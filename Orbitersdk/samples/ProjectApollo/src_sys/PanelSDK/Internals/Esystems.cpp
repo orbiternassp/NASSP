@@ -306,11 +306,6 @@ void FCell::Reaction(double dt, double thrust)
 	#define O2RATIO 0.8881
 
 	reactant = dt * max_power * thrust / 2880.0 * 0.2894 ; //grams /second/ 100 amps
-
-	//if (!strcmp(name, "FUELCELL1"))
-	//{
-	//	sprintf(oapiDebugString(), "%0.10f", thrust);
-	//}
 		
 	// get fuel from sources
 	double O2_maxflow = O2_flow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
@@ -375,6 +370,11 @@ void FCell::Reaction(double dt, double thrust)
 	H20_waste->Flow(h2o_volume);
 
 	Clogging(dt); //simulate reactant impurity accumulation
+
+	//if (!strcmp(name, "FUELCELL2"))
+	//{
+	//	sprintf(oapiDebugString(), "%0.10f", O2_SRC->GetPress());
+	//}
 
 	// TSCH
 	/* sprintf(oapiDebugString(), "m %f Q %f Q/m %f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass,
@@ -451,9 +451,9 @@ void FCell::UpdateFlow(double dt)
 		running = 1; //ie. not running
 		break;
 
-	case 1:// starting; is this even used? it almost doesnt make physical sense to have it
+	case 1:// starting; 
 		Reaction(dt, 1.0);
-		//status = 2; //don't do this, it makes the fuel cells stop
+		//status = 2;
 		if (reaction > 0.96) {
 			status = 0; //started
 			start_handle = 2;
@@ -472,33 +472,35 @@ void FCell::UpdateFlow(double dt)
 	case 3: // O2 purging
 	case 4: // H2 purging
 	case 0: // normal running
+
+		running = 0; //0 = running
+		loadResistance = (829.44) / (power_load); //829.44 = 28.8V^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
+		Volts = 31.0; //inital estimate for voltage
+
+		//coefficients for 5th order approximation of fuel cell performance, taken from:
+		//CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-10
+		double A = 0.023951368224792 * Temp + 23.9241562583015;
+		double B = 0.003480859912024 * Temp - 2.19986938582928;
+		double C = -0.0001779207513 * Temp + 0.104916556604259;
+		double D = 5.0656524872309E-06 * Temp - 0.002885372247954;
+		double E = -6.42229870072935E-08 * Temp + 3.58599071612147E-05;
+		double F = 3.02098031429142E-10 * Temp - 1.66275376548748E-07;
+
+		for (int ii = 0; ii < 5; ++ii) //use an iterative procedure to solve for voltage and current. with our guess of 31 volts these should converge in 3~5 steps
+		{
+			Amperes = (power_load / Volts);
+			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
+			power_load = Amperes * Volts; //recalculate power_load
+		}
+
+		//"clogg" is used to make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
+		Amperes -= (2.25*clogg);
+		Volts -= -(5.2*clogg);
+
 		//---- throttle of the fuel cell [0..1]
 		thrust = power_load / max_power;
 
-		// TSCH
-		// sprintf(oapiDebugString(), "thrust %f, log(1+clogg) %f clogg %f", thrust, log(1+clogg), clogg);
-
-		Volts = 31.0; //we are trying to get 31.0V (1V per cell)
-
 		Reaction(dt, thrust);
-		running = 0;
-		Volts = Volts * min(1.0, reaction); //case of reaction problems :-)
-		if (reaction && Volts > 0.0)
-		{
-			//make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
-
-			Amperes = (power_load / Volts)-(2.25*clogg);
-	
-			loadResistance = (power_load) / (Amperes*Amperes);
-			Volts = Volts * (loadResistance / (loadResistance + outputImpedance))-(5.2*clogg);
-
-			power_load = Amperes * Volts; //recalculate power_load
-			
-		}
-		else
-		{
-			Amperes = 0;
-		}
 
 		break;
 	}
