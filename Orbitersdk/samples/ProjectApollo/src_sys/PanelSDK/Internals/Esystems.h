@@ -229,6 +229,8 @@ public:
 	h_Valve *H2_SRC;	//source for H2
 	h_Valve *H20_waste;	//pointer to a waste tank
 
+	unsigned int numCells = 31;
+
 	double H2_flow, O2_flow, H2_flowPerSecond, O2_flowPerSecond;
 	h_volume h2o_volume;
 
@@ -252,6 +254,9 @@ public:
 
 	double H2_purity;
 	double O2_purity;
+
+	const double hydrogenHHV = 1.482; //volts (per cell), 286kJ/mol /(2 mols * Faraday's constant)
+	const double hydrogenLHV = 1.254; //volts (per cell), 241kJ/mol /(2 mols * Faraday's constant)
 
 	FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts);
 	void DrawPower(double watts);

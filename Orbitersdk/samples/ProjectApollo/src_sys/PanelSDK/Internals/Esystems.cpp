@@ -302,6 +302,8 @@ void FCell::PUNLOAD(double watts) {
 
 void FCell::Reaction(double dt, double thrust) 
 {
+	//this function needs to be called *after* the power/current/voltage estimation code runs
+
 	#define H2RATIO 0.1119
 	#define O2RATIO 0.8881
 
@@ -321,7 +323,12 @@ void FCell::Reaction(double dt, double thrust)
 	
 	// results of reaction
 	double H2O_flow = O2_flow + H2_flow;
-	double heat = (O2_flow + H2_flow) * 10000.0;		
+
+	//efficiency and heat generation
+	double efficiency = Volts / (hydrogenHHV*numCells);
+	double heat = ((power_load / efficiency) - power_load)*dt;
+
+	heat *= 2.5; ///TODO: FIX WHAT EVER IS COOLING TOO MUCH AND REMOVE THIS LINE
 
 	// purging
 	if (status == 3)
@@ -371,10 +378,10 @@ void FCell::Reaction(double dt, double thrust)
 
 	Clogging(dt); //simulate reactant impurity accumulation
 
-	//if (!strcmp(name, "FUELCELL2"))
-	//{
-	//	sprintf(oapiDebugString(), "%0.10f", O2_SRC->GetPress());
-	//}
+	if (!strcmp(name, "FUELCELL2"))
+	{
+		sprintf(oapiDebugString(), "%0.10f", heat);
+	}
 
 	// TSCH
 	/* sprintf(oapiDebugString(), "m %f Q %f Q/m %f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass,
