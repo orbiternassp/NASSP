@@ -309,9 +309,12 @@ void FCell::Reaction(double dt, double thrust)
 
 	reactant = dt * max_power * thrust / 2880.0 * 0.2894 ; //grams /second/ 100 amps
 		
-	// get fuel from sources
-	double O2_maxflow = O2_flow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
-	double H2_maxflow = H2_flow = H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+	// get fuel from sources, maximum flow: grams/timestep from each valve
+	double O2_maxflow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
+	double H2_maxflow = H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+
+	O2_flow = O2_maxflow;
+	H2_flow = H2_maxflow;
 	
 	// max. consumption
 	if (H2_flow > reactant * H2RATIO) H2_flow = reactant * H2RATIO;
@@ -380,7 +383,7 @@ void FCell::Reaction(double dt, double thrust)
 
 	if (!strcmp(name, "FUELCELL2"))
 	{
-		sprintf(oapiDebugString(), "%0.10f", heat);
+		sprintf(oapiDebugString(), "%0.10f", H2_maxflow);
 	}
 
 	// TSCH
