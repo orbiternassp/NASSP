@@ -445,11 +445,6 @@ void FCell::UpdateFlow(double dt)
 		H2_flowPerSecond = 0;
 		O2_flowPerSecond = 0;
 
-		//Conductive heat transfer
-		if (Temp > 300.0)
-			thermic((300.0 - Temp) * 0.1 * dt);
-		//
-
 		running = 1; //ie. not running
 		break;
 
@@ -509,6 +504,14 @@ void FCell::UpdateFlow(double dt)
 
 	//condenser exhaust temperature is not simulated realistically at the moment
 	condenserTemp = (0.29 * Temp) + 209.0;
+
+	//Conductive heat transfer
+	const double ConductiveHeatTransferCoefficient = 0.54758; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
+	if (Temp > 300.0) //assume that the ambient internal temperature of the spacecraft is 300K, ~80°F, eventually we need to simulate this too
+	{ 
+		thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt);
+	}	
+	//*********************
 
 	e_object::UpdateFlow(dt);
 }
