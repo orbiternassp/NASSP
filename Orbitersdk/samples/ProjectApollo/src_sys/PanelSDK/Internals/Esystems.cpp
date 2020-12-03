@@ -320,8 +320,8 @@ void FCell::Reaction(double dt, double thrust)
 	reactant = H2_flow + O2_flow;
 
 	// max. consumption
-	//if (H2_flow > reactant * H2RATIO) H2_flow = reactant * H2RATIO;
-	//if (O2_flow > reactant * O2RATIO) O2_flow = reactant * O2RATIO;
+	if (H2_flow > H2_maxflow) H2_flow = H2_maxflow;
+	if (O2_flow > O2_maxflow) O2_flow = O2_maxflow;
 	
 	// results of reaction
 	double H2O_flow = O2_flow + H2_flow;
