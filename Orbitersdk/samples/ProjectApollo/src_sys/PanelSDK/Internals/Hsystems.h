@@ -51,6 +51,8 @@ const double BULK_MOD	[MAX_SUB]=	{32e6,		24e6,		2.18e6,		32e6,		32e6,		2.55e6,		
 const double CRITICAL_P [MAX_SUB]=  {350115.0,	89631.0,	1523741.0,	234421.0,	508833.0,	3097574.75,		11692906.154,	10132500.0,		226968.0224 };		//Pa.. critical pressure
 const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,		256.9525,		607.15,			431.15,			5.19		};		//K.. critical temperature
 
+const double FaradaysConstant = 96485.3321233100184; //Coulombs/mol
+
 #include "thermal.h"
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )

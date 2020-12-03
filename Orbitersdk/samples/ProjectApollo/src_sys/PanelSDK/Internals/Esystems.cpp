@@ -307,22 +307,21 @@ void FCell::Reaction(double dt, double thrust)
 	#define H2RATIO 0.1119
 	#define O2RATIO 0.8881
 
-	reactant = dt * max_power * thrust / 2880.0 * 0.2894 ; //grams /second/ 100 amps
+	//reactant = dt * max_power * thrust / 2880.0 * 0.2894; //grams /second/ 100 amps
 		
 	// get fuel from sources, maximum flow: grams/timestep from each valve
 	double O2_maxflow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
 	double H2_maxflow = H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
 
-	O2_flow = O2_maxflow;
-	H2_flow = H2_maxflow;
-	
+	// Reactant consumption
+	H2_flow = ((Amperes * MMASS[SUBSTANCE_H2]) / (2*FaradaysConstant)) * numCells * dt; //Faraday's 2nd law electrolysis. confirmed against CSM databook equation
+	O2_flow = H2_flow / H2RATIO * O2RATIO; //consume a stoichometeric amount of oxygen
+
+	reactant = H2_flow + O2_flow;
+
 	// max. consumption
-	if (H2_flow > reactant * H2RATIO) H2_flow = reactant * H2RATIO;
-	if (O2_flow > reactant * O2RATIO) O2_flow = reactant * O2RATIO;
-	
-	// maintain reactant ratio
-	if (H2_flow > O2_flow / O2RATIO * H2RATIO) H2_flow = O2_flow / O2RATIO * H2RATIO;
-	if (O2_flow > H2_flow / H2RATIO * O2RATIO) O2_flow = H2_flow / H2RATIO * O2RATIO;
+	//if (H2_flow > reactant * H2RATIO) H2_flow = reactant * H2RATIO;
+	//if (O2_flow > reactant * O2RATIO) O2_flow = reactant * O2RATIO;
 	
 	// results of reaction
 	double H2O_flow = O2_flow + H2_flow;
@@ -383,7 +382,7 @@ void FCell::Reaction(double dt, double thrust)
 
 	if (!strcmp(name, "FUELCELL2"))
 	{
-		sprintf(oapiDebugString(), "%0.10f", H2_maxflow);
+		sprintf(oapiDebugString(), "%0.10f", H2_flowPerSecond);
 	}
 
 	// TSCH
