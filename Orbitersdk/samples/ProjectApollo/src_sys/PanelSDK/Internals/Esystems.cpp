@@ -350,22 +350,30 @@ void FCell::Reaction(double dt, double thrust)
 	reaction = (H2_flow + O2_flow) / reactant; // % of reaction
 	
 	// flow from sources
-	if (H2_SRC->parent->space.composition[SUBSTANCE_H2].mass > 0.0) { 
-		H2_SRC->parent->space.composition[SUBSTANCE_H2].Q -= 
-			H2_SRC->parent->space.composition[SUBSTANCE_H2].Q * H2_flow / H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+	if (H2_SRC->parent->space.composition[SUBSTANCE_H2].mass > 0.0) 
+	{ 
+		//reduce enthalpy in the hydrogen source by the amount of enthalpy removed by flow
+		H2_SRC->parent->space.composition[SUBSTANCE_H2].Q -= H2_SRC->parent->space.composition[SUBSTANCE_H2].Q * H2_flow / H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+
+		//recalculate total enthalpy
 		H2_SRC->parent->space.GetQ();
 
-		H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass -= 
-			H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass * H2_flow / H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+		//remove gaseous hydrogen from tank 
+		H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass -= H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass * H2_flow / H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
 	}
-	if (O2_SRC->parent->space.composition[SUBSTANCE_O2].mass > 0.0) { 
-		O2_SRC->parent->space.composition[SUBSTANCE_O2].Q -= 
-			O2_SRC->parent->space.composition[SUBSTANCE_O2].Q * O2_flow / O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
+	if (O2_SRC->parent->space.composition[SUBSTANCE_O2].mass > 0.0)
+	{
+		//reduce enthalpy in the oxygen source by the amount of enthalpy removed by flow
+		O2_SRC->parent->space.composition[SUBSTANCE_O2].Q -= O2_SRC->parent->space.composition[SUBSTANCE_O2].Q * O2_flow / O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
+		
+		//recalculate total enthalpy
 		O2_SRC->parent->space.GetQ();
 
-		O2_SRC->parent->space.composition[SUBSTANCE_O2].vapor_mass -= 
-			O2_SRC->parent->space.composition[SUBSTANCE_O2].vapor_mass * O2_flow / O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
+		//remove gaseous oxygen from tank 
+		O2_SRC->parent->space.composition[SUBSTANCE_O2].vapor_mass -= O2_SRC->parent->space.composition[SUBSTANCE_O2].vapor_mass * O2_flow / O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
 	}
+
+	//take reactants from source
 	H2_SRC->parent->space.composition[SUBSTANCE_H2].mass -= H2_flow;
 	O2_SRC->parent->space.composition[SUBSTANCE_O2].mass -= O2_flow;
 
