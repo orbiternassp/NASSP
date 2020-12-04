@@ -330,7 +330,7 @@ void FCell::Reaction(double dt, double thrust)
 	double efficiency = Volts / (hydrogenHHV*numCells);
 	double heat = ((power_load / efficiency) - power_load)*dt;
 
-	heat *= 2.5; ///TODO: FIX WHAT EVER IS COOLING TOO MUCH AND REMOVE THIS LINE
+	heat *= 1.5; ///TODO: FIX WHAT EVER IS COOLING TOO MUCH AND REMOVE THIS LINE
 
 	// purging
 	if (status == 3)
@@ -388,10 +388,10 @@ void FCell::Reaction(double dt, double thrust)
 
 	Clogging(dt); //simulate reactant impurity accumulation
 
-	if (!strcmp(name, "FUELCELL2"))
-	{
-		sprintf(oapiDebugString(), "%0.10f", H2_flowPerSecond);
-	}
+	//if (!strcmp(name, "FUELCELL2"))
+	//{
+	//	sprintf(oapiDebugString(), "%0.10f, %0.10f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass, H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass);
+	//}
 
 	// TSCH
 	/* sprintf(oapiDebugString(), "m %f Q %f Q/m %f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass,
@@ -443,6 +443,7 @@ void FCell::UpdateFlow(double dt)
 	} 
 	else {
 		tempTooLowCount = 0;
+		status = 0;
 	}
 
 	switch (status) {

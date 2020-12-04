@@ -737,12 +737,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_AUTO;
 				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_AUTO;
 
-				// Reduce fuel cell cooling power because of low fuel cell load
-				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 2.0;
-				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 2.0;
-				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 2.0;
-				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:RAD") = 2.0;
-
 				// 
 				// Event handling.
 				//
@@ -834,12 +828,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADBHEATER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_OFF;
-
-					// Set fuel cell cooling power to normal
-					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 6.8;
-					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 6.8;
-					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 6.8;
-					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:RAD") = 6.8;
 
 					// Next state
 					systemsState = SATSYSTEMS_GSECONNECTED_2;
@@ -1425,17 +1413,6 @@ void Saturn::SystemsInternalTimestep(double simdt)
 	//FuelCellH2Manifold[1]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
 	//FuelCellH2Manifold[2]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
 
-	if (this->systemsState < SATSYSTEMS_GSECONNECTED_1)
-	{
-		//need better solution
-
-		//keep the fuel cells from cooling prior to launch.
-		//this should be done by GSE, not this hacky piece of code
-
-		FuelCells[0]->SetTemp(475.0);
-		FuelCells[1]->SetTemp(475.0);
-		FuelCells[2]->SetTemp(475.0);
-	}
 }
 
 void Saturn::JoystickTimestep()

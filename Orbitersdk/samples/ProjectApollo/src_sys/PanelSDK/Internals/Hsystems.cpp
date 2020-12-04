@@ -966,6 +966,9 @@ void h_Radiator::refresh(double dt) {
 	// if (!strcmp(name, "LEM-LR-Antenna")) 
 		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 
+	 //if (!strcmp(name, "FUELCELLRADIATOR2")) 
+		//sprintf(oapiDebugString(), "%lf ", parent->Vessel->GetAtmPressure());
+
 	thermic(-Q);
 }
 
