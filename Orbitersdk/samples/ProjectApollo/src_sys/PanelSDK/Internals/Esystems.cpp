@@ -330,7 +330,7 @@ void FCell::Reaction(double dt, double thrust)
 	double efficiency = Volts / (hydrogenHHV*numCells);
 	double heat = ((power_load / efficiency) - power_load)*dt;
 
-	heat *= 1.5; ///TODO: FIX WHAT EVER IS COOLING TOO MUCH AND REMOVE THIS LINE
+	//heat *= 1.5; ///TODO: FIX WHAT EVER IS COOLING TOO MUCH AND REMOVE THIS LINE
 
 	// purging
 	if (status == 3)

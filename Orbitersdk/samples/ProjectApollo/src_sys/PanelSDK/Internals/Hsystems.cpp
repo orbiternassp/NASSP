@@ -973,13 +973,13 @@ void h_Radiator::refresh(double dt)
 	Qc *= parent->Vessel->GetAtmDensity() / 1.225; //simple model for correcting for density
 
 	Qr = rad * size * 5.67e-8 * dt * pow(Temp - ((AirTemp) * (parent->Vessel->GetAtmDensity() / 1.225)), 4); //Stefan–Boltzmann law 
-
+	
 	
 	// if (!strcmp(name, "LEM-LR-Antenna")) 
 		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 
-	 if (!strcmp(name, "FUELCELLRADIATOR2")) 
-		sprintf(oapiDebugString(), "Temp=%lf K, Qc=%lf, Qr=%lf",Temp, Qc*dt, Qr*dt);
+	//if (!strcmp(name, "FUELCELLRADIATOR1")) 
+	//	sprintf(oapiDebugString(), "Temp=%lf K, Qc=%lf, Qr=%lf",Temp, Qc/dt, Qr/dt);
 
 	thermic( - ( Qc + Qr));
 }
