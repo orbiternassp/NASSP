@@ -1253,23 +1253,28 @@ void Cooling::refresh(double dt)
 		}
 	}
 
-	if (pumping) { //time to do the rumba
-		if (SRC && SRC->Voltage() > SP_MIN_DCVOLTAGE) {
+	if (pumping) //time to do the rumba
+	{ 
+		if (SRC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
+		{
 		  SRC->DrawPower(65.0);
 
-		} else { //no power
+		}
+		else //no power
+		{ 
 		  pumping = 0;
 		  return;
 		} 
 
-		for (i = 0; i < nr_activelist - 1; i++) {
+		for (i = 0; i < nr_activelist - 1; i++)
+		{
 			heat_ex = (activelist[i+1]->Temp - activelist[i]->Temp) * activelength[i] * dt * isolation * throttle;
 			activelist[i]->thermic(heat_ex);
 			activelist[i+1]->thermic(-heat_ex);
 		}
-		heat_ex = (activelist[nr_activelist-1]->Temp - activelist[0]->Temp) * activelength[nr_activelist-1] * dt * isolation * throttle;
-		activelist[0]->thermic(heat_ex);
-		activelist[nr_activelist-1]->thermic(-heat_ex);
+
+		heat_ex = (activelist[0]->Temp - activelist[nr_activelist-1]->Temp) * activelength[0] * dt * isolation * throttle;
+		activelist[0]->thermic(-heat_ex);
 	}
 
 	// average temp except the first
