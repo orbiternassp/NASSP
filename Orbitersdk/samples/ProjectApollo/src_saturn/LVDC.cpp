@@ -3794,8 +3794,6 @@ void LVDCSV::Init(){
 	KSSB5 = 0.0256;
 	KSSB8 = 0.0108;
 	KCSSK = 0.2;
-	KSSINDXTB7A = KSSINDXTB6A = KSSINDXTB6B = KSSINDXTB6C = KSSINDXTB3A = KSSINDXTB5A = KSSINDXTB5B = KSSINDXSIVA = KSSINDXSIVB = KSSINDXS4C1 = KSSINDXGSS = -1;
-	KSSINDXSBLO = KSSINDXSBHI = KSSINDXSBOM = KSSINDXECSV = KSSINDXECS1 = KSSINDXGAIN = KSSINDXTB6D = KSSINDXALU = -1;
 
 	//Telemetry stations
 	C_A[0] = _V(0.87981, -0.47532, -0.00134);
@@ -5168,6 +5166,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_TI5F2", EPTTIM[57]); //Events Processor: TB5, event 3
 		papiReadScenario_double(line, "LVDC_TI7AF1", EPTTIM[107]); //Events Processor: TB8, event 1
 		papiReadScenario_double(line, "LVDC_TI7AF2", EPTTIM[108]); //Events Processor: TB8, event 2
+		papiReadScenario_double(line, "LVDC_T7M9", EPTTIM[94]); //TB7, task 2
 		papiReadScenario_double(line, "LVDC_T7M10", T7M10);
 		papiReadScenario_double(line, "LVDC_T7M11", T7M11);
 		papiReadScenario_double(line, "LVDC_T_ImpactBurn", T_ImpactBurn);
@@ -6477,7 +6476,7 @@ void LVDCSV::DiscreteProcessor()
 	}
 
 	//Discrete 6: Spacecraft separation sensed
-	if (KSSINDXTB7A >= 0 && DPM[DIN4_SpacecraftSeparation] == false && lvda.SpacecraftSeparationIndication())
+	if (KSSINDXTB7A > 0 && DPM[DIN4_SpacecraftSeparation] == false && lvda.SpacecraftSeparationIndication())
 	{
 		DPM[DIN4_SpacecraftSeparation] = true;
 		DVASW = DVASW | MSKSSTB5A;
