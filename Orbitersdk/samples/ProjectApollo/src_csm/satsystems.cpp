@@ -42,7 +42,7 @@
 #include "tracer.h"
 #include "Mission.h"
 
-//FILE *PanelsdkLogFile;
+FILE *PanelsdkLogFile;
 
 
 void Saturn::SystemsInit() {
@@ -56,7 +56,7 @@ void Saturn::SystemsInit() {
 	Panelsdk.RegisterVessel(this);
 	Panelsdk.InitFromFile("ProjectApollo\\SaturnSystems");
 
-	//PanelsdkLogFile = fopen("ProjectApollo Saturn Systems.log", "w");
+	PanelsdkLogFile = fopen("ProjectApollo Saturn Systems.log", "w");
 
 	//
 	// Electrical systems.
@@ -910,6 +910,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:TEMP"));
 
+	fprintf(PanelsdkLogFile, "%0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f\n",
+		simt,
+		FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,
+		FuelCellCooling[0]->coolant_temp, FuelCellCooling[1]->coolant_temp, FuelCellCooling[2]->coolant_temp,
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:TEMP"));
+	fflush(PanelsdkLogFile);
+
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
@@ -1324,7 +1332,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*massH2FC1M, *tempH2FC1M, *pressH2FC1M * 0.000145038);
 */
 
-/*	fprintf(PanelsdkLogFile, "%f H2T1-m %.2f T %.1f p %.1f H2T2-m %.2f T %.1f p %.1f H2FCM-m %.2f T %.1f p %.1f O2T1-m %.2f T %.2f p %.2f O2T2-m %.2f T %.2f p %.2f O2SM-m %.2f T %.2f p %5.2f O2MAIN-m %.2f T %.2f p %5.2f Cabin-m %.2f T %.2f p %.2f CO2 PP %.2f Co2Rate %f Rad-T %.2f\n", 
+/*fprintf(PanelsdkLogFile, "%f H2T1-m %.2f T %.1f p %.1f H2T2-m %.2f T %.1f p %.1f H2FCM-m %.2f T %.1f p %.1f O2T1-m %.2f T %.2f p %.2f O2T2-m %.2f T %.2f p %.2f O2SM-m %.2f T %.2f p %5.2f O2MAIN-m %.2f T %.2f p %5.2f Cabin-m %.2f T %.2f p %.2f CO2 PP %.2f Co2Rate %f Rad-T %.2f\n", 
 		simt, 
 		*massH2Tank1 / 1000.0, *tempH2Tank1, *pressH2Tank1 * 0.000145038,
 		*massH2Tank2 / 1000.0, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
