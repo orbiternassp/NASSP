@@ -441,9 +441,14 @@ void FCell::UpdateFlow(double dt)
 			tempTooLowCount = 0;
 		}
 	} 
-	else {
+	else
+	{
 		tempTooLowCount = 0;
-		status = 0;
+
+		if(status == 2) //this will allow us to start if heating up for the first time from ambient temperature
+		{
+			status = 0;
+		}
 	}
 
 	switch (status) {
