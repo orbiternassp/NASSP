@@ -275,10 +275,18 @@ bool LVDA::RestartManeuverEnable()
 	return false;
 }
 
-bool LVDA::InhibitAttitudeManeuver()
+bool LVDA::TDEEnable()
 {
 	if (iu->GetLVDC())
-		return iu->GetLVDC()->InhibitAttitudeManeuver();
+		return iu->GetLVDC()->TDEEnable();
+
+	return false;
+}
+
+bool LVDA::RemoveInhibitManeuver4()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->RemoveInhibitManeuver4();
 
 	return false;
 }

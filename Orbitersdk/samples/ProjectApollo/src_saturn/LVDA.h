@@ -70,7 +70,8 @@ public:
 	bool TimebaseUpdate(double dt);
 	bool LMAbort();
 	bool RestartManeuverEnable();
-	bool InhibitAttitudeManeuver();
+	bool TDEEnable();
+	bool RemoveInhibitManeuver4();
 	bool Timebase8Enable();
 	bool EvasiveManeuverEnable();
 	bool ExecuteCommManeuver();

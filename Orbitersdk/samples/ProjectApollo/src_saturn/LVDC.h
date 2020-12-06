@@ -62,7 +62,8 @@ public:
 	virtual bool GeneralizedSwitchSelector(int stage, int channel) = 0;
 	virtual bool LMAbort() { return false; }
 	virtual bool RestartManeuverEnable() { return false; }
-	virtual bool InhibitAttitudeManeuver() = 0;
+	virtual bool TDEEnable() { return false; }
+	virtual bool RemoveInhibitManeuver4() { return false; }
 	virtual bool TimeBase8Enable() { return false; }
 	virtual bool EvasiveManeuverEnable() { return false; }
 	virtual bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw) { return false; }
@@ -102,8 +103,10 @@ public:
 	bool TimebaseUpdate(double dt);
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool RestartManeuverEnable();
-	bool InhibitAttitudeManeuver();
+	bool TDEEnable();
+	bool RemoveInhibitManeuver4();
 	bool InhibitSeparationManeuver();
+	bool UpdateSeparationManeuver(double dt);
 	bool EvasiveManeuverEnable();
 	bool TimeBase8Enable();
 	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
@@ -125,6 +128,7 @@ private:								// Saturn LV
 	void NonInterruptSequencer(bool phase13);
 
 	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec);
+	bool TimeCheck(double t_event);
 	void StartTimebase4A();
 	void StartTimebase5();
 	void StartTimebase7();
@@ -222,6 +226,7 @@ private:								// Saturn LV
 	int EPTINDX;
 	//Time of execution for an event
 	double EPTTIM[131];
+	int EPTABLE[131];
 	//Non-interrupt sequence task table (phase 1/3)
 	//0 = Accelerometer Read (AR)
 	//1 = Simulated Accelerometers (SA)
@@ -390,9 +395,6 @@ private:								// Saturn LV
 	bool GATE1;										// Permit entry to out-of-orbit targeting
 	bool GATE2;										// Permit only one pass through 1st-opportunity targeting
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
-	bool INH1,INH2;									// Dunno yet (INH appears to be the manual XLUNAR INHIBIT signal, at least)
-	bool INH4;										// Inhibit maneuver to separation attitude
-	bool INH5;										// Inhibit maneuver to slingshot attitude in TB7
 	bool TU;										// Gate for processing targeting update
 	bool TU10;										// Gate for processing ten-paramemter targeting update
 	bool first_op;									// switch for first TLI opportunity
@@ -504,6 +506,12 @@ private:								// Saturn LV
 	double T_SON;									// Time since last orbital navigation pass
 	// Normally set to 2, set to the desired type in the events processor. -2 = inertial hold of local reference, -1 = local reference, 0 = chi freeze, 1 = inertial reference
 	int AttitudeManeuverState;
+	std::bitset<15> OGStatusWord;					// Flagword that indicates the maneuvers that have already been implemented
+	double TI5F3;									// Time of Earth orbit separation maneuver
+	double TI5F4;									// Time of Earth orbit maneuver back to horizontal tracking
+	double TI5F5;									// Time of Earth orbit retro maneuver
+	double T7M10;									// Time in TB7 to compute inertial attitude corresponding to locally referenced separation maneuver
+	double T7M11;									// Time in TB7 for the slingshot/LOX dump maneuver (Apollo 8)
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
@@ -676,8 +684,8 @@ private:								// Saturn LV
 	double theta_R;									// Total angular rotation of earth since GRR
 	double d_A;										// Altitude of the vehicle above the horizon of a telemetry station
 	double R_STA;									// Mean radius of telemetry stations
-	double TBA;										// Time of station acquisition in TB5
-	double TBL;										// Time of station loss in TB5
+	double TBA;										// Time of station acquisition
+	double TBL;										// Time of station loss
 
 	//Switch Selector Table
 	std::vector<SwitchSelectorSet> SSTABLE;
@@ -811,8 +819,14 @@ private:								// Saturn LV
 
 	enum ModeCode27_Bits
 	{
-		MC27_InhibitManeuver13 = 1,
-		MC27_H2OControlValveLogicActive = 7,
+		MC27_InhibitManeuver13 = 0,
+		MC27_InhibitManeuver11,
+		MC27_InhibitManeuver10,
+		MC27_InhibitManeuver9,
+		MC27_InhibitManeuver5,
+		MC27_InhibitManeuver4,
+		MC27_InhibitManeuver3,
+		MC27_H2OControlValveLogicActive,
 		MC27_AttHoldWrtInertialContRetFromSC,
 		MC27_AttHoldWrtLocalContRetFromSC,
 		MC27_TB8_Started,
@@ -823,7 +837,10 @@ private:								// Saturn LV
 		MC27_TrackLocalHoriz,
 		MC27_TimeBaseUpdateAccepted,
 		MC27_DCSNavigationUpdateAccepted,
-		MC27_CommManInTB8 = 21,
+		MC27_AntennaOmni,
+		MC27_AntennaHighGain,
+		MC27_AntennaLowGain,
+		MC27_CommManInTB8,
 		MC27_TB8EnableDCSCmdEnable = 24,
 		MC27_PoweredFlightDCSInhibitRemoved
 	};

@@ -2885,10 +2885,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	GATE2 = false;
 	GATE5 = false;
 	HSL = false;
-	INH1 = false;
-	INH2 = false;
-	INH4 = false;
-	INH5 = false;
 	init = false;
 	i_op = false;
 	KSSINDXTB7A = KSSINDXTB6A = KSSINDXTB6B = KSSINDXTB6C = KSSINDXTB3A = KSSINDXTB5A = KSSINDXTB5B = KSSINDXSIVA = KSSINDXSIVB = KSSINDXS4C1 = KSSINDXGSS = 0;
@@ -3029,6 +3025,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	for (int i = 0;i < 131;i++)
 	{
 		EPTTIM[i] = 0.0;
+		EPTABLE[i] = 0;
 	}
 	f = 0;
 	F = 0;
@@ -3231,6 +3228,11 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	theta_xa = 0.0;
 	theta_za = 0.0;
 	TI = 0.0;
+	TI5F3 = 0.0;
+	TI5F4 = 0.0;
+	TI5F5 = 0.0;
+	T7M10 = 0.0;
+	T7M11 = 0.0;
 	T_ImpactBurn = 0;
 	dT_ImpactBurn = 0;
 	T_L = 0.0;
@@ -3361,10 +3363,6 @@ void LVDCSV::Init(){
 	GATE1 = false;							// allows single pass through out-of-orbit targeting calculations when false
 	GATE2 = false;							// logic switch for first or second opportunity out-of-orbit targeting; false for first
 	GATE5 = false;							// allows single pass through HSL initialization when false
-	INH1 = true;							// inhibits first EPO roll/pitch maneuver
-	INH2 = true;							// inhibits second EPO roll/pitch maneuver
-	INH4 = false;
-	INH5 = true;
 	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB6 = TB7 = TB8 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
 	TU = false;								// flag indicating target update has been received from ground
 	TU10 = false;							// flag indicating 10-parameter target update has been received
@@ -3680,6 +3678,11 @@ void LVDCSV::Init(){
 
 	XLunarSlingshotAttitude = _V(PI, PI, 0.0);
 	XLunarCommAttitude = _V(PI, PI, 0);
+	TI5F3 = 2.0*3600.0 + 42.0*60.0;
+	TI5F4 = TI5F3 + 100.0*60.0;
+	TI5F5 = 99999999.9;
+	T7M10 = 900.0;
+	T7M11 = 99999999.9;
 
 	//Filter
 	MFK[0] = 0.39254895;
@@ -3693,17 +3696,96 @@ void LVDCSV::Init(){
 	MFK[8] = 0.0;
 
 	//Default Event Table
-	EPTTIM[0] = 0.0; EPTTIM[1] = 16.0; EPTTIM[2] = 17.0; EPTTIM[3] = 17.5; EPTTIM[4] = 0.0; //TB0
-	EPTTIM[5] = 0.0; EPTTIM[6] = 1.0; EPTTIM[7] = 6.0; EPTTIM[8] = 9.0; EPTTIM[9] = 10.0; EPTTIM[10] = 14.0; EPTTIM[11] = 134.7; EPTTIM[12] = 0.0; //TB1
-	EPTTIM[13] = 0.0; EPTTIM[14] = 0.0; EPTTIM[15] = 18.4; EPTTIM[16] = 27.5; EPTTIM[17] = 0.0; //TB2
-	EPTTIM[18] = 0.0; EPTTIM[19] = 0.0; EPTTIM[20] = 0.0; EPTTIM[21] = 0.0; EPTTIM[22] = 0.0; EPTTIM[23] = 0.0; EPTTIM[24] = 1.4; EPTTIM[25] = 4.4; EPTTIM[26] = 4.4; EPTTIM[27] = 6.7; //TB3
-	EPTTIM[28] = 6.7; EPTTIM[29] = 6.7; EPTTIM[30] = 40.6; EPTTIM[31] = 40.6; EPTTIM[32] = 58.6; EPTTIM[33] = 60.6; EPTTIM[34] = 299.0; EPTTIM[35] = 355.0; EPTTIM[36] = 388.5; EPTTIM[37] = 0.0; //TB3
-	EPTTIM[38] = 0.0; EPTTIM[39] = 6.5; EPTTIM[40] = 8.6; EPTTIM[41] = 10.0; EPTTIM[42] = 12.0; EPTTIM[43] = 15.0; //TB4
-	EPTTIM[55] = 0.0; EPTTIM[56] = 10.0; EPTTIM[57] = 20.0; EPTTIM[58] = 100.0; EPTTIM[59] = 2700.0; EPTTIM[60] = 5160.0;//TB5
-	EPTTIM[71] = 0.0; EPTTIM[72] = 41.0; EPTTIM[73] = 48.0; EPTTIM[74] = 341.3; EPTTIM[75] = 496.7; EPTTIM[76] = 497.3; EPTTIM[77] = 560.0; EPTTIM[78] = 578.6; EPTTIM[79] = 580.3; EPTTIM[80] = 583.0; EPTTIM[81] = 584.0; EPTTIM[82] = 590.0;//TB6
-	EPTTIM[93] = 0.0;  EPTTIM[94] = 20.0;  EPTTIM[95] = 20.0; EPTTIM[96] = 900.0; EPTTIM[97] = 900.0; EPTTIM[98] = 1200.0; EPTTIM[99] = 6540.0; //TB7
-	EPTTIM[107] = 0.0; EPTTIM[108] = 3705.0;//TB8
-	EPTTIM[109] = 0.0; EPTTIM[110] = 11.5; EPTTIM[111] = 13.3; EPTTIM[112] = 15.0; //TB4a
+	EPTABLE[0] = 1;	EPTTIM[0] = 0.0; //Start of Time Base 0 Table
+	EPTABLE[1] = 0;	EPTTIM[1] = 16.0;
+	EPTABLE[2] = 0; EPTTIM[2] = 17.0;
+	EPTABLE[3] = 0; EPTTIM[3] = 17.5;
+	EPTABLE[4] = 0; EPTTIM[4] = 0.0;
+	EPTABLE[5] = 5; EPTTIM[5] = 0.0; //Start of Time Base 1 Table
+	EPTABLE[6] = 6; EPTTIM[6] = 1.0;
+	EPTABLE[7] = 0; EPTTIM[7] = 6.0;
+	EPTABLE[8] = 8; EPTTIM[8] = 9.0;
+	EPTABLE[9] = 9;	EPTTIM[9] = 10.0;
+	EPTABLE[10] = 0; EPTTIM[10] = 14.0;
+	EPTABLE[11] = 11; EPTTIM[11] = 134.7;
+	EPTABLE[12] = 0; EPTTIM[12] = 0.0;
+	EPTABLE[13] = 12; EPTTIM[13] = 0.0; //Start of Time Base 2 Table
+	EPTABLE[14] = 0; EPTTIM[14] = 0.0;
+	EPTABLE[15] = 0; EPTTIM[15] = 18.4;
+	EPTABLE[16] = 0; EPTTIM[16] = 27.5;
+	EPTABLE[17] = 0; EPTTIM[17] = 0.0;
+	EPTABLE[18] = 16; EPTTIM[18] = 0.0; //Start of Time Base 3 Table
+	EPTABLE[19] = 17; EPTTIM[19] = 0.0;
+	EPTABLE[20] = 18; EPTTIM[20] = 0.0;
+	EPTABLE[21] = 19; EPTTIM[21] = 0.0;
+	EPTABLE[22] = 20; EPTTIM[22] = 0.0;
+	EPTABLE[23] = 21; EPTTIM[23] = 0.0;
+	EPTABLE[24] = 22; EPTTIM[24] = 1.4;
+	EPTABLE[25] = 23; EPTTIM[25] = 4.4;
+	EPTABLE[26] = 24; EPTTIM[26] = 4.4;
+	EPTABLE[27] = 25; EPTTIM[27] = 6.7;
+	EPTABLE[28] = 26; EPTTIM[28] = 6.7;
+	EPTABLE[29] = 27; EPTTIM[29] = 6.7;
+	EPTABLE[30] = 28; EPTTIM[30] = 40.6;
+	EPTABLE[31] = 29; EPTTIM[31] = 40.6;
+	EPTABLE[32] = 30; EPTTIM[32] = 58.6;
+	EPTABLE[33] = 31; EPTTIM[33] = 60.6;
+	EPTABLE[34] = 32; EPTTIM[34] = 299.0;
+	EPTABLE[35] = 33; EPTTIM[35] = 355.0;
+	EPTABLE[36] = 34; EPTTIM[36] = 388.5;
+	EPTABLE[37] = 0; EPTTIM[37] = 0.0;
+	EPTABLE[38] = 35; EPTTIM[38] = 0.0; //Start of Time Base 4 Table
+	EPTABLE[39] = 36; EPTTIM[39] = 6.5;
+	EPTABLE[40] = 37; EPTTIM[40] = 8.6;
+	EPTABLE[41] = 38; EPTTIM[41] = 10.0;
+	EPTABLE[42] = 39; EPTTIM[42] = 12.0;
+	EPTABLE[43] = 40; EPTTIM[43] = 15.0;
+	EPTABLE[44] = 0; EPTTIM[44] = 0.0;
+	//TBD
+	EPTABLE[55] = 51; EPTTIM[55] = 0.0; //Start of Time Base 5 Table
+	EPTABLE[56] = 52; EPTTIM[56] = 10.0;
+	EPTABLE[57] = 53; EPTTIM[57] = 20.0;
+	EPTABLE[58] = 54; EPTTIM[58] = 100.0;
+	EPTABLE[59] = 0; EPTTIM[59] = 0.0;
+	//TBD
+	EPTABLE[71] = 66; EPTTIM[71] = 0.0; //Start of Time Base 6 Table
+	EPTABLE[72] = 67; EPTTIM[72] = 41.0;
+	EPTABLE[73] = 68; EPTTIM[73] = 48.0;
+	EPTABLE[74] = 69; EPTTIM[74] = 341.3;
+	EPTABLE[75] = 70; EPTTIM[75] = 496.7;
+	EPTABLE[76] = 71; EPTTIM[76] = 497.3;
+	EPTABLE[77] = 72; EPTTIM[77] = 560.0;
+	EPTABLE[78] = 73; EPTTIM[78] = 578.6;
+	EPTABLE[79] = 74; EPTTIM[79] = 580.3;
+	EPTABLE[80] = 75; EPTTIM[80] = 583.0;
+	EPTABLE[81] = 76; EPTTIM[81] = 584.0;
+	EPTABLE[82] = 77; EPTTIM[82] = 590.0;
+	EPTABLE[83] = 0; EPTTIM[83] = 0.0;
+	//TBD
+	EPTABLE[93] = 87; EPTTIM[93] = 0.0; //Start of Time Base 7 Table
+	EPTABLE[94] = 88; EPTTIM[94] = 20.0;
+	EPTABLE[95] = 89; EPTTIM[95] = 20.0;
+	EPTABLE[96] = 0; EPTTIM[96] = 0.0;
+	EPTABLE[97] = 90; EPTTIM[97] = 0.0;
+	EPTABLE[98] = 91; EPTTIM[98] = 0.0;
+	EPTABLE[99] = 0; EPTTIM[99] = 0.0;
+	EPTABLE[100] = 92; EPTTIM[100] = 0.0;
+	EPTABLE[101] = 0; EPTTIM[101] = 0.0;
+	//TBD
+	EPTABLE[107] = 100; EPTTIM[107] = 0.0; //Start of Time Base 8 Table
+	EPTABLE[108] = 101; EPTTIM[108] = 3705.0;
+	EPTABLE[109] = 0; EPTTIM[109] = 0.0;
+	EPTABLE[110] = 102; EPTTIM[110] = 0.0; //Start of Time Base 4A Table
+	EPTABLE[111] = 103; EPTTIM[111] = 11.5;
+	EPTABLE[112] = 104; EPTTIM[112] = 13.3;
+	EPTABLE[113] = 105; EPTTIM[113] = 15.0;
+	EPTABLE[114] = 0; EPTTIM[114] = 0.0;
+	//TBD
+
+	//By default, inhibit Earth orbit attitude maneuvers
+	ModeCode27[MC27_InhibitManeuver3] = true;
+	ModeCode27[MC27_InhibitManeuver4] = true;
+	ModeCode27[MC27_InhibitManeuver5] = true;
 
 	//Switch selector
 	KSSB1 = 0.018;
@@ -3770,10 +3852,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
 	oapiWriteScenario_int(scn, "LVDC_ImpactBurnEnabled", ImpactBurnEnabled);
 	oapiWriteScenario_int(scn, "LVDC_ImpactBurnInProgress", ImpactBurnInProgress);
-	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
-	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
-	oapiWriteScenario_int(scn, "LVDC_INH4", INH4);
-	oapiWriteScenario_int(scn, "LVDC_INH5", INH5);
 	oapiWriteScenario_int(scn, "LVDC_init", init);
 	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
 	oapiWriteScenario_int(scn, "LVDC_MRS", MRS);
@@ -3809,6 +3887,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_ModeCode27", ModeCode27.to_ulong());
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
+	oapiWriteScenario_int(scn, "LVDC_OGStatusWord", OGStatusWord.to_ulong());
 	oapiWriteScenario_int(scn, "LVDC_SSM", SSM);
 	oapiWriteScenario_int(scn, "LVDC_SST1PTR", SST1PTR);
 	oapiWriteScenario_int(scn, "LVDC_SST2PTR", SST2PTR);
@@ -3824,6 +3903,13 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_VSC31", VSC31);
 	oapiWriteScenario_int(scn, "LVDC_VSNA1", VSNA1);
 	oapiWriteScenario_int(scn, "LVDC_VSNA2", VSNA2);
+	papiWriteScenario_intarr(scn, "LVDC_EPTABLE0", EPTABLE, 20);
+	papiWriteScenario_intarr(scn, "LVDC_EPTABLE1", EPTABLE + 20, 20);
+	papiWriteScenario_intarr(scn, "LVDC_EPTABLE2", EPTABLE + 40, 20);
+	papiWriteScenario_intarr(scn, "LVDC_EPTABLE3", EPTABLE + 60, 20);
+	papiWriteScenario_intarr(scn, "LVDC_EPTABLE4", EPTABLE + 80, 20);
+	papiWriteScenario_intarr(scn, "LVDC_EPTABLE5", EPTABLE + 100, 20);
+	papiWriteScenario_intarr(scn, "LVDC_EPTABLE6", EPTABLE + 120, 11);
 	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM0", EPTTIM, 20); //Save EPTTIM before any other double, in case we want something in the load function to overwrite it
 	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM1", EPTTIM + 20, 20);
 	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM2", EPTTIM + 40, 20);
@@ -4314,6 +4400,11 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
 	papiWriteScenario_double(scn, "LVDC_TI", TI);
 	papiWriteScenario_double(scn, "LVDC_T_ImpactBurn", T_ImpactBurn);
+	papiWriteScenario_double(scn, "LVDC_TI5F3", TI5F3);
+	papiWriteScenario_double(scn, "LVDC_TI5F4", TI5F4);
+	papiWriteScenario_double(scn, "LVDC_TI5F5", TI5F5);
+	papiWriteScenario_double(scn, "LVDC_T7M10", T7M10);
+	papiWriteScenario_double(scn, "LVDC_T7M11", T7M11);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
 	papiWriteScenario_double(scn, "LVDC_T_LO", T_LO);
 	papiWriteScenario_double(scn, "LVDC_TMEFRZ", TMEFRZ);
@@ -4471,10 +4562,6 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "LVDC_HSL", HSL);
 		papiReadScenario_bool(line, "LVDC_ImpactBurnEnabled", ImpactBurnEnabled);
 		papiReadScenario_bool(line, "LVDC_ImpactBurnInProgress", ImpactBurnInProgress);
-		papiReadScenario_bool(line, "LVDC_INH1", INH1);
-		papiReadScenario_bool(line, "LVDC_INH2", INH2);
-		papiReadScenario_bool(line, "LVDC_INH4", INH4);
-		papiReadScenario_bool(line, "LVDC_INH5", INH5);
 		papiReadScenario_bool(line, "LVDC_init", init);
 		papiReadScenario_bool(line, "LVDC_i_op", i_op);
 		papiReadScenario_bool(line, "LVDC_MRS", MRS);
@@ -4534,6 +4621,10 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		{
 			ModeCode27 = tmp;
 		}
+		if (papiReadScenario_int(line, "LVDC_OGStatusWord", tmp))
+		{
+			OGStatusWord = tmp;
+		}
 		papiReadScenario_int(line, "LVDC_SSM", SSM);
 		if (papiReadScenario_int(line, "LVDC_SST1PTR", tmp))
 		{
@@ -4572,6 +4663,13 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		}
 		papiReadScenario_int(line, "LVDC_VSNA1", VSNA1);
 		papiReadScenario_int(line, "LVDC_VSNA2", VSNA2);
+		papiReadScenario_intarr(line, "LVDC_EPTABLE0", EPTABLE, 20);
+		papiReadScenario_intarr(line, "LVDC_EPTABLE1", EPTABLE + 20, 20);
+		papiReadScenario_intarr(line, "LVDC_EPTABLE2", EPTABLE + 40, 20);
+		papiReadScenario_intarr(line, "LVDC_EPTABLE3", EPTABLE + 60, 20);
+		papiReadScenario_intarr(line, "LVDC_EPTABLE4", EPTABLE + 80, 20);
+		papiReadScenario_intarr(line, "LVDC_EPTABLE5", EPTABLE + 100, 20);
+		papiReadScenario_intarr(line, "LVDC_EPTABLE6", EPTABLE + 120, 11);
 		// doubles
 		papiReadScenario_doublearr(line, "LVDC_EPTTIM0", EPTTIM, 20);
 		papiReadScenario_doublearr(line, "LVDC_EPTTIM1", EPTTIM + 20, 20);
@@ -4605,7 +4703,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_beta", beta);
 		papiReadScenario_double(line, "LVDC_BETAA", TABLE15[0].beta);
 		papiReadScenario_double(line, "LVDC_BETAB", TABLE15[1].beta);
-		papiReadScenario_double(line, "LVDC_BN4", EPTTIM[94]);
+		papiReadScenario_double(line, "LVDC_BN4", EPTTIM[95]); //TB7, task 3
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -5018,8 +5116,9 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_T2IRB", TABLE15[1].T2IR);
 		papiReadScenario_double(line, "LVDC_T3PRA", TABLE15[0].T3PR);
 		papiReadScenario_double(line, "LVDC_T3PRB", TABLE15[1].T3PR);
-		papiReadScenario_double(line, "LVDC_TA1", EPTTIM[59]);
-		papiReadScenario_double(line, "LVDC_TA2", EPTTIM[60]);
+		papiReadScenario_double(line, "LVDC_TI5F3", TI5F3);
+		papiReadScenario_double(line, "LVDC_TI5F4", TI5F4);
+		papiReadScenario_double(line, "LVDC_TI5F5", TI5F5);
 		papiReadScenario_double(line, "LVDC_T_ar", T_ar);
 		papiReadScenario_double(line, "LVDC_TAS", TAS);
 		papiReadScenario_double(line, "LVDC_tau1", tau1);
@@ -5069,8 +5168,8 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_TI5F2", EPTTIM[57]); //Events Processor: TB5, event 3
 		papiReadScenario_double(line, "LVDC_TI7AF1", EPTTIM[107]); //Events Processor: TB8, event 1
 		papiReadScenario_double(line, "LVDC_TI7AF2", EPTTIM[108]); //Events Processor: TB8, event 2
-		papiReadScenario_double(line, "LVDC_TI7F10", EPTTIM[95]); //Events Processor: TB7, event 3
-		papiReadScenario_double(line, "LVDC_TI7F11", EPTTIM[96]); //Events Processor: TB7, event 4
+		papiReadScenario_double(line, "LVDC_T7M10", T7M10);
+		papiReadScenario_double(line, "LVDC_T7M11", T7M11);
 		papiReadScenario_double(line, "LVDC_T_ImpactBurn", T_ImpactBurn);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
 		papiReadScenario_double(line, "LVDC_T_LO", T_LO);
@@ -5727,6 +5826,36 @@ void LVDCSV::PhaseActivator(bool init)
 		{
 			T2STAT[i] = false;
 		}
+
+		//Events Processor Task List
+		if (true)
+		{
+			//Normal Mission
+
+			EPTABLE[1] = 2; //Search for liftoff discrete (TB+16.0)
+			EPTABLE[2] = -1;
+			EPTABLE[3] = 4; //Start looking for backup liftoff acceleration (TB0+17.5)
+			EPTABLE[7] = 7; //Start checking for engine failure (TB1+6.0)
+			EPTABLE[10] = -1; //TBD (TB1+14.0)
+			EPTABLE[14] = 13; //Enable INT5 and DIN 18 (TB2+0.0)
+			EPTABLE[15] = 14; //(TB2+18.4)
+			EPTABLE[16] = 0;
+		}
+		else
+		{
+			//Repeatable Flight Simulation
+
+			EPTABLE[1] = -1;
+			EPTABLE[2] = 3; //Liftoff on schedule (TB0+17.0)
+			EPTABLE[3] = -1;
+			EPTABLE[7] = -1;
+			EPTABLE[10] = -1; //TBD
+			EPTABLE[14] = -1;
+			EPTABLE[15] = -1;
+			EPTABLE[16] = 15; //TB3 on schedule (TB2+27.5)
+		}
+
+
 		//Events Processor On
 		EventsProcessor(1);
 	}
@@ -7625,16 +7754,6 @@ void LVDCSV::EventsProcessor(int entry)
 	//entry: 0 = timer 2 entry, 1 = time base change entry, 2 = reschedule entry
 
 	const static int EPTTBINDX[10] = { 0, 5, 13, 18, 38, 55, 71, 93, 107, 110 };
-	const static int EPTABLE[131] = { 1, 2, 3, 4, 0, //TB0
-									 5, 6, 7, 8, 9, 10, 11, 0, //TB1
-									 12, 13, 15, 16, 0, //TB2
-									 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, //TB3
-									 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 0, //TB4
-									 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 0, //TB5,
-									 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 0, //TB6
-									 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 0, //TB7
-									 101, 102, 0, //TB8
-									 103, 104, 105, 106, 107, 108, 109, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //TB4a
 
 	if (entry == 1)
 	{
@@ -7656,13 +7775,16 @@ EP00:
 	fprintf(lvlog, "Events Processor: TB%d+%.3lf IDX %d Task %d\r\n", LVDC_Timebase, LVDC_TB_ETime, EPTINDX, EPTABLE[EPTINDX]);
 	switch (EPTABLE[EPTINDX])
 	{
-	case 1: //Schedule Water Methanol
+	case -1: //Do Nothing
+		break;
+	case 1: //Schedule Water Methanol (TB0+0.0)
 		break;
 	case 2: //Start looking for liftoff (TB0+16.0)
 		DPM[DIN24_Liftoff] = false;
 		MLM = 2;
 		break;
 	case 3: //Nominal liftoff (flight simulation) (TB0+17.0)
+		StartTimeBase1(0);
 		break;
 	case 4: //Start looking for backup liftoff acceleration (TB0+17.5)
 		NISTAT[16] = true;
@@ -7688,70 +7810,68 @@ EP00:
 	case 11: //Start Time Base 2 (TB1+X.X, mission dependant)
 		StartTimeBase2();
 		break;
-	case 12: //Maybe inhibit on S-IC IECO interrupt? (TB2+0.0)
+	case 12: //Disable thrust constraint (TB2+0.0)
 		break;
 	case 13: //Enable INT5 and DIN 18 (TB2+0.0)
 		DVIH[INT5_SICOutboardEnginesCutoffA] = false;
 		DPM[DIN18_SICOutboardEngineCutoffB] = false;
 		break;
-	case 14: // (TB2+0.0)
-		break;
-	case 15: // (TB2+18.4)
+	case 14: // (TB2+18.4)
 		//TBD: Start looking for INT5 and DIN18 here instead of above? Only in actual flight
 		break;
-	case 16: // (TB2+27.5)
-		//TBD: Likely flight simulation start of TB3
+	case 15: //Flight simulation start of TB3 (TB2+27.5)
+		StartTimeBase3();
 		break;
-	case 17: //Time Base 3 Setup (TB3+0)
+	case 16: //Time Base 3 Setup (TB3+0)
 		DPM[DIN11_SICInboardEngineOutB] = true;
 		DPM[DIN14_SICOutboardEngineOut] = true;
 		break;
-	case 18: //Set accelerometer reasonability test constants (TB3+0)
+	case 17: //Set accelerometer reasonability test constants (TB3+0)
 		break;
-	case 19: //Change gimbal reasonability test constants (TB3+0)
+	case 18: //Change gimbal reasonability test constants (TB3+0)
 		break;
-	case 20: //Something at TB3+0, probably for only flight sim or real flight
+	case 19: //Something at TB3+0, probably for only flight sim or real flight
 		break;
-	case 21: //Dequeue time tilt (TB3+0)
+	case 20: //Dequeue time tilt (TB3+0)
 		NISTAT[8] = false;
 		ModeCode25[MC25_StopPitchManeuver] = true;
 		break;
-	case 22: //F/M uncertainty for thrust misalignment (TB3+0)
+	case 21: //F/M uncertainty for thrust misalignment (TB3+0)
 		break;
-	case 23: //Enable DIN 22 and INT 2 (TB3+1.4)
+	case 22: //Enable DIN 22 and INT 2 (TB3+1.4)
 		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
 		DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
 		break;
-	case 24: //Set acceleration backup profile (TB3+4.4)
+	case 23: //Set acceleration backup profile (TB3+4.4)
 		S2_IGNITION = true;
 		t_21 = TMM;
 		break;
-	case 25: //Set accelerometer reasonability test constants (TB3+4.4)
+	case 24: //Set accelerometer reasonability test constants (TB3+4.4)
 		break;
-	case 26: //Enable DIN 19 (TB3+6.7)
+	case 25: //Enable DIN 19 (TB3+6.7)
 		DPM[DIN19_SIIEnginesOut] = false;
 		break;
-	case 27: //Something at TB3+6.7, probably for only flight sim or real flight
+	case 26: //Something at TB3+6.7, probably for only flight sim or real flight
 		DPM[DIN13_SIIInboardEngineOut] = false;
 		DPM[DIN21_SIIOutboardEngineOut] = false;
 		break;
-	case 28: //Enqueue F/M Calc, Smoothing (TB3+6.7)
+	case 27: //Enqueue F/M Calc, Smoothing (TB3+6.7)
 		NISTAT[3] = true;
 		break;
-	case 29: //Enqueue IGM (TB3+40.6)
+	case 28: //Enqueue IGM (TB3+40.6)
 		NISTAT[10] = true;
 		ModeCode25[MC25_SII_IGMBeforeEMRC] = true;
 		break;
-	case 30: //Set Minor Loop Parameters (TB3+40.6)
+	case 29: //Set Minor Loop Parameters (TB3+40.6)
 		DT_N = DT_N3;
 		MS25DT = 25.0*DT_N;
 		MS04DT = 0.04 / DT_N;
 		break;
-	case 31: //Set SMC Flag (TB3+58.6)
+	case 30: //Set SMC Flag (TB3+58.6)
 		break;
-	case 32: //Enqueue SMC (TB3+60.6)
+	case 31: //Enqueue SMC (TB3+60.6)
 		break;
-	case 33: //S-II IECO (TB3+299.0), actual flight only
+	case 32: //S-II IECO (TB3+299.0), actual flight only
 		if (SIICenterEngineCutoff)
 		{
 			ModeCode25[MC25_SIIInboardEngineOut] = true;
@@ -7759,10 +7879,10 @@ EP00:
 			T_EO2 = 1;
 		}
 		break;
-	case 34: //TB3+355.0 Enable INT6
+	case 33: //TB3+355.0 Enable INT6
 		DVIH[INT6_SIIEnginesCutoff] = false;
 		break;
-	case 35: //TB3+388.5 (flight sim S-II cutoff?)
+	case 34: //TB3+388.5 (flight sim S-II cutoff?)
 		break;
 	case 36: //TB4+0
 		DPM[DIN13_SIIInboardEngineOut] = true;
@@ -7783,9 +7903,10 @@ EP00:
 		break;
 	case 41: //TB4+15
 		break;
-	case 52: //Time Base 5 Start
+	case 51: //Time Base 5 Start
 		//Start chi freeze
 		AttitudeManeuverState = 0;
+		OGStatusWord[0] = true;
 		//Inhibit detection of S-IVB engine out
 		DVIH[INT4_SIVBEngineOutB] = true;
 		DPM[DIN5_SIVBEngineOutA] = true;
@@ -7810,17 +7931,18 @@ EP00:
 		MSLIM1 = 0.024*RAD;
 		MSLIM2 = 0.016*RAD;
 		break;
-	case 53: //TB5+10
+	case 52: //TB5+10
 		lvda.SetStage(STAGE_ORBIT_SIVB);
 		break;
-	case 54: //Maneuver to local horizontal (TB5+20)
+	case 53: //Maneuver to local horizontal (TB5+20)
 		fprintf(lvlog, "Initiate orbrate\r\n");
 		AttitudeManeuverState = -1;
 		alpha_1 = 0.0;
 		alpha_2 = 0.0;
 		CommandedAttitude.x = 0.0;
+		OGStatusWord[1] = true;
 		break;
-	case 55: //Transition to coasting flight (TB5+100)
+	case 54: //Transition to coasting flight (TB5+100)
 		fprintf(lvlog, "Orbit Initialization\r\n");
 		PhaseActivator(false);
 		DT_N = DT_N6;
@@ -7834,22 +7956,7 @@ EP00:
 		}
 		DPM[DIN20_SIVBIgnitionSequenceStart] = false;
 		break;
-	case 56: //Maneuver to TD&E attitude in Earth orbit
-		if (INH1 == false)
-		{
-			AttitudeManeuverState = -1;
-			alpha_1 = XLunarAttitude.y;
-			alpha_2 = XLunarAttitude.z;
-			CommandedAttitude.x = XLunarAttitude.x;
-		}
-		break;
-	case 57: //Attitude Hold for TD&E
-		if (INH2 == false)
-		{
-			AttitudeManeuverState = 0;
-		}
-		break;
-	case 67: //Time Base 6 start
+	case 66: //Time Base 6 start (TB6+0.0)
 		ModeCode27[MC27_SCInControl] = false;
 		DPM[DIN20_SIVBIgnitionSequenceStart] = true;
 		ModeCode26[MC26_SCInitOfSIVBCutoff] = false;
@@ -7871,29 +7978,29 @@ EP00:
 			fprintf(lvlog, "Maintain orbrate\r\n");
 		}
 		break;
-	case 68: //Check on TLI Inhibit(TB6+41.0)
+	case 67: //Check on TLI Inhibit(TB6+41.0)
 		break;
-	case 69: //Enable DIN3 (TB6+48.0)
+	case 68: //Enable DIN3 (TB6+48.0)
 		DPM[DIN3_O2H2BurnerMalfunction] = false;
 		break;
-	case 70: //Switch point between TB6a and TB6b (TB6+341.3)
+	case 69: //Switch point between TB6a and TB6b (TB6+341.3)
 		break;
-	case 71: //Disable DIN3 (TB6+496.7)
+	case 70: //Disable DIN3 (TB6+496.7)
 		DPM[DIN3_O2H2BurnerMalfunction] = true;
 		break;
-	case 72: //Start checking on TLI Inhibit all the time(TB6+497.3)
+	case 71: //Start checking on TLI Inhibit all the time(TB6+497.3)
 		break;
-	case 73: //Stop checking on TLI inhibit(TB6+560.0)
+	case 72: //Stop checking on TLI inhibit(TB6+560.0)
 		DPM[DIN6_TLI_Inhibit] = true;
 		DPM[DIN4_SpacecraftSeparation] = true;
 		break;
-	case 74: //Restart Calculations (TB6+578.6)
+	case 73: //Restart Calculations (TB6+578.6)
 		if (!TU || TU10)
 		{
 			NISTAT[6] = true;
 		}
 		break;
-	case 75: //TB6+580.3
+	case 74: //TB6+580.3
 		NISTAT[3] = true;
 		S4B_REIGN = true;
 		MSLIM1 = 0.04*RAD;
@@ -7902,24 +8009,23 @@ EP00:
 		MS25DT = 10.0*DT_N;
 		MS04DT = 0.1 / DT_N;
 		break;
-	case 76: //TB6+583
+	case 75: //TB6+583
 		//Start detecting S-IVB engine out
 		DVIH[INT4_SIVBEngineOutB] = false;
 		DPM[DIN5_SIVBEngineOutA] = false;
 		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
 		DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
 		break;
-	case 77: //TB6+584
+	case 76: //TB6+584
 		//Enqueue IGM
 		NISTAT[10] = true;
 		NISTAT[12] = false;
 		break;
-	case 78: //TB6+590
+	case 77: //TB6+590
 		DPM[DIN23_SCInitiationOfSIVBEngineCutoff] = false;
 		DVIH[INT7_GuidanceReferenceRelease] = false;
-
 		break;
-	case 88: //Start Time Base 7
+	case 87: //Start Time Base 7
 		//Start chi freeze
 		AttitudeManeuverState = 0;
 		//Inhibit detection of S-IVB engine out
@@ -7934,13 +8040,13 @@ EP00:
 		//Start looking for S/C separation (for Apollo 8)
 		DPM[DIN4_SpacecraftSeparation] = false;
 		break;
-	case 89: //Time in Timebase 7 to begin maneuver to local horizontal attitude
+	case 88: //Time in Timebase 7 to begin maneuver to local horizontal attitude (TB7+20)
 		AttitudeManeuverState = -1;
 		alpha_1 = 0.0;
 		alpha_2 = 0.0;
 		CommandedAttitude.x = 0.0;
 		break;
-	case 90: //Time in Timebase 7 to enter orbit initialize and resume orbit navigation
+	case 89: //Time in Timebase 7 to enter orbit initialize and resume orbit navigation (TB7+20)
 		fprintf(lvlog, "Orbit Initialization\r\n");
 		PhaseActivator(false);
 		DT_N = DT_N6;
@@ -7957,58 +8063,52 @@ EP00:
 		ddotS = ddotG_act;
 		fprintf(lvlog, "EarthRel Acceleration: %f %f %f \r\n", ddotS.x, ddotS.y, ddotS.z);
 		break;
-	case 91: //Set attitude rate limits for maneuver to sep attitude (TB7+900.0)
+	case 90: //Maneuver to separation attitude, set attitude rate limits (TB7+900.0)
+		AttitudeManeuverState = -2;
+		alpha_1 = XLunarAttitude.y;
+		alpha_2 = XLunarAttitude.z;
+		CommandedAttitude.x = XLunarAttitude.x;
 		MSLIM1 = 0.1*RAD;
 		MSLIM2 = 0.1*RAD;
+		//Set up next task, reset of attitude rates, in 300 seconds. Might be useful for updated sep maneuver time
+		EPTTIM[EPTINDX + 1] = DVTRR + 300.0;
+		fprintf(lvlog, "T&D attitude\r\n");
 		break;
-	case 92: //Maneuver to separation attitude (TB7+900.0)
-		if (INH4 == false)
-		{
-			AttitudeManeuverState = -2;
-			alpha_1 = XLunarAttitude.y;
-			alpha_2 = XLunarAttitude.z;
-			CommandedAttitude.x = XLunarAttitude.x;
-			fprintf(lvlog, "T&D attitude\r\n");
-		}
-		break;
-	case 93: //Reset attitude rate limits (TB7+1200.0)
+	case 91: //Reset attitude rate limits (TB7+1200.0)
 		MSLIM1 = 0.06*RAD;
 		MSLIM2 = 0.04*RAD;
 		break;
-	case 94: //Maneuver to slingshot attitude (TB7)
-		if (INH5 == false)
-		{
-			AttitudeManeuverState = -1;
-			alpha_1 = XLunarSlingshotAttitude.y;
-			alpha_2 = XLunarSlingshotAttitude.z;
-			CommandedAttitude.x = XLunarSlingshotAttitude.x;
-			fprintf(lvlog, "Slingshot attitude\r\n");
-		}
-		break;
-	case 101: //Maneuver to slingshot attitude (TB8)
+	case 92: //Maneuver to slingshot attitude (TB7)
 		AttitudeManeuverState = -1;
 		alpha_1 = XLunarSlingshotAttitude.y;
 		alpha_2 = XLunarSlingshotAttitude.z;
 		CommandedAttitude.x = XLunarSlingshotAttitude.x;
 		fprintf(lvlog, "Slingshot attitude\r\n");
 		break;
-	case 102: //Maneuver to comm attitude (TB8)
+	case 100: //Maneuver to slingshot attitude (TB8)
+		AttitudeManeuverState = -1;
+		alpha_1 = XLunarSlingshotAttitude.y;
+		alpha_2 = XLunarSlingshotAttitude.z;
+		CommandedAttitude.x = XLunarSlingshotAttitude.x;
+		fprintf(lvlog, "Slingshot attitude\r\n");
+		break;
+	case 101: //Maneuver to comm attitude (TB8)
 		AttitudeManeuverState = -1;
 		alpha_1 = XLunarCommAttitude.y;
 		alpha_2 = XLunarCommAttitude.z;
 		CommandedAttitude.x = XLunarCommAttitude.x;
 		fprintf(lvlog, "Communications attitude\r\n");
 		break;
-	case 103: //TB4a+0
+	case 102: //TB4a+0
 		DPM[DIN13_SIIInboardEngineOut] = true;
 		DPM[DIN21_SIIOutboardEngineOut] = true;
 		break;
-	case 104: //TB4a+11.5
+	case 103: //TB4a+11.5
 		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
 		//Enqueue F/M calculations
 		NISTAT[3] = true;
 		break;
-	case 105: //TB4a+13.3
+	case 104: //TB4a+13.3
 		S4B_IGN = true;
 		//Enqueue IGM
 		NISTAT[10] = true;
@@ -8017,7 +8117,7 @@ EP00:
 		MS25DT = 25.0*DT_N;
 		MS04DT = 0.04 / DT_N;
 		break;
-	case 106: //Start checking for TB5 (TB4a+15)
+	case 105: //Start checking for TB5 (TB4a+15)
 		DVIH[INT4_SIVBEngineOutB] = false;
 		DPM[DIN5_SIVBEngineOutA] = false;
 		NISTAT[17] = true;
@@ -8567,12 +8667,6 @@ void LVDCSV::StartTimebase7()
 	MSLIM2 = 0.016*RAD;
 	ModeCode26[MC26_TB7_Started] = true;
 
-	//Chi freeze
-	AttitudeManeuverState = 0;
-
-	//Reset telemetry acquisition/loss times
-	TBA = TBL = 0.0;
-
 	lvda.TLIEnded();
 }
 
@@ -8656,7 +8750,7 @@ void LVDCSV::AcquisitionGainLoss()
 			//AOS
 			DVASW = DVASW | MSKSSACQU;
 			SwitchSelectorProcessor(0);
-			TBA = DVTRR;
+			TBA = TMM;
 			fprintf(lvlog, "[%d+%f] Acquisition of Signal\r\n", LVDC_Timebase, LVDC_TB_ETime);
 		}
 	}
@@ -8665,7 +8759,7 @@ void LVDCSV::AcquisitionGainLoss()
 		if (TBL <= TBA)
 		{
 			//LOS
-			TBL = DVTRR;
+			TBL = TMM;
 			fprintf(lvlog, "[%d+%f] Loss of Signal\r\n", LVDC_Timebase, LVDC_TB_ETime);
 		}
 	}
@@ -8721,6 +8815,61 @@ void LVDCSV::OrbitGuidance()
 	if (DVP == 1 || DVP == 3)
 	{
 		R_OG = PosS;
+	}
+
+	if (LVDC_Timebase == 5)
+	{
+		//Reschedule TD&E in Earth orbit
+		if (TimeCheck(TI5F3) && ModeCode27[MC27_InhibitManeuver3] && OGStatusWord[2] == false)
+		{
+			double dttemp = 85.0*3600.0;
+			TI5F3 += dttemp;
+			TI5F4 += dttemp;
+			TI5F5 += dttemp;
+		}
+
+		//Retro attitude
+		if (TimeCheck(TI5F5) && ModeCode27[MC27_InhibitManeuver5] == false && OGStatusWord[4] == false)
+		{
+			AttitudeManeuverState = -1;
+			alpha_1 = PI;
+			alpha_2 = 0.0;
+			CommandedAttitude.x = PI;
+			OGStatusWord[4] = true;
+		}
+		//Maneuver back to local horizontal
+		else if (TimeCheck(TI5F4) && ModeCode27[MC27_InhibitManeuver4] == false && OGStatusWord[3] == false)
+		{
+			AttitudeManeuverState = -1;
+			alpha_1 = 0.0;
+			alpha_2 = 0.0;
+			CommandedAttitude.x = 0.0;
+			OGStatusWord[3] = true;
+		}
+		//Maneuver to Earth orbit TD&E Attitude
+		else if (TimeCheck(TI5F3) && ModeCode27[MC27_InhibitManeuver3] == false && OGStatusWord[2] == false)
+		{
+			AttitudeManeuverState = -2;
+			CommandedAttitude.x = XLunarAttitude.x;
+			alpha_1 = XLunarAttitude.y;
+			alpha_2 = XLunarAttitude.z;
+			OGStatusWord[2] = true;
+		}
+	}
+	else if (LVDC_Timebase == 7)
+	{
+		//Maneuver to slingshot/comm attitude
+		if (LVDC_TB_ETime > T7M11 && ModeCode27[MC27_InhibitManeuver11] == false && OGStatusWord[10] == false && EPTINDX == 99)
+		{
+			EventsProcessor(2);
+			OGStatusWord[10] = true;
+		}
+		//Maneuver to separation attitude
+		else if (LVDC_TB_ETime > T7M10 && ModeCode27[MC27_InhibitManeuver10] == false && OGStatusWord[9] == false && EPTINDX == 96)
+		{
+			EventsProcessor(2);
+			OGStatusWord[9] = true;
+		}
 	}
 
 	if (AttitudeManeuverState != 2)
@@ -9170,12 +9319,25 @@ bool LVDCSV::RestartManeuverEnable()
 	return false;
 }
 
-bool LVDCSV::InhibitAttitudeManeuver()
+bool LVDCSV::TDEEnable()
+{
+	if (LVDC_Timebase == 5 && LVDC_TB_ETime > 100.0)
+	{
+		ModeCode27[MC27_TDE_Enable] = true;
+		ModeCode27[MC27_InhibitManeuver3] = false;
+		ModeCode27[MC27_InhibitManeuver4] = false;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDCSV::RemoveInhibitManeuver4()
 {
 	if (LVDC_Timebase == 5)
 	{
-		INH1 = true;
-		INH2 = true;
+		ModeCode27[MC27_InhibitManeuver4] = false;
 
 		return true;
 	}
@@ -9187,7 +9349,20 @@ bool LVDCSV::InhibitSeparationManeuver()
 {
 	if (LVDC_Timebase == 5 || LVDC_Timebase == 7)
 	{
-		INH4 = true;
+		ModeCode27[MC27_InhibitManeuver10] = true;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDCSV::UpdateSeparationManeuver(double dt)
+{
+	if (LVDC_Timebase == 5 || LVDC_Timebase == 7)
+	{
+		ModeCode27[MC27_InhibitManeuver10] = false;
+		T7M10 += dt * 60.0;
 
 		return true;
 	}
@@ -9320,4 +9495,25 @@ VECTOR3 LVDCSV::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 VECTOR3 LVDCSV::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec)
 {
 	return _V(0, 0, 0);
+}
+
+bool LVDCSV::TimeCheck(double t_event)
+{
+	//negative event time for time since GRR
+	if (t_event < 0)
+	{
+		if (TMM >= abs(t_event))
+		{
+			return true;
+		}
+	}
+	else
+	{
+		if (DVTRR >= t_event)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
