@@ -402,11 +402,11 @@ class Cooling: public e_object {
 public:
 	Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,double min_t,double max_t);
 	~Cooling();
-	therm_obj* list[6];	//the list of objects
-	double length[6];	//and their pipe length
-	bool bypassed[6];	// and are they bypassed 
+	therm_obj* list[16];	//the list of objects
+	double length[16];	//and their pipe length
+	bool bypassed[16];	// and are they bypassed 
 	int nr_list;
-	double coolant_temp;
+	double coolant_temp[16];
 	double isolation;
 	void AddObject(therm_obj* new_t,double lght);
 	virtual void refresh(double dt);

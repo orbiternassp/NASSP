@@ -906,14 +906,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; EPS-R1 %0.1fK, EPS-R2 %0.1fK, EPS-R3 %0.1fK, EPS-R4 %0.1fK",
 		FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,
-		FuelCellCooling[0]->coolant_temp, FuelCellCooling[1]->coolant_temp, FuelCellCooling[2]->coolant_temp,
+		FuelCellCooling[0]->coolant_temp[0], FuelCellCooling[1]->coolant_temp[0], FuelCellCooling[2]->coolant_temp[0],
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:TEMP"));
 
 	fprintf(PanelsdkLogFile, "%0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f\n",
 		simt,
 		FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,
-		FuelCellCooling[0]->coolant_temp, FuelCellCooling[1]->coolant_temp, FuelCellCooling[2]->coolant_temp,
+		FuelCellCooling[0]->coolant_temp[0], FuelCellCooling[1]->coolant_temp[0], FuelCellCooling[2]->coolant_temp[0],
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:TEMP"),
 		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:TEMP"));
 	fflush(PanelsdkLogFile);

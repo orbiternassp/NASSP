@@ -1196,7 +1196,7 @@ Cooling::Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,dou
 	handle_min=0;
 	handle_max=0;
 	nr_list=0;
-	coolant_temp=300.0; // reasonable ambient temperature
+	coolant_temp[0]=300.0; // reasonable ambient temperature
 	isolation=thermal_prop;
 	SRC=i_SRC;
 	loaded=0; //ie. not PLOADed
@@ -1205,7 +1205,7 @@ Cooling::Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,dou
 void Cooling::AddObject(therm_obj *new_t, double lght) 
 
 {
-	if (nr_list < 6) {
+	if (nr_list < 16) {
 		list[nr_list] = new_t;
 		length[nr_list] = lght;
 		bypassed[nr_list] = false;
@@ -1217,8 +1217,8 @@ void Cooling::refresh(double dt)
 
 {
 	double throttle, heat_ex;
-	therm_obj* activelist[6];	//the list of not bypassed objects
-	double activelength[6];		//and their pipe length
+	therm_obj* activelist[16];	//the list of not bypassed objects
+	double activelength[16];		//and their pipe length
 	int nr_activelist = 0;
 
 	if (handle_min)
@@ -1284,11 +1284,11 @@ void Cooling::refresh(double dt)
 	}
 
 	// average temp except the first
-	coolant_temp = 0.0;
+	coolant_temp[0] = 0.0;
 	for (i = 1; i < nr_activelist; i++) {
-		coolant_temp += activelist[i]->Temp;
+		coolant_temp[0] += activelist[i]->Temp;
 	}
-	coolant_temp = coolant_temp / (nr_activelist - 1.0);
+	coolant_temp[0] = coolant_temp[0] / (nr_activelist - 1.0);
 }
 
 void Cooling::Load(char *line, FILEHANDLE scn) {
