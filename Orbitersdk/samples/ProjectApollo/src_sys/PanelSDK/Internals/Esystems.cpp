@@ -509,6 +509,7 @@ void FCell::UpdateFlow(double dt)
 		//"clogg" is used to make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
 		Amperes -= (2.25*clogg);
 		Volts -= -(5.2*clogg);
+		power_load = Amperes * Volts; //recalculate power_load again after clogging
 
 		//---- throttle of the fuel cell [0..1]
 		thrust = power_load / max_power;
