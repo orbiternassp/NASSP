@@ -535,6 +535,8 @@ void FCell::Clogging(double dt)
 	//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
 	//here we're simulating the effect by making the O2 clogging effect the voltage drop 25x as much as the H2
 	clogg = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
+
+	clogg = clogg / 3; //reduce clogging by a factor of 3 so we can make it to our purge interval without undervolt alarms; REPLACE WITH BETTER MODEL
 }
 
 void FCell::Load(char *line)
