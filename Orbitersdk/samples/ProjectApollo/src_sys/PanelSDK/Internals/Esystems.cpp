@@ -327,7 +327,7 @@ void FCell::Reaction(double dt, double thrust)
 	double H2O_flow = O2_flow + H2_flow;
 
 	//efficiency and heat generation
-	double efficiency = Volts / (hydrogenHHV*numCells);
+	double efficiency = Volts / (hydrogenLHV*numCells);
 	double heat = ((power_load / efficiency) - power_load)*dt;
 
 	//heat *= 1.5; ///TODO: FIX WHAT EVER IS COOLING TOO MUCH AND REMOVE THIS LINE
