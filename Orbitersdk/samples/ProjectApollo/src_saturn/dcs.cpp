@@ -66,9 +66,13 @@ bool DCS::Uplink(int type, void *upl)
 		{
 			return iu->GetLVDA()->RestartManeuverEnable();
 		}
-		else if (type == DCSUPLINK_INHIBIT_MANEUVER)
+		else if (type == DCSUPLINK_TDE_ENABLE)
 		{
-			return iu->GetLVDA()->InhibitAttitudeManeuver();
+			return iu->GetLVDA()->TDEEnable();
+		}
+		else if (type == DCSUPLINK_REMOVE_INHIBIT_MANEUVER4)
+		{
+			return iu->GetLVDA()->RemoveInhibitManeuver4();
 		}
 		else if (type == DCSUPLINK_TIMEBASE_8_ENABLE)
 		{

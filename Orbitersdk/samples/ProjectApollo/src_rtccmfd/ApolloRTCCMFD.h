@@ -495,6 +495,7 @@ public:
 	void menuSetP30UplinkPage();
 	void menuSetRetrofireEXDVUplinkPage();
 	void menuREFSMMATUplinkCalc();
+	bool REFSMMATUplinkCalc(char *str);
 	void menuSetREFSMMATUplinkPage();
 	void menuSetTITransferPage();
 	void menuCycleTITable();

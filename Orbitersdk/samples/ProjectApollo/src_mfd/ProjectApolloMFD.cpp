@@ -975,10 +975,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign(hDC, TA_CENTER);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "LM Abort (Apollo 5)", 19);
 		}
-		else if (g_Data.iuUplinkType == DCSUPLINK_INHIBIT_MANEUVER)
+		else if (g_Data.iuUplinkType == DCSUPLINK_TDE_ENABLE)
 		{
 			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Inhibit Maneuver", 16);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "TD&E Enable", 11);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_RESTART_MANEUVER_ENABLE)
 		{
@@ -1019,6 +1019,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), buffer, strlen(buffer));
 			sprintf(buffer, "%.01f°", g_Data.iuUplinkYaw*DEG);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.6), buffer, strlen(buffer));
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_REMOVE_INHIBIT_MANEUVER4)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Remove Inhibit Mnv. 4", 21);
 		}
 
 		SetTextAlign (hDC, TA_CENTER);
@@ -2337,7 +2342,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 8)
+	if (g_Data.iuUplinkType < 9)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -2542,11 +2547,12 @@ void ProjectApolloMFD::menuIUUplink()
 	}
 	break;
 	case DCSUPLINK_LM_ABORT:
-	case DCSUPLINK_INHIBIT_MANEUVER:
+	case DCSUPLINK_TDE_ENABLE:
 	case DCSUPLINK_RESTART_MANEUVER_ENABLE:
 	case DCSUPLINK_TIMEBASE_8_ENABLE:
 	case DCSUPLINK_EVASIVE_MANEUVER_ENABLE:
 	case DCSUPLINK_EXECUTE_COMM_MANEUVER:
+	case DCSUPLINK_REMOVE_INHIBIT_MANEUVER4:
 	{
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}

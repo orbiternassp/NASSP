@@ -778,6 +778,11 @@ EDSSV::EDSSV(IU *iu) : EDS(iu)
 	SIIEDSCutoff = false;
 }
 
+bool EDSSV::GetSIIInboardEngineOut()
+{
+	return (SIIEngineThrustMonitorA[4] || SIIEngineThrustMonitorB[4]);
+}
+
 double EDSSV::GetLVTankPressure(int n)
 {
 	if (n == 1)

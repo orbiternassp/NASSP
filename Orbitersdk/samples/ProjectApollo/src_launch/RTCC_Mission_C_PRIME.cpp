@@ -94,7 +94,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		tliparam.theta_EO = lvdc->theta_EO;
 		tliparam.t_D = lvdc->t_D;
 		tliparam.T_L = lvdc->T_L;
-		tliparam.T_RG = lvdc->T_RG;
+		tliparam.T_RG = 578.6;
 		tliparam.T_ST = lvdc->T_ST;
 		tliparam.Tt_3R = lvdc->Tt_3R;
 		tliparam.t_clock = lvdc->t_clock;
