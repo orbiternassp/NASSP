@@ -70,19 +70,19 @@ extern "C" {
 
 #define CSM_AXIS_INPUT_CNT  7
 VesimInputDefinition vesim_csm_inputs[CSM_AXIS_INPUT_CNT] = {
-	{ CSM_AXIS_INPUT_RHCR ,          "RHC Roll",        VESIM_INPUTTYPE_AXIS,   VESIM_DEFAULT_AXIS_VALUE, false},
-	{ CSM_AXIS_INPUT_RHCP ,          "RHC Pitch",       VESIM_INPUTTYPE_AXIS,   VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_RHCY ,          "RHC Yaw",         VESIM_INPUTTYPE_AXIS,   VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCX ,          "THC X",           VESIM_INPUTTYPE_AXIS,   VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCY ,          "THC Y",           VESIM_INPUTTYPE_AXIS,   VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCZ ,          "THC Z",           VESIM_INPUTTYPE_AXIS,   VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_BUTTON_INPUT_TOGGLE_RTHC , "RHC/THC toggle",  VESIM_INPUTTYPE_BUTTON, 0, true }
+	{ CSM_AXIS_INPUT_RHCR,   "RHC Roll",                      VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHCP,   "RHC Pitch",                     VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHCY,   "RHC Yaw",                       VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCX,   "THC X",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCY,   "THC Y",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCZ,   "THC Z",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_BUTTON_ROT_LIN,    "Rotation/Translation toggle",   VESIM_INPUTTYPE_BUTTON,  0, true }
 };
 
 void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata) {
 	Saturn *pSaturn = (Saturn *)pdata;
 	switch (inputID) {
-	case CSM_BUTTON_INPUT_TOGGLE_RTHC:
+	case CSM_BUTTON_ROT_LIN:
 		if (eventType == VESIM_EVTTYPE_BUTTON_ON) {
 			if (pSaturn->GetAttitudeMode() == RCS_ROT)
 				pSaturn->SetAttitudeMode(RCS_LIN);

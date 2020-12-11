@@ -3,12 +3,12 @@ Vessel Specific Input Manager (experimental)
 The purpose of this module is to map user inputs to the simulated devices, in
 a similar, highly flexible way as done e.g in Digital Combat Simulator (DCS).
 At the moment, only joysticks and game controllers are supported, configurable
-keyboard mapping is not yet implemented planned.
+keyboard mapping is not yet implemented but planned.
 
 Inputs - (Sub)device connections
 
-There are multiple inputs in a simulated spacecraft which could e reasonable to
-map to game controllers. Rotational and Translational Hand Controllers are 
+There are multiple inputs in a simulated spacecraft which could be reasonable
+to map to game controllers. Rotational and Translational Hand Controllers are 
 natural examples, but switches like Abort button and Engine Stop button are
 also good to be on hand as well. On the other side, there are the game
 controllers and their subdevices like joystick axes, buttons, throttles and POV
@@ -30,24 +30,29 @@ extremal position, a "button pressed" event is triggered.
 
 Configuration of a joystick
 
-At the moment configuration could be done by editing config files only. A more
-user friendly solution through Project Apollo Configurator is planned. Vesim
-looks for the config files in the folder Config\ProjectApollo\Vesim in the
-following fallback sequence (in order of decreasing precendce):
+At the moment, the configuration could be done by editing config files only. A
+more user friendly solution through Project Apollo Configurator is planned.
+Vesim looks for the config files in the folder Config\ProjectApollo\Vesim in
+the following fallback sequence (in order of decreasing precendce):
 1. <vessel name> - <joystick name>.launchpad.cfg like
    "CSM - VKBsim Gladiator .launchpad.cfg". Joystick name should be exactly the
-   same as the device itself returns it, and in this specific case it contains
-   one at the end (maybe due to some bug) that's why we included the trailing
-   space in the file name also.
+   same as the device itself returns it. To find out the name of your own
+   joystick you may use either the in-bulit game controller setup app in
+   Windows or online controller tester will do the job as well. In this
+   specific example the joystick's name contains a space at the end (maybe due
+   to some bug), please be aware it should appear in the config file name as
+   well.
 2. <vessel name> - GeneralJoystick.launchpad.cfg like
-   "CSM - GenericJoystick.launchpad.cfg". If you don't to want to find out your
+   "CSM - GenericJoystick.launchpad.cfg". If you are unable to find out your
    own joystick's name, the easiest solution is to duplicate the file with the
-   default mappings for the vessel and change the extension from "cfg" to
-   "launchpad.cfg".
+   default mappings for the vessel and change the extension from ".cfg" to
+   ".launchpad.cfg".
 3. GeneralJoystick.launchpad.cfg
 
-From this point, the files are containing default values and they are part
-of the source code, so normal users shouldn't change them
+From this point, the files are the ones with default values and they are part
+of the source code, so normal users shouldn't change them. If you want to
+override the default settings then copy the file into the same folder but with
+".launchpad.cfg". and edit that one.
 
 4. <vessel name> - <joystick name>.cfg like 
    "CSM - VKBsim Gladiator .launchpad.cfg".
@@ -59,9 +64,9 @@ of the source code, so normal users shouldn't change them
 The config file format
 
 Till a user-friendly configurator is developed, the config files should be
-edited manually. They are tab-delimited file with a header row, which could be
-edited by a text editor but the most convenient way to use a spreadsheet app
-like Excel or LibreOffice. Please refer to the default config files in the
+edited manually. They are tab-delimited files, which could be edited by a text
+editor however the most convenient way to use a spreadsheet app like Excel or
+LibreOffice. Please refer to the default config files in the
 Config\ProjectApollo\Vesim folder. The file has the following columns:
 INPUT - this is the name of the virtual input. It is mostly vessel-dependent
     and the available values are defined in the source code by the developers.
@@ -86,7 +91,7 @@ REVERSE
 MODIFIER
     Not used yet. Modifier keys like Ctrl and Shift will go here.
 	
-The reason for there isn't any device id in this file is that normally the
+The reason behind not having any device id in this file is that normally the
 device name is encoded in the filename itself. 
 
    

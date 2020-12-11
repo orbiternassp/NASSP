@@ -157,6 +157,7 @@
     <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\vesim.cpp" />
     <ClCompile Include="..\..\src_lm\CWEA_FlipFlop.cpp" />
     <ClCompile Include="..\..\src_lm\lemconnector.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aca.cpp" />

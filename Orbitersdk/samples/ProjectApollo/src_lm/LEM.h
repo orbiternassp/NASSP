@@ -31,6 +31,7 @@
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+#include "vesim.h"
 #include "dsky.h"
 #include "imu.h"
 #include "cdu.h"
@@ -212,6 +213,32 @@ namespace mission
 {
 	class Mission;
 };
+
+// Vesim input IDs
+#define LM_AXIS_INPUT_ACAR           1
+#define LM_AXIS_INPUT_ACAP           2
+#define LM_AXIS_INPUT_ACAY           3
+#define LM_AXIS_INPUT_TTCAX          4
+#define LM_AXIS_INPUT_TTCAY          5
+#define LM_AXIS_INPUT_TTCAZ          6
+#define LM_BUTTON_ROT_LIN            7
+#define LM_AXIS_INPUT_THROTTLE       8
+#define LM_BUTTON_ENG_START          9
+#define LM_BUTTON_ENG_STOP          10
+#define LM_BUTTON_DES_RATE_PLUS     11
+#define LM_BUTTON_DES_RATE_MINUS    12
+#define LM_BUTTON_ABORT             13
+#define LM_BUTTON_ABORT_STAGE       14
+#define LM_BUTTON_ABORT_STAGE_GRD   15
+#define LM_BUTTON_DSKY_PRO          16
+#define LM_BUTTON_DSKY_ENTER        17
+#define LM_BUTTON_MDCTRL_PGNS       18
+#define LM_BUTTON_MDCTRL_PGNS_AUT   19
+#define LM_BUTTON_MDCTRL_PGNS_ATH   20
+#define LM_BUTTON_MDCTRL_PGNS_OFF   21
+
+// Callback for Vesim events
+void cbLMVesim(int inputID, int eventType, int newValue, void *pdata);
 
 ///
 /// \ingroup LEM
@@ -595,6 +622,7 @@ public:
 	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
 	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
 	HRESULT				 dx8_failure;     // DX failure reason
+	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  // Joystick # for the RHC
 	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       // ID of SLIDER axis to use for throttle control from joystick configured as ACA
@@ -611,6 +639,7 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
+	bool enableVESIM;                     ///< Vessel Specific Input Mgmt enabled
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag
 	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
 	double ttca_throttle_pos_dig;		  // TTCA THROTTLE-mode position mapped to 0-1
@@ -1988,6 +2017,8 @@ protected:
 	friend class ProjectApolloMFD;
 	friend class MCC;
 	friend class RTCC;
+
+	friend void cbLMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
 
 extern MESHHANDLE hLMDescent;

@@ -838,7 +838,7 @@ void LEM::JoystickTimestep(double simdt)
 {
 	// Joystick read
 	if (oapiGetFocusInterface() == this) {
-
+		if (enableVESIM) vesim.poolDevices();
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
 		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
@@ -910,7 +910,17 @@ void LEM::JoystickTimestep(double simdt)
 		// Read data
 		HRESULT hr;
 		// Handle RHC
-		if (rhc_id != -1 && rhc_id < js_enabled) {
+		if (enableVESIM) {
+			if (GetAttitudeMode() == RCS_ROT) {
+				rhc_pos[0] = vesim.getInputValue(LM_AXIS_INPUT_ACAR);
+				rhc_pos[1] = vesim.getInputValue(LM_AXIS_INPUT_ACAP);
+				rhc_pos[2] = 65536 - vesim.getInputValue(LM_AXIS_INPUT_ACAY);
+				
+			}
+			ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_THROTTLE);
+			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+		}
+		else if (rhc_id != -1 && rhc_id < js_enabled) {
 			// CHECK FOR POWER HERE
 			hr = dx8_joystick[rhc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
@@ -1175,7 +1185,21 @@ void LEM::JoystickTimestep(double simdt)
 		}
 
 		// And now the THC...
-		if (thc_id != -1 && thc_id < js_enabled) {
+		if (enableVESIM) {
+			if (LeftTTCATranslSwitch.IsUp()) {
+				if (GetAttitudeMode() == RCS_ROT) {
+					thc_x_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAY) - 32768;
+					thc_y_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAX) - 32768;
+					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAZ) - 32768;
+				}
+				else {
+					thc_x_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAR) - 32768;
+					thc_y_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAP) - 32768;
+					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAY) - 32768;
+				}
+			}
+		}
+		else if (thc_id != -1 && thc_id < js_enabled) {
 			hr = dx8_joystick[thc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
 							  // Attempt to acquire the device

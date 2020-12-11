@@ -310,6 +310,7 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 #ifdef _DEBUG
 	fflush(out_file);
 #endif
+	return true;
 }
 
 bool Vesim::addInput(int inputID, char *inputName, int inputType, int defaultValue, bool notifyOnChange) {

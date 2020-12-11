@@ -318,15 +318,16 @@ typedef struct {
 	double OxidizerLineTempF;
 } SPSStatus;
 
+// Vesim input IDs
+#define CSM_AXIS_INPUT_RHCR    1
+#define CSM_AXIS_INPUT_RHCP    2
+#define CSM_AXIS_INPUT_RHCY    3
+#define CSM_AXIS_INPUT_THCX    4
+#define CSM_AXIS_INPUT_THCY    5
+#define CSM_AXIS_INPUT_THCZ    6
+#define CSM_BUTTON_ROT_LIN     7
 
-#define CSM_AXIS_INPUT_RHCR          1
-#define CSM_AXIS_INPUT_RHCP          2
-#define CSM_AXIS_INPUT_RHCY          3
-#define CSM_AXIS_INPUT_THCX          4
-#define CSM_AXIS_INPUT_THCY          5
-#define CSM_AXIS_INPUT_THCZ          6
-#define CSM_BUTTON_INPUT_TOGGLE_RTHC 7
-
+// Callback for Vesim events
 void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 ///
 /// \brief Generic Saturn launch vehicle class.
