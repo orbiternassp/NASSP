@@ -37,7 +37,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define VESIM_SUBDEVTYPE_BUTTON 2
 #define VESIM_SUBDEVTYPE_KEY    3
 
-
 #define VESIM_DEVICE_AXIS_X       1
 #define VESIM_DEVICE_AXIS_Y       2
 #define VESIM_DEVICE_AXIS_Z       3
@@ -47,17 +46,16 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define VESIM_DEVICE_AXIS_SLDR0   7
 #define VESIM_DEVICE_AXIS_SLDR1   8
 
-#define VESIM_MODIFIER_SHIFT   1
-#define VESIM_MODIFIER_CONTROL 2
-#define VESIM_MODIFIER_ALT     4
-#define VESIM_MODIFIER_META    8
-
 #define VESIM_CFG_EXT ".cfg"
 #define VESIM_CFG_USER_EXT ".launchpad.cfg"
 #define VESIM_CFG_GENERIC "GenericJoystick"
 
 char *subdevnames[] = {
 	"X", "Y", "Z", "RX", "RY", "RZ", "Slider 0", "Slider 1"
+};
+
+char *povaxnames[] = {
+	"0H", "0V", "1H", "1V", "2H", "2V", "3H", "3V"
 };
 
 bool icomp(const char *s1, const char *s2) {
@@ -259,7 +257,7 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 						case 2:	
 							if (token.length() > 5 && icomp(token.substr(0, 4).c_str(), "Axis")) {
 								subdevtype = VESIM_SUBDEVTYPE_AXIS;
-								std::string ssid = token.substr(5);
+								std::string ssid = token.substr(4);
 								const char * psid = ssid.c_str();
 								for (int k = 0; k < 8; k++) {
 									if (icomp(psid, subdevnames[k])) {
@@ -278,6 +276,17 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 									(void)e;
 								}
 							}
+							else if (token.length() > 3 && icomp(token.substr(0, 3).c_str(), "POV")) {
+								subdevtype = VESIM_SUBDEVTYPE_AXIS;
+								std::string ssid = token.substr(3);
+								const char * psid = ssid.c_str();
+								for (int k = 0; k < 8; k++) {
+									if (icomp(psid, povaxnames[k])) {
+										subdevid = k + 16;
+										break;
+									}
+								}
+							}
 							break;
 						case 3:
 							if (icomp(ptok, "True")) isreverse=true;						
@@ -294,7 +303,7 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 			if (inpname.length() > 0 && subdevtype > 0 && subdevid >= 0) {
 				for (size_t k = 0; k < vinp.size(); k++) {
 
-					if (vinp[k].name == inpname) {
+					if (icomp(vinp[k].name.c_str(), inpname.c_str())) {
 #ifdef _DEBUG
 						fprintf(out_file, "Input %d (%s) connected to device %d (%s) subdev type:%d subdevid:%d reverse:%d\n", k, inpname.c_str(), devid, vdev[devid].name.c_str(), subdevtype, subdevid, isreverse);
 #endif
@@ -380,7 +389,23 @@ void  Vesim::poolDevices() {
 					newValue = pdev->dx8_jstate.rglSlider[1];
 					isSet = true;
 					break;
-				default:
+				default: //It is a POV axis
+					int povidx = pconn->subdeviceID-16;
+					int povval = pdev->dx8_jstate.rgdwPOV[povidx>>1];
+					if ((povval & 0xFFFF) != 0xFFFF) {																
+						double povcos = cos(PI*povval / 18000.0);
+						double povsin = sin(PI*povval / 18000.0);
+						double maxnorm = max(abs(povcos), abs(povsin));
+						povcos = povcos / maxnorm;
+						povsin = povsin / maxnorm;
+						if (povidx & 1) {
+							newValue = min((int)round(32768 - 327678.0*povcos), 65535);
+						}
+						else {
+							newValue = min((int)round(32768 + 327678.0*povsin), 65535);
+						}
+						isSet = true;						
+					}
 					break;
 				}
 

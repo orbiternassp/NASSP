@@ -18,15 +18,16 @@ developers to define two types of virtual inputs: axis-type and (push)button
 type. To keep things simple no additional types are planned, if e.g. a
 three-pos switch is to be made mappable, it should be done through the
 definition of three binary button input. The same types (axis and buttons) are
-used for subdevices, but POV-types and also keyboard keys will be added later.
-The inputs and subdevices could be connected in any combination. Beside button-
-button and axis-axis mappings, two joystick buttons could be mapped onto a
-single axis input (one button for the maximal axis value, one for the minimal).
-When none of the button is pressed, a default value (usually halfway between
-the two extremes) will be returned. This is very usefull if a user wants to map
-THC axes to controller buttons. Additionally a joystick axis could be mapped to
-a button-type input, and in this case when the controller axis moved to an
-extremal position, a "button pressed" event is triggered. 
+used for subdevices, and also keyboard keys will be added later. POV hats are
+also handled as axis-type subdevices. The inputs and subdevices could be
+connected in any combination. Beside button-button and axis-axis mappings, two
+joystick buttons could be mapped onto a single axis input (one button for the
+maximal axis value, one for the minimal). When none of the button is pressed,
+a default value (usually halfway between the two extremes) will be returned.
+This is very usefull if a user wants to map THC axes to controller buttons.
+Additionally a joystick axis could be mapped to a button-type input, and in
+this case when the controller axis moved to an extremal position, a "button
+pressed" event is triggered. 
 
 Configuration of a joystick
 
@@ -75,13 +76,21 @@ INPUT - this is the name of the virtual input. It is mostly vessel-dependent
 	inputs in the config files even if they aren't mapped.
 INPUTTYPE - It is the type of the virtual input. Just for informative purposes,
     and not read by Vesim and doesn't have any effect.
-SUBDEVID - the ID of the subdevice connected to the input. Depending on the
-    subdevice type it could be "Axis <controller axis name>" or
-	"Button <number>". Axis name should be taken from the following list:
-	X, Y, Z, RX, RY, RZ, Slider 0, Slider 1
-	Button numbers should be integers between 0 and 127. To find out the ID of
-	a button or an axis, the easiest way is to use an online joystick tester.
-	If SUBDEVID is left empty then the entire row is skipped by Vesim.
+SUBDEVID - the ID of the subdevice connected to the input. It begins with the
+	subdevice type, which could be "Axis", "Button" or "POV" and then a name 
+	follows which is dependent on the type. For axis type the name should be
+	one of the following: X, Y, Z, RX, RY, RZ, Slider 0, Slider 1. For button
+	type subdevices the name is simply an integer between 0 and 127. For POV
+	tpyes the name has a format of "<POV hat index>{H,V}" where the index is a
+	number between 0 and 3 (it is usually 0 as on most of the controllers there
+	is only one POV hat). "H" and "V" selects that the horizontal or vertical
+	displacement of the POV hat should be returned as axis value. To remain
+	consistent with the usual Y axis of a joystick, the vertical axis values
+	for a POV hat will be positive for downward(or inward) displacement. A few
+	examples of proper subdevice IDs: "Axis X", "Button 10", "POV 0H". To find
+	out the ID of a button or an axis, the easiest way is to use an	online
+	joystick tester or use Windows' inbuild game controller	configurator. If
+	SUBDEVID is left empty then the entire row is skipped by Vesim.
 REVERSE
     If it is "true", the controller is mapped with negative sign to the input.
 	For controller button-axis input connection it is necessary to create a
