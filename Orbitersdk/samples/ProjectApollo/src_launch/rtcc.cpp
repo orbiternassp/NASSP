@@ -4231,67 +4231,6 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG, double &t_PDI,
 	P30TIG = t_DOI;
 }
 
-void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
-{
-	SV sv_pre, sv_post;
-
-	PlaneChangeTargeting(opt, dV_LVLH, P30TIG, sv_pre, sv_post);
-}
-
-void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post)
-{
-	double cosA, sinA, A, dt, MJD_A, lng, lat, rad, GET, mu, LMmass, mass;
-	MATRIX3 Rot;
-	VECTOR3 RLS, n1, u, n2, V_PC2, DV, loc;
-	SV sv0, sv1, sv_PC;
-
-	sv0 = opt->RV_MCC;
-
-	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
-	MJD_A = opt->GETbase + opt->t_A / 24.0 / 3600.0;
-	Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD_A);
-	mu = GGRAV*oapiGetMass(sv0.gravref);
-
-	if (opt->csmlmdocked)
-	{
-		LMmass = GetDockedVesselMass(opt->vessel);
-	}
-	else
-	{
-		LMmass = 0.0;
-	}
-
-	mass = LMmass + sv0.mass;
-
-	if (opt->landed)
-	{
-		opt->target->GetEquPos(lng, lat, rad);
-		loc = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*rad;
-	}
-	else
-	{
-		loc = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)))*oapiGetSize(sv0.gravref);
-	}
-
-	RLS = mul(Rot, loc);
-	RLS = _V(RLS.x, RLS.z, RLS.y);
-	sv1 = coast(sv0, opt->EarliestGET - GET);
-
-	n1 = unit(crossp(sv1.R, sv1.V));
-	u = unit(crossp(-RLS, n1));
-	cosA = dotp(u, unit(sv1.R));
-	sinA = sqrt(1.0 - cosA*cosA);
-	A = atan2(sinA, cosA);
-	dt = OrbMech::time_theta(sv1.R, sv1.V, A, mu);
-	sv_PC = coast(sv1, dt);
-	n2 = unit(crossp(sv_PC.R, -RLS));
-	V_PC2 = unit(crossp(n2, sv_PC.R))*length(sv_PC.V);
-
-	DV = V_PC2 - sv_PC.V;
-
-	PoweredFlightProcessor(sv_PC, opt->GETbase, opt->EarliestGET + dt, RTCC_ENGINETYPE_CSMSPS, LMmass, DV, false, P30TIG, dV_LVLH, sv_pre, sv_post);
-}
-
 int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad, LunarDescentPlanningTable &table)
 {
 	LDPPOptions opt;
