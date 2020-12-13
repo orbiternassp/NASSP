@@ -18,16 +18,16 @@ developers to define two types of virtual inputs: axis-type and (push)button
 type. To keep things simple no additional types are planned, if e.g. a
 three-pos switch is to be made mappable, it should be done through the
 definition of three binary button input. The same types (axis and buttons) are
-used for subdevices, and also keyboard keys will be added later. POV hats are
-also handled as axis-type subdevices. The inputs and subdevices could be
-connected in any combination. Beside button-button and axis-axis mappings, two
-joystick buttons could be mapped onto a single axis input (one button for the
-maximal axis value, one for the minimal). When none of the button is pressed,
-a default value (usually halfway between the two extremes) will be returned.
-This is very usefull if a user wants to map THC axes to controller buttons.
-Additionally a joystick axis could be mapped to a button-type input, and in
-this case when the controller axis moved to an extremal position, a "button
-pressed" event is triggered. 
+used for subdevices, and additionally keyboard keys and POV hats are also could
+be connected to inputs. A POV hat is handled as a compound of two axis-type
+subdevices. The inputs and subdevices could be connected in any combination.
+Beside button-button and axis-axis mappings, two joystick buttons could be
+mapped onto a single axis input (one button for the maximal axis value, one for
+the minimal). When none of the button is pressed, a default value (usually
+halfway between the two extremes) will be returned. This is very usefull if a
+user wants to map THC axes to controller buttons. Additionally a joystick axis
+could be mapped to a button-type input, and in this case when the controller
+axis moved to an extremal position, a "button pressed" event is triggered. 
 
 Configuration of a joystick
 
@@ -101,7 +101,15 @@ MODIFIER
     Not used yet. Modifier keys like Ctrl and Shift will go here.
 	
 The reason behind not having any device id in this file is that normally the
-device name is encoded in the filename itself. 
+device name is encoded in the filename itself.
+
+Configuration of the keyboard
+
+Inputs could be binded to keys as well. The method is very similar to joystick
+configuration. The device name is "Keyboard" so for example the user
+preferences for CSM key bindings should go into "CSM - Keyboard.launchpad.cfg".
+The keys should be given in SUBDEVID column simply by their name as e.g. "C" or
+"Enter". For full list of available key names, refer to VESIM_cfg_helper.ods.
 
    
 

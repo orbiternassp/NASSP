@@ -1,6 +1,6 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2004-2020
+Copyright 2020
 
 Vessel Specific Input Manager
 
@@ -80,7 +80,7 @@ public:
 		value(defaultValue)
 	{};
 
-	bool VesimInput::addConnection(int deviceID, int subdeviceType, int subdeviceID, int modifiers, bool reverse);
+	int VesimInput::addConnection(int deviceID, int subdeviceType, int subdeviceID, int modifiers, bool reverse);
 
 	friend class VesimDevice;
 	friend class Vesim;
@@ -101,7 +101,7 @@ private:
 	void poolDevice();
 
 public:
-	VesimDevice(Vesim* parent, const char* deviceName);
+	VesimDevice(Vesim* parent);
 	VesimDevice(Vesim* parent, const char* deviceName, LPDIRECTINPUTDEVICE8 dx8_joystick);
 	~VesimDevice();
 	friend class Vesim;
@@ -114,6 +114,7 @@ private:
 	void *pCbData;
 	std::vector<VesimInput> vinp;
 	int inpid2idx[VESIM_MAX_INPUTS];
+	int key2conn[256][2];
 
 	std::vector<VesimDevice> vdev;
 	std::vector<VesimDeviceInputConn> vconn;
@@ -131,7 +132,9 @@ public:
 	bool addInput(int inputID, char *inputName, int inputType, int defaultValue = VESIM_DEFAULT_AXIS_VALUE, bool notifyOnChange = false);
 	bool addInput(VesimInputDefinition *vid);
 	bool setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv);
+	int clbkConsumeBufferedKey(DWORD key, bool down, char *keystate);
 	void poolDevices();
 	int getInputValue(int inputID);
+
 	friend BOOL CALLBACK VesimEnumJoysticksCB(const DIDEVICEINSTANCE* pdidInstance, VOID* pVesim);
 };

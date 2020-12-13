@@ -1,6 +1,6 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2004-2020
+Copyright 2020
 
 Vessel Specific Input Manager
 
@@ -58,6 +58,117 @@ char *povaxnames[] = {
 	"0H", "0V", "1H", "1V", "2H", "2V", "3H", "3V"
 };
 
+struct KeyData{
+	int oapiID;
+	char *keyName;
+};
+
+#define KEYDATA_CNT 102
+KeyData keydata[KEYDATA_CNT] = {
+	{ OAPI_KEY_ESCAPE,         "Escape" },
+	{ OAPI_KEY_1,              "1" },
+	{ OAPI_KEY_2,              "2" },
+	{ OAPI_KEY_3,              "3" },
+	{ OAPI_KEY_4,              "4" },
+	{ OAPI_KEY_5,              "5" },
+	{ OAPI_KEY_6,              "6" },
+	{ OAPI_KEY_7,              "7" },
+	{ OAPI_KEY_8,              "8" },
+	{ OAPI_KEY_9,              "9" },
+	{ OAPI_KEY_0,              "0" },
+	{ OAPI_KEY_MINUS,          "-" },
+	{ OAPI_KEY_EQUALS,         "=" },
+	{ OAPI_KEY_BACK,           "Backspace" },
+	{ OAPI_KEY_TAB,            "Tab" },
+	{ OAPI_KEY_Q,              "Q" },
+	{ OAPI_KEY_W,              "W" },
+	{ OAPI_KEY_E,              "E" },
+	{ OAPI_KEY_R,              "R" },
+	{ OAPI_KEY_T,              "T" },
+	{ OAPI_KEY_Y,              "Y" },
+	{ OAPI_KEY_U,              "U" },
+	{ OAPI_KEY_I,              "I" },
+	{ OAPI_KEY_O,              "O" },
+	{ OAPI_KEY_P,              "P" },
+	{ OAPI_KEY_LBRACKET,       "{" },
+	{ OAPI_KEY_RBRACKET,       "}" },
+	{ OAPI_KEY_RETURN,         "Enter" },
+	{ OAPI_KEY_LCONTROL,       "LCtrl" },
+	{ OAPI_KEY_A,              "A" },
+	{ OAPI_KEY_S,              "S" },
+	{ OAPI_KEY_D,              "D" },
+	{ OAPI_KEY_F,              "F" },
+	{ OAPI_KEY_G,              "G" },
+	{ OAPI_KEY_H,              "H" },
+	{ OAPI_KEY_J,              "J" },
+	{ OAPI_KEY_K,              "K" },
+	{ OAPI_KEY_L,              "L" },
+	{ OAPI_KEY_SEMICOLON,      ";" },
+	{ OAPI_KEY_APOSTROPHE,     "'" },
+	{ OAPI_KEY_GRAVE,          "`" },
+	{ OAPI_KEY_LSHIFT,         "LShift" },
+	{ OAPI_KEY_BACKSLASH,      "\\" },
+	{ OAPI_KEY_Z,              "Z" },
+	{ OAPI_KEY_X,              "X" },
+	{ OAPI_KEY_C,              "C" },
+	{ OAPI_KEY_V,              "V" },
+	{ OAPI_KEY_B,              "B" },
+	{ OAPI_KEY_N,              "N" },
+	{ OAPI_KEY_M,              "M" },
+	{ OAPI_KEY_COMMA,          "," },
+	{ OAPI_KEY_PERIOD,         "." },
+	{ OAPI_KEY_SLASH,          "/" },
+	{ OAPI_KEY_RSHIFT,         "RShift" },
+	{ OAPI_KEY_MULTIPLY,       "Keypad *" },
+	{ OAPI_KEY_LALT,           "LAlt" },
+	{ OAPI_KEY_SPACE,          "Space" },
+	{ OAPI_KEY_CAPITAL,        "Caps Lock" },
+	{ OAPI_KEY_F1,             "F1" },
+	{ OAPI_KEY_F2,             "F2" },
+	{ OAPI_KEY_F3,             "F3" },
+	{ OAPI_KEY_F4,             "F4" },
+	{ OAPI_KEY_F5,             "F5" },
+	{ OAPI_KEY_F6,             "F6" },
+	{ OAPI_KEY_F7,             "F7" },
+	{ OAPI_KEY_F8,             "F8" },
+	{ OAPI_KEY_F9,             "F9" },
+	{ OAPI_KEY_F10,            "F10" },
+	{ OAPI_KEY_NUMLOCK,        "Num Lock" },
+	{ OAPI_KEY_SCROLL,         "Scroll Lock" },
+	{ OAPI_KEY_NUMPAD7,        "Keypad 7" },
+	{ OAPI_KEY_NUMPAD8,        "Keypad 8" },
+	{ OAPI_KEY_NUMPAD9,        "Keypad 9" },
+	{ OAPI_KEY_SUBTRACT,       "Keypad -" },
+	{ OAPI_KEY_NUMPAD4,        "Keypad 4" },
+	{ OAPI_KEY_NUMPAD5,        "Keypad 5" },
+	{ OAPI_KEY_NUMPAD6,        "Keypad 6" },
+	{ OAPI_KEY_ADD,            "Keypad +" },
+	{ OAPI_KEY_NUMPAD1,        "Keypad 1" },
+	{ OAPI_KEY_NUMPAD2,        "Keypad 2" },
+	{ OAPI_KEY_NUMPAD3,        "Keypad 3" },
+	{ OAPI_KEY_NUMPAD0,        "Keypad 0" },
+	{ OAPI_KEY_DECIMAL,        "Keypad ." },
+	{ OAPI_KEY_OEM_102,        "OEM 102" },
+	{ OAPI_KEY_F11,            "F11" },
+	{ OAPI_KEY_F12,            "F12" },
+	{ OAPI_KEY_NUMPADENTER,    "Keypad Enter" },
+	{ OAPI_KEY_RCONTROL,       "RCtrl" },
+	{ OAPI_KEY_DIVIDE,         "Keypad /" },
+	{ OAPI_KEY_SYSRQ,          "SysReq" },
+	{ OAPI_KEY_RALT,           "RAlt" },
+	{ OAPI_KEY_PAUSE,          "Pause" },
+	{ OAPI_KEY_HOME,           "Home" },
+	{ OAPI_KEY_UP,             "Up" },
+	{ OAPI_KEY_PRIOR,          "Page Up" },
+	{ OAPI_KEY_LEFT,           "Left" },
+	{ OAPI_KEY_RIGHT,          "Right" },
+	{ OAPI_KEY_END,            "End" },
+	{ OAPI_KEY_DOWN,           "Down" },
+	{ OAPI_KEY_NEXT,           "Page Down" },
+	{ OAPI_KEY_INSERT,         "Insert" },
+	{ OAPI_KEY_DELETE,         "Delete" }
+};
+
 bool icomp(const char *s1, const char *s2) {
 	//printf("icomp(\"%s\", \"%s\"\n", s1, s2);
 	while (*s1 == ' ' && *s1 != 0) s1++;
@@ -86,18 +197,17 @@ bool icomp(const char *s1, const char *s2) {
 	return true;
 }
 
-bool VesimInput::addConnection(int deviceID, int subdeviceType, int subdeviceID, int modifiers, bool reverse){
-	if (nconns >= VESIM_MAX_INPUT_CONNS) return false;
+int VesimInput::addConnection(int deviceID, int subdeviceType, int subdeviceID, int modifiers, bool reverse){
+	if (nconns >= VESIM_MAX_INPUT_CONNS) return -1;
 	conn[nconns].deviceID = deviceID;
 	conn[nconns].subdeviceID = subdeviceID;
 	conn[nconns].subdeviceType = subdeviceType;
 	conn[nconns].modifiers = modifiers;
 	conn[nconns].reverse = reverse;
-	nconns++;
-	return true;
+	return nconns++;
 }
 
-VesimDevice::VesimDevice(Vesim *parent, const char* deviceName) : parent(parent), name(deviceName) {
+VesimDevice::VesimDevice(Vesim *parent) : parent(parent), name("Keyboard") {
 	type = VESIM_DEVICETYPE_KEYBOARD; 
 };
 
@@ -105,17 +215,15 @@ VesimDevice::VesimDevice(Vesim *parent, const char* deviceName, LPDIRECTINPUTDEV
 	parent(parent),  name(deviceName), dx8_joystick(dx8_joystick) {
 	type = VESIM_DEVICETYPE_JOYSTICK;
 	dx8_joystick->SetDataFormat(&c_dfDIJoystick2);
-	//dx8_joystick->EnumObjects(VesimEnumAxesCB, this, DIDFT_AXIS | DIDFT_POV | DIDFT_BUTTON);
 };
 
 void VesimDevice::poolDevice() {
-	if (type = VESIM_DEVICETYPE_JOYSTICK) {
+	if (type == VESIM_DEVICETYPE_JOYSTICK) {
 		HRESULT hr = dx8_joystick->Poll();
 		if (FAILED(hr)) { // Did that work?
 						  // Attempt to acquire the device
 			hr = dx8_joystick->Acquire();
 			if (FAILED(hr)) {
-				sprintf(oapiDebugString(), "DX8JS: Cannot aquire THC");
 #ifdef _DEBUG
 				fprintf(parent->out_file, "DX8JS: Cannot aquire %s\n", name.c_str());
 #endif
@@ -130,17 +238,24 @@ void VesimDevice::poolDevice() {
 }
 
 VesimDevice::~VesimDevice() {
-	if (type = VESIM_DEVICETYPE_JOYSTICK) {
+	if (type == VESIM_DEVICETYPE_JOYSTICK) {
 		dx8_joystick->Unacquire();
 		dx8_joystick->Release();
 	}
 }
+
 Vesim::Vesim(CbInputChanged cbInputChanged, void *pCbData) : cbInputChanged(cbInputChanged), pCbData(pCbData) {
-	for (int i = 0; i < VESIM_MAX_INPUTS; i++)
+	int i;
+	for (i = 0; i < VESIM_MAX_INPUTS; i++)
 		inpid2idx[i] = -1;
+	for (i = 0; i < 256; i++) {
+		key2conn[i][0] = -1;
+		key2conn[i][1] = -1;
+	}
+	vdev.emplace_back(this);
 #ifdef _DEBUG
 	out_file = fopen("vesim.log", "wt");
-	fprintf(out_file, "Vesim object created\n", vesselStationName);
+	fprintf(out_file, "Vesim object created\n");
 #endif
 }
 
@@ -158,6 +273,7 @@ BOOL CALLBACK VesimEnumJoysticksCB(const DIDEVICEINSTANCE* pdidInstance, VOID* p
 
 #ifdef _DEBUG
 	fprintf(ves->out_file, "Found stick instance: %s Prod name: %s\n", &pdidInstance->tszInstanceName[0], &pdidInstance->tszProductName[0]);
+	fflush(ves->out_file);
 #endif
 	// Obtain an interface to the enumerated joystick.
 	hr = ves->dx8ppv->CreateDevice(pdidInstance->guidInstance, &dx8_joystick, NULL);
@@ -167,6 +283,7 @@ BOOL CALLBACK VesimEnumJoysticksCB(const DIDEVICEINSTANCE* pdidInstance, VOID* p
 	} // No, keep enumerating (if there's more)
 
 	ves->vdev.emplace_back(ves, &pdidInstance->tszProductName[0], dx8_joystick);
+
 	return DIENUM_CONTINUE; // and keep enumerating
 }
 
@@ -179,13 +296,21 @@ std::string getDeviceInputFileName(char* vesselStationName, std::string deviceNa
 }
 
 bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
+#ifdef _DEBUG
+	fprintf(out_file, "Setting up controller devices for vessel %s\n", vesselStationName);
+	fflush(out_file);
+#endif
 	this->vesselStationName = vesselStationName;
 	this->dx8ppv = dx8ppv;
 	dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, VesimEnumJoysticksCB, this, DIEDFL_ATTACHEDONLY);
 	int ndev = vdev.size();
 	for (int devid = 0; devid < ndev; devid++) {
 		std::string devicename = vdev[devid].name;
+#ifdef _DEBUG
+		fprintf(out_file, "Setting up device %s\n", devicename.c_str());
+#endif
 		std::string configdir = "Config\\ProjectApollo\\Vesim\\";
+		int devtype = vdev[devid].type;
 
 		// Fallback config files
 		// 
@@ -211,7 +336,8 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 #endif
 			if (fdevcfg.is_open()) break;
 		}
-		if (!fdevcfg.is_open()) return false;
+		if (!fdevcfg.is_open()) break;
+
 #ifdef _DEBUG
 		fflush(out_file);
 #endif
@@ -254,35 +380,46 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 							if (icomp(ptok, "Axis")) inptype = VESIM_INPUTTYPE_AXIS;
 							else if (icomp(ptok, "Button")) inptype = VESIM_INPUTTYPE_BUTTON;
 							break;
-						case 2:	
-							if (token.length() > 5 && icomp(token.substr(0, 4).c_str(), "Axis")) {
-								subdevtype = VESIM_SUBDEVTYPE_AXIS;
-								std::string ssid = token.substr(4);
-								const char * psid = ssid.c_str();
-								for (int k = 0; k < 8; k++) {
-									if (icomp(psid, subdevnames[k])) {
-										subdevid = k + 1;
-										break;
+						case 2:
+							if (devtype == VESIM_DEVICETYPE_JOYSTICK) {
+								if (token.length() > 5 && icomp(token.substr(0, 4).c_str(), "Axis")) {
+									subdevtype = VESIM_SUBDEVTYPE_AXIS;
+									std::string ssid = token.substr(4);
+									const char * psid = ssid.c_str();
+									for (int k = 0; k < 8; k++) {
+										if (icomp(psid, subdevnames[k])) {
+											subdevid = k + 1;
+											break;
+										}
+									}
+								}
+								else if (token.length() > 7 && icomp(token.substr(0, 6).c_str(), "Button")) {
+									subdevtype = VESIM_SUBDEVTYPE_BUTTON;
+									try
+									{
+										subdevid = std::stoi(token.substr(6));
+									}
+									catch (int e) {
+										(void)e;
+									}
+								}
+								else if (token.length() > 3 && icomp(token.substr(0, 3).c_str(), "POV")) {
+									subdevtype = VESIM_SUBDEVTYPE_AXIS;
+									std::string ssid = token.substr(3);
+									const char * psid = ssid.c_str();
+									for (int k = 0; k < 8; k++) {
+										if (icomp(psid, povaxnames[k])) {
+											subdevid = k + 16;
+											break;
+										}
 									}
 								}
 							}
-							else if (token.length() > 7 && icomp(token.substr(0, 6).c_str(), "Button")) {
-								subdevtype = VESIM_SUBDEVTYPE_BUTTON;
-								try
-								{
-									subdevid = std::stoi(token.substr(6));
-								}
-								catch(int e) {
-									(void)e;
-								}
-							}
-							else if (token.length() > 3 && icomp(token.substr(0, 3).c_str(), "POV")) {
-								subdevtype = VESIM_SUBDEVTYPE_AXIS;
-								std::string ssid = token.substr(3);
-								const char * psid = ssid.c_str();
-								for (int k = 0; k < 8; k++) {
-									if (icomp(psid, povaxnames[k])) {
-										subdevid = k + 16;
+							else if (devtype == VESIM_DEVICETYPE_KEYBOARD) {
+								subdevtype = VESIM_SUBDEVTYPE_KEY;
+								for (int k = 0; k < KEYDATA_CNT; k++) {
+									if (icomp(token.c_str(), keydata[k].keyName)) {
+										subdevid = keydata[k].oapiID;
 										break;
 									}
 								}
@@ -339,7 +476,63 @@ bool Vesim::addInput(VesimInputDefinition *vid) {
 }
 
 bool Vesim::connectDeviceToInput(int inputidx, int deviceID, int subdeviceType, int subdeviceID, bool reverse, int modifiers) {
-	return vinp[inputidx].addConnection(deviceID, subdeviceType, subdeviceID, modifiers, reverse);
+	int connidx= vinp[inputidx].addConnection(deviceID, subdeviceType, subdeviceID, modifiers, reverse);
+	if (connidx >= 0) {
+		if (subdeviceType == VESIM_SUBDEVTYPE_KEY) {
+			key2conn[subdeviceID][0] = inputidx;
+			key2conn[subdeviceID][1] = connidx;
+		}
+		return true;
+	}
+	return false;
+}
+
+int Vesim::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
+	if (key >= 0 && key < 256) {
+		int inpidx=key2conn[key][0];
+#ifdef _DEBUG
+		fprintf(out_file, "Key callback key:%d inpidx:%d \n", (int) key, inpidx);
+		fflush(out_file);
+#endif
+		boolean isSet = false;
+		int newValue = 0;
+		if (inpidx >= 0) {
+			VesimInput *inp = &vinp[inpidx];
+			VesimDeviceInputConn *pconn = &inp->conn[key2conn[key][1]];
+			if (down) {
+				isSet = true;
+				if (inp->type == VESIM_INPUTTYPE_BUTTON) {
+					newValue = pconn->reverse ? 0 : 1;
+				}
+				else newValue = pconn->reverse ? 0 : 65535;
+			}
+			else if (inp->type == VESIM_INPUTTYPE_BUTTON) {
+				isSet = true;
+				newValue = pconn->reverse ? 1 : 0;
+			}
+			if (!isSet) newValue = inp->defaultValue;
+			int oldValue = inp->value;
+			inp->value = newValue;
+
+#ifdef _DEBUG
+			fprintf(out_file, "Value changed key:%d oldValue:%d newValue:%d\n", (int)key, oldValue, newValue);
+			fflush(out_file);
+#endif
+
+			if (inp->notifyOnChange && (oldValue != inp->value) && cbInputChanged != NULL) {
+				int eventType;
+				if (inp->type == VESIM_INPUTTYPE_AXIS)
+					eventType = VESIM_EVTTYPE_AXIS_CHANGED;
+				else if (newValue)
+					eventType = VESIM_EVTTYPE_BUTTON_ON;
+				else
+					eventType = VESIM_EVTTYPE_BUTTON_OFF;
+				cbInputChanged(inp->ID, eventType, newValue, pCbData);
+			}
+		}
+		
+	}
+	return 0;
 }
 
 void  Vesim::poolDevices() {
@@ -429,6 +622,10 @@ void  Vesim::poolDevices() {
 					newValue = pconn->reverse ? 1 : 0;
 				}					
 			}
+			else if (pconn->subdeviceType == VESIM_SUBDEVTYPE_KEY) {
+				newValue = inp->value;
+				isSet = true;
+			}
 		}
 		
 		if (!isSet) newValue = inp->defaultValue;
@@ -443,9 +640,7 @@ void  Vesim::poolDevices() {
 			else
 				eventType = VESIM_EVTTYPE_BUTTON_OFF;
 			cbInputChanged(inp->ID, eventType, newValue, pCbData);
-		}
-
-		
+		}	
 	}
 }
 

@@ -2890,6 +2890,8 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (FirstTimestep) return 0;
 
+	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, kstate);
+
 	if (KEYMOD_SHIFT(kstate)){
 		// Do DSKY stuff
 		if(down){

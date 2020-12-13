@@ -695,6 +695,8 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	// rewrote to get key events rather than monitor key state - LazyD
 
+	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, keystate);
+
 	// DS20060404 Allow keys to control DSKY like in the CM
 	if (KEYMOD_SHIFT(keystate)){
 		// Do DSKY stuff
