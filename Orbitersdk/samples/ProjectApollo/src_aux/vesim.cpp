@@ -204,6 +204,7 @@ int VesimInput::addConnection(int deviceID, int subdeviceType, int subdeviceID, 
 	conn[nconns].subdeviceType = subdeviceType;
 	conn[nconns].modifiers = modifiers;
 	conn[nconns].reverse = reverse;
+	conn[nconns].value = 0;
 	return nconns++;
 }
 
@@ -500,15 +501,19 @@ int Vesim::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			VesimInput *inp = &vinp[inpidx];
 			VesimDeviceInputConn *pconn = &inp->conn[key2conn[key][1]];
 			if (down) {
+				pconn->value = 1;
 				isSet = true;
 				if (inp->type == VESIM_INPUTTYPE_BUTTON) {
 					newValue = pconn->reverse ? 0 : 1;
 				}
 				else newValue = pconn->reverse ? 0 : 65535;
 			}
-			else if (inp->type == VESIM_INPUTTYPE_BUTTON) {
-				isSet = true;
-				newValue = pconn->reverse ? 1 : 0;
+			else {
+				pconn->value = 0;
+				if (inp->type == VESIM_INPUTTYPE_BUTTON) {
+					isSet = true;
+					newValue = pconn->reverse ? 1 : 0;
+				}
 			}
 			if (!isSet) newValue = inp->defaultValue;
 			int oldValue = inp->value;
@@ -552,39 +557,47 @@ void  Vesim::poolDevices() {
 				switch (pconn->subdeviceID) {
 				case VESIM_DEVICE_AXIS_X:
 					newValue = pdev->dx8_jstate.lX;
+					pconn->value = newValue;
 					isSet = true;
 					break;
 				case VESIM_DEVICE_AXIS_Y:
 					newValue = pdev->dx8_jstate.lY;
+					pconn->value = newValue;
 					isSet = true;
 					break;
 				case VESIM_DEVICE_AXIS_Z:
 					newValue = pdev->dx8_jstate.lZ;
+					pconn->value = newValue;
 					isSet = true;
 					break;
 				case VESIM_DEVICE_AXIS_RX:
 					newValue = pdev->dx8_jstate.lRx;
+					pconn->value = newValue;
 					isSet = true;
 					break;
 				case VESIM_DEVICE_AXIS_RY:
 					newValue = pdev->dx8_jstate.lRy;
+					pconn->value = newValue;
 					isSet = true;
 					break;
 				case VESIM_DEVICE_AXIS_RZ:
 					newValue = pdev->dx8_jstate.lRz;
+					pconn->value = newValue;
 					isSet = true;
 					break;
 				case VESIM_DEVICE_AXIS_SLDR0:
 					newValue = pdev->dx8_jstate.rglSlider[0];
+					pconn->value = newValue;
 					isSet = true;
 					break;
 				case VESIM_DEVICE_AXIS_SLDR1:
 					newValue = pdev->dx8_jstate.rglSlider[1];
+					pconn->value = newValue;
 					isSet = true;
 					break;
 				default: //It is a POV axis
 					int povidx = pconn->subdeviceID-16;
-					int povval = pdev->dx8_jstate.rgdwPOV[povidx>>1];
+					int povval = pdev->dx8_jstate.rgdwPOV[povidx>>1];					
 					if ((povval & 0xFFFF) != 0xFFFF) {																
 						double povcos = cos(PI*povval / 18000.0);
 						double povsin = sin(PI*povval / 18000.0);
@@ -599,6 +612,7 @@ void  Vesim::poolDevices() {
 						}
 						isSet = true;						
 					}
+					pconn->value = povval;
 					break;
 				}
 
@@ -611,20 +625,26 @@ void  Vesim::poolDevices() {
 			else if (pconn->subdeviceType == VESIM_SUBDEVTYPE_BUTTON) {
 				int sdid = pconn->subdeviceID;
 				if (sdid >= 0 && sdid < 128 && pdev->dx8_jstate.rgbButtons[sdid] & 0x80) {
+					pconn->value = 1;
 					isSet = true;
 					if (inp->type == VESIM_INPUTTYPE_BUTTON) {
 						newValue = pconn->reverse ? 0 : 1;
 					}
 					else newValue = pconn->reverse?  0 : 65535;
 				}
-				else if(inp->type == VESIM_INPUTTYPE_BUTTON){
-					isSet = true;
-					newValue = pconn->reverse ? 1 : 0;
+				else {
+					pconn->value = 0;
+					if (inp->type == VESIM_INPUTTYPE_BUTTON) {
+						isSet = true;
+						newValue = pconn->reverse ? 1 : 0;
+					}
 				}					
 			}
 			else if (pconn->subdeviceType == VESIM_SUBDEVTYPE_KEY) {
-				newValue = inp->value;
-				isSet = true;
+				if (pconn->value) {
+					newValue = inp->value;
+					isSet = true;
+				}
 			}
 		}
 		

@@ -917,8 +917,6 @@ void LEM::JoystickTimestep(double simdt)
 				rhc_pos[2] = 65536 - vesim.getInputValue(LM_AXIS_INPUT_ACAY);
 				
 			}
-			ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_THROTTLE);
-			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
 		}
 		else if (rhc_id != -1 && rhc_id < js_enabled) {
 			// CHECK FOR POWER HERE
@@ -1198,6 +1196,16 @@ void LEM::JoystickTimestep(double simdt)
 					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAY) - 32768;
 				}
 			}
+			if (vesim.getInputValue(LM_AXIS_THR_JET_LEVER) < 32768) 
+				ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_THROTTLE);				
+			else {
+				if (GetAttitudeMode() == RCS_ROT)			
+					ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAX);
+				else			
+					ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAP);				
+				thc_y_pos = 0;
+			}
+			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
 		}
 		else if (thc_id != -1 && thc_id < js_enabled) {
 			hr = dx8_joystick[thc_id]->Poll();

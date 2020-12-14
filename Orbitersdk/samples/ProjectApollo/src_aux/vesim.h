@@ -56,6 +56,7 @@ struct VesimDeviceInputConn {
 	int subdeviceID;
 	int modifiers;
 	bool reverse;
+	int value;
 };
 
 class VesimInput {

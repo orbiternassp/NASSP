@@ -133,7 +133,7 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 	if (vessel) delete static_cast<LEM *> (vessel);
 }
 
-#define LM_AXIS_INPUT_CNT  21
+#define LM_AXIS_INPUT_CNT  22
 VesimInputDefinition vesim_lm_inputs[LM_AXIS_INPUT_CNT] = {
 	{ LM_AXIS_INPUT_ACAR,          "ACA Roll",                                 VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
 	{ LM_AXIS_INPUT_ACAP,          "ACA Pitch",                                VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
@@ -155,7 +155,8 @@ VesimInputDefinition vesim_lm_inputs[LM_AXIS_INPUT_CNT] = {
 	{ LM_BUTTON_MDCTRL_PGNS,       "Mode Control PGNS Auto/Att Hold toggle",   VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_MDCTRL_PGNS_AUT,   "Mode Control PGNS Auto",                   VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_MDCTRL_PGNS_ATH,   "Mode Control PGNS Att Hold",               VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_MDCTRL_PGNS_OFF,   "Mode Control PGNS Off",                    VESIM_INPUTTYPE_BUTTON,  0, true }
+	{ LM_BUTTON_MDCTRL_PGNS_OFF,   "Mode Control PGNS Off",                    VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_AXIS_THR_JET_LEVER,       "TTCA Throttle/Jets Select lever",          VESIM_INPUTTYPE_AXIS,    0, false }
 };
 
 void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {

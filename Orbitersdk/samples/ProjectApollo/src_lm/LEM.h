@@ -236,6 +236,7 @@ namespace mission
 #define LM_BUTTON_MDCTRL_PGNS_AUT   19
 #define LM_BUTTON_MDCTRL_PGNS_ATH   20
 #define LM_BUTTON_MDCTRL_PGNS_OFF   21
+#define LM_AXIS_THR_JET_LEVER       22
 
 // Callback for Vesim events
 void cbLMVesim(int inputID, int eventType, int newValue, void *pdata);
