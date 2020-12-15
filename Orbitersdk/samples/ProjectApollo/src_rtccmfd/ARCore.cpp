@@ -10,6 +10,7 @@
 #include "LVDC.h"
 #include "LEM.h"
 #include "sivb.h"
+#include "mccvessel.h"
 #include "mcc.h"
 #include "TLMCC.h"
 #include "rtcc.h"
@@ -29,7 +30,19 @@ static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
 
 AR_GCore::AR_GCore(VESSEL* v)
 {
-	rtcc = new RTCC();
+	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
+	if (hMCC)
+	{
+		VESSEL *pMCC = oapiGetVesselInterface(hMCC);
+		MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pMCC);
+		rtcc = pMCCVessel->rtcc;
+		isOwnRTCC = false;
+	}
+	else
+	{
+		rtcc = new RTCC();
+		isOwnRTCC = true;
+	}
 
 	MissionPlanningActive = false;
 	pCSMnumber = -1;
@@ -38,11 +51,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	mptInitError = 0;
 
 	mission = 0;
-	rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 0.0;
-	rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 0.0;
 	t_Land = 0.0;
-	rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 40.0*60.0;
-	rtcc->GZGENCSN.TIPhaseAngle = 0.0;
 
 	if (strcmp(v->GetName(), "AS-205") == 0)
 	{
@@ -94,7 +103,11 @@ AR_GCore::AR_GCore(VESSEL* v)
 
 AR_GCore::~AR_GCore()
 {
-	delete rtcc;
+	if (isOwnRTCC && rtcc)
+	{
+		delete rtcc;
+		rtcc = NULL;
+	}
 }
 
 void AR_GCore::SetMissionSpecificParameters()

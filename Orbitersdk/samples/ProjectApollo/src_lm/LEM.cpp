@@ -37,6 +37,7 @@
 #include "apolloguidance.h"
 #include "lm_channels.h"
 #include "mcc.h"
+#include "mccvessel.h"
 
 #include "LEM.h"
 #include "tracer.h"
@@ -1602,14 +1603,20 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 void LEM::clbkPostCreation()
 {
 	//Find MCC, if it exists
+	pMCC = NULL;
 	hMCC = oapiGetVesselByName("MCC");
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17)
-				|| !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17)) pMCC = static_cast<MCC*>(pVessel);
+			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17))
+			{
+				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
+				if (pMCCVessel->mcc)
+				{
+					pMCC = pMCCVessel->mcc;
+				}
+			}
 		}
-		else pMCC = NULL;
 	}
 
 	// Delete LM/SLA docking port if LM extracted from SIVB

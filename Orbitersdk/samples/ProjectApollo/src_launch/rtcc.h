@@ -26,6 +26,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include <vector>
 #include <deque>
+#include <bitset>
+#include "../src_sys/yaAGC/agc_engine.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/LDPP.h"
 #include "../src_rtccmfd/EntryCalculations.h"
@@ -34,6 +36,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/LOITargeting.h"
 #include "../src_rtccmfd/LMGuidanceSim.h"
 #include "MCCPADForms.h"
+
+class Saturn;
 
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"

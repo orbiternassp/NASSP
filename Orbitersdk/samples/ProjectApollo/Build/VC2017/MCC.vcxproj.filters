@@ -90,6 +90,9 @@
     <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_launch\mccvessel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -144,6 +147,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\LOITargeting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\mccvessel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

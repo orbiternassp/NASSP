@@ -65,150 +65,14 @@ static DWORD WINAPI MCC_Trampoline(LPVOID ptr){
 #define LOAD_M3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&VALUE.m11,&VALUE.m12,&VALUE.m13,&VALUE.m21,&VALUE.m22,&VALUE.m23,&VALUE.m31,&VALUE.m32,&VALUE.m33); }
 #define LOAD_STRING(KEY,VALUE,LEN) if(strnicmp(line,KEY,strlen(KEY))==0){ strncpy(VALUE, line + (strlen(KEY)+1), LEN); }
 
-#define ORBITER_MODULE
-
-void MCC::clbkSaveState(FILEHANDLE scn)
-{
-	VESSEL4::clbkSaveState(scn);
-
-	if (CSMName[0])
-		oapiWriteScenario_string(scn, "CSMNAME", CSMName);
-
-	if (LVName[0])
-		oapiWriteScenario_string(scn, "LVNAME", LVName);
-
-	if (LEMName[0])
-		oapiWriteScenario_string(scn, "LEMNAME", LEMName);
-
-	SaveState(scn);
-	rtcc->SaveState(scn);
-}
-
-void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
-{
-	char *line;
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, "MISSIONTRACKING", 15)) {
-			int i;
-			sscanf(line + 15, "%d", &i);
-			if (i)
-				enableMissionTracking();
-		}
-		else if (!strnicmp(line, "CSMNAME", 7))
-		{
-			strncpy(CSMName, line + 8, 64);
-		}
-		else if (!strnicmp(line, "LVNAME", 6))
-		{
-			strncpy(LVName, line + 7, 64);
-		}
-		else if (!strnicmp(line, "LEMNAME", 7))
-		{
-			strncpy(LEMName, line + 8, 64);
-		}
-		else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
-			LoadState(scn);
-		}
-		else if (!strnicmp(line, RTCC_START_STRING, sizeof(RTCC_START_STRING))) {
-			rtcc->LoadState(scn);
-		}
-		else ParseScenarioLineEx(line, status);
-	}
-}
-
-void MCC::clbkPreStep(double simt, double simdt, double mjd)
-{
-	// Update Ground Data
-	TimeStep(simdt);
-}
-
-void MCC::clbkPostCreation()
-{
-	VESSEL *v;
-	OBJHANDLE hVessel;
-
-	//CSM
-	if (CSMName[0])
-	{
-		hVessel = oapiGetObjectByName(CSMName);
-		if (hVessel != NULL)
-		{
-			v = oapiGetVesselInterface(hVessel);
-
-			if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
-				!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
-				cm = (Saturn *)v;
-				rtcc->calcParams.src = cm;
-			}
-		}
-	}
-
-	//S-IVB
-	if (LVName[0])
-	{
-		hVessel = oapiGetObjectByName(LVName);
-		if (hVessel != NULL)
-		{
-			v = oapiGetVesselInterface(hVessel);
-
-			if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3") ||
-				!stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) {
-				sivb = (SIVB *)v;
-			}
-		}
-	}
-
-	//LEM
-	if (LEMName[0])
-	{
-		hVessel = oapiGetObjectByName(LEMName);
-		if (hVessel != NULL)
-		{
-			v = oapiGetVesselInterface(hVessel);
-
-			if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
-				lm = (LEM *)v;
-				rtcc->calcParams.tgt = lm;
-			}
-		}
-	}
-}
-
-DLLCLBK void InitModule(HINSTANCE hDLL)
-{
-}
-
-DLLCLBK void ExitModule(HINSTANCE hDLL)
-{
-}
-
-DLLCLBK VESSEL* ovcInit(OBJHANDLE hVessel, int iFlightModel)
-{
-	return new MCC(hVessel, iFlightModel);
-}
-
-DLLCLBK void ovcExit(VESSEL* pVessel)
-{
-	delete static_cast<MCC*>(pVessel);
-}
-
 // CONS
-MCC::MCC(OBJHANDLE hVessel, int flightmodel)
-	: VESSEL4(hVessel, flightmodel)
-{
-	//Vessel data
+MCC::MCC(RTCC *rtc)
+{	
+	// Reset data
 	CSMName[0] = 0;
 	LEMName[0] = 0;
 	LVName[0] = 0;
-	
-	// Reset data
-	rtcc = NULL;
+	rtcc = rtc;
 	cm = NULL;
 	lm = NULL;
 	sivb = NULL;
@@ -276,8 +140,8 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 
 void MCC::Init(){
 	
-	// Make a new RTCC if we don't have one already
-	if (rtcc == NULL) { rtcc = new RTCC; rtcc->Init(this); }
+	//Tell the RTCC that the MCC exists
+	rtcc->Init(this);
 
 	// Obtain Earth and Moon pointers
 	Earth = oapiGetGbodyByName("Earth");
@@ -4009,5 +3873,64 @@ void MCC::SlowIfDesired()
 {
 	if (oapiGetTimeAcceleration() > 1.0) {
 		oapiSetTimeAcceleration(1.0);
+	}
+}
+
+void MCC::SetCSM(char *csmname)
+{
+	VESSEL *v;
+	OBJHANDLE hVessel;
+
+	hVessel = oapiGetObjectByName(csmname);
+	if (hVessel != NULL)
+	{
+		v = oapiGetVesselInterface(hVessel);
+
+		if (!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
+			strncat(CSMName, csmname, 64);
+			cm = (Saturn *)v;
+			rtcc->calcParams.src = cm;
+		}
+	}
+}
+void MCC::SetLM(char *lemname)
+{
+	VESSEL *v;
+	OBJHANDLE hVessel;
+
+	hVessel = oapiGetObjectByName(lemname);
+	if (hVessel != NULL)
+	{
+		v = oapiGetVesselInterface(hVessel);
+
+		if (!_stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
+			strncat(LEMName, lemname, 64);
+			lm = (LEM *)v;
+			rtcc->calcParams.tgt = v;
+		}
+	}
+}
+
+void MCC::SetLV(char *lvname)
+{
+	VESSEL *v;
+	OBJHANDLE hVessel;
+
+	hVessel = oapiGetObjectByName(lvname);
+	if (hVessel != NULL)
+	{
+		v = oapiGetVesselInterface(hVessel);
+
+		if (!_stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/sat5stg3") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) {
+			strncat(LVName, lvname, 64);
+			sivb = (SIVB *)v;
+		}
 	}
 }

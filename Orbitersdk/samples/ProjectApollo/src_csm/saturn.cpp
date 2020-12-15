@@ -45,6 +45,7 @@
 #include "LEM.h"
 #include "papi.h"
 #include "mcc.h"
+#include "mccvessel.h"
 #include "LVDC.h"
 #include "iu.h"
 #include "Mission.h"
@@ -959,14 +960,20 @@ void Saturn::clbkPostCreation()
 	checkControl.linktoVessel(this);
 
 	//Find MCC, if it exists
+	pMCC = NULL;
 	hMCC = oapiGetVesselByName("MCC");
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17)
-				|| !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17)) pMCC = static_cast<MCC*>(pVessel);
+			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17))
+			{
+				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
+				if (pMCCVessel->mcc)
+				{
+					pMCC = pMCCVessel->mcc;
+				}
+			}
 		}
-		else pMCC = NULL;
 	}
 }
 
