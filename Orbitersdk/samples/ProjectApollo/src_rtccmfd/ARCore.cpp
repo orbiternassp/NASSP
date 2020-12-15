@@ -31,18 +31,23 @@ static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
 AR_GCore::AR_GCore(VESSEL* v)
 {
 	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
-	if (hMCC)
+	if (hMCC == NULL)
 	{
-		VESSEL *pMCC = oapiGetVesselInterface(hMCC);
-		MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pMCC);
-		rtcc = pMCCVessel->rtcc;
-		isOwnRTCC = false;
+		VESSELSTATUS2 vs;
+		memset(&vs, 0, sizeof(vs));
+		vs.version = 2;
+		vs.status = 1;
+		vs.surf_lng = -95.08833333*RAD;
+		vs.surf_lat = 29.55805556*RAD;
+		vs.surf_hdg = 270.0*RAD;
+		vs.rbody = oapiGetObjectByName("Earth");
+
+		hMCC = oapiCreateVesselEx("MCC", "ProjectApollo/MCC", &vs);
 	}
-	else
-	{
-		rtcc = new RTCC();
-		isOwnRTCC = true;
-	}
+
+	VESSEL *pMCC = oapiGetVesselInterface(hMCC);
+	MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pMCC);
+	rtcc = pMCCVessel->rtcc;
 
 	MissionPlanningActive = false;
 	pCSMnumber = -1;
@@ -103,11 +108,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 
 AR_GCore::~AR_GCore()
 {
-	if (isOwnRTCC && rtcc)
-	{
-		delete rtcc;
-		rtcc = NULL;
-	}
+
 }
 
 void AR_GCore::SetMissionSpecificParameters()

@@ -49,7 +49,6 @@ public:
 	int mptInitError;
 
 	RTCC* rtcc;
-	bool isOwnRTCC;
 
 	LunarDescentPlanningTable descplantable;
 };
