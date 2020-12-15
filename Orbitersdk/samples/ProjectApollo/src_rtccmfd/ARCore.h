@@ -136,6 +136,7 @@ public:
 	void CalculateTPITime();
 	void GetStateVectorFromAGC(bool csm);
 	void VectorCompareDisplayCalc();
+	void UpdateTLITargetTable();
 
 	int startSubthread(int fcn);
 	int subThread();

@@ -1880,6 +1880,81 @@ void ARCore::NavCheckPAD()
 	GC->rtcc->NavCheckPAD(sv, navcheckpad, GC->rtcc->CalcGETBase(), navcheckpad.NavChk[0]);
 }
 
+void ARCore::UpdateTLITargetTable()
+{
+	SaturnV *SatV = (SaturnV*)g_Data.progVessel;
+	LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
+
+	GC->rtcc->MDVSTP.T4IG = lvdc->t_3i - 17.0;
+	GC->rtcc->MDVSTP.T4C = lvdc->TB5 - 17.0;
+	GC->rtcc->MDVSTP.DT4N = lvdc->T_4N;
+	GC->rtcc->MDVSTP.KP1 = lvdc->K_P1;
+	GC->rtcc->MDVSTP.KP2 = lvdc->K_P2;
+	GC->rtcc->MDVSTP.KY1 = lvdc->K_Y1;
+	GC->rtcc->MDVSTP.KY2 = lvdc->K_Y2;
+	GC->rtcc->MDVSTP.PHIL = lvdc->PHI;
+	GC->rtcc->MDVSTP.t_D0 = lvdc->t_D0;
+	GC->rtcc->MDVSTP.t_D1 = lvdc->t_D1;
+	GC->rtcc->MDVSTP.t_D2 = lvdc->t_D2;
+	GC->rtcc->MDVSTP.t_D3 = lvdc->t_D3;
+	GC->rtcc->MDVSTP.t_DS0 = lvdc->t_DS0;
+	GC->rtcc->MDVSTP.t_DS1 = lvdc->t_DS1;
+	GC->rtcc->MDVSTP.t_DS2 = lvdc->t_DS2;
+	GC->rtcc->MDVSTP.t_DS3 = lvdc->t_DS3;
+	GC->rtcc->MDVSTP.t_SD1 = lvdc->t_SD1;
+	GC->rtcc->MDVSTP.t_SD2 = lvdc->t_SD2;
+	GC->rtcc->MDVSTP.t_SD3 = lvdc->t_SD3;
+
+	int i, j;
+	for (i = 0;i < 3;i++)
+	{
+		for (j = 0;j < 5;j++)
+		{
+			GC->rtcc->MDVSTP.hx[i][j] = lvdc->hx[i][j];
+		}
+	}
+	for (i = 0;i < 7;i++)
+	{
+		GC->rtcc->MDVSTP.fx[i] = lvdc->fx[i];
+		GC->rtcc->MDVSTP.gx[i] = lvdc->gx[i];
+	}
+
+	GC->rtcc->PZSTARGP.T_LO = lvdc->T_LO + 17.0; //LVDC presetting is time of GRR, RTCC apparently wants actual liftoff time
+	GC->rtcc->PZSTARGP.theta_EO = lvdc->theta_EO;
+	GC->rtcc->PZSTARGP.omega_E = lvdc->omega_E;
+	GC->rtcc->PZSTARGP.K_T3 = lvdc->K_T3;
+
+	for (i = 0;i < 2;i++)
+	{
+		GC->rtcc->PZSTARGP.T_ST[i] = lvdc->TABLE15[i].T_ST;
+		GC->rtcc->PZSTARGP.beta[i] = lvdc->TABLE15[i].beta*RAD;
+		GC->rtcc->PZSTARGP.alpha_TS[i] = lvdc->TABLE15[i].alphaS_TS*RAD;
+		GC->rtcc->PZSTARGP.f[i] = lvdc->TABLE15[i].f*RAD;
+		GC->rtcc->PZSTARGP.R_N[i] = lvdc->TABLE15[i].R_N;
+		GC->rtcc->PZSTARGP.T3_apo[i] = lvdc->TABLE15[i].T3PR;
+		GC->rtcc->PZSTARGP.tau3R[i] = lvdc->TABLE15[i].TAU3R;
+		GC->rtcc->PZSTARGP.T2[i] = lvdc->TABLE15[i].T2IR;
+		GC->rtcc->PZSTARGP.DV_BR[i] = lvdc->TABLE15[i].dV_BR;
+
+		//TBD: LVDC needs to have separate values for these for the two restart opportunities
+		GC->rtcc->PZSTARGP.Vex2[i] = lvdc->V_ex2R;
+		GC->rtcc->PZSTARGP.Mdot2[i] = lvdc->dotM_2R;
+		GC->rtcc->PZSTARGP.tau2N[i] = lvdc->tau2N;
+		GC->rtcc->PZSTARGP.KP0[i] = 0.0;
+		GC->rtcc->PZSTARGP.KY0[i] = 0.0;
+
+		for (j = 0;j < 15;j++)
+		{
+			GC->rtcc->PZSTARGP.cos_sigma[i][j] = lvdc->TABLE15[i].target[j].cos_sigma;
+			GC->rtcc->PZSTARGP.C_3[i][j] = lvdc->TABLE15[i].target[j].C_3;
+			GC->rtcc->PZSTARGP.e_N[i][j] = lvdc->TABLE15[i].target[j].e_N;
+			GC->rtcc->PZSTARGP.RA[i][j] = lvdc->TABLE15[i].target[j].RAS*RAD;
+			GC->rtcc->PZSTARGP.DEC[i][j] = lvdc->TABLE15[i].target[j].DEC*RAD;
+			GC->rtcc->PZSTARGP.t_D[i][j] = lvdc->TABLE15[i].target[j].t_D;
+		}
+	}
+}
+
 void ARCore::LandingSiteUpdate()
 {
 	double lat, lng, rad;
@@ -4894,77 +4969,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			break;
 		}
 
-		SaturnV *SatV = (SaturnV*)g_Data.progVessel;
-		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
-
-		GC->rtcc->MDVSTP.T4IG = lvdc->t_3i - 17.0;
-		GC->rtcc->MDVSTP.T4C = lvdc->TB5 - 17.0;
-		GC->rtcc->MDVSTP.DT4N = lvdc->T_4N;
-		GC->rtcc->MDVSTP.KP1 = lvdc->K_P1;
-		GC->rtcc->MDVSTP.KP2 = lvdc->K_P2;
-		GC->rtcc->MDVSTP.KY1 = lvdc->K_Y1;
-		GC->rtcc->MDVSTP.KY2 = lvdc->K_Y2;
-		GC->rtcc->MDVSTP.PHIL = lvdc->PHI;
-		GC->rtcc->MDVSTP.t_D0 = lvdc->t_D0;
-		GC->rtcc->MDVSTP.t_D1 = lvdc->t_D1; 
-		GC->rtcc->MDVSTP.t_D2 = lvdc->t_D2; 
-		GC->rtcc->MDVSTP.t_D3 = lvdc->t_D3;
-		GC->rtcc->MDVSTP.t_DS0 = lvdc->t_DS0;
-		GC->rtcc->MDVSTP.t_DS1 = lvdc->t_DS1;
-		GC->rtcc->MDVSTP.t_DS2 = lvdc->t_DS2;
-		GC->rtcc->MDVSTP.t_DS3 = lvdc->t_DS3;
-		GC->rtcc->MDVSTP.t_SD1 = lvdc->t_SD1;
-		GC->rtcc->MDVSTP.t_SD2 = lvdc->t_SD2;
-		GC->rtcc->MDVSTP.t_SD3 = lvdc->t_SD3;
-
-		int i, j;
-		for (i = 0;i < 3;i++)
-		{
-			for (j = 0;j < 5;j++)
-			{
-				GC->rtcc->MDVSTP.hx[i][j] = lvdc->hx[i][j];
-			}
-		}
-		for (i = 0;i < 7;i++)
-		{
-			GC->rtcc->MDVSTP.fx[i] = lvdc->fx[i];
-			GC->rtcc->MDVSTP.gx[i] = lvdc->gx[i];
-		}
-
-		GC->rtcc->PZSTARGP.T_LO = lvdc->T_LO;
-		GC->rtcc->PZSTARGP.theta_EO = lvdc->theta_EO;
-		GC->rtcc->PZSTARGP.omega_E = lvdc->omega_E;
-		GC->rtcc->PZSTARGP.K_T3 = lvdc->K_T3;
-
-		for (i = 0;i < 2;i++)
-		{
-			GC->rtcc->PZSTARGP.T_ST[i] = lvdc->TABLE15[i].T_ST;
-			GC->rtcc->PZSTARGP.beta[i] = lvdc->TABLE15[i].beta*RAD;
-			GC->rtcc->PZSTARGP.alpha_TS[i] = lvdc->TABLE15[i].alphaS_TS*RAD;
-			GC->rtcc->PZSTARGP.f[i] = lvdc->TABLE15[i].f*RAD;
-			GC->rtcc->PZSTARGP.R_N[i] = lvdc->TABLE15[i].R_N;
-			GC->rtcc->PZSTARGP.T3_apo[i] = lvdc->TABLE15[i].T3PR;
-			GC->rtcc->PZSTARGP.tau3R[i] = lvdc->TABLE15[i].TAU3R;
-			GC->rtcc->PZSTARGP.T2[i] = lvdc->TABLE15[i].T2IR;
-			GC->rtcc->PZSTARGP.DV_BR[i] = lvdc->TABLE15[i].dV_BR;
-
-			//TBD: LVDC needs to have separate values for these for the two restart opportunities
-			GC->rtcc->PZSTARGP.Vex2[i] = lvdc->V_ex2R;
-			GC->rtcc->PZSTARGP.Mdot2[i] = lvdc->dotM_2R;
-			GC->rtcc->PZSTARGP.tau2N[i] = lvdc->tau2N;
-			GC->rtcc->PZSTARGP.KP0[i] = 0.0;
-			GC->rtcc->PZSTARGP.KY0[i] = 0.0;
-
-			for (j = 0;j < 15;j++)
-			{
-				GC->rtcc->PZSTARGP.cos_sigma[i][j] = lvdc->TABLE15[i].target[j].cos_sigma;
-				GC->rtcc->PZSTARGP.C_3[i][j] = lvdc->TABLE15[i].target[j].C_3;
-				GC->rtcc->PZSTARGP.e_N[i][j] = lvdc->TABLE15[i].target[j].e_N;
-				GC->rtcc->PZSTARGP.RA[i][j] = lvdc->TABLE15[i].target[j].RAS*RAD;
-				GC->rtcc->PZSTARGP.DEC[i][j] = lvdc->TABLE15[i].target[j].DEC*RAD;
-				GC->rtcc->PZSTARGP.t_D[i][j] = lvdc->TABLE15[i].target[j].t_D;
-			}
-		}
+		UpdateTLITargetTable();
 
 		//MED string was previously saved
 		GC->rtcc->GMGMED(GC->rtcc->RTCCMEDBUFFER);
