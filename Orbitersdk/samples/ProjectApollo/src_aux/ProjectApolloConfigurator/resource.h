@@ -26,6 +26,8 @@
 #define IDC_STATIC_RHCTHCTOGGLE         1016
 #define IDC_EDIT_RHCTHCTOGGLE           1017
 #define IDC_RADIO_GNSINGLEPANEL         1018
+#define IDC_CHECK_THC2                  1018
+#define IDC_CHECK_VESIM                 1018
 #define IDC_CHECK_TJT                   1019
 #define IDC_RADIO_GNSPLITTEDPANEL       1020
 #define IDC_STATIC_TJT                  1021
