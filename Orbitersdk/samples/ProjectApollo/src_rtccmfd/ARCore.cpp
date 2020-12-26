@@ -30,25 +30,6 @@ static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
 
 AR_GCore::AR_GCore(VESSEL* v)
 {
-	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
-	if (hMCC == NULL)
-	{
-		VESSELSTATUS2 vs;
-		memset(&vs, 0, sizeof(vs));
-		vs.version = 2;
-		vs.status = 1;
-		vs.surf_lng = -95.08833333*RAD;
-		vs.surf_lat = 29.55805556*RAD;
-		vs.surf_hdg = 270.0*RAD;
-		vs.rbody = oapiGetObjectByName("Earth");
-
-		hMCC = oapiCreateVesselEx("MCC", "ProjectApollo/MCC", &vs);
-	}
-
-	VESSEL *pMCC = oapiGetVesselInterface(hMCC);
-	MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pMCC);
-	rtcc = pMCCVessel->rtcc;
-
 	MissionPlanningActive = false;
 	pCSMnumber = -1;
 	pLMnumber = -1;
@@ -103,7 +84,40 @@ AR_GCore::AR_GCore(VESSEL* v)
 		mission = 17;
 	}
 
-	SetMissionSpecificParameters();
+	//Get a pointer to the RTCC. If the MCC vessel doesn't exist yet, create it
+	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
+	if (hMCC == NULL)
+	{
+		VESSELSTATUS2 vs;
+		memset(&vs, 0, sizeof(vs));
+		vs.version = 2;
+		vs.status = 1;
+		vs.surf_lng = -95.08833333*RAD;
+		vs.surf_lat = 29.55805556*RAD;
+		vs.surf_hdg = 270.0*RAD;
+		vs.rbody = oapiGetObjectByName("Earth");
+
+		hMCC = oapiCreateVesselEx("MCC", "ProjectApollo/MCC", &vs);
+		
+	}
+
+	VESSEL *pMCC = oapiGetVesselInterface(hMCC);
+	MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pMCC);
+	rtcc = pMCCVessel->rtcc;
+
+	
+	bool loadinitvalues;
+	//If the year hasn't been loaded into the RTCC we can assume it hasn't been properly initialized yet
+	if (rtcc->GZGENCSN.Year == 0)
+	{
+		loadinitvalues = true;
+	}
+	else
+	{
+		loadinitvalues = false;
+	}
+
+	SetMissionSpecificParameters(loadinitvalues);
 }
 
 AR_GCore::~AR_GCore()
@@ -111,24 +125,32 @@ AR_GCore::~AR_GCore()
 
 }
 
-void AR_GCore::SetMissionSpecificParameters()
+void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 {
-	rtcc->AGCEpoch = 40221.525;
 	if (mission == 7)
 	{
-		rtcc->MCLSDA = sin(28.5217969*RAD);
-		rtcc->MCLCDA = cos(28.5217969*RAD);
-		rtcc->MCLGRA = -80.5612465*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,10,11,1968;");
-		rtcc->GMGMED("P10,CSM,15:02:45;");
-		rtcc->GMGMED("P12,CSM,15:02:45,72.0;");
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 7 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1968, 10, 11);
+			rtcc->GMGMED("P80,1,CSM,10,11,1968;");
+			rtcc->GMGMED("P10,CSM,15:02:45;");
+			rtcc->GMGMED("P12,CSM,15:02:45,72.0;");
+		}
 	}
 	else if (mission == 8)
 	{
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 2.6317*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 34.0253*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon - 0.82*1852.0;
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 8 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1968, 12, 21);
+			rtcc->GMGMED("P80,1,CSM,12,21,1968;");
+			rtcc->GMGMED("P10,CSM,12:51:0;");
+			rtcc->GMGMED("P12,CSM,12:51:0,72.0;");
+		}
+
 		rtcc->med_k18.psi_DS = -78.0 + 360.0;
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
@@ -139,42 +161,22 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -78.0*RAD;
 		rtcc->PZMCCPLN.REVS2 = rtcc->med_k40.REVS2 = 4;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(82, 0, 0);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -5.67822*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 60.0*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 50, 31);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 2.4*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(20, 3, 30);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(12, 59, 26);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -78.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = 2.6317*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = 34.0253*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 0.82*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = -2.3*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3531.7*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(57, 30, 35);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 33.73*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,12,21,1968;");
-		rtcc->GMGMED("P10,CSM,12:51:0;");
-		rtcc->GMGMED("P12,CSM,12:51:0,72.0;");
+		
 	}
 	else if (mission == 9)
 	{
-		rtcc->GMGMED("P80,1,CSM,3,3,1969;");
-		rtcc->GMGMED("P10,CSM,16:00:00;");
-		rtcc->GMGMED("P12,CSM,16:00:00,72.0;");
-
-		rtcc->MCCLEX = 3431;
-		rtcc->MCCLRF = 1735;
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 9 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1969, 3, 3);
+			rtcc->GMGMED("P80,1,CSM,3,3,1969;");
+			rtcc->GMGMED("P10,CSM,16:00:00;");
+			rtcc->GMGMED("P12,CSM,16:00:00,72.0;");
+		}
 	}
 	else if (mission == 10)
 	{
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 0.732*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 23.647*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon -1.66*1852.0;
 		rtcc->med_k18.psi_DS = -91.0 + 360.0;
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
@@ -182,44 +184,22 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -91.0*RAD;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(92, 39, 0);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -4.933294*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 60.0*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 33, 26);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -6.1*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(61, 31, 0);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(24, 40, 45);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -91.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = 0.732*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = 23.647*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.66*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = -0.2*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3622.5*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(54, 29, 32);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
-
 		rtcc->PZMCCPLN.LOPC_M = 0;
 		rtcc->PZMCCPLN.LOPC_N = 0;
 		rtcc->PZMCCPLN.REVS2 = rtcc->med_k40.REVS2 = 10;
 
-		rtcc->GMGMED("P80,1,CSM,5,18,1969;");
-		rtcc->GMGMED("P10,CSM,16:49:00;");
-		rtcc->GMGMED("P12,CSM,16:49:00,72.0;");
-
-		rtcc->MCLSDA = sin(28.608202*RAD);
-		rtcc->MCLCDA = cos(28.608202*RAD);
-		rtcc->MCLGRA = -80.602087222*RAD;
-		rtcc->MCCLEX = 3431;
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 10 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1969, 5, 18);
+			rtcc->GMGMED("P80,1,CSM,5,18,1969;");
+			rtcc->GMGMED("P10,CSM,16:49:00;");
+			rtcc->GMGMED("P12,CSM,16:49:00,72.0;");
+		}
 	}
 	else if (mission == 11) // July 16th Launch
 	{
-		rtcc->AGCEpoch = 40586.767239;
-
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 0.71388888*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 23.7077777*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon -3073.263;
 		rtcc->med_k18.psi_DS = -91.0 + 360.0;
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
@@ -227,34 +207,18 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -91.0*RAD;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(89, 25, 35);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = 0.26206227*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 179.81579*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 60.0*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 44, 18);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -4.4393618*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(59, 30, 5);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 40, 45);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -91.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = 0.71388888*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = 23.7077777*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 3073.263;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 4.8067843*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3155.9987*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(63, 30, 0);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,7,16,1969;");
-		rtcc->GMGMED("P10,CSM,13:32:00;");
-		rtcc->GMGMED("P12,CSM,13:32:00,72.0;");
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 11 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1969, 7, 16);
+			rtcc->GMGMED("P80,1,CSM,7,16,1969;");
+			rtcc->GMGMED("P10,CSM,13:32:00;");
+			rtcc->GMGMED("P12,CSM,13:32:00,72.0;");
+		}
 	}
 	/*else if (mission == 11) // July 18th Launch
 	{
-		rtcc->AGCEpoch = 40586.767239;
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 0.35277778*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -01.29916667*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon - 1.01*1852.0;
 		rtcc->med_k18.psi_DS = -89.0 + 360.0;
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(100.0, 43.0, 0.0);
@@ -262,33 +226,11 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -89.0*RAD;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(89, 17, 42);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = 2.3710876*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = -179.68688*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 60.0*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 43, 10);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -4.6862913*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(55, 26, 12);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(24, 53, 48);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -89.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = 0.35277778*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = -01.29916667*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.01*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 5.9618956*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3095.6632*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(65, 27, 01);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
-
 		rtcc->GMGMED("P80,1,CSM,7,18,1969;");
 		rtcc->GMGMED("P10,CSM,15:32:00;");
 	}
 	else if (mission == 11) // July 21st Launch
 	{
-		rtcc->AGCEpoch = 40586.767239;
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 1.67805556*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -41.89916667*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon - 1.25*1852.0;
 		rtcc->med_k18.psi_DS = -86.0 + 360.0;
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 46.0, 0.0);
@@ -296,74 +238,17 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -86.0*RAD;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = OrbMech::HHMMSSToSS(92, 58, 38);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = -0.48832588*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = 179.84695*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = 799.9*1852.0;
-
-		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(92, 58, 38);
-		rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -0.48832588*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 60.0*1852.0;
-
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 53, 11);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -2.8424*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(55, 21, 55);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(25, 04, 06);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -86.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = 1.67805556*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = -41.89916667*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.25*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 2.6518*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3060.6*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(65, 52, 02);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
-
 		rtcc->GMGMED("P80,1,CSM,7,21,1969;");
 		rtcc->GMGMED("P10,CSM,16:09:00;");
 	}*/
 	else if (mission == 12)
 	{
-		rtcc->AGCEpoch = 40586.767239;
-
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = -2.9425*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -23.44333*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon -1.19*1852.0;
 		rtcc->med_k18.psi_DS = -75.0 + 360.0;
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1250.0;
 
 		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -75.0*RAD;
-
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = OrbMech::HHMMSSToSS(99, 47, 51);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = -1.963*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = 178.047*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = 1851.7*1852.0;
-
-		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(99, 50, 39);
-		rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = 3.618*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 157.6*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 59.9*1852.0;
-
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 47, 22);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 6.7*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 2.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(90, 57, 0);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(27, 02, 19);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -75.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = -2.9425*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = -23.44333*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.19*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 2.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3113.0*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(70, 0, 0);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,11,14,1969;");
-		rtcc->GMGMED("P10,CSM,16:22:00;");
-		rtcc->GMGMED("P12,CSM,16:22:00,72.0;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5551.1299*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -133067.52*0.3048;
@@ -380,14 +265,29 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->RTCCDescentTargets.VARFG = _V(-3.19e-1, 0.0, 3.1233e-1)*0.3048;
 		rtcc->RTCCDescentTargets.AARFG = _V(2.9982e-1, 0.0, -4.0165e-1)*0.3048;
 		rtcc->RTCCDescentTargets.JARFGZ = 3.76954e-2*0.3048;
+
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 12 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1969, 11, 14);
+			rtcc->GMGMED("P80,1,CSM,11,14,1969;");
+			rtcc->GMGMED("P10,CSM,16:22:00;");
+			rtcc->GMGMED("P12,CSM,16:22:00,72.0;");
+		}
 	}
 	else if (mission == 13)
 	{
-		rtcc->AGCEpoch = 40586.767239;
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 13 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1970, 4, 11);
+			rtcc->GMGMED("P80,1,CSM,4,11,1970;");
+			rtcc->GMGMED("P10,CSM,19:13:00;");
+			rtcc->GMGMED("P12,CSM,19:13:00,72.0;");
+		}
 
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = -3.6686*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -17.4842*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon -0.76*1852.0;
 		rtcc->med_k18.psi_DS = -93.88 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 		rtcc->med_k17.DwellOrbits = 11;
@@ -399,32 +299,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZMCCPLN.LOPC_N = 12;
 		rtcc->PZMCCPLN.H_P_LPO1 = 59.0*1852.0;
 		rtcc->PZMCCPLN.ETA1 = 14.4*RAD;
-
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = OrbMech::HHMMSSToSS(96, 53, 22);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = -0.058*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = 180.155*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = 211.7*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(96, 41, 39);
-		rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -0.343*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 177.996*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 57.0*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 35, 24);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -0.7*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 2.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(90, 0, 0);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 13, 35);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -93.88*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = -3.6686*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = -17.4842*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 0.76*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 11.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3449.5*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(72, 0, 0);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,4,11,1970;");
-		rtcc->GMGMED("P10,CSM,19:13:00;");
-		rtcc->GMGMED("P12,CSM,19:13:00,72.0;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
@@ -444,18 +318,16 @@ void AR_GCore::SetMissionSpecificParameters()
 	}
 	else if (mission == 14)
 	{
-		rtcc->AGCEpoch = 40952.009432;
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 14 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1971, 1, 31);
+			rtcc->GMGMED("P80,1,CSM,1,31,1971;");
+			rtcc->GMGMED("P10,CSM,20:23:00;");
+			rtcc->GMGMED("P12,CSM,20:23:00,72.0;");
+		}
 
-		rtcc->MCCCRF = 1733;
-		rtcc->MCCCRF_DL = 01733;
-		rtcc->MCCCXS = 306;
-		rtcc->MCCLRF = 1731;
-		rtcc->MCCLRF_DL = 01731;
-		rtcc->MCCLXS = 3606;
-
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = -3.672*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -17.463*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon -0.76*1852.0;
 		rtcc->med_k18.psi_DS = -76.31 + 360.0;
 		rtcc->med_k18.HPLOI1 = 59.6;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
@@ -466,32 +338,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 38.0*60.0;
 
 		rtcc->PZMCCPLN.ETA1 = 21.6*RAD;
-
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = OrbMech::HHMMSSToSS(103, 2, 52);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = -0.058*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = 180.710*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = 2030.9*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(103, 3, 36);
-		rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -4.572*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 161.158*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 57.0*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 30, 38);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -11.2*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(66, 37, 36);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 13, 47);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -76.31*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = -3.672*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = -17.463*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 0.76*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 11.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3449.5*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(67, 10, 59);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,1,31,1971;");
-		rtcc->GMGMED("P10,CSM,20:23:00;");
-		rtcc->GMGMED("P12,CSM,20:23:00,72.0;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
@@ -511,9 +357,16 @@ void AR_GCore::SetMissionSpecificParameters()
 	}
 	else if (mission == 15)
 	{
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 26.0739*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 3.6539*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon -1.92*1852.0;
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 15 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1971, 7, 26);
+			rtcc->GMGMED("P80,1,CSM,7,26,1971;");
+			rtcc->GMGMED("P10,CSM,13:34:00;");
+			rtcc->GMGMED("P12,CSM,13:34:00,80.088;");
+		}
+
 		rtcc->med_k18.psi_DS = -91.0 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
@@ -526,28 +379,6 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->PZMCCPLN.ETA1 = 36.0*RAD;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(92, 9, 1);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -16.905*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 175.625*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 67.88*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 49, 58);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -7.9*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(145, 14, 51);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 7, 40);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -91.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = 26.0739*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = 3.6539*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.92*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 5.6*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3046.7*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(71, 13, 20);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 75.0*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,7,26,1971;");
-		rtcc->GMGMED("P10,CSM,13:34:00;");
-		rtcc->GMGMED("P12,CSM,13:34:00,80.088;");
-
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5548.14101*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -162539.6686*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1547120.997*0.3048;
@@ -557,9 +388,16 @@ void AR_GCore::SetMissionSpecificParameters()
 	}
 	else if (mission == 16)
 	{
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = -9.00028*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 15.51639*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon -0.1405*1852.0;
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 16 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1972, 4, 16);
+			rtcc->GMGMED("P80,1,CSM,4,16,1972;");
+			rtcc->GMGMED("P10,CSM,17:54:00;");
+			rtcc->GMGMED("P12,CSM,17:54:00,72.0;");
+		}
+
 		rtcc->med_k18.psi_DS = -90.0 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
@@ -575,28 +413,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZMCCPLN.SITEROT = -16.0*RAD;
 		rtcc->PZMCCPLN.ETA1 = 46.8*RAD;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(92, 26, 13);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = 5.529*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 168.758*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 72.76*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 33, 15);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -0.9*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(147, 52, 0);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(24, 15, 0);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -90.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = -9.00028*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = 15.51639*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 0.1405*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = -2.1*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3212.2*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(68, 0, 0);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,4,16,1972;");
-		rtcc->GMGMED("P10,CSM,17:54:00;");
-		rtcc->GMGMED("P12,CSM,17:54:00,72.0;");
-
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5543.4605*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -159548.72*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1547623.3*0.3048;
@@ -606,9 +422,16 @@ void AR_GCore::SetMissionSpecificParameters()
 	}
 	else if (mission == 17)
 	{
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 20.164*RAD;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 30.750*RAD;
-		rtcc->MCSMLR = OrbMech::R_Moon -1.95*1852.0;
+		if (loadinitvalues)
+		{
+			sprintf(rtcc->MissionFileName, "Apollo 16 Constants");
+			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+			rtcc->LoadLaunchDaySpecificParameters(1972, 12, 7);
+			rtcc->GMGMED("P80,1,CSM,12,7,1972;");
+			rtcc->GMGMED("P10,CSM,02:53:00;");
+			rtcc->GMGMED("P12,CSM,02:53:00,72.0;");
+		}
+
 		rtcc->med_k18.psi_DS = -90.0 + 360.0;
 		rtcc->med_k18.HPLOI1 = 52.8;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
@@ -625,28 +448,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZMCCPLN.H_P_LPO1 = 51.3*1852.0;
 		rtcc->PZMCCPLN.H_P_LPO2 = 13.17*1852.0;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(91, 52, 23);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -9.75*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 161.779*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 51.3*1852.0;
-		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(3, 20, 58);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 11.3*RAD;
-		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(147, 41, 0);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(23, 59, 39);
-		rtcc->PZSFPTAB.blocks[0].psi_lls = -90.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].lat_lls = 20.164*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = 30.750*RAD;
-		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.95*1852.0;
-		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 0.9*RAD;
-		rtcc->PZSFPTAB.blocks[0].dv_tei = 3045.7*0.3048;
-		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(67, 37, 2);
-		rtcc->PZSFPTAB.blocks[0].incl_fr = 75.0*RAD;
-
-		rtcc->GMGMED("P80,1,CSM,12,7,1972;");
-		rtcc->GMGMED("P10,CSM,02:53:00;");
-		rtcc->GMGMED("P12,CSM,02:53:00,72.0;");
-
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5542.8976*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -156145.03*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1541941.8*0.3048;
@@ -657,13 +458,6 @@ void AR_GCore::SetMissionSpecificParameters()
 
 	if (mission == 15 || mission == 16 || mission == 17)
 	{
-		rtcc->AGCEpoch = 41317.251625;
-		rtcc->MCCCRF = 1733;
-		rtcc->MCCCRF_DL = 01733;
-		rtcc->MCCCXS = 306;
-		rtcc->MCCLRF = 1731;
-		rtcc->MCCLRF_DL = 01731;
-		rtcc->MCCLXS = 3606;
 		rtcc->RTCCDescentTargets.RBRFG = _V(-3.1183588e3, 0.0, -1.1741441e4)*0.3048;
 		rtcc->RTCCDescentTargets.VBRFG = _V(-1.9646916e2, 0.0, -1.6675997e2)*0.3048;
 		rtcc->RTCCDescentTargets.ABRFG = _V(-7.1824814e-1, 0.0, -8.3024503)*0.3048;
@@ -700,9 +494,9 @@ int AR_GCore::MPTTrajectoryUpdate()
 		double lat, lng, rad;
 		ves->GetEquPos(lng, lat, rad);
 
-		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = lat;
-		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = lng;
-		rtcc->MCSMLR = rad;
+		rtcc->BZLAND.lat[RTCC_LMPOS_BEST] = lat;
+		rtcc->BZLAND.lng[RTCC_LMPOS_BEST] = lng;
+		rtcc->BZLAND.rad[RTCC_LMPOS_BEST] = rad;
 	}
 	else
 	{
@@ -729,11 +523,6 @@ void AR_GCore::MPTMassUpdate()
 {
 	//Mass Update
 	VESSEL *vessel = NULL;
-	int vesseltype = 0;
-	std::string cfg;
-	double cmmass, lmmass, sivb_mass, lm_ascent_mass;
-	cmmass = lmmass = sivb_mass = lm_ascent_mass = 0.0;
-
 	if (rtcc->med_m50.Table == RTCC_MPT_LM)
 	{
 		vessel = pLM;
@@ -745,130 +534,7 @@ void AR_GCore::MPTMassUpdate()
 
 	if (vessel == NULL) return;
 
-	char Buffer[100];
-
-	sprintf_s(Buffer, vessel->GetClassNameA());
-
-	if (!stricmp(Buffer, "ProjectApollo\\Saturn5") ||
-		!stricmp(Buffer, "ProjectApollo/Saturn5") ||
-		!stricmp(Buffer, "ProjectApollo\\Saturn1b") ||
-		!stricmp(Buffer, "ProjectApollo/Saturn1b"))
-	{
-		vesseltype = 0;
-	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM"))
-	{
-		vesseltype = 1;
-	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/sat5stg3") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/nsat1stg2"))
-	{
-		vesseltype = 2;
-	}
-	else
-	{
-		vesseltype = 3;
-	}
-
-	if (vesseltype == 3) return;
-
-	if (vesseltype == 0)
-	{
-		Saturn *sat = (Saturn *)vessel;
-		if (sat->GetStage() < CSM_LEM_STAGE)
-		{
-			cmmass = sat->SM_FuelMass + sat->SM_EmptyMass + sat->CM_FuelMass + sat->CM_EmptyMass + 4.0*152.5 + 2.0*55.5;
-			if (sat->SIVBPayload == PAYLOAD_LEM)
-			{
-				cfg = "CSL";
-				lmmass = sat->LMDescentFuelMassKg + sat->LMAscentFuelMassKg + sat->LMDescentEmptyMassKg + sat->LMAscentEmptyMassKg + 2.0*133.084001;
-				lm_ascent_mass = sat->LMAscentFuelMassKg + sat->LMAscentEmptyMassKg + 2.0*133.084001;
-
-			}
-			else
-			{
-				cfg = "CS";
-			}
-			sivb_mass = vessel->GetMass() - cmmass - lmmass;
-		}
-		else
-		{
-			cmmass = vessel->GetMass();
-			if (lmmass = rtcc->GetDockedVesselMass(vessel))
-			{
-				DOCKHANDLE dock;
-				OBJHANDLE hLM;
-				VESSEL *lm;
-				dock = vessel->GetDockHandle(0);
-				hLM = vessel->GetDockStatus(dock);
-				lm = oapiGetVesselInterface(hLM);
-
-				LEM *lem = (LEM *)lm;
-				lm_ascent_mass = lem->GetAscentStageMass();
-
-				//TBD: Make this better
-				if (lem->GetStage() < 2)
-				{
-					cfg = "CL";
-				}
-				else
-				{
-					cfg = "CA";
-				}
-
-				
-			}
-			else
-			{
-				cfg = "C";
-			}
-		}
-	}
-	else if (vesseltype == 1)
-	{
-		LEM *lem = (LEM *)vessel;
-
-		lmmass = vessel->GetMass();
-		lm_ascent_mass = lem->GetAscentStageMass();
-
-		if (lem->GetStage() < 2)
-		{
-			if (cmmass = rtcc->GetDockedVesselMass(vessel))
-			{
-				cfg = "CL";
-			}
-			else
-			{
-				cfg = "L";
-			}
-		}
-		else
-		{
-			if (cmmass = rtcc->GetDockedVesselMass(vessel))
-			{
-				cfg = "CA";
-			}
-			else
-			{
-				cfg = "A";
-			}
-		}
-	}
-	else
-	{
-		cfg = "S";
-		sivb_mass = vessel->GetMass();
-	}
-
-	rtcc->med_m55.ConfigCode = cfg;
-
-	rtcc->med_m50.CSMWT = cmmass;
-	rtcc->med_m50.LMWT = lmmass;
-	rtcc->med_m50.LMASCWT = lm_ascent_mass;
-	rtcc->med_m50.SIVBWT = sivb_mass;
+	rtcc->MPTMassUpdate(vessel);
 }
 
 ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
@@ -1974,16 +1640,16 @@ void ARCore::LandingSiteUpdate()
 	double lat, lng, rad;
 	svtarget->GetEquPos(lng, lat, rad);
 
-	GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = lat;
-	GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = lng;
-	GC->rtcc->MCSMLR = rad;
+	GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] = lat;
+	GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] = lng;
+	GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] = rad;
 }
 
 void ARCore::LSUplinkCalc()
 {
 	VECTOR3 R_P;
 
-	R_P = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
+	R_P = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 
 	RLSUplink = R_P;
 
@@ -2836,10 +2502,6 @@ int ARCore::subThread()
 			mptveh = RTCC_MPT_LM;
 			mptotherveh = RTCC_MPT_CSM;
 		}
-
-		//Queue control
-		GC->rtcc->PMSEXE(RTCC_MPT_CSM, GC->rtcc->RTCCPresentTimeGMT());
-		GC->rtcc->PMSEXE(RTCC_MPT_LM, GC->rtcc->RTCCPresentTimeGMT());
 	}
 
 	if (vesseltype == 1 || vesseltype == 3)
@@ -3113,7 +2775,7 @@ int ARCore::subThread()
 		opt.TIG_GET = SPSGET;
 		opt.AltRef = OrbAdjAltRef;
 		opt.dLAN = GMPNodeShiftAngle;
-		opt.R_LLS = GC->rtcc->MCSMLR;
+		opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.dW = GMPWedgeAngle;
 		opt.long_D = GMPManeuverLongitude;
 		opt.H_D = GMPManeuverHeight;
@@ -3138,8 +2800,8 @@ int ARCore::subThread()
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.LSAzi = GC->rtcc->med_k18.psi_DS*RAD;
-		opt.LSLat = GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST];
-		opt.LSLng = GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST];
+		opt.LSLat = GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.LSLng = GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.mission = GC->mission;
 		opt.REFSMMATopt = REFSMMATopt;
 
@@ -3542,7 +3204,7 @@ int ARCore::subThread()
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.vesseltype = vesseltype;
-			opt.R_LLS = GC->rtcc->MCSMLR;
+			opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
 
@@ -3561,7 +3223,7 @@ int ARCore::subThread()
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.csmlmdocked = !GC->MissionPlanningActive && docked;
-			opt.R_LLS = GC->rtcc->MCSMLR;
+			opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
 
@@ -3605,7 +3267,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			sv = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		if (!GC->rtcc->LunarDescentPlanningProcessor(sv, GC->rtcc->CalcGETBase(), GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR, GC->descplantable))
+		if (!GC->rtcc->LunarDescentPlanningProcessor(sv, GC->rtcc->CalcGETBase(), GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST], GC->descplantable))
 		{
 			if (GC->rtcc->med_k16.Mode != 7)
 			{
@@ -3866,9 +3528,9 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.Y_S = GC->rtcc->PZLTRT.YawSteerCap;
 		opt.V_Z_NOM = 32.0*0.3048;
 		opt.T_TH = GC->rtcc->GMTfromGET(GC->rtcc->med_k50.GETTH);
-		opt.R_LS = GC->rtcc->MCSMLR;
-		opt.lat_LS = GC->rtcc->BZLSDISP.lat[0];
-		opt.lng_LS = GC->rtcc->BZLSDISP.lng[0];
+		opt.R_LS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
+		opt.lat_LS = GC->rtcc->BZLAND.lat[0];
+		opt.lng_LS = GC->rtcc->BZLAND.lng[0];
 		opt.alpha_PF = GC->rtcc->PZLTRT.PoweredFlightArc;
 		opt.dt_PF = GC->rtcc->PZLTRT.PoweredFlightTime;
 		opt.dt_INS_TPI = GC->rtcc->PZLTRT.DT_Ins_TPI;
@@ -4002,9 +3664,9 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.DH_OFF = GC->rtcc->PZLTRT.TPF_Height_Offset;
 		opt.dTheta_OFF = GC->rtcc->PZLTRT.TPF_Phase_Offset;
 		opt.t_hole = GC->rtcc->GMTfromGET(GC->rtcc->med_k15.ThresholdTime);
-		opt.lat = GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST];
-		opt.lng = GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST];
-		opt.R_LLS = GC->rtcc->MCSMLR;
+		opt.lat = GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.lng = GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST];
+		opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.lng_TPI = GC->rtcc->med_k15.TPIValue;
 		opt.sv_CSM = sv_CSM;
 		if (GC->rtcc->med_k15.Chaser == 1)
@@ -4045,7 +3707,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.HeadsUp = HeadsUp;
 		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
-		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
+		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.t_land = GC->t_Land;
 		opt.vessel = vessel;
 
@@ -4237,7 +3899,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			m0 = l->GetAscentStageMass();
 		}
 
-		R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
+		R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 
 		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GC->rtcc->CalcGETBase(), t_LunarLiftoff, GC->rtcc->PZLTRT.InsertionHorizontalVelocity, GC->rtcc->PZLTRT.InsertionRadialVelocity, theta, dt, dv, sv_IG, sv_Ins);
 
@@ -4268,7 +3930,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
-		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
+		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_CSM = sv_CSM;
 		opt.TIG = t_LunarLiftoff;
 		opt.v_LH = GC->rtcc->PZLTRT.InsertionHorizontalVelocity;
@@ -4332,7 +3994,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.IsTwoSegment = GC->mission > 11;
 		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
-		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
+		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
 		opt.TLAND = GC->t_Land;

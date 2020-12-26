@@ -729,11 +729,6 @@ protected:
 	} screenData;
 private:
 
-	static void papiWriteScenario_SV(FILEHANDLE scn, char *item, EphemerisData sv);
-	static bool papiReadScenario_SV(char *line, char *item, EphemerisData &sv);
-	static void papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in);
-	static bool papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out);
-
 	ARCore* G;
 	AR_GCore* GC;
 	ApolloRTCCMFDButtons coreButtons;	

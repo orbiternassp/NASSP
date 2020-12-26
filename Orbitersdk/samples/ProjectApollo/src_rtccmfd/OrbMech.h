@@ -597,6 +597,7 @@ namespace OrbMech {
 	double quadratic(double *T, double *DV);
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	void rv_from_adbar(VECTOR3 R, VECTOR3 V, double &rmag, double &vmag, double &rtasc, double &decl, double &fpav, double &az);
 	VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs);

@@ -47,15 +47,82 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define SAVE_BOOL(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
 #define SAVE_INT(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
 #define SAVE_DOUBLE(KEY,VALUE) papiWriteScenario_double(scn, KEY, VALUE)
+#define SAVE_DOUBLE2(KEY,VALUE1, VALUE2) papiWriteScenario_double2(scn, KEY, VALUE1, VALUE2)
 #define SAVE_V3(KEY,VALUE) papiWriteScenario_vec(scn, KEY, VALUE)
 #define SAVE_M3(KEY,VALUE) papiWriteScenario_mx(scn, KEY, VALUE)
 #define SAVE_STRING(KEY,VALUE) oapiWriteScenario_string(scn, KEY, VALUE)
 #define LOAD_BOOL(KEY,VALUE) if(strnicmp(line, KEY, strlen(KEY)) == 0){ sscanf(line + strlen(KEY), "%i", &tmp); if (tmp == 1) { VALUE = true; } else { VALUE = false; } }
 #define LOAD_INT(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%i",&VALUE); }
 #define LOAD_DOUBLE(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf",&VALUE); }
+#define LOAD_DOUBLE2(KEY,VALUE1, VALUE2) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf",&VALUE1, &VALUE2); }
 #define LOAD_V3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf",&VALUE.x,&VALUE.y,&VALUE.z); }
 #define LOAD_M3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&VALUE.m11,&VALUE.m12,&VALUE.m13,&VALUE.m21,&VALUE.m22,&VALUE.m23,&VALUE.m31,&VALUE.m32,&VALUE.m33); }
 #define LOAD_STRING(KEY,VALUE,LEN) if(strnicmp(line,KEY,strlen(KEY))==0){ strncpy(VALUE, line + (strlen(KEY)+1), LEN); }
+
+//void papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv);
+//void papiWriteScenario_SV(FILEHANDLE scn, char *item, EphemerisData sv);
+//bool papiReadScenario_SV(char *line, char *item, SV &sv);
+//bool papiReadScenario_SV(char *line, char *item, EphemerisData &sv);
+
+void papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv)
+{
+
+	char buffer[256], name[16];
+
+	if (sv.gravref)
+	{
+		oapiGetObjectName(sv.gravref, name, 16);
+	}
+	else
+	{
+		sprintf(name, "None");
+	}
+
+	sprintf(buffer, "  %s %s %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, name, sv.mass, sv.MJD, sv.R.x, sv.R.y, sv.R.z, sv.V.x, sv.V.y, sv.V.z);
+	oapiWriteLine(scn, buffer);
+}
+
+bool papiReadScenario_SV(char *line, char *item, SV &sv)
+{
+
+	char buffer[256], name[16];
+	SV v;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			if (sscanf(line, "%s %s %lf %lf %lf %lf %lf %lf %lf %lf", buffer, name, &v.mass, &v.MJD, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 10) {
+				v.gravref = oapiGetObjectByName(name);
+				sv = v;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void papiWriteScenario_SV(FILEHANDLE scn, char *item, EphemerisData sv) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %d %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, sv.RBI, sv.GMT, sv.R.x, sv.R.y, sv.R.z, sv.V.x, sv.V.y, sv.V.z);
+	oapiWriteLine(scn, buffer);
+}
+
+bool papiReadScenario_SV(char *line, char *item, EphemerisData &sv)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			EphemerisData v;
+			if (sscanf(line, "%s %d %lf %lf %lf %lf %lf %lf %lf", buffer, &v.RBI, &v.GMT, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 9) {
+				sv = v;
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 FIDOOrbitDigitals::FIDOOrbitDigitals()
 {
@@ -356,6 +423,50 @@ TradeoffDataDisplayBuffer::TradeoffDataDisplayBuffer()
 	}
 }
 
+void MPTVehicleDataBlock::SaveState(FILEHANDLE scn)
+{
+	oapiWriteScenario_int(scn, "ConfigCode", ConfigCode.to_ulong());
+	oapiWriteScenario_int(scn, "ConfigChangeInd", ConfigChangeInd);
+	oapiWriteScenario_int(scn, "TUP", TUP);
+	papiWriteScenario_double(scn, "CSMArea", CSMArea);
+	papiWriteScenario_double(scn, "SIVBArea", SIVBArea);
+	papiWriteScenario_double(scn, "LMAscentArea", LMAscentArea);
+	papiWriteScenario_double(scn, "LMDescentArea", LMDescentArea);
+	papiWriteScenario_double(scn, "CSMMass", CSMMass);
+	papiWriteScenario_double(scn, "SIVBMass", SIVBMass);
+	papiWriteScenario_double(scn, "LMAscentMass", LMAscentMass);
+	papiWriteScenario_double(scn, "LMDescentMass", LMDescentMass);
+	papiWriteScenario_double(scn, "CSMRCSFuelRemaining", CSMRCSFuelRemaining);
+	papiWriteScenario_double(scn, "SPSFuelRemaining", SPSFuelRemaining);
+	papiWriteScenario_double(scn, "SIVBFuelRemaining", SIVBFuelRemaining);
+	papiWriteScenario_double(scn, "LMRCSFuelRemaining", LMRCSFuelRemaining);
+	papiWriteScenario_double(scn, "LMAPSFuelRemaining", LMAPSFuelRemaining);
+	papiWriteScenario_double(scn, "LMDPSFuelRemaining", LMDPSFuelRemaining);
+}
+void MPTVehicleDataBlock::LoadState(char *line, int &inttemp)
+{
+	if (papiReadScenario_int(line, "ConfigCode", inttemp))
+	{
+		ConfigCode = inttemp;
+	}
+	papiReadScenario_int(line, "ConfigChangeInd", ConfigChangeInd);
+	papiReadScenario_int(line, "TUP", TUP);
+	papiReadScenario_double(line, "CSMArea", CSMArea);
+	papiReadScenario_double(line, "SIVBArea", SIVBArea);
+	papiReadScenario_double(line, "LMAscentArea", LMAscentArea);
+	papiReadScenario_double(line, "LMDescentArea", LMDescentArea);
+	papiReadScenario_double(line, "CSMMass", CSMMass);
+	papiReadScenario_double(line, "SIVBMass", SIVBMass);
+	papiReadScenario_double(line, "LMAscentMass", LMAscentMass);
+	papiReadScenario_double(line, "LMDescentMass", LMDescentMass);
+	papiReadScenario_double(line, "CSMRCSFuelRemaining", CSMRCSFuelRemaining);
+	papiReadScenario_double(line, "SPSFuelRemaining", SPSFuelRemaining);
+	papiReadScenario_double(line, "SIVBFuelRemaining", SIVBFuelRemaining);
+	papiReadScenario_double(line, "LMRCSFuelRemaining", LMRCSFuelRemaining);
+	papiReadScenario_double(line, "LMAPSFuelRemaining", LMAPSFuelRemaining);
+	papiReadScenario_double(line, "LMDPSFuelRemaining", LMDPSFuelRemaining);
+}
+
 MPTManeuver::MPTManeuver()
 {
 	GMTFrozen = 0.0;
@@ -397,6 +508,7 @@ MPTManeuver::MPTManeuver()
 	Word79 = 0.0;
 	Word80 = 0.0;
 	Word81 = 0.0;
+	Word82 = 0.0;
 	Word83 = 0.0;
 	Word83 = 0.0;
 	Word84 = 0.0;
@@ -413,6 +525,278 @@ MPTManeuver::MPTManeuver()
 
 	TotalMassAfter = 0.0;
 	TotalAreaAfter = 0.0;
+	MainEngineFuelUsed = 0.0;
+	RCSFuelUsed = 0.0;
+	DVREM = 0.0;
+	DVC = 0.0;
+	DVXBT = 0.0;
+	DV_M = 0.0;
+	V_F = 0.0, V_S = 0.0, V_D = 0.0;
+	P_H = 0.0, Y_H = 0.0, R_H = 0.0;
+	dt_BD = 0.0;
+	dt_TO = 0.0;
+	dv_TO = 0.0;
+	P_G = 0.0;
+	Y_G = 0.0;
+	lat_BI = 0.0;
+	lng_BI = 0.0;
+	h_BI = 0.0;
+	eta_BI = 0.0;
+	e_BO = 0.0;
+	i_BO = 0.0;
+	g_BO = 0.0;
+	h_a = 0.0;
+	lat_a = 0.0;
+	lng_a = 0.0;
+	GMT_a = 0.0;
+	h_p = 0.0;
+	lat_p = 0.0;
+	lng_p = 0.0;
+	GMT_p = 0.0;
+	GMT_AN = 0.0;
+	lng_AN = 0.0;
+	IMPT = 0.0;
+}
+
+void MPTManeuver::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	char Buff[128];
+
+	oapiWriteLine(scn, start_str);
+	
+	sprintf_s(Buff, code.c_str());
+	oapiWriteScenario_string(scn, "code", Buff);
+	CommonBlock.SaveState(scn);
+	sprintf_s(Buff, StationIDFrozen.c_str());
+	oapiWriteScenario_string(scn, "StationIDFrozen", Buff);
+	papiWriteScenario_double(scn, "GMTFrozen", GMTFrozen);
+	oapiWriteScenario_int(scn, "AttitudeCode", AttitudeCode);
+	oapiWriteScenario_int(scn, "Thruster", Thruster);
+	oapiWriteScenario_int(scn, "UllageThrusterOpt", UllageThrusterOpt);
+	oapiWriteScenario_int(scn, "AttitudesInput", AttitudesInput);
+	oapiWriteScenario_int(scn, "ConfigCodeBefore", ConfigCodeBefore.to_ulong());
+	oapiWriteScenario_int(scn, "TVC", TVC);
+	oapiWriteScenario_int(scn, "TrimAngleInd", TrimAngleInd);
+	oapiWriteScenario_int(scn, "FrozenManeuverInd", FrozenManeuverInd);
+	oapiWriteScenario_int(scn, "RefBodyInd", RefBodyInd);
+	oapiWriteScenario_int(scn, "CoordSysInd", CoordSysInd);
+	oapiWriteScenario_int(scn, "HeadsUpDownInd", HeadsUpDownInd);
+	papiWriteScenario_double(scn, "DockingAngle", DockingAngle);
+	papiWriteScenario_double(scn, "GMTMAN", GMTMAN);
+	papiWriteScenario_double(scn, "dt_ullage", dt_ullage);
+	papiWriteScenario_double(scn, "DT_10PCT", DT_10PCT);
+	papiWriteScenario_double(scn, "dt", dt);
+	papiWriteScenario_double(scn, "dv", dv);
+	papiWriteScenario_vec(scn, "A_T", A_T);
+	papiWriteScenario_vec(scn, "X_B", X_B);
+	papiWriteScenario_vec(scn, "Y_B", Y_B);
+	papiWriteScenario_vec(scn, "Z_B", Z_B);
+	papiWriteScenario_SV(scn, "FrozenManeuverVector", FrozenManeuverVector);
+	papiWriteScenario_double(scn, "DPSScaleFactor", DPSScaleFactor);
+	papiWriteScenario_vec(scn, "dV_inertial", dV_inertial);
+	papiWriteScenario_vec(scn, "dV_LVLH", dV_LVLH);
+	if (AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+	{
+		papiWriteScenario_double(scn, "Word67d", Word67d);
+	}
+	else
+	{
+		papiWriteScenario_intarr(scn, "Word67i", Word67i, 2);
+	}
+	papiWriteScenario_double(scn, "Word68", Word68);
+	papiWriteScenario_double(scn, "Word69", Word69);
+	papiWriteScenario_double(scn, "Word70", Word70);
+	papiWriteScenario_double(scn, "Word71", Word71);
+	papiWriteScenario_double(scn, "Word72", Word72);
+	papiWriteScenario_double(scn, "Word73", Word73);
+	papiWriteScenario_double(scn, "Word74", Word74);
+	papiWriteScenario_double(scn, "Word75", Word75);
+	papiWriteScenario_double(scn, "Word76", Word76);
+	papiWriteScenario_double(scn, "Word77", Word77);
+	if (AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+	{
+		papiWriteScenario_intarr(scn, "Word78i", Word78i, 2);
+	}
+	else
+	{
+		papiWriteScenario_double(scn, "Word78d", Word78d);
+	}
+	papiWriteScenario_double(scn, "Word79", Word79);
+	papiWriteScenario_double(scn, "Word80", Word80);
+	papiWriteScenario_double(scn, "Word81", Word81);
+	papiWriteScenario_double(scn, "Word82", Word82);
+	papiWriteScenario_double(scn, "Word83", Word83);
+	papiWriteScenario_double(scn, "Word84", Word84);
+	papiWriteScenario_double(scn, "GMTI", GMTI);
+	papiWriteScenario_intarr(scn, "TrajDet", TrajDet, 3);
+	papiWriteScenario_vec(scn, "R_BI", R_BI);
+	papiWriteScenario_vec(scn, "V_BI", V_BI);
+	papiWriteScenario_double(scn, "GMT_BI", GMT_BI);
+	papiWriteScenario_vec(scn, "R_BO", R_BO);
+	papiWriteScenario_vec(scn, "V_BO", V_BO);
+	papiWriteScenario_double(scn, "GMT_BO", GMT_BO);
+	papiWriteScenario_vec(scn, "R_1", R_1);
+	papiWriteScenario_vec(scn, "V_1", V_1);
+	papiWriteScenario_double(scn, "GMT_1", GMT_1);
+	papiWriteScenario_double(scn, "TotalMassAfter", TotalMassAfter);
+	papiWriteScenario_double(scn, "TotalAreaAfter", TotalAreaAfter);
+	papiWriteScenario_double(scn, "MainEngineFuelUsed", MainEngineFuelUsed);
+	papiWriteScenario_double(scn, "RCSFuelUsed", RCSFuelUsed);
+	papiWriteScenario_double(scn, "DVREM", DVREM);
+	papiWriteScenario_double(scn, "DVC", DVC);
+	papiWriteScenario_double(scn, "DVXBT", DVXBT);
+	papiWriteScenario_double(scn, "DV_M", DV_M);
+	papiWriteScenario_double(scn, "V_F", V_F);
+	papiWriteScenario_double(scn, "V_S", V_S);
+	papiWriteScenario_double(scn, "V_D", V_D);
+	papiWriteScenario_double(scn, "P_H", P_H);
+	papiWriteScenario_double(scn, "Y_H", Y_H);
+	papiWriteScenario_double(scn, "R_H", R_H);
+	papiWriteScenario_double(scn, "dt_BD", dt_BD);
+	papiWriteScenario_double(scn, "dt_TO", dt_TO);
+	papiWriteScenario_double(scn, "dv_TO", dv_TO);
+	papiWriteScenario_double(scn, "P_G", P_G);
+	papiWriteScenario_double(scn, "Y_G", Y_G);
+	papiWriteScenario_double(scn, "lat_BI", lat_BI);
+	papiWriteScenario_double(scn, "lng_BI", lng_BI);
+	papiWriteScenario_double(scn, "h_BI", h_BI);
+	papiWriteScenario_double(scn, "eta_BI", eta_BI);
+	papiWriteScenario_double(scn, "e_BO", e_BO);
+	papiWriteScenario_double(scn, "i_BO", i_BO);
+	papiWriteScenario_double(scn, "g_BO", g_BO);
+	papiWriteScenario_double(scn, "h_a", h_a);
+	papiWriteScenario_double(scn, "lat_a", lat_a);
+	papiWriteScenario_double(scn, "lng_a", lng_a);
+	papiWriteScenario_double(scn, "GMT_a", GMT_a);
+	papiWriteScenario_double(scn, "h_p", h_p);
+	papiWriteScenario_double(scn, "lat_p", lat_p);
+	papiWriteScenario_double(scn, "lng_p", lng_p);
+	papiWriteScenario_double(scn, "GMT_p", GMT_p);
+	papiWriteScenario_double(scn, "GMT_AN", GMT_AN);
+	papiWriteScenario_double(scn, "lng_AN", lng_AN);
+	papiWriteScenario_double(scn, "IMPT", IMPT);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void MPTManeuver::LoadState(FILEHANDLE scn, char *end_str)
+{
+	char Buff[128];
+	char *line;
+	int inttemp;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str))) {
+			break;
+		}
+
+		if (papiReadScenario_string(line, "code", Buff))
+		{
+			code.assign(Buff);
+		}
+		CommonBlock.LoadState(line, inttemp);
+		if (papiReadScenario_string(line, "StationIDFrozen", Buff))
+		{
+			StationIDFrozen.assign(Buff);
+		}
+		papiReadScenario_double(line, "GMTFrozen", GMTFrozen);
+		papiReadScenario_int(line, "AttitudeCode", AttitudeCode);
+		papiReadScenario_int(line, "Thruster", Thruster);
+		papiReadScenario_bool(line, "UllageThrusterOpt", UllageThrusterOpt);
+		papiReadScenario_bool(line, "AttitudesInput", AttitudesInput);
+		if (papiReadScenario_int(line, "ConfigCodeBefore", inttemp))
+		{
+			ConfigCodeBefore = inttemp;
+		}
+		papiReadScenario_int(line, "TVC", TVC);
+		papiReadScenario_int(line, "TrimAngleInd", TrimAngleInd);
+		papiReadScenario_bool(line, "FrozenManeuverInd", FrozenManeuverInd);
+		papiReadScenario_int(line, "RefBodyInd", RefBodyInd);
+		papiReadScenario_int(line, "CoordSysInd", CoordSysInd);
+		papiReadScenario_bool(line, "HeadsUpDownInd", HeadsUpDownInd);
+		papiReadScenario_double(line, "DockingAngle", DockingAngle);
+		papiReadScenario_double(line, "GMTMAN", GMTMAN);
+		papiReadScenario_double(line, "dt_ullage", dt_ullage);
+		papiReadScenario_double(line, "DT_10PCT", DT_10PCT);
+		papiReadScenario_double(line, "dt", dt);
+		papiReadScenario_double(line, "dv", dv);
+		papiReadScenario_vec(line, "A_T", A_T);
+		papiReadScenario_vec(line, "X_B", X_B);
+		papiReadScenario_vec(line, "Y_B", Y_B);
+		papiReadScenario_vec(line, "Z_B", Z_B);
+		papiReadScenario_SV(line, "FrozenManeuverVector", FrozenManeuverVector);
+		papiReadScenario_double(line, "DPSScaleFactor", DPSScaleFactor);
+		papiReadScenario_vec(line, "dV_inertial", dV_inertial);
+		papiReadScenario_vec(line, "dV_LVLH", dV_LVLH);
+		papiReadScenario_double(line, "Word67d", Word67d);
+		papiReadScenario_intarr(line, "Word67i", Word67i, 2);
+		papiReadScenario_double(line, "Word68", Word68);
+		papiReadScenario_double(line, "Word69", Word69);
+		papiReadScenario_double(line, "Word70", Word70);
+		papiReadScenario_double(line, "Word71", Word71);
+		papiReadScenario_double(line, "Word72", Word72);
+		papiReadScenario_double(line, "Word73", Word73);
+		papiReadScenario_double(line, "Word74", Word74);
+		papiReadScenario_double(line, "Word75", Word75);
+		papiReadScenario_double(line, "Word76", Word76);
+		papiReadScenario_double(line, "Word77", Word77);
+		papiReadScenario_double(line, "Word78d", Word78d);
+		papiReadScenario_intarr(line, "Word78i", Word78i, 2);
+		papiReadScenario_double(line, "Word79", Word79);
+		papiReadScenario_double(line, "Word80", Word80);
+		papiReadScenario_double(line, "Word81", Word81);
+		papiReadScenario_double(line, "Word82", Word82);
+		papiReadScenario_double(line, "Word83", Word83);
+		papiReadScenario_double(line, "Word84", Word84);
+		papiReadScenario_double(line, "GMTI", GMTI);
+		papiReadScenario_intarr(line, "TrajDet", TrajDet, 3);
+		papiReadScenario_vec(line, "R_BI", R_BI);
+		papiReadScenario_vec(line, "V_BI", V_BI);
+		papiReadScenario_double(line, "GMT_BI", GMT_BI);
+		papiReadScenario_vec(line, "R_BO", R_BO);
+		papiReadScenario_vec(line, "V_BO", V_BO);
+		papiReadScenario_double(line, "GMT_BO", GMT_BO);
+		papiReadScenario_vec(line, "R_1", R_1);
+		papiReadScenario_vec(line, "V_1", V_1);
+		papiReadScenario_double(line, "GMT_1", GMT_1);
+		papiReadScenario_double(line, "TotalMassAfter", TotalMassAfter);
+		papiReadScenario_double(line, "TotalAreaAfter", TotalAreaAfter);
+		papiReadScenario_double(line, "MainEngineFuelUsed", MainEngineFuelUsed);
+		papiReadScenario_double(line, "RCSFuelUsed", RCSFuelUsed);
+		papiReadScenario_double(line, "DVREM", DVREM);
+		papiReadScenario_double(line, "DVC", DVC);
+		papiReadScenario_double(line, "DVXBT", DVXBT);
+		papiReadScenario_double(line, "DV_M", DV_M);
+		papiReadScenario_double(line, "V_F", V_F);
+		papiReadScenario_double(line, "V_S", V_S);
+		papiReadScenario_double(line, "V_D", V_D);
+		papiReadScenario_double(line, "P_H", P_H);
+		papiReadScenario_double(line, "Y_H", Y_H);
+		papiReadScenario_double(line, "R_H", R_H);
+		papiReadScenario_double(line, "dt_BD", dt_BD);
+		papiReadScenario_double(line, "dt_TO", dt_TO);
+		papiReadScenario_double(line, "dv_TO", dv_TO);
+		papiReadScenario_double(line, "P_G", P_G);
+		papiReadScenario_double(line, "Y_G", Y_G);
+		papiReadScenario_double(line, "lat_BI", lat_BI);
+		papiReadScenario_double(line, "lng_BI", lng_BI);
+		papiReadScenario_double(line, "h_BI", h_BI);
+		papiReadScenario_double(line, "eta_BI", eta_BI);
+		papiReadScenario_double(line, "e_BO", e_BO);
+		papiReadScenario_double(line, "i_BO", i_BO);
+		papiReadScenario_double(line, "g_BO", g_BO);
+		papiReadScenario_double(line, "h_a", h_a);
+		papiReadScenario_double(line, "lat_a", lat_a);
+		papiReadScenario_double(line, "lng_a", lng_a);
+		papiReadScenario_double(line, "GMT_a", GMT_a);
+		papiReadScenario_double(line, "h_p", h_p);
+		papiReadScenario_double(line, "lat_p", lat_p);
+		papiReadScenario_double(line, "lng_p", lng_p);
+		papiReadScenario_double(line, "GMT_p", GMT_p);
+		papiReadScenario_double(line, "GMT_AN", GMT_AN);
+		papiReadScenario_double(line, "lng_AN", lng_AN);
+		papiReadScenario_double(line, "IMPT", IMPT);
+	}
 }
 
 MPTManDisplay::MPTManDisplay()
@@ -567,15 +951,15 @@ LunarDescentPlanningTable::LunarDescentPlanningTable()
 	LONG_LLS = 0.0;
 	for (int i = 0;i < 4;i++)
 	{
-		GETTH[i] = 0.0;
-		GETIG[i] = 0.0;
-		LIG[i] = 0.0;
-		DV[i] = 0.0;
-		AC[i] = 0.0;
-		HPC[i] = 0.0;
-		DEL[i] = 0.0;
-		THPC[i] = 0.0;
-		DVVector[i] = _V(0, 0, 0);
+	GETTH[i] = 0.0;
+	GETIG[i] = 0.0;
+	LIG[i] = 0.0;
+	DV[i] = 0.0;
+	AC[i] = 0.0;
+	HPC[i] = 0.0;
+	DEL[i] = 0.0;
+	THPC[i] = 0.0;
+	DVVector[i] = _V(0, 0, 0);
 	}
 	PD_ThetaIgn = 0.0;
 	PD_PropRem = 0.0;
@@ -585,6 +969,111 @@ LunarDescentPlanningTable::LunarDescentPlanningTable()
 	sprintf(DescAzMode, "");
 	DescAsc = 0.0;
 	SN_LK_A = 0.0;
+}
+
+MissionPlanTable::MissionPlanTable()
+{
+	for (int i = 0;i < 15;i++)
+	{
+		TimeToBeginManeuver[i] = 0.0;
+		TimeToEndManeuver[i] = 0.0;
+		AreaAfterManeuver[i] = 0.0;
+		WeightAfterManeuver[i] = 0.0;
+	}
+}
+
+void MissionPlanTable::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	char Buff[128], Buff2[128];
+	oapiWriteLine(scn, start_str);
+	oapiWriteScenario_int(scn, "ManeuverNum", ManeuverNum);
+	sprintf_s(Buff, StationID.c_str());
+	oapiWriteScenario_string(scn, "StationID", Buff);
+	papiWriteScenario_double(scn, "GMTAV", GMTAV);
+	papiWriteScenario_double(scn, "KFactor", KFactor);
+	papiWriteScenario_double(scn, "LMStagingGMT", LMStagingGMT);
+	sprintf(Buff, "  %s %.12g", "UpcomingManeuverGMT", UpcomingManeuverGMT);
+	oapiWriteLine(scn, Buff);
+	papiWriteScenario_double(scn, "SIVBVentingBeginGET", SIVBVentingBeginGET);
+	CommonBlock.SaveState(scn);
+	papiWriteScenario_double(scn, "TotalInitMass", TotalInitMass);
+	papiWriteScenario_double(scn, "ConfigurationArea", ConfigurationArea);
+	papiWriteScenario_double(scn, "DeltaDockingAngle", DeltaDockingAngle);
+	if (ManeuverNum > 0)
+	{
+		papiWriteScenario_doublearr(scn, "TimeToBeginManeuver", TimeToBeginManeuver, ManeuverNum);
+		papiWriteScenario_doublearr(scn, "TimeToEndManeuver", TimeToEndManeuver, ManeuverNum);
+		papiWriteScenario_doublearr(scn, "AreaAfterManeuver", AreaAfterManeuver, ManeuverNum);
+		papiWriteScenario_doublearr(scn, "WeightAfterManeuver", WeightAfterManeuver, ManeuverNum);
+	}
+	oapiWriteScenario_int(scn, "LastFrozenManeuver", LastFrozenManeuver);
+	oapiWriteScenario_int(scn, "LastExecutedManeuver", LastExecutedManeuver);
+	for (unsigned i = 0;i < ManeuverNum;i++)
+	{
+		sprintf_s(Buff, "MAN%d_BEGIN", i + 1);
+		sprintf_s(Buff2, "MAN%d_END", i + 1);
+		mantable[i].SaveState(scn, Buff, Buff2);
+	}
+	oapiWriteLine(scn, end_str);
+}
+
+void MissionPlanTable::LoadState(FILEHANDLE scn, char *end_str)
+{
+	char Buff[128], manbuff[16], manbuff2[16];
+	char *line;
+	int inttemp, mannum;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str))) {
+			break;
+		}
+
+		if (!strnicmp(line, "ManeuverNum", 11)) {
+			sscanf(line + 11, "%d", &ManeuverNum);
+			mantable.resize(ManeuverNum);
+			mannum = 0;
+			sprintf_s(manbuff, "MAN%d_BEGIN", mannum + 1);
+			sprintf_s(manbuff2, "MAN%d_END", mannum + 1);
+		}
+		else if (papiReadScenario_string(line, "StationID", Buff))
+		{
+			StationID.assign(Buff);
+		}
+
+		papiReadScenario_double(line, "GMTAV", GMTAV);
+		papiReadScenario_double(line, "KFactor", KFactor);
+		papiReadScenario_double(line, "LMStagingGMT", LMStagingGMT);
+		papiReadScenario_double(line, "UpcomingManeuverGMT", UpcomingManeuverGMT);
+		papiReadScenario_double(line, "SIVBVentingBeginGET", SIVBVentingBeginGET);
+		CommonBlock.LoadState(line, inttemp);
+		papiReadScenario_double(line, "TotalInitMass", TotalInitMass);
+		papiReadScenario_double(line, "ConfigurationArea", ConfigurationArea);
+		papiReadScenario_double(line, "DeltaDockingAngle", DeltaDockingAngle);
+		if (ManeuverNum > 0)
+		{
+			papiReadScenario_doublearr(line, "TimeToBeginManeuver", TimeToBeginManeuver, ManeuverNum);
+			papiReadScenario_doublearr(line, "TimeToEndManeuver", TimeToEndManeuver, ManeuverNum);
+			papiReadScenario_doublearr(line, "AreaAfterManeuver", AreaAfterManeuver, ManeuverNum);
+			papiReadScenario_doublearr(line, "WeightAfterManeuver", WeightAfterManeuver, ManeuverNum);
+		}
+		if (papiReadScenario_int(line, "LastFrozenManeuver", inttemp))
+		{
+			LastFrozenManeuver = inttemp;
+		}
+		else if (papiReadScenario_int(line, "LastExecutedManeuver", inttemp))
+		{
+			LastExecutedManeuver = inttemp;
+		}
+		if (ManeuverNum > 0)
+		{
+			if (!strnicmp(line, manbuff, sizeof(manbuff))) {
+				mantable[mannum].LoadState(scn, manbuff2);
+				mannum++;
+				sprintf_s(manbuff, "MAN%d_BEGIN", mannum + 1);
+				sprintf_s(manbuff2, "MAN%d_END", mannum + 1);
+			}
+		}
+	}
 }
 
 RTCC::RTEConstraintsTable::RTEConstraintsTable()
@@ -695,6 +1184,7 @@ RTCC::RendezvousEvaluationDisplay::RendezvousEvaluationDisplay()
 RTCC::RTCC()
 {
 	mcc = NULL;
+	MissionFileName[0] = 0;
 	TimeofIgnition = 0.0;
 	SplashLatitude = 0.0;
 	SplashLongitude = 0.0;
@@ -715,8 +1205,6 @@ RTCC::RTCC()
 	calcParams.TLAND = 0.0;
 	calcParams.LSAlt = 0.0;
 	calcParams.LSAzi = 0.0;
-	calcParams.LSLat = 0.0;
-	calcParams.LSLng = 0.0;
 	calcParams.LunarLiftoff = 0.0;
 	calcParams.Insertion = 0.0;
 	calcParams.Phasing = 0.0;
@@ -850,8 +1338,13 @@ RTCC::RTCC()
 	MCVWD3 = 472.159 / (LBS*1000.0);
 	MCVTB2 = 1.0;
 
+	MCERTS = 0.26251614528012;
+	MCCBES = 0;
 	GMTBASE = 0.0;
 	MCGMTL = MGLGMT = 0.0;
+	MCGRAG = 0.0;
+	MCGRIC = 0.0;
+	MCGRIL = 0.0;
 	MCGECC = 0.85;
 	MCGSMA = 25.0;
 	MCTSPP = -2.15*RAD;
@@ -866,7 +1359,7 @@ RTCC::RTCC()
 	MCEBAS = 1.0;
 	MCEASQ = 4.0619437e13;
 	MCEBSQ = 4.0619437e13;
-	MCSMLR = OrbMech::R_Moon;
+	MCSMLR = 1738090.0;
 	//LC-39A
 	MCLSDA = sin(28.608202*RAD);
 	MCLCDA = cos(28.608202*RAD);
@@ -898,6 +1391,34 @@ RTCC::RTCC()
 	//Inertial velocity of EI, fps
 	MDLEIC[2] = 25567.72868;
 
+	//Polynomials for inclination and descending node
+	MDVSTP.fx[0] = 32.55754;
+	MDVSTP.fx[1] = -15.84615;
+	MDVSTP.fx[2] = 11.64780;
+	MDVSTP.fx[3] = 9.890970;
+	MDVSTP.fx[4] = -5.111430;
+	MDVSTP.fx[5] = 0;
+	MDVSTP.fx[6] = 0;
+	MDVSTP.gx[0] = 123.1935;
+	MDVSTP.gx[1] = -55.06485;
+	MDVSTP.gx[2] = -35.26208;
+	MDVSTP.gx[3] = 26.01324;
+	MDVSTP.gx[4] = -1.47591;
+	MDVSTP.gx[5] = 0;
+	MDVSTP.gx[6] = 0;
+	MDVSTP.T4IG = 9.0*60.0 + 15.0;
+	MDVSTP.T4C = 11.0*60.0 + 40.0;
+	MDVSTP.DTIG = 578.0;
+	MDVSTP.DT4N = 145.0;
+	MDVSTP.DTLIM = 100.0;
+	MDVSTP.KP1 = 0.0;
+	MDVSTP.KP2 = 0.0;
+	MDVSTP.KY1 = 0.0;
+	MDVSTP.KY2 = 0.0;
+	MDVSTP.PHIL = 28.6082888*RAD;
+
+	//Epoch of NBY 1969 (Apollo 7-10)
+	AGCEpoch = 40221.525;
 	MCCCEX = 3404;
 	MCCLEX = 3433;
 	MCCCRF = 1735;
@@ -999,8 +1520,12 @@ RTCC::RTCC()
 	LMDSCCGTAB.CG[39] = _V(4.731846, 0.000000, 0.000000);
 	LMDSCCGTAB.N = 40;
 
-	BZLSDISP.lat[RTCC_LMPOS_BEST] = 0.0;
-	BZLSDISP.lng[RTCC_LMPOS_BEST] = 0.0;
+	//Load star table
+	EMSGSUPP(0, 0);
+
+	BZLAND.lat[RTCC_LMPOS_BEST] = 0.0;
+	BZLAND.lng[RTCC_LMPOS_BEST] = 0.0;
+	BZLAND.rad[RTCC_LMPOS_BEST] = MCSMLR;
 
 	PZLTRT.DT_Ins_TPI = PZLTRT.DT_Ins_TPI_NOM = 40.0*60.0;
 	GZGENCSN.TIPhaseAngle = 0.0;
@@ -1013,6 +1538,372 @@ RTCC::~RTCC()
 void RTCC::Init(MCC *ptr)
 {
 	mcc = ptr;
+}
+
+void RTCC::Timestep(double simt, double simdt, double mjd)
+{
+	double gmt = RTCCPresentTimeGMT();
+	if (PZMPTCSM.ManeuverNum > 0)
+	{
+		if (gmt >= PZMPTCSM.UpcomingManeuverGMT)
+		{
+			PMSEXE(RTCC_MPT_CSM, gmt);
+		}
+	}
+	if (PZMPTLEM.ManeuverNum > 0)
+	{
+		if (gmt >= PZMPTLEM.UpcomingManeuverGMT)
+		{
+			PMSEXE(RTCC_MPT_LM, gmt);
+		}
+	}
+}
+
+void RTCC::LoadLaunchDaySpecificParameters(int year, int month, int day)
+{
+	//Mission initialization parameters
+	LoadMissionInitParameters(year, month, day);
+	//Skeleton flight plan table
+	QMSEARCH(year, month, day);
+	QMMBLD(year, month, day);
+}
+
+void RTCC::QMSEARCH(int year, int month, int day)
+{
+	//This function loads the skeleton flight plan for the launch day
+	char Buff[128];
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%d-%02d-%02d SFP.txt", year, month, day);
+
+	ifstream startable(Buff);
+	if (startable.is_open())
+	{
+		std::string line;
+		double dtemp;
+
+		while (getline(startable, line))
+		{
+			sprintf_s(Buff, line.c_str());
+
+			if (papiReadScenario_double(Buff, "SFP_DPSI_LOI", dtemp))
+			{
+				PZSFPTAB.blocks[0].dpsi_loi = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_DPSI_TEI", dtemp))
+			{
+				PZSFPTAB.blocks[0].dpsi_tei = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_DT_LLS", dtemp))
+			{
+				PZSFPTAB.blocks[0].dt_lls = dtemp * 3600.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_DV_TEI", dtemp))
+			{
+				PZSFPTAB.blocks[0].dv_tei = dtemp * 0.3048;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_GAMMA_LOI", dtemp))
+			{
+				PZSFPTAB.blocks[0].gamma_loi = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_GET_TLI", dtemp))
+			{
+				PZSFPTAB.blocks[0].GET_TLI = dtemp * 3600.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_GMT_ND", dtemp))
+			{
+				PZSFPTAB.blocks[0].GMT_nd = dtemp * 3600.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_GMT_PC1", dtemp))
+			{
+				PZSFPTAB.blocks[0].GMT_pc1 = dtemp * 3600.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_GMT_PC2", dtemp))
+			{
+				PZSFPTAB.blocks[0].GMT_pc2 = dtemp * 3600.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_H_ND", dtemp))
+			{
+				PZSFPTAB.blocks[0].h_nd = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_H_PC1", dtemp))
+			{
+				PZSFPTAB.blocks[0].h_pc1 = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_H_PC2", dtemp))
+			{
+				PZSFPTAB.blocks[0].h_pc2 = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_INCL_FR", dtemp))
+			{
+				PZSFPTAB.blocks[0].incl_fr = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_LAT_LLS", dtemp))
+			{
+				PZSFPTAB.blocks[0].lat_lls = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_LAT_ND", dtemp))
+			{
+				PZSFPTAB.blocks[0].lat_nd = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_LAT_PC1", dtemp))
+			{
+				PZSFPTAB.blocks[0].lat_pc1 = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_LAT_PC2", dtemp))
+			{
+				PZSFPTAB.blocks[0].lat_pc2 = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_LNG_LLS", dtemp))
+			{
+				PZSFPTAB.blocks[0].lng_lls = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_LNG_ND", dtemp))
+			{
+				PZSFPTAB.blocks[0].lng_nd = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_LNG_PC1", dtemp))
+			{
+				PZSFPTAB.blocks[0].lng_pc1 = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_LNG_PC2", dtemp))
+			{
+				PZSFPTAB.blocks[0].lng_pc2 = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_PSI_LLS", dtemp))
+			{
+				PZSFPTAB.blocks[0].psi_lls = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_RAD_LLS", dtemp))
+			{
+				PZSFPTAB.blocks[0].rad_lls = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_T_LO", dtemp))
+			{
+				PZSFPTAB.blocks[0].T_lo = dtemp * 3600.0;
+			}
+			else if (papiReadScenario_double(Buff, "SFP_T_TE", dtemp))
+			{
+				PZSFPTAB.blocks[0].T_te = dtemp * 3600.0;
+			}
+		}
+	}
+}
+
+void RTCC::QMMBLD(int year, int month, int day)
+{
+	//This function loads the TLI targeting parameters for the launch day
+	//Loaded file has to have the punch card format from MSC memo 69-FM-171. One punch card = one line
+	char Buff[128];
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%d-%02d-%02d TLI.txt", year, month, day);
+
+	ifstream startable(Buff);
+
+	if (startable.is_open())
+	{
+		std::string line;
+		int i, j, day, opp, entry;
+		double dtemp1, dtemp2, dtemp3, dtemp4;
+
+		for (i = 0;i < 2;i++)
+		{
+			entry = 0;
+			getline(startable, line);
+			sscanf(line.c_str(), "%d %d %lf %lf", &day, &opp, &dtemp1, &dtemp2);
+			if (opp < 1 || opp > 2)
+			{
+				return;
+			}
+			PZSTARGP.Day = day;
+			PZSTARGP.t_D[opp - 1][entry] = dtemp1;
+			PZSTARGP.cos_sigma[opp - 1][entry] = dtemp2;
+
+			getline(startable, line);
+			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+			PZSTARGP.C_3[opp - 1][entry] = dtemp1;
+			PZSTARGP.e_N[opp - 1][entry] = dtemp2;
+			PZSTARGP.RA[opp - 1][entry] = dtemp3 * RAD;
+			PZSTARGP.DEC[opp - 1][entry] = dtemp4 * RAD;
+			for (j = 0;j < 7;j++)
+			{
+				getline(startable, line);
+				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+				entry++;
+				PZSTARGP.t_D[opp - 1][entry] = dtemp1;
+				PZSTARGP.cos_sigma[opp - 1][entry] = dtemp2;
+				PZSTARGP.C_3[opp - 1][entry] = dtemp3;
+				PZSTARGP.e_N[opp - 1][entry] = dtemp4;
+				getline(startable, line);
+				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+				PZSTARGP.RA[opp - 1][entry] = dtemp1 * RAD;
+				PZSTARGP.DEC[opp - 1][entry] = dtemp2 * RAD;
+				entry++;
+				PZSTARGP.t_D[opp - 1][entry] = dtemp3;
+				PZSTARGP.cos_sigma[opp - 1][entry] = dtemp4;
+				getline(startable, line);
+				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+				PZSTARGP.C_3[opp - 1][entry] = dtemp1;
+				PZSTARGP.e_N[opp - 1][entry] = dtemp2;
+				PZSTARGP.RA[opp - 1][entry] = dtemp3 * RAD;
+				PZSTARGP.DEC[opp - 1][entry] = dtemp4 * RAD;
+			}
+		}
+		for (i = 0;i < 2;i++)
+		{
+			getline(startable, line);
+			sscanf(line.c_str(), "%d %d %lf %lf", &day, &opp, &dtemp1, &dtemp2);
+			if (opp < 1 || opp > 2)
+			{
+				return;
+			}
+			PZSTARGP.T_ST[opp - 1] = dtemp1;
+			PZSTARGP.beta[opp - 1] = dtemp2 * RAD;
+			getline(startable, line);
+			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+			PZSTARGP.alpha_TS[opp - 1] = dtemp1 * RAD;
+			PZSTARGP.f[opp - 1] = dtemp2 * RAD;
+			PZSTARGP.R_N[opp - 1] = dtemp3;
+			PZSTARGP.T3_apo[opp - 1] = dtemp4;
+			getline(startable, line);
+			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+			PZSTARGP.tau3R[opp - 1] = dtemp1;
+			PZSTARGP.T2[opp - 1] = dtemp2;
+			PZSTARGP.Vex2[opp - 1] = dtemp3;
+			PZSTARGP.Mdot2[opp - 1] = dtemp4;
+			getline(startable, line);
+			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+			PZSTARGP.DV_BR[opp - 1] = dtemp1;
+			PZSTARGP.tau2N[opp - 1] = dtemp2;
+			PZSTARGP.KP0[opp - 1] = dtemp3;
+			PZSTARGP.KY0[opp - 1] = dtemp4;
+		}
+		getline(startable, line);
+		sscanf(line.c_str(), "%d %lf %lf %lf", &day, &dtemp1, &dtemp2, &dtemp3);
+		PZSTARGP.T_LO = dtemp1;
+		PZSTARGP.theta_EO = dtemp2;
+		PZSTARGP.omega_E = dtemp3 / 3600.0;
+		getline(startable, line);
+		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+		PZSTARGP.K_a1 = dtemp1;
+		PZSTARGP.K_a2 = dtemp2;
+		PZSTARGP.K_T3 = dtemp3;
+		MDVSTP.t_DS0 = dtemp4;
+		getline(startable, line);
+		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+		MDVSTP.t_DS0 = dtemp1;
+		MDVSTP.t_DS1 = dtemp2;
+		MDVSTP.t_DS2 = dtemp3;
+		MDVSTP.hx[0][0] = dtemp4;
+		getline(startable, line);
+		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+		MDVSTP.hx[0][1] = dtemp1;
+		MDVSTP.hx[0][2] = dtemp2;
+		MDVSTP.hx[0][3] = dtemp3;
+		MDVSTP.hx[0][4] = dtemp4;
+		getline(startable, line);
+		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+		MDVSTP.t_D0 = 0.0;
+		MDVSTP.t_D1 = dtemp1;
+		MDVSTP.t_SD1 = dtemp2;
+		MDVSTP.hx[1][0] = dtemp3;
+		MDVSTP.hx[1][1] = dtemp4;
+		getline(startable, line);
+		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+		MDVSTP.hx[1][2] = dtemp1;
+		MDVSTP.hx[1][3] = dtemp2;
+		MDVSTP.hx[1][4] = dtemp3;
+		MDVSTP.t_D2 = dtemp4;
+		getline(startable, line);
+		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+		MDVSTP.t_SD2 = dtemp1;
+		MDVSTP.hx[2][0] = dtemp2;
+		MDVSTP.hx[2][1] = dtemp3;
+		MDVSTP.hx[2][2] = dtemp4;
+		getline(startable, line);
+		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
+		MDVSTP.hx[2][3] = dtemp1;
+		MDVSTP.hx[2][4] = dtemp2;
+		MDVSTP.t_D3 = dtemp3;
+		MDVSTP.t_SD3 = dtemp4;
+	}
+}
+
+void RTCC::LoadMissionInitParameters(int year, int month, int day)
+{
+	//This function loads launch day specific parameters that might be updated and are be saved/loaded
+	char Buff[128];
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%d-%02d-%02d Init.txt", year, month, day);
+
+	ifstream startable(Buff);
+	if (startable.is_open())
+	{
+		std::string line;
+		double dtemp;
+
+		while (getline(startable, line))
+		{
+			sprintf_s(Buff, line.c_str());
+
+			if (papiReadScenario_double(Buff, "LSLat", dtemp))
+			{
+				BZLAND.lat[RTCC_LMPOS_BEST] = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "LSLng", dtemp))
+			{
+				BZLAND.lng[RTCC_LMPOS_BEST] = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "LSRad", dtemp))
+			{
+				BZLAND.rad[RTCC_LMPOS_BEST] = dtemp * 1852.0;
+			}
+		}
+	}
+}
+
+void RTCC::LoadMissionConstantsFile(char *file)
+{
+	//This function loads mission specific constants that will not be changed or saved/loaded
+	char Buff[128];
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s.txt", file);
+
+	ifstream startable(Buff);
+	if (startable.is_open())
+	{
+		std::string line;
+		double dtemp;
+
+		while (getline(startable, line))
+		{
+			sprintf_s(Buff, line.c_str());
+
+			papiReadScenario_double(Buff, "AGCEpoch", AGCEpoch);
+			papiReadScenario_int(Buff, "MCCLEX", MCCLEX);
+			papiReadScenario_int(Buff, "MCCLRF", MCCLRF);
+			papiReadScenario_int(Buff, "MCCCXS", MCCCXS);
+			papiReadScenario_int(Buff, "MCCLXS", MCCLXS);
+			if (papiReadScenario_double(Buff, "MCLADA", dtemp))
+			{
+				MCLSDA = sin(dtemp*RAD);
+				MCLCDA = cos(dtemp*RAD);
+			}
+			else if (papiReadScenario_double(Buff, "MDVSTP_PHIL", dtemp))
+			{
+				MDVSTP.PHIL = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "MCLGRA", dtemp))
+			{
+				MCLGRA = dtemp * RAD;
+			}
+			else if (papiReadScenario_int(Buff, "MCCCRF", MCCCRF))
+			{
+				sprintf(Buff, "%d", MCCCRF);
+				sscanf(Buff, "%o", &MCCCRF_DL);
+			}
+			else if (papiReadScenario_int(Buff, "MCCLRF", MCCLRF))
+			{
+				sprintf(Buff, "%d", MCCLRF);
+				sscanf(Buff, "%o", &MCCLRF_DL);
+			}
+		}
+	}
 }
 
 void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
@@ -1511,7 +2402,7 @@ int RTCC::PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH,
 		prograde = false;
 		mu = OrbMech::mu_Moon;
 		//SIGN = -1.0;
-		RPLIM = MCSMLR;
+		RPLIM = BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 
 	IC = 0;
@@ -6534,11 +7425,82 @@ void RTCC::P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad)
 }
 
 void RTCC::SaveState(FILEHANDLE scn) {
+
+	int i;
+
 	oapiWriteLine(scn, RTCC_START_STRING);
+	oapiWriteScenario_string(scn, "RTCC_MISSIONFILE", MissionFileName);
 	// Booleans
 	// Integers
+	SAVE_INT("RTCC_GZGENCSN_Year", GZGENCSN.Year);
+	SAVE_INT("RTCC_GZGENCSN_RefDayOfYear", GZGENCSN.RefDayOfYear);
+	SAVE_INT("RTCC_GZGENCSN_DaysInYear", GZGENCSN.DaysInYear);
+	SAVE_INT("RTCC_GZGENCSN_MonthofLiftoff", GZGENCSN.MonthofLiftoff);
+	SAVE_INT("RTCC_GZGENCSN_DayofLiftoff", GZGENCSN.DayofLiftoff);
+	SAVE_INT("RTCC_GZGENCSN_DaysinMonthofLiftoff", GZGENCSN.DaysinMonthofLiftoff);
+	SAVE_INT("RTCC_SFP_MODE", PZSFPTAB.blocks[1].mode);
 	SAVE_INT("RTCC_REFSMMATType", REFSMMATType);
 	// Floats
+	SAVE_DOUBLE("RTCC_GMTBASE", GMTBASE);
+	SAVE_DOUBLE("RTCC_MCGMTL", MCGMTL);
+	SAVE_DOUBLE("RTCC_MCLABN", MCLABN);
+	SAVE_DOUBLE("RTCC_MCLSBN", MCLSBN);
+	SAVE_DOUBLE("RTCC_MCLCBN", MCLCBN);
+	SAVE_DOUBLE("RTCC_MCGRAG", MCGRAG);
+	SAVE_DOUBLE("RTCC_MCGRIC", MCGRIC);
+	SAVE_DOUBLE("RTCC_MCGRIL", MCGRIL);
+	SAVE_DOUBLE("RTCC_MCLSDA", MCLSDA);
+	SAVE_DOUBLE("RTCC_MCLCDA", MCLCDA);
+	SAVE_DOUBLE("RTCC_MCLAMD", MCLAMD);
+	SAVE_DOUBLE("RTCC_MDVSTP_T4IG", MDVSTP.T4IG);
+	SAVE_DOUBLE("RTCC_MDVSTP_T4C", MDVSTP.T4C);
+	
+	SAVE_DOUBLE("RTCC_GZGENCSN_DKIELEVATIONANGLE", GZGENCSN.DKIElevationAngle);
+	SAVE_DOUBLE("RTCC_GZGENCSN_DKITERMINALPHASEANGLE", GZGENCSN.DKITerminalPhaseAngle);
+	SAVE_DOUBLE("RTCC_GZGENCSN_TIDELTAH", GZGENCSN.TIDeltaH);
+	SAVE_DOUBLE("RTCC_GZGENCSN_TIPHASEANGLE", GZGENCSN.TIPhaseAngle);
+	SAVE_DOUBLE("RTCC_GZGENCSN_TIELEVATIONANGLE", GZGENCSN.TIElevationAngle);
+	SAVE_DOUBLE("RTCC_GZGENCSN_TITRAVELANGLE", GZGENCSN.TITravelAngle);
+	SAVE_DOUBLE("RTCC_GZGENCSN_TINSRNOMINALTIME", GZGENCSN.TINSRNominalTime);
+	SAVE_DOUBLE("RTCC_GZGENCSN_TINSRNOMINALDELTAH", GZGENCSN.TINSRNominalDeltaH);
+	SAVE_DOUBLE("RTCC_GZGENCSN_TINSRNOMINALPHASEANGLE", GZGENCSN.TINSRNominalPhaseAngle);
+	SAVE_DOUBLE("RTCC_GZGENCSN_DKIDELTAH", GZGENCSN.DKIDeltaH);
+	SAVE_DOUBLE("RTCC_GZGENCSN_SPQDELTAH", GZGENCSN.SPQDeltaH);
+	SAVE_DOUBLE("RTCC_GZGENCSN_SPQELEVATIONANGLE", GZGENCSN.SPQElevationAngle);
+
+	SAVE_DOUBLE("RTCC_TLCCGET", PZMCCPLN.MidcourseGET);
+	SAVE_DOUBLE("RTCC_TLCCVectorGET", PZMCCPLN.VectorGET);
+	SAVE_DOUBLE("RTCC_TLCC_TLMIN", PZMCCPLN.TLMIN);
+	SAVE_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
+
+	SAVE_DOUBLE2("RTCC_SFP_DPSI_LOI", PZSFPTAB.blocks[0].dpsi_loi, PZSFPTAB.blocks[1].dpsi_loi);
+	SAVE_DOUBLE2("RTCC_SFP_DPSI_TEI", PZSFPTAB.blocks[0].dpsi_tei, PZSFPTAB.blocks[1].dpsi_tei);
+	SAVE_DOUBLE2("RTCC_SFP_DT_LLS", PZSFPTAB.blocks[0].dt_lls, PZSFPTAB.blocks[1].dt_lls);
+	SAVE_DOUBLE2("RTCC_SFP_DT_UPD_NOM", PZSFPTAB.blocks[0].dt_upd_nom, PZSFPTAB.blocks[1].dt_upd_nom);
+	SAVE_DOUBLE2("RTCC_SFP_DV_TEI", PZSFPTAB.blocks[0].dv_tei, PZSFPTAB.blocks[1].dv_tei);
+	SAVE_DOUBLE2("RTCC_SFP_GAMMA_LOI", PZSFPTAB.blocks[0].gamma_loi, PZSFPTAB.blocks[1].gamma_loi);
+	SAVE_DOUBLE2("RTCC_SFP_GET_TLI", PZSFPTAB.blocks[0].GET_TLI, PZSFPTAB.blocks[1].GET_TLI);
+	SAVE_DOUBLE2("RTCC_SFP_GMT_TIME_FLAG", PZSFPTAB.blocks[0].GMTTimeFlag, PZSFPTAB.blocks[1].GMTTimeFlag);
+	SAVE_DOUBLE2("RTCC_SFP_GMT_ND", PZSFPTAB.blocks[0].GMT_nd, PZSFPTAB.blocks[1].GMT_nd);
+	SAVE_DOUBLE2("RTCC_SFP_GMT_PC1", PZSFPTAB.blocks[0].GMT_pc1, PZSFPTAB.blocks[1].GMT_pc1);
+	SAVE_DOUBLE2("RTCC_SFP_GMT_PC2", PZSFPTAB.blocks[0].GMT_pc2, PZSFPTAB.blocks[1].GMT_pc2);
+	SAVE_DOUBLE2("RTCC_SFP_H_ND", PZSFPTAB.blocks[0].h_nd, PZSFPTAB.blocks[1].h_nd);
+	SAVE_DOUBLE2("RTCC_SFP_H_PC1", PZSFPTAB.blocks[0].h_pc1, PZSFPTAB.blocks[1].h_pc1);
+	SAVE_DOUBLE2("RTCC_SFP_H_PC2", PZSFPTAB.blocks[0].h_pc2, PZSFPTAB.blocks[1].h_pc2);
+	SAVE_DOUBLE2("RTCC_SFP_INCL_FR", PZSFPTAB.blocks[0].incl_fr, PZSFPTAB.blocks[1].incl_fr);
+	SAVE_DOUBLE2("RTCC_SFP_LAT_LLS", PZSFPTAB.blocks[0].lat_lls, PZSFPTAB.blocks[1].lat_lls);
+	SAVE_DOUBLE2("RTCC_SFP_LAT_ND", PZSFPTAB.blocks[0].lat_nd, PZSFPTAB.blocks[1].lat_nd);
+	SAVE_DOUBLE2("RTCC_SFP_LAT_PC1", PZSFPTAB.blocks[0].lat_pc1, PZSFPTAB.blocks[1].lat_pc1);
+	SAVE_DOUBLE2("RTCC_SFP_LAT_PC2", PZSFPTAB.blocks[0].lat_pc2, PZSFPTAB.blocks[1].lat_pc2);
+	SAVE_DOUBLE2("RTCC_SFP_LNG_LLS", PZSFPTAB.blocks[0].lng_lls, PZSFPTAB.blocks[1].lng_lls);
+	SAVE_DOUBLE2("RTCC_SFP_LNG_ND", PZSFPTAB.blocks[0].lng_nd, PZSFPTAB.blocks[1].lng_nd);
+	SAVE_DOUBLE2("RTCC_SFP_LNG_PC1", PZSFPTAB.blocks[0].lng_pc1, PZSFPTAB.blocks[1].lng_pc1);
+	SAVE_DOUBLE2("RTCC_SFP_LNG_PC2", PZSFPTAB.blocks[0].lng_pc2, PZSFPTAB.blocks[1].lng_pc2);
+	SAVE_DOUBLE2("RTCC_SFP_PSI_LLS", PZSFPTAB.blocks[0].psi_lls, PZSFPTAB.blocks[1].psi_lls);
+	SAVE_DOUBLE2("RTCC_SFP_RAD_LLS", PZSFPTAB.blocks[0].rad_lls, PZSFPTAB.blocks[1].rad_lls);
+	SAVE_DOUBLE2("RTCC_SFP_T_LO", PZSFPTAB.blocks[0].T_lo, PZSFPTAB.blocks[1].T_lo);
+	SAVE_DOUBLE2("RTCC_SFP_T_TE", PZSFPTAB.blocks[0].T_te, PZSFPTAB.blocks[1].T_te);
+
 	SAVE_DOUBLE("RTCC_P30TIG", TimeofIgnition);
 	SAVE_DOUBLE("RTCC_SplLat", SplashLatitude);
 	SAVE_DOUBLE("RTCC_SplLng", SplashLongitude);
@@ -6552,8 +7514,9 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLAND", calcParams.TLAND);
 	SAVE_DOUBLE("RTCC_LSAlt", calcParams.LSAlt);
 	SAVE_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
-	SAVE_DOUBLE("RTCC_LSLat", calcParams.LSLat);
-	SAVE_DOUBLE("RTCC_LSLng", calcParams.LSLng);
+	SAVE_DOUBLE("RTCC_LSLat", BZLAND.lat[RTCC_LMPOS_BEST]);
+	SAVE_DOUBLE("RTCC_LSLng", BZLAND.lng[RTCC_LMPOS_BEST]);
+	SAVE_DOUBLE("RTCC_LSRadius", BZLAND.rad[RTCC_LMPOS_BEST]);
 	SAVE_DOUBLE("RTCC_LunarLiftoff", calcParams.LunarLiftoff);
 	SAVE_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 	SAVE_DOUBLE("RTCC_Phasing", calcParams.Phasing);
@@ -6567,6 +7530,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TEPHEM", calcParams.TEPHEM);
 	SAVE_DOUBLE("RTCC_PericynthionLatitude", calcParams.PericynthionLatitude);
 	SAVE_DOUBLE("RTCC_TIGSTORE1", calcParams.TIGSTORE1);
+
 	// Strings
 	// Vectors
 	SAVE_V3("RTCC_DVLVLH", DeltaV_LVLH);
@@ -6575,8 +7539,34 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_V3("RTCC_DVSTORE1", calcParams.DVSTORE1);
 	// Matrizes
 	SAVE_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
+	SAVE_M3("PZMATCSM_EPH", PZMATCSM.EPH);
+	SAVE_M3("PZMATCSM_G", PZMATCSM.G);
+	SAVE_M3("PZMATCSM_GG", PZMATCSM.GG);
+	SAVE_M3("PZMATLEM_EPH", PZMATLEM.EPH);
+	SAVE_M3("PZMATLEM_G", PZMATLEM.G);
+	SAVE_M3("PZMATLEM_GG", PZMATLEM.GG);
+	for (i = 0;i < 12;i++)
+	{
+		if (EZJGMTX1.data[i].ID > 0)
+		{
+			papiWriteScenario_REFS(scn, "REFSMMAT", 1, i, EZJGMTX1.data[i]);
+		}
+	}
+	for (i = 0;i < 12;i++)
+	{
+		if (EZJGMTX3.data[i].ID > 0)
+		{
+			papiWriteScenario_REFS(scn, "REFSMMAT", 3, i, EZJGMTX3.data[i]);
+		}
+	}
 	// State vectors
 	papiWriteScenario_SV(scn, "RTCC_SVSTORE1", calcParams.SVSTORE1);
+	papiWriteScenario_SV(scn, "RTCC_MPTCM_ANCHOR", EZANCHR1.AnchorVectors[9]);
+	papiWriteScenario_SV(scn, "RTCC_MPTLM_ANCHOR", EZANCHR3.AnchorVectors[9]);
+
+	PZMPTCSM.SaveState(scn, "MPTCSM_BEGIN", "MPTCSM_END");
+	PZMPTLEM.SaveState(scn, "MPTLEM_BEGIN", "MPTLEM_END");
+
 	oapiWriteLine(scn, RTCC_END_STRING);
 }
 
@@ -6584,12 +7574,92 @@ void RTCC::SaveState(FILEHANDLE scn) {
 void RTCC::LoadState(FILEHANDLE scn) {
 	char *line;
 	int tmp = 0; // Used in boolean type loader
+	int inttemp, inttemp2;
+	REFSMMATData refs;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, RTCC_END_STRING, sizeof(RTCC_END_STRING))) {
 			break;
 		}
+		if (papiReadScenario_string(line, "RTCC_MISSIONFILE", MissionFileName))
+		{
+			LoadMissionConstantsFile(MissionFileName);
+		}
+		LOAD_INT("RTCC_GZGENCSN_Year", GZGENCSN.Year);
+		LOAD_INT("RTCC_GZGENCSN_RefDayOfYear", GZGENCSN.RefDayOfYear);
+		LOAD_INT("RTCC_GZGENCSN_DaysInYear", GZGENCSN.DaysInYear);
+		LOAD_INT("RTCC_GZGENCSN_MonthofLiftoff", GZGENCSN.MonthofLiftoff);
+		if (papiReadScenario_int(line, "RTCC_GZGENCSN_DayofLiftoff", GZGENCSN.DayofLiftoff))
+		{
+			//Same as in ARCore, if the year is 0 we assume that the RTCC hasn't been initialized
+			if (GZGENCSN.Year != 0)
+			{
+				LoadLaunchDaySpecificParameters(GZGENCSN.Year, GZGENCSN.MonthofLiftoff, GZGENCSN.DayofLiftoff);
+			}
+		}
+		LOAD_INT("RTCC_GZGENCSN_DaysinMonthofLiftoff", GZGENCSN.DaysinMonthofLiftoff);
+		LOAD_INT("RTCC_SFP_MODE", PZSFPTAB.blocks[1].mode);
 		LOAD_INT("RTCC_REFSMMATType", REFSMMATType);
+		LOAD_DOUBLE("RTCC_GMTBASE", GMTBASE);
+		LOAD_DOUBLE("RTCC_MCGMTL", MCGMTL);
+		LOAD_DOUBLE("RTCC_MCLABN", MCLABN);
+		LOAD_DOUBLE("RTCC_MCLSBN", MCLSBN);
+		LOAD_DOUBLE("RTCC_MCLCBN", MCLCBN);
+		LOAD_DOUBLE("RTCC_MCGRAG", MCGRAG);
+		LOAD_DOUBLE("RTCC_MCGRIC", MCGRIC);
+		LOAD_DOUBLE("RTCC_MCGRIL", MCGRIL);
+		LOAD_DOUBLE("RTCC_MCLSDA", MCLSDA);
+		LOAD_DOUBLE("RTCC_MCLCDA", MCLCDA);
+		LOAD_DOUBLE("RTCC_MCLAMD", MCLAMD);
+		LOAD_DOUBLE("RTCC_MDVSTP_T4IG", MDVSTP.T4IG);
+		LOAD_DOUBLE("RTCC_MDVSTP_T4C", MDVSTP.T4C);
+
+		LOAD_DOUBLE("RTCC_GZGENCSN_DKIELEVATIONANGLE", GZGENCSN.DKIElevationAngle);
+		LOAD_DOUBLE("RTCC_GZGENCSN_DKITERMINALPHASEANGLE", GZGENCSN.DKITerminalPhaseAngle);
+		LOAD_DOUBLE("RTCC_GZGENCSN_TIDELTAH", GZGENCSN.TIDeltaH);
+		LOAD_DOUBLE("RTCC_GZGENCSN_TIPHASEANGLE", GZGENCSN.TIPhaseAngle);
+		LOAD_DOUBLE("RTCC_GZGENCSN_TIELEVATIONANGLE", GZGENCSN.TIElevationAngle);
+		LOAD_DOUBLE("RTCC_GZGENCSN_TITRAVELANGLE", GZGENCSN.TITravelAngle);
+		LOAD_DOUBLE("RTCC_GZGENCSN_TINSRNOMINALTIME", GZGENCSN.TINSRNominalTime);
+		LOAD_DOUBLE("RTCC_GZGENCSN_TINSRNOMINALDELTAH", GZGENCSN.TINSRNominalDeltaH);
+		LOAD_DOUBLE("RTCC_GZGENCSN_TINSRNOMINALPHASEANGLE", GZGENCSN.TINSRNominalPhaseAngle);
+		LOAD_DOUBLE("RTCC_GZGENCSN_DKIDELTAH", GZGENCSN.DKIDeltaH);
+		LOAD_DOUBLE("RTCC_GZGENCSN_SPQDELTAH", GZGENCSN.SPQDeltaH);
+		LOAD_DOUBLE("RTCC_GZGENCSN_SPQELEVATIONANGLE", GZGENCSN.SPQElevationAngle);
+
+		LOAD_DOUBLE("RTCC_TLCCGET", PZMCCPLN.MidcourseGET);
+		LOAD_DOUBLE("RTCC_TLCCVectorGET", PZMCCPLN.VectorGET);
+		LOAD_DOUBLE("RTCC_TLCC_TLMIN", PZMCCPLN.TLMIN);
+		LOAD_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
+
+		LOAD_DOUBLE2("RTCC_SFP_DPSI_LOI", PZSFPTAB.blocks[0].dpsi_loi, PZSFPTAB.blocks[1].dpsi_loi);
+		LOAD_DOUBLE2("RTCC_SFP_DPSI_TEI", PZSFPTAB.blocks[0].dpsi_tei, PZSFPTAB.blocks[1].dpsi_tei);
+		LOAD_DOUBLE2("RTCC_SFP_DT_LLS", PZSFPTAB.blocks[0].dt_lls, PZSFPTAB.blocks[1].dt_lls);
+		LOAD_DOUBLE2("RTCC_SFP_DT_UPD_NOM", PZSFPTAB.blocks[0].dt_upd_nom, PZSFPTAB.blocks[1].dt_upd_nom);
+		LOAD_DOUBLE2("RTCC_SFP_DV_TEI", PZSFPTAB.blocks[0].dv_tei, PZSFPTAB.blocks[1].dv_tei);
+		LOAD_DOUBLE2("RTCC_SFP_GAMMA_LOI", PZSFPTAB.blocks[0].gamma_loi, PZSFPTAB.blocks[1].gamma_loi);
+		LOAD_DOUBLE2("RTCC_SFP_GET_TLI", PZSFPTAB.blocks[0].GET_TLI, PZSFPTAB.blocks[1].GET_TLI);
+		LOAD_DOUBLE2("RTCC_SFP_GMT_TIME_FLAG", PZSFPTAB.blocks[0].GMTTimeFlag, PZSFPTAB.blocks[1].GMTTimeFlag);
+		LOAD_DOUBLE2("RTCC_SFP_GMT_ND", PZSFPTAB.blocks[0].GMT_nd, PZSFPTAB.blocks[1].GMT_nd);
+		LOAD_DOUBLE2("RTCC_SFP_GMT_PC1", PZSFPTAB.blocks[0].GMT_pc1, PZSFPTAB.blocks[1].GMT_pc1);
+		LOAD_DOUBLE2("RTCC_SFP_GMT_PC2", PZSFPTAB.blocks[0].GMT_pc2, PZSFPTAB.blocks[1].GMT_pc2);
+		LOAD_DOUBLE2("RTCC_SFP_H_ND", PZSFPTAB.blocks[0].h_nd, PZSFPTAB.blocks[1].h_nd);
+		LOAD_DOUBLE2("RTCC_SFP_H_PC1", PZSFPTAB.blocks[0].h_pc1, PZSFPTAB.blocks[1].h_pc1);
+		LOAD_DOUBLE2("RTCC_SFP_H_PC2", PZSFPTAB.blocks[0].h_pc2, PZSFPTAB.blocks[1].h_pc2);
+		LOAD_DOUBLE2("RTCC_SFP_INCL_FR", PZSFPTAB.blocks[0].incl_fr, PZSFPTAB.blocks[1].incl_fr);
+		LOAD_DOUBLE2("RTCC_SFP_LAT_LLS", PZSFPTAB.blocks[0].lat_lls, PZSFPTAB.blocks[1].lat_lls);
+		LOAD_DOUBLE2("RTCC_SFP_LAT_ND", PZSFPTAB.blocks[0].lat_nd, PZSFPTAB.blocks[1].lat_nd);
+		LOAD_DOUBLE2("RTCC_SFP_LAT_PC1", PZSFPTAB.blocks[0].lat_pc1, PZSFPTAB.blocks[1].lat_pc1);
+		LOAD_DOUBLE2("RTCC_SFP_LAT_PC2", PZSFPTAB.blocks[0].lat_pc2, PZSFPTAB.blocks[1].lat_pc2);
+		LOAD_DOUBLE2("RTCC_SFP_LNG_LLS", PZSFPTAB.blocks[0].lng_lls, PZSFPTAB.blocks[1].lng_lls);
+		LOAD_DOUBLE2("RTCC_SFP_LNG_ND", PZSFPTAB.blocks[0].lng_nd, PZSFPTAB.blocks[1].lng_nd);
+		LOAD_DOUBLE2("RTCC_SFP_LNG_PC1", PZSFPTAB.blocks[0].lng_pc1, PZSFPTAB.blocks[1].lng_pc1);
+		LOAD_DOUBLE2("RTCC_SFP_LNG_PC2", PZSFPTAB.blocks[0].lng_pc2, PZSFPTAB.blocks[1].lng_pc2);
+		LOAD_DOUBLE2("RTCC_SFP_PSI_LLS", PZSFPTAB.blocks[0].psi_lls, PZSFPTAB.blocks[1].psi_lls);
+		LOAD_DOUBLE2("RTCC_SFP_RAD_LLS", PZSFPTAB.blocks[0].rad_lls, PZSFPTAB.blocks[1].rad_lls);
+		LOAD_DOUBLE2("RTCC_SFP_T_LO", PZSFPTAB.blocks[0].T_lo, PZSFPTAB.blocks[1].T_lo);
+		LOAD_DOUBLE2("RTCC_SFP_T_TE", PZSFPTAB.blocks[0].T_te, PZSFPTAB.blocks[1].T_te);
+
 		LOAD_DOUBLE("RTCC_P30TIG", TimeofIgnition);
 		LOAD_DOUBLE("RTCC_SplLat", SplashLatitude);
 		LOAD_DOUBLE("RTCC_SplLng", SplashLongitude);
@@ -6603,8 +7673,9 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);
 		LOAD_DOUBLE("RTCC_LSAlt", calcParams.LSAlt);
 		LOAD_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
-		LOAD_DOUBLE("RTCC_LSLat", calcParams.LSLat);
-		LOAD_DOUBLE("RTCC_LSLng", calcParams.LSLng);
+		LOAD_DOUBLE("RTCC_LSLat", BZLAND.lat[RTCC_LMPOS_BEST]);
+		LOAD_DOUBLE("RTCC_LSLng", BZLAND.lng[RTCC_LMPOS_BEST]);
+		LOAD_DOUBLE("RTCC_LSRadius", BZLAND.rad[RTCC_LMPOS_BEST]);
 		LOAD_DOUBLE("RTCC_LunarLiftoff", calcParams.LunarLiftoff);
 		LOAD_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 		LOAD_DOUBLE("RTCC_Phasing", calcParams.Phasing);
@@ -6618,13 +7689,52 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TEPHEM", calcParams.TEPHEM);
 		LOAD_DOUBLE("RTCC_PericynthionLatitude", calcParams.PericynthionLatitude);
 		LOAD_DOUBLE("RTCC_TIGSTORE1", calcParams.TIGSTORE1);
+
 		LOAD_V3("RTCC_DVLVLH", DeltaV_LVLH);
 		LOAD_V3("RTCC_R_TLI", calcParams.R_TLI);
 		LOAD_V3("RTCC_V_TLI", calcParams.V_TLI);
 		LOAD_V3("RTCC_DVSTORE1", calcParams.DVSTORE1);
 		LOAD_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
+		LOAD_M3("PZMATCSM_EPH", PZMATCSM.EPH);
+		LOAD_M3("PZMATCSM_G", PZMATCSM.G);
+		LOAD_M3("PZMATCSM_GG", PZMATCSM.GG);
+		LOAD_M3("PZMATLEM_EPH", PZMATLEM.EPH);
+		LOAD_M3("PZMATLEM_G", PZMATLEM.G);
+		LOAD_M3("PZMATLEM_GG", PZMATLEM.GG);
+		if (papiReadScenario_REFS(line, "REFSMMAT", inttemp, inttemp2, refs))
+		{
+			if (inttemp == 1)
+			{
+				EZJGMTX1.data[inttemp2] = refs;
+			}
+			else
+			{
+				EZJGMTX3.data[inttemp2] = refs;
+			}
+		}
 		papiReadScenario_SV(line, "RTCC_SVSTORE1", calcParams.SVSTORE1);
+		papiReadScenario_SV(line, "RTCC_MPTCM_ANCHOR", EZANCHR1.AnchorVectors[9]);
+		papiReadScenario_SV(line, "RTCC_MPTLM_ANCHOR", EZANCHR3.AnchorVectors[9]);
+
+		if (!strnicmp(line, "MPTCSM_BEGIN", sizeof("MPTCSM_BEGIN"))) {
+			PZMPTCSM.LoadState(scn, "MPTCSM_END");
+		}
+		else if (!strnicmp(line, "MPTLEM_BEGIN", sizeof("MPTLEM_BEGIN"))) {
+			PZMPTLEM.LoadState(scn, "MPTLEM_END");
+		}
 	}
+
+	if (EZANCHR1.AnchorVectors[9].GMT != 0 && EZEPH1.EPHEM.Header.TUP == 0)
+	{
+		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9]);
+	}
+	if (EZANCHR3.AnchorVectors[9].GMT != 0 && EZEPH2.EPHEM.Header.TUP == 0)
+	{
+		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9]);
+	}
+	//Update Mission Plan Table display
+	PMDMPT();
+
 	return;
 }
 
@@ -7375,7 +8485,7 @@ RTCC_PMMSPT_14_1:
 RTCC_PMMSPT_15_2:
 	double P_RP = KP0 + MDVSTP.KP1 * dt4_apo + MDVSTP.KP2 * dt4_apo*dt4_apo;
 	double Y_RP = KP0 + MDVSTP.KY1 * dt4_apo + MDVSTP.KY2 * dt4_apo*dt4_apo;
-	double T3 = T3_apo - dt4_apo;
+	double T3 = T3_apo - PZSTARGP.K_T3 * dt4_apo;
 	double tau3 = tau3R - dt4_apo;
 	in.CurMan->Word73 = P_RP;
 	in.CurMan->Word74 = Y_RP;
@@ -10778,7 +11888,7 @@ void RTCC::PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, doubl
 	else
 	{
 		mu = OrbMech::mu_Moon;
-		R_E = MCSMLR;
+		R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 		DT = 20.0*60.0;
 	}
 	sv_TC = OrbMech::PositionMatch(sv_T, sv_C, mu);
@@ -11764,6 +12874,151 @@ bool RTCC::GETEval(double get)
 	return false;
 }
 
+bool RTCC::GETEval2(double get)
+{
+	if (OrbMech::GETfromMJD(oapiGetSimMJD(), CalcGETBase()) > get)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void RTCC::MPTMassUpdate(VESSEL *vessel)
+{
+	int vesseltype = 0;
+	std::string cfg;
+	double cmmass, lmmass, sivb_mass, lm_ascent_mass;
+	cmmass = lmmass = sivb_mass = lm_ascent_mass = 0.0;
+
+	if (vessel == NULL) return;
+
+	char Buffer[100];
+
+	sprintf_s(Buffer, vessel->GetClassNameA());
+
+	if (!stricmp(Buffer, "ProjectApollo\\Saturn5") ||
+		!stricmp(Buffer, "ProjectApollo/Saturn5") ||
+		!stricmp(Buffer, "ProjectApollo\\Saturn1b") ||
+		!stricmp(Buffer, "ProjectApollo/Saturn1b"))
+	{
+		vesseltype = 0;
+	}
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM"))
+	{
+		vesseltype = 1;
+	}
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/sat5stg3") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/nsat1stg2"))
+	{
+		vesseltype = 2;
+	}
+	else
+	{
+		vesseltype = 3;
+	}
+
+	if (vesseltype == 3) return;
+
+	if (vesseltype == 0)
+	{
+		Saturn *sat = (Saturn *)vessel;
+		if (sat->GetStage() < CSM_LEM_STAGE)
+		{
+			cmmass = sat->SM_FuelMass + sat->SM_EmptyMass + sat->CM_FuelMass + sat->CM_EmptyMass + 4.0*152.5 + 2.0*55.5;
+			if (sat->SIVBPayload == PAYLOAD_LEM)
+			{
+				cfg = "CSL";
+				lmmass = sat->LMDescentFuelMassKg + sat->LMAscentFuelMassKg + sat->LMDescentEmptyMassKg + sat->LMAscentEmptyMassKg + 2.0*133.084001;
+				lm_ascent_mass = sat->LMAscentFuelMassKg + sat->LMAscentEmptyMassKg + 2.0*133.084001;
+
+			}
+			else
+			{
+				cfg = "CS";
+			}
+			sivb_mass = vessel->GetMass() - cmmass - lmmass;
+		}
+		else
+		{
+			cmmass = vessel->GetMass();
+			if (lmmass = GetDockedVesselMass(vessel))
+			{
+				DOCKHANDLE dock;
+				OBJHANDLE hLM;
+				VESSEL *lm;
+				dock = vessel->GetDockHandle(0);
+				hLM = vessel->GetDockStatus(dock);
+				lm = oapiGetVesselInterface(hLM);
+
+				LEM *lem = (LEM *)lm;
+				lm_ascent_mass = lem->GetAscentStageMass();
+
+				//TBD: Make this better
+				if (lem->GetStage() < 2)
+				{
+					cfg = "CL";
+				}
+				else
+				{
+					cfg = "CA";
+				}
+
+
+			}
+			else
+			{
+				cfg = "C";
+			}
+		}
+	}
+	else if (vesseltype == 1)
+	{
+		LEM *lem = (LEM *)vessel;
+
+		lmmass = vessel->GetMass();
+		lm_ascent_mass = lem->GetAscentStageMass();
+
+		if (lem->GetStage() < 2)
+		{
+			if (cmmass = GetDockedVesselMass(vessel))
+			{
+				cfg = "CL";
+			}
+			else
+			{
+				cfg = "L";
+			}
+		}
+		else
+		{
+			if (cmmass = GetDockedVesselMass(vessel))
+			{
+				cfg = "CA";
+			}
+			else
+			{
+				cfg = "A";
+			}
+		}
+	}
+	else
+	{
+		cfg = "S";
+		sivb_mass = vessel->GetMass();
+	}
+
+	med_m55.ConfigCode = cfg;
+
+	med_m50.CSMWT = cmmass;
+	med_m50.LMWT = lmmass;
+	med_m50.LMASCWT = lm_ascent_mass;
+	med_m50.SIVBWT = sivb_mass;
+}
+
 void RTCC::AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA)
 {
 	MATRIX3 M, SBNB, CBNB;
@@ -12588,12 +13843,12 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 	OrbMech::periapo(sv_TPF.R, sv_TPF.V, OrbMech::mu_Moon, RA_TPF, RP_TPF);
 	OrbMech::periapo(sv_LS.R, sv_LS.V, OrbMech::mu_Moon, RA_T, RP_T);
 
-	res.HA_TPI = RA_TPI - MCSMLR;
-	res.HP_TPI = RP_TPI - MCSMLR;
-	res.HA_TPF = RA_TPF - MCSMLR;
-	res.HP_TPF = RP_TPF - MCSMLR;
-	res.HA_T = RA_T - MCSMLR;
-	res.HP_T = RP_T - MCSMLR;
+	res.HA_TPI = RA_TPI - BZLAND.rad[RTCC_LMPOS_BEST];
+	res.HP_TPI = RP_TPI - BZLAND.rad[RTCC_LMPOS_BEST];
+	res.HA_TPF = RA_TPF - BZLAND.rad[RTCC_LMPOS_BEST];
+	res.HP_TPF = RP_TPF - BZLAND.rad[RTCC_LMPOS_BEST];
+	res.HA_T = RA_T - BZLAND.rad[RTCC_LMPOS_BEST];
+	res.HP_T = RP_T - BZLAND.rad[RTCC_LMPOS_BEST];
 
 	return true;
 }
@@ -12605,35 +13860,25 @@ double RTCC::GetSemiMajorAxis(SV sv)
 	return -mu / (2.0*eps);
 }
 
-void RTCC::papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv)
+void RTCC::papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in)
 {
+	char buffer[256];
 
-	char buffer[256], name[16];
-
-	if (sv.gravref)
-	{
-		oapiGetObjectName(sv.gravref, name, 16);
-	}
-	else
-	{
-		sprintf(name, "None");
-	}
-
-	sprintf(buffer, "  %s %s %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, name, sv.mass, sv.MJD, sv.R.x, sv.R.y, sv.R.z, sv.V.x, sv.V.y, sv.V.z);
+	sprintf(buffer, "  %s %d %d %d %lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, tab, i, in.ID, in.GMT, in.REFSMMAT.m11, in.REFSMMAT.m12, in.REFSMMAT.m13, in.REFSMMAT.m21, in.REFSMMAT.m22,
+		in.REFSMMAT.m23, in.REFSMMAT.m31, in.REFSMMAT.m32, in.REFSMMAT.m33);
 	oapiWriteLine(scn, buffer);
 }
 
-bool RTCC::papiReadScenario_SV(char *line, char *item, SV &sv)
+bool RTCC::papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out)
 {
-
-	char buffer[256], name[16];
-	SV v;
+	char buffer[256];
 
 	if (sscanf(line, "%s", buffer) == 1) {
 		if (!strcmp(buffer, item)) {
-			if (sscanf(line, "%s %s %lf %lf %lf %lf %lf %lf %lf %lf", buffer, name, &v.mass, &v.MJD, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 10) {
-				v.gravref = oapiGetObjectByName(name);
-				sv = v;
+			REFSMMATData v;
+			if (sscanf(line, "%s %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", buffer, &tab, &i, &v.ID, &v.GMT, &v.REFSMMAT.m11, &v.REFSMMAT.m12, &v.REFSMMAT.m13, &v.REFSMMAT.m21, &v.REFSMMAT.m22,
+				&v.REFSMMAT.m23, &v.REFSMMAT.m31, &v.REFSMMAT.m32, &v.REFSMMAT.m33) == 14) {
+				out = v;
 				return true;
 			}
 		}
@@ -13065,7 +14310,7 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 	}
 	else
 	{
-		h = r - MCSMLR;
+		h = r - BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 
 	tab.a = -mu / (2.0*eps);
@@ -13566,7 +14811,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	}
 	else
 	{
-		R_B = MCSMLR;
+		R_B = BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 
 	if (queid == 1)
@@ -14111,7 +15356,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			{
 				csi_in = 2;
 				csi_out = 3;
-				R_E = MCSMLR;
+				R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 			}
 			
 			EZSPACE.H1 = EZSPACE.HS = EZSPACE.HO = (length(sv.R) - R_E) / 1852.0;
@@ -15584,7 +16829,7 @@ RTCC_PMMMPT_20_B:
 int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E)
 {
 	EphemerisData data;
-	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lng[RTCC_LMPOS_BEST], MCSMLR);
+	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 	double theta, dt_asc, dv;
 	SV sv_IG, sv_Ins;
 	LunarAscentProcessor(R_LS, in.m0, in.sv_CSM, GMTBASE, in.t_liftoff, in.v_LH, in.v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
@@ -15651,7 +16896,7 @@ int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *
 	EphemerisData data;
 	SV sv_PDI, sv_land;
 	double dv;
-	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lng[RTCC_LMPOS_BEST], MCSMLR);
+	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
 	PoweredDescentProcessor(R_LS, in.TLAND, in.sv, CalcGETBase(), aux, E, sv_PDI, sv_land, dv);
 
@@ -15719,7 +16964,7 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 	VECTOR3 U_IG;
 	double GMTBB, CR, t_go;
 
-	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lng[RTCC_LMPOS_BEST], MCSMLR);
+	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
 	if (!PDIIgnitionAlgorithm(in.sv, CalcGETBase(), R_LS, in.TLAND, sv_IG, t_go, CR, U_IG, REFSMMAT))
 	{
@@ -16351,7 +17596,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		}
 	}
 
-	if (in.landed || length(in.AnchorVector.R) - 1.0 < MCSMLR)
+	if (in.landed || length(in.AnchorVector.R) - 1.0 < BZLAND.rad[RTCC_LMPOS_BEST])
 	{
 		surfaceflag = true;
 	}
@@ -16376,9 +17621,9 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		VECTOR3 R, V, U_M;
 		OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 		bool stop = false;
-		double lat = BZLSDISP.lat[RTCC_LMPOS_BEST];
-		double lng = BZLSDISP.lng[RTCC_LMPOS_BEST];
-		double r = MCSMLR;
+		double lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		double lng = BZLAND.lng[RTCC_LMPOS_BEST];
+		double r = BZLAND.rad[RTCC_LMPOS_BEST];
 
 		while (stop == false)
 		{
@@ -16467,7 +17712,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 					else
 					{
 						StopCondParam = in.MoonRelStopParam;
-						R_E = MCSMLR;
+						R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 					}
 					if (length(svtemp.R) - R_E < StopCondParam)
 					{
@@ -16715,14 +17960,18 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			E = NULL;
 		}
 		//Link to TLI matrix table
-		MATRIX3 *ADRMAT;
+		MATRIX3 ADRMAT[3];
 		if (in.VehicleCode == RTCC_MPT_CSM)
 		{
-			ADRMAT = PZMATCSM.data;
+			ADRMAT[0] = PZMATCSM.EPH;
+			ADRMAT[1] = PZMATCSM.GG;
+			ADRMAT[2] = PZMATCSM.G;
 		}
 		else
 		{
-			ADRMAT = PZMATLEM.data;
+			ADRMAT[0] = PZMATLEM.EPH;
+			ADRMAT[1] = PZMATLEM.GG;
+			ADRMAT[2] = PZMATLEM.G;
 		}
 
 		TLIGuidanceSim numin(*this, integin, nierror, E, in.AuxTableIndicator, ADRMAT);
@@ -16990,7 +18239,7 @@ EphemerisData RTCC::EMMENI(EMSMISSInputTable &in, EphemerisData sv, double dt)
 				}
 				else
 				{
-					funct = length(svtemp.R) - MCSMLR;
+					funct = length(svtemp.R) - BZLAND.rad[RTCC_LMPOS_BEST];
 				}
 			}
 			else if (in.CutoffIndicator == 4)
@@ -17481,6 +18730,11 @@ int RTCC::PMMWTC(int med)
 		{
 			PMXSPT("PMMWTC", 71);
 			return 2;
+		}
+
+		if (med_m55.VentingGET >= 0.0)
+		{
+			table->SIVBVentingBeginGET = med_m55.VentingGET;
 		}
 
 		if (med_m55.DeltaDockingAngle >= -360.0)
@@ -18011,10 +19265,15 @@ void RTCC::PMMIEV(double T_L)
 	int day;
 	
 	day = GZGENCSN.RefDayOfYear;
+	if (day != PZSTARGP.Day)
+	{
+		PMXSPT("PMMIEV", 102);
+		return;
+	}
 	T_D = T_L - PZSTARGP.T_LO;
 	if (T_D < MDVSTP.t_D0 || T_D > MDVSTP.t_D3)
 	{
-		PMXSPT("PMMIEV", 102);
+		PMXSPT("PMMIEV", 121);
 		return;
 	}
 	A_Z = 0.0;
@@ -18060,7 +19319,7 @@ void RTCC::PMMIEV(double T_L)
 	double GMT_EOI = T_L + dt_EOI;
 	if (EMMXTR(GMT_EOI, rad_EOI, vel_EOI, lng_EOI, lat_EOI, fpa_EOI, azi_EOI, R, V))
 	{
-		PMXSPT("PMMIEV", 121);
+		PMXSPT("PMMIEV", 120);
 		return;
 	}
 	//TBD: Print insertion vector
@@ -18665,8 +19924,8 @@ void RTCC::ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, 
 	}
 	else
 	{
-		alt = length(sv_out.R) - MCSMLR;
-		R_stat = stat->alt + MCSMLR;
+		alt = length(sv_out.R) - BZLAND.rad[RTCC_LMPOS_BEST];
+		R_stat = stat->alt + BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 	
 	Q = unit(crossp(sv_out.V, sv_out.R));
@@ -18702,7 +19961,7 @@ int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 	}
 	else
 	{
-		alt = length(sv.R) - MCSMLR;
+		alt = length(sv.R) - BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 	return 0;
 }
@@ -19080,7 +20339,7 @@ void RTCC::PMMDAN(AEGBlock aeg, int IND, int &ERR, double &T_c, double &T_c_apo)
 	{
 		R_S = R_ES - R_EM;
 		mu = OrbMech::mu_Moon;
-		R_e = MCSMLR;
+		R_e = BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 	aeg.Data.TIMA = 0;
 	aeg.Data.TE = aeg.Data.TS;
@@ -19336,6 +20595,12 @@ int RTCC::ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable 
 
 int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 {
+	if (in == out)
+	{
+		sv_out = sv;
+		return 0;
+	}
+
 	int err;
 
 	sv_out = sv;
@@ -19744,7 +21009,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	}
 	else
 	{
-		R_E = MCSMLR;
+		R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 		mu = OrbMech::mu_Moon;
 	}
 
@@ -20375,7 +21640,7 @@ int RTCC::PMMXFR(int id, void *data)
 			in.T_RP = 0.0;
 			in.V = sv.V;
 
-			PMMSPT(in);
+			err = PMMSPT(in);
 		}
 		else
 		{
@@ -20414,6 +21679,24 @@ int RTCC::PMMXFR(int id, void *data)
 			in.Roll = inp->Roll;
 
 			err = PMMMCD(in, man);
+		}
+
+		//PMMXFR_31_1
+		if (err)
+		{
+			return 1;
+		}
+		//Is this the 1st working maneuver?
+		if (CurMan == mpt->LastExecutedManeuver + 1)
+		{
+			//TBD: Different from RTCC document
+			if (man.GMTI < mpt->UpcomingManeuverGMT)
+			{
+				PMSEXE(inp->TableCode, RTCCPresentTimeGMT());
+			}
+			//TBD: Is this deorbit entry?
+			//TBD: Is this a TLI entry?
+			//TBD: Did we delete a deorbit or TLI maneuver?
 		}
 		
 		//Either add a new maneuver or replace one
@@ -21340,7 +22623,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 
 	res.P_LLS = 0.0;
 	res.L_LLS = 0.0;
-	res.R_LLS = MCSMLR / 1852.0;
+	res.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0;
 
 	res.PHASE = 0.0;
 	res.PHASE_DOT = 0.0;
@@ -22525,8 +23808,9 @@ int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
 	return 0;
 }
 
-int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double GMT_begin, bool sun, SunriseSunsetTable &table)
+int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double GMT_begin, int option, SunriseSunsetTable &table, VECTOR3 *u_inter)
 {
+	//option 0: Sun, 1: Moon, 2: Plane intersection Earth, 3: Plane intersection Moon
 	ELVCTRInputTable interin;
 	ELVCTROutputTable interout;
 	SunriseSunsetData data;
@@ -22540,13 +23824,16 @@ int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, do
 	int counter = 0;
 	int iter2 = 0;
 
-	if (EZEPH1.EPHEM.table.size() == 0) return 1;
+	//Return error if no ephemeris is available
+	if (ephemeris.table.size() == 0) return 1;
 
-	if (sun == false && ephemeris.table.front().RBI != BODY_EARTH)
+	//Return error if moonrise/moonset data is requested and the spacecraft is in lunar orbit
+	if (option == 1 && ephemeris.table.front().RBI != BODY_EARTH)
 	{
 		return 1;
 	}
 
+	//Find vector at starting GMT
 	while (ephemeris.table[iter].GMT < GMT_begin)
 	{
 		iter++;
@@ -22559,31 +23846,62 @@ int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, do
 	while (iter < ephemeris.table.size())
 	{
 		sv_cur = ephemeris.table[iter];
-		OrbMech::PLEFEM(pzefem, OrbMech::MJDfromGET(sv_cur.GMT, GMTBASE), R_EM, V_EM, R_ES);
 
-		if (sun)
+		if (option >= 2)
 		{
+			EphemerisData sv_out;
+			int in, out;
+			//0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP
 			if (sv_cur.RBI == BODY_EARTH)
 			{
-				R_MS = R_ES;
-				R_E = OrbMech::R_Earth;
+				in = 0;
 			}
 			else
 			{
-				R_MS = R_ES - R_EM;
-				R_E = OrbMech::R_Moon;
+				in = 2;
 			}
+			if (option == 2)
+			{
+				out = 0;
+			}
+			else
+			{
+				out = 2;
+			}
+
+			ELVCNV(sv_cur, in, out, sv_out);
+			cos_theta = dotp(sv_cur.R, *u_inter);
+			sight = (cos_theta >= 0.0);
 		}
 		else
 		{
-			R_MS = R_EM;
-			R_E = OrbMech::R_Earth;
+			OrbMech::PLEFEM(pzefem, OrbMech::MJDfromGET(sv_cur.GMT, GMTBASE), R_EM, V_EM, R_ES);
+			if (option == 0)
+			{
+				if (sv_cur.RBI == BODY_EARTH)
+				{
+					R_MS = R_ES;
+					R_E = OrbMech::R_Earth;
+				}
+				else
+				{
+					R_MS = R_ES - R_EM;
+					R_E = OrbMech::R_Moon;
+				}
+			}
+			else
+			{
+				R_MS = R_EM;
+				R_E = OrbMech::R_Earth;
+			}
+
+			sight = OrbMech::sight(sv_cur.R, R_MS, R_E);
+			s = unit(R_MS);
+
+			cos_theta = length(sv_cur.R - s * dotp(sv_cur.R, s)) - R_E;
 		}
 
-		sight = OrbMech::sight(sv_cur.R, R_MS, R_E);
-		s = unit(R_MS);
-
-		cos_theta = length(sv_cur.R - s * dotp(sv_cur.R, s)) - R_E;
+		
 		if (iter == iter_start)
 		{
 			sight_old = sight;
@@ -22742,7 +24060,7 @@ void RTCC::EMDSSEMD(int ind, double param)
 		EZSSTAB.data[i].psi_SS = 0.0;
 	}
 
-	if (EMMENV(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMT_begin, true, EZSSTAB))
+	if (EMMENV(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMT_begin, 0, EZSSTAB))
 	{
 		return;
 	}
@@ -22805,7 +24123,7 @@ void RTCC::EMDSSMMD(int ind, double param)
 		EZMMTAB.data[i].psi_SS = 0.0;
 	}
 
-	if (EMMENV(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMT_begin, false, EZMMTAB))
+	if (EMMENV(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMT_begin, 1, EZMMTAB))
 	{
 		return;
 	}
@@ -23472,14 +24790,14 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 	opt.HP_LLS = med_k40.HP_LLS*1852.0;
 	opt.HA_LPO = med_k18.HALOI1*1852.0;
 	opt.HP_LPO = med_k18.HPLOI1*1852.0;
-	opt.lat_LLS= BZLSDISP.lat[0];
-	opt.lng_LLS = BZLSDISP.lng[0];
+	opt.lat_LLS= BZLAND.lat[0];
+	opt.lng_LLS = BZLAND.lng[0];
 	opt.psi_DS = med_k18.psi_DS*RAD;
 	opt.psi_mn = med_k18.psi_MN*RAD;
 	opt.psi_mx = med_k18.psi_MX*RAD;
 	opt.REVS1 = med_k40.REVS1;
 	opt.REVS2 = med_k40.REVS2;
-	opt.R_LLS = MCSMLR;
+	opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
 	opt.usePlaneSolnForInterSoln = med_k40.PlaneSolnForInterSoln;
 
 	double h_pc = length(opt.SPH.R) - opt.R_LLS;
@@ -23519,9 +24837,9 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 void RTCC::PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out)
 {
 	PZLRBTI.VectorGET = med_k18.VectorTime;
-	PZLRBTI.lat_lls = BZLSDISP.lat[0] * DEG;
-	PZLRBTI.lng_lls = BZLSDISP.lng[0] * DEG;
-	PZLRBTI.R_lls = MCSMLR / 1852.0;
+	PZLRBTI.lat_lls = BZLAND.lat[0] * DEG;
+	PZLRBTI.lng_lls = BZLAND.lng[0] * DEG;
+	PZLRBTI.R_lls = BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0;
 	PZLRBTI.REVS1 = opt.REVS1;
 	PZLRBTI.REVS2 = opt.REVS2;
 	PZLRBTI.DHBIAS = opt.dh_bias / 1852.0;
@@ -25891,8 +27209,10 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		if (veh == 0)
 		{
 			MCGRAG = GMTGRR;
-			if (EZJGMTX1.data[0].ID == 0)
+			//If the CSM current REFSMMAT hasn't been established, or only the first one (previous launch REFSMMAT) then update
+			if (EZJGMTX1.data[0].ID  <= 1)
 			{
+				EZJGMTX1.data[0].ID = 0;
 				LMMGRP(GMTGRR*3600.0, MCLABN);
 			}
 		}
@@ -26758,9 +28078,9 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		double J_D = TJUDAT(Year, Month, Day);
 		GMTBASE = J_D - 2400000.5;
 
-		//PIGBHA();
-
-		EMSGSUPP(0, 0);
+		MCLAMD = PIGBHA();
+		MCCBES = 24.0*(double)(GZGENCSN.RefDayOfYear - 1);
+		//TBD: Call EMLAMBNP
 	}
 	return 0;
 }
@@ -27720,14 +29040,27 @@ int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 	return 0;
 }
 
-double RTCC::PIGMHA(int E, int Y, int D)
+double RTCC::PIAIES(double hour)
 {
-	int XN;
+	return 0.0;
+}
+
+double RTCC::PIBSHA(double hour)
+{
+	double GMT = hour - MCCBES;
+	return PIGMHA(GMT);
+}
+
+double RTCC::PIGBHA()
+{
+	int Y, E, D, XN;
 	static const double A = 0.0929;
 	static const double B = 8640184.542;
 	static const double W1 = 1.720217954160054e-2;
 	double C, T, DE, BHA, DI, DELTA;
 
+	E = Y = GZGENCSN.Year;
+	D = GZGENCSN.RefDayOfYear;
 	XN = (E - 1901) / 4;
 	C = -86400.0*(double)(E - 1900) - 74.164;
 	T = 2 * C / (-B - sqrt(B*B - 4 * A*C));
@@ -27751,6 +29084,11 @@ double RTCC::PIGMHA(int E, int Y, int D)
 	DELTA = DI - DE;
 	BHA = 2.0 / 3.6 + W1 * DELTA;
 	return BHA;
+}
+
+double RTCC::PIGMHA(double hour)
+{
+	return MCLAMD + hour * MCERTS;
 }
 
 EphemerisData RTCC::ConvertSVtoEphemData(SV sv)
@@ -28908,7 +30246,7 @@ PCMATC_2B:
 		ini.body = body1;
 		ini.stop_ind = 2;
 		OrbMech::PMMCEN(vni, ini, R_p, V_p, T_p, ITS, IRS);
-		h_p = length(R_p) - MCSMLR;
+		h_p = length(R_p) - BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 	T_min = 0.0;
 PCMATC_3A:
@@ -29516,7 +30854,7 @@ void RTCC::PMDMPT()
 		else
 		{
 			mu = OrbMech::mu_Moon;
-			r = MCSMLR;
+			r = BZLAND.rad[RTCC_LMPOS_BEST];
 		}
 
 		man.HA = mptman->h_a / 1852.0;
@@ -30108,10 +31446,12 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		S_Fuel = mpt->mantable[man - 2].CommonBlock.SIVBFuelRemaining;
 	} 
 
+	//S-IVB in configuration at init?
 	if (mptman->ConfigCodeBefore[RTCC_CONFIG_S])
 	{
 		double DW = W_S_Prior - S_Fuel;
 		S_Fuel = S_Fuel - DW;
+		//S-IVB maneuver?
 		if (mptman->TVC == 2)
 		{
 			mptman->CommonBlock.SIVBFuelRemaining = S_Fuel - aux->MainFuelUsed;
@@ -30373,7 +31713,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		out = 3;
 		mu = OrbMech::mu_Moon;
 		body = BODY_MOON;
-		R_E = MCSMLR;
+		R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 
 	EphemerisData sv_true;
@@ -30402,7 +31742,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	}
 	else
 	{
-		mptman->h_BI = length(sv_true.R) - MCSMLR;
+		mptman->h_BI = length(sv_true.R) - BZLAND.rad[RTCC_LMPOS_BEST];
 		mptman->lat_BI = asin(sv_true.R.z / sv_true.R.x);
 	}
 	mptman->lng_BI = atan2(sv_true.R.y, sv_true.R.x);
@@ -30789,7 +32129,7 @@ void RTCC::BMSVEC()
 	else
 	{
 		mu = OrbMech::mu_Moon;
-		R_E = MCSMLR;
+		R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 
 	VECTOR3 U, V, W;
@@ -31354,7 +32694,7 @@ void RTCC::EMMGSTMP()
 				int in, out;
 				if (EZGSTMED.G14_RB == 2)
 				{
-					r = EZGSTMED.G14_height + MCSMLR;
+					r = EZGSTMED.G14_height + BZLAND.rad[RTCC_LMPOS_BEST];
 					in = 3;
 					out = 2;
 				}

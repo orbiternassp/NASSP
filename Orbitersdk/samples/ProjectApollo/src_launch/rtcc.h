@@ -1536,6 +1536,9 @@ struct DetailedManeuverTable
 
 struct MPTVehicleDataBlock
 {
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line, int &inttemp);
+
 	//Word 12 (Bytes 1, 2)
 	std::bitset<4> ConfigCode;
 	//Word 12 (Bytes 3, 4)
@@ -1575,6 +1578,8 @@ struct MPTVehicleDataBlock
 struct MPTManeuver
 {
 	MPTManeuver();
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 
 	//Word 1
 	std::string code;
@@ -1749,6 +1754,10 @@ struct MPTManDisplay
 
 struct MissionPlanTable
 {
+	MissionPlanTable();
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
 	//Word 1 (Byte 3,4)
 	//Number of maneuvers in table
 	unsigned ManeuverNum = 0;
@@ -1760,7 +1769,7 @@ struct MissionPlanTable
 	std::string StationID;
 	//Word 3
 	//Anchor vector time
-	double GMTAV;
+	double GMTAV = 0.0;
 	//Word 4
 	double KFactor = 0.0;
 	//Word 8
@@ -2332,8 +2341,6 @@ struct calculationParameters {
 	double LunarLiftoff;// Time of lunar liftoff
 	double LSAlt;		// Height of the lunar landing site relative to mean lunar radius
 	double LSAzi;		// Approach azimuth to the lunar landing site
-	double LSLat;		// Latitude of the lunar landing site
-	double LSLng;		// Longitude of the lunar landing site
 	double Insertion;	// Time of Insertion
 	double Phasing;		// Time of Phasing
 	double CSI;			// Time of CSI
@@ -2621,10 +2628,16 @@ public:
 	RTCC();
 	~RTCC();
 	void Init(MCC *ptr);
+	void Timestep(double simt, double simdt, double mjd);
 	bool Calculation(int mission, int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	void SetManeuverData(double TIG, VECTOR3 DV);
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
+	void LoadLaunchDaySpecificParameters(int year, int month, int day);
+	void LoadMissionConstantsFile(char *file);
+private:
+	void LoadMissionInitParameters(int year, int month, int day);
+public:
 
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
 	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
@@ -2744,6 +2757,7 @@ public:
 	VECTOR3 CircularizationManeuverInteg(SV sv0);
 	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval(double get);
+	bool GETEval2(double get);
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
@@ -2806,7 +2820,7 @@ public:
 	//Ascending Node Computation
 	int RMMASCND(int L, double GMT_min, double &lng_asc);
 	//Environment Change Calculations
-	int EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double GMT_begin, bool sun, SunriseSunsetTable &table);
+	int EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double GMT_begin, int option, SunriseSunsetTable &table, VECTOR3 *u_inter = NULL);
 	//Sunrise/Sunset Display
 	void EMDSSEMD(int ind, double param);
 	//Moonrise/Moonset Display
@@ -2983,6 +2997,7 @@ public:
 
 	MCC *mcc;
 	struct calculationParameters calcParams;
+	char MissionFileName[64];
 
 	//MEDs
 
@@ -3472,8 +3487,6 @@ public:
 	struct TLITargetingParametersTable
 	{
 		int Day;
-		int Month;
-		int Year;
 		double T_LO;
 		double theta_EO;
 		double omega_E;		
@@ -3540,16 +3553,14 @@ public:
 		double t_SD1, t_SD2, t_SD3;
 	} MDVSTP;
 
-	union SIVBTLIMatrixTable {
-		MATRIX3 data[3];
-		struct {
-			//Plumbline coordinate axes in ECI coordinates
-			MATRIX3 EPH;
-			//Plumbline to parking orbit nodal system transformation matrix
-			MATRIX3 GG;
-			//Plumbline to target orbit nodal system transformation matrix
-			MATRIX3 G;
-		};
+	struct SIVBTLIMatrixTable
+	{
+		//Plumbline coordinate axes in ECI coordinates
+		MATRIX3 EPH = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+		//Plumbline to parking orbit nodal system transformation matrix
+		MATRIX3 GG = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+		//Plumbline to target orbit nodal system transformation matrix
+		MATRIX3 G = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	} PZMATCSM, PZMATLEM;
 
 	struct TLIPlanningOutputTable
@@ -3632,7 +3643,8 @@ public:
 	{
 		double lat[4];
 		double lng[4];
-	} BZLSDISP;//Is this the right one?
+		double rad[4];
+	} BZLAND;
 
 	struct HistoryAnchorVectorTable
 	{
@@ -3717,7 +3729,8 @@ public:
 		int TPICounterNum;
 		//Block 32 Bytes 5-8
 		int PhaseAngleSetting;
-		//Block 34 (something for PMMIEV)
+		//Block 34
+		int DeltaDays = 0;
 		//Block 36
 		double ActualDH;
 		//Block 37
@@ -4344,8 +4357,8 @@ private:
 	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
 	double GetSemiMajorAxis(SV sv);
-	void papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv);
-	bool papiReadScenario_SV(char *line, char *item, SV &sv);
+	void papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in);
+	bool papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out);
 	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
 	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 
@@ -4370,8 +4383,14 @@ private:
 	void ECMPAY(EphemerisDataTable &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw);
 	//Spherical to Inertial Conversion
 	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
-	//Base hour Angle
-	double PIGMHA(int E, int Y, int D);
+	//Right ascension of greenwich at Time T
+	double PIAIES(double hour);
+	//Hour angle with Besselian input time
+	double PIBSHA(double hour);
+	//Calc. Greenwich hour angle at midnight preceeding launch
+	double PIGBHA();
+	//GMT hour angle
+	double PIGMHA(double hour);
 	//Delta True Anomaly Function
 	double PCDETA(double beta1, double beta2, double r1, double r2);
 	//Orbit Desired REFSMMAT Computation Subroutine
@@ -4423,6 +4442,9 @@ private:
 	bool MPTIsUllageThruster(int thruster, int i);
 	int MPTGetPrimaryThruster(int thruster);
 	void MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg);
+public:
+	void MPTMassUpdate(VESSEL *vessel);
+protected:
 
 	//Auxiliary subroutines
 	MissionPlanTable *GetMPTPointer(int L);
@@ -4437,6 +4459,13 @@ private:
 	int PMMMCDCallEMSMISS(EphemerisData sv0, double GMTI, EphemerisData &sv1);
 	int PMSVCTAuxVectorFetch(int L, double T_F, EphemerisData &sv);
 	bool MEDTimeInputHHMMSS(std::string vec, double &hours);
+
+	//Offline Programs
+
+	//Search tape and build skeleton flight plan table
+	void QMSEARCH(int year, int month, int day);
+	//Build TLI targeting parameters table
+	void QMMBLD(int year, int month, int day);
 
 	double GLHTCS(double FLTHRS) { return FLTHRS * 360000.0; }
 	double GLCSTH(double FIXCSC) { return FIXCSC / 360000.0; }
@@ -4502,9 +4531,13 @@ protected:
 	double MCEASQ;
 	//Geodetic Earth constant B²
 	double MCEBSQ;
+	//Rotational rate of the Earth (radians/hr.)
+	double MCERTS;
 
 	//MJD of launch day (days)
 	double GMTBASE;
+	//Number of hours from January 0 to midnight before launch
+	double MCCBES;
 
 	//CONSTANTS
 	//Nautical miles per Earth radii
@@ -4513,7 +4546,7 @@ protected:
 public:
 	//MJD of epoch
 	double AGCEpoch;
-	//Radius of lunar landing site
+	//Mean lunar radius
 	double MCSMLR;
 	//Sine of the geodetic latitude of the launch pad
 	double MCLSDA;

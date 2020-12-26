@@ -176,6 +176,15 @@ namespace OrbMech{
 		return H*3600.0 + M*60.0 + S;
 	}
 
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
+	{
+		double mins;
+		hours = (int)trunc(time / 3600.0);
+		mins = fmod(time / 60.0, 60.0);
+		minutes = (int)trunc(mins);
+		seconds = (mins - minutes) * 60.0;
+	}
+
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
 	{
 		R = _V(cos(decl)*cos(rtasc), cos(decl)*sin(rtasc), sin(decl))*rmag;

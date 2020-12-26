@@ -33,7 +33,7 @@ public:
 	AR_GCore(VESSEL* v);
 	~AR_GCore();
 
-	void SetMissionSpecificParameters();
+	void SetMissionSpecificParameters(bool loadinitvalues);
 	void MPTMassUpdate();
 	int MPTTrajectoryUpdate();
 

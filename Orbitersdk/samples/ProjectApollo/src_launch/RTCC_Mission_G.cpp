@@ -390,8 +390,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.LOIh_apo = 170.0*1852.0;
 		opt.LOIh_peri = 60.0*1852.0;
-		opt.LSlat = calcParams.LSLat;
-		opt.LSlng = calcParams.LSLng;
+		opt.LSlat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.LSlng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.RV_MCC = sv;
 		opt.t_land = calcParams.TLAND;
 
@@ -592,8 +592,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.h_apo = 170.0*1852.0;
 		loiopt.h_peri = 60.0*1852.0;
 		loiopt.impulsive = 1;
-		loiopt.lat = calcParams.LSLat;
-		loiopt.lng = calcParams.LSLng;
+		loiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		loiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		loiopt.RV_MCC = sv;
 		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
@@ -696,8 +696,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.h_apo = 170.0*1852.0;
 		loiopt.h_peri = 60.0*1852.0;
 		loiopt.impulsive = 1;
-		loiopt.lat = calcParams.LSLat;
-		loiopt.lng = calcParams.LSLng;
+		loiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		loiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		loiopt.RV_MCC = sv;
 		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
@@ -721,8 +721,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//REFSMMAT calculation
 		refsopt.GETbase = GETbase;
 		refsopt.LSAzi = calcParams.LSAzi;
-		refsopt.LSLat = calcParams.LSLat;
-		refsopt.LSLng = calcParams.LSLng;
+		refsopt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
+		refsopt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		refsopt.REFSMMATopt = 8;
 		refsopt.REFSMMATTime = calcParams.TLAND;
 
@@ -891,8 +891,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.h_peri = 60.0*1852.0;
 		opt.R_LLS = R_LLS;
 		opt.azi = calcParams.LSAzi;
-		opt.lat = calcParams.LSLat;
-		opt.lng = calcParams.LSLng;
+		opt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.RV_MCC = sv;
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.src;
@@ -951,7 +951,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.DesiredHeight = 60.0*1852.0;
 
 		LunarDescentPlanningTable table;
-		LunarDescentPlanningProcessor(sv, GETbase, calcParams.LSLat, calcParams.LSLng, R_LLS, table);
+		LunarDescentPlanningProcessor(sv, GETbase, BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], R_LLS, table);
 
 		PoweredFlightProcessor(sv, GETbase, table.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, table.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
@@ -1003,8 +1003,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		doiopt.R_LLS = R_LLS;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(101, 0, 0);
 		doiopt.GETbase = GETbase;
-		doiopt.lat = calcParams.LSLat;
-		doiopt.lng = calcParams.LSLng;
+		doiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		doiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		doiopt.N = 0;
 		doiopt.opt = 0;
 		doiopt.sv0 = sv;
@@ -1017,8 +1017,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PoweredFlightProcessor(sv, GETbase, t_DOI, RTCC_ENGINETYPE_LMDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
 
 		opt.GETbase = GETbase;
-		opt.LSLat = calcParams.LSLat;
-		opt.LSLng = calcParams.LSLng;
+		opt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.REFSMMATopt = 5;
 		opt.REFSMMATTime = calcParams.TLAND;
 		opt.vessel = calcParams.src;
@@ -1186,8 +1186,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		doiopt.R_LLS = R_LLS;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(101, 0, 0);
 		doiopt.GETbase = GETbase;
-		doiopt.lat = calcParams.LSLat;
-		doiopt.lng = calcParams.LSLng;
+		doiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		doiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		doiopt.N = 0;
 		doiopt.opt = 0;
 		doiopt.sv0 = sv;
@@ -1429,12 +1429,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			R_M = 1.73809e6;
 
 			//Update landing site
-			calcParams.tgt->GetEquPos(calcParams.LSLng, calcParams.LSLat, LSRad);
+			calcParams.tgt->GetEquPos(BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.lat[RTCC_LMPOS_BEST], LSRad);
 			calcParams.LSAlt = LSRad - R_M;
 
 			sprintf(form->LmkID[0], "Lunar Module");
 			opt.alt[0] = calcParams.LSAlt;
-			opt.lat[0] = calcParams.LSLat;
+			opt.lat[0] = BZLAND.lat[RTCC_LMPOS_BEST];
 			if (fcn == 63)
 			{
 				opt.LmkTime[0] = OrbMech::HHMMSSToSS(104, 30, 0);
@@ -1443,7 +1443,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			{
 				opt.LmkTime[0] = OrbMech::HHMMSSToSS(114, 20, 0);
 			}
-			opt.lng[0] = calcParams.LSLng;
+			opt.lng[0] = BZLAND.lng[RTCC_LMPOS_BEST];
 			opt.entries = 1;
 		}
 
@@ -1464,8 +1464,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		doiopt.R_LLS = R_LLS;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(101, 0, 0);
 		doiopt.GETbase = GETbase;
-		doiopt.lat = calcParams.LSLat;
-		doiopt.lng = calcParams.LSLng;
+		doiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		doiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		doiopt.N = 0;
 		doiopt.opt = 0;
 		doiopt.sv0 = sv;
@@ -1493,7 +1493,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.HeadsUp = false;
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
-		opt.R_LS = RLS_from_latlng(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt);
+		opt.R_LS = RLS_from_latlng(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], calcParams.LSAlt);
 		opt.sv0 = sv;
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.tgt;
@@ -1621,7 +1621,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		v_LV = 19.6*0.3048;
 
 		T2 = calcParams.PDI + 21.0*60.0 + 24.0;
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt + OrbMech::R_Moon);
+		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], calcParams.LSAlt + OrbMech::R_Moon);
 
 		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, T2, v_LH, v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
 		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, OrbMech::mu_Moon);
@@ -1647,8 +1647,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.R_LLS = R_LLS;
 		opt.GETbase = GETbase;
-		opt.lat = calcParams.LSLat;
-		opt.lng = calcParams.LSLng;
+		opt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.sv_CSM = sv_CSM;
 		opt.t_hole = calcParams.PDI + 1.5*3600.0;
 
@@ -1662,7 +1662,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LaunchTimePredictionProcessor(opt, res);
 
 		sv_CSM2 = coast(sv_CSM, calcParams.PDI - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
-		MJD_over = OrbMech::P29TimeOfLongitude(sv_CSM2.R, sv_CSM2.V, sv_CSM2.MJD, sv_CSM2.gravref, calcParams.LSLng);
+		MJD_over = OrbMech::P29TimeOfLongitude(sv_CSM2.R, sv_CSM2.V, sv_CSM2.MJD, sv_CSM2.gravref, BZLAND.lng[RTCC_LMPOS_BEST]);
 		sv_CSM_over = coast(sv_CSM2, (MJD_over - sv_CSM2.MJD)*24.0*3600.0);
 
 		t_P = OrbMech::period(sv_CSM_over.R, sv_CSM_over.V, OrbMech::mu_Moon);
@@ -1777,12 +1777,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.R_LLS = R_LLS;
 		opt.GETbase = GETbase;
-		opt.lat = calcParams.LSLat;
-		opt.lng = calcParams.LSLng;
+		opt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.sv_CSM = sv_CSM;
 		opt.t_hole = calcParams.PDI + 1.5*3600.0;
 
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, OrbMech::R_Moon + calcParams.LSAlt);
+		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], OrbMech::R_Moon + calcParams.LSAlt);
 
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
@@ -1813,7 +1813,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.DVSTORE1 = _V(res.DV_CSI, 0, 0);
 		calcParams.SVSTORE1 = sv_Ins;
 
-		LandingSiteUplink(buffer1, calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt, 2022);
+		LandingSiteUplink(buffer1, BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], calcParams.LSAlt, 2022);
 		AGCStateVectorUpdate(buffer2, sv_CSM, true, AGCEpoch, GETbase);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -1866,8 +1866,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.R_LLS = R_LLS;
 		opt.GETbase = GETbase;
-		opt.lat = calcParams.LSLat;
-		opt.lng = calcParams.LSLng;
+		opt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.sv_CSM = sv_CSM;
 		if (fcn == 92)
 		{
@@ -1888,7 +1888,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->startdigit = 10;
 		}
 
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, OrbMech::R_Moon + calcParams.LSAlt);
+		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], OrbMech::R_Moon + calcParams.LSAlt);
 
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
@@ -1921,7 +1921,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MJD_TIG_nom = OrbMech::MJDfromGET(TIG_nom, GETbase);
 		sv_Liftoff = coast(sv_CSM, (MJD_TIG_nom - sv_CSM.MJD)*24.0*3600.0);
 
-		R_LS = RLS_from_latlng(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt);
+		R_LS = RLS_from_latlng(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], calcParams.LSAlt);
 
 		dt1 = OrbMech::findelev_gs(sv_Liftoff.R, sv_Liftoff.V, R_LS, MJD_TIG_nom, 180.0*RAD, sv_Liftoff.gravref, LmkRange);
 
@@ -1948,7 +1948,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k17.Azimuth = 0.0;
 
 		LunarDescentPlanningTable table;
-		LunarDescentPlanningProcessor(sv, calcParams.TEPHEM, calcParams.LSLat, calcParams.LSLng, R_LLS, table);
+		LunarDescentPlanningProcessor(sv, calcParams.TEPHEM, BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], R_LLS, table);
 
 		PoweredFlightProcessor(sv, calcParams.TEPHEM, table.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, table.DVVector[0] * 0.3048, true, TimeofIgnition, DeltaV_LVLH);
 
@@ -2021,8 +2021,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = calcParams.TEPHEM;
 
 		opt.GETbase = GETbase;
-		opt.LSLat = calcParams.LSLat;
-		opt.LSLng = calcParams.LSLng;
+		opt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.REFSMMATopt = 5;
 		opt.REFSMMATTime = calcParams.LunarLiftoff;
 		opt.vessel = calcParams.src;
@@ -2056,13 +2056,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.R_LLS = R_LLS;
 		opt.GETbase = GETbase;
-		opt.lat = calcParams.LSLat;
-		opt.lng = calcParams.LSLng;
+		opt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.sv_CSM = sv_CSM;
 		//1.5 hours from "now"
 		opt.t_hole = OrbMech::GETfromMJD(sv_CSM.MJD, GETbase) + 1.5*3600.0;
 
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, OrbMech::R_Moon + calcParams.LSAlt);
+		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], OrbMech::R_Moon + calcParams.LSAlt);
 
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
@@ -2087,8 +2087,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Calculate Liftoff REFSMMAT
 		refsopt.GETbase = GETbase;
-		refsopt.LSLat = calcParams.LSLat;
-		refsopt.LSLng = calcParams.LSLng;
+		refsopt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
+		refsopt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		refsopt.REFSMMATopt = 5;
 		refsopt.REFSMMATTime = calcParams.LunarLiftoff;
 		refsopt.vessel = calcParams.src;
@@ -2146,7 +2146,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
-		R_LS = RLS_from_latlng(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt);
+		R_LS = RLS_from_latlng(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], calcParams.LSAlt);
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();

@@ -654,9 +654,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			GET_Display(Buffer, GC->t_Land);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
+			sprintf(Buffer, "%f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
 			skp->Text((int)(5.5 * W / 8), 8 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%f°", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] * DEG);
+			sprintf(Buffer, "%f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
 			skp->Text((int)(5.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
 
 			if (G->REFSMMATopt == 8)
@@ -1274,15 +1274,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				skp->Text(5 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
 
 				skp->Text(4 * W / 8, 16 * H / 20, "Lat:", 4);
-				sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
+				sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
 				skp->Text(5 * W / 8, 16 * H / 20, Buffer, strlen(Buffer));
 
 				skp->Text(4 * W / 8, 17 * H / 20, "Lng:", 4);
-				sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] * DEG);
+				sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
 				skp->Text(5 * W / 8, 17 * H / 20, Buffer, strlen(Buffer));
 
 				skp->Text(4 * W / 8, 18 * H / 20, "Rad:", 4);
-				sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
+				sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
 				skp->Text(5 * W / 8, 18 * H / 20, Buffer, strlen(Buffer));
 
 				if (!G->PADSolGood)
@@ -3272,11 +3272,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 
 		skp->Text(5 * W / 8, 15 * H / 21, "Landing Site:", 13);
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
+		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
 		skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
 		skp->Text(5 * W / 8, 19 * H / 21, "TLAND:", 6);
 		GET_Display(Buffer, GC->t_Land);
@@ -4276,13 +4276,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "No Target!", 10);
 		}
 
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
+		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 50)
@@ -4302,13 +4302,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(1 * W / 8, 4 * H / 14, "LAT", 3);
 		skp->Text(1 * W / 8, 5 * H / 14, "LNG", 3);
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(2 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(2 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(4 * W / 8, 4 * H / 14, "RAD", 3);
-		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
+		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 32, 13 * H / 28, "OID", 3);
@@ -7534,9 +7534,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(8 * W / 32, 7 * H / 32, "LEM", 3);
 		}
 
-		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLSDISP.lat[0] * DEG);
+		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLAND.lat[0] * DEG);
 		skp->Text(31 * W / 64, 5 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLSDISP.lng[0] * DEG);
+		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLAND.lng[0] * DEG);
 		skp->Text(31 * W / 64, 6 * H / 32, Buffer, strlen(Buffer));
 		GET_Display(Buffer, GC->rtcc->med_k15.ThresholdTime, false);
 		skp->Text(31 * W / 64, 7 * H / 32, Buffer, strlen(Buffer));
@@ -7677,11 +7677,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display(Buffer, GC->rtcc->med_k50.GETTH, false);
 		skp->Text(9 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLSDISP.lat[0] * DEG);
+		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(31 * W / 32, 4 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLSDISP.lng[0] * DEG);
+		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(31 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.4lf", GC->rtcc->MCSMLR / 1852.0);
+		sprintf_s(Buffer, "%.4lf", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
 		skp->Text(31 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.3lf", GC->rtcc->PZLTRT.PoweredFlightArc*DEG);

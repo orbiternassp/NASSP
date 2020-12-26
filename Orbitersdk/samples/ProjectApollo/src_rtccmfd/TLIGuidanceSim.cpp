@@ -367,8 +367,7 @@ void TLIGuidanceSim::PCMTRL()
 		AUX->V_BO = VE;
 		AUX->GMT_BO = T;
 		AUX->DT_TO = DTPHASE[6];
-		double DTU = TIG - TABLIN.GMTI;
-		AUX->DT_B = T - TABLIN.GMTI - DTU;
+		AUX->DT_B = T - AUX->DT_TO - AUX->GMT_BI;
 		AUX->P_G = PITCHG;
 		AUX->Y_G = YAWG;
 		AUX->DV_TO = DVTO;
@@ -382,6 +381,7 @@ void TLIGuidanceSim::PCMTRL()
 		AUX->W_SIVB = TABLIN.SIVBWT;
 		AUX->WTEND = WT;
 		AUX->MainFuelUsed = AUX->WTINIT - AUX->WTEND;
+		AUX->RCSFuelUsed = 0.0;
 		AUX->RBI = BODY_EARTH;
 		AUX->CSI = 0;
 		AUX->Word60 = E;

@@ -73,6 +73,7 @@ void MCCVessel::clbkPreStep(double simt, double simdt, double mjd)
 {
 	// Update Ground Data
 	if (mcc) mcc->TimeStep(simdt);
+	if (rtcc) rtcc->Timestep(simt, simdt, mjd);
 }
 
 void MCCVessel::clbkSaveState(FILEHANDLE scn)

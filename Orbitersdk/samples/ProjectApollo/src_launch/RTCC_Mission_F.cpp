@@ -39,8 +39,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 	//Hardcoded for now, better solution at some point...
 	double AGCEpoch = 40221.525;
-	double LSLat = 0.732*RAD;
-	double LSLng = 23.647*RAD;
 	double R_LLS = OrbMech::R_Moon - 3073.263;
 	double LSAzi = -91.0*RAD;
 	double EMPLat = -4.933294*RAD;
@@ -302,8 +300,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.LOIh_apo = 170.0*1852.0;
 		opt.LOIh_peri = 60.0*1852.0;
-		opt.LSlat = LSLat;
-		opt.LSlng = LSLng;
+		opt.LSlat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.LSlng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.RV_MCC = sv;
 		opt.t_land = calcParams.TLAND;
 
@@ -496,8 +494,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.h_apo = 170.0*1852.0;
 		loiopt.h_peri = 60.0*1852.0;
 		loiopt.impulsive = 1;
-		loiopt.lat = LSLat;
-		loiopt.lng = LSLng;
+		loiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		loiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		loiopt.RV_MCC = sv;
 		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
@@ -600,8 +598,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.h_apo = 170.0*1852.0;
 		loiopt.h_peri = 60.0*1852.0;
 		loiopt.impulsive = 1;
-		loiopt.lat = LSLat;
-		loiopt.lng = LSLng;
+		loiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		loiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		loiopt.RV_MCC = sv;
 		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
@@ -625,8 +623,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//REFSMMAT calculation
 		refsopt.GETbase = GETbase;
 		refsopt.LSAzi = LSAzi;
-		refsopt.LSLat = LSLat;
-		refsopt.LSLng = LSLng;
+		refsopt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
+		refsopt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		refsopt.REFSMMATopt = 8;
 		refsopt.REFSMMATTime = calcParams.TLAND;
 
@@ -793,8 +791,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.h_peri = 60.0*1852.0;
 		opt.R_LLS = R_LLS;
 		opt.azi = LSAzi;
-		opt.lat = LSLat;
-		opt.lng = LSLng;
+		opt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.RV_MCC = sv;
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.src;
@@ -857,7 +855,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.DesiredHeight = 60.0*1852.0;
 
 		LunarDescentPlanningTable table;
-		LunarDescentPlanningProcessor(sv, GETbase, LSLat, LSLng, R_LLS, table);
+		LunarDescentPlanningProcessor(sv, GETbase, BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], R_LLS, table);
 
 		PoweredFlightProcessor(sv, GETbase, table.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, table.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
@@ -1326,8 +1324,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		doiopt.R_LLS = R_LLS;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
 		doiopt.GETbase = GETbase;
-		doiopt.lat = LSLat;
-		doiopt.lng = LSLng;
+		doiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		doiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		doiopt.N = 0;
 		doiopt.opt = 0;
 		doiopt.sv0 = sv;
@@ -1337,8 +1335,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.TLAND = t_land;
 
 		opt.GETbase = GETbase;
-		opt.LSLat = LSLat;
-		opt.LSLng = LSLng;
+		opt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.REFSMMATopt = 5;
 		opt.REFSMMATTime = calcParams.TLAND;
 		opt.vessel = calcParams.src;
@@ -1419,8 +1417,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		IncrementAGCTime(clockupdate, deltaT);
 
 		opt.GETbase = GETbase;
-		opt.LSLat = LSLat;
-		opt.LSLng = LSLng;
+		opt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
+		opt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.REFSMMATopt = 5;
 		opt.REFSMMATTime = calcParams.TLAND;
 		opt.vessel = calcParams.src;
@@ -1514,8 +1512,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		doiopt.R_LLS = R_LLS;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
 		doiopt.GETbase = GETbase;
-		doiopt.lat = LSLat;
-		doiopt.lng = LSLng;
+		doiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
+		doiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
 		doiopt.N = 0;
 		doiopt.opt = 0;
 		doiopt.sv0 = sv;
@@ -1627,7 +1625,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (preliminary)
 		{
-			MJD_LS = OrbMech::P29TimeOfLongitude(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, LSLng);
+			MJD_LS = OrbMech::P29TimeOfLongitude(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, BZLAND.lng[RTCC_LMPOS_BEST]);
 			t_LS = (MJD_LS - GETbase)*24.0*3600.0;
 			MJD_100E = OrbMech::P29TimeOfLongitude(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, 100.0*RAD);
 			t_100E = (MJD_100E - GETbase)*24.0*3600.0;
