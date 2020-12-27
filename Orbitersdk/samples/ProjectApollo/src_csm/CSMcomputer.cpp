@@ -211,7 +211,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-			if (ProgramName == "Colossus237" || ProgramName == "Colossus249" || ProgramName == "Comanche055NBY69")
+			if (ProgramName == "Colossus237" || ProgramName == "Colossus249" || ProgramName == "Manche45R2")
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
