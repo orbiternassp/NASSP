@@ -134,6 +134,141 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 	if (vessel) delete static_cast<LEM *> (vessel);
 }
 
+#define LM_AXIS_INPUT_CNT  22
+VesimInputDefinition vesim_lm_inputs[LM_AXIS_INPUT_CNT] = {
+	{ LM_AXIS_INPUT_ACAR,          "ACA Roll",                                 VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ LM_AXIS_INPUT_ACAP,          "ACA Pitch",                                VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ LM_AXIS_INPUT_ACAY,          "ACA Yaw",                                  VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ LM_AXIS_INPUT_TTCAX,         "TTCA X",                                   VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ LM_AXIS_INPUT_TTCAY,         "TTCA Y",                                   VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ LM_AXIS_INPUT_TTCAZ,         "TTCA Z",                                   VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ LM_BUTTON_ROT_LIN,           "Rotation/Translation toggle",              VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_AXIS_INPUT_THROTTLE,      "TTCA Throttle",                            VESIM_INPUTTYPE_AXIS,    0, false },
+	{ LM_BUTTON_ENG_START,         "Engine Start toggle",                      VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_ENG_STOP,          "Engine Stop toggle",                       VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DES_RATE_PLUS,     "Descent Rate plus",                        VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DES_RATE_MINUS,    "Descent Rate minus",                       VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_ABORT,             "Abort toggle",                             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_ABORT_STAGE,       "Abort Stage toggle",                       VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_ABORT_STAGE_GRD,   "Abort Stage Guard toggle",                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_PRO,          "DSKY PRO",                                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_ENTER,        "DSKY ENTER",                               VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_MDCTRL_PGNS,       "Mode Control PGNS Auto/Att Hold toggle",   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_MDCTRL_PGNS_AUT,   "Mode Control PGNS Auto",                   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_MDCTRL_PGNS_ATH,   "Mode Control PGNS Att Hold",               VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_MDCTRL_PGNS_OFF,   "Mode Control PGNS Off",                    VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_AXIS_THR_JET_LEVER,       "TTCA Throttle/Jets Select lever",          VESIM_INPUTTYPE_AXIS,    0, false }
+};
+
+void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
+	LEM *pLM = (LEM *)pdata;
+	int state;
+	if (eventType == VESIM_EVTTYPE_BUTTON_ON) {
+		switch (inputID) {
+		case LM_BUTTON_ROT_LIN:
+			if (pLM->GetAttitudeMode() == RCS_ROT)
+				pLM->SetAttitudeMode(RCS_LIN);
+			else
+				pLM->SetAttitudeMode(RCS_ROT);
+			break;
+		case LM_BUTTON_DES_RATE_MINUS:
+			pLM->agc.SetInputChannelBit(016, DescendMinus, 1);
+			break;
+		case LM_BUTTON_DES_RATE_PLUS:
+			pLM->agc.SetInputChannelBit(016, DescendPlus, 1);
+			break;
+		case LM_BUTTON_ENG_START:
+			//Engine Start Button
+			pLM->ManualEngineStart.Push();
+			pLM->ButtonClick();
+			break;
+		case LM_BUTTON_ENG_STOP:
+			//Engine Stop Button
+			pLM->CDRManualEngineStop.Push();
+			pLM->ButtonClick();
+			break;
+		case LM_BUTTON_ABORT:
+			//Ugly solution, should go into AbortSwitch.SetState(...)
+			state = pLM->AbortSwitch.GetState(); 
+			if (state == 0) {
+				pLM->AbortSwitch.SwitchTo(1, true);
+				pLM->Sclick.play();
+				pLM->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
+				pLM->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+			}
+			else if (state == 1) {
+				pLM->AbortSwitch.SwitchTo(0, true);
+				pLM->Sclick.play();
+				pLM->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
+				pLM->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+			}
+			break;
+		case LM_BUTTON_ABORT_STAGE:			
+			if (pLM->AbortStageSwitch.GetGuardState()) {
+				state = pLM->AbortStageSwitch.GetState();
+				if (state == 0) {
+					pLM->AbortStageSwitch.SwitchTo(1);
+					pLM->Sclick.play();
+				}
+				else if (state == 1) {
+					pLM->AbortStageSwitch.SwitchTo(0);
+					pLM->Sclick.play();
+				}
+			}
+			break;
+		case LM_BUTTON_ABORT_STAGE_GRD:
+			if (pLM->AbortStageSwitch.GetGuardState()) {
+				pLM->AbortStageSwitch.SetGuardState(false);
+			}
+			else {
+				pLM->AbortStageSwitch.SetGuardState(true);
+			}
+			pLM->ButtonClick(); // guardClick is inaccesible
+			break;
+		case LM_BUTTON_DSKY_PRO:
+			pLM->dsky.ProgPressed();
+			break;
+		case LM_BUTTON_DSKY_ENTER:
+			pLM->dsky.EnterPressed();
+			break;
+		case LM_BUTTON_MDCTRL_PGNS:
+			//Mode Control PGNS - cycle between Auto & Att Hold
+			if (pLM->ModeControlPGNSSwitch.GetState() < 2) {
+				pLM->ModeControlPGNSSwitch.SetState(2);
+			}
+			else {
+				pLM->ModeControlPGNSSwitch.SetState(1);
+			}
+			break;
+		case LM_BUTTON_MDCTRL_PGNS_AUT:
+			pLM->ModeControlPGNSSwitch.SetState(2);
+			break;
+		case LM_BUTTON_MDCTRL_PGNS_ATH:
+			pLM->ModeControlPGNSSwitch.SetState(1);
+			break;
+		case LM_BUTTON_MDCTRL_PGNS_OFF:
+			pLM->ModeControlPGNSSwitch.SetState(0);
+			break;
+		}
+	}
+	else if (eventType == VESIM_EVTTYPE_BUTTON_OFF) {
+		switch (inputID) {
+		case LM_BUTTON_DES_RATE_MINUS:
+			pLM->agc.SetInputChannelBit(016, DescendMinus, 0);
+			pLM->Sclick.play();;
+			break;
+		case LM_BUTTON_DES_RATE_PLUS:
+			pLM->agc.SetInputChannelBit(016, DescendPlus, 0);
+			pLM->Sclick.play();;
+			break;
+		case LM_BUTTON_DSKY_PRO:
+			pLM->dsky.ProgReleased();
+			break;
+		}
+	}
+}
+
+
 // DS20060302 DX8 callback for enumerating joysticks
 BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pLEM)
 {
@@ -266,7 +401,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	lm_rr_to_csm_connector(this, &RR),
 	lm_vhf_to_csm_csm_connector(this, &VHF),
 	cdi(this),
-	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
+	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk),
+	vesim(&cbLMVesim, this)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -307,7 +443,7 @@ LEM::~LEM()
 #endif
 
 	// DS20060413 release DirectX stuff
-	if(js_enabled > 0){
+	if (enableVESIM || js_enabled > 0) {
 		// Release joysticks
 		while(js_enabled > 0){
 			js_enabled--;
@@ -560,6 +696,8 @@ void LEM::LoadDefaultSounds()
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	// rewrote to get key events rather than monitor key state - LazyD
+
+	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, keystate);
 
 	// DS20060404 Allow keys to control DSKY like in the CM
 	if (KEYMOD_SHIFT(keystate)){
@@ -1265,25 +1403,32 @@ void LEM::PostLoadSetup(bool define_anims)
 	// Having read the configuration file, set up DirectX...	
 	hr = DirectInput8Create(dllhandle, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
 	if (!FAILED(hr)) {
-		int x = 0;
-		// Enumerate attached joysticks until we find 2 or run out.
-		dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-		if (js_enabled == 0) {   // Did we get anything?			
-			dx8ppv->Release(); // No. Close down DirectInput
-			dx8ppv = NULL;     // otherwise it won't get closed later
-			//sprintf(oapiDebugString(), "DX8JS: No joysticks found");
+		if (enableVESIM) {
+			for (int i = 0; i<LM_AXIS_INPUT_CNT; i++)
+				vesim.addInput(&vesim_lm_inputs[i]);
+			vesim.setupDevices("LM", dx8ppv);
 		}
 		else {
-			while (x < js_enabled) {                                // For each joystick
-				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-																  // Z-axis detection
-				if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
-					js_current = x;
-					dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+			int x = 0;
+			// Enumerate attached joysticks until we find 2 or run out.
+			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+			if (js_enabled == 0) {   // Did we get anything?			
+				dx8ppv->Release(); // No. Close down DirectInput
+				dx8ppv = NULL;     // otherwise it won't get closed later
+				//sprintf(oapiDebugString(), "DX8JS: No joysticks found");
+			}
+			else {
+				while (x < js_enabled) {                                // For each joystick
+					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+																	  // Z-axis detection
+					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
+						js_current = x;
+						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+					}
+					x++;                                              // Next!
 				}
-				x++;                                              // Next!
 			}
 		}
 	}
@@ -1751,6 +1896,11 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
 		sscanf(line + 12, "%i", &i);
 		rhc_thctoggle = (i != 0);
+	}
+	else if (!strnicmp(line, "JOYSTICK_VESIM", 14)) {
+		int tmp;
+		sscanf(line + 14, "%i", &tmp);
+		enableVESIM = (tmp != 0);
 	}
 	else if (!strnicmp(line, "VAGCCHECKLISTAUTOSLOW", 21)) {
 		sscanf(line + 21, "%i", &i);

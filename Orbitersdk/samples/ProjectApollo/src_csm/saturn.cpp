@@ -69,6 +69,30 @@ extern "C" {
 
 //extern FILE *PanelsdkLogFile;
 
+#define CSM_AXIS_INPUT_CNT  7
+VesimInputDefinition vesim_csm_inputs[CSM_AXIS_INPUT_CNT] = {
+	{ CSM_AXIS_INPUT_RHCR,   "RHC Roll",                      VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHCP,   "RHC Pitch",                     VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHCY,   "RHC Yaw",                       VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCX,   "THC X",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCY,   "THC Y",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCZ,   "THC Z",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_BUTTON_ROT_LIN,    "Rotation/Translation toggle",   VESIM_INPUTTYPE_BUTTON,  0, true }
+};
+
+void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata) {
+	Saturn *pSaturn = (Saturn *)pdata;
+	switch (inputID) {
+	case CSM_BUTTON_ROT_LIN:
+		if (eventType == VESIM_EVTTYPE_BUTTON_ON) {
+			if (pSaturn->GetAttitudeMode() == RCS_ROT)
+				pSaturn->SetAttitudeMode(RCS_LIN);
+			else
+				pSaturn->SetAttitudeMode(RCS_ROT);
+		}
+		break;
+	}
+}
 
 // DX8 callback for enumerating joysticks
 BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pSaturn)
@@ -276,7 +300,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	PriEvapInletTempSensor("Pri-Evap-Inlet-Temp-Sensor", 35.0, 100.0),
 	PriRadInTempSensor("Pri-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadInTempSensor("Sec-Rad-In-Temp-Sensor", 55.0, 120.0),
-	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0)
+	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0),
+	vesim(&cbCSMVesim, this)
 #pragma warning ( pop ) // disable:4355
 
 {	
@@ -351,7 +376,7 @@ Saturn::~Saturn()
 	ClearMissionManagementMemory();
 
 	// Release DirectX joystick stuff
-	if(js_enabled > 0){
+	if(enableVESIM || js_enabled > 0){
 		// Release joysticks
 		while(js_enabled > 0){
 			js_enabled--;
@@ -2264,7 +2289,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
 			sscanf(line + 12, "%i", &i);
 			rhc_thctoggle = (i != 0);
-		} 
+		}
+		else if (!strnicmp(line, "JOYSTICK_VESIM", 14)) {
+			int tmp;
+			sscanf(line + 14, "%i", &tmp);
+			enableVESIM = (tmp!= 0);
+		}
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
 		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg));
 		else if (papiReadScenario_double(line, "LMDSCEMPTY", LMDescentEmptyMassKg));
@@ -2866,6 +2896,8 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (FirstTimestep) return 0;
+
+	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, kstate);
 
 	if (KEYMOD_SHIFT(kstate)){
 		// Do DSKY stuff
@@ -3848,29 +3880,36 @@ void Saturn::GenericLoadStateSetup()
 	// Having read the configuration file, set up DirectX...	
 	hr = DirectInput8Create(dllhandle, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
 	if (!FAILED(hr)) {
-		int x = 0;
-		// Enumerate attached joysticks until we find 2 or run out.
-		dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-		if (js_enabled == 0) {   // Did we get anything?			
-			dx8ppv->Release(); // No. Close down DirectInput
-			dx8ppv = NULL;     // otherwise it won't get closed later
-			//sprintf(oapiDebugString(), "DX8JS: No joysticks found");
+		if (enableVESIM) {
+			for (int i=0; i<CSM_AXIS_INPUT_CNT; i++)
+				vesim.addInput(&vesim_csm_inputs[i]);
+			vesim.setupDevices("CSM", dx8ppv);		
 		}
 		else {
-			while (x < js_enabled) {                                // For each joystick
-				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-				// Can't do this because we don't own a window.
-				// dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
-				// 	 DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		 // and we don't need exclusive joystick access.
+			int x = 0;
+			// Enumerate attached joysticks until we find 2 or run out.
+			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+			if (js_enabled == 0) {   // Did we get anything?			
+				dx8ppv->Release(); // No. Close down DirectInput
+				dx8ppv = NULL;     // otherwise it won't get closed later
+				//sprintf(oapiDebugString(), "DX8JS: No joysticks found");
+			}
+			else {
+				while (x < js_enabled) {                                // For each joystick
+					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+					// Can't do this because we don't own a window.
+					// dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
+					// 	 DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		 // and we don't need exclusive joystick access.
 
-				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-				// Z-axis detection
-				if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
-					js_current = x;
-					dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+					// Z-axis detection
+					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
+						js_current = x;
+						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+					}
+					x++;                                              // Next!
 				}
-				x++;                                              // Next!
 			}
 		}
 	}
