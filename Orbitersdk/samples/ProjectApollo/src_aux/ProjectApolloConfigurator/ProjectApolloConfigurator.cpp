@@ -62,6 +62,7 @@ static struct {
 	int Saturn_TSL;
 	int Saturn_RHCTHCToggle;
 	int Saturn_RHCTHCToggleId;
+	int Saturn_VESIM;
 	int Saturn_MaxTimeAcceleration;
 	int Saturn_MultiThread;
 	int Saturn_VAGCChecklistAutoSlow;
@@ -130,7 +131,9 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 		} else if (!strnicmp (line, "JOYSTICK_RTTID", 14)) {
 			sscanf (line + 14, "%i", &gParams.Saturn_RHCTHCToggleId);
 		} else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
-			sscanf (line + 12, "%i", &gParams.Saturn_RHCTHCToggle);
+			sscanf (line + 12, "%i", &gParams.Saturn_RHCTHCToggle);			
+		} else if (!strnicmp (line, "JOYSTICK_VESIM", 14)) {
+			sscanf(line + 14, "%i", &gParams.Saturn_VESIM);
 		} else if (!strnicmp(line, "VCINFOENABLED", 13)) {
 			sscanf(line + 13, "%i", &gParams.Saturn_VcInfoEnabled);
 		}
@@ -204,6 +207,9 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	oapiWriteLine(hFile, cbuf);
 
 	sprintf(cbuf, "JOYSTICK_TSL %d", gParams.Saturn_TSL);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "JOYSTICK_VESIM %d", gParams.Saturn_VESIM);
 	oapiWriteLine(hFile, cbuf);
 
 	oapiWriteLine(hFile, "JOYSTICK_TAUTO");	// Not configurable currently
@@ -362,6 +368,13 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 					}
 				}
 
+				if (SendDlgItemMessage(gParams.hDlgTabs[1], IDC_CHECK_VESIM, BM_GETCHECK, 0, 0) == BST_UNCHECKED) {
+					gParams.Saturn_VESIM = 0;
+				}
+				else {
+					gParams.Saturn_VESIM = 1;
+				}
+
 				// Miscellaneous Tab
 				SendDlgItemMessage(gParams.hDlgTabs[2], IDC_EDIT_TIMEACC, WM_GETTEXT, 4, (LPARAM) (LPCTSTR) buffer);
 				if (sscanf(buffer, "%i", &i) == 1) {
@@ -478,6 +491,8 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 			SendDlgItemMessage(hWnd, IDC_EDIT_TJT, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
 		}
 
+		SendDlgItemMessage(hWnd, IDC_CHECK_VESIM, BM_SETCHECK, gParams.Saturn_VESIM ? BST_CHECKED : BST_UNCHECKED, 0);
+
 		sprintf(buffer,"%i",gParams.Saturn_MaxTimeAcceleration);
 		SendDlgItemMessage(hWnd, IDC_EDIT_TIMEACC, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
 
@@ -507,6 +522,10 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_TJT)) {
 			UpdateControlState(hWnd);
+
+		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_VESIM)) {
+			UpdateControlState(hWnd);
+
 		}
 		break;
 
@@ -526,7 +545,21 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 
-	long rhcChecked, thcChecked;
+	long rhcChecked, thcChecked, vesimChecked;
+
+	vesimChecked = SendDlgItemMessage(hWnd, IDC_CHECK_VESIM, BM_GETCHECK, 0, 0);
+
+	if (vesimChecked == BST_CHECKED) {
+		SendDlgItemMessage(hWnd, IDC_CHECK_RHC, BM_SETCHECK, BST_UNCHECKED, 0);
+		SendDlgItemMessage(hWnd, IDC_CHECK_THC, BM_SETCHECK, BST_UNCHECKED, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RHC), FALSE);
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_THC), FALSE);
+		//SendDlgItemMessage(hWnd, IDC_CHECK_RHC, EM_SETREADONLY, (WPARAM)(BOOL)true, 0);
+	}
+	else {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RHC), TRUE);
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_THC), TRUE);
+	}
 
 	rhcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_RHC, BM_GETCHECK, 0, 0);
 	thcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_THC, BM_GETCHECK, 0, 0);
@@ -619,6 +652,7 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 	gParams.Saturn_TSL = -1;
 	gParams.Saturn_RHCTHCToggle = 0;
 	gParams.Saturn_RHCTHCToggleId = -1;
+	gParams.Saturn_VESIM = 0;
 	gParams.Saturn_MaxTimeAcceleration = 0;
 	gParams.Saturn_MultiThread = 0;
 	gParams.Saturn_VAGCChecklistAutoSlow = 1;
