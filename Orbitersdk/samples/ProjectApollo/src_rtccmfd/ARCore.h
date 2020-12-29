@@ -35,7 +35,7 @@ public:
 
 	void SetMissionSpecificParameters(bool loadinitvalues);
 	void MPTMassUpdate();
-	int MPTTrajectoryUpdate();
+	int MPTTrajectoryUpdate(bool csm);
 
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
@@ -87,6 +87,7 @@ public:
 	void CycleFIDOOrbitDigitals1();
 	void CycleFIDOOrbitDigitals2();
 	void CycleSpaceDigitals();
+	void CycleVectorPanelSummary();
 	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
 	void RTETradeoffDisplayCalc();
@@ -135,6 +136,7 @@ public:
 	void SendNodeToSFP();
 	void CalculateTPITime();
 	void GetStateVectorFromAGC(bool csm);
+	void GetStateVectorFromIU();
 	void VectorCompareDisplayCalc();
 	void UpdateTLITargetTable();
 

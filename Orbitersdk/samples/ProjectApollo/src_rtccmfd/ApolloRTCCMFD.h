@@ -38,6 +38,8 @@ public:
 	void StoreStatus(void) const;
 	void RecallStatus(void);
 
+	bool Text(oapi::Sketchpad *skp, int x, int y, const std::string & str);
+
 	void menuTIChaserVectorTime();
 	void set_TIChaserVectorTime(double get);
 	void menuTITargetVectorTime();
@@ -615,7 +617,15 @@ public:
 	void menuMPTM55Update();
 	void menuMPTInitAutoUpdate();
 	void menuMPTInitM50M55Vehicle();
-	void menuMPTTrajectoryUpdate();
+	void menuMPTTrajectoryUpdateCSM();
+	void menuMPTTrajectoryUpdateLEM();
+	void menuMoveToEvalTableCSM();
+	void menuMoveToEvalTableLEM();
+	void menuMoveToUsableTableCSM();
+	void menuMoveToUsableTableLEM();
+	void menuEphemerisUpdateCSM();
+	void menuEphemerisUpdateLEM();
+	void VectorControlPBI(int code);
 	void menuSetDescPlanTablePage();
 	void menuSetLDPPAzimuth();
 	void set_LDPPAzimuth(double azi);
@@ -709,6 +719,8 @@ public:
 	void menuSetSLVNavigationUpdatePage();
 	void menuSLVNavigationUpdateCalc();
 	void menuSLVNavigationUpdateUplink();
+	void menuVectorPanelSummaryPage();
+	void menuGetStateVectorsFromAGC();
 
 protected:
 	oapi::Font *font;

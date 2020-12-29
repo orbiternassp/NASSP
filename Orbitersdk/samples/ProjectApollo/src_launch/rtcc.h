@@ -86,7 +86,6 @@ class Saturn;
 #define RTCC_ENGINETYPE_LMAPS 34
 #define RTCC_ENGINETYPE_LMDPS 35
 #define RTCC_ENGINETYPE_SIVB_MAIN 36
-#define RTCC_ENGINETYPE_SIVB_APS 37
 
 #define RTCC_MANVEHICLE_CSM 1
 #define RTCC_MANVEHICLE_SIVB 2
@@ -1957,6 +1956,7 @@ struct PMMSPTInput
 	int ThrusterCode;
 	int AttitudeMode;
 	//Word 14-19
+	std::string StationID;
 	//Targeting Parameters
 	//Word 20 (DT of burn, negative if not input)
 	double dt;
@@ -2877,6 +2877,9 @@ public:
 	void SetGMTBase(double gmt) { GMTBASE = gmt; }
 	double GETfromGMT(double GMT);
 	double GMTfromGET(double GET);
+	double GetCMCClockZero() { return MCGZSA * 3600.0; }
+	double GetLGCClockZero() { return MCGZSL * 3600.0; }
+	double GetIUClockZero() { return MCGRIC * 3600.0; }
 	//Arrival time at selenographic argument of latitude
 	int PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg);
 
@@ -2906,7 +2909,7 @@ public:
 	//Vehicle Orientation Change Processor
 	void PMMUDT(int L, unsigned man, int headsup, int trim);
 	//Vector Routing Load Module
-	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false);
+	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false, std::string* StationID = NULL);
 	//Vector Fetch Load Module
 	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	//Maneuver Execution Program
@@ -2963,7 +2966,12 @@ public:
 	//SLV Navigation Update
 	void CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
 
-	//Trajectory Determination
+	//TRAJECTORY DETERMINATION
+	//D.C. MED Decoder
+	int BMQDCMED(std::string med, std::vector<std::string> data);
+	//Vector Panel Summary Control
+	void BMSVPS(int queid, int PBIID);
+	int BMSVPSVectorFetch(const std::string &vecid, EphemerisData &sv_out);
 	//Vector Comparison Control
 	void BMSVEC();
 	//Vector Comparison Display
@@ -2971,9 +2979,11 @@ public:
 	//Online print of trajectory determination
 	void BMGPRIME(std::string source, int n);
 	void BMGPRIME(std::string source, std::vector<std::string> message);
+	//Vector Panel Summary Display
+	void BMDVPS();
 
 	//Launch 
-	void LMMGRP(double gmt, double A_Z);
+	void LMMGRP(int veh, double gmt);
 
 	//Guidance
 
@@ -3346,7 +3356,27 @@ public:
 	LandmarkAcquisitionTable EZLANDU1;
 	LunarLaunchTargetingTable PZLLTT;
 
+	struct StateVectorTableEntry
+	{
+		EphemerisData Vector;
+		int ID = -1;
+		std::string VectorCode;
+	};
+
 	struct EvaluationVectorTable
+	{
+		//0 = CSM, CMC
+		//1 = CSM, LGC
+		//2 = CSM, AGS
+		//3 = CSM, IU
+		//4 = LM, CMC
+		//5 = LM, LGC
+		//6 = LM, AGS
+		//7 = LM, IU
+		StateVectorTableEntry data[8];
+	} BZEVLVEC;
+
+	struct UsableVectorTable
 	{
 		//0 = CSM, CMC
 		//1 = CSM, LGC
@@ -3360,9 +3390,8 @@ public:
 		//9 = LM, IU
 		//10 = LM, HSR
 		//11 = LM, DC
-		EphemerisData Vectors[12];
-		int ID[12] = { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 };
-	} BZEVLVEC;
+		StateVectorTableEntry data[12];
+	} BZUSEVEC;
 
 	struct VectorCompareTableData
 	{
@@ -3408,12 +3437,60 @@ public:
 		std::string error = "TABLE NOT INITIALIZED";
 	} VectorCompareDisplayBuffer;
 
+	struct VectorPanelSummaryDisplay
+	{
+		double gmt = 0.0;
+		//0 = CSM, 1 = LM
+		std::string AnchorVectorID[2];
+		std::string AnchorVectorGMT[2];
+		std::string CurrentGMT;
+		//0 = CMC, 1 = LGC, 2 = AGS, 3 = IU
+		std::string CompUsableID[2][4];
+		std::string CompUsableGMT[2][4];
+		std::string CompEvalID[2][4];
+		std::string CompEvalGMT[2][4];
+		std::string CompTelemetryHighGMT[2][4];
+		std::string CompTelemetryLowGMT[2][4];
+		std::string HSRID[2];
+		std::string HSRGMT[2];
+		std::string DCID[2];
+		std::string DCGMT[2];
+		std::string LastManGMTUL[2];
+		std::string LastManGMTBO[2];
+	} VectorPanelSummaryBuffer;
+
 	struct TelemetryTrajectoryInterfaceTable
 	{
-		MATRIX3 LGC_REFSMMAT;
-		bool LGCRefsPresent = false;
+		//Block 1
+		EphemerisData HighSpeedCMCCSMVector;
+		//Block 2
+		EphemerisData HighSpeedCMCLEMVector;
+		//Block 3 (High-speed AGC optics data)
+		//TBD
+		//Block 4 (High-Speed CMC REFSMMAT)
 		MATRIX3 CMC_REFSMMAT;
 		bool CMCRefsPresent = false;
+		//Block 5-8 Low-speed CMC data
+		//TBD
+		//Block 9
+		EphemerisData HighSpeedLGCCSMVector;
+		//Block 10
+		EphemerisData HighSpeedLGCLEMVector;
+		//Block 11
+		EphemerisData HighSpeedAGSCSMVector;
+		//Block 12
+		EphemerisData HighSpeedAGSLEMVector;
+		//Block 13 (LGC optics data)
+		//TBD
+		//Block 14 (high-speed LGC REFSMMAT)
+		MATRIX3 LGC_REFSMMAT;
+		bool LGCRefsPresent = false;
+		//Block 15-20 (low speed data)
+		//TBD
+		//Block 21
+		EphemerisData HighSpeedIUVector;
+		//Block 22 (Low-speed IU vector)
+		//TBD
 	} BZSTLM;
 
 	struct RelativeMotionDigitalsTableEntry
@@ -3539,11 +3616,11 @@ public:
 		double KY2 = 0.0;
 		//Geodetic latitude of launch site
 		double PHIL = 0.0;
-		//Azimuth from time polynomial
+		//Azimuth from time polynomial (radians)
 		double hx[3][5];
-		//Inclination from azimuth polynomial
+		//Inclination from azimuth polynomial (radians)
 		double fx[7];
-		//Descending Node Angle from azimuth polynomial
+		//Descending Node Angle from azimuth polynomial (radians)
 		double gx[7];
 		//Times of the opening and closing of launch windows
 		double t_D0, t_D1, t_D2, t_D3;
@@ -4467,8 +4544,8 @@ protected:
 	//Build TLI targeting parameters table
 	void QMMBLD(int year, int month, int day);
 
-	double GLHTCS(double FLTHRS) { return FLTHRS * 360000.0; }
-	double GLCSTH(double FIXCSC) { return FIXCSC / 360000.0; }
+	double GLHTCS(double FLTHRS);
+	double GLCSTH(double FIXCSC);
 	double TJUDAT(int Y, int M, int D);
 	EphemerisData ConvertSVtoEphemData(SV sv);
 	SV ConvertEphemDatatoSV(EphemerisData sv);

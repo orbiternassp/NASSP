@@ -375,6 +375,11 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 	}
 }
 
+bool ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, const std::string & str)
+{
+	return skp->Text(x, y, str.c_str(), str.length());
+}
+
 void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
@@ -575,10 +580,6 @@ void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 	else if (n == RTCC_ENGINETYPE_LMRCSMINUS4)
 	{
 		sprintf(Buff, "LM RCS -X (4 quads)");
-	}
-	else if (n == RTCC_ENGINETYPE_SIVB_APS)
-	{
-		sprintf(Buff, "S-IVB APS");
 	}
 	else if (n == RTCC_ENGINETYPE_LOX_DUMP)
 	{
@@ -1295,6 +1296,12 @@ void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
 void ApolloRTCCMFD::menuSetSLVNavigationUpdatePage()
 {
 	screen = 96;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuVectorPanelSummaryPage()
+{
+	screen = 97;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -3359,16 +3366,269 @@ void ApolloRTCCMFD::menuMPTM55Update()
 	}
 }
 
-void ApolloRTCCMFD::menuMPTTrajectoryUpdate()
+void ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM()
 {
-	if (GC->MPTTrajectoryUpdate())
+	GC->MPTTrajectoryUpdate(true);
+}
+
+void ApolloRTCCMFD::menuMPTTrajectoryUpdateLEM()
+{
+	GC->MPTTrajectoryUpdate(false);
+}
+
+void ApolloRTCCMFD::menuMoveToEvalTableCSM()
+{
+	bool MoveToEvalTableCSMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move CSM telemetry vector to evaluation vector table. Input: CMC, LGC, AGS or IU", MoveToEvalTableCSMInput, 0, 50, (void*)this);
+}
+
+bool MoveToEvalTableCSMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
 	{
-		GC->mptInitError = 6;
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 300;
+		}
+		else if (str == "LGC")
+		{
+			code = 301;
+		}
+		else if (str == "AGS")
+		{
+			code = 302;
+		}
+		else if (str == "IU")
+		{
+			code = 303;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
 	}
-	else
+	return false;
+}
+
+void ApolloRTCCMFD::menuMoveToEvalTableLEM()
+{
+	bool MoveToEvalTableLEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move LEM telemetry vector to evaluation vector table. Input: CMC, LGC, AGS or IU", MoveToEvalTableLEMInput, 0, 50, (void*)this);
+}
+
+bool MoveToEvalTableLEMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
 	{
-		GC->mptInitError = 5;
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 308;
+		}
+		else if (str == "LGC")
+		{
+			code = 309;
+		}
+		else if (str == "AGS")
+		{
+			code = 310;
+		}
+		else if (str == "IU")
+		{
+			code = 311;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
 	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuMoveToUsableTableCSM()
+{
+	bool MoveToUsableTableCSMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move CSM telemetry vector to usable vector table. Input: CMC, LGC, AGS or IU", MoveToUsableTableCSMInput, 0, 50, (void*)this);
+}
+
+bool MoveToUsableTableCSMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 316;
+		}
+		else if (str == "LGC")
+		{
+			code = 317;
+		}
+		else if (str == "AGS")
+		{
+			code = 318;
+		}
+		else if (str == "IU")
+		{
+			code = 319;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuMoveToUsableTableLEM()
+{
+	bool MoveToUsableTableLEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move LEM telemetry vector to usable vector table. Input: CMC, LGC, AGS or IU", MoveToUsableTableLEMInput, 0, 50, (void*)this);
+}
+
+bool MoveToUsableTableLEMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 320;
+		}
+		else if (str == "LGC")
+		{
+			code = 321;
+		}
+		else if (str == "AGS")
+		{
+			code = 322;
+		}
+		else if (str == "IU")
+		{
+			code = 323;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuEphemerisUpdateCSM()
+{
+	bool EphemerisUpdateCSMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move CSM telemetry vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateCSMInput, 0, 50, (void*)this);
+}
+
+bool EphemerisUpdateCSMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 324;
+		}
+		else if (str == "LGC")
+		{
+			code = 325;
+		}
+		else if (str == "AGS")
+		{
+			code = 326;
+		}
+		else if (str == "IU")
+		{
+			code = 327;
+		}
+		else if (str == "HSR")
+		{
+			code = 328;
+		}
+		else if (str == "DC")
+		{
+			code = 329;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuEphemerisUpdateLEM()
+{
+	bool EphemerisUpdateLEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move LEM telemetry vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateLEMInput, 0, 50, (void*)this);
+}
+
+bool EphemerisUpdateLEMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 330;
+		}
+		else if (str == "LGC")
+		{
+			code = 331;
+		}
+		else if (str == "AGS")
+		{
+			code = 332;
+		}
+		else if (str == "IU")
+		{
+			code = 333;
+		}
+		else if (str == "HSR")
+		{
+			code = 334;
+		}
+		else if (str == "DC")
+		{
+			code = 335;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::VectorControlPBI(int code)
+{
+	GC->rtcc->BMSVPS(0, code);
 }
 
 void ApolloRTCCMFD::menuMPTInitAutoUpdate()
@@ -4235,10 +4495,6 @@ void ApolloRTCCMFD::CycleThrusterOption(int &thruster)
 	{
 		thruster++;
 	}
-	else if (thruster == RTCC_ENGINETYPE_LMDPS)
-	{
-		thruster = RTCC_ENGINETYPE_SIVB_APS;
-	}
 	else
 	{
 		thruster = RTCC_ENGINETYPE_CSMRCSPLUS2;
@@ -4488,7 +4744,14 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	double ss;
 	OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
 	char Buff[128];
+	//Update actual liftoff time
 	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hh, mm, ss);
+	GC->rtcc->GMGMED(Buff);
+	//Update GMT of zeroing CMC clock
+	sprintf_s(Buff, "P15,AGC,%d:%d:%lf;", hh, mm, ss);
+	GC->rtcc->GMGMED(Buff);
+	//Update GMT of zeroing LGC clock
+	sprintf_s(Buff, "P15,LGC,%d:%d:%lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 }
 
@@ -7798,7 +8061,7 @@ void ApolloRTCCMFD::menuVectorCompareDisplayCalc()
 void ApolloRTCCMFD::menuVectorCompareColumn1()
 {
 	bool VectorCompareColumn1Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Select vector for column 1. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn1Input, 0, 20, (void*)this);
+	oapiOpenInputBox("Select vector for column 1. EPHO = Orbit Ephemeris, otherwise ID from Vector Panel Summary:", VectorCompareColumn1Input, 0, 20, (void*)this);
 }
 
 bool VectorCompareColumn1Input(void* id, char *str, void *data)
@@ -7817,7 +8080,7 @@ bool VectorCompareColumn1Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuVectorCompareColumn2()
 {
 	bool VectorCompareColumn2Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Select vector for column 2. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn2Input, 0, 20, (void*)this);
+	oapiOpenInputBox("Select vector for column 2. EPHO = Orbit Ephemeris, otherwise ID from Vector Panel Summary:", VectorCompareColumn2Input, 0, 20, (void*)this);
 }
 
 bool VectorCompareColumn2Input(void* id, char *str, void *data)
@@ -7836,7 +8099,7 @@ bool VectorCompareColumn2Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuVectorCompareColumn3()
 {
 	bool VectorCompareColumn3Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Select vector for column 3. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn3Input, 0, 20, (void*)this);
+	oapiOpenInputBox("Select vector for column 3. EPHO = Orbit Ephemeris, otherwise ID from Vector Panel Summary:", VectorCompareColumn3Input, 0, 20, (void*)this);
 }
 
 bool VectorCompareColumn3Input(void* id, char *str, void *data)
@@ -7855,7 +8118,7 @@ bool VectorCompareColumn3Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuVectorCompareColumn4()
 {
 	bool VectorCompareColumn4Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Select vector for column 4. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn4Input, 0, 20, (void*)this);
+	oapiOpenInputBox("Select vector for column 4. EPHO = Orbit Ephemeris, otherwise ID from Vector Panel Summary:", VectorCompareColumn4Input, 0, 20, (void*)this);
 }
 
 bool VectorCompareColumn4Input(void* id, char *str, void *data)
@@ -8104,6 +8367,13 @@ void ApolloRTCCMFD::menuSLVNavigationUpdateUplink()
 	G->SLVNavigationUpdateUplink();
 }
 
+void ApolloRTCCMFD::menuGetStateVectorsFromAGC()
+{
+	G->GetStateVectorFromAGC(true);
+	G->GetStateVectorFromAGC(false);
+	G->GetStateVectorFromIU();
+}
+
 void ApolloRTCCMFD::menuMSKRequest()
 {
 	bool MSKRequestInput(void* id, char *str, void *data);
@@ -8199,6 +8469,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 1590:
 		menuSetVectorCompareDisplay();
+		break;
+	case 1591:
+		menuVectorPanelSummaryPage();
 		break;
 	case 1597:
 		menuSetSkeletonFlightPlanPage();

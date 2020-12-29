@@ -1199,6 +1199,8 @@ private:
 		MC27_DCSNavigationUpdateAccepted,
 		MC27_DCSPoweredFlightInhibitRemoved = 25
 	};
+
+	friend class ARCore;
 };
 
 #define LVDC_START_STRING "LVDC_BEGIN"

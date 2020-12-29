@@ -496,19 +496,10 @@ PMMRKJ_LABEL_22C:
 		Aux->WTEND = WT;
 		Aux->MainFuelUsed = MAINFUELUSED;
 		Aux->RCSFuelUsed = RCSFUELUSED;
-		Aux->W_CSM = WC;
-		if (TArr.IC == 4 || TArr.IC == 5)
-		{
-			Aux->W_LMA = WL;
-			Aux->W_LMD = 0.0;
-		}
-		else
-		{
-			Aux->W_LMA = TArr.LMAWT;
-			Aux->W_LMD = WL - TArr.LMAWT;
-		}
-
-		Aux->W_SIVB = WS;
+		Aux->W_CSM = TArr.CSMWT;
+		Aux->W_LMA = TArr.LMAWT;
+		Aux->W_LMD = TArr.LMDWT;
+		Aux->W_SIVB = TArr.SIVBWT;
 	}
 }
 
@@ -647,7 +638,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		DTSPAN[3] = 6.0;
 		DTSPAN[5] = 4.0;
 	}
-	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LOX_DUMP || TArr.ThrusterCode == RTCC_ENGINETYPE_SIVB_APS)
+	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LOX_DUMP)
 	{
 		THPS[0] = Thrust;
 		WDOTPS[0] = Thrust / isp;

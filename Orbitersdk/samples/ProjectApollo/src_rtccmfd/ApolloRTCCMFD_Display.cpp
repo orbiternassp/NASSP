@@ -3565,9 +3565,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(8 * W / 16, 6 * H / 28, "1503 Next Station Contacts", 26);
 		skp->Text(8 * W / 16, 7 * H / 28, "1506 Experimental Site Acquisition", 26);
 		skp->Text(8 * W / 16, 8 * H / 28, "1590 Vector Compare Display", 27);
-		skp->Text(8 * W / 16, 9 * H / 28, "1597 Skeleton Flight Plan Table", 31);
-		skp->Text(8 * W / 16, 10 * H / 28, "1619 Checkout Monitor", 21);
-		skp->Text(8 * W / 16, 11 * H / 28, "1629 On Line Monitor", 20);
+		skp->Text(8 * W / 16, 9 * H / 28, "1591 Vector Panel Summary", 25);
+		skp->Text(8 * W / 16, 10 * H / 28, "1597 Skeleton Flight Plan Table", 31);
+		skp->Text(8 * W / 16, 11 * H / 28, "1619 Checkout Monitor", 21);
+		skp->Text(8 * W / 16, 12 * H / 28, "1629 On Line Monitor", 20);
 	}
 	else if (screen == 43)
 	{
@@ -3926,10 +3927,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		skp->Text(6 * W / 32, 5 * H / 28, "CSM STA ID", 10);
+		sprintf_s(Buffer, GC->rtcc->MPTDISPLAY.CSMSTAID.c_str());
+		skp->Text(12 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(6 * W / 32, 6 * H / 28, "GETAV", 5);
 		sprintf_s(Buffer, GC->rtcc->MPTDISPLAY.CSMGETAV.c_str());
 		skp->Text(10 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(18 * W / 32, 5 * H / 28, "LEM STA ID", 10);
+		sprintf_s(Buffer, GC->rtcc->MPTDISPLAY.LEMSTAID.c_str());
+		skp->Text(24 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(18 * W / 32, 6 * H / 28, "GETAV", 5);
 		sprintf_s(Buffer, GC->rtcc->MPTDISPLAY.LEMGETAV.c_str());
 		skp->Text(22 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
@@ -5365,15 +5370,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->Text(7 * W / 16, 13 * H / 14, "Config update rejected!", 23);
 		}
-		else if (GC->mptInitError == 5)
-		{
-			skp->Text(7 * W / 16, 13 * H / 14, "Trajectory update successful!", 29);
-		}
-		else if (GC->mptInitError == 6)
-		{
-			skp->Text(7 * W / 16, 13 * H / 14, "Trajectory update rejected!", 27);
-		}
-
 	}
 	else if (screen == 60)
 	{
@@ -8360,6 +8356,103 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%+.4lf", GC->rtcc->CZNAVSLV.NUPTIM / 3600.0);
 		skp->Text(24 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
 
+	}
+	else if (screen == 97)
+	{
+		G->CycleVectorPanelSummary();
+
+		skp->SetFont(fonttest);
+		skp->SetPen(pen2);
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(5 * W / 8, 1 * H / 32, "VECTOR PANEL SUMMARY", 20);
+		skp->Text(38 * W / 43, 1 * H / 32, "1591", 4);
+		
+		skp->SetTextAlign(oapi::Sketchpad::LEFT, oapi::Sketchpad::BASELINE);
+
+		skp->Text(2 * W / 43, 3 * H / 32, "CSM ANCHOR", 10);
+		Text(skp, 10 * W / 43, 3 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.AnchorVectorID[0]);
+		skp->Text(17 * W / 43, 3 * H / 32, "CURRENT GMT", 11);
+		skp->Text(29 * W / 43, 3 * H / 32, "LM ANCHOR", 9);
+		Text(skp, 37 * W / 43, 3 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.AnchorVectorID[1]);
+
+		skp->Text(3 * W / 43, 4 * H / 32, "GMTAV", 10);
+		Text(skp, 8 * W / 43, 4 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.AnchorVectorGMT[0]);
+		Text(skp, 18 * W / 43, 4 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CurrentGMT);
+		skp->Text(30 * W / 43, 4 * H / 32, "GMTAV", 10);
+		Text(skp, 35 * W / 43, 4 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.AnchorVectorGMT[1]);
+
+		skp->Line(0, 5 * H / 32, W, 5 * H / 32);
+		skp->Line(0, 7 * H / 32, W, 7 * H / 32);
+		skp->Line(W / 2, 5 * H / 32, W / 2, H);
+		skp->Line(0, 15 * H / 32, W, 15 * H / 32);
+		skp->Line(W / 4, 7 * H / 32, W / 4, H);
+		skp->Line(3 * W / 4, 7 * H / 32, 3 * W / 4, H);
+		skp->Line(W / 4, 20 * H / 32, W / 2, 20 * H / 32);
+		skp->Line(3 * W / 4, 20 * H / 32, W, 20 * H / 32);
+		skp->Line(0, 23 * H / 32, W / 4, 23 * H / 32);
+		skp->Line(W / 2, 23 * H / 32, 3 * W / 4, 23 * H / 32);
+		skp->Line(W / 4, 25 * H / 32, W / 2, 25 * H / 32);
+		skp->Line(3 * W / 4, 25 * H / 32, W, 25 * H / 32);
+
+		skp->Text(5 * W / 43, 6 * H / 32, "CSM VECTORS", 11);
+		skp->Text(26 * W / 43, 6 * H / 32, "LM VECTORS", 10);
+
+		for (int i = 0;i < 2;i++)
+		{
+			skp->Text((22 * i + 1) * W / 44, 8 * H / 32, "CMC", 3);
+			skp->Text((22 * i + 1) * W / 44, 16 * H / 32, "LGC", 3);
+			skp->Text((22 * i + 1) * W / 44, 24 * H / 32, "AGS", 3);
+
+			skp->Text((22 * i + 11) * W / 44, 8 * H / 32, "IU", 2);
+			skp->Text((22 * i + 11) * W / 44, 16 * H / 32, "HIGHSPEED RADAR", 15);
+			skp->Text((22 * i + 11) * W / 44, 21 * H / 32, "DC VECTOR", 9);
+			skp->Text((22 * i + 11) * W / 44, 26 * H / 32, "LAST EXECUTED", 13);
+			skp->Text((22 * i + 13) * W / 44, 27 * H / 32, "MANEUVER", 8);
+
+			//CMC, LGC and AGS
+			for (int j = 0;j < 3;j++)
+			{
+				skp->Text((22 * i + 1) * W / 44, (j * 8 + 9) * H / 32, "UV", 2);
+				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 9) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableID[i][j]);
+				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 10) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableGMT[i][j]);
+				skp->Text((22 * i + 1) * W / 44, (j * 8 + 11) * H / 32, "EV", 2);
+				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 11) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalID[i][j]);
+				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 12) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalGMT[i][j]);
+				skp->Text((22 * i + 1) * W / 44, (j * 8 + 13) * H / 32, "TH", 3);
+				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 13) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryHighGMT[i][j]);
+				skp->Text((22 * i + 1) * W / 44, (j * 8 + 14) * H / 32, "TL", 3);
+				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 14) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryLowGMT[i][j]);
+			}
+
+			//IU
+			skp->Text((22 * i + 12) * W / 44, 9 * H / 32, "UV", 2);
+			Text(skp, (22 * i + 14) * W / 44, 9 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableID[i][3]);
+			Text(skp, (22 * i + 14) * W / 44, 10 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableGMT[i][3]);
+			skp->Text((22 * i + 12) * W / 44, 11 * H / 32, "EV", 2);
+			Text(skp, (22 * i + 14) * W / 44, 11 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalID[i][3]);
+			Text(skp, (22 * i + 14) * W / 44, 12 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalGMT[i][3]);
+			skp->Text((22 * i + 12) * W / 44, 13 * H / 32, "TH", 3);
+			Text(skp, (22 * i + 14) * W / 44, 13 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryHighGMT[i][3]);
+			skp->Text((22 * i + 12) * W / 44, 14 * H / 32, "TL", 3);
+			Text(skp, (22 * i + 14) * W / 44, 14 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryLowGMT[i][3]);
+
+			//HSR
+			skp->Text((22 * i + 12) * W / 44, 18 * H / 32, "UV", 2);
+			Text(skp, (22 * i + 14) * W / 44, 18 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.HSRID[i]);
+			Text(skp, (22 * i + 14) * W / 44, 19 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.HSRGMT[i]);
+
+			//DC
+			skp->Text((22 * i + 12) * W / 44, 23 * H / 32, "UV", 2);
+			Text(skp, (22 * i + 14) * W / 44, 23 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.DCID[i]);
+			Text(skp, (22 * i + 14) * W / 44, 24 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.DCGMT[i]);
+
+			//Last Executed Maneuver
+			skp->Text((22 * i + 11) * W / 44, 28 * H / 32, "GMTUL", 5);
+			Text(skp, (22 * i + 14) * W / 44, 28 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.LastManGMTUL[i]);
+			skp->Text((22 * i + 11) * W / 44, 29 * H / 32, "GMTBO", 5);
+			Text(skp, (22 * i + 14) * W / 44, 29 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.LastManGMTBO[i]);
+		}
 	}
 	return true;
 }

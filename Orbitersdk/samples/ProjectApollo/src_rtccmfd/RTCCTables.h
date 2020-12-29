@@ -164,6 +164,10 @@ struct RTCCNIAuxOutputTable
 	double DV_cTO;
 	//Word 39, DV of pure ullage
 	double DV_U;
+	//Words 40-41: Open (CSM and LM weight?)
+	double W_CSM, W_LMA, W_LMD;
+	//Word 42: S-IVB weighr at maneuver initiation
+	double W_SIVB;
 	//Word 43, total configuration weight at maneuver initiation
 	double WTINIT;
 	//Word 45, weight at main engine on
@@ -184,7 +188,6 @@ struct RTCCNIAuxOutputTable
 	double RCSFuelUsed;
 	//Velocity-to-be-gained
 	VECTOR3 V_G;
-	double W_CSM, W_LMA, W_LMD, W_SIVB;
 	//SV at main engine on, without ullage (free flight)
 	EphemerisData sv_FF;
 	//Eccentricity of target conic (TLI)

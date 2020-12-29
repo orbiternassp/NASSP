@@ -116,5 +116,8 @@
     <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

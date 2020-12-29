@@ -93,6 +93,9 @@
     <ClCompile Include="..\..\src_launch\mccvessel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
