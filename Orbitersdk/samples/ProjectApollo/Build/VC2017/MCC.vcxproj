@@ -172,6 +172,7 @@
     <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_launch\mcc.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />

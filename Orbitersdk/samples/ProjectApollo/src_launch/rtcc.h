@@ -1662,6 +1662,8 @@ struct MPTManeuver
 	{
 		double Word78d;
 		//For TLI this is current and original TLI computation indicator (negative for specified TIG)
+		//Original TLI indicator: 0 = if target parameters were input, otherwise (-2, -1, 1 and 2) only opportunity (and time of restart prep) was input
+		//Iterable TLI means original TLI indicator is not 0
 		int Word78i[2];
 	};
 	double Word79;
@@ -2776,8 +2778,6 @@ public:
 	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
 	//Ground Range and Altitude Subprogram
 	void ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt);
-	//Subsatellite Position
-	int GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt);
 	//Landmark Acquisition Display
 	void EMDLANDM(int L, double get, double dt, int ref);
 	//Display Updates
@@ -2791,24 +2791,12 @@ public:
 	void PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC);
 	//AEG Day/Night Determination
 	void PMMDAN(AEGBlock aeg, int IND, int &ERR, double &T1, double &T2);
-	//LM AGS External DV Coordinate Transformation Subroutine
-	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
-	//External DV Coordinate Transformation Subroutine
-	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
-	//Generalized Coordinate System Conversion Subroutine
-	int ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out);
-	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
-	int ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out);
 	//Checkout Monitor Display
 	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
 	//Detailed Maneuver Table Display
 	void PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, DetailedManeuverTable &res);
 	//Lunar Descent Planning Table Display
 	void PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table);
-	//Time of Longitude Crossing Subroutine
-	double RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, LunarStayTimesTable *LUNRSTAY = NULL);
-	//Computes and outputs pitch, yaw, roll
-	void RLMPYR(VECTOR3 X_P,VECTOR3 Y_P,VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll);
 	//LEM gimbal angle + FDAI angle computation routine
 	void EMGLMRAT(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll, double &PB, double &YB, double &RB);
 	//Vector rotation routine
@@ -2825,11 +2813,6 @@ public:
 	void EMDSSEMD(int ind, double param);
 	//Moonrise/Moonset Display
 	void EMDSSMMD(int ind, double param);
-	//Ephemeris Fetch Routine
-	int ELFECH(double GMT, int L, EphemerisData &SV);
-	int ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, EphemerisDataTable &EPHEM, ManeuverTimesTable &MANTIMES, LunarStayTimesTable &LUNSTAY);
-	//Vector Count Routine
-	int ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP);
 	int NewMPTTrajectory(int L, SV &sv0);
 	//RTE Tradeoff Display Sort and Order Routine
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
@@ -2880,8 +2863,6 @@ public:
 	double GetCMCClockZero() { return MCGZSA * 3600.0; }
 	double GetLGCClockZero() { return MCGZSL * 3600.0; }
 	double GetIUClockZero() { return MCGRIC * 3600.0; }
-	//Arrival time at selenographic argument of latitude
-	int PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -2905,7 +2886,7 @@ public:
 	//LM Lunar Descent Pre-Thrust Targeting Module
 	int PMMLDP(PMMLDPInput in, MPTManeuver &man);
 	//Freeze, Unfreeze, Delete Processor
-	void PMMFUD(int veh, unsigned man, int action);
+	void PMMFUD(int veh, unsigned man, int action, std::string StationID);
 	//Vehicle Orientation Change Processor
 	void PMMUDT(int L, unsigned man, int headsup, int trim);
 	//Vector Routing Load Module
@@ -2943,19 +2924,32 @@ public:
 	bool MPTHasManeuvers(int L);
 	//Weight Change Module
 	int PMMWTC(int med);
-	//Weight Determination at a Time
-	int PLAWDT(int L, double gmt, double &cfg_weight);
-	int PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
-	//Gimbal, Thrust and Weight Loss Rate Subroutine
-	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned &IC, int IA, int IJ, double D);
-	VECTOR3 GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W);
 	double GetOnboardComputerThrust(int thruster);
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
 	double RTCCPresentTimeGMT();
 	OBJHANDLE GetGravref(int body);
 	bool RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, double lmdscmass, int &thruster, double &manmass);
 
-	//Uplink Mission Programs (C-Code)
+	// **MISSION PROGRAMS**
+
+	// TRAJECTORY DETERMINATION (B)
+
+	//Vector Comparison Display
+	void BMDVEC();
+	//Vector Panel Summary Display
+	void BMDVPS();
+	//Online print of trajectory determination
+	void BMGPRIME(std::string source, int n);
+	void BMGPRIME(std::string source, std::vector<std::string> message);
+	//D.C. MED Decoder
+	int BMQDCMED(std::string med, std::vector<std::string> data);
+	//Vector Comparison Control
+	void BMSVEC();
+	//Vector Panel Summary Control
+	void BMSVPS(int queid, int PBIID);
+	int BMSVPSVectorFetch(const std::string &vecid, EphemerisData &sv_out);
+
+	// DIGITAL COMMAND SYSTEM (C)
 
 	//CMC External Delta-V Update Generator
 	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV);
@@ -2966,26 +2960,7 @@ public:
 	//SLV Navigation Update
 	void CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
 
-	//TRAJECTORY DETERMINATION
-	//D.C. MED Decoder
-	int BMQDCMED(std::string med, std::vector<std::string> data);
-	//Vector Panel Summary Control
-	void BMSVPS(int queid, int PBIID);
-	int BMSVPSVectorFetch(const std::string &vecid, EphemerisData &sv_out);
-	//Vector Comparison Control
-	void BMSVEC();
-	//Vector Comparison Display
-	void BMDVEC();
-	//Online print of trajectory determination
-	void BMGPRIME(std::string source, int n);
-	void BMGPRIME(std::string source, std::vector<std::string> message);
-	//Vector Panel Summary Display
-	void BMDVPS();
-
-	//Launch 
-	void LMMGRP(int veh, double gmt);
-
-	//Guidance
+	// MISSION CONTROL (G)
 
 	//Guidance Optics Display Supervisor
 	void EMSGSUPP(int QUEID, int refs, int refs2 = -1, unsigned man = -1, bool headsup = true);
@@ -3001,6 +2976,93 @@ public:
 	void EMMGSTMP();
 	//Guidance Optics Display
 	void EMDGSUPP(int err);
+
+	// LAUNCH/HIGH SPEED ABORT (L)
+	void LMMGRP(int veh, double gmt);
+
+	// **LIBRARY PROGRAMS**
+	// TRAJECTORY DETERMINATION (B)
+	//TBD
+	// ORBIT TRAJECTORY COMPUTATIONS (E)
+	//Ephemeris Fetch Routine
+	int ELFECH(double GMT, int L, EphemerisData &SV);
+	int ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, EphemerisDataTable &EPHEM, ManeuverTimesTable &MANTIMES, LunarStayTimesTable &LUNSTAY);
+	//Vector Count Routine
+	int ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP);
+	//Variable Order Interpolation
+	int ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData &sv_out, unsigned &ORER_out);
+	//Generalized Coordinate System Conversion Subroutine
+	int ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out);
+	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
+	int ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out);
+	//Extended Interpolation Routine
+	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out);
+	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out, EphemerisDataTable &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY = NULL);
+	// MISSION CONTROL (G)
+	//Fixed Point Centiseconds to Floating Point Hours
+	double GLCSTH(double FIXCSC);
+	//Floating Point Hourse To Fixed Point Centiseconds
+	double GLHTCS(double FLTHRS);
+	//Subsatellite Position
+	int GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt);
+	// MISSION PLANNING (P)
+	//Weight Determination at a Time
+	int PLAWDT(int L, double gmt, double &cfg_weight);
+	int PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
+	// REENTRY COMPUTATIONS (R)
+	//Computes and outputs pitch, yaw, roll
+	void RLMPYR(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll);
+	//Time of Longitude Crossing Subroutine
+	double RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, LunarStayTimesTable *LUNRSTAY = NULL);
+
+	// **INTERMEDIATE LIBRARY PROGRAMS**
+	// MISSION CONTROL (G)
+	//Gimbal, Thrust and Weight Loss Rate Subroutine
+	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned &IC, int IA, int IJ, double D);
+	VECTOR3 GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W);
+	// MISSION PLANNING (P)
+	//LM AGS External DV Coordinate Transformation Subroutine
+	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
+	//Right ascension of greenwich at Time T
+	double PIAIES(double hour);
+	//TBD: PIAIPP
+	//TBD: PIANGL
+	//TBD: PIAQRE
+	//Arrival time at selenographic argument of latitude
+	int PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg);
+	//TBD: PIBETA
+	//TBD: PIBGAM
+	//Hour angle with Besselian input time
+	double PIBSHA(double hour);
+	//Impulse Analytical Burn
+	void PIBURN(VECTOR3 R, VECTOR3 V, double T, double *B, VECTOR3 &ROUT, VECTOR3 &VOUT, double &TOUT);
+	//TBD: PICNEL
+	//TBD: PICREF
+	//Coordinate transformation
+	void PICSSC(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &lat, double &lng, double &gamma, double &azi);
+	//Orbit Desired REFSMMAT Computation Subroutine
+	MATRIX3 PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K);
+	//TBD: PIDTFN
+	//TBD: PIDVRS
+	//TBD: PIEBETA
+	//TBD: PIEMNT
+	//External DV Coordinate Transformation Subroutine
+	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
+	//Apogee/perigee magnitude determination
+	void PIFAAP(double a, double e, double i, double f, double u, double r, double &r_apo, double &r_peri);
+	//TBD: PIFTCH
+	//Calc. Greenwich hour angle at midnight preceeding launch
+	double PIGBHA();
+	//GMT hour angle
+	double PIGMHA(double hour);
+	//Universal Cartesian to Kepler Coordinates
+	void PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h);
+
+	// **AUXILIARY SUBROUTINES**
+	//Delta True Anomaly Function
+	double PCDETA(double beta1, double beta2, double r1, double r2);
+	//Cotangens Routine
+	double DCOTAN(double ang);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -4450,36 +4512,11 @@ private:
 	void EMGENGEN(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res);
 	//Horizon Crossing Subprogram
 	bool EMXING(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions);
-	//Variable Order Interpolation
-	int ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData &sv_out, unsigned &ORER_out);
-	//Extended Interpolation Routine
-	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out);
-	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out, EphemerisDataTable &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY = NULL);
 	int CapeCrossingRev(int L, double GMT);
 	double CapeCrossingGMT(int L, int rev);
 	void ECMPAY(EphemerisDataTable &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw);
 	//Spherical to Inertial Conversion
 	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
-	//Right ascension of greenwich at Time T
-	double PIAIES(double hour);
-	//Hour angle with Besselian input time
-	double PIBSHA(double hour);
-	//Calc. Greenwich hour angle at midnight preceeding launch
-	double PIGBHA();
-	//GMT hour angle
-	double PIGMHA(double hour);
-	//Delta True Anomaly Function
-	double PCDETA(double beta1, double beta2, double r1, double r2);
-	//Orbit Desired REFSMMAT Computation Subroutine
-	MATRIX3 PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K);
-	//Universal Cartesian to Kepler Coordinates
-	void PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h);
-	//Impulse Analytical Burn
-	void PIBURN(VECTOR3 R, VECTOR3 V, double T, double *B, VECTOR3 &ROUT, VECTOR3 &VOUT, double &TOUT);
-	//Coordinate transformation
-	void PICSSC(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &lat, double &lng, double &gamma, double &azi);
-	//Apogee/perigee magnitude determination
-	void PIFAAP(double a, double e, double i, double f, double u, double r, double &r_apo, double &r_peri);
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
 	//PMMMPT Matrix Utility Subroutine
@@ -4544,8 +4581,6 @@ protected:
 	//Build TLI targeting parameters table
 	void QMMBLD(int year, int month, int day);
 
-	double GLHTCS(double FLTHRS);
-	double GLCSTH(double FIXCSC);
 	double TJUDAT(int Y, int M, int D);
 	EphemerisData ConvertSVtoEphemData(SV sv);
 	SV ConvertEphemDatatoSV(EphemerisData sv);
@@ -4866,6 +4901,10 @@ public:
 	double MCTSAV;
 	//S-IVB weight loss rate
 	double MCTWAV;
+	//Nominal integration cycle for PMMSIU
+	double MCVDTM;
+	//Suppress integrator processing
+	bool MGREPH;
 
 	//Polynomial coefficients for insertion conditions
 	double MDLIEV[16];

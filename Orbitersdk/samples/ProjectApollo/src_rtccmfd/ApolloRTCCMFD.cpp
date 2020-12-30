@@ -3535,7 +3535,7 @@ bool MoveToUsableTableLEMInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuEphemerisUpdateCSM()
 {
 	bool EphemerisUpdateCSMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Move CSM telemetry vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateCSMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Move CSM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateCSMInput, 0, 50, (void*)this);
 }
 
 bool EphemerisUpdateCSMInput(void* id, char *str, void *data)
@@ -3582,7 +3582,7 @@ bool EphemerisUpdateCSMInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuEphemerisUpdateLEM()
 {
 	bool EphemerisUpdateLEMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Move LEM telemetry vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateLEMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Move LEM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateLEMInput, 0, 50, (void*)this);
 }
 
 bool EphemerisUpdateLEMInput(void* id, char *str, void *data)
