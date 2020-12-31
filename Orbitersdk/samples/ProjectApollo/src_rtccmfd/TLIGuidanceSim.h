@@ -25,14 +25,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "RTCCTables.h"
-
-class RTCC;
+#include "RTCCModule.h"
 
 //Module PMMSIU
-class TLIGuidanceSim
+class TLIGuidanceSim : public RTCCModule
 {
 public:
-	TLIGuidanceSim(RTCC &r, RTCCNIInputTable TABLIN, int &IRETN, EphemerisDataTable *EPHEM, RTCCNIAuxOutputTable *AUX, MATRIX3 *adramat, std::vector<double> *WTABL = NULL);
+	TLIGuidanceSim(RTCC *r, RTCCNIInputTable TABLIN, int &IRETN, EphemerisDataTable *EPHEM, RTCCNIAuxOutputTable *AUX, MATRIX3 *adramat, std::vector<double> *WTABL = NULL);
 	void PCMTRL();
 private:
 	//Thrust Subroutine
@@ -279,7 +278,6 @@ private:
 	RTCCNIAuxOutputTable *AUX;
 	std::vector<double> *WTABL;
 	MATRIX3 *ADRMAT;
-	RTCC &rtcc;
 
 	OBJHANDLE hEarth;
 };

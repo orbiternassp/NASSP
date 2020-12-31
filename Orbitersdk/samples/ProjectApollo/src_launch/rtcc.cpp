@@ -18121,7 +18121,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			ADRMAT[2] = PZMATLEM.G;
 		}
 
-		TLIGuidanceSim numin(*this, integin, nierror, E, in.AuxTableIndicator, ADRMAT);
+		TLIGuidanceSim numin(this, integin, nierror, E, in.AuxTableIndicator, ADRMAT);
 		numin.PCMTRL();
 
 	}

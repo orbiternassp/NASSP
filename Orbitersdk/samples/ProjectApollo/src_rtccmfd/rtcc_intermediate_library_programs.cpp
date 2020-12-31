@@ -626,3 +626,53 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 		h = PI2 - h;
 	}
 }
+
+void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double &TIME, double &P)
+{
+	//INPUT:
+	//MU: gravitational constant (er^3/hr^2)
+	//K: outward leg (0.) and return lef (1.) flag. k is input as a floating point number
+	//AORP: semimajor axis of elliptic or hyperbolic conic or semilatus rectum of parabolic conic (er)
+	//e: eccentricity
+	//r: radial distance from focus (er)
+
+	double XP = 0.0, E, TP, X, XAORP = AORP;
+
+	//Parabolic case?
+	if (abs(ECC - 1.0) < 1.e-5) goto RTCC_PITFPC_2;
+RTCC_PITFPC_5:
+	//Eccentric or hyperbolic?
+	if (ECC < 1.0) goto RTCC_PITFPC_3;
+	//Hyperbolic
+	X = 1.0 / ECC * (1.0 - rad / XAORP);
+	E = log(X + sqrt(X*X - 1.0));
+	TP = XAORP * sqrt(abs(XAORP) / MU)*(E - ECC * (0.5*(exp(E) - exp(-E))));
+	goto RTCC_PITFPC_4;
+RTCC_PITFPC_2:
+	//Check if C3 is sufficiently large to use the non-parabolic calculations
+	double C3;
+	C3 = MU * (ECC*ECC - 1.0) / XAORP;
+	if (abs(C3) >= 10.e-5)
+	{
+		XAORP = XAORP / (1.0 - ECC * ECC);
+		goto RTCC_PITFPC_5;
+	}
+	//Parabolic
+	double ETAP = acos(XAORP / rad - 1.0);
+	double TEMP1 = sin(ETAP / 2.0) / cos(ETAP / 2.0);
+	TP = XAORP / 2.0*sqrt(XAORP / MU)*(TEMP1 + 1.0 / 3.0*pow(TEMP1, 3.0));
+	goto RTCC_PITFPC_4;
+RTCC_PITFPC_3:
+	//Eccentric
+	E = acos(1.0 / ECC * (1.0 - rad / XAORP));
+	XP = PI2 * XAORP*sqrt(XAORP / MU);
+	TP = XAORP * sqrt(XAORP / MU)*(E - ECC * sin(E));
+RTCC_PITFPC_4:
+	P = XP;
+	TIME = TP;
+	//Outward or return leg?
+	if (K)
+	{
+		TIME = -TP;
+	}
+}
