@@ -619,6 +619,7 @@ public:
 	void menuMPTInitM50M55Vehicle();
 	void menuMPTTrajectoryUpdateCSM();
 	void menuMPTTrajectoryUpdateLEM();
+	bool set_DifferentialCorrectionSolution(char *str, bool csm);
 	void menuMoveToEvalTableCSM();
 	void menuMoveToEvalTableLEM();
 	void menuMoveToUsableTableCSM();
@@ -728,6 +729,7 @@ protected:
 	oapi::Font *font2vert;
 	oapi::Font *fonttest;
 	oapi::Font *font3;
+	oapi::Font *font4;
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
 	Saturn *saturn;

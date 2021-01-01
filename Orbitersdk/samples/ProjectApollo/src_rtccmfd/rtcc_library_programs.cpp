@@ -138,7 +138,30 @@ int RTCC::ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, Ephemeri
 	return 0;
 }
 
-//TBD: ELGLCV
+void RTCC::ELGLCV(double lat, double lng, VECTOR3 &out, double rad)
+{
+	double R_M;
+
+	if (rad == 0.0)
+	{
+		R_M = MCSMLR;
+	}
+	else
+	{
+		R_M = rad;
+	}
+	out = _V(cos(lat)*cos(lng), cos(lat)*sin(lng), sin(lat))*R_M;
+}
+
+void RTCC::ELGLCV(double lat, double lng, MATRIX3 &out, double rad)
+{
+	VECTOR3 X, Y, Z;
+
+	X = _V(cos(lat)*cos(lng), cos(lat)*sin(lng), sin(lat));
+	Y = unit(_V(-cos(lat)*sin(lng), cos(lat)*sin(lat), 0.0));
+	Z = crossp(X, Y);
+	out = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+}
 
 //Vector Count Routine
 int RTCC::ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP)

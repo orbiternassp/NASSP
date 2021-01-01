@@ -104,7 +104,7 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 40, MST_CP_TRANSLUNAR10);
 		break;
 	case MST_CP_TRANSLUNAR10: //Fast PC+2 to MCC3
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.LOI - 18.0*3600.0), 42, MST_CP_TRANSLUNAR11);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.LOI - 23.0*3600.0), 42, MST_CP_TRANSLUNAR11);
 		break;
 	case MST_CP_TRANSLUNAR11: //MCC3 to MCC4
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.LOI - 9.5*3600.0), 22, MST_CP_TRANSLUNAR12);

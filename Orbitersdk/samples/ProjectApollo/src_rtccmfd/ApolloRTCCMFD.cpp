@@ -53,6 +53,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
 	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
 	font3 = oapiCreateFont(w / 22, true, "Courier", FONT_NORMAL, 0);
+	font4 = oapiCreateFont(w / 27, true, "Courier", FONT_NORMAL, 0);
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
 	bool found = false;
@@ -87,6 +88,7 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font2vert);
 	oapiReleaseFont(fonttest);
 	oapiReleaseFont(font3);
+	oapiReleaseFont(font4);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 }
@@ -3368,12 +3370,47 @@ void ApolloRTCCMFD::menuMPTM55Update()
 
 void ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM()
 {
-	GC->MPTTrajectoryUpdate(true);
+	bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Choose vessel for the CSM ground tracking solution:", DifferentialCorrectionSolutionCSMInput, 0, 50, (void*)this);
+}
+
+bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		return ((ApolloRTCCMFD*)data)->set_DifferentialCorrectionSolution(str, true);
+	}
+	return false;
 }
 
 void ApolloRTCCMFD::menuMPTTrajectoryUpdateLEM()
 {
-	GC->MPTTrajectoryUpdate(false);
+	bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Choose vessel for the LEM ground tracking solution:", DifferentialCorrectionSolutionLEMInput, 0, 50, (void*)this);
+}
+
+bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		return ((ApolloRTCCMFD*)data)->set_DifferentialCorrectionSolution(str, false);
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char *str, bool csm)
+{
+	OBJHANDLE hVessel = oapiGetVesselByName(str);
+	if (hVessel)
+	{
+		VESSEL *v = oapiGetVesselInterface(hVessel);
+		if (v)
+		{
+			GC->MPTTrajectoryUpdate(v, csm);
+			return true;
+		}
+	}
+	return false;
 }
 
 void ApolloRTCCMFD::menuMoveToEvalTableCSM()

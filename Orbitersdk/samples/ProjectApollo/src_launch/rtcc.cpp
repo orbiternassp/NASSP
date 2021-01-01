@@ -8314,7 +8314,7 @@ RTCC_PMMSPT_4_1:
 	emsin.MaxIntegTime = T_RP - in.GMT;
 	if (emsin.MaxIntegTime < 0)
 	{
-		emsin.IsForwardIntegration = false;
+		emsin.IsForwardIntegration = -1.0;
 		emsin.MaxIntegTime = abs(emsin.MaxIntegTime);
 		goto RTCC_PMMSPT_6_2;
 	}
@@ -8328,7 +8328,7 @@ RTCC_PMMSPT_4_1:
 		goto RTCC_PMMSPT_6_1;
 	}
 RTCC_PMMSPT_6_1:
-	emsin.IsForwardIntegration = true;
+	emsin.IsForwardIntegration = 1.0;
 RTCC_PMMSPT_6_2:
 	emsin.EphemerisBuildIndicator = false;
 	goto RTCC_PMMSPT_7_2;
@@ -17634,6 +17634,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 	MissionPlanTable *mpt = NULL;
 	
+	//Access MPT if we need to consider maneuvers
 	if (in.ManeuverIndicator)
 	{
 		mpt = GetMPTPointer(in.VehicleCode);
@@ -17642,20 +17643,25 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	unsigned i = 0, NextMan;
 	bool manflag = false, surfaceflag = false;
 
+	//Use max integration time as default dt
 	dt = in.MaxIntegTime;
 
+	//Set some output parameters to default values
 	in.NIAuxOutputTable.LunarStayBeginGMT = -1;
 	in.NIAuxOutputTable.LunarStayEndGMT = -1;
 	in.NIAuxOutputTable.ErrorCode = 0;
 
+	//If ephemeris building is desired, find and coast to ephemeris begin
 	if (in.EphemerisBuildIndicator)
 	{
 		if (in.landed)
 		{
+			//If we are landed then no coasting is required
 			sv1.GMT = in.EphemerisLeftLimitGMT;
 		}
 		else
 		{
+			//Otherwise coast to EphemerisLeftLimitGMT. TBD: Use EMMENI
 			sv1 = coast(in.AnchorVector, in.EphemerisLeftLimitGMT - in.AnchorVector.GMT);
 		}
 
@@ -17663,15 +17669,19 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		{
 			in.EphemTableIndicator->table.push_back(sv1);
 		}
+		//Calculate ephemeris storage time interval
 		if (in.landed)
 		{
+			//For landed case it's just the difference between the requested start and end time
 			dt2 = in.EphemerRightLimitGMT - in.EphemerisLeftLimitGMT;
 		}
 		else
 		{
+			//Otherwise use the last state vector in tables as begin time. Does this make sense?
 			dt2 = in.EphemerRightLimitGMT - in.EphemTableIndicator->table.back().GMT;
 		}
 		
+		//Use the dt that is smaller
 		if (dt2 < dt)
 		{
 			dt = dt2;
@@ -17679,6 +17689,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	}
 	else
 	{
+		//No ephemeris building required
 		sv1 = in.AnchorVector;
 	}
 
@@ -24802,16 +24813,17 @@ int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 		{
 			return 2;
 		}
-		//TBD: This should use CMC liftoff time, not RTCC
-		double TIG = GETfromGMT(tab->mantable[ManeuverNum - 1].GMTI);
+		double TIG;
 		VECTOR3 DV = tab->mantable[ManeuverNum - 1].dV_LVLH;
 		if (VehicleType == 1)
 		{
-			CMMAXTDV(TIG, DV);
+			TIG = tab->mantable[ManeuverNum - 1].GMTI - MCGZSA * 3600.0;
+			CMMAXTDV(TIG, DV, ManeuverNum);
 		}
 		else
 		{
-			CMMLXTDV(TIG, DV);
+			TIG = tab->mantable[ManeuverNum - 1].GMTI - MCGZSL * 3600.0;
+			CMMLXTDV(TIG, DV, ManeuverNum);
 		}
 	}
 	//Initiate a CMC/LGC REFSMMAT update
@@ -30578,7 +30590,15 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	{
 		double r_apo, r_peri;
 		OrbMech::periapo(aux->R_BO, aux->V_BO, mu, r_apo, r_peri);
-		mptman->h_a = r_apo - R_E;
+		if (aeg.coe_osc.e < 1.0)
+		{
+			mptman->h_a = r_apo - R_E;
+		}
+		else
+		{
+			mptman->h_a = 0.0;
+		}
+	
 		mptman->h_p = r_peri - R_E;
 	}
 	//TBD: Day and night
@@ -30588,8 +30608,18 @@ RTCC_PMMDMT_PB2_6:;
 }
 
 //CMC External Delta-V Update Generator
-void RTCC::CMMAXTDV(double GETIG, VECTOR3 DV_EXDV)
+void RTCC::CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man)
 {
+	if (CZAXTRDV.LoadNumber == 0)
+	{
+		CZAXTRDV.LoadNumber = 1001;
+	}
+	else
+	{
+		CZAXTRDV.LoadNumber++;
+	}
+	CZAXTRDV.GenGET = GETfromGMT(RTCCPresentTimeGMT());
+
 	CZAXTRDV.Octals[0] = 12;
 	CZAXTRDV.Octals[1] = MCCCEX;
 	CZAXTRDV.Octals[2] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 1);
@@ -30603,10 +30633,40 @@ void RTCC::CMMAXTDV(double GETIG, VECTOR3 DV_EXDV)
 
 	CZAXTRDV.GET = GETIG;
 	CZAXTRDV.DV = DV_EXDV / 0.3048;
+
+	if (man)
+	{
+		CZAXTRDV.ManeuverCode = PZMPTCSM.mantable[man - 1].code;
+		CZAXTRDV.GMTID = PZMPTCSM.GMTAV;
+		CZAXTRDV.StationID = PZMPTCSM.StationID;
+	}
+	else
+	{
+		CZAXTRDV.ManeuverCode = "";
+		CZAXTRDV.GMTID = 0.0;
+		CZAXTRDV.StationID = "";
+	}
+	CMDAXTDV();
 }
-//LGC External Delta-V Update Generator
-void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV)
+
+void RTCC::CMDAXTDV()
 {
+
+}
+
+//LGC External Delta-V Update Generator
+void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man)
+{
+	if (CZLXTRDV.LoadNumber == 0)
+	{
+		CZLXTRDV.LoadNumber = 2201;
+	}
+	else
+	{
+		CZLXTRDV.LoadNumber++;
+	}
+	CZLXTRDV.GenGET = GETfromGMT(RTCCPresentTimeGMT());
+
 	CZLXTRDV.Octals[0] = 12;
 	CZLXTRDV.Octals[1] = MCCLEX;
 	CZLXTRDV.Octals[2] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 1);
@@ -30620,6 +30680,19 @@ void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV)
 
 	CZLXTRDV.GET = GETIG;
 	CZLXTRDV.DV = DV_EXDV / 0.3048;
+
+	if (man)
+	{
+		CZLXTRDV.ManeuverCode = PZMPTLEM.mantable[man - 1].code;
+		CZLXTRDV.GMTID = PZMPTLEM.GMTAV;
+		CZLXTRDV.StationID = PZMPTLEM.StationID;
+	}
+	else
+	{
+		CZLXTRDV.ManeuverCode = "";
+		CZLXTRDV.GMTID = 0.0;
+		CZLXTRDV.StationID = "";
+	}
 }
 
 void RTCC::CMMRFMAT(int L, int id, int addr)
@@ -31088,7 +31161,14 @@ void RTCC::BMSVEC()
 			lng -= PI2;
 		}
 
-		BZCCANOE.data[i].HA = (r_apo - R_E);
+		if (coe.e >= 1.0)
+		{
+			BZCCANOE.data[i].HA = 0.0;
+		}
+		else
+		{
+			BZCCANOE.data[i].HA = (r_apo - R_E);
+		}
 		BZCCANOE.data[i].HP = (r_peri - R_E);
 		BZCCANOE.data[i].v = v;
 		BZCCANOE.data[i].gamma = gamma;

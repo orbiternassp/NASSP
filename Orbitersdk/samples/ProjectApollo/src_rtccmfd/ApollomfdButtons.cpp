@@ -2668,7 +2668,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Choose engine", 0, 'E' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -2685,7 +2685,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("MPT", OAPI_KEY_E, &ApolloRTCCMFD::menuMCCTransferPage);
+	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuMCCTransferPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuMidcoursePage);
 
 
@@ -2834,11 +2834,11 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
+		{ "Calculate LOI Solutions", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Choose engine", 0, 'E' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -2855,7 +2855,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("MPT", OAPI_KEY_E, &ApolloRTCCMFD::menuLOITransferPage);
+	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuLOITransferPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLOIPage);
 
 

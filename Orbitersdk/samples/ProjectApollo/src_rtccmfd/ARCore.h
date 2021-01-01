@@ -35,7 +35,7 @@ public:
 
 	void SetMissionSpecificParameters(bool loadinitvalues);
 	void MPTMassUpdate();
-	int MPTTrajectoryUpdate(bool csm);
+	int MPTTrajectoryUpdate(VESSEL *ves, bool csm);
 
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.

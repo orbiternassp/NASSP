@@ -2574,8 +2574,8 @@ struct EMSMISSInputTable
 	bool DescentBurnIndicator;
 	//Cut-off indicator (0 = none, 1 = radial distance, 2 = first reference switch, 3 = altitude above Earth or moon, 4 = flight-path angle)
 	int CutoffIndicator = 0;
-	//Integration direction indicator (true = forward, false = backward)
-	bool IsForwardIntegration = true;
+	//Integration direction indicator (+X-forward, -X-backward)
+	double IsForwardIntegration = 1.0;
 	//Coordinate system indicator (TBD)
 	//Maneuver indicator (true = consider maneuvers, false = don't consider maneuvers)
 	bool ManeuverIndicator;
@@ -2951,10 +2951,12 @@ public:
 
 	// DIGITAL COMMAND SYSTEM (C)
 
+	//CMC External Delta-V Update Display
+	void CMDAXTDV();
 	//CMC External Delta-V Update Generator
-	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV);
+	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man = 0);
 	//LGC External Delta-V Update Generator
-	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV);
+	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man = 0);
 	//CMC and LGC REFSMMAT Update Generator
 	void CMMRFMAT(int L, int id, int addr);
 	//SLV Navigation Update
@@ -2987,6 +2989,8 @@ public:
 	//Ephemeris Fetch Routine
 	int ELFECH(double GMT, int L, EphemerisData &SV);
 	int ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, EphemerisDataTable &EPHEM, ManeuverTimesTable &MANTIMES, LunarStayTimesTable &LUNSTAY);
+	void ELGLCV(double lat, double lng, VECTOR3 &out, double rad = 0.0);
+	void ELGLCV(double lat, double lng, MATRIX3 &out, double rad = 0.0);
 	//Vector Count Routine
 	int ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP);
 	//Variable Order Interpolation
@@ -4372,7 +4376,7 @@ public:
 		double GET = 0.0;
 		VECTOR3 DV = _V(0, 0, 0);
 		std::string ManeuverCode;
-		std::string GMTID;
+		double GMTID = 0.0;
 		std::string StationID;
 	} CZAXTRDV, CZLXTRDV;
 

@@ -487,18 +487,8 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 	rtcc->med_k18.psi_MN = rtcc->med_k18.psi_DS - 1.0;
 }
 
-int AR_GCore::MPTTrajectoryUpdate(bool csm)
+int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 {
-	VESSEL *ves;
-	if (csm)
-	{
-		ves = pCSM;
-	}
-	else
-	{
-		ves = pLM;
-	}
-
 	if (ves == NULL) return 1;
 
 	bool landed = ves->GroundContact();

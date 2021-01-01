@@ -8361,7 +8361,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		G->CycleVectorPanelSummary();
 
-		skp->SetFont(fonttest);
+		skp->SetFont(font4);
 		skp->SetPen(pen2);
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
@@ -8378,7 +8378,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(3 * W / 43, 4 * H / 32, "GMTAV", 10);
 		Text(skp, 8 * W / 43, 4 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.AnchorVectorGMT[0]);
-		Text(skp, 18 * W / 43, 4 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CurrentGMT);
+		Text(skp, 19 * W / 43, 4 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CurrentGMT);
 		skp->Text(30 * W / 43, 4 * H / 32, "GMTAV", 10);
 		Text(skp, 35 * W / 43, 4 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.AnchorVectorGMT[1]);
 
@@ -8395,8 +8395,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Line(W / 4, 25 * H / 32, W / 2, 25 * H / 32);
 		skp->Line(3 * W / 4, 25 * H / 32, W, 25 * H / 32);
 
-		skp->Text(5 * W / 43, 6 * H / 32, "CSM VECTORS", 11);
-		skp->Text(26 * W / 43, 6 * H / 32, "LM VECTORS", 10);
+		skp->Text(5 * W / 43, 13 * H / 64, "CSM VECTORS", 11);
+		skp->Text(26 * W / 43, 13 * H / 64, "LM VECTORS", 10);
 
 		for (int i = 0;i < 2;i++)
 		{
@@ -8404,54 +8404,54 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text((22 * i + 1) * W / 44, 16 * H / 32, "LGC", 3);
 			skp->Text((22 * i + 1) * W / 44, 24 * H / 32, "AGS", 3);
 
-			skp->Text((22 * i + 11) * W / 44, 8 * H / 32, "IU", 2);
+			skp->Text((22 * i + 12) * W / 44, 8 * H / 32, "IU", 2);
 			skp->Text((22 * i + 11) * W / 44, 16 * H / 32, "HIGHSPEED RADAR", 15);
-			skp->Text((22 * i + 11) * W / 44, 21 * H / 32, "DC VECTOR", 9);
-			skp->Text((22 * i + 11) * W / 44, 26 * H / 32, "LAST EXECUTED", 13);
+			skp->Text((22 * i + 12) * W / 44, 21 * H / 32, "DC VECTOR", 9);
+			skp->Text((22 * i + 12) * W / 44, 26 * H / 32, "LAST EXECUTED", 13);
 			skp->Text((22 * i + 13) * W / 44, 27 * H / 32, "MANEUVER", 8);
 
 			//CMC, LGC and AGS
 			for (int j = 0;j < 3;j++)
 			{
-				skp->Text((22 * i + 1) * W / 44, (j * 8 + 9) * H / 32, "UV", 2);
-				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 9) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableID[i][j]);
-				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 10) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableGMT[i][j]);
-				skp->Text((22 * i + 1) * W / 44, (j * 8 + 11) * H / 32, "EV", 2);
-				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 11) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalID[i][j]);
-				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 12) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalGMT[i][j]);
-				skp->Text((22 * i + 1) * W / 44, (j * 8 + 13) * H / 32, "TH", 3);
-				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 13) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryHighGMT[i][j]);
-				skp->Text((22 * i + 1) * W / 44, (j * 8 + 14) * H / 32, "TL", 3);
-				Text(skp, (22 * i + 3) * W / 44, (j * 8 + 14) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryLowGMT[i][j]);
+				skp->Text((22 * i + 2) * W / 44, (j * 8 + 9) * H / 32, "UV", 2);
+				Text(skp, (22 * i + 4) * W / 44, (j * 8 + 9) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableID[i][j]);
+				Text(skp, (22 * i + 4) * W / 44, (j * 8 + 10) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableGMT[i][j]);
+				skp->Text((22 * i + 2) * W / 44, (j * 8 + 11) * H / 32, "EV", 2);
+				Text(skp, (22 * i + 4) * W / 44, (j * 8 + 11) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalID[i][j]);
+				Text(skp, (22 * i + 4) * W / 44, (j * 8 + 12) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalGMT[i][j]);
+				skp->Text((22 * i + 2) * W / 44, (j * 8 + 13) * H / 32, "TH", 3);
+				Text(skp, (22 * i + 4) * W / 44, (j * 8 + 13) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryHighGMT[i][j]);
+				skp->Text((22 * i + 2) * W / 44, (j * 8 + 14) * H / 32, "TL", 3);
+				Text(skp, (22 * i + 4) * W / 44, (j * 8 + 14) * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryLowGMT[i][j]);
 			}
 
 			//IU
-			skp->Text((22 * i + 12) * W / 44, 9 * H / 32, "UV", 2);
-			Text(skp, (22 * i + 14) * W / 44, 9 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableID[i][3]);
-			Text(skp, (22 * i + 14) * W / 44, 10 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableGMT[i][3]);
-			skp->Text((22 * i + 12) * W / 44, 11 * H / 32, "EV", 2);
-			Text(skp, (22 * i + 14) * W / 44, 11 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalID[i][3]);
-			Text(skp, (22 * i + 14) * W / 44, 12 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalGMT[i][3]);
-			skp->Text((22 * i + 12) * W / 44, 13 * H / 32, "TH", 3);
-			Text(skp, (22 * i + 14) * W / 44, 13 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryHighGMT[i][3]);
-			skp->Text((22 * i + 12) * W / 44, 14 * H / 32, "TL", 3);
-			Text(skp, (22 * i + 14) * W / 44, 14 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryLowGMT[i][3]);
+			skp->Text((22 * i + 13) * W / 44, 9 * H / 32, "UV", 2);
+			Text(skp, (22 * i + 15) * W / 44, 9 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableID[i][3]);
+			Text(skp, (22 * i + 15) * W / 44, 10 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompUsableGMT[i][3]);
+			skp->Text((22 * i + 13) * W / 44, 11 * H / 32, "EV", 2);
+			Text(skp, (22 * i + 15) * W / 44, 11 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalID[i][3]);
+			Text(skp, (22 * i + 15) * W / 44, 12 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompEvalGMT[i][3]);
+			skp->Text((22 * i + 13) * W / 44, 13 * H / 32, "TH", 3);
+			Text(skp, (22 * i + 15) * W / 44, 13 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryHighGMT[i][3]);
+			skp->Text((22 * i + 13) * W / 44, 14 * H / 32, "TL", 3);
+			Text(skp, (22 * i + 15) * W / 44, 14 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.CompTelemetryLowGMT[i][3]);
 
 			//HSR
-			skp->Text((22 * i + 12) * W / 44, 18 * H / 32, "UV", 2);
-			Text(skp, (22 * i + 14) * W / 44, 18 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.HSRID[i]);
-			Text(skp, (22 * i + 14) * W / 44, 19 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.HSRGMT[i]);
+			skp->Text((22 * i + 13) * W / 44, 18 * H / 32, "UV", 2);
+			Text(skp, (22 * i + 15) * W / 44, 18 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.HSRID[i]);
+			Text(skp, (22 * i + 15) * W / 44, 19 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.HSRGMT[i]);
 
 			//DC
-			skp->Text((22 * i + 12) * W / 44, 23 * H / 32, "UV", 2);
-			Text(skp, (22 * i + 14) * W / 44, 23 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.DCID[i]);
-			Text(skp, (22 * i + 14) * W / 44, 24 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.DCGMT[i]);
+			skp->Text((22 * i + 13) * W / 44, 23 * H / 32, "UV", 2);
+			Text(skp, (22 * i + 15) * W / 44, 23 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.DCID[i]);
+			Text(skp, (22 * i + 15) * W / 44, 24 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.DCGMT[i]);
 
 			//Last Executed Maneuver
-			skp->Text((22 * i + 11) * W / 44, 28 * H / 32, "GMTUL", 5);
-			Text(skp, (22 * i + 14) * W / 44, 28 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.LastManGMTUL[i]);
-			skp->Text((22 * i + 11) * W / 44, 29 * H / 32, "GMTBO", 5);
-			Text(skp, (22 * i + 14) * W / 44, 29 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.LastManGMTBO[i]);
+			skp->Text((22 * i + 12) * W / 44, 28 * H / 32, "GMTUL", 5);
+			Text(skp, (22 * i + 17) * W / 44, 28 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.LastManGMTUL[i]);
+			skp->Text((22 * i + 12) * W / 44, 29 * H / 32, "GMTBO", 5);
+			Text(skp, (22 * i + 17) * W / 44, 29 * H / 32, GC->rtcc->VectorPanelSummaryBuffer.LastManGMTBO[i]);
 		}
 	}
 	return true;
