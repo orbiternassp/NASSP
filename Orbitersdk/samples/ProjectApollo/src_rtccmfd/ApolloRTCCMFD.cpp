@@ -223,8 +223,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "DKI_N_HC", G->DKI_N_HC);
 	oapiWriteScenario_int(scn, "DKI_N_PB", G->DKI_N_PB);
 
-	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
-
 	papiWriteScenario_bool(scn, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
 	oapiWriteScenario_int(scn, "MPTCM_number", GC->pCSMnumber);
 	oapiWriteScenario_int(scn, "MPTLM_number", GC->pLMnumber);
@@ -349,8 +347,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_bool(line, "DKI_Radial_DV", G->DKI_Radial_DV);
 		papiReadScenario_int(line, "DKI_N_HC", G->DKI_N_HC);
 		papiReadScenario_int(line, "DKI_N_PB", G->DKI_N_PB);
-
-		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
 		papiReadScenario_bool(line, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
 		papiReadScenario_int(line, "MPTCM_number", GC->pCSMnumber);
@@ -4135,21 +4131,20 @@ void ApolloRTCCMFD::menuSetAGSKFactor()
 
 bool AGSKFactorInput(void *id, char *str, void *data)
 {
-	int hh, mm;
-	double ss, get;
-
-	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	if (strlen(str) < 20)
 	{
-		get = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_AGSKFactor(get);
+		((ApolloRTCCMFD*)data)->set_AGSKFactor(str);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_AGSKFactor(double time)
+void ApolloRTCCMFD::set_AGSKFactor(char *str)
 {
-	G->AGSKFactor = time;
+	char Buff[128];
+
+	sprintf_s(Buff, "P15,AGS,,%s;", str);
+	GeneralMEDRequest(Buff);
 }
 
 void ApolloRTCCMFD::t2dialogue()

@@ -7273,17 +7273,22 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 	VECTOR3 R, V;
 	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt, scalR, scalV;
 
-	AGSEpochTime = (opt->sv.MJD - opt->GETbase)*24.0*3600.0;
-	AGSEpochTime2 = ceil(AGSEpochTime / 6.0)*6.0;
+	//Calculate time in GMT
+	AGSEpochTime = (opt->sv.MJD - GMTBASE)*24.0*3600.0;
+	//Calculate time in AGS time
+	AGSEpochTime2 = AGSEpochTime - GetAGSClockZero();
+	//Round to the next 6 seconds
+	AGSEpochTime2 = ceil(AGSEpochTime2 / 6.0)*6.0;
+	//Convert back to GMT for coasting
+	AGSEpochTime3 = AGSEpochTime2 + GetAGSClockZero();
 
-	dt = AGSEpochTime2 - AGSEpochTime;
+	//Determine coasting time
+	dt = AGSEpochTime3 - AGSEpochTime;
 
 	sv1 = coast(opt->sv, dt);
 
 	R = mul(opt->REFSMMAT, sv1.R);
 	V = mul(opt->REFSMMAT, sv1.V);
-
-	AGSEpochTime3 = AGSEpochTime2 - opt->AGSbase;
 
 	if (sv1.gravref == oapiGetObjectByName("Earth"))
 	{
@@ -7304,7 +7309,7 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 		pad.DEDA264 = V.x / 0.3048 / scalV;
 		pad.DEDA265 = V.y / 0.3048 / scalV;
 		pad.DEDA266 = V.z / 0.3048 / scalV;
-		pad.DEDA272 = AGSEpochTime3 / 60.0;
+		pad.DEDA272 = AGSEpochTime2 / 60.0;
 	}
 	else
 	{
@@ -7314,7 +7319,7 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 		pad.DEDA260 = V.x / 0.3048 / scalV;
 		pad.DEDA261 = V.y / 0.3048 / scalV;
 		pad.DEDA262 = V.z / 0.3048 / scalV;
-		pad.DEDA254 = AGSEpochTime3 / 60.0;
+		pad.DEDA254 = AGSEpochTime2 / 60.0;
 	}
 }
 
@@ -24193,6 +24198,10 @@ bool RTCC::GMGMED(char *str)
 	{
 		err = GMSREMED(code, MEDSequence);
 	}
+	else
+	{
+		err = 3;
+	}
 	
 	char Buffer[128];
 	if (err == 0)
@@ -27898,6 +27907,11 @@ int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 		}
 		EMDSSEMD(ind, param);
 	}
+	//AGS Navigation Update
+	else if (med == "10")
+	{
+		
+	}
 	//FDO Orbit Digitals: Predict apogee/perigee
 	else if (med == "12")
 	{
@@ -31494,6 +31508,11 @@ void RTCC::LMMGRP(int veh, double gmt)
 		GZLTRA.IU1_REFSMMAT = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -phi, 2, -MCLABN, 1);
 		GZLTRA.IU1_REFSMMAT = mul(GZLTRA.IU1_REFSMMAT, OrbMech::J2000EclToBRCS(AGCEpoch)); //Remove when coordinate system is correct
 	}
+}
+
+void RTCC::EMDAGSN(double GMT, int refs, int body)
+{
+
 }
 
 void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)

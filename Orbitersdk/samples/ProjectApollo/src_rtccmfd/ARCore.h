@@ -281,7 +281,6 @@ public:
 	int svtargetnumber;
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
-	double AGSKFactor;
 	AP11AGSSVPAD agssvpad;
 	int SVOctals[021];
 	VECTOR3 RLSUplink;

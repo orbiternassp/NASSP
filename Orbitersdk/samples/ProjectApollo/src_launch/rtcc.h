@@ -878,8 +878,6 @@ struct AGSSVOpt
 	SV sv;
 	MATRIX3 REFSMMAT;
 	bool csm;
-	double GETbase;
-	double AGSbase;
 };
 
 struct SkyRendOpt
@@ -2764,25 +2762,6 @@ public:
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
 
-	//Mission Operations Control Room Displays
-
-	//FDO Orbit Digitals
-	void EMMDYNMC(int L, int queid, int ind = 0, double param = 0.0);
-	//FDO Space Digitals
-	int EMDSPACE(int queid, int option = 0, double val = 0.0, double incl = 0.0, double ascnode = 0.0);
-	//Orbit Station Contact Generation Control
-	void EMSTAGEN(int L);
-	//Next Station Contact Display
-	void EMDSTAC();
-	//Predicted Site Acquisition Display
-	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
-	//Ground Range and Altitude Subprogram
-	void ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt);
-	//Landmark Acquisition Display
-	void EMDLANDM(int L, double get, double dt, int ref);
-	//Display Updates
-	void EMSNAP(int L, int ID);
-
 	//Actual RTCC Subroutines
 
 	//AEG Service Routine
@@ -2863,6 +2842,7 @@ public:
 	double GetCMCClockZero() { return MCGZSA * 3600.0; }
 	double GetLGCClockZero() { return MCGZSL * 3600.0; }
 	double GetIUClockZero() { return MCGRIC * 3600.0; }
+	double GetAGSClockZero() { return MCGZSS * 3600.0; }
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -2964,6 +2944,8 @@ public:
 
 	// MISSION CONTROL (G)
 
+	//LEM AGS Navigation Updates Display
+	void EMDAGSN(double GMT, int refs, int body);
 	//Guidance Optics Display Supervisor
 	void EMSGSUPP(int QUEID, int refs, int refs2 = -1, unsigned man = -1, bool headsup = true);
 	//LEM Optics Supervisor
@@ -2978,6 +2960,22 @@ public:
 	void EMMGSTMP();
 	//Guidance Optics Display
 	void EMDGSUPP(int err);
+	//FDO Orbit Digitals
+	void EMMDYNMC(int L, int queid, int ind = 0, double param = 0.0);
+	//FDO Space Digitals
+	int EMDSPACE(int queid, int option = 0, double val = 0.0, double incl = 0.0, double ascnode = 0.0);
+	//Orbit Station Contact Generation Control
+	void EMSTAGEN(int L);
+	//Next Station Contact Display
+	void EMDSTAC();
+	//Predicted Site Acquisition Display
+	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
+	//Ground Range and Altitude Subprogram
+	void ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt);
+	//Landmark Acquisition Display
+	void EMDLANDM(int L, double get, double dt, int ref);
+	//Display Updates
+	void EMSNAP(int L, int ID);
 
 	// LAUNCH/HIGH SPEED ABORT (L)
 	void LMMGRP(int veh, double gmt);

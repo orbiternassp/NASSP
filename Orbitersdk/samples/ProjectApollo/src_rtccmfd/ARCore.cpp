@@ -182,6 +182,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P12,IU1,15:59:43,72.0;");
 			rtcc->GMGMED("P15,AGC,16:00:00;");
 			rtcc->GMGMED("P15,LGC,16:00:00;");
+			rtcc->GMGMED("P15,AGS,,40:00:00;");
 		}
 	}
 	else if (mission == 10)
@@ -208,6 +209,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P12,IU1,16:48:43,72.0;");
 			rtcc->GMGMED("P15,AGC,16:49:00;");
 			rtcc->GMGMED("P15,LGC,16:49:00;");
+			rtcc->GMGMED("P15,AGS,,90:00:00;");
 		}
 	}
 	else if (mission == 11) // July 16th Launch
@@ -230,6 +232,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P12,IU1,13:31:43,72.0;");
 			rtcc->GMGMED("P15,AGC,13:32:00;");
 			rtcc->GMGMED("P15,LGC,13:32:00;");
+			rtcc->GMGMED("P15,AGS,,90:00:00;");
 		}
 	}
 	/*else if (mission == 11) // July 18th Launch
@@ -289,6 +292,10 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P80,1,CSM,11,14,1969;");
 			rtcc->GMGMED("P10,CSM,16:22:00;");
 			rtcc->GMGMED("P12,CSM,16:22:00,72.0;");
+			rtcc->GMGMED("P12,IU1,16:21:43,72.0;");
+			rtcc->GMGMED("P15,AGC,16:22:00;");
+			rtcc->GMGMED("P15,LGC,16:22:00;");
+			rtcc->GMGMED("P15,AGS,,100:00:00;");
 		}
 	}
 	else if (mission == 13)
@@ -301,6 +308,10 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P80,1,CSM,4,11,1970;");
 			rtcc->GMGMED("P10,CSM,19:13:00;");
 			rtcc->GMGMED("P12,CSM,19:13:00,72.0;");
+			rtcc->GMGMED("P12,IU1,19:12:43,72.0;");
+			rtcc->GMGMED("P15,AGC,19:13:00;");
+			rtcc->GMGMED("P15,LGC,19:13:00;");
+			rtcc->GMGMED("P15,AGS,,90:00:00;");
 		}
 
 		rtcc->med_k18.psi_DS = -93.88 + 360.0;
@@ -341,6 +352,10 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P80,1,CSM,1,31,1971;");
 			rtcc->GMGMED("P10,CSM,20:23:00;");
 			rtcc->GMGMED("P12,CSM,20:23:00,72.0;");
+			rtcc->GMGMED("P12,IU1,20:22:43,72.0;");
+			rtcc->GMGMED("P15,AGC,20:23:00;");
+			rtcc->GMGMED("P15,LGC,20:23:00;");
+			rtcc->GMGMED("P15,AGS,,100:00:00;");
 		}
 
 		rtcc->med_k18.psi_DS = -76.31 + 360.0;
@@ -380,6 +395,10 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P80,1,CSM,7,26,1971;");
 			rtcc->GMGMED("P10,CSM,13:34:00;");
 			rtcc->GMGMED("P12,CSM,13:34:00,80.088;");
+			rtcc->GMGMED("P12,IU1,13:33:43,80.088;");
+			rtcc->GMGMED("P15,AGC,13:34:00;");
+			rtcc->GMGMED("P15,LGC,13:34:00;");
+			rtcc->GMGMED("P15,AGS,,100:00:00;");
 		}
 
 		rtcc->med_k18.psi_DS = -91.0 + 360.0;
@@ -411,6 +430,10 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P80,1,CSM,4,16,1972;");
 			rtcc->GMGMED("P10,CSM,17:54:00;");
 			rtcc->GMGMED("P12,CSM,17:54:00,72.0;");
+			rtcc->GMGMED("P12,IU1,17:53:43,72.0;");
+			rtcc->GMGMED("P15,AGC,17:54:00;");
+			rtcc->GMGMED("P15,LGC,17:54:00;");
+			rtcc->GMGMED("P15,AGS,,90:00:00;");
 		}
 
 		rtcc->med_k18.psi_DS = -90.0 + 360.0;
@@ -445,6 +468,10 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P80,1,CSM,12,7,1972;");
 			rtcc->GMGMED("P10,CSM,02:53:00;");
 			rtcc->GMGMED("P12,CSM,02:53:00,72.0;");
+			rtcc->GMGMED("P12,IU1,02:52:43,72.0;");
+			rtcc->GMGMED("P15,AGC,02:53:00;");
+			rtcc->GMGMED("P15,LGC,02:53:00;");
+			rtcc->GMGMED("P15,AGS,,110:00:00;");
 		}
 
 		rtcc->med_k18.psi_DS = -90.0 + 360.0;
@@ -898,8 +925,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	DOI_dV_LVLH = _V(0, 0, 0);
 
-	AGSKFactor = 90.0*3600.0;
-
 	DKI_Profile = 0;
 	DKI_TPI_Mode = 0;
 	DKI_Radial_DV = false;
@@ -941,13 +966,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PDAP_Theta_LIM = 0.0;
 	PDAP_R_amin = 0.0;
 
-	if (GC->mission == 9)
+	if (GC->mission == 12)
 	{
-		AGSKFactor = 40.0*3600.0;
-	}
-	else if (GC->mission == 12)
-	{
-		AGSKFactor = 100.0*3600.0;
 		//For PTC REFSMMAT
 		REFSMMATTime = OrbMech::HHMMSSToSS(183, 0, 30);
 
@@ -965,13 +985,11 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (GC->mission == 14)
 	{
-		AGSKFactor = 100.0*3600.0;
 		//For PTC REFSMMAT
 		REFSMMATTime = OrbMech::HHMMSSToSS(166, 10, 30);
 	}
 	else if (GC->mission == 15)
 	{
-		AGSKFactor = 100.0*3600.0;
 		//For PTC REFSMMAT
 		REFSMMATTime = OrbMech::HHMMSSToSS(230, 9, 0);
 	}
@@ -982,7 +1000,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (GC->mission == 17)
 	{
-		AGSKFactor = 110.0*3600.0;
 		//For PTC REFSMMAT
 		REFSMMATTime = OrbMech::HHMMSSToSS(241, 29, 30);
 	}
@@ -1900,9 +1917,7 @@ void ARCore::AGSStateVectorCalc()
 
 	sv = GC->rtcc->StateVectorCalc(svtarget);
 
-	opt.AGSbase = AGSKFactor;
 	opt.csm = SVSlot;
-	opt.GETbase = GC->rtcc->CalcGETBase();
 	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 	opt.sv = sv;
 

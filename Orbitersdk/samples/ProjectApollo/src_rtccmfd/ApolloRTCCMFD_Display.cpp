@@ -756,7 +756,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		int hh, mm;
 		double secs;
 
-		SStoHHMMSS(G->AGSKFactor, hh, mm, secs);
+		SStoHHMMSS(GC->rtcc->GETfromGMT(GC->rtcc->GetAGSClockZero()), hh, mm, secs);
 		sprintf(Buffer, "%d:%02d:%05.2f GET", hh, mm, secs);
 		skp->Text((int)(0.5 * W / 8), 12 * H / 14, Buffer, strlen(Buffer));
 
@@ -5105,32 +5105,32 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 
 		skp->Text(4 * W / 32, 19 * H / 28, "LO/C", 4);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.LOC, false);
-		skp->Text(9 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.LOC);
+		skp->Text(10 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 20 * H / 28, "GRR/C", 5);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.GRRC, false);
-		skp->Text(9 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.GRRC);
+		skp->Text(10 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 21 * H / 28, "ZS/C", 4);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.ZSC, false);
-		skp->Text(9 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.ZSC);
+		skp->Text(10 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 22 * H / 28, "GRR/S", 5);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.GRRS, false);
-		skp->Text(9 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.GRRS);
+		skp->Text(10 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 23 * H / 28, "ZS/L", 4);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.ZSL, false);
-		skp->Text(9 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.ZSL);
+		skp->Text(10 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 24 * H / 28, "ZS/A", 4);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.ZSA, false);
-		skp->Text(9 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.ZSA);
+		skp->Text(10 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 25 * H / 28, "EPHB", 4);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.EPHB, false);
-		skp->Text(9 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.EPHB);
+		skp->Text(10 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 26 * H / 28, "EPHE", 4);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.EPHE, false);
-		skp->Text(9 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.EPHE);
+		skp->Text(10 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 27 * H / 28, "THT", 4);
-		GET_Display(Buffer, GC->rtcc->EZCHECKDIS.THT, false);
-		skp->Text(9 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.THT);
+		skp->Text(10 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
 
 		skp->Text(13 * W / 32, 7 * H / 28, "V", 1);
 		sprintf(Buffer, "%07.1f", GC->rtcc->EZCHECKDIS.V_i);
@@ -5167,7 +5167,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%07.3f", GC->rtcc->EZCHECKDIS.Omega);
 		skp->Text(24 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(20 * W / 32, 17 * H / 28, "TA", 2);
-		skp->Text(20 * W / 32, 19 * H / 28, "MA", 2);
+		skp->Text(21 * W / 32, 19 * H / 28, "MA", 2);
 		if (GC->rtcc->EZCHECKDIS.TABlank == false)
 		{
 			sprintf(Buffer, "%07.3f", GC->rtcc->EZCHECKDIS.nu);
@@ -5176,7 +5176,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		if (GC->rtcc->EZCHECKDIS.MABlank == false)
 		{
 			sprintf(Buffer, "%07.3f", GC->rtcc->EZCHECKDIS.m);
-			skp->Text(24 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(25 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
 		}
 		skp->Text(27 * W / 32, 9 * H / 28, "WT", 2);
 		sprintf(Buffer, "%06.0f", GC->rtcc->EZCHECKDIS.WT);
@@ -5229,39 +5229,39 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		skp->Text(10 * W / 32, 19 * H / 28, "HA", 2);
+		skp->Text(11 * W / 32, 19 * H / 28, "HA", 2);
 		sprintf(Buffer, "%07.2f", GC->rtcc->EZCHECKDIS.h_a);
-		skp->Text(14 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
-		skp->Text(10 * W / 32, 20 * H / 28, "HP", 2);
+		skp->Text(15 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(11 * W / 32, 20 * H / 28, "HP", 2);
 		sprintf(Buffer, "%07.2f", GC->rtcc->EZCHECKDIS.h_p);
-		skp->Text(14 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
-		skp->Text(10 * W / 32, 21 * H / 28, "HO", 2);
-		skp->Text(10 * W / 32, 22 * H / 28, "HO", 2);
+		skp->Text(15 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(11 * W / 32, 21 * H / 28, "HO", 2);
+		skp->Text(11 * W / 32, 22 * H / 28, "HO", 2);
 		if (GC->rtcc->EZCHECKDIS.HOBlank == false)
 		{
 			sprintf(Buffer, "%07.2f", GC->rtcc->EZCHECKDIS.h_o_NM);
-			skp->Text(14 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(15 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%07.0f", GC->rtcc->EZCHECKDIS.h_o_ft);
-			skp->Text(14 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(15 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
 		}
-		skp->Text(10 * W / 32, 23 * H / 28, "LATD", 4);
+		skp->Text(11 * W / 32, 23 * H / 28, "LATD", 4);
 		sprintf(Buffer, "%+07.3f", GC->rtcc->EZCHECKDIS.phi_D);
-		skp->Text(14 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
-		skp->Text(10 * W / 32, 24 * H / 28, "LOND", 4);
+		skp->Text(15 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(11 * W / 32, 24 * H / 28, "LOND", 4);
 		sprintf(Buffer, "%07.3f", GC->rtcc->EZCHECKDIS.lambda_D);
-		skp->Text(14 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
-		skp->Text(10 * W / 32, 25 * H / 28, "R", 1);
+		skp->Text(15 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(11 * W / 32, 25 * H / 28, "R", 1);
 		sprintf(Buffer, "%+09.2f", GC->rtcc->EZCHECKDIS.R);
-		skp->Text(14 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
-		skp->Text(10 * W / 32, 26 * H / 28, "DECL", 4);
+		skp->Text(15 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(11 * W / 32, 26 * H / 28, "DECL", 4);
 		sprintf(Buffer, "%+07.3f", GC->rtcc->EZCHECKDIS.deltaL);
-		skp->Text(14 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
-		skp->Text(10 * W / 32, 27 * H / 28, "LSB", 3);
+		skp->Text(15 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(11 * W / 32, 27 * H / 28, "LSB", 3);
 		skp->Text(20 * W / 32, 27 * H / 28, "LLS", 3);
 		if (GC->rtcc->EZCHECKDIS.LSTBlank == false)
 		{
 			GET_Display(Buffer, GC->rtcc->EZCHECKDIS.LAL, false);
-			skp->Text(14 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(15 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
 			GET_Display(Buffer, GC->rtcc->EZCHECKDIS.LOL, false);
 			skp->Text(24 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
 		}
