@@ -53,9 +53,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LoadLaunchDaySpecificParameters(GZGENCSN.Year, GZGENCSN.MonthofLiftoff, GZGENCSN.DayofLiftoff);
 	}
 
-	//Generate ephemeris table, if necessary
-	OrbMech::GenerateSunMoonEphemeris(oapiGetSimMJD(), pzefem);
-
 	switch (fcn) {
 	case 1: //MISSION INITIALIZATION GROUND LIFTOFF TIME UPDATE
 	{
@@ -461,29 +458,45 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				LOIMan opt2;
 				REFSMMATOpt refsopt;
 				SV sv_node, sv_ig2, sv_cut2;
-				double P30TIG_LOI, P30TIG_LOI2;
-				VECTOR3 dV_LVLH_LOI;
+				double P30TIG_LOI2;
 
 				//Step 1: Calculate LOI-1 with MCC-4 burnout vector
-				opt2.csmlmdocked = false;
-				opt2.GETbase = CalcGETBase();
-				opt2.h_apo = 170.0*1852.0;
-				opt2.h_peri = 60.0*1852.0;
-				opt2.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
-				opt2.azi = LSAzi;
-				opt2.lat = BZLAND.lat[RTCC_LMPOS_BEST];
-				opt2.lng = BZLAND.lng[RTCC_LMPOS_BEST];
-				opt2.vessel = calcParams.src;
-				opt2.t_land = t_land;
-				opt2.RV_MCC = sv_cut1;
 
-				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, sv_node, sv_ig2, sv_cut2);
+				med_k40.dh_bias = 0.0;
+				med_k40.DW = -15.0;
+				med_k40.eta_1 = 0.0;
+				med_k40.HA_LLS = 60.0;
+				med_k40.HP_LLS = 60.0;
+				med_k40.PlaneSolnForInterSoln = true;
+				med_k40.REVS1 = 2.0;
+				med_k40.REVS2 = 4;
+
+				med_k18.HALOI1 = 170.0;
+				med_k18.HPLOI1 = 60.0;
+				med_k18.DVMAXp = 10000.0;
+				med_k18.DVMAXm = 10000.0;
+				med_k18.psi_MN = 281.0;
+				med_k18.psi_DS = 282.0;
+				med_k18.psi_MX = 283.0;
+
+				EphemerisData sv_cut1b;
+
+				sv_cut1b.R = sv_cut1.R;
+				sv_cut1b.V = sv_cut1.V;
+				sv_cut1b.GMT = OrbMech::GETfromMJD(sv_cut1.MJD, GMTBASE);
+				sv_cut1b.RBI = BODY_MOON;
+
+				PMMLRBTI(sv_cut1b);
+
+				sv_cut2.R = PZLRBELM.sv_man_bef[6].R;
+				sv_cut2.V = PZLRBELM.V_man_after[6];
+				sv_cut2.MJD = OrbMech::MJDfromGET(PZLRBELM.sv_man_bef[6].GMT, GMTBASE);
+				sv_cut2.gravref = hMoon;
 
 				//Step 2: Calculate LOI-2 to get the TIG
-
 				med_k16.Mode = 2;
 				med_k16.Sequence = 3;
-				med_k16.GETTH1 = P30TIG_LOI + 3.5*3600.0;
+				med_k16.GETTH1 = GETfromGMT(PZLRBELM.sv_man_bef[6].GMT) + 3.5*3600.0;
 				med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
 				med_k16.DesiredHeight = 60.0*1852.0;
 
@@ -587,8 +600,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		PMMLRBTI(sv_ephem);
 
 		sv = StateVectorCalc(calcParams.src);
-		tig = GETfromGMT(PZMCCXFR.sv_man_bef[6].GMT);
-		dv = PZMCCXFR.V_man_after[6] - PZMCCXFR.sv_man_bef[6].V;
+		tig = GETfromGMT(PZLRBELM.sv_man_bef[6].GMT);
+		dv = PZLRBELM.V_man_after[6] - PZLRBELM.sv_man_bef[6].V;
 
 		PoweredFlightProcessor(sv, GETbase, tig, RTCC_ENGINETYPE_CSMSPS, 0.0, dv, false, P30TIG, dV_LVLH);
 

@@ -3013,6 +3013,7 @@ public:
 	//Weight Determination at a Time
 	int PLAWDT(int L, double gmt, double &cfg_weight);
 	int PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
+	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	// REENTRY COMPUTATIONS (R)
 	//Computes and outputs pitch, yaw, roll
 	void RLMPYR(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll);
@@ -3063,6 +3064,12 @@ public:
 	void PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h);
 	//Time from perifocal pass to radius (TRW routine TFPCR)
 	void PITFPC(double MUE, int K, double AORP, double ECC, double rad, double &TIME, double &P);
+
+	// ** MISCELLANEOUS UTILITY PROGRAMS**
+	//Sun/Moon ephemeris table from tape
+	void QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS);
+	//Sun-Moon ephemeris offline
+	bool QMGEPH(double gmtbase, double HOURS);
 
 	// **AUXILIARY SUBROUTINES**
 	//Delta True Anomaly Function
@@ -3342,7 +3349,6 @@ public:
 	} med_s80;
 
 	//Data Tables
-	PZEFEM pzefem;
 	CapeCrossingTable EZCCSM;
 	CapeCrossingTable EZCLEM;
 	SunriseSunsetTable EZSSTAB;
@@ -4441,6 +4447,19 @@ public:
 
 		std::vector<std::string> tab;
 	} MHGVNM;
+
+	struct SunMoonEphemerisTable
+	{
+		int EPOCH;
+		//MJD of first entry
+		double MJD;
+		//Table of vectors pointing from Earth to Sun, in Er
+		VECTOR3 R_ES[71];
+		//Table of vectors pointing from Earth to Moon, in Er
+		VECTOR3 R_EM[71];
+		VECTOR3 V_EM[71];
+		//Table of velocity vectors of the Moon relative to the Earth, in Er/hr
+	} MDGSUN;
 
 	//System parameters for PDI
 	LGCDescentConstants RTCCDescentTargets;

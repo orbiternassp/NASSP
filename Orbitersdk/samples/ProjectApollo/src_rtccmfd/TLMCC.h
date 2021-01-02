@@ -23,6 +23,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "RTCCModule.h"
+
 struct TLMCCDataTable
 {
 	//Time at which block was generated
@@ -280,11 +282,11 @@ struct TLMCCGeneralizedIteratorArray
 	double V_L;
 };
 
-class TLMCCProcessor
+class TLMCCProcessor : public RTCCModule
 {
 public:
-	TLMCCProcessor();
-	void Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst);
+	TLMCCProcessor(RTCC *r);
+	void Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst);
 	void Main(TLMCCOutputData &out);
 
 	//The trajectory computers
@@ -351,8 +353,6 @@ protected:
 	double DELTAT(double a, double e, double eta, double deta);
 
 	double R_E, R_M, mu_E, mu_M;
-
-	PZEFEM *ephemeris;
 
 	MPTSV sv_MCC;
 	double isp_SPS, isp_DPS, isp_MCC, Wdot;

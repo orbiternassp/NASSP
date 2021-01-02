@@ -2606,9 +2606,6 @@ int ARCore::subThread()
 		docked = false;
 	}
 
-	//Generate ephemeris table, if necessary
-	OrbMech::GenerateSunMoonEphemeris(oapiGetSimMJD(), GC->rtcc->pzefem);
-
 	subThreadStatus = 2; // Running
 	switch (subThreadMode) {
 	case 0: // Test

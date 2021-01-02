@@ -179,21 +179,6 @@ struct MPTSV
 	OBJHANDLE gravref;
 };
 
-struct PZEFEMData
-{
-	VECTOR3 R_EM;
-	VECTOR3 V_EM;
-	VECTOR3 R_ES;
-	double MJD;
-};
-
-// Sun-Moon Ephemeris Data Table
-struct PZEFEM
-{
-	std::vector<PZEFEMData> data;
-	bool init = false;
-};
-
 struct ITERSTATE
 {
 	int s_F = 0;
@@ -481,8 +466,6 @@ namespace OrbMech {
 	SV coast(SV sv0, double dt);
 	MPTSV coast(MPTSV sv0, double dt);
 	void PMMCEN(PMMCEN_VNI VNI, PMMCEN_INI INI, VECTOR3 &R1, VECTOR3 &V1, double &T1, int &ITS, int &IRS);
-	void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem);
-	bool PLEFEM(const PZEFEM &ephem, double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future = false);

@@ -23,9 +23,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "OrbMech.h"
 #include "GeneralizedIterator.h"
+#include "rtcc.h"
 #include "TLMCC.h"
 
-TLMCCProcessor::TLMCCProcessor()
+TLMCCProcessor::TLMCCProcessor(RTCC *r) : RTCCModule(r)
 {
 	R_E = OrbMech::R_Earth;
 	R_M = OrbMech::R_Moon;
@@ -38,10 +39,8 @@ TLMCCProcessor::TLMCCProcessor()
 	isp_DPS = 3107.0;
 }
 
-void TLMCCProcessor::Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst)
+void TLMCCProcessor::Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst)
 {
-	ephemeris = ephem;
-	
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
 
@@ -3551,7 +3550,8 @@ void TLMCCProcessor::FCOMP(double a, double &F1, double &F2, double &F3, double 
 
 bool TLMCCProcessor::EPHEM(double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES)
 {
-	return (OrbMech::PLEFEM(*ephemeris, MJD, R_EM, V_EM, R_ES) == false);
+	double GMT = (MJD - MEDQuantities.GMTBase)*24.0;
+	return pRTCC->PLEFEM(1, GMT, 0, R_EM, V_EM, R_ES);
 }
 
 bool TLMCCProcessor::LIBRAT(VECTOR3 &R, double MJD, int K)

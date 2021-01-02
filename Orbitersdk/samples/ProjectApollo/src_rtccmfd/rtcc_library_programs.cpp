@@ -470,7 +470,10 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	{
 		VECTOR3 R_EM, V_EM, R_ES;
 
-		if (!OrbMech::PLEFEM(pzefem, OrbMech::MJDfromGET(sv.GMT, GMTBASE), R_EM, V_EM, R_ES)) return 1;
+		if (PLEFEM(1, sv.GMT / 3600.0, 0, R_EM, V_EM, R_ES))
+		{
+			return 1;
+		}
 
 		if (in == 0)
 		{
@@ -506,7 +509,10 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 		VECTOR3 R_EM, V_EM, R_ES;
 		VECTOR3 X_EMP, Y_EMP, Z_EMP;
 
-		if (!OrbMech::PLEFEM(pzefem, OrbMech::MJDfromGET(sv.GMT, GMTBASE), R_EM, V_EM, R_ES)) return 1;
+		if (PLEFEM(1, sv.GMT / 3600.0, 0, R_EM, V_EM, R_ES))
+		{
+			return 1;
+		}
 
 		X_EMP = -unit(R_EM);
 		Z_EMP = unit(crossp(R_EM, V_EM));
@@ -889,6 +895,57 @@ int RTCC::PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, dou
 	sivb_weight = table->mantable[i].CommonBlock.SIVBMass;
 
 	return 0;
+}
+
+//Sun/Moon Ephemeris Interpolation Program
+bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES)
+{
+	double T, C[6];
+	int i, j, k, l;
+
+	if (IND > 0)
+	{
+		HOUR = HOUR + MCCBES;
+	}
+	//TBD: Convert from universal time to ephemeris time
+	//T is 0 to 1, from last to next 12 hour interval
+	T = (HOUR - floor(HOUR / 12.0) * 12.0) / 12.0;
+	C[0] = -((T + 1.0)*T*(T - 1.0)*(T - 2.0)*(T - 3.0)) / 120.0;
+	C[1] = ((T + 2.0)*T*(T - 1.0)*(T - 2.0)*(T - 3.0)) / 24.0;
+	C[2] = -((T + 2.0)*(T + 1.0)*(T - 1.0)*(T - 2.0)*(T - 3.0)) / 12.0;
+	C[3] = ((T + 2.0)*(T + 1.0)*T*(T - 2.0)*(T - 3.0)) / 12.0;
+	C[4] = -((T + 2.0)*(T + 1.0)*T*(T - 1.0)*(T - 3.0)) / 24.0;
+	C[5] = ((T + 2.0)*(T + 1.0)*T*(T - 1.0)*(T - 2.0)) / 120.0;
+	
+	//Calculate MJD from GMT
+	double MJD = GMTBASE + HOUR / 24.0;
+	//Calculate position of time in array
+	i = (int)((MJD - MDGSUN.MJD)*2.0);
+	//Is time contained in Sun/Moon data array?
+	if (i < 0 || i > 70) goto RTCC_PLEFEM_A;
+	//Calculate starting point in the array
+	j = i - 2;
+	//Limit to array size
+	if (j < 0) j = 0;
+	else if (j > 65) j = 65;
+
+	VECTOR3 *X[3] = {MDGSUN.R_EM, MDGSUN.V_EM, MDGSUN.R_ES };
+	double x[9];
+	for (k = 0;k < 3;k++)
+	{
+		for (l = 0;l < 3;l++)
+		{
+			x[k * 3 + l] = C[0] * X[k][j].data[l] + C[1] * X[k][j + 1].data[l] + C[2] * X[k][j + 2].data[l] + C[3] * X[k][j + 3].data[l] + C[4] * X[k][j + 4].data[l] + C[5] * X[k][j + 5].data[l];
+		}
+	}
+	R_EM = _V(x[0], x[1], x[2])*OrbMech::R_Earth;
+	V_EM = _V(x[3], x[4], x[5])*OrbMech::R_Earth / 3600.0;
+	R_ES = _V(x[6], x[7], x[8])*OrbMech::R_Earth;
+	
+	return false;
+RTCC_PLEFEM_A:
+	//Error return
+	return true;
 }
 
 //Computes and outputs pitch, yaw, roll

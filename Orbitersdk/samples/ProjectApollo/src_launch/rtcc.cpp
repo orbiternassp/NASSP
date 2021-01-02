@@ -1574,6 +1574,7 @@ void RTCC::LoadLaunchDaySpecificParameters(int year, int month, int day)
 	//Skeleton flight plan table
 	QMSEARCH(year, month, day);
 	QMMBLD(year, month, day);
+	QMEPHEM(0, year, month, day, 0.0);
 }
 
 void RTCC::QMSEARCH(int year, int month, int day)
@@ -5475,8 +5476,8 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double
 	mccconst.T_t1_max_dps = PZMCCPLN.TT1_DPS_MAX;
 	mccconst.INCL_PR_MAX = PZMCCPLN.INCL_PR_MAX;
 
-	TLMCCProcessor tlmcc;
-	tlmcc.Init(&pzefem, datatab, medquant, mccconst);
+	TLMCCProcessor tlmcc(this);
+	tlmcc.Init(datatab, medquant, mccconst);
 	tlmcc.Main(out);
 
 	//Update display data
@@ -10645,6 +10646,7 @@ RTCC_LLWP_HMALIT_8_1:
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
 }
 
+//Lunar Launch Targeting from 68-FM-67
 void RTCC::PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP)
 {
 	AEGDataBlock sv_temp, sv_L;
@@ -10743,7 +10745,7 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
 	VECTOR3 R_LS, R_LS_sg, r_LS, R1, V1, r1, Q, h1, H1, v1, C, R_P, r_P, H_D, h_D, R_BO, V_BO, R_TPI, V_TPI, R_XX, V_XX, R_TI_C, V_TI_C, R_TI_T, V_TI_T;
 	double mu, T_TPI, T_hole, t_ca, theta_CA, theta, dt, S1, S2, t_xx, MJD_BO, T_INS, dt_B, t_CSI, t_D, U_R, t_R, r_apo, r_peri, H_S_apo, DH_MIN, DH_CRIT;
 	double C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, P_mm, DH_u, theta_w, t_LOR, t_H, dv_CSI, dv_CDH, dv_TPI, dv_TPF, t_CDH, theta_TPI, dt_NSR, P_O, P_Q;
-	double dt_max, B1, B2, B3, B4, DP, P_mm_apo, r_TPM, theta_s, f_TPI, C_R[3], C_V[3], DH_MAX, ddH_c;
+	double dt_max, B1, B2, B3, B4, DP, P_mm_apo, r_TPM, theta_s, f_TPI, C_R[3], C_V[3], DH_MAX, ddH_c, DH[10], DH_apo[10];
 	int K, m, p, I_SRCH, L_DH, I, J, K_T, i, I_STOP2, M_stop, IPHAS;
 	int N_arr[10];
 	double T_TPI_arr[10], T_R_arr[10], DV_CSI_arr[10], DV_CDH_arr[10], T_CDH_arr[10], DV_TPI_arr[10], DV_TPF_arr[10], DV_T_arr[10], T_LO_arr[10], T_CSI_arr[10], T_INS_arr[10];
@@ -10764,8 +10766,6 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
 	dt_B = opt.DT_B;
 	I_SRCH = opt.I_SRCH;
 	L_DH = opt.L_DH;
-	double *DH = new double[L_DH];
-	double *DH_apo = new double[L_DH];
 	for (int ii = 0;ii < L_DH;ii++)
 	{
 		DH[ii] = opt.DH[ii];
@@ -11344,8 +11344,6 @@ RTCC_PMMLLWP_22_19:
 		PZLRPT.data[i].DVTPF = DV_TPF_arr[i] / 0.3048;
 		PZLRPT.data[i].DVT = DV_T_arr[i] / 0.3048;
 	}
-
-	delete[] DH_apo;
 }
 
 void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res)
@@ -20325,7 +20323,7 @@ void RTCC::PMMDAN(AEGBlock aeg, int IND, int &ERR, double &T_c, double &T_c_apo)
 
 	J = 0;
 	MJD = GMTBASE + aeg.Data.TS / 24.0 / 3600.0;
-	OrbMech::PLEFEM(pzefem, MJD, R_EM, V_EM, R_ES);
+	PLEFEM(1, aeg.Data.TS / 3600.0, 0, R_EM, V_EM, R_ES);
 
 	if (aeg.Header.AEGInd == BODY_EARTH)
 	{
@@ -23276,7 +23274,7 @@ int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, do
 		}
 		else
 		{
-			OrbMech::PLEFEM(pzefem, OrbMech::MJDfromGET(sv_cur.GMT, GMTBASE), R_EM, V_EM, R_ES);
+			PLEFEM(1, sv_cur.GMT / 3600.0, 0, R_EM, V_EM, R_ES);
 			if (option == 0)
 			{
 				if (sv_cur.RBI == BODY_EARTH)
@@ -23628,7 +23626,7 @@ void RTCC::ECMPAY(EphemerisDataTable &EPH, ManeuverTimesTable &MANTIMES, double 
 		return;
 	}
 	sv_out = interout.SV;
-	OrbMech::PLEFEM(pzefem, OrbMech::MJDfromGET(GMT, GMTBASE), R_EM, V_EM, R_ES);
+	PLEFEM(1, GMT / 3600.0, 0, R_EM, V_EM, R_ES);
 	if (sun)
 	{
 		if (sv_out.RBI == BODY_EARTH)
@@ -23850,7 +23848,7 @@ void RTCC::PMMREAP(int med)
 
 		std::vector<TradeoffData>todata;
 
-		ConicRTEEarthNew rteproc(EPHEM.table, pzefem);
+		ConicRTEEarthNew rteproc(this, EPHEM.table);
 		rteproc.READ(mode, GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX);
 		rteproc.Init(PZREAP.DVMAX, PZREAP.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
 
@@ -23931,7 +23929,7 @@ void RTCC::PMMREAST()
 	{
 		std::vector<EphemerisData> SVArray;
 		SVArray.push_back(sv_abort);
-		ConicRTEEarthNew rteproc(SVArray, pzefem);
+		ConicRTEEarthNew rteproc(this, SVArray);
 		rteproc.READ(med_f75.Type, GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX);
 		rteproc.Init(med_f75.DVMAX, med_f75.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
 		rteproc.MAIN();
@@ -27323,7 +27321,6 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		GMTBASE = J_D - 2400000.5;
 
 		MCLAMD = PIGBHA();
-		MCCBES = 24.0*(double)(GZGENCSN.RefDayOfYear - 1);
 		//TBD: Call EMLAMBNP
 	}
 	return 0;
@@ -31864,7 +31861,8 @@ void RTCC::EMMGSTMP()
 		EZJGSTTB.Landmark_RA = 0.0;
 
 		VECTOR3 R_EM, V_EM, R_ES, R_BL, R_BV, R_VL, R_BL_equ;
-		if (OrbMech::PLEFEM(pzefem, OrbMech::MJDfromGET(EZGSTMED.G14_GMT, GMTBASE), R_EM, V_EM, R_ES) == false)
+
+		if (PLEFEM(1, EZGSTMED.G14_GMT / 3600.0, 0, R_EM, V_EM, R_ES))
 		{
 			err = 2;
 		}
@@ -32058,4 +32056,46 @@ void RTCC::CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
 	CZNAVSLV.PosS = mul(MRS, R_ecl);
 	CZNAVSLV.DotS = mul(MRS, V_ecl);
 	CZNAVSLV.NUPTIM = GMT - MCGRIC * 3600.0;
+}
+
+void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)
+{
+	double J_D = TJUDAT(YEAR, MONTH, DAY);
+	double gmtbase = J_D - 2400000.5;
+	QMGEPH(gmtbase, HOURS);
+	//TBD: QMPNREAD
+}
+
+bool RTCC::QMGEPH(double gmtbase, double HOURS)
+{
+	double MJD, MoonPos[12], EarthPos[12];
+	OBJHANDLE hMoon, hEarth;
+	CELBODY *cMoon, *cEarth;
+
+	hMoon = oapiGetObjectByName("Moon");
+	hEarth = oapiGetObjectByName("Earth");
+
+	cMoon = oapiGetCelbodyInterface(hMoon);
+	cEarth = oapiGetCelbodyInterface(hEarth);
+
+	//Store beginning time of ephemeris
+	MDGSUN.MJD = gmtbase - 5.0;
+
+	for (int i = 0;i < 71;i++)
+	{
+		MJD = MDGSUN.MJD + 0.5*(double)(i);
+
+		//Moon Ephemeris
+		cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
+		MDGSUN.R_EM[i] = _V(MoonPos[0], MoonPos[2], MoonPos[1]) / OrbMech::R_Earth;
+		MDGSUN.V_EM[i] = _V(MoonPos[3], MoonPos[5], MoonPos[4]) / OrbMech::R_Earth*3600.0;
+
+		//Sun Ephemers
+		cEarth->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
+		MDGSUN.R_ES[i] = -OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]) / OrbMech::R_Earth;
+	}
+
+	//MCCBES stored as the time of midnight on launch day since beginning of the year
+	//MCCBES = HOURS;
+	return false;
 }

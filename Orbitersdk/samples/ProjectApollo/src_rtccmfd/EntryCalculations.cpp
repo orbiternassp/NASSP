@@ -26,6 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "nasspdefs.h"
 #include "OrbMech.h"
 #include "EntryCalculations.h"
+#include "rtcc.h"
 
 namespace EntryCalculations
 {
@@ -2926,8 +2927,8 @@ OBJHANDLE RTEEarth::AGCGravityRef(VESSEL *vessel)
 	return gravref;
 }
 
-ConicRTEEarthNew::ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris) :
-	XArray(SVArray), ephem(ephemeris)
+ConicRTEEarthNew::ConicRTEEarthNew(RTCC *r, std::vector<EphemerisData> &SVArray) : RTCCModule(r),
+	XArray(SVArray)
 {
 	mu = OrbMech::mu_Earth*pow(SCPHR, 2) / pow(KMPER*1000.0, 3);
 	RR = (OrbMech::R_Earth + 400000.0 * 0.3048) / (KMPER*1000.0);
@@ -4388,7 +4389,7 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 	double deltat, deltat1, cos_PV, deltaT, Tr, T_arm, T_arm2, Z3, TERM, dt_dbetaa, dt_dva, dbetar_dbetaa, dbetar_dva, ALVA, D, dv, dbeta, T_art, dw;
 	double DUM, DUM2, ES, ESS, PS, h, Sbeta_s, beta_s, CDB, DLBET, ZIT;
 
-	OrbMech::PLEFEM(ephem, GMTbase + T0 / 24.0, R_EM, V_EM, R_ES);
+	pRTCC->PLEFEM(1, T0, 0, R_EM, V_EM, R_ES);
 	R_Moon = R_EM / (KMPER*1000.0);
 	R_Moon = OrbMech::EclipticToECI(R_Moon, GMTbase + T0 / 24.0);
 
@@ -4425,7 +4426,7 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 		AMAA = EAA - e * sin(EAA);
 		TAA = a * sqrt(a / mu)*(PI - AMAA);
 		TJ = T0 + TAA;
-		OrbMech::PLEFEM(ephem, GMTbase + TJ / 24.0, R_EM, V_EM, R_ES);
+		pRTCC->PLEFEM(1, TJ, 0, R_EM, V_EM, R_ES);
 		RMAP = R_EM / (KMPER*1000.0);
 		RMAP = OrbMech::EclipticToECI(RMAP, GMTbase + T0 / 24.0);
 		theta = PI - eta - beta_a;
