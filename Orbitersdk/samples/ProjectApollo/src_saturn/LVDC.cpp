@@ -6828,7 +6828,7 @@ void LVDCSV::IterativeGuidanceMode()
 
 			if (Tt_3 <= 0 && S4B_REIGN == true) {
 				//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second		
-				DVASW = DVASW | MSKSSS4C0;
+				DVASW = DVASW | MSKSSS4C1;
 				SwitchSelectorProcessor(0);
 				fprintf(lvlog, "SIVB SCHEDULED CUTOFF! TMM = %f \r\n", TMM);
 			}

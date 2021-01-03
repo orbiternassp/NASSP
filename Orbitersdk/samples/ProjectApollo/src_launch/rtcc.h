@@ -1653,7 +1653,7 @@ struct MPTManeuver
 	union
 	{
 		double Word78d;
-		//For TLI this is current and original TLI computation indicator
+		//For TLI this is current and original TLI computation indicator (negative for specified TIG)
 		int Word78i[2];
 	};
 	double Word79;
@@ -1669,12 +1669,15 @@ struct MPTManeuver
 	//Word 148-150
 	int TrajDet[3];
 
+	//State vector at main engine on
 	VECTOR3 R_BI;
 	VECTOR3 V_BI;
 	double GMT_BI;
+	//State vector at burnout
 	VECTOR3 R_BO;
 	VECTOR3 V_BO;
 	double GMT_BO;
+	//State vector at ullage on/first phase
 	VECTOR3 R_1;
 	VECTOR3 V_1;
 	double GMT_1;
@@ -1935,13 +1938,15 @@ struct PMMSPTInput
 	//Word 11
 	unsigned ReplaceCode;
 	int InjOpp;
-	//Word 12
+	//Word 12 (Time of ignition for TLI confirmation, negative if not input)
 	double T_RP = -1;
 	//Word 13
 	int ThrusterCode;
 	int AttitudeMode;
 	//Word 14-19
 	//Targeting Parameters
+	//Word 20 (DT of burn, negative if not input)
+	double dt;
 	//Word 29
 	int CCI;
 	//Word 30
@@ -2650,8 +2655,6 @@ public:
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	int LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad, LunarDescentPlanningTable &table);
-	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, GPMPRESULTS &res);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
@@ -2667,6 +2670,7 @@ public:
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double GETbase, double P30TIG, double TB5, double mu, double T_RG);
 	void LVDCTLIPredict(LVDCTLIparam lvdc, double m0, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI);
+	//S-IVB TLI IGM Pre-Thrust Targeting Module
 	int PMMSPT(PMMSPTInput &in);
 	void PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC);
 	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
@@ -3499,9 +3503,9 @@ public:
 	struct TLISystemParameters
 	{
 		//Time of ignition of first S-IVB burn
-		double T4IG = 0.0;
+		double T4IG = 9.0*60.0 + 15.0;
 		//Time of cutoff of first S-IVB
-		double T4C = 0.0;
+		double T4C = 11.0*60.0 + 40.0;
 		//Time interval from time of restart preparations to time of ignition
 		double DTIG = 578.0;
 		//Nominal time duration of first S-IVB burn
@@ -3532,15 +3536,17 @@ public:
 		double t_SD1, t_SD2, t_SD3;
 	} MDVSTP;
 
-	struct SIVBTLIMatrixTable
-	{
-		//Plumbline coordinate axes in ECI coordinates
-		MATRIX3 EPH;
-		//Plumbline to parking orbit nodal system transformation matrix
-		MATRIX3 GG;
-		//Plumbline to target orbit nodal system transformation matrix
-		MATRIX3 G;
-	} PZTLIMAT;
+	union SIVBTLIMatrixTable {
+		MATRIX3 data[3];
+		struct {
+			//Plumbline coordinate axes in ECI coordinates
+			MATRIX3 EPH;
+			//Plumbline to parking orbit nodal system transformation matrix
+			MATRIX3 GG;
+			//Plumbline to target orbit nodal system transformation matrix
+			MATRIX3 G;
+		};
+	} PZMATCSM, PZMATLEM;
 
 	struct TLIPlanningOutputTable
 	{

@@ -32,7 +32,7 @@ class RTCC;
 class TLIGuidanceSim
 {
 public:
-	TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable TABLIN, int &IRETN, EphemerisDataTable *EPHEM, RTCCNIAuxOutputTable *AUX, std::vector<double> *WTABL = NULL);
+	TLIGuidanceSim(RTCC &r, RTCCNIInputTable TABLIN, int &IRETN, EphemerisDataTable *EPHEM, RTCCNIAuxOutputTable *AUX, MATRIX3 *adramat, std::vector<double> *WTABL = NULL);
 	void PCMTRL();
 private:
 	//Thrust Subroutine
@@ -278,7 +278,8 @@ private:
 	EphemerisDataTable *EPHEM;
 	RTCCNIAuxOutputTable *AUX;
 	std::vector<double> *WTABL;
-	RTCC *rtcc;
+	MATRIX3 *ADRMAT;
+	RTCC &rtcc;
 
 	OBJHANDLE hEarth;
 };

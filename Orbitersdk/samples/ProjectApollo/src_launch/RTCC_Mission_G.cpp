@@ -1935,23 +1935,22 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 94: //PLANE CHANGE TARGETING (FOR REFSMMAT)
 	case 95: //PLANE CHANGE TARGETING (FOR BURN)
 	{
-		PCMan opt;
 		SV sv;
-		double GETbase;
 
 		sv = StateVectorCalc(calcParams.src);
-		GETbase = calcParams.TEPHEM;
 
-		opt.alt = calcParams.LSAlt;
-		opt.EarliestGET = OrbMech::HHMMSSToSS(106, 30, 0);
-		opt.GETbase = GETbase;
-		opt.lat = calcParams.LSLat;
-		opt.lng = calcParams.LSLng;
-		opt.RV_MCC = sv;
-		opt.t_A = calcParams.LunarLiftoff;
-		opt.vessel = calcParams.src;
+		med_k16.GETTH1 = OrbMech::HHMMSSToSS(106, 30, 0);
+		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(124, 0, 0);
+		med_k16.Mode = 7;
+		med_k16.Sequence = 1;
+		med_k16.Vehicle = RTCC_MPT_CSM;
 
-		PlaneChangeTargeting(&opt, DeltaV_LVLH, TimeofIgnition);
+		med_k17.Azimuth = 0.0;
+
+		LunarDescentPlanningTable table;
+		LunarDescentPlanningProcessor(sv, calcParams.TEPHEM, calcParams.LSLat, calcParams.LSLng, R_LLS, table);
+
+		PoweredFlightProcessor(sv, calcParams.TEPHEM, table.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, table.DVVector[0] * 0.3048, true, TimeofIgnition, DeltaV_LVLH);
 
 		if (fcn == 94)
 		{
@@ -1960,7 +1959,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			char buffer[1000];
 
 			refsopt.dV_LVLH = DeltaV_LVLH;
-			refsopt.GETbase = GETbase;
+			refsopt.GETbase = calcParams.TEPHEM;
 			refsopt.HeadsUp = false;
 			refsopt.REFSMMATTime = TimeofIgnition;
 			refsopt.REFSMMATopt = 0;
@@ -1990,7 +1989,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			manopt.R_LLS = R_LLS;
 			manopt.dV_LVLH = DeltaV_LVLH;
 			manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-			manopt.GETbase = GETbase;
+			manopt.GETbase = calcParams.TEPHEM;
 			manopt.HeadsUp = false;
 			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 			manopt.TIG = TimeofIgnition;
@@ -2000,7 +1999,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			AP11ManeuverPAD(&manopt, *form);
 			sprintf(form->purpose, "PLANE CHANGE");
 
-			AGCStateVectorUpdate(buffer1, sv_CSM, true, AGCEpoch, GETbase);
+			AGCStateVectorUpdate(buffer1, sv_CSM, true, AGCEpoch, calcParams.TEPHEM);
 			CMCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
