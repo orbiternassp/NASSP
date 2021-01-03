@@ -179,11 +179,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "GMPManeuverCode", G->GMPManeuverCode);
 	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
 
-	oapiWriteScenario_int(scn, "TLCCMANEUVER", G->TLCCmaneuver);
 	papiWriteScenario_double(scn, "LOI_eta_1", GC->rtcc->med_k40.eta_1);
 	papiWriteScenario_double(scn, "LOI_REVS1", GC->rtcc->med_k40.REVS1);
-	papiWriteScenario_vec(scn, "TLCCDV", G->TLCC_dV_LVLH);
-	papiWriteScenario_double(scn, "TLCCTIG", G->TLCC_TIG);
 	papiWriteScenario_vec(scn, "R_TLI", G->R_TLI);
 	papiWriteScenario_vec(scn, "V_TLI", G->V_TLI);
 
@@ -304,11 +301,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "GMPManeuverCode", G->GMPManeuverCode);
 		papiReadScenario_double(line, "SPSGET", G->SPSGET);
 
-		papiReadScenario_int(line, "TLCCMANEUVER", G->TLCCmaneuver);
 		papiReadScenario_double(line, "LOI_eta_1", GC->rtcc->med_k40.eta_1);
 		papiReadScenario_double(line, "LOI_REVS1", GC->rtcc->med_k40.REVS1);
-		papiReadScenario_vec(line, "TLCCDV", G->TLCC_dV_LVLH);
-		papiReadScenario_double(line, "TLCCTIG", G->TLCC_TIG);
 		papiReadScenario_vec(line, "R_TLI", G->R_TLI);
 		papiReadScenario_vec(line, "V_TLI", G->V_TLI);
 
@@ -5081,13 +5075,13 @@ void ApolloRTCCMFD::menuCycleTLCCConfiguration()
 
 void ApolloRTCCMFD::menuSwitchTLCCManeuver()
 {
-	if (G->TLCCmaneuver < 9)
+	if (GC->rtcc->PZMCCPLN.Mode < 9)
 	{
-		G->TLCCmaneuver++;
+		GC->rtcc->PZMCCPLN.Mode++;
 	}
 	else
 	{
-		G->TLCCmaneuver = 1;
+		GC->rtcc->PZMCCPLN.Mode = 1;
 	}
 }
 
@@ -5139,10 +5133,10 @@ void ApolloRTCCMFD::set_TLand(double time)
 
 void ApolloRTCCMFD::menuSetTLCCDesiredInclination()
 {
-	if (G->TLCCmaneuver >= 8)
+	if (GC->rtcc->PZMCCPLN.Mode >= 8)
 	{
-bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
-oapiOpenInputBox("Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", TLCCDesiredInclinationInput, 0, 20, (void*)this);
+		bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", TLCCDesiredInclinationInput, 0, 20, (void*)this);
 	}
 }
 

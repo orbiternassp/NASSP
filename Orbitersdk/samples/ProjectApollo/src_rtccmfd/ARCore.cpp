@@ -884,10 +884,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	entryprecision = -1;
 
 	TLImaneuver = 0;
-	TLCCmaneuver = 1;
-	GC->rtcc->PZMCCPLN.MidcourseGET = 0.0;
-	TLCC_dV_LVLH = _V(0.0, 0.0, 0.0);
-	TLCC_TIG = 0.0;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -3693,7 +3689,6 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			}
 		}
 
-		GC->rtcc->PZMCCPLN.Mode = TLCCmaneuver;
 		GC->rtcc->TranslunarMidcourseCorrectionProcessor(sv0, CSMmass, LMmass);
 
 		Result = 0;

@@ -2083,42 +2083,38 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 22)
 	{
-		if (G->TLCCmaneuver == 1)
+		switch (GC->rtcc->PZMCCPLN.Mode)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 1: Nodal Targeting", 25);
+		case 1:
+			sprintf_s(Buffer, "Option 1: Nodal Targeting");
+			break;
+		case 2:
+			sprintf_s(Buffer, "Option 2: FR BAP, Fixed LPO, LS");
+			break;
+		case 3:
+			sprintf_s(Buffer, "Option 3: FR BAP, Free LPO, LS");
+			break;
+		case 4:
+			sprintf_s(Buffer, "Option 4: Non-FR BAP, Fixed LPO, LS");
+			break;
+		case 5:
+			sprintf_s(Buffer, "Option 5: Non-FR BAP, Free LPO, LS");
+			break;
+		case 6:
+			sprintf_s(Buffer, "Option 6: Circumlunar flyby, nominal");
+			break;
+		case 7:
+			sprintf_s(Buffer, "Option 7: Circumlunar flyby, specified H_pc");
+			break;
+		case 8:
+			sprintf_s(Buffer, "Option 8: SPS flyby to spec. FR inclination");
+			break;
+		default:
+			sprintf_s(Buffer, "Option 9: Fuel critical lunar flyby");
+			break;
 		}
-		else if (G->TLCCmaneuver == 2)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 2: FR BAP, Fixed LPO, LS", 31);
-		}
-		else if (G->TLCCmaneuver == 3)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 3: FR BAP, Free LPO, LS", 30);
-		}
-		else if (G->TLCCmaneuver == 4)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 4: Non-FR BAP, Fixed LPO, LS", 35);
-		}
-		else if (G->TLCCmaneuver == 5)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 5: Non-FR BAP, Free LPO, LS", 34);
-		}
-		else if (G->TLCCmaneuver == 6)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 6: Circumlunar flyby, nominal", 36);
-		}
-		else if (G->TLCCmaneuver == 7)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 7: Circumlunar flyby, specified H_pc", 43);
-		}
-		else if (G->TLCCmaneuver == 8)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 8: SPS flyby to spec. FR inclination", 43);
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Option 9: Fuel critical lunar flyby", 35);
-		}
+
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		if (GC->MissionPlanningActive)
 		{
@@ -2144,19 +2140,19 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%d", GC->rtcc->PZMCCPLN.SFPBlockNum);
 		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->TLCCmaneuver >= 7)
+		if (GC->rtcc->PZMCCPLN.Mode >= 7)
 		{
 			sprintf(Buffer, "%.2f NM", GC->rtcc->PZMCCPLN.h_PC / 1852.0);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (G->TLCCmaneuver >= 8)
+		if (GC->rtcc->PZMCCPLN.Mode >= 8)
 		{
 			sprintf(Buffer, "%.2f°", GC->rtcc->PZMCCPLN.incl_fr*DEG);
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (G->TLCCmaneuver == 5)
+		if (GC->rtcc->PZMCCPLN.Mode == 5)
 		{
 			if (GC->rtcc->PZMCCPLN.h_PC_mode5 < 0)
 			{

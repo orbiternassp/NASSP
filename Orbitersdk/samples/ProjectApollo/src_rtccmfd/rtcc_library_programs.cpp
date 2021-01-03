@@ -489,17 +489,20 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//MCI to/from MCT
 	else if ((in == 2 && out == 3) || (in == 3 && out == 2))
 	{
-		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, OrbMech::MJDfromGET(sv.GMT, GMTBASE));
+		MATRIX3 Rot;
+		PLEFEM(1, sv.GMT / 3600.0, 0, Rot);
 
 		if (in == 2)
 		{
-			sv_out.R = rhtmul(Rot, sv.R);
-			sv_out.V = rhtmul(Rot, sv.V);
+			//MCI to MCT
+			sv_out.R = tmul(Rot, sv.R);
+			sv_out.V = tmul(Rot, sv.V);
 		}
 		else
 		{
-			sv_out.R = rhmul(Rot, sv.R);
-			sv_out.V = rhmul(Rot, sv.V);
+			//MCT to MCI
+			sv_out.R = mul(Rot, sv.R);
+			sv_out.V = mul(Rot, sv.V);
 		}
 	}
 	//MCI to/from EMP
@@ -921,13 +924,10 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, 
 	double MJD = GMTBASE + HOUR / 24.0;
 	//Calculate position of time in array
 	i = (int)((MJD - MDGSUN.MJD)*2.0);
-	//Is time contained in Sun/Moon data array?
-	if (i < 0 || i > 70) goto RTCC_PLEFEM_A;
 	//Calculate starting point in the array
 	j = i - 2;
-	//Limit to array size
-	if (j < 0) j = 0;
-	else if (j > 65) j = 65;
+	//Is time contained in Sun/Moon data array?
+	if (j < 0 || j > 65) goto RTCC_PLEFEM_A;
 
 	VECTOR3 *X[3] = {MDGSUN.R_EM, MDGSUN.V_EM, MDGSUN.R_ES };
 	double x[9];
@@ -946,6 +946,16 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, 
 RTCC_PLEFEM_A:
 	//Error return
 	return true;
+}
+
+bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB)
+{
+	//Calculate MJD from GMT
+	double MJD = GMTBASE + HOUR / 24.0;
+	//Moon Libration Matrix
+	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
+	M_LIB = MatrixRH_LH(Rot);
+	return false;
 }
 
 //Computes and outputs pitch, yaw, roll

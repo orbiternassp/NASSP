@@ -344,6 +344,16 @@ RTCC_PIATSU_1A:
 	goto RTCC_PIATSU_1A;
 }
 
+void RTCC::PIBETA(double BETA, double ONOVA, double &F1, double &F2, double &F3, double &F4)
+{
+	double a = ONOVA * BETA*BETA;
+	F1 = OrbMech::stumpS(a);
+	F2 = OrbMech::stumpC(a);
+
+	F3 = 1.0 - a * F1;
+	F4 = 1.0 - a * F2;
+}
+
 double RTCC::PIBSHA(double hour)
 {
 	double GMT = hour - MCCBES;
