@@ -1187,8 +1187,7 @@ RTCC::RendezvousEvaluationDisplay::RendezvousEvaluationDisplay()
 	}
 }
 
-RTCC::RTCC() :
-	pmmcen(this)
+RTCC::RTCC()
 {
 	mcc = NULL;
 	MissionFileName[0] = 0;
