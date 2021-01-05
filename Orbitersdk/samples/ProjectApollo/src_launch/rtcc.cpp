@@ -40,6 +40,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/TLIGuidanceSim.h"
 #include "../src_rtccmfd/CSMLMGuidanceSim.h"
 #include "../src_rtccmfd/GeneralizedIterator.h"
+#include "../src_rtccmfd/CoastNumericalIntegrator.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -1186,7 +1187,8 @@ RTCC::RendezvousEvaluationDisplay::RendezvousEvaluationDisplay()
 	}
 }
 
-RTCC::RTCC()
+RTCC::RTCC() :
+	pmmcen(this)
 {
 	mcc = NULL;
 	MissionFileName[0] = 0;
@@ -1367,6 +1369,13 @@ RTCC::RTCC()
 	MCEASQ = 4.0619437e13;
 	MCEBSQ = 4.0619437e13;
 	MCSMLR = 1738090.0;
+
+	//These are calculated with R_E = 6.373338e6
+	MCGMUM = 2.454405845045305e-01;
+	MCEMUU = 19.95468740240253;
+	MCSRMU = 4.954196044814240e-01;
+	MCERMU = 4.467066979842873;
+
 	//LC-39A
 	MCLSDA = sin(28.608202*RAD);
 	MCLCDA = cos(28.608202*RAD);
@@ -17087,6 +17096,17 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 	man.GMT_BO = GMTfromGET(in.TLAND);
 
 	return 0;
+}
+
+void RTCC::PMMCEN(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS)
+{
+	pmmcen.Propagate(sv.R, sv.V, sv.GMT, tmax, tmin, endcond, dir, sv.RBI, opt);
+
+	sv_out.R = pmmcen.R2;
+	sv_out.V = pmmcen.V2;
+	sv_out.GMT = pmmcen.T2;
+	sv_out.RBI = pmmcen.outplanet;
+	ITS = pmmcen.ITS;
 }
 
 void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)

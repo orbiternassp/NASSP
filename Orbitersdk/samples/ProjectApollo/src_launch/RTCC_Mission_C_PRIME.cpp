@@ -264,6 +264,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		//Delete maneuvers from MPT
 		GMGMED("M62,CSM,1,D;");
+
+		//Set anchor vector time to 0, so that no trajectory updates are done anymore
+		EZANCHR1.AnchorVectors[9].GMT = 0.0;
 	}
 	break;
 	case 6: //TLI Evaluation

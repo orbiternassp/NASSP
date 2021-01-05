@@ -35,6 +35,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/TLMCC.h"
 #include "../src_rtccmfd/LOITargeting.h"
 #include "../src_rtccmfd/LMGuidanceSim.h"
+#include "../src_rtccmfd/CoastNumericalIntegrator.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -2865,6 +2866,8 @@ public:
 	int PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E = NULL);
 	//LM Lunar Descent Pre-Thrust Targeting Module
 	int PMMLDP(PMMLDPInput in, MPTManeuver &man);
+	//Coast Numerical Integrator
+	void PMMCEN(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
 	//Freeze, Unfreeze, Delete Processor
 	void PMMFUD(int veh, unsigned man, int action, std::string StationID);
 	//Vehicle Orientation Change Processor
@@ -4487,6 +4490,8 @@ public:
 	PMMAEG pmmaeg;
 	PMMLAEG pmmlaeg;
 
+	CoastIntegrator2 pmmcen;
+
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
@@ -4930,6 +4935,15 @@ public:
 	double MCVDTM;
 	//Suppress integrator processing
 	bool MGREPH;
+
+	//Gravitational constant of the Moon (Er^3/hr^2)
+	double MCGMUM;
+	//Gravitational constant of the Earth (Er^3/hr^2)
+	double MCEMUU;
+	//Square root of gravitational constant of the Moon (Er^3/hr^2)^1/2
+	double MCSRMU;
+	//Square root of gravitational constant of the Earth (Er^3/hr^2)^1/2
+	double MCERMU;
 
 	//Polynomial coefficients for insertion conditions
 	double MDLIEV[16];
