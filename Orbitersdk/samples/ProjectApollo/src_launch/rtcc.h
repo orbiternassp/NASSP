@@ -4490,8 +4490,6 @@ public:
 	PMMAEG pmmaeg;
 	PMMLAEG pmmlaeg;
 
-	CoastIntegrator2 pmmcen;
-
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);

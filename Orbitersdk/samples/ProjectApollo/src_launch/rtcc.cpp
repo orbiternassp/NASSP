@@ -17100,6 +17100,8 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 
 void RTCC::PMMCEN(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS)
 {
+	CoastIntegrator2 pmmcen(this);
+
 	pmmcen.Propagate(sv.R, sv.V, sv.GMT, tmax, tmin, endcond, dir, sv.RBI, opt);
 
 	sv_out.R = pmmcen.R2;

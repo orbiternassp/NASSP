@@ -80,13 +80,12 @@ private:
 	double r_SPH;
 	//Direction control and step size multiplier
 	double HMULT;
-	//Dividend for termination control
+	//Divisor for termination control
 	double DEV;
 	//Bounding variable. 0 = first pass, -1 = not bounded, 1 = bounded
 	int INITE;
 	double DEL, AQ, BQ, DISQ, dtesc[2];
 	double dt_temp;
-	int I;
 
 	//Constants
 	static const double K, dt_lim;

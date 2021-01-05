@@ -48,12 +48,27 @@ bool CoastIntegrator2::Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tm
 		STOPVA = abs(STOPVA);
 		TMIN = STOPVA - 2.0*dt_lim;
 	}
-	if (STOPVA != 0.0)
+
+	if (ISTOPS == 2)
 	{
-		DEV = STOPVA;
+		//Still gives really accurate flight path anglr
+		DEV = 100.0;
+	}
+	else if (ISTOPS == 3)
+	{
+		//Radius
+		if (STOPVA == 0.0)
+		{
+			DEV = 1.0;
+		}
+		else
+		{
+			DEV = STOPVA;
+		}
 	}
 	else
 	{
+		//Time
 		DEV = 1.0;
 	}
 
@@ -234,28 +249,30 @@ PMMCEN_Edit_5C: //New step size
 	DISQ = sqrt(DISQ);
 	dtesc[0] = (-BQ + DISQ) / (2.0*AQ);
 	dtesc[1] = (-BQ - DISQ) / (2.0*AQ);
-	I = 0;
-PMMCEN_Edit_6B:
-	if (dt*dtesc[I] <= 0.0) goto PMMCEN_Edit_6C;
-	dt_temp = dtesc[I];
-	RestoreVariables();
-	goto PMMCEN_Edit_7B;
-PMMCEN_Edit_6C:
-	I++;
-	if (I < 1) goto PMMCEN_Edit_6B;
-PMMCEN_Edit_7A: //Chord method
-	if (RCALC*RES2 > 0)
+
+	//Direct of solution?
+	if (dt*dtesc[0] >= 0.0)
 	{
-		VAR = dt;
-		dt_temp = dt / 2.0;
+		//Direct of solution is good, which one is closer to initial state?
+		if (abs(dtesc[0]) < abs(dtesc[1]))
+		{
+			dt_temp = dtesc[0];
+		}
+		else
+		{
+			dt_temp = dtesc[1];
+		}
 	}
 	else
 	{
-		VAR = VAR - dt;
-		dt_temp = VAR / 2.0;
+		dt_temp = dtesc[1];
 	}
+	VAR = dt;
+	RestoreVariables();
 	RES2 = RCALC;
-	Rectification();
+	goto PMMCEN_Edit_7B;
+PMMCEN_Edit_7A:
+	sprintf(oapiDebugString(), "ERROR!");
 PMMCEN_Edit_7B: //Don't stop yet
 	dt = dt_temp;
 	IEND = 0;
