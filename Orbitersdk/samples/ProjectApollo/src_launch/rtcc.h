@@ -36,6 +36,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/LOITargeting.h"
 #include "../src_rtccmfd/LMGuidanceSim.h"
 #include "../src_rtccmfd/CoastNumericalIntegrator.h"
+#include "../src_rtccmfd/RTCCSystemParameters.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -2657,11 +2658,11 @@ public:
 	void PMMTISS();
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
 	double TPISearch(SV sv_A, SV sv_P, double GETbase, double elev);
-	double FindDH(MPTSV sv_A, MPTSV sv_P, double GETbase, double TIGguess, double DH);
+	double FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
-	void TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double LMmass);
+	void TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass);
 	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res);
 	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
@@ -2831,8 +2832,8 @@ public:
 	void PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux);
 	//Time Queue Control Load Module
 	void EMSTIME(int L, int ID);
-	void FDOLaunchAnalog1(MPTSV sv);
-	void FDOLaunchAnalog2(MPTSV sv);
+	void FDOLaunchAnalog1(EphemerisData sv);
+	void FDOLaunchAnalog2(EphemerisData sv);
 	double GetGMTLO() { return MCGMTL; }
 	void SetGMTLO(double gmt) { MCGMTL = gmt; }
 	double CalcGETBase();
@@ -4677,17 +4678,12 @@ protected:
 	//MJD of launch day (days)
 	double GMTBASE;
 	//Number of hours from January 0 to midnight before launch
-	double MCCBES;
-
-	//CONSTANTS
-	//Nautical miles per Earth radii
-	const double MCCNMC = 3443.93359;
+	double MCCBES; 
 
 public:
-	//MJD of epoch
-	double AGCEpoch;
-	//Mean lunar radius
-	double MCSMLR;
+
+	RTCCSystemParameters SystemParameters;
+
 	//Sine of the geodetic latitude of the launch pad
 	double MCLSDA;
 	//Cosine of the geodetic latitude of the launch pad

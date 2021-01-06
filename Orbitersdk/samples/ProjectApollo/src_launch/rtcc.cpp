@@ -1367,7 +1367,7 @@ RTCC::RTCC()
 	MCEBAS = 1.0;
 	MCEASQ = 4.0619437e13;
 	MCEBSQ = 4.0619437e13;
-	MCSMLR = 1738090.0;
+	SystemParameters.MCSMLR = 1738090.0;
 
 	//These are calculated with R_E = 6.373338e6
 	MCGMUM = 2.454405845045305e-01;
@@ -1433,7 +1433,7 @@ RTCC::RTCC()
 	MDVSTP.PHIL = 28.6082888*RAD;
 
 	//Epoch of NBY 1969 (Apollo 7-10)
-	AGCEpoch = 40221.525;
+	SystemParameters.AGCEpoch = 40221.525;
 	MCCCEX = 3404;
 	MCCLEX = 3433;
 	MCCCRF = 1735;
@@ -1541,7 +1541,7 @@ RTCC::RTCC()
 
 	BZLAND.lat[RTCC_LMPOS_BEST] = 0.0;
 	BZLAND.lng[RTCC_LMPOS_BEST] = 0.0;
-	BZLAND.rad[RTCC_LMPOS_BEST] = MCSMLR;
+	BZLAND.rad[RTCC_LMPOS_BEST] = SystemParameters.MCSMLR;
 
 	PZLTRT.DT_Ins_TPI = PZLTRT.DT_Ins_TPI_NOM = 40.0*60.0;
 	GZGENCSN.TIPhaseAngle = 0.0;
@@ -1891,7 +1891,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 		{
 			sprintf_s(Buff, line.c_str());
 
-			papiReadScenario_double(Buff, "AGCEpoch", AGCEpoch);
+			papiReadScenario_double(Buff, "AGCEpoch", SystemParameters.AGCEpoch);
 			papiReadScenario_int(Buff, "MCCLEX", MCCLEX);
 			papiReadScenario_int(Buff, "MCCLRF", MCCLRF);
 			papiReadScenario_int(Buff, "MCCCXS", MCCCXS);
@@ -5069,7 +5069,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	}
 }
 
-double RTCC::FindDH(MPTSV sv_A, MPTSV sv_P, double GETbase, double TIGguess, double DH)
+double RTCC::FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH)
 {
 	SV sv_A1, sv_P1;
 	double dt, dt2, t_A, t_P, SVMJD, c1, c2, dt2_apo, CDHtime_cor;
@@ -5428,7 +5428,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 }
 
-void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double LMmass)
+void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass)
 {
 	TLMCCDataTable datatab;
 	TLMCCMEDQuantities medquant;
@@ -26486,7 +26486,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 			{
 				return 2;
 			}
-			MCGSMA = val / MCCNMC;
+			MCGSMA = val / SystemParameters.MCCNMC;
 		}
 		if (data.size() > 1 && data[1] != "")
 		{
@@ -29315,14 +29315,14 @@ PCMATC_5A:
 	goto PCMATC_1A;
 }
 
-void RTCC::FDOLaunchAnalog1(MPTSV sv)
+void RTCC::FDOLaunchAnalog1(EphemerisData sv)
 {
 	fdolaunchanalog1tab.LastUpdateTime = oapiGetSimTime();
 
 	double xval = 0.0;
 	double yval = 0.0;
 
-	if (sv.gravref != oapiGetObjectByName("Earth"))
+	if (sv.RBI != BODY_EARTH)
 	{
 		return;
 	}
@@ -29403,7 +29403,7 @@ void RTCC::FDOLaunchAnalog1(MPTSV sv)
 	fdolaunchanalog1tab.YVal.push_back(yval);
 }
 
-void RTCC::FDOLaunchAnalog2(MPTSV sv)
+void RTCC::FDOLaunchAnalog2(EphemerisData sv)
 {
 	fdolaunchanalog2tab.LastUpdateTime = oapiGetSimTime();
 
@@ -29411,7 +29411,7 @@ void RTCC::FDOLaunchAnalog2(MPTSV sv)
 	double xval = 0.0;
 	double yval = 0.0;
 
-	if (sv.gravref != oapiGetObjectByName("Earth"))
+	if (sv.RBI != BODY_EARTH)
 	{
 		return;
 	}
@@ -30760,7 +30760,7 @@ void RTCC::CMMRFMAT(int L, int id, int addr)
 	FormatREFSMMATCode(id, refs.ID, buff);
 	block->MatrixID.assign(buff);
 
-	MATRIX3 a = mul(refs.REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
+	MATRIX3 a = mul(refs.REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)));
 	block->REFSMMAT = a;
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
@@ -31090,7 +31090,7 @@ void RTCC::BMSVEC()
 	//Reset
 	BZCCANOE = VectorCompareTable();
 	//Get transformation matrix
-	Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+	Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
 
 	ELVCTRInputTable intab;
 	ELVCTROutputTable outtab;
@@ -31527,7 +31527,7 @@ void RTCC::LMMGRP(int veh, double gmt)
 	{
 		double DLNG = MCLGRA + MCLAMD + MCERTS * gmt / 3600.0;
 		GZLTRA.IU1_REFSMMAT = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -phi, 2, -MCLABN, 1);
-		GZLTRA.IU1_REFSMMAT = mul(GZLTRA.IU1_REFSMMAT, OrbMech::J2000EclToBRCS(AGCEpoch)); //Remove when coordinate system is correct
+		GZLTRA.IU1_REFSMMAT = mul(GZLTRA.IU1_REFSMMAT, OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)); //Remove when coordinate system is correct
 	}
 }
 
@@ -31879,7 +31879,7 @@ void RTCC::EMMGSTMP()
 	{
 		EZJGSTTB.Landmark_GET = 0.0;
 		VECTOR3 u = EZJGSTAR[EZGSTMED.G14_Star - 1];
-		MATRIX3 Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+		MATRIX3 Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
 		u = mul(Rot, u);
 		char buff[4];
 		sprintf_s(buff, "%03o", EZGSTMED.G14_Star);
@@ -31986,7 +31986,7 @@ void RTCC::EMMGSTMP()
 				}
 				R_VL = R_BL - R_BV;
 
-				MATRIX3 Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+				MATRIX3 Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
 				VECTOR3 u = mul(Rot, unit(R_VL));
 				EZJGSTTB.Landmark_SC = "";
 				if (EZGSTMED.G14_Vehicle == 1)

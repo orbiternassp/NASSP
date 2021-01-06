@@ -4681,7 +4681,7 @@ bool AGCEpochInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_AGCEpoch(double mjd)
 {
-	this->GC->rtcc->AGCEpoch = mjd;
+	this->GC->rtcc->SystemParameters.AGCEpoch = mjd;
 }
 
 void ApolloRTCCMFD::menuChangeVesselType()
@@ -4925,7 +4925,7 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
 
-	REFSMMAT = mul(REFSMMAT, OrbMech::J2000EclToBRCS(GC->rtcc->AGCEpoch));
+	REFSMMAT = mul(REFSMMAT, OrbMech::J2000EclToBRCS(GC->rtcc->SystemParameters.AGCEpoch));
 	if (G->vesseltype < 2)
 	{
 		GC->rtcc->BZSTLM.CMC_REFSMMAT = REFSMMAT;

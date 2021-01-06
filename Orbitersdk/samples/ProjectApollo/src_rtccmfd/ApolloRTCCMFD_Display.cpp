@@ -828,7 +828,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display2(Buffer, GC->rtcc->GetGMTLO()*3600.0);
 		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "AGC Epoch: %f", GC->rtcc->AGCEpoch);
+		sprintf(Buffer, "AGC Epoch: %f", GC->rtcc->SystemParameters.AGCEpoch);
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(4 * W / 8, 8 * H / 14, "Update Liftoff Time", 19);
@@ -5657,7 +5657,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		if (oapiGetSimTime() > GC->rtcc->fdolaunchanalog1tab.LastUpdateTime + 0.5)
 		{
-			MPTSV sv = GC->rtcc->StateVectorCalc(G->vessel);
+			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(G->vessel);
 			GC->rtcc->FDOLaunchAnalog1(sv);
 		}
 
@@ -5766,7 +5766,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		if (oapiGetSimTime() > GC->rtcc->fdolaunchanalog2tab.LastUpdateTime + 0.5)
 		{
-			MPTSV sv = GC->rtcc->StateVectorCalc(G->vessel);
+			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(G->vessel);
 			GC->rtcc->FDOLaunchAnalog2(sv);
 		}
 

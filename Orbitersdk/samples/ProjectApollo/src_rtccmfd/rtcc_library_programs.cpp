@@ -144,7 +144,7 @@ void RTCC::ELGLCV(double lat, double lng, VECTOR3 &out, double rad)
 
 	if (rad == 0.0)
 	{
-		R_M = MCSMLR;
+		R_M = SystemParameters.MCSMLR;
 	}
 	else
 	{

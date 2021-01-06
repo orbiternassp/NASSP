@@ -1027,7 +1027,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	LVDCLaunchAzimuth = 0.0;
 
 	AGCEphemOption = 0;
-	AGCEphemBRCSEpoch = GC->rtcc->AGCEpoch;
+	AGCEphemBRCSEpoch = GC->rtcc->SystemParameters.AGCEpoch;
 	AGCEphemTIMEM0 = floor(GC->rtcc->CalcGETBase()) + 6.75;
 	AGCEphemTEPHEM = GC->rtcc->CalcGETBase();
 	AGCEphemTLAND = GC->t_Land;
@@ -1609,7 +1609,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 		V.z *= pow(2, 7);
 	}
 
-	Rot = OrbMech::J2000EclToBRCS(GC->rtcc->AGCEpoch);
+	Rot = OrbMech::J2000EclToBRCS(GC->rtcc->SystemParameters.AGCEpoch);
 
 	EphemerisData sv;
 	sv.R = tmul(Rot, R);
@@ -1836,7 +1836,7 @@ void ARCore::StateVectorCalc()
 
 	UplinkSV = sv1;
 
-	Rot = OrbMech::J2000EclToBRCS(GC->rtcc->AGCEpoch);
+	Rot = OrbMech::J2000EclToBRCS(GC->rtcc->SystemParameters.AGCEpoch);
 
 	UplinkSV.R = mul(Rot, UplinkSV.R);
 	UplinkSV.V = mul(Rot, UplinkSV.V);
@@ -3651,7 +3651,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 	break;
 	case 14: //MCC Targeting
 	{
-		SV sv0;
+		EphemerisData sv0;
 		double CSMmass, LMmass;
 
 		if (GC->MissionPlanningActive)
@@ -3665,20 +3665,17 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 				break;
 			}
 
-			double lm_asc_weight, lm_dsc_weight, sivb_weight;
+			double cfg_weight, lm_asc_weight, lm_dsc_weight, sivb_weight;
 
-			sv0.R = EPHEM.R;
-			sv0.V = EPHEM.V;
-			sv0.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv0.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-			GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, cfg, sv0.mass, CSMmass, lm_asc_weight, lm_dsc_weight, sivb_weight);
+			sv0 = EPHEM;
+			GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, cfg, cfg_weight, CSMmass, lm_asc_weight, lm_dsc_weight, sivb_weight);
 			LMmass = lm_asc_weight + lm_dsc_weight;
 		}
 		else
 		{
-			sv0 = GC->rtcc->StateVectorCalc(vessel);
+			sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
 
-			CSMmass = sv0.mass;
+			CSMmass = vessel->GetMass();
 			if (GC->rtcc->PZMCCPLN.Config)
 			{
 				LMmass = GC->rtcc->GetDockedVesselMass(vessel);

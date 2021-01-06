@@ -27,6 +27,7 @@
     <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCSystemParameters.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h" />
