@@ -156,27 +156,14 @@ struct PMMCEN_INI
 	int year;
 };
 
-struct MPTSV;
 
 struct SV
 {
-	SV& operator=(const MPTSV& other);
 	VECTOR3 R = _V(0, 0, 0);
 	VECTOR3 V = _V(0, 0, 0);
 	double MJD = 0.0;
 	OBJHANDLE gravref = NULL;
 	double mass = 0.0;
-};
-
-struct MPTSV
-{
-	MPTSV();
-	MPTSV(const SV sv);
-	MPTSV& operator=(const SV& other);
-	VECTOR3 R;
-	VECTOR3 V;
-	double MJD;
-	OBJHANDLE gravref;
 };
 
 struct ITERSTATE
@@ -464,7 +451,6 @@ namespace OrbMech {
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout);
 	SV coast(SV sv0, double dt);
-	MPTSV coast(MPTSV sv0, double dt);
 	void PMMCEN(PMMCEN_VNI VNI, PMMCEN_INI INI, VECTOR3 &R1, VECTOR3 &V1, double &T1, int &ITS, int &IRS);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);

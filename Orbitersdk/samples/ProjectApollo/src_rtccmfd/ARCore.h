@@ -275,7 +275,7 @@ public:
 
 	//STATE VECTOR PAGE
 	bool SVSlot; //true = CSM, false = LEM
-	MPTSV UplinkSV;
+	EphemerisData UplinkSV;
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;

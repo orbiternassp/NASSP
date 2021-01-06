@@ -5,41 +5,6 @@
 inline double acosh(double z) { return log(z + sqrt(z + 1.0)*sqrt(z - 1.0)); }
 inline double atanh(double z){ return 0.5*log(1.0 + z) - 0.5*log(1.0 - z); }
 
-SV& SV::operator=(const MPTSV& other)
-{
-	this->gravref = other.gravref;
-	this->mass = 0.0;
-	this->MJD = other.MJD;
-	this->R = other.R;
-	this->V = other.V;
-	return *this;
-}
-
-MPTSV::MPTSV()
-{
-	R = _V(0, 0, 0);
-	V = _V(0, 0, 0);
-	MJD = 0.0;
-	gravref = NULL;
-}
-
-MPTSV::MPTSV(const SV sv)
-{
-	R = sv.R;
-	V = sv.V;
-	MJD = sv.MJD;
-	gravref = sv.gravref;
-}
-
-MPTSV& MPTSV::operator=(const SV& other)
-{
-	this->gravref = other.gravref;
-	this->MJD = other.MJD;
-	this->R = other.R;
-	this->V = other.V;
-	return *this;
-}
-
 namespace OrbMech{
 
 	double period(VECTOR3 R, VECTOR3 V, double mu)
@@ -1067,17 +1032,6 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	}
 	
 	return soichange;
-}
-
-MPTSV coast(MPTSV sv0, double dt)
-{
-	SV sv;
-	
-	sv.gravref = sv0.gravref;
-	sv.MJD = sv0.MJD;
-	sv.R = sv0.R;
-	sv.V = sv0.V;
-	return coast(sv, dt);
 }
 
 SV coast(SV sv0, double dt)

@@ -3139,7 +3139,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.V.z);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.MJD);
+		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.GMT);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 39)
@@ -4166,11 +4166,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display(Buffer, G->SVDesiredGET);
 		skp->Text(2 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->UplinkSV.gravref == oapiGetObjectByName("Earth"))
+		if (G->UplinkSV.RBI == BODY_EARTH)
 		{
 			skp->Text(2 * W / 8, 3 * H / 14, "Earth", 5);
 		}
-		else if (G->UplinkSV.gravref == oapiGetObjectByName("Moon"))
+		else if (G->UplinkSV.RBI == BODY_MOON)
 		{
 			skp->Text(2 * W / 8, 3 * H / 14, "Moon", 4);
 		}
@@ -4260,7 +4260,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(22 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.1f", G->UplinkSV.V.z);
 		skp->Text(22 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->UplinkSV.MJD, false);
+		GET_Display(Buffer, G->UplinkSV.GMT, false);
 		skp->Text(22 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
 	}
 	else if (screen == 49)

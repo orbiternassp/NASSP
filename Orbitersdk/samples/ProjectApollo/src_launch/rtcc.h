@@ -2746,8 +2746,6 @@ public:
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
-	MPTSV coast(MPTSV sv0, double dt);
-	MPTSV coast_conic(MPTSV sv0, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt);
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
@@ -4142,8 +4140,7 @@ public:
 		double t_launch;
 		double R_D, Y_D;
 		double R_D_dot, Y_D_dot, Z_D_dot;
-		MPTSV sv_CSM;
-		MPTSV sv_Insertion;
+		EphemerisData sv_Insertion;
 	} JZLAI;
 
 	struct AEGBlockSaveTable
@@ -4591,7 +4588,6 @@ protected:
 
 	//Auxiliary subroutines
 	MissionPlanTable *GetMPTPointer(int L);
-	MPTSV SVfromRVGMT(VECTOR3 R, VECTOR3 V, double GMT, int body);
 	int PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan, double &VectorFetchTime);
 	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
 	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI);

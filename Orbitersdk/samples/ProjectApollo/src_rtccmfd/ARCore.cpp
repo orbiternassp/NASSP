@@ -532,19 +532,8 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 	}
 	else
 	{
-		MPTSV sv = rtcc->StateVectorCalc(ves);
-
-		sv2.R = sv.R;
-		sv2.V = sv.V;
-		sv2.GMT = OrbMech::GETfromMJD(sv.MJD, rtcc->GetGMTBase());
-		if (sv.gravref == oapiGetObjectByName("Earth"))
-		{
-			sv2.RBI = BODY_EARTH;
-		}
-		else
-		{
-			sv2.RBI = BODY_MOON;
-		}
+		EphemerisData sv = rtcc->StateVectorCalcEphem(ves);
+		sv2 = sv;
 
 		int id;
 		char letter;
@@ -1797,12 +1786,10 @@ void ARCore::LandingSiteUplink()
 
 void ARCore::StateVectorCalc()
 {
-	SV sv0, sv1;
+	EphemerisData sv0, sv1;
 	MATRIX3 Rot;
 	VECTOR3 pos, vel;
 	double get;
-	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
-	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 
 	if (GC->MissionPlanningActive)
 	{
@@ -1823,15 +1810,12 @@ void ARCore::StateVectorCalc()
 			return;
 		}
 
-		sv1.R = EPHEM.R;
-		sv1.V = EPHEM.V;
-		sv1.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-		sv1.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+		sv1 = EPHEM;
 	}
 	else
 	{
-		sv0 = GC->rtcc->StateVectorCalc(svtarget);
-		sv1 = GC->rtcc->coast(sv0, SVDesiredGET - OrbMech::GETfromMJD(sv0.MJD, GC->rtcc->CalcGETBase()));
+		sv0 = GC->rtcc->StateVectorCalcEphem(svtarget);
+		sv1 = GC->rtcc->coast(sv0, SVDesiredGET - GC->rtcc->GETfromGMT(sv0.GMT));
 	}
 
 	UplinkSV = sv1;
@@ -1840,16 +1824,15 @@ void ARCore::StateVectorCalc()
 
 	UplinkSV.R = mul(Rot, UplinkSV.R);
 	UplinkSV.V = mul(Rot, UplinkSV.V);
-	UplinkSV.MJD = OrbMech::GETfromMJD(UplinkSV.MJD, GC->rtcc->CalcGETBase());
 
 	pos = UplinkSV.R;
 	vel = UplinkSV.V*0.01;
-	get = UplinkSV.MJD;
+	get = GC->rtcc->GETfromGMT(UplinkSV.GMT);
 
 	SVOctals[0] = 21;
 	SVOctals[1] = 1501;
 
-	if (sv1.gravref == hMoon)
+	if (sv1.RBI == BODY_MOON)
 	{
 		if (SVSlot)
 		{
@@ -1877,7 +1860,7 @@ void ARCore::StateVectorCalc()
 		return;
 	}
 
-	if (sv1.gravref == hEarth)
+	if (sv1.RBI == BODY_EARTH)
 	{
 		if (SVSlot)
 		{
@@ -2709,7 +2692,7 @@ int ARCore::subThread()
 	{
 		SPQOpt opt;
 		SPQResults res;
-		MPTSV sv_A, sv_P, sv_pre, sv_post;
+		SV sv_A, sv_P, sv_pre, sv_post;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -4009,8 +3992,10 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		GC->rtcc->JZLAI.R_D_dot = GC->rtcc->PZLTRT.InsertionRadialVelocity;
 		GC->rtcc->JZLAI.Y_D_dot = 0.0;
 		GC->rtcc->JZLAI.Z_D_dot = GC->rtcc->PZLTRT.InsertionHorizontalVelocity;
-		GC->rtcc->JZLAI.sv_CSM = sv_CSM;
-		GC->rtcc->JZLAI.sv_Insertion = sv_Ins;
+
+		GC->rtcc->JZLAI.sv_Insertion.R = sv_Ins.R;
+		GC->rtcc->JZLAI.sv_Insertion.V = sv_Ins.V;
+		GC->rtcc->JZLAI.sv_Insertion.GMT = OrbMech::GETfromMJD(sv_Ins.MJD, GC->rtcc->GetGMTBase());
 
 		Result = 0;
 	}

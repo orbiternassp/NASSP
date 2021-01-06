@@ -5200,15 +5200,7 @@ int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, doubl
 		PZLDPELM.sv_man_bef[i].R = res.sv_before[i].R;
 		PZLDPELM.sv_man_bef[i].V = res.sv_before[i].V;
 		PZLDPELM.sv_man_bef[i].GMT = OrbMech::GETfromMJD(res.sv_before[i].MJD, GMTBASE);
-		if (res.sv_before[i].gravref == hEarth)
-		{
-			PZLDPELM.sv_man_bef[i].RBI = BODY_EARTH;
-		}
-		else
-		{
-			PZLDPELM.sv_man_bef[i].RBI = BODY_MOON;
-		}
-		
+		PZLDPELM.sv_man_bef[i].RBI = BODY_MOON;	
 		PZLDPELM.V_man_after[i] = res.V_after[i];
 		PZLDPELM.plan[i] = med_k16.Vehicle;
 	}
@@ -8086,18 +8078,6 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 	pad.entries = opt->entries;
 }
 
-MPTSV RTCC::coast(MPTSV sv0, double dt)
-{
-	MPTSV sv1;
-	OBJHANDLE gravout = NULL;
-
-	OrbMech::oneclickcoast(sv0.R, sv0.V, sv0.MJD, dt, sv1.R, sv1.V, sv0.gravref, gravout);
-	sv1.gravref = gravout;
-	sv1.MJD = sv0.MJD + dt / 24.0 / 3600.0;
-
-	return sv1;
-}
-
 SV RTCC::coast(SV sv0, double dt)
 {
 	SV sv1;
@@ -8119,18 +8099,6 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt)
 	OrbMech::oneclickcoast(sv1.R, sv1.V, MJD, dt, sv2.R, sv2.V, sv1.RBI, sv2.RBI);
 	sv2.GMT = sv1.GMT + dt;
 	return sv2;
-}
-
-MPTSV RTCC::coast_conic(MPTSV sv0, double dt)
-{
-	MPTSV sv1;
-	double mu = GGRAV * oapiGetMass(sv0.gravref);
-
-	OrbMech::rv_from_r0v0(sv0.R, sv0.V, dt, sv1.R, sv1.V, mu);
-	sv1.gravref = sv0.gravref;
-	sv1.MJD = sv0.MJD + dt / 24.0 / 3600.0;
-
-	return sv1;
 }
 
 void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD)
@@ -21199,17 +21167,6 @@ OBJHANDLE RTCC::GetGravref(int body)
 	}
 
 	return hMoon;
-}
-
-MPTSV RTCC::SVfromRVGMT(VECTOR3 R, VECTOR3 V, double GMT, int body)
-{
-	MPTSV sv;
-
-	sv.R = R;
-	sv.V = V;
-	sv.MJD = OrbMech::MJDfromGET(GMT, GMTBASE);
-	sv.gravref = GetGravref(body);
-	return sv;
 }
 
 int RTCC::PMMXFR(int id, void *data)
