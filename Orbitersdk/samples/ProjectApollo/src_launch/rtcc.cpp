@@ -1805,9 +1805,9 @@ void RTCC::QMMBLD(int year, int month, int day)
 		MDVSTP.t_DS0 = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		MDVSTP.t_DS0 = dtemp1;
-		MDVSTP.t_DS1 = dtemp2;
-		MDVSTP.t_DS2 = dtemp3;
+		MDVSTP.t_DS1 = dtemp1;
+		MDVSTP.t_DS2 = dtemp2;
+		MDVSTP.t_DS3 = dtemp3;
 		MDVSTP.hx[0][0] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
@@ -8508,14 +8508,14 @@ RTCC_PMMSPT_15_2:
 		{
 			//Some message
 		}
-		for (int N = 0;N < 4;N++)
+		for (int N = 0;N < 5;N++)
 		{
 			A_Z += MDVSTP.hx[0][N] * pow((t_D - MDVSTP.t_D1) / MDVSTP.t_SD1, N);
 		}
 	}
 	else if (t_D < MDVSTP.t_DS2)
 	{
-		for (int N = 0;N < 4;N++)
+		for (int N = 0;N < 5;N++)
 		{
 			A_Z += MDVSTP.hx[1][N] * pow((t_D - MDVSTP.t_D2) / MDVSTP.t_SD2, N);
 		}
@@ -8526,7 +8526,7 @@ RTCC_PMMSPT_15_2:
 		{
 			//Some message
 		}
-		for (int N = 0;N < 4;N++)
+		for (int N = 0;N < 5;N++)
 		{
 			A_Z += MDVSTP.hx[2][N] * pow((t_D - MDVSTP.t_D3) / MDVSTP.t_SD3, N);
 		}
@@ -14172,12 +14172,12 @@ void RTCC::PMXSPT(std::string source, int n)
 		{
 			int hh, mm;
 			double ss;
-			OrbMech::SStoHHMMSS(RTCCONLINEMON.DoubleBuffer[0], hh, mm, ss);
+			OrbMech::SStoHHMMSSTH(RTCCONLINEMON.DoubleBuffer[0], hh, mm, ss);
 			sprintf_s(Buffer, "LIFTOFF TIME(GMT) = 00/%02d/%02d/%05.2lf", hh, mm, ss);
 			message.push_back(Buffer);
 			sprintf_s(Buffer, "LAUNCH AZIMUTH (DEG) = %.6lf", RTCCONLINEMON.DoubleBuffer[1]);
 			message.push_back(Buffer);
-			OrbMech::SStoHHMMSS(RTCCONLINEMON.DoubleBuffer[2], hh, mm, ss);
+			OrbMech::SStoHHMMSSTH(RTCCONLINEMON.DoubleBuffer[2], hh, mm, ss);
 			sprintf_s(Buffer, "VECTOR TIME(HRS) = 00/%02d/%02d/%05.2lf CS = ECT", hh, mm, ss);
 			message.push_back(Buffer);
 			sprintf_s(Buffer, "   R(ER) = %.10lf %.10lf %.10lf", RTCCONLINEMON.VectorBuffer[0].x, RTCCONLINEMON.VectorBuffer[0].y, RTCCONLINEMON.VectorBuffer[0].z);
@@ -19436,21 +19436,21 @@ void RTCC::PMMIEV(double T_L)
 	A_Z = 0.0;
 	if (T_D < MDVSTP.t_DS1)
 	{
-		for (int N = 0;N < 4;N++)
+		for (int N = 0;N < 5;N++)
 		{
 			A_Z += MDVSTP.hx[0][N] * pow((T_D - MDVSTP.t_D1) / MDVSTP.t_SD1, N);
 		}
 	}
 	else if (T_D < MDVSTP.t_DS2)
 	{
-		for (int N = 0;N < 4;N++)
+		for (int N = 0;N < 5;N++)
 		{
 			A_Z += MDVSTP.hx[1][N] * pow((T_D - MDVSTP.t_D2) / MDVSTP.t_SD2, N);
 		}
 	}
 	else
 	{
-		for (int N = 0;N < 4;N++)
+		for (int N = 0;N < 5;N++)
 		{
 			A_Z += MDVSTP.hx[2][N] * pow((T_D - MDVSTP.t_D3) / MDVSTP.t_SD3, N);
 		}
@@ -23881,8 +23881,10 @@ void RTCC::PMMREAST()
 	//TBD: Check if any AST slots are available
 
 	//Convert MED, fetch state vector, propagate to TIG
-	EphemerisData sv0;
+	EphemerisData sv0, sv_abort;
 	double GMTV, GMT0, dt;
+	int ITS;
+
 	GMTV = GMTfromGET(med_f75.T_V);
 	GMT0 = GMTfromGET(med_f75.T_0);
 	if (ELFECH(GMTV, RTCC_MPT_CSM, sv0))
@@ -23890,20 +23892,7 @@ void RTCC::PMMREAST()
 		return;
 	}
 	dt = GMT0 - sv0.GMT;
-	PMMCEN_INI ini;
-	PMMCEN_VNI vni;
-	int ITS;
-	EphemerisData sv_abort;
-	ini.body = sv0.RBI;
-	ini.stop_ind = 1;
-	vni.dir = 1.0;
-	vni.dt_max = dt;
-	vni.dt_min = 0.0;
-	vni.GMTBASE = GetGMTBase();
-	vni.R = sv0.R;
-	vni.V = sv0.V;
-	vni.T = sv0.GMT;
-	OrbMech::PMMCEN(vni, ini, sv_abort.R, sv_abort.V, sv_abort.GMT, ITS, sv_abort.RBI);
+	PMMCEN(sv0, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_abort, ITS);
 
 	//Conic solutions
 	VECTOR3 DV;
@@ -31500,7 +31489,7 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 	{
 		if (EZJGSTAR.size() == 0)
 		{
-			ifstream startable(".\\Config\\ProjectApollo\\RTCC Star Table.txt");
+			ifstream startable(".\\Config\\ProjectApollo\\RTCC\\Star Table.txt");
 			std::string line;
 			VECTOR3 temp;
 

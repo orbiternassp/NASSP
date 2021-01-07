@@ -150,6 +150,14 @@ namespace OrbMech{
 		seconds = (mins - minutes) * 60.0;
 	}
 
+	void SStoHHMMSSTH(double time, int &hours, int &minutes, double &seconds)
+	{
+		int cs = (int)(round(time*100.0));
+		hours = cs / 360000;
+		minutes = (cs - 360000 * hours) / 6000;
+		seconds = (double)(cs - 360000 * hours - 6000 * minutes) / 100.0;
+	}
+
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
 	{
 		R = _V(cos(decl)*cos(rtasc), cos(decl)*sin(rtasc), sin(decl))*rmag;

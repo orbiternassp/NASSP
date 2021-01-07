@@ -488,8 +488,11 @@ void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display
 
 void ApolloRTCCMFD::GET_Display2(char* Buff, double time) //Display a time in the format hhh:mm:ss.ss
 {
-	double time2 = round(time);
-	sprintf(Buff, "%03.0f:%02.0f:%05.2f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
+	int cs = (int)(round(time*100.0));
+	int hr = cs / 360000;
+	int min = (cs - 360000*hr) / 6000;
+	double sec = (double)(cs - 360000 * hr - 6000 * min) / 100.0;
+	sprintf(Buff, "%03d:%02d:%05.2lf", hr, min, sec);
 }
 
 void ApolloRTCCMFD::GET_Display3(char* Buff, double time) //Display a time in the format hhh:mm:ss.s
@@ -4611,13 +4614,13 @@ void ApolloRTCCMFD::set_CDHtimemode()
 void ApolloRTCCMFD::menuSetLaunchDate()
 {
 	bool LaunchDateInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the launch date (Format: day,month,year)", LaunchDateInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the launch date (Format: day:month:year)", LaunchDateInput, 0, 20, (void*)this);
 }
 
 bool LaunchDateInput(void *id, char *str, void *data)
 {
 	int year, month, day;
-	if (sscanf(str, "%d,%d,%d", &day, &month, &year) == 3)
+	if (sscanf(str, "%d:%d:%d", &day, &month, &year) == 3)
 	{
 		((ApolloRTCCMFD*)data)->set_launchdate(year, month, day);
 		return true;
@@ -8428,7 +8431,7 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		menuSetFIDOLaunchAnalogNo1Page();
 		break;
 	case 41:
-		menuSetFIDOLaunchAnalogNo1Page();
+		menuSetFIDOLaunchAnalogNo2Page();
 		break;
 	case 43:
 		//FDO LAUNCH DIG NO 1

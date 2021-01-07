@@ -3091,7 +3091,7 @@ public:
 	//Generate the near Earth tradeoff display
 	struct MED_F70
 	{
-		std::string Site;
+		std::string Site = "No Site!";
 		//Time of vector (hrs.)
 		double T_V = 0.0;
 		//Minimum abort time (hrs.)

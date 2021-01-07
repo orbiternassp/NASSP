@@ -2249,18 +2249,18 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu66[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Choose Mode", 0, 'Q' },
+		{ "Choose page for solution", 0, 'H' },
+		{ "Choose landing site", 0, 'G' },
+		{ "Vector time", 0, 'U' },
+		{ "Minimum time", 0, 'V' },
+		{ "Maximum time", 0, 'L' },
 
 		{ "Cycle through pages", 0, 'P' },
 		{ "Calc tradeoff display", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Entry profile", 0, 'E' },
 		{ "Back to menu", 0, 'B' },
 	};
 

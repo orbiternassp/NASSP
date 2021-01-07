@@ -45,8 +45,8 @@ bool CoastIntegrator2::Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tm
 	V0 = V = V_CON = V00;
 	TMAX = tmax;
 	TMIN = tmin;
-	HMULT = dir;
 	STOPVA = deltat;
+	HMULT = dir;
 
 	SetBodyParameters(planet);
 	ISTOPS = stopcond;
@@ -59,6 +59,7 @@ bool CoastIntegrator2::Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tm
 	r_SPH = 9.0*OrbMech::R_Earth;
 	if (ISTOPS > 2)
 	{
+		//Radius
 		if (STOPVA > 8.0 && STOPVA < 10.0)
 		{
 			//If end condition is radius and close to normal reference switch, use 14 Er instead
@@ -67,14 +68,26 @@ bool CoastIntegrator2::Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tm
 	}
 	else if (ISTOPS < 2)
 	{
-		//In time mode, don't check on termination until we are close to done
+		//Time
+		//Set HMULT to desired propagation direction. Then start using absolute value of STOPVA
+		if (STOPVA >= 0.0)
+		{
+			HMULT = abs(HMULT);
+		}
+		else
+		{
+			HMULT = -abs(HMULT);
+		}
+
 		STOPVA = abs(STOPVA);
+		//In time mode, don't check on termination until we are close to done
 		TMIN = STOPVA - 2.0*dt_lim;
 	}
 
 	if (ISTOPS == 2)
 	{
-		//Still gives really accurate flight path anglr
+		//Flight path angle
+		//Still gives really accurate flight path angle
 		DEV = 100.0;
 	}
 	else if (ISTOPS == 3)
@@ -295,7 +308,23 @@ PMMCEN_Edit_5C: //New step size
 	RES2 = RCALC;
 	goto PMMCEN_Edit_7B;
 PMMCEN_Edit_7A:
-	sprintf(oapiDebugString(), "ERROR!");
+	sprintf(oapiDebugString(), "PMMCEN: How did we get here?");
+	//Chord method. Needs work.
+	//Was the last step a step in the right direction?
+	if (RCALC*RES2 > 0)
+	{
+		//No, go backwards
+		VAR = dt;
+		dt_temp = -dt / 2.0;
+		RES2 = RCALC;
+		Rectification();
+	}
+	else
+	{
+		VAR = VAR - dt;
+		dt_temp = VAR / 2.0;
+		StoreVariables();
+	}
 PMMCEN_Edit_7B: //Don't stop yet
 	dt = dt_temp;
 	IEND = 0;
@@ -372,63 +401,72 @@ VECTOR3 CoastIntegrator2::adfunc(VECTOR3 R)
 	double r, costheta, P2, P3, P4, P5;
 	VECTOR3 U_R, a_dP, a_d, a_dQ, a_dS;
 
-	if (INITF == false)
+	a_dP = a_dQ = a_dS = _V(0, 0, 0);
+
+	if (INITF == false || tau != TS)
 	{
-		INITF = true;
-		MATRIX3 obli = OrbMech::GetObliquityMatrix(P, pRTCC->GetGMTBase() + CurrentTime() / 24.0 / 3600.0);
-		U_Z = mul(obli, _V(0, 1, 0));
-		U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+		if (INITF == false)
+		{
+			INITF = true;
+			MATRIX3 obli = OrbMech::GetObliquityMatrix(P, pRTCC->GetGMTBase() + CurrentTime() / 24.0 / 3600.0);
+			U_Z = mul(obli, _V(0, 1, 0));
+			U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+		}
+
+		TS = tau;
+		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, R_EM, V_EM, R_ES);
 	}
 
-	a_dP = _V(0, 0, 0);
 	r = length(R);
-	if (r < r_dP)
-	{
-		U_R = unit(R);
-		costheta = dotp(U_R, U_Z);
 
-		P2 = 3.0 * costheta;
-		P3 = 0.5*(15.0*costheta*costheta - 3.0);
+	//Only calculate perturbations if we are above surface of primary body
+	if (r > R_E)
+	{
+		if (r < r_dP)
+		{
+			U_R = unit(R);
+			costheta = dotp(U_R, U_Z);
+
+			P2 = 3.0 * costheta;
+			P3 = 0.5*(15.0*costheta*costheta - 3.0);
+
+			if (P == BODY_EARTH)
+			{
+				a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Earth * OrbMech::power(R_E / r, 2.0);
+				P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
+				a_dP += (U_R*P4 - U_Z * P3)*OrbMech::J3_Earth * OrbMech::power(R_E / r, 3.0);
+				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
+				a_dP += (U_R*P5 - U_Z * P4)*OrbMech::J4_Earth * OrbMech::power(R_E / r, 4.0);
+			}
+			else
+			{
+				a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Moon * OrbMech::power(R_E / r, 2.0);
+			}
+
+			a_dP *= mu / OrbMech::power(r, 2.0);
+		}
+
+		VECTOR3 R_PS, R_SC;
+		double q_Q, q_S;
 
 		if (P == BODY_EARTH)
 		{
-			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Earth * OrbMech::power(R_E / r, 2.0);
-			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-			a_dP += (U_R*P4 - U_Z * P3)*OrbMech::J3_Earth * OrbMech::power(R_E / r, 3.0);
-			P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-			a_dP += (U_R*P5 - U_Z * P4)*OrbMech::J4_Earth * OrbMech::power(R_E / r, 4.0);
+			R_PQ = R_EM;
+			R_PS = R_ES;
 		}
 		else
 		{
-			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Moon * OrbMech::power(R_E / r, 2.0);
+			R_PQ = -R_EM;
+			R_PS = R_ES - R_EM;
 		}
+		R_QC = R - R_PQ;
+		R_SC = R - R_PS;
 
-		a_dP *= mu / OrbMech::power(r, 2.0);
+		q_Q = dotp(R - R_PQ * 2.0, R) / OrbMech::power(length(R_PQ), 2.0);
+		q_S = dotp(R - R_PS * 2.0, R) / OrbMech::power(length(R_PS), 2.0);
+		a_dQ = -(R_PQ*fq(q_Q) + R)*mu_Q / OrbMech::power(length(R_QC), 3.0);
+		a_dS = -(R_PS*fq(q_S) + R)*OrbMech::mu_Sun / OrbMech::power(length(R_SC), 3.0);
 	}
-
-	VECTOR3 R_PS, R_SC;
-	double q_Q, q_S;
-
-	pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, R_EM, V_EM, R_ES);
-
-	if (P == BODY_EARTH)
-	{
-		R_PQ = R_EM;
-		R_PS = R_ES;
-	}
-	else
-	{
-		R_PQ = -R_EM;
-		R_PS = R_ES - R_EM;
-	}
-	R_QC = R - R_PQ;
-	R_SC = R - R_PS;
-
-	q_Q = dotp(R - R_PQ * 2.0, R) / OrbMech::power(length(R_PQ), 2.0);
-	q_S = dotp(R - R_PS * 2.0, R) / OrbMech::power(length(R_PS), 2.0);
-	a_dQ = -(R_PQ*fq(q_Q) + R)*mu_Q / OrbMech::power(length(R_QC), 3.0);
-	a_dS = -(R_PS*fq(q_S) + R)*OrbMech::mu_Sun / OrbMech::power(length(R_SC), 3.0);
-
 	a_d = a_dP + a_dQ + a_dS;
 	return a_d;
 }

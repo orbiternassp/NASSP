@@ -109,6 +109,8 @@ private:
 	int INITE;
 	double DEL, AQ, BQ, DISQ, dtesc[2];
 	double dt_temp;
+	//Stored time of last forcing function init
+	double TS;
 
 	//Constants
 	static const double K, dt_lim;
