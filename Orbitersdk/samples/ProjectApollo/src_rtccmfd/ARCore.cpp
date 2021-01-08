@@ -316,7 +316,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 
 		rtcc->med_k18.psi_DS = -93.88 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
-		rtcc->med_k17.DwellOrbits = 11;
+		rtcc->GZGENCSN.LDPPDwellOrbits = 11;
 		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.96;
 		rtcc->med_k40.eta_1 = 14.4;
 		rtcc->PZREAP.RRBIAS = 1250.0;
@@ -361,7 +361,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 		rtcc->med_k18.psi_DS = -76.31 + 360.0;
 		rtcc->med_k18.HPLOI1 = 59.6;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
-		rtcc->med_k17.DwellOrbits = 11;
+		rtcc->GZGENCSN.LDPPDwellOrbits = 11;
 		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.94;
 		rtcc->med_k40.eta_1 = 21.6;
 		rtcc->PZREAP.RRBIAS = 1250.0;
@@ -403,8 +403,8 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 
 		rtcc->med_k18.psi_DS = -91.0 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
-		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
-		rtcc->med_k17.DwellOrbits = 11;
+		rtcc->GZGENCSN.LDPPDescentFlightArc = 16.0*RAD;
+		rtcc->GZGENCSN.LDPPDwellOrbits = 11;
 		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.9;
 		rtcc->med_k40.eta_1 = 36.0;
 		rtcc->PZREAP.IRMAX = 40.0;
@@ -438,9 +438,9 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 
 		rtcc->med_k18.psi_DS = -90.0 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
-		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
-		rtcc->med_k17.DwellOrbits = rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
-		rtcc->med_k17.DescIgnHeight = 52500.0*0.3048;
+		rtcc->GZGENCSN.LDPPDescentFlightArc = 16.0*RAD;
+		rtcc->GZGENCSN.LDPPDwellOrbits = rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
+		rtcc->GZGENCSN.LDPPHeightofPDI = 52500.0*0.3048;
 		rtcc->med_k40.DW = -16.0;
 		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.87;
 		rtcc->med_k40.eta_1 = 46.8;
@@ -477,11 +477,11 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 		rtcc->med_k18.psi_DS = -90.0 + 360.0;
 		rtcc->med_k18.HPLOI1 = 52.8;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
-		rtcc->med_k17.DescentFlightArc = -10.0*RAD;
+		rtcc->GZGENCSN.LDPPDescentFlightArc = -10.0*RAD;
 		rtcc->med_k40.DW = 20.0;
 		rtcc->med_k40.HP_LLS = 13.17;
 		rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
-		rtcc->med_k17.DescIgnHeight = 40000.0*0.3048;
+		rtcc->GZGENCSN.LDPPHeightofPDI = 40000.0*0.3048;
 		rtcc->PZREAP.IRMAX = 80.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
 		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 47.0*60.0;
@@ -4714,7 +4714,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			break;
 		}
 
-		UpdateTLITargetTable();
+		//UpdateTLITargetTable();
 
 		//MED string was previously saved
 		GC->rtcc->GMGMED(GC->rtcc->RTCCMEDBUFFER);

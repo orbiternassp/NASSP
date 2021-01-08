@@ -1978,9 +1978,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(4 * W / 8, 1 * H / 14, "Initialization for Lunar Descent Planning (K17)", 47);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		if (GC->rtcc->med_k17.Azimuth != 0.0)
+		if (GC->rtcc->GZGENCSN.LDPPAzimuth != 0.0)
 		{
-			sprintf(Buffer, "%.3f°", GC->rtcc->med_k17.Azimuth*DEG);
+			sprintf(Buffer, "%.3f°", GC->rtcc->GZGENCSN.LDPPAzimuth*DEG);
 			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
@@ -1988,10 +1988,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 2 * H / 14, "Optimum Azimuth", 15);
 		}
 
-		sprintf(Buffer, "%.0f ft", GC->rtcc->med_k17.DescIgnHeight / 0.3048);
+		sprintf(Buffer, "%.0f ft", GC->rtcc->GZGENCSN.LDPPHeightofPDI / 0.3048);
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->med_k17.PoweredDescSimFlag)
+		if (GC->rtcc->GZGENCSN.LDPPPoweredDescentSimFlag)
 		{
 			skp->Text(1 * W / 8, 6 * H / 14, "Simulate powered descent (N/A)", 30);
 		}
@@ -2000,16 +2000,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 6 * H / 14, "Do not simulate powered descent", 31);
 		}
 
-		GET_Display(Buffer, GC->rtcc->med_k17.PoweredDescTime);
+		GET_Display(Buffer, GC->rtcc->GZGENCSN.LDPPTimeofPDI);
 		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%d", GC->rtcc->med_k17.DwellOrbits);
+		sprintf(Buffer, "%d", GC->rtcc->GZGENCSN.LDPPDwellOrbits);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.2f min", GC->rtcc->med_k17.DescentFlightTime / 60.0);
+		sprintf(Buffer, "%.2f min", GC->rtcc->GZGENCSN.LDPPDescentFlightTime / 60.0);
 		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.2f°", GC->rtcc->med_k17.DescentFlightArc*DEG);
+		sprintf(Buffer, "%.2f°", GC->rtcc->GZGENCSN.LDPPDescentFlightArc*DEG);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 19)
@@ -5030,6 +5030,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%02d:%02d:%04d", GC->rtcc->EZCHECKDIS.R_Day[0], GC->rtcc->EZCHECKDIS.R_Day[1], GC->rtcc->EZCHECKDIS.R_Day[2]);
 		skp->Text(13 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(10 * W / 32, 4 * H / 28, "VID", 3);
+		skp->Text(13 * W / 32, 4 * H / 28, GC->rtcc->EZCHECKDIS.VID, strlen(GC->rtcc->EZCHECKDIS.VID));
 		skp->Text(7 * W / 32, 5 * H / 28, "XT", 2);
 		skp->Text(18 * W / 32, 3 * H / 28, "K-FAC", 5);
 		skp->Text(16 * W / 32, 4 * H / 28, "RF", 2);

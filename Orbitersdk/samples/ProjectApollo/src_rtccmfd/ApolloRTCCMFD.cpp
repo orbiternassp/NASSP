@@ -199,13 +199,10 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "SKYLAB_DH1", G->SkylabDH1);
 	papiWriteScenario_double(scn, "SKYLAB_DH2", G->SkylabDH2);
 
-	oapiWriteScenario_int(scn, "DOI_N", GC->rtcc->med_k17.DwellOrbits);
 	papiWriteScenario_double(scn, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 	papiWriteScenario_double(scn, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
 	papiWriteScenario_double(scn, "LDPPGETTH3", GC->rtcc->med_k16.GETTH3);
 	papiWriteScenario_double(scn, "LDPPGETTH4", GC->rtcc->med_k16.GETTH4);
-	papiWriteScenario_double(scn, "DOI_PERIANG", GC->rtcc->med_k17.DescentFlightArc);
-	papiWriteScenario_double(scn, "DOI_alt", GC->rtcc->med_k17.DescIgnHeight);
 
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
 	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_LunarLiftoff);
@@ -321,13 +318,10 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "SKYLAB_DH1", G->SkylabDH1);
 		papiReadScenario_double(line, "SKYLAB_DH2", G->SkylabDH2);
 
-		papiReadScenario_int(line, "DOI_N", GC->rtcc->med_k17.DwellOrbits);
 		papiReadScenario_double(line, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 		papiReadScenario_double(line, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
 		papiReadScenario_double(line, "LDPPGETTH3", GC->rtcc->med_k16.GETTH3);
 		papiReadScenario_double(line, "LDPPGETTH4", GC->rtcc->med_k16.GETTH4);
-		papiReadScenario_double(line, "DOI_PERIANG", GC->rtcc->med_k17.DescentFlightArc);
-		papiReadScenario_double(line, "DOI_alt", GC->rtcc->med_k17.DescIgnHeight);
 
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
 		papiReadScenario_double(line, "t_Liftoff_guess", G->t_LunarLiftoff);
@@ -4659,7 +4653,7 @@ bool LaunchTimeInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_LaunchTime(int hours, int minutes, double seconds)
 {
 	char Buff[128];
-	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hours, minutes, seconds);
+	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hours, minutes, seconds);
 	GC->rtcc->GMGMED(Buff);
 }
 
@@ -4774,7 +4768,7 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
 	char Buff[128];
 	//Update actual liftoff time
-	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hh, mm, ss);
+	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 	//Update GMT of zeroing CMC clock
 	sprintf_s(Buff, "P15,AGC,%d:%d:%lf;", hh, mm, ss);
@@ -5885,7 +5879,7 @@ bool LDPPDwellOrbitsInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDwellOrbits(int N)
 {
-	GC->rtcc->med_k17.DwellOrbits = N;
+	GC->rtcc->GZGENCSN.LDPPDwellOrbits = N;
 }
 
 void ApolloRTCCMFD::menuSetLDPPDescentFlightArc()
@@ -5906,7 +5900,7 @@ bool LDPPDescentFlightArcInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDescentFlightArc(double ang)
 {
-	GC->rtcc->med_k17.DescentFlightArc = ang*RAD;
+	GC->rtcc->GZGENCSN.LDPPDescentFlightArc = ang*RAD;
 }
 
 void ApolloRTCCMFD::menuSetLDPPDescIgnHeight()
@@ -5927,12 +5921,12 @@ bool LDPPDescIgnHeightInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDescIgnHeight(double alt)
 {
-	GC->rtcc->med_k17.DescIgnHeight = alt * 0.3048;
+	GC->rtcc->GZGENCSN.LDPPHeightofPDI = alt * 0.3048;
 }
 
 void ApolloRTCCMFD::cycleLDPPPoweredDescSimFlag()
 {
-	GC->rtcc->med_k17.PoweredDescSimFlag = !GC->rtcc->med_k17.PoweredDescSimFlag;
+	GC->rtcc->GZGENCSN.LDPPPoweredDescentSimFlag = !GC->rtcc->GZGENCSN.LDPPPoweredDescentSimFlag;
 }
 
 void ApolloRTCCMFD::menuSetLDPPMode()
@@ -7676,7 +7670,7 @@ bool LDPPAzimuthInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPAzimuth(double azi)
 {
-	GC->rtcc->med_k17.Azimuth = azi*RAD;
+	GC->rtcc->GZGENCSN.LDPPAzimuth = azi*RAD;
 }
 
 void ApolloRTCCMFD::menuSetLDPPPoweredDescTime()
@@ -7699,7 +7693,7 @@ bool LDPPPoweredDescTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPPoweredDescTime(double pdi)
 {
-	GC->rtcc->med_k17.PoweredDescTime = pdi;
+	GC->rtcc->GZGENCSN.LDPPTimeofPDI = pdi;
 }
 
 void ApolloRTCCMFD::menuLDPPThresholdTime1()
@@ -7837,7 +7831,7 @@ bool LDPPDescentFlightTimeInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDescentFlightTime(double dt)
 {
-	GC->rtcc->med_k17.DescentFlightTime = dt * 60.0;
+	GC->rtcc->GZGENCSN.LDPPDescentFlightTime = dt * 60.0;
 }
 
 void ApolloRTCCMFD::cycleLDPPVehicle()

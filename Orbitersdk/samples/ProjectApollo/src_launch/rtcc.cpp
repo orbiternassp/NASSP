@@ -1326,7 +1326,7 @@ RTCC::RTCC()
 	MCTWAV = 472.121 / (LBS*1000.0);
 
 	MCVIGM = 584.0;
-	MCVWMN = 0.0;
+	MCVWMN = 10000.0; //Minimum S-IVB weight
 	MCVKPC = 0.0;
 	MCVCPQ = 10.0;
 	MCVEP1 = 1000.0;
@@ -5149,12 +5149,12 @@ int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, doubl
 {
 	LDPPOptions opt;
 
-	opt.azi_nom = med_k17.Azimuth;
+	opt.azi_nom = GZGENCSN.LDPPAzimuth;
 	opt.GETbase = GETbase;
-	opt.H_DP = med_k17.DescIgnHeight;
+	opt.H_DP = GZGENCSN.LDPPHeightofPDI;
 	opt.H_W = med_k16.DesiredHeight;
 	opt.IDO = med_k16.Sequence - 2;
-	if (med_k17.Azimuth != 0.0)
+	if (GZGENCSN.LDPPAzimuth != 0.0)
 	{
 		opt.I_AZ = 1;
 	}
@@ -5162,7 +5162,7 @@ int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, doubl
 	{
 		opt.I_AZ = 0;
 	}
-	if (med_k17.PoweredDescSimFlag)
+	if (GZGENCSN.LDPPPoweredDescentSimFlag)
 	{
 		opt.I_PD = 1;
 	}
@@ -5174,7 +5174,7 @@ int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, doubl
 	opt.I_TPD = 0;
 	opt.Lat_LS = lat;
 	opt.Lng_LS = lng;
-	opt.M = med_k17.DwellOrbits;
+	opt.M = GZGENCSN.LDPPDwellOrbits;
 	opt.MODE = med_k16.Mode;
 	opt.R_LS = rad;
 	opt.sv0 = sv;
@@ -5182,9 +5182,9 @@ int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, doubl
 	opt.TH[1] = med_k16.GETTH2;
 	opt.TH[2] = med_k16.GETTH3;
 	opt.TH[3] = med_k16.GETTH4;
-	opt.theta_D = med_k17.DescentFlightArc;
-	opt.t_D = med_k17.DescentFlightTime;
-	opt.T_PD = med_k17.PoweredDescTime;
+	opt.theta_D = GZGENCSN.LDPPDescentFlightArc;
+	opt.t_D = GZGENCSN.LDPPDescentFlightTime;
+	opt.T_PD = GZGENCSN.LDPPTimeofPDI;
 	opt.W_LM = 0.0;
 
 	LDPP ldpp;
@@ -7466,6 +7466,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_MCGRAG", MCGRAG);
 	SAVE_DOUBLE("RTCC_MCGRIC", MCGRIC);
 	SAVE_DOUBLE("RTCC_MCGRIL", MCGRIL);
+	SAVE_DOUBLE("RTCC_MCGREF", MCGREF);
 	SAVE_DOUBLE("RTCC_MCLSDA", MCLSDA);
 	SAVE_DOUBLE("RTCC_MCLCDA", MCLCDA);
 	SAVE_DOUBLE("RTCC_MCLAMD", MCLAMD);
@@ -7484,6 +7485,11 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_GZGENCSN_DKIDELTAH", GZGENCSN.DKIDeltaH);
 	SAVE_DOUBLE("RTCC_GZGENCSN_SPQDELTAH", GZGENCSN.SPQDeltaH);
 	SAVE_DOUBLE("RTCC_GZGENCSN_SPQELEVATIONANGLE", GZGENCSN.SPQElevationAngle);
+	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPAzimuth", GZGENCSN.LDPPAzimuth);
+	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPHeightofPDI", GZGENCSN.LDPPHeightofPDI);
+	SAVE_INT("RTCC_GZGENCSN_LDPPDwellOrbits", GZGENCSN.LDPPDwellOrbits);
+	SAVE_BOOL("RTCC_GZGENCSN_LDPPPoweredDescentSimFlag", GZGENCSN.LDPPPoweredDescentSimFlag);
+	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 
 	SAVE_DOUBLE("RTCC_TLCCGET", PZMCCPLN.MidcourseGET);
 	SAVE_DOUBLE("RTCC_TLCCVectorGET", PZMCCPLN.VectorGET);
@@ -7629,6 +7635,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_MCGRAG", MCGRAG);
 		LOAD_DOUBLE("RTCC_MCGRIC", MCGRIC);
 		LOAD_DOUBLE("RTCC_MCGRIL", MCGRIL);
+		LOAD_DOUBLE("RTCC_MCGREF", MCGREF);
 		LOAD_DOUBLE("RTCC_MCLSDA", MCLSDA);
 		LOAD_DOUBLE("RTCC_MCLCDA", MCLCDA);
 		LOAD_DOUBLE("RTCC_MCLAMD", MCLAMD);
@@ -7647,6 +7654,11 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_GZGENCSN_DKIDELTAH", GZGENCSN.DKIDeltaH);
 		LOAD_DOUBLE("RTCC_GZGENCSN_SPQDELTAH", GZGENCSN.SPQDeltaH);
 		LOAD_DOUBLE("RTCC_GZGENCSN_SPQELEVATIONANGLE", GZGENCSN.SPQElevationAngle);
+		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPAzimuth", GZGENCSN.LDPPAzimuth);
+		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPHeightofPDI", GZGENCSN.LDPPHeightofPDI);
+		LOAD_INT("RTCC_GZGENCSN_LDPPDwellOrbits", GZGENCSN.LDPPDwellOrbits);
+		LOAD_BOOL("RTCC_GZGENCSN_LDPPPoweredDescentSimFlag", GZGENCSN.LDPPPoweredDescentSimFlag);
+		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 
 		LOAD_DOUBLE("RTCC_TLCCGET", PZMCCPLN.MidcourseGET);
 		LOAD_DOUBLE("RTCC_TLCCVectorGET", PZMCCPLN.VectorGET);
@@ -8439,8 +8451,8 @@ RTCC_PMMSPT_12_2:
 		{
 			return 77;
 		}
-		R = sv_out.R / OrbMech::R_Earth;
-		V = sv_out.V / OrbMech::R_Earth*3600.0;
+		R = sv_out.R;
+		V = sv_out.V;
 		goto RTCC_PMMSPT_12_2;
 	}
 	T_RP = t;
@@ -20671,6 +20683,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	{
 		sprintf_s(EZCHECKDIS.VEH, "CSM");
 	}
+	sprintf_s(EZCHECKDIS.VID, "%s", table->StationID.c_str());
 	EZCHECKDIS.GET = GETfromGMT(sv_out.GMT);
 	EZCHECKDIS.GMT = sv_out.GMT;
 
@@ -22341,10 +22354,14 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	res.WEDGE_ANG = 0.0;
 	res.DH = 0.0;
 
+	sprintf_s(res.PGNS_Veh, "");
+	sprintf_s(res.AGS_Veh, "");
+
 	if (man->AttitudeCode == 5)
 	{
 		res.PGNS_DV = _V(0, 0, 0);
 		res.AGS_DV = man->dV_LVLH / 0.3048;
+		sprintf_s(res.AGS_Veh, "LM");
 	}
 	else if (man->AttitudeCode == 4)
 	{
@@ -22352,6 +22369,15 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 		if (man->TVC == 3)
 		{
 			//Calc AGS DV, done further down
+		}
+
+		if (MPT_ID == RTCC_MPT_CSM)
+		{
+			sprintf_s(res.PGNS_Veh, "CSM");
+		}
+		else
+		{
+			sprintf_s(res.PGNS_Veh, "LM");
 		}
 	}
 	else

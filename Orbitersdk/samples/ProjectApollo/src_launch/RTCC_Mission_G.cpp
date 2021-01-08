@@ -1945,7 +1945,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.Sequence = 1;
 		med_k16.Vehicle = RTCC_MPT_CSM;
 
-		med_k17.Azimuth = 0.0;
+		GZGENCSN.LDPPAzimuth = 0.0;
 
 		LunarDescentPlanningTable table;
 		LunarDescentPlanningProcessor(sv, calcParams.TEPHEM, BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], R_LLS, table);

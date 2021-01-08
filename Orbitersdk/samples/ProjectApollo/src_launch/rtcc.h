@@ -214,18 +214,6 @@ struct MED_K16
 	int Vehicle = RTCC_MPT_CSM; //1 = CSM, 3 = LEM (Instead of Vector ID)
 };
 
-//Initialization for Lunar Descent Planning
-struct MED_K17
-{
-	double Azimuth = 0.0;					//Greater or equal to zero, lower than 360°. If 0, LDPP will compute azimuth
-	double DescIgnHeight = 50000.0*0.3048;	//Feet
-	bool PoweredDescSimFlag = false;//true = simulate powered descent
-	double PoweredDescTime = 0.0;	//Time for powered descent ignition
-	int DwellOrbits = 0;			//Number of dwell orbits desired between DOI and PDI
-	double DescentFlightTime = 11.0*60.0; //Minutes
-	double DescentFlightArc = 15.0*RAD;	//Degrees
-};
-
 //Change Vehicle Weight
 struct MED_M50
 {
@@ -3320,7 +3308,6 @@ public:
 	} med_m86;
 
 	MED_K16 med_k16;
-	MED_K17 med_k17;
 
 	struct MED_M49
 	{
@@ -3891,19 +3878,19 @@ public:
 		//Block 38
 		double ActualWedgeAngle;
 		//Block 40
-		double LDPPAzimuth;
+		double LDPPAzimuth = 0.0; //Greater or equal to zero, lower than 360°. If 0, LDPP will compute azimuth
 		//Block 41
-		double LDPPHeightofPDI;
+		double LDPPHeightofPDI = 50000.0*0.3048;
 		//Block 42 1st word
-		int LDPPDwellOrbits;
+		int LDPPDwellOrbits = 0; //Number of dwell orbits desired between DOI and PDI
 		//Block 42 2nd word
-		bool LDPPPoweredDescentSimFlag;
+		bool LDPPPoweredDescentSimFlag = false; //true = simulate powered descent
 		//Block 43
-		double LDPPTimeofPDI;
+		double LDPPTimeofPDI = 0.0;	//Time for powered descent ignition
 		//Block 44
-		double LDPPDescentFlightTime;
+		double LDPPDescentFlightTime = 11.0*60.0; //Minutes
 		//Block 45
-		double LDPPDescentFlightArc;
+		double LDPPDescentFlightArc = 15.0*RAD;
 		//Block 46
 		double SPQDeltaH = 15.0*1852.0;
 		//Block 47
