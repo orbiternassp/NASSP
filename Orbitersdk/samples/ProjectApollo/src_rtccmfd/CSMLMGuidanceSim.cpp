@@ -484,7 +484,11 @@ PMMRKJ_LABEL_22C:
 		Aux->GMT_BO = sv2.GMT;
 		if (TArr.KEPHOP >= 1)
 		{
-			Eph->table.push_back(sv2);
+			//Don't store same state vector twice, relevant for zero maneuvers
+			if (Eph->table.back().GMT != sv2.GMT)
+			{
+				Eph->table.push_back(sv2);
+			}
 		}
 		Aux->sv_FF = sv_ff;
 		Aux->V_G = VGN;

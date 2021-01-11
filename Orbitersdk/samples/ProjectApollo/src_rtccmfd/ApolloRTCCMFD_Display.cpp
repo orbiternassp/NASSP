@@ -4175,32 +4175,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(2 * W / 8, 3 * H / 14, "Moon", 4);
 		}
 
-		if (GC->MissionPlanningActive)
-		{
-			if (G->SVSlot)
-			{
-				if (GC->pCSM)
-				{
-					sprintf(Buffer, GC->pCSM->GetName());
-				}
-				else
-				{
-					sprintf(Buffer, "No Vehicle");
-				}
-			}
-			else
-			{
-				if (GC->pLM)
-				{
-					sprintf(Buffer, GC->pLM->GetName());
-				}
-				else
-				{
-					sprintf(Buffer, "No Vehicle");
-				}
-			}
-		}
-		else
+		if (GC->MissionPlanningActive == false)
 		{
 			if (G->svtarget != NULL)
 			{
@@ -5029,8 +5004,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(9 * W / 32, 3 * H / 28, "R-DAY", 5);
 		sprintf(Buffer, "%02d:%02d:%04d", GC->rtcc->EZCHECKDIS.R_Day[0], GC->rtcc->EZCHECKDIS.R_Day[1], GC->rtcc->EZCHECKDIS.R_Day[2]);
 		skp->Text(13 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
-		skp->Text(10 * W / 32, 4 * H / 28, "VID", 3);
-		skp->Text(13 * W / 32, 4 * H / 28, GC->rtcc->EZCHECKDIS.VID, strlen(GC->rtcc->EZCHECKDIS.VID));
+		skp->Text(9 * W / 32, 4 * H / 28, "VID", 3);
+		skp->Text(11 * W / 32, 4 * H / 28, GC->rtcc->EZCHECKDIS.VID, strlen(GC->rtcc->EZCHECKDIS.VID));
 		skp->Text(7 * W / 32, 5 * H / 28, "XT", 2);
 		skp->Text(18 * W / 32, 3 * H / 28, "K-FAC", 5);
 		skp->Text(16 * W / 32, 4 * H / 28, "RF", 2);
@@ -5283,29 +5258,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 2 * H / 14, "CSM", 3);
 		}
 
-		if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
+		if (GC->pMPTVessel != NULL)
 		{
-			if (GC->pLM != NULL)
-			{
-				sprintf(Buffer, GC->pLM->GetName());
-				skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text(1 * W / 16, 4 * H / 14, "None", 4);
-			}
+			sprintf(Buffer, GC->pMPTVessel->GetName());
+			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			if (GC->pCSM != NULL)
-			{
-				sprintf(Buffer, GC->pCSM->GetName());
-				skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text(1 * W / 16, 4 * H / 14, "None", 4);
-			}
+			skp->Text(1 * W / 16, 4 * H / 14, "None", 4);
 		}
 
 		if (GC->rtcc->med_m50.CSMWT >= 0)

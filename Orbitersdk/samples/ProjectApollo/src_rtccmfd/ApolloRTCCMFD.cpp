@@ -218,8 +218,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "DKI_N_PB", G->DKI_N_PB);
 
 	papiWriteScenario_bool(scn, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
-	oapiWriteScenario_int(scn, "MPTCM_number", GC->pCSMnumber);
-	oapiWriteScenario_int(scn, "MPTLM_number", GC->pLMnumber);
 }
 
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
@@ -337,27 +335,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "DKI_N_PB", G->DKI_N_PB);
 
 		papiReadScenario_bool(line, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
-		papiReadScenario_int(line, "MPTCM_number", GC->pCSMnumber);
-		papiReadScenario_int(line, "MPTLM_number", GC->pLMnumber);
 
 		//G->coreButtons.SelectPage(this, G->screen);
-	}
-
-	if (GC->pCSMnumber >= 0)
-	{
-		OBJHANDLE hVes = oapiGetVesselByIndex(GC->pCSMnumber);
-		if (hVes)
-		{
-			GC->pCSM = oapiGetVesselInterface(hVes);
-		}
-	}
-	if (GC->pLMnumber >= 0)
-	{
-		OBJHANDLE hVes = oapiGetVesselByIndex(GC->pLMnumber);
-		if (hVes)
-		{
-			GC->pLM = oapiGetVesselInterface(hVes);
-		}
 	}
 }
 
@@ -3666,32 +3645,16 @@ void ApolloRTCCMFD::menuMPTInitM50M55Vehicle()
 
 	vesselcount = oapiGetVesselCount();
 
-	if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
+	if (GC->MPTVesselNumber < vesselcount - 1)
 	{
-		if (GC->pLMnumber < vesselcount - 1)
-		{
-			GC->pLMnumber++;
-		}
-		else
-		{
-			GC->pLMnumber = 0;
-		}
-
-		GC->pLM = oapiGetVesselInterface(oapiGetVesselByIndex(GC->pLMnumber));
+		GC->MPTVesselNumber++;
 	}
 	else
 	{
-		if (GC->pCSMnumber < vesselcount - 1)
-		{
-			GC->pCSMnumber++;
-		}
-		else
-		{
-			GC->pCSMnumber = 0;
-		}
-
-		GC->pCSM = oapiGetVesselInterface(oapiGetVesselByIndex(GC->pCSMnumber));
+		GC->MPTVesselNumber = 0;
 	}
+
+	GC->pMPTVessel = oapiGetVesselInterface(oapiGetVesselByIndex(GC->MPTVesselNumber));
 }
 
 void ApolloRTCCMFD::CheckoutMonitorCalc()

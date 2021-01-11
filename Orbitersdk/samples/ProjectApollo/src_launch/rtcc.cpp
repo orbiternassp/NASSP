@@ -114,6 +114,14 @@ void papiWriteScenario_SV(FILEHANDLE scn, char *item, EphemerisData sv) {
 	oapiWriteLine(scn, buffer);
 }
 
+void papiWriteScenario_SV(FILEHANDLE scn, char *item, int i, RTCC::StateVectorTableEntry vec) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %d %s %d %d %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, i, vec.VectorCode.c_str(), vec.ID, vec.Vector.RBI, vec.Vector.GMT, vec.Vector.R.x, vec.Vector.R.y, vec.Vector.R.z, vec.Vector.V.x, vec.Vector.V.y, vec.Vector.V.z);
+	oapiWriteLine(scn, buffer);
+}
+
 bool papiReadScenario_SV(char *line, char *item, EphemerisData &sv)
 {
 	char buffer[256];
@@ -123,6 +131,26 @@ bool papiReadScenario_SV(char *line, char *item, EphemerisData &sv)
 			EphemerisData v;
 			if (sscanf(line, "%s %d %lf %lf %lf %lf %lf %lf %lf", buffer, &v.RBI, &v.GMT, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 9) {
 				sv = v;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool papiReadScenario_SV(char *line, char *item, RTCC::StateVectorTableEntry *vec)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			char buffer2[64];
+			int i, ID;
+			EphemerisData v;
+			if (sscanf(line, "%s %d %s %d %d %lf %lf %lf %lf %lf %lf %lf", buffer, &i, buffer2, &ID, &v.RBI, &v.GMT, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 12) {
+				vec[i].ID = ID;
+				vec[i].VectorCode.assign(buffer2);
+				vec[i].Vector = v;				
 				return true;
 			}
 		}
@@ -1870,6 +1898,14 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 			else if (papiReadScenario_double(Buff, "LSRad", dtemp))
 			{
 				BZLAND.rad[RTCC_LMPOS_BEST] = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "TLCC_AZ_min", dtemp))
+			{
+				PZMCCPLN.AZ_min = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "TLCC_AZ_max", dtemp))
+			{
+				PZMCCPLN.AZ_max = dtemp * RAD;
 			}
 		}
 	}
@@ -7495,6 +7531,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLCCVectorGET", PZMCCPLN.VectorGET);
 	SAVE_DOUBLE("RTCC_TLCC_TLMIN", PZMCCPLN.TLMIN);
 	SAVE_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
+	SAVE_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
+	SAVE_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 
 	SAVE_DOUBLE2("RTCC_SFP_DPSI_LOI", PZSFPTAB.blocks[0].dpsi_loi, PZSFPTAB.blocks[1].dpsi_loi);
 	SAVE_DOUBLE2("RTCC_SFP_DPSI_TEI", PZSFPTAB.blocks[0].dpsi_tei, PZSFPTAB.blocks[1].dpsi_tei);
@@ -7587,6 +7625,20 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_SV(scn, "RTCC_SVSTORE1", calcParams.SVSTORE1);
 	papiWriteScenario_SV(scn, "RTCC_MPTCM_ANCHOR", EZANCHR1.AnchorVectors[9]);
 	papiWriteScenario_SV(scn, "RTCC_MPTLM_ANCHOR", EZANCHR3.AnchorVectors[9]);
+	for (i = 0;i < 12;i++)
+	{
+		if (BZUSEVEC.data[i].ID > 0)
+		{
+			papiWriteScenario_SV(scn, "RTCC_BZUSEVEC", i, BZUSEVEC.data[i]);
+		}
+	}
+	for (i = 0;i < 8;i++)
+	{
+		if (BZEVLVEC.data[i].ID > 0)
+		{
+			papiWriteScenario_SV(scn, "RTCC_BZEVLVEC", i, BZEVLVEC.data[i]);
+		}
+	}
 
 	PZMPTCSM.SaveState(scn, "MPTCSM_BEGIN", "MPTCSM_END");
 	PZMPTLEM.SaveState(scn, "MPTLEM_BEGIN", "MPTLEM_END");
@@ -7664,6 +7716,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCCVectorGET", PZMCCPLN.VectorGET);
 		LOAD_DOUBLE("RTCC_TLCC_TLMIN", PZMCCPLN.TLMIN);
 		LOAD_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
+		LOAD_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
+		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 
 		LOAD_DOUBLE2("RTCC_SFP_DPSI_LOI", PZSFPTAB.blocks[0].dpsi_loi, PZSFPTAB.blocks[1].dpsi_loi);
 		LOAD_DOUBLE2("RTCC_SFP_DPSI_TEI", PZSFPTAB.blocks[0].dpsi_tei, PZSFPTAB.blocks[1].dpsi_tei);
@@ -7749,6 +7803,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		papiReadScenario_SV(line, "RTCC_SVSTORE1", calcParams.SVSTORE1);
 		papiReadScenario_SV(line, "RTCC_MPTCM_ANCHOR", EZANCHR1.AnchorVectors[9]);
 		papiReadScenario_SV(line, "RTCC_MPTLM_ANCHOR", EZANCHR3.AnchorVectors[9]);
+		papiReadScenario_SV(line, "RTCC_BZUSEVEC", BZUSEVEC.data);
+		papiReadScenario_SV(line, "RTCC_BZEVLVEC", BZEVLVEC.data);
 
 		if (!strnicmp(line, "MPTCSM_BEGIN", sizeof("MPTCSM_BEGIN"))) {
 			PZMPTCSM.LoadState(scn, "MPTCSM_END");
@@ -14776,7 +14832,8 @@ void RTCC::EMSTIME(int L, int ID)
 
 		ELVCTR(in, out);
 
-		if (out.ErrorCode)
+		//Error code 2 is acceptable ("Order of interpolation performed less than order requested")
+		if (out.ErrorCode > 2)
 		{
 			tab->TUP = 0;
 			return;
@@ -14805,7 +14862,6 @@ void RTCC::EMSTIME(int L, int ID)
 		EMMDYNEL(sv_true, *tab);
 
 		tab->RevNum = CapeCrossingRev(L, sv_true.GMT);
-		PLAWDT(L, sv_true.GMT, tab->WT);
 		tab->TUP = out.TUP;
 	}
 }
@@ -14906,7 +14962,16 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		{
 			sprintf_s(tab->REF, "LUNAR");
 		}
-		tab->ORBWT = tcontab->WT*1000.0*LBS;
+
+		if (mpt->LastExecutedManeuver == 0)
+		{
+			tab->ORBWT = mpt->TotalInitMass*1000.0*LBS;
+
+		}
+		else
+		{
+			tab->ORBWT = mpt->mantable[mpt->LastExecutedManeuver - 1].TotalMassAfter *1000.0*LBS;
+		}
 	}
 
 	if (queid == 2)
@@ -15318,7 +15383,15 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 		sprintf_s(EZSPACE.VecID, mpt->StationID.c_str());
 		if (tctab->TUP > 0)
 		{
-			cfg_weight = tctab->WT;
+			if (mpt->LastExecutedManeuver == 0)
+			{
+				cfg_weight = mpt->TotalInitMass;
+
+			}
+			else
+			{
+				cfg_weight = mpt->mantable[mpt->LastExecutedManeuver - 1].TotalMassAfter;
+			}
 		}
 		else
 		{
@@ -15384,7 +15457,8 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			if (queid == 3)
 			{
 				EMSMISSInputTable emsin;
-				sv = EMMENI(emsin, sv, GMT - sv.GMT);
+				emsin.AnchorVector = sv;
+				sv = EMMENI(emsin, GMT - sv.GMT);
 			}
 		}
 		//MNV
@@ -15510,22 +15584,23 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			if (sv.RBI == BODY_EARTH)
 			{
 				//Try to find lunar sphere entry
+				emsin.AnchorVector = sv;
 				emsin.CutoffIndicator = 1;
 				emsin.StopParamRefFrame = 1;
 				emsin.MoonRelStopParam = 9.0*OrbMech::R_Earth;
 
-				EphemerisData sv_SI = EMMENI(emsin, sv, 10.0*24.0*3600.0);
+				EphemerisData sv_SI = EMMENI(emsin, 10.0*24.0*3600.0);
 				if (emsin.NIAuxOutputTable.TerminationCode == 1)
 				{
 					EZSPACE.GETSI = GETfromGMT(sv_SI.GMT);
 				}
 			}
 
-
+			emsin.AnchorVector = sv;
 			emsin.CutoffIndicator = 4;
 			emsin.StopParamRefFrame = 1;
 			emsin.MoonRelStopParam = 0.0;
-			EphemerisData sv1 = EMMENI(emsin, sv, 10.0*24.0*3600.0);
+			EphemerisData sv1 = EMMENI(emsin, 10.0*24.0*3600.0);
 			if (emsin.NIAuxOutputTable.TerminationCode != 4)
 			{
 				return 0;
@@ -16560,14 +16635,17 @@ RTCC_PMMMPT_10_A:
 	{
 		goto RTCC_PMMMPT_11_A;
 	}
-	sv_gmti = EMMENI(emsin, in.sv_before, GMTI - TIMP);
+	emsin.AnchorVector = in.sv_before;
+	sv_gmti = EMMENI(emsin, GMTI - TIMP);
 	DV_LVLH = PIEXDV(sv_gmti.R, sv_gmti.V, in.VehicleWeight, GetOnboardComputerThrust(in.Thruster), DV, false);
 	man.dV_LVLH = DV_LVLH;
 	man.Word67i[0] = 1;
 	goto RTCC_PMMMPT_11_B;
 RTCC_PMMMPT_11_A:
-	sv_gmti_other = EMMENI(emsin, in.sv_other, GMTBB - TIMP);
-	sv_gmti = EMMENI(emsin, in.sv_before, GMTBB - TIMP);
+	emsin.AnchorVector = in.sv_other;
+	sv_gmti_other = EMMENI(emsin, GMTBB - TIMP);
+	emsin.AnchorVector = in.sv_before;
+	sv_gmti = EMMENI(emsin, GMTBB - TIMP);
 	DV_LVLH = PIAEDV(DV, sv_gmti_other.R, sv_gmti_other.V, sv_gmti.R, false);
 	man.dV_LVLH = DV_LVLH;
 	man.Word67i[0] = 1;
@@ -16697,7 +16775,8 @@ RTCC_PMMMPT_12_A:
 	PARM[3] = GMTBB;
 	IP[3] = true;
 	TIG = GMTBB;
-	sv_gmti = EMMENI(emsin, in.sv_before, TIG - TIMP);
+	emsin.AnchorVector = in.sv_before;
+	sv_gmti = EMMENI(emsin, TIG - TIMP);
 	LAMP = LAMI * 10.0;
 	NIP = 6;
 	if (man.AttitudeCode == 3)
@@ -16757,7 +16836,8 @@ RTCC_PMMMPT_14_B:
 	sv_BO.V = aux.V_BO;
 	sv_BO.GMT = aux.GMT_BO;
 	sv_BO.RBI = aux.RBI;
-	sv_impt = EMMENI(emsin, sv_BO, TIMP - sv_BO.GMT);
+	emsin.AnchorVector = sv_BO;
+	sv_impt = EMMENI(emsin, TIMP - sv_BO.GMT);
 	ELPRES = OrbMech::GIMIKC(sv_impt.R, sv_impt.V, mu);
 	ELPRES.a /= OrbMech::R_Earth;
 	SUMN = 0.0;
@@ -16826,7 +16906,8 @@ RTCC_PMMMPT_17_B:
 	if (TIG != PARM[3])
 	{
 		TIG = PARM[3];
-		sv_gmti = EMMENI(emsin, in.sv_before, TIG - in.sv_before.GMT);
+		emsin.AnchorVector = in.sv_before;
+		sv_gmti = EMMENI(emsin, TIG - in.sv_before.GMT);
 	}
 	//Update PMMRKJ input table
 	integin.sv0 = sv_gmti;
@@ -16837,7 +16918,8 @@ RTCC_PMMMPT_17_B:
 	sv_BO.V = aux.V_BO;
 	sv_BO.GMT = aux.GMT_BO;
 	sv_BO.RBI = aux.RBI;
-	sv_impt = EMMENI(emsin, sv_BO, TIMP - sv_BO.GMT);
+	emsin.AnchorVector = sv_BO;
+	sv_impt = EMMENI(emsin, TIMP - sv_BO.GMT);
 	OSCELB = OrbMech::GIMIKC(sv_impt.R, sv_impt.V, mu);
 	OSCELB.a /= OrbMech::R_Earth;
 	IPI = 0;
@@ -16888,7 +16970,8 @@ RTCC_PMMMPT_20_B:
 		}
 	}
 	TIG = PARM[3];
-	sv_gmti = EMMENI(emsin, in.sv_before, TIG - in.sv_before.GMT);
+	emsin.AnchorVector = in.sv_before;
+	sv_gmti = EMMENI(emsin, TIG - in.sv_before.GMT);
 	goto RTCC_PMMMPT_14_C;
 
 	delete[] A;
@@ -17533,6 +17616,7 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 
 		InTable.EphemerisLeftLimitGMT = PresentGMT;
 		InTable.EphemerRightLimitGMT = PresentGMT + DTMAX;
+		InTable.ECIEphemerisIndicator = true;
 		InTable.ManCutoffIndicator = 1;
 		InTable.EphemTableIndicator = &table->EPHEM;
 		InTable.StopParamRefFrame = 2;
@@ -18329,16 +18413,16 @@ int RTCC::EMGVECSTOutput(int L, EphemerisData &sv)
 	return 0;
 }
 
-EphemerisData RTCC::EMMENI(EMSMISSInputTable &in, EphemerisData sv, double dt)
+EphemerisData RTCC::EMMENI(EMSMISSInputTable &in, double dt)
 {
 	EphemerisData svtemp;
 	double funct, RCALC, RES1, TIME, TIME_old, t_new;
 	int INITE = 0;
-	int gravref = sv.RBI;
+	int gravref = in.AnchorVector.RBI;
 	bool allow_stop, ephstore;
 	int stopcondition = in.CutoffIndicator;
 
-	CoastIntegrator coast(sv.R, sv.V, OrbMech::MJDfromGET(sv.GMT, GMTBASE), dt, sv.RBI, -1);
+	CoastIntegrator coast(in.AnchorVector.R, in.AnchorVector.V, OrbMech::MJDfromGET(in.AnchorVector.GMT, GMTBASE), dt, in.AnchorVector.RBI, -1);
 	bool stop = false;
 
 	if (in.CutoffIndicator > 0)
@@ -20578,8 +20662,9 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 			}
 			EMSMISSInputTable emsin;
 
+			emsin.AnchorVector = svtemp;
 			emsin.MaxIntegTime = GMT - svtemp.GMT;
-			sv_out = EMMENI(emsin, svtemp, emsin.MaxIntegTime);
+			sv_out = EMMENI(emsin, emsin.MaxIntegTime);
 		}
 		else
 		{
@@ -20665,8 +20750,8 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 			emsin.StopParamRefFrame = 1;
 			emsin.MoonRelStopParam = param;
 		}
-
-		sv_out = EMMENI(emsin, svtemp, 10.0*24.0*3600.0);
+		emsin.AnchorVector = svtemp;
+		sv_out = EMMENI(emsin, 10.0*24.0*3600.0);
 
 		if (emsin.CutoffIndicator != emsin.NIAuxOutputTable.TerminationCode)
 		{
@@ -23965,8 +24050,9 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 	in.StopParamRefFrame = 1;
 	in.MoonRelStopParam = 0.0;
 	in.CutoffIndicator = 4;
+	in.AnchorVector = sv;
 
-	EphemerisData sv2 = EMMENI(in, sv, 5.0*24.0*3600.0);
+	EphemerisData sv2 = EMMENI(in, 5.0*24.0*3600.0);
 
 	if (in.NIAuxOutputTable.TerminationCode != 4)
 	{
@@ -29078,24 +29164,24 @@ bool RTCC::PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& a
 
 	OELEMENTS coe;
 	double gamma_p, T_min, h_p = 0.0;
+	int stop_ind;
+	//Pre abort
+	EphemerisData sv0;
+	//Actual abort time
+	EphemerisData sv1;
+	//After burn
+	EphemerisData sv2;
+	//At reentry
+	EphemerisData sv_r;
 
 	PCMATCArray *vars = static_cast<PCMATCArray*>(varPtr);
 
-	PMMCEN_VNI vni;
-	vni.dt_max = var[3] * 3600.0 - vars->T0;
-	vni.GMTBASE = vars->GMTBASE;
-	vni.R = vars->R0;
-	vni.V = vars->V0;
-	vni.T = vars->T0;
-	PMMCEN_INI ini;
-	ini.body = vars->REF;
-	ini.stop_ind = 1;
+	sv0.R = vars->R0;
+	sv0.V = vars->V0;
+	sv0.GMT = vars->T0;
+	sv0.RBI = vars->REF;
+	PMMCEN(sv0, 0.0, 24.0*3600.0, 1, var[3] * 3600.0 - vars->T0, 1.0, sv1, stop_ind);
 
-	VECTOR3 R1, V1;
-	double T1;
-	int stop_ind, body1;
-
-	OrbMech::PMMCEN(vni, ini, R1, V1, T1, stop_ind, body1);
 	if (vars->IASD == 1)
 	{
 		goto PCMATC_5A;
@@ -29109,22 +29195,21 @@ bool RTCC::PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& a
 	B[5] = var[1];
 	B[6] = 1.0;
 
-	VECTOR3 R2, V2;
-	double T_a;
-	PIBURN(R1, V1, T1, B, R2, V2, T_a);
+	PIBURN(sv1.R, sv1.V, sv1.GMT, B, sv2.R, sv2.V, sv2.GMT);
+	sv2.RBI = sv1.RBI;
 PCMATC_1A:
-	if (body1 == BODY_MOON)
+	if (sv2.RBI == BODY_MOON)
 	{
 		goto PCMATC_2B;
 	}
 	double dt_ar;
 	if (vars->ISTP == -1)
 	{
-		dt_ar = var[4]*3600.0 - T_a;
+		dt_ar = var[4]*3600.0 - sv2.GMT;
 		goto PCMATC_3A;
 	}
-	coe = OrbMech::coe_from_sv(R2, V2, OrbMech::mu_Earth);
-	double a = OrbMech::GetSemiMajorAxis(R2, V2, OrbMech::mu_Moon);
+	coe = OrbMech::coe_from_sv(sv2.R, sv2.V, OrbMech::mu_Earth);
+	double a = OrbMech::GetSemiMajorAxis(sv2.R, sv2.V, OrbMech::mu_Moon);
 	double gamma_min;
 	if (coe.e > 1.0)
 	{
@@ -29165,68 +29250,45 @@ PCMATC_2B:
 	//Is H_PC switched on as a dependant variable?
 	if (vars->h_pc_on == true)
 	{
-		VECTOR3 R_p, V_p;
-		double T_p;
-		int IRS, ITS;
+		double dir;
+		EphemerisData sv_pc;
 
-		gamma_p = asin(dotp(unit(R2), unit(V2)));
+		gamma_p = asin(dotp(unit(sv2.R), unit(sv2.V)));
 		if (gamma_p >= 0.0)
 		{
-			vni.dir = -1.0;
+			dir = -1.0;
 		}
 		else
 		{
-			vni.dir = 1.0;
+			dir = 1.0;
 		}
-		vni.dt_max = 10.0*24.0*3600.0;
-		vni.dt_min = 0.0;
-		vni.end_cond = 0.0;
-		vni.R = R2;
-		vni.V = V2;
-		vni.T = T_a;
-		ini.body = body1;
-		ini.stop_ind = 2;
-		OrbMech::PMMCEN(vni, ini, R_p, V_p, T_p, ITS, IRS);
-		h_p = length(R_p) - BZLAND.rad[RTCC_LMPOS_BEST];
+
+		//Propagate from abort to pericynthion
+		PMMCEN(sv2, 0.0, 10.0*24.0*3600.0, 2, 0.0, dir, sv_pc, stop_ind);
+		h_p = length(sv_pc.R) - BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 	T_min = 0.0;
 PCMATC_3A:
-	vni.dir = 1.0;
-	vni.dt_max = 10.0*24.0*3600.0;
 	if (vars->ISTP == -1)
 	{
-		vni.end_cond = 0.0;
-		vni.dt_min = 0.0;
-		vni.dt_max = T_a;
-		ini.stop_ind = 1;
+		PMMCEN(sv2, 0.0, 10.0*24.0*3600.0, 1, dt_ar, 1.0, sv_r, stop_ind);
 	}
 	else
 	{
-		vni.dt_min = T_min;
-		vni.dt_max = 10.0*24.0*3600.0;
-		vni.end_cond = vars->gamma_stop;
-		ini.stop_ind = 2;
+		PMMCEN(sv2, T_min, 10.0*24.0*3600.0, 2, vars->gamma_stop, 1.0, sv_r, stop_ind);
 	}
-	vni.R = R2;
-	vni.V = V2;
-	vni.T = T_a;
-	ini.body = body1;
-	VECTOR3 R_r, V_r;
-	double T_r;
-	int ref_r;
-	OrbMech::PMMCEN(vni, ini, R_r, V_r, T_r, stop_ind, ref_r);
 
-	if (ref_r == BODY_MOON || (vars->ISTP == 1 && stop_ind != 2))
+	if (sv_r.RBI == BODY_MOON || (vars->ISTP == 1 && stop_ind != 2))
 	{
 		goto PCMATC_4C;
 	}
-	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, OrbMech::MJDfromGET(T_r, vars->GMTBASE));
-	VECTOR3 R_r_equ = rhtmul(Rot, R_r);
-	VECTOR3 V_r_equ = rhtmul(Rot, V_r);
-	double h_r = length(R_r) - OrbMech::R_Earth;
+	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, OrbMech::MJDfromGET(sv_r.GMT, vars->GMTBASE));
+	VECTOR3 R_r_equ = rhtmul(Rot, sv_r.R);
+	VECTOR3 V_r_equ = rhtmul(Rot, sv_r.V);
+	double h_r = length(sv_r.R) - OrbMech::R_Earth;
 	double r_r, v_r, lat_r, lng_r, gamma_r, azi_r;
-	PICSSC(true, R_r, V_r, r_r, v_r, lat_r, lng_r, gamma_r, azi_r);
-	double T_ar = T_r - T_a;
+	PICSSC(true, sv_r.R, sv_r.V, r_r, v_r, lat_r, lng_r, gamma_r, azi_r);
+	double T_ar = sv_r.GMT - sv2.GMT;
 
 	arr[0] = h_r / OrbMech::R_Earth;
 	arr[1] = lat_r;
@@ -29236,9 +29298,9 @@ PCMATC_3A:
 	arr[5] = gamma_r;
 	arr[6] = h_p / OrbMech::R_Earth;
 
-	vars->R_r = R_r;
-	vars->V_r = V_r;
-	vars->T_r = T_r;
+	vars->R_r = sv_r.R;
+	vars->V_r = sv_r.V;
+	vars->T_r = sv_r.GMT;
 	return true;
 PCMATC_4C:
 	return false;
@@ -29260,10 +29322,7 @@ PCMATC_5A:
 	integin.LMDESCJETT = 1e70;
 	integin.MANOP = vars->AttitudeCode;
 
-	integin.sv0.R = R2;
-	integin.sv0.V = V2;
-	integin.sv0.GMT = T_a;
-	integin.sv0.RBI = body1;
+	integin.sv0 = sv1;
 	integin.ThrusterCode = vars->ThrusterCode;
 	integin.TVC = vars->TVC;
 	integin.UllageOption = vars->UllageCode;
@@ -29281,9 +29340,10 @@ PCMATC_5A:
 	RTCCNIAuxOutputTable AuxTable;
 	CSMLMPoweredFlightIntegration numin(this, integin, Ierr, NULL, &AuxTable);
 	numin.PMMRKJ();
-	R2 = AuxTable.R_BO;
-	V2 = AuxTable.V_BO;
-	T_a = AuxTable.GMT_BO;
+	sv2.R = AuxTable.R_BO;
+	sv2.V = AuxTable.V_BO;
+	sv2.GMT = AuxTable.GMT_BO;
+	sv2.RBI = sv1.RBI;
 	goto PCMATC_1A;
 }
 
@@ -31097,7 +31157,8 @@ void RTCC::BMSVEC()
 
 			ELVCTR(intab, outtab);
 
-			if (outtab.ErrorCode)
+			//Error code 2 acceptable
+			if (outtab.ErrorCode > 2)
 			{
 				BMGPRIME("BMSVEC", 10);
 				BZCCANOE.error = true;

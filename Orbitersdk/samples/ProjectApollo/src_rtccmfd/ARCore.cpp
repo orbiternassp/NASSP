@@ -31,9 +31,8 @@ static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
 AR_GCore::AR_GCore(VESSEL* v)
 {
 	MissionPlanningActive = false;
-	pCSMnumber = -1;
-	pLMnumber = -1;
-	pCSM = pLM = NULL;
+	MPTVesselNumber = -1;
+	pMPTVessel = NULL;
 	mptInitError = 0;
 
 	mission = 0;
@@ -164,10 +163,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 
 		rtcc->PZMCCPLN.LOPC_M = 1;
 		rtcc->PZMCCPLN.LOPC_N = 0;
-		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -78.0*RAD;
 		rtcc->PZMCCPLN.REVS2 = rtcc->med_k40.REVS2 = 4;
-
-		
 	}
 	else if (mission == 9)
 	{
@@ -191,8 +187,6 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
-
-		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -91.0*RAD;
 
 		rtcc->PZMCCPLN.LOPC_M = 0;
 		rtcc->PZMCCPLN.LOPC_N = 0;
@@ -219,8 +213,6 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
 
-		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -91.0*RAD;
-
 		if (loadinitvalues)
 		{
 			sprintf(rtcc->MissionFileName, "Apollo 11 Constants");
@@ -242,8 +234,6 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 		t_Land = OrbMech::HHMMSSToSS(100.0, 43.0, 0.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
 
-		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -89.0*RAD;
-
 		rtcc->GMGMED("P80,1,CSM,7,18,1969;");
 		rtcc->GMGMED("P10,CSM,15:32:00;");
 	}
@@ -254,8 +244,6 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 		t_Land = OrbMech::HHMMSSToSS(103.0, 46.0, 0.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
 
-		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -86.0*RAD;
-
 		rtcc->GMGMED("P80,1,CSM,7,21,1969;");
 		rtcc->GMGMED("P10,CSM,16:09:00;");
 	}*/
@@ -265,8 +253,6 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1250.0;
-
-		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -75.0*RAD;
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5551.1299*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -133067.52*0.3048;
@@ -565,19 +551,9 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 void AR_GCore::MPTMassUpdate()
 {
 	//Mass Update
-	VESSEL *vessel = NULL;
-	if (rtcc->med_m50.Table == RTCC_MPT_LM)
-	{
-		vessel = pLM;
-	}
-	else
-	{
-		vessel = pCSM;
-	}
+	if (pMPTVessel == NULL) return;
 
-	if (vessel == NULL) return;
-
-	rtcc->MPTMassUpdate(vessel);
+	rtcc->MPTMassUpdate(pMPTVessel);
 }
 
 ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
@@ -1827,7 +1803,8 @@ void ARCore::StateVectorCalc()
 
 	pos = UplinkSV.R;
 	vel = UplinkSV.V*0.01;
-	get = GC->rtcc->GETfromGMT(UplinkSV.GMT);
+	UplinkSV.GMT = GC->rtcc->GETfromGMT(UplinkSV.GMT);
+	get = UplinkSV.GMT;
 
 	SVOctals[0] = 21;
 	SVOctals[1] = 1501;
@@ -3311,7 +3288,7 @@ int ARCore::subThread()
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
 
-GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
+			GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		}
 
 		Result = 0;

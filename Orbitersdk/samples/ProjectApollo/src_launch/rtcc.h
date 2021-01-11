@@ -2212,18 +2212,6 @@ struct LandmarkAcquisitionTable
 	double h[3][20];
 };
 
-struct MANTIMESData
-{
-	MANTIMESData() { ManData[0] = 0.0;ManData[1] = 0.0; }
-	double ManData[2];
-};
-
-struct ManeuverTimesTable
-{
-	int TUP = 0;
-	std::vector<MANTIMESData> Table;
-};
-
 struct LunarStayTimesTable
 {
 	double LunarStayBeginGMT = -1;
@@ -2510,80 +2498,6 @@ struct ASTData
 	VECTOR3 R0;
 	VECTOR3 V0;
 	double T0;
-};
-
-struct EMSMISSAuxOutputTable
-{
-	EphemerisData sv_cutoff;
-	int ErrorCode;
-	//0 = free-flight, 1 = end of maneuver
-	int TerminationCode;
-	//Maneuver number of last processed maneuver
-	unsigned ManeuverNumber;
-	double LunarStayBeginGMT;
-	double LunarStayEndGMT;
-};
-
-struct EMSMISSInputTable
-{
-	EphemerisData AnchorVector;
-	bool landed = false;
-	//Desired value of stopping parameter relative to the Earth
-	double EarthRelStopParam = 0.0;
-	//Desired value of stopping parameter relative to the Moon
-	double MoonRelStopParam = 0.0;
-	//Maximum time of integration
-	double MaxIntegTime = 10e70;
-	//Storage interval for maneuver ephemeris
-	double ManEphemDT = 10.0;
-	//Storage interval for lunar surface ephemeris
-	double LunarEphemDT = 3.0*60.0;
-	//Density multiplier value
-	double DensityMultiplier = 1.0;
-	//Left limit of ephemeris (time to begin ephemeris)
-	double EphemerisLeftLimitGMT;
-	//Right limit of ephemeris (time to end ephemeris)
-	double EphemerRightLimitGMT;
-	//Minimum time between ephemeris points
-	double MinEphemDT;
-	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
-	int StopParamRefFrame = 2;
-	//Minimum number of points desired in ephemeris
-	unsigned MinNumEphemPoints;
-	bool ECIEphemerisIndicator = true;
-	bool ECTEphemerisIndicator = false;
-	bool MCIEphemerisIndicator = false;
-	bool MCTEphemerisIndicator = false;
-	//Ephemeris build indicator
-	bool EphemerisBuildIndicator = false;
-	//Maneuver cut-off indicator (0 = cut at begin of maneuver, 1 = cut at end of maneuver, 2 = don't cut off)
-	int ManCutoffIndicator;
-	//Descent burn indicator
-	bool DescentBurnIndicator;
-	//Cut-off indicator (0 = none, 1 = radial distance, 2 = first reference switch, 3 = altitude above Earth or moon, 4 = flight-path angle)
-	int CutoffIndicator = 0;
-	//Integration direction indicator (+X-forward, -X-backward)
-	double IsForwardIntegration = 1.0;
-	//Coordinate system indicator (TBD)
-	//Maneuver indicator (true = consider maneuvers, false = don't consider maneuvers)
-	bool ManeuverIndicator;
-	//Vehicle code (1 = LEM, 3 = CSM)
-	int VehicleCode;
-	//Density multiplication override indicator
-	bool DensityMultOverrideIndicator = false;
-	//Table of ephemeris addresses indicator
-	EphemerisDataTable *EphemTableIndicator = NULL;
-	//Reference switch table indicator
-	//Maneuver times table indicator
-	ManeuverTimesTable *ManTimesIndicator = NULL;
-	//Runge-Kutta auxiliary output table indicator
-	RTCCNIAuxOutputTable *AuxTableIndicator = NULL;
-	//Runge-Kutta dense ephemeris table indicator
-	//Update in process override indicator (true = override, false = don't override)
-	bool UIPOverrideIndicator = false;
-	//Maneuver number of last maneuver to be ignored
-	unsigned IgnoreManueverNumber = 10000U;
-	EMSMISSAuxOutputTable NIAuxOutputTable;
 };
 
 struct ELVCTRInputTable
@@ -2882,7 +2796,7 @@ public:
 	//Miscellaneous Numerical Integration Control Module
 	void EMSMISS(EMSMISSInputTable &in);
 	//Encke Integrator
-	EphemerisData EMMENI(EMSMISSInputTable &in, EphemerisData sv, double dt);
+	EphemerisData EMMENI(EMSMISSInputTable &in, double dt);
 	//Spherical to inertial conversion
 	int EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	//Anchor Vector Maintenance Module
@@ -3810,7 +3724,6 @@ public:
 		double AoP = 0.0;
 		double RA = 0.0;
 		double l = 0.0;
-		double WT = 0.0;
 		int OrbitNum = 0;
 		int RevNum = 0;
 		//EI time?

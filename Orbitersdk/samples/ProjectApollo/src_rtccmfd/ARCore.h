@@ -41,11 +41,9 @@ public:
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 	double t_Land;				//Time of landing
 
-	VESSEL *pCSM;
-	VESSEL *pLM;
+	VESSEL *pMPTVessel;
+	int MPTVesselNumber;
 
-	int pCSMnumber;
-	int pLMnumber;
 	int mptInitError;
 
 	RTCC* rtcc;

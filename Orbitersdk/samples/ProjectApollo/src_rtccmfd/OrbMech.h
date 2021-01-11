@@ -371,6 +371,7 @@ namespace OrbMech {
 	const double J4_Earth = -1.60e-6;
 	const double J5_Earth = -0.15e-6;
 	const double J2_Moon = 207.108e-6;
+	const double J3_Moon = -2.1e-5;
 
 	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, double J2, double mu, double R_E, int P, VECTOR3 &R2, VECTOR3 &V2);
 	double kepler_E(double e, double M, double error2 = 1.e-8);
