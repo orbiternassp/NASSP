@@ -32,7 +32,7 @@ class EnckeFreeFlightIntegrator : public RTCCModule
 public:
 	EnckeFreeFlightIntegrator(RTCC *r);
 	~EnckeFreeFlightIntegrator();
-	bool Propagate(EMSMISSInputTable &in);
+	void Propagate(EMSMISSInputTable &in);
 
 private:
 	void Edit();

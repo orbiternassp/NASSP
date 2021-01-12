@@ -40,7 +40,7 @@ EnckeFreeFlightIntegrator::~EnckeFreeFlightIntegrator()
 {
 }
 
-bool EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
+void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 {
 	//Initialize
 	t0 = in.AnchorVector.GMT;
@@ -70,7 +70,20 @@ bool EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 	dt = dt_lim;
 	//Normally 9 Er
 	r_SPH = 9.0*OrbMech::R_Earth;
-	if (ISTOPS == 1 || ISTOPS == 3)
+	if (ISTOPS == 2)
+	{
+		//If we want to find a reference switch, set SOI to 14 Er, Moon relative stop variable to actual SOI (9 Er) and stop reference to Moon only
+		r_SPH = 14.0*OrbMech::R_Earth;
+		STOPVAM = 9.0*OrbMech::R_Earth;
+		StopParamRefFrame = 1;
+	}
+	//If we want to find a radius relative to Moon and it's between 8 and 10 Er, set SOI to 14 Er
+	if (ISTOPS == 1 && StopParamRefFrame > 0 && (STOPVAM > 8.0*OrbMech::R_Earth && STOPVAM < 10.0*OrbMech::R_Earth))
+	{
+		r_SPH = 14.0*OrbMech::R_Earth;
+	}
+
+	if (ISTOPS == 1 || ISTOPS == 2 || ISTOPS == 3)
 	{
 		//1 meter tolerance for radius and height
 		DEV = 1.0;
@@ -114,7 +127,6 @@ bool EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 	in.NIAuxOutputTable.sv_cutoff.GMT = CurrentTime();
 	in.NIAuxOutputTable.sv_cutoff.RBI = P;
 	in.NIAuxOutputTable.TerminationCode = ISTOPS;
-	return true;
 }
 
 void EnckeFreeFlightIntegrator::Edit()
@@ -130,12 +142,6 @@ void EnckeFreeFlightIntegrator::Edit()
 			//Are we leaving the sphere of influence?
 			if (rr > r_SPH)
 			{
-				//Cutoff on reference switch?
-				if (ISTOPS == 2)
-				{
-					IEND = 2;
-					return;
-				}
 				VECTOR3 V_PQ;
 
 				R_PQ = -R_EM;
@@ -158,13 +164,6 @@ void EnckeFreeFlightIntegrator::Edit()
 
 			if (length(R_QC) < r_SPH)
 			{
-				//Cutoff on reference switch?
-				if (ISTOPS == 2)
-				{
-					IEND = 2;
-					return;
-				}
-
 				V_PQ = V_EM;
 				R_CON = R_CON - R_PQ;
 				V_CON = V_CON - V_PQ;
@@ -193,11 +192,11 @@ EMMENI_Edit_3B:
 	}
 	else
 	{
-		RCALC = 1.0;
+		RCALC = 1000000000.0;
 	}
 	if (ISTOPS > 0 && (StopParamRefFrame == 2 || P == StopParamRefFrame))
 	{
-		if (ISTOPS == 1)
+		if (ISTOPS == 1 || ISTOPS == 2)
 		{
 			FUNCT = length(R);
 			if (P == BODY_EARTH)
