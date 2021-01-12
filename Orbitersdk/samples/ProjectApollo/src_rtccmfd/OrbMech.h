@@ -603,7 +603,6 @@ namespace OrbMech {
 	void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W);
 
 	//AEG
-	CELEMENTS BrouwerMeanToOsculating(CELEMENTS arr, int body);
 	CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body);
 	CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body);
 	CELEMENTS KeplerToEquinoctial(CELEMENTS kep);

@@ -1,7 +1,7 @@
 /****************************************************************************
 This file is part of Project Apollo - NASSP
 
-Coast Numerical Integrator, RTCC Module PMMCEN
+Encke Numerical Free Flight Integrator, RTCC Module EMMENI
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,35 +21,48 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
-#include "CoastNumericalIntegrator.h"
+#include "EnckeIntegrator.h"
 #include "OrbMech.h"
 #include "rtcc.h"
 
-const double CoastIntegrator2::K = 0.1;
-const double CoastIntegrator2::dt_lim = 1000.0;
+const double EnckeFreeFlightIntegrator::K = 0.1;
+const double EnckeFreeFlightIntegrator::dt_lim = 1000.0;
 
-CoastIntegrator2::CoastIntegrator2(RTCC *r) : RTCCModule(r)
+EnckeFreeFlightIntegrator::EnckeFreeFlightIntegrator(RTCC *r) : RTCCModule(r)
 {
-	
+	for (int i = 0;i < 4;i++)
+	{
+		pEph[i] = NULL;
+	}
 }
 
-CoastIntegrator2::~CoastIntegrator2()
+EnckeFreeFlightIntegrator::~EnckeFreeFlightIntegrator()
 {
 }
 
-bool CoastIntegrator2::Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tmax, double tmin, double deltat, double dir, int planet, int stopcond)
+bool EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 {
 	//Initialize
-	t0 = gmt;
-	R0 = R = R_CON = R00;
-	V0 = V = V_CON = V00;
-	TMAX = tmax;
-	TMIN = tmin;
-	STOPVA = deltat;
-	HMULT = dir;
+	t0 = in.AnchorVector.GMT;
+	R0 = R = R_CON = in.AnchorVector.R;
+	V0 = V = V_CON = in.AnchorVector.V;
+	TMAX = in.MaxIntegTime;
+	STOPVAE = in.EarthRelStopParam;
+	STOPVAM = in.MoonRelStopParam;
+	HMULT = in.IsForwardIntegration;
 
-	SetBodyParameters(planet);
-	ISTOPS = stopcond;
+	SetBodyParameters(in.AnchorVector.RBI);
+	ISTOPS = in.CutoffIndicator;
+	StopParamRefFrame = in.StopParamRefFrame;
+
+	bStoreEphemeris[0] = in.ECIEphemerisIndicator;
+	bStoreEphemeris[1] = in.ECTEphemerisIndicator;
+	bStoreEphemeris[2] = in.MCIEphemerisIndicator;
+	bStoreEphemeris[3] = in.MCTEphemerisIndicator;
+	pEph[0] = in.ECIEphemTableIndicator;
+	pEph[1] = in.ECTEphemTableIndicator;
+	pEph[2] = in.MCIEphemTableIndicator;
+	pEph[3] = in.MCTEphemTableIndicator;
 
 	delta = _V(0, 0, 0);
 	nu = _V(0, 0, 0);
@@ -57,54 +70,19 @@ bool CoastIntegrator2::Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tm
 	dt = dt_lim;
 	//Normally 9 Er
 	r_SPH = 9.0*OrbMech::R_Earth;
-	if (ISTOPS > 2)
+	if (ISTOPS == 1 || ISTOPS == 3)
 	{
-		//Radius
-		if (STOPVA > 8.0 && STOPVA < 10.0)
-		{
-			//If end condition is radius and close to normal reference switch, use 14 Er instead
-			r_SPH = 14.0*OrbMech::R_Earth;
-		}
+		//1 meter tolerance for radius and height
+		DEV = 1.0;
 	}
-	else if (ISTOPS < 2)
+	else if (ISTOPS == 4)
 	{
-		//Time
-		//Set HMULT to desired propagation direction. Then start using absolute value of STOPVA
-		if (STOPVA >= 0.0)
-		{
-			HMULT = abs(HMULT);
-		}
-		else
-		{
-			HMULT = -abs(HMULT);
-		}
-
-		STOPVA = abs(STOPVA);
-		//In time mode, don't check on termination until we are close to done
-		TMIN = STOPVA - 2.0*dt_lim;
-	}
-
-	if (ISTOPS == 2)
-	{
-		//Flight path angle
-		//Still gives really accurate flight path angle
-		DEV = 100.0;
-	}
-	else if (ISTOPS == 3)
-	{
-		//Radius
-		if (STOPVA == 0.0)
-		{
-			DEV = 1.0;
-		}
-		else
-		{
-			DEV = STOPVA;
-		}
+		//0.0001° tolerance
+		DEV = 0.0001*RAD;
 	}
 	else
 	{
-		//Time
+		//Doesn't matter
 		DEV = 1.0;
 	}
 
@@ -118,21 +96,28 @@ bool CoastIntegrator2::Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tm
 	do
 	{
 		Edit();
-		if (IEND == 0)
+		if (INITE != 1)
+		{
+			EphemerisStorage();
+		}
+		if (IEND == -1)
 		{
 			Step();
 		}
-	} while (IEND == 0);
+	} while (IEND == -1);
 
-	R2 = R_CON + delta;
-	V2 = V_CON + nu;
-	T2 = CurrentTime();
-	outplanet = P;
-	ITS = ISTOPS;
+	EphemerisStorage();
+	WriteEphemerisHeader();
+
+	in.NIAuxOutputTable.sv_cutoff.R = R_CON + delta;
+	in.NIAuxOutputTable.sv_cutoff.V = V_CON + nu;
+	in.NIAuxOutputTable.sv_cutoff.GMT = CurrentTime();
+	in.NIAuxOutputTable.sv_cutoff.RBI = P;
+	in.NIAuxOutputTable.TerminationCode = ISTOPS;
 	return true;
 }
 
-void CoastIntegrator2::Edit()
+void EnckeFreeFlightIntegrator::Edit()
 {
 	double rr, dt_max;
 
@@ -145,6 +130,12 @@ void CoastIntegrator2::Edit()
 			//Are we leaving the sphere of influence?
 			if (rr > r_SPH)
 			{
+				//Cutoff on reference switch?
+				if (ISTOPS == 2)
+				{
+					IEND = 2;
+					return;
+				}
 				VECTOR3 V_PQ;
 
 				R_PQ = -R_EM;
@@ -167,6 +158,13 @@ void CoastIntegrator2::Edit()
 
 			if (length(R_QC) < r_SPH)
 			{
+				//Cutoff on reference switch?
+				if (ISTOPS == 2)
+				{
+					IEND = 2;
+					return;
+				}
+
 				V_PQ = V_EM;
 				R_CON = R_CON - R_PQ;
 				V_CON = V_CON - V_PQ;
@@ -184,38 +182,69 @@ void CoastIntegrator2::Edit()
 	}
 
 	//Termination control
-PMMCEN_Edit_3B:
+EMMENI_Edit_3B:
 	TIME = abs(TRECT + tau);
 	dt_max = min(dt_lim, K*OrbMech::power(rr, 1.5) / sqrt(mu));
 
-	if (TMIN > TIME)
+	//Should we even check?
+	if (ISTOPS == 0)
 	{
-		//Minimum time not reached
-		dt_temp = HMULT * dt_max;
-		goto PMMCEN_Edit_7B;
-	}
-	if (ISTOPS == 1)
-	{
-		FUNCT = TIME;
-	}
-	else if (ISTOPS == 2)
-	{
-		FUNCT = dotp(unit(R), unit(V));
+		RCALC = TIME - TMAX;
 	}
 	else
 	{
-		FUNCT = length(R);
+		RCALC = 1.0;
 	}
-	RCALC = FUNCT - STOPVA;
+	if (ISTOPS > 0 && (StopParamRefFrame == 2 || P == StopParamRefFrame))
+	{
+		if (ISTOPS == 1)
+		{
+			FUNCT = length(R);
+			if (P == BODY_EARTH)
+			{
+				RCALC = FUNCT - STOPVAE;
+			}
+			else
+			{
+				RCALC = FUNCT - STOPVAM;
+			}
+		}
+		else if (ISTOPS == 3)
+		{
+			if (P == BODY_EARTH)
+			{
+				FUNCT = length(R) - OrbMech::R_Earth;
+				RCALC = FUNCT - STOPVAE;
+			}
+			else
+			{
+				FUNCT = length(R) - pRTCC->BZLAND.rad[RTCC_LMPOS_BEST];
+				RCALC = FUNCT - STOPVAM;
+			}
+		}
+		else if (ISTOPS == 4)
+		{
+			FUNCT = dotp(unit(R), unit(V));
+			if (P == BODY_EARTH)
+			{
+				RCALC = FUNCT - STOPVAE;
+			}
+			else
+			{
+				RCALC = FUNCT - STOPVAM;
+			}
+		}
+	}
+
 	IEND = ISTOPS;
 
 	//Special time logic
-	if (ISTOPS == 1)
+	if (ISTOPS == 0)
 	{
 		dt = HMULT * min(abs(RCALC), dt_max);
 		if (abs(dt) > 1e-6)
 		{
-			IEND = 0;
+			IEND = -1;
 		}
 		return;
 	}
@@ -225,7 +254,7 @@ PMMCEN_Edit_3B:
 	dt_temp = HMULT * dt_max;
 
 	//Termination check
-	if (abs(RCALC / DEV) <= 1.e-12 || abs(dt) < 1e-6)
+	if (abs(RCALC / DEV) <= 1.0 || abs(dt) < 1e-6)
 	{
 		return;
 	}
@@ -240,7 +269,7 @@ PMMCEN_Edit_3B:
 		//Not bounded
 		if (RCALC*RES1 >= 0)
 		{
-			goto PMMCEN_Edit_4A;
+			goto EMMENI_Edit_4A;
 		}
 
 		//Found it. Go back to previous step
@@ -250,45 +279,45 @@ PMMCEN_Edit_3B:
 		RES2 = RCALC;
 
 		INITE = 1;
-		goto PMMCEN_Edit_7B;
+		goto EMMENI_Edit_7B;
 	}
 	else
 	{
 		//bounded
-		goto PMMCEN_Edit_5C;
+		goto EMMENI_Edit_5C;
 	}
-PMMCEN_Edit_4A:
+
+EMMENI_Edit_4A:
 	//TMAX check
 	if (TMAX <= abs(TRECT + tau))
 	{
 		//Now try to find TMAX
-		ISTOPS = 1;
-		STOPVA = TMAX;
+		ISTOPS = 0;
 		RestoreVariables();
 		//Go back to find new dt
-		goto PMMCEN_Edit_3B;
+		goto EMMENI_Edit_3B;
 	}
 	else
 	{
 		StoreVariables();
 	}
-	goto PMMCEN_Edit_7B;
-PMMCEN_Edit_5C: //New step size
+	goto EMMENI_Edit_7B;
+EMMENI_Edit_5C: //New step size
 	//Calculate quadratic
 	DEL = dt * VAR*VAR - VAR * dt*dt;
 	AQ = (dt*(RES2 - RES1) - VAR * (RCALC - RES1)) / DEL;
-	if (AQ == 0.0) goto PMMCEN_Edit_7A;
+	if (AQ == 0.0) goto EMMENI_Edit_7A;
 	BQ = (VAR*VAR*(RCALC - RES1) - dt * dt*(RES2 - RES1)) / DEL;
 	DISQ = BQ * BQ - 4.0*AQ*RES1;
-	if (DISQ < 0.0) goto PMMCEN_Edit_7A;
+	if (DISQ < 0.0) goto EMMENI_Edit_7A;
 	DISQ = sqrt(DISQ);
 	dtesc[0] = (-BQ + DISQ) / (2.0*AQ);
 	dtesc[1] = (-BQ - DISQ) / (2.0*AQ);
 
-	//Direct of solution?
+	//Direction of solution?
 	if (dt*dtesc[0] >= 0.0)
 	{
-		//Direct of solution is good, which one is closer to initial state?
+		//Direction of solution is good, which one is closer to initial state?
 		if (abs(dtesc[0]) < abs(dtesc[1]))
 		{
 			dt_temp = dtesc[0];
@@ -305,9 +334,9 @@ PMMCEN_Edit_5C: //New step size
 	VAR = dt;
 	RestoreVariables();
 	RES2 = RCALC;
-	goto PMMCEN_Edit_7B;
-PMMCEN_Edit_7A:
-	sprintf(oapiDebugString(), "PMMCEN: How did we get here?");
+	goto EMMENI_Edit_7B;
+EMMENI_Edit_7A:
+	sprintf(oapiDebugString(), "EMMENI: How did we get here?");
 	//Chord method. Needs work.
 	//Was the last step a step in the right direction?
 	if (RCALC*RES2 > 0)
@@ -324,13 +353,13 @@ PMMCEN_Edit_7A:
 		dt_temp = VAR / 2.0;
 		StoreVariables();
 	}
-PMMCEN_Edit_7B: //Don't stop yet
+EMMENI_Edit_7B: //Don't stop yet
 	dt = dt_temp;
-	IEND = 0;
+	IEND = -1;
 	return;
 }
 
-void CoastIntegrator2::Rectification()
+void EnckeFreeFlightIntegrator::Rectification()
 {
 	TRECT = TRECT + tau;
 	R0 = R_CON + delta;
@@ -345,7 +374,7 @@ void CoastIntegrator2::Rectification()
 	INITF = false;
 }
 
-void CoastIntegrator2::Step()
+void EnckeFreeFlightIntegrator::Step()
 {
 	VECTOR3 R_apo, V_apo, alpha, a_d, ff, k[3];
 	double h, x_apo, gamma, s, alpha_N, x_t;
@@ -380,7 +409,7 @@ void CoastIntegrator2::Step()
 	V = V_CON + nu;
 }
 
-VECTOR3 CoastIntegrator2::f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d)
+VECTOR3 EnckeFreeFlightIntegrator::f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d)
 {
 	VECTOR3 R_CON;
 	double q;
@@ -390,12 +419,12 @@ VECTOR3 CoastIntegrator2::f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d)
 	return -(R*fq(q) + alpha)*mu / OrbMech::power(length(R_CON), 3.0) + a_d;
 }
 
-double CoastIntegrator2::fq(double q)
+double EnckeFreeFlightIntegrator::fq(double q)
 {
 	return q * (3.0 + 3.0 * q + q * q) / (1.0 + OrbMech::power(1 + q, 1.5));
 }
 
-VECTOR3 CoastIntegrator2::adfunc(VECTOR3 R)
+VECTOR3 EnckeFreeFlightIntegrator::adfunc(VECTOR3 R)
 {
 	double r, costheta, P2, P3, P4, P5;
 	VECTOR3 U_R, a_dP, a_d, a_dQ, a_dS;
@@ -470,7 +499,7 @@ VECTOR3 CoastIntegrator2::adfunc(VECTOR3 R)
 	return a_d;
 }
 
-void CoastIntegrator2::SetBodyParameters(int p)
+void EnckeFreeFlightIntegrator::SetBodyParameters(int p)
 {
 	if (p == BODY_EARTH)
 	{
@@ -494,7 +523,7 @@ void CoastIntegrator2::SetBodyParameters(int p)
 	}
 }
 
-void CoastIntegrator2::StoreVariables()
+void EnckeFreeFlightIntegrator::StoreVariables()
 {
 	P_S = P;
 	R_S = R_CON + delta;
@@ -503,7 +532,7 @@ void CoastIntegrator2::StoreVariables()
 	RES1 = RCALC;
 }
 
-void CoastIntegrator2::RestoreVariables()
+void EnckeFreeFlightIntegrator::RestoreVariables()
 {
 	R_CON = R_S;
 	V_CON = V_S;
@@ -519,7 +548,61 @@ void CoastIntegrator2::RestoreVariables()
 	Rectification();
 }
 
-double CoastIntegrator2::CurrentTime()
+double EnckeFreeFlightIntegrator::CurrentTime()
 {
 	return (t0 + TRECT + tau);
+}
+
+void EnckeFreeFlightIntegrator::EphemerisStorage()
+{
+	EphemerisData sv, sv_out;
+	EphemerisData2 sv2;
+	int in;
+
+	for (int i = 0;i < 4;i++)
+	{
+		if (bStoreEphemeris[i] && pEph[i])
+		{
+			if (pEph[i]->table.size() == 0 || abs(pEph[i]->table.back().GMT - CurrentTime()) > 3.6e-11)
+			{
+				if (P == BODY_EARTH)
+				{
+					in = 0;
+				}
+				else
+				{
+					in = 2;
+				}
+				
+				sv.R = R_CON + delta;
+				sv.V = V_CON + nu;
+				sv.GMT = CurrentTime();
+				sv.RBI = P;
+				pRTCC->ELVCNV(sv, in, i, sv_out);
+				sv2.R = sv_out.R;
+				sv2.V = sv_out.V;
+				sv2.GMT = sv_out.GMT;
+
+				pEph[i]->table.push_back(sv2);
+			}
+		}
+	}
+}
+
+void EnckeFreeFlightIntegrator::WriteEphemerisHeader()
+{
+	for (int i = 0;i < 4;i++)
+	{
+		if (bStoreEphemeris[i] && pEph[i])
+		{
+			pEph[i]->Header.CSI = i;
+			pEph[i]->Header.NumVec = pEph[i]->table.size();
+			pEph[i]->Header.Offset = 0;
+			pEph[i]->Header.Status = 0;
+			pEph[i]->Header.TL = pEph[i]->table.front().GMT;
+			pEph[i]->Header.TR = pEph[i]->table.back().GMT;
+			pEph[i]->Header.TUP = 0;
+			pEph[i]->Header.VEH = 0;
+		}
+	}
 }

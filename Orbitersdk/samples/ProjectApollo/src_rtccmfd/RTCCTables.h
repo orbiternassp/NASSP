@@ -35,6 +35,13 @@ struct EphemerisData
 	int RBI = -1; //0 = Earth, 1 = Moon
 };
 
+struct EphemerisData2
+{
+	double GMT = 0.0;
+	VECTOR3 R = _V(0, 0, 0);
+	VECTOR3 V = _V(0, 0, 0);
+};
+
 struct EphemerisHeader
 {
 	//Update number
@@ -59,6 +66,12 @@ struct EphemerisDataTable
 {
 	EphemerisHeader Header;
 	std::vector<EphemerisData> table;
+};
+
+struct EphemerisDataTable2
+{
+	EphemerisHeader Header;
+	std::vector<EphemerisData2> table;
 };
 
 struct RTCCNIInputTable
@@ -266,7 +279,7 @@ struct EMSMISSInputTable
 	bool ECTEphemerisIndicator = false;
 	bool MCIEphemerisIndicator = false;
 	bool MCTEphemerisIndicator = false;
-	//Ephemeris build indicator
+	//Ephemeris build indicator (delete me)
 	bool EphemerisBuildIndicator = false;
 	//Maneuver cut-off indicator (0 = cut at begin of maneuver, 1 = cut at end of maneuver, 2 = don't cut off)
 	int ManCutoffIndicator;
@@ -284,7 +297,11 @@ struct EMSMISSInputTable
 	//Density multiplication override indicator
 	bool DensityMultOverrideIndicator = false;
 	//Table of ephemeris addresses indicator
-	EphemerisDataTable *EphemTableIndicator = NULL;
+	EphemerisDataTable *EphemTableIndicator = NULL; //Delete me
+	EphemerisDataTable2 *ECIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *ECTEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCTEphemTableIndicator = NULL;
 	//Reference switch table indicator
 	//Maneuver times table indicator
 	ManeuverTimesTable *ManTimesIndicator = NULL;

@@ -1,7 +1,7 @@
 /****************************************************************************
 This file is part of Project Apollo - NASSP
 
-Coast Numerical Integrator, RTCC Module PMMCEN (Header)
+Encke Numerical Free Flight Integrator, RTCC Module EMMENI (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,19 +25,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "RTCCModule.h"
+#include "RTCCTables.h"
 
-class CoastIntegrator2 : public RTCCModule
+class EnckeFreeFlightIntegrator : public RTCCModule
 {
 public:
-	CoastIntegrator2(RTCC *r);
-	~CoastIntegrator2();
-	bool Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tmax, double tmin, double deltat, double dir, int planet, int stopcond);
+	EnckeFreeFlightIntegrator(RTCC *r);
+	~EnckeFreeFlightIntegrator();
+	bool Propagate(EMSMISSInputTable &in);
 
-	VECTOR3 R2, V2;
-	double T2;
-	int outplanet;
-	//End condition
-	int ITS;
 private:
 	void Edit();
 	void Step();
@@ -49,6 +45,8 @@ private:
 	double fq(double q);
 	VECTOR3 adfunc(VECTOR3 R);
 	double CurrentTime();
+	void EphemerisStorage();
+	void WriteEphemerisHeader();
 
 	double R_E, mu;
 	//State vector at last rectification
@@ -62,8 +60,8 @@ private:
 	double tau;
 	//Time of last rectification
 	double TRECT;
-	//Stop variable
-	double STOPVA;
+	//Stop variable (Earth and Moon)
+	double STOPVAE, STOPVAM;
 	double x;
 	VECTOR3 delta, nu;
 	double r_dP;
@@ -95,12 +93,12 @@ private:
 	double RES2;
 	//Previous value of dt
 	double VAR;
-	//Minimum time until checking of end condition
-	double TMIN;
 	//Maximum time to integrate
 	double TMAX;
-	//Stop condition (1 = time, 2 = flight path angle, 3 = radius)
+	//Stop condition (0 = none, 1 = radial distance, 2 = first reference switch, 3 = altitude above Earth or moon, 4 = flight-path angle)
 	int ISTOPS;
+	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
+	int StopParamRefFrame;
 	//Size of the sphere of influence of the Moon
 	double r_SPH;
 	//Direction control and step size multiplier
@@ -113,6 +111,9 @@ private:
 	double dt_temp;
 	//Stored time of last forcing function init
 	double TS;
+	//Ephemeris storage flags
+	bool bStoreEphemeris[4];
+	EphemerisDataTable2 *pEph[4];
 
 	//Constants
 	static const double K, dt_lim;
