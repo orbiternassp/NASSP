@@ -749,7 +749,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	const double TrkngCtrlGain = 5.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
 	const double ServoFeedbackGain = 3.2; //this works too...
-	const double BeamSwitchingTrkErThreshhold = 0.1; 
+	const double BeamSwitchingTrkErThreshhold = 1.5; 
 
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
@@ -768,7 +768,7 @@ void HGA::TimeStep(double simt, double simdt)
 		{
 			if (SignalStrength > 0)
 			{
-				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold*392) //acquire mode in auto (392 = PI/8*1000 which is a good place to switch between narrow and wide)
+				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold) //acquire mode in auto
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
@@ -800,7 +800,7 @@ void HGA::TimeStep(double simt, double simdt)
 	}
 	else
 	{
-		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscimates between manual and auto and won't acquire. 
+		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscilates between manual and auto and won't acquire. 
 									//It get's set to manual later if we actually have no signal
 
 		if (ModeSwitchTimer < simt)
@@ -808,7 +808,7 @@ void HGA::TimeStep(double simt, double simdt)
 			if ((SignalStrength > 0) && (scanlimitwarn == false) && (scanlimit == false)) //
 			{
 				AutoTrackingMode = true; //if it somehow wasn't on...
-				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392)) //acquire mode in auto
+				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold)) //acquire mode in auto
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
