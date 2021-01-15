@@ -114,6 +114,7 @@ private:
 	//Ephemeris storage flags
 	bool bStoreEphemeris[4];
 	EphemerisDataTable2 *pEph[4];
+	bool EphemerisBuildIndicator;
 
 	//Constants
 	static const double K, dt_lim;

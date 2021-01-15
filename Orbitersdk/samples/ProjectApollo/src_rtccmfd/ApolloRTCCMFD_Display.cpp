@@ -3840,9 +3840,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(30 * W / 32, 10 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, GC->rtcc->EZSPACE.GETEI, false);
 		skp->Text(30 * W / 32, 11 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%05.0f", GC->rtcc->EZSPACE.VEI);
+		sprintf(Buffer, "%08.2f", GC->rtcc->EZSPACE.VEI);
 		skp->Text(30 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+06.1f°", GC->rtcc->EZSPACE.GEI);
+		sprintf(Buffer, "%+07.2f°", GC->rtcc->EZSPACE.GEI);
 		skp->Text(30 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
 		if (GC->rtcc->EZSPACE.PEI > 0)
 		{
@@ -3862,11 +3862,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "%06.2f W", abs(GC->rtcc->EZSPACE.LEI));
 		}
 		skp->Text(30 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+06.1f°", GC->rtcc->EZSPACE.PSIEI);
+		sprintf(Buffer, "%+07.2f°", GC->rtcc->EZSPACE.PSIEI);
 		skp->Text(30 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, GC->rtcc->EZSPACE.GETVP, false);
 		skp->Text(30 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%05.0f", GC->rtcc->EZSPACE.VVP);
+		sprintf(Buffer, "%08.2f", GC->rtcc->EZSPACE.VVP);
 		skp->Text(30 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%08.1f", GC->rtcc->EZSPACE.HVP);
 		skp->Text(30 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
@@ -3888,7 +3888,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "%06.2f W", abs(GC->rtcc->EZSPACE.LVP));
 		}
 		skp->Text(30 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+06.1f°", GC->rtcc->EZSPACE.PSIVP);
+		sprintf(Buffer, "%+07.2f°", GC->rtcc->EZSPACE.PSIVP);
 		skp->Text(30 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%05.2f°", GC->rtcc->EZSPACE.IE);

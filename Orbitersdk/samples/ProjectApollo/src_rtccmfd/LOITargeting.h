@@ -26,6 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "RTCCTables.h"
+#include "RTCCModule.h"
 
 namespace rtcc
 {
@@ -99,10 +100,10 @@ namespace rtcc
 		double eta_MN;
 	};
 
-	class LOITargeting
+	class LOITargeting : public RTCCModule
 	{
 	public:
-		LOITargeting(LOIOptions o);
+		LOITargeting(RTCC *r, LOIOptions o);
 		bool MAIN();
 
 		LOIOutputData out;

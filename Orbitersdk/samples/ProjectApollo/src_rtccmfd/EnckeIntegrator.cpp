@@ -63,6 +63,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 	pEph[1] = in.ECTEphemTableIndicator;
 	pEph[2] = in.MCIEphemTableIndicator;
 	pEph[3] = in.MCTEphemTableIndicator;
+	EphemerisBuildIndicator = in.EphemerisBuildIndicator;
 
 	delta = _V(0, 0, 0);
 	nu = _V(0, 0, 0);
@@ -554,6 +555,8 @@ double EnckeFreeFlightIntegrator::CurrentTime()
 
 void EnckeFreeFlightIntegrator::EphemerisStorage()
 {
+	if (EphemerisBuildIndicator == false) return;
+
 	EphemerisData sv, sv_out;
 	EphemerisData2 sv2;
 	int in;
@@ -590,6 +593,8 @@ void EnckeFreeFlightIntegrator::EphemerisStorage()
 
 void EnckeFreeFlightIntegrator::WriteEphemerisHeader()
 {
+	if (EphemerisBuildIndicator == false) return;
+
 	for (int i = 0;i < 4;i++)
 	{
 		if (bStoreEphemeris[i] && pEph[i])

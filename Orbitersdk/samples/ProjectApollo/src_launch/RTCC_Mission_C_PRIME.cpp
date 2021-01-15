@@ -41,7 +41,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	bool scrubbed = false;
 
 	//Hardcoded for now, better solution at some point...
-	double LSAzi = -78.0*RAD;
 	double t_land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 
 	//For old scenarios
@@ -113,7 +112,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		PMMWTC(50);
 		//Trajectory Update
 		EphemerisData sv0 = StateVectorCalcEphem(calcParams.src);
-		PMSVCT(4, RTCC_MPT_CSM, &sv0, false);
+		PMSVCT(4, RTCC_MPT_CSM, &sv0, false, "APIC001");
 
 		//Add TLI to MPT
 		if (GETEval2(3.0*3600.0))
@@ -406,7 +405,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		PZMCCPLN.LOPC_M = 1;
 		PZMCCPLN.LOPC_N = 0;
-		PZMCCPLN.AZ_min = PZMCCPLN.AZ_max = -78.0*RAD;
 		PZMCCPLN.REVS2 = 4;
 		PZMCCPLN.MidcourseGET = MCCGET;
 		PZMCCPLN.Config = false;
@@ -481,9 +479,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				med_k18.HPLOI1 = 60.0;
 				med_k18.DVMAXp = 10000.0;
 				med_k18.DVMAXm = 10000.0;
-				med_k18.psi_MN = 281.0;
 				med_k18.psi_DS = 282.0;
-				med_k18.psi_MX = 283.0;
+				med_k18.psi_MN = med_k18.psi_DS - 1.0;
+				med_k18.psi_MX = med_k18.psi_DS + 1.0;
 
 				EphemerisData sv_cut1b;
 
@@ -599,9 +597,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		med_k18.HPLOI1 = 60.0;
 		med_k18.DVMAXp = 10000.0;
 		med_k18.DVMAXm = 10000.0;
-		med_k18.psi_MN = 281.0;
 		med_k18.psi_DS = 282.0;
-		med_k18.psi_MX = 283.0;
+		med_k18.psi_MN = med_k18.psi_DS - 1.0;
+		med_k18.psi_MX = med_k18.psi_DS + 1.0;
 
 		PMMLRBTI(sv_ephem);
 

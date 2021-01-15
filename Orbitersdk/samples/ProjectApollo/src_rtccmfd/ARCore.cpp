@@ -4139,67 +4139,6 @@ int ARCore::subThread()
 			break;
 		}
 
-		IU *iu;
-		bool isSaturnV;
-
-		if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
-		{
-			Saturn *iuv = (Saturn *)svtarget;
-			iu = iuv->GetIU();
-			isSaturnV = true;
-		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
-		{
-			Saturn *iuv = (Saturn *)svtarget;
-			iu = iuv->GetIU();
-			isSaturnV = false;
-		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
-		{
-			SIVB *iuv = (SIVB *)svtarget;
-			iu = iuv->GetIU();
-			isSaturnV = true;
-		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
-		{
-			SIVB *iuv = (SIVB *)svtarget;
-			iu = iuv->GetIU();
-			isSaturnV = false;
-		}
-		else
-		{
-			Result = 0;
-			break;
-		}
-
-		double A_Z, T_GRR;
-
-		if (isSaturnV)
-		{
-			LVDCSV* lvdc = (LVDCSV*)iu->GetLVDC();
-
-			GC->rtcc->MDVSTP.PHIL = lvdc->PHI;
-			A_Z = lvdc->Azimuth;
-			T_GRR = lvdc->T_L;
-		}
-		else
-		{
-			LVDC1B* lvdc = (LVDC1B*)iu->GetLVDC();
-
-			GC->rtcc->MDVSTP.PHIL = lvdc->PHI;
-			A_Z = lvdc->Azimuth;
-			T_GRR = lvdc->T_GRR;
-		}
-
-		char Buffer[64], Buffer2[64];
-		OrbMech::format_time_HHMMSS(Buffer, T_GRR);
-		sprintf_s(Buffer2, "P12,IU1,%s,%.4lf;", Buffer, A_Z*DEG);
-		GC->rtcc->GMGMED(Buffer2);
-
 		EphemerisData sv = GC->rtcc->StateVectorCalcEphem(svtarget);
 		EphemerisData sv2 = GC->rtcc->coast(sv,  GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT);
 

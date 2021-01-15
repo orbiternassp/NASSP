@@ -23,12 +23,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #include "LOITargeting.h"
+#include "rtcc.h"
 #include "OrbMech.h"
 
 namespace rtcc
 {
 
-	LOITargeting::LOITargeting(LOIOptions o)
+	LOITargeting::LOITargeting(RTCC *r, LOIOptions o) : RTCCModule(r)
 	{
 		opt = o;
 		hMoon = oapiGetObjectByName("Moon");
@@ -283,18 +284,10 @@ namespace rtcc
 			R_P = 2.0*RA_LPO / (e + 1.0) - RA_LPO;
 		}
 
-		VECTOR3 R_H, V_H, V_A, u;
-		double T_H, gamma_H, r_H, psi_H, v_A, psi_A, gamma_A, decl, rtasc;
-		int ITS, IRS;
-		PMMCEN_VNI vni;
-		PMMCEN_INI ini;
-
-		vni.R = opt.SPH.R;
-		vni.V = opt.SPH.V;
-		vni.T = opt.SPH.GMT;
-		vni.GMTBASE = opt.GMTBASE;
-		ini.body = BODY_MOON;
-		ini.stop_ind = 3;
+		EphemerisData sv_H;
+		VECTOR3 V_A, u;
+		double gamma_H, r_H, psi_H, v_A, psi_A, gamma_A, decl, rtasc;
+		int ITS;
 
 		for (int i = 0;i < 8;i++)
 		{
@@ -305,32 +298,30 @@ namespace rtcc
 			}
 			out.data[i].display.dv_LOI2 = DELV2(out.data[i].R_LOI, out.data[i].USSAV, RA_LPO + DHASAV, out.data[i].display.h_P + opt.R_LLS + DHPSAV, out.data[i].display.W_P);
 			sgn = OrbMech::sign(dotp(crossp(U_PC, out.data[i].R_LOI), U_H));
-			
-			vni.dir = sgn;
-			vni.end_cond = length(out.data[i].R_LOI);
-			OrbMech::PMMCEN(vni, ini, R_H, V_H, T_H, ITS, IRS);
 
-			gamma_H = PI05 - acos2(dotp(unit(R_H), unit(V_H)));
-			r_H = length(R_H);
-			psi_H = atan2(R_H.x*V_H.y - R_H.y*V_H.x, V_H.z*r_H - R_H.z*dotp(R_H, V_H) / r_H);
+			pRTCC->PMMCEN(opt.SPH, 0.0, 24.0*3600.0, 3, length(out.data[i].R_LOI), sgn, sv_H, ITS);
+
+			gamma_H = PI05 - acos2(dotp(unit(sv_H.R), unit(sv_H.V)));
+			r_H = length(sv_H.R);
+			psi_H = atan2(sv_H.R.x*sv_H.V.y - sv_H.R.y*sv_H.V.x, sv_H.V.z*r_H - sv_H.R.z*dotp(sv_H.R, sv_H.V) / r_H);
 			if (psi_H < 0)
 			{
 				psi_H += PI2;
 			}
-			v_A = length(V_H) + out.data[i].dv_LOI;
+			v_A = length(sv_H.V) + out.data[i].dv_LOI;
 			psi_A = psi_H + out.data[i].dpsi_LOI;
 			gamma_A = gamma_H + out.data[i].dgamma_LOI;
-			u = unit(R_H);
+			u = unit(sv_H.R);
 			decl = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
 			rtasc = atan2(u.y, u.x);
 			gamma_A = PI05 - gamma_A;
 			V_A.x = v_A * (cos(rtasc)*(-cos(psi_A)*sin(gamma_A)*sin(decl) + cos(gamma_A)*cos(decl)) - sin(psi_A)*sin(gamma_A)*sin(rtasc));
 			V_A.y = v_A * (sin(rtasc)*(-cos(psi_A)*sin(gamma_A)*sin(decl) + cos(gamma_A)*cos(decl)) + sin(psi_A)*sin(gamma_A)*cos(rtasc));
 			V_A.z = v_A * (cos(psi_A)*cos(decl)*sin(gamma_A) + cos(gamma_A)*sin(decl));
-			out.data[i].R_LOI = R_H;
-			out.data[i].V_LOI = V_H;
+			out.data[i].R_LOI = sv_H.R;
+			out.data[i].V_LOI = sv_H.V;
 			out.data[i].V_LOI_apo = V_A;
-			out.data[i].GMT_LOI = T_H;
+			out.data[i].GMT_LOI = sv_H.GMT;
 		}
 
 		return false;

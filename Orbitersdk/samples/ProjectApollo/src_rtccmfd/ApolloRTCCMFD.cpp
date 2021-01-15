@@ -7372,7 +7372,7 @@ bool FIDOOrbitDigitalsGETBVInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSpaceDigitalsInit()
 {
 	bool SpaceDigitalsInitInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U00, CSM or LEM, E or M (optional);", SpaceDigitalsInitInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Format: U00, CSM or LEM, E or M (optional);", SpaceDigitalsInitInput, 0, 20, (void*)this);
 }
 
 bool SpaceDigitalsInitInput(void *id, char *str, void *data)
@@ -7384,7 +7384,7 @@ bool SpaceDigitalsInitInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuGenerateSpaceDigitals()
 {
 	bool GenerateSpaceDigitalsInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Generate Space Digitals, format: U01, column (1-3), option (GET or MNV), parameter (time or mnv number), Inclination (Col. 2), Long Ascending Node (Col. 2);", GenerateSpaceDigitalsInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Generate Space Digitals, format: U01, column (1-3), option (GET or MNV), parameter (time or mnv number), Inclination (Col. 2), Long Ascending Node (Col. 2);", GenerateSpaceDigitalsInput, 0, 50, (void*)this);
 }
 
 bool GenerateSpaceDigitalsInput(void *id, char *str, void *data)

@@ -258,7 +258,7 @@ struct EMSMISSInputTable
 	//Desired value of stopping parameter relative to the Moon
 	double MoonRelStopParam = 0.0;
 	//Maximum time of integration
-	double MaxIntegTime = 10e70;
+	double MaxIntegTime = 10.0*24.0*3600.0;
 	//Storage interval for maneuver ephemeris
 	double ManEphemDT = 10.0;
 	//Storage interval for lunar surface ephemeris
@@ -279,7 +279,7 @@ struct EMSMISSInputTable
 	bool ECTEphemerisIndicator = false;
 	bool MCIEphemerisIndicator = false;
 	bool MCTEphemerisIndicator = false;
-	//Ephemeris build indicator (delete me)
+	//Ephemeris build indicator
 	bool EphemerisBuildIndicator = false;
 	//Maneuver cut-off indicator (0 = cut at begin of maneuver, 1 = cut at end of maneuver, 2 = don't cut off)
 	int ManCutoffIndicator;

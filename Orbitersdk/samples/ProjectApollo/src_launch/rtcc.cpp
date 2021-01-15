@@ -41,6 +41,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/CSMLMGuidanceSim.h"
 #include "../src_rtccmfd/GeneralizedIterator.h"
 #include "../src_rtccmfd/CoastNumericalIntegrator.h"
+#include "../src_rtccmfd/EnckeIntegrator.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -7526,6 +7527,14 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_INT("RTCC_GZGENCSN_LDPPDwellOrbits", GZGENCSN.LDPPDwellOrbits);
 	SAVE_BOOL("RTCC_GZGENCSN_LDPPPoweredDescentSimFlag", GZGENCSN.LDPPPoweredDescentSimFlag);
 	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
+	if (EZETVMED.SpaceDigVehID != -1)
+	{
+		SAVE_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
+	}
+	if (EZETVMED.SpaceDigCentralBody != -1)
+	{
+		SAVE_INT("EZETVMED_SpaceDigCentralBody", EZETVMED.SpaceDigCentralBody);
+	}
 
 	SAVE_DOUBLE("RTCC_TLCCGET", PZMCCPLN.MidcourseGET);
 	SAVE_DOUBLE("RTCC_TLCCVectorGET", PZMCCPLN.VectorGET);
@@ -7712,6 +7721,9 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_BOOL("RTCC_GZGENCSN_LDPPPoweredDescentSimFlag", GZGENCSN.LDPPPoweredDescentSimFlag);
 		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 
+		LOAD_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
+		LOAD_INT("EZETVMED_SpaceDigCentralBody", EZETVMED.SpaceDigCentralBody);
+
 		LOAD_DOUBLE("RTCC_TLCCGET", PZMCCPLN.MidcourseGET);
 		LOAD_DOUBLE("RTCC_TLCCVectorGET", PZMCCPLN.VectorGET);
 		LOAD_DOUBLE("RTCC_TLCC_TLMIN", PZMCCPLN.TLMIN);
@@ -7816,11 +7828,11 @@ void RTCC::LoadState(FILEHANDLE scn) {
 
 	if (EZANCHR1.AnchorVectors[9].GMT != 0 && EZEPH1.EPHEM.Header.TUP == 0)
 	{
-		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9], false, &PZMPTCSM.StationID);
+		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9], false, PZMPTCSM.StationID);
 	}
 	if (EZANCHR3.AnchorVectors[9].GMT != 0 && EZEPH2.EPHEM.Header.TUP == 0)
 	{
-		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9], false, &PZMPTLEM.StationID);
+		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9], false, PZMPTLEM.StationID);
 	}
 	//Update Mission Plan Table display
 	PMDMPT();
@@ -15458,7 +15470,17 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			{
 				EMSMISSInputTable emsin;
 				emsin.AnchorVector = sv;
-				sv = EMMENI(emsin, GMT - sv.GMT);
+				emsin.MaxIntegTime = abs(GMT - sv.GMT);
+				if (GMT - sv.GMT >= 0)
+				{
+					emsin.IsForwardIntegration = 1.0;
+				}
+				else
+				{
+					emsin.IsForwardIntegration = -1.0;
+				}
+				EMMENI(emsin);
+				sv = emsin.NIAuxOutputTable.sv_cutoff;
 			}
 		}
 		//MNV
@@ -15585,22 +15607,27 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			{
 				//Try to find lunar sphere entry
 				emsin.AnchorVector = sv;
-				emsin.CutoffIndicator = 1;
-				emsin.StopParamRefFrame = 1;
-				emsin.MoonRelStopParam = 9.0*OrbMech::R_Earth;
+				emsin.CutoffIndicator = 2;
+				emsin.MaxIntegTime = 10.0*24.0*3600.0;
 
-				EphemerisData sv_SI = EMMENI(emsin, 10.0*24.0*3600.0);
-				if (emsin.NIAuxOutputTable.TerminationCode == 1)
+				EphemerisData sv_SI;
+				EMMENI(emsin);
+				sv_SI = emsin.NIAuxOutputTable.sv_cutoff;
+				if (emsin.NIAuxOutputTable.TerminationCode == 2)
 				{
 					EZSPACE.GETSI = GETfromGMT(sv_SI.GMT);
 				}
 			}
 
+			//Try to find perilune
 			emsin.AnchorVector = sv;
 			emsin.CutoffIndicator = 4;
 			emsin.StopParamRefFrame = 1;
 			emsin.MoonRelStopParam = 0.0;
-			EphemerisData sv1 = EMMENI(emsin, 10.0*24.0*3600.0);
+			emsin.MaxIntegTime = 10.0*24.0*3600.0;
+			EphemerisData sv1;
+			EMMENI(emsin);
+			sv1 = emsin.NIAuxOutputTable.sv_cutoff;
 			if (emsin.NIAuxOutputTable.TerminationCode != 4)
 			{
 				return 0;
@@ -15609,7 +15636,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EphemerisData svtempout;
 			TimeConstraintsTable newtab;
 
-			ELVCNV(sv1, 0, 1, svtempout);
+			ELVCNV(sv1, 2, 3, svtempout);
 			EMMDYNEL(svtempout, newtab);
 
 			EZSPACE.GETCA = GETfromGMT(sv1.GMT);
@@ -15636,158 +15663,68 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EZSPACE.PVP = 0.0;
 			EZSPACE.LVP = 0.0;
 			EZSPACE.PSIVP = 0.0;
+			EZSPACE.IE = 0.0;
+			EZSPACE.LN = 0.0;
 
-			double mu;
-			bool HighOrbit;
+			EMSMISSInputTable emsin;
+			EZSPACE.GETVector3 = GETfromGMT(sv.GMT);			
 
-			EZSPACE.GETVector3 = GETfromGMT(sv.GMT);
-			if (sv.RBI == BODY_EARTH)
+			//Find Moon SOI exit
+			emsin.AnchorVector = sv;
+			emsin.CutoffIndicator = 1;
+			emsin.MoonRelStopParam = 9.0*OrbMech::R_Earth;
+			emsin.StopParamRefFrame = 1;
+			emsin.MaxIntegTime = 10.0*24.0*3600.0;
+			EMMENI(emsin);
+			if (emsin.NIAuxOutputTable.TerminationCode == 1)
 			{
-				mu = OrbMech::mu_Earth;
-			}
-			else
-			{
-				mu = OrbMech::mu_Moon;
-			}
-
-			OELEMENTS coe = OrbMech::coe_from_sv(sv.R, sv.V, mu);
-			double SMA = OrbMech::GetSemiMajorAxis(sv.R, sv.V, mu);
-
-			if (coe.e > MCGECC)
-			{
-				HighOrbit = true;
-			}
-			else
-			{
-				if (SMA < 0 || SMA > MCGSMA*OrbMech::R_Earth)
+				double fpa = dotp(unit(emsin.NIAuxOutputTable.sv_cutoff.R), unit(emsin.NIAuxOutputTable.sv_cutoff.V));
+				if (fpa < 0)
 				{
-					HighOrbit = true;
+					//We found an Moon SOI entry
+					//Try to find exit, first 1 hour into the future, then find next passage of SOI
+					emsin.AnchorVector = emsin.NIAuxOutputTable.sv_cutoff;
+					emsin.CutoffIndicator = 0;
+					emsin.MaxIntegTime = 1.0*3600.0;
+					EMMENI(emsin);
+
+					emsin.AnchorVector = emsin.NIAuxOutputTable.sv_cutoff;
+					emsin.CutoffIndicator = 1;
+					emsin.MoonRelStopParam = 9.0*OrbMech::R_Earth;
+					emsin.MaxIntegTime = 10.0*24.0*3600.0;
+					EMMENI(emsin);
 				}
-				else
+
+				//Did we find the SOI radius?
+				if (emsin.NIAuxOutputTable.TerminationCode == 1)
 				{
-					HighOrbit = false;
+					EZSPACE.GETSE = GETfromGMT(emsin.NIAuxOutputTable.sv_cutoff.GMT);
 				}
 			}
 
-			if (HighOrbit == false)
+			//Find vacuum perigee
+			emsin.AnchorVector = sv;
+			emsin.CutoffIndicator = 4;
+			emsin.StopParamRefFrame = 0;
+			emsin.EarthRelStopParam = 0.0;
+			emsin.MaxIntegTime = 10.0*24.0*3600.0;
+			EMMENI(emsin);
+			if (emsin.NIAuxOutputTable.TerminationCode != 4)
 			{
 				return 0;
 			}
 
-			//sv1: "now"
-			//sv2: pericynthion
-			//sv3: lunar sphere exit
-			//sv4: vacuum perigee
-			//sv5: entry interface
-			EphemerisData sv2, sv3, sv4, sv5;
-			PMMCEN_VNI vni;
-			PMMCEN_INI ini;
-			int ITS;
-
-			vni.GMTBASE = GMTBASE;
-
-			if (sv.RBI == BODY_EARTH)
+			if (length(emsin.NIAuxOutputTable.sv_cutoff.R) > 10.0*OrbMech::R_Earth)
 			{
-				//Integrate to next periapsis
-				vni.R = sv.R;
-				vni.V = sv.V;
-				vni.T = sv.GMT;
-				ini.body = sv.RBI;
-				vni.end_cond = 0.0;
-				ini.stop_ind = 2;
-				vni.dt_min = 0.0;
-				OrbMech::PMMCEN(vni, ini, sv4.R, sv4.V, sv4.GMT, ITS, sv4.RBI);
-
-				if (sv4.RBI == BODY_EARTH)
-				{
-					if (length(sv4.R) > OrbMech::GetSemiMajorAxis(sv4.R, sv4.V, OrbMech::mu_Earth))
-					{
-						//We are at apogee, try again
-						vni.dt_min = 30.0*60.0;
-						vni.R = sv4.R;
-						vni.V = sv4.V;
-						vni.T = sv4.GMT;
-						ini.body = sv4.RBI;
-						OrbMech::PMMCEN(vni, ini, sv4.R, sv4.V, sv4.GMT, ITS, sv4.RBI);
-					}
-					//Found a vacuum perigee
-				}
-				else
-				{
-					//Found a pericynthion
-					sv2 = sv4;
-					vni.R = sv2.R;
-					vni.V = sv2.V;
-					vni.T = sv2.GMT;
-					ini.body = sv2.RBI;
-					vni.end_cond = 9.0*OrbMech::R_Earth;
-					vni.dt_min = 0.0;
-					ini.stop_ind = 3;
-					OrbMech::PMMCEN(vni, ini, sv3.R, sv3.V, sv3.GMT, ITS, sv3.RBI);
-
-					EZSPACE.GETSE = GETfromGMT(sv3.GMT);
-
-					//Find vacuum perigee
-					vni.R = sv3.R;
-					vni.V = sv3.V;
-					vni.T = sv3.GMT;
-					ini.body = sv3.RBI;
-					vni.end_cond = 0.0;
-					vni.dt_min = 0.0;
-					ini.stop_ind = 2;
-					OrbMech::PMMCEN(vni, ini, sv4.R, sv4.V, sv4.GMT, ITS, sv4.RBI);
-
-					if (ITS == 1 || sv4.RBI == BODY_MOON)
-					{
-						//Not found
-						return 0;
-					}
-				}
+				return 0;
 			}
-			else
-			{
-				//Try to find lunar sphere exit
-				vni.R = sv.R;
-				vni.V = sv.V;
-				vni.T = sv.GMT;
-				ini.body = sv.RBI;
-				vni.end_cond = 9.0*OrbMech::R_Earth;
-				vni.dt_min = 0.0;
-				ini.stop_ind = 3;
-				OrbMech::PMMCEN(vni, ini, sv3.R, sv3.V, sv3.GMT, ITS, sv3.RBI);
 
-				if (ITS == 1)
-				{
-					//Not found
-					return 0;
-				}
-				else
-				{
-					EZSPACE.GETSE = GETfromGMT(sv3.GMT);
-				}
-				//Find vacuum perigee
-				vni.R = sv3.R;
-				vni.V = sv3.V;
-				vni.T = sv3.GMT;
-				ini.body = sv3.RBI;
-				vni.end_cond = 0.0;
-				vni.dt_min = 0.0;
-				ini.stop_ind = 2;
-				OrbMech::PMMCEN(vni, ini, sv4.R, sv4.V, sv4.GMT, ITS, sv4.RBI);
-
-				if (ITS == 1 || sv4.RBI == BODY_MOON)
-				{
-					//Not found
-					return 0;
-				}
-			}
-			//Calc VP parameters
 			TimeConstraintsTable newtab;
 			EphemerisData svtempout;
 
-			EZSPACE.GETVP = GETfromGMT(sv4.GMT);
+			EZSPACE.GETVP = GETfromGMT(emsin.NIAuxOutputTable.sv_cutoff.GMT);
 
-			ELVCNV(sv4, 0, 1, svtempout);
+			ELVCNV(emsin.NIAuxOutputTable.sv_cutoff, 0, 1, svtempout);
 			EMMDYNEL(svtempout, newtab);
 
 			EZSPACE.VVP = newtab.V / 0.3048;
@@ -15795,24 +15732,29 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EZSPACE.PVP = newtab.lat * DEG;
 			EZSPACE.LVP = newtab.lng * DEG;
 			EZSPACE.PSIVP = newtab.azi*DEG;
-			//Do we have a reentry
-			if (length(sv4.R) < OrbMech::R_Earth + 400000.0*0.3048)
+			EZSPACE.IE = newtab.i*DEG;
+			EZSPACE.LN = newtab.RA*DEG;
+
+			//Have we passed EI?
+			if (length(emsin.NIAuxOutputTable.sv_cutoff.R) > OrbMech::R_Earth + 400000.0*0.3048)
 			{
-				//Calc EI parameters
-				vni.R = sv4.R;
-				vni.V = sv4.V;
-				vni.T = sv4.GMT;
-				ini.body = sv4.RBI;
-				vni.end_cond = OrbMech::R_Earth + 400000.0*0.3048;
-				vni.dt_min = 0.0;
-				vni.dt_max = 24.0*3600.0;
-				vni.dir = -1.0;
-				ini.stop_ind = 3;
-				OrbMech::PMMCEN(vni, ini, sv5.R, sv5.V, sv5.GMT, ITS, sv5.RBI);
+				return 0;
+			}
 
-				EZSPACE.GETEI = GETfromGMT(sv5.GMT);
+			//Find EI
+			emsin.AnchorVector = emsin.NIAuxOutputTable.sv_cutoff;
+			emsin.CutoffIndicator = 1;
+			emsin.StopParamRefFrame = 0;
+			emsin.EarthRelStopParam = OrbMech::R_Earth + 400000.0*0.3048;
+			emsin.MaxIntegTime = 3600.0; //Should be enough
+			emsin.IsForwardIntegration = -1.0;
+			EMMENI(emsin);
 
-				ELVCNV(sv5, 0, 1, svtempout);
+			if (emsin.NIAuxOutputTable.TerminationCode == 1)
+			{
+				EZSPACE.GETEI = GETfromGMT(emsin.NIAuxOutputTable.sv_cutoff.GMT);
+
+				ELVCNV(emsin.NIAuxOutputTable.sv_cutoff, 0, 1, svtempout);
 				EMMDYNEL(svtempout, newtab);
 
 				EZSPACE.VEI = newtab.V / 0.3048;
@@ -16636,16 +16578,39 @@ RTCC_PMMMPT_10_A:
 		goto RTCC_PMMMPT_11_A;
 	}
 	emsin.AnchorVector = in.sv_before;
-	sv_gmti = EMMENI(emsin, GMTI - TIMP);
+	emsin.MaxIntegTime = abs(GMTI - TIMP);
+	if (GMTI - TIMP >= 0.0)
+	{
+		emsin.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		emsin.IsForwardIntegration = -1.0;
+	}
+	EMMENI(emsin);
+	sv_gmti = emsin.NIAuxOutputTable.sv_cutoff;
 	DV_LVLH = PIEXDV(sv_gmti.R, sv_gmti.V, in.VehicleWeight, GetOnboardComputerThrust(in.Thruster), DV, false);
 	man.dV_LVLH = DV_LVLH;
 	man.Word67i[0] = 1;
 	goto RTCC_PMMMPT_11_B;
 RTCC_PMMMPT_11_A:
 	emsin.AnchorVector = in.sv_other;
-	sv_gmti_other = EMMENI(emsin, GMTBB - TIMP);
+	emsin.MaxIntegTime = abs(GMTBB - TIMP);
+	if (GMTBB - TIMP >= 0.0)
+	{
+		emsin.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		emsin.IsForwardIntegration = -1.0;
+	}
+	EMMENI(emsin);
+	sv_gmti_other = emsin.NIAuxOutputTable.sv_cutoff;
+
 	emsin.AnchorVector = in.sv_before;
-	sv_gmti = EMMENI(emsin, GMTBB - TIMP);
+	EMMENI(emsin);
+	sv_gmti = emsin.NIAuxOutputTable.sv_cutoff;
+
 	DV_LVLH = PIAEDV(DV, sv_gmti_other.R, sv_gmti_other.V, sv_gmti.R, false);
 	man.dV_LVLH = DV_LVLH;
 	man.Word67i[0] = 1;
@@ -16775,8 +16740,20 @@ RTCC_PMMMPT_12_A:
 	PARM[3] = GMTBB;
 	IP[3] = true;
 	TIG = GMTBB;
+
 	emsin.AnchorVector = in.sv_before;
-	sv_gmti = EMMENI(emsin, TIG - TIMP);
+	emsin.MaxIntegTime = abs(TIG - TIMP);
+	if (TIG - TIMP >= 0.0)
+	{
+		emsin.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		emsin.IsForwardIntegration = -1.0;
+	}
+	EMMENI(emsin);
+	sv_gmti = emsin.NIAuxOutputTable.sv_cutoff;
+
 	LAMP = LAMI * 10.0;
 	NIP = 6;
 	if (man.AttitudeCode == 3)
@@ -16836,8 +16813,20 @@ RTCC_PMMMPT_14_B:
 	sv_BO.V = aux.V_BO;
 	sv_BO.GMT = aux.GMT_BO;
 	sv_BO.RBI = aux.RBI;
+
 	emsin.AnchorVector = sv_BO;
-	sv_impt = EMMENI(emsin, TIMP - sv_BO.GMT);
+	emsin.MaxIntegTime = abs(TIMP - sv_BO.GMT);
+	if (TIMP - sv_BO.GMT >= 0.0)
+	{
+		emsin.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		emsin.IsForwardIntegration = -1.0;
+	}
+	EMMENI(emsin);
+	sv_impt = emsin.NIAuxOutputTable.sv_cutoff;
+
 	ELPRES = OrbMech::GIMIKC(sv_impt.R, sv_impt.V, mu);
 	ELPRES.a /= OrbMech::R_Earth;
 	SUMN = 0.0;
@@ -16907,7 +16896,17 @@ RTCC_PMMMPT_17_B:
 	{
 		TIG = PARM[3];
 		emsin.AnchorVector = in.sv_before;
-		sv_gmti = EMMENI(emsin, TIG - in.sv_before.GMT);
+		emsin.MaxIntegTime = abs(TIG - in.sv_before.GMT);
+		if (TIG - in.sv_before.GMT >= 0.0)
+		{
+			emsin.IsForwardIntegration = 1.0;
+		}
+		else
+		{
+			emsin.IsForwardIntegration = -1.0;
+		}
+		EMMENI(emsin);
+		sv_gmti = emsin.NIAuxOutputTable.sv_cutoff;
 	}
 	//Update PMMRKJ input table
 	integin.sv0 = sv_gmti;
@@ -16918,8 +16917,20 @@ RTCC_PMMMPT_17_B:
 	sv_BO.V = aux.V_BO;
 	sv_BO.GMT = aux.GMT_BO;
 	sv_BO.RBI = aux.RBI;
+
 	emsin.AnchorVector = sv_BO;
-	sv_impt = EMMENI(emsin, TIMP - sv_BO.GMT);
+	emsin.MaxIntegTime = abs(TIMP - sv_BO.GMT);
+	if (TIMP - sv_BO.GMT >= 0.0)
+	{
+		emsin.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		emsin.IsForwardIntegration = -1.0;
+	}
+	EMMENI(emsin);
+	sv_impt = emsin.NIAuxOutputTable.sv_cutoff;
+
 	OSCELB = OrbMech::GIMIKC(sv_impt.R, sv_impt.V, mu);
 	OSCELB.a /= OrbMech::R_Earth;
 	IPI = 0;
@@ -16971,7 +16982,17 @@ RTCC_PMMMPT_20_B:
 	}
 	TIG = PARM[3];
 	emsin.AnchorVector = in.sv_before;
-	sv_gmti = EMMENI(emsin, TIG - in.sv_before.GMT);
+	emsin.MaxIntegTime = abs(TIG - in.sv_before.GMT);
+	if (TIG - in.sv_before.GMT >= 0.0)
+	{
+		emsin.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		emsin.IsForwardIntegration = -1.0;
+	}
+	EMMENI(emsin);
+	sv_gmti = emsin.NIAuxOutputTable.sv_cutoff;
 	goto RTCC_PMMMPT_14_C;
 
 	delete[] A;
@@ -18413,149 +18434,10 @@ int RTCC::EMGVECSTOutput(int L, EphemerisData &sv)
 	return 0;
 }
 
-EphemerisData RTCC::EMMENI(EMSMISSInputTable &in, double dt)
+void RTCC::EMMENI(EMSMISSInputTable &in)
 {
-	EphemerisData svtemp;
-	double funct, RCALC, RES1, TIME, TIME_old, t_new;
-	int INITE = 0;
-	int gravref = in.AnchorVector.RBI;
-	bool allow_stop, ephstore;
-	int stopcondition = in.CutoffIndicator;
-
-	CoastIntegrator coast(in.AnchorVector.R, in.AnchorVector.V, OrbMech::MJDfromGET(in.AnchorVector.GMT, GMTBASE), dt, in.AnchorVector.RBI, -1);
-	bool stop = false;
-
-	if (in.CutoffIndicator > 0)
-	{
-		allow_stop = false;
-	}
-	else
-	{
-		allow_stop = true;
-	}
-	ephstore = in.EphemerisBuildIndicator;
-
-	while (stop == false)
-	{
-		if (abs(coast.GetTime() - dt) < 1e-6)
-		{
-			allow_stop = true;
-			stopcondition = 0;
-		}
-
-		stop = coast.iteration(allow_stop);
-
-		svtemp.RBI = coast.GetGravRef();
-		svtemp.GMT = OrbMech::GETfromMJD(coast.GetMJD(), GMTBASE);
-		svtemp.R = coast.GetPosition();
-		svtemp.V = coast.GetVelocity();
-
-		//Additional stop conditions
-		if (stop == false && in.CutoffIndicator > 0 && (in.StopParamRefFrame == 2 || svtemp.RBI == in.StopParamRefFrame))
-		{
-			if (in.CutoffIndicator != 2 && gravref != svtemp.RBI)
-			{
-				gravref = svtemp.RBI;
-				INITE = 0;
-			}
-
-			TIME = coast.GetTime();
-
-			//Calculate stop condition value
-			if (in.CutoffIndicator == 1)
-			{
-				funct = length(svtemp.R);
-			}
-			else if (in.CutoffIndicator == 2)
-			{
-				if (svtemp.RBI == BODY_EARTH)
-				{
-					funct = 1.0;
-				}
-				else
-				{
-					funct = -1.0;
-				}
-			}
-			else if (in.CutoffIndicator == 3)
-			{
-				if (svtemp.RBI == BODY_EARTH)
-				{
-					funct = length(svtemp.R) - OrbMech::R_Earth;
-				}
-				else
-				{
-					funct = length(svtemp.R) - BZLAND.rad[RTCC_LMPOS_BEST];
-				}
-			}
-			else if (in.CutoffIndicator == 4)
-			{
-				funct = dotp(unit(svtemp.R), unit(svtemp.V));
-			}
-
-			if (svtemp.RBI == BODY_EARTH)
-			{
-				RCALC = funct - in.EarthRelStopParam;
-			}
-			else
-			{
-				RCALC = funct - in.MoonRelStopParam;
-			}
-		
-			//1st pass
-			if (INITE == 0)
-			{
-				INITE = -1;
-			}
-			//Not bounded, not 1st pass
-			else if (INITE < 0)
-			{
-				if (RCALC*RES1 < 0)
-				{
-					//Turn of ephemeris storage
-					ephstore = false;
-
-					if (in.CutoffIndicator == 2)
-					{
-						INITE = 2;
-
-						coast.AdjustTF(TIME);
-						allow_stop = true;
-					}
-					else
-					{
-						INITE = 1;
-
-						t_new = OrbMech::LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
-						coast.AdjustTF(t_new);
-					}
-				}
-			}
-			//Bounded
-			else if (INITE == 1)
-			{
-				t_new = OrbMech::LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
-				coast.AdjustTF(t_new);
-				if (abs(TIME - t_new) < 1e-6)
-				{
-					allow_stop = true;
-				}
-			}
-
-			RES1 = RCALC;
-			TIME_old = TIME;
-		}
-
-		//Store when allowed, or when desired + iteration stopped
-		if (in.EphemTableIndicator && (ephstore || (stop && in.EphemerisBuildIndicator)))
-		{
-			in.EphemTableIndicator->table.push_back(svtemp);
-		}
-	}
-
-	in.NIAuxOutputTable.TerminationCode = stopcondition;
-
-	return svtemp;
+	EnckeFreeFlightIntegrator integ(this);
+	integ.Propagate(in);
 }
 
 int RTCC::EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
@@ -19055,7 +18937,7 @@ int RTCC::PMMWTC(int med)
 	return 0;
 }
 
-void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed, std::string* StationID)
+void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed, std::string StationID)
 {
 	//QUEID:
 	//0 = Nominal Insertion
@@ -19123,7 +19005,7 @@ RTCC_PMSVCT_4:
 	}
 
 	//Station ID to MPT
-	mpt->StationID.assign(*StationID);
+	mpt->StationID.assign(StationID);
 	K = 1;
 	I = mpt->ManeuverNum;
 RTCC_PMSVCT_5:
@@ -20663,8 +20545,17 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 			EMSMISSInputTable emsin;
 
 			emsin.AnchorVector = svtemp;
-			emsin.MaxIntegTime = GMT - svtemp.GMT;
-			sv_out = EMMENI(emsin, emsin.MaxIntegTime);
+			emsin.MaxIntegTime = abs(GMT - svtemp.GMT);
+			if (GMT - svtemp.GMT >= 0.0)
+			{
+				emsin.IsForwardIntegration = 1.0;
+			}
+			else
+			{
+				emsin.IsForwardIntegration = -1.0;
+			}
+			EMMENI(emsin);
+			sv_out = emsin.NIAuxOutputTable.sv_cutoff;
 		}
 		else
 		{
@@ -20751,13 +20642,15 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 			emsin.MoonRelStopParam = param;
 		}
 		emsin.AnchorVector = svtemp;
-		sv_out = EMMENI(emsin, 10.0*24.0*3600.0);
+		emsin.MaxIntegTime = 10.0*24.0*3600.0;
+		EMMENI(emsin);
 
 		if (emsin.CutoffIndicator != emsin.NIAuxOutputTable.TerminationCode)
 		{
 			EZCHECKDIS.ErrorMessage = "Error 10";
 			return;
 		}
+		sv_out = emsin.NIAuxOutputTable.sv_cutoff;
 	}
 
 	if (veh == RTCC_MPT_LM)
@@ -24051,14 +23944,18 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 	in.MoonRelStopParam = 0.0;
 	in.CutoffIndicator = 4;
 	in.AnchorVector = sv;
+	in.MaxIntegTime = 5.0*24.0*3600.0;
 
-	EphemerisData sv2 = EMMENI(in, 5.0*24.0*3600.0);
+	EphemerisData sv2;
+	EMMENI(in);
 
 	if (in.NIAuxOutputTable.TerminationCode != 4)
 	{
 		PMXSPT("PMMLRBTI", 124);
 		return;
 	}
+
+	sv2 = in.NIAuxOutputTable.sv_cutoff;
 
 	rtcc::LOIOptions opt;
 	opt.SPH = sv2;
@@ -24094,7 +23991,7 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 		return;
 	}
 
-	rtcc::LOITargeting loi(opt);
+	rtcc::LOITargeting loi(this, opt);
 	loi.MAIN();
 
 	//Write message with time at LLS
@@ -26809,7 +26706,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				landed = false;
 			}
 		}
-		PMSVCT(4, veh2, &sv0, landed, &StationID);
+		PMSVCT(4, veh2, &sv0, landed, StationID);
 	}
 	//Condition for Launch (Simulation)
 	else if (med == "92")
@@ -31098,7 +30995,7 @@ RTCC_BMSVPS_1:
 		{
 			L = RTCC_MPT_LM;
 		}
-		PMSVCT(queid, L, &sv, false, &BZUSEVEC.data[PBIID - 324].VectorCode);
+		PMSVCT(queid, L, &sv, false, BZUSEVEC.data[PBIID - 324].VectorCode);
 	}
 }
 

@@ -3303,35 +3303,35 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu97[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Get telemetry vectors", 0, 'T' },
+		{ "Move to CSM evaluation table", 0, 'E' },
+		{ "Move to CSM usable table", 0, 'U' },
+		{ "CSM ground tracking vector", 0, 'G' },
+		{ "CSM trajectory update", 0, 'C' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "General MED request", 0, 'M' },
+		{ "Move to LM evaluation table", 0, 'F' },
+		{ "Move to LM usable table", 0, 'V' },
+		{ "LM ground tracking vector", 0, 'H' },
+		{ "LM trajectory update", 0, 'L' },
 		{ "Back to menu", 0, 'B' },
 	};
 
 	RegisterPage(mnu97, sizeof(mnu97) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("TLM", OAPI_KEY_Q, &ApolloRTCCMFD::menuGetStateVectorsFromAGC);
-	RegisterFunction("EV", OAPI_KEY_V, &ApolloRTCCMFD::menuMoveToEvalTableCSM);
-	RegisterFunction("UV", OAPI_KEY_T, &ApolloRTCCMFD::menuMoveToUsableTableCSM);
-	RegisterFunction("DC", OAPI_KEY_L, &ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM);
-	RegisterFunction("TUP", OAPI_KEY_H, &ApolloRTCCMFD::menuEphemerisUpdateCSM);
+	RegisterFunction("TLM", OAPI_KEY_T, &ApolloRTCCMFD::menuGetStateVectorsFromAGC);
+	RegisterFunction("EV", OAPI_KEY_E, &ApolloRTCCMFD::menuMoveToEvalTableCSM);
+	RegisterFunction("UV", OAPI_KEY_U, &ApolloRTCCMFD::menuMoveToUsableTableCSM);
+	RegisterFunction("DC", OAPI_KEY_G, &ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM);
+	RegisterFunction("TUP", OAPI_KEY_C, &ApolloRTCCMFD::menuEphemerisUpdateCSM);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("MED", OAPI_KEY_G, &ApolloRTCCMFD::menuGeneralMEDRequest);
-	RegisterFunction("EV", OAPI_KEY_A, &ApolloRTCCMFD::menuMoveToEvalTableLEM);
-	RegisterFunction("UV", OAPI_KEY_G, &ApolloRTCCMFD::menuMoveToUsableTableLEM);
-	RegisterFunction("DC", OAPI_KEY_S, &ApolloRTCCMFD::menuMPTTrajectoryUpdateLEM);
-	RegisterFunction("TUP", OAPI_KEY_E, &ApolloRTCCMFD::menuEphemerisUpdateLEM);
+	RegisterFunction("MED", OAPI_KEY_M, &ApolloRTCCMFD::menuGeneralMEDRequest);
+	RegisterFunction("EV", OAPI_KEY_F, &ApolloRTCCMFD::menuMoveToEvalTableLEM);
+	RegisterFunction("UV", OAPI_KEY_V, &ApolloRTCCMFD::menuMoveToUsableTableLEM);
+	RegisterFunction("DC", OAPI_KEY_H, &ApolloRTCCMFD::menuMPTTrajectoryUpdateLEM);
+	RegisterFunction("TUP", OAPI_KEY_L, &ApolloRTCCMFD::menuEphemerisUpdateLEM);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMPTInitPage);
 }
 

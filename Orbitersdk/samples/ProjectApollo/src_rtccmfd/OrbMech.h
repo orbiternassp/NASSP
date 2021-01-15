@@ -136,27 +136,6 @@ const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
 #define BODY_EARTH 0
 #define BODY_MOON 1
 
-struct PMMCEN_VNI
-{
-	VECTOR3 R;
-	VECTOR3 V;
-	double GMTBASE;
-	double T;
-	double dt_min = 0.0;
-	double dt_max = 10.0*24.0*3600.0;
-	double end_cond = 0.0;
-	double dir = 1.0;
-};
-
-struct PMMCEN_INI
-{
-	int body;
-	//1 = time, 2 = flight-path angle, 3 = radius
-	int stop_ind = 1;
-	int year;
-};
-
-
 struct SV
 {
 	VECTOR3 R = _V(0, 0, 0);
@@ -452,7 +431,6 @@ namespace OrbMech {
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout);
 	SV coast(SV sv0, double dt);
-	void PMMCEN(PMMCEN_VNI VNI, PMMCEN_INI INI, VECTOR3 &R1, VECTOR3 &V1, double &T1, int &ITS, int &IRS);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future = false);

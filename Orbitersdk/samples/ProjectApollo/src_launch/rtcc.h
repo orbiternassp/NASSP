@@ -2774,7 +2774,7 @@ public:
 	//Vehicle Orientation Change Processor
 	void PMMUDT(int L, unsigned man, int headsup, int trim);
 	//Vector Routing Load Module
-	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false, std::string* StationID = NULL);
+	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false, std::string StationID = "");
 	//Vector Fetch Load Module
 	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	//Maneuver Execution Program
@@ -2796,7 +2796,7 @@ public:
 	//Miscellaneous Numerical Integration Control Module
 	void EMSMISS(EMSMISSInputTable &in);
 	//Encke Integrator
-	EphemerisData EMMENI(EMSMISSInputTable &in, double dt);
+	void EMMENI(EMSMISSInputTable &in);
 	//Spherical to inertial conversion
 	int EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	//Anchor Vector Maintenance Module
