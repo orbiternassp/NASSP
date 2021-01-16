@@ -743,7 +743,7 @@ void HGA::TimeStep(double simt, double simdt)
 		AzmuthTrackErrorDeg = 90 * DEG;
 	}
 
-	TrackErrorSumNorm = abs(AzimuthErrorSignalNorm + ElevationErrorSignalNorm);
+	TrackErrorSumNorm = sqrt(AzimuthErrorSignalNorm*AzimuthErrorSignalNorm + ElevationErrorSignalNorm*ElevationErrorSignalNorm);
 
 	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
 
