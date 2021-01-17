@@ -805,7 +805,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 		if (ModeSwitchTimer < simt)
 		{
-			if ((SignalStrength > 0) && (scanlimitwarn == false) && (scanlimit == false)) //
+			if ((SignalStrength > 0.0001) && (scanlimitwarn == false) && (scanlimit == false)) //
 			{
 				AutoTrackingMode = true; //if it somehow wasn't on...
 				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold)) //acquire mode in auto
@@ -813,7 +813,7 @@ void HGA::TimeStep(double simt, double simdt)
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
 				}
-
+				
 				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto wide
 				{
 					RcvBeamWidthSelect = 1;
