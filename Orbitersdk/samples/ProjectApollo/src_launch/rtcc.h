@@ -2734,17 +2734,17 @@ public:
 	void EMSTIME(int L, int ID);
 	void FDOLaunchAnalog1(EphemerisData sv);
 	void FDOLaunchAnalog2(EphemerisData sv);
-	double GetGMTLO() { return MCGMTL; }
-	void SetGMTLO(double gmt) { MCGMTL = gmt; }
+	double GetGMTLO() { return SystemParameters.MCGMTL; }
+	void SetGMTLO(double gmt) { SystemParameters.MCGMTL = gmt; }
 	double CalcGETBase();
-	double GetGMTBase() { return GMTBASE; }
-	void SetGMTBase(double gmt) { GMTBASE = gmt; }
+	double GetGMTBase() { return SystemParameters.GMTBASE; }
+	void SetGMTBase(double gmt) { SystemParameters.GMTBASE = gmt; }
 	double GETfromGMT(double GMT);
 	double GMTfromGET(double GET);
-	double GetCMCClockZero() { return MCGZSA * 3600.0; }
-	double GetLGCClockZero() { return MCGZSL * 3600.0; }
-	double GetIUClockZero() { return MCGRIC * 3600.0; }
-	double GetAGSClockZero() { return MCGZSS * 3600.0; }
+	double GetCMCClockZero() { return SystemParameters.MCGZSA * 3600.0; }
+	double GetLGCClockZero() { return SystemParameters.MCGZSL * 3600.0; }
+	double GetIUClockZero() { return SystemParameters.MCGRIC * 3600.0; }
+	double GetAGSClockZero() { return SystemParameters.MCGZSS * 3600.0; }
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -2795,6 +2795,8 @@ public:
 	EphemerisData EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGMT, bool landed = false);
 	//Miscellaneous Numerical Integration Control Module
 	void EMSMISS(EMSMISSInputTable &in);
+	//Lunar Surface Ephemeris Generator
+	void EMSLSF(EMSMISSInputTable &in);
 	//Encke Integrator
 	void EMMENI(EMSMISSInputTable &in);
 	//Spherical to inertial conversion
@@ -2900,6 +2902,7 @@ public:
 	//Generalized Coordinate System Conversion Subroutine
 	int ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out);
 	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
+	int ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out);
 	int ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out);
 	//Extended Interpolation Routine
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out);
@@ -4518,74 +4521,12 @@ protected:
 	OBJHANDLE hEarth, hMoon;
 	std::ofstream rtccdebug;
 
-	//RTCC System Parameters
-
-	//Radians per degree
-	double MCCRPD = RAD;
-	//Burnout launch azimuth (rad.)
-	double MCLABN;
-	//Sine of burnout launch azimuth
-	double MCLSBN;
-	//Cosine of burnout launch azimuth
-	double MCLCBN;
-	//Pitch angle from horizon (rad.)
-	double MCGHZA;
-	//L/O time first vehicle (hrs.)
-	double MCGMTL;
-	//L/O time second vehicle (hrs.)
-	double MCGMTS;
-	//L/O time first vehicle (centisec.)
-	double MGLGMT;
-	//L/O time second vehicle (centisec.)
-	double MGGGMT;
-	//CSM GMTGRR (hrs.)
-	double MCGRAG;
-	//IU1 GMTGRR (hrs.)
-	double MCGRIC;
-	//IU2 GMTGRR (hrs.)
-	double MCGRIL;
-	//AGC GMTZS (hrs.)
-	double MCGZSA;
-	//LGC GMTZS (hrs.)
-	double MCGZSL;
-	//AGS GMTZS (hrs.)
-	double MCGZSS;
-	//Semimajor axis for integration limit (Er.)
-	double MCGSMA;
-	//Eccentricity for integration limit
-	double MCGECC;
-	//Phase reference time - GET (hrs.)
-	double MCGREF;
-	//Venting scale factor
-	double MCTVEN;
-	//Lambda Zero
-	double MCLAMD;
-	//P80 first launch vehicle
-	std::string MCGPRM;
-	//Geodetic Earth constant B²/A²
-	double MCEBAS;
-	//Geodetic Earth constant A²
-	double MCEASQ;
-	//Geodetic Earth constant B²
-	double MCEBSQ;
-	//Rotational rate of the Earth (radians/hr.)
-	double MCERTS;
-
-	//MJD of launch day (days)
-	double GMTBASE;
-	//Number of hours from January 0 to midnight before launch
-	double MCCBES; 
-
 public:
 
 	RTCCSystemParameters SystemParameters;
 
-	//Sine of the geodetic latitude of the launch pad
-	double MCLSDA;
-	//Cosine of the geodetic latitude of the launch pad
-	double MCLCDA;
-	//Longitude of launch pad
-	double MCLGRA;
+	//RTCC System Parameters
+
 	//Nominal LM cross-product steering constant
 	double MCVLMC;
 	//Nominal CSM cross-product steering constant
@@ -4839,21 +4780,6 @@ public:
 	double MDLIEV[16];
 	//Earth orbit insertion constants
 	double MDLEIC[3];
-
-	//CMC address for external DV uplink
-	int MCCCEX;
-	//LGC address for external DV uplink
-	int MCCLEX;
-	//CMC address for REFSMMAT uplink (and downlink)
-	int MCCCRF, MCCCRF_DL;
-	//CMC address for desired REFSMMAT uplink
-	int MCCCXS;
-	//LGC address for REFSMMAT uplink (and downlink)
-	int MCCLRF, MCCLRF_DL;
-	//LGC address for desired REFSMMAT uplink
-	int MCCLXS;
-	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
-	int MGRTAG;
 
 	struct CGTable
 	{

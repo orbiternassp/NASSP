@@ -435,6 +435,19 @@ int RTCC::ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable 
 	return err;
 }
 
+int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
+{
+	EphemerisData sv1, sv_out2;
+
+	sv1.R = sv.R;
+	sv1.V = sv.V;
+	sv1.GMT = sv.GMT;
+	return ELVCNV(sv1, in, out, sv_out2);
+	sv_out.R = sv_out2.R;
+	sv_out.V = sv_out2.V;
+	sv_out.GMT = sv_out2.GMT;
+}
+
 int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 {
 	if (in == out)
@@ -452,7 +465,7 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//ECI to/from ECT
 	if ((in == 0 && out == 1) || (in == 1 && out == 0))
 	{
-		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, OrbMech::MJDfromGET(sv.GMT, GMTBASE));
+		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, OrbMech::MJDfromGET(sv.GMT, SystemParameters.GMTBASE));
 
 		if (in == 0)
 		{
@@ -908,7 +921,7 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, 
 
 	if (IND > 0)
 	{
-		HOUR = HOUR + MCCBES;
+		HOUR = HOUR + SystemParameters.MCCBES;
 	}
 	//TBD: Convert from universal time to ephemeris time
 	//T is 0 to 1, from last to next 12 hour interval
@@ -921,7 +934,7 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, 
 	C[5] = ((T + 2.0)*(T + 1.0)*T*(T - 1.0)*(T - 2.0)) / 120.0;
 	
 	//Calculate MJD from GMT
-	double MJD = GMTBASE + HOUR / 24.0;
+	double MJD = SystemParameters.GMTBASE + HOUR / 24.0;
 	//Calculate position of time in array
 	i = (int)((MJD - MDGSUN.MJD)*2.0);
 	//Calculate starting point in the array
@@ -951,7 +964,7 @@ RTCC_PLEFEM_A:
 bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB)
 {
 	//Calculate MJD from GMT
-	double MJD = GMTBASE + HOUR / 24.0;
+	double MJD = SystemParameters.GMTBASE + HOUR / 24.0;
 	//Moon Libration Matrix
 	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
 	M_LIB = MatrixRH_LH(Rot);
@@ -1029,7 +1042,7 @@ double RTCC::RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 
 	RBI_search = interout.SV.RBI;
 	sv_cur = interout.SV;
-	OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, GMTBASE), sv_cur.RBI, lat, lng);
+	OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, SystemParameters.GMTBASE), sv_cur.RBI, lat, lng);
 	dlng1 = lng - long_des;
 	if (dlng1 > PI) { dlng1 -= PI2; }
 	else if (dlng1 < -PI) { dlng1 += PI2; }
@@ -1056,7 +1069,7 @@ double RTCC::RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 		}
 		T2 = sv_cur.GMT;
 
-		OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, GMTBASE), sv_cur.RBI, lat, lng);
+		OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, SystemParameters.GMTBASE), sv_cur.RBI, lat, lng);
 		dlng2 = lng - long_des;
 		if (dlng2 > PI) { dlng2 -= PI2; }
 		else if (dlng2 < -PI) { dlng2 += PI2; }
@@ -1099,7 +1112,7 @@ double RTCC::RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 		}
 
 		sv_cur = interout.SV;
-		OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, GMTBASE), sv_cur.RBI, lat, lng);
+		OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, SystemParameters.GMTBASE), sv_cur.RBI, lat, lng);
 		dlngx = lng - long_des;
 		if (dlngx > PI) { dlngx -= PI2; }
 		else if (dlngx < -PI) { dlngx += PI2; }

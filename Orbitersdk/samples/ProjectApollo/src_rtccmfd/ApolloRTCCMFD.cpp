@@ -4841,13 +4841,13 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 	{
 		saturn = (Saturn *)G->vessel;
 		vagc = &saturn->agc.vagc;
-		REFSMMATaddress = GC->rtcc->MCCCRF_DL;
+		REFSMMATaddress = GC->rtcc->SystemParameters.MCCCRF_DL;
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
 		vagc = &lem->agc.vagc;
-		REFSMMATaddress = GC->rtcc->MCCLRF_DL;
+		REFSMMATaddress = GC->rtcc->SystemParameters.MCCLRF_DL;
 	}
 
 	unsigned short REFSoct[20];
@@ -7454,7 +7454,7 @@ void ApolloRTCCMFD::set_MPTTLIDirectInput(char *str)
 
 void ApolloRTCCMFD::menuNextStationContactLunar()
 {
-	if (GC->rtcc->MGRTAG == 1)
+	if (GC->rtcc->SystemParameters.MGRTAG == 1)
 	{
 		GeneralMEDRequest("B04,START;");
 	}
@@ -8353,11 +8353,12 @@ void ApolloRTCCMFD::menuSLVNavigationUpdateUplink()
 	G->SLVNavigationUpdateUplink();
 }
 
-void ApolloRTCCMFD::menuGetStateVectorsFromAGC()
+void ApolloRTCCMFD::menuGetOnboardStateVectors()
 {
 	G->GetStateVectorFromAGC(true);
 	G->GetStateVectorFromAGC(false);
 	G->GetStateVectorFromIU();
+	G->GetStateVectorsFromAGS();
 }
 
 void ApolloRTCCMFD::menuMSKRequest()

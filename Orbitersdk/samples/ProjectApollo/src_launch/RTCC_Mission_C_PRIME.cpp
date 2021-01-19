@@ -69,7 +69,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		TEPHEM0 = 40038.;
 		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc);
 		double LaunchMJD = (tephem_scal / 8640000.) + TEPHEM0;
-		LaunchMJD = (LaunchMJD - GMTBASE)*24.0;
+		LaunchMJD = (LaunchMJD - SystemParameters.GMTBASE)*24.0;
 
 		int hh, mm;
 		double ss;
@@ -173,7 +173,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		sv1.mass = PZMPTCSM.mantable[0].CommonBlock.CSMMass;
 		sv1.gravref = hEarth;
-		sv1.MJD = OrbMech::MJDfromGET(PZMPTCSM.mantable[0].GMT_BO, GMTBASE);
+		sv1.MJD = OrbMech::MJDfromGET(PZMPTCSM.mantable[0].GMT_BO, SystemParameters.GMTBASE);
 		sv1.R = PZMPTCSM.mantable[0].R_BO;
 		sv1.V = PZMPTCSM.mantable[0].V_BO;
 
@@ -487,14 +487,14 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 				sv_cut1b.R = sv_cut1.R;
 				sv_cut1b.V = sv_cut1.V;
-				sv_cut1b.GMT = OrbMech::GETfromMJD(sv_cut1.MJD, GMTBASE);
+				sv_cut1b.GMT = OrbMech::GETfromMJD(sv_cut1.MJD, SystemParameters.GMTBASE);
 				sv_cut1b.RBI = BODY_MOON;
 
 				PMMLRBTI(sv_cut1b);
 
 				sv_cut2.R = PZLRBELM.sv_man_bef[6].R;
 				sv_cut2.V = PZLRBELM.V_man_after[6];
-				sv_cut2.MJD = OrbMech::MJDfromGET(PZLRBELM.sv_man_bef[6].GMT, GMTBASE);
+				sv_cut2.MJD = OrbMech::MJDfromGET(PZLRBELM.sv_man_bef[6].GMT, SystemParameters.GMTBASE);
 				sv_cut2.gravref = hMoon;
 
 				//Step 2: Calculate LOI-2 to get the TIG

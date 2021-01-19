@@ -1501,6 +1501,94 @@ void ARCore::GetStateVectorFromIU()
 	GC->rtcc->BZSTLM.HighSpeedIUVector = sv;
 }
 
+void ARCore::GetStateVectorsFromAGS()
+{
+	//Are we a LM?
+	if (vesseltype < 2) return;
+
+	//0-6: pos and vel
+	int csmvecoct[6], lmvecoct[6];
+	int timeoct[2];
+
+	LEM *lem = (LEM *)vessel;
+
+	//Get Data
+	lmvecoct[0] = lem->aea.vags.Memory[0340];
+	lmvecoct[1] = lem->aea.vags.Memory[0341];
+	lmvecoct[2] = lem->aea.vags.Memory[0342];
+	lmvecoct[3] = lem->aea.vags.Memory[0360];
+	lmvecoct[4] = lem->aea.vags.Memory[0361];
+	lmvecoct[5] = lem->aea.vags.Memory[0362];
+
+	csmvecoct[0] = lem->aea.vags.Memory[0344];
+	csmvecoct[1] = lem->aea.vags.Memory[0345];
+	csmvecoct[2] = lem->aea.vags.Memory[0346];
+	csmvecoct[3] = lem->aea.vags.Memory[0364];
+	csmvecoct[4] = lem->aea.vags.Memory[0365];
+	csmvecoct[5] = lem->aea.vags.Memory[0366];
+
+	timeoct[0] = lem->aea.vags.Memory[0377];
+	timeoct[1] = lem->aea.vags.Memory[0353];
+
+	//From twos complement
+	for (int i = 0;i < 6;i++)
+	{
+		if (lmvecoct[i] >= 0400000)
+		{
+			lmvecoct[i] = lmvecoct[i] - 01000000;
+		}
+	}
+	for (int i = 0;i < 6;i++)
+	{
+		if (csmvecoct[i] >= 0400000)
+		{
+			csmvecoct[i] = csmvecoct[i] - 01000000;
+		}
+	}
+
+	VECTOR3 R_CSM, V_CSM, R_LM, V_LM;
+	double T_SV;
+
+	R_LM = _V(lmvecoct[0], lmvecoct[1], lmvecoct[2]);
+	V_LM = _V(lmvecoct[3], lmvecoct[4], lmvecoct[5]);
+	R_CSM = _V(csmvecoct[0], csmvecoct[1], csmvecoct[2]);
+	V_CSM = _V(csmvecoct[3], csmvecoct[4], csmvecoct[5]);
+
+	//Scale
+	R_LM *= pow(2, 6)*0.3048;
+	V_LM *= pow(2, -4)*0.3048;
+	R_CSM *= pow(2, 6)*0.3048;
+	V_CSM *= pow(2, -4)*0.3048;
+
+	T_SV = (double)(timeoct[0])*2.0 + (double)(timeoct[1]) *pow(2, -16);
+
+	//Convert to RTCC coordinates
+	EphemerisData sv_CSM, sv_LM;
+	MATRIX3 Rot = GC->rtcc->EZJGMTX3.data[RTCC_REFSMMAT_TYPE_AGS - 1].REFSMMAT;
+	sv_LM.R = tmul(Rot, R_LM);
+	sv_LM.V = tmul(Rot, V_LM);
+	sv_CSM.R = tmul(Rot, R_CSM);
+	sv_CSM.V = tmul(Rot, V_CSM);
+	sv_CSM.GMT = sv_LM.GMT = T_SV + GC->rtcc->GetAGSClockZero();
+	if (GC->rtcc->AGCGravityRef(vessel) == oapiGetObjectByName("Moon"))
+	{
+		sv_CSM.RBI = sv_LM.RBI = BODY_MOON;
+	}
+	else
+	{
+		//Scale to Earth units
+		sv_CSM.R *= 10.0;
+		sv_CSM.V *= 10.0;
+		sv_LM.R *= 10.0;
+		sv_LM.V *= 10.0;
+		sv_CSM.RBI = sv_LM.RBI = BODY_EARTH;
+	}
+
+	//Save in telemetry table
+	GC->rtcc->BZSTLM.HighSpeedAGSCSMVector = sv_CSM;
+	GC->rtcc->BZSTLM.HighSpeedAGSLEMVector = sv_LM;
+}
+
 void ARCore::GetStateVectorFromAGC(bool csm)
 {
 	agc_t* vagc;

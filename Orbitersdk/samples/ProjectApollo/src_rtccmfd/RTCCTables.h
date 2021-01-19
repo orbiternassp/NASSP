@@ -268,7 +268,7 @@ struct EMSMISSInputTable
 	//Left limit of ephemeris (time to begin ephemeris)
 	double EphemerisLeftLimitGMT;
 	//Right limit of ephemeris (time to end ephemeris)
-	double EphemerRightLimitGMT;
+	double EphemerisRightLimitGMT;
 	//Minimum time between ephemeris points
 	double MinEphemDT;
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
@@ -285,13 +285,13 @@ struct EMSMISSInputTable
 	int ManCutoffIndicator;
 	//Descent burn indicator
 	bool DescentBurnIndicator;
-	//Cut-off indicator (0 = none, 1 = radial distance, 2 = first reference switch, 3 = altitude above Earth or moon, 4 = flight-path angle)
-	int CutoffIndicator = 0;
+	//Cut-off indicator (1 = Time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch)
+	int CutoffIndicator = 1;
 	//Integration direction indicator (+X-forward, -X-backward)
 	double IsForwardIntegration = 1.0;
-	//Coordinate system indicator (TBD)
+	//Coordinate system indicator (Part of Anchor Vector)
 	//Maneuver indicator (true = consider maneuvers, false = don't consider maneuvers)
-	bool ManeuverIndicator;
+	bool ManeuverIndicator = false;
 	//Vehicle code (1 = LEM, 3 = CSM)
 	int VehicleCode;
 	//Density multiplication override indicator

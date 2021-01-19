@@ -44,7 +44,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	double EMPLat = -4.933294*RAD;
 
 	int LGCREFSAddrOffs = -2;
-	MCCLEX = 3431;
 
 	switch (fcn) {
 	case 1: //TLI+90 PAD + State Vector

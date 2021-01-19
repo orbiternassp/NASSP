@@ -721,7 +721,7 @@ public:
 	void menuSLVNavigationUpdateCalc();
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();
-	void menuGetStateVectorsFromAGC();
+	void menuGetOnboardStateVectors();
 
 protected:
 	oapi::Font *font;

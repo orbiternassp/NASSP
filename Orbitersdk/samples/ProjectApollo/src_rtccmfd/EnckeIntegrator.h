@@ -95,7 +95,7 @@ private:
 	double VAR;
 	//Maximum time to integrate
 	double TMAX;
-	//Stop condition (0 = none, 1 = radial distance, 2 = first reference switch, 3 = altitude above Earth or moon, 4 = flight-path angle)
+	//Stop condition (1 = time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch)
 	int ISTOPS;
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame;

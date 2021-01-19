@@ -60,7 +60,7 @@ bool CoastIntegrator2::Propagate(VECTOR3 R00, VECTOR3 V00, double gmt, double tm
 	if (ISTOPS > 2)
 	{
 		//Radius
-		if (STOPVA > 8.0 && STOPVA < 10.0)
+		if (STOPVA > 8.0*OrbMech::R_Earth && STOPVA < 10.0*OrbMech::R_Earth)
 		{
 			//If end condition is radius and close to normal reference switch, use 14 Er instead
 			r_SPH = 14.0*OrbMech::R_Earth;
@@ -285,29 +285,47 @@ PMMCEN_Edit_5C: //New step size
 	dtesc[0] = (-BQ + DISQ) / (2.0*AQ);
 	dtesc[1] = (-BQ - DISQ) / (2.0*AQ);
 
-	//Direct of solution?
-	if (dt*dtesc[0] >= 0.0)
+	//Direction of solution?
+	if (dt*dtesc[0] <= 0.0)
 	{
-		//Direct of solution is good, which one is closer to initial state?
-		if (abs(dtesc[0]) < abs(dtesc[1]))
+		if (dt*dtesc[1] <= 0.0)
 		{
-			dt_temp = dtesc[0];
+			//Both solutions bad
+			goto PMMCEN_Edit_7A;
 		}
 		else
 		{
+			//It's the other one
 			dt_temp = dtesc[1];
 		}
 	}
 	else
 	{
-		dt_temp = dtesc[1];
+		if (dt*dtesc[1] <= 0.0)
+		{
+			//The other one is bad, use this
+			dt_temp = dtesc[0];
+		}
+		else
+		{
+			//Both solutions good in theory, use the closest one
+			if (abs(dtesc[0]) < abs(dtesc[1]))
+			{
+				dt_temp = dtesc[0];
+			}
+			else
+			{
+				dt_temp = dtesc[1];
+			}
+		}
 	}
+
 	VAR = dt;
 	RestoreVariables();
 	RES2 = RCALC;
 	goto PMMCEN_Edit_7B;
 PMMCEN_Edit_7A:
-	sprintf(oapiDebugString(), "PMMCEN: How did we get here?");
+	//sprintf(oapiDebugString(), "PMMCEN: How did we get here?");
 	//Chord method. Needs work.
 	//Was the last step a step in the right direction?
 	if (RCALC*RES2 > 0)

@@ -43,7 +43,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	//Mission Constants
 	double AGCEpoch = 40586.767239;
 	int LGCREFSAddrOffs = -2;
-	MCCLEX = 3433;
 	double R_LLS = calcParams.LSAlt + OrbMech::R_Moon;
 
 	switch (fcn) {

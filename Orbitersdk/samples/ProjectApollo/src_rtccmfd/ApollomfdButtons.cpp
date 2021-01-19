@@ -3320,7 +3320,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu97, sizeof(mnu97) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("TLM", OAPI_KEY_T, &ApolloRTCCMFD::menuGetStateVectorsFromAGC);
+	RegisterFunction("TLM", OAPI_KEY_T, &ApolloRTCCMFD::menuGetOnboardStateVectors);
 	RegisterFunction("EV", OAPI_KEY_E, &ApolloRTCCMFD::menuMoveToEvalTableCSM);
 	RegisterFunction("UV", OAPI_KEY_U, &ApolloRTCCMFD::menuMoveToUsableTableCSM);
 	RegisterFunction("DC", OAPI_KEY_G, &ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM);

@@ -287,7 +287,7 @@ int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &
 	KE = 0;
 	K = 1;
 RTCC_PIATSU_1A:
-	Rot = OrbMech::GetRotationMatrix(BODY_MOON, GMTBASE + AEGOUT.TS / 24.0 / 3600.0);
+	Rot = OrbMech::GetRotationMatrix(BODY_MOON, SystemParameters.GMTBASE + AEGOUT.TS / 24.0 / 3600.0);
 	OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
 	P_apo = rhtmul(Rot, P);
 	W_apo = rhtmul(Rot, W);
@@ -356,7 +356,7 @@ void RTCC::PIBETA(double BETA, double ONOVA, double &F1, double &F2, double &F3,
 
 double RTCC::PIBSHA(double hour)
 {
-	double GMT = hour - MCCBES;
+	double GMT = hour - SystemParameters.MCCBES;
 	return PIGMHA(GMT);
 }
 
@@ -587,7 +587,7 @@ double RTCC::PIGBHA()
 
 double RTCC::PIGMHA(double hour)
 {
-	return MCLAMD + hour * MCERTS;
+	return SystemParameters.MCLAMD + hour * SystemParameters.MCERTS;
 }
 
 void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h)

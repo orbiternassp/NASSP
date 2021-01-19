@@ -71,7 +71,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 	dt = dt_lim;
 	//Normally 9 Er
 	r_SPH = 9.0*OrbMech::R_Earth;
-	if (ISTOPS == 2)
+	if (ISTOPS == 5)
 	{
 		//If we want to find a reference switch, set SOI to 14 Er, Moon relative stop variable to actual SOI (9 Er) and stop reference to Moon only
 		r_SPH = 14.0*OrbMech::R_Earth;
@@ -79,12 +79,12 @@ void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 		StopParamRefFrame = 1;
 	}
 	//If we want to find a radius relative to Moon and it's between 8 and 10 Er, set SOI to 14 Er
-	if (ISTOPS == 1 && StopParamRefFrame > 0 && (STOPVAM > 8.0*OrbMech::R_Earth && STOPVAM < 10.0*OrbMech::R_Earth))
+	if (ISTOPS == 2 && StopParamRefFrame > 0 && (STOPVAM > 8.0*OrbMech::R_Earth && STOPVAM < 10.0*OrbMech::R_Earth))
 	{
 		r_SPH = 14.0*OrbMech::R_Earth;
 	}
 
-	if (ISTOPS == 1 || ISTOPS == 2 || ISTOPS == 3)
+	if (ISTOPS == 2 || ISTOPS == 3 || ISTOPS == 5)
 	{
 		//1 meter tolerance for radius and height
 		DEV = 1.0;
@@ -114,11 +114,11 @@ void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 		{
 			EphemerisStorage();
 		}
-		if (IEND == -1)
+		if (IEND == 0)
 		{
 			Step();
 		}
-	} while (IEND == -1);
+	} while (IEND == 0);
 
 	EphemerisStorage();
 	WriteEphemerisHeader();
@@ -187,7 +187,7 @@ EMMENI_Edit_3B:
 	dt_max = min(dt_lim, K*OrbMech::power(rr, 1.5) / sqrt(mu));
 
 	//Should we even check?
-	if (ISTOPS == 0)
+	if (ISTOPS == 1)
 	{
 		RCALC = TIME - TMAX;
 	}
@@ -195,9 +195,9 @@ EMMENI_Edit_3B:
 	{
 		RCALC = 1000000000.0;
 	}
-	if (ISTOPS > 0 && (StopParamRefFrame == 2 || P == StopParamRefFrame))
+	if (ISTOPS > 1 && (StopParamRefFrame == 2 || P == StopParamRefFrame))
 	{
-		if (ISTOPS == 1 || ISTOPS == 2)
+		if (ISTOPS == 2 || ISTOPS == 5)
 		{
 			FUNCT = length(R);
 			if (P == BODY_EARTH)
@@ -239,12 +239,12 @@ EMMENI_Edit_3B:
 	IEND = ISTOPS;
 
 	//Special time logic
-	if (ISTOPS == 0)
+	if (ISTOPS == 1)
 	{
 		dt = HMULT * min(abs(RCALC), dt_max);
 		if (abs(dt) > 1e-6)
 		{
-			IEND = -1;
+			IEND = 0;
 		}
 		return;
 	}
@@ -292,7 +292,7 @@ EMMENI_Edit_4A:
 	if (TMAX <= abs(TRECT + tau))
 	{
 		//Now try to find TMAX
-		ISTOPS = 0;
+		ISTOPS = 1;
 		RestoreVariables();
 		//Go back to find new dt
 		goto EMMENI_Edit_3B;
@@ -315,28 +315,45 @@ EMMENI_Edit_5C: //New step size
 	dtesc[1] = (-BQ - DISQ) / (2.0*AQ);
 
 	//Direction of solution?
-	if (dt*dtesc[0] >= 0.0)
+	if (dt*dtesc[0] <= 0.0)
 	{
-		//Direction of solution is good, which one is closer to initial state?
-		if (abs(dtesc[0]) < abs(dtesc[1]))
+		if (dt*dtesc[1] <= 0.0)
 		{
-			dt_temp = dtesc[0];
+			//Both solutions bad
+			goto EMMENI_Edit_7A;
 		}
 		else
 		{
+			//It's the other one
 			dt_temp = dtesc[1];
 		}
 	}
 	else
 	{
-		dt_temp = dtesc[1];
+		if (dt*dtesc[1] <= 0.0)
+		{
+			//The other one is bad, use this
+			dt_temp = dtesc[0];
+		}
+		else
+		{
+			//Both solutions good in theory, use the closest one
+			if (abs(dtesc[0]) < abs(dtesc[1]))
+			{
+				dt_temp = dtesc[0];
+			}
+			else
+			{
+				dt_temp = dtesc[1];
+			}
+		}
 	}
 	VAR = dt;
 	RestoreVariables();
 	RES2 = RCALC;
 	goto EMMENI_Edit_7B;
 EMMENI_Edit_7A:
-	sprintf(oapiDebugString(), "EMMENI: How did we get here?");
+	//sprintf(oapiDebugString(), "EMMENI: How did we get here?");
 	//Chord method. Needs work.
 	//Was the last step a step in the right direction?
 	if (RCALC*RES2 > 0)
@@ -355,7 +372,7 @@ EMMENI_Edit_7A:
 	}
 EMMENI_Edit_7B: //Don't stop yet
 	dt = dt_temp;
-	IEND = -1;
+	IEND = 0;
 	return;
 }
 

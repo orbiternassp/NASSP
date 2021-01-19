@@ -135,6 +135,7 @@ public:
 	void CalculateTPITime();
 	void GetStateVectorFromAGC(bool csm);
 	void GetStateVectorFromIU();
+	void GetStateVectorsFromAGS();
 	void VectorCompareDisplayCalc();
 	void UpdateTLITargetTable();
 

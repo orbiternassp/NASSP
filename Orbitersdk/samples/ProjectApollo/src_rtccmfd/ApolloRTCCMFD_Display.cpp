@@ -3969,7 +3969,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		G->CycleNextStationContactsDisplay();
 
-		if (GC->rtcc->MGRTAG == 0)
+		if (GC->rtcc->SystemParameters.MGRTAG == 0)
 		{
 			skp->Text(1 * W / 16, 2 * H / 14, "Lunar", 5);
 		}
