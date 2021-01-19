@@ -4527,10 +4527,6 @@ public:
 
 	//RTCC System Parameters
 
-	//Nominal LM cross-product steering constant
-	double MCVLMC;
-	//Nominal CSM cross-product steering constant
-	double MCVCMC;
 	//Thrust of CSM RCS+X (2 quads)
 	double MCTCT1;
 	//Thrust of CSM RCS+X (4 quads)
@@ -4767,29 +4763,13 @@ public:
 	//Suppress integrator processing
 	bool MGREPH;
 
-	//Gravitational constant of the Moon (Er^3/hr^2)
-	double MCGMUM;
-	//Gravitational constant of the Earth (Er^3/hr^2)
-	double MCEMUU;
-	//Square root of gravitational constant of the Moon (Er^3/hr^2)^1/2
-	double MCSRMU;
-	//Square root of gravitational constant of the Earth (Er^3/hr^2)^1/2
-	double MCERMU;
-
-	//Polynomial coefficients for insertion conditions
-	double MDLIEV[16];
-	//Earth orbit insertion constants
-	double MDLEIC[3];
-
+	//CG table of LM with descent stage
 	struct CGTable
 	{
 		double Weight[40];
 		VECTOR3 CG[40];
 		int N;
-	};
-
-	//CG table of LM with descent stage
-	CGTable LMDSCCGTAB;
+	} LMDSCCGTAB;
 };
 
 #endif

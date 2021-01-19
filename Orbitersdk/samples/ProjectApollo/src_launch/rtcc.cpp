@@ -1260,8 +1260,6 @@ RTCC::RTCC()
 	calcParams.SVSTORE1.R = _V(0, 0, 0);
 	calcParams.SVSTORE1.V = _V(0, 0, 0);
 
-	MCVLMC = 0.0;
-	MCVCMC = 0.5;
 	MCTCT1 = 441.5*2.0;
 	MCTCT2 = 441.5*4.0;
 	MCTCT3 = 441.5*2.0;
@@ -1382,39 +1380,6 @@ RTCC::RTCC()
 	MCTARG = 0.0;
 	MCTDPG = 0.0;
 	MCTDRG = 0.0;
-
-	//These are calculated with R_E = 6.373338e6
-	MCGMUM = 2.454405845045305e-01;
-	MCEMUU = 19.95468740240253;
-	MCSRMU = 4.954196044814240e-01;
-	MCERMU = 4.467066979842873;
-
-	//Time from launch to EOI, seconds
-	MDLIEV[0] = 0.76673814e3;
-	MDLIEV[1] = -0.18916781e1;
-	MDLIEV[2] = 0.10202785e-1;
-	MDLIEV[3] = 0.16441395e-5;
-	//Declination of EOI, deg
-	MDLIEV[4] = 0.60994221e2;
-	MDLIEV[5] = -0.36710496e0;
-	MDLIEV[6] = -0.68781953e-3;
-	MDLIEV[7] = 0.44783353e-5;
-	//Longitude of EOI, deg
-	MDLIEV[8] = -0.7232328e2;
-	MDLIEV[9] = 0.55465072e0;
-	MDLIEV[10] = -0.48610649e-2;
-	MDLIEV[11] = 0.90988410e-5;
-	//Inertial azimuth of EOI, deg
-	MDLIEV[12] = 0.12344699e2;
-	MDLIEV[13] = 0.13104156e1;
-	MDLIEV[14] = -0.46697509e-2;
-	MDLIEV[15] = 0.14584433e-4;
-	//Radius of EOI in NM
-	MDLEIC[0] = 3.5439336e3;
-	//Flight path angle of EOI in deg
-	MDLEIC[1] = 0.0;
-	//Inertial velocity of EI, fps
-	MDLEIC[2] = 25567.72868;
 
 	//Polynomials for inclination and descending node
 	MDVSTP.fx[0] = 32.55754*RAD;
@@ -19463,13 +19428,13 @@ void RTCC::PMMIEV(double T_L)
 	}
 	GZLTRA.Azimuth = A_Z;
 	A_Z *= DEG;
-	dt_EOI = MDLIEV[0] + MDLIEV[1] * A_Z + MDLIEV[2] * pow(A_Z, 2) + MDLIEV[3] * pow(A_Z, 3);
-	lat_EOI = MDLIEV[4] + MDLIEV[5] * A_Z + MDLIEV[6] * pow(A_Z, 2) + MDLIEV[7] * pow(A_Z, 3);
-	lng_EOI = MDLIEV[8] + MDLIEV[9] * A_Z + MDLIEV[10] * pow(A_Z, 2) + MDLIEV[11] * pow(A_Z, 3);
-	azi_EOI = MDLIEV[12] + MDLIEV[13] * A_Z + MDLIEV[14] * pow(A_Z, 2) + MDLIEV[15] * pow(A_Z, 3);
-	rad_EOI = MDLEIC[0];
-	fpa_EOI = MDLEIC[1];
-	vel_EOI = MDLEIC[2];
+	dt_EOI = SystemParameters.MDLIEV[0] + SystemParameters.MDLIEV[1] * A_Z + SystemParameters.MDLIEV[2] * pow(A_Z, 2) + SystemParameters.MDLIEV[3] * pow(A_Z, 3);
+	lat_EOI = SystemParameters.MDLIEV[4] + SystemParameters.MDLIEV[5] * A_Z + SystemParameters.MDLIEV[6] * pow(A_Z, 2) + SystemParameters.MDLIEV[7] * pow(A_Z, 3);
+	lng_EOI = SystemParameters.MDLIEV[8] + SystemParameters.MDLIEV[9] * A_Z + SystemParameters.MDLIEV[10] * pow(A_Z, 2) + SystemParameters.MDLIEV[11] * pow(A_Z, 3);
+	azi_EOI = SystemParameters.MDLIEV[12] + SystemParameters.MDLIEV[13] * A_Z + SystemParameters.MDLIEV[14] * pow(A_Z, 2) + SystemParameters.MDLIEV[15] * pow(A_Z, 3);
+	rad_EOI = SystemParameters.MDLEIC[0];
+	fpa_EOI = SystemParameters.MDLEIC[1];
+	vel_EOI = SystemParameters.MDLEIC[2];
 
 	lat_EOI /= DEG;
 	lng_EOI /= DEG;
