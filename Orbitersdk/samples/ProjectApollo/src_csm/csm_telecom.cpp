@@ -743,13 +743,13 @@ void HGA::TimeStep(double simt, double simdt)
 		AzmuthTrackErrorDeg = 90 * DEG;
 	}
 
-	TrackErrorSumNorm = abs(AzimuthErrorSignalNorm + ElevationErrorSignalNorm);
+	TrackErrorSumNorm = sqrt(AzimuthErrorSignalNorm*AzimuthErrorSignalNorm + ElevationErrorSignalNorm*ElevationErrorSignalNorm);
 
 	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
 
-	const double TrkngCtrlGain = 2.9; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
-	const double ServoFeedbackGain = 1.2; //this works too...
-	const double BeamSwitchingTrkErThreshhold = 0.001; 
+	const double TrkngCtrlGain = 5.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
+	const double ServoFeedbackGain = 3.2; //this works too...
+	const double BeamSwitchingTrkErThreshhold = 1.5; 
 
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
@@ -768,7 +768,7 @@ void HGA::TimeStep(double simt, double simdt)
 		{
 			if (SignalStrength > 0)
 			{
-				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold*392) //acquire mode in auto (392 = PI/8*1000 which is a good place to switch between narrow and wide)
+				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold) //acquire mode in auto
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
@@ -800,20 +800,20 @@ void HGA::TimeStep(double simt, double simdt)
 	}
 	else
 	{
-		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscimates between manual and auto and won't acquire. 
+		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscilates between manual and auto and won't acquire. 
 									//It get's set to manual later if we actually have no signal
 
 		if (ModeSwitchTimer < simt)
 		{
-			if ((SignalStrength > 0) && (scanlimitwarn == false) && (scanlimit == false)) //
+			if ((SignalStrength > 0.5) && (scanlimitwarn == false) && (scanlimit == false)) //
 			{
 				AutoTrackingMode = true; //if it somehow wasn't on...
-				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392)) //acquire mode in auto
+				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold)) //acquire mode in auto
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
 				}
-
+				
 				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto wide
 				{
 					RcvBeamWidthSelect = 1;
@@ -832,12 +832,11 @@ void HGA::TimeStep(double simt, double simdt)
 				ModeSwitchTimer = simt + 1; 
 
 			}
-			else if ((scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
+			else if ((SignalStrength > 0.5) && (scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
 			{
 				AutoTrackingMode = true;
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
-				ModeSwitchTimer = simt + 1;
 			}
 			else // switch to manual mode if loss of signal or scanlimit (this will enable the manual controls and drive the servos to the selecter position)
 			{
@@ -884,19 +883,16 @@ void HGA::TimeStep(double simt, double simdt)
 		}
 		else					//mode select B-C servo control
 		{
-			double GammaLast = Gamma;
-			if (Gamma <= -1.0 * RAD)
+			if (!WhiparoundIsSet)
 			{
-				if ((GammaLast > -1.0 * RAD)&&(Gamma < -1.0)) //falling edge detection for gamma dropping below -1.0°
-				{
-					WhiparoundIsSet = true; //set whiparound flag on falling edge below -1.0
-				}
-				else
-				{
-					WhiparoundIsSet = false; //clear whiparound flag
-				}
-				BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt / 10);
-				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				AAxisCmd = Alpha - (Beta*ServoFeedbackGain*simdt);
+			}
+			BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+			CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+
+			if ((Gamma <= -1.0 * RAD) && !WhiparoundIsSet)
+			{
+				WhiparoundIsSet = true; //set whiparound flag on falling edge below -1.0
 
 				if (WhiparoundIsSet == true)
 				{
@@ -908,23 +904,12 @@ void HGA::TimeStep(double simt, double simdt)
 					{
 						AAxisCmd = Alpha + 180 * RAD;
 					}
-					WhiparoundIsSet = false; //clear whiparound flag
 				}
 			}
-			else
+
+			if ((Gamma >= 1.0 * RAD) && WhiparoundIsSet)
 			{
-				if (AzmuthTrackErrorDeg > 3.0)
-				{
-					AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-					BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt/10);
-					CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
-				}
-				else
-				{
-					AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-					BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
-					CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
-				}
+				WhiparoundIsSet = false; //clear whiparound flag
 			}
 		}
 	}
@@ -979,9 +964,9 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_CSM;
 	MATRIX3 Rot;
-	double relang, beamwidth, Moonrelang, EarthSignalDist;
+	double relang, beamwidth, Moonrelang, EarthSignalDist, CSMrelang;
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
@@ -1044,10 +1029,24 @@ void HGA::TimeStep(double simt, double simdt)
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
 
+	const VECTOR3 boomAxis = {-0.402019, -0.915631, 0.00 };
+	U_CSM = unit(mul(Rot, unit(boomAxis)));
+
+	CSMrelang = acos(dotp(U_CSM, unit(R_E- pos)));
+	
+
 	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
 		SignalStrength = 0.0;
 		for (int i = 0;i < 4;i++)
+		{
+			HornSignalStrength[i] = 0.0;
+		}
+	}
+	else if (CSMrelang > 125*RAD) //CSM body shadowing the antenna
+	{
+		SignalStrength = 0.0;
+		for (int i = 0; i < 4; i++)
 		{
 			HornSignalStrength[i] = 0.0;
 		}
@@ -1106,7 +1105,8 @@ void HGA::TimeStep(double simt, double simdt)
 		scanlimitwarn = false;
 	}
 
-	//sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
+	/*sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf°, SignalStrength %lf, RelAng %lf°, CSMrelang %lf°, Warn: %d, Limit: %d, Beam: %d, Auto: %d, Whiparound: %d",
+		Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, CSMrelang*DEG, scanlimitwarn, scanlimit, RcvBeamWidthMode, AutoTrackingMode, WhiparoundIsSet);*/
 }
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
