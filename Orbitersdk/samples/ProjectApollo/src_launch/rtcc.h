@@ -711,53 +711,6 @@ struct MCCFRMan
 	double LOIh_peri;		//perilune altitude
 };
 
-struct MCCNFRMan
-{
-	int type;		//0 = fixed LPO, 1 = free LPO
-	double GETbase; //usually MJD at launch
-	double MCCGET; //GET for the MCC
-	double lat; //Earth-Moon-Plane latitude
-	double PeriGET; //initial guess for the GET at pericynthion
-	double h_peri;	//pericynthion altitude
-	SV RV_MCC;		//State vector as input
-
-	//LOI targets for BAP
-	double LSlat;			//landing site latitude
-	double LSlng;			//landing site longitude
-	double R_LLS;			//landing site radius
-	double azi;			//landing site approach azimuth
-	double t_land;		//time of landing
-	double LOIh_apo;		//apolune altitude
-	double LOIh_peri;		//perilune altitude
-	int N;				//Revs between DOI and PDI
-	int DOIType;		//0 = Normal DOI, 1 = DOI as LOI-2
-	double DOIPeriAng;	//Angle between landing site and perilune
-	int LOIEllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
-	double DOIPeriAlt = 50000.0*0.3048; //perilune altitude above landing site
-};
-
-struct MCCFlybyMan
-{
-	double GETbase; //usually MJD at launch
-	double MCCGET; //GET for the MCC
-	double lat; //Earth-Moon-Plane latitude
-	double PeriGET; //initial guess for the GET at pericynthion
-	double h_peri;	//pericynthion altitude
-	SV RV_MCC;		//State vector as input
-};
-
-struct MCCSPSLunarFlybyMan
-{
-	double GETbase; //usually MJD at launch
-	double MCCGET; //GET for the MCC
-	double lat; //Earth-Moon-Plane latitude, initial guess
-	double PeriGET; //initial guess for the GET at pericynthion
-	double h_peri;	//pericynthion altitude
-	double FRInclination;
-	bool AscendingNode;
-	SV RV_MCC;		//State vector as input
-};
-
 struct LOIMan
 {
 	VESSEL* vessel;		//vessel
@@ -2567,9 +2520,6 @@ public:
 	void TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass);
 	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res);
 	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res);
-	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
-	bool TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCResults *res);
-	bool TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyMan *opt, TLMCCResults *res, int &step);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_pre, SV &sv_post);
@@ -2615,12 +2565,8 @@ public:
 	bool TLIFlyby(SV sv_TLI, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
 	bool TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
 	bool TLMCFlybyConic(SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
-	bool TLMCConicFlybyToInclinationSubprocessor(SV sv_mcc, double h_peri, double inc_fr_des, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry, double &lat_EMP);
-	bool TLMCIntegratedFlybyToInclinationSubprocessor(SV sv_mcc, double h_peri, double inc_fr_des, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry, double &lat_EMP);
 	bool TLMCConic_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, SV &sv_reentry, double &lat_EMPcor);
 	bool TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, SV &sv_reentry, double &lat_EMPcor);
-	bool TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
-	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	void PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP);
 	void LLWP_PERHAP(AEGHeader Header, AEGDataBlock sv, double &RAP, double &RPE);
 	void LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp, int M, int P, int I_CDH, double DH, double &dv_CSI, double &dv_CDH, double &t_CDH);

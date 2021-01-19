@@ -74,6 +74,7 @@ struct RTCCSystemParameters
 		MCGHZA = 0.55326937288; //31.7°
 		MCGSMA = 1.5;
 		MCGECC = 0.5;
+		MGGPHS = 0;
 	}
 
 	//DEFINITIONS
@@ -176,4 +177,6 @@ struct RTCCSystemParameters
 	double MCVLMC;
 	//Nominal CSM cross-product steering constant
 	double MCVCMC;
+	//Phase indicator system parameter
+	int MGGPHS;
 };
