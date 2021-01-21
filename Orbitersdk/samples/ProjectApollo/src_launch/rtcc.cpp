@@ -1406,9 +1406,6 @@ RTCC::RTCC()
 	MDVSTP.KY1 = 0.0;
 	MDVSTP.KY2 = 0.0;
 	MDVSTP.PHIL = 28.6082888*RAD;
-
-	//Epoch of NBY 1969 (Apollo 7-10)
-	SystemParameters.AGCEpoch = 40221.525;
 	MGREPH = false;
 
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -1810,7 +1807,7 @@ void RTCC::QMMBLD(int year, int month, int day)
 
 void RTCC::LoadMissionInitParameters(int year, int month, int day)
 {
-	//This function loads launch day specific parameters that might be updated and are be saved/loaded
+	//This function loads launch day specific parameters that might be updated and might be saved/loaded
 	char Buff[128];
 	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%d-%02d-%02d Init.txt", year, month, day);
 
@@ -1819,11 +1816,14 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 	{
 		std::string line;
 		double dtemp;
+		int itemp;
 
 		while (getline(startable, line))
 		{
 			sprintf_s(Buff, line.c_str());
 
+			papiReadScenario_int(Buff, "LDPPDwellOrbits", GZGENCSN.LDPPDwellOrbits);
+			papiReadScenario_double(Buff, "PZLOIPLN_HP_LLS", PZLOIPLN.HP_LLS);
 			if (papiReadScenario_double(Buff, "LSLat", dtemp))
 			{
 				BZLAND.lat[RTCC_LMPOS_BEST] = dtemp * RAD;
@@ -1844,6 +1844,55 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 			{
 				PZMCCPLN.AZ_max = dtemp * RAD;
 			}
+			else if (papiReadScenario_double(Buff, "REVS1", dtemp))
+			{
+				PZMCCPLN.REVS1 = PZLOIPLN.REVS1 = dtemp;
+			}
+			else if (papiReadScenario_int(Buff, "REVS2", itemp))
+			{
+				PZMCCPLN.REVS2 = PZLOIPLN.REVS2 = itemp;
+			}
+			else if (papiReadScenario_int(Buff, "LOPC_M", itemp))
+			{
+				PZMCCPLN.LOPC_M = itemp;
+			}
+			else if (papiReadScenario_int(Buff, "LOPC_N", itemp))
+			{
+				PZMCCPLN.LOPC_N = itemp;
+			}
+			else if (papiReadScenario_double(Buff, "LOI_psi_DS", dtemp))
+			{
+				med_k18.psi_DS = dtemp;
+				med_k18.psi_MX = med_k18.psi_DS + 1.0;
+				med_k18.psi_MN = med_k18.psi_DS - 1.0;
+			}
+			else if (papiReadScenario_double(Buff, "eta_1", dtemp))
+			{
+				PZLOIPLN.eta_1 = dtemp;
+				PZMCCPLN.ETA1 = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "H_P_LPO1", dtemp))
+			{
+				med_k18.HPLOI1 = dtemp;
+				PZMCCPLN.H_P_LPO1 = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "PZLTRT_DT_Ins_TPI", dtemp))
+			{
+				PZLTRT.DT_Ins_TPI = PZLTRT.DT_Ins_TPI_NOM = dtemp * 60.0;
+			}
+			else if (papiReadScenario_double(Buff, "LDPPDescentFlightArc", dtemp))
+			{
+				GZGENCSN.LDPPDescentFlightArc = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "LDPPHeightofPDI", dtemp))
+			{
+				GZGENCSN.LDPPHeightofPDI = dtemp * 0.3048;
+			}
+			else if (papiReadScenario_double(Buff, "SITEROT", dtemp))
+			{
+				PZLOIPLN.DW = dtemp;
+				PZMCCPLN.SITEROT = dtemp * RAD;
+			}
 		}
 	}
 }
@@ -1859,6 +1908,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 	{
 		std::string line;
 		double dtemp;
+		VECTOR3 vtemp;
 
 		while (getline(startable, line))
 		{
@@ -1869,6 +1919,10 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MCCLRF", SystemParameters.MCCLRF);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
+			papiReadScenario_double(Buff, "PZREAP_RRBIAS", PZREAP.RRBIAS);
+			papiReadScenario_double(Buff, "PZREAP_IRMAX", PZREAP.IRMAX);
+			papiReadScenario_double(Buff, "PDI_K_X", RTCCPDIIgnitionTargets.K_X);
+			papiReadScenario_double(Buff, "PDI_K_V", RTCCPDIIgnitionTargets.K_V);
 			if (papiReadScenario_double(Buff, "MCLADA", dtemp))
 			{
 				SystemParameters.MCLSDA = sin(dtemp*RAD);
@@ -1891,6 +1945,54 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			{
 				sprintf(Buff, "%d", SystemParameters.MCCLRF);
 				sscanf(Buff, "%o", &SystemParameters.MCCLRF_DL);
+			}
+			else if (papiReadScenario_double(Buff, "PDI_v_IGG", dtemp))
+			{
+				RTCCPDIIgnitionTargets.v_IGG = dtemp * 0.3048;
+			}
+			else if (papiReadScenario_double(Buff, "PDI_r_IGXG", dtemp))
+			{
+				RTCCPDIIgnitionTargets.r_IGXG = dtemp * 0.3048;
+			}
+			else if (papiReadScenario_double(Buff, "PDI_r_IGZG", dtemp))
+			{
+				RTCCPDIIgnitionTargets.r_IGZG = dtemp * 0.3048;
+			}
+			else if (papiReadScenario_double(Buff, "PDI_K_Y", dtemp))
+			{
+				RTCCPDIIgnitionTargets.K_Y = dtemp / 0.3048;
+			}
+			else if (papiReadScenario_vec(Buff, "PDI_RBRFG", vtemp))
+			{
+				RTCCDescentTargets.RBRFG = vtemp * 0.3048;
+			}
+			else if (papiReadScenario_vec(Buff, "PDI_VBRFG", vtemp))
+			{
+				RTCCDescentTargets.VBRFG = vtemp * 0.3048;
+			}
+			else if (papiReadScenario_vec(Buff, "PDI_ABRFG", vtemp))
+			{
+				RTCCDescentTargets.ABRFG = vtemp * 0.3048;
+			}
+			else if (papiReadScenario_double(Buff, "PDI_JBRFGZ", dtemp))
+			{
+				RTCCDescentTargets.JBRFGZ = dtemp * 0.3048;
+			}
+			else if (papiReadScenario_vec(Buff, "PDI_RARFG", vtemp))
+			{
+				RTCCDescentTargets.RARFG = vtemp * 0.3048;
+			}
+			else if (papiReadScenario_vec(Buff, "PDI_VARFG", vtemp))
+			{
+				RTCCDescentTargets.VARFG = vtemp * 0.3048;
+			}
+			else if (papiReadScenario_vec(Buff, "PDI_AARFG", vtemp))
+			{
+				RTCCDescentTargets.AARFG = vtemp * 0.3048;
+			}
+			else if (papiReadScenario_double(Buff, "PDI_JARFGZ", dtemp))
+			{
+				RTCCDescentTargets.JARFGZ = dtemp * 0.3048;
 			}
 		}
 	}
@@ -5118,7 +5220,7 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG, double &t_PDI,
 	P30TIG = t_DOI;
 }
 
-int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad, LunarDescentPlanningTable &table)
+int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad)
 {
 	LDPPOptions opt;
 
@@ -5179,12 +5281,12 @@ int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, doubl
 	}
 	PZLDPELM.num_man = res.i;
 
-	PMDLDPP(opt, res, table);
+	PMDLDPP(opt, res, PZLDPDIS);
 
-	PZLDPELM.code[0] = table.MVR[0];
-	PZLDPELM.code[1] = table.MVR[1];
-	PZLDPELM.code[2] = table.MVR[2];
-	PZLDPELM.code[3] = table.MVR[3];
+	PZLDPELM.code[0] = PZLDPDIS.MVR[0];
+	PZLDPELM.code[1] = PZLDPDIS.MVR[1];
+	PZLDPELM.code[2] = PZLDPDIS.MVR[2];
+	PZLDPELM.code[3] = PZLDPDIS.MVR[3];
 
 	return 0;
 }
@@ -7052,8 +7154,6 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_MCGRIC", SystemParameters.MCGRIC);
 	SAVE_DOUBLE("RTCC_MCGRIL", SystemParameters.MCGRIL);
 	SAVE_DOUBLE("RTCC_MCGREF", SystemParameters.MCGREF);
-	SAVE_DOUBLE("RTCC_MCLSDA", SystemParameters.MCLSDA);
-	SAVE_DOUBLE("RTCC_MCLCDA", SystemParameters.MCLCDA);
 	SAVE_DOUBLE("RTCC_MCLAMD", SystemParameters.MCLAMD);
 	SAVE_DOUBLE("RTCC_MDVSTP_T4IG", MDVSTP.T4IG);
 	SAVE_DOUBLE("RTCC_MDVSTP_T4C", MDVSTP.T4C);
@@ -7090,6 +7190,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
 	SAVE_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
 	SAVE_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
+	SAVE_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
+	SAVE_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
 
 	SAVE_DOUBLE2("RTCC_SFP_DPSI_LOI", PZSFPTAB.blocks[0].dpsi_loi, PZSFPTAB.blocks[1].dpsi_loi);
 	SAVE_DOUBLE2("RTCC_SFP_DPSI_TEI", PZSFPTAB.blocks[0].dpsi_tei, PZSFPTAB.blocks[1].dpsi_tei);
@@ -7245,8 +7347,6 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_MCGRIC", SystemParameters.MCGRIC);
 		LOAD_DOUBLE("RTCC_MCGRIL", SystemParameters.MCGRIL);
 		LOAD_DOUBLE("RTCC_MCGREF", SystemParameters.MCGREF);
-		LOAD_DOUBLE("RTCC_MCLSDA", SystemParameters.MCLSDA);
-		LOAD_DOUBLE("RTCC_MCLCDA", SystemParameters.MCLCDA);
 		LOAD_DOUBLE("RTCC_MCLAMD", SystemParameters.MCLAMD);
 		LOAD_DOUBLE("RTCC_MDVSTP_T4IG", MDVSTP.T4IG);
 		LOAD_DOUBLE("RTCC_MDVSTP_T4C", MDVSTP.T4C);
@@ -7278,6 +7378,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
 		LOAD_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
+		LOAD_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
+		LOAD_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
 
 		LOAD_DOUBLE2("RTCC_SFP_DPSI_LOI", PZSFPTAB.blocks[0].dpsi_loi, PZSFPTAB.blocks[1].dpsi_loi);
 		LOAD_DOUBLE2("RTCC_SFP_DPSI_TEI", PZSFPTAB.blocks[0].dpsi_tei, PZSFPTAB.blocks[1].dpsi_tei);
@@ -23257,14 +23359,14 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 
 	rtcc::LOIOptions opt;
 	opt.SPH = sv2;
-	opt.dh_bias = med_k40.dh_bias*1852.0;
+	opt.dh_bias = PZLOIPLN.dh_bias*1852.0;
 	opt.DV_maxm = med_k18.DVMAXm*0.3048;
 	opt.DV_maxp = med_k18.DVMAXp*0.3048;
-	opt.DW = med_k40.DW*RAD;
-	opt.eta1 = med_k40.eta_1*RAD;
+	opt.DW = PZLOIPLN.DW*RAD;
+	opt.eta1 = PZLOIPLN.eta_1*RAD;
 	opt.GMTBASE =SystemParameters.GMTBASE;
-	opt.HA_LLS = med_k40.HA_LLS*1852.0;
-	opt.HP_LLS = med_k40.HP_LLS*1852.0;
+	opt.HA_LLS = PZLOIPLN.HA_LLS*1852.0;
+	opt.HP_LLS = PZLOIPLN.HP_LLS*1852.0;
 	opt.HA_LPO = med_k18.HALOI1*1852.0;
 	opt.HP_LPO = med_k18.HPLOI1*1852.0;
 	opt.lat_LLS= BZLAND.lat[0];
@@ -23272,10 +23374,10 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 	opt.psi_DS = med_k18.psi_DS*RAD;
 	opt.psi_mn = med_k18.psi_MN*RAD;
 	opt.psi_mx = med_k18.psi_MX*RAD;
-	opt.REVS1 = med_k40.REVS1;
-	opt.REVS2 = med_k40.REVS2;
+	opt.REVS1 = PZLOIPLN.REVS1;
+	opt.REVS2 = PZLOIPLN.REVS2;
 	opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
-	opt.usePlaneSolnForInterSoln = med_k40.PlaneSolnForInterSoln;
+	opt.usePlaneSolnForInterSoln = PZLOIPLN.PlaneSolnForInterSoln;
 
 	double h_pc = length(opt.SPH.R) - opt.R_LLS;
 	if (h_pc > opt.HA_LPO)

@@ -1,3 +1,9 @@
 LSLat 26.0739
 LSLng 3.6539
 LSRad 936.573520518
+LOI_psi_DS 269.0
+LDPPDescentFlightArc 16.0
+LDPPDwellOrbits 11
+REVS1 1.9
+eta_1 36.0
+PZLTRT_DT_Ins_TPI 45.0

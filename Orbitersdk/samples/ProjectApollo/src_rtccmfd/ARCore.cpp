@@ -156,14 +156,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P15,LGC,12:51:0;");
 		}
 
-		rtcc->med_k18.psi_DS = -78.0 + 360.0;
-		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
-		rtcc->PZREAP.RRBIAS = 1350.0;
-
-		rtcc->PZMCCPLN.LOPC_M = 1;
-		rtcc->PZMCCPLN.LOPC_N = 0;
-		rtcc->PZMCCPLN.REVS2 = rtcc->med_k40.REVS2 = 4;
 	}
 	else if (mission == 9)
 	{
@@ -183,15 +176,6 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 	}
 	else if (mission == 10)
 	{
-		rtcc->med_k18.psi_DS = -91.0 + 360.0;
-		rtcc->med_k40.HP_LLS = 60.0;
-		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
-		rtcc->PZREAP.RRBIAS = 1285.0;
-
-		rtcc->PZMCCPLN.LOPC_M = 0;
-		rtcc->PZMCCPLN.LOPC_N = 0;
-		rtcc->PZMCCPLN.REVS2 = rtcc->med_k40.REVS2 = 10;
-
 		if (loadinitvalues)
 		{
 			sprintf(rtcc->MissionFileName, "Apollo 10 Constants");
@@ -205,14 +189,10 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P15,LGC,16:49:00;");
 			rtcc->GMGMED("P15,AGS,,90:00:00;");
 		}
+		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 	}
 	else if (mission == 11) // July 16th Launch
 	{
-		rtcc->med_k18.psi_DS = -91.0 + 360.0;
-		rtcc->med_k40.HP_LLS = 60.0;
-		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
-		rtcc->PZREAP.RRBIAS = 1285.0;
-
 		if (loadinitvalues)
 		{
 			sprintf(rtcc->MissionFileName, "Apollo 11 Constants");
@@ -226,49 +206,25 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P15,LGC,13:32:00;");
 			rtcc->GMGMED("P15,AGS,,90:00:00;");
 		}
+		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
 	}
 	/*else if (mission == 11) // July 18th Launch
 	{
-		rtcc->med_k18.psi_DS = -89.0 + 360.0;
-		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(100.0, 43.0, 0.0);
-		rtcc->PZREAP.RRBIAS = 1285.0;
 
 		rtcc->GMGMED("P80,1,CSM,7,18,1969;");
 		rtcc->GMGMED("P10,CSM,15:32:00;");
 	}
 	else if (mission == 11) // July 21st Launch
 	{
-		rtcc->med_k18.psi_DS = -86.0 + 360.0;
-		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 46.0, 0.0);
-		rtcc->PZREAP.RRBIAS = 1285.0;
 
 		rtcc->GMGMED("P80,1,CSM,7,21,1969;");
 		rtcc->GMGMED("P10,CSM,16:09:00;");
 	}*/
 	else if (mission == 12)
 	{
-		rtcc->med_k18.psi_DS = -75.0 + 360.0;
-		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
-		rtcc->PZREAP.RRBIAS = 1250.0;
-
-		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5551.1299*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -133067.52*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1437887.4*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_X = 0.331;
-		rtcc->RTCCPDIIgnitionTargets.K_Y = 5.8694e-7 / 0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_V = 438.0;
-
-		rtcc->RTCCDescentTargets.RBRFG = _V(-3.56205e3, 0.0, -1.370571e4)*0.3048;
-		rtcc->RTCCDescentTargets.VBRFG = _V(-1.8690305e2, 0.0, -9.873819e1)*0.3048;
-		rtcc->RTCCDescentTargets.ABRFG = _V(-4.502495e-1, 0.0, -9.5150975)*0.3048;
-		rtcc->RTCCDescentTargets.JBRFGZ = -1.4742736e-2*0.3048;
-		rtcc->RTCCDescentTargets.RARFG = _V(8.29275e1, 0.0, -2.01605e1)*0.3048;
-		rtcc->RTCCDescentTargets.VARFG = _V(-3.19e-1, 0.0, 3.1233e-1)*0.3048;
-		rtcc->RTCCDescentTargets.AARFG = _V(2.9982e-1, 0.0, -4.0165e-1)*0.3048;
-		rtcc->RTCCDescentTargets.JARFGZ = 3.76954e-2*0.3048;
 
 		if (loadinitvalues)
 		{
@@ -300,33 +256,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P15,AGS,,90:00:00;");
 		}
 
-		rtcc->med_k18.psi_DS = -93.88 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
-		rtcc->GZGENCSN.LDPPDwellOrbits = 11;
-		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.96;
-		rtcc->med_k40.eta_1 = 14.4;
-		rtcc->PZREAP.RRBIAS = 1250.0;
-
-		rtcc->PZMCCPLN.LOPC_M = 5;
-		rtcc->PZMCCPLN.LOPC_N = 12;
-		rtcc->PZMCCPLN.H_P_LPO1 = 59.0*1852.0;
-		rtcc->PZMCCPLN.ETA1 = 14.4*RAD;
-
-		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1464980.0*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_X = 0.419;
-		rtcc->RTCCPDIIgnitionTargets.K_Y = 9.05e-7 / 0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_V = 470.0;
-
-		rtcc->RTCCDescentTargets.RBRFG = _V(-3.56205e3, 0.0, -1.370571e4)*0.3048;
-		rtcc->RTCCDescentTargets.VBRFG = _V(-1.8690305e2, 0.0, -9.873819e1)*0.3048;
-		rtcc->RTCCDescentTargets.ABRFG = _V(-4.502495e-1, 0.0, -9.5150975)*0.3048;
-		rtcc->RTCCDescentTargets.JBRFGZ = -1.4742736e-2*0.3048;
-		rtcc->RTCCDescentTargets.RARFG = _V(8.29275e1, 0.0, -2.01605e1)*0.3048;
-		rtcc->RTCCDescentTargets.VARFG = _V(-3.19e-1, 0.0, 3.1233e-1)*0.3048;
-		rtcc->RTCCDescentTargets.AARFG = _V(2.9982e-1, 0.0, -4.0165e-1)*0.3048;
-		rtcc->RTCCDescentTargets.JARFGZ = 3.769542e-2*0.3048;
 	}
 	else if (mission == 14)
 	{
@@ -344,32 +274,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P15,AGS,,100:00:00;");
 		}
 
-		rtcc->med_k18.psi_DS = -76.31 + 360.0;
-		rtcc->med_k18.HPLOI1 = 59.6;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
-		rtcc->GZGENCSN.LDPPDwellOrbits = 11;
-		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.94;
-		rtcc->med_k40.eta_1 = 21.6;
-		rtcc->PZREAP.RRBIAS = 1250.0;
-		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 38.0*60.0;
-
-		rtcc->PZMCCPLN.ETA1 = 21.6*RAD;
-
-		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1464980.0*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_X = 0.419;
-		rtcc->RTCCPDIIgnitionTargets.K_Y = 9.05e-7 / 0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_V = 470.0;
-
-		rtcc->RTCCDescentTargets.RBRFG = _V(-1773.725, 0.0, -14488.027)*0.3048;
-		rtcc->RTCCDescentTargets.VBRFG = _V(-168.10646, 0.0, -77.614367)*0.3048;
-		rtcc->RTCCDescentTargets.ABRFG = _V(-0.64723603, 0.0, -8.4143819)*0.3048;
-		rtcc->RTCCDescentTargets.JBRFGZ = 8.2572949e-3*0.3048;
-		rtcc->RTCCDescentTargets.RARFG = _V(94.9191, 0.0, -15.7208)*0.3048;
-		rtcc->RTCCDescentTargets.VARFG = _V(2.08358, 0.0, 0.83031879)*0.3048;
-		rtcc->RTCCDescentTargets.AARFG = _V(0.540285, 0.0, -0.235423)*0.3048;
-		rtcc->RTCCDescentTargets.JARFGZ = 0.045092421*0.3048;
 	}
 	else if (mission == 15)
 	{
@@ -387,24 +292,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P15,AGS,,100:00:00;");
 		}
 
-		rtcc->med_k18.psi_DS = -91.0 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
-		rtcc->GZGENCSN.LDPPDescentFlightArc = 16.0*RAD;
-		rtcc->GZGENCSN.LDPPDwellOrbits = 11;
-		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.9;
-		rtcc->med_k40.eta_1 = 36.0;
-		rtcc->PZREAP.IRMAX = 40.0;
-		rtcc->PZREAP.RRBIAS = 1190.0;
-		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 45.0*60.0;
-
-		rtcc->PZMCCPLN.ETA1 = 36.0*RAD;
-
-		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5548.14101*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -162539.6686*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1547120.997*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_X = 0.334;
-		rtcc->RTCCPDIIgnitionTargets.K_Y = 2.207e-7 / 0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_V = 498.0;
 	}
 	else if (mission == 16)
 	{
@@ -422,27 +310,7 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P15,AGS,,90:00:00;");
 		}
 
-		rtcc->med_k18.psi_DS = -90.0 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
-		rtcc->GZGENCSN.LDPPDescentFlightArc = 16.0*RAD;
-		rtcc->GZGENCSN.LDPPDwellOrbits = rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
-		rtcc->GZGENCSN.LDPPHeightofPDI = 52500.0*0.3048;
-		rtcc->med_k40.DW = -16.0;
-		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.87;
-		rtcc->med_k40.eta_1 = 46.8;
-		rtcc->PZREAP.IRMAX = 80.0;
-		rtcc->PZREAP.RRBIAS = 1190.0;
-		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 47.0*60.0;
-
-		rtcc->PZMCCPLN.SITEROT = -16.0*RAD;
-		rtcc->PZMCCPLN.ETA1 = 46.8*RAD;
-
-		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5543.4605*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -159548.72*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1547623.3*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_X = 0.334;
-		rtcc->RTCCPDIIgnitionTargets.K_Y = 2.207e-7 / 0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_V = 498.0;
 	}
 	else if (mission == 17)
 	{
@@ -460,44 +328,8 @@ void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
 			rtcc->GMGMED("P15,AGS,,110:00:00;");
 		}
 
-		rtcc->med_k18.psi_DS = -90.0 + 360.0;
-		rtcc->med_k18.HPLOI1 = 52.8;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
-		rtcc->GZGENCSN.LDPPDescentFlightArc = -10.0*RAD;
-		rtcc->med_k40.DW = 20.0;
-		rtcc->med_k40.HP_LLS = 13.17;
-		rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
-		rtcc->GZGENCSN.LDPPHeightofPDI = 40000.0*0.3048;
-		rtcc->PZREAP.IRMAX = 80.0;
-		rtcc->PZREAP.RRBIAS = 1190.0;
-		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 47.0*60.0;
-
-		rtcc->PZMCCPLN.SITEROT = 20.0*RAD;
-		rtcc->PZMCCPLN.H_P_LPO1 = 51.3*1852.0;
-		rtcc->PZMCCPLN.H_P_LPO2 = 13.17*1852.0;
-
-		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5542.8976*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -156145.03*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1541941.8*0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_X = 0.334;
-		rtcc->RTCCPDIIgnitionTargets.K_Y = 2.207e-7 / 0.3048;
-		rtcc->RTCCPDIIgnitionTargets.K_V = 498.0;
 	}
-
-	if (mission == 15 || mission == 16 || mission == 17)
-	{
-		rtcc->RTCCDescentTargets.RBRFG = _V(-3.1183588e3, 0.0, -1.1741441e4)*0.3048;
-		rtcc->RTCCDescentTargets.VBRFG = _V(-1.9646916e2, 0.0, -1.6675997e2)*0.3048;
-		rtcc->RTCCDescentTargets.ABRFG = _V(-7.1824814e-1, 0.0, -8.3024503)*0.3048;
-		rtcc->RTCCDescentTargets.JBRFGZ = -1.5123659e-2*0.3048;
-		rtcc->RTCCDescentTargets.RARFG = _V(1.585e2, 0.0, -2.73554e1)*0.3048;
-		rtcc->RTCCDescentTargets.VARFG = _V(-3.53476, 0.0, 2.49505e-2)*0.3048;
-		rtcc->RTCCDescentTargets.AARFG = _V(7.71783e-2, 0.0, -5.89627e-1)*0.3048;
-		rtcc->RTCCDescentTargets.JARFGZ = 4.31736e-2*0.3048;
-	}
-
-	rtcc->med_k18.psi_MX = rtcc->med_k18.psi_DS + 1.0;
-	rtcc->med_k18.psi_MN = rtcc->med_k18.psi_DS - 1.0;
 }
 
 int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
@@ -3416,11 +3248,11 @@ int ARCore::subThread()
 			sv = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		if (!GC->rtcc->LunarDescentPlanningProcessor(sv, GC->rtcc->CalcGETBase(), GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST], GC->descplantable))
+		if (!GC->rtcc->LunarDescentPlanningProcessor(sv, GC->rtcc->CalcGETBase(), GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]))
 		{
 			if (GC->rtcc->med_k16.Mode != 7)
 			{
-				GC->t_Land = GC->descplantable.PD_GETTD;
+				GC->t_Land = GC->rtcc->PZLDPDIS.PD_GETTD;
 			}
 		}
 
@@ -4639,14 +4471,14 @@ int ARCore::subThread()
 			double attachedMass = 0.0;
 
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
-			sv_tig = GC->rtcc->coast(sv_now, GC->descplantable.GETIG[0] - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
+			sv_tig = GC->rtcc->coast(sv_now, GC->rtcc->PZLDPDIS.GETIG[0] - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
 			if (docked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
 
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), GC->descplantable.GETIG[0], GC->rtcc->med_m70.Thruster, attachedMass, GC->descplantable.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), GC->rtcc->PZLDPDIS.GETIG[0], GC->rtcc->med_m70.Thruster, attachedMass, GC->rtcc->PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH, sv_pre, sv_post);
 		}
 
 		Result = 0;
@@ -4708,11 +4540,6 @@ int ARCore::subThread()
 	case 46: //TLI Direct Input
 	{
 		if (!GC->MissionPlanningActive)
-		{
-			Result = 0;
-			break;
-		}
-		if (g_Data.progVessel->GetStage() >= CSM_LEM_STAGE)
 		{
 			Result = 0;
 			break;

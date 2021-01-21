@@ -29,6 +29,9 @@ struct RTCCSystemParameters
 	{
 		//DEFAULT VALUES
 
+		//Epoch of NBY 1969 (Apollo 7-10)
+		AGCEpoch = 40221.525;
+
 		//These are calculated with R_E = 6.373338e6
 		MCGMUM = 2.454405845045305e-01;
 		MCEMUU = 19.95468740240253;
@@ -178,5 +181,13 @@ struct RTCCSystemParameters
 	//Nominal CSM cross-product steering constant
 	double MCVCMC;
 	//Phase indicator system parameter
+	// 0 = No Phase, 1 = Prelaunch
+	// 2, 3 = Condition for Launch and Condition for Launch Sim?
+	// 13 = Orbit (likely, but what about lunar orbit)
+	// 17 = Lunar Descent (?)
+	// 18 = Translunar (likely)
+	// 20 = Lunar Stay
+	// 26 = Transearth(likely)
+	// 14, 19, 21, 27 must be high speed
 	int MGGPHS;
 };

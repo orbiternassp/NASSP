@@ -179,8 +179,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "GMPManeuverCode", G->GMPManeuverCode);
 	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
 
-	papiWriteScenario_double(scn, "LOI_eta_1", GC->rtcc->med_k40.eta_1);
-	papiWriteScenario_double(scn, "LOI_REVS1", GC->rtcc->med_k40.REVS1);
 	papiWriteScenario_vec(scn, "R_TLI", G->R_TLI);
 	papiWriteScenario_vec(scn, "V_TLI", G->V_TLI);
 
@@ -296,8 +294,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "GMPManeuverCode", G->GMPManeuverCode);
 		papiReadScenario_double(line, "SPSGET", G->SPSGET);
 
-		papiReadScenario_double(line, "LOI_eta_1", GC->rtcc->med_k40.eta_1);
-		papiReadScenario_double(line, "LOI_REVS1", GC->rtcc->med_k40.REVS1);
 		papiReadScenario_vec(line, "R_TLI", G->R_TLI);
 		papiReadScenario_vec(line, "V_TLI", G->V_TLI);
 
@@ -5462,7 +5458,7 @@ bool LOI_HALLSInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOI_HALLS(double ha)
 {
-	GC->rtcc->med_k40.HA_LLS = ha;
+	GC->rtcc->PZLOIPLN.HA_LLS = ha;
 }
 
 void ApolloRTCCMFD::menuSetLOI_HPLLS()
@@ -5483,7 +5479,7 @@ bool LOI_HPLLSInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOI_HPLLS(double hp)
 {
-	GC->rtcc->med_k40.HP_LLS = hp;
+	GC->rtcc->PZLOIPLN.HP_LLS = hp;
 }
 
 void ApolloRTCCMFD::menuSetLOIDW()
@@ -5504,7 +5500,7 @@ bool LOIDWInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIDW(double dw)
 {
-	GC->rtcc->med_k40.DW = dw;
+	GC->rtcc->PZLOIPLN.DW = dw;
 }
 
 void ApolloRTCCMFD::menuSetLOIDHBias()
@@ -5525,7 +5521,7 @@ bool LOIDHBiasInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIDHBias(double dh)
 {
-	GC->rtcc->med_k40.dh_bias = dh;
+	GC->rtcc->PZLOIPLN.dh_bias = dh;
 }
 
 void ApolloRTCCMFD::menuSetLOIRevs1()
@@ -5546,7 +5542,7 @@ bool LOIRevs1Input(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIRevs1(double revs1)
 {
-	GC->rtcc->med_k40.REVS1 = revs1;
+	GC->rtcc->PZLOIPLN.REVS1 = revs1;
 }
 
 void ApolloRTCCMFD::menuSetLOIRevs2()
@@ -5567,12 +5563,12 @@ bool LOIRevs2Input(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIRevs2(int revs2)
 {
-	GC->rtcc->med_k40.REVS2 = revs2;
+	GC->rtcc->PZLOIPLN.REVS2 = revs2;
 }
 
 void ApolloRTCCMFD::menuCycleLOIInterSolnFlag()
 {
-	GC->rtcc->med_k40.PlaneSolnForInterSoln = !GC->rtcc->med_k40.PlaneSolnForInterSoln;
+	GC->rtcc->PZLOIPLN.PlaneSolnForInterSoln = !GC->rtcc->PZLOIPLN.PlaneSolnForInterSoln;
 }
 
 void ApolloRTCCMFD::menuSetLOIEta1()
@@ -5593,7 +5589,7 @@ bool LOIEta1Input(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIEta1(double eta)
 {
-	GC->rtcc->med_k40.eta_1 = eta;
+	GC->rtcc->PZLOIPLN.eta_1 = eta;
 }
 
 void ApolloRTCCMFD::menuSetTLCCAlt()

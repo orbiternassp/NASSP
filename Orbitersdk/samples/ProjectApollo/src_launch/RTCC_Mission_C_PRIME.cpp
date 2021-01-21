@@ -466,14 +466,14 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 				//Step 1: Calculate LOI-1 with MCC-4 burnout vector
 
-				med_k40.dh_bias = 0.0;
-				med_k40.DW = -15.0;
-				med_k40.eta_1 = 0.0;
-				med_k40.HA_LLS = 60.0;
-				med_k40.HP_LLS = 60.0;
-				med_k40.PlaneSolnForInterSoln = true;
-				med_k40.REVS1 = 2.0;
-				med_k40.REVS2 = 4;
+				PZLOIPLN.dh_bias = 0.0;
+				PZLOIPLN.DW = -15.0;
+				PZLOIPLN.eta_1 = 0.0;
+				PZLOIPLN.HA_LLS = 60.0;
+				PZLOIPLN.HP_LLS = 60.0;
+				PZLOIPLN.PlaneSolnForInterSoln = true;
+				PZLOIPLN.REVS1 = 2.0;
+				PZLOIPLN.REVS2 = 4;
 
 				med_k18.HALOI1 = 170.0;
 				med_k18.HPLOI1 = 60.0;
@@ -504,9 +504,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
 				med_k16.DesiredHeight = 60.0*1852.0;
 
-				LunarDescentPlanningTable table;
-				LunarDescentPlanningProcessor(sv_cut2, CalcGETBase(), BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST], table);
-				P30TIG_LOI2 = table.GETIG[0];
+				LunarDescentPlanningProcessor(sv_cut2, CalcGETBase(), BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
+				P30TIG_LOI2 = PZLDPDIS.GETIG[0];
 
 				//Step 3: Calculate LVLH REFSMMAT at LOI-2 TIG taking into account the trajectory leading up to that point
 				refsopt.GETbase = CalcGETBase();
@@ -584,14 +583,14 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		GETbase = CalcGETBase();
 		sv_ephem = StateVectorCalcEphem(calcParams.src);
 
-		med_k40.dh_bias = 0.0;
-		med_k40.DW = -15.0;
-		med_k40.eta_1 = 0.0;
-		med_k40.HA_LLS = 60.0;
-		med_k40.HP_LLS = 60.0;
-		med_k40.PlaneSolnForInterSoln = true;
-		med_k40.REVS1 = 2.0;
-		med_k40.REVS2 = 4;
+		PZLOIPLN.dh_bias = 0.0;
+		PZLOIPLN.DW = -15.0;
+		PZLOIPLN.eta_1 = 0.0;
+		PZLOIPLN.HA_LLS = 60.0;
+		PZLOIPLN.HP_LLS = 60.0;
+		PZLOIPLN.PlaneSolnForInterSoln = true;
+		PZLOIPLN.REVS1 = 2.0;
+		PZLOIPLN.REVS2 = 4;
 
 		med_k18.HALOI1 = 170.0;
 		med_k18.HPLOI1 = 60.0;
@@ -1032,10 +1031,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
 		med_k16.DesiredHeight = 60.0*1852.0;
 
-		LunarDescentPlanningTable table;
-		LunarDescentPlanningProcessor(sv, GETbase, BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST], table);
+		LunarDescentPlanningProcessor(sv, GETbase, BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
-		PoweredFlightProcessor(sv, GETbase, table.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, table.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;

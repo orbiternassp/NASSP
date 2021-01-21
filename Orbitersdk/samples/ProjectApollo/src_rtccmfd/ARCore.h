@@ -47,8 +47,6 @@ public:
 	int mptInitError;
 
 	RTCC* rtcc;
-
-	LunarDescentPlanningTable descplantable;
 };
 
 class ARCore {

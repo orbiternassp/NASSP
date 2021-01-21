@@ -2525,7 +2525,7 @@ public:
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_pre, SV &sv_post);
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
-	int LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad, LunarDescentPlanningTable &table);
+	int LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, GPMPRESULTS &res);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
@@ -3073,19 +3073,6 @@ public:
 		double TimeStep = 60.0;
 		double TimeRange = 600.0;
 	} med_k30;
-
-	//LOI Initialization (Apollo 14 and later, MED code is not from any documentation!)
-	struct MED_K40
-	{
-		double HA_LLS = 60.0;
-		double HP_LLS = 8.23;
-		double DW = -15.0;
-		double REVS1 = 2.0;
-		int REVS2 = 11;
-		double eta_1 = 0.0;
-		double dh_bias = 0.0;
-		bool PlaneSolnForInterSoln = true;
-	} med_k40;
 
 	//Lunar Launch Targeting Processor (Apollo 14 and later, MED code is not from any documentation!)
 	struct MED_K50
@@ -3642,6 +3629,8 @@ public:
 		std::string code[4];
 	} PZLDPELM;
 
+	LunarDescentPlanningTable PZLDPDIS;
+
 	struct LMPositionVectorTable
 	{
 		double lat[4];
@@ -3980,8 +3969,8 @@ public:
 		//Short profile
 		double DT_DH = 15.0*1852.0;
 		double DT_Theta_i = 1.69*RAD;
-		double DT_Ins_TPI;			//Fixed time from insertion to TPI
-		double DT_Ins_TPI_NOM;		//Nominal time from insertion to TPI
+		double DT_Ins_TPI = 40.0*60.0;			//Fixed time from insertion to TPI
+		double DT_Ins_TPI_NOM = 40.0*60.0;		//Nominal time from insertion to TPI
 	} PZLTRT;
 
 	struct LAIInputOutput
@@ -4182,6 +4171,18 @@ public:
 		//Max inclination of powered return
 		double INCL_PR_MAX = 40.0*RAD;
 	} PZMCCPLN;
+
+	struct LOITargetingInitTable
+	{
+		double HA_LLS = 60.0;
+		double HP_LLS = 8.23;
+		double DW = -15.0;
+		double REVS1 = 2.0;
+		int REVS2 = 11;
+		double eta_1 = 0.0;
+		double dh_bias = 0.0;
+		bool PlaneSolnForInterSoln = true;
+	} PZLOIPLN; //Figure out real name!
 
 	struct UMEDSaveTable
 	{
