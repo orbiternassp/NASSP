@@ -191,7 +191,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "SKYLAB_NCC", G->Skylab_t_NCC);
 	papiWriteScenario_double(scn, "SKYLAB_NSR", G->Skylab_t_NSR);
 	papiWriteScenario_double(scn, "t_TPI", G->t_TPI);
-	//papiWriteScenario_double(scn, "SKYLAB_NPC", G->Skylab_t_NPC);
 	papiWriteScenario_double(scn, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
 	papiWriteScenario_double(scn, "SKYLAB_E_L", G->Skylab_E_L);
 	papiWriteScenario_double(scn, "SKYLAB_DH1", G->SkylabDH1);
@@ -205,9 +204,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
 	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_LunarLiftoff);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
-	papiWriteScenario_double(scn, "DT_Ins_TPI", GC->rtcc->PZLTRT.DT_Ins_TPI);
-	papiWriteScenario_double(scn, "LTPoweredFlightArc", GC->rtcc->PZLTRT.PoweredFlightArc);
-	papiWriteScenario_double(scn, "LTPoweredFlightTime", GC->rtcc->PZLTRT.PoweredFlightTime);
 	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
 	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -306,7 +302,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "SKYLAB_NCC", G->Skylab_t_NCC);
 		papiReadScenario_double(line, "SKYLAB_NSR", G->Skylab_t_NSR);
 		papiReadScenario_double(line, "t_TPI", G->t_TPI);
-		//papiReadScenario_double(line, "SKYLAB_NPC", G->Skylab_t_NPC);
 		papiReadScenario_double(line, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
 		papiReadScenario_double(line, "SKYLAB_E_L", G->Skylab_E_L);
 		papiReadScenario_double(line, "SKYLAB_DH1", G->SkylabDH1);
@@ -320,9 +315,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
 		papiReadScenario_double(line, "t_Liftoff_guess", G->t_LunarLiftoff);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
-		papiReadScenario_double(line, "DT_Ins_TPI", GC->rtcc->PZLTRT.DT_Ins_TPI);
-		papiReadScenario_double(line, "LTPoweredFlightArc", GC->rtcc->PZLTRT.PoweredFlightArc);
-		papiReadScenario_double(line, "LTPoweredFlightTime", GC->rtcc->PZLTRT.PoweredFlightTime);
 		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
 		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -1549,7 +1541,7 @@ bool MissionNumberInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_MissionNumber(int mission)
 {
 	GC->mission = mission;
-	GC->SetMissionSpecificParameters(true);
+	GC->SetMissionSpecificParameters();
 }
 
 void ApolloRTCCMFD::menuMPTDirectInputMPTCode()

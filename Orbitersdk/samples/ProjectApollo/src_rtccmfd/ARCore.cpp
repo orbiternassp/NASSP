@@ -45,6 +45,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "AS-503") == 0)
 	{
 		mission = 8;
+		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 	}
 	else if (strcmp(v->GetName(), "AS-504") == 0 || strcmp(v->GetName(), "Spider") == 0)
 	{
@@ -53,34 +54,44 @@ AR_GCore::AR_GCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie-Brown") == 0 || strcmp(v->GetName(), "Snoopy") == 0)
 	{
 		mission = 10;
+		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 	}
 	else if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0 || strcmp(v->GetName(), "Eagle") == 0)
 	{
 		mission = 11;
+		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
+		//t_Land = OrbMech::HHMMSSToSS(100.0, 43.0, 0.0); //July 18 launch
+		//t_Land = OrbMech::HHMMSSToSS(103.0, 46.0, 0.0); //July 21 launch
 	}
 	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0 || strcmp(v->GetName(), "Intrepid") == 0)
 	{
 		mission = 12;
+		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 	}
 	else if (strcmp(v->GetName(), "Odyssey") == 0 || strcmp(v->GetName(), "Aquarius") == 0)
 	{
 		mission = 13;
+		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 	}
 	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0 || strcmp(v->GetName(), "Antares") == 0)
 	{
 		mission = 14;
+		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0 || strcmp(v->GetName(), "Falcon") == 0)
 	{
 		mission = 15;
+		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 	}
 	else if (strcmp(v->GetName(), "Casper") == 0 || strcmp(v->GetName(), "Orion") == 0)
 	{
 		mission = 16;
+		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 	}
 	else if (strcmp(v->GetName(), "America") == 0 || strcmp(v->GetName(), "Challenger") == 0)
 	{
 		mission = 17;
+		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 	}
 
 	//Get a pointer to the RTCC. If the MCC vessel doesn't exist yet, create it
@@ -105,18 +116,11 @@ AR_GCore::AR_GCore(VESSEL* v)
 	rtcc = pMCCVessel->rtcc;
 
 	
-	bool loadinitvalues;
 	//If the year hasn't been loaded into the RTCC we can assume it hasn't been properly initialized yet
 	if (rtcc->GZGENCSN.Year == 0)
 	{
-		loadinitvalues = true;
+		SetMissionSpecificParameters();
 	}
-	else
-	{
-		loadinitvalues = false;
-	}
-
-	SetMissionSpecificParameters(loadinitvalues);
 }
 
 AR_GCore::~AR_GCore()
@@ -124,211 +128,169 @@ AR_GCore::~AR_GCore()
 
 }
 
-void AR_GCore::SetMissionSpecificParameters(bool loadinitvalues)
+void AR_GCore::SetMissionSpecificParameters()
 {
 	if (mission == 7)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 7 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1968, 10, 11);
-			rtcc->GMGMED("P80,1,CSM,10,11,1968;");
-			rtcc->GMGMED("P10,CSM,15:02:45;");
-			rtcc->GMGMED("P12,CSM,15:02:45,72.0;");
-			rtcc->GMGMED("P12,IU1,15:02:28,72.0;");
-			rtcc->GMGMED("P15,AGC,15:02:45;");
-			rtcc->GMGMED("P15,LGC,15:02:45;");
-		}
+		sprintf(rtcc->MissionFileName, "Apollo 7 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1968, 10, 11);
+		rtcc->GMGMED("P80,1,CSM,10,11,1968;");
+		rtcc->GMGMED("P10,CSM,15:02:45;");
+		rtcc->GMGMED("P12,CSM,15:02:45,72.0;");
+		rtcc->GMGMED("P12,IU1,15:02:28,72.0;");
+		rtcc->GMGMED("P15,AGC,15:02:45;");
+		rtcc->GMGMED("P15,LGC,15:02:45;");
 	}
 	else if (mission == 8)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 8 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1968, 12, 21);
-			rtcc->GMGMED("P80,1,CSM,12,21,1968;");
-			rtcc->GMGMED("P10,CSM,12:51:0;");
-			rtcc->GMGMED("P12,CSM,12:51:0,72.0;");
-			rtcc->GMGMED("P12,IU1,12:50:43,72.0;");
-			rtcc->GMGMED("P15,AGC,12:51:0;");
-			rtcc->GMGMED("P15,LGC,12:51:0;");
-		}
-
-		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
+		sprintf(rtcc->MissionFileName, "Apollo 8 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1968, 12, 21);
+		rtcc->GMGMED("P80,1,CSM,12,21,1968;");
+		rtcc->GMGMED("P10,CSM,12:51:0;");
+		rtcc->GMGMED("P12,CSM,12:51:0,72.0;");
+		rtcc->GMGMED("P12,IU1,12:50:43,72.0;");
+		rtcc->GMGMED("P15,AGC,12:51:0;");
+		rtcc->GMGMED("P15,LGC,12:51:0;");
 	}
 	else if (mission == 9)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 9 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1969, 3, 3);
-			rtcc->GMGMED("P80,1,CSM,3,3,1969;");
-			rtcc->GMGMED("P10,CSM,16:00:00;");
-			rtcc->GMGMED("P12,CSM,16:00:00,72.0;");
-			rtcc->GMGMED("P12,IU1,15:59:43,72.0;");
-			rtcc->GMGMED("P15,AGC,16:00:00;");
-			rtcc->GMGMED("P15,LGC,16:00:00;");
-			rtcc->GMGMED("P15,AGS,,40:00:00;");
-		}
+		sprintf(rtcc->MissionFileName, "Apollo 9 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1969, 3, 3);
+		rtcc->GMGMED("P80,1,CSM,3,3,1969;");
+		rtcc->GMGMED("P10,CSM,16:00:00;");
+		rtcc->GMGMED("P12,CSM,16:00:00,72.0;");
+		rtcc->GMGMED("P12,IU1,15:59:43,72.0;");
+		rtcc->GMGMED("P15,AGC,16:00:00;");
+		rtcc->GMGMED("P15,LGC,16:00:00;");
+		rtcc->GMGMED("P15,AGS,,40:00:00;");
 	}
 	else if (mission == 10)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 10 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1969, 5, 18);
-			rtcc->GMGMED("P80,1,CSM,5,18,1969;");
-			rtcc->GMGMED("P10,CSM,16:49:00;");
-			rtcc->GMGMED("P12,CSM,16:49:00,72.0;");
-			rtcc->GMGMED("P12,IU1,16:48:43,72.0;");
-			rtcc->GMGMED("P15,AGC,16:49:00;");
-			rtcc->GMGMED("P15,LGC,16:49:00;");
-			rtcc->GMGMED("P15,AGS,,90:00:00;");
-		}
-		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
+		sprintf(rtcc->MissionFileName, "Apollo 10 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1969, 5, 18);
+		rtcc->GMGMED("P80,1,CSM,5,18,1969;");
+		rtcc->GMGMED("P10,CSM,16:49:00;");
+		rtcc->GMGMED("P12,CSM,16:49:00,72.0;");
+		rtcc->GMGMED("P12,IU1,16:48:43,72.0;");
+		rtcc->GMGMED("P15,AGC,16:49:00;");
+		rtcc->GMGMED("P15,LGC,16:49:00;");
+		rtcc->GMGMED("P15,AGS,,90:00:00;");
 	}
 	else if (mission == 11) // July 16th Launch
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 11 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1969, 7, 16);
-			rtcc->GMGMED("P80,1,CSM,7,16,1969;");
-			rtcc->GMGMED("P10,CSM,13:32:00;");
-			rtcc->GMGMED("P12,CSM,13:32:00,72.0;");
-			rtcc->GMGMED("P12,IU1,13:31:43,72.0;");
-			rtcc->GMGMED("P15,AGC,13:32:00;");
-			rtcc->GMGMED("P15,LGC,13:32:00;");
-			rtcc->GMGMED("P15,AGS,,90:00:00;");
-		}
-		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
-	}
-	/*else if (mission == 11) // July 18th Launch
-	{
-		t_Land = OrbMech::HHMMSSToSS(100.0, 43.0, 0.0);
+		//July 16 launch
+		sprintf(rtcc->MissionFileName, "Apollo 11 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1969, 7, 16);
+		rtcc->GMGMED("P80,1,CSM,7,16,1969;");
+		rtcc->GMGMED("P10,CSM,13:32:00;");
+		rtcc->GMGMED("P12,CSM,13:32:00,72.0;");
+		rtcc->GMGMED("P12,IU1,13:31:43,72.0;");
+		rtcc->GMGMED("P15,AGC,13:32:00;");
+		rtcc->GMGMED("P15,LGC,13:32:00;");
+		rtcc->GMGMED("P15,AGS,,90:00:00;");
 
-		rtcc->GMGMED("P80,1,CSM,7,18,1969;");
-		rtcc->GMGMED("P10,CSM,15:32:00;");
-	}
-	else if (mission == 11) // July 21st Launch
-	{
-		t_Land = OrbMech::HHMMSSToSS(103.0, 46.0, 0.0);
+		//July 18 launch
+		//rtcc->LoadLaunchDaySpecificParameters(1969, 7, 18);
+		//rtcc->GMGMED("P80,1,CSM,7,18,1969;");
+		//rtcc->GMGMED("P10,CSM,15:32:00;");
+		//rtcc->GMGMED("P12,CSM,15:32:00,89.295;");
+		//rtcc->GMGMED("P12,IU1,15:31:43,89.295;");
+		//rtcc->GMGMED("P15,AGC,15:32:00;");
+		//rtcc->GMGMED("P15,LGC,15:32:00;");
+		//rtcc->GMGMED("P15,AGS,,90:00:00;");
 
-		rtcc->GMGMED("P80,1,CSM,7,21,1969;");
-		rtcc->GMGMED("P10,CSM,16:09:00;");
-	}*/
+		//July 21 launch
+		//rtcc->LoadLaunchDaySpecificParameters(1969, 7, 21);
+		//rtcc->GMGMED("P80,1,CSM,7,21,1969;");
+		//rtcc->GMGMED("P10,CSM,16:09:00;");
+		//rtcc->GMGMED("P12,CSM,16:09:00,94.6775;");
+		//rtcc->GMGMED("P12,IU1,16:08:43,94.6775;");
+		//rtcc->GMGMED("P15,AGC,16:09:00;");
+		//rtcc->GMGMED("P15,LGC,16:09:00;");
+		//rtcc->GMGMED("P15,AGS,,90:00:00;");
+	}
 	else if (mission == 12)
 	{
-		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
-
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 12 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1969, 11, 14);
-			rtcc->GMGMED("P80,1,CSM,11,14,1969;");
-			rtcc->GMGMED("P10,CSM,16:22:00;");
-			rtcc->GMGMED("P12,CSM,16:22:00,72.0;");
-			rtcc->GMGMED("P12,IU1,16:21:43,72.0;");
-			rtcc->GMGMED("P15,AGC,16:22:00;");
-			rtcc->GMGMED("P15,LGC,16:22:00;");
-			rtcc->GMGMED("P15,AGS,,100:00:00;");
-		}
+		sprintf(rtcc->MissionFileName, "Apollo 12 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1969, 11, 14);
+		rtcc->GMGMED("P80,1,CSM,11,14,1969;");
+		rtcc->GMGMED("P10,CSM,16:22:00;");
+		rtcc->GMGMED("P12,CSM,16:22:00,72.0;");
+		rtcc->GMGMED("P12,IU1,16:21:43,72.0;");
+		rtcc->GMGMED("P15,AGC,16:22:00;");
+		rtcc->GMGMED("P15,LGC,16:22:00;");
+		rtcc->GMGMED("P15,AGS,,100:00:00;");
 	}
 	else if (mission == 13)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 13 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1970, 4, 11);
-			rtcc->GMGMED("P80,1,CSM,4,11,1970;");
-			rtcc->GMGMED("P10,CSM,19:13:00;");
-			rtcc->GMGMED("P12,CSM,19:13:00,72.0;");
-			rtcc->GMGMED("P12,IU1,19:12:43,72.0;");
-			rtcc->GMGMED("P15,AGC,19:13:00;");
-			rtcc->GMGMED("P15,LGC,19:13:00;");
-			rtcc->GMGMED("P15,AGS,,90:00:00;");
-		}
-
-		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
+		sprintf(rtcc->MissionFileName, "Apollo 13 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1970, 4, 11);
+		rtcc->GMGMED("P80,1,CSM,4,11,1970;");
+		rtcc->GMGMED("P10,CSM,19:13:00;");
+		rtcc->GMGMED("P12,CSM,19:13:00,72.0;");
+		rtcc->GMGMED("P12,IU1,19:12:43,72.0;");
+		rtcc->GMGMED("P15,AGC,19:13:00;");
+		rtcc->GMGMED("P15,LGC,19:13:00;");
+		rtcc->GMGMED("P15,AGS,,90:00:00;");
 	}
 	else if (mission == 14)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 14 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1971, 1, 31);
-			rtcc->GMGMED("P80,1,CSM,1,31,1971;");
-			rtcc->GMGMED("P10,CSM,20:23:00;");
-			rtcc->GMGMED("P12,CSM,20:23:00,72.0;");
-			rtcc->GMGMED("P12,IU1,20:22:43,72.0;");
-			rtcc->GMGMED("P15,AGC,20:23:00;");
-			rtcc->GMGMED("P15,LGC,20:23:00;");
-			rtcc->GMGMED("P15,AGS,,100:00:00;");
-		}
-
-		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
+		sprintf(rtcc->MissionFileName, "Apollo 14 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1971, 1, 31);
+		rtcc->GMGMED("P80,1,CSM,1,31,1971;");
+		rtcc->GMGMED("P10,CSM,20:23:00;");
+		rtcc->GMGMED("P12,CSM,20:23:00,72.0;");
+		rtcc->GMGMED("P12,IU1,20:22:43,72.0;");
+		rtcc->GMGMED("P15,AGC,20:23:00;");
+		rtcc->GMGMED("P15,LGC,20:23:00;");
+		rtcc->GMGMED("P15,AGS,,100:00:00;");
 	}
 	else if (mission == 15)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 15 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1971, 7, 26);
-			rtcc->GMGMED("P80,1,CSM,7,26,1971;");
-			rtcc->GMGMED("P10,CSM,13:34:00;");
-			rtcc->GMGMED("P12,CSM,13:34:00,80.088;");
-			rtcc->GMGMED("P12,IU1,13:33:43,80.088;");
-			rtcc->GMGMED("P15,AGC,13:34:00;");
-			rtcc->GMGMED("P15,LGC,13:34:00;");
-			rtcc->GMGMED("P15,AGS,,100:00:00;");
-		}
-
-		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
+		sprintf(rtcc->MissionFileName, "Apollo 15 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1971, 7, 26);
+		rtcc->GMGMED("P80,1,CSM,7,26,1971;");
+		rtcc->GMGMED("P10,CSM,13:34:00;");
+		rtcc->GMGMED("P12,CSM,13:34:00,80.088;");
+		rtcc->GMGMED("P12,IU1,13:33:43,80.088;");
+		rtcc->GMGMED("P15,AGC,13:34:00;");
+		rtcc->GMGMED("P15,LGC,13:34:00;");
+		rtcc->GMGMED("P15,AGS,,100:00:00;");
 	}
 	else if (mission == 16)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 16 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1972, 4, 16);
-			rtcc->GMGMED("P80,1,CSM,4,16,1972;");
-			rtcc->GMGMED("P10,CSM,17:54:00;");
-			rtcc->GMGMED("P12,CSM,17:54:00,72.0;");
-			rtcc->GMGMED("P12,IU1,17:53:43,72.0;");
-			rtcc->GMGMED("P15,AGC,17:54:00;");
-			rtcc->GMGMED("P15,LGC,17:54:00;");
-			rtcc->GMGMED("P15,AGS,,90:00:00;");
-		}
-
-		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
+		sprintf(rtcc->MissionFileName, "Apollo 16 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1972, 4, 16);
+		rtcc->GMGMED("P80,1,CSM,4,16,1972;");
+		rtcc->GMGMED("P10,CSM,17:54:00;");
+		rtcc->GMGMED("P12,CSM,17:54:00,72.0;");
+		rtcc->GMGMED("P12,IU1,17:53:43,72.0;");
+		rtcc->GMGMED("P15,AGC,17:54:00;");
+		rtcc->GMGMED("P15,LGC,17:54:00;");
+		rtcc->GMGMED("P15,AGS,,90:00:00;");
 	}
 	else if (mission == 17)
 	{
-		if (loadinitvalues)
-		{
-			sprintf(rtcc->MissionFileName, "Apollo 16 Constants");
-			rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
-			rtcc->LoadLaunchDaySpecificParameters(1972, 12, 7);
-			rtcc->GMGMED("P80,1,CSM,12,7,1972;");
-			rtcc->GMGMED("P10,CSM,02:53:00;");
-			rtcc->GMGMED("P12,CSM,02:53:00,72.0;");
-			rtcc->GMGMED("P12,IU1,02:52:43,72.0;");
-			rtcc->GMGMED("P15,AGC,02:53:00;");
-			rtcc->GMGMED("P15,LGC,02:53:00;");
-			rtcc->GMGMED("P15,AGS,,110:00:00;");
-		}
-
-		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
+		sprintf(rtcc->MissionFileName, "Apollo 17 Constants");
+		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->LoadLaunchDaySpecificParameters(1972, 12, 7);
+		rtcc->GMGMED("P80,1,CSM,12,7,1972;");
+		rtcc->GMGMED("P10,CSM,02:53:00;");
+		rtcc->GMGMED("P12,CSM,02:53:00,72.0;");
+		rtcc->GMGMED("P12,IU1,02:52:43,72.0;");
+		rtcc->GMGMED("P15,AGC,02:53:00;");
+		rtcc->GMGMED("P15,LGC,02:53:00;");
+		rtcc->GMGMED("P15,AGS,,110:00:00;");
 	}
 }
 
