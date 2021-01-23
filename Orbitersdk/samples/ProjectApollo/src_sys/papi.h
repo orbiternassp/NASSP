@@ -41,6 +41,14 @@ static inline void papiWriteScenario_double(FILEHANDLE scn, char *item, double d
 	oapiWriteLine(scn, buffer);
 }
 
+static inline void papiWriteScenario_double2(FILEHANDLE scn, char *item, double d1, double d2) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %.12lf %.12lf", item, d1, d2);
+	oapiWriteLine(scn, buffer);
+}
+
 static inline void papiWriteScenario_vec(FILEHANDLE scn, char *item, VECTOR3 v) {
 
 	char buffer[256];

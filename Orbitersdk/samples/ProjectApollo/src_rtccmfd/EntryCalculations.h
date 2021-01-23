@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 #include "OrbMech.h"
+#include "RTCCModule.h"
 #include "RTCCTables.h"
 
 struct ATPData
@@ -236,10 +237,10 @@ struct DiscreteData
 	int NOSOLN;
 };
 
-class ConicRTEEarthNew
+class ConicRTEEarthNew : public RTCCModule
 {
 public:
-	ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris);
+	ConicRTEEarthNew(RTCC *r, std::vector<EphemerisData> &SVArray);
 	void MAIN();
 	void Init(double dvm, int icrngg, double irmax, double urmax, double rrbi, int imsfn);
 	void READ(int Mode, double gmtbase, double tzmin, double tzmax);
@@ -274,7 +275,6 @@ protected:
 	int Mode;
 	//State vector array
 	std::vector<EphemerisData> &XArray;
-	PZEFEM &ephem;
 	//Maximum DV to be used for the abort manuever
 	double DVMAX;
 	//Time at which maneuver is to be computed

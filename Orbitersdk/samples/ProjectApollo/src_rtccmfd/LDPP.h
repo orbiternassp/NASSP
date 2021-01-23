@@ -82,7 +82,7 @@ struct LDPPResults
 	double t_Land;
 	//Azimuth at landing site
 	double azi;
-	MPTSV sv_before[4];
+	SV sv_before[4];
 	VECTOR3 V_after[4];
 };
 
@@ -121,7 +121,7 @@ protected:
 	//State vector index
 	//0-3 = maneuvers
 	//0 = before, 1 = after
-	MPTSV LDPP_SV_E[4][2];
+	SV LDPP_SV_E[4][2];
 	SV sv_CSM, sv_LM, sv_V;
 
 	LDPPOptions opt;

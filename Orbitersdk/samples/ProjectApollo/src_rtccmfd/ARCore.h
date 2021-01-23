@@ -35,22 +35,18 @@ public:
 
 	void SetMissionSpecificParameters();
 	void MPTMassUpdate();
-	int MPTTrajectoryUpdate();
+	int MPTTrajectoryUpdate(VESSEL *ves, bool csm);
 
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 	double t_Land;				//Time of landing
 
-	VESSEL *pCSM;
-	VESSEL *pLM;
+	VESSEL *pMPTVessel;
+	int MPTVesselNumber;
 
-	int pCSMnumber;
-	int pLMnumber;
 	int mptInitError;
 
 	RTCC* rtcc;
-
-	LunarDescentPlanningTable descplantable;
 };
 
 class ARCore {
@@ -87,6 +83,7 @@ public:
 	void CycleFIDOOrbitDigitals1();
 	void CycleFIDOOrbitDigitals2();
 	void CycleSpaceDigitals();
+	void CycleVectorPanelSummary();
 	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
 	void RTETradeoffDisplayCalc();
@@ -135,6 +132,8 @@ public:
 	void SendNodeToSFP();
 	void CalculateTPITime();
 	void GetStateVectorFromAGC(bool csm);
+	void GetStateVectorFromIU();
+	void GetStateVectorsFromAGS();
 	void VectorCompareDisplayCalc();
 	void UpdateTLITargetTable();
 
@@ -273,13 +272,12 @@ public:
 
 	//STATE VECTOR PAGE
 	bool SVSlot; //true = CSM, false = LEM
-	MPTSV UplinkSV;
+	EphemerisData UplinkSV;
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
-	double AGSKFactor;
 	AP11AGSSVPAD agssvpad;
 	int SVOctals[021];
 	VECTOR3 RLSUplink;
@@ -315,12 +313,6 @@ public:
 	int TLImaneuver;
 
 	//TLCC PAGE
-
-	//1 = XYZ and T (Nodal) Targeting, 2 = FR BAP Fixed LPO, 3 = FR BAP Free LPO, 4 = Non Free BAP Fixed LPO, 5 = Non Free BAP Free LPO
-	//6 = Circumlunar free-return flyby, nominal H_PC and phi_PC, 7 = Flyby with specific H_PC, 8 = SPS lunar flyby, 9 = Optimized RCS flyby
-	int TLCCmaneuver;
-	double TLCC_TIG;
-	VECTOR3 TLCC_dV_LVLH;
 	VECTOR3 R_TLI, V_TLI;
 	int TLCCSolGood;
 

@@ -38,6 +38,8 @@ public:
 	void StoreStatus(void) const;
 	void RecallStatus(void);
 
+	bool Text(oapi::Sketchpad *skp, int x, int y, const std::string & str);
+
 	void menuTIChaserVectorTime();
 	void set_TIChaserVectorTime(double get);
 	void menuTITargetVectorTime();
@@ -177,7 +179,7 @@ public:
 	void menuSetSVTime();
 	void set_SVtime(double SVtime);
 	void menuSetAGSKFactor();
-	void set_AGSKFactor(double time);
+	void set_AGSKFactor(char *str);
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSetMapUpdateGET();
@@ -615,7 +617,16 @@ public:
 	void menuMPTM55Update();
 	void menuMPTInitAutoUpdate();
 	void menuMPTInitM50M55Vehicle();
-	void menuMPTTrajectoryUpdate();
+	void menuMPTTrajectoryUpdateCSM();
+	void menuMPTTrajectoryUpdateLEM();
+	bool set_DifferentialCorrectionSolution(char *str, bool csm);
+	void menuMoveToEvalTableCSM();
+	void menuMoveToEvalTableLEM();
+	void menuMoveToUsableTableCSM();
+	void menuMoveToUsableTableLEM();
+	void menuEphemerisUpdateCSM();
+	void menuEphemerisUpdateLEM();
+	void VectorControlPBI(int code);
 	void menuSetDescPlanTablePage();
 	void menuSetLDPPAzimuth();
 	void set_LDPPAzimuth(double azi);
@@ -709,6 +720,8 @@ public:
 	void menuSetSLVNavigationUpdatePage();
 	void menuSLVNavigationUpdateCalc();
 	void menuSLVNavigationUpdateUplink();
+	void menuVectorPanelSummaryPage();
+	void menuGetOnboardStateVectors();
 
 protected:
 	oapi::Font *font;
@@ -716,6 +729,7 @@ protected:
 	oapi::Font *font2vert;
 	oapi::Font *fonttest;
 	oapi::Font *font3;
+	oapi::Font *font4;
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
 	Saturn *saturn;
@@ -728,11 +742,6 @@ protected:
 		int RTETradeoffScreen;
 	} screenData;
 private:
-
-	static void papiWriteScenario_SV(FILEHANDLE scn, char *item, EphemerisData sv);
-	static bool papiReadScenario_SV(char *line, char *item, EphemerisData &sv);
-	static void papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in);
-	static bool papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out);
 
 	ARCore* G;
 	AR_GCore* GC;

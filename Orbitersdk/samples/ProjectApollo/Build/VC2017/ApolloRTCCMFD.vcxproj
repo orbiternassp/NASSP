@@ -17,7 +17,9 @@
     <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARoapiModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
     <ClInclude Include="..\..\src_rtccmfd\GeneralizedIterator.h" />
     <ClInclude Include="..\..\src_rtccmfd\LDPP.h" />
@@ -25,6 +27,8 @@
     <ClInclude Include="..\..\src_rtccmfd\LOITargeting.h" />
     <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCSystemParameters.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h" />
@@ -36,7 +40,9 @@
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD_Display.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARCore.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARoapiModule.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EphemProg.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\GeneralizedIterator.cpp" />
@@ -45,6 +51,9 @@
     <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LWP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\RTCCModule.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
   </ItemGroup>
