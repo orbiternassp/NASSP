@@ -13675,11 +13675,11 @@ void RTCC::OnlinePrint(const std::string &source, const std::vector<std::string>
 	//Also write to text file
 	if (RTCCONLINEMON.data.size() == 0)
 	{
-		rtccdebug.open("RTCCDebug.txt", std::ofstream::trunc);
+		rtccdebug.open("RTCCDebug.log", std::ofstream::trunc);
 	}
 	else
 	{
-		rtccdebug.open("RTCCDebug.txt", std::ofstream::app);
+		rtccdebug.open("RTCCDebug.log", std::ofstream::app);
 	}
 
 	RTCCONLINEMON.data.push_front(data);
