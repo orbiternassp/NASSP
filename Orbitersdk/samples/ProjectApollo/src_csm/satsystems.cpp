@@ -2585,28 +2585,17 @@ void Saturn::ClearEngineIndicator(int i)
 	ENGIND[i - 1] = false;
 }
 
-void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {
-
+void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed)
+{
 	// Bypass Radiator 2 and 4
-	char buffer[100];
-
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
-	bool *bp = (bool *) Panelsdk.GetPointerByString(buffer);
-	*bp = bypassed;
-
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:4:BYPASSED", fuelcell);
-	bp = (bool *) Panelsdk.GetPointerByString(buffer);
-	*bp = bypassed;
+	FuelCellCooling[fuelcell - 1]->bypassed[2] = bypassed;
+	FuelCellCooling[fuelcell - 1]->bypassed[4] = bypassed;
 }
 
-bool Saturn::FuelCellCoolingBypassed(int fuelcell) {
-
+bool Saturn::FuelCellCoolingBypassed(int fuelcell)
+{
 	// It's bypassed when Radiator 2 is bypassed
-	char buffer[100];
-
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
-	bool *bypassed = (bool *) Panelsdk.GetPointerByString(buffer);
-	return *bypassed;
+	return FuelCellCooling[fuelcell - 1]->bypassed[2];
 }
 
 //
@@ -3544,7 +3533,7 @@ void Saturn::EPSTimestep() {
 	}
 
 	// FuelCell Purge Switches
-	int *start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:PURGE");	
+	int *start = &FuelCells[0]->purge_handle;
 	if (FuelCellPurge1Switch.IsDown() && FuelCell1PurgeCB.IsPowered()) {
 		*start = SP_FUELCELL_O2PURGE;
 	} else if (FuelCellPurge1Switch.IsUp() && FuelCell1PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {
@@ -3553,7 +3542,7 @@ void Saturn::EPSTimestep() {
 		*start = SP_FUELCELL_NOPURGE;
 	}
 
-	start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:PURGE");	
+	start = &FuelCells[1]->purge_handle;
 	if (FuelCellPurge2Switch.IsDown() && FuelCell2PurgeCB.IsPowered()) {
 		*start = SP_FUELCELL_O2PURGE;
 	} else if (FuelCellPurge2Switch.IsUp() && FuelCell2PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {
@@ -3562,7 +3551,7 @@ void Saturn::EPSTimestep() {
 		*start = SP_FUELCELL_NOPURGE;
 	}
 
-	start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:PURGE");	
+	start = &FuelCells[2]->purge_handle;
 	if (FuelCellPurge3Switch.IsDown() && FuelCell3PurgeCB.IsPowered()) {
 		*start = SP_FUELCELL_O2PURGE;
 	} else if (FuelCellPurge3Switch.IsUp() && FuelCell3PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {
