@@ -1727,12 +1727,13 @@ struct MissionPlanTable
 	//Word 34
 	double DeltaDockingAngle = 0.0;
 
+	unsigned LastFrozenManeuver = 0;
+	unsigned LastExecutedManeuver = 0;
+
 	double TimeToBeginManeuver[15];
 	double TimeToEndManeuver[15];
 	double AreaAfterManeuver[15];
 	double WeightAfterManeuver[15];
-	unsigned LastFrozenManeuver = 0;
-	unsigned LastExecutedManeuver = 0;
 
 	std::deque<MPTManeuver> mantable;
 };
