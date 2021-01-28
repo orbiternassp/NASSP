@@ -246,7 +246,6 @@ for (int i=0;i<3;i++)
 //----------------------------------- FUEL CELL --------------------------------------
 
 FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts) 
-
 {
 	strcpy(name, i_name);
 	max_stage = 99;
@@ -260,10 +259,21 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	H2_SRC = h2;
 	H20_waste = waste;
 
+	outputImpedance = 0.0346667; //ohms
+
+	H2_clogging = 0.0;
+	O2_clogging = 0.0;
+
+	H2_purity = 0.9994; //set me somewhere else
+	O2_purity = 0.9999; //set me somewhere else
+
+	H2_max_impurities = 0.0504; //nominal impurities after 24hrs //set me somewhere else
+	O2_max_impurities = 0.106; //nominal impurities after 24hrs set me somewhere else
+
 	SetTemp(475.0); 
 	condenserTemp = 345.0;
 	tempTooLowCount = 0;
-	Volts = 28.8;
+	Volts = 31.0;
 	power_load = 600.0; //2 amps is internal impedance		//TSCH Test 
 	max_power = r_watts; //max watts
 	clogg = 0.0; //no clog
@@ -282,7 +292,6 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 }
 
 void FCell::DrawPower(double watts) 
-
 {
 	power_load += watts;
 }
@@ -292,12 +301,16 @@ void FCell::PUNLOAD(double watts) {
 }
 
 void FCell::Reaction(double dt, double thrust) 
-
 {
 	#define H2RATIO 0.1119
 	#define O2RATIO 0.8881
 
 	reactant = dt * max_power * thrust / 2880.0 * 0.2894 ; //grams /second/ 100 amps
+
+	//if (!strcmp(name, "FUELCELL1"))
+	//{
+	//	sprintf(oapiDebugString(), "%0.10f", thrust);
+	//}
 		
 	// get fuel from sources
 	double O2_maxflow = O2_flow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
@@ -316,8 +329,17 @@ void FCell::Reaction(double dt, double thrust)
 	double heat = (O2_flow + H2_flow) * 10000.0;		
 
 	// purging
-	if (status == 3) H2_flow += __min(0.67/7.93665 * dt, H2_maxflow - H2_flow);
-	if (status == 4) O2_flow += __min(0.6/7.93665 * dt, O2_maxflow - O2_flow);
+	if (status == 3)
+	{
+		H2_flow += __min(0.67 / 7.93665 * dt, H2_maxflow - H2_flow);
+		H2_clogging -= H2_clogging * 0.05 * dt; //take approximately 2 minutes to purge
+	}
+
+	if (status == 4)
+	{
+		O2_flow += __min(0.67 / 7.93665 * dt, O2_maxflow - O2_flow);
+		O2_clogging -= O2_clogging * 0.05 * dt; //take approximately 2 minutes to purge
+	}
 
 	H2_flowPerSecond = H2_flow / dt;
 	O2_flowPerSecond = O2_flow / dt;
@@ -349,11 +371,10 @@ void FCell::Reaction(double dt, double thrust)
 	h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
 	h2o_volume.GetQ(); 
 	
-	thermic(heat); //from the reaction
+	thermic(heat); //heat from the reaction
 	H20_waste->Flow(h2o_volume);
 
-	// TSCH clogging disabled
-    //Clogging(dt);
+	Clogging(dt); //simulate reactant impurity accumulation
 
 	// TSCH
 	/* sprintf(oapiDebugString(), "m %f Q %f Q/m %f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass,
@@ -386,12 +407,13 @@ void FCell::UpdateFlow(double dt)
 		return;
 	}
 
-	//Idle power load to prevent the fuel cells from stopping and cooling too much (has to be fixed at some point)
-	if (power_load < 160.0)
-		power_load = 160.0;
+	//Idle power load to prevent the fuel cells from causing divide by 0 (temporary fix)
+	if (power_load < 1.0)
+		power_load = 1.0;
 
 	//first we check the start_handle;
 	double thrust = 0.0;
+	double loadResistance = 0.0;
 	if (start_handle == -1) status = 2; //stopped
 	if (start_handle == 1)	status = 1; //starting
 	if ((purge_handle == 1) && (status == 0 || status == 4)) status = 3; //H2 purging;
@@ -427,16 +449,16 @@ void FCell::UpdateFlow(double dt)
 		running = 1; //ie. not running
 		break;
 
-	case 1:// starting;
+	case 1:// starting; is this even used? it almost doesnt make physical sense to have it
 		Reaction(dt, 1.0);
-		status = 2;
+		//status = 2; //don't do this, it makes the fuel cells stop
 		if (reaction > 0.96) {
 			status = 0; //started
 			start_handle = 2;
 		}
 
 		if (reaction > 0.3) {
-			Volts = 28.8 * reaction;
+			Volts = 31.0 * reaction;
 			Amperes = (power_load / Volts);
 		} else {
 			Volts = 0;
@@ -445,30 +467,34 @@ void FCell::UpdateFlow(double dt)
 		running = 1;
 		break;
 
+	case 3: // O2 purging
+	case 4: // H2 purging
 	case 0: // normal running
-	case 3: // H2 purging
-	case 4: // O2 purging
 		//---- throttle of the fuel cell [0..1]
-		thrust = power_load / max_power / (1 - log(1 + clogg)); //clogg is preventing normal flow
+		thrust = power_load / max_power;
 
 		// TSCH
 		// sprintf(oapiDebugString(), "thrust %f, log(1+clogg) %f clogg %f", thrust, log(1+clogg), clogg);
 
-		Volts = 28.8; //we are trying to get 28.8V
-		if (thrust > 1.0) {	//set voltage to manage overmax loads
-			Volts= 28.8 / thrust; 
-			thrust = 1.0;
-		}
+		Volts = 31.0; //we are trying to get 31.0V (1V per cell)
+
 		Reaction(dt, thrust);
 		running = 0;
 		Volts = Volts * min(1.0, reaction); //case of reaction problems :-)
 		if (reaction && Volts > 0.0)
 		{
-			Amperes = (power_load / Volts);
+			//make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
+
+			Amperes = (power_load / Volts)-(2.25*clogg);
+	
+			loadResistance = (power_load) / (Amperes*Amperes);
+			Volts = Volts * (loadResistance / (loadResistance + outputImpedance))-(5.2*clogg);
+
+			power_load = Amperes * Volts; //recalculate power_load
+			
 		}
 		else
 		{
-			status = 2;
 			Amperes = 0;
 		}
 
@@ -489,30 +515,40 @@ void FCell::refresh(double dt)
 	//
 }
 
-void FCell::Clogging(double dt) {
+void FCell::Clogging(double dt)
+{
+	H2_clogging += (1 - H2_purity) * H2_flow *dt;
+	O2_clogging += (1 - O2_purity) * O2_flow *dt;
 
-	if (H2_flow) {
-		double change = (O2_flow / (reactant * H2_flow + 0.01) - 0.4) / 100000.0 * dt; //stuff that gets in the way
-		clogg += change;
+	if (H2_clogging < 0)
+	{
+		H2_clogging = 0.0; //cannot be negative	
 	}
-	if (clogg < 0)
-		clogg = 0.0; //cannot get negative, let's be serious;
+
+	if (O2_clogging < 0)
+	{
+		O2_clogging = 0.0; //cannot be negative	
+	}
+
+	//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
+	//here we're simulating the effect by making the O2 clogging effect the voltage drop 25x as much as the H2
+	clogg = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
+
+	clogg = clogg / 3; //reduce clogging by a factor of 3 so we can make it to our purge interval without undervolt alarms; REPLACE WITH BETTER MODEL
 }
 
 void FCell::Load(char *line)
-
 {
 	double temp;
-	sscanf (line,"    <FCELL> %s %i %lf %lf %lf", name, &status, &clogg, &temp, &power_load);
+	sscanf(line, "    <FCELL> %s %i %lf %lf %lf %lf", name, &status, &H2_clogging, &temp, &power_load, &O2_clogging);
 	SetTemp(temp);
 	if (status == 0 || status >=3) running = 0;
 }
 
 void FCell::Save(FILEHANDLE scn)
-
 {
 	char cbuf[1000];
-	sprintf (cbuf, "%s %i %0.4f %0.4f %0.4f", name, status, clogg, Temp, power_load);
+	sprintf(cbuf, "%s %i %0.10f %0.4f %0.4f %0.10f", name, status, H2_clogging, Temp, power_load, O2_clogging);
 	oapiWriteScenario_string (scn, "    <FCELL> ", cbuf);
 }
 

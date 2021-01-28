@@ -411,6 +411,19 @@ void LM_VHF::Timestep(double simt)
 		}
 	}
 
+	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
+	{
+		if (transmitA)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(R), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)));
+		}
+
+		if (transmitB)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(R), 0.0, false);
+		}
+	}
+
 	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	// This stuff has to happen every timestep, regardless of system status.
@@ -461,19 +474,6 @@ void LM_VHF::Timestep(double simt)
 				}			
 				perform_io(simt);
 			}
-		}
-	}
-
-	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
-	{
-		if (transmitA)
-		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(R), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B>minimumRCVDPower)));
-		}
-
-		if (transmitB)
-		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(R), 0.0, false);
 		}
 	}
 }

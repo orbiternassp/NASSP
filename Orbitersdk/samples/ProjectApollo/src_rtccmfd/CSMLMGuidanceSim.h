@@ -26,8 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include <vector>
 #include "Orbitersdk.h"
 #include "RTCCTables.h"
-
-class RTCC;
+#include "RTCCModule.h"
 
 struct PMMRKJInputArray
 {
@@ -88,7 +87,7 @@ struct PMMRKJInputArray
 	bool ExtDVCoordInd;
 };
 
-class CSMLMPoweredFlightIntegration
+class CSMLMPoweredFlightIntegration : public RTCCModule
 {
 public:
 	CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable *E, RTCCNIAuxOutputTable *A);
@@ -254,7 +253,6 @@ private:
 	double RCSFUELUSED;
 	double MAINFUELUSED;
 
-	RTCC *rtcc;
 	PMMRKJInputArray &TArr;
 	int &IERR;
 	RTCCNIAuxOutputTable *Aux;

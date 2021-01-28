@@ -242,6 +242,16 @@ public:
 	double running;		//for tb indicators only;they need a float
 	double condenserTemp;	// condenser exhaust temp, only for display
 	int tempTooLowCount; 
+	double outputImpedance;
+
+	double H2_clogging;
+	double O2_clogging;
+
+	double H2_max_impurities;
+	double O2_max_impurities;
+
+	double H2_purity;
+	double O2_purity;
 
 	FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts);
 	void DrawPower(double watts);

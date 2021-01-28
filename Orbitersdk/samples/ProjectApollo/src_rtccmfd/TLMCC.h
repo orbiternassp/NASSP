@@ -23,6 +23,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "RTCCModule.h"
+
 struct TLMCCDataTable
 {
 	//Time at which block was generated
@@ -88,7 +90,7 @@ struct TLMCCMEDQuantities
 	double T_MCC;
 	double GMTBase;
 	double GETBase;
-	MPTSV sv0;
+	EphemerisData sv0;
 	double CSMMass;
 	double LMMass;
 	bool Config; //false = undocked, true = docked
@@ -124,6 +126,7 @@ struct TLMCCMissionConstants
 	int n, m;
 	double lambda_IP;
 	double V_pcynlo;
+	//Time bias for LPO1 in hours
 	double dt_bias;
 	double T_t1_min_dps;
 	double T_t1_max_dps;
@@ -184,7 +187,7 @@ struct TLMCCOutputData
 struct TLMCCGeneralizedIteratorArray
 {
 	//Input
-	MPTSV sv0;
+	EphemerisData sv0;
 	VECTOR3 LOIOffset = _V(0, 0, 0);
 	//For first guess logic
 	bool TLMCIntegrating;
@@ -213,24 +216,24 @@ struct TLMCCGeneralizedIteratorArray
 	double lng_nd;
 	double h_nd;
 	double gamma_nd;
-	double MJD_nd;
+	double GMT_nd;
 	double h_pl;
 	double v_pl;
 	double gamma_pl;
 	double psi_pl;
 	double lat_pl;
 	double lng_pl;
-	double MJD_pl;
+	double GMT_pl;
 	double incl_pl;
 	double dpsi_loi;
-	MPTSV sv_loi;
+	EphemerisData sv_loi;
 	double dt_lls;
 	double AZ_act;
-	MPTSV sv_lls1;
-	MPTSV sv_lls2;
+	EphemerisData sv_lls1;
+	EphemerisData sv_lls2;
 	double T_lo;
 	VECTOR3 DV_LOPC;
-	double MJD_tei;
+	double GMT_tei;
 	double dv_tei;
 	double dgamma_tei;
 	double dpsi_tei;
@@ -246,12 +249,13 @@ struct TLMCCGeneralizedIteratorArray
 	double T_te;
 	double lat_ip;
 	double lng_ip;
-	double MJD_ip;
+	double GMT_ip;
 	double lat_ip_pr;
 	double lng_ip_pr;
-	double MJD_ip_pr;
+	double GMT_ip_pr;
 	double theta;
 	double DH_Node;
+	//Time bias in hours
 	double dt_bias_conic_prec = 0.0;
 
 	//Masses
@@ -269,7 +273,7 @@ struct TLMCCGeneralizedIteratorArray
 	double M_tei;
 
 	//PRCOMP data
-	MPTSV SGSLOI;
+	EphemerisData SGSLOI;
 	double RA_LPO1;
 	//New Version
 	double gamma_L;
@@ -280,11 +284,11 @@ struct TLMCCGeneralizedIteratorArray
 	double V_L;
 };
 
-class TLMCCProcessor
+class TLMCCProcessor : public RTCCModule
 {
 public:
-	TLMCCProcessor();
-	void Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst);
+	TLMCCProcessor(RTCC *r);
+	void Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst);
 	void Main(TLMCCOutputData &out);
 
 	//The trajectory computers
@@ -308,56 +312,53 @@ protected:
 
 	//These appear as the boxes in the main program flow
 	bool ConvergeTLMC(double V, double azi, double lng, double lat, double r, double GMT_pl, bool integrating);
-	void IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double R_nd, double lat_nd, double lng_nd, double GMT_node);
-	void ConicFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl);
-	void ConicFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_pg, double lat_pl_min = 0, double lat_pl_max = 0);
-	void ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double inc_pg_min, double inc_pg_max, int inc_class);
-	void IntegratedFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl);
-	void IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_fr);
-	void ConicFreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi);
-	void ConicNonfreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_min, double T_max);
-	void ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double dpsi_loi, double DT_lls, double AZ_min, double AZ_max);
-	void ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double T_min, double T_max, double h_pl);
-	void ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double h_pl, double gamma_loi, double dpsi_loi, double dt_lls, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double AZ_min, double AZ_max, double mass, bool freereturn, double T_min = 0.0, double T_max = 0.0);
-	void ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double mass, bool freereturn, double T_min = 0.0, double T_max = 0.0);
+	void IntegratedXYZTTrajectory(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double R_nd, double lat_nd, double lng_nd, double GMT_node);
+	void ConicFreeReturnFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl);
+	void ConicFreeReturnInclinationFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_pg, double lat_pl_min = 0, double lat_pl_max = 0);
+	void ConicFreeReturnOptimizedInclinationFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double inc_pg_min, double inc_pg_max, int inc_class);
+	void IntegratedFreeReturnFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl);
+	void IntegratedFreeReturnInclinationFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_fr);
+	void ConicFreeReturnOptimizedFixedOrbitToLLS(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi);
+	void ConicNonfreeReturnOptimizedFixedOrbitToLLS(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_min, double T_max);
+	void ConicFreeReturnOptimizedFreeOrbitToLOPC(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double dpsi_loi, double DT_lls, double AZ_min, double AZ_max);
+	void ConicNonfreeReturnOptimizedFreeOrbitToLOPC(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double T_min, double T_max, double h_pl);
+	void ConicFullMissionFreeOrbit(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double h_pl, double gamma_loi, double dpsi_loi, double dt_lls, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double AZ_min, double AZ_max, double mass, bool freereturn, double T_min = 0.0, double T_max = 0.0);
+	void ConicFullMissionFixedOrbit(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double mass, bool freereturn, double T_min = 0.0, double T_max = 0.0);
 	void ConicTransEarthInjection(double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, bool lngiter);
-	VECTOR3 CalcLOIDV(MPTSV sv_MCC_apo, double gamma_nd);
+	VECTOR3 CalcLOIDV(EphemerisData sv_MCC_apo, double gamma_nd);
 
 	//Subroutines
-	bool PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF);
-	bool LIBRAT(VECTOR3 &R, double MJD, int K);
-	bool LIBRAT(VECTOR3 &R, VECTOR3 &V, double MJD, int K);
+	bool PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF);
+	bool LIBRAT(VECTOR3 &R, double GMT, int K);
+	bool LIBRAT(VECTOR3 &R, VECTOR3 &V, double GMT, int K);
 	double EBETA(VECTOR3 R, VECTOR3 V, double mu, double &ainv);
 	bool RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, double &beta);
-	void XBETA(VECTOR3 R0, VECTOR3 V0, double MJD0, double beta, int K, VECTOR3 &RF, VECTOR3 &VF, double &MJDF);
+	void XBETA(VECTOR3 R0, VECTOR3 V0, double GMT0, double beta, int K, VECTOR3 &RF, VECTOR3 &VF, double &GMTF);
 	double GetMU(int k);
 	void FCOMP(double a, double &F1, double &F2, double &F3, double &F4);
-	bool EPHEM(double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
-	bool CTBODY(VECTOR3 R0, VECTOR3 V0, double MJD0, double MJDF, int K, double mu, VECTOR3 &RF, VECTOR3 &VF);
-	bool CTBODY(VECTOR3 R0, VECTOR3 V0, double MJD0, double MJDF, int K, double mu, double &alpha, double &F1, double &F2, double &F3, double &F4, VECTOR3 &RF, VECTOR3 &VF);
+	bool EPHEM(double GMT, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
+	bool CTBODY(VECTOR3 R0, VECTOR3 V0, double GMT0, double GMTF, int K, double mu, VECTOR3 &RF, VECTOR3 &VF);
+	bool CTBODY(VECTOR3 R0, VECTOR3 V0, double GMT0, double GMTF, int K, double mu, double &alpha, double &F1, double &F2, double &F3, double &F4, VECTOR3 &RF, VECTOR3 &VF);
 	bool DGAMMA(double r0, double ainv, double gamma, double &H, double &E, double &beta, double &e);
 	void BURN(VECTOR3 R, VECTOR3 V, double dv, double dgamma, double dpsi, double isp, double &mfm0, VECTOR3 &RF, VECTOR3 &VF);
 	void BURN(VECTOR3 R, VECTOR3 V, int opt, double gamma0, double v_pl, double dv, double dgamma, double dpsi, double isp, double mu, double &v_c, double &dv_R, double &mfm0, VECTOR3 &RF, VECTOR3 &VF);
 	void RVIO(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &theta, double &phi, double &gamma, double& psi);
 	double MCOMP(double dv, bool docked, bool useSPS, double m0);
-	void RNTSIM(VECTOR3 R, VECTOR3 V, double MJD, double lng_L, double &lat, double &lng, double &dlng);
-	void LOPC(VECTOR3 R0, VECTOR3 V0, double MJD0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &MJD3, double &mfm0, double &dpsi, VECTOR3 &DV);
+	void RNTSIM(VECTOR3 R, VECTOR3 V, double GMT, double lng_L, double &lat, double &lng, double &dlng);
+	void LOPC(VECTOR3 R0, VECTOR3 V0, double GMT0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &GMT3, double &mfm0, double &dpsi, VECTOR3 &DV);
 	void ELEMT(VECTOR3 R, VECTOR3 V, double mu, VECTOR3 &H, double &a, double &e, double &i, double &n, double &P, double &eta);
-	void PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &A1, double &E1, double &gamma1, double &V_L, double &gamma_L, double &V2, double &DT_1st_pass);
+	void PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double GMT_nd, double &RA_LPO1, double &A1, double &E1, double &gamma1, double &V_L, double &gamma_L, double &V2, double &DT_1st_pass);
 	double DDELTATIME(double a, double dt_apo, double xm, double betam, double dt);
 	void SCALE(VECTOR3 R0, VECTOR3 V0, double h, VECTOR3 &RF, VECTOR3 &VF);
-	MPTSV PPC(MPTSV SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS);
-	MPTSV TLIBRN(MPTSV sv, double C3, double sigma, double delta, double FW, double W_I, double F_I, double F, double W_dot, double T_MRS);
+	EphemerisData PPC(EphemerisData SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS);
+	EphemerisData TLIBRN(EphemerisData sv, double C3, double sigma, double delta, double FW, double W_I, double F_I, double F, double W_dot, double T_MRS);
 	double DELTAT(double a, double e, double eta, double deta);
 
 	double R_E, R_M, mu_E, mu_M;
 
-	PZEFEM *ephemeris;
-
-	MPTSV sv_MCC;
+	EphemerisData sv_MCC;
 	double isp_SPS, isp_DPS, isp_MCC, Wdot;
 	int KREF_MCC;
-	OBJHANDLE hMoon, hEarth;
 	VECTOR3 DV_MCC;
 
 	double gamma_reentry;

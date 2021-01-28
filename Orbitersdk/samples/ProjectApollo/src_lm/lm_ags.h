@@ -202,6 +202,8 @@ protected:
 	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
 	const double ALTSCALEFACTOR = 0.3048*2.345*pow(2.0, -3.0);
 	const double ALTRATESCALEFACTOR = 0.3048*pow(2.0, -4.0);
+
+	friend class ARCore;
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)
