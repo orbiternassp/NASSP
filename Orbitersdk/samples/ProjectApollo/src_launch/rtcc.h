@@ -2553,6 +2553,7 @@ public:
 	VECTOR3 ConvertDVtoInertial(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_LVLH_imp);
 	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, SV &sv_pre, SV &sv_post, bool agc = true);
 	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
+	void PoweredFlightProcessor(EphemerisData sv0, double mass, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	EphemerisData StateVectorCalcEphem(VESSEL *vessel, double SVGMT = 0.0);
@@ -2651,7 +2652,7 @@ public:
 	//RTE Trajectory Computer
 	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 	//Lunar Orbit Insertion Computational Unit
-	void PMMLRBTI(EphemerisData sv);
+	bool PMMLRBTI(EphemerisData sv);
 	//Lunar Orbit Insertion Display
 	void PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out);
 	//Central Manual Entry Device Decoder
@@ -2784,6 +2785,9 @@ public:
 
 	// DIGITAL COMMAND SYSTEM (C)
 
+	//CMC/LGC Navigation Update
+	void CMMCMNAV(int veh, int mpt, double GETSV);
+	void CMMCMNAV(int veh, int mpt, EphemerisData sv);
 	//CMC External Delta-V Update Display
 	void CMDAXTDV();
 	//CMC External Delta-V Update Generator
@@ -2831,7 +2835,12 @@ public:
 	void EMSNAP(int L, int ID);
 
 	// LAUNCH/HIGH SPEED ABORT (L)
+
+	//Platform Initialization Routine
 	void LMMGRP(int veh, double gmt);
+	//Launch On-Line Print
+	void LMXPRNTR(std::string source, int n);
+	void LMXPRNTR(std::string source, std::vector<std::string> message);
 
 	// **LIBRARY PROGRAMS**
 	// TRAJECTORY DETERMINATION (B)
@@ -3345,7 +3354,6 @@ public:
 		bool showHA[4] = { false,false,false,false };
 		int NumVec = 0;
 		VectorCompareTableData data[4];
-		double GMT = 0.0;
 		double PET = 0.0;
 		double GMTR = 0.0;
 		std::string error = "TABLE NOT INITIALIZED";
@@ -3580,14 +3588,14 @@ public:
 
 	struct LOIDisplayTableElement
 	{
-		double GETLOI = 0.0;
-		double DVLOI1 = 0.0;
-		double DVLOI2 = 0.0;
-		double H_ND = 0.0;
-		double f_ND_H = 0.0;
-		double H_PC = 0.0;
-		double Theta = 0.0;
-		double f_ND_E = 0.0;
+		double GETLOI = 0.0;	//Impulsive GET of LOI ignition
+		double DVLOI1 = 0.0;	//Total DV of LOI-1 in feet per second
+		double DVLOI2 = 0.0;	//Total DV of DOI/LOI-2 in feet per second
+		double H_ND = 0.0;		//Height of the node (impulsive LOI ignition point)
+		double f_ND_H = 0.0;	//True anomaly at LOI on the approach hyperbola (pre LOI)
+		double H_PC = 0.0;		//Height of perilune on the first lunar orbit
+		double Theta = 0.0;		//Angle between the desired lunar orbit plane and the actual achieved plane 
+		double f_ND_E = 0.0;	//True anomaly at LOI on the first ellipse (post LOI)
 	};
 
 	struct LOIDisplayTable
@@ -3612,6 +3620,7 @@ public:
 		double DVMAXm = 0.0;
 		double RARPGT = 0.0;
 		bool planesoln = true;
+		double h_pc = 0.0; //Not actually for display
 		LOIDisplayTableElement sol[8];
 	} PZLRBTI;
 
@@ -3818,7 +3827,7 @@ public:
 	struct LaunchInterfaceTable
 	{
 		//Block 1-9
-		MATRIX3 IU1_REFSMMAT;
+		MATRIX3 IU1_REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 		//Block 56-62
 		double GMT_T;
 		VECTOR3 R_T;
@@ -4259,6 +4268,28 @@ public:
 		REFSMMATUpdateMakeupTableBlock Block[2];
 	} CZREFMAT;
 
+	struct NavUpdateMakeupBuffer
+	{
+		std::string LoadType;
+		int SequenceNumber = 0;
+		std::string PrimarySite;
+		std::string BackupSite;
+		double GETofGeneration = 0.0;
+		int Octals[17] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+		EphemerisData sv; //For display
+		std::string DCCode;
+		double AnchorVectorTime = 0.0;
+		std::string VehicleID;
+	};
+
+	struct CMCLGCNavUpdatesMakeupBuffers
+	{
+		NavUpdateMakeupBuffer CMCCSMUpdate;
+		NavUpdateMakeupBuffer CMCLEMUpdate;
+		NavUpdateMakeupBuffer LGCCSMUpdate;
+		NavUpdateMakeupBuffer LGCLEMUpdate;
+	} CZNAVGEN;
+
 	struct SLVNavigationMakeupTable
 	{
 		VECTOR3 PosS = _V(0, 0, 0);
@@ -4351,6 +4382,7 @@ private:
 	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
 	void LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
 	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
+	void AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, bool v66 = false);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
 	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
 	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);

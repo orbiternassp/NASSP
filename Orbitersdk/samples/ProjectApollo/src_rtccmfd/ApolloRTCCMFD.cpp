@@ -8139,7 +8139,30 @@ void ApolloRTCCMFD::menuVectorCompareReference()
 
 void ApolloRTCCMFD::menuVectorCompareTime()
 {
+	bool VectorCompareTimeInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter vector time. GMT if positive, GET if negative. Time of V1 vector if zero. (Format HH:MM:SS):", VectorCompareTimeInput, 0, 20, (void*)this);
+}
 
+bool VectorCompareTimeInput(void* id, char *str, void *data)
+{
+	int hh, mm, ss;
+	double time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		time = ss + 60 * (mm + 60 * abs(hh));
+		if (str[0] == '-')
+		{
+			time = -time;
+		}
+		((ApolloRTCCMFD*)data)->set_VectorCompareTime(time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_VectorCompareTime(double time)
+{
+	GC->rtcc->med_s80.time = time;
 }
 
 void ApolloRTCCMFD::menuGOSTDisplayREFSMMAT()

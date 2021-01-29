@@ -6643,6 +6643,214 @@ void RTCC::LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
 	V71Update(str, CZLXTRDV.Octals, 10);
 }
 
+void RTCC::CMMCMNAV(int veh, int mpt, double GETSV)
+{
+	double GMTSV = GMTfromGET(GETSV);
+
+	EphemerisData sv;
+	if (ELFECH(GMTSV, mpt, sv))
+	{
+		return;
+	}
+	CMMCMNAV(veh, mpt, sv);
+}
+
+void RTCC::CMMCMNAV(int veh, int mpt, EphemerisData sv)
+{
+	//veh: 1 = CMC, 2 = LGC
+
+	MissionPlanTable *mptab;
+	NavUpdateMakeupBuffer *buf;
+	VECTOR3 pos, vel;
+	double get, tclockzero;
+	MATRIX3 Rot;
+
+	if (veh == 1)
+	{
+		if (mpt == RTCC_MPT_CSM)
+		{
+			buf = &CZNAVGEN.CMCCSMUpdate;
+			buf->LoadType = "00";
+		}
+		else
+		{
+			buf = &CZNAVGEN.CMCLEMUpdate;
+			buf->LoadType = "09";
+		}
+	}
+	else
+	{
+		if (mpt == RTCC_MPT_CSM)
+		{
+			buf = &CZNAVGEN.LGCCSMUpdate;
+			buf->LoadType = "21";
+		}
+		else
+		{
+			buf = &CZNAVGEN.LGCLEMUpdate;
+			buf->LoadType = "20";
+		}
+	}
+
+	if (mpt == RTCC_MPT_CSM)
+	{
+		mptab = &PZMPTCSM;
+		buf->VehicleID = "CSM";
+	}
+	else
+	{
+		mptab = &PZMPTLEM;
+		buf->VehicleID = "LEM";
+	}
+	
+	Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+	if (veh == 1)
+	{
+		tclockzero = SystemParameters.MCGZSA*3600.0;
+	}
+	else
+	{
+		tclockzero = SystemParameters.MCGZSL*3600.0;
+	}
+
+	pos = buf->sv.R = mul(Rot, sv.R);
+	buf->sv.V = mul(Rot, sv.V);
+	vel = buf->sv.V*0.01;
+	get = sv.GMT - tclockzero;
+
+	buf->GETofGeneration = GETfromGMT(RTCCPresentTimeGMT());
+	buf->sv.GMT = get;
+	buf->sv.RBI = sv.RBI;
+	buf->AnchorVectorTime = mptab->GMTAV;
+	buf->DCCode = mptab->StationID;
+
+	if (sv.RBI == BODY_MOON) {
+
+		buf->Octals[0] = 21;
+		buf->Octals[1] = 1501;
+
+		if (mpt == RTCC_MPT_CSM)
+		{
+			buf->Octals[2] = 2;
+		}
+		else
+		{
+			buf->Octals[2] = 77775;
+		}
+
+		buf->Octals[3] = OrbMech::DoubleToBuffer(pos.x, 27, 1);
+		buf->Octals[4] = OrbMech::DoubleToBuffer(pos.x, 27, 0);
+		buf->Octals[5] = OrbMech::DoubleToBuffer(pos.y, 27, 1);
+		buf->Octals[6] = OrbMech::DoubleToBuffer(pos.y, 27, 0);
+		buf->Octals[7] = OrbMech::DoubleToBuffer(pos.z, 27, 1);
+		buf->Octals[8] = OrbMech::DoubleToBuffer(pos.z, 27, 0);
+		buf->Octals[9] = OrbMech::DoubleToBuffer(vel.x, 5, 1);
+		buf->Octals[10] = OrbMech::DoubleToBuffer(vel.x, 5, 0);
+		buf->Octals[11] = OrbMech::DoubleToBuffer(vel.y, 5, 1);
+		buf->Octals[12] = OrbMech::DoubleToBuffer(vel.y, 5, 0);
+		buf->Octals[13] = OrbMech::DoubleToBuffer(vel.z, 5, 1);
+		buf->Octals[14] = OrbMech::DoubleToBuffer(vel.z, 5, 0);
+		buf->Octals[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
+		buf->Octals[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
+	}
+	else
+	{
+		buf->Octals[0] = 21;
+		buf->Octals[1] = 1501;
+
+		if (mpt == RTCC_MPT_CSM)
+		{
+			buf->Octals[2] = 1;
+		}
+		else
+		{
+			buf->Octals[2] = 77776;
+		}
+
+		buf->Octals[3] = OrbMech::DoubleToBuffer(pos.x, 29, 1);
+		buf->Octals[4] = OrbMech::DoubleToBuffer(pos.x, 29, 0);
+		buf->Octals[5] = OrbMech::DoubleToBuffer(pos.y, 29, 1);
+		buf->Octals[6] = OrbMech::DoubleToBuffer(pos.y, 29, 0);
+		buf->Octals[7] = OrbMech::DoubleToBuffer(pos.z, 29, 1);
+		buf->Octals[8] = OrbMech::DoubleToBuffer(pos.z, 29, 0);
+		buf->Octals[9] = OrbMech::DoubleToBuffer(vel.x, 7, 1);
+		buf->Octals[10] = OrbMech::DoubleToBuffer(vel.x, 7, 0);
+		buf->Octals[11] = OrbMech::DoubleToBuffer(vel.y, 7, 1);
+		buf->Octals[12] = OrbMech::DoubleToBuffer(vel.y, 7, 0);
+		buf->Octals[13] = OrbMech::DoubleToBuffer(vel.z, 7, 1);
+		buf->Octals[14] = OrbMech::DoubleToBuffer(vel.z, 7, 0);
+		buf->Octals[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
+		buf->Octals[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
+	}
+
+	if (buf->SequenceNumber == 0)
+	{
+		if (veh == 1)
+		{
+			if (mpt == RTCC_MPT_CSM)
+			{
+				buf->SequenceNumber = 1;
+			}
+			else
+			{
+				buf->SequenceNumber = 901;
+			}
+		}
+		else
+		{
+			if (mpt == RTCC_MPT_CSM)
+			{
+				buf->SequenceNumber = 2101;
+			}
+			else
+			{
+				buf->SequenceNumber = 2001;
+			}
+		}
+	}
+	else
+	{
+		buf->SequenceNumber++;
+	}
+}
+
+void RTCC::AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, bool v66)
+{
+	//comp: 1 = CMC, 2 = LGC
+	//ves: 1 = CSM, 3 = LEM
+	CMMCMNAV(comp, ves, sv);
+
+	NavUpdateMakeupBuffer *buf;
+
+	if (comp == 1)
+	{
+		if (ves == 1)
+		{
+			buf = &CZNAVGEN.CMCCSMUpdate;
+		}
+		else
+		{
+			buf = &CZNAVGEN.CMCLEMUpdate;
+		}
+	}
+	else
+	{
+		if (ves == 1)
+		{
+			buf = &CZNAVGEN.LGCCSMUpdate;
+		}
+		else
+		{
+			buf = &CZNAVGEN.LGCLEMUpdate;
+		}
+	}
+	V71Update(str, buf->Octals, 17);
+	if (v66)
+	{
+		sprintf(str, "%sV66EV37E00E", str);
+	}
+}
+
 void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66)
 {
 	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
@@ -8739,6 +8947,14 @@ void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, in
 	SV sv_tig, sv_cut;
 
 	FiniteBurntimeCompensation(sv, attachedMass, DV, engine, DV_imp, t_slip, sv_tig, sv_cut, agc);
+}
+
+void RTCC::PoweredFlightProcessor(EphemerisData sv0, double mass, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc)
+{
+	SV sv1;
+	sv1 = ConvertEphemDatatoSV(sv0);
+	sv1.mass = mass;
+	PoweredFlightProcessor(sv1, GETbase, GET_TIG_imp, enginetype, attachedMass, DV, DVIsLVLH, GET_TIG, dV_LVLH, agc);
 }
 
 void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc)
@@ -13684,9 +13900,9 @@ void RTCC::OnlinePrint(const std::string &source, const std::vector<std::string>
 
 	RTCCONLINEMON.data.push_front(data);
 	
-	for (unsigned i = 0;i < message.size();i++)
+	for (unsigned i = 0;i < data.message.size();i++)
 	{
-		rtccdebug << message[i] << endl;
+		rtccdebug << data.message[i] << endl;
 	}
 	rtccdebug.close();
 
@@ -23344,7 +23560,7 @@ void RTCC::PMMREAST()
 	//PMMDAB(sv_abort.R, sv_abort.V, sv_abort.GMT, ARIN, IRIN, AST, IER, IPRT);
 }
 
-void RTCC::PMMLRBTI(EphemerisData sv)
+bool RTCC::PMMLRBTI(EphemerisData sv)
 {
 	EMSMISSInputTable in;
 	in.StopParamRefFrame = 1;
@@ -23359,7 +23575,7 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 	if (in.NIAuxOutputTable.TerminationCode != 4)
 	{
 		PMXSPT("PMMLRBTI", 124);
-		return;
+		return true;
 	}
 
 	sv2 = in.NIAuxOutputTable.sv_cutoff;
@@ -23387,15 +23603,19 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 	opt.usePlaneSolnForInterSoln = PZLOIPLN.PlaneSolnForInterSoln;
 
 	double h_pc = length(opt.SPH.R) - opt.R_LLS;
+
+	//Store h_pc for (mainly) the MCC
+	PZLRBTI.h_pc = h_pc / 1852.0;
+
 	if (h_pc > opt.HA_LPO)
 	{
 		PMXSPT("PMMLRBTI", 126);
-		return;
+		return true;
 	}
 	if (h_pc < 0.0)
 	{
 		PMXSPT("PMMLRBTI", 125);
-		return;
+		return true;
 	}
 
 	rtcc::LOITargeting loi(this, opt);
@@ -23418,6 +23638,7 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 		PZLRBELM.sv_man_bef[i].RBI = BODY_MOON;
 		PZLRBELM.V_man_after[i] = loi.out.data[i].V_LOI_apo;
 	}
+	return false;
 }
 
 void RTCC::PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out)
@@ -27828,6 +28049,11 @@ void RTCC::EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt)
 	else
 	{
 		tab = &EZJGMTX3;
+		//LM REFSMMATs start with code 501
+		if (tab->data[id - 1].ID == 0)
+		{
+			tab->data[id - 1].ID = 500;
+		}
 	}
 
 	tab->data[id - 1].ID++;
@@ -30420,7 +30646,6 @@ void RTCC::BMSVEC()
 
 	EphemerisData sv_comp[4];
 	EphemerisData sv_final[4];
-	EphemerisData sv_w;
 	MATRIX3 Rot;
 
 	//Reset
@@ -30482,7 +30707,7 @@ void RTCC::BMSVEC()
 			}
 			numvec++;
 		}
-		if (i == 0)
+		if (gmt == 0.0)
 		{
 			gmt = sv_comp[i].GMT;
 		}
@@ -30574,9 +30799,8 @@ void RTCC::BMDVEC()
 		return;
 	}
 
-	VectorCompareDisplayBuffer.GMT = BZCCANOE.data[0].GMT;
 	VectorCompareDisplayBuffer.GMTR = GMTfromGET(SystemParameters.MCGREF);
-	VectorCompareDisplayBuffer.PET = VectorCompareDisplayBuffer.GMT - VectorCompareDisplayBuffer.GMTR;
+	VectorCompareDisplayBuffer.PET = BZCCANOE.data[0].GMT - VectorCompareDisplayBuffer.GMTR;
 	VectorCompareDisplayBuffer.NumVec = BZCCANOE.NumVec;
 
 	for (int i = 0;i < BZCCANOE.NumVec;i++)
@@ -30646,6 +30870,10 @@ void RTCC::BMDVEC()
 			VectorCompareDisplayBuffer.data[i].U -= VectorCompareDisplayBuffer.data[0].U;
 			VectorCompareDisplayBuffer.data[i].V -= VectorCompareDisplayBuffer.data[0].V;
 			VectorCompareDisplayBuffer.data[i].W -= VectorCompareDisplayBuffer.data[0].W;
+			//Convert from NM to ft
+			VectorCompareDisplayBuffer.data[i].U *= 1852.0 / 0.3048;
+			VectorCompareDisplayBuffer.data[i].V *= 1852.0 / 0.3048;
+			VectorCompareDisplayBuffer.data[i].W *= 1852.0 / 0.3048;
 			VectorCompareDisplayBuffer.data[i].U_dot -= VectorCompareDisplayBuffer.data[0].U_dot;
 			VectorCompareDisplayBuffer.data[i].V_dot -= VectorCompareDisplayBuffer.data[0].V_dot;
 			VectorCompareDisplayBuffer.data[i].W_dot -= VectorCompareDisplayBuffer.data[0].W_dot;
@@ -30840,7 +31068,7 @@ void RTCC::BMGPRIME(std::string source, int n)
 		message.push_back("CANNOT FIND VECTOR " + RTCCONLINEMON.TextBuffer[0]);
 		break;
 	}
-	PMXSPT(source, message);
+	BMGPRIME(source, message);
 }
 
 void RTCC::BMGPRIME(std::string source, std::vector<std::string> message)
@@ -30865,7 +31093,42 @@ void RTCC::LMMGRP(int veh, double gmt)
 		double DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * gmt / 3600.0;
 		GZLTRA.IU1_REFSMMAT = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -phi, 2, -SystemParameters.MCLABN, 1);
 		GZLTRA.IU1_REFSMMAT = mul(GZLTRA.IU1_REFSMMAT, OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)); //Remove when coordinate system is correct
+
+		RTCCONLINEMON.TextBuffer[0] = "IU1";
+		RTCCONLINEMON.MatrixBuffer = GZLTRA.IU1_REFSMMAT;
+		LMXPRNTR("LMMGRP", 10);
 	}
+}
+
+void RTCC::LMXPRNTR(std::string source, int n)
+{
+	std::vector<std::string> message;
+	char Buffer[128];
+
+	switch (n)
+	{
+	case 1:
+		message.push_back("LAUNCH IMPROPERLY CONDITIONED");
+		break;
+	case 10:
+		message.push_back(RTCCONLINEMON.TextBuffer[0] + " REFSMMAT");
+		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m11, RTCCONLINEMON.MatrixBuffer.m12, RTCCONLINEMON.MatrixBuffer.m13);
+		message.push_back(Buffer);
+		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m21, RTCCONLINEMON.MatrixBuffer.m22, RTCCONLINEMON.MatrixBuffer.m23);
+		message.push_back(Buffer);
+		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m31, RTCCONLINEMON.MatrixBuffer.m32, RTCCONLINEMON.MatrixBuffer.m33);
+		message.push_back(Buffer);
+		break;
+	case 11:
+		message.push_back("VEHICLE OPTION INVALID - NO PLATFORM COMPUTED");
+		break;
+	}
+	LMXPRNTR(source, message);
+}
+
+void RTCC::LMXPRNTR(std::string source, std::vector<std::string> message)
+{
+	OnlinePrint(source, message);
 }
 
 void RTCC::EMDAGSN(double GMT, int refs, int body)
@@ -31421,17 +31684,17 @@ void RTCC::EMDGSUPP(int err)
 
 void RTCC::CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
 {
-	double lambda = SystemParameters.MCLGRA + SystemParameters.MCGRIC *3600.0*OrbMech::w_Earth;
+	/*double lambda = SystemParameters.MCLGRA + SystemParameters.MCGRIC *3600.0*OrbMech::w_Earth;
 	//Converts from equatorial coordinates (with launchpad longitude as 0) to RTCC ecliptic
 	MATRIX3 RMAT = mul(MatrixRH_LH(OrbMech::GetRotationMatrix(BODY_EARTH,SystemParameters.GMTBASE)), _M(cos(lambda), -sin(lambda), 0, sin(lambda), cos(lambda), 0, 0, 0, 1));
 	//Converts from RTCC ecliptic to S-IVB ephemeral
 	MATRIX3 MRG = mul(_M(1, 0, 0, 0, 0, -1, 0, 1, 0), OrbMech::tmat(RMAT));
 	double phi_L = MDVSTP.PHIL;
 	MATRIX3 MSG = _M(cos(phi_L), sin(phi_L)*SystemParameters.MCLSBN, -sin(phi_L)*SystemParameters.MCLCBN, -sin(phi_L), cos(phi_L)*SystemParameters.MCLSBN, -cos(phi_L)*SystemParameters.MCLCBN, 0, SystemParameters.MCLCBN, SystemParameters.MCLSBN);
-	MATRIX3 MRS = mul(OrbMech::tmat(MSG), MRG);
+	MATRIX3 MRS = mul(OrbMech::tmat(MSG), MRG);*/
 
-	CZNAVSLV.PosS = mul(MRS, R_ecl);
-	CZNAVSLV.DotS = mul(MRS, V_ecl);
+	CZNAVSLV.PosS = mul(GZLTRA.IU1_REFSMMAT, R_ecl);
+	CZNAVSLV.DotS = mul(GZLTRA.IU1_REFSMMAT, V_ecl);
 	CZNAVSLV.NUPTIM = GMT - SystemParameters.MCGRIC * 3600.0;
 }
 

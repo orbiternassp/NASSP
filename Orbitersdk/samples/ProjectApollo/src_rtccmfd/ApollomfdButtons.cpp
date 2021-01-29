@@ -3167,12 +3167,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu93[] =
 	{
+		{ "Enter vector time", 0, 'T' },
+		{ "Enter vehicle", 0, 'H' },
 		{ "Column 1", 0, ' ' },
 		{ "Column 2", 0, ' ' },
 		{ "Column 3", 0, ' ' },
 		{ "Column 4", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
 
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -3184,10 +3184,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu93, sizeof(mnu93) / sizeof(MFDBUTTONMENU));
 
+	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::menuVectorCompareTime);
 	RegisterFunction("VEH", OAPI_KEY_H, &ApolloRTCCMFD::menuVectorCompareVehicle);
-	RegisterFunction("TIM", OAPI_KEY_Q, &ApolloRTCCMFD::menuVectorCompareTime);
-	RegisterFunction("V1", OAPI_KEY_T, &ApolloRTCCMFD::menuVectorCompareColumn1);
-	RegisterFunction("V2", OAPI_KEY_Q, &ApolloRTCCMFD::menuVectorCompareColumn2);
+	RegisterFunction("V1", OAPI_KEY_Q, &ApolloRTCCMFD::menuVectorCompareColumn1);
+	RegisterFunction("V2", OAPI_KEY_P, &ApolloRTCCMFD::menuVectorCompareColumn2);
 	RegisterFunction("V3", OAPI_KEY_V, &ApolloRTCCMFD::menuVectorCompareColumn3);
 	RegisterFunction("V4", OAPI_KEY_L, &ApolloRTCCMFD::menuVectorCompareColumn4);
 

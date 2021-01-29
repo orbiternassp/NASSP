@@ -6015,6 +6015,11 @@ void AOTcheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &s
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
 }
 
+VECTOR3 imulimit(VECTOR3 a)
+{
+	return _V(imulimit(a.x), imulimit(a.y), imulimit(a.z));
+}
+
 double imulimit(double a)
 {
 	if (a < 0)

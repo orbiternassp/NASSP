@@ -529,6 +529,7 @@ namespace OrbMech {
 	void f_and_g(double x, double t, double ro, double a, double &f, double &g, double mu);
 	void fDot_and_gDot(double x, double r, double ro, double a, double &fdot, double &gdot, double mu);
 	double atan3(double x, double y);
+	VECTOR3 imulimit(VECTOR3 a);
 	double imulimit(double a);
 	MATRIX3 tensorp(VECTOR3 u, VECTOR3 v);
 	MATRIX3 skew(VECTOR3 u);

@@ -83,8 +83,18 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SaturnV *SatV = (SaturnV*)cm;
 		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 		double Azi = lvdc->Azimuth*DEG;
+		double T_GRR = lvdc->T_L;
 
 		sprintf_s(Buff, "P12,CSM,%d:%d:%.2lf,%.2lf;", hh, mm, ss, Azi);
+		GMGMED(Buff);
+
+		//P15: CMC clock zero
+		sprintf_s(Buff, "P15,AGC,%d:%d:%.2lf;", hh, mm, ss);
+		GMGMED(Buff);
+
+		//P12: IU GRR and Azimuth
+		OrbMech::SStoHHMMSS(T_GRR, hh, mm, ss);
+		sprintf_s(Buff, "P12,IU1,%d:%d:%.2lf,%.2lf;", hh, mm, ss, Azi);
 		GMGMED(Buff);
 
 		//Get actual liftoff REFSMMAT from telemetry
