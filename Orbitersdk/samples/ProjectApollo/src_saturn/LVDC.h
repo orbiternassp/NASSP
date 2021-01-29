@@ -75,6 +75,7 @@ public:
 
 	//Mathematical functions
 	double log(double a);
+	MATRIX3 tmat(MATRIX3 a);
 
 	FILE* lvlog;									// LV Log file
 protected:
