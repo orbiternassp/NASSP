@@ -4823,57 +4823,23 @@ ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
 	agc_t* vagc;
-	int REFSMMATaddress;
+	bool cmc;
 
 	if (G->vesseltype < 2)
 	{
 		saturn = (Saturn *)G->vessel;
 		vagc = &saturn->agc.vagc;
-		REFSMMATaddress = GC->rtcc->SystemParameters.MCCCRF_DL;
+		cmc = true;
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
 		vagc = &lem->agc.vagc;
-		REFSMMATaddress = GC->rtcc->SystemParameters.MCCLRF_DL;
+		cmc = false;
 	}
 
-	unsigned short REFSoct[20];
+	MATRIX3 REFSMMAT = GC->rtcc->GetREFSMMATfromAGC(vagc, cmc);
 
-	REFSoct[2] = vagc->Erasable[0][REFSMMATaddress];
-	REFSoct[3] = vagc->Erasable[0][REFSMMATaddress + 1];
-	REFSoct[4] = vagc->Erasable[0][REFSMMATaddress + 2];
-	REFSoct[5] = vagc->Erasable[0][REFSMMATaddress + 3];
-	REFSoct[6] = vagc->Erasable[0][REFSMMATaddress + 4];
-	REFSoct[7] = vagc->Erasable[0][REFSMMATaddress + 5];
-	REFSoct[8] = vagc->Erasable[0][REFSMMATaddress + 6];
-	REFSoct[9] = vagc->Erasable[0][REFSMMATaddress + 7];
-	REFSoct[10] = vagc->Erasable[0][REFSMMATaddress + 8];
-	REFSoct[11] = vagc->Erasable[0][REFSMMATaddress + 9];
-	REFSoct[12] = vagc->Erasable[0][REFSMMATaddress + 10];
-	REFSoct[13] = vagc->Erasable[0][REFSMMATaddress + 11];
-	REFSoct[14] = vagc->Erasable[0][REFSMMATaddress + 12];
-	REFSoct[15] = vagc->Erasable[0][REFSMMATaddress + 13];
-	REFSoct[16] = vagc->Erasable[0][REFSMMATaddress + 14];
-	REFSoct[17] = vagc->Erasable[0][REFSMMATaddress + 15];
-	REFSoct[18] = vagc->Erasable[0][REFSMMATaddress + 16];
-	REFSoct[19] = vagc->Erasable[0][REFSMMATaddress + 17];
-
-	MATRIX3 REFSMMAT;
-
-	REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
-	REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
-	REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
-	REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
-	REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
-	REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
-	REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
-	REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
-	REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
-
-	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
-
-	REFSMMAT = mul(REFSMMAT, OrbMech::J2000EclToBRCS(GC->rtcc->SystemParameters.AGCEpoch));
 	if (G->vesseltype < 2)
 	{
 		GC->rtcc->BZSTLM.CMC_REFSMMAT = REFSMMAT;

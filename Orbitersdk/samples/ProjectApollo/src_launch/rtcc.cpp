@@ -4682,13 +4682,21 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	pad.VLMin[0] = 0.0;
 }
 
-MATRIX3 RTCC::GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff)
+MATRIX3 RTCC::GetREFSMMATfromAGC(agc_t *agc, bool cmc)
 {
 	MATRIX3 REFSMMAT;
 	char Buffer[100];
 	int REFSMMAToct[20];
+	int REFSaddr;
 
-	int REFSaddr = 01735 + addroff;
+	if (cmc)
+	{
+		REFSaddr = SystemParameters.MCCCRF_DL;
+	}
+	else
+	{
+		REFSaddr = SystemParameters.MCCLRF_DL;
+	}
 
 	unsigned short REFSoct[20];
 	REFSoct[2] = agc->Erasable[0][REFSaddr];
@@ -4725,7 +4733,7 @@ MATRIX3 RTCC::GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff)
 	REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
 	REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
 	
-	return mul(REFSMMAT, OrbMech::J2000EclToBRCS(AGCEpoch));
+	return mul(REFSMMAT, OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch));
 }
 
 double RTCC::GetClockTimeFromAGC(agc_t *agc)
@@ -6851,12 +6859,12 @@ void RTCC::AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, 
 	}
 }
 
-void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66)
+void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double GETbase, bool v66)
 {
 	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 
-	MATRIX3 Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+	MATRIX3 Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
 
 	VECTOR3 vel, pos;
 	double get;
@@ -7042,7 +7050,7 @@ void RTCC::SunburstMassUpdate(char *list, double masskg)
 	sprintf(list, "V24N1E1320E%dE%dER", emem[0], emem[1]);
 }
 
-void RTCC::AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc, bool AGCCoordSystem)
+void RTCC::AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoordSystem)
 {
 	MATRIX3 a;
 	int emem[24];
@@ -7053,7 +7061,7 @@ void RTCC::AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoc
 	}
 	else
 	{
-		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
+		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)));
 	}
 
 	emem[0] = 24;
@@ -7087,10 +7095,11 @@ void RTCC::AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoc
 	V71Update(list, emem, 20);
 }
 
-void RTCC::AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int offset, bool AGCCoordSystem)
+void RTCC::AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoordSystem)
 {
 	MATRIX3 a;
 	int emem[24];
+	int address;
 
 	if (AGCCoordSystem)
 	{
@@ -7098,11 +7107,20 @@ void RTCC::AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int 
 	}
 	else
 	{
-		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
+		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)));
+	}
+
+	if (cmc)
+	{
+		address = SystemParameters.MCCCRF;
+	}
+	else
+	{
+		address = SystemParameters.MCCLRF;
 	}
 
 	emem[0] = 24;
-	emem[1] = 1735 + offset;
+	emem[1] = address;
 	emem[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
 	emem[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
 	emem[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
@@ -7243,7 +7261,7 @@ void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET)
 	pad.lng[0] = lng*DEG;
 }
 
-void RTCC::P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad)
+void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
 {
 	double lat, lng, alt, get, SVMJD;
 	VECTOR3 pos, vel;
@@ -7268,8 +7286,8 @@ void RTCC::P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad)
 	pad.Index[0] = 21;
 	pad.Verb[0] = 71;
 
-	pos = mul(OrbMech::J2000EclToBRCS(AGCEpoch), sv.R);
-	vel = mul(OrbMech::J2000EclToBRCS(AGCEpoch), sv.V)*0.01;
+	pos = mul(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch), sv.R);
+	vel = mul(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch), sv.V)*0.01;
 	get = opt->SVGET;
 
 	if (sv.gravref == hMoon) {

@@ -2611,6 +2611,7 @@ public:
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
+	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, bool cmc);
 
 	//Actual RTCC Subroutines
 
@@ -4372,7 +4373,6 @@ public:
 
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
 	double GetClockTimeFromAGC(agc_t *agc);
 	double GetTEPHEMFromAGC(agc_t *agc);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
@@ -4383,9 +4383,9 @@ private:
 	void LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
 	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
 	void AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, bool v66 = false);
-	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
-	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
-	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
+	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double GETbase, bool v66 = false);
+	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc = true, bool AGCCoordSystem = false);
+	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoordSystem = false);
 	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
 	void IncrementAGCTime(char *list, double dt);
@@ -4395,7 +4395,7 @@ private:
 	void SunburstAttitudeManeuver(char *list, VECTOR3 imuangles);
 	void SunburstLMPCommand(char *list, int code);
 	void SunburstMassUpdate(char *list, double masskg);
-	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
+	void P27PADCalc(P27Opt *opt, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	double PericynthionTime(VESSEL* vessel);
