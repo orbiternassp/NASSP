@@ -398,7 +398,7 @@ void LM_VHF::Timestep(double simt)
 		}
 		else
 		{
-			RCVDinputPowRCVR_A = -150.0;
+			RCVDinputPowRCVR_A = RF_ZERO_POWER_DBM;
 		}
 
 		if (receiveB)
@@ -407,7 +407,7 @@ void LM_VHF::Timestep(double simt)
 		}
 		else
 		{
-			RCVDinputPowRCVR_B = -150.0;
+			RCVDinputPowRCVR_B = RF_ZERO_POWER_DBM;
 		}
 	}
 
@@ -424,7 +424,7 @@ void LM_VHF::Timestep(double simt)
 		}
 	}
 
-	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
