@@ -984,7 +984,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
 		med_k16.DesiredHeight = 60.0*1852.0;
 
-		LunarDescentPlanningProcessor(sv, GETbase, BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
+		LunarDescentPlanningProcessor(sv);
 		PoweredFlightProcessor(sv, GETbase, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
 		manopt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
@@ -1438,29 +1438,29 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 60: //STATE VECTOR and LLS 2 REFSMMAT UPLINK
 	{
 		MATRIX3 REFSMMAT;
-		VECTOR3 DV;
-		double GETbase, t_PDI, t_land, CR;
+		double GETbase;
 		SV sv;
 		REFSMMATOpt opt;
-		DOIMan doiopt;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 		GETbase = CalcGETBase();
 
-		doiopt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
-		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
-		doiopt.GETbase = GETbase;
-		doiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
-		doiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
-		doiopt.N = 0;
-		doiopt.opt = 0;
-		doiopt.sv0 = sv;
+		//MED K17
+		GZGENCSN.LDPPAzimuth = 0.0;
+		GZGENCSN.LDPPHeightofPDI = 50000.0*0.3048;
+		GZGENCSN.LDPPPoweredDescentSimFlag = false;
+		GZGENCSN.LDPPDwellOrbits = 0;
+		//MED K16
+		med_k16.Mode = 4;
+		med_k16.Sequence = 1;
+		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(99, 0, 0);
 
-		DOITargeting(&doiopt, DV, TimeofIgnition, t_PDI, t_land, CR);
-		calcParams.DOI = TimeofIgnition;
-		calcParams.TLAND = t_land;
+		LunarDescentPlanningProcessor(sv);
+
+		calcParams.DOI = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
+		calcParams.TLAND = PZLDPDIS.PD_GETTD;
 
 		opt.GETbase = GETbase;
 		opt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
@@ -1623,9 +1623,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManPADOpt opt;
 
 		VECTOR3 DV;
-		double GETbase, t_PDI, t_land, CR, t_DOI_imp, t_TPI_guess;
+		double GETbase, t_DOI_imp, t_TPI_guess;
 		SV sv_CSM, sv, sv_DOI;
-		DOIMan doiopt;
 		char GETbuffer[64];
 		char TLANDbuffer[64];
 		char buffer1[1000];
@@ -1637,19 +1636,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.tgt);
 		GETbase = CalcGETBase();
 
-		doiopt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
-		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
-		doiopt.GETbase = GETbase;
-		doiopt.lat = BZLAND.lat[RTCC_LMPOS_BEST];
-		doiopt.lng = BZLAND.lng[RTCC_LMPOS_BEST];
-		doiopt.N = 0;
-		doiopt.opt = 0;
-		doiopt.sv0 = sv;
+		//MED K17
+		GZGENCSN.LDPPAzimuth = 0.0;
+		GZGENCSN.LDPPHeightofPDI = 50000.0*0.3048;
+		GZGENCSN.LDPPPoweredDescentSimFlag = false;
+		GZGENCSN.LDPPDwellOrbits = 0;
+		//MED K16
+		med_k16.Mode = 4;
+		med_k16.Sequence = 1;
+		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(99, 0, 0);
 
-		DOITargeting(&doiopt, DV, t_DOI_imp, t_PDI, t_land, CR);
+		LunarDescentPlanningProcessor(sv);
 
-		calcParams.DOI = t_DOI_imp;
-		calcParams.TLAND = t_land;
+		calcParams.DOI = t_DOI_imp = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
+		calcParams.TLAND = PZLDPDIS.PD_GETTD;
+		DV = PZLDPELM.V_man_after[0] - PZLDPELM.sv_man_bef[0].V;
 
 		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_ENGINETYPE_LMDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
 

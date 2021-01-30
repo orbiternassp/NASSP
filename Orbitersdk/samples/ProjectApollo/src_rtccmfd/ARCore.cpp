@@ -3158,7 +3158,7 @@ int ARCore::subThread()
 			sv = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		if (!GC->rtcc->LunarDescentPlanningProcessor(sv, GC->rtcc->CalcGETBase(), GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]))
+		if (!GC->rtcc->LunarDescentPlanningProcessor(sv))
 		{
 			if (GC->rtcc->med_k16.Mode != 7)
 			{
