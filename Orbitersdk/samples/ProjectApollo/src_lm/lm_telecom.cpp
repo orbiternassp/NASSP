@@ -424,7 +424,7 @@ void LM_VHF::Timestep(double simt)
 		}
 	}
 
-	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
