@@ -1511,14 +1511,14 @@ void VHFAMTransceiver::Timestep()
 	VECTOR3 R; //vector from the LEM to the CSM
 	VECTOR3 U_R; //unit vector from the LEM to the CSM
 	MATRIX3 Rot; //rotational matrix for transforming from global to local coordinate systems
-	VECTOR3 U_R_LOCAL;
+	VECTOR3 U_R_LOCAL; //unit vector in the local coordinate system, pointing to the other vessel
 
 	if (lem)
 	{
 		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
 		U_R = unit(R); //normalize it
 		sat->GetRotationMatrix(Rot);
-		U_R_LOCAL = tmul(Rot, U_R);
+		U_R_LOCAL = tmul(Rot, U_R); // rotate U_R into the local coordinate system
 	}
 
 	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
