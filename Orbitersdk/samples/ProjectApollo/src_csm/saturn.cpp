@@ -257,10 +257,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	EMSDvSetSwitch(Sclick),
 	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
 	ForwardHatch(HatchOpenSound, HatchCloseSound),
-	omnia(_V(0.0, 0.707108, 0.707108)), //CSM Coordinate System
-	omnib(_V(0.0, -0.707108, 0.707108)), //CSM Coordinate System
-	omnic(_V(0.0, -0.707108, -0.707108)), //CSM Coordinate System
-	omnid(_V(0.0, 0.707108, -0.707108)), //CSM Coordinate System
+	omnia(_V(0.707108, -0.707108, 0.0)), //Orbiter Coordinate System
+	omnib(_V(-0.707108, -0.707108, 0.0)), //Orbiter Coordinate System
+	omnic(_V(-0.707108, 0.707108, 0.0)), //Orbiter Coordinate System
+	omnid(_V(0.707108, 0.707108, 0.0)), //Orbiter Coordinate System
 	vhfAntRight(_V(0.7716246, -0.63607822, 0.0)), //Orbiter Coordinate System
 	vhfAntLeft(_V(-0.7716246, 0.63607822, 0.0)), //Orbiter Coordinate System
 	LogicPowerSwitch(2),

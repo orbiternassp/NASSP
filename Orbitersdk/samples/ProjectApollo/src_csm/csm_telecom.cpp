@@ -1254,15 +1254,13 @@ void OMNI::Init(Saturn *vessel) {
 
 void OMNI::TimeStep()
 {
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	VECTOR3 pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
 	double relang, Moonrelang;
 	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
 
 	double EarthSignalDist;
 
-	//Unit vector of antenna in vessel's local frame
-	U_RP = _V(direction.y, -direction.z, direction.x);
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
@@ -1271,7 +1269,7 @@ void OMNI::TimeStep()
 	sat->GetRotationMatrix(Rot);
 
 	//Calculate antenna pointing vector in global frame
-	U_R = mul(Rot, U_RP);
+	U_R = mul(Rot, direction);
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
 
