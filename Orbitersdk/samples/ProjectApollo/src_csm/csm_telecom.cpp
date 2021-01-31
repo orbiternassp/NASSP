@@ -1320,7 +1320,7 @@ double VHFAntenna::getPolarGain(VECTOR3 target)
 
 	theta = acos(dotp(target,unit(pointingVector)));
 
-	gain = sin(1.4562266550955*theta / ((75 * RAD) - exp(-(theta*theta))))*sin(1.4562266550955*theta / ((75 * RAD) - exp(-(theta*theta)))); //0--1 scaled polar pattern
+	gain = pow(sin(1.4562266550955*theta / ((75 * RAD) - exp(-(theta*theta)))),2); //0--1 scaled polar pattern
 	gain = (gain - 1.0)*scaleGain; //scale to appropriate values. roughly approximates figures 4.7-26 -- 4.7-33 of CSM/LM SPACECRAFT Operational Data Book Volume I CSM Data Book Part I Constraints and Performance Rev 3.
 
 	if (theta > 160.0*RAD)
@@ -1510,7 +1510,7 @@ void VHFAMTransceiver::Timestep()
 
 	VECTOR3 R; //vector from the LEM to the CSM
 	VECTOR3 U_R; //unit vector from the LEM to the CSM
-	MATRIX3 Rot; //rotational matrix for transforming from global to local coordinate systems
+	MATRIX3 Rot; //rotational matrix for transforming from local to global coordinate systems
 	VECTOR3 U_R_LOCAL; //unit vector in the local coordinate system, pointing to the other vessel
 
 	if (lem)
@@ -1518,7 +1518,7 @@ void VHFAMTransceiver::Timestep()
 		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
 		U_R = unit(R); //normalize it
 		sat->GetRotationMatrix(Rot);
-		U_R_LOCAL = tmul(Rot, U_R); // rotate U_R into the local coordinate system
+		U_R_LOCAL = tmul(Rot, U_R); // rotate U_R into the global coordinate system
 	}
 
 	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
