@@ -423,10 +423,18 @@ void LM_VHF::Timestep(double simt)
 		{
 			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)));
 		}
+		else
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, false);
+		}
 
 		if (transmitB)
 		{
 			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false);
+		}
+		else
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
 		}
 
 		//sprintf(oapiDebugString(), "VHF ANTENNA GAIN = %lf", activeAntenna->getPolarGain(U_R_LOCAL));
