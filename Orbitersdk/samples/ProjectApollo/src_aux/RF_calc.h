@@ -53,7 +53,7 @@ inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrG
 	rcvdPower = xmitrPower * xmitrGain * rcvrGain * pow((wavelength / (4 * PI * distance)), 2); //watts
 	rcvdPower = 10.0 * log10(1000.0 * rcvdPower); //convert to dBm
 
-	if (isnan(rcvdPower))//will be true if any arguments were 0.
+	if ((distance < 1E-5) || (frequency == 0.0))//will be true if any arguments were 0.
 	{
 		return RF_ZERO_POWER_DBM;
 	}
