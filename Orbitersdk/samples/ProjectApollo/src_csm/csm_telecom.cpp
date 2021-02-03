@@ -5385,8 +5385,6 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	{
 		sat->CSM_RRTto_LM_RRConnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
 	}
-
-	if(lem){ RNDZXPDRSystem::SendRF(); } //send inital info to the connector
 }
 
 unsigned char RNDZXPDRSystem::GetScaledRFPower()
@@ -5645,14 +5643,14 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 
 void RNDZXPDRSystem::LoadState(char *line)
 {
-	sscanf(line + 14, "%i %lf", &haslock, &lockTimer);
+	sscanf(line + 14, "%i %lf %lf %lf %lf %lf", &haslock, &lockTimer, &RCVDfreq, &RCVDpow, &RCVDgain, &RCVDPhase);
 }
 
 void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 {
 	char buffer[256];
 
-	sprintf(buffer, "%i %lf", haslock, lockTimer);
+	sprintf(buffer, "%i %lf %lf %lf %lf %lf", haslock, lockTimer, RCVDfreq, RCVDpow, RCVDgain, RCVDPhase);
 
 	oapiWriteScenario_string(scn, "RNDZXPDRSystem", buffer);
 }
