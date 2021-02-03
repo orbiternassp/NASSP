@@ -39,9 +39,8 @@
 /// \param frequency The frequency of the signal being transmitted in Hz
 /// \param distance  The distance between the transmitter and the receiver in meters
 /// \return The power recieved by the receiver in dBm
-inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance)
+static inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance)
 {
-	
 	double rcvdPower = 0;
 	double wavelength = 0;
 
@@ -53,7 +52,7 @@ inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrG
 	rcvdPower = xmitrPower * xmitrGain * rcvrGain * pow((wavelength / (4 * PI * distance)), 2); //watts
 	rcvdPower = 10.0 * log10(1000.0 * rcvdPower); //convert to dBm
 
-	if ((distance < 1E-5) || (frequency == 0.0))//will be true if any arguments were 0.
+	if (fpclassify(rcvdPower) != FP_NORMAL)
 	{
 		return RF_ZERO_POWER_DBM;
 	}
