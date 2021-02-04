@@ -11908,7 +11908,7 @@ int RTCC::PCTETR(SV sv_C, SV sv_T, double GETBase, double WT, double ESP, double
 		}
 		sv_C1 = coast(sv_C1, DT);
 		I++;
-	} while (I <= 10);
+	} while (I <= 25);
 	return -1;
 }
 
@@ -21754,6 +21754,7 @@ int RTCC::PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv)
 		return 9;
 	}
 
+	sv = EPHEM.table[0];
 	return 0;
 }
 
