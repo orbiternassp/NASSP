@@ -66,15 +66,16 @@ double LM_VHFAntenna::getPolarGain(VECTOR3 target)
 	double theta = 0.0;
 	double gain = 0.0;
 
-	theta = acos(dotp(unit(target), unit(pointingVector)));
+	const double scaleGain = 9.0; //dBi ################# THIS THE SAME GAIN AS THE CSM AND MAY NEED TO BE CORRECTED? ################
 
-	if (theta < 90.0*RAD)
+	theta = acos(dotp(target, unit(pointingVector)));
+
+	gain = pow(sin(1.4562266550955*theta / ((75 * RAD) - exp(-(theta*theta)))), 2); //0--1 scaled polar pattern
+	gain = (gain - 1.0)*scaleGain; //scale to appropriate values. roughly approximates figures 4.7-26 -- 4.7-33 of CSM/LM SPACECRAFT Operational Data Book Volume I CSM Data Book Part I Constraints and Performance Rev 3.
+
+	if (theta > 160.0*RAD)
 	{
-		gain = pow(cos(theta / 10.0), 2.0)*maxGain; //probably a toroidal polar, but this is close enough for now
-	}
-	else
-	{
-		gain = -150.0;
+		return -scaleGain;
 	}
 
 	return gain;
@@ -371,18 +372,23 @@ void LM_VHF::Timestep(double simt)
 		csm = NULL;
 		lem->lm_vhf_to_csm_csm_connector.Disconnect();
 	}
-	//
 
-	VECTOR3 R = _V(0,0,0);
+	VECTOR3 R;
+	VECTOR3 U_R; //unit vector from the CSM to the LEM
+	MATRIX3 Rot; //rotational matrix for transforming from local to global coordinate systems
+	VECTOR3 U_R_LOCAL; //unit vector in the local coordinate system, pointing to the other vessel
 
 	if (!csm)
 	{
-		csm = lem->agc.GetCSM(); //############################ FIXME ################################
+		csm = lem->agc.GetCSM();
 	}
 
 	if (csm)
 	{
 		oapiGetRelativePos(csm->GetHandle(), lem->GetHandle(), &R); //vector to the LM
+		U_R = unit(R); //normalize it
+		lem->GetRotationMatrix(Rot);
+		U_R_LOCAL = tmul(Rot, U_R); //rotate U_R into the global coordinate system
 	}
 
 	if (!(lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
@@ -394,20 +400,20 @@ void LM_VHF::Timestep(double simt)
 	{
 		if (receiveA)
 		{
-			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(R), RCVDfreqRCVR_A, length(R));
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_A, length(R));
 		}
 		else
 		{
-			RCVDinputPowRCVR_A = -150.0;
+			RCVDinputPowRCVR_A = RF_ZERO_POWER_DBM;
 		}
 
 		if (receiveB)
 		{
-			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(R), RCVDfreqRCVR_B, length(R));
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_B, length(R));
 		}
 		else
 		{
-			RCVDinputPowRCVR_B = -150.0;
+			RCVDinputPowRCVR_B = RF_ZERO_POWER_DBM;
 		}
 	}
 
@@ -415,13 +421,23 @@ void LM_VHF::Timestep(double simt)
 	{
 		if (transmitA)
 		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(R), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)));
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)));
+		}
+		else
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, false);
 		}
 
 		if (transmitB)
 		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(R), 0.0, false);
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false);
 		}
+		else
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
+		}
+
+		//sprintf(oapiDebugString(), "VHF ANTENNA GAIN = %lf", activeAntenna->getPolarGain(U_R_LOCAL));
 	}
 
 	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);

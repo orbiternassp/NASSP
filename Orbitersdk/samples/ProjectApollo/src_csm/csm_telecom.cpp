@@ -1254,15 +1254,13 @@ void OMNI::Init(Saturn *vessel) {
 
 void OMNI::TimeStep()
 {
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	VECTOR3 pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
 	double relang, Moonrelang;
 	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
 
 	double EarthSignalDist;
 
-	//Unit vector of antenna in vessel's local frame
-	U_RP = _V(direction.y, -direction.z, direction.x);
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
@@ -1271,7 +1269,7 @@ void OMNI::TimeStep()
 	sat->GetRotationMatrix(Rot);
 
 	//Calculate antenna pointing vector in global frame
-	U_R = mul(Rot, U_RP);
+	U_R = mul(Rot, direction);
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
 
@@ -1316,17 +1314,16 @@ double VHFAntenna::getPolarGain(VECTOR3 target)
 	double theta = 0.0;
 	double gain = 0.0;
 
-	const double maxGain = -9.0; //dB
+	const double scaleGain = 9.0; //dBi
 
-	theta = acos(dotp(unit(target),unit(pointingVector)));
+	theta = acos(dotp(target,unit(pointingVector)));
 
-	if (theta < 90.0*RAD)
+	gain = pow(sin(1.4562266550955*theta / ((75 * RAD) - exp(-(theta*theta)))),2); //0--1 scaled polar pattern
+	gain = (gain - 1.0)*scaleGain; //scale to appropriate values. roughly approximates figures 4.7-26 -- 4.7-33 of CSM/LM SPACECRAFT Operational Data Book Volume I CSM Data Book Part I Constraints and Performance Rev 3.
+
+	if (theta > 160.0*RAD)
 	{
-		gain = pow(cos(theta / 10.0), 2.0)*maxGain;
-	}
-	else
-	{
-		gain = -150.0;
+		return -scaleGain;
 	}
 
 	return gain;
@@ -1414,10 +1411,9 @@ void VHFAMTransceiver::Timestep()
 
 	if (!lem)
 	{
-		//lem = sat->agc.GetLM(); //need to change type of "lem" to "VESSEL" before uncommenting
 		VESSEL *lm = sat->agc.GetLM(); 
 		if (lm) {
-			lem = (static_cast<LEM*>(lm)); //################################# DELETE ME #######################################
+			lem = (static_cast<LEM*>(lm)); 
 		}
 	}
 
@@ -1425,15 +1421,6 @@ void VHFAMTransceiver::Timestep()
 	{
 		sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
-
-	VECTOR3 R = _V(0, 0, 0);
-
-	if(lem)
-	{
-		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
-	}
-
-	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
 
 	if (antSelectorSw->GetState() == 0)
 	{
@@ -1519,24 +1506,40 @@ void VHFAMTransceiver::Timestep()
 		receiveB = false;
 	}
 
+	VECTOR3 R; //vector from the LEM to the CSM
+	VECTOR3 U_R; //unit vector from the LEM to the CSM
+	MATRIX3 Rot; //rotational matrix for transforming from local to global coordinate systems
+	VECTOR3 U_R_LOCAL; //unit vector in the local coordinate system, pointing to the other vessel
+
+	if (lem)
+	{
+		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
+		U_R = unit(R); //normalize it
+		sat->GetRotationMatrix(Rot);
+		U_R_LOCAL = tmul(Rot, U_R); // rotate U_R into the global coordinate system
+	}
+
+	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
+
+	//if we're connected, have a pointer to the LEM, and have a non NULL antenna selected, receive RF power.
 	if ((sat->csm_vhfto_lm_vhfconnector.connectedTo) && lem && activeAntenna)
 	{
 		if (receiveA)
 		{
-			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(R), RCVDfreqRCVR_A, length(R));
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_A, length(R));
 		}
 		else
 		{
-			RCVDinputPowRCVR_A = -150.0;
+			RCVDinputPowRCVR_A = RF_ZERO_POWER_DBM;
 		}
 
 		if (receiveB)
 		{
-			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(R), RCVDfreqRCVR_B, length(R));
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_B, length(R));
 		}
 		else
 		{
-			RCVDinputPowRCVR_B = -150.0;
+			RCVDinputPowRCVR_B = RF_ZERO_POWER_DBM;
 		}
 	}
 
@@ -1545,20 +1548,25 @@ void VHFAMTransceiver::Timestep()
 	//send RF properties to the connector
 	if (lem && activeAntenna)
 	{
-		VECTOR3 U_R;
-
-		oapiGetRelativePos(sat->GetHandle(), lem->GetHandle(), &U_R); //vector to the LM
-		U_R = unit(U_R); //normalize it
-
 		if (transmitA)
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, false); //XCVR A
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false); //XCVR A
+		}
+		else
+		{
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
 		}
 
 		if (transmitB)
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, XMITRangeTone); //XCVR B
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, XMITRangeTone); //XCVR B
 		}
+		else
+		{
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
+		}
+
+		//sprintf(oapiDebugString(), "VHF ANTENNA GAIN = %lf dBi", activeAntenna->getPolarGain(U_R_LOCAL));
 	}
 
 	XMITRangeTone = false;
@@ -1685,7 +1693,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 				//Specification is 200NM range, but during the flights up to 320NM was achieved
 				if (newrange > 500.0*0.3048)
 				{		
-					if(transceiver->RCVDinputPowRCVR_A > -122.0 && transceiver->GetActiveAntenna())
+					if(transceiver->RCVDinputPowRCVR_A > -122.0 && transceiver->GetActiveAntenna() && transceiver->RCVDRangeTone)
 					{
 						RangingReturnSignal();
 					}
@@ -5377,8 +5385,6 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	{
 		sat->CSM_RRTto_LM_RRConnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
 	}
-
-	if(lem){ RNDZXPDRSystem::SendRF(); } //send inital info to the connector
 }
 
 unsigned char RNDZXPDRSystem::GetScaledRFPower()
@@ -5637,14 +5643,14 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 
 void RNDZXPDRSystem::LoadState(char *line)
 {
-	sscanf(line + 14, "%i %lf", &haslock, &lockTimer);
+	sscanf(line + 14, "%i %lf %lf %lf %lf %lf", &haslock, &lockTimer, &RCVDfreq, &RCVDpow, &RCVDgain, &RCVDPhase);
 }
 
 void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 {
 	char buffer[256];
 
-	sprintf(buffer, "%i %lf", haslock, lockTimer);
+	sprintf(buffer, "%i %lf %lf %lf %lf %lf", haslock, lockTimer, RCVDfreq, RCVDpow, RCVDgain, RCVDPhase);
 
 	oapiWriteScenario_string(scn, "RNDZXPDRSystem", buffer);
 }

@@ -26,6 +26,9 @@
 #pragma once
 #include "math.h"
 #include "OrbiterAPI.h"
+
+#define RF_ZERO_POWER_DBM -1000.0; //safe "0" for power, nothing should ever get this low
+
 /// \brief Calcluate Received Power
 ///
 /// This function is a simple inplimentation of Friis transmission equation.
@@ -35,8 +38,8 @@
 /// \param xmitrGain The gain or directivity of the transmitter in dBi
 /// \param frequency The frequency of the signal being transmitted in Hz
 /// \param distance  The distance between the transmitter and the receiver in meters
-/// \return The power recieved by the receiver in watts RMS
-inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance)
+/// \return The power recieved by the receiver in dBm
+static inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance)
 {
 	double rcvdPower = 0;
 	double wavelength = 0;
@@ -46,7 +49,13 @@ inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrG
 
 	wavelength = C0 / (frequency);
 
-	rcvdPower = xmitrPower * xmitrGain * rcvrGain * pow((wavelength / (4 * PI * distance)), 2);
+	rcvdPower = xmitrPower * xmitrGain * rcvrGain * pow((wavelength / (4 * PI * distance)), 2); //watts
+	rcvdPower = 10.0 * log10(1000.0 * rcvdPower); //convert to dBm
 
-	return (10.0 * log10(1000.0 * rcvdPower));
+	if (fpclassify(rcvdPower) != FP_NORMAL)
+	{
+		return RF_ZERO_POWER_DBM;
+	}
+
+	return rcvdPower;
 }
