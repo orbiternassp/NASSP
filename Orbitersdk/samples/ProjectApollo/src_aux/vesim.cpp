@@ -43,15 +43,18 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define VESIM_DEVICE_AXIS_RX      4
 #define VESIM_DEVICE_AXIS_RY      5
 #define VESIM_DEVICE_AXIS_RZ      6
-#define VESIM_DEVICE_AXIS_SLDR0   7
-#define VESIM_DEVICE_AXIS_SLDR1   8
+#define VESIM_DEVICE_SLDR0        7
+#define VESIM_DEVICE_SLDR1        8
+#define VESIM_DEVICE_POV         16
+
+
 
 #define VESIM_CFG_EXT ".cfg"
 #define VESIM_CFG_USER_EXT ".launchpad.cfg"
 #define VESIM_CFG_GENERIC "GenericJoystick"
 
 char *subdevnames[] = {
-	"X", "Y", "Z", "RX", "RY", "RZ", "Slider 0", "Slider 1"
+	"X", "Y", "Z", "RX", "RY", "RZ"
 };
 
 char *povaxnames[] = {
@@ -392,9 +395,9 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 									subdevtype = VESIM_SUBDEVTYPE_AXIS;
 									std::string ssid = token.substr(4);
 									const char * psid = ssid.c_str();
-									for (int k = 0; k < 8; k++) {
+									for (int k = 0; k < 6; k++) {
 										if (icomp(psid, subdevnames[k])) {
-											subdevid = k + 1;
+											subdevid = k + VESIM_DEVICE_AXIS_X;
 											break;
 										}
 									}
@@ -415,9 +418,29 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 									const char * psid = ssid.c_str();
 									for (int k = 0; k < 8; k++) {
 										if (icomp(psid, povaxnames[k])) {
-											subdevid = k + 16;
+											subdevid = k + VESIM_DEVICE_POV;
 											break;
 										}
+									}
+								}
+								else if (token.length() > 7 && icomp(token.substr(0, 6).c_str(), "Slider")) {
+									subdevtype = VESIM_SUBDEVTYPE_AXIS;
+									try
+									{
+										int tmp= std::stoi(token.substr(6));
+										switch (tmp) {
+										case 0:
+											subdevid = VESIM_DEVICE_SLDR0;
+											break;
+										case 1:
+											subdevid = VESIM_DEVICE_SLDR1;
+											break;
+										default:
+											break;
+										}
+									}
+									catch (int e) {
+										(void)e;
 									}
 								}
 							}
@@ -590,18 +613,18 @@ void  Vesim::poolDevices() {
 					pconn->value = newValue;
 					isSet = true;
 					break;
-				case VESIM_DEVICE_AXIS_SLDR0:
+				case VESIM_DEVICE_SLDR0:
 					newValue = pdev->dx8_jstate.rglSlider[0];
 					pconn->value = newValue;
 					isSet = true;
 					break;
-				case VESIM_DEVICE_AXIS_SLDR1:
+				case VESIM_DEVICE_SLDR1:
 					newValue = pdev->dx8_jstate.rglSlider[1];
 					pconn->value = newValue;
 					isSet = true;
 					break;
 				default: //It is a POV axis
-					int povidx = pconn->subdeviceID-16;
+					int povidx = pconn->subdeviceID- VESIM_DEVICE_POV;
 					int povval = pdev->dx8_jstate.rgdwPOV[povidx>>1];					
 					if ((povval & 0xFFFF) != 0xFFFF) {																
 						double povcos = cos(PI*povval / 18000.0);
