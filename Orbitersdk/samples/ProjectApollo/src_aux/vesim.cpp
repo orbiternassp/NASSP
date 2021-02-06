@@ -239,10 +239,7 @@ void VesimDevice::poolDevice() {
 }
 
 VesimDevice::~VesimDevice() {
-	if (type == VESIM_DEVICETYPE_JOYSTICK) {
-		dx8_joystick->Unacquire();
-		dx8_joystick->Release();
-	}
+
 }
 
 Vesim::Vesim(CbInputChanged cbInputChanged, void *pCbData) : cbInputChanged(cbInputChanged), pCbData(pCbData) {
@@ -261,6 +258,14 @@ Vesim::Vesim(CbInputChanged cbInputChanged, void *pCbData) : cbInputChanged(cbIn
 }
 
 Vesim::~Vesim() {
+	int ndev = vdev.size();
+	for (int i = 0; i < ndev; i++) {
+		VesimDevice *d = &vdev[i];
+		if (d->type == VESIM_DEVICETYPE_JOYSTICK) {
+			d->dx8_joystick->Unacquire();
+			d->dx8_joystick->Release();
+		}
+	}
 #ifdef _DEBUG
 	fclose(out_file);
 #endif
