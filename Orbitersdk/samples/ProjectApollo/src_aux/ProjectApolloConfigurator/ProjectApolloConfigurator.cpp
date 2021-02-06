@@ -554,11 +554,13 @@ void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 		SendDlgItemMessage(hWnd, IDC_CHECK_THC, BM_SETCHECK, BST_UNCHECKED, 0);
 		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RHC), FALSE);
 		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_THC), FALSE);
+		EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG), TRUE);
 		//SendDlgItemMessage(hWnd, IDC_CHECK_RHC, EM_SETREADONLY, (WPARAM)(BOOL)true, 0);
 	}
 	else {
 		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RHC), TRUE);
 		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_THC), TRUE);
+		EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG), FALSE);
 	}
 
 	rhcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_RHC, BM_GETCHECK, 0, 0);
