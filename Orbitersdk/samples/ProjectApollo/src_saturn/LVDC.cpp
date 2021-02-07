@@ -7173,11 +7173,11 @@ void LVDCSV::IterativeGuidanceMode()
 				// TRANSLUNAR INJECTION VELOCITY
 				fprintf(lvlog, "TRANSLUNAR INJECTION\r\n");
 				double dotR = dotp(PosS, DotS) / R;
-				R_T = R + dotR * (T_3 - DT_N);
+				R_T = R + dotR * (T_GO - dt_c);
 				V_T = sqrt(C_3 + 2.0*mu / R_T);
 				dV_B = dV_BR;
 				//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
-				fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
+				fprintf(lvlog, "TLI VELOCITY: R %f dotR %f T_GO %f dt_c %f R_T %f V_T: %f\r\n", R, dotR, T_GO, dt_c, R_T, V_T);
 				// LVDC_GP_PC = 30; // STOP
 			}
 			// TGO DETERMINATION
