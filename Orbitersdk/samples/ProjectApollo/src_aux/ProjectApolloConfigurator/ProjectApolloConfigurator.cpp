@@ -32,6 +32,7 @@
 #include <commctrl.h>
 #include "resource.h"
 #include <stdio.h>
+#include "vesim.h"
 
 // ==============================================================
 // Some global parameters
@@ -526,6 +527,24 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_VESIM)) {
 			UpdateControlState(hWnd);
 
+		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG)) {
+			std::string configdir = "Config\\ProjectApollo\\Vesim\\";
+			LPDIRECTINPUT8 dx8ppv;
+			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLong(hWnd, GWL_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
+			if (!FAILED(hr)) {
+				Vesim lmvm(NULL, NULL), csmvm(NULL, NULL);
+				lmvm.setupDevices("LM", dx8ppv);
+				csmvm.setupDevices("CSM", dx8ppv);
+				lmvm.createUserConfigs();
+				csmvm.createUserConfigs();
+				/*if (enableVESIM) {
+					for (int i = 0; i < LM_AXIS_INPUT_CNT; i++)
+						vesim.addInput(&vesim_lm_inputs[i]);
+					
+				}*/
+				dx8ppv->Release();
+			}
+			
 		}
 		break;
 

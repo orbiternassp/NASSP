@@ -18,6 +18,9 @@
     <ClCompile Include="..\..\src_aux\ProjectApolloConfigurator\ProjectApolloConfigurator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\vesim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_aux\ProjectApolloConfigurator\ProjectApolloConfigurator.rc">
@@ -26,6 +29,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_aux\ProjectApolloConfigurator\resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\vesim.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
