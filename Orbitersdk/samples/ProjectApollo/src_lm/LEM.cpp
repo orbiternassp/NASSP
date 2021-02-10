@@ -188,19 +188,12 @@ void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
 			pLM->ButtonClick();
 			break;
 		case LM_BUTTON_ABORT:
-			//Ugly solution, should go into AbortSwitch.SetState(...)
 			state = pLM->AbortSwitch.GetState(); 
 			if (state == 0) {
-				pLM->AbortSwitch.SwitchTo(1, true);
-				pLM->Sclick.play();
-				pLM->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
-				pLM->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+				pLM->AbortSwitch.SwitchTo(1);
 			}
 			else if (state == 1) {
-				pLM->AbortSwitch.SwitchTo(0, true);
-				pLM->Sclick.play();
-				pLM->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
-				pLM->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+				pLM->AbortSwitch.SwitchTo(0);
 			}
 			break;
 		case LM_BUTTON_ABORT_STAGE:			
