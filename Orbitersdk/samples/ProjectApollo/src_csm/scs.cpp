@@ -489,7 +489,6 @@ void BMAG::LoadState(FILEHANDLE scn){
 
 GDC::GDC()
 {
-	rates = _V(0,0,0);
 	Attitude = _V(0, 0, 0);
 	sat = NULL;
 	fdai_err_ena = 0;
@@ -984,19 +983,6 @@ void GDC::Timestep(double simdt) {
 			Attitude.y += PI2;
 		}
 	}
-
-	//TBD: Remove this part when it doesn't get used anymore by other SCS subsystems
-	rates.x = pitchBmag->GetRates().x;
-	// Special Logic for Entry .05 Switch
-	if (sat->GSwitch.IsUp()) {
-		// Entry Stability Roll Transformation
-		rates.y = -primRollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
-		// sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
-	} else {
-		// Normal Operation
-		rates.y = yawBmag->GetRates().y;
-	}
-	rates.z = primRollBmag->GetRates().z;
 
 	//sprintf(oapiDebugString(), "Body: %f %f %f Euler: %f %f %f", sat->bmag1.GetRates().z*DEG, sat->bmag1.GetRates().x*DEG, sat->bmag1.GetRates().y*DEG, rollrate*DEG, pitchrate*DEG, yawrate*DEG);
 }
