@@ -24,6 +24,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#define DIRECTINPUT_VERSION 0x0800
+#include "dinput.h"
+
 #define VESIM_INPUTTYPE_BUTTON 1
 #define VESIM_INPUTTYPE_AXIS   2
 
@@ -136,6 +139,7 @@ public:
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *keystate);
 	void poolDevices();
 	int getInputValue(int inputID);
+	void createUserConfigs();
 
 	friend BOOL CALLBACK VesimEnumJoysticksCB(const DIDEVICEINSTANCE* pdidInstance, VOID* pVesim);
 };
