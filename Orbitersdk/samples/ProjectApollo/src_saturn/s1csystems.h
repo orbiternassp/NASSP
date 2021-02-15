@@ -35,13 +35,18 @@ public:
 	void SetEngineStart() { EngineStart = true; }
 	void SetProgrammedEngineCutoff() { ProgrammedCutoff = true; }
 	void SetEDSCutoff() { EDSCutoff = true; }
+	void SetGSECutoff() { GSECutoff = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
 	void SetFailed() { EngineFailed = true; }
 
 	bool GetThrustOK() { return ThrustOK; }
 	double GetThrustLevel() { return ThrustLevel; }
 	bool GetFailed() { return EngineFailed; }
+	bool GetEngineStop() { return EngineStop; }
 protected:
+
+	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
+
 	THRUSTER_HANDLE &th_f1;
 	VESSEL *vessel;
 
@@ -59,17 +64,27 @@ protected:
 
 	double ThrustTimer;
 	double ThrustLevel;
+
+	double pitchCmd;
+	double pitchPos;
+	double yawCmd;
+	double yawPos;
 };
+
+class TSMUmbilical;
+class Pyro;
+class Sound;
 
 class SICSystems
 {
 public:
 	SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Pyro &SIC_SII_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl);
-	void Timestep(double simdt, bool liftoff);
+	~SICSystems();
+	void Timestep(double misst, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	void SetEngineStart(int n);
+	virtual void SetEngineStart(int n);
 	void InboardEngineCutoff();
 	void OutboardEnginesCutoff();
 	void OutboardEnginesCutoffEnable() { PointLevelSensorArmed = true; }
@@ -77,21 +92,30 @@ public:
 	void TwoAdjacentOutboardEnginesOutCutoffEnable() { TwoAdjacentOutboardEnginesOutCutoff = true; }
 	void MultipleEngineCutoffEnable() { MultipleEngineCutoffEnabled = true; }
 	void EDSEnginesCutoff(bool cut);
+	virtual void GSEEnginesCutoff(bool cut);
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 	void SwitchSelector(int channel);
 
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
-	void SetEngineFailureParameters(int n, double SICutTimes);
-	bool GetFailInit() { return FailInit; }
+	void SetEngineFailureParameters(int n, double SICutTimes, bool fail);
+	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
 
 	bool PropellantLowLevel();
 	void GetThrustOK(bool *ok);
 	bool GetPropellantDepletionEngineCutoff();
 	bool GetInboardEngineOut();
 	bool GetOutboardEngineOut();
+
+	virtual bool GetEngineStop();
+
+	virtual void ConnectUmbilical(TSMUmbilical *umb);
+	virtual void DisconnectUmbilical();
+	bool IsUmbilicalConnected();
 protected:
 
+	bool TripleVoting(bool vote1, bool vote2, bool vote3);
 	double GetSumThrust();
+	bool ESEGetSICThrustOKSimulate(int eng, int n);
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -110,14 +134,17 @@ protected:
 	F1Engine *f1engines[5];
 
 	bool PropellantDepletionSensors;
-	bool PointLevelSensorArmed;
+	//K1
 	bool TwoAdjacentOutboardEnginesOutCutoff;
+	//K2
 	bool MultipleEngineCutoffEnabled;
+	//K3
+	bool PointLevelSensorArmed;
 
-	bool ThrustOK[5];
+	bool ThrustOK[15];
 
-	bool FailInit;
 	bool EarlySICutoff[5];
 	double FirstStageFailureTime[5];
-	double FailureTimer;
+
+	TSMUmbilical *TSMUmb;
 };

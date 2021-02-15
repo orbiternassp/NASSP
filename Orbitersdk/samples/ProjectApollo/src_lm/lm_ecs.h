@@ -24,11 +24,55 @@
 
 #pragma once
 
+#include "animations.h"
+
+  ///
+  /// This class simulates the crew status (dead or alive) in the LM.
+  /// \ingroup InternalSystems
+  /// \brief crew status.
+  ///
+
+#define ECS_CREWSTATUS_OK			0
+#define ECS_CREWSTATUS_CRITICAL		1
+#define ECS_CREWSTATUS_DEAD			2
+
+
+class LEMCrewStatus {
+
+public:
+	LEMCrewStatus(Sound &crewdeadsound);
+	virtual ~LEMCrewStatus();
+	void Init(LEM *s);
+	void Timestep(double simdt);
+	int GetStatus() { return status; };
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
+protected:
+	int status;
+	double SuitPressureLowTime;
+	double PressureLowTime;
+	double SuitPressureHighTime;
+	double PressureHighTime;
+	double SuitTemperatureTime;
+	double TemperatureTime;
+	double CO2Time;
+	double accelerationTime;
+	double lastVerticalVelocity;
+
+	LEM *lem;
+	Sound &crewDeadSound;
+	bool firstTimestepDone;
+};
+
 class LEMOverheadHatch
 {
 public:
 	LEMOverheadHatch(Sound &opensound, Sound &closesound);
 	void Init(LEM *l, ToggleSwitch *ohh);
+	void DefineAnimations(UINT idx);
+	void DefineAnimationsVC(UINT idx);
+	void Timestep(double simdt);
 	void Toggle();
 
 	bool IsOpen() { return open; };
@@ -36,6 +80,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 protected:
+	AnimState2 ovhdhatch_state;
 	bool open;
 
 	LEM *lem;
@@ -43,6 +88,9 @@ protected:
 
 	Sound &OpenSound;
 	Sound &CloseSound;
+
+	UINT anim_OvhdHatch;
+	UINT anim_OvhdHatchVC;
 };
 
 class LEMOVHDCabinReliefDumpValve
@@ -62,6 +110,9 @@ class LEMForwardHatch
 public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
 	void Init(LEM *l, ToggleSwitch *fhh);
+	void DefineAnimations(UINT idx);
+	void DefineAnimationsVC(UINT idx);
+	void Timestep(double simdt);
 	void Toggle();
 
 	bool IsOpen() { return open; };
@@ -69,6 +120,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 protected:
+	AnimState2 hatch_state;
 	bool open;
 
 	LEM *lem;
@@ -76,6 +128,9 @@ protected:
 
 	Sound &OpenSound;
 	Sound &CloseSound;
+
+	UINT anim_Hatch;
+	UINT anim_HatchVC;
 };
 
 class LEMFWDCabinReliefDumpValve
@@ -107,6 +162,8 @@ public:
 	LEMPressureSwitch();
 	void Init(h_Tank *st, double max, double min);
 	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *name_str);
+	void LoadState(char *line, int strlen);
 
 	bool GetPressureSwitch() { return PressureSwitch; }
 protected:
@@ -226,7 +283,7 @@ protected:
 class LEMCabinFan
 {
 public:
-	LEMCabinFan(Sound &cabinfanS);
+	LEMCabinFan(FadeInOutSound &cabinfanS);
 	void Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf, h_HeatLoad *cfh);
 	void SystemTimestep(double simdt);
 protected:
@@ -239,7 +296,7 @@ protected:
 	RotationalSwitch *pressRegulatorASwitch;
 	RotationalSwitch *pressRegulatorBSwitch;
 	Pump *cabinFan;
-	Sound &cabinfansound;
+	FadeInOutSound &cabinfansound;
 	h_HeatLoad *cabinFanHeat;
 };
 
@@ -266,6 +323,7 @@ public:
 
 	bool GetPressureSwitch() { return PressureSwitch; }
 	bool GetGlycolPumpFailRelay() { return GlycolPumpFailRelay; }
+	bool GetGlycolPumpState(int i);
 protected:
 	h_Tank *primGlycolAccumulatorTank;
 	h_Tank *primGlycolPumpManifoldTank;
@@ -284,6 +342,7 @@ protected:
 	bool GlycolPumpFailRelay;
 
 	bool PressureSwitch;
+	int AutoTransferCounter;
 };
 
 class LEMSuitFanDPSensor
@@ -332,12 +391,22 @@ public:
 	double GetSecondaryGlycolQuantity();
 	double GetPrimaryGlycolPressure();
 	double GetSecondaryGlycolPressure();
+	double GetSelectedGlycolPressure();
+	double DescentWaterTankPressure();
 	double GetPrimaryGlycolTempF();
 	double GetSecondaryGlycolTempF();
 	double GetSelectedGlycolTempF();
 	double GetWaterSeparatorRPM();
 	double GetAscWaterTank1TempF();
 	double GetAscWaterTank2TempF();
+	double GetPrimWBWaterInletTempF();
+	double GetPrimWBGlycolInletTempF();
+	double GetPrimWBGlycolOutletTempF();
+	double GetPrimaryGlycolPumpDP();
+	double GetPLSSFillPressurePSI();
+	double GetECSSuitPSI();
+	double GetECSCabinPSI();
+	double GetECSSensorCO2MMHg();
 	bool GetSuitFan1Failure();
 	bool GetSuitFan2Failure();
 	bool GetPrimGlycolLowLevel();
@@ -349,8 +418,8 @@ public:
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
 	double *Suit_Press, *Suit_Temp, *SuitCircuit_CO2, *HX_CO2;					// Suit Circuit Atmosphere
-	double *Asc_Water1, *Asc_Water2, *Des_Water;					// Water tanks
-	double *Asc_Water1Temp, *Asc_Water2Temp;						// Water tank temperatures
+	double *Asc_Water1, *Asc_Water2, *Des_Water, *Des_Water_Press;	// Water tanks
+	double *Asc_Water1Temp, *Asc_Water2Temp, *WB_Prim_Water_Temp;	// Water tank temperatures
 	double *Asc_Oxygen1, *Asc_Oxygen2, *Des_Oxygen;				// Oxygen tanks
 	double *Asc_Oxygen1Press, *Asc_Oxygen2Press, *Des_OxygenPress;  // Oxygen Tank Pressures
 	double *Primary_CL_Glycol_Press;							// Pressure before and after pumps
@@ -376,6 +445,9 @@ public:
 	double *Secondary_Glycol_EvapIn;							// Evap inlet mass
 	double *Secondary_Glycol_EvapOut;							// Evap outlet mass
 	double *Water_Sep1_RPM, *Water_Sep2_RPM;					// Water separators RPM
+	double *WB_Prim_Gly_In_Temp, *WB_Prim_Gly_Out_Temp;			// Primary WB glycol temperatures
+	double *Primary_Glycol_Accu_Press;							// Primary glycol accumulator pressure
+	double *PLSS_O2_Fill_Press;									// PLSS O2 fill pressure
 	int *Asc_H2O_To_PLSS, *Des_H2O_To_PLSS;						// PLSS Water Fill valves
 	int *Water_Tank_Selector;									// WT selection valve
 	int *Pri_Evap_Flow_1, *Pri_Evap_Flow_2;						// Primary evaporator flow valves

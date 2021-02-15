@@ -34,14 +34,17 @@ enum ConnectorType
 	NO_CONNECTION,				///< Dummy.
 	CSM_IU_COMMAND,				///< Passes commands and data between CSM and IU.
 	LV_IU_COMMAND,				///< Passes commands between launch vehicle and IU.
-	CSM_SIVB_DOCKING,			///< Docking connector between CSM and SIVb.
 	CSM_LEM_DOCKING,			///< Docking connector between CSM and LEM.
-	CSM_SIVB_COMMAND,			///< Passes commands and data between CSM and SIVb.
-	CSM_SIVB_POWER,				///< Power connection from SIVB to CSM.
 	LEM_CSM_POWER,				///< Power connection from CSM to LEM.
 	MFD_PANEL_INTERFACE,		///< Connector from an MFD to a panel.
 	LEM_CSM_ECS,				///< Tunnel connection from CSM to LEM.
-	CHECKLIST_DATA_INTERFACE	///< Data connector from checklist controller to vessel
+	CHECKLIST_DATA_INTERFACE,	///< Data connector from checklist controller to vessel
+	PAYLOAD_SLA_CONNECT,		///< Passes commands and data between payload and SIVb.
+	CSM_PAYLOAD_COMMAND,		///< Docking connector between CSM and Payload
+	SIVB_SI_COMMAND,			///< Docking connector between S-IVB and S-IB/S-II
+	SII_SIC_COMMAND,			///< Docking connector between S-II and S-IC
+	RADAR_RF_SIGNAL,			///< Radar connector betwen LM rendezvous radar amd CSM rendezvous radar transponder
+	VHF_RNG,
 };
 
 #define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.
@@ -365,5 +368,16 @@ protected:
 /// \return Connector if found, or NULL if not.
 ///
 extern Connector *GetVesselConnector(VESSEL *v, int port, ConnectorType t);
+
+///
+/// \ingroup Connectors
+/// \brief Radar Messages
+///
+enum RFconnectorMessageType {
+	CW_RADAR_SIGNAL, ///< Continuous Wave Radar Signal
+	RR_XPDR_SIGNAL, ///< Radar Transponder Signal
+	VHF_RNG_SIGNAL_CSM,
+	VHF_RNG_SIGNAL_LM,
+};
 
 #endif // _PA_CONNECTOR_H

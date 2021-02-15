@@ -16,9 +16,6 @@
     <Filter Include="yaAGC">
       <UniqueIdentifier>{415d3395-e435-43fc-ac24-2d8af6501bb5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{77ee6e82-07f2-4368-9f75-0d4532ca3c7e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="yaAGS">
       <UniqueIdentifier>{980b600a-ff7d-422f-9b94-d6b839a598e2}</UniqueIdentifier>
     </Filter>
@@ -135,9 +132,6 @@
     <ClCompile Include="..\..\src_sys\yaAGC\rfopen.c">
       <Filter>yaAGC</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <Filter>CollisionSDK</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_lm\yaAGS\aea_engine.c">
       <Filter>yaAGS</Filter>
     </ClCompile>
@@ -198,36 +192,6 @@
     <ClCompile Include="..\..\src_lm\lemconnector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_lm\LEMSaturn.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\sivbsystems.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\s1bsystems.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\iu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\dcs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\eds.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\FCC.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\LVDA.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\lvimu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_saturn\LVDC.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -238,6 +202,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_lm\lm_rr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_lm\CWEA_FlipFlop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\animations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\Mission.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\vesim.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -273,9 +249,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_sys\ioChannels.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\iu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_lm\LEM.h">
@@ -353,9 +326,6 @@
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h">
       <Filter>yaAGC</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h">
-      <Filter>CollisionSDK</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src_lm\yaAGS\aea_engine.h">
       <Filter>yaAGS</Filter>
     </ClInclude>
@@ -410,33 +380,6 @@
     <ClInclude Include="..\..\src_lm\lemconnector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_lm\LEMSaturn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\sivbsystems.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\s1bsystems.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\dcs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\eds.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\FCC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\LVDA.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\LVIMU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_saturn\LVDC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -447,6 +390,30 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_lm\lm_rr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_lm\CWEA_FlipFlop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_lm\LM_AscentStageResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\animations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_lm\LM_DescentStageResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_lm\LM_VC_Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\Mission.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\RF_calc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\vesim.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

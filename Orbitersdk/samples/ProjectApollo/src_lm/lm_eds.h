@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 #include "DelayTimer.h"
+#include "animations.h"
 
 class LEM_EDRelayBox
 {
@@ -51,6 +52,7 @@ public:
 	void SetStagingRelay() { StagingRelay = true; }
 
 	bool GetStageRelayMonitor();
+	bool GetEDRelayMonitor();
 protected:
 
 	bool HasDCPower();
@@ -109,11 +111,15 @@ protected:
 class LEM_EDS {
 public:
 	LEM_EDS();							// Cons
+	virtual ~LEM_EDS();                         // Des
 	void Init(LEM *s); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
+	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
 	void Timestep(double simdt);
 	bool GetHeliumPressDelayContactClosed() { return HeliumPressurizationDelayA.ContactClosed() || HeliumPressurizationDelayB.ContactClosed(); }
+	bool GetLGDeployed() { return LG_Deployed; }
 
 	LEM *lem;					// Pointer at LEM
 	bool LG_Deployed;           // Landing Gear Deployed Flag
@@ -125,4 +131,8 @@ public:
 protected:
 	DelayTimer HeliumPressurizationDelayA;
 	DelayTimer HeliumPressurizationDelayB;
+
+	AnimState2 gear_state;
+	UINT anim_Gear;
+	MGROUP_TRANSFORM	*mgt_Leg[4], *mgt_Strut[4], *mgt_Downlock[4], *mgt_Probes1[3], *mgt_Probes2[3];
 };

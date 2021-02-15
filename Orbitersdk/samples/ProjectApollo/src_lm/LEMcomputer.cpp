@@ -37,6 +37,7 @@
 #include "papi.h"
 #include "saturn.h"
 #include "LEM.h"
+#include "Mission.h"
 
 #include "lm_channels.h"
 
@@ -63,49 +64,18 @@ LEMcomputer::~LEMcomputer()
 	//
 }
 
-void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
+void LEMcomputer::SetMissionInfo(std::string ProgramName, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
+	ApolloGuidance::SetMissionInfo(ProgramName, OtherVessel);
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//
 
-	char *binfile;
+	char Buffer[100];
+	sprintf(Buffer, "Config/ProjectApollo/%s.bin", ProgramName.c_str());
 
-	if (ApolloNo < 9)	// Sunburst 120
-	{
-		binfile = "Config/ProjectApollo/Sunburst120.bin";
-
-		LEM *lem = (LEM *)OurVessel;
-		lem->InvertStageBit = true;
-	}
-	else if (ApolloNo < 11)	// Luminary 069
-	{
-		binfile = "Config/ProjectApollo/Luminary069.bin";
-	}
-	else if (ApolloNo < 12)	// Luminary 099
-	{
-		binfile = "Config/ProjectApollo/Luminary099.bin";
-	}
-	else if (ApolloNo < 13)	// Luminary 116
-	{
-		binfile = "Config/ProjectApollo/Luminary116.bin";
-	}
-	else if (ApolloNo < 14 || ApolloNo == 1301)	// Luminary 131
-	{
-		binfile = "Config/ProjectApollo/Luminary131.bin";
-	}
-	else if (ApolloNo < 15)	// Luminary 210, modified for Apollo 14
-	{
-		binfile = "Config/ProjectApollo/Luminary210NBY71.bin";
-	}
-	else	//Luminary 210
-	{
-		binfile = "Config/ProjectApollo/Luminary210.bin";
-	}
-
-	agc_load_binfile(&vagc, binfile);
+	agc_load_binfile(&vagc, Buffer);
 }
 
 void LEMcomputer::agcTimestep(double simt, double simdt)
@@ -145,64 +115,62 @@ void LEMcomputer::Run ()
 
 
 void LEMcomputer::Timestep(double simt, double simdt)
-
 {
 	lem = (LEM *) OurVessel;
 	// If the power is out, the computer should restart.
 	// HARDWARE MUST RESTART
 	if (!IsPowered()) {
-			// Clear flip-flop based registers
-			vagc.Erasable[0][00] = 0;     // A
-			vagc.Erasable[0][01] = 0;     // L
-			vagc.Erasable[0][02] = 0;     // Q
-			vagc.Erasable[0][03] = 0;     // EB
-			vagc.Erasable[0][04] = 0;     // FB
-			vagc.Erasable[0][05] = 04000; // Z
-			vagc.Erasable[0][06] = 0;     // BB
-			// Clear ISR flag
-			vagc.InIsr = 0;
-			// Clear interrupt requests
-			vagc.InterruptRequests[0] = 0;
-			vagc.InterruptRequests[1] = 0;
-			vagc.InterruptRequests[2] = 0;
-			vagc.InterruptRequests[3] = 0;
-			vagc.InterruptRequests[4] = 0;
-			vagc.InterruptRequests[5] = 0;
-			vagc.InterruptRequests[6] = 0;
-			vagc.InterruptRequests[7] = 0;
-			vagc.InterruptRequests[8] = 0;
-			vagc.InterruptRequests[9] = 0;
-			vagc.InterruptRequests[10] = 0;
-			// Reset cycle counter and Extracode flags
-			vagc.CycleCounter = 0;
-			vagc.ExtraCode = 0;
-			vagc.ExtraDelay = 0;
-			// No idea about the interrupts/pending/etc so we reset those
-			vagc.AllowInterrupt = 1;
-			vagc.PendFlag = 0;
-			vagc.PendDelay = 0;
-			// Don't disturb erasable core
-			// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-			// Reset standby flip-flop
-			vagc.Standby = 0;
-			// Turn on EL display and LGC Light (DSKYWarn).
-			vagc.DskyChannel163 = 1;
-			SetOutputChannel(0163, 1);
-			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
-			// Those two bits are what causes the CWEA to notice.
-			vagc.InputChannel[033] &= 037777;
-			OutputChannel[033] &= 037777;
-			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
-			// The RESTART light will come on as soon as the AGC receives power again.
-			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
-			vagc.VoltageAlarm = 1;
-			vagc.RestartLight = 1;
-			dsky.ClearRestart();
-			dsky.ClearStby();
-			// Reset last cycling time
-			LastCycled = 0;
-			// We should issue telemetry though.
-			lem->VHF.Timestep(simt);
+		// Clear flip-flop based registers
+		vagc.Erasable[0][00] = 0;     // A
+		vagc.Erasable[0][01] = 0;     // L
+		vagc.Erasable[0][02] = 0;     // Q
+		vagc.Erasable[0][03] = 0;     // EB
+		vagc.Erasable[0][04] = 0;     // FB
+		vagc.Erasable[0][05] = 04000; // Z
+		vagc.Erasable[0][06] = 0;     // BB
+		// Clear ISR flag
+		vagc.InIsr = 0;
+		// Clear interrupt requests
+		vagc.InterruptRequests[0] = 0;
+		vagc.InterruptRequests[1] = 0;
+		vagc.InterruptRequests[2] = 0;
+		vagc.InterruptRequests[3] = 0;
+		vagc.InterruptRequests[4] = 0;
+		vagc.InterruptRequests[5] = 0;
+		vagc.InterruptRequests[6] = 0;
+		vagc.InterruptRequests[7] = 0;
+		vagc.InterruptRequests[8] = 0;
+		vagc.InterruptRequests[9] = 0;
+		vagc.InterruptRequests[10] = 0;
+		// Reset cycle counter and Extracode flags
+		vagc.CycleCounter = 0;
+		vagc.ExtraCode = 0;
+		vagc.ExtraDelay = 2; // GOJAM and TC 4000 both take 1 MCT to execute
+		// No idea about the interrupts/pending/etc so we reset those
+		vagc.AllowInterrupt = 1;
+		vagc.PendFlag = 0;
+		vagc.PendDelay = 0;
+		// Don't disturb erasable core
+		// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+		// Reset standby flip-flop
+		vagc.Standby = 0;
+		// Turn on EL display and LGC Light (DSKYWarn).
+		vagc.DskyChannel163 = 1;
+		SetOutputChannel(0163, 1);
+		// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
+		// Those two bits are what causes the CWEA to notice.
+		vagc.InputChannel[033] &= 037777;
+		OutputChannel[033] &= 037777;
+		// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+		// The RESTART light will come on as soon as the AGC receives power again.
+		// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
+		vagc.RestartLight = 1;
+		dsky.ClearRestart();
+		dsky.ClearStby();
+		// Reset last cycling time
+		LastCycled = 0;
+		// We should issue telemetry though.
+		lem->VHF.Timestep(simt);
 
 		// and do nothing more.
 		return;
@@ -212,14 +180,15 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	// If MultiThread is enabled and the simulation is accellerated, the run vAGC in the AGC Thread,
 	// otherwise run in main thread. at x1 acceleration, it is better to run vAGC totally synchronized
 	//
-	if(lem->isMultiThread && oapiGetTimeAcceleration() > 1.0){
+	if (lem->isMultiThread && oapiGetTimeAcceleration() > 1.0) {
 		Lock lock(agcCycleMutex);
 		thread_simt = simt;
 		thread_simdt = simdt;
 		timeStepEvent.Raise();
-	}else{
+	} else {
 		agcTimestep(simt,simdt);
 	}
+
 	return;
 }
 
@@ -251,7 +220,7 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 
 void LEMcomputer::ProcessChannel10(ChannelValue val) {
 	dsky.ProcessChannel10(val);
-	if (lem->HasProgramer) lem->lmp.ProcessChannel10(val);
+	if (lem->pMission->HasLMProgramer()) lem->lmp.ProcessChannel10(val);
 }
 
 // DS20060413
@@ -291,41 +260,6 @@ void LEMcomputer::ProcessChannel6(ChannelValue val){
 	// This is now handled inside the ATCA
 	LEM *lem = (LEM *) OurVessel;	
 	lem->atca.ProcessLGC(6,val.to_ulong());
-}
-
-
-void LEMcomputer::ProcessChannel140(ChannelValue val) {
-	
-	/*ChannelValue val12;
-	val12 = GetOutputChannel(012);
-	LEM *lem = (LEM *) OurVessel;
-
-	if (val12[DispayInertialData])
-	{
-		lem->crossPointerLeft.SetForwardVelocity(val.to_ulong(), val12);
-		lem->crossPointerRight.SetForwardVelocity(val.to_ulong(), val12);
-	}
-	else
-	{
-		lem->RR.RRShaftDrive(val.to_ulong(), val12);
-	}*/
-}
-
-void LEMcomputer::ProcessChannel141(ChannelValue val) {
-
-	/*ChannelValue val12;
-	val12 = GetOutputChannel(012);
-	LEM *lem = (LEM *) OurVessel;
-
-	if (val12[DispayInertialData])
-	{
-		lem->crossPointerLeft.SetLateralVelocity(val.to_ulong(), val12);
-		lem->crossPointerRight.SetLateralVelocity(val.to_ulong(), val12);
-	}
-	else
-	{
-		lem->RR.RRTrunionDrive(val.to_ulong(), val12);
-	}*/
 }
 
 void LEMcomputer::ProcessChannel142(ChannelValue val) {
@@ -403,7 +337,7 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 				lem->atca.lgc_err_z += delta;
 			}
 		}
-		// sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
+		//sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",lem->atca.lgc_err_x,lem->atca.lgc_err_y,lem->atca.lgc_err_z);
 		break;
 	
 	case 0175: // PITCH ERROR

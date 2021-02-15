@@ -22,13 +22,7 @@
 
   **************************************************************************/
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
-#define _CRT_SECURE_NO_DEPRECATE 
 #include <fstream>
-#else
-#include <fstream.h>
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include "instruments.h"
@@ -391,24 +385,6 @@ while (!Compare(line,"</PANEL>"))
 			new_c->ColPenIndex=descriptor->SurfaceIndex[1];
 			new_c->NoColPenIndex=descriptor->SurfaceIndex[2];
 			new_c->height = (int) descriptor->p_double1;
-		}else if(Compare(descriptor->class_name,"ADI")){
-			sscanf(line,"%s %i %i %s %s %s %s",string1,&x,&y,Pointer,up_text,down_text,string2);
-			double *YAW=(double*)GetPointerByString(Pointer);
-			double *PITCH=(double*)GetPointerByString(up_text);
-			double *ROLL=(double*)GetPointerByString(down_text);
-			ADI *new_adi=new ADI(x,y,panels[NumPanels]);
-			strcpy(new_adi->name,string2);
-			new_adi->size_x=descriptor->p_int1;
-			new_adi->size_y=descriptor->p_int2;
-			new_adi->SetZoom(descriptor->p_double1);
-			new_adi->SetAmbient(descriptor->p_int3,descriptor->p_int4,descriptor->p_int5);
-			new_adi->SetLight(descriptor->p_int6,descriptor->p_int7,descriptor->p_int8);
-			new_adi->InitGL(descriptor->param_string);
-			new_adi->SRF_index=descriptor->SurfaceIndex[0];
-			new_adi->ROLL=ROLL;
-			new_adi->PITCH=PITCH;
-			new_adi->YAW=YAW;
-
 		}else if(Compare(descriptor->class_name,"LINEAR")){
 			sscanf(line,"%s %i %i %lf %lf %lf %lf %s %s",string1,&x,&y,
 				&dbl1,&dbl2,&dbl3,&dbl4,Pointer,iname);

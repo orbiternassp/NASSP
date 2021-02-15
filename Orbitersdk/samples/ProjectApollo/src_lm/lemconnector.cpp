@@ -29,6 +29,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEMcomputer.h"
 #include "LEM.h"
 #include "iu.h"
+#include "sivbsystems.h"
+#include "sivb.h"
 #include "lemconnector.h"
 
 LEMConnector::LEMConnector(LEM *l)
@@ -76,7 +78,8 @@ bool LEMECSConnector::ReceiveMessage(Connector *from, ConnectorMessage &m) {
 }
 
 // UMBILICAL
-LEMPowerConnector::LEMPowerConnector() {
+LEMPowerConnector::LEMPowerConnector(LEM *l) : LEMConnector(l)
+{
 	type = NO_CONNECTION;
 	connectedTo = 0;
 	csm_power_latch = 0;
@@ -84,27 +87,35 @@ LEMPowerConnector::LEMPowerConnector() {
 
 bool LEMPowerConnector::ReceiveMessage(Connector *from, ConnectorMessage &m) {
 	// This should only get messages of type 42 from the CM telling it to switch relay states
-	// on our side
-	if (from != this && m.messageType == 42) {
-		// Relay Event
-		// When connected, the CSM feeds the LM via two 7.5A umbilicals. Both feed the same stuff, they are redundant.
-		// The CSM power comes in via the CDRs DC bus and returns to the CSM via the CDR and LMP XLUNAR busses.
-		// The XLUNAR busses are latched to the CDR and LMP negative busses to provide return when LM PWR switch is in CSM.
-		// When CSM power is commanded on, it turns off the descent ECAs and prevents them from being turned back on.
-		// Ascent power is not affected.
-		// The ECA design makes it impossible to charge the LM batteries from the CSM power supply, since it prevents current from flowing backwards.
-		switch (m.val1.iValue) {
-		case 0: // Disconnect				
-			csm_power_latch = -1;
-			// sprintf(oapiDebugString(),"LM/CSM Conn: Latch Reset");
-			break;
-		case 1: // Connect
-			csm_power_latch = 1;
-			// sprintf(oapiDebugString(),"LM/CSM Conn: Latch Set");
+	// on our side. EDIT: And now also the command for SLA separation.
+	if (from != this) {
+		switch (m.messageType)
+		{
+		case 42:
+			// Relay Event
+			// When connected, the CSM feeds the LM via two 7.5A umbilicals. Both feed the same stuff, they are redundant.
+			// The CSM power comes in via the CDRs DC bus and returns to the CSM via the CDR and LMP XLUNAR busses.
+			// The XLUNAR busses are latched to the CDR and LMP negative busses to provide return when LM PWR switch is in CSM.
+			// When CSM power is commanded on, it turns off the descent ECAs and prevents them from being turned back on.
+			// Ascent power is not affected.
+			// The ECA design makes it impossible to charge the LM batteries from the CSM power supply, since it prevents current from flowing backwards.
+			switch (m.val1.iValue) {
+			case 0: // Disconnect				
+				csm_power_latch = -1;
+				// sprintf(oapiDebugString(),"LM/CSM Conn: Latch Reset");
+				break;
+			case 1: // Connect
+				csm_power_latch = 1;
+				// sprintf(oapiDebugString(),"LM/CSM Conn: Latch Set");
+				break;
+			default:
+				sprintf(oapiDebugString(), "LM/CSM Conn: Relay Event: Bad parameter %d", m.val1.iValue);
+				return false;
+			}
 			break;
 		default:
-			sprintf(oapiDebugString(), "LM/CSM Conn: Relay Event: Bad parameter %d", m.val1.iValue);
 			return false;
+		
 		}
 		return true;
 	}
@@ -113,18 +124,45 @@ bool LEMPowerConnector::ReceiveMessage(Connector *from, ConnectorMessage &m) {
 	return false;
 }
 
-LMToIUConnector::LMToIUConnector(LEMcomputer &c, LEM *l) : agc(c), LEMConnector(l)
-
-{
-	type = CSM_IU_COMMAND;
-}
-
-LMToIUConnector::~LMToIUConnector()
-
+LMToSIVBConnector::LMToSIVBConnector(LEM *l) : LEMConnector(l)
 {
 }
 
-bool LMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+LMToSIVBConnector::~LMToSIVBConnector()
+{
+}
+
+void LMToSIVBConnector::StartSeparationPyros()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SLA_START_SEPARATION;
+
+	SendMessage(cm);
+}
+
+void LMToSIVBConnector::StopSeparationPyros()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SLA_STOP_SEPARATION;
+
+	SendMessage(cm);
+}
+
+LEMCommandConnector::LEMCommandConnector(LEM *l) : LEMConnector(l)
+{
+	type = CSM_PAYLOAD_COMMAND;
+}
+
+LEMCommandConnector::~LEMCommandConnector()
+{
+
+}
+
+bool LEMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
 {
 	//
@@ -136,36 +174,157 @@ bool LMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		return false;
 	}
 
-	IULMMessageType messageType;
+	PayloadSIVBMessageType messageType;
 
-	messageType = (IULMMessageType)m.messageType;
+	messageType = (PayloadSIVBMessageType)m.messageType;
 
 	switch (messageType)
 	{
-	case IULM_SET_INPUT_CHANNEL_BIT:
+	case SLA_START_SEPARATION:
 		if (OurVessel)
 		{
-			agc.SetInputChannelBit(m.val1.iValue, m.val2.iValue, m.val3.bValue);
+			OurVessel->StartSeparationPyros();
 			return true;
 		}
 		break;
 
-	case IULM_PLAY_COUNT_SOUND:
+	case SLA_STOP_SEPARATION:
 		if (OurVessel)
 		{
-			OurVessel->PlayCountSound(m.val1.bValue);
+			OurVessel->StopSeparationPyros();
 			return true;
 		}
 		break;
 
-	case IULM_PLAY_SEPS_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlaySepsSound(m.val1.bValue);
-			return true;
-		}
-		break;
 	}
 
 	return false;
+}
+
+LM_RRtoCSM_RRT_Connector::LM_RRtoCSM_RRT_Connector(LEM *l, LEM_RR *lm_rr) : LEMConnector(l)
+{
+	type = RADAR_RF_SIGNAL;
+	lemrr = lm_rr;
+}
+
+LM_RRtoCSM_RRT_Connector::~LM_RRtoCSM_RRT_Connector()
+{
+
+}
+
+void LM_RRtoCSM_RRT_Connector::SendRF(double freq, double XMITpow, double XMITgain, double Phase)
+{
+	ConnectorMessage cm;
+
+	cm.destination = RADAR_RF_SIGNAL;
+	cm.messageType = CW_RADAR_SIGNAL;
+
+	cm.val1.dValue = freq;
+	cm.val2.dValue = XMITpow;
+	cm.val3.dValue = XMITgain;
+	cm.val4.dValue = Phase;
+
+	SendMessage(cm);
+
+	//sprintf(oapiDebugString(), "Hey this Function got called at %lf", oapiGetSimTime());
+
+}
+
+bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
+	//sprintf(oapiDebugString(), "Hey this Function got called at %lf", oapiGetSimTime()); //debugging
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	if (!lemrr)
+	{
+		return false;
+	}
+
+	RFconnectorMessageType messageType;
+	messageType = (RFconnectorMessageType)m.messageType;
+
+	switch (messageType)
+	{
+		case RR_XPDR_SIGNAL:
+		{
+			//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", m.val1.dValue);
+			lemrr->SetRCVDrfProp(m.val1.dValue, m.val2.dValue, m.val3.dValue, m.val4.dValue);
+
+			return true;
+		}
+		case CW_RADAR_SIGNAL:
+		{
+			return false;
+		}
+	}
+
+	return false;
+}
+
+//LEM VHF Connectors
+
+LM_VHFtoCSM_VHF_Connector::LM_VHFtoCSM_VHF_Connector(LEM * l, LM_VHF * VHFsys): LEMConnector(l)
+{
+	type = VHF_RNG;
+	pLM_VHFs = VHFsys;
+}
+
+LM_VHFtoCSM_VHF_Connector::~LM_VHFtoCSM_VHF_Connector()
+{
+
+}
+
+void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone)
+{
+	ConnectorMessage cm;
+
+	cm.destination = VHF_RNG;
+	cm.messageType = VHF_RNG_SIGNAL_LM;
+
+	cm.val1.dValue = freq; //MHz
+	cm.val2.dValue = XMITpow; //W
+	cm.val3.dValue = XMITgain; //dBi
+	cm.val4.dValue = XMITphase;
+	cm.val1.bValue = RangeTone; 
+
+	SendMessage(cm);
+}
+
+bool LM_VHFtoCSM_VHF_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
+	if (!pLM_VHFs) //No more segfaults
+	{
+		return false;
+	}
+
+	//this checks that the incoming frequencies from the csm connector are within 1% of the tuned frequencies of the receivers
+	//in actuality it should be something more like a resonance responce centered around the tuned receiver frequency, but this waaay more simple
+	//and easy to compute every timestep
+
+	if (m.val1.dValue > pLM_VHFs->freqXCVR_A*0.99f && m.val1.dValue < pLM_VHFs->freqXCVR_A*1.01f)
+	{
+		//sprintf(oapiDebugString(), "A");
+		pLM_VHFs->RCVDfreqRCVR_A = m.val1.dValue;
+		pLM_VHFs->RCVDpowRCVR_A = m.val2.dValue;
+		pLM_VHFs->RCVDgainRCVR_A = m.val3.dValue;
+		pLM_VHFs->RCVDPhaseRCVR_A = m.val4.dValue;
+		return true;
+	}
+	else if (m.val1.dValue > pLM_VHFs->freqXCVR_B*0.99f && m.val1.dValue < pLM_VHFs->freqXCVR_B*1.01f)
+	{
+		//sprintf(oapiDebugString(), "B");
+		pLM_VHFs->RCVDfreqRCVR_B = m.val1.dValue;
+		pLM_VHFs->RCVDpowRCVR_B = m.val2.dValue;
+		pLM_VHFs->RCVDgainRCVR_B = m.val3.dValue;
+		pLM_VHFs->RCVDPhaseRCVR_B = m.val4.dValue;
+		pLM_VHFs->RCVDRangeTone = m.val1.bValue;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

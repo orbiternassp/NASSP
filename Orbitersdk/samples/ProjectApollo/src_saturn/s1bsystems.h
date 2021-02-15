@@ -35,6 +35,7 @@ public:
 	void SetEngineStart() { EngineStart = true; }
 	void SetProgrammedEngineCutoff() { ProgrammedCutoff = true; }
 	void SetEDSCutoff() { EDSCutoff = true; }
+	void SetGSECutoff() { GSECutoff = true; }
 	void SetThrustNotOKCutoff() { ThrustNotOKCutoff = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
 	void SetFailed() { EngineFailed = true; }
@@ -42,6 +43,7 @@ public:
 	bool GetThrustOK() { return ThrustOK; }
 	double GetThrustLevel() { return ThrustLevel; }
 	bool GetFailed() { return EngineFailed; }
+	bool GetEngineStop() { return EngineStop; }
 protected:
 	THRUSTER_HANDLE &th_h1;
 	VESSEL *vessel;
@@ -68,20 +70,23 @@ protected:
 	const double GIMBALLIMIT = 8.0*RAD;
 };
 
+class SCMUmbilical;
+class Pyro;
+class Sound;
 
 class SIBSystems
 {
 public:
-	SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Pyro &SIB_SIVB_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl);
-	void Timestep(double simdt, bool liftoff);
+	SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Pyro &SIB_SIVB_Sep, Sound &LaunchS, Sound &SShutS);
+	void Timestep(double misst, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
-	void SetEngineFailureParameters(int n, double SICutTimes);
-	bool GetFailInit() { return FailInit; }
+	void SetEngineFailureParameters(int n, double SICutTimes, bool fail);
+	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
 
-	void SetEngineStart(int n);
+	virtual void SetEngineStart(int n);
 	void SwitchSelector(int channel);
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 
@@ -93,15 +98,24 @@ public:
 	void SetOutboardEnginesCutoff() { OutboardEnginesCutoffLatch = true; }
 	void SetLOXDepletionCutoffEnable() { LOXDepletionCutoffEnabledLatch = true; }
 	void SetFuelDepletionCutoffEnable() { FuelDepletionCutoffEnabledLatch = true; }
+	void Set_SIB_SIVB_SeparationCmdLatch() { SIB_SIVB_SeparationCmdLatch = true; }
 	void EDSEnginesCutoff(bool cut);
+	virtual void GSEEnginesCutoff(bool cut);
 
 	bool GetLowLevelSensorsDry();
 	bool GetInboardEngineOut();
 	bool GetOutboardEngineOut();
 	bool GetOutboardEnginesCutoff();
 	void GetThrustOK(bool *ok);
+	virtual bool GetEngineStop();
+	bool FireRetroRockets();
+
+	virtual void ConnectUmbilical(SCMUmbilical *umb);
+	virtual void DisconnectUmbilical();
+	bool IsUmbilicalConnected();
 protected:
 	double GetSumThrust();
+	bool ESEGetSIBThrustOKSimulate(int eng, int n);
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -109,7 +123,6 @@ protected:
 	Pyro &SIB_SIVB_Separation_Pyros;
 	Sound &SShutSound;
 	Sound &LaunchSound;
-	double &contrailLevel;
 
 	H1Engine h1engine1;
 	H1Engine h1engine2;
@@ -130,10 +143,14 @@ protected:
 	bool InboardEnginesCutoffRelay;
 	//K7
 	bool OutboardEnginesCutoffRelay;
+	//K15
+	bool EBWFiringUnit1TriggerRelay;
 	//K18
 	bool LowPropellantLevelRelay;
 	//K22
 	bool PropLevelSensorsEnabledAndRedundantChargingRelay;
+	//K23
+	bool EBWFiringUnit2TriggerRelay;
 	//K42
 	bool MultipleEngineCutoffEnabledLatch1;
 	//K44
@@ -146,6 +163,8 @@ protected:
 	bool LOXDepletionCutoffEnabledLatch;
 	//K50
 	bool OutboardEnginesCutoffLatch;
+	//K51
+	bool SIB_SIVB_SeparationCmdLatch;
 	//K53
 	bool LOXDepletionCutoffEnabledRelay;
 	//K58
@@ -180,11 +199,12 @@ protected:
 	bool LOXLevelSensor;
 	bool FuelDepletionSensors1;
 	bool FuelDepletionSensors2;
+	bool ThrustOK[24];
 
 	bool OutboardEnginesCutoffSignal;
 
-	bool FailInit;
 	bool EarlySICutoff[8];
 	double FirstStageFailureTime[8];
-	double FailureTimer;
+
+	SCMUmbilical *SCMUmb;
 };

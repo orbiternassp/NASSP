@@ -25,7 +25,7 @@
 #ifndef SOUNDLIB_H
 #define SOUNDLIB_H
 
-#include "OrbiterSoundSDK40.h"
+#include "OrbiterSoundSDK50.h"
 
 ///
 /// \ingroup Sound
@@ -37,7 +37,7 @@ public:
 	virtual ~SoundData();
 	bool isValid();
 	bool isPlaying();
-	bool play(int flags, int libflags, int volume, int playvolume);
+	bool play(int flags, int libflags, int volume, int playvolume, int frequency = NULL);
 	void stop();
 	void done();
 	void setID(int num) { id = num; };
@@ -81,7 +81,7 @@ public:
 	bool isPlaying();
 	void setFlags(int fl);
 	void clearFlags(int fl);
-	bool play(int flags = NOLOOP, int volume = 255);
+	bool play(int flags = NOLOOP, int volume = 255, int frequency = NULL);
 	void stop();
 	void done();
 	void SetSoundData(SoundData *s);
@@ -95,6 +95,27 @@ protected:
 	SoundData *sd;
 	SoundLib *sl;
 };
+
+class FadeInOutSound : public Sound {
+public:
+	bool play(int volume = 255);
+	void stop();
+
+	void setRiseTime(int seconds) { riseSlope = 255 / seconds; }
+	void setFadeTime(int seconds) { fadeSlope = 255 / seconds; }
+
+	void setFrequencyShift(int minFreq, int maxFreq) { fMin = minFreq; fMax = maxFreq; }
+	void clearFrequencyShift() { fMin = fMax = NULL; }
+	bool hasFrequencyShift() const { return fMin != NULL && fMax != NULL; }
+
+private:
+	int riseSlope     = 255 / 4; // [vol/sec]
+	int fadeSlope     = 255 / 6; // [vol/sec]
+	int fMin          =  3000;   // [Hz]
+	int fMax          = 22050;   // [Hz]
+	int currentVolume = -1;      // "lagging" volume level
+};
+
 
 #define SOUNDFLAG_1XORLESS		0x0001
 #define SOUNDFLAG_1XONLY		0x0002

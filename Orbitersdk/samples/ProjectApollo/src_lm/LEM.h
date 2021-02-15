@@ -31,6 +31,7 @@
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+#include "vesim.h"
 #include "dsky.h"
 #include "imu.h"
 #include "cdu.h"
@@ -97,8 +98,8 @@ enum LMRCSThrusters
 typedef struct {
 	int crewNumber;
 	int crewStatus;
-	bool cdrInSuit;
-	bool lmpInSuit;
+	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA, 3 = PLSS
+	int lmpStatus;
 } LEMECSStatus;
 
 // Systems things
@@ -117,6 +118,8 @@ public:
 	bool IsVelocityDataGood() { return velocityGood == 1; };
 	double GetAltitude() { return range*0.3048; };
 	double GetAltitudeRate() { return rate[0]*0.3048; };
+	double GetAltTransmitterPower();
+	double GetVelTransmitterPower();
 
 	bool IsPowered(); 
 
@@ -136,40 +139,54 @@ public:
 class LEM_RadarTape : public e_object {
 public:
 	LEM_RadarTape();
-	void Init(LEM *s, e_object * dc_src, e_object *ac_src);
+	void Init(LEM *s, e_object * dc_src, e_object *ac_src, SURFHANDLE surf1, SURFHANDLE surf2);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void setRange(double range) { reqRange = range; };
 	void setRate(double rate) { reqRate = rate ; }; 
-	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
-	void RenderRate(SURFHANDLE surf, SURFHANDLE tape);
+	void RenderRange(SURFHANDLE surf);
+	void RenderRate(SURFHANDLE surf);
+	void RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2);
+	void RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b);
 	void SetLGCAltitude(int val);
 	void SetLGCAltitudeRate(int val);
 
+	double GetLGCAltitude() { return lgc_alt; };
+	double GetLGCAltitudeRate() { return lgc_altrate; };
+
 	bool IsPowered();
 private:
+	void TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 	LEM *lem;					// Pointer at LEM
 	e_object *dc_source;
 	e_object *ac_source;
 	double reqRange;
 	double reqRate;
-	int  dispRange;
-	int  dispRate;
+	double dispRange;
+	double  dispRate;
 	double lgc_alt, lgc_altrate;
+	SURFHANDLE tape1, tape2;
+	double desRange, desRate;
 };
 
 class CrossPointer
 {
 public:
 	CrossPointer();
+	virtual ~CrossPointer();
 	void Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void GetVelocities(double &vx, double &vy);
+
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	void SetDirection(const VECTOR3 &xvec, const VECTOR3 &yvec);
+	void DefineVCAnimations(UINT vc_idx);
+	void DefineMeshGroup(UINT _grpX, UINT _grpY);
 
 	bool IsPowered();
 protected:
@@ -180,11 +197,49 @@ protected:
 
 	double vel_x, vel_y;
 	double lgc_forward, lgc_lateral;
+
+	UINT anim_xpointerx, anim_xpointery;
+	UINT grpX, grpY;
+
+	VECTOR3 xvector, yvector;
+	MGROUP_TRANSLATE *xtrans, *ytrans;
 };
 
 #define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
 #define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
 #define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
+
+namespace mission
+{
+	class Mission;
+};
+
+// Vesim input IDs
+#define LM_AXIS_INPUT_ACAR           1
+#define LM_AXIS_INPUT_ACAP           2
+#define LM_AXIS_INPUT_ACAY           3
+#define LM_AXIS_INPUT_TTCAX          4
+#define LM_AXIS_INPUT_TTCAY          5
+#define LM_AXIS_INPUT_TTCAZ          6
+#define LM_BUTTON_ROT_LIN            7
+#define LM_AXIS_INPUT_THROTTLE       8
+#define LM_BUTTON_ENG_START          9
+#define LM_BUTTON_ENG_STOP          10
+#define LM_BUTTON_DES_RATE_PLUS     11
+#define LM_BUTTON_DES_RATE_MINUS    12
+#define LM_BUTTON_ABORT             13
+#define LM_BUTTON_ABORT_STAGE       14
+#define LM_BUTTON_ABORT_STAGE_GRD   15
+#define LM_BUTTON_DSKY_PRO          16
+#define LM_BUTTON_DSKY_ENTER        17
+#define LM_BUTTON_MDCTRL_PGNS       18
+#define LM_BUTTON_MDCTRL_PGNS_AUT   19
+#define LM_BUTTON_MDCTRL_PGNS_ATH   20
+#define LM_BUTTON_MDCTRL_PGNS_OFF   21
+#define LM_AXIS_THR_JET_LEVER       22
+
+// Callback for Vesim events
+void cbLMVesim(int inputID, int eventType, int newValue, void *pdata);
 
 ///
 /// \ingroup LEM
@@ -208,7 +263,7 @@ public:
 		// First value in the enum must be set to one. Entry zero is not
 		// used.
 		//
-		SRF_INDICATOR							=	 1,
+		SRF_INDICATOR = 1,
 		SRF_NEEDLE,
 		SRF_DIGITAL,
 		SRF_SWITCHUP,
@@ -316,6 +371,12 @@ public:
 		SRF_BORDER_1001x240,
 		SRF_BORDER_360x316,
 		SRF_BORDER_178x187,
+		SRF_BORDER_55x55,
+		SRF_BORDER_109x119,
+		SRF_BORDER_68x69,
+		SRF_BORDER_210x200,
+		SRF_BORDER_104x106,
+		SRF_BORDER_286x197,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -336,6 +397,7 @@ public:
 		SRF_DIGITALDISP2,
 		SRF_RR_NOTRACK,
 		SRF_RADAR_TAPE,
+		SRF_RADAR_TAPE2,
 		SRF_ORDEAL_PANEL,
 		SRF_ORDEAL_ROTARY,
 		SRF_TW_NEEDLE,
@@ -356,14 +418,42 @@ public:
 		SRF_LEM_U_HATCH_HNDL,
 		SRF_LEM_F_HATCH_HNDL,
 		SRF_LEM_F_HATCH_REL_VLV,
-	    SRF_LEM_INTLK_OVRD,
+		SRF_LEM_INTLK_OVRD,
 		SRF_RED_INDICATOR,
 		SRF_LEM_MASTERALARM,
+		SRF_PWRFAIL_LIGHT,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
 		//
 		nsurf	///< nsurf gives the count of surfaces for the array size calculation.
+	};
+
+	enum SurfaceID_VC
+	{
+		//
+		// First value in the enum must be set to one. Entry zero is not
+		// used.
+		//
+
+		// VC Sutfaces
+		SRF_VC_DSKYDISP,
+		SRF_VC_DSKY_LIGHTS,
+		SRF_VC_DIGITALDISP,
+		SRF_VC_DIGITALDISP2,
+		SRF_VC_RADAR_TAPEA,
+		SRF_VC_RADAR_TAPEB,
+		SRF_VC_RADAR_TAPE2,
+		SFR_VC_CW_LIGHTS,
+		SRF_INDICATORVC,
+		SRF_INDICATORREDVC,
+		SRF_LEM_MASTERALARMVC,
+		SRF_DEDA_LIGHTSVC,
+
+		//
+		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
+		//
+		nsurfvc	///< nsurfvc gives the count of surfaces for the array size calculation.
 	};
 
 	LEM(OBJHANDLE hObj, int fmodel);
@@ -374,18 +464,21 @@ public:
 	void SetLmVesselDockStage();
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
+	void SetLmDockingPort(double offs);
 	void SetLmLandedMesh();
-	void SetLPDMesh();
-	void SetLPDMeshRet();
-	void SetLPDMeshExt();
-	void SetFwdHatchMesh();
-	void SetOvhdHatchMesh();
+	void SetLMMeshVis();
+	void SetLMMeshVisAsc();
+	void SetLMMeshVisVC();
+	void SetLMMeshVisDsc();
+	void SetCrewMesh();
+	void DrogueVis();
+	void HideProbes();
 	void SetTrackLight();
 	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
+	int GetApolloNo() { return ApolloNo; }
 	UINT GetStage() { return stage; }
 	virtual double GetAscentStageMass();
-	virtual void SendVHFRangingSignal(Saturn *sat, bool isAcquiring);
 
 	virtual void PlayCountSound(bool StartStop) {};
 	virtual void PlaySepsSound(bool StartStop) {};
@@ -395,6 +488,10 @@ public:
 	bool clbkLoadVC(int id);
 	bool clbkPanelMouseEvent (int id, int event, int mx, int my);
 	bool clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf);
+
+	bool clbkVCMouseEvent(int id, int event, VECTOR3 &p);
+	bool clbkVCRedrawEvent(int id, int event, SURFHANDLE surf);
+
 	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
@@ -404,13 +501,19 @@ public:
 	bool clbkLoadGenericCockpit ();
 	void clbkMFDMode (int mfd, int mode);
 	void clbkPostCreation();
+	void clbkVisualCreated(VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
+	void clbkDockEvent(int dock, OBJHANDLE connected);
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);
-	void PostLoadSetup();
+	void PostLoadSetup(bool define_anims = true);
+	void DefineAnimations();
+	void SetMeshes();
+	void RegisterActiveAreas();
 
-	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void PanelSwitchToggled(ToggleSwitch *s);
+	void RCSHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
+	void PanelSwitchToggled(TwoPositionSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
@@ -427,6 +530,9 @@ public:
 	virtual void SetCrewNumber(int number);
 	virtual void SetCDRInSuit();
 	virtual void SetLMPInSuit();
+	virtual void StartEVA();
+	void StartSeparationPyros();
+	void StopSeparationPyros();
 
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
@@ -474,6 +580,7 @@ public:
 
 	// DS20160916 Physical parameters updation
 	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update
+	VECTOR3 currentCoG; // 0,0,0 corresponds to CoG at center of mesh
 
 	//
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
@@ -483,6 +590,7 @@ public:
 	virtual void PadLoad(unsigned int address, unsigned int value);
 	virtual void AEAPadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA();
+	virtual bool IsForwardHatchOpen() { return ForwardHatch.IsOpen(); }
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
 	APSPropellantSource *GetAPSPropellant() { return &APSPropellant; };
@@ -495,7 +603,7 @@ public:
 
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
-	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
+	THRUSTER_HANDLE th_hover[1];               // handles for orbiter main engines
 	// There are 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
@@ -515,14 +623,14 @@ public:
 	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
 	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
 	HRESULT				 dx8_failure;     // DX failure reason
+	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  // Joystick # for the RHC
 	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
-	int rhc_sld_id;                       // ID of SLIDER axis to use for RHC Z-axis
+	int rhc_sld_id;                       // ID of SLIDER axis to use for throttle control from joystick configured as ACA
 	int rhc_rzx_id;                       // Flag to use native Z-axis as RHC Z-axis
 	int rhc_pov_id;						  ///< ID of the cooliehat a.k.a. POV
 	int thc_id;                           // Joystick # for the THC
 	int thc_rot_id;						  // ID of ROTATOR axis to use for THC Z-axis
-	int thc_sld_id;                       // ID of SLIDER axis to use for THC Z-axis
 	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
 	int thc_pov_id;						  ///< ID of the cooliehat a.k.a. POV
 	int thc_tjt_id;                       // Flag to use axis as TTCA THROTTLE/JETS select lever
@@ -532,6 +640,7 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
+	bool enableVESIM;                     ///< Vessel Specific Input Mgmt enabled
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag
 	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
 	double ttca_throttle_pos_dig;		  // TTCA THROTTLE-mode position mapped to 0-1
@@ -554,18 +663,21 @@ protected:
 
     PanelSDK Panelsdk;
 
+	void UpdateMassAndCoG();
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
+	void ReleaseSurfacesVC();
 	void ResetThrusters();
 	virtual void SeparateStage (UINT stage);
 	void CheckDescentStageSystems();
+	void CreateMissionSpecificSystems();
 	void InitPanel (int panel);
+	void InitPanelVC();
 	void SetSwitches(int panel);
-	void AddRCS_LMH(double TRANZ);
-	void AddRCS_LMH2(double TRANZ);
+	void AddRCS_LMH(double TRANY);
 	void ToggleEVA();
 	void SetupEVA();
 	void SetView();
@@ -577,10 +689,28 @@ protected:
 	void GuardClick();
 	void AbortFire();
 	void InitSwitches();
+	void DefineVCAnimations();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	// void GetDockStatus();
+	void JostleViewpoint(double amount);
+	void AddDust();
+	void SetCompLight(int m, bool state);
+	void SetContactLight(int m, bool state);
+	void SetPowerFailureLight(int m, bool state);
+	void SetStageSeqRelayLight(int m, bool state);
+	void InitFDAI(UINT mesh);
+	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
+
+	// LM touchdown points
+	// mass in kg, ro1 (distance from center of the middle points), ro2 (distance from center of footpad points), tdph (height of footpad points),
+	// probeh (height of the probes), height (of the top point), x_target (stiffness/damping factor, stable default is -0.5)
+	void ConfigTouchdownPoints(double mass, double ro1, double ro2, double tdph, double probeh, double height, double x_target = -0.5);
+	void DefineTouchdownPoints(int s);
+
+	void CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG);
+	void CreateAirfoils();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -591,8 +721,6 @@ protected:
 	// Save/Load support functions.
 	//
 
-	virtual void SaveLEMSaturn(FILEHANDLE scn) {};
-	virtual void LoadLEMSaturn(FILEHANDLE scn) {};
 	int GetCSwitchState();
 	void SetCSwitchState(int s);
 
@@ -602,6 +730,7 @@ protected:
 
 	// Panel components
 	PanelSwitches MainPanel;
+	PanelSwitchesVC MainPanelVC;
 	PanelSwitchScenarioHandler PSH;
 
 	SwitchRow AbortSwitchesRow;
@@ -765,7 +894,6 @@ protected:
 	SwitchRow RCSXfeedSwitchRow;
 	ThreePosSwitch RCSXFeedSwitch;
 
-	// DS20060406 RCS MAIN SHUTOFF VALVES
 	SwitchRow RCSMainSOVTBRow;
 	LEMSCEATalkback RCSMainSovATB;
 	LEMSCEATalkback RCSMainSovBTB;
@@ -1074,7 +1202,7 @@ protected:
 	ToggleSwitch EDStageRelay;
 	ThreePosSwitch EDDesFuelVent;
 	ThreePosSwitch EDDesOxidVent;
-	IndicatorSwitch EDLGTB;
+	LEMSCEATalkback EDLGTB;
 	LEMDPSValveTalkback EDDesFuelVentTB;
 	LEMDPSValveTalkback EDDesOxidVentTB;
 	// Audio section
@@ -1092,10 +1220,6 @@ protected:
 	ThumbwheelSwitch CDRAudMasterVol;
 	ThumbwheelSwitch CDRAudVOXSens;
 	ThreePosSwitch CDRCOASSwitch;
-
-	bool CPswitch;
-
-	bool EVAswitch;
 
 	bool COASswitch;
 
@@ -1401,20 +1525,17 @@ protected:
 
 	bool FirstTimestep;
 
-	bool LAUNCHIND[8];
-	bool ABORT_IND;
-	bool ENGIND[7];
-
-	bool bModeDocked;
-	bool bModeHover;
 	bool ToggleEva;
 	bool CDREVA_IP;
-	bool HasProgramer;
-	bool NoAEA;
-	bool InvertStageBit;
+
+	int CDRinPLSS;
+	int LMPinPLSS;
 
 #define LMVIEW_CDR		0
 #define LMVIEW_LMP		1
+#define LMVIEW_LPD		3
+
+#define VIEWANGLE 30
 
 	int	viewpos;
 	
@@ -1428,6 +1549,8 @@ protected:
 
 	ATTACHMENTHANDLE hattDROGUE;
 
+	DOCKHANDLE docksla;
+
 	UINT stage;
 	int status;
 
@@ -1440,7 +1563,6 @@ protected:
 
 	int ApolloNo;
 	int Landed;
-	bool NoLegs;
 
 	//
 	// VAGC Mode settings
@@ -1502,10 +1624,27 @@ protected:
 	double AscentEmptyMassKg;
 
 	// Mesh indexes
-	int lpdgret;
-	int lpdgext;
-	int fwdhatch;
-	int ovhdhatch;
+	UINT ascidx;
+	UINT dscidx;
+	UINT vcidx;
+
+	DEVMESHHANDLE probes;
+	DEVMESHHANDLE drogue;
+	DEVMESHHANDLE cdrmesh;
+	DEVMESHHANDLE lmpmesh;
+	DEVMESHHANDLE vcmesh;
+
+	// VC animations
+	UINT anim_fdaiR_cdr, anim_fdaiR_lmp;
+	UINT anim_fdaiP_cdr, anim_fdaiP_lmp;
+	UINT anim_fdaiY_cdr, anim_fdaiY_lmp;
+	UINT anim_fdaiRerror_cdr, anim_fdaiRerror_lmp;
+	UINT anim_fdaiPerror_cdr, anim_fdaiPerror_lmp;
+	UINT anim_fdaiYerror_cdr, anim_fdaiYerror_lmp;
+	UINT anim_fdaiRrate_cdr, anim_fdaiRrate_lmp;
+	UINT anim_fdaiPrate_cdr, anim_fdaiPrate_lmp;
+	UINT anim_fdaiYrate_cdr, anim_fdaiYrate_lmp;
+	UINT anim_attflag_cdr, anim_attflag_lmp;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
@@ -1514,6 +1653,9 @@ protected:
 	// Exterior light definitions
 	BEACONLIGHTSPEC trackLight;                   // tracking light
 	BEACONLIGHTSPEC dockingLights[5];             // docking lights
+
+	VECTOR3 trackLightPos;
+	VECTOR3 dockingLightsPos[5];
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
@@ -1532,11 +1674,22 @@ protected:
 
 	bool InVC;
 	bool InPanel;
+	bool ExtView;
 	bool InFOV;  
 	int  PanelId; 
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
 	bool RefreshPanelIdInTimestep;
+	bool VcInfoActive;
+	bool VcInfoEnabled;
+
+	//
+	// Random motion.
+	//
+
+	double ViewOffsetx;
+	double ViewOffsety;
+	double ViewOffsetz;
 
 	//
 	// Ground Systems
@@ -1564,7 +1717,7 @@ protected:
 	Sound SHMode;
 	Sound SLEVA;
 	Sound SAbort;
-	Sound CabinFans;
+	FadeInOutSound CabinFans;
 	Sound Vox;
 	Sound Afire;
 	Sound Slanding;
@@ -1572,6 +1725,9 @@ protected:
 	Sound RCSSustainSound;
 	Sound HatchOpenSound;
 	Sound HatchCloseSound;
+	FadeInOutSound GlycolPumpSound;
+	FadeInOutSound SuitFanSound;
+	Sound CrewDeadSound;
 
 	//
 	// Connectors.
@@ -1589,6 +1745,11 @@ protected:
 	LEMPowerConnector CSMToLEMPowerConnector;		// This sends data *FROM* CSMToLEMPowerSource *TO* LEMToCSMConnector
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
 	LEMECSConnector CSMToLEMECSConnector;
+	LMToSIVBConnector LEMToSLAConnector;
+	LEMCommandConnector CSMToLEMCommandConnector;
+
+	LM_RRtoCSM_RRT_Connector lm_rr_to_csm_connector;
+	LM_VHFtoCSM_VHF_Connector lm_vhf_to_csm_csm_connector;
 
 	// Checklist Controller to LEM connector
 	ChecklistDataInterface cdi;
@@ -1703,6 +1864,7 @@ protected:
 	LEM_UtilLights UtilLights;
 	LEM_COASLights COASLights;
 	LEM_FloodLights FloodLights;
+	LEM_PFIRA pfira;
 
 	// ECS
 	LEM_ECS ecs;
@@ -1728,6 +1890,7 @@ protected:
 	LEMWaterTankSelect WaterTankSelect;
 	LEMPrimGlycolPumpController PrimGlycolPumpController;
 	LEMSuitFanDPSensor SuitFanDPSensor;
+	LEMCrewStatus CrewStatus;
 
 	// EDS
 	LEM_EDS eds;
@@ -1760,6 +1923,8 @@ protected:
 	SCERA2 scera2;
 
 	bool isMultiThread;
+
+	mission::Mission* pMission;
 
 	// Friend classes
 	friend class ATCA;
@@ -1832,7 +1997,11 @@ protected:
 	friend class LMRCSBPressInd;
 	friend class LMRCSAQtyInd;
 	friend class LMRCSBQtyInd;
+	friend class LMRCSATempInd;
+	friend class LMRCSBTempInd;
 	friend class TempMonitorInd;
+	friend class MainFuelTempInd;
+	friend class MainOxidizerTempInd;
 	friend class RCS_TCA;
 	friend class LEM_ECS;
 	friend class LEMCabinRepressValve;
@@ -1841,15 +2010,31 @@ protected:
 	friend class EngineStopButton;
 	friend class EngineStartButton;
 	friend class LEM_LCA;
+	friend class LEM_PFIRA;
+	friend class LEMCrewStatus;
 
 	friend class ApolloRTCCMFD;
+	friend class ARCore;
 	friend class ProjectApolloMFD;
 	friend class MCC;
 	friend class RTCC;
+
+	friend void cbLMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
+
+extern MESHHANDLE hLMDescent;
+extern MESHHANDLE hLMDescentNoLeg;
+extern MESHHANDLE hLMAscent;
+extern MESHHANDLE hAstro1;
+extern MESHHANDLE hLMVC;
 
 extern void LEMLoadMeshes();
 extern void InitGParam(HINSTANCE hModule);
 extern void FreeGParam();
+
+//Offset from center of LM mesh (full LM) to center of descent stage mesh (for staging)
+const VECTOR3 OFS_LM_DSC = { 0, -1.25, 0.0 };
+//Ofset from center of LM mesh (full LM) to center of ascent stage mesh (for staging)
+const VECTOR3 OFS_ASC_DSC = { 0, -1.75, 0 };
 
 #endif

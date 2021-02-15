@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E38D5A31-C96D-437E-A495-4314EF198CEB}</ProjectGuid>
     <RootNamespace>Saturn5NASP</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -65,7 +65,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;_DEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug\MCC/MCC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug\MCC/</AssemblerListingLocation>
       <ObjectFileName>.\Debug\MCC/</ObjectFileName>
@@ -80,7 +80,7 @@
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;lua5.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;lua5.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/MCC.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>;../../../../lib/Lua;.\Debug\PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -113,9 +113,9 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\Release\MCC/MCC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release\MCC/</AssemblerListingLocation>
@@ -123,13 +123,14 @@
       <ProgramDataBaseFileName>.\Release\MCC/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;lua5.1.lib;OrbiterSoundSDK40.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;lua5.1.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/MCC.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\Release\PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;../../../../lib/Lua;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -148,6 +149,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_launch\mccvessel.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_B.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_C.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_C_PRIME.cpp" />
@@ -162,13 +164,25 @@
     <ClCompile Include="..\..\src_launch\RTCC_Mission_D.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_F.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_G.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\GeneralizedIterator.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_launch\mcc.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\RTCCModule.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_launch\mccvessel.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_B.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_C.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_C_PRIME.h" />
@@ -176,10 +190,19 @@
     <ClInclude Include="..\..\src_launch\MCC_Mission_F.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_G.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
+    <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
+    <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
+    <ClInclude Include="..\..\src_rtccmfd\GeneralizedIterator.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LDPP.h" />
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LOITargeting.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_launch\mcc.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_sys\thread.h" />
   </ItemGroup>
   <ItemGroup>

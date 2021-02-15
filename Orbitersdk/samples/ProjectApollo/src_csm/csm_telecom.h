@@ -346,6 +346,7 @@ class SBandAntenna
 public:
 	SBandAntenna() { SignalStrength = 0.0; }
 	double GetSignalStrength() { return SignalStrength; }
+	double dBm2SignalStrength(double dBm);
 protected:
 	double SignalStrength;						// Signal Strength (0-100)
 };
@@ -369,7 +370,7 @@ public:
 	bool fm_opr;                       // FM transmitter operating
 	int pa_mode_1, pa_mode_2;          // Power amplifier mode
 	double pa_timer_1, pa_timer_2;	   // Tube heater timer
-	int pa_ovr_1, pa_ovr_2;			   // PA mode override for uptelemetry channel
+	int pa_ovr_1, pa_ovr_2;				// PA mode override for uptelemetry channel
 	double rcvr_agc_voltage;			//Receiver AGC Voltage
 	SBandAntenna *ant;
 };
@@ -380,15 +381,29 @@ class HGA:public SBandAntenna {
 public:
 	HGA();
 	void Init(Saturn *vessel);					// Initialization
+	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
 	void TimeStep(double simt, double simdt);   // TimeStep
 	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool ScanLimitWarning();
 	bool IsPowered();
+	void clbkPostCreation();
+	double ModeSwitchTimer;
+	int RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
+	int XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
+	bool AutoTrackingMode;
+	double HGAWavelength;
+	double HGAFrequency;
+	double Gain85ft;
+	double Power85ft;
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }
+	double GetAlpha() { return Alpha; }
+	double GetBeta() { return Beta; }
+	double GetGamma() { return Gamma; }
 
 private:
 	VECTOR3 PitchYawToBodyVector(double pit, double ya);
@@ -401,6 +416,9 @@ private:
 	double Alpha;								// Antenna alpha
 	double Beta;								// Antenna beta
 	double Gamma;								// Antenna gamma
+	double AAxisCmd;
+	double BAxisCmd;
+	double CAxisCmd;
 	double PitchRes;
 	double YawRes;
 	bool scanlimit;
@@ -408,6 +426,11 @@ private:
 	double HornSignalStrength[4];
 
 	VECTOR3 U_Horn[4];
+
+	// Animations
+	UINT anim_HGAalpha, anim_HGAbeta, anim_HGAgamma;
+	double	hga_proc[3];
+	double	hga_proc_last[3];
 };
 
 //S-Band Omnidirectional Antenna system
@@ -417,6 +440,11 @@ public:
 	OMNI(VECTOR3 dir);
 	void Init(Saturn *vessel);	// Initialization
 	void TimeStep();			// TimeStep
+	double OMNIWavelength;
+	double OMNIFrequency;
+	double Gain30ft;
+	double Power30ft;
+	double OMNI_Gain;
 protected:
 	Saturn *sat;				// Ship we're installed in
 	VECTOR3 direction;
@@ -429,17 +457,52 @@ class VHFAntenna
 {
 public:
 	VHFAntenna(VECTOR3 dir);
+	~VHFAntenna();
+
+	double getPolarGain(VECTOR3 target);
+private:
+	VECTOR3 pointingVector;
 };
+
+class LEM;
 
 class VHFAMTransceiver
 {
 public:
 	VHFAMTransceiver();
 	void Timestep();
-	void Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb);
+	void Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
+	void sendRanging();
+
+	void SetRCVDrfPropA(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_A = freq; RCVDpowRCVR_A = pow; RCVDgainRCVR_A = gain; RCVDPhaseRCVR_A = phase; RCVDRangeTone = tone; };
+	//void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; }; //not needed at the moment
+
+	VHFAntenna* GetActiveAntenna() { return activeAntenna; };
+
+	const double freqXCVR_A = 296.8E6; //MHz;
+	const double freqXCVR_B = 259.7E6; //MHz;
+
+	const double xmitPower = 5; //watts
+
+	//Recvd RF properties*********
+	double RCVDfreqRCVR_A; //frequency received by rcvr A
+	double RCVDpowRCVR_A; //power radiated at rcvr A MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_A; //gain of the transmitter senting to rcvr A
+	double RCVDPhaseRCVR_A; //phase of the signal sending to rcvr A
+	//
+	double RCVDfreqRCVR_B; //Frequency received by rcvr B
+	double RCVDpowRCVR_B; //Power radiated at B MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_B; //Gain of the transmitter senting to rcvr B
+	double RCVDPhaseRCVR_B; //Phase of the signal sending to rcvr B
+	bool RCVDRangeTone; // Receiving a ranging tone from the CSM?
+
+	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
+	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
+	//****************************
+
 protected:
 	bool K1;
 	bool K2;
@@ -449,13 +512,29 @@ protected:
 	bool transmitA;
 	bool transmitB;
 
+	bool XMITRangeTone;
+
+
+
+	//not needed at the moment
+	//double RCVDfreqRCVR_B;
+	//double RCVDpowRCVR_B;
+	//double RCVDgainRCVR_B;
+	//double RCVDPhaseRCVR_B;
+
+
 	ThreePosSwitch *vhfASwitch;
 	ThreePosSwitch *vhfBSwitch;
 	ThreePosSwitch *rcvSwitch;
 	CircuitBrakerSwitch *ctrPowerCB;
+	RotationalSwitch *antSelectorSw;
+	VHFAntenna *leftAntenna;
+	VHFAntenna *rightAntenna;
+	VHFAntenna *activeAntenna;
+	Saturn *sat;
+	LEM *lem;
 };
 
-class LEM;
 
 class VHFRangingSystem
 {
@@ -469,7 +548,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 
 	double GetRange() { return range / 185.20; }
-	void RangingReturnSignal();
+	void RangingReturnSignal(); // ################# DELETE ME #######################
 protected:
 
 	bool dataGood;
@@ -479,10 +558,96 @@ protected:
 	double phaseLockTimer;
 	int hasLock;
 
+	bool rangeTone;
+
 	Saturn *sat;
-	LEM *lem;
+	VESSEL *lem;
 	VHFAMTransceiver *transceiver;
 	CircuitBrakerSwitch *powercb;
 	ToggleSwitch *powerswitch;
 	ToggleSwitch *resetswitch;
 };
+
+class CSM_RRTto_LM_RRConnector;
+
+class RNDZXPDRSystem
+{
+public:
+	RNDZXPDRSystem();
+	~RNDZXPDRSystem();
+	void Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch);
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+	void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
+
+	//these values are for the LEB101 test meter gauge
+	unsigned char GetScaledRFPower(); //RF power, converts a -122 to -18 dBm signal to a 2.1V to 5V output 
+	unsigned char GetScaledAGCPower(); //Automatic Gain Control, converts an - (-18) to - (-122) dBm signal to 0 to 4.5V output(AGV voltage down up when RF power received goes down)
+	unsigned char GetScaledFreqLock(); //frequency lock, output 4.5V when locked (use lockTimer as input to simulate freq locking)
+
+protected:
+	double GetCSMGain(double theta, double phi); //returns the gain of the csm RRT system for returned power calculations
+	void SendRF();
+
+	Saturn *sat;
+	LEM *lem;
+
+	double XMITpower;
+	double RCVDfreq;
+	double RCVDpow;
+	double RCVDgain;
+	double RCVDPhase;
+	double RCVDPowerdB;
+	double RNDZXPDRGain;
+	double RadarDist; //distance from CSM to LEM;
+	double theta, phi;
+	
+
+	double lockTimer;
+
+	enum FreqLock {
+		UNLOCKED,
+		LOCKED,
+	};
+
+	FreqLock haslock;
+	bool XPDRon;
+	bool XPDRheaterOn;
+	bool XPDRtest;
+
+	VECTOR3 lemPos;
+	VECTOR3 csmPos;
+	VECTOR3 R;
+	VECTOR3 U_R;
+	VECTOR3 U_R_RR;
+	MATRIX3 LMRot, CSMRot;
+
+	//not implimented yet
+	//RRT_RFpowerXDUCER RFpowerXDUCER;
+	//RRT_AGC_XDUCER AGC_XDUCER;
+	//RRT_FREQLOCK_XDUCER FREQLOCK_XDUCER;
+
+	CircuitBrakerSwitch *RRT_FLTBusCB;
+	ToggleSwitch *TestOperateSwitch; //test operate switch
+	ThreePosSwitch *HeaterPowerSwitch; //heater/power switch
+	RotationalSwitch *RRT_LeftSystemTestRotarySwitch;
+	RotationalSwitch *RRT_RightSystemTestRotarySwitch;
+};
+
+//not implimented yet
+//class RRT_RFpowerXDUCER : public Transducer //RF power tranducer, converts a -122 to -18 dBm signal to a 2.1V to 5V output
+//{
+//	
+//};
+//
+//class RRT_AGC_XDUCER : public Transducer//Automatic Gain Control transducer, converts an -(-18) to -(-122) dBm signal to 0 to 4.5V output (AGV voltage down up when RF power received goes down)
+//{
+//
+//};
+//
+//class RRT_FREQLOCK_XDUCER : public Transducer //frequency lock transducer, output 4.5V when locked (use lockTimer as input to simulate freq locking)
+//{
+//
+//};

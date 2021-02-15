@@ -333,6 +333,13 @@ bool RCSC::CMRCSHeDumpLogicB()
 	return (Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CmRcsHeDumpSwitch.GetState(); 
 }
 
+bool RCSC::GetCMTransferMotor(bool IsSystemA)
+{
+	if (IsSystemA) return GetCMTransferMotor1();
+
+	return GetCMTransferMotor2();
+}
+
 void RCSC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
@@ -443,34 +450,53 @@ MESC::MESC():
 	EDSAbort3Relay = false;
 	ELSActivateSolidStateSwitch = false;
 
-	AbortStarted = false;
+	CrewAbortSignal = false;
+
 	AutoTowerJettison = false;
 	SSSInput1 = false;
 	SSSInput2 = false;
 	IsSystemA = false;
-	LiftoffFlag = false;
 
 	EDSLogicBreaker = NULL;
+	SECSLogicBus = NULL;
+	SECSPyroBus = NULL;
+	MissionTimerDisplay = NULL;
+	MissionTimerControl = NULL;
+	EventTimerDisplay = NULL;
+	EventTimerControl = NULL;
+	Sat = NULL;
+	OtherMESC = NULL;
+	SECSLogicBreaker = NULL;
+	SECSArmBreaker = NULL;
+	RCSLogicCircuitBreaker = NULL;
+	ELSBatteryBreaker = NULL;
+	EDSBatteryBreaker = NULL;
 	//MESCDisplay = NULL;
 }
 
-void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem, int IsSysA)
+void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, MESC* OtherMESCSystem, int IsSysA)
 {
 	SECSLogicBus = LogicBus;
 	SECSPyroBus = PyroBus;
-	SECSLogicBreaker = SECSLogic;
-	SECSArmBreaker = SECSArm;
-	RCSLogicCircuitBreaker = RCSLogicCB;
-	ELSBatteryBreaker = ELSBatteryCB;
-	EDSBatteryBreaker = EDSBreaker;
 	MissionTimerDisplay = MT;
+	MissionTimerControl = MTC;
 	EventTimerDisplay = ET;
+	EventTimerControl = ETC;
 	Sat = v;
 	OtherMESC = OtherMESCSystem;
 	IsSystemA = IsSysA;
 
 	//MESCDisplay = oapiCreateAnnotation(false, 0.65, _V(1, 1, 0));
 	//oapiAnnotationSetPos(MESCDisplay, 0, 0.1, 0.33, 1);
+}
+
+void MESC::CBInit(CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker)
+{
+	SECSLogicBreaker = SECSLogic;
+	SECSArmBreaker = SECSArm;
+	RCSLogicCircuitBreaker = RCSLogicCB;
+	ELSBatteryBreaker = ELSBatteryCB;
+	EDSBatteryBreaker = EDSBreaker;
 }
 
 void MESC::TimerTimestep(double simdt)
@@ -556,20 +582,14 @@ void MESC::Timestep(double simdt)
 
 	if (EDSLiftoffCircuitPower())
 	{
-		if (!LiftoffFlag)
+		if (MissionTimerControl->IsUp())
 		{
 			MissionTimerDisplay->Reset();
+		}
+		if (EventTimerControl->IsCenter())
+		{
 			EventTimerDisplay->Reset();
 			EventTimerDisplay->SetRunning(true);
-
-			LiftoffFlag = true;
-		}
-	}
-	else
-	{
-		if (LiftoffFlag)
-		{
-			LiftoffFlag = false;
 		}
 	}
 
@@ -584,7 +604,7 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Auto Abort Logic
-	if ((EDSLiftoffCircuitPower() || ((AutoAbortEnableRelay || Sat->LiftoffNoAutoAbortSwitch.GetState()) && LETPhysicalSeparationMonitor && SequentialLogicBus())) && Sat->EDSSwitch.GetState())
+	if (((!Sat->LaunchFail.AutoAbortEnableFail && EDSLiftoffCircuitPower()) || ((AutoAbortEnableRelay || Sat->LiftoffNoAutoAbortSwitch.GetState()) && LETPhysicalSeparationMonitor && SequentialLogicBus())) && Sat->EDSSwitch.GetState())
 	{
 		AutoAbortEnableRelay = true;
 	}
@@ -616,12 +636,10 @@ void MESC::Timestep(double simdt)
 	//Start Event Timer
 	if (SequentialLogicBus() && BoosterCutoffAbortStartRelay)
 	{
-		if (!AbortStarted)
+		if (Sat->EventTimerContSwitch.IsCenter())
 		{
 			Sat->EventTimerDisplay.Reset();
 			Sat->EventTimerDisplay.SetRunning(true);
-
-			AbortStarted = true;
 		}
 	}
 
@@ -632,9 +650,12 @@ void MESC::Timestep(double simdt)
 	}
 
 	//SM Jettison Controller Start
-	if (SequentialArmBus() && (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp()))
+	if (Sat->GetStage() < CM_STAGE && SequentialArmBus() && (Sat->CmSmSep1Switch.IsUp() || Sat->CmSmSep2Switch.IsUp()))
 	{
-		//TBD: Through RCSC switch, start SM Jett Controller
+		if (Sat->secs.rcsc.GetCMTransferMotor(IsSystemA) == false)
+		{
+			Sat->secs.GetSMJC(IsSystemA)->SMJettControllerStart();
+		}
 	}
 
 	//CM/SM Separation Logic
@@ -954,6 +975,15 @@ void MESC::Timestep(double simdt)
 		FwdHeatshieldJett = false;
 	}
 
+	if (Sat->THCRotary.IsCounterClockwise() && SequentialLogicBus())
+	{
+		CrewAbortSignal = true;
+	}
+	else
+	{
+		CrewAbortSignal = false;
+	}
+
 	//Mode 1A Display
 	/*char buffer[1024];
 	sprintf(buffer, "MASTER EVENTS SEQUENCE CONTROLLER - MODE 1A\n\n");
@@ -1127,7 +1157,12 @@ bool MESC::EDSMainPower()
 
 bool MESC::EDSVote()
 {
-	return (EDSAbort1Relay && EDSAbort2Relay) || (EDSAbort1Relay && EDSAbort3Relay) || (EDSAbort2Relay && EDSAbort3Relay);
+	return (!EDSAbort1Relay && !EDSAbort2Relay) || (!EDSAbort1Relay && !EDSAbort3Relay) || (!EDSAbort2Relay && !EDSAbort3Relay);
+}
+
+bool MESC::EDSUnsafeIndicateSignal()
+{
+	return (!EDSAbort1Relay || !EDSAbort2Relay || !EDSAbort3Relay);
 }
 
 bool MESC::ELSActivateLogic()
@@ -1153,7 +1188,6 @@ void MESC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "CSMLVSEPARATERELAY", CSMLVSeparateRelay);
 	papiWriteScenario_bool(scn, "LESMOTORFIRE", LESMotorFire);
 	papiWriteScenario_bool(scn, "PITCHCONTROLMOTORFIRE", PitchControlMotorFire);
-	papiWriteScenario_bool(scn, "ABORTSTARTED", AbortStarted);
 	papiWriteScenario_bool(scn, "RCSENABLEARMRELAY", RCSEnableArmRelay);
 	papiWriteScenario_bool(scn, "RCSENABLEDISABLERELAY", RCSEnableDisableRelay);
 	papiWriteScenario_bool(scn, "LETJETTISONANDFRANGIBLENUTSRELAY", LETJettisonAndFrangibleNutsRelay);
@@ -1165,7 +1199,6 @@ void MESC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "EDSABORT2RELAY", EDSAbort2Relay);
 	papiWriteScenario_bool(scn, "EDSABORT3RELAY", EDSAbort3Relay);
 	papiWriteScenario_bool(scn, "ELSACTIVATESOLIDSTATESWITCH", ELSActivateSolidStateSwitch);
-	papiWriteScenario_bool(scn, "LIFTOFFFLAG", LiftoffFlag);
 
 	TD1.SaveState(scn, "TD1_BEGIN", "TD1_END");
 	TD3.SaveState(scn, "TD3_BEGIN", "TD_END");
@@ -1205,7 +1238,6 @@ void MESC::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "CSMLVSEPARATERELAY", CSMLVSeparateRelay);
 		papiReadScenario_bool(line, "LESMOTORFIRE", LESMotorFire);
 		papiReadScenario_bool(line, "PITCHCONTROLMOTORFIRE", PitchControlMotorFire);
-		papiReadScenario_bool(line, "ABORTSTARTED", AbortStarted);
 		papiReadScenario_bool(line, "RCSENABLEARMRELAY", RCSEnableArmRelay);
 		papiReadScenario_bool(line, "RCSENABLEDISABLERELAY", RCSEnableDisableRelay);
 		papiReadScenario_bool(line, "LETJETTISONANDFRANGIBLENUTSRELAY", LETJettisonAndFrangibleNutsRelay);
@@ -1217,7 +1249,6 @@ void MESC::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "EDSABORT2RELAY", EDSAbort2Relay);
 		papiReadScenario_bool(line, "EDSABORT3RELAY", EDSAbort3Relay);
 		papiReadScenario_bool(line, "ELSACTIVATESOLIDSTATESWITCH", ELSActivateSolidStateSwitch);
-		papiReadScenario_bool(line, "LIFTOFFFLAG", LiftoffFlag);
 
 		if (!strnicmp(line, "TD1_BEGIN", sizeof("TD1_BEGIN"))) {
 			TD1.LoadState(scn, "TD_END");
@@ -1257,6 +1288,10 @@ LDEC::LDEC():
 	DockingProbeRetract2 = false;
 	DockingProbeRetract1 = false;
 	DockingRingFinalSeparation = false;
+	CSM_LEM_LockRingSepRelaySignal = false;
+	SIMPyroArmRelay = false;
+
+	SMSector1LogicPowerBreaker = NULL;
 }
 
 void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe,ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed)
@@ -1269,6 +1304,11 @@ void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, Ci
 	PyroArmSwitch = PyroArmSw;
 	PyroBus = PyroB;
 	PyroBusFeeder = PyroBusFeed;
+}
+
+void LDEC::InitSIMJett(CircuitBrakerSwitch *SMSec1Power)
+{
+	SMSector1LogicPowerBreaker = SMSec1Power;
 }
 
 void LDEC::Timestep(double simdt)
@@ -1329,6 +1369,32 @@ void LDEC::Timestep(double simdt)
 		DockingRingFinalSeparation = false;
 	}
 
+	//Apollo 15 and later
+	if (Sat->Panel181)
+	{
+		if (SMSector1LogicPowerBreaker)
+		{
+			if (SMSector1LogicPowerBreaker->IsPowered() && (Sat->Panel181->SMSector1LogicPower1Switch.IsUp() || Sat->Panel181->SMSector1LogicPower2Switch.IsUp()))
+			{
+				SIMPyroArmRelay = true;
+			}
+			else
+			{
+				SIMPyroArmRelay = false;
+			}
+		}
+	}
+
+	//Telemetry
+	if (mesc->MESCLogicBus() && DockingRingFinalSeparation)
+	{
+		CSM_LEM_LockRingSepRelaySignal = true;
+	}
+	else
+	{
+		CSM_LEM_LockRingSepRelaySignal = false;
+	}
+
 	//sprintf(oapiDebugString(), "MotorSwitch %d LM/SLA Sep %d Probe Retract1 %d Probe Retract2 %d Ring Final Sep %d", SECSPyroBusMotor, LMSLASeparationInitiate, DockingProbeRetract1, DockingProbeRetract2, DockingRingFinalSeparation);
 }
 
@@ -1385,26 +1451,46 @@ SECS::SECS()
 {
 
 	State = 0;
-	NextMissionEventTime = MINUS_INFINITY;
-	LastMissionEventTime = MINUS_INFINITY;
-
 	Sat = 0;
+
+	SMJCA = NULL;
+	SMJCB = NULL;
 }
 
 SECS::~SECS()
-
 {
+	if (SMJCA)
+	{
+		delete SMJCA;
+		SMJCA = NULL;
+	}
+	if (SMJCB)
+	{
+		delete SMJCB;
+		SMJCB = NULL;
+	}
 }
 
 void SECS::ControlVessel(Saturn *v)
-
 {
 	Sat = v;
 	rcsc.ControlVessel(v);
-	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker, &Sat->MissionTimer306Display, &Sat->EventTimer306Display, &MESCB, true);
-	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay, &MESCA, false);
-	LDECA.Init(v, &MESCA, &Sat->SECSArmBatACircuitBraker, &Sat->DockProbeMnACircuitBraker, &Sat->DockingProbeRetractPrimSwitch, &Sat->PyroArmASwitch, &Sat->PyroBusA, &Sat->PyroBusAFeeder);
-	LDECB.Init(v, &MESCB, &Sat->SECSArmBatBCircuitBraker, &Sat->DockProbeMnBCircuitBraker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
+}
+
+void SECS::Realize()
+{
+	MESCA.Init(Sat, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->MissionTimer306Display, &Sat->MissionTimer306Switch, &Sat->EventTimer306Display, &Sat->EventTimerControl306Switch, &MESCB, true);
+	MESCA.CBInit(&Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker);
+	MESCB.Init(Sat, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->MissionTimerDisplay, &Sat->MissionTimerSwitch, &Sat->EventTimerDisplay, &Sat->EventTimerContSwitch, &MESCA, false);
+	MESCB.CBInit(&Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker);
+	LDECA.Init(Sat, &MESCA, &Sat->SECSArmBatACircuitBraker, &Sat->DockProbeMnACircuitBraker, &Sat->DockingProbeRetractPrimSwitch, &Sat->PyroArmASwitch, &Sat->PyroBusA, &Sat->PyroBusAFeeder);
+	LDECB.Init(Sat, &MESCB, &Sat->SECSArmBatBCircuitBraker, &Sat->DockProbeMnBCircuitBraker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
+}
+
+void SECS::InitSIMJett(CircuitBrakerSwitch *SMSec1PowerA, CircuitBrakerSwitch *SMSec1PowerB)
+{
+	LDECA.InitSIMJett(SMSec1PowerA);
+	LDECB.InitSIMJett(SMSec1PowerB);
 }
 
 void SECS::SetSaturnType(int sattype)
@@ -1425,6 +1511,8 @@ void SECS::Timestep(double simt, double simdt)
 	rcsc.Timestep(simdt);
 	LDECA.Timestep(simdt);
 	LDECB.Timestep(simdt);
+	if (SMJCA) SMJCA->Timestep(simdt, Sat->MainBusAController.IsSMBusPowered());
+	if (SMJCB) SMJCB->Timestep(simdt, Sat->MainBusBController.IsSMBusPowered());
 
 	//
 	// CSM LV separation relays
@@ -1464,7 +1552,38 @@ void SECS::Timestep(double simt, double simdt)
 	}
 	/// \todo This assumes instantaneous separation of the LM, but it avoids connector calls each time step
 	if (pyroA || pyroB) {
-		Sat->sivbControlConnector.StartSeparationPyros();
+		Sat->StartSeparationPyros();
+	}
+
+	//
+	// SIM Bay Jettison
+	//
+
+	if (Sat->Panel181)
+	{
+		pyroA = false, pyroB = false;
+
+		if (Sat->Panel181->SMSector1DoorJettisonSwitch.IsUp())
+		{
+			if (LDECA.GetSIMPyroArmRelay() && Sat->PyroBusAFeeder.Voltage() > SP_MIN_DCVOLTAGE)
+			{
+				pyroA = true;
+			}
+			if (LDECB.GetSIMPyroArmRelay() && Sat->PyroBusBFeeder.Voltage() > SP_MIN_DCVOLTAGE)
+			{
+				pyroB = true;
+			}
+		}
+
+		if (pyroA || pyroB)
+		{
+			if (!Sat->SIMBayPanelJett)
+			{
+				Sat->SIMBayPanelJett = true;
+				Sat->JettisonSIMBayPanel();
+				Sat->SetSIMBayPanelMesh();
+			}
+		}
 	}
 
 	//
@@ -1599,9 +1718,10 @@ bool SECS::NoAutoAbortLightPower()
 	return false;
 }
 
-bool SECS::BECO()
+SMJC *SECS::GetSMJC(bool isSysA)
 {
-	return MESCA.BECO() || MESCB.BECO();
+	if (isSysA) return SMJCA;
+	return SMJCB;
 }
 
 void SECS::SaveState(FILEHANDLE scn)
@@ -1610,13 +1730,13 @@ void SECS::SaveState(FILEHANDLE scn)
 	oapiWriteLine(scn, SECS_START_STRING);
 
 	oapiWriteScenario_int(scn, "STATE", State);
-	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
-	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 	rcsc.SaveState(scn, "RCSC_BEGIN", "RCSC_END");
 	MESCA.SaveState(scn, "MESCA_BEGIN", "MESC_END");
 	MESCB.SaveState(scn, "MESCB_BEGIN", "MESC_END");
 	LDECA.SaveState(scn, "LDECA_BEGIN", "LDEC_END");
 	LDECB.SaveState(scn, "LDECB_BEGIN", "LDEC_END");
+	if (SMJCA) SMJCA->SaveState(scn, SMJCA_START_STRING);
+	if (SMJCB) SMJCB->SaveState(scn, SMJCB_START_STRING);
 	
 	oapiWriteLine(scn, SECS_END_STRING);
 }
@@ -1632,8 +1752,6 @@ void SECS::LoadState(FILEHANDLE scn)
 			break;
 
 		papiReadScenario_int(line, "STATE", State);
-		papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
-		papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 		
 		if (!strnicmp(line, "RCSC_BEGIN", sizeof("RCSC_BEGIN"))) {
 			rcsc.LoadState(scn, "RCSC_END");
@@ -1649,6 +1767,12 @@ void SECS::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp(line, "LDECB_BEGIN", sizeof("LDECB_BEGIN"))) {
 			LDECB.LoadState(scn, "LDEC_END");
+		}
+		else if (!strnicmp(line, SMJCA_START_STRING, sizeof(SMJCA_START_STRING))) {
+			if (SMJCA) SMJCA->LoadState(scn);
+		}
+		else if (!strnicmp(line, SMJCB_START_STRING, sizeof(SMJCB_START_STRING))) {
+			if (SMJCB) SMJCB->LoadState(scn);
 		}
 	}
 }
@@ -1958,8 +2082,6 @@ ELS::ELS() :
 	BaroSwitch24k(18823.7, 39319.4)
 {
 	State = 0;
-	NextMissionEventTime = MINUS_INFINITY;
-	LastMissionEventTime = MINUS_INFINITY;
 
 	FloatBag1Size = 0;
 	FloatBag2Size = 0;
@@ -1984,7 +2106,7 @@ void ELS::ControlVessel(Saturn *v)
 	BaroSwitch10k.ControlVessel(Sat);
 	BaroSwitch24k.ControlVessel(Sat);
 	ELSCA.Init(Sat, &Sat->ELSBatACircuitBraker, &Sat->secs.MESCA, &ELSCB);
-	ELSCB.Init(Sat, &Sat->ELSBatBCircuitBraker, &Sat->secs.MESCA, &ELSCA);
+	ELSCB.Init(Sat, &Sat->ELSBatBCircuitBraker, &Sat->secs.MESCB, &ELSCA);
 	pcvb.Init(Sat);
 }
 
@@ -2179,8 +2301,6 @@ void ELS::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "STATE", State);
 	oapiWriteScenario_int(scn, "BAROSWITCH10K", BaroSwitch10k.GetStatus());
 	oapiWriteScenario_int(scn, "BAROSWITCH24K", BaroSwitch24k.GetStatus());
-	oapiWriteScenario_float(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
-	oapiWriteScenario_float(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 	oapiWriteScenario_float(scn, "FLOATBAG1SIZE", FloatBag1Size);
 	oapiWriteScenario_float(scn, "FLOATBAG2SIZE", FloatBag2Size);
 	oapiWriteScenario_float(scn, "FLOATBAG3SIZE", FloatBag3Size);
@@ -2214,14 +2334,6 @@ void ELS::LoadState(FILEHANDLE scn)
 		else if (!strnicmp(line, "BAROSWITCH24K", 13)) {
 			sscanf(line + 13, "%d", &it);
 			BaroSwitch24k.SetStatus(it);
-		}
-		else if (!strnicmp (line, "NEXTMISSIONEVENTTIME", 20)) {
-			sscanf(line + 20, "%f", &flt);
-			NextMissionEventTime = flt;
-		}
-		else if (!strnicmp (line, "LASTMISSIONEVENTTIME", 20)) {
-			sscanf(line + 20, "%f", &flt);
-			LastMissionEventTime = flt;
 		}
 		else if (!strnicmp (line, "FLOATBAG1SIZE", 13)) {
 			sscanf (line+13, "%lf", &FloatBag1Size);

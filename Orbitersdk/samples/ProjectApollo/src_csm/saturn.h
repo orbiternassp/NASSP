@@ -62,10 +62,13 @@
 #include "canard.h"
 #include "siisystems.h"
 #include "sivbsystems.h"
+#include "sce.h"
+#include "csmsensors.h"
+#include "rhc.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-
+#include "vesim.h"
 
 //
 // IMFD5 communication support
@@ -74,6 +77,12 @@
 #include "IMFD/IMFD_Client.h"
 
 class IU;
+class SICSystems;
+
+namespace mission
+{
+	class Mission;
+};
 
 
 #define RCS_SM_QUAD_A		0
@@ -108,21 +117,6 @@ typedef struct {
 	double H2Tank1Quantity;
 	double H2Tank2Quantity;
 } TankQuantities;
-
-///
-/// \brief Launch Vehicle tank quantities.
-/// \ingroup InternalInterface
-///
-typedef struct {
-	double SICQuantity;
-	double SIIQuantity;
-	double SIVBOxQuantity;
-	double SIVBFuelQuantity;
-	double SICFuelMass;
-	double SIIFuelMass;
-	double S4BFuelMass;
-	double S4BOxMass;
-} LVTankQuantities;
 
 ///
 /// \brief Cabin atmosphere status.
@@ -288,6 +282,19 @@ typedef struct {
 	bool RCSActivateSignalB;
 	bool EDSAbortLogicOutputB;
 	bool FwdHeatshieldJettB;
+	bool DrogueSepRelayA;
+	bool DrogueSepRelayB;
+	bool MainChuteDiscRelayA;
+	bool MainChuteDiscRelayB;
+	bool MainDeployRelayA;
+	bool MainDeployRelayB;
+	bool EDSAbortLogicInput1;
+	bool EDSAbortLogicInput2;
+	bool EDSAbortLogicInput3;
+	bool CrewAbortA;
+	bool CrewAbortB;
+	bool CSMLEMLockRingSepRelaySignalA;
+	bool CSMLEMLockRingSepRelaySignalB;
 } SECSStatus;
 
 ///
@@ -311,6 +318,17 @@ typedef struct {
 	double OxidizerLineTempF;
 } SPSStatus;
 
+// Vesim input IDs
+#define CSM_AXIS_INPUT_RHCR    1
+#define CSM_AXIS_INPUT_RHCP    2
+#define CSM_AXIS_INPUT_RHCY    3
+#define CSM_AXIS_INPUT_THCX    4
+#define CSM_AXIS_INPUT_THCY    5
+#define CSM_AXIS_INPUT_THCZ    6
+#define CSM_BUTTON_ROT_LIN     7
+
+// Callback for Vesim events
+void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 ///
 /// \brief Generic Saturn launch vehicle class.
 /// \ingroup Saturns
@@ -521,11 +539,59 @@ public:
 		SRF_BORDER_28x32,
 		SRF_EVENT_TIMER_DIGITS90,
 		SRF_DIGITAL90,
+		SRF_CSM_PRESS_EQUAL_HANDLE,
+		SRF_CSM_PANEL_181,
+		SRF_CSM_PANEL_277,
+		SRF_CSM_PANEL_278_CSM112,
+		SRF_CSM_PANEL_278_CSM114,
+		SRF_INDICATOR90,
+		SRF_THREEPOSSWITCH90_RIGHT,
+		SRF_CRYO_SWITCHES_J,
+		SRF_CRYO_IND_J,
+		SRF_SWITCHGUARDS90_RIGHT,
+
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
 		//
 		nsurf	///< nsurf gives the count of surfaces for the array size calculation.
+	};
+
+	enum SurfaceID_VC
+	{
+		//
+		// First value in the enum must be set to one. Entry zero is not
+		// used.
+		//
+
+		// VC Sutfaces
+		SRF_VC_DSKYDISP,
+		SRF_VC_DSKY_LIGHTS,
+		SRF_VC_DIGITALDISP,
+		SRF_VC_DIGITALDISP2,
+		SRF_VC_MASTERALARM,
+		SRF_VC_CW_LIGHTS,
+		SRF_VC_LVENGLIGHTS,
+		SRF_VC_EVENT_TIMER_DIGITS,
+		SRF_VC_EMS_SCROLL_LEO,
+		SRF_VC_EMS_SCROLL_BORDER,
+		SRF_VC_EMS_SCROLL_BUG,
+		SRF_VC_EMS_LIGHTS,
+		SRF_VC_INDICATOR,
+		SRF_VC_ECSINDICATOR,
+		SRF_VC_SEQUENCERSWITCHES,
+		SRF_VC_LVENGLIGHTS_S1B,
+		SRF_VC_SPS_FONT_BLACK,
+		SRF_VC_SPS_FONT_WHITE,
+		SRF_VC_SPS_INJ_VLV,
+		SRF_VC_SPSMAXINDICATOR,
+		SRF_VC_SPSMININDICATOR,
+		SRF_VC_THUMBWHEEL_LARGEFONTSINV,
+
+		//
+		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
+		//
+		nsurfvc	///< nsurfvc gives the count of surfaces for the array size calculation.
 	};
 
 	//
@@ -538,7 +604,6 @@ public:
 	///
 	union LandingFailures {
 		struct {
-			unsigned Init:1;		///< Flags have been initialised.
 			unsigned CoverFail:1;	///< Apex cover will fail to deploy automatically.
 			unsigned DrogueFail:1;	///< Drogue will fail to deploy automatically.
 			unsigned MainFail:1;	///< Main chutes will fail to deploy automatically.
@@ -554,10 +619,12 @@ public:
 	///
 	union LaunchFailures {
 		struct {
-			unsigned Init:1;					///< Flags have been initialised.
 			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
 			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
 			unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
+			unsigned LiftoffSignalAFail:1;		///< Liftoff signal A will not come through from the IU.
+			unsigned LiftoffSignalBFail:1;		///< Liftoff signal B will not come through from the IU.
+			unsigned AutoAbortEnableFail:1;		///< IU fails to enable the auto abort relays.
 		};
 		int word;								///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
 
@@ -572,7 +639,6 @@ public:
 	///
 	union SwitchFailures {
 		struct {
-			unsigned Init:1;				///< Flags have been initialised.
 			unsigned TowerJett1Fail:1;		///< TWR JETT switch 1 will fail.
 			unsigned TowerJett2Fail:1;		///< TWR JETT switch 2 will fail.
 			unsigned SMJett1Fail:1;			///< SM JETT switch 1 will fail.
@@ -645,6 +711,7 @@ public:
 			unsigned CSMAttached:1;			///< Is there a CSM?
 			unsigned NosecapAttached:1;		///< Is there an Apollo 5-style nosecap?
 			unsigned LESLegsCut:1;			///< Are the LES legs attached?
+			unsigned SIMBayPanelJett:1;		///< Has the SIM bay panel been jettisoned?
 		};
 		unsigned long word;
 
@@ -686,13 +753,13 @@ public:
 			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
 			unsigned CMdocktgt:1;                   ///< CM docking target on
-			unsigned NoVHFRanging:1;				///< Do we have a VHF Ranging System?
+			unsigned unused4:1;						///< Spare
 			unsigned unused5:1;						///< Spare
 			unsigned unused6:2;						///< Spare
 			unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
 			unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
 			unsigned S1bPanel:1;					///< Is this a Command Module with a Saturn 1b panel?
-			unsigned NoHGA:1;						///< Do we have a High-Gain Antenna?
+			unsigned unused7:1;						///< Spare
 			unsigned viewpos:5;						///< Position of the virtual cockpit viewpoint.
 		};
 		unsigned long word;
@@ -820,6 +887,7 @@ public:
 	DIDEVCAPS			 dx8_jscaps[2];   ///< Joystick capabilities
 	DIJOYSTATE2			 dx8_jstate[2];   ///< Joystick state
 	HRESULT				 dx8_failure;     ///< DX failure reason
+	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  ///< Joystick # for the RHC
 	int rhc_rot_id;						  ///< ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       ///< ID of SLIDER axis to use for RHC Z-axis
@@ -836,6 +904,7 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
+	bool enableVESIM;                     ///< Vessel Specific Input Mgmt enabled
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag				  
 	int js_current;
 
@@ -883,6 +952,8 @@ public:
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
+	void clbkVisualCreated(VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -896,10 +967,11 @@ public:
 	///
 	/// \brief Initialise a virtual cockpit view.
 	///
-	void InitVC (int vc);
-	bool RegisterVC ();
+	void InitVC();
+	void ReleaseSurfacesVC();
+	void RegisterActiveAreas();
 
-	void PanelSwitchToggled(ToggleSwitch *s);
+	void PanelSwitchToggled(TwoPositionSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelRefreshForwardHatch();
@@ -937,7 +1009,10 @@ public:
 	///
 	double GetMissionTime() { return MissionTime; };
 
-	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
+	virtual double GetFirstStageThrust();
+	virtual double GetSIIFuelTankPressurePSI() { return 0.0; }
+	double GetSIVBFuelTankPressurePSI();
+	double GetSIVBLOXTankPressurePSI();
 
 	virtual void GetSIThrustOK(bool *ok) = 0;
 	virtual void GetSIIThrustOK(bool *ok);
@@ -955,14 +1030,14 @@ public:
 	virtual void SIEDSCutoff(bool cut) = 0;
 	virtual void SIIEDSCutoff(bool cut) {};
 	void SIVBEDSCutoff(bool cut);
-	void SetQBallPowerOff();
-	virtual void SetSIEngineStart(int n) = 0;
 	virtual double GetSIThrustLevel() = 0;
+	bool GetQBallPower();
+	bool GetQBallSimulateCmd();
 
 	virtual void ActivateStagingVent() {}
 
-	virtual void SetIUUmbilicalState(bool connect);
 	virtual void VHFRangingReturnSignal();
+	void StartSeparationPyros();
 
 	//CSM to IU interface functions
 	bool GetCMCSIVBTakeover();
@@ -984,23 +1059,12 @@ public:
 	///
 	/// \brief Triggers EMS scroll saving
 	///
-	virtual void SaveEMSScroll() { ems.WriteScrollToFile(); }
-
-	///
-	/// Get a pointer to the Saturn Instrument Unit, which controls the autopilot prior to SIVb/CSM
-	/// seperation.
-	/// \brief Access the Saturn IU.
-	/// \return Pointer to IU object.
-	///
-	IU *GetIU() { return iu; };
+	virtual void SaveEMSScroll() { ems.WriteScrollToFile(); }	
 
 	///
 	/// \brief Get settings for the Saturn payload.
 	///
 	void GetPayloadSettings(PayloadSettings &p);
-
-	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
-	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 
 	///
 	/// \brief Accessor to get checklistController
@@ -1010,15 +1074,9 @@ public:
 	/// 
 	/// \brief LVDC "Switch Selector" staging support utility function
 	/// 
-	virtual void SwitchSelector(int item) = 0;
 	virtual void SISwitchSelector(int channel) = 0;
-	virtual void SIISwitchSelector(int channel);
+	virtual void SIISwitchSelector(int channel) {}
 	void SIVBSwitchSelector(int channel);
-
-	///
-	/// \brief Has an abort been initiated?
-	///
-	bool GetAbort() { return secs.BECO(); };
 
 	//
 	// CWS functions.
@@ -1062,17 +1120,20 @@ public:
 	virtual void SetSecECSTestHeaterPowerW(double power);
 
 	///
-	/// Get information on launch vehicle propellant tank quantities.
-	/// \brief Get LV fuel tank status.
-	/// \param LVq LV fuel tank information structure, updated by the call.
-	///
-	void GetLVTankQuantities(LVTankQuantities &LVq);
-
-	///
 	/// Enable or disable generic Service Module systems based on current state.
 	/// \brief Check SM systems state.
 	///
 	void CheckSMSystemsState();
+
+	///
+	/// Enable or disable Saturn systems based on current state.
+	/// \brief Check Saturn systems state.
+	///
+	virtual void CheckSaturnSystemsState();
+
+	virtual void CreateStageSpecificSystems() = 0;
+
+	void CreateMissionSpecificSystems();
 
 	///
 	/// If the scenario specified AUTOSLOW and time acceleration is enabled, slow it
@@ -1119,18 +1180,11 @@ public:
 	void ClearLVRateLight();
 
 	///
-	/// \brief Get thrust level of the SIVb J2 engine.
-	/// \return Thrust level 0.0 - 1.0.
-	///
-	double GetJ2ThrustLevel();
-
-	///
 	/// \brief Set propellant mass in the SIVb stage.
 	/// \param mass Propellant mass in kg.
 	///
 	void SetSIVbPropellantMass(double mass);
 
-	int GetEDSSwitchState();
 	int GetLVRateAutoSwitchState();
 	int GetTwoEngineOutAutoSwitchState();
 
@@ -1151,36 +1205,6 @@ public:
 	void ClearTLISounds();
 
 	///
-	/// \brief Play or stop countdown sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlayCountSound(bool StartStop);
-
-	///
-	/// \brief Play or stop SECO sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlaySecoSound(bool StartStop);
-
-	///
-	/// \brief Play or stop seperation sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlaySepsSound(bool StartStop);
-
-	///
-	/// \brief Play or stop TLI sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlayTLISound(bool StartStop);
-
-	///
-	/// \brief Play or stop TLI start sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlayTLIStartSound(bool StartStop);
-
-	///
 	/// \brief We've hard docked, so check connections.
 	///
 	void HaveHardDocked(int port);
@@ -1199,6 +1223,11 @@ public:
 	/// \brief Set side hatch mesh
 	///
 	void SetSideHatchMesh();
+
+	///
+	/// \brief Set fwd hatch mesh
+	///
+	void SetFwdHatchMesh();
 	
 	///
 	/// \brief Set crew mesh
@@ -1221,6 +1250,13 @@ public:
 	///
 	void SetNosecapMesh();
 
+	void SetSIMBayPanelMesh();
+
+	///
+	/// \brief Set probe visibility flag
+	///
+	void ProbeVis();
+
 	///
 	/// Check whether the Launch Escape Tower is attached.
 	/// \brief Is the LET still attached?
@@ -1242,6 +1278,13 @@ public:
 	void TLI_Ended();
 
 	//
+	// Function for configuring 4 touchdown points in Orbiter 2016.
+	// \ mass in kg, ro (distance from center of the bottom points), tdph (height of bottom points),
+	// \ height (of the top point), x_target (stiffness/damping factor, stable default is -0.5)
+	//
+	void ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target = -0.5);
+
+	//
 	// LUA Interface
 	//
 	int clbkGeneric(int msgid, int prm, void *context);
@@ -1256,6 +1299,17 @@ public:
 	int Lua_GetAGCChannel(int ch);
 	void Lua_SetAGCErasable(int page, int addr, int value);
 	int Lua_GetAGCUplinkStatus();
+
+	//System Access
+	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
+	SPSEngine *GetSPSEngine() { return &SPSEngine; };
+	SCE *GetSCE() { return &sce; }
+	EDA *GetEDA() { return &eda; }
+	IU *GetIU() { return iu; };
+	virtual SICSystems *GetSIC() { return NULL; }
+	SECS *GetSECS() { return &secs; }
+
+	void ClearMeshes();
 
 protected:
 
@@ -1288,6 +1342,8 @@ protected:
 	void JettisonOpticsCover();
 
 	void JettisonNosecap();
+
+	void JettisonSIMBayPanel();
 
 	//
 	// State that needs to be saved.
@@ -1368,6 +1424,8 @@ protected:
 	///
 	bool SLAWillSeparate;
 
+	bool SIMBayPanelJett;
+
 	bool DeleteLaunchSite;
 
 	int buildstatus;
@@ -1406,12 +1464,6 @@ protected:
 	/// \brief Time to next check for stage destruction.
 	///
 	double NextDestroyCheckTime;
-
-	///
-	/// The time in seconds when the next failure will occur.
-	/// \brief Time of next system failure.
-	///
-	double NextFailureTime;
 
 	///
 	/// Mission Timer display on control panel.
@@ -1548,6 +1600,11 @@ protected:
 	int fdaiSmooth;
 
 	HBITMAP hBmpFDAIRollIndicator;
+
+	//Panels
+
+	PanelGroup pgPanels100;
+	PanelGroup pgPanels200;
 
 	SwitchRow MasterAlarmSwitchRow;
 	MasterAlarmSwitch MasterAlarmSwitch; 
@@ -2031,9 +2088,9 @@ protected:
 	ToggleSwitch SPSswitch;
 
 	SwitchRow SPSGimbalPitchThumbwheelRow;
-	ThumbwheelSwitch SPSGimbalPitchThumbwheel;
+	ContinuousThumbwheelSwitch SPSGimbalPitchThumbwheel;
 	SwitchRow SPSGimbalYawThumbwheelRow;
-	ThumbwheelSwitch SPSGimbalYawThumbwheel;
+	ContinuousThumbwheelSwitch SPSGimbalYawThumbwheel;
 
 	SwitchRow DirectUllageThrustOnRow;
 	PushSwitch DirectUllageButton;
@@ -2512,18 +2569,18 @@ protected:
 	// G&N lower equipment bay //
 	/////////////////////////////
 
-	SwitchRow ModeSwitchRow;
-	CMCOpticsModeSwitch ModeSwitch;
+	SwitchRow ZeroSwitchRow;
+	CMCOpticsZeroSwitch OpticsZeroSwitch;
 
-	SwitchRow ControllerSpeedSwitchRow;
-	ThreePosSwitch ControllerSpeedSwitch;
+	SwitchRow TelescopeTrunnionSwitchRow;
+	ThreePosSwitch ControllerTelescopeTrunnionSwitch;
 
 	SwitchRow ControllerCouplingSwitchRow;
 	ToggleSwitch ControllerCouplingSwitch;
 
-	SwitchRow ControllerSwitchesRow;
-	ThreePosSwitch ControllerTrackerSwitch;
-	ThreePosSwitch ControllerTelescopeTrunnionSwitch;
+	SwitchRow OpticsModeSpeedSwitchesRow;
+	ToggleSwitch OpticsModeSwitch;
+	ThreePosSwitch ControllerSpeedSwitch;
 
 	SwitchRow ConditionLampsSwitchRow;
 	ThreePosSwitch ConditionLampsSwitch;
@@ -2583,6 +2640,11 @@ protected:
 
 	SwitchRow SCIUtilPowerSwitchRow;
 	ToggleSwitch SCIUtilPowerSwitch;
+
+	/////////////////////////////////////
+	// Panel 181 (Apollo 15 and later) //
+	/////////////////////////////////////
+	SaturnPanel181 *Panel181;
 
 	///////////////////////
 	// Panel 15 switches //
@@ -3011,6 +3073,14 @@ protected:
 	CircuitBrakerSwitch UprightingSystemCompressor2CircuitBraker;
 	CircuitBrakerSwitch SIVBLMSepPyroACircuitBraker;
 	CircuitBrakerSwitch SIVBLMSepPyroBCircuitBraker;
+
+	// Panel 278 Mission-Specific Additions
+	SaturnPanel278J *Panel278J;
+
+	/////////////////////////////////////
+	// Panel 277 (Apollo 15 and later) //
+	/////////////////////////////////////
+	SaturnPanel277 *Panel277;
 	
 	///////////////////////////////
 	// Panel 300/301/302/303/305 //
@@ -3437,6 +3507,7 @@ protected:
 	VECTOR3 normal;
 
 	PanelSwitches MainPanel;
+	PanelSwitchesVC MainPanelVC;
 	PanelSwitchScenarioHandler PSH;
 
 	SwitchRow SequencerSwitchesRow;
@@ -3469,7 +3540,12 @@ protected:
 	EDA  eda;
 	RJEC rjec;
 	ECA  eca;
+	TVSA tvsa;
 	ORDEAL ordeal;
+	EMS ems;
+	RHC rhc1;
+	RHC rhc2;
+
 	// Telecom equipment
 	DSE  dataRecorder;
 	PCM  pcm;
@@ -3480,11 +3556,55 @@ protected:
 	OMNI omnib;
 	OMNI omnic;
 	OMNI omnid;
-	VHFAntenna vhfa;
-	VHFAntenna vhfb;
+	VHFAntenna vhfAntRight;
+	VHFAntenna vhfAntLeft;
 	VHFRangingSystem vhfranging;
 	VHFAMTransceiver vhftransceiver;
-	EMS  ems;
+	RNDZXPDRSystem RRTsystem;
+
+	//Instrumentation
+	SCE sce;
+	PowerMerge ECSPressGroups1Feeder;
+	PowerMerge ECSPressGroups2Feeder;
+	PowerMerge ECSTempTransducerFeeder;
+	PowerMerge ECSWastePotTransducerFeeder;
+	PowerMerge InstrumentationPowerFeeder;
+	PowerMerge ECSSecTransducersFeeder;
+public:
+	CSMTankTempTransducer H2Tank1TempSensor;
+	CSMTankTempTransducer H2Tank2TempSensor;
+	CSMTankTempTransducer O2Tank1TempSensor;
+	CSMTankTempTransducer O2Tank2TempSensor;
+	CSMTankPressTransducer CabinPressSensor;
+	CSMTankTempTransducer CabinTempSensor;
+	CSMDeltaPressINH2OTransducer SuitCabinDeltaPressSensor;
+	CSMCO2PressTransducer CO2PartPressSensor;
+	CSMTankPressTransducer O2SurgeTankPressSensor;
+	CSMTankTempTransducer SuitTempSensor;
+	CSMTankQuantityTransducer WasteH2OQtySensor;
+	CSMTankQuantityTransducer PotH2OQtySensor;
+	CSMTankPressTransducer SuitPressSensor;
+	CSMDeltaPressPSITransducer SuitCompressorDeltaPSensor;
+	CSMTankPressTransducer GlycolPumpOutPressSensor;
+	CSMTankTempTransducer GlyEvapOutSteamTempSensor;
+	CSMTankTempTransducer GlyEvapOutTempSensor;
+	CSMTankQuantityTransducer GlycolAccumQtySensor;
+	CSMTankTempTransducer ECSRadOutTempSensor;
+	CSMEvaporatorPressTransducer GlyEvapBackPressSensor;
+	CSMPipeFlowTransducer ECSO2FlowO2SupplyManifoldSensor;
+	CSMTankPressTransducer O2SupplyManifPressSensor;
+	CSMTankPressTransducer SecGlyPumpOutPressSensor;
+	CSMTankTempTransducer SecEvapOutLiqTempSensor;
+	CSMTankQuantityTransducer SecGlycolAccumQtySensor;
+	CSMEvaporatorPressTransducer SecEvapOutSteamPressSensor;
+	//CSMTankPressTransducer H2OGlyResPressSensor;
+	//Primary glycol flow rate needs a pipe implemented with name
+	//CSMPipeFlowTransducer PriGlycolFlowRateSensor;
+	CSMTankTempTransducer PriEvapInletTempSensor;
+	CSMTankTempTransducer PriRadInTempSensor;
+	CSMTankTempTransducer SecRadInTempSensor;
+	CSMTankTempTransducer SecRadOutTempSensor;
+protected:
 
 	// CM Optics
 	CMOptics optics;
@@ -3694,12 +3814,23 @@ protected:
 	bool IUSCContPermanentEnabled;
 	bool TLISoundsLoaded;
 	bool SkylabSM;
-	bool NoHGA;
-	bool NoVHFRanging;
 	bool CMdocktgt;
 	bool SkylabCM;
 	bool S1bPanel;
 	bool bRecovery;
+	bool DontDeleteIU;
+
+	// VC animations
+
+	UINT anim_fdaiR_L, anim_fdaiR_R;
+	UINT anim_fdaiP_L, anim_fdaiP_R;
+	UINT anim_fdaiY_L, anim_fdaiY_R;
+	UINT anim_fdaiRerror_L, anim_fdaiRerror_R;
+	UINT anim_fdaiPerror_L, anim_fdaiPerror_R;
+	UINT anim_fdaiYerror_L, anim_fdaiYerror_R;
+	UINT anim_fdaiRrate_L, anim_fdaiRrate_R;
+	UINT anim_fdaiPrate_L, anim_fdaiPrate_R;
+	UINT anim_fdaiYrate_L, anim_fdaiYrate_R;
 
 	#define SATVIEW_LEFTSEAT		0
 	#define SATVIEW_RIGHTSEAT		1
@@ -3725,29 +3856,26 @@ protected:
 	int sidehatchopenidx;
 	int sidehatchburnedidx;
 	int sidehatchburnedopenidx;
+	int fwdhatchidx;
 	int opticscoveridx;
 	int cmdocktgtidx;
 	int nosecapidx;
 	int meshLM_1;
+	int simbaypanelidx;
+	int vcidx;
+
+	DEVMESHHANDLE probe;
 
 	bool ASTPMission;
 
 	double DockAngle;
 
-	double AtempP;
-	double AtempY;
-	double AtempR;
-
-	ELEMENTS elemSaturn1B;
-	double refSaturn1B;
-	ELEMENTS elemPREV;
-	double refPREV;
-	double AltitudePREV;
-
 	double 	Offset1st;
 
 	bool StopRot;
 	bool PayloadDataTransfer;
+
+	mission::Mission* pMission;
 
 	//
 	// Panels
@@ -3773,6 +3901,7 @@ protected:
 #define SATPANEL_LOWER_MAIN			15
 #define SATPANEL_RIGHT_CB			16
 #define SATPANEL_LEFT_317_WINDOW    17
+#define SATPANEL_TUNNEL             18
 
 	int  PanelId;
 	int MainPanelSplit;
@@ -3782,9 +3911,8 @@ protected:
 	bool CheckPanelIdInTimestep;
 	bool RefreshPanelIdInTimestep;
 	bool FovFixed;
-	int FovExternal;
+	bool FovExternal;
 	double FovSave;
-	double FovSaveExternal;
 	int maxTimeAcceleration;
 	bool IsMultiThread;
 
@@ -3792,7 +3920,6 @@ protected:
 	// Virtual cockpit
 	//
 
-	bool VCRegistered;
 	VECTOR3 VCCameraOffset;
 	VECTOR3 VCMeshOffset;
 
@@ -3803,9 +3930,6 @@ protected:
 	bool FireLEM;
 	bool FireTJM;
 	bool FirePCM;
-
-	double FailureMultiplier;
-	double PlatFail;
 
 	OBJHANDLE hEVA;
 
@@ -3852,6 +3976,9 @@ protected:
 	OBJHANDLE hMainChute;
 	OBJHANDLE hOpticsCover;
 	OBJHANDLE hNosecapVessel;
+	OBJHANDLE hLC34;
+	OBJHANDLE hLC37;
+	OBJHANDLE hLCC;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
@@ -3899,9 +4026,9 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Alt2 (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
-	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
+	void CryoTankHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
+	void FuelCellHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
+	void FuelCellReactantsSwitchToggled(TwoPositionSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void initSaturn();
 	void SwitchClick();
@@ -3944,6 +4071,12 @@ protected:
 	void GetApolloName(char *s);
 	void AddSM(double offet, bool showSPS);
 
+	void InitVCAnimations();
+	void DefineVCAnimations();
+
+	void InitFDAI(UINT mesh);
+	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
+
 	//
 	// Systems functions.
 	//
@@ -3957,7 +4090,6 @@ protected:
 	void DeactivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
-	virtual void SetRandomFailures();
 	void SetPipeMaxFlow(char *pipe, double flow);
 
 	//
@@ -3998,7 +4130,8 @@ protected:
 	virtual void LoadSI(FILEHANDLE scn) = 0;
 	virtual void SaveSII(FILEHANDLE scn) {};
 	virtual void LoadSII(FILEHANDLE scn) {};
-	virtual void SetEngineFailure(int failstage, int faileng, double failtime) = 0;
+	virtual void SetEngineFailure(int failstage, int faileng, double failtime, bool fail) = 0;
+	virtual void GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
@@ -4029,6 +4162,8 @@ protected:
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
+	void LoadVC();
+	void UpdateVC(VECTOR3 meshdir);
 
 	//
 	// Sounds
@@ -4055,8 +4190,8 @@ protected:
 	Sound SepS;
 	Sound CrashBumpS;
 	Sound Psound;
-	Sound CabinFans;
-	Sound SuitCompressorSound;
+	FadeInOutSound CabinFans;
+	FadeInOutSound SuitCompressorSound;
 	Sound SwindowS;
 	Sound SKranz;
 	Sound SExploded;
@@ -4246,23 +4381,19 @@ protected:
 	CSMToIUConnector iuCommandConnector;
 	SaturnToIUCommandConnector sivbCommandConnector;
 
-	MultiConnector CSMToSIVBConnector;
 	MultiConnector CSMToLEMConnector;
-
-	///
-	/// \brief SIVb control connector for venting.
-	///
-	CSMToSIVBControlConnector sivbControlConnector;
-
-	PowerSourceConnectorObject SIVBToCSMPowerSource;
-	Connector SIVBToCSMPowerConnector;
 
 	PowerDrainConnectorObject CSMToLEMPowerDrain;
 	PowerDrainConnector CSMToLEMPowerConnector;
 	CSMToLEMECSConnector lemECSConnector;
+	CSMToPayloadConnector payloadCommandConnector;
 
 	// Checklist Controller to CSM connector
 	ChecklistDataInterface cdi;
+
+	//RF connectors
+	CSM_RRTto_LM_RRConnector CSM_RRTto_LM_RRConnector;
+	CSM_VHFto_LM_VHFConnector csm_vhfto_lm_vhfconnector;
 
 	//
 	// PanelSDK pointers.
@@ -4342,6 +4473,8 @@ protected:
 	friend class EDA;
 	friend class RJEC;
 	friend class ECA;
+	friend class TVSA;
+	friend class ServoAmplifierModule;
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 	friend class LEMcomputer; 
 	friend class PCM;         // Otherwise reading telemetry is a pain
@@ -4384,13 +4517,19 @@ protected:
 	friend class SaturnHighGainAntennaStrengthMeter;
 	friend class SaturnSystemTestAttenuator;
 	friend class SaturnLVSPSPcMeter;
+	friend class SaturnSPSHeliumNitrogenPressMeter;
 	friend class SaturnLMDPGauge;
+	friend class VHFAMTransceiver;
 	friend class VHFRangingSystem;
+	friend class RNDZXPDRSystem;
+	friend class DockingTargetSwitch;
+	friend class SCE;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
+	friend class ARCore;
+	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
-	friend class DockingTargetSwitch;
 };
 
 extern void BaseInit();
@@ -4403,10 +4542,12 @@ const double CREWO = 0.0;
 
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;
+extern MESHHANDLE hCMnh;
 extern MESHHANDLE hCMInt;
 extern MESHHANDLE hCMVC;
 extern MESHHANDLE hFHC;
 extern MESHHANDLE hFHO;
+extern MESHHANDLE hFHF;
 extern MESHHANDLE hCMP;
 extern MESHHANDLE hCREW;
 extern MESHHANDLE hSMhga;

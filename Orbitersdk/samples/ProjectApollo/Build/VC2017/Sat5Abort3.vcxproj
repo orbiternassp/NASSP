@@ -12,6 +12,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{16DA84DA-79DC-4631-B5A6-4D31433433AD}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -61,7 +62,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;Sat5Abort3_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;Sat5Abort3_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -71,13 +72,14 @@
       <ProgramDataBaseFileName>.\Release\Sat5Abort3/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/Sat5Abort3.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -124,7 +126,7 @@
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/Sat5Abort3.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>;../../../../lib/Lua;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -142,15 +144,19 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_csm\smjc.cpp" />
     <ClCompile Include="..\..\src_saturn\Sat5Abort3.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_csm\smjc.h" />
     <ClInclude Include="..\..\src_saturn\Sat5Abort3.h" />
+    <ClInclude Include="..\..\src_sys\DelayTimer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

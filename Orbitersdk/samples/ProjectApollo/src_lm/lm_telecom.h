@@ -173,6 +173,18 @@
 
 class Saturn;
 
+class LM_VHFAntenna
+{
+public:
+	LM_VHFAntenna(VECTOR3 dir, double maximumGain);
+	~LM_VHFAntenna();
+
+	double getPolarGain(VECTOR3 target);
+private:
+	VECTOR3 pointingVector;
+	double maxGain;
+};
+
 // VHF system (and shared stuff)
 class LM_VHF {
 public:
@@ -182,19 +194,49 @@ public:
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
-	void RangingSignal(Saturn *sat, bool isAcquiring);
+
+	const double freqXCVR_A = 296.8E6; //MHz;
+	const double freqXCVR_B = 259.7E6; //MHz;
 
 	LEM *lem;					   // Ship we're installed in
+	VESSEL *csm;					//Pointer to CSM
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
 	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
 	h_HeatLoad *PCMHeat;			//PCM Heat Load
 	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
+
+	LM_VHFAntenna fwdInflightVHF;
+	LM_VHFAntenna aftInflightVHF;
+	LM_VHFAntenna evaVHF;
+	LM_VHFAntenna *activeAntenna;
+	RotationalSwitch *AntennaSelectorSW;
 
 	bool receiveA;
 	bool receiveB;
 	bool transmitA;
 	bool transmitB;
 	bool isRanging;
+
+	double xmitPower;
+	const double minimumRCVDPower = -122.0; //dB
+
+	//Recvd RF properties*********
+	double RCVDfreqRCVR_A; //frequency received by rcvr A
+	double RCVDpowRCVR_A; //power radiated at rcvr A MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_A; //gain of the transmitter senting to rcvr A
+	double RCVDPhaseRCVR_A; //phase of the signal sending to rcvr A
+	//
+	double RCVDfreqRCVR_B; //Frequency received by rcvr B
+	double RCVDpowRCVR_B; //Power radiated at B MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_B; //Gain of the transmitter senting to rcvr B
+	double RCVDPhaseRCVR_B; //Phase of the signal sending to rcvr B
+	bool RCVDRangeTone; // Receiving a ranging tone from the CSM?
+
+	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
+	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
+	
+	//****************************
+
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
@@ -208,6 +250,7 @@ public:
 	void generate_stream_lbr();     // Generate LBR datastream
 	void generate_stream_hbr();     // Same for HBR datastream
 	unsigned char scale_data(double data, double low, double high); // Scale data for PCM transmission
+	unsigned char scale_scea(double data); // Scale preconditioned data from the SCEA for PCM transmission
 	unsigned char measure(int channel, int type, int ccode);
 	// Error control
 	int wsk_error;                  // Winsock error
@@ -239,6 +282,7 @@ class LM_SBandAntenna
 public:
 	LM_SBandAntenna() { SignalStrength = 0.0; }
 	double GetSignalStrength() { return SignalStrength; }
+	double dBm2SignalStrength(double dBm);
 protected:
 	double SignalStrength;						// Signal Strength (0-100)
 };
@@ -275,10 +319,17 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);			// System Timestep
+	void DefineAnimations(UINT idx);
 	bool IsPowered();
 	double GetAntennaTempF();
 	double GetPitch() { return pitch*DEG; }
 	double GetYaw() { return yaw*DEG; }
+	VECTOR3 pitchYaw2GlobalVector(double pitch, double yaw);
+	double LEM_SteerableAntGain;
+	double LEM_SteerableAntFrequency;
+	double LEM_SteerableAntWavelength;
+	double Gain85ft;
+	double Power85ft;
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
@@ -286,6 +337,13 @@ public:
 protected:
 	double pitch;
 	double yaw;
+	double HornSignalStrength[4];
+
+
+	// Animations
+	UINT anim_SBandPitch, anim_SBandYaw;
+	double	sband_proc[2];
+	double	sband_proc_last[2];
 
 	bool moving;
 	double hpbw_factor;
@@ -302,6 +360,12 @@ public:
 	LM_OMNI(VECTOR3 dir);
 	void Init(LEM *vessel);	// Initialization
 	void Timestep();			// Timestep
+
+	double OMNIWavelength;
+	double OMNIFrequency;
+	double Gain85ft;
+	double Power85ft;
+	double OMNI_Gain;
 protected:
 	LEM *lem;					// Ship we're installed in
 	VECTOR3 direction;

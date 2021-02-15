@@ -12,6 +12,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1C98109C-791B-4563-AA9C-D02963D2AEC1}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -80,7 +81,7 @@
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/Sat1bAbort1.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>;../../../../lib/Lua;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -111,7 +112,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SAT1ABORT1_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SAT1ABORT1_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -121,13 +122,14 @@
       <ProgramDataBaseFileName>.\Release\Sat1Abort1/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/Sat1bAbort1.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

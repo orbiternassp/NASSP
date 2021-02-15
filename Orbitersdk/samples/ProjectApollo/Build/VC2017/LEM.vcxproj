@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1E53A199-CCDF-4FCF-B2E8-5F8FF80AFEC8}</ProjectGuid>
     <RootNamespace>LEM</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -62,7 +63,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_USRDLL;LEM_EXPORTS;DIRECTSOUNDENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_USRDLL;LEM_EXPORTS;DIRECTSOUNDENABLED;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -72,13 +73,14 @@
       <ProgramDataBaseFileName>.\Release\LEM/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../../src_aux/dsound.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;opengl32.lib;glu32.lib;winmm.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../src_aux/dsound.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;opengl32.lib;glu32.lib;winmm.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/LEM.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\Release\PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -127,7 +129,7 @@
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../../src_aux/dsound.lib;wsock32.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;opengl32.lib;glu32.lib;winmm.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../src_aux/dsound.lib;wsock32.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;opengl32.lib;glu32.lib;winmm.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/LEM.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>;../../../../lib/Lua;.\Debug\PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -147,14 +149,17 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_aux\animations.cpp" />
     <ClCompile Include="..\..\src_aux\CDK.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\vesim.cpp" />
+    <ClCompile Include="..\..\src_lm\CWEA_FlipFlop.cpp" />
     <ClCompile Include="..\..\src_lm\lemconnector.cpp" />
-    <ClCompile Include="..\..\src_lm\LEMSaturn.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aca.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_cwea.cpp" />
@@ -168,15 +173,6 @@
     <ClCompile Include="..\..\src_lm\lm_scea.cpp" />
     <ClCompile Include="..\..\src_lm\lm_ttca.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
-    <ClCompile Include="..\..\src_saturn\dcs.cpp" />
-    <ClCompile Include="..\..\src_saturn\eds.cpp" />
-    <ClCompile Include="..\..\src_saturn\FCC.cpp" />
-    <ClCompile Include="..\..\src_saturn\iu.cpp" />
-    <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
-    <ClCompile Include="..\..\src_saturn\LVDC.cpp" />
-    <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
-    <ClCompile Include="..\..\src_saturn\s1bsystems.cpp" />
-    <ClCompile Include="..\..\src_saturn\sivbsystems.cpp" />
     <ClCompile Include="..\..\src_sys\apolloguidance.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -347,12 +343,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\..\src_lm\yaAGS\aea_engine.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -373,8 +363,14 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_aux\animations.h" />
+    <ClInclude Include="..\..\src_aux\Mission.h" />
+    <ClInclude Include="..\..\src_aux\RF_calc.h" />
+    <ClInclude Include="..\..\src_aux\vesim.h" />
+    <ClInclude Include="..\..\src_lm\CWEA_FlipFlop.h" />
     <ClInclude Include="..\..\src_lm\lemconnector.h" />
-    <ClInclude Include="..\..\src_lm\LEMSaturn.h" />
+    <ClInclude Include="..\..\src_lm\LM_AscentStageResource.h" />
+    <ClInclude Include="..\..\src_lm\LM_DescentStageResource.h" />
     <ClInclude Include="..\..\src_lm\lm_eps.h" />
     <ClInclude Include="..\..\src_lm\lmresource.h" />
     <ClInclude Include="..\..\src_lm\lm_aca.h" />
@@ -389,15 +385,8 @@
     <ClInclude Include="..\..\src_lm\lm_rr.h" />
     <ClInclude Include="..\..\src_lm\lm_scea.h" />
     <ClInclude Include="..\..\src_lm\lm_ttca.h" />
+    <ClInclude Include="..\..\src_lm\LM_VC_Resource.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
-    <ClInclude Include="..\..\src_saturn\dcs.h" />
-    <ClInclude Include="..\..\src_saturn\eds.h" />
-    <ClInclude Include="..\..\src_saturn\FCC.h" />
-    <ClInclude Include="..\..\src_saturn\LVDA.h" />
-    <ClInclude Include="..\..\src_saturn\LVDC.h" />
-    <ClInclude Include="..\..\src_saturn\LVIMU.h" />
-    <ClInclude Include="..\..\src_saturn\s1bsystems.h" />
-    <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />
@@ -411,7 +400,6 @@
     <ClInclude Include="..\..\src_sys\FDAI.h" />
     <ClInclude Include="..\..\src_sys\IMU.h" />
     <ClInclude Include="..\..\src_sys\ioChannels.h" />
-    <ClInclude Include="..\..\src_saturn\iu.h" />
     <ClInclude Include="..\..\src_lm\LEM.h" />
     <ClInclude Include="..\..\src_lm\LEMcomputer.h" />
     <ClInclude Include="..\..\src_lm\lemswitches.h" />
@@ -439,7 +427,6 @@
     <ClInclude Include="..\..\src_aux\tracer.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h" />
-    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h" />
     <ClInclude Include="..\..\src_lm\yaAGS\aea_engine.h" />
     <ClInclude Include="..\..\src_lm\yaAGS\yaAEA.h" />
   </ItemGroup>

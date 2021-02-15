@@ -22,6 +22,10 @@
 
   **************************************************************************/
 
+#pragma once
+
+#include "smjc.h"
+
 ///
 /// Flags structure indicating which of the SM  settings are valid.
 ///
@@ -63,10 +67,19 @@ typedef struct {
 	double RCSBFuelKg;					///< RCS Quad B fuel in kg.
 	double RCSCFuelKg;					///< RCS Quad C fuel in kg.
 	double RCSDFuelKg;					///< RCS Quad B fuel in kg.
+	double HGAalpha;                    ///< HGA Alpha
+	double HGAbeta;                     ///< HGA Beta
+	double HGAgamma;                    ///< HGA Gamma
 
 	bool LowRes;						///< Using low-res meshes?
 	bool showHGA;						///< Do we have an HGA?
 	bool A13Exploded;					///< Did the SM explode on Apollo 13 mission?
+	bool SIMBayPanelJett;				///< Was the SIM bay panel jettisoned?
+
+	bool SMBusAPowered;
+	bool SMBusBPowered;
+	SMJCState SMJCAState;
+	SMJCState SMJCBState;
 
 } SMSettings;
 
@@ -170,7 +183,10 @@ protected:
 	void SetSM();
 	void InitSM();
 	void AddEngines();
+	void AddSMJC();
 	void DefineAnimations();
+	void DefineAnimationsHGA(UINT idx);
+	void AddMissionSpecificSystems();
 
 	///
 	/// \brief Setup variables on first timestep.
@@ -295,6 +311,12 @@ protected:
 	bool showCRYO;
 
 	///
+	/// \brief Show the SIM bay equipment.
+	///
+
+	bool showSIMBay;
+
+	///
 	/// \brief This is an Apollo 13 SM which exploded in flight.
 	///
 	bool A13Exploded;
@@ -355,6 +377,27 @@ protected:
 	/// \brief Temperature buildup during re-entry.
 	///
 	double Temperature;
+
+	///
+	/// \brief HGA Position.
+	///
+
+	double Alpha;
+	double Beta;
+	double Gamma;
+
+	//
+	/// \brief SM buses status
+
+	bool SMBusAPowered;
+	bool SMBusBPowered;
+
+	///
+	/// \brief HGA Animations.
+	///
+
+	UINT anim_HGAalpha, anim_HGAbeta, anim_HGAgamma;
+	double	hga_proc[3];
 
 	///
 	/// \brief Re-entry texture.
@@ -420,4 +463,7 @@ protected:
 	/// \brief Breakup sound.
 	///
 	Sound BreakS;
+
+	SMJC *SMJCA;
+	SMJC *SMJCB;
 };

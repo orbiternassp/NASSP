@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -14,21 +14,19 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Englisch (GB) resources
+// English (United Kingdom) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-IDD_MYFRAME DIALOG DISCARDABLE  0, 0, 250, 251
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_MYFRAME DIALOG 0, 0, 250, 251
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Project Apollo Configuration"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -37,103 +35,69 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,195,230,50,15
 END
 
-IDD_PAGEVISUAL DIALOG DISCARDABLE  0, 0, 232, 195
-STYLE DS_3DLOOK | WS_CHILD
+IDD_PAGEVISUAL DIALOG 0, 0, 232, 195
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "High resolution",IDC_RADIO_HIGHRES,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP,13,20,82,10
-    CONTROL         "Low resolution",IDC_RADIO_LOWRES,"Button",
-                    BS_AUTORADIOBUTTON,13,33,76,10
-    CONTROL         "Single, continuous panel",IDC_RADIO_SINGLEPANEL,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP,13,66,102,12
-    CONTROL         "Multiple, split panels",IDC_RADIO_SPLITTEDPANEL,"Button",
-                    BS_AUTORADIOBUTTON,13,79,89,10
+    CONTROL         "High resolution",IDC_RADIO_HIGHRES,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,20,82,10
+    CONTROL         "Low resolution",IDC_RADIO_LOWRES,"Button",BS_AUTORADIOBUTTON,13,33,76,10
+    CONTROL         "Single, continuous panel",IDC_RADIO_SINGLEPANEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,66,102,12
+    CONTROL         "Multiple, split panels",IDC_RADIO_SPLITTEDPANEL,"Button",BS_AUTORADIOBUTTON,13,79,89,10
     CONTROL         "Single, continuous panel",IDC_RADIO_GNSINGLEPANEL,
                     "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,112,102,12
     CONTROL         "Multiple, split panels",IDC_RADIO_GNSPLITTEDPANEL,
                     "Button",BS_AUTORADIOBUTTON,13,125,89,10
     GROUPBOX        "CSM main panel",IDC_STATIC,7,53,219,44
-    GROUPBOX        "CSM G&&N Lower Equipment Bay panel",IDC_STATIC,7,99,219,
-                    44
+    GROUPBOX        "CSM G&&N Lower Equipment Bay panel",IDC_STATIC,7,99,219,44
     GROUPBOX        "Mesh resolution",IDC_STATIC,7,7,219,44
     GROUPBOX        "FDAI",IDC_STATIC,7,147,219,44
-    CONTROL         "Disabled",IDC_CHECK_FDAIDISABLED,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,160,43,10
-    CONTROL         "Smooth scrolling",IDC_CHECK_FDAISMOOTH,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,173,67,10
+    CONTROL         "Disabled",IDC_CHECK_FDAIDISABLED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,160,43,10
+    CONTROL         "Smooth scrolling",IDC_CHECK_FDAISMOOTH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,173,67,10
 END
 
-IDD_PAGECONTROL DIALOG DISCARDABLE  0, 0, 232, 195
-STYLE DS_3DLOOK | WS_CHILD
-FONT 8, "MS Sans Serif"
+IDD_PAGECONTROL DIALOGEX 0, 0, 232, 195
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "Joysticks",IDC_STATIC,7,7,219,105
-    CTEXT           "Orbiter's joystick control must be <Disabled>!",
-                    IDC_STATIC_JOYATT,14,20,205,10
-    CONTROL         "RHC enabled",IDC_CHECK_RHC,"Button",BS_AUTOCHECKBOX | 
-                    BS_NOTIFY | WS_TABSTOP,13,34,59,10
-    EDITTEXT        IDC_EDIT_RHC,91,33,19,13,ES_RIGHT | ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    LTEXT           "ID:",IDC_STATIC_RHC,77,35,10,10
-    CONTROL         "If only the RHC is enabled, use this joystick either as RHC or as THC depending on Orbiter's attitude control mode.",
-                    IDC_CHECK_RHCTHCTOGGLE,"Button",BS_AUTOCHECKBOX | BS_TOP | 
-                    BS_MULTILINE | BS_NOTIFY | WS_TABSTOP,26,47,188,27
-    EDITTEXT        IDC_EDIT_RHCTHCTOGGLE,173,74,19,13,ES_RIGHT | 
-                    ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Optional RHC/THC toggle joystick button ID:",
-                    IDC_STATIC_RHCTHCTOGGLE,28,77,145,10
-    CONTROL         "THC enabled",IDC_CHECK_THC,"Button",BS_AUTOCHECKBOX | 
-                    BS_NOTIFY | WS_TABSTOP,13,92,59,10
-    EDITTEXT        IDC_EDIT_THC,91,91,19,13,ES_RIGHT | ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    LTEXT           "ID:",IDC_STATIC_THC,77,93,10,10
+    GROUPBOX        "Joysticks",IDC_STATIC,7,7,219,170
+    CTEXT           "Orbiter's joystick control must be <Disabled>!",IDC_STATIC_JOYATT,14,20,205,10
+    CONTROL         "RHC/ACA enabled",IDC_CHECK_RHC,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,13,34,73,10
+    EDITTEXT        IDC_EDIT_RHC,109,33,19,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "ID:",IDC_STATIC_RHC,95,35,10,10
+    CONTROL         "If only the RHC/ACA is enabled, use this joystick either as RHC/ACA or as THC/TTCA depending on Orbiter's attitude control mode.",IDC_CHECK_RHCTHCTOGGLE,
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | BS_NOTIFY | WS_TABSTOP,26,47,188,27
+    EDITTEXT        IDC_EDIT_RHCTHCTOGGLE,139,74,19,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Optional toggle joystick button ID:",IDC_STATIC_RHCTHCTOGGLE,28,77,106,10
+    CONTROL         "THC/TTCA enabled",IDC_CHECK_THC,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,13,113,75,10
+    EDITTEXT        IDC_EDIT_THC,109,111,19,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "ID:",IDC_STATIC_THC,95,113,10,10
+    CONTROL         "TTCA with throttle/jets lever",IDC_CHECK_TJT,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,26,131,100,10
+    EDITTEXT        IDC_EDIT_TJT,145,130,19,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "ID:",IDC_STATIC_TJT,131,132,10,10
+    CONTROL         "ACA with throttle slider",IDC_CHECK_RSL,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,26,95,82,10
+    EDITTEXT        IDC_EDIT_RSL,127,94,19,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "ID:",IDC_STATIC_RSL,113,96,10,10
+    CONTROL         "VESIM Enabled (experimental)",IDC_CHECK_VESIM,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,13,156,115,10
+    PUSHBUTTON      "Create config files",IDC_BUTTON_CREATECONFIG,131,153,87,14
 END
 
-IDD_PAGEQUICKSTART DIALOG DISCARDABLE  0, 0, 232, 195
-STYLE DS_3DLOOK | WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-    GROUPBOX        "Orbiter's Attitude Control",IDC_STATIC,7,51,219,72
-    LTEXT           "Orbiter's joystick or keyboard controls can be used either as RHC or as THC depending on Orbiter's attitude control mode.",
-                    IDC_STATIC,13,64,200,19
-    CTEXT           "Orbiter's attitude control is disabled in this case!",
-                    IDC_STATIC_ORBITERATT,14,88,205,10
-    CONTROL         "Use Orbiter controls as RHC/THC",
-                    IDC_CHECK_ORBITERATTITUDEDISABLED,"Button",
-                    BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,13,106,150,10
-    GROUPBOX        "Checklists",IDC_STATIC,7,7,219,42
-    CONTROL         "Slow automatic checklist execution (e.g. for demonstrations)",
-                    IDC_CHECK_CHECKLISTAUTOSLOW,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,13,20,207,10
-    GROUPBOX        "Panels",IDC_STATIC,7,125,219,29
-    CONTROL         "Disable lighting of the backup sequencer switches on panel 1",
-                    IDC_CHECK_SEQUENCERSWITCHLIGHTINGDISABLED,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,139,205,10
-    CONTROL         "Disable automatic checklist execution",
-                    IDC_CHECK_CHECKLISTAUTODISABLED,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,13,33,149,10
-END
-
-IDD_PAGEVIRTUALAGC DIALOG DISCARDABLE  0, 0, 232, 195
-STYLE DS_3DLOOK | WS_CHILD
-FONT 8, "MS Sans Serif"
+IDD_PAGEMISC DIALOGEX 0, 0, 232, 195
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     GROUPBOX        "Time Acceleration",IDC_STATIC,7,7,219,47
-    LTEXT           "Max. time acceleration (0=unlimited):",
-                    IDC_STATIC_TIMEACC,13,19,116,10
-    EDITTEXT        IDC_EDIT_TIMEACC,134,17,20,13,ES_RIGHT | ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    CONTROL         "Multi-Threading in time acceleration",
-                    IDC_CHECK_MULTITHREAD,"Button",BS_AUTOCHECKBOX | 
-                    BS_NOTIFY | WS_TABSTOP,13,35,150,10
+    LTEXT           "Max. time acceleration (0=unlimited):",IDC_STATIC_TIMEACC,13,19,116,10
+    EDITTEXT        IDC_EDIT_TIMEACC,134,17,20,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Multi-Threading in time acceleration",IDC_CHECK_MULTITHREAD,
+                    "Button",BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,13,35,150,10
     GROUPBOX        "Checklists",IDC_STATIC,7,57,219,42
-    CONTROL         "Slow automatic checklist execution (e.g. for demonstrations)",
-                    IDC_CHECK_VAGCCHECKLISTAUTOSLOW,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,13,83,207,10
-    CONTROL         "Enable automatic checklist execution",
-                    IDC_CHECK_VAGCCHECKLISTAUTOENABLED,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,70,149,10
+    CONTROL         "Slow automatic checklist execution (e.g. for demonstrations)",IDC_CHECK_VAGCCHECKLISTAUTOSLOW,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,83,207,10
+    CONTROL         "Enable automatic checklist execution",IDC_CHECK_VAGCCHECKLISTAUTOENABLED,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,70,149,10
+    GROUPBOX        "Other",IDC_STATIC,7,105,219,32
+    CONTROL         "Enable VC flight instruments in debug string (e.g. during PDI)",IDC_CHECK_VCINFOENABLED,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,119,206,10
 END
 
 
@@ -143,11 +107,23 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO MOVEABLE PURE 
+GUIDELINES DESIGNINFO
 BEGIN
+    IDD_MYFRAME, DIALOG
+    BEGIN
+    END
+
     IDD_PAGEVISUAL, DIALOG
     BEGIN
         RIGHTMARGIN, 230
+    END
+
+    IDD_PAGECONTROL, DIALOG
+    BEGIN
+    END
+
+    IDD_PAGEMISC, DIALOG
+    BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -159,19 +135,19 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE MOVEABLE PURE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE MOVEABLE PURE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""winresrc.h""\r\n"
     "#define IDC_STATIC              (-1)     // all static controls\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE MOVEABLE PURE 
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -179,7 +155,23 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Englisch (GB) resources
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_PAGECONTROL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PAGEMISC AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

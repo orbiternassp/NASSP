@@ -1,4 +1,4 @@
-version: 8.0-Alpha-{branch}-{build}
+version: 8.0-Beta-{branch}-{build}
 skip_tags: true
 os: Visual Studio 2017
 configuration: Release
@@ -14,6 +14,7 @@ after_build:
 - 7z a NASSP-V%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\Doc\
 - 7z a NASSP-V%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\Html\
 - 7z a NASSP-V%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\Meshes\
+- 7z a NASSP-V%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\Missions\
 - 7z a NASSP-V%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\Modules\
 - 7z a NASSP-V%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\Scenarios\
 - 7z a NASSP-V%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\Script\
@@ -27,7 +28,7 @@ artifacts:
 deploy:
 - provider: GitHub
   tag: NASSP-V$(appveyor_build_version)
-  description: V8.0 Alpha Release
+  description: V8.0 Beta Release
   auth_token:
     secure: IQ7NMbd0zOFrOgF1Kmp2i5/6C/bTng4X83G4tu9YAoYViKEvjWTPcn7r/0kKJ7M2
   artifact: NASSP

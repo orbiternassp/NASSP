@@ -40,7 +40,7 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "CollisionSDK/CollisionSDK.h"
+#include "Mission.h"
 
 #include "connector.h"
 
@@ -120,7 +120,7 @@ void LEM_ASA::Timestep(double simdt){
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
 
 	// Do we have an ASA?
-	if (lem->NoAEA) return;
+	if (!lem->pMission->HasAEA()) return;
 
 	if (IsHeaterPowered())
 	{
@@ -368,7 +368,7 @@ bool LEM_ASA::IsHeaterPowered()
 bool LEM_ASA::IsPowered()
 {
 	// Do we have an ASA?
-	if (lem->NoAEA) return false;
+	if (!lem->pMission->HasAEA()) return false;
 
 	if (lem->SCS_ASA_CB.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 	if (PowerSwitch) {
@@ -448,7 +448,6 @@ papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
 LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) {
 	lem = NULL;
 	AEAInitialized = false;
-	FlightProgram = 0;
 	PowerSwitch = 0;
 	aeaHeat = 0;
 	secaeaHeat = 0;
@@ -915,7 +914,7 @@ void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
 bool LEM_AEA::IsPowered()
 {
 	// Do we have an AEA?
-	if (lem->NoAEA) return false;
+	if (!lem->pMission->HasAEA()) return false;
 
 	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 	if (PowerSwitch) {
@@ -933,47 +932,25 @@ bool LEM_AEA::IsACPowered()
 
 bool LEM_AEA::GetTestModeFailure()
 {
-		if (!IsPowered())
-			return false;
-		AGSChannelValue40 agsval40;
-		agsval40 = OutputPorts[IO_ODISCRETES];
-		return ~agsval40[AGSTestModeFailure];
+	if (!IsPowered())
+		return false;
+	AGSChannelValue40 agsval40;
+	agsval40 = OutputPorts[IO_ODISCRETES];
+	return ~agsval40[AGSTestModeFailure];
 }
 
 void LEM_AEA::InitVirtualAGS(char *binfile)
-
 {
 	aea_engine_init(&vags, binfile, NULL);
 }
 
-void LEM_AEA::SetMissionInfo(int MissionNo)
+void LEM_AEA::SetMissionInfo(std::string ProgramName)
 {
 	if (AEAInitialized) { return; }
 
-	if (MissionNo < 13)
-	{
-		FlightProgram = 6;
-	}
-	else
-	{
-		FlightProgram = 8;
-	}
+	char binfile[100];
 
-	SetFlightProgram(FlightProgram);
-}
-
-void LEM_AEA::SetFlightProgram(int FP)
-{
-	char *binfile;
-
-	// Flight Program 6
-	binfile = "Config/ProjectApollo/FP6.bin";
-
-	if (FP == 8)	//Flight Program 8
-	{
-		binfile = "Config/ProjectApollo/FP8.bin";
-	}
-
+	sprintf_s(binfile, 100, "Config/ProjectApollo/%s.bin", ProgramName.c_str());
 	InitVirtualAGS(binfile);
 
 	AEAInitialized = true;
@@ -1020,9 +997,6 @@ void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	char fname[32], str[32], buffer[256];
 	int i;
 	int val;
-
-	//Has to be first!
-	oapiWriteScenario_int(scn, "FLIGHTPROGRAM", FlightProgram);
 
 	for (i = 0; i < AEA_MEM_ENTRIES; i++) {
 		if (ReadMemory(i, val) && (val != 0)) {
@@ -1084,12 +1058,7 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 		if (!strnicmp(line, end_str, sizeof(end_str)))
 			break;
 
-		//Has to be first!
-		if (!strnicmp(line, "FLIGHTPROGRAM", 13)) {
-			sscanf(line + 13, "%d", &FlightProgram);
-			SetFlightProgram(FlightProgram);
-		}
-		else if (!strnicmp(line, "MEM", 3)) {
+		if (!strnicmp(line, "MEM", 3)) {
 			int num, val;
 			sscanf(line + 3, "%o", &num);
 			sscanf(line + 8, "%o", &val);
@@ -1233,6 +1202,36 @@ void LEM_DEDA::LoadState(FILEHANDLE scn,char *end_str){
 		papiReadScenario_intarr(line, "SHIFTREGISTER", ShiftRegister, 9);
 		papiReadScenario_int(line, "STATE", State);
 	}
+}
+
+bool LEM_DEDA::IsPowered()
+{ 
+	if (Voltage() > 25.0)
+		return true;
+
+	return false;
+}
+
+bool LEM_DEDA::HasAnnunPower()
+{
+	if (lem->lca.GetAnnunVoltage() > 2.25)
+		return true;
+
+	return false;
+}
+bool LEM_DEDA::HasNumPower()
+{
+	if (lem->lca.GetNumericVoltage() > 25.0)
+		return true;
+
+	return false;
+}
+bool LEM_DEDA::HasIntglPower()
+{
+	if (lem->lca.GetIntegralVoltage() > 20.0)
+		return true;
+
+	return false;
 }
 
 void LEM_DEDA::KeyClick()
@@ -1410,7 +1409,7 @@ void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dst
 void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
 
 {
-	if (!IsPowered())
+	if (!IsPowered() || !HasNumPower())
 		return;
 
 	RenderThreeDigitDisplay(surf, digits, xOffset, yOffset, Adr);
@@ -1419,7 +1418,7 @@ void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yO
 void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
 
 {
-	if (!IsPowered())
+	if (!IsPowered() || !HasNumPower())
 		return;
 
 	//
@@ -1470,7 +1469,7 @@ void LEM_DEDA::DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, 
 void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
 
 {
-	if (!IsPowered())
+	if (!HasAnnunPower())
 		return;
 
 	//

@@ -16,9 +16,6 @@
     <Filter Include="yaAGC">
       <UniqueIdentifier>{0af792c1-c158-41a0-ab32-d7efe000754c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{e5b6bedd-c44d-4132-bf09-a5dc0f88c6f3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="IMFD">
       <UniqueIdentifier>{100899c2-ed1a-489d-bf47-d93b4712d124}</UniqueIdentifier>
     </Filter>
@@ -96,9 +93,6 @@
     <ClCompile Include="..\..\src_sys\powersource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\Prediction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_sys\pyro.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -165,9 +159,6 @@
     <ClCompile Include="..\..\src_sys\yaAGC\rfopen.c">
       <Filter>yaAGC</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <Filter>CollisionSDK</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp">
       <Filter>IMFD</Filter>
     </ClCompile>
@@ -217,6 +208,33 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_saturn\canard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\sce.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\csmsensors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\rhc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_csm\smjc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\IUControlDistributor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\Mission.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_saturn\IUControlSignalProcessor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\vesim.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -356,9 +374,6 @@
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h">
       <Filter>yaAGC</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h">
-      <Filter>CollisionSDK</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h">
       <Filter>IMFD</Filter>
     </ClInclude>
@@ -411,6 +426,39 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_saturn\canard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\sce.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\csmsensors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\rhc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\smjc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\IUControlDistributor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\Mission.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\IUControlSignalProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\CM_VC_Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\RF_calc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\vesim.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -47,6 +47,8 @@
 #include "s1b.h"
 #include "sm.h"
 #include "Saturn1Abort.h"
+#include "Saturn1Abort2.h"
+#include "Mission.h"
 
 //
 // Meshes are loaded globally, once, so we use these global
@@ -215,35 +217,13 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 {
 	double TCP=-54.485-TCPO;//STG0O;
 
-	double Mass = Stage1Mass + SI_FuelMass;;
-	double ro = 30;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.05;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = -cos(30 * RAD)*ro;
-	td[0].pos.y = -sin(30 * RAD)*ro;
-	td[0].pos.z = TCP;
-	td[1].pos.x = 0;
-	td[1].pos.y = 1 * ro;
-	td[1].pos.z = TCP;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = -sin(30 * RAD)*ro;
-	td[2].pos.z = TCP;
-	td[3].pos.x = 0;
-	td[3].pos.y = 0;
-	td[3].pos.z = TCP+60;
-	
-	SetTouchdownPoints(td, 4);
+	double td_mass = Stage1Mass + SI_FuelMass;
+	double td_width = 30.0;
+	double td_tdph = TCP;
+	double td_height = 60.0;
 
-	//SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.5,.5,TCP), _V(.5,.5,TCP));
-	
+	ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height, -0.05);
+
 	VECTOR3 mesh_dir=_V(0,0,offset);
 
 	AddMesh (hStage1Mesh, &mesh_dir);
@@ -257,6 +237,13 @@ void Saturn1b::SetFirstStageEngines()
 	ClearThrusters();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
+
+	//Add CSM RCS
+	if (SaturnHasCSM())
+	{
+		AddRCSJets(32.87, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 35.15, false);
+	}
 
 	// ************************* propellant specs **********************************
 	if (!ph_1st)
@@ -413,8 +400,6 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 
 		AddSM(17.05 + offset, false);
 
-		WORD CMMode = MESHVIS_VCEXTERNAL;
-
 		if (LESAttached)
 		{
 			TowerOffset = 26.15 + offset;
@@ -426,7 +411,6 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 			// If the LES is attached, no point drawing things in the external view which can't
 			// actually be seen...
 			//
-			CMMode = MESHVIS_VC;
 		}
 		else if (HasProbe)
 		{
@@ -441,7 +425,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		// otherwise the BPC is floating above the SM.
 		//
 		mesh_dir=_V(0,0,21.2 + offset);
-		meshidx = AddMesh (hCM, &mesh_dir);
+		meshidx = AddMesh (hCMnh, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		//
@@ -454,7 +438,10 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, CMMode);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		// VC
+		UpdateVC(mesh_dir);
 
 		//
 		// Don't Forget the Hatch
@@ -462,6 +449,10 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		sidehatchidx = AddMesh (hFHC, &mesh_dir);
 		sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
 		SetSideHatchMesh();
+
+		//Forward Hatch
+		fwdhatchidx = AddMesh(hFHF, &mesh_dir);
+		SetFwdHatchMesh();
 
 		// Optics Cover
 		opticscoveridx = AddMesh (hopticscover, &mesh_dir);
@@ -497,6 +488,13 @@ void Saturn1b::SetSecondStageEngines ()
 	ClearThrusters();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
+
+	//Add CSM RCS
+	if (SaturnHasCSM())
+	{
+		AddRCSJets(20.62, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 22.9, false);
+	}
 
 	//
 	// ************************* propellant specs **********************************
@@ -684,6 +682,8 @@ void Saturn1b::SeparateStage (int new_stage)
 		vs2.vrot.z = 0.0;
 		StageS.play();
 
+		CreateStageOne();
+
 		//
 		// Create S1b stage and set it up.
 		//
@@ -703,7 +703,6 @@ void Saturn1b::SeparateStage (int new_stage)
 			S1Config.RetroNum = 4;
 			S1Config.EmptyMass = SI_EmptyMass;
 			S1Config.MainFuelKg = GetPropellantMass(ph_1st);
-			S1Config.MissionTime = MissionTime;
 			S1Config.VehicleNo = VehicleNo;
 			S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
 			S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
@@ -728,7 +727,27 @@ void Saturn1b::SeparateStage (int new_stage)
 		CreateSIVBStage("ProjectApollo/nsat1stg2", vs1, false);
 
 		SeparationS.play();
+
+		// Store RCS Propellant 
+		double proptemp[6] = { -1,-1,-1,-1,-1,-1 };
+
+		if (ph_rcs_cm_1) proptemp[0] = GetPropellantMass(ph_rcs_cm_1);
+		if (ph_rcs_cm_2) proptemp[1] = GetPropellantMass(ph_rcs_cm_2);
+		if (ph_rcs0) proptemp[2] = GetPropellantMass(ph_rcs0);
+		if (ph_rcs1) proptemp[3] = GetPropellantMass(ph_rcs1);
+		if (ph_rcs2) proptemp[4] = GetPropellantMass(ph_rcs2);
+		if (ph_rcs3) proptemp[5] = GetPropellantMass(ph_rcs3);
+		ClearPropellants();
+
 		SetCSMStage();
+
+		// Restore RCS Propellant
+		if (proptemp[0] != -1) SetPropellantMass(ph_rcs_cm_1, proptemp[0]);
+		if (proptemp[1] != -1) SetPropellantMass(ph_rcs_cm_2, proptemp[1]);
+		if (proptemp[2] != -1) SetPropellantMass(ph_rcs0, proptemp[2]);
+		if (proptemp[3] != -1) SetPropellantMass(ph_rcs1, proptemp[3]);
+		if (proptemp[4] != -1) SetPropellantMass(ph_rcs2, proptemp[4]);
+		if (proptemp[5] != -1) SetPropellantMass(ph_rcs3, proptemp[5]);
 
 		ShiftCentreOfMass(_V(0, 0, 20.8));
 	}
@@ -736,9 +755,6 @@ void Saturn1b::SeparateStage (int new_stage)
 	if (stage == CSM_LEM_STAGE)
 	{
 		char VName[256];
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
 		SMJetS.play();
 
 		GetApolloName(VName); strcat (VName, "-SM");
@@ -760,8 +776,16 @@ void Saturn1b::SeparateStage (int new_stage)
 		SMConfig.MissionTime = MissionTime;
 		SMConfig.VehicleNo = VehicleNo;
 		SMConfig.LowRes = LowRes;
-		SMConfig.showHGA = !NoHGA;
+		SMConfig.showHGA = pMission->CSMHasHGA();
 		SMConfig.A13Exploded = ApolloExploded;
+		SMConfig.SIMBayPanelJett = SIMBayPanelJett;
+		SMConfig.HGAalpha = hga.GetAlpha();
+		SMConfig.HGAbeta = hga.GetBeta();
+		SMConfig.HGAgamma = hga.GetGamma();
+		SMConfig.SMBusAPowered = MainBusAController.IsSMBusPowered();
+		SMConfig.SMBusBPowered = MainBusBController.IsSMBusPowered();
+		if (secs.SMJCA) secs.SMJCA->GetState(SMConfig.SMJCAState);
+		if (secs.SMJCB) secs.SMJCB->GetState(SMConfig.SMJCBState);
 
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);
@@ -816,7 +840,7 @@ void Saturn1b::SeparateStage (int new_stage)
 			habort = oapiCreateVesselEx("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", &vs3);
 
 			Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
-			stage1->SetState(new_stage == CM_STAGE);
+			stage1->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
@@ -836,11 +860,11 @@ void Saturn1b::SeparateStage (int new_stage)
 			vs1.vrot.x = 0.0;
 			vs1.vrot.y = 0.0;
 			vs1.vrot.z = 0.0;
-		
+
 			habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
 
 			Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
-			stage1->SetState(new_stage == CM_STAGE);
+			stage1->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
@@ -861,7 +885,12 @@ void Saturn1b::SeparateStage (int new_stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
+
 		habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort2", vs1);
+
+		Sat1Abort2 *stage1 = static_cast<Sat1Abort2 *> (oapiGetVesselInterface(habort));
+		stage1->SetState(LowRes);
+
 		SetReentryStage();
 		ShiftCentreOfMass(_V(0, 0, 22.9));
 	}

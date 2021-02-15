@@ -52,6 +52,7 @@ public:
 	double GetFuelTankUllagePressurePSI();
 	double GetOxidizerTankUllagePressurePSI();
 	double GetHeliumRegulator1OutletPressurePSI();
+	double GetHeliumRegulator2OutletPressurePSI();
 	double GetFuelTrimOrificeOutletPressurePSI() { return FuelTrimOrificeOutletPressurePSI; }
 	double GetOxidTrimOrificeOutletPressurePSI() { return OxidTrimOrificeOutletPressurePSI; }
 	bool GetFuelLowLevel() { return fuelLevelLow; }
@@ -93,10 +94,14 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void Timestep(double simdt);
 
+	double GetThrustChamberPressurePSI();
+
 	LEM *lem;					// Pointer at LEM
 	bool thrustOn;
 	bool armedOn;
 	double ChamberPressure;
+	double ActuatorIsolationValve;
+	double ThrustDecay;
 };
 
 #define APSPROPELLANT_START_STRING   "APSPROPELLANT_BEGIN"

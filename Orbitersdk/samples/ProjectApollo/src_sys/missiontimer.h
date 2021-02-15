@@ -35,6 +35,7 @@
 
 class Saturn;
 class RotationalSwitch;
+class ToggleSwitch;
 
 class MissionTimer : public e_object {
 
@@ -42,7 +43,7 @@ public:
 	MissionTimer(PanelSDK &p);
 	virtual ~MissionTimer();
 
-	void Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c);
+	void Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c, ToggleSwitch *overide);
 	void Timestep(double simt, double deltat, bool persistent);
 	virtual void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent);
@@ -85,12 +86,15 @@ protected:
 	bool Running;
 	bool TimerTrash;
 	int CountUp;
+	bool ResetFlag;
+	bool ResetStatus;
 
 	//
 	// Don't need to be saved.
 	//
 
 	RotationalSwitch *DimmerRotationalSwitch;
+	ToggleSwitch *DimmerOverride;
 	PowerMerge DCPower;
 };
 

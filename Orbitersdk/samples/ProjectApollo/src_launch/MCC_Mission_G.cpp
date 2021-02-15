@@ -112,7 +112,7 @@ void MCC::MissionSequence_G()
 				}
 			}
 
-			sivb->GetIU()->dcs.Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
+			sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
 			setSubState(3);
 		}
 		break;
@@ -233,14 +233,11 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PDI_DAY_14: //PDI Abort PAD to No PDI+12 PAD
 		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 71, MST_G_LUNAR_ORBIT_PDI_DAY_15);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_15: //No PDI+12 PAD to Lunar Surface PAD 1
+	case MST_G_LUNAR_ORBIT_PDI_DAY_15: //No PDI+12 PAD to Lunar Surface PAD
 		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, rtcc->GETEval(rtcc->calcParams.SEP + 3.0*60.0) && SubStateTime > 3.0*60.0, 72, MST_G_LUNAR_ORBIT_PRE_DOI_1);
 		break;
-	case MST_G_LUNAR_ORBIT_PRE_DOI_1: //Lunar Surface PAD 1 to Lunar Surface PAD 2
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11T2ABORTPAD, SubStateTime > 3.0*60.0, 73, MST_G_LUNAR_ORBIT_PRE_DOI_2);
-		break;
-	case MST_G_LUNAR_ORBIT_PRE_DOI_2: //Lunar Surface PAD 2 to CSM Rescue PAD
-		UpdateMacro(UTP_PADONLY, PT_AP11T3ABORTPAD, SubStateTime > 3.0*60.0, 74, MST_G_LUNAR_ORBIT_PRE_DOI_3);
+	case MST_G_LUNAR_ORBIT_PRE_DOI_1: //Lunar Surface PAD to CSM Rescue PAD
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LUNSURFPAD, SubStateTime > 3.0*60.0, 73, MST_G_LUNAR_ORBIT_PRE_DOI_3);
 		break;
 	case MST_G_LUNAR_ORBIT_PRE_DOI_3: //CSM Rescue PAD to CSM P76 PADs
 		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 75, MST_G_LUNAR_ORBIT_PRE_DOI_4);
@@ -403,5 +400,16 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PRE_PDI2_1: //PDI2 PAD to
 		UpdateMacro(UTP_PADONLY, PT_AP11PDIPAD, SubStateTime > 3.0*60.0, 170, MST_G_LUNAR_ORBIT_PDI_DAY_14);
 		break;
+	case MST_G_ABORT_ORBIT:
+	{
+		if (AbortMode == 5) //Earth Orbit Abort
+		{
+			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			{
+				setState(MST_LANDING);
+			}
+		}
+	}
+	break;
 	}
 }

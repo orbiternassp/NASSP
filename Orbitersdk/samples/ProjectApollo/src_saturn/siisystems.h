@@ -53,6 +53,8 @@ public:
 	void SetSIISIVBOrdnanceArm() { SIISIVBOrdnanceArmed = true; }
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 	void SetPUValve(int state);
+	void StartPhaseLimiterCutoffArmReset() { StartPhaseLimiterCutoffArm = false; }
+	void LH2StepPressurizationReset() { LH2StepPressurization = false; }
 
 	void RecalculateEngineParameters();
 	void RecalculateEngineParameters(double BaseThrust);
@@ -60,12 +62,15 @@ public:
 	void SwitchSelector(int channel);
 
 	void SetEngineFailureParameters(bool *SIICut, double *SIICutTimes);
-	void SetEngineFailureParameters(int n, double SIICutTimes);
-	bool GetFailInit() { return FailInit; }
+	void SetEngineFailureParameters(int n, double SIICutTimes, bool fail);
+	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
 
 	void GetThrustOK(bool *ok);
 	bool GetPropellantDepletionEngineCutoff();
 	bool GetEngineOut();
+
+	//To IU
+	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }
 
 protected:
 	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
@@ -75,7 +80,16 @@ protected:
 
 	int PUValveState;
 
+	//K20
+	bool StartPhaseLimiterCutoffArm;
+	//K18 (LOX), K23 (LH2)
 	bool PointLevelSensorArmed;
+	//K16 (K37)
+	bool SICSIIEngineStartLockout;
+	//K17 (K43)
+	bool CommandEngineStart;
+	//K50
+	bool LH2StepPressurization;
 	bool PropellantDepletionSensors;
 	bool UllageTrigger;
 	bool OrdnanceArmed;
@@ -86,7 +100,8 @@ protected:
 	bool EarlySIICutoff[5];
 	double SecondStageFailureTime[5];
 	double FailureTimer;
-	bool FailInit;
+
+	double LH2TankUllagePressurePSI;
 
 	VESSEL *vessel;
 	J2Engine j2engine1;

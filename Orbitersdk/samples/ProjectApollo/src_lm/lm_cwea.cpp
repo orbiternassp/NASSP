@@ -44,27 +44,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 	Operate = false;
-
-	//Logic states
-	AutoTrackChanged = true;
-	RRHeaterPrev = false;
-	SBDHeaterPrev = false;
-	QD1HeaterPrev = false;
-	QD2HeaterPrev = false;
-	QD3HeaterPrev = false;
-	QD4HeaterPrev = false;
-
-	//Initialize all FF's as "reset"
-	DesRegWarnFF = 0;
-	AGSWarnFF = 0;
-	CESDCWarnFF = 0;
-	CESACWarnFF = 0;
-	RCSCautFF1 = 0; RCSCautFF2 = 0;
-	RRHeaterCautFF = 0; SBDHeaterCautFF = 0; QD1HeaterCautFF = 0; QD2HeaterCautFF = 0; QD3HeaterCautFF = 0; QD4HeaterCautFF = 0;
-	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
-	WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
-	RRCautFF = 0;
-	SBDCautFF = 0;
+	ECSFailureCount = 0;
 }
 
 void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah, h_HeatLoad *seccweah) {
@@ -170,13 +150,15 @@ void LEM_CWEA::Timestep(double simdt) {
 		// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 		// Pressure in descent helium lines downstream of the regulators is above 259.1 psia or below 219.2 psia.
 		lightlogic = false;
-		if (lem->scera1.GetVoltage(3, 9) > 2.5 || lem->eds.GetHeliumPressDelayContactClosed()) { DesRegWarnFF = 1; }
+
+		DesRegWarnFF.Set(lem->scera1.GetVoltage(3, 9) > 2.5 || lem->eds.GetHeliumPressDelayContactClosed());
+		DesRegWarnFF.Reset(false);
 
 		if (lem->stage < 2 && (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 259.1 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 219.2)) { 
 				lightlogic = true; //Pressure is default at 245 so this will not be true until He MP is simulated
 		}
 
-		if (lightlogic && DesRegWarnFF == 1) {
+		if (lightlogic && DesRegWarnFF.IsSet()) {
 			SetLight(2, 0, 1);
 		}
 		else
@@ -199,10 +181,10 @@ void LEM_CWEA::Timestep(double simdt) {
 		// This power is provided by the ATCA main power supply and spins the RGAs and operate the AEA reference.
 		// Disabled by Gyro Test Control in POS RT or NEG RT position.
 		// Needs RGA data
-		if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESACWarnFF = 0; }
-		else if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESACWarnFF = 1; }
+		CESACWarnFF.Set(lem->SCS_ATCA_CB.Voltage() < 24.0);
+		CESACWarnFF.Reset(lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER);
 
-		if (CESACWarnFF == 1)
+		if (CESACWarnFF.IsSet())
 			SetLight(0, 1, 1);
 		else
 			SetLight(0, 1, 0);
@@ -212,10 +194,10 @@ void LEM_CWEA::Timestep(double simdt) {
 		// All of these are provided by the ATCA main power supply.
 		// Disabled by Gyro Test Control in POS RT or NEG RT position.
 		// Needs RGA data
-		if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESDCWarnFF = 0; }
-		else if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESDCWarnFF = 1; }
+		CESDCWarnFF.Set(lem->SCS_ATCA_CB.Voltage() < 24.0);
+		CESDCWarnFF.Reset(lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER);
 
-		if (CESDCWarnFF == 1)
+		if (CESDCWarnFF.IsSet())
 			SetLight(1, 1, 1);
 		else
 			SetLight(1, 1, 0);
@@ -224,8 +206,8 @@ void LEM_CWEA::Timestep(double simdt) {
 		// On when any ASA power supply signals a failure, when AGS raises failure signal, or ASA overtemp.
 		// Disabled when AGS status switch is OFF.
 		lightlogic = false;
-		if (lem->QtyMonRotary.GetState() == 0) { AGSWarnFF = 0; }
-		else if (lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) { AGSWarnFF = 1; } // AEA Test Mode Fail
+		AGSWarnFF.Set(lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN);
+		AGSWarnFF.Reset(lem->QtyMonRotary.GetState() == 0);
 
 		if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
 			if (lem->scera1.GetVoltage(15, 4) > (13.2 / 2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC **Open circuit by overtemp condition**
@@ -233,7 +215,7 @@ void LEM_CWEA::Timestep(double simdt) {
 			if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
 		}
 
-		if (lightlogic || AGSWarnFF == 1)
+		if (lightlogic || AGSWarnFF.IsSet())
 			SetLight(2, 1, 1);
 		else
 			SetLight(2, 1, 0);
@@ -317,8 +299,8 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS22 ASCENT PROPELLANT LOW QUANTITY CAUTION
 		// On when less than 10 seconds of ascent propellant/oxidizer remains, <= 2.2%
 		// Disabled when ascent engine is not firing.
-		if (lem->APS.thrustOn && (lem->scera2.GetVoltage(2, 6) > 2.5 || lem->scera2.GetVoltage(2, 7) > 2.5)) {
-				SetLight(1, 4, 1);
+		if (lem->scera2.GetVoltage(2, 10) > 2.5 && (lem->scera2.GetVoltage(2, 6) > 2.5 || lem->scera2.GetVoltage(2, 7) > 2.5)) {
+			SetLight(1, 4, 1);
 		}
 		else
 			SetLight(1, 4, 0);
@@ -357,18 +339,16 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 		// On when RR indicates Data-Not-Good.
 		// Disabled when RR mode switch is not set to AUTO TRACK.
-		if (lem->RendezvousRadarRotary.GetState() != 0) { AutoTrackChanged = 1;}
+		RRCautFF.Set(lem->scera2.GetVoltage(2, 5) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0);
+		RRCautFF.Reset(lem->RendezvousRadarRotary.GetState() == 0);
 
-		if (lem->RendezvousRadarRotary.GetState() == 0 && AutoTrackChanged == 1) { RRCautFF = 0; AutoTrackChanged = 0; }
-		else if (RRCautFF == 0 && lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
-
-		if (RRCautFF == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
+		if (RRCautFF.IsSet() && lem->scera2.GetVoltage(2, 5) >= 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
 			SetLight(2, 5, 1);
 		}
 		else
 			SetLight(2, 5, 0);
 
-		//sprintf(oapiDebugString(), "RRC %i ATC %i SCV %lf", RRCautFF, AutoTrackChanged, lem->scera2.GetVoltage(2, 1));
+		//sprintf(oapiDebugString(), "RRC %i FFS %i FFR %i SCV %lf", RRCautFF.IsSet(), RRCautFF.GetSInput(), RRCautFF.GetRInput(), lem->scera2.GetVoltage(2, 5));
 
 		// 6DS29 LANDING RADAR 
 		// Was not present on LM-7 thru LM-9!  **What about LM 3-5?  Unlikely but need to research**
@@ -400,13 +380,12 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS32 RCS FAILURE CAUTION
 		// On when helium pressure in either RCS system below 1700 psia.
 		// Disabled when RCS TEMP/PRESS MONITOR switch in HELIUM position.
-		if (lem->TempPressMonRotary.GetState() == 0) { RCSCautFF1 = 0; }
-		else if (lem->scera1.GetVoltage(6, 1) < (1696.1 / 700.0)) { RCSCautFF1 = 1; }
+		RCSCautFF1.Set(lem->scera1.GetVoltage(6, 1) < 2.423);
+		RCSCautFF1.Reset(lem->TempPressMonRotary.GetState() == 0);
+		RCSCautFF2.Set(lem->scera1.GetVoltage(6, 2) < 2.423);
+		RCSCautFF2.Reset(lem->TempPressMonRotary.GetState() == 0);
 
-		if (lem->TempPressMonRotary.GetState() == 0) { RCSCautFF2 = 0; }
-		else if (lem->scera1.GetVoltage(6, 2) < (1696.1 / 700.0)) { RCSCautFF2 = 1; }
-
-		if (RCSCautFF1 == 1 || RCSCautFF2 == 1)
+		if (RCSCautFF1.IsSet() || RCSCautFF2.IsSet())
 			SetLight(1, 6, 1);
 		else
 			SetLight(1, 6, 0);
@@ -416,73 +395,32 @@ void LEM_CWEA::Timestep(double simdt) {
 		// LR temp cut and capped from CW logic
 
 		// RR Assembly < -54.07F or > 147.69F
-		bool RRHeaterLogic = false;
-
-		if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterLogic = 1; }
-		else { RRHeaterLogic = 0; }
-
-		if (RRHeaterPrev == 0 && RRHeaterLogic == 1) { RRHeaterCautFF = 1; }
-		RRHeaterPrev = RRHeaterLogic;
-
-		if (lem->TempMonitorRotary.GetState() == 0 && RRHeaterCautFF == 1) { RRHeaterCautFF = 0; }
+		RRHeaterCautFF.Set(lem->scera1.GetVoltage(21, 4) < 1.869 || lem->scera1.GetVoltage(21, 4) > 4.361);
+		RRHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 0);
 
 		// RCS Quads < 118.8F  or > 190.5F, cut and capped on LM-8 and subsequent
 		//Quad 1
-		bool QD1HeaterLogic = false;
-
-		if ((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->scera1.GetVoltage(20, 4) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 4) > ((190.5 - 20.0) / 36.0)) { QD1HeaterLogic = 1; }
-		else { QD1HeaterLogic = 0; }
-
-		if (QD1HeaterPrev == 0 && QD1HeaterLogic == 1) { QD1HeaterCautFF = 1; }
-		QD1HeaterPrev = QD1HeaterLogic;
-
-		if (lem->TempMonitorRotary.GetState() == 2 && QD1HeaterCautFF == 1) { QD1HeaterCautFF = 0; }
+		QD1HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 4) < 2.79 || lem->scera1.GetVoltage(20, 4) > 4.725));
+		QD1HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 2);
 
 		//Quad 2
-		bool QD2HeaterLogic = false;
-
-		if ((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->scera1.GetVoltage(20, 3) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 3) > ((190.5 - 20.0) / 36.0)) { QD2HeaterLogic = 1; }
-		else { QD2HeaterLogic = 0; }
-
-		if (QD2HeaterPrev == 0 && QD2HeaterLogic == 1) { QD2HeaterCautFF = 1; }
-		QD2HeaterPrev = QD2HeaterLogic;
-
-		if (lem->TempMonitorRotary.GetState() == 3 && QD2HeaterCautFF == 1) { QD2HeaterCautFF = 0; }
+		QD2HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 3) < 2.79 || lem->scera1.GetVoltage(20, 3) > 4.725));
+		QD2HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 3);
 
 		//Quad 3
-		bool QD3HeaterLogic = false;
-
-		if ((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->scera1.GetVoltage(20, 2) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 2) > ((190.5 - 20.0) / 36.0)) { QD3HeaterLogic = 1; }
-		else { QD3HeaterLogic = 0; }
-
-		if (QD3HeaterPrev == 0 && QD3HeaterLogic == 1) { QD3HeaterCautFF = 1; }
-		QD3HeaterPrev = QD3HeaterLogic;
-
-		if (lem->TempMonitorRotary.GetState() == 4 && QD3HeaterCautFF == 1) { QD3HeaterCautFF = 0; }
+		QD3HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 2) < 2.79 || lem->scera1.GetVoltage(20, 2) > 4.725));
+		QD3HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 4);
 
 		//Quad 4
-		bool QD4HeaterLogic = false;
-
-		if ((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->scera1.GetVoltage(20, 1) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 1) > ((190.5 - 20.0) / 36.0)) { QD4HeaterLogic = 1; }
-		else { QD4HeaterLogic = 0; }
-
-		if (QD4HeaterPrev == 0 && QD4HeaterLogic == 1) { QD4HeaterCautFF = 1; }
-		QD4HeaterPrev = QD4HeaterLogic;
-
-		if (lem->TempMonitorRotary.GetState() == 5 && QD4HeaterCautFF == 1) { QD4HeaterCautFF = 0; }
+		QD4HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 1) < 2.79 || lem->scera1.GetVoltage(20, 1) > 4.725));
+		QD4HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 5);
 
 		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
-		bool SBDHeaterLogic = false;
-
-		if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterLogic = 1; }
-
-		if (SBDHeaterPrev == 0 && SBDHeaterLogic == 1) { SBDHeaterCautFF = 1; }
-		SBDHeaterPrev = SBDHeaterLogic;
-
-		if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 0; }
+		SBDHeaterCautFF.Set(lem->scera2.GetVoltage(21, 2) < 1.743 || lem->scera2.GetVoltage(21, 2) > 4.421);
+		SBDHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 6);
 
 		//Set CW Light
-		if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1 || QD1HeaterCautFF == 1 || QD2HeaterCautFF == 1 || QD3HeaterCautFF == 1 || QD4HeaterCautFF == 1)
+		if (RRHeaterCautFF.IsSet() || SBDHeaterCautFF.IsSet() || QD1HeaterCautFF.IsSet() || QD2HeaterCautFF.IsSet() || QD3HeaterCautFF.IsSet() || QD4HeaterCautFF.IsSet())
 			SetLight(2, 6, 1);
 		else
 			SetLight(2, 6, 0);
@@ -501,12 +439,23 @@ void LEM_CWEA::Timestep(double simdt) {
 		// Restoration of normal water separator speed
 		// Selection of #2 suit fan
 		lightlogic = false;
-		if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6 / 6.0)) { lightlogic = true; }	// CO2 Partial Pressure > 7.6mm
+		if (lem->ecs.GetSensorCO2MMHg() >= 7.6) { lightlogic = true;}	// CO2 Partial Pressure > 7.6mm
 		if (lem->scera2.GetVoltage(13, 3) > 2.5) { lightlogic = true; } // Glycol pump failure
 		if (lem->scera2.GetVoltage(3, 2) > 2.5) { lightlogic = true; } // Suit fan 1 failure
-		if (lem->scera1.GetVoltage(5, 3) < (792.5 / 720.0)) { lightlogic = true; } // Water separator failure
+		if (lem->ecs.GetWaterSeparatorRPM() < 792.5) { lightlogic = true; } // Water separator failure
 
+		// To avoid spurious alarms because of fluctuation at high time accelerations
+		// the "bad" condition has to last for a few check counts.
 		if (lightlogic)
+		{
+			if (ECSFailureCount < 20) ECSFailureCount++;
+		}
+		else
+		{
+			ECSFailureCount = 0;
+		}
+
+		if (lightlogic && ECSFailureCount >= 20)
 			SetLight(0, 7, 1);
 		else
 			SetLight(0, 7, 0);
@@ -516,16 +465,20 @@ void LEM_CWEA::Timestep(double simdt) {
 		// < 135 psia in descent oxygen tank, or Less than full (<682.4 / 681.6 psia) ascent oxygen tanks, WHEN NOT STAGED
 		// Less than 99.6 psia in ascent oxygen tank #1
 		// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
-		if (lem->QtyMonRotary.GetState() == 0) { OxygenCautFF1 = 0; }
-		else if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 1) < (681.6 / 200.0) || lem->scera1.GetVoltage(7, 2) < (682.4 / 200.0))) { OxygenCautFF1 = 1; } // Unstaged less than full ASC tanks
 
-		if (lem->QtyMonRotary.GetState() == 0) { OxygenCautFF2 = 0; }
-		else if (lem->stage < 2 && (lem->scera2.GetVoltage(8, 2) < (135.0 / 600.0))) { OxygenCautFF2 = 1; } // Unstaged low DES tank
+		// Unstaged less than full ASC tanks
+		OxygenCautFF1.Set(lem->scera1.GetVoltage(7, 1) < 3.408 || lem->scera1.GetVoltage(7, 2) < 3.408);
+		OxygenCautFF1.Reset(lem->QtyMonRotary.GetState() == 0);
 
-		if (lem->QtyMonRotary.GetState() == 0) { OxygenCautFF3 = 0; }
-		else if (lem->scera1.GetVoltage(7, 1) < (99.6 / 200.0)) { OxygenCautFF3 = 1; } // Low ASC tank 1
+		// Unstaged low DES tank
+		OxygenCautFF2.Set(lem->scera2.GetVoltage(8, 1) < 2.22);
+		OxygenCautFF2.Reset(lem->QtyMonRotary.GetState() == 0);
 
-		if (OxygenCautFF1 == 1 || OxygenCautFF2 == 1 || OxygenCautFF3 == 1)
+		// Low ASC tank 1
+		OxygenCautFF3.Set(lem->scera1.GetVoltage(7, 1) < 0.498);
+		OxygenCautFF3.Reset(lem->QtyMonRotary.GetState() == 0);
+
+		if ((lem->stage < 2 && (OxygenCautFF2.IsSet() || OxygenCautFF1.IsSet())) || OxygenCautFF3.IsSet())
 			SetLight(1, 7, 1);
 		else
 			SetLight(1, 7, 0);
@@ -547,16 +500,16 @@ void LEM_CWEA::Timestep(double simdt) {
 		// NOT STAGED: Descent water tank < 15.94% or < 94.78% in either ascent tank
 		// Unequal levels in either ascent tank
 		// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
-		if (lem->QtyMonRotary.GetState() == 0) { WaterCautFF1 = 0; }
-		else if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 3) < (0.1594 / 0.2))) { WaterCautFF1 = 1; } // Unstaged, DES tank < 15.94%
+		WaterCautFF1.Set(lem->scera1.GetVoltage(7, 3) < 0.799);
+		WaterCautFF1.Reset(lem->QtyMonRotary.GetState() == 0);
 
-		if (lem->QtyMonRotary.GetState() == 0) { WaterCautFF2 = 0; }
-		else if (lem->stage < 2 && (lem->scera1.GetVoltage(8, 1) < (0.9478 / 0.2) || lem->scera1.GetVoltage(8, 2) < (0.9478 / 0.2))) { WaterCautFF2 = 1; } // Unstaged, ASC tank < 94.78%
+		WaterCautFF2.Set(lem->scera1.GetVoltage(8, 1) < 4.739 || lem->scera1.GetVoltage(8, 2) < 4.739);
+		WaterCautFF2.Reset(lem->QtyMonRotary.GetState() == 0);
 
-		if (lem->QtyMonRotary.GetState() == 0) { WaterCautFF3 = 0; }
-		else if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15) { WaterCautFF3 = 1; } // Staged ASC tank unbalance
+		WaterCautFF3.Set((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15);
+		WaterCautFF3.Reset(lem->QtyMonRotary.GetState() == 0);
 
-		if (WaterCautFF1 == 1 || WaterCautFF2 == 1 || WaterCautFF3 == 1)
+		if ((lem->stage < 2 && (WaterCautFF1.IsSet() || WaterCautFF2.IsSet())) || WaterCautFF3.IsSet())
 			SetLight(3, 7, 1);
 		else
 			SetLight(3, 7, 0);
@@ -565,10 +518,10 @@ void LEM_CWEA::Timestep(double simdt) {
 		// On when reciever signal lost.
 		// Off when Range/TV function switch to OFF/RESET
 		// Disabled when Range/TV switch is not in TV/CWEA ENABLE position
-		if (lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_CENTER) { SBDCautFF = 0; }
-		else if (lem->scera1.GetVoltage(5, 4) < 1.071) { SBDCautFF = 1; }
+		SBDCautFF.Set(lem->scera1.GetVoltage(5, 4) < 1.071);
+		SBDCautFF.Reset(lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_CENTER);
 
-		if (lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_DOWN && SBDCautFF == 1)
+		if (lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_DOWN && SBDCautFF.IsSet())
 			SetLight(4, 7, 1);
 		else
 			SetLight(4, 7, 0);
@@ -663,26 +616,36 @@ void LEM_CWEA::TurnOn()
 
 	if (!Operate)
 	{
-		DesRegWarnFF = 0;
-		AGSWarnFF = 0;
-		CESDCWarnFF = 0;
-		CESACWarnFF = 0;
-		RCSCautFF1 = 0; RCSCautFF2 = 0;
-		RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
-		OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
-		WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
-		RRCautFF = 0;
-		SBDCautFF = 0;
+		DesRegWarnFF.HardReset();
+		AGSWarnFF.HardReset();
+		CESDCWarnFF.HardReset();
+		CESACWarnFF.HardReset();
+		RCSCautFF1.HardReset();
+		RCSCautFF2.HardReset();
+		RRHeaterCautFF.HardReset();
+		SBDHeaterCautFF.HardReset();
+		QD1HeaterCautFF.HardReset();
+		QD2HeaterCautFF.HardReset();
+		QD3HeaterCautFF.HardReset();
+		QD4HeaterCautFF.HardReset();
+		OxygenCautFF1.HardReset();
+		OxygenCautFF2.HardReset();
+		OxygenCautFF3.HardReset();
+		WaterCautFF1.HardReset();
+		WaterCautFF2.HardReset();
+		WaterCautFF3.HardReset();
+		RRCautFF.HardReset();
+		SBDCautFF.HardReset();
 
 		//Reset TCA FF's
-		lem->tca1A.GetTCAFailureFlipFlop()->Reset();
-		lem->tca1B.GetTCAFailureFlipFlop()->Reset();
-		lem->tca2A.GetTCAFailureFlipFlop()->Reset();
-		lem->tca2B.GetTCAFailureFlipFlop()->Reset();
-		lem->tca3A.GetTCAFailureFlipFlop()->Reset();
-		lem->tca3B.GetTCAFailureFlipFlop()->Reset();
-		lem->tca4A.GetTCAFailureFlipFlop()->Reset();
-		lem->tca4B.GetTCAFailureFlipFlop()->Reset();
+		lem->tca1A.Reset();
+		lem->tca1B.Reset();
+		lem->tca2A.Reset();
+		lem->tca2B.Reset();
+		lem->tca3A.Reset();
+		lem->tca3B.Reset();
+		lem->tca4A.Reset();
+		lem->tca4B.Reset();
 
 		Operate = true;
 	}
@@ -703,38 +666,32 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 
 	papiWriteScenario_bool(scn, "OPERATE", Operate);
 	papiWriteScenario_bool(scn, "MASTERALARM", MasterAlarm);
-	papiWriteScenario_bool(scn, "DESREGWARNFF", DesRegWarnFF);
-	papiWriteScenario_bool(scn, "AGSWARNFF", AGSWarnFF);
-	papiWriteScenario_bool(scn, "CESDCWARNFF", CESDCWarnFF);
-	papiWriteScenario_bool(scn, "CESACWARNFF", CESACWarnFF);
-	papiWriteScenario_bool(scn, "RCSCAUTFF1", RCSCautFF1);
-	papiWriteScenario_bool(scn, "RCSCAUTFF2", RCSCautFF2);
-	papiWriteScenario_bool(scn, "RRHEATERCAUTFF", RRHeaterCautFF);
-	papiWriteScenario_bool(scn, "SBDHEATERCAUTFF", SBDHeaterCautFF);
-	papiWriteScenario_bool(scn, "QD1HEATERCAUTFF", QD1HeaterCautFF);
-	papiWriteScenario_bool(scn, "QD2HEATERCAUTFF", QD2HeaterCautFF);
-	papiWriteScenario_bool(scn, "QD3HEATERCAUTFF", QD3HeaterCautFF);
-	papiWriteScenario_bool(scn, "QD4HEATERCAUTFF", QD4HeaterCautFF);
-	papiWriteScenario_bool(scn, "OXYGENCAUTFF1", OxygenCautFF1);
-	papiWriteScenario_bool(scn, "OXYGENCAUTFF2", OxygenCautFF2);
-	papiWriteScenario_bool(scn, "OXYGENCAUTFF3", OxygenCautFF3);
-	papiWriteScenario_bool(scn, "WATERCAUTFF1", WaterCautFF1);
-	papiWriteScenario_bool(scn, "WATERCAUTFF2", WaterCautFF2);
-	papiWriteScenario_bool(scn, "WATERCAUTFF3", WaterCautFF3);
-	papiWriteScenario_bool(scn, "RRCAUTFF", RRCautFF);
-	papiWriteScenario_bool(scn, "SBDCAUTFF", SBDCautFF);
-	papiWriteScenario_bool(scn, "AUTOTRACKCHANGED", AutoTrackChanged);
-	papiWriteScenario_bool(scn, "RRHEATERPREV", RRHeaterPrev);
-	papiWriteScenario_bool(scn, "SBDHEATERPREV", SBDHeaterPrev);
-	papiWriteScenario_bool(scn, "QD1HEATERPREV", QD1HeaterPrev);
-	papiWriteScenario_bool(scn, "QD2HEATERPREV", QD2HeaterPrev);
-	papiWriteScenario_bool(scn, "QD3HEATERPREV", QD3HeaterPrev);
-	papiWriteScenario_bool(scn, "QD4HEATERPREV", QD4HeaterPrev);
+	CESDCWarnFF.SaveState(scn, "CESDCWARNFF");
+	CESACWarnFF.SaveState(scn, "CESACWARNFF");
+	RRCautFF.SaveState(scn, "RRCAUTFF");
+	DesRegWarnFF.SaveState(scn, "DESREGWARNFF");
+	AGSWarnFF.SaveState(scn, "AGSWARNFF");
+	RCSCautFF1.SaveState(scn, "RCSCAUTFF1");
+	RCSCautFF2.SaveState(scn, "RCSCAUTFF2");
+	RRHeaterCautFF.SaveState(scn, "RRHEATERCAUTFF");
+	SBDHeaterCautFF.SaveState(scn, "SBDHEATERCAUTFF");
+	QD1HeaterCautFF.SaveState(scn, "QD1HEATERCAUTFF");
+	QD2HeaterCautFF.SaveState(scn, "QD2HEATERCAUTFF");
+	QD3HeaterCautFF.SaveState(scn, "QD3HEATERCAUTFF");
+	QD4HeaterCautFF.SaveState(scn, "QD4HEATERCAUTFF");
+	SBDCautFF.SaveState(scn, "SBDCAUTFF");
+	WaterCautFF1.SaveState(scn, "WATERCAUTFF1");
+	WaterCautFF2.SaveState(scn, "WATERCAUTFF2");
+	WaterCautFF3.SaveState(scn, "WATERCAUTFF3");
+	OxygenCautFF1.SaveState(scn, "OXYGENCAUTFF1");
+	OxygenCautFF2.SaveState(scn, "OXYGENCAUTFF2");
+	OxygenCautFF3.SaveState(scn, "OXYGENCAUTFF3");
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS4", &LightStatus[4][0], 8);
+	oapiWriteScenario_int(scn, "ECSFAILURECOUNT", ECSFailureCount);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -748,40 +705,75 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 			return;
 		}
 
+		if (!strnicmp(line, "CESDCWARNFF", 11)) {
+			CESDCWarnFF.LoadState(line, 11);
+		}
+		else if (!strnicmp(line, "CESACWARNFF", 11)) {
+			CESACWarnFF.LoadState(line, 11);
+		}
+		else if (!strnicmp(line, "RRCAUTFF", 8)) {
+			RRCautFF.LoadState(line, 8);
+		}
+		else if (!strnicmp(line, "DESREGWARNFF", 12)) {
+			DesRegWarnFF.LoadState(line, 12);
+		}
+		else if (!strnicmp(line, "AGSWARNFF", 9)) {
+			AGSWarnFF.LoadState(line, 9);
+		}
+		else if (!strnicmp(line, "RCSCAUTFF1", 10)) {
+			RCSCautFF1.LoadState(line, 10);
+		}
+		else if (!strnicmp(line, "RCSCAUTFF2", 10)) {
+			RCSCautFF2.LoadState(line, 10);
+		}
+		else if (!strnicmp(line, "RRHEATERCAUTFF", 14)) {
+			RRHeaterCautFF.LoadState(line, 14);
+		}
+		else if (!strnicmp(line, "SBDHEATERCAUTFF", 15)) {
+			SBDHeaterCautFF.LoadState(line, 15);
+		}
+		else if (!strnicmp(line, "QD1HEATERCAUTFF", 15)) {
+			QD1HeaterCautFF.LoadState(line, 15);
+		}
+		else if (!strnicmp(line, "QD2HEATERCAUTFF", 15)) {
+			QD2HeaterCautFF.LoadState(line, 15);
+		}
+		else if (!strnicmp(line, "QD3HEATERCAUTFF", 15)) {
+			QD3HeaterCautFF.LoadState(line, 15);
+		}
+		else if (!strnicmp(line, "QD4HEATERCAUTFF", 15)) {
+			QD4HeaterCautFF.LoadState(line, 15);
+		}
+		else if (!strnicmp(line, "SBDCAUTFF", 9)) {
+			SBDCautFF.LoadState(line, 9);
+		}
+		else if (!strnicmp(line, "WATERCAUTFF1", 12)) {
+			WaterCautFF1.LoadState(line, 12);
+		}
+		else if (!strnicmp(line, "WATERCAUTFF2", 12)) {
+			WaterCautFF2.LoadState(line, 12);
+		}
+		else if (!strnicmp(line, "WATERCAUTFF3", 12)) {
+			WaterCautFF3.LoadState(line, 12);
+		}
+		else if (!strnicmp(line, "OXYGENCAUTFF1", 13)) {
+			OxygenCautFF1.LoadState(line, 13);
+		}
+		else if (!strnicmp(line, "OXYGENCAUTFF2", 13)) {
+			OxygenCautFF2.LoadState(line, 13);
+		}
+		else if (!strnicmp(line, "OXYGENCAUTFF3", 13)) {
+			OxygenCautFF3.LoadState(line, 13);
+		}
+
 		papiReadScenario_bool(line, "OPERATE", Operate);
 		papiReadScenario_bool(line, "MASTERALARM", MasterAlarm);
-		papiReadScenario_bool(line, "DESREGWARNFF", DesRegWarnFF);
-		papiReadScenario_bool(line, "AGSWARNFF", AGSWarnFF);
-		papiReadScenario_bool(line, "CESDCWARNFF", CESDCWarnFF);
-		papiReadScenario_bool(line, "CESACWARNFF", CESACWarnFF);
-		papiReadScenario_bool(line, "RCSCAUTFF1", RCSCautFF1);
-		papiReadScenario_bool(line, "RCSCAUTFF2", RCSCautFF2);
-		papiReadScenario_bool(line, "RRHEATERCAUTFF", RRHeaterCautFF);
-		papiReadScenario_bool(line, "SBDHEATERCAUTFF", SBDHeaterCautFF);
-		papiReadScenario_bool(line, "QD1HEATERCAUTFF", QD1HeaterCautFF);
-		papiReadScenario_bool(line, "QD2HEATERCAUTFF", QD2HeaterCautFF);
-		papiReadScenario_bool(line, "QD3HEATERCAUTFF", QD3HeaterCautFF);
-		papiReadScenario_bool(line, "QD4HEATERCAUTFF", QD4HeaterCautFF);
-		papiReadScenario_bool(line, "OXYGENCAUTFF1", OxygenCautFF1);
-		papiReadScenario_bool(line, "OXYGENCAUTFF2", OxygenCautFF2);
-		papiReadScenario_bool(line, "OXYGENCAUTFF3", OxygenCautFF3);
-		papiReadScenario_bool(line, "WATERCAUTFF1", WaterCautFF1);
-		papiReadScenario_bool(line, "WATERCAUTFF2", WaterCautFF2);
-		papiReadScenario_bool(line, "WATERCAUTFF3", WaterCautFF3);
-		papiReadScenario_bool(line, "RRCAUTFF", RRCautFF);
-		papiReadScenario_bool(line, "SBDCAUTFF", SBDCautFF);
-		papiReadScenario_bool(line, "AUTOTRACKCHANGED", AutoTrackChanged);
-		papiReadScenario_bool(line, "RRHEATERPREV", RRHeaterPrev);
-		papiReadScenario_bool(line, "SBDHEATERPREV", SBDHeaterPrev);
-		papiReadScenario_bool(line, "QD1HEATERPREV", QD1HeaterPrev);
-		papiReadScenario_bool(line, "QD2HEATERPREV", QD2HeaterPrev);
-		papiReadScenario_bool(line, "QD3HEATERPREV", QD3HeaterPrev);
-		papiReadScenario_bool(line, "QD4HEATERPREV", QD4HeaterPrev);
 		papiReadScenario_intarr(line, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS4", &LightStatus[4][0], 8);
+		papiReadScenario_int(line, "ECSFAILURECOUNT", ECSFailureCount);
 	}
 }
 
@@ -896,6 +888,9 @@ void LEM_CWEA::SetLight(int row, int column, int state, bool TriggerMA)
 	//
 	// Turn on Master Alarm if a new light is lit.
 	//
+
+	//For debugging
+	//if (state == 0) return;
 
 	if (state && !LightStatus[row][column]) {
 		if (TriggerMA) {

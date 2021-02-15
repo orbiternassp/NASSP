@@ -127,7 +127,7 @@ public:
 	void SetInputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
 
-	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
+	void SetMissionInfo(std::string ProgramName, char *OtherVessel = 0);
 
 	VESSEL *GetLM();
 protected:
@@ -139,8 +139,6 @@ protected:
 	void ProcessChannel11(ChannelValue val);
 	// DS20060226 TVC / Optics
 	void ProcessChannel14(ChannelValue val);
-	void ProcessChannel140(ChannelValue val);
-	void ProcessChannel141(ChannelValue val);
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	void ProcessIMUCDUReadCount(int channel, int val);
@@ -175,10 +173,9 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
-	void CMCShaftDrive(int val, int ch12);                          // CMC pulses
-	void CMCTrunionDrive(int val, int ch12); 
 	bool PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits);		// Update panel image
 	bool PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
+	void OpticsSwitchToggled();
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -194,10 +191,6 @@ public:
 	double OpticsShaft;												// Shaft Position
 	double SextTrunion;												// SXT Trunion
 	double TeleTrunion;												// SCT Trunion
-	double TargetShaft;												// Reserved
-	double TargetTrunion;											// Reserved
-	double ShaftMoved;												// Movement counters for manual mode
-	double TrunionMoved;
 	double dShaft;
 	double dTrunion;
 	bool SextDualView;												// Toggle logical for sextant dual-view

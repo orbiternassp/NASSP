@@ -22,10 +22,37 @@
 
   **************************************************************************/
 
+#pragma once
+
+#include "soundlib.h"
+#include "IUUmbilicalInterface.h"
+#include "TSMUmbilicalInterface.h"
+#include "LCCPadInterface.h"
+
+class Saturn;
+class IUUmbilical;
+class TSMUmbilical;
+class IUSV_ESE;
+class SIC_ESE;
+class RCA110AM;
+
+const double ML_SIC_INTERTANK_ARM_CONNECTING_SPEED = 1.0 / 300.0;
+const double ML_SIC_INTERTANK_ARM_RETRACT_SPEED = 1.0 / 13.0;
+const double ML_SIC_FORWARD_ARM_CONNECTING_SPEED = 1.0 / 300.0;
+const double ML_SIC_FORWARD_ARM_RETRACT_SPEED = 1.0 / 5.2;
+const double ML_SWINGARM_CONNECTING_SPEED = 1.0 / 200.0;
+const double ML_SWINGARM_RETRACT_SPEED = 1.0 / 5.0;
+const double ML_TAIL_SERVICE_MAST_CONNECTING_SPEED = 1.0 / 100.0;
+const double ML_TAIL_SERVICE_MAST_RETRACT_SPEED = 1.0 / 2.0;
+const double ML_TAIL_SERVICE_MAST_COVERS_CONNECTING_SPEED = 1.0 / 100.0;
+const double ML_TAIL_SERVICE_MAST_COVERS_RETRACT_SPEED = 1.0 / 1;
+const double DAMPERARM_CONNECTING_SPEED = 1.0 / 1000.0;
+const double DAMPERARM_RETRACT_SPEED = 1.0 / 30.0;
+
 ///
 /// \ingroup Ground
 ///
-class ML: public VESSEL2 {
+class ML: public VESSEL2, public IUUmbilicalInterface, public TSMUmbilicalInterface, public LCCPadInterface {
 
 public:
 	ML(OBJHANDLE hObj, int fmodel);
@@ -46,6 +73,34 @@ public:
 	virtual bool Attach();
 	virtual bool IsInVAB(); 
 
+	// ML/IU Interface
+	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
+	bool ESEGetSICOutboardEnginesCantInhibit();
+	bool ESEGetSICOutboardEnginesCantSimulate();
+	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	bool ESEGetGSEOverrateSimulate(int n);
+	bool ESEGetEDSPowerInhibit();
+	bool ESEPadAbortRequest();
+	bool ESEGetThrustOKIndicateEnableInhibitA();
+	bool ESEGetThrustOKIndicateEnableInhibitB();
+	bool ESEEDSLiftoffInhibitA();
+	bool ESEEDSLiftoffInhibitB();
+	bool ESEGetSIBurnModeSubstitute();
+	bool ESEGetGuidanceReferenceRelease();
+	bool ESEGetQBallSimulateCmd();
+	bool ESEGetEDSAutoAbortSimulate(int n);
+	bool ESEGetEDSLVCutoffSimulate(int n);
+
+	//ML/S-IC Interface
+	bool ESEGetSICThrustOKSimulate(int eng, int n);
+
+	// LCC/ML Interface
+	void SLCCCheckDiscreteInput(RCA110A *c);
+	bool SLCCGetOutputSignal(size_t n);
+	void ConnectGroundComputer(RCA110A *c);
+	void IssueSwitchSelectorCmd(int stage, int chan);
 
 protected:
 	bool firstTimestepDone;
@@ -63,22 +118,46 @@ protected:
 
 	UINT craneAnim;
 	UINT cmarmAnim;
+	UINT s2aftarmAnim;
+	UINT damperarmAnim;
 	UINT s1cintertankarmAnim;
 	UINT s1cforwardarmAnim;
 	UINT swingarmAnim;
 	UINT mastAnim;
+	UINT mastcoversAnim;
 	double craneProc;
 	double cmarmProc;
-	double s1cintertankarmProc;
-	double s1cforwardarmProc;
-	double swingarmProc;
-	double mastProc;
+	AnimState s2aftarmState;
+	AnimState damperarmState;
+	AnimState s1cintertankarmState;
+	AnimState s1cforwardarmState;
+	AnimState swingarmState;
+	AnimState mastState;
+	AnimState mastcoversState;
 
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;
+
+	Saturn *sat;
+	IUUmbilical *IuUmb;
+	TSMUmbilical *TSMUmb;
+	IUSV_ESE *IuESE;
+	SIC_ESE *SICESE;
+	RCA110AM *rca110a;
 
 	void DoFirstTimestep();
 	double GetDistanceTo(double lon, double lat);
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
+
+	bool CutoffInterlock();
+	bool Commit();
+
+	void MobileLauncherComputer(int mdo, bool on = true);
+
+	void TerminalCountdownSequencer(double MissionTime);
+
+	int TCSSequence;
+	bool Hold;
+	bool bCommit;
 };

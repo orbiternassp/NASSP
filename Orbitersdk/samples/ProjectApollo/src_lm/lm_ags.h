@@ -133,8 +133,7 @@ public:
 	unsigned int GetOutputChannel(int channel);
 	unsigned int GetInputChannel(int channel);
 	bool GetInputChannelBit(int channel, int bit);
-	void SetMissionInfo(int MissionNo);
-	void SetFlightProgram(int FP);
+	void SetMissionInfo(std::string ProgramName);
 	void PadLoad(unsigned int address, unsigned int value);
 	void WriteMemory(unsigned int loc, int val);
 	bool ReadMemory(unsigned int loc, int &val);
@@ -175,7 +174,6 @@ protected:
 
 	unsigned int OutputPorts[MAX_OUTPUT_PORTS];
 
-	int FlightProgram;
 	bool AEAInitialized;
 	double LastCycled;
 	int ASACycleCounter;
@@ -204,6 +202,8 @@ protected:
 	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
 	const double ALTSCALEFACTOR = 0.3048*2.345*pow(2.0, -3.0);
 	const double ALTRATESCALEFACTOR = 0.3048*pow(2.0, -4.0);
+
+	friend class ARCore;
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)
@@ -269,13 +269,17 @@ public:
 
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
+	void ResetKeyDown();
 	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights);
 	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 
 	void KeyClick();
-	bool IsPowered() { return Voltage() > 25.0; };
+	bool IsPowered();
+	bool HasAnnunPower();
+	bool HasNumPower();
+	bool HasIntglPower();
 
 	//
 	// Helper functions.
@@ -362,7 +366,6 @@ protected:
 	void SetData();
 	char ValueChar(unsigned val);
 	char ValueCharSign(unsigned val);
-	void ResetKeyDown();
 	void SendKeyCode(int val);
 
 	void DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 

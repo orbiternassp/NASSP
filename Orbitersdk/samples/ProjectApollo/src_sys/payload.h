@@ -25,6 +25,8 @@
 #if !defined(_PA_PAYLOAD_H)
 #define _PA_PAYLOAD_H
 
+#include "connector.h"
+
 struct PayloadSettings {
 
 	double AscentFuelKg;
@@ -33,12 +35,10 @@ struct PayloadSettings {
 	double DescentEmptyKg;
 	int MissionNo;
 	double MissionTime;
-	char language[64];
 	char CSMName[64];
 	bool Crewed;
 	bool AutoSlow;
 	char checklistFile[100];
-
 };
 
 ///

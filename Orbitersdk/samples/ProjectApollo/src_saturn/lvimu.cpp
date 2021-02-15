@@ -31,10 +31,11 @@
 #include "iu.h"
 #include "LVIMU.h"
 
-LVIMU::LVIMU()
-
+LVIMU::LVIMU(IU *iu)
 {
 	Init();
+
+	OurVessel = iu;
 }
 
 LVIMU::~LVIMU()
@@ -181,7 +182,7 @@ void LVIMU::Timestep(double mjd)
 	
 	// fill OrbiterData
 	VECTOR3 arot;
-	OurVessel->GetGlobalOrientation(arot);
+	OurVessel->GetLVCommandConnector()->GetGlobalOrientation(arot);
 
 	Orbiter.Attitude.X = arot.x;
 	Orbiter.Attitude.Y = arot.y;
@@ -197,9 +198,9 @@ void LVIMU::Timestep(double mjd)
 
 		// Get current weight vector in vessel coordinates
 		VECTOR3 w;
-		OurVessel->GetWeightVector(w);
+		OurVessel->GetLVCommandConnector()->GetWeightVector(w);
 		// Transform to Orbiter global and calculate weight acceleration
-		w = mul(tinv, w) / OurVessel->GetMass();
+		w = mul(tinv, w) / OurVessel->GetLVCommandConnector()->GetMass();
 
 		//Orbiter 2016 hack
 		if (length(w) == 0.0)
@@ -209,7 +210,7 @@ void LVIMU::Timestep(double mjd)
 
 		LastWeightAcceleration = w;
 
-		OurVessel->GetGlobalVel(LastGlobalVel);
+		OurVessel->GetLVCommandConnector()->GetGlobalVel(LastGlobalVel);
 
 		LastTime = mjd;
 		Initialized = true;
@@ -219,9 +220,9 @@ void LVIMU::Timestep(double mjd)
 
 		// Calculate accelerations
 		VECTOR3 w, vel;
-		OurVessel->GetWeightVector(w);
+		OurVessel->GetLVCommandConnector()->GetWeightVector(w);
 		// Transform to Orbiter global and calculate accelerations
-		w = mul(tinv, w) / OurVessel->GetMass();
+		w = mul(tinv, w) / OurVessel->GetLVCommandConnector()->GetMass();
 
 		//Orbiter 2016 hack
 		if (length(w) == 0.0)
@@ -229,7 +230,7 @@ void LVIMU::Timestep(double mjd)
 			w = GetGravityVector();
 		}
 
-		OurVessel->GetGlobalVel(vel);
+		OurVessel->GetLVCommandConnector()->GetGlobalVel(vel);
 		VECTOR3 dvel = (vel - LastGlobalVel) / deltaTime;
 
 		// Measurements with the 2006-P1 version showed that the average of the weight 
@@ -431,14 +432,14 @@ void LVIMU::SetOrbiterAttitudeReference()
 
 VECTOR3 LVIMU::GetGravityVector()
 {
-	OBJHANDLE gravref = OurVessel->GetGravityRef();
+	OBJHANDLE gravref = OurVessel->GetLVCommandConnector()->GetGravityRef();
 	OBJHANDLE hSun = oapiGetObjectByName("Sun");
 	VECTOR3 R, U_R;
-	OurVessel->GetRelativePos(gravref, R);
+	OurVessel->GetLVCommandConnector()->GetRelativePos(gravref, R);
 	U_R = unit(R);
 	double r = length(R);
 	VECTOR3 R_S, U_R_S;
-	OurVessel->GetRelativePos(hSun, R_S);
+	OurVessel->GetLVCommandConnector()->GetRelativePos(hSun, R_S);
 	U_R_S = unit(R_S);
 	double r_S = length(R_S);
 	double mu = GGRAV * oapiGetMass(gravref);
@@ -490,7 +491,7 @@ VECTOR3 LVIMU::GetGravityVector()
 		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 
 		VECTOR3 R_Ea, U_R_E;
-		OurVessel->GetRelativePos(hEarth, R_Ea);
+		OurVessel->GetLVCommandConnector()->GetRelativePos(hEarth, R_Ea);
 		U_R_E = unit(R_Ea);
 		double r_E = length(R_Ea);
 		double mu_E = GGRAV * oapiGetMass(hEarth);
@@ -519,6 +520,11 @@ VECTOR3 LVIMU::GetTotalAttitude()
 	v.y = Gimbal.Y;
 	v.z = Gimbal.Z;
 	return v;
+}
+
+double LVIMU::GetLastTime()
+{
+	return LastTime;
 }
 
 typedef union

@@ -154,14 +154,10 @@ public:
 	void ProcessChannel11(ChannelValue val);
 	void ProcessChannel163(ChannelValue val);
 
-	//
-	// Helper functions.
-	//
-
-	void LightsOff();
-
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
+
+	char *GetProg() { return Prog; };
 
 protected:
 

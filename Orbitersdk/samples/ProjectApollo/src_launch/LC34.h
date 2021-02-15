@@ -24,10 +24,23 @@
 
 #pragma once
 
+#include "IUUmbilicalInterface.h"
+#include "SCMUmbilicalInterface.h"
+#include "LCCPadInterface.h"
+
+class S1B;
+class SIVB;
+class Saturn1b;
+class IUUmbilical;
+class IU_ESE;
+class SCMUmbilical;
+class SIB_ESE;
+class RCA110AM;
+
 ///
 /// \ingroup Ground
 ///
-class LC34: public VESSEL2 {
+class LC34: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface, public LCCPadInterface {
 
 public:
 	LC34(OBJHANDLE hObj, int fmodel);
@@ -42,23 +55,59 @@ public:
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
 
+	// LC-34/IU Interface
+	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
+	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	bool ESEGetGSEOverrateSimulate(int n);
+	bool ESEGetEDSPowerInhibit();
+	bool ESEPadAbortRequest();
+	bool ESEGetThrustOKIndicateEnableInhibitA();
+	bool ESEGetThrustOKIndicateEnableInhibitB();
+	bool ESEEDSLiftoffInhibitA();
+	bool ESEEDSLiftoffInhibitB();
+	bool ESEGetEDSAutoAbortSimulate(int n);
+	bool ESEGetSIBurnModeSubstitute();
+	bool ESEGetGuidanceReferenceRelease();
+	bool ESEGetQBallSimulateCmd();
+	bool ESEGetEDSLVCutoffSimulate(int n);
+
+	//ML/S-IC Interface
+	bool ESEGetSIBThrustOKSimulate(int eng, int n);
+
+	// LCC/ML Interface
+	void SLCCCheckDiscreteInput(RCA110A *c);
+	bool SLCCGetOutputSignal(size_t n);
+	void ConnectGroundComputer(RCA110A *c);
+	void IssueSwitchSelectorCmd(int stage, int chan);
+
 protected:
+
+	bool CutoffInterlock();
+	bool Commit();
+
 	bool firstTimestepDone;
-	bool abort;
 	int meshindexLUT;
 	int meshindexMSS;
 	double touchdownPointHeight;
 	char LVName[256];
+	char SIBName[256];
+	char SIVBName[256];
 	SoundLib soundlib;
 	OBJHANDLE hLV;
 	int state;
+	double LaunchMJD;
+	double MissionTime;
+	bool Hold;
+	bool bCommit;
 
 	UINT mssAnim;
 	UINT cmarmAnim;
 	UINT swingarmAnim;
 	double mssProc;
 	double cmarmProc;
-	double swingarmProc;
+	AnimState swingarmState;
 
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;
@@ -66,6 +115,15 @@ protected:
 	void DoFirstTimestep();
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
+
+	Saturn1b *sat;
+	S1B *s1b;
+	SIVB *sivb;
+	IUUmbilical *IuUmb;
+	SCMUmbilical *SCMUmb;
+	IU_ESE *IuESE;
+	SIB_ESE *SIBESE;
+	RCA110AM *rca110a;
 
 	//VECTOR3 meshoffsetMSS;
 };

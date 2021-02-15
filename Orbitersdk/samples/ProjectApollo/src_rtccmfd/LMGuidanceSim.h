@@ -80,11 +80,25 @@ protected:
 	VECTOR3 A_H, A_T;
 };
 
+struct LGCDescentConstants
+{
+	LGCDescentConstants();
+
+	VECTOR3 RBRFG;
+	VECTOR3 VBRFG;
+	VECTOR3 ABRFG;
+	double JBRFGZ;
+	VECTOR3 RARFG;
+	VECTOR3 VARFG;
+	VECTOR3 AARFG;
+	double JARFGZ;
+};
+
 class DescentGuidance
 {
 public:
 	DescentGuidance();
-	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W);
+	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W, double ttgo, LGCDescentConstants *consts);
 	void Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDI, double &ttgo, double &Thrust, double &isp);
 protected:
 	//Descent phase
@@ -106,24 +120,28 @@ protected:
 	static const double THRTRM;
 	//Max thrust setting
 	static const double THRMAX;
+	static const double THRMIN;
 	//Ullage specific impulse
 	static const double ULISP;
 	//DPS specific impulse
 	static const double XKISP;
 	//Lunar gravitational constant
 	static const double mu_M;
-	//Maximum force in throttable region
+	//Maximum force in throttable region (P66)
 	static const double MAXFORCE;
-	///Minimum force in throttable region
+	//Minimum force in throttable region (P66)
 	static const double MINFORCE;
-	//Braking and approach phase position targets 
-	double XRD[6];
-	//Braking and approach phase velocity targets 
-	double XVD[6];
-	//Braking and approach phase acceleration targets 
-	double XAD[6];
-	//Braking and approach phase jerk targets 
-	double XJD[6];
+	//Lower end of throttlable upper limit
+	static const double LOWCRIT;
+	//Upper end of throttlable upper limit
+	static const double HIGHCRIT;
+	//Change in actual thrust with respect to time from braking phase initiation,
+	//for the DPS due to an eroding engine nozzle
+	static const double DELHTR;
+	static const double DELISP;
+	static const double XISP0;
+	static const double XISP1;
+	static const double XISP2;
 	//time to go in current phase
 	double t_go;
 	VECTOR3 RDG, VDG, ADG, JDG;
@@ -137,6 +155,9 @@ protected:
 	VECTOR3 ULP, UXGP, UYGP, UZGP, WXR, RG, VG, ACG, A_FDP;
 	MATRIX3 C_GP;
 	double FC;
+	//Thrust of previous cycle
+	double Thrust_old;
+	LGCDescentConstants *desc_const;
 };
 
 class AscDescIntegrator

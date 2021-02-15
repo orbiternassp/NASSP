@@ -61,10 +61,13 @@ SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	PropellantDepletionSensors = false;
 	OrdnanceArmed = false;
 	SIISIVBOrdnanceArmed = false;
-	FailInit = false;
+	StartPhaseLimiterCutoffArm = false;
+	LH2StepPressurization = false;
 
 	FailureTimer = 0.0;
 	J2DefaultThrust = 0.0;
+
+	LH2TankUllagePressurePSI = 50.0;
 
 	j2engines[0] = &j2engine1;
 	j2engines[1] = &j2engine2;
@@ -80,11 +83,10 @@ void SIISystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "ORDNANCEARMED", OrdnanceArmed);
 	papiWriteScenario_bool(scn, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
-	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
+	papiWriteScenario_bool(scn, "STARTPHASELIMITERCUTOFFARM", StartPhaseLimiterCutoffArm);
+	papiWriteScenario_bool(scn, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
-	papiWriteScenario_boolarr(scn, "EARLYSIICUTOFF", EarlySIICutoff, 5);
-	papiWriteScenario_doublearr(scn, "SECONDSTAGEFAILURETIME", SecondStageFailureTime, 5);
 
 	j2engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	j2engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -106,11 +108,10 @@ void SIISystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "ORDNANCEARMED", OrdnanceArmed);
 		papiReadScenario_bool(line, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
-		papiReadScenario_bool(line, "FAILINIT", FailInit);
+		papiReadScenario_bool(line, "STARTPHASELIMITERCUTOFFARM", StartPhaseLimiterCutoffArm);
+		papiReadScenario_bool(line, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
-		papiReadScenario_boolarr(line, "EARLYSIICUTOFF", EarlySIICutoff, 5);
-		papiReadScenario_doublearr(line, "SECONDSTAGEFAILURETIME", SecondStageFailureTime, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			j2engine1.LoadState(scn, "ENGINE_END");
@@ -140,6 +141,12 @@ void SIISystems::Timestep(double simdt)
 	j2engine4.Timestep(simdt);
 	j2engine5.Timestep(simdt);
 
+	//Propellant systems
+	if (main_propellant)
+	{
+		LH2TankUllagePressurePSI = vessel->GetPropellantMass(main_propellant) / vessel->GetPropellantMaxMass(main_propellant)*50.0;
+	}
+
 	//Thrust OK switch
 	for (int i = 0;i < 5;i++)
 	{
@@ -167,17 +174,19 @@ void SIISystems::Timestep(double simdt)
 		}
 	}
 
+	if (ullage && sepSound.isPlaying() && vessel->GetThrusterGroupLevel(ullage) < 1.0)
+	{
+		sepSound.stop();
+	}
+
 	//Failure code
 	FailureTimer += simdt;
 
-	if (vessel->GetDamageModel())
+	for (int i = 0;i < 5;i++)
 	{
-		for (int i = 0;i < 5;i++)
+		if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && !j2engines[i]->GetFailed())
 		{
-			if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && !j2engines[i]->GetFailed())
-			{
-				j2engines[i]->SetFailed();
-			}
+			j2engines[i]->SetFailed();
 		}
 	}
 }
@@ -189,18 +198,22 @@ void SIISystems::SetEngineFailureParameters(bool *SIICut, double *SIICutTimes)
 		EarlySIICutoff[i] = SIICut[i];
 		SecondStageFailureTime[i] = SIICutTimes[i];
 	}
-
-	FailInit = true;
 }
 
-void SIISystems::SetEngineFailureParameters(int n, double SIICutTimes)
+void SIISystems::SetEngineFailureParameters(int n, double SIICutTimes, bool fail)
 {
 	if (n < 1 || n > 5) return;
 
-	EarlySIICutoff[n - 1] = true;
+	EarlySIICutoff[n - 1] = fail;
 	SecondStageFailureTime[n - 1] = SIICutTimes;
+}
 
-	FailInit = true;
+void SIISystems::GetEngineFailureParameters(int n, bool &fail, double &failtime)
+{
+	if (n < 1 || n > 5) return;
+
+	fail = EarlySIICutoff[n - 1];
+	failtime = SecondStageFailureTime[n - 1];
 }
 
 #define MR_STATS 5
@@ -303,7 +316,8 @@ bool SIISystems::PropellantLowLevel()
 	{
 		if (main_propellant)
 		{
-			if (vessel->GetPropellantMass(main_propellant) < 3866.0)
+			//Actual propellant remaining for Apollo 11 was 7368.0 kg (including unusable)
+			if (vessel->GetPropellantMass(main_propellant) < 7368.0) //3866.0
 			{
 				return true;
 			}
@@ -356,8 +370,10 @@ void SIISystems::SwitchSelector(int channel)
 		}
 		break;
 	case 6: //Start Phase Limiter Cutoff Reset
+		StartPhaseLimiterCutoffArmReset();
 		break;
 	case 7: //LH2 Step Pressurization
+		LH2StepPressurization = true;
 		break;
 	case 8: //S-II/S-IVB Ordnance Arm
 		SetSIISIVBOrdnanceArm();
@@ -371,7 +387,7 @@ void SIISystems::SwitchSelector(int channel)
 		break;
 	case 14: //LOX Step Pressurization
 		break;
-	case 17: //S-II Center Engine Cutoff (Actual channel has to be researched!)
+	case 15: //S-II Center Engine Cutoff
 		LVDCCenterEngineCutoff();
 		break;
 	case 18: //S-II Engines Cutoff
@@ -392,6 +408,7 @@ void SIISystems::SwitchSelector(int channel)
 		FireUllageTrigger();
 		break;
 	case 25: //Start Phase Limiter Cutoff Arm
+		StartPhaseLimiterCutoffArm = true;
 		break;
 	case 30: //Start First PAM - FM/FM Relays Reset
 		break;

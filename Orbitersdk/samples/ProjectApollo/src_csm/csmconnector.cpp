@@ -88,26 +88,11 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 
 	switch (messageType)
 	{
-	case IULV_GET_J2_THRUST_LEVEL:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetJ2ThrustLevel();
-			return true;
-		}
-		break;
 
 	case IULV_GET_STAGE:
 		if (OurVessel)
 		{
 			m.val1.iValue = OurVessel->GetStage();
-			return true;
-		}
-		break;
-
-	case IULV_GET_ALTITUDE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetAltitude();
 			return true;
 		}
 		break;
@@ -137,22 +122,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetFuelMass();
-			return true;
-		}
-		break;
-
-	case IULV_GET_MAX_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMaxFuelMass();
 			return true;
 		}
 		break;
@@ -229,14 +198,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_APOLLONO:
-		if (OurVessel)
-		{
-			m.val1.iValue = OurVessel->GetApolloNo();
-			return true;
-		}
-		break;
-
 	case IULV_GET_SI_THRUST_OK:
 		if (OurVessel)
 		{
@@ -309,35 +270,26 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_FIRST_STAGE_THRUST:
+	case IULV_GET_SII_FUEL_TANK_PRESSURE:
 		if (OurVessel)
 		{
-			m.val1.dValue = OurVessel->GetFirstStageThrust();
+			m.val1.dValue = OurVessel->GetSIIFuelTankPressurePSI();
 			return true;
 		}
 		break;
 
-
-	case IULV_ACTIVATE_NAVMODE:
+	case IULV_GET_SIVB_FUEL_TANK_PRESSURE:
 		if (OurVessel)
 		{
-			OurVessel->ActivateNavmode(m.val1.iValue);
+			m.val1.dValue = OurVessel->GetSIVBFuelTankPressurePSI();
 			return true;
 		}
 		break;
 
-	case IULV_DEACTIVATE_NAVMODE:
+	case IULV_GET_SIVB_LOX_TANK_PRESSURE:
 		if (OurVessel)
 		{
-			OurVessel->DeactivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SwitchSelector(m.val1.iValue);
+			m.val1.dValue = OurVessel->GetSIVBLOXTankPressurePSI();
 			return true;
 		}
 		break;
@@ -438,46 +390,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_QBALL_POWER_OFF:
-		if (OurVessel)
-		{
-			OurVessel->SetQBallPowerOff();
-			return true;
-		}
-		break;
-
-	case IULV_ADD_FORCE:
-		if (OurVessel)
-		{
-			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
-			return true;
-		}
-		break;
-
-	case IULV_ADD_S4RCS:
-		if (OurVessel)
-		{
-			OurVessel->AddRCS_S4B();
-			return true;
-		}
-		break;
-
-	case IULV_ACTIVATE_PRELAUNCH_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->ActivatePrelaunchVenting();
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_PRELAUNCH_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->DeactivatePrelaunchVenting();
-			return true;
-		}
-		break;
-
 	case IULV_CSM_SEPARATION_SENSED:
 		if (OurVessel)
 		{
@@ -527,14 +439,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_SET_OUTPUT_CHANNEL:
-		if (OurVessel)
-		{
-			agc.SetOutputChannel(m.val1.iValue, m.val2.iValue);
-			return true;
-		}
-		break;
-
 	case IUCSM_GET_CMC_SIVB_TAKEOVER:
 		if (OurVessel)
 		{
@@ -563,14 +467,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		if (OurVessel)
 		{
 			m.val1.bValue = OurVessel->GetSIISIVbDirectStagingSignal();
-			return true;
-		}
-		break;
-
-	case IUCSM_GET_EDS_SWITCH_STATE:
-		if (OurVessel)
-		{
-			m.val1.iValue = OurVessel->GetEDSSwitchState();
 			return true;
 		}
 		break;
@@ -714,61 +610,22 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_LOAD_TLI_SOUNDS:
+	case IUCSM_IS_EDS_UNSAFE_A:
 		if (OurVessel)
 		{
-			OurVessel->LoadTLISounds();
+			m.val1.bValue = OurVessel->GetSECS()->MESCA.EDSUnsafeIndicateSignal();
 			return true;
 		}
 		break;
 
-	case IUCSM_PLAY_COUNT_SOUND:
+	case IUCSM_IS_EDS_UNSAFE_B:
 		if (OurVessel)
 		{
-			OurVessel->PlayCountSound(m.val1.bValue);
+			m.val1.bValue = OurVessel->GetSECS()->MESCB.EDSUnsafeIndicateSignal();
 			return true;
 		}
 		break;
 
-	case IUCSM_PLAY_SECO_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlaySecoSound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_PLAY_SEPS_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlaySepsSound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_PLAY_TLI_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlayTLISound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_PLAY_TLISTART_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlayTLIStartSound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_CLEAR_TLI_SOUNDS:
-		if (OurVessel)
-		{
-			OurVessel->ClearTLISounds();
-			return true;
-		}
-		break;
 	case IUCSM_TLI_BEGUN:
 		if (OurVessel)
 		{
@@ -776,6 +633,7 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			return true;
 		}
 		break;
+
 	case IUCSM_TLI_ENDED:
 		if (OurVessel)
 		{
@@ -786,69 +644,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	}
 
 	return false;
-}
-
-bool CSMToIUConnector::IsTLICapable()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_IS_TLI_CAPABLE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-void CSMToIUConnector::GetVesselStats(double &isp, double &thrust)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_GET_VESSEL_STATS;
-
-	if (SendMessage(cm))
-	{
-		isp = cm.val1.dValue;
-		thrust = cm.val2.dValue;
-	}
-}
-
-double CSMToIUConnector::GetMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_GET_VESSEL_MASS;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 1.0;
-}
-
-double CSMToIUConnector::GetFuelMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_GET_VESSEL_FUEL;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 1.0;
 }
 
 bool CSMToIUConnector::GetLiftOffCircuit(bool sysA)
@@ -883,79 +678,28 @@ bool CSMToIUConnector::GetEDSAbort(int n)
 	return false;
 }
 
-void CSMToIUConnector::ChannelOutput(int channel, int value)
-
+double CSMToIUConnector::GetLVTankPressure(int n)
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_CHANNEL_OUTPUT;
-	cm.val1.iValue = channel;
-	cm.val2.iValue = value;
+	cm.messageType = CSMIU_GET_LV_TANK_PRESSURE;
+	cm.val1.iValue = n;
 
-	SendMessage(cm);
-}
-
-CSMToSIVBControlConnector::CSMToSIVBControlConnector(CSMcomputer &c,  DockingProbe &probe, Saturn *s) : agc(c), dockingprobe(probe), SaturnConnector(s)
-
-{
-	type = CSM_SIVB_COMMAND;
-}
-
-CSMToSIVBControlConnector::~CSMToSIVBControlConnector()
-
-{
-}
-
-//
-// For now we have to process the ignore docking event message from the SIVB.
-//
-bool CSMToSIVBControlConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
-{
-	//
-	// Sanity check.
-	//
-
-	if (m.destination != type)
+	if (SendMessage(cm))
 	{
-		return false;
+		return cm.val2.dValue;
 	}
 
-	CSMSIVBMessageType messageType;
-
-	messageType = static_cast<CSMSIVBMessageType> (m.messageType);
-
-	switch (messageType)
-	{
-	case SIVBCSM_IGNORE_DOCK_EVENT:
-		dockingprobe.SetIgnoreNextDockEvent();
-		return true;
-
-	case SIVBCSM_IGNORE_DOCK_EVENTS:
-		dockingprobe.SetIgnoreNextDockEvents(m.val1.iValue);
-		return true;
-
-	case SIVBCSM_GET_PAYLOAD_SETTINGS:
-		{
-			PayloadSettings *p = static_cast<PayloadSettings *> (m.val1.pValue);
-			OurVessel->GetPayloadSettings(*p);
-			m.val1.bValue = true;
-		}
-		return true;
-
-	default:
-		return false;
-	}
+	return 0.0;
 }
 
-bool CSMToSIVBControlConnector::IsVentable()
-
+bool CSMToIUConnector::GetAbortLight()
 {
 	ConnectorMessage cm;
 
-	cm.destination = type;
-	cm.messageType = CSMSIVB_IS_VENTABLE;
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_ABORT_LIGHT_SIGNAL;
 
 	if (SendMessage(cm))
 	{
@@ -965,82 +709,34 @@ bool CSMToSIVBControlConnector::IsVentable()
 	return false;
 }
 
-double CSMToSIVBControlConnector::GetFuelMass()
-
+bool CSMToIUConnector::GetQBallPower()
 {
 	ConnectorMessage cm;
 
-	cm.destination = type;
-	cm.messageType = CSMSIVB_GET_VESSEL_FUEL;
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_QBALL_POWER;
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.dValue;
+		return cm.val1.bValue;
 	}
 
-	//
-	// Non-zero return just in case the calling code tries to divide
-	// by it.
-	//
-	return 0.01;
+	return false;
 }
 
-void CSMToSIVBControlConnector::GetMainBatteryPower(double &capacity, double &drain)
-
+bool CSMToIUConnector::GetQBallSimulateCmd()
 {
 	ConnectorMessage cm;
 
-	cm.destination = type;
-	cm.messageType = CSMSIVB_GET_MAIN_BATTERY_POWER;
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_QBALL_SIMULATE_CMD;
 
 	if (SendMessage(cm))
 	{
-		capacity = cm.val1.dValue;
-		drain = cm.val2.dValue;
-		return;
+		return cm.val1.bValue;
 	}
 
-	capacity = drain = 0.0;
-}
-
-void CSMToSIVBControlConnector::GetMainBatteryElectrics(double &volts, double &current)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_GET_MAIN_BATTERY_ELECTRICS;
-
-	if (SendMessage(cm))
-	{
-		volts = cm.val1.dValue;
-		current = cm.val2.dValue;
-		return;
-	}
-
-	volts = current = 0.0;
-}
-
-void CSMToSIVBControlConnector::StartSeparationPyros()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_START_SEPARATION;
-
-	SendMessage(cm);
-}
-
-void CSMToSIVBControlConnector::StopSeparationPyros()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_STOP_SEPARATION;
-
-	SendMessage(cm);
+	return false;
 }
 
 CSMToLEMECSConnector::CSMToLEMECSConnector(Saturn *s) : SaturnConnector(s)
@@ -1055,6 +751,9 @@ CSMToLEMECSConnector::~CSMToLEMECSConnector()
 
 bool CSMToLEMECSConnector::ConnectTo(Connector *other)
 {
+	// Disconnect in case we're already connected.
+	Disconnect();
+
 	if (SaturnConnector::ConnectTo(other))
 	{
 		h_Pipe *cmpipe = OurVessel->GetCMTunnelPipe();
@@ -1100,4 +799,159 @@ void CSMToLEMECSConnector::ConnectLMTunnelToCabinVent()
 	cm.messageType = 1;
 
 	SendMessage(cm);
+}
+
+CSMToPayloadConnector::CSMToPayloadConnector(Saturn *s) : SaturnConnector(s)
+{
+	type = CSM_PAYLOAD_COMMAND;
+}
+
+CSMToPayloadConnector::~CSMToPayloadConnector()
+{
+
+}
+
+void CSMToPayloadConnector::StartSeparationPyros()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SLA_START_SEPARATION;
+
+	SendMessage(cm);
+}
+
+void CSMToPayloadConnector::StopSeparationPyros()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SLA_STOP_SEPARATION;
+
+	SendMessage(cm);
+}
+
+//connector for rendezvous radar transponder
+//****************************************************************************
+
+CSM_RRTto_LM_RRConnector::CSM_RRTto_LM_RRConnector(Saturn *s, RNDZXPDRSystem *rrt) : SaturnConnector(s)
+{
+	type = RADAR_RF_SIGNAL;
+	csm_rrt = rrt;
+}
+
+CSM_RRTto_LM_RRConnector::~CSM_RRTto_LM_RRConnector()
+{
+}
+
+void CSM_RRTto_LM_RRConnector::SendRF(double freq, double XMITpow, double XMITgain, double Phase)
+{
+	ConnectorMessage cm;
+
+	cm.destination = RADAR_RF_SIGNAL;
+	cm.messageType = RR_XPDR_SIGNAL;
+
+	cm.val1.dValue = freq;
+	cm.val2.dValue = XMITpow;
+	cm.val3.dValue = XMITgain;
+	cm.val4.dValue = Phase;
+
+	SendMessage(cm);
+}
+
+bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
+	//sprintf(oapiDebugString(), "Hey this Function got called at %lf", oapiGetSimTime()); //debugging
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	if (!csm_rrt)
+	{
+		return false;
+	}
+
+	RFconnectorMessageType messageType;
+	messageType = (RFconnectorMessageType)m.messageType;
+
+	switch (messageType)
+	{
+		case CW_RADAR_SIGNAL:
+		{
+			//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", m.val1.dValue);
+			csm_rrt->SetRCVDrfProp(m.val1.dValue, m.val2.dValue, m.val3.dValue, m.val4.dValue);
+
+			return true;
+		}
+		case RR_XPDR_SIGNAL:
+		{
+			return false;
+		}
+	}
+
+	return false;
+}
+
+CSM_VHFto_LM_VHFConnector::CSM_VHFto_LM_VHFConnector(Saturn *s, VHFAMTransceiver *VHFxcvr, VHFRangingSystem  *vhf_system): SaturnConnector(s)
+{
+	type = VHF_RNG;
+	pVHFRngSys = vhf_system;
+	pVHFxcvr = VHFxcvr;
+}
+
+CSM_VHFto_LM_VHFConnector::~CSM_VHFto_LM_VHFConnector()
+{
+}
+
+void CSM_VHFto_LM_VHFConnector::SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone)
+{
+	ConnectorMessage cm;
+
+	cm.destination = VHF_RNG;
+	cm.messageType = VHF_RNG_SIGNAL_CSM;
+
+	cm.val1.dValue = freq; //MHz
+	cm.val2.dValue = XMITpow; //W
+	cm.val3.dValue = XMITgain; //dBi
+	cm.val4.dValue = XMITphase;
+	cm.val1.bValue = RangeTone;
+
+	SendMessage(cm);
+}
+
+bool CSM_VHFto_LM_VHFConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
+	if ((!pVHFRngSys) || (!pVHFxcvr)) //No more segfaults
+	{
+		return false;
+	}
+
+	//this checks that the incoming frequencies from the csm connector are within 1% of the tuned frequencies of the receivers
+	//in actuality it should be something more like a resonance responce centered around the tuned receiver frequency, but this waaay more simple
+	//and easy to compute every timestep
+
+	if (m.val1.dValue > pVHFxcvr->freqXCVR_A*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_A*1.01f)
+	{
+		//sprintf(oapiDebugString(), "A");
+		pVHFxcvr->RCVDfreqRCVR_A = m.val1.dValue;
+		pVHFxcvr->RCVDpowRCVR_A = m.val2.dValue;
+		pVHFxcvr->RCVDgainRCVR_A = m.val3.dValue;
+		pVHFxcvr->RCVDPhaseRCVR_A = m.val4.dValue;
+		pVHFxcvr->RCVDRangeTone = m.val1.bValue;
+		return true;
+	}
+	else if (m.val1.dValue > pVHFxcvr->freqXCVR_B*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_B*1.01f)
+	{
+		//sprintf(oapiDebugString(), "B");
+		pVHFxcvr->RCVDfreqRCVR_B = m.val1.dValue;
+		pVHFxcvr->RCVDpowRCVR_B = m.val2.dValue;
+		pVHFxcvr->RCVDgainRCVR_B = m.val3.dValue;
+		pVHFxcvr->RCVDPhaseRCVR_B = m.val4.dValue;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

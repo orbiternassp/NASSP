@@ -54,7 +54,6 @@ void DelayTimer::SetTime(double t)
 }
 
 void DelayTimer::Timestep(double simdt)
-
 {
 
 	if (Running) {
@@ -78,6 +77,18 @@ void DelayTimer::Reset()
 	seconds = 0.0;
 	Running = false;
 	Contact = false;
+}
+
+void DelayTimer::SetState(const DelayTimerState &state)
+{
+	Running = state.Running;
+	SetTime(state.seconds);
+}
+
+void DelayTimer::GetState(DelayTimerState &state)
+{
+	state.Running = Running;
+	state.seconds = GetTime();
 }
 
 void DelayTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -153,5 +164,43 @@ void RestartableDelayTimer::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "CONTACT", Contact);
 		papiReadScenario_bool(line, "RUNNING", Running);
 		papiReadScenario_bool(line, "START", Start);
+	}
+}
+
+DelayOffTimer::DelayOffTimer(double del) : DelayTimer(del)
+{
+
+}
+
+void DelayOffTimer::Timestep(double simdt)
+{
+	if (Running) {
+		seconds = delay;
+		SetContact(true);
+		Running = false;
+	}
+	else
+	{
+		double t = GetTime();
+
+		if (t > 0)
+		{
+			t -= simdt;
+			SetTime(t);
+		}
+		else
+		{
+			Reset();
+		}
+	}
+}
+
+void DelayOffTimer::SetTime(double t)
+{
+	seconds = t;
+
+	if (seconds < 0)
+	{
+		SetContact(false);
 	}
 }

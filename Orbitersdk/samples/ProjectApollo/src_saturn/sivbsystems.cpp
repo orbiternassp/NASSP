@@ -53,6 +53,9 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	PointLevelSensorArmed = false;
 	LH2ContinuousVentValveOpen = false;
 	ThrustOKCutoffInhibit = false;
+	PrevalvesCloseOn = false;
+	//Gets switched on at about T-8 minutes
+	AuxHydPumpFlightMode = true;
 
 	for (int i = 0;i < 2;i++)
 	{
@@ -65,6 +68,8 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
 	BoiloffTime = 0.0;
+	LH2TankUllagePressurePSI = 50.0;
+	LOXTankUllagePressurePSI = 50.0;
 }
 
 SIVBSystems::~SIVBSystems()
@@ -132,6 +137,13 @@ void SIVBSystems::Timestep(double simdt)
 
 	//Thrust OK switch
 	bool ThrustOK = vessel->GetThrusterLevel(j2engine) > 0.65;
+
+	//Propellant Systems
+	if (main_propellant)
+	{
+		LOXTankUllagePressurePSI = vessel->GetPropellantMass(main_propellant) / vessel->GetPropellantMaxMass(main_propellant)*50.0;
+		LH2TankUllagePressurePSI = LOXTankUllagePressurePSI * 0.9362 + 3.19;
+	}
 
 	//Propellant Depletion
 	if (PropellantLowLevel())
@@ -316,6 +328,8 @@ void SIVBSystems::SIVBBoiloff()
 void SIVBSystems::SetThrusterDir(double beta_y, double beta_p)
 {
 	if (j2engine == NULL) return;
+	//Check if aux or main hydraulic pumps are on
+	if (!AuxHydPumpFlightMode && vessel->GetThrusterLevel(j2engine) < 0.1) return;
 
 	VECTOR3 j2vector;
 
@@ -483,11 +497,14 @@ void SIVB200Systems::SetSIVBMixtureRatio(double ratio)
 	double isp, thrust;
 
 	// Hardcoded ISP and thrust according to the the Apollo 7 Saturn IB Report, NTRS ID 19900067467
-
-	if (ratio >= 5.0) {
+	if (ratio >= 5.25) {
 		thrust = 1009902;
 		isp = 424 * G;
 
+	}
+	else if (ratio >= 4.75){
+		thrust = 889951.0;
+		isp = 426 * G;
 	}
 	else {
 		thrust = 770000.;
@@ -522,6 +539,16 @@ void SIVB200Systems::SwitchSelector(int channel)
 	case 19: //Engine Ready Bypass On
 		EngineReadyBypass();
 		break;
+	case 22: //LOX Chilldown Pump On
+		break;
+	case 23: //LOX Chilldown Pump Off
+		break;
+	case 28: //Aux Hydraulic Pump Flight Mode On
+		AuxHydPumpFlightModeOn();
+		break;
+	case 29: //Aux Hydraulic Pump Flight Mode Off
+		AuxHydPumpFlightModeOff();
+		break;
 	case 32: //P.U. Mixture Ratio 4.5 On
 		SetPUValve(PUVALVE_OPEN);
 		//SPUShiftS.play(NOLOOP, 255);
@@ -542,14 +569,30 @@ void SIVB200Systems::SwitchSelector(int channel)
 	case 49: //S-IVB Engine Cutoff No. 2 Off
 		LVDCEngineCutoffOff();
 		break;
+	case 54: //Charge Ullage Ignition On
+		break;
+	case 55: //Charge Ullage Jettison On
+		break;
 	case 56: //Fire Ullage Ignition On
 		FireUllageIgnitionOn();
+		break;
+	case 58: //Fuel Chilldown Pump On
+		break;
+	case 59: //Fuel Chilldown Pump Off
 		break;
 	case 79: //LOX Tank Flight Pressurization Shutoff Valves Close On
 		EndLOXVenting();
 		break;
 	case 80: //LOX Tank Flight Pressurization Shutoff Valves Close Off
 		StartLOXVenting();
+		break;
+	case 82: //Prevalves Close On
+		PrevalvesCloseOn = true;
+		break;
+	case 83: //Prevalves Close Off
+		PrevalvesCloseOn = false;
+		break;
+	case 85: //Passivation Enable
 		break;
 	case 97: //Point Level Sensor Arming
 		PointLevelSensorArming();
@@ -673,8 +716,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 		EngineStartOff();
 		break;
 	case 28: //Aux Hydraulic Pump Flight Mode On
+		AuxHydPumpFlightModeOn();
 		break;
 	case 29: //Aux Hydraulic Pump Flight Mode Off
+		AuxHydPumpFlightModeOff();
 		break;
 	case 30: //Start Bottle Vent Control Valve Open On
 		break;
@@ -788,8 +833,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 81: //LH2 Tank Repressurization Control Valve Open Off
 		break;
 	case 82: //Prevalves Close On
+		PrevalvesCloseOn = true;
 		break;
 	case 83: //Prevalves Close Off
+		PrevalvesCloseOn = false;
 		break;
 	case 84: //LH2 Tank Continuous Vent Valve Close On
 		LH2ContinuousVentValveCloseOn();

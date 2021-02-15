@@ -22,14 +22,11 @@
 
   **************************************************************************/
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
-#define _CRT_SECURE_NO_DEPRECATE 
-#endif
-
 #include "hsystems.h"
 #include "orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
+#include "nasspdefs.h"
 //const float CONST_R=8.31904f/1000.0f;
 //const float TEMP_PRESS_RATIO=0.07;
 
@@ -1324,6 +1321,7 @@ void h_WaterSeparator::refresh(double dt) {
 
 	h2oremovalrate = 0;
 	flow = 0;
+	rpmcmd = 0;
 
 	if ((!in) || (!out)) return;
 
@@ -1336,24 +1334,7 @@ void h_WaterSeparator::refresh(double dt) {
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
 		flow = fanned.GetMass() / dt;
 
-		// RPM Calculation
-		double delay, drpmcmd, rpmcmdsign, drpm;
-
-		delay = 7.0;	// Gives delay for WS spool up/spin down RPM/sec
-
 		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
-
-		drpmcmd = rpmcmd - RPM;
-		rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
-		if (abs(drpmcmd)>delay*dt)
-		{
-			drpm = rpmcmdsign * delay*dt;
-		}
-		else
-		{
-			drpm = drpmcmd;
-		}
-		RPM += drpm;
 
 		if (flow != 0) {
 			h2oremovalratio = (RPM / rpmcmd);
@@ -1362,19 +1343,31 @@ void h_WaterSeparator::refresh(double dt) {
 
 			h2oremovalrate = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
 
-			// separate water
-			h_volume h2o_volume;
-			h2o_volume.Void();
-			h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass * h2oremovalratio;
-			h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
-			h2o_volume.GetQ();
+			if (h2oremovalratio > 0)
+			{
+				double removedmass = fanned.composition[SUBSTANCE_H2O].mass*h2oremovalratio;
+				double factor = 1 - h2oremovalratio;
 
-			// ... and pump it to waste valve	
-			H20waste->Flow(h2o_volume);
+				// separate water
+				h_volume h2o_volume;
+				h2o_volume.Void();
+				h2o_volume.composition[SUBSTANCE_H2O].mass = removedmass;
+				h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
+				h2o_volume.GetQ();
 
-			fanned.composition[SUBSTANCE_H2O].mass =
-				fanned.composition[SUBSTANCE_H2O].vapor_mass =
-				fanned.composition[SUBSTANCE_H2O].Q = 0;
+				// ... and pump it to waste valve
+				H20waste->Flow(h2o_volume);
+
+				fanned.composition[SUBSTANCE_H2O].mass -= removedmass;
+				fanned.composition[SUBSTANCE_H2O].vapor_mass -= removedmass;
+				//Can liquid water cause this to be below 0?
+				if (fanned.composition[SUBSTANCE_H2O].vapor_mass < 0)
+					fanned.composition[SUBSTANCE_H2O].vapor_mass = 0;
+				fanned.composition[SUBSTANCE_H2O].Q = fanned.composition[SUBSTANCE_H2O].Q*factor;
+
+				//if (!strcmp(name, "WATERSEP1"))
+				//	sprintf(oapiDebugString(), "Rate %f Removed %f Remaining %f", h2oremovalratio, removedmass / dt, fanned.composition[SUBSTANCE_H2O].mass / dt);
+			}
 		}
 
 		// flow to output
@@ -1382,6 +1375,28 @@ void h_WaterSeparator::refresh(double dt) {
 		fanned.GetQ();
 		out->Flow(fanned);
 	}
+
+	// RPM Calculation
+	double delay, drpmcmd, drpm;
+
+	drpmcmd = rpmcmd - RPM;
+	if (drpmcmd >= 0.0)
+	{
+		delay = 7.0;	// Gives delay for WS spool up RPM/sec
+	}
+	else
+	{
+		delay = 28.0;	// Gives delay for WS spin down RPM/sec
+	}
+	if (abs(drpmcmd) > delay*dt)
+	{
+		drpm = sign(drpmcmd)*delay*dt;
+	}
+	else
+	{
+		drpm = drpmcmd;
+	}
+	RPM += drpm;
 }
 
 void h_WaterSeparator::Save(FILEHANDLE scn) {

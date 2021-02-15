@@ -32,7 +32,6 @@
 #include "saturn.h"
 #include "saturnv.h"
 #include "LEM.h"
-#include "LEMSaturn.h"
 #include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
@@ -66,150 +65,14 @@ static DWORD WINAPI MCC_Trampoline(LPVOID ptr){
 #define LOAD_M3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&VALUE.m11,&VALUE.m12,&VALUE.m13,&VALUE.m21,&VALUE.m22,&VALUE.m23,&VALUE.m31,&VALUE.m32,&VALUE.m33); }
 #define LOAD_STRING(KEY,VALUE,LEN) if(strnicmp(line,KEY,strlen(KEY))==0){ strncpy(VALUE, line + (strlen(KEY)+1), LEN); }
 
-#define ORBITER_MODULE
-
-void MCC::clbkSaveState(FILEHANDLE scn)
-{
-	VESSEL4::clbkSaveState(scn);
-
-	if (CSMName[0])
-		oapiWriteScenario_string(scn, "CSMNAME", CSMName);
-
-	if (LVName[0])
-		oapiWriteScenario_string(scn, "LVNAME", LVName);
-
-	if (LEMName[0])
-		oapiWriteScenario_string(scn, "LEMNAME", LEMName);
-
-	SaveState(scn);
-	rtcc->SaveState(scn);
-}
-
-void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
-{
-	char *line;
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, "MISSIONTRACKING", 15)) {
-			int i;
-			sscanf(line + 15, "%d", &i);
-			if (i)
-				enableMissionTracking();
-		}
-		else if (!strnicmp(line, "CSMNAME", 7))
-		{
-			strncpy(CSMName, line + 8, 64);
-		}
-		else if (!strnicmp(line, "LVNAME", 6))
-		{
-			strncpy(LVName, line + 7, 64);
-		}
-		else if (!strnicmp(line, "LEMNAME", 7))
-		{
-			strncpy(LEMName, line + 8, 64);
-		}
-		else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
-			LoadState(scn);
-		}
-		else if (!strnicmp(line, RTCC_START_STRING, sizeof(RTCC_START_STRING))) {
-			rtcc->LoadState(scn);
-		}
-		else ParseScenarioLineEx(line, status);
-	}
-}
-
-void MCC::clbkPreStep(double simt, double simdt, double mjd)
-{
-	// Update Ground Data
-	TimeStep(simdt);
-}
-
-void MCC::clbkPostCreation()
-{
-	VESSEL *v;
-	OBJHANDLE hVessel;
-
-	//CSM
-	if (CSMName[0])
-	{
-		hVessel = oapiGetObjectByName(CSMName);
-		if (hVessel != NULL)
-		{
-			v = oapiGetVesselInterface(hVessel);
-
-			if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
-				!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
-				cm = (Saturn *)v;
-				rtcc->calcParams.src = cm;
-			}
-		}
-	}
-
-	//S-IVB
-	if (LVName[0])
-	{
-		hVessel = oapiGetObjectByName(LVName);
-		if (hVessel != NULL)
-		{
-			v = oapiGetVesselInterface(hVessel);
-
-			if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) {
-				sivb = (SIVB *)v;
-			}
-		}
-	}
-
-	//LEM
-	if (LEMName[0])
-	{
-		hVessel = oapiGetObjectByName(LEMName);
-		if (hVessel != NULL)
-		{
-			v = oapiGetVesselInterface(hVessel);
-
-			if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/LEM") ||
-				!stricmp(v->GetClassName(), "ProjectApollo\\LEMSaturn") ||
-				!stricmp(v->GetClassName(), "ProjectApollo/LEMSaturn")) {
-				lm = (LEM *)v;
-				rtcc->calcParams.tgt = lm;
-			}
-		}
-	}
-}
-
-DLLCLBK void InitModule(HINSTANCE hDLL)
-{
-}
-
-DLLCLBK void ExitModule(HINSTANCE hDLL)
-{
-}
-
-DLLCLBK VESSEL* ovcInit(OBJHANDLE hVessel, int iFlightModel)
-{
-	return new MCC(hVessel, iFlightModel);
-}
-
-DLLCLBK void ovcExit(VESSEL* pVessel)
-{
-	delete static_cast<MCC*>(pVessel);
-}
-
 // CONS
-MCC::MCC(OBJHANDLE hVessel, int flightmodel)
-	: VESSEL4(hVessel, flightmodel)
-{
-	//Vessel data
+MCC::MCC(RTCC *rtc)
+{	
+	// Reset data
 	CSMName[0] = 0;
 	LEMName[0] = 0;
 	LVName[0] = 0;
-	
-	// Reset data
-	rtcc = NULL;
+	rtcc = rtc;
 	cm = NULL;
 	lm = NULL;
 	sivb = NULL;
@@ -277,8 +140,8 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 
 void MCC::Init(){
 	
-	// Make a new RTCC if we don't have one already
-	if (rtcc == NULL) { rtcc = new RTCC; rtcc->Init(this); }
+	//Tell the RTCC that the MCC exists
+	rtcc->Init(this);
 
 	// Obtain Earth and Moon pointers
 	Earth = oapiGetGbodyByName("Earth");
@@ -1323,6 +1186,16 @@ int MCC::subThread(){
 	}
 	else if (MissionType == MTP_F || MissionType == MTP_G)
 	{
+		//Try to find LEM
+		if (rtcc->calcParams.tgt == NULL)
+		{
+			OBJHANDLE ves = oapiGetVesselByName(LEMName);
+			if (ves != NULL)
+			{
+				rtcc->calcParams.tgt = oapiGetVesselInterface(ves);
+			}
+		}
+
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = 0;
 	}
@@ -1632,6 +1505,15 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_PMGET", form->PMGET);
+			SAVE_DOUBLE("MCC_AP10MAPUPDATE_SRGET", form->SRGET);
+			SAVE_DOUBLE("MCC_AP10MAPUPDATE_SSGET", form->SSGET);
+			if (form->type == 3)
+			{
+				SAVE_DOUBLE("MCC_AP10MAPUPDATE_AOSGET2", form->AOSGET2);
+				SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET2", form->LOSGET2);
+				SAVE_DOUBLE("MCC_AP10MAPUPDATE_PMGET2", form->PMGET2);
+				SAVE_DOUBLE("MCC_AP10MAPUPDATE_SSGET2", form->SSGET2);
+			}
 		}
 		else if (padNumber == 13)
 		{
@@ -1801,24 +1683,19 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_PDIABORTPAD_T_TPI_Pre10Min", form->T_TPI_Pre10Min);
 			SAVE_INT("MCC_PDIABORTPAD_type", form->type);
 		}
-		else if (padNumber == PT_AP11T2ABORTPAD)
+		else if (padNumber == PT_AP11LUNSURFPAD)
 		{
-			AP11T2ABORTPAD *form = (AP11T2ABORTPAD*)padForm;
+			AP11LunarSurfaceDataCard *form = (AP11LunarSurfaceDataCard*)padForm;
 
-			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_TIG", form->TIG);
-			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_CSI1", form->t_CSI1);
-			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_Phasing", form->t_Phasing);
-			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_TPI", form->t_TPI);
-		}
-		else if (padNumber == PT_AP11T3ABORTPAD)
-		{
-			AP11T3ABORTPAD *form = (AP11T3ABORTPAD*)padForm;
-
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_TIG", form->TIG);
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_CSI", form->t_CSI);
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->t_Period);
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->t_PPlusDT);
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->t_TPI);
+			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_TIG", form->T2_TIG);
+			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_CSI1", form->T2_t_CSI1);
+			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_Phasing", form->T2_t_Phasing);
+			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_TPI", form->T3_t_TPI);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_TIG", form->T3_TIG);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_CSI", form->T3_t_CSI);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->T3_t_Period);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->T3_t_PPlusDT);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->T3_t_TPI);
 		}
 		else if (padNumber == PT_AP11P76PAD)
 		{
@@ -2161,6 +2038,12 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
 			LOAD_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
 			LOAD_DOUBLE("MCC_AP10MAPUPDATE_PMGET", form->PMGET);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_SRGET", form->SRGET);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_SSGET", form->SSGET);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_AOSGET2", form->AOSGET2);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_LOSGET2", form->LOSGET2);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_PMGET2", form->PMGET2);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_SSGET2", form->SSGET2);
 		}
 		else if (padNumber == 13)
 		{
@@ -2321,24 +2204,19 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_PDIABORTPAD_T_TPI_Pre10Min", form->T_TPI_Pre10Min);
 			LOAD_INT("MCC_PDIABORTPAD_type", form->type);
 		}
-		else if (padNumber == PT_AP11T2ABORTPAD)
+		else if (padNumber == PT_AP11LUNSURFPAD)
 		{
-			AP11T2ABORTPAD *form = (AP11T2ABORTPAD*)padForm;
+		AP11LunarSurfaceDataCard *form = (AP11LunarSurfaceDataCard*)padForm;
 
-			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_TIG", form->TIG);
-			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_CSI1", form->t_CSI1);
-			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_Phasing", form->t_Phasing);
-			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_TPI", form->t_TPI);
-		}
-		else if (padNumber == PT_AP11T3ABORTPAD)
-		{
-			AP11T3ABORTPAD *form = (AP11T3ABORTPAD*)padForm;
-
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_TIG", form->TIG);
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_CSI", form->t_CSI);
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->t_Period);
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->t_PPlusDT);
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->t_TPI);
+			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_TIG", form->T2_TIG);
+			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_CSI1", form->T2_t_CSI1);
+			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_Phasing", form->T2_t_Phasing);
+			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_TPI", form->T2_t_TPI);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_TIG", form->T3_TIG);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_CSI", form->T3_t_CSI);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->T3_t_Period);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->T3_t_PPlusDT);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->T3_t_TPI);
 		}
 		else if (padNumber == PT_AP11P76PAD)
 		{
@@ -2488,7 +2366,7 @@ void MCC::drawPad(){
 			sprintf(buffer, "P27 UPDATE\nPURP V%d\nGET %s\n304 01 INDEX %d\n", form->Verb[0], tmpbuf, form->Index[0]);
 			for (int i = 0;i < 16;i++)
 			{
-				sprintf(buffer, "%s       %02o %05d\n", buffer,i+2, form->Data[0][i]);
+				sprintf(buffer, "%s %02o %05d\n", buffer,i+2, form->Data[0][i]);
 			}
 			format_time_prec(tmpbuf, form->NavChk);
 			sprintf(buffer, "%sNAV CHECK (N34)\n%s\nLAT %+07.2f\nLONG %+07.2f\nALT %+07.1f\n", buffer, tmpbuf, form->lat, form->lng, form->alt);
@@ -2679,6 +2557,25 @@ void MCC::drawPad(){
 			sprintf(buffer, "%sAOS WITH LOI1: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 			SStoHHMMSS(form->AOSGET, hh, mm, ss);
 			sprintf(buffer, "%sAOS W/O LOI1: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+		}
+		else if (form->type == 3)
+		{
+			SStoHHMMSS(form->PMGET, hh, mm, ss);
+			sprintf(buffer, "%sPM: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->AOSGET, hh, mm, ss);
+			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->SSGET, hh, mm, ss);
+			sprintf(buffer, "%sSS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->LOSGET2, hh, mm, ss);
+			sprintf(buffer, "%sLOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->SRGET, hh, mm, ss);
+			sprintf(buffer, "%sSR: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->PMGET2, hh, mm, ss);
+			sprintf(buffer, "%sPM: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->AOSGET2, hh, mm, ss);
+			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->SSGET2, hh, mm, ss);
+			sprintf(buffer, "%sSS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
@@ -2937,41 +2834,29 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
-	case PT_AP11T2ABORTPAD:
+	case PT_AP11LUNSURFPAD:
 	{
-		AP11T2ABORTPAD *form = (AP11T2ABORTPAD*)padForm;
+		AP11LunarSurfaceDataCard *form = (AP11LunarSurfaceDataCard*)padForm;
 
-		int hh[4], mm[4];
-		double ss[4];
+		int hh[9], mm[9];
+		double ss[9];
 
-		SStoHHMMSS(form->TIG, hh[0], mm[0], ss[0]);
-		SStoHHMMSS(form->t_Phasing, hh[1], mm[1], ss[1]);
-		SStoHHMMSS(form->t_CSI1, hh[2], mm[2], ss[2]);
-		SStoHHMMSS(form->t_TPI, hh[3], mm[3], ss[3]);
+		SStoHHMMSS(form->T2_TIG, hh[0], mm[0], ss[0]);
+		SStoHHMMSS(form->T2_t_Phasing, hh[1], mm[1], ss[1]);
+		SStoHHMMSS(form->T2_t_CSI1, hh[2], mm[2], ss[2]);
+		SStoHHMMSS(form->T2_t_TPI, hh[3], mm[3], ss[3]);
+		SStoHHMMSS(form->T3_TIG, hh[4], mm[4], ss[4]);
+		SStoHHMMSS(form->T3_t_Period, hh[5], mm[5], ss[5]);
+		SStoHHMMSS(form->T3_t_PPlusDT, hh[6], mm[6], ss[6]);
+		SStoHHMMSS(form->T3_t_CSI, hh[7], mm[7], ss[7]);
+		SStoHHMMSS(form->T3_t_TPI, hh[8], mm[8], ss[8]);
 
 		sprintf(buffer, "T2 ABORT\n%+06d HRS T2\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS N33\n%+06d MIN PHASING\n%+07.2f SEC TIG\n"
-			"%+06d HRS N11\n%+06d MIN CSI1\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC", 
-			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2], hh[3], mm[3], ss[3]);
-
-		oapiAnnotationSetText(NHpad, buffer);
-	}
-	break;
-	case PT_AP11T3ABORTPAD:
-	{
-		AP11T3ABORTPAD *form = (AP11T3ABORTPAD*)padForm;
-
-		int hh[5], mm[5];
-		double ss[5];
-
-		SStoHHMMSS(form->TIG, hh[0], mm[0], ss[0]);
-		SStoHHMMSS(form->t_Period, hh[1], mm[1], ss[1]);
-		SStoHHMMSS(form->t_PPlusDT, hh[2], mm[2], ss[2]);
-		SStoHHMMSS(form->t_CSI, hh[3], mm[3], ss[3]);
-		SStoHHMMSS(form->t_TPI, hh[4], mm[4], ss[4]);
-
-		sprintf(buffer, "T3 ABORT\n%+06d HRS T3\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS CSM\n%+06d MIN PERIOD\n%+07.2f SEC\n"
+			"%+06d HRS N11\n%+06d MIN CSI1\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\n"
+			"T3 ABORT\n%+06d HRS T3\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS CSM\n%+06d MIN PERIOD\n%+07.2f SEC\n"
 			"%+06d HRS\n%+06d MIN P+DT\n%+07.2f SEC\n%+06d HRS N11\n%+06d MIN CSI TIG\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC",
-			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2], hh[3], mm[3], ss[3], hh[4], mm[4], ss[4]);
+			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2], hh[3], mm[3], ss[3], hh[4], mm[4], ss[4], hh[5], mm[5], ss[5],
+			hh[6], mm[6], ss[6], hh[7], mm[7], ss[7], hh[8], mm[8], ss[8]);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3138,11 +3023,8 @@ void MCC::allocPad(int Number){
 	case PT_PDIABORTPAD: // PDIABORTPAD
 		padForm = calloc(1, sizeof(PDIABORTPAD));
 		break;
-	case PT_AP11T2ABORTPAD: // AP11T2ABORTPAD
-		padForm = calloc(1, sizeof(AP11T2ABORTPAD));
-		break;
-	case PT_AP11T3ABORTPAD: // AP11T3ABORTPAD
-		padForm = calloc(1, sizeof(AP11T3ABORTPAD));
+	case PT_AP11LUNSURFPAD: // AP11T2ABORTPAD
+		padForm = calloc(1, sizeof(AP11LunarSurfaceDataCard));
 		break;
 	case PT_AP11P76PAD: // AP11P76PAD
 		padForm = calloc(1, sizeof(AP11P76PAD));
@@ -3273,6 +3155,8 @@ void MCC::keyDown(DWORD key){
 			if (menuState == 2) {
 				// Report State
 				sprintf(buf, "MissionState %d SubState %d StateTime %f SubStateTime %f", MissionState, SubState, StateTime, SubStateTime);
+				addMessage(buf);
+				sprintf(buf, "MissionPhase %d EarthRev %d MoonRev %d MoonRevTime %f", MissionPhase, EarthRev, MoonRev, MoonRevTime);
 				addMessage(buf);
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
 				menuState = 0;
@@ -3949,21 +3833,38 @@ void MCC::initiateAbort()
 		{
 			setState(MST_CP_ABORT_ORBIT);
 		}
+		else if (MissionType == MTP_F)
+		{
+			setState(MST_F_ABORT_ORBIT);
+		}
+		else if (MissionType == MTP_G)
+		{
+			setState(MST_G_ABORT_ORBIT);
+		}
 	}
 	else if (MissionPhase == MMST_TL_COAST)
 	{
 		AbortMode = 6;
-		setState(MST_CP_ABORT);
+		if (MissionType == MTP_C_PRIME)
+		{
+			setState(MST_CP_ABORT);
+		}
 	}
 	else if (MissionPhase == MMST_LUNAR_ORBIT)
 	{
 		AbortMode = 7;
-		setState(MST_CP_ABORT);
+		if (MissionType == MTP_C_PRIME)
+		{
+			setState(MST_CP_ABORT);
+		}
 	}
 	else if (MissionPhase == MMST_TE_COAST)
 	{
 		AbortMode = 8;
-		setState(MST_CP_ABORT);
+		if (MissionType == MTP_C_PRIME)
+		{
+			setState(MST_CP_ABORT);
+		}
 	}
 }
 
@@ -3972,5 +3873,64 @@ void MCC::SlowIfDesired()
 {
 	if (oapiGetTimeAcceleration() > 1.0) {
 		oapiSetTimeAcceleration(1.0);
+	}
+}
+
+void MCC::SetCSM(char *csmname)
+{
+	VESSEL *v;
+	OBJHANDLE hVessel;
+
+	hVessel = oapiGetObjectByName(csmname);
+	if (hVessel != NULL)
+	{
+		v = oapiGetVesselInterface(hVessel);
+
+		if (!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
+			strncat(CSMName, csmname, 64);
+			cm = (Saturn *)v;
+			rtcc->calcParams.src = cm;
+		}
+	}
+}
+void MCC::SetLM(char *lemname)
+{
+	VESSEL *v;
+	OBJHANDLE hVessel;
+
+	hVessel = oapiGetObjectByName(lemname);
+	if (hVessel != NULL)
+	{
+		v = oapiGetVesselInterface(hVessel);
+
+		if (!_stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
+			strncat(LEMName, lemname, 64);
+			lm = (LEM *)v;
+			rtcc->calcParams.tgt = v;
+		}
+	}
+}
+
+void MCC::SetLV(char *lvname)
+{
+	VESSEL *v;
+	OBJHANDLE hVessel;
+
+	hVessel = oapiGetObjectByName(lvname);
+	if (hVessel != NULL)
+	{
+		v = oapiGetVesselInterface(hVessel);
+
+		if (!_stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/sat5stg3") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+			!_stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) {
+			strncat(LVName, lvname, 64);
+			sivb = (SIVB *)v;
+		}
 	}
 }

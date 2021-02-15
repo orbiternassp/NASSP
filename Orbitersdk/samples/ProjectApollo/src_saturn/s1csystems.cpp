@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "csmcomputer.h"
 #include "saturn.h"
 #include "papi.h"
+#include "TSMUmbilical.h"
 
 #include "s1csystems.h"
 
@@ -48,6 +49,11 @@ F1Engine::F1Engine(VESSEL *v, THRUSTER_HANDLE &f1)
 
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
+
+	pitchCmd = 0.0;
+	pitchPos = 0.0;
+	yawCmd = 0.0;
+	yawPos = 0.0;
 }
 
 void F1Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -60,6 +66,10 @@ void F1Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "RSSCUTOFF", RSSCutoff);
 	papiWriteScenario_bool(scn, "ENGINERUNNING", EngineRunning);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
+	papiWriteScenario_double(scn, "PITCHCMD", pitchCmd);
+	papiWriteScenario_double(scn, "PITCHPOS", pitchPos);
+	papiWriteScenario_double(scn, "YAWCMD", yawCmd);
+	papiWriteScenario_double(scn, "YAWPOS", yawPos);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -80,6 +90,10 @@ void F1Engine::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "RSSCUTOFF", RSSCutoff);
 		papiReadScenario_bool(line, "ENGINERUNNING", EngineRunning);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
+		papiReadScenario_double(line, "PITCHCMD", pitchCmd);
+		papiReadScenario_double(line, "PITCHPOS", pitchPos);
+		papiReadScenario_double(line, "YAWCMD", yawCmd);
+		papiReadScenario_double(line, "YAWPOS", yawPos);
 	}
 }
 
@@ -90,48 +104,51 @@ void F1Engine::Timestep(double simdt)
 	//Thrust OK switch
 	ThrustOK = vessel->GetThrusterLevel(th_f1) > 0.9 && !EngineFailed;
 
-	if (ProgrammedCutoff || EDSCutoff || GSECutoff || RSSCutoff || (!ThrustOK && EngineRunning))
+	if (ProgrammedCutoff || EDSCutoff || GSECutoff || RSSCutoff)
 	{
 		EngineStop = true;
 	}
 
 	if (EngineStop)
 	{
-		EngineStart = false;
-		EngineRunning = false;
-
-		double tm_1, tm_2, tm_3;
-
-		ThrustTimer += simdt;
-
-		tm_1 = 0.1;
-		tm_2 = 0.3;
-		tm_3 = 0.7;
-
-		if (ThrustTimer >= tm_1)
+		if (ThrustLevel > 0.0)
 		{
-			if (ThrustTimer < tm_2)
+			EngineStart = false;
+			EngineRunning = false;
+
+			double tm_1, tm_2, tm_3;
+
+			ThrustTimer += simdt;
+
+			tm_1 = 0.1;
+			tm_2 = 0.3;
+			tm_3 = 0.7;
+
+			if (ThrustTimer >= tm_1)
 			{
-				ThrustLevel = 1.0 - 3.35*(ThrustTimer - tm_1);
-			}
-			else
-			{
-				if (ThrustTimer < tm_3)
+				if (ThrustTimer < tm_2)
 				{
-					ThrustLevel = 0.33 - 0.825*(ThrustTimer - tm_2);
+					ThrustLevel = min(ThrustLevel, 1.0 - 3.35*(ThrustTimer - tm_1));
 				}
 				else
 				{
-					ThrustLevel = 0;
+					if (ThrustTimer < tm_3)
+					{
+						ThrustLevel = min(ThrustLevel, 0.33 - 0.825*(ThrustTimer - tm_2));
+					}
+					else
+					{
+						ThrustLevel = 0;
+					}
 				}
 			}
-		}
-		else
-		{
-			ThrustLevel = 1;
-		}
+			else
+			{
+				ThrustLevel = min(ThrustLevel, 1);
+			}
 
-		vessel->SetThrusterLevel(th_f1, ThrustLevel);
+			vessel->SetThrusterLevel(th_f1, ThrustLevel);
+		}
 	}
 	else if (EngineStart && !EngineRunning)
 	{
@@ -190,43 +207,55 @@ void F1Engine::Timestep(double simdt)
 	{
 		ThrustTimer = 0.0;
 	}
+
+	//Gimbal timesteps
+	ServoDrive(pitchPos, pitchCmd, 5.0*RAD, simdt);
+	ServoDrive(yawPos, yawCmd, 5.0*RAD, simdt);
+
+	vessel->SetThrusterDir(th_f1, _V(yawPos, pitchPos, 1));
 }
 
 void F1Engine::SetThrusterDir(double beta_y, double beta_p)
 {
 	if (th_f1 == NULL) return;
 
-	VECTOR3 f1vector;
-
 	if (beta_y > 5.16*RAD)
 	{
-		f1vector.x = 5.16*RAD;
+		beta_y = 5.16*RAD;
 	}
 	else if (beta_y < -5.16*RAD)
 	{
-		f1vector.x = -5.16*RAD;
-	}
-	else
-	{
-		f1vector.x = beta_y;
+		beta_y = -5.16*RAD;
 	}
 
 	if (beta_p > 5.16*RAD)
 	{
-		f1vector.y = 5.16*RAD;
+		beta_p = 5.16*RAD;
 	}
 	else if (beta_p < -5.16*RAD)
 	{
-		f1vector.y = -5.16*RAD;
+		beta_p = -5.16*RAD;
+	}
+
+	pitchCmd = beta_p;
+	yawCmd = beta_y;
+}
+
+void F1Engine::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
+{
+	double dposcmd, dpos;
+
+	dposcmd = AngleCmd - Angle;
+
+	if (abs(dposcmd) > RateLimit*simdt)
+	{
+		dpos = sign(AngleCmd - Angle)*RateLimit*simdt;
 	}
 	else
 	{
-		f1vector.y = beta_p;
+		dpos = dposcmd;
 	}
-
-	f1vector.z = 1.0;
-
-	vessel->SetThrusterDir(th_f1, f1vector);
+	Angle += dpos;
 }
 
 SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Pyro &SIC_SII_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl) :
@@ -245,24 +274,34 @@ SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 
 	for (int i = 0;i < 5;i++)
 	{
-		ThrustOK[i] = false;
 		EarlySICutoff[i] = false;
 		FirstStageFailureTime[i] = 0.0;
+	}
+	for (int i = 0;i < 15;i++)
+	{
+		ThrustOK[i] = false;
 	}
 
 	MultipleEngineCutoffEnabled = false;
 	PropellantDepletionSensors = false;
 	PointLevelSensorArmed = false;
 	TwoAdjacentOutboardEnginesOutCutoff = false;
-	FailInit = false;
-
-	FailureTimer = 0.0;
 
 	f1engines[0] = &f1engine1;
 	f1engines[1] = &f1engine2;
 	f1engines[2] = &f1engine3;
 	f1engines[3] = &f1engine4;
 	f1engines[4] = &f1engine5;
+
+	TSMUmb = NULL;
+}
+
+SICSystems::~SICSystems()
+{
+	if (TSMUmb)
+	{
+		TSMUmb->AbortDisconnect();
+	}
 }
 
 void SICSystems::SaveState(FILEHANDLE scn) {
@@ -272,10 +311,7 @@ void SICSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
-	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
-	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 5);
-	papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 5);
-	papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
+	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 15);
 
 	f1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	f1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -297,10 +333,7 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
-		papiReadScenario_bool(line, "FAILINIT", FailInit);
-		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 5);
-		papiReadScenario_boolarr(line, "EARLYSICUTOFF", EarlySICutoff, 5);
-		papiReadScenario_doublearr(line, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
+		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 15);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			f1engine1.LoadState(scn, "ENGINE_END");
@@ -320,7 +353,7 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 	}
 }
 
-void SICSystems::Timestep(double simdt, bool liftoff)
+void SICSystems::Timestep(double misst, double simdt)
 {
 	f1engine1.Timestep(simdt);
 	f1engine2.Timestep(simdt);
@@ -331,7 +364,10 @@ void SICSystems::Timestep(double simdt, bool liftoff)
 	//Thrust OK
 	for (int i = 0;i < 5;i++)
 	{
-		ThrustOK[i] = f1engines[i]->GetThrustOK();
+		for (int j = 0;j < 3;j++)
+		{
+			ThrustOK[i * 3 + j] = f1engines[i]->GetThrustOK() || ESEGetSICThrustOKSimulate(i + 1, j + 1);
+		}
 	}
 
 	//Propellant Depletion
@@ -360,19 +396,21 @@ void SICSystems::Timestep(double simdt, bool liftoff)
 		}
 	}
 
-	//Failure code
-
-	if (liftoff)
-		FailureTimer += simdt;
-
-	if (vessel->GetDamageModel())
+	if (MultipleEngineCutoffEnabled)
 	{
 		for (int i = 0;i < 5;i++)
 		{
-			if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
-			{
-				f1engines[i]->SetFailed();
-			}
+			if (f1engines[i]->GetThrustOK() == false) f1engines[i]->SetProgrammedEngineCutoff();
+		}
+	}
+
+	//Failure code
+
+	for (int i = 0;i < 5;i++)
+	{
+		if (EarlySICutoff[i] && (misst > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
+		{
+			f1engines[i]->SetFailed();
 		}
 	}
 
@@ -439,9 +477,21 @@ void SICSystems::EDSEnginesCutoff(bool cut)
 	}
 }
 
+void SICSystems::GSEEnginesCutoff(bool cut)
+{
+	if (cut)
+	{
+		f1engine1.SetGSECutoff();
+		f1engine2.SetGSECutoff();
+		f1engine3.SetGSECutoff();
+		f1engine4.SetGSECutoff();
+		f1engine5.SetGSECutoff();
+	}
+}
+
 void SICSystems::GetThrustOK(bool *ok)
 {
-	for (int i = 0;i < 5;i++)
+	for (int i = 0;i < 15;i++)
 	{
 		ok[i] = ThrustOK[i];
 	}
@@ -454,23 +504,37 @@ void SICSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 		EarlySICutoff[i] = SICut[i];
 		FirstStageFailureTime[i] = SICutTimes[i];
 	}
-
-	FailInit = true;
 }
 
-void SICSystems::SetEngineFailureParameters(int n, double SICutTimes)
+void SICSystems::SetEngineFailureParameters(int n, double SICutTimes, bool fail)
 {
 	if (n < 1 || n > 5) return;
 
-	EarlySICutoff[n - 1] = true;
+	EarlySICutoff[n - 1] = fail;
 	FirstStageFailureTime[n - 1] = SICutTimes;
+}
 
-	FailInit = true;
+void SICSystems::GetEngineFailureParameters(int n, bool &fail, double &failtime)
+{
+	if (n < 1 || n > 5) return;
+
+	fail = EarlySICutoff[n - 1];
+	failtime = FirstStageFailureTime[n - 1];
 }
 
 double SICSystems::GetSumThrust()
 {
 	return (f1engine1.GetThrustLevel() + f1engine2.GetThrustLevel() + f1engine3.GetThrustLevel() + f1engine4.GetThrustLevel() + f1engine5.GetThrustLevel()) / 5.0;
+}
+
+bool SICSystems::TripleVoting(bool vote1, bool vote2, bool vote3)
+{
+	int num = 0;
+	if (vote1) num++;
+	if (vote2) num++;
+	if (vote3) num++;
+	if (num >= 2) return true;
+	return false;
 }
 
 void SICSystems::SwitchSelector(int channel)
@@ -539,8 +603,7 @@ bool SICSystems::GetPropellantDepletionEngineCutoff()
 	if (PointLevelSensorArmed)
 	{
 		if (PropellantDepletionSensors) return true;
-
-		for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
+		if (!TripleVoting(ThrustOK[0], ThrustOK[1], ThrustOK[2]) && !TripleVoting(ThrustOK[3], ThrustOK[4], ThrustOK[5]) && !TripleVoting(ThrustOK[6], ThrustOK[7], ThrustOK[8]) && !TripleVoting(ThrustOK[9], ThrustOK[10], ThrustOK[11])) return true;
 	}
 
 	return false;
@@ -548,14 +611,45 @@ bool SICSystems::GetPropellantDepletionEngineCutoff()
 
 bool SICSystems::GetInboardEngineOut()
 {
-	if (!ThrustOK[4]) return true;
+	if (!TripleVoting(ThrustOK[12], ThrustOK[13], ThrustOK[14])) return true;
 
 	return false;
 }
 
 bool SICSystems::GetOutboardEngineOut()
 {
-	for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
+	for (int i = 0;i < 4;i++) if (!TripleVoting(ThrustOK[3 * i], ThrustOK[3 * i + 1], ThrustOK[3 * i + 2])) return true;
 
 	return false;
+}
+
+bool SICSystems::GetEngineStop()
+{
+	for (int i = 0;i < 5;i++) if (f1engines[i]->GetEngineStop()) return true;
+
+	return false;
+}
+
+void SICSystems::ConnectUmbilical(TSMUmbilical *umb)
+{
+	TSMUmb = umb;
+}
+
+void SICSystems::DisconnectUmbilical()
+{
+	TSMUmb = NULL;
+}
+
+bool SICSystems::IsUmbilicalConnected()
+{
+	if (TSMUmb && TSMUmb->IsUmbilicalConnected()) return true;
+
+	return false;
+}
+
+bool SICSystems::ESEGetSICThrustOKSimulate(int eng, int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return TSMUmb->ESEGetSICThrustOKSimulate(eng, n);
 }

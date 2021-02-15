@@ -298,11 +298,11 @@ void LES::AddEngines()
 	//
 	// Yes, the jettison engines _are_ supposed to point in different
 	// directions! It's intended to rotate the LES after jettison to
-	// move it away from the Saturn.
+	// move it away from the Saturn. Angles chosen for 4° thrust vector.
 	//
 
-	VECTOR3 m_exhaust_ref1 = {0.3, 0.0, 1.0};
-	VECTOR3 m_exhaust_ref2 = {-0.25, 0.0, 1.0};
+	VECTOR3 m_exhaust_ref1 = _V(sin(30.0*RAD), 0, cos(30.0*RAD));
+	VECTOR3 m_exhaust_ref2 = _V(-sin(22.0*RAD), 0, cos(22.0*RAD));
 
 	if (!ph_tjm)
 		ph_tjm = CreatePropellantResource(JettisonFuelMax, JettisonFuel);

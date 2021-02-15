@@ -24,10 +24,23 @@
 
 #pragma once
 
+#include "soundlib.h"
+#include "IUUmbilicalInterface.h"
+#include "SCMUmbilicalInterface.h"
+#include "LCCPadInterface.h"
+
+class S1B;
+class SIVB;
+class IUUmbilical;
+class IU_ESE;
+class SCMUmbilical;
+class SIB_ESE;
+class RCA110AM;
+
 ///
 /// \ingroup Ground
 ///
-class LC37: public VESSEL2 {
+class LC37: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface, public LCCPadInterface {
 
 public:
 	LC37(OBJHANDLE hObj, int fmodel);
@@ -42,14 +55,43 @@ public:
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
 
+	// LC-37/IU Interface
+	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
+	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	bool ESEGetGSEOverrateSimulate(int n);
+	bool ESEGetEDSPowerInhibit();
+	bool ESEPadAbortRequest();
+	bool ESEGetThrustOKIndicateEnableInhibitA();
+	bool ESEGetThrustOKIndicateEnableInhibitB();
+	bool ESEEDSLiftoffInhibitA();
+	bool ESEEDSLiftoffInhibitB();
+	bool ESEGetEDSAutoAbortSimulate(int n);
+	bool ESEGetEDSLVCutoffSimulate(int n);
+	bool ESEGetSIBurnModeSubstitute();
+	bool ESEGetGuidanceReferenceRelease();
+	bool ESEGetQBallSimulateCmd();
+
+	//ML/S-IC Interface
+	bool ESEGetSIBThrustOKSimulate(int eng, int n);
+
+	// LCC/LC-37 Interface
+	void SLCCCheckDiscreteInput(RCA110A *c);
+	bool SLCCGetOutputSignal(size_t n);
+	void ConnectGroundComputer(RCA110A *c);
+	void IssueSwitchSelectorCmd(int stage, int chan);
+
 protected:
 	bool firstTimestepDone;
 	bool abort;
 	double touchdownPointHeight;
-	char LVName[256];
+	char SIBName[256];
+	char SIVBName[256];
 	SoundLib soundlib;
-	OBJHANDLE hLV;
 	int state;
+	double LaunchMJD;
+	double MissionTime;
 
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;
@@ -57,4 +99,12 @@ protected:
 	void DoFirstTimestep();
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
+
+	IUUmbilical *IuUmb;
+	SCMUmbilical *SCMUmb;
+	IU_ESE *IuESE;
+	SIB_ESE *SIBESE;
+	RCA110AM *rca110a;
+	S1B *s1b;
+	SIVB *sivb;
 };

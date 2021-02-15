@@ -50,33 +50,66 @@ public:
 
 // ELECTRICAL
 // LEM to CSM Power Connector
-class LEMPowerConnector : public Connector
+class LEMPowerConnector : public LEMConnector
 {
 public:
-	LEMPowerConnector();
+	LEMPowerConnector(LEM *l);
 	int csm_power_latch;
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };
 
-enum IULMMessageType
-{
-	IULM_SET_INPUT_CHANNEL_BIT,			///< Set an AGC input channel bit value.
-	IULM_PLAY_COUNT_SOUND,				///< Play/stop countdown sound.
-	IULM_PLAY_SEPS_SOUND,				///< Play/stop Seperation sound.
-};
-
 ///
 /// \ingroup Connectors
-/// \brief CSM to IU connector type.
+/// \brief LM to S-IVB connector type.
 ///
-class LMToIUConnector : public LEMConnector
+class LMToSIVBConnector : public LEMConnector
 {
 public:
-	LMToIUConnector(LEMcomputer &c, LEM *l);
-	~LMToIUConnector();
+	LMToSIVBConnector(LEM *l);
+	~LMToSIVBConnector();
+
+	void StartSeparationPyros();
+	void StopSeparationPyros();
+};
+
+//CSM to LM command connector
+
+class LEMCommandConnector : public LEMConnector
+{
+public:
+	LEMCommandConnector(LEM *l);
+	~LEMCommandConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+class LEM_RR;
+
+class LM_RRtoCSM_RRT_Connector : public LEMConnector
+{
+public:
+	LM_RRtoCSM_RRT_Connector(LEM *l, LEM_RR *lm_rr); //constructor
+	~LM_RRtoCSM_RRT_Connector(); //descructor
+
+	void SendRF(double freq, double XMITpow, double XMITgain, double Phase);
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+	void SetRR(LEM_RR* lm_rr) { lemrr = lm_rr; };
 
 protected:
-	LEMcomputer & agc;
+	LEM_RR* lemrr; //pointer to the instance of the RR that's doing the sending
+};
+
+class LM_VHF;
+
+class LM_VHFtoCSM_VHF_Connector : public LEMConnector
+{
+public:
+	LM_VHFtoCSM_VHF_Connector(LEM *l, LM_VHF *VHFsys);
+	~LM_VHFtoCSM_VHF_Connector();
+
+	void SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone);
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+protected:
+	LM_VHF *pLM_VHFs;
 };

@@ -32,11 +32,12 @@
 #include <commctrl.h>
 #include "resource.h"
 #include <stdio.h>
+#include "vesim.h"
 
 // ==============================================================
 // Some global parameters
 
-#define MAX_TABNUM 4
+#define MAX_TABNUM 3
 
 // file name for storing custom parameters
 static const char *cfgfile = "ProjectApollo/Saturn5.launchpad.cfg";
@@ -58,16 +59,16 @@ static struct {
 	int Saturn_FDAISmooth;
 	int Saturn_RHC;
 	int Saturn_THC;
+	int Saturn_RSL;
+	int Saturn_TSL;
 	int Saturn_RHCTHCToggle;
 	int Saturn_RHCTHCToggleId;
-	int Saturn_ChecklistAutoSlow;
-	int Saturn_ChecklistAutoDisabled;
-	int Saturn_OrbiterAttitudeDisabled;
-	int Saturn_SequencerSwitchLightingDisabled;
+	int Saturn_VESIM;
 	int Saturn_MaxTimeAcceleration;
 	int Saturn_MultiThread;
 	int Saturn_VAGCChecklistAutoSlow;
 	int Saturn_VAGCChecklistAutoEnabled;
+	int Saturn_VcInfoEnabled;
 } gParams;
 
 
@@ -110,14 +111,6 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 12, "%i", &gParams.Saturn_FDAIDisabled);
 		} else if (!strnicmp (line, "FDAISMOOTH", 10)) {
 			sscanf (line + 10, "%i", &gParams.Saturn_FDAISmooth);
-		} else if (!strnicmp (line, "CHECKLISTAUTOSLOW", 17)) {
-			sscanf (line + 17, "%i", &gParams.Saturn_ChecklistAutoSlow);
-		} else if (!strnicmp (line, "CHECKLISTAUTODISABLED", 21)) {
-			sscanf (line + 21, "%i", &gParams.Saturn_ChecklistAutoDisabled);
-		} else if (!strnicmp (line, "ORBITERATTITUDEDISABLED", 23)) {
-			sscanf (line + 23, "%i", &gParams.Saturn_OrbiterAttitudeDisabled);
-		} else if (!strnicmp (line, "SEQUENCERSWITCHLIGHTINGDISABLED", 31)) {
-			sscanf (line + 31, "%i", &gParams.Saturn_SequencerSwitchLightingDisabled);
 		} else if (!strnicmp (line, "GNSPLIT", 7)) {
 			sscanf (line + 7, "%i", &gParams.Saturn_GNSplit);
 		} else if (!strnicmp (line, "MAXTIMEACC", 10)) {
@@ -132,10 +125,18 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 12, "%i", &gParams.Saturn_RHC);
 		} else if (!strnicmp (line, "JOYSTICK_THC", 12)) {
 			sscanf (line + 12, "%i", &gParams.Saturn_THC);
+		} else if (!strnicmp(line, "JOYSTICK_RSL", 12)) {
+			sscanf(line + 12, "%i", &gParams.Saturn_RSL);
+		} else if (!strnicmp(line, "JOYSTICK_TSL", 12)) {
+			sscanf(line + 12, "%i", &gParams.Saturn_TSL);
 		} else if (!strnicmp (line, "JOYSTICK_RTTID", 14)) {
 			sscanf (line + 14, "%i", &gParams.Saturn_RHCTHCToggleId);
 		} else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
-			sscanf (line + 12, "%i", &gParams.Saturn_RHCTHCToggle);
+			sscanf (line + 12, "%i", &gParams.Saturn_RHCTHCToggle);			
+		} else if (!strnicmp (line, "JOYSTICK_VESIM", 14)) {
+			sscanf(line + 14, "%i", &gParams.Saturn_VESIM);
+		} else if (!strnicmp(line, "VCINFOENABLED", 13)) {
+			sscanf(line + 13, "%i", &gParams.Saturn_VcInfoEnabled);
 		}
 	}	
 	oapiCloseFile (hFile, FILE_IN);
@@ -177,18 +178,6 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	sprintf(cbuf, "FDAISMOOTH %d", gParams.Saturn_FDAISmooth);
 	oapiWriteLine(hFile, cbuf);
 
-	sprintf(cbuf, "CHECKLISTAUTOSLOW %d", gParams.Saturn_ChecklistAutoSlow);
-	oapiWriteLine(hFile, cbuf);
-
-	sprintf(cbuf, "CHECKLISTAUTODISABLED %d", gParams.Saturn_ChecklistAutoDisabled);
-	oapiWriteLine(hFile, cbuf);
-
-	sprintf(cbuf, "ORBITERATTITUDEDISABLED %d", gParams.Saturn_OrbiterAttitudeDisabled);
-	oapiWriteLine(hFile, cbuf);
-
-	sprintf(cbuf, "SEQUENCERSWITCHLIGHTINGDISABLED %d", gParams.Saturn_SequencerSwitchLightingDisabled);
-	oapiWriteLine(hFile, cbuf);
-
 	sprintf(cbuf, "MAXTIMEACC %d", gParams.Saturn_MaxTimeAcceleration);
 	oapiWriteLine(hFile, cbuf);
 
@@ -214,9 +203,20 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	
 	sprintf(cbuf, "JOYSTICK_THC %d", gParams.Saturn_THC);
 	oapiWriteLine(hFile, cbuf);
-	
+
+	sprintf(cbuf, "JOYSTICK_RSL %d", gParams.Saturn_RSL);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "JOYSTICK_TSL %d", gParams.Saturn_TSL);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "JOYSTICK_VESIM %d", gParams.Saturn_VESIM);
+	oapiWriteLine(hFile, cbuf);
+
 	oapiWriteLine(hFile, "JOYSTICK_TAUTO");	// Not configurable currently
-	oapiWriteLine(hFile, "JOYSTICK_TJT");	// Not configurable currently
+
+	sprintf(cbuf, "VCINFOENABLED %d", gParams.Saturn_VcInfoEnabled);
+	oapiWriteLine(hFile, cbuf);
 
 	oapiCloseFile (hFile, FILE_OUT);
 }
@@ -244,11 +244,8 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 		tabitem.pszText = "Controls";
 		SendMessage(hTab, TCM_INSERTITEM, 1, (LPARAM) &tabitem);
 
-		tabitem.pszText = "Quickstart Mode";
+		tabitem.pszText = "Miscellaneous";
 		SendMessage(hTab, TCM_INSERTITEM, 2, (LPARAM) &tabitem);
-
-		tabitem.pszText = "Virtual AGC Mode";
-		SendMessage(hTab, TCM_INSERTITEM, 3, (LPARAM) &tabitem);
 
 		// set tab control display area
 		GetWindowRect(hTab, &rc);
@@ -266,13 +263,9 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 		MoveWindow(gParams.hDlgTabs[1], pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top, false);
 		ShowWindow(gParams.hDlgTabs[1], SW_HIDE);
 
-		gParams.hDlgTabs[2] = CreateDialog(gParams.hInst, MAKEINTRESOURCE(IDD_PAGEQUICKSTART), hWnd, (DLGPROC) DlgProcControl);
+		gParams.hDlgTabs[2] = CreateDialog(gParams.hInst, MAKEINTRESOURCE(IDD_PAGEMISC), hWnd, (DLGPROC) DlgProcControl);
 		MoveWindow(gParams.hDlgTabs[2], pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top, false);
 		ShowWindow(gParams.hDlgTabs[2], SW_HIDE);
-
-		gParams.hDlgTabs[3] = CreateDialog(gParams.hInst, MAKEINTRESOURCE(IDD_PAGEVIRTUALAGC), hWnd, (DLGPROC) DlgProcControl);
-		MoveWindow(gParams.hDlgTabs[3], pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top, false);
-		ShowWindow(gParams.hDlgTabs[3], SW_HIDE);
 
 		return TRUE;
 
@@ -350,49 +343,66 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 					gParams.Saturn_RHCTHCToggleId = -1;
 				}
 
-				// Quickstart Tab
-				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_CHECKLISTAUTOSLOW, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-					gParams.Saturn_ChecklistAutoSlow = 1;
-				} else {
-					gParams.Saturn_ChecklistAutoSlow = 0;
+				if (SendDlgItemMessage(gParams.hDlgTabs[1], IDC_CHECK_RSL, BM_GETCHECK, 0, 0) == BST_UNCHECKED) {
+					gParams.Saturn_RSL = -1;
 				}
-				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_CHECKLISTAUTODISABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-					gParams.Saturn_ChecklistAutoDisabled = 1;
-				} else {
-					gParams.Saturn_ChecklistAutoDisabled = 0;
-				}
-				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_ORBITERATTITUDEDISABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-					gParams.Saturn_OrbiterAttitudeDisabled = 1;
-				} else {
-					gParams.Saturn_OrbiterAttitudeDisabled = 0;
-				}
-				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_SEQUENCERSWITCHLIGHTINGDISABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
-					gParams.Saturn_SequencerSwitchLightingDisabled = 1;
-				} else {
-					gParams.Saturn_SequencerSwitchLightingDisabled = 0;
+				else {
+					SendDlgItemMessage(gParams.hDlgTabs[1], IDC_EDIT_RSL, WM_GETTEXT, 3, (LPARAM)(LPCTSTR)buffer);
+					if (sscanf(buffer, "%i", &i) == 1) {
+						gParams.Saturn_RSL = i;
+					}
+					else {
+						gParams.Saturn_RSL = -1;
+					}
 				}
 
-				// VAGC Tab
-				SendDlgItemMessage(gParams.hDlgTabs[3], IDC_EDIT_TIMEACC, WM_GETTEXT, 4, (LPARAM) (LPCTSTR) buffer);
+				if (SendDlgItemMessage(gParams.hDlgTabs[1], IDC_CHECK_TJT, BM_GETCHECK, 0, 0) == BST_UNCHECKED) {
+					gParams.Saturn_TSL = -1;
+				}
+				else {
+					SendDlgItemMessage(gParams.hDlgTabs[1], IDC_EDIT_TJT, WM_GETTEXT, 3, (LPARAM)(LPCTSTR)buffer);
+					if (sscanf(buffer, "%i", &i) == 1) {
+						gParams.Saturn_TSL = i;
+					}
+					else {
+						gParams.Saturn_TSL = -1;
+					}
+				}
+
+				if (SendDlgItemMessage(gParams.hDlgTabs[1], IDC_CHECK_VESIM, BM_GETCHECK, 0, 0) == BST_UNCHECKED) {
+					gParams.Saturn_VESIM = 0;
+				}
+				else {
+					gParams.Saturn_VESIM = 1;
+				}
+
+				// Miscellaneous Tab
+				SendDlgItemMessage(gParams.hDlgTabs[2], IDC_EDIT_TIMEACC, WM_GETTEXT, 4, (LPARAM) (LPCTSTR) buffer);
 				if (sscanf(buffer, "%i", &i) == 1) {
 					gParams.Saturn_MaxTimeAcceleration = i;
 				} else {
 					gParams.Saturn_MaxTimeAcceleration = 100;
 				}
-				if (SendDlgItemMessage (gParams.hDlgTabs[3], IDC_CHECK_MULTITHREAD, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_MULTITHREAD, BM_GETCHECK, 0, 0) == BST_CHECKED) {
 					gParams.Saturn_MultiThread = 1;
 				} else {
 					gParams.Saturn_MultiThread = 0;
 				}
-				if (SendDlgItemMessage (gParams.hDlgTabs[3], IDC_CHECK_VAGCCHECKLISTAUTOSLOW, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_VAGCCHECKLISTAUTOSLOW, BM_GETCHECK, 0, 0) == BST_CHECKED) {
 					gParams.Saturn_VAGCChecklistAutoSlow = 1;
 				} else {
 					gParams.Saturn_VAGCChecklistAutoSlow = 0;
 				}
-				if (SendDlgItemMessage (gParams.hDlgTabs[3], IDC_CHECK_VAGCCHECKLISTAUTOENABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_VAGCCHECKLISTAUTOENABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
 					gParams.Saturn_VAGCChecklistAutoEnabled = 1;
 				} else {
 					gParams.Saturn_VAGCChecklistAutoEnabled = 0;
+				}
+				if (SendDlgItemMessage(gParams.hDlgTabs[2], IDC_CHECK_VCINFOENABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+					gParams.Saturn_VcInfoEnabled = 1;
+				}
+				else {
+					gParams.Saturn_VcInfoEnabled = 0;
 				}
 
 				EndDialog (hWnd, 0);
@@ -453,7 +463,6 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 			SendDlgItemMessage(hWnd, IDC_EDIT_THC, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
 		}
 
-
 		SendDlgItemMessage(hWnd, IDC_CHECK_RHCTHCTOGGLE, BM_SETCHECK, gParams.Saturn_RHCTHCToggle?BST_CHECKED:BST_UNCHECKED, 0);
 
 		if (gParams.Saturn_RHCTHCToggleId == -1) {
@@ -463,13 +472,27 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 			SendDlgItemMessage(hWnd, IDC_EDIT_RHCTHCTOGGLE, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
 		}
 
-		SendDlgItemMessage(hWnd, IDC_CHECK_CHECKLISTAUTOSLOW, BM_SETCHECK, gParams.Saturn_ChecklistAutoSlow?BST_CHECKED:BST_UNCHECKED, 0);
+		if (gParams.Saturn_RSL == -1) {
+			SendDlgItemMessage(hWnd, IDC_CHECK_RSL, BM_SETCHECK, BST_UNCHECKED, 0);
+			SendDlgItemMessage(hWnd, IDC_EDIT_RSL, WM_SETTEXT, 0, (LPARAM)(LPCTSTR) "0");
+		}
+		else {
+			SendDlgItemMessage(hWnd, IDC_CHECK_RSL, BM_SETCHECK, BST_CHECKED, 0);
+			sprintf(buffer, "%i", gParams.Saturn_RSL);
+			SendDlgItemMessage(hWnd, IDC_EDIT_RSL, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
+		}
 
-		SendDlgItemMessage(hWnd, IDC_CHECK_CHECKLISTAUTODISABLED, BM_SETCHECK, gParams.Saturn_ChecklistAutoDisabled?BST_CHECKED:BST_UNCHECKED, 0);
+		if (gParams.Saturn_TSL == -1) {
+			SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_UNCHECKED, 0);
+			SendDlgItemMessage(hWnd, IDC_EDIT_TJT, WM_SETTEXT, 0, (LPARAM)(LPCTSTR) "1");
+		}
+		else {
+			SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_CHECKED, 0);
+			sprintf(buffer, "%i", gParams.Saturn_TSL);
+			SendDlgItemMessage(hWnd, IDC_EDIT_TJT, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
+		}
 
-		SendDlgItemMessage(hWnd, IDC_CHECK_ORBITERATTITUDEDISABLED, BM_SETCHECK, gParams.Saturn_OrbiterAttitudeDisabled?BST_CHECKED:BST_UNCHECKED, 0);
-
-		SendDlgItemMessage(hWnd, IDC_CHECK_SEQUENCERSWITCHLIGHTINGDISABLED, BM_SETCHECK, gParams.Saturn_SequencerSwitchLightingDisabled?BST_CHECKED:BST_UNCHECKED, 0);
+		SendDlgItemMessage(hWnd, IDC_CHECK_VESIM, BM_SETCHECK, gParams.Saturn_VESIM ? BST_CHECKED : BST_UNCHECKED, 0);
 
 		sprintf(buffer,"%i",gParams.Saturn_MaxTimeAcceleration);
 		SendDlgItemMessage(hWnd, IDC_EDIT_TIMEACC, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
@@ -479,6 +502,8 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 		SendDlgItemMessage(hWnd, IDC_CHECK_VAGCCHECKLISTAUTOSLOW, BM_SETCHECK, gParams.Saturn_VAGCChecklistAutoSlow?BST_CHECKED:BST_UNCHECKED, 0);
 
 		SendDlgItemMessage(hWnd, IDC_CHECK_VAGCCHECKLISTAUTOENABLED, BM_SETCHECK, gParams.Saturn_VAGCChecklistAutoEnabled?BST_CHECKED:BST_UNCHECKED, 0);
+
+		SendDlgItemMessage(hWnd, IDC_CHECK_VCINFOENABLED, BM_SETCHECK, gParams.Saturn_VcInfoEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
 
 		UpdateControlState(hWnd);
 		return TRUE;
@@ -492,12 +517,40 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_RHCTHCTOGGLE)) {
 			UpdateControlState(hWnd);
-		} 
+
+		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_RSL)) {
+			UpdateControlState(hWnd);
+
+		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_TJT)) {
+			UpdateControlState(hWnd);
+
+		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_VESIM)) {
+			UpdateControlState(hWnd);
+
+		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG)) {
+			std::string configdir = "Config\\ProjectApollo\\Vesim\\";
+			LPDIRECTINPUT8 dx8ppv;
+			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLong(hWnd, GWL_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
+			if (!FAILED(hr)) {
+				Vesim lmvm(NULL, NULL), csmvm(NULL, NULL);
+				lmvm.setupDevices("LM", dx8ppv);
+				csmvm.setupDevices("CSM", dx8ppv);
+				lmvm.createUserConfigs();
+				csmvm.createUserConfigs();
+				/*if (enableVESIM) {
+					for (int i = 0; i < LM_AXIS_INPUT_CNT; i++)
+						vesim.addInput(&vesim_lm_inputs[i]);
+					
+				}*/
+				dx8ppv->Release();
+			}
+			
+		}
 		break;
 
 	case WM_CTLCOLORSTATIC:
 		// Set the color of the text
-		if ((HWND)lParam == GetDlgItem(hWnd, IDC_STATIC_JOYATT) || (HWND)lParam == GetDlgItem(hWnd, IDC_STATIC_ORBITERATT)) {
+		if ((HWND)lParam == GetDlgItem(hWnd, IDC_STATIC_JOYATT)) {
 			// were about to draw the static
 			// set the text color in (HDC)lParam
 			SetBkMode((HDC)wParam,TRANSPARENT);
@@ -511,7 +564,23 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 
-	long rhcChecked, thcChecked;
+	long rhcChecked, thcChecked, vesimChecked;
+
+	vesimChecked = SendDlgItemMessage(hWnd, IDC_CHECK_VESIM, BM_GETCHECK, 0, 0);
+
+	if (vesimChecked == BST_CHECKED) {
+		SendDlgItemMessage(hWnd, IDC_CHECK_RHC, BM_SETCHECK, BST_UNCHECKED, 0);
+		SendDlgItemMessage(hWnd, IDC_CHECK_THC, BM_SETCHECK, BST_UNCHECKED, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RHC), FALSE);
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_THC), FALSE);
+		EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG), TRUE);
+		//SendDlgItemMessage(hWnd, IDC_CHECK_RHC, EM_SETREADONLY, (WPARAM)(BOOL)true, 0);
+	}
+	else {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RHC), TRUE);
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_THC), TRUE);
+		EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG), FALSE);
+	}
 
 	rhcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_RHC, BM_GETCHECK, 0, 0);
 	thcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_THC, BM_GETCHECK, 0, 0);
@@ -547,6 +616,39 @@ void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_RHCTHCTOGGLE), FALSE);
 	}
 
+	if (rhcChecked == BST_CHECKED) {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RSL), TRUE);
+	}
+	else {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RSL), FALSE);
+		SendDlgItemMessage(hWnd, IDC_CHECK_RSL, BM_SETCHECK, BST_UNCHECKED, 0);
+	}
+
+	if (SendDlgItemMessage(hWnd, IDC_CHECK_RSL, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+		SendDlgItemMessage(hWnd, IDC_EDIT_RSL, EM_SETREADONLY, (WPARAM)(BOOL)false, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_RSL), TRUE);
+	}
+	else {
+		SendDlgItemMessage(hWnd, IDC_EDIT_RSL, EM_SETREADONLY, (WPARAM)(BOOL)true, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_RSL), FALSE);
+	}
+
+	if (thcChecked == BST_CHECKED) {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_TJT), TRUE);
+	}
+	else {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_TJT), FALSE);
+		SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_UNCHECKED, 0);
+	}
+
+	if (SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+		SendDlgItemMessage(hWnd, IDC_EDIT_TJT, EM_SETREADONLY, (WPARAM)(BOOL)false, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_TJT), TRUE);
+	}
+	else {
+		SendDlgItemMessage(hWnd, IDC_EDIT_TJT, EM_SETREADONLY, (WPARAM)(BOOL)true, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_TJT), FALSE);
+	}
 }
 
 // ==============================================================
@@ -567,16 +669,16 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 	gParams.Saturn_FDAISmooth = 0;
 	gParams.Saturn_RHC = -1;
 	gParams.Saturn_THC = -1;
+	gParams.Saturn_RSL = -1;
+	gParams.Saturn_TSL = -1;
 	gParams.Saturn_RHCTHCToggle = 0;
 	gParams.Saturn_RHCTHCToggleId = -1;
-	gParams.Saturn_ChecklistAutoSlow = 0;
-	gParams.Saturn_ChecklistAutoDisabled = 0;
-	gParams.Saturn_OrbiterAttitudeDisabled = 0;
-	gParams.Saturn_SequencerSwitchLightingDisabled = 0;
+	gParams.Saturn_VESIM = 0;
 	gParams.Saturn_MaxTimeAcceleration = 0;
 	gParams.Saturn_MultiThread = 0;
 	gParams.Saturn_VAGCChecklistAutoSlow = 1;
 	gParams.Saturn_VAGCChecklistAutoEnabled = 0;
+	gParams.Saturn_VcInfoEnabled = 0;
 
 	gParams.item = new ProjectApolloConfigurator;
 	for (i = 0; i < MAX_TABNUM; i++)

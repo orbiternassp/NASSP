@@ -11,36 +11,63 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_launch\MCCPADForms.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApollomfdButtons.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARoapiModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
+    <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
+    <ClInclude Include="..\..\src_rtccmfd\GeneralizedIterator.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LDPP.h" />
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LOITargeting.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCSystemParameters.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_launch\rtcc.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD_Display.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARCore.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARoapiModule.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EphemProg.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\GeneralizedIterator.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LWP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\RTCCModule.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3F97A697-44DB-4A22-A5F3-7168A990B3C0}</ProjectGuid>
     <RootNamespace>ApolloRTCCMFD</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -130,7 +157,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>../../../LaunchMFD/libMFD;../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -140,6 +167,7 @@
       <ProgramDataBaseFileName>.\Release\ApolloRTCCMFD/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -150,7 +178,7 @@
       <OutputFile>../../../../../Modules/Plugin/ApolloRTCCMFD.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>msvcirt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>msvcirt;LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ProgramDatabaseFile>.\Release\ApolloRTCCMFD/ApolloRTCCMFD.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>

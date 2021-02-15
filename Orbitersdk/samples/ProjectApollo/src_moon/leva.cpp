@@ -33,19 +33,14 @@
 #include "nasspsound.h"
 #include "nasspdefs.h"
 #include "soundlib.h"
-#include "OrbiterMath.h"
 
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "LEMcomputer.h"
 #include "LEM.h"
 
 #include "leva.h"
 #include "LRV.h"
 #include "lrv_console.h"
 #include "tracer.h"
-
-#include "CollisionSDK/CollisionSDK.h"
 
 //
 // Set the file name for the tracer code.
@@ -143,8 +138,6 @@ void LEVA::init()
 void LEVA::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	init();
-	VSEnableCollisions(GetHandle(),"ProjectApollo");
-	VSSetCollisionFlags(GetHandle(),VSC_ONEPOINT);
 	SetAstroStage();
 }
 		 
@@ -166,11 +159,10 @@ void LEVA::SetAstroStage ()
     ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0,0);
     AddMesh (hCDREVA, &mesh_dir);
-	SetCameraOffset(_V(0,1.6,0));
+	SetCameraOffset(_V(0,0.8,0));
 	
 	double tdph = -0.8;
 	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
 	Astro = true;
 }
 
@@ -621,7 +613,7 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 		dist = sqrt(posr.x * posr.x + posr.y * posr.y + posr.z * posr.z);
 		Vel = sqrt(rvel.x * rvel.x + rvel.y * rvel.y + rvel.z * rvel.z);
 		if (GoDock1) {						
-			if (dist <= 6.00550) {
+			if (lmvessel->IsForwardHatchOpen() && dist <= 6.00550) {
 				GoDock1 = false;
 				lmvessel->StopEVA();
 				oapiSetFocusObject(hMaster);
@@ -645,16 +637,7 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
 }
 
-DLLCLBK void ovcLoadState (VESSEL *vessel, FILEHANDLE scn, VESSELSTATUS *vs)
-
-{
-	LEVA *sv = (LEVA *)vessel;
-
-	sv->LoadState(scn, vs);
-}
-
-void LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
-
+void LEVA::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 {
     char *line;
 	
@@ -673,7 +656,7 @@ void LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 			sscanf(line + 9, "%d", &ApolloNo);
 		}
 		else {
-            ParseScenarioLine (line, vs);
+			ParseScenarioLineEx(line, vs);
         }
     }
 }
@@ -687,13 +670,6 @@ void LEVA::clbkVisualCreated (VISHANDLE vis, int refcount)
 
 void LEVA::clbkVisualDestroyed (VISHANDLE vis, int refcount)
 {
-}
-
-
-DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
-{
-	LEVA *sv = (LEVA *)vessel;
-	sv->SaveState(scn);
 }
 
 typedef union {
@@ -732,10 +708,9 @@ void LEVA::SetMainState(int n)
 	Astro = (s.u.Astro != 0);
 }
 
-void LEVA::SaveState(FILEHANDLE scn)
-
+void LEVA::clbkSaveState(FILEHANDLE scn)
 {
-	SaveDefaultState (scn);
+	VESSEL2::clbkSaveState(scn);
 
 	int s = GetMainState();
 	if (s) {
@@ -768,5 +743,5 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 
 DLLCLBK void InitModule (HINSTANCE hModule)
 {
-	InitCollisionSDK();
+
 }

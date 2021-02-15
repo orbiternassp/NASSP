@@ -28,6 +28,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_F_INSERTION		10
 // Ends at TLI Update
 #define MST_F_EPO1			11
+#define MST_F_EPO2			12
+#define MST_F_EPO3			13
+#define MST_F_EPO4			14
 // Ends at TLI BURN
 #define MST_F_TRANSLUNAR1	21
 // Ends at separation
@@ -38,34 +41,40 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_F_TRANSLUNAR4	24
 // Ends at Block Data 1 update
 #define MST_F_TRANSLUNAR5	25
-// Ends at PTC REFSMMAT update
+// Ends at MCC-1 evaluation
 #define MST_F_TRANSLUNAR6	26
-// Ends at MCC-1 update
+// Ends at PTC REFSMMAT update
 #define MST_F_TRANSLUNAR7	27
-// Ends at Block Data 2 update
+#define MST_F_TRANSLUNAR_NO_MCC1_1	50
+#define MST_F_TRANSLUNAR_NO_MCC1_2	51
+// Ends at MCC-1 update
 #define MST_F_TRANSLUNAR8	28
-// Ends at MCC-2 update
+// Ends at Block Data 2 update
 #define MST_F_TRANSLUNAR9	29
-// Ends at Flyby PAD update
+// Ends at MCC-2 update
 #define MST_F_TRANSLUNAR10	30
-// Ends at State Vector Update
+// Ends at Flyby PAD update
 #define MST_F_TRANSLUNAR11	31
-// Ends at MCC-3 update
+// Ends at State Vector Update
 #define MST_F_TRANSLUNAR12	32
-// Ends at MCC-4 update
+// Ends at MCC-3 update
 #define MST_F_TRANSLUNAR13	33
-// Ends at PC+2 update
+// Ends at MCC-4 update
 #define MST_F_TRANSLUNAR14	34
-// Ends at Preliminary LOI-1 update
+// Ends at PC+2 update
 #define MST_F_TRANSLUNAR15	35
-// Ends at TEI-1 update
+// Ends at Preliminary LOI-1 update
 #define MST_F_TRANSLUNAR16	36
-// Ends at TEI-4 update
+// Ends at TEI-1 update
 #define MST_F_TRANSLUNAR17	37
-// Ends at rev 1 map update
+// Ends at TEI-4 update
 #define MST_F_TRANSLUNAR18	38
-// Ends at LOI-1 update
+// Ends at rev 1 map update
 #define MST_F_TRANSLUNAR19	39
+// Ends at LOI-1 update
+#define MST_F_TRANSLUNAR20	40
+#define MST_F_TRANSLUNAR21	41
+#define MST_F_TRANSLUNAR22	42
 // Ends at rev 2 map update
 #define MST_F_LUNAR_ORBIT_LOI_DAY_1		100
 // Ends at LOI-2 update
@@ -240,3 +249,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_F_TRANSEARTH_12	411
 // Ends at CM/SM separation
 #define MST_F_TRANSEARTH_13	412
+
+//ABORTS
+// Ends at entry interface, goes to entry.
+#define MST_F_ABORT_ORBIT	500

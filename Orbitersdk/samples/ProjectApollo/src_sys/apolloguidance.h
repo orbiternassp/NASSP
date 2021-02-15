@@ -101,18 +101,6 @@ public:
 	void ControlVessel(VESSEL *v) { OurVessel = v; };
 
 	///
-	/// \brief Set the Apollo mission number for this spacecraft.
-	/// \param flight The mission number.
-	///
-	void SetApolloNo(int flight) { ApolloNo = flight; };
-
-	///
-	/// \brief Get the Apollo mission number for this flight.
-	/// \return Mission number.
-	///
-	int GetApolloNo() { return ApolloNo; };
-
-	///
 	/// \brief Force the AGC to restart.
 	///
 	void ForceRestart();
@@ -292,7 +280,7 @@ public:
 	/// \param MissionNo Apollo mission number.
 	/// \param OtherVessel Pointer to the LEM so that the CSM can track it for rendevouz.
 	///
-	virtual void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
+	virtual void SetMissionInfo(std::string ProgramName, char *OtherName = 0);
 
 	///
 	/// \brief Initialise the Virtual AGC.
@@ -309,7 +297,7 @@ public:
 	/// \param a Power bus 1.
 	/// \param b Power bus 2.
 	///
-	void WirePower(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
+	void WirePower(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); }
 
 	///
 	/// \brief Is the AGC supplied with power.
@@ -317,13 +305,14 @@ public:
 	///
 	bool IsPowered();
 
-	void SetDSKY2(DSKY *d2) { dsky2 = d2; };
+	void SetDSKY2(DSKY *d2) { dsky2 = d2; }
 
 	///
 	/// \brief alarm flags for CWS
 	///
-	bool GetProgAlarm() { return ProgAlarm; };
-	bool GetGimbalLockAlarm() { return GimbalLockAlarm; };
+	bool GetProgAlarm() { return ProgAlarm; }
+	bool GetTrackerAlarm() { return TrackerAlarm; }
+	bool GetGimbalLockAlarm() { return GimbalLockAlarm; }
 
 protected:
 
@@ -339,8 +328,6 @@ protected:
 	virtual void ProcessChannel13(ChannelValue val);
 	virtual void ProcessChannel14(ChannelValue val);
 	virtual void ProcessChannel34(ChannelValue val);
-	virtual void ProcessChannel140(ChannelValue val);
-	virtual void ProcessChannel141(ChannelValue val);
 	virtual void ProcessChannel142(ChannelValue val);
 	virtual void ProcessChannel143(ChannelValue val);
 	virtual void ProcessChannel163(ChannelValue val);
@@ -350,10 +337,6 @@ protected:
 	public: virtual void GenerateUprupt();
     public: virtual void GenerateRadarupt();
 	public: virtual bool IsUpruptActive();
-	public: virtual int DoPINC(int16_t *Counter);
-	public: virtual int DoPCDU(int16_t *Counter);
-	public: virtual int DoMCDU(int16_t *Counter);
-	public: virtual int DoDINC(int CounterNum, int16_t *Counter);
 
 	//
 	// Odds and ends.
@@ -386,14 +369,10 @@ protected:
 	CDU &tcdu;
 	CDU &scdu;
 
-	//
-	// Program data.
-	//
-
 	///
-	/// \brief Apollo mission number.
+	/// \brief AGC software name
 	///
-	int ApolloNo;
+	std::string ProgramName;
 
 	double LastTimestep;
 	double LastCycled;
@@ -471,6 +450,7 @@ protected:
 	/// \brief alarm flags for CWS
 	///
 	bool ProgAlarm;
+	bool TrackerAlarm;
 	bool GimbalLockAlarm;
 };
 

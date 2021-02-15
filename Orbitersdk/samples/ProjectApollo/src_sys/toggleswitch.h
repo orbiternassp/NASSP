@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-#ifndef __toggleswitch_h
-#define __toggleswitch_h
+#pragma once
 
+#include <vector>
 #include "cautionwarning.h"
 #include "powersource.h"
 #include "nasspdefs.h"
@@ -210,8 +210,24 @@ public:
 	virtual void Guard() {};
 
 	virtual	void SetHeld(bool s) {};
+
+	virtual void DrawSwitchVC(int id, int event, SURFHANDLE surf) {}
+	virtual bool CheckMouseClickVC(int event, VECTOR3 &p) { return false; }
+	virtual void DefineVCAnimations(UINT vc_idx);
+	virtual const VECTOR3& GetDirection() const;
+	virtual const VECTOR3& GetReference() const;
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD) {}
+
+	virtual void SetReference(const VECTOR3& ref);
+	virtual void SetReference(const VECTOR3& ref, const VECTOR3& dir);
+	virtual void SetDirection(const VECTOR3& _dir);
+	void SetInitialAnimState(double fState);
+	double InitialAnimState() const { return fInitialAnimState; };
 	
 protected:
+
+	bool VerifyAnimations();
+
 	///
 	/// This can be interpreted in any desired manner by derived classes. Only positive values should be used.
 	/// \brief Current state.
@@ -261,6 +277,15 @@ protected:
 	///
 	bool visible;
 
+	bool bHasAnimations;
+	bool bHasDirection;
+	bool bHasReference;
+
+	double fInitialAnimState;
+
+	VECTOR3 reference;
+	VECTOR3 dir;
+
 	PanelSwitchItem *next;
 	PanelSwitchItem *nextForScenario;
 	PanelSwitchCallbackInterface *callback;
@@ -271,11 +296,11 @@ protected:
 /// \brief Toggle switch base class.
 /// \ingroup PanelItems
 ///
-class ToggleSwitch: public PanelSwitchItem {
+class TwoPositionSwitch : public PanelSwitchItem {
 
 public:
-	ToggleSwitch();
-	virtual ~ToggleSwitch();
+	TwoPositionSwitch();
+	virtual ~TwoPositionSwitch();
 
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE, char *dname = 0);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s,
@@ -290,7 +315,7 @@ public:
 	void SetHeld(bool s) { Held = s; };
 	bool IsHeld() { return Held; };
 	void SetActive(bool s);
-	void SetSideways(bool s) { Sideways = s; };
+	void SetSideways(int s) { Sideways = s; }
 	void SetDelayTime(double t) { delayTime = t; };
 
 	bool Toggled() { return SwitchToggled; };
@@ -305,16 +330,21 @@ public:
 
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 	virtual void DrawSwitch(SURFHANDLE DrawSurface);
+	virtual void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	virtual bool CheckMouseClick(int event, int mx, int my);
+	virtual bool CheckMouseClickVC(int event, VECTOR3 &p);
+	virtual void DefineVCAnimations(UINT vc_idx) = 0;
 	virtual void SaveState(FILEHANDLE scn);
 	virtual void LoadState(char *line);
 	virtual void SetState(int value); //Needed to properly process set states from toggle switches.
 	virtual void timestep(double missionTime);
+	virtual void DefineMeshGroup(UINT _grpIndex);
 
 protected:
 	virtual void InitSound(SoundLib *s);
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
 	bool DoCheckMouseClick(int event, int mx, int my);
+	bool DoCheckMouseClickVC(int event, VECTOR3 &p);
 
 	virtual unsigned int GetFlags();
 	virtual void SetFlags(unsigned int f);
@@ -330,7 +360,8 @@ protected:
 	bool Active;
 	bool SwitchToggled;
 	bool Held;
-	bool Sideways;
+	//0 = not sideways, 1 = sideways rotated 90° clockwise, 2 = sideways rotated 90° counterclockwise
+	int Sideways;
 
 	double delayTime;
 	double resetTime;
@@ -341,6 +372,10 @@ protected:
 	Sound Sclick;
 
 	SwitchRow *switchRow;
+
+	//VC Stuff
+	UINT grpIndex;
+	UINT anim_switch;
 
 	///
 	/// Flags structure for saving state to scenario file.
@@ -358,6 +393,19 @@ protected:
 		///
 		ToggleSwitchFlags() { flags = 0; };
 	};
+};
+
+class ToggleSwitch : public TwoPositionSwitch
+{
+public:
+	ToggleSwitch();
+	virtual ~ToggleSwitch();
+	void DefineVCAnimations(UINT vc_idx);
+	void SetRotationRange(const double range);
+protected:
+	const double GetRotationRange() const;
+	MGROUP_ROTATE* pswitchrot;
+	double RotationRange;
 };
 
 ///
@@ -412,12 +460,15 @@ class ThreePosSwitch: public ToggleSwitch {
 
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 	bool IsDown() { return (GetState() == THREEPOSSWITCH_DOWN); };
 	bool IsCenter() { return (GetState() == THREEPOSSWITCH_CENTER); };
 	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
+
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 };
 
 ///
@@ -429,16 +480,26 @@ public:
 class FivePosSwitch: public ToggleSwitch {
 
 public:
+	FivePosSwitch();
+	virtual ~FivePosSwitch();
+	void DefineVCAnimations(UINT vc_idx);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
+
+	void SetDirection(const VECTOR3& _dirx, const VECTOR3 & _diry);
 
 	bool IsDown() { return (GetState() == FIVEPOSSWITCH_DOWN); };
 	bool IsCenter() { return (GetState() == FIVEPOSSWITCH_CENTER); };
 	bool IsUp() { return (GetState() == FIVEPOSSWITCH_UP); };
 	bool IsLeft() { return (GetState() == FIVEPOSSWITCH_LEFT); };
 	bool IsRight() { return (GetState() == FIVEPOSSWITCH_RIGHT); };
-
+protected:
+	MGROUP_ROTATE* pswitchroty;
+	UINT anim_switchy;
+	VECTOR3 diry;
 };
 
 ///
@@ -509,6 +570,7 @@ class NSourceDestSwitch : public ToggleSwitch {
 public:
 	NSourceDestSwitch(int nSources);
 	~NSourceDestSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 	void WireSourcesToBuses(int bus, e_object* i, DCbus* o);
@@ -662,16 +724,29 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
+class SimplePushSwitch : public TwoPositionSwitch
+{
+public:
+	SimplePushSwitch();
+	~SimplePushSwitch();
+
+	virtual void DefineVCAnimations(UINT vc_idx);
+protected:
+	MGROUP_TRANSLATE* pswitchtrans;
+};
+
 ///
 /// A two-position switch which is pushed in/out rather than toggled up/down.
 /// \brief Two-position push switch.
 /// \ingroup PanelItems
 ///
-class PushSwitch: public ToggleSwitch {
+class PushSwitch: public SimplePushSwitch {
 
 public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
+	
 
 protected:
 	virtual void InitSound(SoundLib *s);
@@ -683,12 +758,13 @@ protected:
 /// \brief Two-position circuit breaker switch.
 /// \ingroup PanelItems
 ///
-class CircuitBrakerSwitch: public ToggleSwitch {
+class CircuitBrakerSwitch: public SimplePushSwitch {
 
 public:
 	CircuitBrakerSwitch() { MaxAmps = 0.0; };
 
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
 
 	double Voltage();
@@ -777,7 +853,7 @@ class AGCSwitch: public ToggleSwitch {
 
 public:
 	AGCSwitch() { agc = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, int xoffset = 0, int yoffset = 0);
 
 protected:
 	ApolloGuidance *agc;
@@ -818,9 +894,9 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
-class CMCOpticsModeSwitch : public AGCThreePoswitch {
+class CMCOpticsZeroSwitch : public ToggleSwitch {
 public:
-	virtual bool SwitchTo(int newState, bool dontspring = false);
+	void DoDrawSwitch(SURFHANDLE DrawSurface);
 };
 
 class PGNSSwitch : public AGCThreePoswitch {
@@ -833,7 +909,28 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
-class GuardedToggleSwitch: public ToggleSwitch {
+class SwitchCover
+{
+public:
+	SwitchCover();
+	virtual ~SwitchCover();
+
+	void SetCoverRotationAngle(const double rot);
+
+protected:
+	const double& GetCoverRotation() const;
+	const VECTOR3& GetCoverReference() const;
+	const VECTOR3& GetCoverDirection() const;
+
+	UINT guardAnim;
+	MGROUP_ROTATE* pcoverrot;
+	UINT coverGrpIndex;
+	VECTOR3 coverreference;
+	VECTOR3 coverdir;
+	double coverrotation;
+};
+
+class GuardedToggleSwitch: public ToggleSwitch, public SwitchCover {
 
 public:
 	GuardedToggleSwitch();
@@ -843,8 +940,10 @@ public:
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	void DrawFlash(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
@@ -852,6 +951,10 @@ public:
 	void SetGuardResetsState(bool s) { guardResetsState = s; };
 	void Unguard() { guardState = 1; };
 	void Guard();
+
+	void DefineVCAnimations(UINT vc_idx);
+	void DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex);
+	void SetReference(const VECTOR3& ref, const VECTOR3& coverref, const VECTOR3& dir, const VECTOR3& coverdir);
 
 protected:
 	int	guardX;
@@ -956,7 +1059,7 @@ protected:
 	void SetIMU();
 };
 
-class GuardedPushSwitch: public PushSwitch {
+class GuardedPushSwitch: public PushSwitch, public SwitchCover {
 
 public:
 	GuardedPushSwitch();
@@ -969,18 +1072,25 @@ public:
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE dsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	void DrawFlash(SURFHANDLE DrawSurface);
 	void DoDrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
+	void SetGuardResetsState(bool s) { guardResetsState = s; };
 	void Unguard() { guardState = 1; };
 	void Guard();
 
 	void SetLit(bool l) { lit = l; };
 	bool IsLit() { return lit; };
+
+	void DefineVCAnimations(UINT vc_idx);
+	void SetReference(const VECTOR3& _dir, const VECTOR3& coverref, const VECTOR3& _coverdir);
+	void DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex);
 
 protected:
 	int	guardX;
@@ -988,6 +1098,7 @@ protected:
 	int guardWidth;
 	int guardHeight;
 	int guardState;
+	bool guardResetsState;
 
 	int litOffsetX;
 	int litOffsetY;
@@ -1003,7 +1114,7 @@ protected:
 };
 
 
-class GuardedThreePosSwitch: public ThreePosSwitch {
+class GuardedThreePosSwitch: public ThreePosSwitch, public SwitchCover {
 
 public:
 	GuardedThreePosSwitch();
@@ -1014,7 +1125,9 @@ public:
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
@@ -1022,6 +1135,10 @@ public:
 	void SetGuardResetsState(bool s) { guardResetsState = s; };
 	void Unguard() { guardState = 1; };
 	void Guard();
+
+	void DefineVCAnimations(UINT vc_idx);
+	void SetReference(const VECTOR3& ref, const VECTOR3& coverref, const VECTOR3& dir, const VECTOR3& coverdir);
+	void DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex);
 
 protected:
 	int	guardX;
@@ -1082,18 +1199,31 @@ public:
 	operator int();
 	virtual void SetState(int value);
 	void SoundEnabled(bool on) { soundEnabled = on; };
+	void SetWraparound(bool w) { Wraparound = w; };
+
+	void DefineVCAnimations(UINT vc_idx);
+	void DefineMeshGroup(UINT _grpIndex);
+	void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 
 protected:
 	int	x;
 	int y;
 	int width;
 	int height;
+	int maxState;
+	bool Wraparound;
 	RotationalSwitchPosition *position;
 	RotationalSwitchPosition *positionList;
 
 	SURFHANDLE switchSurface;
 	SURFHANDLE switchBorder;
 
+	UINT grpIndex;
+	MGROUP_ROTATE* pswitchrot;
+	UINT anim_switch;
+
+	VESSEL *OurVessel;
 	Sound sclick;
 	bool soundEnabled;
 	RotationalSwitchBitmap bitmaps[RotationalSwitchBitmapCount];
@@ -1145,6 +1275,8 @@ public:
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, bool failopen = false);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
+	void InitVC(SURFHANDLE surf);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
@@ -1163,6 +1295,7 @@ protected:
 	int width;
 	int height;
 	SURFHANDLE switchSurface;
+	SURFHANDLE switchsurfacevc;
 	SwitchRow *switchRow;
 };
 
@@ -1185,6 +1318,9 @@ public:
 	virtual double QueryValue() = 0;
 	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface) = 0;
 
+	virtual void DefineVCAnimations(UINT vc_idx) {}
+	void DefineMeshGroup(UINT _grpIndex);
+
 protected:
 
 	virtual double AdjustForPower(double val);
@@ -1196,6 +1332,41 @@ protected:
 	double minMaxTime;
 	SwitchRow *switchRow;
 	double lastDrawTime;
+
+	VESSEL *OurVessel;
+
+	//VC Stuff
+	UINT grpIndex;
+	UINT anim_switch;
+};
+
+class CurvedMeter : public MeterSwitch {
+
+public:
+	CurvedMeter();
+	virtual ~CurvedMeter();
+
+	void DefineVCAnimations(UINT vc_idx);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
+	void SetRotationRange(const double range);
+
+protected:
+	const double GetRotationRange() const;
+
+	double RotationRange;
+	MGROUP_ROTATE* pswitchrot;
+};
+
+class LinearMeter : public MeterSwitch
+{
+public:
+	LinearMeter();
+	virtual ~LinearMeter();
+
+	void DefineVCAnimations(UINT vc_idx);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
+protected:
+	MGROUP_TRANSLATE* pswitchtrans;
 };
 
 
@@ -1209,8 +1380,10 @@ public:
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
 	void DrawFlash(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	virtual bool SwitchTo(int newState);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
@@ -1218,6 +1391,10 @@ public:
 //	int operator=(const int b);
 //	operator int();
 	virtual void SetState(int value);
+
+	void DefineVCAnimations(UINT vc_idx);
+	void DefineMeshGroup(UINT _grpIndex);
+	void SetRotationRange(const double range);
 
 protected:
 	int	x;
@@ -1231,6 +1408,32 @@ protected:
 	SURFHANDLE switchBorder;
 	Sound sclick;
 	SwitchRow *switchRow;
+	VESSEL *OurVessel;
+
+	const double GetRotationRange() const;
+	MGROUP_ROTATE* pswitchrot;
+	UINT grpIndex;
+	UINT anim_switch;
+	double RotationRange;
+};
+
+class ContinuousThumbwheelSwitch : public ThumbwheelSwitch {
+public:
+	ContinuousThumbwheelSwitch();
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal, int multPos);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
+	bool SwitchTo(int newPosition);
+	void LoadState(char *line);
+	void SetState(int value);
+	int GetPosition();
+protected:
+	int StateToPosition(int st);
+	int PositionToState(int pos);
+
+	int multiplicator;
+	int numPositions;
+	int position;
 };
 
 
@@ -1309,7 +1512,7 @@ protected:
 
 	e_object *RowPower;
 
-	friend class ToggleSwitch;
+	friend class TwoPositionSwitch;
 	friend class ThreePosSwitch;
 	friend class FivePosSwitch;
 	friend class PushSwitch;
@@ -1321,14 +1524,30 @@ protected:
 	friend class ThumbwheelSwitch;
 	friend class CircuitBrakerSwitch;
 	friend class HandcontrollerSwitch;
+	friend class MeterSwitch;
 };
 
 class PanelSwitchListener {
 
 public:
-	virtual void PanelSwitchToggled(ToggleSwitch *s) = 0;
+	virtual void PanelSwitchToggled(TwoPositionSwitch *s) = 0;
 	virtual void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) = 0;
 	virtual void PanelRotationalSwitchChanged(RotationalSwitch *s) = 0;
+};
+
+class PanelSwitchesVC
+{
+public:
+	PanelSwitchesVC() {}
+	void DefineVCAnimations(UINT vcidx);
+	bool VCMouseEvent(int id, int event, VECTOR3 &p);
+	bool VCRedrawEvent(int id, int event, SURFHANDLE surf);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
+	void AddSwitch(PanelSwitchItem *s, int area = -1);
+	void ClearSwitches();
+protected:
+	std::vector<PanelSwitchItem*>SwitchList;
+	std::vector<int> SwitchArea;
 };
 
 class PanelSwitches {
@@ -1363,7 +1582,7 @@ protected:
 	SwitchRow *RowList;
 	double lastexecutedtime;
 
-	friend class ToggleSwitch;
+	friend class TwoPositionSwitch;
 	friend class ThreePosSwitch;
 	friend class FivePosSwitch;
 	friend class PushSwitch;
@@ -1375,6 +1594,7 @@ protected:
 	friend class ThumbwheelSwitch;
 	friend class CircuitBrakerSwitch;
 	friend class HandcontrollerSwitch;
+	friend class MeterSwitch;
 };
 
 
@@ -1400,13 +1620,22 @@ protected:
 ///
 class RoundMeter : public MeterSwitch {
 public:
+	RoundMeter();
+	virtual ~RoundMeter();
 	void Init(HPEN p0, HPEN p1, SwitchRow &row);
-
+	void DefineVCAnimations(UINT vc_idx);
+	void SetRotationRange(const double range);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
+	
 protected:
 	HPEN Pen0;
 	HPEN Pen1;
 
 	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
+
+	const double GetRotationRange() const;
+	double RotationRange;
+	MGROUP_ROTATE* pswitchrot;
 };
 
 ///
@@ -1588,4 +1817,22 @@ public:
 		(*obj_ptr.*func_ptr)(s);
 	}
 };
-#endif
+
+class BasicPanel
+{
+public:
+	BasicPanel() {}
+	virtual ~BasicPanel() {}
+	virtual void Register(PanelSwitchScenarioHandler *PSH) = 0;
+};
+
+class PanelGroup
+{
+public:
+	PanelGroup() {}
+	virtual ~PanelGroup();
+
+	virtual bool AddPanel(BasicPanel* pPanel, PanelSwitchScenarioHandler *PSH);
+private:
+	std::vector<BasicPanel*> panels;
+};

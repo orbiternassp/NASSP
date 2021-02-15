@@ -45,6 +45,7 @@
 #include "sivb.h"
 
 #include "LES.h"
+#include "Mission.h"
 
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
@@ -60,6 +61,7 @@ MESHHANDLE hSMhga;
 MESHHANDLE hSMCRYO;
 MESHHANDLE hSMSIMBAY;
 MESHHANDLE hCM;
+MESHHANDLE hCMnh;
 MESHHANDLE hCM2;
 MESHHANDLE hCMP;
 MESHHANDLE hCMInt;
@@ -67,6 +69,7 @@ MESHHANDLE hCMVC;
 MESHHANDLE hCREW;
 MESHHANDLE hFHO;
 MESHHANDLE hFHC;
+MESHHANDLE hFHF;
 MESHHANDLE hCM2B;
 MESHHANDLE hprobe;
 MESHHANDLE hprobeext;
@@ -280,6 +283,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hSMCRYO, "ProjectApollo/SM-CRYO");
 	LOAD_MESH(hSMSIMBAY, "ProjectApollo/SM-SIMBAY");
 	LOAD_MESH(hCM, "ProjectApollo/CM");
+	LOAD_MESH(hCMnh, "ProjectApollo/CM-Nohatch");
 	LOAD_MESH(hCM2, "ProjectApollo/CM-Recov");
 	LOAD_MESH(hCMP, "ProjectApollo/CM-CMP");
 	LOAD_MESH(hCMInt, "ProjectApollo/CM-Interior");
@@ -287,6 +291,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hCREW, "ProjectApollo/CM-CREW");
 	LOAD_MESH(hFHC, "ProjectApollo/CM-HatchC");
 	LOAD_MESH(hFHO, "ProjectApollo/CM-HatchO");
+	LOAD_MESH(hFHF, "ProjectApollo/CM-HatchF");
 	LOAD_MESH(hCM2B, "ProjectApollo/CMB-Recov");
 	LOAD_MESH(hprobe, "ProjectApollo/CM-Probe");
 	LOAD_MESH(hprobeext, "ProjectApollo/CM-ProbeExtended");
@@ -319,7 +324,11 @@ void Saturn::AddSM(double offset, bool showSPS)
 	else
 		AddMesh (hSMRCS, &mesh_dir);
 
-	AddMesh (hSMPanel1, &mesh_dir);
+	if (!SIMBayPanelJett)
+	{
+		simbaypanelidx = AddMesh(hSMPanel1, &mesh_dir);
+	}
+
 	AddMesh (hSMPanel2, &mesh_dir);
 	AddMesh (hSMPanel3, &mesh_dir);
 
@@ -335,6 +344,7 @@ void Saturn::AddSM(double offset, bool showSPS)
 	if (showSPS) {
 		mesh_dir = _V(0, SMVO, offset - 1.654);
 		SPSidx = AddMesh(hSMSPS, &mesh_dir);
+		SPSEngine.DefineAnimations(SPSidx);
 	}
 }
 
@@ -533,7 +543,6 @@ void Saturn::SetupEVA()
 
 
 void Saturn::SetCSMStage ()
-
 {
 	ClearMeshes();
     ClearThrusterDefinitions();
@@ -541,6 +550,9 @@ void Saturn::SetCSMStage ()
 	ClearLVGuidLight();
 	ClearLVRateLight();
 	ClearSIISep();
+	agc.SetInputChannelBit(030, LiftOff, false);
+	agc.SetInputChannelBit(030, GuidanceReferenceRelease, false);
+	agc.SetInputChannelBit(030, UllageThrust, false);
 
 	//
 	// Delete any dangling propellant resources.
@@ -574,7 +586,7 @@ void Saturn::SetCSMStage ()
 		ph_2nd = 0;
 	}
 
-	if(ph_3rd) {
+	if (ph_3rd) {
 		DelPropellantResource(ph_3rd);
 		ph_3rd = 0;
 	}
@@ -618,8 +630,9 @@ void Saturn::SetCSMStage ()
 	DelThrusterGroup(THGROUP_MAIN, true);
 	thg_sps = CreateThrusterGroup(th_sps, 1, THGROUP_MAIN);
 
+	VECTOR3 spspos0 = _V(-0.000043, -0.001129, -5);
 	EXHAUSTSPEC es_sps[1] = {
-		{ th_sps[0], NULL, NULL, NULL, 20.0, 2.25, 0, 0.1, SMExhaustTex }
+		{ th_sps[0], NULL, &spspos0, NULL, 20.0, 2.25, 0, 0.1, SMExhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_sps);
@@ -635,47 +648,29 @@ void Saturn::SetCSMStage ()
 	const double CGOffset = 12.25+21.5-1.8+0.35;
 	AddSM(30.25 - CGOffset, true);
 
-	double Mass = (CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2));
-	double ro = 4;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.1;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = -cos(30 * RAD)*ro;
-	td[0].pos.y = -sin(30 * RAD)*ro;
-	td[0].pos.z = -6;
-	td[1].pos.x = 0;
-	td[1].pos.y = 1 * ro;
-	td[1].pos.z = -6;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = -sin(30 * RAD)*ro;
-	td[2].pos.z = -6;
-	td[3].pos.x = 0;
-	td[3].pos.y = 0;
-	td[3].pos.z = 5.5;
+	double td_mass = CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2);
+	double td_width = 4.0;
+	double td_tdph = -6.0;
+	double td_height = 5.5;
 
-	SetTouchdownPoints(td, 4);
+	ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height, -0.1);
 
 	VECTOR3 mesh_dir;
 
 	//
 	// Skylab SM and Apollo 7 have no HGA.
 	//
-	if (!NoHGA) {
+	if (pMission->CSMHasHGA()) {
+		UINT HGAidx;
 		mesh_dir=_V(-1.308,-1.18,29.042-CGOffset);
-		AddMesh (hSMhga, &mesh_dir);
+		HGAidx = AddMesh (hSMhga, &mesh_dir);
+		hga.DefineAnimations(HGAidx);
 	}
 
 	mesh_dir=_V(0, 0, 34.4 - CGOffset);
 
 	UINT meshidx;
-	meshidx = AddMesh (hCM, &mesh_dir);
+	meshidx = AddMesh (hCMnh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	if (LESAttached) {
@@ -701,18 +696,22 @@ void Saturn::SetCSMStage ()
 	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
 	SetCMdocktgtMesh();
 
-	//Interior
-    meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
-
 	//Don't Forget the Hatch
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
 	SetSideHatchMesh();
 
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	//Forward Hatch
+	fwdhatchidx = AddMesh(hFHF, &mesh_dir);
+	SetFwdHatchMesh();
+
+	// VC
+	UpdateVC(mesh_dir);
 	VCMeshOffset = mesh_dir;
+
+	//Interior
+	meshidx = AddMesh(hCMInt, &mesh_dir);
+	SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
 
 	// Docking probe
 	if (HasProbe) {
@@ -820,6 +819,7 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.PayloadMass = S4PL_Mass;
 	S4Config.SaturnVStage = SaturnVStage;
 	S4Config.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
+	S4Config.MissionNo = ApolloNo;
 	S4Config.MissionTime = MissionTime;
 	S4Config.LowRes = LowRes;
 	S4Config.ISP_VAC = ISP_THIRD_VAC;
@@ -829,6 +829,8 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.PanelProcess = 0.0;
 
 	GetPayloadName(S4Config.PayloadName);
+	strncpy(S4Config.CSMName, GetName(), 63);
+	S4Config.Crewed = Crewed;
 
 	S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
 	S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
@@ -841,6 +843,7 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	sprintf(S4Config.LEMCheck, LEMCheck);
 
 	S4Config.iu_pointer = iu;
+	DontDeleteIU = true;
 
 	SIVB *SIVBVessel = static_cast<SIVB *> (oapiGetVesselInterface(hs4bM));
 	SIVBVessel->SetState(S4Config);
@@ -864,6 +867,19 @@ void Saturn::SetDockingProbeMesh() {
 	} else {
 		SetMeshVisibilityMode(probeidx, MESHVIS_NEVER);
 		SetMeshVisibilityMode(probeextidx, MESHVIS_NEVER);
+	}
+}
+
+void Saturn::SetSIMBayPanelMesh()
+{
+	if (simbaypanelidx == -1)
+		return;
+
+	if (!SIMBayPanelJett) {
+		SetMeshVisibilityMode(simbaypanelidx, MESHVIS_EXTERNAL);
+	}
+	else {
+		SetMeshVisibilityMode(simbaypanelidx, MESHVIS_NEVER);
 	}
 }
 
@@ -901,6 +917,18 @@ void Saturn::SetSideHatchMesh() {
 	}
 }
 
+void Saturn::SetFwdHatchMesh() {
+
+	if (fwdhatchidx == -1)
+		return;
+
+	if (ForwardHatch.IsOpen()) {
+		SetMeshVisibilityMode(fwdhatchidx, MESHVIS_NEVER);
+	}
+	else {
+		SetMeshVisibilityMode(fwdhatchidx, MESHVIS_EXTERNAL);
+	}
+}
 
 void Saturn::SetCrewMesh() {
 
@@ -958,6 +986,26 @@ void Saturn::SetNosecapMesh() {
 	}
 }
 
+void Saturn::ProbeVis() {
+
+	if (!probe)
+		return;
+
+	GROUPEDITSPEC ges;
+
+	if (ForwardHatch.IsOpen()) {
+		ges.flags = (GRPEDIT_ADDUSERFLAG);
+		ges.UsrFlag = 3;
+		oapiEditMeshGroup(probe, 2, &ges);
+	}
+	else
+	{
+		ges.flags = (GRPEDIT_SETUSERFLAG);
+		ges.UsrFlag = 0;
+		oapiEditMeshGroup(probe, 2, &ges);
+	}
+}
+
 void Saturn::SetReentryStage ()
 
 {
@@ -969,43 +1017,25 @@ void Saturn::SetReentryStage ()
 	ClearLVGuidLight();
 	ClearLVRateLight();
 	ClearSIISep();
+	agc.SetInputChannelBit(030, LiftOff, false);
+	agc.SetInputChannelBit(030, GuidanceReferenceRelease, false);
+	agc.SetInputChannelBit(030, UllageThrust, false);
+
+	hga.DeleteAnimations();
+	SPSEngine.DeleteAnimations();
 	double EmptyMass = CM_EmptyMass + (LESAttached ? 2000.0 : 0.0);
 	SetSize(6.0);
 	SetEmptyMass(EmptyMass);
 
-	double Mass = 5430;
-	double ra;
+	double td_mass = 5430.0;
+	double td_width = 2.0;
+	double td_tdph = -2.5;
 	if (ApexCoverAttached) {
-		ra = -1.0;
+		td_tdph = -1.3;
 	}
-	else {
-		ra = -2.2;
-	}
-	double ro = 2;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = -cos(30 * RAD)*ro;
-	td[0].pos.y = -sin(30 * RAD)*ro;
-	td[0].pos.z = ra;
-	td[1].pos.x = 0;
-	td[1].pos.y = 1 * ro;
-	td[1].pos.z = ra;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = -sin(30 * RAD)*ro;
-	td[2].pos.z = ra;
-	td[3].pos.x = 0;
-	td[3].pos.y = 0;
-	td[3].pos.z = ra + 5.0;
+	double td_height = 5.0;
 
-	SetTouchdownPoints(td, 4);
+	ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height);
 
 	if (LESAttached)
 	{
@@ -1146,7 +1176,7 @@ void Saturn::SetReentryMeshes() {
 		}
 	} else {
 		if (ApexCoverAttached) {
-			meshidx = AddMesh (hCM, &mesh_dir);
+			meshidx = AddMesh (hCMnh, &mesh_dir);
 		} else {
 			mesh_dir=_V(0, 0, -1.2);
 			meshidx = AddMesh (hCM2, &mesh_dir);
@@ -1176,10 +1206,6 @@ void Saturn::SetReentryMeshes() {
 	VECTOR3 dt_dir = _V(0.66, 1.07, 0);
 	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
 	SetCMdocktgtMesh();
-	
-	//Interior
-	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 	// Hatch
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
@@ -1188,8 +1214,18 @@ void Saturn::SetReentryMeshes() {
 	sidehatchburnedopenidx = AddMesh (hFHO2, &mesh_dir);
 	SetSideHatchMesh();
 
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	//Forward Hatch
+	if (ApexCoverAttached) {
+		fwdhatchidx = AddMesh(hFHF, &mesh_dir);
+		SetFwdHatchMesh();
+	}
+
+	//Interior
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	// VC
+	UpdateVC(mesh_dir);
 
 	//
 	// Docking probe
@@ -1242,7 +1278,7 @@ void Saturn::StageSeven(double simt)
 void Saturn::StageEight(double simt)
 
 {
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 
 	// Mark apex as detached
 	ApexCoverAttached = false;
@@ -1297,8 +1333,8 @@ void Saturn::SetChuteStage1()
 {
 	SetSize(15);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass(CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	ClearAirfoilDefinitions();
 	SetPMI(_V(20,20,12));
 	SetCrossSections(_V(2.8,2.8,80.0));
@@ -1327,8 +1363,8 @@ void Saturn::SetChuteStage2()
 {
 	SetSize(22);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass (CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetPMI (_V(20,20,12));
 	SetCrossSections (_V(2.8,2.8,140.0));
 	SetCW (1.0, 1.5, 1.4, 1.4);
@@ -1354,8 +1390,8 @@ void Saturn::SetChuteStage3()
 {
 	SetSize(22);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass (CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetPMI(_V(20,20,12));
 	SetCrossSections(_V(2.8,2.8,480.0));
 	SetCW(0.7, 1.5, 1.4, 1.4);
@@ -1381,8 +1417,8 @@ void Saturn::SetChuteStage4()
 {
 	SetSize(22);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass(CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetPMI(_V(20,20,12));
 	SetCrossSections (_V(2.8,2.8,3280.0));
 	SetCW (0.7, 1.5, 1.4, 1.4);
@@ -1408,8 +1444,8 @@ void Saturn::SetSplashStage()
 {
 	SetSize(6.0);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass(CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetPMI(_V(20,20,12));
 	SetCrossSections(_V(2.8,2.8,7.0));
 	SetCW(0.5, 1.5, 1.4, 1.4);
@@ -1441,7 +1477,7 @@ void Saturn::SetRecovery()
 {
 	SetSize(10.0);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetEmptyMass(CM_EmptyMass);
 	SetPMI(_V(20,20,12));
 	SetCrossSections(_V(2.8,2.8,7.0));
@@ -1479,8 +1515,8 @@ void Saturn::SetRecovery()
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	// VC
+	UpdateVC(mesh_dir);
 	VCMeshOffset = mesh_dir;
 
 	if (Crewed) {
@@ -1657,6 +1693,43 @@ void Saturn::JettisonDockingProbe()
 	hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
 }
 
+void Saturn::JettisonSIMBayPanel()
+{
+	//TBD: Correct offset and velocity
+
+	//
+	// Blow off Panel 1.
+	//
+
+	VESSELSTATUS vs1;
+
+	const double CGOffset = 12.25 + 21.5 - 1.8 + 0.35;
+
+	VECTOR3 vel1 = _V(cos(52.25*RAD), sin(52.25*RAD), 0.0)*13.7*0.3048;
+	VECTOR3 ofs1 = { 0, 0, 30.25 - CGOffset };
+
+	GetStatus(vs1);
+
+	VECTOR3 rofs1, rvel1 = { vs1.rvel.x, vs1.rvel.y, vs1.rvel.z };
+
+	Local2Rel(ofs1, vs1.rpos);
+	GlobalRot(vel1, rofs1);
+
+	vs1.rvel.x = rvel1.x + rofs1.x;
+	vs1.rvel.y = rvel1.y + rofs1.y;
+	vs1.rvel.z = rvel1.z + rofs1.z;
+	vs1.vrot.x = 0;
+	vs1.vrot.y = 0;
+	vs1.vrot.z = 0;
+
+	char VName[256];
+
+	GetApolloName(VName);
+	strcat(VName, "-PANEL1");
+
+	oapiCreateVessel(VName, "ProjectApollo/SM-Panel1", vs1);
+}
+
 void Saturn::JettisonOpticsCover() 
 
 {
@@ -1719,4 +1792,60 @@ void Saturn::CMLETCanardAirfoilConfig()
 
 	CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.0, 1.12), CMLETCanardVertCoeffFunc, 3.5, 11.95 / 2.0, 1.0);
 	CreateAirfoil(LIFT_HORIZONTAL, _V(0.0, 0.0, 1.12), CMLETHoriCoeffFunc, 3.5, 11.95 / 2.0, 1.0);
+}
+void Saturn::ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target)
+{
+
+	TOUCHDOWNVTX td[4];
+	double stiffness = (-1)*(mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(mass*stiffness));
+	for (int i = 0; i < 4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.y = -sin(30 * RAD)*ro;
+	td[0].pos.z = tdph;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * ro;
+	td[1].pos.z = tdph;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -sin(30 * RAD)*ro;
+	td[2].pos.z = tdph;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = tdph + height;
+
+	SetTouchdownPoints(td, 4);
+}
+
+void Saturn::LoadVC()
+{
+	VECTOR3 mesh_dir = _V(0, 0, 0);
+	vcidx = AddMesh(hCMVC, &mesh_dir);
+	SetMeshVisibilityMode(vcidx, MESHVIS_VC);
+	DefineVCAnimations();
+}
+
+void Saturn::UpdateVC(VECTOR3 meshdir)
+{
+	if (vcidx == -1)
+		return;
+
+	VECTOR3 ofs;
+	GetMeshOffset(vcidx, ofs);
+	ShiftMesh(vcidx, meshdir - ofs);
+}
+
+void Saturn::ClearMeshes() {
+	// Clear all meshes EXCEPT the VC mesh (idx = 0) in order to not screw up the VC animations when a ClearMeshes() is called i.e. staging
+	// This should not be needed once a better way to handle staging is implemented (docked stages)
+	int meshcount = GetMeshCount();
+
+	for (int i = 1; i < meshcount; i++)
+	{
+		DelMesh(i);
+	}
 }

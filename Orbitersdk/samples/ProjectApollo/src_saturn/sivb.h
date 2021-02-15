@@ -25,7 +25,9 @@
 #if !defined(_PA_SIVB_H)
 #define _PA_SIVB_H
 
+#include "PanelSDK/PanelSDK.h"
 #include "payload.h"
+#include "pyro.h"
 
 //
 // Data structure passed from main vessel to SIVB to configure stage.
@@ -70,6 +72,7 @@ struct SIVBSettings
 
 	int Payload;					///< Payload type.
 	int VehicleNo;					///< Saturn vehicle number.
+	int MissionNo;					///< Mission number.
 
 	double THRUST_VAC;				///< Vacuum thrust.
 	double ISP_VAC;					///< Vacuum ISP.
@@ -98,6 +101,8 @@ struct SIVBSettings
 	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
 	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 	char PayloadName[64];			///< Payload Name
+	char CSMName[64];
+	bool Crewed;
 
 	int LMPadCount;					///< Count of LM PAD data.
 	unsigned int *LMPad;			///< LM PAD data.
@@ -109,12 +114,13 @@ struct SIVBSettings
 	///
 	char LEMCheck[100];
 
-	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0; };
+	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0;};
 
 	IU *iu_pointer;
 };
 
 class SIVB;
+class Battery;
 
 ///
 /// \ingroup Connectors
@@ -147,38 +153,40 @@ public:
 
 ///
 /// \ingroup Connectors
-/// \brief CSM to SIVb command connector type.
+/// \brief LM to SIVb command connector type.
 ///
-class CSMToSIVBCommandConnector : public SIVbConnector
+class PayloadToSLACommandConnector : public SIVbConnector
 {
 public:
-	CSMToSIVBCommandConnector();
-	~CSMToSIVBCommandConnector();
+	PayloadToSLACommandConnector();
+	~PayloadToSLACommandConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
 
-	///
-	/// \brief Tell CSM docking probe to ignore next docking event.
-	///
-	void SetIgnoreNextDockEvent();
+//Messages to S-IB or S-II
+enum SIVBSIMessageType
+{
+	SIVB_SI_SWITCH_SELECTOR,
+	SIVB_SI_THRUSTER_DIR,
+	SIVB_SI_SIB_LOW_LEVEL_SENSORS_DRY,
+	SIVB_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	SIVB_SI_GETSITHRUSTOK
+};
 
-	///
-	/// \brief Tell CSM docking probe to ignore next n docking events.
-	/// \param n Number of events to ignore.
-	///
-	void SetIgnoreNextDockEvents(int n);
+//S-IVB to S-IB or S-II Connector
+class SIVBToSIConnector : public SIVbConnector
+{
+public:
+	SIVBToSIConnector();
+	~SIVBToSIConnector();
 
-	///
-	/// The CSM knows what the payload should do. This is difficult to get right as some
-	/// of the data relates to the CSM which docks with the payload, and other data should
-	/// be set by the booster which launches the SIVB into space. For now we'll get all the
-	/// data from the docked CSM and we can figure out a better solution later.
-	///
-	/// \brief Get payload settings from CSM.
-	/// \param p Payload settings structure.
-	/// \return True if we got valid settings, false if not.
-	///
-	bool GetPayloadSettings(PayloadSettings &p);
+	void SISwitchSelector(int channel);
+	void SetSIThrusterDir(int n, double yaw, double pitch);
+
+	bool GetLowLevelSensorsDry();
+	bool GetSIPropellantDepletionEngineCutoff();
+	void GetSIThrustOK(bool *ok, int n);
 };
 
 ///
@@ -215,7 +223,7 @@ public:
 			unsigned SaturnVStage:1;
 			unsigned LowRes:1;
 			unsigned IUSCContPermanentEnabled:1;
-			unsigned spare2:1;
+			unsigned PayloadCreated:1;
 			unsigned Payloaddatatransfer:1;
 		};
 		unsigned long word;
@@ -260,6 +268,7 @@ public:
 	/// \brief Orbiter dock state function.
 	///
 	void clbkDockEvent(int dock, OBJHANDLE connected);
+	void clbkPostCreation();
 
 	///
 	/// Pass settings from the main DLL to the jettisoned SIVb. This call must be virtual 
@@ -269,24 +278,20 @@ public:
 	///
 	virtual void SetState(SIVBSettings &state);
 
-	///
-	/// \brief Get thrust level of the J2 engine.
-	/// \return Thrust level from 0.0 to 1.0.
-	///
-	double GetJ2ThrustLevel();
-
-	///
-	/// \brief Get mission time.
-	/// \return Mission time in seconds since launch.
-	///
-	double GetMissionTime();
+	int GetVehicleNo();
 
 	bool GetSIVBThrustOK();
 
 	void SetSIVBThrusterDir(double yaw, double pitch);
-	void SetAPSAttitudeEngine(int n, bool on) { sivbsys->SetAPSAttitudeEngine(n, on); }
+	void SetAPSAttitudeEngine(int n, bool on);
 	void SIVBEDSCutoff(bool cut);
 	void SIVBSwitchSelector(int channel);
+
+	//Signals to lower stages
+	void SISwitchSelector(int channel);
+	void SetSIThrusterDir(int n, double yaw, double pitch);
+	bool GetSIBLowLevelSensorsDry();
+	bool GetSIPropellantDepletionEngineCutoff();
 
 	IU *GetIU() { return iu; };
 
@@ -295,12 +300,6 @@ public:
 	/// \return Propellant mass in kg.
 	///
 	double GetSIVbPropellantMass();
-
-	///
-	/// \brief Get total mass, including docked vessels.
-	/// \return Mass in kg.
-	///
-	double GetTotalMass();
 
 	virtual double GetPayloadMass();
 
@@ -329,6 +328,11 @@ public:
 	double GetMainBatteryCurrent();
 
 	///
+	/// \Create payload vessel
+	///
+	void CreatePayload();
+
+	///
 	/// \brief Start payload separation.
 	///
 	void StartSeparationPyros();
@@ -337,6 +341,12 @@ public:
 	/// \brief Stop payload separation.
 	///
 	void StopSeparationPyros();
+
+	void StartSLASeparationPyros();
+	void SeparateCSM();
+	bool IsLowerStageDocked();
+
+	SIVBToSIConnector *GetSIVBSIConnector() { return &sivbSIConnector; }
 
 protected:
 	///
@@ -383,14 +393,18 @@ protected:
 	void AddRCS_S4B();				///< Add RCS for SIVb control.
 	void Boiloff();					///< Boil off some LOX/LH2 in orbit.
 
+	void CreateSISIVBInterface();
+	bool GetDockingPortFromHandle(OBJHANDLE port, UINT &num);
+	void CreateAirfoils();
+
 	bool PayloadIsDetachable();		///< Is the payload detachable?
 
 	VECTOR3	mainExhaustPos;			///< Position of main thruster exhaust.
 
 	int PayloadType;				///< Payload type.
-	int MissionNo;					///< Apollo mission number.
 	int VehicleNo;					///< Saturn vehicle number.
 	SIVbState State;				///< Main stage state.
+	PayloadSettings payloadSettings;
 
 	double EmptyMass;				///< Empty mass in kg.
 	double PayloadMass;				///< Payload mass in kg.
@@ -407,6 +421,7 @@ protected:
 	bool SaturnVStage;				///< Stage from Saturn V.
 	bool LowRes;					///< Using low-res meshes.
 	bool IUSCContPermanentEnabled;
+	bool PayloadCreated;
 
 	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
 	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).
@@ -414,10 +429,7 @@ protected:
 	double THRUST_THIRD_VAC;		///< J2 engine thrust vacuum level in Newtons.
 	double ISP_THIRD_VAC;			///< J2 engine ISP in vacuum.
 
-	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
-	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
-	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
-	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
+	double PayloadEjectionForce;	///< Force applied at "undocking" of the payload attached at the front of the SLA (CSM, nosecone etc.)
 
 	// Exterior light definitions
 	BEACONLIGHTSPEC dockingLights[5];             // docking lights
@@ -442,10 +454,7 @@ protected:
 
 	bool Payloaddatatransfer;		///< Have we transferred data to the payload?
 
-	///
-	/// LEM checklist file
-	///
-	char LEMCheck[100];
+	bool FirstTimestep;
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
@@ -464,27 +473,21 @@ protected:
 	SIVBSystems *sivbsys;
 
 	///
-	/// \brief Connector from SIVb to CSM when docked.
-	///
-	MultiConnector SIVBToCSMConnector;
-
-	///
 	/// \brief Command connector from SIVb to IU.
 	///
 	SIVbToIUCommandConnector IUCommandConnector;
 
 	///
-	/// \brief Command connector from CSM to SIVb.
+	/// \brief Command connector from LM to SIVb.
 	///
-	CSMToSIVBCommandConnector csmCommandConnector;
 
-	PowerDrainConnectorObject SIVBToCSMPowerDrain;
-	PowerDrainConnector SIVBToCSMPowerConnector;
+	PayloadToSLACommandConnector payloadSeparationConnector;
+	SIVBToSIConnector sivbSIConnector;
 
 	///
 	/// \brief Handle of docked vessel.
 	///
-	DOCKHANDLE hDock;
+	DOCKHANDLE hDock, hDockSI, hDockCSM;
 
 	Battery *MainBattery;
 
@@ -501,28 +504,25 @@ protected:
 	int panelMesh1SaturnV, panelMesh2SaturnV, panelMesh3SaturnV, panelMesh4SaturnV;
 	int panelMesh1SaturnVLow, panelMesh2SaturnVLow, panelMesh3SaturnVLow, panelMesh4SaturnVLow;
 	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
-	int meshSivbSaturnV, meshSivbSaturnVLow, meshSivbSaturn1b, meshSivbSaturn1bLow;
+	int meshSivbSaturnV, meshSivbSaturnVLow, meshSivbSaturn1b, meshSivbSaturn1bLow, meshSivbSaturn1bcross;
 	int meshASTP_A, meshASTP_B, meshCOASTarget_A, meshCOASTarget_B, meshCOASTarget_C;
-	int meshLMPKD, meshApollo8LTA, meshLTA_2r, meshLM_1;
+	int meshApollo8LTA, meshLTA_2r;
 
 	void HideAllMeshes();
+
+	Pyro CSMLVSeparationInitiator;
+	Pyro LMSLASeparationInitiators;
+	Pyro SLAPanelDeployInitiator;
 };
 
 ///
 /// \ingroup Connectors
-/// \brief Message type to send from the CSM to the SIVb.
+/// \brief Message type to send from the payload to the SIVb.
 ///
-enum CSMSIVBMessageType
+enum PayloadSIVBMessageType
 {
-	CSMSIVB_GET_VESSEL_FUEL,				///< Get vessel fuel.
-	CSMSIVB_GET_MAIN_BATTERY_POWER,			///< Get the main battery power level.
-	CSMSIVB_GET_MAIN_BATTERY_ELECTRICS,		///< Get the main battery voltage and current.
-	CSMSIVB_IS_VENTABLE,					///< Is this a ventable vessel?
-	CSMSIVB_START_SEPARATION,				///< Start charging separation pyros.
-	CSMSIVB_STOP_SEPARATION,				///< Stop charging separation pyros.
-	SIVBCSM_IGNORE_DOCK_EVENT,				///< CSM docking probe should ignore next docking event (for payload creation)
-	SIVBCSM_IGNORE_DOCK_EVENTS,				///< CSM docking probe should ignore next docking events (for payload creation)
-	SIVBCSM_GET_PAYLOAD_SETTINGS,			///< Get the payload settings information from the CSM.
+	SLA_START_SEPARATION,			///< Start charging separation pyros.
+	SLA_STOP_SEPARATION,			///< Stop charging separation pyros.
 };
 
 #endif // _PA_SIVB_H

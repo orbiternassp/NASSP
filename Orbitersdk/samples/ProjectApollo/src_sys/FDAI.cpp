@@ -278,7 +278,7 @@ void FDAI::MoveBall() {
 	glRotated(now.z / PI * 180.0, 0.0, 0.0, 1.0);	//attitude.y
 }
 
-void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI,
+void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
 	SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth) {
 
 	if (!init) InitGL();
@@ -350,38 +350,17 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 
 	if (!LM_FDAI)
 	{
-		switch (ratescale) {
-		case 2: // THREEPOSSWITCH_UP:
-			targetX = (int)(117 + (3609.694608 * rates.z));
-			targetY = (int)(117 - (3609.694608 * rates.x));
-			targetZ = (int)(117 - (3609.694608 * rates.y));
-			break;
-		case 1: // THREEPOSSWITCH_CENTER:
-			targetX = (int)(117 + (721.938921 * rates.z));
-			targetY = (int)(117 - (721.938921 * rates.x));
-			targetZ = (int)(117 - (721.938921 * rates.y));
-			break;
-		case 0: // THREEPOSSWITCH_DOWN:
-			targetX = (int)(117 + (72.193892 * rates.z));
-			targetY = (int)(117 - (360.969460 * rates.x));
-			targetZ = (int)(117 - (360.969460 * rates.y));
-			break;
-		}
+		//Input is scaled -1.0 to 1.0, this scales to 126 pixels
+		targetX = (int)(117 + (63.0 * rates.z));
+		targetY = (int)(117 - (63.0 * rates.x));
+		targetZ = (int)(117 - (63.0 * rates.y));
 	}
 	else
 	{
-		switch (ratescale) {
-		case 1: // TOGGLESWITCH_UP (25 deg/s scale)
-			targetX = (int)(119 + (114.593480*rates.z));
-			targetY = (int)(120 - (114.593480*rates.x));
-			targetZ = (int)(119 - (114.593480*rates.y));
-			break;
-		case 0: // TOGGLESWITCH_DOWN (5 deg/s scale)
-			targetX = (int)(119 + (572.967398 * rates.z));
-			targetY = (int)(120 - (572.967398 * rates.x));
-			targetZ = (int)(119 - (572.967398 * rates.y));
-			break;
-		}
+		//Input is scaled -1.0 to 1.0, this scales to 100 pixels
+		targetX = (int)(119 + (50.0*rates.z));
+		targetY = (int)(120 - (50.0*rates.x));
+		targetZ = (int)(119 - (50.0*rates.y));
 	}
 
 	// Enforce Limits
@@ -459,8 +438,8 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 
 
 	// sprintf(oapiDebugString(),"FDAI: Rates %f %f %f, TGX %d",rates.x,rates.y,rates.z,targetX);
-	// Off-flag
-	if (!IsPowered() || no_att != 0)
+	// Off-flag (CSM FDAI doesn't have one... I think)
+	if (LM_FDAI && (!IsPowered() || no_att != 0))
 		oapiBlt(surf, hFDAIOff, 31, 100, 0, 0, 13, 30, SURF_PREDEF_CK);
 }
 

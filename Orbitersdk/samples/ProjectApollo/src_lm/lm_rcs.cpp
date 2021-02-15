@@ -501,11 +501,16 @@ void RCS_TCA::Timestep(double simdt)
 		}
 		else if (jetDriverSignal[i] && !pulseFlag[i])
 		{
-			pulseCounter[i]++;
-			pulseFlag[i] = true;
+			//Below 1.0x time acceleration this accumulates pulses too quickly
+			if (oapiGetTimeAcceleration() >= 1.0)
+			{
+				pulseCounter[i]++;
+				pulseFlag[i] = true;
+			}
 		}
 
-		if ((jetDriverSignal[i] && !resetSignal) && !thrusterTCP[i])
+		//Sim step constraint to below 0.08s, so that it takes at least two timesteps for the fail timer to reach >0.08s
+		if ((jetDriverSignal[i] && !resetSignal) && !thrusterTCP[i] && oapiGetSimStep() < 0.08)
 		{
 			failTimer[i] += simdt;
 		}
@@ -525,6 +530,15 @@ void RCS_TCA::Timestep(double simdt)
 	{
 		TCAFailure.Set();
 	}
+}
+
+void RCS_TCA::Reset()
+{
+	TCAFailure.Reset();
+	failTimer[0] = 0.0;
+	failTimer[1] = 0.0;
+	pulseCounter[0] = 0;
+	pulseCounter[1] = 0;
 }
 
 void RCS_TCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)

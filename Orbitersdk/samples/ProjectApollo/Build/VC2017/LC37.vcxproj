@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1DE45393-14EC-4D29-A2F8-61FC60C2C286}</ProjectGuid>
     <RootNamespace>LC34</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -80,7 +80,7 @@
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/LC37.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>;../../../../lib/Lua;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -112,7 +112,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LC37_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LC37_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -122,13 +122,14 @@
       <ProgramDataBaseFileName>.\Release\LC37/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;OrbiterSoundSDK40.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/LC37.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -146,11 +147,24 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_launch\IUUmbilical.cpp" />
+    <ClCompile Include="..\..\src_launch\IUUmbilicalInterface.cpp" />
+    <ClCompile Include="..\..\src_launch\IU_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\LC37.cpp" />
+    <ClCompile Include="..\..\src_launch\RCA110A.cpp" />
+    <ClCompile Include="..\..\src_launch\SCMUmbilical.cpp" />
+    <ClCompile Include="..\..\src_launch\SIB_ESE.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_launch\IUUmbilical.h" />
+    <ClInclude Include="..\..\src_launch\IUUmbilicalInterface.h" />
+    <ClInclude Include="..\..\src_launch\IU_ESE.h" />
     <ClInclude Include="..\..\src_launch\LC37.h" />
+    <ClInclude Include="..\..\src_launch\RCA110A.h" />
+    <ClInclude Include="..\..\src_launch\SCMUmbilical.h" />
+    <ClInclude Include="..\..\src_launch\SCMUmbilicalInterface.h" />
+    <ClInclude Include="..\..\src_launch\SIB_ESE.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
     <ClInclude Include="..\..\src_sys\soundlib.h" />
   </ItemGroup>

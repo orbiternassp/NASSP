@@ -23,20 +23,9 @@
 
   **************************************************************************/
 
+#pragma once
 
-
-/* ATTENTION: The original implementation used an inertial attitude reference 
-   for the uncaged BMAGs. In my understanding of the AOH this is wrong, each 
-   gyro assemblies is body-mounted along a spacecraft axis. Set the define to
-   true to switch back to the original implementation.
-
-   To see the difference align the GDC to (0,0,0), uncage the pitch BMAG (ATT1/RATE2),
-   Roll 90° and look what happens when you pitch manually
-*/
-
-#define SCS_INERTIAL_BMAGS	false
-
-
+#include "DelayTimer.h"
 
 class Saturn;
 
@@ -79,7 +68,7 @@ protected:
 #define BMAG2_START_STRING	"BMAG2_BEGIN"
 #define BMAG_END_STRING	    "BMAG_END"
 
-class BMAG: public AttitudeReference {
+class BMAG {
 	
 public: 
 	BMAG();                                                                  // Cons
@@ -107,7 +96,6 @@ protected:
 	double temperature;                                                         // Temperature
 	VECTOR3 rates;                                                           // Detected rotation acceleration
 	VECTOR3 uncaged;														 // 0 = caged, 1 = not caged (each axis)
-	VECTOR3 targetAttitude;													 // Attitude when uncaged
 	VECTOR3 errorAttitude;												     // Body attitude error when uncaged
 	Saturn *sat;                                                             // Pointer to ship we're attached to
 	bool powered;                                                            // Data valid flag.
@@ -120,30 +108,93 @@ protected:
 #define GDC_START_STRING	"GDC_BEGIN"
 #define GDC_END_STRING		"GDC_END"
 
-class GDC: public AttitudeReference {
+class GDC {
 	
 public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
 	GDC();                          // Cons
 	void Init(Saturn *v);		    // Initialization
 	void Timestep(double simt);     // TimeStep
 	void SystemTimestep(double simdt);
-	bool AlignGDC();                // Alignment Switch Pressed
 	void SaveState(FILEHANDLE scn); // SaveState callback
 	void LoadState(FILEHANDLE scn); // LoadState callback
 
+	bool GetYawAttitudeSetInputEnable() { return A9K1; }
+	bool GetPitchRollAttitudeSetInputEnable() { return A9K2; }
+
+	double GetRollBodyMinusEulerError();
+	double GetPitchBodyError();
+	double GetYawBodyError();
+
+	double GetRollEulerResolver();
+	double GetPitchEulerResolver();
+	double GetYawEulerResolver();
+
 	VECTOR3 rates;					// Integrated Euler rotation rates
-	double rollstabilityrate;
 	Saturn *sat;
 	// FDAI error needle data from CMC
 	int fdai_err_ena;
 	int fdai_err_x;
 	int fdai_err_y;
 	int fdai_err_z;
-	// RSI
-	bool rsiRotationOn;
-	double rsiRotationStart;
 
 	friend class CSMcomputer; // Needs to write FDAI error indications, which are really not on the GDC, but meh.
+
+protected:
+
+	VECTOR3 Attitude;
+
+	//RELAYS
+
+	//Pitch Euler mode enable
+	bool A2K1;
+	//Pitch 0.05 config
+	bool A2K2;
+	//Pitch align enable
+	bool A2K3;
+	//Pitch rate 1 enable
+	bool A2K4;
+
+	//Roll Euler mode enable
+	bool A3K1;
+	//Roll 0.05G config
+	bool A3K2;
+	//Roll align enable
+	bool A3K3;
+	//GDC roll rate 1 enable
+	bool A3K4;
+
+	//Yaw Euler mode enable
+	bool A4K1;
+	//Yaw 0.05G configuration
+	bool A4K2;
+	//Yaw align enable
+	bool A4K3;
+	//GDC yaw rate 1 enable
+	bool A4K4;
+
+	//Yaw 0.05G Configuration
+	bool A6K1;
+	//EMS roll display on
+	bool A6K2;
+
+	//Resolver excitation
+	bool A8K1;
+	//EMS roll display on 
+	bool A8K2;
+
+	//Yaw attitude set input enable
+	bool A9K1;
+	//Pitch, roll attitude set input enable
+	bool A9K2;
+	//Secant function enable
+	bool A9K3;
+
+	//POWER FLAGS
+
+	//Euler resolver power (Pitch, Roll)
+	bool E0_505PR;
+	//Euler resolver power (Yaw)
+	bool E0_505Y;
 };
 
 
@@ -179,6 +230,13 @@ public: // We use these inside a timestep, so everything is public to make data 
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
+	double GetRollEulerAttitudeSetError();
+	double GetPitchEulerAttitudeSetError();
+	double GetYawEulerAttitudeSetError();
+	double GetRollEulerAttitudeSetInput();
+	double GetPitchEulerAttitudeSetInput();
+	double GetYawEulerAttitudeSetInput();
+
 	int mousedowncounter;                                          // Mouse Down Counter
 	int mousedownposition;
 	double mousedownangle;
@@ -193,25 +251,259 @@ public: // We use these inside a timestep, so everything is public to make data 
 
 protected:
 	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value);
+	double CalcRollEulerAttitudeSetError();
+	double CalcPitchEulerAttitudeSetError();
+	double CalcYawEulerAttitudeSetError();
 };
 
 
 // Electronic Display Assembly
-// This really just serves as a placeholder right now, and does some of the FDAI sourcing
-// so the FDAI redraw is less messy.
+
+#define EDA_START_STRING	"EDA_BEGIN"
+#define EDA_END_STRING		"EDA_END"
 
 class EDA {
 
 public: // Same stuff about speed and I'm lazy too.
 	EDA();															// Cons
 	void Init(Saturn *vessel);										// Initialization
-	VECTOR3 ReturnCMCErrorNeedles();								// Return said data.
-	VECTOR3 ReturnASCPError(VECTOR3 attitude);						// Return said data.
-	VECTOR3 ReturnBMAG1Error();										// See the general theme here?
-	VECTOR3 AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors);  // Adjust errors for roll so as to be FLY-TO
-	VECTOR3 CalcErrors(VECTOR3 target);
+	void WireTo(e_object *ac1, e_object *ac2, e_object *dca, e_object *dcb);	// Wire to power sources
+	void Timestep(double simdt);
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
+	VECTOR3 GetFDAI1Attitude() { return FDAI1Attitude; }
+	VECTOR3 GetFDAI2Attitude() { return FDAI2Attitude; }
+
+	VECTOR3 GetFDAI1AttitudeRate() { return FDAI1AttitudeRate; }
+	VECTOR3 GetFDAI2AttitudeRate() { return FDAI2AttitudeRate; }
+
+	VECTOR3 GetFDAI1AttitudeError() { return FDAI1AttitudeError; }
+	VECTOR3 GetFDAI2AttitudeError() { return FDAI2AttitudeError; }
+
+	double GetConditionedPitchAttErr();
+	double GetConditionedYawAttErr();
+	double GetConditionedRollAttErr();
+
+	double GetInstPitchAttRate();
+	double GetInstYawAttRate();
+	double GetInstRollAttRate();
+
+	double GetGPFPIPitch(int sys);
+	double GetGPFPIYaw(int sys);
+
+	bool GetIMUtoAttSetRoll() { return A8K13; }
+	bool GetIMUtoAttSetYaw() { return A8K15; }
+	bool GetIMUtoAttSetPitch() { return A8K17; }
+
+	bool GetGDCResolverExcitation() { return GDC118A8K1; }
+
+protected:
+	bool HasSigCondPower();
+	bool IsPowered();
+	double scale_data(double data);
+	double inst_scale_rates(double data);
+	void ResetRelays();
+	void ResetTransistors();
+	double NormalizeAngle(double ang);
+
+	//Scaled -1 to 1
+	VECTOR3 FDAI1AttitudeRate;
+	VECTOR3 FDAI2AttitudeRate;
+	VECTOR3 InstrAttitudeRate;
+	//Simply in radians
+	VECTOR3 FDAI1Attitude;
+	VECTOR3 FDAI2Attitude;
+	//Scaled -41 to 41 pixels
+	VECTOR3 FDAI1AttitudeError;
+	VECTOR3 FDAI2AttitudeError;
+	VECTOR3 InstrAttitudeError;
+
+	double GPFPIPitch[2], GPFPIYaw[2];
+
+	e_object *ac_source1;					  	          			// Power supply for FDAI 1 circuits
+	e_object *ac_source2;											// Power supply for FDAI 2 circuits
+	e_object *mna_source;					  	          			// Power supply for FDAI 1 circuits
+	e_object *mnb_source;											// Power supply for FDAI 2 circuits
 
 	Saturn *sat;
+
+	//LOGIC SIGNAL
+
+	//GDC Resolver Excitation
+	bool GDC118A8K1;
+
+	//RELAYS
+
+	//FDAI No. 2 Attitude Enable
+	bool A4K1;
+	//FDAI No. 1 Attitude Motor Enable
+	bool A4K2;
+	//FDAI No. 1 Attitude Enable
+	bool A4K3;
+	//FDAI No. 2 Attitude Motor Enable
+	bool A4K4;
+
+	//FDAI No. 1 & No. 2 roll rate enable
+	bool A5K1;
+	//FDAI No. 1 and No. 2 yaw rate enable
+	bool A5K2;
+	//Pitch rate 1 enable
+	bool A5K3;
+	//FDAI rate and error source select
+	bool A5K4;
+	//FDAI rate and error source select
+	bool A5K5;
+
+	//IMU to FDAI No. 2 and GDC to FDAI No. 1 Enable
+	bool A8K1;
+	//IMU to FDAI No. 2 and GDC to FDAI No. 1 Enable
+	bool A8K3;
+	//IMU to FDAI No. 2 and GDC to FDAI No. 1 Enable
+	bool A8K5;
+	//IMU to FDAI No. 2 and GDC to FDAI No. 1 Enable
+	bool A8K7;
+	//IMU to FDAI No. 2 and GDC to FDAI No. 1 Enable
+	bool A8K9;
+	//IMU to FDAI No. 2 and GDC to FDAI No. 1 Enable
+	bool A8K11;
+	//IMU to Attitude Set Enable (Roll)
+	bool A8K13;
+	//IMU to Attitude Set Enable (Yaw)
+	bool A8K15;
+	//IMU to Attitude Set Enable (Pitch)
+	bool A8K17;
+
+	//FDAI No. 1 error enable
+	bool A9K1;
+	//FDAI No. 2 error enable
+	bool A9K2;
+	//FDAI No. 2 error enable
+	bool A9K4;
+	//FDAI rate and error source select
+	bool A9K5;
+
+	//LV Pressure Display Enable
+	bool A11K1, A11K2, A11K3, A11K4, A11K5, A11K6;
+
+	//TRANSISTORS
+
+	//FDAI No. 1 Roll Gain Disable
+	bool T1QS53;
+	//FDAI No. 2 Roll Gain Disable
+	bool T1QS54;
+	//Attitude set to FDAI No. 1 Roll Error Disable
+	bool T1QS55;
+	//Attitude set to FDAI No. 2 Roll Error Disable
+	bool T1QS56;
+	//Roll error no. 1 to FDAI No. 1 disable
+	bool T1QS57;
+	//Roll error no. 1 to FDAI No. 2 disable
+	bool T1QS58;
+	//CDU roll error to FDAI No. 1 disable
+	bool T1QS59;
+	//Roll error to FDAI No. 2 disable, CDU
+	bool T1QS60;
+	//Roll rate 2 to FDAI No. 2 disable
+	bool T1QS63;
+	//Roll rate 1 to FDAI No. 1 disable
+	bool T1QS64;
+	//Roll rate 1 to FDAI No. 2 disable
+	bool T1QS65;
+	//FDAI No. 1 and No. 2 roll error scale factor low range enable
+	bool T1QS67;
+	//Roll rate 2 to FDAI No. 1 disable
+	bool T1QS68;
+	//Roll rate scale factor enable 5° or 50°
+	bool T1QS71;
+	//Roll rate scale factor enable 50°
+	bool T1QS72;
+	//GDC roll error to FDAI No. 1 and No. 2 disable
+	bool T1QS73;
+	//FDAI No. 1 50° scale factor disable
+	bool T1QS75;
+	//FDAI No. 2 50° scale factor disable
+	bool T1QS76;
+	//Attitude set/IMU gain disable
+	bool T1QS78;
+
+	//FDAI No. 1 Yaw Gain Disable
+	bool T2QS53;
+	//FDAI No. 2 Yaw Gain Disable
+	bool T2QS54;
+	//Attitude set to FDAI No. 1 yaw error disable
+	bool T2QS55;
+	//Attitude set to FDAI No. 2 yaw error disable
+	bool T2QS56;
+	//Yaw error no. 1 to FDAI No. 1 disable
+	bool T2QS57;
+	//Yaw error no. 1 to FDAI No. 2 disable
+	bool T2QS58;
+	//CDU yaw error to FDAI No. 1 disable
+	bool T2QS59;
+	//Yaw error to FDAI No. 2 disable, CDU
+	bool T2QS60;
+	//Roll rate 2 to FDAI No. 1 yaw rate cross coupling disable
+	bool T2QS63;
+	//Yaw rate 2 to FDAI No. 1 disable
+	bool T2QS64;
+	//Yaw rate 2 to FDAI No. 2 disable
+	bool T2QS65;
+	//Roll rate 2 to FDAI No. 2 yaw rate cross coupling disable
+	bool T2QS66;
+	//FDAI No. 1 yaw error scale factor low range enable
+	bool T2QS67;
+	//Roll rate 1 to FDAI No. 1 yaw rate cross coupling disable
+	bool T2QS68;
+	//Roll rate 1 to FDAI No. 2 yaw rate cross coupling disable
+	bool T2QS69;
+	//Yaw rate scale factor enable 5° or 10°
+	bool T2QS71;
+	//Yaw rate scale factor enable 10°
+	bool T2QS72;
+	//GDC yaw body attitude error to FDAI No. 1 disable
+	bool T2QS73;
+	//Yaw error to FDAI No. 2 disable
+	bool T2QS74;
+	//Yaw rate 1 to FDAI No. 1 disable
+	bool T2QS76;
+	//Yaw rate 1 to FDAI No. 2 disable
+	bool T2QS77;
+
+	//FDAI No. 1 Pitch Gain Disable
+	bool T3QS53;
+	//FDAI No. 2 Pitch Gain Disable
+	bool T3QS54;
+	//Attitude set to FDAI No. 1 pitch error disable
+	bool T3QS55;
+	//Attitude set to FDAI No. 2 pitch error disable
+	bool T3QS56;
+	//Pitch error no. 1 to FDAI No. 1 disable
+	bool T3QS57;
+	//Pitch error no. 1 to FDAI No. 2 disable
+	bool T3QS58;
+	//CDU pitch error to FDAI No. 1 disable
+	bool T3QS59;
+	//Pitch error to FDAI No. 2 disable, CDU
+	bool T3QS60;
+	//Pitch Rate 2 to FDAI No. 1 disable
+	bool T3QS64;
+	//Pitch Rate 2 to FDAI No. 2 disable
+	bool T3QS65;
+	//FDAI No. 1 pitch error scale factor low range enable
+	bool T3QS67;
+	//Pitch rate scale factor enable 5° or 10°
+	bool T3QS71;
+	//Pitch rate scale factor enable 10°
+	bool T3QS72;
+	//GDC pitch body attitude error to FDAI No. 1 disable
+	bool T3QS73;
+	//GDC pitch body attitude error to FDAI No. 2 disable
+	bool T3QS74;
+	//Pitch Rate 1 to FDAI No. 1 disable
+	bool T3QS76;
+	//Pitch Rate 1 to FDAI No. 2 disable
+	bool T3QS77;
 };
 
 
@@ -231,8 +523,9 @@ public: // Same stuff about speed and I'm lazy too.
 	bool GetThruster(int thruster);
 	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
 
-	bool GetSPSActive() { return SPSActive; }
-	void SetSPSActive(bool active) { SPSActive = active; }
+	bool GetSPSEnableA() { return SPSEnableA; }
+	bool GetSPSEnableB() { return SPSEnableB; }
+	bool GetIGN2() { return IGN2; }
 	
 	bool GetDirectPitchActive() { return DirectPitchActive; }
 	bool GetDirectYawActive()   { return DirectYawActive; }
@@ -245,15 +538,37 @@ public: // Same stuff about speed and I'm lazy too.
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
 protected:
+	DelayTimer engineOnDelayA;
+	DelayTimer engineOnDelayB;
+	DelayOffTimer engineOffDelay;
+
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
-	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
+	bool SCSLatchUpA, SCSLatchUpB;
+	bool SPSEnableA, SPSEnableB;
+	bool IGN1, IGN2;												// SPS Active notification
 
 	Saturn *sat;
 	ThreePosSwitch *PoweredSwitch[20];                              // Set when power is drawn from this switch
 
 	void SetRCSState(int thruster, bool td, bool cm, int smquad, int smthruster, int cmthruster, ThreePosSwitch *s, bool lockout);
 	bool IsThrusterPowered(ThreePosSwitch *s);
+};
+
+
+//ECA Integrator
+class ECAIntegrator
+{
+public:
+	ECAIntegrator(double g, double ulim, double llim);
+	void Timestep(double input, double simdt);
+	double GetState() { return state; }
+	void Reset() { state = 0.0; }
+protected:
+	double state;
+	double gain;
+	double upperLimit;
+	double lowerLimit;
 };
 
 
@@ -266,10 +581,15 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
-	bool IsPowered();
+	bool IsDCPowered();
+	bool IsAC1Powered();
+	bool IsAC2Powered();
 
-	long rhc_x,rhc_y,rhc_z;											// RHC position
-	long rhc_ac_x,rhc_ac_y,rhc_ac_z;								// RHC AC powered position
+	double GetPitchMTVCPosition() { return pitchMTVCPosition; }
+	double GetYawMTVCPosition() { return yawMTVCPosition; }
+	double GetPitchAutoTVCPosition() { return pitchAutoTVCPosition; }
+	double GetYawAutoTVCPosition() { return yawAutoTVCPosition; }
+
 	long thc_x,thc_y,thc_z;											// THC position
 	int accel_roll_trigger;                                         // Joystick triggered roll thrust in RATE CMD mode
 	int mnimp_roll_trigger;                                         // Joystick triggered roll thrust in MIN IMP mode
@@ -279,6 +599,210 @@ public:
 	int mnimp_yaw_trigger;                                          // Joystick triggered yaw thrust in MIN IMP mode
 	Saturn *sat;
 	VECTOR3 pseudorate;
+protected:
+
+	ECAIntegrator PitchMTVCIntegrator;
+	ECAIntegrator YawMTVCIntegrator;
+	ECAIntegrator PitchAutoTVCIntegrator;
+	ECAIntegrator YawAutoTVCIntegrator;
+
+	void ResetRelays();
+	void ResetTransistors();
+
+	double pitchMTVCPosition;
+	double yawMTVCPosition;
+	double pitchAutoTVCPosition;
+	double yawAutoTVCPosition;
+
+	//RELAYS
+
+	//Roll Min Deadband Enable
+	bool R1K22;
+	//Roll High Rate Enable
+	bool R1K25;
+
+	//Yaw TVC Integrator Enable
+	bool R2K11;
+	//Yaw Min Deadband Enable
+	bool R2K22;
+	//Yaw High Rate Enable
+	bool R2K25;
+	//MTVC Yaw Rate 2 Enable
+	bool R2K30;
+	//MTVC Yaw Rate 1 Enable
+	bool R2K31;
+
+	//Pitch TVC Integrator Enable
+	bool R3K11;
+	//Pitch Min Deadband Enable
+	bool R3K22;
+	//Pitch High Rate Enable
+	bool R3K25;
+	//MTVC Pitch Rate 2 Enable
+	bool R3K30;
+	//MTVC Pitch Rate 1 Enable
+	bool R3K31;
+
+	//TRANSISTORS
+
+	//Roll Attitude Signal No. 1 Enable
+	bool T1QS21;
+	//Roll High Rate Enable
+	bool T1QS25;
+	//Cross Coupling Enable
+	bool T1QS26;
+	//Roll Rate 1 Enable
+	bool T1QS28;
+	//Roll Rate 2 Enable
+	bool T1QS29;
+	//Roll RJC Rotational Control Proportional Enable
+	bool T1QS32;
+	//Roll Minimum Impulse or Accel Cmd Enable
+	bool T1QS43;
+	//Roll Pseudo Rate Disable
+	bool T1QS44;
+
+	//Yaw TVC Manual Cmd Enable
+	bool T2QS1;
+	//Yaw LM Off Gain Enable
+	bool T2QS11;
+	//Yaw LM On Gain Enable
+	bool T2QS12;
+	//Yaw Attitude Signal No. 1 Enable
+	bool T2QS21;
+	//Yaw High Rate Enable
+	bool T2QS25;
+	//Yaw Rate 1 Enable
+	bool T2QS28;
+	//Yaw Rate 2 Enable
+	bool T2QS29;
+	//Yaw MTVC Integrator Enable
+	bool T2QS30;
+	//Yaw RJC Prop Feedback Disable
+	bool T2QS31;
+	//Yaw RJC Rotational Control Proportional Enable
+	bool T2QS32;
+	//Yaw Minimum Impulse or Accel Cmd Enable
+	bool T2QS43;
+	//Yaw Pseudo Rate Disable
+	bool T2QS44;
+
+	//Pitch TVC Manual Cmd Enable
+	bool T3QS1;
+	//Pitch LM Off Gain Enable
+	bool T3QS11;
+	//Pitch LM On Gain Enable
+	bool T3QS12;
+	//Pitch Attitude Signal No. 1 Enable
+	bool T3QS21;
+	//Pitch High Rate Enable
+	bool T3QS25;
+	//Pitch Rate 1 Enable
+	bool T3QS28;
+	//Pitch Rate 2 Enable
+	bool T3QS29;
+	//Pitch MTVC Integrator Enable
+	bool T3QS30;
+	//Pitch RJC Prop Feedback Disable
+	bool T3QS31;
+	//Pitch RJC Rotational Control Proportional Enable
+	bool T3QS32;
+	//Pitch Minimum Impulse or Accel Cmd Enable
+	bool T3QS43;
+	//Pitch Pseudo Rate Disable
+	bool T3QS44;
+};
+
+class ServoAmplifierModule
+{
+public:
+	ServoAmplifierModule(bool *r1, bool *r2, bool *r3, bool *r4);
+	void Init(Saturn *vessel);
+	void SystemTimestep(double simdt);
+
+	bool IsClutch1Powered();
+	bool IsClutch2Powered();
+protected:
+
+	void DrawSystem1Power();
+	void DrawSystem2Power();
+
+	Saturn *sat;
+	bool *relays[4];
+};
+
+//Thrust Vector Servo Amplifier Assembly
+
+#define TVSA_START_STRING	"TVSA_BEGIN"
+#define TVSA_END_STRING		"TVSA_END"
+
+class TVSA
+{
+public:
+	TVSA();
+	void Init(Saturn *vessel);										// Initialization
+	void TimeStep(double simdt);                                    // Timestep
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+	double GetPitchGimbalTrim();
+	double GetYawGimbalTrim();
+	double GetPitchGimbalPosition();
+	double GetYawGimbalPosition();
+
+	ServoAmplifierModule *GetPitchServoAmp() { return &pitchServoAmp; }
+	ServoAmplifierModule *GetYawServoAmp() { return &yawServoAmp; }
+protected:
+
+	bool IsSystem1ACPowered();
+	bool IsSystem2ACPowered();
+	void DrawSystem1ACPower();
+	void DrawSystem2ACPower();
+
+	ServoAmplifierModule pitchServoAmp;
+	ServoAmplifierModule yawServoAmp;
+
+	double pitchGimbalTrim1;
+	double pitchGimbalTrim2;
+	double yawGimbalTrim1;
+	double yawGimbalTrim2;
+	double pitchGimbalPosition1;
+	double pitchGimbalPosition2;
+	double yawGimbalPosition1;
+	double yawGimbalPosition2;
+	Saturn *sat;
+
+	//RELAYS
+
+	//Pitch Servo No. 2 Engage
+	bool A4K1;
+	//Pitch Servo No. 2 Engage
+	bool A4K2;
+	//Pitch Servo No. 2 Engage
+	bool A4K3;
+	//Yaw Servo No. 2 Engage
+	bool A4K4;
+	//Yaw Servo No. 2 Engage
+	bool A4K5;
+	//Yaw Servo No. 2 Engage
+	bool A4K6;
+	//Pitch Servo No. 2 Engage
+	bool A4K7;
+	//Yaw Servo No. 2 Engage
+	bool A4K8;
+
+	//TRANSISTORS
+
+	//Yaw SCS Gimbal Cmd Enable
+	bool T2QS2;
+	//Yaw TVC Gimbal Trim Enable
+	bool T2QS3;
+
+	//Pitch SCS Gimbal Cmd Enable
+	bool T3QS2;
+	//Pitch TVC Gimbal Trim Enable
+	bool T3QS3;
 };
 
 
@@ -295,8 +819,9 @@ class EMS : public e_object {
 
 public:
 	EMS(PanelSDK &p);
+	virtual ~EMS();
 	void Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c);
-	void TimeStep(double MissionTime, double simdt);
+	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
@@ -304,8 +829,7 @@ public:
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
 	POINT RSITriangle[3];
-	void SetRSIRotation(double angle);
-	double GetRSIRotation();
+	void SetRSIDeltaRotation(double dangle);
 	int ScribePntCnt;
 	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
 	int GetGScribe() { return GScribe; };
@@ -317,6 +841,11 @@ public:
 	bool IsdVMode();
 	bool WriteScrollToFile();
 	bool IsDecimalPointBlanked();
+
+	void DefineVCAnimations(UINT vc_idx);
+	void SetReference(const VECTOR3& ref, const VECTOR3& _dir);
+	void DefineMeshGroup(UINT _grp);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	
 protected:
 	bool IsPowered();
@@ -347,6 +876,17 @@ protected:
 
 	bool pt05GLightOn;
 	bool pt05GFailed;
+
+	const VECTOR3& GetReference() const;
+	const VECTOR3& GetDirection() const;
+
+	VECTOR3 reference;
+	VECTOR3 dir;
+
+	UINT anim_RSI_indicator;
+	UINT grp;
+
+	MGROUP_ROTATE *rsirot;
 
 	//Comparator Circuits
 	bool pt05GComparator(double simdt);

@@ -53,12 +53,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	LastCycled = 0;
 	AGCHeat = NULL;
 
-	//
-	// Flight number.
-	//
-
-	ApolloNo = 0;
-
 	OtherVesselName[0] = 0;
 
 	//
@@ -80,6 +74,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	PadLoaded = false;
 
 	ProgAlarm = false;
+	TrackerAlarm = false;
 	GimbalLockAlarm = false;
 
 	//
@@ -240,17 +235,9 @@ void ApolloGuidance::SystemTimestep(double simdt)
 	}
 }
 
-void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName) 
-
+void ApolloGuidance::SetMissionInfo(std::string ProgramName, char *OtherName)
 {
-	//
-	// Older scenarios saved the mission number in the AGC. For backwards
-	// compatibility we'll only let the new number overwrite the saved value
-	// if it's zero.
-	//
-
-	if (!ApolloNo)
-		ApolloNo = MissionNo; 
+	this->ProgramName = ProgramName; 
 
 	if (OtherName != 0)
 		strncpy(OtherVesselName, OtherName, 64);
@@ -258,8 +245,6 @@ void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName)
 
 //
 // Virtual AGC Erasable memory functions.
-//
-// Currenty do nothing.
 //
 
 
@@ -424,14 +409,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	// And non-zero I/O state.
 	//
 
-	for (i = 0; i < MAX_INPUT_CHANNELS; i++) {
-		val = GetInputChannel(i);
-		if (val != 0) {
-			sprintf(fname, "ICHAN%03d", i);
-			oapiWriteScenario_int (scn, fname, val);
-		}
-	}
-
 	for (i = 0; i < MAX_OUTPUT_CHANNELS; i++) {
 		val = GetOutputChannel(i);
 		if (val != 0) {
@@ -439,7 +416,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 			oapiWriteScenario_int (scn, fname, val);
 		}
 	}
-
 
 	for (i = 0; i < NUM_CHANNELS; i++) {
 		val = vagc.InputChannel[i];
@@ -474,6 +450,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	}
 
 	papiWriteScenario_bool(scn, "PROGALARM", ProgAlarm);
+	papiWriteScenario_bool(scn, "TRACKERALARM", TrackerAlarm);
 	papiWriteScenario_bool(scn, "GIMBALLOCKALARM", GimbalLockAlarm);
 
 	oapiWriteLine(scn, AGC_END_STRING);
@@ -590,6 +567,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 
 		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);
+		papiReadScenario_bool(line, "TRACKERALARM", TrackerAlarm);
 		papiReadScenario_bool(line, "GIMBALLOCKALARM", GimbalLockAlarm);
 	}
 }
@@ -796,16 +774,10 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 		ProcessIMUCDUErrorCount(channel, val);
 		imu.ChannelOutput(channel, val);
 		break;
-
-	// DS20060225 Enable SPS gimbal control
-	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
 	case 0140:
-		ProcessChannel140(val);
 		scdu.ChannelOutput(channel, val);
 		break;
-
 	case 0141:
-		ProcessChannel141(val);
 		tcdu.ChannelOutput(channel, val);
 		break;
 	case 0142:
@@ -848,12 +820,6 @@ void ApolloGuidance::ProcessChannel14(ChannelValue val){
 void ApolloGuidance::ProcessChannel34(ChannelValue val) {
 }
 
-void ApolloGuidance::ProcessChannel140(ChannelValue val){
-}
-
-void ApolloGuidance::ProcessChannel141(ChannelValue val){
-}
-
 // Stub for LGC thrust drive
 void ApolloGuidance::ProcessChannel142(ChannelValue val) {
 }
@@ -870,41 +836,31 @@ void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
 }
 
 void ApolloGuidance::GenerateHandrupt() {
-	GenerateHANDRUPT(&vagc);
+	vagc.InterruptRequests[10] = 1;
 }
 
-// DS20060402 DOWNRUPT
 void ApolloGuidance::GenerateDownrupt(){
-	GenerateDOWNRUPT(&vagc);
+	vagc.InterruptRequests[8] = 1;
 }
 
 void ApolloGuidance::GenerateUprupt(){
-	GenerateUPRUPT(&vagc);
+	vagc.InterruptRequests[7] = 1;
 }
 
 void ApolloGuidance::GenerateRadarupt(){
-	GenerateRADARUPT(&vagc);
+	vagc.InterruptRequests[9] = 1;
 }
 
 bool ApolloGuidance::IsUpruptActive() {
-	return (IsUPRUPTActive(&vagc) == 1);
-}
+	// UPRUPT waiting to be processed
+	if (vagc.InterruptRequests[7] == 1)
+		return 1;
 
-// DS20060903 PINC, DINC, ETC
-int ApolloGuidance::DoPINC(int16_t *Counter){
-	return(CounterPINC(Counter));
-}
+	// UPRUPT currently being processed
+	if (vagc.InIsr && vagc.InterruptRequests[0] == 7)
+		return 1;
 
-int ApolloGuidance::DoPCDU(int16_t *Counter){
-	return(CounterPCDU(Counter));
-}
-
-int ApolloGuidance::DoMCDU(int16_t *Counter){
-	return(CounterMCDU(Counter));
-}
-
-int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
-	return(CounterDINC(&vagc,CounterNum,Counter));
+	return 0;
 }
 
 bool ApolloGuidance::GetInputChannelBit(int channel, int bit)

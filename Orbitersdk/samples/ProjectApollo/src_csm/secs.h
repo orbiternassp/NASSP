@@ -26,6 +26,7 @@
 #define _PA_SECS_H
 
 #include "DelayTimer.h"
+#include "smjc.h"
 
 class Saturn;
 class FloatBag;
@@ -43,6 +44,7 @@ public:
 	bool GetMode1ASignal() { return Mode1ASignal; };
 	bool GetCMTransferMotor1() { return CMTransferMotor1; };
 	bool GetCMTransferMotor2() { return CMTransferMotor2; };
+	bool GetCMTransferMotor(bool IsSystemA);
 	bool GetInterconnectAndPropellantBurnRelayA() { return InterconnectAndPropellantBurnA; }
 	bool GetInterconnectAndPropellantBurnRelayB() { return InterconnectAndPropellantBurnB; }
 	bool GetOxidFuelPurgeRelay() { return FuelAndOxidBypassPurgeA || FuelAndOxidBypassPurgeB; }
@@ -123,7 +125,8 @@ class MESC
 {
 public:
 	MESC();
-	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem, int IsSysA);
+	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, MESC* OtherMESCSystem, int IsSysA);
+	void CBInit(CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker);
 	void Timestep(double simdt);
 
 	bool GetApexCoverJettisonRelay() { return ApexCoverJettison; }
@@ -136,12 +139,10 @@ public:
 	bool GetLESAbortRelay() { return LESAbortRelay;	}
 	bool GetLETJettisonAndFrangibleNutsRelay() { return LETJettisonAndFrangibleNutsRelay; }
 	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
-	void SetEDSAbortRelay1(bool relay) { EDSAbort1Relay = relay; }
-	void SetEDSAbortRelay2(bool relay) { EDSAbort2Relay = relay; }
-	void SetEDSAbortRelay3(bool relay) { EDSAbort3Relay = relay; }
 	bool FireUllage() { return MESCLogicArm && UllageRelay; };
 	bool BECO() { return BoosterCutoffAbortStartRelay; };
 	bool ELSActivateLogic();
+	bool EDSUnsafeIndicateSignal();
 
 	//Source 12
 	bool MESCLogicBus();
@@ -167,6 +168,8 @@ public:
 	bool EDSAbortLogicOutput;
 	//Forward Heatshield Jettison Event
 	bool FwdHeatshieldJett;
+	//Hand Controller Input Event
+	bool CrewAbortSignal;
 protected:
 
 	void TimerTimestep(double simdt);
@@ -235,13 +238,11 @@ protected:
 	bool ELSActivateSolidStateSwitch;
 
 	//Miscellaneous
-	bool AbortStarted;
 	bool CMSMSeparateLogic;
 	bool AutoTowerJettison;
 	bool SSSInput1;
 	bool SSSInput2;
 	bool IsSystemA;
-	bool LiftoffFlag;
 	MESC* OtherMESC;
 
 	//Abort Start Delay
@@ -274,6 +275,8 @@ protected:
 	CircuitBrakerSwitch *EDSBatteryBreaker;
 	MissionTimer *MissionTimerDisplay;
 	EventTimer *EventTimerDisplay;
+	ThreePosSwitch *EventTimerControl;
+	ThreePosSwitch *MissionTimerControl;
 
 	CircuitBrakerSwitch *EDSLogicBreaker;
 
@@ -287,6 +290,7 @@ class LDEC
 public:
 	LDEC();
 	void Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe, ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed);
+	void InitSIMJett(CircuitBrakerSwitch *SMSec1Power);
 	void Timestep(double simdt);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -295,7 +299,12 @@ public:
 	bool GetLMSLASeparationInitiate() { return LMSLASeparationInitiate; }
 	bool GetDockingProbeRetract1() { return DockingProbeRetract1; }
 	bool GetDockingProbeRetract2() { return DockingProbeRetract2; }
+	bool GetSIMPyroArmRelay() { return SIMPyroArmRelay; }
 	void ResetLMSLASeparationInitiate() { LMSLASeparationInitiate = false; }
+
+	//Telemetry
+
+	bool CSM_LEM_LockRingSepRelaySignal;
 protected:
 	//Relays
 
@@ -314,6 +323,8 @@ protected:
 	bool DockingProbeRetract1;
 	//Z4
 	bool DockingRingFinalSeparation;
+	//Z5 (Only on Apollo 15 and later)
+	bool SIMPyroArmRelay;
 
 	//Delay Timers
 
@@ -331,6 +342,7 @@ protected:
 	ToggleSwitch *PyroArmSwitch;
 	DCbus *PyroBus;
 	PowerMerge *PyroBusFeeder;
+	CircuitBrakerSwitch *SMSector1LogicPowerBreaker;
 };
 
 ///
@@ -345,23 +357,22 @@ public:
 	virtual ~SECS();
 
 	void ControlVessel(Saturn *v);
+	void Realize();
 	void Timestep(double simt, double simdt);
 
 	bool AbortLightPowerA();
 	bool AbortLightPowerB();
 	bool LiftoffLightPower();
 	bool NoAutoAbortLightPower();
-	virtual bool BECO();
 
 	bool GetDockingProbeRetractPrim1() { return LDECA.GetDockingProbeRetract1(); }
 	bool GetDockingProbeRetractPrim2() { return LDECA.GetDockingProbeRetract2(); }
 	bool GetDockingProbeRetractSec1() { return LDECB.GetDockingProbeRetract1(); }
 	bool GetDockingProbeRetractSec2() { return LDECB.GetDockingProbeRetract2(); }
 
-	void SetEDSAbort1(bool set) { MESCA.SetEDSAbortRelay1(set); MESCB.SetEDSAbortRelay1(set); };
-	void SetEDSAbort2(bool set) { MESCA.SetEDSAbortRelay2(set); MESCB.SetEDSAbortRelay2(set); };
-	void SetEDSAbort3(bool set) { MESCA.SetEDSAbortRelay3(set); MESCB.SetEDSAbortRelay3(set); };
+	SMJC *GetSMJC(bool isSysA);
 
+	void InitSIMJett(CircuitBrakerSwitch *SMSec1PowerA, CircuitBrakerSwitch *SMSec1PowerB);
 	void SetSaturnType(int sattype);
 
 	void LoadState(FILEHANDLE scn);
@@ -376,15 +387,17 @@ public:
 	//Lunar Docking Events Controller A
 	LDEC LDECA;
 	//Lunar Docking Events Controller B
-	LDEC LDECB;
+	LDEC LDECB;	
+	//Service Module Jettison Controller A
+	SMJC* SMJCA;
+	//Service Module Jettison Controller B
+	SMJC* SMJCB;
 
 protected:
 	bool IsLogicPoweredAndArmedA();
 	bool IsLogicPoweredAndArmedB();
 	
 	int State;
-	double NextMissionEventTime;
-	double LastMissionEventTime;
 
 	Saturn *Sat;
 };
@@ -522,8 +535,6 @@ protected:
 	double NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBrakerSwitch *cb, double simdt);
 
 	int State;
-	double NextMissionEventTime;
-	double LastMissionEventTime;
 
 	double FloatBag1Size;
 	double FloatBag2Size;

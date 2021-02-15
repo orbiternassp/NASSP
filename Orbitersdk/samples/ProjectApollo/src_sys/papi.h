@@ -24,8 +24,6 @@
 
 #pragma warning(disable : 4996 ) 
 
-#include "CollisionSDK/CollisionSDK.h"
-
 
 // All inline functions and const variables should be static, see
 // http://www.orbitersim.com/Forum/Default.aspx?g=posts&m=172439#172439
@@ -40,6 +38,14 @@ static inline void papiWriteScenario_double(FILEHANDLE scn, char *item, double d
 	char buffer[256];
 
 	sprintf(buffer, "  %s %.12lf", item, d);
+	oapiWriteLine(scn, buffer);
+}
+
+static inline void papiWriteScenario_double2(FILEHANDLE scn, char *item, double d1, double d2) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %.12lf %.12lf", item, d1, d2);
 	oapiWriteLine(scn, buffer);
 }
 

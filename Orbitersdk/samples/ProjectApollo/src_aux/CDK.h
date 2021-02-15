@@ -30,11 +30,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "Control.h"
-#include "Elements.h"
-#include "GravBodyData.h"
 #include "OrbiterMath.h"
-#include "Prediction.h"
-#include "EI.h"
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"

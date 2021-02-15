@@ -38,9 +38,8 @@
 #include "lm_channels.h"
 #include "tracer.h"
 #include "papi.h"
+#include "Mission.h"
 #include "LEM.h"
-
-#define DECA_AUTOTHRUST_STEP 0.00026828571
 
 // RATE GYRO ASSEMBLY
 
@@ -172,21 +171,72 @@ void ATCA::Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl){
 
 double ATCA::GetPrimPowerVoltage() {
 	if (lem->CDR_SCS_ATCA_CB.IsPowered())
-	{
 		return -4.7;
-	}
 	else
 		return 0.0;
 }
 double ATCA::GetBackupPowerVoltage() {
 	if (lem->SCS_ATCA_AGS_CB.IsPowered())
-	{
 		return -4.7;
-	}
 	else
 		return 0.0;
 }
-// GuidContSwitch is the Guidance Control switch
+
+double ATCA::GetRGAPickoffExcitationVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 28.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetRGASpinMotorVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 26.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus15VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 15.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetMinus15VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return -15.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus6VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 6.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetMinus6VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return -6.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus43VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 4.3;
+	else
+		return 0.0;
+}
 
 void ATCA::Timestep(double simt, double simdt){
 	hasPrimPower = false, hasAbortPower = false;
@@ -1019,7 +1069,8 @@ DECA::DECA() {
 	engOn = false;
 	lgcAutoThrust = 0.0;
 	ManualThrust = 0.0;
-	LMR = 0.859;
+	//85.9% for 12V
+	LMR = 0.859*12.0;
 
 	ResetRelays();
 }
@@ -1399,11 +1450,11 @@ void DECA::Timestep(double simdt) {
 
 		if (ttca_throttle_pos > 0.51 / 0.66)
 		{
-			ManualThrust = 1.8436*ttca_throttle_pos - 0.9186;
+			ManualThrust = 1.993081081*ttca_throttle_pos - 0.9930810811;
 		}
 		else
 		{
-			ManualThrust = 0.5254117647*ttca_throttle_pos + 0.1;
+			ManualThrust = 0.5785055644*ttca_throttle_pos + 0.1;
 		}
 	}
 	else
@@ -1416,23 +1467,12 @@ void DECA::Timestep(double simdt) {
 		ManualThrust = 0.0;
 	}
 
-	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust);
+	//TBD: Manual thrust also as a voltage. Throttle actuator input should be voltages eventually, too.
+	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust*0.9 / 12.0);
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 	//sprintf(oapiDebugString(), "Manual: K1 %d K3 %d K7 %d K10 %d K16 %d K23 %d K28 %d", K1, K3, K7, K10, K16, K23, K28);
 	//sprintf(oapiDebugString(), "Auto: X %d Y %d Q %d K6 %d K10 %d K15 %d K16 %d K23 %d K28 %d", X, Y, Q, K6, K10, K15, K16, K23, K28);
-}
-
-double DECA::GetCommandedThrust()
-{
-	if (lem->THRContSwitch.IsUp())
-	{
-		return AutoThrust + 0.1;
-	}
-	else
-	{
-		return ManualThrust;
-	}
 }
 
 void DECA::ProcessLGCThrustCommands(int val) {
@@ -1449,13 +1489,13 @@ void DECA::ProcessLGCThrustCommands(int val) {
 		pulses = val & 077777;
 	}
 
-	thrust_cmd = (DECA_AUTOTHRUST_STEP*pulses);
+	thrust_cmd = (0.0035*pulses);
 
 	lgcAutoThrust += thrust_cmd;
 
-	if (lgcAutoThrust > 0.825)
+	if (lgcAutoThrust > 12.0)
 	{
-		lgcAutoThrust = 0.825;
+		lgcAutoThrust = 12.0;
 	}
 	else if (lgcAutoThrust < 0)
 	{
@@ -2192,6 +2232,19 @@ void SCCA2::Timestep(double simdt)
 	}
 
 	//TBD: K23 and K24 are only used by GSE
+	K23 = false;
+	K24 = false;
+
+	if (lem->stage > 1 || (K23 && K24))
+	{
+		tempsignal = false;
+	}
+	else
+	{
+		tempsignal = true;
+	}
+	if (lem->pMission->IsLMStageBitInverted()) tempsignal = !tempsignal;
+	lem->agc.SetInputChannelBit(030, DescendStageAttached, tempsignal);
 }
 
 void SCCA2::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {

@@ -26,8 +26,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
-// Ends at TLI Update
+// Ends at TLI prediction
 #define MST_CP_EPO1			11
+// Ends at TLI update
+#define MST_CP_EPO2			12
+#define MST_CP_EPO3			13
+#define MST_CP_EPO4			14
 // Ends at TLI BURN
 #define MST_CP_TRANSLUNAR1	21
 // Ends at separation
@@ -54,12 +58,18 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_TRANSLUNAR12	32
 //Ends at Preliminary LOI-1 Update
 #define MST_CP_TRANSLUNAR13	33
-//Ends at Block Data 7 Update
+//Ends at PC+2 Update
 #define MST_CP_TRANSLUNAR14	34
-//Ends at Map Update
+//Ends at Fast PC+2 Update
 #define MST_CP_TRANSLUNAR15	35
-//Ends at LOI-1 Update
+//Ends at Preliminary TEI-1 Update
 #define MST_CP_TRANSLUNAR16	36
+//Ends at Preliminary TEI-2 Update
+#define MST_CP_TRANSLUNAR17	37
+//Ends at Map Update
+#define MST_CP_TRANSLUNAR18	38
+//Ends at LOI-1 Update
+#define MST_CP_TRANSLUNAR19	39
 //Ends at LOI-2 Update
 
 #define MST_CP_LUNAR_ORBIT1	101
@@ -97,6 +107,16 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_LUNAR_ORBIT18 118
 // Ends at TEI Calculation
 #define MST_CP_LUNAR_ORBIT19 119
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT20 120
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT21 121
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT22 122
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT23 123
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT24 124
 // Ends at TEI BURN
 
 #define MST_CP_TRANSEARTH1	201

@@ -41,6 +41,7 @@
 #include "csmcomputer.h"
 #include "ioChannels.h"
 
+#include "s1csystems.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "s1c.h"
@@ -91,14 +92,14 @@ GDIParams g_Param;
 SaturnV::SaturnV (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
 	SICSIISepPyros("SIC-SII-Separation-Pyros", Panelsdk),
 	SIIInterstagePyros("SII-Interstage-Pyros", Panelsdk),
-	SIISIVBSepPyros("SII-SIVB-Separation-Pyros", Panelsdk),
-	sic(this, th_1st, ph_1st, SICSIISepPyros, LaunchS, SShutS, contrailLevel),
-	sii(this, th_2nd, ph_2nd, thg_ull, SIIInterstagePyros, SIISIVBSepPyros, SPUShiftS, SepS)
+	SIISIVBSepPyros("SII-SIVB-Separation-Pyros", Panelsdk)
 
 {
 	TRACESETUP("SaturnV");
 	
 	hMaster = hObj;
+	sic = NULL;
+	sii = NULL;
 	initSaturnV();
 }
 
@@ -204,6 +205,16 @@ SaturnV::~SaturnV()
 		delete iu;
 		iu = 0;
 	}
+	if (sic)
+	{
+		delete sic;
+		sic = 0;
+	}
+	if (sii)
+	{
+		delete sii;
+		sii = 0;
+	}
 }
 
 void SaturnV::CalculateStageMass ()
@@ -214,8 +225,8 @@ void SaturnV::CalculateStageMass ()
 		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 		SII_Mass = SII_EmptyMass + SII_FuelMass + (SII_UllageNum * 175);
 		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-		SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
-		CM_Mass = CM_EmptyMass + CM_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		CM_Mass = CM_EmptyMass;
 
 		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
 		Stage2Mass = Stage3Mass + SII_EmptyMass + S4B_FuelMass + Abort_Mass + Interstage_Mass;
@@ -226,8 +237,8 @@ void SaturnV::CalculateStageMass ()
 		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 		SII_Mass = 0;
 		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-		SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
-		CM_Mass = CM_EmptyMass + CM_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		CM_Mass = CM_EmptyMass;
 
 		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
 		Stage2Mass = 0;
@@ -469,11 +480,11 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 	if (stage <= LAUNCH_STAGE_ONE)
 	{
-		sic.Timestep(simdt, stage >= LAUNCH_STAGE_ONE);
+		sic->Timestep(MissionTime, simdt);
 	}
 	else if (stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET)
 	{
-		sii.Timestep(simdt);
+		sii->Timestep(simdt);
 	}
 
 	if (stage < CSM_LEM_STAGE) {
@@ -485,11 +496,18 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	// S-IC/S-II separation
 	//
 
-	if (SICSIISepPyros.Blown() && stage == LAUNCH_STAGE_ONE)
+	if (!LaunchFail.SIIAutoSepFail && SICSIISepPyros.Blown() && stage == LAUNCH_STAGE_ONE)
 	{
 		SeparateStage(LAUNCH_STAGE_TWO);
 		SetStage(LAUNCH_STAGE_TWO);
 		ActivateStagingVent();
+		NextMissionEventTime = MissionTime + 1.7;
+	}
+
+	//Deactivate S-IC/S-II staging vent
+	if (stagingvent[0] && MissionTime >= NextMissionEventTime)
+	{
+		DeactivateStagingVent();
 	}
 
 	//
@@ -630,41 +648,68 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
 }
 
+void SaturnV::CreateStageSpecificSystems()
+{
+	if (stage <= LAUNCH_STAGE_ONE)
+	{
+		sic = new SICSystems(this, th_1st, ph_1st, SICSIISepPyros, LaunchS, SShutS, contrailLevel);
+	}
+	if (stage <= LAUNCH_STAGE_TWO_ISTG_JET)
+	{
+		sii = new SIISystems(this, th_2nd, ph_2nd, thg_ull, SIIInterstagePyros, SIISIVBSepPyros, SPUShiftS, SepS);
+	}
+	if (stage < CSM_LEM_STAGE)
+	{
+		iu = new IUSV;
+		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+	}
+}
+
+void SaturnV::CheckSaturnSystemsState()
+{
+	Saturn::CheckSaturnSystemsState();
+
+	if (stage > LAUNCH_STAGE_ONE)
+	{
+		if (sic)
+		{
+			delete sic;
+			sic = 0;
+		}
+	}
+	if (stage > LAUNCH_STAGE_TWO_ISTG_JET)
+	{
+		if (sii)
+		{
+			delete sii;
+			sii = 0;
+		}
+	}
+}
+
 void SaturnV::LoadIU(FILEHANDLE scn)
 {
-	// If the IU does not yet exist, create it.
-	if (iu == NULL) {
-		iu = new IUSV;
-	}
 	iu->LoadState(scn);
 }
 
-void SaturnV::LoadLVDC(FILEHANDLE scn) {
-
-	if (iu == NULL) {
-		iu = new IUSV;
-	}
-
+void SaturnV::LoadLVDC(FILEHANDLE scn)
+{
 	iu->LoadLVDC(scn);
 }
 
-void SaturnV::LoadSIVB(FILEHANDLE scn) {
-
-	if (sivb == NULL) {
-		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
-	}
-
+void SaturnV::LoadSIVB(FILEHANDLE scn)
+{
 	sivb->LoadState(scn);
 }
 
 void SaturnV::SaveSI(FILEHANDLE scn)
 {
-	sic.SaveState(scn);
+	sic->SaveState(scn);
 }
 
 void SaturnV::LoadSI(FILEHANDLE scn)
 {
-	sic.LoadState(scn);
+	sic->LoadState(scn);
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
@@ -677,15 +722,11 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	ClearMeshes();
 	SetupMeshes();
 
-	if (stage < CSM_LEM_STAGE)
-	{
-		if (iu == NULL) {
-			iu = new IUSV;
-		}
-		if (sivb == NULL)
-		{
-			sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
-		}
+	// Load the CM virtual vockpit only once here to ensure it is always in idx = 0
+	// This is to ensure the VC is not deleted at staging or else bad things happen to animations
+	// This should be here until a better way to handle staging is implemented (docked stages)
+	if (buildstatus == 6) {
+		LoadVC();
 	}
 
 	//
@@ -898,129 +939,79 @@ void SaturnV::LaunchVehicleUnbuild() {
 	}
 }
 
-// DS20150720 "SWITCH SELECTOR" STAGING SUPPORT FUNCTION
-void SaturnV::SwitchSelector(int item){
-	int i=0;
-
-	switch(item){
-	case 10:
-		DeactivatePrelaunchVenting();
-		break;
-	case 11:
-		ActivatePrelaunchVenting();
-		break;
-	case 12:
-		CreateStageOne();								// Create hidden stage one, for later use in staging
-		break;
-	case 13:
-		if (!UseATC && Scount.isValid()) {
-			Scount.play();
-			Scount.done();
-		}
-		break;
-	case 14:
-		DeactivatePrelaunchVenting();
-		break;
-	case 17:
-		// Move hidden S1C
-		if (hstg1) {
-			VESSELSTATUS vs;
-			GetStatus(vs);
-			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
-			stage1->DefSetState(&vs);
-		}
-		break;
-	case 19:
-		// S2 Engine Startup
-		DeactivateStagingVent();
-		break;
-	case 20:
-		// S2 Engine Startup P2
-		SepS.stop();
-		break;
-	}
-}
-
 void SaturnV::SISwitchSelector(int channel)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sic.SwitchSelector(channel);
+	sic->SwitchSelector(channel);
 }
 
 void SaturnV::SIISwitchSelector(int channel)
 {
 	if (stage > LAUNCH_STAGE_TWO_ISTG_JET) return;
 
-	sii.SwitchSelector(channel);
+	sii->SwitchSelector(channel);
 }
 
 void SaturnV::GetSIThrustOK(bool *ok)
 {
-	for (int i = 0;i < 5;i++)
+	for (int i = 0;i < 15;i++)
 	{
 		ok[i] = false;
 	}
 
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sic.GetThrustOK(ok);
+	sic->GetThrustOK(ok);
 }
 
 bool SaturnV::GetSIPropellantDepletionEngineCutoff()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sic.GetPropellantDepletionEngineCutoff();
+	return sic->GetPropellantDepletionEngineCutoff();
 }
 
 bool SaturnV::GetSIInboardEngineOut()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sic.GetInboardEngineOut();
+	return sic->GetInboardEngineOut();
 }
 
 bool SaturnV::GetSIOutboardEngineOut()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sic.GetOutboardEngineOut();
-}
-
-void SaturnV::SetSIEngineStart(int n)
-{
-	if (stage >= LAUNCH_STAGE_ONE) return;
-
-	sic.SetEngineStart(n);
+	return sic->GetOutboardEngineOut();
 }
 
 void SaturnV::SetSIThrusterDir(int n, double yaw, double pitch)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sic.SetThrusterDir(n, yaw, pitch);
+	sic->SetThrusterDir(n, yaw, pitch);
 }
 
 bool SaturnV::GetSIIPropellantDepletionEngineCutoff()
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
 
-	return sii.GetPropellantDepletionEngineCutoff();
+	return sii->GetPropellantDepletionEngineCutoff();
 }
 
 bool SaturnV::GetSIIEngineOut()
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
 
-	return sii.GetEngineOut();
+	return sii->GetEngineOut();
 }
 
 void SaturnV::SIEDSCutoff(bool cut)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sic.EDSEnginesCutoff(cut);
+	sic->EDSEnginesCutoff(cut);
 }
 
 void SaturnV::GetSIIThrustOK(bool *ok)
@@ -1032,47 +1023,69 @@ void SaturnV::GetSIIThrustOK(bool *ok)
 
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
 
-	sii.GetThrustOK(ok);
+	sii->GetThrustOK(ok);
 }
 
 void SaturnV::SetSIIThrusterDir(int n, double yaw, double pitch)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
 
-	sii.SetThrusterDir(n, yaw, pitch);
+	sii->SetThrusterDir(n, yaw, pitch);
 }
 
 void SaturnV::SIIEDSCutoff(bool cut)
 {
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
 
-	sii.EDSEnginesCutoff(cut);
+	sii->EDSEnginesCutoff(cut);
+}
+
+double SaturnV::GetSIIFuelTankPressurePSI()
+{
+	if (stage <= LAUNCH_STAGE_TWO_ISTG_JET)
+		return sii->GetLH2TankUllagePressurePSI();
+
+	return 0.0;
 }
 
 void SaturnV::SaveSII(FILEHANDLE scn)
 {
-	sii.SaveState(scn);
+	sii->SaveState(scn);
 }
 
 void SaturnV::LoadSII(FILEHANDLE scn)
 {
-	sii.LoadState(scn);
+	sii->LoadState(scn);
 }
 
-void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime)
+void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime, bool fail)
 {
 	if (failstage == 1)
 	{
-		sic.SetEngineFailureParameters(faileng, failtime);
+		sic->SetEngineFailureParameters(faileng, failtime, fail);
 	}
 	else if (failstage == 2)
 	{
-		sii.SetEngineFailureParameters(faileng, failtime);
+		sii->SetEngineFailureParameters(faileng, failtime, fail);
+	}
+}
+
+void SaturnV::GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime)
+{
+	if (failstage == 1 && sic)
+	{
+		sic->GetEngineFailureParameters(faileng, fail, failtime);
+	}
+	else if (failstage == 2 && sii)
+	{
+		sii->GetEngineFailureParameters(faileng, fail, failtime);
 	}
 }
 
 double SaturnV::GetSIThrustLevel()
 {
+	if (stage > LAUNCH_STAGE_ONE) return 0.0;
+
 	double lvl = 0.0;
 	for (int i = 0;i < 5;i++)
 	{
@@ -1080,95 +1093,4 @@ double SaturnV::GetSIThrustLevel()
 	}
 
 	return lvl / 5.0;
-}
-
-void SaturnV::SetRandomFailures()
-{
-	Saturn::SetRandomFailures();
-
-	//
-	// Engine failure times
-	//
-
-	if (stage < LAUNCH_STAGE_TWO)
-	{
-		if (!sic.GetFailInit())
-		{
-			//
-			// Engine failure times for first stage.
-			//
-
-			bool EarlySICutoff[5];
-			double FirstStageFailureTime[5];
-
-			for (int i = 0;i < 5;i++)
-			{
-				EarlySICutoff[i] = 0;
-				FirstStageFailureTime[i] = 0.0;
-			}
-
-			for (int i = 0;i < 5;i++)
-			{
-				if (!(random() & (int)(127.0 / FailureMultiplier)))
-				{
-					EarlySICutoff[i] = true;
-					FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
-				}
-			}
-
-			sic.SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
-		}
-	}
-
-	if (stage < LAUNCH_STAGE_SIVB)
-	{
-		if (!sii.GetFailInit())
-		{
-			//
-			// Engine failure times for second stage.
-			//
-
-			bool EarlySIICutoff[5];
-			double SecondStageFailureTime[5];
-
-			for (int i = 0;i < 5;i++)
-			{
-				EarlySIICutoff[i] = 0;
-				SecondStageFailureTime[i] = 0.0;
-			}
-
-			for (int i = 0;i < 5;i++)
-			{
-				if (!(random() & (int)(127.0 / FailureMultiplier)))
-				{
-					EarlySIICutoff[i] = true;
-					SecondStageFailureTime[i] = 10.0 + ((double)(random() & 3071) / 10.0);
-				}
-			}
-			sii.SetEngineFailureParameters(EarlySIICutoff, SecondStageFailureTime);
-
-		}
-	}
-
-	//
-	// Set up launch failures.
-	//
-
-	if (!LaunchFail.Init)
-	{
-		LaunchFail.Init = 1;
-
-		if (!(random() & 127))
-		{
-			LaunchFail.LETAutoJetFail = 1;
-		}
-		if (!(random() & 63))
-		{
-			LaunchFail.SIIAutoSepFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.LESJetMotorFail = 1;
-		}
-	}
 }

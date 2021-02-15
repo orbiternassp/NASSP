@@ -244,3 +244,46 @@ protected:
 	h_HeatLoad *FloodHeat;
 
 };
+
+//Power Failure Indicator Relay Assembly
+
+class LEM_PFIRA
+{
+public:
+	LEM_PFIRA();
+	void Init(LEM *l);
+	void Timestep(double simdt);
+
+	bool GetPropPressIndRelay() { return K1; }
+	bool GetCDRXPointerRelay() { return K2; }
+	bool GetThrustIndRelay() { return K3; }
+	bool GetSuitCabinPressIndRelay() { return K4; }
+	bool GetO2H2OQtyIndRelay() { return K5; }
+	bool GetGlyTempPressIndRelay() { return K6; }
+	bool GetRCSPressIndRelay() { return K7; }
+	bool GetRCSQtyIndRelay() { return K8; }
+	bool GetLMPXPointerRelay() { return K9; }
+protected:
+	LEM *lem;
+
+	//RELAYS:
+
+	//Propellant pressure indicator
+	bool K1;
+	//CDR cross pointer
+	bool K2;
+	//Thrust
+	bool K3;
+	//Suit/cabin pressure
+	bool K4;
+	//OX/H2O Quantity
+	bool K5;
+	//Glycol temperature/pressure
+	bool K6;
+	//RCS pressure
+	bool K7;
+	//RCS quantity
+	bool K8;
+	//LMP cross pointer
+	bool K9;
+};

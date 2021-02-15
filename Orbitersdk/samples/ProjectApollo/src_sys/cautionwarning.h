@@ -187,7 +187,7 @@ public:
 	/// \param lightnum Light number to update.
 	/// \param failed True to make the light fail, false to fix it.
 	///
-	void FailLight(int lightnum, bool failed);
+	virtual void FailLight(int lightnum, bool failed);
 
 	///
 	/// \brief Check whether a light has failed.

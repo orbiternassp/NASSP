@@ -68,12 +68,15 @@ public:
 	double GetHeliumRegulatorManifoldPressurePSI();
 	double GetFuelTankUllagePressurePSI();
 	double GetOxidizerTankUllagePressurePSI();
-	double GetFuelEngineInletPressurePSI() { return FuelEngineInletPressurePSI; }
+	double GetFuelEngineInletPressurePSI();
+	double GetOxidizerEngineInletPressurePSI();
 	double GetOxidizerTank1BulkTempF();
 	double GetOxidizerTank2BulkTempF();
 	double GetFuelTank1BulkTempF();
 	double GetFuelTank2BulkTempF();
 	bool PropellantLevelLow();
+
+	double GetActuatorValvesPressurePSI() { return FuelEngineInletPressurePSI; }
 
 	DPSValve *GetHeliumValve1() { return &PrimaryHeRegulatorShutoffValve; }
 	DPSValve *GetHeliumValve2() { return &SecondaryHeRegulatorShutoffValve; }
@@ -93,6 +96,10 @@ protected:
 	double FuelTankUllagePressurePSI;
 	double OxidTankUllagePressurePSI;
 	double FuelEngineInletPressurePSI;
+	double OxidEngineInletPressurePSI;
+	double supercriticalHeliumMass;
+	double supercriticalHeliumTemp;
+	double ambientHeliumMass;
 
 	bool fuel1LevelLow;
 	bool fuel2LevelLow;
@@ -148,6 +155,9 @@ protected:
 	e_object *motorSource;
 };
 
+const double DPS_FCMAX = 43203.3;	//The uneroded maximum DPS thrust
+const double DPS_FMAX = 46703.3;	//The maximum DPS thrust
+
 // Descent Engine
 class LEM_DPS {
 public:
@@ -155,24 +165,43 @@ public:
 	void Init(LEM *s);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
+	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 
 	void ThrottleActuator(double manthrust, double autothrust);
+
+	double GetPitchGimbalPosition();
+	double GetRollGimbalPosition();
+	double GetThrustChamberPressurePSI();
+	double GetInjectorActuatorPosition();
 
 	LEM *lem;					// Pointer at LEM
 	bool thrustOn;				// Engine "On" Command
 	bool engArm;				// Engine Arm Command
 	bool engPreValvesArm;		// Engine Prevalves Arm Command
 	double thrustcommand;		// DPS Thrust Command
+	double ActuatorValves;
+	double PropellantShutoffValves;
+
+	double ThrustChamberPressurePSI;
 
 	DPSGimbalActuator pitchGimbalActuator;
 	DPSGimbalActuator rollGimbalActuator;
 
 protected:
 
+	double RecalculateISP(double THRUST_FMAX);
+
 	THRUSTER_HANDLE *dpsThruster;
 
+	// Animations
+	UINT anim_DPSGimbalPitch, anim_DPSGimbalRoll;
+	double dpsgimbal_proc[2];
+	double dpsgimbal_proc_last[2];
+
+	double Erosion; //In Newtons
 };
 
 #define DPSPROPELLANT_START_STRING     "DPSPROPELLANT_BEGIN"

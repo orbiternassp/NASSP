@@ -9,9 +9,6 @@
       <UniqueIdentifier>{df6ab7b5-a89d-4ea3-8c61-1546e19ecdac}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
-    <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{2a406c86-84a6-4de5-a761-ac847ae35067}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{c864c80a-fa8c-4ab3-8b16-c040e58d83fb}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
@@ -27,8 +24,23 @@
     <ClCompile Include="..\..\src_aux\tracer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <Filter>CollisionSDK</Filter>
+    <ClCompile Include="..\..\src_launch\IUUmbilical.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\IUUmbilicalInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\IU_ESE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\TSMUmbilical.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\SIC_ESE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\RCA110A.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -84,6 +96,30 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_aux\tracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\IUUmbilical.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\IUUmbilicalInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\IU_ESE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\TSMUmbilical.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\TSMUmbilicalInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\SIC_ESE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\LCCPadInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\RCA110A.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

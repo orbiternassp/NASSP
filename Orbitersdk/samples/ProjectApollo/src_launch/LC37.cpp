@@ -33,14 +33,21 @@
 #include "soundlib.h"
 #include "tracer.h"
 
+#include "IU_ESE.h"
+#include "SCMUmbilical.h"
+#include "SIB_ESE.h"
+#include "IUUmbilical.h"
 #include "LC37.h"
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "LEM.h"
-#include "LEMSaturn.h"
+#include "sivbsystems.h"
+#include "s1b.h"
+#include "sivb.h"
 #include "papi.h"
+#include "RCA110A.h"
 
 HINSTANCE g_hDLL;
 
@@ -90,11 +97,15 @@ DLLCLBK void ovcExit(VESSEL *vessel) {
 LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	firstTimestepDone = false;
-	LVName[0] = '\0';
+	SIBName[0] = '\0';
+	SIVBName[0] = '\0';
 	touchdownPointHeight = -0.01; // pad height
-	hLV = 0;
 	state = STATE_PRELAUNCH;
 	abort = false;
+	LaunchMJD = 99999.9;
+	MissionTime = 0.0;
+	s1b = NULL;
+	sivb = NULL;
 
 	int i;
 	for (i = 0; i < 2; i++) {
@@ -105,9 +116,20 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	//meshoffsetMSS = _V(0,0,0);
+
+	IuUmb = new IUUmbilical(this);
+	IuESE = new IU_ESE(IuUmb, this);
+	SCMUmb = new SCMUmbilical(this);
+	SIBESE = new SIB_ESE(SCMUmb, this);
+	rca110a = new RCA110AM(this);
 }
 
 LC37::~LC37() {
+	delete IuUmb;
+	delete IuESE;
+	delete SCMUmb;
+	delete SIBESE;
+	delete rca110a;
 }
 
 void LC37::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -127,30 +149,43 @@ void LC37::clbkSetClassCaps(FILEHANDLE cfg) {
 	SetTouchdownPointHeight(touchdownPointHeight);
 }
 
-void LC37::clbkPostCreation() {
-	
+void LC37::clbkPostCreation()
+{	
+	char buffer[256];
 
+	double vcount = oapiGetVesselCount();
+	for (int i = 0; i < vcount; i++) {
+		OBJHANDLE h = oapiGetVesselByIndex(i);
+		oapiGetObjectName(h, buffer, 256);
+		if (!strcmp(SIBName, buffer)) {
+			s1b = (S1B *)oapiGetVesselInterface(h);
+			SCMUmb->Connect(s1b->GetSIB());
+		}
+		else if (!strcmp(SIVBName, buffer)) {
+			sivb = (SIVB *)oapiGetVesselInterface(h);
+			IuUmb->Connect(sivb->GetIU());
+		}
+	}
 }
 
-void LC37::clbkPreStep(double simt, double simdt, double mjd) {
-
-	LEMSaturn *sat;
-
+void LC37::clbkPreStep(double simt, double simdt, double mjd)
+{
 	if (!firstTimestepDone) DoFirstTimestep();
 
-	if (hLV && !abort) {
-		sat = (LEMSaturn *)oapiGetVesselInterface(hLV);
-		abort = false;
-	}
+	MissionTime = (oapiGetSimMJD() - LaunchMJD)*24.0*3600.0;
 
 	switch (state) {
 	case STATE_PRELAUNCH:
 		if (abort) break; // Don't do anything if we have aborted.
 
+		// T-3h or later?
+		if (MissionTime > -3 * 3600)
+		{
+			//sat->ActivatePrelaunchVenting();
+		}
+
 		// T-33min or later?
-		if (!hLV) break;
-		sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() > -33 * 60) {
+		if (MissionTime > -33 * 60) {
 			state = STATE_CMARM1;
 		}
 		break;
@@ -158,10 +193,10 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 	case STATE_CMARM1:
 		if (abort) break; // Don't do anything if we have aborted.
 
+		//sat->ActivatePrelaunchVenting();
+
 		// T-5min or later?
-		if (!hLV) break;
-		sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() > -5 * 60) {
+		if (MissionTime > -5 * 60) {
 			state = STATE_CMARM2;
 		}  
 		break;
@@ -169,78 +204,122 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 	case STATE_CMARM2:
 		if (abort) break; // Don't do anything if we have aborted.
 
+		//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
+		if (MissionTime >= -(17.0 + oapiGetSimStep()))
+		{
+			IuESE->SetGuidanceReferenceRelease(true);
+		}
+		else
+		{
+			IuUmb->LVDCPrepareToLaunch();
+		}
+
+		if (MissionTime < -9)
+		{
+			//sat->ActivatePrelaunchVenting();
+		}
+		else
+		{
+			//sat->DeactivatePrelaunchVenting();
+		}
+
 		// T-4.9s or later?
-		if (!hLV) break;
-		sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() > -4.9) {
+		if (MissionTime > -4.9) {
 			state = STATE_LIFTOFFSTREAM;
 		}
 		break;
 
 
 	case STATE_LIFTOFFSTREAM:
-		if (!hLV) break;
-		sat = (LEMSaturn *)oapiGetVesselInterface(hLV);
 
-		if (sat->GetMissionTime() > -3.1)
+		if (MissionTime > -3.1)
 		{
-			sat->SetSIEngineStart(5);
-			sat->SetSIEngineStart(7);
+			SCMUmb->SetEngineStart(5);
+			SCMUmb->SetEngineStart(7);
 		}
-		if (sat->GetMissionTime() > -3.0)
+		if (MissionTime > -3.0)
 		{
-			sat->SetSIEngineStart(6);
-			sat->SetSIEngineStart(8);
+			SCMUmb->SetEngineStart(6);
+			SCMUmb->SetEngineStart(8);
 		}
-		if (sat->GetMissionTime() > -2.9)
+		if (MissionTime > -2.9)
 		{
-			sat->SetSIEngineStart(2);
-			sat->SetSIEngineStart(4);
+			SCMUmb->SetEngineStart(2);
+			SCMUmb->SetEngineStart(4);
 		}
-		if (sat->GetMissionTime() > -2.8)
+		if (MissionTime > -2.8)
 		{
-			sat->SetSIEngineStart(1);
-			sat->SetSIEngineStart(3);
+			SCMUmb->SetEngineStart(1);
+			SCMUmb->SetEngineStart(3);
 		}
 
 		// T-1s or later?
-		if (sat->GetMissionTime() > -1) {
+		if (MissionTime > -1) {
 			state = STATE_LIFTOFF;
 		}
 
 		if (abort) break; // Don't do anything if we have aborted.
 
-		if (sat->GetMissionTime() < -2.0)
-			liftoffStreamLevel = (sat->GetMissionTime() + 4.9) / 2.9;
+		if (MissionTime < -2.0)
+			liftoffStreamLevel = (MissionTime + 4.9) / 2.9;
 		else
 			liftoffStreamLevel = 1;
+
+		if (s1b)
+		{
+			if (MissionTime > -2.0 && MissionTime < -1.0)
+				liftoffStreamLevel = s1b->GetThrusterGroupLevel(THGROUP_MAIN) *(MissionTime + 2.0) / 1.0;
+			else
+				liftoffStreamLevel = s1b->GetThrusterGroupLevel(THGROUP_MAIN);
+		}
+		else
+		{
+			liftoffStreamLevel = 0.0;
+		}
+
+		//Hold-down force
+		if (MissionTime > -4.0) {
+			if (s1b) s1b->AddForce(_V(0, 0, -8. * 1008000), _V(0, 0, 0)); // Maintain hold-down lock
+		}
 		break;
-	
 	case STATE_LIFTOFF:
-		if (!hLV) break;
-		sat = (LEMSaturn *)oapiGetVesselInterface(hLV);
+		//if (!hLV) break;
+		//sat = (LEMSaturn *)oapiGetVesselInterface(hLV);
 
 		// Disconnect IU Umbilical
-		if (sat->GetMissionTime() >= -0.05) {
-			sat->SetIUUmbilicalState(false);
+		if (MissionTime >= -0.05) {
+			IuUmb->Disconnect();
+			SCMUmb->Disconnect();
 		}
 
 		// T+4s or later?
-		if (sat->GetMissionTime() > 4) {
+		if (MissionTime > 4) {
 			state = STATE_POSTLIFTOFF;
 		}
 
 		if (abort) break; // Don't do anything if we have aborted.
 
-		liftoffStreamLevel = 1;
+		// Soft-Release Pin Dragging
+		if (MissionTime < 0.5) {
+			double PinDragFactor = min(1.0, 1.0 - (MissionTime * 2.0));
+			if (s1b) s1b->AddForce(_V(0, 0, -(8*1008000 * PinDragFactor)), _V(0, 0, 0));
+		}
+		if (s1b)
+		{
+			liftoffStreamLevel = s1b->GetThrusterGroupLevel(THGROUP_MAIN);
+		}
+		else
+		{
+			liftoffStreamLevel = 0;
+		}
 	break;
 
 	case STATE_POSTLIFTOFF:
 
-		if (!hLV) break;
-		sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() < 10.0 && !abort)
-			liftoffStreamLevel = (sat->GetMissionTime() - 10.0) / -6.0;
+		//if (!hLV) break;
+		//sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
+		if (s1b && MissionTime < 10.0 && !abort)
+			liftoffStreamLevel = s1b->GetThrusterGroupLevel(THGROUP_MAIN)*(MissionTime - 10.0) / -6.0;
 		else {
 			liftoffStreamLevel = 0;
 
@@ -248,10 +327,17 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 			// Once the stream is finished, forget about the vessel since we won't be
 			// using it again. This prevents a crash if we later delete the vessel.
 			//
-			hLV = 0;
+			SIBName[0] = '\0';
+			SIVBName[0] = '\0';
+			s1b = NULL;
+			sivb = NULL;
 		}
 		break;
 	}
+
+	//IU ESE
+	IuESE->Timestep(MissionTime, simdt);
+	SIBESE->Timestep();
 }
 
 void LC37::clbkPostStep (double simt, double simdt, double mjd) {
@@ -263,18 +349,7 @@ void LC37::clbkPostStep (double simt, double simdt, double mjd) {
 
 void LC37::DoFirstTimestep() {
 
-	char buffer[256];
 
-	double vcount = oapiGetVesselCount();
-	for (int i = 0; i < vcount; i++)	{
-		OBJHANDLE h = oapiGetVesselByIndex(i);
-		oapiGetObjectName(h, buffer, 256);
-		if (!strcmp(LVName, buffer)){
-			hLV = h;
-			LEMSaturn *sat = (LEMSaturn *)oapiGetVesselInterface(hLV);
-			sat->SetIUUmbilicalState(true);
-		}
-	}
 
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
@@ -302,12 +377,14 @@ void LC37::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	char *line;
 
 	while (oapiReadScenario_nextline (scn, line)) {
+		papiReadScenario_double(line, "LAUNCHMJD", LaunchMJD);
+		papiReadScenario_string(line, "SIBNAME", SIBName);
+		papiReadScenario_string(line, "SIVBNAME", SIVBName);
+
 		if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line + 5, "%i", &state);
 		} else if (!strnicmp (line, "TOUCHDOWNPOINTHEIGHT", 20)) {
 			sscanf (line + 20, "%lf", &touchdownPointHeight);
-		} else if (!strnicmp (line, "LVNAME", 6)) {
-			strncpy (LVName, line + 7, 64);
 		} else {
 			ParseScenarioLineEx (line, status);
 		}
@@ -321,9 +398,11 @@ void LC37::clbkSaveState(FILEHANDLE scn) {
 
 	oapiWriteScenario_int(scn, "STATE", state);
 	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
-	if (LVName[0])
-		oapiWriteScenario_string(scn, "LVNAME", LVName);
-
+	if (SIBName[0])
+		oapiWriteScenario_string(scn, "SIBNAME", SIBName);
+	if (SIVBName[0])
+		oapiWriteScenario_string(scn, "SIVBNAME", SIVBName);
+	papiWriteScenario_double(scn, "LAUNCHMJD", LaunchMJD);
 }
 
 int LC37::clbkConsumeDirectKey(char *kstate) {
@@ -466,4 +545,111 @@ int LC37::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 	return 0;
+}
+
+bool LC37::ESEGetCommandVehicleLiftoffIndicationInhibit()
+{
+	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
+}
+
+bool LC37::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
+{
+	return IuESE->GetExcessiveRollRateAutoAbortInhibit(n);
+}
+
+bool LC37::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
+{
+	return IuESE->GetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool LC37::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	return IuESE->GetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool LC37::ESEGetGSEOverrateSimulate(int n)
+{
+	return IuESE->GetOverrateSimulate(n);
+}
+
+bool LC37::ESEGetEDSPowerInhibit()
+{
+	return IuESE->GetEDSPowerInhibit();
+}
+
+bool LC37::ESEPadAbortRequest()
+{
+	return IuESE->GetEDSPadAbortRequest();
+}
+
+bool LC37::ESEGetThrustOKIndicateEnableInhibitA()
+{
+	return IuESE->GetThrustOKIndicateEnableInhibitA();
+}
+
+bool LC37::ESEGetThrustOKIndicateEnableInhibitB()
+{
+	return IuESE->GetThrustOKIndicateEnableInhibitB();
+}
+
+bool LC37::ESEEDSLiftoffInhibitA()
+{
+	return IuESE->GetEDSLiftoffInhibitA();
+}
+
+bool LC37::ESEEDSLiftoffInhibitB()
+{
+	return IuESE->GetEDSLiftoffInhibitB();
+}
+
+bool LC37::ESEGetEDSAutoAbortSimulate(int n)
+{
+	return IuESE->GetEDSAutoAbortSimulate(n);
+}
+
+bool LC37::ESEGetEDSLVCutoffSimulate(int n)
+{
+	return IuESE->GetEDSLVCutoffSimulate(n);
+}
+
+bool LC37::ESEGetSIBurnModeSubstitute()
+{
+	return IuESE->GetSIBurnModeSubstitute();
+}
+
+bool LC37::ESEGetGuidanceReferenceRelease()
+{
+	return IuESE->GetGuidanceReferenceRelease();
+}
+
+bool LC37::ESEGetQBallSimulateCmd()
+{
+	return IuESE->GetQBallSimulateCmd();
+}
+
+bool LC37::ESEGetSIBThrustOKSimulate(int eng, int n)
+{
+	return SIBESE->GetSIBThrustOKSimulate(eng, n);
+}
+
+void LC37::SLCCCheckDiscreteInput(RCA110A *c)
+{
+	c->SetInput(0, true);
+	c->SetInput(1, false);
+	c->SetInput(861, IuESE->GetFCCPowerIsOn());
+}
+
+bool LC37::SLCCGetOutputSignal(size_t n)
+{
+	return rca110a->GetOutputSignal(n);
+}
+
+void LC37::ConnectGroundComputer(RCA110A *c)
+{
+	rca110a->Connect(c);
+}
+
+void LC37::IssueSwitchSelectorCmd(int stage, int chan)
+{
+	IuUmb->SwitchSelector(stage, chan);
 }

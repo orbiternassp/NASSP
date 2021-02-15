@@ -22,6 +22,10 @@
 
   **************************************************************************/
 
+#pragma once
+
+#include "smjc.h"
+
 class Sat5Abort3: public VESSEL3 {
 
 public:
@@ -30,10 +34,20 @@ public:
 	virtual ~Sat5Abort3();
 	void init();
 	void Setup();
+	virtual void SetState(bool lowres, int Vehicle, bool SMBusAPower, bool SMBusBPower, SMJCState *sta, SMJCState *stb);
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
+	void clbkPreStep(double simt, double simdt, double mjd);
 
 protected:
+
+	void AddMissionSpecificSystems();
+	void AddEngines();
+	void AddSMJC();
+
+	bool LowRes;                    ///< Mesh resolution flag
 
 	//
 	// We don't actually seem to use any of these variables, even though they're
@@ -41,5 +55,19 @@ protected:
 	//
 
 	double Offset1st;
+
+	PROPELLANT_HANDLE ph_rcsa, ph_rcsb, ph_rcsc, ph_rcsd;
+	THRUSTER_HANDLE th_rcs_a[5], th_rcs_b[5], th_rcs_c[5], th_rcs_d[5];
+
+	//
+	/// \brief SM buses status
+
+	bool SMBusAPowered;
+	bool SMBusBPowered;
+
+	int VehicleNo;
+
+	SMJC *SMJCA;
+	SMJC *SMJCB;
 
 };

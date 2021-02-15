@@ -24,6 +24,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "CWEA_FlipFlop.h"
+
 class LEM;
 
 class LEM_CWEA : public e_object {
@@ -48,6 +50,15 @@ public:
 	double GetNonDimmableLoad();
 	double GetDimmableLoad();
 
+	//For SCEA
+	//TBD: Should use relays, light status is also set during light test
+	bool GetCESACPwrFail() { return LightStatus[0][1] == 1; }
+	bool GetCESDCPwrFail() { return LightStatus[1][1] == 1; }
+	bool GetAGSPwrFail() { return LightStatus[2][1] == 1; }
+	bool GetMasterAlarm() { return MasterAlarm; }
+	bool GetBatteryCaution() { return LightStatus[1][5] == 1; }
+	bool GetCWPowerFail() { return LightStatus[3][6] == 1; }
+
 	bool CheckMasterAlarmMouseClick(int event);
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border);
 	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf);
@@ -61,35 +72,31 @@ protected:
 
 	int LightStatus[5][8];		// 0 = not lit, 1 = lit, 2 = light doesn't exist
 	bool Operate;
-	bool DesRegWarnFF;   // Flip Flop
-	bool AGSWarnFF;   // Flip Flop
-	bool CESDCWarnFF;   // Flip Flop
-	bool CESACWarnFF;   // Flip Flop
-	bool RCSCautFF1;   // Flip Flop
-	bool RCSCautFF2;   // Flip Flop
-	bool RRHeaterCautFF;   // Flip Flop
-	bool SBDHeaterCautFF;   // Flip Flop
-	bool QD1HeaterCautFF;	// Flip Flop
-	bool QD2HeaterCautFF;	// Flip Flop
-	bool QD3HeaterCautFF;	// Flip Flop
-	bool QD4HeaterCautFF;	// Flip Flop
-	bool OxygenCautFF1;   // Flip Flop
-	bool OxygenCautFF2;   // Flip Flop
-	bool OxygenCautFF3;   // Flip Flop
-	bool WaterCautFF1;   // Flip Flop
-	bool WaterCautFF2;   // Flip Flop
-	bool WaterCautFF3;   // Flip Flop
-	bool RRCautFF;   // Flip Flop
-	bool SBDCautFF;   // Flip Flop
+	CWEA_FlipFlop DesRegWarnFF;
+	CWEA_FlipFlop AGSWarnFF;
+	CWEA_FlipFlop CESDCWarnFF;
+	CWEA_FlipFlop CESACWarnFF;
+	CWEA_FlipFlop RCSCautFF1;
+	CWEA_FlipFlop RCSCautFF2;
+	CWEA_FlipFlop RRHeaterCautFF;
+	CWEA_FlipFlop SBDHeaterCautFF;
+	CWEA_FlipFlop QD1HeaterCautFF;
+	CWEA_FlipFlop QD2HeaterCautFF;
+	CWEA_FlipFlop QD3HeaterCautFF;
+	CWEA_FlipFlop QD4HeaterCautFF;
+	CWEA_FlipFlop OxygenCautFF1;
+	CWEA_FlipFlop OxygenCautFF2;
+	CWEA_FlipFlop OxygenCautFF3;
+	CWEA_FlipFlop WaterCautFF1;
+	CWEA_FlipFlop WaterCautFF2;
+	CWEA_FlipFlop WaterCautFF3;
+	CWEA_FlipFlop RRCautFF;
+	CWEA_FlipFlop SBDCautFF;
 
 	bool MasterAlarm;
-	bool AutoTrackChanged;
-	bool RRHeaterPrev;
-	bool SBDHeaterPrev;
-	bool QD1HeaterPrev;
-	bool QD2HeaterPrev;
-	bool QD3HeaterPrev;
-	bool QD4HeaterPrev;
+
+	//For time accelerations etc.
+	int ECSFailureCount;
 
 	e_object *cwea_pwr;
 	e_object *ma_pwr;

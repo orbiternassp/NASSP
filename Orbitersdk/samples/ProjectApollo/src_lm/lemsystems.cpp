@@ -44,8 +44,8 @@
 
 #include "LEM.h"
 
-#include "CollisionSDK/CollisionSDK.h"
 #include "papi.h"
+#include "Mission.h"
 
 void LEM::ResetThrusters()
 
@@ -59,75 +59,73 @@ void LEM::ResetThrusters()
 	ActivateNavmode(NAVMODE_KILLROT);
 }
 
-void LEM::AddRCS_LMH(double TRANZ)
+void LEM::AddRCS_LMH(double TRANY)
 {
-	const double ATTCOOR = 1.78;
-	const double ATTCOOR2 = 1.35;
-	const double ATTZ = 2.85;
-	const double TRANCOOR = 0;
-	const double TRANCOOR2 = 0.1;
-	const double ATTWIDTH=.15;
-	const double ATTHEIGHT=3;
-	const double TRANWIDTH=.2;
-	const double TRANHEIGHT=1;
-	const double RCSOFFSET=0.75;
-	const double RCSOFFSETM=0.30;
-	const double RCSOFFSETM2=0.47;
+	const double ATTCOOR = 66.1*0.0254;
+	const double ATTCOORY = 254.0*0.0254;
+	const double RCSOFFSET = 4.6*0.0254;
+	const double QUADTOTHRUSTER1 = 5.3*0.0254;
+	const double QUADTOTHRUSTER2 = 4.8*0.0254;
+	const double QUADTOTHRUSTER3 = 0.25*0.0254;
+	const double ATTWIDTH = .15;
+	const double ATTHEIGHT = 3;
+	const double LOFS = 0.12;
 
-	double MaxThrust=445.0;
-	double RCSISP=2840.0;
+	double MaxThrust = 444.82;
+	double RCSISP = 2840.0;
 
 	// A1U
-	th_rcs[0]=CreateThruster(_V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[0] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[0], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
+
 	// A1F
-	th_rcs[1]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[1] = CreateThruster(_V(-ATTCOOR + RCSOFFSET, ATTCOORY + TRANY, ATTCOOR + QUADTOTHRUSTER3), _V(0, 0, -1), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[1], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// B1L
-	th_rcs[2]=CreateThruster(_V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[2] = CreateThruster(_V(-ATTCOOR - QUADTOTHRUSTER3, ATTCOORY + TRANY, ATTCOOR - RCSOFFSET), _V(1, 0, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[2], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// B1D
-	th_rcs[3]=CreateThruster(_V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[3] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY - QUADTOTHRUSTER1, ATTCOOR), _V(0, 1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[3], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 
 	// B2U
-	th_rcs[4]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[4] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, -ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[4], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// B2L
-	th_rcs[5]=CreateThruster(_V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[5] = CreateThruster(_V(-ATTCOOR - QUADTOTHRUSTER3, ATTCOORY + TRANY, -ATTCOOR + RCSOFFSET), _V(1, 0, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[5], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// A2A
-	th_rcs[6]=CreateThruster(_V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[6] = CreateThruster(_V(-ATTCOOR + RCSOFFSET, ATTCOORY + TRANY, -ATTCOOR - QUADTOTHRUSTER3), _V(0, 0, 1), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[6], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// A2D
-	th_rcs[7]=CreateThruster(_V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[7] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY - QUADTOTHRUSTER1, -ATTCOOR), _V(0, 1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[7], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 
 	// A3U
-	th_rcs[8]=CreateThruster(_V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[8] = CreateThruster(_V(ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, -ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[8], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// A3R
-	th_rcs[9]=CreateThruster(_V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(-1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[9] = CreateThruster(_V(ATTCOOR + QUADTOTHRUSTER3, ATTCOORY + TRANY, -ATTCOOR + RCSOFFSET), _V(-1, 0, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[9], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// B3A
-	th_rcs[10]=CreateThruster(_V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[10] = CreateThruster(_V(ATTCOOR - RCSOFFSET, ATTCOORY + TRANY, -ATTCOOR - QUADTOTHRUSTER3), _V(0, 0, 1), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[10], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// B3D
-	th_rcs[11]=CreateThruster(_V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[11] = CreateThruster(_V(ATTCOOR, ATTCOORY + TRANY - QUADTOTHRUSTER1, -ATTCOOR), _V(0, 1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[11], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 
 	// B4U
-	th_rcs[12]=CreateThruster(_V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[12] = CreateThruster(_V(ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[12], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// B4F
-	th_rcs[13]=CreateThruster(_V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[13] = CreateThruster(_V(ATTCOOR - RCSOFFSET, ATTCOORY + TRANY, ATTCOOR + QUADTOTHRUSTER3), _V(0, 0, -1), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[13], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// A4R
-	th_rcs[14]=CreateThruster(_V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(-1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[14] = CreateThruster(_V(ATTCOOR + QUADTOTHRUSTER3, ATTCOORY + TRANY, ATTCOOR - RCSOFFSET), _V(-1, 0, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[14], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 	// A4D
-	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	th_rcs[15] = CreateThruster(_V(ATTCOOR, ATTCOORY + TRANY - QUADTOTHRUSTER1, ATTCOOR), _V(0, 1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[15], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
@@ -141,78 +139,17 @@ void LEM::AddRCS_LMH(double TRANZ)
 		7	A2D		15	A4D
 	*/
 
-//	CreateThrusterGroup (th_rcs,   1, THGROUP_ATT_YAWLEFT);
+	//	CreateThrusterGroup (th_rcs,   1, THGROUP_ATT_YAWLEFT);
 }
 
-void LEM::AddRCS_LMH2(double TRANZ)
+void LEM::SetLmDockingPort(double offs)
 {
-	const double ATTCOOR = 1.78;
-	const double ATTCOOR2 = -0.50;
-	const double ATTZ = 2.85;
-	const double TRANCOOR = 0;
-	const double TRANCOOR2 = 0.1;
-	const double ATTWIDTH=.15;
-	const double ATTHEIGHT=3;
-	const double TRANWIDTH=.2;
-	const double TRANHEIGHT=1;
-	const double RCSOFFSET=0.75;
-	const double RCSOFFSETM=0.30;
-	const double RCSOFFSETM2=0.47;
+	VECTOR3 dockpos = { 0.0 ,offs, 0.0 };
+	VECTOR3 dockdir = { 0,1,0 };
 
-	double MaxThrust=445.0;
-	double RCSISP=2840.0;
-
-	// A1U
-	th_rcs[0]=CreateThruster(_V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
-	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// A1F
-	th_rcs[1]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, ph_RCSA, RCSISP, RCSISP);
-	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// B1L
-	th_rcs[2]=CreateThruster(_V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(1,0,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
-	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// B1D
-	th_rcs[3]=CreateThruster(_V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
-	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH, exhaustTex);
-
-	// B2U
-	th_rcs[4]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30), _V(0,-1,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
-	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// B2L
-	th_rcs[5]=CreateThruster(_V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(1,0,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
-	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// A2A
-	th_rcs[6]=CreateThruster(_V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, ph_RCSA, RCSISP, RCSISP);
-	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// A2D
-	th_rcs[7]=CreateThruster(_V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3), _V(0,1,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
-	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH, exhaustTex);
-
-	// A3U
-	th_rcs[8]=CreateThruster(_V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35), _V(0,-1,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
-	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// A3R
-	th_rcs[9]=CreateThruster(_V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(-1,0,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
-	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// B3A
-	th_rcs[10]=CreateThruster(_V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, ph_RCSB, RCSISP, RCSISP);
-	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// B3D
-	th_rcs[11]=CreateThruster(_V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35), _V(0,1,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
-	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH, exhaustTex);
-
-	// B4U
-	th_rcs[12]=CreateThruster(_V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, ph_RCSB, RCSISP, RCSISP);
-	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// B4F
-	th_rcs[13]=CreateThruster(_V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, ph_RCSB, RCSISP, RCSISP);
-	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// A4R
-	th_rcs[14]=CreateThruster(_V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(-1,0,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
-	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH, exhaustTex);
-	// A4D
-	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, ph_RCSA, RCSISP, RCSISP);
-	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
+	SetDockParams(dockpos, dockdir, dockrot);
+	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 }
 
 void LEM::SystemsInit()
@@ -238,10 +175,10 @@ void LEM::SystemsInit()
 
 	// ECA #1 (DESCENT stage, LMP 28V DC bus)
 	ECA_1a.Init(this, Battery1, 2); // Battery 1 starts on LV
-	ECA_1b.Init(this, Battery2, 0);
+	ECA_1b.Init(this, Battery2, 2);
 
 	// ECA #2 (DESCENT stage, CDR 28V DC bus)
-	ECA_2a.Init(this, Battery3, 0);
+	ECA_2a.Init(this, Battery3, 2);
 	ECA_2b.Init(this, Battery4, 2); 
 
 	// ECA #1 and #2 are JETTISONED with the descent stage.
@@ -433,6 +370,7 @@ void LEM::SystemsInit()
 	COASLights.Init(this, &COAS_DC_CB, &CDRCOASSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	AOTLampFeeder.WireToBuses(&AOT_LAMP_ACA_CB, &AOT_LAMP_ACB_CB);
+	pfira.Init(this);
 
 	// LGC and DSKY
 	agc.WirePower(&LGC_DSKY_CB, NULL);
@@ -493,7 +431,7 @@ void LEM::SystemsInit()
 	LMP_FDAI_AC_CB.MaxAmps = 2.0;
 	LMP_FDAI_AC_CB.WireTo(&ACBusB);
 	fdaiRight.WireTo(&LMP_EVT_TMR_FDAI_DC_CB,&LMP_FDAI_AC_CB);
-	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
+	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB, &LtgORideNumSwitch);
 
 	// HEATERS
 	TempMonitorInd.WireTo(&HTR_DISP_CB);
@@ -503,7 +441,6 @@ void LEM::SystemsInit()
 
 	// Rdz Radar
 	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RRHEAT"));
-	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB);
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
@@ -667,7 +604,7 @@ void LEM::SystemsInit()
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
-	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
+	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB, &LtgORideNumSwitch);
 
 	// Pyro Buses
 	Panelsdk.AddElectrical(&ED28VBusA, false);
@@ -785,6 +722,7 @@ void LEM::SystemsInit()
 	SuitFanDPSensor.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLD"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&ECS_SUIT_FAN_DP_CB);
+	CrewStatus.Init(this);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -880,9 +818,8 @@ void LEM::SystemsInit()
 	rhc_rzx_id = -1; // Disabled
 	thc_id = -1;     // Disabled
 	thc_rot_id = -1; // Disabled
-	thc_sld_id = -1; // Disabled
 	thc_rzx_id = -1; // Disabled
-	thc_tjt_id = 0; // Disabled
+	thc_tjt_id = -1; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
 	rhc_thctoggle = false;
@@ -901,7 +838,7 @@ void LEM::JoystickTimestep(double simdt)
 {
 	// Joystick read
 	if (oapiGetFocusInterface() == this) {
-
+		if (enableVESIM) vesim.poolDevices();
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
 		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
@@ -916,14 +853,14 @@ void LEM::JoystickTimestep(double simdt)
 
 			rhc_id = thc_id;
 			rhc_rot_id = thc_rot_id;
-			rhc_sld_id = thc_sld_id;
+			rhc_sld_id = thc_tjt_id;
 			rhc_rzx_id = thc_rzx_id;
 			rhc_pov_id = thc_pov_id;
 			rhc_debug = thc_debug;
 
 			thc_id = tmp_id;
 			thc_rot_id = tmp_rot_id;
-			thc_sld_id = tmp_sld_id;
+			thc_tjt_id = tmp_sld_id;
 			thc_rzx_id = tmp_rzx_id;
 			thc_pov_id = tmp_pov_id;
 			thc_debug = tmp_debug;
@@ -945,7 +882,7 @@ void LEM::JoystickTimestep(double simdt)
 		int thc_x_pos = 0;
 		int thc_y_pos = 0;
 		int thc_z_pos = 0;
-		int thc_rot_pos = 0;
+		int thc_rot_pos = 32768; // Initialize to centered
 		int thc_tjt_pos = 32768; // Initialize to centered
 		bool ttca_realistic_throttle = false;
 
@@ -973,7 +910,15 @@ void LEM::JoystickTimestep(double simdt)
 		// Read data
 		HRESULT hr;
 		// Handle RHC
-		if (rhc_id != -1 && rhc_id < js_enabled) {
+		if (enableVESIM) {
+			if (GetAttitudeMode() == RCS_ROT) {
+				rhc_pos[0] = vesim.getInputValue(LM_AXIS_INPUT_ACAR);
+				rhc_pos[1] = vesim.getInputValue(LM_AXIS_INPUT_ACAP);
+				rhc_pos[2] = 65536 - vesim.getInputValue(LM_AXIS_INPUT_ACAY);
+				
+			}
+		}
+		else if (rhc_id != -1 && rhc_id < js_enabled) {
 			// CHECK FOR POWER HERE
 			hr = dx8_joystick[rhc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
@@ -999,9 +944,6 @@ void LEM::JoystickTimestep(double simdt)
 					rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
 				}
 			}
-			if (rhc_sld_id != -1) { // If this is a slider
-				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
-			}
 			if (rhc_rzx_id != -1 && rhc_rot_id == -1) { // If we use the native Z-axis
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}
@@ -1010,9 +952,12 @@ void LEM::JoystickTimestep(double simdt)
 			rhc_pos[1] = dx8_jstate[rhc_id].lY;
 			rhc_pos[2] = 65536 - rhc_rot_pos;
 
-			//Let's cheat and give the ACA a throttle lever
-			ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[0];
-			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+			//Let's cheat and give the ACA a throttle lever, if the joystick has one
+			if (rhc_sld_id != -1)
+			{
+				ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
+				ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+			}
 
 			// RCS mode toggle
 			if (rhc_thctoggle && thc_id == -1 && rhc_thctoggle_id != -1) {
@@ -1220,6 +1165,12 @@ void LEM::JoystickTimestep(double simdt)
 			}
 		}
 
+		//Debug
+		if (rhc_debug != -1)
+		{
+			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d sld_id %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id, rhc_sld_id);
+		}
+
 		//
 		// +X TRANSLATION
 		//
@@ -1231,12 +1182,32 @@ void LEM::JoystickTimestep(double simdt)
 			SetRCSJet(3, true);
 		}
 
-		if (rhc_debug != -1)
-		{
-			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id);
-		}
 		// And now the THC...
-		if (thc_id != -1 && thc_id < js_enabled) {
+		if (enableVESIM) {
+			if (LeftTTCATranslSwitch.IsUp()) {
+				if (GetAttitudeMode() == RCS_ROT) {
+					thc_x_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAY) - 32768;
+					thc_y_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAX) - 32768;
+					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAZ) - 32768;
+				}
+				else {
+					thc_x_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAR) - 32768;
+					thc_y_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAP) - 32768;
+					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAY) - 32768;
+				}
+			}
+			if (vesim.getInputValue(LM_AXIS_THR_JET_LEVER) < 32768) 
+				ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_THROTTLE);				
+			else {
+				if (GetAttitudeMode() == RCS_ROT)			
+					ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAX);
+				else			
+					ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAP);				
+				thc_y_pos = 0;
+			}
+			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+		}
+		else if (thc_id != -1 && thc_id < js_enabled) {
 			hr = dx8_joystick[thc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
 							  // Attempt to acquire the device
@@ -1249,7 +1220,9 @@ void LEM::JoystickTimestep(double simdt)
 				}
 			}
 
-			ttca_realistic_throttle = true;
+			if (thc_tjt_id != -1) {
+				ttca_realistic_throttle = true;
+			}
 
 			// Read data
 			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
@@ -1273,9 +1246,6 @@ void LEM::JoystickTimestep(double simdt)
 					case 2:
 						thc_rot_pos = dx8_jstate[thc_id].lRz; break;
 					}
-				}
-				if (thc_sld_id != -1) { // If this is a slider
-					thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
 				}
 				if (thc_rzx_id != -1 && thc_rot_id == -1) { // If we use the native Z-axis
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
@@ -1376,7 +1346,7 @@ void LEM::JoystickTimestep(double simdt)
 		}
 
 		//LM Programer
-		if (HasProgramer)
+		if (pMission->HasLMProgramer())
 		{
 			if (lmp.GetPlusXTrans())
 			{
@@ -1391,7 +1361,7 @@ void LEM::JoystickTimestep(double simdt)
 
 void LEM::SystemsInternalTimestep(double simdt)
 {
-	double mintFactor = __max(simdt / 100.0, 0.5);
+	double mintFactor = __max(simdt / 20.0, 0.02);
 	double tFactor = __min(mintFactor, simdt);
 	while (simdt > 0) {
 
@@ -1464,9 +1434,10 @@ void LEM::SystemsInternalTimestep(double simdt)
 	}
 }
 
-void LEM::SystemsTimestep(double simt, double simdt) 
+void LEM::SystemsTimestep(double simt, double simdt)
 
 {
+
 	// Clear debug line when timer runs out
 	if(DebugLineClearTimer > 0){
 		DebugLineClearTimer -= simdt;
@@ -1514,7 +1485,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	optics.Timestep(simdt);
 	LR.Timestep(simdt);
 	RR.Timestep(simdt);
-	RadarTape.Timestep(MissionTime);
+	RadarTape.Timestep(simdt);
 	crossPointerLeft.Timestep(simdt);
 	crossPointerRight.Timestep(simdt);
 	SBandSteerable.Timestep(simdt);
@@ -1522,6 +1493,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
 	ecs.Timestep(simdt);
+	OverheadHatch.Timestep(simdt);
+	ForwardHatch.Timestep(simdt);
+	CrewStatus.Timestep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
@@ -1546,6 +1520,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	UtilLights.Timestep(simdt);
 	COASLights.Timestep(simdt);
 	FloodLights.Timestep(simdt);
+	pfira.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
@@ -1599,7 +1574,33 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		SE_WND_HTR_AC_CB.DrawPower(61.8);
 	}
 
+	//Misc Sounds
+
+	//Suit Fan Sound
+	if (SuitFan1->pumping || SuitFan2->pumping) {
+		SuitFanSound.play(220);
+	}
+	else
+	{
+		SuitFanSound.stop();
+	}
+
+	//Glycol Pump Sound
+	if (SecGlyPump->pumping || PrimGlycolPumpController.GetGlycolPumpState(1) || PrimGlycolPumpController.GetGlycolPumpState(2)) {
+		GlycolPumpSound.play();
+	}
+	else
+	{
+		GlycolPumpSound.stop();
+	}
+
 	// Debug tests //
+
+	// Mesh Index Order
+	//sprintf(oapiDebugString(), "ascidx %i vcidx %i dscidx %i", ascidx, vcidx, dscidx);
+
+	//sprintf(oapiDebugString(), "CDRinPLSS %i CDRsuited %i LMPinPLSS %i LMPsuited %i CrewInCabin %i", CDRinPLSS, CDRSuited->number, LMPinPLSS, LMPSuited->number, CrewInCabin->number);
+	//sprintf(oapiDebugString(), "InPanel %d InVC %d ExtView %d InFOV %d", InPanel, InVC, ExtView, InFOV);
 
 	//ECS Debug Lines//
 
@@ -2080,26 +2081,38 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 {
 	// Crew
 
-	if (CDRSuited->number == 1)
+	if (CDREVA_IP)
 	{
-		ecs.cdrInSuit = true;
+		ecs.cdrStatus = 2;
+	}
+	else if (CDRinPLSS > 1)
+	{
+		ecs.cdrStatus = 3;
+	}
+	else if (CDRSuited->number == 1)
+	{
+		ecs.cdrStatus = 1;
 	}
 	else
 	{
-		ecs.cdrInSuit = false;
+		ecs.cdrStatus = 0;
 	}
 
-	if (LMPSuited->number == 1)
+	if (LMPinPLSS > 1)
 	{
-		ecs.lmpInSuit = true;
+		ecs.lmpStatus = 3;
+	}
+	else if (LMPSuited->number == 1)
+	{
+		ecs.lmpStatus = 1;
 	}
 	else
 	{
-		ecs.lmpInSuit = false;
+		ecs.lmpStatus = 0;
 	}
 
 	ecs.crewNumber = CrewInCabin->number + CDRSuited->number + LMPSuited->number;
-	ecs.crewStatus = 0;
+	ecs.crewStatus = CrewStatus.GetStatus();;
 
 
 }
@@ -2108,7 +2121,7 @@ void LEM::SetCrewNumber(int number)
 {
 	int crewsuited = CDRSuited->number + LMPSuited->number;
 
-	if (number + crewsuited <= 3)
+	if (number + crewsuited + (CDREVA_IP ? 1 : 0) <= 3)
 	{
 		CrewInCabin->number = number;
 	}
@@ -2116,29 +2129,62 @@ void LEM::SetCrewNumber(int number)
 
 void LEM::SetCDRInSuit()
 {
-	if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
+	if (!CDREVA_IP)
 	{
-		CrewInCabin->number--;
-		CDRSuited->number = 1;
-	}
-	else if (CDRSuited->number == 1)
-	{
-		CrewInCabin->number++;
-		CDRSuited->number = 0;
+
+		if (CDRinPLSS == 2) {
+			CDRSuited->number = 1;
+			CDRinPLSS = 0;
+		}
+		else if (CDRinPLSS == 1)
+		{
+			CDRSuited->number = 0;
+			CDRinPLSS = 2;
+		}
+		else if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
+		{
+			CrewInCabin->number--;
+			CDRSuited->number = 1;
+			CDRinPLSS = 1;
+		}
+		else if (CDRSuited->number == 1)
+		{
+			CrewInCabin->number++;
+			CDRSuited->number = 0;
+		}
+		SetCrewMesh();
 	}
 }
 
 void LEM::SetLMPInSuit()
 {
-	if (CrewInCabin->number >= 1 && LMPSuited->number == 0)
+	if (LMPinPLSS == 2) {
+		LMPSuited->number = 1;
+		LMPinPLSS = 0;
+	}
+	else if (LMPinPLSS == 1)
+	{
+		LMPSuited->number = 0;
+		LMPinPLSS = 2;
+	}
+	else if (CrewInCabin->number >= 1 && LMPSuited->number == 0)
 	{
 		CrewInCabin->number--;
 		LMPSuited->number = 1;
+		LMPinPLSS = 1;
 	}
 	else if (LMPSuited->number == 1)
 	{
 		CrewInCabin->number++;
 		LMPSuited->number = 0;
+	}
+	SetCrewMesh();
+}
+
+void LEM::StartEVA()
+{
+	if (ForwardHatch.IsOpen() && GroundContact() && CDRinPLSS > 1) {
+		ToggleEva = true;
 	}
 }
 
@@ -2189,6 +2235,16 @@ void LEM::CheckDescentStageSystems()
 	}
 }
 
+void LEM::CreateMissionSpecificSystems()
+{
+	//
+	// Pass on the mission number and realism setting to the AGC.
+	//
+
+	agc.SetMissionInfo(pMission->GetLGCVersion());
+	aea.SetMissionInfo(pMission->GetAEAVersion());
+}
+
 // SYSTEMS COMPONENTS
 
 // Landing Radar
@@ -2232,6 +2288,25 @@ bool LEM_LR::IsPowered()
 	return true;
 }
 
+double LEM_LR::GetAltTransmitterPower()
+{
+	if (!IsPowered())
+	{
+		return 0;
+	}
+
+	return 3.0;
+}
+
+double LEM_LR::GetVelTransmitterPower()
+{
+	if (!IsPowered())
+	{
+		return 0;
+	}
+
+	return 3.0;
+}
 
 void LEM_LR::Timestep(double simdt){
 	if(lem == NULL){ return; }
@@ -2260,8 +2335,25 @@ void LEM_LR::Timestep(double simdt){
 		if(val33[LRVelocityDataGood]){ clobber = TRUE; val33[LRVelocityDataGood] = 0; }
 		if(val33[LRPos1]){ clobber = TRUE; val33[LRPos1] = 0; }
 		if(val33[LRPos2]){ clobber = TRUE; val33[LRPos2] = 0; }
-		if(val33[LRRangeLowScale]){ clobber = TRUE; val33[LRRangeLowScale] = 0; }
+		if(val33[LRRangeLowScale] == 0){ clobber = TRUE; val33[LRRangeLowScale] = 1; }
 		if(clobber == TRUE){ lem->agc.SetInputChannel(033, val33); }
+		rangeGood = 0;
+		velocityGood = 0;
+		if (val13[RadarActivity] == 1) {
+			int radarBits = 0;
+			if (val13[RadarA] == 1) { radarBits |= 1; }
+			if (val13[RadarB] == 1) { radarBits |= 2; }
+			if (val13[RadarC] == 1) { radarBits |= 4; }
+			switch (radarBits) {
+			case 1:
+			case 3:
+			case 5:
+			case 7:
+				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+				lem->agc.GenerateRadarupt();
+				break;
+			}
+		}
 		return;
 	}	
 
@@ -2596,16 +2688,20 @@ LEM_RadarTape::LEM_RadarTape()
 	dc_source = NULL;
 	reqRange = 0;
 	reqRate = 0;
-	dispRange = 0;
-	dispRate = 0;
+	dispRange = 0.0;
+	dispRate = 0.0;
 	lgc_alt = 0;
 	lgc_altrate = 0;
+	desRange = 0.0;
+	desRate = 0.0;
 }
 
-void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src){
+void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src, SURFHANDLE surf1, SURFHANDLE surf2){
 	lem = s;
 	dc_source = dc_src;
 	ac_source = ac_src;
+	tape1 = surf1;
+	tape2 = surf2;
 }
 
 void LEM_RadarTape::Timestep(double simdt) {
@@ -2650,14 +2746,71 @@ void LEM_RadarTape::Timestep(double simdt) {
 		}
 
 	}
-	//
-	//  Missing code to smooth out tape scrolling
-	if( reqRange < (120000.0 * 0.3048) ) {
-		dispRange = 6443 - 82 - (int)((reqRange * 3.2808399) * 40.0 / 1000.0);
-	} else {
-		dispRange = 81 + 1642 - 82 - (int)((reqRange * 0.000539956803*100.0)  * 40.0 / 1000.0);
+	// Altitude/Range
+	if (reqRange < (1000.0 * 0.3048))
+	{
+		desRange = 6317.0 + 2086.0 - 82.0 - ((reqRange * 3.2808399) * 40.0 * 50.0 / 1000.0);
 	}
-	dispRate  = 2881 - 82 -  (int)(reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
+	else if (reqRange < (120000.0 * 0.3048) )
+	{
+		desRange = 6443.0 - 82.0 - ((reqRange * 3.2808399) * 40.0 / 1000.0);
+	}
+	else
+	{
+		desRange = 81.0 + 1642.0 - 82.0 - ((reqRange * 0.000539956803*100.0)  * 40.0 / 1000.0);
+	}
+
+	TapeDrive(dispRange, desRange, 500.0, simdt);
+	if (dispRange < 0)
+	{
+		dispRange = 0;
+	}
+	else if (dispRange > 8486)
+	{
+		dispRange = 8486;
+	}
+
+	//Altitude Rate/Range Rate
+
+	//AOH Volume 2: "Range rate of 100 fps can mean rate of 100, 1100, 2100, etc., fps. Also, if rate is between 701 to 999, 1700 to 1999,
+	//etc., fps, the display will read 700 fps and recycle to zero when rate becomes 1000, 2000, etc., fps.
+
+	while (reqRate > 304.8)
+	{
+		reqRate -= 304.8;
+	}
+	while (reqRate < -304.8)
+	{
+		reqRate += 304.8;
+	}
+
+	desRate  = 2881.0 - 82.0 -  (reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
+	TapeDrive(dispRate, desRate, 500.0, simdt);
+	if (dispRate < 0)
+	{
+		dispRate = 0;
+	}
+	else if (dispRate > 5599.0)
+	{
+		dispRate = 5599.0;
+	}
+}
+
+void LEM_RadarTape::TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
+{
+	double dposcmd, dpos;
+
+	dposcmd = AngleCmd - Angle;
+
+	if (abs(dposcmd) > RateLimit*simdt)
+	{
+		dpos = sign(AngleCmd - Angle)*RateLimit*simdt;
+	}
+	else
+	{
+		dpos = dposcmd;
+	}
+	Angle += dpos;
 }
 
 void LEM_RadarTape::SystemTimestep(double simdt) {
@@ -2714,7 +2867,7 @@ void LEM_RadarTape::SetLGCAltitudeRate(int val) {
 
 void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_int(scn, "RDRTAPE_RANGE", dispRange);
+	papiWriteScenario_double(scn, "RDRTAPE_RANGE", dispRange);
 	oapiWriteScenario_float(scn, "RDRTAPE_RATE", dispRate);
 	oapiWriteLine(scn, end_str);
 }
@@ -2722,14 +2875,15 @@ void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 void LEM_RadarTape::LoadState(FILEHANDLE scn,char *end_str){
 	char *line;
 	int value = 0;
+	double lfValue = 0.0;
 	int end_len = strlen(end_str);
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, end_str, end_len))
 			return;
 		if (!strnicmp (line, "RDRTAPE_RANGE", 13)) {
-			sscanf(line + 13, "%d", &value);
-			dispRange = value;
+			sscanf(line + 13, "%lf", &lfValue);
+			dispRange = lfValue;
 		}
 		if (!strnicmp (line, "RDRTAPE_RATE", 12)) {
 			sscanf(line + 12, "%d", &value);
@@ -2738,19 +2892,46 @@ void LEM_RadarTape::LoadState(FILEHANDLE scn,char *end_str){
 	}
 }
 
-void LEM_RadarTape::RenderRange(SURFHANDLE surf, SURFHANDLE tape)
-{
-    oapiBlt(surf,tape,0,0,0, dispRange ,43,163, SURF_PREDEF_CK); 
+void LEM_RadarTape::RenderRange(SURFHANDLE surf) {
+	if (dispRange > 6321.0)
+	{
+		oapiBlt(surf, tape2, 0, 0, 0, (int)(dispRange) - 6317, 43, 163, SURF_PREDEF_CK);
+	}
+	else
+	{
+		oapiBlt(surf, tape1, 0, 0, 0, (int)(dispRange), 43, 163, SURF_PREDEF_CK);
+	}
 }
 
-void LEM_RadarTape::RenderRate(SURFHANDLE surf, SURFHANDLE tape)
+void LEM_RadarTape::RenderRate(SURFHANDLE surf)
 {
-    oapiBlt(surf,tape,0,0,42, dispRate ,35,163, SURF_PREDEF_CK); 
+    oapiBlt(surf,tape1,0,0,42, (int)(dispRate) ,35,163, SURF_PREDEF_CK);
 }
 
-double LEM_RR::GetAntennaTempF(){
+void LEM_RadarTape::RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2) {
+	if (dispRange > 6321.0)
+	{
+		oapiBlt(surf, surf2, 0, 0, 0, (int)(dispRange)-6317, 43, 163, SURF_PREDEF_CK);
+	}
+	else if (dispRange > 3181.0)
+	{
+		oapiBlt(surf, surf1b, 0, 0, 0, (int)(dispRange)-3026, 43, 163, SURF_PREDEF_CK);
+	}
+	else
+	{
+		oapiBlt(surf, surf1a, 0, 0, 0, (int)(dispRange), 43, 163, SURF_PREDEF_CK);
+	}
+}
 
-	return KelvinToFahrenheit(antenna->GetTemp());
+void LEM_RadarTape::RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b)
+{
+	if (dispRate > 3181.0) {
+
+		oapiBlt(surf, surf1b, 0, 0, 42, (int)(dispRate) - 3026, 35, 163, SURF_PREDEF_CK);
+	}
+	else {
+		oapiBlt(surf, surf1a, 0, 0, 42, (int)(dispRate), 35, 163, SURF_PREDEF_CK);
+	}
 }
 
 //Cross Pointer
@@ -2765,6 +2946,19 @@ CrossPointer::CrossPointer()
 	vel_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
+	anim_xpointerx = -1;
+	anim_xpointery = -1;
+	xvector = _V(0, 0, 0);
+	yvector = _V(0, 0, 0);
+	grpX = 0;
+	grpY = 0;
+	xtrans = ytrans = NULL;
+}
+
+CrossPointer::~CrossPointer()
+{
+	if (xtrans) delete xtrans;
+	if (ytrans) delete ytrans;
 }
 
 void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
@@ -2821,6 +3015,12 @@ void CrossPointer::Timestep(double simdt)
 			{
 				vx = lem->LR.rate[2] * 0.3048;
 				vy = lem->LR.rate[1] * 0.3048;
+
+				//Apollo 15 and later had this inversed
+				if (lem->ApolloNo >= 15)
+				{
+					vy *= -1.0;
+				}
 			}
 			else
 			{
@@ -2835,6 +3035,12 @@ void CrossPointer::Timestep(double simdt)
 
 			vx = lgc_forward*0.3048;
 			vy = lgc_lateral*0.3048;
+
+			//Apollo 15 and later had this inversed
+			if (lem->ApolloNo >= 15)
+			{
+				vy *= -1.0;
+			}
 		}
 		else //AGS
 		{
@@ -2859,6 +3065,34 @@ void CrossPointer::GetVelocities(double &vx, double &vy)
 {
 	vx = vel_x;
 	vy = vel_y;
+}
+
+void CrossPointer::SetDirection(const VECTOR3 &xvec, const VECTOR3 &yvec)
+{
+	xvector = xvec;
+	yvector = yvec;
+}
+
+void CrossPointer::DefineMeshGroup(UINT _grpX, UINT _grpY)
+{
+	grpX = _grpX;
+	grpY = _grpY;
+}
+
+void CrossPointer::DefineVCAnimations(UINT vc_idx)
+{
+	xtrans = new MGROUP_TRANSLATE(vc_idx, &grpX, 1, xvector);
+	ytrans = new MGROUP_TRANSLATE(vc_idx, &grpY, 1, yvector);
+	anim_xpointerx = lem->CreateAnimation(0.5);
+	anim_xpointery = lem->CreateAnimation(0.5);
+	lem->AddAnimationComponent(anim_xpointerx, 0.0f, 1.0f, xtrans);
+	lem->AddAnimationComponent(anim_xpointery, 0.0f, 1.0f, ytrans);
+}
+
+void CrossPointer::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	if (anim_xpointerx != 1) lem->SetAnimation(anim_xpointerx, (vel_x / 40) + 0.5);
+	if (anim_xpointery != 1) lem->SetAnimation(anim_xpointery, (vel_y / 40) + 0.5);
 }
 
 void CrossPointer::SaveState(FILEHANDLE scn) {

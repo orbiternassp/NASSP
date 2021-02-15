@@ -36,192 +36,55 @@ See http://nassp.sourceforge.net/license/ for more details.
 void MCC::MissionSequence_F()
 {
 	switch (MissionState) {
-	case MST_F_INSERTION:
-		switch (SubState) {
-		case 0:
-			if (cm->GetMissionTime() > 3600.0 + 40.0*60.0)
-			{
-				SlowIfDesired();
-				SaturnV *SatV = (SaturnV*)cm;
-				LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
-
-				LVDCTLIparam tliparam;
-
-				tliparam.alpha_TS = lvdc->alpha_TS;
-				tliparam.Azimuth = lvdc->Azimuth;
-				tliparam.beta = lvdc->beta;
-				tliparam.cos_sigma = lvdc->cos_sigma;
-				tliparam.C_3 = lvdc->C_3;
-				tliparam.e_N = lvdc->e_N;
-				tliparam.f = lvdc->f;
-				tliparam.mu = lvdc->mu;
-				tliparam.MX_A = lvdc->MX_A;
-				tliparam.omega_E = lvdc->omega_E;
-				tliparam.phi_L = lvdc->PHI;
-				tliparam.R_N = lvdc->R_N;
-				tliparam.T_2R = lvdc->T_2R;
-				tliparam.TargetVector = lvdc->TargetVector;
-				tliparam.TB5 = lvdc->TB5;
-				tliparam.theta_EO = lvdc->theta_EO;
-				tliparam.t_D = lvdc->t_D;
-				tliparam.T_L = lvdc->T_L;
-				tliparam.T_RG = lvdc->T_RG;
-				tliparam.T_ST = lvdc->T_ST;
-				tliparam.Tt_3R = lvdc->Tt_3R;
-
-				rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
-
-				setSubState(1);
-			}
-			break;
-		case 1:
-			if (subThreadStatus == 0)
-			{
-				setSubState(2);
-			}
-			break;
-		case 2:
-			allocPad(8);// Allocate AP11 MNV Pad
-			if (padForm != NULL) {
-				// If success
-				startSubthread(1, UTP_PADWITHCMCUPLINK); // Start subthread to fill PAD
-			}
-			else {
-				// ERROR STATE
-			}
-			setSubState(3);
-			// FALL INTO
-		case 3: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && padState > -1) {
-				addMessage("You can has PAD");
-				if (padAutoShow == true && padState == 0) { drawPad(); }
-				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
-				addMessage("Ready for uplink?");
-				sprintf(PCOption_Text, "Ready for uplink");
-				PCOption_Enabled = true;
-				setSubState(4);
-			}
-			break;
-		case 4: // Awaiting user response
-		case 5: // Negative response / not ready for uplink
-			break;
-		case 6: // Ready for uplink
-			if (SubStateTime > 1 && padState > -1) {
-				// The uplink should also be ready, so flush the uplink buffer to the CMC
-				this->CM_uplink_buffer();
-				// uplink_size = 0; // Reset
-				PCOption_Enabled = false; // No longer needed
-				if (upDescr[0] != 0)
-				{
-					addMessage(upDescr);
-				}
-				setSubState(7);
-			}
-			break;
-		case 7: // Await uplink completion
-			if (cm->pcm.mcc_size == 0) {
-				addMessage("Uplink completed!");
-				NCOption_Enabled = true;
-				sprintf(NCOption_Text, "Repeat uplink");
-				setSubState(8);
-			}
-			break;
-		case 8: // Await next PAD
-			if (SubStateTime > 300.0)
-			{
-				SlowIfDesired();
-				NCOption_Enabled = false;
-				setSubState(10);
-			}
-			else {
-				break;
-			}
-			break;
-		case 9: //Repeat uplink
-		{
-			NCOption_Enabled = false;
-			setSubState(2);
-		}
+	case MST_F_INSERTION: //Ground liftoff time update to TLI Simulation
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(1.0*3600.0 + 40.0*60.0), 1, MST_F_EPO1);
 		break;
-		case 10:
-			allocPad(7);// Allocate P37 PAD
-			if (padForm != NULL) {
-				// If success
-				startSubthread(2, UTP_PADONLY); // Start subthread to fill PAD
-			}
-			else {
-				// ERROR STATE
-			}
-			setSubState(11);
-			// FALL INTO
-		case 11: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && padState > -1) {
-				addMessage("You can has PAD");
-				if (padAutoShow == true && padState == 0) { drawPad(); }
-				setSubState(12);
-			}
-			break;
-		case 12: // Await next PAD
-			if (SubStateTime > 180.0)
-			{
-				SlowIfDesired();
-				setSubState(13);
-			}
-			break;
-		case 13:
-			allocPad(10);// Allocate AP11 TLI PAD
-			if (padForm != NULL) {
-				// If success
-				startSubthread(3, UTP_PADONLY); // Start subthread to fill PAD
-			}
-			else {
-				// ERROR STATE
-			}
-			setSubState(14);
-			// FALL INTO
-		case 14: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && padState > -1) {
-				addMessage("You can has PAD");
-				if (padAutoShow == true && padState == 0) { drawPad(); }
-				setSubState(15);
-			}
-			break;
-		case 15: // Next state
-			setState(MST_F_EPO1);
-			break;
-		}
+	case MST_F_EPO1: //TLI Simulation to TLI+90 PAD
+		UpdateMacro(UTP_NONE, PT_NONE, true, 2, MST_F_EPO2);
 		break;
-	case MST_F_EPO1:
-		if (cm->MissionTime > rtcc->calcParams.TLI)
+	case MST_F_EPO2: //TLI+90 Maneuver PAD to TLI+5h Maneuver PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 3.0*60.0, 3, MST_F_EPO3);
+		break;
+	case MST_F_EPO3: //TLI+5h P37 PAD to TLI PAD
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, SubStateTime > 3.0*60.0, 4, MST_F_EPO4);
+		break;
+	case MST_F_EPO4: //TLI PAD to TLI Evaluation
+		UpdateMacro(UTP_PADONLY, PT_TLIPAD, rtcc->GETEval2(rtcc->calcParams.TLI + 18.0), 5, MST_F_TRANSLUNAR1);
+		break;
+	case MST_F_TRANSLUNAR1: //TLI Evaluation to Block Data 1
+		UpdateMacro(UTP_NONE, PT_NONE, true, 6, MST_F_TRANSLUNAR2, scrubbed, rtcc->GETEval2(3.0*3600.0 + 10.0*60.0), MST_F_EPO1);
+		break;
+	case MST_F_TRANSLUNAR2:
+		if (rtcc->GETEval2(rtcc->calcParams.TLI))
 		{
 			addMessage("TLI");
 			MissionPhase = MMST_TL_COAST;
-			setState(MST_F_TRANSLUNAR1);
-		}
-		else {
-			break;
-		}
-		break;
-	case MST_F_TRANSLUNAR1: //
-		if (cm->stage == CSM_LEM_STAGE) {
-			addMessage("SEPARATION");
-			setState(MST_F_TRANSLUNAR2);
-		}
-		else {
-			break;
-		}
-		break;
-	case MST_F_TRANSLUNAR2: //
-		if (cm->MissionTime > rtcc->calcParams.TLI + 55.0*60.0)
-		{
-			SlowIfDesired();
 			setState(MST_F_TRANSLUNAR3);
 		}
+		else {
+			break;
+		}
 		break;
-	case MST_F_TRANSLUNAR3: //Evasive Maneuver to TB8 enable
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 3600.0 + 30.0*60.0, 4, MST_F_TRANSLUNAR4);
+	case MST_F_TRANSLUNAR3: //
+		if (cm->stage == CSM_LEM_STAGE) {
+			addMessage("SEPARATION");
+			setState(MST_F_TRANSLUNAR4);
+		}
+		else {
+			break;
+		}
 		break;
-	case MST_F_TRANSLUNAR4:  //TB8 enable to Block Data 1
+	case MST_F_TRANSLUNAR4: //
+		if (rtcc->GETEval2(rtcc->calcParams.TLI + 55.0*60.0))
+		{
+			SlowIfDesired();
+			setState(MST_F_TRANSLUNAR5);
+		}
+		break;
+	case MST_F_TRANSLUNAR5: //Evasive Maneuver to TB8 enable
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 30.0*60.0), 7, MST_F_TRANSLUNAR6);
+		break;
+	case MST_F_TRANSLUNAR6:  //TB8 enable to Block Data 1
 		switch (SubState) {
 		case 0:
 		{
@@ -257,62 +120,72 @@ void MCC::MissionSequence_F()
 				}
 			}
 
-			sivb->GetIU()->dcs.Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
+			sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
 			setSubState(3);
 		}
 		break;
 		case 3:
-			if (cm->MissionTime > rtcc->calcParams.TLI + 2.0*3600.0 + 30.0*60.0)
+			if (rtcc->GETEval2(rtcc->calcParams.TLI + 2.0*3600.0 + 30.0*60.0))
 			{
-				setState(MST_F_TRANSLUNAR5);
+				SlowIfDesired();
+				setState(MST_F_TRANSLUNAR7);
 			}
 			break;
 		}
 		break;
-	case MST_F_TRANSLUNAR5: //Block Data 1 to PTC REFSMMAT
-		UpdateMacro(UTP_PADONLY, PT_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 4.0*3600.0 + 30.0*60.0, 5, MST_F_TRANSLUNAR6);
+	case MST_F_TRANSLUNAR7: //Block Data 1 to MCC-1 Calculation
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval2(rtcc->calcParams.TLI + 3.0*3600.0 + 20.0*60.0), 8, MST_F_TRANSLUNAR8);
 		break;
-	case MST_F_TRANSLUNAR6: //PTC REFSMMAT to MCC-1
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.TLI + 7.0*3600.0 + 30.0*60.0, 7, MST_F_TRANSLUNAR7);
+	case MST_F_TRANSLUNAR8: //MCC-1 Calculation to MCC-1 Update (or PTC REFSMMAT)
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 7.0*3600.0 + 30.0*60.0), 11, MST_F_TRANSLUNAR9, scrubbed, rtcc->GETEval2(rtcc->calcParams.TLI + 4.0*3600.0 + 30.0*60.0), MST_F_TRANSLUNAR_NO_MCC1_1);
 		break;
-	case MST_F_TRANSLUNAR7: //MCC-1 to Block Data 2
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 9.0*3600.0 + 30.0*60.0, 10, MST_F_TRANSLUNAR8);
+	case MST_F_TRANSLUNAR9: //MCC-1 Update to PTC REFSMMAT update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TLI + 9.0*3600.0 + 20.0*60.0), 12, MST_F_TRANSLUNAR10);
 		break;
-	case MST_F_TRANSLUNAR8: //Block Data 2 to MCC-2
-		UpdateMacro(UTP_PADONLY, PT_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 23.0*3600.0, 6, MST_F_TRANSLUNAR9);
+	case MST_F_TRANSLUNAR_NO_MCC1_1: //PTC REFSMMAT update to SV update (MCC-1 was scrubbed)
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 7.0*3600.0 + 10.0*60.0), 10, MST_F_TRANSLUNAR_NO_MCC1_2);
 		break;
-	case MST_F_TRANSLUNAR9: //MCC-2 to Lunar Flyby PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 30.0*3600.0 + 30.0*60.0, 11, MST_F_TRANSLUNAR10);
+	case MST_F_TRANSLUNAR_NO_MCC1_2: //SV update to Block Data 2 (MCC-1 was scrubbed)
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 9.0*3600.0 + 30.0*60.0), 100, MST_F_TRANSLUNAR11);
 		break;
-	case MST_F_TRANSLUNAR10: //Lunar Flyby PAD to State Vector update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 42.0*3600.0, 12, MST_F_TRANSLUNAR11);
+	case MST_F_TRANSLUNAR10: //PTC REFSMMAT to Block Data 2
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 9.0*3600.0 + 35.0*60.0), 10, MST_F_TRANSLUNAR11);
 		break;
-	case MST_F_TRANSLUNAR11: //State Vector update to MCC-3 update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.LOI - 23.0*3600.0 - 30.0*60.0, 100, MST_F_TRANSLUNAR12);
+	case MST_F_TRANSLUNAR11: //Block Data 2 to MCC-2
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval2(rtcc->calcParams.TLI + 23.0*3600.0), 9, MST_F_TRANSLUNAR12);
 		break;
-	case MST_F_TRANSLUNAR12: //MCC-3 update to MCC-4 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 6.0*3600.0 - 30.0*60.0, 13, MST_F_TRANSLUNAR13);
+	case MST_F_TRANSLUNAR12: //MCC-2 to Lunar Flyby PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TLI + 30.0*3600.0 + 30.0*60.0), 13, MST_F_TRANSLUNAR13);
 		break;
-	case MST_F_TRANSLUNAR13: //MCC-4 update to PC+2 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 14, MST_F_TRANSLUNAR14);
+	case MST_F_TRANSLUNAR13: //Lunar Flyby PAD to State Vector update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TLI + 42.0*3600.0), 14, MST_F_TRANSLUNAR14);
 		break;
-	case MST_F_TRANSLUNAR14: //PC+2 update to Preliminary LOI-1 update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 4.0*3600.0 - 30.0*60.0, 15, MST_F_TRANSLUNAR15);
+	case MST_F_TRANSLUNAR14: //State Vector update to MCC-3 update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.LOI - 23.0*3600.0 - 30.0*60.0), 100, MST_F_TRANSLUNAR15);
 		break;
-	case MST_F_TRANSLUNAR15: //Preliminary LOI-1 update to TEI-1 update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 20, MST_F_TRANSLUNAR16);
+	case MST_F_TRANSLUNAR15: //MCC-3 update to MCC-4 update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.LOI - 6.0*3600.0 - 30.0*60.0), 15, MST_F_TRANSLUNAR16);
 		break;
-	case MST_F_TRANSLUNAR16: //TEI-1 update to TEI-4 update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 30, MST_F_TRANSLUNAR17);
+	case MST_F_TRANSLUNAR16: //MCC-4 update to PC+2 update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 16, MST_F_TRANSLUNAR17);
 		break;
-	case MST_F_TRANSLUNAR17: //TEI-4 update to Rev 1 Map Update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 2.0*3600.0 - 15.0*60.0, 31, MST_F_TRANSLUNAR18);
+	case MST_F_TRANSLUNAR17: //PC+2 update to Preliminary LOI-1 update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.LOI - 4.0*3600.0 - 30.0*60.0), 17, MST_F_TRANSLUNAR18);
 		break;
-	case MST_F_TRANSLUNAR18: //Rev 1 Map Update to LOI-1 update
-		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 30.0*60.0, 40, MST_F_TRANSLUNAR19);
+	case MST_F_TRANSLUNAR18: //Preliminary LOI-1 update to TEI-1 update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 20, MST_F_TRANSLUNAR19);
 		break;
-	case MST_F_TRANSLUNAR19: //LOI-1 update to Rev 2 Map Update
-		if (MissionPhase == MMST_TL_COAST && cm->MissionTime > rtcc->calcParams.LOI)
+	case MST_F_TRANSLUNAR19: //TEI-1 update to TEI-4 update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 30, MST_F_TRANSLUNAR20);
+		break;
+	case MST_F_TRANSLUNAR20: //TEI-4 update to Rev 1 Map Update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.LOI - 2.0*3600.0 - 15.0*60.0), 31, MST_F_TRANSLUNAR21);
+		break;
+	case MST_F_TRANSLUNAR21: //Rev 1 Map Update to LOI-1 update
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, rtcc->GETEval2(rtcc->calcParams.LOI - 1.0*3600.0 - 30.0*60.0), 40, MST_F_TRANSLUNAR22);
+		break;
+	case MST_F_TRANSLUNAR22: //LOI-1 update to Rev 2 Map Update
+		if (MissionPhase == MMST_TL_COAST && rtcc->GETEval2(rtcc->calcParams.LOI))
 		{
 			MissionPhase = MMST_LUNAR_ORBIT;
 		}
@@ -373,7 +246,7 @@ void MCC::MissionSequence_F()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 11 && MoonRevTime > 70.0*60.0, 70, MST_F_LUNAR_ORBIT_DOI_DAY_11);
 		break;
 	case MST_F_LUNAR_ORBIT_DOI_DAY_11: //AGS K Factor update to DOI update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, MoonRev >= 12 && MoonRevTime > 30.0*60.0, 65, MST_F_LUNAR_ORBIT_DOI_DAY_12);
+		UpdateMacro(UTP_PADONLY, PT_AP11AGSACT, MoonRev >= 12 && MoonRevTime > 30.0*60.0, 65, MST_F_LUNAR_ORBIT_DOI_DAY_12);
 		break;
 	case MST_F_LUNAR_ORBIT_DOI_DAY_12: //DOI update to Phasing update
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 71, MST_F_LUNAR_ORBIT_DOI_DAY_13);
@@ -517,51 +390,51 @@ void MCC::MissionSequence_F()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 134, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_35);
 		break;
 	case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_35: //TEI map update to TEI
-		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, cm->MissionTime > rtcc->calcParams.TEI, 144, MST_F_TRANSEARTH_1);
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, rtcc->GETEval2(rtcc->calcParams.TEI), 144, MST_F_TRANSEARTH_1);
 		break;
 	case MST_F_TRANSEARTH_1: //TEI to PTC REFSMMAT
-		if (cm->MissionTime > rtcc->calcParams.TEI && MissionPhase == MMST_LUNAR_ORBIT)
+		if (rtcc->GETEval2(rtcc->calcParams.TEI) && MissionPhase == MMST_LUNAR_ORBIT)
 		{
 			MissionPhase = MMST_TE_COAST;
 		}
-		if (cm->MissionTime > rtcc->calcParams.TEI + 35.0*60.0)
+		if (rtcc->GETEval2(rtcc->calcParams.TEI + 35.0*60.0))
 		{
 			SlowIfDesired();
 			setState(MST_F_TRANSEARTH_2);
 		}
 		break;
 	case MST_F_TRANSEARTH_2: //PTC REFSMMAT to state vector update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.TEI + 2.0*3600.0 + 40.0*60.0, 7, MST_F_TRANSEARTH_3);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TEI + 2.0*3600.0 + 40.0*60.0), 10, MST_F_TRANSEARTH_3);
 		break;
 	case MST_F_TRANSEARTH_3: //State vector update to state vector update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.TEI + 10.0*3600.0 + 15.0*60.0, 100, MST_F_TRANSEARTH_4);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TEI + 10.0*3600.0 + 15.0*60.0), 100, MST_F_TRANSEARTH_4);
 		break;
 	case MST_F_TRANSEARTH_4: //State vector update to MCC-5 update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.TEI + 14.0*3600.0 + 10.0*60.0, 100, MST_F_TRANSEARTH_5);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TEI + 14.0*3600.0 + 10.0*60.0), 100, MST_F_TRANSEARTH_5);
 		break;
 	case MST_F_TRANSEARTH_5: //MCC-5 update to preliminary MCC-6 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TEI + 27.0*3600.0 + 20.0*60.0, 90, MST_F_TRANSEARTH_6);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TEI + 27.0*3600.0 + 20.0*60.0), 90, MST_F_TRANSEARTH_6);
 		break;
 	case MST_F_TRANSEARTH_6: //Preliminary MCC-6 update to Entry PAD update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 91, MST_F_TRANSEARTH_7);
 		break;
 	case MST_F_TRANSEARTH_7: //Entry PAD update to MCC-6 update
-		UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 16.0*3600.0 - 45.0*60.0, 96, MST_F_TRANSEARTH_8);
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval2(rtcc->calcParams.EI - 16.0*3600.0 - 45.0*60.0), 96, MST_F_TRANSEARTH_8);
 		break;
 	case MST_F_TRANSEARTH_8: //MCC-6 update to Entry PAD update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 92, MST_F_TRANSEARTH_9);
 		break;
 	case MST_F_TRANSEARTH_9: //Entry PAD update to MCC-7 decision update
-		UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 5.0*3600.0 - 45.0*60.0, 97, MST_F_TRANSEARTH_10);
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval2(rtcc->calcParams.EI - 5.0*3600.0 - 45.0*60.0), 97, MST_F_TRANSEARTH_10);
 		break;
 	case MST_F_TRANSEARTH_10: //MCC-7 decision update to MCC-7 update
-		UpdateMacro(UTP_NONE, PT_NONE, cm->MissionTime > rtcc->calcParams.EI - 4.5*3600.0, 93, MST_F_TRANSEARTH_11);
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(rtcc->calcParams.EI - 4.5*3600.0), 93, MST_F_TRANSEARTH_11);
 		break;
 	case MST_F_TRANSEARTH_11: //MCC-7 update to Entry PAD update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 94, MST_F_TRANSEARTH_12);
 		break;
 	case MST_F_TRANSEARTH_12: //Entry PAD update to final entry update
-		UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 1.0*3600.0, 98, MST_F_TRANSEARTH_13);
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval2(rtcc->calcParams.EI - 1.0*3600.0), 98, MST_F_TRANSEARTH_13);
 		break;
 	case MST_F_TRANSEARTH_13: //Final entry update to CM/SM separation
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->stage == CM_STAGE, 99, MST_ENTRY);
@@ -584,5 +457,16 @@ void MCC::MissionSequence_F()
 		break;
 		}
 		break;
+	case MST_F_ABORT_ORBIT:
+	{
+		if (AbortMode == 5) //Earth Orbit Abort
+		{
+			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			{
+				setState(MST_LANDING);
+			}
+		}
+	}
+	break;
 	}
 }

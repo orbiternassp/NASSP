@@ -23,10 +23,205 @@
   **************************************************************************/
 
 #include "Orbitersdk.h"
+#include "LM_AscentStageResource.h"
+#include "LM_VC_Resource.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
 #include "LEM.h"
 #include "lm_ecs.h"
+
+LEMCrewStatus::LEMCrewStatus(Sound &crewdeadsound) : crewDeadSound(crewdeadsound) {
+
+	status = ECS_CREWSTATUS_OK;
+	SuitPressureLowTime = 600;
+	PressureLowTime = 600;
+	SuitPressureHighTime = 3600;
+	PressureHighTime = 3600;
+	SuitTemperatureTime = 12 * 3600;
+	TemperatureTime = 12 * 3600;
+	CO2Time = 1800;
+	accelerationTime = 10;
+	lastVerticalVelocity = 0;
+
+	lem = NULL;
+	firstTimestepDone = false;
+}
+
+LEMCrewStatus::~LEMCrewStatus() {
+}
+
+void LEMCrewStatus::Init(LEM *s) {
+
+	lem = s;
+}
+
+void LEMCrewStatus::Timestep(double simdt) {
+
+	if (!firstTimestepDone) {
+		// Dead at startup?
+		if (status == ECS_CREWSTATUS_DEAD) {
+			crewDeadSound.play();
+		}
+		firstTimestepDone = true;
+	}
+
+	if (!lem) return;
+
+	LEMECSStatus ecs;
+	lem->GetECSStatus(ecs);
+
+	// Already dead?
+	if (status == ECS_CREWSTATUS_DEAD) return;
+	// No crew?
+	if (!lem->Crewed || ecs.crewNumber == 0) return;
+
+	status = ECS_CREWSTATUS_OK;
+
+	// Suit/Cabin Pressure lower than 2.8 psi for 10 minutes
+	if ((lem->ecs.GetECSSuitPSI() < 2.8) && (lem->CDRSuited->number + lem->LMPSuited->number > 0)) {
+			if (SuitPressureLowTime <= 0) {
+				status = ECS_CREWSTATUS_DEAD;
+				crewDeadSound.play();
+				return;
+			} else {
+				status = ECS_CREWSTATUS_CRITICAL;
+				SuitPressureLowTime -= simdt;
+			}
+		} else {
+		SuitPressureLowTime = 600;
+	}
+
+    if (lem->ecs.GetECSCabinPSI() < 2.8 && lem->CrewInCabin->number > 0) {
+		if (PressureLowTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		} else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			PressureLowTime -= simdt;
+		}
+	} else {
+		PressureLowTime = 600;
+	}
+
+	// Suit/Cabin Pressure higher than 22 psi for 1 hour
+	if ((lem->ecs.GetECSSuitPSI() > 22) && (lem->CDRSuited->number + lem->LMPSuited->number > 0)) {
+			if (SuitPressureHighTime <= 0) {
+				status = ECS_CREWSTATUS_DEAD;
+				crewDeadSound.play();
+				return;
+			} else {
+				status = ECS_CREWSTATUS_CRITICAL;
+				SuitPressureHighTime -= simdt;
+			}
+		} else {
+		SuitPressureHighTime = 3600;
+	}
+
+	if (lem->ecs.GetECSCabinPSI() > 22 && lem->CrewInCabin->number > 0) {
+		if (PressureHighTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		} else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			PressureHighTime -= simdt;
+		}
+	} else {
+		PressureHighTime = 3600;
+	}
+
+	// Suit/Cabin temperature above about 45°C or below about 0°C for 12 hours
+	if ((lem->ecs.GetSuitTempF() > 113 || lem->ecs.GetSuitTempF() < 32) && (lem->CDRSuited->number + lem->LMPSuited->number > 0)) {
+			if (SuitTemperatureTime <= 0) {
+				status = ECS_CREWSTATUS_DEAD;
+				crewDeadSound.play();
+				return;
+			} else {
+				status = ECS_CREWSTATUS_CRITICAL;
+				SuitTemperatureTime -= simdt;
+			}
+		} else {
+		SuitTemperatureTime = 12 * 3600;
+	}
+	// **Disabled for now until cabin temperatures are more stable
+	/*if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
+		if (TemperatureTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		} else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			TemperatureTime -= simdt;
+		}
+	} else {
+		TemperatureTime = 12 * 3600;
+	}*/
+
+	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
+	if (lem->ecs.GetECSSensorCO2MMHg() > 10 && (lem->CrewInCabin->number > 0 || (lem->CDRSuited->number + lem->LMPSuited->number > 0))) {
+		if (CO2Time <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+		else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			CO2Time -= simdt;
+		}
+	}
+	else {
+		CO2Time = 1800;
+	}
+
+	// Acceleration exceeds 12 g for 10 seconds
+	VECTOR3 f, w;
+	lem->GetForceVector(f);
+	lem->GetWeightVector(w);
+	if (length(f - w) / lem->GetMass() > 12. * G) {
+		if (accelerationTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+		else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			accelerationTime -= simdt;
+		}
+	}
+	else {
+		accelerationTime = 10;
+	}
+
+	// Touchdown speed exceeds 15 m/s (= about 50 ft/s)
+	if (lem->GroundContact()) {
+		if (fabs(lastVerticalVelocity) > 15) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+	}
+	else {
+		VECTOR3 v;
+		lem->GetAirspeedVector(FRAME_HORIZON, v);
+		lastVerticalVelocity = v.y;
+	}
+}
+
+void LEMCrewStatus::LoadState(char *line) {
+
+	sscanf(line + 10, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf", &status, &SuitPressureLowTime, &PressureLowTime, &SuitPressureHighTime,
+		&PressureHighTime, &SuitTemperatureTime, &TemperatureTime, &CO2Time, &accelerationTime, &lastVerticalVelocity);
+}
+
+void LEMCrewStatus::SaveState(FILEHANDLE scn) {
+
+	char buffer[1000];
+
+	sprintf(buffer, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf", status, SuitPressureLowTime, PressureLowTime, SuitPressureHighTime,
+		PressureHighTime, SuitTemperatureTime, TemperatureTime, CO2Time, accelerationTime, lastVerticalVelocity);
+	oapiWriteScenario_string(scn, "CREWSTATUS", buffer);
+}
 
 LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
 	OpenSound(opensound), CloseSound(closesound)
@@ -34,12 +229,51 @@ LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
 	open = false;
 	ovhdHatchHandle = NULL;
 	lem = NULL;
+
+	ovhdhatch_state.SetOperatingSpeed(0.2);
+	anim_OvhdHatch = -1;
 }
 
 void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh)
 {
 	lem = l;
 	ovhdHatchHandle = fhh;
+}
+
+void LEMOverheadHatch::DefineAnimations(UINT idx)
+{
+	// Overhead Hatch Animations
+	ANIMATIONCOMPONENT_HANDLE ach_OvhdHatch;
+
+	static UINT	meshgroup_OvhdHatch = AS_GRP_UpperHatch;
+	static MGROUP_ROTATE mgt_OvhdHatch(idx, &meshgroup_OvhdHatch, 1, _V(0.00, 1.02873, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+
+	anim_OvhdHatch = lem->CreateAnimation(0.0);
+	ach_OvhdHatch = lem->AddAnimationComponent(anim_OvhdHatch, 0.0f, 1.0f, &mgt_OvhdHatch);
+
+	lem->SetAnimation(anim_OvhdHatch, ovhdhatch_state.State());
+}
+
+void LEMOverheadHatch::DefineAnimationsVC(UINT idx)
+{
+	// Overhead Hatch Animations
+	ANIMATIONCOMPONENT_HANDLE ach_OvhdHatchVC;
+
+	static UINT	meshgroup_OvhdHatchVC = VC_GRP_UpperHatch;
+	static MGROUP_ROTATE mgt_OvhdHatchVC(idx, &meshgroup_OvhdHatchVC, 1, _V(0.00, 1.02873, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+
+	anim_OvhdHatchVC = lem->CreateAnimation(0.0);
+	ach_OvhdHatchVC = lem->AddAnimationComponent(anim_OvhdHatchVC, 0.0f, 1.0f, &mgt_OvhdHatchVC);
+
+	lem->SetAnimation(anim_OvhdHatchVC, ovhdhatch_state.State());
+}
+
+void LEMOverheadHatch::Timestep(double simdt)
+{
+	if (ovhdhatch_state.Process(simdt)) {
+		lem->SetAnimation(anim_OvhdHatch, ovhdhatch_state.State());
+		lem->SetAnimation(anim_OvhdHatchVC, ovhdhatch_state.State());
+	}
 }
 
 void LEMOverheadHatch::Toggle()
@@ -51,7 +285,8 @@ void LEMOverheadHatch::Toggle()
 			open = true;
 			OpenSound.play();
 			lem->PanelRefreshOverheadHatch();
-			lem->SetOvhdHatchMesh();
+			ovhdhatch_state.Open();
+			lem->DrogueVis();
 		}
 	}
 	else
@@ -59,23 +294,26 @@ void LEMOverheadHatch::Toggle()
 		open = false;
 		CloseSound.play();
 		lem->PanelRefreshOverheadHatch();
-		lem->SetOvhdHatchMesh();
+		ovhdhatch_state.Close();
+		lem->DrogueVis();
 	}
 }
 
 void LEMOverheadHatch::LoadState(char *line) {
 
 	int i1;
+	double a, b;
 
-	sscanf(line + 13, "%d", &i1);
+	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
 	open = (i1 != 0);
+	ovhdhatch_state.SetState(a, b);
 }
 
 void LEMOverheadHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i", (open ? 1 : 0));
+	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), ovhdhatch_state.State(), ovhdhatch_state.Speed());
 	oapiWriteScenario_string(scn, "OVERHEADHATCH", buffer);
 }
 
@@ -158,12 +396,45 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	open = false;
 	ForwardHatchHandle = NULL;
 	lem = NULL;
+
+	hatch_state.SetOperatingSpeed(0.2);
+	anim_Hatch = -1;
 }
 
 void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh)
 {
 	lem = l;
 	ForwardHatchHandle = fhh;
+}
+
+void LEMForwardHatch::DefineAnimations(UINT idx)
+{
+	// Forward Hatch Animation
+	ANIMATIONCOMPONENT_HANDLE	ach_Hatch;
+	static UINT	meshgroup_Hatch = AS_GRP_FwdHatch;
+	static MGROUP_ROTATE	mgt_Hatch(idx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.63386), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
+	anim_Hatch = lem->CreateAnimation(0.0);
+	ach_Hatch = lem->AddAnimationComponent(anim_Hatch, 0.0f, 1.0f, &mgt_Hatch);
+	lem->SetAnimation(anim_Hatch, hatch_state.State());
+}
+
+void LEMForwardHatch::DefineAnimationsVC(UINT idx)
+{
+	// Forward Hatch Animation
+	ANIMATIONCOMPONENT_HANDLE	ach_HatchVC;
+	static UINT	meshgroup_HatchVC = VC_GRP_FwdHatch;
+	static MGROUP_ROTATE	mgt_HatchVC(idx, &meshgroup_HatchVC, 1, _V(0.39366, -0.57839, 1.63386), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
+	anim_HatchVC = lem->CreateAnimation(0.0);
+	ach_HatchVC = lem->AddAnimationComponent(anim_HatchVC, 0.0f, 1.0f, &mgt_HatchVC);
+	lem->SetAnimation(anim_HatchVC, hatch_state.State());
+}
+
+void LEMForwardHatch::Timestep(double simdt)
+{
+	if (hatch_state.Process(simdt)) {
+		lem->SetAnimation(anim_Hatch, hatch_state.State());
+		lem->SetAnimation(anim_HatchVC, hatch_state.State());
+	}
 }
 
 void LEMForwardHatch::Toggle()
@@ -175,7 +446,7 @@ void LEMForwardHatch::Toggle()
 			open = true;
 			OpenSound.play();
 			lem->PanelRefreshForwardHatch();
-			lem->SetFwdHatchMesh();
+			hatch_state.Open();
 		}
 	}
 	else
@@ -183,23 +454,25 @@ void LEMForwardHatch::Toggle()
 		open = false;
 		CloseSound.play();
 		lem->PanelRefreshForwardHatch();
-		lem->SetFwdHatchMesh();
+		hatch_state.Close();
 	}
 }
 
 void LEMForwardHatch::LoadState(char *line) {
 
 	int i1;
+	double a, b;
 
-	sscanf(line + 12, "%d", &i1);
+	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
 	open = (i1 != 0);
+	hatch_state.SetState(a, b);
 }
 
 void LEMForwardHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i", (open ? 1 : 0));
+	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed());
 	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
 }
 
@@ -365,6 +638,23 @@ void LEMPressureSwitch::SystemTimestep(double simdt)
 	}
 }
 
+void LEMPressureSwitch::LoadState(char *line, int strlen)
+{
+	int i;
+
+	sscanf(line + strlen + 1, "%i", &i);
+
+	PressureSwitch = (i != 0);
+}
+
+void LEMPressureSwitch::SaveState(FILEHANDLE scn, char *name_str)
+{
+	char buffer[100];
+
+	sprintf(buffer, "%d", PressureSwitch);
+	oapiWriteScenario_string(scn, name_str, buffer);
+}
+
 LEMSuitIsolValve::LEMSuitIsolValve()
 {
 	lem = NULL;
@@ -438,7 +728,15 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 	{
 		cabinRepressValve->flowMax = 396.0 / LBH;
 
-		if (cabinRepressCB->IsPowered() && (pressRegulatorASwitch->GetState() != 0 || pressRegulatorBSwitch->GetState() != 0))
+		bool repressinhibit = false;
+
+		//Both in EGRESS
+		if (pressRegulatorASwitch->GetState() == 0 && pressRegulatorBSwitch->GetState() == 0) repressinhibit = true;
+		//One in EGRESS, other in CLOSE
+		else if (pressRegulatorASwitch->GetState() == 0 && pressRegulatorBSwitch->GetState() == 3) repressinhibit = true;
+		else if (pressRegulatorASwitch->GetState() == 3 && pressRegulatorBSwitch->GetState() == 0) repressinhibit = true;
+
+		if (cabinRepressCB->IsPowered() && repressinhibit == false)
 		{
 			if (lem->CabinPressureSwitch.GetPressureSwitch() != 0 && cabinRepressValve->in->open == 0)
 			{
@@ -449,9 +747,9 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 				cabinRepressValve->in->Close();
 			}
 			if (cabinRepressValve->in->open)
-				{
+			{
 				EmergencyCabinRepressRelay = true;
-				}
+			}
 		}
 		else
 		{
@@ -727,7 +1025,7 @@ void LEMWaterSeparationSelector::SystemTimestep(double simdt)
 	}
 }
 
-LEMCabinFan::LEMCabinFan(Sound &cabinfanS) : cabinfansound(cabinfanS)
+LEMCabinFan::LEMCabinFan(FadeInOutSound &cabinfanS) : cabinfansound(cabinfanS)
 {
 	cabinFan1CB = NULL;
 	cabinFanContCB = NULL;
@@ -779,7 +1077,7 @@ void LEMCabinFan::SystemTimestep(double simdt)
 
 void LEMCabinFan::CabinFanSound()
 {
-	cabinfansound.play(LOOP, 200);
+	cabinfansound.play(200);
 }
 
 void LEMCabinFan::StopCabinFanSound()
@@ -855,6 +1153,7 @@ LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
 	GlycolAutoTransferRelay = false;
 	GlycolPumpFailRelay = false;
 	PressureSwitch = true;
+	AutoTransferCounter = 0;
 }
 
 void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h)
@@ -888,11 +1187,24 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 
 	if (PressureSwitch && glycolRotary->GetState() == 1 && glycolPumpAutoTransferCB->IsPowered())
 	{
-		GlycolAutoTransferRelay = true;
+		//To make this more stable with time acceleration and panel changes
+		if (AutoTransferCounter > 20)
+		{
+			GlycolAutoTransferRelay = true;
+		}
+		else
+		{
+			AutoTransferCounter++;
+		}
 	}
 	else if (glycolRotary->GetState() == 2 && glycolPumpAutoTransferCB->IsPowered())
 	{
 		GlycolAutoTransferRelay = false;
+		AutoTransferCounter = 0;
+	}
+	else
+	{
+		AutoTransferCounter = 0;
 	}
 
 	if (GlycolAutoTransferRelay && glycolRotary->GetState() == 1 && glycolPump1CB->IsPowered())
@@ -936,6 +1248,18 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	//sprintf(oapiDebugString(), "DP %f DPSwitch %d ATRelay %d Pump1 %d Pump2 %d", DPSensor*PSI, PressureSwitch, GlycolAutoTransferRelay, glycolPump1->h_pump, glycolPump2->h_pump);
 }
 
+bool LEMPrimGlycolPumpController::GetGlycolPumpState(int i) {
+
+	if (i == 1 && glycolPump1->pumping) {
+		return true;
+	}
+
+	if (i == 2 && glycolPump2->pumping) {
+		return true;
+	}
+	return false;
+}
+
 void LEMPrimGlycolPumpController::LoadState(char *line)
 {
 	int i, j, k;
@@ -944,7 +1268,7 @@ void LEMPrimGlycolPumpController::LoadState(char *line)
 
 	PressureSwitch = (i != 0);
 	GlycolAutoTransferRelay = (j != 0);
-	GlycolPumpFailRelay = (j != 0);
+	GlycolPumpFailRelay = (k != 0);
 }
 
 void LEMPrimGlycolPumpController::SaveState(FILEHANDLE scn)
@@ -1028,6 +1352,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Asc_Water1 = 0;
 	Asc_Water2 = 0;
 	Des_Water = 0;
+	Des_Water_Press = 0;
 	//Des_Water2 = 0; Using LM-8 Systems Handbook, only 1 DES H2O tank
 	Primary_CL_Glycol_Press = 0;						// Zero this, system will fill from accu
 	Secondary_CL_Glycol_Press = 0;						// Zero this, system will fill from accu
@@ -1051,6 +1376,8 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Secondary_Glycol_Loop2 = 0;							// Loop 2 mass
 	Secondary_Glycol_EvapIn = 0;						// Evap inlet mass
 	Secondary_Glycol_EvapOut = 0;						// Evap outlet mass
+	Primary_Glycol_Accu_Press = 0;
+	PLSS_O2_Fill_Press = 0;
 
 	// Open valves as would be for IVT
 	Des_O2 = 0;
@@ -1063,7 +1390,8 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Water_Sep1_RPM = 0; Water_Sep2_RPM = 0;
 	Suit_Circuit_Relief = 0;
 	Cabin_Gas_Return = 0;
-	Asc_Water1Temp = 0; Asc_Water2Temp = 0;
+	Asc_Water1Temp = 0; Asc_Water2Temp = 0; WB_Prim_Water_Temp = 0;
+	WB_Prim_Gly_In_Temp = 0; WB_Prim_Gly_Out_Temp = 0;
 }
 
 void LEM_ECS::Init(LEM *s) {
@@ -1153,6 +1481,8 @@ double LEM_ECS::AscentOxyTank2QuantityLBS() {
 }
 
 double LEM_ECS::GetCabinPressurePSI() {
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+
 	if (!Cabin_Press) {
 		Cabin_Press = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	}
@@ -1184,6 +1514,7 @@ double LEM_ECS::GetSensorCO2MMHg() {
 
 double LEM_ECS::DescentWaterTankQuantity() {
 	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+	if (lem->stage > 1) return 0.0;
 
 	if (!Des_Water) {
 		Des_Water = (double*)sdk.GetPointerByString("HYDRAULIC:DESH2OTANK:MASS");
@@ -1327,6 +1658,16 @@ double LEM_ECS::GetSelectedGlycolTempF()
 	return GetPrimaryGlycolTempF();
 }
 
+double LEM_ECS::GetSelectedGlycolPressure()
+{
+	if (lem->GlycolRotary.GetState() == 0)
+	{
+		return GetSecondaryGlycolPressure();
+	}
+
+	return GetPrimaryGlycolPressure();
+}
+
 double LEM_ECS::GetWaterSeparatorRPM()
 {
 	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
@@ -1441,4 +1782,87 @@ bool LEM_ECS::GetGlycolPump2Failure()
 	}
 
 	return false;
+}
+
+double LEM_ECS::GetPrimWBWaterInletTempF()
+{
+	if (!WB_Prim_Water_Temp) {
+		WB_Prim_Water_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMWATERBOILER:TEMP");
+	}
+	return KelvinToFahrenheit(*WB_Prim_Water_Temp);
+}
+
+double LEM_ECS::GetPrimWBGlycolInletTempF()
+{
+	if (!WB_Prim_Gly_In_Temp) {
+		WB_Prim_Gly_In_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:TEMP");
+	}
+	return KelvinToFahrenheit(*WB_Prim_Gly_In_Temp);
+}
+
+double LEM_ECS::GetPrimWBGlycolOutletTempF()
+{
+	if (!WB_Prim_Gly_Out_Temp) {
+		WB_Prim_Gly_Out_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPOUTLET:TEMP");
+	}
+	return KelvinToFahrenheit(*WB_Prim_Gly_Out_Temp);
+}
+
+double LEM_ECS::GetPrimaryGlycolPumpDP()
+{
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+
+	if (!Primary_CL_Glycol_Press) {
+		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD:PRESS");
+	}
+	if (!Primary_Glycol_Accu_Press) {
+		Primary_Glycol_Accu_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
+	}
+	return (*Primary_CL_Glycol_Press - *Primary_Glycol_Accu_Press)*PSI;
+}
+
+double LEM_ECS::GetPLSSFillPressurePSI()
+{
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+
+	if (!PLSS_O2_Fill_Press) {
+		PLSS_O2_Fill_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PLSSO2FILLVALVE:PRESS");
+	}
+	return (*PLSS_O2_Fill_Press)*PSI;
+}
+
+double LEM_ECS::DescentWaterTankPressure() {
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+	if (lem->stage > 1) return 0.0;
+
+	if (!Des_Water_Press) {
+		Des_Water_Press = (double*)sdk.GetPointerByString("HYDRAULIC:DESH2OTANK:PRESS");
+	}
+	return (*Des_Water_Press)*PSI;
+}
+double LEM_ECS::GetECSSuitPSI() {
+
+	if (!Suit_Press) {
+		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
+	}
+	return *Suit_Press * PSI;
+}
+
+double LEM_ECS::GetECSCabinPSI() {
+
+	if (!Cabin_Press) {
+		Cabin_Press = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
+	}
+	return *Cabin_Press * PSI;
+}
+
+double LEM_ECS::GetECSSensorCO2MMHg() {
+
+	if (!SuitCircuit_CO2) {
+		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
+	}
+	if (!HX_CO2) {
+		HX_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:CO2_PPRESS");
+	}
+	return ((*SuitCircuit_CO2 + *HX_CO2) / 2.0) * MMHG;
 }

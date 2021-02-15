@@ -27,12 +27,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define DCSUPLINK_SWITCH_SELECTOR			0
 #define DCSUPLINK_TIMEBASE_UPDATE			1
 #define DCSUPLINK_LM_ABORT					2
-#define DCSUPLINK_INHIBIT_MANEUVER			3
+#define DCSUPLINK_TDE_ENABLE				3
 #define DCSUPLINK_RESTART_MANEUVER_ENABLE	4
 #define DCSUPLINK_TIMEBASE_8_ENABLE			5
 #define DCSUPLINK_EVASIVE_MANEUVER_ENABLE	6
 #define DCSUPLINK_EXECUTE_COMM_MANEUVER		7
 #define DCSUPLINK_SIVBIU_LUNAR_IMPACT		8
+#define DCSUPLINK_REMOVE_INHIBIT_MANEUVER4	9
+#define DCSUPLINK_SATURNIB_LAUNCH_TARGETING	10
+#define DCSUPLINK_SLV_NAVIGATION_UPDATE 	11
 
 #define DCS_START_STRING	"DCS_BEGIN"
 #define DCS_END_STRING		"DCS_END"
@@ -59,6 +62,26 @@ struct DCSLUNARIMPACT
 	double yaw;
 };
 
+//Saturn IB Launch Targeting Update
+struct DCSLAUNCHTARGET
+{
+	double V_T;
+	double R_T;
+	double theta_T;
+	double i;
+	double lambda_0;
+	double lambda_dot;
+	double T_GRR0;
+};
+
+//SLV Navigation Update
+struct DCSSLVNAVUPDATE
+{
+	double NUPTIM = 0.0;
+	VECTOR3 PosS = _V(0, 0, 0);
+	VECTOR3 DotS = _V(0, 0, 0);
+};
+
 class IU;
 
 class DCS
@@ -69,11 +92,8 @@ public:
 	void SaveState(FILEHANDLE scn);
 
 	virtual bool Uplink(int type, void *upl);
-	void EnableCommandSystem() { CommandSystemEnabled = true; }
 
 	bool IsCommandSystemEnabled();
 protected:
-	bool CommandSystemEnabled;
-
 	IU *iu;
 };

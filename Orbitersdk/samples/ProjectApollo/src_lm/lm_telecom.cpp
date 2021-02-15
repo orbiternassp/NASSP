@@ -40,16 +40,57 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "CollisionSDK/CollisionSDK.h"
 
 #include "saturn.h"
 
 #include "connector.h"
 #include "lm_channels.h"
+#include "LM_AscentStageResource.h"
+
+#include "RF_calc.h"
+
+//VHF Antenna
+
+LM_VHFAntenna::LM_VHFAntenna(VECTOR3 dir, double maximumGain)
+{
+	pointingVector = dir;
+	maxGain = maximumGain;
+}
+
+LM_VHFAntenna::~LM_VHFAntenna()
+{
+}
+
+double LM_VHFAntenna::getPolarGain(VECTOR3 target)
+{
+	double theta = 0.0;
+	double gain = 0.0;
+
+	const double scaleGain = 9.0; //dBi ################# THIS THE SAME GAIN AS THE CSM AND MAY NEED TO BE CORRECTED? ################
+
+	theta = acos(dotp(target, unit(pointingVector)));
+
+	gain = pow(sin(1.4562266550955*theta / ((75 * RAD) - exp(-(theta*theta)))), 2); //0--1 scaled polar pattern
+	gain = (gain - 1.0)*scaleGain; //scale to appropriate values. roughly approximates figures 4.7-26 -- 4.7-33 of CSM/LM SPACECRAFT Operational Data Book Volume I CSM Data Book Part I Constraints and Performance Rev 3.
+
+	if (theta > 160.0*RAD)
+	{
+		return -scaleGain;
+	}
+
+	return gain;
+}
 
 // VHF System (and shared stuff)
-LM_VHF::LM_VHF(){
+LM_VHF::LM_VHF():
+	fwdInflightVHF(unit(_V(-1.0, 0.5, 0.0)), -10.0), // rough positions for testing
+	aftInflightVHF(unit(_V(0.1, 0.5, -1.0)), -10.0),
+	evaVHF(_V(0.0, 1.0, 0.0), -15.0)
+{
 	lem = NULL;
+	csm = NULL;
+	AntennaSelectorSW = NULL;
+
 	VHFHeat = 0;
 	VHFSECHeat = 0;
 	PCMHeat = 0;
@@ -83,7 +124,35 @@ bool LM_VHF::registerSocket(SOCKET sock)
 	return true;
 }
 void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh){
+	
 	lem = vessel;
+	AntennaSelectorSW = &lem->Panel12VHFAntSelKnob;
+
+	if (!csm)
+	{
+		csm = lem->agc.GetCSM();
+	}
+
+	if (!(lem->lm_rr_to_csm_connector.connectedTo))
+	{
+		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+	}
+
+	RCVDfreqRCVR_A = 0.0;
+	RCVDpowRCVR_A = 0.0;
+	RCVDgainRCVR_A = 0.0;
+	RCVDPhaseRCVR_A = 0.0;
+	RCVDfreqRCVR_B = 0.0;
+	RCVDpowRCVR_B = 0.0;
+	RCVDgainRCVR_B = 0.0;
+	RCVDPhaseRCVR_B = 0.0;
+	RCVDRangeTone = false;
+
+	RCVDinputPowRCVR_A = -150.0;
+	RCVDinputPowRCVR_B = -150.0;
+
+	xmitPower = 5; //watts
+
 	VHFHeat = vhfh;
 	VHFSECHeat = secvhfh;
 	PCMHeat = pcmh;
@@ -93,7 +162,7 @@ void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad
 	mcc_size = 0; mcc_offset = 0;
 	wsk_error = 0;
 	last_update = 0;
-	last_rx = 0;
+	last_rx = MINUS_INFINITY;
 	word_addr = 0;
 	pcm_rate_override = 0;
 	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
@@ -270,15 +339,109 @@ void LM_VHF::SystemTimestep(double simdt) {
 	}
 }
 
-void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
+void LM_VHF::Timestep(double simt)
 {
-	if (isRanging && transmitA && receiveB)
+	if (AntennaSelectorSW->GetState() == 0)
 	{
-		sat->VHFRangingReturnSignal();
+		activeAntenna = &aftInflightVHF;
 	}
-}
+	else if (AntennaSelectorSW->GetState() == 1)
+	{
+		activeAntenna = &fwdInflightVHF;
+	}
+	else
+	{
+		activeAntenna = &evaVHF;
+	}
 
-void LM_VHF::Timestep(double simt){
+	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
+	bool isCSM = false;
+
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\Saturn5", 21)) //some day: if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\CSM", 17))
+		{
+			isCSM = true;
+		}
+	}
+
+	if (!isCSM)
+	{
+		csm = NULL;
+		lem->lm_vhf_to_csm_csm_connector.Disconnect();
+	}
+
+	VECTOR3 R;
+	VECTOR3 U_R; //unit vector from the CSM to the LEM
+	MATRIX3 Rot; //rotational matrix for transforming from local to global coordinate systems
+	VECTOR3 U_R_LOCAL; //unit vector in the local coordinate system, pointing to the other vessel
+
+	if (!csm)
+	{
+		csm = lem->agc.GetCSM();
+	}
+
+	if (csm)
+	{
+		oapiGetRelativePos(csm->GetHandle(), lem->GetHandle(), &R); //vector to the LM
+		U_R = unit(R); //normalize it
+		lem->GetRotationMatrix(Rot);
+		U_R_LOCAL = tmul(Rot, U_R); //rotate U_R into the global coordinate system
+	}
+
+	if (!(lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
+	{
+		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+	}
+	
+	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
+	{
+		if (receiveA)
+		{
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_A, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_A = RF_ZERO_POWER_DBM;
+		}
+
+		if (receiveB)
+		{
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_B, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_B = RF_ZERO_POWER_DBM;
+		}
+	}
+
+	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
+	{
+		if (transmitA)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)));
+		}
+		else
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, false);
+		}
+
+		if (transmitB)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false);
+		}
+		else
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
+		}
+
+		//sprintf(oapiDebugString(), "VHF ANTENNA GAIN = %lf", activeAntenna->getPolarGain(U_R_LOCAL));
+	}
+
+	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
 		sprintf(oapiDebugString(),"%s",wsk_emsg);
@@ -348,6 +511,12 @@ unsigned char LM_VHF::scale_data(double data, double low, double high){
 	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
 }
 
+unsigned char LM_VHF::scale_scea(double data)
+{
+	//data is already 0 to 5V
+	return static_cast<unsigned char>(data*256.0 / 5.0 + 0.5);
+}
+
 void LM_VHF::perform_io(double simt){
 	// Do TCP IO
 	switch(conn_state){
@@ -358,7 +527,7 @@ void LM_VHF::perform_io(double simt){
 			if (mcc_size > 0) {
 				// sprintf(oapiDebugString(), "MCCSIZE %d LRX %f LRXINT %f", mcc_size, last_rx, ((simt - last_rx) / 0.005));
 				// Should we recieve?
-				if ((fabs(simt - last_rx) / 0.05) < 1 || lem->agc.IsUpruptActive()) {
+				if ((fabs(simt - last_rx) / 0.1) < 1 || lem->agc.IsUpruptActive()) {
 					return; // No
 				}
 				last_rx = simt;
@@ -415,7 +584,7 @@ void LM_VHF::perform_io(double simt){
 						break;					
 				}
 			}
-			// Should we recieve?
+			// Should we receive?
 			if (((simt - last_rx) / 0.005) < 1 || lem->agc.IsUpruptActive()) {			
 				return; // No
 			}
@@ -1356,439 +1525,439 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 		case LTLM_A:  // ANALOG
 			switch(ccode){
 				case 1: 
-					if(channel == 1){return(0); } // DPS OX PRESS
-					if(channel == 10){ return(0); } // X TRANS CMD
-					if(channel == 50){ return(0); } // Y PIPA OUT IN O
-					if(channel == 100){return(0); } // IG SVO ERR IN O
-					if(channel == 200){return(0); } // DPS FUEL PRESS
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(17, 2))); } // X TRANS CMD
+					if(channel == 50){ return(scale_data(0.0, -2.5, 2.5)); } // Y PIPA OUT IN O
+					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // IG SVO ERR IN O
+					if(channel == 200){ return(scale_data(lem->DPSPropellant.GetFuelEngineInletPressurePSI(), 0.0, 300.0)); } // DPS FUEL PRESS
 				case 2: 
-					if(channel == 1){ return(0); } // PLS TORQ REF (???)
-					if(channel == 10){return(0); } // SBand ST PH ERR
-					if(channel == 50){return(0); } // X PIPA OUT IN O
-					if(channel == 200){return(0); } // DPS OX PRESS
+					if(channel == 1){ return(scale_data(0.0, 85.0, 135.0)); } // PLS TORQ REF
+					if(channel == 10){ return(scale_data(0.0, -90.0, 90.0)); } // SBand ST PH ERR
+					if(channel == 50){ return(scale_data(0.0, -2.5, 2.5)); } // X PIPA OUT IN O
+					if(channel == 200){ return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
 				case 3: 
-					if(channel == 1){return(0); } // DPS OX 1 TEMP
-					if(channel == 100){ return(0); } // MG SVO ERR IN O					
-					return(0); // Z PIPA OUT IN O
+					if(channel == 1){ return(scale_scea(lem->scera1.GetVoltage(10, 3))); } // DPS OX 1 TEMP
+					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // MG SVO ERR IN O					
+					return(scale_data(0.0, -2.5, 2.5));  // Z PIPA OUT IN O
 				case 4:  
-					if(channel == 1){return(0); } // DPS FUEL 1 TEMP
-					if(channel == 50){return(0); } // VAR INJ ACT POS
-					if(channel == 200){return(0); } // DPS FUEL PRESS
-					return(0); // P NO2 HE SUP 1
+					if(channel == 1){ return(scale_scea(lem->scera1.GetVoltage(9, 1))); } // DPS FUEL 1 TEMP
+					if(channel == 50){ return(scale_data(lem->DPS.GetInjectorActuatorPosition(), 0.0, 1.0)); } // VAR INJ ACT POS
+					if(channel == 200){ return(scale_data(lem->DPSPropellant.GetFuelEngineInletPressurePSI(), 0.0, 300.0)); } // DPS FUEL PRESS
+					return(scale_data(lem->APSPropellant.GetAscentHelium1PressPSI(), 0.0, 4000.0)); // APS HE 1R PRESS
 				case 5: 
-					if(channel == 1){ return(0); } // IRIG SUSP 3.2 KC (???)
-					if(channel == 10){ return(0); } // ROLL ERR CMD
-					if(channel == 50){return(0); } // X PIPA OUT IN O
-					if(channel == 200){return(0); } // DPS OX PRESS
+					if (channel == 1) { return (scale_data(28.0, 0.0, 31.1)); } // IRIG SUSP 3.2 KC
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 2))); } // ROLL ERR CMD
+					if (channel == 50) { return(scale_data(0.0, -2.5, 2.5)); } // X PIPA OUT IN O
+					if(channel == 200){ return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
 				case 6: 
-					if(channel == 1){ return(0); } // DPS HE PRESS
-					if(channel == 200){return(0); } // DPS TCP
-					return(0); // Y PIPA OUT IN O
+					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetSupercriticalHeliumPressPSI(), 0.0, 2000.0)); } // DPS HE PRESS
+					if(channel == 200){ return(scale_data(lem->DPS.GetThrustChamberPressurePSI(), 0.0, 200.0)); } // DPS TCP
+					return(scale_data(0.0, -2.5, 2.5));  // Z PIPA OUT IN O
 				case 7:  
-					if(channel == 200){ return(0); } // APS TCP
-					if(channel == 10){ return(0); } // PITCH ATT ERR
-					if(channel == 1){ return(0); } // DPS OX 2 QTY
-					return(0); // MG RSVR OUT COS
+					if(channel == 200){ return(scale_data(lem->APS.GetThrustChamberPressurePSI(), 0.0, 150.0)); } // APS TCP
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(9, 4))); } // PITCH ATT ERR
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0)); } // DPS OX 2 QTY
+					return (scale_data(0.0, -20.25, 20.25)); // MG RSVR OUT COS
 				case 8: 
-					if(channel == 1){ return(0); } // QUAD 4 TEMP
-					if(channel == 50){return(0); } // VAR INJ ACT POS
-					if(channel == 100){ return(0); } // DPS FUEL 1 QTY
-					return(0); // Y TRANS CMD
+					if (channel == 1) { return (scale_scea(lem->scera1.GetVoltage(20, 1))); } // QUAD 4 TEMP
+					if(channel == 50){ return(scale_data(lem->DPS.GetInjectorActuatorPosition(), 0.0, 1.0)); } // VAR INJ ACT POS
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0)); } // DPS FUEL 1 QTY
+					return(scale_scea(lem->scera2.GetVoltage(17, 3))); // Y TRANS CMD
 				case 9:
-					if(channel == 100){ return(0); } // IG SVO ERR IN O
-					if(channel == 10){ return(0); } // MG RSVR OUT SIN
-					return(scale_data(lem->Battery5->Voltage(),0,40)); // BAT 5 VOLT 
-				case 10: // RR SHFT COS
-					return(0);
+					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // IG SVO ERR IN O
+					if(channel == 10){ return(scale_data(0.0, -20.25, 20.25)); } // MG RSVR OUT SIN
+					return(scale_scea(lem->scera2.GetVoltage(17, 1))); // BAT 5 VOLT 
+				case 10:
+					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
+					return(scale_data(0.0, -21.5, 21.5)); // RR SHFT COS
 				case 11: 
-					if(channel == 100){ return(0); } // DPS OX 1 QTY
-					if(channel == 1){ return(0); } // ROLL GDA POS
-					return(0); // RR TRUN SIN
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0)); } // DPS OX 1 QTY
+					if(channel == 1){ return (scale_scea(lem->scera2.GetVoltage(9, 2))); } // ROLL GDA POS
+					return(scale_data(0.0, -21.5, 21.5)); // RR TRUN SIN
 				case 12: 
-					if(channel == 10){ return(0); } // MG RSVR OUT COS
-					return(scale_data(0,0,1000)); // ASC 1 O2 PRESS
+					if(channel == 10){ return(scale_data(0.0, -20.25, 20.25)); } // MG RSVR OUT COS
+					return (scale_scea(lem->scera1.GetVoltage(7, 1))); // ASC 1 O2 PRESS
 				case 13: 
-					if(channel == 10){  return(0); } // ROLL ATT ERR
-					if(channel == 100){ return(0); } // OG SVO ERR IN O
-					return(0); // ASC 2 H20 TEMP (???)
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(10, 1))); } // ROLL ATT ERR
+					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // OG SVO ERR IN O
+					return(scale_scea(lem->scera2.GetVoltage(21, 4))); // ASC 2 H20 TEMP
 				case 14: 
-					if(channel == 1){ return(0); } // A FUEL MFLD PRESS
-					return(0); // IG RSVR OUT SIN
+					if (channel == 1) { return(scale_data(lem->RCSA.GetRCSFuelManifoldPressPSI(), 0.0, 350.0)); } // A FUEL MFLD PRESS
+					return(scale_data(0.0, -20.25, 20.25)); // IG RSVR OUT COS
 				case 15: 
-					if(channel == 1){ return(0); } // B FUEL MFLD PRESS
-					return(0); // YAW ATT ERR
+					if (channel == 1) { return(scale_data(lem->RCSB.GetRCSFuelManifoldPressPSI(), 0.0, 350.0)); } // B FUEL MFLD PRESS
+					return(scale_scea(lem->scera2.GetVoltage(9, 3))); // YAW ATT ERR
 				case 16: 
-					if(channel == 10){ return(0); } // IG RSVR OUT SIN
-					if(channel == 100){ return(0); } // MG SVO ERR IN O
-					return(scale_data(0,0,80)); // SEC GLY LOOP PRESS
+					if(channel == 10){ return(scale_data(0.0, -20.25, 20.25)); } // IG RSVR OUT SIN
+					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // MG SVO ERR IN O
+					return(scale_data(lem->ecs.GetSecondaryGlycolPressure(), 0.0, 60.0)); // SEC GLY LOOP PRESS
 				case 17: 
-					if(channel == 10){ return(0); } // YAW ATT ERR
-					return(scale_data(0,0,30)); // CO2 PARTIAL PRESS
+					if(channel == 10){ return(scale_data(0.0, -5.0, 5.0)); } // YAW ATT ERR
+					return(scale_scea(lem->scera1.GetVoltage(5, 2))); // CO2 PARTIAL PRESS
 				case 18: 
-					if(channel == 1){ return(0); } // DPS FUEL PRESS
-					return(0); // Z TRANS CMD
+					if(channel == 1){ return(scale_data(lem->DPSPropellant.GetFuelEngineInletPressurePSI(), 0.0, 300.0)); } // DPS FUEL PRESS
+					return(scale_scea(lem->scera2.GetVoltage(17, 4))); // Z TRANS CMD
 				case 19: 
-					if(channel == 10){ return(0); } // RGA YAW RATE
-					if(channel == 100){ return(0); } // OG SVO ERR IN O
-					return(scale_data(0,0,80)); // GLY PUMP PRESS
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(10, 2))); } // RGA YAW RATE
+					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // OG SVO ERR IN O
+					return(scale_data(lem->ecs.GetSelectedGlycolPressure(), 0.0, 60.0)); // GLY PUMP PRESS
 				case 20: 
-					if(channel == 10){ return(0); } // RR TRUN COS
-					return(scale_data(0,0,100)); // ASC 1 H20 QTY
+					if(channel == 10){ return(scale_data(0.0, -21.5, 21.5)); } // RR TRUN COS
+					return(scale_scea(lem->scera1.GetVoltage(8, 1))); // ASC 1 H20 QTY
 				case 21: 
-					if(channel == 1){ return(0); } // A OX MFLD PRESS
-					if(channel == 100){ return(0); } // DPS FUEL 2 QTY
-					return(0); // AUTO THRUST CMD
+					if (channel == 1) { return(scale_data(lem->RCSA.GetRCSOxidManifoldPressPSI(), 0.0, 350.0)); } // A OX MFLD PRESS
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0)); } // DPS FUEL 2 QTY
+					return(scale_scea(lem->scera1.GetVoltage(15, 1))); // AUTO THRUST CMD
 				case 22: 
-					if(channel == 10){ return(0); } // P NO2 HE SUP 2
-					return(0); // PITCH GDA POS
+					return(scale_data(lem->APSPropellant.GetAscentHelium2PressPSI(), 0.0, 4000.0)); // APS HE 2R PRESS
+					return(scale_scea(lem->scera2.GetVoltage(9, 1))); // PITCH GDA POS
 				case 23: 
-					if(channel == 10){ return(0); } // ROLL ATT ERR
-					return(0); // 2.5 VDC TM BIAS
+					if(channel == 10){ return(scale_data(0.0, -5.0, 5.0)); } // ROLL ATT ERR
+					return(scale_scea(scale_data(2.5, 0.0, 5.0))); // 2.5 VDC TM BIAS
 				case 24: 
-					if(channel == 10){ return(0); } // OG RSVR OUT SIN
-					return(scale_data(0,0,100)); // ASC 2 H20 QTY
+					if(channel == 10){ return(scale_data(0.0, -20.25, 20.25)); } // OG RSVR OUT SIN
+					return(scale_scea(lem->scera1.GetVoltage(8, 2))); // ASC 2 H20 QTY
 				case 25: 
-					if(channel == 10){ return(0); } // YAW ERR CMD
-					return(scale_data(0,500,3600)); // H2O SEP RPM
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 3))); } // YAW ERR CMD
+					return(scale_scea(lem->scera1.GetVoltage(5, 3))); // H2O SEP RPM
 				case 26: 
-					if(channel == 10){ scale_data(85,0,100); } // CAL 85 PCT
-					return(0); // YAW ATT ERR
+					if (channel == 10) { return scale_data(4.25, 0, 5.0); } // CAL 85 PCT
+					return(scale_scea(lem->scera2.GetVoltage(9, 3))); // YAW ATT ERR
 				case 27: 
-					if(channel == 10){ scale_data(15,0,100); } // CAL 15 PCT
-					return(0); // ASC 2 H20 TEMP (???)
+					if (channel == 10) { return scale_data(0.75, 0, 5.0); } // CAL 15 PCT
+					return(scale_scea(lem->scera2.GetVoltage(21, 4))); // ASC 2 H20 TEMP
 				case 28: 
-					if(channel == 10){ return(0); } // OG RSVR OUT COS
-					return(scale_data(0,0,1000)); // ASC 1 O2 PRESS
+					if(channel == 10){ return(scale_data(0.0, -20.25, 20.25)); } // OG RSVR OUT COS
+					return(scale_scea(lem->scera1.GetVoltage(7, 1))); // ASC 1 O2 PRESS
 				case 29: 
-					if(channel == 10){ return(0); } // RGA PITCH RATE
-					return(scale_data(0,0,80)); // GLY PUMP PRESS
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(10, 3))); } // RGA PITCH RATE
+					return(scale_data(lem->ecs.GetSelectedGlycolPressure(), 0.0, 60.0)); // GLY PUMP PRESS
 				case 30: 
-					if(channel == 1){ return(0); } // DPS HE PRESS
-					return(0); // PITCH GDA POS
+					if (channel == 1) { return(scale_data(lem->DPSPropellant.GetSupercriticalHeliumPressPSI(), 0.0, 2000.0)); } // DPS HE PRESS
+					return(scale_scea(lem->scera2.GetVoltage(9, 1))); // PITCH GDA POS
 				case 31: 
-					if(channel == 1){ return(0); } // RR ANT TEMP
-					return(0); // ROLL GDA POS
+					if(channel == 1){ return(scale_scea(lem->scera1.GetVoltage(21, 4))); } // RR ANT TEMP
+					return (scale_scea(lem->scera2.GetVoltage(9, 2))); // ROLL GDA POS
 				case 32: // RR SHFT SIN
-					return(0);
+					return(scale_data(0.0, -21.5, 21.5));
 				case 33: 
-					if(channel == 10){ return(0); } // PITCH ERR CMD
-					if(lem->status < 2){ return(0); }else{ return(0); } // DES H20 PRESS (???)
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 4))); } // PITCH ERR CMD
+					return(scale_data(lem->ecs.DescentWaterTankPressure(), 0.0, 60.0)); // DES H20 PRESS 
 				case 34: 
-					if(channel == 1){ return(0); } // DPS OX 2 TEMP
-					return(0); // RGA ROLL RATE
+					if(channel == 1){ return(scale_scea(lem->scera1.GetVoltage(10, 4))); } // DPS OX 2 TEMP
+					return(scale_scea(lem->scera2.GetVoltage(10, 4)));  // RGA ROLL RATE
 				case 35: 
-					if(channel == 1){ return(0); } // QUAD 3 TEMP
-					return(0); // PITCH ATT ERR
+					if(channel == 1){ return (scale_scea(lem->scera1.GetVoltage(20, 2))); } // QUAD 3 TEMP
+					return(scale_data(0.0, -5.0, 5.0));  // PITCH ATT ERR
 				case 36: 
-					if(channel == 10){ scale_data(15,0,100); } // CAL 15 PCT
-					return(scale_data(lem->Battery6->Voltage(),0,40)); // BAT 6 VOLT
+					if (channel == 10) { return scale_data(0.75, 0.0, 5.0); } // CAL 15 PCT
+					return(scale_scea(lem->scera2.GetVoltage(18, 1))); // BAT 6 VOLT
 				case 37: 
-					if(channel == 1){ return(0); } // APS HE REG PRESS
-					return(0); // ROLL ATT ERR
+					if(channel == 1){ return(scale_scea(lem->scera1.GetVoltage(8, 3))); } // APS HE REG PRESS
+					return(scale_scea(lem->scera2.GetVoltage(10, 1))); // ROLL ATT ERR
 				case 38: 
-					if(channel == 1){ return(0); } // B OX MFLD PRESS
-					return(0); // RGA ROLL RATE
+					if(channel == 1){ return(scale_data(lem->RCSB.GetRCSOxidManifoldPressPSI(), 0.0, 350.0)); } // B OX MFLD PRESS
+					return(scale_scea(lem->scera2.GetVoltage(10, 4))); // RGA ROLL RATE
 				case 39: // YAW ATT ERR
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(9, 3)));
 				case 40: 
-					if(channel == 1){ return(0); } // DPS Start Tank Press
-					return(0); // MG RSVR OUT SIN
+					if (channel == 1) { return(scale_data(lem->DPSPropellant.GetAmbientHeliumPressPSI(), 0.0, 1750.0)); } // DPS START TANK PRESS
+					return(scale_data(0.0, -20.25, 20.25)); // MG RSVR OUT SIN
 				case 41: 
-					if(channel == 10){ scale_data(85,0,100); } // CAL 85 PCT
-					if(lem->status < 2){ return(scale_data(lem->Battery2->Voltage(),0,40)); }else{ return(0); } // BAT 2 VOLT
+					if(channel == 10){ return scale_data(4.25, 0, 5.0); } // CAL 85 PCT
+					return(scale_scea(lem->scera2.GetVoltage(16, 2))); // BAT 2 VOLT
 				case 42: 
-					if(channel == 1){ return(0); } // DPS He Reg press
-					return(0); // PITCH ATT ERR
+					if(channel == 1){ return(scale_scea(lem->scera1.GetVoltage(19, 2))); } // DPS HE REG PRESS
+					return(scale_scea(lem->scera2.GetVoltage(9, 4))); // PITCH ATT ERR
 				case 43: 
-					if(channel == 10){ return(0); } // RGA YAW RATE
-					return(scale_data(0,0,80)); // SEC GLY LOOP PRESS
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(10, 2))); } // RGA YAW RATE
+					return(scale_data(lem->ecs.GetSecondaryGlycolPressure(), 0.0, 60.0)); // SEC GLY LOOP PRESS
 				case 44: // B FUEL MFLD PRESS
-					return(0);
+					return(scale_data(lem->RCSB.GetRCSFuelManifoldPressPSI(), 0.0, 350.0));;
 				case 45: 
-					if(channel == 1){ return(0); } // A FUEL MFLD PRESS
-					return(0); // RGA PITCH RATE
+					if(channel == 1){ return(scale_data(lem->RCSA.GetRCSFuelManifoldPressPSI(), 0.0, 350.0)); } // A FUEL MFLD PRESS
+					return(scale_scea(lem->scera2.GetVoltage(10, 3))); // RGA PITCH RATE
 				case 46: // CO2 PARTIAL PRESS
-					return(scale_data(0,0,30));
+					return(scale_scea(lem->scera1.GetVoltage(5, 2)));
 				case 47: // DPS FUEL 1 TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 1)));
 				case 48: // DPS OX 1 TEMP
-					return(0);
-				case 49: // PLS TORQ REF (???)
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(10, 3)));
+				case 49: // PLS TORQ REF
+					return(scale_data(0.0, 85.0, 135.0));
 				case 50: // ASC 2 H20 QTY
-					return(scale_data(0,0,100));
+					return(scale_scea(lem->scera1.GetVoltage(8, 2)));
 				case 51: // 2.5 VDC TM BIAS
-					return(0);
+					return(scale_scea(scale_data(2.5, 0.0, 5.0)));
 				case 52: // B OX MFLD PRESS
-					return(0);
+					return(scale_data(lem->RCSB.GetRCSOxidManifoldPressPSI(), 0.0, 350.0));
 				case 53: // A OX MFLD PRESS
-					return(0);
+					return(scale_data(lem->RCSA.GetRCSOxidManifoldPressPSI(), 0.0, 350.0));
 				case 54: // ASC 1 H20 QTY
-					return(scale_data(0,0,100));
+					return(scale_scea(lem->scera1.GetVoltage(8, 1)));
 				case 55: // RR ANT TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(21, 4)));
 				case 56: // DPS OX 2 TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(10, 4)));
 				case 57: // BAT 4 VOLT
-					if(lem->status < 2){ return(scale_data(lem->Battery4->Voltage(),0,40)); }else{ return(0); }
+					return(scale_scea(lem->scera2.GetVoltage(16, 4)));
 				case 58: // DES H20 QTY
-					if(lem->status < 2){ return(scale_data(0,0,100)); }else{ return(0); }
+					return(scale_scea(lem->scera1.GetVoltage(7, 3)));
 				case 59: // PRI GLY PUMP P
-					return(scale_data(0,0,80));
+					return(scale_data(lem->ecs.GetPrimaryGlycolPumpDP(), 0.0, 50.0));
 				case 60: // PITCH ATT ERR
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(9, 4)));
 				case 61: // APS OX PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(19, 4)));
 				case 62: // APS FUEL PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(19, 3)));
 				case 63: // BAT 3 CUR
-					if(lem->status < 2){ return(scale_data(lem->Battery3->Current(),0,120)); }else{ return(0); }
+					if(lem->status < 2){ return(scale_data(lem->Battery3->Current(),0,60)); }else{ return(0); }
 				case 64: // OG RSVR OUT COS
-					return(0); 
+					return (scale_data(0.0, -20.25, 20.25));
 				case 65: // ASA TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(10, 2)));
 				case 66: // RCS A FUEL TEMP
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(20, 2)));
 				case 67: // BAT 4 CUR
-					if(lem->status < 2){ return(scale_data(lem->Battery4->Current(),0,120)); }else{ return(0); }
+					if(lem->status < 2){ return(scale_data(lem->Battery4->Current(),0,60)); }else{ return(0); }
 				case 68: // BAT 5 CUR
 					return(scale_data(lem->Battery5->Current(),0,120));
 				case 69: // DPS FUEL 2 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
 				case 70: // REG OUT MANIFOLD
-					return(0);
+					return(scale_data(lem->APSPropellant.GetHeliumRegulator2OutletPressurePSI(), 0.0, 300.0));
 				case 71: // UNKNOWN, HBR
 					return(0);
 			    case 72: // BAT 1 VOLT
-					if(lem->status < 2){ return(scale_data(lem->Battery1->Voltage(),0,40)); }else{ return(0); }
+					return(scale_scea(lem->scera2.GetVoltage(16, 1)));
 				case 73: // ASC 2 O2 PRESS
-					return(scale_data(0,0,1000));
+					return(scale_scea(lem->scera1.GetVoltage(7, 2)));
 				case 74: // RCS B FUEL TEMP
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(20, 3)));
 				case 75: // BAT 6 CUR
 					return(scale_data(lem->Battery6->Current(),0,120));
 				case 76: // DPS TCP
-					return(0);
+					return(scale_data(lem->DPS.GetThrustChamberPressurePSI(), 0.0, 200.0));
 				case 77: // DPS FUEL 1 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
 				case 78: // UNKNOWN, HBR
 					return(0);
 				case 79: // BAT 3 VOLT
-					if(lem->status < 2){ return(scale_data(lem->Battery3->Voltage(),0,40)); }else{ return(0); }
+					return(scale_scea(lem->scera2.GetVoltage(16, 3)));
 				case 80: // QUAD 2 TEMP
-					return(0);
+					return (scale_scea(lem->scera1.GetVoltage(20, 3)));
 				case 81: // VHF B RX AGC
-					return(0);
+					return(scale_data(0.0, 0.176, 0.282));
 			    case 82: // AC BUS VOLT
-					return(scale_data(lem->ACBusA.Voltage(),100,150));
+					return (scale_scea(lem->scera1.GetVoltage(18, 2)));
 				case 83: // CABIN PRESS
-					return(scale_data(0,0,10));
+					return(scale_data(lem->ecs.GetCabinPressurePSI(), 0.0, 10.0));
 				case 84: // QUAD 1 TEMP
-					return(0);
+					return (scale_scea(lem->scera1.GetVoltage(20, 4)));
 				case 85: // PCM OSC FAIL 3
-					return(0);
+					return(scale_data(0.0, 0.0, 5.0));
 				case 86: // DPS TCP
-					return(0);
+					return(scale_data(lem->DPS.GetThrustChamberPressurePSI(), 0.0, 200.0));
 				case 87: // BAT 6 CUR
 					return(scale_data(lem->Battery6->Current(),0,120));
 				case 88: // DES H20 QTY
-					if(lem->status < 2){ return(scale_data(0,0,100)); }else{ return(0); }
+					return(scale_scea(lem->scera1.GetVoltage(7, 3)));
 				case 89: // ASA TEMP
-					return(0);
-				case 90: // O2 MANIFOLD PRESS (???)
-					return(scale_data(0,0,1000));
+					return(scale_scea(lem->scera1.GetVoltage(10, 2)));
+				case 90: // O2 MANIFOLD PRESS
+					return(scale_data(lem->ecs.GetPLSSFillPressurePSI(), 0.0, 1400.0));
 				case 91: // BAT 1 CUR
 					if(lem->status < 2){ return(scale_data(lem->Battery1->Current(),0,120)); }else{ return(0); }
 				case 92: // APS FUEL PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(19, 3)));
 				case 93: // APS HE 2 PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(19, 1)));
 				case 94: // BAT 4 CUR
 					if(lem->status < 2){ return(scale_data(lem->Battery4->Current(),0,120)); }else{ return(0); }
 				case 95: // BAT 3 CUR
 					if(lem->status < 2){ return(scale_data(lem->Battery3->Current(),0,120)); }else{ return(0); }
 				case 96: // VHF B RX AGC
-					return(0);
+					return(scale_data(0.0, 0.176, 0.282));
 				case 97: // ASC 2 O2 PRESS
-					return(scale_data(0,0,1000));
+					return(scale_scea(lem->scera1.GetVoltage(7, 2)));
 				case 98: // CABIN PRESS
-					return(scale_data(0,0,10));
+					return(scale_data(lem->ecs.GetCabinPressurePSI(), 0.0, 10.0));
 				case 99: // PRI GLY PUMP P
-					return(scale_data(0,0,80));
+					return(scale_data(lem->ecs.GetPrimaryGlycolPumpDP(), 0.0, 50.0));
 				case 100: // APS HE 2 PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(19, 1)));
 				case 101: // DPS FUEL 2 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
 				case 102: // BAT 5 CUR
 					return(scale_data(lem->Battery5->Current(),0,120));
-				case 103: // O2 MANIFOLD PRESS (???)
-					return(scale_data(0,0,1000));
+				case 103: // O2 MANIFOLD PRESS
+					return(scale_data(lem->ecs.GetPLSSFillPressurePSI(), 0.0, 1400.0));
 				case 104: // DPS FUEL 1 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
 				case 105: // APS OX PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(19, 4)));
 				case 106: // BAT 1 CUR
 					if(lem->status < 2){ return(scale_data(lem->Battery1->Current(),0,120)); }else{ return(0); }
 				case 107: // S-BAND ANT TEMP
-					return(0);
-				case 108: // DPS He Reg press
-					return(0); 
+					return(scale_scea(lem->scera2.GetVoltage(21, 2)));
+				case 108: // DPS HE REG PRESS
+					return(scale_scea(lem->scera1.GetVoltage(19, 2)));
 				case 109: // UNKNOWN, HBR
 					return(0);
 				case 110: // RCS A REG PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 3)));
 				case 111: // UNKNOWN, HBR
 					return(0);
 				case 112: // RCS A REG PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 3)));
 				case 113: // DPS BALL VLV TEMP
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(21, 1)));
 				case 114: // APS FUEL TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 3)));
 				case 115: // ROLL ATT ERR
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(10, 1)));
 				case 116: // DPS OX 1 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
 				case 117: // DPS FUEL 2 TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 2)));
 				case 118: // UNKNOWN, HBR
 					return(0);
 				case 119: // RCS PROP B QTY
-					return(0);
+					return(scale_data(lem->RCSB.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 120: // GLY TEMP
-					return(scale_data(0,20,120));
-				case 121: // IMU 28 VAC 800 (???)
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(10, 1)));
+				case 121: // IMU 28 VAC 800
+					return(scale_data(28.0, 0.0, 31.1));
 				case 122: // BAT 2 CUR
-					if(lem->status < 2){ return(scale_data(lem->Battery2->Current(),0,120)); }else{ return(0); }
+					if(lem->status < 2){ return(scale_data(lem->Battery2->Current(),0,60)); }else{ return(0); }
 				case 123: // PIPA TEMP
-					return(0); 
+					return(scale_data(lem->imu.GetPIPATempF(), 120.0, 140.0));
 				case 124: // RCS B HE PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 2)));
 				case 125: // RCS A HE PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 1)));
 				case 126: // CDR BUS VOLT
-					return(scale_data(lem->CDRs28VBus.Voltage(),0,40));
+					return(scale_scea(lem->scera1.GetVoltage(18, 3)));
 				case 127: // "W/B GLY OUT TEMP" = Main Sublimator Outlet Temp
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera2.GetVoltage(20, 4)));
 				case 128: // CABIN TEMP
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera1.GetVoltage(21, 2)));
 				case 129: // APS OX TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 4)));
 				case 130: // ECS SUIT PRESS
-					return(scale_data(0,0,10));
+					return(scale_scea(lem->scera1.GetVoltage(5, 1)));
 				case 131: // DES O2 PRESS
-					if(lem->status < 2){ return(scale_data(0,0,3000)); }else{ return(0); }
+					return(scale_scea(lem->scera2.GetVoltage(8, 2)));
 				case 132: // MAN THRUST CMD
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(15, 2)));
 				case 133: // DPS OX 2 QTY
-					return(0); 
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
 				case 134: // SE BUS VOLT
-					return(scale_data(lem->LMPs28VBus.Voltage(),0,40));
-				case 135: // ASC 1 H20 TEMP (???)
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(8, 4)));
+				case 135: // ASC 1 H20 TEMP
+					return(scale_scea(lem->scera2.GetVoltage(21, 3)));
 				case 136: // UNKNOWN, HBR
 					return(0);
 				case 137: // "W/B GLY IN TEMP" = Main Sublimator Inlet Temp
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera2.GetVoltage(20, 1)));
 				case 138: // RR ANT TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(21, 4)));
 				case 139: // YAW ERR CMD
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(18, 3)));
 				case 140: // RCS B REG PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 4)));
 				case 141: // PRI H2O REG DP
-					return(scale_data(0,0,2));
+					return(scale_scea(lem->scera1.GetVoltage(18, 4)));
 				case 142: // DES O2 PRESS
-					if(lem->status < 2){ return(scale_data(0,0,3000)); }else{ return(0); }
+					return(scale_scea(lem->scera2.GetVoltage(8, 2)));
 				case 143: // SE BUS VOLT
-					return(scale_data(lem->LMPs28VBus.Voltage(),0,40));
+					return(scale_scea(lem->scera2.GetVoltage(8, 4)));
 				case 144: // APS OX TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 4)));
 				case 145: // RCS B HE PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 2)));
 				case 146: // RCS PROP B QTY
-					return(0);
+					return(scale_data(lem->RCSB.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 147: // ECS SUIT PRESS
-					return(scale_data(0,0,10));
+					return(scale_scea(lem->scera1.GetVoltage(5, 1)));
 				case 148: // DPS FUEL 2 TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 1)));
 				case 149: // LR ANT TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(21, 3)));
 				case 150: // UNKNOWN, HBR
 					return(0);
 				case 151: // RCS PROP A QTY
-					return(0);
-				case 152: // SBand RX SIG
-					return(0);
+					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
+				case 152: // S-BND RCVR SIG
+					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
 				case 153: // APS HE 1 PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(8, 4)));
 				case 154: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
-					return(scale_data(0,20,160));
+					return(scale_scea(lem->scera2.GetVoltage(6, 4)));
 				case 155: // PITCH ERR CMD
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(18, 4)));
 				case 156: // UNKNOWN, HBR
 					return(0);
 				case 157: // UNKNOWN, HBR
 					return(0);
 			    case 158: // AC BUS FREQ
-					return(scale_data(400,380,420));
+					return(scale_scea(lem->scera1.GetVoltage(18, 1)));
 				case 159: // UNKNOWN, HBR
 					return(0);
 				case 160: // RCS A HE PRESS
-					return(0);
-				case 161: // SBand RX SIG
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 1)));
+				case 161: //S-BND RCVR SIG
+					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
 				case 162: // RCS PROP A QTY
-					return(0);
-				case 167: // BAT 2 CUR
-					if(lem->status < 2){ return(scale_data(lem->Battery2->Current(),0,120)); }else{ return(0); }
+					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 163: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
-					return(scale_data(0,20,160));
+					return(scale_scea(lem->scera2.GetVoltage(6, 4)));
 				case 164: // LR ANT TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(21, 3)));
 				case 165: // DPS OX 1 QTY
-					return(0); 
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
 				case 166: // PIPA TEMP
-					return(0); 
+					return(scale_data(lem->imu.GetPIPATempF(), 120.0, 140.0));
+				case 167: // BAT 2 CUR
+					if (lem->status < 2) { return(scale_data(lem->Battery2->Current(), 0, 60)); } else { return(0); }
 				case 168: // PRI H2O REG DP
-					return(scale_data(0,0,2));
+					return(scale_scea(lem->scera1.GetVoltage(18, 4)));
 				case 169: // GLY TEMP
-					return(scale_data(0,20,120));
-				case 170: // ASC 1 H20 TEMP (???)
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(10, 1)));
+				case 170: // ASC 1 H20 TEMP
+					return(scale_scea(lem->scera2.GetVoltage(21, 3)));
 				case 171: // PCM OSC FAIL 2
-					return(0);
+					return(scale_data(0.0, 0.0, 5.0));
 				case 172: // ECS SUIT TEMP
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera1.GetVoltage(21, 1)));
 				case 173: // APS TCP
-					return(0);
+					return(scale_data(lem->APS.GetThrustChamberPressurePSI(), 0.0, 150.0));
 			    case 174: // AC BUS FREQ
-					if(lem->ACBusB.Voltage() > 0){ return(scale_data(400,380,420)); } else{ return(0); }
+					return(scale_scea(lem->scera1.GetVoltage(18, 1)));
 				case 175: // ROLL ERR CMD
-					return(0); 
-				case 176: // DPS OX 1 QTY
-					return(0); 
+					return(scale_scea(lem->scera2.GetVoltage(18, 2)));
+				case 176: // DPS OX 2 QTY
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
 				case 177: // ECS SUIT TEMP
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera1.GetVoltage(21, 1)));
 				case 178: // APS TCP
-					return(0);
+					return(scale_data(lem->APS.GetThrustChamberPressurePSI(), 0.0, 150.0));
 				case 179: // APS HE 1 PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(8, 4)));
 				case 180: // RTG CASK SHIELD TEMP
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(6, 3)));
 				case 181: // UNKNOWN, LBR
 					return(0);
 				case 182: // UNKNOWN, LBR
 					return(0);
-				case 183: // F/H RLF PRESS (???)
-					return(0);
+				case 183: // F/H RLF PRESS
+					return(scale_data(0.0, 0.0, 25.0));
 				case 184: // UNKNOWN, LBR
 					return(0);
 				case 185: // SBand ST PH ERR
-					return(0);
+					return(scale_data(0.0, -90.0, 90.0));
 				case 186: // AUTO THRUST CMD
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(15, 1)));
 				case 187: // UNKNOWN, HBR
 					return(0);
 				case 188: // UNKNOWN, HBR
@@ -1802,11 +1971,11 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 192: // UNKNOWN, HBR
 					return(0);
 				case 193: // VAR INJ ACT POS
-					return(0);
-				case 194: // U/H RLF PRESS (???)
-					return(0);
+					return(scale_data(lem->DPS.GetInjectorActuatorPosition(), 0.0, 1.0));
+				case 194: // U/H RLF PRESS
+					return(scale_data(0.0, 0.0, 25.0));
 				case 195: // SBand XMTR PO
-					return(0);
+					return(scale_data(0.0, 0.3, 1.75));
 				default:
 					sprintf(oapiDebugString(),"MEASURE: UNKNOWN A-%d",ccode);
 					break;
@@ -1814,8 +1983,9 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 		break;
 		case LTLM_D:  // DIGITAL
 			switch(ccode){
-				case 0x001: // FORMAT ID (???)
-					return(0);
+				case 0x001: // FORMAT ID
+					if (lem->TLMBitrateSwitch.IsUp()) { return (033); }
+					return(0344);
 				case 0x002: // DUA STATUS (DIGITAL UPLINK ASSEMBLY)
 					return(0);
 				case 0x003: // UNKNOWN, LBR
@@ -1859,25 +2029,27 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				// Channel 100
 				switch(ccode){
 					case 0x01A: // RCS TCP nn
-						// Bit 8 = 3S
-						// Bit 7 = 3F
-						// Bit 6 = 3D
-						// Bit 5 = 3U
-						// Bit 4 = 4S
-						// Bit 3 = 4F
-						// Bit 2 = 4D
-						// Bit 1 = 4U
-						return 0;
+						rdata = 0;
+						if (lem->scera1.IsSet(11, 8)) { rdata |= 0x01; } // Bit 8 = 3S
+						if (lem->scera1.IsSet(11, 7)) { rdata |= 0x02; } // Bit 7 = 3F
+						if (lem->scera1.IsSet(11, 6)) { rdata |= 0x04; } // Bit 6 = 3D
+						if (lem->scera1.IsSet(11, 5)) { rdata |= 0x08; } // Bit 5 = 3U
+						if (lem->scera1.IsSet(11, 4)) { rdata |= 0x10; } // Bit 4 = 4S
+						if (lem->scera1.IsSet(11, 3)) { rdata |= 0x20; } // Bit 3 = 4F
+						if (lem->scera1.IsSet(11, 2)) { rdata |= 0x40; } // Bit 2 = 4D
+						if (lem->scera1.IsSet(11, 1)) { rdata |= 0x80; } // Bit 1 = 4U
+						return rdata;
 					case 0x01B: // RCS TCP nn
-						// Bit 8 = 1S
-						// Bit 7 = 1F
-						// Bit 6 = 1D
-						// Bit 5 = 1U
-						// Bit 4 = 2S
-						// Bit 3 = 2F
-						// Bit 2 = 2D
-						// Bit 1 = 2U
-						return 0;
+						rdata = 0;
+						if (lem->scera1.IsSet(3, 8)) { rdata |= 0x01; }// Bit 8 = 1S
+						if (lem->scera1.IsSet(3, 7)) { rdata |= 0x02; }// Bit 7 = 1F
+						if (lem->scera1.IsSet(3, 6)) { rdata |= 0x04; }// Bit 6 = 1D
+						if (lem->scera1.IsSet(3, 5)) { rdata |= 0x08; }// Bit 5 = 1U
+						if (lem->scera1.IsSet(3, 4)) { rdata |= 0x10; }// Bit 4 = 2S
+						if (lem->scera1.IsSet(3, 3)) { rdata |= 0x20; }// Bit 3 = 2F
+						if (lem->scera1.IsSet(11, 10)) { rdata |= 0x40; }// Bit 2 = 2D
+						if (lem->scera1.IsSet(11, 9)) { rdata |= 0x80; }// Bit 1 = 2U
+						return rdata;
 					default:
 						sprintf(oapiDebugString(),"MEASURE: UNKNOWN 200-E-0x%x",ccode);
 						break;
@@ -1888,27 +2060,29 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				switch(ccode){
 					case 0x01: // RCS JET DRIVERS
 					case 0x02:
-						// Bit 8 = JD 1D OUTPUT
-						// Bit 7 = JD 1U OUTPUT
-						// Bit 6 = JD 2D OUTPUT
-						// Bit 5 = JD 2U OUTPUT
-						// Bit 4 = JD 3D OUTPUT
-						// Bit 3 = JD 3U OUTPUT
-						// Bit 2 = JD 4D OUTPUT
-						// Bit 1 = JD 4U OUTPUT
-						return 0;
+						rdata = 0;
+						if (lem->scera1.IsSet(2, 6)) { rdata |= 0x01; } // Bit 8 = JD 1D OUTPUT
+						if (lem->scera1.IsSet(2, 5)) { rdata |= 0x02; } // Bit 7 = JD 1U OUTPUT
+						if (lem->scera1.IsSet(2, 2)) { rdata |= 0x04; } // Bit 6 = JD 2D OUTPUT
+						if (lem->scera1.IsSet(2, 1)) { rdata |= 0x08; } // Bit 5 = JD 2U OUTPUT
+						if (lem->scera1.IsSet(4, 8)) { rdata |= 0x10; } // Bit 4 = JD 3D OUTPUT
+						if (lem->scera1.IsSet(4, 7)) { rdata |= 0x20; } // Bit 3 = JD 3U OUTPUT
+						if (lem->scera1.IsSet(4, 5)) { rdata |= 0x40; } // Bit 2 = JD 4D OUTPUT
+						if (lem->scera1.IsSet(4, 3)) { rdata |= 0x80; } // Bit 1 = JD 4U OUTPUT
+						return rdata;
 					case 0x03: // UNKNOWN, HBR
 						return 0;
 					case 0x04: // MORE RCS JET DRIVERS
-						// Bit 8 = JD 1S OUTPUT
-						// Bit 7 = JD 1F OUTPUT
-						// Bit 6 = JD 2S OUTPUT
-						// Bit 5 = JD 2F OUTPUT
-						// Bit 4 = JD 3S OUTPUT
-						// Bit 3 = JD 3F OUTPUT
-						// Bit 2 = JD 4S OUTPUT
-						// Bit 1 = JD 4F OUTPUT
-						return 0;
+						rdata = 0;
+						if (lem->scera1.IsSet(2, 7)) { rdata |= 0x01; } // Bit 8 = JD 1S OUTPUT
+						if (lem->scera1.IsSet(2, 8)) { rdata |= 0x02; } // Bit 7 = JD 1F OUTPUT
+						if (lem->scera1.IsSet(2, 4)) { rdata |= 0x04; } // Bit 6 = JD 2S OUTPUT
+						if (lem->scera1.IsSet(2, 3)) { rdata |= 0x08; } // Bit 5 = JD 2F OUTPUT
+						if (lem->scera1.IsSet(4, 10)) { rdata |= 0x10; } // Bit 4 = JD 3S OUTPUT
+						if (lem->scera1.IsSet(4, 9)) { rdata |= 0x20; } // Bit 3 = JD 3F OUTPUT
+						if (lem->scera1.IsSet(4, 6)) { rdata |= 0x40; } // Bit 2 = JD 4S OUTPUT
+						if (lem->scera1.IsSet(4, 4)) { rdata |= 0x80; } // Bit 1 = JD 4F OUTPUT
+						return rdata;
 					default:
 						sprintf(oapiDebugString(),"MEASURE: UNKNOWN 100-E-0x%x",ccode);
 						break;
@@ -1917,11 +2091,12 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 			if(channel == 50){
 				// Channel 50
 				switch(ccode){
-					case 0x01: // ???
+					case 0x01:
 					case 0x02:
-						// Bit 8 = APS On
-						// Bit 7 = Abort Stage
-						return 0;
+						rdata = 0;
+						if (lem->scera2.IsSet(2, 10)) { rdata |= 0x01; } // Bit 8 = APS On
+						if (lem->scera2.IsSet(14, 1)) { rdata |= 0x02; } // Bit 7 = Abort Stage
+						return rdata;
 					case 0x03: // UNKNOWN, HBR
 					case 0x04:
 						return 0;
@@ -1934,54 +2109,61 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 			switch(ccode){
 				case 0x01: // PNGS Statuses
 				case 0x12: // PNGS Statuses
-					// Bit 8 = LR Range Bad
-					// Bit 7 = LR Vel Bad
-					// Bit 6 = RR No Track
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(2, 3)) { rdata |= 0x01; } // Bit 8 = LR Range Bad
+					if (lem->scera2.IsSet(2, 4)) { rdata |= 0x02; } // Bit 7 = LR Vel Bad
+					if (lem->scera2.IsSet(2, 5)) { rdata |= 0x04; } // Bit 6 = RR No Track
+					return rdata;
 				case 0x02: // PNGS Statuses
 				case 0x13: // PNGS Statuses
-					// Bit 8 = LGC Warning
-					// Bit 7 = ISS Warning
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(3, 11)) { rdata |= 0x01; } // Bit 8 = LGC Warning
+					if (lem->scera2.IsSet(3, 12)) { rdata |= 0x02; } // Bit 7 = ISS Warning
+					return rdata;
 				case 0x03: // ECS Statuses
 				case 0x14: // ECS Statuses
-					// Bit 8 = CDR Suit Disc
-					// Bit 7 = SE Suit Disc
-					// Bit 6 = Selected Gly Level Low
-					// Bit 5 = Repr Elec Open
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(5, 11)) { rdata |= 0x01; } // Bit 8 = CDR Suit Disc
+					if (lem->scera2.IsSet(5, 12)) { rdata |= 0x02; } // Bit 7 = SE Suit Disc
+					if (lem->scera2.IsSet(3, 3)) { rdata |= 0x04; } // Bit 6 = Selected Gly Level Low
+					if (lem->scera2.IsSet(3, 8)) { rdata |= 0x08; } // Bit 5 = Repr Elec Open
+					return rdata;
 				case 0x04: // ECS Statuses
 				case 0x15: // ECS Statuses
-					// Bit 8 = Cabin Ret Closed
-					// Bit 7 = Cabin Ret Open
-					// Bit 6 = Demand Reg A Closed
-					// Bit 4 = Demand Reg B Closed
-					// Bit 2 = Sec Gly Pump Fail
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(5, 9)) { rdata |= 0x01; } // Bit 8 = Cabin Ret Closed
+					if (lem->scera2.IsSet(5, 10)) { rdata |= 0x02; } // Bit 7 = Cabin Ret Open
+					if (lem->scera2.IsSet(5, 5)) { rdata |= 0x04; } // Bit 6 = Demand Reg A Closed
+					if (lem->scera2.IsSet(5, 7)) { rdata |= 0x10; } // Bit 4 = Demand Reg B Closed
+					if (lem->scera2.IsSet(12, 2)) { rdata |= 0x40; } // Bit 2 = Sec Gly Pump Fail
+					return rdata;
 				case 0x05: // ECS Statuses
 				case 0x16: // ECS Statuses
-					// Bit 8 = Suit Fan 1 Malf
-					// Bit 7 = Suit Fan 2 Malf
-					// Bit 6 = Suit Rlf Closed
-					// Bit 5 = Suit Rlf Open
-					// Bit 4 = Suit Div Egress
-					// Bit 3 = Sec CO2 Sel
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(3, 2)) { rdata |= 0x01; } // Bit 8 = Suit Fan 1 Malf
+					if (lem->scera2.IsSet(3, 6)) { rdata |= 0x02; } // Bit 7 = Suit Fan 2 Malf
+					if (lem->scera2.IsSet(5, 3)) { rdata |= 0x04; } // Bit 6 = Suit Rlf Closed
+					if (lem->scera2.IsSet(5, 4)) { rdata |= 0x08; }// Bit 5 = Suit Rlf Open
+					if (lem->scera2.IsSet(5, 2)) { rdata |= 0x10; }// Bit 4 = Suit Div Egress
+					if (lem->scera2.IsSet(5, 1)) { rdata |= 0x20; }// Bit 3 = Sec CO2 Sel
+					return rdata;
 				case 0x06: // PNGS Statuses
 				case 0x17: // PNGS Statuses
-					// Bit 8 = IMU STBY
-					// Bit 7 = IMU OPR
-					return 0;
+					rdata = 0;
+					if (lem->IMU_SBY_CB.IsPowered()) { rdata |= 0x01; } // Bit 8 = IMU STBY
+					if (lem->LGC_DSKY_CB.IsPowered()) { rdata |= 0x02; }// Bit 7 = IMU OPR
+					return rdata;
 				case 0x07: // IS Statuses
 				case 0x18: // IS Statuses
-					// Bit 8 = CES AC Power Fail
-					// Bit 7 = CES DC Power Fail
-					// Bit 6 = AGS Power Fail
-					// Bit 5 = C&W Power Fail
-					// Bit 4 = Master Alarm On
-					// Bit 3 = EPS Battery Caution
+					rdata = 0;
+					if (lem->scera2.IsSet(2, 1)) { rdata |= 0x01; } // Bit 8 = CES AC Power Fail
+					if (lem->scera2.IsSet(2, 12)) { rdata |= 0x02; }// Bit 7 = CES DC Power Fail
+					if (lem->scera2.IsSet(2, 2)) { rdata |= 0x04; }// Bit 6 = AGS Power Fail
+					if (lem->scera2.IsSet(12, 1)) { rdata |= 0x08; }// Bit 5 = C&W Power Fail
+					if (lem->scera2.IsSet(2, 8)) { rdata |= 0x10; }// Bit 4 = Master Alarm On
+					if (lem->scera2.IsSet(3, 7)) { rdata |= 0x20; }// Bit 3 = EPS Battery Caution
 					// Bit 1 = PCM Osc Fail 1
-					return 0;
+					return rdata;
 				case 0x08: // ???
 				case 0x19: // ???
 					// UNKNOWN - LBR
@@ -1992,87 +2174,93 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					return 0;
 				case 0x10: // RCS Statuses
 				case 0x21: // RCS Statuses
-					// Bit 8 = SIG ASC Feed A OX Open
-					// Bit 7 = SIG ASC Feed B OX Open
-					// Bit 6 = RCS MAIN A CLOSED
-					// Bit 5 = RCS MAIN B CLOSED
-					// Bit 4 = ASC Feed A Open
-					// Bit 3 = ASC Feed B Open
-					// Bit 2 = A/B Crossfeed Open
-					return 0;
+					rdata = 0;
+					if (lem->scera1.IsSet(12, 3)) { rdata |= 0x01; } // Bit 8 = SIG ASC Feed A OX Open
+					if (lem->scera1.IsSet(12, 4)) { rdata |= 0x02; } // Bit 7 = SIG ASC Feed B OX Open
+					if (lem->scera1.IsSet(12, 1)) { rdata |= 0x04; } // Bit 6 = RCS MAIN A CLOSED
+					if (lem->scera1.IsSet(12, 2)) { rdata |= 0x08; } // Bit 5 = RCS MAIN B CLOSED
+					if (lem->scera1.IsSet(13, 10)) { rdata |= 0x10; } // Bit 4 = ASC Feed A Open
+					if (lem->scera1.IsSet(13, 11)) { rdata |= 0x20; } // Bit 3 = ASC Feed B Open
+					if (lem->scera1.IsSet(13, 12)) { rdata |= 0x40; } // Bit 2 = A/B Crossfeed Open
+					return rdata;
 				case 0x11: // EDS Statuses
 				case 0x22: // EDS Statuses
-					// Bit 8 = Abort Command
-					// Bit 5 = ED Relay A K7-K15
-					// Bit 4 = ED Relay B K7-K15
-					// Bit 3 = ED Relay A K3-K6
-					// Bit 2 = ED Relay B K3-K6
-					return 0;
-				case 0x23: // ???
-					// Bit 8 = Auto On
-					// Bit 7 = DPS On
-					// Bit 6 = Pitch Trim Fail
-					// Bit 5 = Roll Trim Fail
-					// Bit 4 = AGS Selected
-					return 0;
-				case 0x24: // ???
-					// Bit 8 = APS Fuel Low
-					// Bit 7 = APS Ox Low
-					return 0;
+					rdata = 0;
+					if (lem->scera1.IsSet(2, 9)) { rdata |= 0x01; } // Bit 8 = Abort Command
+					if (lem->scera1.IsSet(14, 9)) { rdata |= 0x08; }// Bit 5 = ED Relay A K7-K15
+					if (lem->scera1.IsSet(14, 10)) { rdata |= 0x10; }// Bit 4 = ED Relay B K7-K15
+					if (lem->scera1.IsSet(14, 11)) { rdata |= 0x20; }// Bit 3 = ED Relay A K3-K6
+					if (lem->scera1.IsSet(14, 12)) { rdata |= 0x40; }// Bit 2 = ED Relay B K3-K6
+					return rdata;
+				case 0x23:
+					rdata = 0;
+					if (lem->scera2.IsSet(14, 6)) { rdata |= 0x01; } // Bit 8 = Auto On
+					if (lem->scera2.IsSet(3, 4)) { rdata |= 0x02; } // Bit 7 = DPS On
+					if (lem->scera2.IsSet(3, 9)) { rdata |= 0x04; } // Bit 6 = Pitch Trim Fail
+					if (lem->scera2.IsSet(3, 10)) { rdata |= 0x08; } // Bit 5 = Roll Trim Fail
+					if (lem->scera2.IsSet(3, 5)) { rdata |= 0x10; } // Bit 4 = AGS Selected
+					return rdata;
+				case 0x24:
+					rdata = 0;
+					if (lem->scera2.IsSet(2, 6)) { rdata |= 0x01; } // Bit 8 = APS Fuel Low
+					if (lem->scera2.IsSet(2, 7)) { rdata |= 0x02; } // Bit 7 = APS Ox Low
+					return rdata;
 				case 0x25: // UNKNOWN, LBR
 				case 0x26: // UNKNOWN, LBR
 					return(0);
-				case 0x27: // ???
-					// Bit 8 = Roll Pulsed/Direct
-					// Bit 7 = Pitch Pulsed/Direct
-					// Bit 6 = Yaw Pulsed/Direct
-					// Bit 5 = AGS Warmup
-					// Bit 4 = AGS Standby
-					return 0;
+				case 0x27:
+					rdata = 0;
+					if (lem->scera2.IsSet(13, 1)) { rdata |= 0x01; } // Bit 8 = Roll Pulsed/Direct
+					if (lem->scera2.IsSet(13, 2)) { rdata |= 0x02; } // Bit 7 = Pitch Pulsed/Direct
+					if (lem->scera2.IsSet(13, 6)) { rdata |= 0x04; } // Bit 6 = Yaw Pulsed/Direct
+					if (lem->scera2.IsSet(2, 11)) { rdata |= 0x08; } // Bit 5 = AGS Warmup
+					if (lem->scera2.IsSet(13, 5)) { rdata |= 0x10; } // Bit 4 = AGS Standby
+					return rdata;
 				case 0x28: // UNKNOWN, HBR
 					return 0;
 				case 0x29: // Battery Malfunction Flags
 					rdata = 0;
-					if(lem->status < 2){
-						// Bits 8-5 = Bat 1-4 malf
-					}
-					// Bits 4,3 = bat 5,6 malf
+					if (lem->scera2.IsSet(12, 7)) { rdata |= 0x01; } // B1 Malfunction
+					if (lem->scera2.IsSet(12, 8)) { rdata |= 0x02; } // B2 Malfunction
+					if (lem->scera2.IsSet(12, 9)) { rdata |= 0x04; } // B3 Malfunction
+					if (lem->scera2.IsSet(12, 10)) { rdata |= 0x08; } // B4 Malfunction
+					if (lem->scera2.IsSet(12, 11)) { rdata |= 0x10; } // B5 Malfunction
+					if (lem->scera2.IsSet(12, 12)) { rdata |= 0x20; } // B6 Malfunction
 					return rdata;
 				case 0x30: // Descent Battery Status Flags
-					if(lem->status < 2){
-						rdata = 0;
-						if(lem->ECA_1a.input == 1){ rdata |= 0x01; } // B1 HI tap
-						if(lem->ECA_1a.input == 2){ rdata |= 0x02; } // B1 LO tap
-						if(lem->ECA_1b.input == 1){ rdata |= 0x04; } // B2 HI tap
-						if(lem->ECA_1b.input == 2){ rdata |= 0x08; } // B2 LO tap
-						if(lem->ECA_2a.input == 1){ rdata |= 0x10; } // B3 HI tap
-						if(lem->ECA_2a.input == 2){ rdata |= 0x20; } // B3 LO tap
-						if(lem->ECA_2b.input == 1){ rdata |= 0x40; } // B4 HI tap
-						if(lem->ECA_2b.input == 2){ rdata |= 0x80; } // B4 LO tap
-						return rdata;
-					}
-					return 0;
+					rdata = 0;
+					if(lem->scera2.IsSet(4, 1)){ rdata |= 0x01; } // B1 HI tap
+					if(lem->scera2.IsSet(4, 2)){ rdata |= 0x02; } // B1 LO tap
+					if(lem->scera2.IsSet(4, 3)){ rdata |= 0x04; } // B2 HI tap
+					if(lem->scera2.IsSet(4, 4)){ rdata |= 0x08; } // B2 LO tap
+					if(lem->scera2.IsSet(4, 5)){ rdata |= 0x10; } // B3 HI tap
+					if(lem->scera2.IsSet(4, 6)){ rdata |= 0x20; } // B3 LO tap
+					if(lem->scera2.IsSet(4, 7)){ rdata |= 0x40; } // B4 HI tap
+					if(lem->scera2.IsSet(4, 8)){ rdata |= 0x80; } // B4 LO tap
+					return rdata;
 				case 0x31: // ???
-					// Bit 8 = Out Det
-					// Bit 7 = Auto Off
-					// Bit 6 = Engine Fire Override
-					// Bit 5 = PNGS Mode Auto
-					// Bit 4 = PNGS Mode Att Hold
-					// Bit 3 = Unbalanced Couples
-					// Bit 2 = AGS Mode Att Hold
-					// Bit 1 = AGS Mode Auto
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(14, 5)) { rdata |= 0x01; } // Bit 8 = Out Det
+					if (lem->scera2.IsSet(14, 7)) { rdata |= 0x02; } // Bit 7 = Auto Off
+					if (lem->scera2.IsSet(14, 2)) { rdata |= 0x04; } // Bit 6 = Engine Fire Override
+					if (lem->scera2.IsSet(14, 3)) { rdata |= 0x08; } // Bit 5 = PNGS Mode Auto
+					if (lem->scera2.IsSet(14, 4)) { rdata |= 0x10; } // Bit 4 = PNGS Mode Att Hold
+					if (lem->scera2.IsSet(14, 8)) { rdata |= 0x20; } // Bit 3 = Unbalanced Couples
+					if (lem->scera2.IsSet(12, 5)) { rdata |= 0x40; } // Bit 2 = AGS Mode Att Hold
+					if (lem->scera2.IsSet(12, 6)) { rdata |= 0x80; } // Bit 1 = AGS Mode Auto
+					return rdata;
 				case 0x32: // DPS Statuses
-					// Bit 7 = DES Prop Lo
-					// Bit 6 = PROP VLVS DEL P
-					// Bit 5 = PROP VLVS DEL P
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(12, 3)) { rdata |= 0x02; } // Bit 7 = DES Prop Lo
+					if (lem->scera2.IsSet(14, 11)) { rdata |= 0x04; } // Bit 6 = PROP VLVS DEL P
+					if (lem->scera2.IsSet(14, 12)) { rdata |= 0x08; } // Bit 5 = PROP VLVS DEL P
+					return rdata;
 				case 0x33: // Ascent Battery Status Flags
 					rdata = 0;
-					if(lem->ECA_3b.input == 1){ rdata |= 0x01; } // B5 Backup
-					if(lem->ECA_4a.input == 1){ rdata |= 0x02; } // B6 Normal
-					if(lem->ECA_3a.input == 1){ rdata |= 0x04; } // B5 Normal
-					if(lem->ECA_4b.input == 1){ rdata |= 0x08; } // B6 Backup
+					if (lem->scera2.IsSet(4, 9)) { rdata |= 0x01; } // B5 Backup
+					if(lem->scera2.IsSet(4, 10)){ rdata |= 0x02; } // B6 Normal
+					if(lem->scera2.IsSet(4, 11)){ rdata |= 0x04; } // B5 Normal
+					if(lem->scera2.IsSet(4, 12)){ rdata |= 0x08; } // B6 Backup
 					return rdata;
 				case 0x34: // UNKNOWN, HBR
 					return 0;
@@ -2086,29 +2274,33 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					return 0;
 				case 0x39: // UNKNOWN, HBR
 					return 0;
-				case 0x40: // ???
-					// Bit 8 = Landing Gear Deploy
-					return 0;
-				case 0x41: // ???
-					// Bit 8 = APS Arm
-					// Bit 7 = DPS Arm
-					// Bit 6 = Min Deadband
-					// Bit 5 = X Trans Override
-					return 0;
+				case 0x40:
+					rdata = 0;
+					if (lem->scera1.IsSet(13, 9)) { rdata |= 0x01; } // Bit 8 = Landing Gear Deploy
+					return rdata;
+				case 0x41:
+					rdata = 0;
+					if (lem->scera1.IsSet(3, 2)) { rdata |= 0x01; } // Bit 8 = APS Arm
+					if (lem->scera1.IsSet(3, 9)) { rdata |= 0x02; } // Bit 7 = DPS Arm
+					if (lem->scera1.IsSet(3, 1)) { rdata |= 0x04; } // Bit 6 = Min Deadband
+					if (lem->scera1.IsSet(3, 10)) { rdata |= 0x08; } // Bit 5 = X Trans Override
+					return rdata;
 				case 0x42: // RCS Isolation valve xx closed
-					// Bit 8 = 4A 
-					// Bit 7 = 4B
-					// Bit 6 = 3A
-					// Bit 5 = 3B
-					// Bit 4 = 2A
-					// Bit 3 = 2B
-					// Bit 2 = 1A
-					// Bit 1 = 1B
-					return 0;
-				case 0x43: // ???
-					// Bit 8 = APS He 1 Closed
-					// Bit 7 = APS He 2 Closed
-					return 0;
+					rdata = 0;
+					if (lem->scera1.IsSet(14, 1)) { rdata |= 0x01; } // Bit 8 = 4A 
+					if (lem->scera1.IsSet(14, 2)) { rdata |= 0x02; } // Bit 7 = 4B
+					if (lem->scera1.IsSet(14, 3)) { rdata |= 0x04; } // Bit 6 = 3A
+					if (lem->scera1.IsSet(14, 4)) { rdata |= 0x08; } // Bit 5 = 3B
+					if (lem->scera1.IsSet(14, 5)) { rdata |= 0x10; } // Bit 4 = 2A
+					if (lem->scera1.IsSet(14, 6)) { rdata |= 0x20; } // Bit 3 = 2B
+					if (lem->scera1.IsSet(14, 7)) { rdata |= 0x40; } // Bit 2 = 1A
+					if (lem->scera1.IsSet(14, 8)) { rdata |= 0x80; } // Bit 1 = 1B
+					return rdata;
+				case 0x43:
+					rdata = 0;
+					if (lem->scera1.IsSet(12, 6)) { rdata |= 0x01; } // Bit 8 = APS He 1 Closed
+					if (lem->scera1.IsSet(12, 7)) { rdata |= 0x02; } // Bit 7 = APS He 2 Closed
+					return rdata;
 				case 0x44: // UNKNOWN, HBR
 					return 0;
 				case 0x45: // UNKNOWN, HBR
@@ -2440,6 +2632,14 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	moving = false;
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
+
+	anim_SBandPitch = -1;
+	anim_SBandYaw = -1;
+
+	sband_proc[0] = 0.0;
+	sband_proc[1] = 0.0;
+	sband_proc_last[0] = 0.0;
+	sband_proc_last[1] = 0.0;
 }
 
 void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
@@ -2459,6 +2659,12 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 
 	double beamwidth = 12.5*RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
+
+	LEM_SteerableAntGain = pow(10, (16.5 / 10));
+	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
+	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
+	Gain85ft = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
+	Power85ft = 20000; //watts
 }
 
 void LEM_SteerableAnt::Timestep(double simdt){
@@ -2468,6 +2674,16 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	// Draw AC power from SBD_ANT_AC_CB
 	// Use 27.9 watts to move the antenna and 4.0 watts to maintain auto track.
 
+	// S-Band mesh animation
+	sband_proc[0] = (-pitch + PI05) / PI2;
+	if (sband_proc[0] < 0) sband_proc[0] += 1.0;
+	sband_proc[1] = -yaw / PI2;
+	if (sband_proc[1] < 0) sband_proc[1] += 1.0;
+	if (sband_proc[0] - sband_proc_last[0] != 0.0) lem->SetAnimation(anim_SBandPitch, sband_proc[0]);
+	if (sband_proc[1] - sband_proc_last[1] != 0.0) lem->SetAnimation(anim_SBandYaw, sband_proc[1]);
+	sband_proc_last[0] = sband_proc[0];
+	sband_proc_last[1] = sband_proc[1];
+
 	moving = false;
 
 	if (!IsPowered())
@@ -2476,40 +2692,80 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		return;
 	}
 
+	double AzimuthErrorSignal, ElevationErrorSignal;
+	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
+
+	//actual Azimuth and Elevation error signals came from phase differences not signal strength
+	//both are be a function of tracking error though so this works
+	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
+	ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2])*0.25;
+
+	//normalize Azimuth and Elevation error signals
+	if (SignalStrength > 0.0)
+	{
+		AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
+		ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
+	}
+	else //prevent division by zero
+	{
+		AzimuthErrorSignalNorm = 0;
+		ElevationErrorSignalNorm = 0;
+	}
+
 	double pitchrate = 0.0;
 	double yawrate = 0.0;
 
-	double PitchSlew = (lem->Panel12AntPitchKnob.GetState()*15.0 - 75.0)*RAD;
-	double YawSlew = (lem->Panel12AntYawKnob.GetState()*15.0 - 90.0)*RAD;
+	double PitchSlew, YawSlew;
 
-	//sprintf(oapiDebugString(), "%PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+	const double TrkngCtrlGain = 270; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
+	const double TrkngRatelGain = 4.0; //
+	const double MaxServoRate = 20 * RAD;
+
+	//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
 
 	//Slew Mode
-
 	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
 	{
-		if (abs(PitchSlew - pitch) > 0.01*RAD)
-		{
-			pitchrate = (PitchSlew - pitch)*2.0;
-			if (abs(pitchrate) > 5.0*RAD)
-			{
-				pitchrate = 5.0*RAD*pitchrate / abs(pitchrate);
-			}
-			moving = true;
-		}
-
-		if (abs(YawSlew - yaw) > 0.01*RAD)
-		{
-			yawrate = (YawSlew - yaw)*2.0;
-			if (abs(yawrate) > 5.0*RAD)
-			{
-				yawrate = 5.0*RAD*yawrate / abs(yawrate);
-			}
-			moving = true;
-		}
+		PitchSlew = (lem->Panel12AntPitchKnob.GetState()*15.0 - 75.0)*RAD;
+		YawSlew = (lem->Panel12AntYawKnob.GetState()*15.0 - 90.0)*RAD;
+	}
+	//Auto Tracking
+	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
+	{
+		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm);
+		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm);
+	}
+	else
+	{
+		PitchSlew = pitch;
+		YawSlew = yaw;
 	}
 
-	//TBD: Auto Tracking
+	
+	//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+
+	//set antenna slew-rates
+	if (abs(PitchSlew - pitch) > 0.0001)
+	{
+		pitchrate = (PitchSlew - pitch)*TrkngRatelGain;
+		if (abs(pitchrate) > MaxServoRate)
+		{
+			pitchrate = MaxServoRate *pitchrate / abs(pitchrate);
+		}
+		moving = true;
+	}
+
+	if (abs(YawSlew - yaw) > 0.0001)
+	{
+		yawrate = (YawSlew - yaw)*TrkngRatelGain;
+		if (abs(yawrate) > MaxServoRate)
+		{
+			yawrate = MaxServoRate *yawrate / abs(yawrate);
+		}
+		moving = true;
+	}
+
+	//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
 
 	//Drive Antenna
 	pitch += pitchrate*simdt;
@@ -2538,35 +2794,33 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	//Signal Strength
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
-	MATRIX3 Rot, RX, RY;
-	double relang, Moonrelang;
+	double relang[4], Moonrelang;
 
-	//Unit vector of antenna in vessel's local frame
-	RY = _M(cos(pitch), 0.0, sin(pitch), 0.0, 1.0, 0.0, -sin(pitch), 0.0, cos(pitch));
-	RX = _M(1.0, 0.0, 0.0, 0.0, cos(yaw), sin(yaw), 0.0, -sin(yaw), cos(yaw));
-	U_RP = mul(NBSA, mul(RY, mul(RX, _V(0.0, 0.0, 1.0))));
-	U_RP = _V(U_RP.y, U_RP.x, U_RP.z);
+	VECTOR3 U_RP[4], pos, R_E, R_M, U_R[4];
+	MATRIX3 Rot;
+
+
+	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (0.1 * RAD));
+	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (0.1 * RAD));
+	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (0.1 * RAD), yaw);
+	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (0.1 * RAD), yaw);
+	
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	lem->GetGlobalPos(pos);
 	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
+	
+	double EarthSignalDist;
+	double RecvdLEM_SteerableAntPower, RecvdLEM_SteerableAntPower_dBm;
 
-	//Calculate antenna pointing vector in global frame
-	U_R = mul(Rot, U_RP);
-	//relative angle between antenna pointing vector and direction of Earth
-	relang = acos(dotp(U_R, unit(R_E - pos)));
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	if (relang < PI05 / hpbw_factor)
-	{
-		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*75.625;
-	}
-	else
-	{
-		SignalStrength = 0.0;
-	}
+	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft * LEM_SteerableAntGain * pow((LEM_SteerableAntWavelength /(4 * PI*EarthSignalDist)), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
+
+	double SignalStrengthScaleFactor = LEM_SteerableAnt::dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
 
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
@@ -2575,9 +2829,37 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	{
 		SignalStrength = 0.0;
 	}
+	else
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			//Calculate antenna pointing vector in global frame
+			U_R[i] = mul(Rot, U_RP[i]);
+			//relative angle between antenna pointing vector and direction of Earth
+			relang[i] = acos(dotp(U_R[i], unit(R_E - pos)));
 
-	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", relang*DEG, SignalStrength);
+			if (relang[i] < PI05 / hpbw_factor)
+			{
+				HornSignalStrength[i] = cos(hpbw_factor*relang[i])*cos(hpbw_factor*relang[i])*SignalStrengthScaleFactor;
+			}
+			else
+			{
+				HornSignalStrength[i] = 0.0;
+			}
+
+			SignalStrength = (HornSignalStrength[0] + HornSignalStrength[1] + HornSignalStrength[2] + HornSignalStrength[3]) / 4.0;
+
+		}
+	}
+
+	//sprintf(oapiDebugString(), "RecvdLEM_SteerableAntPower_dBm = %lf dBm, Power85ft = %lfW, Gain85ft = %lf, LEM_SteerableAntGain = %lf, LEM_SteerableAntWavelength = %lfM, EarthSignalDist = %lfM", RecvdLEM_SteerableAntPower_dBm, Power85ft, Gain85ft, LEM_SteerableAntGain, LEM_SteerableAntWavelength, EarthSignalDist);
+
+	//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
+
+	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", (relang[0]+ relang[1]+ relang[2]+ relang[3])/4*DEG, SignalStrength);
 	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
+
+
 }
 
 void LEM_SteerableAnt::SystemTimestep(double simdt)
@@ -2604,6 +2886,66 @@ bool LEM_SteerableAnt::IsPowered()
 	if (!(lem->SBD_ANT_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) || !lem->COMM_SBAND_ANT_CB.IsPowered()) return false;
 
 	return true;
+}
+
+void LEM_SteerableAnt::DefineAnimations(UINT idx) {
+
+	// S-Band animation definition
+	ANIMATIONCOMPONENT_HANDLE	ach_SBandPitch, ach_SBandYaw;
+	const VECTOR3	LM_SBAND_PIVOT1 = { 1.85114, 1.42171, -0.00002 }; // Pivot Point 1
+	const VECTOR3	LM_SBAND_PIVOT2 = { 2.06154, 1.20804, -0.00595 }; // Pivot Point 2
+	const VECTOR3	LM_SBAND_AXIS = { cos(RAD * 45),-sin(RAD * 45), 0.00 }; //Pivot Axis
+	static UINT meshgroup_SBandPivot = AS_GRP_SbandPivot;
+	static UINT meshgroup_SBandAntenna[3] = { AS_GRP_Sband, AS_GRP_SbandDish, AS_GRP_SbandDish2 };
+	static MGROUP_ROTATE mgt_SBand_pivot(idx, &meshgroup_SBandPivot, 1, LM_SBAND_PIVOT1, LM_SBAND_AXIS, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_SBand_Antenna(idx, meshgroup_SBandAntenna, 3, LM_SBAND_PIVOT2, _V(0, 0, 1), (float)(RAD * 360));
+	anim_SBandPitch = lem->CreateAnimation(0.0);
+	anim_SBandYaw = lem->CreateAnimation(0.0);
+	ach_SBandPitch = lem->AddAnimationComponent(anim_SBandPitch, 0.0f, 1.0f, &mgt_SBand_pivot);
+	ach_SBandYaw = lem->AddAnimationComponent(anim_SBandYaw, 0.0f, 1.0f, &mgt_SBand_Antenna, ach_SBandPitch);
+
+	// Get current S-Band state for animation
+	sband_proc[0] = (-pitch + PI05) / PI2;
+	if (sband_proc[0] < 0) sband_proc[0] += 1.0;
+	sband_proc[1] = -yaw / PI2;
+	if (sband_proc[1] < 0) sband_proc[1] += 1.0;
+	lem->SetAnimation(anim_SBandPitch, sband_proc[0]); lem->SetAnimation(anim_SBandYaw, sband_proc[1]);
+}
+
+VECTOR3 LEM_SteerableAnt::pitchYaw2GlobalVector(double pitch, double yaw)
+{
+	VECTOR3 U_RP;
+	MATRIX3 RX, RY;
+
+	//U_RP = pitchYaw2GlobalVector(pitch, yaw, NBSA);
+
+	//Unit vector of antenna in vessel's local frame
+	RY = _M(cos(pitch), 0.0, sin(pitch), 0.0, 1.0, 0.0, -sin(pitch), 0.0, cos(pitch));
+	RX = _M(1.0, 0.0, 0.0, 0.0, cos(yaw), sin(yaw), 0.0, -sin(yaw), cos(yaw));
+	U_RP = mul(NBSA, mul(RY, mul(RX, _V(0.0, 0.0, 1.0))));
+	U_RP = _V(U_RP.y, U_RP.x, U_RP.z);
+
+	return U_RP;
+}
+
+double LM_SBandAntenna::dBm2SignalStrength(double dBm)
+{
+	double SignalStrength;
+
+	if (dBm >= -50)
+	{
+		SignalStrength = 100.0;
+	}
+	else if (dBm <= -135)
+	{
+		SignalStrength = 0.0;
+	}
+	else
+	{
+		SignalStrength = (135.0 + dBm)*1.1764706; //convert from dBm to the 0-100% signal strength used in NASSP
+	}
+
+	return SignalStrength;
 }
 
 // Load
@@ -2636,11 +2978,18 @@ LM_OMNI::LM_OMNI(VECTOR3 dir)
 void LM_OMNI::Init(LEM *vessel) {
 	lem = vessel;
 
-	double beamwidth = 70.0*RAD;
+	double beamwidth = 45 * RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
 
 	hMoon = oapiGetObjectByName("Moon");
 	hEarth = oapiGetObjectByName("Earth");
+
+	OMNI_Gain = pow(10, (-3 / 10));
+
+	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
+	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
+	Gain85ft = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
+	Power85ft = 20000; //watts
 }
 
 void LM_OMNI::Timestep()
@@ -2648,6 +2997,8 @@ void LM_OMNI::Timestep()
 	VECTOR3 U_RP, pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
 	double relang, Moonrelang;
+	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
+	double EarthSignalDist;
 
 	//Unit vector of antenna in vessel's local frame
 	U_RP = _V(direction.y, direction.x, direction.z);
@@ -2662,10 +3013,17 @@ void LM_OMNI::Timestep()
 	U_R = mul(Rot, U_RP);
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	if (relang < PI05 / hpbw_factor)
+	RecvdOMNIPower = Power85ft * Gain85ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	SignalStrengthScaleFactor = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
+
+	if (relang < 160 * RAD) //this is a litteral copy of the CSM OMNI but should be fairly close
 	{
-		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*40.0;
+		//very rough approximation of radiation pattern
+		//https://www.wolframalpha.com/input/?i=polar+plot+sin%5E2%28%28acos%28sqrt%28sqrt%280.5%29%29%29+%2F+%2845deg+%2F+2.0%29%29*theta%2F%281.309-e%5E-theta%5E2%29%29+from+-160deg+to+160deg
+		SignalStrength = sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*SignalStrengthScaleFactor;
 	}
 	else
 	{

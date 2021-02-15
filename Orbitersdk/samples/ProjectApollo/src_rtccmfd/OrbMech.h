@@ -43,7 +43,7 @@ _V(0.817196194, -0.436629484, 0.376224766),
 _V(0.837327731, -0.410968743, -0.360537048)
 };
 
-#define NUMBEROFGROUNDSTATIONS 18
+#define NUMBEROFGROUNDSTATIONS 19
 
 static const char* gsnames[NUMBEROFGROUNDSTATIONS] = {
 	{ "BERMUDA" },
@@ -63,7 +63,30 @@ static const char* gsnames[NUMBEROFGROUNDSTATIONS] = {
 	{ "USNS MERCURY" },
 	{ "USNS HUNTSVILLE" },
 	{ "USNS REDSTONE" },
-	{ "GOLDSTONE" }
+	{ "GOLDSTONE" },
+	{ "MADRID" }
+};
+
+static const char* gsabbreviations[NUMBEROFGROUNDSTATIONS] = {
+	{ "BDA" },
+	{ "CYI" },
+	{ "CRO" },
+	{ "HSK" },
+	{ "GYM" },
+	{ "HAW" },
+	{ "VAN" },
+	{ "ASC" },
+	{ "GWM" },
+	{ "MIL" },
+	{ "TEX" },
+	{ "GBM" },
+	{ "ANG" },
+	{ "TAN" },
+	{ "MER" },
+	{ "HTV" },
+	{ "RED" },
+	{ "GDS" },
+	{ "MAD" }
 };
 
 const double groundstations[NUMBEROFGROUNDSTATIONS][2] = {
@@ -79,12 +102,59 @@ const double groundstations[NUMBEROFGROUNDSTATIONS][2] = {
 	{ 28.40433*RAD, -80.60192*RAD },
 	{ 27.65273*RAD, -97.37588*RAD },
 	{ 26.62022*RAD, -78.35825*RAD },
-	{ 28.40433*RAD, -80.60192*RAD },
+	{ 17.137222*RAD, -61.775833*RAD },
 	{ -19.00000*RAD, 47.27556*RAD },
 	{ 25.0*RAD, 125.0*RAD },
 	{ 25.0*RAD, -136.0*RAD },
 	{ -24.0*RAD, -118.0*RAD },
-	{ 35.33820*RAD, -116.87421*RAD }
+	{ 35.33820*RAD, -116.87421*RAD },
+	{ 40.45443*RAD, -4.16990*RAD }
+};
+
+const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
+	false,
+	false,
+	false,
+	true,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	true,
+	true
+};
+
+#define BODY_EARTH 0
+#define BODY_MOON 1
+
+struct SV
+{
+	VECTOR3 R = _V(0, 0, 0);
+	VECTOR3 V = _V(0, 0, 0);
+	double MJD = 0.0;
+	OBJHANDLE gravref = NULL;
+	double mass = 0.0;
+};
+
+struct ITERSTATE
+{
+	int s_F = 0;
+	double p_H = 0.0;
+	double c_I = 0.0;
+	double dv = 0.0;
+	double dvo = 0.0;
+	double err = 0.0;
+	double erro = 0.0;
+	bool converged = false;
 };
 
 struct OELEMENTS
@@ -96,6 +166,21 @@ struct OELEMENTS
 	double w = 0.0;
 	double TA = 0.0;
 };
+
+//Classical elements
+typedef union
+{
+	double data[6];
+	//a: Semi-major axis
+	//e: Eccentricity
+	//i: Inclination
+	//h: Longitude of the ascending node
+	//g: Argument of pericenter
+	//l: Mean Anomaly
+	struct { 
+		double a, e, i, h, g, l;
+	};
+} CELEMENTS;
 
 struct TLMCConstants
 {
@@ -125,15 +210,103 @@ struct TLMCFlybyConstants
 	OBJHANDLE gravin;
 };
 
+struct LGCIgnitionConstants
+{
+	double v_IGG = 5545.46*0.3048;
+	double r_IGXG = -130519.86*0.3048;
+	double r_IGZG = -1432597.3*0.3048;
+	double K_X = 0.617631;
+	double K_Y = 0.755e-6 / 0.3048;
+	double K_V = 410.0;
+};
+
+struct AEGHeader
+{
+	//0 = Earth, 1 = Lunar
+	int AEGInd = 0;
+	int ErrorInd = 0;
+	int NumBlocks = 1;
+	//int Spare;
+};
+
+struct AEGDataBlock
+{
+	//Item 1, 11 is Keplerian to Keplerian (only used in AEG service routine)
+	int InputOutputInd = 11;
+	//Item 2, initialize/update indicator (0 = Osculating elements provided, 1 = osc and mean elements provided, use low e form., 2 = same as 1, but high e)
+	int ENTRY = 0;
+	//Item 3, update option indicator (0 = to time, 1 = to mean anomaly, 2 = to argument of latitude, 3 = to maneuver counter line...)
+	int TIMA = 0;
+	//Item 4, 0 for J2 and J4, 1 for J2, J3, J4 and -1 for J2 and J3 (only 1 should be used in the real time system)
+	int HarmonicsInd = 1;
+	//Item 5, drag indicator. If nonzero it is the K-Factor
+	double ICSUBD = 0.0;
+	//Item 6, vehicle area
+	double VehArea = 0.0;
+	//Item 7, vehicle weight for Earth AEG, GMTBASE for Lunar AEG
+	double Item7;
+	//Item 8, Input: Mean anomaly (option 1), argument of latitude (option 2), Output: DH (options 5-6) otherwise same as input
+	double Item8;
+	//Item 9, crossing time of the reference counter line (input), time lag (options 5-6), otherwise same as input (output)
+	double Item9;
+	//Item 10, number of times the AEG will cross the reference line (input), phase angle for options 4-6 (output)
+	double Item10;
+	CELEMENTS coe_osc;
+	CELEMENTS coe_mean;
+	//Item 23, time associated with elements 11-16 (in GMT)
+	double TS;
+	double l_dot;
+	double g_dot;
+	double h_dot;
+	//Item 27, time to which to update elements (in GMT)
+	double TE;
+	double f;
+	double U;
+	double R;
+};
+
+struct AEGBlock
+{
+	AEGHeader Header;
+	AEGDataBlock Data;
+};
+
+class PMMAEG
+{
+public:
+	PMMAEG();
+	void CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out);
+protected:
+	AEGDataBlock CurrentBlock;
+};
+
+class PMMLAEG
+{
+public:
+	PMMLAEG();
+	void CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out);
+protected:
+	AEGDataBlock CurrentBlock;
+};
+
 class CoastIntegrator
 {
 public:
-	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, OBJHANDLE planet, OBJHANDLE outplanet);
+	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, int planet, int outplanet);
 	~CoastIntegrator();
-	bool iteration();
+	bool iteration(bool allow_stop = true);
+
+	void AdjustTF(double t_f) { t_F = t_f; }
+
+	double GetTime();
+	VECTOR3 GetPosition();
+	VECTOR3 GetVelocity();
+	double GetMJD();
+	int GetGravRef();
 
 	VECTOR3 R2, V2;
-	OBJHANDLE outplanet;
+	int outplanet;
+	bool soichange;
 private:
 	VECTOR3 f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d);
 	double fq(double q);
@@ -142,34 +315,45 @@ private:
 
 	double R_E, mu;
 	double K, dt_lim;
-	int jcount;
-	double *JCoeff;
 	VECTOR3 R00, V00, R0, V0, R_CON, V_CON, R_QC, R_PQ;
 	double t_0, t, tau, t_F, x;
 	VECTOR3 delta, nu;
 	//0 = earth or lunar orbit, 1 = cislunar-midcourse flight
 	int M;
-	double r_MP, r_dP, r_SPH;
-	OBJHANDLE hEarth, hMoon, hSun, planet;
-	double mu_Q, mu_S;
+	double r_MP, r_dP;
+	double mu_Q;
 	double mjd0;
 	double rect1, rect2;
-	CELBODY *cMoon, *cEarth, *cSun;
+	CELBODY *cMoon, *cEarth;
 	VECTOR3 U_Z_E, U_Z_M;
 	int B;
 	//Primary Body, 0 = Earth, 1 = Moon
 	int P;
 	VECTOR3 R_ES0, V_ES0;
 	double W_ES;
+	static const double r_SPH;
+	bool SunEphemerisInit;
 };
 
 namespace OrbMech {
 
-	//public:
-		//OrbMech(VESSEL *v, OBJHANDLE gravref);
+	//Constants
+	const double mu_Earth = 0.3986032e15;
+	const double R_Earth = 6.373338e6;//6378165.0; We use LC-39 launchpad radius, because Orbiter Earth is spherical
+	const double w_Earth = 7.29211514667e-5;
+	const double mu_Moon = 0.4902778e13;
+	const double R_Moon = 1738090.0;
+	const double w_Moon = 2.66169948e-6;
+	const double mu_Sun = 0.13271244e21; //Different from GSOP. Guess they hadn't properly figured this out yet.
+	const double J2_Earth = 1082.6269e-6;
+	const double J3_Earth = -2.51e-6;
+	const double J4_Earth = -1.60e-6;
+	const double J5_Earth = -0.15e-6;
+	const double J2_Moon = 207.108e-6;
+	const double J3_Moon = -2.1e-5;
 
-	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref);
-	double kepler_E(double e, double M);
+	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, double J2, double mu, double R_E, int P, VECTOR3 &R2, VECTOR3 &V2);
+	double kepler_E(double e, double M, double error2 = 1.e-8);
 	double kepler_H(double e, double M);
 	double power(double b, double e);
 	void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V);
@@ -180,14 +364,12 @@ namespace OrbMech {
 	void SolveQuartic(double *A, double *R, int &N);
 	VECTOR3 GeneralizedIterator(VECTOR3(*state_evaluation)(VECTOR3, void*), bool(*endcondition)(VECTOR3), VECTOR3 Target, VECTOR3 var_guess, VECTOR3 stepsizes, void *constants);
 	VECTOR3 GeneralizedIterator2(VECTOR3(*state_evaluation)(VECTOR3, void*), bool(*endcondition)(VECTOR3), VECTOR3 Target, VECTOR3 var_guess, VECTOR3 stepsizes, void *constants);
-	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess, double tol = 0.1);
+	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, int gravref, int gravin, int gravout, VECTOR3 V_guess, double tol = 0.1);
 	VECTOR3 TLMCConicFirstGuessIterator(double r_peri, double lat_EMP, double gamma, VECTOR3 var_guess, VECTOR3 R2, VECTOR3 step, double MJD0, double dt, OBJHANDLE hMoon, OBJHANDLE gravout);
 	VECTOR3 IntegratedTLMCIterator(double r_peri, double lat_EMP, double gamma, VECTOR3 var_guess, VECTOR3 R2, VECTOR3 step, double mjd0, double dt, OBJHANDLE hMoon, OBJHANDLE gravout);
 	VECTOR3 TLMCIntegratedXYZTIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step, double dt);
 	VECTOR3 TLMCConicFlybyIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step);
 	VECTOR3 TLMCIntegratedFlybyIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step);
-	VECTOR3 TLMCConicSPSLunarFlybyIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step);
-	VECTOR3 TLMCIntegratedSPSLunarFlybyIterator(VECTOR3 R1, VECTOR3 V1, double mjd0, OBJHANDLE gravin, VECTOR3 DV_guess, VECTOR3 target, VECTOR3 step);
 	void ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2, double mjd0, double dt, VECTOR3 V_guess, VECTOR3 &V1_apo, VECTOR3 &V2_apo, double tol = 0.1);
 	double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref);
 	void ra_and_dec_from_r(VECTOR3 R, double &ra, double &dec);
@@ -198,6 +380,9 @@ namespace OrbMech {
 	void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHANDLE gravout, double t, VECTOR3 &R1, VECTOR3 &V1);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
 	double period(VECTOR3 R, VECTOR3 V, double mu);
+	double MeanToTrueAnomaly(double meanAnom, double eccdp, double error2 = 1e-12);
+	double TrueToMeanAnomaly(double ta, double eccdp);
+	double TrueToEccentricAnomaly(double ta, double ecc);
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
@@ -215,15 +400,14 @@ namespace OrbMech {
 	void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double phi, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri);
 	void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri);
 	double PATCH(VECTOR3 R, VECTOR3 V, double mjd0, bool earthsoi, VECTOR3 &R3, VECTOR3 &V3, bool Q = true);
-	MATRIX3 GetRotationMatrix(OBJHANDLE plan, double t);
-	//MATRIX3 GetRotationMatrix2(OBJHANDLE plan, double t);
+	MATRIX3 GetRotationMatrix(int plan, double t);
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
 	void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V);
 	void PACSS13_from_coe(OELEMENTS coe, double lat, double A_Z, double mu, VECTOR3 &R_S, VECTOR3 &V_S);
 	OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu);
 	MATRIX3 MSGMatrix(double phi_L, double A_Z);
 	MATRIX3 MEGMatrix(double theta_E);
-	double GetPlanetCurrentRotation(OBJHANDLE plan, double t);
+	double GetPlanetCurrentRotation(int plan, double t);
 	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref);
 	double findelev_conic(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double E, double mu);
 	double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);
@@ -242,7 +426,9 @@ namespace OrbMech {
 	//void rungeinteg(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	//void adfunc(double* dfdt, double t, double* f);
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
-	void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
+	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
+	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout);
+	SV coast(SV sv0, double dt);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future = false);
@@ -254,6 +440,7 @@ namespace OrbMech {
 	VECTOR3 RotateVelocityVector(VECTOR3 R, VECTOR3 V, double ang);
 	double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d);
 	void latlong_from_J2000(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng);
+	void latlong_from_J2000(VECTOR3 R, double MJD, int RefBody, double &lat, double &lng);
 	void latlong_from_r(VECTOR3 R, double &lat, double &lng);
 	VECTOR3 r_from_latlong(double lat, double lng);
 	VECTOR3 r_from_latlong(double lat, double lng, double r);
@@ -266,7 +453,7 @@ namespace OrbMech {
 	bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
 	bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
-	bool vesselinLOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
+	bool vesselinLOS(VECTOR3 R, VECTOR3 V, double MJD);
 	MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z);
 	void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VECTOR3 R_LSA, double h_DP, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double &t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR);
 	void LunarLandingPrediction2(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VECTOR3 R_LSA, double h_P, double h_A, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double & t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR);
@@ -274,8 +461,9 @@ namespace OrbMech {
 	void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &m_cutoff, double &t_go);
 	//void poweredflight2(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
 	VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0);
-	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff, bool agc = true);
-	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
+	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
+	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
+	void impulsive2(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
 	double DVFromBurnTime(double bt, double thrust, double isp, double mass);
 	void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
 	void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
@@ -299,6 +487,7 @@ namespace OrbMech {
 	OELEMENTS NodeShift(OELEMENTS coe_b, double dLAN);
 	OELEMENTS ApoapsisPeriapsisChange(OELEMENTS coe_b, double mu, double r_A, double r_P);
 	VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu);
+	void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double MJD_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &MJD_BO);
 	//private:
 		//VESSEL* vessel;
 		//double mu;
@@ -318,12 +507,13 @@ namespace OrbMech {
 	int DoubleToBuffer(double x, double q, int m);
 	int DoubleToDEDA(double x, double q);
 	double cot(double a);
+	double sec(double a);
 	void fabs_vektor(double* vektor, int n);
 	double vektor_max(double* vektor, int n);
 	double power(double b, double e);
 	double calculateDifferenceBetweenAngles(double firstAngle, double secondAngle);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
-	MATRIX3 GetObliquityMatrix(OBJHANDLE plan, double t);
+	MATRIX3 GetObliquityMatrix(int plan, double t);
 	MATRIX3 J2000EclToBRCS(double mjd);
 	MATRIX3 _MRx(double a);
 	MATRIX3 _MRy(double a);
@@ -339,6 +529,7 @@ namespace OrbMech {
 	void f_and_g(double x, double t, double ro, double a, double &f, double &g, double mu);
 	void fDot_and_gDot(double x, double r, double ro, double a, double &fdot, double &gdot, double mu);
 	double atan3(double x, double y);
+	VECTOR3 imulimit(VECTOR3 a);
 	double imulimit(double a);
 	MATRIX3 tensorp(VECTOR3 u, VECTOR3 v);
 	MATRIX3 skew(VECTOR3 u);
@@ -349,9 +540,12 @@ namespace OrbMech {
 	double DecToDouble(int dec1, int dec2);
 	double round(double number);
 	double trunc(double d);
+	void normalizeAngle(double & a);
 	double quadratic(double *T, double *DV);
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
+	void SStoHHMMSSTH(double time, int &hours, int &minutes, double &seconds);
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	void rv_from_adbar(VECTOR3 R, VECTOR3 V, double &rmag, double &vmag, double &rtasc, double &decl, double &fpav, double &az);
 	VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs);
@@ -365,6 +559,44 @@ namespace OrbMech {
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);
 	MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG);
 	MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG);
+	VECTOR3 EclipticToECI(VECTOR3 v, double MJD);
+	void EclipticToECI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECI, VECTOR3 &V_ECI);
+	VECTOR3 ECIToEcliptic(VECTOR3 v, double MJD);
+	void ECIToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl);
+	VECTOR3 EclipticToECEF(VECTOR3 v, double MJD);
+	void EclipticToECEF(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECEF, VECTOR3 &V_ECEF);
+	VECTOR3 ECEFToEcliptic(VECTOR3 v, double MJD);
+	void ECEFToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl);
+	void EclipticToMCI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_MCI, VECTOR3 &V_MCI);
+	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
+	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
+	double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng);
+	//RTCC EMXING support routine, calculate direction vectors and sine of elevation angle
+	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body, VECTOR3 &N, VECTOR3 &rho, double &sinang);
+	//RTCC EMXING support routine, calculates elevation slope function
+	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body);
+	//Generate orbit normal and ascending node vectors from elements, and vice versa
+	void PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h);
+	void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W);
+
+	//AEG
+	CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body);
+	CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body);
+	CELEMENTS KeplerToEquinoctial(CELEMENTS kep);
+	CELEMENTS EquinoctialToKepler(CELEMENTS aeq);
+	void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double &l_dot, double &g_dot, double &h_dot);
+	SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	//Inertial to Keplerian Conversion Subroutine
+	CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu);
+	//Keplerian to Inertial Conversion Subroutine
+	void GIMKIC(CELEMENTS elem, double mu, VECTOR3 &R, VECTOR3 &V);
+	SV PositionMatch(SV sv_A, SV sv_P, double mu);
+	//Phase angle determination
+	double THETR(double u1, double u2, double i1, double i2, double h1, double h2);
+	double PHSANG(VECTOR3 R, VECTOR3 V, VECTOR3 R_D);
+	VECTOR3 PROJCT(VECTOR3 U1, VECTOR3 U2, VECTOR3 X);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);
@@ -375,21 +607,51 @@ namespace OrbMech {
 	double fraction_pq(double x);
 	double fraction_xi(double x);
 	void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2);
+	double LinearInterpolation(double x0, double y0, double x1, double y1, double x);
 	void CubicInterpolation(double *x, double *y, double *a);
 	void VandermondeMatrix(double *x, int N, double **V);
 	int LUPDecompose(double **A, int N, double Tol, int *P);
-	void LUPSolve(double **A, int *P, double *b, int N, double *x);
+	void LUPSolve(double **A, int *P, double *b, int N, std::vector<double> &x);
+	void LUPInvert(double **A, int *P, int N, double **IA);
 	void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &b1, double &b2);
 	double Sum(double *x, int N);
 	double SumProd(double *x, double *y, int N);
 	double SumQuad(double *x, int N);
 	double QuadSum(double *x, int N);
+	void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I);
+}
+
+inline CELEMENTS operator+(const CELEMENTS &a, const CELEMENTS &b)
+{
+	CELEMENTS c;
+	c.a = a.a + b.a;
+	c.e = a.e + b.e;
+	c.i = a.i + b.i;
+	c.h = a.h + b.h;
+	c.g = a.g + b.g;
+	c.l = a.l + b.l;
+	return c;
+}
+
+inline CELEMENTS operator-(const CELEMENTS &a, const CELEMENTS &b)
+{
+	CELEMENTS c;
+	c.a = a.a - b.a;
+	c.e = a.e - b.e;
+	c.i = a.i - b.i;
+	c.h = a.h - b.h;
+	c.g = a.g - b.g;
+	c.l = a.l - b.l;
+	return c;
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);
 VECTOR3 rhmul(const MATRIX3 &A, const VECTOR3 &b);
 VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b);
+MATRIX3 MatrixRH_LH(MATRIX3 A);
 double acos2(double _X);
+double asin2(double _X);
+double factorial(unsigned n);
 
 //void(*)(double*, double, double*)
 #endif

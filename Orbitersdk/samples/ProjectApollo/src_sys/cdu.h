@@ -25,15 +25,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 #include "apolloguidance.h"
-
 #include "powersource.h"
 
-#define CDU_STEP 0.000191747598876953125 
+#define CDU_STEP 9.587379924285257e-05
 
 class CDU
 {
 public:
-	CDU(ApolloGuidance &comp, int l, int err, bool isicdu);
+	CDU(ApolloGuidance &comp, int l, int err, int cdutype);
 	void Timestep(double simdt);
 	void ChannelOutput(int address, ChannelValue val);
 	void SetReadCounter(double angle);
@@ -45,7 +44,7 @@ public:
 protected:
 	void DoZeroCDU();
 
-	double ReadCounter;
+	uint16_t ReadCounter;
 	int ErrorCounter;
 	double NewReadCounter;
 
@@ -54,7 +53,8 @@ protected:
 	bool ZeroCDU;
 	bool ErrorCounterEnabled;
 
-	bool IsICDU;
+	//0 = ICDU, 1 = RR CDU, 2 = OCDU
+	int CDUType;
 	//Address of AGC CDU counter
 	int loc;
 	//Channel for error counter commands
@@ -66,6 +66,9 @@ protected:
 	int ErrorCounterBit;
 
 	int AltOutBit;
+
+	//Mode switches
+	bool CA;
 
 	ApolloGuidance &agc;
 };

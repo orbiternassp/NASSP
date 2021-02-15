@@ -1,0 +1,122 @@
+Vessel Specific Input Manager (experimental)
+
+The purpose of this module is to map user inputs to the simulated devices, in
+a similar, highly flexible way as done e.g in Digital Combat Simulator (DCS).
+At the moment, only joysticks and game controllers are supported, configurable
+keyboard mapping is not yet implemented but planned.
+
+Inputs - (Sub)device connections
+
+There are multiple inputs in a simulated spacecraft which could be reasonable
+to map to game controllers. Rotational and Translational Hand Controllers are 
+natural examples, but switches like Abort button and Engine Stop button are
+also good to be on hand as well. On the other side, there are the game
+controllers and their subdevices like joystick axes, buttons, throttles and POV
+hats which could be real life source for these virtual inputs. What Vesim does
+is to provide an interface between the two. To achieve this, Vesim allows the
+developers to define two types of virtual inputs: axis-type and (push)button
+type. To keep things simple no additional types are planned, if e.g. a
+three-pos switch is to be made mappable, it should be done through the
+definition of three binary button input. The same types (axis and buttons) are
+used for subdevices, and additionally keyboard keys and POV hats are also could
+be connected to inputs. A POV hat is handled as a compound of two axis-type
+subdevices. The inputs and subdevices could be connected in any combination.
+Beside button-button and axis-axis mappings, two joystick buttons could be
+mapped onto a single axis input (one button for the maximal axis value, one for
+the minimal). When none of the button is pressed, a default value (usually
+halfway between the two extremes) will be returned. This is very usefull if a
+user wants to map THC axes to controller buttons. Additionally a joystick axis
+could be mapped to a button-type input, and in this case when the controller
+axis moved to an extremal position, a "button pressed" event is triggered. 
+
+Configuration of a joystick
+
+At the moment, the configuration could be done by editing config files only. A
+more user friendly solution through Project Apollo Configurator is planned.
+Vesim looks for the config files in the folder Config\ProjectApollo\Vesim in
+the following fallback sequence (in order of decreasing precendce):
+1. <vessel name> - <joystick name>.launchpad.cfg like
+   "CSM - VKBsim Gladiator .launchpad.cfg". Joystick name should be exactly the
+   same as the device itself returns it. To find out the name of your own
+   joystick you may use either the in-bulit game controller setup app in
+   Windows or online controller tester will do the job as well. In this
+   specific example the joystick's name contains a space at the end (maybe due
+   to some bug), please be aware it should appear in the config file name as
+   well.
+2. <vessel name> - GeneralJoystick.launchpad.cfg like
+   "CSM - GenericJoystick.launchpad.cfg". If you are unable to find out your
+   own joystick's name, the easiest solution is to duplicate the file with the
+   default mappings for the vessel and change the extension from ".cfg" to
+   ".launchpad.cfg".
+3. GeneralJoystick.launchpad.cfg
+
+From this point, the files are the ones with default values and they are part
+of the source code, so normal users shouldn't change them. If you want to
+override the default settings then copy the file into the same folder but with
+".launchpad.cfg". and edit that one.
+
+4. <vessel name> - <joystick name>.cfg like 
+   "CSM - VKBsim Gladiator .launchpad.cfg".
+5. <vessel name> - GeneralJoystick.cfg like "CSM - GenericJoystick.cfg".
+   Vessel defaults for generic joystick. At least this config file should
+   be created for each vessel which uses Vesim.
+
+Finding out the exact name of a joystick could be difficult, so in Project
+Apollo Configurator in the Controls tab, the button "Create Config Files"
+creates the appropriate .launchpad.cfg files for all the attached devices.
+These new config files will be loaded with the default settings for the device
+type (currently only two is covered), or for the generic joystick. These
+.launchpad.cfg files should be modified for setting the personal preferences.
+   
+The config file format
+
+Till a user-friendly configurator is developed, the config files should be
+edited manually. They are tab-delimited files, which could be edited by a text
+editor however the most convenient way to use a spreadsheet app like Excel or
+LibreOffice. Please refer to the default config files in the
+Config\ProjectApollo\Vesim folder. The file has the following columns:
+INPUT - this is the name of the virtual input. It is mostly vessel-dependent
+    and the available values are defined in the source code by the developers.
+	If an undefined value is used here, it makes no harm, just would be skipped
+	by Vesim. To keep up consistency it is desirable to have all the available
+	inputs in the config files even if they aren't mapped.
+INPUTTYPE - It is the type of the virtual input. Just for informative purposes,
+    and not read by Vesim and doesn't have any effect.
+SUBDEVID - the ID of the subdevice connected to the input. It begins with the
+    subdevice type, which could be "Axis", "Slider", "Button" or "POV" and then
+    a name follows which is dependent on the type. For axis type the name
+    should be one of the following: X, Y, Z, RX, RY, RZ. Sliders could be
+    "Slider 0" or "Slider 1". For button type subdevices the name is simply an
+    integer between 0 and 127. For POV tpyes the name has a format of "<POV hat
+    index>{H,V}" where the index is a number between 0 and 3 (it is usually 0
+    as on most of the controllers there is only one POV hat). "H" and "V"
+    selects that the horizontal or vertical displacement of the POV hat should
+    be returned as axis value. To remain consistent with the usual Y axis of a
+    joystick, the vertical axis values for a POV hat will be positive for
+    downward(or inward) displacement. A few examples of proper subdevice IDs:
+    "Axis X", "Button 10", "POV 0H". To find out the ID of a button or an axis,
+    the easiest way is to use an online	joystick tester or use Windows' inbuild
+    game controller configurator. If SUBDEVID is left empty then the entire row
+	is skipped by Vesim.
+REVERSE
+    If it is "true", the controller is mapped with negative sign to the input.
+	For controller button-axis input connection it is necessary to create a
+	row with "true" for REVERSE, as this means when the button is pressed, the
+	minimum axis value should be returned ("false" means returning the maximum
+	value). Empty value in REVERSE means "false".
+MODIFIER
+    Not used yet. Modifier keys like Ctrl and Shift will go here.
+	
+The reason behind not having any device id in this file is that normally the
+device name is encoded in the filename itself.
+
+Configuration of the keyboard
+
+Inputs could be binded to keys as well. The method is very similar to joystick
+configuration. The device name is "Keyboard" so for example the user
+preferences for CSM key bindings should go into "CSM - Keyboard.launchpad.cfg".
+The keys should be given in SUBDEVID column simply by their name as e.g. "C" or
+"Enter". For full list of available key names, refer to VESIM_cfg_helper.ods.
+
+   
+

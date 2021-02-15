@@ -278,6 +278,7 @@ static const double INH2O = 0.00401474;				///< Pa to in H2O
 static const double LBH   = 7.93665;				///< g/s to lb/h
 static const double FPS   = 3.2808399;				///< m/s to ft/s
 static const double LBS = 0.0022046226218;			///< g to lbs
+static const double LBF = 0.2248089431;				///< N to lbf
 
 static const double TWO_PI = (PI * 2.);				///< Twice Pi.
 
@@ -304,11 +305,20 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 	return (fahrenheit + 459.67) / 1.8;
 }
 
+///
+/// \brief sign function
+///
+static inline double sign(double x)
+{
+	if (x >= 0.0) return 1.0;
+	else return -1.0;
+}
+
 //
 // Engine information.
 //
 
-#define SPS_THRUST					92100.0		// Apollo 7 Mission Report
+#define SPS_THRUST					91188.544		// CMC fixed constant
 #define SPS_ISP						 3080.0
 #define SPS_DEFAULT_PROPELLANT		18500.0		// Apollo 11 Mission Report
 #define SPS_NORM_OXIDIZER_FLOW		(1.6 / (1.0 + 1.6))

@@ -53,7 +53,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(1.0, 0.0, -1.0);
-		opt.enginetype = RTCC_ENGINETYPE_RCS;
+		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = REFSMMAT;
 		opt.TIG = OrbMech::HHMMSSToSS(8, 52, 44);
@@ -143,7 +143,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(0.0, 1.0, 0.0);
-		opt.enginetype = RTCC_ENGINETYPE_RCS;
+		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = REFSMMAT;
 		opt.TIG = OrbMech::HHMMSSToSS(9, 40, 20);
@@ -199,7 +199,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(1.0, 0.0, 0.0);
-		opt.enginetype = RTCC_ENGINETYPE_RCS;
+		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = REFSMMAT;
 		opt.TIG = OrbMech::HHMMSSToSS(12, 52, 18);

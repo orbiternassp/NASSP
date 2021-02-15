@@ -29,6 +29,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "papi.h"
 #include "LEM.h"
 #include "lm_dps.h"
+#include "LM_DescentStageResource.h"
 
 DPSValve::DPSValve() {
 	isOpen = false;
@@ -79,6 +80,10 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	FuelTankUllagePressurePSI = 0.0;
 	OxidTankUllagePressurePSI = 0.0;
 	FuelEngineInletPressurePSI = 0.0;
+	OxidEngineInletPressurePSI = 0.0;
+	supercriticalHeliumMass = 22.0;	//48.5 pounds
+	supercriticalHeliumTemp = 12.35186667;	//Kelvin, based on loading temp of -453°F, should give 400PSI at liftoff
+	ambientHeliumMass = 0.4808079;	//1.06 lbm
 
 	fuel1LevelLow = false;
 	fuel2LevelLow = false;
@@ -115,14 +120,17 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 		FuelTankUllagePressurePSI = 0.0;
 		OxidTankUllagePressurePSI = 0.0;
 		FuelEngineInletPressurePSI = 0.0;
+		OxidEngineInletPressurePSI = 0.0;
 	}
 	else {
 		p = our_vessel->GetPropellantMass(source_prop);
 		pmax = DPS_DEFAULT_PROPELLANT;
 		double pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
 
-		ambientHeliumPressurePSI = 1600.0;
-		supercriticalHeliumPressurePSI = 400.0;
+		ambientHeliumPressurePSI = 3327.732344*ambientHeliumMass;
+
+		supercriticalHeliumTemp += 7.5352301587e-5*simdt;
+		supercriticalHeliumPressurePSI = 1.471989512*supercriticalHeliumMass*supercriticalHeliumTemp;
 
 		double InletPressure1, InletPressure2;
 		InletPressure1 = InletPressure2 = 0.0;
@@ -187,15 +195,32 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 		}
 
 		FuelEngineInletPressurePSI = FuelTankUllagePressurePSI - 15.0;
+		OxidEngineInletPressurePSI = OxidTankUllagePressurePSI - 15.0;
 
 		//Propellant Venting
 		if (OxidVentValve1.IsOpen() && OxidVentValve2.IsOpen())
 		{
-			//TBD: Vent Helium and Oxidizer
+			double dMass = 0.01*p*simdt;
+			p -= dMass;
+			our_vessel->SetPropellantMass(source_prop, p);
+
+			if (AmbientHeIsolValve.IsOpen() && OxidCompatibilityValve.IsOpen())
+			{
+				dMass = 0.01*ambientHeliumMass*simdt;
+				ambientHeliumMass -= dMass;
+			}
 		}
 		if (FuelVentValve1.IsOpen() && FuelVentValve2.IsOpen())
 		{
-			// TBD: Vent Helium and Fuel
+			double dMass = 0.01*p*simdt;
+			p -= dMass;
+			our_vessel->SetPropellantMass(source_prop, p);
+
+			if (AmbientHeIsolValve.IsOpen() && FuelCompatibilityValve.IsOpen())
+			{
+				dMass = 0.01*ambientHeliumMass*simdt;
+				ambientHeliumMass -= dMass;
+			}
 		}
 
 		//Ambient Helium Isolation Valve
@@ -263,6 +288,8 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 	}
 	else
 	{
+		propellantMassToDisplay = 0.0;
+
 		fuel1LevelLow = false;
 		fuel2LevelLow = false;
 		oxid1LevelLow = false;
@@ -334,6 +361,22 @@ double DPSPropellantSource::GetOxidizerTankUllagePressurePSI()
 	return 0.0;
 }
 
+double DPSPropellantSource::GetFuelEngineInletPressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return FuelEngineInletPressurePSI;
+
+	return 0.0;
+}
+
+double DPSPropellantSource::GetOxidizerEngineInletPressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return OxidEngineInletPressurePSI;
+
+	return 0.0;
+}
+
 bool DPSPropellantSource::IsGaugingPowered() {
 
 	if (GaugingPower->Voltage() < SP_MIN_DCVOLTAGE) return false;
@@ -384,6 +427,9 @@ void DPSPropellantSource::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "AMBIENTHELIUMPRESSUREPSI", ambientHeliumPressurePSI);
 	papiWriteScenario_double(scn, "SUPERCRITICALHELIUMPRESSUREPSI", supercriticalHeliumPressurePSI);
 	papiWriteScenario_double(scn, "HELIUMREGULATORMANIFOLDPRESSUREPSI", heliumRegulatorManifoldPressurePSI);
+	papiWriteScenario_double(scn, "SUPERCRITICALHELIUMMASS", supercriticalHeliumMass);
+	papiWriteScenario_double(scn, "SUPERCRITICALHELIUMTEMP", supercriticalHeliumTemp);
+	papiWriteScenario_double(scn, "AMBIENTHELIUMMASS", ambientHeliumMass);
 
 	papiWriteScenario_bool(scn, "PRIMREGHELIUMVALVE_ISOPEN", PrimaryHeRegulatorShutoffValve.IsOpen());
 	papiWriteScenario_bool(scn, "SECREGHELIUMVALVE_ISOPEN", SecondaryHeRegulatorShutoffValve.IsOpen());
@@ -418,6 +464,9 @@ void DPSPropellantSource::LoadState(FILEHANDLE scn)
 		papiReadScenario_double(line, "AMBIENTHELIUMPRESSUREPSI", ambientHeliumPressurePSI);
 		papiReadScenario_double(line, "SUPERCRITICALHELIUMPRESSUREPSI", supercriticalHeliumPressurePSI);
 		papiReadScenario_double(line, "HELIUMREGULATORMANIFOLDPRESSUREPSI", heliumRegulatorManifoldPressurePSI);
+		papiReadScenario_double(line, "SUPERCRITICALHELIUMMASS", supercriticalHeliumMass);
+		papiReadScenario_double(line, "SUPERCRITICALHELIUMTEMP", supercriticalHeliumTemp);
+		papiReadScenario_double(line, "AMBIENTHELIUMMASS", ambientHeliumMass);
 
 		if (papiReadScenario_bool(line, "PRIMREGHELIUMVALVE_ISOPEN", isOpen))			PrimaryHeRegulatorShutoffValve.SetState(isOpen);
 		if (papiReadScenario_bool(line, "SECREGHELIUMVALVE_ISOPEN", isOpen))			SecondaryHeRegulatorShutoffValve.SetState(isOpen);
@@ -440,6 +489,19 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	engPreValvesArm = 0;
 	engArm = 0;
 	thrustcommand = 0;
+	ThrustChamberPressurePSI = 0.0;
+	ActuatorValves = 0.0;
+	PropellantShutoffValves = 0.0;
+
+	anim_DPSGimbalPitch = -1;
+	anim_DPSGimbalRoll = -1;
+
+	dpsgimbal_proc[0] = 0.0;
+	dpsgimbal_proc[1] = 0.0;
+	dpsgimbal_proc_last[0] = 0.0;
+	dpsgimbal_proc_last[1] = 0.0;
+
+	Erosion = 0.0;
 }
 
 void LEM_DPS::Init(LEM *s) {
@@ -452,9 +514,9 @@ void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 	{
 		thrustcommand = manthrust + autothrust;
 
-		if (thrustcommand > 0.925)
+		if (thrustcommand > 1.0)
 		{
-			thrustcommand = 0.925;
+			thrustcommand = 1.0;
 		}
 		else if (thrustcommand < 0.1)
 		{
@@ -464,15 +526,53 @@ void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 	else
 	{
 		//Without power, the throttle will be fully open
-		thrustcommand = 0.925;
+		thrustcommand = 1.0;
 	}
 }
 
+void LEM_DPS::DefineAnimations(UINT idx) {
+
+	// DPS Gimbal Animation Definition
+	ANIMATIONCOMPONENT_HANDLE ach_DPSGimbalPitch, ach_DPSGimbalRoll;
+	const VECTOR3 LM_DPS_PIVOT = { -0.000818, -0.383743, 0.001107 }; // Pivot Point
+	static UINT meshgroup_DPSBell = DS_GRP_DPSbell;
+	static MGROUP_ROTATE mgt_Gimbal_Pitch(idx, &meshgroup_DPSBell, 1, LM_DPS_PIVOT, _V(1, 0, 0), (float)PI2);
+	static MGROUP_ROTATE mgt_Gimbal_Roll(idx, &meshgroup_DPSBell, 1, LM_DPS_PIVOT, _V(0, 0, 1), (float)PI2);
+	anim_DPSGimbalPitch = lem->CreateAnimation(0.0);
+	anim_DPSGimbalRoll = lem->CreateAnimation(0.0);
+	ach_DPSGimbalPitch = lem->AddAnimationComponent(anim_DPSGimbalPitch, 0.0f, 1.0f, &mgt_Gimbal_Pitch);
+	ach_DPSGimbalRoll = lem->AddAnimationComponent(anim_DPSGimbalRoll, 0.0f, 1.0f, &mgt_Gimbal_Roll);
+
+	// Get current DPS gimbal state for animation
+	dpsgimbal_proc[0] = pitchGimbalActuator.GetPosition() / 360;
+	if (dpsgimbal_proc[0] < 0) dpsgimbal_proc[0] += 1.0;
+	dpsgimbal_proc[1] = rollGimbalActuator.GetPosition() / 360;
+	if (dpsgimbal_proc[1] < 0) dpsgimbal_proc[1] += 1.0;
+	lem->SetAnimation(anim_DPSGimbalPitch, dpsgimbal_proc[0]); lem->SetAnimation(anim_DPSGimbalRoll, dpsgimbal_proc[1]);
+}
+
+void LEM_DPS::DeleteAnimations() {
+
+	if (anim_DPSGimbalPitch != -1) lem->DelAnimation(anim_DPSGimbalPitch);
+	anim_DPSGimbalPitch = -1;
+	if (anim_DPSGimbalRoll != -1) lem->DelAnimation(anim_DPSGimbalRoll);
+	anim_DPSGimbalRoll = -1;
+}
+
 void LEM_DPS::Timestep(double simt, double simdt) {
+
 	if (lem == NULL) { return; }
 	if (lem->stage > 1) { return; }
 
-	double ActuatorValves;
+	// Animate DPS Gimbals
+	dpsgimbal_proc[0] = pitchGimbalActuator.GetPosition() / 360;
+	if (dpsgimbal_proc[0] < 0) dpsgimbal_proc[0] += 1.0;
+	dpsgimbal_proc[1] = rollGimbalActuator.GetPosition() / 360;
+	if (dpsgimbal_proc[1] < 0) dpsgimbal_proc[1] += 1.0;
+	if (dpsgimbal_proc[0] - dpsgimbal_proc_last[0] != 0.0) lem->SetAnimation(anim_DPSGimbalPitch, dpsgimbal_proc[0]);
+	if (dpsgimbal_proc[1] - dpsgimbal_proc_last[1] != 0.0) lem->SetAnimation(anim_DPSGimbalRoll, dpsgimbal_proc[1]);
+	dpsgimbal_proc_last[0] = dpsgimbal_proc[0];
+	dpsgimbal_proc_last[1] = dpsgimbal_proc[1];
 
 	if ((lem->SCS_DECA_PWR_CB.IsPowered() && lem->deca.GetK10()) || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
 	{
@@ -503,7 +603,7 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 
 	if (thrustOn)
 	{
-		double ActuatorPressure = lem->GetDPSPropellant()->GetFuelEngineInletPressurePSI();
+		double ActuatorPressure = lem->GetDPSPropellant()->GetActuatorValvesPressurePSI();
 		if (ActuatorPressure > 110.0)
 		{
 			ActuatorValves = 1.0;
@@ -522,31 +622,40 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 		ActuatorValves = 0.0;
 	}
 
-	if (dpsThruster[0]) {
-
-		//Set Thruster Resource
-		if (engPreValvesArm)
-		{
-			lem->SetThrusterResource(dpsThruster[0], lem->ph_Dsc);
-			lem->SetThrusterResource(dpsThruster[1], lem->ph_Dsc);
-		}
-		else
-		{
-			lem->SetThrusterResource(dpsThruster[0], NULL);
-			lem->SetThrusterResource(dpsThruster[1], NULL);
-		}
-
+	if (dpsThruster[0])
+	{
 		//Engine Fire Command
 		if (engPreValvesArm && thrustOn)
 		{
-			lem->SetThrusterLevel(dpsThruster[0], thrustcommand*ActuatorValves);
-			lem->SetThrusterLevel(dpsThruster[1], thrustcommand*ActuatorValves);
+			if (PropellantShutoffValves < ActuatorValves)
+			{
+				//Flight experience from Apollo 9, about 2.1 seconds from 0 to full
+				PropellantShutoffValves += 1.0 / 2.1*simdt;
+			}
+			//This prevents overshooting from the code above and accounts for the actuator valves slowly closing when the actuator pressure drops
+			if (PropellantShutoffValves > ActuatorValves)
+			{
+				PropellantShutoffValves = ActuatorValves;
+			}
 		}
 		else
 		{
-			lem->SetThrusterLevel(dpsThruster[0], 0.0);
-			lem->SetThrusterLevel(dpsThruster[1], 0.0);
+			if (PropellantShutoffValves > 0)
+			{
+				// 38cs cutoff delay at 100% thrust in GSOP. To reach the same impulse, linear thrust decay over twice that time.
+				PropellantShutoffValves -= 1.0 / 0.76*simdt;
+				if (PropellantShutoffValves < 0) PropellantShutoffValves = 0.0;
+			}
 		}
+
+		lem->SetThrusterLevel(dpsThruster[0], thrustcommand*PropellantShutoffValves);
+
+		//103.4PSI at FTP (uneroded)
+		ThrustChamberPressurePSI = lem->GetThrusterMax(dpsThruster[0])*lem->GetThrusterLevel(dpsThruster[0])*103.4 / DPS_FCMAX;
+	}
+	else
+	{
+		ThrustChamberPressurePSI = 0.0;
 	}
 
 	// Do GDA time steps
@@ -561,10 +670,22 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 		dpsvector.z = pitchGimbalActuator.GetPosition() * RAD;
 		dpsvector.y = 1;
 		lem->SetThrusterDir(dpsThruster[0], dpsvector);
-		lem->SetThrusterDir(dpsThruster[1], dpsvector);
+
+		//Erosion effects and thruster parameter calculation
+		if (lem->GetThrusterLevel(dpsThruster[0]) > 0.0)
+		{
+			//2.525 is rate of change of thrust (in Newtons per second) at full thrust command to simulation erosion effects
+			//TBD: Effects at lower throttle settings, scaled linearly with thrust command for now
+			Erosion += lem->GetThrusterLevel(dpsThruster[0])*2.525*simdt;
+			//Set base thrust (FCMAX) plus erosion effect
+			lem->SetThrusterMax0(dpsThruster[0], DPS_FCMAX + Erosion);
+			//Recalculate and set ISP
+			lem->SetThrusterIsp(dpsThruster[0], RecalculateISP((DPS_FCMAX + Erosion) / DPS_FMAX)*9.80665);
+		}
 
 		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f engPreValvesArm %d engArm %d thrustOn: %d", lem->ManualEngineStart.GetState(), lem->CDRManualEngineStop.GetState(), lem->ttca_throttle_pos_dig, thrustcommand, engPreValvesArm, engArm, thrustOn);
-		//sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
+		//sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetCmdPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetCmdPosition(), pitchGimbalActuator.GetPosition());
+		//sprintf(oapiDebugString(), "lvl: %f Max Thr: %f Isp: %f Erosion %f", lem->GetThrusterLevel(dpsThruster[0]), lem->GetThrusterMax0(dpsThruster[0]), lem->GetThrusterIsp(dpsThruster[0]), Erosion);
 	}
 }
 
@@ -573,35 +694,70 @@ void LEM_DPS::SystemTimestep(double simdt) {
 	rollGimbalActuator.SystemTimestep(simdt);
 }
 
+double LEM_DPS::GetPitchGimbalPosition()
+{
+	if (lem->DECA_GMBL_AC_CB.IsPowered() && lem->deca.GetK25())
+		return pitchGimbalActuator.GetPosition();
+
+	return 0.0;
+}
+
+double LEM_DPS::GetRollGimbalPosition()
+{
+	if (lem->DECA_GMBL_AC_CB.IsPowered() && lem->deca.GetK25())
+		return rollGimbalActuator.GetPosition();
+
+	return 0.0;
+}
+
+double LEM_DPS::GetThrustChamberPressurePSI()
+{
+	if (lem->stage > 1 || !lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+
+	return ThrustChamberPressurePSI;
+}
+
+double LEM_DPS::GetInjectorActuatorPosition()
+{
+	if (lem->stage > 1) return 0.0;
+
+	return ActuatorValves;
+}
+
+double LEM_DPS::RecalculateISP(double THRUST_FMAX)
+{
+	//Numbers from GSOP R-567 Section 6, except below 11.4% thrust, which just needed to not go below zero ISP
+	if (THRUST_FMAX >= 0.925) return (488.0 - 200.0*THRUST_FMAX);
+	else if (THRUST_FMAX >= 0.401) return (288.8778626 + 15.26717557*THRUST_FMAX);
+	else if (THRUST_FMAX >= 0.252) return (291.2322148 + 9.395973154*THRUST_FMAX);
+	else if (THRUST_FMAX >= 0.115) return (291.9445255 + 6.569343066*THRUST_FMAX);
+	else if (THRUST_FMAX >= 0.05) return (-52.3 + 3000.0*THRUST_FMAX);
+	else return (97.7);
+}
+
 void LEM_DPS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGPREVALVESARM", (engPreValvesArm ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGARM", (engArm ? 1 : 0));
+	papiWriteScenario_double(scn, "EROSION", Erosion);
+	papiWriteScenario_double(scn, "PROPSHUTOFFVALVES", PropellantShutoffValves);
 	oapiWriteLine(scn, end_str);
 }
 
 void LEM_DPS::LoadState(FILEHANDLE scn, char *end_str) {
 	char *line;
-	int i;
 	int end_len = strlen(end_str);
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, end_str, end_len))
 			return;
 
-		if (!strnicmp(line, "THRUSTON", 8)) {
-			sscanf(line + 8, "%d", &i);
-			thrustOn = (i != 0);
-		}
-		else if (!strnicmp(line, "ENGPREVALVESARM", 15)) {
-			sscanf(line + 15, "%d", &i);
-			engPreValvesArm = (i != 0);
-		}
-		else if (!strnicmp(line, "ENGARM", 6)) {
-			sscanf(line + 6, "%d", &i);
-			engArm = (i != 0);
-		}
+		papiReadScenario_bool(line, "THRUSTON", thrustOn);
+		papiReadScenario_bool(line, "ENGPREVALVESARM", engPreValvesArm);
+		papiReadScenario_bool(line, "ENGARM", engArm);
+		papiReadScenario_double(line, "EROSION", Erosion);
+		papiReadScenario_double(line, "PROPSHUTOFFVALVES", PropellantShutoffValves);
 	}
 }
 
