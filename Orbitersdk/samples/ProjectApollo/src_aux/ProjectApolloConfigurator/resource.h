@@ -40,6 +40,8 @@
 #define IDC_CHECK_VAGCCHECKLISTAUTOENABLED 1028
 #define IDC_CHECK_VAGCCHECKLISTAUTOSLOW 1029
 #define IDC_CHECK_VCINFOENABLED         1030
+#define IDC_BUTTON1                     1031
+#define IDC_BUTTON_CREATECONFIG         1032
 
 // Next default values for new objects
 // 
@@ -47,7 +49,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1031
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -61,6 +61,12 @@ override the default settings then copy the file into the same folder but with
    Vessel defaults for generic joystick. At least this config file should
    be created for each vessel which uses Vesim.
 
+Finding out the exact name of a joystick could be difficult, so in Project
+Apollo Configurator in the Controls tab, the button "Create Config Files"
+creates the appropriate .launchpad.cfg files for all the attached devices.
+These new config files will be loaded with the default settings for the device
+type (currently only two is covered), or for the generic joystick. These
+.launchpad.cfg files should be modified for setting the personal preferences.
    
 The config file format
 
@@ -77,20 +83,21 @@ INPUT - this is the name of the virtual input. It is mostly vessel-dependent
 INPUTTYPE - It is the type of the virtual input. Just for informative purposes,
     and not read by Vesim and doesn't have any effect.
 SUBDEVID - the ID of the subdevice connected to the input. It begins with the
-	subdevice type, which could be "Axis", "Button" or "POV" and then a name 
-	follows which is dependent on the type. For axis type the name should be
-	one of the following: X, Y, Z, RX, RY, RZ, Slider 0, Slider 1. For button
-	type subdevices the name is simply an integer between 0 and 127. For POV
-	tpyes the name has a format of "<POV hat index>{H,V}" where the index is a
-	number between 0 and 3 (it is usually 0 as on most of the controllers there
-	is only one POV hat). "H" and "V" selects that the horizontal or vertical
-	displacement of the POV hat should be returned as axis value. To remain
-	consistent with the usual Y axis of a joystick, the vertical axis values
-	for a POV hat will be positive for downward(or inward) displacement. A few
-	examples of proper subdevice IDs: "Axis X", "Button 10", "POV 0H". To find
-	out the ID of a button or an axis, the easiest way is to use an	online
-	joystick tester or use Windows' inbuild game controller	configurator. If
-	SUBDEVID is left empty then the entire row is skipped by Vesim.
+    subdevice type, which could be "Axis", "Slider", "Button" or "POV" and then
+    a name follows which is dependent on the type. For axis type the name
+    should be one of the following: X, Y, Z, RX, RY, RZ. Sliders could be
+    "Slider 0" or "Slider 1". For button type subdevices the name is simply an
+    integer between 0 and 127. For POV tpyes the name has a format of "<POV hat
+    index>{H,V}" where the index is a number between 0 and 3 (it is usually 0
+    as on most of the controllers there is only one POV hat). "H" and "V"
+    selects that the horizontal or vertical displacement of the POV hat should
+    be returned as axis value. To remain consistent with the usual Y axis of a
+    joystick, the vertical axis values for a POV hat will be positive for
+    downward(or inward) displacement. A few examples of proper subdevice IDs:
+    "Axis X", "Button 10", "POV 0H". To find out the ID of a button or an axis,
+    the easiest way is to use an online	joystick tester or use Windows' inbuild
+    game controller configurator. If SUBDEVID is left empty then the entire row
+	is skipped by Vesim.
 REVERSE
     If it is "true", the controller is mapped with negative sign to the input.
 	For controller button-axis input connection it is necessary to create a
