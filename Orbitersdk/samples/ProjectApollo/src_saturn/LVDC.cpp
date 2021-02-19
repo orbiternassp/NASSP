@@ -60,6 +60,14 @@ double LVDC::log(double a)
 	return std::log(a);
 }
 
+MATRIX3 LVDC::tmat(MATRIX3 a)
+{
+	MATRIX3 b;
+
+	b = _M(a.m11, a.m21, a.m31, a.m12, a.m22, a.m32, a.m13, a.m23, a.m33);
+	return b;
+}
+
 void LVDC::PrepareToLaunch()
 {
 	if (ReadyToLaunch == false)
@@ -7165,11 +7173,11 @@ void LVDCSV::IterativeGuidanceMode()
 				// TRANSLUNAR INJECTION VELOCITY
 				fprintf(lvlog, "TRANSLUNAR INJECTION\r\n");
 				double dotR = dotp(PosS, DotS) / R;
-				R_T = R + dotR * (T_3 - DT_N);
+				R_T = R + dotR * (T_GO - dt_c);
 				V_T = sqrt(C_3 + 2.0*mu / R_T);
 				dV_B = dV_BR;
 				//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
-				fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
+				fprintf(lvlog, "TLI VELOCITY: R %f dotR %f T_GO %f dt_c %f R_T %f V_T: %f\r\n", R, dotR, T_GO, dt_c, R_T, V_T);
 				// LVDC_GP_PC = 30; // STOP
 			}
 			// TGO DETERMINATION
@@ -9107,7 +9115,7 @@ restartprep:
 	//Determination of S-bar and S-bar-dot
 	theta_E = theta_EO + TVRATE * t_D;
 
-	MX_EPH = mul(OrbMech::tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+	MX_EPH = mul(tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
 
 	T_P = mul(MX_EPH, unit(TargetVector));
 	N = unit(crossp(R_OG, DotS));

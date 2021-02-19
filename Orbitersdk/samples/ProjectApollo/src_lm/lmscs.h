@@ -89,16 +89,20 @@ public:
 	h_HeatLoad *SECATCAHeat;
 	int lgc_err_x,lgc_err_y,lgc_err_z;	// LGC attitude error counters
 	int lgc_err_ena;                    // LGC error counter enabled
+	bool pgns_jet_request[16];
+	bool ags_jet_request[16];
 	int jet_request[16];				// Jet request list
 	int jet_last_request[16];			// Jet request list at last timestep
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
-
 protected:
 
 	double PRMDutyRatio(double volt);
 	double PRMPulseWidth(double volt);
 	bool PRMTimestep(int n, double simdt, double pp, double pw);
 	void Limiter(double &val, double lim);
+	double ImpulseOn(double t0, double dt);
+	double ImpulseOff(double t0, double dt);
+	bool CalculateThrustLevel(double simt, double t_start, double t_stop, double simdt, double &power);
 
 	VECTOR3 aea_attitude_error;
 	VECTOR3 aca_rates;

@@ -257,12 +257,12 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	EMSDvSetSwitch(Sclick),
 	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
 	ForwardHatch(HatchOpenSound, HatchCloseSound),
-	omnia(_V(0.0, 0.707108, 0.707108)),
-	omnib(_V(0.0, -0.707108, 0.707108)),
-	omnic(_V(0.0, -0.707108, -0.707108)),
-	omnid(_V(0.0, 0.707108, -0.707108)),
-	vhfAntRight(_V(0.0, 0.7716246, 0.63607822)),
-	vhfAntLeft(_V(0.0, -0.7716246, -0.63607822)),
+	omnia(_V(0.707108, -0.707108, 0.0)), //Orbiter Coordinate System
+	omnib(_V(-0.707108, -0.707108, 0.0)), //Orbiter Coordinate System
+	omnic(_V(-0.707108, 0.707108, 0.0)), //Orbiter Coordinate System
+	omnid(_V(0.707108, 0.707108, 0.0)), //Orbiter Coordinate System
+	vhfAntRight(_V(0.7716246, -0.63607822, 0.0)), //Orbiter Coordinate System
+	vhfAntLeft(_V(-0.7716246, 0.63607822, 0.0)), //Orbiter Coordinate System
 	LogicPowerSwitch(2),
 	H2Tank1TempSensor("H2Tank1-Temp-Sensor", -425.0, -200.0),
 	H2Tank2TempSensor("H2Tank2-Temp-Sensor", -425.0, -200.0),

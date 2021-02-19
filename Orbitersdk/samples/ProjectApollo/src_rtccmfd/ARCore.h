@@ -272,14 +272,12 @@ public:
 
 	//STATE VECTOR PAGE
 	bool SVSlot; //true = CSM, false = LEM
-	EphemerisData UplinkSV;
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
 	AP11AGSSVPAD agssvpad;
-	int SVOctals[021];
 	VECTOR3 RLSUplink;
 	int RLSOctals[010];
 	int TLANDOctals[5];

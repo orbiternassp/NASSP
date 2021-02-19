@@ -4135,15 +4135,18 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
+		RTCC::NavUpdateMakeupBuffer * tab;
 		if (G->vesseltype < 2)
 		{
 			if (G->SVSlot)
 			{
 				skp->Text(4 * W / 8, 1 * H / 14, "CSM NAV UPDATE TO CMC (276)", 27);
+				tab = &GC->rtcc->CZNAVGEN.CMCCSMUpdate;
 			}
 			else
 			{
 				skp->Text(4 * W / 8, 1 * H / 14, "LM NAV UPDATE TO CMC (270)", 26);
+				tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
 			}
 		}
 		else
@@ -4151,28 +4154,32 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			if (G->SVSlot)
 			{
 				skp->Text(4 * W / 8, 1 * H / 14, "LGC CSM NAV UPDATE (278)", 24);
+				tab = &GC->rtcc->CZNAVGEN.LGCCSMUpdate;
 			}
 			else
 			{
 				skp->Text(4 * W / 8, 1 * H / 14, "LGC LM NAV UPDATE (279)", 23);
+				tab = &GC->rtcc->CZNAVGEN.LGCLEMUpdate;
 			}
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
-		skp->Text(1 * W / 8, 3 * H / 14, "REF", 3);
+		skp->Text(1 * W / 8, 4 * H / 28, "GET", 3);
+		skp->Text(1 * W / 8, 5 * H / 28, "LOAD NO", 7);
+		skp->Text(1 * W / 8, 6 * H / 28, "REF", 3);
 
 		GET_Display(Buffer, G->SVDesiredGET);
-		skp->Text(2 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-
-		if (G->UplinkSV.RBI == BODY_EARTH)
+		skp->Text(2 * W / 8, 4 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%04d", tab->SequenceNumber);
+		skp->Text(3 * W / 8, 5 * H / 28, Buffer, strlen(Buffer));
+		if (tab->sv.RBI == BODY_EARTH)
 		{
-			skp->Text(2 * W / 8, 3 * H / 14, "Earth", 5);
+			skp->Text(2 * W / 8, 6 * H / 28, "Earth", 5);
 		}
-		else if (G->UplinkSV.RBI == BODY_MOON)
+		else if (tab->sv.RBI == BODY_MOON)
 		{
-			skp->Text(2 * W / 8, 3 * H / 14, "Moon", 4);
+			skp->Text(2 * W / 8, 6 * H / 28, "Moon", 4);
 		}
 
 		if (GC->MissionPlanningActive == false)
@@ -4185,8 +4192,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				sprintf(Buffer, "No Vehicle");
 			}
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
-		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 32, 9 * H / 28, "OID", 3);
 		skp->Text(10 * W / 32, 9 * H / 28, "FCT", 3);
@@ -4219,23 +4226,23 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		for (int i = 0;i < 021;i++)
 		{
-			sprintf(Buffer, "%05d", G->SVOctals[i]);
+			sprintf(Buffer, "%05d", tab->Octals[i]);
 			skp->Text(15 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 		}
 
-		sprintf(Buffer, "%.1f", G->UplinkSV.R.x);
+		sprintf(Buffer, "%.1f", tab->sv.R.x);
 		skp->Text(22 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->UplinkSV.R.y);
+		sprintf(Buffer, "%.1f", tab->sv.R.y);
 		skp->Text(22 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->UplinkSV.R.z);
+		sprintf(Buffer, "%.1f", tab->sv.R.z);
 		skp->Text(22 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->UplinkSV.V.x);
+		sprintf(Buffer, "%.1f", tab->sv.V.x);
 		skp->Text(22 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->UplinkSV.V.y);
+		sprintf(Buffer, "%.1f", tab->sv.V.y);
 		skp->Text(22 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->UplinkSV.V.z);
+		sprintf(Buffer, "%.1f", tab->sv.V.z);
 		skp->Text(22 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->UplinkSV.GMT, false);
+		GET_Display(Buffer, tab->sv.GMT, false);
 		skp->Text(22 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
 	}
 	else if (screen == 49)
@@ -7763,7 +7770,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(57 * W / 64, 7 * H / 32, "V4", 2);
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		skp->Text(1 * W / 32, 4 * H / 32, "GMT", 3);
 		skp->Text(1 * W / 32, 5 * H / 32, "VEH", 3);
 		skp->Text(6 * W / 32, 5 * H / 32, "REF", 3);
 		skp->Text(21 * W / 32, 4 * H / 32, "PET", 3);
@@ -7796,8 +7802,23 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Line(0, 18 * H / 32, W, 18 * H / 32);
 		skp->Line(0, 24 * H / 32, W, 24 * H / 32);
 
-		GET_Display2(Buffer, GC->rtcc->VectorCompareDisplayBuffer.GMT);
-		skp->Text(4 * W / 32, 4 * H / 32, Buffer, strlen(Buffer));
+		if (GC->rtcc->med_s80.time > 0.0)
+		{
+			skp->Text(1 * W / 32, 4 * H / 32, "GMT", 3);
+			GET_Display2(Buffer, GC->rtcc->med_s80.time);
+			skp->Text(4 * W / 32, 4 * H / 32, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->med_s80.time < 0.0)
+		{
+			skp->Text(1 * W / 32, 4 * H / 32, "GET", 3);
+			GET_Display2(Buffer, -GC->rtcc->med_s80.time);
+			skp->Text(4 * W / 32, 4 * H / 32, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(1 * W / 32, 4 * H / 32, "Time From V1", 12);
+		}
+		
 		if (GC->rtcc->med_s80.VEH == 1)
 		{
 			skp->Text(3 * W / 32, 5 * H / 32, "CSM", 3);

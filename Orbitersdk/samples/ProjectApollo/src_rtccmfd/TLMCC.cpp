@@ -2418,7 +2418,7 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(EphemerisData sv0, double dv_gues
 	block.DepVarWeight[10] = 1.0;
 	block.DepVarWeight[12] = 1.0;
 	block.DepVarWeight[13] = 0.125;
-	block.DepVarWeight[19] = 1.0;
+	block.DepVarWeight[19] = 0.25; //If this is 1.0 the mass optimization overpowers other constraints. Why do we have to do this?
 	block.DepVarWeight[20] = 0.125;
 	if (freereturn)
 	{
@@ -3196,12 +3196,27 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF)
 
 	if (KREF == 1)
 	{
+		//Is position magnitude larger than 40 e.r.?
 		if (length(R) > 40.0*R_E)
 		{
-			return true;
+			VECTOR3 R_p, V_p;
+			double ainv, GMT_p;
+			beta = EBETA(R, V, mu_E, ainv);
+			XBETA(R, V, GMT, beta, KREF, R_p, V_p, GMT_p);
+			//Is radius of periapsis larger than 40 e.r. as well?
+			if (length(R_p) > 40.0*R_E)
+			{
+				return true;
+			}
+			//Initial guess 40 e.r., with reverse direction indication
+			if (RBETA(R, -V, 40.0*R_E, -Q, mu_E, beta))
+			{
+				return true;
+			}
 		}
 		else
 		{
+			//Initial guess 40 e.r.
 			if (RBETA(R, V, 40.0*R_E, Q, mu_E, beta))
 			{
 				return true;
@@ -3213,12 +3228,27 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF)
 	}
 	else
 	{
+		//Is position magnitude larger than 10 e.r.?
 		if (length(R) > 10.0*R_E)
 		{
-			return true;
+			VECTOR3 R_p, V_p;
+			double ainv, GMT_p;
+			beta = EBETA(R, V, mu_M, ainv);
+			XBETA(R, V, GMT, beta, KREF, R_p, V_p, GMT_p);
+			//Is radius of periapsis larger than 10 e.r. as well?
+			if (length(R_p) > 10.0*R_E)
+			{
+				return true;
+			}
+			//Initial guess 10 e.r., with reverse direction indication
+			if (RBETA(R, -V, 10.0*R_E, -Q, mu_E, beta))
+			{
+				return true;
+			}
 		}
 		else
 		{
+			//Initial guess 10 e.r.
 			if (RBETA(R, V, 10.0*R_E, Q, mu_M, beta))
 			{
 				return true;
@@ -3252,11 +3282,11 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF)
 		r2 = length(R2);
 		/*if (KREF == 1)
 		{
-			if (r1 > 60.0*R_E) return false;
+			if (r1 > 60.0*R_E) return true;
 		}
 		else
 		{
-			if (r1 > 15.0*R_E) return false;
+			if (r1 > 15.0*R_E) return true;
 		}*/
 		Ratio = r2 / r1;
 		DRatio = Ratio_desired - Ratio;

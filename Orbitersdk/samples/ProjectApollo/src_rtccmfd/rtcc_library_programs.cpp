@@ -844,6 +844,253 @@ int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 }
 
 //Weight Access Routine
+void RTCC::NewPLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
+{
+	//Time of area and weights in GET
+	double T_AW;
+	//Configuration code
+	std::bitset<4> CC;
+	//Time to stop venting
+	double T_NV;
+	double dt;
+	int J, N, K;
+
+	MissionPlanTable *mpt;
+
+	out.Err = 0;
+	dt = 0.0;
+
+	if (in.TableCode < 0)
+	{
+		//Option 2
+		CC = in.Num;
+		T_AW = in.T_IN - GetGMTLO();
+		if (in.T_IN > in.T_UP)
+		{
+			goto RTCC_PLAWDT_9_T;
+		}
+		if (in.VentingOpt == false)
+		{
+			goto RTCC_PLAWDT_3_G;
+		}
+		if (CC[RTCC_CONFIG_S] == false)
+		{
+			goto RTCC_PLAWDT_3_G;
+		}
+		//We need to consider S-IVB venting
+		mpt = GetMPTPointer(-in.TableCode);
+		bool tli = false;
+		unsigned tlinum;
+		for (unsigned i = 0;i < mpt->ManeuverNum;i++)
+		{
+			if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+			{
+				tli = true;
+				tlinum = i;
+			}
+		}
+		if (tli)
+		{
+			T_NV = mpt->TimeToEndManeuver[tlinum] + SystemParameters.MCGVNT*3600.0;
+		}
+		else
+		{
+			T_NV = in.T_UP;
+		}
+		goto RTCC_PLAWDT_3_G;
+	}
+	mpt = GetMPTPointer(in.TableCode);
+	if (in.KFactorOpt)
+	{
+		out.KFactor = mpt->KFactor;
+	}
+	bool tli = false;
+	unsigned tlinum;
+	for (unsigned i = 0;i < mpt->ManeuverNum;i++)
+	{
+		if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+		{
+			tli = true;
+			tlinum = i;
+		}
+	}
+	if (tli)
+	{
+		T_NV = mpt->TimeToEndManeuver[tlinum] + SystemParameters.MCGVNT*3600.0;
+	}
+	else
+	{
+		T_NV = in.T_UP;
+	}
+	if (mpt->ManeuverNum == 0)
+	{
+		K = 0;
+		CC = 0;
+		T_AW = mpt->SIVBVentingBeginGET;
+		goto RTCC_PLAWDT_3_F;
+	}
+	else
+	{
+		N = mpt->ManeuverNum;
+		CC = 0;
+		K = in.Num;
+		//K can't be greater than N
+		if (K > N)
+		{
+			K = N;
+		}
+		J = N - K;
+	}
+	if (J = 0)
+	{
+		goto RTCC_PLAWDT_2_B;
+	}
+RTCC_PLAWDT_2_C:
+	if (in.T_UP < mpt->TimeToBeginManeuver[K])
+	{
+		K = N - J;
+		goto RTCC_PLAWDT_2_B;
+	}
+	else if (in.T_UP == mpt->TimeToBeginManeuver[K])
+	{
+		K = N - J;
+		CC = mpt->mantable[N - J].ConfigCodeBefore;
+		goto RTCC_PLAWDT_2_B;
+	}
+	K++;
+	if (J != 1)
+	{
+		J = J - 1;
+		goto RTCC_PLAWDT_2_C;
+	}
+	if (in.T_UP < mpt->TimeToEndManeuver[K - 1])
+	{
+		out.Err = 1;
+		K = N - (J + 1);
+	}
+RTCC_PLAWDT_2_B:
+	if (K == 0)
+	{
+		T_AW = mpt->SIVBVentingBeginGET;
+		goto RTCC_PLAWDT_3_F;
+	}
+	//TBD: Maneuver not current
+	T_AW = mpt->TimeToEndManeuver[K];
+RTCC_PLAWDT_3_F:
+	if (CC == 0)
+	{
+		if (K == 0)
+		{
+			CC = mpt->CommonBlock.ConfigCode;
+		}
+		else
+		{
+			CC = mpt->mantable[K].CommonBlock.ConfigCode;
+		}
+	}
+RTCC_PLAWDT_3_G:
+	//Move areas and weights to output
+	if (in.TableCode > 0)
+	{
+		out.CSMWeight = mpt->mantable[K].CommonBlock.CSMMass;
+		out.CSMArea = mpt->mantable[K].CommonBlock.CSMArea;
+		out.SIVBWeight = mpt->mantable[K].CommonBlock.SIVBMass;
+		out.SIVBArea = mpt->mantable[K].CommonBlock.SIVBArea;
+		out.LMAscWeight = mpt->mantable[K].CommonBlock.LMAscentMass;
+		out.LMAscArea = mpt->mantable[K].CommonBlock.LMAscentArea;
+		out.LMDscWeight = mpt->mantable[K].CommonBlock.LMDescentMass;
+		out.LMDscArea = mpt->mantable[K].CommonBlock.LMDescentArea;
+	}
+	else
+	{
+		out.CSMWeight = in.CSMWeight;
+		out.CSMArea = in.CSMArea;
+		out.SIVBWeight = in.SIVBWeight;
+		out.SIVBArea = in.SIVBArea;
+		out.LMAscWeight = in.LMAscWeight;
+		out.LMAscArea = in.LMAscArea;
+		out.LMDscWeight = in.LMDscWeight;
+		out.LMDscArea = in.LMDscArea;
+	}
+	//TBD: Expendables
+	dt = in.T_UP - T_AW;
+RTCC_PLAWDT_M_5:
+	if (CC[RTCC_CONFIG_C])
+	{
+		out.CSMWeight = out.CSMWeight - (SystemParameters.MDVCCC[0]*dt+ SystemParameters.MDVCCC[1]);
+	}
+	if (CC[RTCC_CONFIG_A])
+	{
+		out.LMAscWeight = out.LMAscWeight - (SystemParameters.MDVACC[0] * dt + SystemParameters.MDVACC[1]);
+	}
+	if (CC[RTCC_CONFIG_D])
+	{
+		out.LMDscWeight = out.LMDscWeight - (SystemParameters.MDVDCC[0] * dt + SystemParameters.MDVDCC[1]);
+	}
+	out.ConfigWeight = 0.0;
+	out.ConfigArea = 0.0;
+	if (CC[RTCC_CONFIG_C])
+	{
+		out.ConfigWeight = out.ConfigWeight + out.CSMWeight;
+		out.ConfigArea = max(out.ConfigArea, out.CSMArea);
+	}
+	if (CC[RTCC_CONFIG_S] == false)
+	{
+		goto RTCC_PLAWDT_8_Z;
+	}
+	if (in.VentingOpt == false)
+	{
+		goto RTCC_PLAWDT_8_Y;
+	}
+	if (out.Err == 3)
+	{
+		goto RTCC_PLAWDT_8_Y;
+	}
+	if (T_AW < SystemParameters.MCGVEN)
+	{
+		T_AW = SystemParameters.MCGVEN;
+	}
+	if (in.T_UP < SystemParameters.MCGVEN)
+	{
+		goto RTCC_PLAWDT_8_Y;
+	}
+	if (T_AW == in.T_UP)
+	{
+		goto RTCC_PLAWDT_8_Y;
+	}
+	//Venting calculations
+RTCC_PLAWDT_8_Y:
+	out.ConfigWeight = out.ConfigWeight + out.SIVBWeight;
+	out.ConfigArea = max(out.ConfigArea, out.SIVBArea);
+RTCC_PLAWDT_8_Z:
+	if (CC[RTCC_CONFIG_A])
+	{
+		out.ConfigWeight = out.ConfigWeight + out.LMAscWeight;
+		out.ConfigArea = max(out.ConfigArea, out.LMAscArea);
+	}
+	else
+	{
+		out.LMAscArea = 0.0;
+		out.LMAscWeight = 0.0;
+	}
+	if (CC[RTCC_CONFIG_D])
+	{
+		out.ConfigWeight = out.ConfigWeight + out.LMDscWeight;
+		out.ConfigArea = max(out.ConfigArea, out.LMDscArea);
+	}
+	else
+	{
+		out.LMDscArea = 0.0;
+		out.LMDscWeight = 0.0;
+	}
+	return;
+RTCC_PLAWDT_9_T:
+	out.Err = 3;
+	//Move areas and weights to output
+	goto RTCC_PLAWDT_M_5;
+}
+
+
 int RTCC::PLAWDT(int L, double gmt, double &cfg_weight)
 {
 	double csm_weight, lma_weight, lmd_weight, sivb_weight;

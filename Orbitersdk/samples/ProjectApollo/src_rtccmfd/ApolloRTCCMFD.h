@@ -708,6 +708,7 @@ public:
 	void set_VectorCompareColumn(std::string vec, int col);
 	void menuVectorCompareVehicle();
 	void menuVectorCompareTime();
+	void set_VectorCompareTime(double time);
 	void menuVectorCompareReference();
 	void menuSetGuidanceOpticsSupportTablePage();
 	void menuGOSTDisplayREFSMMAT();
