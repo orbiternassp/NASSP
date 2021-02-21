@@ -80,7 +80,7 @@
       <Culture>0x0809</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;User32.lib;Gdi32.lib;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;User32.lib;Gdi32.lib;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/Startup/ProjectApolloConfigurator.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>../../../../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -91,6 +91,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>.\Release\ProjectApolloConfigurator/ProjectApolloConfigurator.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -128,7 +129,7 @@
       <Culture>0x0809</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;User32.lib;Gdi32.lib;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>orbiter.lib;orbitersdk.lib;User32.lib;Gdi32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/Startup/ProjectApolloConfigurator.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>;../../../../lib/Lua;../../../../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -140,6 +141,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>.\Debug\ProjectApolloConfigurator/ProjectApolloConfigurator.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -153,6 +155,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\vesim.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_aux\ProjectApolloConfigurator\ProjectApolloConfigurator.rc">
@@ -164,6 +167,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_aux\ProjectApolloConfigurator\resource.h" />
+    <ClInclude Include="..\..\src_aux\vesim.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

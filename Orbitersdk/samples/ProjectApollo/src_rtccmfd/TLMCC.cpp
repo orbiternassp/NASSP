@@ -2418,7 +2418,7 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(EphemerisData sv0, double dv_gues
 	block.DepVarWeight[10] = 1.0;
 	block.DepVarWeight[12] = 1.0;
 	block.DepVarWeight[13] = 0.125;
-	block.DepVarWeight[19] = 1.0;
+	block.DepVarWeight[19] = 0.25; //If this is 1.0 the mass optimization overpowers other constraints. Why do we have to do this?
 	block.DepVarWeight[20] = 0.125;
 	if (freereturn)
 	{
