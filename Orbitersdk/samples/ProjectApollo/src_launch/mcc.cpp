@@ -3897,6 +3897,8 @@ void MCC::SetCSM(char *csmname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(CSMName, csmname, 64);
+
 	hVessel = oapiGetObjectByName(csmname);
 	if (hVessel != NULL)
 	{
@@ -3906,7 +3908,6 @@ void MCC::SetCSM(char *csmname)
 			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
-			strncat(CSMName, csmname, 64);
 			cm = (Saturn *)v;
 			rtcc->calcParams.src = cm;
 		}
@@ -3917,6 +3918,8 @@ void MCC::SetLM(char *lemname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(LEMName, lemname, 64);
+
 	hVessel = oapiGetObjectByName(lemname);
 	if (hVessel != NULL)
 	{
@@ -3924,7 +3927,6 @@ void MCC::SetLM(char *lemname)
 
 		if (!_stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
-			strncat(LEMName, lemname, 64);
 			lm = (LEM *)v;
 			rtcc->calcParams.tgt = v;
 		}
@@ -3936,6 +3938,8 @@ void MCC::SetLV(char *lvname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(LVName, lvname, 64);
+
 	hVessel = oapiGetObjectByName(lvname);
 	if (hVessel != NULL)
 	{
@@ -3945,7 +3949,6 @@ void MCC::SetLV(char *lvname)
 			!_stricmp(v->GetClassName(), "ProjectApollo/sat5stg3") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) {
-			strncat(LVName, lvname, 64);
 			sivb = (SIVB *)v;
 		}
 	}
