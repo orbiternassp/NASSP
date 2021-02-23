@@ -1054,6 +1054,14 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 {
 	char *line;
 
+	//This nulls all AGS memory addresses that can be saved/loaded, otherwise the values in the flight program binary would be used
+	//That means we always have to padload parameters in a way that doesn't use this load function, which is currently the case
+	//The alternative would be to save and load addresses that contain the value 0, which would be a waste of scenario lines
+	for (int i = 0;i < AEA_MEM_ENTRIES;i++)
+	{
+		vags.Memory[i] = 0;
+	}
+
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, end_str, sizeof(end_str)))
 			break;
