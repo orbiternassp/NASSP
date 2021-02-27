@@ -78,6 +78,23 @@ struct RTCCSystemParameters
 		MCGSMA = 1.5;
 		MCGECC = 0.5;
 		MGGPHS = 0;
+		MDVCCC[0] = 0.0;
+		MDVCCC[1] = 0.0;
+		MDVACC[0] = 0.0;
+		MDVACC[1] = 0.0;
+		MDVDCC[0] = 0.0;
+		MDVDCC[1] = 0.0;
+		MCGVNT = 2.0 / 3600.0;
+		MCGVEN = 15.0 / 60.0;
+		for (int i = 0;i < 2;i++)
+		{
+			for (int j = 0;j < 10;j++)
+			{
+				MDTVTV[i][j] = 0.0;
+			}
+		}
+		MCTVSP = 1000.0;
+		MCLABN = MCLCBN = MCLSBN = 0.0;
 	}
 
 	//DEFINITIONS
@@ -190,4 +207,19 @@ struct RTCCSystemParameters
 	// 26 = Transearth(likely)
 	// 14, 19, 21, 27 must be high speed
 	int MGGPHS;
+	//Linear weight loss coefficients for CSM
+	double MDVCCC[2];
+	//Linear weight loss coefficients for LM ascent
+	double MDVACC[2];
+	//Linear weight loss coefficients for LM descent
+	double MDVDCC[2];
+
+	//DT from end of TLI maneuver to the end of venting weight loss (hrs.)
+	double MCGVNT;
+	//Reference GET for MDTVTV (Venting thrust table) (hrs.)
+	double MCGVEN;
+	//Venting thrust table
+	double MDTVTV[2][10];
+	//Venting specific impulse
+	double MCTVSP;
 };

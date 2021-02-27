@@ -469,7 +469,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			if (fcn == 23)
 			{
-				LOIMan opt2;
 				REFSMMATOpt refsopt;
 				SV sv_node, sv_ig2, sv_cut2;
 				double P30TIG_LOI2;
@@ -581,7 +580,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	case 30:	// MISSION CP PRELIMINARY LOI-1 MANEUVER
 	case 31:	// MISSION CP LOI-1 MANEUVER
 	{
-		LOIMan opt;
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG, tig;
 		VECTOR3 dV_LVLH, dv;

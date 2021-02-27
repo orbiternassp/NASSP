@@ -83,6 +83,12 @@ MCC::MCC(RTCC *rtc)
 	MT_Enabled = false;
 	AbortMode = 0;
 	LastAOSUpdate=0;
+	CM_Position[0] = 0;
+	CM_Position[1] = 0;
+	CM_Position[2] = 0;
+	CM_Prev_Position[0] = 0;
+	CM_Prev_Position[1] = 0;
+	CM_Prev_Position[2] = 0;
 	CM_MoonPosition[0] = 0;
 	CM_MoonPosition[1] = 0;
 	CM_MoonPosition[2] = 0;
@@ -557,6 +563,7 @@ void MCC::Init(){
 	sprintf(NCOption_Text, "Negative");
 	// Uplink items
 	uplink_size = 0;
+	logfileinit = false;
 }
 
 void MCC::setState(int newState){
@@ -2327,7 +2334,7 @@ void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
 }
 
 // Draw PAD display
-void MCC::drawPad(){
+void MCC::drawPad(bool writetofile){
 	char buffer[1024];
 	char tmpbuf[36];
 	char tmpbuf2[36];
@@ -2352,11 +2359,6 @@ void MCC::drawPad(){
 				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s %s WX    \n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
-
-			//ofstream myfile;
-			//myfile.open("MCCDebugging.txt");
-			//myfile << buffer;
-			//myfile.close();
 		}
 		break;
 	case PT_P27PAD:
@@ -2772,11 +2774,6 @@ void MCC::drawPad(){
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
-
-		//ofstream myfile;
-		//myfile.open("MCCDebugging.txt");
-		//myfile << buffer;
-		//myfile.close();
 	}
 	break;
 	case PT_AP11AGSACT:
@@ -2875,7 +2872,7 @@ void MCC::drawPad(){
 			SStoHHMMSS(form->TIG[i], hh, mm, ss);
 
 			sprintf(buffer, "%s%s PURPOSE\n%+06d HRS N33\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f DVX N84\n%+07.1f DVY\n%+07.1f DVZ\n", 
-				buffer, form->purpose, hh, mm, ss, form->DV[i].x, form->DV[i].y, form->DV[i].z);
+				buffer, form->purpose[i], hh, mm, ss, form->DV[i].x, form->DV[i].y, form->DV[i].z);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
@@ -2934,6 +2931,25 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad,buffer);
 		break;
 	}
+
+	if (writetofile)
+	{
+		if (logfileinit)
+		{
+			//Append
+			mcclog.open("MCCPreAdvisoryData.log", std::ofstream::app);
+		}
+		else
+		{
+			//Clear file
+			mcclog.open("MCCPreAdvisoryData.log");
+			logfileinit = true;
+		}		
+		mcclog << buffer;
+		mcclog << std::endl << std::endl;
+		mcclog.close();
+	}
+
 	padState = 1;
 }
 
@@ -3193,7 +3209,7 @@ void MCC::keyDown(DWORD key){
 						oapiAnnotationSetText(NHpad,""); // Clear PAD
 						padState = 0;
 					}else{
-						drawPad();						
+						drawPad(false);						
 					}
 				}
 				oapiAnnotationSetText(NHmenu,""); // Clear menu
@@ -3881,6 +3897,8 @@ void MCC::SetCSM(char *csmname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(CSMName, csmname, 64);
+
 	hVessel = oapiGetObjectByName(csmname);
 	if (hVessel != NULL)
 	{
@@ -3890,7 +3908,6 @@ void MCC::SetCSM(char *csmname)
 			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
-			strncat(CSMName, csmname, 64);
 			cm = (Saturn *)v;
 			rtcc->calcParams.src = cm;
 		}
@@ -3901,6 +3918,8 @@ void MCC::SetLM(char *lemname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(LEMName, lemname, 64);
+
 	hVessel = oapiGetObjectByName(lemname);
 	if (hVessel != NULL)
 	{
@@ -3908,7 +3927,6 @@ void MCC::SetLM(char *lemname)
 
 		if (!_stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
-			strncat(LEMName, lemname, 64);
 			lm = (LEM *)v;
 			rtcc->calcParams.tgt = v;
 		}
@@ -3920,6 +3938,8 @@ void MCC::SetLV(char *lvname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(LVName, lvname, 64);
+
 	hVessel = oapiGetObjectByName(lvname);
 	if (hVessel != NULL)
 	{
@@ -3929,7 +3949,6 @@ void MCC::SetLV(char *lvname)
 			!_stricmp(v->GetClassName(), "ProjectApollo/sat5stg3") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) {
-			strncat(LVName, lvname, 64);
 			sivb = (SIVB *)v;
 		}
 	}

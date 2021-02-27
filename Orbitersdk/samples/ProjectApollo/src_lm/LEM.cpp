@@ -188,19 +188,12 @@ void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
 			pLM->ButtonClick();
 			break;
 		case LM_BUTTON_ABORT:
-			//Ugly solution, should go into AbortSwitch.SetState(...)
 			state = pLM->AbortSwitch.GetState(); 
 			if (state == 0) {
-				pLM->AbortSwitch.SwitchTo(1, true);
-				pLM->Sclick.play();
-				pLM->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
-				pLM->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+				pLM->AbortSwitch.SwitchTo(1);
 			}
 			else if (state == 1) {
-				pLM->AbortSwitch.SwitchTo(0, true);
-				pLM->Sclick.play();
-				pLM->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
-				pLM->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+				pLM->AbortSwitch.SwitchTo(0);
 			}
 			break;
 		case LM_BUTTON_ABORT_STAGE:			
@@ -2141,6 +2134,7 @@ void LEM::AEAPadLoad(unsigned int address, unsigned int value)
 	aea.PadLoad(address, value);
 }
 
+// Set level of RCS thruster, using secondary coils
 void LEM::SetRCSJet(int jet, bool fire) {
 	if (th_rcs[jet] == NULL) return;  // Sanity check
 	SetThrusterLevel(th_rcs[jet], fire);
@@ -2154,62 +2148,7 @@ double LEM::GetRCSThrusterLevel(int jet)
 
 // Set level of RCS thruster, using primary coils
 void LEM::SetRCSJetLevelPrimary(int jet, double level) {
-	/* THRUSTER TABLE:
-		0	A1U		8	A3U
-		1	A1F		9	A3R
-		2	B1L		10	B3A
-		3	B1D		11	B3D
-
-		4	B2U		12	B4U
-		5	B2L		13	B4F
-		6	A2A		14	A4R
-		7	A2D		15	A4D
-	*/
-	// The thruster is a Marquardt R-4D, which uses 46 watts @ 28 volts to fire.
-	// This applies to the SM as well, someone should probably tell them about this.
-	// RCS pressurized?
-
-	// Is this thruster on?	
-	switch(jet){
-		// SYS A
-		case 0: // QUAD 1
-		case 1:
-			if(RCS_A_QUAD1_TCA_CB.Voltage() > 24){ RCS_A_QUAD1_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 6: // QUAD 2
-		case 7:
-			if(RCS_A_QUAD2_TCA_CB.Voltage() > 24){ RCS_A_QUAD2_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 8: // QUAD 3
-		case 9:
-			if(RCS_A_QUAD3_TCA_CB.Voltage() > 24){ RCS_A_QUAD3_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 14: // QUAD 4
-		case 15:
-			if(RCS_A_QUAD4_TCA_CB.Voltage() > 24){ RCS_A_QUAD4_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-
-		// SYS B
-		case 2: // QUAD 1
-		case 3:
-			if(RCS_B_QUAD1_TCA_CB.Voltage() > 24){ RCS_B_QUAD1_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 4: // QUAD 2
-		case 5:
-			if(RCS_B_QUAD2_TCA_CB.Voltage() > 24){ RCS_B_QUAD2_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 10: // QUAD 3
-		case 11:
-			if(RCS_B_QUAD3_TCA_CB.Voltage() > 24){ RCS_B_QUAD3_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 12: // QUAD 4
-		case 13:
-			if(RCS_B_QUAD4_TCA_CB.Voltage() > 24){ RCS_B_QUAD4_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-	}
-
 	if (th_rcs[jet] == NULL) return;  // Sanity check
-
 	SetThrusterLevel(th_rcs[jet], level);
 }
 

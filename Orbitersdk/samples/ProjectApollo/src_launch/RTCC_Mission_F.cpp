@@ -692,7 +692,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 16: //MCC-4
 	{
-		LOIMan loiopt;
 		REFSMMATOpt refsopt;
 		VECTOR3 dV_LVLH;
 		EphemerisData sv;
@@ -820,7 +819,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 				sprintf(upDesc, "CSM state vector, target load, Landing Site REFSMMAT");
 			}
 		}
-
 	}
 	break;
 	case 17: //PC+2 UPDATE

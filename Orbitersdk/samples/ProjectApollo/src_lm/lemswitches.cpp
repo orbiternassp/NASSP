@@ -1577,7 +1577,7 @@ bool EngineStopButton::Push()
 	int newstate = !state;
 	if (ToggleSwitch::SwitchTo(newstate)) {
 		
-		if (newstate = 1)
+		if (newstate == 1)
 		{
 			if (startbutton)
 			{
@@ -1626,16 +1626,10 @@ bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
 	if (event == PANEL_MOUSE_LBDOWN)
 	{
 		if (state == 0) {
-			SwitchTo(1, true);
-			Sclick.play();
-			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
-			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+			SwitchTo(1);
 		}
 		else if (state == 1) {
-			SwitchTo(0, true);
-			Sclick.play();
-			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
-			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+			SwitchTo(0);
 		}
 	}
 	return true;
@@ -1648,19 +1642,38 @@ bool LMAbortButton::CheckMouseClickVC(int event, VECTOR3 &p) {
 	if (event == PANEL_MOUSE_LBDOWN)
 	{
 		if (state == 0) {
-			SwitchTo(1, true);
-			Sclick.play();
-			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
-			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+			SwitchTo(1);
 		}
 		else if (state == 1) {
-			SwitchTo(0, true);
-			Sclick.play();
-			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
-			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+			SwitchTo(0);
 		}
 	}
 	return true;
+}
+
+bool LMAbortButton::SwitchTo(int newState)
+{
+	if (TwoPositionSwitch::SwitchTo(newState))
+	{
+		Sclick.play();
+		//AbortWithDescentStage gets inverted in ApolloGuidance::SetInputChannelBit
+		if (state == 0) {
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+		}
+		else if (state == 1) {
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+		}
+
+		return true;
+	}
+	return false;
+}
+
+void LMAbortButton::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState)
+{
+	TwoPositionSwitch::Register(scnh, n, defaultState, 0);
 }
 
 void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
