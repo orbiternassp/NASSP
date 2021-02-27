@@ -62,7 +62,6 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 
 	Initialized = false;
 	Operate = false;
-	PulsesSent = false;
 	CurrentRotationMatrix = _M(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	EulerAngles = _V(0.0, 0.0, 0.0);
 	RemainingDeltaVel = _V(0.0, 0.0, 0.0);
@@ -99,7 +98,6 @@ void LEM_ASA::TurnOn()
 void LEM_ASA::TurnOff()
 {
 	Operate = false;
-	PulsesSent = false;
 	Initialized = false;
 }
 
@@ -145,13 +143,12 @@ void LEM_ASA::Timestep(double simdt){
 		return;
 	}
 
-	if (!PulsesSent)
+	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes to reset this in that case
+	if (!lem->aea.IsPowered())
 	{
 		EulerAngles = _V(0.0, 0.0, 0.0);
 		RemainingDeltaVel = _V(0.0, 0.0, 0.0);
 	}
-
-	PulsesSent = false;
 
 	//ATTITUDE
 	MATRIX3 Rotnew, dRot;
@@ -341,8 +338,6 @@ void LEM_ASA::PulseTimestep(int* ASAPulses)
 
 		RemainingDeltaVel.data[i - 3] -= (1.0 / AccPulsesScal)*(ASAPulses[i] - 32);
 	}
-
-	PulsesSent = true;
 }
 
 MATRIX3 LEM_ASA::transpose_matrix(MATRIX3 a)
@@ -419,12 +414,11 @@ void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	papiWriteScenario_double(scn, "LASTSIMDT", LastSimDT);
 	papiWriteScenario_bool(scn, "INITIALIZED", Initialized);
 	papiWriteScenario_bool(scn, "OPERATE", Operate);
-	papiWriteScenario_bool(scn, "PULSESSENT", PulsesSent);
 
 	oapiWriteLine(scn, end_str);
 }
 
-void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str)
+void LEM_ASA::LoadState(FILEHANDLE scn, char *end_str)
 {
 	char *line;
 
@@ -438,9 +432,8 @@ void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str)
 		papiReadScenario_vec(line, "LASTGLOBALVEL", LastGlobalVel);
 		papiReadScenario_vec(line, "REMAININGDELTAVEL", RemainingDeltaVel);
 		papiReadScenario_double(line, "LASTSIMDT", LastSimDT);
-papiReadScenario_bool(line, "INITIALIZED", Initialized);
-papiReadScenario_bool(line, "OPERATE", Operate);
-papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
+		papiReadScenario_bool(line, "INITIALIZED", Initialized);
+		papiReadScenario_bool(line, "OPERATE", Operate);
 	}
 }
 
@@ -484,6 +477,8 @@ void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah) {
 void LEM_AEA::Timestep(double simt, double simdt) {
 	if (lem == NULL) { return; }
 
+	//Determine if the AEA has power
+	powered = DeterminePowerState();
 	if (!IsPowered()) return;
 
 	int Delta, CycleCount = 0;
@@ -911,7 +906,7 @@ void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
 	PowerSwitch = s;
 }
 
-bool LEM_AEA::IsPowered()
+bool LEM_AEA::DeterminePowerState()
 {
 	// Do we have an AEA?
 	if (!lem->pMission->HasAEA()) return false;
@@ -922,6 +917,11 @@ bool LEM_AEA::IsPowered()
 	}
 
 	return true;
+}
+
+bool LEM_AEA::IsPowered()
+{
+	return powered;
 }
 
 bool LEM_AEA::IsACPowered()
@@ -1035,6 +1035,7 @@ void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	sprintf(buffer, "  NEXT20MSSIGNAL %I64d", vags.Next20msSignal);
 	oapiWriteLine(scn, buffer);
 
+	papiWriteScenario_bool(scn, "POWERED", powered);
 	oapiWriteScenario_int(scn, "ASACYCLECOUNTER", ASACycleCounter);
 	papiWriteScenario_double(scn, "SIN_THETA", sin_theta);
 	papiWriteScenario_double(scn, "COS_THETA", cos_theta);
@@ -1101,6 +1102,7 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 			sscanf(line + 14, "%I64d", &vags.Next20msSignal);
 		}
 
+		papiReadScenario_bool(line, "POWERED", powered);
 		papiReadScenario_int(line, "ASACYCLECOUNTER", ASACycleCounter);
 		papiReadScenario_double(line, "SIN_THETA", sin_theta);
 		papiReadScenario_double(line, "COS_THETA", cos_theta);

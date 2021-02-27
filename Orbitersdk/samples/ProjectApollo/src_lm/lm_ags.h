@@ -102,7 +102,6 @@ protected:
 	h_HeatLoad *asaHeat;
 	ThreePosSwitch *PowerSwitch;
 
-	bool PulsesSent;
 	bool Initialized;
 	bool Operate;
 
@@ -163,6 +162,9 @@ public:
 	h_HeatLoad *secaeaHeat;
 
 protected:
+
+	bool DeterminePowerState();
+
 	ags_t vags;
 	PowerMerge DCPower;
 	ThreePosSwitch *PowerSwitch;
@@ -177,6 +179,7 @@ protected:
 	bool AEAInitialized;
 	double LastCycled;
 	int ASACycleCounter;
+	bool powered;
 
 	//AEA attitude display
 	double sin_theta;
@@ -186,7 +189,7 @@ protected:
 	double sin_psi;
 	double cos_psi;
 
-	//AEA attitude error
+	//AEA attitude error in radians
 	VECTOR3 AGSAttitudeError;
 
 	//AEA lateral velocity in feet
@@ -198,7 +201,7 @@ protected:
 	std::queue<uint16_t> ags_queue;
 
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
-	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0);
+	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0); //Least significant bit equals 0.5113269e-3 rad, shifted by 8 bits (word length 18 bits, error 10 bits, both with sign)
 	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
 	const double ALTSCALEFACTOR = 0.3048*2.345*pow(2.0, -3.0);
 	const double ALTRATESCALEFACTOR = 0.3048*pow(2.0, -4.0);
