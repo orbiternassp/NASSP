@@ -1594,6 +1594,8 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
 			SAVE_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
 			SAVE_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+			SAVE_DOUBLE("MCC_AP10CSI_DEDA275", form->DEDA275);
+			SAVE_DOUBLE("MCC_AP10CSI_DEDA373", form->DEDA373);
 			SAVE_INT("MCC_AP10CSI_type", form->type);
 		}
 		else if (padNumber == PT_GENERIC)
@@ -2116,6 +2118,8 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
 			LOAD_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
 			LOAD_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+			LOAD_DOUBLE("MCC_AP10CSI_DEDA275", form->DEDA275);
+			LOAD_DOUBLE("MCC_AP10CSI_DEDA373", form->DEDA373);
 			LOAD_INT("MCC_AP10CSI_type", form->type);
 		}
 		else if (padNumber == PT_GENERIC)
@@ -2819,7 +2823,7 @@ void MCC::drawPad(bool writetofile){
 
 		if (form->type == 0)
 		{
-			sprintf(buffer, "PDI ABORT <10 MIN\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\n%+06d HRS\n%+06d MIN\n%+07.2f SEC PHASING TIG\n"
+			sprintf(buffer, "PDI ABORT <10 MIN\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\nPDI ABORT >10 MIN\n%+06d HRS\n%+06d MIN\n%+07.2f SEC PHASING TIG\n"
 				"%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC", hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
 		}
 		else
