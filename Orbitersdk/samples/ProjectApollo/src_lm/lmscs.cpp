@@ -113,6 +113,23 @@ void LEM_RGA::SystemTimestep(double simdt)
 	}
 }
 
+//ATCA Constants
+//All data derived from https://archive.computerhistory.org/resources/access/text/2019/01/102789076-05-01-acc.pdf
+const double ATCA::atterr_limit_dsc_ry = 3.64;	//3.64 Volts attitude error limit for roll and yaw, descent configuration
+const double ATCA::atterr_limit_dsc_p = 7.28;	//8.28 Volts attitude error limit for pitch, ascent configuration
+const double ATCA::atterr_limit_asc_ry = 1.0;	//1.0 Volts attitude error limit for roll and yaw, descent configuration
+const double ATCA::atterr_limit_asc_p = 2.0;	//2.0 Volts attitude error limit for pitch, ascent configuration
+const double ATCA::narrowdb_thres_rp = 2.63;	//2.63 Volts narrow deadband threshold for roll and pitch
+const double ATCA::narrowdb_thres_y = 3.59;		//3.59 Volts narrow deadband threshold for yaw
+const double ATCA::widedb_thres = 9.87;			//9.87 Volts wide deadband threshold	
+const double ATCA::gain_insumamp = 7.0 / 1.62;	//Gain of the input summing amplifier
+
+const double ATCA::atterrtransformer = DEG * 0.3*1.62;						//Transforms input attitude error in radians to Volts (amplified), input to limiter			
+const double ATCA::attratetransformer_asc = DEG * 0.14*6.05 / (7.0 / 1.62);	//Transforms input attitude rate (rad/sec) to Volts (amplified for ascent), input to summing amplifier
+const double ATCA::attratetransformer_dsc = DEG * 0.14*22.5 / (7.0 / 1.62); //Transforms input attitude rate (rad/sec) to Volts (amplified for descent), input to summing amplifier
+const double ATCA::acaratetransformer_asc = 6.05 / (7.0 / 1.62) * 2.8;		//Transforms input ACA rate (0 to 1) to Volts (amplified for ascent), input to summing amplifier
+const double ATCA::acaratetransformer_dsc = 22.5 / (7.0 / 1.62) * 2.8;		//Transforms input ACA rate (0 to 1) to Volts (amplified for descent), input to summing amplifier
+
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 ATCA::ATCA(){
 	lem = NULL;
@@ -149,15 +166,11 @@ ATCA::ATCA(){
 		SummingAmplifierOutput[i] = 0.0;
 		PRMPulse[i] = false;
 		PRMCycleTime[i] = 0.0;
-		PRMOffTime[i] = 0.0;
 	}
 
 	hasAbortPower = false;
 	hasPrimPower = false;
 
-	RateGain = _V(0.0, 0.0, 0.0);
-	DeadbandGain = _V(0.0, 0.0, 0.0);
-	ACARateGain = _V(0, 0, 0);
 	pitchGimbalError = 0.0;
 	rollGimbalError = 0.0;
 }
@@ -166,7 +179,7 @@ void ATCA::Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl){
 	lem = vessel;
 	ATCAHeat = hl;
 	SECATCAHeat = sechl;
-	int x = 0; while (x < 16) { pgns_jet_request[x] = false; ags_jet_request[x] = false; jet_request[x] = 0; jet_last_request[x] = 0; jet_start[x] = 0; jet_stop[x] = 0; x++; }
+	int x = 0; while (x < 16) { pgns_jet_request[x] = false; ags_jet_request[x] = false; jet_driver[x] = false; jet_request[x] = 0; jet_last_request[x] = 0; jet_start[x] = 0; jet_stop[x] = 0; x++; }
 }
 
 double ATCA::GetPrimPowerVoltage() {
@@ -238,11 +251,11 @@ double ATCA::GetPlus43VDCSupplyVoltage()
 		return 0.0;
 }
 
-void ATCA::Timestep(double simt, double simdt){
+void ATCA::Timestep(double simt, double simdt) {
 	hasPrimPower = false, hasAbortPower = false;
 	thrustLogicInputError = _V(0.0, 0.0, 0.0);
 	translationCommands = _V(0, 0, 0);
-	if(lem == NULL){ return; }
+	if (lem == NULL) { return; }
 
 	// Determine ATCA power situation.
 	if (lem->CDR_SCS_ATCA_CB.IsPowered() && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
@@ -258,7 +271,6 @@ void ATCA::Timestep(double simt, double simdt){
 	}
 
 	//AEA input bits
-
 	if (!lem->scca2.GetK8() || (lem->ModeControlAGSSwitch.IsCenter() && lem->scca1.GetK7()))
 	{
 		lem->aea.SetInputPortBit(IO_2020, AGSFollowUpDiscrete, false);
@@ -279,9 +291,9 @@ void ATCA::Timestep(double simt, double simdt){
 
 	//INPUTS: ACA, RGA and AEA
 
-	att_rates = lem->rga.GetRates();
-	aea_attitude_error = lem->aea.GetAttitudeError();
-	aca_rates = _V(0, 0, 0);
+	att_rates = lem->rga.GetRates(); //In radians per second
+	aea_attitude_error = lem->aea.GetAttitudeError(); //In radians
+	aca_rates = _V(0, 0, 0); //Scaled 0 to 1. Should be 0V to 2.8V
 
 	if (lem->scca2.GetK2())
 	{
@@ -295,6 +307,10 @@ void ATCA::Timestep(double simt, double simdt){
 	{
 		aca_rates.x = lem->CDR_ACA.GetACAProp(0);
 	}
+
+	//sprintf(oapiDebugString(), "%lf %lf %lf", aea_attitude_error.x*DEG, aea_attitude_error.y*DEG, aea_attitude_error.z*DEG);
+
+	int i;
 
 	if (lem->SCS_ATCA_CB.IsPowered())
 	{
@@ -357,63 +373,15 @@ void ATCA::Timestep(double simt, double simdt){
 			K21 = false;
 		}
 
-		//THRUST LOGIC INPUT
+		// *** THRUST LOGIC INPUT ***
 
-		//Gain Switching
-		if (K8)
-		{
-			RateGain.z = 22.5;
-			ACARateGain.z = 63.8403;
-		}
-		else
-		{
-			RateGain.z = 6.0;
-			ACARateGain.z = 17.6403;
-		}
-		if (K9)
-		{
-			RateGain.y = 22.5;
-			ACARateGain.y = 63.6302;
-		}
-		else
-		{
-			RateGain.y = 6.0;
-			ACARateGain.y = 17.4302;
-		}
-		if (K10)
-		{
-			RateGain.x = 22.5;
-			ACARateGain.x = 63.6302;
-		}
-		else
-		{
-			RateGain.x = 6.0;
-			ACARateGain.x = 17.4302;
-		}
+		//ATTITUDE ERROR INPUT
+		VECTOR3 V_atterr;
 
-		if (K14)
+		//Amplifier
+		for (i = 0;i < 3;i++)
 		{
-			DeadbandGain.z = 48.503;
-		}
-		else
-		{
-			DeadbandGain.z = 3.59;
-		}
-		if (K15)
-		{
-			DeadbandGain.y = 47.735;
-		}
-		else
-		{
-			DeadbandGain.y = 2.63;
-		}
-		if (K16)
-		{
-			DeadbandGain.x = 47.735;
-		}
-		else
-		{
-			DeadbandGain.x = 2.63;
+			V_atterr.data[i] = aea_attitude_error.data[i] * atterrtransformer;
 		}
 
 		//Attitude Error Limiter
@@ -422,11 +390,11 @@ void ATCA::Timestep(double simt, double simdt){
 			//Limits attitude rate to 5.0°/s
 			if (K11)
 			{
-				Limiter(aea_attitude_error.z, 7.9*RAD);
+				Limiter(V_atterr.z, atterr_limit_dsc_ry);
 			}
 			else
 			{
-				Limiter(aea_attitude_error.z, 2.4*RAD);
+				Limiter(V_atterr.z, atterr_limit_asc_ry);
 			}
 		}
 
@@ -435,11 +403,11 @@ void ATCA::Timestep(double simt, double simdt){
 			//Limits attitude rate to 10.0°/s
 			if (K12)
 			{
-				Limiter(aea_attitude_error.y, 15.3*RAD);
+				Limiter(V_atterr.y, atterr_limit_dsc_p);
 			}
 			else
 			{
-				Limiter(aea_attitude_error.y, 4.3*RAD);
+				Limiter(V_atterr.y, atterr_limit_asc_p);
 			}
 		}
 
@@ -448,14 +416,116 @@ void ATCA::Timestep(double simt, double simdt){
 			//Limits attitude rate to 5.0°/s
 			if (K13)
 			{
-				Limiter(aea_attitude_error.x, 7.8*RAD);
+				Limiter(V_atterr.x, atterr_limit_dsc_ry);
 			}
 			else
 			{
-				Limiter(aea_attitude_error.x, 2.3*RAD);
+				Limiter(V_atterr.x, atterr_limit_asc_ry);
 			}
 		}
 
+		//ATTITUDE AND ACA RATE INPUT
+		VECTOR3 V_attrate, V_acarate;
+		//Yaw
+		if (K8)
+		{
+			//Descent
+			V_attrate.z = att_rates.y*attratetransformer_dsc;
+			V_acarate.z = aca_rates.z*acaratetransformer_dsc;
+		}
+		else
+		{
+			//Ascent
+			V_attrate.z = att_rates.y*attratetransformer_asc;
+			V_acarate.z = aca_rates.z*acaratetransformer_asc;
+		}
+		//Pitch
+		if (K9)
+		{
+			//Descent
+			V_attrate.y = att_rates.x*attratetransformer_dsc;
+			V_acarate.y = aca_rates.y*acaratetransformer_dsc;
+		}
+		else
+		{
+			//Ascent
+			V_attrate.y = att_rates.x*attratetransformer_asc;
+			V_acarate.y = aca_rates.y*acaratetransformer_asc;
+		}
+		//Roll
+		if (K10)
+		{
+			//Descent
+			V_attrate.x = att_rates.z*attratetransformer_dsc;
+			V_acarate.x = aca_rates.x*acaratetransformer_asc;
+		}
+		else
+		{
+			//Ascent
+			V_attrate.x = att_rates.z*attratetransformer_asc;
+			V_acarate.x = aca_rates.x*acaratetransformer_asc;
+		}
+
+		//INPUT SUMMING AMPLIFIER
+		VECTOR3 V_sum;
+		for (i = 0;i < 3;i++)
+		{
+			V_sum.data[i] = (V_atterr.data[i] - V_attrate.data[i] + V_acarate.data[i])*gain_insumamp;
+			Limiter(V_sum.data[i], 12.0); //Limit to 12V
+		}
+
+		//GIMBAL TRIM SIGNAL
+		if (K20)
+		{
+			pitchGimbalError = 0.0;
+		}
+		else
+		{
+			pitchGimbalError = V_sum.y;
+		}
+		if (K21)
+		{
+			rollGimbalError = 0.0;
+		}
+		else
+		{
+			rollGimbalError = V_sum.x;
+		}
+		//sprintf(oapiDebugString(), "%lf %lf %lf %lf", pitchGimbalError, rollGimbalError, lem->DPS.GetPitchGimbalPosition(), lem->DPS.GetRollGimbalPosition());
+
+		//WIDE DEADBAND AMPLIFIER
+		//Yaw
+		if (K14)
+		{
+			Deadband(V_sum.z, widedb_thres);
+		}
+		//Pitch
+		if (K15)
+		{
+			Deadband(V_sum.y, widedb_thres);
+		}
+		//Roll
+		if (K16)
+		{
+			Deadband(V_sum.x, widedb_thres);
+		}
+
+		for (i = 0;i < 3;i++)
+		{
+			V_sum.data[i] *= 4.57;
+			Limiter(V_sum.data[i], 12.0);
+		}
+
+		//NARROW DEADBAND AMPLIFIER
+		Deadband(V_sum.z, narrowdb_thres_y);
+		Deadband(V_sum.y, narrowdb_thres_rp);
+		Deadband(V_sum.x, narrowdb_thres_rp);
+		for (i = 0;i < 3;i++)
+		{
+			V_sum.data[i] *= 2.0;
+		}
+
+		//RATE OR PULSE MODE
 		//Yaw
 		if (K19)
 		{
@@ -470,15 +540,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			thrustLogicInputError.z = (aca_rates.z*ACARateGain.z + aea_attitude_error.z*DEG*0.3*7.0 - att_rates.y*DEG*0.14*RateGain.z)*4.57;
-			if (thrustLogicInputError.z > 0.0)
-			{
-				thrustLogicInputError.z = max(0.0, abs(thrustLogicInputError.z) - DeadbandGain.z)*2.0;
-			}
-			else
-			{
-				thrustLogicInputError.z = -max(0.0, abs(thrustLogicInputError.z) - DeadbandGain.z)*2.0;
-			}
+			thrustLogicInputError.z = V_sum.z;
 		}
 
 		//Pitch
@@ -495,16 +557,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			thrustLogicInputError.y = (aca_rates.y*ACARateGain.y + aea_attitude_error.y*DEG*0.3*7.0 - att_rates.x*DEG*0.14*RateGain.y)*4.57;
-			pitchGimbalError = thrustLogicInputError.y;
-			if (thrustLogicInputError.y > 0.0)
-			{
-				thrustLogicInputError.y = max(0.0, abs(thrustLogicInputError.y) - DeadbandGain.y)*2.0;
-			}
-			else
-			{
-				thrustLogicInputError.y = -max(0.0, abs(thrustLogicInputError.y) - DeadbandGain.y)*2.0;
-			}
+			thrustLogicInputError.y = V_sum.y;
 		}
 
 		//Roll
@@ -521,16 +574,7 @@ void ATCA::Timestep(double simt, double simdt){
 		}
 		else
 		{
-			thrustLogicInputError.x = (aca_rates.x*ACARateGain.x + aea_attitude_error.x*DEG*0.3*7.0 - att_rates.z*DEG*0.14*RateGain.x)*4.57;
-			rollGimbalError = thrustLogicInputError.x;
-			if (thrustLogicInputError.x > 0.0)
-			{
-				thrustLogicInputError.x = max(0.0, abs(thrustLogicInputError.x) - DeadbandGain.x)*2.0;
-			}
-			else
-			{
-				thrustLogicInputError.x = -max(0.0, abs(thrustLogicInputError.x) - DeadbandGain.x)*2.0;
-			}
+			thrustLogicInputError.x = V_sum.x;
 		}
 
 		//sprintf(oapiDebugString(), "Thrust Logic Input Error: %f %f %f", thrustLogicInputError.x, thrustLogicInputError.y, thrustLogicInputError.z);
@@ -542,29 +586,29 @@ void ATCA::Timestep(double simt, double simdt){
 			{
 				if (lem->CDR_TTCA.GetPlusXTrans())
 				{
-					translationCommands.x = 15.0;
+					translationCommands.x = 10.0;
 				}
 				else if (lem->CDR_TTCA.GetMinusXTrans())
 				{
-					translationCommands.x = -15.0;
+					translationCommands.x = -10.0;
 				}
 
 				if (lem->CDR_TTCA.GetPlusYTrans())
 				{
-					translationCommands.y = 15.0;
+					translationCommands.y = 10.0;
 				}
 				else if (lem->CDR_TTCA.GetMinusYTrans())
 				{
-					translationCommands.y = -15.0;
+					translationCommands.y = -10.0;
 				}
 
 				if (lem->CDR_TTCA.GetPlusZTrans())
 				{
-					translationCommands.z = 15.0;
+					translationCommands.z = 10.0;
 				}
 				else if (lem->CDR_TTCA.GetMinusZTrans())
 				{
-					translationCommands.z = -15.0;
+					translationCommands.z = -10.0;
 				}
 			}
 		}
@@ -631,6 +675,8 @@ void ATCA::Timestep(double simt, double simdt){
 			K2 = false;
 		}
 
+		//sprintf(oapiDebugString(), "%d %d %d", K1, K2, K3);
+
 		//SUMMING AMPLIFIERS
 
 		//1
@@ -662,23 +708,25 @@ void ATCA::Timestep(double simt, double simdt){
 
 		//PULSE RATIO (DE)MODULATOR
 
-		for (int i = 0;i < 8;i++)
+		for (i = 0;i < 8;i++)
 		{
 			if (abs(SummingAmplifierOutput[i]) > 0.5)
 			{
-				double dr = PRMDutyRatio(SummingAmplifierOutput[i]);
-				double pw = PRMPulseWidth(SummingAmplifierOutput[i]);
-				PRMPulse[i] = PRMTimestep(i, simdt, pw/dr, pw);
+				double V_norm = abs(SummingAmplifierOutput[i] / 10.0);
+				Limiter(V_norm, 1.0);
+				double t_on = PRMOnTime(V_norm);
+				double t_off = PRMOffTime(V_norm);
+				PRMPulse[i] = PRMTimestep(i, simdt, t_on, t_off);
 			}
 			else
 			{
 				PRMPulse[i] = false;
 				PRMCycleTime[i] = 0.0;
-				PRMOffTime[i] = 0.0;
 			}
 		}
 
 		//sprintf(oapiDebugString(), "PRM: %d %d %d %d %d %d %d %d", PRMPulse[0], PRMPulse[1], PRMPulse[2], PRMPulse[3], PRMPulse[4], PRMPulse[5], PRMPulse[6], PRMPulse[7]);
+		//sprintf(oapiDebugString(), "PRM 6 and 7: %d %lf %d %lf", PRMPulse[5], PRMCycleTime[5], PRMPulse[6], PRMCycleTime[6]);
 	}
 	else
 	{
@@ -701,124 +749,139 @@ void ATCA::Timestep(double simt, double simdt){
 		pitchGimbalError = 0.0;
 		rollGimbalError = 0.0;
 
-		for (int i = 0;i < 8;i++)
+		for (i = 0;i < 8;i++)
 		{
 			PRMPulse[i] = false;
 		}
 	}
 
-	if (hasAbortPower)
+	for (i = 0;i < 16;i++)
 	{
-		for (int i = 0;i < 16;i++)
-		{
-			ags_jet_request[i] = 0;
-		}
+		ags_jet_request[i] = 0;
+	}
 
-		if (PRMPulse[0])
+	if (PRMPulse[0])
+	{
+		if (SummingAmplifierOutput[0] > 0.0)
 		{
-			if (SummingAmplifierOutput[0] > 0.0)
-			{
-				ags_jet_request[14] = 1;
-				ags_jet_request[2] = 0;
-			}
-			else
-			{
-				ags_jet_request[14] = 0;
-				ags_jet_request[2] = 1;
-			}
+			ags_jet_request[14] = 1;
+			ags_jet_request[2] = 0;
 		}
-		if (PRMPulse[1])
+		else
 		{
-			if (SummingAmplifierOutput[1] > 0.0)
-			{
-				ags_jet_request[9] = 1;
-				ags_jet_request[5] = 0;
-			}
-			else
-			{
-				ags_jet_request[9] = 0;
-				ags_jet_request[5] = 1;
-			}
-		}
-		if (PRMPulse[2])
-		{
-			if (SummingAmplifierOutput[2] > 0.0)
-			{
-				ags_jet_request[1] = 1;
-				ags_jet_request[6] = 0;
-			}
-			else
-			{
-				ags_jet_request[1] = 0;
-				ags_jet_request[6] = 1;
-			}
-		}
-		if (PRMPulse[3])
-		{
-			if (SummingAmplifierOutput[3] > 0.0)
-			{
-				ags_jet_request[13] = 1;
-				ags_jet_request[10] = 0;
-			}
-			else
-			{
-				ags_jet_request[13] = 0;
-				ags_jet_request[10] = 1;
-			}
-		}
-		if (PRMPulse[4])
-		{
-			if (SummingAmplifierOutput[4] > 0.0)
-			{
-				ags_jet_request[12] = 1;
-				ags_jet_request[15] = 0;
-			}
-			else
-			{
-				ags_jet_request[12] = 0;
-				ags_jet_request[15] = 1;
-			}
-		}
-		if (PRMPulse[5])
-		{
-			if (SummingAmplifierOutput[5] > 0.0)
-			{
-				ags_jet_request[8] = 1;
-				ags_jet_request[11] = 0;
-			}
-			else
-			{
-				ags_jet_request[8] = 0;
-				ags_jet_request[11] = 1;
-			}
-		}
-		if (PRMPulse[6])
-		{
-			if (SummingAmplifierOutput[6] > 0.0)
-			{
-				ags_jet_request[4] = 1;
-				ags_jet_request[7] = 0;
-			}
-			else
-			{
-				ags_jet_request[4] = 0;
-				ags_jet_request[7] = 1;
-			}
-		}
-		if (PRMPulse[7])
-		{
-			if (SummingAmplifierOutput[7] > 0.0)
-			{
-				ags_jet_request[0] = 1;
-				ags_jet_request[3] = 0;
-			}
-			else
-			{
-				ags_jet_request[0] = 0;
-				ags_jet_request[3] = 1;
-			}
+			ags_jet_request[14] = 0;
+			ags_jet_request[2] = 1;
 		}
 	}
+	if (PRMPulse[1])
+	{
+		if (SummingAmplifierOutput[1] > 0.0)
+		{
+			ags_jet_request[9] = 1;
+			ags_jet_request[5] = 0;
+		}
+		else
+		{
+			ags_jet_request[9] = 0;
+			ags_jet_request[5] = 1;
+		}
+	}
+	if (PRMPulse[2])
+	{
+		if (SummingAmplifierOutput[2] > 0.0)
+		{
+			ags_jet_request[1] = 1;
+			ags_jet_request[6] = 0;
+		}
+		else
+		{
+			ags_jet_request[1] = 0;
+			ags_jet_request[6] = 1;
+		}
+	}
+	if (PRMPulse[3])
+	{
+		if (SummingAmplifierOutput[3] > 0.0)
+		{
+			ags_jet_request[13] = 1;
+			ags_jet_request[10] = 0;
+		}
+		else
+		{
+			ags_jet_request[13] = 0;
+			ags_jet_request[10] = 1;
+		}
+	}
+	if (PRMPulse[4])
+	{
+		if (SummingAmplifierOutput[4] > 0.0)
+		{
+			ags_jet_request[12] = 1;
+			ags_jet_request[15] = 0;
+		}
+		else
+		{
+			ags_jet_request[12] = 0;
+			ags_jet_request[15] = 1;
+		}
+	}
+	if (PRMPulse[5])
+	{
+		if (SummingAmplifierOutput[5] > 0.0)
+		{
+			ags_jet_request[8] = 1;
+			ags_jet_request[11] = 0;
+		}
+		else
+		{
+			ags_jet_request[8] = 0;
+			ags_jet_request[11] = 1;
+		}
+	}
+	if (PRMPulse[6])
+	{
+		if (SummingAmplifierOutput[6] > 0.0)
+		{
+			ags_jet_request[4] = 1;
+			ags_jet_request[7] = 0;
+		}
+		else
+		{
+			ags_jet_request[4] = 0;
+			ags_jet_request[7] = 1;
+		}
+	}
+	if (PRMPulse[7])
+	{
+		if (SummingAmplifierOutput[7] > 0.0)
+		{
+			ags_jet_request[0] = 1;
+			ags_jet_request[3] = 0;
+		}
+		else
+		{
+			ags_jet_request[0] = 0;
+			ags_jet_request[3] = 1;
+		}
+	}
+
+	//Thruster selection debugging
+	/*char Buffer[128];
+	sprintf(Buffer, "");
+	bool update = false;
+	int thrustertable[16] = {13, 15, 16, 14, 9, 12, 11, 10, 5, 8, 7, 6, 1, 3, 4, 2};
+	for (i = 0;i < 16;i++)
+	{
+		if (ags_jet_request[i])
+		{
+			update = true;
+			sprintf(Buffer, "%s %d", Buffer, thrustertable[i]);
+		}
+	}
+	if (update)
+	{
+		sprintf(oapiDebugString(), Buffer);
+	}*/
 
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
@@ -841,7 +904,21 @@ void ATCA::Timestep(double simt, double simdt){
 		ags_jet_request[12] = false;
 	}
 
+	int x = 0;
 	// *** JET DRIVER ***
+	for (x = 0;x < 16;x++)
+	{
+		if ((hasPrimPower && pgns_jet_request[x]) || (hasAbortPower && ags_jet_request[x]))
+		{
+			jet_driver[x] = true;
+		}
+		else
+		{
+			jet_driver[x] = false;
+		}
+	}
+
+
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
 		1	A1F		9	A3R
@@ -856,13 +933,13 @@ void ATCA::Timestep(double simt, double simdt){
 	// The thruster is a Marquardt R-4D, which uses 46 watts @ 28 volts to fire.
 	// This applies to the SM as well, someone should probably tell them about this.
 	// RCS pressurized?
-	int x = 0;
+	// This code should be in a RCS specific class
+
 	for (x = 0;x < 16;x++)
 	{
 		jet_request[x] = false;
 
-		//Logic for primary and abort preamps
-		if ((hasPrimPower && pgns_jet_request[x]) || (hasAbortPower && ags_jet_request[x]))
+		if (jet_driver[x])
 		{
 			switch (x) {
 				// SYS A
@@ -939,16 +1016,17 @@ void ATCA::Timestep(double simt, double simdt){
 
 	// *** THRUSTER MAINTENANCE ***
 	x = 0;
-	while(x < 16){
-		double power=0;
+	while (x < 16) {
+		double power = 0;
 		// Process jet request list to generate start and stop times.
-		if(jet_request[x] == 1 && jet_last_request[x] == 0){
+		if (jet_request[x] == 1 && jet_last_request[x] == 0) {
 			// New fire request
 			jet_start[x] = simt;
 			jet_stop[x] = 0;
 			//sprintf_s(Buffer, "Start %lf %d", jet_start[x], x);
 			//oapiWriteLog(Buffer);
-		}else if(jet_request[x] == 0 && jet_last_request[x] == 1){
+		}
+		else if (jet_request[x] == 0 && jet_last_request[x] == 1) {
 			// New stop request
 			jet_stop[x] = simt;
 			//Minimum impulse
@@ -976,7 +1054,7 @@ void ATCA::Timestep(double simt, double simdt){
 			oapiWriteLog(Buffer);
 		}*/
 
-		lem->SetRCSJetLevelPrimary(x,power);
+		lem->SetRCSJetLevelPrimary(x, power);
 		x++;
 	}
 }
@@ -1130,41 +1208,56 @@ void ATCA::ProcessLGC(int ch, int val){
 	}
 }
 
-double ATCA::PRMDutyRatio(double volt)
+double ATCA::PRMOnTime(double X)
 {
-	if (abs(volt) > 0.5)
-	{
-		return exp(0.3345588235*(min(abs(volt), 9.999) - 10.0));
-	}
-	return 0.0;
+	//X is normalized voltage (0 to 1)
+	return 0.013 / (1.0 - X);
 }
 
-double ATCA::PRMPulseWidth(double volt)
+double ATCA::PRMOffTime(double X)
 {
-	if (abs(volt) > 0.5)
-	{
-		return -1.0/(7.8125*(min(abs(volt), 9.999) - 10.0));
-	}
-	return 0.0;
+	//X is normalized voltage (0 to 1)
+	return 0.013 / (0.3*X); //0.3 (LM-Systems Handbook, lambda in schematic for PRM) for LM-4 and beyond, 0.1 (G&C Data Book as above) for LM-3 and earlier. Can be made mission specific
 }
 
-bool ATCA::PRMTimestep(int n, double simdt, double pp, double pw)
+bool ATCA::PRMTimestep(int n, double simdt, double t_on, double t_off)
 {
+	//Two version currently. Let's find out which one is correct
+	//On first, then off
+	bool on = false;
+	if (PRMCycleTime[n] >= t_on + t_off)
+	{
+		PRMCycleTime[n] = 0.0;
+	}
+
+	if (PRMCycleTime[n] <= t_on)
+	{
+		on = true;
+	}
+	else
+	{
+		on = false;
+	}
 	PRMCycleTime[n] += simdt;
-	PRMOffTime[n] += simdt;
+	return on;
 
-	if (PRMCycleTime[n] > pp)
+	//Off first, then on
+	/*bool on = false;
+	PRMCycleTime[n] += simdt;
+	if (PRMCycleTime[n] > t_off)
 	{
-		PRMCycleTime[n] =  0.0;
-		PRMOffTime[n] = 0.0;
+		on = true;
+	}
+	else
+	{
+		on = false;
+	}
+	if (PRMCycleTime[n] > t_off + t_on)
+	{
+		PRMCycleTime[n] = 0.0;
 	}
 
-	if (PRMOffTime[n] < pw + simdt)
-	{
-		return true;
-	}
-
-	return false;
+	return on;*/
 }
 
 void ATCA::Limiter(double &val, double lim)
@@ -1176,6 +1269,22 @@ void ATCA::Limiter(double &val, double lim)
 	else if (val < -lim)
 	{
 		val = -lim;
+	}
+}
+
+void ATCA::Deadband(double &val, double thres)
+{
+	if (val > thres)
+	{
+		val = val - thres;
+	}
+	else if (val < -thres)
+	{
+		val = val + thres;
+	}
+	else
+	{
+		val = 0.0;
 	}
 }
 
@@ -1510,11 +1619,11 @@ void DECA::Timestep(double simdt) {
 	{
 		double atcaPitch = lem->atca.GetDPSPitchGimbalError();
 
-		if (atcaPitch > 0.5)
+		if (atcaPitch > 0.7875)
 		{
 			pitchactuatorcommand = 1;
 		}
-		else if (atcaPitch < -0.5)
+		else if (atcaPitch < -0.7875)
 		{
 			pitchactuatorcommand = -1;
 		}
@@ -1535,11 +1644,11 @@ void DECA::Timestep(double simdt) {
 	{
 		double atcaRoll = lem->atca.GetDPSRollGimbalError();
 
-		if (atcaRoll > 0.5)
+		if (atcaRoll > 0.7875)
 		{
 			rollactuatorcommand = 1;
 		}
-		else if (atcaRoll < -0.5)
+		else if (atcaRoll < -0.7875)
 		{
 			rollactuatorcommand = -1;
 		}
