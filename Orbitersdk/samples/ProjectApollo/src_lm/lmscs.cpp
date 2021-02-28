@@ -1217,7 +1217,7 @@ double ATCA::PRMOnTime(double X)
 double ATCA::PRMOffTime(double X)
 {
 	//X is normalized voltage (0 to 1)
-	return 0.013 / (0.3*X); //0.3 (LM-Systems Handbook, lambda in schematic for PRM) for LM-4 and beyond, 0.1 (G&C Data Book as above) for LM-3 and earlier. Can be made mission specific
+	return 0.013 / (lem->pMission->GetATCA_PRM_Factor() *X); //0.3 (LM-Systems Handbook, lambda in schematic for PRM) for LM-4 and beyond, 0.1 (G&C Data Book as above) for LM-3 and earlier. Can be made mission specific
 }
 
 bool ATCA::PRMTimestep(int n, double simdt, double t_on, double t_off)
