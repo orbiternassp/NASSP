@@ -5084,7 +5084,7 @@ bool TLMCCAzimuthConstraintsInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSetTLMCCTLCTimesConstraints()
 {
 	bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint)", TLMCCTLCTimesConstraintsInput, 0, 40, (void*)this);
+	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint, enter F23; to clear both)", TLMCCTLCTimesConstraintsInput, 0, 40, (void*)this);
 }
 
 bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data)

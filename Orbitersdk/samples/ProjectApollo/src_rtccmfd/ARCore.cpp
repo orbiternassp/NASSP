@@ -2351,6 +2351,11 @@ void ARCore::NodeConvCalc()
 
 void ARCore::SendNodeToSFP()
 {
+	//If SFP block 2 hasn't been generated yet, copy it over from block 1 and then write the nodal target to it
+	if (GC->rtcc->PZSFPTAB.blocks[1].GMTTimeFlag == 0.0)
+	{
+		GC->rtcc->PZSFPTAB.blocks[1] = GC->rtcc->PZSFPTAB.blocks[0];
+	}
 	GC->rtcc->PZSFPTAB.blocks[1].GMT_nd = GC->rtcc->GMTfromGET(NodeConvGET);
 	GC->rtcc->PZSFPTAB.blocks[1].lat_nd = NodeConvResLat;
 	GC->rtcc->PZSFPTAB.blocks[1].lng_nd = NodeConvResLng;
