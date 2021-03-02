@@ -4682,7 +4682,7 @@ public:
 		double Weight[40];
 		VECTOR3 CG[40];
 		int N;
-	} LMDSCCGTAB;
+	} LMDSCCGTAB, LMASCCGTAB;
 };
 
 #endif

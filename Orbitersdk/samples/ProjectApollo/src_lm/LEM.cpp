@@ -411,6 +411,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	SetDockMode(0);
 
 	// Docking port (0)
+	// CSM/LM interface is located at 312.5 inches in LM coordinates
+	// Applying the same shift as for the DPS in lemmesh.cpp this gives: 312.5 in - (254 in - 0.99 m) = 2.4759 m
+	// TBD: Implement that
 	SetLmDockingPort(2.6);
 
 	// Docking port used for LM/SLA connection (1)
@@ -2236,42 +2239,52 @@ void LEM::StopSeparationPyros()
 
 void LEM::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 {
+	double tanky, resty, fm, restmass, totaly;
 	double m = GetMass();
 
 	//Descent stage
 	if (stage < 2)
 	{
 		//Y-coordinate of DPS propellant tanks
-		double tanky = 4.067429;
+		tanky = 4.067429;
 		//Y-coordinate of "rest" of the full LM (empirically derived)
-		double resty = 5.5;
-		double fm = 0.0;
+		resty = 5.5;
+		fm = 0.0;
 		if (ph_Dsc != NULL) { fm = GetPropellantMass(ph_Dsc); }
-		double restmass = m - fm;
-		double totaly = (tanky*fm + resty * restmass) / m;
+		restmass = m - fm;
+		totaly = (tanky*fm + resty * restmass) / m;
 
-		//5.4516 is the offset between the full LM mesh and the LM coordinate system
-		COG = _V(0.0, totaly - 5.4516, 0.0);
+		//5.4616 is the offset between the full LM mesh and the LM coordinate system
+		COG = _V(0.0, totaly - 5.4616, 0.0);
 		//COG = _V(0.0, 0.0, 0.0);
 		PMI = _V(2.5428, 2.2871, 2.7566);
 	}
 	//Ascent stage
 	else
 	{
-		//Use this when RCS minimum impulse behavior is better
-		/*static double xaxis[3] = { 3.9839365e-8, -5.363325e-4, 2.625888102 };
-		static double yaxis[3] = { -1.925907e-8, 2.1607777e-4, 1.255232416 };
-		static double zaxis[3] = { -9.068924e-8, 9.4558155e-4, -0.7852828715 };
+		//LM-7 data from Operational Data Book
+		static const double AscIXX[3] = { 8.7719e-08, -7.9329e-04, 7.9773e+00 };
+		static const double AscIYY[3] = { 2.1488e-10, -2.5485e-06, 1.2769e-02 };
+		static const double AscIZZ[3] = { 6.1788e-09, -6.9019e-05, 2.5186e-01 };
 
-		COG = _V(0, -0.8755, 0);
 		VECTOR3 p;
+		p.x = AscIXX[0] * m*m + AscIXX[1] * m + AscIXX[2];
+		p.y = AscIYY[0] * m*m + AscIYY[1] * m + AscIYY[2];
+		p.z = AscIZZ[0] * m*m + AscIZZ[1] * m + AscIZZ[2];
+		//7.2116 is the offset between the ascent stage mesh and the LM coordinate system
+		COG = _V(p.y, p.x - 7.2116, p.z);
+
+		//LM-7 mass data from Operational Data Book
+		static double xaxis[3] = { -9.773352930507752e-09,  -2.002652528853579e-04,   2.158070696191321e+00 };
+		static double yaxis[3] = { -1.982580828901464e-08,   2.180921051287748e-04,   1.279468795611901e+00 };
+		static double zaxis[3] = { -1.493493149106471e-07,   1.346185241563343e-03,  -1.387949293268988e+00 };
 
 		p.x = xaxis[0] * m*m + xaxis[1] * m + xaxis[2];
 		p.y = yaxis[0] * m*m + yaxis[1] * m + yaxis[2];
 		p.z = zaxis[0] * m*m + zaxis[1] * m + zaxis[2];
-		PMI = p;*/
+		PMI = p;
 
-		PMI = _V(2.8, 2.29, 2.37);
-		COG = _V(0, 0, 0);
+		//PMI = _V(2.8, 2.29, 2.37);
+		//COG = _V(0, 0, 0);
 	}
 }
