@@ -1594,6 +1594,8 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
 			SAVE_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
 			SAVE_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+			SAVE_DOUBLE("MCC_AP10CSI_DEDA275", form->DEDA275);
+			SAVE_DOUBLE("MCC_AP10CSI_DEDA373", form->DEDA373);
 			SAVE_INT("MCC_AP10CSI_type", form->type);
 		}
 		else if (padNumber == PT_GENERIC)
@@ -2116,6 +2118,8 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
 			LOAD_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
 			LOAD_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+			LOAD_DOUBLE("MCC_AP10CSI_DEDA275", form->DEDA275);
+			LOAD_DOUBLE("MCC_AP10CSI_DEDA373", form->DEDA373);
 			LOAD_INT("MCC_AP10CSI_type", form->type);
 		}
 		else if (padNumber == PT_GENERIC)
@@ -2819,7 +2823,7 @@ void MCC::drawPad(bool writetofile){
 
 		if (form->type == 0)
 		{
-			sprintf(buffer, "PDI ABORT <10 MIN\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\n%+06d HRS\n%+06d MIN\n%+07.2f SEC PHASING TIG\n"
+			sprintf(buffer, "PDI ABORT <10 MIN\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\nPDI ABORT >10 MIN\n%+06d HRS\n%+06d MIN\n%+07.2f SEC PHASING TIG\n"
 				"%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC", hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
 		}
 		else
@@ -3897,6 +3901,8 @@ void MCC::SetCSM(char *csmname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(CSMName, csmname, 64);
+
 	hVessel = oapiGetObjectByName(csmname);
 	if (hVessel != NULL)
 	{
@@ -3906,7 +3912,6 @@ void MCC::SetCSM(char *csmname)
 			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
-			strncat(CSMName, csmname, 64);
 			cm = (Saturn *)v;
 			rtcc->calcParams.src = cm;
 		}
@@ -3917,6 +3922,8 @@ void MCC::SetLM(char *lemname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(LEMName, lemname, 64);
+
 	hVessel = oapiGetObjectByName(lemname);
 	if (hVessel != NULL)
 	{
@@ -3924,7 +3931,6 @@ void MCC::SetLM(char *lemname)
 
 		if (!_stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
-			strncat(LEMName, lemname, 64);
 			lm = (LEM *)v;
 			rtcc->calcParams.tgt = v;
 		}
@@ -3936,6 +3942,8 @@ void MCC::SetLV(char *lvname)
 	VESSEL *v;
 	OBJHANDLE hVessel;
 
+	strncat(LVName, lvname, 64);
+
 	hVessel = oapiGetObjectByName(lvname);
 	if (hVessel != NULL)
 	{
@@ -3945,7 +3953,6 @@ void MCC::SetLV(char *lvname)
 			!_stricmp(v->GetClassName(), "ProjectApollo/sat5stg3") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") ||
 			!_stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) {
-			strncat(LVName, lvname, 64);
 			sivb = (SIVB *)v;
 		}
 	}

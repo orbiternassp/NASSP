@@ -325,7 +325,7 @@ PMMRKJ_LABEL_15A:
 	}
 PMMRKJ_LABEL_15B:
 	IJ = 0;
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && TArr.IC == 13 && TArr.LMDESCJETT <= TBM)
+	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && (TArr.IC == 13 || TArr.IC == 5) && TArr.LMDESCJETT <= TBM)
 	{
 		goto PMMRKJ_LABEL_15C;
 	}
@@ -522,7 +522,16 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	DV_ul = 0.0;
 	X_B = Y_B = Z_B = _V(0, 0, 0);
 	Kg = 0;
-	IJ = 0;
+	
+	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && (TArr.IC == 13 || TArr.IC == 5) && TArr.LMDESCJETT <= TBM)
+	{
+		IJ = 1;
+	}
+	else
+	{
+		IJ = 0;
+	}
+
 	DTMANE = 0.0;
 	A_T_in = TArr.AT;
 
@@ -560,6 +569,12 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	{
 		WC = TArr.CSMWT;
 		WL = 0.0;
+		WS = 0.0;
+	}
+	else if (TArr.IC == 5)
+	{
+		WC = TArr.CSMWT;
+		WL = TArr.LMAWT;
 		WS = 0.0;
 	}
 	else if (TArr.IC == 12)

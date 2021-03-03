@@ -103,6 +103,7 @@ namespace mission {
 		strLGCVersion = "Luminary210";
 		strAEAVersion = "FP8";
 		bInvertLMStageBit = false;
+		dATCA_PRM_Factor = 0.3;
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -156,6 +157,7 @@ namespace mission {
 			strAEAVersion = buffer;
 		}
 		oapiReadItem_bool(hFile, "InvertLMStageBit", bInvertLMStageBit);
+		oapiReadItem_float(hFile, "ATCA_PRM_Factor", dATCA_PRM_Factor);
 
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
@@ -234,5 +236,10 @@ namespace mission {
 	bool Mission::IsLMStageBitInverted() const
 	{
 		return bInvertLMStageBit;
+	}
+
+	double Mission::GetATCA_PRM_Factor() const
+	{
+		return dATCA_PRM_Factor;
 	}
 }

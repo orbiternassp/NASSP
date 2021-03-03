@@ -91,15 +91,17 @@ public:
 	int lgc_err_ena;                    // LGC error counter enabled
 	bool pgns_jet_request[16];
 	bool ags_jet_request[16];
+	bool jet_driver[16];
 	int jet_request[16];				// Jet request list
 	int jet_last_request[16];			// Jet request list at last timestep
 	double jet_start[16],jet_stop[16];  // RCS jet start/stop times
 protected:
 
-	double PRMDutyRatio(double volt);
-	double PRMPulseWidth(double volt);
-	bool PRMTimestep(int n, double simdt, double pp, double pw);
+	double PRMOnTime(double X);
+	double PRMOffTime(double X);
+	bool PRMTimestep(int n, double simdt, double t_on, double t_off);
 	void Limiter(double &val, double lim);
+	void Deadband(double &val, double thres);
 	double ImpulseOn(double t0, double dt);
 	double ImpulseOff(double t0, double dt);
 	bool CalculateThrustLevel(double simt, double t_start, double t_stop, double simdt, double &power);
@@ -112,12 +114,8 @@ protected:
 	double SummingAmplifierOutput[8];
 	bool PRMPulse[8];
 	double PRMCycleTime[8];
-	double PRMOffTime[8];
 	bool hasAbortPower;
 	bool hasPrimPower;
-	VECTOR3 ACARateGain;
-	VECTOR3 RateGain;
-	VECTOR3 DeadbandGain;
 	double pitchGimbalError;
 	double rollGimbalError;
 
@@ -153,6 +151,12 @@ protected:
 	bool K20;
 	//Pulse Mode Roll
 	bool K21;
+
+	//GAINS
+	static const double atterr_limit_dsc_ry, atterr_limit_dsc_p, atterr_limit_asc_ry, atterr_limit_asc_p;
+	static const double narrowdb_thres_rp, narrowdb_thres_y, widedb_thres;
+	static const double gain_insumamp;
+	static const double atterrtransformer, attratetransformer_asc, attratetransformer_dsc, acaratetransformer_asc, acaratetransformer_dsc;
 };
 
 class DECA {

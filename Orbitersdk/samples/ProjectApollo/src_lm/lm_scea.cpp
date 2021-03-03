@@ -297,21 +297,21 @@ void SCERA1::Timestep()
 	double dval = 0.0;
 
 	//Jet Driver B2U Output (GH1426V)
-	SA2.SetOutput(1, lem->atca.jet_request[LMRCS_B2U] == 1);
+	SA2.SetOutput(1, lem->atca.jet_driver[LMRCS_B2U] == 1);
 	//Jet Driver A2D Output (GH1427V)
-	SA2.SetOutput(2, lem->atca.jet_request[LMRCS_A2D] == 1);
+	SA2.SetOutput(2, lem->atca.jet_driver[LMRCS_A2D] == 1);
 	//Jet Driver A2A Output (GH1428V)
-	SA2.SetOutput(3, lem->atca.jet_request[LMRCS_A2A] == 1);
+	SA2.SetOutput(3, lem->atca.jet_driver[LMRCS_A2A] == 1);
 	//Jet Driver B2L Output (GH1429V)
-	SA2.SetOutput(4, lem->atca.jet_request[LMRCS_B2L] == 1);
+	SA2.SetOutput(4, lem->atca.jet_driver[LMRCS_B2L] == 1);
 	//Jet Driver A1U Output (GH1430V)
-	SA2.SetOutput(5, lem->atca.jet_request[LMRCS_A1U] == 1);
+	SA2.SetOutput(5, lem->atca.jet_driver[LMRCS_A1U] == 1);
 	//Jet Driver B1D Output (GH1431V)
-	SA2.SetOutput(6, lem->atca.jet_request[LMRCS_B1D] == 1);
+	SA2.SetOutput(6, lem->atca.jet_driver[LMRCS_B1D] == 1);
 	//Jet Driver B1L Output (GH1433V)
-	SA2.SetOutput(7, lem->atca.jet_request[LMRCS_B1L] == 1);
+	SA2.SetOutput(7, lem->atca.jet_driver[LMRCS_B1L] == 1);
 	//Jet Driver A1F Output (GH1432V)
-	SA2.SetOutput(8, lem->atca.jet_request[LMRCS_A1F] == 1);
+	SA2.SetOutput(8, lem->atca.jet_driver[LMRCS_A1F] == 1);
 	//Abort Command (GY0050X)
 	SA2.SetOutput(9, lem->AbortSwitch.GetState() == 0 && lem->SCS_ENG_CONT_CB.IsPowered());
 	//Spare
@@ -341,21 +341,21 @@ void SCERA1::Timestep()
 	SA4.SetOutput(1, lem->aea.GetTestModeFailure());
 	//Spare
 	//Jet Driver B4U Output (GH1418V)
-	SA4.SetOutput(3, lem->atca.jet_request[LMRCS_B4U] == 1);
+	SA4.SetOutput(3, lem->atca.jet_driver[LMRCS_B4U] == 1);
 	//Jet Driver B4F Output (GH1420V)
-	SA4.SetOutput(4, lem->atca.jet_request[LMRCS_B4F] == 1);
+	SA4.SetOutput(4, lem->atca.jet_driver[LMRCS_B4F] == 1);
 	//Jet Driver A4D Output (GH1419V)
-	SA4.SetOutput(5, lem->atca.jet_request[LMRCS_A4D] == 1);
+	SA4.SetOutput(5, lem->atca.jet_driver[LMRCS_A4D] == 1);
 	//Jet Driver A4R Output (GH1421V)
-	SA4.SetOutput(6, lem->atca.jet_request[LMRCS_A4R] == 1);
+	SA4.SetOutput(6, lem->atca.jet_driver[LMRCS_A4R] == 1);
 	//Jet Driver A3U Output (GH1422V)
-	SA4.SetOutput(7, lem->atca.jet_request[LMRCS_A3U] == 1);
+	SA4.SetOutput(7, lem->atca.jet_driver[LMRCS_A3U] == 1);
 	//Jet Driver B3D Output (GH1423V)
-	SA4.SetOutput(8, lem->atca.jet_request[LMRCS_B3D] == 1);
+	SA4.SetOutput(8, lem->atca.jet_driver[LMRCS_B3D] == 1);
 	//Jet Driver B3A Output (GH1424V)
-	SA4.SetOutput(9, lem->atca.jet_request[LMRCS_B3A] == 1);
+	SA4.SetOutput(9, lem->atca.jet_driver[LMRCS_B3A] == 1);
 	//Jet Driver A3R Output (GH1425V)
-	SA4.SetOutput(10, lem->atca.jet_request[LMRCS_A3R] == 1);
+	SA4.SetOutput(10, lem->atca.jet_driver[LMRCS_A3R] == 1);
 
 	//Suit outlet pressure (GF1301)
 	SA5.SetOutput(1, scale_data(lem->ecs.GetSuitPressurePSI(), 0.0, 10.0));

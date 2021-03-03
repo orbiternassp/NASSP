@@ -1489,6 +1489,36 @@ RTCC::RTCC()
 	LMDSCCGTAB.CG[39] = _V(4.731846, 0.000000, 0.000000);
 	LMDSCCGTAB.N = 40;
 
+	LMASCCGTAB.Weight[0] = 2267.960000;
+	LMASCCGTAB.CG[0] = _V(6.629321, 0.008094, 0.127109);
+	LMASCCGTAB.Weight[1] = 2494.756000;
+	LMASCCGTAB.CG[1] = _V(6.544157, 0.007748, 0.118130);
+	LMASCCGTAB.Weight[2] = 2721.552000;
+	LMASCCGTAB.CG[2] = _V(6.468017, 0.007424, 0.109787);
+	LMASCCGTAB.Weight[3] = 2948.348000;
+	LMASCCGTAB.CG[3] = _V(6.400901, 0.007123, 0.102079);
+	LMASCCGTAB.Weight[4] = 3175.144000;
+	LMASCCGTAB.CG[4] = _V(6.342809, 0.006843, 0.095007);
+	LMASCCGTAB.Weight[5] = 3401.940000;
+	LMASCCGTAB.CG[5] = _V(6.293741, 0.006586, 0.088570);
+	LMASCCGTAB.Weight[6] = 3628.736000;
+	LMASCCGTAB.CG[6] = _V(6.253696, 0.006350, 0.082769);
+	LMASCCGTAB.Weight[7] = 3855.532000;
+	LMASCCGTAB.CG[7] = _V(6.222676, 0.006137, 0.077604);
+	LMASCCGTAB.Weight[8] = 4082.328000;
+	LMASCCGTAB.CG[8] = _V(6.200679, 0.005946, 0.073074);
+	LMASCCGTAB.Weight[9] = 4309.124000;
+	LMASCCGTAB.CG[9] = _V(6.187706, 0.005777, 0.069180);
+	LMASCCGTAB.Weight[10] = 4535.920000;
+	LMASCCGTAB.CG[10] = _V(6.183757, 0.005630, 0.065922);
+	LMASCCGTAB.Weight[11] = 4762.716000;
+	LMASCCGTAB.CG[11] = _V(6.188832, 0.005505, 0.063299);
+	LMASCCGTAB.Weight[12] = 4989.512000;
+	LMASCCGTAB.CG[12] = _V(6.202931, 0.005402, 0.061312);
+	LMASCCGTAB.Weight[13] = 5216.308000;
+	LMASCCGTAB.CG[13] = _V(6.226054, 0.005322, 0.059961);
+	LMASCCGTAB.N = 14;
+
 	//Load star table
 	EMSGSUPP(0, 0);
 
@@ -15481,7 +15511,14 @@ RTCC_PMMMPT_12_A:
 	integin.KAUXOP = 1;
 	integin.KEPHOP = 0;
 	integin.KTRIMOP = man.TrimAngleInd;
-	integin.LMDESCJETT = 1e70;
+	if (man.CommonBlock.ConfigCode[RTCC_CONFIG_D] == true)
+	{
+		integin.LMDESCJETT = 1e70;
+	}
+	else
+	{
+		integin.LMDESCJETT = 0;
+	}
 	integin.MANOP = 4;
 	integin.ThrusterCode = man.Thruster;
 	integin.TVC = man.TVC;
@@ -16887,7 +16924,15 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			integin.KEPHOP = 0;
 		}
 		integin.KTRIMOP = mpt->mantable[i].TrimAngleInd;
-		integin.LMDESCJETT = 1e70;
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_D] == true)
+		{
+			integin.LMDESCJETT = 1e70;
+		}
+		else
+		{
+			integin.LMDESCJETT = 0;
+		}
+
 		if (mpt->mantable[i].AttitudesInput)
 		{
 			integin.MANOP = -mpt->mantable[i].AttitudeCode;
@@ -23815,7 +23860,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 				return 1;
 			}
 			get = hh + mm / 60.0 + ss / 3600.0;
-			if (get > PZMCCPLN.TLMIN)
+			if (get == 0.0 || get > PZMCCPLN.TLMIN)
 			{
 				PZMCCPLN.TLMAX = get;
 			}
@@ -28109,7 +28154,15 @@ PCMATC_5A:
 	integin.KAUXOP = 1;
 	integin.KEPHOP = 0;
 	integin.KTRIMOP = vars->TrimAngleInd;
-	integin.LMDESCJETT = 1e70;
+	std::bitset<4> cfg = vars->ConfigCode;
+	if (cfg[RTCC_CONFIG_D] == true)
+	{
+		integin.LMDESCJETT = 1e70;
+	}
+	else
+	{
+		integin.LMDESCJETT = 0;
+	}
 	integin.MANOP = vars->AttitudeCode;
 
 	integin.sv0 = sv1;

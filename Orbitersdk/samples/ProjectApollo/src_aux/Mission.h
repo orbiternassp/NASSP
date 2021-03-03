@@ -68,6 +68,8 @@ namespace mission
 		virtual const std::string& GetAEAVersion() const;
 		//false = LM stage verify bit normal, true = inverted
 		bool IsLMStageBitInverted() const;
+		//Value of adjustable gain in pulse ratio modulator of the ATCA in the LM. 0.3 used for LM-4 and later, 0.1 for LM-3 and before
+		double Mission::GetATCA_PRM_Factor() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
@@ -87,6 +89,7 @@ namespace mission
 		bool bCSMHasHGA;
 		bool bCSMHasVHFRanging;
 		bool bInvertLMStageBit;
+		double dATCA_PRM_Factor;
 
 		void SetDefaultValues();
 	};

@@ -164,7 +164,10 @@ void LEM::SetLmVesselDockStage()
 	}
 
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster(_V(0.0, -1.54, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
+	//Ascent stage mesh has RCS plane as reference, but it's shifted by 0.99 m up for center of full LM mesh
+	//RCS plane is at 254 inches in LM coordinates. DPS gimbal plane is at 154 inches in LM coordinates
+	//Therefore: 3.9116 m - (6.4516 m - 0.99 m) = -1.55 m for the DPS reference position
+	th_hover[0] = CreateThruster(_V(0.0, -1.55, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
 
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
@@ -179,7 +182,8 @@ void LEM::SetLmVesselDockStage()
 
 	SetCameraOffset(_V(-0.58, 1.60, 1.40) - currentCoG); // Has to be the same as LPD view
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH(-5.4516);
+
+	AddRCS_LMH(-5.4616); //254 inches minus the 0.99m offset from mesh_asc = 5.4616 m
 	status = 0;
 	stage = 0;
 
@@ -229,7 +233,10 @@ void LEM::SetLmVesselHoverStage()
 	}
 	
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster(_V(0.0, -1.54, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
+	//Ascent stage mesh has RCS plane as reference, but it's shifted by 0.99 m up for center of full LM mesh
+	//RCS plane is at 254 inches in LM coordinates. DPS gimbal plane is at 154 inches in LM coordinates
+	//Therefore: 3.9116 m - (6.4516 m - 0.99 m) = -1.55 m for the DPS reference position
+	th_hover[0] = CreateThruster(_V(0.0, -1.55, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
 
 	DelThrusterGroup(THGROUP_HOVER, true);
 	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
@@ -246,7 +253,7 @@ void LEM::SetLmVesselHoverStage()
 	status = 1;
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH(-5.4516);
+	AddRCS_LMH(-5.4616); //254 inches minus the 0.99m offset from mesh_asc = 5.4616 m
 
 	InitNavRadios (4);
 
@@ -304,13 +311,19 @@ void LEM::SetLmAscentHoverStage()
 	}
 
 	// orbiter main thrusters
-    th_hover[0] = CreateThruster (_V( 0.0,  -2.5, 0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
+	//Point of thrust application of the APS is at 232.96 inches in LM coordinates
+	//Center of mesh is the RCS reference plane at 254 inches in LM coordinates
+	//Mesh is shifted up by 0.99 meters when it is loaded and then 1.75 meters down with ShiftCG in this function
+	//Therefore we need to calculate: 232.96 in - (254 in - 0.99 m + 1.75 m) = -1.294416 m
+	//Point of thrust application is also shifted 3.75 in (0.09525 m) in the z-axis.
+	//And it's canted at 1.5° to point through the CG which is located forward of the centerline
+    th_hover[0] = CreateThruster (_V( 0.0,  -1.294416, 0.09525), _V( 0,cos(1.5*RAD),sin(1.5*RAD)), APS_THRUST, ph_Asc, APS_ISP);
 
     DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 	
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[0], NULL, NULL, NULL, 6.0, 0.8, -0.5, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
+		{ th_hover[0], NULL, NULL, NULL, 6.0, 0.8, 0.5, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);
@@ -319,13 +332,16 @@ void LEM::SetLmAscentHoverStage()
 	status = 2;
 	stage = 2;
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH(-7.2016);
+	AddRCS_LMH(-7.2116);  //254 inches minus the 0.99m offset from mesh_asc and plus 1.75 m from the ShiftCG = 7.2116 m
 
 	if(ph_Dsc){
 		DelPropellantResource(ph_Dsc);
 		ph_Dsc = 0;
 	}
 	
+	// CSM/LM interface is located at 312.5 inches in LM coordinates
+	// Applying the same shift as for APS and RCS this gives: 312.5 in - (254 in - 0.99 m + 1.75 m) = 0.7259 m
+	// TBD: Implement that
 	SetLmDockingPort(0.85);
 	InitNavRadios (4);
 
