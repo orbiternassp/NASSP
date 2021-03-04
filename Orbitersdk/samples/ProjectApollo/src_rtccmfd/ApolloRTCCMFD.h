@@ -180,6 +180,7 @@ public:
 	void set_SVtime(double SVtime);
 	void menuSetAGSKFactor();
 	void set_AGSKFactor(char *str);
+	void menuGetAGSKFactor();
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSetMapUpdateGET();

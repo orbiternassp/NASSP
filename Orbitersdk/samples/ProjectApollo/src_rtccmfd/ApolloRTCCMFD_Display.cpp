@@ -732,33 +732,42 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (G->SVSlot)
 		{
-			skp->Text((int)(0.5 * W / 8), 10 * H / 14, "CSM", 3);
+			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "CSM", 3);
 		}
 		else
 		{
-			skp->Text((int)(0.5 * W / 8), 10 * H / 14, "LM", 2);
+			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "LM", 2);
 		}
 
 		if (G->svtarget != NULL)
 		{
 			sprintf(Buffer, G->svtarget->GetName());
-			skp->Text((int)(0.5 * W / 8), 8 * H / 14, Buffer, strlen(Buffer));
+			skp->Text((int)(0.5 * W / 8), 6 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "No Target!", 10);
+			skp->Text((int)(0.5 * W / 8), 6 * H / 14, "No Target!", 10);
 		}
 
-		skp->Text((int)(0.5 * W / 8), 5 * H / 14, "REFSMMAT:", 9);
+		skp->Text((int)(0.5 * W / 8), 3 * H / 14, "REFSMMAT:", 9);
 		REFSMMATName(Buffer, G->REFSMMATcur);
-		skp->Text((int)(0.5 * W / 8), 6 * H / 14, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 
 		int hh, mm;
 		double secs;
 
-		SStoHHMMSS(GC->rtcc->GETfromGMT(GC->rtcc->GetAGSClockZero()), hh, mm, secs);
+		SStoHHMMSS(GC->rtcc->GETfromGMT(GC->rtcc->GetAGSClockZero()), hh, mm, secs); //Should be relative to LGC clock zero instead of liftoff time
 		sprintf(Buffer, "%d:%02d:%05.2f GET", hh, mm, secs);
-		skp->Text((int)(0.5 * W / 8), 12 * H / 14, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->subThreadStatus > 0)
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "Calculating...", 14);
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "Calculate K-Factor", 18);
+		}
 
 		sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA240);
 		skp->Text(4 * W / 8, 4 * H / 21, Buffer, strlen(Buffer));
