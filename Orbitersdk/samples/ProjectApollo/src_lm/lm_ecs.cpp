@@ -1071,7 +1071,8 @@ void LEMCabinFan::SystemTimestep(double simdt)
 	}
 
 	if (cabinFan->pumping) {
-		cabinFanHeat->GenerateHeat(36.5);
+		//cabinFanHeat->GenerateHeat(36.5);  //Not sure about this heat load, seems very high
+		cabinFanHeat->GenerateHeat(18.2);  //Testing lower heat
 	}
 }
 
