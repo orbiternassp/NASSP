@@ -1138,6 +1138,11 @@ void ARCore::GeneralMEDRequest()
 	startSubthread(53);
 }
 
+void ARCore::GetAGSKFactor()
+{
+	startSubthread(35);
+}
+
 void ARCore::TransferTIToMPT()
 {
 	startSubthread(38);
@@ -4236,8 +4241,24 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 35: //Spare
+	case 35: //AGS Clock Sync
 	{
+		if (vesseltype < 2)
+		{
+			Result = 0;
+			break;
+		}
+
+		LEM *l = (LEM*)vessel;
+
+		double KFactor;
+		bool res = GC->rtcc->CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
+		if (res)
+		{
+			//TBD: Use MED P15 instead
+			GC->rtcc->SystemParameters.MCGZSS = GC->rtcc->SystemParameters.MCGZSL + KFactor / 3600.0;
+		}
+
 		Result = 0;
 	}
 	break;

@@ -31052,3 +31052,29 @@ bool RTCC::QMGEPH(double gmtbase, double HOURS)
 	//MCCBES = HOURS;
 	return false;
 }
+
+bool RTCC::CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor)
+{
+	//This function only works in a thread
+	uint32_t tim_old, TA1, TA2;
+	double simt;
+
+	simt = oapiGetSimTime();
+	tim_old = aea->Memory[0377];
+	do
+	{
+		if (oapiGetSimTime() > simt + 3.0)
+		{
+			//Give up after 3 seconds
+			return false;
+		}
+		TA1 = aea->Memory[0377];
+	} while (tim_old == TA1 || TA1 == 0);
+	//Quickly get data from AGC
+	double t_agc = GetClockTimeFromAGC(agc) / 100.0;
+	TA2 = aea->Memory[0353];
+	double t_aea = 2.0*TA1 + pow(2, -16)*TA2;
+	KFactor = t_agc - t_aea;
+
+	return true;
+}

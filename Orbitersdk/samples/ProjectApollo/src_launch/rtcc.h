@@ -28,6 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include <deque>
 #include <bitset>
 #include "../src_sys/yaAGC/agc_engine.h"
+#include "../src_lm/yaAGS/aea_engine.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/LDPP.h"
 #include "../src_rtccmfd/EntryCalculations.h"
@@ -2505,6 +2506,7 @@ public:
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, bool cmc);
+	bool CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor);
 
 	//Actual RTCC Subroutines
 

@@ -93,37 +93,13 @@ LM_VHF::LM_VHF():
 
 	VHFHeat = 0;
 	VHFSECHeat = 0;
-	PCMHeat = 0;
-	PCMSECHeat = 0;
-	conn_state = 0;
-	uplink_state = 0; rx_offset = 0;
-	mcc_size = 0; mcc_offset = 0;
-	wsk_error = 0;
-	last_update = 0;
-	last_rx = 0;
-	pcm_rate_override = 0;
 	receiveA = false;
 	receiveB = false;
 	transmitA = false;
 	transmitB = false;
 }
 
-bool LM_VHF::registerSocket(SOCKET sock)
-{
-	HMODULE hpac = GetModuleHandle("modules\\startup\\ProjectApolloConfigurator.dll");
-	if (hpac) {
-		bool (__cdecl *regSocket1)(SOCKET);
-		regSocket1 = (bool (__cdecl *)(SOCKET)) GetProcAddress(hpac,"pacDefineSocket");
-		if (regSocket1)	{
-			if (!regSocket1(sock))
-				return false;
-		} else {
-			return false;
-		}
-	}
-	return true;
-}
-void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh){
+void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh){
 	
 	lem = vessel;
 	AntennaSelectorSW = &lem->Panel12VHFAntSelKnob;
@@ -155,65 +131,6 @@ void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad
 
 	VHFHeat = vhfh;
 	VHFSECHeat = secvhfh;
-	PCMHeat = pcmh;
-	PCMSECHeat = secpcmh;
-	conn_state = 0;
-	uplink_state = 0; rx_offset = 0;
-	mcc_size = 0; mcc_offset = 0;
-	wsk_error = 0;
-	last_update = 0;
-	last_rx = MINUS_INFINITY;
-	word_addr = 0;
-	pcm_rate_override = 0;
-	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
-	if ( iResult != NO_ERROR ){
-		sprintf(wsk_emsg,"LM-TELECOM: Error at WSAStartup()");
-		wsk_error = 1;
-		return;
-	}
-	m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
-	if ( m_socket == INVALID_SOCKET ) {
-		sprintf(wsk_emsg,"LM-TELECOM: Error at socket(): %ld", WSAGetLastError());
-		WSACleanup();
-		wsk_error = 1;
-		return;
-	}
-	// Be nonblocking
-	int iMode = 1; // 0 = BLOCKING, 1 = NONBLOCKING
-	if(ioctlsocket(m_socket, FIONBIO, (u_long FAR*) &iMode) != 0){
-		sprintf(wsk_emsg,"LM-TELECOM: ioctlsocket() failed: %ld", WSAGetLastError());
-		wsk_error = 1;
-		closesocket(m_socket);
-		WSACleanup();
-		return;
-	}
-
-	// Set up incoming options
-	service.sin_family = AF_INET;
-	service.sin_addr.s_addr = htonl(INADDR_ANY);
-	service.sin_port = htons( 14243 ); // CM on 14242, LM on 14243
-
-	if ( ::bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
-		sprintf(wsk_emsg,"LM-TELECOM: bind() failed: %ld", WSAGetLastError());
-		wsk_error = 1;
-		closesocket(m_socket);
-		WSACleanup();
-		return;
-	}
-	if ( listen( m_socket, 1 ) == SOCKET_ERROR ){
-		wsk_error = 1;
-		sprintf(wsk_emsg,"LM-TELECOM: listen() failed: %ld", WSAGetLastError());
-		closesocket(m_socket);
-		WSACleanup();
-		return;
-	}
-	if(!registerSocket(m_socket))
-	{
-		sprintf(wsk_emsg,"LM-TELECOM: Failed to register socket %i for cleanup",m_socket);
-		wsk_error = 1;
-	}
-	conn_state = 1; // INITIALIZED, LISTENING
-	uplink_state = 0; rx_offset = 0;
 }
 
 void LM_VHF::SystemTimestep(double simdt) {
@@ -323,20 +240,6 @@ void LM_VHF::SystemTimestep(double simdt) {
 	if(lem->COMM_SE_AUDIO_CB.Voltage() > 0){ 
 		lem->COMM_SE_AUDIO_CB.DrawPower(4.2); 
 	}
-	// PMP
-	if(lem->COMM_PMP_CB.Voltage() > 0){	
-		lem->COMM_PMP_CB.DrawPower(4.3); 
-	}
-	// Current drain amount for INST_SIG_SENSOR_CB
-	if (lem->INST_SIG_SENSOR_CB.Voltage() > 0) {
-		lem->INST_SIG_SENSOR_CB.DrawPower(10.5);
-	}
-	// PCMTEA
-	if(lem->INST_PCMTEA_CB.Voltage() > 0){ 
-		lem->INST_PCMTEA_CB.DrawPower(11); 
-		PCMHeat->GenerateHeat(5.15);  
-		PCMSECHeat->GenerateHeat(5.15);
-	}
 }
 
 void LM_VHF::Timestep(double simt)
@@ -395,7 +298,7 @@ void LM_VHF::Timestep(double simt)
 	{
 		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
-	
+
 	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
 	{
 		if (receiveA)
@@ -441,7 +344,144 @@ void LM_VHF::Timestep(double simt)
 	}
 
 	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+}
 
+void LM_VHF::LoadState(char *line)
+{
+	int one, two, three, four, five;
+
+	sscanf(line + 14, "%d %d %d %d %d", &one, &two, &three, &four, &five);
+	transmitA = (one != 0);
+	transmitB = (two != 0);
+	receiveA = (three != 0);
+	receiveB = (four != 0);
+	isRanging = (five != 0);
+}
+
+void LM_VHF::SaveState(FILEHANDLE scn)
+{
+	char buffer[256];
+
+	sprintf(buffer, "%d %d %d %d %d", transmitA, transmitB, receiveA, receiveB, isRanging);
+
+	oapiWriteScenario_string(scn, "VHFTRANSCEIVER", buffer);
+}
+
+//PCM
+LM_PCM::LM_PCM()
+{
+	lem = NULL;
+	PCMHeat = 0;
+	PCMSECHeat = 0;
+	conn_state = 0;
+	uplink_state = 0; rx_offset = 0;
+	mcc_size = 0; mcc_offset = 0;
+	wsk_error = 0;
+	last_update = 0;
+	last_rx = 0;
+}
+
+void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh, h_HeatLoad *secpcmh)
+{
+	lem = vessel;
+	PCMHeat = pcmh;
+	PCMSECHeat = secpcmh;
+	conn_state = 0;
+	uplink_state = 0; rx_offset = 0;
+	mcc_size = 0; mcc_offset = 0;
+	wsk_error = 0;
+	last_update = 0;
+	last_rx = MINUS_INFINITY;
+	word_addr = 0;
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != NO_ERROR) {
+		sprintf(wsk_emsg, "LM-TELECOM: Error at WSAStartup()");
+		wsk_error = 1;
+		return;
+	}
+	m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (m_socket == INVALID_SOCKET) {
+		sprintf(wsk_emsg, "LM-TELECOM: Error at socket(): %ld", WSAGetLastError());
+		WSACleanup();
+		wsk_error = 1;
+		return;
+	}
+	// Be nonblocking
+	int iMode = 1; // 0 = BLOCKING, 1 = NONBLOCKING
+	if (ioctlsocket(m_socket, FIONBIO, (u_long FAR*) &iMode) != 0) {
+		sprintf(wsk_emsg, "LM-TELECOM: ioctlsocket() failed: %ld", WSAGetLastError());
+		wsk_error = 1;
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+
+	// Set up incoming options
+	service.sin_family = AF_INET;
+	service.sin_addr.s_addr = htonl(INADDR_ANY);
+	service.sin_port = htons(14243); // CM on 14242, LM on 14243
+
+	if (::bind(m_socket, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR) {
+		sprintf(wsk_emsg, "LM-TELECOM: bind() failed: %ld", WSAGetLastError());
+		wsk_error = 1;
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+	if (listen(m_socket, 1) == SOCKET_ERROR) {
+		wsk_error = 1;
+		sprintf(wsk_emsg, "LM-TELECOM: listen() failed: %ld", WSAGetLastError());
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+	if (!registerSocket(m_socket))
+	{
+		sprintf(wsk_emsg, "LM-TELECOM: Failed to register socket %i for cleanup", m_socket);
+		wsk_error = 1;
+	}
+	conn_state = 1; // INITIALIZED, LISTENING
+	uplink_state = 0; rx_offset = 0;
+}
+
+bool LM_PCM::registerSocket(SOCKET sock)
+{
+	HMODULE hpac = GetModuleHandle("modules\\startup\\ProjectApolloConfigurator.dll");
+	if (hpac) {
+		bool(__cdecl *regSocket1)(SOCKET);
+		regSocket1 = (bool(__cdecl *)(SOCKET)) GetProcAddress(hpac, "pacDefineSocket");
+		if (regSocket1) {
+			if (!regSocket1(sock))
+				return false;
+		}
+		else {
+			return false;
+		}
+	}
+	return true;
+}
+
+void LM_PCM::SystemTimestep(double simdt)
+{
+	// PMP
+	if (lem->COMM_PMP_CB.Voltage() > 0) {
+		lem->COMM_PMP_CB.DrawPower(4.3);
+	}
+	// Current drain amount for INST_SIG_SENSOR_CB
+	if (lem->INST_SIG_SENSOR_CB.Voltage() > 0) {
+		lem->INST_SIG_SENSOR_CB.DrawPower(10.5);
+	}
+	// PCMTEA
+	if (lem->INST_PCMTEA_CB.Voltage() > 0)
+	{
+		lem->INST_PCMTEA_CB.DrawPower(11);
+		PCMHeat->GenerateHeat(5.15);
+		PCMSECHeat->GenerateHeat(5.15);
+	}
+}
+
+void LM_PCM::Timestep(double simt)
+{
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
 		sprintf(oapiDebugString(),"%s",wsk_emsg);
@@ -461,7 +501,7 @@ void LM_VHF::Timestep(double simt)
 	// Otherwise we would abort here (I think)
 
 	// Generate PCM datastream
-	if(pcm_rate_override == 1 || (pcm_rate_override == 0 && lem->TLMBitrateSwitch.GetState() == TOGGLESWITCH_DOWN)){
+	if(lem->TLMBitrateSwitch.GetState() == TOGGLESWITCH_DOWN){
 		tx_size = (int)((simt - last_update) / 0.005);
 		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
@@ -475,9 +515,8 @@ void LM_VHF::Timestep(double simt)
 				perform_io(simt);
 			}
 		}
-		return; // Don't waste time checking for HBR
 	}
-	if(pcm_rate_override == 2 || (pcm_rate_override == 0 && lem->TLMBitrateSwitch.GetState() == TOGGLESWITCH_UP)){
+	else {
 		tx_size = (int)((simt - last_update) / 0.00015625);
 		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
@@ -498,7 +537,7 @@ void LM_VHF::Timestep(double simt)
 // This function will be called lots of times inside a timestep, so it should go
 // as fast as possible!
 
-unsigned char LM_VHF::scale_data(double data, double low, double high){
+unsigned char LM_PCM::scale_data(double data, double low, double high){
 	double step = 0;
 	
 	// First eliminate cases outside of the scales
@@ -511,13 +550,13 @@ unsigned char LM_VHF::scale_data(double data, double low, double high){
 	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
 }
 
-unsigned char LM_VHF::scale_scea(double data)
+unsigned char LM_PCM::scale_scea(double data)
 {
 	//data is already 0 to 5V
 	return static_cast<unsigned char>(data*256.0 / 5.0 + 0.5);
 }
 
-void LM_VHF::perform_io(double simt){
+void LM_PCM::perform_io(double simt){
 	// Do TCP IO
 	switch(conn_state){
 		case 0: // UNINITIALIZED
@@ -660,29 +699,8 @@ void LM_VHF::perform_io(double simt){
 	}
 }
 
-void LM_VHF::LoadState(char *line)
-{
-	int one, two, three, four, five;
-
-	sscanf(line + 14, "%d %d %d %d %d", &one, &two, &three, &four, &five);
-	transmitA = (one != 0);
-	transmitB = (two != 0);
-	receiveA = (three != 0);
-	receiveB = (four != 0);
-	isRanging = (five != 0);
-}
-
-void LM_VHF::SaveState(FILEHANDLE scn)
-{
-	char buffer[256];
-
-	sprintf(buffer, "%d %d %d %d %d", transmitA, transmitB, receiveA, receiveB, isRanging);
-
-	oapiWriteScenario_string(scn, "VHFTRANSCEIVER", buffer);
-}
-
 // Handle data moved to buffer from either the socket or mcc buffer
-void LM_VHF::handle_uplink()
+void LM_PCM::handle_uplink()
 {
 	switch (uplink_state) {
 	case 0: // NEW COMMAND START
@@ -726,7 +744,7 @@ void LM_VHF::handle_uplink()
 	}
 }
 
-void LM_VHF::generate_stream_hbr(){
+void LM_PCM::generate_stream_hbr(){
 	unsigned char data=0;
 	// 128 words per frame, 50 frames pre second
 	switch(word_addr){
@@ -1298,7 +1316,7 @@ void LM_VHF::generate_stream_hbr(){
 	}
 }
 
-void LM_VHF::generate_stream_lbr(){
+void LM_PCM::generate_stream_lbr(){
 	unsigned char data=0;
 	// 200 words per frame, 1 frame per second
 	switch(word_addr){
@@ -1519,7 +1537,7 @@ void LM_VHF::generate_stream_lbr(){
 // Fetch a telemetry data item from its channel code
 // FIXME: SCALE FACTORS NEED CHECKING AGAINST REAL DATA
 
-unsigned char LM_VHF::measure(int channel, int type, int ccode){
+unsigned char LM_PCM::measure(int channel, int type, int ccode){
 	unsigned char rdata;
 	switch(type){
 		case LTLM_A:  // ANALOG
@@ -1544,7 +1562,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					if(channel == 200){ return(scale_data(lem->DPSPropellant.GetFuelEngineInletPressurePSI(), 0.0, 300.0)); } // DPS FUEL PRESS
 					return(scale_data(lem->APSPropellant.GetAscentHelium1PressPSI(), 0.0, 4000.0)); // APS HE 1R PRESS
 				case 5: 
-					if (channel == 1) { return (scale_data(28.0, 0.0, 31.1)); } // IRIG SUSP 3.2 KC
+					if (channel == 1) { return (scale_data(lem->IMU_OPR_CB.Voltage(), 0.0, 31.1)); } // IRIG SUSP 3.2 KC
 					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 2))); } // ROLL ERR CMD
 					if (channel == 50) { return(scale_data(0.0, -2.5, 2.5)); } // X PIPA OUT IN O
 					if(channel == 200){ return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS

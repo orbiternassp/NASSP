@@ -1856,6 +1856,7 @@ protected:
 	LM_VHF VHF;
 	LM_SBAND SBand;
 	LM_DSEA DSEA;
+	LM_PCM PCM;
 
 	//Lighting
 	LEM_TLE tle;
@@ -1951,6 +1952,7 @@ protected:
 	friend class LEM_DEDA;
 	friend class LEM_SteerableAnt;
 	friend class LM_VHF;
+	friend class LM_PCM;
 	friend class LM_SBAND;
 	friend class LM_DSEA;
 	friend class LEMMissionTimerSwitch;

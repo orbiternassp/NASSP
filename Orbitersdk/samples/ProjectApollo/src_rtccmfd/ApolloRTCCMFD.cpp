@@ -4089,6 +4089,11 @@ void ApolloRTCCMFD::set_AGSKFactor(char *str)
 	GeneralMEDRequest(Buff);
 }
 
+void ApolloRTCCMFD::menuGetAGSKFactor()
+{
+	G->GetAGSKFactor();
+}
+
 void ApolloRTCCMFD::t2dialogue()
 {
 	bool T2GETInput(void *id, char *str, void *data);
