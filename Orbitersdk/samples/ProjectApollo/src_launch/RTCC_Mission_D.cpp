@@ -633,6 +633,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.HeadsUp = true;
 		manopt.navcheckGET = P30TIG - 30.0*60.0;
 		manopt.REFSMMAT = REFSMMAT;
+		manopt.sxtstardtime = -50.0 * 60.0;
 		manopt.TIG = P30TIG;
 		manopt.vessel = calcParams.src;
 		manopt.vesseltype = 1;
