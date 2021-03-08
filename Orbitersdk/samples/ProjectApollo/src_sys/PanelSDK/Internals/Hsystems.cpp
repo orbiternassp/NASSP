@@ -967,8 +967,6 @@ void h_Radiator::refresh(double dt)
 
 	double AirTemp = parent->Vessel->GetAtmTemperature();
 
-	AirTemp *= (1 + ((1.4 - 1) / 2)*pow(parent->Vessel->GetMachNumber(), 2)); //correct for Mach number
-
 	Qc = AirHeatTransferCoefficient* size * (Temp - AirTemp) * dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
 	Qc *= parent->Vessel->GetAtmDensity() / 1.225; //simple model for correcting for density
 
