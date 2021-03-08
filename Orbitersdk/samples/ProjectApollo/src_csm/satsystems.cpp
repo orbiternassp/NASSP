@@ -2557,28 +2557,18 @@ void Saturn::ClearEngineIndicator(int i)
 	ENGIND[i - 1] = false;
 }
 
-void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {
-
-	// Bypass Radiator 2 and 4
-	char buffer[100];
-
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
-	bool *bp = (bool *) Panelsdk.GetPointerByString(buffer);
-	*bp = bypassed;
-
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:4:BYPASSED", fuelcell);
-	bp = (bool *) Panelsdk.GetPointerByString(buffer);
-	*bp = bypassed;
+void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed)
+{
+	// Bypass Radiator 6-8
+	FuelCellCooling[fuelcell - 1]->bypassed[6] = bypassed;
+	FuelCellCooling[fuelcell - 1]->bypassed[7] = bypassed;
+	FuelCellCooling[fuelcell - 1]->bypassed[8] = bypassed;
 }
 
-bool Saturn::FuelCellCoolingBypassed(int fuelcell) {
-
-	// It's bypassed when Radiator 2 is bypassed
-	char buffer[100];
-
-	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
-	bool *bypassed = (bool *) Panelsdk.GetPointerByString(buffer);
-	return *bypassed;
+bool Saturn::FuelCellCoolingBypassed(int fuelcell)
+{
+	// It's bypassed when Radiator 6 is bypassed
+	return FuelCellCooling[fuelcell - 1]->bypassed[6];
 }
 
 //
