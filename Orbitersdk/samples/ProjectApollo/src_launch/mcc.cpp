@@ -1145,11 +1145,11 @@ int MCC::CM_uplink(const unsigned char *data, int len) {
 // Uplink string to LM
 int MCC::LM_uplink(const unsigned char *data, int len) {
 	int remsize = 2048;
-	remsize -= lm->VHF.mcc_size;
+	remsize -= lm->PCM.mcc_size;
 	// if (lm->pcm.mcc_size > 0) { return -1; } // If busy, bail
 	if (len > remsize) { return -2; } // Too long!
-	memcpy((lm->VHF.mcc_data + lm->VHF.mcc_size), data, len);
-	lm->VHF.mcc_size += len;
+	memcpy((lm->PCM.mcc_data + lm->PCM.mcc_size), data, len);
+	lm->PCM.mcc_size += len;
 	return len;
 }
 
@@ -3588,7 +3588,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			}
 			break;
 		case 5: // Await uplink completion
-			if (lm->VHF.mcc_size == 0) {
+			if (lm->PCM.mcc_size == 0) {
 				addMessage("Uplink completed!");
 				NCOption_Enabled = true;
 				sprintf(NCOption_Text, "Repeat uplink");
@@ -3656,7 +3656,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			}
 			break;
 		case 5: // Await uplink completion
-			if (lm->VHF.mcc_size == 0) {
+			if (lm->PCM.mcc_size == 0) {
 				addMessage("Uplink completed!");
 				NCOption_Enabled = true;
 				sprintf(NCOption_Text, "Repeat uplink");
@@ -3711,7 +3711,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			}
 			break;
 		case 3: // Await uplink completion
-			if (lm->VHF.mcc_size == 0) {
+			if (lm->PCM.mcc_size == 0) {
 				addMessage("Uplink completed!");
 				setSubState(4);
 			}

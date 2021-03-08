@@ -455,7 +455,9 @@ void LEM::SystemsInit()
 	// SBand System
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBPHEAT"));
 	// VHF System
-	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT"));
+	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"));
+	// PCM
+	PCM.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT"));
 	// DSEA
 	DSEA.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:DSEHEAT"));
 	TapeRecorderTB.WireTo(&INST_PCMTEA_CB); //Tape Recorder TB powered by PCM/TE cb
@@ -1389,6 +1391,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		crossPointerRight.SystemTimestep(tFactor);
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
+		PCM.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
 		DSEA.SystemTimestep(tFactor);
 		CabinPressureSwitch.SystemTimestep(tFactor);
@@ -1492,6 +1495,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	omni_fwd.Timestep();
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
+	VHF.Timestep(simt);
 	ecs.Timestep(simdt);
 	OverheadHatch.Timestep(simdt);
 	ForwardHatch.Timestep(simdt);

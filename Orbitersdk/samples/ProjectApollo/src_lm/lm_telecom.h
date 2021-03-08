@@ -189,8 +189,9 @@ private:
 class LM_VHF {
 public:
 	LM_VHF();
-	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh);	       // Initialization
 	void Timestep(double simt);        // TimeStep
+	
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -202,8 +203,6 @@ public:
 	VESSEL *csm;					//Pointer to CSM
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
 	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
-	h_HeatLoad *PCMHeat;			//PCM Heat Load
-	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
 
 	LM_VHFAntenna fwdInflightVHF;
 	LM_VHFAntenna aftInflightVHF;
@@ -234,9 +233,21 @@ public:
 
 	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
 	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
-	
-	//****************************
+};
 
+class LM_PCM
+{
+public:
+	LM_PCM();
+	void Init(LEM *vessel, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
+	void Timestep(double simt);     // TimeStep
+	void SystemTimestep(double simdt);
+
+	double last_update;				// simt of last update
+protected:
+	LEM *lem;					   // Ship we're installed in
+	h_HeatLoad *PCMHeat;			//PCM Heat Load
+	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
@@ -256,7 +267,6 @@ public:
 	int wsk_error;                  // Winsock error
 	char wsk_emsg[256];             // Winsock error message
 	// PCM datastream management
-	double last_update;				// simt of last update
 	double last_rx;                 // simt of last uplink update
 	int word_addr;                  // Word address of outgoing packet
 	int frame_addr;                 // Frame address
@@ -266,7 +276,6 @@ public:
 	int rx_offset;					// RX offset to use
 	int mcc_offset;					// RX offset into MCC data block
 	int mcc_size;					// Size of MCC data block
-	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
 	unsigned char mcc_data[2048];	// MCC-provided incoming data

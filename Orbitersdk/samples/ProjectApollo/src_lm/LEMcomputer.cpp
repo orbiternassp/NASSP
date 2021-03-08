@@ -84,7 +84,7 @@ void LEMcomputer::agcTimestep(double simt, double simdt)
 	SingleTimestepPrep(simt, simdt);        // Setup
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
-		lem->VHF.last_update = LastCycled;
+		lem->PCM.last_update = LastCycled;
 	}
 	double ThisTime = LastCycled;			// Save here
 
@@ -94,8 +94,8 @@ void LEMcomputer::agcTimestep(double simt, double simdt)
 	while (x < cycles) {
 		SingleTimestep();
 		ThisTime += 0.00001171875;								// Add time
-		if ((ThisTime - lem->VHF.last_update) > 0.00015625) {	// If a step is needed
-			lem->VHF.Timestep(ThisTime);						// do it
+		if ((ThisTime - lem->PCM.last_update) > 0.00015625) {	// If a step is needed
+			lem->PCM.Timestep(ThisTime);						// do it
 		}
 		x++;
 	}
@@ -170,7 +170,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		// Reset last cycling time
 		LastCycled = 0;
 		// We should issue telemetry though.
-		lem->VHF.Timestep(simt);
+		lem->PCM.Timestep(simt);
 
 		// and do nothing more.
 		return;
