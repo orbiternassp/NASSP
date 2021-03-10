@@ -36,8 +36,8 @@ therm_obj::therm_obj() {
 
 void therm_obj::thermic(double _en) {
 
-	//if (-_en > energy)
-	//	_en = -energy / 10.0;
+	if (-_en > energy)
+		_en = -energy / 10.0;
 
 	energy += _en; //total energy, in joules to add or substract
 
