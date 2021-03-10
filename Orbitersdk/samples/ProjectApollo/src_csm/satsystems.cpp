@@ -42,7 +42,7 @@
 #include "tracer.h"
 #include "Mission.h"
 
-FILE *PanelsdkLogFile;
+//FILE *PanelsdkLogFile;
 
 
 void Saturn::SystemsInit() {
@@ -56,7 +56,7 @@ void Saturn::SystemsInit() {
 	Panelsdk.RegisterVessel(this);
 	Panelsdk.InitFromFile("ProjectApollo\\SaturnSystems");
 
-	PanelsdkLogFile = fopen("ProjectApollo Saturn Systems.log", "w");
+	//PanelsdkLogFile = fopen("ProjectApollo Saturn Systems.log", "w");
 
 	//
 	// Electrical systems.
