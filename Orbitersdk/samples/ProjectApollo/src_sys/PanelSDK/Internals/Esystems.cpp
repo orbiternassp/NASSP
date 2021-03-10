@@ -300,14 +300,12 @@ void FCell::PUNLOAD(double watts) {
 	power_load -= watts;
 }
 
-void FCell::Reaction(double dt, double thrust) 
+void FCell::Reaction(double dt) 
 {
 	//this function needs to be called *after* the power/current/voltage estimation code runs
 
 	#define H2RATIO 0.1119
 	#define O2RATIO 0.8881
-
-	//reactant = dt * max_power * thrust / 2880.0 * 0.2894; //grams /second/ 100 amps
 		
 	// get fuel from sources, maximum flow: grams/timestep from each valve
 	double O2_maxflow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
@@ -317,7 +315,7 @@ void FCell::Reaction(double dt, double thrust)
 	H2_flow = ((Amperes * MMASS[SUBSTANCE_H2]) / (2*FaradaysConstant)) * numCells * dt; //Faraday's 2nd law electrolysis. confirmed against CSM databook equation
 	O2_flow = H2_flow / H2RATIO * O2RATIO; //consume a stoichometeric amount of oxygen
 
-	reactant = H2_flow + O2_flow;
+	reactant = H2_flow + O2_flow; //will probably get removed in a later commit
 
 	// max. consumption
 	if (H2_flow > H2_maxflow) H2_flow = H2_maxflow;
@@ -327,9 +325,6 @@ void FCell::Reaction(double dt, double thrust)
 	double H2O_flow = O2_flow + H2_flow;
 
 	//efficiency and heat generation
-	//double efficiency = Volts / (hydrogenLHV*numCells);
-	//double heat = ((power_load / efficiency) - power_load)*dt;
-
 	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEMSTUDY GUIDE COURSE NO.A212, and referenced documents
 	double heat = (power_load / (0.9063642805859956 +
 		-0.00040191337758397755 * power_load +
@@ -435,7 +430,6 @@ void FCell::UpdateFlow(double dt)
 	}
 
 	//first we check the start_handle;
-	double thrust = 0.0;
 	double loadResistance = 0.0;
 	if (start_handle == -1) status = 2; //stopped
 	if (start_handle == 1)	status = 1; //starting
@@ -476,7 +470,7 @@ void FCell::UpdateFlow(double dt)
 		break;
 
 	case 1:// starting; 
-		Reaction(dt, 1.0);
+		Reaction(dt);
 		//status = 2;
 		if (reaction > 0.96) {
 			status = 0; //started
@@ -523,14 +517,12 @@ void FCell::UpdateFlow(double dt)
 		}*/
 
 		//"clogg" is used to make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
-		Amperes -= (2.25*clogg);
-		Volts -= -(5.2*clogg);
+		Amperes -= (0.225*clogg);
+		Volts -= -(0.52*clogg);
 		power_load = Amperes * Volts; //recalculate power_load again after clogging
 
-		//---- throttle of the fuel cell [0..1]
-		thrust = power_load / max_power;
 
-		Reaction(dt, thrust);
+		Reaction(dt);
 
 		break;
 	}
@@ -1210,7 +1202,7 @@ Cooling::Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,dou
 	handle_min=0;
 	handle_max=0;
 	nr_list=0;
-	coolant_temp[0]=300.0; // reasonable ambient temperature
+	coolant_temp=300.0; // reasonable ambient temperature
 	isolation=thermal_prop;
 	SRC=i_SRC;
 	loaded=0; //ie. not PLOADed
@@ -1298,11 +1290,11 @@ void Cooling::refresh(double dt)
 	}
 
 	// average temp except the first
-	coolant_temp[0] = 0.0;
+	coolant_temp = 0.0;
 	for (i = 1; i < nr_activelist; i++) {
-		coolant_temp[0] += activelist[i]->Temp;
+		coolant_temp += activelist[i]->Temp;
 	}
-	coolant_temp[0] = coolant_temp[0] / (nr_activelist - 1.0);
+	coolant_temp = coolant_temp / (nr_activelist - 1.0);
 }
 
 void Cooling::Load(char *line, FILEHANDLE scn) {

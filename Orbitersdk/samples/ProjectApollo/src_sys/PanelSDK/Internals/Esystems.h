@@ -255,14 +255,11 @@ public:
 	double H2_purity;
 	double O2_purity;
 
-	const double hydrogenHHV = 1.482; //volts (per cell), 286kJ/mol /(2 mols * Faraday's constant)
-	const double hydrogenLHV = 1.254; //volts (per cell), 241kJ/mol /(2 mols * Faraday's constant)
-
 	FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts);
 	void DrawPower(double watts);
 	void PUNLOAD(double watts);
 	void refresh(double dt);
-	void Reaction(double dt, double thrust);
+	void Reaction(double dt);
 	void Clogging(double dt);
 	void Load(char *line);
 	void Save(FILEHANDLE scn);
@@ -406,7 +403,7 @@ public:
 	double length[16];	//and their pipe length
 	bool bypassed[16];	// and are they bypassed 
 	int nr_list;
-	double coolant_temp[16];
+	double coolant_temp;
 	double isolation;
 	void AddObject(therm_obj* new_t,double lght);
 	virtual void refresh(double dt);
