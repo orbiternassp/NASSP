@@ -72,7 +72,7 @@ void MCC::MissionSequence_D()
 					}
 				}
 
-				sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_INHIBIT_MANEUVER, NULL);
+				sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_REMOVE_INHIBIT_MANEUVER4, NULL);
 
 				setSubState(2);
 			}

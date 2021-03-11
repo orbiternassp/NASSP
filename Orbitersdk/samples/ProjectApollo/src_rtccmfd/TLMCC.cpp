@@ -23,9 +23,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "OrbMech.h"
 #include "GeneralizedIterator.h"
+#include "rtcc.h"
 #include "TLMCC.h"
 
-TLMCCProcessor::TLMCCProcessor()
+TLMCCProcessor::TLMCCProcessor(RTCC *r) : RTCCModule(r)
 {
 	R_E = OrbMech::R_Earth;
 	R_M = OrbMech::R_Moon;
@@ -38,32 +39,29 @@ TLMCCProcessor::TLMCCProcessor()
 	isp_DPS = 3107.0;
 }
 
-void TLMCCProcessor::Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst)
+void TLMCCProcessor::Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst)
 {
-	ephemeris = ephem;
-	
-	hEarth = oapiGetObjectByName("Earth");
-	hMoon = oapiGetObjectByName("Moon");
-
 	DataTable = data;
 	MEDQuantities = med;
 	Constants = cst;
 
-	outarray.sv_lls1.gravref = hMoon;
-	outarray.sv_loi.gravref = hMoon;
-	outarray.SGSLOI.gravref = hMoon;
-	outarray.sv_lls2.gravref = hMoon;
+	outarray.sv_lls1.RBI = BODY_MOON;
+	outarray.sv_loi.RBI = BODY_MOON;
+	outarray.SGSLOI.RBI = BODY_MOON;
+	outarray.sv_lls2.RBI = BODY_MOON;
 }
 
 void TLMCCProcessor::Main(TLMCCOutputData &out)
 {
-	sv_MCC = OrbMech::coast(MEDQuantities.sv0, MEDQuantities.T_MCC - OrbMech::GETfromMJD(MEDQuantities.sv0.MJD, MEDQuantities.GMTBase));
+	//Propagate state vector to time of ignition
+	int ITS;
+	pRTCC->PMMCEN(MEDQuantities.sv0, 0.0, 10.0*24.0*3600.0, 1, MEDQuantities.T_MCC - MEDQuantities.sv0.GMT, 1.0, sv_MCC, ITS);
 
 	//SOI check
 	VECTOR3 R_EM, V_EM, R_ES, R2;
 	double r1, r2, Ratio;
-	EPHEM(sv_MCC.MJD, R_EM, V_EM, R_ES);
-	if (sv_MCC.gravref == hEarth)
+	EPHEM(sv_MCC.GMT, R_EM, V_EM, R_ES);
+	if (sv_MCC.RBI == BODY_EARTH)
 	{
 		R2 = sv_MCC.R - R_EM;
 	}
@@ -74,24 +72,22 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	r1 = length(sv_MCC.R);
 	r2 = length(R2);
 	Ratio = r2 / r1;
-	if (sv_MCC.gravref == hEarth)
+	if (sv_MCC.RBI == BODY_EARTH)
 	{
 		if (Ratio < 0.275)
 		{
-			OrbMech::oneclickcoast(sv_MCC.R, sv_MCC.V, sv_MCC.MJD, 0.0, sv_MCC.R, sv_MCC.V, sv_MCC.gravref, hMoon);
-			sv_MCC.gravref = hMoon;
+			pRTCC->ELVCNV(sv_MCC, 0, 2, sv_MCC);
 		}
 	}
 	else
 	{
 		if (Ratio < 1.0 / 0.275)
 		{
-			OrbMech::oneclickcoast(sv_MCC.R, sv_MCC.V, sv_MCC.MJD, 0.0, sv_MCC.R, sv_MCC.V, sv_MCC.gravref, hEarth);
-			sv_MCC.gravref = hEarth;
+			pRTCC->ELVCNV(sv_MCC, 2, 0, sv_MCC);
 		}
 	}
 
-	if (sv_MCC.gravref == oapiGetObjectByName("Earth"))
+	if (sv_MCC.RBI == BODY_EARTH)
 	{
 		KREF_MCC = 1;
 	}
@@ -163,7 +159,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 
 	if (MEDQuantities.Mode <= 5)
 	{
-		MPTSV sv_MCC_apo;
+		EphemerisData sv_MCC_apo;
 		sv_MCC_apo = sv_MCC;
 		sv_MCC_apo.V += DV_MCC;
 		DV_LOI = CalcLOIDV(sv_MCC_apo, outarray.gamma_nd);
@@ -171,15 +167,9 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	//Calc MPT parameters
 	out.R_MCC = sv_MCC.R;
 	out.V_MCC = sv_MCC.V;
-	out.GMT_MCC = OrbMech::GETfromMJD(sv_MCC.MJD, MEDQuantities.GMTBase);
-	if (sv_MCC.gravref == oapiGetObjectByName("Earth"))
-	{
-		out.RBI = BODY_EARTH;
-	}
-	else
-	{
-		out.RBI = BODY_MOON;
-	}
+	out.GMT_MCC = sv_MCC.GMT;
+	out.RBI = sv_MCC.RBI;
+
 	out.V_MCC_apo = sv_MCC.V + DV_MCC;
 
 	//Calc display quantities
@@ -217,7 +207,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	out.display.Config = MEDQuantities.Config;
 	double dv = length(DV_MCC);
 	double T_start = -outarray.M_i / Wdot * (1.0 + (exp(-dv / isp_MCC) - 1.0) / (dv / isp_MCC));
-	out.display.GET_MCC = OrbMech::GETfromMJD(sv_MCC.MJD, MEDQuantities.GETBase) + T_start;
+	out.display.GET_MCC = pRTCC->GETfromGMT(sv_MCC.GMT) + T_start;
 	out.display.DV_MCC = DV_MCC;
 	out.display.h_PC = outarray.h_pl;
 	
@@ -225,7 +215,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	{
 		dv = length(DV_LOI);
 		T_start = -outarray.M_mcc / Wdot * (1.0 + (exp(-dv / isp_MCC) - 1.0) / (dv / isp_MCC));
-		out.display.GET_LOI = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GETBase) + T_start;
+		out.display.GET_LOI = pRTCC->GETfromGMT(outarray.GMT_nd) + T_start;
 		out.display.DV_LOI = DV_LOI;
 	}
 	else
@@ -240,7 +230,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 		out.display.delta_lat = 0.0; //TBD
 		dv = length(outarray.DV_TEI);
 		T_start = -outarray.M_lopc / Wdot * (1.0 + (exp(-dv / isp_MCC) - 1.0) / (dv / isp_MCC));
-		out.display.GET_TEI = OrbMech::GETfromMJD(outarray.MJD_tei, MEDQuantities.GETBase) + T_start;
+		out.display.GET_TEI = pRTCC->GETfromGMT(outarray.GMT_tei) + T_start;
 		out.display.DV_TEI = outarray.DV_TEI;
 		out.display.DV_LOPC = outarray.DV_LOPC;
 	}
@@ -266,14 +256,14 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	{
 		if (out.display.Mode >= 6)
 		{
-			out.display.GET_LC = OrbMech::GETfromMJD(outarray.MJD_ip, MEDQuantities.GETBase);
+			out.display.GET_LC = pRTCC->GETfromGMT(outarray.GMT_ip);
 			out.display.lat_IP = outarray.lat_ip;
 			out.display.lng_IP = outarray.lng_ip;
 			out.display.v_EI = outarray.v_EI;
 		}
 		else
 		{
-			out.display.GET_LC = OrbMech::GETfromMJD(outarray.MJD_ip_pr, MEDQuantities.GETBase);
+			out.display.GET_LC = pRTCC->GETfromGMT(outarray.GMT_ip_pr);
 			out.display.lat_IP = outarray.lat_ip_pr;
 			out.display.lng_IP = outarray.lng_ip_pr;
 			out.display.v_EI = outarray.v_EI_pr;
@@ -296,8 +286,8 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	{
 		out.display.incl_pr = 0.0;
 	}
-	out.display.GMTV = OrbMech::GETfromMJD(MEDQuantities.sv0.MJD, MEDQuantities.GMTBase);
-	out.display.GETV = OrbMech::GETfromMJD(MEDQuantities.sv0.MJD, MEDQuantities.GETBase);
+	out.display.GMTV = MEDQuantities.sv0.GMT;
+	out.display.GETV = pRTCC->GETfromGMT(MEDQuantities.sv0.GMT);
 	out.display.CSMWT = MEDQuantities.CSMMass;
 	out.display.LMWT = MEDQuantities.LMMass;
 
@@ -310,51 +300,27 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	out.outtab = outtab;
 }
 
-VECTOR3 TLMCCProcessor::CalcLOIDV(MPTSV sv_MCC_apo, double gamma_nd)
+VECTOR3 TLMCCProcessor::CalcLOIDV(EphemerisData sv_MCC_apo, double gamma_nd)
 {
+	EphemerisData sv_nd;
 	VECTOR3 U1, U2, RF, VF;
 	double mfm0;
+	int ITS;
 
-	PMMCEN_VNI vni;
-	PMMCEN_INI ini;
+	pRTCC->PMMCEN(sv_MCC_apo, 0.0, 10.0*24.0*3600.0, 2, sin(gamma_nd), 1.0, sv_nd, ITS);
 
-	vni.R = sv_MCC_apo.R;
-	vni.V = sv_MCC_apo.V;
-	vni.T = OrbMech::GETfromMJD(sv_MCC_apo.MJD, MEDQuantities.GMTBase);
-	vni.dir = 1.0;
-	vni.dt_min = 0.0;
-	vni.dt_max = 10.0*24.0*3600.0;
-	vni.end_cond = sin(gamma_nd);
-	vni.GMTBASE = MEDQuantities.GMTBase;
-
-	if (KREF_MCC == 1)
-	{
-		ini.body = BODY_EARTH;
-	}
-	else
-	{
-		ini.body = BODY_MOON;
-	}
-	ini.stop_ind = 2;
-
-	VECTOR3 R_nd, V_nd;
-	double T_nd;
-	int ITS, IRS;
-
-	OrbMech::PMMCEN(vni, ini, R_nd, V_nd, T_nd, ITS, IRS);
-
-	VECTOR3 h1 = unit(crossp(R_nd, V_nd));
+	VECTOR3 h1 = unit(crossp(sv_nd.R, sv_nd.V));
 	double R = 1.0;
 	double V = 1.0;
 	double gamma = 0.0;
 	RVIO(false, U1, U2, R, V, DataTable.lng_lls, DataTable.lat_lls, gamma, outarray.AZ_act);
-	LIBRAT(U1, U2, OrbMech::MJDfromGET(T_nd + DataTable.dt_lls,MEDQuantities.GMTBase), 6);
+	LIBRAT(U1, U2, sv_nd.GMT + DataTable.dt_lls, 6);
 	double dpsi_loi = acos(dotp(h1, crossp(U1, U2)));
-	double dv_loi = Constants.V_pcynlo - length(V_nd);
+	double dv_loi = Constants.V_pcynlo - length(sv_nd.V);
 	outarray.dpsi_loi = dpsi_loi;
 
-	BURN(R_nd, V_nd, dv_loi, -gamma_nd, dpsi_loi, isp_MCC, mfm0, RF, VF);
-	return VF - V_nd;
+	BURN(sv_nd.R, sv_nd.V, dv_loi, -gamma_nd, dpsi_loi, isp_MCC, mfm0, RF, VF);
+	return VF - sv_nd.V;
 }
 
 void TLMCCProcessor::Option1()
@@ -405,39 +371,37 @@ void TLMCCProcessor::Option2()
 	ConicFreeReturnOptimizedFixedOrbitToLLS(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, DataTable.gamma_loi);
 	double h_pl3 = outarray.h_pl;
 	double lat_pl3 = outarray.lat_pl;
-	double GMT_pl3 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase) / 3600.0;
+	double GMT_pl3 = outarray.GMT_pl / 3600.0;
 	double gamma_loi3 = outarray.gamma_nd;
 	double dt_lls3 = outarray.dt_lls;
 
 	double dt = -OrbMech::period(outarray.sv_lls1.R, outarray.sv_lls1.V, mu_M)*(double)(MEDQuantities.Revs_circ + 1);
-	MPTSV sv_circ;
-	OrbMech::oneclickcoast(outarray.sv_lls1.R, outarray.sv_lls1.V, outarray.sv_lls1.MJD, dt, sv_circ.R, sv_circ.V, hMoon, hMoon);
-	sv_circ.MJD = outarray.sv_lls1.MJD + dt / 24.0 / 3600.0;
+	EphemerisData sv_circ;
+	INT ITS;
+	pRTCC->PMMCEN(outarray.sv_lls1, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_circ, ITS);
 	dt = OrbMech::time_radius(sv_circ.R, sv_circ.V, DataTable.rad_lls+MEDQuantities.H_T_circ, 1.0, mu_M);
-	OrbMech::oneclickcoast(sv_circ.R, sv_circ.V, sv_circ.MJD, dt, sv_circ.R, sv_circ.V, hMoon, hMoon);
-	sv_circ.MJD = sv_circ.MJD + dt / 24.0 / 3600.0;
+	pRTCC->PMMCEN(sv_circ, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_circ, ITS);
 	sv_circ.V = unit(sv_circ.V)*sqrt(mu_M / (DataTable.rad_lls + MEDQuantities.H_T_circ));
-	sv_circ.gravref = hMoon;
 
 	double DV_PPC;
-	MPTSV sv_lls2 = PPC(sv_circ, DataTable.lat_lls, DataTable.lng_lls, DataTable.psi_lls, Constants.n, 0, DV_PPC);
+	EphemerisData sv_lls2 = PPC(sv_circ, DataTable.lat_lls, DataTable.lng_lls, DataTable.psi_lls, Constants.n, 0, DV_PPC);
 	outarray.sv_lls2.R = sv_lls2.R;
 	outarray.sv_lls2.V = sv_lls2.V;
-	outarray.sv_lls2.MJD = sv_lls2.MJD;
+	outarray.sv_lls2.GMT = sv_lls2.GMT;
 	outarray.M_lopc = MCOMP(DV_PPC, MEDQuantities.Config, MEDQuantities.useSPS, outarray.M_cir);
 
-	double lat_TEI, lng_TEI, MJD_TEI, dlng, mfm0;
-	MPTSV sv_TEI1, sv_TEI2;
+	double lat_TEI, lng_TEI, GMT_TEI, dlng, mfm0;
+	EphemerisData sv_TEI1, sv_TEI2;
 	VECTOR3 R_TEI_EMP, V_TEI_EMP;
 
-	MJD_TEI = outarray.MJD_nd + DataTable.T_lo / 24.0 / 3600.0;
-	sv_TEI1 = OrbMech::coast(outarray.sv_lls2, (MJD_TEI - outarray.sv_lls2.MJD)*24.0*3600.0);
+	GMT_TEI = outarray.GMT_nd + DataTable.T_lo;
+	pRTCC->PMMCEN(outarray.sv_lls2, 0.0, 10.0*24.0*3600.0, 1, GMT_TEI - outarray.sv_lls2.GMT, 1.0, sv_TEI1, ITS);
 	sv_TEI2 = sv_TEI1;
 
 	do
 	{
 		R_TEI_EMP = sv_TEI2.R;
-		LIBRAT(R_TEI_EMP, sv_TEI2.MJD, 4);
+		LIBRAT(R_TEI_EMP, sv_TEI2.GMT, 4);
 		OrbMech::latlong_from_r(R_TEI_EMP, lat_TEI, lng_TEI);
 		if (lng_TEI < 0)
 		{
@@ -453,16 +417,16 @@ void TLMCCProcessor::Option2()
 			dlng += PI2;
 		}
 		dt = dlng * 20.0 / RAD;
-		sv_TEI2 = OrbMech::coast(sv_TEI2, dt);
+		pRTCC->PMMCEN(sv_TEI2, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_TEI2, ITS);
 	} while (abs(dt) > 0.1);
 
 	VECTOR3 RF, VF;
 	double dt_LPO, dpsi_tei, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp;
 
-	dt_LPO = (sv_TEI2.MJD - sv_TEI1.MJD)*24.0*3600.0;
+	dt_LPO = sv_TEI2.GMT - sv_TEI1.GMT;
 	R_TEI_EMP = sv_TEI2.R;
 	V_TEI_EMP = sv_TEI2.V;
-	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.MJD, 4);
+	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.GMT, 4);
 	RVIO(true, R_TEI_EMP, V_TEI_EMP, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp);
 	dpsi_tei = 270.0*RAD - psi_emp;
 	if (dpsi_tei > PI2)
@@ -470,8 +434,8 @@ void TLMCCProcessor::Option2()
 		dpsi_tei -= PI2;
 	}
 
-	MPTSV S1 = sv_MCC;
-	MPTSV S2C = sv_MCC;
+	EphemerisData S1 = sv_MCC;
+	EphemerisData S2C = sv_MCC;
 	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
 
@@ -487,7 +451,7 @@ void TLMCCProcessor::Option2()
 
 	//Step 6
 	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl3, lat_pl3);
-	double GMT_pl6 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase) / 3600.0;
+	double GMT_pl6 = outarray.GMT_pl / 3600.0;
 	//With the trajectory computer, the time used for the state vector at the start of LPO is biased by the difference between the time of perilune passage
 	//in step 6 (integrated) and step 3 (conic).
 	outarray.dt_bias_conic_prec = GMT_pl6 - GMT_pl3;
@@ -495,7 +459,7 @@ void TLMCCProcessor::Option2()
 	BURN(sv_MCC.R, sv_MCC.V, DV6.x*R_E / 3600.0, DV6.y, DV6.z, isp_MCC, mfm0, RF, VF);
 	VECTOR3 DV_temp = VF - sv_MCC.V;
 
-	MPTSV S_apo;
+	EphemerisData S_apo;
 	VECTOR3 NewGuess, DV7, DV8;
 	double r, v1, theta, phi, gamma1, psi1, v2, gamma2, psi2, v_c, dv_char7, dv_char8;
 
@@ -518,7 +482,7 @@ TLMCC_Option_2_E:
 	RVIO(true, S1.R, S1.V + DV_temp, r, v2, theta, phi, gamma2, psi2);
 	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
-	outtab.GMT_pc1 = outtab.GMT_pc2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase);
+	outtab.GMT_pc1 = outtab.GMT_pc2 = outarray.GMT_pl;
 	outtab.h_pc1 = outtab.h_pc2 = outarray.h_pl;
 	outtab.lat_pc1 = outtab.lat_pc2 = outarray.lat_pl;
 	outtab.lng_pc1 = outtab.lng_pc2 = outarray.lng_pl;
@@ -545,47 +509,22 @@ TLMCC_Option_2_E:
 	BURN(sv_MCC.R, sv_MCC.V, DV8.x*R_E / 3600.0, DV8.y, DV8.z, isp_MCC, mfm0, RF, VF);
 	DV_MCC = VF - sv_MCC.V;
 
-	MPTSV sv_MCC_apo = sv_MCC;
+	EphemerisData sv_MCC_apo = sv_MCC;
 	sv_MCC_apo.V = VF;
 
 	//Step 9
-	PMMCEN_VNI vni;
-	PMMCEN_INI ini;
+	EphemerisData sv_nd;
+	pRTCC->PMMCEN(sv_MCC_apo, 0.0, 10.0*24.0*3600.0, 2, sin(outarray.gamma_nd), 1.0, sv_nd, ITS);
 
-	vni.R = sv_MCC_apo.R;
-	vni.V = sv_MCC_apo.V;
-	vni.T = OrbMech::GETfromMJD(sv_MCC_apo.MJD, MEDQuantities.GMTBase);
-	vni.dir = 1.0;
-	vni.dt_min = 0.0;
-	vni.dt_max = 10.0*24.0*3600.0;
-	vni.end_cond = sin(outarray.gamma_nd);
-	vni.GMTBASE = MEDQuantities.GMTBase;
-
-	if (KREF_MCC == 1)
-	{
-		ini.body = BODY_EARTH;
-	}
-	else
-	{
-		ini.body = BODY_MOON;
-	}
-	ini.stop_ind = 2;
-
-	VECTOR3 R_nd, V_nd;
-	double T_nd;
-	int ITS, IRS;
-
-	OrbMech::PMMCEN(vni, ini, R_nd, V_nd, T_nd, ITS, IRS);
-
-	LIBRAT(R_nd, OrbMech::MJDfromGET(T_nd, MEDQuantities.GMTBase), 4);
-	OrbMech::latlong_from_r(R_nd, outtab.lat_nd, outtab.lng_nd);
+	LIBRAT(sv_nd.R, sv_nd.GMT, 4);
+	OrbMech::latlong_from_r(sv_nd.R, outtab.lat_nd, outtab.lng_nd);
 	if (outtab.lng_nd < 0)
 	{
 		outtab.lng_nd += PI2;
 	}
-	outtab.h_nd = length(R_nd) - DataTable.rad_lls;
-	outtab.GMT_nd = T_nd;
-	outarray.MJD_nd = OrbMech::MJDfromGET(T_nd, MEDQuantities.GMTBase);
+	outtab.h_nd = length(sv_nd.R) - DataTable.rad_lls;
+	outtab.GMT_nd = sv_nd.GMT;
+	outarray.GMT_nd = sv_nd.GMT;
 
 	outarray.AZ_act = DataTable.psi_lls;
 }
@@ -611,23 +550,24 @@ void TLMCCProcessor::Option3()
 	ConicFreeReturnOptimizedFreeOrbitToLOPC(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, DataTable.gamma_loi, DataTable.dpsi_loi, DataTable.dt_lls / 3600.0, MEDQuantities.AZ_min, MEDQuantities.AZ_max);
 	double h_pl3 = outarray.h_pl;
 	double lat_pl3 = outarray.lat_pl;
-	double GMT_pl3 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase) / 3600.0;
+	double GMT_pl3 = outarray.GMT_pl / 3600.0;
 	double gamma_loi3 = outarray.gamma_nd;
 	double dpsi_loi3 = outarray.dpsi_loi;
 	double dt_lls3 = outarray.dt_lls;
 
-	double lat_TEI, lng_TEI, MJD_TEI, dlng, dt;
-	MPTSV sv_TEI1, sv_TEI2;
+	double lat_TEI, lng_TEI, GMT_TEI, dlng, dt;
+	EphemerisData sv_TEI1, sv_TEI2;
 	VECTOR3 R_TEI_EMP, V_TEI_EMP;
+	INT ITS;
 
-	MJD_TEI = outarray.MJD_nd + DataTable.T_lo / 24.0 / 3600.0;
-	sv_TEI1 = OrbMech::coast(outarray.sv_lls2, (MJD_TEI - outarray.sv_lls2.MJD)*24.0*3600.0);
+	GMT_TEI = outarray.GMT_nd + DataTable.T_lo;
+	pRTCC->PMMCEN(outarray.sv_lls2, 0.0, 10.0*24.0*3600.0, 1, GMT_TEI - outarray.sv_lls2.GMT, 1.0, sv_TEI1, ITS);
 	sv_TEI2 = sv_TEI1; 
 	
 	do
 	{
 		R_TEI_EMP = sv_TEI2.R;
-		LIBRAT(R_TEI_EMP, sv_TEI2.MJD, 4);
+		LIBRAT(R_TEI_EMP, sv_TEI2.GMT, 4);
 		OrbMech::latlong_from_r(R_TEI_EMP, lat_TEI, lng_TEI);
 		if (lng_TEI < 0)
 		{
@@ -643,16 +583,16 @@ void TLMCCProcessor::Option3()
 			dlng += PI2;
 		}
 		dt = dlng * 20.0 / RAD;
-		sv_TEI2 = OrbMech::coast(sv_TEI2, dt);
+		pRTCC->PMMCEN(sv_TEI2, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_TEI2, ITS);
 	} while (abs(dt) > 0.1);
 
 	VECTOR3 RF, VF;
 	double dt_LPO, dpsi_tei, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp, mfm0;
 
-	dt_LPO = (sv_TEI2.MJD - sv_TEI1.MJD)*24.0*3600.0;
+	dt_LPO = sv_TEI2.GMT - sv_TEI1.GMT;
 	R_TEI_EMP = sv_TEI2.R;
 	V_TEI_EMP = sv_TEI2.V;
-	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.MJD, 4);
+	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.GMT, 4);
 	RVIO(true, R_TEI_EMP, V_TEI_EMP, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp);
 	dpsi_tei = 270.0*RAD - psi_emp;
 	if (dpsi_tei > PI2)
@@ -660,8 +600,8 @@ void TLMCCProcessor::Option3()
 		dpsi_tei -= PI2;
 	}
 
-	MPTSV S1 = sv_MCC;
-	MPTSV S2C = sv_MCC;
+	EphemerisData S1 = sv_MCC;
+	EphemerisData S2C = sv_MCC;
 	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
 
@@ -677,7 +617,7 @@ void TLMCCProcessor::Option3()
 
 	//Step 6
 	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl3, lat_pl3);
-	double GMT_pl6 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase) / 3600.0;
+	double GMT_pl6 = outarray.GMT_pl / 3600.0;
 	//With the trajectory computer, the time used for the state vector at the start of LPO is biased by the difference between the time of perilune passage
 	//in step 6 (integrated) and step 3 (conic).
 	outarray.dt_bias_conic_prec = GMT_pl6 - GMT_pl3;
@@ -685,7 +625,7 @@ void TLMCCProcessor::Option3()
 	BURN(sv_MCC.R, sv_MCC.V, DV6.x*R_E / 3600.0, DV6.y, DV6.z, isp_MCC, mfm0, RF, VF);
 	VECTOR3 DV_temp = VF - sv_MCC.V;
 
-	MPTSV S_apo;
+	EphemerisData S_apo;
 	VECTOR3 NewGuess, DV7, DV8;
 	double r, v1, theta, phi, gamma1, psi1, v2, gamma2, psi2, v_c, dv_char7, dv_char8;
 
@@ -708,7 +648,7 @@ TLMCC_Option_3_E:
 	RVIO(true, S1.R, S1.V + DV_temp, r, v2, theta, phi, gamma2, psi2);
 	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
-	outtab.GMT_pc1 = outtab.GMT_pc2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase);
+	outtab.GMT_pc1 = outtab.GMT_pc2 = outarray.GMT_pl;
 	outtab.h_pc1 = outtab.h_pc2 = outarray.h_pl;
 	outtab.lat_pc1 = outtab.lat_pc2 = outarray.lat_pl;
 	outtab.lng_pc1 = outtab.lng_pc2 = outarray.lng_pl;
@@ -735,46 +675,22 @@ TLMCC_Option_3_E:
 	BURN(sv_MCC.R, sv_MCC.V, DV8.x*R_E / 3600.0, DV8.y, DV8.z, isp_MCC, mfm0, RF, VF);
 	DV_MCC = VF - sv_MCC.V;
 
-	MPTSV sv_MCC_apo = sv_MCC;
+	EphemerisData sv_MCC_apo = sv_MCC;
 	sv_MCC_apo.V = VF;
 	//Step 9
-	PMMCEN_VNI vni;
-	PMMCEN_INI ini;
+	EphemerisData sv_nd;
 
-	vni.R = sv_MCC_apo.R;
-	vni.V = sv_MCC_apo.V;
-	vni.T = OrbMech::GETfromMJD(sv_MCC_apo.MJD, MEDQuantities.GMTBase);
-	vni.dir = 1.0;
-	vni.dt_min = 0.0;
-	vni.dt_max = 10.0*24.0*3600.0;
-	vni.end_cond = sin(outarray.gamma_nd);
-	vni.GMTBASE = MEDQuantities.GMTBase;
+	pRTCC->PMMCEN(sv_MCC_apo, 0.0, 10.0*24.0*3600.0, 2, sin(outarray.gamma_nd), 1.0, sv_nd, ITS);
 
-	if (KREF_MCC == 1)
-	{
-		ini.body = BODY_EARTH;
-	}
-	else
-	{
-		ini.body = BODY_MOON;
-	}
-	ini.stop_ind = 2;
-
-	VECTOR3 R_nd, V_nd;
-	double T_nd;
-	int ITS, IRS;
-
-	OrbMech::PMMCEN(vni, ini, R_nd, V_nd, T_nd, ITS, IRS);
-
-	LIBRAT(R_nd, OrbMech::MJDfromGET(T_nd, MEDQuantities.GMTBase), 4);
-	OrbMech::latlong_from_r(R_nd, outtab.lat_nd, outtab.lng_nd);
+	LIBRAT(sv_nd.R, sv_nd.GMT, 4);
+	OrbMech::latlong_from_r(sv_nd.R, outtab.lat_nd, outtab.lng_nd);
 	if (outtab.lng_nd < 0)
 	{
 		outtab.lng_nd += PI2;
 	}
-	outtab.h_nd = length(R_nd) - DataTable.rad_lls;
-	outtab.GMT_nd = T_nd;
-	outarray.MJD_nd = OrbMech::MJDfromGET(T_nd, MEDQuantities.GMTBase);
+	outtab.h_nd = length(sv_nd.R) - DataTable.rad_lls;
+	outtab.GMT_nd = sv_nd.GMT;
+	outarray.GMT_nd = sv_nd.GMT;
 }
 
 void TLMCCProcessor::Option4()
@@ -791,15 +707,15 @@ void TLMCCProcessor::Option4()
 		VECTOR3 R_EM, V_EM, R_ES;
 		double ainv;
 		EBETA(sv_MCC.R, sv_MCC.V, mu_E, ainv);
-		double MJD_PC = OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase);
-		double MJD_TLI = OrbMech::MJDfromGET(DataTable.GET_TLI + 328.0, MEDQuantities.GETBase);
-		if ((sv_MCC.MJD - MJD_TLI)*24.0 > 20.0)
+		double GMT_PC = DataTable.GMT_pc1;
+		double GMT_TLI = pRTCC->GMTfromGET(DataTable.GET_TLI + 328.0);
+		if (sv_MCC.GMT - GMT_TLI > 20.0*3600.0)
 		{
 			ddt = 0.0;
 		}
 		else
 		{
-			EPHEM(MJD_PC, R_EM, V_EM, R_ES);
+			EPHEM(GMT_PC, R_EM, V_EM, R_ES);
 			ddt = 0.0;//DDELTATIME(1.0 / ainv / R_E, (sv_MCC.MJD - MJD_TLI)*24.0, length(R_EM) / R_E, PI - acos(dotp(unit(R_EM), unit(V_EM))), (MJD_PC - MJD_TLI)*24.0);
 		}
 	}
@@ -853,39 +769,38 @@ void TLMCCProcessor::Option4()
 	double lng_nd2 = outarray.lng_nd;
 	double v_nd2 = outarray.v_pl*3600.0 / R_E;
 	double psi_nd2 = outarray.psi_pl;
-	double GMT_nd2 = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GMTBase) / 3600.0;
+	double GMT_nd2 = (outarray.GMT_nd) / 3600.0;
 	double dt_lls2 = outarray.dt_lls;
 
 	double dt = -OrbMech::period(outarray.sv_lls1.R, outarray.sv_lls1.V, mu_M)*(double)(MEDQuantities.Revs_circ + 1);
-	MPTSV sv_circ;
-	OrbMech::oneclickcoast(outarray.sv_lls1.R, outarray.sv_lls1.V, outarray.sv_lls1.MJD, dt, sv_circ.R, sv_circ.V, hMoon, hMoon);
-	sv_circ.MJD = outarray.sv_lls1.MJD + dt / 24.0 / 3600.0;
+	EphemerisData sv_circ;
+	int ITS;
+
+	pRTCC->PMMCEN(outarray.sv_lls1, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_circ, ITS);
 	dt = OrbMech::time_radius(sv_circ.R, sv_circ.V, DataTable.rad_lls + MEDQuantities.H_T_circ, 1.0, mu_M);
-	OrbMech::oneclickcoast(sv_circ.R, sv_circ.V, sv_circ.MJD, dt, sv_circ.R, sv_circ.V, hMoon, hMoon);
-	sv_circ.MJD = sv_circ.MJD + dt / 24.0 / 3600.0;
+	pRTCC->PMMCEN(sv_circ, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_circ, ITS);
 	sv_circ.V = unit(sv_circ.V)*sqrt(mu_M / (DataTable.rad_lls + MEDQuantities.H_T_circ));
-	sv_circ.gravref = hMoon;
 
 	double DV_PPC;
-	MPTSV sv_lls2 = PPC(sv_circ, DataTable.lat_lls, DataTable.lng_lls, DataTable.psi_lls, Constants.n, 0, DV_PPC);
+	EphemerisData sv_lls2 = PPC(sv_circ, DataTable.lat_lls, DataTable.lng_lls, DataTable.psi_lls, Constants.n, 0, DV_PPC);
 	outarray.DV_LOPC = _V(DV_PPC, 0, 0);
 	outarray.sv_lls2.R = sv_lls2.R;
 	outarray.sv_lls2.V = sv_lls2.V;
-	outarray.sv_lls2.MJD = sv_lls2.MJD;
+	outarray.sv_lls2.GMT = sv_lls2.GMT;
 	outarray.M_lopc = MCOMP(DV_PPC, MEDQuantities.Config, MEDQuantities.useSPS, outarray.M_cir) - MEDQuantities.LMMass;
 
-	double lat_TEI, lng_TEI, MJD_TEI, dlng, mfm0;
-	MPTSV sv_TEI1, sv_TEI2;
+	double lat_TEI, lng_TEI, GMT_TEI, dlng, mfm0;
+	EphemerisData sv_TEI1, sv_TEI2;
 	VECTOR3 R_TEI_EMP, V_TEI_EMP;
 
-	MJD_TEI = outarray.MJD_nd + DataTable.T_lo / 24.0 / 3600.0;
-	sv_TEI1 = OrbMech::coast(outarray.sv_lls2, (MJD_TEI - outarray.sv_lls2.MJD)*24.0*3600.0);
+	GMT_TEI = outarray.GMT_nd + DataTable.T_lo;
+	pRTCC->PMMCEN(outarray.sv_lls2, 0.0, 10.0*24.0*3600.0, 1, GMT_TEI - outarray.sv_lls2.GMT, 1.0, sv_TEI1, ITS);
 	sv_TEI2 = sv_TEI1;
 
 	do
 	{
 		R_TEI_EMP = sv_TEI2.R;
-		LIBRAT(R_TEI_EMP, sv_TEI2.MJD, 4);
+		LIBRAT(R_TEI_EMP, sv_TEI2.GMT, 4);
 		OrbMech::latlong_from_r(R_TEI_EMP, lat_TEI, lng_TEI);
 		if (lng_TEI < 0)
 		{
@@ -901,16 +816,16 @@ void TLMCCProcessor::Option4()
 			dlng += PI2;
 		}
 		dt = dlng * 20.0 / RAD;
-		sv_TEI2 = OrbMech::coast(sv_TEI2, dt);
+		pRTCC->PMMCEN(sv_TEI2, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_TEI2, ITS);
 	} while (abs(dt) > 0.1);
 
 	VECTOR3 RF, VF;
 	double dt_LPO, dpsi_tei, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp;
 
-	dt_LPO = (sv_TEI2.MJD - sv_TEI1.MJD)*24.0*3600.0;
+	dt_LPO = sv_TEI2.GMT - sv_TEI1.GMT;
 	R_TEI_EMP = sv_TEI2.R;
 	V_TEI_EMP = sv_TEI2.V;
-	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.MJD, 4);
+	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.GMT, 4);
 	RVIO(true, R_TEI_EMP, V_TEI_EMP, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp);
 	dpsi_tei = 270.0*RAD - psi_emp;
 	if (dpsi_tei > PI)
@@ -918,10 +833,10 @@ void TLMCCProcessor::Option4()
 		dpsi_tei -= PI2;
 	}
 
-	MPTSV S_apo, S3I;
-	MPTSV S1 = sv_MCC;
-	MPTSV S2C = sv_MCC;
-	MPTSV S3C = outarray.sv_loi;
+	EphemerisData S_apo, S3I;
+	EphemerisData S1 = sv_MCC;
+	EphemerisData S2C = sv_MCC;
+	EphemerisData S3C = outarray.sv_loi;
 	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
 
@@ -966,7 +881,7 @@ TLMCC_Option_4_D:
 	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
 	//Step 6
-	GMT_nd = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GMTBase);
+	GMT_nd = outarray.GMT_nd;
 	IntegratedXYZTTrajectory(sv_MCC, NewGuess.x, NewGuess.y, NewGuess.z, outarray.h_nd + DataTable.rad_lls, outarray.lat_nd, outarray.lng_nd, GMT_nd);
 	DV6 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 	BURN(sv_MCC.R, sv_MCC.V, 3, 0.0, 0.0, DV6.x*R_E / 3600.0, DV6.y, DV6.z, isp_MCC, 0.0, v_c, dv_char6, mfm0, RF, VF);
@@ -982,11 +897,11 @@ TLMCC_Option_4_D:
 	DV_MCC = VF - sv_MCC.V;
 
 	VECTOR3 R_pl, V_pl;
-	double beta, ainv, MJD_pl;
+	double beta, ainv, GMT_pl;
 	beta = EBETA(outarray.sv_loi.R, outarray.sv_loi.V, mu_M, ainv);
-	XBETA(outarray.sv_loi.R, outarray.sv_loi.V, outarray.sv_loi.MJD, beta, 2, R_pl, V_pl, MJD_pl);
+	XBETA(outarray.sv_loi.R, outarray.sv_loi.V, outarray.sv_loi.GMT, beta, 2, R_pl, V_pl, GMT_pl);
 	outarray.AZ_act = DataTable.psi_lls;
-	outtab.GMT_pc1 = outtab.GMT_pc2 = OrbMech::GETfromMJD(MJD_pl, MEDQuantities.GMTBase);
+	outtab.GMT_pc1 = outtab.GMT_pc2 = outarray.GMT_pl;
 	outtab.GMT_nd = GMT_nd;
 	outtab.h_nd = outarray.h_nd;
 	outtab.lat_nd = outarray.lat_nd;
@@ -1018,16 +933,16 @@ void TLMCCProcessor::Option5()
 		VECTOR3 R_EM, V_EM, R_ES;
 		double ainv;
 		EBETA(sv_MCC.R, sv_MCC.V, mu_E, ainv);
-		double MJD_PC = OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase);
-		double MJD_TLI = OrbMech::MJDfromGET(DataTable.GET_TLI + 328.0, MEDQuantities.GETBase);
-		if ((sv_MCC.MJD - MJD_TLI)*24.0 > 20.0)
+		double GMT_PC = DataTable.GMT_pc1;
+		double GMT_TLI = pRTCC->GMTfromGET(DataTable.GET_TLI + 328.0);
+		if (sv_MCC.GMT - GMT_TLI > 20.0*3600.0)
 		{
 			ddt = 0.0;
 		}
 		else
 		{
-			EPHEM(MJD_PC, R_EM, V_EM, R_ES);
-			ddt = DDELTATIME(1.0 / ainv / R_E, (sv_MCC.MJD - MJD_TLI)*24.0, length(R_EM) / R_E, PI - acos(dotp(unit(R_EM), unit(V_EM))), (MJD_PC - MJD_TLI)*24.0);
+			EPHEM(GMT_PC, R_EM, V_EM, R_ES);
+			ddt = DDELTATIME(1.0 / ainv / R_E, (sv_MCC.GMT - GMT_TLI) / 3600.0, length(R_EM) / R_E, PI - acos(dotp(unit(R_EM), unit(V_EM))), (GMT_PC - GMT_TLI) / 3600.0);
 		}
 	}
 
@@ -1089,25 +1004,26 @@ void TLMCCProcessor::Option5()
 	double h_nd2 = outarray.h_nd;
 	double lat_nd2 = outarray.lat_nd;
 	double lng_nd2 = outarray.lng_nd;
-	double GMT_nd2 = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GMTBase) / 3600.0;
+	double GMT_nd2 = outarray.GMT_nd / 3600.0;
 	double gamma_loi2 = outarray.gamma_nd;
 	double dpsi_loi2 = outarray.dpsi_loi;
 	double dt_lls2 = outarray.dt_lls;
 	double psi_nd2 = outarray.psi_pl;
 	double v_nd2 = outarray.v_pl*3600.0 / R_E;
 
-	double lat_TEI, lng_TEI, MJD_TEI, dlng, dt;
-	MPTSV sv_TEI1, sv_TEI2;
+	double lat_TEI, lng_TEI, GMT_TEI, dlng, dt;
+	EphemerisData sv_TEI1, sv_TEI2;
 	VECTOR3 R_TEI_EMP, V_TEI_EMP;
+	INT ITS;
 
-	MJD_TEI = outarray.MJD_nd + DataTable.T_lo / 24.0 / 3600.0;
-	sv_TEI1 = OrbMech::coast(outarray.sv_lls2, (MJD_TEI - outarray.sv_lls2.MJD)*24.0*3600.0);
+	GMT_TEI = outarray.GMT_nd + DataTable.T_lo;
+	pRTCC->PMMCEN(outarray.sv_lls2, 0.0, 10.0*24.0*3600.0, 1, GMT_TEI - outarray.sv_lls2.GMT, 1.0, sv_TEI1, ITS);
 	sv_TEI2 = sv_TEI1;
 
 	do
 	{
 		R_TEI_EMP = sv_TEI2.R;
-		LIBRAT(R_TEI_EMP, sv_TEI2.MJD, 4);
+		LIBRAT(R_TEI_EMP, sv_TEI2.GMT, 4);
 		OrbMech::latlong_from_r(R_TEI_EMP, lat_TEI, lng_TEI);
 		if (lng_TEI < 0)
 		{
@@ -1123,16 +1039,16 @@ void TLMCCProcessor::Option5()
 			dlng += PI2;
 		}
 		dt = dlng * 20.0 / RAD;
-		sv_TEI2 = OrbMech::coast(sv_TEI2, dt);
+		pRTCC->PMMCEN(sv_TEI2, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_TEI2, ITS);
 	} while (abs(dt) > 0.1);
 
 	VECTOR3 RF, VF;
 	double dt_LPO, dpsi_tei, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp, mfm0;
 
-	dt_LPO = (sv_TEI2.MJD - sv_TEI1.MJD)*24.0*3600.0;
+	dt_LPO = sv_TEI2.GMT - sv_TEI1.GMT;
 	R_TEI_EMP = sv_TEI2.R;
 	V_TEI_EMP = sv_TEI2.V;
-	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.MJD, 4);
+	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.GMT, 4);
 	RVIO(true, R_TEI_EMP, V_TEI_EMP, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp);
 	dpsi_tei = 270.0*RAD - psi_emp;
 	if (dpsi_tei > PI2)
@@ -1140,10 +1056,10 @@ void TLMCCProcessor::Option5()
 		dpsi_tei -= PI2;
 	}
 
-	MPTSV S_apo, S3I;
-	MPTSV S1 = sv_MCC;
-	MPTSV S2C = sv_MCC;
-	MPTSV S3C = outarray.sv_loi;
+	EphemerisData S_apo, S3I;
+	EphemerisData S1 = sv_MCC;
+	EphemerisData S2C = sv_MCC;
+	EphemerisData S3C = outarray.sv_loi;
 	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
 
@@ -1189,7 +1105,7 @@ TLMCC_Option_5_D:
 	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
 	//Step 6
-	GMT_nd = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GMTBase);
+	GMT_nd = outarray.GMT_nd;
 	IntegratedXYZTTrajectory(sv_MCC, NewGuess.x, NewGuess.y, NewGuess.z, outarray.h_nd + DataTable.rad_lls, outarray.lat_nd, outarray.lng_nd, GMT_nd);
 	DV6 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 	BURN(sv_MCC.R, sv_MCC.V, 3, 0.0, 0.0, DV6.x*R_E / 3600.0, DV6.y, DV6.z, isp_MCC, 0.0, v_c, dv_char6, mfm0, RF, VF);
@@ -1205,10 +1121,10 @@ TLMCC_Option_5_D:
 	DV_MCC = VF - sv_MCC.V;
 
 	VECTOR3 R_pl, V_pl;
-	double beta, ainv, MJD_pl;
+	double beta, ainv, GMT_pl;
 	beta = EBETA(outarray.sv_loi.R, outarray.sv_loi.V, mu_M, ainv);
-	XBETA(outarray.sv_loi.R, outarray.sv_loi.V, outarray.sv_loi.MJD, beta, 2, R_pl, V_pl, MJD_pl);
-	outtab.GMT_pc1 = outtab.GMT_pc2 = OrbMech::GETfromMJD(MJD_pl, MEDQuantities.GMTBase);
+	XBETA(outarray.sv_loi.R, outarray.sv_loi.V, outarray.sv_loi.GMT, beta, 2, R_pl, V_pl, GMT_pl);
+	outtab.GMT_pc1 = outtab.GMT_pc2 = GMT_pl;
 	outtab.GMT_nd = GMT_nd;
 	outtab.h_nd = outarray.h_nd;
 	outtab.lat_nd = outarray.lat_nd;
@@ -1292,7 +1208,7 @@ void TLMCCProcessor::Option8()
 	psi = 270.0*RAD;
 	T = DataTable.GMT_pc1 / 3600.0;
 
-	double dt = (OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase) - sv_MCC.MJD)*24.0;
+	double dt = (DataTable.GMT_pc1 - sv_MCC.GMT) / 3600.0;
 	if (dt < 15.0)
 	{
 		double R0 = (DataTable.rad_lls + 60.0*1852.0) / R_E;
@@ -1306,10 +1222,10 @@ void TLMCCProcessor::Option8()
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
-	double incl_pg, lat_split, MJD_pc;
-	MJD_pc = OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase);
-	EPHEM(MJD_pc, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_pc), R_EM);
+	double incl_pg, lat_split, GMT_pc;
+	GMT_pc = DataTable.GMT_pc1;
+	EPHEM(GMT_pc, R_EM, V_EM, R_ES);
+	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MEDQuantities.GMTBase + GMT_pc / 24.0 / 3600.0), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
 	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
 	lat_split = outarray.lat_pl;
@@ -1338,11 +1254,11 @@ void TLMCCProcessor::Option8()
 	ConicFreeReturnInclinationFlyby(sv_MCC, DV3.x, DV3.y, DV3.z, h_pl, outarray.incl_fr);
 	VECTOR3 DV5 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 
-	MPTSV S1 = sv_MCC;
-	MPTSV S2C = sv_MCC;
+	EphemerisData S1 = sv_MCC;
+	EphemerisData S2C = sv_MCC;
 	BURN(sv_MCC.R, sv_MCC.V, DV5.x*R_E / 3600.0, DV5.y, DV5.z, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
-	MPTSV S_apo = sv_MCC;
+	EphemerisData S_apo = sv_MCC;
 	S_apo.V = S2C.V - DV_temp;
 	double theta, phi, r, v1, v2, gamma1, gamma2, psi1, psi2;
 	RVIO(true, S_apo.R, S_apo.V, r, v1, theta, phi, gamma1, psi1);
@@ -1395,7 +1311,7 @@ void TLMCCProcessor::Option9A()
 	psi = 270.0*RAD;
 	T = DataTable.GMT_pc1 / 3600.0;
 
-	double dt = (OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase) - sv_MCC.MJD)*24.0;
+	double dt = (DataTable.GMT_pc1 - sv_MCC.GMT) / 3600.0;
 	if (dt < 15.0)
 	{
 		double R0 = (DataTable.rad_lls + 60.0*1852.0) / R_E;
@@ -1409,10 +1325,10 @@ void TLMCCProcessor::Option9A()
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
-	double incl_pg, lat_split, MJD_pc;
-	MJD_pc = OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase);
-	EPHEM(MJD_pc, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_pc), R_EM);
+	double incl_pg, lat_split, GMT_pc;
+	GMT_pc = DataTable.GMT_pc1;
+	EPHEM(GMT_pc, R_EM, V_EM, R_ES);
+	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MEDQuantities.GMTBase + GMT_pc / 24.0 / 3600.0), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
 	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
 	lat_split = outarray.lat_pl;
@@ -1435,11 +1351,11 @@ void TLMCCProcessor::Option9A()
 	//Step 5
 	ConicFreeReturnInclinationFlyby(sv_MCC, DV3.x, DV3.y, DV3.z, h_pl, outarray.incl_fr);
 	VECTOR3 DV5 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
-	MPTSV S1 = sv_MCC;
-	MPTSV S2C = sv_MCC;
+	EphemerisData S1 = sv_MCC;
+	EphemerisData S2C = sv_MCC;
 	BURN(sv_MCC.R, sv_MCC.V, DV5.x*R_E / 3600.0, DV5.y, DV5.z, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
-	MPTSV S_apo;
+	EphemerisData S_apo;
 	VECTOR3 NewGuess, DV6, DV7, DV8, DV9;
 	double h_conv, theta, phi, r, v1, v2, gamma1, gamma2, psi1, psi2, inc_opt, v_c, dv_char8, dv_char9;
 
@@ -1506,7 +1422,7 @@ void TLMCCProcessor::Option9B()
 	psi = 270.0*RAD;
 	T = DataTable.GMT_pc1 / 3600.0;
 
-	double dt = (OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase) - sv_MCC.MJD)*24.0;
+	double dt = (DataTable.GMT_pc1 - sv_MCC.GMT) / 3600.0;
 	if (dt < 15.0)
 	{
 		double R0 = (DataTable.rad_lls + 60.0*1852.0) / R_E;
@@ -1520,10 +1436,10 @@ void TLMCCProcessor::Option9B()
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
-	double incl_pg, lat_split, MJD_pc;
-	MJD_pc = OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase);
-	EPHEM(MJD_pc, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_pc), R_EM);
+	double incl_pg, lat_split, GMT_pc;
+	GMT_pc = DataTable.GMT_pc1;
+	EPHEM(GMT_pc, R_EM, V_EM, R_ES);
+	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MEDQuantities.GMTBase + GMT_pc / 24.0 / 3600.0), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
 	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
 	lat_split = outarray.lat_pl;
@@ -1552,9 +1468,9 @@ void TLMCCProcessor::Option9B()
 	ConicFreeReturnInclinationFlyby(sv_MCC, DV3.x, DV3.y, DV3.z, h_pl, outarray.incl_fr);
 	VECTOR3 DV5 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 
-	MPTSV S1 = sv_MCC;
-	MPTSV S2C = sv_MCC;
-	MPTSV S_apo;
+	EphemerisData S1 = sv_MCC;
+	EphemerisData S2C = sv_MCC;
+	EphemerisData S_apo;
 	VECTOR3 NewGuess, DV6, DV7, DV8;
 	double theta, phi, r, v1, v2, gamma1, gamma2, psi1, psi2, lat_pl_max, lat_pl_min, v_c, dv_char7, h_conv, inc_conv, dv_char8;
 
@@ -1676,7 +1592,7 @@ bool TLMCCProcessor::ConvergeTLMC(double V, double azi, double lng, double lat, 
 	return GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double R_nd, double lat_nd, double lng_nd, double GMT_node)
+void TLMCCProcessor::IntegratedXYZTTrajectory(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double R_nd, double lat_nd, double lng_nd, double GMT_node)
 {
 	void *constPtr;
 
@@ -1724,7 +1640,7 @@ void TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_pg, double lat_pl_min, double lat_pl_max)
+void TLMCCProcessor::ConicFreeReturnInclinationFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_pg, double lat_pl_min, double lat_pl_max)
 {
 	void *constPtr;
 
@@ -1781,7 +1697,7 @@ void TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess,
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double inc_pg_min, double inc_pg_max, int inc_class)
+void TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double inc_pg_min, double inc_pg_max, int inc_class)
 {
 	void *constPtr;
 
@@ -1837,7 +1753,7 @@ void TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double 
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::IntegratedFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl)
+void TLMCCProcessor::IntegratedFreeReturnFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl)
 {
 	void *constPtr;
 	outarray.NodeStopIndicator = false;
@@ -1889,7 +1805,7 @@ void TLMCCProcessor::IntegratedFreeReturnFlyby(MPTSV sv0, double dv_guess, doubl
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl)
+void TLMCCProcessor::ConicFreeReturnFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -1942,7 +1858,7 @@ void TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double dv_guess, double dga
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_fr)
+void TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_fr)
 {
 	void *constPtr;
 	outarray.NodeStopIndicator = false;
@@ -1989,7 +1905,7 @@ void TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double dv_g
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi)
+void TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitToLLS(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -2057,7 +1973,7 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double d
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicNonfreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_min, double T_max)
+void TLMCCProcessor::ConicNonfreeReturnOptimizedFixedOrbitToLLS(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_min, double T_max)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -2117,7 +2033,7 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, doubl
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double dpsi_loi, double DT_lls, double AZ_min, double AZ_max)
+void TLMCCProcessor::ConicFreeReturnOptimizedFreeOrbitToLOPC(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double dpsi_loi, double DT_lls, double AZ_min, double AZ_max)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -2213,7 +2129,7 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double d
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double T_min, double T_max, double h_pl)
+void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double T_min, double T_max, double h_pl)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -2359,7 +2275,7 @@ void TLMCCProcessor::ConicTransEarthInjection(double T_lo, double dv_tei, double
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double h_pl, double gamma_loi, double dpsi_loi, double dt_lls, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double AZ_min, double AZ_max, double mass, bool freereturn, double T_min, double T_max)
+void TLMCCProcessor::ConicFullMissionFreeOrbit(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double h_pl, double gamma_loi, double dpsi_loi, double dt_lls, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double AZ_min, double AZ_max, double mass, bool freereturn, double T_min, double T_max)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -2502,7 +2418,7 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	block.DepVarWeight[10] = 1.0;
 	block.DepVarWeight[12] = 1.0;
 	block.DepVarWeight[13] = 0.125;
-	block.DepVarWeight[19] = 1.0;
+	block.DepVarWeight[19] = 0.25; //If this is 1.0 the mass optimization overpowers other constraints. Why do we have to do this?
 	block.DepVarWeight[20] = 0.125;
 	if (freereturn)
 	{
@@ -2529,7 +2445,7 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double mass, bool freereturn, double T_min, double T_max)
+void TLMCCProcessor::ConicFullMissionFixedOrbit(EphemerisData sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double mass, bool freereturn, double T_min, double T_max)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -2672,8 +2588,8 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void
 {
 	TLMCCGeneralizedIteratorArray *vars;
 	vars = static_cast<TLMCCGeneralizedIteratorArray*>(varPtr);
-	VECTOR3 R, V, R_MCC, V_MCC;
-	double MJD, v_pl, psi_pl, lng_pl, lat_pl, rad_pl, gamma_pl, GMT_pl;
+	EphemerisData sv_pl, sv_mcc_temp;
+	double v_pl, psi_pl, lng_pl, lat_pl, rad_pl, gamma_pl;
 	bool err;
 
 	//Independent variables:
@@ -2701,47 +2617,53 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void
 	lat_pl = var[3];
 	rad_pl = var[4] * R_E;
 	gamma_pl = var[5];
-	GMT_pl = var[6] * 3600.0;
-	MJD = OrbMech::MJDfromGET(GMT_pl, MEDQuantities.GMTBase);
-	vars->MJD_pl = MJD;
+	sv_pl.GMT = var[6] * 3600.0;
+	vars->GMT_pl = sv_pl.GMT;
 
-	RVIO(false, R, V, rad_pl, v_pl, lng_pl, lat_pl, gamma_pl, psi_pl);
-	LIBRAT(R, V, MJD, 3);
+	//Build state vector at perilune
+	RVIO(false, sv_pl.R, sv_pl.V, rad_pl, v_pl, lng_pl, lat_pl, gamma_pl, psi_pl);
+	LIBRAT(sv_pl.R, sv_pl.V, sv_pl.GMT, 3);
+	sv_pl.RBI = BODY_MOON;
 
 	if (vars->TLMCIntegrating)
 	{
-		OrbMech::oneclickcoast(R, V, MJD, (vars->sv0.MJD - MJD)*24.0*3600.0, R_MCC, V_MCC, hMoon, vars->sv0.gravref);
+		//Integrate backwards to time of MCC
+		int ITS;
+		pRTCC->PMMCEN(sv_pl, 0.0, 10.0*24.0*3600.0, 1, vars->sv0.GMT - sv_pl.GMT, -1.0, sv_mcc_temp, ITS);
 	}
 	else
 	{
 		if (KREF_MCC == 1)
 		{
+			//We need to patch
 			VECTOR3 R_patch, V_patch;
-			R_patch = R;
-			V_patch = V;
-			if (PATCH(R_patch, V_patch, MJD, -1, 2))
+			R_patch = sv_pl.R;
+			V_patch = sv_pl.V;
+			if (PATCH(R_patch, V_patch, sv_pl.GMT, -1, 2))
 			{
 				return true;
 			}
-			err = CTBODY(R_patch, V_patch, MJD, vars->sv0.MJD, 1, mu_E, R_MCC, V_MCC);
+			//Patch point found. Now to back to time of MCC
+			err = CTBODY(R_patch, V_patch, sv_pl.GMT, vars->sv0.GMT, 1, mu_E, sv_mcc_temp.R, sv_mcc_temp.V);
 			if (err) return true;
 		}
 		else
 		{
-			err = CTBODY(R, V, MJD, vars->sv0.MJD, 2, mu_M, R_MCC, V_MCC);
+			//Earth centered, two-body backwards propagation to time of MCC
+			err = CTBODY(sv_pl.R, sv_pl.V, sv_pl.GMT, vars->sv0.GMT, 2, mu_M, sv_mcc_temp.R, sv_mcc_temp.V);
 			if (err) return true;
 		}
 	}
 
-	arr[0] = R_MCC.x / R_E;
-	arr[1] = R_MCC.y / R_E;
-	arr[2] = R_MCC.z / R_E;
-	vars->V_MCC = V_MCC;
+	arr[0] = sv_mcc_temp.R.x / R_E;
+	arr[1] = sv_mcc_temp.R.y / R_E;
+	arr[2] = sv_mcc_temp.R.z / R_E;
+	vars->V_MCC = sv_mcc_temp.V;
 
 	double r1, r2, v1, v2, theta, phi, gamma1, gamma2, psi1, psi2;
 
 	RVIO(true, vars->sv0.R, vars->sv0.V, r1, v1, theta, phi, gamma1, psi1);
-	RVIO(true, R_MCC, V_MCC, r2, v2, theta, phi, gamma2, psi2);
+	RVIO(true, sv_mcc_temp.R, sv_mcc_temp.V, r2, v2, theta, phi, gamma2, psi2);
 	vars->dv_mcc = (v2 - v1)*3600.0 / R_E;
 	vars->dgamma_mcc = gamma2 - gamma1;
 	vars->dpsi_mcc = psi2 - psi1;
@@ -2778,9 +2700,10 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 
 	TLMCCGeneralizedIteratorArray *vars;
 	vars = static_cast<TLMCCGeneralizedIteratorArray*>(varPtr);
-	MPTSV sv0;
-	VECTOR3 RF, VF, R_node, V_node, H_pg;
-	double dv_mcc, dgamma_mcc, dpsi_mcc, mfm0, R_nd, lat_nd, lng_nd, MJD_node, inc_pg, dt_node;
+	EphemerisData sv0, sv0_apo, sv_nd;
+	VECTOR3 H_pg;
+	double dv_mcc, dgamma_mcc, dpsi_mcc, mfm0, R_nd, lat_nd, lng_nd, inc_pg, dt_node;
+	INT ITS;
 
 	//Store in array
 	vars->dv_mcc = var[0];
@@ -2791,31 +2714,28 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 	dgamma_mcc = var[1];
 	dpsi_mcc = var[2];
 	dt_node = var[3] * 3600.0;
-	sv0 = vars->sv0;
+	sv0 = sv0_apo = vars->sv0;
 
-	BURN(sv0.R, sv0.V, dv_mcc, dgamma_mcc, dpsi_mcc, isp_SPS, mfm0, RF, VF);
+	BURN(sv0.R, sv0.V, dv_mcc, dgamma_mcc, dpsi_mcc, isp_SPS, mfm0, sv0_apo.R, sv0_apo.V);
 	outarray.M_mcc = outarray.M_i*mfm0;
 	if (vars->NodeStopIndicator)
 	{
 		VECTOR3 R_node_emp, V_node_emp, R_pl, V_pl;
-		double V_nd, gamma_nd, psi_nd, beta, ainv, MJD_pl, r_pl, v_pl, lng_pl, lat_pl, gamma_pl, psi_pl;
+		double V_nd, gamma_nd, psi_nd, beta, ainv, GMT_pl, r_pl, v_pl, lng_pl, lat_pl, gamma_pl, psi_pl;
 
-		OrbMech::oneclickcoast(RF, VF, sv0.MJD, dt_node, R_node, V_node, sv0.gravref, hMoon);
-		MJD_node = sv0.MJD + dt_node / 24.0 / 3600.0;
-		vars->sv_loi.R = R_node;
-		vars->sv_loi.V = V_node;
-		vars->sv_loi.MJD = MJD_node;
-		R_node_emp = R_node;
-		V_node_emp = V_node;
-		LIBRAT(R_node_emp, V_node_emp, MJD_node, 4);
+		pRTCC->PMMCEN(sv0_apo, 0.0, 10.0*24.0*3600.0, 1, dt_node, 1.0, sv_nd, ITS);
+		vars->sv_loi = sv_nd;
+		R_node_emp = sv_nd.R;
+		V_node_emp = sv_nd.V;
+		LIBRAT(R_node_emp, V_node_emp, sv_nd.GMT, 4);
 		RVIO(true, R_node_emp, V_node_emp, R_nd, V_nd, lng_nd, lat_nd, gamma_nd, psi_nd);
 		if (lng_nd < 0) lng_nd += PI2;
 		H_pg = crossp(R_node_emp, V_node_emp);
 		inc_pg = acos(H_pg.z / length(H_pg));
 
-		beta = EBETA(R_node, V_node, mu_M, ainv);
-		XBETA(R_node, V_node, MJD_node, beta, 2, R_pl, V_pl, MJD_pl);
-		LIBRAT(R_pl, V_pl, MJD_pl, 4);
+		beta = EBETA(sv_nd.R, sv_nd.V, mu_M, ainv);
+		XBETA(sv_nd.R, sv_nd.V, sv_nd.GMT, beta, 2, R_pl, V_pl, GMT_pl);
+		LIBRAT(R_pl, V_pl, GMT_pl, 4);
 		RVIO(true, R_pl, V_pl, r_pl, v_pl, lng_pl, lat_pl, gamma_pl, psi_pl);
 
 		arr[0] = R_nd / R_E;
@@ -2823,44 +2743,28 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 		arr[2] = lng_nd;
 		arr[3] = inc_pg;
 		vars->gamma_nd = gamma_nd;
-		vars->MJD_nd = MJD_node;
+		vars->GMT_nd = sv_nd.GMT;
 		vars->lat_pl = lat_pl;
 		vars->lng_pl = lng_pl;
 		vars->h_pl = r_pl - DataTable.rad_lls;
-		vars->MJD_pl = MJD_pl;
+		vars->GMT_pl = GMT_pl;
 
 		return false;
 	}
 	else
 	{
+		EphemerisData sv_pl, sv_r;
 		MATRIX3 Rot;
-		VECTOR3 R_pl, V_pl, R_temp, V_temp, HH_pl, H_equ, R_r, V_r;
-		double T_pl, T_r, MJD_r;
-		int ITS, IRS;
-		PMMCEN_VNI vni;
-		PMMCEN_INI ini;
+		VECTOR3 R_temp, V_temp, HH_pl, H_equ;
+		int ITS;
 
-		vni.R = RF;
-		vni.V = VF;
-		vni.T = OrbMech::GETfromMJD(sv0.MJD, MEDQuantities.GMTBase);
-		vni.GMTBASE = MEDQuantities.GMTBase;
-		vni.dt_max = 100.0*3600.0;
-		
-		if (sv0.gravref==oapiGetObjectByName("Earth"))
-		{
-			ini.body = BODY_EARTH;
-		}
-		else
-		{
-			ini.body = BODY_MOON;
-		}
-		ini.stop_ind = 2;
-		OrbMech::PMMCEN(vni, ini, R_pl, V_pl, T_pl, ITS, IRS);
+		//Propagate state vector to perilune
+		pRTCC->PMMCEN(sv0_apo, 0.0, 100.0*3600.0, 2, 0.0, 1.0, sv_pl, ITS);
 	
-		R_temp = R_pl;
-		V_temp = V_pl;
-		vars->MJD_pl = OrbMech::MJDfromGET(T_pl, MEDQuantities.GMTBase);
-		LIBRAT(R_temp, V_temp, vars->MJD_pl, 4);
+		R_temp = sv_pl.R;
+		V_temp = sv_pl.V;
+		vars->GMT_pl = sv_pl.GMT;
+		LIBRAT(R_temp, V_temp, vars->GMT_pl, 4);
 		vars->h_pl = length(R_temp) - DataTable.rad_lls;
 		OrbMech::latlong_from_r(R_temp, vars->lat_pl, vars->lng_pl);
 		if (vars->lng_pl < 0)
@@ -2870,28 +2774,22 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 		HH_pl = crossp(R_temp, V_temp);
 		vars->incl_pl = acos(HH_pl.z / length(HH_pl));
 
-		vni.R = R_pl;
-		vni.V = V_pl;
-		vni.T = T_pl;
-		vni.end_cond = sin(gamma_reentry);
+		//Propagate state vector to reentry
+		pRTCC->PMMCEN(sv_pl, 0.0, 100.0*3600.0, 2, sin(gamma_reentry), 1.0, sv_r, ITS);
 
-		ini.body = BODY_MOON;
-		OrbMech::PMMCEN(vni, ini, R_r, V_r, T_r, ITS, IRS);
-
-		vars->h_fr = length(R_r) - R_E;
-		MJD_r = OrbMech::MJDfromGET(T_r, MEDQuantities.GMTBase);
-		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_r);
-		R_temp = rhtmul(Rot, R_r);
-		V_temp = rhtmul(Rot, V_r);
+		vars->h_fr = length(sv_r.R) - R_E;
+		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, MEDQuantities.GMTBase + sv_r.GMT / 24.0 / 3600.0);
+		R_temp = rhtmul(Rot, sv_r.R);
+		V_temp = rhtmul(Rot, sv_r.V);
 		H_equ = crossp(R_temp, V_temp);
 		vars->incl_fr = acos(H_equ.z / length(H_equ));
-		vars->v_EI = length(V_r);
+		vars->v_EI = length(sv_r.V);
 
 		if (vars->LunarFlybyIndicator)
 		{
 			double dlng;
-			RNTSIM(R_r, V_r, MJD_r, Constants.lambda_IP, vars->lat_ip, vars->lng_ip, dlng);
-			outarray.MJD_ip = MJD_r + Reentry_dt / 24.0 / 3600.0;
+			RNTSIM(sv_r.R, sv_r.V, sv_r.GMT, Constants.lambda_IP, vars->lat_ip, vars->lng_ip, dlng);
+			outarray.GMT_ip = sv_r.GMT + Reentry_dt;
 		}
 
 		arr[4] = vars->h_pl / R_E;
@@ -2946,10 +2844,10 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 
 	TLMCCGeneralizedIteratorArray *vars;
 	vars = static_cast<TLMCCGeneralizedIteratorArray*>(varPtr);
-	MPTSV sv0;
+	EphemerisData sv0;
 	VECTOR3 RF, VF, R_patch, V_patch, R_pl, V_pl, R_temp, V_temp, HH_pl, H;
 	double dv_mcc, dgamma_mcc, dpsi_mcc, dv_tei;
-	double mfm0, beta, MJD_patch, ainv, gamma;
+	double mfm0, beta, GMT_patch, ainv, gamma;
 	double ainv_pl, a, e, i, n, P, eta, dpsi_lopc, DV_R;
 
 	//Store in array
@@ -2995,8 +2893,8 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	{
 		R_patch = RF;
 		V_patch = VF;
-		MJD_patch = sv0.MJD;
-		if (PATCH(R_patch, V_patch, MJD_patch, 1, 1))
+		GMT_patch = sv0.GMT;
+		if (PATCH(R_patch, V_patch, GMT_patch, 1, 1))
 		{
 			return true;
 		}
@@ -3005,14 +2903,14 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	{
 		R_patch = RF;
 		V_patch = VF;
-		MJD_patch = sv0.MJD;
+		GMT_patch = sv0.GMT;
 	}
 	beta = EBETA(R_patch, V_patch, mu_M, ainv);
 	ainv_pl = ainv;
-	XBETA(R_patch, V_patch, MJD_patch, beta, 2, R_pl, V_pl, vars->MJD_pl);
+	XBETA(R_patch, V_patch, GMT_patch, beta, 2, R_pl, V_pl, vars->GMT_pl);
 	R_temp = R_pl;
 	V_temp = V_pl;
-	LIBRAT(R_temp, V_temp, vars->MJD_pl, 4);
+	LIBRAT(R_temp, V_temp, vars->GMT_pl, 4);
 	double r_pl, gamma_temp;
 	RVIO(true, R_temp, V_temp, r_pl, vars->v_pl, vars->lng_pl, vars->lat_pl, gamma_temp, vars->psi_pl);
 	vars->h_pl = r_pl - DataTable.rad_lls;
@@ -3023,22 +2921,22 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	{
 		MATRIX3 Rot;
 		VECTOR3 R_patch2, V_patch2, R_pg, V_pg, R_reentry, V_reentry, R_equ, V_equ, H_equ;
-		double MJD_patch2, MJD_pg, H, E, beta, e, MJD_reentry;
+		double GMT_patch2, GMT_pg, H, E, beta, e, GMT_reentry;
 
 		R_patch2 = R_pl;
 		V_patch2 = V_pl;
-		MJD_patch2 = vars->MJD_pl;
+		GMT_patch2 = vars->GMT_pl;
 
-		if (PATCH(R_patch2, V_patch2, MJD_patch2, 1, 2))
+		if (PATCH(R_patch2, V_patch2, GMT_patch2, 1, 2))
 		{
 			return true;
 		}
 		beta = EBETA(R_patch2, V_patch2, mu_E, ainv);
-		XBETA(R_patch2, V_patch2, MJD_patch2, beta, 1, R_pg, V_pg, MJD_pg);
+		XBETA(R_patch2, V_patch2, GMT_patch2, beta, 1, R_pg, V_pg, GMT_pg);
 		DGAMMA(length(R_pg), ainv, gamma_reentry, H, E, beta, e);
-		XBETA(R_pg, V_pg, MJD_pg, beta, 1, R_reentry, V_reentry, MJD_reentry);
+		XBETA(R_pg, V_pg, GMT_pg, beta, 1, R_reentry, V_reentry, GMT_reentry);
 		vars->h_fr = length(R_reentry) - R_E;
-		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_reentry);
+		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, MEDQuantities.GMTBase + GMT_reentry / 24.0 / 3600.0);
 		R_equ = rhtmul(Rot, R_reentry);
 		V_equ = rhtmul(Rot, V_reentry);
 		H_equ = crossp(R_equ, V_equ);
@@ -3062,18 +2960,18 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	{
 		R_LOI = R_pl;
 		V_LOI = V_pl;
-		vars->MJD_nd = vars->MJD_pl;
+		vars->GMT_nd = vars->GMT_pl;
 	}
 	else
 	{
 		double H, E, e;
 		DGAMMA(length(R_pl), ainv_pl, vars->gamma_nd, H, E, beta, e);
-		XBETA(R_pl, V_pl, vars->MJD_pl, beta, 2, R_LOI, V_LOI, vars->MJD_nd);
+		XBETA(R_pl, V_pl, vars->GMT_pl, beta, 2, R_LOI, V_LOI, vars->GMT_nd);
 	}
 
 	vars->sv_loi.R = R_LOI;
 	vars->sv_loi.V = V_LOI;
-	vars->sv_loi.MJD = vars->MJD_nd;
+	vars->sv_loi.GMT = vars->GMT_nd;
 
 	//Apply offset
 	V_LOI += outarray.LOIOffset;
@@ -3084,25 +2982,25 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	vars->h_nd = length(R_LOI) - DataTable.rad_lls;
 	R_temp = R_LOI;
 	V_temp = V_LOI;
-	LIBRAT(R_temp, V_temp, vars->MJD_nd, 4);
+	LIBRAT(R_temp, V_temp, vars->GMT_nd, 4);
 	H_LOI = crossp(R_temp, V_temp);
 	OrbMech::latlong_from_r(R_temp, vars->lat_nd, vars->lng_nd);
 	if (vars->lng_nd < 0) vars->lng_nd += PI2;
 	i_EMP = acos(H_LOI.z / length(H_LOI));
-	vars->t_tl = (vars->MJD_nd - sv0.MJD)*24.0*3600.0;
+	vars->t_tl = vars->GMT_nd - sv0.GMT;
 
 	if (vars->FixedOrbitIndicator)
 	{
 		goto TLMCC_Conic_A1;
 	}
 
-	double dv, MJD_LPO;
+	double dv, GMT_LPO;
 	dv = Constants.V_pcynlo - length(V_LOI);
 	BURN(R_LOI, V_LOI, dv, -vars->gamma_nd, vars->dpsi_loi, isp_MCC, mfm0, RF, VF);
 	outarray.M_loi = mfm0 * outarray.M_mcc;
 	outarray.M_cir = MCOMP(157.8*0.3048, MEDQuantities.Config, MEDQuantities.useSPS, outarray.M_loi);
-	vars->MJD_nd += vars->dt_bias_conic_prec / 24.0;
-	MJD_LPO = vars->MJD_nd + Constants.dt_bias / 24.0;
+	vars->GMT_nd += vars->dt_bias_conic_prec*3600.0;
+	GMT_LPO = vars->GMT_nd + Constants.dt_bias*3600.0;
 
 	goto TLMCC_Conic_C4;
 
@@ -3119,9 +3017,9 @@ TLMCC_Conic_A1:
 	{
 		if (!mode && vars->FirstOptimize)
 		{
-			vars->MJD_nd += vars->dt_bias_conic_prec / 24.0;
+			vars->GMT_nd += vars->dt_bias_conic_prec*3600.0;
 		}
-		PRCOMP(R_N, U_H, vars->MJD_nd, vars->RA_LPO1, vars->A1, vars->E1, vars->gamma1, vars->V_L, vars->gamma_L, vars->V2, vars->dt_lls);
+		PRCOMP(R_N, U_H, vars->GMT_nd, vars->RA_LPO1, vars->A1, vars->E1, vars->gamma1, vars->V_L, vars->gamma_L, vars->V2, vars->dt_lls);
 		var[5] = vars->dt_lls / 3600.0;
 		if (vars->FirstSelect)
 		{
@@ -3135,7 +3033,7 @@ TLMCC_Conic_A1:
 
 	VECTOR3 Rtemp = vars->SGSLOI.R;
 	VECTOR3 Vtemp = vars->SGSLOI.V;
-	LIBRAT(Rtemp, Vtemp, vars->MJD_nd, 6);
+	LIBRAT(Rtemp, Vtemp, vars->GMT_nd, 6);
 	U_DS = unit(crossp(Rtemp, Vtemp));
 
 	VECTOR3 U_PJ, gamma_vec;
@@ -3157,9 +3055,9 @@ TLMCC_Conic_A1:
 	double DV_DOI = sqrt(vars->V2*vars->V2 + vars->V_L * vars->V_L - 2.0*vars->V_L*vars->V2*cos(gamma));
 	outarray.M_cir = MCOMP(DV_DOI, MEDQuantities.Config, MEDQuantities.useSPS, outarray.M_loi);
 
-	LIBRAT(vars->sv_lls1.R, vars->sv_lls1.V, vars->sv_lls1.MJD, 5);
-	vars->sv_lls1.MJD = vars->MJD_nd + vars->dt_lls / 24.0 / 3600.0;
-	LIBRAT(vars->sv_lls1.R, vars->sv_lls1.V, vars->sv_lls1.MJD, 6);
+	LIBRAT(vars->sv_lls1.R, vars->sv_lls1.V, vars->sv_lls1.GMT, 5);
+	vars->sv_lls1.GMT = vars->GMT_nd + vars->dt_lls;
+	LIBRAT(vars->sv_lls1.R, vars->sv_lls1.V, vars->sv_lls1.GMT, 6);
 
 	if (vars->LLSStopIndicator)
 	{
@@ -3172,22 +3070,22 @@ TLMCC_Conic_A1:
 TLMCC_Conic_C4:
 	
 	VECTOR3 R_LPO, V_LPO, R_LLS, V_LLS;
-	double MJD_LLS, lat_S, lng_S;
+	double GMT_LLS, lat_S, lng_S;
 
 	SCALE(RF, VF, 60.0*1852.0, R_LPO, V_LPO);
-	MJD_LLS = vars->MJD_nd + vars->dt_lls / 24.0 / 3600.0;
-	CTBODY(R_LPO, V_LPO, MJD_LPO, MJD_LLS, 2, mu_M, R_LLS, V_LLS);
+	GMT_LLS = vars->GMT_nd + vars->dt_lls;
+	CTBODY(R_LPO, V_LPO, GMT_LPO, GMT_LLS, 2, mu_M, R_LLS, V_LLS);
 
 	R_temp = R_LLS;
 	V_temp = V_LLS;
-	LIBRAT(R_temp, V_temp, MJD_LLS, 5);
+	LIBRAT(R_temp, V_temp, GMT_LLS, 5);
 	OrbMech::latlong_from_r(R_temp, lat_S, lng_S);
 	double r, v;
 	RVIO(true, R_temp, V_temp, r, v, theta, phi, gamma, vars->AZ_act);
 	ELEMT(R_LLS, V_LLS, mu_M, H, a, e, i, n, P, eta);
 	P = PI2 / (length(V_LLS) / length(R_LLS) + OrbMech::w_Moon);
 	
-	LOPC(R_LLS, V_LLS, MJD_LLS, unit(R_temp), Constants.m, Constants.n, P, vars->sv_lls2.R, vars->sv_lls2.V, vars->sv_lls2.MJD, mfm0, dpsi_lopc, outarray.DV_LOPC);
+	LOPC(R_LLS, V_LLS, GMT_LLS, unit(R_temp), Constants.m, Constants.n, P, vars->sv_lls2.R, vars->sv_lls2.V, vars->sv_lls2.GMT, mfm0, dpsi_lopc, outarray.DV_LOPC);
 	if (vars->FixedOrbitIndicator == false && abs(dpsi_lopc) < 8e-3)
 	{
 		DV_R = 2.0*length(vars->sv_lls2.V)*(31.24975000037*dpsi_lopc*dpsi_lopc + 2.0000053333202e-3);
@@ -3199,32 +3097,32 @@ TLMCC_Conic_F5:
 
 	MATRIX3 Rot;
 	VECTOR3 R_TEI, V_TEI, R_TEC, V_TEC, R_pg, V_pg, R_reentry, V_reentry, R_equ, V_equ, H_equ;
-	double MJD_TEC, MJD_pg, HH, E, MJD_reentry, dlng;
+	double GMT_TEC, GMT_pg, HH, E, GMT_reentry, dlng;
 
-	vars->MJD_tei = vars->MJD_nd + vars->T_lo / 24.0 / 3600.0;
-	CTBODY(vars->sv_lls2.R, vars->sv_lls2.V, vars->sv_lls2.MJD, vars->MJD_tei, 2, mu_M, R_TEI, V_TEI);
+	vars->GMT_tei = vars->GMT_nd + vars->T_lo;
+	CTBODY(vars->sv_lls2.R, vars->sv_lls2.V, vars->sv_lls2.GMT, vars->GMT_tei, 2, mu_M, R_TEI, V_TEI);
 	BURN(R_TEI, V_TEI, dv_tei, vars->dgamma_tei, vars->dpsi_tei, isp_MCC, mfm0, R_TEC, V_TEC);
 	vars->DV_TEI = V_TEC - V_TEI;
 	outarray.M_tei = outarray.M_lopc * mfm0;
-	MJD_TEC = vars->MJD_tei;
-	if (PATCH(R_TEC, V_TEC, MJD_TEC, 1, 2))
+	GMT_TEC = vars->GMT_tei;
+	if (PATCH(R_TEC, V_TEC, GMT_TEC, 1, 2))
 	{
 		return true;
 	}
 	beta = EBETA(R_TEC, V_TEC, mu_E, ainv);
-	XBETA(R_TEC, V_TEC, MJD_TEC, beta, 1, R_pg, V_pg, MJD_pg);
+	XBETA(R_TEC, V_TEC, GMT_TEC, beta, 1, R_pg, V_pg, GMT_pg);
 	//TBD: If T_reentry < T_patch, adjust T_reentry
 	DGAMMA(length(R_pg), ainv, gamma_reentry, HH, E, beta, e);
-	XBETA(R_pg, V_pg, MJD_pg, beta, 1, R_reentry, V_reentry, MJD_reentry);
+	XBETA(R_pg, V_pg, GMT_pg, beta, 1, R_reentry, V_reentry, GMT_reentry);
 	vars->h_pr = length(R_reentry) - R_E;
-	Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_reentry);
+	Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, MEDQuantities.GMTBase + GMT_reentry / 24.0 / 3600.0);
 	R_equ = rhtmul(Rot, R_reentry);
 	V_equ = rhtmul(Rot, V_reentry);
 	H_equ = crossp(R_equ, V_equ);
 	vars->incl_pr = acos(H_equ.z / length(H_equ));
-	RNTSIM(R_reentry, V_reentry, MJD_reentry, Constants.lambda_IP, vars->lat_ip_pr, vars->lng_ip_pr, dlng);
-	vars->T_te = (MJD_reentry - vars->MJD_tei)*24.0*3600.0;
-	vars->MJD_ip_pr = MJD_reentry + Reentry_dt / 24.0 / 3600.0;
+	RNTSIM(R_reentry, V_reentry, GMT_reentry, Constants.lambda_IP, vars->lat_ip_pr, vars->lng_ip_pr, dlng);
+	vars->T_te = GMT_reentry - vars->GMT_tei;
+	vars->GMT_ip_pr = GMT_reentry + Reentry_dt;
 	vars->v_EI_pr = length(V_reentry);
 
 TLMCC_Conic_Out:
@@ -3288,22 +3186,37 @@ double TLMCCProcessor::EBETA(VECTOR3 R, VECTOR3 V, double mu, double &ainv)
 	return beta;
 }
 
-bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF)
+bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF)
 {
 	//KREF = 1: Earth reference input, 2: Moon reference input
 
 	VECTOR3 R_EM, V_EM, R_ES, R1, V1, R2, V2, R21, A2;
-	double beta, Ratio_desired, MJDF, r1, r2, r21, mu1, mu2, d1, d2, v12, v22, DRatioDBeta, DDRatioDDBeta, Ratio, DRatio, dbeta;
+	double beta, Ratio_desired, GMTF, r1, r2, r21, mu1, mu2, d1, d2, v12, v22, DRatioDBeta, DDRatioDDBeta, Ratio, DRatio, dbeta;
 	int i = 0;
 
 	if (KREF == 1)
 	{
+		//Is position magnitude larger than 40 e.r.?
 		if (length(R) > 40.0*R_E)
 		{
-			return true;
+			VECTOR3 R_p, V_p;
+			double ainv, GMT_p;
+			beta = EBETA(R, V, mu_E, ainv);
+			XBETA(R, V, GMT, beta, KREF, R_p, V_p, GMT_p);
+			//Is radius of periapsis larger than 40 e.r. as well?
+			if (length(R_p) > 40.0*R_E)
+			{
+				return true;
+			}
+			//Initial guess 40 e.r., with reverse direction indication
+			if (RBETA(R, -V, 40.0*R_E, -Q, mu_E, beta))
+			{
+				return true;
+			}
 		}
 		else
 		{
+			//Initial guess 40 e.r.
 			if (RBETA(R, V, 40.0*R_E, Q, mu_E, beta))
 			{
 				return true;
@@ -3315,12 +3228,27 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF)
 	}
 	else
 	{
+		//Is position magnitude larger than 10 e.r.?
 		if (length(R) > 10.0*R_E)
 		{
-			return true;
+			VECTOR3 R_p, V_p;
+			double ainv, GMT_p;
+			beta = EBETA(R, V, mu_M, ainv);
+			XBETA(R, V, GMT, beta, KREF, R_p, V_p, GMT_p);
+			//Is radius of periapsis larger than 10 e.r. as well?
+			if (length(R_p) > 10.0*R_E)
+			{
+				return true;
+			}
+			//Initial guess 10 e.r., with reverse direction indication
+			if (RBETA(R, -V, 10.0*R_E, -Q, mu_E, beta))
+			{
+				return true;
+			}
 		}
 		else
 		{
+			//Initial guess 10 e.r.
 			if (RBETA(R, V, 10.0*R_E, Q, mu_M, beta))
 			{
 				return true;
@@ -3333,8 +3261,8 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF)
 
 	do
 	{
-		XBETA(R, V, MJD, beta, KREF, R1, V1, MJDF);
-		if (EPHEM(MJDF, R_EM, V_EM, R_ES))
+		XBETA(R, V, GMT, beta, KREF, R1, V1, GMTF);
+		if (EPHEM(GMTF, R_EM, V_EM, R_ES))
 		{
 			return true;
 		}
@@ -3354,11 +3282,11 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF)
 		r2 = length(R2);
 		/*if (KREF == 1)
 		{
-			if (r1 > 60.0*R_E) return false;
+			if (r1 > 60.0*R_E) return true;
 		}
 		else
 		{
-			if (r1 > 15.0*R_E) return false;
+			if (r1 > 15.0*R_E) return true;
 		}*/
 		Ratio = r2 / r1;
 		DRatio = Ratio_desired - Ratio;
@@ -3385,7 +3313,7 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF)
 
 	R = R2;
 	V = V2;
-	MJD = MJDF;
+	GMT = GMTF;
 
 	return false;
 }
@@ -3487,7 +3415,7 @@ bool TLMCCProcessor::RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, d
 	return false;
 }
 
-void TLMCCProcessor::XBETA(VECTOR3 R0, VECTOR3 V0, double MJD0, double beta, int K, VECTOR3 &RF, VECTOR3 &VF, double &MJDF)
+void TLMCCProcessor::XBETA(VECTOR3 R0, VECTOR3 V0, double GMT0, double beta, int K, VECTOR3 &RF, VECTOR3 &VF, double &GMTF)
 {
 	double D0, r0, v0, ainv, mu, a, F1, F2, F3, F4, t, r, f, g, fdot, gdot;
 
@@ -3499,7 +3427,7 @@ void TLMCCProcessor::XBETA(VECTOR3 R0, VECTOR3 V0, double MJD0, double beta, int
 	a = -beta * beta*ainv;
 	FCOMP(a, F1, F2, F3, F4);
 	t = (beta*beta*F1 + D0 * beta*F2 / sqrt(mu) + r0 * F3)*beta / sqrt(mu);
-	MJDF = MJD0 + t / 24.0 / 3600.0;
+	GMTF = GMT0 + t;
 	r = (D0*F3 / sqrt(mu) + beta * F2)*beta + r0 * F4;
 	f = 1.0 - beta * beta*F2 / r0;
 	g = t - pow(beta, 3)*F1 / sqrt(mu);
@@ -3549,18 +3477,18 @@ void TLMCCProcessor::FCOMP(double a, double &F1, double &F2, double &F3, double 
 	F4 = a * F2 + 1.0;
 }
 
-bool TLMCCProcessor::EPHEM(double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES)
+bool TLMCCProcessor::EPHEM(double GMT, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES)
 {
-	return (OrbMech::PLEFEM(*ephemeris, MJD, R_EM, V_EM, R_ES) == false);
+	return pRTCC->PLEFEM(1, GMT / 3600.0, 0, R_EM, V_EM, R_ES);
 }
 
-bool TLMCCProcessor::LIBRAT(VECTOR3 &R, double MJD, int K)
+bool TLMCCProcessor::LIBRAT(VECTOR3 &R, double GMT, int K)
 {
 	VECTOR3 V = _V(0, 0, 0);
-	return LIBRAT(R, V, MJD, K);
+	return LIBRAT(R, V, GMT, K);
 }
 
-bool TLMCCProcessor::LIBRAT(VECTOR3 &R, VECTOR3 &V, double MJD, int K)
+bool TLMCCProcessor::LIBRAT(VECTOR3 &R, VECTOR3 &V, double GMT, int K)
 {
 	//Options
 	//1: EMP to selenographic
@@ -3575,7 +3503,7 @@ bool TLMCCProcessor::LIBRAT(VECTOR3 &R, VECTOR3 &V, double MJD, int K)
 		MATRIX3 A;
 		VECTOR3 R_ME, V_ME, R_ES, i, j, k;
 
-		if (EPHEM(MJD, R_ME, V_ME, R_ES))
+		if (EPHEM(GMT, R_ME, V_ME, R_ES))
 		{
 			return true;
 		}
@@ -3599,7 +3527,7 @@ bool TLMCCProcessor::LIBRAT(VECTOR3 &R, VECTOR3 &V, double MJD, int K)
 		{
 			MATRIX3 Rot;
 
-			Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
+			Rot = OrbMech::GetRotationMatrix(BODY_MOON, MEDQuantities.GMTBase + GMT / 24.0 / 3600.0);
 
 			if (K == 1)
 			{
@@ -3617,7 +3545,7 @@ bool TLMCCProcessor::LIBRAT(VECTOR3 &R, VECTOR3 &V, double MJD, int K)
 	{
 		MATRIX3 Rot;
 
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
+		Rot = OrbMech::GetRotationMatrix(BODY_MOON, MEDQuantities.GMTBase + GMT / 24.0 / 3600.0);
 
 		if (K == 5)
 		{
@@ -3634,18 +3562,18 @@ bool TLMCCProcessor::LIBRAT(VECTOR3 &R, VECTOR3 &V, double MJD, int K)
 	return false;
 }
 
-bool TLMCCProcessor::CTBODY(VECTOR3 R0, VECTOR3 V0, double MJD0, double MJDF, int K, double mu, VECTOR3 &RF, VECTOR3 &VF)
+bool TLMCCProcessor::CTBODY(VECTOR3 R0, VECTOR3 V0, double GMT0, double GMTF, int K, double mu, VECTOR3 &RF, VECTOR3 &VF)
 {
 	double F1, F2, F3, F4, alpha;
-	return CTBODY(R0, V0, MJD0, MJDF, K, mu, alpha, F1, F2, F3, F4, RF, VF);
+	return CTBODY(R0, V0, GMT0, GMTF, K, mu, alpha, F1, F2, F3, F4, RF, VF);
 }
 
-bool TLMCCProcessor::CTBODY(VECTOR3 R0, VECTOR3 V0, double MJD0, double MJDF, int K, double mu, double &alpha, double &F1, double &F2, double &F3, double &F4, VECTOR3 &RF, VECTOR3 &VF)
+bool TLMCCProcessor::CTBODY(VECTOR3 R0, VECTOR3 V0, double GMT0, double GMTF, int K, double mu, double &alpha, double &F1, double &F2, double &F3, double &F4, VECTOR3 &RF, VECTOR3 &VF)
 {
 	double dt;
 	int i = 0;
 
-	dt = (MJDF - MJD0)*24.0*3600.0;
+	dt = GMTF - GMT0;
 
 	if (abs(dt) < 3.6e-9)
 	{
@@ -3696,7 +3624,7 @@ bool TLMCCProcessor::CTBODY(VECTOR3 R0, VECTOR3 V0, double MJD0, double MJDF, in
 
 	G0 = RF;
 	Gdot0 = VF;
-	LIBRAT(G0, Gdot0, MJDF, 5);
+	LIBRAT(G0, Gdot0, GMTF, 5);
 	double n1, n2, n;
 
 	n1 = Gdot0.z*G0.x - G0.z*Gdot0.x;
@@ -3725,7 +3653,7 @@ bool TLMCCProcessor::CTBODY(VECTOR3 R0, VECTOR3 V0, double MJD0, double MJDF, in
 	M = _V(-cos_i*(sin_Omega*cos(dOmega) + cos_Omega * sin(dOmega)), cos_i*(cos_Omega*cos(dOmega) - sin_Omega * sin(dOmega)), sin_i);
 	G = N * (Gdot0.z*rr - G0.z*d) / n + M * G0.z*length(crossp(G0, Gdot0)) / n;
 	Gdot = N * (Gdot0.z*d - G0.z*vv) / n + M * Gdot0.z*length(crossp(G0, Gdot0)) / n;
-	LIBRAT(G, Gdot, MJDF, 6);
+	LIBRAT(G, Gdot, GMTF, 6);
 	RF = G;
 	VF = Gdot;
 
@@ -3840,7 +3768,7 @@ double TLMCCProcessor::MCOMP(double dv, bool docked, bool useSPS, double m0)
 	}
 }
 
-void TLMCCProcessor::RNTSIM(VECTOR3 R, VECTOR3 V, double MJD, double lng_L, double &lat, double &lng, double &dlng)
+void TLMCCProcessor::RNTSIM(VECTOR3 R, VECTOR3 V, double GMT, double lng_L, double &lat, double &lng, double &dlng)
 {
 	MATRIX3 Rot;
 	VECTOR3 P, S, S_equ;
@@ -3852,7 +3780,7 @@ void TLMCCProcessor::RNTSIM(VECTOR3 R, VECTOR3 V, double MJD, double lng_L, doub
 	P = V / v / cos(gamma_reentry) - R / r * tan(gamma_reentry);
 	theta = Reentry_range / 3443.933585;
 	S = R / r * cos(theta) + P * sin(theta);
-	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD + Reentry_dt / 24.0 / 3600.0);
+	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MEDQuantities.GMTBase + (GMT + Reentry_dt) / 24.0 / 3600.0);
 	S_equ = rhtmul(Rot, S);
 	OrbMech::latlong_from_r(S_equ, lat, lng);
 	if (lng < 0)
@@ -3870,29 +3798,33 @@ void TLMCCProcessor::RNTSIM(VECTOR3 R, VECTOR3 V, double MJD, double lng_L, doub
 	}
 }
 
-void TLMCCProcessor::LOPC(VECTOR3 R0, VECTOR3 V0, double MJD0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &MJD3, double &mfm0, double &dpsi, VECTOR3 &DV)
+void TLMCCProcessor::LOPC(VECTOR3 R0, VECTOR3 V0, double GMT0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &GMT3, double &mfm0, double &dpsi, VECTOR3 &DV)
 {
 	VECTOR3 R1, V1, R2, V2;
-	double dt1, MJD1, MJD2, dt2;
+	double dt1, GMT1, GMT2, dt2;
 
 	dt1 = P * (-0.25 + (double)m);
-	MJD1 = MJD0 + dt1 / 24.0 / 3600.0;
-	CTBODY(R0, V0, MJD0, MJD1, 2, mu_M, R1, V1);
+	GMT1 = GMT0 + dt1;
+	CTBODY(R0, V0, GMT0, GMT1, 2, mu_M, R1, V1);
 	dt2 = P * (double)(m + n);
-	MJD2 = MJD0 + dt2 / 24.0 / 3600.0;
-	CTBODY(R0, V0, MJD0, MJD2, 2, mu_M, R2, V2);
-	LIBRAT(R2, V2, MJD2, 5);
+	GMT2 = GMT0 + dt2;
+	CTBODY(R0, V0, GMT0, GMT2, 2, mu_M, R2, V2);
+	LIBRAT(R2, V2, GMT2, 5);
 	dpsi = -asin(dotp(unit(crossp(R2, V2)), L));
 	BURN(R1, V1, 0.0, 0.0, dpsi, isp_MCC, mfm0, R3, V3);
 	DV = V3 - V1;
-	MJD3 = MJD1;
+	GMT3 = GMT1;
 }
 
-void TLMCCProcessor::PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &A1, double &E1, double &gamma1, double &V_L, double &gamma_L, double &V2, double &DT_1st_pass)
+void TLMCCProcessor::PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double GMT_nd, double &RA_LPO1, double &A1, double &E1, double &gamma1, double &V_L, double &gamma_L, double &V2, double &DT_1st_pass)
 {
-	VECTOR3 u_lls_equ, u_lls, R_LLS_sg, V_LLS_sg, R_LLS, V_LLS, R_DOI, V_DOI, U, H, R_DOI2, V_DOI2;
-	double R1, DR1, R2, RP_LPO1, a_lls, e_lls, a1, e1, dt1, dt2, dt3, eta2, MJD_LLS, da, DA, dw, MJD_DOI, dt, alpha1, deta, a, e, i, eta, n, P, MJD_DOI2;
+	EphemerisData sv_LLS, sv_DOI, sv_DOI2, sv_preDOI, sv_1I;
+	VECTOR3 u_lls_equ, u_lls, R_LLS_sg, V_LLS_sg, U, H;
+	double R1, DR1, R2, RP_LPO1, a_lls, e_lls, a1, e1, dt1, dt2, dt3, eta2, da, DA, dw, dt, alpha1, deta, a, e, i, eta, n, P;
+	int ITS;
 	bool recycle = false;
+
+	sv_LLS.RBI = BODY_MOON;
 
 	//TIME from LOI targeting
 	dw = MEDQuantities.site_rotation_LPO2;
@@ -3919,11 +3851,11 @@ void TLMCCProcessor::PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &R
 	}
 
 	dt1 = PI2 * R1*sqrt(pow(a1, 3) / mu_M) + PI2 * R2*sqrt(pow(a_lls, 3) / mu_M);
-	MJD_LLS = MJD_nd + (dt1 + dt2) / 24.0 / 3600.0;
+	sv_LLS.GMT = GMT_nd + dt1 + dt2;
 	u_lls_equ = OrbMech::r_from_latlong(DataTable.lat_lls, DataTable.lng_lls);
 LOI_PRCOMP2_TIME:
 	u_lls = u_lls_equ;
-	LIBRAT(u_lls, MJD_LLS, 6);
+	LIBRAT(u_lls, sv_LLS.GMT, 6);
 	da = acos(dotp(u_lls, u_pc));
 	if (dotp(crossp(u_lls, u_pc), h_pc) > 0)
 	{
@@ -3938,7 +3870,7 @@ LOI_PRCOMP2_TIME:
 		DA = PI2 - (DR1 - da);
 	}
 	dt3 = DELTAT(a_lls, e_lls, dw < 0 ? -dw : PI2 - dw, -DA);
-	MJD_LLS = MJD_nd + (dt1 + dt2 - dt3) / 24.0 / 3600.0;
+	sv_LLS.GMT = GMT_nd + (dt1 + dt2 - dt3);
 	if (recycle == false)
 	{
 		recycle = true;
@@ -3947,7 +3879,7 @@ LOI_PRCOMP2_TIME:
 
 	//BACKUP from LOI targeting
 	//compute LPO at LLS
-	VECTOR3 R_pre_DOI, V_pre_DOI, R1I, V1I, U_PJ;
+	VECTOR3 U_PJ;
 	double p_lls, r, v, cos_gamma, gamma, a_L, e_L, R_L,  theta_L, phi_L, psi_L, V1, A, E, dt_CORR;
 	p_lls = a_lls * (1.0 - e_lls * e_lls);
 	r = p_lls / (1.0 + e_lls * cos(dw));
@@ -3961,25 +3893,24 @@ LOI_PRCOMP2_TIME:
 	RVIO(false, R_LLS_sg, V_LLS_sg, r, v, DataTable.lng_lls, DataTable.lat_lls, gamma, DataTable.psi_lls);
 	recycle = false;
 LOI_PRCOMP2_BACKUP:
-	R_LLS = R_LLS_sg;
-	V_LLS = V_LLS_sg;
-	LIBRAT(R_LLS, V_LLS, MJD_LLS, 6);
-	MJD_DOI = MJD_LLS + (dt3 - R2 * PI2*sqrt(pow(a_lls, 3) / mu_M)) / 24.0 / 3600.0;
-	dt = (MJD_DOI - MJD_LLS)*24.0*3600.0;
-	OrbMech::oneclickcoast(R_LLS, V_LLS, MJD_LLS, dt, R_DOI, V_DOI, hMoon, hMoon);
-	ELEMT(R_DOI, V_DOI, mu_M, H, a, e, i, n, P, eta);
-	alpha1 = acos(dotp(unit(R_DOI), u_lls));
+	sv_LLS.R = R_LLS_sg;
+	sv_LLS.V = V_LLS_sg;
+	LIBRAT(sv_LLS.R, sv_LLS.V, sv_LLS.GMT, 6);
+	sv_DOI.GMT = sv_LLS.GMT + (dt3 - R2 * PI2*sqrt(pow(a_lls, 3) / mu_M));
+	dt = sv_DOI.GMT - sv_LLS.GMT;
+	pRTCC->PMMCEN(sv_LLS, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_DOI, ITS);
+	ELEMT(sv_DOI.R, sv_DOI.V, mu_M, H, a, e, i, n, P, eta);
+	alpha1 = acos(dotp(unit(sv_DOI.R), u_lls));
 	U = unit(H);
-	if (dotp(crossp(unit(R_DOI), u_lls), U) <= 0.0)
+	if (dotp(crossp(unit(sv_DOI.R), u_lls), U) <= 0.0)
 	{
 		alpha1 = PI2 - alpha1;
 	}
 	deta = alpha1 - DA;
 	dt = DELTAT(a, e, eta, deta);
-	OrbMech::oneclickcoast(R_DOI, V_DOI, MJD_DOI, dt, R_DOI2, V_DOI2, hMoon, hMoon);
-	ELEMT(R_DOI2, V_DOI2, mu_M, H, a_L, e_L, i, n, P, eta);
-	RVIO(true, R_DOI2, V_DOI2, R_L, V_L, theta_L, phi_L, gamma_L, psi_L);
-	MJD_DOI2 = MJD_DOI + dt / 24.0 / 3600.0;
+	pRTCC->PMMCEN(sv_DOI, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_DOI2, ITS);
+	ELEMT(sv_DOI2.R, sv_DOI2.V, mu_M, H, a_L, e_L, i, n, P, eta);
+	RVIO(true, sv_DOI2.R, sv_DOI2.V, R_L, V_L, theta_L, phi_L, gamma_L, psi_L);
 	r = R_L - MEDQuantities.dh_bias;
 	E = (RA_LPO1 - r) / (RA_LPO1 + r *cos(eta2));
 	A = RA_LPO1 / (1.0 + E);
@@ -3991,33 +3922,34 @@ LOI_PRCOMP2_BACKUP:
 		cos_gamma = 1.0;
 	}
 	gamma1 = OrbMech::sign(eta2)*acos(cos_gamma);
-	RVIO(false, R_pre_DOI, V_pre_DOI, r, V1, theta_L, phi_L, gamma1, psi_L);
-	dt = (MJD_nd - MJD_DOI2)*24.0*3600.0;
-	OrbMech::oneclickcoast(R_pre_DOI, V_pre_DOI, MJD_DOI2, dt, R1I, V1I, hMoon, hMoon);
-	ELEMT(R1I, V1I, mu_M, H, a, e, i, n, P, eta);
+	sv_preDOI = sv_DOI2;
+	RVIO(false, sv_preDOI.R, sv_preDOI.V, r, V1, theta_L, phi_L, gamma1, psi_L);
+	dt = GMT_nd - sv_DOI2.GMT;
+	pRTCC->PMMCEN(sv_preDOI, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, sv_1I, ITS);
+	ELEMT(sv_1I.R, sv_1I.V, mu_M, H, a, e, i, n, P, eta);
 	U = unit(H);
 	U_PJ = unit(u_pc - U * dotp(u_pc, U));
-	deta = OrbMech::sign(dotp(crossp(U_PJ, unit(R1I)), U))*acos(dotp(U_PJ, unit(R1I)));
+	deta = OrbMech::sign(dotp(crossp(U_PJ, unit(sv_1I.R)), U))*acos(dotp(U_PJ, unit(sv_1I.R)));
 	dt_CORR = DELTAT(a, e, eta, deta);
 	if (recycle == false)
 	{
 		recycle = true;
-		MJD_LLS += dt_CORR / 24.0 / 3600.0;
+		sv_LLS.GMT += dt_CORR;
 		u_lls = u_lls_equ;
-		LIBRAT(u_lls, MJD_LLS, 6);
+		LIBRAT(u_lls, sv_LLS.GMT, 6);
 		goto LOI_PRCOMP2_BACKUP;
 	}
 	A1 = a;
 	E1 = e;
-	DT_1st_pass = (MJD_LLS - MJD_nd)*24.0*3600.0;
+	DT_1st_pass = sv_LLS.GMT - GMT_nd;
 
-	outarray.sv_lls1.R = R_LLS;
-	outarray.sv_lls1.V = V_LLS;
-	outarray.sv_lls1.MJD = MJD_LLS;
+	outarray.sv_lls1.R = sv_LLS.R;
+	outarray.sv_lls1.V = sv_LLS.V;
+	outarray.sv_lls1.GMT = sv_LLS.GMT;
 
-	outarray.SGSLOI.R = R1I;
-	outarray.SGSLOI.V = V1I;
-	LIBRAT(outarray.SGSLOI.R, outarray.SGSLOI.V, MJD_nd, 5);
+	outarray.SGSLOI.R = sv_1I.R;
+	outarray.SGSLOI.V = sv_1I.V;
+	LIBRAT(outarray.SGSLOI.R, outarray.SGSLOI.V, GMT_nd, 5);
 }
 
 void TLMCCProcessor::ELEMT(VECTOR3 R, VECTOR3 V, double mu, VECTOR3 &H, double &a, double &e, double &i, double &n, double &P, double &eta)
@@ -4085,29 +4017,28 @@ double TLMCCProcessor::DDELTATIME(double a, double dt_apo, double xm, double bet
 	return ddt - dt;
 }
 
-MPTSV TLMCCProcessor::PPC(MPTSV SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS)
+EphemerisData TLMCCProcessor::PPC(EphemerisData SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS)
 {
 	if (INTL != 0)
 	{
 		//goto TLMCC_PPC_E;
 	}
 
-	MPTSV S, SG, SLLG, SLLS, SMB, SMA;
+	EphemerisData S, SG, SLLG, SLLS, SMB, SMA;
 	VECTOR3 H, H_apo, ND1, HSMA, TSMB, PSMB;
 	double dt, GMT, PP, DV, r, v, theta, phi, gamma, psi, DL, D1, T1, T2, sin_az, DT, D, DAZ;
-	int i, K;
+	int i, K, ITS;
 	int IMAX = 1;
 
 	S = SIN;
-	GMT = OrbMech::GETfromMJD(S.MJD, MEDQuantities.GMTBase);
+	GMT = S.GMT;
 	PP = PI2 * length(S.R) / sqrt(mu_M / length(S.R));
 	i = 1;
 	DV = 0.0;
 TLMCC_PPC_J:
 	dt = PP * (double)(RT1 + 1);
-	OrbMech::oneclickcoast(S.R, S.V, S.MJD, dt, SG.R, SG.V, hMoon, hMoon);
-	SG.MJD = S.MJD + dt / 24.0 / 3600.0;
-	LIBRAT(SG.R, SG.V, SG.MJD, 5);
+	pRTCC->PMMCEN(S, 0.0, 10.0*24.0*3600.0, 1, dt, 1.0, SG, ITS);
+	LIBRAT(SG.R, SG.V, SG.GMT, 5);
 	r = length(S.R);
 	v = length(S.V);
 	theta = lng1;
@@ -4116,10 +4047,10 @@ TLMCC_PPC_J:
 	psi = azi1;
 	RVIO(false, SLLG.R, SLLG.V, r, v, theta, phi, gamma, psi);
 	DL = atan2(length(crossp(SG.R, SLLG.R)), dotp(SG.R, SLLG.R));
-	SLLG.MJD = S.MJD + (PP*(DL / PI2 + 1.0 + (double)(RT1))) / 24.0 / 3600.0;
+	SLLG.GMT = S.GMT + (PP*(DL / PI2 + 1.0 + (double)(RT1)));
 TLMCC_PPC_C:
 	SLLS = SLLG;
-	LIBRAT(SLLS.R, SLLS.V, SLLS.MJD, 6);
+	LIBRAT(SLLS.R, SLLS.V, SLLS.GMT, 6);
 	H = unit(crossp(S.R, S.V));
 	H_apo = unit(crossp(SLLS.R, SLLS.V));
 	ND1 = unit(crossp(H, H_apo));
@@ -4133,40 +4064,40 @@ TLMCC_PPC_C:
 	{
 		D1 = PI2 - D1;
 	}
-	SMB.MJD = S.MJD + PP*(1.0-D1/PI2+(double)(RT1)) / 24.0 / 3600.0;
-	if (SLLG.MJD < SMB.MJD)
+	SMB.GMT = S.GMT + PP*(1.0-D1/PI2+(double)(RT1));
+	if (SLLG.GMT < SMB.GMT)
 	{
-		SLLG.MJD += PP / 24.0 / 3600.0;
+		SLLG.GMT += PP;
 		goto TLMCC_PPC_C;
 	}
 TLMCC_PPC_D:
 	if (K <= 5)
 	{
-		T1 = S.MJD + PP * (double)(RT1) / 24.0 / 3600.0;
-		T2 = S.MJD + PP * (1.0 + (double)(RT1)) / 24.0 / 3600.0;
-		if (SMB.MJD < T1)
+		T1 = S.GMT + PP * (double)(RT1);
+		T2 = S.GMT + PP * (1.0 + (double)(RT1));
+		if (SMB.GMT < T1)
 		{
-			SMB.MJD += PP / 24.0 / 3600.0;
+			SMB.GMT += PP;
 		}
-		else if (SMB.MJD > T2)
+		else if (SMB.GMT > T2)
 		{
-			SMB.MJD -= PP / 24.0 / 3600.0;
+			SMB.GMT -= PP;
 		}
-		T1 = SMB.MJD;
-		T2 = SMB.MJD + PP / 24.0 / 3600.0;
-		if (SLLG.MJD < T1)
+		T1 = SMB.GMT;
+		T2 = SMB.GMT + PP;
+		if (SLLG.GMT < T1)
 		{
-			SLLG.MJD += PP / 24.0 / 3600.0;
+			SLLG.GMT += PP;
 		}
-		else if (SLLG.MJD > T2)
+		else if (SLLG.GMT > T2)
 		{
-			SLLG.MJD -= PP / 24.0 / 3600.0;
+			SLLG.GMT -= PP;
 		}
 	}
-	SLLS.MJD = SLLG.MJD;
-	SMA.MJD = SMB.MJD;
-	CTBODY(S.R, S.V, S.MJD, SMB.MJD, 2, mu_M, SMB.R, SMB.V);
-	CTBODY(SLLS.R, SLLS.V, SLLS.MJD, SMA.MJD, 2, mu_M, SMA.R, SMA.V);
+	SLLS.GMT = SLLG.GMT;
+	SMA.GMT = SMB.GMT;
+	CTBODY(S.R, S.V, S.GMT, SMB.GMT, 2, mu_M, SMB.R, SMB.V);
+	CTBODY(SLLS.R, SLLS.V, SLLS.GMT, SMA.GMT, 2, mu_M, SMA.R, SMA.V);
 	H = unit(crossp(SMA.R, SMA.V));
 	H_apo = unit(crossp(SMB.R, SMB.V));
 	ND1 = unit(crossp(H, H_apo));
@@ -4213,10 +4144,10 @@ TLMCC_PPC_G:
 	}
 	else
 	{
-		SLLG.MJD += (DT + D) / 24.0 / 3600.0;
-		SMB.MJD += (DT) / 24.0 / 3600.0;
+		SLLG.GMT += DT + D;
+		SMB.GMT += DT;
 		SLLS = SLLG;
-		LIBRAT(SLLS.R, SLLS.V, SLLS.MJD, 6);
+		LIBRAT(SLLS.R, SLLS.V, SLLS.GMT, 6);
 		K++;
 		goto TLMCC_PPC_D;
 	}
@@ -4225,9 +4156,9 @@ TLMCC_PPC_I:
 	return SLLS;
 }
 
-MPTSV TLMCCProcessor::TLIBRN(MPTSV sv, double C3, double sigma, double delta, double FW, double W_I, double F_I, double F, double W_dot, double T_MRS)
+EphemerisData TLMCCProcessor::TLIBRN(EphemerisData sv, double C3, double sigma, double delta, double FW, double W_I, double F_I, double F, double W_dot, double T_MRS)
 {
-	MPTSV out;
+	EphemerisData out;
 	double DV_I, DT_B1, V_I, R_I, phi_dot_I, dphi_B1, DT_B2, dphi_B2, delta0, ddelta, W;
 
 	static const double mu = OrbMech::mu_Earth*pow(3600.0, 2) / pow(6378.165*1000.0, 3);
@@ -4408,8 +4339,8 @@ MPTSV TLMCCProcessor::TLIBRN(MPTSV sv, double C3, double sigma, double delta, do
 	gamma_c = atan2(e*sin(eta), 1.0 + e * cos(eta));
 	out.R = (T*cos(sigma + eta) + crossp(N_c, T)*sin(sigma + eta))*R_c;
 	out.V = (-T * sin(sigma + eta - gamma_c) + crossp(N_c, T)*cos(sigma + eta - gamma_c))*V_c;
-	out.MJD = sv.MJD + T_B / 24.0 / 3600.0;
-	out.gravref = sv.gravref;
+	out.GMT = sv.GMT + T_B;
+	out.RBI = sv.RBI;
 
 	return out;
 }

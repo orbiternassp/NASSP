@@ -429,6 +429,10 @@ void FCell::UpdateFlow(double dt)
 		return;
 	}
 
+	//Idle power load to prevent the fuel cells from causing divide by 0 (temporary fix)
+	if (power_load < 1.0)
+		power_load = 1.0;
+
 	//first we check the start_handle;
 	double loadResistance = 0.0;
 	if (start_handle == -1) status = 2; //stopped
@@ -437,7 +441,7 @@ void FCell::UpdateFlow(double dt)
 	if ((purge_handle == 2) && (status == 0 || status == 3)) status = 4; //O2 purging;
 	if ((purge_handle == -1) && (status == 3 || status == 4)) status = 0; //no purging;
 
-	// stopping if colder than the critical temperature (300 °F)
+	// stopping if colder than the critical temperature (300 Â°F)
 	// counter is because of temperature fluctuation at high time accelerations
 	if (Temp < 422.0) {
 		tempTooLowCount++;
@@ -532,7 +536,7 @@ void FCell::UpdateFlow(double dt)
 
 	//Conductive heat transfer
 	const double ConductiveHeatTransferCoefficient = 0.1825267; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
-	thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt); //assume that the ambient internal temperature of the spacecraft is 300K, ~80°F, eventually we need to simulate this too
+	thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt); //assume that the ambient internal temperature of the spacecraft is 300K, ~80Â°F, eventually we need to simulate this too
 
 	//*********************
 
@@ -565,6 +569,8 @@ void FCell::Clogging(double dt)
 	//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
 	//here we're simulating the effect by making the O2 clogging effect the voltage drop 25x as much as the H2
 	clogg = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
+
+	clogg = clogg / 3; //reduce clogging by a factor of 3 so we can make it to our purge interval without undervolt alarms; REPLACE WITH BETTER MODEL
 }
 
 void FCell::Load(char *line)

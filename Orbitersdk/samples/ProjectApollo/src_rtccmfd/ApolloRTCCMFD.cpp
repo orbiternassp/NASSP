@@ -53,6 +53,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
 	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
 	font3 = oapiCreateFont(w / 22, true, "Courier", FONT_NORMAL, 0);
+	font4 = oapiCreateFont(w / 27, true, "Courier", FONT_NORMAL, 0);
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
 	bool found = false;
@@ -87,6 +88,7 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font2vert);
 	oapiReleaseFont(fonttest);
 	oapiReleaseFont(font3);
+	oapiReleaseFont(font4);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 }
@@ -118,27 +120,10 @@ bool ApolloRTCCMFD::ConsumeKeyBuffered(DWORD key)
 void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 {
 	char Buffer2[100];
-	int i;
 
 	//oapiWriteScenario_int(scn, "SCREEN", G->screen);
 	oapiWriteScenario_int(scn, "VESSELTYPE", G->vesseltype);
 	papiWriteScenario_double(scn, "SXTSTARDTIME", G->sxtstardtime);
-
-	for (i = 0;i < 12;i++)
-	{
-		if (GC->rtcc->EZJGMTX1.data[i].ID > 0)
-		{
-			papiWriteScenario_REFS(scn, "REFSMMAT", 1, i, GC->rtcc->EZJGMTX1.data[i]);
-		}
-	}
-	for (i = 0;i < 12;i++)
-	{
-		if (GC->rtcc->EZJGMTX3.data[i].ID > 0)
-		{
-			papiWriteScenario_REFS(scn, "REFSMMAT", 3, i, GC->rtcc->EZJGMTX3.data[i]);
-		}
-	}
-
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
@@ -156,31 +141,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	}
 	oapiWriteScenario_int(scn, "TARGETNUMBER", G->targetnumber);
 	oapiWriteScenario_int(scn, "MISSION", GC->mission);
-
-	papiWriteScenario_double(scn, "GMTBASE", GC->rtcc->GetGMTBase());
-	papiWriteScenario_double(scn, "GMTLO", GC->rtcc->GetGMTLO());
-	oapiWriteScenario_int(scn, "YEAR", GC->rtcc->GZGENCSN.Year);
-	oapiWriteScenario_int(scn, "REFDAYOFYEAR", GC->rtcc->GZGENCSN.RefDayOfYear);
-	oapiWriteScenario_int(scn, "DAYSINYEAR", GC->rtcc->GZGENCSN.DaysInYear);
-	oapiWriteScenario_int(scn, "MONTHOFLIFTOFF", GC->rtcc->GZGENCSN.MonthofLiftoff);
-	oapiWriteScenario_int(scn, "DAYOFLIFTOFF", GC->rtcc->GZGENCSN.DayofLiftoff);
-	oapiWriteScenario_int(scn, "DAYSINMONTHOFLIFTOFF", GC->rtcc->GZGENCSN.DaysinMonthofLiftoff);
-	papiWriteScenario_double(scn, "DKIELEVATIONANGLE", GC->rtcc->GZGENCSN.DKIElevationAngle);
-	papiWriteScenario_double(scn, "DKITERMINALPHASEANGLE", GC->rtcc->GZGENCSN.DKITerminalPhaseAngle);
-	papiWriteScenario_double(scn, "TIDELTAH", GC->rtcc->GZGENCSN.TIDeltaH);
-	papiWriteScenario_double(scn, "TIPHASEANGLE", GC->rtcc->GZGENCSN.TIPhaseAngle);
-	papiWriteScenario_double(scn, "TIELEVATIONANGLE", GC->rtcc->GZGENCSN.TIElevationAngle);
-	papiWriteScenario_double(scn, "TITRAVELANGLE", GC->rtcc->GZGENCSN.TITravelAngle);
-	papiWriteScenario_double(scn, "TINSRNOMINALTIME", GC->rtcc->GZGENCSN.TINSRNominalTime);
-	papiWriteScenario_double(scn, "TINSRNOMINALDELTAH", GC->rtcc->GZGENCSN.TINSRNominalDeltaH);
-	papiWriteScenario_double(scn, "TINSRNOMINALPHASEANGLE", GC->rtcc->GZGENCSN.TINSRNominalPhaseAngle);
-	papiWriteScenario_double(scn, "DKIDELTAH", GC->rtcc->GZGENCSN.DKIDeltaH);
-	papiWriteScenario_double(scn, "SPQDELTAH", GC->rtcc->GZGENCSN.SPQDeltaH);
-	papiWriteScenario_double(scn, "SPQELEVATIONANGLE", GC->rtcc->GZGENCSN.SPQElevationAngle);
-
-	papiWriteScenario_double(scn, "LSLat", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST]);
-	papiWriteScenario_double(scn, "LSLng", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST]);
-	papiWriteScenario_double(scn, "LSRadius", GC->rtcc->MCSMLR);
 	papiWriteScenario_double(scn, "TLAND", GC->t_Land);
 	papiWriteScenario_double(scn, "P30TIG", G->P30TIG);
 	papiWriteScenario_vec(scn, "DV_LVLH", G->dV_LVLH);
@@ -219,43 +179,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "GMPManeuverCode", G->GMPManeuverCode);
 	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
 
-	oapiWriteScenario_int(scn, "TLCCMANEUVER", G->TLCCmaneuver);
-	papiWriteScenario_double(scn, "TLCCGET", GC->rtcc->PZMCCPLN.MidcourseGET);
-	papiWriteScenario_double(scn, "TLCCVectorGET", GC->rtcc->PZMCCPLN.VectorGET);
-	papiWriteScenario_double(scn, "TLCC_TLMIN", GC->rtcc->PZMCCPLN.TLMIN);
-	papiWriteScenario_double(scn, "TLCC_TLMAX", GC->rtcc->PZMCCPLN.TLMAX);
-	papiWriteScenario_double(scn, "SFP_DPSI_LOI", GC->rtcc->PZSFPTAB.blocks[1].dpsi_loi);
-	papiWriteScenario_double(scn, "SFP_DPSI_TEI", GC->rtcc->PZSFPTAB.blocks[1].dpsi_tei);
-	papiWriteScenario_double(scn, "SFP_DT_LLS", GC->rtcc->PZSFPTAB.blocks[1].dt_lls);
-	papiWriteScenario_double(scn, "SFP_DT_UPD_NOM", GC->rtcc->PZSFPTAB.blocks[1].dt_upd_nom);
-	papiWriteScenario_double(scn, "SFP_DV_TEI", GC->rtcc->PZSFPTAB.blocks[1].dv_tei);
-	papiWriteScenario_double(scn, "SFP_GAMMA_LOI", GC->rtcc->PZSFPTAB.blocks[1].gamma_loi);
-	papiWriteScenario_double(scn, "SFP_GET_TLI", GC->rtcc->PZSFPTAB.blocks[1].GET_TLI);
-	papiWriteScenario_double(scn, "SFP_GMT_TIME_FLAG", GC->rtcc->PZSFPTAB.blocks[1].GMTTimeFlag);
-	papiWriteScenario_double(scn, "SFP_GMT_ND", GC->rtcc->PZSFPTAB.blocks[1].GMT_nd);
-	papiWriteScenario_double(scn, "SFP_GMT_PC1", GC->rtcc->PZSFPTAB.blocks[1].GMT_pc1);
-	papiWriteScenario_double(scn, "SFP_GMT_PC2", GC->rtcc->PZSFPTAB.blocks[1].GMT_pc2);
-	papiWriteScenario_double(scn, "SFP_H_ND", GC->rtcc->PZSFPTAB.blocks[1].h_nd);
-	papiWriteScenario_double(scn, "SFP_H_PC1", GC->rtcc->PZSFPTAB.blocks[1].h_pc1);
-	papiWriteScenario_double(scn, "SFP_H_PC2", GC->rtcc->PZSFPTAB.blocks[1].h_pc2);
-	papiWriteScenario_double(scn, "SFP_INCL_FR", GC->rtcc->PZSFPTAB.blocks[1].incl_fr);
-	papiWriteScenario_double(scn, "SFP_LAT_LLS", GC->rtcc->PZSFPTAB.blocks[1].lat_lls);
-	papiWriteScenario_double(scn, "SFP_LAT_ND", GC->rtcc->PZSFPTAB.blocks[1].lat_nd);
-	papiWriteScenario_double(scn, "SFP_LAT_PC1", GC->rtcc->PZSFPTAB.blocks[1].lat_pc1);
-	papiWriteScenario_double(scn, "SFP_LAT_PC2", GC->rtcc->PZSFPTAB.blocks[1].lat_pc2);
-	papiWriteScenario_double(scn, "SFP_LNG_LLS", GC->rtcc->PZSFPTAB.blocks[1].lng_lls);
-	papiWriteScenario_double(scn, "SFP_LNG_ND", GC->rtcc->PZSFPTAB.blocks[1].lng_nd);
-	papiWriteScenario_double(scn, "SFP_LNG_PC1", GC->rtcc->PZSFPTAB.blocks[1].lng_pc1);
-	papiWriteScenario_double(scn, "SFP_LNG_PC2", GC->rtcc->PZSFPTAB.blocks[1].lng_pc2);
-	oapiWriteScenario_int(scn, "SFP_MODE", GC->rtcc->PZSFPTAB.blocks[1].mode);
-	papiWriteScenario_double(scn, "SFP_PSI_LLS", GC->rtcc->PZSFPTAB.blocks[1].psi_lls);
-	papiWriteScenario_double(scn, "SFP_RAD_LLS", GC->rtcc->PZSFPTAB.blocks[1].rad_lls);
-	papiWriteScenario_double(scn, "SFP_T_LO", GC->rtcc->PZSFPTAB.blocks[1].T_lo);
-	papiWriteScenario_double(scn, "SFP_T_TE", GC->rtcc->PZSFPTAB.blocks[1].T_te);
-	papiWriteScenario_double(scn, "LOI_eta_1", GC->rtcc->med_k40.eta_1);
-	papiWriteScenario_double(scn, "LOI_REVS1", GC->rtcc->med_k40.REVS1);
-	papiWriteScenario_vec(scn, "TLCCDV", G->TLCC_dV_LVLH);
-	papiWriteScenario_double(scn, "TLCCTIG", G->TLCC_TIG);
 	papiWriteScenario_vec(scn, "R_TLI", G->R_TLI);
 	papiWriteScenario_vec(scn, "V_TLI", G->V_TLI);
 
@@ -268,26 +191,19 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "SKYLAB_NCC", G->Skylab_t_NCC);
 	papiWriteScenario_double(scn, "SKYLAB_NSR", G->Skylab_t_NSR);
 	papiWriteScenario_double(scn, "t_TPI", G->t_TPI);
-	//papiWriteScenario_double(scn, "SKYLAB_NPC", G->Skylab_t_NPC);
 	papiWriteScenario_double(scn, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
 	papiWriteScenario_double(scn, "SKYLAB_E_L", G->Skylab_E_L);
 	papiWriteScenario_double(scn, "SKYLAB_DH1", G->SkylabDH1);
 	papiWriteScenario_double(scn, "SKYLAB_DH2", G->SkylabDH2);
 
-	oapiWriteScenario_int(scn, "DOI_N", GC->rtcc->med_k17.DwellOrbits);
 	papiWriteScenario_double(scn, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 	papiWriteScenario_double(scn, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
 	papiWriteScenario_double(scn, "LDPPGETTH3", GC->rtcc->med_k16.GETTH3);
 	papiWriteScenario_double(scn, "LDPPGETTH4", GC->rtcc->med_k16.GETTH4);
-	papiWriteScenario_double(scn, "DOI_PERIANG", GC->rtcc->med_k17.DescentFlightArc);
-	papiWriteScenario_double(scn, "DOI_alt", GC->rtcc->med_k17.DescIgnHeight);
 
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
 	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_LunarLiftoff);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
-	papiWriteScenario_double(scn, "DT_Ins_TPI", GC->rtcc->PZLTRT.DT_Ins_TPI);
-	papiWriteScenario_double(scn, "LTPoweredFlightArc", GC->rtcc->PZLTRT.PoweredFlightArc);
-	papiWriteScenario_double(scn, "LTPoweredFlightTime", GC->rtcc->PZLTRT.PoweredFlightTime);
 	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
 	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -295,27 +211,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "DKI_N_HC", G->DKI_N_HC);
 	oapiWriteScenario_int(scn, "DKI_N_PB", G->DKI_N_PB);
 
-	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
-
 	papiWriteScenario_bool(scn, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
-	oapiWriteScenario_int(scn, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.CommonBlock.ConfigCode.to_ulong());
-	papiWriteScenario_double(scn, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CommonBlock.CSMMass);
-	papiWriteScenario_double(scn, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMAscentMass);
-	papiWriteScenario_double(scn, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMDescentMass);
-	papiWriteScenario_double(scn, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.CommonBlock.SIVBMass);
-	papiWriteScenario_double(scn, "MPTCM_TotalInitMass", GC->rtcc->PZMPTCSM.TotalInitMass);
-	oapiWriteScenario_int(scn, "MPTCM_number", GC->pCSMnumber);
-	oapiWriteScenario_int(scn, "MPTCM_TUP", GC->rtcc->PZMPTCSM.CommonBlock.TUP);
-	papiWriteScenario_SV(scn, "MPTCM_ANCHOR", GC->rtcc->EZANCHR1.AnchorVectors[9]);
-	oapiWriteScenario_int(scn, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.CommonBlock.ConfigCode.to_ulong());
-	papiWriteScenario_double(scn, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CommonBlock.CSMMass);
-	papiWriteScenario_double(scn, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMAscentMass);
-	papiWriteScenario_double(scn, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMDescentMass);
-	papiWriteScenario_double(scn, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.CommonBlock.SIVBMass);
-	papiWriteScenario_double(scn, "MPTLM_TotalInitMass", GC->rtcc->PZMPTLEM.TotalInitMass);
-	oapiWriteScenario_int(scn, "MPTLM_number", GC->pLMnumber);
-	oapiWriteScenario_int(scn, "MPTLM_TUP", GC->rtcc->PZMPTLEM.CommonBlock.TUP);
-	papiWriteScenario_SV(scn, "MPTLM_ANCHOR", GC->rtcc->EZANCHR3.AnchorVectors[9]);
 }
 
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
@@ -323,9 +219,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 	char *line;
 	char Buffer2[100];
 	bool istarget = false;
-	double temp;
-	int inttemp, inttemp2;
-	REFSMMATData refs;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, "END_MFD", 7))
@@ -334,19 +227,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		//papiReadScenario_int(line, "SCREEN", G->screen);
 		papiReadScenario_int(line, "VESSELTYPE", G->vesseltype);
 		papiReadScenario_double(line, "SXTSTARDTIME", G->sxtstardtime);
-		
-		if (papiReadScenario_REFS(line, "REFSMMAT", inttemp, inttemp2, refs))
-		{
-			if (inttemp == 1)
-			{
-				GC->rtcc->EZJGMTX1.data[inttemp2] = refs;
-			}
-			else
-			{
-				GC->rtcc->EZJGMTX3.data[inttemp2] = refs;
-			}
-		}
-
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
@@ -372,36 +252,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 
 		papiReadScenario_int(line, "TARGETNUMBER", G->targetnumber);
 		papiReadScenario_int(line, "MISSION", GC->mission);
-		if (papiReadScenario_double(line, "GMTBASE", temp))
-		{
-			GC->rtcc->SetGMTBase(temp);
-		}
-		if (papiReadScenario_double(line, "GMTLO", temp))
-		{
-			GC->rtcc->SetGMTLO(temp);
-		}
-		papiReadScenario_int(line, "YEAR", GC->rtcc->GZGENCSN.Year);
-		papiReadScenario_int(line, "REFDAYOFYEAR", GC->rtcc->GZGENCSN.RefDayOfYear);
-		papiReadScenario_int(line, "DAYSINYEAR", GC->rtcc->GZGENCSN.DaysInYear);
-		papiReadScenario_int(line, "MONTHOFLIFTOFF", GC->rtcc->GZGENCSN.MonthofLiftoff);
-		papiReadScenario_int(line, "DAYOFLIFTOFF", GC->rtcc->GZGENCSN.DayofLiftoff);
-		papiReadScenario_int(line, "DAYSINMONTHOFLIFTOFF", GC->rtcc->GZGENCSN.DaysinMonthofLiftoff);
-		papiReadScenario_double(line, "DKIELEVATIONANGLE", GC->rtcc->GZGENCSN.DKIElevationAngle);
-		papiReadScenario_double(line, "DKITERMINALPHASEANGLE", GC->rtcc->GZGENCSN.DKITerminalPhaseAngle);
-		papiReadScenario_double(line, "TIDELTAH", GC->rtcc->GZGENCSN.TIDeltaH);
-		papiReadScenario_double(line, "TIPHASEANGLE", GC->rtcc->GZGENCSN.TIPhaseAngle);
-		papiReadScenario_double(line, "TIELEVATIONANGLE", GC->rtcc->GZGENCSN.TIElevationAngle);
-		papiReadScenario_double(line, "TITRAVELANGLE", GC->rtcc->GZGENCSN.TITravelAngle);
-		papiReadScenario_double(line, "TINSRNOMINALTIME", GC->rtcc->GZGENCSN.TINSRNominalTime);
-		papiReadScenario_double(line, "TINSRNOMINALDELTAH", GC->rtcc->GZGENCSN.TINSRNominalDeltaH);
-		papiReadScenario_double(line, "TINSRNOMINALPHASEANGLE", GC->rtcc->GZGENCSN.TINSRNominalPhaseAngle);
-		papiReadScenario_double(line, "DKIDELTAH", GC->rtcc->GZGENCSN.DKIDeltaH);
-		papiReadScenario_double(line, "SPQDELTAH", GC->rtcc->GZGENCSN.SPQDeltaH);
-		papiReadScenario_double(line, "SPQELEVATIONANGLE", GC->rtcc->GZGENCSN.SPQElevationAngle);
-
-		papiReadScenario_double(line, "LSLat", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST]);
-		papiReadScenario_double(line, "LSLng", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST]);
-		papiReadScenario_double(line, "LSRadius", GC->rtcc->MCSMLR);
 		papiReadScenario_double(line, "TLAND", GC->t_Land);
 		papiReadScenario_double(line, "P30TIG", G->P30TIG);
 		papiReadScenario_vec(line, "DV_LVLH", G->dV_LVLH);
@@ -440,43 +290,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "GMPManeuverCode", G->GMPManeuverCode);
 		papiReadScenario_double(line, "SPSGET", G->SPSGET);
 
-		papiReadScenario_int(line, "TLCCMANEUVER", G->TLCCmaneuver);
-		papiReadScenario_double(line, "TLCCGET", GC->rtcc->PZMCCPLN.MidcourseGET);
-		papiReadScenario_double(line, "TLCCVectorGET", GC->rtcc->PZMCCPLN.VectorGET);
-		papiReadScenario_double(line, "TLCC_TLMIN", GC->rtcc->PZMCCPLN.TLMIN);
-		papiReadScenario_double(line, "TLCC_TLMAX", GC->rtcc->PZMCCPLN.TLMAX);
-		papiReadScenario_double(line, "SFP_DPSI_LOI", GC->rtcc->PZSFPTAB.blocks[1].dpsi_loi);
-		papiReadScenario_double(line, "SFP_DPSI_TEI", GC->rtcc->PZSFPTAB.blocks[1].dpsi_tei);
-		papiReadScenario_double(line, "SFP_DT_LLS", GC->rtcc->PZSFPTAB.blocks[1].dt_lls);
-		papiReadScenario_double(line, "SFP_DT_UPD_NOM", GC->rtcc->PZSFPTAB.blocks[1].dt_upd_nom);
-		papiReadScenario_double(line, "SFP_DV_TEI", GC->rtcc->PZSFPTAB.blocks[1].dv_tei);
-		papiReadScenario_double(line, "SFP_GAMMA_LOI", GC->rtcc->PZSFPTAB.blocks[1].gamma_loi);
-		papiReadScenario_double(line, "SFP_GET_TLI", GC->rtcc->PZSFPTAB.blocks[1].GET_TLI);
-		papiReadScenario_double(line, "SFP_GMT_TIME_FLAG", GC->rtcc->PZSFPTAB.blocks[1].GMTTimeFlag);
-		papiReadScenario_double(line, "SFP_GMT_ND", GC->rtcc->PZSFPTAB.blocks[1].GMT_nd);
-		papiReadScenario_double(line, "SFP_GMT_PC1", GC->rtcc->PZSFPTAB.blocks[1].GMT_pc1);
-		papiReadScenario_double(line, "SFP_GMT_PC2", GC->rtcc->PZSFPTAB.blocks[1].GMT_pc2);
-		papiReadScenario_double(line, "SFP_H_ND", GC->rtcc->PZSFPTAB.blocks[1].h_nd);
-		papiReadScenario_double(line, "SFP_H_PC1", GC->rtcc->PZSFPTAB.blocks[1].h_pc1);
-		papiReadScenario_double(line, "SFP_H_PC2", GC->rtcc->PZSFPTAB.blocks[1].h_pc2);
-		papiReadScenario_double(line, "SFP_INCL_FR", GC->rtcc->PZSFPTAB.blocks[1].incl_fr);
-		papiReadScenario_double(line, "SFP_LAT_LLS", GC->rtcc->PZSFPTAB.blocks[1].lat_lls);
-		papiReadScenario_double(line, "SFP_LAT_ND", GC->rtcc->PZSFPTAB.blocks[1].lat_nd);
-		papiReadScenario_double(line, "SFP_LAT_PC1", GC->rtcc->PZSFPTAB.blocks[1].lat_pc1);
-		papiReadScenario_double(line, "SFP_LAT_PC2", GC->rtcc->PZSFPTAB.blocks[1].lat_pc2);
-		papiReadScenario_double(line, "SFP_LNG_LLS", GC->rtcc->PZSFPTAB.blocks[1].lng_lls);
-		papiReadScenario_double(line, "SFP_LNG_ND", GC->rtcc->PZSFPTAB.blocks[1].lng_nd);
-		papiReadScenario_double(line, "SFP_LNG_PC1", GC->rtcc->PZSFPTAB.blocks[1].lng_pc1);
-		papiReadScenario_double(line, "SFP_LNG_PC2", GC->rtcc->PZSFPTAB.blocks[1].lng_pc2);
-		papiReadScenario_int(line, "SFP_MODE", GC->rtcc->PZSFPTAB.blocks[1].mode);
-		papiReadScenario_double(line, "SFP_PSI_LLS", GC->rtcc->PZSFPTAB.blocks[1].psi_lls);
-		papiReadScenario_double(line, "SFP_RAD_LLS", GC->rtcc->PZSFPTAB.blocks[1].rad_lls);
-		papiReadScenario_double(line, "SFP_T_LO", GC->rtcc->PZSFPTAB.blocks[1].T_lo);
-		papiReadScenario_double(line, "SFP_T_TE", GC->rtcc->PZSFPTAB.blocks[1].T_te);
-		papiReadScenario_double(line, "LOI_eta_1", GC->rtcc->med_k40.eta_1);
-		papiReadScenario_double(line, "LOI_REVS1", GC->rtcc->med_k40.REVS1);
-		papiReadScenario_vec(line, "TLCCDV", G->TLCC_dV_LVLH);
-		papiReadScenario_double(line, "TLCCTIG", G->TLCC_TIG);
 		papiReadScenario_vec(line, "R_TLI", G->R_TLI);
 		papiReadScenario_vec(line, "V_TLI", G->V_TLI);
 
@@ -489,26 +302,19 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "SKYLAB_NCC", G->Skylab_t_NCC);
 		papiReadScenario_double(line, "SKYLAB_NSR", G->Skylab_t_NSR);
 		papiReadScenario_double(line, "t_TPI", G->t_TPI);
-		//papiReadScenario_double(line, "SKYLAB_NPC", G->Skylab_t_NPC);
 		papiReadScenario_double(line, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
 		papiReadScenario_double(line, "SKYLAB_E_L", G->Skylab_E_L);
 		papiReadScenario_double(line, "SKYLAB_DH1", G->SkylabDH1);
 		papiReadScenario_double(line, "SKYLAB_DH2", G->SkylabDH2);
 
-		papiReadScenario_int(line, "DOI_N", GC->rtcc->med_k17.DwellOrbits);
 		papiReadScenario_double(line, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 		papiReadScenario_double(line, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
 		papiReadScenario_double(line, "LDPPGETTH3", GC->rtcc->med_k16.GETTH3);
 		papiReadScenario_double(line, "LDPPGETTH4", GC->rtcc->med_k16.GETTH4);
-		papiReadScenario_double(line, "DOI_PERIANG", GC->rtcc->med_k17.DescentFlightArc);
-		papiReadScenario_double(line, "DOI_alt", GC->rtcc->med_k17.DescIgnHeight);
 
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
 		papiReadScenario_double(line, "t_Liftoff_guess", G->t_LunarLiftoff);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
-		papiReadScenario_double(line, "DT_Ins_TPI", GC->rtcc->PZLTRT.DT_Ins_TPI);
-		papiReadScenario_double(line, "LTPoweredFlightArc", GC->rtcc->PZLTRT.PoweredFlightArc);
-		papiReadScenario_double(line, "LTPoweredFlightTime", GC->rtcc->PZLTRT.PoweredFlightTime);
 		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
 		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -516,61 +322,15 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "DKI_N_HC", G->DKI_N_HC);
 		papiReadScenario_int(line, "DKI_N_PB", G->DKI_N_PB);
 
-		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
-
 		papiReadScenario_bool(line, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
-		if (papiReadScenario_int(line, "MPTCM_InitConfigCode", inttemp))
-		{
-			GC->rtcc->PZMPTCSM.CommonBlock.ConfigCode = inttemp;
-		}
-		papiReadScenario_double(line, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CommonBlock.CSMMass);
-		papiReadScenario_double(line, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMAscentMass);
-		papiReadScenario_double(line, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMDescentMass);
-		papiReadScenario_double(line, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.CommonBlock.SIVBMass);
-		papiReadScenario_double(line, "MPTCM_TotalInitMass", GC->rtcc->PZMPTCSM.TotalInitMass);
-		papiReadScenario_int(line, "MPTCM_number", GC->pCSMnumber);
-		papiReadScenario_int(line, "MPTCM_TUP", GC->rtcc->PZMPTCSM.CommonBlock.TUP);
-		papiReadScenario_SV(line, "MPTCM_ANCHOR", GC->rtcc->EZANCHR1.AnchorVectors[9]);
-		if (papiReadScenario_int(line, "MPTLM_InitConfigCode", inttemp))
-		{
-			GC->rtcc->PZMPTLEM.CommonBlock.ConfigCode = inttemp;
-		}
-		papiReadScenario_double(line, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CommonBlock.CSMMass);
-		papiReadScenario_double(line, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMAscentMass);
-		papiReadScenario_double(line, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMDescentMass);
-		papiReadScenario_double(line, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.CommonBlock.SIVBMass);
-		papiReadScenario_double(line, "MPTLM_TotalInitMass", GC->rtcc->PZMPTLEM.TotalInitMass);
-		papiReadScenario_int(line, "MPTLM_number", GC->pLMnumber);
-		papiReadScenario_int(line, "MPTLM_TUP", GC->rtcc->PZMPTLEM.CommonBlock.TUP);
-		papiReadScenario_SV(line, "MPTLM_ANCHOR", GC->rtcc->EZANCHR3.AnchorVectors[9]);
 
 		//G->coreButtons.SelectPage(this, G->screen);
 	}
+}
 
-	if (GC->pCSMnumber >= 0)
-	{
-		OBJHANDLE hVes = oapiGetVesselByIndex(GC->pCSMnumber);
-		if (hVes)
-		{
-			GC->pCSM = oapiGetVesselInterface(hVes);
-		}
-	}
-	if (GC->pLMnumber >= 0)
-	{
-		OBJHANDLE hVes = oapiGetVesselByIndex(GC->pLMnumber);
-		if (hVes)
-		{
-			GC->pLM = oapiGetVesselInterface(hVes);
-		}
-	}
-	if (GC->rtcc->EZANCHR1.AnchorVectors[9].GMT != 0 && GC->rtcc->EZEPH1.EPHEM.Header.TUP == 0)
-	{
-		GC->rtcc->PMSVCT(4, RTCC_MPT_CSM, &GC->rtcc->EZANCHR1.AnchorVectors[9]);
-	}
-	if (GC->rtcc->EZANCHR3.AnchorVectors[9].GMT != 0 && GC->rtcc->EZEPH2.EPHEM.Header.TUP == 0)
-	{
-		GC->rtcc->PMSVCT(4, RTCC_MPT_LM, &GC->rtcc->EZANCHR3.AnchorVectors[9]);
-	}
+bool ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, const std::string & str)
+{
+	return skp->Text(x, y, str.c_str(), str.length());
 }
 
 void ApolloRTCCMFD::menuEntryUpdateUpload()
@@ -592,11 +352,10 @@ void ApolloRTCCMFD::menuIUUplink()
 	testves = (SaturnV*)G->g_Data.progVessel;
 	LVDCSV *lvdc = (LVDCSV*)testves->iu->GetLVDC();
 
-	coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, GC->rtcc->CalcGETBase(), G->P30TIG, lvdc->TB5, lvdc->mu, lvdc->T_RG);
+	coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, GC->rtcc->CalcGETBase(), G->P30TIG, lvdc->TB5, lvdc->mu, 578.6);
 
 	lvdc->TU = true;
 	lvdc->TU10 = false;
-	lvdc->GATE3 = false;
 
 	lvdc->T_RP = coe.T_RP;
 	lvdc->C_3 = coe.C3;
@@ -690,8 +449,11 @@ void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display
 
 void ApolloRTCCMFD::GET_Display2(char* Buff, double time) //Display a time in the format hhh:mm:ss.ss
 {
-	double time2 = round(time);
-	sprintf(Buff, "%03.0f:%02.0f:%05.2f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
+	int cs = (int)(round(time*100.0));
+	int hr = cs / 360000;
+	int min = (cs - 360000*hr) / 6000;
+	double sec = (double)(cs - 360000 * hr - 6000 * min) / 100.0;
+	sprintf(Buff, "%03d:%02d:%05.2lf", hr, min, sec);
 }
 
 void ApolloRTCCMFD::GET_Display3(char* Buff, double time) //Display a time in the format hhh:mm:ss.s
@@ -774,10 +536,6 @@ void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 	else if (n == RTCC_ENGINETYPE_LMRCSMINUS4)
 	{
 		sprintf(Buff, "LM RCS -X (4 quads)");
-	}
-	else if (n == RTCC_ENGINETYPE_SIVB_APS)
-	{
-		sprintf(Buff, "S-IVB APS");
 	}
 	else if (n == RTCC_ENGINETYPE_LOX_DUMP)
 	{
@@ -1494,6 +1252,12 @@ void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
 void ApolloRTCCMFD::menuSetSLVNavigationUpdatePage()
 {
 	screen = 96;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuVectorPanelSummaryPage()
+{
+	screen = 97;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -3558,16 +3322,304 @@ void ApolloRTCCMFD::menuMPTM55Update()
 	}
 }
 
-void ApolloRTCCMFD::menuMPTTrajectoryUpdate()
+void ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM()
 {
-	if (GC->MPTTrajectoryUpdate())
+	bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Choose vessel for the CSM ground tracking solution:", DifferentialCorrectionSolutionCSMInput, 0, 50, (void*)this);
+}
+
+bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
 	{
-		GC->mptInitError = 6;
+		return ((ApolloRTCCMFD*)data)->set_DifferentialCorrectionSolution(str, true);
 	}
-	else
+	return false;
+}
+
+void ApolloRTCCMFD::menuMPTTrajectoryUpdateLEM()
+{
+	bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Choose vessel for the LEM ground tracking solution:", DifferentialCorrectionSolutionLEMInput, 0, 50, (void*)this);
+}
+
+bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
 	{
-		GC->mptInitError = 5;
+		return ((ApolloRTCCMFD*)data)->set_DifferentialCorrectionSolution(str, false);
 	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char *str, bool csm)
+{
+	OBJHANDLE hVessel = oapiGetVesselByName(str);
+	if (hVessel)
+	{
+		VESSEL *v = oapiGetVesselInterface(hVessel);
+		if (v)
+		{
+			GC->MPTTrajectoryUpdate(v, csm);
+			return true;
+		}
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuMoveToEvalTableCSM()
+{
+	bool MoveToEvalTableCSMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move CSM telemetry vector to evaluation vector table. Input: CMC, LGC, AGS or IU", MoveToEvalTableCSMInput, 0, 50, (void*)this);
+}
+
+bool MoveToEvalTableCSMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 300;
+		}
+		else if (str == "LGC")
+		{
+			code = 301;
+		}
+		else if (str == "AGS")
+		{
+			code = 302;
+		}
+		else if (str == "IU")
+		{
+			code = 303;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuMoveToEvalTableLEM()
+{
+	bool MoveToEvalTableLEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move LEM telemetry vector to evaluation vector table. Input: CMC, LGC, AGS or IU", MoveToEvalTableLEMInput, 0, 50, (void*)this);
+}
+
+bool MoveToEvalTableLEMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 308;
+		}
+		else if (str == "LGC")
+		{
+			code = 309;
+		}
+		else if (str == "AGS")
+		{
+			code = 310;
+		}
+		else if (str == "IU")
+		{
+			code = 311;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuMoveToUsableTableCSM()
+{
+	bool MoveToUsableTableCSMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move CSM telemetry vector to usable vector table. Input: CMC, LGC, AGS or IU", MoveToUsableTableCSMInput, 0, 50, (void*)this);
+}
+
+bool MoveToUsableTableCSMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 316;
+		}
+		else if (str == "LGC")
+		{
+			code = 317;
+		}
+		else if (str == "AGS")
+		{
+			code = 318;
+		}
+		else if (str == "IU")
+		{
+			code = 319;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuMoveToUsableTableLEM()
+{
+	bool MoveToUsableTableLEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move LEM telemetry vector to usable vector table. Input: CMC, LGC, AGS or IU", MoveToUsableTableLEMInput, 0, 50, (void*)this);
+}
+
+bool MoveToUsableTableLEMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 320;
+		}
+		else if (str == "LGC")
+		{
+			code = 321;
+		}
+		else if (str == "AGS")
+		{
+			code = 322;
+		}
+		else if (str == "IU")
+		{
+			code = 323;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuEphemerisUpdateCSM()
+{
+	bool EphemerisUpdateCSMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move CSM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateCSMInput, 0, 50, (void*)this);
+}
+
+bool EphemerisUpdateCSMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 324;
+		}
+		else if (str == "LGC")
+		{
+			code = 325;
+		}
+		else if (str == "AGS")
+		{
+			code = 326;
+		}
+		else if (str == "IU")
+		{
+			code = 327;
+		}
+		else if (str == "HSR")
+		{
+			code = 328;
+		}
+		else if (str == "DC")
+		{
+			code = 329;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuEphemerisUpdateLEM()
+{
+	bool EphemerisUpdateLEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Move LEM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateLEMInput, 0, 50, (void*)this);
+}
+
+bool EphemerisUpdateLEMInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		std::string str(str);
+		int code;
+		if (str == "CMC")
+		{
+			code = 330;
+		}
+		else if (str == "LGC")
+		{
+			code = 331;
+		}
+		else if (str == "AGS")
+		{
+			code = 332;
+		}
+		else if (str == "IU")
+		{
+			code = 333;
+		}
+		else if (str == "HSR")
+		{
+			code = 334;
+		}
+		else if (str == "DC")
+		{
+			code = 335;
+		}
+		else
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->VectorControlPBI(code);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::VectorControlPBI(int code)
+{
+	GC->rtcc->BMSVPS(0, code);
 }
 
 void ApolloRTCCMFD::menuMPTInitAutoUpdate()
@@ -3581,32 +3633,16 @@ void ApolloRTCCMFD::menuMPTInitM50M55Vehicle()
 
 	vesselcount = oapiGetVesselCount();
 
-	if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
+	if (GC->MPTVesselNumber < vesselcount - 1)
 	{
-		if (GC->pLMnumber < vesselcount - 1)
-		{
-			GC->pLMnumber++;
-		}
-		else
-		{
-			GC->pLMnumber = 0;
-		}
-
-		GC->pLM = oapiGetVesselInterface(oapiGetVesselByIndex(GC->pLMnumber));
+		GC->MPTVesselNumber++;
 	}
 	else
 	{
-		if (GC->pCSMnumber < vesselcount - 1)
-		{
-			GC->pCSMnumber++;
-		}
-		else
-		{
-			GC->pCSMnumber = 0;
-		}
-
-		GC->pCSM = oapiGetVesselInterface(oapiGetVesselByIndex(GC->pCSMnumber));
+		GC->MPTVesselNumber = 0;
 	}
+
+	GC->pMPTVessel = oapiGetVesselInterface(oapiGetVesselByIndex(GC->MPTVesselNumber));
 }
 
 void ApolloRTCCMFD::CheckoutMonitorCalc()
@@ -3697,7 +3733,7 @@ bool LSLatInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LSLat(double lat)
 {
-	this->GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = lat*RAD;
+	this->GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] = lat*RAD;
 }
 
 void ApolloRTCCMFD::menuLSLng()
@@ -3718,7 +3754,7 @@ bool LSLngInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LSLng(double lng)
 {
-	this->GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = lng*RAD;
+	this->GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] = lng*RAD;
 }
 
 void ApolloRTCCMFD::GMPInput1Dialogue()
@@ -4037,21 +4073,25 @@ void ApolloRTCCMFD::menuSetAGSKFactor()
 
 bool AGSKFactorInput(void *id, char *str, void *data)
 {
-	int hh, mm;
-	double ss, get;
-
-	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	if (strlen(str) < 20)
 	{
-		get = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_AGSKFactor(get);
+		((ApolloRTCCMFD*)data)->set_AGSKFactor(str);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_AGSKFactor(double time)
+void ApolloRTCCMFD::set_AGSKFactor(char *str)
 {
-	G->AGSKFactor = time;
+	char Buff[128];
+
+	sprintf_s(Buff, "P15,AGS,,%s;", str);
+	GeneralMEDRequest(Buff);
+}
+
+void ApolloRTCCMFD::menuGetAGSKFactor()
+{
+	G->GetAGSKFactor();
 }
 
 void ApolloRTCCMFD::t2dialogue()
@@ -4275,11 +4315,49 @@ void ApolloRTCCMFD::menuLSUpload()
 
 void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
 {
-	bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Format: C12,VEH. COMPUTER,REFSMMAT,ADDRESS; VEH. COMPUTER = CMC, LGC. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
+	if (GC->MissionPlanningActive)
+	{
+		bool REFSMMATUplinkCalcMPTInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Format: C12,VEH. COMPUTER,REFSMMAT,ADDRESS; VEH. COMPUTER = CMC, LGC. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcMPTInput, 0, 20, (void*)this);
+	}
+	else
+	{
+		bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Format: 1 for actual REFSMMAT, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
+	}
 }
 
 bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->REFSMMATUplinkCalc(str);
+}
+
+bool ApolloRTCCMFD::REFSMMATUplinkCalc(char *str)
+{
+	int type;
+	if (sscanf(str, "%d", &type) == 1)
+	{
+		if (type >= 1 && type <= 2)
+		{
+			char veh[4];
+			char str2[32];
+			if (G->vesseltype < 2)
+			{
+				sprintf_s(veh, "CMC");
+			}
+			else
+			{
+				sprintf_s(veh, "LGC");
+			}
+			sprintf_s(str2, 32, "C12,%s,CUR,%d;", veh, type);
+			GeneralMEDRequest(str2);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool REFSMMATUplinkCalcMPTInput(void *id, char *str, void *data)
 {
 	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
@@ -4396,10 +4474,6 @@ void ApolloRTCCMFD::CycleThrusterOption(int &thruster)
 	{
 		thruster++;
 	}
-	else if (thruster == RTCC_ENGINETYPE_LMDPS)
-	{
-		thruster = RTCC_ENGINETYPE_SIVB_APS;
-	}
 	else
 	{
 		thruster = RTCC_ENGINETYPE_CSMRCSPLUS2;
@@ -4489,17 +4563,14 @@ void ApolloRTCCMFD::set_CDHtimemode()
 
 void ApolloRTCCMFD::menuSetLaunchDate()
 {
-	if (GC->mission == 0)
-	{
-		bool LaunchDateInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the launch date (Format: day,month,year)", LaunchDateInput, 0, 20, (void*)this);
-	}
+	bool LaunchDateInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the launch date (Format: day:month:year)", LaunchDateInput, 0, 20, (void*)this);
 }
 
 bool LaunchDateInput(void *id, char *str, void *data)
 {
 	int year, month, day;
-	if (sscanf(str, "%d,%d,%d", &day, &month, &year) == 3)
+	if (sscanf(str, "%d:%d:%d", &day, &month, &year) == 3)
 	{
 		((ApolloRTCCMFD*)data)->set_launchdate(year, month, day);
 		return true;
@@ -4512,6 +4583,8 @@ void ApolloRTCCMFD::set_launchdate(int year, int month, int day)
 	char Buff[128];
 	sprintf_s(Buff, "P80,1,CSM,%d,%d,%d;", month, day, year);
 	GC->rtcc->GMGMED(Buff);
+
+	GC->rtcc->LoadLaunchDaySpecificParameters(year, month, day);
 }
 
 void ApolloRTCCMFD::menuSetLaunchTime()
@@ -4536,7 +4609,7 @@ bool LaunchTimeInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_LaunchTime(int hours, int minutes, double seconds)
 {
 	char Buff[128];
-	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hours, minutes, seconds);
+	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hours, minutes, seconds);
 	GC->rtcc->GMGMED(Buff);
 }
 
@@ -4561,7 +4634,7 @@ bool AGCEpochInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_AGCEpoch(double mjd)
 {
-	this->GC->rtcc->AGCEpoch = mjd;
+	this->GC->rtcc->SystemParameters.AGCEpoch = mjd;
 }
 
 void ApolloRTCCMFD::menuChangeVesselType()
@@ -4648,9 +4721,16 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 
 	int hh, mm;
 	double ss;
-	SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
+	OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
 	char Buff[128];
-	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hh, mm, ss);
+	//Update actual liftoff time
+	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
+	GC->rtcc->GMGMED(Buff);
+	//Update GMT of zeroing CMC clock
+	sprintf_s(Buff, "P15,AGC,%d:%d:%lf;", hh, mm, ss);
+	GC->rtcc->GMGMED(Buff);
+	//Update GMT of zeroing LGC clock
+	sprintf_s(Buff, "P15,LGC,%d:%d:%lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 }
 
@@ -4748,57 +4828,23 @@ ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
 	agc_t* vagc;
-	int REFSMMATaddress;
+	bool cmc;
 
 	if (G->vesseltype < 2)
 	{
 		saturn = (Saturn *)G->vessel;
 		vagc = &saturn->agc.vagc;
-		REFSMMATaddress = GC->rtcc->MCCCRF_DL;
+		cmc = true;
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
 		vagc = &lem->agc.vagc;
-		REFSMMATaddress = GC->rtcc->MCCLRF_DL;
+		cmc = false;
 	}
 
-	unsigned short REFSoct[20];
+	MATRIX3 REFSMMAT = GC->rtcc->GetREFSMMATfromAGC(vagc, cmc);
 
-	REFSoct[2] = vagc->Erasable[0][REFSMMATaddress];
-	REFSoct[3] = vagc->Erasable[0][REFSMMATaddress + 1];
-	REFSoct[4] = vagc->Erasable[0][REFSMMATaddress + 2];
-	REFSoct[5] = vagc->Erasable[0][REFSMMATaddress + 3];
-	REFSoct[6] = vagc->Erasable[0][REFSMMATaddress + 4];
-	REFSoct[7] = vagc->Erasable[0][REFSMMATaddress + 5];
-	REFSoct[8] = vagc->Erasable[0][REFSMMATaddress + 6];
-	REFSoct[9] = vagc->Erasable[0][REFSMMATaddress + 7];
-	REFSoct[10] = vagc->Erasable[0][REFSMMATaddress + 8];
-	REFSoct[11] = vagc->Erasable[0][REFSMMATaddress + 9];
-	REFSoct[12] = vagc->Erasable[0][REFSMMATaddress + 10];
-	REFSoct[13] = vagc->Erasable[0][REFSMMATaddress + 11];
-	REFSoct[14] = vagc->Erasable[0][REFSMMATaddress + 12];
-	REFSoct[15] = vagc->Erasable[0][REFSMMATaddress + 13];
-	REFSoct[16] = vagc->Erasable[0][REFSMMATaddress + 14];
-	REFSoct[17] = vagc->Erasable[0][REFSMMATaddress + 15];
-	REFSoct[18] = vagc->Erasable[0][REFSMMATaddress + 16];
-	REFSoct[19] = vagc->Erasable[0][REFSMMATaddress + 17];
-
-	MATRIX3 REFSMMAT;
-
-	REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
-	REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
-	REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
-	REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
-	REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
-	REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
-	REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
-	REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
-	REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
-
-	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
-
-	REFSMMAT = mul(REFSMMAT, OrbMech::J2000EclToBRCS(GC->rtcc->AGCEpoch));
 	if (G->vesseltype < 2)
 	{
 		GC->rtcc->BZSTLM.CMC_REFSMMAT = REFSMMAT;
@@ -4948,13 +4994,13 @@ void ApolloRTCCMFD::menuCycleTLCCConfiguration()
 
 void ApolloRTCCMFD::menuSwitchTLCCManeuver()
 {
-	if (G->TLCCmaneuver < 9)
+	if (GC->rtcc->PZMCCPLN.Mode < 9)
 	{
-		G->TLCCmaneuver++;
+		GC->rtcc->PZMCCPLN.Mode++;
 	}
 	else
 	{
-		G->TLCCmaneuver = 1;
+		GC->rtcc->PZMCCPLN.Mode = 1;
 	}
 }
 
@@ -5006,10 +5052,10 @@ void ApolloRTCCMFD::set_TLand(double time)
 
 void ApolloRTCCMFD::menuSetTLCCDesiredInclination()
 {
-	if (G->TLCCmaneuver >= 8)
+	if (GC->rtcc->PZMCCPLN.Mode >= 8)
 	{
-bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
-oapiOpenInputBox("Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", TLCCDesiredInclinationInput, 0, 20, (void*)this);
+		bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", TLCCDesiredInclinationInput, 0, 20, (void*)this);
 	}
 }
 
@@ -5043,7 +5089,7 @@ bool TLMCCAzimuthConstraintsInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSetTLMCCTLCTimesConstraints()
 {
 	bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint)", TLMCCTLCTimesConstraintsInput, 0, 40, (void*)this);
+	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint, enter F23; to clear both)", TLMCCTLCTimesConstraintsInput, 0, 40, (void*)this);
 }
 
 bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data)
@@ -5375,7 +5421,7 @@ bool LOI_HALLSInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOI_HALLS(double ha)
 {
-	GC->rtcc->med_k40.HA_LLS = ha;
+	GC->rtcc->PZLOIPLN.HA_LLS = ha;
 }
 
 void ApolloRTCCMFD::menuSetLOI_HPLLS()
@@ -5396,7 +5442,7 @@ bool LOI_HPLLSInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOI_HPLLS(double hp)
 {
-	GC->rtcc->med_k40.HP_LLS = hp;
+	GC->rtcc->PZLOIPLN.HP_LLS = hp;
 }
 
 void ApolloRTCCMFD::menuSetLOIDW()
@@ -5417,7 +5463,7 @@ bool LOIDWInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIDW(double dw)
 {
-	GC->rtcc->med_k40.DW = dw;
+	GC->rtcc->PZLOIPLN.DW = dw;
 }
 
 void ApolloRTCCMFD::menuSetLOIDHBias()
@@ -5438,7 +5484,7 @@ bool LOIDHBiasInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIDHBias(double dh)
 {
-	GC->rtcc->med_k40.dh_bias = dh;
+	GC->rtcc->PZLOIPLN.dh_bias = dh;
 }
 
 void ApolloRTCCMFD::menuSetLOIRevs1()
@@ -5459,7 +5505,7 @@ bool LOIRevs1Input(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIRevs1(double revs1)
 {
-	GC->rtcc->med_k40.REVS1 = revs1;
+	GC->rtcc->PZLOIPLN.REVS1 = revs1;
 }
 
 void ApolloRTCCMFD::menuSetLOIRevs2()
@@ -5480,12 +5526,12 @@ bool LOIRevs2Input(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIRevs2(int revs2)
 {
-	GC->rtcc->med_k40.REVS2 = revs2;
+	GC->rtcc->PZLOIPLN.REVS2 = revs2;
 }
 
 void ApolloRTCCMFD::menuCycleLOIInterSolnFlag()
 {
-	GC->rtcc->med_k40.PlaneSolnForInterSoln = !GC->rtcc->med_k40.PlaneSolnForInterSoln;
+	GC->rtcc->PZLOIPLN.PlaneSolnForInterSoln = !GC->rtcc->PZLOIPLN.PlaneSolnForInterSoln;
 }
 
 void ApolloRTCCMFD::menuSetLOIEta1()
@@ -5506,7 +5552,7 @@ bool LOIEta1Input(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIEta1(double eta)
 {
-	GC->rtcc->med_k40.eta_1 = eta;
+	GC->rtcc->PZLOIPLN.eta_1 = eta;
 }
 
 void ApolloRTCCMFD::menuSetTLCCAlt()
@@ -5734,7 +5780,7 @@ bool LSRadiusInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LSRadius(double rad)
 {
-	GC->rtcc->MCSMLR = rad*1852.0;
+	GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] = rad*1852.0;
 }
 
 void ApolloRTCCMFD::menuSetLDPPDwellOrbits()
@@ -5755,7 +5801,7 @@ bool LDPPDwellOrbitsInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDwellOrbits(int N)
 {
-	GC->rtcc->med_k17.DwellOrbits = N;
+	GC->rtcc->GZGENCSN.LDPPDwellOrbits = N;
 }
 
 void ApolloRTCCMFD::menuSetLDPPDescentFlightArc()
@@ -5776,7 +5822,7 @@ bool LDPPDescentFlightArcInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDescentFlightArc(double ang)
 {
-	GC->rtcc->med_k17.DescentFlightArc = ang*RAD;
+	GC->rtcc->GZGENCSN.LDPPDescentFlightArc = ang*RAD;
 }
 
 void ApolloRTCCMFD::menuSetLDPPDescIgnHeight()
@@ -5797,12 +5843,12 @@ bool LDPPDescIgnHeightInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDescIgnHeight(double alt)
 {
-	GC->rtcc->med_k17.DescIgnHeight = alt * 0.3048;
+	GC->rtcc->GZGENCSN.LDPPHeightofPDI = alt * 0.3048;
 }
 
 void ApolloRTCCMFD::cycleLDPPPoweredDescSimFlag()
 {
-	GC->rtcc->med_k17.PoweredDescSimFlag = !GC->rtcc->med_k17.PoweredDescSimFlag;
+	GC->rtcc->GZGENCSN.LDPPPoweredDescentSimFlag = !GC->rtcc->GZGENCSN.LDPPPoweredDescentSimFlag;
 }
 
 void ApolloRTCCMFD::menuSetLDPPMode()
@@ -7285,7 +7331,7 @@ bool FIDOOrbitDigitalsGETBVInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSpaceDigitalsInit()
 {
 	bool SpaceDigitalsInitInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U00, CSM or LEM, E or M (optional);", SpaceDigitalsInitInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Format: U00, CSM or LEM, E or M (optional);", SpaceDigitalsInitInput, 0, 20, (void*)this);
 }
 
 bool SpaceDigitalsInitInput(void *id, char *str, void *data)
@@ -7297,7 +7343,7 @@ bool SpaceDigitalsInitInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuGenerateSpaceDigitals()
 {
 	bool GenerateSpaceDigitalsInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Generate Space Digitals, format: U01, column (1-3), option (GET or MNV), parameter (time or mnv number);", GenerateSpaceDigitalsInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Generate Space Digitals, format: U01, column (1-3), option (GET or MNV), parameter (time or mnv number), Inclination (Col. 2), Long Ascending Node (Col. 2);", GenerateSpaceDigitalsInput, 0, 50, (void*)this);
 }
 
 bool GenerateSpaceDigitalsInput(void *id, char *str, void *data)
@@ -7367,7 +7413,7 @@ void ApolloRTCCMFD::set_MPTTLIDirectInput(char *str)
 
 void ApolloRTCCMFD::menuNextStationContactLunar()
 {
-	if (GC->rtcc->MGRTAG == 1)
+	if (GC->rtcc->SystemParameters.MGRTAG == 1)
 	{
 		GeneralMEDRequest("B04,START;");
 	}
@@ -7546,7 +7592,7 @@ bool LDPPAzimuthInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPAzimuth(double azi)
 {
-	GC->rtcc->med_k17.Azimuth = azi*RAD;
+	GC->rtcc->GZGENCSN.LDPPAzimuth = azi*RAD;
 }
 
 void ApolloRTCCMFD::menuSetLDPPPoweredDescTime()
@@ -7569,7 +7615,7 @@ bool LDPPPoweredDescTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPPoweredDescTime(double pdi)
 {
-	GC->rtcc->med_k17.PoweredDescTime = pdi;
+	GC->rtcc->GZGENCSN.LDPPTimeofPDI = pdi;
 }
 
 void ApolloRTCCMFD::menuLDPPThresholdTime1()
@@ -7707,7 +7753,7 @@ bool LDPPDescentFlightTimeInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDescentFlightTime(double dt)
 {
-	GC->rtcc->med_k17.DescentFlightTime = dt * 60.0;
+	GC->rtcc->GZGENCSN.LDPPDescentFlightTime = dt * 60.0;
 }
 
 void ApolloRTCCMFD::cycleLDPPVehicle()
@@ -7960,7 +8006,7 @@ void ApolloRTCCMFD::menuVectorCompareDisplayCalc()
 void ApolloRTCCMFD::menuVectorCompareColumn1()
 {
 	bool VectorCompareColumn1Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Select vector for column 1. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn1Input, 0, 20, (void*)this);
+	oapiOpenInputBox("Select vector for column 1. EPHO = Orbit Ephemeris, otherwise ID from Vector Panel Summary:", VectorCompareColumn1Input, 0, 20, (void*)this);
 }
 
 bool VectorCompareColumn1Input(void* id, char *str, void *data)
@@ -7979,7 +8025,7 @@ bool VectorCompareColumn1Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuVectorCompareColumn2()
 {
 	bool VectorCompareColumn2Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Select vector for column 2. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn2Input, 0, 20, (void*)this);
+	oapiOpenInputBox("Select vector for column 2. EPHO = Orbit Ephemeris, otherwise ID from Vector Panel Summary:", VectorCompareColumn2Input, 0, 20, (void*)this);
 }
 
 bool VectorCompareColumn2Input(void* id, char *str, void *data)
@@ -7998,7 +8044,7 @@ bool VectorCompareColumn2Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuVectorCompareColumn3()
 {
 	bool VectorCompareColumn3Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Select vector for column 3. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn3Input, 0, 20, (void*)this);
+	oapiOpenInputBox("Select vector for column 3. EPHO = Orbit Ephemeris, otherwise ID from Vector Panel Summary:", VectorCompareColumn3Input, 0, 20, (void*)this);
 }
 
 bool VectorCompareColumn3Input(void* id, char *str, void *data)
@@ -8017,7 +8063,7 @@ bool VectorCompareColumn3Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuVectorCompareColumn4()
 {
 	bool VectorCompareColumn4Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Select vector for column 4. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn4Input, 0, 20, (void*)this);
+	oapiOpenInputBox("Select vector for column 4. EPHO = Orbit Ephemeris, otherwise ID from Vector Panel Summary:", VectorCompareColumn4Input, 0, 20, (void*)this);
 }
 
 bool VectorCompareColumn4Input(void* id, char *str, void *data)
@@ -8064,7 +8110,30 @@ void ApolloRTCCMFD::menuVectorCompareReference()
 
 void ApolloRTCCMFD::menuVectorCompareTime()
 {
+	bool VectorCompareTimeInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter vector time. GMT if positive, GET if negative. Time of V1 vector if zero. (Format HH:MM:SS):", VectorCompareTimeInput, 0, 20, (void*)this);
+}
 
+bool VectorCompareTimeInput(void* id, char *str, void *data)
+{
+	int hh, mm, ss;
+	double time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		time = ss + 60 * (mm + 60 * abs(hh));
+		if (str[0] == '-')
+		{
+			time = -time;
+		}
+		((ApolloRTCCMFD*)data)->set_VectorCompareTime(time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_VectorCompareTime(double time)
+{
+	GC->rtcc->med_s80.time = time;
 }
 
 void ApolloRTCCMFD::menuGOSTDisplayREFSMMAT()
@@ -8266,6 +8335,14 @@ void ApolloRTCCMFD::menuSLVNavigationUpdateUplink()
 	G->SLVNavigationUpdateUplink();
 }
 
+void ApolloRTCCMFD::menuGetOnboardStateVectors()
+{
+	G->GetStateVectorFromAGC(true);
+	G->GetStateVectorFromAGC(false);
+	G->GetStateVectorFromIU();
+	G->GetStateVectorsFromAGS();
+}
+
 void ApolloRTCCMFD::menuMSKRequest()
 {
 	bool MSKRequestInput(void* id, char *str, void *data);
@@ -8294,7 +8371,7 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		menuSetFIDOLaunchAnalogNo1Page();
 		break;
 	case 41:
-		menuSetFIDOLaunchAnalogNo1Page();
+		menuSetFIDOLaunchAnalogNo2Page();
 		break;
 	case 43:
 		//FDO LAUNCH DIG NO 1
@@ -8361,6 +8438,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 1590:
 		menuSetVectorCompareDisplay();
+		break;
+	case 1591:
+		menuVectorPanelSummaryPage();
 		break;
 	case 1597:
 		menuSetSkeletonFlightPlanPage();
@@ -8639,54 +8719,4 @@ void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &se
 	mins = fmod(time / 60.0, 60.0);
 	minutes = (int)trunc(mins);
 	seconds = (mins - minutes) * 60.0;
-}
-
-void ApolloRTCCMFD::papiWriteScenario_SV(FILEHANDLE scn, char *item, EphemerisData sv) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %d %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, sv.RBI, sv.GMT, sv.R.x, sv.R.y, sv.R.z, sv.V.x, sv.V.y, sv.V.z);
-	oapiWriteLine(scn, buffer);
-}
-
-bool ApolloRTCCMFD::papiReadScenario_SV(char *line, char *item, EphemerisData &sv)
-{
-	char buffer[256];
-
-	if (sscanf(line, "%s", buffer) == 1) {
-		if (!strcmp(buffer, item)) {
-			EphemerisData v;
-			if (sscanf(line, "%s %d %lf %lf %lf %lf %lf %lf %lf", buffer, &v.RBI, &v.GMT, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 9) {
-				sv = v;
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in)
-{
-	char buffer[256];
-
-	sprintf(buffer, "  %s %d %d %d %lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, tab, i, in.ID, in.GMT, in.REFSMMAT.m11, in.REFSMMAT.m12, in.REFSMMAT.m13, in.REFSMMAT.m21, in.REFSMMAT.m22,
-		in.REFSMMAT.m23, in.REFSMMAT.m31, in.REFSMMAT.m32, in.REFSMMAT.m33);
-	oapiWriteLine(scn, buffer);
-}
-
-bool ApolloRTCCMFD::papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out)
-{
-	char buffer[256];
-
-	if (sscanf(line, "%s", buffer) == 1) {
-		if (!strcmp(buffer, item)) {
-			REFSMMATData v;
-			if (sscanf(line, "%s %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", buffer, &tab, &i, &v.ID, &v.GMT, &v.REFSMMAT.m11, &v.REFSMMAT.m12, &v.REFSMMAT.m13, &v.REFSMMAT.m21, &v.REFSMMAT.m22,
-				&v.REFSMMAT.m23, &v.REFSMMAT.m31, &v.REFSMMAT.m32, &v.REFSMMAT.m33) == 14) {
-				out = v;
-				return true;
-			}
-		}
-	}
-	return false;
 }

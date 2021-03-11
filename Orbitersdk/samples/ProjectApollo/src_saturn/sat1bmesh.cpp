@@ -755,9 +755,6 @@ void Saturn1b::SeparateStage (int new_stage)
 	if (stage == CSM_LEM_STAGE)
 	{
 		char VName[256];
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
 		SMJetS.play();
 
 		GetApolloName(VName); strcat (VName, "-SM");

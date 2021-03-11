@@ -1437,7 +1437,7 @@ void Saturn::JoystickTimestep()
 	// Read joysticks and feed data to the computer
 	// Do not do this if we aren't the active vessel.
 	if (oapiGetFocusInterface() == this) {
-
+		if (enableVESIM) vesim.poolDevices();
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
 		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
@@ -1543,8 +1543,15 @@ void Saturn::JoystickTimestep()
 		int rhc_x_pos = 32768; 
 		int rhc_y_pos = 32768; 
 		int rhc_rot_pos = 32768; 
-
-		if (rhc_id != -1 && rhc_id < js_enabled) {	
+		if (enableVESIM) {
+			if (GetAttitudeMode() == RCS_ROT) {
+				rhc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCR);
+				rhc_y_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCP);
+				rhc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCY);
+			}
+			//sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_x_pos, rhc_y_pos, rhc_rot_pos, rhc_rzx_id, rhc_rot_id);
+		}
+		else if (rhc_id != -1 && rhc_id < js_enabled) {	
 			hr = dx8_joystick[rhc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
 				// Attempt to acquire the device
@@ -1981,7 +1988,20 @@ void Saturn::JoystickTimestep()
 		int thc_y_pos = 32768; 
 		int thc_rot_pos = 32768; 
 
-		if (thc_id != -1 && thc_id < js_enabled){
+		
+		if (enableVESIM) {
+			if (GetAttitudeMode() == RCS_ROT) {
+				thc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_THCY);
+				thc_y_pos = 65535 - vesim.getInputValue(CSM_AXIS_INPUT_THCZ);
+				thc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_THCX);
+			}
+			else{
+				thc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCR);
+				thc_y_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCP);
+				thc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCY);
+			}
+		}
+		else if (thc_id != -1 && thc_id < js_enabled){
 			hr = dx8_joystick[thc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
 				// Attempt to acquire the device
@@ -2560,6 +2580,7 @@ void Saturn::ClearEngineIndicator(int i)
 
 void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed)
 {
+
 	// Bypass Radiator 6-8
 	FuelCellCooling[fuelcell - 1]->bypassed[6] = bypassed;
 	FuelCellCooling[fuelcell - 1]->bypassed[7] = bypassed;
@@ -3507,7 +3528,7 @@ void Saturn::EPSTimestep() {
 	}
 
 	// FuelCell Purge Switches
-	int *start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:PURGE");	
+	int *start = &FuelCells[0]->purge_handle;
 	if (FuelCellPurge1Switch.IsDown() && FuelCell1PurgeCB.IsPowered()) {
 		*start = SP_FUELCELL_O2PURGE;
 	} else if (FuelCellPurge1Switch.IsUp() && FuelCell1PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {
@@ -3516,7 +3537,7 @@ void Saturn::EPSTimestep() {
 		*start = SP_FUELCELL_NOPURGE;
 	}
 
-	start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:PURGE");	
+	start = &FuelCells[1]->purge_handle;
 	if (FuelCellPurge2Switch.IsDown() && FuelCell2PurgeCB.IsPowered()) {
 		*start = SP_FUELCELL_O2PURGE;
 	} else if (FuelCellPurge2Switch.IsUp() && FuelCell2PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {
@@ -3525,7 +3546,7 @@ void Saturn::EPSTimestep() {
 		*start = SP_FUELCELL_NOPURGE;
 	}
 
-	start = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:PURGE");	
+	start = &FuelCells[2]->purge_handle;
 	if (FuelCellPurge3Switch.IsDown() && FuelCell3PurgeCB.IsPowered()) {
 		*start = SP_FUELCELL_O2PURGE;
 	} else if (FuelCellPurge3Switch.IsUp() && FuelCell3PurgeCB.IsPowered() && H2PurgeLineSwitch.IsUp()) {

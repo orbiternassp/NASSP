@@ -26,6 +26,8 @@
 #define IDC_STATIC_RHCTHCTOGGLE         1016
 #define IDC_EDIT_RHCTHCTOGGLE           1017
 #define IDC_RADIO_GNSINGLEPANEL         1018
+#define IDC_CHECK_THC2                  1018
+#define IDC_CHECK_VESIM                 1018
 #define IDC_CHECK_TJT                   1019
 #define IDC_RADIO_GNSPLITTEDPANEL       1020
 #define IDC_STATIC_TJT                  1021
@@ -38,6 +40,8 @@
 #define IDC_CHECK_VAGCCHECKLISTAUTOENABLED 1028
 #define IDC_CHECK_VAGCCHECKLISTAUTOSLOW 1029
 #define IDC_CHECK_VCINFOENABLED         1030
+#define IDC_BUTTON1                     1031
+#define IDC_BUTTON_CREATECONFIG         1032
 
 // Next default values for new objects
 // 
@@ -45,7 +49,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1031
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

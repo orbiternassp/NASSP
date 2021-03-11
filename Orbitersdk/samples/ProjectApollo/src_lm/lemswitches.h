@@ -466,6 +466,8 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState);
+	bool SwitchTo(int newState);
 protected:
 	LEM *lem;
 };

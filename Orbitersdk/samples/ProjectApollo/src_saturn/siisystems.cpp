@@ -316,7 +316,8 @@ bool SIISystems::PropellantLowLevel()
 	{
 		if (main_propellant)
 		{
-			if (vessel->GetPropellantMass(main_propellant) < 3866.0)
+			//Actual propellant remaining for Apollo 11 was 7368.0 kg (including unusable)
+			if (vessel->GetPropellantMass(main_propellant) < 7368.0) //3866.0
 			{
 				return true;
 			}

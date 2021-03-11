@@ -271,6 +271,7 @@ public:
 
 	double GetLVTankPressure(int n);
 	bool GetSIISIVBSepSeqStart() { return SIISIVBSepSeqStart; }
+	bool GetSIIInboardEngineOut();
 
 	//GSE Reset Buses
 	void ResetBus1();

@@ -50,6 +50,8 @@ IUControlDistributor::IUControlDistributor(IU *iu)
 	TwoEngOutAutoAbortInhibitEnable = false;
 	IUCommandSystemEnable = false;
 	QBallPowerOn = true;
+	SIVBEngineOutA = false;
+	SIVBEngineOutB = false;
 }
 
 void IUControlDistributor::Timestep(double simdt)
@@ -60,9 +62,17 @@ void IUControlDistributor::Timestep(double simdt)
 		GSECommandVehicleLiftoffIndicationInhibit = false;
 
 	if (iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
+	{
 		SIVBThrustNotOK = true;
+		SIVBEngineOutA = true;
+		SIVBEngineOutB = true;
+	}
 	else
+	{
 		SIVBThrustNotOK = false;
+		SIVBEngineOutA = false;
+		SIVBEngineOutB = false;
+	}
 
 	if (iu->GetEDS()->GetIUCommandSystemEnable())
 		IUCommandSystemEnable = true;

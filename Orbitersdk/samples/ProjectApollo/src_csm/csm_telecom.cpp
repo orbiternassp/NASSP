@@ -743,13 +743,13 @@ void HGA::TimeStep(double simt, double simdt)
 		AzmuthTrackErrorDeg = 90 * DEG;
 	}
 
-	TrackErrorSumNorm = abs(AzimuthErrorSignalNorm + ElevationErrorSignalNorm);
+	TrackErrorSumNorm = sqrt(AzimuthErrorSignalNorm*AzimuthErrorSignalNorm + ElevationErrorSignalNorm*ElevationErrorSignalNorm);
 
 	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
 
-	const double TrkngCtrlGain = 2.9; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
-	const double ServoFeedbackGain = 1.2; //this works too...
-	const double BeamSwitchingTrkErThreshhold = 0.001; 
+	const double TrkngCtrlGain = 5.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
+	const double ServoFeedbackGain = 3.2; //this works too...
+	const double BeamSwitchingTrkErThreshhold = 1.5; 
 
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
@@ -768,7 +768,7 @@ void HGA::TimeStep(double simt, double simdt)
 		{
 			if (SignalStrength > 0)
 			{
-				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold*392) //acquire mode in auto (392 = PI/8*1000 which is a good place to switch between narrow and wide)
+				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold) //acquire mode in auto
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
@@ -800,20 +800,20 @@ void HGA::TimeStep(double simt, double simdt)
 	}
 	else
 	{
-		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscimates between manual and auto and won't acquire. 
+		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscilates between manual and auto and won't acquire. 
 									//It get's set to manual later if we actually have no signal
 
 		if (ModeSwitchTimer < simt)
 		{
-			if ((SignalStrength > 0) && (scanlimitwarn == false) && (scanlimit == false)) //
+			if ((SignalStrength > 0.5) && (scanlimitwarn == false) && (scanlimit == false)) //
 			{
 				AutoTrackingMode = true; //if it somehow wasn't on...
-				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392)) //acquire mode in auto
+				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold)) //acquire mode in auto
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
 				}
-
+				
 				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto wide
 				{
 					RcvBeamWidthSelect = 1;
@@ -832,12 +832,11 @@ void HGA::TimeStep(double simt, double simdt)
 				ModeSwitchTimer = simt + 1; 
 
 			}
-			else if ((scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
+			else if ((SignalStrength > 0.5) && (scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
 			{
 				AutoTrackingMode = true;
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
-				ModeSwitchTimer = simt + 1;
 			}
 			else // switch to manual mode if loss of signal or scanlimit (this will enable the manual controls and drive the servos to the selecter position)
 			{
@@ -884,19 +883,16 @@ void HGA::TimeStep(double simt, double simdt)
 		}
 		else					//mode select B-C servo control
 		{
-			double GammaLast = Gamma;
-			if (Gamma <= -1.0 * RAD)
+			if (!WhiparoundIsSet)
 			{
-				if ((GammaLast > -1.0 * RAD)&&(Gamma < -1.0)) //falling edge detection for gamma dropping below -1.0°
-				{
-					WhiparoundIsSet = true; //set whiparound flag on falling edge below -1.0
-				}
-				else
-				{
-					WhiparoundIsSet = false; //clear whiparound flag
-				}
-				BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt / 10);
-				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				AAxisCmd = Alpha - (Beta*ServoFeedbackGain*simdt);
+			}
+			BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+			CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+
+			if ((Gamma <= -1.0 * RAD) && !WhiparoundIsSet)
+			{
+				WhiparoundIsSet = true; //set whiparound flag on falling edge below -1.0
 
 				if (WhiparoundIsSet == true)
 				{
@@ -908,23 +904,12 @@ void HGA::TimeStep(double simt, double simdt)
 					{
 						AAxisCmd = Alpha + 180 * RAD;
 					}
-					WhiparoundIsSet = false; //clear whiparound flag
 				}
 			}
-			else
+
+			if ((Gamma >= 1.0 * RAD) && WhiparoundIsSet)
 			{
-				if (AzmuthTrackErrorDeg > 3.0)
-				{
-					AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-					BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt/10);
-					CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
-				}
-				else
-				{
-					AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-					BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
-					CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
-				}
+				WhiparoundIsSet = false; //clear whiparound flag
 			}
 		}
 	}
@@ -979,9 +964,9 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_CSM;
 	MATRIX3 Rot;
-	double relang, beamwidth, Moonrelang, EarthSignalDist;
+	double relang, beamwidth, Moonrelang, EarthSignalDist, CSMrelang;
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
@@ -1044,10 +1029,24 @@ void HGA::TimeStep(double simt, double simdt)
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
 
+	const VECTOR3 boomAxis = {-0.402019, -0.915631, 0.00 };
+	U_CSM = unit(mul(Rot, unit(boomAxis)));
+
+	CSMrelang = acos(dotp(U_CSM, unit(R_E- pos)));
+	
+
 	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
 		SignalStrength = 0.0;
 		for (int i = 0;i < 4;i++)
+		{
+			HornSignalStrength[i] = 0.0;
+		}
+	}
+	else if (CSMrelang > 125*RAD) //CSM body shadowing the antenna
+	{
+		SignalStrength = 0.0;
+		for (int i = 0; i < 4; i++)
 		{
 			HornSignalStrength[i] = 0.0;
 		}
@@ -1106,7 +1105,8 @@ void HGA::TimeStep(double simt, double simdt)
 		scanlimitwarn = false;
 	}
 
-	//sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
+	/*sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf°, SignalStrength %lf, RelAng %lf°, CSMrelang %lf°, Warn: %d, Limit: %d, Beam: %d, Auto: %d, Whiparound: %d",
+		Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, CSMrelang*DEG, scanlimitwarn, scanlimit, RcvBeamWidthMode, AutoTrackingMode, WhiparoundIsSet);*/
 }
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
@@ -1254,15 +1254,13 @@ void OMNI::Init(Saturn *vessel) {
 
 void OMNI::TimeStep()
 {
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	VECTOR3 pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
 	double relang, Moonrelang;
 	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
 
 	double EarthSignalDist;
 
-	//Unit vector of antenna in vessel's local frame
-	U_RP = _V(direction.y, -direction.z, direction.x);
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
@@ -1271,7 +1269,7 @@ void OMNI::TimeStep()
 	sat->GetRotationMatrix(Rot);
 
 	//Calculate antenna pointing vector in global frame
-	U_R = mul(Rot, U_RP);
+	U_R = mul(Rot, direction);
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
 
@@ -1316,17 +1314,16 @@ double VHFAntenna::getPolarGain(VECTOR3 target)
 	double theta = 0.0;
 	double gain = 0.0;
 
-	const double maxGain = -9.0; //dB
+	const double scaleGain = 9.0; //dBi
 
-	theta = acos(dotp(unit(target),unit(pointingVector)));
+	theta = acos(dotp(target,unit(pointingVector)));
 
-	if (theta < 90.0*RAD)
+	gain = pow(sin(1.4562266550955*theta / ((75 * RAD) - exp(-(theta*theta)))),2); //0--1 scaled polar pattern
+	gain = (gain - 1.0)*scaleGain; //scale to appropriate values. roughly approximates figures 4.7-26 -- 4.7-33 of CSM/LM SPACECRAFT Operational Data Book Volume I CSM Data Book Part I Constraints and Performance Rev 3.
+
+	if (theta > 160.0*RAD)
 	{
-		gain = pow(cos(theta / 10.0), 2.0)*maxGain;
-	}
-	else
-	{
-		gain = -150.0;
+		return -scaleGain;
 	}
 
 	return gain;
@@ -1414,10 +1411,9 @@ void VHFAMTransceiver::Timestep()
 
 	if (!lem)
 	{
-		//lem = sat->agc.GetLM(); //need to change type of "lem" to "VESSEL" before uncommenting
 		VESSEL *lm = sat->agc.GetLM(); 
 		if (lm) {
-			lem = (static_cast<LEM*>(lm)); //################################# DELETE ME #######################################
+			lem = (static_cast<LEM*>(lm)); 
 		}
 	}
 
@@ -1425,15 +1421,6 @@ void VHFAMTransceiver::Timestep()
 	{
 		sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
-
-	VECTOR3 R = _V(0, 0, 0);
-
-	if(lem)
-	{
-		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
-	}
-
-	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
 
 	if (antSelectorSw->GetState() == 0)
 	{
@@ -1519,24 +1506,40 @@ void VHFAMTransceiver::Timestep()
 		receiveB = false;
 	}
 
+	VECTOR3 R; //vector from the LEM to the CSM
+	VECTOR3 U_R; //unit vector from the LEM to the CSM
+	MATRIX3 Rot; //rotational matrix for transforming from local to global coordinate systems
+	VECTOR3 U_R_LOCAL; //unit vector in the local coordinate system, pointing to the other vessel
+
+	if (lem)
+	{
+		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
+		U_R = unit(R); //normalize it
+		sat->GetRotationMatrix(Rot);
+		U_R_LOCAL = tmul(Rot, U_R); // rotate U_R into the global coordinate system
+	}
+
+	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
+
+	//if we're connected, have a pointer to the LEM, and have a non NULL antenna selected, receive RF power.
 	if ((sat->csm_vhfto_lm_vhfconnector.connectedTo) && lem && activeAntenna)
 	{
 		if (receiveA)
 		{
-			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(R), RCVDfreqRCVR_A, length(R));
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_A, length(R));
 		}
 		else
 		{
-			RCVDinputPowRCVR_A = -150.0;
+			RCVDinputPowRCVR_A = RF_ZERO_POWER_DBM;
 		}
 
 		if (receiveB)
 		{
-			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(R), RCVDfreqRCVR_B, length(R));
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_B, length(R));
 		}
 		else
 		{
-			RCVDinputPowRCVR_B = -150.0;
+			RCVDinputPowRCVR_B = RF_ZERO_POWER_DBM;
 		}
 	}
 
@@ -1545,20 +1548,25 @@ void VHFAMTransceiver::Timestep()
 	//send RF properties to the connector
 	if (lem && activeAntenna)
 	{
-		VECTOR3 U_R;
-
-		oapiGetRelativePos(sat->GetHandle(), lem->GetHandle(), &U_R); //vector to the LM
-		U_R = unit(U_R); //normalize it
-
 		if (transmitA)
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, false); //XCVR A
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false); //XCVR A
+		}
+		else
+		{
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
 		}
 
 		if (transmitB)
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, XMITRangeTone); //XCVR B
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, XMITRangeTone); //XCVR B
 		}
+		else
+		{
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
+		}
+
+		//sprintf(oapiDebugString(), "VHF ANTENNA GAIN = %lf dBi", activeAntenna->getPolarGain(U_R_LOCAL));
 	}
 
 	XMITRangeTone = false;
@@ -1685,7 +1693,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 				//Specification is 200NM range, but during the flights up to 320NM was achieved
 				if (newrange > 500.0*0.3048)
 				{		
-					if(transceiver->RCVDinputPowRCVR_A > -122.0 && transceiver->GetActiveAntenna())
+					if(transceiver->RCVDinputPowRCVR_A > -122.0 && transceiver->GetActiveAntenna() && transceiver->RCVDRangeTone)
 					{
 						RangingReturnSignal();
 					}
@@ -5377,8 +5385,6 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	{
 		sat->CSM_RRTto_LM_RRConnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
 	}
-
-	if(lem){ RNDZXPDRSystem::SendRF(); } //send inital info to the connector
 }
 
 unsigned char RNDZXPDRSystem::GetScaledRFPower()
@@ -5637,14 +5643,14 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 
 void RNDZXPDRSystem::LoadState(char *line)
 {
-	sscanf(line + 14, "%i %lf", &haslock, &lockTimer);
+	sscanf(line + 14, "%i %lf %lf %lf %lf %lf", &haslock, &lockTimer, &RCVDfreq, &RCVDpow, &RCVDgain, &RCVDPhase);
 }
 
 void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 {
 	char buffer[256];
 
-	sprintf(buffer, "%i %lf", haslock, lockTimer);
+	sprintf(buffer, "%i %lf %lf %lf %lf %lf", haslock, lockTimer, RCVDfreq, RCVDpow, RCVDgain, RCVDPhase);
 
 	oapiWriteScenario_string(scn, "RNDZXPDRSystem", buffer);
 }

@@ -55,6 +55,7 @@ public:
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
 	VECTOR3 GetTotalAttitude();
+	double GetLastTime();
 
 	bool IsCaged();
 	bool IsPowered();

@@ -27,8 +27,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "rtcc.h"
 
-TLIGuidanceSim::TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable tablin, int &iretn, EphemerisDataTable *ephem, RTCCNIAuxOutputTable *aux, std::vector<double> *wtabl) :
-	TABLIN(tablin), IRETN(iretn), EPHEM(ephem), AUX(aux), WTABL(wtabl)
+TLIGuidanceSim::TLIGuidanceSim(RTCC *r, RTCCNIInputTable tablin, int &iretn, EphemerisDataTable *ephem, RTCCNIAuxOutputTable *aux, MATRIX3 *adrmat, std::vector<double> *wtabl) :
+	RTCCModule(r),
+	TABLIN(tablin), IRETN(iretn), EPHEM(ephem), AUX(aux), WTABL(wtabl), ADRMAT(adrmat)
 {
 	T = 0.0;
 	TPR = 0.0;
@@ -76,39 +77,37 @@ TLIGuidanceSim::TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable tablin, int &iretn, 
 	VEX3 = 0.0;
 	WDOT3 = 0.0;
 	TB2 = 0.0;
-
-	this->rtcc = rtcc;
 }
 
 void TLIGuidanceSim::PCMTRL()
 {
-	DTPHASE[0] = rtcc->MCTJD1;
-	DTPHASE[2] = rtcc->MCTJD3;
+	DTPHASE[0] = pRTCC->MCTJD1;
+	DTPHASE[2] = pRTCC->MCTJD3;
 
-	FORCE[0] = rtcc->MCTJT1;
-	FORCE[1] = rtcc->MCTJT2;
-	FORCE[2] = rtcc->MCTJT3;
-	FORCE[3] = rtcc->MCTJT4;
-	FORCE[5] = rtcc->MCTJT5;
-	FORCE[6] = rtcc->MCTJT6;
-	WTFLO[0] = rtcc->MCTJW1;
-	WTFLO[1] = rtcc->MCTJW2;
-	WTFLO[2] = rtcc->MCTJW3;
-	WTFLO[3] = rtcc->MCTJW4;
-	WTFLO[5] = rtcc->MCTJW5;
-	WTFLO[6] = rtcc->MCTJW6;
+	FORCE[0] = pRTCC->MCTJT1;
+	FORCE[1] = pRTCC->MCTJT2;
+	FORCE[2] = pRTCC->MCTJT3;
+	FORCE[3] = pRTCC->MCTJT4;
+	FORCE[5] = pRTCC->MCTJT5;
+	FORCE[6] = pRTCC->MCTJT6;
+	WTFLO[0] = pRTCC->MCTJW1;
+	WTFLO[1] = pRTCC->MCTJW2;
+	WTFLO[2] = pRTCC->MCTJW3;
+	WTFLO[3] = pRTCC->MCTJW4;
+	WTFLO[5] = pRTCC->MCTJW5;
+	WTFLO[6] = pRTCC->MCTJW6;
 
-	EPSL1 = rtcc->MCVEP1;
-	EPSL2 = rtcc->MCVEP2;
-	EPSL3 = rtcc->MCVEP3;
-	EPSL4 = rtcc->MCVEP4;
-	VEX3 = rtcc->MCVVX3;
-	WDOT3 = rtcc->MCVWD3;
-	TB2 = rtcc->MCVTB2;
+	EPSL1 = pRTCC->MCVEP1;
+	EPSL2 = pRTCC->MCVEP2;
+	EPSL3 = pRTCC->MCVEP3;
+	EPSL4 = pRTCC->MCVEP4;
+	VEX3 = pRTCC->MCVVX3;
+	WDOT3 = pRTCC->MCVWD3;
+	TB2 = pRTCC->MCVTB2;
 
-	G = rtcc->PZTLIMAT.G;
-	GG = rtcc->PZTLIMAT.GG;
-	PLMB = rtcc->PZTLIMAT.EPH;
+	G = ADRMAT[2];
+	GG = ADRMAT[1];
+	PLMB = ADRMAT[0];
 
 	IGMSKP = 0;
 	IERR = 0;
@@ -141,7 +140,7 @@ void TLIGuidanceSim::PCMTRL()
 	TE = TABLIN.GMTI;
 	WBM = TABLIN.CAPWT;
 	WT = TABLIN.CAPWT;
-	STEP = TABLIN.DTOUT;
+	STEP = pRTCC->MCVDTM;
 	KTHSWT = 1;
 	IPUTIG = 2;
 	IPHFUL = 5;
@@ -152,16 +151,16 @@ void TLIGuidanceSim::PCMTRL()
 	CDFACT = 0.0 * TABLIN.DENSMULT *TABLIN.Area;
 	AOM = CDFACT / WT;
 	DTPHASE[1] = TABLIN.Params2[5];
-	DTPHASE[3] = T2 + (rtcc->MCVIGM - (DTPHASE[0] + DTPHASE[1] + DTPHASE[2]));
+	DTPHASE[3] = T2 + (pRTCC->MCVIGM - (DTPHASE[0] + DTPHASE[1] + DTPHASE[2]));
 	TLARGE = T + 4096.0*3600.0;
-	DTPHASE[4] = rtcc->MCTJDS;
-	DTPHASE[5] = rtcc->MCTJD5;
-	DTPHASE[6] = rtcc->MCTJD6;
+	DTPHASE[4] = pRTCC->MCTJDS;
+	DTPHASE[5] = pRTCC->MCTJD5;
+	DTPHASE[6] = pRTCC->MCTJD6;
 	PITN = PRP;
 	YAWN = YRP;
 	TIG = TABLIN.GMTI + DTPHASE[0] + DTPHASE[1];
 	TI = TABLIN.GMTI + DTPHASE[0];
-	TIGM = TABLIN.GMTI + rtcc->MCVIGM;
+	TIGM = TABLIN.GMTI + pRTCC->MCVIGM;
 	T = TABLIN.GMTI;
 	KEHOP = abs(TABLIN.IEPHOP);
 	RE = TABLIN.R;
@@ -190,17 +189,17 @@ void TLIGuidanceSim::PCMTRL()
 		TIG = TABLIN.GMTI;
 	}
 
-	if (rtcc->MCTIND == 1)
+	if (pRTCC->MCTIND == 1)
 	{
 		//Low thrust
-		FORCE[4] = rtcc->MCTJTL;
-		WTFLO[4] = rtcc->MCTJWL;
+		FORCE[4] = pRTCC->MCTJTL;
+		WTFLO[4] = pRTCC->MCTJWL;
 	}
 	else
 	{
 		//High thrust
-		FORCE[4] = rtcc->MCTJTH;
-		WTFLO[4] = rtcc->MCTJWH;
+		FORCE[4] = pRTCC->MCTJTH;
+		WTFLO[4] = pRTCC->MCTJWH;
 	}
 
 	//Ephemeris storage initialization
@@ -275,7 +274,7 @@ void TLIGuidanceSim::PCMTRL()
 		}
 		DT = TE - T;
 		TAU = TE;
-		if (WT <= rtcc->MCVWMN)
+		if (WT <= pRTCC->MCVWMN)
 		{
 			IERR = 2;
 			goto PMMSIU_999;
@@ -369,8 +368,7 @@ void TLIGuidanceSim::PCMTRL()
 		AUX->V_BO = VE;
 		AUX->GMT_BO = T;
 		AUX->DT_TO = DTPHASE[6];
-		double DTU = TIG - TABLIN.GMTI;
-		AUX->DT_B = T - TABLIN.GMTI - DTU;
+		AUX->DT_B = T - AUX->DT_TO - AUX->GMT_BI;
 		AUX->P_G = PITCHG;
 		AUX->Y_G = YAWG;
 		AUX->DV_TO = DVTO;
@@ -384,6 +382,7 @@ void TLIGuidanceSim::PCMTRL()
 		AUX->W_SIVB = TABLIN.SIVBWT;
 		AUX->WTEND = WT;
 		AUX->MainFuelUsed = AUX->WTINIT - AUX->WTEND;
+		AUX->RCSFuelUsed = 0.0;
 		AUX->RBI = BODY_EARTH;
 		AUX->CSI = 0;
 		AUX->Word60 = E;
@@ -641,7 +640,8 @@ void TLIGuidanceSim::PCMGN()
 	TEMP4 = (1.0 - P / RT) / E;
 	if (TEMP4 > 1.0)
 	{
-		//Error
+		IERR = 3;
+		return;
 	}
 	goto PMMSIU_PCMGN_1B;
 PMMSIU_PCMGN_1A:
@@ -695,13 +695,13 @@ PMMSIU_PCMGN_2A:
 		T2 = T2 - DDLT;
 		if (T2 > 0.0)
 		{
-			if (CPR >= rtcc->MCVCPQ)
+			if (CPR >= pRTCC->MCVCPQ)
 			{
 				TAU2 = VEX2 / FOM;
 			}
 			else
 			{
-				TAU2 = (VEX2 / FOM - DDLT * 0.5 - TAU2N)*pow(CPR / rtcc->MCVCPQ, 4);
+				TAU2 = (VEX2 / FOM - DDLT * 0.5 - TAU2N)*pow(CPR / pRTCC->MCVCPQ, 4);
 				TAU2 = TAU2N + TAU2;
 				TAU2N = TAU2N - DDLT;
 				CPR = CPR + DDLT;
@@ -710,7 +710,7 @@ PMMSIU_PCMGN_2A:
 		else
 		{
 			PC = PC + DT;
-			if (PC > rtcc->MCVKPC)
+			if (PC > pRTCC->MCVKPC)
 			{
 				IMRS = 1;
 				TB4 = 0.0;
@@ -790,7 +790,7 @@ PMMSIU_PCMGN_5A:
 	PHIT = atan2(X4.z, X4.x);
 	if (TTOTP > EPSL1)
 	{
-		DELL2 = (VMAG * TTOTP) - XJ3P + (XLYP * T3P) - (rtcc->MCVRQV / VEX3) *((TAU2 - T2) * XL2 + (TAU3 - T3P) * XL3P)*(XLYP + VMAG - VT);
+		DELL2 = (VMAG * TTOTP) - XJ3P + (XLYP * T3P) - (pRTCC->MCVRQV / VEX3) *((TAU2 - T2) * XL2 + (TAU3 - T3P) * XL3P)*(XLYP + VMAG - VT);
 		TEMP2 = (S2 + DELL2)*GAMT / RT;
 	}
 	else
@@ -815,7 +815,7 @@ PMMSIU_PCMGN_5A:
 	}
 	SGAMT = sin(GAMT);
 	CGAMT = cos(GAMT);
-	if (rtcc->MCVRQT == 1.0)
+	if (pRTCC->MCVRQT == 1.0)
 	{
 		XIT = RT * CGAMT;
 		ZETATD = VT;
@@ -919,35 +919,35 @@ PMMSIU_PCMGN_300:
 PMMSIU_PCMGN_330:
 	PITN = atan2(-UTA.z, UTA.x);
 	YAWN = asin(UTA.y);
-	if (abs(YAWN) > rtcc->MCVYMX)
+	if (abs(YAWN) > pRTCC->MCVYMX)
 	{
-		YAWN = rtcc->MCVYMX*(YAWN / abs(YAWN));
+		YAWN = pRTCC->MCVYMX*(YAWN / abs(YAWN));
 	}
 	if (T == TABLIN.GMTI)
 	{
 		PITO = PITN;
 		YAWO = YAWN;
 	}
-	if (DDLT == 0.0 || abs(YAWN - YAWO) / DDLT > rtcc->MCVYDL)
+	if (DDLT == 0.0 || abs(YAWN - YAWO) / DDLT > pRTCC->MCVYDL)
 	{
 		if (YAWN > YAWO)
 		{
-			YAWN = YAWO + rtcc->MCVYDL*DDLT;
+			YAWN = YAWO + pRTCC->MCVYDL*DDLT;
 		}
 		else
 		{
-			YAWN = YAWO - rtcc->MCVYDL*DDLT;
+			YAWN = YAWO - pRTCC->MCVYDL*DDLT;
 		}
 	}
-	if (DDLT == 0.0 || abs(PITN - PITO) / DDLT > rtcc->MCVPDL)
+	if (DDLT == 0.0 || abs(PITN - PITO) / DDLT > pRTCC->MCVPDL)
 	{
 		if (PITN > PITO)
 		{
-			PITN = PITO + rtcc->MCVPDL*DDLT;
+			PITN = PITO + pRTCC->MCVPDL*DDLT;
 		}
 		else
 		{
-			PITN = PITO - rtcc->MCVPDL*DDLT;
+			PITN = PITO - pRTCC->MCVPDL*DDLT;
 		}
 	}
 	ZCP = cos(PITN);
@@ -991,7 +991,7 @@ PMMSIU_PCMGN_2B:
 	DT1P = DT2P;
 	DT2P = DDLT;
 
-	if (!(TTOTP <= EPSL4 && (VTEST + rtcc->MCVTGQ) >= VT))
+	if (!(TTOTP <= EPSL4 && (VTEST + pRTCC->MCVTGQ) >= VT))
 	{
 		goto PMMSIU_PCMGN_300;
 	}

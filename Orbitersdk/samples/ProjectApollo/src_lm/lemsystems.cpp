@@ -455,7 +455,9 @@ void LEM::SystemsInit()
 	// SBand System
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBPHEAT"));
 	// VHF System
-	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT"));
+	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"));
+	// PCM
+	PCM.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT"));
 	// DSEA
 	DSEA.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:DSEHEAT"));
 	TapeRecorderTB.WireTo(&INST_PCMTEA_CB); //Tape Recorder TB powered by PCM/TE cb
@@ -838,7 +840,7 @@ void LEM::JoystickTimestep(double simdt)
 {
 	// Joystick read
 	if (oapiGetFocusInterface() == this) {
-
+		if (enableVESIM) vesim.poolDevices();
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
 		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
@@ -910,7 +912,15 @@ void LEM::JoystickTimestep(double simdt)
 		// Read data
 		HRESULT hr;
 		// Handle RHC
-		if (rhc_id != -1 && rhc_id < js_enabled) {
+		if (enableVESIM) {
+			if (GetAttitudeMode() == RCS_ROT) {
+				rhc_pos[0] = vesim.getInputValue(LM_AXIS_INPUT_ACAR);
+				rhc_pos[1] = vesim.getInputValue(LM_AXIS_INPUT_ACAP);
+				rhc_pos[2] = 65536 - vesim.getInputValue(LM_AXIS_INPUT_ACAY);
+				
+			}
+		}
+		else if (rhc_id != -1 && rhc_id < js_enabled) {
 			// CHECK FOR POWER HERE
 			hr = dx8_joystick[rhc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
@@ -1175,7 +1185,31 @@ void LEM::JoystickTimestep(double simdt)
 		}
 
 		// And now the THC...
-		if (thc_id != -1 && thc_id < js_enabled) {
+		if (enableVESIM) {
+			if (LeftTTCATranslSwitch.IsUp()) {
+				if (GetAttitudeMode() == RCS_ROT) {
+					thc_x_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAY) - 32768;
+					thc_y_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAX) - 32768;
+					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAZ) - 32768;
+				}
+				else {
+					thc_x_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAR) - 32768;
+					thc_y_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAP) - 32768;
+					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAY) - 32768;
+				}
+			}
+			if (vesim.getInputValue(LM_AXIS_THR_JET_LEVER) < 32768) 
+				ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_THROTTLE);				
+			else {
+				if (GetAttitudeMode() == RCS_ROT)			
+					ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAX);
+				else			
+					ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAP);				
+				thc_y_pos = 0;
+			}
+			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+		}
+		else if (thc_id != -1 && thc_id < js_enabled) {
 			hr = dx8_joystick[thc_id]->Poll();
 			if (FAILED(hr)) { // Did that work?
 							  // Attempt to acquire the device
@@ -1357,6 +1391,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		crossPointerRight.SystemTimestep(tFactor);
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
+		PCM.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
 		DSEA.SystemTimestep(tFactor);
 		CabinPressureSwitch.SystemTimestep(tFactor);
@@ -1460,6 +1495,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	omni_fwd.Timestep();
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
+	VHF.Timestep(simt);
 	ecs.Timestep(simdt);
 	OverheadHatch.Timestep(simdt);
 	ForwardHatch.Timestep(simdt);

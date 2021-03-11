@@ -74,6 +74,8 @@ public:
 
 	//For LVDA
 	virtual void SwitchSelector(int stage, int channel);
+	bool GetSIVBEngineOutA() { return SIVBEngineOutA; }
+	bool GetSIVBEngineOutB() { return SIVBEngineOutB; }
 
 	//For DCS
 	bool GetIUCommandSystemEnable() { return IUCommandSystemEnable; }
@@ -95,6 +97,10 @@ protected:
 
 	//Relays:
 
+	//K2 (K92)
+	bool SIVBEngineOutA;
+	//K3 (K93)
+	bool SIVBEngineOutB;
 	//K4-1/2
 	bool GSECommandVehicleLiftoffIndicationInhibit;
 	//K6

@@ -25,6 +25,7 @@
 #define _PA_MCC_H
 
 #include "MCCPADForms.h"
+#include <fstream>
 
 // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
@@ -224,19 +225,18 @@ struct GroundStation {
 class LEM;
 class Saturn;
 class SIVB;
+class RTCC;
 
 // Mission Control Center class
-class MCC : public VESSEL4 {
+class MCC {
 public:
-	MCC(OBJHANDLE hVessel, int flightmodel);				// Cons
-	
+	MCC(RTCC *rtc);											// Cons
+
 	char CSMName[64];
 	char LEMName[64];
 	char LVName[64];
 	
 	void Init();											// Initialization
-	void clbkPreStep(double simt, double simdt, double mjd);
-	void clbkPostCreation();
 	void TimeStep(double simdt);					        // Timestep
 	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
@@ -251,7 +251,7 @@ public:
 	int LM_uplink_buffer();									// Send uplink buffer to LM
 	void setState(int newState);							// Set mission state
 	void setSubState(int newState);							// Set mission substate
-	void drawPad();											// Draw PAD display
+	void drawPad(bool writetofile = true);					// Draw PAD display
 	void allocPad(int Number);								// Allocate memory for PAD form
 	void freePad();											// Free memory occupied by PAD form
 	void UpdateMacro(int type, int padtype, bool condition, int updatenumber, int nextupdate, bool altcriterium = false, bool altcondition = false, int altnextupdate = 0);
@@ -261,10 +261,11 @@ public:
 	void enableMissionTracking(){ MT_Enabled = true; GT_Enabled = true; }
 	void initiateAbort();
 	void SlowIfDesired();
+	void SetCSM(char *csmname);
+	void SetLM(char *lemname);
+	void SetLV(char *lvname);
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
-	void clbkSaveState(FILEHANDLE scn);
-	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 
 	// MISSION SPECIFIC FUNCTIONS
 	void MissionSequence_B();
@@ -274,7 +275,7 @@ public:
 	void MissionSequence_F();
 	void MissionSequence_G();
 
-	class RTCC *rtcc;										// Pointer to RTCC
+	RTCC *rtcc;												// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
 	LEM *lm;												// Pointer to LM
 	SIVB *sivb;												// Pointer to SIVB
@@ -319,6 +320,8 @@ public:
 	char upMessage[1024];									// Update message
 	bool scrubbed;											// Maneuver scrubbed
 	int upType;												// Uplink type (1 = CSM, 2 = LM)
+	std::ofstream mcclog;
+	bool logfileinit;
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer
