@@ -69,7 +69,9 @@ namespace mission
 		//false = LM stage verify bit normal, true = inverted
 		bool IsLMStageBitInverted() const;
 		//Value of adjustable gain in pulse ratio modulator of the ATCA in the LM. 0.3 used for LM-4 and later, 0.1 for LM-3 and before
-		double Mission::GetATCA_PRM_Factor() const;
+		double GetATCA_PRM_Factor() const;
+		//Get matrix with coefficients for calculating the LM center of gravity as a quadratic function of mass
+		MATRIX3 GetLMCGCoefficients() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
@@ -90,6 +92,7 @@ namespace mission
 		bool bCSMHasVHFRanging;
 		bool bInvertLMStageBit;
 		double dATCA_PRM_Factor;
+		MATRIX3 LM_CG_Coefficients;
 
 		void SetDefaultValues();
 	};

@@ -104,6 +104,8 @@ namespace mission {
 		strAEAVersion = "FP8";
 		bInvertLMStageBit = false;
 		dATCA_PRM_Factor = 0.3;
+		//LM-7 data from Operational Data Book
+		LM_CG_Coefficients = _M(8.7719e-08, -7.9329e-04, 7.9773e+00, 2.1488e-10, -2.5485e-06, 1.2769e-02, 6.1788e-09, -6.9019e-05, 2.5186e-01);
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -128,6 +130,8 @@ namespace mission {
 			oapiWriteLog("(Mission) ERROR: Can't open file.");
 			return false;
 		}
+
+		VECTOR3 vtemp;
 
 		if (oapiReadItem_string(hFile, "Name", buffer))
 		{
@@ -158,6 +162,18 @@ namespace mission {
 		}
 		oapiReadItem_bool(hFile, "InvertLMStageBit", bInvertLMStageBit);
 		oapiReadItem_float(hFile, "ATCA_PRM_Factor", dATCA_PRM_Factor);
+		if (oapiReadItem_vec(hFile, "LM_CGX_Coefficients", vtemp))
+		{
+			LM_CG_Coefficients.m11 = vtemp.x; LM_CG_Coefficients.m12 = vtemp.y; LM_CG_Coefficients.m13 = vtemp.z;
+		}
+		if (oapiReadItem_vec(hFile, "LM_CGY_Coefficients", vtemp))
+		{
+			LM_CG_Coefficients.m21 = vtemp.x; LM_CG_Coefficients.m22 = vtemp.y; LM_CG_Coefficients.m23 = vtemp.z;
+		}
+		if (oapiReadItem_vec(hFile, "LM_CGZ_Coefficients", vtemp))
+		{
+			LM_CG_Coefficients.m31 = vtemp.x; LM_CG_Coefficients.m32 = vtemp.y; LM_CG_Coefficients.m33 = vtemp.z;
+		}
 
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
@@ -241,5 +257,10 @@ namespace mission {
 	double Mission::GetATCA_PRM_Factor() const
 	{
 		return dATCA_PRM_Factor;
+	}
+
+	MATRIX3 Mission::GetLMCGCoefficients() const
+	{
+		return LM_CG_Coefficients;
 	}
 }
