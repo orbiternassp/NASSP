@@ -11636,7 +11636,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 {
 	OELEMENTS coe_bef, coe_aft, coe_p, coe_a;
 	SV sv0_apo, sv_a, sv_p;
-	double r_a_b, r_p_b, a_ap, a_p, dr_a_max, dr_p_max, a_D, e_D, mu, r_b, cos_theta_A, theta_A, r_a, r_p, a_a, cos_E_a, E_a, u_b, r_a_a, r_p_a;
+	double r_a_b, r_p_b, a_ap, a_p, dr_a_max, dr_p_max, a_D, e_D, mu, r_b, cos_theta_A, theta_A, r_a, r_p, a_a, cos_E_a, E_a, l_b, u_b, r_a_a, r_p_a;
 	double dr_ap0, dr_p0, dr_ap_c, dr_p_c, dr_ap1, dr_p1, ddr_ap, ddr_p, eps;
 	int n, nmax;
 
@@ -11648,6 +11648,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 
 	coe_bef = OrbMech::coe_from_sv(sv0.R, sv0.V, mu);
 	u_b = fmod(coe_bef.TA + coe_bef.w, PI2);
+	l_b = OrbMech::TrueToMeanAnomaly(coe_bef.TA, coe_bef.e);
 	PMMAPD(sv0, sv_a, sv_p);
 
 	if (r_AD == r_PD)
@@ -11714,7 +11715,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 
 		E_a = acos(cos_E_a);
 		coe_aft.TA = acos2((a_a*(1.0 - coe_aft.e * coe_aft.e) - r_b) / (coe_aft.e*r_b));
-		if (coe_bef.TA > PI)
+		if (l_b > PI)
 		{
 			E_a = PI2 - E_a;
 			coe_aft.TA = PI2 - coe_aft.TA;
@@ -11746,8 +11747,24 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 			dr_p1 = r_PD - r_p_a;
 			ddr_ap = dr_ap0 - dr_ap1;
 			ddr_p = dr_p0 - dr_p1;
-			dr_ap_c = dr_ap1 * dr_ap_c / ddr_ap;
-			dr_p_c = dr_p1 * dr_p_c / ddr_p;
+			if (abs(ddr_ap) < 0.1)
+			{
+				dr_ap_c = 0.0;
+			}
+			else
+			{
+				dr_ap_c = dr_ap1 * dr_ap_c / ddr_ap;
+			}
+			
+			if (abs(ddr_p) < 0.1)
+			{
+				dr_p_c = 0.0;
+			}
+			else
+			{
+				dr_p_c = dr_p1 * dr_p_c / ddr_p;
+			}
+			
 			dr_ap0 = dr_ap1;
 			dr_p0 = dr_p1;
 		}
