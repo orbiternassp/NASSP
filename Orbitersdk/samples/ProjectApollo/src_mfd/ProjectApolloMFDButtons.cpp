@@ -113,7 +113,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ 0,0,0 },
 		{ "Change Source",0,'S' },
 		{ "Change Reference Body", 0, 'R' },
-		{ 0,0,0 },
+		{ "Ascent Engine Arming",0,'A' },
 		{ "Clock Update", 0, 'C' },
 		{ "Sunburst Suborbital Abort",0,'F' },
 		{ "Sunburst COI",0,'G' },
@@ -124,12 +124,12 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuAbortUplink);
 	RegisterFunction("SV", OAPI_KEY_U, &ProjectApolloMFD::menuStateVectorUpdate);
-	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("SRC", OAPI_KEY_S, &ProjectApolloMFD::menuSetSource);
 	RegisterFunction("REF", OAPI_KEY_R, &ProjectApolloMFD::menuSetReference);
 
-	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("AEAA", OAPI_KEY_A, &ProjectApolloMFD::menuAEAACommands);
 	RegisterFunction("CLK", OAPI_KEY_C, &ProjectApolloMFD::menuClockUpdate);
 	RegisterFunction("SAB", OAPI_KEY_F, &ProjectApolloMFD::menuSunburstSuborbitalAbort);
 	RegisterFunction("COI", OAPI_KEY_G, &ProjectApolloMFD::menuSunburstCOI);

@@ -281,6 +281,7 @@ public:
 	/// \param OtherVessel Pointer to the LEM so that the CSM can track it for rendevouz.
 	///
 	virtual void SetMissionInfo(std::string ProgramName, char *OtherName = 0);
+	virtual void SetOtherVesselName(char *OtherName);
 
 	///
 	/// \brief Initialise the Virtual AGC.

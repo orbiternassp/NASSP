@@ -243,6 +243,12 @@ void ApolloGuidance::SetMissionInfo(std::string ProgramName, char *OtherName)
 		strncpy(OtherVesselName, OtherName, 64);
 }
 
+void ApolloGuidance::SetOtherVesselName(char *OtherName)
+{
+	if (OtherName != 0)
+		strncpy(OtherVesselName, OtherName, 64);
+}
+
 //
 // Virtual AGC Erasable memory functions.
 //
