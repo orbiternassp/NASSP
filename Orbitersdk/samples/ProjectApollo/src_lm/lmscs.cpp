@@ -2067,6 +2067,24 @@ void SCCA1::Timestep(double simdt)
 		K8 = false;
 	}
 
+	//PGNS Input Bits
+	if (lem->ModeControlPGNSSwitch.IsUp())
+	{
+		lem->agc.SetInputChannelBit(031, AutomaticStab, true);
+		lem->agc.SetInputChannelBit(031, AttitudeHold, false);
+	}
+	else if (lem->ModeControlPGNSSwitch.IsCenter())
+	{
+		lem->agc.SetInputChannelBit(031, AutomaticStab, false);
+		lem->agc.SetInputChannelBit(031, AttitudeHold, true);
+	}
+	else
+	{
+		lem->agc.SetInputChannelBit(031, AutomaticStab, false);
+		lem->agc.SetInputChannelBit(031, AttitudeHold, false);
+	}
+	//TBD: Relay K8 switching PGNS out-of-detent signal on
+
 	//Abort Stage Handling
 
 	if (lem->SCS_ABORT_STAGE_CB.IsPowered() && lem->AbortStageSwitch.GetState() == 0)

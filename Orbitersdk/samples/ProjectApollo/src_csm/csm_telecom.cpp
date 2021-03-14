@@ -1817,6 +1817,8 @@ PCM::PCM(){
 	last_update = 0;
 	last_rx = 0;
 	pcm_rate_override = 0;
+	frame_addr = 0;
+	frame_count = 0;
 }
 
 void PCM::Init(Saturn *vessel){
@@ -1971,15 +1973,14 @@ void PCM::TimeStep(double simt){
 // This function will be called lots of times inside a timestep, so it should go
 // as fast as possible!
 
-unsigned char PCM::scale_data(double data, double low, double high){
-	double step = 0;
-	
+unsigned char PCM::scale_data(double data, double low, double high)
+{
 	// First eliminate cases outside of the scales
 	if(data >= high){ return 0xFF; }
 	if(data <= low){  return 0; }
 	
 	// Now figure step value
-	step = ( ( high - low ) / 256.0);
+	double step = ( ( high - low ) / 256.0);
 	// and return result
 	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
 }

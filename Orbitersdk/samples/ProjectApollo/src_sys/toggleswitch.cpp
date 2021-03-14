@@ -4969,33 +4969,6 @@ void CMCOpticsZeroSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 	}
 }
 
-//
-// LEM PGNS switch.
-//
-
-bool PGNSSwitch::SwitchTo(int newState, bool dontspring)
-{
-	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
-		if (agc) {
-			bool Hold = false;
-			bool Auto = false;
-
-			if (IsCenter()) {
-				Hold = true;
-			}
-			else if (IsUp()) {
-				Auto = true;
-			}
-
-			agc->SetInputChannelBit(031, HoldFunction, Hold);
-			agc->SetInputChannelBit(031, FreeFunction, Auto);
-		}
-		return true;
-	}
-
-	return false;
-}
-
 bool ModeSelectSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (AGCThreePoswitch::SwitchTo(newState, dontspring)) {

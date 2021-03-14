@@ -2263,16 +2263,14 @@ void LEM::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 	else
 	{
 		//LM-7 data from Operational Data Book
-		static const double AscIXX[3] = { 8.7719e-08, -7.9329e-04, 7.9773e+00 };
-		static const double AscIYY[3] = { 2.1488e-10, -2.5485e-06, 1.2769e-02 };
-		static const double AscIZZ[3] = { 6.1788e-09, -6.9019e-05, 2.5186e-01 };
+		MATRIX3 CGData = pMission->GetLMCGCoefficients();
 
 		VECTOR3 p;
-		p.x = AscIXX[0] * m*m + AscIXX[1] * m + AscIXX[2];
-		p.y = AscIYY[0] * m*m + AscIYY[1] * m + AscIYY[2];
-		p.z = AscIZZ[0] * m*m + AscIZZ[1] * m + AscIZZ[2];
+		p.x = CGData.m11 * m*m + CGData.m12 * m + CGData.m13;
+		p.y = CGData.m21 * m*m + CGData.m22 * m + CGData.m23;
+		p.z = CGData.m31 * m*m + CGData.m32 * m + CGData.m33;
 		//7.2116 is the offset between the ascent stage mesh and the LM coordinate system
-		COG = _V(p.y, p.x - 7.2116, p.z);
+		COG = _V(p.y, p.x - 7.2116, p.z); //Switch to Orbiter coordinates here
 
 		//LM-7 mass data from Operational Data Book
 		static double xaxis[3] = { -9.773352930507752e-09,  -2.002652528853579e-04,   2.158070696191321e+00 };

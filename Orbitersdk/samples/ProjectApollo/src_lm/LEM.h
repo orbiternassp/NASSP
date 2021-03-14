@@ -923,7 +923,7 @@ protected:
 	ToggleSwitch EngineDescentCommandOverrideSwitch;
 
 	SwitchRow ModeControlSwitchesRow;
-	PGNSSwitch ModeControlPGNSSwitch;
+	ThreePosSwitch ModeControlPGNSSwitch;
 	ThreePosSwitch ModeControlAGSSwitch;
     UnguardedIMUCageSwitch IMUCageSwitch;
 

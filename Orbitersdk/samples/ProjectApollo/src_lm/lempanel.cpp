@@ -2228,7 +2228,7 @@ void LEM::SetSwitches(int panel) {
 
 	ModeControlSwitchesRow.Init(AID_MODECONTROL, MainPanel);
 
-	ModeControlPGNSSwitch.Init(0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow, &agc);
+	ModeControlPGNSSwitch.Init(0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow);
 	ModeControlAGSSwitch.Init(93, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeControlSwitchesRow);
 
 	IMUCageSwitch.Init(191, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], ModeControlSwitchesRow, &imu);
