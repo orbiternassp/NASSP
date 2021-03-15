@@ -1077,7 +1077,7 @@ void LEM_FloodLights::SystemTimestep(double simdt)
 {
 	FloodCB->DrawPower(GetPowerDraw());
 	//FloodHeat->GenerateHeat((GetPowerDraw()*0.356)*0.50);	//Assumes linear relationship between heat and power draw based on maximum at 28V, 50% of power load to heat (just a guess to keep cabin temps stable)
-	FloodHeat->GenerateHeat(0);	//Testing Zero Heat
+	FloodHeat->GenerateHeat(0);	//Testing zero heat
 }
 
 LEM_PFIRA::LEM_PFIRA()
