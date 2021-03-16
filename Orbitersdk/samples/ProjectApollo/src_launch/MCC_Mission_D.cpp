@@ -302,14 +302,17 @@ void MCC::MissionSequence_D()
 	case MST_D_DAY9STATE3: //S065 Update to S065 Update
 		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 191.0*3600.0 + 30.0*60.0, 63, MST_D_DAY9STATE4);
 		break;
-	case MST_D_DAY9STATE4: //S065 Update to state vector update
-		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 193.0*3600.0, 64, MST_D_DAY9STATE5);
+	case MST_D_DAY9STATE4: //S065 Update to HGA Test REFSMMAT
+		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 192.0*3600.0 + 20.0*60.0, 64, MST_D_DAY9STATE5);
 		break;
-	case MST_D_DAY9STATE5: //State vector update to Block Data 20
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 196.0*3600.0 + 45.0*60.0, 2, MST_D_DAY9STATE6);
+	case MST_D_DAY9STATE5: //HGA Test REFSMMAT to Block Data 20
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 196.0*3600.0 + 45.0*60, 80, MST_D_DAY9STATE6);
 		break;
-	case MST_D_DAY9STATE6: //Block Data 20 to Block Data 21
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 209.0*3600.0 + 50.0*60.0, 65, MST_D_DAY10STATE1);
+	case MST_D_DAY9STATE6: //Block Data 20 to state vector update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 198.0*3600.0 + 30.0*60.0, 65, MST_D_DAY9STATE7);
+		break;
+	case MST_D_DAY9STATE7: //State vector update to Block Data 21
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 209.0*3600.0 + 50.0*60.0, 2, MST_D_DAY10STATE1);
 		break;
 	case MST_D_DAY10STATE1: //Block Data 21 to T Align Update
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 211.0*3600.0 + 28.0*60.0, 66, MST_D_DAY10STATE2);

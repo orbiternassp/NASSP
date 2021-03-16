@@ -101,6 +101,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_D_DAY9STATE4	133
 #define MST_D_DAY9STATE5	134
 #define MST_D_DAY9STATE6	135
+#define MST_D_DAY9STATE7	136
 #define MST_D_DAY10STATE1	140
 #define MST_D_DAY10STATE2	141
 #define MST_D_DAY10STATE3	142

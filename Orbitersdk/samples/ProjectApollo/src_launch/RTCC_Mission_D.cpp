@@ -2117,6 +2117,53 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EarthOrbitEntry(opt, *form);
 	}
 	break;
+	case 80: //HGA Test REFSMMAT
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
+		SV sv0, sv1;
+		double GETbase, dt, GET_AOS, GET_LOS, GET_AOS_HAW, GET_LOS_HAW;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+
+		dt = OrbMech::HHMMSSToSS(193, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+		sv1 = coast(sv0, dt);
+
+		//Carnarvon
+		FindRadarAOSLOS(sv1, GETbase, -24.90619*RAD, 113.72595*RAD, GET_AOS, GET_LOS);
+		//Hawaii
+		FindRadarAOSLOS(sv1, GETbase, 21.44719*RAD, -157.76307*RAD, GET_AOS_HAW, GET_LOS_HAW);
+
+		refsopt.csmlmdocked = false;
+		refsopt.dV_LVLH = _V(0, -1.0, 0.0); //Pointing north
+		refsopt.GETbase = getGETBase();
+		refsopt.REFSMMATTime = GET_AOS;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.src;
+		refsopt.vesseltype = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		AGCDesiredREFSMMATUpdate(uplinkdata, REFSMMAT);
+
+		char buff1[64], buff2[64], buff3[64], buff4[64];
+		OrbMech::format_time_HHMMSS(buff1, GET_AOS);
+		OrbMech::format_time_HHMMSS(buff2, GET_LOS);
+		OrbMech::format_time_HHMMSS(buff3, GET_AOS_HAW);
+		OrbMech::format_time_HHMMSS(buff4, GET_LOS_HAW);
+
+		sprintf(form->paddata, "Carnarvon AOS %s LOS %s\nHawaii AOS %s LOS %s", buff1, buff2, buff3, buff4);
+
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "High Gain Antenna Test REFSMMAT");
+		}
+	}
+	break;
 	}
 
 	return scrubbed;
