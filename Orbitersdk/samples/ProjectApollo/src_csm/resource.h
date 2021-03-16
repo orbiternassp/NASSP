@@ -1093,6 +1093,20 @@
 #define AID_VC_SPSOXIDFLOWIND   3390
 #define AID_VC_SPS_INJ_VLV      3391
 
+// VC Active Areas (Panel 7)
+#define AID_VC_PANEL_7			((id >= 3700) && (id <= 3799))
+#define AID_VC_SWITCH_P7_01		3701
+#define AID_VC_SWITCH_P7_02		3702
+#define AID_VC_SWITCH_P7_03		3703
+#define AID_VC_SWITCH_P7_04		3704
+#define AID_VC_SWITCH_P7_05		3705
+#define AID_VC_SWITCH_P7_06		3706
+
+#define AID_VC_ROT_P7_01		3709
+#define AID_VC_ROT_P7_02		3710
+#define AID_VC_ROT_P7_03		3711
+#define AID_VC_ROT_P7_04		3712
+
 // VC Active Areas (Panel 8)
 #define AID_VC_PANEL_8			((id >= 3800) && (id <= 3899))
 #define AID_VC_SWITCH_P8_01		3801
@@ -1188,6 +1202,46 @@
 #define AID_VC_CB_P8_65         3892
 #define AID_VC_CB_P8_66         3893
 #define AID_VC_CB_P8_67         3894
+
+#define AID_VC_ROT_P8_01		3897
+#define AID_VC_ROT_P8_02		3898
+#define AID_VC_ROT_P8_03		3899
+
+// VC Active Areas (Panel 9)
+#define AID_VC_PANEL_9			((id >= 3900) && (id <= 3999))
+#define AID_VC_SWITCH_P9_01		3901
+#define AID_VC_SWITCH_P9_02		3902
+#define AID_VC_SWITCH_P9_03		3903
+#define AID_VC_SWITCH_P9_04		3904
+#define AID_VC_SWITCH_P9_05		3905
+#define AID_VC_SWITCH_P9_06		3906
+#define AID_VC_SWITCH_P9_07		3907
+#define AID_VC_SWITCH_P9_08		3908
+#define AID_VC_SWITCH_P9_09		3909
+
+#define AID_VC_TW_P9_01         3912
+#define AID_VC_TW_P9_02         3913
+#define AID_VC_TW_P9_03         3914
+#define AID_VC_TW_P9_04         3915
+#define AID_VC_TW_P9_05         3916
+#define AID_VC_TW_P9_06         3917
+
+// VC Active Areas (Panel 13)
+#define AID_VC_PANEL_13			((id >= 4300) && (id <= 4399))
+#define AID_VC_SWITCH_P13_01		4301
+#define AID_VC_SWITCH_P13_02		4302
+#define AID_VC_SWITCH_P13_03		4303
+#define AID_VC_SWITCH_P13_04		4304
+#define AID_VC_SWITCH_P13_05		4305
+#define AID_VC_SWITCH_P13_06		4306
+
+// VC Active Areas (Panel 15)
+#define AID_VC_PANEL_15			((id >= 4500) && (id <= 4599))
+#define AID_VC_SWITCH_P15_01		4501
+#define AID_VC_SWITCH_P15_02		4502
+#define AID_VC_SWITCH_P15_03		4503
+#define AID_VC_SWITCH_P15_04		4504
+#define AID_VC_SWITCH_P15_05		4505
 
 // Next default values for new objects
 //
