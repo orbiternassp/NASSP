@@ -2430,19 +2430,36 @@ void LEM_LR::Timestep(double simdt){
 
 	// Data Determination
 	if(lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		// Test Mode
-		// Drive to:
-		// Alt 8287 ft
-		// Vel -494,1861,1331 ft/sec
-		// on the LGC
-		// For some reason this should show up as 8000 ft and -480 fps on the alt/alt-rate monitor?
-		range = 8287;
-		rate[0] = -494;
-		rate[1] = 1861;
-		rate[2] = 1331;
-		rangeGood = 1;
-		velocityGood = 1;
-	}else{
+		if (antennaAngle == 0) {
+			// Test Mode POS 2
+			// Drive to:
+			//
+			//
+			//
+			//
+			range = 8000;
+			rate[0] = -494;
+			rate[1] = 1861;
+			rate[2] = 1331;
+			rangeGood = 1;
+			velocityGood = 1;
+		}
+		else {
+			// Test Mode
+			// Drive to:
+			// Alt 8287 ft
+			// Vel -494,1861,1331 ft/sec
+			// on the LGC
+			// For some reason this should show up as 8000 ft and -480 fps on the alt/alt-rate monitor?
+			range = 8287;
+			rate[0] = -494;
+			rate[1] = 1861;
+			rate[2] = 1331;
+			rangeGood = 1;
+			velocityGood = 1;
+		}
+	}
+	else{
 		// Operate Mode
 		rangeGood = 0;
 		velocityGood = 0;
