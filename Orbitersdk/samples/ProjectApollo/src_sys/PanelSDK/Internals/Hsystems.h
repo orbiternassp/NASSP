@@ -239,6 +239,12 @@ public:
 	virtual void* GetComponent(char *component_name);
 	virtual therm_obj* GetThermalInterface(){ return (therm_obj*)this; };
 	virtual void Save(FILEHANDLE scn);
+
+	double AirHeatTransferCoefficient;
+
+protected:
+	double Qc, Qr;
+	double AirTemp;
 };
 
 class h_HeatExchanger : public h_object {
