@@ -305,6 +305,91 @@ void uplink_word(char *data)
 	send_agc_key('E');
 }
 
+//LM Ascent Engine Arming Assembly (Apollo 9+10 only)
+void uplink_aeaa_cmd(bool arm, bool set)
+{
+	//arm: true = APS arming, false = AGS guidance
+	//set: true = set relays, false = reset relays
+	unsigned char cmdbuf[8];
+
+	//3 for LM, 4 for RTC A
+	cmdbuf[0] = 034;
+	cmdbuf[2] = 034;
+	cmdbuf[4] = 034;
+	cmdbuf[6] = 034;
+
+	if (arm)
+	{
+		if (set)
+		{
+			cmdbuf[1] = 0;
+			cmdbuf[3] = 2;
+			cmdbuf[5] = 4;
+			cmdbuf[7] = 6;
+		}
+		else
+		{
+			cmdbuf[1] = 1;
+			cmdbuf[3] = 3;
+			cmdbuf[5] = 5;
+			cmdbuf[7] = 7;
+		}
+	}
+	else
+	{
+		if (set)
+		{
+			cmdbuf[1] = 8;
+			cmdbuf[3] = 10;
+			cmdbuf[5] = 12;
+			cmdbuf[7] = 14;
+		}
+		else
+		{
+			cmdbuf[1] = 9;
+			cmdbuf[3] = 11;
+			cmdbuf[5] = 13;
+			cmdbuf[7] = 15;
+		}
+	}
+	for (int i = 0; i < 8; i++) {
+		g_Data.uplinkBuffer.push(cmdbuf[i]);
+	}
+
+	g_Data.uplinkDataReady = 3;
+	g_Data.connStatus = 1;
+}
+
+void UplinkLMRTC(bool arm, bool set)
+{
+	if (g_Data.connStatus == 0) {
+		int bytesRecv = SOCKET_ERROR;
+		char addr[256];
+		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (m_socket == INVALID_SOCKET) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
+		else { clientService.sin_port = htons(14242); }
+		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "CONNECTED");
+		g_Data.uplinkState = 0;
+		uplink_aeaa_cmd(arm, set);
+		g_Data.connStatus = 1;
+	}
+}
+
 void UplinkData()
 {
 	if (g_Data.connStatus == 0) {
@@ -1135,6 +1220,16 @@ void ProjectApolloMFD::Update (HDC hDC)
 				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "324   %ld", g_Data.emem[16]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			}
+		}
+		else if (g_Data.uplinkDataReady == 3)
+		{
+			SetTextAlign(hDC, TA_LEFT);
+
+			if (g_Data.uplinkBuffer.size() > 0)
+			{
+				sprintf(buffer, "Uplink word: %d", g_Data.uplinkBuffer.front());
+				TextOut(hDC, (int)(width * 0.1), (int)(height * 0.4), buffer, strlen(buffer));
 			}
 		}
 		SetTextAlign (hDC, TA_LEFT);
@@ -2003,6 +2098,12 @@ void ProjectApolloMFD::SetRandomFailures(double FailureMultiplier)
 	}
 }
 
+void ProjectApolloMFD::SetAEAACommands(int arm, int set)
+{
+	g_Data.uplinkLEM = 1;
+	UplinkLMRTC(arm == 1, set == 1);
+}
+
 void ProjectApolloMFD::GetCSM()
 {
 	OBJHANDLE object;
@@ -2290,6 +2391,14 @@ void ProjectApolloMFD::menuSunburstCOI()
 	if (lem && lem->ApolloNo == 5) {
 		g_Data.uplinkLEM = 1;
 		UplinkSunburstCOI();
+	}
+}
+
+void ProjectApolloMFD::menuAEAACommands()
+{
+	if (g_Data.uplinkDataReady == 0) {
+		bool AEAACommandsInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Ascent Engine Arming Assembly. Input: X X. First digit: 1 = Arm APS, 2 = AGS guidance control. Second digit: 1 = set, 2 = reset", AEAACommandsInput, 0, 20, (void*)this);
 	}
 }
 
@@ -2747,6 +2856,17 @@ bool RandomFailuresInput(void *id, char *str, void *data)
 	if (sscanf(str, "%lf", &failmult) == 1)
 	{
 		((ProjectApolloMFD*)data)->SetRandomFailures(failmult);
+		return true;
+	}
+	return false;
+}
+
+bool AEAACommandsInput(void *id, char *str, void *data)
+{
+	int arm, set;
+	if (sscanf(str, "%d %d", &arm, &set) == 2)
+	{
+		((ProjectApolloMFD*)data)->SetAEAACommands(arm, set);
 		return true;
 	}
 	return false;

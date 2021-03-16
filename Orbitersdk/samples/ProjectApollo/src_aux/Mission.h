@@ -53,7 +53,7 @@ namespace mission
 		//false = LM has no abort electronics assembly, true = LM has abort electronics assembly
 		virtual bool HasAEA() const;
 		//false = LM has no ascent engine arming assembly, = true = LM has ascent engine arming assembly
-		virtual bool HasAscEngArmAssy() const;
+		virtual bool LMHasAscEngArmAssy() const;
 		//false = LM has no legs, true = LM has legs
 		virtual bool LMHasLegs() const;
 		//false = CSM has no HGA, true = CSM has a HGA
@@ -86,7 +86,7 @@ namespace mission
 		int iLMDSKYVersion;
 		bool bHasLMProgramer;
 		bool bHasAEA;
-		bool bHasAscEngArmAssy;
+		bool bLMHasAscEngArmAssy;
 		bool bLMHasLegs;
 		bool bCSMHasHGA;
 		bool bCSMHasVHFRanging;

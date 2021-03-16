@@ -2149,9 +2149,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%d", GC->rtcc->PZMCCPLN.SFPBlockNum);
 		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->PZMCCPLN.Mode >= 7)
+		if (GC->rtcc->PZMCCPLN.Mode == 7)
 		{
 			sprintf(Buffer, "%.2f NM", GC->rtcc->PZMCCPLN.h_PC / 1852.0);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->PZMCCPLN.Mode >= 8)
+		{
+			if (GC->rtcc->PZMCCPLN.h_PC <= 0)
+			{
+				sprintf(Buffer, "Height from SFP");
+			}
+			else
+			{
+				sprintf(Buffer, "%.2f NM", GC->rtcc->PZMCCPLN.h_PC / 1852.0);
+			}
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 

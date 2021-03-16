@@ -5558,7 +5558,7 @@ void ApolloRTCCMFD::set_LOIEta1(double eta)
 void ApolloRTCCMFD::menuSetTLCCAlt()
 {
 	bool TLCCPeriInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the perilune altitude:", TLCCPeriInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the perilune altitude (Either 0 or 50+ NM):", TLCCPeriInput, 0, 20, (void*)this);
 }
 
 bool TLCCPeriInput(void *id, char *str, void *data)

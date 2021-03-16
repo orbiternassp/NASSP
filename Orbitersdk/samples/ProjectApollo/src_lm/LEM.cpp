@@ -449,6 +449,12 @@ LEM::~LEM()
 		dx8ppv->Release();
 		dx8ppv = NULL;
 	}
+
+	if (aeaa)
+	{
+		delete aeaa;
+		aeaa = NULL;
+	}
 }
 
 void LEM::Init()
@@ -534,6 +540,8 @@ void LEM::Init()
 	vcmesh = NULL;
 
 	pMCC = NULL;
+
+	aeaa = NULL;
 
 	trackLightPos = _V(0, 0, 0);
 	for (int i = 0;i < 5;i++)
@@ -1657,6 +1665,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA3_BEGIN"))) {
 			scca3.LoadState(scn, "SCCA_END");
 		}
+		else if (!strnicmp(line, "AscEngArmAssy", 13)) {
+			if (aeaa) aeaa->LoadState(line);
+		}
 		else if (!strnicmp(line, APSPROPELLANT_START_STRING, sizeof(APSPROPELLANT_START_STRING))) {
 			APSPropellant.LoadState(scn);
 		}
@@ -2054,6 +2065,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scca1.SaveState(scn, "SCCA1_BEGIN", "SCCA_END");
 	scca2.SaveState(scn, "SCCA2_BEGIN", "SCCA_END");
 	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
+	if (aeaa) aeaa->SaveState(scn);
 	APSPropellant.SaveState(scn);
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
 	RCSA.SaveState(scn, "RCSPROPELLANT_A_BEGIN", "RCSPROPELLANT_END");
@@ -2113,8 +2125,8 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	pMission->LoadMission(ApolloNo);
 
-	agc.SetMissionInfo(pMission->GetLGCVersion(), CSMName);
-	aea.SetMissionInfo(pMission->GetAEAVersion());
+	agc.SetOtherVesselName(CSMName);
+	CreateMissionSpecificSystems();
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
