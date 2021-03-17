@@ -2247,6 +2247,10 @@ void LEM::CreateMissionSpecificSystems()
 
 	agc.SetMissionInfo(pMission->GetLGCVersion());
 	aea.SetMissionInfo(pMission->GetAEAVersion());
+	if (pMission->LMHasAscEngArmAssy())
+	{
+		aeaa = new LEM_AEAA();
+	}
 }
 
 // SYSTEMS COMPONENTS

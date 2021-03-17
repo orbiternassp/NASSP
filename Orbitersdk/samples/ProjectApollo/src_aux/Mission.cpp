@@ -95,7 +95,7 @@ namespace mission {
 		iLMDSKYVersion = 2;
 		bHasLMProgramer = false;
 		bHasAEA = true;
-		bHasAscEngArmAssy = false;
+		bLMHasAscEngArmAssy = false;
 		bLMHasLegs = true;
 		bCSMHasHGA = true;
 		bCSMHasVHFRanging = true;
@@ -144,7 +144,7 @@ namespace mission {
 		oapiReadItem_int(hFile, "LMDSKYVersion", iLMDSKYVersion);
 		oapiReadItem_bool(hFile, "HasLMProgramer", bHasLMProgramer);
 		oapiReadItem_bool(hFile, "HasAEA", bHasAEA);
-		oapiReadItem_bool(hFile, "HasAscEngArmAssy", bHasAscEngArmAssy);
+		oapiReadItem_bool(hFile, "LMHasAscEngArmAssy", bLMHasAscEngArmAssy);
 		oapiReadItem_bool(hFile, "LMHasLegs", bLMHasLegs);
 		oapiReadItem_bool(hFile, "CSMHasHGA", bCSMHasHGA);
 		oapiReadItem_bool(hFile, "CSMHasVHFRanging", bCSMHasVHFRanging);
@@ -214,9 +214,9 @@ namespace mission {
 		return bHasAEA;
 	}
 
-	bool Mission::HasAscEngArmAssy() const
+	bool Mission::LMHasAscEngArmAssy() const
 	{
-		return bHasAscEngArmAssy;
+		return bLMHasAscEngArmAssy;
 	}
 
 	bool Mission::LMHasLegs() const

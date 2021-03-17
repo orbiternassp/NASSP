@@ -715,11 +715,20 @@ void LM_PCM::handle_uplink()
 		// *** VEHICLE ADDRESS HARDCODED HERE *** (NASA DID THIS TOO)
 		if (va != 03) { break; }
 		switch (sa) {
-		case 0: // TEST
-			rx_offset++; uplink_state = 10;
-			break;
 		case 1: // LGC-UPDATA
 			rx_offset++; uplink_state = 20;
+			break;
+		case 3: // RTC B
+			rx_offset++; uplink_state = 40;
+			break;
+		case 4: // RTC A
+			rx_offset++; uplink_state = 50;
+			break;
+		case 5: // TEST
+			rx_offset++; uplink_state = 10;
+			break;
+		case 6: // PRA
+			rx_offset++; uplink_state = 30;
 			break;
 		default:
 			sprintf(oapiDebugString(), "LM-UPLINK: UNKNOWN SYSTEM-ADDRESS %o", sa);
@@ -743,6 +752,38 @@ void LM_PCM::handle_uplink()
 		lem->agc.GenerateUprupt();
 
 		//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
+		rx_offset = 0; uplink_state = 0;
+	}
+	break;
+	case 30: // PRA
+		rx_offset = 0; uplink_state = 0;
+		break;
+	case 40: // RTC B
+	case 50: // RTC A
+	{
+		//6 bits.
+		//Two least significants bit are:
+		//00: Set 1
+		//01: Reset 1
+		//10: Set 2
+		//11: Reset 2
+		//4 most significant bits are for select:
+		//0000: Select 1
+		//0001: Select 2
+		//0010: Select 3
+		//0011: Select 4
+		if (lem->aeaa == NULL)
+		{
+			rx_offset = 0; uplink_state = 0;
+			break;
+		}
+
+		int doreset = rx_data[rx_offset] & 01;
+		int set = (rx_data[rx_offset] & 02) >> 1;
+		int select = 1 + ((rx_data[rx_offset] & 074) >> 2);
+		
+		lem->aeaa->SetRelay(set, select, doreset);
+
 		rx_offset = 0; uplink_state = 0;
 	}
 	break;

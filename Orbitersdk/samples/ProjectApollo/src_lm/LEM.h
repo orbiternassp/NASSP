@@ -53,6 +53,7 @@
 #include "lm_eps.h"
 #include "LEMcomputer.h"
 #include "lm_rr.h"
+#include "lm_aeaa.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -1845,6 +1846,7 @@ protected:
 	LEM_ACA CDR_ACA;
 	LEM_RGA rga;
 	LEM_TTCA CDR_TTCA;
+	LEM_AEAA *aeaa;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;

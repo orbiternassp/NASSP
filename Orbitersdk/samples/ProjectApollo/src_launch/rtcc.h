@@ -4088,7 +4088,7 @@ public:
 		double MidcourseGET = 0.0;
 		bool Config = true; //false = undocked, true = docked
 		int SFPBlockNum = 1;
-		double h_PC = 60.0*1852.0;
+		double h_PC = -1.0;
 		double h_PC_mode5 = -1.0;
 		double incl_fr = 0.0;
 		double AZ_min = -110.0*RAD;

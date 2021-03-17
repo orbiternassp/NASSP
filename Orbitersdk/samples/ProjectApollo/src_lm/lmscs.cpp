@@ -2123,7 +2123,7 @@ void SCCA1::Timestep(double simdt)
 		K201 = false;
 	}
 
-	if (lem->EngineArmSwitch.IsUp() && lem->SCS_ENG_ARM_CB.IsPowered())
+	if (lem->SCS_ENG_ARM_CB.IsPowered() && (lem->EngineArmSwitch.IsUp() || (lem->aeaa && lem->aeaa->GetArmingSignal())))
 	{
 		K22 = true;
 		K206 = true;
@@ -2180,7 +2180,7 @@ void SCCA1::Timestep(double simdt)
 		K12 = false;
 	}
 
-	if (K206 && K22 && lem->EngineArmSwitch.IsUp() && lem->SCS_ENG_ARM_CB.IsPowered())
+	if (K206 && K22 && lem->SCS_ENG_ARM_CB.IsPowered() && (lem->EngineArmSwitch.IsUp() || (lem->aeaa && lem->aeaa->GetArmingSignal())))
 	{
 		K13 = true;
 	}
@@ -2193,7 +2193,7 @@ void SCCA1::Timestep(double simdt)
 		K13 = false;
 	}
 
-	if (AutoOn && lem->CDRManualEngineStop.GetState() == 0 && lem->LMPManualEngineStop.GetState() == 0 && lem->EngineArmSwitch.IsUp())
+	if (AutoOn && lem->CDRManualEngineStop.GetState() == 0 && lem->LMPManualEngineStop.GetState() == 0 && (lem->EngineArmSwitch.IsUp() || (lem->aeaa && lem->aeaa->GetArmingSignal())))
 	{
 		K14 = true;
 	}
@@ -2423,7 +2423,7 @@ void SCCA2::Timestep(double simdt)
 {
 	if (lem == NULL) { return; }
 
-	if (lem->CDR_SCS_ATCA_CB.IsPowered() && lem->GuidContSwitch.IsUp())
+	if (lem->CDR_SCS_ATCA_CB.IsPowered() && (lem->GuidContSwitch.IsUp() && !(lem->aeaa && lem->aeaa->GetGuidanceSignal())))
 	{
 		K1 = false;
 		K2 = false;
@@ -2438,7 +2438,7 @@ void SCCA2::Timestep(double simdt)
 		K12 = false;
 		K13 = false;
 	}
-	if (lem->SCS_ATCA_AGS_CB.IsPowered() && lem->GuidContSwitch.IsDown())
+	if (lem->SCS_ATCA_AGS_CB.IsPowered() && (lem->GuidContSwitch.IsDown() || (lem->aeaa && lem->aeaa->GetGuidanceSignal())))
 	{
 		K1 = true;
 		K2 = true;
@@ -2467,7 +2467,7 @@ void SCCA2::Timestep(double simdt)
 		K22 = false;
 	}
 
-	if (lem->SCS_ENG_ARM_CB.IsPowered() && !lem->EngineArmSwitch.IsCenter())
+	if (lem->SCS_ENG_ARM_CB.IsPowered() && (!lem->EngineArmSwitch.IsCenter() || (lem->aeaa && lem->aeaa->GetArmingSignal())))
 	{
 		K14 = true;
 	}
