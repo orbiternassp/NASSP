@@ -1158,17 +1158,6 @@ void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPE
 	SelectObject (hDC, oldObj);
 }
 
-void LEM::RedrawPanel_Thrust (SURFHANDLE surf)
-
-{
-	double DispValue;
-
-	DispValue = GetEngineLevel(ENGINE_HOVER);
-
-	oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(67-(DispValue)*67),0,0,7,7, SURF_PREDEF_CK);//
-	oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
-}
-
 void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
 
 	int ix, iy;
@@ -3648,44 +3637,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_EVENT_TIMER:
 		EventTimerDisplay.Render(surf, srf[SRF_DIGITALDISP2]);
-		return true;
-
-	case AID_ENG_THRUST:
-		RedrawPanel_Thrust(surf);
-		return true;
-
-	case AID_ENG_FUEL_TEMP:
-		double DispValue;
-
-		if(ph_Dsc){
-			DispValue = GetPropellantMass(ph_Dsc)/8165;
-		}else{
-				DispValue =0;
-		}
-		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(47-(DispValue)*47),0,0,7,7, SURF_PREDEF_CK);//
-		if(ph_Asc){
-		DispValue = GetPropellantMass(ph_Asc)/GetPropellantMaxMass(ph_Asc);
-		}else{
-			DispValue =1;
-		}
-
-		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(47-(DispValue)*47),8,0,7,7, SURF_PREDEF_CK);//
-		return true;
-
-	case AID_ENG_FUEL_PRESS:
-		if(ph_Dsc){
-			DispValue = GetPropellantMass(ph_Dsc)/8165;
-		}else{
-				DispValue =0;
-		}
-		oapiBlt(surf,srf[SRF_NEEDLE],1,(int)(62-(DispValue)*62),0,0,7,7, SURF_PREDEF_CK);//
-		if(ph_Asc){
-		DispValue = GetPropellantMass(ph_Asc)/GetPropellantMaxMass(ph_Asc);
-		}else{
-			DispValue =1;
-		}
-
-		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(62-(DispValue)*62),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 
 	case AID_AOT_RETICLE:
