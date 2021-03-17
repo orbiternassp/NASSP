@@ -1093,6 +1093,133 @@
 #define AID_VC_SPSOXIDFLOWIND   3390
 #define AID_VC_SPS_INJ_VLV      3391
 
+// VC Active Areas (Panel 4)
+#define AID_VC_PANEL_4			((id >= 3400) && (id <= 3499))
+#define AID_VC_SWITCH_P4_01		3401
+#define AID_VC_SWITCH_P4_02		3402
+#define AID_VC_SWITCH_P4_03		3403
+#define AID_VC_SWITCH_P4_04		3404
+#define AID_VC_SWITCH_P4_05		3405
+
+#define AID_VC_ROT_P4_01		3410
+
+#define AID_VC_CB_P4_01         3428
+#define AID_VC_CB_P4_02         3429
+#define AID_VC_CB_P4_03         3430
+#define AID_VC_CB_P4_04         3431
+#define AID_VC_CB_P4_05         3432
+#define AID_VC_CB_P4_06         3433
+#define AID_VC_CB_P4_07         3434
+#define AID_VC_CB_P4_08         3435
+#define AID_VC_CB_P4_09         3436
+#define AID_VC_CB_P4_10         3437
+#define AID_VC_CB_P4_11         3438
+#define AID_VC_CB_P4_12         3439
+
+// VC Active Areas (Panel 5)
+#define AID_VC_PANEL_5			((id >= 3500) && (id <= 3599))
+#define AID_VC_SWITCH_P5_01		3501
+#define AID_VC_SWITCH_P5_02		3502
+#define AID_VC_SWITCH_P5_03		3503
+#define AID_VC_SWITCH_P5_04		3504
+#define AID_VC_SWITCH_P5_05		3505
+#define AID_VC_SWITCH_P5_06		3506
+#define AID_VC_SWITCH_P5_07		3507
+#define AID_VC_SWITCH_P5_08		3508
+#define AID_VC_SWITCH_P5_09		3509
+#define AID_VC_SWITCH_P5_10		3510
+
+#define AID_VC_ROT_P5_01		3515
+#define AID_VC_ROT_P5_02		3516
+
+#define AID_VC_CB_P5_01         3528
+#define AID_VC_CB_P5_02         3529
+#define AID_VC_CB_P5_03         3530
+#define AID_VC_CB_P5_04         3531
+#define AID_VC_CB_P5_05         3532
+#define AID_VC_CB_P5_06         3533
+#define AID_VC_CB_P5_07         3534
+#define AID_VC_CB_P5_08         3535
+#define AID_VC_CB_P5_09         3536
+#define AID_VC_CB_P5_10         3537
+#define AID_VC_CB_P5_11         3538
+#define AID_VC_CB_P5_12         3539
+#define AID_VC_CB_P5_13         3540
+#define AID_VC_CB_P5_14         3541
+#define AID_VC_CB_P5_15         3542
+#define AID_VC_CB_P5_16         3543
+#define AID_VC_CB_P5_17         3544
+#define AID_VC_CB_P5_18         3545
+#define AID_VC_CB_P5_19         3546
+#define AID_VC_CB_P5_20         3547
+#define AID_VC_CB_P5_21         3548
+#define AID_VC_CB_P5_22         3549
+#define AID_VC_CB_P5_23         3550
+#define AID_VC_CB_P5_24         3551
+#define AID_VC_CB_P5_25         3552
+#define AID_VC_CB_P5_26         3553
+#define AID_VC_CB_P5_27         3554
+#define AID_VC_CB_P5_28         3555
+#define AID_VC_CB_P5_29         3556
+#define AID_VC_CB_P5_30         3557
+#define AID_VC_CB_P5_31         3558
+#define AID_VC_CB_P5_32         3559
+#define AID_VC_CB_P5_33         3560
+#define AID_VC_CB_P5_34         3561
+#define AID_VC_CB_P5_35         3562
+#define AID_VC_CB_P5_36         3563
+#define AID_VC_CB_P5_37         3564
+#define AID_VC_CB_P5_38         3565
+#define AID_VC_CB_P5_39         3566
+#define AID_VC_CB_P5_40         3567
+#define AID_VC_CB_P5_41         3568
+#define AID_VC_CB_P5_42         3569
+#define AID_VC_CB_P5_43         3570
+#define AID_VC_CB_P5_44         3571
+#define AID_VC_CB_P5_45         3572
+#define AID_VC_CB_P5_46         3573
+#define AID_VC_CB_P5_47         3574
+#define AID_VC_CB_P5_48         3575
+#define AID_VC_CB_P5_49         3576
+#define AID_VC_CB_P5_50         3577
+#define AID_VC_CB_P5_51         3578
+#define AID_VC_CB_P5_52         3579
+#define AID_VC_CB_P5_53         3580
+#define AID_VC_CB_P5_54         3581
+#define AID_VC_CB_P5_55         3582
+#define AID_VC_CB_P5_56         3583
+#define AID_VC_CB_P5_57         3584
+#define AID_VC_CB_P5_58         3585
+#define AID_VC_CB_P5_59         3586
+#define AID_VC_CB_P5_60         3587
+#define AID_VC_CB_P5_61         3588
+#define AID_VC_CB_P5_62         3589
+#define AID_VC_CB_P5_63         3590
+#define AID_VC_CB_P5_64         3591
+#define AID_VC_CB_P5_65         3592
+#define AID_VC_CB_P5_66         3593
+#define AID_VC_CB_P5_67         3594
+#define AID_VC_CB_P5_68         3595
+#define AID_VC_CB_P5_69         3596
+
+// VC Active Areas (Panel 6)
+#define AID_VC_PANEL_6			((id >= 3600) && (id <= 3699))
+#define AID_VC_SWITCH_P6_01		3601
+#define AID_VC_SWITCH_P6_02		3602
+#define AID_VC_SWITCH_P6_03		3603
+#define AID_VC_SWITCH_P6_04		3604
+#define AID_VC_SWITCH_P6_05		3605
+#define AID_VC_SWITCH_P6_06		3606
+#define AID_VC_SWITCH_P6_07		3607
+#define AID_VC_SWITCH_P6_08		3608
+
+#define AID_VC_TW_P6_01         3612
+#define AID_VC_TW_P6_02         3613
+#define AID_VC_TW_P6_03         3614
+#define AID_VC_TW_P6_04         3615
+#define AID_VC_TW_P6_05         3616
+#define AID_VC_TW_P6_06         3617
+
 // VC Active Areas (Panel 7)
 #define AID_VC_PANEL_7			((id >= 3700) && (id <= 3799))
 #define AID_VC_SWITCH_P7_01		3701
@@ -1242,6 +1369,12 @@
 #define AID_VC_SWITCH_P15_03		4503
 #define AID_VC_SWITCH_P15_04		4504
 #define AID_VC_SWITCH_P15_05		4505
+
+// VC Active Areas (Panel 16)
+#define AID_VC_PANEL_16			((id >= 4600) && (id <= 4699))
+#define AID_VC_SWITCH_P16_01		4601
+#define AID_VC_SWITCH_P16_02		4602
+#define AID_VC_SWITCH_P16_03		4603
 
 // Next default values for new objects
 //
