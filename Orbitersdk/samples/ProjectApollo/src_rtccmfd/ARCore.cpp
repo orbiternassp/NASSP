@@ -1250,6 +1250,68 @@ void ARCore::VectorCompareDisplayCalc()
 	startSubthread(25);
 }
 
+void ARCore::UpdateGRRTime()
+{
+	if (svtarget == NULL) return;
+
+	bool isSaturnV;
+	double T_L, Azi;
+	LVDC *lvdc;
+
+	if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+	{
+		Saturn *iuv = (Saturn *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = true;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+	{
+		Saturn *iuv = (Saturn *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = false;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+	{
+		SIVB *iuv = (SIVB *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = true;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+	{
+		SIVB *iuv = (SIVB *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = false;
+	}
+	else
+	{
+		return;
+	}
+
+	if (isSaturnV)
+	{
+		LVDCSV *l = (LVDCSV*)lvdc;
+		T_L = l->T_L;
+		Azi = l->Azimuth;
+	}
+	else
+	{
+		LVDC1B *l = (LVDC1B*)lvdc;
+		T_L = l->T_GRR;
+		Azi = l->Azimuth;
+	}
+
+	int hh, mm;
+	double ss;
+	char Buff[128];
+	OrbMech::SStoHHMMSS(T_L, hh, mm, ss);
+	sprintf_s(Buff, "P12,IU1,%d:%d:%.2lf,%.3lf;", hh, mm, ss, Azi*DEG);
+	GC->rtcc->GMGMED(Buff);
+}
+
 void ARCore::GetStateVectorFromIU()
 {
 	if (vesseltype >= 2)

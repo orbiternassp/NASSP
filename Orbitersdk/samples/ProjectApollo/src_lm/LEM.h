@@ -665,7 +665,6 @@ protected:
     PanelSDK Panelsdk;
 
 	void UpdateMassAndCoG();
-	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);

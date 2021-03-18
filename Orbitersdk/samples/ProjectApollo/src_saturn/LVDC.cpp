@@ -3471,8 +3471,8 @@ void LVDCSV::Init(){
 	TABLE15[1].T3PR = 308.6854;
 	TABLE15[0].TAU3R = 684.5038;
 	TABLE15[1].TAU3R = 682.1127;
-	TABLE15[0].dV_BR = 2.8816;
-	TABLE15[1].dV_BR = 2.8816;
+	TABLE15[0].dV_BR = 3.7; //Estimated value for S-IVB in NASSP
+	TABLE15[1].dV_BR = 3.7;
 
 	MRS = false;						// MR Shift
 	dotM_1 = 1221.1489;					// Mass flowrate of S2 from approximately LET jettison to second MRS
@@ -3482,8 +3482,8 @@ void LVDCSV::Init(){
 	dotM_3R = 215.2241;
 	ROT = false;
 	ROTR = true;
-	dV_B = 1.782; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
-	dV_BR = 2.8816;
+	dV_B = 1.7; // Velocity cutoff bias for orbital insertion
+	dV_BR = 3.7;
 	MSLIM1 = 0.06*RAD;
 	MSLIM2 = 0.04*RAD;
 	MSK6 = MSK16 = 15.3*RAD;
@@ -7138,6 +7138,7 @@ void LVDCSV::IterativeGuidanceMode()
 				HSL = true;
 				GATE5 = true;
 				T_GO = T_3;
+				DT_N = 0.7; //HSL takes about 0.7 seconds to run
 				fprintf(lvlog, "HSL = true, GATE5 = true, T_GO = %f\r\n", T_GO);
 				//Set up engine pump purge control valve enable on sequence on first S-IVB burn
 				if (BOOST)
