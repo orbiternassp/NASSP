@@ -496,35 +496,53 @@ void FCell::UpdateFlow(double dt)
 	case 0: // normal running
 
 		running = 0; //0 = running
-		loadResistance = (829.44) / (power_load); //829.44 = 28.8V^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
-		Volts = 31.0; //inital estimate for voltage
-
+		
 		//coefficients for 5th order approximation of fuel cell performance, taken from:
 		//CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-10
-		double A = 0.023951368224792 * Temp + 23.9241562583015;
+		double A = 0.023951368224792 * Temp + 23.9241562583015; //A == V + , zero load theoretical potential
 		double B = 0.003480859912024 * Temp - 2.19986938582928;
 		double C = -0.0001779207513 * Temp + 0.104916556604259;
 		double D = 5.0656524872309E-06 * Temp - 0.002885372247954;
 		double E = -6.42229870072935E-08 * Temp + 3.58599071612147E-05;
 		double F = 3.02098031429142E-10 * Temp - 1.66275376548748E-07;
 
-		for (int ii = 0; ii < 5; ++ii) //use an iterative procedure to solve for voltage and current. with our guess of 31 volts these should converge in 3~5 steps
+		Volts = A; 	
+		loadResistance = 784.0 / (power_load); //<R_F>, 784 = (28.0V)^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
+		Amperes = (power_load / Volts);
+		
+		for (int ii = 0; ii < 5; ++ii) //use an iterative procedure to solve for voltage and current. Should converge in ~5 steps, see https://gist.github.com/n7275/46a399d648721367a2bead3a6c2ae9ff
 		{
-			Amperes = (power_load / Volts);
 			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
-			power_load = Amperes * Volts; //recalculate power_load
+			Amperes = Volts / loadResistance;
 		}
+
+		//"clogg" is used to make voltage (and current) drop by 0.2V over 1 day of normal impurity accumulation
+		Volts -= (0.22*clogg);
+		
+		power_load = Amperes * Volts; //recalculate power_load
+
+		/*	voltage divider schematic
+			
+			V+		//zero load theoretical potential
+			|
+			|
+			<R_F>	//fuel cell internal resistance
+			|
+			|
+			V_t		//terminal voltage
+			|
+			|
+			<R_L>	//load resistance
+			|
+			|
+			V0		//ground
+
+		*/
 
 		/*if (!strcmp(name, "FUELCELL1"))
 		{
 		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfA, Power %lfW", Amperes, Volts, power_load);
 		}*/
-
-		//"clogg" is used to make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
-		Amperes -= (0.225*clogg);
-		Volts -= -(0.52*clogg);
-		power_load = Amperes * Volts; //recalculate power_load again after clogging
-
 
 		Reaction(dt);
 
