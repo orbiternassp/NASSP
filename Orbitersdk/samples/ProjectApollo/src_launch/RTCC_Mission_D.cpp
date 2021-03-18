@@ -2155,7 +2155,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(buff3, GET_AOS_HAW);
 		OrbMech::format_time_HHMMSS(buff4, GET_LOS_HAW);
 
-		sprintf(form->paddata, "Carnarvon AOS %s LOS %s\nHawaii AOS %s LOS %s", buff1, buff2, buff3, buff4);
+		sprintf(form->paddata, "Carnarvon AOS %s LOS %s, Hawaii AOS %s LOS %s", buff1, buff2, buff3, buff4);
 
 		if (upString != NULL) {
 			// give to mcc
