@@ -3269,16 +3269,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu96[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Set SV time", 0, 'G' },
+		{ "Get GRR time from LVDC", 0, 'Q' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Set target", 0, 'T' },
+		{ "Calculate SV", 0, 'C' },
+		{ "Uplink SV to LVDC", 0, 'U' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
@@ -3287,7 +3287,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu96, sizeof(mnu96) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TIM", OAPI_KEY_G, &ApolloRTCCMFD::menuSetSVTime);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("GRR", OAPI_KEY_Q, &ApolloRTCCMFD::menuUpdateGRRTime);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
@@ -3295,7 +3295,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_svtarget);
 	RegisterFunction("CLC", OAPI_KEY_A, &ApolloRTCCMFD::menuSLVNavigationUpdateCalc);
-	RegisterFunction("UPL", OAPI_KEY_G, &ApolloRTCCMFD::menuSLVNavigationUpdateUplink);
+	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuSLVNavigationUpdateUplink);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);

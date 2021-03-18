@@ -4065,6 +4065,11 @@ void ApolloRTCCMFD::set_SVtime(double SVtime)
 	G->SVDesiredGET = SVtime;
 }
 
+void ApolloRTCCMFD::menuUpdateGRRTime()
+{
+	G->UpdateGRRTime();
+}
+
 void ApolloRTCCMFD::menuSetAGSKFactor()
 {
 	bool AGSKFactorInput(void *id, char *str, void *data);
@@ -4727,10 +4732,10 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 	//Update GMT of zeroing CMC clock
-	sprintf_s(Buff, "P15,AGC,%d:%d:%lf;", hh, mm, ss);
+	sprintf_s(Buff, "P15,AGC,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 	//Update GMT of zeroing LGC clock
-	sprintf_s(Buff, "P15,LGC,%d:%d:%lf;", hh, mm, ss);
+	sprintf_s(Buff, "P15,LGC,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 }
 
