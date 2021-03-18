@@ -877,6 +877,7 @@ void Saturn::initSaturn()
 
 	viewpos = SATVIEW_LEFTSEAT;
 
+	dockringidx = -1;
 	probeidx = -1;
 	probeextidx = -1;
 	crewidx = -1;
@@ -890,8 +891,8 @@ void Saturn::initSaturn()
 	cmdocktgtidx = -1;
 	simbaypanelidx = -1;
 	vcidx = -1;
-
-	probe = NULL;
+	seatsfoldedidx = -1;
+	seatsunfoldedidx = -1;
 
 	Scorrec = false;
 
@@ -932,6 +933,9 @@ void Saturn::initSaturn()
 	LongestTimestep = 0;
 	LongestTimestepLength = 0.0;
 	CurrentTimestep = 0;
+
+	// VC Seats status
+	VCSeatsfolded = false;
 
 	// call only once 
 	if (!InitSaturnCalled) {
@@ -1000,19 +1004,6 @@ void Saturn::clbkPostCreation()
 			}
 		}
 	}
-}
-
-void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount)
-{
-	if (probeidx != -1 && HasProbe) {
-		probe = GetDevMesh(vis, probeidx);
-		ProbeVis();
-	}
-}
-
-void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount)
-{
-	probe = NULL;
 }
 
 void Saturn::GetPayloadName(char *s)

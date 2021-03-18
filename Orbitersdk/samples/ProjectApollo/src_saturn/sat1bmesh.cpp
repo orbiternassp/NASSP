@@ -382,6 +382,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	mesh_dir=_V(-2.45, 0, 10.55 + offset);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
 
+	dockringidx = -1;
 	probeidx = -1;
 	probeextidx = -1;
 	crewidx = -1;
@@ -391,6 +392,8 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	opticscoveridx = -1;
 	nosecapidx = -1;
 	meshLM_1 = -1;
+	seatsfoldedidx = -1;
+	seatsunfoldedidx = -1;
 
 	if (SaturnHasCSM()) {
 
@@ -415,6 +418,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		else if (HasProbe)
 		{
 			mesh_dir=_V(0,0,21.2 + offset);
+			dockringidx = AddMesh(hdockring, &mesh_dir);
 			probeidx = AddMesh(hprobe, &mesh_dir);
 			probeextidx = AddMesh(hprobeext, &mesh_dir);
 			SetDockingProbeMesh();
@@ -442,6 +446,9 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 
 		// VC
 		UpdateVC(mesh_dir);
+		seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
+		seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
+		SetVCSeatsMesh();
 
 		//
 		// Don't Forget the Hatch

@@ -952,8 +952,6 @@ public:
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
-	void clbkVisualCreated(VISHANDLE vis, int refcount);
-	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -1250,12 +1248,12 @@ public:
 	///
 	void SetNosecapMesh();
 
-	void SetSIMBayPanelMesh();
+	///
+	/// \brief Set VC seats mesh
+	///
+	void SetVCSeatsMesh();
 
-	///
-	/// \brief Set probe visibility flag
-	///
-	void ProbeVis();
+	void SetSIMBayPanelMesh();
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -1554,6 +1552,8 @@ protected:
 
 	bool CryoStir;
 	double TCPO;
+
+	bool VCSeatsfolded;
 
 	//
 	// Failures.
@@ -3848,6 +3848,7 @@ protected:
 	unsigned int	viewpos;
 
 	// Mesh indexes
+	int dockringidx;
 	int probeidx;
 	int probeextidx;
 	int crewidx;
@@ -3863,8 +3864,8 @@ protected:
 	int meshLM_1;
 	int simbaypanelidx;
 	int vcidx;
-
-	DEVMESHHANDLE probe;
+	int seatsfoldedidx;
+	int seatsunfoldedidx;
 
 	bool ASTPMission;
 
@@ -4551,11 +4552,14 @@ extern MESHHANDLE hFHF;
 extern MESHHANDLE hCMP;
 extern MESHHANDLE hCREW;
 extern MESHHANDLE hSMhga;
+extern MESHHANDLE hdockring;
 extern MESHHANDLE hprobe;
 extern MESHHANDLE hprobeext;
 extern MESHHANDLE hsat5tower;
 extern MESHHANDLE hFHO2;
 extern MESHHANDLE hopticscover;
+extern MESHHANDLE hcmseatsfolded;
+extern MESHHANDLE hcmseatsunfolded;
 
 extern void SetupgParam(HINSTANCE hModule);
 extern void DeletegParam();

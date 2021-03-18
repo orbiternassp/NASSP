@@ -422,7 +422,7 @@ void Saturn::InitVC()
 	// Register active areas for repainting here
 	//
 		
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 13);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 11);
 	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 2);
 
 	// Panel 1
@@ -662,6 +662,10 @@ void Saturn::RegisterActiveAreas() {
 	//
 	// Register active areas for switches/animations here
 	//
+
+	// Clickspot to cycle seats folded/unfolded
+	oapiVCRegisterArea(AID_VC_SEATSCYCLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SEATSCYCLE, _V(-0.9187, 0.200999, -0.258652) + ofs, 0.05);
 
 	// FDAI's
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -935,6 +939,18 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		}
 		ascp.YawClick(event, mx, my);
 		return true;
+	}
+	case AID_VC_SEATSCYCLE:
+	{
+		if (VCSeatsfolded) {
+			VCSeatsfolded = false;
+		}
+		else {
+			VCSeatsfolded = true;
+		}
+
+		SwitchClick();
+		SetVCSeatsMesh();
 	}
 
 	}
