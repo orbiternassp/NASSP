@@ -178,6 +178,7 @@ public:
 	void set_LSLng(double lng);
 	void menuSetSVTime();
 	void set_SVtime(double SVtime);
+	void menuUpdateGRRTime();
 	void menuSetAGSKFactor();
 	void set_AGSKFactor(char *str);
 	void menuGetAGSKFactor();
