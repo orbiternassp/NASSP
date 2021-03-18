@@ -327,7 +327,7 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 217.0*3600.0, 69, MST_D_DAY10STATE5);
 		break;
 	case MST_D_DAY10STATE5: //State vector update to Block Data 22
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 220.0*3600.0 + 20.0*60.0, 2, MST_D_DAY10STATE6);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 220.0*3600.0 + 48.0*60.0, 2, MST_D_DAY10STATE6);
 		break;
 	case MST_D_DAY10STATE6: //Block Data 22 to Block Data 23
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 232.0*3600.0 + 25.0*60.0, 70, MST_D_DAY11STATE1);
