@@ -1548,6 +1548,7 @@ int Saturn::GetMainState()
 	state.S1bPanel = S1bPanel;
 	state.TLISoundsLoaded = TLISoundsLoaded;
 	state.CMdocktgt = CMdocktgt;
+	state.VCSeatsfolded = VCSeatsfolded;
 
 	return state.word;
 }
@@ -1575,6 +1576,7 @@ void Saturn::SetMainState(int s)
 	S1bPanel = (state.S1bPanel != 0);
 	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
 	CMdocktgt = (state.CMdocktgt != 0);
+	VCSeatsfolded = (state.VCSeatsfolded != 0);
 }
 
 int Saturn::GetSLAState()

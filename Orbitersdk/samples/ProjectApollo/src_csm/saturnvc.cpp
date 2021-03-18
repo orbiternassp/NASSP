@@ -101,17 +101,17 @@ const int P8_CBCOUNT = 67;
 // Switch clickspot offset
 const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*sin(P1_3_TILT - (90.0 * RAD)) };
 const VECTOR3	P1_3_TWCLICK = { 0.00, 0.024*cos(P1_3_TILT - (90.0 * RAD)), 0.024*sin(P1_3_TILT - (90.0 * RAD)) };
-const VECTOR3	P6_TWCLICK = { 0, 0, 0 };
-const VECTOR3	P9_TWCLICK = { 0, 0, 0 };
-const VECTOR3	P4_CLICK = { 0, 0, 0 };
-const VECTOR3	P6_CLICK = { 0, 0, 0 };
-const VECTOR3	P5_CLICK = { 0, 0, 0 };
-const VECTOR3	P7_CLICK = { 0, 0, 0 };
-const VECTOR3	P8_CLICK = { 0, 0, 0 };
-const VECTOR3	P9_CLICK = { 0, 0, 0 };
-const VECTOR3	P13_CLICK = { 0, 0, 0 };
-const VECTOR3	P15_CLICK = { 0, 0, 0 };
-const VECTOR3	P16_CLICK = { 0, 0, 0 };
+const VECTOR3	P6_TWCLICK = { -0.016793, -0.010398, -0.013661 };
+const VECTOR3	P9_TWCLICK = { 0.017689, -0.011461, -0.012926 };
+const VECTOR3	P4_CLICK = { -0.00442, 0.008318, -0.002538 };
+const VECTOR3	P6_CLICK = { -0.006293, -0.003896, -0.005119 };
+const VECTOR3	P5_CLICK = { -0.00828, 0.00004, -0.005173 };
+const VECTOR3	P7_CLICK = { 0.00442, 0.008327, -0.002499 };
+const VECTOR3	P8_CLICK = { 0.00826, 0.00008, -0.005196 };
+const VECTOR3	P9_CLICK = { 0.006978, -0.004521, -0.005098 };
+const VECTOR3	P13_CLICK = { 0.005371, -0.00622, -0.005259 };
+const VECTOR3	P15_CLICK = { 0.005634, -0.006241, -0.004942 };
+const VECTOR3	P16_CLICK = { -0.006025, -0.005422, -0.005441 };
 
 // Rotary/Needle rotation axises
 const VECTOR3	P1_3_ROT_AXIS = { 0.00, sin(P1_3_TILT),-cos(P1_3_TILT) };
