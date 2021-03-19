@@ -37,11 +37,13 @@ public:
 	void clbkPostCreation();
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
+	bool clbkLoadVC(int id);
 
 	MCC *mcc;
 	RTCC *rtcc;
 protected:
 	void CreateMCC();
+	void LoadVC();
 
 	char CSMName[64];
 	char LEMName[64];

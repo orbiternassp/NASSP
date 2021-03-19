@@ -129,6 +129,8 @@ void MCCVessel::clbkLoadStateEx(FILEHANDLE scn, void *status)
 		}
 		else ParseScenarioLineEx(line, status);
 	}
+
+	LoadVC();
 }
 
 void MCCVessel::clbkPostCreation()
