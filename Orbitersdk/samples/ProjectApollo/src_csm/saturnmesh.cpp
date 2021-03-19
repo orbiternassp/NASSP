@@ -71,6 +71,7 @@ MESHHANDLE hFHO;
 MESHHANDLE hFHC;
 MESHHANDLE hFHF;
 MESHHANDLE hCM2B;
+MESHHANDLE hdockring;
 MESHHANDLE hprobe;
 MESHHANDLE hprobeext;
 //MESHHANDLE hCMBALLOON;
@@ -86,6 +87,8 @@ MESHHANDLE hFHO2;
 MESHHANDLE hCMPEVA;
 MESHHANDLE hopticscover;
 MESHHANDLE hcmdocktgt;
+MESHHANDLE hcmseatsfolded;
+MESHHANDLE hcmseatsunfolded;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -293,7 +296,8 @@ void SaturnInitMeshes()
 	LOAD_MESH(hFHO, "ProjectApollo/CM-HatchO");
 	LOAD_MESH(hFHF, "ProjectApollo/CM-HatchF");
 	LOAD_MESH(hCM2B, "ProjectApollo/CMB-Recov");
-	LOAD_MESH(hprobe, "ProjectApollo/CM-Probe");
+	LOAD_MESH(hdockring, "ProjectApollo/CM-DockRing");
+	LOAD_MESH(hprobe, "ProjectApollo/CM-ProbeRetracted");
 	LOAD_MESH(hprobeext, "ProjectApollo/CM-ProbeExtended");
 	LOAD_MESH(hCRB, "ProjectApollo/CM-CrewRecovery");
 	LOAD_MESH(hCMB, "ProjectApollo/CMB");
@@ -307,6 +311,8 @@ void SaturnInitMeshes()
 	LOAD_MESH(hCMPEVA, "ProjectApollo/CM-CMPEVA");
 	LOAD_MESH(hopticscover, "ProjectApollo/CM-OpticsCover");
 	LOAD_MESH(hcmdocktgt, "ProjectApollo/CM-Docktgt");
+	LOAD_MESH(hcmseatsfolded, "ProjectApollo/CM-VC-SeatsFolded");
+	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -708,6 +714,9 @@ void Saturn::SetCSMStage ()
 	// VC
 	UpdateVC(mesh_dir);
 	VCMeshOffset = mesh_dir;
+	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
+	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
+	SetVCSeatsMesh();
 
 	//Interior
 	meshidx = AddMesh(hCMInt, &mesh_dir);
@@ -715,10 +724,12 @@ void Saturn::SetCSMStage ()
 
 	// Docking probe
 	if (HasProbe) {
+		dockringidx = AddMesh(hdockring, &mesh_dir);
 		probeidx = AddMesh(hprobe, &mesh_dir);
 		probeextidx = AddMesh(hprobeext, &mesh_dir);
 		SetDockingProbeMesh();
 	} else {
+		dockringidx = -1;
 		probeidx = -1;
 		probeextidx = -1;
 	}
@@ -853,10 +864,16 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 
 void Saturn::SetDockingProbeMesh() {
 
-	if (probeidx == -1 || probeextidx == -1)
+	if (probeidx == -1 || probeextidx == -1 || dockringidx == -1)
 		return;
 
 	if (HasProbe) {
+		SetMeshVisibilityMode(dockringidx, MESHVIS_VCEXTERNAL);
+	} else {
+		SetMeshVisibilityMode(dockringidx, MESHVIS_NEVER);
+	}
+
+	if (HasProbe && !ForwardHatch.IsOpen()) {
 		if (!dockingprobe.IsRetracted()) {
 			SetMeshVisibilityMode(probeidx, MESHVIS_NEVER);
 			SetMeshVisibilityMode(probeextidx, MESHVIS_VCEXTERNAL);
@@ -986,23 +1003,17 @@ void Saturn::SetNosecapMesh() {
 	}
 }
 
-void Saturn::ProbeVis() {
+void Saturn::SetVCSeatsMesh() {
 
-	if (!probe)
+	if (seatsfoldedidx == -1 || seatsunfoldedidx == -1)
 		return;
 
-	GROUPEDITSPEC ges;
-
-	if (ForwardHatch.IsOpen()) {
-		ges.flags = (GRPEDIT_ADDUSERFLAG);
-		ges.UsrFlag = 3;
-		oapiEditMeshGroup(probe, 2, &ges);
-	}
-	else
-	{
-		ges.flags = (GRPEDIT_SETUSERFLAG);
-		ges.UsrFlag = 0;
-		oapiEditMeshGroup(probe, 2, &ges);
+	if (VCSeatsfolded) {
+		SetMeshVisibilityMode(seatsfoldedidx, MESHVIS_VC);
+		SetMeshVisibilityMode(seatsunfoldedidx, MESHVIS_NEVER);
+	} else {
+		SetMeshVisibilityMode(seatsfoldedidx, MESHVIS_NEVER);
+		SetMeshVisibilityMode(seatsunfoldedidx, MESHVIS_VC);
 	}
 }
 
@@ -1226,6 +1237,9 @@ void Saturn::SetReentryMeshes() {
 
 	// VC
 	UpdateVC(mesh_dir);
+	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
+	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
+	SetVCSeatsMesh();
 
 	//
 	// Docking probe
@@ -1233,14 +1247,17 @@ void Saturn::SetReentryMeshes() {
 
 	if (HasProbe)
 	{
+		dockringidx = AddMesh(hdockring, &mesh_dir);
 		probeidx = AddMesh(hprobe, &mesh_dir);
 		probeextidx = AddMesh(hprobeext, &mesh_dir);
 		SetDockingProbeMesh();
 	} else
 	{
+		dockringidx = -1;
 		probeidx = -1;
 		probeextidx = -1;
 	}
+
 	VCMeshOffset = mesh_dir;
 }
 
@@ -1518,6 +1535,9 @@ void Saturn::SetRecovery()
 	// VC
 	UpdateVC(mesh_dir);
 	VCMeshOffset = mesh_dir;
+	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
+	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
+	SetVCSeatsMesh();
 
 	if (Crewed) {
 		mesh_dir =_V(2.7,1.8,-1.5);

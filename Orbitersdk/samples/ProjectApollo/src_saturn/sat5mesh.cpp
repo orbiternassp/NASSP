@@ -838,6 +838,9 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 	// VC
 	UpdateVC(mesh_dir);
+	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
+	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
+	SetVCSeatsMesh();
 
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
@@ -851,6 +854,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 	opticscoveridx = AddMesh (hopticscover, &mesh_dir);
 	SetOpticsCoverMesh();
 
+	dockringidx = -1;
 	probeidx = -1;
 	probeextidx = -1;
 
@@ -863,6 +867,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 	}
 	else {
 		if (HasProbe) {
+			dockringidx = AddMesh(hdockring, &mesh_dir);
 			probeidx = AddMesh(hprobe, &mesh_dir);
 			probeextidx = AddMesh(hprobeext, &mesh_dir);
 			SetDockingProbeMesh();
