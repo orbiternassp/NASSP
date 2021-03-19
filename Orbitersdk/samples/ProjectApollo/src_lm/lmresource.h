@@ -225,9 +225,9 @@
 #define AID_ASCENT_HE                   437
 #define AID_EXPLOSIVE_DEVICES2          438
 #define AID_ATTITUDE_CONTROL_SWITCHES   440
-#define AID_ENG_FUEL_TEMP               441
-#define AID_ENG_FUEL_PRESS              442
-#define AID_ENG_THRUST                  443
+#define AID_SPARE1		                441
+#define AID_SPARE2		                442
+#define AID_SPARE3	                    443
 #define AID_RCS_TEMP                    444
 #define AID_FDAI                        445
 #define AID_CRSFD_SWITCH                446

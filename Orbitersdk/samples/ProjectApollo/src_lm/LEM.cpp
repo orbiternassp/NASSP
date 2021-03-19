@@ -449,6 +449,12 @@ LEM::~LEM()
 		dx8ppv->Release();
 		dx8ppv = NULL;
 	}
+
+	if (aeaa)
+	{
+		delete aeaa;
+		aeaa = NULL;
+	}
 }
 
 void LEM::Init()
@@ -534,6 +540,8 @@ void LEM::Init()
 	vcmesh = NULL;
 
 	pMCC = NULL;
+
+	aeaa = NULL;
 
 	trackLightPos = _V(0, 0, 0);
 	for (int i = 0;i < 5;i++)
@@ -1657,6 +1665,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA3_BEGIN"))) {
 			scca3.LoadState(scn, "SCCA_END");
 		}
+		else if (!strnicmp(line, "AscEngArmAssy", 13)) {
+			if (aeaa) aeaa->LoadState(line);
+		}
 		else if (!strnicmp(line, APSPROPELLANT_START_STRING, sizeof(APSPROPELLANT_START_STRING))) {
 			APSPropellant.LoadState(scn);
 		}
@@ -2054,6 +2065,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scca1.SaveState(scn, "SCCA1_BEGIN", "SCCA_END");
 	scca2.SaveState(scn, "SCCA2_BEGIN", "SCCA_END");
 	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
+	if (aeaa) aeaa->SaveState(scn);
 	APSPropellant.SaveState(scn);
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
 	RCSA.SaveState(scn, "RCSPROPELLANT_A_BEGIN", "RCSPROPELLANT_END");
@@ -2113,8 +2125,8 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	pMission->LoadMission(ApolloNo);
 
-	agc.SetMissionInfo(pMission->GetLGCVersion(), CSMName);
-	aea.SetMissionInfo(pMission->GetAEAVersion());
+	agc.SetOtherVesselName(CSMName);
+	CreateMissionSpecificSystems();
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
@@ -2263,16 +2275,14 @@ void LEM::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 	else
 	{
 		//LM-7 data from Operational Data Book
-		static const double AscIXX[3] = { 8.7719e-08, -7.9329e-04, 7.9773e+00 };
-		static const double AscIYY[3] = { 2.1488e-10, -2.5485e-06, 1.2769e-02 };
-		static const double AscIZZ[3] = { 6.1788e-09, -6.9019e-05, 2.5186e-01 };
+		MATRIX3 CGData = pMission->GetLMCGCoefficients();
 
 		VECTOR3 p;
-		p.x = AscIXX[0] * m*m + AscIXX[1] * m + AscIXX[2];
-		p.y = AscIYY[0] * m*m + AscIYY[1] * m + AscIYY[2];
-		p.z = AscIZZ[0] * m*m + AscIZZ[1] * m + AscIZZ[2];
+		p.x = CGData.m11 * m*m + CGData.m12 * m + CGData.m13;
+		p.y = CGData.m21 * m*m + CGData.m22 * m + CGData.m23;
+		p.z = CGData.m31 * m*m + CGData.m32 * m + CGData.m33;
 		//7.2116 is the offset between the ascent stage mesh and the LM coordinate system
-		COG = _V(p.y, p.x - 7.2116, p.z);
+		COG = _V(p.y, p.x - 7.2116, p.z); //Switch to Orbiter coordinates here
 
 		//LM-7 mass data from Operational Data Book
 		static double xaxis[3] = { -9.773352930507752e-09,  -2.002652528853579e-04,   2.158070696191321e+00 };

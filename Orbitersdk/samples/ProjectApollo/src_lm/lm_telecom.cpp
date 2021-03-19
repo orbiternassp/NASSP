@@ -379,6 +379,8 @@ LM_PCM::LM_PCM()
 	wsk_error = 0;
 	last_update = 0;
 	last_rx = 0;
+	frame_addr = 0;
+	frame_count = 0;
 }
 
 void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh, h_HeatLoad *secpcmh)
@@ -537,21 +539,24 @@ void LM_PCM::Timestep(double simt)
 // This function will be called lots of times inside a timestep, so it should go
 // as fast as possible!
 
-unsigned char LM_PCM::scale_data(double data, double low, double high){
-	double step = 0;
-	
+unsigned char LM_PCM::scale_data(double data, double low, double high)
+{
 	// First eliminate cases outside of the scales
 	if(data >= high){ return 0xFF; }
 	if(data <= low){  return 0; }
 	
 	// Now figure step value
-	step = ( ( high - low ) / 256.0);
+	double step = ( ( high - low ) / 256.0);
 	// and return result
 	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
 }
 
 unsigned char LM_PCM::scale_scea(double data)
 {
+	//First eliminate cases outside of the scales
+	if (data >= 5.0) { return 0xFF; }
+	if (data <= 0.0) { return 0; }
+
 	//data is already 0 to 5V
 	return static_cast<unsigned char>(data*256.0 / 5.0 + 0.5);
 }
@@ -710,11 +715,20 @@ void LM_PCM::handle_uplink()
 		// *** VEHICLE ADDRESS HARDCODED HERE *** (NASA DID THIS TOO)
 		if (va != 03) { break; }
 		switch (sa) {
-		case 0: // TEST
-			rx_offset++; uplink_state = 10;
-			break;
 		case 1: // LGC-UPDATA
 			rx_offset++; uplink_state = 20;
+			break;
+		case 3: // RTC B
+			rx_offset++; uplink_state = 40;
+			break;
+		case 4: // RTC A
+			rx_offset++; uplink_state = 50;
+			break;
+		case 5: // TEST
+			rx_offset++; uplink_state = 10;
+			break;
+		case 6: // PRA
+			rx_offset++; uplink_state = 30;
 			break;
 		default:
 			sprintf(oapiDebugString(), "LM-UPLINK: UNKNOWN SYSTEM-ADDRESS %o", sa);
@@ -738,6 +752,38 @@ void LM_PCM::handle_uplink()
 		lem->agc.GenerateUprupt();
 
 		//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
+		rx_offset = 0; uplink_state = 0;
+	}
+	break;
+	case 30: // PRA
+		rx_offset = 0; uplink_state = 0;
+		break;
+	case 40: // RTC B
+	case 50: // RTC A
+	{
+		//6 bits.
+		//Two least significants bit are:
+		//00: Set 1
+		//01: Reset 1
+		//10: Set 2
+		//11: Reset 2
+		//4 most significant bits are for select:
+		//0000: Select 1
+		//0001: Select 2
+		//0010: Select 3
+		//0011: Select 4
+		if (lem->aeaa == NULL)
+		{
+			rx_offset = 0; uplink_state = 0;
+			break;
+		}
+
+		int doreset = rx_data[rx_offset] & 01;
+		int set = (rx_data[rx_offset] & 02) >> 1;
+		int select = 1 + ((rx_data[rx_offset] & 074) >> 2);
+		
+		lem->aeaa->SetRelay(set, select, doreset);
+
 		rx_offset = 0; uplink_state = 0;
 	}
 	break;
@@ -1106,7 +1152,7 @@ void LM_PCM::generate_stream_hbr(){
 		    case 31: tx_data[tx_offset] = measure(01,LTLM_E,0x26); break;
 		    case 32: tx_data[tx_offset] = measure(01,LTLM_E,0x27); break;
 		    case 33: tx_data[tx_offset] = measure(01,LTLM_E,0x28); break;
-		    case 34: tx_data[tx_offset] = measure(01,LTLM_E,0x29); break;
+		    case 34: tx_data[tx_offset] = measure(01,LTLM_E,0x30); break;
 		    case 35: tx_data[tx_offset] = measure(10,LTLM_A,5); break;
 		    case 36: tx_data[tx_offset] = measure(01,LTLM_E,0x31); break;
 		    case 37: tx_data[tx_offset] = measure(01,LTLM_E,0x32); break;
@@ -1116,7 +1162,7 @@ void LM_PCM::generate_stream_hbr(){
 		    case 41: tx_data[tx_offset] = measure(01,LTLM_E,0x36); break;
 		    case 42: tx_data[tx_offset] = measure(01,LTLM_E,0x37); break;
 		    case 43: tx_data[tx_offset] = measure(01,LTLM_E,0x38); break;
-		    case 44: tx_data[tx_offset] = measure(01,LTLM_E,0x30); break;
+		    case 44: tx_data[tx_offset] = measure(01,LTLM_E,0x40); break;
 		    case 45: tx_data[tx_offset] = measure(10,LTLM_A,5); break;
 		    case 46: tx_data[tx_offset] = measure(01,LTLM_E,0x41); break;
 		    case 47: tx_data[tx_offset] = measure(01,LTLM_E,0x42); break;
@@ -1573,12 +1619,12 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 7:  
 					if(channel == 200){ return(scale_data(lem->APS.GetThrustChamberPressurePSI(), 0.0, 150.0)); } // APS TCP
 					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(9, 4))); } // PITCH ATT ERR
-					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0)); } // DPS OX 2 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95)); } // DPS OX 2 QTY
 					return (scale_data(0.0, -20.25, 20.25)); // MG RSVR OUT COS
 				case 8: 
 					if (channel == 1) { return (scale_scea(lem->scera1.GetVoltage(20, 1))); } // QUAD 4 TEMP
 					if(channel == 50){ return(scale_data(lem->DPS.GetInjectorActuatorPosition(), 0.0, 1.0)); } // VAR INJ ACT POS
-					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0)); } // DPS FUEL 1 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95)); } // DPS FUEL 1 QTY
 					return(scale_scea(lem->scera2.GetVoltage(17, 3))); // Y TRANS CMD
 				case 9:
 					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // IG SVO ERR IN O
@@ -1588,7 +1634,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
 					return(scale_data(0.0, -21.5, 21.5)); // RR SHFT COS
 				case 11: 
-					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0)); } // DPS OX 1 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95)); } // DPS OX 1 QTY
 					if(channel == 1){ return (scale_scea(lem->scera2.GetVoltage(9, 2))); } // ROLL GDA POS
 					return(scale_data(0.0, -21.5, 21.5)); // RR TRUN SIN
 				case 12: 
@@ -1623,10 +1669,10 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 					return(scale_scea(lem->scera1.GetVoltage(8, 1))); // ASC 1 H20 QTY
 				case 21: 
 					if (channel == 1) { return(scale_data(lem->RCSA.GetRCSOxidManifoldPressPSI(), 0.0, 350.0)); } // A OX MFLD PRESS
-					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0)); } // DPS FUEL 2 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95)); } // DPS FUEL 2 QTY
 					return(scale_scea(lem->scera1.GetVoltage(15, 1))); // AUTO THRUST CMD
 				case 22: 
-					return(scale_data(lem->APSPropellant.GetAscentHelium2PressPSI(), 0.0, 4000.0)); // APS HE 2R PRESS
+					if (channel == 10) { return(scale_data(lem->APSPropellant.GetAscentHelium2PressPSI(), 0.0, 4000.0)); } // APS HE 2R PRESS
 					return(scale_scea(lem->scera2.GetVoltage(9, 1))); // PITCH GDA POS
 				case 23: 
 					if(channel == 10){ return(scale_data(0.0, -5.0, 5.0)); } // ROLL ATT ERR
@@ -1741,7 +1787,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 68: // BAT 5 CUR
 					return(scale_data(lem->Battery5->Current(),0,120));
 				case 69: // DPS FUEL 2 QTY
-					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95));
 				case 70: // REG OUT MANIFOLD
 					return(scale_data(lem->APSPropellant.GetHeliumRegulator2OutletPressurePSI(), 0.0, 300.0));
 				case 71: // UNKNOWN, HBR
@@ -1757,7 +1803,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 76: // DPS TCP
 					return(scale_data(lem->DPS.GetThrustChamberPressurePSI(), 0.0, 200.0));
 				case 77: // DPS FUEL 1 QTY
-					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95));
 				case 78: // UNKNOWN, HBR
 					return(0);
 				case 79: // BAT 3 VOLT
@@ -1805,13 +1851,13 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 100: // APS HE 2 PRESS
 					return(scale_scea(lem->scera1.GetVoltage(19, 1)));
 				case 101: // DPS FUEL 2 QTY
-					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95));
 				case 102: // BAT 5 CUR
 					return(scale_data(lem->Battery5->Current(),0,120));
 				case 103: // O2 MANIFOLD PRESS
 					return(scale_data(lem->ecs.GetPLSSFillPressurePSI(), 0.0, 1400.0));
 				case 104: // DPS FUEL 1 QTY
-					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 0.95));
 				case 105: // APS OX PRESS
 					return(scale_scea(lem->scera1.GetVoltage(19, 4)));
 				case 106: // BAT 1 CUR
@@ -1835,7 +1881,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 115: // ROLL ATT ERR
 					return(scale_scea(lem->scera2.GetVoltage(10, 1)));
 				case 116: // DPS OX 1 QTY
-					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95));
 				case 117: // DPS FUEL 2 TEMP
 					return(scale_scea(lem->scera1.GetVoltage(9, 2)));
 				case 118: // UNKNOWN, HBR
@@ -1869,7 +1915,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 132: // MAN THRUST CMD
 					return(scale_scea(lem->scera1.GetVoltage(15, 2)));
 				case 133: // DPS OX 2 QTY
-					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95));
 				case 134: // SE BUS VOLT
 					return(scale_scea(lem->scera2.GetVoltage(8, 4)));
 				case 135: // ASC 1 H20 TEMP
@@ -1933,7 +1979,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 164: // LR ANT TEMP
 					return(scale_scea(lem->scera1.GetVoltage(21, 3)));
 				case 165: // DPS OX 1 QTY
-					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95));
 				case 166: // PIPA TEMP
 					return(scale_data(lem->imu.GetPIPATempF(), 120.0, 140.0));
 				case 167: // BAT 2 CUR
@@ -1955,7 +2001,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 175: // ROLL ERR CMD
 					return(scale_scea(lem->scera2.GetVoltage(18, 2)));
 				case 176: // DPS OX 2 QTY
-					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95));
 				case 177: // ECS SUIT TEMP
 					return(scale_scea(lem->scera1.GetVoltage(21, 1)));
 				case 178: // APS TCP
@@ -1969,7 +2015,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 182: // UNKNOWN, LBR
 					return(0);
 				case 183: // F/H RLF PRESS
-					return(scale_data(0.0, 0.0, 25.0));
+					return(scale_data(lem->ecs.GetCabinPressurePSI(), 0.0, 25.0));
 				case 184: // UNKNOWN, LBR
 					return(0);
 				case 185: // SBand ST PH ERR
@@ -1991,7 +2037,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 193: // VAR INJ ACT POS
 					return(scale_data(lem->DPS.GetInjectorActuatorPosition(), 0.0, 1.0));
 				case 194: // U/H RLF PRESS
-					return(scale_data(0.0, 0.0, 25.0));
+					return(scale_data(lem->ecs.GetCabinPressurePSI(), 0.0, 25.0));
 				case 195: // SBand XMTR PO
 					return(scale_data(0.0, 0.3, 1.75));
 				default:

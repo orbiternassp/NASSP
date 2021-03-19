@@ -53,6 +53,7 @@
 #include "lm_eps.h"
 #include "LEMcomputer.h"
 #include "lm_rr.h"
+#include "lm_aeaa.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -664,7 +665,6 @@ protected:
     PanelSDK Panelsdk;
 
 	void UpdateMassAndCoG();
-	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
@@ -923,7 +923,7 @@ protected:
 	ToggleSwitch EngineDescentCommandOverrideSwitch;
 
 	SwitchRow ModeControlSwitchesRow;
-	PGNSSwitch ModeControlPGNSSwitch;
+	ThreePosSwitch ModeControlPGNSSwitch;
 	ThreePosSwitch ModeControlAGSSwitch;
     UnguardedIMUCageSwitch IMUCageSwitch;
 
@@ -1845,6 +1845,7 @@ protected:
 	LEM_ACA CDR_ACA;
 	LEM_RGA rga;
 	LEM_TTCA CDR_TTCA;
+	LEM_AEAA *aeaa;
 
 	LEM_RadarTape RadarTape;
 	LEM_CWEA CWEA;

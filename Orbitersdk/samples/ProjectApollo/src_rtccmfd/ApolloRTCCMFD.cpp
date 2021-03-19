@@ -4065,6 +4065,11 @@ void ApolloRTCCMFD::set_SVtime(double SVtime)
 	G->SVDesiredGET = SVtime;
 }
 
+void ApolloRTCCMFD::menuUpdateGRRTime()
+{
+	G->UpdateGRRTime();
+}
+
 void ApolloRTCCMFD::menuSetAGSKFactor()
 {
 	bool AGSKFactorInput(void *id, char *str, void *data);
@@ -4727,10 +4732,10 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 	//Update GMT of zeroing CMC clock
-	sprintf_s(Buff, "P15,AGC,%d:%d:%lf;", hh, mm, ss);
+	sprintf_s(Buff, "P15,AGC,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 	//Update GMT of zeroing LGC clock
-	sprintf_s(Buff, "P15,LGC,%d:%d:%lf;", hh, mm, ss);
+	sprintf_s(Buff, "P15,LGC,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
 }
 
@@ -5558,7 +5563,7 @@ void ApolloRTCCMFD::set_LOIEta1(double eta)
 void ApolloRTCCMFD::menuSetTLCCAlt()
 {
 	bool TLCCPeriInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the perilune altitude:", TLCCPeriInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the perilune altitude (Either 0 or 50+ NM):", TLCCPeriInput, 0, 20, (void*)this);
 }
 
 bool TLCCPeriInput(void *id, char *str, void *data)
