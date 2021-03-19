@@ -273,7 +273,8 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	SetTemp(475.0); 
 	condenserTemp = 345.0;
 	tempTooLowCount = 0;
-	Volts = 31.0;
+	Volts = 28.0;
+	Amperes = 25.0;
 	power_load = 600.0; //2 amps is internal impedance		//TSCH Test 
 	max_power = r_watts; //max watts
 	clogg = 0.0; //no clog
@@ -283,6 +284,9 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	reaction = 0; //no chemical react.
 	SRC = NULL; //for now a FCell cannot have a source
 	running = 1; //ie. not running
+
+	voltsLastTimestep = 28.0;
+	ampsLastTimestep = 25.0;
 
 	H2_flow = 0;
 	O2_flow = 0;
@@ -499,27 +503,36 @@ void FCell::UpdateFlow(double dt)
 		
 		//coefficients for 5th order approximation of fuel cell performance, taken from:
 		//CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-10
-		double A = 0.023951368224792 * Temp + 23.9241562583015; //A == V + , zero load theoretical potential
+		double A = 0.023951368224792 * Temp + 25.9241562583015;
 		double B = 0.003480859912024 * Temp - 2.19986938582928;
 		double C = -0.0001779207513 * Temp + 0.104916556604259;
 		double D = 5.0656524872309E-06 * Temp - 0.002885372247954;
 		double E = -6.42229870072935E-08 * Temp + 3.58599071612147E-05;
 		double F = 3.02098031429142E-10 * Temp - 1.66275376548748E-07;
 
-		Volts = A; 	
 		loadResistance = 784.0 / (power_load); //<R_F>, 784 = (28.0V)^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
-		Amperes = (power_load / Volts);
-		
-		for (int ii = 0; ii < 5; ++ii) //use an iterative procedure to solve for voltage and current. Should converge in ~5 steps, see https://gist.github.com/n7275/46a399d648721367a2bead3a6c2ae9ff
+
+		//use an iterative procedure to solve for voltage and current. Should converge in ~2-3 steps, see https://gist.github.com/n7275/46a399d648721367a2bead3a6c2ae9ff
+		int NumSteps = 0;
+		while(NumSteps < 10) //10 is an absolute maximum to prevent hangs, and really should never get much higher than ~6-7 during extream transients
 		{
 			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
 			Amperes = Volts / loadResistance;
+			++NumSteps;
+			if ((abs(Volts - voltsLastTimestep) < 0.001) && (abs(Amperes - ampsLastTimestep) < 0.001))
+			{
+				break;
+			}
+			voltsLastTimestep = Volts;
+			ampsLastTimestep = Amperes;
 		}
-
-		//"clogg" is used to make voltage (and current) drop by 0.2V over 1 day of normal impurity accumulation
-		Volts -= (0.22*clogg);
 		
 		power_load = Amperes * Volts; //recalculate power_load
+
+		/*if (!strcmp(name, "FUELCELL1"))
+		{
+		sprintf(oapiDebugString(), "Steps to Converge: %d", NumSteps);
+		}*/
 
 		/*	voltage divider schematic
 			
