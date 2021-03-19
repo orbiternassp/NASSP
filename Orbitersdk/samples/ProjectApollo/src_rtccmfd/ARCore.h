@@ -87,6 +87,7 @@ public:
 	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
 	void RTETradeoffDisplayCalc();
+	void GetAGSKFactor();
 	void GeneralMEDRequest();
 	void TransferTIToMPT();
 	void TransferSPQToMPT();
@@ -101,6 +102,7 @@ public:
 	void TransferRTEToMPT();
 	void SLVNavigationUpdateCalc();
 	void SLVNavigationUpdateUplink();
+	void UpdateGRRTime();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -272,14 +274,12 @@ public:
 
 	//STATE VECTOR PAGE
 	bool SVSlot; //true = CSM, false = LEM
-	EphemerisData UplinkSV;
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
 	AP11AGSSVPAD agssvpad;
-	int SVOctals[021];
 	VECTOR3 RLSUplink;
 	int RLSOctals[010];
 	int TLANDOctals[5];

@@ -56,7 +56,7 @@ void MCC::MissionSequence_B()
 			setSubState(2);
 			break;
 		case 2:
-			if (lm->VHF.mcc_size == 0)
+			if (lm->PCM.mcc_size == 0)
 			{
 				setSubState(3);
 			}

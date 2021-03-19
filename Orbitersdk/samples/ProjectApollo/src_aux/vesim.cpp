@@ -27,7 +27,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include <string>
 #include <sstream>
 #include "Orbitersdk.h"
+
+#define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+
 #include "vesim.h"
 
 #define VESIM_DEVICETYPE_KEYBOARD 1
@@ -43,15 +46,18 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define VESIM_DEVICE_AXIS_RX      4
 #define VESIM_DEVICE_AXIS_RY      5
 #define VESIM_DEVICE_AXIS_RZ      6
-#define VESIM_DEVICE_AXIS_SLDR0   7
-#define VESIM_DEVICE_AXIS_SLDR1   8
+#define VESIM_DEVICE_SLDR0        7
+#define VESIM_DEVICE_SLDR1        8
+#define VESIM_DEVICE_POV         16
+
+
 
 #define VESIM_CFG_EXT ".cfg"
 #define VESIM_CFG_USER_EXT ".launchpad.cfg"
 #define VESIM_CFG_GENERIC "GenericJoystick"
 
 char *subdevnames[] = {
-	"X", "Y", "Z", "RX", "RY", "RZ", "Slider 0", "Slider 1"
+	"X", "Y", "Z", "RX", "RY", "RZ"
 };
 
 char *povaxnames[] = {
@@ -239,10 +245,7 @@ void VesimDevice::poolDevice() {
 }
 
 VesimDevice::~VesimDevice() {
-	if (type == VESIM_DEVICETYPE_JOYSTICK) {
-		dx8_joystick->Unacquire();
-		dx8_joystick->Release();
-	}
+
 }
 
 Vesim::Vesim(CbInputChanged cbInputChanged, void *pCbData) : cbInputChanged(cbInputChanged), pCbData(pCbData) {
@@ -261,6 +264,14 @@ Vesim::Vesim(CbInputChanged cbInputChanged, void *pCbData) : cbInputChanged(cbIn
 }
 
 Vesim::~Vesim() {
+	int ndev = vdev.size();
+	for (int i = 0; i < ndev; i++) {
+		VesimDevice *d = &vdev[i];
+		if (d->type == VESIM_DEVICETYPE_JOYSTICK) {
+			d->dx8_joystick->Unacquire();
+			d->dx8_joystick->Release();
+		}
+	}
 #ifdef _DEBUG
 	fclose(out_file);
 #endif
@@ -289,7 +300,8 @@ BOOL CALLBACK VesimEnumJoysticksCB(const DIDEVICEINSTANCE* pdidInstance, VOID* p
 }
 
 std::string getDeviceInputFileName(char* vesselStationName, std::string deviceName, bool isUserCfg) {
-	std::string ret(vesselStationName);
+	std::string ret("Config\\ProjectApollo\\Vesim\\");
+	ret.append(vesselStationName);
 	ret.append(" - ");
 	ret.append(deviceName);
 	ret.append(isUserCfg ? VESIM_CFG_USER_EXT : VESIM_CFG_EXT);
@@ -310,7 +322,6 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 #ifdef _DEBUG
 		fprintf(out_file, "Setting up device %s\n", devicename.c_str());
 #endif
-		std::string configdir = "Config\\ProjectApollo\\Vesim\\";
 		int devtype = vdev[devid].type;
 
 		// Fallback config files
@@ -323,11 +334,11 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 		// joystick configuration file with extension ".launchpad.cfg" and edit it.
 
 		std::string cfgfnames[5];  
-		cfgfnames[0] = configdir + getDeviceInputFileName(vesselStationName, devicename, true);
-		cfgfnames[1] = configdir + getDeviceInputFileName(vesselStationName, VESIM_CFG_GENERIC, true);
-		cfgfnames[2] = configdir + VESIM_CFG_GENERIC+VESIM_CFG_USER_EXT;
-		cfgfnames[3] = configdir + getDeviceInputFileName(vesselStationName, devicename, false);
-		cfgfnames[4] = configdir + getDeviceInputFileName(vesselStationName, VESIM_CFG_GENERIC, false);
+		cfgfnames[0] = getDeviceInputFileName(vesselStationName, devicename, true);
+		cfgfnames[1] = getDeviceInputFileName(vesselStationName, VESIM_CFG_GENERIC, true);
+		cfgfnames[2] = std::string(VESIM_CFG_GENERIC)+VESIM_CFG_USER_EXT;
+		cfgfnames[3] = getDeviceInputFileName(vesselStationName, devicename, false);
+		cfgfnames[4] = getDeviceInputFileName(vesselStationName, VESIM_CFG_GENERIC, false);
 
 		std::ifstream fdevcfg;
 		for (int k = 0; k < 5; k++) {
@@ -387,9 +398,9 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 									subdevtype = VESIM_SUBDEVTYPE_AXIS;
 									std::string ssid = token.substr(4);
 									const char * psid = ssid.c_str();
-									for (int k = 0; k < 8; k++) {
+									for (int k = 0; k < 6; k++) {
 										if (icomp(psid, subdevnames[k])) {
-											subdevid = k + 1;
+											subdevid = k + VESIM_DEVICE_AXIS_X;
 											break;
 										}
 									}
@@ -410,9 +421,29 @@ bool Vesim::setupDevices(char* vesselStationName, LPDIRECTINPUT8 dx8ppv){
 									const char * psid = ssid.c_str();
 									for (int k = 0; k < 8; k++) {
 										if (icomp(psid, povaxnames[k])) {
-											subdevid = k + 16;
+											subdevid = k + VESIM_DEVICE_POV;
 											break;
 										}
+									}
+								}
+								else if (token.length() > 7 && icomp(token.substr(0, 6).c_str(), "Slider")) {
+									subdevtype = VESIM_SUBDEVTYPE_AXIS;
+									try
+									{
+										int tmp= std::stoi(token.substr(6));
+										switch (tmp) {
+										case 0:
+											subdevid = VESIM_DEVICE_SLDR0;
+											break;
+										case 1:
+											subdevid = VESIM_DEVICE_SLDR1;
+											break;
+										default:
+											break;
+										}
+									}
+									catch (int e) {
+										(void)e;
 									}
 								}
 							}
@@ -585,18 +616,18 @@ void  Vesim::poolDevices() {
 					pconn->value = newValue;
 					isSet = true;
 					break;
-				case VESIM_DEVICE_AXIS_SLDR0:
+				case VESIM_DEVICE_SLDR0:
 					newValue = pdev->dx8_jstate.rglSlider[0];
 					pconn->value = newValue;
 					isSet = true;
 					break;
-				case VESIM_DEVICE_AXIS_SLDR1:
+				case VESIM_DEVICE_SLDR1:
 					newValue = pdev->dx8_jstate.rglSlider[1];
 					pconn->value = newValue;
 					isSet = true;
 					break;
 				default: //It is a POV axis
-					int povidx = pconn->subdeviceID-16;
+					int povidx = pconn->subdeviceID- VESIM_DEVICE_POV;
 					int povval = pdev->dx8_jstate.rgdwPOV[povidx>>1];					
 					if ((povval & 0xFFFF) != 0xFFFF) {																
 						double povcos = cos(PI*povval / 18000.0);
@@ -670,4 +701,25 @@ int Vesim::getInputValue(int inputID) {
 	int iidx = inpid2idx[inputID];
 	if (iidx < 0) return 0;
 	return vinp[iidx].value;
+}
+
+void Vesim::createUserConfigs() {
+	int ndev = vdev.size();
+	for (int i = 0; i < ndev; i++) {
+		VesimDevice *d = &vdev[i];
+		std::string cfgname = getDeviceInputFileName(vesselStationName, d->name, true);
+		if (!std::ifstream(cfgname).good()){
+			std::ifstream  incfg(
+				getDeviceInputFileName(vesselStationName, d->name, false),
+				std::ios::binary);
+			if(!incfg.good())
+				incfg= std::ifstream(
+					getDeviceInputFileName(vesselStationName, VESIM_CFG_GENERIC, false),
+					std::ios::binary);
+			if (incfg.good()) {
+				std::ofstream  outcfg(cfgname, std::ios::binary);
+				outcfg << incfg.rdbuf();
+			}
+		}
+	}
 }

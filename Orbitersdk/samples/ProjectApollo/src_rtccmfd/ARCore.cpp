@@ -149,8 +149,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->LoadLaunchDaySpecificParameters(1968, 12, 21);
 		rtcc->GMGMED("P80,1,CSM,12,21,1968;");
 		rtcc->GMGMED("P10,CSM,12:51:0;");
-		rtcc->GMGMED("P12,CSM,12:51:0,72.0;");
-		rtcc->GMGMED("P12,IU1,12:50:43,72.0;");
+		rtcc->GMGMED("P12,CSM,12:51:0,72.124;");
+		rtcc->GMGMED("P12,IU1,12:50:43,72.124;");
 		rtcc->GMGMED("P15,AGC,12:51:0;");
 		rtcc->GMGMED("P15,LGC,12:51:0;");
 	}
@@ -174,8 +174,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->LoadLaunchDaySpecificParameters(1969, 5, 18);
 		rtcc->GMGMED("P80,1,CSM,5,18,1969;");
 		rtcc->GMGMED("P10,CSM,16:49:00;");
-		rtcc->GMGMED("P12,CSM,16:49:00,72.0;");
-		rtcc->GMGMED("P12,IU1,16:48:43,72.0;");
+		rtcc->GMGMED("P12,CSM,16:49:00,72.028;");
+		rtcc->GMGMED("P12,IU1,16:48:43,72.028;");
 		rtcc->GMGMED("P15,AGC,16:49:00;");
 		rtcc->GMGMED("P15,LGC,16:49:00;");
 		rtcc->GMGMED("P15,AGS,,90:00:00;");
@@ -188,8 +188,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->LoadLaunchDaySpecificParameters(1969, 7, 16);
 		rtcc->GMGMED("P80,1,CSM,7,16,1969;");
 		rtcc->GMGMED("P10,CSM,13:32:00;");
-		rtcc->GMGMED("P12,CSM,13:32:00,72.0;");
-		rtcc->GMGMED("P12,IU1,13:31:43,72.0;");
+		rtcc->GMGMED("P12,CSM,13:32:00,72.058;");
+		rtcc->GMGMED("P12,IU1,13:31:43,72.058;");
 		rtcc->GMGMED("P15,AGC,13:32:00;");
 		rtcc->GMGMED("P15,LGC,13:32:00;");
 		rtcc->GMGMED("P15,AGS,,90:00:00;");
@@ -221,8 +221,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->LoadLaunchDaySpecificParameters(1969, 11, 14);
 		rtcc->GMGMED("P80,1,CSM,11,14,1969;");
 		rtcc->GMGMED("P10,CSM,16:22:00;");
-		rtcc->GMGMED("P12,CSM,16:22:00,72.0;");
-		rtcc->GMGMED("P12,IU1,16:21:43,72.0;");
+		rtcc->GMGMED("P12,CSM,16:22:00,72.029;");
+		rtcc->GMGMED("P12,IU1,16:21:43,72.029;");
 		rtcc->GMGMED("P15,AGC,16:22:00;");
 		rtcc->GMGMED("P15,LGC,16:22:00;");
 		rtcc->GMGMED("P15,AGS,,100:00:00;");
@@ -234,8 +234,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->LoadLaunchDaySpecificParameters(1970, 4, 11);
 		rtcc->GMGMED("P80,1,CSM,4,11,1970;");
 		rtcc->GMGMED("P10,CSM,19:13:00;");
-		rtcc->GMGMED("P12,CSM,19:13:00,72.0;");
-		rtcc->GMGMED("P12,IU1,19:12:43,72.0;");
+		rtcc->GMGMED("P12,CSM,19:13:00,72.043;");
+		rtcc->GMGMED("P12,IU1,19:12:43,72.043;");
 		rtcc->GMGMED("P15,AGC,19:13:00;");
 		rtcc->GMGMED("P15,LGC,19:13:00;");
 		rtcc->GMGMED("P15,AGS,,90:00:00;");
@@ -247,8 +247,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->LoadLaunchDaySpecificParameters(1971, 1, 31);
 		rtcc->GMGMED("P80,1,CSM,1,31,1971;");
 		rtcc->GMGMED("P10,CSM,20:23:00;");
-		rtcc->GMGMED("P12,CSM,20:23:00,72.0;");
-		rtcc->GMGMED("P12,IU1,20:22:43,72.0;");
+		rtcc->GMGMED("P12,CSM,20:23:00,72.067;");
+		rtcc->GMGMED("P12,IU1,20:22:43,72.067;");
 		rtcc->GMGMED("P15,AGC,20:23:00;");
 		rtcc->GMGMED("P15,LGC,20:23:00;");
 		rtcc->GMGMED("P15,AGS,,100:00:00;");
@@ -273,8 +273,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->LoadLaunchDaySpecificParameters(1972, 4, 16);
 		rtcc->GMGMED("P80,1,CSM,4,16,1972;");
 		rtcc->GMGMED("P10,CSM,17:54:00;");
-		rtcc->GMGMED("P12,CSM,17:54:00,72.0;");
-		rtcc->GMGMED("P12,IU1,17:53:43,72.0;");
+		rtcc->GMGMED("P12,CSM,17:54:00,72.034;");
+		rtcc->GMGMED("P12,IU1,17:53:43,72.034;");
 		rtcc->GMGMED("P15,AGC,17:54:00;");
 		rtcc->GMGMED("P15,LGC,17:54:00;");
 		rtcc->GMGMED("P15,AGS,,90:00:00;");
@@ -286,8 +286,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->LoadLaunchDaySpecificParameters(1972, 12, 7);
 		rtcc->GMGMED("P80,1,CSM,12,7,1972;");
 		rtcc->GMGMED("P10,CSM,02:53:00;");
-		rtcc->GMGMED("P12,CSM,02:53:00,72.0;");
-		rtcc->GMGMED("P12,IU1,02:52:43,72.0;");
+		rtcc->GMGMED("P12,CSM,02:53:00,72.141;");
+		rtcc->GMGMED("P12,IU1,02:52:43,72.141;");
 		rtcc->GMGMED("P15,AGC,02:53:00;");
 		rtcc->GMGMED("P15,LGC,02:53:00;");
 		rtcc->GMGMED("P15,AGS,,110:00:00;");
@@ -624,10 +624,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	svtargetnumber = -1;
 	TLCCSolGood = true;
 
-	for (int i = 0;i < 021;i++)
-	{
-		SVOctals[i] = 0;
-	}
 	RLSUplink = _V(0, 0, 0);
 	for (int i = 0;i < 010;i++)
 	{
@@ -1142,6 +1138,11 @@ void ARCore::GeneralMEDRequest()
 	startSubthread(53);
 }
 
+void ARCore::GetAGSKFactor()
+{
+	startSubthread(35);
+}
+
 void ARCore::TransferTIToMPT()
 {
 	startSubthread(38);
@@ -1247,6 +1248,68 @@ void ARCore::CalculateTPITime()
 void ARCore::VectorCompareDisplayCalc()
 {
 	startSubthread(25);
+}
+
+void ARCore::UpdateGRRTime()
+{
+	if (svtarget == NULL) return;
+
+	bool isSaturnV;
+	double T_L, Azi;
+	LVDC *lvdc;
+
+	if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+	{
+		Saturn *iuv = (Saturn *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = true;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+	{
+		Saturn *iuv = (Saturn *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = false;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+	{
+		SIVB *iuv = (SIVB *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = true;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+	{
+		SIVB *iuv = (SIVB *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = false;
+	}
+	else
+	{
+		return;
+	}
+
+	if (isSaturnV)
+	{
+		LVDCSV *l = (LVDCSV*)lvdc;
+		T_L = l->T_L;
+		Azi = l->Azimuth;
+	}
+	else
+	{
+		LVDC1B *l = (LVDC1B*)lvdc;
+		T_L = l->T_GRR;
+		Azi = l->Azimuth;
+	}
+
+	int hh, mm;
+	double ss;
+	char Buff[128];
+	OrbMech::SStoHHMMSS(T_L, hh, mm, ss);
+	sprintf_s(Buff, "P12,IU1,%d:%d:%.2lf,%.3lf;", hh, mm, ss, Azi*DEG);
+	GC->rtcc->GMGMED(Buff);
 }
 
 void ARCore::GetStateVectorFromIU()
@@ -1644,107 +1707,35 @@ void ARCore::LandingSiteUplink()
 
 void ARCore::StateVectorCalc()
 {
-	EphemerisData sv0, sv1;
-	MATRIX3 Rot;
-	VECTOR3 pos, vel;
-	double get;
+	int uplveh, mptveh;
 
-	if (GC->MissionPlanningActive)
+	if (vesseltype < 2)
 	{
-		int mptveh;
-
-		if (SVSlot)
-		{
-			mptveh = RTCC_MPT_CSM;
-		}
-		else
-		{
-			mptveh = RTCC_MPT_LM;
-		}
-		double GMT = GC->rtcc->GMTfromGET(SVDesiredGET);
-		EphemerisData EPHEM;
-		if (GC->rtcc->ELFECH(GMT, mptveh, EPHEM))
-		{
-			return;
-		}
-
-		sv1 = EPHEM;
+		uplveh = 1;
 	}
 	else
 	{
+		uplveh = 2;
+	}
+	if (SVSlot)
+	{
+		mptveh = RTCC_MPT_CSM;
+	}
+	else
+	{
+		mptveh = RTCC_MPT_LM;
+	}
+
+	if (GC->MissionPlanningActive)
+	{
+		GC->rtcc->CMMCMNAV(uplveh, mptveh, SVDesiredGET);
+	}
+	else
+	{
+		EphemerisData sv0, sv1;
 		sv0 = GC->rtcc->StateVectorCalcEphem(svtarget);
 		sv1 = GC->rtcc->coast(sv0, SVDesiredGET - GC->rtcc->GETfromGMT(sv0.GMT));
-	}
-
-	UplinkSV = sv1;
-
-	Rot = OrbMech::J2000EclToBRCS(GC->rtcc->SystemParameters.AGCEpoch);
-
-	UplinkSV.R = mul(Rot, UplinkSV.R);
-	UplinkSV.V = mul(Rot, UplinkSV.V);
-
-	pos = UplinkSV.R;
-	vel = UplinkSV.V*0.01;
-	UplinkSV.GMT = GC->rtcc->GETfromGMT(UplinkSV.GMT);
-	get = UplinkSV.GMT;
-
-	SVOctals[0] = 21;
-	SVOctals[1] = 1501;
-
-	if (sv1.RBI == BODY_MOON)
-	{
-		if (SVSlot)
-		{
-			SVOctals[2] = 2;
-		}
-		else
-		{
-			SVOctals[2] = 77775;	// Octal coded decimal
-		}
-
-		SVOctals[3] = OrbMech::DoubleToBuffer(pos.x, 27, 1);
-		SVOctals[4] = OrbMech::DoubleToBuffer(pos.x, 27, 0);
-		SVOctals[5] = OrbMech::DoubleToBuffer(pos.y, 27, 1);
-		SVOctals[6] = OrbMech::DoubleToBuffer(pos.y, 27, 0);
-		SVOctals[7] = OrbMech::DoubleToBuffer(pos.z, 27, 1);
-		SVOctals[8] = OrbMech::DoubleToBuffer(pos.z, 27, 0);
-		SVOctals[9] = OrbMech::DoubleToBuffer(vel.x, 5, 1);
-		SVOctals[10] = OrbMech::DoubleToBuffer(vel.x, 5, 0);
-		SVOctals[11] = OrbMech::DoubleToBuffer(vel.y, 5, 1);
-		SVOctals[12] = OrbMech::DoubleToBuffer(vel.y, 5, 0);
-		SVOctals[13] = OrbMech::DoubleToBuffer(vel.z, 5, 1);
-		SVOctals[14] = OrbMech::DoubleToBuffer(vel.z, 5, 0);
-		SVOctals[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
-		SVOctals[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
-		return;
-	}
-
-	if (sv1.RBI == BODY_EARTH)
-	{
-		if (SVSlot)
-		{
-			SVOctals[2] = 1;
-		}
-		else
-		{
-			SVOctals[2] = 77776;	// Octal coded decimal
-		}
-
-		SVOctals[3] = OrbMech::DoubleToBuffer(pos.x, 29, 1);
-		SVOctals[4] = OrbMech::DoubleToBuffer(pos.x, 29, 0);
-		SVOctals[5] = OrbMech::DoubleToBuffer(pos.y, 29, 1);
-		SVOctals[6] = OrbMech::DoubleToBuffer(pos.y, 29, 0);
-		SVOctals[7] = OrbMech::DoubleToBuffer(pos.z, 29, 1);
-		SVOctals[8] = OrbMech::DoubleToBuffer(pos.z, 29, 0);
-		SVOctals[9] = OrbMech::DoubleToBuffer(vel.x, 7, 1);
-		SVOctals[10] = OrbMech::DoubleToBuffer(vel.x, 7, 0);
-		SVOctals[11] = OrbMech::DoubleToBuffer(vel.y, 7, 1);
-		SVOctals[12] = OrbMech::DoubleToBuffer(vel.y, 7, 0);
-		SVOctals[13] = OrbMech::DoubleToBuffer(vel.z, 7, 1);
-		SVOctals[14] = OrbMech::DoubleToBuffer(vel.z, 7, 0);
-		SVOctals[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
-		SVOctals[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
-		return;
+		GC->rtcc->CMMCMNAV(uplveh, mptveh, sv1);
 	}
 }
 
@@ -1764,6 +1755,30 @@ void ARCore::AGSStateVectorCalc()
 
 void ARCore::StateVectorUplink()
 {
+	int *SVOctals;
+	if (vesseltype < 2)
+	{
+		if (SVSlot)
+		{
+			SVOctals = GC->rtcc->CZNAVGEN.CMCCSMUpdate.Octals;
+		}
+		else
+		{
+			SVOctals = GC->rtcc->CZNAVGEN.CMCLEMUpdate.Octals;
+		}
+	}
+	else
+	{
+		if (SVSlot)
+		{
+			SVOctals = GC->rtcc->CZNAVGEN.LGCCSMUpdate.Octals;
+		}
+		else
+		{
+			SVOctals = GC->rtcc->CZNAVGEN.LGCLEMUpdate.Octals;
+		}
+	}
+
 	for (int i = 0;i < 021;i++)
 	{
 		g_Data.emem[i] = SVOctals[i];
@@ -2403,6 +2418,11 @@ void ARCore::NodeConvCalc()
 
 void ARCore::SendNodeToSFP()
 {
+	//If SFP block 2 hasn't been generated yet, copy it over from block 1 and then write the nodal target to it
+	if (GC->rtcc->PZSFPTAB.blocks[1].GMTTimeFlag == 0.0)
+	{
+		GC->rtcc->PZSFPTAB.blocks[1] = GC->rtcc->PZSFPTAB.blocks[0];
+	}
 	GC->rtcc->PZSFPTAB.blocks[1].GMT_nd = GC->rtcc->GMTfromGET(NodeConvGET);
 	GC->rtcc->PZSFPTAB.blocks[1].lat_nd = NodeConvResLat;
 	GC->rtcc->PZSFPTAB.blocks[1].lng_nd = NodeConvResLng;
@@ -3210,7 +3230,7 @@ int ARCore::subThread()
 			sv = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		if (!GC->rtcc->LunarDescentPlanningProcessor(sv, GC->rtcc->CalcGETBase(), GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]))
+		if (!GC->rtcc->LunarDescentPlanningProcessor(sv))
 		{
 			if (GC->rtcc->med_k16.Mode != 7)
 			{
@@ -3518,6 +3538,11 @@ int ARCore::subThread()
 			sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
 
 			CSMmass = vessel->GetMass();
+			//Assume pre CSM separation from the S-IVB
+			if (CSMmass > 30000.0)
+			{
+				CSMmass = 28860.0;
+			}
 			if (GC->rtcc->PZMCCPLN.Config)
 			{
 				LMmass = GC->rtcc->GetDockedVesselMass(vessel);
@@ -4278,8 +4303,24 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 35: //Spare
+	case 35: //AGS Clock Sync
 	{
+		if (vesseltype < 2)
+		{
+			Result = 0;
+			break;
+		}
+
+		LEM *l = (LEM*)vessel;
+
+		double KFactor;
+		bool res = GC->rtcc->CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
+		if (res)
+		{
+			//TBD: Use MED P15 instead
+			GC->rtcc->SystemParameters.MCGZSS = GC->rtcc->SystemParameters.MCGZSL + KFactor / 3600.0;
+		}
+
 		Result = 0;
 	}
 	break;

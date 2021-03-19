@@ -379,11 +379,20 @@ namespace GenIterator
 			}
 		}
 
+		// "In the select mode, search is made for variables which are inside the acceptable interval, but only just inside, that is, they are within
+		// 0.2% of full range of one of the limits. When a variable has such a value, a move procedure begins. The limit near the value of the variable is
+		// temporarily replaced by its opposite limit, thus shrinking the interval of acceptability to zero length. The residual vector and its length
+		// are then recomputed. The move counter, which has been continually reset at every iteration, now begins to count, and control passes into the
+		// basic iteration loop. As the iterations proceed, additional variables may have values which would start a move procedure. If this happens, the
+		// limits are treated the same way, and the move counter begins to count from 1 again. Finally when the move counter reaches 6, all(?) the limits
+		// are restored to their values, as originally input, and the(?) move counter reverts to being reset at every iteration.
 		bool moving = false;
+		//True if all class 1 and 2 variables have converged in residual check
 		bool convergence = false;
 		bool locked = false;
 		bool sizing = false;
 		int sizingcounter = 0;
+		//See at "moving".
 		int movingcounter = 0;
 		bool skip = true;
 		bool badresidual = false;

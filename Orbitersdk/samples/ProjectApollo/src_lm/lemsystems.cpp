@@ -455,7 +455,9 @@ void LEM::SystemsInit()
 	// SBand System
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBPHEAT"));
 	// VHF System
-	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT"));
+	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"));
+	// PCM
+	PCM.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT"));
 	// DSEA
 	DSEA.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:DSEHEAT"));
 	TapeRecorderTB.WireTo(&INST_PCMTEA_CB); //Tape Recorder TB powered by PCM/TE cb
@@ -1389,6 +1391,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		crossPointerRight.SystemTimestep(tFactor);
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
+		PCM.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
 		DSEA.SystemTimestep(tFactor);
 		CabinPressureSwitch.SystemTimestep(tFactor);
@@ -1492,6 +1495,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	omni_fwd.Timestep();
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
+	VHF.Timestep(simt);
 	ecs.Timestep(simdt);
 	OverheadHatch.Timestep(simdt);
 	ForwardHatch.Timestep(simdt);
@@ -2243,6 +2247,10 @@ void LEM::CreateMissionSpecificSystems()
 
 	agc.SetMissionInfo(pMission->GetLGCVersion());
 	aea.SetMissionInfo(pMission->GetAEAVersion());
+	if (pMission->LMHasAscEngArmAssy())
+	{
+		aeaa = new LEM_AEAA();
+	}
 }
 
 // SYSTEMS COMPONENTS
@@ -2422,19 +2430,36 @@ void LEM_LR::Timestep(double simdt){
 
 	// Data Determination
 	if(lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		// Test Mode
-		// Drive to:
-		// Alt 8287 ft
-		// Vel -494,1861,1331 ft/sec
-		// on the LGC
-		// For some reason this should show up as 8000 ft and -480 fps on the alt/alt-rate monitor?
-		range = 8287;
-		rate[0] = -494;
-		rate[1] = 1861;
-		rate[2] = 1331;
-		rangeGood = 1;
-		velocityGood = 1;
-	}else{
+		if (antennaAngle == 0) {
+			// Test Mode POS 2
+			// Drive to:
+			//
+			//
+			//
+			//
+			range = 8000;
+			rate[0] = -494;
+			rate[1] = 1861;
+			rate[2] = 1331;
+			rangeGood = 1;
+			velocityGood = 1;
+		}
+		else {
+			// Test Mode
+			// Drive to:
+			// Alt 8287 ft
+			// Vel -494,1861,1331 ft/sec
+			// on the LGC
+			// For some reason this should show up as 8000 ft and -480 fps on the alt/alt-rate monitor?
+			range = 8287;
+			rate[0] = -494;
+			rate[1] = 1861;
+			rate[2] = 1331;
+			rangeGood = 1;
+			velocityGood = 1;
+		}
+	}
+	else{
 		// Operate Mode
 		rangeGood = 0;
 		velocityGood = 0;

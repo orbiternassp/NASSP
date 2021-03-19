@@ -65,6 +65,7 @@ public:
 	void SetSIEngineFailure(int n, double misst);
 	void SetSIIEngineFailure(int n, double misst);
 	void SetRandomFailures(double FailureMultiplier);
+	void SetAEAACommands(int arm, int set);
 
 	void menuVoid();
 	void menuSetMainPage();
@@ -112,6 +113,7 @@ public:
 	void menuSetSIEngineFailure();
 	void menuSetSIIEngineFailure();
 	void menuSetRandomFailures();
+	void menuAEAACommands();
 
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);

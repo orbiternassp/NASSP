@@ -29,7 +29,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	//INPUTS:
 	//CSMWT and LMWT, CSM and LM weights
 	//ITC: 33 = SPS, 34 = APS, 35 = DPS, 36 = J2
-	//IC: 1 = CSM, 12 = LM, 13 = CSM and LM (docked)
+	//IC: 1 = CSM, 5 = CSM + LM Ascent, 12 = LM, 13 = CSM and LM (docked)
 	//IA: -1: trim angles, thrust and weight loss rate desired outputs, 0: thrust and weight loss rate desired outputs, 1: trim angles desired outputs
 	//IJ: LM descent stage included in configuration at beginning of this maneuver (only applicable if ITC=33 and IC=2). 0 = included, 1 = not included
 
@@ -117,7 +117,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	XCG[IND - 1] = XI - K;
 
 	//CSM or LM, but not docked?
-	if (IC <= 12)
+	if (IC <= 12 && IC != 5)
 	{
 		goto RTCC_GIMGBL_LABEL_3_2;
 	}
@@ -134,8 +134,8 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		if (IJ != 0)
 		{
 			//Use LM w/o descent CG table
-			//GIMGB2();
-			XI = _V(7.6616, 0, 0);
+			XI = GIMGB2(LMASCCGTAB.Weight, LMASCCGTAB.CG, LMASCCGTAB.N, W[1]);
+			//XI = _V(7.6616, 0, 0);
 		}
 		else
 		{

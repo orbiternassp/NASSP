@@ -60,6 +60,14 @@ double LVDC::log(double a)
 	return std::log(a);
 }
 
+MATRIX3 LVDC::tmat(MATRIX3 a)
+{
+	MATRIX3 b;
+
+	b = _M(a.m11, a.m21, a.m31, a.m12, a.m22, a.m32, a.m13, a.m23, a.m33);
+	return b;
+}
+
 void LVDC::PrepareToLaunch()
 {
 	if (ReadyToLaunch == false)
@@ -3463,8 +3471,8 @@ void LVDCSV::Init(){
 	TABLE15[1].T3PR = 308.6854;
 	TABLE15[0].TAU3R = 684.5038;
 	TABLE15[1].TAU3R = 682.1127;
-	TABLE15[0].dV_BR = 2.8816;
-	TABLE15[1].dV_BR = 2.8816;
+	TABLE15[0].dV_BR = 3.7; //Estimated value for S-IVB in NASSP
+	TABLE15[1].dV_BR = 3.7;
 
 	MRS = false;						// MR Shift
 	dotM_1 = 1221.1489;					// Mass flowrate of S2 from approximately LET jettison to second MRS
@@ -3474,8 +3482,8 @@ void LVDCSV::Init(){
 	dotM_3R = 215.2241;
 	ROT = false;
 	ROTR = true;
-	dV_B = 1.782; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
-	dV_BR = 2.8816;
+	dV_B = 1.7; // Velocity cutoff bias for orbital insertion
+	dV_BR = 3.7;
 	MSLIM1 = 0.06*RAD;
 	MSLIM2 = 0.04*RAD;
 	MSK6 = MSK16 = 15.3*RAD;
@@ -7130,6 +7138,7 @@ void LVDCSV::IterativeGuidanceMode()
 				HSL = true;
 				GATE5 = true;
 				T_GO = T_3;
+				DT_N = 0.7; //HSL takes about 0.7 seconds to run
 				fprintf(lvlog, "HSL = true, GATE5 = true, T_GO = %f\r\n", T_GO);
 				//Set up engine pump purge control valve enable on sequence on first S-IVB burn
 				if (BOOST)
@@ -7165,11 +7174,11 @@ void LVDCSV::IterativeGuidanceMode()
 				// TRANSLUNAR INJECTION VELOCITY
 				fprintf(lvlog, "TRANSLUNAR INJECTION\r\n");
 				double dotR = dotp(PosS, DotS) / R;
-				R_T = R + dotR * (T_3 - DT_N);
+				R_T = R + dotR * (T_GO - dt_c);
 				V_T = sqrt(C_3 + 2.0*mu / R_T);
 				dV_B = dV_BR;
 				//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
-				fprintf(lvlog, "TLI VELOCITY: Tt_T: %f, eps_4: %f, V: %f, V_TC: %f, V_T: %f\r\n", Tt_T, eps_4, V, V_TC, V_T);
+				fprintf(lvlog, "TLI VELOCITY: R %f dotR %f T_GO %f dt_c %f R_T %f V_T: %f\r\n", R, dotR, T_GO, dt_c, R_T, V_T);
 				// LVDC_GP_PC = 30; // STOP
 			}
 			// TGO DETERMINATION
@@ -9107,7 +9116,7 @@ restartprep:
 	//Determination of S-bar and S-bar-dot
 	theta_E = theta_EO + TVRATE * t_D;
 
-	MX_EPH = mul(OrbMech::tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+	MX_EPH = mul(tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
 
 	T_P = mul(MX_EPH, unit(TargetVector));
 	N = unit(crossp(R_OG, DotS));

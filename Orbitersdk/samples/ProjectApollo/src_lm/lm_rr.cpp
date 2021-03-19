@@ -127,8 +127,6 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	RCVDpow = 0.0;
 	RCVDgain = 0.0;
 	RCVDPhase = 0.0;
-
-	if(lem){ lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain*AntennaPolarValue, AntennaPhase); }//send inital data to the connector
 }
 
 bool LEM_RR::IsDCPowered()
@@ -827,7 +825,11 @@ void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "RR_RADARDATAGOOD", radarDataGood);
 	papiWriteScenario_double(scn, "RR_RANGE", range);
 	papiWriteScenario_double(scn, "RR_RATE", rate);
-	oapiWriteLine(scn, end_str);
+	papiWriteScenario_double(scn, "RR_RCVDFREQ", RCVDfreq);
+	papiWriteScenario_double(scn, "RR_RCVDPOW", RCVDpow);
+	papiWriteScenario_double(scn, "RR_RCVDGAIN", RCVDgain);
+	papiWriteScenario_double(scn, "RR_RCVDPHASE", RCVDPhase);
+	oapiWriteLine(scn, end_str); 
 }
 
 void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
@@ -846,5 +848,9 @@ void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "RR_RADARDATAGOOD", radarDataGood);
 		papiReadScenario_double(line, "RR_RANGE", range);
 		papiReadScenario_double(line, "RR_RATE", rate);
+		papiReadScenario_double(line, "RR_RCVDFREQ", RCVDfreq);
+		papiReadScenario_double(line, "RR_RCVDPOW", RCVDpow);
+		papiReadScenario_double(line, "RR_RCVDGAIN", RCVDgain);
+		papiReadScenario_double(line, "RR_RCVDPHASE", RCVDPhase);
 	}
 }

@@ -2443,7 +2443,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - mat_L01 + 0;
+	int lightmat = VC_NMAT - mat_L01 + 1;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 

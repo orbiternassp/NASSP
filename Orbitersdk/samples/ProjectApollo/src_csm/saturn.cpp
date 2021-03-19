@@ -257,12 +257,12 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	EMSDvSetSwitch(Sclick),
 	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
 	ForwardHatch(HatchOpenSound, HatchCloseSound),
-	omnia(_V(0.0, 0.707108, 0.707108)),
-	omnib(_V(0.0, -0.707108, 0.707108)),
-	omnic(_V(0.0, -0.707108, -0.707108)),
-	omnid(_V(0.0, 0.707108, -0.707108)),
-	vhfAntRight(_V(0.0, 0.7716246, 0.63607822)),
-	vhfAntLeft(_V(0.0, -0.7716246, -0.63607822)),
+	omnia(_V(0.707108, -0.707108, 0.0)), //Orbiter Coordinate System
+	omnib(_V(-0.707108, -0.707108, 0.0)), //Orbiter Coordinate System
+	omnic(_V(-0.707108, 0.707108, 0.0)), //Orbiter Coordinate System
+	omnid(_V(0.707108, 0.707108, 0.0)), //Orbiter Coordinate System
+	vhfAntRight(_V(0.7716246, -0.63607822, 0.0)), //Orbiter Coordinate System
+	vhfAntLeft(_V(-0.7716246, 0.63607822, 0.0)), //Orbiter Coordinate System
 	LogicPowerSwitch(2),
 	H2Tank1TempSensor("H2Tank1-Temp-Sensor", -425.0, -200.0),
 	H2Tank2TempSensor("H2Tank2-Temp-Sensor", -425.0, -200.0),
@@ -877,6 +877,7 @@ void Saturn::initSaturn()
 
 	viewpos = SATVIEW_LEFTSEAT;
 
+	dockringidx = -1;
 	probeidx = -1;
 	probeextidx = -1;
 	crewidx = -1;
@@ -890,8 +891,8 @@ void Saturn::initSaturn()
 	cmdocktgtidx = -1;
 	simbaypanelidx = -1;
 	vcidx = -1;
-
-	probe = NULL;
+	seatsfoldedidx = -1;
+	seatsunfoldedidx = -1;
 
 	Scorrec = false;
 
@@ -932,6 +933,9 @@ void Saturn::initSaturn()
 	LongestTimestep = 0;
 	LongestTimestepLength = 0.0;
 	CurrentTimestep = 0;
+
+	// VC Seats status
+	VCSeatsfolded = false;
 
 	// call only once 
 	if (!InitSaturnCalled) {
@@ -1000,19 +1004,6 @@ void Saturn::clbkPostCreation()
 			}
 		}
 	}
-}
-
-void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount)
-{
-	if (probeidx != -1 && HasProbe) {
-		probe = GetDevMesh(vis, probeidx);
-		ProbeVis();
-	}
-}
-
-void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount)
-{
-	probe = NULL;
 }
 
 void Saturn::GetPayloadName(char *s)
@@ -1557,6 +1548,7 @@ int Saturn::GetMainState()
 	state.S1bPanel = S1bPanel;
 	state.TLISoundsLoaded = TLISoundsLoaded;
 	state.CMdocktgt = CMdocktgt;
+	state.VCSeatsfolded = VCSeatsfolded;
 
 	return state.word;
 }
@@ -1584,6 +1576,7 @@ void Saturn::SetMainState(int s)
 	S1bPanel = (state.S1bPanel != 0);
 	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
 	CMdocktgt = (state.CMdocktgt != 0);
+	VCSeatsfolded = (state.VCSeatsfolded != 0);
 }
 
 int Saturn::GetSLAState()

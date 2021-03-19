@@ -28,6 +28,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_F_INSERTION		10
 // Ends at TLI Update
 #define MST_F_EPO1			11
+#define MST_F_EPO2			12
+#define MST_F_EPO3			13
+#define MST_F_EPO4			14
 // Ends at TLI BURN
 #define MST_F_TRANSLUNAR1	21
 // Ends at separation
@@ -70,6 +73,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_F_TRANSLUNAR19	39
 // Ends at LOI-1 update
 #define MST_F_TRANSLUNAR20	40
+#define MST_F_TRANSLUNAR21	41
+#define MST_F_TRANSLUNAR22	42
 // Ends at rev 2 map update
 #define MST_F_LUNAR_ORBIT_LOI_DAY_1		100
 // Ends at LOI-2 update

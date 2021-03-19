@@ -188,19 +188,12 @@ void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
 			pLM->ButtonClick();
 			break;
 		case LM_BUTTON_ABORT:
-			//Ugly solution, should go into AbortSwitch.SetState(...)
 			state = pLM->AbortSwitch.GetState(); 
 			if (state == 0) {
-				pLM->AbortSwitch.SwitchTo(1, true);
-				pLM->Sclick.play();
-				pLM->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
-				pLM->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+				pLM->AbortSwitch.SwitchTo(1);
 			}
 			else if (state == 1) {
-				pLM->AbortSwitch.SwitchTo(0, true);
-				pLM->Sclick.play();
-				pLM->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
-				pLM->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+				pLM->AbortSwitch.SwitchTo(0);
 			}
 			break;
 		case LM_BUTTON_ABORT_STAGE:			
@@ -418,6 +411,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	SetDockMode(0);
 
 	// Docking port (0)
+	// CSM/LM interface is located at 312.5 inches in LM coordinates
+	// Applying the same shift as for the DPS in lemmesh.cpp this gives: 312.5 in - (254 in - 0.99 m) = 2.4759 m
+	// TBD: Implement that
 	SetLmDockingPort(2.6);
 
 	// Docking port used for LM/SLA connection (1)
@@ -452,6 +448,12 @@ LEM::~LEM()
 		}
 		dx8ppv->Release();
 		dx8ppv = NULL;
+	}
+
+	if (aeaa)
+	{
+		delete aeaa;
+		aeaa = NULL;
 	}
 }
 
@@ -538,6 +540,8 @@ void LEM::Init()
 	vcmesh = NULL;
 
 	pMCC = NULL;
+
+	aeaa = NULL;
 
 	trackLightPos = _V(0, 0, 0);
 	for (int i = 0;i < 5;i++)
@@ -1661,6 +1665,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "SCCA3_BEGIN", sizeof("SCCA3_BEGIN"))) {
 			scca3.LoadState(scn, "SCCA_END");
 		}
+		else if (!strnicmp(line, "AscEngArmAssy", 13)) {
+			if (aeaa) aeaa->LoadState(line);
+		}
 		else if (!strnicmp(line, APSPROPELLANT_START_STRING, sizeof(APSPROPELLANT_START_STRING))) {
 			APSPropellant.LoadState(scn);
 		}
@@ -2058,6 +2065,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scca1.SaveState(scn, "SCCA1_BEGIN", "SCCA_END");
 	scca2.SaveState(scn, "SCCA2_BEGIN", "SCCA_END");
 	scca3.SaveState(scn, "SCCA3_BEGIN", "SCCA_END");
+	if (aeaa) aeaa->SaveState(scn);
 	APSPropellant.SaveState(scn);
 	APS.SaveState(scn, "APS_BEGIN", "APS_END");
 	RCSA.SaveState(scn, "RCSPROPELLANT_A_BEGIN", "RCSPROPELLANT_END");
@@ -2117,8 +2125,8 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	pMission->LoadMission(ApolloNo);
 
-	agc.SetMissionInfo(pMission->GetLGCVersion(), CSMName);
-	aea.SetMissionInfo(pMission->GetAEAVersion());
+	agc.SetOtherVesselName(CSMName);
+	CreateMissionSpecificSystems();
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
@@ -2141,6 +2149,7 @@ void LEM::AEAPadLoad(unsigned int address, unsigned int value)
 	aea.PadLoad(address, value);
 }
 
+// Set level of RCS thruster, using secondary coils
 void LEM::SetRCSJet(int jet, bool fire) {
 	if (th_rcs[jet] == NULL) return;  // Sanity check
 	SetThrusterLevel(th_rcs[jet], fire);
@@ -2154,62 +2163,7 @@ double LEM::GetRCSThrusterLevel(int jet)
 
 // Set level of RCS thruster, using primary coils
 void LEM::SetRCSJetLevelPrimary(int jet, double level) {
-	/* THRUSTER TABLE:
-		0	A1U		8	A3U
-		1	A1F		9	A3R
-		2	B1L		10	B3A
-		3	B1D		11	B3D
-
-		4	B2U		12	B4U
-		5	B2L		13	B4F
-		6	A2A		14	A4R
-		7	A2D		15	A4D
-	*/
-	// The thruster is a Marquardt R-4D, which uses 46 watts @ 28 volts to fire.
-	// This applies to the SM as well, someone should probably tell them about this.
-	// RCS pressurized?
-
-	// Is this thruster on?	
-	switch(jet){
-		// SYS A
-		case 0: // QUAD 1
-		case 1:
-			if(RCS_A_QUAD1_TCA_CB.Voltage() > 24){ RCS_A_QUAD1_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 6: // QUAD 2
-		case 7:
-			if(RCS_A_QUAD2_TCA_CB.Voltage() > 24){ RCS_A_QUAD2_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 8: // QUAD 3
-		case 9:
-			if(RCS_A_QUAD3_TCA_CB.Voltage() > 24){ RCS_A_QUAD3_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 14: // QUAD 4
-		case 15:
-			if(RCS_A_QUAD4_TCA_CB.Voltage() > 24){ RCS_A_QUAD4_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-
-		// SYS B
-		case 2: // QUAD 1
-		case 3:
-			if(RCS_B_QUAD1_TCA_CB.Voltage() > 24){ RCS_B_QUAD1_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 4: // QUAD 2
-		case 5:
-			if(RCS_B_QUAD2_TCA_CB.Voltage() > 24){ RCS_B_QUAD2_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 10: // QUAD 3
-		case 11:
-			if(RCS_B_QUAD3_TCA_CB.Voltage() > 24){ RCS_B_QUAD3_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-		case 12: // QUAD 4
-		case 13:
-			if(RCS_B_QUAD4_TCA_CB.Voltage() > 24){ RCS_B_QUAD4_TCA_CB.DrawPower(46); }else{ level = 0; }
-			break;
-	}
-
 	if (th_rcs[jet] == NULL) return;  // Sanity check
-
 	SetThrusterLevel(th_rcs[jet], level);
 }
 
@@ -2297,42 +2251,50 @@ void LEM::StopSeparationPyros()
 
 void LEM::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 {
+	double tanky, resty, fm, restmass, totaly;
 	double m = GetMass();
 
 	//Descent stage
 	if (stage < 2)
 	{
 		//Y-coordinate of DPS propellant tanks
-		double tanky = 4.067429;
+		tanky = 4.067429;
 		//Y-coordinate of "rest" of the full LM (empirically derived)
-		double resty = 5.5;
-		double fm = 0.0;
+		resty = 5.5;
+		fm = 0.0;
 		if (ph_Dsc != NULL) { fm = GetPropellantMass(ph_Dsc); }
-		double restmass = m - fm;
-		double totaly = (tanky*fm + resty * restmass) / m;
+		restmass = m - fm;
+		totaly = (tanky*fm + resty * restmass) / m;
 
-		//5.4516 is the offset between the full LM mesh and the LM coordinate system
-		COG = _V(0.0, totaly - 5.4516, 0.0);
+		//5.4616 is the offset between the full LM mesh and the LM coordinate system
+		COG = _V(0.0, totaly - 5.4616, 0.0);
 		//COG = _V(0.0, 0.0, 0.0);
 		PMI = _V(2.5428, 2.2871, 2.7566);
 	}
 	//Ascent stage
 	else
 	{
-		//Use this when RCS minimum impulse behavior is better
-		/*static double xaxis[3] = { 3.9839365e-8, -5.363325e-4, 2.625888102 };
-		static double yaxis[3] = { -1.925907e-8, 2.1607777e-4, 1.255232416 };
-		static double zaxis[3] = { -9.068924e-8, 9.4558155e-4, -0.7852828715 };
+		//LM-7 data from Operational Data Book
+		MATRIX3 CGData = pMission->GetLMCGCoefficients();
 
-		COG = _V(0, -0.8755, 0);
 		VECTOR3 p;
+		p.x = CGData.m11 * m*m + CGData.m12 * m + CGData.m13;
+		p.y = CGData.m21 * m*m + CGData.m22 * m + CGData.m23;
+		p.z = CGData.m31 * m*m + CGData.m32 * m + CGData.m33;
+		//7.2116 is the offset between the ascent stage mesh and the LM coordinate system
+		COG = _V(p.y, p.x - 7.2116, p.z); //Switch to Orbiter coordinates here
+
+		//LM-7 mass data from Operational Data Book
+		static double xaxis[3] = { -9.773352930507752e-09,  -2.002652528853579e-04,   2.158070696191321e+00 };
+		static double yaxis[3] = { -1.982580828901464e-08,   2.180921051287748e-04,   1.279468795611901e+00 };
+		static double zaxis[3] = { -1.493493149106471e-07,   1.346185241563343e-03,  -1.387949293268988e+00 };
 
 		p.x = xaxis[0] * m*m + xaxis[1] * m + xaxis[2];
 		p.y = yaxis[0] * m*m + yaxis[1] * m + yaxis[2];
 		p.z = zaxis[0] * m*m + zaxis[1] * m + zaxis[2];
-		PMI = p;*/
+		PMI = p;
 
-		PMI = _V(2.8, 2.29, 2.37);
-		COG = _V(0, 0, 0);
+		//PMI = _V(2.8, 2.29, 2.37);
+		//COG = _V(0, 0, 0);
 	}
 }

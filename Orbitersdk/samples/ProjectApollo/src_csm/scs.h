@@ -129,7 +129,6 @@ public: // We use these inside a timestep, so everything is public to make data 
 	double GetPitchEulerResolver();
 	double GetYawEulerResolver();
 
-	VECTOR3 rates;					// Integrated Euler rotation rates
 	Saturn *sat;
 	// FDAI error needle data from CMC
 	int fdai_err_ena;

@@ -245,10 +245,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
 		{ "Set Target", 0, 'T' },
 		{ "State Vector Slot", 0, 'D' },
 		{ "AGS K Factor", 0, 'A' },
+		{ "", 0, ' ' },
 
 		{ "Calculate State Vector", 0, 'C' },
 		{ "", 0, ' ' },
@@ -262,10 +262,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_svtarget);
 	RegisterFunction("SLT", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchSVSlot);
 	RegisterFunction("AGS", OAPI_KEY_A, &ApolloRTCCMFD::menuSetAGSKFactor);
+	RegisterFunction("KFA", OAPI_KEY_U, &ApolloRTCCMFD::menuGetAGSKFactor);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuAGSSVCalc);
 	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
@@ -3167,12 +3167,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu93[] =
 	{
+		{ "Enter vector time", 0, 'T' },
+		{ "Enter vehicle", 0, 'H' },
 		{ "Column 1", 0, ' ' },
 		{ "Column 2", 0, ' ' },
 		{ "Column 3", 0, ' ' },
 		{ "Column 4", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
 
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -3184,10 +3184,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu93, sizeof(mnu93) / sizeof(MFDBUTTONMENU));
 
+	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::menuVectorCompareTime);
 	RegisterFunction("VEH", OAPI_KEY_H, &ApolloRTCCMFD::menuVectorCompareVehicle);
-	RegisterFunction("TIM", OAPI_KEY_Q, &ApolloRTCCMFD::menuVectorCompareTime);
-	RegisterFunction("V1", OAPI_KEY_T, &ApolloRTCCMFD::menuVectorCompareColumn1);
-	RegisterFunction("V2", OAPI_KEY_Q, &ApolloRTCCMFD::menuVectorCompareColumn2);
+	RegisterFunction("V1", OAPI_KEY_Q, &ApolloRTCCMFD::menuVectorCompareColumn1);
+	RegisterFunction("V2", OAPI_KEY_P, &ApolloRTCCMFD::menuVectorCompareColumn2);
 	RegisterFunction("V3", OAPI_KEY_V, &ApolloRTCCMFD::menuVectorCompareColumn3);
 	RegisterFunction("V4", OAPI_KEY_L, &ApolloRTCCMFD::menuVectorCompareColumn4);
 
@@ -3269,16 +3269,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu96[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Set SV time", 0, 'G' },
+		{ "Get GRR time from LVDC", 0, 'Q' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Set target", 0, 'T' },
+		{ "Calculate SV", 0, 'C' },
+		{ "Uplink SV to LVDC", 0, 'U' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
@@ -3287,7 +3287,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu96, sizeof(mnu96) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TIM", OAPI_KEY_G, &ApolloRTCCMFD::menuSetSVTime);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("GRR", OAPI_KEY_Q, &ApolloRTCCMFD::menuUpdateGRRTime);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
@@ -3295,7 +3295,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_svtarget);
 	RegisterFunction("CLC", OAPI_KEY_A, &ApolloRTCCMFD::menuSLVNavigationUpdateCalc);
-	RegisterFunction("UPL", OAPI_KEY_G, &ApolloRTCCMFD::menuSLVNavigationUpdateUplink);
+	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuSLVNavigationUpdateUplink);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);

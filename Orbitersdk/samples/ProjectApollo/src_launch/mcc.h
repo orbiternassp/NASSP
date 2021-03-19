@@ -25,6 +25,7 @@
 #define _PA_MCC_H
 
 #include "MCCPADForms.h"
+#include <fstream>
 
 // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
@@ -250,7 +251,7 @@ public:
 	int LM_uplink_buffer();									// Send uplink buffer to LM
 	void setState(int newState);							// Set mission state
 	void setSubState(int newState);							// Set mission substate
-	void drawPad();											// Draw PAD display
+	void drawPad(bool writetofile = true);					// Draw PAD display
 	void allocPad(int Number);								// Allocate memory for PAD form
 	void freePad();											// Free memory occupied by PAD form
 	void UpdateMacro(int type, int padtype, bool condition, int updatenumber, int nextupdate, bool altcriterium = false, bool altcondition = false, int altnextupdate = 0);
@@ -319,6 +320,8 @@ public:
 	char upMessage[1024];									// Update message
 	bool scrubbed;											// Maneuver scrubbed
 	int upType;												// Uplink type (1 = CSM, 2 = LM)
+	std::ofstream mcclog;
+	bool logfileinit;
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer

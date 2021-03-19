@@ -1185,7 +1185,7 @@ void TLMCCProcessor::Option7()
 	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 	//Step 2
 	ConvergeTLMC(outarray.v_pl, outarray.psi_pl, outarray.lng_pl, lat, R, T, true);
-	//Step4
+	//Step 3
 	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, MEDQuantities.H_pl, DataTable.lat_pc1);
 	VECTOR3 RF, VF;
 	double mfm0;
@@ -1201,7 +1201,7 @@ void TLMCCProcessor::Option8()
 	double V, R, lng, lat, psi, T, h_pl;
 
 	//Empirical first guess
-	R = (MEDQuantities.H_pl + DataTable.rad_lls) / R_E;
+	R = (DataTable.h_pc1 + DataTable.rad_lls) / R_E;
 	V = sqrt(0.184 + 0.553 / (R + 20.0*1852.0 / R_E));
 	lng = PI;
 	lat = DataTable.lat_pc1;
@@ -1215,12 +1215,18 @@ void TLMCCProcessor::Option8()
 		R = R0 + dt * (R - R0) / 15.0;
 	}
 
-	h_pl = R* R_E - DataTable.rad_lls;
-
 	//Step 1
 	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 
 	//Step 2
+	if (MEDQuantities.H_pl > 0)
+	{
+		h_pl = MEDQuantities.H_pl;
+	}
+	else
+	{
+		h_pl = R * R_E - DataTable.rad_lls;
+	}
 	VECTOR3 R_EM, V_EM, R_ES;
 	double incl_pg, lat_split, GMT_pc;
 	GMT_pc = DataTable.GMT_pc1;
@@ -1304,7 +1310,7 @@ void TLMCCProcessor::Option9A()
 	bool err;
 
 	//Empirical first guess
-	R = (MEDQuantities.H_pl + DataTable.rad_lls) / R_E;
+	R = (DataTable.h_pc1 + DataTable.rad_lls) / R_E;
 	V = sqrt(0.184 + 0.553 / (R + 20.0*1852.0 / R_E));
 	lng = PI;
 	lat = DataTable.lat_pc1;
@@ -1318,14 +1324,22 @@ void TLMCCProcessor::Option9A()
 		R = R0 + dt * (R - R0) / 15.0;
 	}
 
-	h_pl = R * R_E - DataTable.rad_lls;
-
 	//Step 1
 	err = ConvergeTLMC(V, psi, lng, lat, R, T, false);
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
 	double incl_pg, lat_split, GMT_pc;
+
+	if (MEDQuantities.H_pl > 0)
+	{
+		h_pl = MEDQuantities.H_pl;
+	}
+	else
+	{
+		h_pl = R * R_E - DataTable.rad_lls;
+	}
+
 	GMT_pc = DataTable.GMT_pc1;
 	EPHEM(GMT_pc, R_EM, V_EM, R_ES);
 	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MEDQuantities.GMTBase + GMT_pc / 24.0 / 3600.0), R_EM);
@@ -1415,7 +1429,7 @@ void TLMCCProcessor::Option9B()
 	bool recycle = false;
 
 	//Empirical first guess
-	R = (MEDQuantities.H_pl + DataTable.rad_lls) / R_E;
+	R = (DataTable.h_pc1 + DataTable.rad_lls) / R_E;
 	V = sqrt(0.184 + 0.553 / (R + 20.0*1852.0 / R_E));
 	lng = PI;
 	lat = DataTable.lat_pc1;
@@ -1429,14 +1443,22 @@ void TLMCCProcessor::Option9B()
 		R = R0 + dt * (R - R0) / 15.0;
 	}
 
-	h_pl = R * R_E - DataTable.rad_lls;
-
 	//Step 1
 	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
 	double incl_pg, lat_split, GMT_pc;
+
+	if (MEDQuantities.H_pl > 0)
+	{
+		h_pl = MEDQuantities.H_pl;
+	}
+	else
+	{
+		h_pl = R * R_E - DataTable.rad_lls;
+	}
+
 	GMT_pc = DataTable.GMT_pc1;
 	EPHEM(GMT_pc, R_EM, V_EM, R_ES);
 	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MEDQuantities.GMTBase + GMT_pc / 24.0 / 3600.0), R_EM);
@@ -2418,7 +2440,7 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(EphemerisData sv0, double dv_gues
 	block.DepVarWeight[10] = 1.0;
 	block.DepVarWeight[12] = 1.0;
 	block.DepVarWeight[13] = 0.125;
-	block.DepVarWeight[19] = 1.0;
+	block.DepVarWeight[19] = 0.25; //If this is 1.0 the mass optimization overpowers other constraints. Why do we have to do this?
 	block.DepVarWeight[20] = 0.125;
 	if (freereturn)
 	{
@@ -3196,12 +3218,27 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF)
 
 	if (KREF == 1)
 	{
+		//Is position magnitude larger than 40 e.r.?
 		if (length(R) > 40.0*R_E)
 		{
-			return true;
+			VECTOR3 R_p, V_p;
+			double ainv, GMT_p;
+			beta = EBETA(R, V, mu_E, ainv);
+			XBETA(R, V, GMT, beta, KREF, R_p, V_p, GMT_p);
+			//Is radius of periapsis larger than 40 e.r. as well?
+			if (length(R_p) > 40.0*R_E)
+			{
+				return true;
+			}
+			//Initial guess 40 e.r., with reverse direction indication
+			if (RBETA(R, -V, 40.0*R_E, -Q, mu_E, beta))
+			{
+				return true;
+			}
 		}
 		else
 		{
+			//Initial guess 40 e.r.
 			if (RBETA(R, V, 40.0*R_E, Q, mu_E, beta))
 			{
 				return true;
@@ -3213,12 +3250,27 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF)
 	}
 	else
 	{
+		//Is position magnitude larger than 10 e.r.?
 		if (length(R) > 10.0*R_E)
 		{
-			return true;
+			VECTOR3 R_p, V_p;
+			double ainv, GMT_p;
+			beta = EBETA(R, V, mu_M, ainv);
+			XBETA(R, V, GMT, beta, KREF, R_p, V_p, GMT_p);
+			//Is radius of periapsis larger than 10 e.r. as well?
+			if (length(R_p) > 10.0*R_E)
+			{
+				return true;
+			}
+			//Initial guess 10 e.r., with reverse direction indication
+			if (RBETA(R, -V, 10.0*R_E, -Q, mu_E, beta))
+			{
+				return true;
+			}
 		}
 		else
 		{
+			//Initial guess 10 e.r.
 			if (RBETA(R, V, 10.0*R_E, Q, mu_M, beta))
 			{
 				return true;
@@ -3252,11 +3304,11 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF)
 		r2 = length(R2);
 		/*if (KREF == 1)
 		{
-			if (r1 > 60.0*R_E) return false;
+			if (r1 > 60.0*R_E) return true;
 		}
 		else
 		{
-			if (r1 > 15.0*R_E) return false;
+			if (r1 > 15.0*R_E) return true;
 		}*/
 		Ratio = r2 / r1;
 		DRatio = Ratio_desired - Ratio;
@@ -3291,7 +3343,7 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF)
 
 bool TLMCCProcessor::RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, double &beta)
 {
-	double D0, r0, v0, ainv, e, QD, temp;
+	double D0, r0, v0, ainv, e, QD, temp, D0sign;
 
 	//Q: +1 = Solution will be ahead of initial position with respect to direction of motion, -1 = solution behind initial position
 	if (Q == -1)
@@ -3310,6 +3362,14 @@ bool TLMCCProcessor::RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, d
 	r0 = length(R0);
 	v0 = length(V0);
 	D0 = dotp(R0, V0);
+	if (D0 >= 0)
+	{
+		D0sign = 1.0;
+	}
+	else
+	{
+		D0sign = -1.0;
+	}
 	ainv = 2.0 / r0 - v0 * v0 / mu;
 	e = sqrt(pow(1.0 - r0 * ainv, 2) + D0 * D0*ainv / mu);
 	if (e < 0.000001)
@@ -3336,7 +3396,7 @@ bool TLMCCProcessor::RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, d
 			{
 				return true;
 			}
-			H0 = D0 / abs(D0)*log(cosh_H0 + sqrt(temp));
+			H0 = D0sign *log(cosh_H0 + sqrt(temp));
 		}
 		temp = cosh_H * cosh_H - 1.0;
 		if (temp < 0)
@@ -3362,7 +3422,7 @@ bool TLMCCProcessor::RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, d
 		{
 			E0 += PI2;
 		}
-		E0 = D0 / abs(D0)*E0;
+		E0 = D0sign *E0;
 		temp = 1.0 - cos_E * cos_E;
 		if (temp < 0)
 		{
