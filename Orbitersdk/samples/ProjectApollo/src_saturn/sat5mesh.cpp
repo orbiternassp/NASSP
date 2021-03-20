@@ -210,6 +210,8 @@ static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
 static MESHHANDLE hlta_2r;
 
+static SURFHANDLE hLMVCpl;
+
 static SURFHANDLE contrail_tex;
 static SURFHANDLE exhaust_tex;
 
@@ -247,6 +249,9 @@ void LoadSat5Meshes()
 	LOAD_MESH(hLMPKD, "ProjectApollo/LM_SLA");
 	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
 	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
+
+	// LM VC mesh pre-loaded to avoid long pause at CSM/LV separation
+	LOAD_MESH(hLMVCpl, "ProjectApollo/LM_VC");
 
 	contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
