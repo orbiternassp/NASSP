@@ -373,7 +373,7 @@ public:
 class h_Accumulator : public h_Tank
 {
 public:
-	h_Accumulator(char* i_name, vector3 i_p);
+	h_Accumulator(char* i_name, vector3 i_p, double i_vol);
 	virtual ~h_Accumulator();
 
 };

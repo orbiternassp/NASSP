@@ -406,11 +406,12 @@ void H_system::Create_h_Accumulator(char* line) {
 
 	line = ReadConfigLine();
 	while (strnicmp(line, "</ACCUMULATOR>", 7)) {
-		sscanf(line, "<%lf %lf %lf> <%lf %lf %lf> %lf",
-			&pos.x, &pos.y, &pos.z,
-			&dir.x, &dir.y, &dir.z,
-			&volume);
-
+		sscanf(line + 6, " %s <%lf %lf %lf> %lf %lf",
+			name,
+			&pos.x,
+			&pos.y,
+			&pos.z,
+			&volume, &isol);
 		line = ReadConfigLine();
 	}
 }
