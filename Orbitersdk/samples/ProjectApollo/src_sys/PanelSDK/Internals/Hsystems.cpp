@@ -1443,7 +1443,7 @@ void h_Accumulator::refresh(double dt)
 	space.Volume = (0.0000338420 * space.Press) - 1.2666587702;
 
 	if (space.Volume >= (0.8 * Original_volume))
-	{ 
+	{
 		space.Volume = (0.8 * Original_volume);
 	}
 
@@ -1454,4 +1454,3 @@ void h_Accumulator::refresh(double dt)
 
 	//sprintf(oapiDebugString(), "Volume %lf Pressure %lf Original Volume %lf", space.Volume, space.Press*PSI, Original_volume);
 }
-
