@@ -396,7 +396,7 @@ void H_system::Create_h_Accumulator(char* line) {
 	int open;
 	h_Valve* valve;
 
-	sscanf(line + 14, " %s <%lf %lf %lf> %lf %lf",
+	sscanf(line + 13, " %s <%lf %lf %lf> %lf %lf",
 		name,
 		&pos.x,
 		&pos.y,
