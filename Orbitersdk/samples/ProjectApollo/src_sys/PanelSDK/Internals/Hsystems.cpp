@@ -1429,16 +1429,28 @@ void h_HeatLoad::refresh(double dt)
 		heat_load = 0.0;
 	}
 }
-
-h_Accumulator::h_Accumulator(char* i_name, vector3 i_p) 
+/*
+h_Accumulator::h_Accumulator(char* i_name, vector3 i_p, double i_vol) : h_Tank(i_name, i_p, i_vol)
 {
 
 	space.Void();
 	parent = NULL;
 }
-
+*/
 void h_Accumulator::refresh(double dt)
 {
 	h_Tank::refresh(dt);
-	space.Volume = 5.0 * space.Press;
+
+	space.Volume = (0.0000338420 * space.Press) - 1.2666587702;
+
+	if (space.Volume >= (0.8 * Original_volume))
+	{ 
+		space.Volume = (0.8 * Original_volume);
+	}
+
+	else if (space.Volume <= (0.05 * Original_volume))
+	{
+		space.Volume = (0.05 * Original_volume);
+	}
 }
+
