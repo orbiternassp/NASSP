@@ -386,36 +386,6 @@ void H_system::Create_h_HeatLoad(char *line) {
 	AddSystem(new h_HeatLoad(name,target));
 }
 
-void H_system::Create_h_Accumulator(char* line) {
-
-	char name[100];
-	h_Accumulator* new_one;
-	vector3 pos = _vector3(0.0, 0.0, 0.0);
-	vector3 dir;
-	double volume, isol = 0;
-	int one, two, three, four;
-	sscanf(line + 6, " %s %i %i %i %i",
-		name,
-		&one, &two, &three, &four);
-	new_one = (h_Accumulator*)AddSystem(new h_Accumulator(name, pos));
-	new_one->IN_valve.open = one;
-	new_one->OUT_valve.open = two;
-	new_one->OUT2_valve.open = three;
-	new_one->LEAK_valve.open = four;
-	new_one->space.Void(); //empty the space
-
-	line = ReadConfigLine();
-	while (strnicmp(line, "</ACCUMULATOR>", 7)) {
-		sscanf(line + 6, " %s <%lf %lf %lf> %lf %lf",
-			name,
-			&pos.x,
-			&pos.y,
-			&pos.z,
-			&volume, &isol);
-		line = ReadConfigLine();
-	}
-}
-
 void H_system::Build() {
 	
 	char *line;
@@ -444,8 +414,6 @@ void H_system::Build() {
 			Create_h_CO2Scrubber(line);
 		else if (Compare(line, "<H2OSEP>"))
 			Create_h_WaterSeparator(line);
-		else if (Compare(line, "<ACCUMULATOR>"))
-			Create_h_Accumulator(line);
 		else if (Compare(line, "<HEATLOAD>"))
 			Create_h_HeatLoad(line);
 		do {

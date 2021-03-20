@@ -370,11 +370,9 @@ public:
 	virtual void* GetComponent(char *component_name);
 };
 
-class h_Accumulator : public h_Tank
-{
-public:
-	h_Accumulator(char* i_name, vector3 i_p, double i_vol);
-	virtual ~h_Accumulator();
+class h_Accumulator : public h_Tank {
+
+	void refresh(double dt);
 
 };
 #endif

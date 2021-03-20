@@ -1430,13 +1430,15 @@ void h_HeatLoad::refresh(double dt)
 	}
 }
 
-h_Accumulator::h_Accumulator(char* i_name, vector3 i_p, double i_vol) : h_Tank(i_name, i_p, i_vol)
+h_Accumulator::h_Accumulator(char* i_name, vector3 i_p) 
 {
 
 	space.Void();
 	parent = NULL;
 }
 
-h_Accumulator::~h_Accumulator() {
-	//nothing !!!!
+void h_Accumulator::refresh(double dt)
+{
+	h_Tank::refresh(dt);
+	space.Volume = 5.0 * space.Press;
 }
