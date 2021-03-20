@@ -1432,7 +1432,6 @@ void h_HeatLoad::refresh(double dt)
 
 h_Accumulator::h_Accumulator(char* i_name, vector3 i_p, double i_vol) : h_Tank(i_name, i_p, i_vol)
 {
-
 	space.Void();
 	parent = NULL;
 }
@@ -1453,6 +1452,6 @@ void h_Accumulator::refresh(double dt)
 		space.Volume = (0.05 * Original_volume);
 	}
 
-	sprintf(oapiDebugString(), "Volume %lf Pressure %lf Original Volume %lf", space.Volume, space.Press, Original_volume);
+	sprintf(oapiDebugString(), "Volume %lf Pressure %lf Original Volume %lf", space.Volume, space.Press*PSI, Original_volume);
 }
 
