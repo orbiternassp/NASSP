@@ -1609,7 +1609,7 @@ double LEM_ECS::GetPrimaryGlycolQuantity() {
 
 double LEM_ECS::GetPrimaryGlycolTempF() {
 	if (!Primary_CL_Glycol_Temp) {
-		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
+		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLDINLET:TEMP");
 	}
 	return KelvinToFahrenheit(*Primary_CL_Glycol_Temp);
 }
@@ -1822,7 +1822,7 @@ double LEM_ECS::GetPrimaryGlycolPumpDP()
 		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLDOUTLET:PRESS");
 	}
 	if (!Primary_Glycol_Accu_Press) {
-		Primary_Glycol_Accu_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
+		Primary_Glycol_Accu_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLDINLET:PRESS");
 	}
 	return (*Primary_CL_Glycol_Press - *Primary_Glycol_Accu_Press)*PSI;
 }
