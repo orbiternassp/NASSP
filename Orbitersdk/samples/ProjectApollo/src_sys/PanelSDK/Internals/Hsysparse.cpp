@@ -389,7 +389,7 @@ void H_system::Create_h_HeatLoad(char *line) {
 void H_system::Create_h_Accumulator(char* line) {
 
 	char name[100], valvename[100];
-	h_Tank* new_one;
+	h_Accumulator* new_one;
 	vector3 pos;
 	double volume, isol = 0;
 	float size = 0;
@@ -403,7 +403,7 @@ void H_system::Create_h_Accumulator(char* line) {
 		&pos.z,
 		&volume, &isol);
 
-	new_one = (h_Tank*)AddSystem(new h_Tank(name, pos, volume));
+	new_one = (h_Accumulator*)AddSystem(new h_Accumulator(name, pos, volume));
 
 	h_substance loaded_sub;
 	new_one->space.Void(); //empty the space
@@ -693,5 +693,68 @@ void* h_HeatLoad::GetComponent(char *component_name) {
 		return (void*)&heat_load;
 
 	BuildError(2);	//no such component
+	return NULL;
+}
+
+void* h_Accumulator::GetComponent(char* component_name) {
+
+	if (!strnicmp(component_name, "OUT2", 4)) {//talks about the out valve
+		if (strlen(component_name) == 4)
+			return &OUT2_valve;//the valve is all it wants
+	//or maybe something else
+		return OUT2_valve.GetComponent(component_name + 5);
+	};
+	if (!strnicmp(component_name, "OUT", 3)) {//talks about the out valve
+		if (strlen(component_name) == 3)
+			return &OUT_valve;//the valve is all it wants
+	//or maybe something else
+		return OUT_valve.GetComponent(component_name + 4);
+	};
+	if (!strnicmp(component_name, "IN", 2)) {
+		if (strlen(component_name) == 2)
+			return &IN_valve;//the valve is all it wants
+	//or maybe something else
+		return IN_valve.GetComponent(component_name + 3);
+	};
+	if (!strnicmp(component_name, "LEAK", 4)) {
+		if (strlen(component_name) == 4)
+			return &LEAK_valve;//the valve is all it wants
+	//or maybe something else
+		return LEAK_valve.GetComponent(component_name + 5);
+	};
+	if (!strnicmp(component_name, "TEMP", 4))
+		return &(space.Temp);
+	if (!strnicmp(component_name, "ENERGY", 6))
+		return &(space.Q);
+	if (!strnicmp(component_name, "MASS", 4))
+		return &(space.total_mass);
+	if (!strnicmp(component_name, "PRESS", 5))
+		return &(space.Press);
+	if (!strnicmp(component_name, "VOLUME", 6))
+		return &(space.Volume);
+	if (!strnicmp(component_name, "O2_PPRESS", 9))
+		return &(space.composition[0].p_press);
+	if (!strnicmp(component_name, "H2_PPRESS", 9))
+		return &(space.composition[1].p_press);
+	if (!strnicmp(component_name, "N2_PPRESS", 9))
+		return &(space.composition[3].p_press);
+	if (!strnicmp(component_name, "CO2_PPRESS", 10))
+		return &(space.composition[4].p_press);
+	if (!strnicmp(component_name, "H2O_PPRESS", 10))
+		return &(space.composition[2].p_press);
+	if (!strnicmp(component_name, "AZ_PPRESS", 9))
+		return &(space.composition[6].p_press);
+	if (!strnicmp(component_name, "N2O4_PPRESS", 11))
+		return &(space.composition[7].p_press);
+	if (!strnicmp(component_name, "HE_PPRESS", 9))
+		return &(space.composition[8].p_press);
+	if (!strnicmp(component_name, "H2_VAPORMASS", 12))
+		return &(space.composition[1].vapor_mass);
+	if (!strnicmp(component_name, "O2_VAPORMASS", 12))
+		return &(space.composition[0].vapor_mass);
+	if (!strnicmp(component_name, "H2O_MASS", 8))
+		return &(space.composition[2].mass);
+
+	BuildError(2);
 	return NULL;
 }
