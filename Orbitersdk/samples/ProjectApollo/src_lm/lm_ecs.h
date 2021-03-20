@@ -427,7 +427,8 @@ public:
 	double *Primary_CL_Glycol_Temp;							// Temperature before and after pumps
 	double *Secondary_CL_Glycol_Temp;						// Temperature before and after pumps
 	double *Primary_Glycol_Accu;								// Glycol Accumulator mass
-	double *Primary_Glycol_Pump_Manifold;						// Pump manifold mass
+	double *Primary_Glycol_Pump_Manifold_Inlet;						// Pump manifold inlet mass
+	double* Primary_Glycol_Pump_Manifold_Outlet;						// Pump manifold outlet mass
 	double *Primary_Glycol_HXCooling;						// HXCooling mass
 	double *Primary_Glycol_Loop1;							// Loop 1 mass
 	double *Primary_Glycol_WaterHX;							// Water glycol HX mass

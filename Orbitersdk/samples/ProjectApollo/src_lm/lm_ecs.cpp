@@ -1361,7 +1361,8 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Primary_CL_Glycol_Temp = 0;							// 40 in the accu, 0 other side of the pump
 	Secondary_CL_Glycol_Temp = 0;						// 40 in the accu, 0 other side of the pump
 	Primary_Glycol_Accu = 0;							// Glycol Accumulator mass
-	Primary_Glycol_Pump_Manifold = 0;					// Pump manifold mass
+	Primary_Glycol_Pump_Manifold_Inlet = 0;					// Pump manifold inlet mass
+	Primary_Glycol_Pump_Manifold_Outlet = 0;					// Pump manifold outlet mass
 	Primary_Glycol_HXCooling = 0;						// HXCooling mass
 	Primary_Glycol_Loop1 = 0;							// Loop 1 mass
 	Primary_Glycol_WaterHX = 0;							// Water glycol HX mass
@@ -1560,7 +1561,7 @@ double LEM_ECS::GetSuitTempF() {
 
 double LEM_ECS::GetPrimaryGlycolPressure() {
 	if (!Primary_CL_Glycol_Press) {
-		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD:PRESS");
+		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLDOUTLET:PRESS");
 	}
 	return *Primary_CL_Glycol_Press * PSI;
 }
@@ -1569,8 +1570,11 @@ double LEM_ECS::GetPrimaryGlycolQuantity() {
 	if (!Primary_Glycol_Accu) {
 		Primary_Glycol_Accu = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:MASS");
 	}
-	if (!Primary_Glycol_Pump_Manifold) {
-		Primary_Glycol_Pump_Manifold = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD:MASS");
+	if (!Primary_Glycol_Pump_Manifold_Inlet) {
+		Primary_Glycol_Pump_Manifold_Inlet = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLDINLET:MASS");
+	}
+	if (!Primary_Glycol_Pump_Manifold_Outlet) {
+		Primary_Glycol_Pump_Manifold_Outlet = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLDOUTLET:MASS");
 	}
 	if (!Primary_Glycol_HXCooling) {
 		Primary_Glycol_HXCooling = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXCOOLING:MASS");
@@ -1599,7 +1603,7 @@ double LEM_ECS::GetPrimaryGlycolQuantity() {
 	if (!Primary_Glycol_DesCooling) {
 		Primary_Glycol_DesCooling = (double*)sdk.GetPointerByString("HYDRAULIC:DESBATCOOLING:MASS");
 	}
-	return (*Primary_Glycol_Accu + *Primary_Glycol_Pump_Manifold + *Primary_Glycol_HXCooling + *Primary_Glycol_Loop1 + *Primary_Glycol_WaterHX + *Primary_Glycol_Loop2 +
+	return (*Primary_Glycol_Accu + *Primary_Glycol_Pump_Manifold_Inlet + *Primary_Glycol_Pump_Manifold_Outlet + *Primary_Glycol_HXCooling + *Primary_Glycol_Loop1 + *Primary_Glycol_WaterHX + *Primary_Glycol_Loop2 +
 		*Primary_Glycol_HXHeating + *Primary_Glycol_EvapIn + *Primary_Glycol_EvapOut + *Primary_Glycol_AscCooling + *Primary_Glycol_DesCooling) * LBS;
 }
 
