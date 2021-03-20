@@ -126,6 +126,7 @@ class H_system:public ship_system
 	void Create_h_CO2Scrubber(char *line);
 	void Create_h_WaterSeparator(char *line);
 	void Create_h_HeatLoad(char *line);
+	void Create_h_Accumulator(char* line);
 
 public:
 
@@ -179,7 +180,7 @@ public:
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual int Flow(h_volume block);
 	h_volume GetFlow(double volume, double maxMass = 0);	//flow from a tank is defined in volume
-	virtual void thermic( double _en);  //tank has it's own termic function, to account for the h_volume
+	virtual void thermic( double _en);  //tank has it's own thermic function, to account for the h_volume
 	virtual void Load(FILEHANDLE scn);
 	virtual void Save(FILEHANDLE scn);
 	virtual void* GetComponent(char *component_name);
@@ -369,4 +370,11 @@ public:
 	virtual void* GetComponent(char *component_name);
 };
 
+class h_Accumulator : public h_Tank
+{
+public:
+	h_Accumulator(char* i_name, vector3 i_p);
+	virtual ~h_Accumulator();
+
+};
 #endif
