@@ -325,8 +325,8 @@ public:
 	bool GetGlycolPumpFailRelay() { return GlycolPumpFailRelay; }
 	bool GetGlycolPumpState(int i);
 protected:
-	h_Tank *primGlycolAccumulatorTank;
-	h_Tank *primGlycolPumpManifoldTank;
+	h_Tank *primGlycolPumpManifoldTankInlet;
+	h_Tank *primGlycolPumpManifoldTankOutlet;
 	Pump *glycolPump1;
 	Pump *glycolPump2;
 	RotationalSwitch *glycolRotary;

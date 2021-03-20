@@ -1141,8 +1141,8 @@ void LEMWaterTankSelect::SystemTimestep(double simdt)
 
 LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
 {
-	primGlycolAccumulatorTank = NULL;
-	primGlycolPumpManifoldTank = NULL;
+	primGlycolPumpManifoldTankInlet = NULL;
+	primGlycolPumpManifoldTankOutlet = NULL;
 	glycolPump1CB = NULL;
 	glycolPump2CB = NULL;
 	glycolPumpAutoTransferCB = NULL;
@@ -1160,8 +1160,8 @@ LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
 
 void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h)
 {
-	primGlycolAccumulatorTank = pgat;
-	primGlycolPumpManifoldTank = pgpmt;
+	primGlycolPumpManifoldTankInlet = pgat;
+	primGlycolPumpManifoldTankOutlet = pgpmt;
 	glycolPump1 = gp1;
 	glycolPump2 = gp2;
 	glycolRotary = gr;
@@ -1174,9 +1174,9 @@ void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, P
 
 void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 {
-	if (!primGlycolPumpManifoldTank || !primGlycolAccumulatorTank) return;
+	if (!primGlycolPumpManifoldTankOutlet || !primGlycolPumpManifoldTankInlet) return;
 
-	double DPSensor = primGlycolPumpManifoldTank->space.Press - primGlycolAccumulatorTank->space.Press;
+	double DPSensor = primGlycolPumpManifoldTankOutlet->space.Press - primGlycolPumpManifoldTankInlet->space.Press;
 
 	if (PressureSwitch == false && DPSensor < 3.0 / PSI)
 	{
@@ -1819,7 +1819,7 @@ double LEM_ECS::GetPrimaryGlycolPumpDP()
 	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
 
 	if (!Primary_CL_Glycol_Press) {
-		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD:PRESS");
+		Primary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLDOUTLET:PRESS");
 	}
 	if (!Primary_Glycol_Accu_Press) {
 		Primary_Glycol_Accu_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
