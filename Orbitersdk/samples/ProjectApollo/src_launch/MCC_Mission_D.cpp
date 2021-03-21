@@ -333,7 +333,7 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 221.0*3600.0 + 5.0*60.0, 70, MST_D_DAY10STATE7);
 		break;
 	case MST_D_DAY10STATE7: //CSM/LM state vector update to Block Data 23
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_NONE, cm->MissionTime > 232.0*3600.0 + 25.0*60.0, 3, MST_D_DAY11STATE1);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 232.0*3600.0 + 25.0*60.0, 3, MST_D_DAY11STATE1);
 		break;
 	case MST_D_DAY11STATE1: //Block Data 23 to Deorbit Maneuver Update
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 235.0*3600.0 + 15.0*60.0, 71, MST_D_DAY11STATE2);
