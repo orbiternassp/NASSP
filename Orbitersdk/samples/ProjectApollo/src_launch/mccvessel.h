@@ -37,13 +37,18 @@ public:
 	void clbkPostCreation();
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
+	void clbkSetClassCaps(FILEHANDLE cfg);
 	bool clbkLoadVC(int id);
+	bool clbkVCRedrawEvent(int id, int event, SURFHANDLE surf);
+	bool clbkVCMouseEvent(int id, int event, VECTOR3 &p);
+	void clbkMFDMode(int mfd, int mode);
 
 	MCC *mcc;
 	RTCC *rtcc;
 protected:
 	void CreateMCC();
 	void LoadVC();
+	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int xdist);
 
 	char CSMName[64];
 	char LEMName[64];

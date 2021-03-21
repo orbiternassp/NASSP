@@ -129,7 +129,10 @@ void MCCVessel::clbkLoadStateEx(FILEHANDLE scn, void *status)
 		}
 		else ParseScenarioLineEx(line, status);
 	}
+}
 
+void MCCVessel::clbkSetClassCaps(FILEHANDLE cfg)
+{
 	LoadVC();
 }
 
