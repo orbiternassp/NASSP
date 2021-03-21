@@ -131,6 +131,11 @@ void MCCVessel::clbkLoadStateEx(FILEHANDLE scn, void *status)
 	}
 }
 
+void MCCVessel::clbkSetClassCaps(FILEHANDLE cfg)
+{
+	LoadVC();
+}
+
 void MCCVessel::clbkPostCreation()
 {
 	//CSM

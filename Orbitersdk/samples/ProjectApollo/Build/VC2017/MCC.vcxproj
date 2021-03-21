@@ -180,6 +180,7 @@
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
+    <ClCompile Include="..\..\src_launch\mccvc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mccvessel.h" />
