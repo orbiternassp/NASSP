@@ -624,11 +624,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	svtargetnumber = -1;
 	TLCCSolGood = true;
 
-	RLSUplink = _V(0, 0, 0);
-	for (int i = 0;i < 010;i++)
-	{
-		RLSOctals[i] = 0;
-	}
 	for (int i = 0;i < 5;i++)
 	{
 		TLANDOctals[i] = 0;
@@ -1661,45 +1656,31 @@ void ARCore::LandingSiteUpdate()
 	GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] = rad;
 }
 
-void ARCore::LSUplinkCalc()
+void ARCore::CSMLSUplinkCalc()
 {
-	VECTOR3 R_P;
-
-	R_P = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
-
-	RLSUplink = R_P;
-
-	RLSOctals[0] = 10;
-
-	if (vesseltype < 2)
-	{
-		RLSOctals[1] = 2025;
-	}
-	else
-	{
-		if (GC->mission < 14)
-		{
-			RLSOctals[1] = 2022;
-		}
-		else
-		{
-			RLSOctals[1] = 2020;
-		}
-	}
-
-	RLSOctals[2] = OrbMech::DoubleToBuffer(RLSUplink.x, 27, 1);
-	RLSOctals[3] = OrbMech::DoubleToBuffer(RLSUplink.x, 27, 0);
-	RLSOctals[4] = OrbMech::DoubleToBuffer(RLSUplink.y, 27, 1);
-	RLSOctals[5] = OrbMech::DoubleToBuffer(RLSUplink.y, 27, 0);
-	RLSOctals[6] = OrbMech::DoubleToBuffer(RLSUplink.z, 27, 1);
-	RLSOctals[7] = OrbMech::DoubleToBuffer(RLSUplink.z, 27, 0);
+	GC->rtcc->CMMCMCLS(RTCC_MPT_CSM);
 }
 
-void ARCore::LandingSiteUplink()
+void ARCore::LMLSUplinkCalc()
+{
+	GC->rtcc->CMMCMCLS(RTCC_MPT_LM);
+}
+
+void ARCore::CSMLandingSiteUplink()
 {
 	for (int i = 0;i < 010;i++)
 	{
-		g_Data.emem[i] = RLSOctals[i];
+		g_Data.emem[i] = GC->rtcc->CZLSVECT.CSMLSUpdate.Octals[i];
+	}
+
+	UplinkData();
+}
+
+void ARCore::LMLandingSiteUplink()
+{
+	for (int i = 0;i < 010;i++)
+	{
+		g_Data.emem[i] = GC->rtcc->CZLSVECT.LMLSUpdate.Octals[i];
 	}
 
 	UplinkData();

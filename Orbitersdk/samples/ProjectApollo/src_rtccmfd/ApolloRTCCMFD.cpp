@@ -949,7 +949,14 @@ void ApolloRTCCMFD::menuSetLSUpdateMenu()
 
 void ApolloRTCCMFD::menuSetLSUplinkPage()
 {
-	screen = 50;
+	if (G->vesseltype < 2)
+	{
+		screen = 50;
+	}
+	else
+	{
+		screen = 98;
+	}
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -4305,16 +4312,29 @@ void ApolloRTCCMFD::menuSVUpload()
 	}
 }
 
-void ApolloRTCCMFD::menuLSUplinkCalc()
+void ApolloRTCCMFD::menuCSMLSUplinkCalc()
 {
-	G->LSUplinkCalc();
+	G->CSMLSUplinkCalc();
 }
 
-void ApolloRTCCMFD::menuLSUpload()
+void ApolloRTCCMFD::menuLMLSUplinkCalc()
+{
+	G->LMLSUplinkCalc();
+}
+
+void ApolloRTCCMFD::menuCSMLSUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		G->LandingSiteUplink();
+		G->CSMLandingSiteUplink();
+	}
+}
+
+void ApolloRTCCMFD::menuLMLSUpload()
+{
+	if (!G->inhibUplLOS || !G->vesselinLOS())
+	{
+		G->LMLandingSiteUplink();
 	}
 }
 

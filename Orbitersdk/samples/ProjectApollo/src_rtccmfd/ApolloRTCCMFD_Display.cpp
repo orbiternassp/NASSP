@@ -4289,30 +4289,34 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
-	else if (screen == 50)
+	else if (screen == 50 || screen == 98)
 	{
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
-		if (G->vesseltype < 2)
+		RTCC::LandingSiteMakupBuffer *tab;
+
+		if (screen == 50)
 		{
 			skp->Text(4 * W / 8, 2 * H / 14, "LANDING SITE UPDT TO CMC (293)", 30);
+			tab = &GC->rtcc->CZLSVECT.CSMLSUpdate;
 		}
 		else
 		{
 			skp->Text(4 * W / 8, 2 * H / 14, "LANDING SITE UPDT TO LGC (294)", 30);
+			tab = &GC->rtcc->CZLSVECT.LMLSUpdate;
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		skp->Text(1 * W / 8, 4 * H / 14, "LAT", 3);
 		skp->Text(1 * W / 8, 5 * H / 14, "LNG", 3);
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", tab->lat * DEG);
 		skp->Text(2 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", tab->lng * DEG);
 		skp->Text(2 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(4 * W / 8, 4 * H / 14, "RAD", 3);
-		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
+		sprintf(Buffer, "%.2f NM", tab->rad / 1852.0);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 32, 13 * H / 28, "OID", 3);
@@ -4337,15 +4341,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		for (int i = 0;i < 010;i++)
 		{
-			sprintf(Buffer, "%05d", G->RLSOctals[i]);
+			sprintf(Buffer, "%05d", tab->Octals[i]);
 			skp->Text(15 * W / 32, (i + 15) * H / 28, Buffer, strlen(Buffer));
 		}
 
-		sprintf(Buffer, "%.1f", G->RLSUplink.x);
+		sprintf(Buffer, "%.1f", tab->R_LS.x);
 		skp->Text(22 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->RLSUplink.y);
+		sprintf(Buffer, "%.1f", tab->R_LS.y);
 		skp->Text(22 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->RLSUplink.z);
+		sprintf(Buffer, "%.1f", tab->R_LS.z);
 		skp->Text(22 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
 	}
 	else if (screen == 51)

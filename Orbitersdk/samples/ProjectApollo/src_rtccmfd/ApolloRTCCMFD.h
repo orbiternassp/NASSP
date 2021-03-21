@@ -151,7 +151,6 @@ public:
 	void menuSwitchSVSlot();
 	void menuSVUpload();
 	void menuLSCalc();
-	void menuLSUpload();
 	void menuAGSSVCalc();
 	void menuEntryUpdateUpload();
 	void menuCycleTwoImpulseOption();
@@ -494,8 +493,11 @@ public:
 	void menuSetUplinkMenu();
 	void menuSetStateVectorMenu();
 	void menuSetLSUpdateMenu();
-	void menuLSUplinkCalc();
 	void menuSetLSUplinkPage();
+	void menuCSMLSUplinkCalc();
+	void menuLMLSUplinkCalc();
+	void menuCSMLSUpload();
+	void menuLMLSUpload();
 	void menuSetP30UplinkPage();
 	void menuSetRetrofireEXDVUplinkPage();
 	void menuREFSMMATUplinkCalc();

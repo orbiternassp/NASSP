@@ -71,8 +71,10 @@ public:
 	void StateVectorCalc();
 	void AGSStateVectorCalc();
 	void LandingSiteUpdate();
-	void LSUplinkCalc();
-	void LandingSiteUplink();
+	void CSMLSUplinkCalc();
+	void LMLSUplinkCalc();
+	void CSMLandingSiteUplink();
+	void LMLandingSiteUplink();
 	void VecPointCalc();
 	void TerrainModelCalc();
 	void DKICalc();
@@ -280,8 +282,6 @@ public:
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
 	AP11AGSSVPAD agssvpad;
-	VECTOR3 RLSUplink;
-	int RLSOctals[010];
 	int TLANDOctals[5];
 
 	//MANEUVER PAD PAGE

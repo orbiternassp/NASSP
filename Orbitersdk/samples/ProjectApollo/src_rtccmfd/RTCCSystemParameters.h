@@ -179,6 +179,10 @@ struct RTCCSystemParameters
 	int MCCLRF_DL = 01733;
 	//LGC address for desired REFSMMAT uplink
 	int MCCLXS = 3606;
+	//CMC address for landing site uplink
+	int MCCRLS = 2025;
+	//LGC address for landing site uplink
+	int MCLRLS = 2022;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
 	int MGRTAG = 1;
 	//Gravitational constant of the Moon (Er^3/hr^2)
