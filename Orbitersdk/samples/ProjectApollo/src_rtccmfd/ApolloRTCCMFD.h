@@ -491,18 +491,13 @@ public:
 	void RelativeMotionDigitalsCalc();
 	void menuChooseRETPlan();
 	void menuSetUplinkMenu();
-	void menuSetStateVectorMenu();
 	void menuSetLSUpdateMenu();
-	void menuSetLSUplinkPage();
 	void menuCSMLSUplinkCalc();
 	void menuLMLSUplinkCalc();
 	void menuCSMLSUpload();
 	void menuLMLSUpload();
-	void menuSetP30UplinkPage();
-	void menuSetRetrofireEXDVUplinkPage();
 	void menuREFSMMATUplinkCalc();
 	bool REFSMMATUplinkCalc(char *str);
-	void menuSetREFSMMATUplinkPage();
 	void menuSetTITransferPage();
 	void menuCycleTITable();
 	void menuSetTIPlanNumber();
@@ -676,6 +671,8 @@ public:
 	void GMPManeuverCodeName(char *buffer, int code);
 	void menuMSKRequest();
 	void SelectMCCScreen(int num);
+	void menuUplinkDisplayRequest();
+	void SelectUplinkScreen(int num);
 	void menuSetOnlineMonitorPage();
 	void menuSetSkeletonFlightPlanPage();
 	void menuMidcourseTradeoffPage();
@@ -722,7 +719,6 @@ public:
 	void menuGOSTSXTCalc();
 	void menuGOSTShowStarVector();
 	void menuGOSTShowLandmarkVector();
-	void menuSetSLVNavigationUpdatePage();
 	void menuSLVNavigationUpdateCalc();
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();

@@ -19,7 +19,6 @@ struct ApolloRTCCMFDData {  // global data storage
 	int connStatus;
 	int emem[24];
 	int uplinkState;
-	int uplinkLEM;
 	IMFD_BURN_DATA burnData;
 	std::queue<unsigned char> uplinkBuffer;
 	double uplinkBufferSimt;
@@ -68,7 +67,7 @@ public:
 	void DeorbitCalc();
 	void TLCCCalc();
 	void EntryUpdateCalc();
-	void StateVectorCalc();
+	void StateVectorCalc(int type);
 	void AGSStateVectorCalc();
 	void LandingSiteUpdate();
 	void CSMLSUplinkCalc();
@@ -108,17 +107,17 @@ public:
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
-	void UplinkData();
-	void UplinkData2();
-	void send_agc_key(char key);
-	void uplink_word(char *data);
-	void P30UplinkCalc();
-	void P30Uplink();
+	void UplinkData(bool isCSM);
+	void UplinkData2(bool isCSM);
+	void send_agc_key(char key, bool isCSM);
+	void uplink_word(char *data, bool isCSM);
+	void P30UplinkCalc(bool isCSM);
+	void P30Uplink(bool isCSM);
 	void RetrofireEXDVUplinkCalc();
 	void RetrofireEXDVUplink();
 	void EntryUpdateUplink(void);
-	void REFSMMATUplink(void);
-	void StateVectorUplink();
+	void REFSMMATUplink(bool isCSM);
+	void StateVectorUplink(int type);
 	void TLANDUplinkCalc(void);
 	void TLANDUplink(void);
 	void EMPP99Uplink(int i);
@@ -169,7 +168,7 @@ public:
 	//GENERAL PARAMETERS
 	double P30TIG;				//Maneuver GET
 	VECTOR3 dV_LVLH;			//LVLH maneuver vector
-	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked, 4 = MCC
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
 	bool inhibUplLOS;
 	bool PADSolGood;
