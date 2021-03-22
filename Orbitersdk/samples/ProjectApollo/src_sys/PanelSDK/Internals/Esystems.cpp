@@ -519,7 +519,7 @@ void FCell::UpdateFlow(double dt)
 			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
 			Amperes = Volts / loadResistance;
 			++NumSteps;
-			if ((abs(Volts - voltsLastTimestep) < 0.001) && (abs(Amperes - ampsLastTimestep) < 0.001))
+			if ((abs(Volts - voltsLastTimestep) < 0.00001) && (abs(Amperes - ampsLastTimestep) < 0.00001))
 			{
 				break;
 			}
