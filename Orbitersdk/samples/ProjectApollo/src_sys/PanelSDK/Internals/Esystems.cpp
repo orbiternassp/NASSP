@@ -503,7 +503,7 @@ void FCell::UpdateFlow(double dt)
 		
 		//coefficients for 5th order approximation of fuel cell performance, taken from:
 		//CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-10
-		double A = 0.023951368224792 * Temp + 25.9241562583015;
+		double A = 0.023951368224792 * Temp + 25.4241562583015;
 		double B = 0.003480859912024 * Temp - 2.19986938582928;
 		double C = -0.0001779207513 * Temp + 0.104916556604259;
 		double D = 5.0656524872309E-06 * Temp - 0.002885372247954;
