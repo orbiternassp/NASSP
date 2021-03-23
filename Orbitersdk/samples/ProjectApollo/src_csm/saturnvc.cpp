@@ -422,7 +422,7 @@ void Saturn::InitVC()
 	// Register active areas for repainting here
 	//
 		
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 11);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 14);
 	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 2);
 
 	// Panel 1
