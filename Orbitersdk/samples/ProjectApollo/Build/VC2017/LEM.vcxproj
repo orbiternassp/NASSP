@@ -161,6 +161,7 @@
     <ClCompile Include="..\..\src_lm\CWEA_FlipFlop.cpp" />
     <ClCompile Include="..\..\src_lm\lemconnector.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aca.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_aeaa.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_cwea.cpp" />
     <ClCompile Include="..\..\src_lm\lm_dps.cpp" />
@@ -369,6 +370,7 @@
     <ClInclude Include="..\..\src_aux\vesim.h" />
     <ClInclude Include="..\..\src_lm\CWEA_FlipFlop.h" />
     <ClInclude Include="..\..\src_lm\lemconnector.h" />
+    <ClInclude Include="..\..\src_lm\lm_aeaa.h" />
     <ClInclude Include="..\..\src_lm\LM_AscentStageResource.h" />
     <ClInclude Include="..\..\src_lm\LM_DescentStageResource.h" />
     <ClInclude Include="..\..\src_lm\lm_eps.h" />

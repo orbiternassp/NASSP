@@ -374,7 +374,11 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	vesseltype = 0;
 	lemdescentstage = true;
 
-	if (strcmp(v->GetName(), "Spider") == 0)
+	if (strcmp(v->GetName(), "MCC") == 0)
+	{
+		vesseltype = 4;
+	}
+	else if (strcmp(v->GetName(), "Spider") == 0)
 	{
 		vesseltype = 2;
 	}
@@ -494,14 +498,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
 	g_Data.uplinkState = 0;
-	if (vesseltype < 2)
+	if (vesseltype >= 2)
 	{
-		g_Data.uplinkLEM = 0;
-	}
-	else
-	{
-		g_Data.uplinkLEM = 1;
-
 		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
 			!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
 			LEM *lem = (LEM *)vessel;
@@ -557,7 +555,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	RTETradeoffMode = 0;
 
 	SVSlot = true; //true = CSM; false = Other
-	SVDesiredGET = 0.0;
+	SVDesiredGET = -1;
 	manpad.Trun = 0.0;
 	manpad.Shaft = 0.0;
 	manpad.Star = 0;
@@ -624,11 +622,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	svtargetnumber = -1;
 	TLCCSolGood = true;
 
-	RLSUplink = _V(0, 0, 0);
-	for (int i = 0;i < 010;i++)
-	{
-		RLSOctals[i] = 0;
-	}
 	for (int i = 0;i < 5;i++)
 	{
 		TLANDOctals[i] = 0;
@@ -1200,6 +1193,7 @@ void ARCore::TransferRTEToMPT()
 
 void ARCore::DAPPADCalc()
 {
+	if (vesseltype == 4) return;
 	if (vesseltype < 2)
 	{
 		GC->rtcc->CSMDAPUpdate(vessel, DAP_PAD);
@@ -1248,6 +1242,68 @@ void ARCore::CalculateTPITime()
 void ARCore::VectorCompareDisplayCalc()
 {
 	startSubthread(25);
+}
+
+void ARCore::UpdateGRRTime()
+{
+	if (svtarget == NULL) return;
+
+	bool isSaturnV;
+	double T_L, Azi;
+	LVDC *lvdc;
+
+	if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+	{
+		Saturn *iuv = (Saturn *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = true;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+	{
+		Saturn *iuv = (Saturn *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = false;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+	{
+		SIVB *iuv = (SIVB *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = true;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+	{
+		SIVB *iuv = (SIVB *)svtarget;
+		lvdc = iuv->GetIU()->GetLVDC();
+		isSaturnV = false;
+	}
+	else
+	{
+		return;
+	}
+
+	if (isSaturnV)
+	{
+		LVDCSV *l = (LVDCSV*)lvdc;
+		T_L = l->T_L;
+		Azi = l->Azimuth;
+	}
+	else
+	{
+		LVDC1B *l = (LVDC1B*)lvdc;
+		T_L = l->T_GRR;
+		Azi = l->Azimuth;
+	}
+
+	int hh, mm;
+	double ss;
+	char Buff[128];
+	OrbMech::SStoHHMMSS(T_L, hh, mm, ss);
+	sprintf_s(Buff, "P12,IU1,%d:%d:%.2lf,%.3lf;", hh, mm, ss, Azi*DEG);
+	GC->rtcc->GMGMED(Buff);
 }
 
 void ARCore::GetStateVectorFromIU()
@@ -1299,7 +1355,7 @@ void ARCore::GetStateVectorFromIU()
 void ARCore::GetStateVectorsFromAGS()
 {
 	//Are we a LM?
-	if (vesseltype < 2) return;
+	if (vesseltype < 2 || vesseltype == 4) return;
 
 	//0-6: pos and vel
 	int csmvecoct[6], lmvecoct[6];
@@ -1386,6 +1442,8 @@ void ARCore::GetStateVectorsFromAGS()
 
 void ARCore::GetStateVectorFromAGC(bool csm)
 {
+	if (vesseltype == 4) return;
+
 	agc_t* vagc;
 
 	if (vesseltype < 2)
@@ -1599,55 +1657,41 @@ void ARCore::LandingSiteUpdate()
 	GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] = rad;
 }
 
-void ARCore::LSUplinkCalc()
+void ARCore::CSMLSUplinkCalc()
 {
-	VECTOR3 R_P;
-
-	R_P = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
-
-	RLSUplink = R_P;
-
-	RLSOctals[0] = 10;
-
-	if (vesseltype < 2)
-	{
-		RLSOctals[1] = 2025;
-	}
-	else
-	{
-		if (GC->mission < 14)
-		{
-			RLSOctals[1] = 2022;
-		}
-		else
-		{
-			RLSOctals[1] = 2020;
-		}
-	}
-
-	RLSOctals[2] = OrbMech::DoubleToBuffer(RLSUplink.x, 27, 1);
-	RLSOctals[3] = OrbMech::DoubleToBuffer(RLSUplink.x, 27, 0);
-	RLSOctals[4] = OrbMech::DoubleToBuffer(RLSUplink.y, 27, 1);
-	RLSOctals[5] = OrbMech::DoubleToBuffer(RLSUplink.y, 27, 0);
-	RLSOctals[6] = OrbMech::DoubleToBuffer(RLSUplink.z, 27, 1);
-	RLSOctals[7] = OrbMech::DoubleToBuffer(RLSUplink.z, 27, 0);
+	GC->rtcc->CMMCMCLS(RTCC_MPT_CSM);
 }
 
-void ARCore::LandingSiteUplink()
+void ARCore::LMLSUplinkCalc()
+{
+	GC->rtcc->CMMCMCLS(RTCC_MPT_LM);
+}
+
+void ARCore::CSMLandingSiteUplink()
 {
 	for (int i = 0;i < 010;i++)
 	{
-		g_Data.emem[i] = RLSOctals[i];
+		g_Data.emem[i] = GC->rtcc->CZLSVECT.CSMLSUpdate.Octals[i];
 	}
 
-	UplinkData();
+	UplinkData(true);
 }
 
-void ARCore::StateVectorCalc()
+void ARCore::LMLandingSiteUplink()
+{
+	for (int i = 0;i < 010;i++)
+	{
+		g_Data.emem[i] = GC->rtcc->CZLSVECT.LMLSUpdate.Octals[i];
+	}
+
+	UplinkData(false);
+}
+
+void ARCore::StateVectorCalc(int type)
 {
 	int uplveh, mptveh;
 
-	if (vesseltype < 2)
+	if (type == 0 || type == 9)
 	{
 		uplveh = 1;
 	}
@@ -1655,7 +1699,7 @@ void ARCore::StateVectorCalc()
 	{
 		uplveh = 2;
 	}
-	if (SVSlot)
+	if (type == 0 || type == 21)
 	{
 		mptveh = RTCC_MPT_CSM;
 	}
@@ -1666,13 +1710,30 @@ void ARCore::StateVectorCalc()
 
 	if (GC->MissionPlanningActive)
 	{
-		GC->rtcc->CMMCMNAV(uplveh, mptveh, SVDesiredGET);
+		double get;
+		if (SVDesiredGET < 0)
+		{
+			get = GC->rtcc->GETfromGMT(GC->rtcc->RTCCPresentTimeGMT());
+		}
+		else
+		{
+			get = SVDesiredGET;
+		}
+
+		GC->rtcc->CMMCMNAV(uplveh, mptveh, get);
 	}
 	else
 	{
 		EphemerisData sv0, sv1;
 		sv0 = GC->rtcc->StateVectorCalcEphem(svtarget);
-		sv1 = GC->rtcc->coast(sv0, SVDesiredGET - GC->rtcc->GETfromGMT(sv0.GMT));
+		if (SVDesiredGET < 0)
+		{
+			sv1 = sv0;
+		}
+		else
+		{
+			sv1 = GC->rtcc->coast(sv0, SVDesiredGET - GC->rtcc->GETfromGMT(sv0.GMT));
+		}
 		GC->rtcc->CMMCMNAV(uplveh, mptveh, sv1);
 	}
 }
@@ -1691,30 +1752,29 @@ void ARCore::AGSStateVectorCalc()
 	GC->rtcc->AGSStateVectorPAD(&opt, agssvpad);
 }
 
-void ARCore::StateVectorUplink()
+void ARCore::StateVectorUplink(int type)
 {
 	int *SVOctals;
-	if (vesseltype < 2)
+	bool isCSM;
+	if (type == 0)
 	{
-		if (SVSlot)
-		{
-			SVOctals = GC->rtcc->CZNAVGEN.CMCCSMUpdate.Octals;
-		}
-		else
-		{
-			SVOctals = GC->rtcc->CZNAVGEN.CMCLEMUpdate.Octals;
-		}
+		SVOctals = GC->rtcc->CZNAVGEN.CMCCSMUpdate.Octals;
+		isCSM = true;
+	}
+	else if (type == 9)
+	{
+		SVOctals = GC->rtcc->CZNAVGEN.CMCLEMUpdate.Octals;
+		isCSM = true;
+	}
+	else if (type == 21)
+	{
+		SVOctals = GC->rtcc->CZNAVGEN.LGCCSMUpdate.Octals;
+		isCSM = false;
 	}
 	else
 	{
-		if (SVSlot)
-		{
-			SVOctals = GC->rtcc->CZNAVGEN.LGCCSMUpdate.Octals;
-		}
-		else
-		{
-			SVOctals = GC->rtcc->CZNAVGEN.LGCLEMUpdate.Octals;
-		}
+		SVOctals = GC->rtcc->CZNAVGEN.LGCLEMUpdate.Octals;
+		isCSM = false;
 	}
 
 	for (int i = 0;i < 021;i++)
@@ -1722,16 +1782,16 @@ void ARCore::StateVectorUplink()
 		g_Data.emem[i] = SVOctals[i];
 	}
 
-	UplinkData();
+	UplinkData(isCSM);
 }
 
 
-void ARCore::send_agc_key(char key)	{
-
+void ARCore::send_agc_key(char key, bool isCSM)
+{
 	int bytesXmit = SOCKET_ERROR;
 	unsigned char cmdbuf[4];
 
-	if (vesseltype > 1){
+	if (isCSM == false){
 		cmdbuf[0] = 031; // VA,SA for LEM
 	}
 	else{
@@ -1825,11 +1885,11 @@ void ARCore::send_agc_key(char key)	{
 	}
 }
 
-void ARCore::REFSMMATUplink(void)
+void ARCore::REFSMMATUplink(bool isCSM)
 {
 	for (int i = 0; i < 20; i++)
 	{
-		if (vesseltype < 2)
+		if (isCSM)
 		{
 			g_Data.emem[i] = GC->rtcc->CZREFMAT.Block[0].Octals[i];
 		}
@@ -1838,12 +1898,12 @@ void ARCore::REFSMMATUplink(void)
 			g_Data.emem[i] = GC->rtcc->CZREFMAT.Block[1].Octals[i];
 		}
 	}
-	UplinkData();
+	UplinkData(isCSM);
 }
 
-void ARCore::P30UplinkCalc()
+void ARCore::P30UplinkCalc(bool isCSM)
 {
-	if (vesseltype < 2)
+	if (isCSM)
 	{
 		GC->rtcc->CMMAXTDV(P30TIG, dV_LVLH);
 	}
@@ -1853,10 +1913,10 @@ void ARCore::P30UplinkCalc()
 	}
 }
 
-void ARCore::P30Uplink()
+void ARCore::P30Uplink(bool isCSM)
 {
 	int *P30Octals;
-	if (vesseltype < 2)
+	if (isCSM)
 	{
 		P30Octals = GC->rtcc->CZAXTRDV.Octals;
 	}
@@ -1869,7 +1929,7 @@ void ARCore::P30Uplink()
 		g_Data.emem[i] = P30Octals[i];
 	}
 
-	UplinkData();
+	UplinkData(isCSM);
 }
 
 void ARCore::RetrofireEXDVUplinkCalc()
@@ -1899,7 +1959,7 @@ void ARCore::RetrofireEXDVUplink()
 		g_Data.emem[i] = RetrofireEXDVOctals[i];
 	}
 
-	UplinkData();
+	UplinkData(true);
 }
 
 void ARCore::EntryUpdateUplink(void)
@@ -1912,125 +1972,116 @@ void ARCore::EntryUpdateUplink(void)
 	g_Data.emem[5] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 0);
 
 	//g_Data.uplinkDataReady = 2;
-	UplinkData(); // Go for uplink
+	UplinkData(true); // Go for uplink
 }
 
 void ARCore::TLANDUplinkCalc(void)
 {
-	if (vesseltype > 1)
-	{
-		TLANDOctals[0] = 5;
+	TLANDOctals[0] = 5;
 
-		if (GC->mission < 14)
-		{
-			TLANDOctals[1] = 2400;
-			TLANDOctals[3] = 2401;
-		}
-		else
-		{
-			TLANDOctals[1] = 2026;
-			g_Data.emem[3] = 2027;
-		}
-		TLANDOctals[2] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 1);
-		TLANDOctals[4] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 0);
+	if (GC->mission < 14)
+	{
+		TLANDOctals[1] = 2400;
+		TLANDOctals[3] = 2401;
 	}
+	else
+	{
+		TLANDOctals[1] = 2026;
+		g_Data.emem[3] = 2027;
+	}
+	TLANDOctals[2] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 1);
+	TLANDOctals[4] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 0);
 }
 
 void ARCore::TLANDUplink(void)
 {
-	if (vesseltype > 1)
+	for (int i = 0;i < 5;i++)
 	{
-		for (int i = 0;i < 5;i++)
-		{
-			g_Data.emem[i] = TLANDOctals[i];
-		}
-
-		UplinkData2(); // Go for uplink
+		g_Data.emem[i] = TLANDOctals[i];
 	}
+
+	UplinkData2(false); // Go for uplink
 }
 
 void ARCore::EMPP99Uplink(int i)
 {
-	if (vesseltype > 1)
+	if (i == 0)
 	{
-		if (i == 0)
-		{
-			g_Data.emem[0] = 24;
-			g_Data.emem[1] = 3404;
-			g_Data.emem[2] = 1450;
-			g_Data.emem[3] = 12324;
-			g_Data.emem[4] = 5520;
-			g_Data.emem[5] = 161;
-			g_Data.emem[6] = 1400;
-			g_Data.emem[7] = 12150;
-			g_Data.emem[8] = 5656;
-			g_Data.emem[9] = 3667;
-			g_Data.emem[10] = 74066;
-			g_Data.emem[11] = 12404;
-			g_Data.emem[12] = 12433;
-			g_Data.emem[13] = 1406;
-			g_Data.emem[14] = 5313;
-			g_Data.emem[15] = 143;
-			g_Data.emem[16] = 36266;
-			g_Data.emem[17] = 54333;
-			g_Data.emem[18] = 6060;
-			g_Data.emem[19] = 77634;
+		g_Data.emem[0] = 24;
+		g_Data.emem[1] = 3404;
+		g_Data.emem[2] = 1450;
+		g_Data.emem[3] = 12324;
+		g_Data.emem[4] = 5520;
+		g_Data.emem[5] = 161;
+		g_Data.emem[6] = 1400;
+		g_Data.emem[7] = 12150;
+		g_Data.emem[8] = 5656;
+		g_Data.emem[9] = 3667;
+		g_Data.emem[10] = 74066;
+		g_Data.emem[11] = 12404;
+		g_Data.emem[12] = 12433;
+		g_Data.emem[13] = 1406;
+		g_Data.emem[14] = 5313;
+		g_Data.emem[15] = 143;
+		g_Data.emem[16] = 36266;
+		g_Data.emem[17] = 54333;
+		g_Data.emem[18] = 6060;
+		g_Data.emem[19] = 77634;
 
-			UplinkData(); // Go for uplink
-		}
-		else if(i == 1)
-		{
-			g_Data.emem[0] = 12;
-			g_Data.emem[1] = 3734;
-			g_Data.emem[2] = 26;
-			g_Data.emem[3] = 30605;
-			g_Data.emem[4] = 151;
-			g_Data.emem[5] = 5214;
-			g_Data.emem[6] = 0;
-			g_Data.emem[7] = 0;
-			g_Data.emem[8] = 15400;
-			g_Data.emem[9] = 0;
+		UplinkData(false); // Go for uplink
+	}
+	else if (i == 1)
+	{
+		g_Data.emem[0] = 12;
+		g_Data.emem[1] = 3734;
+		g_Data.emem[2] = 26;
+		g_Data.emem[3] = 30605;
+		g_Data.emem[4] = 151;
+		g_Data.emem[5] = 5214;
+		g_Data.emem[6] = 0;
+		g_Data.emem[7] = 0;
+		g_Data.emem[8] = 15400;
+		g_Data.emem[9] = 0;
 
-			UplinkData(); // Go for uplink
-		}
-		else if (i == 2)
-		{
-			g_Data.emem[0] = 17;
-			g_Data.emem[1] = 3400;
-			g_Data.emem[2] = 5520;
-			g_Data.emem[3] = 3401;
-			g_Data.emem[4] = 312;
-			g_Data.emem[5] = 3402;
-			g_Data.emem[6] = 5263;
-			g_Data.emem[7] = 3426;
-			g_Data.emem[8] = 10636;
-			g_Data.emem[9] = 3427;
-			g_Data.emem[10] = 56246;
-			g_Data.emem[11] = 3430;
-			g_Data.emem[12] = 77650;
-			g_Data.emem[13] = 3431;
-			g_Data.emem[14] = 75202;
+		UplinkData(false); // Go for uplink
+	}
+	else if (i == 2)
+	{
+		g_Data.emem[0] = 17;
+		g_Data.emem[1] = 3400;
+		g_Data.emem[2] = 5520;
+		g_Data.emem[3] = 3401;
+		g_Data.emem[4] = 312;
+		g_Data.emem[5] = 3402;
+		g_Data.emem[6] = 5263;
+		g_Data.emem[7] = 3426;
+		g_Data.emem[8] = 10636;
+		g_Data.emem[9] = 3427;
+		g_Data.emem[10] = 56246;
+		g_Data.emem[11] = 3430;
+		g_Data.emem[12] = 77650;
+		g_Data.emem[13] = 3431;
+		g_Data.emem[14] = 75202;
 
-			UplinkData2(); // Go for uplink
-		}
-		else if (i == 3)
-		{
-			g_Data.emem[0] = 15;
-			g_Data.emem[1] = 3455;
-			g_Data.emem[2] = 1404;
-			g_Data.emem[3] = 1250;
-			g_Data.emem[4] = 0;
-			g_Data.emem[5] = 3515;
-			g_Data.emem[6] = 4;
-			g_Data.emem[7] = 2371;
-			g_Data.emem[8] = 13001;
-			g_Data.emem[9] = 2372;
-			g_Data.emem[10] = 1420;
-			g_Data.emem[11] = 2373;
-			g_Data.emem[12] = 12067;
+		UplinkData2(false); // Go for uplink
+	}
+	else if (i == 3)
+	{
+		g_Data.emem[0] = 15;
+		g_Data.emem[1] = 3455;
+		g_Data.emem[2] = 1404;
+		g_Data.emem[3] = 1250;
+		g_Data.emem[4] = 0;
+		g_Data.emem[5] = 3515;
+		g_Data.emem[6] = 4;
+		g_Data.emem[7] = 2371;
+		g_Data.emem[8] = 13001;
+		g_Data.emem[9] = 2372;
+		g_Data.emem[10] = 1420;
+		g_Data.emem[11] = 2373;
+		g_Data.emem[12] = 12067;
 
-			UplinkData2(); // Go for uplink
-		}
+		UplinkData2(false); // Go for uplink
 	}
 }
 
@@ -2055,7 +2106,7 @@ void ARCore::AP11AbortCoefUplink()
 	g_Data.emem[16] = OrbMech::DoubleToBuffer(PDAPABTCOF[7] * pow(100.0, -1), 7, 1);
 	g_Data.emem[17] = OrbMech::DoubleToBuffer(PDAPABTCOF[7] * pow(100.0, -1), 7, 0);
 
-	UplinkData(); // Go for uplink
+	UplinkData(false); // Go for uplink
 }
 
 void ARCore::AP12AbortCoefUplink()
@@ -2082,10 +2133,10 @@ void ARCore::AP12AbortCoefUplink()
 	g_Data.emem[12] = OrbMech::DoubleToBuffer(PDAP_R_amin, 24, 1);
 	g_Data.emem[13] = OrbMech::DoubleToBuffer(PDAP_R_amin, 24, 0);
 
-	UplinkData(); // Go for uplink
+	UplinkData(false); // Go for uplink
 }
 
-void ARCore::UplinkData()
+void ARCore::UplinkData(bool isCSM)
 {
 	if (g_Data.connStatus == 0) {
 		int bytesRecv = SOCKET_ERROR;
@@ -2101,8 +2152,14 @@ void ARCore::UplinkData()
 		sprintf(addr, "127.0.0.1");
 		clientService.sin_family = AF_INET;
 		clientService.sin_addr.s_addr = inet_addr(addr);
-		if (g_Data.uplinkLEM > 0){ clientService.sin_port = htons(14243); }
-		else{ clientService.sin_port = htons(14242); }
+		if (isCSM)
+		{
+			clientService.sin_port = htons(14242);
+		}
+		else
+		{
+			clientService.sin_port = htons(14243);
+		}
 		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
 			//g_Data.uplinkDataReady = 0;
 			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
@@ -2111,10 +2168,10 @@ void ARCore::UplinkData()
 		}
 		sprintf(debugWinsock, "CONNECTED");
 		g_Data.uplinkState = 0;
-		send_agc_key('V');
-		send_agc_key('7');
-		send_agc_key('1');
-		send_agc_key('E');
+		send_agc_key('V', isCSM);
+		send_agc_key('7', isCSM);
+		send_agc_key('1', isCSM);
+		send_agc_key('E', isCSM);
 
 		int cnt2 = (g_Data.emem[0] / 10);
 		int cnt = (g_Data.emem[0] - (cnt2 * 10)) + cnt2 * 8;
@@ -2122,19 +2179,20 @@ void ARCore::UplinkData()
 		while (g_Data.uplinkState < cnt && cnt <= 20 && cnt >= 3)
 			{
 				sprintf(buffer, "%ld", g_Data.emem[g_Data.uplinkState]);
-				uplink_word(buffer);
+				uplink_word(buffer, isCSM);
 				g_Data.uplinkState++;
 			}
-		send_agc_key('V');
-		send_agc_key('3');
-		send_agc_key('3');
-		send_agc_key('E');
+		send_agc_key('V', isCSM);
+		send_agc_key('3', isCSM);
+		send_agc_key('3', isCSM);
+		send_agc_key('E', isCSM);
 		g_Data.connStatus = 1;
 		g_Data.uplinkState = 0;
+		//.uplinkBufferSimt = oapiGetSimTime() + 5.0; //5 second delay
 	}
 }
 
-void ARCore::UplinkData2()
+void ARCore::UplinkData2(bool isCSM)
 {
 	if (g_Data.connStatus == 0) {
 		int bytesRecv = SOCKET_ERROR;
@@ -2150,8 +2208,14 @@ void ARCore::UplinkData2()
 		sprintf(addr, "127.0.0.1");
 		clientService.sin_family = AF_INET;
 		clientService.sin_addr.s_addr = inet_addr(addr);
-		if (g_Data.uplinkLEM > 0){ clientService.sin_port = htons(14243); }
-		else{ clientService.sin_port = htons(14242); }
+		if (isCSM)
+		{
+			clientService.sin_port = htons(14242);
+		}
+		else
+		{
+			clientService.sin_port = htons(14243);
+		}
 		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
 			//g_Data.uplinkDataReady = 0;
 			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
@@ -2160,10 +2224,10 @@ void ARCore::UplinkData2()
 		}
 		sprintf(debugWinsock, "CONNECTED");
 		g_Data.uplinkState = 0;
-		send_agc_key('V');
-		send_agc_key('7');
-		send_agc_key('2');
-		send_agc_key('E');
+		send_agc_key('V', isCSM);
+		send_agc_key('7', isCSM);
+		send_agc_key('2', isCSM);
+		send_agc_key('E', isCSM);
 
 		int cnt2 = (g_Data.emem[0] / 10);
 		int cnt = (g_Data.emem[0] - (cnt2 * 10)) + cnt2 * 8;
@@ -2171,28 +2235,29 @@ void ARCore::UplinkData2()
 		while (g_Data.uplinkState < cnt && cnt <= 20 && cnt >= 3)
 		{
 			sprintf(buffer, "%ld", g_Data.emem[g_Data.uplinkState]);
-			uplink_word(buffer);
+			uplink_word(buffer, isCSM);
 			g_Data.uplinkState++;
 		}
-		send_agc_key('V');
-		send_agc_key('3');
-		send_agc_key('3');
-		send_agc_key('E');
+		send_agc_key('V', isCSM);
+		send_agc_key('3', isCSM);
+		send_agc_key('3', isCSM);
+		send_agc_key('E', isCSM);
 		g_Data.connStatus = 1;
 		g_Data.uplinkState = 0;
+		//g_Data.uplinkBufferSimt = oapiGetSimTime() + 5.0; //6 second delay
 	}
 }
 
-void ARCore::uplink_word(char *data)
+void ARCore::uplink_word(char *data, bool isCSM)
 {
 	int i;
 	for (i = 5; i > (int)strlen(data); i--) {
-		send_agc_key('0');
+		send_agc_key('0', isCSM);
 	}
 	for (i = 0; i < (int)strlen(data); i++) {
-		send_agc_key(data[i]);
+		send_agc_key(data[i], isCSM);
 	}
-	send_agc_key('E');
+	send_agc_key('E', isCSM);
 }
 
 bool ARCore::vesselinLOS()
@@ -3872,7 +3937,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			if (vesseltype < 2 || target == NULL)
+			if (vesseltype < 2 || vesseltype == 4 || target == NULL)
 			{
 				Result = 0;
 				break;
@@ -3985,7 +4050,15 @@ int ARCore::subThread()
 		}
 
 		EphemerisData sv = GC->rtcc->StateVectorCalcEphem(svtarget);
-		EphemerisData sv2 = GC->rtcc->coast(sv,  GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT);
+		EphemerisData sv2;
+		if (SVDesiredGET < 0)
+		{
+			sv2 = sv;
+		}
+		else
+		{
+			sv2 = GC->rtcc->coast(sv, GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT);
+		}
 
 		GC->rtcc->CMMSLVNAV(sv2.R, sv2.V, sv2.GMT);
 
@@ -4243,7 +4316,7 @@ int ARCore::subThread()
 	break;
 	case 35: //AGS Clock Sync
 	{
-		if (vesseltype < 2)
+		if (vesseltype < 2 || vesseltype == 4)
 		{
 			Result = 0;
 			break;

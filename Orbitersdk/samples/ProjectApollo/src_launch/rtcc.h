@@ -2694,6 +2694,8 @@ public:
 	void CMMRFMAT(int L, int id, int addr);
 	//SLV Navigation Update
 	void CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
+	//CMC/LGC Landing Site Update Load Generator
+	void CMMCMCLS(int veh);
 
 	// MISSION CONTROL (G)
 
@@ -4088,7 +4090,7 @@ public:
 		double MidcourseGET = 0.0;
 		bool Config = true; //false = undocked, true = docked
 		int SFPBlockNum = 1;
-		double h_PC = 60.0*1852.0;
+		double h_PC = -1.0;
 		double h_PC_mode5 = -1.0;
 		double incl_fr = 0.0;
 		double AZ_min = -110.0*RAD;
@@ -4233,6 +4235,26 @@ public:
 		double NUPTIM = 0.0;
 	} CZNAVSLV;
 
+	struct LandingSiteMakupBuffer
+	{
+		std::string LoadType;
+		int SequenceNumber = 0;
+		std::string PrimarySite;
+		std::string BackupSite;
+		double GETofGeneration = 0.0;
+		int Octals[8] = { 0,0,0,0,0,0,0,0 };
+		double lat = 0.0;
+		double lng = 0.0;
+		double rad = 0.0;
+		VECTOR3 R_LS = _V(0, 0, 0);
+	};
+
+	struct CMCLGCLandingSupteMakupBuffer
+	{
+		LandingSiteMakupBuffer CSMLSUpdate;
+		LandingSiteMakupBuffer LMLSUpdate;
+	} CZLSVECT;
+
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{
 		double LastUpdateTime = -1.0;
@@ -4316,7 +4338,7 @@ private:
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
 	void LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
-	void LandingSiteUplink(char *str, int RLSAddr);
+	void LandingSiteUplink(char *str, int veh);
 	void AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, bool v66 = false);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double GETbase, bool v66 = false);
 	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc = true, bool AGCCoordSystem = false);

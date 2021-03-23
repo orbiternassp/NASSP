@@ -135,7 +135,7 @@ private:
 	double dlngapo, dt0, x2, x2_apo;
 	double EMSAlt;
 	double k1, k2, k3, k4;
-	double phi2;
+	double phi2; //+1 near apogee solution, -1 near perigee solution
 	double earthorbitangle; //31.7° nominal angled reentry DV vector
 	double R_E;
 	bool entrynominal; //0 = minimum DV entry, 1 = 31.7° line

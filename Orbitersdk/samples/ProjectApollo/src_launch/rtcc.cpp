@@ -1940,6 +1940,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MCCLRF", SystemParameters.MCCLRF);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
+			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
 			papiReadScenario_double(Buff, "PZREAP_RRBIAS", PZREAP.RRBIAS);
 			papiReadScenario_double(Buff, "PZREAP_IRMAX", PZREAP.IRMAX);
 			papiReadScenario_double(Buff, "PDI_K_X", RTCCPDIIgnitionTargets.K_X);
@@ -2038,8 +2039,8 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 
 	for (int i = 0;i < 8;i++)
 	{
-		pad.Area[i][0] = 0;
-		pad.Wx[i][0] = 0;
+		pad.Area[i][0] = '\0';
+		pad.Wx[i][0] = '\0';
 	}
 
 	for (int i = 0;i < opt->n;i++)
@@ -6570,23 +6571,19 @@ void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double GETbase, bool
 	}
 }
 
-void RTCC::LandingSiteUplink(char *str, int RLSAddr)
+void RTCC::LandingSiteUplink(char *str, int veh)
 {
-	VECTOR3 R;
-	int emem[8];
-
-	R = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-
-	emem[0] = 10;
-	emem[1] = RLSAddr;
-	emem[2] = OrbMech::DoubleToBuffer(R.x, 27, 1);
-	emem[3] = OrbMech::DoubleToBuffer(R.x, 27, 0);
-	emem[4] = OrbMech::DoubleToBuffer(R.y, 27, 1);
-	emem[5] = OrbMech::DoubleToBuffer(R.y, 27, 0);
-	emem[6] = OrbMech::DoubleToBuffer(R.z, 27, 1);
-	emem[7] = OrbMech::DoubleToBuffer(R.z, 27, 0);
-
-	V71Update(str, emem, 8);
+	CMMCMCLS(veh);
+	int *octals;
+	if (veh == RTCC_MPT_CSM)
+	{
+		octals = CZLSVECT.CSMLSUpdate.Octals;
+	}
+	else
+	{
+		octals = CZLSVECT.LMLSUpdate.Octals;
+	}
+	V71Update(str, octals, 8);
 }
 
 void RTCC::IncrementAGCTime(char *list, double dt)
@@ -11636,7 +11633,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 {
 	OELEMENTS coe_bef, coe_aft, coe_p, coe_a;
 	SV sv0_apo, sv_a, sv_p;
-	double r_a_b, r_p_b, a_ap, a_p, dr_a_max, dr_p_max, a_D, e_D, mu, r_b, cos_theta_A, theta_A, r_a, r_p, a_a, cos_E_a, E_a, u_b, r_a_a, r_p_a;
+	double r_a_b, r_p_b, a_ap, a_p, dr_a_max, dr_p_max, a_D, e_D, mu, r_b, cos_theta_A, theta_A, r_a, r_p, a_a, cos_E_a, E_a, l_b, u_b, r_a_a, r_p_a;
 	double dr_ap0, dr_p0, dr_ap_c, dr_p_c, dr_ap1, dr_p1, ddr_ap, ddr_p, eps;
 	int n, nmax;
 
@@ -11648,6 +11645,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 
 	coe_bef = OrbMech::coe_from_sv(sv0.R, sv0.V, mu);
 	u_b = fmod(coe_bef.TA + coe_bef.w, PI2);
+	l_b = OrbMech::TrueToMeanAnomaly(coe_bef.TA, coe_bef.e);
 	PMMAPD(sv0, sv_a, sv_p);
 
 	if (r_AD == r_PD)
@@ -11714,7 +11712,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 
 		E_a = acos(cos_E_a);
 		coe_aft.TA = acos2((a_a*(1.0 - coe_aft.e * coe_aft.e) - r_b) / (coe_aft.e*r_b));
-		if (coe_bef.TA > PI)
+		if (l_b > PI)
 		{
 			E_a = PI2 - E_a;
 			coe_aft.TA = PI2 - coe_aft.TA;
@@ -11746,8 +11744,24 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 			dr_p1 = r_PD - r_p_a;
 			ddr_ap = dr_ap0 - dr_ap1;
 			ddr_p = dr_p0 - dr_p1;
-			dr_ap_c = dr_ap1 * dr_ap_c / ddr_ap;
-			dr_p_c = dr_p1 * dr_p_c / ddr_p;
+			if (abs(ddr_ap) < 0.1)
+			{
+				dr_ap_c = 0.0;
+			}
+			else
+			{
+				dr_ap_c = dr_ap1 * dr_ap_c / ddr_ap;
+			}
+			
+			if (abs(ddr_p) < 0.1)
+			{
+				dr_p_c = 0.0;
+			}
+			else
+			{
+				dr_p_c = dr_p1 * dr_p_c / ddr_p;
+			}
+			
 			dr_ap0 = dr_ap1;
 			dr_p0 = dr_p1;
 		}
@@ -31009,6 +31023,55 @@ void RTCC::CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
 	CZNAVSLV.PosS = mul(GZLTRA.IU1_REFSMMAT, R_ecl);
 	CZNAVSLV.DotS = mul(GZLTRA.IU1_REFSMMAT, V_ecl);
 	CZNAVSLV.NUPTIM = GMT - SystemParameters.MCGRIC * 3600.0;
+}
+
+//CMC/LGC Landing Site Update Load Generator
+void RTCC::CMMCMCLS(int veh)
+{
+	LandingSiteMakupBuffer *buf;
+	unsigned int RLSAddr;
+	if (veh == RTCC_MPT_CSM)
+	{
+		buf = &CZLSVECT.CSMLSUpdate;
+		buf->LoadType = "06";
+		RLSAddr = SystemParameters.MCCRLS;
+	}
+	else
+	{
+		buf = &CZLSVECT.LMLSUpdate;
+		buf->LoadType = "26";
+		RLSAddr = SystemParameters.MCLRLS;
+	}
+
+	if (buf->SequenceNumber == 0)
+	{
+		if (veh == RTCC_MPT_CSM)
+		{
+			buf->SequenceNumber = 600;
+		}
+		else
+		{
+			buf->SequenceNumber = 2600;
+		}
+	}
+
+	buf->SequenceNumber++;
+
+	buf->GETofGeneration = GETfromGMT(RTCCPresentTimeGMT());
+	buf->lat = BZLAND.lat[RTCC_LMPOS_BEST];
+	buf->lng = BZLAND.lng[RTCC_LMPOS_BEST];
+	buf->rad = BZLAND.rad[RTCC_LMPOS_BEST];
+
+	ELGLCV(buf->lat, buf->lng, buf->R_LS, buf->rad);
+
+	buf->Octals[0] = 10;
+	buf->Octals[1] = RLSAddr;
+	buf->Octals[2] = OrbMech::DoubleToBuffer(buf->R_LS.x, 27, 1);
+	buf->Octals[3] = OrbMech::DoubleToBuffer(buf->R_LS.x, 27, 0);
+	buf->Octals[4] = OrbMech::DoubleToBuffer(buf->R_LS.y, 27, 1);
+	buf->Octals[5] = OrbMech::DoubleToBuffer(buf->R_LS.y, 27, 0);
+	buf->Octals[6] = OrbMech::DoubleToBuffer(buf->R_LS.z, 27, 1);
+	buf->Octals[7] = OrbMech::DoubleToBuffer(buf->R_LS.z, 27, 0);
 }
 
 void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)

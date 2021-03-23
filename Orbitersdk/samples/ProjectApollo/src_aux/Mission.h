@@ -53,7 +53,7 @@ namespace mission
 		//false = LM has no abort electronics assembly, true = LM has abort electronics assembly
 		virtual bool HasAEA() const;
 		//false = LM has no ascent engine arming assembly, = true = LM has ascent engine arming assembly
-		virtual bool HasAscEngArmAssy() const;
+		virtual bool LMHasAscEngArmAssy() const;
 		//false = LM has no legs, true = LM has legs
 		virtual bool LMHasLegs() const;
 		//false = CSM has no HGA, true = CSM has a HGA
@@ -69,7 +69,9 @@ namespace mission
 		//false = LM stage verify bit normal, true = inverted
 		bool IsLMStageBitInverted() const;
 		//Value of adjustable gain in pulse ratio modulator of the ATCA in the LM. 0.3 used for LM-4 and later, 0.1 for LM-3 and before
-		double Mission::GetATCA_PRM_Factor() const;
+		double GetATCA_PRM_Factor() const;
+		//Get matrix with coefficients for calculating the LM center of gravity as a quadratic function of mass
+		MATRIX3 GetLMCGCoefficients() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
@@ -84,12 +86,13 @@ namespace mission
 		int iLMDSKYVersion;
 		bool bHasLMProgramer;
 		bool bHasAEA;
-		bool bHasAscEngArmAssy;
+		bool bLMHasAscEngArmAssy;
 		bool bLMHasLegs;
 		bool bCSMHasHGA;
 		bool bCSMHasVHFRanging;
 		bool bInvertLMStageBit;
 		double dATCA_PRM_Factor;
+		MATRIX3 LM_CG_Coefficients;
 
 		void SetDefaultValues();
 	};

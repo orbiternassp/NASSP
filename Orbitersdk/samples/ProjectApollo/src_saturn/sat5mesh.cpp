@@ -210,6 +210,8 @@ static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
 static MESHHANDLE hlta_2r;
 
+static SURFHANDLE hLMVCpl;
+
 static SURFHANDLE contrail_tex;
 static SURFHANDLE exhaust_tex;
 
@@ -247,6 +249,9 @@ void LoadSat5Meshes()
 	LOAD_MESH(hLMPKD, "ProjectApollo/LM_SLA");
 	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
 	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
+
+	// LM VC mesh pre-loaded to avoid long pause at CSM/LV separation
+	LOAD_MESH(hLMVCpl, "ProjectApollo/LM_VC");
 
 	contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
@@ -838,6 +843,9 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 	// VC
 	UpdateVC(mesh_dir);
+	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
+	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
+	SetVCSeatsMesh();
 
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
@@ -851,6 +859,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 	opticscoveridx = AddMesh (hopticscover, &mesh_dir);
 	SetOpticsCoverMesh();
 
+	dockringidx = -1;
 	probeidx = -1;
 	probeextidx = -1;
 
@@ -863,6 +872,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 	}
 	else {
 		if (HasProbe) {
+			dockringidx = AddMesh(hdockring, &mesh_dir);
 			probeidx = AddMesh(hprobe, &mesh_dir);
 			probeextidx = AddMesh(hprobeext, &mesh_dir);
 			SetDockingProbeMesh();
