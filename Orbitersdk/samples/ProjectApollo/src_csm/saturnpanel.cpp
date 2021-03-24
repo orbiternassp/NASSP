@@ -3374,7 +3374,7 @@ void Saturn::SetSwitches(int panel) {
 	PLVCSwitch.Init(0, 0, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], PLVCSwitchRow); 
 
 	///////////////
-	// Panel 252 //
+	// Panel 352 //
 	///////////////
 	
 	WaterControlPanelRow.Init(AID_PANEL_352, MainPanel);

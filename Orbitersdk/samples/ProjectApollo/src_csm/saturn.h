@@ -3838,6 +3838,9 @@ protected:
 	#define SATVIEW_LEFTDOCK		3
 	#define SATVIEW_RIGHTDOCK		4
 	#define SATVIEW_GNPANEL			5
+    #define SATVIEW_LEBLEFT			6
+    #define SATVIEW_LEBRIGHT		7
+    #define SATVIEW_LEBAFT		    8
 	#define SATVIEW_ENG1			10
 	#define SATVIEW_ENG2			11
 	#define SATVIEW_ENG3			12

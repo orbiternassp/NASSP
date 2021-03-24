@@ -69,6 +69,7 @@ const int	P16_SWITCHCOUNT = 3;
 // Number of push buttons
 const int   P1_PUSHBCOUNT = 11;
 const int   P2_PUSHBCOUNT = 19;
+const int   LEB_L_PUSHBCOUNT = 4;
 
 // Number of switch covers
 const int   P1_SWITCHCOVERCOUNT = 15;
@@ -80,8 +81,11 @@ const int	 P2_ROTCOUNT = 4;
 const int	 P3_ROTCOUNT = 5;
 const int	 P4_ROTCOUNT = 1;
 const int	 P5_ROTCOUNT = 2;
-const int	 P7_ROTCOUNT = 4;
+const int	 P7_ROTCOUNT = 5;
 const int	 P8_ROTCOUNT = 3;
+const int	 P326_ROTCOUNT = 6;
+const int	 LEB_R_ROTCOUNT = 3;
+const int	 LEB_L_ROTCOUNT = 22;
 
 // Number of thumbwheels
 const int	 P1_TWCOUNT = 2;
@@ -97,6 +101,8 @@ const int	 P1_NEEDLECOUNT = 5;
 const int P4_CBCOUNT = 12;
 const int P5_CBCOUNT = 69;
 const int P8_CBCOUNT = 67;
+const int LEB_R1_CBCOUNT = 81;
+const int LEB_R2_CBCOUNT = 31;
 
 // Switch clickspot offset
 const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*sin(P1_3_TILT - (90.0 * RAD)) };
@@ -284,7 +290,7 @@ const VECTOR3 P7_TOGGLE_POS[P7_SWITCHCOUNT] = {
 
 // Panel 7 rotaries
 const VECTOR3 P7_ROT_POS[P7_ROTCOUNT] = {
-	{-1.1892, 0.2079, -0.0612}, {-1.2288, 0.2103, -0.1199}, {-1.2709, 0.2117, -0.1857}, {-1.2104, 0.1801, -0.1858}
+	{-1.1892, 0.2079, -0.0612}, {-1.2288, 0.2103, -0.1199}, {-1.2709, 0.2117, -0.1857}, {-1.2104, 0.1801, -0.1858}, {-1.1565, 0.1613, -0.1646}
 };
 
 // Panel 8 switches
@@ -345,6 +351,69 @@ const VECTOR3 P15_TOGGLE_POS[P15_SWITCHCOUNT] = {
 // Panel 16 switches
 const VECTOR3 P16_TOGGLE_POS[P16_SWITCHCOUNT] = {
 {0.7430, 0.8487, 0.3613}, {0.7878, 0.8822, 0.2766}, {0.8170, 0.9039, 0.2215}
+};
+
+// Panel 325 handles
+const VECTOR3 Cab_Press_Rel_Handle1Location = { -1.2149, 0.7847, -0.2850 };
+const VECTOR3 Cab_Press_Rel_Handle2Location = { -1.2024, 0.6799, -0.2992 };
+
+// Panel 326 rotaries
+const VECTOR3 P326_ROT_POS[P326_ROTCOUNT] = {
+{-1.1659, 0.5990, -0.2336}, {-1.1659, 0.5355, -0.2336}, {-1.1659, 0.4719, -0.2336}, {-1.2942, 0.3346, -0.2336}, {-1.2305, 0.3346, -0.2336},
+{-1.1670, 0.3346, -0.2336}
+};
+
+// LEB Right Rotaries
+
+const VECTOR3 LEB_R_ROT_POS[LEB_R_ROTCOUNT] = {
+	{1.0811, -0.5597, -0.4702}, {1.0811, -0.5536, -0.6556}, {1.0811, -0.4765, -0.6556}
+};
+
+// LEB Right wall 1 circuit breakers
+const VECTOR3 LEB_R1_CB_POS[LEB_R1_CBCOUNT] = {
+{1.0887, 0.0627, 0.2484}, {1.0887, 0.0827, 0.2484}, {1.0887, 0.1026, 0.2484}, {1.0887, 0.1225, 0.2484}, {1.0887, 0.0627, 0.2139},
+{1.0887, 0.0812, 0.2139}, {1.0887, 0.0997, 0.2139}, {1.0887, 0.1182, 0.2139}, {1.0887, 0.0627, 0.1804}, {1.0887, 0.0812, 0.1804},
+{1.0887, 0.0998, 0.1804}, {1.0887, 0.1182, 0.1804}, {1.0887, 0.0626, 0.1464}, {1.0887, 0.0813, 0.1464}, {1.0887, 0.0997, 0.1464},
+{1.0887, 0.1182, 0.1464}, {1.0887, 0.0627, 0.1118}, {1.0887, 0.0812, 0.1118}, {1.0887, 0.0628, 0.0772}, {1.0887, 0.0812, 0.0772},
+{1.0887, 0.0627, 0.0106}, {1.0887, 0.0812, 0.0106}, {1.0887, -0.0841, 0.2422}, {1.0887, -0.0356, 0.2422}, {1.0887, -0.1464, 0.2047},
+{1.0887, -0.1118, 0.2047}, {1.0887, -0.0773, 0.2047}, {1.0887, -0.0428, 0.2047}, {1.0887, -0.2274, 0.1595}, {1.0887, -0.2076, 0.1595},
+{1.0887, -0.1876, 0.1595}, {1.0887, -0.1678, 0.1595}, {1.0887, -0.1489, 0.1595}, {1.0887, -0.1119, 0.1589}, {1.0887, -0.0769, 0.1589},
+{1.0887, -0.0429, 0.1589}, {1.0887, -0.2301, 0.1139}, {1.0887, -0.2090, 0.1139}, {1.0887, -0.1881, 0.1139}, {1.0887, -0.1672, 0.1139},
+{1.0887, -0.1463, 0.1139}, {1.0887, -0.1118, 0.1139}, {1.0887, -0.0773, 0.1139}, {1.0887, -0.0427, 0.1139}, {1.0887, -0.5147, 0.0014},
+{1.0887, -0.4804, 0.0014}, {1.0887, -0.4612, 0.0014}, {1.0887, -0.4311, 0.0014}, {1.0887, -0.4125, 0.0014}, {1.0887, -0.3933, 0.0014},
+{1.0887, -0.3748, 0.0014}, {1.0887, -0.5147, -0.0482}, {1.0887, -0.4805, -0.0482}, {1.0887, -0.4611, -0.0482}, {1.0887, -0.4313, -0.0482},
+{1.0887, -0.4124, -0.0482}, {1.0887, -0.3933, -0.0482}, {1.0887, -0.3745, -0.0482}, {1.0887, -0.5146, -0.0984}, {1.0887, -0.4804, -0.0984},
+{1.0887, -0.4611, -0.0984}, {1.0887, -0.4310, -0.0984}, {1.0887, -0.4124, -0.0984}, {1.0887, -0.3935, -0.0984}, {1.0887, -0.3745, -0.0984},
+{1.0887, -0.5207, -0.1431}, {1.0887, -0.5019, -0.1431}, {1.0887, -0.4829, -0.1431}, {1.0887, -0.4639, -0.1431}, {1.0887, -0.4313, -0.1431},
+{1.0887, -0.4124, -0.1431}, {1.0887, -0.3934, -0.1431}, {1.0887, -0.3745, -0.1431}, {1.0887, -0.5237, -0.1897}, {1.0887, -0.5028, -0.1897},
+{1.0887, -0.4819, -0.1897}, {1.0887, -0.4610, -0.1897}, {1.0887, -0.4353, -0.1897}, {1.0887, -0.4144, -0.1897}, {1.0887, -0.3932, -0.1897},
+{1.0887, -0.3725, -0.1897}
+};
+
+// LEB Right wall 2 circuit breakers
+const VECTOR3 LEB_R2_CB_POS[LEB_R2_CBCOUNT] = {
+{1.0866, -0.6567, -0.3024}, {1.0866, -0.6567, -0.3280}, {1.0866, -0.6567, -0.3558}, {1.0866, -0.6567, -0.3814}, {1.0866, -0.6565, -0.4168},
+{1.0866, -0.6565, -0.4437}, {1.0866, -0.6565, -0.4705}, {1.0866, -0.6565, -0.4975}, {1.0866, -0.6565, -0.5245}, {1.0866, -0.6565, -0.5468},
+{1.0866, 0.1940, -0.3246}, {1.0866, 0.2255, -0.3246}, {1.0866, 0.2491, -0.3246}, {1.0866, 0.2732, -0.3246}, {1.0866, 0.2970, -0.3246},
+{1.0866, 0.3283, -0.3246}, {1.0866, 0.3521, -0.3246}, {1.0866, 0.3761, -0.3246}, {1.0866, 0.4073, -0.3246}, {1.0866, 0.4311, -0.3246},
+{1.0866, 0.4551, -0.3246}, {1.0866, 0.4789, -0.3246}, {1.0866, 0.5102, -0.3246}, {1.0866, 0.5766, -0.2883}, {1.0866, 0.6237, -0.2883},
+{1.0866, 0.5766, -0.3211}, {1.0866, 0.6237, -0.3213}, {1.0866, 0.7718, -0.3005}, {1.0866, 0.7983, -0.3005}, {1.0866, 0.7718, -0.3409},
+{1.0866, 0.7983, -0.3409}
+};
+
+// LEB Left push-buttons
+const VECTOR3 LEB_L_PUSHB_POS[LEB_L_PUSHBCOUNT] = {
+{-1.0608, 0.2392, -0.3428}, {-1.0727, -0.5641, -0.3161}, {-1.0727, -0.5997, -0.3164}, {-1.0838, -0.6491, -0.5083}
+};
+
+// LEB Left Rotaries
+
+const VECTOR3 LEB_L_ROT_POS[LEB_L_ROTCOUNT] = {
+{-1.0826, 1.0052, -0.3451}, {-1.0827, 0.9334, -0.7408}, {-1.0797, 0.6465, -0.8017}, {-1.0810, 0.6287, -0.5564}, {-1.1027, 0.1549, -0.5528},
+{-1.1027, 0.1612, -0.6055}, {-1.1027, 0.1569, -0.6560}, {-1.1024, 0.2024, -0.6963}, {-1.1002, 0.2175, -0.7425}, {-1.1002, 0.1567, -0.7425},
+{-1.1002, 0.2040, -0.7992}, {-1.1002, 0.1607, -0.7992}, {-1.0794, -0.5441, -0.4012}, {-1.0794, -0.6041, -0.4012}, {-1.0827, -0.6138, -0.5079},
+{-1.0802, -0.5950, -0.5845}, {-1.0802, -0.6160, -0.7094}, {-1.0802, -0.6165, -0.7634}, {-1.0802, -0.6165, -0.8171}, {-1.0802, -0.5416, -0.7602},
+{-1.0827, 0.1467, -0.3310}, {-1.0740, 0.1364, -0.3000}
 };
 
 // Switch Covers
@@ -422,8 +491,8 @@ void Saturn::InitVC()
 	// Register active areas for repainting here
 	//
 		
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 14);
-	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 2);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 2);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 3);
 
 	// Panel 1
 
@@ -570,8 +639,8 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_LEFTSEAT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, SATVIEW_CENTERSEAT, -1, -1);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(-0.3, 0.0, 0.3), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, SATVIEW_CENTERSEAT, -1, SATVIEW_LEBLEFT);
 		SetView(true);
 
 
@@ -582,7 +651,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 
 		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(SATVIEW_LEFTSEAT, SATVIEW_RIGHTSEAT, -1, -1);
+		oapiVCSetNeighbours(SATVIEW_LEFTSEAT, SATVIEW_RIGHTSEAT, -1, SATVIEW_GNPANEL);
 		SetView(true);
 
 
@@ -593,7 +662,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 
 		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(SATVIEW_CENTERSEAT, -1, -1, -1);
+		oapiVCSetNeighbours(SATVIEW_CENTERSEAT, -1, -1, SATVIEW_LEBRIGHT);
 		SetView(true);
 
 
@@ -602,13 +671,12 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_GNPANEL:
 		viewpos = SATVIEW_GNPANEL;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
-		SetCameraShiftRange(_V(-0.4, 0, 0), _V(0, 0, 0), _V(0, 0, 0));
+		//SetCameraShiftRange(_V(-0.4, 0, 0), _V(0, 0, 0), _V(0, 0, 0));
+		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_CENTERSEAT, -1);
 
 		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		//oapiVCSetNeighbours(-1, LMVIEW_LMP, -1, LMVIEW_LPD);
 
-
-
+		SetView(true);
 		return true;
 
 	case SATVIEW_LEFTDOCK:
@@ -628,6 +696,39 @@ bool Saturn::clbkLoadVC (int id)
 
 		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
 		//oapiVCSetNeighbours(-1, LMVIEW_LMP, -1, LMVIEW_LPD);
+
+		return true;
+
+	case SATVIEW_LEBLEFT:
+		viewpos = SATVIEW_LEBLEFT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+
+		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, SATVIEW_GNPANEL, SATVIEW_LEFTSEAT, SATVIEW_LEBAFT);
+		SetView(true);
+
+
+		return true;
+
+	case SATVIEW_LEBRIGHT:
+		viewpos = SATVIEW_LEBRIGHT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+
+		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(SATVIEW_GNPANEL, -1, SATVIEW_RIGHTSEAT, -1);
+		SetView(true);
+
+
+		return true;
+
+	case SATVIEW_LEBAFT:
+		viewpos = SATVIEW_LEBAFT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+
+		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, -1, SATVIEW_LEBLEFT, -1);
+		SetView(true);
+
 
 		return true;
 
@@ -879,6 +980,63 @@ void Saturn::RegisterActiveAreas() {
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P16_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P16_01 + i, P16_TOGGLE_POS[i] + P16_CLICK + ofs, 0.006);
+	}
+
+	// Panel 325
+	const VECTOR3 Prim_Gly_HandleLocation = { -1.1482, 0.9682, -0.2071 };
+
+	oapiVCRegisterArea(AID_VC_Cab_Press_Rel_Handle1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle1, Cab_Press_Rel_Handle1Location + _V(0, 0, 0.07) + ofs, 0.04);
+
+	oapiVCRegisterArea(AID_VC_Cab_Press_Rel_Handle2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle2, Cab_Press_Rel_Handle2Location + _V(0, 0, 0.07) + ofs, 0.04);
+
+	oapiVCRegisterArea(AID_VC_Prim_Gly_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Prim_Gly_Handle, Prim_Gly_HandleLocation + ofs, 0.02);
+
+	// Panel 326
+	for (i = 0; i < P326_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P326_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P326_01 + i, P326_ROT_POS[i] + ofs, 0.02);
+	}
+
+	// LEB Right wall
+
+	for (i = 0; i < LEB_R_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_LEB_R_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_LEB_R_01 + i, LEB_R_ROT_POS[i] + ofs, 0.02);
+	}
+
+	for (i = 0; i < LEB_R1_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_LEB_R1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_LEB_R1_01 + i, LEB_R1_CB_POS[i] + ofs, 0.008);
+	}
+
+	for (i = 0; i < LEB_R2_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_LEB_R2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_LEB_R2_01 + i, LEB_R2_CB_POS[i] + ofs, 0.008);
+	}
+
+	// LEB Left wall
+
+	for (i = 0; i < 21; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_LEB_L_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_LEB_L_01 + i, LEB_L_ROT_POS[i] + ofs, 0.02);
+	}
+
+	// Rotary 22 (Suit Test) needs a different click-spot then the mesh origin
+	oapiVCRegisterArea(AID_VC_ROT_LEB_L_22, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_LEB_L_22, _V(-1.07633, 0.156535, -0.281039) + ofs, 0.02);
+
+	for (i = 0; i < LEB_L_PUSHBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_PUSHB_LEB_L_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_LEB_L_01 + i, LEB_L_PUSHB_POS[i] + ofs, 0.012);
 	}
 
 }
@@ -1457,6 +1615,18 @@ void Saturn::SetView(double offset, bool update_direction)
 
 			case SATVIEW_GNPANEL:
 				v = _V(0.0, -0.15, 0.5 + offset);
+				break;
+
+			case SATVIEW_LEBLEFT:
+				v = _V(-0.6, -0.3, offset);
+				break;
+
+			case SATVIEW_LEBRIGHT:
+				v = _V(0.6, -0.3, offset);
+				break;
+
+			case SATVIEW_LEBAFT:
+				v = _V(-0.6, 0.5, offset - 0.4);
 				break;
 		}
 
@@ -3135,6 +3305,10 @@ void Saturn::DefineVCAnimations()
 	BMAGPowerRotary2Switch.SetReference(P7_ROT_POS[3], P7_ROT_AXIS);
 	BMAGPowerRotary2Switch.DefineMeshGroup(VC_GRP_Rot_P7_04);
 
+	MainPanelVC.AddSwitch(&DirectO2RotarySwitch, AID_VC_ROT_P7_05);
+	DirectO2RotarySwitch.SetReference(P7_ROT_POS[4], P7_ROT_AXIS);
+	DirectO2RotarySwitch.DefineMeshGroup(VC_GRP_Rot_P7_05);
+
 	// Panel 8
 
 	const VECTOR3 P8_SW_AXIS = { 0.522444235332028, -0.207197823992405, 0.82711612407276 };
@@ -3399,6 +3573,216 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&RightCOASPowerSwitch, AID_VC_SWITCH_P16_03);
 	RightCOASPowerSwitch.SetReference(P16_TOGGLE_POS[2], P16_SW_AXIS);
 	RightCOASPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P16_03);
+
+	// Panel 325
+	const VECTOR3	PRIMGLYHANDLE_VECT = { 0, 0, 0.01 };
+	const VECTOR3	P325_HANDLE_AXIS = { 0, 1, 0 };
+
+	MainPanelVC.AddSwitch(&GlycolToRadiatorsLever, AID_VC_Prim_Gly_Handle);
+	GlycolToRadiatorsLever.SetDirection(PRIMGLYHANDLE_VECT);
+	GlycolToRadiatorsLever.DefineMeshGroup(VC_GRP_Prim_Gly_Handle);
+
+	MainPanelVC.AddSwitch(&CabinPressureReliefLever1, AID_VC_Cab_Press_Rel_Handle1);
+	CabinPressureReliefLever1.SetReference(Cab_Press_Rel_Handle1Location, P325_HANDLE_AXIS);
+	CabinPressureReliefLever1.SetRotationRange(50 * RAD);
+	CabinPressureReliefLever1.DefineMeshGroup(VC_GRP_Cab_Press_Rel_Handle1);
+
+	MainPanelVC.AddSwitch(&CabinPressureReliefLever2, AID_VC_Cab_Press_Rel_Handle2);
+	CabinPressureReliefLever2.SetReference(Cab_Press_Rel_Handle2Location, P325_HANDLE_AXIS);
+	CabinPressureReliefLever2.SetRotationRange(55 * RAD);
+	CabinPressureReliefLever2.DefineMeshGroup(VC_GRP_Cab_Press_Rel_Handle2);
+
+	// Panel 326
+
+	const VECTOR3	P326_ROT_AXIS = { 0, 0, 1 };
+
+	MainPanelVC.AddSwitch(&GlycolReservoirInletRotary, AID_VC_ROT_P326_01);
+	GlycolReservoirInletRotary.SetReference(P326_ROT_POS[0], P326_ROT_AXIS);
+	GlycolReservoirInletRotary.DefineMeshGroup(VC_GRP_Rot_P326_01);
+
+	MainPanelVC.AddSwitch(&GlycolReservoirBypassRotary, AID_VC_ROT_P326_02);
+	GlycolReservoirBypassRotary.SetReference(P326_ROT_POS[1], P326_ROT_AXIS);
+	GlycolReservoirBypassRotary.DefineMeshGroup(VC_GRP_Rot_P326_02);
+
+	MainPanelVC.AddSwitch(&GlycolReservoirOutletRotary, AID_VC_ROT_P326_03);
+	GlycolReservoirOutletRotary.SetReference(P326_ROT_POS[2], P326_ROT_AXIS);
+	GlycolReservoirOutletRotary.DefineMeshGroup(VC_GRP_Rot_P326_03);
+
+	MainPanelVC.AddSwitch(&OxygenRepressPackageRotary, AID_VC_ROT_P326_04);
+	OxygenRepressPackageRotary.SetReference(P326_ROT_POS[3], P326_ROT_AXIS);
+	OxygenRepressPackageRotary.DefineMeshGroup(VC_GRP_Rot_P326_04);
+
+	MainPanelVC.AddSwitch(&OxygenSMSupplyRotary, AID_VC_ROT_P326_05);
+	OxygenSMSupplyRotary.SetReference(P326_ROT_POS[4], P326_ROT_AXIS);
+	OxygenSMSupplyRotary.DefineMeshGroup(VC_GRP_Rot_P326_05);
+
+	MainPanelVC.AddSwitch(&OxygenSurgeTankRotary, AID_VC_ROT_P326_06);
+	OxygenSurgeTankRotary.SetReference(P326_ROT_POS[5], P326_ROT_AXIS);
+	OxygenSurgeTankRotary.DefineMeshGroup(VC_GRP_Rot_P326_06);
+
+
+	// LEB Right wall
+
+	const VECTOR3 rot_leb_r_vector = { -1, 0, 0 };
+
+	MainPanelVC.AddSwitch(&WasteMGMTOvbdDrainDumpRotary, AID_VC_ROT_LEB_R_01);
+	WasteMGMTOvbdDrainDumpRotary.SetReference(LEB_R_ROT_POS[0], rot_leb_r_vector);
+	WasteMGMTOvbdDrainDumpRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Right_01);
+
+	MainPanelVC.AddSwitch(&WasteMGMTBatteryVentRotary, AID_VC_ROT_LEB_R_02);
+	WasteMGMTBatteryVentRotary.SetReference(LEB_R_ROT_POS[1], rot_leb_r_vector);
+	WasteMGMTBatteryVentRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Right_02);
+
+	MainPanelVC.AddSwitch(&WasteMGMTStoageVentRotary, AID_VC_ROT_LEB_R_03);
+	WasteMGMTStoageVentRotary.SetReference(LEB_R_ROT_POS[2], rot_leb_r_vector);
+	WasteMGMTStoageVentRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Right_03);
+
+	const VECTOR3 cb_leb_r_vector = { 0.003, 0.0, 0.0 };
+
+	CircuitBrakerSwitch* breakersleb1[LEB_R1_CBCOUNT] = {
+
+		/*Panel 229*/ &EPSMnBGroup1CircuitBraker, &EPSMnAGroup1CircuitBraker, &TimersMnACircuitBraker, &TimersMnBCircuitBraker, &EPSMnAGroup2CircuitBraker, &EPSMnBGroup2CircuitBraker, &SPSLineHtrsMnACircuitBraker, &SPSLineHtrsMnBCircuitBraker, &EPSMnAGroup3CircuitBraker,
+		&EPSMnBGroup3CircuitBraker, &O2VacIonPumpsMnACircuitBraker, &O2VacIonPumpsMnBCircuitBraker, &EPSMnAGroup4CircuitBraker, &EPSMnBGroup4CircuitBraker, &MainReleasePyroACircuitBraker, &MainReleasePyroBCircuitBraker, &EPSMnAGroup5CircuitBraker, &EPSMnBGroup5CircuitBraker, &UtilityCB1, &UtilityCB2, 
+		&EPSBatBusACircuitBraker, &EPSBatBusBCircuitBraker,
+
+		/*Panel 225*/ &PCMTLMGroup1CB, &PCMTLMGroup2CB, &FLTBusMNACB, &FLTBusMNBCB, &PMPPowerPrimCB, &PMPPowerAuxCB, &VHFStationAudioLCB, &VHFStationAudioCTRCB, &VHFStationAudioRCB, &UDLCB, &HGAFLTBus1CB, &HGAGroup2CB, &SBandFMXMTRFLTBusCB, &SBandFMXMTRGroup1CB,
+		&CentralTimingEquipMNACB, &CentralTimingEquipMNBCB, &RNDZXPNDRFLTBusCB, &SIGCondrFLTBusCB, &SBandPWRAmpl1FLTBusCB, &SBandPWRAmpl1Group1CB, &SBandPWRAmpl2FLTBusCB, &SBandPWRAmpl2Group1CB, 
+
+		/*Panel 226*/ &FuelCell1PumpsACCB, &FuelCell1ReacsCB, &FuelCell1BusContCB, &FuelCell1PurgeCB, &FuelCell1RadCB, &CryogenicH2HTR1CB, &CryogenicH2HTR2CB, &FuelCell2PumpsACCB, &FuelCell2ReacsCB, &FuelCell2BusContCB, &FuelCell2PurgeCB, &FuelCell2RadCB, &CryogenicO2HTR1CB, &CryogenicO2HTR2CB, 
+		&FuelCell3PumpsACCB, &FuelCell3ReacsCB, &FuelCell3BusContCB, &FuelCell3PurgeCB, &FuelCell3RadCB, &CryogenicQTYAmpl1CB, &CryogenicQTYAmpl2CB, &CryogenicFanMotorsAC1ACB, &CryogenicFanMotorsAC1BCB, &CryogenicFanMotorsAC1CCB, &CryogenicFanMotorsAC2ACB, &CryogenicFanMotorsAC2BCB, &CryogenicFanMotorsAC2CCB, 
+		&LightingRndzMNACB, &LightingRndzMNBCB, &LightingFloodMNACB, &LightingFloodMNBCB, &LightingFloodFLTPLCB, &LightingNumIntLEBCB, &LightingNumIntLMDCCB, &LightingNumIntRMDCCB, &RunEVATRGTAC1CB, &RunEVATRGTAC2CB };
+
+	for (int i = 0; i < LEB_R1_CBCOUNT; i++)
+	{
+		MainPanelVC.AddSwitch(breakersleb1[i], AID_VC_CB_LEB_R1_01 + i);
+		breakersleb1[i]->SetDirection(cb_leb_r_vector);
+		breakersleb1[i]->DefineMeshGroup(VC_GRP_CB_LEB_Right1_01 + i);
+	}
+
+	CircuitBrakerSwitch* breakersleb2[LEB_R2_CBCOUNT] = {
+		/*Panel 250*/ &BatBusAToPyroBusTieCircuitBraker, &PyroASeqACircuitBraker, &BatBusBToPyroBusTieCircuitBraker, &PyroBSeqBCircuitBraker, &BatAPWRCircuitBraker, &BatBPWRCircuitBraker, &BatCPWRCircuitBraker, &BatCtoBatBusACircuitBraker, &BatCtoBatBusBCircuitBraker, &BatCCHRGCircuitBraker,
+
+		/*Panel 275-278*/ &MainABatBusACircuitBraker, &MainABatCCircuitBraker, &MainBBatCCircuitBraker, &MainBBatBusBCircuitBraker, &FlightPostLandingBatBusACircuitBraker, &FlightPostLandingBatBusBCircuitBraker, &FlightPostLandingBatCCircuitBraker, &FlightPostLandingMainACircuitBraker, 
+		&FlightPostLandingMainBCircuitBraker, &InverterPower1MainACircuitBraker, &InverterPower2MainBCircuitBraker, &InverterPower3MainACircuitBraker, &InverterPower3MainBCircuitBraker,
+		&Panel276CB1, &Panel276CB2, &Panel276CB3, &Panel276CB4, &UprightingSystemCompressor1CircuitBraker, &UprightingSystemCompressor2CircuitBraker, &SIVBLMSepPyroACircuitBraker, &SIVBLMSepPyroBCircuitBraker };
+
+	for (int i = 0; i < LEB_R2_CBCOUNT; i++)
+	{
+		MainPanelVC.AddSwitch(breakersleb2[i], AID_VC_CB_LEB_R2_01 + i);
+		breakersleb2[i]->SetDirection(cb_leb_r_vector);
+		breakersleb2[i]->DefineMeshGroup(VC_GRP_CB_LEB_Right2_01 + i);
+	}
+
+	// LEB Left Wall
+
+	const VECTOR3 rot_leb_l_vector = { 1, 0, 0 };
+
+	MainPanelVC.AddSwitch(&OxygenSurgeTankValveRotary, AID_VC_ROT_LEB_L_01);
+	OxygenSurgeTankValveRotary.SetReference(LEB_L_ROT_POS[0], rot_leb_l_vector);
+	OxygenSurgeTankValveRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_01);
+
+	MainPanelVC.AddSwitch(&GlycolToRadiatorsRotary, AID_VC_ROT_LEB_L_02);
+	GlycolToRadiatorsRotary.SetReference(LEB_L_ROT_POS[1], rot_leb_l_vector);
+	GlycolToRadiatorsRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_02);
+
+	MainPanelVC.AddSwitch(&GlycolRotary, AID_VC_ROT_LEB_L_03);
+	GlycolRotary.SetReference(LEB_L_ROT_POS[2], rot_leb_l_vector);
+	GlycolRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_03);
+
+	MainPanelVC.AddSwitch(&AccumRotary, AID_VC_ROT_LEB_L_04);
+	AccumRotary.SetReference(LEB_L_ROT_POS[3], rot_leb_l_vector);
+	AccumRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_04);
+
+	MainPanelVC.AddSwitch(&SuitHeatExchangerPrimaryGlycolRotary, AID_VC_ROT_LEB_L_05);
+	SuitHeatExchangerPrimaryGlycolRotary.SetReference(LEB_L_ROT_POS[4], rot_leb_l_vector);
+	SuitHeatExchangerPrimaryGlycolRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_05);
+
+	MainPanelVC.AddSwitch(&SuitFlowReliefRotary, AID_VC_ROT_LEB_L_06);
+	SuitFlowReliefRotary.SetReference(LEB_L_ROT_POS[5], rot_leb_l_vector);
+	SuitFlowReliefRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_06);
+
+	MainPanelVC.AddSwitch(&PrimaryGlycolEvapInletTempRotary, AID_VC_ROT_LEB_L_07);
+	PrimaryGlycolEvapInletTempRotary.SetReference(LEB_L_ROT_POS[6], rot_leb_l_vector);
+	PrimaryGlycolEvapInletTempRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_07);
+
+	MainPanelVC.AddSwitch(&SuitHeatExchangerSecondaryGlycolRotary, AID_VC_ROT_LEB_L_08);
+	SuitHeatExchangerSecondaryGlycolRotary.SetReference(LEB_L_ROT_POS[7], rot_leb_l_vector);
+	SuitHeatExchangerSecondaryGlycolRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_08);
+
+	MainPanelVC.AddSwitch(&EvapWaterControlPrimaryRotary, AID_VC_ROT_LEB_L_09);
+	EvapWaterControlPrimaryRotary.SetReference(LEB_L_ROT_POS[8], rot_leb_l_vector);
+	EvapWaterControlPrimaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_09);
+
+	MainPanelVC.AddSwitch(&EvapWaterControlSecondaryRotary, AID_VC_ROT_LEB_L_10);
+	EvapWaterControlSecondaryRotary.SetReference(LEB_L_ROT_POS[9], rot_leb_l_vector);
+	EvapWaterControlSecondaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_10);
+
+	MainPanelVC.AddSwitch(&WaterAccumulator1Rotary, AID_VC_ROT_LEB_L_11);
+	WaterAccumulator1Rotary.SetReference(LEB_L_ROT_POS[10], rot_leb_l_vector);
+	WaterAccumulator1Rotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_11);
+
+	MainPanelVC.AddSwitch(&WaterAccumulator2Rotary, AID_VC_ROT_LEB_L_12);
+	WaterAccumulator2Rotary.SetReference(LEB_L_ROT_POS[11], rot_leb_l_vector);
+	WaterAccumulator2Rotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_12);
+
+	MainPanelVC.AddSwitch(&SelectorInletValveRotary, AID_VC_ROT_LEB_L_13);
+	SelectorInletValveRotary.SetReference(LEB_L_ROT_POS[12], rot_leb_l_vector);
+	SelectorInletValveRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_13);
+
+	MainPanelVC.AddSwitch(&SelectorOutletValveRotary, AID_VC_ROT_LEB_L_14);
+	SelectorOutletValveRotary.SetReference(LEB_L_ROT_POS[13], rot_leb_l_vector);
+	SelectorOutletValveRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_14);
+
+	MainPanelVC.AddSwitch(&EmergencyCabinPressureRotary, AID_VC_ROT_LEB_L_15);
+	EmergencyCabinPressureRotary.SetReference(LEB_L_ROT_POS[14], rot_leb_l_vector);
+	EmergencyCabinPressureRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_15);
+
+	MainPanelVC.AddSwitch(&CabinRepressValveRotary, AID_VC_ROT_LEB_L_16);
+	CabinRepressValveRotary.SetReference(LEB_L_ROT_POS[15], rot_leb_l_vector);
+	CabinRepressValveRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_16);
+
+	MainPanelVC.AddSwitch(&WasteTankServicingRotary, AID_VC_ROT_LEB_L_17);
+	WasteTankServicingRotary.SetReference(LEB_L_ROT_POS[16], rot_leb_l_vector);
+	WasteTankServicingRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_17);
+
+	MainPanelVC.AddSwitch(&PotableTankInletRotary, AID_VC_ROT_LEB_L_18);
+	PotableTankInletRotary.SetReference(LEB_L_ROT_POS[17], rot_leb_l_vector);
+	PotableTankInletRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_18);
+
+	MainPanelVC.AddSwitch(&WasteTankInletRotary, AID_VC_ROT_LEB_L_19);
+	WasteTankInletRotary.SetReference(LEB_L_ROT_POS[18], rot_leb_l_vector);
+	WasteTankInletRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_19);
+
+	MainPanelVC.AddSwitch(&PressureReliefRotary, AID_VC_ROT_LEB_L_20);
+	PressureReliefRotary.SetReference(LEB_L_ROT_POS[19], rot_leb_l_vector);
+	PressureReliefRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_20);
+
+	MainPanelVC.AddSwitch(&O2DemandRegulatorRotary, AID_VC_ROT_LEB_L_21);
+	O2DemandRegulatorRotary.SetReference(LEB_L_ROT_POS[20], rot_leb_l_vector);
+	O2DemandRegulatorRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_21);
+
+	MainPanelVC.AddSwitch(&SuitTestRotary, AID_VC_ROT_LEB_L_22);
+	SuitTestRotary.SetReference(LEB_L_ROT_POS[21], rot_leb_l_vector);
+	SuitTestRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_22);
+
+	const VECTOR3 pb_leb_l_vector = { -0.001, 0, 0 };
+	const VECTOR3 handle_leb_l_vector = { -0.01, 0, 0 };
+
+	MainPanelVC.AddSwitch(&SuitCircuitReturnValveLever, AID_VC_PUSHB_LEB_L_01);
+	SuitCircuitReturnValveLever.SetDirection(handle_leb_l_vector);
+	SuitCircuitReturnValveLever.DefineMeshGroup(VC_GRP_PB_LEB_Left_01);
+
+	MainPanelVC.AddSwitch(&O2MainRegulatorASwitch, AID_VC_PUSHB_LEB_L_02);
+	O2MainRegulatorASwitch.SetDirection(handle_leb_l_vector);
+	O2MainRegulatorASwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_02);
+
+	MainPanelVC.AddSwitch(&O2MainRegulatorBSwitch, AID_VC_PUSHB_LEB_L_03);
+	O2MainRegulatorBSwitch.SetDirection(handle_leb_l_vector);
+	O2MainRegulatorBSwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_03);
+
+	MainPanelVC.AddSwitch(&EmergencyCabinPressureTestSwitch, AID_VC_PUSHB_LEB_L_04);
+	EmergencyCabinPressureTestSwitch.SetDirection(pb_leb_l_vector);
+	EmergencyCabinPressureTestSwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_04);
 
 
     MainPanelVC.DefineVCAnimations(vcidx);

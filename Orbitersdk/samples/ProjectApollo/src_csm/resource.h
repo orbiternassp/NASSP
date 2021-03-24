@@ -874,6 +874,18 @@
 #define AID_VC_ASCPDISPLAYYAW           3184
 #define AID_VC_POSTLDGVENTHANDLE        3185
 
+// VC Active Areas (Panel 325-326)
+#define AID_VC_ROT_P326_01		        3201
+#define AID_VC_ROT_P326_02		        3202
+#define AID_VC_ROT_P326_03		        3203
+#define AID_VC_ROT_P326_04		        3204
+#define AID_VC_ROT_P326_05		        3205
+#define AID_VC_ROT_P326_06		        3206
+
+#define AID_VC_Cab_Press_Rel_Handle1    3210
+#define AID_VC_Cab_Press_Rel_Handle2    3211
+#define AID_VC_Prim_Gly_Handle          3212
+
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 4800) && (id <= 4999))
 #define AID_VC_PUSHB_P2_01      4801    // DSKY key Verb
@@ -1236,6 +1248,7 @@
 #define AID_VC_ROT_P7_02		3710
 #define AID_VC_ROT_P7_03		3711
 #define AID_VC_ROT_P7_04		3712
+#define AID_VC_ROT_P7_05		3713
 
 // VC Active Areas (Panel 8)
 #define AID_VC_PANEL_8			((id >= 3800) && (id <= 3899))
@@ -1378,6 +1391,156 @@
 #define AID_VC_SWITCH_P16_01		4601
 #define AID_VC_SWITCH_P16_02		4602
 #define AID_VC_SWITCH_P16_03		4603
+
+// VC Active Areas (LEB Right wall)
+
+#define AID_VC_CB_LEB_R1_01         5101
+#define AID_VC_CB_LEB_R1_02         5102
+#define AID_VC_CB_LEB_R1_03         5103
+#define AID_VC_CB_LEB_R1_04         5104
+#define AID_VC_CB_LEB_R1_05         5105
+#define AID_VC_CB_LEB_R1_06         5106
+#define AID_VC_CB_LEB_R1_07         5107
+#define AID_VC_CB_LEB_R1_08         5108
+#define AID_VC_CB_LEB_R1_09         5109
+#define AID_VC_CB_LEB_R1_10         5110
+#define AID_VC_CB_LEB_R1_11         5111
+#define AID_VC_CB_LEB_R1_12         5112
+#define AID_VC_CB_LEB_R1_13         5113
+#define AID_VC_CB_LEB_R1_14         5114
+#define AID_VC_CB_LEB_R1_15         5115
+#define AID_VC_CB_LEB_R1_16         5116
+#define AID_VC_CB_LEB_R1_17         5117
+#define AID_VC_CB_LEB_R1_18         5118
+#define AID_VC_CB_LEB_R1_19         5119
+#define AID_VC_CB_LEB_R1_20         5120
+#define AID_VC_CB_LEB_R1_21         5121
+#define AID_VC_CB_LEB_R1_22         5122
+#define AID_VC_CB_LEB_R1_23         5123
+#define AID_VC_CB_LEB_R1_24         5124
+#define AID_VC_CB_LEB_R1_25         5125
+#define AID_VC_CB_LEB_R1_26         5126
+#define AID_VC_CB_LEB_R1_27         5127
+#define AID_VC_CB_LEB_R1_28         5128
+#define AID_VC_CB_LEB_R1_29         5129
+#define AID_VC_CB_LEB_R1_30         5130
+#define AID_VC_CB_LEB_R1_31         5131
+#define AID_VC_CB_LEB_R1_32         5132
+#define AID_VC_CB_LEB_R1_33         5133
+#define AID_VC_CB_LEB_R1_34         5134
+#define AID_VC_CB_LEB_R1_35         5135
+#define AID_VC_CB_LEB_R1_36         5136
+#define AID_VC_CB_LEB_R1_37         5137
+#define AID_VC_CB_LEB_R1_38         5138
+#define AID_VC_CB_LEB_R1_39         5139
+#define AID_VC_CB_LEB_R1_40         5140
+#define AID_VC_CB_LEB_R1_41         5141
+#define AID_VC_CB_LEB_R1_42         5142
+#define AID_VC_CB_LEB_R1_43         5143
+#define AID_VC_CB_LEB_R1_44         5144
+#define AID_VC_CB_LEB_R1_45         5145
+#define AID_VC_CB_LEB_R1_46         5146
+#define AID_VC_CB_LEB_R1_47         5147
+#define AID_VC_CB_LEB_R1_48         5148
+#define AID_VC_CB_LEB_R1_49         5149
+#define AID_VC_CB_LEB_R1_50         5150
+#define AID_VC_CB_LEB_R1_51         5151
+#define AID_VC_CB_LEB_R1_52         5152
+#define AID_VC_CB_LEB_R1_53         5153
+#define AID_VC_CB_LEB_R1_54         5154
+#define AID_VC_CB_LEB_R1_55         5155
+#define AID_VC_CB_LEB_R1_56         5156
+#define AID_VC_CB_LEB_R1_57         5157
+#define AID_VC_CB_LEB_R1_58         5158
+#define AID_VC_CB_LEB_R1_59         5159
+#define AID_VC_CB_LEB_R1_60         5160
+#define AID_VC_CB_LEB_R1_61         5161
+#define AID_VC_CB_LEB_R1_62         5162
+#define AID_VC_CB_LEB_R1_63         5163
+#define AID_VC_CB_LEB_R1_64         5164
+#define AID_VC_CB_LEB_R1_65         5165
+#define AID_VC_CB_LEB_R1_66         5166
+#define AID_VC_CB_LEB_R1_67         5167
+#define AID_VC_CB_LEB_R1_68         5168
+#define AID_VC_CB_LEB_R1_69         5169
+#define AID_VC_CB_LEB_R1_70         5170
+#define AID_VC_CB_LEB_R1_71         5171
+#define AID_VC_CB_LEB_R1_72         5172
+#define AID_VC_CB_LEB_R1_73         5173
+#define AID_VC_CB_LEB_R1_74         5174
+#define AID_VC_CB_LEB_R1_75         5175
+#define AID_VC_CB_LEB_R1_76         5176
+#define AID_VC_CB_LEB_R1_77         5177
+#define AID_VC_CB_LEB_R1_78         5178
+#define AID_VC_CB_LEB_R1_79         5179
+#define AID_VC_CB_LEB_R1_80         5180
+#define AID_VC_CB_LEB_R1_81         5181
+
+#define AID_VC_CB_LEB_R2_01         5201
+#define AID_VC_CB_LEB_R2_02         5202
+#define AID_VC_CB_LEB_R2_03         5203
+#define AID_VC_CB_LEB_R2_04         5204
+#define AID_VC_CB_LEB_R2_05         5205
+#define AID_VC_CB_LEB_R2_06         5206
+#define AID_VC_CB_LEB_R2_07         5207
+#define AID_VC_CB_LEB_R2_08         5208
+#define AID_VC_CB_LEB_R2_09         5209
+#define AID_VC_CB_LEB_R2_10         5210
+#define AID_VC_CB_LEB_R2_11         5211
+#define AID_VC_CB_LEB_R2_12         5212
+#define AID_VC_CB_LEB_R2_13         5213
+#define AID_VC_CB_LEB_R2_14         5214
+#define AID_VC_CB_LEB_R2_15         5215
+#define AID_VC_CB_LEB_R2_16         5216
+#define AID_VC_CB_LEB_R2_17         5217
+#define AID_VC_CB_LEB_R2_18         5218
+#define AID_VC_CB_LEB_R2_19         5219
+#define AID_VC_CB_LEB_R2_20         5220
+#define AID_VC_CB_LEB_R2_21         5221
+#define AID_VC_CB_LEB_R2_22         5222
+#define AID_VC_CB_LEB_R2_23         5223
+#define AID_VC_CB_LEB_R2_24         5224
+#define AID_VC_CB_LEB_R2_25         5225
+#define AID_VC_CB_LEB_R2_26         5226
+#define AID_VC_CB_LEB_R2_27         5227
+#define AID_VC_CB_LEB_R2_28         5228
+#define AID_VC_CB_LEB_R2_29         5229
+#define AID_VC_CB_LEB_R2_30         5230
+#define AID_VC_CB_LEB_R2_31         5231
+
+#define AID_VC_ROT_LEB_R_01         5250
+#define AID_VC_ROT_LEB_R_02         5251
+#define AID_VC_ROT_LEB_R_03         5252
+
+// VC Active Areas (LEB Left wall)
+
+#define AID_VC_ROT_LEB_L_01         5300
+#define AID_VC_ROT_LEB_L_02         5301
+#define AID_VC_ROT_LEB_L_03         5302
+#define AID_VC_ROT_LEB_L_04         5303
+#define AID_VC_ROT_LEB_L_05         5304
+#define AID_VC_ROT_LEB_L_06         5305
+#define AID_VC_ROT_LEB_L_07         5306
+#define AID_VC_ROT_LEB_L_08         5307
+#define AID_VC_ROT_LEB_L_09         5308
+#define AID_VC_ROT_LEB_L_10         5309
+#define AID_VC_ROT_LEB_L_11         5310
+#define AID_VC_ROT_LEB_L_12         5311
+#define AID_VC_ROT_LEB_L_13         5312
+#define AID_VC_ROT_LEB_L_14         5313
+#define AID_VC_ROT_LEB_L_15         5314
+#define AID_VC_ROT_LEB_L_16         5315
+#define AID_VC_ROT_LEB_L_17         5316
+#define AID_VC_ROT_LEB_L_18         5317
+#define AID_VC_ROT_LEB_L_19         5318
+#define AID_VC_ROT_LEB_L_20         5319
+#define AID_VC_ROT_LEB_L_21         5320
+#define AID_VC_ROT_LEB_L_22         5321
+
+#define AID_VC_PUSHB_LEB_L_01       5340
+#define AID_VC_PUSHB_LEB_L_02       5341
+#define AID_VC_PUSHB_LEB_L_03       5342
+#define AID_VC_PUSHB_LEB_L_04       5343
 
 // Next default values for new objects
 //
