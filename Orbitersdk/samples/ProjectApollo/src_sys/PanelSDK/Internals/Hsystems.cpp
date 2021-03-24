@@ -1436,7 +1436,7 @@ h_Accumulator::h_Accumulator(char* i_name, vector3 i_p, double i_vol) : h_Tank(i
 	space.Void();
 	parent = NULL;
 }
-
+/*
 void h_Accumulator::refresh(double dt)
 {
 	h_Tank::refresh(dt);
@@ -1451,6 +1451,27 @@ void h_Accumulator::refresh(double dt)
 	else if (space.Volume <= (0.05 * Original_volume))
 	{
 		space.Volume = (0.05 * Original_volume);
+	}
+
+	//sprintf(oapiDebugString(), "Volume %lf Pressure %lf Original Volume %lf", space.Volume, space.Press*PSI, Original_volume);
+}
+*/
+void h_Accumulator::refresh(double dt)
+{
+	h_Tank::refresh(dt);
+
+	if (space.Volume <= Original_volume * 0.8 || space.Volume >= Original_volume * 0.05)
+	{
+
+		while (space.Press >= 8.0 * PSI)
+		{
+			(space.Volume + 0.001)* dt;
+		}
+
+		while (space.Press <= 5.6 * PSI)
+		{
+			(space.Volume - 0.001)* dt;
+		}
 	}
 
 	//sprintf(oapiDebugString(), "Volume %lf Pressure %lf Original Volume %lf", space.Volume, space.Press*PSI, Original_volume);
