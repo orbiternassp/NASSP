@@ -879,6 +879,7 @@ void h_Pipe::refresh(double dt) {
 		// conductive heat transfer should depend on valve-size
 		// as a "quick hack" it's proportional to the minimum size,
 		// but this has to be improved
+
 		double minSize = __min(in->size, out->size);
 		trQ = trQ * minSize;
 
