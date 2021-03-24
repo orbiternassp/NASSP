@@ -2768,6 +2768,7 @@ public:
 	double GLHTCS(double FLTHRS);
 	//Subsatellite Position
 	int GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt);
+	void GLFDEN(double ALT, double &DENS, double &SPOS);
 	// MISSION PLANNING (P)
 	//Weight Determination at a Time
 	struct PLAWDTInput

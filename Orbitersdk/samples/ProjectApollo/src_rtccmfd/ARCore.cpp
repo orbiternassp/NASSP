@@ -1308,16 +1308,42 @@ void ARCore::UpdateGRRTime()
 
 void ARCore::GetStateVectorFromIU()
 {
-	if (vesseltype >= 2)
+	bool isSaturnV;
+	IU* iu;
+
+	if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+	{
+		Saturn *iuv = (Saturn *)vessel;
+		iu = iuv->GetIU();
+		isSaturnV = true;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+	{
+		Saturn *iuv = (Saturn *)vessel;
+		iu = iuv->GetIU();
+		isSaturnV = false;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+	{
+		SIVB *iuv = (SIVB *)vessel;
+		iu = iuv->GetIU();
+		isSaturnV = true;
+	}
+	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+		!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+	{
+		SIVB *iuv = (SIVB *)vessel;
+		iu = iuv->GetIU();
+		isSaturnV = false;
+	}
+	else
 	{
 		return;
 	}
-	Saturn *saturn = (Saturn *)vessel;
-	if (saturn->GetStage() >= CSM_LEM_STAGE)
-	{
-		return;
-	}
-	IU* iu = saturn->GetIU();
+
 	if (iu == NULL)
 	{
 		return;
@@ -1327,8 +1353,7 @@ void ARCore::GetStateVectorFromIU()
 	VECTOR3 R, V;
 	double TAS;
 
-	//TBD: Make this better
-	if (GC->mission == 7)
+	if (isSaturnV == false)
 	{
 		LVDC1B *lvdc = (LVDC1B*)iu->GetLVDC();
 
