@@ -1901,7 +1901,7 @@ void GuardedToggleSwitch::DefineVCAnimations(UINT vc_idx)
 
 bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (event & PANEL_MOUSE_RBDOWN) {
+	if (event & PANEL_MOUSE_RBDOWN && p.x > 0.004) {
 
 		if (guardState) {
 			Guard();
@@ -1913,7 +1913,7 @@ bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 		return true;
 
 	}
-	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
+	else if (event & (PANEL_MOUSE_DOWN | PANEL_MOUSE_UP)) {
 		if (guardState) {
 			return ToggleSwitch::CheckMouseClickVC(event, p);
 		}

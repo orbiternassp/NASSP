@@ -1542,6 +1542,100 @@
 #define AID_VC_PUSHB_LEB_L_03       5342
 #define AID_VC_PUSHB_LEB_L_04       5343
 
+// VC Active Areas (Panel 100)
+#define AID_VC_PANEL_100			((id >= 6000) && (id <= 6099))
+#define AID_VC_SWITCH_P100_01		6001
+#define AID_VC_SWITCH_P100_02		6002
+#define AID_VC_SWITCH_P100_03		6003
+#define AID_VC_SWITCH_P100_04		6004
+#define AID_VC_SWITCH_P100_05		6005
+#define AID_VC_SWITCH_P100_06		6006
+
+#define AID_VC_ROT_P100_01          6010
+#define AID_VC_ROT_P100_02          6011
+#define AID_VC_ROT_P100_03          6012
+
+// VC Active Areas (Panel 101)
+#define AID_VC_PANEL_101			((id >= 6100) && (id <= 6199))
+#define AID_VC_SWITCH_P101_01		6101
+#define AID_VC_SWITCH_P101_02		6102
+#define AID_VC_SWITCH_P101_03		6103
+#define AID_VC_SWITCH_P101_04		6104
+
+#define AID_VC_ROT_P101_01          6110
+#define AID_VC_ROT_P101_02          6111
+
+// VC Active Areas (Panel 122)
+
+#define AID_VC_PANEL_122			((id >= 6200) && (id <= 6299))
+#define AID_VC_SWITCH_P122_01		6201
+#define AID_VC_SWITCH_P122_02		6202
+#define AID_VC_SWITCH_P122_03		6203
+#define AID_VC_SWITCH_P122_04		6204
+#define AID_VC_SWITCH_P122_05		6205
+#define AID_VC_SWITCH_P122_06		6206
+#define AID_VC_SWITCH_P122_07		6207
+
+#define AID_VC_MASTER_ALARM3        6210
+#define AID_VC_OPT_SHAFTDISPLAY     6211
+#define AID_VC_OPT_TRUNDISPLAY      6212
+#define AID_VC_CWS_GNLIGHTS         6213
+#define AID_VC_DSKY_DISPLAY2        6214
+#define AID_VC_DSKY_LIGHTS2         6215
+
+#define AID_VC_PUSHB_P122_01      6220    // DSKY key Verb
+#define AID_VC_PUSHB_P122_02      6221    // DSKY key Noun
+#define AID_VC_PUSHB_P122_03      6222    // DSKY key +
+#define AID_VC_PUSHB_P122_04      6223    // DSKY key -
+#define AID_VC_PUSHB_P122_05      6224    // DSKY key 0
+#define AID_VC_PUSHB_P122_06      6225    // DSKY key 1
+#define AID_VC_PUSHB_P122_07      6226    // DSKY key 2
+#define AID_VC_PUSHB_P122_08      6227    // DSKY key 3
+#define AID_VC_PUSHB_P122_09      6228    // DSKY key 4
+#define AID_VC_PUSHB_P122_10      6229    // DSKY key 5
+#define AID_VC_PUSHB_P122_11      6230    // DSKY key 6
+#define AID_VC_PUSHB_P122_12      6231    // DSKY key 7
+#define AID_VC_PUSHB_P122_13      6232    // DSKY key 8
+#define AID_VC_PUSHB_P122_14      6233    // DSKY key 9
+#define AID_VC_PUSHB_P122_15      6234    // DSKY key Clear
+#define AID_VC_PUSHB_P122_16      6235    // DSKY key Pro
+#define AID_VC_PUSHB_P122_17      6236    // DSKY key k. rel
+#define AID_VC_PUSHB_P122_18      6237    // DSKY key Enter
+#define AID_VC_PUSHB_P122_19      6238    // DSKY key Reset
+
+#define AID_VC_PANEL_306			((id >= 6300) && (id <= 6399))
+#define AID_VC_SWITCH_P306_01		6301
+#define AID_VC_SWITCH_P306_02		6302
+#define AID_VC_SWITCH_P306_03		6303
+#define AID_VC_SWITCH_P306_04		6304
+#define AID_VC_SWITCH_P306_05		6305
+#define AID_VC_SWITCH_P306_06		6306
+#define AID_VC_SWITCH_P306_07		6307
+#define AID_VC_SWITCH_P306_08		6308
+
+#define AID_VC_MISSION_CLOCK306     6320
+#define AID_VC_EVENT_TIMER306       6321
+
+// Panel 10-12
+#define AID_VC_SWITCH_P10_01		6401
+#define AID_VC_SWITCH_P10_02		6402
+#define AID_VC_SWITCH_P10_03		6403
+#define AID_VC_SWITCH_P10_04		6404
+#define AID_VC_SWITCH_P10_05		6405
+#define AID_VC_SWITCH_P10_06		6406
+#define AID_VC_SWITCH_P10_07		6407
+#define AID_VC_SWITCH_P10_08		6408
+
+#define AID_VC_TW_P10_01         6412
+#define AID_VC_TW_P10_02         6413
+#define AID_VC_TW_P10_03         6414
+#define AID_VC_TW_P10_04         6415
+#define AID_VC_TW_P10_05         6416
+#define AID_VC_TW_P10_06         6417
+
+#define AID_VC_ROT_P12_01          6420
+
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
