@@ -3457,7 +3457,7 @@ protected:
 	//
 
 	boolean StageUnloadState = 0;
-	double StageUnloadTime =-1.0;
+	double LastVPAccelTime = -10000.0, StageUnloadTime = -1.0;
 
 	///
 	/// Mesh offset for BPC and LET.
@@ -3472,11 +3472,6 @@ protected:
 	double S4Offset;
 
 	double actualFUEL;
-
-	#define LASTVELOCITYCOUNT 50
-	//VECTOR3 LastVelocity[LASTVELOCITYCOUNT];
-	//double LastSimt[LASTVELOCITYCOUNT];
-	//int LastVelocityFilled;
 
 	bool KEY1;
 	bool KEY2;

@@ -873,12 +873,6 @@ void Saturn::initSaturn()
 
 	actualFUEL = 0;
 
-	//for (i = 0; i < LASTVELOCITYCOUNT; i++) {
-	//	LastVelocity[i] = _V(0, 0, 0);
-	//	LastSimt[i] = 0;
-	//}
-	//LastVelocityFilled = -1;
-
 	viewpos = SATVIEW_LEFTSEAT;
 
 	probeidx = -1;
@@ -2695,20 +2689,30 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 #endif // TRACK_TIMESTEPS
 
 	// Visualizing vibration
-	// This simulation of the vibration environment in the CM is mostly based on
-	// Saturn V Launch Vehicle Flight Evaluation Report - AS-506, Apollo 11 Mission
+	// The visualized vibration is a superposition of three factors:
+	//  - G-load based offset of the viewpoint(practically head movement due to
+	//    the G-load caused by thrust and aerodynamic forces)
+	//  - Noise-like viewpoint jostling of viewpoint depending on altitude
+	//    (reflected shockwaves); on dynamic pressure(aerodynamic vibration)
+	//    and on thruster activity(engine vibration carried to the cockpit by
+	//    the structure)
+	//  - longitudinal oscillation(POGO effect) depending on the phase of the
+	//    launch.
+	//
+    //  The simulation of noise and longitudinal oscillation is based on Mission
+	//  Reports, Launch Vehicle Flight Evaluation Reports and other sources (the
+	//  most useful ones were "Saturn V Launch Vehicle Flight Evaluation Report - 
+	//  AS-506, Apollo 11 Mission" and the formal and informal crew reports found
+	//  in Apollo Flight Journal).
+	//
+	//  This model of vibration is visual only and has no effect on other parts of the simulation.
 	double dynpress = GetDynPressure();
-	VECTOR3 vAccel, vWeight, vAngAcc;
+	VECTOR3 vAccel, vWeight;
 	GetForceVector(vAccel);
 	GetWeightVector(vWeight);
 	
-	GetAngularAcc(vAngAcc);
 	vAccel -= vWeight;
 	vAccel /= GetMass();
-	//VECTOR3 ofs;
-	//GetMeshOffset(vcidx, ofs);
-	//ofs.y += 1.0;
-	//vAccel += crossp(ofs, vAngAcc);
 	
 	THRUSTER_HANDLE *tharr;
 	VECTOR3 seatacc = vAccel;
@@ -2785,11 +2789,11 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		nth = 1;
 		tharr = th_sps;
 		noisedp = 12.0e-7;
+		noiseth = 0.0075;
 		noisefreq = 15.0;
 	}
 	else if (stage >= CM_STAGE) {
 		noisedp = 4.0e-7;
-		noiseth = 0.0075;
 		noisefreq = 15.0;
 	}
 
@@ -2837,14 +2841,17 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 	double noiselat = thsum*noiseth + dynpress*noisedp;
 	double noiselong = noiselat*latlonratio;
-	//sprintf(oapiDebugString(), "stage=%d AX=%8.4lf AY=%8.4lf AZ=%8.4lf thsum=%5.2lf dynpress=%9.1lf proplev=%9.0lf propratio=%6.2lf pogofreq=%6.1lf pogoamp=%6.2lf", stage, vAccel.x, vAccel.y, vAccel.z, thsum, dynpress, proplev, propratio, pogofreq, pogoamp);
+	//sprintf(oapiDebugString(), "stage=%d AX=%8.4lf AY=%8.4lf AZ=%8.4lf thsum=%5.2lf dynpress=%9.1lf proplev=%9.0lf propratio=%6.2lf pogofreq=%6.1lf pogoamp=%6.2lf voffs=(%5.2lf, %5.2lf, %5.2lf)", stage, vAccel.x, vAccel.y, vAccel.z, thsum, dynpress, proplev, propratio, pogofreq, pogoamp, ViewOffsetx, ViewOffsety, ViewOffsetz);
 
-	if (noiselat > 0.0 || (vAccel.x*vAccel.x+vAccel.y*vAccel.y+ vAccel.z*vAccel.z)>0.01)
-		JostleViewpoint(noiselat, noiselong, noisefreq, simdt, -seatacc.x / 200.0, -seatacc.y / 200.0, -seatacc.z / 300.0 );
-	else {
+	if (noiselat > 0.0 || (vAccel.x*vAccel.x + vAccel.y*vAccel.y + vAccel.z*vAccel.z) > 0.01) {
+		JostleViewpoint(noiselat, noiselong, noisefreq, simdt, -seatacc.x / 200.0, -seatacc.y / 200.0, -seatacc.z / 300.0);
+		LastVPAccelTime = MissionTime;
+	}
+	else if (MissionTime<LastVPAccelTime + 5.0){	
 		ViewOffsetx *= 0.95;
 		ViewOffsety *= 0.95;
 		ViewOffsetz *= 0.95;
+		SetView();
 	}
 
 	//
