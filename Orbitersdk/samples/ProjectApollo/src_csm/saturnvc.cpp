@@ -1136,8 +1136,8 @@ void Saturn::RegisterActiveAreas() {
 
 	for (i = 0; i < P122_PUSHBCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P2_01 + i, P122_PUSHB_POS[i] + ofs, PUSHB);
+		oapiVCRegisterArea(AID_VC_PUSHB_P122_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P122_01 + i, P122_PUSHB_POS[i] + ofs, PUSHB);
 	}
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM3, _V(0.103894, -0.69915, 0.029394) + ofs, PUSHB);
@@ -3941,81 +3941,81 @@ void Saturn::DefineVCAnimations()
 
 	const VECTOR3 pb_P122_vector = {0 , -0.001, 0 };
 
-	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P122_01);
-	DskySwitchVerb.SetDirection(pb_P122_vector);
-	DskySwitchVerb.DefineMeshGroup(VC_GRP_PB_P122_01);
+	MainPanelVC.AddSwitch(&Dsky2SwitchVerb, AID_VC_PUSHB_P122_01);
+	Dsky2SwitchVerb.SetDirection(pb_P122_vector);
+	Dsky2SwitchVerb.DefineMeshGroup(VC_GRP_PB_P122_01);
 
-	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P122_02);
-	DskySwitchNoun.SetDirection(pb_P122_vector);
-	DskySwitchNoun.DefineMeshGroup(VC_GRP_PB_P122_02);
+	MainPanelVC.AddSwitch(&Dsky2SwitchNoun, AID_VC_PUSHB_P122_02);
+	Dsky2SwitchNoun.SetDirection(pb_P122_vector);
+	Dsky2SwitchNoun.DefineMeshGroup(VC_GRP_PB_P122_02);
 
-	MainPanelVC.AddSwitch(&DskySwitchPlus, AID_VC_PUSHB_P122_03);
-	DskySwitchPlus.SetDirection(pb_P122_vector);
-	DskySwitchPlus.DefineMeshGroup(VC_GRP_PB_P122_03);
+	MainPanelVC.AddSwitch(&Dsky2SwitchPlus, AID_VC_PUSHB_P122_03);
+	Dsky2SwitchPlus.SetDirection(pb_P122_vector);
+	Dsky2SwitchPlus.DefineMeshGroup(VC_GRP_PB_P122_03);
 
-	MainPanelVC.AddSwitch(&DskySwitchMinus, AID_VC_PUSHB_P122_04);
-	DskySwitchMinus.SetDirection(pb_P122_vector);
-	DskySwitchMinus.DefineMeshGroup(VC_GRP_PB_P122_04);
+	MainPanelVC.AddSwitch(&Dsky2SwitchMinus, AID_VC_PUSHB_P122_04);
+	Dsky2SwitchMinus.SetDirection(pb_P122_vector);
+	Dsky2SwitchMinus.DefineMeshGroup(VC_GRP_PB_P122_04);
 
-	MainPanelVC.AddSwitch(&DskySwitchZero, AID_VC_PUSHB_P122_05);
-	DskySwitchZero.SetDirection(pb_P122_vector);
-	DskySwitchZero.DefineMeshGroup(VC_GRP_PB_P122_05);
+	MainPanelVC.AddSwitch(&Dsky2SwitchZero, AID_VC_PUSHB_P122_05);
+	Dsky2SwitchZero.SetDirection(pb_P122_vector);
+	Dsky2SwitchZero.DefineMeshGroup(VC_GRP_PB_P122_05);
 
-	MainPanelVC.AddSwitch(&DskySwitchOne, AID_VC_PUSHB_P122_06);
-	DskySwitchOne.SetDirection(pb_P122_vector);
-	DskySwitchOne.DefineMeshGroup(VC_GRP_PB_P122_06);
+	MainPanelVC.AddSwitch(&Dsky2SwitchOne, AID_VC_PUSHB_P122_06);
+	Dsky2SwitchOne.SetDirection(pb_P122_vector);
+	Dsky2SwitchOne.DefineMeshGroup(VC_GRP_PB_P122_06);
 
-	MainPanelVC.AddSwitch(&DskySwitchTwo, AID_VC_PUSHB_P122_07);
-	DskySwitchTwo.SetDirection(pb_P122_vector);
-	DskySwitchTwo.DefineMeshGroup(VC_GRP_PB_P122_07);
+	MainPanelVC.AddSwitch(&Dsky2SwitchTwo, AID_VC_PUSHB_P122_07);
+	Dsky2SwitchTwo.SetDirection(pb_P122_vector);
+	Dsky2SwitchTwo.DefineMeshGroup(VC_GRP_PB_P122_07);
 
-	MainPanelVC.AddSwitch(&DskySwitchThree, AID_VC_PUSHB_P122_08);
-	DskySwitchThree.SetDirection(pb_P122_vector);
-	DskySwitchThree.DefineMeshGroup(VC_GRP_PB_P122_08);
+	MainPanelVC.AddSwitch(&Dsky2SwitchThree, AID_VC_PUSHB_P122_08);
+	Dsky2SwitchThree.SetDirection(pb_P122_vector);
+	Dsky2SwitchThree.DefineMeshGroup(VC_GRP_PB_P122_08);
 
-	MainPanelVC.AddSwitch(&DskySwitchFour, AID_VC_PUSHB_P122_09);
-	DskySwitchFour.SetDirection(pb_P122_vector);
-	DskySwitchFour.DefineMeshGroup(VC_GRP_PB_P122_09);
+	MainPanelVC.AddSwitch(&Dsky2SwitchFour, AID_VC_PUSHB_P122_09);
+	Dsky2SwitchFour.SetDirection(pb_P122_vector);
+	Dsky2SwitchFour.DefineMeshGroup(VC_GRP_PB_P122_09);
 
-	MainPanelVC.AddSwitch(&DskySwitchFive, AID_VC_PUSHB_P122_10);
-	DskySwitchFive.SetDirection(pb_P122_vector);
-	DskySwitchFive.DefineMeshGroup(VC_GRP_PB_P122_10);
+	MainPanelVC.AddSwitch(&Dsky2SwitchFive, AID_VC_PUSHB_P122_10);
+	Dsky2SwitchFive.SetDirection(pb_P122_vector);
+	Dsky2SwitchFive.DefineMeshGroup(VC_GRP_PB_P122_10);
 
-	MainPanelVC.AddSwitch(&DskySwitchSix, AID_VC_PUSHB_P122_11);
-	DskySwitchSix.SetDirection(pb_P122_vector);
-	DskySwitchSix.DefineMeshGroup(VC_GRP_PB_P122_11);
+	MainPanelVC.AddSwitch(&Dsky2SwitchSix, AID_VC_PUSHB_P122_11);
+	Dsky2SwitchSix.SetDirection(pb_P122_vector);
+	Dsky2SwitchSix.DefineMeshGroup(VC_GRP_PB_P122_11);
 
-	MainPanelVC.AddSwitch(&DskySwitchSeven, AID_VC_PUSHB_P122_12);
-	DskySwitchSeven.SetDirection(pb_P122_vector);
-	DskySwitchSeven.DefineMeshGroup(VC_GRP_PB_P122_12);
+	MainPanelVC.AddSwitch(&Dsky2SwitchSeven, AID_VC_PUSHB_P122_12);
+	Dsky2SwitchSeven.SetDirection(pb_P122_vector);
+	Dsky2SwitchSeven.DefineMeshGroup(VC_GRP_PB_P122_12);
 
-	MainPanelVC.AddSwitch(&DskySwitchEight, AID_VC_PUSHB_P122_13);
-	DskySwitchEight.SetDirection(pb_P122_vector);
-	DskySwitchEight.DefineMeshGroup(VC_GRP_PB_P122_13);
+	MainPanelVC.AddSwitch(&Dsky2SwitchEight, AID_VC_PUSHB_P122_13);
+	Dsky2SwitchEight.SetDirection(pb_P122_vector);
+	Dsky2SwitchEight.DefineMeshGroup(VC_GRP_PB_P122_13);
 
-	MainPanelVC.AddSwitch(&DskySwitchNine, AID_VC_PUSHB_P122_14);
-	DskySwitchNine.SetDirection(pb_P122_vector);
-	DskySwitchNine.DefineMeshGroup(VC_GRP_PB_P122_14);
+	MainPanelVC.AddSwitch(&Dsky2SwitchNine, AID_VC_PUSHB_P122_14);
+	Dsky2SwitchNine.SetDirection(pb_P122_vector);
+	Dsky2SwitchNine.DefineMeshGroup(VC_GRP_PB_P122_14);
 
-	MainPanelVC.AddSwitch(&DskySwitchClear, AID_VC_PUSHB_P122_15);
-	DskySwitchClear.SetDirection(pb_P122_vector);
-	DskySwitchClear.DefineMeshGroup(VC_GRP_PB_P122_15);
+	MainPanelVC.AddSwitch(&Dsky2SwitchClear, AID_VC_PUSHB_P122_15);
+	Dsky2SwitchClear.SetDirection(pb_P122_vector);
+	Dsky2SwitchClear.DefineMeshGroup(VC_GRP_PB_P122_15);
 
-	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P122_16);
-	DskySwitchProg.SetDirection(pb_P122_vector);
-	DskySwitchProg.DefineMeshGroup(VC_GRP_PB_P122_16);
+	MainPanelVC.AddSwitch(&Dsky2SwitchProg, AID_VC_PUSHB_P122_16);
+	Dsky2SwitchProg.SetDirection(pb_P122_vector);
+	Dsky2SwitchProg.DefineMeshGroup(VC_GRP_PB_P122_16);
 
-	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P122_17);
-	DskySwitchKeyRel.SetDirection(pb_P122_vector);
-	DskySwitchKeyRel.DefineMeshGroup(VC_GRP_PB_P122_17);
+	MainPanelVC.AddSwitch(&Dsky2SwitchKeyRel, AID_VC_PUSHB_P122_17);
+	Dsky2SwitchKeyRel.SetDirection(pb_P122_vector);
+	Dsky2SwitchKeyRel.DefineMeshGroup(VC_GRP_PB_P122_17);
 
-	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P122_18);
-	DskySwitchEnter.SetDirection(pb_P122_vector);
-	DskySwitchEnter.DefineMeshGroup(VC_GRP_PB_P122_18);
+	MainPanelVC.AddSwitch(&Dsky2SwitchEnter, AID_VC_PUSHB_P122_18);
+	Dsky2SwitchEnter.SetDirection(pb_P122_vector);
+	Dsky2SwitchEnter.DefineMeshGroup(VC_GRP_PB_P122_18);
 
-	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P122_19);
-	DskySwitchReset.SetDirection(pb_P122_vector);
-	DskySwitchReset.DefineMeshGroup(VC_GRP_PB_P122_19);
+	MainPanelVC.AddSwitch(&Dsky2SwitchReset, AID_VC_PUSHB_P122_19);
+	Dsky2SwitchReset.SetDirection(pb_P122_vector);
+	Dsky2SwitchReset.DefineMeshGroup(VC_GRP_PB_P122_19);
 
 	// Panel 306
 	const VECTOR3	P306_SW_AXIS = { 0, -1, 0 };
