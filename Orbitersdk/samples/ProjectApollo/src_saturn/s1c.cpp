@@ -133,7 +133,7 @@ void S1C::SetS1c()
 
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(v2);
-	oapiCameraSetCockpitDir(0,0);
+	//oapiCameraSetCockpitDir(0,0); //This thingy messes up the VC camera dir on SIC staging
 	SetCameraOffset(v);
 }
 

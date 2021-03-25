@@ -3459,7 +3459,8 @@ protected:
 	// And state that doesn't need to be saved.
 	//
 
-	double aHAcc;
+	boolean StageUnloadState = 0;
+	double LastVPAccelTime = -10000.0, StageUnloadTime = -1.0;
 
 	///
 	/// Mesh offset for BPC and LET.
@@ -3474,11 +3475,6 @@ protected:
 	double S4Offset;
 
 	double actualFUEL;
-
-	#define LASTVELOCITYCOUNT 50
-	VECTOR3 LastVelocity[LASTVELOCITYCOUNT];
-	double LastSimt[LASTVELOCITYCOUNT];
-	int LastVelocityFilled;
 
 	bool KEY1;
 	bool KEY2;
@@ -4072,7 +4068,7 @@ protected:
 	virtual void CreateStageOne() = 0;
 
 	void StageSix(double simt);
-	void JostleViewpoint(double amount);
+	void JostleViewpoint(double noiselat, double noiselon, double noisefreq, double dt, double accoffsx, double accoffsy, double accoffsz);
 	void UpdatePayloadMass();
 	void GetPayloadName(char *s);
 	void GetApolloName(char *s);
@@ -4336,9 +4332,9 @@ protected:
 	// Random motion.
 	//
 
-	double ViewOffsetx;
-	double ViewOffsety;
-	double ViewOffsetz;
+	double ViewOffsetx, NoiseOffsetx;
+	double ViewOffsety, NoiseOffsety;
+	double ViewOffsetz, NoiseOffsetz;
 
 	//
 	// Save the last view offset.

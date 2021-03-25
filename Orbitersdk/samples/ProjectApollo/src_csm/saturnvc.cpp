@@ -1580,33 +1580,40 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//return false;
 }
 
+#define JostleAxis(offset, noiseamp) \
+	j = ((double) ((rand() & 32767) - 16384) * noiseamp*sqdt) / 16384.0; \
+	offset += j; \
+	if(dtmul>1.0) \
+		offset = 0.0; \
+	else \
+		offset = offset-dtmul*offset;
 
-void Saturn::JostleViewpoint(double amount)
+void Saturn::JostleViewpoint(double noiselat, double noiselon, double noisefreq, double dt, double accoffsx, double accoffsy, double accoffsz)
+{	
+	double j, tmpoffs, sqdt=sqrt(dt), dtmul= noisefreq*dt;
+	JostleAxis(NoiseOffsetx, noiselat);
+	JostleAxis(NoiseOffsety, noiselat);
+	JostleAxis(NoiseOffsetz, noiselon);
 
-{
-	double j = ((double) ((rand() & 65535) - 32768) * amount) / 3276800.0;
-	ViewOffsetx += j;
+	ViewOffsetx = NoiseOffsetx + accoffsx;
+	ViewOffsety = NoiseOffsety + accoffsy;
+	ViewOffsetz = NoiseOffsetz + accoffsz;
+	//sprintf(oapiDebugString(), "Offsx:%8.4lf Offsy:%8.4lf Offsz:%8.4lf accoffsz:%8.4lf ", ViewOffsetx, ViewOffsety, ViewOffsetz, accoffsz);
 
-	j = ((double) ((rand() & 65535) - 32768) * amount) / 3276800.0;
-	ViewOffsety += j;
-
-	j = ((double) ((rand() & 65535) - 32768) * amount) / 3276800.0;
-	ViewOffsetz += j;
-
-	if (ViewOffsetx > 0.10)
-		ViewOffsetx = 0.10;
-	if (ViewOffsetx < -0.10)
-		ViewOffsetx = -0.10;
+	if (ViewOffsetx > 0.20)
+		ViewOffsetx = 0.20;
+	if (ViewOffsetx < -0.20)
+		ViewOffsetx = -0.20;
 
 	if (ViewOffsety > 0.10)
 		ViewOffsety = 0.10;
 	if (ViewOffsety < -0.10)
 		ViewOffsety = -0.10;
 
-	if (ViewOffsetz > 0.05)
-		ViewOffsetz = 0.05;
-	if (ViewOffsetz < -0.05)
-		ViewOffsetz = -0.05;
+	if (ViewOffsetz > 0.2)
+		ViewOffsetz = 0.2;
+	if (ViewOffsetz < -0.2)
+		ViewOffsetz = -0.2;
 
 	SetView();
 }
@@ -1779,15 +1786,15 @@ void Saturn::SetView(double offset, bool update_direction)
 	else {
 		switch (viewpos) {
 			case SATVIEW_LEFTSEAT:
-				v = _V(-0.6, 0.9, offset);
+				v = _V(-0.6, 0.9, offset + 0.1);
 				break;
 
 			case SATVIEW_CENTERSEAT:
-				v = _V(0, 0.9, offset);
+				v = _V(0, 0.9, offset + 0.1);
 				break;
 
 			case SATVIEW_RIGHTSEAT:
-				v = _V(0.6, 0.9, offset);
+				v = _V(0.6, 0.9, offset + 0.1);
 				break;
 
 			case SATVIEW_LEFTDOCK:

@@ -733,6 +733,10 @@ void Saturn::initSaturn()
 	ViewOffsety = 0;
 	ViewOffsetz = 0;
 
+	NoiseOffsetx = 0;
+	NoiseOffsety = 0;
+	NoiseOffsetz = 0;
+
 	InVC = false;
 	InPanel = false;
 	CheckPanelIdInTimestep = false;
@@ -868,12 +872,6 @@ void Saturn::initSaturn()
 	KEY9=false;
 
 	actualFUEL = 0;
-
-	for (i = 0; i < LASTVELOCITYCOUNT; i++) {
-		LastVelocity[i] = _V(0, 0, 0);
-		LastSimt[i] = 0;
-	}
-	LastVelocityFilled = -1;
 
 	viewpos = SATVIEW_LEFTSEAT;
 
@@ -2635,8 +2633,6 @@ void Saturn::SetStage(int s)
 void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 {
-	int i;
-
 	if (GenericFirstTimestep) {
 		//
 		// Do any generic setup.
@@ -2685,24 +2681,171 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	}
 #endif // TRACK_TIMESTEPS
 
+	// Visualizing vibration
+	// The visualized vibration is a superposition of three factors:
+	//  - G-load based offset of the viewpoint(practically head movement due to
+	//    the G-load caused by thrust and aerodynamic forces)
+	//  - Noise-like viewpoint jostling of viewpoint depending on altitude
+	//    (reflected shockwaves); on dynamic pressure(aerodynamic vibration)
+	//    and on thruster activity(engine vibration carried to the cockpit by
+	//    the structure)
+	//  - longitudinal oscillation(POGO effect) depending on the phase of the
+	//    launch.
 	//
-	// Reduce jostle.
+    //  The simulation of noise and longitudinal oscillation is based on Mission
+	//  Reports, Launch Vehicle Flight Evaluation Reports and other sources (the
+	//  most useful ones were "Saturn V Launch Vehicle Flight Evaluation Report - 
+	//  AS-506, Apollo 11 Mission" and the formal and informal crew reports found
+	//  in Apollo Flight Journal).
 	//
+	//  This model of vibration is visual only and has no effect on other parts of the simulation.
+	double dynpress = GetDynPressure();
+	VECTOR3 vAccel, vWeight;
+	GetForceVector(vAccel);
+	GetWeightVector(vWeight);
+	
+	vAccel -= vWeight;
+	vAccel /= GetMass();
+	
+	THRUSTER_HANDLE *tharr;
+	VECTOR3 seatacc = vAccel;
+	double thsum = 0.0;
+	int nth=0;
+	double noiseth = 0.0, noisedp = 0.0, noisefreq = 0.0, latlonratio = 1.0;
+	double pogoamp = 0.0, pogofreq = 0.0;
+	double proplev = GetTotalPropellantMass(), propratio = 0.0;
 
-	ViewOffsetx *= 0.95;
-	ViewOffsety *= 0.95;
-	ViewOffsetz *= 0.95;
+	if (stage <= LAUNCH_STAGE_ONE) {
+		double groundcoeff = max((300.0 - GetAltitude(ALTMODE_GROUND)) / 300.0, 0.0);
+		if (SaturnType == SAT_SATURNV) {
+			nth = 5;
+			tharr = th_1st;
+			propratio = proplev / 2147000.0;
+			noiseth = 0.006*groundcoeff +0.003;
+			noisedp = 5.0e-7;
+			noisefreq = 6.0;
+			latlonratio = 0.2;
 
-	//
-	// And update for acceleration.
-	//
+			pogofreq = 5.6 - 1.4*propratio;
+			if (propratio > 0.9)
+				pogoamp = 2.0 - 18.0*(1.0 - propratio);
+			else if (propratio > 0.5)
+				pogoamp = 0.5;
+			else if (propratio > 0.4)
+				pogoamp = 0.5 + 10.0*(0.5 - propratio);
+			else if (propratio > 0.2)
+				pogoamp = 1.5 - 5.0*(0.4 - propratio);
+			else if (propratio > 0.15)
+				pogoamp = 0.5 + 30.0*(0.2 - propratio);
+			else 
+				pogoamp = 2.0;
+		}
+		else if (SaturnType == SAT_SATURN1B) {
+			nth = 8;
+			tharr = th_1st;
+			propratio = proplev / 413000.0;
+			noiseth = 0.002*groundcoeff + 0.001;
+			noisedp = 5.0e-7;
+			noisefreq = 6.0;
+		}
+	}
+	else if (stage <= LAUNCH_STAGE_TWO_ISTG_JET) {
+		nth = 5;
+		tharr = th_2nd;
+		propratio = proplev / 444000.0;
+		noiseth = 0.0015;
+		noisefreq = 30.0;
+		latlonratio = 0.2;
 
-	double amt = fabs(aHAcc / 25.0) - 0.1;
-	if (amt > 0.25)
-		amt = 0.25;
+		if (StageUnloadState > 0 && StageUnloadState <= 3)
+			pogofreq = 4.2;
+		else {
+			pogofreq = 15.0;
+			if (propratio > 0.98)
+				pogoamp = 2.5*(1.0 - propratio);
+			else if (propratio > 0.9)
+				pogoamp = 0.05;
+			else if (propratio > 0.8)
+				pogoamp = 0.05+9.5*(0.9- propratio);
+			else if (propratio > 0.75)
+				pogoamp = 1.0 - 18.0*(0.8 - propratio);
+		}
+	}
+	else if (stage <= STAGE_ORBIT_SIVB) {
+		nth = 1;
+		tharr = th_3rd;
+		propratio = proplev / 108000.0;
+		noiseth = 0.0075;
+		noisefreq = 30.0;
+	}
+	else if (stage <= CSM_LEM_STAGE) {
+		nth = 1;
+		tharr = th_sps;
+		noisedp = 12.0e-7;
+		noiseth = 0.0075;
+		noisefreq = 15.0;
+	}
+	else if (stage >= CM_STAGE) {
+		noisedp = 4.0e-7;
+		noisefreq = 15.0;
+	}
 
-	if (amt > 0)
-		JostleViewpoint(amt);
+	for (int i = 0; i < nth; i++)
+		thsum += GetThrusterLevel(tharr[i]);
+	
+	if (stage >= LAUNCH_STAGE_ONE &&  stage <= STAGE_ORBIT_SIVB) {
+		if (SaturnType == SAT_SATURNV) {
+			switch (StageUnloadState) {
+			case 0:
+				if (stage== LAUNCH_STAGE_ONE &&  thsum > 4.9)
+					StageUnloadState = 1;
+				break;
+			case 1:
+				if (thsum < 4.8) {
+					StageUnloadTime = MissionTime;
+					StageUnloadState = 2;
+				}
+				break;
+			case 2:
+				pogoamp = 4.0*exp((StageUnloadTime - MissionTime)*0.2);
+				if (thsum < 3.8) {
+					StageUnloadTime = MissionTime;
+					StageUnloadState = 3; //Get ready for a little jolt, fellas!				
+				}
+				break;
+			case 3:
+				pogoamp = 10.0*exp((StageUnloadTime - MissionTime)*1.0);
+				if ((MissionTime- StageUnloadTime) > 5.0) {
+					StageUnloadState = 0;
+					StageUnloadTime = -1;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		seatacc.z = vAccel.z - pogoamp * sin(6.28*pogofreq*MissionTime);
+	}
+	else if (stage < LAUNCH_STAGE_ONE) {
+		seatacc.x = 0.0;
+		seatacc.y = 0.0;
+		seatacc.z = 9.81;
+	}
+
+	double noiselat = thsum*noiseth + dynpress*noisedp;
+	double noiselong = noiselat*latlonratio;
+	//sprintf(oapiDebugString(), "stage=%d AX=%8.4lf AY=%8.4lf AZ=%8.4lf thsum=%5.2lf dynpress=%9.1lf proplev=%9.0lf propratio=%6.2lf pogofreq=%6.1lf pogoamp=%6.2lf voffs=(%5.2lf, %5.2lf, %5.2lf)", stage, vAccel.x, vAccel.y, vAccel.z, thsum, dynpress, proplev, propratio, pogofreq, pogoamp, ViewOffsetx, ViewOffsety, ViewOffsetz);
+
+	if (noiselat > 0.0 || (vAccel.x*vAccel.x + vAccel.y*vAccel.y + vAccel.z*vAccel.z) > 0.01) {
+		JostleViewpoint(noiselat, noiselong, noisefreq, simdt, -seatacc.x / 200.0, -seatacc.y / 200.0, -seatacc.z / 300.0);
+		LastVPAccelTime = MissionTime;
+	}
+	else if (MissionTime<LastVPAccelTime + 5.0){	
+		ViewOffsetx *= 0.95;
+		ViewOffsety *= 0.95;
+		ViewOffsetz *= 0.95;
+		SetView();
+	}
 
 	//
 	// Velocity calculations
@@ -2713,22 +2856,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	
 	double aSpeed = length(status.rvel);
 	actualFUEL = ((GetFuelMass() * 100.0) / GetMaxFuelMass());
-
-	// Manage velocity cache
-	for (i = LASTVELOCITYCOUNT - 1; i > 0; i--) {
-		LastVelocity[i] = LastVelocity[i - 1];
-		LastSimt[i] = LastSimt[i - 1];
-	}
-	if (LastVelocityFilled < LASTVELOCITYCOUNT - 1)	LastVelocityFilled++;
-
-	// Store current velocities
-	LastVelocity[0] = status.rvel;
-	LastSimt[0] = simt;
-
-	// Calculate accelerations
-	if (LastVelocityFilled > 0) {
-		aHAcc = (aSpeed - length(LastVelocity[LastVelocityFilled])) / (simt - LastSimt[LastVelocityFilled]);
-	}
 
 	SystemsTimestep(simt, simdt, mjd);
 
