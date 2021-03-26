@@ -783,7 +783,16 @@
 #define IDB_SWITCHGUARDS90_RIGHT                           1068
 
 // VC Active Areas
-#define AID_VC_SEATSCYCLE		        3000
+#define AID_VC_SEATSCYCLE		                3000
+#define AID_VC_SIDEHATCH_HANDLE		            3001
+#define AID_VC_SIDEHATCH_GEARBOX_SEL	        3002
+#define AID_VC_SIDEHATCH_ACT_HANDLE_SEL	        3003
+#define AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN	3004
+#define AID_VC_SIDEHATCH_VENT_VALVE	            3005
+#define AID_VC_FWDHATCH_HANDLE		            3006
+#define AID_VC_FWDHATCH_PRESS_EQU_VLV		    3007
+#define AID_VC_SWITCH_P600_01		            3010
+#define AID_VC_SWITCH_P600_02		            3011
 
 // VC Active Areas (Panel 1)
 

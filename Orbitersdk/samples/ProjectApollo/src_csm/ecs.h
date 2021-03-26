@@ -25,6 +25,8 @@
 #if !defined(_PA_ECS_H)
 #define _PA_ECS_H
 
+#include "animations.h"
+
 class Saturn;
 class SaturnSideHatch;
 
@@ -245,6 +247,7 @@ public:
 	void SwitchToggled(PanelSwitchItem *s);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
+	void DefineAnimationsVC(UINT idx);
 
 protected:
 	bool open;
@@ -258,6 +261,13 @@ protected:
 
 	Sound &OpenSound;
 	Sound &CloseSound;
+
+	AnimState2 sidehatch_state;
+
+	UINT anim_SideHatchVC;
+	UINT anim_gearboxsel;
+	UINT anim_actuatorsel;
+	UINT anim_ventvalve;
 };
 
 ///
@@ -339,7 +349,7 @@ public:
 	SaturnForwardHatch(Sound &opensound, Sound &closesound);
 	virtual ~SaturnForwardHatch();
 
-	void Init(Saturn *s, h_Pipe *p);
+	void Init(Saturn *s, h_Pipe *p, RotationalSwitch *pev);
 	void Timestep(double simdt);
 	void Toggle();
 
@@ -347,6 +357,8 @@ public:
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
+
+	void DefineAnimationsVC(UINT idx);
 protected:
 	bool open;
 	int toggle;
@@ -356,6 +368,11 @@ protected:
 
 	Sound &OpenSound;
 	Sound &CloseSound;
+
+	RotationalSwitch *pressureequalvalve;
+
+	UINT anim_FwdHatchVC;
+	UINT anim_pressequalvlv;
 };
 
 class SaturnPressureEqualizationValve

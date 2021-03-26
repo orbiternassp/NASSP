@@ -140,6 +140,7 @@ const VECTOR3	P16_CLICK = { -0.006025, -0.005422, -0.005441 };
 const VECTOR3	P101_CLICK = { 0, 0.938288430820701 * 0.009, -0.345853756070434 * 0.009 };
 const VECTOR3	P306_CLICK = { 0.009, 0, 0 };
 const VECTOR3	P325_CLICK = { 0, 0, 0.07 };
+const VECTOR3	P600_CLICK = { 0, -0.009, 0 };
 const VECTOR3	LEBFLOOR_CLICK = { 0, 0.009, 0 };
 
 // Rotary/Needle rotation axises
@@ -510,6 +511,10 @@ const VECTOR3 P2_COVERS_POS[P2_SWITCHCOVERCOUNT] = {
 {-0.234966, 0.851656, 0.406449}, {-0.169936, 0.675647, 0.347563}
 };
 
+// Panel 600
+const VECTOR3 Sw_P600_01Location = { 0.1788, 1.4288, -0.3471 };
+const VECTOR3 Sw_P600_02Location = { -0.1769, 1.4288, -0.3455 };
+
 extern GDIParams g_Param;
 
 void Saturn::InitVC()
@@ -862,13 +867,73 @@ void Saturn::RegisterActiveAreas() {
 	// Register active areas for switches/animations here
 	//
 
+	// FDAI's
+	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
 	// Clickspot to cycle seats folded/unfolded
 	oapiVCRegisterArea(AID_VC_SEATSCYCLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_SEATSCYCLE, _V(-0.9187, 0.200999, -0.258652) + ofs, 0.05);
 
-	// FDAI's
-	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	// Side Hatch
+	const VECTOR3 SideHatchLocation = { 0.2436, 1.1710, 0.1699 };
+	const VECTOR3 SideHatch_HandleRot1Location = { 0.3076, 1.3543, -0.1137 };
+	const VECTOR3 SideHatch_HandleRot2Location = { 0.2348, 1.2453, 0.0608 };
+	const VECTOR3 SideHatch_VentValveLocation = { -0.2637, 1.1932, 0.1462 };
+	const VECTOR3 SideHatch_openLocation = { -0.4243, 1.7647, 0.6818 };
+	const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.4944, 2.0370, 0.4730 };
+	const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.4556, 1.8491, 0.5764 };
+	const VECTOR3 SideHatch_VentValve_openLocation = { -0.4557, 1.4090, 0.3188 };
+
+	if (!SideHatch.IsOpen()) {
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatchLocation + ofs, 0.1);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1Location + ofs, ROT);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, SideHatch_HandleRot2Location + ofs, ROT);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValveLocation + ofs, ROT);
+
+	} else {
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatch_openLocation + ofs, 0.1);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1_openLocation + ofs, ROT);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, SideHatch_HandleRot2_openLocation + ofs, ROT);
+
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValve_openLocation + ofs, ROT);
+	}
+
+	// Forward Hatch
+	const VECTOR3 FwdHatch_Location = { -0.1495, 0.0705, 1.0980 };
+	const VECTOR3 FwdHatch_Equal_ValveLocation = { 0.0011, -0.0000, 1.0773 };
+
+	oapiVCRegisterArea(AID_VC_FWDHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_HANDLE, FwdHatch_Location + ofs, 0.1);
+
+	if (!ForwardHatch.IsOpen()) {
+		oapiVCRegisterArea(AID_VC_FWDHATCH_PRESS_EQU_VLV, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, ROT);
+	}
+
+	// Panel 600-602
+
+	oapiVCRegisterArea(AID_VC_SWITCH_P600_01, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P600_01, Sw_P600_01Location + P600_CLICK + ofs, SWITCH);
+
+	oapiVCRegisterArea(AID_VC_SWITCH_P600_02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P600_02, Sw_P600_02Location + P600_CLICK + ofs, SWITCH);
+
 
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT; i++)
@@ -1276,8 +1341,12 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 
 		SwitchClick();
 		SetVCSeatsMesh();
+		return true;
 	}
 
+	case AID_VC_FWDHATCH_HANDLE:
+		ForwardHatch.Toggle();
+		return true;
 	}
 
 	return MainPanelVC.VCMouseEvent(id, event, p);
@@ -4269,6 +4338,37 @@ void Saturn::DefineVCAnimations()
 	EmergencyCabinPressureTestSwitch.SetDirection(pb_leb_l_vector);
 	EmergencyCabinPressureTestSwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_04);
 
+	// Side Hatch
+	MainPanelVC.AddSwitch(&HatchToggle, AID_VC_SIDEHATCH_HANDLE);
+	MainPanelVC.AddSwitch(&HatchGearBoxSelector, AID_VC_SIDEHATCH_GEARBOX_SEL);
+	MainPanelVC.AddSwitch(&HatchActuatorHandleSelector, AID_VC_SIDEHATCH_ACT_HANDLE_SEL);
+	MainPanelVC.AddSwitch(&HatchActuatorHandleSelectorOpen, AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN);
+	MainPanelVC.AddSwitch(&HatchVentValveRotary, AID_VC_SIDEHATCH_VENT_VALVE);
+
+	// Forward Hatch
+	MainPanelVC.AddSwitch(&PressEqualValve, AID_VC_FWDHATCH_PRESS_EQU_VLV);
+
+	// Panel 600
+
+	const VECTOR3	P600_SW_AXIS = { -1, 0, 0 };
+
+	MainPanelVC.AddSwitch(&HatchEmergencyO2ValveSwitch, AID_VC_SWITCH_P600_01);
+	HatchEmergencyO2ValveSwitch.SetReference(Sw_P600_01Location, P600_SW_AXIS);
+	HatchEmergencyO2ValveSwitch.SetRotationRange(RAD * 90);
+	HatchEmergencyO2ValveSwitch.DefineMeshGroup(VC_GRP_Sw_P600_01);
+
+	MainPanelVC.AddSwitch(&HatchRepressO2ValveSwitch, AID_VC_SWITCH_P600_02);
+	HatchRepressO2ValveSwitch.SetReference(Sw_P600_02Location, P600_SW_AXIS);
+	HatchRepressO2ValveSwitch.SetRotationRange(RAD * 90);
+	HatchRepressO2ValveSwitch.DefineMeshGroup(VC_GRP_Sw_P600_02);
+
+	NEEDLE_POS = { 0.2225, 1.3865, -0.5910 };
+	const VECTOR3	P600_ROT_AXIS = { -0.000007385524838, -0.576107864976531, 0.817373677003142 };
+
+	MainPanelVC.AddSwitch(&HatchOxygenRepressPressMeter);
+	HatchOxygenRepressPressMeter.SetReference(NEEDLE_POS, P600_ROT_AXIS);
+	HatchOxygenRepressPressMeter.SetRotationRange(RAD * 30);
+	HatchOxygenRepressPressMeter.DefineMeshGroup(VC_GRP_Needle_P600_01);
 
     MainPanelVC.DefineVCAnimations(vcidx);
 
@@ -4276,6 +4376,8 @@ void Saturn::DefineVCAnimations()
 	EMSDvSetSwitch.DefineVCAnimations(vcidx);
 
 	InitFDAI(vcidx);
+	SideHatch.DefineAnimationsVC(vcidx);
+	ForwardHatch.DefineAnimationsVC(vcidx);
 }
 
 void Saturn::InitFDAI(UINT mesh)

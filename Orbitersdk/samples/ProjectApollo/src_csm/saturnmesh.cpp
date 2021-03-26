@@ -907,9 +907,9 @@ void Saturn::SetSideHatchMesh() {
 
 	if (SideHatch.IsOpen()) {
 		SetMeshVisibilityMode(sidehatchidx, MESHVIS_NEVER);
-		SetMeshVisibilityMode(sidehatchopenidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(sidehatchopenidx, MESHVIS_EXTERNAL);
 	} else {
-		SetMeshVisibilityMode(sidehatchidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(sidehatchidx, MESHVIS_EXTERNAL);
 		SetMeshVisibilityMode(sidehatchopenidx, MESHVIS_NEVER);
 	}
 
@@ -927,9 +927,9 @@ void Saturn::SetSideHatchMesh() {
 
 	if (SideHatch.IsOpen()) {
 		SetMeshVisibilityMode(sidehatchburnedidx, MESHVIS_NEVER);
-		SetMeshVisibilityMode(sidehatchburnedopenidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(sidehatchburnedopenidx, MESHVIS_EXTERNAL);
 	} else {
-		SetMeshVisibilityMode(sidehatchburnedidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(sidehatchburnedidx, MESHVIS_EXTERNAL);
 		SetMeshVisibilityMode(sidehatchburnedopenidx, MESHVIS_NEVER);
 	}
 }

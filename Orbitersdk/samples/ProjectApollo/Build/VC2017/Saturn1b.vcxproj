@@ -149,6 +149,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_aux\animations.cpp" />
     <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_aux\vesim.cpp" />
     <ClCompile Include="..\..\src_csm\csmsensors.cpp" />
@@ -448,6 +449,7 @@
     <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_aux\animations.h" />
     <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_aux\RF_calc.h" />
     <ClInclude Include="..\..\src_aux\vesim.h" />
