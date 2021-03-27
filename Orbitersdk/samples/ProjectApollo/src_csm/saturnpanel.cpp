@@ -2946,7 +2946,7 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	LeftCOASPowerSwitchRow.Init(AID_LEFTCOASSWITCH, MainPanel);
-	LeftCOASPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20LEFT], srf[SRF_BORDER_34x31], LeftCOASPowerSwitchRow);
+	LeftCOASPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20LEFT], srf[SRF_BORDER_34x31], LeftCOASPowerSwitchRow, this);
 
 	LeftUtilityPowerSwitchRow.Init(AID_LEFTTUTILITYPOWERSWITCH, MainPanel);
 	LeftUtilityPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20LEFT], srf[SRF_BORDER_34x31], LeftUtilityPowerSwitchRow);

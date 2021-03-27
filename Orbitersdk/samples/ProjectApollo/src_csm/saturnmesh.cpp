@@ -89,6 +89,8 @@ MESHHANDLE hopticscover;
 MESHHANDLE hcmdocktgt;
 MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
+MESHHANDLE hcmCOAScdr;
+MESHHANDLE hcmCOAScdrreticle;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -313,6 +315,8 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmdocktgt, "ProjectApollo/CM-Docktgt");
 	LOAD_MESH(hcmseatsfolded, "ProjectApollo/CM-VC-SeatsFolded");
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
+	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
+	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -717,6 +721,9 @@ void Saturn::SetCSMStage ()
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+	SetCOASMesh();
 
 	//Interior
 	meshidx = AddMesh(hCMInt, &mesh_dir);
@@ -1017,6 +1024,24 @@ void Saturn::SetVCSeatsMesh() {
 	}
 }
 
+void Saturn::SetCOASMesh() {
+
+	if (coascdridx == -1 || coascdrreticleidx == -1)
+		return;
+
+	if (coasEnabled) {
+		SetMeshVisibilityMode(coascdridx, MESHVIS_VC);
+		if (InVC && oapiCameraInternal() && viewpos == SATVIEW_LEFTDOCK && COASreticlevisible) {
+			SetMeshVisibilityMode(coascdrreticleidx, MESHVIS_VC);
+		} else {
+			SetMeshVisibilityMode(coascdrreticleidx, MESHVIS_NEVER);
+		}
+	} else {
+		SetMeshVisibilityMode(coascdridx, MESHVIS_NEVER);
+		SetMeshVisibilityMode(coascdrreticleidx, MESHVIS_NEVER);
+	}
+}
+
 void Saturn::SetReentryStage ()
 
 {
@@ -1240,6 +1265,9 @@ void Saturn::SetReentryMeshes() {
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+	SetCOASMesh();
 
 	//
 	// Docking probe
@@ -1538,6 +1566,9 @@ void Saturn::SetRecovery()
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+	SetCOASMesh();
 
 	if (Crewed) {
 		mesh_dir =_V(2.7,1.8,-1.5);

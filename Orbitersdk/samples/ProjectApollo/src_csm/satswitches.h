@@ -961,3 +961,9 @@ public:
 	IndicatorSwitch O2Tank3IsolIndicator;
 	CircuitBrakerSwitch ExperimentCoversDeployBraker;
 };
+
+class LeftCOASPowerSwitch : public SaturnToggleSwitch
+{
+public:
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+};

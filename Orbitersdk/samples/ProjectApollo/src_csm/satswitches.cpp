@@ -2440,3 +2440,18 @@ void SaturnPanel278J::Register(PanelSwitchScenarioHandler *PSH)
 	O2Tank3IsolIndicator.Register(*PSH, "O2Tank3IsolIndicator", false);
 	ExperimentCoversDeployBraker.Register(*PSH, "ExperimentCoversDeployBraker", 1);
 }
+
+bool LeftCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (SaturnToggleSwitch::SwitchTo(newState, dontspring)) {
+
+		if (state == TOGGLESWITCH_UP) {
+			sat->COASreticlevisible = true;
+		} else {
+			sat->COASreticlevisible = false;
+		}
+		sat->SetCOASMesh();
+		return true;
+	}
+	return false;
+}

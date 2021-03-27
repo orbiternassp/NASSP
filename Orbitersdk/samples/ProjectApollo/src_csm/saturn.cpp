@@ -891,6 +891,8 @@ void Saturn::initSaturn()
 	vcidx = -1;
 	seatsfoldedidx = -1;
 	seatsunfoldedidx = -1;
+	coascdridx = -1;
+	coascdrreticleidx = -1;
 
 	Scorrec = false;
 
@@ -934,6 +936,8 @@ void Saturn::initSaturn()
 
 	// VC Seats status
 	VCSeatsfolded = false;
+
+	COASreticlevisible = false;
 
 	// call only once 
 	if (!InitSaturnCalled) {
@@ -1547,6 +1551,7 @@ int Saturn::GetMainState()
 	state.TLISoundsLoaded = TLISoundsLoaded;
 	state.CMdocktgt = CMdocktgt;
 	state.VCSeatsfolded = VCSeatsfolded;
+	state.COASreticlevisible = COASreticlevisible;
 
 	return state.word;
 }
@@ -1575,6 +1580,7 @@ void Saturn::SetMainState(int s)
 	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
 	CMdocktgt = (state.CMdocktgt != 0);
 	VCSeatsfolded = (state.VCSeatsfolded != 0);
+	COASreticlevisible = (state.COASreticlevisible != 0);
 }
 
 int Saturn::GetSLAState()

@@ -793,6 +793,8 @@
 #define AID_VC_FWDHATCH_PRESS_EQU_VLV		    3007
 #define AID_VC_SWITCH_P600_01		            3010
 #define AID_VC_SWITCH_P600_02		            3011
+#define AID_VC_COAS                             3012
+#define AID_VC_THC_HANDLE                       3013
 
 // VC Active Areas (Panel 1)
 
