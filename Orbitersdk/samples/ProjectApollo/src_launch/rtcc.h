@@ -2815,11 +2815,19 @@ public:
 	int PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
 	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	bool PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB);
+
 	// REENTRY COMPUTATIONS (R)
+	//Coefficients of lift and drag interpolation subroutine
+	void RLMCLD(double FMACH, int VEH, double &CD, double &CL);
+	void RLMCLD(double FMACH, int VEH, double &CD, double &CL, double &ALFA);
 	//Computes and outputs pitch, yaw, roll
 	void RLMPYR(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll);
 	//Time of Longitude Crossing Subroutine
 	double RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, LunarStayTimesTable *LUNRSTAY = NULL);
+	//Reentry numerical integrator
+	void RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
+	//Reentry Constant G Iterator
+	void RMMGIT(EphemerisData sv_EI, double lng_T);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)

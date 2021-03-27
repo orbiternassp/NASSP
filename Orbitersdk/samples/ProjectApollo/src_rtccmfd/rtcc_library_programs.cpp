@@ -1371,6 +1371,49 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB)
 	return false;
 }
 
+//Coefficients of lift and drag interpolation subroutine
+void RTCC::RLMCLD(double FMACH, int VEH, double &CD, double &CL)
+{
+	double ALFA;
+	RLMCLD(FMACH, VEH, CD, CL, ALFA);
+}
+void RTCC::RLMCLD(double FMACH, int VEH, double &CD, double &CL, double &ALFA)
+{
+	//FMACH: Mach number for coefficients of lift and drag
+	//VEH: Vehicle code (0 for CSM, 1 for LEM)
+	double *tab;
+
+	if (VEH == 0)
+	{
+		tab = SystemParameters.MHACLD;
+	}
+	else
+	{
+		tab = SystemParameters.MHALLD;
+	}
+	int i = 1;
+
+	double *CDT = &tab[25];
+	double *CLT = &tab[50];
+	double *AOAT = &tab[75];
+
+	while (FMACH < tab[i - 1] && i < 25)
+	{
+		i++;
+	}
+	if (i == 1 || FMACH == tab[i - 1])
+	{
+		CD = CDT[i - 1];
+		CL = CLT[i - 1];
+		ALFA = AOAT[i - 1];
+		return;
+	}
+
+	CD = CDT[i - 1] + (FMACH - tab[i - 1]) / (tab[i - 1] - tab[i - 2])*(CDT[i - 1] - CDT[i - 2]);
+	CL = CLT[i - 1] + (FMACH - tab[i - 1]) / (tab[i - 1] - tab[i - 2])*(CLT[i - 1] - CLT[i - 2]);
+	ALFA = AOAT[i - 1] + (FMACH - tab[i - 1]) / (tab[i - 1] - tab[i - 2])*(AOAT[i - 1] - AOAT[i - 2]);
+}
+
 //Computes and outputs pitch, yaw, roll
 void RTCC::RLMPYR(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll)
 {
