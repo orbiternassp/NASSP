@@ -795,6 +795,10 @@
 #define AID_VC_SWITCH_P600_02		            3011
 #define AID_VC_COAS                             3012
 #define AID_VC_THC_HANDLE                       3013
+#define AID_VC_ORDEAL_ROT                       3014
+#define AID_VC_ALTIMETER                        3015
+#define AID_VC_SWITCH_P163_01                   3016
+#define AID_VC_SWITCH_PLVC                      3017
 
 // VC Active Areas (Panel 1)
 

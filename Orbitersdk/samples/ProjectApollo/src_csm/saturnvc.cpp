@@ -142,6 +142,7 @@ const VECTOR3	P306_CLICK = { 0.009, 0, 0 };
 const VECTOR3	P325_CLICK = { 0, 0, 0.07 };
 const VECTOR3	P600_CLICK = { 0, -0.009, 0 };
 const VECTOR3	LEBFLOOR_CLICK = { 0, 0.009, 0 };
+const VECTOR3	LEBLEFT_CLICK = { 0.009, 0, 0 };
 
 // Rotary/Needle rotation axises
 const VECTOR3	P1_3_ROT_AXIS = { 0.00, sin(P1_3_TILT),-cos(P1_3_TILT) };
@@ -435,7 +436,7 @@ const VECTOR3 P306_TOGGLE_POS[P306_SWITCHCOUNT] = {
 {-0.5233, -0.6116, 0.3536}, {-0.5233, -0.6323, 0.3536}, {-0.5226, -0.6023, 0.4065}
 };
 
-// Panel 325 handles
+// Panel 325 Levers
 const VECTOR3 Cab_Press_Rel_Handle1Location = { -1.2149, 0.7847, -0.2850 };
 const VECTOR3 Cab_Press_Rel_Handle2Location = { -1.2024, 0.6799, -0.2992 };
 
@@ -518,6 +519,11 @@ const VECTOR3 Sw_P600_02Location = { -0.1769, 1.4288, -0.3455 };
 // THC Handle
 const VECTOR3 THChandleLocation = { -0.9249, 0.2373, 0.0419 };
 
+// Panel 163
+const VECTOR3 Switch_P163Location = { -0.9108, -0.6972, -0.4823 };
+
+// PLVC switch
+const VECTOR3 Switch_PLVCLocation = { -1.0979, 1.0467, -0.4147 };
 
 extern GDIParams g_Param;
 
@@ -958,6 +964,21 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_SWITCH_P600_02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P600_02, Sw_P600_02Location + P600_CLICK + ofs, SWITCH);
 
+	// ORDEAL Rotary
+
+	oapiVCRegisterArea(AID_VC_ORDEAL_ROT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ORDEAL_ROT, _V(-0.92382, 1.00681, -0.08822) + ofs, _V(-0.905273, 0.989085, -0.048251) + ofs, _V(-0.959113, 0.975162, -0.08578) + ofs, _V(-0.941077, 0.957305, -0.046165) + ofs);
+
+	// Altimeter
+	oapiVCRegisterArea(AID_VC_ALTIMETER, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Panel 163
+	oapiVCRegisterArea(AID_VC_SWITCH_P163_01, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P163_01, Switch_P163Location + LEBFLOOR_CLICK + ofs, SWITCH);
+
+	// PLVC switch
+	oapiVCRegisterArea(AID_VC_SWITCH_PLVC, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_PLVC, Switch_PLVCLocation + LEBLEFT_CLICK + ofs, SWITCH);
 
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT; i++)
@@ -1243,9 +1264,11 @@ void Saturn::RegisterActiveAreas() {
 
 	oapiVCRegisterArea(AID_VC_Cab_Press_Rel_Handle1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle1, Cab_Press_Rel_Handle1Location + P325_CLICK + ofs, 0.04);
+	//oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Cab_Press_Rel_Handle1, _V(-1.1716, 0.797558, -0.2383) + ofs, _V(-1.26138, 0.797558, -0.225946) + ofs, _V(-1.17143, 0.749602, -0.2383) + ofs, _V(-1.26138, 0.749602, -0.225946) + ofs);
 
 	oapiVCRegisterArea(AID_VC_Cab_Press_Rel_Handle2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle2, Cab_Press_Rel_Handle2Location + P325_CLICK + ofs, 0.04);
+	//oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle2, Cab_Press_Rel_Handle2Location + P325_CLICK + ofs, 0.04);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Cab_Press_Rel_Handle2, _V(-1.10395, 0.716629, -0.2383) + ofs, _V(-1.26248, 0.716629, -0.218411) + ofs, _V(-1.10413, 0.664093, -0.2383) + ofs, _V(-1.26248, 0.664093, -0.218411) + ofs);
 
 	oapiVCRegisterArea(AID_VC_Prim_Gly_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_Prim_Gly_Handle, Prim_Gly_HandleLocation + ofs, 0.02);
@@ -1673,6 +1696,10 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_OPT_TRUNDISPLAY:
 		optics.PaintTrunnionDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		return true;
+
+	case AID_VC_ALTIMETER:
+		Altimeter.DrawSwitchVC(id, event, surf);
 		return true;
 
 	/*default:
@@ -3882,7 +3909,7 @@ void Saturn::DefineVCAnimations()
 	LMTunnelVentValve.SetReference(P12_ROT_POS[0], P12_ROT_AXIS);
 	LMTunnelVentValve.DefineMeshGroup(VC_GRP_Rot_P12_01);
 
-	NEEDLE_POS = { -0.3165, 0.1991, 0.4679 };
+	NEEDLE_POS = { -0.3174, 0.1993, 0.4694 };
 
 	MainPanelVC.AddSwitch(&LMDPGauge);
 	LMDPGauge.SetReference(NEEDLE_POS, P12_ROT_AXIS);
@@ -3916,6 +3943,13 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&ORDEALSlewSwitch, AID_VC_SWITCH_P13_06);
 	ORDEALSlewSwitch.SetReference(P13_TOGGLE_POS[5], P13_SW_AXIS);
 	ORDEALSlewSwitch.DefineMeshGroup(VC_GRP_Sw_P13_06);
+
+	const VECTOR3	P13_ROT_AXIS = { 0.54191307344258, -0.645820796385401, -0.53781569314045 };
+	const VECTOR3 ORDEAL_RotLocation = { -0.9256, 0.9741, -0.0737 };
+
+	MainPanelVC.AddSwitch(&ORDEALAltSetRotary, AID_VC_ORDEAL_ROT);
+	ORDEALAltSetRotary.SetReference(ORDEAL_RotLocation, P13_ROT_AXIS);
+	ORDEALAltSetRotary.DefineMeshGroup(VC_GRP_ORDEAL_Rot);
 
 	// Panel 15
 
@@ -4417,18 +4451,29 @@ void Saturn::DefineVCAnimations()
 
 	// THC Handle
 	const VECTOR3 thc_handle_axis = { 0.0, 0.945196207714068, -0.326502877357833 };
-
 	MainPanelVC.AddSwitch(&THCRotary, AID_VC_THC_HANDLE);
 	THCRotary.SetReference(THChandleLocation, thc_handle_axis);
 	THCRotary.DefineMeshGroup(VC_GRP_THChandle);
 
-    MainPanelVC.DefineVCAnimations(vcidx);
+	// Panel 163
+	MainPanelVC.AddSwitch(&SCIUtilPowerSwitch, AID_VC_SWITCH_P163_01);
+	SCIUtilPowerSwitch.SetReference(Switch_P163Location, _V(1, 0, 0));
+	SCIUtilPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P163_01);
+
+	// PLVC switch
+	MainPanelVC.AddSwitch(&PLVCSwitch, AID_VC_SWITCH_PLVC);
+	PLVCSwitch.SetReference(Switch_PLVCLocation, _V(0, -1, 0));
+	PLVCSwitch.DefineMeshGroup(VC_GRP_Sw_PLVC);
 
 	ems.DefineVCAnimations(vcidx);
 	EMSDvSetSwitch.DefineVCAnimations(vcidx);
 
 	SideHatch.DefineAnimationsVC(vcidx);
 	ForwardHatch.DefineAnimationsVC(vcidx);
+
+	Altimeter.DefineVCAnimations(vcidx);
+
+	MainPanelVC.DefineVCAnimations(vcidx);
 
 	InitFDAI(vcidx);
 }

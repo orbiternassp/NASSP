@@ -1250,7 +1250,9 @@ class OrdealRotationalSwitch : public RotationalSwitch {
 public:
 	OrdealRotationalSwitch() { value = 100; lastX = 0; mouseDown = false; };
 	virtual void DrawSwitch(SURFHANDLE drawSurface);
+	virtual void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
 	virtual bool CheckMouseClick(int event, int mx, int my);
+	virtual bool CheckMouseClickVC(int event, VECTOR3 &p);
 	virtual void SaveState(FILEHANDLE scn);
 	virtual void LoadState(char *line);
 	int GetValue() { return value; }

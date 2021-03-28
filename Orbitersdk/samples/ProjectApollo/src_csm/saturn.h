@@ -3321,6 +3321,8 @@ protected:
 	SaturnASCPSwitch ASCPPitchSwitch;
 	SaturnASCPSwitch ASCPYawSwitch;
 
+	SaturnAltimeter Altimeter;
+
 
 	///
 	/// Stage is the main stage of the flight.
