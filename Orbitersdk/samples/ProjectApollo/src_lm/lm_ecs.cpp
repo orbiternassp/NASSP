@@ -1190,7 +1190,7 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if (PressureSwitch && glycolRotary->GetState() == 1 && glycolPumpAutoTransferCB->IsPowered())
 	{
 		//To make this more stable with time acceleration and panel changes
-		if (AutoTransferCounter > 20)
+		if (AutoTransferCounter > 1)
 		{
 			GlycolAutoTransferRelay = true;
 		}
