@@ -36,12 +36,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
-#include "../src_rtccmfd/TLMCC.h"
 #include "../src_rtccmfd/TLIGuidanceSim.h"
 #include "../src_rtccmfd/CSMLMGuidanceSim.h"
 #include "../src_rtccmfd/GeneralizedIterator.h"
-#include "../src_rtccmfd/CoastNumericalIntegrator.h"
 #include "../src_rtccmfd/EnckeIntegrator.h"
+#include "../src_rtccmfd/ReentryNumericalIntegrator.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -7042,6 +7041,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
 	SAVE_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
 	SAVE_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
+	SAVE_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
+	SAVE_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
 	SAVE_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
 	SAVE_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
 
@@ -7225,6 +7226,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
 		LOAD_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
+		LOAD_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
+		LOAD_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
 		LOAD_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
 		LOAD_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
 
@@ -31140,4 +31143,36 @@ bool RTCC::CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor)
 	KFactor = t_agc - t_aea;
 
 	return true;
+}
+
+void RTCC::RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out)
+{
+	ReentryNumericalIntegrator integ(this);
+	integ.Main(in, out);
+}
+
+void RTCC::RMMGIT(EphemerisData sv_EI, double lng_T)
+{
+	//sv_EI in ECT
+
+	RMMYNIInputTable in;
+	RMMYNIOutputTable out;
+	double lng_min, lng_max;
+
+	in.R0 = sv_EI.R;
+	in.V0 = sv_EI.V;
+	in.D0 = 2.0*9.80665;
+	in.K1 = 0.0;
+	in.K2 = 55.0*RAD;
+	in.KSWCH = 10;
+
+	RMMYNI(in, out);
+
+	lng_min = out.lng_IP;
+
+	in.D0 = 5.0*9.80665;
+
+	RMMYNI(in, out);
+
+	lng_max = out.lng_IP;
 }

@@ -1693,7 +1693,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 void Saturn::JostleViewpoint(double noiselat, double noiselon, double noisefreq, double dt, double accoffsx, double accoffsy, double accoffsz)
 {	
-	double j, tmpoffs, sqdt=sqrt(dt), dtmul= noisefreq*dt;
+	double j, sqdt=sqrt(dt), dtmul= noisefreq*dt;
 	JostleAxis(NoiseOffsetx, noiselat);
 	JostleAxis(NoiseOffsety, noiselat);
 	JostleAxis(NoiseOffsetz, noiselon);
