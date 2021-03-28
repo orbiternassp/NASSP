@@ -527,7 +527,7 @@ void DCBusController::refresh(double dt)
 
 	// The batteries are connected via diodes, so the battery voltage needs to be higher than the 
 	// fuel cell voltage to draw power
-	if (batPower.Voltage() > fcPower.Voltage() + .7)	// diode bias
+	if (batPower.Voltage() > fcPower.Voltage())
 		busPower.WireToBus(2, &batPower);
 	else if (batPower.Voltage() < fcPower.Voltage())
 		busPower.WireToBus(2, NULL);
