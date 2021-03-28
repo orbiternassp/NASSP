@@ -818,7 +818,7 @@ protected:
 class SaturnCabinPressureReliefLever: public ThumbwheelSwitch {
 
 public:
-	SaturnCabinPressureReliefLever() { guardState = -1; guardAnim = -1; };
+	SaturnCabinPressureReliefLever() { guardState = 0; guardAnim = -1; };
 	virtual ~SaturnCabinPressureReliefLever() { guardClick.done(); };
 
 	void InitGuard(SURFHANDLE surf, SoundLib *soundlib);
