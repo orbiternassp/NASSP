@@ -36,12 +36,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
-#include "../src_rtccmfd/TLMCC.h"
 #include "../src_rtccmfd/TLIGuidanceSim.h"
 #include "../src_rtccmfd/CSMLMGuidanceSim.h"
 #include "../src_rtccmfd/GeneralizedIterator.h"
-#include "../src_rtccmfd/CoastNumericalIntegrator.h"
 #include "../src_rtccmfd/EnckeIntegrator.h"
+#include "../src_rtccmfd/ReentryNumericalIntegrator.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -1940,6 +1939,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MCCLRF", SystemParameters.MCCLRF);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
+			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
 			papiReadScenario_double(Buff, "PZREAP_RRBIAS", PZREAP.RRBIAS);
 			papiReadScenario_double(Buff, "PZREAP_IRMAX", PZREAP.IRMAX);
 			papiReadScenario_double(Buff, "PDI_K_X", RTCCPDIIgnitionTargets.K_X);
@@ -2038,8 +2038,8 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 
 	for (int i = 0;i < 8;i++)
 	{
-		pad.Area[i][0] = 0;
-		pad.Wx[i][0] = 0;
+		pad.Area[i][0] = '\0';
+		pad.Wx[i][0] = '\0';
 	}
 
 	for (int i = 0;i < opt->n;i++)
@@ -6570,23 +6570,19 @@ void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double GETbase, bool
 	}
 }
 
-void RTCC::LandingSiteUplink(char *str, int RLSAddr)
+void RTCC::LandingSiteUplink(char *str, int veh)
 {
-	VECTOR3 R;
-	int emem[8];
-
-	R = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-
-	emem[0] = 10;
-	emem[1] = RLSAddr;
-	emem[2] = OrbMech::DoubleToBuffer(R.x, 27, 1);
-	emem[3] = OrbMech::DoubleToBuffer(R.x, 27, 0);
-	emem[4] = OrbMech::DoubleToBuffer(R.y, 27, 1);
-	emem[5] = OrbMech::DoubleToBuffer(R.y, 27, 0);
-	emem[6] = OrbMech::DoubleToBuffer(R.z, 27, 1);
-	emem[7] = OrbMech::DoubleToBuffer(R.z, 27, 0);
-
-	V71Update(str, emem, 8);
+	CMMCMCLS(veh);
+	int *octals;
+	if (veh == RTCC_MPT_CSM)
+	{
+		octals = CZLSVECT.CSMLSUpdate.Octals;
+	}
+	else
+	{
+		octals = CZLSVECT.LMLSUpdate.Octals;
+	}
+	V71Update(str, octals, 8);
 }
 
 void RTCC::IncrementAGCTime(char *list, double dt)
@@ -7045,6 +7041,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
 	SAVE_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
 	SAVE_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
+	SAVE_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
+	SAVE_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
 	SAVE_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
 	SAVE_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
 
@@ -7228,6 +7226,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
 		LOAD_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
+		LOAD_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
+		LOAD_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
 		LOAD_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
 		LOAD_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
 
@@ -31028,6 +31028,55 @@ void RTCC::CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
 	CZNAVSLV.NUPTIM = GMT - SystemParameters.MCGRIC * 3600.0;
 }
 
+//CMC/LGC Landing Site Update Load Generator
+void RTCC::CMMCMCLS(int veh)
+{
+	LandingSiteMakupBuffer *buf;
+	unsigned int RLSAddr;
+	if (veh == RTCC_MPT_CSM)
+	{
+		buf = &CZLSVECT.CSMLSUpdate;
+		buf->LoadType = "06";
+		RLSAddr = SystemParameters.MCCRLS;
+	}
+	else
+	{
+		buf = &CZLSVECT.LMLSUpdate;
+		buf->LoadType = "26";
+		RLSAddr = SystemParameters.MCLRLS;
+	}
+
+	if (buf->SequenceNumber == 0)
+	{
+		if (veh == RTCC_MPT_CSM)
+		{
+			buf->SequenceNumber = 600;
+		}
+		else
+		{
+			buf->SequenceNumber = 2600;
+		}
+	}
+
+	buf->SequenceNumber++;
+
+	buf->GETofGeneration = GETfromGMT(RTCCPresentTimeGMT());
+	buf->lat = BZLAND.lat[RTCC_LMPOS_BEST];
+	buf->lng = BZLAND.lng[RTCC_LMPOS_BEST];
+	buf->rad = BZLAND.rad[RTCC_LMPOS_BEST];
+
+	ELGLCV(buf->lat, buf->lng, buf->R_LS, buf->rad);
+
+	buf->Octals[0] = 10;
+	buf->Octals[1] = RLSAddr;
+	buf->Octals[2] = OrbMech::DoubleToBuffer(buf->R_LS.x, 27, 1);
+	buf->Octals[3] = OrbMech::DoubleToBuffer(buf->R_LS.x, 27, 0);
+	buf->Octals[4] = OrbMech::DoubleToBuffer(buf->R_LS.y, 27, 1);
+	buf->Octals[5] = OrbMech::DoubleToBuffer(buf->R_LS.y, 27, 0);
+	buf->Octals[6] = OrbMech::DoubleToBuffer(buf->R_LS.z, 27, 1);
+	buf->Octals[7] = OrbMech::DoubleToBuffer(buf->R_LS.z, 27, 0);
+}
+
 void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)
 {
 	double J_D = TJUDAT(YEAR, MONTH, DAY);
@@ -31094,4 +31143,36 @@ bool RTCC::CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor)
 	KFactor = t_agc - t_aea;
 
 	return true;
+}
+
+void RTCC::RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out)
+{
+	ReentryNumericalIntegrator integ(this);
+	integ.Main(in, out);
+}
+
+void RTCC::RMMGIT(EphemerisData sv_EI, double lng_T)
+{
+	//sv_EI in ECT
+
+	RMMYNIInputTable in;
+	RMMYNIOutputTable out;
+	double lng_min, lng_max;
+
+	in.R0 = sv_EI.R;
+	in.V0 = sv_EI.V;
+	in.D0 = 2.0*9.80665;
+	in.K1 = 0.0;
+	in.K2 = 55.0*RAD;
+	in.KSWCH = 10;
+
+	RMMYNI(in, out);
+
+	lng_min = out.lng_IP;
+
+	in.D0 = 5.0*9.80665;
+
+	RMMYNI(in, out);
+
+	lng_max = out.lng_IP;
 }

@@ -23,9 +23,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
 		}
-		else
+		else if (G->vesseltype < 4)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
+		}
+		else
+		{
+			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "MCC", 3);
 		}
 
 		skp->Text(1 * W / 8, 2 * H / 14, "Maneuver Targeting", 18);
@@ -854,12 +858,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 4 * H / 14, "LM", 3);
 		}
-		else
+		else if (G->vesseltype == 3)
 		{
 			skp->Text(1 * W / 8, 4 * H / 14, "LM/CSM docked", 13);
 		}
+		else
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "MCC", 3);
+		}
 
-		if (G->vesseltype >= 2)
+		if (G->vesseltype == 2 || G->vesseltype == 3)
 		{
 			if (G->lemdescentstage)
 			{
@@ -1604,9 +1612,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
 		}
-		else
+		else if (G->vesseltype < 4)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
+		}
+		else
+		{
+			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "MCC", 3);
 		}
 
 		skp->Text(1 * W / 16, 2 * H / 14, "Rendezvous", 10);
@@ -2050,9 +2062,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
 		}
-		else
+		else if (G->vesseltype < 4)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
+		}
+		else
+		{
+			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "MCC", 3);
 		}
 
 		skp->Text(1 * W / 8, 2 * H / 14, "Maneuver PAD", 12);
@@ -4138,50 +4154,54 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 47)
 	{
-		skp->Text(1 * W / 8, 2 * H / 14, "State Vector Update", 19);
-		skp->Text(1 * W / 8, 4 * H / 14, "Landing Site Vector", 19);
-		skp->Text(1 * W / 8, 6 * H / 14, "External DV Update", 18);
-		if (G->vesseltype < 2)
-		{
-			skp->Text(1 * W / 8, 8 * H / 14, "Retrofire EXDV Update", 21);
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 8 * H / 14, "LGC Descent Update", 18);
-		}
-		skp->Text(1 * W / 8, 10 * H / 14, "REFSMMAT Update", 15);
-		skp->Text(1 * W / 8, 12 * H / 14, "SLV Navigation Update", 21);
+		skp->SetFont(font2);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(1 * W / 16, 4 * H / 28, "00: CMC CSM Navigation Update", 29);
+		skp->Text(1 * W / 16, 5 * H / 28, "06: CMC Landing Site Vector", 27);
+		skp->Text(1 * W / 16, 6 * H / 28, "07: CMC Time Increment", 22);
+		skp->Text(1 * W / 16, 7 * H / 28, "08: CMC Liftoff Time Update", 27);
+		skp->Text(1 * W / 16, 8 * H / 28, "09: CMC LM Navigation Update", 28);
+		skp->Text(1 * W / 16, 9 * H / 28, "10: CMC External DV", 19);
+		skp->Text(1 * W / 16, 10 * H / 28, "12: CMC REFSMMAT Update", 23);
+		skp->Text(1 * W / 16, 11 * H / 28, "13: CMC Retrofire External DV", 29);
+		skp->Text(1 * W / 16, 12 * H / 28, "14: CMC Entry Update", 20);
+
+		skp->Text(1 * W / 16, 14 * H / 28, "20: LGC LM Navigation Update", 28);
+		skp->Text(1 * W / 16, 15 * H / 28, "21: LGC CSM Navigation Update", 29);
+		skp->Text(1 * W / 16, 16 * H / 28, "22: LGC External DV", 19);
+		skp->Text(1 * W / 16, 17 * H / 28, "23: LGC REFSMMAT Update", 23);
+		skp->Text(1 * W / 16, 18 * H / 28, "24: LGC Time Increment", 22);
+		skp->Text(1 * W / 16, 19 * H / 28, "25: LGC Liftoff Time Update", 27);
+		skp->Text(1 * W / 16, 20 * H / 28, "26: LGC Landing Site Vector", 27);
+		skp->Text(1 * W / 16, 21 * H / 28, "28: LGC Descent Update", 22);
+
+		skp->Text(9 * W / 16, 4 * H / 28, "49: LVDC Navigation Update", 26);
 	}
-	else if (screen == 48)
+	else if (screen == 48 || screen == 99 || screen == 100 || screen == 101)
 	{
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
 		RTCC::NavUpdateMakeupBuffer * tab;
-		if (G->vesseltype < 2)
+		if (screen == 48)
 		{
-			if (G->SVSlot)
-			{
-				skp->Text(4 * W / 8, 1 * H / 14, "CSM NAV UPDATE TO CMC (276)", 27);
-				tab = &GC->rtcc->CZNAVGEN.CMCCSMUpdate;
-			}
-			else
-			{
-				skp->Text(4 * W / 8, 1 * H / 14, "LM NAV UPDATE TO CMC (270)", 26);
-				tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
-			}
+			skp->Text(4 * W / 8, 1 * H / 14, "CSM NAV UPDATE TO CMC (276)", 27);
+			tab = &GC->rtcc->CZNAVGEN.CMCCSMUpdate;
+		}
+		else if (screen == 99)
+		{
+			skp->Text(4 * W / 8, 1 * H / 14, "LM NAV UPDATE TO CMC (270)", 26);
+			tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
+		}
+		else if (screen == 100)
+		{
+			skp->Text(4 * W / 8, 1 * H / 14, "LGC CSM NAV UPDATE (278)", 24);
+			tab = &GC->rtcc->CZNAVGEN.LGCCSMUpdate;
 		}
 		else
 		{
-			if (G->SVSlot)
-			{
-				skp->Text(4 * W / 8, 1 * H / 14, "LGC CSM NAV UPDATE (278)", 24);
-				tab = &GC->rtcc->CZNAVGEN.LGCCSMUpdate;
-			}
-			else
-			{
-				skp->Text(4 * W / 8, 1 * H / 14, "LGC LM NAV UPDATE (279)", 23);
-				tab = &GC->rtcc->CZNAVGEN.LGCLEMUpdate;
-			}
+			skp->Text(4 * W / 8, 1 * H / 14, "LGC LM NAV UPDATE (279)", 23);
+			tab = &GC->rtcc->CZNAVGEN.LGCLEMUpdate;
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
@@ -4190,7 +4210,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 5 * H / 28, "LOAD NO", 7);
 		skp->Text(1 * W / 8, 6 * H / 28, "REF", 3);
 
-		GET_Display(Buffer, G->SVDesiredGET);
+		if (G->SVDesiredGET < 0)
+		{
+			sprintf(Buffer, "Present GET");
+		}
+		else
+		{
+			GET_Display(Buffer, G->SVDesiredGET);
+		}
 		skp->Text(2 * W / 8, 4 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%04d", tab->SequenceNumber);
 		skp->Text(3 * W / 8, 5 * H / 28, Buffer, strlen(Buffer));
@@ -4289,30 +4316,34 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
-	else if (screen == 50)
+	else if (screen == 50 || screen == 98)
 	{
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
-		if (G->vesseltype < 2)
+		RTCC::LandingSiteMakupBuffer *tab;
+
+		if (screen == 50)
 		{
 			skp->Text(4 * W / 8, 2 * H / 14, "LANDING SITE UPDT TO CMC (293)", 30);
+			tab = &GC->rtcc->CZLSVECT.CSMLSUpdate;
 		}
 		else
 		{
 			skp->Text(4 * W / 8, 2 * H / 14, "LANDING SITE UPDT TO LGC (294)", 30);
+			tab = &GC->rtcc->CZLSVECT.LMLSUpdate;
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		skp->Text(1 * W / 8, 4 * H / 14, "LAT", 3);
 		skp->Text(1 * W / 8, 5 * H / 14, "LNG", 3);
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", tab->lat * DEG);
 		skp->Text(2 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", tab->lng * DEG);
 		skp->Text(2 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(4 * W / 8, 4 * H / 14, "RAD", 3);
-		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
+		sprintf(Buffer, "%.2f NM", tab->rad / 1852.0);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 32, 13 * H / 28, "OID", 3);
@@ -4337,22 +4368,22 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		for (int i = 0;i < 010;i++)
 		{
-			sprintf(Buffer, "%05d", G->RLSOctals[i]);
+			sprintf(Buffer, "%05d", tab->Octals[i]);
 			skp->Text(15 * W / 32, (i + 15) * H / 28, Buffer, strlen(Buffer));
 		}
 
-		sprintf(Buffer, "%.1f", G->RLSUplink.x);
+		sprintf(Buffer, "%.1f", tab->R_LS.x);
 		skp->Text(22 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->RLSUplink.y);
+		sprintf(Buffer, "%.1f", tab->R_LS.y);
 		skp->Text(22 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", G->RLSUplink.z);
+		sprintf(Buffer, "%.1f", tab->R_LS.z);
 		skp->Text(22 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
 	}
-	else if (screen == 51)
+	else if (screen == 51 || screen == 102)
 	{
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
-		if (G->vesseltype < 2)
+		if (screen == 51)
 		{
 			skp->Text(4 * W / 8, 2 * H / 14, "CMC EXTERNAL DV UPDATE (264)", 28);
 		}
@@ -4385,7 +4416,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(10 * W / 32, 19 * H / 28, "TIGN", 4);
 
 		RTCC::ExternalDVMakeupBuffer *tab;
-		if (G->vesseltype < 2)
+		if (screen == 51)
 		{
 			tab = &GC->rtcc->CZAXTRDV;
 		}
@@ -8323,7 +8354,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(6 * W / 8, 2 * H / 14, "No Target!", 10);
 		}
 
-		GET_Display2(Buffer, G->SVDesiredGET);
+		if (G->SVDesiredGET < 0)
+		{
+			sprintf(Buffer, "Present GET");
+		}
+		else
+		{
+			GET_Display2(Buffer, G->SVDesiredGET);
+		}
 		skp->Text(16 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
 		GET_Display2(Buffer, GC->rtcc->GetIUClockZero());
 		skp->Text(16 * W / 32, 7 * H / 32, Buffer, strlen(Buffer));

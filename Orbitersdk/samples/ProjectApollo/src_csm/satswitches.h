@@ -818,20 +818,24 @@ protected:
 class SaturnCabinPressureReliefLever: public ThumbwheelSwitch {
 
 public:
-	SaturnCabinPressureReliefLever() { guardState = 0; };
+	SaturnCabinPressureReliefLever() { guardState = 0; guardAnim = -1; };
 	virtual ~SaturnCabinPressureReliefLever() { guardClick.done(); };
 
 	void InitGuard(SURFHANDLE surf, SoundLib *soundlib);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState);
 	void Guard();
 	void SetState(int value);
+	void DefineVCAnimations(UINT vc_idx);
 
 protected:
 	int guardState;
+	UINT guardAnim;
 
 	Sound guardClick;
 	SURFHANDLE guardSurface;
@@ -960,4 +964,29 @@ public:
 	IndicatorSwitch ExperimentCovers2Indicator;
 	IndicatorSwitch O2Tank3IsolIndicator;
 	CircuitBrakerSwitch ExperimentCoversDeployBraker;
+};
+
+class LeftCOASPowerSwitch : public SaturnToggleSwitch
+{
+public:
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+};
+
+class SaturnAltimeter
+{
+public:
+	SaturnAltimeter() { Sat = NULL; animNeedle = -1; };
+	void Init(SURFHANDLE surf1, SURFHANDLE surf2, Saturn *s);
+	void RedrawPanel_Alt(SURFHANDLE surf);
+	void RedrawPanel_Alt2(SURFHANDLE surf);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	void DrawNeedle(HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPEN pen1);
+	void DefineVCAnimations(UINT vc_idx);
+
+protected:
+	Saturn *Sat;
+	SURFHANDLE surface1;
+	SURFHANDLE surface2;
+
+	UINT animNeedle;
 };

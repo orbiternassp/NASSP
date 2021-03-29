@@ -89,6 +89,8 @@ MESHHANDLE hopticscover;
 MESHHANDLE hcmdocktgt;
 MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
+MESHHANDLE hcmCOAScdr;
+MESHHANDLE hcmCOAScdrreticle;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -313,6 +315,8 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmdocktgt, "ProjectApollo/CM-Docktgt");
 	LOAD_MESH(hcmseatsfolded, "ProjectApollo/CM-VC-SeatsFolded");
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
+	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
+	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -717,6 +721,9 @@ void Saturn::SetCSMStage ()
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+	SetCOASMesh();
 
 	//Interior
 	meshidx = AddMesh(hCMInt, &mesh_dir);
@@ -907,9 +914,9 @@ void Saturn::SetSideHatchMesh() {
 
 	if (SideHatch.IsOpen()) {
 		SetMeshVisibilityMode(sidehatchidx, MESHVIS_NEVER);
-		SetMeshVisibilityMode(sidehatchopenidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(sidehatchopenidx, MESHVIS_EXTERNAL);
 	} else {
-		SetMeshVisibilityMode(sidehatchidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(sidehatchidx, MESHVIS_EXTERNAL);
 		SetMeshVisibilityMode(sidehatchopenidx, MESHVIS_NEVER);
 	}
 
@@ -927,9 +934,9 @@ void Saturn::SetSideHatchMesh() {
 
 	if (SideHatch.IsOpen()) {
 		SetMeshVisibilityMode(sidehatchburnedidx, MESHVIS_NEVER);
-		SetMeshVisibilityMode(sidehatchburnedopenidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(sidehatchburnedopenidx, MESHVIS_EXTERNAL);
 	} else {
-		SetMeshVisibilityMode(sidehatchburnedidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(sidehatchburnedidx, MESHVIS_EXTERNAL);
 		SetMeshVisibilityMode(sidehatchburnedopenidx, MESHVIS_NEVER);
 	}
 }
@@ -1014,6 +1021,24 @@ void Saturn::SetVCSeatsMesh() {
 	} else {
 		SetMeshVisibilityMode(seatsfoldedidx, MESHVIS_NEVER);
 		SetMeshVisibilityMode(seatsunfoldedidx, MESHVIS_VC);
+	}
+}
+
+void Saturn::SetCOASMesh() {
+
+	if (coascdridx == -1 || coascdrreticleidx == -1)
+		return;
+
+	if (coasEnabled) {
+		SetMeshVisibilityMode(coascdridx, MESHVIS_VC);
+		if (InVC && oapiCameraInternal() && viewpos == SATVIEW_LEFTDOCK && COASreticlevisible) {
+			SetMeshVisibilityMode(coascdrreticleidx, MESHVIS_VC);
+		} else {
+			SetMeshVisibilityMode(coascdrreticleidx, MESHVIS_NEVER);
+		}
+	} else {
+		SetMeshVisibilityMode(coascdridx, MESHVIS_NEVER);
+		SetMeshVisibilityMode(coascdrreticleidx, MESHVIS_NEVER);
 	}
 }
 
@@ -1240,6 +1265,9 @@ void Saturn::SetReentryMeshes() {
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+	SetCOASMesh();
 
 	//
 	// Docking probe
@@ -1538,6 +1566,9 @@ void Saturn::SetRecovery()
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+	SetCOASMesh();
 
 	if (Crewed) {
 		mesh_dir =_V(2.7,1.8,-1.5);
@@ -1864,8 +1895,15 @@ void Saturn::ClearMeshes() {
 	// This should not be needed once a better way to handle staging is implemented (docked stages)
 	int meshcount = GetMeshCount();
 
-	for (int i = 1; i < meshcount; i++)
-	{
-		DelMesh(i);
+	if (buildstatus < 6) {
+		for (int i = 0; i < meshcount; i++)
+		{
+			DelMesh(i);
+		}
+	} else {
+		for (int i = 1; i < meshcount; i++)
+		{
+			DelMesh(i);
+		}
 	}
 }

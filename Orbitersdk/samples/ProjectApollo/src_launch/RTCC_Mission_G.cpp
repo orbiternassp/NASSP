@@ -1953,7 +1953,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.DVSTORE1 = _V(res.DV_CSI, 0, 0);
 		calcParams.SVSTORE1 = sv_Ins;
 
-		LandingSiteUplink(buffer1, 2022);
+		LandingSiteUplink(buffer1, RTCC_MPT_LM);
 		AGCStateVectorUpdate(buffer2, sv_CSM, true, GETbase);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);

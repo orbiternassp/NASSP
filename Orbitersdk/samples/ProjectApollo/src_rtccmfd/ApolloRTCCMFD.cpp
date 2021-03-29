@@ -337,10 +337,7 @@ void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		if (G->vesseltype < 2)
-		{
-			G->EntryUpdateUplink();
-		}
+		G->EntryUpdateUplink();
 	}
 }
 
@@ -375,7 +372,7 @@ void ApolloRTCCMFD::menuP30UplinkCalc()
 	}
 	else
 	{
-		G->P30UplinkCalc();
+		G->P30UplinkCalc(screen == 51);
 	}
 }
 
@@ -383,24 +380,18 @@ void ApolloRTCCMFD::menuP30Uplink()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		G->P30Uplink();
+		G->P30Uplink(screen == 51);
 	}
 }
 
 void ApolloRTCCMFD::menuRetrofireEXDVUplink()
 {
-	if (G->vesseltype < 2)
-	{
-		G->RetrofireEXDVUplink();
-	}
+	G->RetrofireEXDVUplink();
 }
 
 void ApolloRTCCMFD::menuRetrofireEXDVUplinkCalc()
 {
-	if (G->vesseltype < 2)
-	{
-		G->RetrofireEXDVUplinkCalc();
-	}
+	G->RetrofireEXDVUplinkCalc();
 }
 
 void ApolloRTCCMFD::menuTLANDUplinkCalc()
@@ -933,56 +924,9 @@ void ApolloRTCCMFD::menuSetUplinkMenu()
 	coreButtons.SelectPage(this, screen);
 }
 
-void ApolloRTCCMFD::menuSetStateVectorMenu()
-{
-	screen = 48;
-	coreButtons.SelectPage(this, screen);
-
-	G->SVDesiredGET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->rtcc->CalcGETBase());
-}
-
 void ApolloRTCCMFD::menuSetLSUpdateMenu()
 {
 	screen = 49;
-	coreButtons.SelectPage(this, screen);
-}
-
-void ApolloRTCCMFD::menuSetLSUplinkPage()
-{
-	screen = 50;
-	coreButtons.SelectPage(this, screen);
-}
-
-void ApolloRTCCMFD::menuSetP30UplinkPage()
-{
-	screen = 51;
-	coreButtons.SelectPage(this, screen);
-}
-
-void ApolloRTCCMFD::menuSetRetrofireEXDVUplinkPage()
-{
-	if (G->vesseltype < 2)
-	{
-		screen = 52;
-		coreButtons.SelectPage(this, screen);
-	}
-	else
-	{
-		screen = 61;
-		coreButtons.SelectPage(this, screen);
-	}
-}
-
-void ApolloRTCCMFD::menuSetREFSMMATUplinkPage()
-{
-	if (G->vesseltype < 2)
-	{
-		screen = 53;
-	}
-	else
-	{
-		screen = 94;
-	}
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -1246,12 +1190,6 @@ void ApolloRTCCMFD::menuSetVectorCompareDisplay()
 void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
 {
 	screen = 95;
-	coreButtons.SelectPage(this, screen);
-}
-
-void ApolloRTCCMFD::menuSetSLVNavigationUpdatePage()
-{
-	screen = 96;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -2434,7 +2372,7 @@ void ApolloRTCCMFD::UploadREFSMMAT()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		G->REFSMMATUplink();
+		G->REFSMMATUplink(screen == 53);
 	}
 }
 
@@ -4271,7 +4209,25 @@ void ApolloRTCCMFD::menuSVCalc()
 {
 	if (GC->MissionPlanningActive || (G->svtarget != NULL && !G->svtarget->GroundContact()))
 	{
-		G->StateVectorCalc();
+		int type;
+		switch (screen)
+		{
+		case 48:
+			type = 0;
+			break;
+		case 99:
+			type = 9;
+			break;
+		case 100:
+			type = 21;
+			break;
+		case 101:
+			type = 20;
+			break;
+		default:
+			return;
+		}
+		G->StateVectorCalc(type);
 	}
 }
 
@@ -4301,20 +4257,51 @@ void ApolloRTCCMFD::menuSVUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		G->StateVectorUplink();
+		int type;
+		switch (screen)
+		{
+		case 48:
+			type = 0;
+			break;
+		case 99:
+			type = 9;
+			break;
+		case 100:
+			type = 21;
+			break;
+		case 101:
+			type = 20;
+			break;
+		default:
+			return;
+		}
+		G->StateVectorUplink(type);
 	}
 }
 
-void ApolloRTCCMFD::menuLSUplinkCalc()
+void ApolloRTCCMFD::menuCSMLSUplinkCalc()
 {
-	G->LSUplinkCalc();
+	G->CSMLSUplinkCalc();
 }
 
-void ApolloRTCCMFD::menuLSUpload()
+void ApolloRTCCMFD::menuLMLSUplinkCalc()
+{
+	G->LMLSUplinkCalc();
+}
+
+void ApolloRTCCMFD::menuCSMLSUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
-		G->LandingSiteUplink();
+		G->CSMLandingSiteUplink();
+	}
+}
+
+void ApolloRTCCMFD::menuLMLSUpload()
+{
+	if (!G->inhibUplLOS || !G->vesselinLOS())
+	{
+		G->LMLandingSiteUplink();
 	}
 }
 
@@ -4346,7 +4333,7 @@ bool ApolloRTCCMFD::REFSMMATUplinkCalc(char *str)
 		{
 			char veh[4];
 			char str2[32];
-			if (G->vesseltype < 2)
+			if (screen == 53)
 			{
 				sprintf_s(veh, "CMC");
 			}
@@ -4644,7 +4631,7 @@ void ApolloRTCCMFD::set_AGCEpoch(double mjd)
 
 void ApolloRTCCMFD::menuChangeVesselType()
 {
-	if (G->vesseltype < 3)
+	if (G->vesseltype < 4)
 	{
 		G->vesseltype++;
 	}
@@ -4653,14 +4640,8 @@ void ApolloRTCCMFD::menuChangeVesselType()
 		G->vesseltype = 0;
 	}
 
-	if (G->vesseltype < 2)
+	if (G->vesseltype == 2 || G->vesseltype == 3)
 	{
-		G->g_Data.uplinkLEM = 0;
-	}
-	else
-	{
-		G->g_Data.uplinkLEM = 1;
-
 		if (!stricmp(G->vessel->GetClassName(), "ProjectApollo\\LEM") ||
 			!stricmp(G->vessel->GetClassName(), "ProjectApollo/LEM")) {
 			LEM *lem = (LEM *)G->vessel;
@@ -4683,6 +4664,8 @@ void ApolloRTCCMFD::menuCycleLMStage()
 
 void ApolloRTCCMFD::menuUpdateLiftoffTime()
 {
+	if (G->vesseltype == 4) return;
+
 	double TEPHEM0, LaunchMJD;
 
 	if (GC->mission < 11)		//NBY 1968/1969
@@ -4832,6 +4815,8 @@ ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
+	if (G->vesseltype == 4) return;
+
 	agc_t* vagc;
 	bool cmc;
 
@@ -6409,7 +6394,7 @@ void ApolloRTCCMFD::menuTLCCCalc()
 
 void ApolloRTCCMFD::menuLunarLiftoffCalc()
 {
-	if (GC->MissionPlanningActive ||(G->target != NULL && G->vesseltype > 1))
+	if (GC->MissionPlanningActive ||(G->target != NULL && (G->vesseltype == 2 || G->vesseltype == 3)))
 	{
 		G->LunarLiftoffCalc();
 	}
@@ -6417,7 +6402,7 @@ void ApolloRTCCMFD::menuLunarLiftoffCalc()
 
 void ApolloRTCCMFD::menuLLTPCalc()
 {
-	if (GC->MissionPlanningActive || (G->target != NULL && G->vesseltype > 1))
+	if (GC->MissionPlanningActive || (G->target != NULL && (G->vesseltype == 2 || G->vesseltype == 3)))
 	{
 		G->LunarLaunchTargetingCalc();
 	}
@@ -6647,7 +6632,7 @@ void ApolloRTCCMFD::menuDKICalc()
 
 void ApolloRTCCMFD::menuLAPCalc()
 {
-	if (GC->MissionPlanningActive || (G->target != NULL && G->vesseltype > 1))
+	if (GC->MissionPlanningActive || (G->target != NULL && (G->vesseltype == 2 || G->vesseltype == 3)))
 	{
 		G->LAPCalc();
 	}
@@ -7255,7 +7240,7 @@ void ApolloRTCCMFD::menuGenerateAGCEphemeris()
 
 void ApolloRTCCMFD::menuAscentPADCalc()
 {
-	if (G->vesseltype > 1 && G->vessel->GroundContact() && G->target != NULL)
+	if ((G->vesseltype == 2 || G->vesseltype == 3) && G->vessel->GroundContact() && G->target != NULL)
 	{
 		G->AscentPADCalc();
 	}
@@ -7263,7 +7248,7 @@ void ApolloRTCCMFD::menuAscentPADCalc()
 
 void ApolloRTCCMFD::menuPDAPCalc()
 {
-	if (G->vesseltype > 1 && G->target != NULL)
+	if ((G->vesseltype == 2 || G->vesseltype == 3) && G->target != NULL)
 	{
 		G->PDAPCalc();
 	}
@@ -7283,7 +7268,7 @@ void ApolloRTCCMFD::menuCyclePDAPEngine()
 
 void ApolloRTCCMFD::menuAP11AbortCoefUplink()
 {
-	if (G->vesseltype > 1)
+	if (G->vesseltype == 2 || G->vesseltype == 3)
 	{
 		if (GC->mission == 11)
 		{
@@ -8346,6 +8331,73 @@ void ApolloRTCCMFD::menuGetOnboardStateVectors()
 	G->GetStateVectorFromAGC(false);
 	G->GetStateVectorFromIU();
 	G->GetStateVectorsFromAGS();
+}
+
+void ApolloRTCCMFD::menuUplinkDisplayRequest()
+{
+	bool UplinkDisplayRequestInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Select display by number:", UplinkDisplayRequestInput, 0, 20, (void*)this);
+}
+
+bool UplinkDisplayRequestInput(void* id, char *str, void *data)
+{
+	int num;
+	if (sscanf(str, "%d", &num) == 1)
+	{
+		((ApolloRTCCMFD*)data)->SelectUplinkScreen(num);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::SelectUplinkScreen(int num)
+{
+	switch (num)
+	{
+	case 0: //CMC CSM State Vector
+		screen = 48;
+		break;
+	case 6: //CMC Landing Site Vector
+		screen = 50;
+		break;
+	case 9: //CMC LM State Vector
+		screen = 99;
+		break;
+	case 10: //CMC External DV Update
+		screen = 51;
+		break;
+	case 12: //CMC REFSMMAT Update
+		screen = 53;
+		break;
+	case 13: //Retrofire External DV Update
+		screen = 52;
+		break;
+	case 20: //LGC LM State Vector
+		screen = 101;
+		break;
+	case 21: //LGC CSM State Vector
+		screen = 100;
+		break;
+	case 22: //LGC External DV Update
+		screen = 102;
+		break;
+	case 23: //LGC REFSMMAT Update
+		screen = 94;
+		break;
+	case 26: //LGC Landing Site Vector
+		screen = 98;
+		break;
+	case 28: //LGC Descent Update
+		screen = 61;
+		break;
+	case 49: //LVDC Navigation Update
+		screen = 96;
+		break;
+	default:
+		return;
+	}
+
+	coreButtons.SelectPage(this, screen);
 }
 
 void ApolloRTCCMFD::menuMSKRequest()
