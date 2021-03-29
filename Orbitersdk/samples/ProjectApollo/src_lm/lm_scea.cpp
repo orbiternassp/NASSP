@@ -214,16 +214,14 @@ SCERA::SCERA()
 	lem = NULL;
 	dcpower = NULL;
 	SCERAHeat = 0;
-	SCERASECHeat = 0;
 	Operate = false;
 }
 
-void SCERA::Init(LEM *l, e_object *dc, h_HeatLoad *hl, h_HeatLoad *sechl)
+void SCERA::Init(LEM *l, e_object *dc, h_HeatLoad *hl)
 {
 	lem = l;
 	dcpower = dc;
 	SCERAHeat = hl;
-	SCERASECHeat = sechl;
 }
 
 bool SCERA::IsPowered()
@@ -659,8 +657,7 @@ void SCERA1::SystemTimestep(double simdt)
 	if (Operate)
 	{
 		dcpower->DrawPower(12.6);
-		SCERAHeat->GenerateHeat(6.3);
-		SCERASECHeat->GenerateHeat(6.3);
+		SCERAHeat->GenerateHeat(12.6);
 	}
 }
 
@@ -1006,8 +1003,7 @@ void SCERA2::SystemTimestep(double simdt)
 	if (Operate)
 	{
 		dcpower->DrawPower(10.36);
-		SCERAHeat->GenerateHeat(5.18);
-		SCERASECHeat->GenerateHeat(5.18);
+		SCERAHeat->GenerateHeat(10.36);
 	}
 }
 

@@ -529,10 +529,9 @@ LEM_INV::LEM_INV() {
 	BASE_HLPW[18] = 117.5;	//360W
 }
 
-void LEM_INV::Init(LEM *s, h_HeatLoad *invh, h_HeatLoad *secinvh) {
+void LEM_INV::Init(LEM *s, h_HeatLoad *invh) {
 	lem = s;
 	InvHeat = invh;
-	SecInvHeat = secinvh;
 }
 
 void LEM_INV::DrawPower(double watts)
@@ -619,8 +618,7 @@ double LEM_INV::calc_hlpw_util(double maxw, int index)
 
 void LEM_INV::SystemTimestep(double simdt)
 {
-	InvHeat->GenerateHeat(heatloss / 2.0);
-	SecInvHeat->GenerateHeat(heatloss / 2.0);
+	InvHeat->GenerateHeat(heatloss);
 }
 
 //Tracking Light Electronics
@@ -630,17 +628,15 @@ LEM_TLE::LEM_TLE()
 	TrackCB = NULL;
 	TrackSwitch = NULL;
 	TLEHeat = 0;
-	SecTLEHeat = 0;
 
 }
 
-void LEM_TLE::Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh)
+void LEM_TLE::Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh)
 {
 	lem = l;
 	TrackCB = trk_cb;
 	TrackSwitch = tracksw;
 	TLEHeat = tleh;
-	SecTLEHeat = sectleh;
 }
 
 bool LEM_TLE::IsPowered()
@@ -665,9 +661,7 @@ void LEM_TLE::SystemTimestep(double simdt)
 {
 	if (IsPowered()) {
 		TrackCB->DrawPower(120.0);
-		//TLEHeat->GenerateHeat(120.0);
-		TLEHeat->GenerateHeat(60.0);
-		SecTLEHeat->GenerateHeat(60.0);
+		TLEHeat->GenerateHeat(120.0);
 	}
 }
 

@@ -468,10 +468,9 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	vags.ags_clientdata = this;
 }
 
-void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah) {
+void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah) {
 	lem = s;
 	aeaHeat = aeah;
-	secaeaHeat = secaeah;
 }
 
 void LEM_AEA::Timestep(double simt, double simdt) {
@@ -542,15 +541,13 @@ void LEM_AEA::SystemTimestep(double simdt)
 	if (IsPowered())
 	{
 		DCPower.DrawPower(47.0);
-		aeaHeat->GenerateHeat(21.25);
-		secaeaHeat->GenerateHeat(21.25);
+		aeaHeat->GenerateHeat(47.0);
 	}
 
 	if (IsACPowered())
 	{
 		lem->AGS_AC_CB.DrawPower(3.45);
-		aeaHeat->GenerateHeat(1.725);
-		secaeaHeat->GenerateHeat(1.725);
+		aeaHeat->GenerateHeat(3.45);
 	}
 }
 

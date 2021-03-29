@@ -50,12 +50,11 @@ LEM_RGA::LEM_RGA()
 	rates = _V(0, 0, 0);
 }
 
-void LEM_RGA::Init(LEM *v, e_object *dcsource, h_HeatLoad *hl, h_HeatLoad *sechl)
+void LEM_RGA::Init(LEM *v, e_object *dcsource, h_HeatLoad *hl)
 {
 	dc_source = dcsource;
 	lem = v;
 	RGAHeat = hl;
-	SecRGAHeat = sechl;
 }
 
 void LEM_RGA::Timestep(double simdt)
@@ -108,8 +107,7 @@ void LEM_RGA::SystemTimestep(double simdt)
 	if (powered && dc_source) 
 	{
 		dc_source->DrawPower(8.7);	//TBD: Actual value
-		RGAHeat->GenerateHeat(4.35);	//TBD: Actual value
-		SecRGAHeat->GenerateHeat(4.35);	//TBD: Actual value
+		RGAHeat->GenerateHeat(8.7);	//TBD: Actual value
 	}
 }
 
@@ -175,10 +173,9 @@ ATCA::ATCA(){
 	rollGimbalError = 0.0;
 }
 
-void ATCA::Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl){
+void ATCA::Init(LEM *vessel, h_HeatLoad *hl){
 	lem = vessel;
 	ATCAHeat = hl;
-	SECATCAHeat = sechl;
 	int x = 0; while (x < 16) { pgns_jet_request[x] = false; ags_jet_request[x] = false; jet_driver[x] = false; jet_request[x] = 0; jet_last_request[x] = 0; jet_start[x] = 0; jet_stop[x] = 0; x++; }
 }
 
@@ -1161,8 +1158,7 @@ void ATCA::SystemTimestep(double simdt)
 	{
 		lem->SCS_ATCA_CB.DrawPower(55.0);	//ATCA cb under PGNS
 		lem->CDR_SCS_ATCA_CB.DrawPower(2.0);
-		ATCAHeat->GenerateHeat(22.0);		//ATCA & ATCA PGNS Heat
-		SECATCAHeat->GenerateHeat(22.0);
+		ATCAHeat->GenerateHeat(44.0);		//ATCA & ATCA PGNS Heat
 	}
 
 	else if (lem->SCS_ATCA_CB.IsPowered() && lem->SCS_ATCA_AGS_CB.IsPowered() && lem->scca2.GetK13() && !lem->ModeControlAGSSwitch.IsDown())
@@ -1170,7 +1166,6 @@ void ATCA::SystemTimestep(double simdt)
 		lem->SCS_ATCA_CB.DrawPower(65.0);	//ATCA cb under AGS
 		lem->SCS_ATCA_AGS_CB.DrawPower(2.0);
 		ATCAHeat->GenerateHeat(22.0);		//ATCA & ATCA AGS Heat
-		SECATCAHeat->GenerateHeat(22.0);
 	}
 }
 
