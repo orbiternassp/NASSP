@@ -1636,7 +1636,7 @@ double Diode::Current()
 {
 	if (SRC && SRC->IsEnabled() && power_load > 0.0)
 	{
-		Amperes = Volts/(784 / power_load);
+		Amperes = power_load / Volts;
 			return Amperes;
 	}
 

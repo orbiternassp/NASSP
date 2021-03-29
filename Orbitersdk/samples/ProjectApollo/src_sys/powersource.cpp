@@ -526,8 +526,8 @@ void DCBusController::refresh(double dt)
 	}
 
 
-	if (!strcmp(name, "MainBusAController"))
-		sprintf(oapiDebugString(), "FC %.2f, BAT %.2f", fcPower.Voltage(), batPower.Voltage());
+	/*if (!strcmp(name, "MainBusAController"))
+		sprintf(oapiDebugString(), "FC %.2f, BAT %.2f", fcPower.Voltage(), batPower.Voltage());*/
 }
 
 bool DCBusController::IsFuelCellConnected(int fc)
