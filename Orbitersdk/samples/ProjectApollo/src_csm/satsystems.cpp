@@ -166,6 +166,10 @@ void Saturn::SystemsInit() {
 	EntryBatteryB = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_B");
 	EntryBatteryC = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_C");
 
+	DiodeBatA = (Diode *)Panelsdk.GetPointerByString("ELECTRIC:DIODE_BAT_A");
+	DiodeBatB = (Diode *)Panelsdk.GetPointerByString("ELECTRIC:DIODE_BAT_B");
+	DiodeBatC = (Diode *)Panelsdk.GetPointerByString("ELECTRIC:DIODE_BAT_C");
+
 	//
 	// Wire battery buses to batteries.
 	//
@@ -3416,20 +3420,20 @@ void Saturn::GetBatteryStatus( BatteryStatus &bs )
 
 	if ( EntryBatteryA ) 
 	{
-		bs.BatteryAVoltage = EntryBatteryA->Voltage();
-		bs.BatteryACurrent = EntryBatteryA->Current();
+		bs.BatteryAVoltage = DiodeBatA->Voltage();
+		bs.BatteryACurrent = DiodeBatA->Current();
 	}
 	
 	if ( EntryBatteryB ) 
 	{
-		bs.BatteryBVoltage = EntryBatteryB->Voltage();
-		bs.BatteryBCurrent = EntryBatteryB->Current();
+		bs.BatteryBVoltage = DiodeBatB->Voltage();
+		bs.BatteryBCurrent = DiodeBatB->Current();
 	}
 	
 	if ( EntryBatteryC ) 
 	{
-		bs.BatteryCVoltage = EntryBatteryC->Voltage();
-		bs.BatteryCCurrent = EntryBatteryC->Current();
+		bs.BatteryCVoltage = DiodeBatC->Voltage();
+		bs.BatteryCCurrent = DiodeBatC->Current();
 	}
 }
 

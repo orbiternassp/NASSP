@@ -3684,6 +3684,10 @@ protected:
 	Battery *EntryBatteryB;
 	Battery *EntryBatteryC;
 
+	Diode *DiodeBatA;
+	Diode *DiodeBatB;
+	Diode *DiodeBatC;
+
 	Battery *PyroBatteryA;
 	Battery *PyroBatteryB;
 

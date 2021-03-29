@@ -191,6 +191,7 @@ class E_system : public ship_system {
 	void Create_Boiler(char *line);
 	void Create_Pump(char *line);
 	void Create_Inverter(char *line);
+	void Create_Diode(char *line);
 
 public:
 	E_system();
@@ -569,6 +570,23 @@ public:
 	void SetPumpOn()   {h_pump = -1; };
 	void SetPumpOff()  {h_pump =  0; };
 	void SetPumpAuto() {h_pump =  1; };
+};
+
+///
+/// \ingroup PanelSDK
+/// The diode simulation class. Applicable to DC systems only
+///
+class Diode : public e_object {
+public:
+	Diode(char *i_name, e_object *i_src, double NominalTemperature, double saturationCurrent); //name, source, Kelvens, Amperes
+	double Voltage();
+	double Current();
+
+	void Load(char *line);
+	void Save(FILEHANDLE scn);
+protected:
+	double Is; //Saturation Current
+	double kT_q; //Thermal Voltage. Currently statatic, as diode temperature is static.
 };
 
 #endif

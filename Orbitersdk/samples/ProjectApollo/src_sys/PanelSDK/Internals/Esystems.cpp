@@ -1612,3 +1612,59 @@ void Pump::Save(FILEHANDLE scn) {
 	sprintf (cbuf, "%s %i %i %lf", name, h_pump, loaded, fan_cap);
 	oapiWriteScenario_string (scn, "    <PUMP> ", cbuf);
 }
+
+
+//------------------------------ Diode Class -----------------------------------
+Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double saturationCurrent)
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	SRC = i_src;
+
+	if (SRC && SRC->IsEnabled())
+	{
+		Volts = SRC->Voltage() - (kT_q*log((Amperes / Is) + 1));
+	}
+	Amperes = 0.0;
+	power_load = 0.0;
+
+	Is = saturationCurrent;
+	kT_q = (1.38064852E-23*NominalTemperature) / 1.60217662E-19;
+}
+
+double Diode::Current()
+{
+	if (SRC && SRC->IsEnabled() && power_load > 0.0)
+	{
+		Amperes = Volts/(784 / power_load);
+			return Amperes;
+	}
+
+	return 0.0;
+}
+
+double Diode::Voltage()
+{
+	if (SRC && SRC->IsEnabled())
+	{
+		Volts = SRC->Voltage() - (kT_q*log((Amperes / Is) + 1));
+		return Volts;
+	}
+
+	return 0.0;
+}
+
+void Diode::Load(char *line)
+
+{
+	sscanf(line, "    <DIODE> %s", name);
+}
+
+void Diode::Save(FILEHANDLE scn)
+{
+
+	char cbuf[1000];
+
+	sprintf(cbuf, "%s", name);
+	oapiWriteScenario_string(scn, "    <DIODE> ", cbuf);
+}

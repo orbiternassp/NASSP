@@ -525,15 +525,9 @@ void DCBusController::refresh(double dt)
 		batPower.WireToBuses(NULL, NULL);
 	}
 
-	// The batteries are connected via diodes, so the battery voltage needs to be higher than the 
-	// fuel cell voltage to draw power
-	if (batPower.Voltage() > fcPower.Voltage())
-		busPower.WireToBus(2, &batPower);
-	else if (batPower.Voltage() < fcPower.Voltage())
-		busPower.WireToBus(2, NULL);
 
-	//if (!strcmp(name, "MainBusAController"))
-	//	sprintf(oapiDebugString(), "FC %.2f, BAT %.2f", fcPower.Voltage(), batPower.Voltage());
+	if (!strcmp(name, "MainBusAController"))
+		sprintf(oapiDebugString(), "FC %.2f, BAT %.2f", fcPower.Voltage(), batPower.Voltage());
 }
 
 bool DCBusController::IsFuelCellConnected(int fc)

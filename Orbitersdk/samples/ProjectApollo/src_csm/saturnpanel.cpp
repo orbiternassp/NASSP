@@ -2849,9 +2849,9 @@ void Saturn::SetSwitches(int panel) {
 	PyroASeqACircuitBraker.Init				( 55, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryA, 20.0);
 	BatBusBToPyroBusTieCircuitBraker.Init	(115, 0, 29, 29, srf[SRF_CIRCUITBRAKER_YELLOW], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatteryBusB, 20.0);
 	PyroBSeqBCircuitBraker.Init				(170, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryB, 20.0);
-	BatAPWRCircuitBraker.Init				(246, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, EntryBatteryA, 80.0);
-	BatBPWRCircuitBraker.Init				(304, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, EntryBatteryB, 80.0);
-	BatCPWRCircuitBraker.Init				(362, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, EntryBatteryC, 80.0);
+	BatAPWRCircuitBraker.Init				(246, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatA, 80.0);
+	BatBPWRCircuitBraker.Init				(304, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatB, 80.0);
+	BatCPWRCircuitBraker.Init				(362, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatC, 80.0);
 	BatCtoBatBusACircuitBraker.Init			(420, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 80.0);
 	BatCtoBatBusBCircuitBraker.Init			(478, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 80.0);
 	BatCCHRGCircuitBraker.Init				(526, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 10.0);
