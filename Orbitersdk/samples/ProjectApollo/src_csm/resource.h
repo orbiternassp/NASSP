@@ -888,6 +888,7 @@
 #define AID_VC_ASCPDISPLAYPITCH         3183
 #define AID_VC_ASCPDISPLAYYAW           3184
 #define AID_VC_POSTLDGVENTHANDLE        3185
+#define AID_VC_EMS_RSI                  3186
 
 // VC Active Areas (Panel 325-326)
 #define AID_VC_ROT_P326_01		        3201

@@ -3222,7 +3222,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// For now this is limited to the Saturn V.
 	//
 
-	/*if (key == OAPI_KEY_1 && down == true && InVC && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_1 && down == true && InVC && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG1;
 		SetView();
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
@@ -3266,7 +3266,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
 		return 1;
-	}*/
+	}
 	return 0;
 }
 

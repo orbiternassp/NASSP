@@ -3845,10 +3845,9 @@ protected:
 	#define SATVIEW_GNPANEL			5
     #define SATVIEW_LEBLEFT			6
     #define SATVIEW_LEBRIGHT		7
-    #define SATVIEW_LEBAFT		    8
-    #define SATVIEW_TUNNEL          9
-    #define SATVIEW_LOWER_CENTER    10
-    #define SATVIEW_UPPER_CENTER    11
+    #define SATVIEW_TUNNEL          8
+    #define SATVIEW_LOWER_CENTER    9
+    #define SATVIEW_UPPER_CENTER    10
 	#define SATVIEW_ENG1			20
 	#define SATVIEW_ENG2			21
 	#define SATVIEW_ENG3			22

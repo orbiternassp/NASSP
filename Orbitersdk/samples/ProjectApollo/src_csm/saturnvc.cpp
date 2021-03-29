@@ -735,14 +735,6 @@ bool Saturn::clbkLoadVC (int id)
 	//if ((viewpos >= SATVIEW_ENG1) && (viewpos <= SATVIEW_ENG6))
 	//	return true;
 
-	// Test stuff
-	//SURFHANDLE tex# = oapiGetTextureHandle (vcmeshidentifier, meshgroup#);
-	//int i;
-	//SetCameraDefaultDirection (_V(0,0,1));
-	//default camera direction: forward
-	//SetCameraShiftRange (_V(#,#,#), _V(#,#,#), _V(#,#,#));
-	// leaning forward/left/right
-
 	InitVC();
 	RegisterActiveAreas();
 
@@ -751,7 +743,7 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_LEFTSEAT:
 		viewpos = SATVIEW_LEFTSEAT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(-0.3, 0.0, 0.3), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(0.0, -0.3, 0.0), 0, 0, _V(-0.3, -0.3, 0.1), 90 * RAD, 0, _V(0.25, -0.19, 0.15), 0, 0);
 		oapiVCSetNeighbours(-1, SATVIEW_CENTERSEAT, SATVIEW_LEFTDOCK, SATVIEW_LEBLEFT);
 		SetCOASMesh();
 		SetView(true);
@@ -761,7 +753,7 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_CENTERSEAT:
 		viewpos = SATVIEW_CENTERSEAT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(-0.0, -0.15, 0.0), 0, 0, _V(-0.3, 0.0, 0.0), 0, 0, _V(0.3, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(SATVIEW_LEFTSEAT, SATVIEW_RIGHTSEAT, SATVIEW_UPPER_CENTER, SATVIEW_LOWER_CENTER);
 		SetView(true);
 
@@ -770,7 +762,7 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_RIGHTSEAT:
 		viewpos = SATVIEW_RIGHTSEAT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(-0.0, -0.3, 0.0), 0, 0, _V(-0.3, 0.0, 0.0), 0, 0, _V(0.3, -0.3, 0.1), -90 * RAD, 0);
 		oapiVCSetNeighbours(SATVIEW_CENTERSEAT, -1, SATVIEW_RIGHTDOCK, SATVIEW_LEBRIGHT);
 		SetView(true);
 
@@ -779,24 +771,23 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_GNPANEL:
 		viewpos = SATVIEW_GNPANEL;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
-		//SetCameraShiftRange(_V(-0.4, 0, 0), _V(0, 0, 0), _V(0, 0, 0));
 		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_TUNNEL, -1);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
 		SetView(true);
 		return true;
 
 	case SATVIEW_LEFTDOCK:
 		viewpos = SATVIEW_LEFTDOCK;
-		SetCameraRotationRange(0, 0, 0, 0);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_LEFTSEAT);
 		SetCOASMesh();
 		SetView(true);
 
 		return true;
 
-	case SATVIEW_RIGHTDOCK: // Limited eye movement
+	case SATVIEW_RIGHTDOCK:
 		viewpos = SATVIEW_RIGHTDOCK;
-		SetCameraRotationRange(0, 0, 0, 0);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_RIGHTSEAT);
 		SetView(true);
 
@@ -804,35 +795,23 @@ bool Saturn::clbkLoadVC (int id)
 
 	case SATVIEW_LEBLEFT:
 		viewpos = SATVIEW_LEBLEFT;
-		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, SATVIEW_GNPANEL, SATVIEW_LEFTSEAT, SATVIEW_LEBAFT);
+		SetCameraMovement(_V(0.0, 1.4, -0.2), -20 * RAD, 0, _V(-0.1, 0.7, -0.3), -20 * RAD, 0, _V(-0.1, 0.55, 0.2), 0, 20 * RAD);
+		oapiVCSetNeighbours(-1, SATVIEW_GNPANEL, SATVIEW_LEFTSEAT, -1);
 		SetView(true);
 
 		return true;
 
 	case SATVIEW_LEBRIGHT:
 		viewpos = SATVIEW_LEBRIGHT;
-		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(0.0, 0.4, 0.1), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, -0.15, -0.35), 0, 0);
 		oapiVCSetNeighbours(SATVIEW_GNPANEL, -1, SATVIEW_RIGHTSEAT, -1);
-		SetView(true);
-
-		return true;
-
-	case SATVIEW_LEBAFT:
-		viewpos = SATVIEW_LEBAFT;
-		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, -1, SATVIEW_LEBLEFT, -1);
 		SetView(true);
 
 		return true;
 
 	case SATVIEW_UPPER_CENTER:
 		viewpos = SATVIEW_UPPER_CENTER;
-		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.2, -0.03, -0.1), 0, 20 * RAD, _V(-0.2, -0.03, -0.1), 0, 20 * RAD);
 		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_CENTERSEAT);
 		SetView(true);
 
@@ -840,8 +819,7 @@ bool Saturn::clbkLoadVC (int id)
 
 	case SATVIEW_LOWER_CENTER:
 		viewpos = SATVIEW_LOWER_CENTER;
-		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(-1, -1, SATVIEW_CENTERSEAT, SATVIEW_TUNNEL);
 		SetView(true);
 
@@ -849,8 +827,7 @@ bool Saturn::clbkLoadVC (int id)
 
 	case SATVIEW_TUNNEL:
 		viewpos = SATVIEW_TUNNEL;
-		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(-0.2, -0.1, 0.0), 90 * RAD, 0, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(-1, -1, SATVIEW_LOWER_CENTER, SATVIEW_GNPANEL);
 		SetView(true);
 
@@ -979,6 +956,9 @@ void Saturn::RegisterActiveAreas() {
 	// PLVC switch
 	oapiVCRegisterArea(AID_VC_SWITCH_PLVC, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_PLVC, Switch_PLVCLocation + LEBLEFT_CLICK + ofs, SWITCH);
+
+	// RSI Needle
+	oapiVCRegisterArea(AID_VC_EMS_RSI, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT; i++)
@@ -1668,10 +1648,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32, 69, 82, 12, 22, 10);
 			break;
 		}
+	}
 
+	case AID_VC_EMS_RSI:
 		ems.DrawSwitchVC(id, event, surf);
 		return true;
-	}
 
 	case AID_VC_EMS_DVSET:
 		EMSDvSetSwitch.DrawSwitchVC(id, event, surf);
@@ -1773,10 +1754,17 @@ void Saturn::SetView(double offset, bool update_direction)
 	TRACESETUP("Saturn::SetView");
 	CurrentViewOffset = offset;
 
+	// VC Offset
+	VECTOR3 ofs_vc = _V(0.0, 0.0, offset);
+	if (vcidx != -1) {
+		GetMeshOffset(vcidx, ofs_vc);
+		ofs_vc.z = ofs_vc.z - 0.15;
+	}
+
 	//
 	// Engineering cameras
 	//
-	/*if (viewpos >= SATVIEW_ENG1)
+	if (viewpos >= SATVIEW_ENG1)
 	{
 		VECTOR3 e1 = _V(0, 0, 0), e2 = _V(0, 0, 0), e3 = _V(0, 0, 0), e4 = _V(0, 0, 0), e5 = _V(0, 0, 0), e6 = _V(0, 0, 0);	
 		VECTOR3 v1 = _V(0, 0, 0), v2 = _V(0, 0, 0), v3 = _V(0, 0, 0), v4 = _V(0, 0, 0), v5 = _V(0, 0, 0), v6 = _V(0, 0, 0);
@@ -1879,7 +1867,7 @@ void Saturn::SetView(double offset, bool update_direction)
 	// 2D panel 
 	// Direction/rotation range is in clbkLoadPanel
 	//
-	else*/ if (InPanel) {
+	else if (InPanel) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			v = _V(-0.605, 1.045, offset - 3.0); // Adjusted to line up with docking target
 
@@ -1916,51 +1904,47 @@ void Saturn::SetView(double offset, bool update_direction)
 	else {
 		switch (viewpos) {
 			case SATVIEW_LEFTSEAT:
-				v = _V(-0.6, 0.9, offset + 0.1);
+				v = _V(-0.6, 0.85, ofs_vc.z + 0.1);
 				break;
 
 			case SATVIEW_CENTERSEAT:
-				v = _V(0, 0.9, offset + 0.1);
+				v = _V(0, 0.85, ofs_vc.z + 0.1);
 				break;
 
 			case SATVIEW_RIGHTSEAT:
-				v = _V(0.6, 0.9, offset + 0.1);
+				v = _V(0.6, 0.85, ofs_vc.z + 0.1);
 				break;
 
 			case SATVIEW_LEFTDOCK:
-				v = _V(-0.6, 1.05, 0.21 + offset); // Adjusted to line up with LM docking target
+				v = _V(-0.6, 1.05, 0.1 + ofs_vc.z); // Adjusted to line up with LM docking target
 				break;
 			
 			case SATVIEW_RIGHTDOCK:
-				v = _V(0.6, 1.05, 0.21 + offset);
+				v = _V(0.6, 1.05, 0.1 + ofs_vc.z);
 				break;
 
 			case SATVIEW_GNPANEL:
-				v = _V(0.0, -0.15, 0.5 + offset);
+				v = _V(-0.05, -0.15, 0.3 + ofs_vc.z);
 				break;
 
 			case SATVIEW_LEBLEFT:
-				v = _V(-0.6, -0.3, offset);
+				v = _V(-0.8, - 0.5, ofs_vc.z - 0.4);
 				break;
 
 			case SATVIEW_LEBRIGHT:
-				v = _V(0.6, -0.3, offset);
-				break;
-
-			case SATVIEW_LEBAFT:
-				v = _V(-0.6, 0.5, offset - 0.4);
+				v = _V(0.8, -0.4, ofs_vc.z + 0.1);
 				break;
 
 			case SATVIEW_LOWER_CENTER:
-				v = _V(0.0, -0.15, 0.6 + offset);
+				v = _V(0.0, 0.1, 0.65 + ofs_vc.z);
 				break;
 
 			case SATVIEW_UPPER_CENTER:
-				v = _V(0, 1.2, offset + 0.1);
+				v = _V(0, 1.35, ofs_vc.z - 0.0);
 				break;
 
 			case SATVIEW_TUNNEL:
-				v = _V(0.0, -0.15, 0.8 + offset);
+				v = _V(0.0, 0.0, 0.8 + ofs_vc.z - 0.1);
 				break;
 		}
 
@@ -1968,6 +1952,16 @@ void Saturn::SetView(double offset, bool update_direction)
 			SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 			if (viewpos == SATVIEW_GNPANEL) {
 				SetCameraDefaultDirection(_V(0.0,-1.0, 0.0));
+			} else if (viewpos == SATVIEW_LEBRIGHT) {
+				SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+			} else if (viewpos == SATVIEW_LEBLEFT) {
+				SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+			} else if (viewpos == SATVIEW_LOWER_CENTER) {
+				SetCameraDefaultDirection(_V(0.0, 1.0, 0.0), 180 * RAD);
+			} else if (viewpos == SATVIEW_UPPER_CENTER) {
+				SetCameraDefaultDirection(_V(0.0, 0.0, -1.0));
+			} else if (viewpos == SATVIEW_LEFTSEAT || viewpos == SATVIEW_CENTERSEAT || viewpos == SATVIEW_RIGHTSEAT) {
+				SetCameraDefaultDirection(_V(0.00, -sin(P1_3_TILT), cos(P1_3_TILT)));
 			} else {
 				SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			}
@@ -2335,6 +2329,7 @@ void Saturn::DefineVCAnimations()
 	AccelGMeter.DefineMeshGroup(VC_GRP_Needle_P1_06);
 
 	const VECTOR3 rsiref = { -0.680414, 0.71462, 0.365469 };
+
 	ems.SetReference(rsiref, P1_3_ROT_AXIS);
 	ems.DefineMeshGroup(VC_GRP_RSI_Indicator);
 
@@ -3913,7 +3908,7 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&LMDPGauge);
 	LMDPGauge.SetReference(NEEDLE_POS, P12_ROT_AXIS);
-	LMDPGauge.SetRotationRange(RAD * 83);
+	LMDPGauge.SetRotationRange(RAD * 75);
 	LMDPGauge.DefineMeshGroup(VC_GRP_Needle_P12_01);
 
 	// Panel 13
@@ -4442,11 +4437,11 @@ void Saturn::DefineVCAnimations()
 	HatchRepressO2ValveSwitch.DefineMeshGroup(VC_GRP_Sw_P600_02);
 
 	NEEDLE_POS = { 0.2225, 1.3865, -0.5910 };
-	const VECTOR3	P600_ROT_AXIS = { -0.000007385524838, -0.576107864976531, 0.817373677003142 };
+	const VECTOR3	P600_ROT_AXIS = { 0.0011765750919, 0.019116914303107, 0.999816562804688 };
 
 	MainPanelVC.AddSwitch(&HatchOxygenRepressPressMeter);
 	HatchOxygenRepressPressMeter.SetReference(NEEDLE_POS, P600_ROT_AXIS);
-	HatchOxygenRepressPressMeter.SetRotationRange(RAD * 30);
+	HatchOxygenRepressPressMeter.SetRotationRange(RAD * 58);
 	HatchOxygenRepressPressMeter.DefineMeshGroup(VC_GRP_Needle_P600_01);
 
 	// THC Handle
@@ -4488,8 +4483,8 @@ void Saturn::InitFDAI(UINT mesh)
 	const VECTOR3 fdaiyawvaxis = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
 	const VECTOR3 needlexvector = { 0.00, 0.05*cos(P1_3_TILT), 0.05*sin(P1_3_TILT) };
 	const VECTOR3 needleyvector = { 0.05, 0, 0 };
-	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_3_TILT), 0.062*sin(P1_3_TILT) };
-	const VECTOR3 rateyvector = { 0.062, 0, 0 };
+	const VECTOR3 ratexvector = { 0.00, 0.078*cos(P1_3_TILT), 0.078*sin(P1_3_TILT) };
+	const VECTOR3 rateyvector = { 0.078, 0, 0 };
 	const VECTOR3 FDAI_PIVOT_L = { -0.673236, 0.563893, 0.385934 }; // L FDAI Pivot Point
 	const VECTOR3 FDAI_PIVOT_R = { -0.340246, 0.750031, 0.44815 }; // R FDAI Pivot Point
 
