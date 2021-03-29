@@ -1956,8 +1956,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
 
 
-	sprintf(oapiDebugString(), "LGC %lf CDU %lf PSA %lf GAS %lf LCA %lf DSE %lf TLE %lf PTA %lf RGA %lf", KelvinToFahrenheit(*LGCRad), KelvinToFahrenheit(*CDURad), KelvinToFahrenheit(*PSARad), KelvinToFahrenheit(*GASTARad), KelvinToFahrenheit(*LCARad), KelvinToFahrenheit(*DSERad), KelvinToFahrenheit(*TLERad), KelvinToFahrenheit(*PTARad), KelvinToFahrenheit(*RGARad));
-	//sprintf(oapiDebugString(), "SBD %lf AEAVHF %lf ATCAINV %lf SCERA %lf CWEAPCM %lf RRE %lf SCERAECA %lf", KelvinToFahrenheit(*SBDRad), KelvinToFahrenheit(*AEAVHFRad), KelvinToFahrenheit(*ATCAINVRad), KelvinToFahrenheit(*SCERARad), KelvinToFahrenheit(*CWEAPCMRad), KelvinToFahrenheit(*RRERad), KelvinToFahrenheit(*SCERAECARad));
+	//sprintf(oapiDebugString(), "LGC %lf CDU %lf PSA %lf GAS %lf LCA %lf DSE %lf TLE %lf PTA %lf RGA %lf", KelvinToFahrenheit(*LGCRad), KelvinToFahrenheit(*CDURad), KelvinToFahrenheit(*PSARad), KelvinToFahrenheit(*GASTARad), KelvinToFahrenheit(*LCARad), KelvinToFahrenheit(*DSERad), KelvinToFahrenheit(*TLERad), KelvinToFahrenheit(*PTARad), KelvinToFahrenheit(*RGARad));
+	sprintf(oapiDebugString(), "SBD %lf AEAVHF %lf ATCAINV %lf SCERA %lf CWEAPCM %lf RRE %lf SCERAECA %lf", KelvinToFahrenheit(*SBDRad), KelvinToFahrenheit(*AEAVHFRad), KelvinToFahrenheit(*ATCAINVRad), KelvinToFahrenheit(*SCERARad), KelvinToFahrenheit(*CWEAPCMRad), KelvinToFahrenheit(*RRERad), KelvinToFahrenheit(*SCERAECARad));
 
 
 	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf CabinQ %lf CabinHeat %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTempF(), *CabinEnergy, *CabinHeat);
