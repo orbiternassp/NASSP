@@ -534,7 +534,7 @@ void Saturn::SystemsInit() {
 	CMRCSProp2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
 
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
-	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"));
+	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
 
 	WaterController.Init(this, (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
 		                 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK"),

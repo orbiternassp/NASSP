@@ -1901,7 +1901,7 @@ void GuardedToggleSwitch::DefineVCAnimations(UINT vc_idx)
 
 bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (event & PANEL_MOUSE_RBDOWN) {
+	if (event & PANEL_MOUSE_RBDOWN && p.x > 0.004) {
 
 		if (guardState) {
 			Guard();
@@ -1913,7 +1913,7 @@ bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 		return true;
 
 	}
-	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
+	else if (event & (PANEL_MOUSE_DOWN | PANEL_MOUSE_UP)) {
 		if (guardState) {
 			return ToggleSwitch::CheckMouseClickVC(event, p);
 		}
@@ -2876,6 +2876,12 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 	}
 }
 
+void OrdealRotationalSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
+
+	OurVessel->SetAnimation(anim_switch, ((double)value / 310) * 0.78);
+	//sprintf(oapiDebugString(), "ALT %d", value);
+}
+
 bool OrdealRotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	if (event & PANEL_MOUSE_LBDOWN) {
@@ -2885,6 +2891,32 @@ bool OrdealRotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 
 		if (mx >(x + width) || my >(y + height))
 			return false;
+
+		lastX = mx;
+		mouseDown = true;
+
+	}
+	else if (((event & PANEL_MOUSE_LBPRESSED) != 0) && mouseDown) {
+		if (abs(mx - lastX) >= 2) {
+			value += (int)((mx - lastX) / 2.);
+			value = min(max(value, 10), 310);
+			lastX = mx;
+		}
+
+	}
+	else if (event & PANEL_MOUSE_LBUP) {
+		mouseDown = false;
+		return false;
+	}
+	SetValue((int)((value / 50.) + 0.5));
+	return true;
+}
+
+bool OrdealRotationalSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	int mx = (int)(p.x * (x + width));
+
+	if (event & PANEL_MOUSE_LBDOWN) {
 
 		lastX = mx;
 		mouseDown = true;

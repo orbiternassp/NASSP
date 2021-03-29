@@ -587,6 +587,9 @@ public:
 		SRF_VC_SPSMAXINDICATOR,
 		SRF_VC_SPSMININDICATOR,
 		SRF_VC_THUMBWHEEL_LARGEFONTSINV,
+		SRF_VC_CWS_GNLIGHTS,
+		SRF_VC_DIGITAL90,
+		SRF_VC_EVENT_TIMER_DIGITS90,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -754,7 +757,7 @@ public:
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
 			unsigned CMdocktgt:1;                   ///< CM docking target on
 			unsigned VCSeatsfolded :1;				///< VC Seats state
-			unsigned unused5:1;						///< Spare
+			unsigned COASreticlevisible :1;		    ///< COAS reticle state
 			unsigned unused6:2;						///< Spare
 			unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
 			unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
@@ -1253,6 +1256,8 @@ public:
 	///
 	void SetVCSeatsMesh();
 
+	void SetCOASMesh();
+
 	void SetSIMBayPanelMesh();
 
 	///
@@ -1554,6 +1559,8 @@ protected:
 	double TCPO;
 
 	bool VCSeatsfolded;
+
+	bool COASreticlevisible;
 
 	//
 	// Failures.
@@ -2651,7 +2658,7 @@ protected:
 	///////////////////////
 
 	SwitchRow LeftCOASPowerSwitchRow;
-	ToggleSwitch LeftCOASPowerSwitch;
+	LeftCOASPowerSwitch LeftCOASPowerSwitch;
 
 	SwitchRow LeftUtilityPowerSwitchRow;
 	ToggleSwitch LeftUtilityPowerSwitch;
@@ -3314,6 +3321,8 @@ protected:
 	SaturnASCPSwitch ASCPPitchSwitch;
 	SaturnASCPSwitch ASCPYawSwitch;
 
+	SaturnAltimeter Altimeter;
+
 
 	///
 	/// Stage is the main stage of the flight.
@@ -3834,12 +3843,17 @@ protected:
 	#define SATVIEW_LEFTDOCK		3
 	#define SATVIEW_RIGHTDOCK		4
 	#define SATVIEW_GNPANEL			5
-	#define SATVIEW_ENG1			10
-	#define SATVIEW_ENG2			11
-	#define SATVIEW_ENG3			12
-	#define SATVIEW_ENG4			13
-	#define SATVIEW_ENG5			14
-	#define SATVIEW_ENG6			15
+    #define SATVIEW_LEBLEFT			6
+    #define SATVIEW_LEBRIGHT		7
+    #define SATVIEW_TUNNEL          8
+    #define SATVIEW_LOWER_CENTER    9
+    #define SATVIEW_UPPER_CENTER    10
+	#define SATVIEW_ENG1			20
+	#define SATVIEW_ENG2			21
+	#define SATVIEW_ENG3			22
+	#define SATVIEW_ENG4			23
+	#define SATVIEW_ENG5			24
+	#define SATVIEW_ENG6			25
 
 	unsigned int	viewpos;
 
@@ -3862,6 +3876,8 @@ protected:
 	int vcidx;
 	int seatsfoldedidx;
 	int seatsunfoldedidx;
+	int coascdridx;
+	int coascdrreticleidx;
 
 	bool ASTPMission;
 
@@ -4520,6 +4536,7 @@ protected:
 	friend class VHFRangingSystem;
 	friend class RNDZXPDRSystem;
 	friend class DockingTargetSwitch;
+	friend class LeftCOASPowerSwitch;
 	friend class SCE;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
@@ -4556,6 +4573,8 @@ extern MESHHANDLE hFHO2;
 extern MESHHANDLE hopticscover;
 extern MESHHANDLE hcmseatsfolded;
 extern MESHHANDLE hcmseatsunfolded;
+extern MESHHANDLE hcmCOAScdr;
+extern MESHHANDLE hcmCOAScdrreticle;
 
 extern void SetupgParam(HINSTANCE hModule);
 extern void DeletegParam();
