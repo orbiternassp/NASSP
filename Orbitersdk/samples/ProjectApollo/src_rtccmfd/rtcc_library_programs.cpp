@@ -808,6 +808,104 @@ double RTCC::GLHTCS(double FLTHRS)
 	return FLTHRS * 360000.0;
 }
 
+void RTCC::GLFDEN(double ALT, double &DENS, double &SPOS)
+{
+	double H, lnRho;
+	int i;
+
+	if (ALT < 0)
+	{
+		H = 0;
+		//Set index to work at sea level
+		i = 7;
+		goto RTCC_GLFDEN_1;
+	}
+	if (ALT >= 700.0*1000.0)
+	{
+		DENS = 0.0;
+		SPOS = SystemParameters.MHGDEN.CSMAX;
+		return;
+	}
+
+	double T_M, D_apo, r;
+	
+	if (ALT > 90.0*1000.0)
+	{
+		r = SystemParameters.MHGDEN.r0 + ALT;
+		SPOS = SystemParameters.MHGDEN.CSMAX;
+	}
+	else if (ALT == 90.0*1000.0)
+	{
+		//Set index to work at 90km
+		i = 12;
+		SPOS = SystemParameters.MHGDEN.CSMAX;
+		goto RTCC_GLFDEN_3;
+	}
+	else
+	{
+		H = SystemParameters.MHGDEN.r0 * ALT / (SystemParameters.MHGDEN.r0 + ALT);
+		goto RTCC_GLFDEN_4;
+	}
+	//2
+	i = 0;
+	while (r < SystemParameters.MHGDEN.r_b[i])
+	{
+		i++;
+	}
+	if (r == SystemParameters.MHGDEN.r_b[i])
+	{
+	RTCC_GLFDEN_3:
+		D_apo = 0.0;
+		T_M = SystemParameters.MHGDEN.T_M_b[i];
+	}
+	else
+	{
+		double F, G;
+		T_M = SystemParameters.MHGDEN.T_M_b[i] + SystemParameters.MHGDEN.L_M[i] * (r - SystemParameters.MHGDEN.r_b[i]);
+		F = T_M / SystemParameters.MHGDEN.T_M_b[i];
+		G = SystemParameters.MHGDEN.r_b[i] / r;
+		D_apo = SystemParameters.MHGDEN.B7[i] * (G - 1.0 + SystemParameters.MHGDEN.A7[i] * log(G*F));
+	}
+	double ln_rho_T_M, rho_T_M;
+	ln_rho_T_M = SystemParameters.MHGDEN.ln_rho_b_T_M_b[i] - D_apo;
+	rho_T_M = exp(ln_rho_T_M);
+	DENS = rho_T_M / T_M;
+	return;
+RTCC_GLFDEN_4:
+	i = 0;
+	while (H < SystemParameters.MHGDEN.H_b[i])
+	{
+		i++;
+	}
+	if (H == SystemParameters.MHGDEN.H_b[i])
+	{
+	RTCC_GLFDEN_1:
+		D_apo = 0.0;
+		T_M = SystemParameters.MHGDEN.T_M_B[i];
+		lnRho = SystemParameters.MHGDEN.ln_rho_b[i];
+	}
+	else
+	{
+		double D;
+
+		D = SystemParameters.MHGDEN.B[i] * (H - SystemParameters.MHGDEN.H_b[i]);
+		if (SystemParameters.MHGDEN.L_M_B[i] == 0.0)
+		{
+			D_apo = D;
+			T_M = SystemParameters.MHGDEN.T_M_B[i];
+			lnRho = SystemParameters.MHGDEN.ln_rho_b[i] - D_apo;
+		}
+		else
+		{
+			T_M = SystemParameters.MHGDEN.T_M_B[i] * (1.0 + D);
+			D_apo = SystemParameters.MHGDEN.A[i] * log(1.0 + D);
+			lnRho = SystemParameters.MHGDEN.ln_rho_b[i] - D_apo;
+		}
+	}
+	SPOS = sqrt(SystemParameters.MHGDEN.C2*T_M);
+	DENS = exp(lnRho);
+}
+
 //Subsatellite position
 int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 {
@@ -1271,6 +1369,49 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB)
 	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
 	M_LIB = MatrixRH_LH(Rot);
 	return false;
+}
+
+//Coefficients of lift and drag interpolation subroutine
+void RTCC::RLMCLD(double FMACH, int VEH, double &CD, double &CL)
+{
+	double ALFA;
+	RLMCLD(FMACH, VEH, CD, CL, ALFA);
+}
+void RTCC::RLMCLD(double FMACH, int VEH, double &CD, double &CL, double &ALFA)
+{
+	//FMACH: Mach number for coefficients of lift and drag
+	//VEH: Vehicle code (0 for CSM, 1 for LEM)
+	double *tab;
+
+	if (VEH == 0)
+	{
+		tab = SystemParameters.MHACLD;
+	}
+	else
+	{
+		tab = SystemParameters.MHALLD;
+	}
+	int i = 1;
+
+	double *CDT = &tab[25];
+	double *CLT = &tab[50];
+	double *AOAT = &tab[75];
+
+	while (FMACH < tab[i - 1] && i < 25)
+	{
+		i++;
+	}
+	if (i == 1 || FMACH == tab[i - 1])
+	{
+		CD = CDT[i - 1];
+		CL = CLT[i - 1];
+		ALFA = AOAT[i - 1];
+		return;
+	}
+
+	CD = CDT[i - 1] + (FMACH - tab[i - 1]) / (tab[i - 1] - tab[i - 2])*(CDT[i - 1] - CDT[i - 2]);
+	CL = CLT[i - 1] + (FMACH - tab[i - 1]) / (tab[i - 1] - tab[i - 2])*(CLT[i - 1] - CLT[i - 2]);
+	ALFA = AOAT[i - 1] + (FMACH - tab[i - 1]) / (tab[i - 1] - tab[i - 2])*(AOAT[i - 1] - AOAT[i - 2]);
 }
 
 //Computes and outputs pitch, yaw, roll

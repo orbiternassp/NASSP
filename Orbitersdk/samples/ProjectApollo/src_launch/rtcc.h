@@ -2694,6 +2694,8 @@ public:
 	void CMMRFMAT(int L, int id, int addr);
 	//SLV Navigation Update
 	void CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
+	//CMC/LGC Landing Site Update Load Generator
+	void CMMCMCLS(int veh);
 
 	// MISSION CONTROL (G)
 
@@ -2766,6 +2768,7 @@ public:
 	double GLHTCS(double FLTHRS);
 	//Subsatellite Position
 	int GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt);
+	void GLFDEN(double ALT, double &DENS, double &SPOS);
 	// MISSION PLANNING (P)
 	//Weight Determination at a Time
 	struct PLAWDTInput
@@ -2812,11 +2815,19 @@ public:
 	int PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
 	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	bool PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB);
+
 	// REENTRY COMPUTATIONS (R)
+	//Coefficients of lift and drag interpolation subroutine
+	void RLMCLD(double FMACH, int VEH, double &CD, double &CL);
+	void RLMCLD(double FMACH, int VEH, double &CD, double &CL, double &ALFA);
 	//Computes and outputs pitch, yaw, roll
 	void RLMPYR(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll);
 	//Time of Longitude Crossing Subroutine
 	double RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, LunarStayTimesTable *LUNRSTAY = NULL);
+	//Reentry numerical integrator
+	void RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
+	//Reentry Constant G Iterator
+	void RMMGIT(EphemerisData sv_EI, double lng_T);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -4233,6 +4244,26 @@ public:
 		double NUPTIM = 0.0;
 	} CZNAVSLV;
 
+	struct LandingSiteMakupBuffer
+	{
+		std::string LoadType;
+		int SequenceNumber = 0;
+		std::string PrimarySite;
+		std::string BackupSite;
+		double GETofGeneration = 0.0;
+		int Octals[8] = { 0,0,0,0,0,0,0,0 };
+		double lat = 0.0;
+		double lng = 0.0;
+		double rad = 0.0;
+		VECTOR3 R_LS = _V(0, 0, 0);
+	};
+
+	struct CMCLGCLandingSupteMakupBuffer
+	{
+		LandingSiteMakupBuffer CSMLSUpdate;
+		LandingSiteMakupBuffer LMLSUpdate;
+	} CZLSVECT;
+
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{
 		double LastUpdateTime = -1.0;
@@ -4316,7 +4347,7 @@ private:
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
 	void LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
-	void LandingSiteUplink(char *str, int RLSAddr);
+	void LandingSiteUplink(char *str, int veh);
 	void AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, bool v66 = false);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double GETbase, bool v66 = false);
 	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc = true, bool AGCCoordSystem = false);
