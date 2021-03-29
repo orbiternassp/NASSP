@@ -41,6 +41,9 @@
 
 #include "saturn.h"
 
+#include "CM_VC_Resource.h"
+
+extern GDIParams g_Param;
 
 void SaturnToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int xoffset, int yoffset)
 {
@@ -1996,6 +1999,17 @@ void SaturnCabinPressureReliefLever::DrawSwitch(SURFHANDLE drawSurface)
 	ThumbwheelSwitch::DrawSwitch(drawSurface);
 }
 
+void SaturnCabinPressureReliefLever::DrawSwitchVC(int id, int event, SURFHANDLE surf) {
+
+	ThumbwheelSwitch::DrawSwitchVC(id, event, surf);
+
+	if (guardState > 0) {
+		OurVessel->SetAnimation(guardAnim, 1.0);
+	} else {
+		OurVessel->SetAnimation(guardAnim, 0.0);
+	}
+}
+
 bool SaturnCabinPressureReliefLever::CheckMouseClick(int event, int mx, int my)
 {
 	if (event & PANEL_MOUSE_RBDOWN) {
@@ -2020,6 +2034,13 @@ bool SaturnCabinPressureReliefLever::CheckMouseClick(int event, int mx, int my)
 			return r;
 		}
 	}
+}
+
+bool SaturnCabinPressureReliefLever::CheckMouseClickVC(int event, VECTOR3 &p) {
+	int mx = (int)(p.x * (x + width));
+	int my = (int)(p.y * (y + height));
+
+	return CheckMouseClick(event, mx, my);
 }
 
 bool SaturnCabinPressureReliefLever::SwitchTo(int newState)
@@ -2078,6 +2099,19 @@ void SaturnCabinPressureReliefLever::LoadState(char *line)
 		state = st;
 		guardState = gst;
 	}
+}
+
+void SaturnCabinPressureReliefLever::DefineVCAnimations(UINT vc_idx)
+{
+	ThumbwheelSwitch::DefineVCAnimations(vc_idx);
+
+	ANIMATIONCOMPONENT_HANDLE ach_guardAnim;
+	const VECTOR3 Cab_Press_Rel_Handle_LockLocation = { -1.1553, 0.6961, -0.2298 };
+	static UINT	meshgroup_guard = { VC_GRP_Cab_Press_Rel_Handle_Lock };
+	static MGROUP_ROTATE mgt_guardAnim(vc_idx, &meshgroup_guard, 1, Cab_Press_Rel_Handle_LockLocation, _V(0, 0, -1), (float)(37.0*RAD));
+	guardAnim = OurVessel->CreateAnimation(0.0);
+	ach_guardAnim = OurVessel->AddAnimationComponent(guardAnim, 0.0f, 1.0f, &mgt_guardAnim);
+	OurVessel->SetAnimation(guardAnim, 1.0);
 }
 
 
@@ -2439,4 +2473,273 @@ void SaturnPanel278J::Register(PanelSwitchScenarioHandler *PSH)
 	ExperimentCovers2Indicator.Register(*PSH, "ExperimentCovers2Indicator", false);
 	O2Tank3IsolIndicator.Register(*PSH, "O2Tank3IsolIndicator", false);
 	ExperimentCoversDeployBraker.Register(*PSH, "ExperimentCoversDeployBraker", 1);
+}
+
+bool LeftCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (SaturnToggleSwitch::SwitchTo(newState, dontspring)) {
+
+		if (state == TOGGLESWITCH_UP) {
+			sat->COASreticlevisible = true;
+		} else {
+			sat->COASreticlevisible = false;
+		}
+		sat->SetCOASMesh();
+		return true;
+	}
+	return false;
+}
+
+void SaturnAltimeter::Init(SURFHANDLE surf1, SURFHANDLE surf2, Saturn *s) {
+
+	surface1 = surf1;
+	surface2 = surf1;
+	Sat = s;
+};
+
+void SaturnAltimeter::DrawNeedle(HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPEN pen1)
+{
+	//
+    //Needle function by Rob Conley from Mercury code
+    //
+	double dx = rad * cos(angle), dy = rad * sin(angle);
+	HGDIOBJ oldObj;
+
+	oldObj = SelectObject(hDC, pen1);
+	MoveToEx(hDC, x, y, 0); LineTo(hDC, x + (int)(0.85*dx + 0.5), y - (int)(0.85*dy + 0.5));
+	SelectObject(hDC, oldObj);
+	oldObj = SelectObject(hDC, pen0);
+	MoveToEx(hDC, x, y, 0); LineTo(hDC, x + (int)(dx + 0.5), y - (int)(dy + 0.5));
+	SelectObject(hDC, oldObj);
+}
+
+//
+// Altimeter Needle function by Rob Conley from Mercury code, Heavily modified to have non linear gauge range... :):)
+//
+
+void SaturnAltimeter::RedrawPanel_Alt(SURFHANDLE surf)
+{
+	double alpha;
+	double range;
+	double press;
+
+	press = Sat->GetAtmPressure();
+	alpha = Sat->GetAltitude();
+	alpha = alpha / 0.3048;
+
+#define ALTIMETER_X_CENTER	68
+#define ALTIMETER_Y_CENTER	69
+#define ALTIMETER_RADIUS	55.0
+
+	//sprintf(oapiDebugString(), "altitude %f", alpha);
+	if (alpha > 55000 || press < 1000.0) alpha = 55000;
+
+	if (alpha < 4001) {
+		range = 120 * RAD;
+		range = range / 4000;
+		alpha = 4000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range) + 150 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 4001 && alpha < 6001) {
+		range = 35 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range) + 185 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 6001 && alpha < 8001) {
+		range = 25 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range) + 165 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 8001 && alpha < 10001) {
+		range = 30 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range) + 180 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 10001 && alpha < 20001) {
+		range = 45 * RAD;
+		range = range / 10000;
+		alpha = 10000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range) + 60 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 20001 && alpha < 40001) {
+		range = 65 * RAD;
+		range = range / 20000;
+		alpha = 20000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range) + 15 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else {
+		range = 20 * RAD;
+		range = range / 10000;
+		alpha = 10000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range) + 10 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	oapiBlt(surf, surface1, 0, 0, 0, 0, 137, 137, SURF_PREDEF_CK);
+}
+
+void SaturnAltimeter::RedrawPanel_Alt2(SURFHANDLE surf)
+{
+	double alpha;
+	double range;
+
+	alpha = Sat->GetAltitude();
+	alpha = alpha / 0.305;
+
+#define ALTIMETER2_X_CENTER	80
+#define ALTIMETER2_Y_CENTER	80
+#define ALTIMETER2_RADIUS	70.0
+
+	//sprintf(oapiDebugString(), "altitude %f", alpha);
+	if (alpha > 50000) alpha = 50000;
+
+	if (alpha < 4001) {
+		range = 120 * RAD;
+		range = range / 4000;
+		alpha = 4000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range) + 150 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 4001 && alpha < 6001) {
+		range = 35 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range) + 185 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 6001 && alpha < 8001) {
+		range = 25 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range) + 165 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 8001 && alpha < 10001) {
+		range = 20 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range) + 150 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 10001 && alpha < 20001) {
+		range = 55 * RAD;
+		range = range / 10000;
+		alpha = 10000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range) + 70 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else if (alpha > 20001 && alpha < 40001) {
+		range = 65 * RAD;
+		range = range / 20000;
+		alpha = 20000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range) + 15 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	else {
+		range = 20 * RAD;
+		range = range / 10000;
+		alpha = 10000 - alpha;
+		HDC hDC = oapiGetDC(surf);
+		DrawNeedle(hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range) + 10 * RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC(surf, hDC);
+	}
+	oapiBlt(surf, surface2, 0, 0, 0, 0, 161, 161, SURF_PREDEF_CK);
+}
+
+void SaturnAltimeter::DrawSwitchVC(int id, int event, SURFHANDLE surf) {
+
+	double alpha;
+	double range;
+	double press;
+
+	double value = 0.0;
+
+	press = Sat->GetAtmPressure();
+	alpha = Sat->GetAltitude();
+	alpha = alpha / 0.3048;
+
+	//sprintf(oapiDebugString(), "altitude %f", alpha);
+	if (alpha > 55000 || press < 1000.0) alpha = 55000;
+
+	if (alpha < 4001) {
+		range = 120 * RAD;
+		range = range / 4000;
+		alpha = 4000 - alpha;
+		value = (alpha*range) + 150 * RAD; //(alpha * range)
+	}
+	else if (alpha > 4001 && alpha < 6001) {
+		range = 35 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		value = (alpha*range) + 185 * RAD; //(alpha * range)
+	}
+	else if (alpha > 6001 && alpha < 8001) {
+		range = 25 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		value = (alpha*range) + 165 * RAD; //(alpha * range)
+	}
+	else if (alpha > 8001 && alpha < 10001) {
+		range = 30 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		value = (alpha*range) + 180 * RAD; //(alpha * range)
+	}
+	else if (alpha > 10001 && alpha < 20001) {
+		range = 45 * RAD;
+		range = range / 10000;
+		alpha = 10000 - alpha;
+		value = (alpha*range) + 60 * RAD; //(alpha * range)
+	}
+	else if (alpha > 20001 && alpha < 40001) {
+		range = 65 * RAD;
+		range = range / 20000;
+		alpha = 20000 - alpha;
+		value = (alpha*range) + 15 * RAD; //(alpha * range)
+	}
+	else {
+		range = 20 * RAD;
+		range = range / 10000;
+		alpha = 10000 - alpha;
+		value = (alpha*range) + 10 * RAD; //(alpha * range)
+	}
+	value = value + 90 * RAD;
+	value = (value * DEG) / 360;
+	if (value < 0) value = 0;
+	if (value > 1) value = 1;
+	Sat->SetAnimation(animNeedle, value);
+	//sprintf(oapiDebugString(), "Alt %lf", Sat->GetAltitude() / 0.3048);
+}
+
+void SaturnAltimeter::DefineVCAnimations(UINT vc_idx)
+{
+	ANIMATIONCOMPONENT_HANDLE ach_needleAnim;
+	const VECTOR3 Needle_AltimeterLocation = { -0.5245, 0.9144, 0.4308 };
+	const VECTOR3 Needle_AltimeterAxis = { 0.0, -0.316903546411375, 0.948457770420958 };
+	static UINT	meshgroup_needle = { VC_GRP_Needle_Altimeter };
+	static MGROUP_ROTATE mgt_needleAnim(vc_idx, &meshgroup_needle, 1, Needle_AltimeterLocation, Needle_AltimeterAxis, (float)(360.0*RAD));
+	animNeedle = Sat->CreateAnimation(0.0);
+	ach_needleAnim = Sat->AddAnimationComponent(animNeedle, 0.0f, 1.0f, &mgt_needleAnim);
+	Sat->SetAnimation(animNeedle, 0.0);
 }

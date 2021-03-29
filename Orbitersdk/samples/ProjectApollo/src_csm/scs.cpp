@@ -5648,7 +5648,7 @@ void EMS::DefineVCAnimations(UINT vc_idx) {
 
 void EMS::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	if (anim_RSI_indicator != 1) sat->SetAnimation(anim_RSI_indicator, RSIRotation / PI2);
+	if (anim_RSI_indicator != -1) sat->SetAnimation(anim_RSI_indicator, RSIRotation / PI2);
 }
 
 // The following code was found and supplied by computerex at orbiter-forum.  The code is from the MSDN sample code library.
