@@ -2493,7 +2493,7 @@ bool LeftCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
 void SaturnAltimeter::Init(SURFHANDLE surf1, SURFHANDLE surf2, Saturn *s) {
 
 	surface1 = surf1;
-	surface2 = surf1;
+	surface2 = surf2;
 	Sat = s;
 };
 
