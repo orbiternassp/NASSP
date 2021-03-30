@@ -27,6 +27,8 @@
 
 #define ORBITER_MODULE
 
+static int refcount = 0;
+
 DLLCLBK void InitModule(HINSTANCE hDLL)
 {
 }
@@ -37,11 +39,17 @@ DLLCLBK void ExitModule(HINSTANCE hDLL)
 
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hVessel, int iFlightModel)
 {
+	if (!refcount++) {
+		LoadMeshes();
+	}
+
 	return new MCCVessel(hVessel, iFlightModel);
 }
 
 DLLCLBK void ovcExit(VESSEL* pVessel)
 {
+    --refcount;
+
 	delete static_cast<MCCVessel*>(pVessel);
 }
 
