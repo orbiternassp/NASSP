@@ -1647,7 +1647,7 @@ double Diode::Voltage()
 {
 	if (SRC && SRC->IsEnabled())
 	{
-		Volts = SRC->Voltage() - (kT_q*log((Amperes+1) / Is)));
+		Volts = SRC->Voltage() - (kT_q*log((Amperes+1) / Is));
 		return Volts;
 	}
 
