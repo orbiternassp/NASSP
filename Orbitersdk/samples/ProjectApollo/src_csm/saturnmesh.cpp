@@ -1874,8 +1874,7 @@ void Saturn::ConfigTouchdownPoints(double mass, double ro, double tdph, double h
 
 void Saturn::LoadVC()
 {
-	VECTOR3 mesh_dir = _V(0, 0, 0);
-	vcidx = AddMesh(hCMVC, &mesh_dir);
+	vcidx = AddMesh(hCMVC);
 	SetMeshVisibilityMode(vcidx, MESHVIS_VC);
 	DefineVCAnimations();
 }
