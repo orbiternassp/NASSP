@@ -1648,6 +1648,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *SuitCircuitPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
 	double *SuitCircuitMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:MASS");
 	double *SuitCircuitTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:TEMP");
+	double *SuitCircuitOutFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITOUT:FLOW");
 
 	int *suitReliefvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:OUT2:ISOPEN");
 	double *suitReliefflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE:FLOW");
@@ -1677,9 +1678,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *CabinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
 
 	int *suitGasDiverterCabinVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:OUT:ISOPEN");
+	double *suitGasDiverterCabinFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTERCABINOUT:FLOW");
+
 	int *suitGasDiverterEgressVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:OUT2:ISOPEN");
 
 	int *cabinGasReturnVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:LEAK:ISOPEN");
+	double *cabinGasReturnFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINGASRETURN:FLOW");
+
 	int *primCO2InVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER:IN:ISOPEN");
 	int *primCO2OutVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER:OUT:ISOPEN");
 	int *secCO2InVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER:IN:ISOPEN");
@@ -1697,13 +1702,14 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *hxheatingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:PRESS");
 	double *hxheatingTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:TEMP");
 	double *hxheatingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:MASS");
-	double *hxheatingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEAT:POWER");
+	//double *hxheatingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEAT:POWER");
 	double *SGDPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:PRESS");
 	double *SGDMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:MASS");
+	double *SGDTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:TEMP");
 	double *hxcoolingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:MASS");
 	double *hxcoolingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:PRESS");
 	double *hxcoolingTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:TEMP");
-	double *hxcoolingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOL:POWER");
+	//double *hxcoolingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOL:POWER");
 	double *WSMMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:MASS");
 	double *WSMPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:PRESS");
 	double *WSMTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:TEMP");
@@ -1728,6 +1734,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *primCO2Removal = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2ABSORBER:CO2REMOVALRATE");
 	double *CO2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:PRESS");
 	double *CO2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:MASS");
+	double *CO2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:TEMP");
 	int *gasreturnvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:LEAK:ISOPEN");
 
 	double *WS1Flow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEP1:FLOW");
@@ -1922,13 +1929,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* PCMHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT:HEAT");
 
 	//Prim Loop 2 Rails
-	double* SBDRad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-SBD-Rail:TEMP");
-	double* AEAVHFRad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-AEA-VHF-Rail:TEMP");
-	double* ATCAINVRad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-ATCA-INV-Rail:TEMP");
-	double* SCERARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-SCERA-Rail:TEMP");
-	double* CWEAPCMRad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-CWEA-PCM-Rail:TEMP");
-	double* RRERad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-RRE-Rail:TEMP");
-	double* SCERAECARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-SCERA-ECA-Rail:TEMP");
+	double* SBDRad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-SBD-Plate:TEMP");
+	double* AEAVHFRad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-AEA-VHF-Plate:TEMP");
+	double* ATCAINVRad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-ATCA-INV-Plate:TEMP");
+	double* SCERARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-SCERA-Plate:TEMP");
+	double* CWEAPCMRad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-CWEA-PCM-Plate:TEMP");
+	double* RRERad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-RRE-Plate:TEMP");
+	double* SCERAECARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-SCERA-ECA-Plate:TEMP");
 
 	double *SBDTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna:TEMP");
 	double *RRTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna:TEMP");
@@ -1956,8 +1963,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
 
 
+	//sprintf(oapiDebugString(), "SCT %lf SCF %lf CT %lf SGDF %lf SGDT %lf GRVF %lf CO2MT %lf GlyCT %lf HXCT %lf HXCPwr %lf GlyHT %lf HXHT %lf HXHPwr %lf", KelvinToFahrenheit(*SuitCircuitTemp), *SuitCircuitOutFlow*LBH, KelvinToFahrenheit(*CabinTemp), *suitGasDiverterCabinFlow*LBH, KelvinToFahrenheit(*SGDTemp), *cabinGasReturnFlow*LBH, KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower);
+	//sprintf(oapiDebugString(), "SGDP %lf SGDV %d SGDF %lf CabP %lf GRV %d GRVF %lf CO2MP %lf", *SGDPress* PSI, *suitGasDiverterCabinVLV, *suitGasDiverterCabinFlow*LBH, *CabinPress* PSI, *gasreturnvlv, *cabinGasReturnFlow*LBH, *CO2ManifoldPress* PSI);
+
 	//sprintf(oapiDebugString(), "LGC %lf CDU %lf PSA %lf GAS %lf LCA %lf DSE %lf TLE %lf PTA %lf RGA %lf", KelvinToFahrenheit(*LGCRad), KelvinToFahrenheit(*CDURad), KelvinToFahrenheit(*PSARad), KelvinToFahrenheit(*GASTARad), KelvinToFahrenheit(*LCARad), KelvinToFahrenheit(*DSERad), KelvinToFahrenheit(*TLERad), KelvinToFahrenheit(*PTARad), KelvinToFahrenheit(*RGARad));
-	sprintf(oapiDebugString(), "SBD %lf AEAVHF %lf ATCAINV %lf SCERA %lf CWEAPCM %lf RRE %lf SCERAECA %lf", KelvinToFahrenheit(*SBDRad), KelvinToFahrenheit(*AEAVHFRad), KelvinToFahrenheit(*ATCAINVRad), KelvinToFahrenheit(*SCERARad), KelvinToFahrenheit(*CWEAPCMRad), KelvinToFahrenheit(*RRERad), KelvinToFahrenheit(*SCERAECARad));
+	//sprintf(oapiDebugString(), "SBD %lf AEAVHF %lf ATCAINV %lf SCERA %lf CWEAPCM %lf RRE %lf SCERAECA %lf", KelvinToFahrenheit(*SBDRad), KelvinToFahrenheit(*AEAVHFRad), KelvinToFahrenheit(*ATCAINVRad), KelvinToFahrenheit(*SCERARad), KelvinToFahrenheit(*CWEAPCMRad), KelvinToFahrenheit(*RRERad), KelvinToFahrenheit(*SCERAECARad));
 
 
 	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf CabinQ %lf CabinHeat %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTempF(), *CabinEnergy, *CabinHeat);
@@ -1978,9 +1988,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	
 	//sprintf(oapiDebugString(), "SBD: T %lf H %lf RR: T %lf SH %lf H %lf LR: T %lf H %lf", KelvinToFahrenheit(*SBDTemp), *SBDHtr, KelvinToFahrenheit(*RRTemp), *RRStbyHtr, *RRHtr, KelvinToFahrenheit(*LRTemp), *LRHtr);
 
-	//sprintf(oapiDebugString(), "ASA %lf GL1 %lf Prim Loop 1 Heat: %lf Prim Loop 2 Heat: %lf", KelvinToFahrenheit(*ASATemp), KelvinToFahrenheit(*primglycoltemp), (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *SBXHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat));
-	//sprintf(oapiDebugString(), "ASA %lf PL1 %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", *ASATemp, *primglycoltemp, *SBPHeat, *AEAHeat, *ATCAHeat, *SCERAHeat, *CWEAHeat, *RREHeat, *SBXHeat, *VHFHeat, *INVHeat, *ECAHeat, *PCMHeat);
-
 	//sprintf(oapiDebugString(), "Sen %lf RM %lf HXH %lf CDR %lf LMP %lf SGD %lf SC %lf CAB %lf CAN %lf PRIM %lf SEC %lf SF %lf HXC %lf", ecs.GetSensorCO2MMHg(), *primCO2Removal, *SuitHXHCO2*MMHG, *CDRSuitCO2*MMHG, *LMPSuitCO2*MMHG, *SuitGasDiverterCO2*MMHG, *SuitCircuitCO2*MMHG, *CabinCO2*MMHG, *CanisterMFCO2*MMHG, *PrimCO2*MMHG, *SecCO2*MMHG, *SuitFanCO2*MMHG, *SuitHXCCO2*MMHG);
 	//sprintf(oapiDebugString(), "GRV %d CO2MP %lf PCO2P %1f SFMP %lf SHXCP %lf SHXHP %lf CO2F %lf CO2REM %lf WS1F %lf H2OTM %lf H2OTOF %lf", *gasreturnvlv, (*CO2ManifoldPress)*PSI, (*primCO2CanisterPress)*PSI, (*suitfanmanifoldPress)*PSI, (*hxcoolingPress)*PSI, (*hxheatingPress)*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, (*STMass)*LBS, (*STPress)*PSI, *SToutflow);
 
@@ -1991,7 +1998,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "AP %lf GP %lf PMP %lf HXCP %lf L1P %lf HXLP %lf L2P %lf HXHP %lf EIP %lf EOP %lf ACP %lf DBP %lf", *primglycolaccumpress* PSI, *primglycolpress*PSI, *glycolpumpmanifoldpress*PSI, *glycolsuitcoolpress*PSI, *primloop1press*PSI, *waterglycolhxpress*PSI, *primloop2press*PSI, *glycolsuitheatpress*PSI, *primevapinpress*PSI, *primevapoutpress*PSI, *ascbatglycolpress*PSI, *desbatglycolpress*PSI);
 	//sprintf(oapiDebugString(), "AM %lf HXCM %lf L1M %lf HXLM %lf L2M %lf HXHM %lf EIM %lf EOM %lf ACM %lf DBM %lf", *primglycolmass, *glycolsuitcoolmass, *primloop1mass, *waterglycolhxmass, *primloop2mass, *glycolsuitheatmass, *primevapinmass, *primevapoutmass, *ascbatglycolmass, *desbatglycolmass);
 	//sprintf(oapiDebugString(), "P1 %lf P2 %lf Reg1 %lf WGHX %lf SHX %lf SHXBP %lf", *Pump1OutFlow*LBH, *Pump2OutFlow*LBH, *primGlyReg1Flow*LBH, *waterGlyHXFlow*LBH, *suitHXGlyFlow*LBH, *suitHXGlyBypassFlow*LBH);
-	//sprintf(oapiDebugString(), "AcT %lf PMT %lf GCT %lf SCT %lf HXCP %lf L1 %lf HXT %lf L2 %lf GHT %lf SHT %lf HXHP %lf ETI %lf ETO %lf A %lf D %lf", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolpumpmanifoldtemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *HXCPower, KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*waterglycolhxtemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *HXHPower, KelvinToFahrenheit(*primevaptempin), KelvinToFahrenheit(*primevaptempout), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*desbatglycoltemp));
+	sprintf(oapiDebugString(), "AcT %lf PMT %lf GCT %lf SCT %lf HXCP %lf L1 %lf HXT %lf L2 %lf GHT %lf SHT %lf HXHP %lf ETI %lf ETO %lf A %lf D %lf", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolpumpmanifoldtemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *HXCPower, KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*waterglycolhxtemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *HXHPower, KelvinToFahrenheit(*primevaptempin), KelvinToFahrenheit(*primevaptempout), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*desbatglycoltemp));
 	
 	//sprintf(oapiDebugString(), "LCG %lf SEC %lf", LCGPump->Voltage(), SecGlyPump->Voltage());
 	//sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
