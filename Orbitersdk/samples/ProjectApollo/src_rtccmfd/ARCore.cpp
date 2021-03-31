@@ -1311,29 +1311,29 @@ void ARCore::GetStateVectorFromIU()
 	bool isSaturnV;
 	IU* iu;
 
-	if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5"))
 	{
 		Saturn *iuv = (Saturn *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = true;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
 	{
 		Saturn *iuv = (Saturn *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = false;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/sat5stg3"))
 	{
 		SIVB *iuv = (SIVB *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = true;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/nsat1stg2"))
 	{
 		SIVB *iuv = (SIVB *)vessel;
 		iu = iuv->GetIU();

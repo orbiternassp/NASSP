@@ -2739,6 +2739,9 @@ public:
 	//Launch On-Line Print
 	void LMXPRNTR(std::string source, int n);
 	void LMXPRNTR(std::string source, std::vector<std::string> message);
+	//Orbit Determination Subroutine
+	int LLBRTD(EphemerisData sv, int I, double SQMU, double PARM, EphemerisData &sv_out);
+	int LLBRTD(EphemerisData sv, int I, double SQMU, double PARM, double H, double SQRAT, EphemerisData &sv_out, double &R_E);
 
 	// **LIBRARY PROGRAMS**
 	// TRAJECTORY DETERMINATION (B)
@@ -2768,7 +2771,44 @@ public:
 	double GLHTCS(double FLTHRS);
 	//Subsatellite Position
 	int GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt);
+	//Density
 	void GLFDEN(double ALT, double &DENS, double &SPOS);
+
+	struct GLUNIVInput
+	{
+		//Time of input vector
+		double T0;
+		//Input position vector
+		VECTOR3 R0;
+		//Input velocity vector
+		VECTOR3 V0;
+		//Option. 0 = time, 1 = height, 2 = radius, 3 = true anomaly change, 4 = flight path angle
+		int Ind;
+		//Square root of gravitational constant
+		double SQRMU;
+		//Time of desired vectors (option 0), estimated Earth radius at desired height (option 1), desired position vector magnitude (option 2),
+		//desired change in true anomaly (-2PI < theta < 2PI, option 3), desired flight path angle (option 4)
+		double PARM;
+		//Desired height (option 1), +1 if output is desired from perifocus to apofocus, -1 if output is desired from apofocus to perifocus (option 2)
+		double PARM2;
+		//square of ratio of equatorial to polar Earth radii (option 1), +1 if we are to propagate forward in direction of orbital motion, -1 if we are to propagate backward (option 2)
+		//+1 if we are to propagate forward in direction of orbital motion, -1 if we are to propagate backward (option 4)
+		double PARM3;
+	};
+	struct GLUNIVOutput
+	{
+		//Time of output vectors
+		double T1;
+		//Output position vector
+		VECTOR3 R1;
+		//Output velocity vector
+		VECTOR3 V1;
+		//Error Code
+		int ERR;
+		//Computed value of the Earth radius at the desired height (option 1)
+		double R_NEW;
+	};
+	void GLUNIV(const GLUNIVInput &in, GLUNIVOutput &out);
 	// MISSION PLANNING (P)
 	//Weight Determination at a Time
 	struct PLAWDTInput
@@ -2776,7 +2816,7 @@ public:
 		double T_UP;		//Option 1: Time of desired, areas/weights. Option 2: Time to stop adjustment
 		int Num;			//Option 1: Maneuver number of last maneuver to be ignored (zero to consider all maneuvers). Option 2: Configuration code associated with input values (same format as MPT code)
 		bool KFactorOpt;	//0 = No K-factor desired, 1 = K-factor desired
-		int TableCode;		//1 = CSM, 3 = LM (MPT and Expandables Tales). Negative for option 2.
+		int TableCode;		//1 = CSM, 3 = LM (MPT and Expandables Tables). Negative for option 2.
 		bool VentingOpt;	//0 = No venting, 1 = venting
 		double CSMArea;
 		double SIVBArea;
@@ -2828,6 +2868,8 @@ public:
 	void RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
 	//Reentry Constant G Iterator
 	void RMMGIT(EphemerisData sv_EI, double lng_T);
+	//Thrust Direction and Body Attitude Routine
+	void RMMATT(int opt, double Roll, double Pitch, double Yaw, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)

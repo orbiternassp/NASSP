@@ -941,6 +941,542 @@ int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 	return 0;
 }
 
+bool EVTRANS(double alpha, double &F1, double &F2, double &F3, double &F4)
+{
+	F1 = OrbMech::stumpS(alpha);
+	F2 = OrbMech::stumpC(alpha);
+	F3 = 1.0 - alpha * F1;
+	F4 = 1.0 - alpha * F2;
+	return false;
+}
+
+void RTCC::GLUNIV(const GLUNIVInput &in, GLUNIVOutput &out)
+{
+	VECTOR3 H;
+	double mu, r0, v0sq, T, d0, D0, s0, c0, ee, e, E0, DT, I_Per, A0, beta, alpha, Dbeta0, F1, F2, F3, F4, r, sqmu_dt, dbeta, beta0;
+	double f, g, fdot, gdot, hh, h, p, tan_theta05, cot_DE05, DE, dE, R_e, c, cc, E, sing, cosg;
+	int count, iter;
+
+	const double eps0 = 2e-7;
+	const double eps1 = 2e-6*OrbMech::R_Earth;
+
+	mu = in.SQRMU*in.SQRMU;
+	r0 = length(in.R0);
+	v0sq = dotp(in.V0, in.V0);
+	T = v0sq / mu - 2.0 / r0;
+	d0 = dotp(in.R0, in.V0);
+	D0 = d0 / in.SQRMU;
+
+	if (T == 0.0)
+	{
+		//Parabolic orbit
+		out.ERR = 1;
+		return;
+	}
+	if (in.Ind == 0)
+	{
+		goto RTCC_GLUNIV_2;
+	}
+	if (in.Ind == 3)
+	{
+		goto RTCC_GLUNIV_5;
+	}
+	c0 = 1.0 + r0 * T;
+	ee = c0 * c0 - D0 * D0*T;
+	e = sqrt(ee);
+	s0 = D0 * sqrt(abs(T));
+	if (T > 0)
+	{
+		E0 = log((s0 + c0) / e);
+	}
+	else
+	{
+		E0 = atan2(s0, c0);
+		if (E0 < 0)
+		{
+			E0 += PI2;
+		}
+	}
+	if (in.Ind == 1)
+	{
+		goto RTCC_GLUNIV_9;
+	}
+	if (in.Ind == 2)
+	{
+		goto RTCC_GLUNIV_11;
+	}
+	if (in.Ind == 4)
+	{
+		goto RTCC_GLUNIV_12;
+	}
+	out.ERR = 2;
+	return;
+RTCC_GLUNIV_2:
+	DT = in.PARM - in.T0;
+	if (T > 0)
+	{
+		I_Per = 0.0;
+	}
+	else
+	{
+		double Per, I;
+		Per = PI2 / sqrt(pow(-T, 3)) / in.SQRMU;
+		I = floor(abs(DT / Per));
+		if (I > 0 && DT < 0)
+		{
+			I = -I;
+		}
+		I_Per = I * Per;
+		DT = DT - I_Per;
+	}
+	A0 = in.SQRMU*DT;
+	beta = in.SQRMU*DT / (5.0*r0);
+	if (T > 0)
+	{
+		if (abs(beta) >= PI * 4.0 / sqrt(T))
+		{
+			beta = abs(beta / beta * PI*4.0 / sqrt(T));
+		}
+	}
+RTCC_GLUNIV_LOPP:
+	Dbeta0 = 0.0;
+	count = 20;
+	alpha = -T * beta*beta;
+	if (EVTRANS(alpha, F1, F2, F3, F4))
+	{
+		out.ERR = 9;
+		return;
+	}
+	r = beta * beta*F2 + r0 * F4 + D0 * beta*F3;
+	sqmu_dt = beta * (beta*beta*F1 + r0 * F3 + D0 * beta*F2);
+	dbeta = (A0 - sqmu_dt) / r;
+	if (abs(dbeta) > eps0)
+	{
+		count = count - 1;
+		if (count <= 0)
+		{
+			out.ERR = 3;
+			return;
+		}
+		if (dbeta*Dbeta0 >= 0 || abs(dbeta) <= abs(-0.5*Dbeta0))
+		{
+			Dbeta0 = dbeta;
+			beta = beta + dbeta;
+			beta0 = beta;
+		}
+		else
+		{
+			beta = beta0 - 0.5*Dbeta0;
+			beta0 = beta;
+			Dbeta0 = 0.0;
+		}
+		goto RTCC_GLUNIV_LOPP;
+	}
+	DT = DT + I_Per;
+RTCC_GLUNIV_3:
+	f = 1.0 - beta * beta*F2 / r0;
+	gdot = 1.0 - beta * beta*F2 / r;
+	g = beta / in.SQRMU*(r0*F3 + D0 * beta*F2);
+	fdot = -in.SQRMU / r / r0 * beta*F3;
+RTCC_GLUNIV_4_1:
+	out.T1 = in.T0 + DT;
+	out.R1 = in.R0*f + in.V0*g;
+	out.V1 = in.R0*fdot + in.V0*gdot;
+	if (in.Ind != 1)
+	{
+		out.ERR = 0;
+		return;
+	}
+	out.R_NEW = OrbMech::R_Earth; //out.R_NEW = r/sqrt(out.R1.x*out.R1.x+out.R1.y*out.R1.y+in.PARM3*out.R1.z*out.R1.z);
+	if (abs(R_e - out.R_NEW) <= eps1)
+	{
+		out.ERR = 0;
+		return;
+	}
+	iter = iter - 1;
+	if (iter <= 0)
+	{
+		out.ERR = 5;
+		return;
+	}
+	R_e = out.R_NEW;
+	goto RTCC_GLUNIV_10;
+RTCC_GLUNIV_5:
+	if (abs(in.PARM) < 1e-10)
+	{
+		DT = 0.0;
+		f = 1.0;
+		gdot = 1.0;
+		g = 0.0;
+		fdot = 0.0;
+		goto RTCC_GLUNIV_4_1;
+	}
+	if (abs(in.PARM) > PI2)
+	{
+		out.ERR = 2;
+		return;
+	}
+	H = crossp(in.R0, in.V0);
+	hh = dotp(H, H);
+	p = hh / mu;
+	h = sqrt(hh);
+	if (abs(abs(in.PARM / 2.0) - PI05) < 1e-10)
+	{
+		tan_theta05 = 1e10;
+	}
+	else
+	{
+		tan_theta05 = tan(in.PARM);
+	}
+	cot_DE05 = sqrt(abs(p / T)) / r0 * (1.0 / tan_theta05 - d0 / h);
+	if (T > 0)
+	{
+		//Hyperbolic
+		double L = (cot_DE05 + 1.0) / (cot_DE05 - 1.0);
+		if (L < 0)
+		{
+			out.ERR = 8;
+			return;
+		}
+		DE = log(L);
+		if (DE <= 0 && in.PARM > 0)
+		{
+			out.ERR = 2;
+			return;
+		}
+	}
+	else
+	{
+		if (abs(in.PARM) > PI2 - 1e-10)
+		{
+			DE = PI2;
+		}
+		else
+		{
+			if (in.PARM >= 0)
+			{
+				dE = 0.0;
+			}
+			else
+			{
+				dE = PI2;
+			}
+			double cosDE = (cot_DE05 - 1.0) / (cot_DE05 + 1.0);
+			double sinDE = (1.0 + cosDE) / (cot_DE05);
+			DE = atan2(sinDE, cosDE);
+			DE = DE - dE;
+		}
+	}
+RTCC_GLUNIV_6:
+	beta = DE / sqrt(abs(T));
+	alpha = -T * beta*beta;
+	if (EVTRANS(alpha, F1, F2, F3, F4))
+	{
+		out.ERR = 9;
+		return;
+	}
+	r = beta * beta*F2 + r0 * F4 + D0 * beta*F3;
+	DT = beta / in.SQRMU*(beta*beta*F1 + r0 * F3 + D0 * beta*F2);
+	goto RTCC_GLUNIV_3;
+RTCC_GLUNIV_9:
+	iter = 10;
+	R_e = in.PARM;
+RTCC_GLUNIV_10:
+	r = R_e + in.PARM2;
+	c = 1.0*r*T;
+	cc = c * c;
+	if (T > 0)
+	{
+		if (cc < ee)
+		{
+			out.ERR = 4;
+			return;
+		}
+		E = -log((c + sqrt(cc - ee)) / e);
+	}
+	else
+	{
+		if (cc > ee)
+		{
+			out.ERR = 4;
+			return;
+		}
+		E = -atan(sqrt(ee - cc) / c);
+	}
+	DE = E - E0;
+	if (DE < 0 && d0 >= 0)
+	{
+		if (T > 0)
+		{
+			out.ERR = 4;
+			return;
+		}
+		DE = DE + PI2;
+	}
+	goto RTCC_GLUNIV_6;
+RTCC_GLUNIV_11:
+	c = 1.0 + in.PARM*T;
+	cc = c * c;
+	if (T > 0)
+	{
+		if (cc < ee)
+		{
+			out.ERR = 6;
+			return;
+		}
+		E = log((c + sqrt(cc - ee)) / e);
+	}
+	else
+	{
+		if (cc > ee)
+		{
+			out.ERR = 6;
+			return;
+		}
+		E = atan(sqrt(ee - cc) / c);
+	}
+	E = in.PARM3*E;
+	DE = E - E0;
+	if (DE > 0)
+	{
+		if (in.PARM3 < 0)
+		{
+			if (T > 0)
+			{
+				out.ERR = 6;
+				return;
+			}
+			DE = DE - PI2;
+		}
+	}
+	else
+	{
+		if (in.PARM3 > 0.0)
+		{
+			if (T > 0)
+			{
+				out.ERR = 6;
+				return;
+			}
+			DE = DE + PI2;
+		}
+	}
+	goto RTCC_GLUNIV_6;
+RTCC_GLUNIV_12:
+	//Flight Path Angle
+	sing = sin(in.PARM);
+	cosg = sqrt(1.0 - sing * sing);
+	if (ee - sing * sing < 0)
+	{
+		//gamma impossible to attain
+		out.ERR = 7;
+		return;
+	}
+	if (T > 0)
+	{
+		double L = (sqrt(ee - 1.0)*sing + sqrt(ee - sing * sing)) / (e*cosg);
+		if (L < 0)
+		{
+			out.ERR = 8;
+			return;
+		}
+		E = log(L);
+	}
+	else
+	{
+		E = atan2(sqrt(1.0 - ee)*sing, sqrt(ee - sing * sing));
+	}
+	DE = E - E0;
+	if (DE > 0)
+	{
+		if (in.PARM3 < 0)
+		{
+			if (T > 0)
+			{
+				out.ERR = 7;
+				return;
+			}
+			DE = DE - PI2;
+		}
+	}
+	else
+	{
+		if (in.PARM3 > 0.0)
+		{
+			if (T > 0)
+			{
+				out.ERR = 7;
+				return;
+			}
+			DE = DE + PI2;
+		}
+	}
+	goto RTCC_GLUNIV_6;
+}
+
+//Orbit Determination Subroutine
+int RTCC::LLBRTD(EphemerisData sv, int I, double SQMU, double PARM, EphemerisData &sv_out)
+{
+	double R_E;
+	return LLBRTD(sv, I, SQMU, PARM, 0.0, 0.0, sv_out, R_E);
+}
+int RTCC::LLBRTD(EphemerisData sv, int I, double SQMU, double PARM, double H, double SQRAT, EphemerisData &sv_out, double &R_E)
+{
+	//Input:
+	//sv: Input state vector. R0, V0, GMT0
+	//I: Indicator. 0 for time, < 0 for altitude, > 0 for anomaly
+	//SQMU: Square root of gravitational constant
+	//PARM: Time for output if time option. Assumption for radius if altitude option. Change in true anomaly for anomaly option
+	//H: Altitude above surface for output vector (altitude option)
+	//SQRAT: Square of ratio of equatorial to polar radii
+	//Output:
+	//sv_out: Output state vector
+	//return value: error indicator. 0 if no error, 4 if hyperbolic, 8 if no height intersection, 16 if no convergence after 5 iterations
+
+	double R0, V02, sigma0, A, SQA, N, D, esinE, tanDE, cosDE, sinDE, DE, dE, S0, S1, S2, S3, f, g, fdot, gdot, dt_c, R_E_old, h, sinDV, cosDV, DT, R, esinE0, ecosE0, ecosE, esinE2;
+
+	const double eps_R = 2.0e-6*OrbMech::R_Earth;
+	const double eps_K = 2.0e-7;
+	double mu = SQMU * SQMU;
+	int iter = 0;
+
+	sv_out.RBI = sv.RBI;
+
+	//Compute R0, V0, sigma0, A
+	R0 = length(sv.R);
+	V02 = dotp(sv.V, sv.V);
+	sigma0 = dotp(sv.R, sv.V);
+	A = R0 / (2.0 - R0 * V02 / mu);
+	if (A < 0)
+	{
+		//Error
+		return 4;
+	}
+	SQA = sqrt(A);
+	dE = 0.0;
+	if (I > 0)
+	{
+		//Anomaly
+		goto RTCC_LLBRTD_3;
+	}
+	if (I == 0)
+	{
+		//Time
+		goto RTCC_LLBRTD_4;
+	} 
+	R_E = PARM;
+RTCC_LLBRTD_1_1:
+	//Compute r, esinE0, ecosE0, ecosE, esinE2
+	R = R_E + H;
+	esinE0 = sigma0 / SQMU / SQA;
+	ecosE0 = 1.0 - R0 / A;
+	ecosE = 1.0 - R / A;
+	esinE2 = esinE0 * esinE0 + ecosE0 * ecosE0 - ecosE * ecosE;
+	if (esinE2 < 0)
+	{
+		//Error
+		return 8;
+	}
+	if (sigma0 < 0) //Negative flight path angle
+	{
+		dE = 0.0;
+		if (R > R0)
+		{
+			dE = PI2;
+		}
+	}
+	//Compute esinE, N, D
+	esinE = -sqrt(esinE2); //minus ensures reentry
+	N = esinE * ecosE0 - ecosE * esinE0;
+	D = ecosE * ecosE0 + esinE * esinE0;
+RTCC_LLBRTD_2_1:
+	//Compute tanDE, cosDE, sinDE, DE
+	tanDE = N / D;
+	if (D > 0)
+	{
+		cosDE = sqrt(1.0 + tanDE * tanDE);
+	}
+	else
+	{
+		cosDE = -sqrt(1.0 + tanDE * tanDE);
+	}
+	cosDE = 1.0 / cosDE; //The above is actually the secant
+	sinDE = tanDE * cosDE;
+	DE = atan2(sinDE, cosDE); //Was N/D in the IBM RTCC document
+	if (DE < 0)
+	{
+		DE += PI2;
+	}
+	DE = DE + dE;
+	//Compute S0, S1, S2, S3, R, g, dt_c, T
+	S0 = cosDE;
+	S1 = SQA / SQMU * sinDE;
+	S2 = A / mu *(1.0 - cosDE);
+	S3 = pow(SQA / SQMU, 3)*(DE - sinDE);
+	R = R0 * S0 + sigma0 * S1 + S2 * mu;
+	g = R0 * S1 + sigma0 * S2;
+	dt_c = g + S3 * mu;
+	sv_out.GMT = sv.GMT + dt_c;
+RTCC_LLBRTD_2_2:
+	//Compute f, fdot, gdot, RV, VV
+	f = 1.0 - mu *S2 / R0;
+	fdot = -S1 * mu / (R*R0);
+	gdot = 1.0 - S2 * mu / R;
+	sv_out.R = sv.R*f + sv.V*g;
+	sv_out.V = sv.R*fdot + sv.V*gdot;
+	if (I >= 0) return 0;
+	R_E_old = R_E;
+	R_E = OrbMech::R_Earth;//R / sqrt(sv_out.R.x*sv_out.R.x + sv_out.R.y*sv_out.R.y + sv_out.R.z*sv_out.R.z / SQRAT); //Change when units are Earth radii
+	if (abs(R_E - R_E_old) <= eps_R)
+	{
+		return 0;
+	}
+	goto RTCC_LLBRTD_1_1;
+RTCC_LLBRTD_3:
+	if (PARM < 0)
+	{
+		dE = PI2;
+	}
+	//Compute h, sinDV, cosDV, N, D
+	h = sqrt(R0*R0*V02 - sigma0 * sigma0);
+	sinDV = sin(PARM);
+	cosDV = cos(PARM);
+	N = R0 / SQA / SQMU * (h*sinDV - sigma0 * (1.0 - cosDV));
+	D = h * h / mu - (h*h / mu - R0 + R0 * R0 / A)*(1.0 - cosDV) - sigma0 * h / mu * sinDV;
+	goto RTCC_LLBRTD_2_1;
+RTCC_LLBRTD_4:
+	//Compute DT, DE
+	DT = PARM - sv.GMT;
+	DE = DT * SQMU / pow(SQA, 3);
+RTCC_LLBRTD_4_1:
+	//Compute sinDE, cosDE
+	sinDE = sin(DE);
+	cosDE = cos(DE);
+	//Compute S0, S1, S2, S3, R, g, dt_c, T
+	S0 = cosDE;
+	S1 = SQA / SQMU * sinDE;
+	S2 = A / mu * (1.0 - cosDE);
+	S3 = pow(SQA / SQMU, 3)*(DE - sinDE);
+	R = R0 * S0 + sigma0 * S1 + S2 * mu;
+	g = R0 * S1 + sigma0 * S2;
+	dt_c = g + S3 * mu;
+	sv_out.GMT = sv.GMT + dt_c;
+	//Compute dE
+	dE = (DT - dt_c)*SQMU / R / SQA;
+	if (abs(dE) <= eps_K)
+	{
+		goto RTCC_LLBRTD_2_2;
+	}
+	if (iter < 5)
+	{
+		DE = DE + dE;
+		iter++;
+		goto RTCC_LLBRTD_4_1;
+	}
+	//Error
+	return 16;
+}
+
 //Weight Access Routine
 void RTCC::NewPLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
 {
