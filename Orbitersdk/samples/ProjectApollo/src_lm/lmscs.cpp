@@ -1968,7 +1968,7 @@ void GASTA::SystemTimestep(double simdt)
 			dc_source->DrawPower(7.8); //7.8 Watts from CDR DC BUS
 		}
 		if (heat_load)
-			heat_load->GenerateHeat(25.9 + 12.5);
+			heat_load->GenerateHeat(25.9 + 12.5); //Need to define where these numbers came from
 	}
 }
 

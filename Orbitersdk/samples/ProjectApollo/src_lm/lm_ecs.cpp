@@ -1222,7 +1222,6 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
 	{
 		glycolPump1->SetPumpOn();
-		glycolPump1Heat->GenerateHeat(30.5);
 	}
 	else
 	{
@@ -1283,25 +1282,25 @@ void LEMPrimGlycolPumpController::SaveState(FILEHANDLE scn)
 
 LEMSuitFanDPSensor::LEMSuitFanDPSensor()
 {
-	suitFanManifoldTank = NULL;
-	suitCircuitHeatExchangerCoolingTank = NULL;
+	suitFanManifoldInTank = NULL;
+	suitFanManifoldOutTank = NULL;
 	suitFanDPCB = NULL;
 	SuitFanFailRelay = false;
 	PressureSwitch = false;
 }
 
-void LEMSuitFanDPSensor::Init(h_Tank *sfmt, h_Tank *schect, CircuitBrakerSwitch *sfdpcb)
+void LEMSuitFanDPSensor::Init(h_Tank *sfmint, h_Tank *sfmoutt, CircuitBrakerSwitch *sfdpcb)
 {
-	suitFanManifoldTank = sfmt;
-	suitCircuitHeatExchangerCoolingTank = schect;
+	suitFanManifoldInTank = sfmint;
+	suitFanManifoldOutTank = sfmoutt;
 	suitFanDPCB = sfdpcb;
 }
 
 void LEMSuitFanDPSensor::SystemTimestep(double simdt)
 {
-	if (!suitFanManifoldTank || !suitCircuitHeatExchangerCoolingTank) return;
+	if (!suitFanManifoldInTank || !suitFanManifoldOutTank) return;
 
-	double DPSensor = suitCircuitHeatExchangerCoolingTank->space.Press - suitFanManifoldTank->space.Press;
+	double DPSensor = suitFanManifoldOutTank->space.Press - suitFanManifoldInTank->space.Press;
 
 	if (PressureSwitch == false && DPSensor <=  6.0 / INH2O)
 	{
