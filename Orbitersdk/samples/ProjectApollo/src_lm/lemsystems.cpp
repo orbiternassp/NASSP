@@ -1558,7 +1558,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//Seq Camera Power/Heat
 	if (CAMR_SEQ_CB.Voltage() > SP_MIN_DCVOLTAGE) {
 		CAMR_SEQ_CB.DrawPower(14.0);
-		//CabinHeat->GenerateHeat(14.0);	//This should only generate heat when the camera is active, as it has it's own on/off switch
+		CabinHeat->GenerateHeat(14.0);	//This should only generate heat when the camera is active, as it has it's own on/off switch
 	}
 
 	//Cabin Window Heaters
