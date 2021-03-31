@@ -755,13 +755,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		break;
 
 	case LAUNCH_STAGE_SIVB:
-		SetThirdStage();
-		SetThirdStageEngines(-STG2O);
-		if (StageState >= 4) {
-			AddRCS_S4B();
-		}
-		break;
-
 	case STAGE_ORBIT_SIVB:
 		SetThirdStage();
 		SetThirdStageEngines(-STG2O);
