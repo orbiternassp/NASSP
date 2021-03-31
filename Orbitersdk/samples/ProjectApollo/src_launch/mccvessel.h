@@ -54,3 +54,5 @@ protected:
 	char LEMName[64];
 	char LVName[64];
 };
+
+extern void LoadMeshes();
