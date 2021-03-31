@@ -48,13 +48,19 @@ FDAI::FDAI() {
 	now = _V(0, 0, 0);
 	lastRates = _V(0, 0, 0);
 	lastErrors = _V(0, 0, 0);
+	lastPaintAtt = _V(0, 0, 0);
 
 	lastPaintTime = -1;
-	newRegistered = false;
 	LM_FDAI = false;
 	DCSource = NULL;
 	ACSource = NULL;
 	noAC = false;
+	vessel = NULL;
+}
+
+void FDAI::Init(VESSEL *v)
+{
+	vessel = v;
 }
 
 void FDAI::InitGL() {
@@ -177,7 +183,6 @@ void FDAI::RegisterMe(int index, int x, int y) {
 	ScrX = x;
 	ScrY = y;
 	oapiRegisterPanelArea(index, _R(ScrX, ScrY, ScrX + 245, ScrY + 245), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-	newRegistered = true;
 }
 
 
@@ -191,83 +196,78 @@ void FDAI::SetAttitude(VECTOR3 attitude) {
 	target.x = attitude.z;	// yaw
 }
 
-void FDAI::MoveBall() {
+void FDAI::RotateBall(double simdt) {
 
-	if (newRegistered) {
-		now.x = target.x;
-		now.y = target.y;
-		now.z = target.z;
+	double delta, deltamax;
 
-		newRegistered = false;
+	deltamax = 0.87*simdt; //About 50°/s
+
+	delta = target.z - now.z;
+	if (delta > deltamax) {
+		if (delta > PI) {
+			now.z += 2 * PI;
+			RotateBall(simdt);
+			return;
+		}
+		now.z += deltamax;
 
 	}
-	else {
-		double delta;
-
-		delta = target.z - now.z;
-		if (delta > 0.05) {
-			if (delta > PI) {
-				now.z += 2 * PI;
-				MoveBall();
-				return;
-			}
-			now.z += 0.05;
-
+	else if (delta < -deltamax) {
+		if (delta < -PI) {
+			now.z -= 2 * PI;
+			RotateBall(simdt);
+			return;
 		}
-		else if (delta < -0.05) {
-			if (delta < -PI) {
-				now.z -= 2 * PI;
-				MoveBall();
-				return;
-			}
-			now.z -= 0.05;
-		}
-		else
-			now.z += delta;
-
-		delta = target.y - now.y;
-		if (delta > 0.05) {
-			if (delta > PI) {
-				now.y += 2 * PI;
-				MoveBall();
-				return;
-			}
-			now.y += 0.05;
-
-		}
-		else if (delta < -0.05) {
-			if (delta < -PI) {
-				now.y -= 2 * PI;
-				MoveBall();
-				return;
-			}
-			now.y -= 0.05;
-		}
-		else
-			now.y += delta;
-
-		delta = target.x - now.x;
-		if (delta > 0.05) {
-			if (delta > PI) {
-				now.x += 2 * PI;
-				MoveBall();
-				return;
-			}
-			now.x += 0.05;
-
-		}
-		else if (delta < -0.05) {
-			if (delta < -PI) {
-				now.x -= 2 * PI;
-				MoveBall();
-				return;
-			}
-			now.x -= 0.05;
-		}
-		else
-			now.x += delta;
+		now.z -= deltamax;
 	}
+	else
+		now.z += delta;
 
+	delta = target.y - now.y;
+	if (delta > deltamax) {
+		if (delta > PI) {
+			now.y += 2 * PI;
+			RotateBall(simdt);
+			return;
+		}
+		now.y += deltamax;
+
+	}
+	else if (delta < -deltamax) {
+		if (delta < -PI) {
+			now.y -= 2 * PI;
+			RotateBall(simdt);
+			return;
+		}
+		now.y -= deltamax;
+	}
+	else
+		now.y += delta;
+
+	delta = target.x - now.x;
+	if (delta > deltamax) {
+		if (delta > PI) {
+			now.x += 2 * PI;
+			RotateBall(simdt);
+			return;
+		}
+		now.x += deltamax;
+
+	}
+	else if (delta < -deltamax) {
+		if (delta < -PI) {
+			now.x -= 2 * PI;
+			RotateBall(simdt);
+			return;
+		}
+		now.x -= deltamax;
+	}
+	else
+		now.x += delta;
+}
+
+void FDAI::MoveBall2D()
+{
 	glLoadIdentity();
 	gluLookAt(0.0, -35.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 
@@ -276,6 +276,8 @@ void FDAI::MoveBall() {
 	glRotated(now.y / PI * 180.0, 0.0, 1.0, 0.0);	//attitude.x
 	glRotated(now.x / PI * 180.0, 1.0, 0.0, 0.0);	//attitude.z
 	glRotated(now.z / PI * 180.0, 0.0, 0.0, 1.0);	//attitude.y
+
+	lastPaintAtt = now;
 }
 
 void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
@@ -286,9 +288,9 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	SetAttitude(attitude);
 
 	// Don't do the OpenGL calculations every timestep
-	if (smooth || lastPaintTime == -1 || ((length(now - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) && oapiGetSysTime() > lastPaintTime + 0.1)) {
+	if (smooth || lastPaintTime == -1 || ((length(lastPaintAtt - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) && oapiGetSysTime() > lastPaintTime + 0.1)) {
 		int ret = wglMakeCurrent(hDC2, hRC);
-		MoveBall();
+		MoveBall2D();
 		glCallList(list_name);	//render
 		glFlush();
 		glFinish();
@@ -351,16 +353,16 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	if (!LM_FDAI)
 	{
 		//Input is scaled -1.0 to 1.0, this scales to 126 pixels
-		targetX = (int)(117 + (63.0 * rates.z));
-		targetY = (int)(117 - (63.0 * rates.x));
-		targetZ = (int)(117 - (63.0 * rates.y));
+		targetX = (int)(117 - (63.0 * rates.z));
+		targetY = (int)(117 + (63.0 * rates.x));
+		targetZ = (int)(117 + (63.0 * rates.y));
 	}
 	else
 	{
 		//Input is scaled -1.0 to 1.0, this scales to 100 pixels
-		targetX = (int)(119 + (50.0*rates.z));
-		targetY = (int)(120 - (50.0*rates.x));
-		targetZ = (int)(119 - (50.0*rates.y));
+		targetX = (int)(119 - (50.0*rates.z));
+		targetY = (int)(120 + (50.0*rates.x));
+		targetZ = (int)(119 + (50.0*rates.y));
 	}
 
 	// Enforce Limits
@@ -443,11 +445,9 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 		oapiBlt(surf, hFDAIOff, 31, 100, 0, 0, 13, 30, SURF_PREDEF_CK);
 }
 
-void FDAI::Timestep(double simt, double simdt) {
-
-	// Check for external view and disable smooth movement 
-	if (oapiCameraMode() != CAM_COCKPIT)
-		newRegistered = true;
+void FDAI::Timestep(double simt, double simdt)
+{
+	RotateBall(simdt);
 }
 
 void FDAI::SystemTimestep(double simdt) {
@@ -836,6 +836,44 @@ bool FDAI::IsPowered()
 void FDAI::SetLMmode()
 {
 	LM_FDAI = true;
+}
+
+void FDAI::AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY)
+{
+	SetAttitude(attitude);
+
+	double fdai_proc[3];
+	double rate_proc[3];
+
+	// Drive FDAI ball
+	fdai_proc[0] = now.y / PI2;
+	fdai_proc[1] = now.z / PI2;
+	fdai_proc[2] = now.x / PI2;
+	if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
+	if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
+	if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
+	vessel->SetAnimation(animY, fdai_proc[2]);
+	vessel->SetAnimation(animR, fdai_proc[0]);
+	vessel->SetAnimation(animP, fdai_proc[1]);
+
+	// Drive error needles
+	vessel->SetAnimation(errorR, (errors.x + 46) / 92);
+	vessel->SetAnimation(errorP, (-errors.y + 46) / 92);
+	vessel->SetAnimation(errorY, (errors.z + 46) / 92);
+
+	// Drive rate needles
+	rate_proc[0] = (-rates.z + 1) / 2;
+	rate_proc[1] = (-rates.x + 1) / 2;
+	rate_proc[2] = (rates.y + 1) / 2;
+	if (rate_proc[0] < 0) rate_proc[0] = 0;
+	if (rate_proc[1] < 0) rate_proc[1] = 0;
+	if (rate_proc[2] < 0) rate_proc[2] = 0;
+	if (rate_proc[0] > 1) rate_proc[0] = 1;
+	if (rate_proc[1] > 1) rate_proc[1] = 1;
+	if (rate_proc[2] > 1) rate_proc[1] = 1;
+	vessel->SetAnimation(rateR, rate_proc[0]);
+	vessel->SetAnimation(rateP, rate_proc[1]);
+	vessel->SetAnimation(rateY, rate_proc[2]);
 }
 
 //

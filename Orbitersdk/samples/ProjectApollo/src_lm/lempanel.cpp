@@ -2032,6 +2032,9 @@ void LEM::SetSwitches(int panel) {
 
 	MainPanel.Init(0, this, &soundlib, this);
 
+	fdaiLeft.Init(this);
+	fdaiRight.Init(this);
+
 	MainPropOxidPercentRow.Init(AID_MPS_OXID_QUANTITY_INDICATOR, MainPanel);
 	DPSOxidPercentMeter.Init(srf[SRF_DIGITALDISP2], MainPropOxidPercentRow, this);
 

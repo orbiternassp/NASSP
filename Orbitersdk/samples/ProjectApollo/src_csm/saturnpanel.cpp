@@ -1557,6 +1557,9 @@ void Saturn::SetSwitches(int panel) {
 	// SATPANEL_MAIN
 	//
 
+	fdaiLeft.Init(this);
+	fdaiRight.Init(this);
+
 	MasterAlarmSwitchRow.Init(0, MainPanel);
 	MasterAlarmSwitch.Init(&cws);
 	MasterAlarmSwitchRow.AddSwitch(&MasterAlarmSwitch);

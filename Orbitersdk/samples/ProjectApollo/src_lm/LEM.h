@@ -701,7 +701,6 @@ protected:
 	void SetPowerFailureLight(int m, bool state);
 	void SetStageSeqRelayLight(int m, bool state);
 	void InitFDAI(UINT mesh);
-	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	// LM touchdown points
 	// mass in kg, ro1 (distance from center of the middle points), ro2 (distance from center of footpad points), tdph (height of footpad points),

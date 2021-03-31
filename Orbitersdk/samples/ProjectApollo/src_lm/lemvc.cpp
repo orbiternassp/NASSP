@@ -1122,7 +1122,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				rates = rga.GetRates() / (5.0*RAD);
 			}
 
-			AnimateFDAI(attitude, rates, errors, anim_fdaiR_cdr, anim_fdaiP_cdr, anim_fdaiY_cdr, anim_fdaiRerror_cdr, anim_fdaiPerror_cdr, anim_fdaiYerror_cdr, anim_fdaiRrate_cdr, anim_fdaiPrate_cdr, anim_fdaiYrate_cdr);
+			fdaiLeft.AnimateFDAI(attitude, rates, errors, anim_fdaiR_cdr, anim_fdaiP_cdr, anim_fdaiY_cdr, anim_fdaiRerror_cdr, anim_fdaiPerror_cdr, anim_fdaiYerror_cdr, anim_fdaiRrate_cdr, anim_fdaiPrate_cdr, anim_fdaiYrate_cdr);
 			SetAnimation(anim_attflag_cdr, 0.0);
 		}
 		else
@@ -1205,7 +1205,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				rates = rga.GetRates() / (5.0*RAD);
 			}
 
-			AnimateFDAI(attitude, rates, errors, anim_fdaiR_lmp, anim_fdaiP_lmp, anim_fdaiY_lmp, anim_fdaiRerror_lmp, anim_fdaiPerror_lmp, anim_fdaiYerror_lmp, anim_fdaiRrate_lmp, anim_fdaiPrate_lmp, anim_fdaiYrate_lmp);
+			fdaiRight.AnimateFDAI(attitude, rates, errors, anim_fdaiR_lmp, anim_fdaiP_lmp, anim_fdaiY_lmp, anim_fdaiRerror_lmp, anim_fdaiPerror_lmp, anim_fdaiYerror_lmp, anim_fdaiRrate_lmp, anim_fdaiPrate_lmp, anim_fdaiYrate_lmp);
 			SetAnimation(anim_attflag_lmp, 0.0);
 		}
 		else
@@ -2490,41 +2490,5 @@ void LEM::SetStageSeqRelayLight(int m, bool state) {
 	}
 
 	oapiSetMaterial(vcmesh, lightmat + m, mat);
-}
-
-void LEM::AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY) {
-
-	double fdai_proc[3];
-	double rate_proc[3];
-
-	// Drive FDAI ball
-	fdai_proc[0] = -attitude.x / PI2; // 1.0 - attitude.x / PI2;
-	fdai_proc[1] = attitude.y / PI2;
-	fdai_proc[2] = attitude.z / PI2;
-	if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
-	if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
-	if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
-	SetAnimation(animY, fdai_proc[2]);
-	SetAnimation(animR, fdai_proc[0]);
-	SetAnimation(animP, fdai_proc[1]);
-
-	// Drive error needles
-	SetAnimation(errorR, (errors.x + 46) / 92);
-	SetAnimation(errorP, (-errors.y + 46) / 92);
-	SetAnimation(errorY, (errors.z + 46) / 92);
-
-	// Drive rate needles
-	rate_proc[0] = (rates.z + 1) / 2;
-	rate_proc[1] = (rates.x + 1) / 2;
-	rate_proc[2] = (-rates.y + 1) / 2;
-	if (rate_proc[0] < 0) rate_proc[0] = 0;
-	if (rate_proc[1] < 0) rate_proc[1] = 0;
-	if (rate_proc[2] < 0) rate_proc[2] = 0;
-	if (rate_proc[0] > 1) rate_proc[0] = 1;
-	if (rate_proc[1] > 1) rate_proc[1] = 1;
-	if (rate_proc[2] > 1) rate_proc[1] = 1;
-	SetAnimation(rateR, rate_proc[0]);
-	SetAnimation(rateP, rate_proc[1]);
-	SetAnimation(rateY, rate_proc[2]);
 }
 
