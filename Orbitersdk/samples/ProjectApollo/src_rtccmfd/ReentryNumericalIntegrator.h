@@ -227,6 +227,7 @@ protected:
 	void Limit02PI(double &val);
 	double ConstantGLogic(VECTOR3 unitR, VECTOR3 VI, double D);
 	bool IsInSBandBlackout(double v_r, double h);
+	bool IsInVHFBlackout(double v_r, double h);
 
 	//G&N
 	void GNInitialization();

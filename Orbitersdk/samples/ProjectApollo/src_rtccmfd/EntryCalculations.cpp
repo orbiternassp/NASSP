@@ -1596,9 +1596,27 @@ void RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		pRTCC->RMMYNI(reentryin, reentryout);
 		lng_L = reentryout.lng_IP;
 
+		dlng = lng_T - lng_L;
+		while (dlng > PI)
+		{
+			dlng -= PI2;
+		}
+		while (dlng < -PI)
+		{
+			dlng += PI2;
+		}
+
 		//Compare target to impact, adjust retrofire maneuver quantities
 		RMMDBN();
-	} while (1 == 1);
+
+	} while (abs(dlng) > 0.00012);
+
+	//Integrate max lift to impact for display
+	reentryin.KSWCH = 2;
+	pRTCC->RMMYNI(reentryin, reentryout);
+	//Integrate zero lift to impact for display
+	reentryin.KSWCH = 1;
+	pRTCC->RMMYNI(reentryin, reentryout);
 }
 
 void RetrofirePlanning::RMMDBF()
@@ -1683,7 +1701,7 @@ void RetrofirePlanning::RMMDBM()
 {
 	EphemerisData sv_TIG, sv_apo;
 	VECTOR3 Att;
-	double R_E, lat_L, MJD_L, dlng, dlng2, lng_old, GMTI_old, ddt;
+	double R_E, lat_L, MJD_L, dlng2, lng_old, GMTI_old, ddt;
 	int iter;
 	ELVCTRInputTable in;
 	ELVCTROutputTable out;
@@ -1751,11 +1769,12 @@ void RetrofirePlanning::RMMDBM()
 
 			//Now iterate on V, gamma
 			double v_EI, gamma_EI, gamma_EI_des, dgamma, dgammao, dvo;
-			double c_I, p_gam;
+			double c_I;
 			int s_F;
 
 			s_F = 0;
-			c_I = p_gam = 0.0;
+			c_I = 0.0;
+			p_gam = 2000.0;
 
 			sv_apo = sv_TIG;
 
@@ -1803,12 +1822,13 @@ void RetrofirePlanning::RMMDBM()
 			lng_old = lng_L;
 
 			double w_C = PI2 / OrbMech::period(sv_TIG.R, sv_TIG.V, OrbMech::mu_Earth);
-			GMTI = GMTI + dlng / (w_C - OrbMech::w_Earth);
+			p_tig = w_C - OrbMech::w_Earth;
 		}
 		else
 		{
 			dlng2 = lng_L - lng_old;
 			ddt = GMTI - GMTI_old;
+			p_tig = dlng2 / ddt;
 
 			GMTI_old = GMTI;
 			lng_old = lng_L;
@@ -1821,8 +1841,8 @@ void RetrofirePlanning::RMMDBM()
 			{
 				dlng2 += PI2;
 			}
-			GMTI = GMTI + dlng / dlng2 * ddt;
 		}
+		GMTI = GMTI + dlng / p_tig;
 		iter++;
 
 	} while (abs(dlng) > 0.0001 && iter < 15);
@@ -1846,22 +1866,12 @@ void RetrofirePlanning::RMMDBN()
 		dgamma = gamma_EI - gamma_EI_des;
 		if (abs(dgamma) > 0.001*RAD)
 		{
-			DVBURN -= dgamma * 2000.0;
+			DVBURN -= dgamma / p_gam;
 			return;
 		}
 	}
 	//Adjust GMTI
-	double w_C = PI2 / OrbMech::period(sv0.R, sv0.V, OrbMech::mu_Earth);
-	double dlng = lng_T - lng_L;
-	while (dlng > PI)
-	{
-		dlng -= PI2;
-	}
-	while (dlng < -PI)
-	{
-		dlng += PI2;
-	}
-	GMTI = GMTI + dlng / (w_C - OrbMech::w_Earth);
+	GMTI = GMTI + dlng / p_tig;
 }
 
 void RetrofirePlanning::RMMATT(int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T)

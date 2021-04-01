@@ -113,6 +113,11 @@ protected:
 	double SQMU;
 	double F, mdot, DVBURN;
 	VECTOR3 U_T;
+	//Gradient of DV vs. flight path angle for V, gamma targeting
+	double p_gam;
+	//Gradient of TIG vs. landing longitude
+	double p_tig;
+	double dlng;
 
 	//ECI state vector at entry interface (400k altitude)
 	EphemerisData sv_EI;
