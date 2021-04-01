@@ -351,7 +351,7 @@ const VECTOR3 P16R4_CB_POS[P16R4_CBCOUNT] = {
 };
 
 // Subtracted from total material count to find L01 location.
-const int mat_L01 = 40;
+const int mat_L01 = 44;
 
 void LEM::JostleViewpoint(double amount)
 
