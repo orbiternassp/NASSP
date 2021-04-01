@@ -280,12 +280,10 @@ void FDAI::MoveBall2D()
 	lastPaintAtt = now;
 }
 
-void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
+void FDAI::PaintMe(VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
 	SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth) {
 
 	if (!init) InitGL();
-
-	SetAttitude(attitude);
 
 	// Don't do the OpenGL calculations every timestep
 	if (smooth || lastPaintTime == -1 || ((length(lastPaintAtt - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) && oapiGetSysTime() > lastPaintTime + 0.1)) {
@@ -441,7 +439,7 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 
 	// sprintf(oapiDebugString(),"FDAI: Rates %f %f %f, TGX %d",rates.x,rates.y,rates.z,targetX);
 	// Off-flag (CSM FDAI doesn't have one... I think)
-	if (LM_FDAI && (!IsPowered() || no_att != 0))
+	if (LM_FDAI && !IsPowered())
 		oapiBlt(surf, hFDAIOff, 31, 100, 0, 0, 13, 30, SURF_PREDEF_CK);
 }
 
@@ -838,10 +836,8 @@ void FDAI::SetLMmode()
 	LM_FDAI = true;
 }
 
-void FDAI::AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY)
+void FDAI::AnimateFDAI(VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY)
 {
-	SetAttitude(attitude);
-
 	double fdai_proc[3];
 	double rate_proc[3];
 

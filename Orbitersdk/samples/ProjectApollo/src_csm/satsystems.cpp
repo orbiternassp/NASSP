@@ -641,7 +641,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		MissionTimer306Display.Timestep(simt, simdt, false);
 		EventTimerDisplay.Timestep(simt, simdt, true);
 		EventTimer306Display.Timestep(simt, simdt, true);
+		fdaiLeft.SetAttitude(eda.GetFDAI1Attitude());
 		fdaiLeft.Timestep(MissionTime, simdt);
+		fdaiRight.SetAttitude(eda.GetFDAI2Attitude());
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
 		JoystickTimestep();
