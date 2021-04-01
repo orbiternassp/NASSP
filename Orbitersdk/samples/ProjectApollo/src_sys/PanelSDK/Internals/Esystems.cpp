@@ -568,7 +568,7 @@ Battery::Battery(char *i_name, e_object *i_src, double i_power, double i_voltage
 	 max_power = power = i_power;
 	 Volts = max_voltage;
 
-	 batheat = 0;
+	 batheat = 0.0;
 }
 
 void Battery::DrawPower(double watts)
@@ -612,7 +612,8 @@ void Battery::UpdateFlow(double dt)
 	else
 		Amperes = 0;
 
-	batheat = (internal_resistance * (Amperes * Amperes));
+	//batheat = (internal_resistance * (Amperes * Amperes));
+	batheat = 10000;
 
 	// Reset power load
 	power_load = 0.0;
@@ -629,7 +630,8 @@ void Battery::UpdateFlow(double dt)
 	if (power < 0) { 
 		power = 0;
 		Amperes = 0;
-		Volts = 0 ;
+		Volts = 0;
+		Temp = 0;
 	}
 }
 
@@ -652,13 +654,15 @@ void Battery::refresh(double dt)
 
 void Battery::Load(char *line)
 {
-	sscanf(line,"    <BATTERY> %s %lf", name, &power);
+	double temp;
+	sscanf(line, "    <BATTERY> %s %lf %lf", name, &power, &temp);
+	SetTemp(temp);
 }
 
 void Battery::Save(FILEHANDLE scn)
 {
 	char cbuf[1000];
-	sprintf (cbuf, "%s %0.4f",name, power);
+	sprintf (cbuf, "%s %0.4f %0.4f",name, power, Temp);
 	oapiWriteScenario_string (scn, "    <BATTERY> ", cbuf);
 }
 
