@@ -153,7 +153,8 @@ void E_system::Create_Inverter(char *line)
 void E_system::Create_Battery(char *line)
 {
 	char name[100];
-	double power, operating_voltage, resistance, isolation, mass, temp, volume = 0;
+	double power, operating_voltage, resistance, isolation, mass, volume = 0;
+	double temp = 0;
 	vector3 pos;
 	char source[100];
 
