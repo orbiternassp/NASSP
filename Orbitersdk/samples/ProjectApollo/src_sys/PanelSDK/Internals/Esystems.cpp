@@ -567,6 +567,8 @@ Battery::Battery(char *i_name, e_object *i_src, double i_power, double i_voltage
 	 power_load = 0.0;
 	 max_power = power = i_power;
 	 Volts = max_voltage;
+
+	 batheat = 0;
 }
 
 void Battery::DrawPower(double watts)
@@ -609,6 +611,8 @@ void Battery::UpdateFlow(double dt)
 		Amperes = (power_load / Volts);
 	else
 		Amperes = 0;
+
+	batheat = (internal_resistance * (Amperes * Amperes));
 
 	// Reset power load
 	power_load = 0.0;
