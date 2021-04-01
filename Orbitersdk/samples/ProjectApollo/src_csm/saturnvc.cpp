@@ -779,7 +779,7 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_LEFTDOCK:
 		viewpos = SATVIEW_LEFTDOCK;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_LEFTSEAT);
+		oapiVCSetNeighbours(-1, SATVIEW_RIGHTDOCK, -1, SATVIEW_LEFTSEAT);
 		SetCOASMesh();
 		SetView(true);
 
@@ -788,7 +788,7 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_RIGHTDOCK:
 		viewpos = SATVIEW_RIGHTDOCK;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_RIGHTSEAT);
+		oapiVCSetNeighbours(SATVIEW_LEFTDOCK, -1, -1, SATVIEW_RIGHTSEAT);
 		SetView(true);
 
 		return true;
@@ -843,23 +843,34 @@ void Saturn::RegisterActiveAreas() {
 	int i = 0;
 
 	VECTOR3 ofs = _V(0.0, 0.0, 0.0);
-	if (vcidx != -1) GetMeshOffset(vcidx, ofs);
 
-	/*if (stage < 12) {
-		ofs.z = 43.65;
-	} else if (stage < 20) {
-		ofs.z = 28.5;
-	} else if (stage < 30) {
-		ofs.z = 15.25;
-	} else if (stage < 40) {
-		ofs.z = 2.1;
-	} else if (stage < 42) {
-		ofs.z = 0.0;
+	if (SaturnType == SAT_SATURNV) {
+		if (stage < 12) {
+			ofs.z = 43.65;
+		} else if (stage < 20) {
+			ofs.z = 28.5;
+		} else if (stage < 30) {
+			ofs.z = 15.25;
+		} else if (stage < 40) {
+			ofs.z = 2.1;
+		} else if (stage < 42) {
+			ofs.z = 0.0;
+		} else {
+			ofs.z = -1.2;
+		}
 	} else {
-		ofs.z = -1.2;
-	}*/
-
-	//sprintf(oapiDebugString(), "OFS %lf", ofs.z);
+		if (stage < 12) {
+			ofs.z = 35.15;
+		} else if (stage < 30) {
+			ofs.z = 22.9;
+		} else if (stage < 40) {
+			ofs.z = 2.1;
+		} else if (stage < 42) {
+			ofs.z = 0.0;
+		} else {
+			ofs.z = -1.2;
+		}
+	}
 
 	//
 	// Register active areas for switches/animations here
