@@ -1406,14 +1406,12 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_VC_FDAI_LEFT:
 	{
 		VECTOR3 euler_rates;
-		VECTOR3 attitude;
 		VECTOR3 errors;
 
 		euler_rates = eda.GetFDAI1AttitudeRate();
-		attitude = eda.GetFDAI1Attitude();
 		errors = eda.GetFDAI1AttitudeError();
 
-		fdaiLeft.AnimateFDAI(attitude, euler_rates, errors, anim_fdaiR_L, anim_fdaiP_L, anim_fdaiY_L, anim_fdaiRerror_L, anim_fdaiPerror_L, anim_fdaiYerror_L, anim_fdaiRrate_L, anim_fdaiPrate_L, anim_fdaiYrate_L);
+		fdaiLeft.AnimateFDAI(euler_rates, errors, anim_fdaiR_L, anim_fdaiP_L, anim_fdaiY_L, anim_fdaiRerror_L, anim_fdaiPerror_L, anim_fdaiYerror_L, anim_fdaiRrate_L, anim_fdaiPrate_L, anim_fdaiYrate_L);
 
 		return true;
 	}
@@ -1421,14 +1419,12 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_VC_FDAI_RIGHT:
 	{
 		VECTOR3 euler_rates;
-		VECTOR3 attitude;
 		VECTOR3 errors;
 
 		euler_rates = eda.GetFDAI2AttitudeRate();
-		attitude = eda.GetFDAI2Attitude();
 		errors = eda.GetFDAI2AttitudeError();
 
-		fdaiRight.AnimateFDAI(attitude, euler_rates, errors, anim_fdaiR_R, anim_fdaiP_R, anim_fdaiY_R, anim_fdaiRerror_R, anim_fdaiPerror_R, anim_fdaiYerror_R, anim_fdaiRrate_R, anim_fdaiPrate_R, anim_fdaiYrate_R);
+		fdaiRight.AnimateFDAI(euler_rates, errors, anim_fdaiR_R, anim_fdaiP_R, anim_fdaiY_R, anim_fdaiRerror_R, anim_fdaiPerror_R, anim_fdaiYerror_R, anim_fdaiRrate_R, anim_fdaiPrate_R, anim_fdaiYrate_R);
 
 		return true;
 	}

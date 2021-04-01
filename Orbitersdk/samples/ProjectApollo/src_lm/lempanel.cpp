@@ -3466,19 +3466,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_FDAI_LEFT:
 		if (!fdaiDisabled) {
-			VECTOR3 attitude;
 			VECTOR3 errors;
 			VECTOR3 rates;
-			int no_att = 0;
-
-			if (AttitudeMonSwitch.IsUp())	//PGNS
-			{
-				attitude = gasta.GetTotalAttitude();
-			}
-			else							//AGS
-			{
-				attitude = aea.GetTotalAttitude();
-			}
 
 			if (RateErrorMonSwitch.GetState() == 1)
 			{
@@ -3523,12 +3512,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 				}
 			}
 
-			// ORDEAL
-			if (!no_att) {
-				attitude.y += ordeal.GetFDAI1PitchAngle();
-				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
-			}
-
 			if (RateScaleSwitch.IsUp())
 			{
 				rates = rga.GetRates() / (25.0*RAD);
@@ -3545,25 +3528,14 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiLeft.PaintMe(attitude, no_att, rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiLeft.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
 	case AID_FDAI_RIGHT:
 		if (!fdaiDisabled){
-			VECTOR3 attitude;
 			VECTOR3 errors;
 			VECTOR3 rates;
-			int no_att = 0;
-
-			if (RightAttitudeMonSwitch.IsUp())	//PGNS
-			{
-				attitude = gasta.GetTotalAttitude();
-			}
-			else							//AGS
-			{
-				attitude = aea.GetTotalAttitude();
-			}
 
 			if (RightRateErrorMonSwitch.GetState() == 1)
 			{
@@ -3608,12 +3580,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 				}
 			}
 
-			// ORDEAL
-			if (!no_att) {
-				attitude.y += ordeal.GetFDAI2PitchAngle();
-				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
-			}
-
 			if (RateScaleSwitch.IsUp())
 			{
 				rates = rga.GetRates() / (25.0*RAD);
@@ -3630,7 +3596,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiRight.PaintMe(attitude, no_att, rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 

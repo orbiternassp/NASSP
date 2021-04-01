@@ -4402,36 +4402,32 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_FDAI_LEFT:
 		if (!fdaiDisabled){  // Is this FDAI enabled?
 			VECTOR3 euler_rates;
-			VECTOR3 attitude;
 			VECTOR3 errors;
 
 			euler_rates = eda.GetFDAI1AttitudeRate();
-			attitude = eda.GetFDAI1Attitude();
 			errors = eda.GetFDAI1AttitudeError();
 
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(attitude, 0, euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
 		}
 		return true;
 
 	case AID_FDAI_RIGHT:
 		if (!fdaiDisabled){  // Is this FDAI enabled?
 			VECTOR3 euler_rates;
-			VECTOR3 attitude;
 			VECTOR3 errors;
 
 			euler_rates = eda.GetFDAI2AttitudeRate();
-			attitude = eda.GetFDAI2Attitude();
 			errors = eda.GetFDAI2AttitudeError();
 
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiRight.PaintMe(attitude, 0, euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
