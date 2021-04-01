@@ -142,6 +142,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 
 	} while (IEND == 0);
 
+	out.IEND = IEND;
 	if (IEND == 2)
 	{
 		//Output
@@ -170,7 +171,7 @@ void ReentryNumericalIntegrator::RungeKuttaIntegrationRoutine(VECTOR3 R_N, VECTO
 	K3 = SecondDerivativeRoutine(R_N + V_N * dt / 2.0 + K1 * dt / 8.0, V_N + K2 / 2.0)*dt;
 	Bank += BRATE * dt / 2.0;
 	Limit02PI(Bank);
-	K4 = SecondDerivativeRoutine(R_N + V_N * dt + K3 * dt / 2.0, V_N + K3);
+	K4 = SecondDerivativeRoutine(R_N + V_N * dt + K3 * dt / 2.0, V_N + K3)*dt;
 
 	R_N1 = R_N + (V_N + (K1 + K2 + K3) / 6.0)*dt;
 	V_N1 = V_N + (K1 + K2 * 2.0 + K3 * 2.0 + K4) / 6.0;
@@ -992,5 +993,45 @@ void ReentryNumericalIntegrator::GNRoutine380()
 		{
 			ROLLC = GNData.C10;
 		}
+	}
+}
+
+bool ReentryNumericalIntegrator::IsInSBandBlackout(double v_r, double h)
+{
+	double v_r_fps, h_ft, h_bo;
+
+	v_r_fps = v_r / 0.3048;
+	h_ft = h / 0.3048;
+
+	//Curve fit based on Apollo 17 SCOT figure 4.17-8
+	h_bo = -3.335751e-4*v_r_fps*v_r_fps + 25.79421769*v_r_fps - 157525.8344;
+
+	if (h < h_bo)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool ReentryNumericalIntegrator::IsInVHFBlackout(double v_r, double h)
+{
+	double v_r_fps, h_ft, h_bo;
+
+	v_r_fps = v_r / 0.3048;
+	h_ft = h / 0.3048;
+
+	//Curve fit based on Apollo 7 SCOT figure 13
+	h_bo = -3.030303e-4*v_r_fps*v_r_fps + 21.51515152*v_r_fps - 41818.18182;
+
+	if (h < h_bo)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }

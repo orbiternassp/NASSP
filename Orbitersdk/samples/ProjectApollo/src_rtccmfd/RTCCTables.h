@@ -351,4 +351,26 @@ struct RMMYNIOutputTable
 	double lat_IP;
 	double lng_IP;
 	double t_10k;
+	//1 = time limit, 2 = impact, 3 = skipout
+	int IEND;
+};
+
+struct ReentryConstraintsTable
+{
+	//R31
+	int Type = 2;			//1 = Primary (lat and long), 2 = Contingency (long only)
+	int Thruster = 33;		//1 = RCS+2, 2 = RCS+4, 3 = RCS-2, 4 = RCS-4, 33 = SPS
+	int GuidanceMode = 4;	//1 = Inertial, 4 = Guided (G&N)
+	int BurnMode = 3;		//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
+	double dt = 0.0;
+	double dv = 0.0;
+	int AttitudeMode = 2;	//1 = LVLH, 2 = 31.7° window line on horizon
+	VECTOR3 LVLHAttitude = _V(0.0, -48.5*RAD, PI);
+	double UllageTime = 15.0;
+	bool Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
+	int REFSMMAT = 1;		//1 = CUR...
+	int GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
+	double InitialBankAngle = 0.0;
+	double GLevel = 0.2;
+	double FinalBankAngle = 55.0*RAD;
 };

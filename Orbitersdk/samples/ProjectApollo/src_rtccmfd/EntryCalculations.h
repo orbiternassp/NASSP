@@ -84,6 +84,44 @@ namespace EntryCalculations
 	double WPL(double lat);
 }
 
+//RTCC task RTSDBMP
+class RetrofirePlanning : public RTCCModule
+{
+public:
+	RetrofirePlanning(RTCC *r);
+	//Retrofire Planning Control Module
+	void RMSDBMP(EphemerisData sv, double GETI, double lat_T, double lng_T, double CSMmass);
+protected:
+	//Retrofire Planning Boundary Computation
+	void RMMDBF();
+	//Retrofire Maneuvers Computations
+	void RMMDBM();
+	//Retrofire Convergence
+	void RMMDBN();
+	//Thrust Direction and Body Attitude Routine
+	void RMMATT(int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T);
+
+	bool WasGETIInput;
+	//Time left and right for the ephemeris
+	double TL, TR;
+	double GMTI;
+	EphemerisData sv0;
+	double lat_T;
+	double lng_T;
+	double CSMmass;
+	MATRIX3 REFSMMAT;
+	double SQMU;
+	double F, mdot, DVBURN;
+	VECTOR3 U_T;
+
+	//ECI state vector at entry interface (400k altitude)
+	EphemerisData sv_EI;
+	//Actual longitude of landing
+	double lng_L;
+
+	EphemerisDataTable ephem;
+};
+
 class EarthEntry {
 public:
 	EarthEntry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, bool entrynominal, bool entrylongmanual);

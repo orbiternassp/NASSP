@@ -26,6 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "nasspdefs.h"
 #include "OrbMech.h"
 #include "EntryCalculations.h"
+#include "CSMLMGuidanceSim.h"
 #include "rtcc.h"
 
 namespace EntryCalculations
@@ -1386,6 +1387,599 @@ namespace EntryCalculations
 			return 170.0*RAD;
 		}
 	}
+}
+
+RetrofirePlanning::RetrofirePlanning(RTCC *r) : RTCCModule(r)
+{
+	SQMU = sqrt(OrbMech::mu_Earth);
+}
+
+void RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, double lng_T, double CSMmass)
+{
+	//Check if we are in lunar reference
+	if (sv.RBI == BODY_MOON)
+	{
+		return;
+	}
+
+	sv0 = sv;
+	this->lat_T = lat_T;
+	this->lng_T = lng_T;
+	this->CSMmass = CSMmass;
+
+	//Get REFSMMAT
+	REFSMMAT = pRTCC->EZJGMTX1.data[pRTCC->RZC1RCNS.REFSMMAT - 1].REFSMMAT;
+
+	//Get thruster thrust and mass flow
+	switch (pRTCC->RZC1RCNS.Thruster)
+	{
+	case RTCC_ENGINETYPE_CSMRCSPLUS2:
+		F = pRTCC->MCTCT1;
+		mdot = pRTCC->MCTCW1;
+		break;
+	case RTCC_ENGINETYPE_CSMRCSPLUS4:
+		F = pRTCC->MCTCT2;
+		mdot = pRTCC->MCTCW2;
+		break;
+	case RTCC_ENGINETYPE_CSMRCSMINUS2:
+		F = pRTCC->MCTCT3;
+		mdot = pRTCC->MCTCW3;
+		break;
+	case RTCC_ENGINETYPE_CSMRCSMINUS4:
+		F = pRTCC->MCTCT4;
+		mdot = pRTCC->MCTCW4;
+		break;
+	case RTCC_ENGINETYPE_CSMSPS:
+		F = pRTCC->MCTST1;
+		mdot = pRTCC->MCTSW1;
+		break;
+	}
+
+	if (GETI < 0)
+	{
+		WasGETIInput = false;
+	}
+	else
+	{
+		WasGETIInput = true;
+		GMTI = pRTCC->GMTfromGET(GETI);
+	}
+	RMMDBF();
+
+	EphemerisData sv_L;
+	EMSMISSInputTable coastin;
+
+	//Coast to TL
+	if (TL == sv0.GMT)
+	{
+		sv_L = sv0;
+	}
+	else
+	{
+		coastin.AnchorVector = sv0;
+		coastin.CutoffIndicator = 1;
+		if (TL > sv0.GMT)
+		{
+			coastin.IsForwardIntegration = 1.0;
+		}
+		else
+		{
+			coastin.IsForwardIntegration = -1.0;
+		}
+		coastin.MaxIntegTime = abs(TL-sv0.GMT);
+
+		pRTCC->EMMENI(coastin);
+
+		sv_L = coastin.NIAuxOutputTable.sv_cutoff;
+	}
+
+	//Generate ephemeris
+	EphemerisDataTable2 tempephem;
+
+	coastin.AnchorVector = sv_L;
+	coastin.EphemerisBuildIndicator = true;
+	coastin.ECIEphemerisIndicator = true;
+	coastin.ECIEphemTableIndicator = &tempephem;
+	coastin.IsForwardIntegration = 1.0;
+	coastin.MaxIntegTime = TR - TL;
+	pRTCC->EMMENI(coastin);
+
+	//Bad code, hopefully gets fixed soon
+	EphemerisData2 svtemp;
+	EphemerisData svtemp2;
+	ephem.Header = tempephem.Header;
+	for (unsigned int i = 0;i < tempephem.table.size();i++)
+	{
+		svtemp = tempephem.table[i];
+		svtemp2.R = svtemp.R;
+		svtemp2.V = svtemp.V;
+		svtemp2.GMT = svtemp.GMT;
+		svtemp2.RBI = BODY_EARTH;
+		ephem.table.push_back(svtemp2);
+	}
+
+	//Coverge two body solution
+	RMMDBM();
+
+	//Predict finite burn ignition time
+	double dt_man = DVBURN / (F / CSMmass);
+	GMTI = GMTI - dt_man / 2.0 - pRTCC->RZC1RCNS.UllageTime;
+
+	//Simulate burn
+	PMMRKJInputArray integin;
+	int Ierr;
+	RTCCNIAuxOutputTable aux;
+	CSMLMPoweredFlightIntegration integ(pRTCC, integin, Ierr, NULL, &aux);
+	ELVCTRInputTable in;
+	ELVCTROutputTable out;
+	ManeuverTimesTable mantimes;
+	EphemerisData sv_apo, sv_ECT;
+	RMMYNIInputTable reentryin;
+	RMMYNIOutputTable reentryout;
+	VECTOR3 Att;
+
+	do
+	{
+		in.GMT = GMTI;
+		pRTCC->ELVCTR(in, out, ephem, mantimes);
+
+		if (out.ErrorCode > 2)
+		{
+			//Error
+			return;
+		}
+
+		//Calculate thrust direction
+		if (pRTCC->RZC1RCNS.AttitudeMode == 1)
+		{
+			Att = pRTCC->RZC1RCNS.LVLHAttitude;
+		}
+		else
+		{
+			Att = _V(0.0, -(31.7*RAD + acos(OrbMech::R_Earth / length(out.SV.R))), PI);
+		}
+		RMMATT(1, Att, REFSMMAT, pRTCC->RZC1RCNS.Thruster, out.SV.R, out.SV.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
+
+		integin.sv0 = out.SV;
+		integin.A = 0.0;
+		integin.CAPWT = CSMmass;
+		integin.CSMWT = CSMmass;
+		integin.TVC = 1;
+		integin.KEPHOP = 0;
+		integin.KAUXOP = 1;
+		integin.MANOP = pRTCC->RZC1RCNS.GuidanceMode;
+		integin.ThrusterCode = pRTCC->RZC1RCNS.Thruster;
+		integin.UllageOption = pRTCC->RZC1RCNS.Use4UllageThrusters;
+		integin.IC = 1;
+		integin.DTU = pRTCC->RZC1RCNS.UllageTime;
+		integin.KTRIMOP = pRTCC->RZC1RCNS.GimbalIndicator;
+		integin.VG = U_T * DVBURN;
+		integin.ExtDVCoordInd = false;
+
+		integ.PMMRKJ();
+
+		//Integrate to EI
+		sv_apo.R = aux.R_BO;
+		sv_apo.V = aux.V_BO;
+		sv_apo.GMT = aux.GMT_BO;
+		sv_apo.RBI = BODY_EARTH;
+
+		coastin.AnchorVector = sv_apo;
+		coastin.CutoffIndicator = 3;
+		coastin.IsForwardIntegration = 1.0;
+		coastin.MaxIntegTime = 4.0*3600.0;
+		coastin.StopParamRefFrame = 0;
+		coastin.EarthRelStopParam = 400000.0*0.3048;
+		coastin.EphemerisBuildIndicator = false;
+		coastin.ECIEphemerisIndicator = false;
+
+		pRTCC->EMMENI(coastin);
+
+		if (coastin.NIAuxOutputTable.TerminationCode != 3)
+		{
+			//Error
+			return;
+		}
+
+		sv_EI = coastin.NIAuxOutputTable.sv_cutoff;
+
+		//Simulate reentry
+		pRTCC->ELVCNV(sv_EI, 0, 1, sv_ECT);
+		reentryin.g_c_BU = pRTCC->RZC1RCNS.GLevel;
+		reentryin.K1 = pRTCC->RZC1RCNS.InitialBankAngle;
+		reentryin.K2 = pRTCC->RZC1RCNS.FinalBankAngle;
+		reentryin.KSWCH = 9;
+		reentryin.R0 = sv_ECT.R;
+		reentryin.V0 = sv_ECT.V;
+		reentryin.RLDIR = 1.0;
+
+		pRTCC->RMMYNI(reentryin, reentryout);
+		lng_L = reentryout.lng_IP;
+
+		//Compare target to impact, adjust retrofire maneuver quantities
+		RMMDBN();
+	} while (1 == 1);
+}
+
+void RetrofirePlanning::RMMDBF()
+{
+	if (WasGETIInput)
+	{
+		TL = GMTI - 60.0*60.0;
+		TR = GMTI + 60.0*60.0;
+		return;
+	}
+
+	//Calculate target longitude crossing
+
+	//Convert vector to ECT
+	EphemerisData sv0_ECT, sv_ECT;
+	double GMT_sv, lng_v, dlambda;
+	pRTCC->ELVCNV(sv0, 0, 1, sv0_ECT);
+	GMT_sv = sv0_ECT.GMT;
+
+	lng_v = atan2(sv0_ECT.R.y, sv0_ECT.R.x) - OrbMech::w_Earth*(sv0_ECT.GMT - GMT_sv);
+
+	dlambda = lng_T - lng_v;
+	while (dlambda >= PI2)
+	{
+		dlambda -= PI2;
+	}
+	while (dlambda < 0)
+	{
+		dlambda += PI2;
+	}
+
+	double w_C, ddt, dt;
+	int i = 0;
+
+	dt = 0.0;
+	w_C = PI2 / OrbMech::period(sv0_ECT.R, sv0_ECT.V, OrbMech::mu_Earth) - OrbMech::w_Earth;
+
+	do
+	{
+		ddt = dlambda / w_C;
+		dt += ddt;
+
+		pRTCC->LLBRTD(sv0_ECT, 0, SQMU, sv0_ECT.GMT + dt, sv_ECT);
+
+		lng_v = atan2(sv_ECT.R.y, sv_ECT.R.x) - OrbMech::w_Earth*(sv_ECT.GMT - GMT_sv);
+
+		dlambda = lng_T - lng_v;
+		while (dlambda >= PI)
+		{
+			dlambda -= PI2;
+		}
+		while (dlambda < -PI)
+		{
+			dlambda += PI2;
+		}
+
+		if (abs(dlambda) < 0.001) break;
+
+		w_C = length(sv_ECT.V) / length(sv_ECT.R) - OrbMech::w_Earth;
+
+		i++;
+	} while (i < 30);
+
+	if (i == 30)
+	{
+		//Error
+		return;
+	}
+	TL = sv_ECT.GMT - 2.0*60.0*60.0;
+	TR = sv_ECT.GMT;
+	if (pRTCC->RZC1RCNS.Thruster == 33)
+	{
+		GMTI = TR - 20.0*60.0;
+	}
+	else
+	{
+		GMTI = TR - 30.0*60.0;
+	}
+}
+
+void RetrofirePlanning::RMMDBM()
+{
+	EphemerisData sv_TIG, sv_apo;
+	VECTOR3 Att;
+	double R_E, lat_L, MJD_L, dlng, dlng2, lng_old, GMTI_old, ddt;
+	int iter;
+	ELVCTRInputTable in;
+	ELVCTROutputTable out;
+	ManeuverTimesTable mantimes;
+
+	//Calculate fixed DV for BurnMode 1 and 2
+	if (pRTCC->RZC1RCNS.BurnMode == 1)
+	{
+		//Fixed DV
+		DVBURN = pRTCC->RZC1RCNS.dv;
+	}
+	else if (pRTCC->RZC1RCNS.BurnMode == 2)
+	{
+		DVBURN = F / mdot * log(CSMmass / (CSMmass - mdot * pRTCC->RZC1RCNS.dt));
+	}
+
+	iter = 0;
+	do
+	{
+		//Interpolate for vector
+		in.GMT = GMTI;
+		pRTCC->ELVCTR(in, out, ephem, mantimes);
+
+		if (out.ErrorCode > 2)
+		{
+			//Error
+			return;
+		}
+
+		sv_TIG = out.SV;
+
+		if (pRTCC->RZC1RCNS.AttitudeMode == 1)
+		{
+			Att = pRTCC->RZC1RCNS.LVLHAttitude;
+		}
+		else
+		{
+			Att = _V(0.0, -(31.7*RAD + acos(OrbMech::R_Earth / length(out.SV.R))), PI);
+		}
+
+		//Calculate thrust direction
+		RMMATT(1, Att, REFSMMAT, pRTCC->RZC1RCNS.Thruster, sv_TIG.R, sv_TIG.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
+
+		//Calculate DV fo V, gamma targeting
+		if (pRTCC->RZC1RCNS.BurnMode == 3)
+		{
+			DVBURN = 0.0;
+
+			double r_a, r_p = 0.0, r_p_last;
+			int i = 0;
+			//Add DV until perigee radius is below 40 NM
+			do
+			{
+				sv_apo.V = sv_TIG.V + U_T * DVBURN;
+				r_p_last = r_p;
+				OrbMech::periapo(sv_TIG.R, sv_apo.V, OrbMech::mu_Earth, r_a, r_p);
+				if (i > 0 && r_p > r_p_last)
+				{
+					//No EI
+					return;
+				}
+				DVBURN += 10.0;
+				i++;
+			} while (r_p > OrbMech::R_Earth + 40.0*1852.0);
+
+			//Now iterate on V, gamma
+			double v_EI, gamma_EI, gamma_EI_des, dgamma, dgammao, dvo;
+			double c_I, p_gam;
+			int s_F;
+
+			s_F = 0;
+			c_I = p_gam = 0.0;
+
+			sv_apo = sv_TIG;
+
+			do
+			{
+				sv_apo.V = sv_TIG.V + U_T * DVBURN;
+
+				pRTCC->LLBRTD(sv_apo, -1, SQMU, OrbMech::R_Earth, 400000.0*0.3048, 1.0, sv_EI, R_E);
+				v_EI = length(sv_EI.V);
+				gamma_EI = acos(dotp(unit(sv_EI.R), unit(sv_EI.V)));
+				gamma_EI_des = EntryCalculations::ReentryTargetLine(v_EI, true);
+
+				dgamma = gamma_EI - gamma_EI_des;
+				if (abs(dgamma) >= 0.001*RAD)
+				{
+					OrbMech::ITER(c_I, s_F, dgamma, p_gam, DVBURN, dgammao, dvo);
+					if (s_F == 1)
+					{
+						break;
+					}
+				}
+			} while (abs(dgamma) >= 0.001*RAD);
+		}
+
+		//Predict state vector at EI
+		sv_apo.V = sv_TIG.V + U_T * DVBURN;
+		pRTCC->LLBRTD(sv_apo, -1, SQMU, OrbMech::R_Earth, 400000.0*0.3048, 1.0, sv_EI, R_E);
+
+		//Calculate landing point
+		EntryCalculations::LNDING(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, 0.3, 1, 0.0, lng_L, lat_L, MJD_L);
+
+		dlng = lng_T - lng_L;
+		while (dlng > PI)
+		{
+			dlng -= PI2;
+		}
+		while (dlng <= -PI)
+		{
+			dlng += PI2;
+		}
+
+		if (iter == 0)
+		{
+			GMTI_old = GMTI;
+			lng_old = lng_L;
+
+			double w_C = PI2 / OrbMech::period(sv_TIG.R, sv_TIG.V, OrbMech::mu_Earth);
+			GMTI = GMTI + dlng / (w_C - OrbMech::w_Earth);
+		}
+		else
+		{
+			dlng2 = lng_L - lng_old;
+			ddt = GMTI - GMTI_old;
+
+			GMTI_old = GMTI;
+			lng_old = lng_L;
+
+			while (dlng2 > PI)
+			{
+				dlng2 -= PI2;
+			}
+			while (dlng2 <= -PI)
+			{
+				dlng2 += PI2;
+			}
+			GMTI = GMTI + dlng / dlng2 * ddt;
+		}
+		iter++;
+
+	} while (abs(dlng) > 0.0001 && iter < 15);
+
+	if (iter >= 15)
+	{
+		//No convergence
+		return;
+	}
+}
+
+void RetrofirePlanning::RMMDBN()
+{
+	if (pRTCC->RZC1RCNS.BurnMode == 3)
+	{
+		double gamma_EI, gamma_EI_des, v_EI, dgamma;
+
+		v_EI = length(sv_EI.V);
+		gamma_EI = acos(dotp(unit(sv_EI.R), unit(sv_EI.V)));
+		gamma_EI_des = EntryCalculations::ReentryTargetLine(v_EI, true);
+		dgamma = gamma_EI - gamma_EI_des;
+		if (abs(dgamma) > 0.001*RAD)
+		{
+			DVBURN -= dgamma * 2000.0;
+			return;
+		}
+	}
+	//Adjust GMTI
+	double w_C = PI2 / OrbMech::period(sv0.R, sv0.V, OrbMech::mu_Earth);
+	double dlng = lng_T - lng_L;
+	while (dlng > PI)
+	{
+		dlng -= PI2;
+	}
+	while (dlng < -PI)
+	{
+		dlng += PI2;
+	}
+	GMTI = GMTI + dlng / (w_C - OrbMech::w_Earth);
+}
+
+void RetrofirePlanning::RMMATT(int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T)
+{
+	//opt: 1 = Att is LVLH, 2 = Att is IMU
+
+	VECTOR3 X_P, Y_P, Z_P;
+	double SINP, SINY, SINR, COSP, COSY, COSR;
+	double AL, BE, a1, a2, a3, b1, b2, b3, c1, c2, c3;
+
+	SINP = sin(Att.y);
+	SINY = sin(Att.z);
+	SINR = sin(Att.x);
+	COSP = cos(Att.y);
+	COSY = cos(Att.z);
+	COSR = cos(Att.x);
+
+	if (opt == 1)
+	{
+		Z_P = -unit(R);
+		Y_P = -unit(crossp(R, V));
+		X_P = crossp(Y_P, Z_P);
+
+		AL = SINP * SINR;
+		BE = SINP * COSR;
+		a1 = COSY * COSP;
+		a2 = SINY * COSP;
+		a3 = -SINP;
+		b1 = AL * COSY - SINY * COSR;
+		b2 = AL * SINY + COSY * COSR;
+		b3 = COSP * SINR;
+		c1 = BE * COSY + SINY * SINR;
+		c2 = BE * SINY - COSY * SINR;
+		c3 = COSP * COSR;
+	}
+	else
+	{
+		X_P = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
+		Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
+		Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
+
+		AL = COSP * COSY;
+		BE = SINP * SINY;
+		a1 = COSP * COSY;
+		a2 = SINY;
+		a3 = -SINP * COSY;
+		b1 = SINP * SINR - AL * COSR;
+		b2 = COSY * COSR;
+		b3 = COSP * SINR + BE * COSR;
+		c1 = SINP * COSR + AL * SINR;
+		c2 = -COSY * SINR;
+		c3 = COSP * COSR - BE * SINR;
+	}
+
+	VECTOR3 X_B, Y_B, Z_B;
+
+	X_B = X_P * a1 + Y_P * a2 + Z_P * a3;
+	Y_B = X_P * b1 + Y_P * b2 + Z_P * b3;
+	Z_B = X_P * c1 + Y_P * c2 + Z_P * c3;
+
+	double P_G = 0.0, Y_G = 0.0;
+	if (thruster == RTCC_ENGINETYPE_CSMSPS)
+	{
+		if (TrimIndicator == -1)
+		{
+			double T, WDOT;
+			unsigned int IC = 1;
+			pRTCC->GIMGBL(CSMmass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 1, 0.0);
+		}
+		else
+		{
+			pRTCC->GetSystemGimbalAngles(RTCC_ENGINETYPE_CSMSPS, P_G, Y_G);
+		}
+		U_T = pRTCC->GLMRTV(X_B, P_G, 2, Y_G, 3);
+	}
+	else
+	{
+		U_T = X_B;
+	}
+
+	//Attitude in other coordinates
+	/*if (opt == 1)
+	{
+		Pitch2 = asin(dotp(X_P, X_B));
+		if (abs(Pitch2 - PI05) < 10e-8)
+		{
+			Roll2 = 0.0;
+			Yaw2 = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
+		}
+		else
+		{
+			Yaw2 = atan2(dotp(Z_P, X_B), dotp(X_P, X_B));
+			Roll2 = atan2(-dotp(Y_P, Z_B), dotp(Y_P, Y_B));
+		}
+	}
+	else
+	{
+		Z_P = unit(R);
+		Y_P = unit(crossp(V, R));
+		X_P = unit(crossp(Y_P, Z_P));
+		Pitch2 = asin(-dotp(Z_P, X_B));
+		if (abs(Pitch2 - PI05) < 10e-8)
+		{
+			Roll2 = 0.0;
+			Yaw2 = atan2(-dotp(X_P, X_B), dotp(Y_P, Y_B));
+		}
+		else
+		{
+			Yaw2 = atan2(dotp(Y_P, X_B), dotp(X_P, X_B));
+			Roll2 = atan2(dotp(X_P, Y_B), dotp(Z_P, Z_B));
+		}
+	}*/
+
+	//Retrofired preferred alignment
+	//X_SM = -X_B;
+	//Y_SM = Y_B;
+	//Z_SM = -Z_B;
+	//DesREFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);*/
 }
 
 EarthEntry::EarthEntry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, bool entrynominal, bool entrylongmanual)

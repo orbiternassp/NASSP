@@ -14,6 +14,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	// Add MFD display routines here.
 	// Use the device context (hDC) for Windows GDI paint functions.
 
+	EphemerisData sv = GC->rtcc->StateVectorCalcEphem(G->vessel);
+	RetrofirePlanning plan(GC->rtcc);
+	plan.RMSDBMP(sv, -1, 0.0, -60.0*RAD, G->vessel->GetMass());
+
 	//sprintf(Buffer, "%d", G->screen);
 	//skp->Text(7.5 * W / 8,(int)(0.5 * H / 14), Buffer, strlen(Buffer));
 

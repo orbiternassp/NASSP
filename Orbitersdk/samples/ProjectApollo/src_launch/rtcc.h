@@ -2868,8 +2868,6 @@ public:
 	void RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
 	//Reentry Constant G Iterator
 	void RMMGIT(EphemerisData sv_EI, double lng_T);
-	//Thrust Direction and Body Attitude Routine
-	void RMMATT(int opt, double Roll, double Pitch, double Yaw, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -3941,6 +3939,8 @@ public:
 		double GMTI_Manual;
 		VECTOR3 DeltaV_Manual;
 	} RZRFTT;
+
+	ReentryConstraintsTable RZC1RCNS;
 
 	struct LMLaunchTargetTable
 	{

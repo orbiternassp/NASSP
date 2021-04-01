@@ -226,6 +226,7 @@ protected:
 	void CalculateDragAcceleration(VECTOR3 R, VECTOR3 V);
 	void Limit02PI(double &val);
 	double ConstantGLogic(VECTOR3 unitR, VECTOR3 VI, double D);
+	bool IsInSBandBlackout(double v_r, double h);
 
 	//G&N
 	void GNInitialization();
