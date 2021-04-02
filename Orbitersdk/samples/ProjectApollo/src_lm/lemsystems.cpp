@@ -1478,8 +1478,36 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	rga.Timestep(simdt);
 	ordeal.Timestep(simdt);
 	mechanicalAccelerometer.Timestep(simdt);
+
+	//Move this to panel code or wherever
+	VECTOR3 attitude;
+	if (AttitudeMonSwitch.IsUp())	//PGNS
+	{
+		attitude = gasta.GetTotalAttitude();
+	}
+	else							//AGS
+	{
+		attitude = aea.GetTotalAttitude();
+	}
+
+	// ORDEAL
+	attitude.y += ordeal.GetFDAI1PitchAngle();
+	if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
 	fdaiLeft.Timestep(MissionTime, simdt);
+
+	if (RightAttitudeMonSwitch.IsUp())	//PGNS
+	{
+		attitude = gasta.GetTotalAttitude();
+	}
+	else							//AGS
+	{
+		attitude = aea.GetTotalAttitude();
+	}
+	// ORDEAL
+	attitude.y += ordeal.GetFDAI2PitchAngle();
+	if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
 	fdaiRight.Timestep(MissionTime, simdt);
+
 	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
 	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);

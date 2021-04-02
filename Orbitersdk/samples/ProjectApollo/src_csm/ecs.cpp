@@ -873,6 +873,7 @@ SaturnSideHatch::SaturnSideHatch(Sound &opensound, Sound &closesound) :
 	open = true;	// Hatch open at prelaunch
 	toggle = 0;
 
+	sidehatch_state.SetState(1.0, 0.0);
 	sidehatch_state.SetOperatingSpeed(0.2);
 	anim_SideHatchVC = -1;
 	anim_gearboxsel = -1;

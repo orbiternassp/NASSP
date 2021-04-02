@@ -4086,7 +4086,6 @@ protected:
 	void DefineVCAnimations();
 
 	void InitFDAI(UINT mesh);
-	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	//
 	// Systems functions.
