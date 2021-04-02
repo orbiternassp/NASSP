@@ -616,7 +616,7 @@ void Battery::UpdateFlow(double dt)
 	batheat = (internal_resistance * (Amperes * Amperes));
 	//batheat = 10000;
 
-	SRC->DrawPower(batheat * dt); //Power loss to heat
+	//SRC->DrawPower(batheat * dt); //Power loss to heat
 	thermic(batheat * dt); //1 joule = 1 watt * dt
 
 	// Reset power load
@@ -653,6 +653,8 @@ void Battery::refresh(double dt)
 		}
 		SRC->DrawPower(p);
 		power += p * dt;
+
+		thermic(SRC->Current() * dt);
 	}
 }
 
