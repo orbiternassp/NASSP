@@ -90,7 +90,7 @@ class RetrofirePlanning : public RTCCModule
 public:
 	RetrofirePlanning(RTCC *r);
 	//Retrofire Planning Control Module
-	void RMSDBMP(EphemerisData sv, double GETI, double lat_T, double lng_T, double CSMmass);
+	bool RMSDBMP(EphemerisData sv, double GETI, double lat_T, double lng_T, double CSMmass);
 protected:
 	//Retrofire Planning Boundary Computation
 	void RMMDBF();
@@ -100,6 +100,10 @@ protected:
 	void RMMDBN();
 	//Thrust Direction and Body Attitude Routine
 	void RMMATT(int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T);
+	//Retrofire Output Control
+	void RMSTTF();
+	//Retrofire On-Line Printing
+	void RMGTTF(std::string source, int i);
 
 	bool WasGETIInput;
 	//Time left and right for the ephemeris
@@ -118,13 +122,28 @@ protected:
 	//Gradient of TIG vs. landing longitude
 	double p_tig;
 	double dlng;
+	//Main iteration counter
+	int MAINITER;
+	//Main error indicator
+	int ERR;
 
+	//State vector at burn initiation (ullage on)
+	EphemerisData sv_BI;
+	//State vector at main engine on
+	EphemerisData sv_TIG;
+	//State vector at burnout (tailoff end)
+	EphemerisData sv_BO;
 	//ECI state vector at entry interface (400k altitude)
 	EphemerisData sv_EI;
 	//Actual longitude of landing
 	double lng_L;
+	//Zero lift landing point
+	double lat_ZL, lng_ZL;
+	//Maximum lift landing point
+	double lat_ML, lng_ML;
 
 	EphemerisDataTable ephem;
+	RTCCNIAuxOutputTable burnaux;
 };
 
 class EarthEntry {

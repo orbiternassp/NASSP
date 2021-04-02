@@ -2645,6 +2645,8 @@ public:
 	void EMMENI(EMSMISSInputTable &in);
 	//Spherical to inertial conversion
 	int EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
+	//Orbital Elements Computations
+	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Anchor Vector Maintenance Module
 	void EMGVECSTInput(int L, EphemerisData sv);
 	int EMGVECSTOutput(int L, EphemerisData &sv);
@@ -3642,30 +3644,7 @@ public:
 		int num = 0;
 	} EZANCHR1, EZANCHR3;
 
-	struct TimeConstraintsTable
-	{
-		EphemerisData sv_present;
-		double a = 0.0;
-		double e = 0.0;
-		double i = 0.0;
-		double gamma = 0.0;
-		double lat = 0.0;
-		double lng = 0.0;
-		double h = 0.0;
-		double T0 = 0.0;
-		double TA = 0.0;
-		double V = 0.0;
-		double azi = 0.0;
-		double AoP = 0.0;
-		double RA = 0.0;
-		double l = 0.0;
-		int OrbitNum = 0;
-		int RevNum = 0;
-		//EI time?
-		double GMTPI = 0.0;
-		std::string StationID;
-		int TUP = 0;
-	} EZTSCNS1, EZTSCNS3;
+	TimeConstraintsTable EZTSCNS1, EZTSCNS3;
 
 	struct GeneralConstraintsTable
 	{
@@ -3941,6 +3920,7 @@ public:
 	} RZRFTT;
 
 	ReentryConstraintsTable RZC1RCNS;
+	RetrofireDisplayParametersTable RZRFDP;
 
 	struct LMLaunchTargetTable
 	{
@@ -4459,8 +4439,6 @@ private:
 	//Trajectory Update On-line Print
 	void EMGPRINT(std::string source, int i);
 	void EMGPRINT(std::string source, std::vector<std::string> message);
-	//Orbital Elements Computations
-	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Relative Motion Digital Display
 	void EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis, int mode, VECTOR3 Att = _V(0, 0, 0), double PYRGET = 0.0);
 	//Ground Point Characteristics Block Routine
