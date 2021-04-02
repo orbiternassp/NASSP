@@ -605,6 +605,11 @@ double Battery::Current()
 	return 0.0;
 }
 
+double Battery::Temperature()
+{
+	return Temp;
+}
+
 void Battery::UpdateFlow(double dt)
 {
 	power -= power_load * dt;

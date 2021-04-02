@@ -284,6 +284,7 @@ public:
 	void* GetComponent(char *component_name);
 	double Voltage();
 	double Current();
+	double Temperature();
 	double Capacity() { return power; };
 	virtual therm_obj* GetThermalInterface(){return (therm_obj*)this;};
 
