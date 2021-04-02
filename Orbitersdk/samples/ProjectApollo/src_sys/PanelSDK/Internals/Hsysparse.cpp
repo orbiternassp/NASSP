@@ -503,6 +503,14 @@ void H_system::Build() {
 	}
 }
 
+void* H_system::GetPointerByString(char* query)
+{
+	if (Compare(query, "HYDRAULIC")) query = query + 10;
+	if (Compare(query, "ELECTRIC"))
+		return P_electric->GetPointerByString(query + 9);
+	return ship_system::GetPointerByString(query);
+};
+
 void* h_Pipe::GetComponent(char *component_name) {
 
 	if (!strnicmp (component_name, "FLOWMAX", 7))
