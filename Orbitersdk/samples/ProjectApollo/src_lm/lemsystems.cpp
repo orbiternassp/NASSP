@@ -1972,9 +1972,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//Batteries
 	double* bat1temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_A:TEMP");
 	double* bat1heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_A:HEAT");
-	//double* DES1HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1HX:POWER");
+	//double* desbattery1HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1HX:POWER");
 
-	sprintf(oapiDebugString(), "B1T %lf B1H %lf", *bat1temp, *bat1heat);
+	sprintf(oapiDebugString(), "B1T %lf B1H %lf", KelvinToFahrenheit(*bat1temp), *bat1heat);
 
 	//sprintf(oapiDebugString(), "Primary Glycol Heating 1: %lf Primary Glycol Heating 2: %lf Cabin Heating %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat);
 
