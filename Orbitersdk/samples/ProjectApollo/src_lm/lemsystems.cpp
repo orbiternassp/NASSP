@@ -1972,9 +1972,18 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//Batteries
 	double* bat1temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_A:TEMP");
 	double* bat1heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_A:HEAT");
-	//double* desbattery1HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1HX:POWER");
+	double* desbat1HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1HX:POWER");
+	double* bat2temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_B:TEMP");
+	double* bat2heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_B:HEAT");
+	double* desbat2HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT2HX:POWER");
+	double* bat3temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_C:TEMP");
+	double* bat3heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_C:HEAT");
+	double* desbat3HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT3HX:POWER");
+	double* bat4temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_D:TEMP");
+	double* bat4heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_D:HEAT");
+	double* desbat4HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4HX:POWER");
 
-	sprintf(oapiDebugString(), "B1T %lf B1H %lf", KelvinToFahrenheit(*bat1temp), *bat1heat);
+	sprintf(oapiDebugString(), "B1T %lf B2T %lf B3T %lf B4T %lf ", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp));
 
 	//sprintf(oapiDebugString(), "Primary Glycol Heating 1: %lf Primary Glycol Heating 2: %lf Cabin Heating %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat);
 

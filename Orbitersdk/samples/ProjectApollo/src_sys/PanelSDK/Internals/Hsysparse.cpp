@@ -23,6 +23,7 @@
   **************************************************************************/
 
 #include "hsystems.h"
+#include "esystems.h"
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"

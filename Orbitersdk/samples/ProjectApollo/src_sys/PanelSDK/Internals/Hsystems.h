@@ -55,7 +55,6 @@ const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,		256.
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
-#include "esystems.h"
 
 //base class for hydraulic objects
 class h_substance
@@ -112,6 +111,8 @@ public:
 	virtual void ProcessShip(VESSEL *vessel,PROPELLANT_HANDLE ph){ };
 };
 
+class E_system;
+
 //all the objects form a system, basically a chained list
 class H_system:public ship_system
 {
@@ -132,7 +133,7 @@ class H_system:public ship_system
 public:
 
 	E_system* P_electric;
-	void* GetPointerByString(char* query);
+	void* GetPointerByString(char *query);
 	void Load (FILEHANDLE scn);
 	void Save (FILEHANDLE scn);
 	void Build();
