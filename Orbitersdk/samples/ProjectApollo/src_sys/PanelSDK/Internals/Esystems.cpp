@@ -570,6 +570,7 @@ Battery::Battery(char *i_name, e_object *i_src, double i_power, double i_voltage
 
 	 c = 0.15;
 	 batheat = 0.0;
+	 chargeheat = 0.0;
 }
 
 void Battery::DrawPower(double watts)
@@ -613,10 +614,10 @@ void Battery::UpdateFlow(double dt)
 	else
 		Amperes = 0;
 
-	batheat = (internal_resistance * (Amperes * Amperes));
+	batheat = (internal_resistance * (Amperes * Amperes));	//Heat due to battery discharging based on draw current
 	//batheat = 10000;
 
-	//SRC->DrawPower(batheat * dt); //Power loss to heat
+	DrawPower(batheat * dt); //Power loss to heat
 	thermic(batheat * dt); //1 joule = 1 watt * dt
 
 	// Reset power load
@@ -651,10 +652,14 @@ void Battery::refresh(double dt)
 		} else {
 			p = Volts * 2.2 / 0.01 * (max_voltage - Volts) / max_voltage;
 		}
+	
+		chargeheat = (internal_resistance * (SRC->Current() * SRC->Current()));
+		p += chargeheat;
+
 		SRC->DrawPower(p);
 		power += p * dt;
 
-		thermic(SRC->Current() * dt);
+		thermic(chargeheat * dt);	//Heat due to battery charging based on charge current
 	}
 }
 
