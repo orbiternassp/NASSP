@@ -350,6 +350,25 @@ const VECTOR3 P16R4_CB_POS[P16R4_CBCOUNT] = {
 {0.9333, 0.4903, 0.7285}
 };
 
+//ECS Panels
+
+const VECTOR3 H20SepHandleLocation = { 0.3153, 0.2264, -0.2932 };
+const VECTOR3 PB_Vent1Location = { 0.3382, 0.1455, 0.2815 };
+const VECTOR3 PB_Vent2Location = { 0.3382, 0.2936, -0.2550 };
+const VECTOR3 Rot_AscO2_1Location = { 0.5702, 0.2829, 0.5882 };
+const VECTOR3 Rot_AscO2_2Location = { 0.4990, 0.2870, 0.5793 };
+const VECTOR3 Rot_CabinGasReturnLocation = { 0.3524, 0.5219, 0.0804 };
+const VECTOR3 Rot_CabinRepressLocation = { 0.6019, 0.3548, 0.5910 };
+const VECTOR3 Rot_Canister1Location = { 0.3380, 0.1642, 0.1238 };
+const VECTOR3 Rot_Canister2Location = { 0.3383, 0.2238, -0.1268 };
+const VECTOR3 Rot_DesO2Location = { 0.6449, 0.2777, 0.5981 };
+const VECTOR3 Rot_PlssFillLocation = { 0.5011, 0.3593, 0.5795 };
+const VECTOR3 Rot_PressRegALocation = { 0.4241, 0.3470, 0.5689 };
+const VECTOR3 Rot_PressRegBLocation = { 0.4215, 0.2573, 0.5693 };
+const VECTOR3 Rot_SuitCircuitReliefLocation = { 0.3524, 0.5006, 0.2689 };
+const VECTOR3 SuitGasDiverterHandleLocation = { 0.4473, 0.6010, 0.5533 };
+const VECTOR3 Sw_CanisterSelLocation = { 0.3544, 0.3645, 0.1312 };
+
 // Subtracted from total material count to find L01 location.
 const int mat_L01 = 44;
 
@@ -419,6 +438,24 @@ void LEM::SetView() {
 				v = _V(-0.58, 1.60, 1.40);
 			}
 			SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE * RAD), cos(VIEWANGLE * RAD)));
+			break;
+		case LMVIEW_ECS:
+			if (stage == 2) {
+				v = _V(0.0, -0.45, 0.10);
+			}
+			else {
+				v = _V(0.0, 1.30, 0.10);
+			}
+			SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+			break;
+		case LMVIEW_ECS2:
+			if (stage == 2) {
+				v = _V(0.45, -0.07, 1.25);
+			}
+			else {
+				v = _V(0.45, 1.68, 1.25);
+			}
+			SetCameraDefaultDirection(_V(0.0, 0.0, -1.0));
 			break;
 		}
 
@@ -583,7 +620,7 @@ bool LEM::clbkLoadVC (int id)
 		viewpos = LMVIEW_CDR;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, LMVIEW_LMP, -1, LMVIEW_LPD);
+		oapiVCSetNeighbours(LMVIEW_ECS, LMVIEW_LMP, -1, LMVIEW_LPD);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -595,7 +632,7 @@ bool LEM::clbkLoadVC (int id)
 		viewpos = LMVIEW_LMP;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, -0.15, 0.0), -90.0 * RAD, 0);
-		oapiVCSetNeighbours(LMVIEW_CDR, -1, -1, -1);
+		oapiVCSetNeighbours(LMVIEW_CDR, -1, -1, LMVIEW_ECS2);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -609,6 +646,30 @@ bool LEM::clbkLoadVC (int id)
 		SetCameraMovement(_V(0.13, 0.0, 0.0), 0, 15 * RAD, _V(0.0, 0.0, 0.0), 0, 0, _V(0.58, -0.4, -0.1), 0, -10 * RAD);
 		oapiCameraSetAperture(30 * RAD);
 		oapiVCSetNeighbours(-1, -1, LMVIEW_CDR, -1);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+
+		return true;
+
+	case LMVIEW_ECS:
+		viewpos = LMVIEW_ECS;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		//SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, -0.15, 0.0), -90.0 * RAD, 0);
+		oapiVCSetNeighbours(-1, -1, LMVIEW_CDR, -1);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+
+		return true;
+
+	case LMVIEW_ECS2:
+		viewpos = LMVIEW_ECS2;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		//SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, -0.15, 0.0), -90.0 * RAD, 0);
+		oapiVCSetNeighbours(-1, -1, LMVIEW_LMP, -1);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -898,6 +959,60 @@ void LEM::RegisterActiveAreas()
 		oapiVCRegisterArea(AID_VC_CB_P16R4_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P16R4_01 + i, P16R4_CB_POS[i] + ofs, 0.008);
 	}
+
+	// ECS Panels
+
+	oapiVCRegisterArea(AID_VC_ROT_SUITCIRCUITRELIEF, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_SUITCIRCUITRELIEF, Rot_SuitCircuitReliefLocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_CABINGASRETURN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CABINGASRETURN, Rot_CabinGasReturnLocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_CANISTER1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CANISTER1, Rot_Canister1Location + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_CANISTER2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CANISTER2, Rot_Canister2Location + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_CABINREPRESS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CABINREPRESS, Rot_CabinRepressLocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_PLSSFILL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_PLSSFILL, Rot_PlssFillLocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_PRESSREGA, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_PRESSREGA, Rot_PressRegALocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_PRESSREGB, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_PRESSREGB, Rot_PressRegBLocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_DESO2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_DESO2, Rot_DesO2Location + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_ASCO2_1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_ASCO2_1, Rot_AscO2_1Location + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_ROT_ASCO2_2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_ASCO2_2, Rot_AscO2_2Location + ofs, 0.02);
+
+
+	oapiVCRegisterArea(AID_VC_SUITGASDIVERTER, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SUITGASDIVERTER, SuitGasDiverterHandleLocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_H2OSEP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_H2OSEP, H20SepHandleLocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_CANISTERSEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_CANISTERSEL, Sw_CanisterSelLocation + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_VENT1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_VENT1, PB_Vent1Location + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_VENT2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_VENT2, PB_Vent2Location + ofs, 0.02);
+
+
+
 
 	//
 	// Initialize surfaces and switches
@@ -2228,6 +2343,76 @@ void LEM::DefineVCAnimations()
 		breakerrowp164[i]->SetDirection(p16row4_vector);
 		breakerrowp164[i]->DefineMeshGroup(VC_GRP_CB_P16R4_01 + i);
 	}
+
+	// ECS Panels
+	const VECTOR3 ECSRotAxis1 = { -0.12642632210213, 0.0, 0.991976000253902 };
+	//const VECTOR3 ECSRotAxis2 = { 1, 0, 0 };
+	const VECTOR3 ECSRotAxis3 = { -1, 0, 0 };
+	const VECTOR3 ECSVector1 = { 0.003, 0, 0 };
+
+	MainPanelVC.AddSwitch(&SuitCircuitReliefValveSwitch, AID_VC_ROT_SUITCIRCUITRELIEF);
+	SuitCircuitReliefValveSwitch.SetReference(Rot_SuitCircuitReliefLocation, ECSRotAxis3);
+	SuitCircuitReliefValveSwitch.DefineMeshGroup(VC_GRP_Rot_SuitCircuitRelief);
+
+	MainPanelVC.AddSwitch(&CabinGasReturnValveSwitch, AID_VC_ROT_CABINGASRETURN);
+	CabinGasReturnValveSwitch.SetReference(Rot_CabinGasReturnLocation, ECSRotAxis3);
+	CabinGasReturnValveSwitch.DefineMeshGroup(VC_GRP_Rot_CabinGasReturn);
+
+	MainPanelVC.AddSwitch(&CO2CanisterPrimValve, AID_VC_ROT_CANISTER1);
+	CO2CanisterPrimValve.SetReference(Rot_Canister1Location, ECSRotAxis3);
+	CO2CanisterPrimValve.DefineMeshGroup(VC_GRP_Rot_Canister1);
+
+	MainPanelVC.AddSwitch(&CO2CanisterSecValve, AID_VC_ROT_CANISTER2);
+	CO2CanisterSecValve.SetReference(Rot_Canister2Location, ECSRotAxis3);
+	CO2CanisterSecValve.DefineMeshGroup(VC_GRP_Rot_Canister2);
+
+	MainPanelVC.AddSwitch(&CabinRepressValveSwitch, AID_VC_ROT_CABINREPRESS);
+	CabinRepressValveSwitch.SetReference(Rot_CabinRepressLocation, ECSRotAxis1);
+	CabinRepressValveSwitch.DefineMeshGroup(VC_GRP_Rot_CabinRepress);
+
+	MainPanelVC.AddSwitch(&PLSSFillValve, AID_VC_ROT_PLSSFILL);
+	PLSSFillValve.SetReference(Rot_PlssFillLocation, ECSRotAxis1);
+	PLSSFillValve.DefineMeshGroup(VC_GRP_Rot_PlssFill);
+
+	MainPanelVC.AddSwitch(&PressRegAValve, AID_VC_ROT_PRESSREGA);
+	PressRegAValve.SetReference(Rot_PressRegALocation, ECSRotAxis1);
+	PressRegAValve.DefineMeshGroup(VC_GRP_Rot_PressRegA);
+
+	MainPanelVC.AddSwitch(&PressRegBValve, AID_VC_ROT_PRESSREGB);
+	PressRegBValve.SetReference(Rot_PressRegBLocation, ECSRotAxis1);
+	PressRegBValve.DefineMeshGroup(VC_GRP_Rot_PressRegB);
+
+	MainPanelVC.AddSwitch(&DESO2Valve, AID_VC_ROT_DESO2);
+	DESO2Valve.SetReference(Rot_DesO2Location, ECSRotAxis1);
+	DESO2Valve.DefineMeshGroup(VC_GRP_Rot_DesO2);
+
+	MainPanelVC.AddSwitch(&ASCO2Valve1, AID_VC_ROT_ASCO2_1);
+	ASCO2Valve1.SetReference(Rot_AscO2_1Location, ECSRotAxis1);
+	ASCO2Valve1.DefineMeshGroup(VC_GRP_Rot_AscO2_1);
+
+	MainPanelVC.AddSwitch(&ASCO2Valve2, AID_VC_ROT_ASCO2_2);
+	ASCO2Valve2.SetReference(Rot_AscO2_2Location, ECSRotAxis1);
+	ASCO2Valve2.DefineMeshGroup(VC_GRP_Rot_AscO2_2);
+
+	MainPanelVC.AddSwitch(&SuitGasDiverterSwitch, AID_VC_SUITGASDIVERTER);
+	SuitGasDiverterSwitch.SetReference(SuitGasDiverterHandleLocation, _V(0, 0, -0.005));
+	SuitGasDiverterSwitch.DefineMeshGroup(VC_GRP_SuitGasDiverterHandle);
+
+	MainPanelVC.AddSwitch(&WaterSepSelectSwitch, AID_VC_H2OSEP);
+	WaterSepSelectSwitch.SetReference(H20SepHandleLocation, ECSVector1);
+	WaterSepSelectSwitch.DefineMeshGroup(VC_GRP_H20SepHandle);
+
+	MainPanelVC.AddSwitch(&CO2CanisterSelectSwitch, AID_VC_CANISTERSEL);
+	CO2CanisterSelectSwitch.SetReference(Sw_CanisterSelLocation, ECSRotAxis3);
+	CO2CanisterSelectSwitch.DefineMeshGroup(VC_GRP_Sw_CanisterSel);
+
+	MainPanelVC.AddSwitch(&CO2CanisterPrimVent, AID_VC_VENT1);
+	CO2CanisterPrimVent.SetReference(PB_Vent1Location, ECSVector1);
+	CO2CanisterPrimVent.DefineMeshGroup(VC_GRP_PB_Vent1);
+
+	MainPanelVC.AddSwitch(&CO2CanisterSecVent, AID_VC_VENT2);
+	CO2CanisterSecVent.SetReference(PB_Vent2Location, ECSVector1);
+	CO2CanisterSecVent.DefineMeshGroup(VC_GRP_PB_Vent2);
 
 	MainPanelVC.DefineVCAnimations(vcidx);
 	crossPointerLeft.DefineVCAnimations(vcidx);

@@ -1294,6 +1294,25 @@
 #define AID_VC_CB_P16R4_18      4682
 #define AID_VC_CB_P16R4_19      4683
 
+// ECS Panels
+#define AID_VC_ROT_SUITCIRCUITRELIEF    5000
+#define AID_VC_ROT_CABINGASRETURN       5001
+#define AID_VC_ROT_CANISTER1            5002
+#define AID_VC_ROT_CANISTER2            5003
+#define AID_VC_ROT_CABINREPRESS         5004
+#define AID_VC_ROT_PLSSFILL             5005
+#define AID_VC_ROT_PRESSREGA            5006
+#define AID_VC_ROT_PRESSREGB            5007
+#define AID_VC_ROT_DESO2                5008
+#define AID_VC_ROT_ASCO2_1              5009
+#define AID_VC_ROT_ASCO2_2              5010
+
+#define AID_VC_SUITGASDIVERTER          5021
+#define AID_VC_H2OSEP                   5022
+#define AID_VC_CANISTERSEL              5023
+#define AID_VC_VENT1                    5024
+#define AID_VC_VENT2                    5025
+
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects
