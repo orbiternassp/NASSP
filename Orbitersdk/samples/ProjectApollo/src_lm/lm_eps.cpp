@@ -922,14 +922,12 @@ void LEM_UtilLights::SystemTimestep(double simdt)
 		UtlCB->DrawPower(2.2);
 		UtlLtgHeat->GenerateHeat(2.178);
 		//UtlLtgHeat->GenerateHeat(1.09);	//Use half heat power
-		//UtlLtgHeat->GenerateHeat(0);	//Testing zero heat 
 	}
 	//CDR Utility Lights Bright
 	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(6.15);
 		UtlLtgHeat->GenerateHeat(6.1);
 		//UtlLtgHeat->GenerateHeat(3.05);	//Use half heat power
-		//UtlLtgHeat->GenerateHeat(0);	//Testing zero heat 
 	}	
 
 	//LMP Utility Lights Dim
@@ -937,14 +935,12 @@ void LEM_UtilLights::SystemTimestep(double simdt)
 		UtlCB->DrawPower(1.76);
 		UtlLtgHeat->GenerateHeat(1.74);
 		//UtlLtgHeat->GenerateHeat(0.87);	//Use half heat power
-		//UtlLtgHeat->GenerateHeat(0);	//Testing zero heat 
 	}
 	//LMP Utility Lights Bright
 	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(3.3);
 		UtlLtgHeat->GenerateHeat(3.267); 
 		//UtlLtgHeat->GenerateHeat(1.63);	//Use half heat power
-		//UtlLtgHeat->GenerateHeat(0);	//Testing zero heat 
 	}
 }
 
@@ -984,7 +980,6 @@ void LEM_COASLights::SystemTimestep(double simdt)
 		COASCB->DrawPower(8.4);
 		COASHeat->GenerateHeat(8.4);
 		//COASHeat->GenerateHeat(4.2); 	//Use half heat power
-		//COASHeat->GenerateHeat(0); 	//Testing zero heat
 	}
 }
 
@@ -1070,8 +1065,7 @@ void LEM_FloodLights::Timestep(double simdt)
 void LEM_FloodLights::SystemTimestep(double simdt)
 {
 	FloodCB->DrawPower(GetPowerDraw());
-	FloodHeat->GenerateHeat((GetPowerDraw()*0.356)*0.50);	//Assumes linear relationship between heat and power draw based on maximum at 28V, 50% of power load to heat (just a guess to keep cabin temps stable)
-	//FloodHeat->GenerateHeat(0);	//Testing zero heat
+	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V
 }
 
 LEM_PFIRA::LEM_PFIRA()

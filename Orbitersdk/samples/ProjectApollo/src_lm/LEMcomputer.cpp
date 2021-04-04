@@ -405,14 +405,12 @@ void LMOptics::SystemTimestep(double simdt) {
 	{
 		lem->AOTLampFeeder.DrawPower(9.3);
 		lem->CabinHeat->GenerateHeat(9.3);
-		//lem->CabinHeat->GenerateHeat(0);	//Testing zero heat
 	}
 
 	if (lem->HTR_AOT_CB.Voltage() > SP_MIN_DCVOLTAGE)
 	{
 		lem->HTR_AOT_CB.DrawPower(5.6);
 		lem->CabinHeat->GenerateHeat(5.6);	//Not sure if all AOT heat radiates into the cabin, but since the heaters/mirrors are in the cabin portion of the AOT, we will do this.
-		//lem->CabinHeat->GenerateHeat(0);	//Testing zero heat
 	}
 }
 

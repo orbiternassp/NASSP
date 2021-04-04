@@ -1586,7 +1586,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//Seq Camera Power/Heat
 	if (CAMR_SEQ_CB.Voltage() > SP_MIN_DCVOLTAGE) {
 		CAMR_SEQ_CB.DrawPower(14.0);
-		CabinHeat->GenerateHeat(14.0);	//This should only generate heat when the camera is active, as it has it's own on/off switch
+		//CabinHeat->GenerateHeat(14.0);	//This should only generate heat when the camera is active, as it has it's own on/off switch
+		CabinHeat->GenerateHeat(7.0);	//This should only generate heat when the camera is active, as it has it's own on/off switch, half heat
 	}
 
 	//Cabin Window Heaters
@@ -2021,7 +2022,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "LGC %lf CDU %lf PSA %lf GAS %lf LCA %lf DSE %lf TLE %lf ASA %lf PTA %lf IMU %lf RGA %lf CT %lf CR %lf HX1 %lf HX2 %lf", KelvinToFahrenheit(*LGCRad), KelvinToFahrenheit(*CDURad), KelvinToFahrenheit(*PSARad), KelvinToFahrenheit(*GASTARad), KelvinToFahrenheit(*LCARad), KelvinToFahrenheit(*DSERad), KelvinToFahrenheit(*TLERad), KelvinToFahrenheit(*ASARad), KelvinToFahrenheit(*PTARad), KelvinToFahrenheit(*IMURad), KelvinToFahrenheit(*RGARad), ecs.GetCabinTempF(), KelvinToFahrenheit(*CabinPlate), *CabinHX1, *CabinHX2);
 	//sprintf(oapiDebugString(), "SBD %lf AEAVHF %lf ATCAINV %lf SCERA %lf CWEAPCM %lf RRE %lf SCERAECA %lf P/S %lf Pwr1:%lf Pwr2:%lf", KelvinToFahrenheit(*SBDRad), KelvinToFahrenheit(*AEAVHFRad), KelvinToFahrenheit(*ATCAINVRad), KelvinToFahrenheit(*SCERARad), KelvinToFahrenheit(*CWEAPCMRad), KelvinToFahrenheit(*RRERad), KelvinToFahrenheit(*SCERAECARad), KelvinToFahrenheit(*PRIMSECRad), *PRIMSECHX1, *PRIMSECHX2);
 
-	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf CabinQ %lf CabinHeat %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTempF(), *CabinEnergy, *CabinHeat);
+	sprintf(oapiDebugString(), "CabinP %lf CabinT %lf CabinQ %lf CabinHeat %lf CabinPlate %lf HX %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTempF(), *CabinEnergy, *CabinHeat, KelvinToFahrenheit(*CabinPlate), *CabinHX1);
 	//sprintf(oapiDebugString(), "LM Cabin: %lf LM Tunnel: %lf", *lmcabinpress*PSI, *lmtunnelpress*PSI);
 	//sprintf(oapiDebugString(), "Quad 1 %lf Quad 2 %lf Quad 3 %lf Quad 4 %lf", KelvinToFahrenheit(*QD1Temp), KelvinToFahrenheit(*QD2Temp), KelvinToFahrenheit(*QD3Temp), KelvinToFahrenheit(*QD4Temp));
 	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
@@ -2292,11 +2293,21 @@ void LEM::CheckDescentStageSystems()
 		DesBatCooling->IN_valve.Close();
 		DesBatCooling->OUT_valve.Close();
 
+		//DES HX
+
+		h_HeatExchanger *desbat1HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1ECAHX");
+		h_HeatExchanger* desbat2HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT2PBATHX");
+		h_HeatExchanger* desbat3HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT3ECAHX");
+		h_HeatExchanger* desbat4HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4ECAHX");
+		desbat1HX->SetPumpOff();
+		desbat2HX->SetPumpOff();
+		desbat3HX->SetPumpOff();
+		desbat4HX->SetPumpOff();
+
 		//LR
 
-		Boiler *lrheater = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-LR-Antenna-Heater");
+		Boiler* lrheater = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:LEM-LR-Antenna-Heater");
 		lrheater->SetPumpOff();
-		lrheater->WireTo(NULL);
 	}
 }
 
