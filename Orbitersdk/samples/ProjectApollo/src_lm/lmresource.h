@@ -1306,12 +1306,23 @@
 #define AID_VC_ROT_DESO2                5008
 #define AID_VC_ROT_ASCO2_1              5009
 #define AID_VC_ROT_ASCO2_2              5010
+#define AID_VC_ROT_SECEVAPFLOW          5011
+#define AID_VC_ROT_PRIEVAPFLOW_1        5012
+#define AID_VC_ROT_PRIEVAPFLOW_2        5013
+#define AID_VC_ROT_DESH2O               5014
+#define AID_VC_ROT_SUITTEMP             5015
+#define AID_VC_ROT_WATERTANKSEL         5016
+#define AID_VC_ROT_LGC                  5017
+#define AID_VC_ROT_SUITISOLCDR          5018
+#define AID_VC_ROT_SUITISOLLMP          5019
 
 #define AID_VC_SUITGASDIVERTER          5021
 #define AID_VC_H2OSEP                   5022
 #define AID_VC_CANISTERSEL              5023
 #define AID_VC_VENT1                    5024
 #define AID_VC_VENT2                    5025
+#define AID_VC_ACTOVRDCDR               5026
+#define AID_VC_ACTOVRDLMP               5027
 
 #define IDB_LEM_FDAI_ROLL               10006
 
