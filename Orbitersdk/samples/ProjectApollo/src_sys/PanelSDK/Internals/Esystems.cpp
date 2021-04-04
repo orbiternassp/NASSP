@@ -620,7 +620,6 @@ void Battery::UpdateFlow(double dt)
 		Amperes = 0;
 
 	batheat = (internal_resistance * (Amperes * Amperes));	//Heat due to battery discharging based on draw current
-	//batheat = 10000;
 
 	DrawPower(batheat * dt); //Power loss to heat
 	thermic(batheat * dt); //1 joule = 1 watt * dt
