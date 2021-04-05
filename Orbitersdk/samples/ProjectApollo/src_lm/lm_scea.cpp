@@ -893,18 +893,18 @@ void SCERA2::Timestep()
 	SA13.SetOutput(5, lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER);
 	//Yaw attitude control selector (GH1630)
 	SA13.SetOutput(6, lem->scca1.GetK1());
-	//Battery 1 malfunction (GC9961)
-	SA13.SetOutput(7, false);	//TBD
+	//Battery 1 malfunction (GC9961) 
+	SA13.SetOutput(7, false);	//TBD, battery temperatures now implemented
 	//Battery 2 malfunction (GC9962)
-	SA13.SetOutput(8, false);	//TBD
+	SA13.SetOutput(8, false);	//TBD, battery temperatures now implemented
 	//Battery 3 malfunction (GC9963)
-	SA13.SetOutput(9, false);	//TBD
+	SA13.SetOutput(9, false);	//TBD, battery temperatures now implemented
 	//Battery 4 malfunction (GC9964)
-	SA13.SetOutput(10, false);	//TBD
+	SA13.SetOutput(10, false);	//TBD, battery temperatures now implemented
 	//Battery 5 malfunction (GC9965)
-	SA13.SetOutput(11, false);	//TBD
+	SA13.SetOutput(11, false);	//TBD, battery temperatures now implemented
 	//Battery 6 malfunction (GC9966)
-	SA13.SetOutput(12, false);	//TBD
+	SA13.SetOutput(12, false);	//TBD, battery temperatures now implemented
 
 	//Abort stage command (GH1283)
 	SA14.SetOutput(1, lem->scca1.GetK19());

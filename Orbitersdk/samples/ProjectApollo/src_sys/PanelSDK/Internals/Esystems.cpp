@@ -607,7 +607,12 @@ double Battery::Current()
 
 double Battery::Temperature()
 {
-	return Temp;
+	if (IsEnabled())
+	{
+		return Temp;
+	}
+	
+	return 0.0;
 }
 
 void Battery::UpdateFlow(double dt)
