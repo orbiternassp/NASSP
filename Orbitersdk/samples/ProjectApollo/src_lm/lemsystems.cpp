@@ -1493,6 +1493,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// ORDEAL
 	attitude.y += ordeal.GetFDAI1PitchAngle();
 	if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+
+	fdaiLeft.SetAttitude(attitude);
 	fdaiLeft.Timestep(MissionTime, simdt);
 
 	if (RightAttitudeMonSwitch.IsUp())	//PGNS
@@ -1506,6 +1508,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// ORDEAL
 	attitude.y += ordeal.GetFDAI2PitchAngle();
 	if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+
+	fdaiRight.SetAttitude(attitude);
 	fdaiRight.Timestep(MissionTime, simdt);
 
 	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
