@@ -358,7 +358,6 @@ struct RMMYNIOutputTable
 struct ReentryConstraintsTable
 {
 	//R31
-	int Type = 2;			//1 = Primary (lat and long), 2 = Contingency (long only)
 	int Thruster = 33;		//1 = RCS+2, 2 = RCS+4, 3 = RCS-2, 4 = RCS-4, 33 = SPS
 	int GuidanceMode = 4;	//1 = Inertial, 4 = Guided (G&N)
 	int BurnMode = 3;		//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)

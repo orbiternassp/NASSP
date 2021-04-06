@@ -545,7 +545,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	entrycritical = 1;
 	RTEReentryTime = 0.0;
-	entrynominal = 1;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
 	FlybyPeriAlt = 0.0;
@@ -593,7 +592,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	manpadenginetype = RTCC_ENGINETYPE_CSMSPS;
-	deorbitenginetype = RTCC_ENGINETYPE_CSMSPS;
 	TPIPAD_AZ = 0.0;
 	TPIPAD_dH = 0.0;
 	TPIPAD_dV_LOS = _V(0.0, 0.0, 0.0);
@@ -3715,53 +3713,27 @@ int ARCore::subThread()
 	break;
 	case 17: //Deorbit Maneuver
 	{
-		EntryResults res;
-		EarthEntryOpt opt;
+		EphemerisData sv;
+		double CSMmass;
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->NewMPTTrajectory(mptveh, opt.RV_MCC))
+			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.GETI);
+			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, sv);
+			if (err)
 			{
 				Result = 0;
 				break;
 			}
+			GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, CSMmass);
 		}
 		else
 		{
-			opt.RV_MCC = GC->rtcc->StateVectorCalc(vessel);
+			sv = GC->rtcc->StateVectorCalcEphem(vessel);
+			CSMmass = vessel->GetMass();
 		}
 
-		if (entrylongmanual)
-		{
-			opt.lng = EntryLng;
-		}
-		else
-		{
-			opt.lng = (double)landingzone;
-		}
-		
-		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.enginetype = deorbitenginetype;
-		opt.entrylongmanual = entrylongmanual;
-		opt.ReA = EntryAng;
-		opt.TIGguess = EntryTIG;
-		opt.vessel = vessel;
-		opt.nominal = entrynominal;
-		opt.useSV = true;
-
-		GC->rtcc->BlockDataProcessor(&opt, &res);
-
-		Entry_DV = res.dV_LVLH;
-		EntryTIGcor = res.P30TIG;
-		EntryLatcor = res.latitude;
-		EntryLngcor = res.longitude;
-		EntryRRT = res.GET400K;
-		EntryRET05G = res.GET05G;
-		EntryRTGO = res.RTGO;
-		EntryAngcor = res.ReA;
-		P30TIG = EntryTIGcor;
-		dV_LVLH = Entry_DV;
-		entryprecision = res.precision;
+		GC->rtcc->RMSDBMP(sv, CSMmass);
 
 		Result = 0;
 	}

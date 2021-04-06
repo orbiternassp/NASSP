@@ -2870,6 +2870,8 @@ public:
 	void RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
 	//Reentry Constant G Iterator
 	void RMMGIT(EphemerisData sv_EI, double lng_T);
+	//Retrofire Planning Control Module
+	void RMSDBMP(EphemerisData sv, double CSMmass);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -3921,6 +3923,16 @@ public:
 
 	ReentryConstraintsTable RZC1RCNS;
 	RetrofireDisplayParametersTable RZRFDP;
+
+	struct RetrofireMEDSaveTable
+	{
+		double GETI = 0.0;
+		double lat_T = 0.0;
+		double lng_T = 0.0;
+
+		//Actually determined by leaving the latitude blank on the MED
+		int Type = 2;			//1 = Primary (lat and long), 2 = Contingency (long only)
+	} RZJCTTC;
 
 	struct LMLaunchTargetTable
 	{

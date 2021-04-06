@@ -99,7 +99,7 @@ protected:
 	//Retrofire Convergence
 	void RMMDBN();
 	//Thrust Direction and Body Attitude Routine
-	void RMMATT(int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T);
+	void RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T);
 	//Retrofire Output Control
 	void RMSTTF();
 	//Retrofire On-Line Printing
@@ -126,6 +126,20 @@ protected:
 	int MAINITER;
 	//Main error indicator
 	int ERR;
+	//Error return from LLBRTD
+	int LLBRTDERR;
+	//Downrange error in NM
+	double MD_lng;
+	//Crossrange error in NM
+	double MD_lat;
+	//Main loop convergence flag
+	bool HASCONVERGED;
+	//Thrust value in CMC
+	double TCMC;
+	//Burn attitude in LVLH coordinates
+	VECTOR3 LVLHAtt;
+	VECTOR3 OtherAtt;
+	MATRIX3 DesREFSMMAT;
 
 	//State vector at burn initiation (ullage on)
 	EphemerisData sv_BI;
@@ -135,8 +149,10 @@ protected:
 	EphemerisData sv_BO;
 	//ECI state vector at entry interface (400k altitude)
 	EphemerisData sv_EI;
+	//Actual latitude of landing
+	double lat_IP;
 	//Actual longitude of landing
-	double lng_L;
+	double lng_IP;
 	//Zero lift landing point
 	double lat_ZL, lng_ZL;
 	//Maximum lift landing point

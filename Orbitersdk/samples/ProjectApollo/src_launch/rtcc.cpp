@@ -31176,3 +31176,9 @@ void RTCC::RMMGIT(EphemerisData sv_EI, double lng_T)
 
 	lng_max = out.lng_IP;
 }
+
+void RTCC::RMSDBMP(EphemerisData sv, double CSMmass)
+{
+	RetrofirePlanning plan(this);
+	plan.RMSDBMP(sv, RZJCTTC.GETI, RZJCTTC.lat_T, RZJCTTC.lng_T, CSMmass);
+}

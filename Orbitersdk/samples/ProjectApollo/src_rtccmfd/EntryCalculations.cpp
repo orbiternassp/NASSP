@@ -1415,22 +1415,27 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	case RTCC_ENGINETYPE_CSMRCSPLUS2:
 		F = pRTCC->MCTCT1;
 		mdot = pRTCC->MCTCW1;
+		TCMC = pRTCC->MCTCT5;
 		break;
 	case RTCC_ENGINETYPE_CSMRCSPLUS4:
 		F = pRTCC->MCTCT2;
 		mdot = pRTCC->MCTCW2;
+		TCMC = pRTCC->MCTCT6;
 		break;
 	case RTCC_ENGINETYPE_CSMRCSMINUS2:
 		F = pRTCC->MCTCT3;
 		mdot = pRTCC->MCTCW3;
+		TCMC = pRTCC->MCTCT5;
 		break;
 	case RTCC_ENGINETYPE_CSMRCSMINUS4:
 		F = pRTCC->MCTCT4;
 		mdot = pRTCC->MCTCW4;
+		TCMC = pRTCC->MCTCT6;
 		break;
 	case RTCC_ENGINETYPE_CSMSPS:
 		F = pRTCC->MCTST1;
 		mdot = pRTCC->MCTSW1;
+		TCMC = pRTCC->MCTST9;
 		break;
 	}
 
@@ -1507,6 +1512,11 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	//Coverge two body solution
 	RMMDBM();
 
+	if (ERR)
+	{
+		return true;
+	}
+
 	//Predict finite burn ignition time
 	double dt_man = DVBURN / (F / CSMmass);
 	GMTI = GMTI - dt_man / 2.0 - pRTCC->RZC1RCNS.UllageTime;
@@ -1521,7 +1531,6 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	EphemerisData sv_ECT;
 	RMMYNIInputTable reentryin;
 	RMMYNIOutputTable reentryout;
-	VECTOR3 Att;
 
 	MAINITER = 0;
 
@@ -1567,13 +1576,13 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		//Calculate thrust direction
 		if (pRTCC->RZC1RCNS.AttitudeMode == 1)
 		{
-			Att = pRTCC->RZC1RCNS.LVLHAttitude;
+			LVLHAtt = pRTCC->RZC1RCNS.LVLHAttitude;
 		}
 		else
 		{
-			Att = _V(0.0, -(31.7*RAD + acos(OrbMech::R_Earth / length(sv_TIG.R))), PI);
+			LVLHAtt = _V(0.0, -(31.7*RAD + acos(OrbMech::R_Earth / length(sv_TIG.R))), PI);
 		}
-		RMMATT(1, Att, REFSMMAT, pRTCC->RZC1RCNS.Thruster, sv_TIG.R, sv_TIG.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
+		RMMATT(1, 1, LVLHAtt, REFSMMAT, pRTCC->RZC1RCNS.Thruster, sv_TIG.R, sv_TIG.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
 
 		integin.sv0 = sv_BI;
 		integin.A = 0.0;
@@ -1635,7 +1644,8 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		reentryin.RLDIR = 1.0;
 
 		pRTCC->RMMYNI(reentryin, reentryout);
-		lng_L = reentryout.lng_IP;
+		lat_IP = reentryout.lat_IP;
+		lng_IP = reentryout.lng_IP;
 
 		//Did we impact?
 		if (pRTCC->RZC1RCNS.BurnMode != 3 && reentryout.IEND != 2)
@@ -1644,7 +1654,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 			return true;
 		}
 
-		dlng = lng_T - lng_L;
+		dlng = lng_T - lng_IP;
 		while (dlng > PI)
 		{
 			dlng -= PI2;
@@ -1657,9 +1667,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		//Compare target to impact, adjust retrofire maneuver quantities
 		RMMDBN();
 
-	} while (abs(dlng) > 0.00012 && MAINITER < 10);
+	} while (HASCONVERGED == false && ERR == 0);
 
-	if (MAINITER >= 10)
+	if (ERR)
 	{
 		//Didn't converge
 		RMGTTF("RMSDBMP", 31);
@@ -1712,7 +1722,7 @@ void RetrofirePlanning::RMMDBF()
 	}
 
 	double w_C, ddt, dt;
-	int i = 0, LLBRTDERR;
+	int i = 0;
 
 	dt = 0.0;
 	w_C = PI2 / OrbMech::period(sv0_ECT.R, sv0_ECT.V, OrbMech::mu_Earth) - OrbMech::w_Earth;
@@ -1771,7 +1781,7 @@ void RetrofirePlanning::RMMDBM()
 {
 	EphemerisData sv_TIG, sv_apo;
 	VECTOR3 Att;
-	double R_E, lat_L, dlng2, lng_old, GMTI_old, ddt; //, MJD_L
+	double R_E, dlng2, lng_old, GMTI_old, ddt; //, MJD_L
 	int iter;
 	ELVCTRInputTable in;
 	ELVCTROutputTable out;
@@ -1798,6 +1808,8 @@ void RetrofirePlanning::RMMDBM()
 		if (out.ErrorCode > 2)
 		{
 			//Error
+			RMGTTF("RMMDBM", 51);
+			ERR = 1;
 			return;
 		}
 
@@ -1813,7 +1825,7 @@ void RetrofirePlanning::RMMDBM()
 		}
 
 		//Calculate thrust direction
-		RMMATT(1, Att, REFSMMAT, pRTCC->RZC1RCNS.Thruster, sv_TIG.R, sv_TIG.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
+		RMMATT(1, 1, Att, REFSMMAT, pRTCC->RZC1RCNS.Thruster, sv_TIG.R, sv_TIG.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
 
 		//Calculate DV fo V, gamma targeting
 		if (pRTCC->RZC1RCNS.BurnMode == 3)
@@ -1830,7 +1842,8 @@ void RetrofirePlanning::RMMDBM()
 				OrbMech::periapo(sv_TIG.R, sv_apo.V, OrbMech::mu_Earth, r_a, r_p);
 				if (i > 0 && r_p > r_p_last)
 				{
-					//No EI
+					RMGTTF("RMMDBM", 53);
+					ERR = 1;
 					return;
 				}
 				DVBURN += 10.0;
@@ -1871,13 +1884,27 @@ void RetrofirePlanning::RMMDBM()
 
 		//Predict state vector at EI
 		sv_apo.V = sv_TIG.V + U_T * DVBURN;
-		pRTCC->LLBRTD(sv_apo, -1, SQMU, OrbMech::R_Earth, 400000.0*0.3048, 1.0, sv_EI, R_E);
+		LLBRTDERR = pRTCC->LLBRTD(sv_apo, -1, SQMU, OrbMech::R_Earth, 400000.0*0.3048, 1.0, sv_EI, R_E);
+
+		if (LLBRTDERR)
+		{
+			if (LLBRTDERR == 4)
+			{
+				RMGTTF("RMMDBM", 56);
+			}
+			else
+			{
+				RMGTTF("RMMDBM", 53);
+			}
+			ERR = 1;
+			return;
+		}
 
 		//Calculate landing point
-		EntryCalculations::landingsite(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, lng_L, lat_L);
+		EntryCalculations::landingsite(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, lng_IP, lat_IP);
 		//EntryCalculations::LNDING(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, 0.3, 1, 0.0, lng_L, lat_L, MJD_L);
 
-		dlng = lng_T - lng_L;
+		dlng = lng_T - lng_IP;
 		while (dlng > PI)
 		{
 			dlng -= PI2;
@@ -1890,19 +1917,19 @@ void RetrofirePlanning::RMMDBM()
 		if (iter == 0)
 		{
 			GMTI_old = GMTI;
-			lng_old = lng_L;
+			lng_old = lng_IP;
 
 			double w_C = PI2 / OrbMech::period(sv_TIG.R, sv_TIG.V, OrbMech::mu_Earth);
 			p_tig = w_C - OrbMech::w_Earth;
 		}
 		else
 		{
-			dlng2 = lng_L - lng_old;
+			dlng2 = lng_IP - lng_old;
 			ddt = GMTI - GMTI_old;
 			p_tig = dlng2 / ddt;
 
 			GMTI_old = GMTI;
-			lng_old = lng_L;
+			lng_old = lng_IP;
 
 			while (dlng2 > PI)
 			{
@@ -1921,6 +1948,9 @@ void RetrofirePlanning::RMMDBM()
 	if (iter >= 15)
 	{
 		//No convergence
+		pRTCC->RTCCONLINEMON.DoubleBuffer[0] = dlng * 3443.93359;
+		RMGTTF("RMMDBM", 52);
+		ERR = 1;
 		return;
 	}
 }
@@ -1941,14 +1971,38 @@ void RetrofirePlanning::RMMDBN()
 			return;
 		}
 	}
+	//Calculate landing error
+	MD_lat = 0.0;
+	MD_lng = dlng * 3443.93359;
+
+	//Check on convergence
+	if (abs(MD_lng) < 0.4)
+	{
+		pRTCC->RTCCONLINEMON.DoubleBuffer[0] = MD_lng;
+		pRTCC->RTCCONLINEMON.DoubleBuffer[1] = MD_lat;
+		RMGTTF("RMMDBN", 41);
+		HASCONVERGED = true;
+		return;
+	}
+
+	//Check on iteration limit
+	MAINITER++;
+	if (MAINITER >= 10)
+	{
+		pRTCC->RTCCONLINEMON.DoubleBuffer[0] = MD_lng;
+		pRTCC->RTCCONLINEMON.DoubleBuffer[1] = MD_lat;
+		RMGTTF("RMMDBN", 43);
+		ERR = 1;
+		return;
+	}
+
 	//Adjust GMTI
 	GMTI = GMTI + dlng / p_tig;
-
-	MAINITER++;
 }
 
-void RetrofirePlanning::RMMATT(int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T)
+void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T)
 {
+	//entry: 1 = calculate unit vector. 2 = calculate attitude in the other coordinate system and the deorbit REFSMMAT
 	//opt: 1 = Att is LVLH, 2 = Att is IMU
 
 	VECTOR3 X_P, Y_P, Z_P;
@@ -2025,19 +2079,24 @@ void RetrofirePlanning::RMMATT(int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thrus
 		U_T = X_B;
 	}
 
-	//Attitude in other coordinates
-	/*if (opt == 1)
+	if (entry == 1)
 	{
-		Pitch2 = asin(dotp(X_P, X_B));
-		if (abs(Pitch2 - PI05) < 10e-8)
+		return;
+	}
+
+	//Attitude in other coordinates
+	if (opt == 1)
+	{
+		OtherAtt.y = asin(dotp(X_P, X_B));
+		if (abs(OtherAtt.y - PI05) < 10e-8)
 		{
-			Roll2 = 0.0;
-			Yaw2 = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
+			OtherAtt.x = 0.0;
+			OtherAtt.z = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
 		}
 		else
 		{
-			Yaw2 = atan2(dotp(Z_P, X_B), dotp(X_P, X_B));
-			Roll2 = atan2(-dotp(Y_P, Z_B), dotp(Y_P, Y_B));
+			OtherAtt.z = atan2(dotp(Z_P, X_B), dotp(X_P, X_B));
+			OtherAtt.x = atan2(-dotp(Y_P, Z_B), dotp(Y_P, Y_B));
 		}
 	}
 	else
@@ -2045,29 +2104,30 @@ void RetrofirePlanning::RMMATT(int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thrus
 		Z_P = unit(R);
 		Y_P = unit(crossp(V, R));
 		X_P = unit(crossp(Y_P, Z_P));
-		Pitch2 = asin(-dotp(Z_P, X_B));
-		if (abs(Pitch2 - PI05) < 10e-8)
+		OtherAtt.y = asin(-dotp(Z_P, X_B));
+		if (abs(OtherAtt.y - PI05) < 10e-8)
 		{
-			Roll2 = 0.0;
-			Yaw2 = atan2(-dotp(X_P, X_B), dotp(Y_P, Y_B));
+			OtherAtt.x = 0.0;
+			OtherAtt.z = atan2(-dotp(X_P, X_B), dotp(Y_P, Y_B));
 		}
 		else
 		{
-			Yaw2 = atan2(dotp(Y_P, X_B), dotp(X_P, X_B));
-			Roll2 = atan2(dotp(X_P, Y_B), dotp(Z_P, Z_B));
+			OtherAtt.z = atan2(dotp(Y_P, X_B), dotp(X_P, X_B));
+			OtherAtt.x = atan2(dotp(X_P, Y_B), dotp(Z_P, Z_B));
 		}
-	}*/
+	}
 
 	//Retrofired preferred alignment
-	//X_SM = -X_B;
-	//Y_SM = Y_B;
-	//Z_SM = -Z_B;
-	//DesREFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);*/
+	VECTOR3 X_SM, Y_SM, Z_SM;
+	X_SM = -X_B;
+	Y_SM = Y_B;
+	Z_SM = -Z_B;
+	DesREFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
 }
 
 void RetrofirePlanning::RMSTTF()
 {
-	//Just for convenience
+	//Just for convenience, later we should have primary and contingency tables, too
 	RetrofireDisplayParametersTable *tab = &pRTCC->RZRFDP;
 
 	tab->Indicator = 0;
@@ -2084,12 +2144,75 @@ void RetrofirePlanning::RMSTTF()
 	char Buffer[16];
 	pRTCC->EMGSTGENName(pRTCC->RZC1RCNS.REFSMMAT, Buffer);
 	tab->RefsID.assign(Buffer);
-	tab->CSMWeightRetro = burnaux.WTENGON / (LBS*1000.0);
+	tab->CSMWeightRetro = burnaux.WTENGON *LBS*1000.0;
 
 	TimeConstraintsTable elem;
 	pRTCC->EMMDYNEL(sv_TIG, elem);
 
 	tab->TrueAnomalyRetro = elem.TA*DEG;
+	RMMATT(2, 1, LVLHAtt, REFSMMAT, pRTCC->RZC1RCNS.Thruster, sv_TIG.R, sv_TIG.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
+	tab->Att_LVLH = LVLHAtt * DEG;
+	tab->Att_IMU = OtherAtt * DEG;
+	for (int i = 0;i < 3;i++)
+	{
+		if (tab->Att_IMU.data[i] < 0)
+		{
+			tab->Att_IMU.data[i] += 360.0;
+		}
+	}
+	tab->DVC = burnaux.DV_C / 0.3048;
+	tab->BurnTime = burnaux.DT_B;
+	tab->DVT = burnaux.DV / 0.3048;
+	tab->UllageDT = pRTCC->RZC1RCNS.UllageTime;
+	tab->GMTI = burnaux.GMT_BI;
+	tab->GETI = pRTCC->GETfromGMT(tab->GMTI);
+	tab->RET400k = sv_EI.GMT - tab->GMTI;
+
+	double v_EI = length(sv_EI.V);
+	double gamma_EI = acos(dotp(unit(sv_EI.R), unit(sv_EI.V)));
+
+	tab->V400k = v_EI / 0.3048;
+	tab->Gamma400k = (PI05 - gamma_EI) * DEG;
+	tab->BankAngle = pRTCC->RZC1RCNS.FinalBankAngle*DEG;
+	tab->RETRB = 0.0; //TBD
+	tab->lat_ML = lat_ML * DEG;
+	tab->lng_ML = lng_ML * DEG;
+	if (pRTCC->RZJCTTC.Type == 2)
+	{
+		tab->lat_T = -750.0;
+	}
+	else
+	{
+		tab->lat_T = lat_T * DEG;
+	}
+	tab->lng_T = lng_T * DEG;
+	tab->lat_IP = lat_IP * DEG;
+	tab->lng_IP = lng_IP * DEG;
+	tab->lat_ZL = lat_ZL * DEG;
+	tab->lng_ZL = lng_ZL * DEG;
+	tab->dlat_NM = MD_lat;
+	tab->dlng_NM = MD_lng;
+	tab->H_Retro = elem.h / 1852.0;
+	tab->P_G = (burnaux.P_G - pRTCC->MCTSPP)*DEG;
+	tab->Y_G = (burnaux.Y_G - pRTCC->MCTSYP)*DEG;
+	tab->REFSMMAT = DesREFSMMAT;
+	tab->DV_TO = burnaux.DV_TO / 0.3048;
+	tab->DT_TO = burnaux.DT_TO;
+	
+	VECTOR3 DV_EXDV = pRTCC->PIEXDV(sv_TIG.R, sv_TIG.V, CSMmass, TCMC, U_T*DVBURN, 0);
+
+	pRTCC->RZRFTT.GMTI_Manual = sv_TIG.GMT;
+	pRTCC->RZRFTT.DeltaV_Manual = DV_EXDV;
+
+	tab->VG_XDX = DV_EXDV / 0.3048;
+	//TBD: VG THR
+	EphemerisData sv_BO_ECT;
+	pRTCC->ELVCNV(sv_BO, 0, 1, sv_BO_ECT);
+	pRTCC->EMMDYNEL(sv_BO_ECT, elem);
+	double r_apo, r_peri;
+	pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_ECT.R), r_apo, r_peri);
+	tab->H_apo = (r_apo - OrbMech::R_Earth) / 1852.0;
+	tab->H_peri = (r_peri - OrbMech::R_Earth) / 1852.0;
 }
 
 void RetrofirePlanning::RMGTTF(std::string source, int i)
@@ -2219,6 +2342,71 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		break;
 	case 40:
 		message.push_back("RECEIVED AN INVALID VEHICLE ID");
+		break;
+	case 41:
+		sprintf(Buffer, "CONVERGED. E-W MISS = %.2lf N-S MISS = %.2lf", pRTCC->RTCCONLINEMON.DoubleBuffer[0], pRTCC->RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 42:
+		message.push_back("LESS THAN 5 MIN. SEPARATING MANEUVERS");
+		sprintf(Buffer, "E-W MISS = %.2lf N-S MISS = %.2lf", pRTCC->RTCCONLINEMON.DoubleBuffer[0], pRTCC->RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 43:
+		message.push_back("NO DOWNRANGE CONVERGENCE");
+		sprintf(Buffer, "E-W MISS = %.2lf N-S MISS = %.2lf", pRTCC->RTCCONLINEMON.DoubleBuffer[0], pRTCC->RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 44:
+		message.push_back("NO CROSSRANGE CONVERGENCE");
+		sprintf(Buffer, "E-W MISS = %.2lf N-S MISS = %.2lf", pRTCC->RTCCONLINEMON.DoubleBuffer[0], pRTCC->RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 45:
+		message.push_back("TL OR TR BOUNDS STOPPED CONVERGENCE");
+		sprintf(Buffer, "E-W MISS = %.2lf N-S MISS = %.2lf", pRTCC->RTCCONLINEMON.DoubleBuffer[0], pRTCC->RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 46:
+		message.push_back("V, GAMMA EI CONDITIONS VIOLATED");
+		sprintf(Buffer, "E-W MISS = %.2lf N-S MISS = %.2lf", pRTCC->RTCCONLINEMON.DoubleBuffer[0], pRTCC->RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 47:
+		message.push_back("NO DELTA-V POSSIBLE");
+		break;
+	case 48:
+		message.push_back("CANNOT INTERPOLATE FOR VECTOR");
+		break;
+	case 49:
+		message.push_back("EI TARGET CURVE NOT HIT");
+		sprintf(Buffer, "VEL = %.1lf GAMMA = %.2lf", pRTCC->RTCCONLINEMON.DoubleBuffer[0], pRTCC->RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 50:
+		message.push_back("(RCMDBM) ENTERED");
+		break;
+	case 51:
+		message.push_back("CANNOT INTERPOLATE FOR VECTOR");
+		break;
+	case 52:
+		message.push_back("NO DOWRANGE CONVERGENCE IN 15 ITERATIONS");
+		sprintf(Buffer, "MISS DISTANCE = %.1lf NM", pRTCC->RTCCONLINEMON.DoubleBuffer[0]);
+		message.push_back(Buffer);
+		break;
+	case 53:
+		message.push_back("NO INTERSECTION WITH EI");
+		break;
+	case 54:
+		message.push_back("NO IMPULSIVE DELTA-V POSSIBLE");
+		break;
+	case 55:
+		message.push_back("VEL, GAMMA BEYOND CURVE FIT");
+		sprintf(Buffer, "VEL = %.1lf GAMMA = %.2lf", pRTCC->RTCCONLINEMON.DoubleBuffer[0], pRTCC->RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 56:
+		message.push_back("HYPERBOLIC ORBIT FROM 2-BODY ROUTINE");
 		break;
 	}
 	pRTCC->OnlinePrint(source, message);

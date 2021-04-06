@@ -155,7 +155,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_vec(scn, "ENTRYDV", G->Entry_DV);
 	oapiWriteScenario_int(scn, "ENTRYCRITICAL", G->entrycritical);
 	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
-	papiWriteScenario_bool(scn, "ENTRYNOMINAL", G->entrynominal);
 	papiWriteScenario_bool(scn, "ENTRYLONGMANUAL", G->entrylongmanual);
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
@@ -266,7 +265,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_vec(line, "ENTRYDV", G->Entry_DV);
 		papiReadScenario_int(line, "ENTRYCRITICAL", G->entrycritical);
 		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
-		papiReadScenario_bool(line, "ENTRYNOMINAL", G->entrynominal);
 		papiReadScenario_bool(line, "ENTRYLONGMANUAL", G->entrylongmanual);
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
@@ -480,6 +478,45 @@ void ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
 	//{
 	//	sprintf(Buff, "%+07.1f", vel);
 	//}
+}
+
+void ApolloRTCCMFD::FormatLatitude(char * Buff, double lat)
+{
+	double iPart, fPart;
+	fPart = modf(abs(lat), &iPart);
+
+	if (lat >= 0)
+	{
+		sprintf_s(Buff, 64, "%02.0lf:%02.0lfN", iPart, fPart*60.0);
+	}
+	else
+	{
+		sprintf_s(Buff, 64, "%02.0lf:%02.0lfS", iPart, fPart*60.0);
+	}
+}
+
+void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng)
+{
+	while (lng >= 180.0)
+	{
+		lng -= 360.0;
+	}
+	while (lng < -180.0)
+	{
+		lng += 360.0;
+	}
+
+	double iPart, fPart;
+	fPart = modf(abs(lng), &iPart);
+
+	if (lng >= 0)
+	{
+		sprintf_s(Buff, 64, "%03.0lf:%02.0lfE", iPart, fPart*60.0);
+	}
+	else
+	{
+		sprintf_s(Buff, 64, "%03.0lf:%02.0lfW", iPart, fPart*60.0);
+	}
 }
 
 void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
@@ -1196,6 +1233,18 @@ void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
 void ApolloRTCCMFD::menuVectorPanelSummaryPage()
 {
 	screen = 97;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetRetrofireConstraintsPage()
+{
+	screen = 103;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetRetrofireDigitalsPage()
+{
+	screen = 104;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -4144,6 +4193,84 @@ void ApolloRTCCMFD::menuDeorbitCalc()
 	G->DeorbitCalc();
 }
 
+void ApolloRTCCMFD::menuCycleRetrofireType()
+{
+	if (GC->rtcc->RZJCTTC.Type < 2)
+	{
+		GC->rtcc->RZJCTTC.Type++;
+	}
+	else
+	{
+		GC->rtcc->RZJCTTC.Type = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuRetrofireGETIDialogue()
+{
+	bool RetrofireGETIInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", RetrofireGETIInput, 0, 20, (void*)this);
+}
+
+bool RetrofireGETIInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_RetrofireGETI(t1time);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RetrofireGETI(double time)
+{
+	GC->rtcc->RZJCTTC.GETI = time;
+}
+
+void ApolloRTCCMFD::menuRetrofireLatDialogue()
+{
+	bool RetrofireLatInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Latitude in degree (°):", RetrofireLatInput, 0, 20, (void*)this);
+}
+
+bool RetrofireLatInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_RetrofireLat(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RetrofireLat(double lat)
+{
+	GC->rtcc->RZJCTTC.lat_T = lat * RAD;
+}
+
+void ApolloRTCCMFD::menuRetrofireLngDialogue()
+{
+	bool RetrofireLngInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Longitude in degree (°):", RetrofireLngInput, 0, 20, (void*)this);
+}
+
+bool RetrofireLngInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_RetrofireLng(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RetrofireLng(double lng)
+{
+	GC->rtcc->RZJCTTC.lng_T = lng * RAD;
+}
+
 void ApolloRTCCMFD::menuEntryUpdateCalc()
 {
 	G->EntryUpdateCalc();
@@ -4877,23 +5004,6 @@ void ApolloRTCCMFD::GetEntryTargetfromAGC()
 			//G->EntryPADLat = G->EntryLatcor;
 			//G->EntryPADLng = G->EntryLngcor;
 		//}
-	}
-}
-
-void ApolloRTCCMFD::menuSwitchEntryNominal()
-{
-	G->entrynominal = !G->entrynominal;
-}
-
-void ApolloRTCCMFD::menuSwitchDeorbitEngineOption()
-{
-	if (G->deorbitenginetype == RTCC_ENGINETYPE_CSMSPS)
-	{
-		G->deorbitenginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
-	}
-	else
-	{
-		G->deorbitenginetype = RTCC_ENGINETYPE_CSMSPS;
 	}
 }
 

@@ -107,6 +107,8 @@ public:
 	void GET_Display4(char* Buff, double time);
 	void GET_Display_HHMM(char *Buff, double time);
 	void AGC_Display(char * Buff, double time);
+	void FormatLatitude(char * Buff, double lat);
+	void FormatLongitude(char * Buff, double lng);
 	void REFSMMATName(char* Buff, int n);
 	void ThrusterName(char *Buff, int n);
 	bool ThrusterType(std::string name, int &id);
@@ -141,6 +143,7 @@ public:
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();
 	void menuDeorbitCalc();
+	void menuCycleRetrofireType();
 	void menuMoonRTECalc();
 	void menuTransferRTEToMPT();
 	void menuGeneralMEDRequest();
@@ -202,8 +205,6 @@ public:
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
 	void GetEntryTargetfromAGC();
-	void menuSwitchEntryNominal();
-	void menuSwitchDeorbitEngineOption();
 	void menuSetRTEReentryTime();
 	void set_RTEReentryTime(double t);
 	void EntryLongitudeModeDialogue();
@@ -723,6 +724,14 @@ public:
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();
 	void menuGetOnboardStateVectors();
+	void menuSetRetrofireConstraintsPage();
+	void menuSetRetrofireDigitalsPage();
+	void menuRetrofireGETIDialogue();
+	void set_RetrofireGETI(double time);
+	void menuRetrofireLatDialogue();
+	void set_RetrofireLat(double lat);
+	void menuRetrofireLngDialogue();
+	void set_RetrofireLng(double lng);
 
 protected:
 	oapi::Font *font;
