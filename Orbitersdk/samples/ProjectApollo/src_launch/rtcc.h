@@ -3912,15 +3912,8 @@ public:
 		//Block 13
 		int RTETradeoffLabelling[5];
 	} PZREAP;
-
-	struct RetrofireTransferTable
-	{
-		double GMTI_Primary;
-		VECTOR3 DeltaV_Primary;
-		double GMTI_Manual;
-		VECTOR3 DeltaV_Manual;
-	} RZRFTT;
-
+	
+	RetrofireTransferTable RZRFTT;
 	ReentryConstraintsTable RZC1RCNS;
 	RetrofireDisplayParametersTable RZRFDP;
 

@@ -451,3 +451,20 @@ struct TimeConstraintsTable
 	std::string StationID;
 	int TUP = 0;
 };
+
+struct RetrofireTransferTableEntry
+{
+	double GMTI = 0.0;
+	VECTOR3 DeltaV = _V(0, 0, 0);
+	int Thruster = 33;
+	double dt_ullage = 0.0;
+	bool UllageThrusterOption = true;
+	double lat_IP = 0.0;
+	double lng_IP = 0.0;
+};
+
+struct RetrofireTransferTable
+{
+	RetrofireTransferTableEntry Primary;
+	RetrofireTransferTableEntry Manual;
+};

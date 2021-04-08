@@ -1679,13 +1679,27 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	//Integrate max lift to impact for display
 	reentryin.KSWCH = 2;
 	pRTCC->RMMYNI(reentryin, reentryout);
-	lat_ML = reentryout.lat_IP;
-	lng_ML = reentryout.lng_IP;
+	if (reentryout.IEND == 2)
+	{
+		lat_ML = reentryout.lat_IP;
+		lng_ML = reentryout.lng_IP;
+	}
+	else
+	{
+		lat_ML = lng_ML = 0.0;
+	}
 	//Integrate zero lift to impact for display
 	reentryin.KSWCH = 1;
 	pRTCC->RMMYNI(reentryin, reentryout);
+	if (reentryout.IEND == 2)
+	{
 	lat_ZL = reentryout.lat_IP;
 	lng_ZL = reentryout.lng_IP;
+	}
+	else
+	{
+		lat_ZL = lng_ZL = 0.0;
+	}
 	//Output display information
 	RMSTTF();
 
@@ -1781,7 +1795,7 @@ void RetrofirePlanning::RMMDBM()
 {
 	EphemerisData sv_TIG, sv_apo;
 	VECTOR3 Att;
-	double R_E, dlng2, lng_old, GMTI_old, ddt; //, MJD_L
+	double R_E, dlng2, lng_old, GMTI_old, ddt, MJD_L;
 	int iter;
 	ELVCTRInputTable in;
 	ELVCTROutputTable out;
@@ -1813,7 +1827,7 @@ void RetrofirePlanning::RMMDBM()
 			return;
 		}
 
-		sv_TIG = out.SV;
+		sv_TIG = sv_apo = out.SV;
 
 		if (pRTCC->RZC1RCNS.AttitudeMode == 1)
 		{
@@ -1859,8 +1873,6 @@ void RetrofirePlanning::RMMDBM()
 			c_I = 0.0;
 			p_gam = 2000.0;
 
-			sv_apo = sv_TIG;
-
 			do
 			{
 				sv_apo.V = sv_TIG.V + U_T * DVBURN;
@@ -1901,8 +1913,8 @@ void RetrofirePlanning::RMMDBM()
 		}
 
 		//Calculate landing point
-		EntryCalculations::landingsite(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, lng_IP, lat_IP);
-		//EntryCalculations::LNDING(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, 0.3, 1, 0.0, lng_L, lat_L, MJD_L);
+		//EntryCalculations::landingsite(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, lng_IP, lat_IP);
+		EntryCalculations::LNDING(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, 0.3, 0, 0.0, lng_IP, lat_IP, MJD_L);
 
 		dlng = lng_T - lng_IP;
 		while (dlng > PI)
@@ -2072,11 +2084,21 @@ void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT
 		{
 			pRTCC->GetSystemGimbalAngles(RTCC_ENGINETYPE_CSMSPS, P_G, Y_G);
 		}
-		U_T = pRTCC->GLMRTV(X_B, P_G, 2, Y_G, 3);
+		//Don't consider the yaw gimbal angle or the burn has a DVY component (if LVLH yaw = 180°)
+		MATRIX3 MTEMP = _M(X_B.x, X_B.y, X_B.z, Y_B.x, Y_B.y, Y_B.z, Z_B.x, Z_B.y, Z_B.z);
+		MATRIX3 MTEMP2 = pRTCC->GLMRTM(MTEMP, P_G, 2);
+		U_T = _V(MTEMP2.m11, MTEMP2.m12, MTEMP2.m13);
 	}
 	else
 	{
-		U_T = X_B;
+		if (thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || thruster == RTCC_ENGINETYPE_CSMRCSPLUS4)
+		{
+			U_T = X_B;
+		}
+		else
+		{
+			U_T = -X_B;
+		}
 	}
 
 	if (entry == 1)
@@ -2084,19 +2106,23 @@ void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT
 		return;
 	}
 
+	X_P = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
+	Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
+	Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
+
 	//Attitude in other coordinates
 	if (opt == 1)
 	{
-		OtherAtt.y = asin(dotp(X_P, X_B));
-		if (abs(OtherAtt.y - PI05) < 10e-8)
+		OtherAtt.z = asin(dotp(Y_P, X_B));
+		if (abs(abs(OtherAtt.z) - PI05) < 10e-8)
 		{
 			OtherAtt.x = 0.0;
-			OtherAtt.z = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
+			OtherAtt.y = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
 		}
 		else
 		{
-			OtherAtt.z = atan2(dotp(Z_P, X_B), dotp(X_P, X_B));
 			OtherAtt.x = atan2(-dotp(Y_P, Z_B), dotp(Y_P, Y_B));
+			OtherAtt.y = atan2(-dotp(Z_P, X_B), dotp(X_P, X_B));
 		}
 	}
 	else
@@ -2117,11 +2143,11 @@ void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT
 		}
 	}
 
-	//Retrofired preferred alignment
+	//Retrofire preferred alignment
 	VECTOR3 X_SM, Y_SM, Z_SM;
 	X_SM = -X_B;
-	Y_SM = Y_B;
-	Z_SM = -Z_B;
+	Y_SM = -Y_B;
+	Z_SM = Z_B;
 	DesREFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
 }
 
@@ -2201,9 +2227,6 @@ void RetrofirePlanning::RMSTTF()
 	
 	VECTOR3 DV_EXDV = pRTCC->PIEXDV(sv_TIG.R, sv_TIG.V, CSMmass, TCMC, U_T*DVBURN, 0);
 
-	pRTCC->RZRFTT.GMTI_Manual = sv_TIG.GMT;
-	pRTCC->RZRFTT.DeltaV_Manual = DV_EXDV;
-
 	tab->VG_XDX = DV_EXDV / 0.3048;
 	//TBD: VG THR
 	EphemerisData sv_BO_ECT;
@@ -2213,6 +2236,21 @@ void RetrofirePlanning::RMSTTF()
 	pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_ECT.R), r_apo, r_peri);
 	tab->H_apo = (r_apo - OrbMech::R_Earth) / 1852.0;
 	tab->H_peri = (r_peri - OrbMech::R_Earth) / 1852.0;
+
+	//Transfer table
+	RetrofireTransferTableEntry *tab2 = &pRTCC->RZRFTT.Manual;
+
+	tab2->GMTI = sv_TIG.GMT;
+	tab2->DeltaV = DV_EXDV;
+	tab2->Thruster = pRTCC->RZC1RCNS.Thruster;
+	tab2->UllageThrusterOption = pRTCC->RZC1RCNS.Use4UllageThrusters;
+	tab2->dt_ullage = pRTCC->RZC1RCNS.UllageTime;
+	tab2->lat_IP = lat_IP;
+	tab2->lng_IP = lng_IP;
+	if (tab2->lng_IP > PI)
+	{
+		tab2->lng_IP -= PI2;
+	}
 }
 
 void RetrofirePlanning::RMGTTF(std::string source, int i)

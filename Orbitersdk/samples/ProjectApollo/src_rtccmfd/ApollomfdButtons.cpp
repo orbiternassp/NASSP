@@ -911,10 +911,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("GET", OAPI_KEY_D, &ApolloRTCCMFD::menuRetrofireGETIDialogue);
 	RegisterFunction("LAT", OAPI_KEY_O, &ApolloRTCCMFD::menuRetrofireLatDialogue);
 	RegisterFunction("LNG", OAPI_KEY_A, &ApolloRTCCMFD::menuRetrofireLngDialogue);
-	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("DIG", OAPI_KEY_C, &ApolloRTCCMFD::menuSetRetrofireDigitalsPage);
-	RegisterFunction("XDV", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("XDV", OAPI_KEY_V, &ApolloRTCCMFD::menuSetRetrofireXDVPage);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
@@ -1696,7 +1696,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLSCalc);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("REV", OAPI_KEY_D, &ApolloRTCCMFD::menuRevertRLSToPrelaunch);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
@@ -3506,35 +3506,35 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu103[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Choose the engine", 0, 'E' },
+		{ "Choose burn mode", 0, 'M' },
+		{ "Choose value for burn", 0, 'V' },
+		{ "Choose attitude mode", 0, 'A' },
+		{ "Choose attitude", 0, 'L' },
+		{ "Choose ullage options", 0, 'U' },
 
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Choose gimbal parameters", 0, 'G' },
+		{ "Initial bank angle", 0, 'I' },
+		{ "G level for bank manuever", 0, 'H' },
+		{ "Final bank angle", 0, 'F' },
 		{ "Back to menu", 0, 'B' },
 	};
 
 	RegisterPage(mnu103, sizeof(mnu103) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchRetrofireEngine);
+	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuSwitchRetrofireBurnMode);
+	RegisterFunction("VAL", OAPI_KEY_V, &ApolloRTCCMFD::menuChooseRetrofireValue);
+	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuSwitchRetrofireAttitudeMode);
+	RegisterFunction("LVH", OAPI_KEY_L, &ApolloRTCCMFD::menuChooseRetrofireAttitude);
+	RegisterFunction("ULL", OAPI_KEY_U, &ApolloRTCCMFD::menuChooseRetrofireUllage);
 
-	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("MAT", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("GIM", OAPI_KEY_G, &ApolloRTCCMFD::menuSwitchRetrofireGimbalIndicator);
+	RegisterFunction("K1", OAPI_KEY_I, &ApolloRTCCMFD::menuChooseRetrofireK1);
+	RegisterFunction("GC", OAPI_KEY_H, &ApolloRTCCMFD::menuChooseRetrofireGs);
+	RegisterFunction("K2", OAPI_KEY_F, &ApolloRTCCMFD::menuChooseRetrofireK2);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDeorbitPage);
 
 
@@ -3547,8 +3547,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Calculate deorbit solution", 0, 'C' },
+		{ "Transfer to MPT", 0, 'F' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -3565,6 +3565,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuDeorbitCalc);
+	RegisterFunction("M74", OAPI_KEY_F, &ApolloRTCCMFD::menuTransferRTEToMPT);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDeorbitPage);
+
+
+	static const MFDBUTTONMENU mnu105[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu105, sizeof(mnu105) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);

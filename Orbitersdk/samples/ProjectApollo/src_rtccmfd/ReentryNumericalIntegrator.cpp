@@ -98,6 +98,8 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	GNData.C10 = in.C10;
 	t_RB = in.t_RB;
 	H_EMS = in.H_EMS;
+	K1 = in.K1;
+	K2 = in.K2;
 
 	t = 0.0;
 	ISGNInit = false;

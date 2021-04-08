@@ -1846,15 +1846,15 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 			papiReadScenario_double(Buff, "PZLOIPLN_HP_LLS", PZLOIPLN.HP_LLS);
 			if (papiReadScenario_double(Buff, "LSLat", dtemp))
 			{
-				BZLAND.lat[RTCC_LMPOS_BEST] = dtemp * RAD;
+				BZLAND.lat[RTCC_LMPOS_BEST] = BZLAND.lat[RTCC_LMPOS_MED] = dtemp * RAD;
 			}
 			else if (papiReadScenario_double(Buff, "LSLng", dtemp))
 			{
-				BZLAND.lng[RTCC_LMPOS_BEST] = dtemp * RAD;
+				BZLAND.lng[RTCC_LMPOS_BEST] = BZLAND.lng[RTCC_LMPOS_MED] = dtemp * RAD;
 			}
 			else if (papiReadScenario_double(Buff, "LSRad", dtemp))
 			{
-				BZLAND.rad[RTCC_LMPOS_BEST] = dtemp * 1852.0;
+				BZLAND.rad[RTCC_LMPOS_BEST] = BZLAND.rad[RTCC_LMPOS_MED] = dtemp * 1852.0;
 			}
 			else if (papiReadScenario_double(Buff, "TLCC_AZ_min", dtemp))
 			{
@@ -2144,8 +2144,8 @@ void RTCC::BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res)
 
 	PoweredFlightProcessor(sv, opt->GETbase, TIG_imp, opt->enginetype, 0.0, DV_imp, true, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
 
-	RZRFTT.GMTI_Primary = GMTfromGET(res->P30TIG);
-	RZRFTT.DeltaV_Primary = res->dV_LVLH;
+	RZRFTT.Primary.GMTI = GMTfromGET(res->P30TIG);
+	RZRFTT.Primary.DeltaV = res->dV_LVLH;
 }
 
 void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
@@ -20143,21 +20143,36 @@ int RTCC::PMMXFR(int id, void *data)
 		//RTE
 		if (id == 32)
 		{
-			if (inp->BurnParameterNumber == 1)
+			if (inp->BurnParameterNumber == 1 || inp->BurnParameterNumber == 3)
 			{
+				RetrofireTransferTableEntry *temptab;
+
+				if (inp->BurnParameterNumber == 1)
+				{
+					temptab = &RZRFTT.Primary;
+				}
+				else
+				{
+					temptab = &RZRFTT.Manual;
+				}
+
 				purpose = "TTF";
-				inp->GMTI = RZRFTT.GMTI_Primary;
-				inp->ThrusterCode = RTCC_ENGINETYPE_CSMSPS;
+				inp->GMTI = temptab->GMTI;
+				inp->ThrusterCode = temptab->Thruster;
+				inp->dt_ullage = temptab->dt_ullage;
+				inp->UllageThrusterOption = temptab->UllageThrusterOption;
+				inp->HeadsUpDownIndicator = true; //TBD
 				
-				BurnParm75 = RZRFTT.DeltaV_Primary.x;
-				BurnParm76 = RZRFTT.DeltaV_Primary.y;
-				BurnParm77 = RZRFTT.DeltaV_Primary.z;
+				BurnParm75 = temptab->DeltaV.x;
+				BurnParm76 = temptab->DeltaV.y;
+				BurnParm77 = temptab->DeltaV.z;
 			}
-			else if (inp->BurnParameterNumber == 3)
+			else if (inp->BurnParameterNumber == 2)
 			{
 				purpose = "RTE";
 				inp->GMTI = PZREAP.RTEPrimaryData.IgnitionGMT;
 				inp->ThrusterCode = PZREAP.RTEPrimaryData.ThrusterCode;
+				inp->dt_ullage = 0.0; //TBD
 
 				BurnParm75 = PZREAP.RTEPrimaryData.UplinkDV.x;
 				BurnParm76 = PZREAP.RTEPrimaryData.UplinkDV.y;
@@ -23422,6 +23437,14 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 				}
 				EMSGSUPP(1, 5, refs, man, headsup);
 			}
+			else if (data[1] == "DOM")
+			{
+				EMSGSUPP(1, 6, 1);
+			}
+			else if (data[1] == "DOS")
+			{
+				EMSGSUPP(1, 6, 2);
+			}
 		}
 		//Enter CSM sextant optics and IMU attitudes
 		else if (med == "12")
@@ -25144,12 +25167,11 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		else if (data[2] == "TTFM")
 		{
-			//TBD
-			return 2;
+			type = 3;
 		}
 		else if (data[2] == "RTEP")
 		{
-			type = 3;
+			type = 2;
 		}
 		else if (data[2] == "RTEM")
 		{
@@ -25171,7 +25193,6 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		inp.ReplaceCode = ReplaceCode;
 		inp.TableCode = veh;
 		inp.EndConfiguration = 0; //TBD
-		inp.dt_ullage = 0.0;
 
 		void *vPtr = &inp;
 		return PMMXFR(32, vPtr);
@@ -29706,8 +29727,57 @@ void RTCC::CMMRFMAT(int L, int id, int addr)
 
 int RTCC::BMQDCMED(std::string med, std::vector<std::string> data)
 {
+	//LM Position Vector Table (Should be in BMLMED instead)
+	if (med == "72")
+	{
+		if (data.size() != 2)
+		{
+			return 1;
+		}
+		int id1;
+		if (data[0] == "BEST")
+		{
+			id1 = 0;
+		}
+		else if (data[0] == "PNGCS")
+		{
+			id1 = 1;
+		}
+		else if (data[0] == "AGS")
+		{
+			id1 = 2;
+		}
+		else if (data[0] == "MED")
+		{
+			id1 = 3;
+		}
+		else
+		{
+			return 2;
+		}
+		int id2;
+		if (data[1] == "PNGCS")
+		{
+			id2 = 1;
+		}
+		else if (data[1] == "AGS")
+		{
+			id2 = 2;
+		}
+		else if (data[1] == "MED")
+		{
+			id2 = 3;
+		}
+		else
+		{
+			return 2;
+		}
+		BZLAND.lat[id1] = BZLAND.lat[id2];
+		BZLAND.lng[id1] = BZLAND.lng[id2];
+		BZLAND.rad[id1] = BZLAND.rad[id2];
+	}
 	//Simulate vector control and DC PBI's
-	if (med == "99")
+	else if (med == "99")
 	{
 		if (data.size() != 1)
 		{
@@ -30488,6 +30558,10 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 	//Acquire and save CSM IMU matrix/optics
 	if (QUEID == 1)
 	{
+		MATRIX3 REFSMMAT;
+		double gmt;
+		int type;
+
 		//Telemetry (high-speed)
 		if (refs == 1)
 		{
@@ -30496,7 +30570,10 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 				EMGPRINT("EMSGSUPP", 1);
 				return;
 			}
-			EMGSTSTM(1, BZSTLM.CMC_REFSMMAT, RTCC_REFSMMAT_TYPE_TLM, RTCCPresentTimeGMT());
+
+			REFSMMAT = BZSTLM.CMC_REFSMMAT;
+			gmt = RTCCPresentTimeGMT();
+			type = RTCC_REFSMMAT_TYPE_TLM;
 		}
 		//DMT
 		else if (refs == 5)
@@ -30506,7 +30583,6 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 				EMGPRINT("EMSGSUPP", 1);
 				return;
 			}
-			MATRIX3 REFSMMAT;
 			if (refs2 == 100)
 			{
 				//Desired REFSMMAT
@@ -30531,8 +30607,36 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 				}
 				REFSMMAT = data.REFSMMAT;
 			}
-			EMGSTSTM(1, REFSMMAT, RTCC_REFSMMAT_TYPE_DMT, RTCCPresentTimeGMT());
+			type = RTCC_REFSMMAT_TYPE_DMT;
+			gmt = RTCCPresentTimeGMT();
 		}
+		//DOD and DOS
+		else if (refs == 6)
+		{
+			if (refs2 == 1)
+			{
+				if (RZRFDP.Indicator != 0)
+				{
+					EMGPRINT("EMSGSUPP", 22);
+					return;
+				}
+				REFSMMAT = RZRFDP.REFSMMAT;
+				gmt = RZRFDP.GETI;
+			}
+			else
+			{
+				//TBD: Spacecraft setting matrix
+				EMGPRINT("EMSGSUPP", 22);
+				return;
+			}
+			type = RTCC_REFSMMAT_TYPE_DOD;
+		}
+		else
+		{
+			EMGPRINT("EMSGSUPP", 1);
+			return;
+		}
+		EMGSTSTM(1, REFSMMAT, type, gmt);
 	}
 }
 

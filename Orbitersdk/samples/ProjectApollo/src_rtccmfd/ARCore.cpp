@@ -3731,9 +3731,22 @@ int ARCore::subThread()
 		{
 			sv = GC->rtcc->StateVectorCalcEphem(vessel);
 			CSMmass = vessel->GetMass();
+			//Assume pre CSM separation from the S-IVB
+			if (CSMmass > 30000.0)
+			{
+				CSMmass = 28860.0;
+			}
 		}
 
 		GC->rtcc->RMSDBMP(sv, CSMmass);
+
+		if (GC->rtcc->RZRFDP.Indicator == 0)
+		{
+			P30TIG = GC->rtcc->RZRFDP.GETI;
+			dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
+			EntryLatcor = GC->rtcc->RZRFTT.Manual.lat_IP;
+			EntryLngcor = GC->rtcc->RZRFTT.Manual.lng_IP;
+		}
 
 		Result = 0;
 	}
@@ -4139,9 +4152,9 @@ int ARCore::subThread()
 		{
 			EarthEntryPADOpt opt;
 
-			opt.dV_LVLH = Entry_DV;
+			opt.dV_LVLH = dV_LVLH;
 			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.P30TIG = EntryTIGcor;
+			opt.P30TIG = P30TIG;
 			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
 

@@ -154,6 +154,7 @@ public:
 	void menuSwitchSVSlot();
 	void menuSVUpload();
 	void menuLSCalc();
+	void menuRevertRLSToPrelaunch();
 	void menuAGSSVCalc();
 	void menuEntryUpdateUpload();
 	void menuCycleTwoImpulseOption();
@@ -732,6 +733,23 @@ public:
 	void set_RetrofireLat(double lat);
 	void menuRetrofireLngDialogue();
 	void set_RetrofireLng(double lng);
+	void menuSetRetrofireXDVPage();
+	void menuSwitchRetrofireEngine();
+	void menuSwitchRetrofireBurnMode();
+	void menuSwitchRetrofireAttitudeMode();
+	void menuSwitchRetrofireGimbalIndicator();
+	void menuChooseRetrofireValue();
+	void set_RetrofireValue(double val);
+	void menuChooseRetrofireAttitude();
+	void set_RetrofireAttitude(VECTOR3 att);
+	void menuChooseRetrofireK1();
+	void set_RetrofireK1(double val);
+	void menuChooseRetrofireK2();
+	void set_RetrofireK2(double val);
+	void menuChooseRetrofireGs();
+	bool set_RetrofireGs(double val);
+	void menuChooseRetrofireUllage();
+	bool set_RetrofireUllage(int num, double dt);
 
 protected:
 	oapi::Font *font;
