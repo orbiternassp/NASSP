@@ -2350,3 +2350,20 @@ bool LMOverheadHatchHandle::SwitchTo(int newState, bool dontspring)
 
 	return false;
 }
+
+bool CDRCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
+
+		if (state == THREEPOSSWITCH_UP) {
+			lem->COASreticlevisible = 2;
+		} else if (state == THREEPOSSWITCH_CENTER) {
+			lem->COASreticlevisible = 1;
+		} else {
+			lem->COASreticlevisible = 0;
+		}
+		lem->SetCOAS();
+		return true;
+	}
+	return false;
+}

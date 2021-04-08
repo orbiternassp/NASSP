@@ -450,6 +450,7 @@ public:
 		SRF_INDICATORREDVC,
 		SRF_LEM_MASTERALARMVC,
 		SRF_DEDA_LIGHTSVC,
+		SRF_AOTFONT_VC,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -476,6 +477,7 @@ public:
 	void HideProbes();
 	void SetTrackLight();
 	void SetDockingLights();
+	void SetCOAS();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	int GetApolloNo() { return ApolloNo; }
 	UINT GetStage() { return stage; }
@@ -1218,9 +1220,10 @@ protected:
 	ThumbwheelSwitch CDRAudICSVol;
 	ThumbwheelSwitch CDRAudMasterVol;
 	ThumbwheelSwitch CDRAudVOXSens;
-	ThreePosSwitch CDRCOASSwitch;
+	CDRCOASPowerSwitch CDRCOASSwitch;
 
 	bool COASswitch;
+	int COASreticlevisible;   // 0 = FWD  1 = OFF  2 = OVHD
 
 	//////////////////
 	// LEM panel 14 //
@@ -2016,6 +2019,7 @@ protected:
 	friend class LEM_LCA;
 	friend class LEM_PFIRA;
 	friend class LEMCrewStatus;
+	friend class CDRCOASPowerSwitch;
 
 	friend class ApolloRTCCMFD;
 	friend class ARCore;

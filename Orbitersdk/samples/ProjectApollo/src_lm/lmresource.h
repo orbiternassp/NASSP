@@ -844,6 +844,30 @@
 #define IDB_BORDER_104x106              2021
 #define IDB_BORDER_286x197              2022
 
+// VC Active Areas
+#define AID_VC_OVERHEADHATCH            3000
+#define AID_VC_OVERHEADHATCHHANDLE      3001
+#define AID_VC_OVERHEADHATCHRELIEFVALVE 3002
+#define AID_VC_FORWARDHATCH             3003
+#define AID_VC_FORWARDHATCHHANDLE       3004
+#define AID_VC_FORWARDHATCHRELIEFVALVE  3005
+
+#define AID_VC_UTILITYLIGHTCDR          3006
+#define AID_VC_UTILITYLIGHTLMP          3007
+
+#define AID_VC_SWITCH_ORDEAL_01          3008
+#define AID_VC_SWITCH_ORDEAL_02          3009
+#define AID_VC_SWITCH_ORDEAL_03          3010
+#define AID_VC_SWITCH_ORDEAL_04          3011
+#define AID_VC_SWITCH_ORDEAL_05          3012
+#define AID_VC_SWITCH_ORDEAL_06          3013
+#define AID_VC_ROT_ORDEAL_01             3014
+
+#define AID_VC_SW_RRGYRO                 3020
+#define AID_VC_RETICLEDISP               3021
+
+#define AID_VC_COAS1                     3030
+
 // VC Active Areas (Panel 1)
 #define AID_VC_PANEL_1				    ((id >= 3100) && (id <= 3140))
 #define AID_VC_SWITCH_P1_01		        3101	// Rate/error monitor CDR
@@ -1315,6 +1339,7 @@
 #define AID_VC_ROT_LGC                  5017
 #define AID_VC_ROT_SUITISOLCDR          5018
 #define AID_VC_ROT_SUITISOLLMP          5019
+#define AID_VC_ROT_ASCH2O               5020
 
 #define AID_VC_SUITGASDIVERTER          5021
 #define AID_VC_H2OSEP                   5022

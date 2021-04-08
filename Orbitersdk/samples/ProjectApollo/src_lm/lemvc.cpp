@@ -99,6 +99,7 @@ const int	P6_SWITCHCOUNT = 1;
 const int	P8_SWITCHCOUNT = 19;
 const int	P12_SWITCHCOUNT = 22;
 const int	P14_SWITCHCOUNT = 16;
+const int	ORDEAL_SWITCHCOUNT = 6;
 
 // Number of rotaries
 const int	 P1_ROTCOUNT = 1;
@@ -136,6 +137,7 @@ const VECTOR3	P8_CLICK = { 0.0005, 0.0015, 0 };
 const VECTOR3	P12_CLICK = { -0.0005, 0.0016, 0 };
 const VECTOR3	P14_CLICK = { -0.001, 0.0013, 0 };
 const VECTOR3	CANISTERSEL_CLICK = { 0.0, 0.08, 0.0 };
+const VECTOR3	ORDEAL_CLICK = { 0, 0, 0 };
 
 // Number of circuit breakers
 const int P11R1_CBCOUNT = 19;
@@ -351,6 +353,14 @@ const VECTOR3 P16R4_CB_POS[P16R4_CBCOUNT] = {
 {0.9333, 0.4903, 0.7285}
 };
 
+// ORDEAL
+
+const VECTOR3 ORDEAL_TOGGLE_POS[ORDEAL_SWITCHCOUNT] = {
+{-1.0594, 0.2094, 0.7269}, {-1.0594, 0.2095, 0.7876}, {-1.0594, 0.2094, 0.8391}, {-1.0141, 0.1945, 0.7268}, {-1.0140, 0.1944, 0.8128}, {-1.0140, 0.1944, 0.8390}
+};
+
+const VECTOR3 ORDEAL_RotLocation = { -1.0319, 0.2112, 0.8968 };
+
 //ECS Panels
 
 const VECTOR3 H20SepHandleLocation = { 0.3153, 0.2264, -0.2932 };
@@ -360,8 +370,6 @@ const VECTOR3 Rot_AscO2_1Location = { 0.5702, 0.2829, 0.5882 };
 const VECTOR3 Rot_AscO2_2Location = { 0.4990, 0.2870, 0.5793 };
 const VECTOR3 Rot_CabinGasReturnLocation = { 0.3524, 0.5219, 0.0804 };
 const VECTOR3 Rot_CabinRepressLocation = { 0.6019, 0.3548, 0.5910 };
-const VECTOR3 Rot_Canister1Location = { 0.3077, 0.1679, 0.1246 };
-const VECTOR3 Rot_Canister2Location = { 0.3105, 0.2269, -0.1261 };
 const VECTOR3 Rot_DesO2Location = { 0.6449, 0.2777, 0.5981 };
 const VECTOR3 Rot_PlssFillLocation = { 0.5011, 0.3593, 0.5795 };
 const VECTOR3 Rot_PressRegALocation = { 0.4241, 0.3470, 0.5689 };
@@ -373,16 +381,36 @@ const VECTOR3 Rot_SuitIsolCdrLocation = { 0.3457, 0.1616, 0.6088 };
 const VECTOR3 Rot_SuitIsolLmpLocation = { 0.6174, 0.1719, 0.5947 };
 const VECTOR3 Sw_ActOvrdCdrLocation = { 0.3653, 0.1552, 0.5451 };
 const VECTOR3 Sw_ActOvrdLmpLocation = { 0.5787, 0.1753, 0.5402 };
-const VECTOR3 Rot_DesH2OLocation = { 0.4361, -0.0897, 0.6493 };
-const VECTOR3 Rot_LGCLocation = { 0.2671, -0.2187, 0.6231 };
-const VECTOR3 Rot_PriEvapFlow1Location = { 0.4467, -0.1718, 0.6542 };
-const VECTOR3 Rot_PriEvapFlow2Location = { 0.4554, -0.0220, 0.6362 };
-const VECTOR3 Rot_SecEvapFlowLocation = { 0.5541, -0.0225, 0.6351 };
-const VECTOR3 Rot_SuitTempLocation = { 0.4475, -0.3862, 0.6944 };
-const VECTOR3 Rot_WaterTankSelectorLocation = { 0.5210, -0.2505, 0.6683 };
+const VECTOR3 Rot_Canister1Location = { 0.3077, 0.1679, 0.1246 };
+const VECTOR3 Rot_Canister2Location = { 0.3105, 0.2269, -0.1261 };
+const VECTOR3 Rot_DesH2OLocation = { 0.4426, -0.1245, 0.6489 };
+const VECTOR3 Rot_LGCLocation = { 0.2639, -0.2183, 0.6220 };
+const VECTOR3 Rot_PriEvapFlow1Location = { 0.4581, -0.2074, 0.6538 };
+const VECTOR3 Rot_PriEvapFlow2Location = { 0.4646, -0.0502, 0.6359 };
+const VECTOR3 Rot_SecEvapFlowLocation = { 0.5511, -0.0439, 0.6348 };
+const VECTOR3 Rot_SuitTempLocation = { 0.4532, -0.4007, 0.6942 };
+const VECTOR3 Rot_WaterTankSelectorLocation = { 0.5189, -0.2687, 0.6631 };
+const VECTOR3 Rot_AscH2OLocation = { 0.3745, -0.0204, 0.5146 };
+
+// Hatches
+const VECTOR3 UpperHatchLocation = { -0.0013, 0.9817, 0.0000 };
+const VECTOR3 UpperHatchHandleLocation = { -0.0021, 0.9917, 0.3372 };
+const VECTOR3 UpperHatchReliefValveLocation = { 0.1467, 1.0035, 0.1677 };
+
+const VECTOR3 FwdHatchHandleLocation = { -0.3440, -0.5710, 1.5847 };
+const VECTOR3 FwdHatchReliefValveLocation = { 0.2370, -0.5113, 1.5987 };
+const VECTOR3 FwdHatchInnerLocation = { -0.0164, -0.5784, 1.6599 };
+
+// Utility Lights
+const VECTOR3 UtilityLights_CDRLocation = { 0.0162, 1.0318, 0.8908 };
+const VECTOR3 UtilityLights_LMPLocation = { 0.1030, 1.0318, 0.8908 };
+
+// AOT
+const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
+const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
 // Subtracted from total material count to find L01 location.
-const int mat_L01 = 44;
+const int mat_L01 = 47;
 
 void LEM::JostleViewpoint(double amount)
 
@@ -631,12 +659,13 @@ bool LEM::clbkLoadVC (int id)
 	case LMVIEW_CDR:
 		viewpos = LMVIEW_CDR;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(-0.1, -0.0492, 0.25), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(LMVIEW_ECS, LMVIEW_LMP, -1, LMVIEW_LPD);
 		InVC = true;
 		InPanel = false;
 		SetView();
 		SetLMMeshVis();
+		SetCOAS();
 
 		return true;
 
@@ -649,6 +678,7 @@ bool LEM::clbkLoadVC (int id)
 		InPanel = false;
 		SetView();
 		SetLMMeshVis();
+		SetCOAS();
 
 		return true;
 
@@ -662,6 +692,7 @@ bool LEM::clbkLoadVC (int id)
 		InPanel = false;
 		SetView();
 		SetLMMeshVis();
+		SetCOAS();
 
 		return true;
 
@@ -674,6 +705,7 @@ bool LEM::clbkLoadVC (int id)
 		InPanel = false;
 		SetView();
 		SetLMMeshVis();
+		SetCOAS();
 
 		return true;
 
@@ -694,6 +726,46 @@ bool LEM::clbkLoadVC (int id)
 	}
 }
 
+void LEM::InitPanelVC() {
+
+	DWORD ck = oapiGetColour(255, 0, 255);
+
+	// LM VC surfaces
+
+	srf[SRF_VC_DIGITALDISP] = oapiLoadTexture("ProjectApollo/VC/digitaldisp.dds");
+	srf[SRF_VC_DIGITALDISP2] = oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
+	srf[SRF_VC_DSKYDISP] = oapiLoadTexture("ProjectApollo/VC/dsky_disp.dds");
+	srf[SRF_VC_DSKY_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/dsky_lights.dds");
+	srf[SRF_VC_RADAR_TAPEA] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_a.dds");
+	srf[SRF_VC_RADAR_TAPEB] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_b.dds");
+	srf[SRF_VC_RADAR_TAPE2] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales2.dds");
+	srf[SFR_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/lem_cw_lights.dds");
+	srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
+	srf[SRF_INDICATORREDVC] = oapiLoadTexture("ProjectApollo/VC/IndicatorRed.dds");
+	srf[SRF_LEM_MASTERALARMVC] = oapiLoadTexture("ProjectApollo/VC/lem_master_alarm.dds");
+	srf[SRF_DEDA_LIGHTSVC] = oapiLoadTexture("ProjectApollo/VC/ags_lights.dds");
+	srf[SRF_AOTFONT_VC] = oapiLoadTexture("ProjectApollo/VC/aot_font.dds");
+
+	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DSKYDISP], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DSKY_LIGHTS], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEA], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEB], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPE2], ck);
+	oapiSetSurfaceColourKey(srf[SFR_VC_CW_LIGHTS], ck);
+	oapiSetSurfaceColourKey(srf[SRF_AOTFONT_VC], ck);
+}
+
+void LEM::ReleaseSurfacesVC()
+{
+	for (int i = 0; i < nsurfvc; i++)
+		if (srf[i]) {
+			oapiDestroySurface(srf[i]);
+			srf[i] = 0;
+		}
+}
+
 void LEM::RegisterActiveAreas()
 {
 	int i = 0;
@@ -710,8 +782,8 @@ void LEM::RegisterActiveAreas()
 	//
 	ReleaseSurfacesVC();
 
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hLMVC, 2);
-	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hLMVC, 8);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hLMVC, 3);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hLMVC, 2);
 
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT; i++)
@@ -972,6 +1044,17 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P16R4_01 + i, P16R4_CB_POS[i] + ofs, 0.008);
 	}
 
+	// ORDEAL
+
+	for (i = 0; i < ORDEAL_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_ORDEAL_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_ORDEAL_01 + i, ORDEAL_TOGGLE_POS[i] + ORDEAL_CLICK + ofs, 0.006);
+	}
+
+	oapiVCRegisterArea(AID_VC_ROT_ORDEAL_01, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_ORDEAL_01, _V(-1.05598, 0.207146, 0.875066) + ofs, _V(-1.05538, 0.206944, 0.918372) + ofs, _V(-1.01508, 0.193584, 0.875066) + ofs, _V(-1.01508, 0.193608, 0.918372) + ofs);
+
 	// ECS Panels
 
 	oapiVCRegisterArea(AID_VC_ROT_SUITCIRCUITRELIEF, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
@@ -1034,6 +1117,9 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_ROT_SUITISOLLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_SUITISOLLMP, Rot_SuitIsolLmpLocation + ofs, 0.02);
 
+	oapiVCRegisterArea(AID_VC_ROT_ASCH2O, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_ASCH2O, Rot_AscH2OLocation + ofs, 0.02);
+
 
 	oapiVCRegisterArea(AID_VC_SUITGASDIVERTER, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_SUITGASDIVERTER, SuitGasDiverterHandleLocation + ofs, 0.02);
@@ -1056,8 +1142,44 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_ACTOVRDLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_ACTOVRDLMP, _V(0.560577, 0.172482, 0.554511) + ofs, 0.008);
 
+	// Hatches
+	oapiVCRegisterArea(AID_VC_OVERHEADHATCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCH, UpperHatchLocation + ofs, 0.1);
 
+	oapiVCRegisterArea(AID_VC_OVERHEADHATCHHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHHANDLE, _V( 0.0118, 0.9904, 0.2825 ) + ofs, 0.05);
 
+	oapiVCRegisterArea(AID_VC_OVERHEADHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHRELIEFVALVE, _V( 0.1786, 0.9834, 0.1652 ) + ofs, 0.03);
+
+	oapiVCRegisterArea(AID_VC_FORWARDHATCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCH, FwdHatchInnerLocation + ofs, 0.1);
+
+	oapiVCRegisterArea(AID_VC_FORWARDHATCHHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCHHANDLE, _V(-0.2875, -0.5710, 1.5833) + ofs, 0.05);
+
+	oapiVCRegisterArea(AID_VC_FORWARDHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCHRELIEFVALVE, _V(0.2087, -0.4964, 1.5786) + ofs, 0.03);
+
+	// Utility Lights
+
+	oapiVCRegisterArea(AID_VC_UTILITYLIGHTCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_UTILITYLIGHTCDR, UtilityLights_CDRLocation + ofs, 0.008);
+
+	oapiVCRegisterArea(AID_VC_UTILITYLIGHTLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_UTILITYLIGHTLMP, UtilityLights_LMPLocation + ofs, 0.008);
+
+	// AOT
+
+	oapiVCRegisterArea(AID_VC_SW_RRGYRO, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_SW_RRGYRO, Sw_RRGyroLocation + ofs, 0.008);
+
+	oapiVCRegisterArea(AID_VC_RETICLEDISP, _R(1068, 1891, 1188, 1927), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	// COAS FWD
+	const VECTOR3 COAS1Location = { -0.5612, 0.7323, 1.6805 };
+	oapiVCRegisterArea(AID_VC_COAS1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS1, COAS1Location + ofs, 0.05);
 
 	//
 	// Initialize surfaces and switches
@@ -1116,6 +1238,23 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 		case AID_VC_LEM_MA_LEFT:
 		case AID_VC_LEM_MA_RIGHT:
 			return CWEA.CheckMasterAlarmMouseClick(event);
+
+		case AID_VC_OVERHEADHATCH:
+			OverheadHatch.Toggle();
+			return true;
+
+		case AID_VC_FORWARDHATCH:
+			ForwardHatch.Toggle();
+			return true;
+
+		case AID_VC_COAS1:
+			if (LEMCoas1Enabled)
+				LEMCoas1Enabled = false;
+			else
+				LEMCoas1Enabled = true;
+			SwitchClick();
+			SetCOAS();
+			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
 	//return false;
@@ -1490,6 +1629,10 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_VC_LEM_MA_LEFT:
 	case AID_VC_LEM_MA_RIGHT:
 		CWEA.RenderMasterAlarm(surf, srf[SRF_LEM_MASTERALARMVC], NULL);
+		return true;
+
+	case AID_VC_RETICLEDISP:
+		optics.PaintReticleAngle(surf, srf[SRF_AOTFONT_VC]);
 		return true;
 
 	/*case AID_VC_RECORDER_TALKBACK:
@@ -2389,6 +2532,40 @@ void LEM::DefineVCAnimations()
 		breakerrowp164[i]->DefineMeshGroup(VC_GRP_CB_P16R4_01 + i);
 	}
 
+	// ORDEAL
+
+	const VECTOR3 ORDEAL_SW_AXIS = { 0, 0, 1 };
+
+	MainPanelVC.AddSwitch(&ORDEALFDAI1Switch, AID_VC_SWITCH_ORDEAL_01);
+	ORDEALFDAI1Switch.SetReference(ORDEAL_TOGGLE_POS[0], ORDEAL_SW_AXIS);
+	ORDEALFDAI1Switch.DefineMeshGroup(VC_GRP_Sw_ORDEAL_01);
+
+	MainPanelVC.AddSwitch(&ORDEALFDAI2Switch, AID_VC_SWITCH_ORDEAL_02);
+	ORDEALFDAI2Switch.SetReference(ORDEAL_TOGGLE_POS[1], ORDEAL_SW_AXIS);
+	ORDEALFDAI2Switch.DefineMeshGroup(VC_GRP_Sw_ORDEAL_02);
+
+	MainPanelVC.AddSwitch(&ORDEALEarthSwitch, AID_VC_SWITCH_ORDEAL_03);
+	ORDEALEarthSwitch.SetReference(ORDEAL_TOGGLE_POS[2], ORDEAL_SW_AXIS);
+	ORDEALEarthSwitch.DefineMeshGroup(VC_GRP_Sw_ORDEAL_03);
+
+	MainPanelVC.AddSwitch(&ORDEALLightingSwitch, AID_VC_SWITCH_ORDEAL_04);
+	ORDEALLightingSwitch.SetReference(ORDEAL_TOGGLE_POS[3], ORDEAL_SW_AXIS);
+	ORDEALLightingSwitch.DefineMeshGroup(VC_GRP_Sw_ORDEAL_04);
+
+	MainPanelVC.AddSwitch(&ORDEALModeSwitch, AID_VC_SWITCH_ORDEAL_05);
+	ORDEALModeSwitch.SetReference(ORDEAL_TOGGLE_POS[4], ORDEAL_SW_AXIS);
+	ORDEALModeSwitch.DefineMeshGroup(VC_GRP_Sw_ORDEAL_05);
+
+	MainPanelVC.AddSwitch(&ORDEALSlewSwitch, AID_VC_SWITCH_ORDEAL_06);
+	ORDEALSlewSwitch.SetReference(ORDEAL_TOGGLE_POS[5], ORDEAL_SW_AXIS);
+	ORDEALSlewSwitch.DefineMeshGroup(VC_GRP_Sw_ORDEAL_06);
+
+	const VECTOR3	ORDEAL_ROT_AXIS = { 0.318638153340006, 0.947872639959537, 0.002680606686833 };
+
+	MainPanelVC.AddSwitch(&ORDEALAltSetRotary, AID_VC_ROT_ORDEAL_01);
+	ORDEALAltSetRotary.SetReference(ORDEAL_RotLocation, ORDEAL_ROT_AXIS);
+	ORDEALAltSetRotary.DefineMeshGroup(VC_GRP_ORDEAL_Rot);
+
 	// ECS Panels
 	const VECTOR3 ECSRotAxisOCM = { -0.12642632210213, 0.0, 0.991976000253902 };
 	const VECTOR3 ECSRotAxisWCM = { 0.00021370205398, 0.167627891144257, 0.985850315434327 };
@@ -2475,6 +2652,10 @@ void LEM::DefineVCAnimations()
 	LMPSuitIsolValve.SetReference(Rot_SuitIsolLmpLocation, _V(0.043971612425928, 0.769550296267906, 0.637070513220194));
 	LMPSuitIsolValve.DefineMeshGroup(VC_GRP_Rot_SuitIsolLmp);
 
+	MainPanelVC.AddSwitch(&ASCH2OValve, AID_VC_ROT_ASCH2O);
+	ASCH2OValve.SetReference(Rot_AscH2OLocation, ECSRotAxisSSA);
+	ASCH2OValve.DefineMeshGroup(VC_GRP_Rot_AscH2O);
+
 	MainPanelVC.AddSwitch(&SuitGasDiverterSwitch, AID_VC_SUITGASDIVERTER);
 	SuitGasDiverterSwitch.SetReference(SuitGasDiverterHandleLocation, _V(0, 0, -0.005));
 	SuitGasDiverterSwitch.DefineMeshGroup(VC_GRP_SuitGasDiverterHandle);
@@ -2505,6 +2686,27 @@ void LEM::DefineVCAnimations()
 	LMPActuatorOvrd.SetReference(Sw_ActOvrdLmpLocation, _V(-0.567684017188507, 0.544856511735439, -0.617143612336876));
 	LMPActuatorOvrd.DefineMeshGroup(VC_GRP_Sw_ActOvrdLmp);
 	LMPActuatorOvrd.SetRotationRange(RAD * 20.0);
+
+	// Hatches
+	MainPanelVC.AddSwitch(&UpperHatchHandle, AID_VC_OVERHEADHATCHHANDLE);
+	MainPanelVC.AddSwitch(&UpperHatchReliefValve, AID_VC_OVERHEADHATCHRELIEFVALVE);
+
+	MainPanelVC.AddSwitch(&ForwardHatchHandle, AID_VC_FORWARDHATCHHANDLE);
+	MainPanelVC.AddSwitch(&ForwardHatchReliefValve, AID_VC_FORWARDHATCHRELIEFVALVE);
+
+	// Utility Lights
+	MainPanelVC.AddSwitch(&UtilityLightSwitchCDR, AID_VC_UTILITYLIGHTCDR);
+	UtilityLightSwitchCDR.SetReference(UtilityLights_CDRLocation, _V(1, 0, 0));
+	UtilityLightSwitchCDR.DefineMeshGroup(VC_GRP_Sw_UtilityLightsCDR);
+
+	MainPanelVC.AddSwitch(&UtilityLightSwitchLMP, AID_VC_UTILITYLIGHTLMP);
+	UtilityLightSwitchLMP.SetReference(UtilityLights_LMPLocation, _V(1, 0, 0));
+	UtilityLightSwitchLMP.DefineMeshGroup(VC_GRP_Sw_UtilityLightsLMP);
+
+	// AOT
+	MainPanelVC.AddSwitch(&RRGyroSelSwitch, AID_VC_SW_RRGYRO);
+	RRGyroSelSwitch.SetReference(Sw_RRGyroLocation, _V(-0.048633374944462, -0.519162328382934, 0.853290848204481));
+	RRGyroSelSwitch.DefineMeshGroup(VC_GRP_Sw_RRGyro);
 
 	MainPanelVC.DefineVCAnimations(vcidx);
 	crossPointerLeft.DefineVCAnimations(vcidx);

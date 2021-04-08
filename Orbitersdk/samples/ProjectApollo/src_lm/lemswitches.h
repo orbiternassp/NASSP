@@ -680,3 +680,9 @@ protected:
 	h_Pipe * pipe;
 	LEMOverheadHatch *ovhdHatch;
 };
+
+class CDRCOASPowerSwitch : public LEMThreePosSwitch
+{
+public:
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+};
