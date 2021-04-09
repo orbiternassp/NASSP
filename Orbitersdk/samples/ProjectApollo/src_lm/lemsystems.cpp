@@ -1588,8 +1588,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//Seq Camera Power/Heat
 	if (CAMR_SEQ_CB.Voltage() > SP_MIN_DCVOLTAGE) {
 		CAMR_SEQ_CB.DrawPower(14.0);
-		//CabinHeat->GenerateHeat(14.0);	//This should only generate heat when the camera is active, as it has it's own on/off switch
-		CabinHeat->GenerateHeat(7.0);	//This should only generate heat when the camera is active, as it has it's own on/off switch, half heat
+		CabinHeat->GenerateHeat(12.6);	//This should only generate heat when the camera is active, as it has it's own on/off switch, not sure if heat goes into cabin or power
 	}
 
 	//Cabin Window Heaters
@@ -2014,14 +2013,28 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* bat4heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_D:HEAT");
 	double* desbat4HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4HX:POWER");
 
-	//sprintf(oapiDebugString(), "B1T %lf B2T %lf B3T %lf B4T %lf ", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp));
+	double* bat5temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A:TEMP");
+	double* bat5heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A:HEAT");
+	double* ascbat1HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:ASCBAT1HX:POWER");
+	double* bat6temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B:TEMP");
+	double* bat6heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B:HEAT");
+	double* ascbat2HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:ASCBAT2HX:POWER");
+
+	double* edbatAtemp = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_A:TEMP");
+	double* edbatAheat = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_A:HEAT");
+	double* edbatAHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATAHX:POWER");
+	double* edbatBtemp = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B:TEMP");
+	double* edbatBheat = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B:HEAT");
+	double* edbatBHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATBHX:POWER");
+
+	sprintf(oapiDebugString(), "B1T %lf B2T %lf B3T %lf B4T %lf B5T %lf B6T %lf EDA %lf EDB %lf", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp), KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*edbatAtemp), KelvinToFahrenheit(*edbatBtemp));
 
 	//sprintf(oapiDebugString(), "Primary Glycol Heating 1: %lf Primary Glycol Heating 2: %lf Cabin Heating %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat);
 
 	//sprintf(oapiDebugString(), "SCT %lf SCF %lf CT %lf SGDF %lf SGDT %lf GRVF %lf CO2MT %lf GlyCT %lf HXCT %lf HXCPwr %lf GlyHT %lf HXHT %lf HXHPwr %lf", KelvinToFahrenheit(*SuitCircuitTemp), *SuitCircuitOutFlow*LBH, KelvinToFahrenheit(*CabinTemp), *suitGasDiverterCabinFlow*LBH, KelvinToFahrenheit(*SGDTemp), *cabinGasReturnFlow*LBH, KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower);
 	//sprintf(oapiDebugString(), "SGDP %lf SGDV %d SGDF %lf CabP %lf GRV %d GRVF %lf CO2MP %lf", *SGDPress* PSI, *suitGasDiverterCabinVLV, *suitGasDiverterCabinFlow*LBH, *CabinPress* PSI, *gasreturnvlv, *cabinGasReturnFlow*LBH, *CO2ManifoldPress* PSI);
 
-	sprintf(oapiDebugString(), "LGC %lf CDU %lf PSA %lf GAS %lf LCA %lf DSE %lf TLE %lf ASA %lf PTA %lf IMU %lf RGA %lf CT %lf CR %lf HX1 %lf HX2 %lf", KelvinToFahrenheit(*LGCRad), KelvinToFahrenheit(*CDURad), KelvinToFahrenheit(*PSARad), KelvinToFahrenheit(*GASTARad), KelvinToFahrenheit(*LCARad), KelvinToFahrenheit(*DSERad), KelvinToFahrenheit(*TLERad), KelvinToFahrenheit(*ASARad), KelvinToFahrenheit(*PTARad), KelvinToFahrenheit(*IMURad), KelvinToFahrenheit(*RGARad), KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*CabinPlate), *CabinHX1, *CabinHX2);
+	//sprintf(oapiDebugString(), "LGC %lf CDU %lf PSA %lf GAS %lf LCA %lf DSE %lf TLE %lf ASA %lf PTA %lf IMU %lf RGA %lf CT %lf CR %lf HX1 %lf HX2 %lf", KelvinToFahrenheit(*LGCRad), KelvinToFahrenheit(*CDURad), KelvinToFahrenheit(*PSARad), KelvinToFahrenheit(*GASTARad), KelvinToFahrenheit(*LCARad), KelvinToFahrenheit(*DSERad), KelvinToFahrenheit(*TLERad), KelvinToFahrenheit(*ASARad), KelvinToFahrenheit(*PTARad), KelvinToFahrenheit(*IMURad), KelvinToFahrenheit(*RGARad), KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*CabinPlate), *CabinHX1, *CabinHX2);
 	//sprintf(oapiDebugString(), "SBD %lf AEAVHF %lf ATCAINV %lf SCERA %lf CWEAPCM %lf RRE %lf SCERAECA %lf P/S %lf Pwr1:%lf Pwr2:%lf", KelvinToFahrenheit(*SBDRad), KelvinToFahrenheit(*AEAVHFRad), KelvinToFahrenheit(*ATCAINVRad), KelvinToFahrenheit(*SCERARad), KelvinToFahrenheit(*CWEAPCMRad), KelvinToFahrenheit(*RRERad), KelvinToFahrenheit(*SCERAECARad), KelvinToFahrenheit(*PRIMSECRad), *PRIMSECHX1, *PRIMSECHX2);
 
 	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf CabinQ %lf CabinHeat %lf CabinPlate %lf HX %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTempF(), *CabinEnergy, *CabinHeat, KelvinToFahrenheit(*CabinPlate), *CabinHX1);
