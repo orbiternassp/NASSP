@@ -1919,7 +1919,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	double *CabFan = (double*)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN:ISON");
 
-
 	//Prim Loop 1 Heat
 	double *LGCHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT:HEAT");
 	double *CDUHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDUHEAT:HEAT");
@@ -2016,9 +2015,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* bat5temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A:TEMP");
 	double* bat5heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A:HEAT");
 	double* ascbat1HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:ASCBAT1HX:POWER");
+	double* bat5platetemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-ASCBAT1-Plate:TEMP");
 	double* bat6temp = (double*)Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B:TEMP");
 	double* bat6heat = (double*)Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B:HEAT");
 	double* ascbat2HX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:ASCBAT2HX:POWER");
+	double* bat6platetemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-ASCBAT2-Plate:TEMP");
 
 	double* edbatAtemp = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_A:TEMP");
 	double* edbatAheat = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_A:HEAT");
@@ -2027,7 +2028,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* edbatBheat = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B:HEAT");
 	double* edbatBHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATBHX:POWER");
 
-	sprintf(oapiDebugString(), "B1T %lf B2T %lf B3T %lf B4T %lf B5T %lf B6T %lf EDA %lf EDB %lf", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp), KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*edbatAtemp), KelvinToFahrenheit(*edbatBtemp));
+	//sprintf(oapiDebugString(), "B1T %lf B2T %lf B3T %lf B4T %lf DGT %lf B5T %lf B6T %lf B5PT %lf B6PT %lf AGT %lf EDA %lf EDB %lf", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp), KelvinToFahrenheit(*desbatglycoltemp), KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatAtemp), KelvinToFahrenheit(*edbatBtemp));
+	sprintf(oapiDebugString(), "B5T %lf B6T %lf B5PT %lf B6PT %lf AGT %lf EDB %lf", KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatBtemp));
+
 
 	//sprintf(oapiDebugString(), "Primary Glycol Heating 1: %lf Primary Glycol Heating 2: %lf Cabin Heating %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat);
 
@@ -2310,14 +2313,24 @@ void LEM::CheckDescentStageSystems()
 
 		//DES HX
 
-		h_HeatExchanger *desbat1HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1ECAHX");
-		h_HeatExchanger* desbat2HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT2PBATHX");
-		h_HeatExchanger* desbat3HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT3ECAHX");
-		h_HeatExchanger* desbat4HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4ECAHX");
+		h_HeatExchanger* desbat1HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1HX");
+		h_HeatExchanger* desbat2HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT2HX");
+		h_HeatExchanger* desbat3HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT3HX");
+		h_HeatExchanger* desbat4HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4HX");
+		h_HeatExchanger* desplate1HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1ECAHX");
+		h_HeatExchanger* desplate2HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT2PBATHX");
+		h_HeatExchanger* desplate3HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT3ECAHX");
+		h_HeatExchanger* desplate4HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4ECAHX");
+		h_HeatExchanger* edbatAHX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATAHX");
 		desbat1HX->SetPumpOff();
 		desbat2HX->SetPumpOff();
 		desbat3HX->SetPumpOff();
 		desbat4HX->SetPumpOff();
+		desplate1HX->SetPumpOff();
+		desplate2HX->SetPumpOff();
+		desplate3HX->SetPumpOff();
+		desplate4HX->SetPumpOff();
+		edbatAHX->SetPumpOff();
 
 		//LR
 
