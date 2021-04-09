@@ -653,8 +653,6 @@ void LEM::SetView() {
 
 bool LEM::clbkLoadVC (int id)
 {
-	RegisterActiveAreas();
-
 	switch (id) {
 	case LMVIEW_CDR:
 		viewpos = LMVIEW_CDR;
@@ -666,6 +664,8 @@ bool LEM::clbkLoadVC (int id)
 		SetView();
 		SetLMMeshVis();
 		SetCOAS();
+
+		RegisterActiveAreas();
 
 		return true;
 
@@ -679,6 +679,8 @@ bool LEM::clbkLoadVC (int id)
 		SetView();
 		SetLMMeshVis();
 		SetCOAS();
+
+		RegisterActiveAreas();
 
 		return true;
 
@@ -694,6 +696,8 @@ bool LEM::clbkLoadVC (int id)
 		SetLMMeshVis();
 		SetCOAS();
 
+		RegisterActiveAreas();
+
 		return true;
 
 	case LMVIEW_ECS:
@@ -707,6 +711,8 @@ bool LEM::clbkLoadVC (int id)
 		SetLMMeshVis();
 		SetCOAS();
 
+		RegisterActiveAreas();
+
 		return true;
 
 	case LMVIEW_ECS2:
@@ -718,6 +724,8 @@ bool LEM::clbkLoadVC (int id)
 		InPanel = false;
 		SetView();
 		SetLMMeshVis();
+
+		RegisterActiveAreas();
 
 		return true;
 
@@ -868,7 +876,7 @@ void LEM::RegisterActiveAreas()
 	// Panel 4
 	for (i = 0; i < P4_PUSHBCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_PUSHB_P4_01 + i, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCRegisterArea(AID_VC_PUSHB_P4_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P4_01 + i, P4_PUSHB_POS[i] + ofs, 0.008);
 	}
 
@@ -906,7 +914,7 @@ void LEM::RegisterActiveAreas()
 
 	for (i = 0; i < P6_PUSHBCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_PUSHB_P6_01 + i, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCRegisterArea(AID_VC_PUSHB_P6_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P6_01 + i, P6_PUSHB_POS[i] + ofs, 0.008);
 	}
 
@@ -1147,19 +1155,21 @@ void LEM::RegisterActiveAreas()
 	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCH, UpperHatchLocation + ofs, 0.1);
 
 	oapiVCRegisterArea(AID_VC_OVERHEADHATCHHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHHANDLE, _V( 0.0118, 0.9904, 0.2825 ) + ofs, 0.05);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHHANDLE, _V(0.0118, 0.9904, 0.2825) + ofs, 0.05);
 
 	oapiVCRegisterArea(AID_VC_OVERHEADHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHRELIEFVALVE, _V( 0.1786, 0.9834, 0.1652 ) + ofs, 0.03);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHRELIEFVALVE, _V(0.1786, 0.9834, 0.1652) + ofs, 0.03);
 
-	oapiVCRegisterArea(AID_VC_FORWARDHATCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCH, FwdHatchInnerLocation + ofs, 0.1);
+	if (viewpos == LMVIEW_ECS) { // To avoid that my DSKY clicks plays with the forward dump valve as well
+		oapiVCRegisterArea(AID_VC_FORWARDHATCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCH, FwdHatchInnerLocation + ofs, 0.1);
 
-	oapiVCRegisterArea(AID_VC_FORWARDHATCHHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCHHANDLE, _V(-0.2875, -0.5710, 1.5833) + ofs, 0.05);
+		oapiVCRegisterArea(AID_VC_FORWARDHATCHHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCHHANDLE, _V(-0.2875, -0.5710, 1.5833) + ofs, 0.05);
 
-	oapiVCRegisterArea(AID_VC_FORWARDHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCHRELIEFVALVE, _V(0.2087, -0.4964, 1.5786) + ofs, 0.03);
+		oapiVCRegisterArea(AID_VC_FORWARDHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCHRELIEFVALVE, _V(0.2087, -0.4964, 1.5786) + ofs, 0.03);
+	}
 
 	// Utility Lights
 
@@ -1178,8 +1188,8 @@ void LEM::RegisterActiveAreas()
 
 	// COAS FWD
 	const VECTOR3 COAS1Location = { -0.5612, 0.7323, 1.6805 };
-	oapiVCRegisterArea(AID_VC_COAS1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS1, COAS1Location + ofs, 0.05);
+	oapiVCRegisterArea(AID_VC_COAS2, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS2, COAS1Location + ofs, 0.05);
 
 	//
 	// Initialize surfaces and switches
@@ -1247,11 +1257,11 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			ForwardHatch.Toggle();
 			return true;
 
-		case AID_VC_COAS1:
-			if (LEMCoas1Enabled)
-				LEMCoas1Enabled = false;
+		case AID_VC_COAS2:
+			if (LEMCoas2Enabled)
+				LEMCoas2Enabled = false;
 			else
-				LEMCoas1Enabled = true;
+				LEMCoas2Enabled = true;
 			SwitchClick();
 			SetCOAS();
 			return true;
@@ -1734,30 +1744,36 @@ void LEM::DefineVCAnimations()
 	HeliumMonRotary.SetReference(P1_ROT_POS[0], P1_ROT_AXIS);
 	HeliumMonRotary.DefineMeshGroup(VC_GRP_Rot_P1_01);
 
-	VECTOR3 xvector = { 0.00, 0.0625*cos(P1_TILT), 0.0625*sin(P1_TILT) };
+	VECTOR3 NEEDLE_POS = { -0.1278, 0.6781, 1.8072 };
 
 	MainPanelVC.AddSwitch(&EngineThrustInd);
-	EngineThrustInd.SetDirection(xvector);
+	EngineThrustInd.SetReference(NEEDLE_POS);
+	EngineThrustInd.SetRotationRange(RAD * 38.6);
 	EngineThrustInd.DefineMeshGroup(VC_GRP_Needle_P1_01);
 
 	MainPanelVC.AddSwitch(&CommandedThrustInd);
-	CommandedThrustInd.SetDirection(xvector);
+	CommandedThrustInd.SetReference(NEEDLE_POS);
+	CommandedThrustInd.SetRotationRange(RAD * 38.6);
 	CommandedThrustInd.DefineMeshGroup(VC_GRP_Needle_P1_02);
 
 	MainPanelVC.AddSwitch(&MainFuelTempInd);
-	MainFuelTempInd.SetDirection(xvector);
+	MainFuelTempInd.SetReference(NEEDLE_POS);
+	MainFuelTempInd.SetRotationRange(RAD * 38.6);
 	MainFuelTempInd.DefineMeshGroup(VC_GRP_Needle_P1_03);
 
 	MainPanelVC.AddSwitch(&MainOxidizerTempInd);
-	MainOxidizerTempInd.SetDirection(xvector);
+	MainOxidizerTempInd.SetReference(NEEDLE_POS);
+	MainOxidizerTempInd.SetRotationRange(RAD * 38.6);
 	MainOxidizerTempInd.DefineMeshGroup(VC_GRP_Needle_P1_04);
 
 	MainPanelVC.AddSwitch(&MainFuelPressInd);
-	MainFuelPressInd.SetDirection(xvector);
+	MainFuelPressInd.SetReference(NEEDLE_POS);
+	MainFuelPressInd.SetRotationRange(RAD * 38.6);
 	MainFuelPressInd.DefineMeshGroup(VC_GRP_Needle_P1_05);
 
 	MainPanelVC.AddSwitch(&MainOxidizerPressInd);
-	MainOxidizerPressInd.SetDirection(xvector);
+	MainOxidizerPressInd.SetReference(NEEDLE_POS);
+	MainOxidizerPressInd.SetRotationRange(RAD * 38.6);
 	MainOxidizerPressInd.DefineMeshGroup(VC_GRP_Needle_P1_06);
 
 	MainPanelVC.AddSwitch(&ThrustWeightInd);
@@ -1784,7 +1800,7 @@ void LEM::DefineVCAnimations()
 	AbortStageSwitch.DefineMeshGroup(VC_GRP_AbortStageButton, VC_GRP_AbortStageCover);
 	AbortStageSwitch.SetInitialAnimState(1.0);
 
-	xvector = { 0.00, 0.075*cos(P1_TILT), 0.075*sin(P1_TILT) };
+	VECTOR3 xvector = { 0.00, 0.075*cos(P1_TILT), 0.075*sin(P1_TILT) };
 	VECTOR3 yvector = { 0.075, 0, 0 };
 	crossPointerLeft.SetDirection(xvector, yvector);
 	crossPointerLeft.DefineMeshGroup(VC_GRP_XpointerX_cdr, VC_GRP_XpointerY_cdr);
@@ -1882,66 +1898,85 @@ void LEM::DefineVCAnimations()
 	QtyMonRotary.SetReference(P2_ROT_POS[3], P2_ROT_AXIS);
 	QtyMonRotary.DefineMeshGroup(VC_GRP_Rot_P2_04);
 
-	xvector = _V(0.0, 0.0625*cos(P2_TILT), 0.0625*sin(P2_TILT));
+	NEEDLE_POS = { 0.1862, 0.7887, 1.8224 };
 
 	MainPanelVC.AddSwitch(&LMRCSATempInd);
-	LMRCSATempInd.SetDirection(xvector);
+	LMRCSATempInd.SetReference(NEEDLE_POS);
+	LMRCSATempInd.SetRotationRange(RAD * 38.6);
 	LMRCSATempInd.DefineMeshGroup(VC_GRP_Needle_P2_01);
 
 	MainPanelVC.AddSwitch(&LMRCSBTempInd);
-	LMRCSBTempInd.SetDirection(xvector);
+	LMRCSBTempInd.SetReference(NEEDLE_POS);
+	LMRCSBTempInd.SetRotationRange(RAD * 38.6);
 	LMRCSBTempInd.DefineMeshGroup(VC_GRP_Needle_P2_02);
 
 	MainPanelVC.AddSwitch(&LMRCSAPressInd);
-	LMRCSAPressInd.SetDirection(xvector);
+	LMRCSAPressInd.SetReference(NEEDLE_POS);
+	LMRCSAPressInd.SetRotationRange(RAD * 38.6);
 	LMRCSAPressInd.DefineMeshGroup(VC_GRP_Needle_P2_03);
 
 	MainPanelVC.AddSwitch(&LMRCSBPressInd);
-	LMRCSBPressInd.SetDirection(xvector);
+	LMRCSBPressInd.SetReference(NEEDLE_POS);
+	LMRCSBPressInd.SetRotationRange(RAD * 38.6);
 	LMRCSBPressInd.DefineMeshGroup(VC_GRP_Needle_P2_04);
 
 	MainPanelVC.AddSwitch(&LMRCSAQtyInd);
-	LMRCSAQtyInd.SetDirection(xvector);
+	LMRCSAQtyInd.SetReference(NEEDLE_POS);
+	LMRCSAQtyInd.SetRotationRange(RAD * 38.6);
 	LMRCSAQtyInd.DefineMeshGroup(VC_GRP_Needle_P2_05);
 
 	MainPanelVC.AddSwitch(&LMRCSBQtyInd);
-	LMRCSBQtyInd.SetDirection(xvector);
+	LMRCSBQtyInd.SetReference(NEEDLE_POS);
+	LMRCSBQtyInd.SetRotationRange(RAD * 38.6);
 	LMRCSBQtyInd.DefineMeshGroup(VC_GRP_Needle_P2_06);
 
 	MainPanelVC.AddSwitch(&LMSuitTempMeter);
-	LMSuitTempMeter.SetDirection(xvector);
+	LMSuitTempMeter.SetReference(NEEDLE_POS);
+	LMSuitTempMeter.SetRotationRange(RAD * 38.6);
 	LMSuitTempMeter.DefineMeshGroup(VC_GRP_Needle_P2_07);
 
 	MainPanelVC.AddSwitch(&LMCabinTempMeter);
-	LMCabinTempMeter.SetDirection(xvector);
+	LMCabinTempMeter.SetReference(NEEDLE_POS);
+	LMCabinTempMeter.SetRotationRange(RAD * 38.6);
 	LMCabinTempMeter.DefineMeshGroup(VC_GRP_Needle_P2_08);
 
 	MainPanelVC.AddSwitch(&LMSuitPressMeter);
-	LMSuitPressMeter.SetDirection(xvector);
+	LMSuitPressMeter.SetReference(NEEDLE_POS);
+	LMSuitPressMeter.SetRotationRange(RAD * 38.6);
 	LMSuitPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_09);
 
 	MainPanelVC.AddSwitch(&LMCabinPressMeter);
-	LMCabinPressMeter.SetDirection(xvector);
+	LMCabinPressMeter.SetReference(NEEDLE_POS);
+	LMCabinPressMeter.SetRotationRange(RAD * 38.6);
 	LMCabinPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_10);
 
+	NEEDLE_POS = { 0.2785, 0.6710, 1.8063 };
+
 	MainPanelVC.AddSwitch(&LMGlycolTempMeter);
-	LMGlycolTempMeter.SetDirection(xvector);
+	LMGlycolTempMeter.SetReference(NEEDLE_POS);
+	LMGlycolTempMeter.SetRotationRange(RAD * 38.6);
 	LMGlycolTempMeter.DefineMeshGroup(VC_GRP_Needle_P2_11);
 
 	MainPanelVC.AddSwitch(&LMGlycolPressMeter);
-	LMGlycolPressMeter.SetDirection(xvector);
+	LMGlycolPressMeter.SetReference(NEEDLE_POS);
+	LMGlycolPressMeter.SetRotationRange(RAD * 38.6);
 	LMGlycolPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_12);
 
 	MainPanelVC.AddSwitch(&LMOxygenQtyMeter);
-	LMOxygenQtyMeter.SetDirection(xvector);
+	LMOxygenQtyMeter.SetReference(NEEDLE_POS);
+	LMOxygenQtyMeter.SetRotationRange(RAD * 38.6);
 	LMOxygenQtyMeter.DefineMeshGroup(VC_GRP_Needle_P2_13);
 
 	MainPanelVC.AddSwitch(&LMWaterQtyMeter);
-	LMWaterQtyMeter.SetDirection(xvector);
+	LMWaterQtyMeter.SetReference(NEEDLE_POS);
+	LMWaterQtyMeter.SetRotationRange(RAD * 38.6);
 	LMWaterQtyMeter.DefineMeshGroup(VC_GRP_Needle_P2_14);
 
+	NEEDLE_POS = { 0.1862, 0.7887, 1.8224 };
+
 	MainPanelVC.AddSwitch(&LMCO2Meter);
-	LMCO2Meter.SetDirection(xvector);
+	LMCO2Meter.SetReference(NEEDLE_POS);
+	LMCO2Meter.SetRotationRange(RAD * 38.6);
 	LMCO2Meter.DefineMeshGroup(VC_GRP_Needle_P2_15);
 
 	MainPanelVC.AddSwitch(&RCSAscFeed1ATB, AID_VC_RCS_ASC_FEED_TALKBACKS);
@@ -2104,25 +2139,84 @@ void LEM::DefineVCAnimations()
 	RadarSlewSwitch.DefineMeshGroup(VC_GRP_RR_slew_switch);
 
 	//Panel 4
+
+	const VECTOR3	P4_PB_VECT = { 0.00,  0.001*-sin(P4_TILT), 0.001*cos(P4_TILT) };
+
 	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P4_01);
+	DskySwitchVerb.SetDirection(P4_PB_VECT);
+	DskySwitchVerb.DefineMeshGroup(VC_GRP_PB_P4_01);
+
 	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P4_02);
+	DskySwitchNoun.SetDirection(P4_PB_VECT);
+	DskySwitchNoun.DefineMeshGroup(VC_GRP_PB_P4_02);
+
 	MainPanelVC.AddSwitch(&DskySwitchPlus, AID_VC_PUSHB_P4_03);
+	DskySwitchPlus.SetDirection(P4_PB_VECT);
+	DskySwitchPlus.DefineMeshGroup(VC_GRP_PB_P4_03);
+
 	MainPanelVC.AddSwitch(&DskySwitchMinus, AID_VC_PUSHB_P4_04);
+	DskySwitchMinus.SetDirection(P4_PB_VECT);
+	DskySwitchMinus.DefineMeshGroup(VC_GRP_PB_P4_04);
+
 	MainPanelVC.AddSwitch(&DskySwitchZero, AID_VC_PUSHB_P4_05);
+	DskySwitchZero.SetDirection(P4_PB_VECT);
+	DskySwitchZero.DefineMeshGroup(VC_GRP_PB_P4_05);
+
 	MainPanelVC.AddSwitch(&DskySwitchOne, AID_VC_PUSHB_P4_06);
+	DskySwitchOne.SetDirection(P4_PB_VECT);
+	DskySwitchOne.DefineMeshGroup(VC_GRP_PB_P4_06);
+
 	MainPanelVC.AddSwitch(&DskySwitchTwo, AID_VC_PUSHB_P4_07);
+	DskySwitchTwo.SetDirection(P4_PB_VECT);
+	DskySwitchTwo.DefineMeshGroup(VC_GRP_PB_P4_07);
+
 	MainPanelVC.AddSwitch(&DskySwitchThree, AID_VC_PUSHB_P4_08);
+	DskySwitchThree.SetDirection(P4_PB_VECT);
+	DskySwitchThree.DefineMeshGroup(VC_GRP_PB_P4_08);
+
 	MainPanelVC.AddSwitch(&DskySwitchFour, AID_VC_PUSHB_P4_09);
+	DskySwitchFour.SetDirection(P4_PB_VECT);
+	DskySwitchFour.DefineMeshGroup(VC_GRP_PB_P4_09);
+
 	MainPanelVC.AddSwitch(&DskySwitchFive, AID_VC_PUSHB_P4_10);
+	DskySwitchFive.SetDirection(P4_PB_VECT);
+	DskySwitchFive.DefineMeshGroup(VC_GRP_PB_P4_10);
+
 	MainPanelVC.AddSwitch(&DskySwitchSix, AID_VC_PUSHB_P4_11);
+	DskySwitchSix.SetDirection(P4_PB_VECT);
+	DskySwitchSix.DefineMeshGroup(VC_GRP_PB_P4_11);
+
 	MainPanelVC.AddSwitch(&DskySwitchSeven, AID_VC_PUSHB_P4_12);
+	DskySwitchSeven.SetDirection(P4_PB_VECT);
+	DskySwitchSeven.DefineMeshGroup(VC_GRP_PB_P4_12);
+
 	MainPanelVC.AddSwitch(&DskySwitchEight, AID_VC_PUSHB_P4_13);
+	DskySwitchEight.SetDirection(P4_PB_VECT);
+	DskySwitchEight.DefineMeshGroup(VC_GRP_PB_P4_13);
+
 	MainPanelVC.AddSwitch(&DskySwitchNine, AID_VC_PUSHB_P4_14);
+	DskySwitchNine.SetDirection(P4_PB_VECT);
+	DskySwitchNine.DefineMeshGroup(VC_GRP_PB_P4_14);
+
 	MainPanelVC.AddSwitch(&DskySwitchClear, AID_VC_PUSHB_P4_15);
+	DskySwitchClear.SetDirection(P4_PB_VECT);
+	DskySwitchClear.DefineMeshGroup(VC_GRP_PB_P4_15);
+
 	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P4_16);
+	DskySwitchProg.SetDirection(P4_PB_VECT);
+	DskySwitchProg.DefineMeshGroup(VC_GRP_PB_P4_16);
+
 	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P4_17);
+	DskySwitchKeyRel.SetDirection(P4_PB_VECT);
+	DskySwitchKeyRel.DefineMeshGroup(VC_GRP_PB_P4_17);
+
 	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P4_18);
+	DskySwitchEnter.SetDirection(P4_PB_VECT);
+	DskySwitchEnter.DefineMeshGroup(VC_GRP_PB_P4_18);
+
 	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P4_19);
+	DskySwitchReset.SetDirection(P4_PB_VECT);
+	DskySwitchReset.DefineMeshGroup(VC_GRP_PB_P4_19);
 
 	MainPanelVC.AddSwitch(&LeftACA4JetSwitch, AID_VC_SWITCH_P4_01);
 	LeftACA4JetSwitch.SetReference(P4_TOGGLE_POS[0], _V(1, 0, 0));
@@ -2201,22 +2295,71 @@ void LEM::DefineVCAnimations()
 
 	//Panel 6
 
+	const VECTOR3	P6_PB_VECT = { 0.00,  0.001*-sin(P6_TILT), 0.001*cos(P6_TILT) };
+
 	MainPanelVC.AddSwitch(&DedaSwitchPlus, AID_VC_PUSHB_P6_01);
+	DedaSwitchPlus.SetDirection(P6_PB_VECT);
+	DedaSwitchPlus.DefineMeshGroup(VC_GRP_PB_P5_6_01);
+
 	MainPanelVC.AddSwitch(&DedaSwitchMinus, AID_VC_PUSHB_P6_02);
+	DedaSwitchMinus.SetDirection(P6_PB_VECT);
+	DedaSwitchMinus.DefineMeshGroup(VC_GRP_PB_P5_6_02);
+
 	MainPanelVC.AddSwitch(&DedaSwitchZero, AID_VC_PUSHB_P6_03);
+	DedaSwitchZero.SetDirection(P6_PB_VECT);
+	DedaSwitchZero.DefineMeshGroup(VC_GRP_PB_P5_6_03);
+
 	MainPanelVC.AddSwitch(&DedaSwitchOne, AID_VC_PUSHB_P6_04);
+	DedaSwitchOne.SetDirection(P6_PB_VECT);
+	DedaSwitchOne.DefineMeshGroup(VC_GRP_PB_P5_6_04);
+
 	MainPanelVC.AddSwitch(&DedaSwitchTwo, AID_VC_PUSHB_P6_05);
+	DedaSwitchTwo.SetDirection(P6_PB_VECT);
+	DedaSwitchTwo.DefineMeshGroup(VC_GRP_PB_P5_6_05);
+
 	MainPanelVC.AddSwitch(&DedaSwitchThree, AID_VC_PUSHB_P6_06);
+	DedaSwitchThree.SetDirection(P6_PB_VECT);
+	DedaSwitchThree.DefineMeshGroup(VC_GRP_PB_P5_6_06);
+
 	MainPanelVC.AddSwitch(&DedaSwitchFour, AID_VC_PUSHB_P6_07);
+	DedaSwitchFour.SetDirection(P6_PB_VECT);
+	DedaSwitchFour.DefineMeshGroup(VC_GRP_PB_P5_6_07);
+
 	MainPanelVC.AddSwitch(&DedaSwitchFive, AID_VC_PUSHB_P6_08);
+	DedaSwitchFive.SetDirection(P6_PB_VECT);
+	DedaSwitchFive.DefineMeshGroup(VC_GRP_PB_P5_6_08);
+
 	MainPanelVC.AddSwitch(&DedaSwitchSix, AID_VC_PUSHB_P6_09);
+	DedaSwitchSix.SetDirection(P6_PB_VECT);
+	DedaSwitchSix.DefineMeshGroup(VC_GRP_PB_P5_6_09);
+
 	MainPanelVC.AddSwitch(&DedaSwitchSeven, AID_VC_PUSHB_P6_10);
+	DedaSwitchSeven.SetDirection(P6_PB_VECT);
+	DedaSwitchSeven.DefineMeshGroup(VC_GRP_PB_P5_6_10);
+
 	MainPanelVC.AddSwitch(&DedaSwitchEight, AID_VC_PUSHB_P6_11);
+	DedaSwitchEight.SetDirection(P6_PB_VECT);
+	DedaSwitchEight.DefineMeshGroup(VC_GRP_PB_P5_6_11);
+
 	MainPanelVC.AddSwitch(&DedaSwitchNine, AID_VC_PUSHB_P6_12);
+	DedaSwitchNine.SetDirection(P6_PB_VECT);
+	DedaSwitchNine.DefineMeshGroup(VC_GRP_PB_P5_6_12);
+
 	MainPanelVC.AddSwitch(&DedaSwitchClear, AID_VC_PUSHB_P6_13);
+	DedaSwitchClear.SetDirection(P6_PB_VECT);
+	DedaSwitchClear.DefineMeshGroup(VC_GRP_PB_P5_6_13);
+
 	MainPanelVC.AddSwitch(&DedaSwitchReadOut, AID_VC_PUSHB_P6_14);
+	DedaSwitchReadOut.SetDirection(P6_PB_VECT);
+	DedaSwitchReadOut.DefineMeshGroup(VC_GRP_PB_P5_6_14);
+
 	MainPanelVC.AddSwitch(&DedaSwitchEnter, AID_VC_PUSHB_P6_15);
+	DedaSwitchEnter.SetDirection(P6_PB_VECT);
+	DedaSwitchEnter.DefineMeshGroup(VC_GRP_PB_P5_6_15);
+
 	MainPanelVC.AddSwitch(&DedaSwitchHold, AID_VC_PUSHB_P6_16);
+	DedaSwitchHold.SetDirection(P6_PB_VECT);
+	DedaSwitchHold.DefineMeshGroup(VC_GRP_PB_P5_6_16);
 
 	MainPanelVC.AddSwitch(&AGSOperateSwitch, AID_VC_SWITCH_P6_01);
 	AGSOperateSwitch.SetReference(P6_TOGGLE_POS[0], _V(1, 0, 0));

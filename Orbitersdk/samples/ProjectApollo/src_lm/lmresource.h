@@ -866,7 +866,7 @@
 #define AID_VC_SW_RRGYRO                 3020
 #define AID_VC_RETICLEDISP               3021
 
-#define AID_VC_COAS1                     3030
+#define AID_VC_COAS2                     3031
 
 // VC Active Areas (Panel 1)
 #define AID_VC_PANEL_1				    ((id >= 3100) && (id <= 3140))

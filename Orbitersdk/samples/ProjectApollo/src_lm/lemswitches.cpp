@@ -2355,12 +2355,16 @@ bool CDRCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
 
-		if (state == THREEPOSSWITCH_UP) {
-			lem->COASreticlevisible = 2;
-		} else if (state == THREEPOSSWITCH_CENTER) {
-			lem->COASreticlevisible = 1;
+		if (lem->COAS_DC_CB.IsPowered()) {
+			if (state == THREEPOSSWITCH_UP) {
+				lem->COASreticlevisible = 2; // OVHD COAS
+			} else if (state == THREEPOSSWITCH_CENTER) {
+				lem->COASreticlevisible = 0; // OFF
+			} else {
+				lem->COASreticlevisible = 1; // FWD COAS
+			}
 		} else {
-			lem->COASreticlevisible = 0;
+			lem->COASreticlevisible = 0; // OFF
 		}
 		lem->SetCOAS();
 		return true;

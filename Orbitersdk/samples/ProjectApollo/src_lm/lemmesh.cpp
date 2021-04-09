@@ -637,34 +637,29 @@ void LEM::SetCOAS() {
 
 	static UINT meshgroup_COAS[3] = { VC_GRP_COAS_1, VC_GRP_COAS_2, VC_GRP_zzzCOAS_Glass };
 	static UINT meshgroup_Reticle = VC_GRP_COAS_Reticle;
-	GROUPEDITSPEC ges;
 
-	if (LEMCoas1Enabled) {
+	GROUPEDITSPEC ges_on;
+	ges_on.flags = (GRPEDIT_SETUSERFLAG);
+	ges_on.UsrFlag = 0;
+	GROUPEDITSPEC ges_off;
+	ges_off.flags = (GRPEDIT_ADDUSERFLAG);
+	ges_off.UsrFlag = 3;
 
+	// FWD COAS
+	if (LEMCoas2Enabled) {
 		for (int i = 0; i < 3; i++) {
-			ges.flags = (GRPEDIT_SETUSERFLAG);
-			ges.UsrFlag = 0;
-			oapiEditMeshGroup(vcmesh, meshgroup_COAS[i], &ges);
+			oapiEditMeshGroup(vcmesh, meshgroup_COAS[i], &ges_on);
 		}
-
-		if (InVC && oapiCameraInternal() && viewpos == LMVIEW_CDR && COASreticlevisible == 0) {
-			ges.flags = (GRPEDIT_SETUSERFLAG);
-			ges.UsrFlag = 0;
-			oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges);
+		if (InVC && oapiCameraInternal() && viewpos == LMVIEW_CDR && COASreticlevisible == 1) {
+			oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_on);
+		} else {
+			oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_off);
 		}
-		else {
-			ges.flags = (GRPEDIT_ADDUSERFLAG);
-			ges.UsrFlag = 3;
-			oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges);
-		}
-	}
-	else {
-		ges.flags = (GRPEDIT_ADDUSERFLAG);
-		ges.UsrFlag = 3;
+	} else {
 		for (int i = 0; i < 3; i++) {
-			oapiEditMeshGroup(vcmesh, meshgroup_COAS[i], &ges);
+			oapiEditMeshGroup(vcmesh, meshgroup_COAS[i], &ges_off);
 		}
-		oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges);
+		oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_off);
 	}
 }
 

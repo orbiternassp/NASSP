@@ -1223,7 +1223,7 @@ protected:
 	CDRCOASPowerSwitch CDRCOASSwitch;
 
 	bool COASswitch;
-	int COASreticlevisible;   // 0 = FWD  1 = OFF  2 = OVHD
+	int COASreticlevisible;   // 0 = OFF  1 = FWD  2 = OVHD
 
 	//////////////////
 	// LEM panel 14 //

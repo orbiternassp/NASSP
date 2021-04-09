@@ -759,7 +759,7 @@ void LEM::InitSwitches() {
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 
 	LEMCoas1Enabled = false;
-	LEMCoas2Enabled = true;
+	LEMCoas2Enabled = false;
 	ordealEnabled = false;
 
 	RRGyroSelSwitch.Register(PSH,"RRGyroSelSwitch",THREEPOSSWITCH_UP);
@@ -3313,9 +3313,9 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_LEM_COAS2:
 		if (LEMCoas2Enabled) {
-			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 0, 540, 540, SURF_PREDEF_CK);
-		} else {
 			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 540, 540, 540, SURF_PREDEF_CK);
+		} else {
+			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 0, 540, 540, SURF_PREDEF_CK);
 		}
 		return true;
 

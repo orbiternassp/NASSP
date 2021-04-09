@@ -543,7 +543,7 @@ void LEM::Init()
 
 	aeaa = NULL;
 
-	COASreticlevisible = 1;
+	COASreticlevisible = 0;
 
 	trackLightPos = _V(0, 0, 0);
 	for (int i = 0;i < 5;i++)
@@ -1529,6 +1529,15 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "LMPINPLSS", 9)) {
 			sscanf(line + 9, "%i", &LMPinPLSS);
 		}
+		else if (!strnicmp(line, "COAS1ENABLED", 12)) {
+			sscanf(line + 12, "%i", &LEMCoas1Enabled);
+		}
+		else if (!strnicmp(line, "COAS2ENABLED", 12)) {
+			sscanf(line + 12, "%i", &LEMCoas2Enabled);
+		}
+		else if (!strnicmp(line, "COASRETICLEVISIBLE", 18)) {
+			sscanf(line + 18, "%i", &COASreticlevisible);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1797,7 +1806,10 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 		HideProbes();
 	}
 
-	if (vcidx != -1) vcmesh = GetDevMesh(vis, vcidx);
+	if (vcidx != -1) {
+		vcmesh = GetDevMesh(vis, vcidx);
+		SetCOAS();
+	}
 }
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
@@ -1968,6 +1980,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
 	oapiWriteScenario_int(scn, "CDRINPLSS", CDRinPLSS);
 	oapiWriteScenario_int(scn, "LMPINPLSS", LMPinPLSS);
+	oapiWriteScenario_int(scn, "COAS1ENABLED", LEMCoas1Enabled);
+	oapiWriteScenario_int(scn, "COAS2ENABLED", LEMCoas2Enabled);
+	oapiWriteScenario_int(scn, "COASRETICLEVISIBLE", COASreticlevisible);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);

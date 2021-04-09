@@ -136,7 +136,7 @@ protected:
 	double AdjustForPower(double val) { return val; } // These are always powered by definition.	
 };
 
-class LMSuitTempMeter : public LinearMeter {
+class LMSuitTempMeter : public CurvedMeter {
 public:
 	LMSuitTempMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -148,7 +148,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCabinTempMeter : public LinearMeter {
+class LMCabinTempMeter : public CurvedMeter {
 public:
 	LMCabinTempMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -160,7 +160,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMSuitPressMeter : public LinearMeter {
+class LMSuitPressMeter : public CurvedMeter {
 public:
 	LMSuitPressMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -173,7 +173,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCabinPressMeter : public LinearMeter {
+class LMCabinPressMeter : public CurvedMeter {
 public:
 	LMCabinPressMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -186,7 +186,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCO2Meter : public LinearMeter {
+class LMCO2Meter : public CurvedMeter {
 public:
 	LMCO2Meter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -199,7 +199,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMGlycolTempMeter : public LinearMeter {
+class LMGlycolTempMeter : public CurvedMeter {
 public:
 	LMGlycolTempMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -212,7 +212,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMGlycolPressMeter : public LinearMeter {
+class LMGlycolPressMeter : public CurvedMeter {
 public:
 	LMGlycolPressMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -224,7 +224,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMOxygenQtyMeter : public LinearMeter {
+class LMOxygenQtyMeter : public CurvedMeter {
 public:
 	LMOxygenQtyMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -237,7 +237,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMWaterQtyMeter : public LinearMeter {
+class LMWaterQtyMeter : public CurvedMeter {
 public:
 	LMWaterQtyMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -250,7 +250,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSATempInd : public LinearMeter {
+class LMRCSATempInd : public CurvedMeter {
 public:
 	LMRCSATempInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -263,7 +263,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSBTempInd : public LinearMeter {
+class LMRCSBTempInd : public CurvedMeter {
 public:
 	LMRCSBTempInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -276,7 +276,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSAPressInd : public LinearMeter {
+class LMRCSAPressInd : public CurvedMeter {
 public:
 	LMRCSAPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -289,7 +289,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSBPressInd : public LinearMeter {
+class LMRCSBPressInd : public CurvedMeter {
 public:
 	LMRCSBPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -302,7 +302,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSAQtyInd : public LinearMeter {
+class LMRCSAQtyInd : public CurvedMeter {
 public:
 	LMRCSAQtyInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -315,7 +315,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSBQtyInd : public LinearMeter {
+class LMRCSBQtyInd : public CurvedMeter {
 public:
 	LMRCSBQtyInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -341,7 +341,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class EngineThrustInd : public LinearMeter {
+class EngineThrustInd : public CurvedMeter {
 public:
 	EngineThrustInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -354,7 +354,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class CommandedThrustInd : public LinearMeter {
+class CommandedThrustInd : public CurvedMeter {
 public:
 	CommandedThrustInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
@@ -380,7 +380,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class MainFuelTempInd : public LinearMeter {
+class MainFuelTempInd : public CurvedMeter {
 public:
 	MainFuelTempInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
@@ -393,7 +393,7 @@ protected:
 	ThreePosSwitch *monswitch;
 };
 
-class MainFuelPressInd : public LinearMeter {
+class MainFuelPressInd : public CurvedMeter {
 public:
 	MainFuelPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
@@ -406,7 +406,7 @@ protected:
 	ThreePosSwitch *monswitch;
 };
 
-class MainOxidizerTempInd : public LinearMeter {
+class MainOxidizerTempInd : public CurvedMeter {
 public:
 	MainOxidizerTempInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
@@ -419,7 +419,7 @@ protected:
 	ThreePosSwitch *monswitch;
 };
 
-class MainOxidizerPressInd : public LinearMeter {
+class MainOxidizerPressInd : public CurvedMeter {
 public:
 	MainOxidizerPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
