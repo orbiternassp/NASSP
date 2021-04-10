@@ -43,6 +43,7 @@
 #include "Sat5LMDSC.h"
 #include "LM_AscentStageResource.h"
 #include "LM_DescentStageResource.h"
+#include "LM_VC_Resource.h"
 #include "Mission.h"
 
 MESHHANDLE hLMDescent;
@@ -626,6 +627,39 @@ void LEM::SetDockingLights() {
 		dockingLights[i].tofs = 0;
 		dockingLights[i].active = false;
 		AddBeacon(dockingLights+i);
+	}
+}
+
+void LEM::SetCOAS() {
+
+	if (!vcmesh)
+		return;
+
+	static UINT meshgroup_COAS[3] = { VC_GRP_COAS_1, VC_GRP_COAS_2, VC_GRP_zzzCOAS_Glass };
+	static UINT meshgroup_Reticle = VC_GRP_COAS_Reticle;
+
+	GROUPEDITSPEC ges_on;
+	ges_on.flags = (GRPEDIT_SETUSERFLAG);
+	ges_on.UsrFlag = 0;
+	GROUPEDITSPEC ges_off;
+	ges_off.flags = (GRPEDIT_ADDUSERFLAG);
+	ges_off.UsrFlag = 3;
+
+	// FWD COAS
+	if (LEMCoas2Enabled) {
+		for (int i = 0; i < 3; i++) {
+			oapiEditMeshGroup(vcmesh, meshgroup_COAS[i], &ges_on);
+		}
+		if (InVC && oapiCameraInternal() && viewpos == LMVIEW_CDR && COASreticlevisible == 1) {
+			oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_on);
+		} else {
+			oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_off);
+		}
+	} else {
+		for (int i = 0; i < 3; i++) {
+			oapiEditMeshGroup(vcmesh, meshgroup_COAS[i], &ges_off);
+		}
+		oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_off);
 	}
 }
 
