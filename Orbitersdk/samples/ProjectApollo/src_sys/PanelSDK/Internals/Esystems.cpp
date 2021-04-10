@@ -267,9 +267,6 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	H2_purity = 0.9994; //set me somewhere else
 	O2_purity = 0.9999; //set me somewhere else
 
-	H2_max_impurities = 0.0504; //nominal impurities after 24hrs //set me somewhere else
-	O2_max_impurities = 0.106; //nominal impurities after 24hrs set me somewhere else
-
 	SetTemp(475.0); 
 	condenserTemp = 345.0;
 	tempTooLowCount = 0;
@@ -277,7 +274,7 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	Amperes = 25.0;
 	power_load = 600.0; //2 amps is internal impedance		//TSCH Test 
 	max_power = r_watts; //max watts
-	clogg = 0.0; //no clog
+	cloggVoltageDrop = 0.0; //no clog
 	start_handle = 0; //stopped
 	purge_handle = -1; //no purging
 	status = i_status;		//2; //stopped
@@ -503,7 +500,7 @@ void FCell::UpdateFlow(double dt)
 		
 		//coefficients for 5th order approximation of fuel cell performance, taken from:
 		//CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-10
-		double A = 0.023951368224792 * Temp + 25.4241562583015;
+		double A = 0.023951368224792 * Temp + 23.9241562583015 - cloggVoltageDrop;
 		double B = 0.003480859912024 * Temp - 2.19986938582928;
 		double C = -0.0001779207513 * Temp + 0.104916556604259;
 		double D = 5.0656524872309E-06 * Temp - 0.002885372247954;
@@ -554,8 +551,9 @@ void FCell::UpdateFlow(double dt)
 
 		/*if (!strcmp(name, "FUELCELL1"))
 		{
-		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfA, Power %lfW", Amperes, Volts, power_load);
+		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfA, Power %lfW, Clogg Potential Reduction %lfV", Amperes, Volts, power_load, -cloggVoltageDrop);
 		}*/
+
 
 		Reaction(dt);
 
@@ -599,9 +597,9 @@ void FCell::Clogging(double dt)
 
 	//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
 	//here we're simulating the effect by making the O2 clogging effect the voltage drop 25x as much as the H2
-	clogg = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
+	cloggVoltageDrop = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
 
-	clogg = clogg / 3; //reduce clogging by a factor of 3 so we can make it to our purge interval without undervolt alarms; REPLACE WITH BETTER MODEL
+	cloggVoltageDrop *= cloggVoltageReduction;
 }
 
 void FCell::Load(char *line)
