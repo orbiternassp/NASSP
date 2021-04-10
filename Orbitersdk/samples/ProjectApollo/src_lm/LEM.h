@@ -1533,11 +1533,17 @@ protected:
 	int CDRinPLSS;
 	int LMPinPLSS;
 
-#define LMVIEW_CDR		0
-#define LMVIEW_LMP		1
-#define LMVIEW_LPD		3
-#define LMVIEW_ECS		4
-#define LMVIEW_ECS2		5
+#define LMVIEW_CDR		 0
+#define LMVIEW_LMP		 1
+#define LMVIEW_LPD		 2
+#define LMVIEW_DSKY		 3
+#define LMVIEW_CBLEFT    4
+#define LMVIEW_CBRIGHT   5
+#define LMVIEW_AOT		 6
+#define LMVIEW_FWDHATCH	 7
+#define LMVIEW_OVHDHATCH 8
+#define LMVIEW_ECS		 9
+#define LMVIEW_ECS2		 10
 
 #define VIEWANGLE 30
 

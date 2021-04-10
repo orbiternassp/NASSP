@@ -266,11 +266,11 @@ void LEMOverheadHatch::DefineAnimationsVC(UINT idx)
 	const VECTOR3 UpperHatchHandleLocation = { -0.0021, 0.9917, 0.3372 };
 	const VECTOR3 UpperHatchReliefValveLocation = { 0.1467, 1.0035, 0.1677 };
 
-	static UINT	meshgroup_OvhdHatchVC = VC_GRP_UpperHatch;
+	static UINT	meshgroup_OvhdHatchVC[3] = { VC_GRP_UpperHatch, VC_GRP_UpperHatchHandleBase, VC_GRP_UpperHatchValveBase };
 	static UINT	meshgroup_OvhdHatchHandle = VC_GRP_UpperHatchHandle;
 	static UINT	meshgroup_OvhdHatchReliefValve = VC_GRP_UpperHatchReliefValve;
 
-	static MGROUP_ROTATE mgt_OvhdHatchVC(idx, &meshgroup_OvhdHatchVC, 1, _V(0.00, 1.02873, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+	static MGROUP_ROTATE mgt_OvhdHatchVC(idx, meshgroup_OvhdHatchVC, 3, _V(0.00, 1.02873, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
 	static MGROUP_ROTATE mgt_OvhdHatchHandle(idx, &meshgroup_OvhdHatchHandle, 1, UpperHatchHandleLocation, _V(0.0, 1.0, 0.0), (float)(90.0*RAD));
 	static MGROUP_ROTATE mgt_OvhdHatchReliefValve(idx, &meshgroup_OvhdHatchReliefValve, 1, UpperHatchReliefValveLocation, _V(0.0, 0.0, 1.0), (float)(60.0*RAD));
 

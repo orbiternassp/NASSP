@@ -410,7 +410,7 @@ const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
 // Subtracted from total material count to find L01 location.
-const int mat_L01 = 47;
+const int mat_L01 = 51;
 
 void LEM::JostleViewpoint(double amount)
 
@@ -445,58 +445,74 @@ void LEM::JostleViewpoint(double amount)
 void LEM::SetView() {
 
 	VECTOR3 v;
+
+	VECTOR3 ofs;
+	if (stage == 2) {
+		ofs = { 0.0, 0.0, 0.0 };
+	} else {
+		ofs = { 0.0, 1.75, 0.0 };
+	}
+
 	//
 	// Set camera offset
 	//
 	if (InVC) {
 		switch (viewpos) {
 		case LMVIEW_CDR:
-			if (stage == 2) {
-				v = _V(-0.45, -0.07, 1.25);
-			}
-			else {
-				v = _V(-0.45, 1.68, 1.25);
-			}
-			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			v = _V(-0.45, -0.07, 1.25) + ofs;
+			SetCameraDefaultDirection(_V(0.00, -sin(P1_TILT), cos(P1_TILT)));
 			break;
 
 		case LMVIEW_LMP:
-			if (stage == 2) {
-				v = _V(0.45, -0.07, 1.25);
-			}
-			else {
-				v = _V(0.45, 1.68, 1.25);
-			}
-			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			v = _V(0.45, -0.07, 1.25) + ofs;
+			SetCameraDefaultDirection(_V(0.00, -sin(P2_TILT), cos(P2_TILT)));
 			break;
 
 		case LMVIEW_LPD:
-			if (stage == 2) {
-				v = _V(-0.58, -0.15, 1.40);
-			}
-			else {
-				v = _V(-0.58, 1.60, 1.40);
-			}
+			v = _V(-0.58, -0.15, 1.40) + ofs;
 			SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE * RAD), cos(VIEWANGLE * RAD)));
 			break;
-		case LMVIEW_ECS:
-			if (stage == 2) {
-				v = _V(0.0, -0.45, 0.10);
-			}
-			else {
-				v = _V(0.0, 1.30, 0.10);
-			}
+
+		case LMVIEW_DSKY:
+			v = _V(0.0, -0.4, 1.2) + ofs;
+			SetCameraDefaultDirection(_V(0.00, -sin(P3_TILT), cos(P3_TILT)));
+			break;
+
+		case LMVIEW_CBLEFT:
+			v = _V(-0.55, -0.22, 1.05) + ofs;
+			SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+			break;
+
+		case LMVIEW_CBRIGHT:
+			v = _V(0.55, -0.22, 1.05) + ofs;
 			SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 			break;
+
+		case LMVIEW_AOT:
+			v = _V(0.0, 0.05, 1.12) + ofs;
+			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			break;
+
+		case LMVIEW_ECS:
+			v = _V(-0.1, -0.35, 0.10) + ofs;
+			SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+			break;
+
 		case LMVIEW_ECS2:
-			if (stage == 2) {
-				v = _V(0.45, -0.07, 1.25);
-			}
-			else {
-				v = _V(0.45, 1.68, 1.25);
-			}
+			v = _V(0.45, -0.35, 1.0) + ofs;
 			SetCameraDefaultDirection(_V(0.0, 0.0, -1.0));
 			break;
+
+		case LMVIEW_FWDHATCH:
+			v = _V(0.0, -1.3, 1.1) + ofs;
+			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			break;
+
+		case LMVIEW_OVHDHATCH:
+			v = _V(0.0, -0.3, 0.1) + ofs;
+			SetCameraDefaultDirection(_V(0.0, 1.0, 0.0), 180 * RAD);
+			break;
+
 		}
 
 		v.x += ViewOffsetx;
@@ -510,103 +526,53 @@ void LEM::SetView() {
 			switch(PanelId)
 			{
 				case LMPANEL_MAIN:
-					if (stage == 2) {
-						v =_V(0, 0.15, 1.26);
-					}
-					else {
-						v =_V(0, 1.90, 1.26);
-					}
+					v =_V(0, 0.15, 1.26) + ofs;
 					break;
+
 				case LMPANEL_RIGHTWINDOW:
-					if (stage == 2) {
-						v =_V(0.576, 0.15, 1.26);
-					}
-					else {
-						v =_V(0.576, 1.90, 1.26);
-					}
+					v =_V(0.576, 0.15, 1.26) + ofs;
 					break;
+
 				case LMPANEL_LEFTWINDOW:
-					if (stage == 2) {
-						v =_V(-0.576, 0.15, 1.26);
-					}
-					else {
-						v =_V(-0.576, 1.90, 1.26);
-					}
+					v =_V(-0.576, 0.15, 1.26) + ofs;
 					break;
+
 				case LMPANEL_LPDWINDOW:
-					if (stage == 2) {
-						v = _V(-0.58, -0.15, 1.40);
-					}
-					else {
-						v = _V(-0.58, 1.60, 1.40);
-					}
+					v = _V(-0.58, -0.15, 1.40) + ofs;
 					break;
+
 				case LMPANEL_RNDZWINDOW:
-					if (stage == 2) {
-						v =_V(-0.598, 0.15, 1.106);
-					}
-					else {
-						v =_V(-0.598, 1.90, 1.106);
-					}
+					v =_V(-0.598, 0.15, 1.106) + ofs;
 					break;
+
 				case LMPANEL_LEFTPANEL:
-					if (stage == 2) {
-						v =_V(-0.576, 0.15, 1.26);
-					}
-					else {
-						v =_V(-0.576, 1.90, 1.26);
-					}
+					v =_V(-0.576, 0.15, 1.26) + ofs;
 					break;
+
 				case LMPANEL_AOTVIEW:
-					if (stage == 2) {
-						v =_V(0, 1.13, 1.26);
-					}
-					else {
-						v =_V(0, 2.88, 1.26);
-					}
+					v =_V(0, 1.13, 1.26) + ofs;
 					break;
+
 				case LMPANEL_AOTZOOM:
-					if (stage == 2) {
-						v =_V(0, 1.13, 1.26);
-					}
-					else {
-						v =_V(0, 2.88, 1.26);
-					}
+					v =_V(0, 1.13, 1.26) + ofs;
 					break;
+
 				case LMPANEL_DOCKVIEW:
-					if (stage == 2) {
-						v =_V(-0.598, 0.15, 1.106);
-					}
-					else {
-						v =_V(-0.598, 1.90, 1.106);
-					}
+					v =_V(-0.598, 0.15, 1.106) + ofs;
 					break;
-				
+
 				case LMPANEL_LEFTZOOM:
-					if (stage == 2) {
-						v =_V(-0.576, 0.15, 1.26);
-					}
-					else {
-						v =_V(-0.576, 1.90, 1.26);
-					}
+					v =_V(-0.576, 0.15, 1.26) + ofs;
 					break;
+
 				case LMPANEL_UPPERHATCH:
-					if (stage == 2) {
-						v =_V(0, -0.55, 0);
-					}
-					else {
-						v =_V(0, 1.20, 0);
-					}
+					v =_V(0, -0.55, 0) + ofs;
 					SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
 					oapiCameraSetCockpitDir(180 * RAD, 0);
 					break;
+
 				case LMPANEL_FWDHATCH:
-					if (stage == 2) {
-						v =_V(0, -1.4, 1.5);
-					}
-					else {
-						v =_V(0, 0.35, 1.5);
-					}
+					v =_V(0, -1.4, 1.5) + ofs;
 					break;
 			}
 		}
@@ -653,12 +619,20 @@ void LEM::SetView() {
 
 bool LEM::clbkLoadVC (int id)
 {
+	// Set VC view to last saved position
+	if (FirstTimestep || !InVC) {
+		id = viewpos;
+	}
+
+	//Reset Clip Radius settings
+	SetClipRadius(0.0);
+
 	switch (id) {
 	case LMVIEW_CDR:
 		viewpos = LMVIEW_CDR;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		SetCameraMovement(_V(-0.1, -0.0492, 0.25), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(LMVIEW_ECS, LMVIEW_LMP, -1, LMVIEW_LPD);
+		SetCameraMovement(_V(-0.1, -0.0612, 0.25), 0, P1_TILT, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(LMVIEW_CBLEFT, LMVIEW_DSKY, -1, LMVIEW_LPD);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -672,8 +646,8 @@ bool LEM::clbkLoadVC (int id)
 	case LMVIEW_LMP:
 		viewpos = LMVIEW_LMP;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, -0.15, 0.0), -90.0 * RAD, 0);
-		oapiVCSetNeighbours(LMVIEW_CDR, -1, -1, LMVIEW_ECS2);
+		SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(LMVIEW_DSKY, LMVIEW_CBRIGHT, -1, -1 );
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -700,11 +674,73 @@ bool LEM::clbkLoadVC (int id)
 
 		return true;
 
+	case LMVIEW_DSKY:
+		viewpos = LMVIEW_DSKY;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(-0.56, 0.0, 0.2), 0, -35 * RAD, _V(0.56, 0.0, 0.2), 0, -35 * RAD);
+		oapiVCSetNeighbours(LMVIEW_CDR, LMVIEW_LMP, LMVIEW_AOT, LMVIEW_FWDHATCH);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+		SetCOAS();
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case LMVIEW_CBLEFT:
+		viewpos = LMVIEW_CBLEFT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.0, 0.1, 0.0), 0, 0, _V(0.0, 0.0, -0.1), 0, 0, _V(0.0, 0.0, 0.1), 0, 0);
+		oapiVCSetNeighbours(LMVIEW_ECS, LMVIEW_CDR, -1, -1);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+		SetCOAS();
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case LMVIEW_CBRIGHT:
+		viewpos = LMVIEW_CBRIGHT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.0, 0.1, 0.0), 0, 0, _V(0.0, 0.0, 0.1), 0, 0, _V(0.0, 0.0, -0.1), 0, 0);
+		oapiVCSetNeighbours(LMVIEW_LMP, LMVIEW_ECS2, -1, -1);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+		SetCOAS();
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case LMVIEW_AOT:
+		viewpos = LMVIEW_AOT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.05, 0.0, -0.05), 0, 90 * RAD, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, -1, -1, LMVIEW_DSKY);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+		SetCOAS();
+
+		PanelId = LMPANEL_AOTZOOM;
+
+		RegisterActiveAreas();
+
+		return true;
+
 	case LMVIEW_ECS:
 		viewpos = LMVIEW_ECS;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, -0.15, 0.0), -90.0 * RAD, 0);
-		oapiVCSetNeighbours(-1, -1, LMVIEW_CDR, -1);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.3), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(LMVIEW_ECS2, LMVIEW_CBLEFT, LMVIEW_OVHDHATCH, -1);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -718,8 +754,36 @@ bool LEM::clbkLoadVC (int id)
 	case LMVIEW_ECS2:
 		viewpos = LMVIEW_ECS2;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		//SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, -0.15, 0.0), -90.0 * RAD, 0);
-		oapiVCSetNeighbours(-1, -1, LMVIEW_LMP, -1);
+		SetCameraMovement(_V(-0.3, -0.1, -0.3), 55 * RAD, 0, _V(0.0, -0.5, 0.0), 0, -7 * RAD, _V(-0.3, -0.8, 0.0), 20 * RAD, 10 * RAD);
+		oapiVCSetNeighbours(LMVIEW_CBRIGHT, LMVIEW_ECS, -1, -1);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case LMVIEW_FWDHATCH:
+		viewpos = LMVIEW_FWDHATCH;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, -1, LMVIEW_DSKY, -1);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case LMVIEW_OVHDHATCH:
+		viewpos = LMVIEW_OVHDHATCH;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, -1, -1, LMVIEW_ECS);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -1160,7 +1224,7 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_OVERHEADHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHRELIEFVALVE, _V(0.1786, 0.9834, 0.1652) + ofs, 0.03);
 
-	if (viewpos == LMVIEW_ECS) { // To avoid that my DSKY clicks plays with the forward dump valve as well
+	if (viewpos == LMVIEW_FWDHATCH) { // To avoid that my DSKY clicks plays with the forward dump valve as well
 		oapiVCRegisterArea(AID_VC_FORWARDHATCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCH, FwdHatchInnerLocation + ofs, 0.1);
 

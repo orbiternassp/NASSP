@@ -1628,6 +1628,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "PANEL_ID", 8)) {
 			sscanf(line + 8, "%d", &PanelId);
 		}
+		else if (!strnicmp(line, "VIEWPOS", 7)) {
+		    sscanf(line + 7, "%d", &viewpos);
+		}
 		else if (!strnicmp(line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) {
 			PSH.LoadState(scn);
 		}
@@ -1970,7 +1973,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
-	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);	
+	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
+	oapiWriteScenario_int(scn, "VIEWPOS", viewpos);
 
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "LANDED", Landed);
