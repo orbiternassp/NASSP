@@ -494,7 +494,7 @@ void LEM::SetView() {
 			break;
 
 		case LMVIEW_ECS:
-			v = _V(-0.1, -0.35, 0.10) + ofs;
+			v = _V(-0.15, -0.42, 0.10) + ofs;
 			SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 			break;
 
@@ -739,7 +739,7 @@ bool LEM::clbkLoadVC (int id)
 	case LMVIEW_ECS:
 		viewpos = LMVIEW_ECS;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.3), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.3), 0, -20 * RAD, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(LMVIEW_ECS2, LMVIEW_CBLEFT, LMVIEW_OVHDHATCH, -1);
 		InVC = true;
 		InPanel = false;
