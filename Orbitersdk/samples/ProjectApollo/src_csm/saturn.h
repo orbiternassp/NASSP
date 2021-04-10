@@ -4040,8 +4040,6 @@ protected:
 	void ReleaseSurfaces();
 	void KillDist(OBJHANDLE &hvessel, double kill_dist = 5000.0);
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
-	void RedrawPanel_Alt (SURFHANDLE surf);
-	void RedrawPanel_Alt2 (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
 	void CryoTankHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
@@ -4092,7 +4090,6 @@ protected:
 	void DefineVCAnimations();
 
 	void InitFDAI(UINT mesh);
-	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	//
 	// Systems functions.

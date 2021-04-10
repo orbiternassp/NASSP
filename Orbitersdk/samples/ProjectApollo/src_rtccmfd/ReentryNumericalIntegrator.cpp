@@ -124,7 +124,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		CalculateDragAcceleration(R_cur, V_cur);
 		t += dt;
 
-		if (t > 3600.0)
+		if (t > 90.0*60.0)
 		{
 			//Time limit
 			IEND = 1;

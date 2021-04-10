@@ -33,11 +33,14 @@ class FDAI {
 public:
 	FDAI();
 	virtual ~FDAI();
+	void Init(VESSEL *v);
 	void RegisterMe(int index, int x, int y);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
-	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
+	void PaintMe(VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
 		SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth);
+	void AnimateFDAI(VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
+	void SetAttitude(VECTOR3 attitude);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -54,9 +57,8 @@ protected:
 	int idx;			//index on the panel list 
 	int init;
 	int list_name; //we store the rendering into a display list
-	VECTOR3 now, target, lastRates, lastErrors;
+	VECTOR3 now, target, lastRates, lastErrors, lastPaintAtt;
 	double lastPaintTime;
-	bool newRegistered;
 
 	//some stuff for OpenGL
 	HDC hDC2;
@@ -69,9 +71,11 @@ protected:
 	bool noAC;
 
 	void InitGL();
-	void MoveBall();
-	void SetAttitude(VECTOR3 attitude);
+	void RotateBall(double simdt);
+	void MoveBall2D();
 	int LoadOGLBitmap(char *filename);
+
+	VESSEL *vessel;
 };
 
 //
