@@ -410,7 +410,7 @@ const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
 // Subtracted from total material count to find L01 location.
-const int mat_L01 = 51;
+const int mat_L01 = 50;
 
 void LEM::JostleViewpoint(double amount)
 
@@ -817,6 +817,7 @@ void LEM::InitPanelVC() {
 	srf[SRF_LEM_MASTERALARMVC] = oapiLoadTexture("ProjectApollo/VC/lem_master_alarm.dds");
 	srf[SRF_DEDA_LIGHTSVC] = oapiLoadTexture("ProjectApollo/VC/ags_lights.dds");
 	srf[SRF_AOTFONT_VC] = oapiLoadTexture("ProjectApollo/VC/aot_font.dds");
+	srf[SRF_ENGSTARTSTOP_VC] = oapiLoadTexture("ProjectApollo/VC/LMEngStartStop.dds");
 
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], ck);
@@ -827,6 +828,7 @@ void LEM::InitPanelVC() {
 	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPE2], ck);
 	oapiSetSurfaceColourKey(srf[SFR_VC_CW_LIGHTS], ck);
 	oapiSetSurfaceColourKey(srf[SRF_AOTFONT_VC], ck);
+	oapiSetSurfaceColourKey(srf[SRF_ENGSTARTSTOP_VC], ck);
 }
 
 void LEM::ReleaseSurfacesVC()
@@ -973,6 +975,8 @@ void LEM::RegisterActiveAreas()
 	oapiVCSetAreaClickmode_Spherical(AID_VC_STOP_BUTTON_CDR, _V(-0.694894, 0.085711, 1.53811) + ofs, 0.01);
 	oapiVCRegisterArea(AID_VC_PLUSX_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_PLUSX_BUTTON, _V(-0.65603, -0.017321, 1.41484) + ofs, 0.01);
+
+	oapiVCRegisterArea(AID_VC_START_BUTTON_RED, _R(894, 1958, 962, 2027), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Panel 6
 
@@ -1707,6 +1711,10 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_RETICLEDISP:
 		optics.PaintReticleAngle(surf, srf[SRF_AOTFONT_VC]);
+		return true;
+
+	case AID_VC_START_BUTTON_RED:
+		ManualEngineStart.DoDrawSwitchVC(surf, srf[SRF_ENGSTARTSTOP_VC]);
 		return true;
 
 	/*case AID_VC_RECORDER_TALKBACK:

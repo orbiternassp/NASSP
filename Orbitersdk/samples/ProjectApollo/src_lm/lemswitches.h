@@ -441,6 +441,7 @@ public:
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	bool Push();
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
+	void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface);
 protected:
 	ToggleSwitch* stopbutton;
 	LEM *lem;

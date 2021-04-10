@@ -1026,6 +1026,7 @@
 #define AID_VC_START_BUTTON    3512
 #define AID_VC_STOP_BUTTON_CDR 3513
 #define AID_VC_PLUSX_BUTTON    3514
+#define AID_VC_START_BUTTON_RED  3515
 
 // VC Active Areas (Panel 6)
 #define AID_VC_PANEL_6			((id >= 3600) && (id <= 3630))

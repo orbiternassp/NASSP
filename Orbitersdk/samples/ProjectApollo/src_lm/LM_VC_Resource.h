@@ -1,13 +1,13 @@
 // ========================================================
 // Mesh resource file for LM_VC.msh
-// Generated with meshc on Fri Apr 09 17:39:51 2021
+// Generated with meshc on Sat Apr 10 13:01:01 2021
 // ========================================================
 
 // Number of mesh groups:
 #define VC_NGRP 591
 
 // Number of materials:
-#define VC_NMAT 65
+#define VC_NMAT 64
 
 // Number of textures:
 #define VC_NTEX 25
