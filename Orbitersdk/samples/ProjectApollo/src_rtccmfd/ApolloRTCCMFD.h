@@ -750,6 +750,12 @@ public:
 	bool set_RetrofireGs(double val);
 	void menuChooseRetrofireUllage();
 	bool set_RetrofireUllage(int num, double dt);
+	void menuSetRetrofireTargetSelectionPage();
+	void menuCycleRecoveryTargetSelectionPages();
+	void menuRecoveryTargetSelectionCalc();
+	void set_RecoveryTargetSelectionCalc(double get, double lng);
+	void menuSelectRecoveryTarget();
+	bool set_RecoveryTarget(int num);
 
 protected:
 	oapi::Font *font;

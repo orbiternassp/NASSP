@@ -245,11 +245,12 @@ protected:
 	void GNRoutine310();
 	void GNRoutine380();
 
+	//Previous and current state vector
 	VECTOR3 R_cur, V_cur, R_prev, V_prev;
+	double t, t_prev;
 	//Ratio of area to mass of spacecraft
 	double N;
 	double Bank;
-	double t;
 	double DRAG;
 	double A_X;
 	//Initial bank angle
@@ -277,6 +278,16 @@ protected:
 	//Roll command
 	double ROLLC;
 	bool ISGNInit;
+	//Maximum g level encountered during the reentry
+	double gmax;
+	//Time of above
+	double t_gmax;
+	//Time when 0.05g was passed
+	double t_05G;
+	//Time when 0.2g was passed
+	double t_2G;
+	//Time when specific g level was passed
+	double t_gc;
 
 	//Parameters for constant G and G&N
 	double VSAT;

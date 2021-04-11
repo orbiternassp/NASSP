@@ -2872,6 +2872,8 @@ public:
 	void RMMGIT(EphemerisData sv_EI, double lng_T);
 	//Retrofire Planning Control Module
 	void RMSDBMP(EphemerisData sv, double CSMmass);
+	//Recovery Target Selection Display
+	void RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -3919,6 +3921,10 @@ public:
 
 	struct RetrofireMEDSaveTable
 	{
+		//R20
+		double R20GET = 0.0;
+		double R20_lng = 0.0;
+		//R32
 		double GETI = 0.0;
 		double lat_T = 0.0;
 		double lng_T = 0.0;
@@ -3926,6 +3932,33 @@ public:
 		//Actually determined by leaving the latitude blank on the MED
 		int Type = 2;			//1 = Primary (lat and long), 2 = Contingency (long only)
 	} RZJCTTC;
+
+	struct RecoveryTargetDisplayEntry
+	{
+		bool DataIndicator = true; //false = data, true = no data
+		bool AlternateLongitudeIndicator = false; //false = converged longitude, true = not converged
+		int Rev = 0;
+		double Azimuth = 0.0;
+		double Latitude = 0.0;
+		double Longitude = 0.0;
+		double GET = 0.0;
+		double GMT = 0.0;
+	};
+
+	struct RecoveryTargetDisplay
+	{
+		std::string VehicleName;
+		std::string ErrorMessage;
+		int Rev = 0;
+		int Mission = 0;
+		double InputLongitude = 0.0;
+		std::string StationID;
+		int TUP = 0;
+		int CurrentPage = 1;
+		int TotalNumPages = 1;
+		int TotalNumEntries = 0;
+		RecoveryTargetDisplayEntry table[40];
+	} RZDRTSD;
 
 	struct LMLaunchTargetTable
 	{

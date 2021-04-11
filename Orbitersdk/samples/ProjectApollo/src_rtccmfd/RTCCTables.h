@@ -348,9 +348,14 @@ struct RMMYNIInputTable
 
 struct RMMYNIOutputTable
 {
-	double lat_IP;
-	double lng_IP;
-	double t_10k;
+	double lat_IP = 0.0;
+	double lng_IP = 0.0;
+	double t_10k = 0.0;
+	double t_05g = 0.0;
+	double t_2g = 0.0;
+	double t_gc = 0.0;
+	double gmax = 0.0;
+	double t_gmax = 0.0;
 	//1 = time limit, 2 = impact, 3 = skipout
 	int IEND;
 };

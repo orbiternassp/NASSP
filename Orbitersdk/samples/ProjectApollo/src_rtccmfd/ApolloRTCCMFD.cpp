@@ -1268,6 +1268,82 @@ void ApolloRTCCMFD::menuSetRetrofireXDVPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetRetrofireTargetSelectionPage()
+{
+	screen = 106;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuCycleRecoveryTargetSelectionPages()
+{
+	if (GC->rtcc->RZDRTSD.CurrentPage < GC->rtcc->RZDRTSD.TotalNumPages)
+	{
+		GC->rtcc->RZDRTSD.CurrentPage++;
+	}
+	else
+	{
+		GC->rtcc->RZDRTSD.CurrentPage = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuRecoveryTargetSelectionCalc()
+{
+	bool RecoveryTargetSelectionCalcInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose starting time and longitude (Format: HH:MM:SS XXX.X)", RecoveryTargetSelectionCalcInput, 0, 20, (void*)this);
+}
+
+bool RecoveryTargetSelectionCalcInput(void *id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, get, lng;
+
+	if (sscanf(str, "%d:%d:%lf %lf", &hh, &mm, &ss, &lng) == 4)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_RecoveryTargetSelectionCalc(get, lng);
+
+		return true;
+
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RecoveryTargetSelectionCalc(double get, double lng)
+{
+	GC->rtcc->RZJCTTC.R20GET = get;
+	GC->rtcc->RZJCTTC.R20_lng = lng * RAD;
+	G->RecoveryTargetSelectionCalc();
+}
+
+void ApolloRTCCMFD::menuSelectRecoveryTarget()
+{
+	bool SelectRecoveryTargetInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose recovery target (1-40):", SelectRecoveryTargetInput, 0, 20, (void*)this);
+}
+
+bool SelectRecoveryTargetInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		return ((ApolloRTCCMFD*)data)->set_RecoveryTarget(atoi(str));
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_RecoveryTarget(int num)
+{
+	if (num >= 1 && num <= 40)
+	{
+		if (GC->rtcc->RZDRTSD.table[num - 1].DataIndicator == false)
+		{
+			GC->rtcc->RZJCTTC.lat_T = GC->rtcc->RZDRTSD.table[num - 1].Latitude*RAD;
+			GC->rtcc->RZJCTTC.lng_T = GC->rtcc->RZDRTSD.table[num - 1].Longitude*RAD;
+			return true;
+		}
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()

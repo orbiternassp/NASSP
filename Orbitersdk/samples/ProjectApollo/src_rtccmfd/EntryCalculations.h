@@ -97,7 +97,7 @@ protected:
 	//Retrofire Maneuvers Computations
 	void RMMDBM();
 	//Retrofire Convergence
-	void RMMDBN();
+	void RMMDBN(int entry);
 	//Thrust Direction and Body Attitude Routine
 	void RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T);
 	//Retrofire Output Control
@@ -119,9 +119,9 @@ protected:
 	VECTOR3 U_T;
 	//Gradient of DV vs. flight path angle for V, gamma targeting
 	double p_gam;
-	//Gradient of TIG vs. landing longitude
-	double p_tig;
-	double dlng;
+	//Partials
+	double p_dlng_dtf, p_dlat_dtf, p_dlat_dtRB, p_dlng_dtRB;
+	double dlat, dlng;
 	//Main iteration counter
 	int MAINITER;
 	//Main error indicator
@@ -140,6 +140,16 @@ protected:
 	VECTOR3 LVLHAtt;
 	VECTOR3 OtherAtt;
 	MATRIX3 DesREFSMMAT;
+	//Time to reverse bank angle
+	double t_RB;
+	//Partials status. 0 = not yet calculated, 1 = TTF varied, 2 = GMTRB varied
+	int PARTSTAT;
+	//Variation of the time to fire
+	const double DT_TTF = 10.0;
+	//Variation of the time to reverse bank angle
+	const double DT_TRB = 10.0;
+	//Stored landing errors
+	double dlat_0, dlng_0, dlat_TRB, dlng_TRB, temp;
 
 	//State vector at burn initiation (ullage on)
 	EphemerisData sv_BI;

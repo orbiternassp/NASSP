@@ -101,8 +101,18 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	K1 = in.K1;
 	K2 = in.K2;
 
-	t = 0.0;
+	gmax = 0;
+	t = t_prev = 0.0;
 	ISGNInit = false;
+	t_2G = 0.0;
+
+	//Null output table
+	out.lat_IP = 0.0;
+	out.lng_IP = 0.0;
+	out.t_05g = 0.0;
+	out.t_2g = 0.0;
+	out.t_10k = 0.0;
+	out.t_gc = 0.0;
 
 	double dt = 2.0;
 	double alt, v, fpa;
@@ -118,6 +128,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	{
 		R_prev = R_cur;
 		V_prev = V_cur;
+		t_prev = t;
 		GuidanceRoutine(R_cur, V_cur, dt);
 		RungeKuttaIntegrationRoutine(R_prev, V_prev, dt, R_cur, V_cur);
 		alt = length(R_cur) - OrbMech::R_Earth;
@@ -158,6 +169,16 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		out.lat_IP = lat;
 		out.lng_IP = lng;
 		out.t_10k = t;
+		if (K05G)
+		{
+			out.t_05g = t_05G;
+		}
+		if (KGC)
+		{
+			out.t_gc = t_gc;
+		}
+		out.t_gmax = t_gmax;
+		out.gmax = gmax;
 	}
 
 }
@@ -238,6 +259,14 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt
 		if (A_X > 0.05*9.80665)
 		{
 			K05G = true;
+			t_05G = t;
+		}
+	}
+	if (t_2G == 0.0)
+	{
+		if (A_X > 0.2*9.80665)
+		{
+			t_2G = t;
 		}
 	}
 	if (KGC == false)
@@ -245,7 +274,14 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt
 		if (A_X > g_c_BU*9.80665)
 		{
 			KGC = true;
+			t_gc = t;
 		}
+	}
+	//Store max g
+	if (A_X > gmax*9.80665)
+	{
+		gmax = A_X / 9.80665;
+		t_gmax = t;
 	}
 
 	if (LiftMode == 1)

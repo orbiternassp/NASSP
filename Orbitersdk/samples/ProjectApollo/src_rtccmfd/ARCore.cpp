@@ -1109,6 +1109,11 @@ void ARCore::CycleNextStationContactsDisplay()
 	}
 }
 
+void ARCore::RecoveryTargetSelectionCalc()
+{
+	startSubthread(37);
+}
+
 void ARCore::SLVNavigationUpdateCalc()
 {
 	startSubthread(27);
@@ -4353,8 +4358,36 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 37: //Spare
+	case 37: //Recovery Target Selection Display
 	{
+		EphemerisDataTable tab;
+		EphemerisDataTable *tab2;
+		double gmt = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
+
+		if (GC->MissionPlanningActive)
+		{
+			tab2 = &GC->rtcc->EZEPH1.EPHEM;
+		}
+		else
+		{
+			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(vessel);
+
+			EMSMISSInputTable intab;
+
+			intab.AnchorVector = sv;
+			intab.EphemerisBuildIndicator = true;
+			intab.EphemerisLeftLimitGMT = gmt - 20.0*60.0;
+			intab.EphemerisRightLimitGMT = gmt + 2.5*60.0*60.0;
+			intab.EphemTableIndicator = &tab;
+
+			GC->rtcc->EMSMISS(intab);
+			tab.Header.TUP = 1;
+
+			tab2 = &tab;
+		}
+
+		GC->rtcc->RMDRTSD(*tab2, 1, gmt, GC->rtcc->RZJCTTC.R20_lng);
+
 		Result = 0;
 	}
 	break;

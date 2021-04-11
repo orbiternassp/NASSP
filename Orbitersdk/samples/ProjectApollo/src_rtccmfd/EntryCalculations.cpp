@@ -1532,10 +1532,205 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	RMMYNIInputTable reentryin;
 	RMMYNIOutputTable reentryout;
 
+	//Get state vector at burn begin (ullage on)
+	in.GMT = GMTI;
+	pRTCC->ELVCTR(in, out, ephem, mantimes);
+
+	if (out.ErrorCode == 2)
+	{
+		RMGTTF("RMSDBMP", 27);
+	}
+	if (out.ErrorCode > 2)
+	{
+		RMGTTF("RMSDBMP", 32);
+		return true;
+	}
+	sv_BI = out.SV;
+
+	//Get state vector at main engine on
+	if (pRTCC->RZC1RCNS.UllageTime == 0.0)
+	{
+		sv_TIG = sv_BI;
+	}
+	else
+	{
+		in.GMT = GMTI + pRTCC->RZC1RCNS.UllageTime - 1.0;
+		pRTCC->ELVCTR(in, out, ephem, mantimes);
+
+		if (out.ErrorCode == 2)
+		{
+			RMGTTF("RMSDBMP", 27);
+		}
+		if (out.ErrorCode > 2)
+		{
+			RMGTTF("RMSDBMP", 32);
+			return true;
+		}
+		sv_TIG = out.SV;
+	}
+
+	//Calculate thrust direction
+	if (pRTCC->RZC1RCNS.AttitudeMode == 1)
+	{
+		LVLHAtt = pRTCC->RZC1RCNS.LVLHAttitude;
+	}
+	else
+	{
+		LVLHAtt = _V(0.0, -(31.7*RAD + acos(OrbMech::R_Earth / length(sv_TIG.R))), PI);
+	}
+	RMMATT(1, 1, LVLHAtt, REFSMMAT, pRTCC->RZC1RCNS.Thruster, sv_TIG.R, sv_TIG.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
+
+	integin.sv0 = sv_BI;
+	integin.A = 0.0;
+	integin.CAPWT = CSMmass;
+	integin.CSMWT = CSMmass;
+	integin.TVC = 1;
+	integin.KEPHOP = 0;
+	integin.KAUXOP = 1;
+	integin.MANOP = pRTCC->RZC1RCNS.GuidanceMode;
+	integin.ThrusterCode = pRTCC->RZC1RCNS.Thruster;
+	integin.UllageOption = pRTCC->RZC1RCNS.Use4UllageThrusters;
+	integin.IC = 1;
+	integin.DTU = pRTCC->RZC1RCNS.UllageTime;
+	integin.KTRIMOP = pRTCC->RZC1RCNS.GimbalIndicator;
+	integin.VG = U_T * DVBURN;
+	integin.ExtDVCoordInd = false;
+
+	integ.PMMRKJ();
+
+	if (PMMRKJerr)
+	{
+		RMGTTF("RMSDBMP", 36);
+		return true;
+	}
+
+	//Integrate to EI
+	sv_BO.R = burnaux.R_BO;
+	sv_BO.V = burnaux.V_BO;
+	sv_BO.GMT = burnaux.GMT_BO;
+	sv_BO.RBI = BODY_EARTH;
+
+	coastin.AnchorVector = sv_BO;
+	coastin.CutoffIndicator = 3;
+	coastin.IsForwardIntegration = 1.0;
+	coastin.MaxIntegTime = 4.0*3600.0;
+	coastin.StopParamRefFrame = 0;
+	coastin.EarthRelStopParam = 400000.0*0.3048;
+	coastin.EphemerisBuildIndicator = false;
+	coastin.ECIEphemerisIndicator = false;
+
+	pRTCC->EMMENI(coastin);
+
+	if (coastin.NIAuxOutputTable.TerminationCode != 3)
+	{
+		RMGTTF("RMSDBMP", 28);
+		return true;
+	}
+
+	sv_EI = coastin.NIAuxOutputTable.sv_cutoff;
+
+	PARTSTAT = 2;
+
+	if (pRTCC->RZJCTTC.Type == 1)
+	{
+		//Simulate reentry
+		pRTCC->ELVCNV(sv_EI, 0, 1, sv_ECT);
+		reentryin.g_c_BU = pRTCC->RZC1RCNS.GLevel;
+		reentryin.K1 = pRTCC->RZC1RCNS.InitialBankAngle;
+		reentryin.K2 = pRTCC->RZC1RCNS.FinalBankAngle;
+		reentryin.KSWCH = 2;
+		reentryin.R0 = sv_ECT.R;
+		reentryin.V0 = sv_ECT.V;
+		reentryin.RLDIR = 1.0;
+
+		//Integrate max lift to impact
+		pRTCC->RMMYNI(reentryin, reentryout);
+
+		//Did we impact?
+		if (pRTCC->RZC1RCNS.BurnMode != 3 && reentryout.IEND != 2)
+		{
+			RMGTTF("RMSDBMP", 29);
+			return true;
+		}
+
+		lat_ML = reentryout.lat_IP;
+		lng_ML = reentryout.lng_IP;
+
+		//Integrate min lift to impact
+		reentryin.KSWCH = 1;
+		pRTCC->RMMYNI(reentryin, reentryout);
+
+		//Did we impact?
+		if (pRTCC->RZC1RCNS.BurnMode != 3 && reentryout.IEND != 2)
+		{
+			RMGTTF("RMSDBMP", 29);
+			return true;
+		}
+
+		lat_ZL = reentryout.lat_IP;
+		lng_ZL = reentryout.lng_IP;
+
+		RMMDBN(1);
+	}
+
 	MAINITER = 0;
 
 	do
 	{
+		//Simulate reentry
+		pRTCC->ELVCNV(sv_EI, 0, 1, sv_ECT);
+		reentryin.g_c_BU = pRTCC->RZC1RCNS.GLevel;
+		reentryin.K1 = pRTCC->RZC1RCNS.InitialBankAngle;
+		reentryin.K2 = pRTCC->RZC1RCNS.FinalBankAngle;
+		if (pRTCC->RZJCTTC.Type == 1)
+		{
+			reentryin.KSWCH = 8;
+			reentryin.t_RB = t_RB;
+		}
+		else
+		{
+			reentryin.KSWCH = 9;
+		}
+		reentryin.R0 = sv_ECT.R;
+		reentryin.V0 = sv_ECT.V;
+		reentryin.RLDIR = 1.0;
+
+		pRTCC->RMMYNI(reentryin, reentryout);
+		lat_IP = reentryout.lat_IP;
+		lng_IP = reentryout.lng_IP;
+
+		//Did we impact?
+		if (pRTCC->RZC1RCNS.BurnMode != 3 && reentryout.IEND != 2)
+		{
+			RMGTTF("RMSDBMP", 29);
+			return true;
+		}
+
+		dlng = lng_T - lng_IP;
+		while (dlng > PI)
+		{
+			dlng -= PI2;
+		}
+		while (dlng < -PI)
+		{
+			dlng += PI2;
+		}
+
+		if (pRTCC->RZJCTTC.Type == 1)
+		{
+			dlat = lat_T - lat_IP;
+		}
+		else
+		{
+			dlat = 0.0;
+		}
+
+		//Compare target to impact, adjust retrofire maneuver quantities
+		RMMDBN(2);
+
+		//Continue loop?
+		if (HASCONVERGED || ERR) break;
+
 		//Get state vector at burn begin (ullage on)
 		in.GMT = GMTI;
 		pRTCC->ELVCTR(in, out, ephem, mantimes);
@@ -1632,40 +1827,6 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		}
 
 		sv_EI = coastin.NIAuxOutputTable.sv_cutoff;
-
-		//Simulate reentry
-		pRTCC->ELVCNV(sv_EI, 0, 1, sv_ECT);
-		reentryin.g_c_BU = pRTCC->RZC1RCNS.GLevel;
-		reentryin.K1 = pRTCC->RZC1RCNS.InitialBankAngle;
-		reentryin.K2 = pRTCC->RZC1RCNS.FinalBankAngle;
-		reentryin.KSWCH = 9;
-		reentryin.R0 = sv_ECT.R;
-		reentryin.V0 = sv_ECT.V;
-		reentryin.RLDIR = 1.0;
-
-		pRTCC->RMMYNI(reentryin, reentryout);
-		lat_IP = reentryout.lat_IP;
-		lng_IP = reentryout.lng_IP;
-
-		//Did we impact?
-		if (pRTCC->RZC1RCNS.BurnMode != 3 && reentryout.IEND != 2)
-		{
-			RMGTTF("RMSDBMP", 29);
-			return true;
-		}
-
-		dlng = lng_T - lng_IP;
-		while (dlng > PI)
-		{
-			dlng -= PI2;
-		}
-		while (dlng < -PI)
-		{
-			dlng += PI2;
-		}
-
-		//Compare target to impact, adjust retrofire maneuver quantities
-		RMMDBN();
 
 	} while (HASCONVERGED == false && ERR == 0);
 
@@ -1913,8 +2074,8 @@ void RetrofirePlanning::RMMDBM()
 		}
 
 		//Calculate landing point
-		//EntryCalculations::landingsite(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, lng_IP, lat_IP);
-		EntryCalculations::LNDING(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, 0.3, 0, 0.0, lng_IP, lat_IP, MJD_L);
+		EntryCalculations::landingsite(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, lng_IP, lat_IP);
+		//EntryCalculations::LNDING(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, 0.3, 0, 0.0, lng_IP, lat_IP, MJD_L);
 
 		dlng = lng_T - lng_IP;
 		while (dlng > PI)
@@ -1932,13 +2093,13 @@ void RetrofirePlanning::RMMDBM()
 			lng_old = lng_IP;
 
 			double w_C = PI2 / OrbMech::period(sv_TIG.R, sv_TIG.V, OrbMech::mu_Earth);
-			p_tig = w_C - OrbMech::w_Earth;
+			p_dlng_dtf = w_C - OrbMech::w_Earth;
 		}
 		else
 		{
 			dlng2 = lng_IP - lng_old;
 			ddt = GMTI - GMTI_old;
-			p_tig = dlng2 / ddt;
+			p_dlng_dtf = dlng2 / ddt;
 
 			GMTI_old = GMTI;
 			lng_old = lng_IP;
@@ -1952,7 +2113,7 @@ void RetrofirePlanning::RMMDBM()
 				dlng2 += PI2;
 			}
 		}
-		GMTI = GMTI + dlng / p_tig;
+		GMTI = GMTI + dlng / p_dlng_dtf;
 		iter++;
 
 	} while (abs(dlng) > 0.0001 && iter < 15);
@@ -1967,49 +2128,132 @@ void RetrofirePlanning::RMMDBM()
 	}
 }
 
-void RetrofirePlanning::RMMDBN()
+void RetrofirePlanning::RMMDBN(int entry)
 {
-	if (pRTCC->RZC1RCNS.BurnMode == 3)
+	if (entry == 1)
 	{
-		double gamma_EI, gamma_EI_des, v_EI, dgamma;
+		//Estimate time to reverse bank angle
+		t_RB = 350.0;
 
-		v_EI = length(sv_EI.V);
-		gamma_EI = acos(dotp(unit(sv_EI.R), unit(sv_EI.V)));
-		gamma_EI_des = EntryCalculations::ReentryTargetLine(v_EI, true);
-		dgamma = gamma_EI - gamma_EI_des;
-		if (abs(dgamma) > 0.001*RAD)
+		//Footprint calculations
+		/*A = cos(lat_ZL)*sin(lat_ML) - cos(lat_ML)*sin(lat_ZL)*cos(lng_ML - lng_ZL);
+		B = cos(lat_ML)*sin(lng_ML - lng_ZL);
+		BI = cos(lat_T)*sin(lng_T - lng_ZL);
+		AI = sin(lat_T)*cos(lat_ZL) - cos(lat_T)*cos(lng_T - lng_ZL)*sin(lat_ZL);
+		SITHT = sqrt(AI*AI + BI * BI);
+		SITHR = sqrt(A*A + B * B);
+		PSI = atan2(B, A);
+		PSIT = atan2(BI, AI);
+		THETR = asin(SITHR);
+		CSTR = cos(THETR);
+		THET = asin(SITHT);
+		SPMT = sin(PSI - PSIT);
+		THTAC = asin(SPMT*SITHT);
+		SINTHETL = SITHT * cos(PSI - PSIT) / cos(THTAC);*/
+		PARTSTAT = 0;
+	}
+	else if (entry == 2)
+	{
+		if (pRTCC->RZC1RCNS.BurnMode == 3)
 		{
-			DVBURN -= dgamma / p_gam;
+			double gamma_EI, gamma_EI_des, v_EI, dgamma;
+
+			v_EI = length(sv_EI.V);
+			gamma_EI = acos(dotp(unit(sv_EI.R), unit(sv_EI.V)));
+			gamma_EI_des = EntryCalculations::ReentryTargetLine(v_EI, true);
+			dgamma = gamma_EI - gamma_EI_des;
+			if (abs(dgamma) > 0.001*RAD)
+			{
+				DVBURN -= dgamma / p_gam;
+				return;
+			}
+		}
+		//Calculate landing error
+		MD_lat = dlat * 3443.93359;
+		MD_lng = dlng * 3443.93359;
+
+		//Check on convergence
+		if (abs(MD_lat) < 0.3 && abs(MD_lng) < 0.4)
+		{
+			pRTCC->RTCCONLINEMON.DoubleBuffer[0] = MD_lng;
+			pRTCC->RTCCONLINEMON.DoubleBuffer[1] = MD_lat;
+			RMGTTF("RMMDBN", 41);
+			HASCONVERGED = true;
 			return;
 		}
-	}
-	//Calculate landing error
-	MD_lat = 0.0;
-	MD_lng = dlng * 3443.93359;
 
-	//Check on convergence
-	if (abs(MD_lng) < 0.4)
-	{
-		pRTCC->RTCCONLINEMON.DoubleBuffer[0] = MD_lng;
-		pRTCC->RTCCONLINEMON.DoubleBuffer[1] = MD_lat;
-		RMGTTF("RMMDBN", 41);
-		HASCONVERGED = true;
-		return;
-	}
+		//Check on iteration limit
+		MAINITER++;
+		if (MAINITER >= 10)
+		{
+			pRTCC->RTCCONLINEMON.DoubleBuffer[0] = MD_lng;
+			pRTCC->RTCCONLINEMON.DoubleBuffer[1] = MD_lat;
+			RMGTTF("RMMDBN", 43);
+			ERR = 1;
+			return;
+		}
 
-	//Check on iteration limit
-	MAINITER++;
-	if (MAINITER >= 10)
-	{
-		pRTCC->RTCCONLINEMON.DoubleBuffer[0] = MD_lng;
-		pRTCC->RTCCONLINEMON.DoubleBuffer[1] = MD_lat;
-		RMGTTF("RMMDBN", 43);
-		ERR = 1;
-		return;
-	}
+		//Adjust GMTI
+		if (pRTCC->RZJCTTC.Type == 1)
+		{
+			if (PARTSTAT == 0)
+			{
+				if (abs(MD_lng) > 25.0)
+				{
+					GMTI = GMTI + dlng / p_dlng_dtf;
+				}
+				else
+				{
+					//Start partials calculation
+					dlat_0 = dlat;
+					dlng_0 = dlng;
+					t_RB += DT_TRB;
+					
+					PARTSTAT++;
+					MAINITER--;
+				}
+			}
+			else if (PARTSTAT == 1)
+			{
+				//Store landing point with perturbed time of reverse bank angle
+				dlat_TRB = dlat;
+				dlng_TRB = dlng;
+				//Back to initial guess
+				t_RB -= DT_TRB;
+				//Perturb time-to-fire
+				GMTI += DT_TTF;
+				PARTSTAT++;
+				MAINITER--;
+			}
+			else
+			{
+				if (PARTSTAT == 2)
+				{
+					//Calculate partials
+					p_dlat_dtf = -(dlat - dlat_0) / DT_TTF;
+					p_dlng_dtf = -(dlng - dlng_0) / DT_TTF;
+					p_dlat_dtRB = -(dlat_TRB - dlat_0) / DT_TRB;
+					p_dlng_dtRB = -(dlng_TRB - dlng_0) / DT_TRB;
+					temp = (p_dlat_dtf*p_dlng_dtRB - p_dlat_dtRB * p_dlng_dtf);
 
-	//Adjust GMTI
-	GMTI = GMTI + dlng / p_tig;
+					PARTSTAT++;
+					MAINITER--;
+				}
+
+				GMTI += (p_dlng_dtRB * dlat - p_dlat_dtRB * dlng) / temp;
+				t_RB += (-p_dlng_dtf * dlat + p_dlat_dtf * dlng) / temp;
+
+				if (t_RB < 0)
+				{
+					t_RB = 0.0;
+				}
+			}
+		}
+		else
+		{
+			GMTI = GMTI + dlng / p_dlng_dtf;
+		}
+	}
 }
 
 void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T)
@@ -2200,7 +2444,15 @@ void RetrofirePlanning::RMSTTF()
 	tab->V400k = v_EI / 0.3048;
 	tab->Gamma400k = (PI05 - gamma_EI) * DEG;
 	tab->BankAngle = pRTCC->RZC1RCNS.FinalBankAngle*DEG;
-	tab->RETRB = 0.0; //TBD
+	if (pRTCC->RZJCTTC.Type == 1)
+	{
+		tab->RETRB = (sv_EI.GMT + t_RB) - sv_TIG.GMT;
+	}
+	else
+	{
+		tab->RETRB = 0.0;
+	}
+	
 	tab->lat_ML = lat_ML * DEG;
 	tab->lng_ML = lng_ML * DEG;
 	if (pRTCC->RZJCTTC.Type == 2)

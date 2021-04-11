@@ -87,6 +87,7 @@ public:
 	void CycleVectorPanelSummary();
 	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
+	void RecoveryTargetSelectionCalc();
 	void RTETradeoffDisplayCalc();
 	void GetAGSKFactor();
 	void GeneralMEDRequest();

@@ -2431,26 +2431,27 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Deorbit", 7);
 
 		skp->Text(1 * W / 8, 2 * H / 14, "Constraints", 11);
+		skp->Text(1 * W / 8, 4 * H / 14, "Target Selection", 16);
 
 		if (GC->rtcc->RZJCTTC.Type == 1)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "PLA", 3);
+			skp->Text(1 * W / 8, 6 * H / 14, "PLA", 3);
 
 			sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lat_T*DEG);
-			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "CLA", 3);
+			skp->Text(1 * W / 8, 6 * H / 14, "CLA", 3);
 		}
 
 		GET_Display(Buffer, GC->rtcc->RZJCTTC.GETI);
-		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lng_T*DEG);
-		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->subThreadStatus > 0)
+		/*if (G->subThreadStatus > 0)
 		{
 			skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 		}
@@ -2472,7 +2473,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				skp->Text(5 * W / 8, 2 * H / 14, "Iteration failed", 16);
 			}
-		}
+		}*/
 	}
 	else if (screen == 27)
 	{
@@ -8519,22 +8520,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetPen(pen2);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		skp->Text(2 * W / 44, 6 * H / 26, "BURN CODE", 9);
-		skp->Text(2 * W / 44, 7 * H / 26, "AREA", 4);
-		skp->Text(2 * W / 44, 8 * H / 26, "MATRIX WT", 9);
-		skp->Text(4 * W / 44, 9 * H / 26, "HA HP", 5);
-		skp->Text(2 * W / 44, 10 * H / 26, "TAA HT", 6);
-		skp->Text(2 * W / 44, 11 * H / 26, "RLH PLH YLH", 11);
-		skp->Text(2 * W / 44, 12 * H / 26, "RO PI YM", 8);
-		skp->Text(2 * W / 44, 13 * H / 26, "VC BT", 5);
-		skp->Text(2 * W / 44, 14 * H / 26, "VT U DT", 7);
-		skp->Text(2 * W / 44, 15 * H / 26, "GETI", 4);
-		skp->Text(2 * W / 44, 16 * H / 26, "GMTI", 4);
-		skp->Text(4 * W / 44, 17 * H / 26, "RET", 3);
-		skp->Text(2 * W / 44, 18 * H / 26, "V EI", 4);
-		skp->Text(6 * W / 44, 18 * H / 26, "GAM EI", 6);
-		skp->Text(2 * W / 44, 19 * H / 26, "BA", 2);
-		skp->Text(6 * W / 44, 19 * H / 26, "RETRB", 5);
+		skp->Text(2 * W / 44, 6 * H / 26, "AREA", 4);
+		skp->Text(2 * W / 44, 7 * H / 26, "MATRIX", 6);
+		skp->Text(2 * W / 44, 8 * H / 26, "WT TAA", 6);
+		skp->Text(2 * W / 44, 9 * H / 26, "RLH PLH YLH", 11);
+		skp->Text(2 * W / 44, 10 * H / 26, "RO PI YM", 8);
+		skp->Text(2 * W / 44, 11 * H / 26, "VC BT", 5);
+		skp->Text(2 * W / 44, 12 * H / 26, "VT U DT", 7);
+		skp->Text(2 * W / 44, 13 * H / 26, "H", 1);
+		skp->Text(2 * W / 44, 14 * H / 26, "GETI", 4);
+		skp->Text(2 * W / 44, 15 * H / 26, "GMTI", 4);
+		skp->Text(2 * W / 44, 16 * H / 26, "RET", 3);
+		skp->Text(2 * W / 44, 17 * H / 26, "V EI", 4);
+		skp->Text(6 * W / 44, 17 * H / 26, "GAM EI", 6);
+		skp->Text(2 * W / 44, 18 * H / 26, "BA", 2);
+		skp->Text(2 * W / 44, 19 * H / 26, "RETRB", 5);
 		skp->Text(2 * W / 44, 20 * H / 26, "LAT ML", 6);
 		skp->Text(8 * W / 44, 20 * H / 26, "LNG ML", 6);
 		skp->Text(2 * W / 44, 21 * H / 26, "LAT T", 5);
@@ -8543,52 +8543,51 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(8 * W / 44, 22 * H / 26, "LNG IP", 6);
 		skp->Text(2 * W / 44, 23 * H / 26, "LAT ZL", 6);
 		skp->Text(8 * W / 44, 23 * H / 26, "LNG ZL", 6);
-		
-		skp->Text(4 * W / 44, 24 * H / 26, "MD", 5);
+		skp->Text(2 * W / 44, 24 * H / 26, "DLAT", 4);
+		skp->Text(8 * W / 44, 24 * H / 26, "DLNG", 4);
 		
 		skp->Line(14 * W / 44, 6 * H / 26, 14 * W / 44, H);
 
 		if (GC->rtcc->RZRFDP.Indicator == 0)
 		{
 			sprintf_s(Buffer, "%s", GC->rtcc->RZRFDP.RefsID.c_str());
-			skp->Text(16 * W / 44, 8 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 7 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.CSMWeightRetro);
-			skp->Text(20 * W / 44, 8 * H / 26, Buffer, strlen(Buffer));
-			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_apo);
-			skp->Text(16 * W / 44, 9 * H / 26, Buffer, strlen(Buffer));
-			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_peri);
-			skp->Text(22 * W / 44, 9 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 8 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.0lf", GC->rtcc->RZRFDP.TrueAnomalyRetro);
-			skp->Text(16 * W / 44, 10 * H / 26, Buffer, strlen(Buffer));
-			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_Retro);
-			skp->Text(22 * W / 44, 10 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(22 * W / 44, 8 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.1lf %.1lf %.1lf", GC->rtcc->RZRFDP.Att_LVLH.x, GC->rtcc->RZRFDP.Att_LVLH.y, GC->rtcc->RZRFDP.Att_LVLH.z);
-			skp->Text(16 * W / 44, 11 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 9 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.1lf %.1lf %.1lf", GC->rtcc->RZRFDP.Att_IMU.x, GC->rtcc->RZRFDP.Att_IMU.y, GC->rtcc->RZRFDP.Att_IMU.z);
-			skp->Text(16 * W / 44, 12 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 10 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.DVC);
-			skp->Text(16 * W / 44, 13 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 11 * H / 26, Buffer, strlen(Buffer));
 			SStoHHMMSS(GC->rtcc->RZRFDP.BurnTime, hh, mm, secs);
 			sprintf_s(Buffer, "%d:%.1lf", mm, secs);
-			skp->Text(22 * W / 44, 13 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(22 * W / 44, 11 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.DVT);
-			skp->Text(16 * W / 44, 14 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 12 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%+d", GC->rtcc->RZRFDP.UllageQuads);
-			skp->Text(21 * W / 44, 14 * H / 26, Buffer, strlen(Buffer));
-			sprintf_s(Buffer, "%.0lf", GC->rtcc->RZRFDP.UllageDT);
-			skp->Text(23 * W / 44, 14 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(21 * W / 44, 12 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.UllageDT);
+			skp->Text(24 * W / 44, 12 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_Retro);
+			skp->Text(16 * W / 44, 13 * H / 26, Buffer, strlen(Buffer));
 			GET_Display2(Buffer, GC->rtcc->RZRFDP.GETI);
-			skp->Text(16 * W / 44, 15 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 14 * H / 26, Buffer, strlen(Buffer));
 			GET_Display(Buffer, GC->rtcc->RZRFDP.GMTI, false);
-			skp->Text(16 * W / 44, 16 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 15 * H / 26, Buffer, strlen(Buffer));
 			SStoHHMMSS(GC->rtcc->RZRFDP.RET400k, hh, mm, secs);
 			sprintf_s(Buffer, "%d:%02.0lf", mm, secs);
-			skp->Text(16 * W / 44, 17 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 16 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.0lf", GC->rtcc->RZRFDP.V400k);
-			skp->Text(16 * W / 44, 18 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 44, 17 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.2lf", GC->rtcc->RZRFDP.Gamma400k);
-			skp->Text(22 * W / 44, 18 * H / 26, Buffer, strlen(Buffer));
+			skp->Text(22 * W / 44, 17 * H / 26, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.1lf°", GC->rtcc->RZRFDP.BankAngle);
+			skp->Text(16 * W / 44, 18 * H / 26, Buffer, strlen(Buffer));
+			SStoHHMMSS(GC->rtcc->RZRFDP.RETRB, hh, mm, secs);
+			sprintf_s(Buffer, "%d:%02.0lf", mm, secs);
 			skp->Text(16 * W / 44, 19 * H / 26, Buffer, strlen(Buffer));
 			FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_ML);
 			skp->Text(16 * W / 44, 20 * H / 26, Buffer, strlen(Buffer));
@@ -8633,8 +8632,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 15 * H / 26, "DEL Y", 5);
 		skp->Text(1 * W / 8, 16 * H / 26, "DT TO", 5);
 		skp->Text(1 * W / 8, 17 * H / 26, "DV TO", 5);
-		skp->Text(1 * W / 8, 18 * H / 26, "LAT IP", 6);
-		skp->Text(1 * W / 8, 19 * H / 26, "LNG IP", 6);
+		skp->Text(1 * W / 8, 18 * H / 26, "HA", 2);
+		skp->Text(1 * W / 8, 19 * H / 26, "HP", 2);
+		skp->Text(1 * W / 8, 20 * H / 26, "LAT IP", 6);
+		skp->Text(1 * W / 8, 21 * H / 26, "LNG IP", 6);
 
 		GET_Display2(Buffer, GC->rtcc->RZRFDP.GETI);
 		skp->Text(4 * W / 8, 10 * H / 26, Buffer, strlen(Buffer));
@@ -8654,10 +8655,55 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(4 * W / 8, 16 * H / 26, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.2lf", GC->rtcc->RZRFDP.DV_TO);
 		skp->Text(4 * W / 8, 17 * H / 26, Buffer, strlen(Buffer));
-		FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_IP);
+		sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_apo);
 		skp->Text(4 * W / 8, 18 * H / 26, Buffer, strlen(Buffer));
-		FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_IP);
+		sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_peri);
 		skp->Text(4 * W / 8, 19 * H / 26, Buffer, strlen(Buffer));
+		FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_IP);
+		skp->Text(4 * W / 8, 20 * H / 26, Buffer, strlen(Buffer));
+		FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_IP);
+		skp->Text(4 * W / 8, 21 * H / 26, Buffer, strlen(Buffer));
+	}
+	else if (screen == 106)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 2 * H / 26, "Recovery Target Selection (MSK 1454)", 36);
+		skp->SetFont(font3);
+
+		//skp->Text(2 * W / 44, 5 * H / 26, "N", 1);
+		skp->Text(4 * W / 44, 8 * H / 26, "REV", 3);
+		skp->Text(9 * W / 44, 8 * H / 26, "GET", 3);
+		skp->Text(17 * W / 44, 8 * H / 26, "GMT", 3);
+		skp->Text(24 * W / 44, 8 * H / 26, "LAT", 3);
+		skp->Text(31 * W / 44, 8 * H / 26, "LNG", 3);
+		skp->Text(39 * W / 44, 8 * H / 26, "AZI", 3);
+
+		sprintf_s(Buffer, "%d/%d", GC->rtcc->RZDRTSD.CurrentPage, GC->rtcc->RZDRTSD.TotalNumPages);
+		skp->Text(7 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		int j = (GC->rtcc->RZDRTSD.CurrentPage - 1) * 10;
+		for (int i = 0; i < 10;i++)
+		{
+			if (GC->rtcc->RZDRTSD.table[i + j].DataIndicator) break;
+
+			sprintf_s(Buffer, "%d", i + j + 1);
+			skp->Text(2 * W / 44, (10 + i) * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%d", GC->rtcc->RZDRTSD.table[i + j].Rev);
+			skp->Text(4 * W / 44, (10 + i) * H / 26, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->RZDRTSD.table[i + j].GET, false);
+			skp->Text(9 * W / 44, (10 + i) * H / 26, Buffer, strlen(Buffer));
+			GET_Display(Buffer, GC->rtcc->RZDRTSD.table[i + j].GMT, false);
+			skp->Text(17 * W / 44, (10 + i) * H / 26, Buffer, strlen(Buffer));
+
+			FormatLatitude(Buffer, GC->rtcc->RZDRTSD.table[i + j].Latitude);
+			skp->Text(24 * W / 44, (10 + i) * H / 26, Buffer, strlen(Buffer));
+			FormatLongitude(Buffer, GC->rtcc->RZDRTSD.table[i + j].Longitude);
+			skp->Text(31 * W / 44, (10 + i) * H / 26, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%06.2lf°", GC->rtcc->RZDRTSD.table[i + j].Azimuth);
+			skp->Text(39 * W / 44, (10 + i) * H / 26, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }

@@ -31286,3 +31286,87 @@ void RTCC::RMSDBMP(EphemerisData sv, double CSMmass)
 	RetrofirePlanning plan(this);
 	plan.RMSDBMP(sv, RZJCTTC.GETI, RZJCTTC.lat_T, RZJCTTC.lng_T, CSMmass);
 }
+
+void RTCC::RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng_des)
+{
+	if (tab.Header.CSI != BODY_EARTH) return;
+
+	ELVCTRInputTable intab;
+	ELVCTROutputTable outtab;
+	ManeuverTimesTable MANTIMES;
+	TimeConstraintsTable tctab;
+	EphemerisData sv_ECT;
+	double GMT_cross, out, lng, GMT_guess;
+	int i;
+
+	RZDRTSD.ErrorMessage = "";
+	RZDRTSD.CurrentPage = 1;
+	RZDRTSD.TotalNumEntries = 0;
+	RZDRTSD.TotalNumPages = 1;
+	for (i = 0;i < 40;i++)
+	{
+		RZDRTSD.table[i].DataIndicator = true;
+	}
+	i = 0;
+	lng = lng_des;
+	GMT_guess = val;
+
+	do
+	{
+		out = RLMTLC(tab, MANTIMES, lng, GMT_guess, GMT_cross);
+		if (out == -1)
+		{
+			//No convergence
+			break;
+		}
+		intab.GMT = GMT_cross;
+		ELVCTR(intab, outtab, tab, MANTIMES);
+		if (outtab.ErrorCode > 2)
+		{
+			break;
+		}
+		RZDRTSD.table[i].DataIndicator = false;
+		if (out == 0)
+		{
+			//Good data
+			RZDRTSD.table[i].AlternateLongitudeIndicator = false;
+		}
+		else
+		{
+			//Not converged
+			RZDRTSD.table[i].AlternateLongitudeIndicator = true;
+		}
+		ELVCNV(outtab.SV, 0, 1, sv_ECT);
+		EMMDYNEL(sv_ECT, tctab);
+		RZDRTSD.table[i].Azimuth = tctab.azi*DEG;
+		RZDRTSD.table[i].GET = GETfromGMT(GMT_cross);
+		RZDRTSD.table[i].GMT = GMT_cross;
+		RZDRTSD.table[i].Latitude = tctab.lat*DEG;
+		RZDRTSD.table[i].Longitude = tctab.lng*DEG;
+		RZDRTSD.table[i].Rev = 0;
+
+		GMT_guess = GMT_cross;
+		lng += 1.0*RAD;
+		if (lng > PI)
+		{
+			lng -= PI2;
+		}
+
+		i++;
+	}
+	while (i < 40);
+
+	RZDRTSD.TotalNumEntries = i;
+	if (RZDRTSD.TotalNumEntries > 30)
+	{
+		RZDRTSD.TotalNumPages = 4;
+	}
+	else if (RZDRTSD.TotalNumEntries > 20)
+	{
+		RZDRTSD.TotalNumPages = 3;
+	}
+	else if (RZDRTSD.TotalNumEntries > 10)
+	{
+		RZDRTSD.TotalNumPages = 2;
+	}
+}
