@@ -1576,7 +1576,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	}
 	else
 	{
-		LVLHAtt = _V(0.0, -(31.7*RAD + acos(OrbMech::R_Earth / length(sv_TIG.R))), PI);
+		LVLHAtt = _V(0.0, -(31.7*RAD + 2.15*RAD + acos(OrbMech::R_Earth / length(sv_TIG.R))), PI);
 	}
 	RMMATT(1, 1, LVLHAtt, REFSMMAT, pRTCC->RZC1RCNS.Thruster, sv_TIG.R, sv_TIG.V, pRTCC->RZC1RCNS.GimbalIndicator, U_T);
 
@@ -1956,7 +1956,7 @@ void RetrofirePlanning::RMMDBM()
 {
 	EphemerisData sv_TIG, sv_apo;
 	VECTOR3 Att;
-	double R_E, dlng2, lng_old, GMTI_old, ddt, MJD_L;
+	double R_E, dlng2, lng_old, GMTI_old, ddt;//, MJD_L;
 	int iter;
 	ELVCTRInputTable in;
 	ELVCTROutputTable out;
@@ -2261,9 +2261,10 @@ void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT
 	//entry: 1 = calculate unit vector. 2 = calculate attitude in the other coordinate system and the deorbit REFSMMAT
 	//opt: 1 = Att is LVLH, 2 = Att is IMU
 
-	VECTOR3 X_P, Y_P, Z_P;
+	VECTOR3 X_P, Y_P, Z_P, X_B, Y_B, Z_B;
 	double SINP, SINY, SINR, COSP, COSY, COSR;
 	double AL, BE, a1, a2, a3, b1, b2, b3, c1, c2, c3;
+	double P_G = 0.0, Y_G = 0.0;
 
 	SINP = sin(Att.y);
 	SINY = sin(Att.z);
@@ -2272,8 +2273,24 @@ void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT
 	COSY = cos(Att.z);
 	COSR = cos(Att.x);
 
+	if (thruster == RTCC_ENGINETYPE_CSMSPS)
+	{
+		if (TrimIndicator == -1)
+		{
+			double T, WDOT;
+			unsigned int IC = 1;
+			pRTCC->GIMGBL(CSMmass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 1, 0.0);
+		}
+		else
+		{
+			pRTCC->GetSystemGimbalAngles(RTCC_ENGINETYPE_CSMSPS, P_G, Y_G);
+		}
+	}
+
 	if (opt == 1)
 	{
+		VECTOR3 Y_T, Z_T;
+
 		Z_P = -unit(R);
 		Y_P = -unit(crossp(R, V));
 		X_P = crossp(Y_P, Z_P);
@@ -2289,6 +2306,14 @@ void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT
 		c1 = BE * COSY + SINY * SINR;
 		c2 = BE * SINY - COSY * SINR;
 		c3 = COSP * COSR;
+
+		U_T = X_P * a1 + Y_P * a2 + Z_P * a3;
+		Y_T = X_P * b1 + Y_P * b2 + Z_P * b3;
+		Z_T = X_P * c1 + Y_P * c2 + Z_P * c3;
+
+		X_B = U_T * cos(P_G)*cos(Y_G) - Y_T * cos(P_G)*sin(Y_G) + Z_T * sin(P_G);
+		Y_B = U_T * sin(Y_G) + Y_T * cos(Y_G);
+		Z_B = crossp(X_B, Y_B);
 	}
 	else
 	{
@@ -2307,35 +2332,18 @@ void RetrofirePlanning::RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT
 		c1 = SINP * COSR + AL * SINR;
 		c2 = -COSY * SINR;
 		c3 = COSP * COSR - BE * SINR;
-	}
 
-	VECTOR3 X_B, Y_B, Z_B;
+		X_B = X_P * a1 + Y_P * a2 + Z_P * a3;
+		Y_B = X_P * b1 + Y_P * b2 + Z_P * b3;
+		Z_B = X_P * c1 + Y_P * c2 + Z_P * c3;
 
-	X_B = X_P * a1 + Y_P * a2 + Z_P * a3;
-	Y_B = X_P * b1 + Y_P * b2 + Z_P * b3;
-	Z_B = X_P * c1 + Y_P * c2 + Z_P * c3;
-
-	double P_G = 0.0, Y_G = 0.0;
-	if (thruster == RTCC_ENGINETYPE_CSMSPS)
-	{
-		if (TrimIndicator == -1)
+		if (thruster == RTCC_ENGINETYPE_CSMSPS)
 		{
-			double T, WDOT;
-			unsigned int IC = 1;
-			pRTCC->GIMGBL(CSMmass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 1, 0.0);
+			MATRIX3 MTEMP = _M(X_B.x, X_B.y, X_B.z, Y_B.x, Y_B.y, Y_B.z, Z_B.x, Z_B.y, Z_B.z);
+			MATRIX3 MTEMP2 = pRTCC->GLMRTM(MTEMP, P_G, 2, Y_G, 3);
+			U_T = _V(MTEMP2.m11, MTEMP2.m12, MTEMP2.m13);
 		}
-		else
-		{
-			pRTCC->GetSystemGimbalAngles(RTCC_ENGINETYPE_CSMSPS, P_G, Y_G);
-		}
-		//Don't consider the yaw gimbal angle or the burn has a DVY component (if LVLH yaw = 180°)
-		MATRIX3 MTEMP = _M(X_B.x, X_B.y, X_B.z, Y_B.x, Y_B.y, Y_B.z, Z_B.x, Z_B.y, Z_B.z);
-		MATRIX3 MTEMP2 = pRTCC->GLMRTM(MTEMP, P_G, 2);
-		U_T = _V(MTEMP2.m11, MTEMP2.m12, MTEMP2.m13);
-	}
-	else
-	{
-		if (thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || thruster == RTCC_ENGINETYPE_CSMRCSPLUS4)
+		else if (thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || thruster == RTCC_ENGINETYPE_CSMRCSPLUS4)
 		{
 			U_T = X_B;
 		}
