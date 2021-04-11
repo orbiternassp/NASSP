@@ -3711,6 +3711,7 @@ protected:
 	PowerMerge GaugePower;
 
 	// ECS
+	h_Tank *CSMCabin;
 	h_HeatExchanger *PrimCabinHeatExchanger;
 	h_HeatExchanger *PrimSuitHeatExchanger;
 	h_HeatExchanger *PrimSuitCircuitHeatExchanger;

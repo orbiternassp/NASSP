@@ -295,6 +295,8 @@ void Saturn::SystemsInit() {
 	// ECS devices
 	//
 
+	CSMCabin = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN");
+
 	PrimCabinHeatExchanger = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER");
 	PrimSuitHeatExchanger = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER");
 	PrimSuitCircuitHeatExchanger = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITCIRCUITHEATEXCHANGER");
@@ -780,7 +782,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 			case SATSYSTEMS_CREWINGRESS_1:
 				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-				if ((scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) || MissionTime >= -900) {	// Suit Cabin delta p is equalized
+				if ((scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) || MissionTime >= -6000) {	// Suit Cabin delta p is equalized (changed to -6000 to allow next case to begin, needs to be looked at for correctness)
 
 					// Reset (i.e. close) suit relief valve again
 					O2DemandRegulator.ResetSuitReliefValve();
@@ -793,7 +795,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 			case SATSYSTEMS_CREWINGRESS_2:
 				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-				if ((scdp > 1.3 && MissionTime - lastSystemsMissionTime >= 10) || MissionTime >= -900) {	// Suit Cabin delta p is established
+				//if ((scdp > 1.3 && MissionTime - lastSystemsMissionTime >= 10) || MissionTime >= -900) {	// Suit Cabin delta p is established
+				if ((scdp > 1.3 && MissionTime - lastSystemsMissionTime >= 10) || MissionTime >= -6000) {	// Suit Cabin delta p is established (changed to -6000 to allow next case to begin, needs to be looked at for correctness)
 
 					// Reset (i.e. open) cabin pressure regulator again, max flow to 0.25 lb/h  
 					CabinPressureRegulator.SetMaxFlowLBH(0.25);
@@ -809,7 +812,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				break;
 
 			case SATSYSTEMS_CABINCLOSEOUT:
-				if (MissionTime >= -6000) {	// 1h 40min before launch
+				if (SideHatch.IsOpen() == false || MissionTime >= -900) {	// Should be triggered by side hatch closing 1h 40min before launch
 
 					if (SaturnType == SAT_SATURNV) {
 						// Play cabin closeout sound
@@ -817,9 +820,23 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 						CabincloseoutS.done();
 					}
 
+					//Cabin Purge
+						//CSMCabin->space.Void();
+
+						CSMCabin->space.composition[SUBSTANCE_O2].mass = 4909.7269924475;
+						CSMCabin->space.composition[SUBSTANCE_O2].vapor_mass = 4904.8172654551;
+						CSMCabin->space.composition[SUBSTANCE_O2].Q = 2411273.9307631600;
+
+						CSMCabin->space.composition[SUBSTANCE_N2].mass = 2865.4855000860;
+						CSMCabin->space.composition[SUBSTANCE_N2].vapor_mass = 2862.6200145860;
+						CSMCabin->space.composition[SUBSTANCE_N2].Q = 876928.9850132200;
+
+						CSMCabin->space.ThermalComps(simdt);
+
+
 					// Next state
 					systemsState = SATSYSTEMS_GSECONNECTED_1;
-					lastSystemsMissionTime = MissionTime; 
+					lastSystemsMissionTime = MissionTime;
 				}
 				break;	
 
@@ -922,7 +939,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
-
+	double *CSMCabinO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:O2_PPRESS");
+	double *CSMCabinN2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:N2_PPRESS");
+	sprintf(oapiDebugString(), "CSM PPO2: %lf PPN2: %lf", (*CSMCabinO2* PSI, *CSMCabinN2 * PSI));
 //CSM Connector Debug Lines
 
 //h_Pipe* csmtunnelpipe = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
