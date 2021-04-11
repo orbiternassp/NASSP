@@ -1539,6 +1539,30 @@ void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
+void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface) {
+
+	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
+		if (IsUp())
+		{
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
+		}
+		else
+		{
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset + width, yOffset + height, width, height, SURF_PREDEF_CK);
+		}
+	}
+	else {
+		if (IsUp())
+		{
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+		}
+		else
+		{
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset + width, yOffset, width, height, SURF_PREDEF_CK);
+		}
+	}
+}
+
 void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, SimplePushSwitch* startbutton, LEM *l) {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
@@ -2348,5 +2372,26 @@ bool LMOverheadHatchHandle::SwitchTo(int newState, bool dontspring)
 		}
 	}
 
+	return false;
+}
+
+bool CDRCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
+
+		if (lem->COAS_DC_CB.IsPowered()) {
+			if (state == THREEPOSSWITCH_UP) {
+				lem->COASreticlevisible = 2; // OVHD COAS
+			} else if (state == THREEPOSSWITCH_CENTER) {
+				lem->COASreticlevisible = 0; // OFF
+			} else {
+				lem->COASreticlevisible = 1; // FWD COAS
+			}
+		} else {
+			lem->COASreticlevisible = 0; // OFF
+		}
+		lem->SetCOAS();
+		return true;
+	}
 	return false;
 }

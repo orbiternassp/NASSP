@@ -1273,6 +1273,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "SATTYPE", SaturnType);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
+	oapiWriteScenario_int(scn, "VIEWPOS", viewpos);
 	papiWriteScenario_double (scn, "TCP", TCPO);
 	papiWriteScenario_double (scn, "MISSNTIME", MissionTime);
 	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
@@ -1724,6 +1725,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "PANEL_ID", 8)) {
 		sscanf (line+8, "%d", &PanelId);
+	}
+	else if (!strnicmp(line, "VIEWPOS", 7)) {
+		sscanf(line + 7, "%d", &viewpos);
 	}
 	else if (!strnicmp (line, "STAGESTATUS", 11)) {
 		sscanf (line+11, "%d", &StageState);
