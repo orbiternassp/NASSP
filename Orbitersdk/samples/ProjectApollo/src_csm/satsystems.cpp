@@ -821,17 +821,21 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					}
 
 					//Cabin Purge
+					// This really should be done with GSE oxygen and the purge valve, for now we will change the cabin atmosphere when we close the hatch
+
 						//CSMCabin->space.Void();
 
-						CSMCabin->space.composition[SUBSTANCE_O2].mass = 4909.7269924475;
-						CSMCabin->space.composition[SUBSTANCE_O2].vapor_mass = 4904.8172654551;
+						CSMCabin->space.composition[SUBSTANCE_O2].mass = 4928.3360738524;
+						CSMCabin->space.composition[SUBSTANCE_O2].vapor_mass = 4923.4077377785;
 						CSMCabin->space.composition[SUBSTANCE_O2].Q = 2411273.9307631600;
 
-						CSMCabin->space.composition[SUBSTANCE_N2].mass = 2865.4855000860;
-						CSMCabin->space.composition[SUBSTANCE_N2].vapor_mass = 2862.6200145860;
+						CSMCabin->space.composition[SUBSTANCE_N2].mass = 2876.3463998912;
+						CSMCabin->space.composition[SUBSTANCE_N2].vapor_mass = 2873.4700534913;
 						CSMCabin->space.composition[SUBSTANCE_N2].Q = 876928.9850132200;
 
-						CSMCabin->space.ThermalComps(simdt);
+						//CSMCabin->space.ThermalComps(simdt);
+						CSMCabin->BoilAllAndSetTemp(293.15);
+						
 
 
 					// Next state
@@ -939,9 +943,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
-	double *CSMCabinO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:O2_PPRESS");
-	double *CSMCabinN2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:N2_PPRESS");
-	sprintf(oapiDebugString(), "CSM PPO2: %lf PPN2: %lf", (*CSMCabinO2* PSI, *CSMCabinN2 * PSI));
+//GSE Oxygen Purge Debug Lines	
+	
+//double *CSMCabinO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:O2_PPRESS");
+//double *CSMCabinN2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:N2_PPRESS");
+//sprintf(oapiDebugString(), "CSM PPO2: %lf PPN2: %lf", *CSMCabinO2* PSI, *CSMCabinN2 * PSI);
+// 
 //CSM Connector Debug Lines
 
 //h_Pipe* csmtunnelpipe = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
