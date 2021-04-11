@@ -69,7 +69,7 @@ class LEMOverheadHatch
 {
 public:
 	LEMOverheadHatch(Sound &opensound, Sound &closesound);
-	void Init(LEM *l, ToggleSwitch *ohh);
+	void Init(LEM *l, ToggleSwitch *ohh, ToggleSwitch *orv);
 	void DefineAnimations(UINT idx);
 	void DefineAnimationsVC(UINT idx);
 	void Timestep(double simdt);
@@ -85,12 +85,15 @@ protected:
 
 	LEM *lem;
 	ToggleSwitch *ovhdHatchHandle;
+	ToggleSwitch *ovhdReliefValve;
 
 	Sound &OpenSound;
 	Sound &CloseSound;
 
 	UINT anim_OvhdHatch;
 	UINT anim_OvhdHatchVC;
+	UINT anim_OvhdHatchHandle;
+	UINT anim_OvhdHatchReliefValve;
 };
 
 class LEMOVHDCabinReliefDumpValve
@@ -109,7 +112,7 @@ class LEMForwardHatch
 {
 public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
-	void Init(LEM *l, ToggleSwitch *fhh);
+	void Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr);
 	void DefineAnimations(UINT idx);
 	void DefineAnimationsVC(UINT idx);
 	void Timestep(double simdt);
@@ -125,12 +128,15 @@ protected:
 
 	LEM *lem;
 	ToggleSwitch *ForwardHatchHandle;
+	ToggleSwitch *ForwardHatchReliefValve;
 
 	Sound &OpenSound;
 	Sound &CloseSound;
 
 	UINT anim_Hatch;
-	UINT anim_HatchVC;
+	UINT anim_FwdHatchVC;
+	UINT anim_FwdHatchHandle;
+	UINT anim_FwdHatchReliefValve;
 };
 
 class LEMFWDCabinReliefDumpValve
