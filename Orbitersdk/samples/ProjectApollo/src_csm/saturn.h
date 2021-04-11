@@ -3741,6 +3741,7 @@ protected:
 	SaturnLMTunnelVent LMTunnelVent;
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
+	SaturnWasteStowageVentValve WasteStowageVentValve;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;

@@ -551,6 +551,8 @@ void Saturn::SystemsInit() {
 					  &LMTunnelVentValve);
 	PressureEqualizationValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"),
 					  &PressEqualValve, &ForwardHatch);
+	WasteStowageVentValve.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE"),
+		&WasteMGMTStoageVentRotary);
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -943,11 +945,16 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
+
+//
 //GSE Oxygen Purge Debug Lines	
 	
 //double *CSMCabinO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:O2_PPRESS");
 //double *CSMCabinN2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:N2_PPRESS");
-//sprintf(oapiDebugString(), "CSM PPO2: %lf PPN2: %lf", *CSMCabinO2* PSI, *CSMCabinN2 * PSI);
+//double *WMFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEPIPE:FLOW");
+//int *WMValve = (int*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE:ISOPEN");
+//sprintf(oapiDebugString(), "CSM PPO2: %lf PPN2: %lf WMFlowPPH %lf WMValve %d", *CSMCabinO2* PSI, *CSMCabinN2 * PSI, *WMFlow *LBH, *WMValve);
+
 // 
 //CSM Connector Debug Lines
 
@@ -1432,6 +1439,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		GlycolCoolingController.SystemTimestep(tFactor);
 		LMTunnelVent.SystemTimestep(tFactor);
 		PressureEqualizationValve.SystemTimestep(tFactor);
+		WasteStowageVentValve.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);
