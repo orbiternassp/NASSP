@@ -273,7 +273,8 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	SetTemp(475.0); 
 	condenserTemp = 345.0;
 	tempTooLowCount = 0;
-	Volts = 31.0;
+	Volts = 28.0;
+	Amperes = 25.0;
 	power_load = 600.0; //2 amps is internal impedance		//TSCH Test 
 	max_power = r_watts; //max watts
 	clogg = 0.0; //no clog
@@ -283,6 +284,9 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	reaction = 0; //no chemical react.
 	SRC = NULL; //for now a FCell cannot have a source
 	running = 1; //ie. not running
+
+	voltsLastTimestep = 28.0;
+	ampsLastTimestep = 25.0;
 
 	H2_flow = 0;
 	O2_flow = 0;
@@ -300,33 +304,43 @@ void FCell::PUNLOAD(double watts) {
 	power_load -= watts;
 }
 
-void FCell::Reaction(double dt, double thrust) 
+void FCell::Reaction(double dt) 
 {
+	//this function needs to be called *after* the power/current/voltage estimation code runs
+
 	#define H2RATIO 0.1119
 	#define O2RATIO 0.8881
-
-	reactant = dt * max_power * thrust / 2880.0 * 0.2894 ; //grams /second/ 100 amps
-
-	//if (!strcmp(name, "FUELCELL1"))
-	//{
-	//	sprintf(oapiDebugString(), "%0.10f", thrust);
-	//}
 		
-	// get fuel from sources
-	double O2_maxflow = O2_flow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
-	double H2_maxflow = H2_flow = H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
-	
+	// get fuel from sources, maximum flow: grams/timestep from each valve
+	double O2_maxflow = O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
+	double H2_maxflow = H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+
+	// Reactant consumption
+	H2_flow = ((Amperes * MMASS[SUBSTANCE_H2]) / (2*FaradaysConstant)) * numCells * dt; //Faraday's 2nd law electrolysis. confirmed against CSM databook equation
+	O2_flow = H2_flow / H2RATIO * O2RATIO; //consume a stoichometeric amount of oxygen
+
+	reactant = H2_flow + O2_flow; //will probably get removed in a later commit
+
 	// max. consumption
-	if (H2_flow > reactant * H2RATIO) H2_flow = reactant * H2RATIO;
-	if (O2_flow > reactant * O2RATIO) O2_flow = reactant * O2RATIO;
-	
-	// maintain reactant ratio
-	if (H2_flow > O2_flow / O2RATIO * H2RATIO) H2_flow = O2_flow / O2RATIO * H2RATIO;
-	if (O2_flow > H2_flow / H2RATIO * O2RATIO) O2_flow = H2_flow / H2RATIO * O2RATIO;
+	if (H2_flow > H2_maxflow) H2_flow = H2_maxflow;
+	if (O2_flow > O2_maxflow) O2_flow = O2_maxflow;
 	
 	// results of reaction
 	double H2O_flow = O2_flow + H2_flow;
-	double heat = (O2_flow + H2_flow) * 10000.0;		
+
+	//efficiency and heat generation
+	//efficiency model calculated from APOLLO TRAINING | ELECTRICAL POWER SYSTEMSTUDY GUIDE COURSE NO.A212, and referenced documents
+	double heat = (power_load / (0.9063642805859956 +
+		-0.00040191337758397755 * power_load +
+		0.0000003368939782880486 * power_load * power_load +
+		-1.5580350625528442e-10 * power_load * power_load * power_load +
+		3.2902028095999155e-14 * power_load * power_load * power_load * power_load +
+		-2.581100488488906e-18 * power_load * power_load * power_load * power_load * power_load) - power_load)*dt; //I think this executes faster than calling pow()
+
+	/*if (!strcmp(name, "FUELCELL1"))
+	{
+		sprintf(oapiDebugString(), "HEAT: %lfW POWER: %lfW", heat/dt, power_load);
+	}*/
 
 	// purging
 	if (status == 3)
@@ -346,22 +360,30 @@ void FCell::Reaction(double dt, double thrust)
 	reaction = (H2_flow + O2_flow) / reactant; // % of reaction
 	
 	// flow from sources
-	if (H2_SRC->parent->space.composition[SUBSTANCE_H2].mass > 0.0) { 
-		H2_SRC->parent->space.composition[SUBSTANCE_H2].Q -= 
-			H2_SRC->parent->space.composition[SUBSTANCE_H2].Q * H2_flow / H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+	if (H2_SRC->parent->space.composition[SUBSTANCE_H2].mass > 0.0) 
+	{ 
+		//reduce enthalpy in the hydrogen source by the amount of enthalpy removed by flow
+		H2_SRC->parent->space.composition[SUBSTANCE_H2].Q -= H2_SRC->parent->space.composition[SUBSTANCE_H2].Q * H2_flow / H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+
+		//recalculate total enthalpy
 		H2_SRC->parent->space.GetQ();
 
-		H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass -= 
-			H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass * H2_flow / H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
+		//remove gaseous hydrogen from tank 
+		H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass -= H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass * H2_flow / H2_SRC->parent->space.composition[SUBSTANCE_H2].mass;
 	}
-	if (O2_SRC->parent->space.composition[SUBSTANCE_O2].mass > 0.0) { 
-		O2_SRC->parent->space.composition[SUBSTANCE_O2].Q -= 
-			O2_SRC->parent->space.composition[SUBSTANCE_O2].Q * O2_flow / O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
+	if (O2_SRC->parent->space.composition[SUBSTANCE_O2].mass > 0.0)
+	{
+		//reduce enthalpy in the oxygen source by the amount of enthalpy removed by flow
+		O2_SRC->parent->space.composition[SUBSTANCE_O2].Q -= O2_SRC->parent->space.composition[SUBSTANCE_O2].Q * O2_flow / O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
+		
+		//recalculate total enthalpy
 		O2_SRC->parent->space.GetQ();
 
-		O2_SRC->parent->space.composition[SUBSTANCE_O2].vapor_mass -= 
-			O2_SRC->parent->space.composition[SUBSTANCE_O2].vapor_mass * O2_flow / O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
+		//remove gaseous oxygen from tank 
+		O2_SRC->parent->space.composition[SUBSTANCE_O2].vapor_mass -= O2_SRC->parent->space.composition[SUBSTANCE_O2].vapor_mass * O2_flow / O2_SRC->parent->space.composition[SUBSTANCE_O2].mass;
 	}
+
+	//take reactants from source
 	H2_SRC->parent->space.composition[SUBSTANCE_H2].mass -= H2_flow;
 	O2_SRC->parent->space.composition[SUBSTANCE_O2].mass -= O2_flow;
 
@@ -376,6 +398,11 @@ void FCell::Reaction(double dt, double thrust)
 
 	Clogging(dt); //simulate reactant impurity accumulation
 
+	//if (!strcmp(name, "FUELCELL2"))
+	//{
+	//	sprintf(oapiDebugString(), "%0.10f, %0.10f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass, H2_SRC->parent->space.composition[SUBSTANCE_H2].vapor_mass);
+	//}
+
 	// TSCH
 	/* sprintf(oapiDebugString(), "m %f Q %f Q/m %f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass,
 												   H2_SRC->parent->space.composition[SUBSTANCE_H2].Q,
@@ -384,7 +411,6 @@ void FCell::Reaction(double dt, double thrust)
 }
 
 void FCell::UpdateFlow(double dt) 
-
 {
 
 	//
@@ -412,7 +438,6 @@ void FCell::UpdateFlow(double dt)
 		power_load = 1.0;
 
 	//first we check the start_handle;
-	double thrust = 0.0;
 	double loadResistance = 0.0;
 	if (start_handle == -1) status = 2; //stopped
 	if (start_handle == 1)	status = 1; //starting
@@ -420,7 +445,7 @@ void FCell::UpdateFlow(double dt)
 	if ((purge_handle == 2) && (status == 0 || status == 3)) status = 4; //O2 purging;
 	if ((purge_handle == -1) && (status == 3 || status == 4)) status = 0; //no purging;
 
-	// stopping if colder than the critical temperature (300 �F)
+	// stopping if colder than the critical temperature (300 °F)
 	// counter is because of temperature fluctuation at high time accelerations
 	if (Temp < 422.0) {
 		tempTooLowCount++;
@@ -429,8 +454,14 @@ void FCell::UpdateFlow(double dt)
 			tempTooLowCount = 0;
 		}
 	} 
-	else {
+	else
+	{
 		tempTooLowCount = 0;
+
+		if(status == 2) //this will allow us to start if heating up for the first time from ambient temperature
+		{
+			status = 0;
+		}
 	}
 
 	switch (status) {
@@ -443,15 +474,12 @@ void FCell::UpdateFlow(double dt)
 		H2_flowPerSecond = 0;
 		O2_flowPerSecond = 0;
 
-		if (Temp > 300.0)
-			thermic((300.0 - Temp) * 0.1 * dt);
-
 		running = 1; //ie. not running
 		break;
 
-	case 1:// starting; is this even used? it almost doesnt make physical sense to have it
-		Reaction(dt, 1.0);
-		//status = 2; //don't do this, it makes the fuel cells stop
+	case 1:// starting; 
+		Reaction(dt);
+		//status = 2;
 		if (reaction > 0.96) {
 			status = 0; //started
 			start_handle = 2;
@@ -470,39 +498,78 @@ void FCell::UpdateFlow(double dt)
 	case 3: // O2 purging
 	case 4: // H2 purging
 	case 0: // normal running
-		//---- throttle of the fuel cell [0..1]
-		thrust = power_load / max_power;
 
-		// TSCH
-		// sprintf(oapiDebugString(), "thrust %f, log(1+clogg) %f clogg %f", thrust, log(1+clogg), clogg);
+		running = 0; //0 = running
+		
+		//coefficients for 5th order approximation of fuel cell performance, taken from:
+		//CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-10
+		double A = 0.023951368224792 * Temp + 25.4241562583015;
+		double B = 0.003480859912024 * Temp - 2.19986938582928;
+		double C = -0.0001779207513 * Temp + 0.104916556604259;
+		double D = 5.0656524872309E-06 * Temp - 0.002885372247954;
+		double E = -6.42229870072935E-08 * Temp + 3.58599071612147E-05;
+		double F = 3.02098031429142E-10 * Temp - 1.66275376548748E-07;
 
-		Volts = 31.0; //we are trying to get 31.0V (1V per cell)
+		loadResistance = 784.0 / (power_load); //<R_F>, 784 = (28.0V)^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
 
-		Reaction(dt, thrust);
-		running = 0;
-		Volts = Volts * min(1.0, reaction); //case of reaction problems :-)
-		if (reaction && Volts > 0.0)
+		//use an iterative procedure to solve for voltage and current. Should converge in ~2-3 steps, see https://gist.github.com/n7275/46a399d648721367a2bead3a6c2ae9ff
+		int NumSteps = 0;
+		while(NumSteps < 10) //10 is an absolute maximum to prevent hangs, and really should never get much higher than ~6-7 during extream transients
 		{
-			//make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
+			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
+			Amperes = Volts / loadResistance;
+			++NumSteps;
+			if ((abs(Volts - voltsLastTimestep) < 0.00001) && (abs(Amperes - ampsLastTimestep) < 0.00001))
+			{
+				break;
+			}
+			voltsLastTimestep = Volts;
+			ampsLastTimestep = Amperes;
+		}
+		
+		power_load = Amperes * Volts; //recalculate power_load
 
-			Amperes = (power_load / Volts)-(2.25*clogg);
-	
-			loadResistance = (power_load) / (Amperes*Amperes);
-			Volts = Volts * (loadResistance / (loadResistance + outputImpedance))-(5.2*clogg);
+		/*if (!strcmp(name, "FUELCELL1"))
+		{
+		sprintf(oapiDebugString(), "Steps to Converge: %d", NumSteps);
+		}*/
 
-			power_load = Amperes * Volts; //recalculate power_load
+		/*	voltage divider schematic
 			
-		}
-		else
+			V+		//zero load theoretical potential
+			|
+			|
+			<R_F>	//fuel cell internal resistance
+			|
+			|
+			V_t		//terminal voltage
+			|
+			|
+			<R_L>	//load resistance
+			|
+			|
+			V0		//ground
+
+		*/
+
+		/*if (!strcmp(name, "FUELCELL1"))
 		{
-			Amperes = 0;
-		}
+		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfA, Power %lfW", Amperes, Volts, power_load);
+		}*/
+
+		Reaction(dt);
 
 		break;
 	}
 
 	//condenser exhaust temperature is not simulated realistically at the moment
 	condenserTemp = (0.29 * Temp) + 209.0;
+
+	//Conductive heat transfer
+	const double ConductiveHeatTransferCoefficient = 0.1825267; // w/K, calculated from CSM/LM Spacecraft Operational Data Book, Volume I CSM Data Book, Part I Constraints and Performance. Figure 4.1-21
+	thermic((300.0 - Temp) * ConductiveHeatTransferCoefficient * dt); //assume that the ambient internal temperature of the spacecraft is 300K, ~80°F, eventually we need to simulate this too
+
+	//*********************
 
 	e_object::UpdateFlow(dt);
 }
@@ -1181,7 +1248,7 @@ Cooling::Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,dou
 void Cooling::AddObject(therm_obj *new_t, double lght) 
 
 {
-	if (nr_list < 6) {
+	if (nr_list < 16) {
 		list[nr_list] = new_t;
 		length[nr_list] = lght;
 		bypassed[nr_list] = false;
@@ -1193,8 +1260,8 @@ void Cooling::refresh(double dt)
 
 {
 	double throttle, heat_ex;
-	therm_obj* activelist[6];	//the list of not bypassed objects
-	double activelength[6];		//and their pipe length
+	therm_obj* activelist[16];	//the list of not bypassed objects
+	double activelength[16];		//and their pipe length
 	int nr_activelist = 0;
 
 	if (handle_min)
@@ -1235,23 +1302,28 @@ void Cooling::refresh(double dt)
 		}
 	}
 
-	if (pumping) { //time to do the rumba
-		if (SRC && SRC->Voltage() > SP_MIN_DCVOLTAGE) {
+	if (pumping) //time to do the rumba
+	{ 
+		if (SRC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
+		{
 		  SRC->DrawPower(65.0);
 
-		} else { //no power
+		}
+		else //no power
+		{ 
 		  pumping = 0;
 		  return;
 		} 
 
-		for (i = 0; i < nr_activelist - 1; i++) {
+		for (i = 0; i < nr_activelist - 1; i++)
+		{
 			heat_ex = (activelist[i+1]->Temp - activelist[i]->Temp) * activelength[i] * dt * isolation * throttle;
 			activelist[i]->thermic(heat_ex);
 			activelist[i+1]->thermic(-heat_ex);
 		}
-		heat_ex = (activelist[nr_activelist-1]->Temp - activelist[0]->Temp) * activelength[nr_activelist-1] * dt * isolation * throttle;
-		activelist[0]->thermic(heat_ex);
-		activelist[nr_activelist-1]->thermic(-heat_ex);
+
+		heat_ex = (activelist[0]->Temp - activelist[nr_activelist-1]->Temp) * activelength[0] * dt * isolation * throttle;
+		activelist[0]->thermic(-heat_ex);
 	}
 
 	// average temp except the first
@@ -1539,4 +1611,60 @@ void Pump::Save(FILEHANDLE scn) {
 
 	sprintf (cbuf, "%s %i %i %lf", name, h_pump, loaded, fan_cap);
 	oapiWriteScenario_string (scn, "    <PUMP> ", cbuf);
+}
+
+
+//------------------------------ Diode Class -----------------------------------
+Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double saturationCurrent)
+{
+	strcpy(name, i_name);
+	max_stage = 99;
+	SRC = i_src;
+
+	if (SRC && SRC->IsEnabled())
+	{
+		Volts = SRC->Voltage() - (kT_q*log((Amperes / Is) + 1));
+	}
+	Amperes = 0.0;
+	power_load = 0.0;
+
+	Is = saturationCurrent;
+	kT_q = (1.38064852E-23*NominalTemperature) / 1.60217662E-19;
+}
+
+double Diode::Current()
+{
+	if (SRC && SRC->IsEnabled() && power_load > 0.0)
+	{
+		Amperes = power_load / Volts;
+			return Amperes;
+	}
+
+	return 0.0;
+}
+
+double Diode::Voltage()
+{
+	if (SRC && SRC->IsEnabled())
+	{
+		Volts = SRC->Voltage() - (kT_q*log((Amperes+1) / Is));
+		return Volts;
+	}
+
+	return 0.0;
+}
+
+void Diode::Load(char *line)
+
+{
+	sscanf(line, "    <DIODE> %s", name);
+}
+
+void Diode::Save(FILEHANDLE scn)
+{
+
+	char cbuf[1000];
+
+	sprintf(cbuf, "%s", name);
+	oapiWriteScenario_string(scn, "    <DIODE> ", cbuf);
 }

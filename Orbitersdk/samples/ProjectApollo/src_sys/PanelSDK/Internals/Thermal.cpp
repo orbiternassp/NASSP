@@ -41,7 +41,7 @@ void therm_obj::thermic(double _en) {
 
 	energy += _en; //total energy, in joules to add or substract
 
-	Temp = energy / c / mass;
+	Temp = energy / (c * mass);
 }
 
 void therm_obj::SetTemp(double _t) { 
