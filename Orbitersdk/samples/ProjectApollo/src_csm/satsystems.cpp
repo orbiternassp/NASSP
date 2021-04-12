@@ -166,6 +166,10 @@ void Saturn::SystemsInit() {
 	EntryBatteryB = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_B");
 	EntryBatteryC = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_C");
 
+	DiodeBatA = (Diode *)Panelsdk.GetPointerByString("ELECTRIC:DIODE_BAT_A");
+	DiodeBatB = (Diode *)Panelsdk.GetPointerByString("ELECTRIC:DIODE_BAT_B");
+	DiodeBatC = (Diode *)Panelsdk.GetPointerByString("ELECTRIC:DIODE_BAT_C");
+
 	//
 	// Wire battery buses to batteries.
 	//
@@ -743,12 +747,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_AUTO;
 				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_AUTO;
 
-				// Reduce fuel cell cooling power because of low fuel cell load
-				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 2.0;
-				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 2.0;
-				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 2.0;
-				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:RAD") = 2.0;
-
 				// 
 				// Event handling.
 				//
@@ -860,12 +858,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_OFF;
 
-					// Set fuel cell cooling power to normal
-					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 6.8;
-					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 6.8;
-					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 6.8;
-					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:RAD") = 6.8;
-
 					// Next state
 					systemsState = SATSYSTEMS_GSECONNECTED_2;
 					lastSystemsMissionTime = MissionTime; 
@@ -963,6 +955,22 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
 
 #ifdef _DEBUG
+
+		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",
+		FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,
+		FuelCellCooling[0]->coolant_temp, FuelCellCooling[1]->coolant_temp, FuelCellCooling[2]->coolant_temp,
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR5:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR6:TEMP"),
+		*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR7:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR8:TEMP"));*/
+
+		/*fprintf(PanelsdkLogFile, "%0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f %0.5f\n",
+			simt,
+			FuelCells[0]->Temp, FuelCells[1]->Temp, FuelCells[2]->Temp,
+			FuelCellCooling[0]->coolant_temp, FuelCellCooling[1]->coolant_temp, FuelCellCooling[2]->coolant_temp,
+			*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:TEMP"),
+			*(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:TEMP"), *(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:TEMP"));
+		fflush(PanelsdkLogFile);*/
 
 /*		sprintf(oapiDebugString(), "Bus A %3.1fA/%3.1fV, Bus B %3.1fA/%3.1fV, Batt A %3.1fV/%3.1fA/%.3f, Batt B %3.1fV/%.3f Batt C %3.1fV/%.3f Charg %2.1fV/%3.1fA FC1 %3.1fV/%3.1fA", 
 			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
@@ -1366,7 +1374,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		*massH2FC1M, *tempH2FC1M, *pressH2FC1M * 0.000145038);
 */
 
-/*	fprintf(PanelsdkLogFile, "%f H2T1-m %.2f T %.1f p %.1f H2T2-m %.2f T %.1f p %.1f H2FCM-m %.2f T %.1f p %.1f O2T1-m %.2f T %.2f p %.2f O2T2-m %.2f T %.2f p %.2f O2SM-m %.2f T %.2f p %5.2f O2MAIN-m %.2f T %.2f p %5.2f Cabin-m %.2f T %.2f p %.2f CO2 PP %.2f Co2Rate %f Rad-T %.2f\n", 
+/*fprintf(PanelsdkLogFile, "%f H2T1-m %.2f T %.1f p %.1f H2T2-m %.2f T %.1f p %.1f H2FCM-m %.2f T %.1f p %.1f O2T1-m %.2f T %.2f p %.2f O2T2-m %.2f T %.2f p %.2f O2SM-m %.2f T %.2f p %5.2f O2MAIN-m %.2f T %.2f p %5.2f Cabin-m %.2f T %.2f p %.2f CO2 PP %.2f Co2Rate %f Rad-T %.2f\n", 
 		simt, 
 		*massH2Tank1 / 1000.0, *tempH2Tank1, *pressH2Tank1 * 0.000145038,
 		*massH2Tank2 / 1000.0, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
@@ -1461,17 +1469,6 @@ void Saturn::SystemsInternalTimestep(double simdt)
 	//FuelCellH2Manifold[1]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
 	//FuelCellH2Manifold[2]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
 
-	if (this->systemsState <= SATSYSTEMS_GSECONNECTED_1)
-	{
-		//need better solution
-
-		//keep the fuel cells from cooling prior to launch.
-		//this should be done by GSE, not this hacky piece of code
-
-		FuelCells[0]->SetTemp(475.0);
-		FuelCells[1]->SetTemp(475.0);
-		FuelCells[2]->SetTemp(475.0);
-	}
 }
 
 void Saturn::JoystickTimestep()
@@ -2623,15 +2620,17 @@ void Saturn::ClearEngineIndicator(int i)
 
 void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed)
 {
-	// Bypass Radiator 2 and 4
-	FuelCellCooling[fuelcell - 1]->bypassed[2] = bypassed;
-	FuelCellCooling[fuelcell - 1]->bypassed[4] = bypassed;
+
+	// Bypass Radiator 6-8
+	FuelCellCooling[fuelcell - 1]->bypassed[6] = bypassed;
+	FuelCellCooling[fuelcell - 1]->bypassed[7] = bypassed;
+	FuelCellCooling[fuelcell - 1]->bypassed[8] = bypassed;
 }
 
 bool Saturn::FuelCellCoolingBypassed(int fuelcell)
 {
-	// It's bypassed when Radiator 2 is bypassed
-	return FuelCellCooling[fuelcell - 1]->bypassed[2];
+	// It's bypassed when Radiator 6 is bypassed
+	return FuelCellCooling[fuelcell - 1]->bypassed[6];
 }
 
 //
@@ -3457,20 +3456,20 @@ void Saturn::GetBatteryStatus( BatteryStatus &bs )
 
 	if ( EntryBatteryA ) 
 	{
-		bs.BatteryAVoltage = EntryBatteryA->Voltage();
-		bs.BatteryACurrent = EntryBatteryA->Current();
+		bs.BatteryAVoltage = DiodeBatA->Voltage();
+		bs.BatteryACurrent = DiodeBatA->Current();
 	}
 	
 	if ( EntryBatteryB ) 
 	{
-		bs.BatteryBVoltage = EntryBatteryB->Voltage();
-		bs.BatteryBCurrent = EntryBatteryB->Current();
+		bs.BatteryBVoltage = DiodeBatB->Voltage();
+		bs.BatteryBCurrent = DiodeBatB->Current();
 	}
 	
 	if ( EntryBatteryC ) 
 	{
-		bs.BatteryCVoltage = EntryBatteryC->Voltage();
-		bs.BatteryCCurrent = EntryBatteryC->Current();
+		bs.BatteryCVoltage = DiodeBatC->Voltage();
+		bs.BatteryCCurrent = DiodeBatC->Current();
 	}
 }
 

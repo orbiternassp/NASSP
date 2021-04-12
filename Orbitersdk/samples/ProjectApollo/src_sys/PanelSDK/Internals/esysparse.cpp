@@ -150,6 +150,17 @@ void E_system::Create_Inverter(char *line)
 	ACInverter *new_dc = (ACInverter*) AddSystem(new ACInverter(name, voltage, SRC));
 }
 
+void E_system::Create_Diode(char *line)
+{
+	char name[100];
+	char source[100];
+	double NominalTemperature;
+	double SaturationCurrent;
+	sscanf(line + 7, "%s %s %lf %lf", name, source, &NominalTemperature, &SaturationCurrent);
+	e_object *Source = (e_object*)GetPointerByString(source);
+	AddSystem(new Diode(name, Source, NominalTemperature, SaturationCurrent));
+}
+
 void E_system::Create_Battery(char *line)
 {
 	char name[100];
@@ -218,6 +229,8 @@ void E_system::Build() {
 			Create_Boiler(line);
 		else if (Compare(line,"<PUMP>"))
 			Create_Pump(line);
+		else if (Compare(line, "<DIODE>"))
+			Create_Diode(line);
 
 		line =ReadConfigLine();
 	}

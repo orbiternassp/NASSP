@@ -191,6 +191,7 @@ class E_system : public ship_system {
 	void Create_Boiler(char *line);
 	void Create_Pump(char *line);
 	void Create_Inverter(char *line);
+	void Create_Diode(char *line);
 
 public:
 	E_system();
@@ -229,6 +230,8 @@ public:
 	h_Valve *H2_SRC;	//source for H2
 	h_Valve *H20_waste;	//pointer to a waste tank
 
+	unsigned int numCells = 31;
+
 	double H2_flow, O2_flow, H2_flowPerSecond, O2_flowPerSecond;
 	h_volume h2o_volume;
 
@@ -243,6 +246,8 @@ public:
 	double condenserTemp;	// condenser exhaust temp, only for display
 	int tempTooLowCount; 
 	double outputImpedance;
+	double voltsLastTimestep;
+	double ampsLastTimestep;
 
 	double H2_clogging;
 	double O2_clogging;
@@ -257,7 +262,7 @@ public:
 	void DrawPower(double watts);
 	void PUNLOAD(double watts);
 	void refresh(double dt);
-	void Reaction(double dt, double thrust);
+	void Reaction(double dt);
 	void Clogging(double dt);
 	void Load(char *line);
 	void Save(FILEHANDLE scn);
@@ -400,9 +405,9 @@ class Cooling: public e_object {
 public:
 	Cooling(char *i_name,int i_pump,e_object *i_SRC,double thermal_prop,double min_t,double max_t);
 	~Cooling();
-	therm_obj* list[6];	//the list of objects
-	double length[6];	//and their pipe length
-	bool bypassed[6];	// and are they bypassed 
+	therm_obj* list[16];	//the list of objects
+	double length[16];	//and their pipe length
+	bool bypassed[16];	// and are they bypassed 
 	int nr_list;
 	double coolant_temp;
 	double isolation;
@@ -568,6 +573,23 @@ public:
 	void SetPumpOn()   {h_pump = -1; };
 	void SetPumpOff()  {h_pump =  0; };
 	void SetPumpAuto() {h_pump =  1; };
+};
+
+///
+/// \ingroup PanelSDK
+/// The diode simulation class. Applicable to DC systems only
+///
+class Diode : public e_object {
+public:
+	Diode(char *i_name, e_object *i_src, double NominalTemperature, double saturationCurrent); //name, source, Kelvens, Amperes
+	double Voltage();
+	double Current();
+
+	void Load(char *line);
+	void Save(FILEHANDLE scn);
+protected:
+	double Is; //Saturation Current
+	double kT_q; //Thermal Voltage. Currently statatic, as diode temperature is static.
 };
 
 #endif
