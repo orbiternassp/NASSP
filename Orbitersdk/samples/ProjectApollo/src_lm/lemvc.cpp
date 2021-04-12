@@ -384,7 +384,7 @@ const VECTOR3 Sw_ActOvrdLmpLocation = { 0.5787, 0.1753, 0.5402 };
 const VECTOR3 Rot_Canister1Location = { 0.3077, 0.1679, 0.1246 };
 const VECTOR3 Rot_Canister2Location = { 0.3105, 0.2269, -0.1261 };
 const VECTOR3 Rot_DesH2OLocation = { 0.4426, -0.1245, 0.6489 };
-const VECTOR3 Rot_LGCLocation = { 0.2639, -0.2183, 0.6220 };
+const VECTOR3 Rot_LGCLocation = { 0.2574, -0.2249, 0.6260 };
 const VECTOR3 Rot_PriEvapFlow1Location = { 0.4581, -0.2074, 0.6538 };
 const VECTOR3 Rot_PriEvapFlow2Location = { 0.4646, -0.0502, 0.6359 };
 const VECTOR3 Rot_SecEvapFlowLocation = { 0.5511, -0.0439, 0.6348 };
@@ -410,7 +410,7 @@ const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
 // Subtracted from total material count to find L01 location.
-const int mat_L01 = 50;
+const int mat_L01 = 53;
 
 void LEM::JostleViewpoint(double amount)
 
