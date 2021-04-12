@@ -244,12 +244,14 @@ class SaturnSuitPressMeter : public SaturnCabinMeter {
 public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
 };
 
 class SaturnCabinPressMeter : public SaturnCabinMeter {
 public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
 };
 
 class SaturnPartPressCO2Meter : public SaturnCabinMeter {
