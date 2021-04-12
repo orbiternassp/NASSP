@@ -534,6 +534,17 @@ void SaturnSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 		oapiBlt(drawSurface, NeedleSurface,  101, (53 - (int)((v - 6.0) / 10.0 * 45.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 }
 
+void SaturnSuitPressMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
+
+	double v = GetDisplayValue();
+
+	if (v < 6.0) {
+		OurVessel->SetAnimation(anim_switch, v / 11.0);
+	}
+	else {
+		OurVessel->SetAnimation(anim_switch, (v / 22.0) + (3.0 / 11.0));
+	}
+}
 
 double SaturnCabinPressMeter::QueryValue()
 {
@@ -548,6 +559,17 @@ void SaturnCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 		oapiBlt(drawSurface, NeedleSurface,  153, (53 - (int)((v - 6.0) / 10.0 * 45.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
+void SaturnCabinPressMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
+
+	double v = GetDisplayValue();
+
+	if (v < 6.0) {
+		OurVessel->SetAnimation(anim_switch, v / 11.0);
+	}
+	else {
+		OurVessel->SetAnimation(anim_switch, (v / 22.0) + (3.0 / 11.0));
+	}
+}
 
 double SaturnPartPressCO2Meter::QueryValue()
 {
