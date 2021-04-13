@@ -682,15 +682,15 @@ void LEM::SystemsInit()
 	CabinRepressValve.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
 		&ECS_CABIN_REPRESS_CB, &CabinRepressValveSwitch, &PressRegAValve, &PressRegBValve);
 	CDRIsolValve.Init(this, &CDRSuitIsolValve, &CDRActuatorOvrd);
-	LMPIsolValve.Init(this, &LMPSuitIsolValve, &LMPActuatorOvrd);
+	//LMPIsolValve.Init(this, &LMPSuitIsolValve, &LMPActuatorOvrd);
 	SuitCircuitPressureRegulatorA.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegAValve);
 	SuitCircuitPressureRegulatorB.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGBOUT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegBValve);
-	OverheadHatch.Init(this, &UpperHatchHandle);
+	OverheadHatch.Init(this, &UpperHatchHandle, &UpperHatchReliefValve);
 	OVHDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"),
 		&UpperHatchReliefValve, &OverheadHatch);
-	ForwardHatch.Init(this, &ForwardHatchHandle);
+	ForwardHatch.Init(this, &ForwardHatchHandle, &ForwardHatchReliefValve);
 	FWDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINFWDHATCHVALVE"),
 		&ForwardHatchReliefValve, &ForwardHatch);
 	SuitCircuitReliefValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE"),
@@ -1479,8 +1479,38 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	rga.Timestep(simdt);
 	ordeal.Timestep(simdt);
 	mechanicalAccelerometer.Timestep(simdt);
+
+	//Move this to panel code or wherever
+	VECTOR3 attitude;
+	if (AttitudeMonSwitch.IsUp())	//PGNS
+	{
+		attitude = gasta.GetTotalAttitude();
+	}
+	else							//AGS
+	{
+		attitude = aea.GetTotalAttitude();
+	}
+
+	// ORDEAL
+	attitude.y += ordeal.GetFDAI1PitchAngle();
+	if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+	fdaiLeft.SetAttitude(attitude);
 	fdaiLeft.Timestep(MissionTime, simdt);
+
+	if (RightAttitudeMonSwitch.IsUp())	//PGNS
+	{
+		attitude = gasta.GetTotalAttitude();
+	}
+	else							//AGS
+	{
+		attitude = aea.GetTotalAttitude();
+	}
+	// ORDEAL
+	attitude.y += ordeal.GetFDAI2PitchAngle();
+	if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+	fdaiRight.SetAttitude(attitude);
 	fdaiRight.Timestep(MissionTime, simdt);
+
 	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
 	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);

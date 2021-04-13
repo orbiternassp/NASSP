@@ -314,3 +314,41 @@ struct EMSMISSInputTable
 	unsigned IgnoreManueverNumber = 10000U;
 	EMSMISSAuxOutputTable NIAuxOutputTable;
 };
+
+struct RMMYNIInputTable
+{
+	VECTOR3 R0, V0;
+
+	double lat_T, lng_T;
+	//Backup mode G-level
+	double g_c_BU = 0.05;
+	//G&N mode G-level
+	double g_c_GN = 0.05;
+	double LAD = 0.27;
+	double LOD = 0.207;
+	double CGBIAS = 0.0;
+	//Initial bank angle for G&N simulation
+	double C10 = 0.0;
+	double CMWT;
+	double H_EMS = -1.0;
+	//Mode: 1 = Zero lift, 2 = Max Lift, 3 = G&N, 4 = Bank angle - time to reverse bank angle, 5 = Constant bank angle, 6 = Constant bank to G, then roll, 7 = Bank angle to G-level then maximum lift
+	//8 = Bank angle to a G-level then bank angle-time to reverse bank angle, 9 = Bank angle to a G-level then another bank angle to impact prediction, 10 = constant G
+	int KSWCH;
+	//Initial reentry bank angle
+	double K1;
+	//Second bank angle to be flown after g = g_c
+	double K2;
+	//Desired constant g level (m/s^2)
+	double D0 = 4.0*9.80665;
+	//Roll direction for the constant g mode
+	double RLDIR = 1.0;
+	//Time to reverse bank angle
+	double t_RB = 0.0;
+};
+
+struct RMMYNIOutputTable
+{
+	double lat_IP;
+	double lng_IP;
+	double t_10k;
+};

@@ -3329,7 +3329,9 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	PosS = _V(0,0,0);
 	PosXEZ = _V(0,0,0);
 	R_OG = _V(0, 0, 0);
+	Sbar = _V(0, 0, 0);
 	TargetVector = _V(0, 0, 0);
+	T_P = _V(0, 0, 0);
 	Vel_Nav = _V(0, 0, 0);
 	WV = _V(0,0,0);
 	XLunarAttitude = _V(0,0,0);
@@ -4515,7 +4517,9 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LVDC_PosS", PosS);
 	papiWriteScenario_vec(scn, "LVDC_PosXEZ", PosXEZ);
 	papiWriteScenario_vec(scn, "LVDC_R_OG", R_OG);
+	papiWriteScenario_vec(scn, "LVDC_Sbar", Sbar);
 	papiWriteScenario_vec(scn, "LVDC_TargetVector", TargetVector);
+	papiWriteScenario_vec(scn, "LVDC_T_P", T_P);
 	papiWriteScenario_vec(scn, "LVDC_Vel_Nav", Vel_Nav);
 	papiWriteScenario_vec(scn, "LVDC_WV", WV);
 	papiWriteScenario_vec(scn, "LVDC_XLunarAttitude", XLunarAttitude);
@@ -5284,7 +5288,9 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_vec(line, "LVDC_PosS", PosS);
 		papiReadScenario_vec(line, "LVDC_PosXEZ", PosXEZ);
 		papiReadScenario_vec(line, "LVDC_R_OG", R_OG);
+		papiReadScenario_vec(line, "LVDC_Sbar", Sbar);
 		papiReadScenario_vec(line, "LVDC_TargetVector", TargetVector);
+		papiReadScenario_vec(line, "LVDC_T_P", T_P);
 		papiReadScenario_vec(line, "LVDC_Vel_Nav", Vel_Nav);
 		papiReadScenario_vec(line, "LVDC_WV", WV);
 		papiReadScenario_vec(line, "LVDC_XLunarAttitude", XLunarAttitude);

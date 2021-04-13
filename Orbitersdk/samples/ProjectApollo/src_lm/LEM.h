@@ -450,6 +450,8 @@ public:
 		SRF_INDICATORREDVC,
 		SRF_LEM_MASTERALARMVC,
 		SRF_DEDA_LIGHTSVC,
+		SRF_AOTFONT_VC,
+		SRF_ENGSTARTSTOP_VC,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -476,6 +478,7 @@ public:
 	void HideProbes();
 	void SetTrackLight();
 	void SetDockingLights();
+	void SetCOAS();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	int GetApolloNo() { return ApolloNo; }
 	UINT GetStage() { return stage; }
@@ -701,7 +704,6 @@ protected:
 	void SetPowerFailureLight(int m, bool state);
 	void SetStageSeqRelayLight(int m, bool state);
 	void InitFDAI(UINT mesh);
-	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	// LM touchdown points
 	// mass in kg, ro1 (distance from center of the middle points), ro2 (distance from center of footpad points), tdph (height of footpad points),
@@ -1219,9 +1221,10 @@ protected:
 	ThumbwheelSwitch CDRAudICSVol;
 	ThumbwheelSwitch CDRAudMasterVol;
 	ThumbwheelSwitch CDRAudVOXSens;
-	ThreePosSwitch CDRCOASSwitch;
+	CDRCOASPowerSwitch CDRCOASSwitch;
 
 	bool COASswitch;
+	int COASreticlevisible;   // 0 = OFF  1 = FWD  2 = OVHD
 
 	//////////////////
 	// LEM panel 14 //
@@ -1531,9 +1534,17 @@ protected:
 	int CDRinPLSS;
 	int LMPinPLSS;
 
-#define LMVIEW_CDR		0
-#define LMVIEW_LMP		1
-#define LMVIEW_LPD		3
+#define LMVIEW_CDR		 0
+#define LMVIEW_LMP		 1
+#define LMVIEW_LPD		 2
+#define LMVIEW_DSKY		 3
+#define LMVIEW_CBLEFT    4
+#define LMVIEW_CBRIGHT   5
+#define LMVIEW_AOT		 6
+#define LMVIEW_FWDHATCH	 7
+#define LMVIEW_OVHDHATCH 8
+#define LMVIEW_ECS		 9
+#define LMVIEW_ECS2		 10
 
 #define VIEWANGLE 30
 
@@ -2015,6 +2026,7 @@ protected:
 	friend class LEM_LCA;
 	friend class LEM_PFIRA;
 	friend class LEMCrewStatus;
+	friend class CDRCOASPowerSwitch;
 
 	friend class ApolloRTCCMFD;
 	friend class ARCore;

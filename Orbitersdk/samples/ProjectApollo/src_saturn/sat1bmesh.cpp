@@ -449,6 +449,9 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 		seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 		SetVCSeatsMesh();
+		coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+		coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+		SetCOASMesh();
 
 		//
 		// Don't Forget the Hatch

@@ -846,6 +846,9 @@ void SaturnV::SetThirdStageMesh (double offset)
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
+	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
+	SetCOASMesh();
 
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);

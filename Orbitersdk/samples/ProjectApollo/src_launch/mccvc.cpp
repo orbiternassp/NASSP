@@ -133,8 +133,7 @@ const VECTOR3 MFD_2_BUTTONPOS[15] = {
 
 void MCCVessel::LoadVC() 
 {
-	hMCCVC = oapiLoadMeshGlobal("ProjectApollo/MCC_VC");
-	int vcidx = AddMesh(hMCCVC, &_V(0, 0, 0));
+	int vcidx = AddMesh(hMCCVC);
 	SetMeshVisibilityMode(vcidx, MESHVIS_VC);
 }
 
@@ -349,4 +348,9 @@ void MCCVessel::clbkMFDMode(int mfd, int mode)
 		oapiVCTriggerRedrawArea(-1, AID_MFD_2_BUTTONS);
 		break;
 	}
+}
+
+void LoadMeshes()
+{
+	hMCCVC = oapiLoadMeshGlobal("ProjectApollo/MCC_VC");
 }

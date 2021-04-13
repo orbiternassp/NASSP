@@ -39,6 +39,8 @@
 
 #include "saturn.h"
 
+#include "CM_VC_Resource.h"
+
 
 CabinPressureRegulator::CabinPressureRegulator() {
 
@@ -870,6 +872,13 @@ SaturnSideHatch::SaturnSideHatch(Sound &opensound, Sound &closesound) :
 	OpenSound(opensound), CloseSound(closesound) {
 	open = true;	// Hatch open at prelaunch
 	toggle = 0;
+
+	sidehatch_state.SetState(1.0, 0.0);
+	sidehatch_state.SetOperatingSpeed(0.2);
+	anim_SideHatchVC = -1;
+	anim_gearboxsel = -1;
+	anim_actuatorsel = -1;
+	anim_ventvalve = -1;
 }
 
 SaturnSideHatch::~SaturnSideHatch() {
@@ -891,6 +900,7 @@ void SaturnSideHatch::Toggle(bool enforce) {
 				open = true;
 				toggle = 2;	// Orbiter 2006P1 is crashing sometimes if this is set to a smaller value
 				saturn->SetSideHatchMesh();
+				sidehatch_state.Open();
 				// Set switches on the open panel
 				actuatorHandleSelectorOpen->SetState(0);
 				OpenSound.play();
@@ -900,6 +910,7 @@ void SaturnSideHatch::Toggle(bool enforce) {
 				open = false;
 				toggle = 2;	// Orbiter 2006P1 is crashing sometimes if this is set to a smaller value
 				saturn->SetSideHatchMesh();
+				sidehatch_state.Close();
 				// Set switches on the open panel
 				actuatorHandleSelector->SetState(2);
 				gearBoxSelector->SetState(2);
@@ -917,6 +928,41 @@ void SaturnSideHatch::Timestep(double simdt) {
 			saturn->PanelRefreshSideHatch();
 		}
 	}
+
+	if (sidehatch_state.Process(simdt)) {
+		saturn->SetAnimation(anim_SideHatchVC, sidehatch_state.State());
+	}
+
+	int act_state = 0;
+	double vent_state = (double)ventValveRotary->GetState();
+
+	if (!open) {
+		act_state = actuatorHandleSelector->GetState();
+	} else {
+		act_state = actuatorHandleSelectorOpen->GetState();
+	}
+
+	if (gearBoxSelector->GetState() == 2) {
+		saturn->SetAnimation(anim_gearboxsel, 1.0);
+
+	} else if (gearBoxSelector->GetState() == 1) {
+		saturn->SetAnimation(anim_gearboxsel, 0.5);
+
+	} else {
+		saturn->SetAnimation(anim_gearboxsel, 0.0);
+	}
+
+	if (act_state == 2) {
+		saturn->SetAnimation(anim_actuatorsel, 1.0);
+
+	} else if (act_state == 1) {
+		saturn->SetAnimation(anim_actuatorsel, 0.5);
+
+	} else {
+		saturn->SetAnimation(anim_actuatorsel, 0.0);
+	}
+
+	saturn->SetAnimation(anim_ventvalve, vent_state / 7);
 }
 
 void SaturnSideHatch::SwitchToggled(PanelSwitchItem *s) {
@@ -926,19 +972,57 @@ void SaturnSideHatch::SwitchToggled(PanelSwitchItem *s) {
 void SaturnSideHatch::LoadState(char *line) {
 
 	int i1;
+	double a, b;
 
-	sscanf(line + 9, "%d %d", &i1, &toggle);
+	sscanf(line + 9, "%d %d %lf %lf", &i1, &toggle, &a, &b);
 	open = (i1 != 0);
+	sidehatch_state.SetState(a, b);
 }
 
 void SaturnSideHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i %i", (open ? 1 : 0), toggle); 
+	sprintf(buffer, "%i %i %lf %lf", (open ? 1 : 0), toggle, sidehatch_state.State(), sidehatch_state.Speed());
 	oapiWriteScenario_string(scn, "SIDEHATCH", buffer);
 }
+void SaturnSideHatch::DefineAnimationsVC(UINT idx)
+{
+	// Side Hatch Animations
+	ANIMATIONCOMPONENT_HANDLE ach_SideHatchVC, ach_gearboxsel, ach_actuatorsel, ach_ventvalve;
 
+	const VECTOR3 SideHatch_HandleRot1Location = { 0.3076, 1.3543, -0.1137 };
+	const VECTOR3 SideHatch_HandleRot2Location = { 0.2348, 1.2453, 0.0608 };
+	const VECTOR3 SideHatch_VentValveLocation = { -0.2637, 1.1932, 0.1462 };
+	const VECTOR3 sidehatch_gearbox_axis = { -0.160457905417272, -0.797020760042779, -0.582246656194721 };
+	const VECTOR3 sidehatch_ventvalve_axis = { 0.080192220002342, -0.837079540734271, -0.541171923084705 };
+
+	static UINT	meshgroup_SideHatchVC[7] = { VC_GRP_SideHatch_1, VC_GRP_SideHatch_2, VC_GRP_SideHatch_3, VC_GRP_SideHatch_4, VC_GRP_SideHatch_5, VC_GRP_SideHatch_6,
+		VC_GRP_SideHatch_7};
+	static UINT	meshgroup_gearboxsel = { VC_GRP_SideHatch_HandleRot1 };
+	static UINT	meshgroup_actuatorsel = { VC_GRP_SideHatch_HandleRot2 };
+	static UINT	meshgroup_ventvalve = { VC_GRP_SideHatch_VentValve };
+
+	static MGROUP_ROTATE mgt_SideHatchVC(idx, meshgroup_SideHatchVC, 7, _V(-0.427397, 1.06886, 0.440263), _V(-0.187232813439751, 0.501366307175263, -0.844734099939665), (float)(-90.0*RAD));
+	static MGROUP_ROTATE mgt_gearboxsel(idx, &meshgroup_gearboxsel, 1, SideHatch_HandleRot1Location, sidehatch_gearbox_axis, (float)(RAD * 60));
+	static MGROUP_ROTATE mgt_actuatorsel(idx, &meshgroup_actuatorsel, 1, SideHatch_HandleRot2Location, sidehatch_gearbox_axis, (float)(RAD * 60));
+	static MGROUP_ROTATE mgt_ventvalve(idx, &meshgroup_ventvalve, 1, SideHatch_VentValveLocation, sidehatch_ventvalve_axis, (float)(RAD * 180));
+
+	anim_SideHatchVC = saturn->CreateAnimation(0.0);
+	anim_gearboxsel = saturn->CreateAnimation(0.5);
+	anim_actuatorsel = saturn->CreateAnimation(0.5);
+	anim_ventvalve = saturn->CreateAnimation(1.0);
+
+	ach_SideHatchVC = saturn->AddAnimationComponent(anim_SideHatchVC, 0.0f, 1.0f, &mgt_SideHatchVC);
+	ach_gearboxsel = saturn->AddAnimationComponent(anim_gearboxsel, 0.0f, 1.0f, &mgt_gearboxsel, ach_SideHatchVC);
+	ach_actuatorsel = saturn->AddAnimationComponent(anim_actuatorsel, 0.0f, 1.0f, &mgt_actuatorsel, ach_SideHatchVC);
+	ach_ventvalve = saturn->AddAnimationComponent(anim_ventvalve, 0.0f, 1.0f, &mgt_ventvalve, ach_SideHatchVC);
+
+	saturn->SetAnimation(anim_SideHatchVC, sidehatch_state.State());
+	saturn->SetAnimation(anim_gearboxsel, 0.5);
+	saturn->SetAnimation(anim_actuatorsel, 0.5);
+	saturn->SetAnimation(anim_ventvalve, 0.5);
+}
 
 SaturnWaterController::SaturnWaterController() {
 }
@@ -1289,6 +1373,9 @@ SaturnForwardHatch::SaturnForwardHatch(Sound &opensound, Sound &closesound) :
 	toggle = 0;
 	pipe = NULL;
 	saturn = NULL;
+
+	anim_FwdHatchVC = -1;
+	anim_pressequalvlv = -1;
 }
 
 SaturnForwardHatch::~SaturnForwardHatch()
@@ -1296,10 +1383,11 @@ SaturnForwardHatch::~SaturnForwardHatch()
 
 }
 
-void SaturnForwardHatch::Init(Saturn *s, h_Pipe *p)
+void SaturnForwardHatch::Init(Saturn *s, h_Pipe *p, RotationalSwitch *pev)
 {
 	saturn = s;
 	pipe = p;
+	pressureequalvalve = pev;
 }
 
 void SaturnForwardHatch::Toggle()
@@ -1315,6 +1403,7 @@ void SaturnForwardHatch::Toggle()
 				open = true;
 				toggle = 2;
 				OpenSound.play();
+				saturn->SetAnimation(anim_FwdHatchVC, 1.0);
 				saturn->SetFwdHatchMesh();
 				saturn->SetDockingProbeMesh(); // Hide docking probe mesh when CM forward hatch is open
 			}
@@ -1324,6 +1413,7 @@ void SaturnForwardHatch::Toggle()
 			open = false;
 			toggle = 2;
 			CloseSound.play();
+			saturn->SetAnimation(anim_FwdHatchVC, 0.0);
 			saturn->SetFwdHatchMesh();
 			saturn->SetDockingProbeMesh(); // Show docking probe mesh when CM forward hatch is closed
 		}
@@ -1338,6 +1428,9 @@ void SaturnForwardHatch::Timestep(double simdt) {
 			saturn->PanelRefreshForwardHatch();
 		}
 	}
+
+	double equalvalve_state = (double)pressureequalvalve->GetState();
+	saturn->SetAnimation(anim_pressequalvlv, equalvalve_state / 3);
 }
 
 void SaturnForwardHatch::LoadState(char *line) {
@@ -1354,6 +1447,28 @@ void SaturnForwardHatch::SaveState(FILEHANDLE scn) {
 
 	sprintf(buffer, "%i %i", (open ? 1 : 0), toggle);
 	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
+}
+
+void SaturnForwardHatch::DefineAnimationsVC(UINT idx)
+{
+	// Forward Hatch Animations
+	ANIMATIONCOMPONENT_HANDLE ach_FwdHatchVC, ach_pressequalvlv;
+	const VECTOR3 FwdHatch_Equal_ValveLocation = { 0.0011, -0.0000, 1.0773 };
+
+	static UINT	meshgroup_FwdHatchVC[2] = { VC_GRP_FwdHatch_01, VC_GRP_FwdHatch_02 };
+	static UINT	meshgroup_pressequalvalve = { VC_GRP_FwdHatch_Equal_Valve };
+
+	static MGROUP_TRANSLATE mgt_fwdhatch(idx, meshgroup_FwdHatchVC, 2, _V(1, 0, 0));
+	static MGROUP_ROTATE mgt_pressequalvalve(idx, &meshgroup_pressequalvalve, 1, FwdHatch_Equal_ValveLocation, _V(0, 0, -1), (float)(RAD * 90));
+
+	anim_FwdHatchVC = saturn->CreateAnimation(0.0);
+	anim_pressequalvlv = saturn->CreateAnimation(0.5);
+
+	ach_FwdHatchVC = saturn->AddAnimationComponent(anim_FwdHatchVC, 0.0f, 1.0f, &mgt_fwdhatch);
+	ach_pressequalvlv = saturn->AddAnimationComponent(anim_pressequalvlv, 0.0f, 1.0f, &mgt_pressequalvalve, ach_FwdHatchVC);
+
+	saturn->SetAnimation(anim_FwdHatchVC, open);
+	saturn->SetAnimation(anim_pressequalvlv, 0.5);
 }
 
 SaturnPressureEqualizationValve::SaturnPressureEqualizationValve()

@@ -36,12 +36,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
-#include "../src_rtccmfd/TLMCC.h"
 #include "../src_rtccmfd/TLIGuidanceSim.h"
 #include "../src_rtccmfd/CSMLMGuidanceSim.h"
 #include "../src_rtccmfd/GeneralizedIterator.h"
-#include "../src_rtccmfd/CoastNumericalIntegrator.h"
 #include "../src_rtccmfd/EnckeIntegrator.h"
+#include "../src_rtccmfd/ReentryNumericalIntegrator.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -7042,6 +7041,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
 	SAVE_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
 	SAVE_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
+	SAVE_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
+	SAVE_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
 	SAVE_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
 	SAVE_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
 
@@ -7225,6 +7226,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_TLMAX", PZMCCPLN.TLMAX);
 		LOAD_DOUBLE("RTCC_TLCC_AZ_min", PZMCCPLN.AZ_min);
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
+		LOAD_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
+		LOAD_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
 		LOAD_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
 		LOAD_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
 
@@ -15122,7 +15125,7 @@ RTCC_PMMMCD_14_2:
 	a3 = -SINP;
 	b1 = AL * COSY - SINY * COSR;
 	b2 = AL * SINY + COSY * COSR;
-	b3 = COSP * SINP;
+	b3 = COSP * SINR;
 	c1 = BE * COSY + SINY * SINR;
 	c2 = BE * SINY - COSY * SINR;
 	c3 = COSP * COSR;
@@ -31140,4 +31143,153 @@ bool RTCC::CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor)
 	KFactor = t_agc - t_aea;
 
 	return true;
+}
+
+void RTCC::RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out)
+{
+	ReentryNumericalIntegrator integ(this);
+	integ.Main(in, out);
+}
+
+void RTCC::RMMGIT(EphemerisData sv_EI, double lng_T)
+{
+	//sv_EI in ECT
+
+	RMMYNIInputTable in;
+	RMMYNIOutputTable out;
+	double lng_min, lng_max;
+
+	in.R0 = sv_EI.R;
+	in.V0 = sv_EI.V;
+	in.D0 = 2.0*9.80665;
+	in.K1 = 0.0;
+	in.K2 = 55.0*RAD;
+	in.KSWCH = 10;
+
+	RMMYNI(in, out);
+
+	lng_min = out.lng_IP;
+
+	in.D0 = 5.0*9.80665;
+
+	RMMYNI(in, out);
+
+	lng_max = out.lng_IP;
+}
+
+void RTCC::RMMATT(int opt, double Roll, double Pitch, double Yaw, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V)
+{
+	//opt: 1 = Att is LVLH, 2 = Att is IMU
+
+	/*VECTOR3 X_P, Y_P, Z_P;
+	double SINP, SINY, SINR, COSP, COSY, COSR;
+	double AL, BE, a1, a2, a3, b1, b2, b3, c1, c2, c3;
+
+	SINP = sin(Pitch);
+	SINY = sin(Yaw);
+	SINR = sin(Roll);
+	COSP = cos(Pitch);
+	COSY = cos(Yaw);
+	COSR = cos(Roll);
+
+	if (opt == 1)
+	{
+		Z_P = -unit(R);
+		Y_P = -unit(crossp(R, V));
+		X_P = crossp(Y_P, Z_P);
+
+		AL = SINP * SINR;
+		BE = SINP * COSR;
+		a1 = COSY * COSP;
+		a2 = SINY * COSP;
+		a3 = -SINP;
+		b1 = AL * COSY - SINY * COSR;
+		b2 = AL * SINY + COSY * COSR;
+		b3 = COSP * SINR;
+		c1 = BE * COSY + SINY * SINR;
+		c2 = BE * SINY - COSY * SINR;
+		c3 = COSP * COSR;
+	}
+	else
+	{
+		X_P = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
+		Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
+		Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
+
+		AL = COSP * COSY;
+		BE = SINP * SINY;
+		a1 = COSP * COSY;
+		a2 = SINY;
+		a3 = -SINP * COSY;
+		b1 = SINP * SINR - AL * COSR;
+		b2 = COSY * COSR;
+		b3 = COSP * SINR + BE * COSR;
+		c1 = SINP * COSR + AL * SINR;
+		c2 = -COSY * SINR;
+		c3 = COSP * COSR - BE * SINR;
+	}
+
+	VECTOR3 X_B, Y_B, Z_B, U_T;
+
+	X_B = X_P * a1 + Y_P * a2 + Z_P * a3;
+	Y_B = X_P * b1 + Y_P * b2 + Z_P * b3;
+	Z_B = X_P * c1 + Y_P * c2 + Z_P * c3;
+
+	double P_G = 0.0, Y_G = 0.0;
+	if (thruster == RTCC_ENGINETYPE_CSMSPS)
+	{
+		if (TrimIndicator == -1)
+		{
+			double T, WDOT;
+			GIMGBL(CSMWT, 0.0, P_G, Y_G, T, WDOT, ITC, IC, IA, IJ, D);
+		}
+		else
+		{
+			GetSystemGimbalAngles(RTCC_ENGINETYPE_CSMSPS, P_G, Y_G);
+		}
+		U_T = GLMRTV(X_B, P_G, 2, Y_G, 3);
+	}
+	else
+	{
+		U_T = X_B;
+	}
+
+	//Attitude in other coordinates
+	if (opt == 1)
+	{
+		Pitch2 = asin(dotp(X_P, X_B));
+		if (abs(Pitch2 - PI05) < 10e-8)
+		{
+			Roll2 = 0.0;
+			Yaw2 = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
+		}
+		else
+		{
+			Yaw2 = atan2(dotp(Z_P, X_B), dotp(X_P, X_B));
+			Roll2 = atan2(-dotp(Y_P, Z_B), dotp(Y_P, Y_B));
+		}
+	}
+	else
+	{
+		Z_P = unit(R);
+		Y_P = unit(crossp(V, R));
+		X_P = unit(crossp(Y_P, Z_P));
+		Pitch2 = asin(-dotp(Z_P, X_B));
+		if (abs(Pitch2 - PI05) < 10e-8)
+		{
+			Roll2 = 0.0;
+			Yaw2 = atan2(-dotp(X_P, X_B), dotp(Y_P, Y_B));
+		}
+		else
+		{
+			Yaw2 = atan2(dotp(Y_P, X_B), dotp(X_P, X_B));
+			Roll2 = atan2(dotp(X_P, Y_B), dotp(Z_P, Z_B));
+		}
+	}
+
+	//Retrofired preferred alignment
+	X_SM = -X_B;
+	Y_SM = Y_B;
+	Z_SM = -Z_B;
+	DesREFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);*/
 }
