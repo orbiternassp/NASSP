@@ -583,6 +583,9 @@ void LEM::SystemsInit()
 	SetPipeMaxFlow("HYDRAULIC:PRESSREGBOUT", 6.75 / LBH);
 	SetPipeMaxFlow("HYDRAULIC:SUITCIRCUITRELIEFVALVE", 7.8 / LBH);
 
+	//Cabin Fan Initialization  
+	SetPipeMaxFlow("HYDRAULIC:CABINFANPIPE", 300.0 / LBH);
+
 	//Primary Glycol Pipe Initialization   
 	//SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT1", 120.0 / LBH);
 	//SetPipeMaxFlow("HYDRAULIC:PRIMGLYPUMPMANIFOLDOUT2", 85.0 / LBH);
@@ -2069,7 +2072,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "AP %lf GP %lf PMP %lf HXCP %lf L1P %lf HXLP %lf L2P %lf HXHP %lf EIP %lf EOP %lf ACP %lf DBP %lf", *primglycolaccumpress* PSI, *primglycolpress*PSI, *glycolpumpmanifoldpress*PSI, *glycolsuitcoolpress*PSI, *primloop1press*PSI, *waterglycolhxpress*PSI, *primloop2press*PSI, *glycolsuitheatpress*PSI, *primevapinpress*PSI, *primevapoutpress*PSI, *ascbatglycolpress*PSI, *desbatglycolpress*PSI);
 	//sprintf(oapiDebugString(), "AM %lf HXCM %lf L1M %lf HXLM %lf L2M %lf HXHM %lf EIM %lf EOM %lf ACM %lf DBM %lf", *primglycolmass, *glycolsuitcoolmass, *primloop1mass, *waterglycolhxmass, *primloop2mass, *glycolsuitheatmass, *primevapinmass, *primevapoutmass, *ascbatglycolmass, *desbatglycolmass);
 	//sprintf(oapiDebugString(), "P1 %lf P2 %lf Reg1 %lf WGHX %lf SHX %lf SHXBP %lf", *Pump1OutFlow*LBH, *Pump2OutFlow*LBH, *primGlyReg1Flow*LBH, *waterGlyHXFlow*LBH, *suitHXGlyFlow*LBH, *suitHXGlyBypassFlow*LBH);
-	//sprintf(oapiDebugString(), "AcT %lf PMT %lf GCT %lf SCT %lf HXCP %lf L1 %lf HXT %lf L2 %lf GHT %lf SHT %lf HXHP %lf ETI %lf ETO %lf A %lf D %lf", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolpumpmanifoldtemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*waterglycolhxtemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*primevaptempin), KelvinToFahrenheit(*primevaptempout), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*desbatglycoltemp));
+	sprintf(oapiDebugString(), "AcT %lf PMT %lf GCT %lf SCT %lf HXCP %lf L1 %lf HXT %lf L2 %lf GHT %lf SHT %lf HXHP %lf ETI %lf ETO %lf A %lf D %lf", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolpumpmanifoldtemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*waterglycolhxtemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*primevaptempin), KelvinToFahrenheit(*primevaptempout), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*desbatglycoltemp));
 	
 	//sprintf(oapiDebugString(), "LCG %lf SEC %lf", LCGPump->Voltage(), SecGlyPump->Voltage());
 	//sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
