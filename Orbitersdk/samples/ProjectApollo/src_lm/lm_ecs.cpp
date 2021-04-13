@@ -144,8 +144,8 @@ void LEMCrewStatus::Timestep(double simdt) {
 		} else {
 		SuitTemperatureTime = 12 * 3600;
 	}
-	// **Disabled for now until cabin temperatures are more stable
-	/*if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
+
+	if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
 		if (TemperatureTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
@@ -156,7 +156,7 @@ void LEMCrewStatus::Timestep(double simdt) {
 		}
 	} else {
 		TemperatureTime = 12 * 3600;
-	}*/
+	}
 
 	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
 	if (lem->ecs.GetECSSensorCO2MMHg() > 10 && (lem->CrewInCabin->number > 0 || (lem->CDRSuited->number + lem->LMPSuited->number > 0))) {
@@ -1259,7 +1259,7 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	{
 		PressureSwitch = false;
 	}
-
+	
 	if (PressureSwitch && glycolRotary->GetState() == 1 && glycolPumpAutoTransferCB->IsPowered())
 	{
 		//To make this more stable with time acceleration and panel changes

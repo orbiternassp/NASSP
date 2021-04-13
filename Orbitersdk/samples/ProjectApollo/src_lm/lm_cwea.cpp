@@ -446,14 +446,14 @@ void LEM_CWEA::Timestep(double simdt) {
 		// the "bad" condition has to last for a few check counts.
 		if (lightlogic)
 		{
-			if (ECSFailureCount < 20) ECSFailureCount++;
+			if (ECSFailureCount < 1) ECSFailureCount++;
 		}
 		else
 		{
 			ECSFailureCount = 0;
 		}
 
-		if (lightlogic && ECSFailureCount >= 20)
+		if (lightlogic && ECSFailureCount >= 1)
 			SetLight(0, 7, 1);
 		else
 			SetLight(0, 7, 0);
