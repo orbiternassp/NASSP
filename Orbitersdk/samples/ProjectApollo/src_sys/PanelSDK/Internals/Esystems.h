@@ -235,8 +235,8 @@ public:
 	double H2_flow, O2_flow, H2_flowPerSecond, O2_flowPerSecond;
 	h_volume h2o_volume;
 
-    float max_power;	//in watts;
-	double clogg;		//not used yet? need to purge the fcell
+    float max_power;		//in watts;
+	double cloggVoltageDrop; //voltage reduction due to impurity accumulation in reactant chambers
 	double reaction;		//is it taking place?
 	double reactant;
 	int start_handle;	//start, stop
@@ -252,8 +252,9 @@ public:
 	double H2_clogging;
 	double O2_clogging;
 
-	double H2_max_impurities;
-	double O2_max_impurities;
+	const double H2_max_impurities = 0.504048960000038; //nominal impurities after 24hrs at 30 amperes
+	const double O2_max_impurities = 0.666835200000667; //nominal impurities after 24hrs at 30 amperes
+	const double cloggVoltageReduction = 0.2;
 
 	double H2_purity;
 	double O2_purity;
