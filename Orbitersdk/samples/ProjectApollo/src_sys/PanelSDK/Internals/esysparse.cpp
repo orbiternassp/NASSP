@@ -270,7 +270,7 @@ void* FCell::GetComponent(char *component_name) {
 	if (Compare(component_name,"RUNNING"))
 		return (void*)&running;
 	if (Compare(component_name,"DPH"))
-		return (void*)&clogg;
+		return (void*)&cloggVoltageDrop;
 	if (Compare(component_name,"H2FLOW"))
 		return (void*)&H2_flowPerSecond;
 	if (Compare(component_name,"O2FLOW"))
