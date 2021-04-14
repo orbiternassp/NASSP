@@ -288,6 +288,16 @@ protected:
 	double t_2G;
 	//Time when specific g level was passed
 	double t_gc;
+	//Altitude
+	double alt;
+	//Wind relative velocity
+	VECTOR3 V_R;
+	//Wind relative speed
+	double v_R;
+	//Drogue and main chute deplyed?
+	bool droguedeployed, maindeployed;
+	//Time of drogue and main chute deployment
+	double t_drogue, t_main;
 
 	//Parameters for constant G and G&N
 	double VSAT;

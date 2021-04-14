@@ -1929,18 +1929,6 @@ struct PCMATCArray
 	bool h_pc_on;
 };
 
-struct REFSMMATData
-{
-	MATRIX3 REFSMMAT;
-	int ID = 0;
-	double GMT = 0.0;
-};
-
-struct REFSMMATLocker
-{
-	REFSMMATData data[12];
-};
-
 struct StationContact
 {
 	StationContact();
@@ -2628,7 +2616,8 @@ public:
 	//Mission Planning Print Load Module
 	void PMXSPT(std::string source, int n);
 	void PMXSPT(std::string source, std::vector<std::string> message);
-	void OnlinePrintTime(double TIME_SEC, std::string &time);
+	void OnlinePrintTimeDDHHMMSS(double TIME_SEC, std::string &time);
+	void OnlinePrintTimeHHHMMSS(double TIME_SEC, std::string &time);
 	void OnlinePrint(const std::string &source, const std::vector<std::string> &message);
 	//Mission Control Print Program
 	void GMSPRINT(std::string source, int n);
@@ -2713,6 +2702,8 @@ public:
 	void EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt);
 	void EMGSTGENName(int ID, char *Buffer);
 	int EMGSTGENCode(const char *Buffer);
+	//GOST REFSMMAT Maintenance
+	void FormatREFSMMATCode(int ID, int num, char *buff);
 	//Guidance Optics Support Table
 	void EMMGSTMP();
 	//Guidance Optics Display
@@ -2874,6 +2865,10 @@ public:
 	void RMSDBMP(EphemerisData sv, double CSMmass);
 	//Recovery Target Selection Display
 	void RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng);
+	//Reentry MED Decoder
+	int RMRMED(std::string med, std::vector<std::string> data);
+	//Spacecraft Setting Control
+	void RMSSCS(int entry);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -3918,6 +3913,7 @@ public:
 	RetrofireTransferTable RZRFTT;
 	ReentryConstraintsTable RZC1RCNS;
 	RetrofireDisplayParametersTable RZRFDP;
+	SpacecraftSettingTable RZDBSC1;
 
 	struct RetrofireMEDSaveTable
 	{
@@ -3928,6 +3924,7 @@ public:
 		double GETI = 0.0;
 		double lat_T = 0.0;
 		double lng_T = 0.0;
+		double MD = 1.0;
 
 		//Actually determined by leaving the latitude blank on the MED
 		int Type = 2;			//1 = Primary (lat and long), 2 = Contingency (long only)
@@ -4470,8 +4467,6 @@ private:
 	void PMDRPT();
 	//Two-Impulse Multiple Solution Display
 	void PMDTIMP();
-	//GOST REFSMMAT Maintenance
-	void FormatREFSMMATCode(int ID, int num, char *buff);
 	//GOST CSM/LM LCV Computation
 	void EMMGLCVP(int L, double gmt);
 	//Trajectory Update On-line Print

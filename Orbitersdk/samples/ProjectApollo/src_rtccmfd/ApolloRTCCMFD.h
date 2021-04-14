@@ -756,6 +756,10 @@ public:
 	void set_RecoveryTargetSelectionCalc(double get, double lng);
 	void menuSelectRecoveryTarget();
 	bool set_RecoveryTarget(int num);
+	void menuSaveDODREFSMMAT();
+	void menuMakeDODREFSMMATCurrent();
+	void menuSetRetrofireMissDistance();
+	bool set_RetrofireMissDistance(double val);
 
 protected:
 	oapi::Font *font;

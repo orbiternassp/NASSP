@@ -99,7 +99,7 @@ protected:
 	//Retrofire Convergence
 	void RMMDBN(int entry);
 	//Thrust Direction and Body Attitude Routine
-	void RMMATT(int entry, int opt, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T);
+	void RMMATT(int entry, int opt, bool calcDesired, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T, VECTOR3 &OtherAtt);
 	//Retrofire Output Control
 	void RMSTTF();
 	//Retrofire On-Line Printing
@@ -113,10 +113,18 @@ protected:
 	double lat_T;
 	double lng_T;
 	double CSMmass;
-	MATRIX3 REFSMMAT;
+	int refsid;
+	REFSMMATData refsdata;
+	int Thruster;
 	double SQMU;
 	double F, mdot, DVBURN;
 	VECTOR3 U_T;
+	//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
+	int BurnMode;
+	//-1 = compute, 1 = use system parameters
+	int GimbalIndicator = -1;
+	//Ullage time
+	double dt_ullage;
 	//Gradient of DV vs. flight path angle for V, gamma targeting
 	double p_gam;
 	//Partials
@@ -132,13 +140,19 @@ protected:
 	double MD_lng;
 	//Crossrange error in NM
 	double MD_lat;
+	//Total miss distance in NM
+	double MD_total;
+	//Maximum miss distance in NM
+	double MD_max;
 	//Main loop convergence flag
 	bool HASCONVERGED;
+	double dlng2, lng_old, GMTI_old, ddt;
 	//Thrust value in CMC
 	double TCMC;
-	//Burn attitude in LVLH coordinates
+	//Burn attitude in LVLH coordinates (thrust direction, not body)
 	VECTOR3 LVLHAtt;
-	VECTOR3 OtherAtt;
+	VECTOR3 BodyAtt;
+	VECTOR3 IMUAtt;
 	MATRIX3 DesREFSMMAT;
 	//Time to reverse bank angle
 	double t_RB;
@@ -149,7 +163,9 @@ protected:
 	//Variation of the time to reverse bank angle
 	const double DT_TRB = 10.0;
 	//Stored landing errors
-	double dlat_0, dlng_0, dlat_TRB, dlng_TRB, temp;
+	double dlat_0, dlng_0, dlat_TRB, dlng_TRB, partialprod;
+	//G-max and time of G-max
+	double gmax, gmt_gmax;
 
 	//State vector at burn initiation (ullage on)
 	EphemerisData sv_BI;
@@ -168,8 +184,12 @@ protected:
 	//Maximum lift landing point
 	double lat_ML, lng_ML;
 
+	//Area
+	double Area;
+
 	EphemerisDataTable ephem;
 	RTCCNIAuxOutputTable burnaux;
+	RMMYNIOutputTable reentryout;
 };
 
 class EarthEntry {

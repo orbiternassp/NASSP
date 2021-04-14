@@ -350,7 +350,9 @@ struct RMMYNIOutputTable
 {
 	double lat_IP = 0.0;
 	double lng_IP = 0.0;
-	double t_10k = 0.0;
+	double t_drogue = 0.0;
+	double t_main = 0.0;
+	double t_lc = 0.0;
 	double t_05g = 0.0;
 	double t_2g = 0.0;
 	double t_gc = 0.0;
@@ -464,12 +466,34 @@ struct RetrofireTransferTableEntry
 	int Thruster = 33;
 	double dt_ullage = 0.0;
 	bool UllageThrusterOption = true;
-	double lat_IP = 0.0;
-	double lng_IP = 0.0;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
 };
 
 struct RetrofireTransferTable
 {
 	RetrofireTransferTableEntry Primary;
 	RetrofireTransferTableEntry Manual;
+};
+
+struct SpacecraftSettingTable
+{
+	int Indicator = 1; //-1 = bad data, 0 = good data, 1 = no data
+	int EnryMode = 0;
+	int REFSMMATID = 0;
+	double GMTI = 0.0;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
+};
+
+struct REFSMMATData
+{
+	MATRIX3 REFSMMAT;
+	int ID = 0;
+	double GMT = 0.0;
+};
+
+struct REFSMMATLocker
+{
+	REFSMMATData data[12];
 };

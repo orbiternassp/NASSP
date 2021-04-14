@@ -1344,6 +1344,41 @@ bool ApolloRTCCMFD::set_RecoveryTarget(int num)
 	return false;
 }
 
+void ApolloRTCCMFD::menuSaveDODREFSMMAT()
+{
+	GeneralMEDRequest("G11,CSM,DOM;");
+}
+
+void ApolloRTCCMFD::menuMakeDODREFSMMATCurrent()
+{
+	GeneralMEDRequest("G00,CSM,DOD,CSM,CUR;");
+}
+
+void ApolloRTCCMFD::menuSetRetrofireMissDistance()
+{
+	bool RetrofireMissDistanceInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the maximum miss distance in NM (0-1500):", RetrofireMissDistanceInput, 0, 20, (void*)this);
+}
+
+bool RetrofireMissDistanceInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		return ((ApolloRTCCMFD*)data)->set_RetrofireMissDistance(atof(str));
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_RetrofireMissDistance(double val)
+{
+	if (val >= 0 && val <= 1500)
+	{
+		GC->rtcc->RZJCTTC.MD = val;
+		return true;
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()

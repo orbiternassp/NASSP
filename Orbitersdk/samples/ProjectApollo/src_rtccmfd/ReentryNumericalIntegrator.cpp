@@ -105,17 +105,21 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	t = t_prev = 0.0;
 	ISGNInit = false;
 	t_2G = 0.0;
+	droguedeployed = false;
+	maindeployed = false;
 
 	//Null output table
 	out.lat_IP = 0.0;
 	out.lng_IP = 0.0;
 	out.t_05g = 0.0;
 	out.t_2g = 0.0;
-	out.t_10k = 0.0;
+	out.t_lc = 0.0;
 	out.t_gc = 0.0;
+	out.t_drogue = 0.0;
+	out.t_main = 0.0;
 
 	double dt = 2.0;
-	double alt, v, fpa;
+	double v, fpa;
 
 	IEND = 0;
 
@@ -129,7 +133,10 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		R_prev = R_cur;
 		V_prev = V_cur;
 		t_prev = t;
-		GuidanceRoutine(R_cur, V_cur, dt);
+		if (droguedeployed == false)
+		{
+			GuidanceRoutine(R_cur, V_cur, dt);
+		}
 		RungeKuttaIntegrationRoutine(R_prev, V_prev, dt, R_cur, V_cur);
 		alt = length(R_cur) - OrbMech::R_Earth;
 		v = length(V_cur);
@@ -137,12 +144,26 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		CalculateDragAcceleration(R_cur, V_cur);
 		t += dt;
 
+		//Configuration changes
+		if (droguedeployed == false && alt < 23500.0*0.3048)
+		{
+			N = 80.0 / 5498.219913;
+			t_drogue = t;
+			droguedeployed = true;
+		}
+		if (maindeployed == false && alt < 10000.0*0.3048)
+		{
+			N = 140.0 / 5498.219913;
+			t_main = t;
+			maindeployed = true;
+		}
+
 		if (t > 90.0*60.0)
 		{
 			//Time limit
 			IEND = 1;
 		}
-		else if (alt < 10000.0*0.3048)
+		else if (alt < 0.0)//10000.0*0.3048)
 		{
 			//Impact
 			IEND = 2;
@@ -162,13 +183,13 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		double lat, lng;
 		OrbMech::latlong_from_r(R_cur, lat, lng);
 		lng -= OrbMech::w_Earth*t;
-		if (lng < 0)
+		while (lng < -PI)
 		{
 			lng += PI2;
 		}
 		out.lat_IP = lat;
 		out.lng_IP = lng;
-		out.t_10k = t;
+		out.t_lc = t;
 		if (K05G)
 		{
 			out.t_05g = t_05G;
@@ -225,8 +246,8 @@ VECTOR3 ReentryNumericalIntegrator::GravityAcceleration(VECTOR3 R)
 
 VECTOR3 ReentryNumericalIntegrator::LiftDragAcceleration(VECTOR3 R, VECTOR3 V, double &AOA)
 {
-	VECTOR3 A_D, A_L, V_R, p_apo, h_apo;
-	double alt, rho, spos, v_R, mach, C_L, C_D;
+	VECTOR3 A_D, A_L, p_apo, h_apo;
+	double alt, rho, spos, mach, C_L, C_D;
 
 	alt = length(R) - OrbMech::R_Earth;
 	pRTCC->GLFDEN(alt, rho, spos);
@@ -249,7 +270,22 @@ VECTOR3 ReentryNumericalIntegrator::LiftDragAcceleration(VECTOR3 R, VECTOR3 V, d
 
 void ReentryNumericalIntegrator::CalculateLiftDrag(double mach, double &CL, double &CD, double &AOA)
 {
-	pRTCC->RLMCLD(mach, 0, CD, CL, AOA);
+	if (maindeployed)
+	{
+		CL = 0.0;
+		CD = 1.5;
+		AOA = PI;
+	}
+	else if (droguedeployed)
+	{
+		CL = 0.0;
+		CD = 1.5;
+		AOA = PI;
+	}
+	else
+	{
+		pRTCC->RLMCLD(mach, 0, CD, CL, AOA);
+	}
 }
 
 void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt)

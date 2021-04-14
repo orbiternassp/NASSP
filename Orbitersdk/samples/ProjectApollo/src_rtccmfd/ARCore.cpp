@@ -3730,7 +3730,12 @@ int ARCore::subThread()
 				Result = 0;
 				break;
 			}
-			GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, CSMmass);
+			err = GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, CSMmass);
+			if (err)
+			{
+				Result = 0;
+				break;
+			}
 		}
 		else
 		{
@@ -3749,8 +3754,8 @@ int ARCore::subThread()
 		{
 			P30TIG = GC->rtcc->RZRFDP.GETI;
 			dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
-			EntryLatcor = GC->rtcc->RZRFTT.Manual.lat_IP;
-			EntryLngcor = GC->rtcc->RZRFTT.Manual.lng_IP;
+			EntryLatcor = GC->rtcc->RZRFTT.Manual.lat_T;
+			EntryLngcor = GC->rtcc->RZRFTT.Manual.lng_T;
 		}
 
 		Result = 0;

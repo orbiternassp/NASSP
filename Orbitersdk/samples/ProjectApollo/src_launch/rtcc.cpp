@@ -12957,9 +12957,9 @@ void RTCC::PMXSPT(std::string source, int n)
 		break;
 	case 36:
 		message.push_back("EXECUTION VECTOR FOR MANEUVER");
-		OnlinePrintTime(RTCCONLINEMON.DoubleBuffer[0], temp1);
+		OnlinePrintTimeDDHHMMSS(RTCCONLINEMON.DoubleBuffer[0], temp1);
 		message.push_back(RTCCONLINEMON.TextBuffer[0] + ", BEGIN TIME = " + temp1);
-		OnlinePrintTime(RTCCONLINEMON.DoubleBuffer[1], temp1);
+		OnlinePrintTimeDDHHMMSS(RTCCONLINEMON.DoubleBuffer[1], temp1);
 		sprintf_s(Buffer, "%.1lf", RTCCONLINEMON.DoubleBuffer[2]);
 		temp2.assign(Buffer);
 		sprintf_s(Buffer, "%.1lf", RTCCONLINEMON.DoubleBuffer[3]);
@@ -13204,7 +13204,7 @@ void RTCC::OnlinePrint(const std::string &source, const std::vector<std::string>
 	{
 		gmt = RTCCPresentTimeGMT();
 	}
-	OnlinePrintTime(gmt, temp);
+	OnlinePrintTimeDDHHMMSS(gmt, temp);
 	data.message.push_back(temp + " )" + source + "( " + message[0]);
 	for (unsigned i = 1;i < message.size();i++)
 	{
@@ -13288,7 +13288,7 @@ void RTCC::GMSPRINT(std::string source, std::vector<std::string> message)
 	OnlinePrint(source, message);
 }
 
-void RTCC::OnlinePrintTime(double TIME_SEC, std::string &time)
+void RTCC::OnlinePrintTimeDDHHMMSS(double TIME_SEC, std::string &time)
 {
 	char Buffer[128];
 	double days, hours, minutes, seconds;
@@ -13302,6 +13302,22 @@ void RTCC::OnlinePrintTime(double TIME_SEC, std::string &time)
 	seconds = TIME_SEC - 86400.0*days - 3600.0*hours - 60.0*minutes;
 
 	sprintf(Buffer, "%02.0lf/%02.0lf/%02.0lf/%05.2lf", days, hours, minutes, seconds);
+	time.assign(Buffer);
+}
+
+void RTCC::OnlinePrintTimeHHHMMSS(double TIME_SEC, std::string &time)
+{
+	char Buffer[128];
+	double hours, minutes, seconds;
+	if (TIME_SEC < 0)
+	{
+		TIME_SEC = 0.0;
+	}
+	hours = trunc(TIME_SEC / 3600.0);
+	minutes = trunc((TIME_SEC - 3600.0 * hours) / 60.0);
+	seconds = TIME_SEC - 3600.0*hours - 60.0*minutes;
+
+	sprintf(Buffer, "%03.0lf/%02.0lf/%05.2lf", hours, minutes, seconds);
 	time.assign(Buffer);
 }
 
@@ -23127,6 +23143,10 @@ bool RTCC::GMGMED(char *str)
 	{
 		err = GMSMED(code, MEDSequence);
 	}
+	else if (medtype == 'R')
+	{
+		err = RMRMED(code, MEDSequence);
+	}
 	else if (medtype == 'S')
 	{
 		err = BMQDCMED(code, MEDSequence);
@@ -31284,7 +31304,10 @@ void RTCC::RMMGIT(EphemerisData sv_EI, double lng_T)
 void RTCC::RMSDBMP(EphemerisData sv, double CSMmass)
 {
 	RetrofirePlanning plan(this);
-	plan.RMSDBMP(sv, RZJCTTC.GETI, RZJCTTC.lat_T, RZJCTTC.lng_T, CSMmass);
+	if (plan.RMSDBMP(sv, RZJCTTC.GETI, RZJCTTC.lat_T, RZJCTTC.lng_T, CSMmass))
+	{
+		RZRFDP.Indicator = -1;
+	}
 }
 
 void RTCC::RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng_des)
@@ -31343,7 +31366,7 @@ void RTCC::RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng_des)
 		RZDRTSD.table[i].GMT = GMT_cross;
 		RZDRTSD.table[i].Latitude = tctab.lat*DEG;
 		RZDRTSD.table[i].Longitude = tctab.lng*DEG;
-		RZDRTSD.table[i].Rev = 0;
+		RZDRTSD.table[i].Rev = CapeCrossingRev(RTCC_MPT_CSM, GMT_cross);
 
 		GMT_guess = GMT_cross;
 		lng += 1.0*RAD;
@@ -31368,5 +31391,47 @@ void RTCC::RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng_des)
 	else if (RZDRTSD.TotalNumEntries > 10)
 	{
 		RZDRTSD.TotalNumPages = 2;
+	}
+}
+
+int RTCC::RMRMED(std::string med, std::vector<std::string> data)
+{
+	//Direct transfer to spacecraft setting
+	if (med == "65")
+	{
+		if (data.size() != 3)
+		{
+			return 1;
+		}
+
+		if (data[0] != "CSM")
+		{
+			return 2;
+		}
+		if (data[1] == "T")
+		{
+			if (data[2] == "M")
+			{
+
+			}
+		}
+		else if (data[1] == "R")
+		{
+
+		}
+		else
+		{
+			return 2;
+		}
+	}
+
+	return 0;
+}
+
+void RTCC::RMSSCS(int entry)
+{
+	if (entry == 1)
+	{
+		//Transfer TTF, Manual column data
 	}
 }
