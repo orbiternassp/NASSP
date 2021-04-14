@@ -2430,29 +2430,34 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Deorbit", 7);
 
-		skp->Text(1 * W / 8, 2 * H / 14, "Constraints", 11);
-		skp->Text(1 * W / 8, 4 * H / 14, "Target Selection", 16);
+		skp->Text(1 * W / 16, 2 * H / 14, "Constraints", 11);
+		skp->Text(1 * W / 16, 4 * H / 14, "Target Selection", 16);
 
 		if (GC->rtcc->RZJCTTC.Type == 1)
 		{
-			skp->Text(1 * W / 8, 6 * H / 14, "PLA", 3);
+			skp->Text(1 * W / 16, 6 * H / 14, "Primary Area", 12);
 
 			sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lat_T*DEG);
-			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 6 * H / 14, "CLA", 3);
+			skp->Text(1 * W / 16, 6 * H / 14, "Contingency Area", 16);
 		}
 
 		GET_Display(Buffer, GC->rtcc->RZJCTTC.GETI);
-		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lng_T*DEG);
-		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		skp->Text(15 * W / 16, 2 * H / 14, "Retrofire Digitals", 18);
+		skp->Text(15 * W / 16, 4 * H / 14, "Retrofire External DV", 21);
 
 		sprintf(Buffer, "%.2lf NM", GC->rtcc->RZJCTTC.MD);
-		skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(15 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 27)
 	{
@@ -8616,32 +8621,39 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 20 * H / 26, "LAT IP", 6);
 		skp->Text(1 * W / 8, 21 * H / 26, "LNG IP", 6);
 
-		GET_Display2(Buffer, GC->rtcc->RZRFDP.GETI);
-		skp->Text(4 * W / 8, 10 * H / 26, Buffer, strlen(Buffer));
+		if (GC->rtcc->RZRFDP.Indicator == 0)
+		{
+			GET_Display2(Buffer, GC->rtcc->RZRFDP.GETI);
+			skp->Text(4 * W / 8, 10 * H / 26, Buffer, strlen(Buffer));
 
-		AGC_Display(Buffer, GC->rtcc->RZRFDP.VG_XDX.x);
-		skp->Text(4 * W / 8, 11 * H / 26, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, GC->rtcc->RZRFDP.VG_XDX.y);
-		skp->Text(4 * W / 8, 12 * H / 26, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, GC->rtcc->RZRFDP.VG_XDX.z);
-		skp->Text(4 * W / 8, 13 * H / 26, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, GC->rtcc->RZRFDP.VG_XDX.x);
+			skp->Text(4 * W / 8, 11 * H / 26, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, GC->rtcc->RZRFDP.VG_XDX.y);
+			skp->Text(4 * W / 8, 12 * H / 26, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, GC->rtcc->RZRFDP.VG_XDX.z);
+			skp->Text(4 * W / 8, 13 * H / 26, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%+.2lf", GC->rtcc->RZRFDP.P_G);
-		skp->Text(4 * W / 8, 14 * H / 26, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%+.2lf", GC->rtcc->RZRFDP.Y_G);
-		skp->Text(4 * W / 8, 15 * H / 26, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.2lf", GC->rtcc->RZRFDP.DT_TO);
-		skp->Text(4 * W / 8, 16 * H / 26, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.2lf", GC->rtcc->RZRFDP.DV_TO);
-		skp->Text(4 * W / 8, 17 * H / 26, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_apo);
-		skp->Text(4 * W / 8, 18 * H / 26, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_peri);
-		skp->Text(4 * W / 8, 19 * H / 26, Buffer, strlen(Buffer));
-		FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_IP);
-		skp->Text(4 * W / 8, 20 * H / 26, Buffer, strlen(Buffer));
-		FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_IP);
-		skp->Text(4 * W / 8, 21 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%+.2lf", GC->rtcc->RZRFDP.P_G);
+			skp->Text(4 * W / 8, 14 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%+.2lf", GC->rtcc->RZRFDP.Y_G);
+			skp->Text(4 * W / 8, 15 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.2lf", GC->rtcc->RZRFDP.DT_TO);
+			skp->Text(4 * W / 8, 16 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.2lf", GC->rtcc->RZRFDP.DV_TO);
+			skp->Text(4 * W / 8, 17 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_apo);
+			skp->Text(4 * W / 8, 18 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_peri);
+			skp->Text(4 * W / 8, 19 * H / 26, Buffer, strlen(Buffer));
+			FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_IP);
+			skp->Text(4 * W / 8, 20 * H / 26, Buffer, strlen(Buffer));
+			FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_IP);
+			skp->Text(4 * W / 8, 21 * H / 26, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->RZRFDP.Indicator == 1)
+		{
+			skp->Text(16 * W / 44, 13 * H / 26, "NO DATA", 7);
+		}
 	}
 	else if (screen == 106)
 	{

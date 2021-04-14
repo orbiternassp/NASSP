@@ -2155,9 +2155,9 @@ void RetrofirePlanning::RMMDBN(int entry)
 		t_RB = 350.0;
 
 		//Reverse bank time has to be greater than the time of initial bank angle plus margin
-		if (t_RB < reentryout.t_gc + 60.0)
+		if (t_RB < reentryout.t_gc + 120.0)
 		{
-			t_RB = reentryout.t_gc + 60.0;
+			t_RB = reentryout.t_gc + 120.0;
 		}
 
 		//Footprint calculations

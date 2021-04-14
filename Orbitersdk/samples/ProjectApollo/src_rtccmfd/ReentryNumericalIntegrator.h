@@ -222,7 +222,7 @@ protected:
 	VECTOR3 GravityAcceleration(VECTOR3 R);
 	VECTOR3 LiftDragAcceleration(VECTOR3 R, VECTOR3 V, double &AOA);
 	void CalculateLiftDrag(double mach, double &CL, double &CD, double &AOA);
-	void GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt);
+	void GuidanceRoutine(VECTOR3 R, VECTOR3 V);
 	void CalculateDragAcceleration(VECTOR3 R, VECTOR3 V);
 	void Limit02PI(double &val);
 	double ConstantGLogic(VECTOR3 unitR, VECTOR3 VI, double D);
@@ -247,7 +247,9 @@ protected:
 
 	//Previous and current state vector
 	VECTOR3 R_cur, V_cur, R_prev, V_prev;
-	double t, t_prev;
+	double T, T_prev;
+	//Time difference
+	double DT;
 	//Ratio of area to mass of spacecraft
 	double N;
 	double Bank;
@@ -298,6 +300,17 @@ protected:
 	bool droguedeployed, maindeployed;
 	//Time of drogue and main chute deployment
 	double t_drogue, t_main;
+	//Ephemeris build indicator
+	bool EphemerisBuildInd;
+	//Next ephemeris storage
+	double TNEXT;
+	//End of current step
+	double TE;
+	//Step size
+	double STEP;
+	//Reverse bank angle implemented
+	bool IREVBANK;
+	double EPS;
 
 	//Parameters for constant G and G&N
 	double VSAT;
