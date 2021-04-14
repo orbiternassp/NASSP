@@ -87,6 +87,7 @@ public:
 	void CycleVectorPanelSummary();
 	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
+	void RecoveryTargetSelectionCalc();
 	void RTETradeoffDisplayCalc();
 	void GetAGSKFactor();
 	void GeneralMEDRequest();
@@ -250,7 +251,6 @@ public:
 
 	//ENTY PAGE	
 	int entrycritical; //1 = Midcourse, 2 = Abort, 3 = Corridor Control
-	bool entrynominal; //0 = minimum DV, 1 = 31.7° line
 	double EntryTIG;
 	double EntryLat;
 	double EntryLng;
@@ -271,7 +271,6 @@ public:
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	double RTEReturnInclination;
 	int RTETradeoffMode; //0 = Near-Earth (F70), 1 = Remote-Earth (F71)
-	int deorbitenginetype;
 
 	//STATE VECTOR PAGE
 	bool SVSlot; //true = CSM, false = LEM

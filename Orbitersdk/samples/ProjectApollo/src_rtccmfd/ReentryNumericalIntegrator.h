@@ -222,10 +222,12 @@ protected:
 	VECTOR3 GravityAcceleration(VECTOR3 R);
 	VECTOR3 LiftDragAcceleration(VECTOR3 R, VECTOR3 V, double &AOA);
 	void CalculateLiftDrag(double mach, double &CL, double &CD, double &AOA);
-	void GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt);
+	void GuidanceRoutine(VECTOR3 R, VECTOR3 V);
 	void CalculateDragAcceleration(VECTOR3 R, VECTOR3 V);
 	void Limit02PI(double &val);
 	double ConstantGLogic(VECTOR3 unitR, VECTOR3 VI, double D);
+	bool IsInSBandBlackout(double v_r, double h);
+	bool IsInVHFBlackout(double v_r, double h);
 
 	//G&N
 	void GNInitialization();
@@ -243,11 +245,14 @@ protected:
 	void GNRoutine310();
 	void GNRoutine380();
 
+	//Previous and current state vector
 	VECTOR3 R_cur, V_cur, R_prev, V_prev;
+	double T, T_prev;
+	//Time difference
+	double DT;
 	//Ratio of area to mass of spacecraft
 	double N;
 	double Bank;
-	double t;
 	double DRAG;
 	double A_X;
 	//Initial bank angle
@@ -275,6 +280,37 @@ protected:
 	//Roll command
 	double ROLLC;
 	bool ISGNInit;
+	//Maximum g level encountered during the reentry
+	double gmax;
+	//Time of above
+	double t_gmax;
+	//Time when 0.05g was passed
+	double t_05G;
+	//Time when 0.2g was passed
+	double t_2G;
+	//Time when specific g level was passed
+	double t_gc;
+	//Altitude
+	double alt;
+	//Wind relative velocity
+	VECTOR3 V_R;
+	//Wind relative speed
+	double v_R;
+	//Drogue and main chute deplyed?
+	bool droguedeployed, maindeployed;
+	//Time of drogue and main chute deployment
+	double t_drogue, t_main;
+	//Ephemeris build indicator
+	bool EphemerisBuildInd;
+	//Next ephemeris storage
+	double TNEXT;
+	//End of current step
+	double TE;
+	//Step size
+	double STEP;
+	//Reverse bank angle implemented
+	bool IREVBANK;
+	double EPS;
 
 	//Parameters for constant G and G&N
 	double VSAT;

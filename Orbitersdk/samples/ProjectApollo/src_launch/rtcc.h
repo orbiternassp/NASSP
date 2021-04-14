@@ -1929,18 +1929,6 @@ struct PCMATCArray
 	bool h_pc_on;
 };
 
-struct REFSMMATData
-{
-	MATRIX3 REFSMMAT;
-	int ID = 0;
-	double GMT = 0.0;
-};
-
-struct REFSMMATLocker
-{
-	REFSMMATData data[12];
-};
-
 struct StationContact
 {
 	StationContact();
@@ -2628,7 +2616,8 @@ public:
 	//Mission Planning Print Load Module
 	void PMXSPT(std::string source, int n);
 	void PMXSPT(std::string source, std::vector<std::string> message);
-	void OnlinePrintTime(double TIME_SEC, std::string &time);
+	void OnlinePrintTimeDDHHMMSS(double TIME_SEC, std::string &time);
+	void OnlinePrintTimeHHHMMSS(double TIME_SEC, std::string &time);
 	void OnlinePrint(const std::string &source, const std::vector<std::string> &message);
 	//Mission Control Print Program
 	void GMSPRINT(std::string source, int n);
@@ -2645,6 +2634,8 @@ public:
 	void EMMENI(EMSMISSInputTable &in);
 	//Spherical to inertial conversion
 	int EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
+	//Orbital Elements Computations
+	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Anchor Vector Maintenance Module
 	void EMGVECSTInput(int L, EphemerisData sv);
 	int EMGVECSTOutput(int L, EphemerisData &sv);
@@ -2711,6 +2702,8 @@ public:
 	void EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt);
 	void EMGSTGENName(int ID, char *Buffer);
 	int EMGSTGENCode(const char *Buffer);
+	//GOST REFSMMAT Maintenance
+	void FormatREFSMMATCode(int ID, int num, char *buff);
 	//Guidance Optics Support Table
 	void EMMGSTMP();
 	//Guidance Optics Display
@@ -2868,8 +2861,14 @@ public:
 	void RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
 	//Reentry Constant G Iterator
 	void RMMGIT(EphemerisData sv_EI, double lng_T);
-	//Thrust Direction and Body Attitude Routine
-	void RMMATT(int opt, double Roll, double Pitch, double Yaw, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V);
+	//Retrofire Planning Control Module
+	void RMSDBMP(EphemerisData sv, double CSMmass);
+	//Recovery Target Selection Display
+	void RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng);
+	//Reentry MED Decoder
+	int RMRMED(std::string med, std::vector<std::string> data);
+	//Spacecraft Setting Control
+	void RMSSCS(int entry);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -3644,30 +3643,7 @@ public:
 		int num = 0;
 	} EZANCHR1, EZANCHR3;
 
-	struct TimeConstraintsTable
-	{
-		EphemerisData sv_present;
-		double a = 0.0;
-		double e = 0.0;
-		double i = 0.0;
-		double gamma = 0.0;
-		double lat = 0.0;
-		double lng = 0.0;
-		double h = 0.0;
-		double T0 = 0.0;
-		double TA = 0.0;
-		double V = 0.0;
-		double azi = 0.0;
-		double AoP = 0.0;
-		double RA = 0.0;
-		double l = 0.0;
-		int OrbitNum = 0;
-		int RevNum = 0;
-		//EI time?
-		double GMTPI = 0.0;
-		std::string StationID;
-		int TUP = 0;
-	} EZTSCNS1, EZTSCNS3;
+	TimeConstraintsTable EZTSCNS1, EZTSCNS3;
 
 	struct GeneralConstraintsTable
 	{
@@ -3933,14 +3909,53 @@ public:
 		//Block 13
 		int RTETradeoffLabelling[5];
 	} PZREAP;
+	
+	RetrofireTransferTable RZRFTT;
+	ReentryConstraintsTable RZC1RCNS;
+	RetrofireDisplayParametersTable RZRFDP;
+	SpacecraftSettingTable RZDBSC1;
 
-	struct RetrofireTransferTable
+	struct RetrofireMEDSaveTable
 	{
-		double GMTI_Primary;
-		VECTOR3 DeltaV_Primary;
-		double GMTI_Manual;
-		VECTOR3 DeltaV_Manual;
-	} RZRFTT;
+		//R20
+		double R20GET = 0.0;
+		double R20_lng = 0.0;
+		//R32
+		double GETI = 0.0;
+		double lat_T = 0.0;
+		double lng_T = 0.0;
+		double MD = 1.0;
+
+		//Actually determined by leaving the latitude blank on the MED
+		int Type = 2;			//1 = Primary (lat and long), 2 = Contingency (long only)
+	} RZJCTTC;
+
+	struct RecoveryTargetDisplayEntry
+	{
+		bool DataIndicator = true; //false = data, true = no data
+		bool AlternateLongitudeIndicator = false; //false = converged longitude, true = not converged
+		int Rev = 0;
+		double Azimuth = 0.0;
+		double Latitude = 0.0;
+		double Longitude = 0.0;
+		double GET = 0.0;
+		double GMT = 0.0;
+	};
+
+	struct RecoveryTargetDisplay
+	{
+		std::string VehicleName;
+		std::string ErrorMessage;
+		int Rev = 0;
+		int Mission = 0;
+		double InputLongitude = 0.0;
+		std::string StationID;
+		int TUP = 0;
+		int CurrentPage = 1;
+		int TotalNumPages = 1;
+		int TotalNumEntries = 0;
+		RecoveryTargetDisplayEntry table[40];
+	} RZDRTSD;
 
 	struct LMLaunchTargetTable
 	{
@@ -4452,15 +4467,11 @@ private:
 	void PMDRPT();
 	//Two-Impulse Multiple Solution Display
 	void PMDTIMP();
-	//GOST REFSMMAT Maintenance
-	void FormatREFSMMATCode(int ID, int num, char *buff);
 	//GOST CSM/LM LCV Computation
 	void EMMGLCVP(int L, double gmt);
 	//Trajectory Update On-line Print
 	void EMGPRINT(std::string source, int i);
 	void EMGPRINT(std::string source, std::vector<std::string> message);
-	//Orbital Elements Computations
-	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Relative Motion Digital Display
 	void EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis, int mode, VECTOR3 Att = _V(0, 0, 0), double PYRGET = 0.0);
 	//Ground Point Characteristics Block Routine
