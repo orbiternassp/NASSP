@@ -2623,7 +2623,7 @@ public:
 	void GMSPRINT(std::string source, int n);
 	void GMSPRINT(std::string source, std::vector<std::string> message);
 	//Trajectory Update Control Module
-	void EMSTRAJ(EphemerisData sv, int L, bool landed = false);
+	void EMSTRAJ(EphemerisData sv, int L, bool landed, std::string StationID);
 	//Ephemeris Storage and Control Module
 	EphemerisData EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGMT, bool landed = false);
 	//Miscellaneous Numerical Integration Control Module
@@ -2637,7 +2637,7 @@ public:
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Anchor Vector Maintenance Module
-	void EMGVECSTInput(int L, EphemerisData sv);
+	void EMGVECSTInput(int L, EphemerisData sv, bool landed, std::string StationID);
 	int EMGVECSTOutput(int L, EphemerisData &sv);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
@@ -3272,6 +3272,7 @@ public:
 		EphemerisData Vector;
 		int ID = -1;
 		std::string VectorCode;
+		bool LandingSiteIndicator = false;
 	};
 
 	struct EvaluationVectorTable
@@ -3638,8 +3639,7 @@ public:
 
 	struct HistoryAnchorVectorTable
 	{
-		EphemerisData AnchorVectors[10];
-		std::string StationIDs[10];
+		StateVectorTableEntry AnchorVectors[10];
 		int num = 0;
 	} EZANCHR1, EZANCHR3;
 

@@ -118,7 +118,7 @@ void papiWriteScenario_SV(FILEHANDLE scn, char *item, int i, RTCC::StateVectorTa
 
 	char buffer[256];
 
-	sprintf(buffer, "  %s %d %s %d %d %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, i, vec.VectorCode.c_str(), vec.ID, vec.Vector.RBI, vec.Vector.GMT, vec.Vector.R.x, vec.Vector.R.y, vec.Vector.R.z, vec.Vector.V.x, vec.Vector.V.y, vec.Vector.V.z);
+	sprintf(buffer, "  %s %d %s %d %d %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %d", item, i, vec.VectorCode.c_str(), vec.ID, vec.Vector.RBI, vec.Vector.GMT, vec.Vector.R.x, vec.Vector.R.y, vec.Vector.R.z, vec.Vector.V.x, vec.Vector.V.y, vec.Vector.V.z, vec.LandingSiteIndicator);
 	oapiWriteLine(scn, buffer);
 }
 
@@ -145,12 +145,14 @@ bool papiReadScenario_SV(char *line, char *item, RTCC::StateVectorTableEntry *ve
 	if (sscanf(line, "%s", buffer) == 1) {
 		if (!strcmp(buffer, item)) {
 			char buffer2[64];
-			int i, ID;
+			int i, ID, LSInd;
+
 			EphemerisData v;
-			if (sscanf(line, "%s %d %s %d %d %lf %lf %lf %lf %lf %lf %lf", buffer, &i, buffer2, &ID, &v.RBI, &v.GMT, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 12) {
+			if (sscanf(line, "%s %d %s %d %d %lf %lf %lf %lf %lf %lf %lf %d", buffer, &i, buffer2, &ID, &v.RBI, &v.GMT, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z, &LSInd) == 13) {
 				vec[i].ID = ID;
 				vec[i].VectorCode.assign(buffer2);
-				vec[i].Vector = v;				
+				vec[i].Vector = v;
+				vec[i].LandingSiteIndicator = (LSInd != 0);
 				return true;
 			}
 		}
@@ -7126,8 +7128,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	}
 	// State vectors
 	papiWriteScenario_SV(scn, "RTCC_SVSTORE1", calcParams.SVSTORE1);
-	papiWriteScenario_SV(scn, "RTCC_MPTCM_ANCHOR", EZANCHR1.AnchorVectors[9]);
-	papiWriteScenario_SV(scn, "RTCC_MPTLM_ANCHOR", EZANCHR3.AnchorVectors[9]);
+	papiWriteScenario_SV(scn, "RTCC_MPTCM_ANCHOR", 9, EZANCHR1.AnchorVectors[9]);
+	papiWriteScenario_SV(scn, "RTCC_MPTLM_ANCHOR", 9, EZANCHR3.AnchorVectors[9]);
 	for (i = 0;i < 12;i++)
 	{
 		if (BZUSEVEC.data[i].ID > 0)
@@ -7304,8 +7306,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 			}
 		}
 		papiReadScenario_SV(line, "RTCC_SVSTORE1", calcParams.SVSTORE1);
-		papiReadScenario_SV(line, "RTCC_MPTCM_ANCHOR", EZANCHR1.AnchorVectors[9]);
-		papiReadScenario_SV(line, "RTCC_MPTLM_ANCHOR", EZANCHR3.AnchorVectors[9]);
+		papiReadScenario_SV(line, "RTCC_MPTCM_ANCHOR", EZANCHR1.AnchorVectors);
+		papiReadScenario_SV(line, "RTCC_MPTLM_ANCHOR", EZANCHR3.AnchorVectors);
 		papiReadScenario_SV(line, "RTCC_BZUSEVEC", BZUSEVEC.data);
 		papiReadScenario_SV(line, "RTCC_BZEVLVEC", BZEVLVEC.data);
 
@@ -7317,13 +7319,13 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		}
 	}
 
-	if (EZANCHR1.AnchorVectors[9].GMT != 0 && EZEPH1.EPHEM.Header.TUP == 0)
+	if (EZANCHR1.AnchorVectors[9].Vector.GMT != 0 && EZEPH1.EPHEM.Header.TUP == 0)
 	{
-		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9], false, PZMPTCSM.StationID);
+		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9].Vector, EZANCHR1.AnchorVectors[9].LandingSiteIndicator, PZMPTCSM.StationID);
 	}
-	if (EZANCHR3.AnchorVectors[9].GMT != 0 && EZEPH2.EPHEM.Header.TUP == 0)
+	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0 && EZEPH2.EPHEM.Header.TUP == 0)
 	{
-		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9], false, PZMPTLEM.StationID);
+		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9].Vector, EZANCHR3.AnchorVectors[9].LandingSiteIndicator, PZMPTLEM.StationID);
 	}
 	//Update Mission Plan Table display
 	PMDMPT();
@@ -15963,7 +15965,7 @@ int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *
 	aux.WTEND = sv_Ins.mass;
 	aux.WTENGON = sv_IG.mass;
 	aux.W_CSM = 0.0;
-	aux.W_LMA = sv_Ins.mass;
+	aux.W_LMA = sv_IG.mass;
 	aux.W_LMD = 0.0;
 	aux.W_SIVB = 0.0;
 	aux.X_B = _V(1, 0, 0);
@@ -16030,7 +16032,7 @@ int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *
 	aux.WTENGON = sv_PDI.mass;
 	aux.W_CSM = 0.0;
 	aux.W_LMA = in.W_LMA;
-	aux.W_LMD = sv_land.mass - in.W_LMA;
+	aux.W_LMD = sv_PDI.mass - in.W_LMA;
 	aux.W_SIVB = 0.0;
 	aux.X_B = _V(1, 0, 0);
 	aux.Y_B = _V(0, 1, 0);
@@ -16403,11 +16405,12 @@ void RTCC::PMMUDT(int L, unsigned man, int headsup, int trim)
 	PMSVCT(8, L);
 }
 
-void RTCC::EMSTRAJ(EphemerisData sv, int L, bool landed)
+void RTCC::EMSTRAJ(EphemerisData sv, int L, bool landed, std::string StationID)
 {
 	MissionPlanTable *table;
 	OrbitEphemerisTable *maineph;
 	CapeCrossingTable *cctab;
+	TimeConstraintsTable *tctab;
 
 	double gmt;
 
@@ -16416,21 +16419,23 @@ void RTCC::EMSTRAJ(EphemerisData sv, int L, bool landed)
 		table = &PZMPTCSM;
 		maineph = &EZEPH1;
 		cctab = &EZCCSM;
+		tctab = &EZTSCNS1;
 	}
 	else
 	{
 		table = &PZMPTLEM;
 		maineph = &EZEPH2;
 		cctab = &EZCLEM;
+		tctab = &EZTSCNS3;
 	}
 
 	gmt = RTCCPresentTimeGMT();
 
-	if (!landed)
-	{
-		//TBD: Maybe store a landing site vector
-		EMGVECSTInput(L, sv);
-	}
+	//Store as anchor vector
+	EMGVECSTInput(L, sv, landed, StationID);
+
+	//Store Station ID
+	tctab->StationID = StationID;
 
 	//Generate main ephemeris
 	EMSEPH(2, sv, L, gmt, landed);
@@ -17357,7 +17362,7 @@ void RTCC::EMSLSF(EMSMISSInputTable &in)
 	}
 }
 
-void RTCC::EMGVECSTInput(int L, EphemerisData sv)
+void RTCC::EMGVECSTInput(int L, EphemerisData sv, bool landed, std::string StationID)
 {
 	HistoryAnchorVectorTable *tab;
 	if (L == RTCC_MPT_CSM)
@@ -17380,7 +17385,9 @@ void RTCC::EMGVECSTInput(int L, EphemerisData sv)
 		tab->num++;
 	}
 	//Make the last SV in table the current
-	tab->AnchorVectors[9] = sv;
+	tab->AnchorVectors[9].Vector = sv;
+	tab->AnchorVectors[9].LandingSiteIndicator = landed;
+	tab->AnchorVectors[9].VectorCode = StationID;
 }
 
 int RTCC::EMGVECSTOutput(int L, EphemerisData &sv)
@@ -17400,7 +17407,7 @@ int RTCC::EMGVECSTOutput(int L, EphemerisData &sv)
 		return 1;
 	}
 
-	sv = tab->AnchorVectors[9];
+	sv = tab->AnchorVectors[9].Vector;
 
 	return 0;
 }
@@ -18055,8 +18062,12 @@ RTCC_PMSVCT_8:
 	{
 		sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
 	}
+	else
+	{
+		sv1 = *sv0;
+	}
 RTCC_PMSVCT_12:
-	EMSTRAJ(sv1, L, landed);
+	EMSTRAJ(sv1, L, landed, StationID);
 	return;
 RTCC_PMSVCT_14:
 	//TBD
@@ -18123,7 +18134,7 @@ RTCC_PMSVCT_15:
 	}
 	mpt->CommonBlock.TUP--;
 
-	EMSTRAJ(sv, L, landed);
+	EMSTRAJ(sv, L, landed, mpt->StationID);
 }
 
 int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI)
@@ -20704,9 +20715,9 @@ int RTCC::PMMXFR(int id, void *data)
 		in.mpt = mpt;
 		if (mpt->mantable.size() == 0)
 		{
-			in.sv.R = EZANCHR3.AnchorVectors[9].R;
-			in.sv.V = EZANCHR3.AnchorVectors[9].V;
-			in.sv.MJD = OrbMech::MJDfromGET(EZANCHR3.AnchorVectors[9].GMT,SystemParameters.GMTBASE);
+			in.sv.R = EZANCHR3.AnchorVectors[9].Vector.R;
+			in.sv.V = EZANCHR3.AnchorVectors[9].Vector.V;
+			in.sv.MJD = OrbMech::MJDfromGET(EZANCHR3.AnchorVectors[9].Vector.GMT,SystemParameters.GMTBASE);
 			in.sv.gravref = GetGravref(BODY_MOON);
 			in.sv.mass = mpt->TotalInitMass;
 		}
@@ -30048,7 +30059,7 @@ RTCC_BMSVPS_1:
 		{
 			L = RTCC_MPT_LM;
 		}
-		PMSVCT(queid, L, &sv, false, BZUSEVEC.data[PBIID - 324].VectorCode);
+		PMSVCT(queid, L, &sv, BZUSEVEC.data[PBIID - 324].LandingSiteIndicator, BZUSEVEC.data[PBIID - 324].VectorCode);
 	}
 }
 

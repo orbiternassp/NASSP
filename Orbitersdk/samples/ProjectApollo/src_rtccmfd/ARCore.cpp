@@ -310,35 +310,35 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 		rtcc->BZLAND.lng[RTCC_LMPOS_BEST] = lng;
 		rtcc->BZLAND.rad[RTCC_LMPOS_BEST] = rad;
 	}
+	EphemerisData sv = rtcc->StateVectorCalcEphem(ves);
+	sv2 = sv;
+
+	int id;
+	char letter;
+	if (csm)
+	{
+		id = 5;
+		letter = 'C';
+	}
 	else
 	{
-		EphemerisData sv = rtcc->StateVectorCalcEphem(ves);
-		sv2 = sv;
-
-		int id;
-		char letter;
-		if (csm)
-		{
-			id = 5;
-			letter = 'C';
-		}
-		else
-		{
-			id = 11;
-			letter = 'L';
-		}
-
-		if (rtcc->BZUSEVEC.data[id].ID < 0)
-		{
-			rtcc->BZUSEVEC.data[id].ID = 0;
-		}
-		rtcc->BZUSEVEC.data[id].ID++;
-		rtcc->BZUSEVEC.data[id].Vector = sv2;
-		char Buff[16];
-		sprintf_s(Buff, "API%c%03d", letter, rtcc->BZUSEVEC.data[id].ID);
-		rtcc->BZUSEVEC.data[id].VectorCode.assign(Buff);
+		id = 11;
+		letter = 'L';
 	}
 
+	if (rtcc->BZUSEVEC.data[id].ID < 0)
+	{
+		rtcc->BZUSEVEC.data[id].ID = 0;
+	}
+	rtcc->BZUSEVEC.data[id].ID++;
+	rtcc->BZUSEVEC.data[id].Vector = sv2;
+	if (landed)
+	{
+		rtcc->BZUSEVEC.data[id].LandingSiteIndicator = true;
+	}
+	char Buff[16];
+	sprintf_s(Buff, "API%c%03d", letter, rtcc->BZUSEVEC.data[id].ID);
+	rtcc->BZUSEVEC.data[id].VectorCode.assign(Buff);
 	return 0;
 }
 
