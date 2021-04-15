@@ -319,7 +319,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMGMED("M62,CSM,1,D;");
 
 		//Set anchor vector time to 0, so that no trajectory updates are done anymore
-		EZANCHR1.AnchorVectors[9].GMT = 0.0;
+		EZANCHR1.AnchorVectors[9].Vector.GMT = 0.0;
 
 		sprintf(form->remarks, "TLI 10-minute abort pitch, 223°");
 	}

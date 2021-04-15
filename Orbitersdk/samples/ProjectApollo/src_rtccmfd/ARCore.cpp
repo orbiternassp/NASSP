@@ -310,35 +310,35 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 		rtcc->BZLAND.lng[RTCC_LMPOS_BEST] = lng;
 		rtcc->BZLAND.rad[RTCC_LMPOS_BEST] = rad;
 	}
+	EphemerisData sv = rtcc->StateVectorCalcEphem(ves);
+	sv2 = sv;
+
+	int id;
+	char letter;
+	if (csm)
+	{
+		id = 5;
+		letter = 'C';
+	}
 	else
 	{
-		EphemerisData sv = rtcc->StateVectorCalcEphem(ves);
-		sv2 = sv;
-
-		int id;
-		char letter;
-		if (csm)
-		{
-			id = 5;
-			letter = 'C';
-		}
-		else
-		{
-			id = 11;
-			letter = 'L';
-		}
-
-		if (rtcc->BZUSEVEC.data[id].ID < 0)
-		{
-			rtcc->BZUSEVEC.data[id].ID = 0;
-		}
-		rtcc->BZUSEVEC.data[id].ID++;
-		rtcc->BZUSEVEC.data[id].Vector = sv2;
-		char Buff[16];
-		sprintf_s(Buff, "API%c%03d", letter, rtcc->BZUSEVEC.data[id].ID);
-		rtcc->BZUSEVEC.data[id].VectorCode.assign(Buff);
+		id = 11;
+		letter = 'L';
 	}
 
+	if (rtcc->BZUSEVEC.data[id].ID < 0)
+	{
+		rtcc->BZUSEVEC.data[id].ID = 0;
+	}
+	rtcc->BZUSEVEC.data[id].ID++;
+	rtcc->BZUSEVEC.data[id].Vector = sv2;
+	if (landed)
+	{
+		rtcc->BZUSEVEC.data[id].LandingSiteIndicator = true;
+	}
+	char Buff[16];
+	sprintf_s(Buff, "API%c%03d", letter, rtcc->BZUSEVEC.data[id].ID);
+	rtcc->BZUSEVEC.data[id].VectorCode.assign(Buff);
 	return 0;
 }
 
@@ -545,7 +545,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	entrycritical = 1;
 	RTEReentryTime = 0.0;
-	entrynominal = 1;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
 	FlybyPeriAlt = 0.0;
@@ -593,7 +592,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	manpadenginetype = RTCC_ENGINETYPE_CSMSPS;
-	deorbitenginetype = RTCC_ENGINETYPE_CSMSPS;
 	TPIPAD_AZ = 0.0;
 	TPIPAD_dH = 0.0;
 	TPIPAD_dV_LOS = _V(0.0, 0.0, 0.0);
@@ -1109,6 +1107,11 @@ void ARCore::CycleNextStationContactsDisplay()
 			startSubthread(36);
 		}
 	}
+}
+
+void ARCore::RecoveryTargetSelectionCalc()
+{
+	startSubthread(37);
 }
 
 void ARCore::SLVNavigationUpdateCalc()
@@ -3715,12 +3718,20 @@ int ARCore::subThread()
 	break;
 	case 17: //Deorbit Maneuver
 	{
-		EntryResults res;
-		EarthEntryOpt opt;
+		EphemerisData sv;
+		double CSMmass;
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->NewMPTTrajectory(mptveh, opt.RV_MCC))
+			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.GETI);
+			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, sv);
+			if (err)
+			{
+				Result = 0;
+				break;
+			}
+			err = GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, CSMmass);
+			if (err)
 			{
 				Result = 0;
 				break;
@@ -3728,40 +3739,24 @@ int ARCore::subThread()
 		}
 		else
 		{
-			opt.RV_MCC = GC->rtcc->StateVectorCalc(vessel);
+			sv = GC->rtcc->StateVectorCalcEphem(vessel);
+			CSMmass = vessel->GetMass();
+			//Assume pre CSM separation from the S-IVB
+			if (CSMmass > 30000.0)
+			{
+				CSMmass = 28860.0;
+			}
 		}
 
-		if (entrylongmanual)
+		GC->rtcc->RMSDBMP(sv, CSMmass);
+
+		if (GC->rtcc->RZRFDP.Indicator == 0)
 		{
-			opt.lng = EntryLng;
+			P30TIG = GC->rtcc->RZRFDP.GETI;
+			dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
+			EntryLatcor = GC->rtcc->RZRFTT.Manual.lat_T;
+			EntryLngcor = GC->rtcc->RZRFTT.Manual.lng_T;
 		}
-		else
-		{
-			opt.lng = (double)landingzone;
-		}
-		
-		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.enginetype = deorbitenginetype;
-		opt.entrylongmanual = entrylongmanual;
-		opt.ReA = EntryAng;
-		opt.TIGguess = EntryTIG;
-		opt.vessel = vessel;
-		opt.nominal = entrynominal;
-		opt.useSV = true;
-
-		GC->rtcc->BlockDataProcessor(&opt, &res);
-
-		Entry_DV = res.dV_LVLH;
-		EntryTIGcor = res.P30TIG;
-		EntryLatcor = res.latitude;
-		EntryLngcor = res.longitude;
-		EntryRRT = res.GET400K;
-		EntryRET05G = res.GET05G;
-		EntryRTGO = res.RTGO;
-		EntryAngcor = res.ReA;
-		P30TIG = EntryTIGcor;
-		dV_LVLH = Entry_DV;
-		entryprecision = res.precision;
 
 		Result = 0;
 	}
@@ -4167,9 +4162,9 @@ int ARCore::subThread()
 		{
 			EarthEntryPADOpt opt;
 
-			opt.dV_LVLH = Entry_DV;
+			opt.dV_LVLH = dV_LVLH;
 			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.P30TIG = EntryTIGcor;
+			opt.P30TIG = P30TIG;
 			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
 
@@ -4368,8 +4363,36 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 37: //Spare
+	case 37: //Recovery Target Selection Display
 	{
+		EphemerisDataTable tab;
+		EphemerisDataTable *tab2;
+		double gmt = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
+
+		if (GC->MissionPlanningActive)
+		{
+			tab2 = &GC->rtcc->EZEPH1.EPHEM;
+		}
+		else
+		{
+			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(vessel);
+
+			EMSMISSInputTable intab;
+
+			intab.AnchorVector = sv;
+			intab.EphemerisBuildIndicator = true;
+			intab.EphemerisLeftLimitGMT = gmt - 20.0*60.0;
+			intab.EphemerisRightLimitGMT = gmt + 2.5*60.0*60.0;
+			intab.EphemTableIndicator = &tab;
+
+			GC->rtcc->EMSMISS(intab);
+			tab.Header.TUP = 1;
+
+			tab2 = &tab;
+		}
+
+		GC->rtcc->RMDRTSD(*tab2, 1, gmt, GC->rtcc->RZJCTTC.R20_lng);
+
 		Result = 0;
 	}
 	break;

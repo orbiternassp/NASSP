@@ -348,7 +348,152 @@ struct RMMYNIInputTable
 
 struct RMMYNIOutputTable
 {
-	double lat_IP;
-	double lng_IP;
-	double t_10k;
+	double lat_IP = 0.0;
+	double lng_IP = 0.0;
+	double t_drogue = 0.0;
+	double t_main = 0.0;
+	double t_lc = 0.0;
+	double t_05g = 0.0;
+	double t_2g = 0.0;
+	double t_gc = 0.0;
+	double gmax = 0.0;
+	double t_gmax = 0.0;
+	//1 = time limit, 2 = impact, 3 = skipout
+	int IEND;
+};
+
+struct ReentryConstraintsTable
+{
+	//R31
+	int Thruster = 33;		//1 = RCS+2, 2 = RCS+4, 3 = RCS-2, 4 = RCS-4, 33 = SPS
+	int GuidanceMode = 4;	//1 = Inertial, 4 = Guided (G&N)
+	int BurnMode = 3;		//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
+	double dt = 0.0;
+	double dv = 0.0;
+	int AttitudeMode = 2;	//1 = LVLH, 2 = 31.7° window line on horizon
+	VECTOR3 LVLHAttitude = _V(0.0, -48.5*RAD, PI);
+	double UllageTime = 15.0;
+	bool Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
+	int REFSMMAT = 1;		//1 = CUR...
+	int GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
+	double InitialBankAngle = 0.0;
+	double GLevel = 0.2;
+	double FinalBankAngle = 55.0*RAD;
+};
+
+struct RetrofireDisplayParametersTable
+{
+	//0 = good data, +1 = no data, -1 = bad data
+	int Indicator = 1;
+	//Ullage quad (2 or 4)
+	int UllageQuads;
+	std::string BurnCode;
+	std::string Area;
+	std::string RefsID;
+	double CSMWeightRetro;
+	double TrueAnomalyRetro;
+	VECTOR3 Att_LVLH;
+	VECTOR3 Att_IMU;
+	//Velocity counter - tailoff
+	double DVC;
+	double BurnTime;
+	//Total velocity + tailoff
+	double DVT;
+	double UllageDT;
+	double GMTI;
+	double GETI;
+	double RET400k;
+	double V400k;
+	double Gamma400k;
+	double BankAngle;
+	//Elapsed time from GETI to reverse bank angle
+	double RETRB;
+	//Maximum lift
+	double lat_ML, lng_ML;
+	//Target
+	double lat_T, lng_T;
+	//Impact point
+	double lat_IP, lng_IP;
+	//Zero lift
+	double lat_ZL, lng_ZL;
+	//Miss distance (NM)
+	double dlat_NM, dlng_NM;
+	//Height at retrofire above the oblate Earth
+	double H_Retro;
+	//Ballistic indicator
+	int Ballistic;
+	//Rev number of impact
+	int Rev_IP;
+	double P_G, Y_G;
+	MATRIX3 REFSMMAT;
+	double DV_TO;
+	double DT_TO;
+	//Biased and unbiased DV?
+	VECTOR3 VG_XDX;
+	VECTOR3 VGX_THR;
+	double H_apo, H_peri;
+};
+
+struct TimeConstraintsTable
+{
+	EphemerisData sv_present;
+	double a = 0.0;
+	double e = 0.0;
+	double i = 0.0;
+	double gamma = 0.0;
+	double lat = 0.0;
+	double lng = 0.0;
+	double h = 0.0;
+	double T0 = 0.0;
+	double TA = 0.0;
+	double V = 0.0;
+	double azi = 0.0;
+	double AoP = 0.0;
+	double RA = 0.0;
+	double l = 0.0;
+	int OrbitNum = 0;
+	int RevNum = 0;
+	//EI time?
+	double GMTPI = 0.0;
+	std::string StationID;
+	int TUP = 0;
+};
+
+struct RetrofireTransferTableEntry
+{
+	double GMTI = 0.0;
+	VECTOR3 DeltaV = _V(0, 0, 0);
+	int Thruster = 33;
+	double dt_ullage = 0.0;
+	bool UllageThrusterOption = true;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
+};
+
+struct RetrofireTransferTable
+{
+	RetrofireTransferTableEntry Primary;
+	RetrofireTransferTableEntry Manual;
+};
+
+struct SpacecraftSettingTable
+{
+	int Indicator = 1; //-1 = bad data, 0 = good data, 1 = no data
+	int EnryMode = 0;
+	int REFSMMATID = 0;
+	double GMTI = 0.0;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
+};
+
+struct REFSMMATData
+{
+	MATRIX3 REFSMMAT;
+	int ID = 0;
+	double GMT = 0.0;
+};
+
+struct REFSMMATLocker
+{
+	REFSMMATData data[12];
 };
