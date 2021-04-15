@@ -712,7 +712,7 @@ void LEM::SystemsInit()
 	WaterSeparationSelector.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLDIN"),
 		&WaterSepSelectSwitch);
 	CabinFan.Init(&ECS_CABIN_FAN_1_CB, &ECS_CABIN_FAN_CONT_CB, &PressRegAValve, &PressRegBValve, (Pump *)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN"),
-		(h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
+		(h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINFANHEAT"));
 	WaterTankSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OTANKSELECT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OSURGETANK"),
 		&WaterTankSelectValve);
@@ -1994,6 +1994,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* CabinPlate = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-CABIN-Plate:TEMP");
 	double* CabinHX1 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINHX1:POWER");
 	double* CabinHX2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINHX2:POWER");
+	double* CabinFanManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINFANMANIFOLD:TEMP");
+	double* CabinFanManifoldHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINFANHX:POWER");
+	double* CabinFanManifoldOutFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINFANPIPE:FLOW");
 
 	//CSM LM Connection
 	double *lmcabinpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
@@ -2031,11 +2034,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* edbatBheat = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B:HEAT");
 	double* edbatBHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATBHX:POWER");
 
+	//sprintf(oapiDebugString(), "CFM T: %lf HX: %lf Out: %lf", KelvinToFahrenheit(*CabinFanManifoldTemp), *CabinFanManifoldHX, *CabinFanManifoldOutFlow* LBH);
+
 	//sprintf(oapiDebugString(), "B1T %lf B2T %lf B3T %lf B4T %lf DGT %lf B5T %lf B6T %lf B5PT %lf B6PT %lf AGT %lf EDA %lf EDB %lf", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp), KelvinToFahrenheit(*desbatglycoltemp), KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatAtemp), KelvinToFahrenheit(*edbatBtemp));
 	//sprintf(oapiDebugString(), "B5T %lf B6T %lf B5PT %lf B6PT %lf AGT %lf EDB %lf", KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatBtemp));
 
 
-	//sprintf(oapiDebugString(), "Primary Glycol Heating 1: %lf Primary Glycol Heating 2: %lf Cabin Heating %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat);
+	sprintf(oapiDebugString(), "Primary Glycol Heat 1 %lf Primary Glycol Heat 2 %lf Cabin Heat %lf Battery Heat %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat, (*bat1heat+*bat2heat+*bat3heat+*bat4heat+*bat5heat+*bat6heat+*edbatAheat+*edbatBheat));
 
 	//sprintf(oapiDebugString(), "SCT %lf SCF %lf CT %lf SGDF %lf SGDT %lf GRVF %lf CO2MT %lf GlyCT %lf HXCT %lf HXCPwr %lf GlyHT %lf HXHT %lf HXHPwr %lf", KelvinToFahrenheit(*SuitCircuitTemp), *SuitCircuitOutFlow*LBH, KelvinToFahrenheit(*CabinTemp), *suitGasDiverterCabinFlow*LBH, KelvinToFahrenheit(*SGDTemp), *cabinGasReturnFlow*LBH, KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower);
 	//sprintf(oapiDebugString(), "SGDP %lf SGDV %d SGDF %lf CabP %lf GRV %d GRVF %lf CO2MP %lf", *SGDPress* PSI, *suitGasDiverterCabinVLV, *suitGasDiverterCabinFlow*LBH, *CabinPress* PSI, *gasreturnvlv, *cabinGasReturnFlow*LBH, *CO2ManifoldPress* PSI);
@@ -2072,7 +2077,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "AP %lf GP %lf PMP %lf HXCP %lf L1P %lf HXLP %lf L2P %lf HXHP %lf EIP %lf EOP %lf ACP %lf DBP %lf", *primglycolaccumpress* PSI, *primglycolpress*PSI, *glycolpumpmanifoldpress*PSI, *glycolsuitcoolpress*PSI, *primloop1press*PSI, *waterglycolhxpress*PSI, *primloop2press*PSI, *glycolsuitheatpress*PSI, *primevapinpress*PSI, *primevapoutpress*PSI, *ascbatglycolpress*PSI, *desbatglycolpress*PSI);
 	//sprintf(oapiDebugString(), "AM %lf HXCM %lf L1M %lf HXLM %lf L2M %lf HXHM %lf EIM %lf EOM %lf ACM %lf DBM %lf", *primglycolmass, *glycolsuitcoolmass, *primloop1mass, *waterglycolhxmass, *primloop2mass, *glycolsuitheatmass, *primevapinmass, *primevapoutmass, *ascbatglycolmass, *desbatglycolmass);
 	//sprintf(oapiDebugString(), "P1 %lf P2 %lf Reg1 %lf WGHX %lf SHX %lf SHXBP %lf", *Pump1OutFlow*LBH, *Pump2OutFlow*LBH, *primGlyReg1Flow*LBH, *waterGlyHXFlow*LBH, *suitHXGlyFlow*LBH, *suitHXGlyBypassFlow*LBH);
-	sprintf(oapiDebugString(), "AcT %lf PMT %lf GCT %lf SCT %lf HXCP %lf L1 %lf HXT %lf L2 %lf GHT %lf SHT %lf HXHP %lf ETI %lf ETO %lf A %lf D %lf", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolpumpmanifoldtemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*waterglycolhxtemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*primevaptempin), KelvinToFahrenheit(*primevaptempout), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*desbatglycoltemp));
+	//sprintf(oapiDebugString(), "AT %.2f PT %.2f GCT %.2f SCT %.2f HXCP %.2f L1 %.2f HXT %.2f L2 %.2f GHT %.2f SHT %.2f HXHP %.2f EI %.2f EO %.2f A %.2f D %.2f", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolpumpmanifoldtemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*waterglycolhxtemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*primevaptempin), KelvinToFahrenheit(*primevaptempout), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*desbatglycoltemp));
 	
 	//sprintf(oapiDebugString(), "LCG %lf SEC %lf", LCGPump->Voltage(), SecGlyPump->Voltage());
 	//sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);

@@ -299,7 +299,7 @@ void LEM_ASA::SystemTimestep(double simdt)
 	if (IsPowered())
 	{
 		lem->SCS_ASA_CB.DrawPower(41.1);
-		asaHeat->GenerateHeat(41.1);
+		asaHeat->GenerateHeat(95.1); //Electric heat load from LM-8 Systems Handbook
 	}
 }
 
@@ -541,7 +541,7 @@ void LEM_AEA::SystemTimestep(double simdt)
 	if (IsPowered())
 	{
 		DCPower.DrawPower(47.0);
-		aeaHeat->GenerateHeat(47.0);
+		aeaHeat->GenerateHeat(42.5);
 	}
 
 	if (IsACPowered())
