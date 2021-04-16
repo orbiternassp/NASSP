@@ -857,7 +857,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
 		refsopt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		refsopt.REFSMMATopt = 8;
-		refsopt.REFSMMATTime = calcParams.TLAND;
+		refsopt.REFSMMATTime = CZTDTGTU.GETTD;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
 		
@@ -1153,7 +1153,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		calcParams.DOI = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
 		calcParams.PDI = PZLDPDIS.PD_GETIG;
-		calcParams.TLAND = PZLDPDIS.PD_GETTD;
+		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
 
 		PoweredFlightProcessor(sv, GETbase, calcParams.DOI, RTCC_ENGINETYPE_LMDPS, 0.0, PZLDPELM.V_man_after[0] - PZLDPELM.sv_man_bef[0].V, false, TimeofIgnition, DeltaV_LVLH);
 
@@ -1161,7 +1161,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
 		opt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.REFSMMATopt = 5;
-		opt.REFSMMATTime = calcParams.TLAND;
+		opt.REFSMMATTime = CZTDTGTU.GETTD;
 		opt.vessel = calcParams.src;
 
 		REFSMMAT = REFSMMATCalc(&opt);
@@ -1340,7 +1340,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		calcParams.DOI = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
 		calcParams.PDI = PZLDPDIS.PD_GETIG;
-		calcParams.TLAND = PZLDPDIS.PD_GETTD;
+		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
 
 		PoweredFlightProcessor(sv, GETbase, calcParams.DOI, RTCC_ENGINETYPE_LMDPS, 0.0, PZLDPELM.V_man_after[0] - PZLDPELM.sv_man_bef[0].V, false, TimeofIgnition, DeltaV_LVLH);
 
@@ -1359,7 +1359,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AGCStateVectorUpdate(buffer1, sv, false, GETbase);
 		LGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
-		TLANDUpdate(TLANDbuffer, calcParams.TLAND, 2400);
+		TLANDUpdate(TLANDbuffer, CZTDTGTU.GETTD);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, TLANDbuffer);
 		if (upString != NULL) {
@@ -1612,7 +1612,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarDescentPlanningProcessor(sv);
 
 		calcParams.PDI = PZLDPDIS.PD_GETIG;
-		calcParams.TLAND = PZLDPDIS.PD_GETTD;
+		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
 
 		//Fall into PDI PAD calculation
 	}
@@ -1635,7 +1635,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv0 = sv;
-		opt.t_land = calcParams.TLAND;
+		opt.t_land = CZTDTGTU.GETTD;
 		opt.vessel = calcParams.tgt;
 
 		PDI_PAD(&opt, *form);

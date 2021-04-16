@@ -38,7 +38,6 @@ public:
 
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
-	double t_Land;				//Time of landing
 
 	VESSEL *pMPTVessel;
 	int MPTVesselNumber;
@@ -280,7 +279,6 @@ public:
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
 	AP11AGSSVPAD agssvpad;
-	int TLANDOctals[5];
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;

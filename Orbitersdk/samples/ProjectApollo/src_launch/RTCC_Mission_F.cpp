@@ -379,11 +379,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			calcParams.LOI = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
 		}
 
-		if (calcParams.TLAND == 0)
-		{
-			calcParams.TLAND = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
-		}
-
 		double TLIbase = floor((TimeofIgnition / 60.0) + 0.5)*60.0; //Round TLI ignition time to next minute
 
 		MCC1GET = TLIbase + 9.0*3600.0;
@@ -749,7 +744,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
 		refsopt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		refsopt.REFSMMATopt = 8;
-		refsopt.REFSMMATTime = calcParams.TLAND;
+		refsopt.REFSMMATTime = CZTDTGTU.GETTD;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
@@ -1458,13 +1453,13 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarDescentPlanningProcessor(sv);
 
 		calcParams.DOI = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
-		calcParams.TLAND = PZLDPDIS.PD_GETTD;
+		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
 
 		opt.GETbase = GETbase;
 		opt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
 		opt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.REFSMMATopt = 5;
-		opt.REFSMMATTime = calcParams.TLAND;
+		opt.REFSMMATTime = CZTDTGTU.GETTD;
 		opt.vessel = calcParams.src;
 
 		REFSMMAT = REFSMMATCalc(&opt);
@@ -1546,7 +1541,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.LSLat = BZLAND.lat[RTCC_LMPOS_BEST];
 		opt.LSLng = BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.REFSMMATopt = 5;
-		opt.REFSMMATTime = calcParams.TLAND;
+		opt.REFSMMATTime = CZTDTGTU.GETTD;
 		opt.vessel = calcParams.src;
 
 		REFSMMAT = REFSMMATCalc(&opt);
@@ -1647,7 +1642,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarDescentPlanningProcessor(sv);
 
 		calcParams.DOI = t_DOI_imp = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
-		calcParams.TLAND = PZLDPDIS.PD_GETTD;
+		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
 		DV = PZLDPELM.V_man_after[0] - PZLDPELM.sv_man_bef[0].V;
 
 		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_ENGINETYPE_LMDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
@@ -1684,7 +1679,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AGCStateVectorUpdate(buffer1, sv, false, GETbase);
 		LGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
-		TLANDUpdate(TLANDbuffer, calcParams.TLAND, 2400);
+		TLANDUpdate(TLANDbuffer, CZTDTGTU.GETTD);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, TLANDbuffer);
 		if (upString != NULL) {

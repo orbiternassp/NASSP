@@ -1232,7 +1232,6 @@ RTCC::RTCC()
 	calcParams.SEP = 0.0;
 	calcParams.DOI = 0.0;
 	calcParams.PDI = 0.0;
-	calcParams.TLAND = 0.0;
 	calcParams.LSAzi = 0.0;
 	calcParams.LunarLiftoff = 0.0;
 	calcParams.Insertion = 0.0;
@@ -1858,6 +1857,10 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 			{
 				BZLAND.rad[RTCC_LMPOS_BEST] = BZLAND.rad[RTCC_LMPOS_MED] = dtemp * 1852.0;
 			}
+			else if (papiReadScenario_double(Buff, "TLAND", dtemp))
+			{
+				CZTDTGTU.GETTD = dtemp * 3600.0;
+			}
 			else if (papiReadScenario_double(Buff, "TLCC_AZ_min", dtemp))
 			{
 				PZMCCPLN.AZ_min = dtemp * RAD;
@@ -1942,6 +1945,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
+			papiReadScenario_int(Buff, "MCLTTD", SystemParameters.MCLTTD);
 			papiReadScenario_double(Buff, "PZREAP_RRBIAS", PZREAP.RRBIAS);
 			papiReadScenario_double(Buff, "PZREAP_IRMAX", PZREAP.IRMAX);
 			papiReadScenario_double(Buff, "PDI_K_X", RTCCPDIIgnitionTargets.K_X);
@@ -6611,18 +6615,10 @@ void RTCC::V71Update(char *list, int *emem, int n)
 	sprintf(list, "%sV33E", list);
 }
 
-void RTCC::TLANDUpdate(char *list, double t_land, int tlandaddr)
+void RTCC::TLANDUpdate(char *list, double t_land)
 {
-	int emem[5];
-	emem[0] = 5;
-
-	emem[1] = tlandaddr;
-	emem[3] = tlandaddr + 1;
-
-	emem[2] = OrbMech::DoubleToBuffer(t_land*100.0, 28, 1);
-	emem[4] = OrbMech::DoubleToBuffer(t_land*100.0, 28, 0);
-
-	V72Update(list, emem, 5);
+	CMMDTGTU(t_land);
+	V72Update(list, CZTDTGTU.Octals, 5);
 }
 
 void RTCC::V72Update(char *list, int *emem, int n)
@@ -7086,7 +7082,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_SEP", calcParams.SEP);
 	SAVE_DOUBLE("RTCC_DOI", calcParams.DOI);
 	SAVE_DOUBLE("RTCC_PDI", calcParams.PDI);
-	SAVE_DOUBLE("RTCC_TLAND", calcParams.TLAND);
+	SAVE_DOUBLE("RTCC_TLAND", CZTDTGTU.GETTD);
 	SAVE_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
 	SAVE_DOUBLE("RTCC_LSLat", BZLAND.lat[RTCC_LMPOS_BEST]);
 	SAVE_DOUBLE("RTCC_LSLng", BZLAND.lng[RTCC_LMPOS_BEST]);
@@ -7271,7 +7267,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_SEP", calcParams.SEP);
 		LOAD_DOUBLE("RTCC_DOI", calcParams.DOI);
 		LOAD_DOUBLE("RTCC_PDI", calcParams.PDI);
-		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);
+		LOAD_DOUBLE("RTCC_TLAND", CZTDTGTU.GETTD);
 		LOAD_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
 		LOAD_DOUBLE("RTCC_LSLat", BZLAND.lat[RTCC_LMPOS_BEST]);
 		LOAD_DOUBLE("RTCC_LSLng", BZLAND.lng[RTCC_LMPOS_BEST]);
@@ -31210,6 +31206,26 @@ void RTCC::CMMCMCLS(int veh)
 	buf->Octals[5] = OrbMech::DoubleToBuffer(buf->R_LS.y, 27, 0);
 	buf->Octals[6] = OrbMech::DoubleToBuffer(buf->R_LS.z, 27, 1);
 	buf->Octals[7] = OrbMech::DoubleToBuffer(buf->R_LS.z, 27, 0);
+}
+
+void RTCC::CMMDTGTU(double t_land)
+{
+	if (CZTDTGTU.SequenceNumber == 0)
+	{
+		CZTDTGTU.SequenceNumber = 2800;
+	}
+
+	CZTDTGTU.LoadType = "28";
+	CZTDTGTU.SequenceNumber++;
+	CZTDTGTU.GETofGeneration = GETfromGMT(RTCCPresentTimeGMT());
+
+	CZTDTGTU.Octals[0] = 5;
+
+	CZTDTGTU.Octals[1] = SystemParameters.MCLTTD;
+	CZTDTGTU.Octals[3] = SystemParameters.MCLTTD + 1;
+
+	CZTDTGTU.Octals[2] = OrbMech::DoubleToBuffer(t_land*100.0, 28, 1);
+	CZTDTGTU.Octals[4] = OrbMech::DoubleToBuffer(t_land*100.0, 28, 0);
 }
 
 void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)

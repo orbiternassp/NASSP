@@ -36,7 +36,6 @@ AR_GCore::AR_GCore(VESSEL* v)
 	mptInitError = 0;
 
 	mission = 0;
-	t_Land = 0.0;
 
 	if (strcmp(v->GetName(), "AS-205") == 0)
 	{
@@ -45,7 +44,6 @@ AR_GCore::AR_GCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "AS-503") == 0)
 	{
 		mission = 8;
-		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 	}
 	else if (strcmp(v->GetName(), "AS-504") == 0 || strcmp(v->GetName(), "Spider") == 0)
 	{
@@ -54,44 +52,34 @@ AR_GCore::AR_GCore(VESSEL* v)
 	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie-Brown") == 0 || strcmp(v->GetName(), "Snoopy") == 0)
 	{
 		mission = 10;
-		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 	}
 	else if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0 || strcmp(v->GetName(), "Eagle") == 0)
 	{
 		mission = 11;
-		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
-		//t_Land = OrbMech::HHMMSSToSS(100.0, 43.0, 0.0); //July 18 launch
-		//t_Land = OrbMech::HHMMSSToSS(103.0, 46.0, 0.0); //July 21 launch
 	}
 	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0 || strcmp(v->GetName(), "Intrepid") == 0)
 	{
 		mission = 12;
-		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 	}
 	else if (strcmp(v->GetName(), "Odyssey") == 0 || strcmp(v->GetName(), "Aquarius") == 0)
 	{
 		mission = 13;
-		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 	}
 	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0 || strcmp(v->GetName(), "Antares") == 0)
 	{
 		mission = 14;
-		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0 || strcmp(v->GetName(), "Falcon") == 0)
 	{
 		mission = 15;
-		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 	}
 	else if (strcmp(v->GetName(), "Casper") == 0 || strcmp(v->GetName(), "Orion") == 0)
 	{
 		mission = 16;
-		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 	}
 	else if (strcmp(v->GetName(), "America") == 0 || strcmp(v->GetName(), "Challenger") == 0)
 	{
 		mission = 17;
-		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 	}
 
 	//Get a pointer to the RTCC. If the MCC vessel doesn't exist yet, create it
@@ -620,11 +608,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	svtargetnumber = -1;
 	TLCCSolGood = true;
 
-	for (int i = 0;i < 5;i++)
-	{
-		TLANDOctals[i] = 0;
-	}
-
 	entrylongmanual = true;
 	landingzone = 0;
 	entryprecision = -1;
@@ -776,7 +759,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	AGCEphemBRCSEpoch = GC->rtcc->SystemParameters.AGCEpoch;
 	AGCEphemTIMEM0 = floor(GC->rtcc->CalcGETBase()) + 6.75;
 	AGCEphemTEPHEM = GC->rtcc->CalcGETBase();
-	AGCEphemTLAND = GC->t_Land;
+	AGCEphemTLAND = GC->rtcc->CZTDTGTU.GETTD;
 	AGCEphemMission = GC->mission;
 	AGCEphemIsCMC = vesseltype < 2;
 
@@ -2005,27 +1988,14 @@ void ARCore::EntryUpdateUplink(void)
 
 void ARCore::TLANDUplinkCalc(void)
 {
-	TLANDOctals[0] = 5;
-
-	if (GC->mission < 14)
-	{
-		TLANDOctals[1] = 2400;
-		TLANDOctals[3] = 2401;
-	}
-	else
-	{
-		TLANDOctals[1] = 2026;
-		g_Data.emem[3] = 2027;
-	}
-	TLANDOctals[2] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 1);
-	TLANDOctals[4] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 0);
+	GC->rtcc->CMMDTGTU(GC->rtcc->CZTDTGTU.GETTD);
 }
 
 void ARCore::TLANDUplink(void)
 {
 	for (int i = 0;i < 5;i++)
 	{
-		g_Data.emem[i] = TLANDOctals[i];
+		g_Data.emem[i] = GC->rtcc->CZTDTGTU.Octals[i];
 	}
 
 	UplinkData2(false); // Go for uplink
@@ -2805,7 +2775,7 @@ int ARCore::subThread()
 		}
 		else if (REFSMMATopt == 5 || REFSMMATopt == 8)
 		{
-			opt.REFSMMATTime = GC->t_Land;
+			opt.REFSMMATTime = GC->rtcc->CZTDTGTU.GETTD;
 		}
 		else
 		{
@@ -3265,7 +3235,7 @@ int ARCore::subThread()
 		{
 			if (GC->rtcc->med_k16.Mode != 7)
 			{
-				GC->t_Land = GC->rtcc->PZLDPDIS.PD_GETTD;
+				GC->rtcc->CZTDTGTU.GETTD = GC->rtcc->PZLDPDIS.PD_GETTD;
 			}
 		}
 
@@ -3703,7 +3673,7 @@ int ARCore::subThread()
 		opt.HeadsUp = HeadsUp;
 		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.t_land = GC->t_Land;
+		opt.t_land = GC->rtcc->CZTDTGTU.GETTD;
 		opt.vessel = vessel;
 
 		PADSolGood = GC->rtcc->PDI_PAD(&opt, temppdipad);
@@ -3986,7 +3956,7 @@ int ARCore::subThread()
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
-		opt.TLAND = GC->t_Land;
+		opt.TLAND = GC->rtcc->CZTDTGTU.GETTD;
 		opt.t_TPI = t_TPI;
 		if (opt.IsTwoSegment)
 		{
@@ -4551,7 +4521,7 @@ int ARCore::subThread()
 		if (GC->MissionPlanningActive)
 		{
 			//Temporary
-			GC->rtcc->med_m86.Time = GC->t_Land;
+			GC->rtcc->med_m86.Time = GC->rtcc->CZTDTGTU.GETTD;
 
 			std::vector<std::string> str;
 			GC->rtcc->PMMMED("86", str);
