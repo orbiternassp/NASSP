@@ -1671,10 +1671,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu49[] =
 	{
+		{ "Set Target", 0, 'T' },
 		{ "Selen. latitude", 0, 'A' },
 		{ "Selen. longitude", 0, 'O' },
 		{ "Selen. radius", 0, 'L' },
-		{ "Set Target", 0, 'T' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
@@ -1688,10 +1688,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu49, sizeof(mnu49) / sizeof(MFDBUTTONMENU));
 
+	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_svtarget);
 	RegisterFunction("LAT", OAPI_KEY_A, &ApolloRTCCMFD::menuLSLat);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::menuLSLng);
 	RegisterFunction("RAD", OAPI_KEY_L, &ApolloRTCCMFD::menuLSRadius);
-	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_svtarget);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 

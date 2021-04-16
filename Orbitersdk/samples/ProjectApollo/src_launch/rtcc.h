@@ -2176,7 +2176,6 @@ struct calculationParameters {
 	double SEP;			// Time of separation
 	double DOI;			// Time of DOI
 	double PDI;			// Time of PDI
-	double TLAND;		// Time of landing
 	double LunarLiftoff;// Time of lunar liftoff
 	double LSAzi;		// Approach azimuth to the lunar landing site
 	double Insertion;	// Time of Insertion
@@ -2687,6 +2686,8 @@ public:
 	void CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
 	//CMC/LGC Landing Site Update Load Generator
 	void CMMCMCLS(int veh);
+	//LGC Descent Target Update Load Generator
+	void CMMDTGTU(double t_land);
 
 	// MISSION CONTROL (G)
 
@@ -4315,11 +4316,22 @@ public:
 		VECTOR3 R_LS = _V(0, 0, 0);
 	};
 
-	struct CMCLGCLandingSupteMakupBuffer
+	struct CMCLGCLandingSiteMakupBuffer
 	{
 		LandingSiteMakupBuffer CSMLSUpdate;
 		LandingSiteMakupBuffer LMLSUpdate;
 	} CZLSVECT;
+
+	struct LGCDescentTargetMakupBuffer
+	{
+		std::string LoadType;
+		int SequenceNumber = 0;
+		std::string PrimarySite;
+		std::string BackupSite;
+		double GETofGeneration = 0.0;
+		int Octals[5] = { 0,0,0,0,0 };
+		double GETTD = 0.0; //Time of landing
+	} CZTDTGTU;
 
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{
@@ -4412,7 +4424,7 @@ private:
 	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
 	void IncrementAGCTime(char *list, double dt);
-	void TLANDUpdate(char *list, double t_land, int tlandaddr);
+	void TLANDUpdate(char *list, double t_land);
 	void V71Update(char *list, int* emem, int n);
 	void V72Update(char *list, int *emem, int n);
 	void SunburstAttitudeManeuver(char *list, VECTOR3 imuangles);

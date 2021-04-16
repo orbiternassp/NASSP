@@ -141,7 +141,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	}
 	oapiWriteScenario_int(scn, "TARGETNUMBER", G->targetnumber);
 	oapiWriteScenario_int(scn, "MISSION", GC->mission);
-	papiWriteScenario_double(scn, "TLAND", GC->t_Land);
 	papiWriteScenario_double(scn, "P30TIG", G->P30TIG);
 	papiWriteScenario_vec(scn, "DV_LVLH", G->dV_LVLH);
 	papiWriteScenario_double(scn, "ENTRYTIG", G->EntryTIG);
@@ -251,7 +250,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 
 		papiReadScenario_int(line, "TARGETNUMBER", G->targetnumber);
 		papiReadScenario_int(line, "MISSION", GC->mission);
-		papiReadScenario_double(line, "TLAND", GC->t_Land);
 		papiReadScenario_double(line, "P30TIG", G->P30TIG);
 		papiReadScenario_vec(line, "DV_LVLH", G->dV_LVLH);
 		papiReadScenario_double(line, "ENTRYTIG", G->EntryTIG);
@@ -5499,7 +5497,7 @@ bool TLandGETnput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_TLand(double time)
 {
-	GC->t_Land = time;
+	GC->rtcc->CZTDTGTU.GETTD = time;
 }
 
 void ApolloRTCCMFD::menuSetTLCCDesiredInclination()

@@ -655,7 +655,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 		{
-			GET_Display(Buffer, GC->t_Land);
+			GET_Display(Buffer, GC->rtcc->CZTDTGTU.GETTD);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
@@ -1287,7 +1287,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				}
 
 				skp->Text(4 * W / 8, 15 * H / 20, "T_L:", 4);
-				GET_Display(Buffer, GC->t_Land);
+				GET_Display(Buffer, GC->rtcc->CZTDTGTU.GETTD);
 				skp->Text(5 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
 
 				skp->Text(4 * W / 8, 16 * H / 20, "Lat:", 4);
@@ -3238,7 +3238,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
 		skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
 		skp->Text(5 * W / 8, 19 * H / 21, "TLAND:", 6);
-		GET_Display(Buffer, GC->t_Land);
+		GET_Display(Buffer, GC->rtcc->CZTDTGTU.GETTD);
 		skp->Text(5 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 	}
 	else if (screen == 41 || screen == 71)
@@ -4226,21 +4226,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		if (G->svtarget != NULL)
 		{
 			sprintf(Buffer, G->svtarget->GetName());
-			skp->Text((int)(0.5 * W / 8), 8 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "No Target!", 10);
+			skp->Text(1 * W / 16, 2 * H / 14, "No Target!", 10);
 		}
 
 		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
-		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
-		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
-		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 50 || screen == 98)
 	{
@@ -5436,9 +5436,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		skp->Text(1 * W / 8, 4 * H / 14, "TLAND:", 6);
-		GET_Display(Buffer, GC->t_Land);
+		skp->Text(1 * W / 8, 4 * H / 14, "TLAND", 5);
+		GET_Display(Buffer, GC->rtcc->CZTDTGTU.GETTD);
 		skp->Text(3 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 5 * H / 14, "LOAD NO", 7);
+		sprintf(Buffer, "%d", GC->rtcc->CZTDTGTU.SequenceNumber);
+		skp->Text(3 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 32, 13 * H / 28, "OID", 3);
 		skp->Text(10 * W / 32, 13 * H / 28, "FCT", 3);
@@ -5458,7 +5461,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		for (int i = 0;i < 5;i++)
 		{
-			sprintf(Buffer, "%05d", G->TLANDOctals[i]);
+			sprintf(Buffer, "%05d", GC->rtcc->CZTDTGTU.Octals[i]);
 			skp->Text(15 * W / 32, (i + 15) * H / 28, Buffer, strlen(Buffer));
 		}
 	}
