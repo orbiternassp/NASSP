@@ -2455,19 +2455,17 @@ int ARCore::subThread()
 {
 	int Result = 0;
 
-	int mptveh, docked, mptotherveh;
+	int mptveh, docked;
 
 	if (GC->MissionPlanningActive)
 	{
 		if (vesseltype < 2)
 		{
 			mptveh = RTCC_MPT_CSM;
-			mptotherveh = RTCC_MPT_LM;
 		}
 		else
 		{
 			mptveh = RTCC_MPT_LM;
-			mptotherveh = RTCC_MPT_CSM;
 		}
 	}
 
@@ -2766,7 +2764,6 @@ int ARCore::subThread()
 		opt.LSAzi = GC->rtcc->med_k18.psi_DS*RAD;
 		opt.LSLat = GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST];
 		opt.LSLng = GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST];
-		opt.mission = GC->mission;
 		opt.REFSMMATopt = REFSMMATopt;
 
 		if (REFSMMATopt == 0 || REFSMMATopt == 1)

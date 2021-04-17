@@ -6059,6 +6059,49 @@ void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, dou
 	MJD_BO = MJD_LO + dt_pf / 24.0 / 3600.0;
 }
 
+double REVTIM(VECTOR3 R, VECTOR3 V, double MJD, int body, bool S_pert)
+{
+	MATRIX3 Rot;
+	double r_e, J2, J3, J4, ainv, mu, n;
+	if (body == BODY_EARTH)
+	{
+		r_e = R_Earth;
+		J2 = J2_Earth;
+		J3 = J3_Earth;
+		J4 = J4_Earth;
+		mu = mu_Earth;
+	}
+	else
+	{
+		r_e = R_Moon;
+		J2 = J2_Moon;
+		J3 = J3_Moon;
+		J4 = 0.0;
+		mu = mu_Moon;
+	}
+
+	if (S_pert)
+	{
+		VECTOR3 R_T, V_T;
+		double r_T, sin_lat;
+		//Convert to true coordinates
+		Rot = GetRotationMatrix(body, MJD);
+		R_T = rhtmul(Rot, R);
+		V_T = rhtmul(Rot, V);
+		r_T = length(R_T);
+		ainv = 2.0 / r_T - pow(length(V_T), 2) / mu;
+		sin_lat = R_T.z / r_T;
+		ainv = ainv + J2 * pow(r_e, 2) / pow(r_T, 3)*(1.0 - 3.0*pow(sin_lat, 2)) + J3 * pow(r_e, 3) / pow(r_T, 4)*(3.0*sin_lat - 5.0*pow(sin_lat, 3)) +
+			J4 / 4.0 * pow(r_e, 4) / pow(r_T, 5)*(3.0 - 30.0*pow(sin_lat, 2) + 35.0*pow(sin_lat, 4));
+	}
+	else
+	{
+		ainv = 2.0 / length(R) - pow(length(V), 2) / mu;
+	}
+	n = sqrt(mu*pow(ainv, 3));
+	return PI2 / n;
+}
+
 void EclipticToMCI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_MCI, VECTOR3 &V_MCI)
 {
 	MATRIX3 Rot = GetObliquityMatrix(BODY_MOON, MJD);
