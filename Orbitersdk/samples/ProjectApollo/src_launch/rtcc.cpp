@@ -5699,7 +5699,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 			DV = ApoapsisPeriapsisChangeInteg(sv2, r_AD, r_PD);
 			sv2_apo = sv2;
 			sv2_apo.V += DV;
-			T_P = OrbMech::period(sv2_apo.R, sv2_apo.V, mu);
+			T_P = OrbMech::REVTIM(sv2_apo.R, sv2_apo.V, sv2_apo.MJD, body, true);
 
 			PMMAPD(sv2_apo, sv_a, sv_p);
 			OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_p.gravref, lat_p, lng_p);
@@ -5716,6 +5716,12 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 			dlng_apo = dlng;
 			n++;
 		}
+
+		/*SV svtest = coast(sv_p, T_P*opt->N);
+		OrbMech::latlong_from_J2000(svtest.R, svtest.MJD, svtest.gravref, lat_p, lng_p);
+		OELEMENTS coe = OrbMech::coe_from_sv(svtest.R, svtest.V, mu);
+		double get_p = OrbMech::GETfromMJD(svtest.MJD, CalcGETBase());
+		sprintf_s(oapiDebugString(), 128, "TA %lf lng_p %lf get_p %lf", coe.TA*DEG, lng_p*DEG, get_p);*/
 	}
 
 	//Maneuver calculation
@@ -11507,7 +11513,7 @@ void RTCC::DockingAlignmentProcessor(DockAlignOpt &opt)
 bool RTCC::PMMAPD(SV sv0, SV &sv_a, SV &sv_p)
 {
 	OELEMENTS coe;
-	double mu;
+	double mu, DN;
 	bool lowecclogic, error2;
 	
 	mu = GGRAV * oapiGetMass(sv0.gravref);
@@ -11524,12 +11530,21 @@ bool RTCC::PMMAPD(SV sv0, SV &sv_a, SV &sv_p)
 
 	if (lowecclogic == false)
 	{
-		sv_p = OrbMech::PMMAEGS(sv0, 1, 0.0, error2);
+		DN = 1.0;
+		sv_p = OrbMech::PMMAEGS(sv0, 1, 0.0, error2, DN);
 		if (error2)
 		{
 			return true;
 		}
-		sv_a = OrbMech::PMMAEGS(sv0, 1, PI, error2);
+		if (coe.TA > PI)
+		{
+			DN = 1.0;
+		}
+		else
+		{
+			DN = 0.0;
+		}
+		sv_a = OrbMech::PMMAEGS(sv0, 1, PI, error2, DN);
 		if (error2)
 		{
 			return true;
@@ -22889,7 +22904,7 @@ void RTCC::PMMREAST()
 		std::vector<EphemerisData> SVArray;
 		SVArray.push_back(sv_abort);
 		ConicRTEEarthNew rteproc(this, SVArray);
-		rteproc.READ(med_f75.Type,SystemParameters.GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX);
+		rteproc.READ(1,SystemParameters.GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX); //TBD
 		rteproc.Init(med_f75.DVMAX, med_f75.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
 		rteproc.MAIN();
 
@@ -24336,6 +24351,16 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		PZREAP.EntryProfile = med_f71.EntryProfile;
 
 		PMMREAP(71);
+	}
+	//Abort Scan Table Generation for an unspecified area
+	else if (med == "75")
+	{
+		//int type;
+
+		if (med_f75.Site == "FCUA")
+		{
+
+		}
 	}
 	//Update the target table for return to Earth
 	else if (med == "85")

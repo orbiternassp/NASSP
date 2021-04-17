@@ -1781,7 +1781,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.AltRef = 1;
 		gmpopt.GETbase = GETbase;
 		gmpopt.H_A = 210.0*1852.0;
-		gmpopt.H_P = 97.0*1852.0;
+		gmpopt.H_P = 95.0*1852.0;
 		gmpopt.long_D = -45.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_HAS;
 		gmpopt.RV_MCC = sv0;

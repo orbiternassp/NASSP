@@ -594,7 +594,6 @@ struct REFSMMATOpt
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landing site REFSMMAT
 	double LSAzi; //approach azimuth for the landing site REFSMMAT
-	int mission; //Just for the launch REFSMMAT
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool HeadsUp = true; //Orientation during the maneuver
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
@@ -2956,7 +2955,7 @@ public:
 	struct MED_F71
 	{
 		int Page = 1;
-		std::string Site;
+		std::string Site = "No Site!";
 		double T_V = 0.0;
 		double T_omin = 0.0;
 		double T_omax = 0.0;
@@ -2967,7 +2966,7 @@ public:
 	//Generation of Abort Scan Table for unspecified area
 	struct MED_F75
 	{
-		int Type = 0; //0 = TCUA, 1 = FCUA
+		std::string Site = "No Site!";
 		double T_V = 0.0; //Vector time
 		double T_0 = 0.0; //Time of abort
 		double DVMAX = 0.0;
@@ -3888,7 +3887,7 @@ public:
 		double ATPCoordinates[5][10];
 
 		//Block 12
-		std::string RTESite;
+		std::string RTESite = "No Site!";
 		double RTEVectorTime;
 		double RTET0Min;
 		double RTET0Max;
