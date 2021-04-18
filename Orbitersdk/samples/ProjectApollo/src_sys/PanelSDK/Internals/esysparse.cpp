@@ -172,6 +172,8 @@ void E_system::Create_Battery(char *line)
 	e_object* SRC=(e_object*)GetPointerByString(source);
 	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance));
 
+	new_b->parent = this;
+
 	if (temp > 0)
 	{
 		P_thermal->AddThermalObject(new_b);

@@ -31,6 +31,8 @@
 #include "Orbitersdk.h"
 #include "hsystems.h"
 
+class E_system;
+
 ///
 /// \ingroup PanelSDK
 /// The generic electrical object class.
@@ -167,6 +169,8 @@ public:
 	///
 	bool IsEnabled() { return enabled; };
 
+	E_system *parent;
+
 protected:
 	///
 	/// \brief Is this object enabled?
@@ -280,6 +284,7 @@ class Battery:public e_object,public therm_obj
 {  //battery is a producer / consumer
 public:
 	Battery(char *i_name,e_object *i_src, double i_power, double i_voltage, double i_resistance);
+	~Battery();
 
 	void UpdateFlow(double dt);
 	virtual void DrawPower(double watts);

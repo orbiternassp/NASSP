@@ -40,6 +40,7 @@ e_object::e_object()
 	Volts = 0.0;
 	Amperes = 0.0;
 	Hertz = 0.0;
+	parent = NULL;
 }
 
 void e_object::refresh(double dt)
@@ -636,6 +637,11 @@ Battery::Battery(char *i_name, e_object *i_src, double i_power, double i_voltage
 	 c = 0.15;
 	 batheat = 0.0;
 	 chargeheat = 0.0;
+}
+
+Battery::~Battery()
+{
+	parent->P_thermal->RemoveThermalObject(this);
 }
 
 void Battery::DrawPower(double watts)
