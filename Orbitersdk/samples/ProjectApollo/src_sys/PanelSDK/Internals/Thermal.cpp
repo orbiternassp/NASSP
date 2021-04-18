@@ -29,9 +29,17 @@
 /// \todo For testing
 //extern FILE *PanelsdkLogFile;
 
-therm_obj::therm_obj() {
-
+therm_obj::therm_obj()
+{
 	next_t = NULL;
+	Temp = 0.0;
+	energy = 0.0;
+	external = 0;
+	c = 0.0;
+	isolation = 0.0;
+	Area = 0.0;
+	pos = _vector3(0, 0, 0);
+	mass = 0.0;
 }
 
 void therm_obj::thermic(double _en) {
