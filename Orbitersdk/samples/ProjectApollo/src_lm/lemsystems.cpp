@@ -1756,8 +1756,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *primglycolpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
 	double *primglycolmass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:MASS");
 
-	double *primglycolaccumpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATORACTUAL:PRESS");
-	double* primglycolaccumvolume = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATORACTUAL:VOLUME");
+	//double *primglycolaccumpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATORACTUAL:PRESS");
+	//double* primglycolaccumvolume = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATORACTUAL:VOLUME");
 
 	int *primevapPump = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:PUMP");
 	int *primevapValve = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:VALVE");
