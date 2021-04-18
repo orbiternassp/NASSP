@@ -483,6 +483,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPResults.Pitch_Man = 0.0;
 	GMPResults.Yaw_Man = 0.0;
 
+	RTEASTType = 0;
+
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
 	g_Data.uplinkState = 0;

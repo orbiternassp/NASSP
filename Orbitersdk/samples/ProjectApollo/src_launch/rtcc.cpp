@@ -22904,11 +22904,20 @@ void RTCC::PMMREAST()
 		std::vector<EphemerisData> SVArray;
 		SVArray.push_back(sv_abort);
 		ConicRTEEarthNew rteproc(this, SVArray);
-		rteproc.READ(1,SystemParameters.GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX); //TBD
+		int type;
+		if (med_f75.Type == "TCUA")
+		{
+			type = 0;
+		}
+		else
+		{
+			type = 1;
+		}
+		rteproc.READ(type,SystemParameters.GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX); //TBD
 		rteproc.Init(med_f75.DVMAX, med_f75.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
 		rteproc.MAIN();
 
-		DV = rteproc.SolData.DV;
+		DV = rteproc.SolData.DV*0.3048;
 		T_r = rteproc.SolData.T_r;
 	}
 	else
@@ -22920,7 +22929,13 @@ void RTCC::PMMREAST()
 	PICSSC(true, sv_abort.R, sv_abort.V, r, v1, lat, lng, gamma1, azi1);
 	PICSSC(true, sv_abort.R, sv_abort.V + DV, r, v2, lat, lng, gamma2, azi2);
 
+	EphemerisData2 XIN;
 	ASTInput ARIN;
+
+	XIN.R = sv_abort.R;
+	XIN.V = sv_abort.V;
+	XIN.GMT = sv_abort.GMT;
+
 	ARIN.dgamma = gamma2 - gamma1;
 	ARIN.dpsi = azi2 - azi1;
 	ARIN.dv = v2 - v1;
@@ -23093,6 +23108,7 @@ bool RTCC::GMGMED(char *str)
 		return false;
 	}
 
+	bool skipdata = false;
 	char medtype;
 	medtype = str[i];
 	i++;
@@ -23103,6 +23119,12 @@ bool RTCC::GMGMED(char *str)
 	{
 		code.push_back(str[i]);
 		i++;
+		//End of the string?
+		if (str[i] == ';')
+		{
+			skipdata = true;
+			break;
+		}
 	} while (str[i] != ',');
 
 	if (code.size() == 0)
@@ -23115,23 +23137,26 @@ bool RTCC::GMGMED(char *str)
 	std::string word;
 	std::vector<std::string> MEDSequence;
 
-	do
+	if (skipdata == false)
 	{
-		if (str[i] == ',')
+		do
 		{
-			MEDSequence.push_back(word);
-			word.clear();
-		}
-		else
-		{
-			word.push_back(str[i]);
-		}
-		i++;
-		if (str[i] == '\0' || str[i] == ';')
-		{
-			MEDSequence.push_back(word);
-		}
-	} while (str[i] != '\0' && str[i] != ';');
+			if (str[i] == ',')
+			{
+				MEDSequence.push_back(word);
+				word.clear();
+			}
+			else
+			{
+				word.push_back(str[i]);
+			}
+			i++;
+			if (str[i] == '\0' || str[i] == ';')
+			{
+				MEDSequence.push_back(word);
+			}
+		} while (str[i] != '\0' && str[i] != ';');
+	}
 
 	RTCCONLINEMON.TextBuffer[0].assign(str);
 	GMSPRINT("GMGMED", 51);
@@ -24357,10 +24382,20 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 	{
 		//int type;
 
-		if (med_f75.Site == "FCUA")
+		if (med_f75.Type == "TCUA")
 		{
 
 		}
+		else if (med_f75.Type == "FCUA")
+		{
+
+		}
+		else
+		{
+			return 2;
+		}
+
+		PMMREAP(75);
 	}
 	//Update the target table for return to Earth
 	else if (med == "85")
@@ -30755,6 +30790,33 @@ void RTCC::EMSLSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 	}
 }
 
+bool EMMGSTMPOccultationCheck(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES)
+{
+	//Vectors from bodies to spacecraft
+	VECTOR3 R_EV, R_MV, R_SV;
+	if (body == BODY_EARTH)
+	{
+		R_EV = R;
+		R_MV = -R_EM + R;
+		R_SV = -R_ES + R;
+	}
+	else
+	{
+		R_EV = R_EM + R;
+		R_MV = R;
+		R_SV = -R_ES + R_EM + R;
+	}
+
+	//Earth occulation
+	if (OrbMech::isnotocculted(u_star, R_EV, OrbMech::R_Earth, 0.0) == false) return true;
+	//Moon occultation
+	if (OrbMech::isnotocculted(u_star, R_MV, OrbMech::R_Moon, 0.0) == false) return true;
+	//Sun occultation
+	if (OrbMech::isnotocculted(u_star, R_SV, OrbMech::R_Sun, 0.0) == false) return true;
+
+	return false;
+}
+
 void RTCC::EMMGSTMP()
 {
 	int err = 0;
@@ -30765,100 +30827,133 @@ void RTCC::EMMGSTMP()
 		//Stars not initialized, error?
 		if (EZJGSTAR.size() == 0) return;
 
+		//Null stars
+		unsigned i;
+
+		for (i = 0;i < 2;i++)
+		{
+			EZJGSTTB.BS_S[i] = 0;
+			EZJGSTTB.BS_DEC[i] = 0.0;
+			EZJGSTTB.BS_RTASC[i] = 0.0;
+			EZJGSTTB.BS_SPA[i] = 0.0;
+			EZJGSTTB.BS_SXP[i] = 0.0;
+		}
+
+		//Get REFSMMAT
 		REFSMMATData refs = EZJGMTX1.data[EZGSTMED.MTX1 - 1];
 		if (refs.ID <= 0)
 		{
 			err = 4;
 			EZJGSTTB.IRA = "ZZZZZZ";
+			EMDGSUPP(err);
+			return;
+		}
+
+		char Buff[7];
+
+		FormatREFSMMATCode(EZGSTMED.MTX1, refs.ID, Buff);
+		EZJGSTTB.IRA.assign(Buff);
+
+		//Get state vector at input time
+		ELVCTRInputTable intab;
+		ELVCTROutputTable outtab;
+		EphemerisData sv;
+
+		intab.L = RTCC_MPT_CSM;
+		intab.GMT = EZGSTMED.GMT;
+		ELVCTR(intab, outtab);
+		if (outtab.ErrorCode > 2)
+		{
+			err = 2;
+			EMDGSUPP(err);
+			return;
+		}
+
+		//Get ephemerides
+		VECTOR3 R_EM, V_EM, R_ES;
+		if (PLEFEM(1, EZGSTMED.GMT / 3600.0, 0, R_EM, V_EM, R_ES))
+		{
+			err = 2;
+			EMDGSUPP(err);
+			return;
+		}
+
+		MATRIX3 M_SMNB, RM;
+		VECTOR3 u_SM, u_NB;
+		double XSC, YSC, ZSC, SPA, SPX;
+
+		sv = outtab.SV;
+		RM = refs.REFSMMAT;
+		M_SMNB = OrbMech::CALCSMSC(_V(EZJGSTTB.Att[0].z, EZJGSTTB.Att[0].x, EZJGSTTB.Att[0].y));
+
+		VECTOR3 u;
+		int num = 0;
+		unsigned endstar;
+
+		if (EZGSTMED.StartingStar <= EZJGSTAR.size())
+		{
+			i = EZGSTMED.StartingStar - 1;
 		}
 		else
 		{
-			char Buff[7];
+			i = 0;
+		}
+		endstar = i;
 
-			FormatREFSMMATCode(EZGSTMED.MTX1, refs.ID, Buff);
-			EZJGSTTB.IRA.assign(Buff);
+		do
+		{
+			u = EZJGSTAR[i];
 
-			//Null stars
-			unsigned i;
-
-			for (i = 0;i < 2;i++)
+			//Occultation check
+			if (EMMGSTMPOccultationCheck(u, sv.R, sv.RBI, R_EM, R_ES))
 			{
-				EZJGSTTB.BS_S[i] = 0;
-				EZJGSTTB.BS_DEC[i] = 0.0;
-				EZJGSTTB.BS_RTASC[i] = 0.0;
-				EZJGSTTB.BS_SPA[i] = 0.0;
-				EZJGSTTB.BS_SXP[i] = 0.0;
+				continue;
 			}
 
-			MATRIX3 M_SMNB, RM;
-			VECTOR3 u_SM, u_NB;
-			double XSC, YSC, ZSC, SPA, SPX;
+			u_SM = mul(RM, u);
+			u_NB = mul(M_SMNB, u_SM);
 
-			RM = refs.REFSMMAT;
-			M_SMNB = OrbMech::CALCSMSC(_V(EZJGSTTB.Att[0].z, EZJGSTTB.Att[0].x, EZJGSTTB.Att[0].y));
+			XSC = u_NB.x;
+			YSC = u_NB.y;
+			ZSC = u_NB.z;
 
-			VECTOR3 u;
-			int num = 0;
-			unsigned endstar;
+			SPA = atan2(ZSC, XSC);
+			SPX = asin(YSC);
 
-			if (EZGSTMED.StartingStar <= EZJGSTAR.size())
+			if (abs(SPX) <= 5.0*RAD)
 			{
-				i = EZGSTMED.StartingStar - 1;
+				if (SPA <= 31.5*RAD && SPA >= -10.0*RAD)
+				{
+					//Found one
+					EZJGSTTB.BS_S[num] = i + 1;
+					EZJGSTTB.BS_DEC[num] = acos(u.z);
+					EZJGSTTB.BS_RTASC[num] = atan2(u.y, u.x);
+					if (EZJGSTTB.BS_RTASC[num] < 0)
+					{
+						EZJGSTTB.BS_RTASC[num] += PI2;
+					}
+					EZJGSTTB.BS_SPA[num] = SPA;
+					EZJGSTTB.BS_SXP[num] = SPX;
+					num++;
+					if (num >= 2)
+					{
+						break;
+					}
+				}
 			}
-			else
+			i++;
+			if (i >= EZJGSTAR.size())
 			{
 				i = 0;
 			}
-			endstar = i;
+		} while (i != endstar);
 
-			do
-			{
-				u = EZJGSTAR[i];
-
-				//TBD: Occultation check
-				u_SM = mul(RM, u);
-				u_NB = mul(M_SMNB, u_SM);
-
-				XSC = u_NB.x;
-				YSC = u_NB.y;
-				ZSC = u_NB.z;
-
-				SPA = atan2(ZSC, XSC);
-				SPX = asin(YSC);
-
-				if (abs(SPX) <= 5.0*RAD)
-				{
-					if (SPA <= 31.5*RAD && SPA >= -10.0*RAD)
-					{
-						//Found one
-						EZJGSTTB.BS_S[num] = i + 1;
-						EZJGSTTB.BS_DEC[num] = acos(u.z);
-						EZJGSTTB.BS_RTASC[num] = atan2(u.y, u.x);
-						if (EZJGSTTB.BS_RTASC[num] < 0)
-						{
-							EZJGSTTB.BS_RTASC[num] += PI2;
-						}
-						EZJGSTTB.BS_SPA[num] = SPA;
-						EZJGSTTB.BS_SXP[num] = SPX;
-						num++;
-						if (num >= 2)
-						{
-							break;
-						}
-					}
-				}
-				i++;
-				if (i >= EZJGSTAR.size())
-				{
-					i = 0;
-				}
-			} while (i != endstar);
-
-			if (num < 2)
-			{
-				err = 3;
-			}
+		if (num < 2)
+		{
+			err = 3;
 		}
+
+		//TBD: Telescope
 	}
 	//Sextant Data
 	if (EZGSTMED.MTX2 > 0)
@@ -30870,75 +30965,103 @@ void RTCC::EMMGSTMP()
 		if (refs.ID <= 0)
 		{
 			err = 4;
+			EMDGSUPP(err);
+			return;
+		}
+		//Null stars
+		unsigned i;
+
+		for (i = 0;i < 2;i++)
+		{
+			EZJGSTTB.SXT_STAR[0] = 0;
+			EZJGSTTB.SXT_SFT_INP[i] = 0.0;
+			EZJGSTTB.SXT_SFT_RTCC[i] = 0.0;
+			EZJGSTTB.SXT_TRN_INP[i] = 0.0;
+			EZJGSTTB.SXT_TRN_RTCC[i] = 0.0;
+		}
+
+		//Get state vector at input time
+		ELVCTRInputTable intab;
+		ELVCTROutputTable outtab;
+		EphemerisData sv;
+
+		intab.L = RTCC_MPT_CSM;
+		intab.GMT = EZGSTMED.GMT;
+		ELVCTR(intab, outtab);
+		if (outtab.ErrorCode > 2)
+		{
+			err = 2;
+			EMDGSUPP(err);
+			return;
+		}
+
+		//Get ephemerides
+		VECTOR3 R_EM, V_EM, R_ES;
+		if (PLEFEM(1, EZGSTMED.GMT / 3600.0, 0, R_EM, V_EM, R_ES))
+		{
+			err = 2;
+			EMDGSUPP(err);
+			return;
+		}
+
+		MATRIX3 SMNB, RM, SBNB;
+		VECTOR3 S_SM;
+		double TA, SA, a;
+
+		RM = refs.REFSMMAT;
+		SMNB = OrbMech::CALCSMSC(_V(EZJGSTTB.Att[0].z, EZJGSTTB.Att[0].x, EZJGSTTB.Att[0].y));
+		a = -0.5676353234;
+		SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
+
+		VECTOR3 u;
+		int num = 0;
+		unsigned endstar;
+
+		if (EZGSTMED.StartingStar <= EZJGSTAR.size())
+		{
+			i = EZGSTMED.StartingStar - 1;
 		}
 		else
 		{
-			//Null stars
-			unsigned i;
+			i = 0;
+		}
+		endstar = i;
 
-			for (i = 0;i < 2;i++)
+		do
+		{
+			u = EZJGSTAR[i];
+
+			//Occultation check
+			if (EMMGSTMPOccultationCheck(u, sv.R, sv.RBI, R_EM, R_ES))
 			{
-				EZJGSTTB.SXT_STAR[0] = 0;
-				EZJGSTTB.SXT_SFT_INP[i] = 0.0;
-				EZJGSTTB.SXT_SFT_RTCC[i] = 0.0;
-				EZJGSTTB.SXT_TRN_INP[i] = 0.0;
-				EZJGSTTB.SXT_TRN_RTCC[i] = 0.0;
+				continue;
 			}
 
-			MATRIX3 SMNB, RM, SBNB;
-			VECTOR3 S_SM;
-			double TA, SA, a;
+			S_SM = mul(RM, u);
+			OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
 
-			RM = refs.REFSMMAT;
-			SMNB = OrbMech::CALCSMSC(_V(EZJGSTTB.Att[0].z, EZJGSTTB.Att[0].x, EZJGSTTB.Att[0].y));
-			a = -0.5676353234;
-			SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
-
-			VECTOR3 u;
-			int num = 0;
-			unsigned endstar;
-
-			if (EZGSTMED.StartingStar <= EZJGSTAR.size())
+			if (TA <= 50.0*RAD)
 			{
-				i = EZGSTMED.StartingStar - 1;
+				//Found one
+				EZJGSTTB.SXT_STAR[num] = i + 1;
+				EZJGSTTB.SXT_SFT_RTCC[num] = SA;
+				EZJGSTTB.SXT_TRN_RTCC[num] = TA;
+				num++;
+				if (num >= 2)
+				{
+					break;
+				}
 			}
-			else
+			i++;
+			if (i >= EZJGSTAR.size())
 			{
 				i = 0;
 			}
-			endstar = i;
+		} while (i != endstar);
 
-			do
-			{
-				u = EZJGSTAR[i];
-
-				//TBD: Occultation check
-				S_SM = mul(RM, u);
-				OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
-
-				if (TA <= 50.0*RAD)
-				{
-					//Found one
-					EZJGSTTB.SXT_STAR[num] = i + 1;
-					EZJGSTTB.SXT_SFT_RTCC[num] = SA;
-					EZJGSTTB.SXT_TRN_RTCC[num] = TA;
-					num++;
-					if (num >= 2)
-					{
-						break;
-					}
-				}
-				i++;
-				if (i >= EZJGSTAR.size())
-				{
-					i = 0;
-				}
-			} while (i != endstar);
-
-			if (num < 2)
-			{
-				err = 3;
-			}
+		if (num < 2)
+		{
+			err = 3;
 		}
 	}
 	//Matrix display

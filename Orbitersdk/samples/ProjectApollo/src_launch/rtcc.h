@@ -2966,11 +2966,11 @@ public:
 	//Generation of Abort Scan Table for unspecified area
 	struct MED_F75
 	{
-		std::string Site = "No Site!";
+		std::string Type = "TCUA";
 		double T_V = 0.0; //Vector time
 		double T_0 = 0.0; //Time of abort
-		double DVMAX = 0.0;
-		int EntryProfile = 0;
+		double DVMAX = 10000.0;
+		int EntryProfile = 1;
 	} med_f75;
 
 	//Update return to Earth constraints
@@ -3206,9 +3206,9 @@ public:
 
 	struct GuidanceOpticsSupportTable
 	{
-		std::string CODE = "ZZZZZZZZ";
-		VECTOR3 Att_H = _V(0, 0, 0);
-		double GETAC = 0.0;
+		std::string CODE = "ZZZZZZZZ";			//Identification of maneuver to be performed
+		VECTOR3 Att_H = _V(0, 0, 0);			//Pitch, yaw and roll attitudes for the maneuver references to the IMU aligned to a local vertical orientation. Associated with DMT REFSMMAT.
+		double GETAC = 0.0;						//Ground elapsed time of alignment check
 		double IGA = 0.0;
 		std::string IRA = "ZZZZZZ";
 		unsigned SXT_STAR[2] = { 0,0 };

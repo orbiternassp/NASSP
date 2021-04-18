@@ -345,6 +345,7 @@ namespace OrbMech {
 	const double R_Moon = 1738090.0;
 	const double w_Moon = 2.66169948e-6;
 	const double mu_Sun = 0.13271244e21; //Different from GSOP. Guess they hadn't properly figured this out yet.
+	const double R_Sun = 6.96e8;
 	const double J2_Earth = 1082.6269e-6;
 	const double J3_Earth = -2.51e-6;
 	const double J4_Earth = -1.60e-6;
@@ -406,7 +407,7 @@ namespace OrbMech {
 	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA);
 	int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
 	VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL);
-	bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E);
+	bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E, double dist = 5.0*RAD);
 	VECTOR3 CALCGAR(MATRIX3 REFSM, MATRIX3 SMNB);
 	MATRIX3 CALCSMSC(VECTOR3 GA);
 	VECTOR3 CALCGTA(MATRIX3 des);

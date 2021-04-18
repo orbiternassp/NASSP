@@ -760,6 +760,14 @@ public:
 	void menuMakeDODREFSMMATCurrent();
 	void menuSetRetrofireMissDistance();
 	bool set_RetrofireMissDistance(double val);
+	void menuSetAbortScanTablePage();
+	void menuSetASTSiteOrType();
+	void set_ASTSiteOrType(char *site);
+	void menuASTVectorTime();
+	void set_ASTVectorTime(double get);
+	void menuASTAbortTime();
+	void set_ASTAbortTime(double get);
+	void menuASTCalc();
 
 protected:
 	oapi::Font *font;
