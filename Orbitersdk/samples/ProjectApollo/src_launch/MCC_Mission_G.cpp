@@ -376,7 +376,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval2(rtcc->calcParams.EI - 45.0*60.0), 117, MST_G_TRANSEARTH_11);
 		break;
 	case MST_G_TRANSEARTH_11: //Final entry update to CM/SM separation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->stage == CM_STAGE, 118, MST_ENTRY);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->GetStage() == CM_STAGE, 118, MST_ENTRY);
 		break;
 	case MST_ENTRY:
 		switch (SubState) {
@@ -388,7 +388,7 @@ void MCC::MissionSequence_G()
 		break;
 		case 1:
 		{
-			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			if (cm->GetStage() == CM_ENTRY_STAGE_SEVEN)
 			{
 				setState(MST_LANDING);
 			}
@@ -404,7 +404,7 @@ void MCC::MissionSequence_G()
 	{
 		if (AbortMode == 5) //Earth Orbit Abort
 		{
-			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			if (cm->GetStage() == CM_ENTRY_STAGE_SEVEN)
 			{
 				setState(MST_LANDING);
 			}

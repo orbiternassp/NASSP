@@ -66,7 +66,7 @@ void MCC::MissionSequence_F()
 		}
 		break;
 	case MST_F_TRANSLUNAR3: //
-		if (cm->stage == CSM_LEM_STAGE) {
+		if (cm->GetStage() == CSM_LEM_STAGE) {
 			addMessage("SEPARATION");
 			setState(MST_F_TRANSLUNAR4);
 		}
@@ -437,7 +437,7 @@ void MCC::MissionSequence_F()
 		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval2(rtcc->calcParams.EI - 1.0*3600.0), 98, MST_F_TRANSEARTH_13);
 		break;
 	case MST_F_TRANSEARTH_13: //Final entry update to CM/SM separation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->stage == CM_STAGE, 99, MST_ENTRY);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->GetStage() == CM_STAGE, 99, MST_ENTRY);
 		break;
 	case MST_ENTRY:
 		switch (SubState) {
@@ -449,7 +449,7 @@ void MCC::MissionSequence_F()
 		break;
 		case 1:
 		{
-			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			if (cm->GetStage() == CM_ENTRY_STAGE_SEVEN)
 			{
 				setState(MST_LANDING);
 			}
@@ -461,7 +461,7 @@ void MCC::MissionSequence_F()
 	{
 		if (AbortMode == 5) //Earth Orbit Abort
 		{
-			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			if (cm->GetStage() == CM_ENTRY_STAGE_SEVEN)
 			{
 				setState(MST_LANDING);
 			}

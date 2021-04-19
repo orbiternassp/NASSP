@@ -26,6 +26,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 #include "apolloguidance.h"
 #include "saturn.h"
+#include "saturn1b.h"
+#include "iu.h"
+#include "LVDC.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
@@ -37,6 +40,58 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	bool scrubbed = false;
 
 	switch (fcn) {
+	case 100: //MISSION INITIALIZATION
+	{
+		char Buff[128];
+
+		//P80 MED: mission initialization
+		sprintf_s(Buff, "P80,1,CSM,%d,%d,%d;", GZGENCSN.MonthofLiftoff, GZGENCSN.DayofLiftoff, GZGENCSN.Year);
+		GMGMED(Buff);
+
+		//P10 MED: Enter actual liftoff time
+		double TEPHEM0, tephem_scal;
+		Saturn *cm = (Saturn *)calcParams.src;
+
+		//Get TEPHEM
+		TEPHEM0 = 40038.;
+		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc);
+		double LaunchMJD = (tephem_scal / 8640000.) + TEPHEM0;
+		LaunchMJD = (LaunchMJD - SystemParameters.GMTBASE)*24.0;
+
+		int hh, mm;
+		double ss;
+
+		OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
+
+		sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
+		GMGMED(Buff);
+
+		//P12: CSM GRR and Azimuth
+		Saturn1b *Sat1b = (Saturn1b*)cm;
+		LVDC1B *lvdc = (LVDC1B*)Sat1b->iu->GetLVDC();
+		double Azi = lvdc->Azimuth*DEG;
+		double T_GRR = lvdc->T_GRR;
+
+		sprintf_s(Buff, "P12,CSM,%d:%d:%.2lf,%.2lf;", hh, mm, ss, Azi);
+		GMGMED(Buff);
+
+		//P15: CMC clock zero
+		sprintf_s(Buff, "P15,AGC,%d:%d:%.2lf;", hh, mm, ss);
+		GMGMED(Buff);
+
+		//P12: IU GRR and Azimuth
+		OrbMech::SStoHHMMSS(T_GRR, hh, mm, ss);
+		sprintf_s(Buff, "P12,IU1,%d:%d:%.2lf,%.2lf;", hh, mm, ss, Azi);
+		GMGMED(Buff);
+
+		//Get actual liftoff REFSMMAT from telemetry
+		BZSTLM.CMC_REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		BZSTLM.CMCRefsPresent = true;
+		EMSGSUPP(1, 1);
+		//Make telemetry matrix current
+		GMGMED("G00,CSM,TLM,CSM,CUR;");
+	}
+	break;
 	case 1: // MISSION C PHASING BURN
 	{
 		LambertMan lambert;
@@ -53,7 +108,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GET_TIG = OrbMech::HHMMSSToSS(3, 20, 0);
 
 		lambert.mode = 0;
-		lambert.GETbase = getGETBase();
+		lambert.GETbase = CalcGETBase();
 		lambert.T1 = GET_TIG;
 		lambert.T2 = OrbMech::HHMMSSToSS(26, 25, 0);
 		lambert.N = 15;
@@ -65,7 +120,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LambertTargeting(&lambert, res);
 
-		opt.GETbase = getGETBase();
+		opt.GETbase = CalcGETBase();
 		opt.vessel = calcParams.src;
 		opt.TIG = GET_TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -96,7 +151,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer3[1000];
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 
 		entopt.vessel = calcParams.src;
 		entopt.GETbase = GETbase;
@@ -176,7 +231,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GET_TIG = OrbMech::HHMMSSToSS(15, 52, 0);
 
 		lambert.mode = 0;
-		lambert.GETbase = getGETBase();
+		lambert.GETbase = CalcGETBase();
 		lambert.T1 = GET_TIG;
 		lambert.T2 = OrbMech::HHMMSSToSS(26, 25, 0);
 		lambert.N = 7;
@@ -199,7 +254,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else
 		{
-			opt.GETbase = getGETBase();
+			opt.GETbase = CalcGETBase();
 			opt.vessel = calcParams.src;
 			opt.TIG = GET_TIG;
 			opt.dV_LVLH = res.dV_LVLH;
@@ -251,7 +306,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		GETBase = getGETBase();
+		GETBase = CalcGETBase();
 
 		sv_A = StateVectorCalc(calcParams.src);
 		sv_P = StateVectorCalc(calcParams.tgt);
@@ -330,7 +385,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_A = StateVectorCalc(calcParams.src);
 		sv_P = StateVectorCalc(calcParams.tgt);
 
-		GETBase = getGETBase();
+		GETBase = CalcGETBase();
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 
 		GZGENCSN.TIElevationAngle = 27.45*RAD;
@@ -406,7 +461,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -458,7 +513,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_A = StateVectorCalc(calcParams.src);
 		sv_P = StateVectorCalc(calcParams.tgt);
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 
 		GZGENCSN.TIElevationAngle= 27.45*RAD;
 		GZGENCSN.TITravelAngle = 140.0*RAD;
@@ -492,7 +547,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.dV_LVLH = _V(2.0*0.3048, 0.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
-		opt.GETbase = getGETBase();
+		opt.GETbase = CalcGETBase();
 		opt.HeadsUp = false;
 		opt.navcheckGET = 0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
@@ -609,7 +664,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.AltRef = 1;
@@ -761,7 +816,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 		F = SPS_THRUST;
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
@@ -770,7 +825,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		dV_LVLH = _V(dv, 0.0, 0.0);
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 		P30TIG = OrbMech::HHMMSSToSS(120, 43, 0);
 
 		refsopt.GETbase = GETbase;
@@ -890,7 +945,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.AltRef = 1;
@@ -1044,7 +1099,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 		F = SPS_THRUST;
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
@@ -1052,7 +1107,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv = StateVectorCalc(calcParams.src);
 		dV_LVLH = _V(0.0, dv, 0.0);
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 		P30TIG = OrbMech::HHMMSSToSS(210, 8, 0);
 
 		refsopt.dV_LVLH = dV_LVLH;
@@ -1110,7 +1165,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P27PAD * form = (P27PAD *)pad;
 		P27Opt opt;
 
-		opt.GETbase = getGETBase();
+		opt.GETbase = CalcGETBase();
 		opt.navcheckGET = OrbMech::HHMMSSToSS(215, 44, 0);
 		opt.SVGET = OrbMech::HHMMSSToSS(216, 14, 0);
 		opt.vessel = calcParams.src;
@@ -1168,7 +1223,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.dLOA = -22.5*RAD;
@@ -1265,7 +1320,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer3[1000];
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 
 		entopt.vessel = calcParams.src;
 		entopt.GETbase = GETbase;
@@ -1326,7 +1381,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MATRIX3 REFSMMAT;
 
 		refsopt.vessel = calcParams.src;
-		refsopt.GETbase = getGETBase();
+		refsopt.GETbase = CalcGETBase();
 		refsopt.dV_LVLH = DeltaV_LVLH;
 		refsopt.REFSMMATTime = TimeofIgnition;
 		refsopt.REFSMMATopt = 1;
@@ -1334,7 +1389,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
 		opt.dV_LVLH = DeltaV_LVLH;
-		opt.GETbase = getGETBase();
+		opt.GETbase = CalcGETBase();
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = REFSMMAT;
 		opt.sv0 = StateVectorCalc(calcParams.src);
@@ -1355,7 +1410,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EarthEntryPADOpt opt;
 
 		opt.dV_LVLH = DeltaV_LVLH;
-		opt.GETbase = getGETBase();
+		opt.GETbase = CalcGETBase();
 		opt.lat = SplashLatitude;
 		opt.lng = SplashLongitude;
 		opt.P30TIG = TimeofIgnition;
@@ -1373,7 +1428,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 
 		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
 
@@ -1394,7 +1449,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 
 		AGCStateVectorUpdate(buffer1, sv_A, true, GETbase);
 		AGCStateVectorUpdate(buffer2, sv_P, false, GETbase);
@@ -1415,7 +1470,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GETbase;
 		char buffer1[1000];
 
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		NavCheckPAD(sv, *form, GETbase);
@@ -1438,7 +1493,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = getGETBase();
+		GETbase = CalcGETBase();
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
@@ -1460,7 +1515,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P27PAD * form = (P27PAD *)pad;
 		P27Opt opt;
 
-		opt.GETbase = getGETBase();
+		opt.GETbase = CalcGETBase();
 		opt.SVGET = (oapiGetSimMJD() - opt.GETbase)*24.0*3600.0;
 		opt.navcheckGET = opt.SVGET + 30 * 60;
 		opt.vessel = calcParams.src;

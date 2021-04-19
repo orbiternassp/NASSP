@@ -4410,7 +4410,6 @@ private:
 	double GetClockTimeFromAGC(agc_t *agc);
 	double GetTEPHEMFromAGC(agc_t *agc);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
-	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);

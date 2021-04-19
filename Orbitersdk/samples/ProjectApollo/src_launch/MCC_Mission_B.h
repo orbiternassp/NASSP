@@ -26,8 +26,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 // MISSION STATES: MISSION B
 #define MST_B_PRELAUNCH		10
+//Ends at mission init, goes to
+#define MST_B_LAUNCH		11
 //Ends at launch, goes to
-#define MST_B_COASTING		11
+#define MST_B_COASTING		12
 //Ends at post-APS-2, goes to
 #define MST_B_RCS_TESTS1		100
 #define MST_B_RCS_TESTS2		101

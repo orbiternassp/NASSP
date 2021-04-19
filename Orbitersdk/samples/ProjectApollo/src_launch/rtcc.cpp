@@ -4885,14 +4885,6 @@ OBJHANDLE RTCC::AGCGravityRef(VESSEL *vessel)
 	return gravref;
 }
 
-double RTCC::getGETBase()
-{
-	double GET, SVMJD;
-	SVMJD = oapiGetSimMJD();
-	GET = mcc->cm->GetMissionTime();
-	return SVMJD - GET / 24.0 / 3600.0;
-}
-
 double RTCC::CalcGETBase()
 {
 	return SystemParameters.GMTBASE + SystemParameters.MCGMTL / 24.0;
