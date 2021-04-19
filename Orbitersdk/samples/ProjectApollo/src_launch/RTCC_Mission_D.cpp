@@ -962,7 +962,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11LMManeuverPAD(&opt, *form);
 
-		t_Sep = calcParams.Phasing - 45.0*60.0;
+		t_Sep = calcParams.Phasing - 44.5*60.0;
 
 		char GETbuffer1[64];
 		char GETbuffer2[64];
