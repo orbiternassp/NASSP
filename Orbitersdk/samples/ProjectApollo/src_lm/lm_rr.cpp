@@ -42,7 +42,6 @@ LEM_RR::LEM_RR()
 	csm = NULL;
 	lem = NULL;
 	RREHeat = 0;
-	RRESECHeat = 0;
 	NoTrackSignal = false;
 	radarDataGood = false;
 
@@ -60,7 +59,7 @@ LEM_RR::~LEM_RR()
 	lem->lm_rr_to_csm_connector.Disconnect();
 }
 
-void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
+void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *rrh) {
 	lem = s;
 
 	if (!csm)
@@ -86,7 +85,6 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	antheater = anheat;
 	rrheat = rrh;
 	RREHeat = rreh;
-	RRESECHeat = secrreh;
 	antenna->isolation = 0.000001;
 	antenna->Area = 9187.8912; // Area of reflecting dish, probably good enough
 	trunnionAngle = -180.0 * RAD;
@@ -763,15 +761,13 @@ void LEM_RR::SystemTimestep(double simdt) {
 	if (IsDCPowered())
 	{
 		dc_source->DrawPower(117);
-		RREHeat->GenerateHeat(58.5);
-		RRESECHeat->GenerateHeat(58.5);
+		RREHeat->GenerateHeat(117);
 	}
 
 	if (IsACPowered())
 	{
 		ac_source->DrawPower(13.8);
-		RREHeat->GenerateHeat(6.9);
-		RRESECHeat->GenerateHeat(6.9);
+		RREHeat->GenerateHeat(13.8);
 	}
 
 	if (abs(shaftVel) > 0.01*RAD)

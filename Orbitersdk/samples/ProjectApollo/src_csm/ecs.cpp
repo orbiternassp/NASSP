@@ -1519,3 +1519,32 @@ void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
 		}
 	}
 }
+
+SaturnWasteStowageVentValve::SaturnWasteStowageVentValve()
+{
+	WasteStowageValve = NULL;
+	WasteStowageSwitch = NULL;
+}
+
+void SaturnWasteStowageVentValve::Init(h_Valve* wsv, RotationalSwitch* wss)
+{
+	WasteStowageValve = wsv;
+	WasteStowageSwitch = wss;
+}
+
+void SaturnWasteStowageVentValve::SystemTimestep(double simdt)
+{
+	if (!WasteStowageValve) return;
+
+	// Valve in motion
+	if (WasteStowageValve->pz) return;
+
+	if (WasteStowageSwitch->GetState() == 1)
+	{
+		WasteStowageValve->Close();
+	}
+
+	else
+		WasteStowageValve->Open();
+
+}

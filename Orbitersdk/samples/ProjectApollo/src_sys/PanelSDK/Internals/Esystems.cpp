@@ -40,6 +40,7 @@ e_object::e_object()
 	Volts = 0.0;
 	Amperes = 0.0;
 	Hertz = 0.0;
+	parent = NULL;
 }
 
 void e_object::refresh(double dt)
@@ -632,6 +633,15 @@ Battery::Battery(char *i_name, e_object *i_src, double i_power, double i_voltage
 	 power_load = 0.0;
 	 max_power = power = i_power;
 	 Volts = max_voltage;
+
+	 c = 0.15;
+	 batheat = 0.0;
+	 chargeheat = 0.0;
+}
+
+Battery::~Battery()
+{
+	parent->P_thermal->RemoveThermalObject(this);
 }
 
 void Battery::DrawPower(double watts)
@@ -666,14 +676,30 @@ double Battery::Current()
 	return 0.0;
 }
 
+double Battery::Temperature()
+{
+	if (IsEnabled())
+	{
+		return Temp;
+	}
+	
+	return 0.0;
+}
+
 void Battery::UpdateFlow(double dt)
 {
-	power -= power_load * dt;
+	power -= power_load * dt; //Draw from the batteries
 
 	if (Volts > 0.0) 
 		Amperes = (power_load / Volts);
 	else
 		Amperes = 0;
+
+	batheat = (internal_resistance * (Amperes * Amperes));	//Heat due to battery discharging based on draw current
+
+	//DrawPower(batheat); //Power loss to heat, we will add this back when the math is better established
+
+	thermic(batheat * dt); //1 joule = 1 watt * dt
 
 	// Reset power load
 	power_load = 0.0;
@@ -690,7 +716,8 @@ void Battery::UpdateFlow(double dt)
 	if (power < 0) { 
 		power = 0;
 		Amperes = 0;
-		Volts = 0 ;
+		Volts = 0;
+		Temp = 0;
 	}
 }
 
@@ -706,20 +733,32 @@ void Battery::refresh(double dt)
 		} else {
 			p = Volts * 2.2 / 0.01 * (max_voltage - Volts) / max_voltage;
 		}
+	
+		chargeheat = (internal_resistance * (SRC->Current() * SRC->Current()));	//Heat due to battery charging based on charge current
+
+		//p += chargeheat; //Power loss to heat, we will add this back when the math is better established
+
 		SRC->DrawPower(p);
 		power += p * dt;
+
+		thermic(chargeheat * dt); //1 joule = 1 watt * dt
 	}
 }
 
 void Battery::Load(char *line)
 {
-	sscanf(line,"    <BATTERY> %s %lf", name, &power);
+	double temp = 0;
+	sscanf(line, "    <BATTERY> %s %lf %lf", name, &power, &temp);
+	if (temp > 0)
+	{
+		SetTemp(temp);
+	}
 }
 
 void Battery::Save(FILEHANDLE scn)
 {
 	char cbuf[1000];
-	sprintf (cbuf, "%s %0.4f",name, power);
+	sprintf (cbuf, "%s %0.4f %0.4f",name, power, Temp);
 	oapiWriteScenario_string (scn, "    <BATTERY> ", cbuf);
 }
 

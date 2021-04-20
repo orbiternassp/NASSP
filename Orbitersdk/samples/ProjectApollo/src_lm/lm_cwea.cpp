@@ -39,7 +39,6 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	ma_pwr = NULL;
 	lem = NULL;
 	CWEAHeat = 0;
-	SecCWEAHeat = 0;
 
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
@@ -47,7 +46,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	ECSFailureCount = 0;
 }
 
-void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah, h_HeatLoad *seccweah) {
+void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah) {
 	int row = 0, col = 0;
 	while (col < 8) {
 		while (row < 5) {
@@ -62,7 +61,6 @@ void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah, h_H
 	ma_pwr = ma;
 	lem = l;
 	CWEAHeat = cweah;
-	SecCWEAHeat = seccweah;
 }
 
 bool LEM_CWEA::IsCWEAPowered() {
@@ -448,14 +446,14 @@ void LEM_CWEA::Timestep(double simdt) {
 		// the "bad" condition has to last for a few check counts.
 		if (lightlogic)
 		{
-			if (ECSFailureCount < 20) ECSFailureCount++;
+			if (ECSFailureCount < 1) ECSFailureCount++;
 		}
 		else
 		{
 			ECSFailureCount = 0;
 		}
 
-		if (lightlogic && ECSFailureCount >= 20)
+		if (lightlogic && ECSFailureCount >= 1)
 			SetLight(0, 7, 1);
 		else
 			SetLight(0, 7, 0);
@@ -600,8 +598,7 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 
 	if (IsCWEAPowered()) {
 		cwea_pwr->DrawPower(11.48);
-		CWEAHeat->GenerateHeat(5.74);
-		SecCWEAHeat->GenerateHeat(5.74);
+		CWEAHeat->GenerateHeat(11.48);
 	}
 	if (IsLTGPowered())
 		lem->lca.DrawDCPower(GetDimmableLoad() + GetNonDimmableLoad());

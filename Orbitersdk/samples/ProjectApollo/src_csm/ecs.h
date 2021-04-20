@@ -387,4 +387,15 @@ protected:
 	SaturnForwardHatch *ForwardHatch;
 };
 
+class SaturnWasteStowageVentValve
+{
+public:
+	SaturnWasteStowageVentValve();
+	void Init(h_Valve* wsv, RotationalSwitch* wss);
+	void SystemTimestep(double simdt);
+protected:
+	RotationalSwitch* WasteStowageSwitch;
+	h_Valve* WasteStowageValve;
+};
+
 #endif // _PA_ECS_H

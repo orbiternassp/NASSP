@@ -214,16 +214,14 @@ SCERA::SCERA()
 	lem = NULL;
 	dcpower = NULL;
 	SCERAHeat = 0;
-	SCERASECHeat = 0;
 	Operate = false;
 }
 
-void SCERA::Init(LEM *l, e_object *dc, h_HeatLoad *hl, h_HeatLoad *sechl)
+void SCERA::Init(LEM *l, e_object *dc, h_HeatLoad *hl)
 {
 	lem = l;
 	dcpower = dc;
 	SCERAHeat = hl;
-	SCERASECHeat = sechl;
 }
 
 bool SCERA::IsPowered()
@@ -659,8 +657,7 @@ void SCERA1::SystemTimestep(double simdt)
 	if (Operate)
 	{
 		dcpower->DrawPower(12.6);
-		SCERAHeat->GenerateHeat(6.3);
-		SCERASECHeat->GenerateHeat(6.3);
+		SCERAHeat->GenerateHeat(12.6);
 	}
 }
 
@@ -896,18 +893,18 @@ void SCERA2::Timestep()
 	SA13.SetOutput(5, lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER);
 	//Yaw attitude control selector (GH1630)
 	SA13.SetOutput(6, lem->scca1.GetK1());
-	//Battery 1 malfunction (GC9961)
-	SA13.SetOutput(7, false);	//TBD
+	//Battery 1 malfunction (GC9961) 
+	SA13.SetOutput(7, false);	//TBD, battery temperatures now implemented
 	//Battery 2 malfunction (GC9962)
-	SA13.SetOutput(8, false);	//TBD
+	SA13.SetOutput(8, false);	//TBD, battery temperatures now implemented
 	//Battery 3 malfunction (GC9963)
-	SA13.SetOutput(9, false);	//TBD
+	SA13.SetOutput(9, false);	//TBD, battery temperatures now implemented
 	//Battery 4 malfunction (GC9964)
-	SA13.SetOutput(10, false);	//TBD
+	SA13.SetOutput(10, false);	//TBD, battery temperatures now implemented
 	//Battery 5 malfunction (GC9965)
-	SA13.SetOutput(11, false);	//TBD
+	SA13.SetOutput(11, false);	//TBD, battery temperatures now implemented
 	//Battery 6 malfunction (GC9966)
-	SA13.SetOutput(12, false);	//TBD
+	SA13.SetOutput(12, false);	//TBD, battery temperatures now implemented
 
 	//Abort stage command (GH1283)
 	SA14.SetOutput(1, lem->scca1.GetK19());
@@ -1006,8 +1003,7 @@ void SCERA2::SystemTimestep(double simdt)
 	if (Operate)
 	{
 		dcpower->DrawPower(10.36);
-		SCERAHeat->GenerateHeat(5.18);
-		SCERASECHeat->GenerateHeat(5.18);
+		SCERAHeat->GenerateHeat(10.36);
 	}
 }
 

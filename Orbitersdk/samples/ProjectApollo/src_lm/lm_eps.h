@@ -105,7 +105,7 @@ public:
 class LEM_INV : public e_object {
 public:
 	LEM_INV();							// Cons
-	void Init(LEM *s, h_HeatLoad *invh, h_HeatLoad *secinvh);
+	void Init(LEM *s, h_HeatLoad *invh);
 	void DrawPower(double watts);
 	void UpdateFlow(double dt);
 	void SystemTimestep(double simdt);
@@ -125,7 +125,7 @@ class LEM_TLE
 {
 public:
 	LEM_TLE();
-	void Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh);
+	void Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
