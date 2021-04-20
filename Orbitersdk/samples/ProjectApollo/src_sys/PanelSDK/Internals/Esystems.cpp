@@ -688,8 +688,6 @@ double Battery::Temperature()
 
 void Battery::UpdateFlow(double dt)
 {
-	power -= power_load * dt;
-
 	if (Volts > 0.0) 
 		Amperes = (power_load / Volts);
 	else
@@ -697,11 +695,14 @@ void Battery::UpdateFlow(double dt)
 
 	batheat = (internal_resistance * (Amperes * Amperes));	//Heat due to battery discharging based on draw current
 
+	DrawPower(batheat); //Power loss to heat
+
+	power -= power_load * dt; //Draw from the batteries
+
+	thermic(batheat * dt); //1 joule = 1 watt * dt
+
 	// Reset power load
 	power_load = 0.0;
-
-	DrawPower(batheat); //Power loss to heat
-	thermic(batheat * dt); //1 joule = 1 watt * dt
 
 	// Simple appoximation for voltage: 90% voltage at 20% capacity
 	if (power > 0.2 * max_power)
