@@ -189,7 +189,7 @@ private:
 class LM_VHF {
 public:
 	LM_VHF();
-	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *vhfh);	       // Initialization
 	void Timestep(double simt);        // TimeStep
 	
 	void SystemTimestep(double simdt); // System Timestep
@@ -202,7 +202,6 @@ public:
 	LEM *lem;					   // Ship we're installed in
 	VESSEL *csm;					//Pointer to CSM
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
-	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
 
 	LM_VHFAntenna fwdInflightVHF;
 	LM_VHFAntenna aftInflightVHF;
@@ -239,7 +238,7 @@ class LM_PCM
 {
 public:
 	LM_PCM();
-	void Init(LEM *vessel, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *pcmh);	       // Initialization
 	void Timestep(double simt);     // TimeStep
 	void SystemTimestep(double simdt);
 
@@ -247,7 +246,6 @@ public:
 protected:
 	LEM *lem;					   // Ship we're installed in
 	h_HeatLoad *PCMHeat;			//PCM Heat Load
-	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
@@ -300,7 +298,7 @@ protected:
 class LM_SBAND {
 public:
 	LM_SBAND();
-	void Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph);	       // Initialization
+	void Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *sbph);	       // Initialization
 	void Timestep(double simt);        // Timestep
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
@@ -308,9 +306,7 @@ public:
 
 	LEM *lem;					   // Ship we're installed in
 	h_HeatLoad *SBXHeat;			//XCVR Heat
-	h_HeatLoad *SBXSECHeat;			//XCVR Heat
 	h_HeatLoad *SBPHeat;			//PMP Heat
-	h_HeatLoad *SBPSECHeat;			//PMP Heat
 	int pa_mode_1,pa_mode_2;       // Power amplifier state
 	double pa_timer_1,pa_timer_2;  // Tube heater timer
 	int tc_mode_1,tc_mode_2;	   // Transciever state

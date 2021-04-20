@@ -164,11 +164,25 @@ void E_system::Create_Diode(char *line)
 void E_system::Create_Battery(char *line)
 {
 	char name[100];
-	double power, operating_voltage, resistance;
+	double power, operating_voltage, resistance, volume, isolation, mass, temp = 0;
+	vector3 pos;
 	char source[100];
-	sscanf(line+9,"%s %lf %lf %lf %s",name, &power, &operating_voltage, &resistance, source);
+
+	sscanf(line + 9, "%s %lf %lf %lf %s %lf <%lf %lf %lf> %lf %lf %lf", name, &power, &operating_voltage, &resistance, source, &temp, &pos.x, &pos.y, &pos.z, &volume, &isolation, &mass);
 	e_object* SRC=(e_object*)GetPointerByString(source);
 	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance));
+
+	new_b->parent = this;
+
+	if (temp > 0)
+	{
+		P_thermal->AddThermalObject(new_b);
+		new_b->isolation = isolation;
+		new_b->mass = mass;
+		new_b->Area = (1.0 / 4.0 * volume);
+		new_b->pos = pos;
+		new_b->SetTemp(temp);
+	}
 } 
 
 void E_system::Create_FCell(char *line) {
@@ -249,6 +263,11 @@ void* Battery::GetComponent(char *component_name) {
 	
 	void *norm=e_object::GetComponent(component_name);
 	if (norm) return norm;
+
+	if (Compare(component_name, "TEMP"))
+		return (void*)&Temp;
+	if (Compare(component_name, "HEAT"))
+		return (void*)&batheat;
 
 	BuildError(2);
 	return NULL;

@@ -42,6 +42,7 @@ PanelSDK::PanelSDK() {
     THERMAL = new Thermal_engine;
 	VESSELMGMT = new VesselMgmt;
 	HYDRAULIC->P_thermal = THERMAL;
+	HYDRAULIC->P_electric = ELECTRIC;
 	ELECTRIC->P_thermal = THERMAL;
 	ELECTRIC->P_hydraulics = HYDRAULIC;
 
