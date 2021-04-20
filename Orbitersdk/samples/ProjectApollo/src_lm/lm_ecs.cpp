@@ -144,8 +144,8 @@ void LEMCrewStatus::Timestep(double simdt) {
 		} else {
 		SuitTemperatureTime = 12 * 3600;
 	}
-	// **Disabled for now until cabin temperatures are more stable
-	/*if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
+
+	if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
 		if (TemperatureTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
@@ -156,7 +156,7 @@ void LEMCrewStatus::Timestep(double simdt) {
 		}
 	} else {
 		TemperatureTime = 12 * 3600;
-	}*/
+	}
 
 	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
 	if (lem->ecs.GetECSSensorCO2MMHg() > 10 && (lem->CrewInCabin->number > 0 || (lem->CDRSuited->number + lem->LMPSuited->number > 0))) {
@@ -1145,9 +1145,7 @@ void LEMCabinFan::SystemTimestep(double simdt)
 	}
 
 	if (cabinFan->pumping) {
-		//cabinFanHeat->GenerateHeat(36.5);  //Not sure about this heat load, seems very high
-		//cabinFanHeat->GenerateHeat(18.2);  //Testing lower heat (1/2 CB heat load)
-		cabinFanHeat->GenerateHeat(0);  //Testing zero heat 
+		cabinFanHeat->GenerateHeat(36.5);  //Not sure about this heat load, seems very high. Value from LM-8 Systems Handbook
 	}
 }
 
@@ -1260,11 +1258,11 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	{
 		PressureSwitch = false;
 	}
-
+	
 	if (PressureSwitch && glycolRotary->GetState() == 1 && glycolPumpAutoTransferCB->IsPowered())
 	{
 		//To make this more stable with time acceleration and panel changes
-		if (AutoTransferCounter > 20)
+		if (AutoTransferCounter > 1)
 		{
 			GlycolAutoTransferRelay = true;
 		}
@@ -1296,7 +1294,6 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
 	{
 		glycolPump1->SetPumpOn();
-		glycolPump1Heat->GenerateHeat(30.5);
 	}
 	else
 	{
@@ -1357,25 +1354,25 @@ void LEMPrimGlycolPumpController::SaveState(FILEHANDLE scn)
 
 LEMSuitFanDPSensor::LEMSuitFanDPSensor()
 {
-	suitFanManifoldTank = NULL;
-	suitCircuitHeatExchangerCoolingTank = NULL;
+	suitFanManifoldInTank = NULL;
+	suitFanManifoldOutTank = NULL;
 	suitFanDPCB = NULL;
 	SuitFanFailRelay = false;
 	PressureSwitch = false;
 }
 
-void LEMSuitFanDPSensor::Init(h_Tank *sfmt, h_Tank *schect, CircuitBrakerSwitch *sfdpcb)
+void LEMSuitFanDPSensor::Init(h_Tank *sfmint, h_Tank *sfmoutt, CircuitBrakerSwitch *sfdpcb)
 {
-	suitFanManifoldTank = sfmt;
-	suitCircuitHeatExchangerCoolingTank = schect;
+	suitFanManifoldInTank = sfmint;
+	suitFanManifoldOutTank = sfmoutt;
 	suitFanDPCB = sfdpcb;
 }
 
 void LEMSuitFanDPSensor::SystemTimestep(double simdt)
 {
-	if (!suitFanManifoldTank || !suitCircuitHeatExchangerCoolingTank) return;
+	if (!suitFanManifoldInTank || !suitFanManifoldOutTank) return;
 
-	double DPSensor = suitCircuitHeatExchangerCoolingTank->space.Press - suitFanManifoldTank->space.Press;
+	double DPSensor = suitFanManifoldOutTank->space.Press - suitFanManifoldInTank->space.Press;
 
 	if (PressureSwitch == false && DPSensor <=  6.0 / INH2O)
 	{

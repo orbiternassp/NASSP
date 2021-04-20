@@ -84,6 +84,114 @@ namespace EntryCalculations
 	double WPL(double lat);
 }
 
+//RTCC task RTSDBMP
+class RetrofirePlanning : public RTCCModule
+{
+public:
+	RetrofirePlanning(RTCC *r);
+	//Retrofire Planning Control Module
+	bool RMSDBMP(EphemerisData sv, double GETI, double lat_T, double lng_T, double CSMmass);
+protected:
+	//Retrofire Planning Boundary Computation
+	void RMMDBF();
+	//Retrofire Maneuvers Computations
+	void RMMDBM();
+	//Retrofire Convergence
+	void RMMDBN(int entry);
+	//Thrust Direction and Body Attitude Routine
+	void RMMATT(int entry, int opt, bool calcDesired, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T, VECTOR3 &OtherAtt);
+	//Retrofire Output Control
+	void RMSTTF();
+	//Retrofire On-Line Printing
+	void RMGTTF(std::string source, int i);
+
+	bool WasGETIInput;
+	//Time left and right for the ephemeris
+	double TL, TR;
+	double GMTI;
+	EphemerisData sv0;
+	double lat_T;
+	double lng_T;
+	double CSMmass;
+	int refsid;
+	REFSMMATData refsdata;
+	int Thruster;
+	double SQMU;
+	double F, mdot, DVBURN;
+	VECTOR3 U_T;
+	//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
+	int BurnMode;
+	//-1 = compute, 1 = use system parameters
+	int GimbalIndicator = -1;
+	//Ullage time
+	double dt_ullage;
+	//Gradient of DV vs. flight path angle for V, gamma targeting
+	double p_gam;
+	//Partials
+	double p_dlng_dtf, p_dlat_dtf, p_dlat_dtRB, p_dlng_dtRB;
+	double dlat, dlng;
+	//Main iteration counter
+	int MAINITER;
+	//Main error indicator
+	int ERR;
+	//Error return from LLBRTD
+	int LLBRTDERR;
+	//Downrange error in NM
+	double MD_lng;
+	//Crossrange error in NM
+	double MD_lat;
+	//Total miss distance in NM
+	double MD_total;
+	//Maximum miss distance in NM
+	double MD_max;
+	//Main loop convergence flag
+	bool HASCONVERGED;
+	double dlng2, lng_old, GMTI_old, ddt;
+	//Thrust value in CMC
+	double TCMC;
+	//Burn attitude in LVLH coordinates (thrust direction, not body)
+	VECTOR3 LVLHAtt;
+	VECTOR3 BodyAtt;
+	VECTOR3 IMUAtt;
+	MATRIX3 DesREFSMMAT;
+	//Time to reverse bank angle
+	double t_RB;
+	//Partials status. 0 = not yet calculated, 1 = TTF varied, 2 = GMTRB varied
+	int PARTSTAT;
+	//Variation of the time to fire
+	const double DT_TTF = 10.0;
+	//Variation of the time to reverse bank angle
+	const double DT_TRB = 10.0;
+	//Stored landing errors
+	double dlat_0, dlng_0, dlat_TRB, dlng_TRB, partialprod;
+	//G-max and time of G-max
+	double gmax, gmt_gmax;
+
+	//State vector at burn initiation (ullage on)
+	EphemerisData sv_BI;
+	//State vector at main engine on
+	EphemerisData sv_TIG;
+	//State vector at burnout (tailoff end)
+	EphemerisData sv_BO;
+	//ECI state vector at entry interface (400k altitude)
+	EphemerisData sv_EI;
+	//Actual latitude of landing
+	double lat_IP;
+	//Actual longitude of landing
+	double lng_IP;
+	//Zero lift landing point
+	double lat_ZL, lng_ZL;
+	//Maximum lift landing point
+	double lat_ML, lng_ML;
+
+	//Area
+	double Area;
+
+	EphemerisDataTable ephem;
+	RTCCNIAuxOutputTable burnaux;
+	RMMYNIOutputTable reentryout;
+};
+
 class EarthEntry {
 public:
 	EarthEntry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, bool entrynominal, bool entrylongmanual);

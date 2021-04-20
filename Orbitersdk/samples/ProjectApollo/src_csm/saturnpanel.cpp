@@ -930,6 +930,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 		oapiSetPanelNeighbours(-1, SATPANEL_LEFT_RNDZ_WINDOW, -1, SATPANEL_MAIN);
 
+		//If a panel has no panel area at all then Orbiter doesn't get rid of the panel areas from the previous panel when the new one is loaded. Orbiter bug?
+		oapiRegisterPanelArea(AID_DUMMY_PANEL_AREA, _R(10, 10, 20, 20), PANEL_REDRAW_NEVER, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, 0.5254716511, 0.8508111094));
 		oapiCameraSetCockpitDir(0, 0);
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);

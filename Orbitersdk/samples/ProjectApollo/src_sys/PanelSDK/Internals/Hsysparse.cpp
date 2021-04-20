@@ -23,6 +23,7 @@
   **************************************************************************/
 
 #include "hsystems.h"
+#include "esystems.h"
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
@@ -386,6 +387,85 @@ void H_system::Create_h_HeatLoad(char *line) {
 	AddSystem(new h_HeatLoad(name,target));
 }
 
+void H_system::Create_h_Accumulator(char* line) {
+
+	char name[100], valvename[100];
+	h_Accumulator* new_one;
+	vector3 pos;
+	double volume, isol = 0;
+	float size = 0;
+	int open;
+	h_Valve* valve;
+
+	sscanf(line + 13, " %s <%lf %lf %lf> %lf %lf",
+		name,
+		&pos.x,
+		&pos.y,
+		&pos.z,
+		&volume, &isol);
+
+	new_one = (h_Accumulator*)AddSystem(new h_Accumulator(name, pos, volume));
+
+	h_substance loaded_sub;
+	new_one->space.Void(); //empty the space
+
+	while (strnicmp(line, "</ACCUMULATOR>", 14)) {
+
+		if (!strnicmp(line, "CHM", 3)) {
+			sscanf(line + 3, "   %i %lf %lf %lf",
+				&loaded_sub.subst_type,
+				&loaded_sub.mass,
+				&loaded_sub.vapor_mass,
+				&loaded_sub.Q);
+			new_one->space += loaded_sub;
+
+		}
+		else if (!strnicmp(line, "VALVE", 5)) {
+			sscanf(line + 5, " %s %i %f",
+				valvename, &open, &size);
+
+			valve = 0;
+			if (!strnicmp(valvename, "IN", 2)) {
+				valve = &(new_one->IN_valve);
+			}
+			else if (!strnicmp(valvename, "OUT2", 4)) {
+				valve = &(new_one->OUT2_valve);
+			}
+			else if (!strnicmp(valvename, "OUT", 3)) {
+				valve = &(new_one->OUT_valve);
+			}
+			else if (!strnicmp(valvename, "LEAK", 4)) {
+				valve = &(new_one->LEAK_valve);
+			}
+			else {
+				BuildError(2); //no such component
+			}
+
+			if (valve) {
+				valve->open = open;
+				valve->size = size;
+			}
+		}
+		do {
+			line = ReadConfigLine();
+		} while (line == NULL);
+	}
+	new_one->mass = new_one->space.GetMass();//get all the mass,etc..
+	new_one->space.GetMaxSub();//recompute sub_number;
+	new_one->energy = new_one->space.GetQ();//sum up Qs
+	new_one->Original_volume = volume;
+	P_thermal->AddThermalObject(new_one);
+	if (isol)
+		new_one->isolation = isol;
+	else
+		new_one->isolation = 1.0;
+
+	new_one->Area = pow(3.0 / (4.0 * PI) * volume / 1000, 0.3333); //radius of tank
+	new_one->Area = PI * new_one->Area * new_one->Area;//projection circle is PI*R^2
+	new_one->parent = this;
+}
+
+
 void H_system::Build() {
 	
 	char *line;
@@ -416,11 +496,21 @@ void H_system::Build() {
 			Create_h_WaterSeparator(line);
 		else if (Compare(line, "<HEATLOAD>"))
 			Create_h_HeatLoad(line);
+		else if (Compare(line, "<ACCUMULATOR>"))
+			Create_h_Accumulator(line);
 		do {
 			line = ReadConfigLine();
 		} while (line == NULL);
 	}
 }
+
+void* H_system::GetPointerByString(char* query)
+{
+	if (Compare(query, "HYDRAULIC")) query = query + 10;
+	if (Compare(query, "ELECTRIC"))
+		return P_electric->GetPointerByString(query + 9);
+	return ship_system::GetPointerByString(query);
+};
 
 void* h_Pipe::GetComponent(char *component_name) {
 

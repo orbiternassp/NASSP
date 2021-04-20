@@ -3715,6 +3715,7 @@ protected:
 	PowerMerge GaugePower;
 
 	// ECS
+	h_Tank *CSMCabin;
 	h_HeatExchanger *PrimCabinHeatExchanger;
 	h_HeatExchanger *PrimSuitHeatExchanger;
 	h_HeatExchanger *PrimSuitCircuitHeatExchanger;
@@ -3744,6 +3745,7 @@ protected:
 	SaturnLMTunnelVent LMTunnelVent;
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
+	SaturnWasteStowageVentValve WasteStowageVentValve;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;

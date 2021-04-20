@@ -98,12 +98,33 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	GNData.C10 = in.C10;
 	t_RB = in.t_RB;
 	H_EMS = in.H_EMS;
+	K1 = in.K1;
+	K2 = in.K2;
+	EphemerisBuildInd = false; //TBD
 
-	t = 0.0;
+	gmax = 0;
+	T = T_prev = 0.0;
 	ISGNInit = false;
+	t_2G = 0.0;
+	droguedeployed = false;
+	maindeployed = false;
+	TNEXT = 0.0;
+	STEP = 2.0;
+	TE = STEP;
+	IREVBANK = false;
+	EPS = 1e-14*3600.0;
 
-	double dt = 2.0;
-	double alt, v, fpa;
+	//Null output table
+	out.lat_IP = 0.0;
+	out.lng_IP = 0.0;
+	out.t_05g = 0.0;
+	out.t_2g = 0.0;
+	out.t_lc = 0.0;
+	out.t_gc = 0.0;
+	out.t_drogue = 0.0;
+	out.t_main = 0.0;
+
+	double v, fpa;
 
 	IEND = 0;
 
@@ -114,22 +135,72 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 
 	do
 	{
+		//Determine next step
+		if (EphemerisBuildInd)
+		{
+			//Should we store ephemeris?
+			if (TNEXT < TE)
+			{
+				TE = TNEXT;
+			}
+		}
+		//Time to reverse bank angle?
+		if (LiftMode == 4 || LiftMode == 8)
+		{
+			if (IREVBANK == false && t_RB < TE)
+			{
+				TE = t_RB;
+			}
+		}
+
 		R_prev = R_cur;
 		V_prev = V_cur;
-		GuidanceRoutine(R_cur, V_cur, dt);
-		RungeKuttaIntegrationRoutine(R_prev, V_prev, dt, R_cur, V_cur);
+		T_prev = T;
+		if (droguedeployed == false)
+		{
+			GuidanceRoutine(R_cur, V_cur);
+		}
+
+		DT = TE - T;
+
+		RungeKuttaIntegrationRoutine(R_prev, V_prev, DT, R_cur, V_cur);
+		T += DT;
+
+		//Switch to reverse bank angle?
+		if (LiftMode == 4 || LiftMode == 8)
+		{
+			if (IREVBANK == false && abs(t_RB - T) < EPS)
+			{
+				IREVBANK = true;
+			}
+		}
+
 		alt = length(R_cur) - OrbMech::R_Earth;
 		v = length(V_cur);
 		fpa = asin(dotp(unit(R_cur), unit(V_cur)))*DEG;
 		CalculateDragAcceleration(R_cur, V_cur);
-		t += dt;
+		
 
-		if (t > 90.0*60.0)
+		//Configuration changes
+		if (droguedeployed == false && alt < 23500.0*0.3048)
+		{
+			N = 80.0 / 5498.219913;
+			t_drogue = T;
+			droguedeployed = true;
+		}
+		if (maindeployed == false && alt < 10000.0*0.3048)
+		{
+			N = 140.0 / 5498.219913;
+			t_main = T;
+			maindeployed = true;
+		}
+
+		if (T > 90.0*60.0)
 		{
 			//Time limit
 			IEND = 1;
 		}
-		else if (alt < 10000.0*0.3048)
+		else if (alt < 0.0)//10000.0*0.3048)
 		{
 			//Impact
 			IEND = 2;
@@ -140,21 +211,33 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 			IEND = 3;
 		}
 
+		TE += STEP;
 	} while (IEND == 0);
 
+	out.IEND = IEND;
 	if (IEND == 2)
 	{
 		//Output
 		double lat, lng;
 		OrbMech::latlong_from_r(R_cur, lat, lng);
-		lng -= OrbMech::w_Earth*t;
-		if (lng < 0)
+		lng -= OrbMech::w_Earth*T;
+		while (lng < -PI)
 		{
 			lng += PI2;
 		}
 		out.lat_IP = lat;
 		out.lng_IP = lng;
-		out.t_10k = t;
+		out.t_lc = T;
+		if (K05G)
+		{
+			out.t_05g = t_05G;
+		}
+		if (KGC)
+		{
+			out.t_gc = t_gc;
+		}
+		out.t_gmax = t_gmax;
+		out.gmax = gmax;
 	}
 
 }
@@ -170,7 +253,7 @@ void ReentryNumericalIntegrator::RungeKuttaIntegrationRoutine(VECTOR3 R_N, VECTO
 	K3 = SecondDerivativeRoutine(R_N + V_N * dt / 2.0 + K1 * dt / 8.0, V_N + K2 / 2.0)*dt;
 	Bank += BRATE * dt / 2.0;
 	Limit02PI(Bank);
-	K4 = SecondDerivativeRoutine(R_N + V_N * dt + K3 * dt / 2.0, V_N + K3);
+	K4 = SecondDerivativeRoutine(R_N + V_N * dt + K3 * dt / 2.0, V_N + K3)*dt;
 
 	R_N1 = R_N + (V_N + (K1 + K2 + K3) / 6.0)*dt;
 	V_N1 = V_N + (K1 + K2 * 2.0 + K3 * 2.0 + K4) / 6.0;
@@ -201,8 +284,8 @@ VECTOR3 ReentryNumericalIntegrator::GravityAcceleration(VECTOR3 R)
 
 VECTOR3 ReentryNumericalIntegrator::LiftDragAcceleration(VECTOR3 R, VECTOR3 V, double &AOA)
 {
-	VECTOR3 A_D, A_L, V_R, p_apo, h_apo;
-	double alt, rho, spos, v_R, mach, C_L, C_D;
+	VECTOR3 A_D, A_L, p_apo, h_apo;
+	double alt, rho, spos, mach, C_L, C_D;
 
 	alt = length(R) - OrbMech::R_Earth;
 	pRTCC->GLFDEN(alt, rho, spos);
@@ -225,16 +308,39 @@ VECTOR3 ReentryNumericalIntegrator::LiftDragAcceleration(VECTOR3 R, VECTOR3 V, d
 
 void ReentryNumericalIntegrator::CalculateLiftDrag(double mach, double &CL, double &CD, double &AOA)
 {
-	pRTCC->RLMCLD(mach, 0, CD, CL, AOA);
+	if (maindeployed)
+	{
+		CL = 0.0;
+		CD = 1.5;
+		AOA = PI;
+	}
+	else if (droguedeployed)
+	{
+		CL = 0.0;
+		CD = 1.5;
+		AOA = PI;
+	}
+	else
+	{
+		pRTCC->RLMCLD(mach, 0, CD, CL, AOA);
+	}
 }
 
-void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt)
+void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 {
 	if (K05G == false)
 	{
 		if (A_X > 0.05*9.80665)
 		{
 			K05G = true;
+			t_05G = T;
+		}
+	}
+	if (t_2G == 0.0)
+	{
+		if (A_X > 0.2*9.80665)
+		{
+			t_2G = T;
 		}
 	}
 	if (KGC == false)
@@ -242,7 +348,14 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt
 		if (A_X > g_c_BU*9.80665)
 		{
 			KGC = true;
+			t_gc = T;
 		}
+	}
+	//Store max g
+	if (A_X > gmax*9.80665)
+	{
+		gmax = A_X / 9.80665;
+		t_gmax = T;
 	}
 
 	if (LiftMode == 1)
@@ -286,7 +399,7 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt
 		}
 		else
 		{
-			if (t <= t_RB)
+			if (IREVBANK == false)
 			{
 				Bank = K2;
 			}
@@ -348,7 +461,7 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V, double dt
 		}
 		else
 		{
-			if (t <= t_RB)
+			if (IREVBANK == false)
 			{
 				Bank = K2;
 			}
@@ -440,7 +553,7 @@ void ReentryNumericalIntegrator::GNInitialization()
 {
 	GNData.RTE = crossp(U_Z, GNData.URTO);
 	GNData.UTR = crossp(GNData.RTE, U_Z);
-	GNData.WT = GNData.WIE*(GNData.TN + t);
+	GNData.WT = GNData.WIE*(GNData.TN + T);
 	VECTOR3 RTINT = GNData.URTO + GNData.UTR*(cos(GNData.WT) - 1.0) + GNData.RTE*sin(GNData.WT);
 	GNData.THETA = acos(dotp(unit(R_cur), unit(RTINT)));
 	GNData.K2ROLL = -dotp(unit(RTINT), crossp(unit(V_cur), unit(R_cur)));
@@ -487,7 +600,7 @@ void ReentryNumericalIntegrator::GNTargeting()
 	GNData.LATSW = true;
 	if (GNData.RELVELSW)
 	{
-		GNData.WT = GNData.WIE * t;
+		GNData.WT = GNData.WIE * T;
 	}
 	else
 	{
@@ -497,11 +610,11 @@ void ReentryNumericalIntegrator::GNTargeting()
 			{
 				GNData.RELVELSW = true;
 			}
-			GNData.WT = GNData.WIE*(RE*GNData.THETA / GNData.v + t);
+			GNData.WT = GNData.WIE*(RE*GNData.THETA / GNData.v + T);
 		}
 		else
 		{
-			GNData.WT = GNData.WIE*(GNData.KTETA*GNData.THETA + t);
+			GNData.WT = GNData.WIE*(GNData.KTETA*GNData.THETA + T);
 		}
 	}
 	GNData.URT = GNData.URTO + GNData.UTR * (cos(GNData.WT) - 1.0) + GNData.RTE * sin(GNData.WT);
@@ -992,5 +1105,45 @@ void ReentryNumericalIntegrator::GNRoutine380()
 		{
 			ROLLC = GNData.C10;
 		}
+	}
+}
+
+bool ReentryNumericalIntegrator::IsInSBandBlackout(double v_r, double h)
+{
+	double v_r_fps, h_ft, h_bo;
+
+	v_r_fps = v_r / 0.3048;
+	h_ft = h / 0.3048;
+
+	//Curve fit based on Apollo 17 SCOT figure 4.17-8
+	h_bo = -3.335751e-4*v_r_fps*v_r_fps + 25.79421769*v_r_fps - 157525.8344;
+
+	if (h < h_bo)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool ReentryNumericalIntegrator::IsInVHFBlackout(double v_r, double h)
+{
+	double v_r_fps, h_ft, h_bo;
+
+	v_r_fps = v_r / 0.3048;
+	h_ft = h / 0.3048;
+
+	//Curve fit based on Apollo 7 SCOT figure 13
+	h_bo = -3.030303e-4*v_r_fps*v_r_fps + 21.51515152*v_r_fps - 41818.18182;
+
+	if (h < h_bo)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }

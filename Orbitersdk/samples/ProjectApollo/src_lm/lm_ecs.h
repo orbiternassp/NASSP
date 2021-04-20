@@ -355,15 +355,15 @@ class LEMSuitFanDPSensor
 {
 public:
 	LEMSuitFanDPSensor();
-	void Init(h_Tank *sfmt, h_Tank *schect, CircuitBrakerSwitch *sfdpcb);
+	void Init(h_Tank *sfmint, h_Tank *sfmoutt, CircuitBrakerSwitch *sfdpcb);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 
 	bool GetSuitFanFail() { return SuitFanFailRelay; }
 protected:
-	h_Tank *suitFanManifoldTank;
-	h_Tank *suitCircuitHeatExchangerCoolingTank;
+	h_Tank *suitFanManifoldInTank;
+	h_Tank *suitFanManifoldOutTank;
 	CircuitBrakerSwitch *suitFanDPCB;
 
 	//K12

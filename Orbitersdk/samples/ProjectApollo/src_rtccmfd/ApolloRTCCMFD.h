@@ -107,6 +107,8 @@ public:
 	void GET_Display4(char* Buff, double time);
 	void GET_Display_HHMM(char *Buff, double time);
 	void AGC_Display(char * Buff, double time);
+	void FormatLatitude(char * Buff, double lat);
+	void FormatLongitude(char * Buff, double lng);
 	void REFSMMATName(char* Buff, int n);
 	void ThrusterName(char *Buff, int n);
 	bool ThrusterType(std::string name, int &id);
@@ -141,6 +143,7 @@ public:
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();
 	void menuDeorbitCalc();
+	void menuCycleRetrofireType();
 	void menuMoonRTECalc();
 	void menuTransferRTEToMPT();
 	void menuGeneralMEDRequest();
@@ -151,6 +154,7 @@ public:
 	void menuSwitchSVSlot();
 	void menuSVUpload();
 	void menuLSCalc();
+	void menuRevertRLSToPrelaunch();
 	void menuAGSSVCalc();
 	void menuEntryUpdateUpload();
 	void menuCycleTwoImpulseOption();
@@ -202,8 +206,6 @@ public:
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
 	void GetEntryTargetfromAGC();
-	void menuSwitchEntryNominal();
-	void menuSwitchDeorbitEngineOption();
 	void menuSetRTEReentryTime();
 	void set_RTEReentryTime(double t);
 	void EntryLongitudeModeDialogue();
@@ -723,6 +725,41 @@ public:
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();
 	void menuGetOnboardStateVectors();
+	void menuSetRetrofireConstraintsPage();
+	void menuSetRetrofireDigitalsPage();
+	void menuRetrofireGETIDialogue();
+	void set_RetrofireGETI(double time);
+	void menuRetrofireLatDialogue();
+	void set_RetrofireLat(double lat);
+	void menuRetrofireLngDialogue();
+	void set_RetrofireLng(double lng);
+	void menuSetRetrofireXDVPage();
+	void menuSwitchRetrofireEngine();
+	void menuSwitchRetrofireBurnMode();
+	void menuSwitchRetrofireAttitudeMode();
+	void menuSwitchRetrofireGimbalIndicator();
+	void menuChooseRetrofireValue();
+	void set_RetrofireValue(double val);
+	void menuChooseRetrofireAttitude();
+	void set_RetrofireAttitude(VECTOR3 att);
+	void menuChooseRetrofireK1();
+	void set_RetrofireK1(double val);
+	void menuChooseRetrofireK2();
+	void set_RetrofireK2(double val);
+	void menuChooseRetrofireGs();
+	bool set_RetrofireGs(double val);
+	void menuChooseRetrofireUllage();
+	bool set_RetrofireUllage(int num, double dt);
+	void menuSetRetrofireTargetSelectionPage();
+	void menuCycleRecoveryTargetSelectionPages();
+	void menuRecoveryTargetSelectionCalc();
+	void set_RecoveryTargetSelectionCalc(double get, double lng);
+	void menuSelectRecoveryTarget();
+	bool set_RecoveryTarget(int num);
+	void menuSaveDODREFSMMAT();
+	void menuMakeDODREFSMMATCurrent();
+	void menuSetRetrofireMissDistance();
+	bool set_RetrofireMissDistance(double val);
 
 protected:
 	oapi::Font *font;

@@ -529,10 +529,9 @@ LEM_INV::LEM_INV() {
 	BASE_HLPW[18] = 117.5;	//360W
 }
 
-void LEM_INV::Init(LEM *s, h_HeatLoad *invh, h_HeatLoad *secinvh) {
+void LEM_INV::Init(LEM *s, h_HeatLoad *invh) {
 	lem = s;
 	InvHeat = invh;
-	SecInvHeat = secinvh;
 }
 
 void LEM_INV::DrawPower(double watts)
@@ -619,8 +618,7 @@ double LEM_INV::calc_hlpw_util(double maxw, int index)
 
 void LEM_INV::SystemTimestep(double simdt)
 {
-	InvHeat->GenerateHeat(heatloss / 2.0);
-	SecInvHeat->GenerateHeat(heatloss / 2.0);
+	InvHeat->GenerateHeat(heatloss);
 }
 
 //Tracking Light Electronics
@@ -630,17 +628,15 @@ LEM_TLE::LEM_TLE()
 	TrackCB = NULL;
 	TrackSwitch = NULL;
 	TLEHeat = 0;
-	SecTLEHeat = 0;
 
 }
 
-void LEM_TLE::Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh)
+void LEM_TLE::Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh)
 {
 	lem = l;
 	TrackCB = trk_cb;
 	TrackSwitch = tracksw;
 	TLEHeat = tleh;
-	SecTLEHeat = sectleh;
 }
 
 bool LEM_TLE::IsPowered()
@@ -665,9 +661,7 @@ void LEM_TLE::SystemTimestep(double simdt)
 {
 	if (IsPowered()) {
 		TrackCB->DrawPower(120.0);
-		//TLEHeat->GenerateHeat(120.0);
-		TLEHeat->GenerateHeat(60.0);
-		SecTLEHeat->GenerateHeat(60.0);
+		TLEHeat->GenerateHeat(120.0);
 	}
 }
 
@@ -926,31 +920,27 @@ void LEM_UtilLights::SystemTimestep(double simdt)
 	//CDR Utility Lights Dim
 	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(2.2);
-		//UtlLtgHeat->GenerateHeat(2.178);
+		UtlLtgHeat->GenerateHeat(2.178);
 		//UtlLtgHeat->GenerateHeat(1.09);	//Use half heat power
-		UtlLtgHeat->GenerateHeat(0);	//Testing zero heat 
 	}
 	//CDR Utility Lights Bright
 	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(6.15);
-		//UtlLtgHeat->GenerateHeat(6.1);
+		UtlLtgHeat->GenerateHeat(6.1);
 		//UtlLtgHeat->GenerateHeat(3.05);	//Use half heat power
-		UtlLtgHeat->GenerateHeat(0);	//Testing zero heat 
 	}	
 
 	//LMP Utility Lights Dim
 	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(1.76);
-		//UtlLtgHeat->GenerateHeat(1.74);
+		UtlLtgHeat->GenerateHeat(1.74);
 		//UtlLtgHeat->GenerateHeat(0.87);	//Use half heat power
-		UtlLtgHeat->GenerateHeat(0);	//Testing zero heat 
 	}
 	//LMP Utility Lights Bright
 	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(3.3);
-		//UtlLtgHeat->GenerateHeat(3.267); 
+		UtlLtgHeat->GenerateHeat(3.267); 
 		//UtlLtgHeat->GenerateHeat(1.63);	//Use half heat power
-		UtlLtgHeat->GenerateHeat(0);	//Testing zero heat 
 	}
 }
 
@@ -988,9 +978,8 @@ void LEM_COASLights::SystemTimestep(double simdt)
 {
 	if (IsPowered() && COASSwitch->GetState() != THREEPOSSWITCH_CENTER) {
 		COASCB->DrawPower(8.4);
-		//COASHeat->GenerateHeat(8.4);
+		COASHeat->GenerateHeat(8.4);
 		//COASHeat->GenerateHeat(4.2); 	//Use half heat power
-		COASHeat->GenerateHeat(0); 	//Testing zero heat
 	}
 }
 
@@ -1076,8 +1065,7 @@ void LEM_FloodLights::Timestep(double simdt)
 void LEM_FloodLights::SystemTimestep(double simdt)
 {
 	FloodCB->DrawPower(GetPowerDraw());
-	//FloodHeat->GenerateHeat((GetPowerDraw()*0.356)*0.50);	//Assumes linear relationship between heat and power draw based on maximum at 28V, 50% of power load to heat (just a guess to keep cabin temps stable)
-	FloodHeat->GenerateHeat(0);	//Testing zero heat
+	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V
 }
 
 LEM_PFIRA::LEM_PFIRA()

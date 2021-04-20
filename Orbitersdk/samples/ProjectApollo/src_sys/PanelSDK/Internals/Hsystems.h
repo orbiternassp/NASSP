@@ -41,8 +41,8 @@
 #define R_CONST					8314.4621	//(L*Pa)/(mol*K)
 							//		O2			H2			H20			N2			CO2			GLYCOL			Aerozine-50		N2O4			He
 const double MMASS		[MAX_SUB]=	{31.998,	2.01588,	18.01528,	28.0134,	44.01,		33.434432,		92.146,			92.01,			4.00260		};		//g/mol
-//const double SPECIFICC	[MAX_SUB]=	{0.918,		1.434,		4.18,		1.040,		0.858,		3.568952,		2.9056392,		1.270			5.193		};		//J/g-K .. assume constant
-const double SPECIFICC	[MAX_SUB]=	{1.669,		9.668,		4.184,		1.040,		0.858,		2.014316,		2.9056392,		1.270,			5.193		};		//J/g-K .. assume constant
+//const double SPECIFICC	[MAX_SUB]=	{0.918,		1.434,		4.184,		1.040,		0.858,		3.625769,		2.9056392,		1.270			5.193		};		//J/g-K .. assume constant
+const double SPECIFICC	[MAX_SUB]=	{1.669,		9.668,		4.184,		1.040,		0.858,		  3.691041,		2.9056392,		1.270,			5.193		};		//J/g-K .. assume constant
 const double VAPENTH	[MAX_SUB]=	{213.13,	445.46,		2260.0,		198.83,		347.0,		1769.195,		991.01556,		414.3,			0.0829		};		//J/g
 const double VAPPRESS	[MAX_SUB]=	{1314841.0,	4925221.0,	39441.0,	1528361.0,	493284.0,	25639.45,		21722.212986,	206782.99342,	14778377.09 };		//Pa @ 273.00K
 const double VAPGRAD	[MAX_SUB]=	{6556.0,	19045.0,	680.0,		7228.0,		4800.0,		52.87,			111.1,			1754.255683,	874.9447005 };		//Pa/K.. assume linear dependence of PV / K
@@ -113,6 +113,8 @@ public:
 	virtual void ProcessShip(VESSEL *vessel,PROPELLANT_HANDLE ph){ };
 };
 
+class E_system;
+
 //all the objects form a system, basically a chained list
 class H_system:public ship_system
 {
@@ -128,9 +130,12 @@ class H_system:public ship_system
 	void Create_h_CO2Scrubber(char *line);
 	void Create_h_WaterSeparator(char *line);
 	void Create_h_HeatLoad(char *line);
+	void Create_h_Accumulator(char* line);
 
 public:
 
+	E_system* P_electric;
+	void* GetPointerByString(char *query);
 	void Load (FILEHANDLE scn);
 	void Save (FILEHANDLE scn);
 	void Build();
@@ -181,7 +186,7 @@ public:
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual int Flow(h_volume block);
 	h_volume GetFlow(double volume, double maxMass = 0);	//flow from a tank is defined in volume
-	virtual void thermic( double _en);  //tank has it's own termic function, to account for the h_volume
+	virtual void thermic( double _en);  //tank has it's own thermic function, to account for the h_volume
 	virtual void Load(FILEHANDLE scn);
 	virtual void Save(FILEHANDLE scn);
 	virtual void* GetComponent(char *component_name);
@@ -375,6 +380,14 @@ public:
 	void GenerateHeat(double watts);
 	virtual void refresh(double dt);
 	virtual void* GetComponent(char *component_name);
+};
+
+class h_Accumulator : public h_Tank {
+public:
+
+	h_Accumulator(char* i_name, vector3 i_p, double i_vol);
+	void refresh(double dt);
+
 };
 
 #endif

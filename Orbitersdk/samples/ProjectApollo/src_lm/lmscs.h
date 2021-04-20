@@ -30,7 +30,7 @@ class LEM_RGA {
 	// RATE GYRO ASSEMBLY
 public:
 	LEM_RGA();
-	void Init(LEM *v, e_object *dcsource, h_HeatLoad *hl, h_HeatLoad *sechl);
+	void Init(LEM *v, e_object *dcsource, h_HeatLoad *hl);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
@@ -55,7 +55,7 @@ class ATCA {
 	// ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 public:
 	ATCA();								// Cons
-	void Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl);				// Init
+	void Init(LEM *vessel, h_HeatLoad *hl);				// Init
 	double GetPrimPowerVoltage();
 	double GetBackupPowerVoltage();
 	double GetRGAPickoffExcitationVoltage();
@@ -86,7 +86,6 @@ public:
 
 	LEM *lem;
 	h_HeatLoad *ATCAHeat;
-	h_HeatLoad *SECATCAHeat;
 	int lgc_err_x,lgc_err_y,lgc_err_z;	// LGC attitude error counters
 	int lgc_err_ena;                    // LGC error counter enabled
 	bool pgns_jet_request[16];

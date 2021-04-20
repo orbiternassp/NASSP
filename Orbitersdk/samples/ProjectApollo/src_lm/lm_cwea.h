@@ -31,7 +31,7 @@ class LEM;
 class LEM_CWEA : public e_object {
 public:
 	LEM_CWEA(SoundLib &s, Sound &buttonsound);
-	void Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah, h_HeatLoad *seccweah);
+	void Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	bool IsCWEAPowered();
@@ -101,7 +101,6 @@ protected:
 	e_object *cwea_pwr;
 	e_object *ma_pwr;
 	h_HeatLoad *CWEAHeat;
-	h_HeatLoad *SecCWEAHeat;
 
 	SoundLib &soundlib;
 	Sound &ButtonSound;
