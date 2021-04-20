@@ -186,7 +186,7 @@ public:
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual int Flow(h_volume block);
 	h_volume GetFlow(double volume, double maxMass = 0);	//flow from a tank is defined in volume
-	virtual void thermic( double _en);  //tank has it's own termic function, to account for the h_volume
+	virtual void thermic( double _en);  //tank has it's own thermic function, to account for the h_volume
 	virtual void Load(FILEHANDLE scn);
 	virtual void Save(FILEHANDLE scn);
 	virtual void* GetComponent(char *component_name);
