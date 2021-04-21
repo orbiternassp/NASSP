@@ -241,7 +241,7 @@ struct EMSMISSAuxOutputTable
 {
 	EphemerisData sv_cutoff;
 	int ErrorCode;
-	//0 = free-flight, 1 = end of maneuver
+	//1 = maximum time, 2 = radius, 3 = altitude, 4 = flight path angle, 5 = reference switch, 6 = beginning of maneuver, 7 = end of maneuver, 8 = ascending node
 	int TerminationCode;
 	//Maneuver number of last processed maneuver
 	unsigned ManeuverNumber;

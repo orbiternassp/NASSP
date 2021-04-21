@@ -16518,6 +16518,7 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 	InTable.IgnoreManueverNumber = 0;
 	InTable.landed = landed;
 	InTable.ManeuverIndicator = true;
+	InTable.StopParamRefFrame = 2;
 
 	if (QUEID == 2)
 	{
@@ -16580,13 +16581,12 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 		InTable.ECIEphemerisIndicator = true;
 		InTable.ManCutoffIndicator = 1;
 		InTable.EphemTableIndicator = &table->EPHEM;
-		InTable.StopParamRefFrame = 2;
 	}
 	else
 	{
 		InTable.MaxIntegTime = PresentGMT - sv0.GMT;
 		InTable.EphemerisBuildIndicator = false;
-		InTable.ManCutoffIndicator = 2;
+		InTable.ManCutoffIndicator = 1;
 	}
 
 	MissionPlanTable *mpt = GetMPTPointer(L);
@@ -16596,83 +16596,99 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 		table->EPHEM.table.clear();
 		table->MANTIMES.Table.clear();
 	}
-	else
-	{
-		EMSMISS(InTable);
-		return InTable.NIAuxOutputTable.sv_cutoff;
-	}
 
 	RTCCNIAuxOutputTable aux;
 	InTable.AuxTableIndicator = &aux;
-	InTable.ManTimesIndicator = &table->MANTIMES;
+	if (QUEID == 2)
+	{
+		InTable.ManTimesIndicator = &table->MANTIMES;
+	}
+	else
+	{
+		InTable.ManTimesIndicator = NULL;
+	}
 
 	do
 	{
 		EMSMISS(InTable);
-		if (InTable.NIAuxOutputTable.TerminationCode == 1)
+		if (InTable.NIAuxOutputTable.TerminationCode == 7)
 		{
-			MANTIMESData data;
-
 			if (InTable.NIAuxOutputTable.LunarStayEndGMT > 0)
 			{
-				table->LUNRSTAY.LunarStayEndGMT = InTable.NIAuxOutputTable.LunarStayEndGMT;
+				if (QUEID == 2)
+				{
+					table->LUNRSTAY.LunarStayEndGMT = InTable.NIAuxOutputTable.LunarStayEndGMT;
+				}
 				InTable.landed = false;
 			}
 			if (InTable.NIAuxOutputTable.LunarStayBeginGMT > 0)
 			{
-				table->LUNRSTAY.LunarStayBeginGMT = InTable.NIAuxOutputTable.LunarStayBeginGMT;
+				if (QUEID == 2)
+				{
+					table->LUNRSTAY.LunarStayBeginGMT = InTable.NIAuxOutputTable.LunarStayBeginGMT;
+				}
 				InTable.landed = true;
 			}
 
-			PMMDMT(L, InTable.NIAuxOutputTable.ManeuverNumber, InTable.AuxTableIndicator);
-			InTable.AnchorVector = table->EPHEM.table.back();
-			InTable.EphemerisLeftLimitGMT = InTable.AnchorVector.GMT;
+			if (QUEID == 2)
+			{
+				PMMDMT(L, InTable.NIAuxOutputTable.ManeuverNumber, InTable.AuxTableIndicator);
+				InTable.AnchorVector = table->EPHEM.table.back();
+				InTable.EphemerisLeftLimitGMT = InTable.AnchorVector.GMT;
+			}
+			else
+			{
+				InTable.AnchorVector = InTable.NIAuxOutputTable.sv_cutoff;
+			}
 			InTable.IgnoreManueverNumber = InTable.NIAuxOutputTable.ManeuverNumber;
 		}
 		else
 		{
-			if (InTable.NIAuxOutputTable.LunarStayEndGMT > 0)
+			if (QUEID == 2)
 			{
-				table->LUNRSTAY.LunarStayEndGMT = InTable.NIAuxOutputTable.LunarStayEndGMT;
-			}
-			if (InTable.NIAuxOutputTable.LunarStayBeginGMT > 0)
-			{
-				table->LUNRSTAY.LunarStayBeginGMT = InTable.NIAuxOutputTable.LunarStayBeginGMT;
+				if (InTable.NIAuxOutputTable.LunarStayEndGMT > 0)
+				{
+					table->LUNRSTAY.LunarStayEndGMT = InTable.NIAuxOutputTable.LunarStayEndGMT;
+				}
+				if (InTable.NIAuxOutputTable.LunarStayBeginGMT > 0)
+				{
+					table->LUNRSTAY.LunarStayBeginGMT = InTable.NIAuxOutputTable.LunarStayBeginGMT;
+				}
 			}
 		}
-	} while (InTable.NIAuxOutputTable.TerminationCode == 1 && InTable.NIAuxOutputTable.ErrorCode == 0);
+	} while (InTable.NIAuxOutputTable.TerminationCode == 7 && InTable.NIAuxOutputTable.ErrorCode == 0);
 
 	//Unlock
 	if (QUEID == 2)
 	{
 		table->EPHEM.Header.TUP = -table->EPHEM.Header.TUP;
-	}
-	table->EPHEM.Header.NumVec = table->EPHEM.table.size();
-	table->EPHEM.Header.Offset = 0;
-	table->EPHEM.Header.TL = table->EPHEM.table.front().GMT;
-	table->EPHEM.Header.TR = table->EPHEM.table.back().GMT;
+		table->EPHEM.Header.NumVec = table->EPHEM.table.size();
+		table->EPHEM.Header.Offset = 0;
+		table->EPHEM.Header.TL = table->EPHEM.table.front().GMT;
+		table->EPHEM.Header.TR = table->EPHEM.table.back().GMT;
 
-	mpt->CommonBlock.TUP = table->EPHEM.Header.TUP;
+		mpt->CommonBlock.TUP = table->EPHEM.Header.TUP;
 
-	if (L == RTCC_MPT_CSM)
-	{
-		RTCCONLINEMON.TextBuffer[0] = "CSM";
-	}
-	else
-	{
-		RTCCONLINEMON.TextBuffer[0] = "LEM";
-	}
-	EMGPRINT("EMSEPH", 12);
-	char Buff[64];
-	format_time_rtcc(Buff, table->EPHEM.Header.TL);
-	RTCCONLINEMON.TextBuffer[1].assign(Buff);
-	format_time_rtcc(Buff, table->EPHEM.Header.TR);
-	RTCCONLINEMON.TextBuffer[2].assign(Buff);
-	EMGPRINT("EMSEPH", 15);
+		if (L == RTCC_MPT_CSM)
+		{
+			RTCCONLINEMON.TextBuffer[0] = "CSM";
+		}
+		else
+		{
+			RTCCONLINEMON.TextBuffer[0] = "LEM";
+		}
+		EMGPRINT("EMSEPH", 12);
+		char Buff[64];
+		format_time_rtcc(Buff, table->EPHEM.Header.TL);
+		RTCCONLINEMON.TextBuffer[1].assign(Buff);
+		format_time_rtcc(Buff, table->EPHEM.Header.TR);
+		RTCCONLINEMON.TextBuffer[2].assign(Buff);
+		EMGPRINT("EMSEPH", 15);
 
-	//Update mission plan table display
-	PMDMPT();
-	return table->EPHEM.table.back();
+		//Update mission plan table display
+		PMDMPT();
+	}
+	return InTable.NIAuxOutputTable.sv_cutoff;
 }
 
 void RTCC::EMSMISS(EMSMISSInputTable &in)
@@ -16695,6 +16711,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 	//Use max integration time as default dt
 	dt = in.MaxIntegTime;
+	in.NIAuxOutputTable.TerminationCode = 1;
 
 	//Set some output parameters to default values
 	in.NIAuxOutputTable.LunarStayBeginGMT = -1;
@@ -16743,7 +16760,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		sv1 = in.AnchorVector;
 	}
 
-	if (in.ManeuverIndicator && in.ManCutoffIndicator != 2)
+	if (in.ManeuverIndicator)
 	{
 		dt2 = 1e70;
 		for (unsigned i = 0;i < mpt->mantable.size();i++)
@@ -16794,6 +16811,10 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 				{
 					NextMan = i;
 					manflag = true;
+				}
+				else
+				{
+					in.NIAuxOutputTable.TerminationCode = 6;
 				}
 				break;
 			}
@@ -16904,6 +16925,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 					{
 						stop = true;
 						manflag = false;
+						in.NIAuxOutputTable.TerminationCode = 2;
 					}
 				}
 				else if (in.CutoffIndicator == 5)
@@ -16926,6 +16948,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 					{
 						stop = true;
 						manflag = false;
+						in.NIAuxOutputTable.TerminationCode = 3;
 					}
 				}
 			}
@@ -16940,7 +16963,6 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	if (manflag == false)
 	{
 		in.NIAuxOutputTable.sv_cutoff = svtemp;
-		in.NIAuxOutputTable.TerminationCode = 0;
 		in.NIAuxOutputTable.ErrorCode = 0;
 		in.NIAuxOutputTable.ManeuverNumber = 0;
 
@@ -17255,12 +17277,12 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	if (in.EphemerisBuildIndicator)
 	{
 		EphemerisData svtemp2;
-		for (unsigned int ii = 1;ii < tempephemtable.table.size();ii++)
+		svtemp2.RBI = svtemp.RBI;
+		for (unsigned int ii = 1;ii < tempephemtable.table.size();ii++) //First state vector in maneuver ephemeris is the same as the current last one in the main ephemeris
 		{
 			svtemp2.R = tempephemtable.table[ii].R;
 			svtemp2.V = tempephemtable.table[ii].V;
 			svtemp2.GMT = tempephemtable.table[ii].GMT;
-			svtemp2.RBI = svtemp.RBI;
 			in.EphemTableIndicator->table.push_back(svtemp2);
 		}
 	}
@@ -17311,7 +17333,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		in.NIAuxOutputTable.sv_cutoff.GMT = in.AuxTableIndicator->GMT_BO;
 		in.NIAuxOutputTable.sv_cutoff.RBI = in.AuxTableIndicator->RBI;
 	}
-	in.NIAuxOutputTable.TerminationCode = 1;
+	in.NIAuxOutputTable.TerminationCode = 7;
 	in.NIAuxOutputTable.ErrorCode = nierror;
 	in.NIAuxOutputTable.ManeuverNumber = i + 1;
 
