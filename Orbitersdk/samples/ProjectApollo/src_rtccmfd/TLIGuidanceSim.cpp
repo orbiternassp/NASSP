@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "rtcc.h"
 
-TLIGuidanceSim::TLIGuidanceSim(RTCC *r, RTCCNIInputTable tablin, int &iretn, EphemerisDataTable *ephem, RTCCNIAuxOutputTable *aux, MATRIX3 *adrmat, std::vector<double> *wtabl) :
+TLIGuidanceSim::TLIGuidanceSim(RTCC *r, RTCCNIInputTable tablin, int &iretn, EphemerisDataTable2 *ephem, RTCCNIAuxOutputTable *aux, MATRIX3 *adrmat, std::vector<double> *wtabl) :
 	RTCCModule(r),
 	TABLIN(tablin), IRETN(iretn), EPHEM(ephem), AUX(aux), WTABL(wtabl), ADRMAT(adrmat)
 {
@@ -399,6 +399,11 @@ void TLIGuidanceSim::PCMTRL()
 	if (KEHOP != 0)
 	{
 		//Store ephemeris and header information
+		EPHEM->Header.CSI = 0;
+		EPHEM->Header.NumVec = EPHEM->table.size();
+		EPHEM->Header.Status = IERR;
+		EPHEM->Header.TL = EPHEM->table.front().GMT;
+		EPHEM->Header.TR = EPHEM->table.back().GMT;
 	}
 PMMSIU_999:
 	IRETN = IERR;
@@ -454,12 +459,11 @@ void TLIGuidanceSim::PCMEP()
 	}
 	else
 	{
-		EphemerisData sv;
+		EphemerisData2 sv;
 
 		sv.GMT = T;
 		sv.R = RE;
 		sv.V = VE;
-		sv.RBI = BODY_EARTH;
 		EPHEM->table.push_back(sv);
 
 		if (KEHOP >= 2 && WTABL)

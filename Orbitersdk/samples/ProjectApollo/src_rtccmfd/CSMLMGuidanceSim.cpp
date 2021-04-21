@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "rtcc.h"
 
-CSMLMPoweredFlightIntegration::CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable *E, RTCCNIAuxOutputTable *A) :
+CSMLMPoweredFlightIntegration::CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable2 *E, RTCCNIAuxOutputTable *A) :
 	RTCCModule(r),
 	TArr(T),
 	IERR(I),
@@ -101,7 +101,7 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 	sv_ff.R = R;
 	sv_ff.V = V;
 	sv_ff.GMT = TArr.sv0.GMT + T;
-	sv_ff.RBI = TArr.sv0.RBI;
+	//sv_ff.RBI = TArr.sv0.RBI;
 
 	CalcBodyAttitude();
 
@@ -117,6 +117,18 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 	T = TSAVE;
 	if (TArr.KEPHOP != 0)
 	{
+		//Store initial state vector
+		EphemerisData2 sv;
+
+		sv.R = R;
+		sv.V = V;
+		sv.GMT = TArr.sv0.GMT + T;
+		Eph->table.push_back(sv);
+
+		if (TArr.KEPHOP == 2)
+		{
+			WeightTable.push_back(WT);
+		}
 		TNEXT = TArr.DTOUT;
 	}
 
@@ -129,7 +141,7 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 		sv1.R = R;
 		sv1.V = V;
 		sv1.GMT = TArr.sv0.GMT + T;
-		sv1.RBI = TArr.sv0.RBI;
+		//sv1.RBI = TArr.sv0.RBI;
 		TEND = TLARGE;
 		TBI = TBM;
 		if (DTMAN > 0)
@@ -353,7 +365,7 @@ PMMRKJ_LABEL_16A:
 	sv1.R = R;
 	sv1.V = V;
 	sv1.GMT = TArr.sv0.GMT + T;
-	sv1.RBI = TArr.sv0.RBI;
+	//sv1.RBI = TArr.sv0.RBI;
 	if (TArr.KTRIMOP == -1)
 	{
 		IA = 1;
@@ -449,7 +461,7 @@ PMMRKJ_LABEL_22C:
 	sv2.R = R;
 	sv2.V = V;
 	sv2.GMT = TArr.sv0.GMT + T;
-	sv2.RBI = TArr.sv0.RBI;
+	//sv2.RBI = TArr.sv0.RBI;
 	if (Aux && TArr.KAUXOP)
 	{
 		Aux->A_T = A_T_out;
@@ -485,12 +497,28 @@ PMMRKJ_LABEL_22C:
 		if (TArr.KEPHOP >= 1)
 		{
 			//Don't store same state vector twice, relevant for zero maneuvers
-			if (Eph->table.back().GMT != sv2.GMT)
+			if (Eph->table.size() == 0 || Eph->table.back().GMT != sv2.GMT)
 			{
 				Eph->table.push_back(sv2);
 			}
+
+			//Write ephemeris header
+			if (TArr.sv0.RBI == BODY_EARTH)
+			{
+				Eph->Header.CSI = 0;
+			}
+			else
+			{
+				Eph->Header.CSI = 2;
+			}
+			Eph->Header.NumVec = Eph->table.size();
+			Eph->Header.TL = Eph->table.front().GMT;
+			Eph->Header.TR = Eph->table.back().GMT;
 		}
-		Aux->sv_FF = sv_ff;
+		Aux->sv_FF.R = sv_ff.R;
+		Aux->sv_FF.V = sv_ff.V;
+		Aux->sv_FF.GMT = sv_ff.GMT;
+		Aux->sv_FF.RBI = TArr.sv0.RBI;
 		Aux->V_G = VGN;
 		Aux->X_B = X_B;
 		Aux->Y_B = Y_B;
@@ -818,7 +846,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	DTTOC = DTSPAN[7];
 }
 
-void CSMLMPoweredFlightIntegration::PCRUNG(EphemerisDataTable *E, std::vector<double> &W)
+void CSMLMPoweredFlightIntegration::PCRUNG(EphemerisDataTable2 *E, std::vector<double> &W)
 {
 	VECTOR3 RDDP1, RDDP2, RDDP3;
 	if (DT != DTPREV)
@@ -883,11 +911,11 @@ PCRUNG_LABEL_4B:
 	//Time to store some data
 	if (T == TNEXT)
 	{
-		EphemerisData sv;
+		EphemerisData2 sv;
 
 		sv.R = R;
 		sv.V = V;
-		sv.RBI = TArr.sv0.RBI;
+		//sv.RBI = TArr.sv0.RBI;
 		sv.GMT = TArr.sv0.GMT + T;
 		E->table.push_back(sv);
 		TLOP = TNEXT;

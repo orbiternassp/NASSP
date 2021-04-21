@@ -12119,7 +12119,7 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 	return IMUangles;
 }
 
-bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv)
+bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv)
 {
 	MATRIX3 Rot, REFSMMAT;
 	DescentGuidance descguid;
@@ -15923,13 +15923,21 @@ RTCC_PMMMPT_20_B:
 	goto RTCC_PMMMPT_10_A;*/
 }
 
-int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E)
+int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E)
 {
-	EphemerisData data;
+	EphemerisData2 data;
 	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 	double theta, dt_asc, dv;
 	SV sv_IG, sv_Ins;
 	LunarAscentProcessor(R_LS, in.m0, in.sv_CSM,SystemParameters.GMTBASE, in.t_liftoff, in.v_LH, in.v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
+
+	if (E)
+	{
+		data.R = sv_IG.R;
+		data.V = sv_IG.V;
+		data.GMT = OrbMech::GETfromMJD(sv_IG.MJD, SystemParameters.GMTBASE);
+		E->table.push_back(data);
+	}
 
 	aux.A_T = unit(sv_IG.R);
 	aux.DT_B = (sv_Ins.MJD - sv_IG.MJD)*24.0*3600.0;
@@ -15981,21 +15989,34 @@ int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *
 		data.R = sv_Ins.R;
 		data.V = sv_Ins.V;
 		data.GMT = OrbMech::GETfromMJD(sv_Ins.MJD,SystemParameters.GMTBASE);
-		data.RBI = BODY_MOON;
 		E->table.push_back(data);
+
+		//Header
+		E->Header.CSI = 2;
+		E->Header.NumVec = E->table.size();
+		E->Header.TL = E->table.front().GMT;
+		E->Header.TR = E->table.back().GMT;
 	}
 
 	return 0;
 }
 
-int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E)
+int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E)
 {
-	EphemerisData data;
+	EphemerisData2 data;
 	SV sv_PDI, sv_land;
 	double dv;
 	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
 	PoweredDescentProcessor(R_LS, in.TLAND, in.sv, CalcGETBase(), aux, E, sv_PDI, sv_land, dv);
+
+	if (E)
+	{
+		data.R = sv_PDI.R;
+		data.V = sv_PDI.V;
+		data.GMT = OrbMech::GETfromMJD(sv_PDI.MJD, SystemParameters.GMTBASE);
+		E->table.push_back(data);
+	}
 
 	aux.A_T = _V(1, 0, 0);
 	aux.DT_B = (sv_land.MJD - sv_PDI.MJD)*24.0*3600.0;
@@ -16047,8 +16068,13 @@ int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *
 		data.R = sv_land.R;
 		data.V = sv_land.V;
 		data.GMT = OrbMech::GETfromMJD(sv_land.MJD,SystemParameters.GMTBASE);
-		data.RBI = BODY_MOON;
 		E->table.push_back(data);
+
+		//Header
+		E->Header.CSI = 2;
+		E->Header.NumVec = E->table.size();
+		E->Header.TL = E->table.front().GMT;
+		E->Header.TR = E->table.back().GMT;
 	}
 
 	return 0;
@@ -16651,6 +16677,7 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 
 void RTCC::EMSMISS(EMSMISSInputTable &in)
 {
+	EphemerisDataTable2 tempephemtable;
 	MANTIMESData mantimes;
 	EphemerisData sv1;
 	double dt, dt2, t_right, StopCondParam, R_E;
@@ -16937,6 +16964,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	}
 
 	int nierror = 0;
+	tempephemtable.table.clear();
 
 	//PMMRKJ
 	if (mpt->mantable[i].AttitudeCode <= 5)
@@ -16958,7 +16986,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.KAUXOP = 1;
 		if (in.EphemerisBuildIndicator)
 		{
-			integin.KEPHOP = 2;
+			integin.KEPHOP = 1;
 		}
 		else
 		{
@@ -17037,14 +17065,13 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 		int Ierr;
 
-		CSMLMPoweredFlightIntegration numin(this, integin, Ierr, in.EphemTableIndicator, in.AuxTableIndicator);
+		CSMLMPoweredFlightIntegration numin(this, integin, Ierr, &tempephemtable, in.AuxTableIndicator);
 		numin.PMMRKJ();
 	}
 	else if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
 	{
 		//TLI simulation
 
-		EphemerisDataTable *E;
 		RTCCNIInputTable integin;
 
 		integin.R = svtemp.R;
@@ -17052,7 +17079,14 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.DTOUT = in.ManEphemDT;
 		integin.WDMULT = 1.0;
 		integin.DENSMULT = in.DensityMultiplier;
-		integin.IEPHOP = 1;
+		if (in.EphemerisBuildIndicator)
+		{
+			integin.IEPHOP = 1;
+		}
+		else
+		{
+			integin.IEPHOP = 0;
+		}
 		integin.KAUXOP = true;
 		integin.MAXSTO = 1000;
 
@@ -17127,14 +17161,6 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.Params2[4] = mpt->mantable[i].Word83;
 		integin.Params2[5] = mpt->mantable[i].Word84;
 
-		if (in.EphemerisBuildIndicator)
-		{
-			E = in.EphemTableIndicator;
-		}
-		else
-		{
-			E = NULL;
-		}
 		//Link to TLI matrix table
 		MATRIX3 ADRMAT[3];
 		if (in.VehicleCode == RTCC_MPT_CSM)
@@ -17150,7 +17176,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			ADRMAT[2] = PZMATLEM.G;
 		}
 
-		TLIGuidanceSim numin(this, integin, nierror, E, in.AuxTableIndicator, ADRMAT);
+		TLIGuidanceSim numin(this, integin, nierror, &tempephemtable, in.AuxTableIndicator, ADRMAT);
 		numin.PCMTRL();
 
 	}
@@ -17159,7 +17185,6 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		//Descent simulation
 
 		PMMLDIInput integin;
-		EphemerisDataTable *E;
 
 		integin.sv.R = svtemp.R;
 		integin.sv.V = svtemp.V;
@@ -17181,36 +17206,13 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			integin.W_LMD = mpt->mantable[i - 1].CommonBlock.LMDescentMass;
 		}
 
-		if (in.EphemerisBuildIndicator)
-		{
-			E = in.EphemTableIndicator;
-		}
-		else
-		{
-			E = NULL;
-		}
-
-		PMMLDI(integin, *in.AuxTableIndicator, E);
-
-		svtemp.R = in.AuxTableIndicator->R_BO;
-		svtemp.V = in.AuxTableIndicator->V_BO;
-		svtemp.GMT = in.AuxTableIndicator->GMT_BO;
-		svtemp.GMT += 0.1;
-
-		if (E)
-		{
-			E->table.push_back(svtemp);
-		}
-
-		in.NIAuxOutputTable.LunarStayBeginGMT = svtemp.GMT;
-		in.NIAuxOutputTable.LunarStayEndGMT = 1e71;
+		PMMLDI(integin, *in.AuxTableIndicator, &tempephemtable);
 	}
 	else
 	{
 		//Ascent simulation
 
 		PMMLAIInput integin;
-		EphemerisDataTable *E;
 
 		if (i == 0)
 		{
@@ -17245,19 +17247,44 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.t_liftoff = mpt->mantable[i].GMTMAN;
 		integin.v_LH = mpt->mantable[i].dV_LVLH.z;
 		integin.v_LV = mpt->mantable[i].dV_LVLH.x;
+		
+		PMMLAI(integin, *in.AuxTableIndicator, &tempephemtable);
+	}
+
+	//Add maneuver ephemeris to full ephemeris
+	if (in.EphemerisBuildIndicator)
+	{
+		EphemerisData svtemp2;
+		for (unsigned int ii = 1;ii < tempephemtable.table.size();ii++)
+		{
+			svtemp2.R = tempephemtable.table[ii].R;
+			svtemp2.V = tempephemtable.table[ii].V;
+			svtemp2.GMT = tempephemtable.table[ii].GMT;
+			svtemp2.RBI = svtemp.RBI;
+			in.EphemTableIndicator->table.push_back(svtemp2);
+		}
+	}
+
+	//Some special processing
+	if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_PGNS_DESCENT)
+	{
+		//Add an extra state vector for the begin of the lunar surface ephemeris
+		svtemp.R = in.AuxTableIndicator->R_BO;
+		svtemp.V = in.AuxTableIndicator->V_BO;
+		svtemp.GMT = in.AuxTableIndicator->GMT_BO;
+		svtemp.GMT += 0.1;
 
 		if (in.EphemerisBuildIndicator)
 		{
-			E = in.EphemTableIndicator;
+			in.EphemTableIndicator->table.push_back(svtemp);
 		}
-		else
-		{
-			E = NULL;
-		}
-		
-		PMMLAI(integin, *in.AuxTableIndicator, E);
 
-		in.NIAuxOutputTable.LunarStayEndGMT = integin.t_liftoff;
+		in.NIAuxOutputTable.LunarStayBeginGMT = svtemp.GMT;
+		in.NIAuxOutputTable.LunarStayEndGMT = 1e71;
+	}
+	else if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_PGNS_ASCENT || mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_AGS_ASCENT)
+	{
+		in.NIAuxOutputTable.LunarStayEndGMT = in.AuxTableIndicator->GMT_BI;
 	}
 
 	//Print error

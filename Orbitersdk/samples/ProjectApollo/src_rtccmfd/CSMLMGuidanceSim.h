@@ -90,11 +90,11 @@ struct PMMRKJInputArray
 class CSMLMPoweredFlightIntegration : public RTCCModule
 {
 public:
-	CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable *E, RTCCNIAuxOutputTable *A);
+	CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable2 *E, RTCCNIAuxOutputTable *A);
 	void PMMRKJ();
 private:
 	void PCINIT();
-	void PCRUNG(EphemerisDataTable *E, std::vector<double> &W);
+	void PCRUNG(EphemerisDataTable2 *E, std::vector<double> &W);
 	void PCRDD();
 	void PCGUID();
 	void CalcBodyAttitude();
@@ -246,7 +246,7 @@ private:
 	double YGBI;
 	double DV_ul;
 	double DTMANE;
-	EphemerisData sv1, sv2, sv_ff;
+	EphemerisData2 sv1, sv2, sv_ff;
 	double WTENGON;
 	VECTOR3 VGN;
 	double DTTOC;
@@ -256,6 +256,6 @@ private:
 	PMMRKJInputArray &TArr;
 	int &IERR;
 	RTCCNIAuxOutputTable *Aux;
-	EphemerisDataTable *Eph;
+	EphemerisDataTable2 *Eph;
 	std::vector<double> WeightTable;
 };
