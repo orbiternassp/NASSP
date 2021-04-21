@@ -33,12 +33,12 @@ therm_obj::therm_obj()
 {
 	next_t = NULL;
 	c = 0.15;
+	mass = 1.0;
 	SetTemp(273.15);
 	external = 0;
 	isolation = 0.0;
 	Area = 0.0;
 	pos = _vector3(0, 0, 0);
-	mass = 1.0;
 }
 
 void therm_obj::thermic(double _en) {
