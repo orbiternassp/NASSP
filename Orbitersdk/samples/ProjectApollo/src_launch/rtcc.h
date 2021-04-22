@@ -2704,6 +2704,8 @@ public:
 	int EMGSTGENCode(const char *Buffer);
 	//GOST REFSMMAT Maintenance
 	void FormatREFSMMATCode(int ID, int num, char *buff);
+	//Sun-Moon-Earth Occultation
+	bool EMMGSTCK(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES);
 	//Guidance Optics Support Table
 	void EMMGSTMP();
 	//Guidance Optics Display
@@ -2750,7 +2752,7 @@ public:
 	//Variable Order Interpolation
 	int ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData &sv_out, unsigned &ORER_out);
 	//Generalized Coordinate System Conversion Subroutine
-	int ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out);
+	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
 	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
 	int ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out);
 	int ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out);

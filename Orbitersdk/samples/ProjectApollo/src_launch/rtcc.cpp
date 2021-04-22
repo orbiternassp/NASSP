@@ -30831,7 +30831,7 @@ void RTCC::EMSLSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 	}
 }
 
-bool EMMGSTMPOccultationCheck(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES)
+bool RTCC::EMMGSTCK(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES)
 {
 	//Vectors from bodies to spacecraft
 	VECTOR3 R_EV, R_MV, R_SV;
@@ -30946,7 +30946,7 @@ void RTCC::EMMGSTMP()
 			u = EZJGSTAR[i];
 
 			//Occultation check
-			if (EMMGSTMPOccultationCheck(u, sv.R, sv.RBI, R_EM, R_ES))
+			if (EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
 			{
 				continue;
 			}
@@ -31073,7 +31073,7 @@ void RTCC::EMMGSTMP()
 			u = EZJGSTAR[i];
 
 			//Occultation check
-			if (EMMGSTMPOccultationCheck(u, sv.R, sv.RBI, R_EM, R_ES))
+			if (EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
 			{
 				continue;
 			}
