@@ -505,7 +505,6 @@ LEM_INV::LEM_INV() {
 	lem = NULL;
 	dc_input = NULL;
 	InvHeat = 0;
-	SecInvHeat = 0;
 	heatloss = 0.0;
 
 	BASE_HLPW[0] = 40.0;	//0W AC output
@@ -921,26 +920,22 @@ void LEM_UtilLights::SystemTimestep(double simdt)
 	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(2.2);
 		UtlLtgHeat->GenerateHeat(2.178);
-		//UtlLtgHeat->GenerateHeat(1.09);	//Use half heat power
 	}
 	//CDR Utility Lights Bright
 	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(6.15);
 		UtlLtgHeat->GenerateHeat(6.1);
-		//UtlLtgHeat->GenerateHeat(3.05);	//Use half heat power
 	}	
 
 	//LMP Utility Lights Dim
 	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(1.76);
 		UtlLtgHeat->GenerateHeat(1.74);
-		//UtlLtgHeat->GenerateHeat(0.87);	//Use half heat power
 	}
 	//LMP Utility Lights Bright
 	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(3.3);
 		UtlLtgHeat->GenerateHeat(3.267); 
-		//UtlLtgHeat->GenerateHeat(1.63);	//Use half heat power
 	}
 }
 
@@ -979,7 +974,6 @@ void LEM_COASLights::SystemTimestep(double simdt)
 	if (IsPowered() && COASSwitch->GetState() != THREEPOSSWITCH_CENTER) {
 		COASCB->DrawPower(8.4);
 		COASHeat->GenerateHeat(8.4);
-		//COASHeat->GenerateHeat(4.2); 	//Use half heat power
 	}
 }
 

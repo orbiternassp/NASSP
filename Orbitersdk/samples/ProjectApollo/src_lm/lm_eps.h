@@ -118,7 +118,6 @@ private:
 	double get_hlpw(double base_hlpw_factor);
 	double calc_hlpw_util(double maxw, int index);
 	h_HeatLoad *InvHeat;
-	h_HeatLoad *SecInvHeat;
 };
 
 class LEM_TLE
