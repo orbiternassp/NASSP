@@ -2327,7 +2327,6 @@ void LEM::CheckDescentStageSystems()
 		h_HeatExchanger* desbat4HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4HX");
 		h_HeatExchanger* desplate1HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBATLeftPlateHX");
 		h_HeatExchanger* desplate2HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBATRightPlateHX");
-		h_HeatExchanger* edbatAHX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATAHX");
 		desbat1HX->SetPumpOff();
 		desbat2HX->SetPumpOff();
 		desbat3HX->SetPumpOff();
@@ -2335,7 +2334,11 @@ void LEM::CheckDescentStageSystems()
 		desplate1HX->SetPumpOff();
 		desplate2HX->SetPumpOff();
 
+		h_HeatExchanger* edbatAHX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATAHX");
 		edbatAHX->SetPumpOff();
+
+		//h_HeatExchanger* staybatHX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:STAYBATHX");
+		//staybatHX->SetPumpOff();
 
 		//LR
 
