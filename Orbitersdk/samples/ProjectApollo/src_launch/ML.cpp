@@ -707,7 +707,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 	// This code forces the vehicle in a landed state, ensuring any thruster firing will not move the vehicle until liftoff. From here: https://www.orbiter-forum.com/threads/how-to-keep-vessels-landed-for-good-in-orbiter-2016-walkthrough.39702/
 	if (sat) {
-		if ( sat->GetStage() < LAUNCH_STAGE_ONE && ((state > STATE_ROLLOUT && state < STATE_LIFTOFF) || (state == STATE_LIFTOFF && Hold == true))) {
+		if (sat->GetStage() < LAUNCH_STAGE_ONE && state > STATE_ROLLOUT) {
 			double lng, lat;
 			if (GetDistanceTo(PAD_LV_LONB, PAD_LV_LATB) < 10.0) {
 				lng = PAD_LV_LONB;
