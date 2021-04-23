@@ -62,6 +62,62 @@ public:
 	int input;                  // Channel input selector
 };
 
+class LEM_ECABatMonitor
+{
+public:
+	LEM_ECABatMonitor();
+	void Init(Battery *b, LEM_ECAch *c, PowerMerge *p);
+	void Timestep(double dt);
+	void SaveState(FILEHANDLE scn, char *start_str);
+	void LoadState(char *line);
+
+	bool GetMalfunction();
+protected:
+
+	bool OC;
+	bool RC;
+
+	Battery *batt;
+	LEM_ECAch *chan;
+	PowerMerge *power;
+};
+
+class LEM_ECA
+{
+public:
+	LEM_ECA();
+protected:
+};
+
+class LEM_DescentECA : public LEM_ECA
+{
+public:
+	LEM_DescentECA();
+	void Init(Battery *b1, Battery *b2, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p);
+	void Timestep(double dt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	bool GetMalfunctionA() { return bat1mon.GetMalfunction(); }
+	bool GetMalfunctionB() { return bat2mon.GetMalfunction(); }
+protected:
+	LEM_ECABatMonitor bat1mon, bat2mon;
+};
+
+class LEM_AscentECA : public LEM_ECA
+{
+public:
+	LEM_AscentECA();
+	void Init(Battery *b, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p);
+	void Timestep(double dt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	bool GetMalfunction() { return batmon.GetMalfunction(); }
+protected:
+	LEM_ECABatMonitor batmon;
+};
+
 // Bus feed controller object
 class LEM_BusFeed : public e_object {
 public:

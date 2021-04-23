@@ -235,6 +235,7 @@ public:
 	void SystemTimestep(double simdt);
 	double GetVoltage(int sa, int chan);
 	SCEA_SolidStateSwitch* GetSwitch(int sa, int chan);
+	bool GetBatFaultLogic();
 protected:
 	SCEA_SA_5043 SA2;
 	SCEA_SA_5043 SA3;

@@ -281,6 +281,7 @@ public:
 	bool GetK7() { return K7; }
 	bool GetK8() { return K8; }
 	bool GetK9() { return K9; }
+	bool GetK10() { return K10; }
 	bool GetK15() { return K15; }
 	bool GetK17() { return K17; }
 	bool GetK18() { return K18; }

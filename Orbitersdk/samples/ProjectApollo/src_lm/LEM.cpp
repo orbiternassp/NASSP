@@ -395,6 +395,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	lm_vhf_to_csm_csm_connector(this, &VHF),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk),
+	DescentECAMainFeeder("Descent-ECA-Main-Feeder", Panelsdk),
+	DescentECAContFeeder("Descent-ECA-Cont-Feeder", Panelsdk),
+	AscentECAMainFeeder("Ascent-ECA-Main-Feeder", Panelsdk),
 	vesim(&cbLMVesim, this)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
@@ -1562,6 +1565,18 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ASA_START", sizeof("ASA_START"))) {
 			asa.LoadState(scn, "ASA_END");
 		}
+		else if (!strnicmp(line, "ECA_1_START", sizeof("ECA_1_START"))) {
+			ECA_1.LoadState(scn, "ECA_1_END");
+		}
+		else if (!strnicmp(line, "ECA_2_START", sizeof("ECA_2_START"))) {
+			ECA_2.LoadState(scn, "ECA_2_END");
+		}
+		else if (!strnicmp(line, "ECA_3_START", sizeof("ECA_3_START"))) {
+			ECA_3.LoadState(scn, "ECA_3_END");
+		}
+		else if (!strnicmp(line, "ECA_4_START", sizeof("ECA_4_START"))) {
+			ECA_4.LoadState(scn, "ECA_4_END");
+		}
 		else if (!strnicmp(line, "ECA_1A_START", sizeof("ECA_1A_START"))) {
 			ECA_1a.LoadState(scn, "ECA_1A_END");
 		}
@@ -2030,6 +2045,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	PSH.SaveState(scn);	
 
 	// Save ECAs
+	ECA_1.SaveState(scn, "ECA_1_START", "ECA_1_END");
+	ECA_2.SaveState(scn, "ECA_2_START", "ECA_2_END");
+	ECA_3.SaveState(scn, "ECA_3_START", "ECA_3_END");
+	ECA_4.SaveState(scn, "ECA_4_START", "ECA_4_END");
 	ECA_1a.SaveState(scn,"ECA_1A_START","ECA_1A_END");
 	ECA_1b.SaveState(scn,"ECA_1B_START","ECA_1B_END");
 	ECA_2a.SaveState(scn,"ECA_2A_START","ECA_2A_END");

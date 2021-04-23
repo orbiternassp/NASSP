@@ -1348,6 +1348,10 @@ protected:
 	SwitchRow ComYawMeterRow;
 	LEMSteerableAntennaYawMeter ComYawMeter;
 
+	PowerMerge DescentECAMainFeeder;
+	PowerMerge DescentECAContFeeder;
+	PowerMerge AscentECAMainFeeder;
+
 	//////////////////
 	// LEM panel 16 //
 	//////////////////
@@ -1805,6 +1809,10 @@ protected:
 	LEM_XLBControl BTC_XLunar;
 
 	// ECA
+	LEM_DescentECA ECA_1;
+	LEM_DescentECA ECA_2;
+	LEM_AscentECA ECA_3;
+	LEM_AscentECA ECA_4;
 	LEM_ECAch ECA_1a; // (DESCENT stage, LMP DC bus)
 	LEM_ECAch ECA_1b; // (DESCENT stage, LMP DC bus)
 	LEM_ECAch ECA_2a; // (DESCENT stage, CDR DC bus)

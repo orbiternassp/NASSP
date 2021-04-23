@@ -114,6 +114,156 @@ void LEM_ECAch::UpdateFlow(double dt) {
 	e_object::UpdateFlow(dt);
 }
 
+LEM_ECABatMonitor::LEM_ECABatMonitor()
+{
+	batt = NULL;
+	chan = NULL;
+}
+
+void LEM_ECABatMonitor::Init(Battery *b, LEM_ECAch *c, PowerMerge *p)
+{
+	batt = b;
+	chan = c;
+	power = p;
+}
+
+void LEM_ECABatMonitor::Timestep(double dt)
+{
+	if (chan->input && power->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		if (!OC && batt->Current() > 150.0)
+		{
+			OC = true;
+		}
+		if (!RC && batt->Current() < -10.0)
+		{
+			RC = true;
+		}
+		else if (RC && batt->Current() >= -10.0)
+		{
+			RC = false;
+		}
+	}
+	if (OC && chan->input == 0)
+	{
+		OC = false;
+	}
+}
+
+bool LEM_ECABatMonitor::GetMalfunction()
+{
+	if (chan->input && batt->GetTemp() > 335.928) //145°F
+	{
+		return true;
+	}
+	else if (OC || RC)
+	{
+		return true;
+	}
+	return false;
+}
+
+void LEM_ECABatMonitor::SaveState(FILEHANDLE scn, char *start_str) {
+
+	char buffer[100];
+
+	sprintf(buffer, "%i %i", (OC ? 1 : 0), (RC ? 1 : 0));
+	oapiWriteScenario_string(scn, start_str, buffer);
+}
+
+void LEM_ECABatMonitor::LoadState(char *line) {
+
+	int i1, i2;
+
+	sscanf(line + 5, "%i %i", &i1, &i2);
+	OC = (i1 != 0);
+	RC = (i2 != 0);
+}
+
+LEM_ECA::LEM_ECA()
+{
+
+}
+
+LEM_DescentECA::LEM_DescentECA()
+{
+
+}
+
+void LEM_DescentECA::Init(Battery *b1, Battery *b2, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p)
+{
+	bat1mon.Init(b1, c1, p);
+	bat2mon.Init(b2, c2, p);
+}
+
+void LEM_DescentECA::Timestep(double dt)
+{
+	bat1mon.Timestep(dt);
+	bat2mon.Timestep(dt);
+}
+
+void LEM_DescentECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+	bat1mon.SaveState(scn, "BAT1");
+	bat2mon.SaveState(scn, "BAT2");
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_DescentECA::LoadState(FILEHANDLE scn, char *end_str)
+{
+	char *line;
+	int dec = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp(line, "BAT1", 4)) {
+			bat1mon.LoadState(line);
+		}
+		else if (!strnicmp(line, "BAT2", 4)) {
+			bat2mon.LoadState(line);
+		}
+	}
+}
+
+LEM_AscentECA::LEM_AscentECA()
+{
+
+}
+void LEM_AscentECA::Init(Battery *b, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p)
+{
+	batmon.Init(b, c1, p);
+}
+
+void LEM_AscentECA::Timestep(double dt)
+{
+	batmon.Timestep(dt);
+}
+
+void LEM_AscentECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+	batmon.SaveState(scn, "BAT1");
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_AscentECA::LoadState(FILEHANDLE scn, char *end_str)
+{
+	char *line;
+	int dec = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp(line, "BAT1", 4)) {
+			batmon.LoadState(line);
+		}
+	}
+}
+
 // BUS TIE BLOCK
 
 LEM_BusFeed::LEM_BusFeed() {

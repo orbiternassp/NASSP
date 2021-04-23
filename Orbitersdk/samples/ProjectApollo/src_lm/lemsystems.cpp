@@ -174,17 +174,21 @@ void LEM::SystemsInit()
 	// Batteries 1-4 and the Lunar Stay Battery are jettisoned with the descent stage.
 
 	// ECA #1 (DESCENT stage, LMP 28V DC bus)
+	ECA_1.Init(Battery1, Battery2, &ECA_1a, &ECA_1b, &DescentECAMainFeeder);
 	ECA_1a.Init(this, Battery1, 2); // Battery 1 starts on LV
 	ECA_1b.Init(this, Battery2, 2);
 
 	// ECA #2 (DESCENT stage, CDR 28V DC bus)
+	ECA_2.Init(Battery3, Battery4, &ECA_2a, &ECA_2b, &DescentECAMainFeeder);
 	ECA_2a.Init(this, Battery3, 2);
 	ECA_2b.Init(this, Battery4, 2); 
 
 	// ECA #1 and #2 are JETTISONED with the descent stage.
 	// ECA #3 and #4 have no low voltage taps and can feed either bus.
+	ECA_3.Init(Battery5, &ECA_3a, &ECA_3b, &AscentECAMainFeeder);
 	ECA_3a.Init(this, Battery5, 0);
 	ECA_3b.Init(this, Battery5, 0);
+	ECA_4.Init(Battery6, &ECA_4a, &ECA_4b, &AscentECAMainFeeder);
 	ECA_4a.Init(this, Battery6, 0);
 	ECA_4b.Init(this, Battery6, 0);
 
@@ -327,6 +331,11 @@ void LEM::SystemsInit()
 
 	// AC bus attenuator.
 	ACVoltsAttenuator.WireTo(&AC_A_BUS_VOLT_CB);
+
+	//Descent ECA power mergers
+	DescentECAMainFeeder.WireToBuses(&CDRDesECAMainCB, &LMPDesECAMainCB);
+	DescentECAContFeeder.WireToBuses(&CDRDesECAContCB, &LMPDesECAContCB);
+	DescentECAMainFeeder.WireToBuses(&CDRAscECAMainCB, &LMPAscECAMainCB);
 
 	// RCS valves
 	RCSMainSovASwitch.WireTo(&RCS_A_MAIN_SOV_CB);
@@ -1551,6 +1560,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tca4B.Timestep(simdt);
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
+	ECA_1.Timestep(simdt);
+	ECA_2.Timestep(simdt);
+	ECA_3.Timestep(simdt);
+	ECA_4.Timestep(simdt);
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
 	UtilLights.Timestep(simdt);
