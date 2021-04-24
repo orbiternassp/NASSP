@@ -1528,6 +1528,14 @@ RTCC::RTCC()
 
 	PZLTRT.DT_Ins_TPI = PZLTRT.DT_Ins_TPI_NOM = 40.0*60.0;
 	GZGENCSN.TIPhaseAngle = 0.0;
+
+	//Initialize MPT areas
+	PZMPTCSM.CommonBlock.ConfigCode = PZMPTLEM.CommonBlock.ConfigCode = 15;
+	PZMPTCSM.CommonBlock.CSMArea = PZMPTLEM.CommonBlock.CSMArea = 129.4*0.3048*0.3048;
+	PZMPTCSM.CommonBlock.LMAscentArea = PZMPTLEM.CommonBlock.LMAscentArea = 200.6*0.3048*0.3048;
+	PZMPTCSM.CommonBlock.LMDescentArea = PZMPTLEM.CommonBlock.LMDescentArea = 200.6*0.3048*0.3048;
+	PZMPTCSM.CommonBlock.SIVBArea = PZMPTLEM.CommonBlock.SIVBArea = 368.7*0.3048*0.3048;
+	PZMPTCSM.KFactor = PZMPTLEM.KFactor = 1.0;
 }
 
 RTCC::~RTCC()
@@ -4883,6 +4891,62 @@ OBJHANDLE RTCC::AGCGravityRef(VESSEL *vessel)
 		gravref = oapiGetObjectByName("Earth");
 	}
 	return gravref;
+}
+
+int RTCC::DetermineSVBody(EphemerisData sv)
+{
+	double r_m; //Radius relative to the Moon
+	if (sv.RBI == BODY_MOON)
+	{
+		r_m = length(sv.R);
+	}
+	else
+	{
+		EphemerisData sv_M;
+		ELVCNV(sv, 0, 2, sv_M);
+		r_m = length(sv_M.R);
+	}
+	if (r_m > 9.0*OrbMech::R_Earth)
+	{
+		return BODY_EARTH;
+	}
+	return BODY_MOON;
+}
+
+void RTCC::RotateSVToSOI(EphemerisData &sv)
+{
+	EphemerisData sv_E, sv_M;
+
+	//Earth or Moon SOI?
+	if (sv.RBI == BODY_EARTH)
+	{
+		//Earth, convert to MCI
+		sv_E = sv;
+		ELVCNV(sv, 0, 2, sv_M);
+	}
+	else
+	{
+		//Already have a MCI vector
+		sv_M = sv;
+	}
+	//SOI criterium: 9 Earth radii
+	if (length(sv_M.R) > 9.0*OrbMech::R_Earth)
+	{
+		//More than 9 Er, state vector should be ECI
+		if (sv.RBI == BODY_MOON)
+		{
+			//If input was MCI, convert to ECI
+			ELVCNV(sv, 2, 0, sv_E);
+			sv = sv_E;
+		}
+		sv.RBI = BODY_EARTH;
+	}
+	else
+	{
+		//Output MCI vector
+		sv = sv_M;
+		sv.RBI = BODY_MOON;
+	}
 }
 
 double RTCC::CalcGETBase()
@@ -12960,6 +13024,17 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("FAILED TO CONVERGE ON ELEVATION ANGLE -");
 		message.push_back("NO PLAN COMPUTED.");
 		break;
+	case 32:
+		message.push_back("ILLEGAL ENTRY. CODE = 32");
+		break;
+	case 33:
+		message.push_back("MPT REFLECTS REQUESTED CHANGES - NO VECTOR AVAILABLE");
+		message.push_back("FOR " + RTCCONLINEMON.TextBuffer[0] + " TRAJECTORY UPDATE.");
+		break;
+	case 35:
+		message.push_back("UNABLE TO MOVE VECTOR TO PRESENT TIME -");
+		message.push_back("NO TRAJECTORY UPDATE.");
+		break;
 	case 36:
 		message.push_back("EXECUTION VECTOR FOR MANEUVER");
 		OnlinePrintTimeDDHHMMSS(RTCCONLINEMON.DoubleBuffer[0], temp1);
@@ -17507,7 +17582,7 @@ int RTCC::PMMWTC(int med)
 	MissionPlanTable *table;
 	double W, WDOT[6], TL[6], DVREM, FuelR[6];
 	unsigned IBLK;
-	int Thruster;
+	int Thruster, TabInd;
 
 	WDOT[0] = MCTCW1;
 	WDOT[1] = MCTSW1;
@@ -17527,7 +17602,8 @@ int RTCC::PMMWTC(int med)
 	{
 		double RCSFuelUsed, MainEngineFuelUsed, TotalMassAfter;
 
-		table = GetMPTPointer(med_m49.Table);
+		TabInd = med_m49.Table;
+		table = GetMPTPointer(TabInd);
 		IBLK = table->LastExecutedManeuver + 1;
 		double FuelC[6];
 
@@ -17666,7 +17742,8 @@ int RTCC::PMMWTC(int med)
 	{
 		double WeightGMT, W, WTV[4];
 
-		table = GetMPTPointer(med_m50.Table);
+		TabInd = med_m50.Table;
+		table = GetMPTPointer(TabInd);
 		IBLK = table->LastExecutedManeuver + 1;
 		WeightGMT = GMTfromGET(med_m50.WeightGET);
 
@@ -17811,7 +17888,8 @@ int RTCC::PMMWTC(int med)
 		table->CommonBlock = CommonBlock;
 
 		//Set up input for PMSVCT
-		PMSVCT(8, med_m50.Table);
+		PMSVCT(8, TabInd);
+		return 0;
 	}
 	//Change Vehicle Area or K-Factor
 	if (med == 51)
@@ -17819,7 +17897,8 @@ int RTCC::PMMWTC(int med)
 		double Area, ARI[4], ARV[4];
 		int I;
 
-		table = GetMPTPointer(med_m51.Table);
+		TabInd = med_m51.Table;
+		table = GetMPTPointer(TabInd);
 		ARI[0] = med_m51.CSMArea;
 		ARI[1] = med_m51.SIVBArea;
 		ARI[2] = med_m51.LMAscentArea;
@@ -17882,7 +17961,8 @@ int RTCC::PMMWTC(int med)
 	//Input initialization parameters
 	if (med == 55)
 	{
-		table = GetMPTPointer(med_m55.Table);
+		TabInd = med_m55.Table;
+		table = GetMPTPointer(TabInd);
 
 		if (table->mantable.size() > 0)
 		{
@@ -17920,7 +18000,7 @@ int RTCC::PMMWTC(int med)
 			for (int i = 0;i < 4;i++)
 			{
 				arvs[i] = wtvs[i] = 0.0;
-				if (CommonBlock.ConfigCode[i])
+				if (table->CommonBlock.ConfigCode[i] == true)
 				{
 					wtvs[i] = wtv[i];
 					arvs[i] = arv[i];
@@ -17932,7 +18012,7 @@ int RTCC::PMMWTC(int med)
 			W = 0.0;
 			for (int i = 0;i < 4;i++)
 			{
-				if (CommonBlock.ConfigCode[i])
+				if (table->CommonBlock.ConfigCode[i] == true)
 				{
 					if (AREA < arvs[i])
 					{
@@ -18174,7 +18254,15 @@ RTCC_PMSVCT_15:
 				mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
 			}
 
-			//Error
+			if (L == RTCC_MPT_CSM)
+			{
+				RTCCONLINEMON.TextBuffer[0] = "CSM";
+			}
+			else
+			{
+				RTCCONLINEMON.TextBuffer[0] = "LEM";
+			}
+			PMXSPT("PMSVCT", 33);
 			return;
 		}
 	}
@@ -18243,7 +18331,6 @@ int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Ar
 		PMXSPT("PMSVEC", 49);
 		return 1;
 	}
-
 PMSVEC_2_2:
 
 	if (sv.RBI == BODY_EARTH)
@@ -18355,6 +18442,7 @@ int RTCC::PMSVCTAuxVectorFetch(int L, double T_F, EphemerisData &sv)
 		return err;
 	}
 	sv = EPHEM.table[0];
+	RotateSVToSOI(sv);
 
 	return 0;
 }
@@ -19650,7 +19738,6 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 			EZCHECKDIS.ErrorMessage = "Error 4";
 			return;
 		}
-
 		EMSMISSInputTable emsin;
 
 		if (opt == 5)
@@ -20629,7 +20716,6 @@ int RTCC::PMMXFR(int id, void *data)
 				return 1;
 			}
 		}
-
 		in.Attitude = inp->Attitude[working_man - 1];
 		in.CONFIG = CC.to_ulong();
 		in.CurrentManeuver = CurMan;
@@ -21169,6 +21255,7 @@ int RTCC::PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv)
 	}
 
 	sv = EPHEM.table[0];
+	RotateSVToSOI(sv);
 	return 0;
 }
 
@@ -22731,7 +22818,6 @@ int RTCC::NewMPTTrajectory(int L, SV &sv0)
 		{
 			return 1;
 		}
-
 		sv0.R = sv.R;
 		sv0.V = sv.V;
 		sv0.MJD = OrbMech::MJDfromGET(sv.GMT,SystemParameters.GMTBASE);
@@ -23388,7 +23474,7 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 		//COMPUTE AND SAVE LOCAL VERTICAL CSM/LM PLATFORM ALIGNMENT
 		else if (med == "03")
 		{
-			if (data.size() < 2)
+			if (data.size() < 3)
 			{
 				return 1;
 			}
@@ -23410,8 +23496,24 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			{
 				gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
 			}
-			//TBD: Earth or Moon
-			EMMGLCVP(L, gmt);
+			else
+			{
+				return 2;
+			}
+			int body;
+			if (data[2] == "E")
+			{
+				body = BODY_EARTH;
+			}
+			else if (data[2] == "M")
+			{
+				body = BODY_MOON;
+			}
+			else
+			{
+				return 2;
+			}
+			EMMGLCVP(L, gmt, body);
 		}
 		//Generate Guidance Optics Support Table
 		else if (med == "10")
@@ -24772,6 +24874,70 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		PMMWTC(49);
 	}
+	//Change vehicle cross-sectional area or K-factor
+	else if (med == "51")
+	{
+		if (data.size() < 1)
+		{
+			return 1;
+		}
+		int tab;
+		if (data[0] == "CSM")
+		{
+			tab = RTCC_MPT_CSM;
+		}
+		else if (data[0] == "LEM")
+		{
+			tab = RTCC_MPT_LM;
+		}
+		else
+		{
+			return 2;
+		}
+		med_m51.Table = tab;
+		double temp;
+		if (data.size() > 1 && data[1] != "" && sscanf(data[1].c_str(), "%lf", &temp) == 1)
+		{
+			med_m51.CSMArea = temp * 0.3048*0.3048;
+		}
+		else
+		{
+			med_m51.CSMArea = -1.0;
+		}
+		if (data.size() > 2 && data[2] != "" && sscanf(data[2].c_str(), "%lf", &temp) == 1)
+		{
+			med_m51.SIVBArea = temp * 0.3048*0.3048;
+		}
+		else
+		{
+			med_m51.SIVBArea = -1.0;
+		}
+		if (data.size() > 3 && data[3] != "" && sscanf(data[3].c_str(), "%lf", &temp) == 1)
+		{
+			med_m51.LMAscentArea = temp * 0.3048*0.3048;
+		}
+		else
+		{
+			med_m51.LMAscentArea = -1.0;
+		}
+		if (data.size() > 4 && data[4] != "" && sscanf(data[4].c_str(), "%lf", &temp) == 1)
+		{
+			med_m51.LMDescentArea = temp * 0.3048*0.3048;
+		}
+		else
+		{
+			med_m51.LMDescentArea = -1.0;
+		}
+		if (data.size() > 5 && data[5] != "" && sscanf(data[5].c_str(), "%lf", &temp) == 1)
+		{
+			med_m51.KFactor = temp;
+		}
+		else
+		{
+			med_m51.KFactor = -10000.0;
+		}
+		PMMWTC(51);
+	}
 	//Change vehicle body orientation and trim angles for MPT maneuver
 	else if (med == "58")
 	{
@@ -25796,6 +25962,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				return 2;
 			}
 			sv0 = EPHEM.table[0];
+			RotateSVToSOI(sv0);
 			if (gmt >= LUNSTAY.LunarStayBeginGMT && gmt <= LUNSTAY.LunarStayEndGMT)
 			{
 				landed = true;
@@ -27743,17 +27910,41 @@ void RTCC::EMGPRINT(std::string source, std::vector<std::string> message)
 	OnlinePrint(source, message);
 }
 
-void RTCC::EMMGLCVP(int L, double gmt)
+void RTCC::EMMGLCVP(int L, double gmt, int body)
 {
 	EphemerisDataTable EPHEM;
 	ManeuverTimesTable MANTIMES;
 	LunarStayTimesTable LUNSTAY;
+	int csiin, csiout;
 
 	if (ELFECH(gmt, 16, 8, L, EPHEM, MANTIMES, LUNSTAY))
 	{
 		EMGPRINT("EMMGLCVP", 25);
 		return;
 	}
+
+	if (body == BODY_EARTH)
+	{
+		csiout = 0;
+	}
+	else
+	{
+		csiout = 2;
+	}
+
+	for (unsigned i = 0;i < EPHEM.table.size();i++)
+	{
+		if (EPHEM.table[i].RBI == BODY_EARTH)
+		{
+			csiin = 0;
+		}
+		else
+		{
+			csiin = 2;
+		}
+		ELVCNV(EPHEM.table[i], csiin, csiout, EPHEM.table[i]);
+	}
+
 	ELVCTRInputTable in;
 	ELVCTROutputTable out;
 
@@ -29356,6 +29547,11 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mptman->CommonBlock.LMAscentMass = 0.0;
 	mptman->CommonBlock.LMDescentMass = 0.0;
 	mptman->CommonBlock.SIVBMass = 0.0;
+	mptman->TotalAreaAfter = 0.0;
+	mptman->CommonBlock.CSMArea = 0.0;
+	mptman->CommonBlock.LMAscentArea = 0.0;
+	mptman->CommonBlock.LMDescentArea = 0.0;
+	mptman->CommonBlock.SIVBArea = 0.0;
 	if (mptman->CommonBlock.ConfigCode[RTCC_CONFIG_C])
 	{
 		//Was it an CSM engine?
@@ -29368,6 +29564,12 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 			mptman->CommonBlock.CSMMass = aux->W_CSM;
 		}
 		mptman->TotalMassAfter += mptman->CommonBlock.CSMMass;
+
+		mptman->CommonBlock.CSMArea = CommonBlockBefore->CSMArea;
+		if (mptman->CommonBlock.CSMArea > mptman->TotalAreaAfter)
+		{
+			mptman->TotalAreaAfter = mptman->CommonBlock.CSMArea;
+		}
 	}
 	if (mptman->CommonBlock.ConfigCode[RTCC_CONFIG_A])
 	{
@@ -29381,6 +29583,12 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 			mptman->CommonBlock.LMAscentMass = aux->W_LMA;
 		}
 		mptman->TotalMassAfter += mptman->CommonBlock.LMAscentMass;
+
+		mptman->CommonBlock.LMAscentArea = CommonBlockBefore->LMAscentArea;
+		if (mptman->CommonBlock.LMAscentArea > mptman->TotalAreaAfter)
+		{
+			mptman->TotalAreaAfter = mptman->CommonBlock.LMAscentArea;
+		}
 	}
 	if (mptman->CommonBlock.ConfigCode[RTCC_CONFIG_D])
 	{
@@ -29395,6 +29603,12 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		}
 		
 		mptman->TotalMassAfter += mptman->CommonBlock.LMDescentMass;
+
+		mptman->CommonBlock.LMDescentArea = CommonBlockBefore->LMDescentArea;
+		if (mptman->CommonBlock.LMDescentArea > mptman->TotalAreaAfter)
+		{
+			mptman->TotalAreaAfter = mptman->CommonBlock.LMDescentArea;
+		}
 	}
 	if (mptman->CommonBlock.ConfigCode[RTCC_CONFIG_S])
 	{
@@ -29408,7 +29622,16 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		}
 		
 		mptman->TotalMassAfter += mptman->CommonBlock.SIVBMass;
+
+		mptman->CommonBlock.SIVBArea = CommonBlockBefore->SIVBArea;
+		if (mptman->CommonBlock.SIVBArea > mptman->TotalAreaAfter)
+		{
+			mptman->TotalAreaAfter = mptman->CommonBlock.SIVBArea;
+		}
 	}
+
+	mpt->WeightAfterManeuver[man - 1] = mptman->TotalMassAfter;
+	mpt->AreaAfterManeuver[man - 1] = mptman->TotalAreaAfter;
 
 	mptman->DVREM = T / WDOT * log(mptman->TotalMassAfter / (mptman->TotalMassAfter - F));
 	if (mptman->Thruster == RTCC_ENGINETYPE_LOX_DUMP)

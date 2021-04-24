@@ -2421,6 +2421,8 @@ public:
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, GPMPRESULTS &res);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
+	int DetermineSVBody(EphemerisData sv);
+	void RotateSVToSOI(EphemerisData &sv);
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
@@ -4480,7 +4482,7 @@ private:
 	//Two-Impulse Multiple Solution Display
 	void PMDTIMP();
 	//GOST CSM/LM LCV Computation
-	void EMMGLCVP(int L, double gmt);
+	void EMMGLCVP(int L, double gmt, int body);
 	//Trajectory Update On-line Print
 	void EMGPRINT(std::string source, int i);
 	void EMGPRINT(std::string source, std::vector<std::string> message);

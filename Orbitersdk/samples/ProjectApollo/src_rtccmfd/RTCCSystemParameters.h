@@ -288,6 +288,7 @@ struct RTCCSystemParameters
 		{
 			MHALLD[i] = MHACLD[i];
 		}
+		MCADRG = 0.1; //Should be 2.0
 	}
 
 	//DEFINITIONS
@@ -425,4 +426,6 @@ struct RTCCSystemParameters
 	RTCCDensityTables MHGDEN;
 	//Lift/Drag coefficients (Words: 1-25 Mach Number, 26-50 Coefficients of drag, 51-75 Coefficients of lift, 76-100: Trim angle, 101 DX, 102 DZ, 103 DD)
 	double MHACLD[103], MHALLD[103];
+	//Coefficient of drag for Earth orbit
+	double MCADRG;
 };

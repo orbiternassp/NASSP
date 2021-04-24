@@ -136,6 +136,11 @@ const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
 #define BODY_EARTH 0
 #define BODY_MOON 1
 
+#define CSI_ECI 0
+#define CSI_ECT 1
+#define CSI_MCI 2
+#define CSI_MCT 3
+
 struct SV
 {
 	VECTOR3 R = _V(0, 0, 0);

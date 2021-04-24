@@ -35,6 +35,7 @@ int RTCC::ELFECH(double GMT, int L, EphemerisData &SV)
 	if (err == 0)
 	{
 		SV = EPHEM.table[0];
+		RotateSVToSOI(SV); //Probably shouldn't be here, but it's convenient
 	}
 	return err;
 }
