@@ -75,7 +75,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	// Set up antenna.
 	// RR antenna is designed to operate between 10F and 75F
 	// The standby heater switches on below -40F and turns it off again at 0F
-	// The oprational heater switches on below 0F and turns it off again at 20F
+	// The operational heater switches on below 0F and turns it off again at 20F
 	//The RR assembly has multiple heater systems within, we will only concern ourselves with the antenna itself
 	// The CWEA complains if the temperature is outside of -54F to +148F
 	// Values in the constructor are name, pos, vol, isol
