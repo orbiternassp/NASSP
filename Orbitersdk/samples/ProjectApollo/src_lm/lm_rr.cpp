@@ -760,7 +760,7 @@ void LEM_RR::Timestep(double simdt) {
 void LEM_RR::SystemTimestep(double simdt) {
 	if (IsDCPowered())
 	{
-		dc_source->DrawPower(117);
+		dc_source->DrawPower(117); //Total power draw 150W, 33W guessed for RR antenna section
 		RREHeat->GenerateHeat(117);
 	}
 
