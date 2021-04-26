@@ -1787,6 +1787,7 @@ struct PMMMPTInput
 	int VC;
 	double DT_10PCT;
 	double DPSScaleFactor;
+	double VehicleArea;
 	double VehicleWeight;
 	double CSMWeight;
 	double LMWeight;

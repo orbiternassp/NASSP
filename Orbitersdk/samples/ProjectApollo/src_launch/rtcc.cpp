@@ -15566,7 +15566,7 @@ RTCC_PMMMPT_11_B:
 RTCC_PMMMPT_12_A:
 	PMMRKJInputArray integin;
 
-	integin.A = 0.0;
+	integin.A = in.VehicleArea;
 	integin.DENSMULT = 1.0;
 	integin.DOCKANG = man.DockingAngle;
 	integin.DPSScale = man.DPSScaleFactor;
@@ -17021,7 +17021,6 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	{
 		PMMRKJInputArray integin;
 
-		integin.A = 0.0;
 		integin.AT = mpt->mantable[i].A_T;
 		integin.DENSMULT = 1.0;
 		integin.DOCKANG = mpt->mantable[i].DockingAngle;
@@ -17091,26 +17090,43 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			CommonBlock = &mpt->mantable[i - 1].CommonBlock;
 		}
 
+		integin.A = 0.0;
 		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_C])
 		{
 			integin.CSMWT = CommonBlock->CSMMass;
 			integin.CAPWT += integin.CSMWT;
+			if (CommonBlock->CSMArea > integin.A)
+			{
+				integin.A = CommonBlock->CSMArea;
+			}
 		}
 		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_S])
 		{
 			integin.SIVBWT = CommonBlock->SIVBMass;
 			integin.CAPWT += integin.SIVBWT;
+			if (CommonBlock->SIVBArea > integin.A)
+			{
+				integin.A = CommonBlock->SIVBArea;
+			}
 		}
 		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_A])
 		{
 			integin.LMAWT = CommonBlock->LMAscentMass;
 			integin.CAPWT += integin.LMAWT;
+			if (CommonBlock->LMAscentArea > integin.A)
+			{
+				integin.A = CommonBlock->LMAscentArea;
+			}
 		}
 
 		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_D])
 		{
 			integin.LMDWT = CommonBlock->LMDescentMass;
 			integin.CAPWT += integin.LMDWT;
+			if (CommonBlock->LMDescentArea > integin.A)
+			{
+				integin.A = CommonBlock->LMDescentArea;
+			}
 		}
 
 		int Ierr;
@@ -20635,12 +20651,14 @@ int RTCC::PMMXFR(int id, void *data)
 				in.CSMWeight = 0.0;
 				in.LMWeight = 0.0;
 				in.VehicleWeight = mpt->mantable.back().TotalMassAfter;
+				in.VehicleArea = mpt->mantable.back().TotalAreaAfter;
 			}
 			else
 			{
 				in.CSMWeight = 0.0;
 				in.LMWeight = 0.0;
 				in.VehicleWeight = mpt->TotalInitMass;
+				in.VehicleArea = mpt->ConfigurationArea;
 			}
 			if (replace)
 			{

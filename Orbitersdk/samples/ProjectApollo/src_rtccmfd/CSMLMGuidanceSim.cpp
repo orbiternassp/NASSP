@@ -57,6 +57,8 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 	TPREV = T;
 	DTPREV = 0.0;
 
+	AOM = CDFACT / WT;
+
 	TLOP = TBM;
 	TI = TBM;
 	MPHASE = 1;
@@ -550,6 +552,18 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	DV_ul = 0.0;
 	X_B = Y_B = Z_B = _V(0, 0, 0);
 	Kg = 0;
+
+	//This only because ECI coordinate system is wrong
+	if (TArr.sv0.RBI == BODY_EARTH)
+	{
+		MATRIX3 obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, pRTCC->GetGMTBase() + TArr.sv0.GMT / 24.0 / 3600.0);
+		U_Z = mul(obli_E, _V(0, 1, 0));
+		U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+		W_ES = U_Z * OrbMech::w_Earth;
+	}
+
+	CD = pRTCC->SystemParameters.MCADRG;
+	CDFACT = 0.5 * TArr.DENSMULT *TArr.A;
 	
 	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && (TArr.IC == 13 || TArr.IC == 5) && TArr.LMDESCJETT <= TBM)
 	{
@@ -939,10 +953,53 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 {
 	double TL, WDOT;
 
-	//Compute gravitational acceleration
-	VECTOR3 r_p_ddot = OrbMech::gravityroutine(RP, pRTCC->GetGravref(TArr.sv0.RBI), pRTCC->GetGMTBase() + (TArr.sv0.GMT + T) / 24.0 / 3600.0);
+	//Computing K3?
+	if (KCODE != 3)
+	{
+		//Compute gravitational acceleration
+		VECTOR3 U_R;
+		double RSQD, RMAG;
+
+		U_R = unit(RP);
+		RSQD = dotp(RP, RP);
+		RMAG = sqrt(RSQD);
+
+		if (TArr.sv0.RBI == BODY_EARTH)
+		{
+			VECTOR3 g_b;
+			double costheta;
+			costheta = dotp(U_R, U_Z);
+			g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z * 2.0*costheta)*OrbMech::mu_Earth / RSQD * 3.0 / 2.0*OrbMech::J2_Earth*pow(OrbMech::R_Earth / RMAG, 2.0);
+			r_p_ddot = -U_R * OrbMech::mu_Earth / RSQD + g_b;
+		}
+		else
+		{
+			r_p_ddot = -U_R * OrbMech::mu_Moon / RSQD;
+		}
+		//r_p_ddot = OrbMech::gravityroutine(RP, pRTCC->GetGravref(TArr.sv0.RBI), pRTCC->GetGMTBase() + (TArr.sv0.GMT + T) / 24.0 / 3600.0);
+
+		if (TArr.sv0.RBI == BODY_EARTH)
+		{
+			//Compute altitude
+			ALT = RMAG - OrbMech::R_Earth;
+			//Compute density
+			pRTCC->GLFDEN(ALT, RHO, SOS);
+		}
+	}
+
 	//Compute drag acceleration
-	VECTOR3 r_d_ddot = _V(0, 0, 0);
+	VECTOR3 r_d_ddot;
+	if (TArr.sv0.RBI == BODY_EARTH)
+	{
+		V_R = VP - crossp(W_ES, RP);
+		VRMAG = length(V_R);
+		RHOP = RHO * AOM*CD*VRMAG;
+		r_d_ddot = -V_R * RHOP;
+	}
+	else
+	{
+		r_d_ddot = _V(0, 0, 0);
+	}
 	//Sum drag and gravity termins
 	RDDP = r_p_ddot + r_d_ddot;
 	if (KTHSWT == 0)
@@ -951,6 +1008,7 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 		RDD = RDDP + RDDT;
 		return;
 	}
+	//Computing K3?
 	if (KCODE == 3)
 	{
 		RDD = RDDP + RDDT;
@@ -1026,7 +1084,7 @@ PCRDD_LABEL_3C:
 		{
 			DVTO = DVTO - A * abs(THRUST);
 			DVTOX = DVTOX - A * abs(THX);
-			AOM = CD / WT;
+			AOM = CDFACT / WT;
 			TPREV = T;
 		}
 		else
@@ -1043,7 +1101,7 @@ PCRDD_LABEL_3C:
 					DVGO = abs(TArr.DVMAN) - DVX;
 				}
 			}
-			AOM = CD / WT;
+			AOM = CDFACT / WT;
 			TPREV = T;
 		}
 	}

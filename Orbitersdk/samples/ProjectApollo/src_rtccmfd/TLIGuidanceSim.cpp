@@ -51,8 +51,6 @@ TLIGuidanceSim::TLIGuidanceSim(RTCC *r, RTCCNIInputTable tablin, int &iretn, Eph
 		WTFLO[i] = 0.0;
 	}
 
-	EMU = OrbMech::mu_Earth;
-
 	E = TABLIN.Params[0];
 	C3 = TABLIN.Params[1];
 	ALPHD = TABLIN.Params[2];
@@ -88,7 +86,7 @@ void TLIGuidanceSim::PCMTRL()
 	//Load system parameters
 	//AOBSQD
 	//GRCS
-	//EMU
+	EMU = OrbMech::mu_Earth;
 	//PI
 	//OMEGA
 	//G2
