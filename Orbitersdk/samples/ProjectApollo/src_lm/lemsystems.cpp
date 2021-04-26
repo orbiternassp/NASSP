@@ -409,7 +409,7 @@ void LEM::SystemsInit()
 	//IMU
 	imu.WireToBuses(&IMU_OPR_CB, NULL, NULL);
 	imu.WireHeaterToBuses(imuheater, &IMU_SBY_CB, NULL);
-	imu.InitThermals((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), imucase);
+	imu.InitThermals((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), imucase, (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:PTAHEAT"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:PSAHEAT"));
 
 	// Main Propulsion
 	PROP_DISP_ENG_OVRD_LOGIC_CB.MaxAmps = 2.0;

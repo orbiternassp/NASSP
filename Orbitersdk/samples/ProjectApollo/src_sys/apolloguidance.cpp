@@ -227,7 +227,7 @@ void ApolloGuidance::SystemTimestep(double simdt)
 	}
 	else {
 		//DCPower.DrawPower(106.0);
-		DCPower.DrawPower(70.0); //From 1970 AGC Improvement Study
+		DCPower.DrawPower(70.0); //From 1970 AGC Improvement Study, LM-8 Handbook has 80W
 		if (AGCHeat)
 		{
 			AGCHeat->GenerateHeat(110.0);  //From LM 8 systems handbook, for LGC/DSKY cb
