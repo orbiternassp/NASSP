@@ -85,7 +85,7 @@ void LEM_ECAch::UpdateFlow(double dt) {
 		break;
 	case 2: // LO tap
 		if (dc_source != NULL) {
-			dc_source->DrawPower(power_load*1.06); // Draw 6% more
+			dc_source->DrawPower(power_load*1.06); // Draw 6% more (Why is this drawing 6% more??)
 		}
 		break;
 	}
@@ -202,6 +202,11 @@ void LEM_DescentECA::Timestep(double dt)
 	bat2mon.Timestep(dt);
 }
 
+void LEM_DescentECA::SystemTimestep(double dt)
+{
+
+}
+
 void LEM_DescentECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
 	oapiWriteLine(scn, start_str);
@@ -240,6 +245,11 @@ void LEM_AscentECA::Init(Battery *b, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p
 void LEM_AscentECA::Timestep(double dt)
 {
 	batmon.Timestep(dt);
+}
+
+void LEM_AscentECA::SystemTimestep(double dt)
+{
+
 }
 
 void LEM_AscentECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)

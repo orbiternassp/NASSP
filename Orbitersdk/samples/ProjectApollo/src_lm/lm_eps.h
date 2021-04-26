@@ -95,6 +95,7 @@ public:
 	LEM_DescentECA();
 	void Init(Battery *b1, Battery *b2, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p);
 	void Timestep(double dt);
+	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
@@ -110,6 +111,7 @@ public:
 	LEM_AscentECA();
 	void Init(Battery *b, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p);
 	void Timestep(double dt);
+	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 

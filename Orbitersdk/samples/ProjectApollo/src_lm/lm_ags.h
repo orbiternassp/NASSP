@@ -159,7 +159,6 @@ public:
 	bool GetTestModeFailure();
 	LEM *lem;					// Pointer at LEM
 	h_HeatLoad *aeaHeat;
-	h_HeatLoad *secaeaHeat;
 
 protected:
 
