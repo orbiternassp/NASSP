@@ -1000,7 +1000,7 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 	{
 		r_d_ddot = _V(0, 0, 0);
 	}
-	//Sum drag and gravity termins
+	//Sum drag and gravity terms
 	RDDP = r_p_ddot + r_d_ddot;
 	if (KTHSWT == 0)
 	{

@@ -324,6 +324,10 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 	{
 		rtcc->BZUSEVEC.data[id].LandingSiteIndicator = true;
 	}
+	else
+	{
+		rtcc->BZUSEVEC.data[id].LandingSiteIndicator = false;
+	}
 	char Buff[16];
 	sprintf_s(Buff, "API%c%03d", letter, rtcc->BZUSEVEC.data[id].ID);
 	rtcc->BZUSEVEC.data[id].VectorCode.assign(Buff);
