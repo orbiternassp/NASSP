@@ -324,6 +324,10 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 	{
 		rtcc->BZUSEVEC.data[id].LandingSiteIndicator = true;
 	}
+	else
+	{
+		rtcc->BZUSEVEC.data[id].LandingSiteIndicator = false;
+	}
 	char Buff[16];
 	sprintf_s(Buff, "API%c%03d", letter, rtcc->BZUSEVEC.data[id].ID);
 	rtcc->BZUSEVEC.data[id].VectorCode.assign(Buff);
@@ -1589,38 +1593,38 @@ void ARCore::UpdateTLITargetTable()
 	SaturnV *SatV = (SaturnV*)g_Data.progVessel;
 	LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
-	GC->rtcc->MDVSTP.T4IG = lvdc->t_3i - 17.0;
-	GC->rtcc->MDVSTP.T4C = lvdc->TB5 - 17.0;
-	GC->rtcc->MDVSTP.DT4N = lvdc->T_4N;
-	GC->rtcc->MDVSTP.KP1 = lvdc->K_P1;
-	GC->rtcc->MDVSTP.KP2 = lvdc->K_P2;
-	GC->rtcc->MDVSTP.KY1 = lvdc->K_Y1;
-	GC->rtcc->MDVSTP.KY2 = lvdc->K_Y2;
-	GC->rtcc->MDVSTP.PHIL = lvdc->PHI;
-	GC->rtcc->MDVSTP.t_D0 = lvdc->t_D0;
-	GC->rtcc->MDVSTP.t_D1 = lvdc->t_D1;
-	GC->rtcc->MDVSTP.t_D2 = lvdc->t_D2;
-	GC->rtcc->MDVSTP.t_D3 = lvdc->t_D3;
-	GC->rtcc->MDVSTP.t_DS0 = lvdc->t_DS0;
-	GC->rtcc->MDVSTP.t_DS1 = lvdc->t_DS1;
-	GC->rtcc->MDVSTP.t_DS2 = lvdc->t_DS2;
-	GC->rtcc->MDVSTP.t_DS3 = lvdc->t_DS3;
-	GC->rtcc->MDVSTP.t_SD1 = lvdc->t_SD1;
-	GC->rtcc->MDVSTP.t_SD2 = lvdc->t_SD2;
-	GC->rtcc->MDVSTP.t_SD3 = lvdc->t_SD3;
+	GC->rtcc->SystemParameters.MDVSTP.T4IG = lvdc->t_3i - 17.0;
+	GC->rtcc->SystemParameters.MDVSTP.T4C = lvdc->TB5 - 17.0;
+	GC->rtcc->SystemParameters.MDVSTP.DT4N = lvdc->T_4N;
+	GC->rtcc->SystemParameters.MDVSTP.KP1 = lvdc->K_P1;
+	GC->rtcc->SystemParameters.MDVSTP.KP2 = lvdc->K_P2;
+	GC->rtcc->SystemParameters.MDVSTP.KY1 = lvdc->K_Y1;
+	GC->rtcc->SystemParameters.MDVSTP.KY2 = lvdc->K_Y2;
+	GC->rtcc->SystemParameters.MDVSTP.PHIL = lvdc->PHI;
+	GC->rtcc->SystemParameters.MDVSTP.t_D0 = lvdc->t_D0;
+	GC->rtcc->SystemParameters.MDVSTP.t_D1 = lvdc->t_D1;
+	GC->rtcc->SystemParameters.MDVSTP.t_D2 = lvdc->t_D2;
+	GC->rtcc->SystemParameters.MDVSTP.t_D3 = lvdc->t_D3;
+	GC->rtcc->SystemParameters.MDVSTP.t_DS0 = lvdc->t_DS0;
+	GC->rtcc->SystemParameters.MDVSTP.t_DS1 = lvdc->t_DS1;
+	GC->rtcc->SystemParameters.MDVSTP.t_DS2 = lvdc->t_DS2;
+	GC->rtcc->SystemParameters.MDVSTP.t_DS3 = lvdc->t_DS3;
+	GC->rtcc->SystemParameters.MDVSTP.t_SD1 = lvdc->t_SD1;
+	GC->rtcc->SystemParameters.MDVSTP.t_SD2 = lvdc->t_SD2;
+	GC->rtcc->SystemParameters.MDVSTP.t_SD3 = lvdc->t_SD3;
 
 	int i, j;
 	for (i = 0;i < 3;i++)
 	{
 		for (j = 0;j < 5;j++)
 		{
-			GC->rtcc->MDVSTP.hx[i][j] = lvdc->hx[i][j] * RAD;
+			GC->rtcc->SystemParameters.MDVSTP.hx[i][j] = lvdc->hx[i][j] * RAD;
 		}
 	}
 	for (i = 0;i < 7;i++)
 	{
-		GC->rtcc->MDVSTP.fx[i] = lvdc->fx[i] * RAD;
-		GC->rtcc->MDVSTP.gx[i] = lvdc->gx[i] * RAD;
+		GC->rtcc->SystemParameters.MDVSTP.fx[i] = lvdc->fx[i] * RAD;
+		GC->rtcc->SystemParameters.MDVSTP.gx[i] = lvdc->gx[i] * RAD;
 	}
 
 	GC->rtcc->PZSTARGP.Day = GC->rtcc->GZGENCSN.RefDayOfYear;

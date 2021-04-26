@@ -92,7 +92,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		IND = 2;
 		K = _V(K1, 0, 0);
 		//Use LM DSC CG Table
-		XI = GIMGB2(LMDSCCGTAB.Weight, LMDSCCGTAB.CG, LMDSCCGTAB.N, W[1]);
+		XI = GIMGB2(SystemParameters.LMDSCCGTAB.Weight, SystemParameters.LMDSCCGTAB.CG, SystemParameters.LMDSCCGTAB.N, W[1]);
 	}
 	else
 	{
@@ -134,13 +134,13 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		if (IJ != 0)
 		{
 			//Use LM w/o descent CG table
-			XI = GIMGB2(LMASCCGTAB.Weight, LMASCCGTAB.CG, LMASCCGTAB.N, W[1]);
+			XI = GIMGB2(SystemParameters.LMASCCGTAB.Weight, SystemParameters.LMASCCGTAB.CG, SystemParameters.LMASCCGTAB.N, W[1]);
 			//XI = _V(7.6616, 0, 0);
 		}
 		else
 		{
 			//Use LM w/ descent CG table
-			XI = GIMGB2(LMDSCCGTAB.Weight, LMDSCCGTAB.CG, LMDSCCGTAB.N, W[1]);
+			XI = GIMGB2(SystemParameters.LMDSCCGTAB.Weight, SystemParameters.LMDSCCGTAB.CG, SystemParameters.LMDSCCGTAB.N, W[1]);
 		}
 		IND = 2;
 		K = _V(K1 + K3, 0, 0);

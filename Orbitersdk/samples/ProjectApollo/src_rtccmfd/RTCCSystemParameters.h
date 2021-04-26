@@ -198,6 +198,42 @@ struct RTCCDensityTables
 	double A7[13], B7[13], ln_rho_b_T_M_b[13];
 };
 
+struct TLISystemParameters
+{
+	//Time of ignition of first S-IVB burn
+	double T4IG = 9.0*60.0 + 15.0;
+	//Time of cutoff of first S-IVB
+	double T4C = 11.0*60.0 + 40.0;
+	//Time interval from time of restart preparations to time of ignition
+	double DTIG = 578.0;
+	//Nominal time duration of first S-IVB burn
+	double DT4N = 0.0;
+	//Limited value for difference between actual and nominal burn times for first S-IVB burn
+	double DTLIM = 100.0;
+	//Second coefficient of pitch polynomial
+	double KP1 = 0.0;
+	//Third coefficient of pitch polynomial
+	double KP2 = 0.0;
+	//Second coefficient of yaw polynomial
+	double KY1 = 0.0;
+	//Third coefficient of yaw polynomial
+	double KY2 = 0.0;
+	//Geodetic latitude of launch site
+	double PHIL = 0.0;
+	//Azimuth from time polynomial (radians)
+	double hx[3][5];
+	//Inclination from azimuth polynomial (radians)
+	double fx[7];
+	//Descending Node Angle from azimuth polynomial (radians)
+	double gx[7];
+	//Times of the opening and closing of launch windows
+	double t_D0, t_D1, t_D2, t_D3;
+	//Times to segment the azimuth calculation polynomial
+	double t_DS0, t_DS1, t_DS2, t_DS3;
+	//Times used to scale the azimuth polynomial
+	double t_SD1, t_SD2, t_SD3;
+};
+
 struct RTCCSystemParameters
 {
 	RTCCSystemParameters()
@@ -270,6 +306,7 @@ struct RTCCSystemParameters
 		}
 		MCTVSP = 1000.0;
 		MCLABN = MCLCBN = MCLSBN = 0.0;
+		MGREPH = false;
 
 		//Apollo 15 RTCC Report
 		MHACLD[0] = 29.5; MHACLD[1] = 10.0; MHACLD[2] = 4.0; MHACLD[3] = 3.0; MHACLD[4] = 2.4; MHACLD[5] = 2.0; MHACLD[6] = 1.65; MHACLD[7] = 1.35;
@@ -289,6 +326,267 @@ struct RTCCSystemParameters
 			MHALLD[i] = MHACLD[i];
 		}
 		MCADRG = 0.1; //Should be 2.0
+
+		MCTJD1 = 570.0;
+		MCTJD3 = 2.5;
+		MCTJDS = 1.0;
+		MCTJD5 = 99999.0;
+		MCTJD6 = 1.8;
+
+		MCTJT1 = 38.8 * 4.4482216152605;
+		MCTJT2 = 5889.0 * 4.4482216152605;
+		MCTJT3 = 110900.0 * 4.4482216152605;
+		MCTJT4 = 178147.0 * 4.4482216152605;
+		MCTJTL = 202097.0 * 4.4482216152605;
+		MCTJTH = 202256.0 * 4.4482216152605;
+		MCTJT5 = 202256.0 * 4.4482216152605;
+		MCTJT6 = 27784.0 * 4.4482216152605;
+
+		MCTJW1 = 0.111 * 0.45359237;
+		MCTJW2 = 0.75 * 0.45359237;
+		MCTJW3 = 157.6 * 0.45359237;
+		MCTJW4 = 412.167 * 0.45359237;
+		MCTJWL = 472.121 * 0.45359237;
+		MCTJWH = 472.18 * 0.45359237;
+		MCTJW5 = 472.18* 0.45359237;
+		MCTJW6 = 61.7 * 0.45359237;
+
+		MCTSAV = 202097.0 * 4.4482216152605;
+		MCTWAV = 472.121 * 0.45359237;
+
+		MCVIGM = 584.0;
+		MCVWMN = 10000.0; //Minimum S-IVB weight
+		MCVKPC = 0.0;
+		MCVCPQ = 10.0;
+		MCVEP1 = 1000.0;
+		MCVEP2 = 30.0;
+		MCVEP3 = 30.0;
+		MCVEP4 = 3.0;
+		MCVYMX = 45.0*RAD;
+		MCVPDL = 1.0*RAD;
+		MCVYDL = 1.0*RAD;
+		MCVTGQ = 300.0;
+		MCVRQV = -0.4;
+		MCVRQT = 1.0;
+		MCTIND = 0;
+		MCVVX3 = 4198.1678;
+		MCVWD3 = 472.159 * 0.45359237;
+		MCVTB2 = 1.0;
+		MCVDTM = 2.0;
+		MCCRAM = 0.5;
+
+		MCTCT1 = 441.5*2.0;
+		MCTCT2 = 441.5*4.0;
+		MCTCT3 = 441.5*2.0;
+		MCTCT4 = 441.5*4.0;
+		MCTCT5 = 874.37837;
+		MCTCT6 = 874.37837*2.0;
+		MCTCW1 = 0.31038;
+		MCTCW2 = 0.62076;
+		MCTCW3 = 0.31038;
+		MCTCW4 = 0.62076;
+		MCTLT1 = 441.5*2.0;
+		MCTLT2 = 441.5*4.0;
+		MCTLT3 = 441.5*2.0;
+		MCTLT4 = 441.5*4.0;
+		MCTLT5 = 889.6;
+		MCTLT6 = 1779.2;
+		MCTLW1 = 0.31038;
+		MCTLW2 = 0.62076;
+		MCTLW3 = 0.31038;
+		MCTLW4 = 0.62076;
+		MCTAT1 = 15297.43;
+		MCTAT2 = 693.0329277;
+		MCTAT4 = 15297.43;
+		MCTAT9 = 15569.0;
+		MCTAW1 = 5.049776716;
+		MCTAW2 = 0.2290767466;
+		MCTAW4 = 5.049776716;
+		MCTAD2 = 0.308;
+		MCTAD3 = 0.192;
+		MCTAD9 = 0.5;
+		MCTDT1 = 9712.5 * 4.4482216152605;
+		MCTDT2 = 1.0 * 4.4482216152605;
+		MCTDT3 = 467.7 * 4.4482216152605;
+		MCTDT4 = 1180.0 * 4.4482216152605;
+		MCTDT5 = 4326.5 * 4.4482216152605;
+		MCTDT6 = 10500.0 * 4.4482216152605;
+		MCTDT9 = 43670.0;
+		MCTDW1 = 14.63626597;
+		MCTDW2 = 0.000126;
+		MCTDW3 = 0.7048;
+		MCTDW4 = 1.778203048;
+		MCTDW5 = 6.519823328;
+		MCTDW6 = 15.82299024;
+		MCTDD2 = 0.5;
+		MCTDD3 = 3.1;
+		MCTDD4 = 26.0;
+		MCTDD5 = 0.4;
+		MCTDD6 = 95.0;
+		MCTDD9 = 0.5;
+		MCTST1 = 91188.544;
+		MCTST2 = 424.015 * 4.4482216152605;
+		MCTST4 = 91188.544;
+		MCTST9 = 91188.544;
+		MCTSW1 = 29.60667013;
+		MCTSW2 = 0.6107646462;
+		MCTSW4 = 29.60667013;
+		MCTSD2 = 0.0;
+		MCTSD3 = 0.0;
+		MCTSD9 = 1.0;
+		MCTAK1 = 12455.0;
+		MCTAK2 = 31138.0;
+		MCTAK3 = 15569.0;
+		MCTAK4 = 6181.0;
+		MCTDTF = 0.925;
+
+		MCTSPP = -2.15*RAD;
+		MCTSYP = 0.95*RAD;
+		MCTSPG = 0.0;
+		MCTSYG = 0.0;
+		MCTAPG = 0.0;
+		MCTARG = 0.0;
+		MCTDPG = 0.0;
+		MCTDRG = 0.0;
+
+		//Polynomials for inclination and descending node
+		MDVSTP.fx[0] = 32.55754*RAD;
+		MDVSTP.fx[1] = -15.84615*RAD;
+		MDVSTP.fx[2] = 11.64780*RAD;
+		MDVSTP.fx[3] = 9.890970*RAD;
+		MDVSTP.fx[4] = -5.111430*RAD;
+		MDVSTP.fx[5] = 0 * RAD;
+		MDVSTP.fx[6] = 0 * RAD;
+		MDVSTP.gx[0] = 123.1935*RAD;
+		MDVSTP.gx[1] = -55.06485*RAD;
+		MDVSTP.gx[2] = -35.26208*RAD;
+		MDVSTP.gx[3] = 26.01324*RAD;
+		MDVSTP.gx[4] = -1.47591*RAD;
+		MDVSTP.gx[5] = 0 * RAD;
+		MDVSTP.gx[6] = 0 * RAD;
+		MDVSTP.T4IG = 9.0*60.0 + 15.0;
+		MDVSTP.T4C = 11.0*60.0 + 40.0;
+		MDVSTP.DTIG = 578.0;
+		MDVSTP.DT4N = 145.0;
+		MDVSTP.DTLIM = 100.0;
+		MDVSTP.KP1 = 0.0;
+		MDVSTP.KP2 = 0.0;
+		MDVSTP.KY1 = 0.0;
+		MDVSTP.KY2 = 0.0;
+		MDVSTP.PHIL = 28.6082888*RAD;
+
+		//CG tables
+		LMDSCCGTAB.Weight[0] = 6350.288000;
+		LMDSCCGTAB.CG[0] = _V(5.657285, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[1] = 6577.084000;
+		LMDSCCGTAB.CG[1] = _V(5.602462, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[2] = 6803.880000;
+		LMDSCCGTAB.CG[2] = _V(5.551295, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[3] = 7030.676000;
+		LMDSCCGTAB.CG[3] = _V(5.503428, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[4] = 7257.472000;
+		LMDSCCGTAB.CG[4] = _V(5.458553, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[5] = 7484.268000;
+		LMDSCCGTAB.CG[5] = _V(5.416398, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[6] = 7711.064000;
+		LMDSCCGTAB.CG[6] = _V(5.376722, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[7] = 7937.860000;
+		LMDSCCGTAB.CG[7] = _V(5.339314, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[8] = 8164.656000;
+		LMDSCCGTAB.CG[8] = _V(5.303984, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[9] = 8391.452000;
+		LMDSCCGTAB.CG[9] = _V(5.270563, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[10] = 8618.248000;
+		LMDSCCGTAB.CG[10] = _V(5.238902, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[11] = 8845.044000;
+		LMDSCCGTAB.CG[11] = _V(5.208864, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[12] = 9071.840000;
+		LMDSCCGTAB.CG[12] = _V(5.180328, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[13] = 9298.636000;
+		LMDSCCGTAB.CG[13] = _V(5.153184, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[14] = 9525.432000;
+		LMDSCCGTAB.CG[14] = _V(5.127333, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[15] = 9752.228000;
+		LMDSCCGTAB.CG[15] = _V(5.102684, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[16] = 9979.024000;
+		LMDSCCGTAB.CG[16] = _V(5.079156, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[17] = 10205.820000;
+		LMDSCCGTAB.CG[17] = _V(5.056673, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[18] = 10432.616000;
+		LMDSCCGTAB.CG[18] = _V(5.035167, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[19] = 10659.412000;
+		LMDSCCGTAB.CG[19] = _V(5.014577, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[20] = 10886.208000;
+		LMDSCCGTAB.CG[20] = _V(4.994845, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[21] = 11113.004000;
+		LMDSCCGTAB.CG[21] = _V(4.975918, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[22] = 11339.800000;
+		LMDSCCGTAB.CG[22] = _V(4.957748, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[23] = 11566.596000;
+		LMDSCCGTAB.CG[23] = _V(4.940291, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[24] = 11793.392000;
+		LMDSCCGTAB.CG[24] = _V(4.923505, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[25] = 12020.188000;
+		LMDSCCGTAB.CG[25] = _V(4.907353, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[26] = 12246.984000;
+		LMDSCCGTAB.CG[26] = _V(4.891799, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[27] = 12473.780000;
+		LMDSCCGTAB.CG[27] = _V(4.876810, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[28] = 12700.576000;
+		LMDSCCGTAB.CG[28] = _V(4.862357, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[29] = 12927.372000;
+		LMDSCCGTAB.CG[29] = _V(4.848411, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[30] = 13154.168000;
+		LMDSCCGTAB.CG[30] = _V(4.834946, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[31] = 13380.964000;
+		LMDSCCGTAB.CG[31] = _V(4.821937, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[32] = 13607.760000;
+		LMDSCCGTAB.CG[32] = _V(4.809362, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[33] = 13834.556000;
+		LMDSCCGTAB.CG[33] = _V(4.797199, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[34] = 14061.352000;
+		LMDSCCGTAB.CG[34] = _V(4.785429, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[35] = 14288.148000;
+		LMDSCCGTAB.CG[35] = _V(4.774032, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[36] = 14514.944000;
+		LMDSCCGTAB.CG[36] = _V(4.762991, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[37] = 14741.740000;
+		LMDSCCGTAB.CG[37] = _V(4.752290, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[38] = 14968.536000;
+		LMDSCCGTAB.CG[38] = _V(4.741913, 0.000000, 0.000000);
+		LMDSCCGTAB.Weight[39] = 15195.332000;
+		LMDSCCGTAB.CG[39] = _V(4.731846, 0.000000, 0.000000);
+		LMDSCCGTAB.N = 40;
+
+		LMASCCGTAB.Weight[0] = 2267.960000;
+		LMASCCGTAB.CG[0] = _V(6.629321, 0.008094, 0.127109);
+		LMASCCGTAB.Weight[1] = 2494.756000;
+		LMASCCGTAB.CG[1] = _V(6.544157, 0.007748, 0.118130);
+		LMASCCGTAB.Weight[2] = 2721.552000;
+		LMASCCGTAB.CG[2] = _V(6.468017, 0.007424, 0.109787);
+		LMASCCGTAB.Weight[3] = 2948.348000;
+		LMASCCGTAB.CG[3] = _V(6.400901, 0.007123, 0.102079);
+		LMASCCGTAB.Weight[4] = 3175.144000;
+		LMASCCGTAB.CG[4] = _V(6.342809, 0.006843, 0.095007);
+		LMASCCGTAB.Weight[5] = 3401.940000;
+		LMASCCGTAB.CG[5] = _V(6.293741, 0.006586, 0.088570);
+		LMASCCGTAB.Weight[6] = 3628.736000;
+		LMASCCGTAB.CG[6] = _V(6.253696, 0.006350, 0.082769);
+		LMASCCGTAB.Weight[7] = 3855.532000;
+		LMASCCGTAB.CG[7] = _V(6.222676, 0.006137, 0.077604);
+		LMASCCGTAB.Weight[8] = 4082.328000;
+		LMASCCGTAB.CG[8] = _V(6.200679, 0.005946, 0.073074);
+		LMASCCGTAB.Weight[9] = 4309.124000;
+		LMASCCGTAB.CG[9] = _V(6.187706, 0.005777, 0.069180);
+		LMASCCGTAB.Weight[10] = 4535.920000;
+		LMASCCGTAB.CG[10] = _V(6.183757, 0.005630, 0.065922);
+		LMASCCGTAB.Weight[11] = 4762.716000;
+		LMASCCGTAB.CG[11] = _V(6.188832, 0.005505, 0.063299);
+		LMASCCGTAB.Weight[12] = 4989.512000;
+		LMASCCGTAB.CG[12] = _V(6.202931, 0.005402, 0.061312);
+		LMASCCGTAB.Weight[13] = 5216.308000;
+		LMASCCGTAB.CG[13] = _V(6.226054, 0.005322, 0.059961);
+		LMASCCGTAB.N = 14;
 	}
 
 	//DEFINITIONS
@@ -428,4 +726,252 @@ struct RTCCSystemParameters
 	double MHACLD[103], MHALLD[103];
 	//Coefficient of drag for Earth orbit
 	double MCADRG;
+	//Suppress integrator processing
+	bool MGREPH;
+
+	//Phase 1 burn time for S-IVB TLI maneuver (vent and ullage)
+	double MCTJD1;
+	//Phase 3 burn time for S-IVB TLI maneuver (buildup)
+	double MCTJD3;
+	//Phase 4 burn time for S-IVB TLI maneuver (main burn)
+	double MCTJD4;
+	//Phase 5 burn time for S-IVB TLI maneuver (during MRS)
+	double MCTJDS;
+	//Phase 6 burn time for S-IVB TLI maneuver (main burn after MRS)
+	double MCTJD5;
+	//Phase 7 burn time for S-IVB TLI maneuver (tailoff)
+	double MCTJD6;
+	//Thrust level of first S-IVB thrust phase (vent and ullage)
+	double MCTJT1;
+	//Thrust level of second S-IVB thrust phase (chilldown)
+	double MCTJT2;
+	//Thrust level of third S-IVB thrust phase (buildup)
+	double MCTJT3;
+	//Thrust level of third S-IVB thrust phase (pre MRS)
+	double MCTJT4;
+	//Thrust level of fifth S-IVB thrust phase (high)
+	double MCTJTH;
+	//Thrust level of fifth S-IVB thrust phase (low)
+	double MCTJTL;
+	//Thrust level of sixth S-IVB thrust phase (main burn after MRS)
+	double MCTJT5;
+	//Thrust level of sevent S-IVB thrust phase (tailoff)
+	double MCTJT6;
+	//Weight flow rate for first S-IVB thrust phase
+	double MCTJW1;
+	//Weight flow rate for second S-IVB thrust phase
+	double MCTJW2;
+	//Weight flow rate for third S-IVB thrust phase
+	double MCTJW3;
+	//Weight flow rate for fourth S-IVB thrust phase
+	double MCTJW4;
+	//Weight flow rate for fifth S-IVB thrust phase (high)
+	double MCTJWH;
+	//Weight flow rate for fifth S-IVB thrust phase (low)
+	double MCTJWL;
+	//Weight flow rate for sixth S-IVB thrust phase
+	double MCTJW5;
+	//Weight flow rate for seventh S-IVB thrust phase
+	double MCTJW6;
+	//Time from ignition to start IGM guidance
+	double MCVIGM;
+	//Minimum allowable S-IVB weight
+	double MCVWMN;
+	//Fixed time increment to force MRS to occur
+	double MCVKPC;
+	//Duration of artificial tau for beginning of burn
+	double MCVCPQ;
+	//Epsilon to control range angle computation
+	double MCVEP1;
+	//Epsilon to terminate computation of K1, K2, K3, and K4
+	double MCVEP2;
+	//Epsilon to terminate recomputation of terminal values
+	double MCVEP3;
+	//Epsilon to allow cut-off computations to be sensed
+	double MCVEP4;
+	//Maximum allowable total yaw angle (IGM)
+	double MCVYMX;
+	//Maximum pitch rate (IGM)
+	double MCVPDL;
+	//Maximum yaw rate (IGM)
+	double MCVYDL;
+	//Time-to-go reference velocity increment
+	double MCVTGQ;
+	//IGM range angle constant
+	double MCVRQV;
+	//Terminal valus rotation indicator
+	double MCVRQT;
+	//High or low thrust indicator
+	int MCTIND;
+	//Second stage exhaust velocity
+	double MCVVX3;
+	//Second stage flow rate
+	double MCVWD3;
+	//Transition time for mixture ratio shift (MRS)
+	double MCVTB2;
+	//S-IVB thrust level
+	double MCTSAV;
+	//S-IVB weight loss rate
+	double MCTWAV;
+	//Nominal integration cycle for PMMSIU
+	double MCVDTM;
+	//Converts RHO*AREA/MASS to .5 RHO*AREA/MASS in Er. (eventually in Er at least...)
+	double MCCRAM;
+
+	//Thrust of CSM RCS+X (2 quads)
+	double MCTCT1;
+	//Thrust of CSM RCS+X (4 quads)
+	double MCTCT2;
+	//Thrust of CSM RCS-X (2 quads)
+	double MCTCT3;
+	//Thrust of CSM RCS-X (4 quads)
+	double MCTCT4;
+	//On-board computer thrust level for CSM RCS+/-X thruster (2 quads)
+	double MCTCT5;
+	//On-board computer thrust level for CSM RCS+/-X thruster (4 quads)
+	double MCTCT6;
+	//Weight loss rate CSM RCS+X (2 quads)
+	double MCTCW1;
+	//Weight loss rate CSM RCS+X (4 quads)
+	double MCTCW2;
+	//Weight loss rate CSM RCS-X (2 quads)
+	double MCTCW3;
+	//Weight loss rate CSM RCS-X (4 quads)
+	double MCTCW4;
+	//Thrust of LM RCS+X (2 quads)
+	double MCTLT1;
+	//Thrust of LM RCS+X (4 quads)
+	double MCTLT2;
+	//Thrust of LM RCS-X (2 quads)
+	double MCTLT3;
+	//Thrust of LM RCS-X (4 quads)
+	double MCTLT4;
+	//On-board computer thrust level for LM RCS+/-X thruster (2 quads)
+	double MCTLT5;
+	//On-board computer thrust level for LM RCS+/-X thruster (4 quads)
+	double MCTLT6;
+	//Weight loss rate LM RCS+X (2 quads)
+	double MCTLW1;
+	//Weight loss rate LM RCS+X (4 quads)
+	double MCTLW2;
+	//Weight loss rate LM RCS-X (2 quads)
+	double MCTLW3;
+	//Weight loss rate LM RCS-X (4 quads)
+	double MCTLW4;
+	//APS thrust level
+	double MCTAT1;
+	//APS buildup thrust level
+	double MCTAT2;
+	//APS full load thrust level
+	double MCTAT4;
+	//On-board computer thrust level for LM APS thruster
+	double MCTAT9;
+	//APS weight loss rate
+	double MCTAW1;
+	//APS weight loss rate for buildup
+	double MCTAW2;
+	//APS weight loss rate for full load
+	double MCTAW4;
+	//APS phase two burn time
+	double MCTAD2;
+	//APS phase three burn time
+	double MCTAD3;
+	//Total APS ullage overlap
+	double MCTAD9;
+	//DPS thrust level
+	double MCTDT1;
+	//DPS phase 2 thrust level
+	double MCTDT2;
+	//DPS phase 3 thrust level
+	double MCTDT3;
+	//DPS 10% thrust level
+	double MCTDT4;
+	//DPS thrust for buildup from 10% to maximum
+	double MCTDT5;
+	//DPS full load thrust level
+	double MCTDT6;
+	//On-board computer thrust level for LM DPS thruster
+	double MCTDT9;
+	//DPS weight loss rate
+	double MCTDW1;
+	//DPS phase 2 weight loss rate
+	double MCTDW2;
+	//DPS phase 3 weight loss rate
+	double MCTDW3;
+	//DPS 10% weight loss rate
+	double MCTDW4;
+	//DPS weight loss rate for build from 10% to max.
+	double MCTDW5;
+	//DPS full load weight loss rate
+	double MCTDW6;
+	//DPS phase 2 burn time
+	double MCTDD2;
+	//DPS phase 3 burn time
+	double MCTDD3;
+	//Nominal dt of 10% DPS thrust
+	double MCTDD4;
+	//DPS burn time for building from 10% to max
+	double MCTDD5;
+	//DPS burn time used to determine if 20% thrust level is to be maintained throughout the burn
+	double MCTDD6;
+	//Total DPS ullage overlap
+	double MCTDD9;
+	//SPS thrust level
+	double MCTST1;
+	//SPS thrust level for buildup
+	double MCTST2;
+	//SPS thrust level for full load
+	double MCTST4;
+	//On-board computer thrust level for CSM SPS thruster
+	double MCTST9;
+	//SPS weight loss rate
+	double MCTSW1;
+	//SPS weight loss rate for buildup
+	double MCTSW2;
+	//SPS weight loss rate for full load
+	double MCTSW4;
+	//SPS phase two burn time
+	double MCTSD2;
+	//SPS phase three burn time
+	double MCTSD3;
+	//Total SPS ullage overlap
+	double MCTSD9;
+
+	//Impulse in one second SPS / APS / DPS burn
+	double MCTAK1;
+	//Initial value of SPS/APS/DPS minimum impulse curve
+	double MCTAK2;
+	//Slope of SPS/APS/DPS curve
+	double MCTAK3;
+	//LM RCS impulse due to 7 second, 2 jet ullage
+	double MCTAK4;
+
+	//SPS pitch electronic null parameter
+	double MCTSPP;
+	//SPS yaw electronic null parameter
+	double MCTSYP;
+	//SPS pitch gimbal system parameter
+	double MCTSPG;
+	//SPS yaw gimbal system parameter
+	double MCTSYG;
+	//APS pitch engine cant system parameter
+	double MCTAPG;
+	//APS roll engine cant system parameter
+	double MCTARG;
+	//DPS pitch gimbal system parameter
+	double MCTDPG;
+	//DPS roll gimbal system parameter
+	double MCTDRG;
+	//Nominal scaling factor for main DPS thrust level and weight loss rate
+	double MCTDTF;
+
+	TLISystemParameters MDVSTP;
+
+	//CG table of LM with descent stage
+	struct CGTable
+	{
+		double Weight[40];
+		VECTOR3 CG[40];
+		int N;
+	} LMDSCCGTAB, LMASCCGTAB;
 };

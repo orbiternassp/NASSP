@@ -217,6 +217,46 @@ private:
 	double CYP, SYP;
 	double H, H2, H4, H6;
 	double VTEST;
+	//Earth rotational axis
+	VECTOR3 U_Z;
+	//Rotational velocity vector
+	VECTOR3 W_ES;
+	//Atmospheric density
+	double RHO;
+	//Speed of sound
+	double SOS;
+	//Position unit vector
+	VECTOR3 U_R;
+	double RSQD, RMAG, costheta, ALT;
+	VECTOR3 g_b;
+	//Coefficient of drag for Earth orbit
+	double CD;
+	//Converts RHO*AREA/MASS to .5 RHO*AREA/MASS in Er. (eventually in Er at least...)
+	double CFRAM;
+	//Nominal integration cycle for PMMSIU
+	double DTM;
+	//Time from ignition to start IGM guidance
+	double DTIGM;
+	//High or low thrust indicator
+	int XHILO;
+	//Minimum allowable S-IVB weight
+	double WTMIN;
+	//Duration of artificial tau for beginning of burn
+	double CPRO;
+	//Fixed time increment to force MRS to occur
+	double XKPC;
+	//IGM range angle constant
+	double ROV;
+	//Terminal valus rotation indicator
+	double ROT;
+	//Maximum allowable total yaw angle (IGM)
+	double CHILIM;
+	//Maximum pitch rate (IGM)
+	double PDLIM;
+	//Maximum yaw rate (IGM)
+	double YDLIM;
+	//Time-to-go reference velocity increment
+	double VINCRE;
 
 	//Targeting parameters
 
@@ -278,6 +318,4 @@ private:
 	RTCCNIAuxOutputTable *AUX;
 	std::vector<double> *WTABL;
 	MATRIX3 *ADRMAT;
-
-	OBJHANDLE hEarth;
 };

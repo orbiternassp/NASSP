@@ -51,9 +51,6 @@ TLIGuidanceSim::TLIGuidanceSim(RTCC *r, RTCCNIInputTable tablin, int &iretn, Eph
 		WTFLO[i] = 0.0;
 	}
 
-	hEarth = oapiGetObjectByName("Earth");
-	EMU = OrbMech::mu_Earth;
-
 	E = TABLIN.Params[0];
 	C3 = TABLIN.Params[1];
 	ALPHD = TABLIN.Params[2];
@@ -81,34 +78,59 @@ TLIGuidanceSim::TLIGuidanceSim(RTCC *r, RTCCNIInputTable tablin, int &iretn, Eph
 
 void TLIGuidanceSim::PCMTRL()
 {
-	DTPHASE[0] = pRTCC->MCTJD1;
-	DTPHASE[2] = pRTCC->MCTJD3;
-
-	FORCE[0] = pRTCC->MCTJT1;
-	FORCE[1] = pRTCC->MCTJT2;
-	FORCE[2] = pRTCC->MCTJT3;
-	FORCE[3] = pRTCC->MCTJT4;
-	FORCE[5] = pRTCC->MCTJT5;
-	FORCE[6] = pRTCC->MCTJT6;
-	WTFLO[0] = pRTCC->MCTJW1;
-	WTFLO[1] = pRTCC->MCTJW2;
-	WTFLO[2] = pRTCC->MCTJW3;
-	WTFLO[3] = pRTCC->MCTJW4;
-	WTFLO[5] = pRTCC->MCTJW5;
-	WTFLO[6] = pRTCC->MCTJW6;
-
-	EPSL1 = pRTCC->MCVEP1;
-	EPSL2 = pRTCC->MCVEP2;
-	EPSL3 = pRTCC->MCVEP3;
-	EPSL4 = pRTCC->MCVEP4;
-	VEX3 = pRTCC->MCVVX3;
-	WDOT3 = pRTCC->MCVWD3;
-	TB2 = pRTCC->MCVTB2;
-
+	//Load input and matrix tables into work areas
 	G = ADRMAT[2];
 	GG = ADRMAT[1];
 	PLMB = ADRMAT[0];
 
+	//Load system parameters
+	//AOBSQD
+	//GRCS
+	EMU = OrbMech::mu_Earth;
+	//PI
+	//OMEGA
+	//G2
+	CD = pRTCC->SystemParameters.MCADRG;
+	CFRAM = pRTCC->SystemParameters.MCCRAM;
+	//TWOPI
+	DTIGM = pRTCC->SystemParameters.MCVIGM;
+	DTPHASE[0] = pRTCC->SystemParameters.MCTJD1;
+	DTPHASE[2] = pRTCC->SystemParameters.MCTJD3;
+	DTPHASE[4] = pRTCC->SystemParameters.MCTJDS;
+	DTPHASE[5] = pRTCC->SystemParameters.MCTJD5;
+	DTPHASE[6] = pRTCC->SystemParameters.MCTJD6;
+	WTMIN = pRTCC->SystemParameters.MCVWMN;
+	CPRO = pRTCC->SystemParameters.MCVCPQ;
+	VEX3 = pRTCC->SystemParameters.MCVVX3;
+	WDOT3 = pRTCC->SystemParameters.MCVWD3;
+	FORCE[0] = pRTCC->SystemParameters.MCTJT1;
+	FORCE[1] = pRTCC->SystemParameters.MCTJT2;
+	FORCE[2] = pRTCC->SystemParameters.MCTJT3;
+	FORCE[3] = pRTCC->SystemParameters.MCTJT4;
+	FORCE[5] = pRTCC->SystemParameters.MCTJT5;
+	FORCE[6] = pRTCC->SystemParameters.MCTJT6;
+	WTFLO[0] = pRTCC->SystemParameters.MCTJW1;
+	WTFLO[1] = pRTCC->SystemParameters.MCTJW2;
+	WTFLO[2] = pRTCC->SystemParameters.MCTJW3;
+	WTFLO[3] = pRTCC->SystemParameters.MCTJW4;
+	WTFLO[5] = pRTCC->SystemParameters.MCTJW5;
+	WTFLO[6] = pRTCC->SystemParameters.MCTJW6;
+	TB2 = pRTCC->SystemParameters.MCVTB2;
+	XKPC = pRTCC->SystemParameters.MCVKPC;
+	ROV = pRTCC->SystemParameters.MCVRQV;
+	EPSL1 = pRTCC->SystemParameters.MCVEP1;
+	EPSL2 = pRTCC->SystemParameters.MCVEP2;
+	EPSL3 = pRTCC->SystemParameters.MCVEP3;
+	EPSL4 = pRTCC->SystemParameters.MCVEP4;
+	CHILIM = pRTCC->SystemParameters.MCVYMX;
+	PDLIM = pRTCC->SystemParameters.MCVPDL;
+	YDLIM = pRTCC->SystemParameters.MCVYDL;
+	ROT = pRTCC->SystemParameters.MCVRQT;
+	VINCRE = pRTCC->SystemParameters.MCVTGQ;
+	DTM = pRTCC->SystemParameters.MCVDTM;
+	XHILO = pRTCC->SystemParameters.MCTIND;
+
+	//Quantities set to zero
 	IGMSKP = 0;
 	IERR = 0;
 	IEND = 0;
@@ -133,6 +155,12 @@ void TLIGuidanceSim::PCMTRL()
 	PITCHG = 0.0;
 	YAWG = 0.0;
 
+	//This only because ECI coordinate system is wrong
+	MATRIX3 obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, pRTCC->GetGMTBase() + TABLIN.GMTI / 24.0 / 3600.0);
+	U_Z = mul(obli_E, _V(0, 1, 0));
+	U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+	W_ES = U_Z * OrbMech::w_Earth;
+
 	MPHASE = 1;
 	IMRS = -1;
 	INPASS = 1;
@@ -140,7 +168,7 @@ void TLIGuidanceSim::PCMTRL()
 	TE = TABLIN.GMTI;
 	WBM = TABLIN.CAPWT;
 	WT = TABLIN.CAPWT;
-	STEP = pRTCC->MCVDTM;
+	STEP = DTM;
 	KTHSWT = 1;
 	IPUTIG = 2;
 	IPHFUL = 5;
@@ -148,19 +176,16 @@ void TLIGuidanceSim::PCMTRL()
 	T = TABLIN.GMTI;
 	TPR = TABLIN.GMTI;
 	TLAST = TABLIN.GMTI;
-	CDFACT = 0.0 * TABLIN.DENSMULT *TABLIN.Area;
+	CDFACT = CFRAM * TABLIN.DENSMULT *TABLIN.Area;
 	AOM = CDFACT / WT;
 	DTPHASE[1] = TABLIN.Params2[5];
-	DTPHASE[3] = T2 + (pRTCC->MCVIGM - (DTPHASE[0] + DTPHASE[1] + DTPHASE[2]));
+	DTPHASE[3] = T2 + (DTIGM - (DTPHASE[0] + DTPHASE[1] + DTPHASE[2]));
 	TLARGE = T + 4096.0*3600.0;
-	DTPHASE[4] = pRTCC->MCTJDS;
-	DTPHASE[5] = pRTCC->MCTJD5;
-	DTPHASE[6] = pRTCC->MCTJD6;
 	PITN = PRP;
 	YAWN = YRP;
 	TIG = TABLIN.GMTI + DTPHASE[0] + DTPHASE[1];
 	TI = TABLIN.GMTI + DTPHASE[0];
-	TIGM = TABLIN.GMTI + pRTCC->MCVIGM;
+	TIGM = TABLIN.GMTI + DTIGM;
 	T = TABLIN.GMTI;
 	KEHOP = abs(TABLIN.IEPHOP);
 	RE = TABLIN.R;
@@ -189,17 +214,17 @@ void TLIGuidanceSim::PCMTRL()
 		TIG = TABLIN.GMTI;
 	}
 
-	if (pRTCC->MCTIND == 1)
+	if (XHILO == 1)
 	{
 		//Low thrust
-		FORCE[4] = pRTCC->MCTJTL;
-		WTFLO[4] = pRTCC->MCTJWL;
+		FORCE[4] = pRTCC->SystemParameters.MCTJTL;
+		WTFLO[4] = pRTCC->SystemParameters.MCTJWL;
 	}
 	else
 	{
 		//High thrust
-		FORCE[4] = pRTCC->MCTJTH;
-		WTFLO[4] = pRTCC->MCTJWH;
+		FORCE[4] = pRTCC->SystemParameters.MCTJTH;
+		WTFLO[4] = pRTCC->SystemParameters.MCTJWH;
 	}
 
 	//Ephemeris storage initialization
@@ -274,7 +299,7 @@ void TLIGuidanceSim::PCMTRL()
 		}
 		DT = TE - T;
 		TAU = TE;
-		if (WT <= pRTCC->MCVWMN)
+		if (WT <= WTMIN)
 		{
 			IERR = 2;
 			goto PMMSIU_999;
@@ -574,14 +599,25 @@ void TLIGuidanceSim::PCMRK()
 
 VECTOR3 TLIGuidanceSim::PCMDC()
 {
-	VECTOR3 RDD;
+	VECTOR3 RDD, V_R, DRAG;
+	double VRMAG, RHOP;
 	if (KTHSWT == 0)
 	{
 		RDDTH = _V(0, 0, 0);
 	}
 	if (K3SWT == 0)
 	{
-		PVEC = OrbMech::gravityroutine(RP, hEarth, TABLIN.GMTBASE + T / 24.0 / 3600.0);
+		U_R = unit(RP);
+		RSQD = dotp(RP, RP);
+		RMAG = sqrt(RSQD);
+		costheta = dotp(U_R, U_Z);
+		g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z * 2.0*costheta)*EMU / RSQD * 3.0 / 2.0*OrbMech::J2_Earth*pow(OrbMech::R_Earth / RMAG, 2.0);
+		PVEC = -U_R * EMU / RSQD + g_b;
+		//PVEC = OrbMech::gravityroutine(RP, hEarth, TABLIN.GMTBASE + T / 24.0 / 3600.0);
+
+		ALT = RMAG - OrbMech::R_Earth;
+		pRTCC->GLFDEN(ALT, RHO, SOS);
+
 		if (KTHSWT != 0)
 		{
 			if (IDOUBL != 0 || INPASS == 1)
@@ -591,7 +627,12 @@ VECTOR3 TLIGuidanceSim::PCMDC()
 		}
 	}
 
-	RDD = PVEC;
+	V_R = VP - crossp(W_ES, RP);
+	VRMAG = length(V_R);
+	RHOP = RHO * AOM*CD*VRMAG;
+	DRAG = -V_R * RHOP;
+
+	RDD = PVEC + DRAG;
 	RDD = RDD + RDDTH;
 	return RDD;
 }
@@ -699,13 +740,13 @@ PMMSIU_PCMGN_2A:
 		T2 = T2 - DDLT;
 		if (T2 > 0.0)
 		{
-			if (CPR >= pRTCC->MCVCPQ)
+			if (CPR >= CPRO)
 			{
 				TAU2 = VEX2 / FOM;
 			}
 			else
 			{
-				TAU2 = (VEX2 / FOM - DDLT * 0.5 - TAU2N)*pow(CPR / pRTCC->MCVCPQ, 4);
+				TAU2 = (VEX2 / FOM - DDLT * 0.5 - TAU2N)*pow(CPR / CPRO, 4);
 				TAU2 = TAU2N + TAU2;
 				TAU2N = TAU2N - DDLT;
 				CPR = CPR + DDLT;
@@ -714,7 +755,7 @@ PMMSIU_PCMGN_2A:
 		else
 		{
 			PC = PC + DT;
-			if (PC > pRTCC->MCVKPC)
+			if (PC > XKPC)
 			{
 				IMRS = 1;
 				TB4 = 0.0;
@@ -791,10 +832,11 @@ PMMSIU_PCMGN_2A:
 	CGAMT = cos(GAMT);
 	IFLOP = 230;
 PMMSIU_PCMGN_5A:
+	//Range angle calculations
 	PHIT = atan2(X4.z, X4.x);
 	if (TTOTP > EPSL1)
 	{
-		DELL2 = (VMAG * TTOTP) - XJ3P + (XLYP * T3P) - (pRTCC->MCVRQV / VEX3) *((TAU2 - T2) * XL2 + (TAU3 - T3P) * XL3P)*(XLYP + VMAG - VT);
+		DELL2 = (VMAG * TTOTP) - XJ3P + (XLYP * T3P) - (ROV / VEX3) *((TAU2 - T2) * XL2 + (TAU3 - T3P) * XL3P)*(XLYP + VMAG - VT);
 		TEMP2 = (S2 + DELL2)*GAMT / RT;
 	}
 	else
@@ -808,6 +850,7 @@ PMMSIU_PCMGN_5A:
 	PHIT = PHIT + TEMP2;
 	if (TTOTP > EPSL3)
 	{
+		//Terminal values calculations
 		F = PHIT + ALPHD;
 		TEMP1 = E * cos(F);
 		TEMP2 = 1.0 + TEMP1;
@@ -819,8 +862,9 @@ PMMSIU_PCMGN_5A:
 	}
 	SGAMT = sin(GAMT);
 	CGAMT = cos(GAMT);
-	if (pRTCC->MCVRQT == 1.0)
+	if (ROT == 1.0)
 	{
+		//Rotated terminal values
 		XIT = RT * CGAMT;
 		ZETATD = VT;
 		XITD = 0.0;
@@ -830,6 +874,7 @@ PMMSIU_PCMGN_5A:
 	}
 	else
 	{
+		//Unrotated terminal values
 		XIT = RT;
 		ZETATD = VT * CGAMT;
 		XITD = VT * SGAMT;
@@ -842,8 +887,17 @@ PMMSIU_PCMGN_5A:
 	MX_K = mul(MX_phi_T, G);
 	MX_EKX = mul(MX_K, PLMB);
 
-	AVG = OrbMech::gravityroutine(RINP, hEarth, TABLIN.GMTBASE + T / 24.0 / 3600.0);
+	//Average gravity calculation
+	U_R = unit(RINP);
+	RSQD = dotp(RINP, RINP);
+	RMAG = sqrt(RSQD);
+	costheta = dotp(U_R, U_Z);
+	g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z * 2.0*costheta)*EMU / RSQD * 3.0 / 2.0*OrbMech::J2_Earth*pow(OrbMech::R_Earth / RMAG, 2.0);
+	AVG = -U_R * EMU / RSQD + g_b;
 
+	//AVG = OrbMech::gravityroutine(RINP, hEarth, TABLIN.GMTBASE + T / 24.0 / 3600.0);
+
+	//Time-to-go correction computation
 	GS0D = mul(MX_EKX, RINP);
 	GS1D = mul(MX_EKX, VINP);
 	TEMPY = mul(MX_EKX, AVG);
@@ -923,35 +977,35 @@ PMMSIU_PCMGN_300:
 PMMSIU_PCMGN_330:
 	PITN = atan2(-UTA.z, UTA.x);
 	YAWN = asin(UTA.y);
-	if (abs(YAWN) > pRTCC->MCVYMX)
+	if (abs(YAWN) > CHILIM)
 	{
-		YAWN = pRTCC->MCVYMX*(YAWN / abs(YAWN));
+		YAWN = CHILIM *(YAWN / abs(YAWN));
 	}
 	if (T == TABLIN.GMTI)
 	{
 		PITO = PITN;
 		YAWO = YAWN;
 	}
-	if (DDLT == 0.0 || abs(YAWN - YAWO) / DDLT > pRTCC->MCVYDL)
+	if (DDLT == 0.0 || abs(YAWN - YAWO) / DDLT > YDLIM)
 	{
 		if (YAWN > YAWO)
 		{
-			YAWN = YAWO + pRTCC->MCVYDL*DDLT;
+			YAWN = YAWO + YDLIM *DDLT;
 		}
 		else
 		{
-			YAWN = YAWO - pRTCC->MCVYDL*DDLT;
+			YAWN = YAWO - YDLIM *DDLT;
 		}
 	}
-	if (DDLT == 0.0 || abs(PITN - PITO) / DDLT > pRTCC->MCVPDL)
+	if (DDLT == 0.0 || abs(PITN - PITO) / DDLT > PDLIM)
 	{
 		if (PITN > PITO)
 		{
-			PITN = PITO + pRTCC->MCVPDL*DDLT;
+			PITN = PITO + PDLIM *DDLT;
 		}
 		else
 		{
-			PITN = PITO - pRTCC->MCVPDL*DDLT;
+			PITN = PITO - PDLIM *DDLT;
 		}
 	}
 	ZCP = cos(PITN);
@@ -995,7 +1049,7 @@ PMMSIU_PCMGN_2B:
 	DT1P = DT2P;
 	DT2P = DDLT;
 
-	if (!(TTOTP <= EPSL4 && (VTEST + pRTCC->MCVTGQ) >= VT))
+	if (!(TTOTP <= EPSL4 && (VTEST + VINCRE) >= VT))
 	{
 		goto PMMSIU_PCMGN_300;
 	}

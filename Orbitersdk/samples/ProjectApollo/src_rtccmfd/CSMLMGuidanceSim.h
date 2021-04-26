@@ -183,7 +183,10 @@ private:
 	double SIGN;
 	//Area over mass ratio
 	double AOM;
-	double CD = 0.0;
+	//Coefficient of drag for Earth orbit
+	double CD;
+	//Drag factor
+	double CDFACT;
 	//Tailoff DV
 	double DVTO = 0.0;
 	//Tailoff DV along x-axis
@@ -206,6 +209,19 @@ private:
 	double DTMAN = 0.0;
 	//Input thrust unit vector
 	VECTOR3 A_T_in;
+	VECTOR3 U_Z;
+	VECTOR3 W_ES;
+	//Gravitational acceleration
+	VECTOR3 r_p_ddot;
+	//Altitude
+	double ALT;
+	//Density
+	double RHO;
+	//Speed of sound
+	double SOS;
+	VECTOR3 V_R;
+	double VRMAG;
+	double RHOP;
 
 	//Thrust and weight loss rate tables
 	//0 = Ullage
