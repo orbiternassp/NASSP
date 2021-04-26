@@ -289,6 +289,54 @@ struct RTCCSystemParameters
 			MHALLD[i] = MHACLD[i];
 		}
 		MCADRG = 0.1; //Should be 2.0
+
+		MCTJD1 = 570.0;
+		MCTJD3 = 2.5;
+		MCTJDS = 1.0;
+		MCTJD5 = 99999.0;
+		MCTJD6 = 1.8;
+
+		MCTJT1 = 38.8 * 4.4482216152605;
+		MCTJT2 = 5889.0 * 4.4482216152605;
+		MCTJT3 = 110900.0 * 4.4482216152605;
+		MCTJT4 = 178147.0 * 4.4482216152605;
+		MCTJTL = 202097.0 * 4.4482216152605;
+		MCTJTH = 202256.0 * 4.4482216152605;
+		MCTJT5 = 202256.0 * 4.4482216152605;
+		MCTJT6 = 27784.0 * 4.4482216152605;
+
+		MCTJW1 = 0.111 * 0.45359237;
+		MCTJW2 = 0.75 * 0.45359237;
+		MCTJW3 = 157.6 * 0.45359237;
+		MCTJW4 = 412.167 * 0.45359237;
+		MCTJWL = 472.121 * 0.45359237;
+		MCTJWH = 472.18 * 0.45359237;
+		MCTJW5 = 472.18* 0.45359237;
+		MCTJW6 = 61.7 * 0.45359237;
+
+		MCTSAV = 202097.0 * 4.4482216152605;
+		MCTWAV = 472.121 * 0.45359237;
+
+		MCVIGM = 584.0;
+		MCVWMN = 10000.0; //Minimum S-IVB weight
+		MCVKPC = 0.0;
+		MCVCPQ = 10.0;
+		MCVEP1 = 1000.0;
+		MCVEP2 = 30.0;
+		MCVEP3 = 30.0;
+		MCVEP4 = 3.0;
+		MCVYMX = 45.0*RAD;
+		MCVPDL = 1.0*RAD;
+		MCVYDL = 1.0*RAD;
+		MCVTGQ = 300.0;
+		MCVRQV = -0.4;
+		MCVRQT = 1.0;
+		MCTIND = 0;
+		MCVVX3 = 4198.1678;
+		MCVWD3 = 472.159 * 0.45359237;
+		MCVTB2 = 1.0;
+		MCVDTM = 2.0;
+		MCCRAM = 0.5;
 	}
 
 	//DEFINITIONS
@@ -428,4 +476,93 @@ struct RTCCSystemParameters
 	double MHACLD[103], MHALLD[103];
 	//Coefficient of drag for Earth orbit
 	double MCADRG;
+
+	//Phase 1 burn time for S-IVB TLI maneuver (vent and ullage)
+	double MCTJD1;
+	//Phase 3 burn time for S-IVB TLI maneuver (buildup)
+	double MCTJD3;
+	//Phase 4 burn time for S-IVB TLI maneuver (main burn)
+	double MCTJD4;
+	//Phase 5 burn time for S-IVB TLI maneuver (during MRS)
+	double MCTJDS;
+	//Phase 6 burn time for S-IVB TLI maneuver (main burn after MRS)
+	double MCTJD5;
+	//Phase 7 burn time for S-IVB TLI maneuver (tailoff)
+	double MCTJD6;
+	//Thrust level of first S-IVB thrust phase (vent and ullage)
+	double MCTJT1;
+	//Thrust level of second S-IVB thrust phase (chilldown)
+	double MCTJT2;
+	//Thrust level of third S-IVB thrust phase (buildup)
+	double MCTJT3;
+	//Thrust level of third S-IVB thrust phase (pre MRS)
+	double MCTJT4;
+	//Thrust level of fifth S-IVB thrust phase (high)
+	double MCTJTH;
+	//Thrust level of fifth S-IVB thrust phase (low)
+	double MCTJTL;
+	//Thrust level of sixth S-IVB thrust phase (main burn after MRS)
+	double MCTJT5;
+	//Thrust level of sevent S-IVB thrust phase (tailoff)
+	double MCTJT6;
+	//Weight flow rate for first S-IVB thrust phase
+	double MCTJW1;
+	//Weight flow rate for second S-IVB thrust phase
+	double MCTJW2;
+	//Weight flow rate for third S-IVB thrust phase
+	double MCTJW3;
+	//Weight flow rate for fourth S-IVB thrust phase
+	double MCTJW4;
+	//Weight flow rate for fifth S-IVB thrust phase (high)
+	double MCTJWH;
+	//Weight flow rate for fifth S-IVB thrust phase (low)
+	double MCTJWL;
+	//Weight flow rate for sixth S-IVB thrust phase
+	double MCTJW5;
+	//Weight flow rate for seventh S-IVB thrust phase
+	double MCTJW6;
+	//Time from ignition to start IGM guidance
+	double MCVIGM;
+	//Minimum allowable S-IVB weight
+	double MCVWMN;
+	//Fixed time increment to force MRS to occur
+	double MCVKPC;
+	//Duration of artificial tau for beginning of burn
+	double MCVCPQ;
+	//Epsilon to control range angle computation
+	double MCVEP1;
+	//Epsilon to terminate computation of K1, K2, K3, and K4
+	double MCVEP2;
+	//Epsilon to terminate recomputation of terminal values
+	double MCVEP3;
+	//Epsilon to allow cut-off computations to be sensed
+	double MCVEP4;
+	//Maximum allowable total yaw angle (IGM)
+	double MCVYMX;
+	//Maximum pitch rate (IGM)
+	double MCVPDL;
+	//Maximum yaw rate (IGM)
+	double MCVYDL;
+	//Time-to-go reference velocity increment
+	double MCVTGQ;
+	//IGM range angle constant
+	double MCVRQV;
+	//Terminal valus rotation indicator
+	double MCVRQT;
+	//High or low thrust indicator
+	int MCTIND;
+	//Second stage exhaust velocity
+	double MCVVX3;
+	//Second stage flow rate
+	double MCVWD3;
+	//Transition time for mixture ratio shift (MRS)
+	double MCVTB2;
+	//S-IVB thrust level
+	double MCTSAV;
+	//S-IVB weight loss rate
+	double MCTWAV;
+	//Nominal integration cycle for PMMSIU
+	double MCVDTM;
+	//Converts RHO*AREA/MASS to .5 RHO*AREA/MASS in Er. (eventually in Er at least...)
+	double MCCRAM;
 };

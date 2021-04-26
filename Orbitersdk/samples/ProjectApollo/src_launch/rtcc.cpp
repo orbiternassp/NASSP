@@ -1316,53 +1316,6 @@ RTCC::RTCC()
 	MCTAK4 = 6181.0;
 	MCTDTF = 0.925;
 
-	MCTJD1 = 570.0;
-	MCTJD3 = 2.5;
-	MCTJDS = 1.0;
-	MCTJD5 = 99999.0;
-	MCTJD6 = 1.8;
-
-	MCTJT1 = 38.8 / LBF;
-	MCTJT2 = 5889.0 / LBF;
-	MCTJT3 = 110900.0 / LBF;
-	MCTJT4 = 178147.0 / LBF;
-	MCTJTL = 202097.0 / LBF;
-	MCTJTH = 202256.0 / LBF;
-	MCTJT5 = 202256.0 / LBF;
-	MCTJT6 = 27784.0 / LBF;
-
-	MCTJW1 = 0.111 / (LBS*1000.0);
-	MCTJW2 = 0.75 / (LBS*1000.0);
-	MCTJW3 = 157.6 / (LBS*1000.0);
-	MCTJW4 = 412.167 / (LBS*1000.0);
-	MCTJWL = 472.121 / (LBS*1000.0);
-	MCTJWH = 472.18 / (LBS*1000.0);
-	MCTJW5 = 472.18 / (LBS*1000.0);
-	MCTJW6 = 61.7 / (LBS*1000.0);
-
-	MCTSAV = 202097.0 / LBF;
-	MCTWAV = 472.121 / (LBS*1000.0);
-
-	MCVIGM = 584.0;
-	MCVWMN = 10000.0; //Minimum S-IVB weight
-	MCVKPC = 0.0;
-	MCVCPQ = 10.0;
-	MCVEP1 = 1000.0;
-	MCVEP2 = 30.0;
-	MCVEP3 = 30.0;
-	MCVEP4 = 3.0;
-	MCVYMX = 45.0*RAD;
-	MCVPDL = 1.0*RAD;
-	MCVYDL = 1.0*RAD;
-	MCVTGQ = 300.0;
-	MCVRQV = -0.4;
-	MCVRQT = 1.0;
-	MCTIND = 0;
-	MCVVX3 = 4198.1678;
-	MCVWD3 = 472.159 / (LBS*1000.0);
-	MCVTB2 = 1.0;
-	MCVDTM = 2.0;
-
 	MCTSPP = -2.15*RAD;
 	MCTSYP = 0.95*RAD;
 	MCTSPG = 0.0;
@@ -7861,11 +7814,11 @@ int RTCC::PMMSPT(PMMSPTInput &in)
 		return 79;
 	}
 	double dt_ig = in.CurMan->GMT_1 - in.CurMan->GMTMAN;
-	if (MCTJD1 > dt_ig)
+	if (SystemParameters.MCTJD1 > dt_ig)
 	{
 		return 79;
 	}
-	in.CurMan->Word84 = dt_ig - MCTJD1;
+	in.CurMan->Word84 = dt_ig - SystemParameters.MCTJD1;
 	goto RTCC_PMMSPT_19_1;
 RTCC_PMMSPT_3_1:
 	if (in.QUEID == 32 || in.QUEID == 33)
@@ -8177,7 +8130,7 @@ RTCC_PMMSPT_15_2:
 	MATRIX3 G = mul(B, A);
 
 	in.CurMan->GMTI = T_RP + MDVSTP.DTIG;
-	in.CurMan->Word84 = MDVSTP.DTIG - MCTJD1;
+	in.CurMan->Word84 = MDVSTP.DTIG - SystemParameters.MCTJD1;
 //RTCC_PMMSPT_18_1:
 	SIVBTLIMatrixTable *ADRMAT;
 	if (in.Table == RTCC_MPT_CSM)
@@ -17586,13 +17539,13 @@ int RTCC::PMMWTC(int med)
 
 	WDOT[0] = MCTCW1;
 	WDOT[1] = MCTSW1;
-	WDOT[2] = MCTWAV;
+	WDOT[2] = SystemParameters.MCTWAV;
 	WDOT[3] = MCTLW1;
 	WDOT[4] = MCTAW1;
 	WDOT[5] = MCTDW1;
 	TL[0] = MCTCT1;
 	TL[1] = MCTST1;
-	TL[2] = MCTSAV;
+	TL[2] = SystemParameters.MCTSAV;
 	TL[3] = MCTLT1;
 	TL[4] = MCTAT1;
 	TL[5] = MCTDT1;
@@ -29445,8 +29398,8 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		{
 			mptman->CommonBlock.SIVBFuelRemaining = S_Fuel - aux->MainFuelUsed;
 
-			T = MCTSAV;
-			WDOT = MCTWAV;
+			T = SystemParameters.MCTSAV;
+			WDOT = SystemParameters.MCTWAV;
 			F = mptman->CommonBlock.SIVBFuelRemaining;
 
 			mptman->CommonBlock.SPSFuelRemaining = CommonBlockBefore->SPSFuelRemaining;
