@@ -498,17 +498,21 @@ void IMU::SystemTimestep(double simdt)
 		{
 			DCPower.DrawPower(61.7); //Need to check these values, no source
 			if (IMUHeat && PTAHeat && PSAHeat)
-				IMUHeat->GenerateHeat(8.9); //Need to check these values, no source
-				PTAHeat->GenerateHeat(8.9); //Need to check these values, no source
-				PSAHeat->GenerateHeat(8.9); //Need to check these values, no source
+			{
+			IMUHeat->GenerateHeat(8.9); //Need to check these values, no source
+			PTAHeat->GenerateHeat(8.9); //Need to check these values, no source
+			PSAHeat->GenerateHeat(8.9); //Need to check these values, no source
+			}
 		}
 		else
 		{
 			DCPower.DrawPower(200.0); //Power on IMU OPR breaker in LM-8
 			if (IMUHeat && PTAHeat && PSAHeat) //total heat load on breaker 78.6W
+			{
 				IMUHeat->GenerateHeat(10.0); //guess using CSM databook
 				PTAHeat->GenerateHeat(24.0); //guess using CSM databook
 				PSAHeat->GenerateHeat(26.0); //guess using CSM databook
+			}
 		}
 	}
 }
