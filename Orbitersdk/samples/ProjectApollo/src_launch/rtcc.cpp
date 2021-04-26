@@ -1251,152 +1251,12 @@ RTCC::RTCC()
 	calcParams.SVSTORE1.R = _V(0, 0, 0);
 	calcParams.SVSTORE1.V = _V(0, 0, 0);
 
-	//Polynomials for inclination and descending node
-	MDVSTP.fx[0] = 32.55754*RAD;
-	MDVSTP.fx[1] = -15.84615*RAD;
-	MDVSTP.fx[2] = 11.64780*RAD;
-	MDVSTP.fx[3] = 9.890970*RAD;
-	MDVSTP.fx[4] = -5.111430*RAD;
-	MDVSTP.fx[5] = 0 * RAD;
-	MDVSTP.fx[6] = 0 * RAD;
-	MDVSTP.gx[0] = 123.1935*RAD;
-	MDVSTP.gx[1] = -55.06485*RAD;
-	MDVSTP.gx[2] = -35.26208*RAD;
-	MDVSTP.gx[3] = 26.01324*RAD;
-	MDVSTP.gx[4] = -1.47591*RAD;
-	MDVSTP.gx[5] = 0 * RAD;
-	MDVSTP.gx[6] = 0 * RAD;
-	MDVSTP.T4IG = 9.0*60.0 + 15.0;
-	MDVSTP.T4C = 11.0*60.0 + 40.0;
-	MDVSTP.DTIG = 578.0;
-	MDVSTP.DT4N = 145.0;
-	MDVSTP.DTLIM = 100.0;
-	MDVSTP.KP1 = 0.0;
-	MDVSTP.KP2 = 0.0;
-	MDVSTP.KY1 = 0.0;
-	MDVSTP.KY2 = 0.0;
-	MDVSTP.PHIL = 28.6082888*RAD;
-	MGREPH = false;
-
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_AGS - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
-
-	//CG tables
-	LMDSCCGTAB.Weight[0] = 6350.288000;
-	LMDSCCGTAB.CG[0] = _V(5.657285, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[1] = 6577.084000;
-	LMDSCCGTAB.CG[1] = _V(5.602462, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[2] = 6803.880000;
-	LMDSCCGTAB.CG[2] = _V(5.551295, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[3] = 7030.676000;
-	LMDSCCGTAB.CG[3] = _V(5.503428, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[4] = 7257.472000;
-	LMDSCCGTAB.CG[4] = _V(5.458553, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[5] = 7484.268000;
-	LMDSCCGTAB.CG[5] = _V(5.416398, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[6] = 7711.064000;
-	LMDSCCGTAB.CG[6] = _V(5.376722, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[7] = 7937.860000;
-	LMDSCCGTAB.CG[7] = _V(5.339314, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[8] = 8164.656000;
-	LMDSCCGTAB.CG[8] = _V(5.303984, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[9] = 8391.452000;
-	LMDSCCGTAB.CG[9] = _V(5.270563, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[10] = 8618.248000;
-	LMDSCCGTAB.CG[10] = _V(5.238902, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[11] = 8845.044000;
-	LMDSCCGTAB.CG[11] = _V(5.208864, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[12] = 9071.840000;
-	LMDSCCGTAB.CG[12] = _V(5.180328, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[13] = 9298.636000;
-	LMDSCCGTAB.CG[13] = _V(5.153184, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[14] = 9525.432000;
-	LMDSCCGTAB.CG[14] = _V(5.127333, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[15] = 9752.228000;
-	LMDSCCGTAB.CG[15] = _V(5.102684, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[16] = 9979.024000;
-	LMDSCCGTAB.CG[16] = _V(5.079156, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[17] = 10205.820000;
-	LMDSCCGTAB.CG[17] = _V(5.056673, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[18] = 10432.616000;
-	LMDSCCGTAB.CG[18] = _V(5.035167, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[19] = 10659.412000;
-	LMDSCCGTAB.CG[19] = _V(5.014577, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[20] = 10886.208000;
-	LMDSCCGTAB.CG[20] = _V(4.994845, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[21] = 11113.004000;
-	LMDSCCGTAB.CG[21] = _V(4.975918, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[22] = 11339.800000;
-	LMDSCCGTAB.CG[22] = _V(4.957748, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[23] = 11566.596000;
-	LMDSCCGTAB.CG[23] = _V(4.940291, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[24] = 11793.392000;
-	LMDSCCGTAB.CG[24] = _V(4.923505, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[25] = 12020.188000;
-	LMDSCCGTAB.CG[25] = _V(4.907353, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[26] = 12246.984000;
-	LMDSCCGTAB.CG[26] = _V(4.891799, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[27] = 12473.780000;
-	LMDSCCGTAB.CG[27] = _V(4.876810, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[28] = 12700.576000;
-	LMDSCCGTAB.CG[28] = _V(4.862357, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[29] = 12927.372000;
-	LMDSCCGTAB.CG[29] = _V(4.848411, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[30] = 13154.168000;
-	LMDSCCGTAB.CG[30] = _V(4.834946, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[31] = 13380.964000;
-	LMDSCCGTAB.CG[31] = _V(4.821937, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[32] = 13607.760000;
-	LMDSCCGTAB.CG[32] = _V(4.809362, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[33] = 13834.556000;
-	LMDSCCGTAB.CG[33] = _V(4.797199, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[34] = 14061.352000;
-	LMDSCCGTAB.CG[34] = _V(4.785429, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[35] = 14288.148000;
-	LMDSCCGTAB.CG[35] = _V(4.774032, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[36] = 14514.944000;
-	LMDSCCGTAB.CG[36] = _V(4.762991, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[37] = 14741.740000;
-	LMDSCCGTAB.CG[37] = _V(4.752290, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[38] = 14968.536000;
-	LMDSCCGTAB.CG[38] = _V(4.741913, 0.000000, 0.000000);
-	LMDSCCGTAB.Weight[39] = 15195.332000;
-	LMDSCCGTAB.CG[39] = _V(4.731846, 0.000000, 0.000000);
-	LMDSCCGTAB.N = 40;
-
-	LMASCCGTAB.Weight[0] = 2267.960000;
-	LMASCCGTAB.CG[0] = _V(6.629321, 0.008094, 0.127109);
-	LMASCCGTAB.Weight[1] = 2494.756000;
-	LMASCCGTAB.CG[1] = _V(6.544157, 0.007748, 0.118130);
-	LMASCCGTAB.Weight[2] = 2721.552000;
-	LMASCCGTAB.CG[2] = _V(6.468017, 0.007424, 0.109787);
-	LMASCCGTAB.Weight[3] = 2948.348000;
-	LMASCCGTAB.CG[3] = _V(6.400901, 0.007123, 0.102079);
-	LMASCCGTAB.Weight[4] = 3175.144000;
-	LMASCCGTAB.CG[4] = _V(6.342809, 0.006843, 0.095007);
-	LMASCCGTAB.Weight[5] = 3401.940000;
-	LMASCCGTAB.CG[5] = _V(6.293741, 0.006586, 0.088570);
-	LMASCCGTAB.Weight[6] = 3628.736000;
-	LMASCCGTAB.CG[6] = _V(6.253696, 0.006350, 0.082769);
-	LMASCCGTAB.Weight[7] = 3855.532000;
-	LMASCCGTAB.CG[7] = _V(6.222676, 0.006137, 0.077604);
-	LMASCCGTAB.Weight[8] = 4082.328000;
-	LMASCCGTAB.CG[8] = _V(6.200679, 0.005946, 0.073074);
-	LMASCCGTAB.Weight[9] = 4309.124000;
-	LMASCCGTAB.CG[9] = _V(6.187706, 0.005777, 0.069180);
-	LMASCCGTAB.Weight[10] = 4535.920000;
-	LMASCCGTAB.CG[10] = _V(6.183757, 0.005630, 0.065922);
-	LMASCCGTAB.Weight[11] = 4762.716000;
-	LMASCCGTAB.CG[11] = _V(6.188832, 0.005505, 0.063299);
-	LMASCCGTAB.Weight[12] = 4989.512000;
-	LMASCCGTAB.CG[12] = _V(6.202931, 0.005402, 0.061312);
-	LMASCCGTAB.Weight[13] = 5216.308000;
-	LMASCCGTAB.CG[13] = _V(6.226054, 0.005322, 0.059961);
-	LMASCCGTAB.N = 14;
 
 	//Load star table
 	EMSGSUPP(0, 0);
@@ -1672,44 +1532,44 @@ void RTCC::QMMBLD(int year, int month, int day)
 		PZSTARGP.K_a1 = dtemp1;
 		PZSTARGP.K_a2 = dtemp2;
 		PZSTARGP.K_T3 = dtemp3;
-		MDVSTP.t_DS0 = dtemp4;
+		SystemParameters.MDVSTP.t_DS0 = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		MDVSTP.t_DS1 = dtemp1;
-		MDVSTP.t_DS2 = dtemp2;
-		MDVSTP.t_DS3 = dtemp3;
-		MDVSTP.hx[0][0] = dtemp4;
+		SystemParameters.MDVSTP.t_DS1 = dtemp1;
+		SystemParameters.MDVSTP.t_DS2 = dtemp2;
+		SystemParameters.MDVSTP.t_DS3 = dtemp3;
+		SystemParameters.MDVSTP.hx[0][0] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		MDVSTP.hx[0][1] = dtemp1;
-		MDVSTP.hx[0][2] = dtemp2;
-		MDVSTP.hx[0][3] = dtemp3;
-		MDVSTP.hx[0][4] = dtemp4;
+		SystemParameters.MDVSTP.hx[0][1] = dtemp1;
+		SystemParameters.MDVSTP.hx[0][2] = dtemp2;
+		SystemParameters.MDVSTP.hx[0][3] = dtemp3;
+		SystemParameters.MDVSTP.hx[0][4] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		MDVSTP.t_D0 = 0.0;
-		MDVSTP.t_D1 = dtemp1;
-		MDVSTP.t_SD1 = dtemp2;
-		MDVSTP.hx[1][0] = dtemp3;
-		MDVSTP.hx[1][1] = dtemp4;
+		SystemParameters.MDVSTP.t_D0 = 0.0;
+		SystemParameters.MDVSTP.t_D1 = dtemp1;
+		SystemParameters.MDVSTP.t_SD1 = dtemp2;
+		SystemParameters.MDVSTP.hx[1][0] = dtemp3;
+		SystemParameters.MDVSTP.hx[1][1] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		MDVSTP.hx[1][2] = dtemp1;
-		MDVSTP.hx[1][3] = dtemp2;
-		MDVSTP.hx[1][4] = dtemp3;
-		MDVSTP.t_D2 = dtemp4;
+		SystemParameters.MDVSTP.hx[1][2] = dtemp1;
+		SystemParameters.MDVSTP.hx[1][3] = dtemp2;
+		SystemParameters.MDVSTP.hx[1][4] = dtemp3;
+		SystemParameters.MDVSTP.t_D2 = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		MDVSTP.t_SD2 = dtemp1;
-		MDVSTP.hx[2][0] = dtemp2;
-		MDVSTP.hx[2][1] = dtemp3;
-		MDVSTP.hx[2][2] = dtemp4;
+		SystemParameters.MDVSTP.t_SD2 = dtemp1;
+		SystemParameters.MDVSTP.hx[2][0] = dtemp2;
+		SystemParameters.MDVSTP.hx[2][1] = dtemp3;
+		SystemParameters.MDVSTP.hx[2][2] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		MDVSTP.hx[2][3] = dtemp1;
-		MDVSTP.hx[2][4] = dtemp2;
-		MDVSTP.t_D3 = dtemp3;
-		MDVSTP.t_SD3 = dtemp4;
+		SystemParameters.MDVSTP.hx[2][3] = dtemp1;
+		SystemParameters.MDVSTP.hx[2][4] = dtemp2;
+		SystemParameters.MDVSTP.t_D3 = dtemp3;
+		SystemParameters.MDVSTP.t_SD3 = dtemp4;
 	}
 }
 
@@ -1844,7 +1704,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			}
 			else if (papiReadScenario_double(Buff, "MDVSTP_PHIL", dtemp))
 			{
-				MDVSTP.PHIL = dtemp * RAD;
+				SystemParameters.MDVSTP.PHIL = dtemp * RAD;
 			}
 			else if (papiReadScenario_double(Buff, "MCLGRA", dtemp))
 			{
@@ -6942,8 +6802,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_MCGRIL", SystemParameters.MCGRIL);
 	SAVE_DOUBLE("RTCC_MCGREF", SystemParameters.MCGREF);
 	SAVE_DOUBLE("RTCC_MCLAMD", SystemParameters.MCLAMD);
-	SAVE_DOUBLE("RTCC_MDVSTP_T4IG", MDVSTP.T4IG);
-	SAVE_DOUBLE("RTCC_MDVSTP_T4C", MDVSTP.T4C);
+	SAVE_DOUBLE("RTCC_MDVSTP_T4IG", SystemParameters.MDVSTP.T4IG);
+	SAVE_DOUBLE("RTCC_MDVSTP_T4C", SystemParameters.MDVSTP.T4C);
 	
 	SAVE_DOUBLE("RTCC_GZGENCSN_DKIELEVATIONANGLE", GZGENCSN.DKIElevationAngle);
 	SAVE_DOUBLE("RTCC_GZGENCSN_DKITERMINALPHASEANGLE", GZGENCSN.DKITerminalPhaseAngle);
@@ -7131,8 +6991,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_MCGRIL", SystemParameters.MCGRIL);
 		LOAD_DOUBLE("RTCC_MCGREF", SystemParameters.MCGREF);
 		LOAD_DOUBLE("RTCC_MCLAMD", SystemParameters.MCLAMD);
-		LOAD_DOUBLE("RTCC_MDVSTP_T4IG", MDVSTP.T4IG);
-		LOAD_DOUBLE("RTCC_MDVSTP_T4C", MDVSTP.T4C);
+		LOAD_DOUBLE("RTCC_MDVSTP_T4IG", SystemParameters.MDVSTP.T4IG);
+		LOAD_DOUBLE("RTCC_MDVSTP_T4C", SystemParameters.MDVSTP.T4C);
 
 		LOAD_DOUBLE("RTCC_GZGENCSN_DKIELEVATIONANGLE", GZGENCSN.DKIElevationAngle);
 		LOAD_DOUBLE("RTCC_GZGENCSN_DKITERMINALPHASEANGLE", GZGENCSN.DKITerminalPhaseAngle);
@@ -7825,7 +7685,7 @@ RTCC_PMMSPT_6_2:
 	emsin.EphemerisBuildIndicator = false;
 	goto RTCC_PMMSPT_7_2;
 RTCC_PMMSPT_6_3:
-	T_TH = MDVSTP.T4C + GetGMTLO()*3600.0 + T_ST;
+	T_TH = SystemParameters.MDVSTP.T4C + GetGMTLO()*3600.0 + T_ST;
 	if (in.QUEID != 37)
 	{
 		goto RTCC_PMMSPT_7_1;
@@ -7874,11 +7734,11 @@ RTCC_PMMSPT_8_2:
 	double lambda = SystemParameters.MCLGRA + GetGMTLO()*3600.0*OrbMech::w_Earth;
 	MATRIX3 RMAT = mul(MatrixRH_LH(OrbMech::GetRotationMatrix(BODY_EARTH,SystemParameters.GMTBASE)), _M(cos(lambda), -sin(lambda), 0, sin(lambda), cos(lambda), 0, 0, 0, 1));
 	MATRIX3 M = mul(_M(1, 0, 0, 0, 0, -1, 0, 1, 0), OrbMech::tmat(RMAT));
-	double dt4 = (MDVSTP.T4C - MDVSTP.T4IG) - MDVSTP.DT4N;
+	double dt4 = (SystemParameters.MDVSTP.T4C - SystemParameters.MDVSTP.T4IG) - SystemParameters.MDVSTP.DT4N;
 	double dt4_apo;
-	if (abs(dt4) > MDVSTP.DTLIM)
+	if (abs(dt4) > SystemParameters.MDVSTP.DTLIM)
 	{
-		dt4_apo = MDVSTP.DTLIM*dt4 / abs(dt4);
+		dt4_apo = SystemParameters.MDVSTP.DTLIM*dt4 / abs(dt4);
 	}
 	else
 	{
@@ -7995,8 +7855,8 @@ RTCC_PMMSPT_14_1:
 	goto RTCC_PMMSPT_15_2;
 //RTCC_PMMSPT_15_1:
 RTCC_PMMSPT_15_2:
-	double P_RP = KP0 + MDVSTP.KP1 * dt4_apo + MDVSTP.KP2 * dt4_apo*dt4_apo;
-	double Y_RP = KP0 + MDVSTP.KY1 * dt4_apo + MDVSTP.KY2 * dt4_apo*dt4_apo;
+	double P_RP = KP0 + SystemParameters.MDVSTP.KP1 * dt4_apo + SystemParameters.MDVSTP.KP2 * dt4_apo*dt4_apo;
+	double Y_RP = KP0 + SystemParameters.MDVSTP.KY1 * dt4_apo + SystemParameters.MDVSTP.KY2 * dt4_apo*dt4_apo;
 	double T3 = T3_apo - PZSTARGP.K_T3 * dt4_apo;
 	double tau3 = tau3R - dt4_apo;
 	in.CurMan->Word73 = P_RP;
@@ -8012,51 +7872,51 @@ RTCC_PMMSPT_15_2:
 	in.CurMan->Word83 = tau2N;
 
 	double A_Z = 0.0;
-	if (t_D < MDVSTP.t_DS1)
+	if (t_D < SystemParameters.MDVSTP.t_DS1)
 	{
-		if (t_D < MDVSTP.t_DS0)
+		if (t_D < SystemParameters.MDVSTP.t_DS0)
 		{
 			//Some message
 		}
 		for (int N = 0;N < 5;N++)
 		{
-			A_Z += MDVSTP.hx[0][N] * pow((t_D - MDVSTP.t_D1) / MDVSTP.t_SD1, N);
+			A_Z += SystemParameters.MDVSTP.hx[0][N] * pow((t_D - SystemParameters.MDVSTP.t_D1) / SystemParameters.MDVSTP.t_SD1, N);
 		}
 	}
-	else if (t_D < MDVSTP.t_DS2)
+	else if (t_D < SystemParameters.MDVSTP.t_DS2)
 	{
 		for (int N = 0;N < 5;N++)
 		{
-			A_Z += MDVSTP.hx[1][N] * pow((t_D - MDVSTP.t_D2) / MDVSTP.t_SD2, N);
+			A_Z += SystemParameters.MDVSTP.hx[1][N] * pow((t_D - SystemParameters.MDVSTP.t_D2) / SystemParameters.MDVSTP.t_SD2, N);
 		}
 	}
 	else
 	{
-		if (t_D > MDVSTP.t_DS3)
+		if (t_D > SystemParameters.MDVSTP.t_DS3)
 		{
 			//Some message
 		}
 		for (int N = 0;N < 5;N++)
 		{
-			A_Z += MDVSTP.hx[2][N] * pow((t_D - MDVSTP.t_D3) / MDVSTP.t_SD3, N);
+			A_Z += SystemParameters.MDVSTP.hx[2][N] * pow((t_D - SystemParameters.MDVSTP.t_D3) / SystemParameters.MDVSTP.t_SD3, N);
 		}
 	}
 	double Azo = 72.0*RAD;
 	double Azs = 36.0*RAD;
-	double i_P = MDVSTP.fx[0] + MDVSTP.fx[1] * (A_Z - Azo) / Azs + MDVSTP.fx[2] * pow((A_Z - Azo) / Azs, 2) + MDVSTP.fx[3] * pow((A_Z - Azo) / Azs, 3)
-		+ MDVSTP.fx[4] * pow((A_Z - Azo) / Azs, 4) + MDVSTP.fx[5] * pow((A_Z - Azo) / Azs, 5) + MDVSTP.fx[6] * pow((A_Z - Azo) / Azs, 6);
-	double theta_N_P = MDVSTP.gx[0] + MDVSTP.gx[1] * (A_Z - Azo) / Azs + MDVSTP.gx[2] * pow((A_Z - Azo) / Azs, 2) + MDVSTP.gx[3] * pow((A_Z - Azo) / Azs, 3)
-		+ MDVSTP.gx[4] * pow((A_Z - Azo) / Azs, 4) + MDVSTP.gx[5] * pow((A_Z - Azo) / Azs, 5) + MDVSTP.gx[6] * pow((A_Z - Azo) / Azs, 6);
+	double i_P = SystemParameters.MDVSTP.fx[0] + SystemParameters.MDVSTP.fx[1] * (A_Z - Azo) / Azs + SystemParameters.MDVSTP.fx[2] * pow((A_Z - Azo) / Azs, 2) + SystemParameters.MDVSTP.fx[3] * pow((A_Z - Azo) / Azs, 3)
+		+ SystemParameters.MDVSTP.fx[4] * pow((A_Z - Azo) / Azs, 4) + SystemParameters.MDVSTP.fx[5] * pow((A_Z - Azo) / Azs, 5) + SystemParameters.MDVSTP.fx[6] * pow((A_Z - Azo) / Azs, 6);
+	double theta_N_P = SystemParameters.MDVSTP.gx[0] + SystemParameters.MDVSTP.gx[1] * (A_Z - Azo) / Azs + SystemParameters.MDVSTP.gx[2] * pow((A_Z - Azo) / Azs, 2) + SystemParameters.MDVSTP.gx[3] * pow((A_Z - Azo) / Azs, 3)
+		+ SystemParameters.MDVSTP.gx[4] * pow((A_Z - Azo) / Azs, 4) + SystemParameters.MDVSTP.gx[5] * pow((A_Z - Azo) / Azs, 5) + SystemParameters.MDVSTP.gx[6] * pow((A_Z - Azo) / Azs, 6);
 
-	MATRIX3 A = _M(cos(MDVSTP.PHIL), sin(MDVSTP.PHIL)*sin(A_Z), -sin(MDVSTP.PHIL)*cos(A_Z), -sin(MDVSTP.PHIL), cos(MDVSTP.PHIL)*sin(A_Z), -cos(MDVSTP.PHIL)*cos(A_Z), 0, cos(A_Z), sin(A_Z));
+	MATRIX3 A = _M(cos(SystemParameters.MDVSTP.PHIL), sin(SystemParameters.MDVSTP.PHIL)*sin(A_Z), -sin(SystemParameters.MDVSTP.PHIL)*cos(A_Z), -sin(SystemParameters.MDVSTP.PHIL), cos(SystemParameters.MDVSTP.PHIL)*sin(A_Z), -cos(SystemParameters.MDVSTP.PHIL)*cos(A_Z), 0, cos(A_Z), sin(A_Z));
 	MATRIX3 EPH = mul(OrbMech::tmat(A), M);
 	MATRIX3 BB = _M(cos(theta_N_P), 0, sin(theta_N_P), sin(theta_N_P)*sin(i_P), cos(i_P), -cos(theta_N_P)*sin(i_P), -sin(theta_N_P)*cos(i_P), sin(i_P), cos(theta_N_P)*cos(i_P));
 	MATRIX3 GG = mul(BB, A);
 	MATRIX3 B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(i), cos(i), -cos(theta_N)*sin(i), -sin(theta_N)*cos(i), sin(i), cos(theta_N)*cos(i));
 	MATRIX3 G = mul(B, A);
 
-	in.CurMan->GMTI = T_RP + MDVSTP.DTIG;
-	in.CurMan->Word84 = MDVSTP.DTIG - SystemParameters.MCTJD1;
+	in.CurMan->GMTI = T_RP + SystemParameters.MDVSTP.DTIG;
+	in.CurMan->Word84 = SystemParameters.MDVSTP.DTIG - SystemParameters.MCTJD1;
 //RTCC_PMMSPT_18_1:
 	SIVBTLIMatrixTable *ADRMAT;
 	if (in.Table == RTCC_MPT_CSM)
@@ -8152,7 +8012,7 @@ RTCC_PMMSPT_21_1:
 	PZTTLIPL.R = R;
 	PZTTLIPL.V = V;
 	PZTTLIPL.TB6 = T_RP;
-	PZTTLIPL.TIG = T_RP + MDVSTP.DTIG;
+	PZTTLIPL.TIG = T_RP + SystemParameters.MDVSTP.DTIG;
 	PZTTLIPL.i = i;
 	PZTTLIPL.theta_N = theta_N;
 	PZTTLIPL.sigma = sigma;
@@ -18404,31 +18264,31 @@ void RTCC::PMMIEV(double T_L)
 		return;
 	}
 	T_D = T_L - PZSTARGP.T_LO;
-	if (T_D < MDVSTP.t_D0 || T_D > MDVSTP.t_D3)
+	if (T_D < SystemParameters.MDVSTP.t_D0 || T_D > SystemParameters.MDVSTP.t_D3)
 	{
 		PMXSPT("PMMIEV", 121);
 		return;
 	}
 	A_Z = 0.0;
-	if (T_D < MDVSTP.t_DS1)
+	if (T_D < SystemParameters.MDVSTP.t_DS1)
 	{
 		for (int N = 0;N < 5;N++)
 		{
-			A_Z += MDVSTP.hx[0][N] * pow((T_D - MDVSTP.t_D1) / MDVSTP.t_SD1, N);
+			A_Z += SystemParameters.MDVSTP.hx[0][N] * pow((T_D - SystemParameters.MDVSTP.t_D1) / SystemParameters.MDVSTP.t_SD1, N);
 		}
 	}
-	else if (T_D < MDVSTP.t_DS2)
+	else if (T_D < SystemParameters.MDVSTP.t_DS2)
 	{
 		for (int N = 0;N < 5;N++)
 		{
-			A_Z += MDVSTP.hx[1][N] * pow((T_D - MDVSTP.t_D2) / MDVSTP.t_SD2, N);
+			A_Z += SystemParameters.MDVSTP.hx[1][N] * pow((T_D - SystemParameters.MDVSTP.t_D2) / SystemParameters.MDVSTP.t_SD2, N);
 		}
 	}
 	else
 	{
 		for (int N = 0;N < 5;N++)
 		{
-			A_Z += MDVSTP.hx[2][N] * pow((T_D - MDVSTP.t_D3) / MDVSTP.t_SD3, N);
+			A_Z += SystemParameters.MDVSTP.hx[2][N] * pow((T_D - SystemParameters.MDVSTP.t_D3) / SystemParameters.MDVSTP.t_SD3, N);
 		}
 	}
 	GZLTRA.Azimuth = A_Z;
@@ -24520,8 +24380,8 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		{
 			return 2;
 		}
-		MDVSTP.T4IG = T4IG;
-		MDVSTP.T4C = T4C;
+		SystemParameters.MDVSTP.T4IG = T4IG;
+		SystemParameters.MDVSTP.T4C = T4C;
 	}
 	else if (med == "40")
 	{

@@ -3510,42 +3510,6 @@ public:
 		double t_D[2][15];
 	} PZSTARGP;
 
-	struct TLISystemParameters
-	{
-		//Time of ignition of first S-IVB burn
-		double T4IG = 9.0*60.0 + 15.0;
-		//Time of cutoff of first S-IVB
-		double T4C = 11.0*60.0 + 40.0;
-		//Time interval from time of restart preparations to time of ignition
-		double DTIG = 578.0;
-		//Nominal time duration of first S-IVB burn
-		double DT4N = 0.0;
-		//Limited value for difference between actual and nominal burn times for first S-IVB burn
-		double DTLIM = 100.0;
-		//Second coefficient of pitch polynomial
-		double KP1 = 0.0;
-		//Third coefficient of pitch polynomial
-		double KP2 = 0.0;
-		//Second coefficient of yaw polynomial
-		double KY1 = 0.0;
-		//Third coefficient of yaw polynomial
-		double KY2 = 0.0;
-		//Geodetic latitude of launch site
-		double PHIL = 0.0;
-		//Azimuth from time polynomial (radians)
-		double hx[3][5];
-		//Inclination from azimuth polynomial (radians)
-		double fx[7];
-		//Descending Node Angle from azimuth polynomial (radians)
-		double gx[7];
-		//Times of the opening and closing of launch windows
-		double t_D0, t_D1, t_D2, t_D3;
-		//Times to segment the azimuth calculation polynomial
-		double t_DS0, t_DS1, t_DS2, t_DS3;
-		//Times used to scale the azimuth polynomial
-		double t_SD1, t_SD2, t_SD3;
-	} MDVSTP;
-
 	struct SIVBTLIMatrixTable
 	{
 		//Plumbline coordinate axes in ECI coordinates
@@ -4538,19 +4502,6 @@ protected:
 public:
 
 	RTCCSystemParameters SystemParameters;
-
-	//RTCC System Parameters
-
-	//Suppress integrator processing
-	bool MGREPH;
-
-	//CG table of LM with descent stage
-	struct CGTable
-	{
-		double Weight[40];
-		VECTOR3 CG[40];
-		int N;
-	} LMDSCCGTAB, LMASCCGTAB;
 };
 
 #endif
