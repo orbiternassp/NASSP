@@ -337,6 +337,80 @@ struct RTCCSystemParameters
 		MCVTB2 = 1.0;
 		MCVDTM = 2.0;
 		MCCRAM = 0.5;
+
+		MCTCT1 = 441.5*2.0;
+		MCTCT2 = 441.5*4.0;
+		MCTCT3 = 441.5*2.0;
+		MCTCT4 = 441.5*4.0;
+		MCTCT5 = 874.37837;
+		MCTCT6 = 874.37837*2.0;
+		MCTCW1 = 0.31038;
+		MCTCW2 = 0.62076;
+		MCTCW3 = 0.31038;
+		MCTCW4 = 0.62076;
+		MCTLT1 = 441.5*2.0;
+		MCTLT2 = 441.5*4.0;
+		MCTLT3 = 441.5*2.0;
+		MCTLT4 = 441.5*4.0;
+		MCTLT5 = 889.6;
+		MCTLT6 = 1779.2;
+		MCTLW1 = 0.31038;
+		MCTLW2 = 0.62076;
+		MCTLW3 = 0.31038;
+		MCTLW4 = 0.62076;
+		MCTAT1 = 15297.43;
+		MCTAT2 = 693.0329277;
+		MCTAT4 = 15297.43;
+		MCTAT9 = 15569.0;
+		MCTAW1 = 5.049776716;
+		MCTAW2 = 0.2290767466;
+		MCTAW4 = 5.049776716;
+		MCTAD2 = 0.308;
+		MCTAD3 = 0.192;
+		MCTAD9 = 0.5;
+		MCTDT1 = 9712.5 * 4.4482216152605;
+		MCTDT2 = 1.0 * 4.4482216152605;
+		MCTDT3 = 467.7 * 4.4482216152605;
+		MCTDT4 = 1180.0 * 4.4482216152605;
+		MCTDT5 = 4326.5 * 4.4482216152605;
+		MCTDT6 = 10500.0 * 4.4482216152605;
+		MCTDT9 = 43670.0;
+		MCTDW1 = 14.63626597;
+		MCTDW2 = 0.000126;
+		MCTDW3 = 0.7048;
+		MCTDW4 = 1.778203048;
+		MCTDW5 = 6.519823328;
+		MCTDW6 = 15.82299024;
+		MCTDD2 = 0.5;
+		MCTDD3 = 3.1;
+		MCTDD4 = 26.0;
+		MCTDD5 = 0.4;
+		MCTDD6 = 95.0;
+		MCTDD9 = 0.5;
+		MCTST1 = 91188.544;
+		MCTST2 = 424.015 * 4.4482216152605;
+		MCTST4 = 91188.544;
+		MCTST9 = 91188.544;
+		MCTSW1 = 29.60667013;
+		MCTSW2 = 0.6107646462;
+		MCTSW4 = 29.60667013;
+		MCTSD2 = 0.0;
+		MCTSD3 = 0.0;
+		MCTSD9 = 1.0;
+		MCTAK1 = 12455.0;
+		MCTAK2 = 31138.0;
+		MCTAK3 = 15569.0;
+		MCTAK4 = 6181.0;
+		MCTDTF = 0.925;
+
+		MCTSPP = -2.15*RAD;
+		MCTSYP = 0.95*RAD;
+		MCTSPG = 0.0;
+		MCTSYG = 0.0;
+		MCTAPG = 0.0;
+		MCTARG = 0.0;
+		MCTDPG = 0.0;
+		MCTDRG = 0.0;
 	}
 
 	//DEFINITIONS
@@ -565,4 +639,151 @@ struct RTCCSystemParameters
 	double MCVDTM;
 	//Converts RHO*AREA/MASS to .5 RHO*AREA/MASS in Er. (eventually in Er at least...)
 	double MCCRAM;
+
+	//Thrust of CSM RCS+X (2 quads)
+	double MCTCT1;
+	//Thrust of CSM RCS+X (4 quads)
+	double MCTCT2;
+	//Thrust of CSM RCS-X (2 quads)
+	double MCTCT3;
+	//Thrust of CSM RCS-X (4 quads)
+	double MCTCT4;
+	//On-board computer thrust level for CSM RCS+/-X thruster (2 quads)
+	double MCTCT5;
+	//On-board computer thrust level for CSM RCS+/-X thruster (4 quads)
+	double MCTCT6;
+	//Weight loss rate CSM RCS+X (2 quads)
+	double MCTCW1;
+	//Weight loss rate CSM RCS+X (4 quads)
+	double MCTCW2;
+	//Weight loss rate CSM RCS-X (2 quads)
+	double MCTCW3;
+	//Weight loss rate CSM RCS-X (4 quads)
+	double MCTCW4;
+	//Thrust of LM RCS+X (2 quads)
+	double MCTLT1;
+	//Thrust of LM RCS+X (4 quads)
+	double MCTLT2;
+	//Thrust of LM RCS-X (2 quads)
+	double MCTLT3;
+	//Thrust of LM RCS-X (4 quads)
+	double MCTLT4;
+	//On-board computer thrust level for LM RCS+/-X thruster (2 quads)
+	double MCTLT5;
+	//On-board computer thrust level for LM RCS+/-X thruster (4 quads)
+	double MCTLT6;
+	//Weight loss rate LM RCS+X (2 quads)
+	double MCTLW1;
+	//Weight loss rate LM RCS+X (4 quads)
+	double MCTLW2;
+	//Weight loss rate LM RCS-X (2 quads)
+	double MCTLW3;
+	//Weight loss rate LM RCS-X (4 quads)
+	double MCTLW4;
+	//APS thrust level
+	double MCTAT1;
+	//APS buildup thrust level
+	double MCTAT2;
+	//APS full load thrust level
+	double MCTAT4;
+	//On-board computer thrust level for LM APS thruster
+	double MCTAT9;
+	//APS weight loss rate
+	double MCTAW1;
+	//APS weight loss rate for buildup
+	double MCTAW2;
+	//APS weight loss rate for full load
+	double MCTAW4;
+	//APS phase two burn time
+	double MCTAD2;
+	//APS phase three burn time
+	double MCTAD3;
+	//Total APS ullage overlap
+	double MCTAD9;
+	//DPS thrust level
+	double MCTDT1;
+	//DPS phase 2 thrust level
+	double MCTDT2;
+	//DPS phase 3 thrust level
+	double MCTDT3;
+	//DPS 10% thrust level
+	double MCTDT4;
+	//DPS thrust for buildup from 10% to maximum
+	double MCTDT5;
+	//DPS full load thrust level
+	double MCTDT6;
+	//On-board computer thrust level for LM DPS thruster
+	double MCTDT9;
+	//DPS weight loss rate
+	double MCTDW1;
+	//DPS phase 2 weight loss rate
+	double MCTDW2;
+	//DPS phase 3 weight loss rate
+	double MCTDW3;
+	//DPS 10% weight loss rate
+	double MCTDW4;
+	//DPS weight loss rate for build from 10% to max.
+	double MCTDW5;
+	//DPS full load weight loss rate
+	double MCTDW6;
+	//DPS phase 2 burn time
+	double MCTDD2;
+	//DPS phase 3 burn time
+	double MCTDD3;
+	//Nominal dt of 10% DPS thrust
+	double MCTDD4;
+	//DPS burn time for building from 10% to max
+	double MCTDD5;
+	//DPS burn time used to determine if 20% thrust level is to be maintained throughout the burn
+	double MCTDD6;
+	//Total DPS ullage overlap
+	double MCTDD9;
+	//SPS thrust level
+	double MCTST1;
+	//SPS thrust level for buildup
+	double MCTST2;
+	//SPS thrust level for full load
+	double MCTST4;
+	//On-board computer thrust level for CSM SPS thruster
+	double MCTST9;
+	//SPS weight loss rate
+	double MCTSW1;
+	//SPS weight loss rate for buildup
+	double MCTSW2;
+	//SPS weight loss rate for full load
+	double MCTSW4;
+	//SPS phase two burn time
+	double MCTSD2;
+	//SPS phase three burn time
+	double MCTSD3;
+	//Total SPS ullage overlap
+	double MCTSD9;
+
+	//Impulse in one second SPS / APS / DPS burn
+	double MCTAK1;
+	//Initial value of SPS/APS/DPS minimum impulse curve
+	double MCTAK2;
+	//Slope of SPS/APS/DPS curve
+	double MCTAK3;
+	//LM RCS impulse due to 7 second, 2 jet ullage
+	double MCTAK4;
+
+	//SPS pitch electronic null parameter
+	double MCTSPP;
+	//SPS yaw electronic null parameter
+	double MCTSYP;
+	//SPS pitch gimbal system parameter
+	double MCTSPG;
+	//SPS yaw gimbal system parameter
+	double MCTSYG;
+	//APS pitch engine cant system parameter
+	double MCTAPG;
+	//APS roll engine cant system parameter
+	double MCTARG;
+	//DPS pitch gimbal system parameter
+	double MCTDPG;
+	//DPS roll gimbal system parameter
+	double MCTDRG;
+	//Nominal scaling factor for main DPS thrust level and weight loss rate
+	double MCTDTF;
 };

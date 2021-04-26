@@ -714,26 +714,26 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	}
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS)
 	{
-		THPS[1] = pRTCC->MCTST2;
-		THPS[2] = pRTCC->MCTST4;
+		THPS[1] = pRTCC->SystemParameters.MCTST2;
+		THPS[2] = pRTCC->SystemParameters.MCTST4;
 		THPS[6] = Thrust;
-		THPS[7] = pRTCC->MCTST4;
-		THPS[9] = pRTCC->MCTST4;
+		THPS[7] = pRTCC->SystemParameters.MCTST4;
+		THPS[9] = pRTCC->SystemParameters.MCTST4;
 
-		WDOTPS[1] = pRTCC->MCTSW2;
-		WDOTPS[2] = pRTCC->MCTSW4;
+		WDOTPS[1] = pRTCC->SystemParameters.MCTSW2;
+		WDOTPS[2] = pRTCC->SystemParameters.MCTSW4;
 		WDOTPS[6] = Thrust / isp;
-		WDOTPS[7] = pRTCC->MCTSW4;
-		WDOTPS[9] = pRTCC->MCTSW4;
+		WDOTPS[7] = pRTCC->SystemParameters.MCTSW4;
+		WDOTPS[9] = pRTCC->SystemParameters.MCTSW4;
 
-		DTSPAN[1] = pRTCC->MCTSD2;
-		DTSPAN[2] = pRTCC->MCTSD3;
+		DTSPAN[1] = pRTCC->SystemParameters.MCTSD2;
+		DTSPAN[2] = pRTCC->SystemParameters.MCTSD3;
 		DTSPAN[3] = 6.0;
 		DTSPAN[4] = 0.0;
 		DTSPAN[5] = 4.0;
 		DTSPAN[6] = 1.0;
 		DTSPAN[7] = 0.0;
-		DTSPAN[8] = pRTCC->MCTSD9;
+		DTSPAN[8] = pRTCC->SystemParameters.MCTSD9;
 
 		XK[0] = Thrust;
 		XK[1] = 0.0;
@@ -750,20 +750,20 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	}
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS)
 	{
-		THPS[1] = pRTCC->MCTAT2;
-		THPS[2] = pRTCC->MCTAT4;
+		THPS[1] = pRTCC->SystemParameters.MCTAT2;
+		THPS[2] = pRTCC->SystemParameters.MCTAT4;
 		THPS[6] = Thrust;
-		THPS[7] = pRTCC->MCTAT4;
-		THPS[9] = pRTCC->MCTAT4;
+		THPS[7] = pRTCC->SystemParameters.MCTAT4;
+		THPS[9] = pRTCC->SystemParameters.MCTAT4;
 
-		WDOTPS[1] = pRTCC->MCTAW2;
-		WDOTPS[2] = pRTCC->MCTAW4;
+		WDOTPS[1] = pRTCC->SystemParameters.MCTAW2;
+		WDOTPS[2] = pRTCC->SystemParameters.MCTAW4;
 		WDOTPS[6] = Thrust / isp;
-		WDOTPS[7] = pRTCC->MCTAW4;
-		WDOTPS[9] = pRTCC->MCTAW4;
+		WDOTPS[7] = pRTCC->SystemParameters.MCTAW4;
+		WDOTPS[9] = pRTCC->SystemParameters.MCTAW4;
 
-		DTSPAN[1] = pRTCC->MCTAD2;
-		DTSPAN[2] = pRTCC->MCTAD3;
+		DTSPAN[1] = pRTCC->SystemParameters.MCTAD2;
+		DTSPAN[2] = pRTCC->SystemParameters.MCTAD3;
 		DTSPAN[3] = 6.0;
 		DTSPAN[4] = 0.0;
 		DTSPAN[5] = 4.0;
@@ -771,10 +771,10 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		DTSPAN[7] = 0.1765;
 		DTSPAN[8] = 0.5;
 
-		XK[0] = pRTCC->MCTAK1;
-		XK[1] = pRTCC->MCTAK2;
-		XK[2] = pRTCC->MCTAK3;
-		XK[3] = pRTCC->MCTAK4;
+		XK[0] = pRTCC->SystemParameters.MCTAK1;
+		XK[1] = pRTCC->SystemParameters.MCTAK2;
+		XK[2] = pRTCC->SystemParameters.MCTAK3;
+		XK[3] = pRTCC->SystemParameters.MCTAK4;
 
 		if (TArr.DTU == 0.0)
 		{
@@ -783,28 +783,28 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	}
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
 	{
-		THPS[1] = pRTCC->MCTDT2;
-		THPS[2] = pRTCC->MCTDT3;
-		THPS[3] = pRTCC->MCTDT4;
-		THPS[4] = pRTCC->MCTDT5 * TArr.DPSScale;
+		THPS[1] = pRTCC->SystemParameters.MCTDT2;
+		THPS[2] = pRTCC->SystemParameters.MCTDT3;
+		THPS[3] = pRTCC->SystemParameters.MCTDT4;
+		THPS[4] = pRTCC->SystemParameters.MCTDT5 * TArr.DPSScale;
 		THPS[6] = Thrust;
-		THPS[7] = pRTCC->MCTDT6 * TArr.DPSScale;
-		THPS[9] = pRTCC->MCTDT6 * TArr.DPSScale;
+		THPS[7] = pRTCC->SystemParameters.MCTDT6 * TArr.DPSScale;
+		THPS[9] = pRTCC->SystemParameters.MCTDT6 * TArr.DPSScale;
 
-		WDOTPS[1] = pRTCC->MCTDW2;
-		WDOTPS[2] = pRTCC->MCTDW3;
-		WDOTPS[3] = pRTCC->MCTDW4;
-		WDOTPS[4] = pRTCC->MCTDW5 * TArr.DPSScale;
+		WDOTPS[1] = pRTCC->SystemParameters.MCTDW2;
+		WDOTPS[2] = pRTCC->SystemParameters.MCTDW3;
+		WDOTPS[3] = pRTCC->SystemParameters.MCTDW4;
+		WDOTPS[4] = pRTCC->SystemParameters.MCTDW5 * TArr.DPSScale;
 		WDOTPS[6] = THPS[6] / isp;
-		WDOTPS[7] = pRTCC->MCTDW6 * TArr.DPSScale;
-		WDOTPS[9] = pRTCC->MCTDW6 * TArr.DPSScale;
+		WDOTPS[7] = pRTCC->SystemParameters.MCTDW6 * TArr.DPSScale;
+		WDOTPS[9] = pRTCC->SystemParameters.MCTDW6 * TArr.DPSScale;
 
-		DTSPAN[1] = pRTCC->MCTDD2;
-		DTSPAN[2] = pRTCC->MCTDD3;
+		DTSPAN[1] = pRTCC->SystemParameters.MCTDD2;
+		DTSPAN[2] = pRTCC->SystemParameters.MCTDD3;
 		DTSPAN[3] = 6.0;//TArr.DTPS10 - DTSPAN[2] - DTSPAN[1];
-		DTSPAN[4] = pRTCC->MCTDD5;
+		DTSPAN[4] = pRTCC->SystemParameters.MCTDD5;
 		DTSPAN[5] = 4.0;
-		DTSPAN[6] = pRTCC->MCTDD6;
+		DTSPAN[6] = pRTCC->SystemParameters.MCTDD6;
 		DTSPAN[7] = 0.38;
 		DTSPAN[8] = 0.5;
 
