@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 const double EnckeFreeFlightIntegrator::K = 0.1;
 const double EnckeFreeFlightIntegrator::dt_lim = 1000.0;
+const double EnckeFreeFlightIntegrator::CONS = 6.373338e6 + 700.0*1000.0;
 
 EnckeFreeFlightIntegrator::EnckeFreeFlightIntegrator(RTCC *r) : RTCCModule(r)
 {
@@ -40,7 +41,7 @@ EnckeFreeFlightIntegrator::~EnckeFreeFlightIntegrator()
 {
 }
 
-void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
+void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 {
 	//Initialize
 	t0 = in.AnchorVector.GMT;
@@ -50,6 +51,9 @@ void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 	STOPVAE = in.EarthRelStopParam;
 	STOPVAM = in.MoonRelStopParam;
 	HMULT = in.IsForwardIntegration;
+	DRAG = in.DensityMultiplier;
+	CSA = -0.5*in.Area*pRTCC->SystemParameters.MCADRG;
+	WT = in.Weight;
 
 	SetBodyParameters(in.AnchorVector.RBI);
 	ISTOPS = in.CutoffIndicator;
@@ -67,8 +71,9 @@ void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 
 	delta = _V(0, 0, 0);
 	nu = _V(0, 0, 0);
-	x = 0;
+	HD2 = H2D2 = H2D8 = HD6 = HP = 0.0;
 	dt = dt_lim;
+
 	//Normally 9 Er
 	r_SPH = 9.0*OrbMech::R_Earth;
 	if (ISTOPS == 5)
@@ -105,7 +110,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 	INITE = 0;
 
 	//Initialize forcing function
-	adfunc(R0);
+	adfunc();
 
 	do
 	{
@@ -123,32 +128,27 @@ void EnckeFreeFlightIntegrator::Propagate(EMSMISSInputTable &in)
 	EphemerisStorage();
 	WriteEphemerisHeader();
 
-	in.NIAuxOutputTable.sv_cutoff.R = R_CON + delta;
-	in.NIAuxOutputTable.sv_cutoff.V = V_CON + nu;
-	in.NIAuxOutputTable.sv_cutoff.GMT = CurrentTime();
-	in.NIAuxOutputTable.sv_cutoff.RBI = P;
-	in.NIAuxOutputTable.TerminationCode = ISTOPS;
+	in.sv_cutoff.R = R_CON + delta;
+	in.sv_cutoff.V = V_CON + nu;
+	in.sv_cutoff.GMT = CurrentTime();
+	in.sv_cutoff.RBI = P;
+	in.TerminationCode = ISTOPS;
 }
 
 void EnckeFreeFlightIntegrator::Edit()
 {
 	double rr, dt_max;
 
-	rr = length(R);
 	//Bounded?
 	if (INITE != 1)
 	{
 		if (P == BODY_MOON)
 		{
 			//Are we leaving the sphere of influence?
-			if (rr > r_SPH)
+			if (PWRM > r_SPH)
 			{
-				VECTOR3 V_PQ;
-
-				R_PQ = -R_EM;
-				V_PQ = -V_EM;
-				R_CON = R_CON - R_PQ;
-				V_CON = V_CON - V_PQ;
+				R_CON = R_CON + R_EM;
+				V_CON = V_CON + V_EM;
 
 				SetBodyParameters(BODY_EARTH);
 				Rectification();
@@ -158,16 +158,10 @@ void EnckeFreeFlightIntegrator::Edit()
 		}
 		else
 		{
-			VECTOR3 V_PQ;
-
-			R_PQ = R_EM;
-			R_QC = R - R_PQ;
-
-			if (length(R_QC) < r_SPH)
+			if (PWRM < r_SPH)
 			{
-				V_PQ = V_EM;
-				R_CON = R_CON - R_PQ;
-				V_CON = V_CON - V_PQ;
+				R_CON = R_CON - R_EM;
+				V_CON = V_CON - V_EM;
 
 				SetBodyParameters(BODY_MOON);
 				Rectification();
@@ -184,6 +178,7 @@ void EnckeFreeFlightIntegrator::Edit()
 	//Termination control
 EMMENI_Edit_3B:
 	TIME = abs(TRECT + tau);
+	rr = length(R);
 	dt_max = min(dt_lim, K*OrbMech::power(rr, 1.5) / sqrt(mu));
 
 	//Should we even check?
@@ -376,74 +371,56 @@ EMMENI_Edit_7B: //Don't stop yet
 	return;
 }
 
-void EnckeFreeFlightIntegrator::Rectification()
-{
-	TRECT = TRECT + tau;
-	R0 = R_CON + delta;
-	V0 = V_CON + nu;
-	R = R_CON = R0;
-	V = V_CON = V0;
-	delta = _V(0, 0, 0);
-	nu = _V(0, 0, 0);
-	x = 0;
-	tau = 0;
-	//Re-initialize U_Z vector
-	INITF = false;
-}
-
 void EnckeFreeFlightIntegrator::Step()
 {
-	VECTOR3 R_apo, V_apo, alpha, a_d, ff, k[3];
-	double h, x_apo, gamma, s, alpha_N, x_t;
+	VECTOR3 alpha; //YS
+	VECTOR3 beta; //YPS
+	VECTOR3 F1, F2, F3;
 
-	h = 0;
-	alpha = delta;
-	R_apo = R_CON;
-	V_apo = V_CON;
-	x_apo = x;
-	for (int j = 0; j < 3; j++)
+	//Start
+	if (dt - HP != 0.0)
 	{
-		R = R_CON + alpha;
-		a_d = adfunc(R);
-		ff = f(alpha, R, a_d);
-		k[j] = ff;
-		if (j < 2)
-		{
-			h = h + 0.5*dt;
-			alpha = delta + (nu + ff * h*0.5)*h;
-			tau = tau + 0.5*dt;
-			s = sqrt(mu) / length(R_apo)*0.5*dt;
-			gamma = dotp(R_apo, V_apo) / (length(R_apo)*sqrt(mu)*2.0);
-			alpha_N = 2.0 / length(R0) - OrbMech::power(length(V0), 2.0) / mu;
-			x_t = x_apo + s * (1.0 - gamma * s*(1.0 - 2.0 * gamma*s) - 1.0 / 6.0 * (1.0 / length(R_apo) - alpha_N)*s*s);
-			OrbMech::rv_from_r0v0(R0, V0, tau, R_CON, V_CON, mu, x_t);
-		}
+		HD2 = dt / 2.0;
+		H2D2 = HD2 * dt;
+		H2D8 = H2D2 / 4.0;
+		HD6 = dt / 6.0;
+		HP = dt;
 	}
-	delta = delta + (nu + (k[0] + k[1] * 2.0)*dt*1.0 / 6.0)*dt;
-	nu = nu + (k[0] + k[1] * 4.0 + k[2]) * 1.0 / 6.0 *dt;
 
-	R = R_CON + delta;
-	V = V_CON + nu;
-}
-
-VECTOR3 EnckeFreeFlightIntegrator::f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d)
-{
-	VECTOR3 R_CON;
-	double q;
-
-	R_CON = R - alpha;
-	q = dotp((alpha - R * 2.0), alpha) / (OrbMech::power(length(R), 2.0));
-	return -(R*fq(q) + alpha)*mu / OrbMech::power(length(R_CON), 3.0) + a_d;
+	//Save base and build state for 2nd derivative (2nd term)
+	F1 = YPP;
+	alpha = delta;
+	beta = nu;
+	delta = alpha + beta * HD2 + F1 * H2D8;
+	nu = beta + F1 * HD2;
+	tau = tau + HD2;
+	//Get 2nd derivative (F2)
+	adfunc();
+	//Save F2 and build state for 2nd deriv evaluation F3
+	F2 = YPP;
+	nu = beta + F2 * HD2;
+	adfunc();
+	F3 = YPP;
+	delta = alpha + beta * dt + F3 * H2D2;
+	nu = beta + F3 * dt;
+	tau = tau + HD2;
+	//Get 2nd deriv F4
+	adfunc();
+	//Weighted sum for state at tau + dt
+	delta = alpha + (beta + (F1 + F2 + F3)*HD6)*dt;
+	nu = beta + (F1 + (F2 + F3)*2.0 + YPP) *HD6;
+	//Final acceleration
+	adfunc();
 }
 
 double EnckeFreeFlightIntegrator::fq(double q)
 {
-	return q * (3.0 + 3.0 * q + q * q) / (1.0 + OrbMech::power(1 + q, 1.5));
+	return q * (3.0 + 3.0 * q + q * q) / (1.0 + pow(1.0 + q, 1.5));
 }
 
-VECTOR3 EnckeFreeFlightIntegrator::adfunc(VECTOR3 R)
+void EnckeFreeFlightIntegrator::adfunc()
 {
-	double r, costheta, P2, P3, P4, P5;
+	double r, costheta, P2, P3, P4, P5, q;
 	VECTOR3 U_R, a_dP, a_d, a_dQ, a_dS;
 
 	a_dP = a_dQ = a_dS = _V(0, 0, 0);
@@ -459,39 +436,41 @@ VECTOR3 EnckeFreeFlightIntegrator::adfunc(VECTOR3 R)
 		}
 
 		TS = tau;
+		OrbMech::rv_from_r0v0(R0, V0, tau, R_CON, V_CON, mu);
 		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, R_EM, V_EM, R_ES);
 	}
 
+	//Calculate actual state
+	R = R_CON + delta;
+	V = V_CON + nu;
 	r = length(R);
 
 	//Only calculate perturbations if we are above surface of primary body
 	if (r > R_E)
 	{
-		if (r < r_dP)
+		U_R = unit(R);
+		costheta = dotp(U_R, U_Z);
+
+		P2 = 3.0 * costheta;
+		P3 = 0.5*(15.0*costheta*costheta - 3.0);
+
+		if (P == BODY_EARTH)
 		{
-			U_R = unit(R);
-			costheta = dotp(U_R, U_Z);
-
-			P2 = 3.0 * costheta;
-			P3 = 0.5*(15.0*costheta*costheta - 3.0);
-
-			if (P == BODY_EARTH)
-			{
-				a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Earth * OrbMech::power(R_E / r, 2.0);
-				P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-				a_dP += (U_R*P4 - U_Z * P3)*OrbMech::J3_Earth * OrbMech::power(R_E / r, 3.0);
-				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-				a_dP += (U_R*P5 - U_Z * P4)*OrbMech::J4_Earth * OrbMech::power(R_E / r, 4.0);
-			}
-			else
-			{
-				a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Moon * OrbMech::power(R_E / r, 2.0);
-			}
-
-			a_dP *= mu / OrbMech::power(r, 2.0);
+			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Earth * OrbMech::power(R_E / r, 2.0);
+			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
+			a_dP += (U_R*P4 - U_Z * P3)*OrbMech::J3_Earth * OrbMech::power(R_E / r, 3.0);
+			P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
+			a_dP += (U_R*P5 - U_Z * P4)*OrbMech::J4_Earth * OrbMech::power(R_E / r, 4.0);
+		}
+		else
+		{
+			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Moon * OrbMech::power(R_E / r, 2.0);
 		}
 
-		VECTOR3 R_PS, R_SC;
+		a_dP *= mu / OrbMech::power(r, 2.0);
+
+
+		VECTOR3 R_PS, R_SC, R_PQ, R_QC;
 		double q_Q, q_S;
 
 		if (P == BODY_EARTH)
@@ -513,14 +492,39 @@ VECTOR3 EnckeFreeFlightIntegrator::adfunc(VECTOR3 R)
 		a_dS = -(R_PS*fq(q_S) + R)*OrbMech::mu_Sun / OrbMech::power(length(R_SC), 3.0);
 	}
 	a_d = a_dP + a_dQ + a_dS;
-	return a_d;
+
+	if (P == BODY_EARTH)
+	{
+		PWRM = length(R - R_EM);
+		if (DRAG)
+		{
+			if (r < CONS)
+			{
+				//Compute altitude
+				FACT1 = r - OrbMech::R_Earth;
+				//Get density
+				pRTCC->GLFDEN(FACT1, DENS, SPOS);
+				//Compute drag acceleration
+				CDRAG = DENS*DRAG * CSA / WT;
+				V_R = V - crossp(U_Z*OrbMech::w_Earth, R);
+				VRMAG = length(V_R);
+				a_d += V_R * VRMAG*CDRAG;
+			}
+		}
+	}
+	else
+	{
+		PWRM = r;
+	}
+
+	q = dotp((delta - R * 2.0), delta) / pow(r, 2.0);
+	YPP = -(R*fq(q) + delta)*mu / pow(length(R_CON), 3.0) + a_d;
 }
 
 void EnckeFreeFlightIntegrator::SetBodyParameters(int p)
 {
 	if (p == BODY_EARTH)
 	{
-		r_dP = 80467200.0;
 		mu = OrbMech::mu_Earth;
 		mu_Q = OrbMech::mu_Moon;
 		R_E = OrbMech::R_Earth;
@@ -530,7 +534,6 @@ void EnckeFreeFlightIntegrator::SetBodyParameters(int p)
 	}
 	else
 	{
-		r_dP = 16093440.0;
 		mu = OrbMech::mu_Moon;
 		mu_Q = OrbMech::mu_Earth;
 		R_E = OrbMech::R_Moon;
@@ -540,28 +543,45 @@ void EnckeFreeFlightIntegrator::SetBodyParameters(int p)
 	}
 }
 
+void EnckeFreeFlightIntegrator::Rectification()
+{
+	R0 = R_CON + delta;
+	V0 = V_CON + nu;
+	TRECT = TRECT + tau;
+	delta = _V(0, 0, 0);
+	nu = _V(0, 0, 0);
+	//x = 0;
+	tau = 0;
+	INITF = false;
+	adfunc();
+}
+
 void EnckeFreeFlightIntegrator::StoreVariables()
 {
 	P_S = P;
-	R_S = R_CON + delta;
-	V_S = V_CON + nu;
-	T_S = TRECT + tau;
+	SRTB = R_CON;
+	SRDTB = V_CON;
+	SY = delta;
+	SYP = nu;
+	SDELT = tau;
+	STRECT = TRECT;
 	RES1 = RCALC;
 }
 
 void EnckeFreeFlightIntegrator::RestoreVariables()
 {
-	R_CON = R_S;
-	V_CON = V_S;
-	TRECT = T_S;
+	R_CON = SRTB;
+	V_CON = SRDTB;
+	delta = SY;
+	nu = SYP;
+	tau = SDELT;
+	TRECT = STRECT;
 	if (P != P_S)
 	{
 		SetBodyParameters(P_S);
 		INITF = false;
-		adfunc(R_CON);
+		adfunc();
 	}
-	tau = 0.0;
-	delta = nu = _V(0, 0, 0);
 	Rectification();
 }
 
@@ -574,8 +594,7 @@ void EnckeFreeFlightIntegrator::EphemerisStorage()
 {
 	if (EphemerisBuildIndicator == false) return;
 
-	EphemerisData sv, sv_out;
-	EphemerisData2 sv2;
+	EphemerisData2 sv, sv2;
 	int in;
 
 	for (int i = 0;i < 4;i++)
@@ -596,11 +615,7 @@ void EnckeFreeFlightIntegrator::EphemerisStorage()
 				sv.R = R_CON + delta;
 				sv.V = V_CON + nu;
 				sv.GMT = CurrentTime();
-				sv.RBI = P;
-				pRTCC->ELVCNV(sv, in, i, sv_out);
-				sv2.R = sv_out.R;
-				sv2.V = sv_out.V;
-				sv2.GMT = sv_out.GMT;
+				pRTCC->ELVCNV(sv, in, i, sv2);
 
 				pEph[i]->table.push_back(sv2);
 			}

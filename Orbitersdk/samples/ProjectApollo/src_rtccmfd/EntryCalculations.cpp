@@ -1472,7 +1472,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	}
 
 	EphemerisData sv_L;
-	EMSMISSInputTable coastin;
+	EMMENIInputTable coastin;
 
 	//Coast to TL
 	if (TL == sv0.GMT)
@@ -1495,7 +1495,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 		pRTCC->EMMENI(coastin);
 
-		sv_L = coastin.NIAuxOutputTable.sv_cutoff;
+		sv_L = coastin.sv_cutoff;
 	}
 
 	//Generate ephemeris
@@ -1635,13 +1635,13 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 	pRTCC->EMMENI(coastin);
 
-	if (coastin.NIAuxOutputTable.TerminationCode != 3)
+	if (coastin.TerminationCode != 3)
 	{
 		RMGTTF("RMSDBMP", 28);
 		return true;
 	}
 
-	sv_EI = coastin.NIAuxOutputTable.sv_cutoff;
+	sv_EI = coastin.sv_cutoff;
 
 	PARTSTAT = 2;
 
@@ -1834,13 +1834,13 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 		pRTCC->EMMENI(coastin);
 
-		if (coastin.NIAuxOutputTable.TerminationCode != 3)
+		if (coastin.TerminationCode != 3)
 		{
 			RMGTTF("RMSDBMP", 28);
 			return true;
 		}
 
-		sv_EI = coastin.NIAuxOutputTable.sv_cutoff;
+		sv_EI = coastin.sv_cutoff;
 
 	} while (HASCONVERGED == false && ERR == 0);
 

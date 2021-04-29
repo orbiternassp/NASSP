@@ -37,6 +37,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/LOITargeting.h"
 #include "../src_rtccmfd/LMGuidanceSim.h"
 #include "../src_rtccmfd/CoastNumericalIntegrator.h"
+#include "../src_rtccmfd/EnckeIntegrator.h"
 #include "../src_rtccmfd/RTCCSystemParameters.h"
 #include "MCCPADForms.h"
 
@@ -2632,7 +2633,7 @@ public:
 	//Lunar Surface Ephemeris Generator
 	void EMSLSF(EMSMISSInputTable &in);
 	//Encke Integrator
-	void EMMENI(EMSMISSInputTable &in);
+	void EMMENI(EMMENIInputTable &in);
 	//Spherical to inertial conversion
 	int EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	//Orbital Elements Computations
