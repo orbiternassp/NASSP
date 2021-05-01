@@ -7142,12 +7142,14 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		}
 	}
 
-	if (EZANCHR1.AnchorVectors[9].Vector.GMT != 0 && EZEPH1.EPHEM.Header.TUP == 0)
+	if (EZANCHR1.AnchorVectors[9].Vector.GMT != 0)
 	{
+		EZEPH1.EPHEM.Header.TUP--;
 		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9].Vector, EZANCHR1.AnchorVectors[9].LandingSiteIndicator, PZMPTCSM.StationID);
 	}
-	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0 && EZEPH2.EPHEM.Header.TUP == 0)
+	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0)
 	{
+		EZEPH2.EPHEM.Header.TUP--;
 		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9].Vector, EZANCHR3.AnchorVectors[9].LandingSiteIndicator, PZMPTLEM.StationID);
 	}
 	//Update Mission Plan Table display
@@ -20066,6 +20068,7 @@ int RTCC::PMMXFR(int id, void *data)
 	//Setup input table for PMSVCT
 	//Move MED inputs to proper location
 	//Initialize flags
+	working_man = 1;
 	//Direct inputs (RTE, MPT, TLI)
 	if (id == 32 || id == 33 || id == 37)
 	{
@@ -20169,6 +20172,7 @@ int RTCC::PMMXFR(int id, void *data)
 			replace = false;
 		}
 
+		//Page 17
 		//MPT header
 		mpt = GetMPTPointer(inp->TableCode);
 		//Check ground rules
@@ -20301,18 +20305,6 @@ int RTCC::PMMXFR(int id, void *data)
 		{
 			return 1;
 		}
-		//Is this the 1st working maneuver?
-		if (CurMan == mpt->LastExecutedManeuver + 1)
-		{
-			//TBD: Different from RTCC document
-			if (man.GMTI < mpt->UpcomingManeuverGMT)
-			{
-				PMSEXE(inp->TableCode, RTCCPresentTimeGMT());
-			}
-			//TBD: Is this deorbit entry?
-			//TBD: Is this a TLI entry?
-			//TBD: Did we delete a deorbit or TLI maneuver?
-		}
 		
 		//Either add a new maneuver or replace one
 		if (CurMan > mpt->mantable.size())
@@ -20322,6 +20314,11 @@ int RTCC::PMMXFR(int id, void *data)
 		else
 		{
 			mpt->mantable[CurMan - 1] = man;
+		}
+
+		if (working_man == 1 && man.GMTI < mpt->UpcomingManeuverGMT)
+		{
+			PMSEXE(inp->TableCode, RTCCPresentTimeGMT());
 		}
 
 		PMSVCT(8, inp->TableCode);
@@ -20385,7 +20382,6 @@ int RTCC::PMMXFR(int id, void *data)
 			return 38;
 		}
 
-		working_man = 1;
 	RTCC_PMMXFR_1:
 		if (id == 39)
 		{
@@ -20545,13 +20541,7 @@ int RTCC::PMMXFR(int id, void *data)
 		{
 			return 1;
 		}
-		if (working_man == 1)
-		{
-			if (GMTI < mpt->UpcomingManeuverGMT)
-			{
-				mpt->UpcomingManeuverGMT = GMTI;
-			}
-		}
+
 		//Either add a new maneuver or replace one
 		if (CurMan > mpt->mantable.size())
 		{
@@ -20560,6 +20550,11 @@ int RTCC::PMMXFR(int id, void *data)
 		else
 		{
 			mpt->mantable[CurMan - 1] = man;
+		}
+
+		if (working_man == 1 && man.GMTI < mpt->UpcomingManeuverGMT)
+		{
+			PMSEXE(plan, RTCCPresentTimeGMT());
 		}
 
 		if (plan == RTCC_MPT_CSM)
@@ -20655,6 +20650,12 @@ int RTCC::PMMXFR(int id, void *data)
 		man.code = code;
 		mpt->mantable.push_back(man);
 		mpt->TimeToBeginManeuver[CurMan - 1] = mpt->TimeToEndManeuver[CurMan - 1] = man.GMTMAN;
+
+		if (man.GMTI < mpt->UpcomingManeuverGMT)
+		{
+			PMSEXE(RTCC_MPT_LM, RTCCPresentTimeGMT());
+		}
+
 		PMSVCT(8, RTCC_MPT_LM);
 	}
 	//Ascent
@@ -20709,6 +20710,12 @@ int RTCC::PMMXFR(int id, void *data)
 		man.AttitudeCode = RTCC_ATTITUDE_PGNS_ASCENT;
 		mpt->mantable.push_back(man);
 		mpt->TimeToBeginManeuver[CurMan - 1] = mpt->TimeToEndManeuver[CurMan - 1] = man.GMTMAN;
+
+		if (man.GMTI < mpt->UpcomingManeuverGMT)
+		{
+			PMSEXE(RTCC_MPT_LM, RTCCPresentTimeGMT());
+		}
+
 		PMSVCT(8, RTCC_MPT_LM);
 	}
 	return 0;
