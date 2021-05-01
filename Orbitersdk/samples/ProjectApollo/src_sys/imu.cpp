@@ -95,6 +95,8 @@ void IMU::Init()
 	IMUHeater = 0;
 	IMUHeat = 0;
 	IMUCase = 0;
+	PTAHeat = 0;
+	PSAHeat = 0;
 	PowerSwitch = 0;
 
 	DoZeroIMUGimbals();
@@ -308,10 +310,12 @@ void IMU::WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b)
 		IMUHeater->WireTo(&DCHeaterPower);
 }
 
-void IMU::InitThermals(h_HeatLoad *heat, h_Radiator *cas)
+void IMU::InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad* ptaht, h_HeatLoad* psaht)
 {
-	IMUHeat = heat;
+	IMUHeat = imuht;
 	IMUCase = cas;
+	PTAHeat = ptaht;
+	PSAHeat = psaht;
 }
 
 void IMU::Timestep(double simdt) 
@@ -488,20 +492,28 @@ void IMU::Timestep(double simdt)
 }
 
 void IMU::SystemTimestep(double simdt) 
-
 {
 	if (Operate) {
 		if (Caged)
 		{
-			DCPower.DrawPower(61.7);
+			DCPower.DrawPower(61.7); //Need to check these values, no source
 			if (IMUHeat)
-				IMUHeat->GenerateHeat(14.9);
+				IMUHeat->GenerateHeat(8.9); //Need to check these values, no source
+			if (PTAHeat)
+				PTAHeat->GenerateHeat(8.9); //Need to check these values, no source
+			if (PSAHeat)
+				PSAHeat->GenerateHeat(8.9); //Need to check these values, no source
 		}
 		else
 		{
-			DCPower.DrawPower(325.0);
+			DCPower.DrawPower(200.0); //Power on IMU OPR breaker in LM-8
+			//total heat load on breaker 78.6W
 			if (IMUHeat)
-				IMUHeat->GenerateHeat(78.6);
+				IMUHeat->GenerateHeat(10.0); //guess using CSM databook
+			if (PTAHeat)
+				PTAHeat->GenerateHeat(24.0); //guess using CSM databook
+			if (PSAHeat)
+				PSAHeat->GenerateHeat(26.0); //guess using CSM databook
 		}
 	}
 }

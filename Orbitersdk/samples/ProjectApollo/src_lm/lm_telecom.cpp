@@ -2687,12 +2687,13 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	sband_proc_last[1] = 0.0;
 }
 
-void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
+void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* anthtld){
 	lem = s;
 	// Set up antenna.
 	// SBand antenna 51.7 watts to stay between -40F and 0F
 	antenna = an;
 	antheater = anheat;
+	antheatload = anthtld;
 	antenna->isolation = 0.000001; 
 	antenna->Area = 10783.0112; // Surface area of reflecting dish, probably good enough
 	if(lem != NULL){
@@ -2913,7 +2914,8 @@ void LEM_SteerableAnt::SystemTimestep(double simdt)
 	if (IsPowered()) {
 
 		lem->SBD_ANT_AC_CB.DrawPower(4); 	
-		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);  
+		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);
+		antheatload->GenerateHeat(4 + 0.83);
 
 	}
 
@@ -2921,6 +2923,7 @@ void LEM_SteerableAnt::SystemTimestep(double simdt)
 	{
 		lem->SBD_ANT_AC_CB.DrawPower(27.9); 	//Need a source on this moving draw
 		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);  //Need a source on this moving draw
+		//antheatload->GenerateHeat(0);		//Will add this once loads above are checked and sourced
 	}
 }
 

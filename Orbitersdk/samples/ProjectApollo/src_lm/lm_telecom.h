@@ -319,7 +319,7 @@ public:
 class LEM_SteerableAnt: public LM_SBandAntenna {
 public:
 	LEM_SteerableAnt();
-	void Init(LEM *s, h_Radiator *an, Boiler *anheat);
+	void Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad *anthtld);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	void Timestep(double simdt);
@@ -339,6 +339,7 @@ public:
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
 	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
+	h_HeatLoad *antheatload;		//operational heat load on antenna
 protected:
 	double pitch;
 	double yaw;
