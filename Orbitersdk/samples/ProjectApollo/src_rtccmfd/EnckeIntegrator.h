@@ -45,7 +45,7 @@ struct EMMENIInputTable
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame = 2;
 	//Density multiplier value
-	double DensityMultiplier = 1.0;
+	double DensityMultiplier = 0.0;
 	//Vent Indicator (negative means no venting)
 	double VentPerturbationFactor = -1.0;
 	//Integration Mode Indicator (0 = Encke-Beta, 1 = Encke-Time, 2 = Cowell-Time)
@@ -55,7 +55,7 @@ struct EMMENIInputTable
 	//Input area
 	double Area = 0.0;
 	//Input weight
-	double Weight = 0.0;
+	double Weight = 1.0;
 	//Ephemeris build indicator
 	bool EphemerisBuildIndicator = false;
 	bool ECIEphemerisIndicator = false;

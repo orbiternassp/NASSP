@@ -2812,11 +2812,11 @@ public:
 	//Weight Determination at a Time
 	struct PLAWDTInput
 	{
-		double T_UP;		//Option 1: Time of desired, areas/weights. Option 2: Time to stop adjustment
-		int Num;			//Option 1: Maneuver number of last maneuver to be ignored (zero to consider all maneuvers). Option 2: Configuration code associated with input values (same format as MPT code)
-		bool KFactorOpt;	//0 = No K-factor desired, 1 = K-factor desired
+		double T_UP;				//Option 1: Time of desired, areas/weights. Option 2: Time to stop adjustment
+		int Num = 0;				//Option 1: Maneuver number of last maneuver to be ignored (zero to consider all maneuvers). Option 2: Configuration code associated with input values (same format as MPT code)
+		bool KFactorOpt = false;	//0 = No K-factor desired, 1 = K-factor desired
 		int TableCode;		//1 = CSM, 3 = LM (MPT and Expandables Tables). Negative for option 2.
-		bool VentingOpt;	//0 = No venting, 1 = venting
+		bool VentingOpt = false;	//0 = No venting, 1 = venting
 		double CSMArea;
 		double SIVBArea;
 		double LMAscArea;
@@ -2836,7 +2836,7 @@ public:
 		//2: Maneuver not current - last current values used
 		//3: Time to stop adjustment is before time of input areas/weights - input values returned as output
 		int Err;
-		int CC;
+		std::bitset<4> CC;
 		double ConfigArea;
 		double ConfigWeight;
 		double CSMArea;
@@ -2849,9 +2849,7 @@ public:
 		double LMDscWeight;
 		double KFactor;
 	};
-	void NewPLAWDT(const PLAWDTInput &in, PLAWDTOutput &out);
-	int PLAWDT(int L, double gmt, double &cfg_weight);
-	int PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
+	void PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out);
 	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	bool PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB);
 

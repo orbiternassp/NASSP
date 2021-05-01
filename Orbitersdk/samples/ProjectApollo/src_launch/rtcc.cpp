@@ -1057,7 +1057,8 @@ void MissionPlanTable::LoadState(FILEHANDLE scn, char *end_str)
 {
 	char Buff[128], manbuff[16], manbuff2[16];
 	char *line;
-	int inttemp, mannum;
+	int inttemp;
+	unsigned int mannum;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, end_str, sizeof(end_str))) {
@@ -1066,10 +1067,19 @@ void MissionPlanTable::LoadState(FILEHANDLE scn, char *end_str)
 
 		if (!strnicmp(line, "ManeuverNum", 11)) {
 			sscanf(line + 11, "%d", &ManeuverNum);
-			mantable.resize(ManeuverNum);
-			mannum = 0;
-			sprintf_s(manbuff, "MAN%d_BEGIN", mannum + 1);
-			sprintf_s(manbuff2, "MAN%d_END", mannum + 1);
+			//ManeuverNum should only be 0 to 15
+			if (ManeuverNum <= 15)
+			{
+				mantable.resize(ManeuverNum);
+				mannum = 0;
+				sprintf_s(manbuff, "MAN%d_BEGIN", mannum + 1);
+				sprintf_s(manbuff2, "MAN%d_END", mannum + 1);
+			}
+			else
+			{
+				//For safety
+				ManeuverNum = 0;
+			}
 		}
 		else if (papiReadScenario_string(line, "StationID", Buff))
 		{
@@ -1102,11 +1112,15 @@ void MissionPlanTable::LoadState(FILEHANDLE scn, char *end_str)
 		}
 		if (ManeuverNum > 0)
 		{
-			if (!strnicmp(line, manbuff, sizeof(manbuff))) {
-				mantable[mannum].LoadState(scn, manbuff2);
-				mannum++;
-				sprintf_s(manbuff, "MAN%d_BEGIN", mannum + 1);
-				sprintf_s(manbuff2, "MAN%d_END", mannum + 1);
+			if (!strnicmp(line, manbuff, sizeof(manbuff)))
+			{
+				if (mannum < mantable.size())
+				{
+					mantable[mannum].LoadState(scn, manbuff2);
+					mannum++;
+					sprintf_s(manbuff, "MAN%d_BEGIN", mannum + 1);
+					sprintf_s(manbuff2, "MAN%d_END", mannum + 1);
+				}
 			}
 		}
 	}
@@ -1275,6 +1289,14 @@ RTCC::RTCC()
 	PZMPTCSM.CommonBlock.LMDescentArea = PZMPTLEM.CommonBlock.LMDescentArea = 200.6*0.3048*0.3048;
 	PZMPTCSM.CommonBlock.SIVBArea = PZMPTLEM.CommonBlock.SIVBArea = 368.7*0.3048*0.3048;
 	PZMPTCSM.KFactor = PZMPTLEM.KFactor = 1.0;
+
+	//Initialize MPT usable propellant
+	PZMPTCSM.CommonBlock.SPSFuelRemaining = PZMPTLEM.CommonBlock.SPSFuelRemaining = 40200.0 / (LBS*1000.0);
+	PZMPTCSM.CommonBlock.CSMRCSFuelRemaining = PZMPTLEM.CommonBlock.CSMRCSFuelRemaining = 1228.0 / (LBS*1000.0);
+	PZMPTCSM.CommonBlock.SIVBFuelRemaining = PZMPTLEM.CommonBlock.SIVBFuelRemaining = 164337.0 / (LBS*1000.0);
+	PZMPTCSM.CommonBlock.LMAPSFuelRemaining = PZMPTLEM.CommonBlock.LMAPSFuelRemaining = 5177.0 / (LBS*1000.0);
+	PZMPTCSM.CommonBlock.LMDPSFuelRemaining = PZMPTLEM.CommonBlock.LMDPSFuelRemaining = 17921.0 / (LBS*1000.0);
+	PZMPTCSM.CommonBlock.LMRCSFuelRemaining = PZMPTLEM.CommonBlock.LMRCSFuelRemaining = 549.0 / (LBS*1000.0);
 }
 
 RTCC::~RTCC()
@@ -6925,7 +6947,9 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	}
 	// State vectors
 	papiWriteScenario_SV(scn, "RTCC_SVSTORE1", calcParams.SVSTORE1);
+	if (EZEPH1.EPHEM.Header.TUP > 0) SAVE_INT("EZEPH1_TUP", EZEPH1.EPHEM.Header.TUP);
 	papiWriteScenario_SV(scn, "RTCC_MPTCM_ANCHOR", 9, EZANCHR1.AnchorVectors[9]);
+	if (EZEPH2.EPHEM.Header.TUP > 0) SAVE_INT("EZEPH2_TUP", EZEPH2.EPHEM.Header.TUP);
 	papiWriteScenario_SV(scn, "RTCC_MPTLM_ANCHOR", 9, EZANCHR3.AnchorVectors[9]);
 	for (i = 0;i < 12;i++)
 	{
@@ -7103,7 +7127,9 @@ void RTCC::LoadState(FILEHANDLE scn) {
 			}
 		}
 		papiReadScenario_SV(line, "RTCC_SVSTORE1", calcParams.SVSTORE1);
+		LOAD_INT("EZEPH1_TUP", EZEPH1.EPHEM.Header.TUP);
 		papiReadScenario_SV(line, "RTCC_MPTCM_ANCHOR", EZANCHR1.AnchorVectors);
+		LOAD_INT("EZEPH2_TUP", EZEPH2.EPHEM.Header.TUP);
 		papiReadScenario_SV(line, "RTCC_MPTLM_ANCHOR", EZANCHR3.AnchorVectors);
 		papiReadScenario_SV(line, "RTCC_BZUSEVEC", BZUSEVEC.data);
 		papiReadScenario_SV(line, "RTCC_BZEVLVEC", BZEVLVEC.data);
@@ -14224,7 +14250,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 		{
 			EphemerisData sv_EMP, sv_true;
 			TimeConstraintsTable newtab;
-			double cfg_weight, R_E, mu;
+			double R_E, mu;
 
 			EZSPACE.GETVector1 = GETfromGMT(sv.GMT);
 			if (sv.RBI == BODY_EARTH)
@@ -14238,8 +14264,12 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				mu = OrbMech::mu_Moon;
 			}
 			
-			PLAWDT(EZETVMED.SpaceDigVehID, sv.GMT, cfg_weight);
-			EZSPACE.WT = cfg_weight * LBS*1000.0;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
+			pin.T_UP = sv.GMT;
+			pin.TableCode = EZETVMED.SpaceDigVehID;
+			PLAWDT(pin, pout);
+			EZSPACE.WT = pout.ConfigWeight * LBS*1000.0;
 
 			int csi_in, csi_out;
 			if (sv.RBI == BODY_EARTH)
@@ -15998,7 +16028,6 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 		}
 
 		mpt->ManeuverNum -= man;
-		mpt->CommonBlock.ConfigCode = mpt->mantable[man - 1].CommonBlock.ConfigCode;
 		mpt->DeltaDockingAngle = mpt->mantable[man - 1].DockingAngle;
 		mpt->ConfigurationArea = mpt->mantable[man - 1].TotalAreaAfter;
 		mpt->CommonBlock = mpt->mantable[man - 1].CommonBlock;
@@ -16297,12 +16326,16 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 		table = &EZEPH2;
 	}
 
+	MissionPlanTable *mpt = GetMPTPointer(L);
+
 	if (QUEID == 2)
 	{
 		//Increment
 		table->EPHEM.Header.TUP++;
-		//Lock
+		//Lock ephemeris table
 		table->EPHEM.Header.TUP = -table->EPHEM.Header.TUP;
+		//Also lock MPT
+		mpt->CommonBlock.TUP = table->EPHEM.Header.TUP;
 	}
 
 	InTable.AnchorVector = sv0;
@@ -16383,8 +16416,6 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 		InTable.EphemerisBuildIndicator = false;
 		InTable.ManCutoffIndicator = 1;
 	}
-
-	MissionPlanTable *mpt = GetMPTPointer(L);
 
 	if (QUEID == 2)
 	{
@@ -19737,11 +19768,13 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 		EZCHECKDIS.LSTBlank = true;
 	}
 
-	double cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight;
-	std::bitset<4> cfg;
+	PLAWDTInput pin;
+	PLAWDTOutput pout;
+	pin.T_UP = sv_conv.GMT;
+	pin.TableCode = veh;
+	PLAWDT(pin, pout);
 
-	PLAWDT(veh, sv_conv.GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight);
-	unsigned cfgint = cfg.to_ulong();
+	unsigned cfgint = pout.CC.to_ulong();
 
 	switch (cfgint)
 	{
@@ -19795,9 +19828,9 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 		break;
 	}
 
-	EZCHECKDIS.WT = cfg_weight / 0.45359237;
-	EZCHECKDIS.WC = csm_weight / 0.45359237;
-	EZCHECKDIS.WL = (lma_weight + lmd_weight) / 0.45359237;
+	EZCHECKDIS.WT = pout.ConfigWeight / 0.45359237;
+	EZCHECKDIS.WC = pout.CSMWeight / 0.45359237;
+	EZCHECKDIS.WL = (pout.LMAscWeight + pout.LMDscWeight) / 0.45359237;
 
 	unsigned ii = 0;
 
@@ -22561,10 +22594,12 @@ int RTCC::NewMPTTrajectory(int L, SV &sv0)
 		sv0.MJD = OrbMech::MJDfromGET(sv.GMT,SystemParameters.GMTBASE);
 		sv0.gravref = GetGravref(sv.RBI);
 
-		if (PLAWDT(L, GMT, sv0.mass))
-		{
-			return 2;
-		}
+		PLAWDTInput pin;
+		PLAWDTOutput pout;
+		pin.T_UP = GMT;
+		pin.TableCode = L;
+		PLAWDT(pin, pout);
+		sv0.mass = pout.ConfigWeight;
 	}
 
 	return 0;
@@ -29154,6 +29189,9 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mptman->MainEngineFuelUsed = aux->MainFuelUsed;
 	mptman->RCSFuelUsed = aux->RCSFuelUsed;
 	mptman->lng_AN = 0.0;
+	//mptman->GMTFrozen = mpt->GMTAV;
+	//mptman->StationIDFrozen = mpt->StationID;
+	mptman->CommonBlock.TUP = abs(mpt->CommonBlock.TUP);
 
 	double W_S_Prior, S_Fuel, WDOT, T, F, isp;
 
