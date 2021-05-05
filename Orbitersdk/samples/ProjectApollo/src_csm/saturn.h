@@ -3714,6 +3714,10 @@ protected:
 	PowerMerge SwitchPower;
 	PowerMerge GaugePower;
 
+	// GSE
+	Pump* GSEGlycolPump;
+	h_Radiator* GSERadiator;
+
 	// ECS
 	h_Tank *CSMCabin;
 	h_HeatExchanger *PrimCabinHeatExchanger;
@@ -3726,6 +3730,7 @@ protected:
 	h_HeatExchanger *PrimEcsRadiatorExchanger2;
 	h_HeatExchanger *SecEcsRadiatorExchanger1;
 	h_HeatExchanger *SecEcsRadiatorExchanger2;
+	Pump* PrimGlycolPump;
 	Boiler *CabinHeater;
 	Boiler *PrimECSTestHeater;
 	Boiler *SecECSTestHeater;

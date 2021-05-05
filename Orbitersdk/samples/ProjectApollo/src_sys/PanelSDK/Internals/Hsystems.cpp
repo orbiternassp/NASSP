@@ -966,8 +966,8 @@ h_Radiator::~h_Radiator() {
 
 void h_Radiator::refresh(double dt) 
 {
-	if (parent->Vessel->GetAtmDensity() < 0.00001846) //~80km
-	{
+	//if (parent->Vessel->GetAtmDensity() < 0.00001846) //~80km
+	//{
 		Qr = rad * size * 5.67e-8 * dt * pow((Temp), 4); //Stefan–Boltzmann law
 		thermic(-Qr);
 
@@ -975,9 +975,9 @@ void h_Radiator::refresh(double dt)
 		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 
 		return;
-	}
+	//}
 
-
+	/*
 	AirTemp = parent->Vessel->GetAtmTemperature();
 
 	Qc = AirHeatTransferCoefficient* size * (Temp - AirTemp) * dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
@@ -989,6 +989,7 @@ void h_Radiator::refresh(double dt)
 	//sprintf(oapiDebugString(), "Temp=%lf K, Qc=%lf, Qr=%lf",Temp, Qc/dt, Qr/dt);
 
 	thermic( - ( Qc + Qr));
+	*/
 }
 
 void h_Radiator::Save(FILEHANDLE scn) {
