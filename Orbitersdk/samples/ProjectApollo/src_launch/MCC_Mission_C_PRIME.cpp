@@ -65,7 +65,7 @@ void MCC::MissionSequence_C_Prime()
 		break;
 		case 1:
 		{
-			if (cm->stage == CSM_LEM_STAGE) {
+			if (cm->GetStage() == CSM_LEM_STAGE) {
 				addMessage("SEPARATION");
 				setSubState(2);
 			}
@@ -236,7 +236,7 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval2(rtcc->calcParams.EI - 45.0*60.0), 207, MST_CP_TRANSEARTH8);
 		break;
 	case MST_CP_TRANSEARTH8: //Final Entry PAD to Separation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->stage == CM_STAGE, 208, MST_ENTRY);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->GetStage() == CM_STAGE, 208, MST_ENTRY);
 		break;
 	case MST_ENTRY:
 		switch (SubState) {
@@ -248,7 +248,7 @@ void MCC::MissionSequence_C_Prime()
 		break;
 		case 1:
 		{
-			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			if (cm->GetStage() == CM_ENTRY_STAGE_SEVEN)
 			{
 				setState(MST_LANDING);
 			}
@@ -260,7 +260,7 @@ void MCC::MissionSequence_C_Prime()
 	{
 		if (AbortMode == 5) //Earth Orbit Abort
 		{
-			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			if (cm->GetStage() == CM_ENTRY_STAGE_SEVEN)
 			{
 				setState(MST_LANDING);
 			}

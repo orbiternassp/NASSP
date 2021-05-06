@@ -704,6 +704,32 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 	}
 
 	// sprintf(oapiDebugString(), "Dist %f", GetDistanceTo(VAB_LON, VAB_LAT));
+
+	// This code forces the vehicle in a landed state, ensuring any thruster firing will not move the vehicle until liftoff. From here: https://www.orbiter-forum.com/threads/how-to-keep-vessels-landed-for-good-in-orbiter-2016-walkthrough.39702/
+	if (sat) {
+		if (sat->GetStage() < LAUNCH_STAGE_ONE && state > STATE_ROLLOUT) {
+			double lng, lat;
+			if (GetDistanceTo(PAD_LV_LONB, PAD_LV_LATB) < 10.0) {
+				lng = PAD_LV_LONB;
+				lat = PAD_LV_LATB;
+			} else {
+				lng = PAD_LV_LONA;
+				lat = PAD_LV_LATA;
+			}
+			OBJHANDLE h_Planet;
+			h_Planet = oapiGetGbodyByName("Earth");
+			VESSELSTATUS2 vs;
+			memset(&vs, 0, sizeof(vs));
+			vs.version = 2;
+			vs.rbody = h_Planet;
+			vs.status = 1;
+			vs.arot.x = 10; // <----- Undocumented feature "magic value" to land on touchdown points !! IMPORTANT !! It has to be 10, no more, no less !
+			vs.surf_lng = lng * RAD;
+			vs.surf_lat = lat * RAD;
+			vs.surf_hdg = -90.0 * RAD;
+			sat->DefSetStateEx(&vs);
+		}
+	}
 }
 
 void ML::clbkPostStep (double simt, double simdt, double mjd) {

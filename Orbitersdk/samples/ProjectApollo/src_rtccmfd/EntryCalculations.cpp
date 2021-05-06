@@ -1427,29 +1427,29 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	switch (Thruster)
 	{
 	case RTCC_ENGINETYPE_CSMRCSPLUS2:
-		F = pRTCC->MCTCT1;
-		mdot = pRTCC->MCTCW1;
-		TCMC = pRTCC->MCTCT5;
+		F = pRTCC->SystemParameters.MCTCT1;
+		mdot = pRTCC->SystemParameters.MCTCW1;
+		TCMC = pRTCC->SystemParameters.MCTCT5;
 		break;
 	case RTCC_ENGINETYPE_CSMRCSPLUS4:
-		F = pRTCC->MCTCT2;
-		mdot = pRTCC->MCTCW2;
-		TCMC = pRTCC->MCTCT6;
+		F = pRTCC->SystemParameters.MCTCT2;
+		mdot = pRTCC->SystemParameters.MCTCW2;
+		TCMC = pRTCC->SystemParameters.MCTCT6;
 		break;
 	case RTCC_ENGINETYPE_CSMRCSMINUS2:
-		F = pRTCC->MCTCT3;
-		mdot = pRTCC->MCTCW3;
-		TCMC = pRTCC->MCTCT5;
+		F = pRTCC->SystemParameters.MCTCT3;
+		mdot = pRTCC->SystemParameters.MCTCW3;
+		TCMC = pRTCC->SystemParameters.MCTCT5;
 		break;
 	case RTCC_ENGINETYPE_CSMRCSMINUS4:
-		F = pRTCC->MCTCT4;
-		mdot = pRTCC->MCTCW4;
-		TCMC = pRTCC->MCTCT6;
+		F = pRTCC->SystemParameters.MCTCT4;
+		mdot = pRTCC->SystemParameters.MCTCW4;
+		TCMC = pRTCC->SystemParameters.MCTCT6;
 		break;
 	case RTCC_ENGINETYPE_CSMSPS:
-		F = pRTCC->MCTST1;
-		mdot = pRTCC->MCTSW1;
-		TCMC = pRTCC->MCTST9;
+		F = pRTCC->SystemParameters.MCTST1;
+		mdot = pRTCC->SystemParameters.MCTSW1;
+		TCMC = pRTCC->SystemParameters.MCTST9;
 		break;
 	}
 
@@ -2562,8 +2562,8 @@ void RetrofirePlanning::RMSTTF()
 	tab->H_Retro = elem.h / 1852.0;
 	if (Thruster == RTCC_ENGINETYPE_CSMSPS)
 	{
-		tab->P_G = (burnaux.P_G - pRTCC->MCTSPP)*DEG;
-		tab->Y_G = (burnaux.Y_G - pRTCC->MCTSYP)*DEG;
+		tab->P_G = (burnaux.P_G - pRTCC->SystemParameters.MCTSPP)*DEG;
+		tab->Y_G = (burnaux.Y_G - pRTCC->SystemParameters.MCTSYP)*DEG;
 	}
 	else
 	{

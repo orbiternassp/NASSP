@@ -3533,11 +3533,11 @@ VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 	return _V(0, 0, 0);
 }
 
-bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E)
+bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E, double dist)
 {
 	double c,dote;
 
-	c = cos(5.0*RAD + asin(R_E / length(R_C)));
+	c = cos(dist + asin(R_E / length(R_C)));
 
 	dote = dotp(S_SM, unit(-R_C));
 	if (dote < c)

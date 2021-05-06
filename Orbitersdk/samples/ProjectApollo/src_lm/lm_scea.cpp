@@ -870,17 +870,17 @@ void SCERA2::Timestep()
 	//AGS mode control (automatic) (GH1641)
 	SA12.SetOutput(6, lem->ModeControlAGSSwitch.IsUp());
 	//Battery 1 malfunction (GC9961)
-	SA12.SetOutput(7, false);	//TBD
+	SA12.SetOutput(7, lem->stage < 2 && lem->ECA_1.GetMalfunctionA() && lem->EPSMonitorSelectRotary.GetState() == 1);
 	//Battery 2 malfunction (GC9962)
-	SA12.SetOutput(8, false);	//TBD
+	SA12.SetOutput(8, lem->stage < 2 && lem->ECA_1.GetMalfunctionB() && lem->EPSMonitorSelectRotary.GetState() == 2);
 	//Battery 3 malfunction (GC9963)
-	SA12.SetOutput(9, false);	//TBD
+	SA12.SetOutput(9, lem->stage < 2 && lem->ECA_2.GetMalfunctionA() && lem->EPSMonitorSelectRotary.GetState() == 3);
 	//Battery 4 malfunction (GC9964)
-	SA12.SetOutput(10, false);	//TBD
+	SA12.SetOutput(10, lem->stage < 2 && lem->ECA_2.GetMalfunctionB() && lem->EPSMonitorSelectRotary.GetState() == 4);
 	//Battery 5 malfunction (GC9965)
-	SA12.SetOutput(11, false);	//TBD
+	SA12.SetOutput(11, lem->ECA_3.GetMalfunction() && lem->EPSMonitorSelectRotary.GetState() == 5);
 	//Battery 6 malfunction (GC9966)
-	SA12.SetOutput(12, false);	//TBD
+	SA12.SetOutput(12, lem->ECA_4.GetMalfunction() && lem->EPSMonitorSelectRotary.GetState() == 6);
 
 	//Roll attitude control selector (GH1628)
 	SA13.SetOutput(1, lem->scca1.GetK5());
@@ -893,18 +893,18 @@ void SCERA2::Timestep()
 	SA13.SetOutput(5, lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER);
 	//Yaw attitude control selector (GH1630)
 	SA13.SetOutput(6, lem->scca1.GetK1());
-	//Battery 1 malfunction (GC9961) 
-	SA13.SetOutput(7, false);	//TBD, battery temperatures now implemented
+	//Battery 1 malfunction (GC9961)
+	SA13.SetOutput(7, lem->stage < 2 && lem->ECA_1.GetMalfunctionA());
 	//Battery 2 malfunction (GC9962)
-	SA13.SetOutput(8, false);	//TBD, battery temperatures now implemented
+	SA13.SetOutput(8, lem->stage < 2 && lem->ECA_1.GetMalfunctionB());
 	//Battery 3 malfunction (GC9963)
-	SA13.SetOutput(9, false);	//TBD, battery temperatures now implemented
+	SA13.SetOutput(9, lem->stage < 2 && lem->ECA_2.GetMalfunctionA());
 	//Battery 4 malfunction (GC9964)
-	SA13.SetOutput(10, false);	//TBD, battery temperatures now implemented
+	SA13.SetOutput(10, lem->stage < 2 && lem->ECA_2.GetMalfunctionB());
 	//Battery 5 malfunction (GC9965)
-	SA13.SetOutput(11, false);	//TBD, battery temperatures now implemented
+	SA13.SetOutput(11, lem->ECA_3.GetMalfunction());
 	//Battery 6 malfunction (GC9966)
-	SA13.SetOutput(12, false);	//TBD, battery temperatures now implemented
+	SA13.SetOutput(12, lem->ECA_4.GetMalfunction());
 
 	//Abort stage command (GH1283)
 	SA14.SetOutput(1, lem->scca1.GetK19());
@@ -1101,4 +1101,13 @@ SCEA_SolidStateSwitch* SCERA2::GetSwitch(int sa, int chan)
 	}
 
 	return NULL;
+}
+
+bool SCERA2::GetBatFaultLogic()
+{
+	if (SA12.GetSwitch(7)->IsClosed() || SA12.GetSwitch(8)->IsClosed() || SA12.GetSwitch(9)->IsClosed() || SA12.GetSwitch(10)->IsClosed() || SA12.GetSwitch(11)->IsClosed() || SA12.GetSwitch(12)->IsClosed())
+	{
+		return true;
+	}
+	return false;
 }

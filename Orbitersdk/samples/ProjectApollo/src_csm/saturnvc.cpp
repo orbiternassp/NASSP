@@ -4264,7 +4264,7 @@ void Saturn::DefineVCAnimations()
 	MissionTimer306Switch.DefineMeshGroup(VC_GRP_Sw_P306_08);
 
 	// Panel 325
-	const VECTOR3	PRIMGLYHANDLE_VECT = { 0, 0, 0.01 };
+	const VECTOR3	PRIMGLYHANDLE_VECT = { 0, 0, -0.01 };
 	const VECTOR3	P325_HANDLE_AXIS = { 0, 1, 0 };
 
 	MainPanelVC.AddSwitch(&GlycolToRadiatorsLever, AID_VC_Prim_Gly_Handle);

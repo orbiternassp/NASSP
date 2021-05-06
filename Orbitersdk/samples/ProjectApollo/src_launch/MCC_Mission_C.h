@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 // MISSION STATES: MISSION C
 #define MST_C_INSERTION		10
 // Ends at specified time, goes to
+#define MST_C_SV_UPDATE1	100
 #define MST_C_SEPARATION	11
 // Ends at 1ST RDZ PHASING BURN, goes to
 #define MST_C_COAST1		12

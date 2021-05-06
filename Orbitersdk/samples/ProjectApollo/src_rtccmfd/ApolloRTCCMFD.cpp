@@ -1272,6 +1272,12 @@ void ApolloRTCCMFD::menuSetRetrofireTargetSelectionPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetAbortScanTablePage()
+{
+	screen = 107;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuCycleRecoveryTargetSelectionPages()
 {
 	if (GC->rtcc->RZDRTSD.CurrentPage < GC->rtcc->RZDRTSD.TotalNumPages)
@@ -1584,6 +1590,91 @@ void ApolloRTCCMFD::menuSetRTETradeoffMode()
 	{
 		G->RTETradeoffMode = 0;
 	}
+}
+
+void ApolloRTCCMFD::menuSetASTSiteOrType()
+{
+	bool ASTSiteOrTypeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Unspecified area: Enter FCUA or TCUA for fuel/time critical return. Specific site: Enter name of site (e.g. MPL). Lunar Search: Site or FCUA.", ASTSiteOrTypeInput, 0, 20, (void*)this);
+}
+
+bool ASTSiteOrTypeInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_ASTSiteOrType(str);
+	return true;
+}
+
+void ApolloRTCCMFD::set_ASTSiteOrType(char *site)
+{
+	if (G->RTEASTType == 0)
+	{
+		GC->rtcc->med_f75.Type.assign(site);
+	}
+	//TBD
+}
+
+void ApolloRTCCMFD::menuASTVectorTime()
+{
+	if (GC->MissionPlanningActive)
+	{
+		bool ASTVectorTimeInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the vector GET (Format: hhh:mm:ss)", ASTVectorTimeInput, 0, 25, (void*)this);
+	}
+}
+
+bool ASTVectorTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, get;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_ASTVectorTime(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_ASTVectorTime(double get)
+{
+	if (G->RTEASTType == 0)
+	{
+		GC->rtcc->med_f75.T_V = get;
+	}
+	//TBD
+}
+
+void ApolloRTCCMFD::menuASTAbortTime()
+{
+	bool ASTAbortTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the abort GET (Format: hhh:mm:ss)", ASTAbortTimeInput, 0, 25, (void*)this);
+}
+
+bool ASTAbortTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, get;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_ASTAbortTime(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_ASTAbortTime(double get)
+{
+	if (G->RTEASTType == 0)
+	{
+		GC->rtcc->med_f75.T_0 = get;
+	}
+	//TBD
+}
+
+void ApolloRTCCMFD::menuASTCalc()
+{
+	GeneralMEDRequest("F75;");
 }
 
 void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()

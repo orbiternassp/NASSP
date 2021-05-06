@@ -35,6 +35,7 @@ int RTCC::ELFECH(double GMT, int L, EphemerisData &SV)
 	if (err == 0)
 	{
 		SV = EPHEM.table[0];
+		RotateSVToSOI(SV); //Probably shouldn't be here, but it's convenient
 	}
 	return err;
 }
@@ -410,28 +411,27 @@ int RTCC::ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out)
 	return err;
 }
 
-int RTCC::ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out)
+int RTCC::ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out)
 {
-	EphemerisData sv, sv_out;
-	svtab_out.table.clear();
+	EphemerisData2 sv, sv_out;
 	int err = 0;
-	for (unsigned i = 0;i < svtab.table.size();i++)
+	for (unsigned i = 0;i < svtab.size();i++)
 	{
-		sv = svtab.table[i];
+		sv = svtab[i];
 		err = ELVCNV(sv, in, out, sv_out);
 		if (err)
 		{
 			break;
 		}
-		svtab_out.table.push_back(sv_out);
+		if (svtab_out.size() > i)
+		{
+			svtab_out[i] = sv_out;
+		}
+		else
+		{
+			svtab_out.push_back(sv_out);
+		}
 	}
-	//Store some ephemeris header data
-	svtab_out.Header.CSI = out;
-	svtab_out.Header.NumVec = svtab_out.table.size();
-	svtab_out.Header.TL = svtab_out.table.front().GMT;
-	svtab_out.Header.TR = svtab_out.table.back().GMT;
-	svtab_out.Header.TUP = svtab.Header.TUP;
-	svtab_out.Header.VEH = svtab.Header.VEH;
 	return err;
 }
 

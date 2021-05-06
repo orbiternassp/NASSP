@@ -3404,7 +3404,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_BAT_FAULT_LIGHT:
-		if (lca.GetAnnunVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6)) {								//Needs control logic to indicate overcurrent, reverse current, or over temp of selected battery
+		if (lca.GetAnnunVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6 || scera2.GetBatFaultLogic())) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {

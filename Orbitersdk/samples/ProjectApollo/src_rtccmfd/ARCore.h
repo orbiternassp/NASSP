@@ -270,6 +270,7 @@ public:
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	double RTEReturnInclination;
 	int RTETradeoffMode; //0 = Near-Earth (F70), 1 = Remote-Earth (F71)
+	int RTEASTType = 0; //0 = unspecified, 1 = specific site, 2 = lunar search
 
 	//STATE VECTOR PAGE
 	bool SVSlot; //true = CSM, false = LEM

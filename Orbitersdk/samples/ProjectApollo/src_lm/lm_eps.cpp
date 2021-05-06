@@ -85,7 +85,7 @@ void LEM_ECAch::UpdateFlow(double dt) {
 		break;
 	case 2: // LO tap
 		if (dc_source != NULL) {
-			dc_source->DrawPower(power_load*1.06); // Draw 6% more
+			dc_source->DrawPower(power_load*1.06); // Draw 6% more (Why is this drawing 6% more??)
 		}
 		break;
 	}
@@ -112,6 +112,166 @@ void LEM_ECAch::UpdateFlow(double dt) {
 
 	// Reset for next pass.
 	e_object::UpdateFlow(dt);
+}
+
+LEM_ECABatMonitor::LEM_ECABatMonitor()
+{
+	batt = NULL;
+	chan = NULL;
+}
+
+void LEM_ECABatMonitor::Init(Battery *b, LEM_ECAch *c, PowerMerge *p)
+{
+	batt = b;
+	chan = c;
+	power = p;
+}
+
+void LEM_ECABatMonitor::Timestep(double dt)
+{
+	if (chan->input && power->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		if (!OC && batt->Current() > 150.0)
+		{
+			OC = true;
+		}
+		if (!RC && batt->Current() < -10.0)
+		{
+			RC = true;
+		}
+		else if (RC && batt->Current() >= -10.0)
+		{
+			RC = false;
+		}
+	}
+	if (OC && chan->input == 0)
+	{
+		OC = false;
+	}
+}
+
+bool LEM_ECABatMonitor::GetMalfunction()
+{
+	if (chan->input && batt->GetTemp() > 335.928) //145°F
+	{
+		return true;
+	}
+	else if (OC || RC)
+	{
+		return true;
+	}
+	return false;
+}
+
+void LEM_ECABatMonitor::SaveState(FILEHANDLE scn, char *start_str) {
+
+	char buffer[100];
+
+	sprintf(buffer, "%i %i", (OC ? 1 : 0), (RC ? 1 : 0));
+	oapiWriteScenario_string(scn, start_str, buffer);
+}
+
+void LEM_ECABatMonitor::LoadState(char *line) {
+
+	int i1, i2;
+
+	sscanf(line + 5, "%i %i", &i1, &i2);
+	OC = (i1 != 0);
+	RC = (i2 != 0);
+}
+
+LEM_ECA::LEM_ECA()
+{
+
+}
+
+LEM_DescentECA::LEM_DescentECA()
+{
+
+}
+
+void LEM_DescentECA::Init(Battery *b1, Battery *b2, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p)
+{
+	bat1mon.Init(b1, c1, p);
+	bat2mon.Init(b2, c2, p);
+}
+
+void LEM_DescentECA::Timestep(double dt)
+{
+	bat1mon.Timestep(dt);
+	bat2mon.Timestep(dt);
+}
+
+void LEM_DescentECA::SystemTimestep(double dt)
+{
+
+}
+
+void LEM_DescentECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+	bat1mon.SaveState(scn, "BAT1");
+	bat2mon.SaveState(scn, "BAT2");
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_DescentECA::LoadState(FILEHANDLE scn, char *end_str)
+{
+	char *line;
+	int dec = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp(line, "BAT1", 4)) {
+			bat1mon.LoadState(line);
+		}
+		else if (!strnicmp(line, "BAT2", 4)) {
+			bat2mon.LoadState(line);
+		}
+	}
+}
+
+LEM_AscentECA::LEM_AscentECA()
+{
+
+}
+void LEM_AscentECA::Init(Battery *b, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p)
+{
+	batmon.Init(b, c1, p);
+}
+
+void LEM_AscentECA::Timestep(double dt)
+{
+	batmon.Timestep(dt);
+}
+
+void LEM_AscentECA::SystemTimestep(double dt)
+{
+
+}
+
+void LEM_AscentECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+	batmon.SaveState(scn, "BAT1");
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_AscentECA::LoadState(FILEHANDLE scn, char *end_str)
+{
+	char *line;
+	int dec = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp(line, "BAT1", 4)) {
+			batmon.LoadState(line);
+		}
+	}
 }
 
 // BUS TIE BLOCK
@@ -505,7 +665,6 @@ LEM_INV::LEM_INV() {
 	lem = NULL;
 	dc_input = NULL;
 	InvHeat = 0;
-	SecInvHeat = 0;
 	heatloss = 0.0;
 
 	BASE_HLPW[0] = 40.0;	//0W AC output
@@ -921,26 +1080,22 @@ void LEM_UtilLights::SystemTimestep(double simdt)
 	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(2.2);
 		UtlLtgHeat->GenerateHeat(2.178);
-		//UtlLtgHeat->GenerateHeat(1.09);	//Use half heat power
 	}
 	//CDR Utility Lights Bright
 	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(6.15);
 		UtlLtgHeat->GenerateHeat(6.1);
-		//UtlLtgHeat->GenerateHeat(3.05);	//Use half heat power
 	}	
 
 	//LMP Utility Lights Dim
 	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(1.76);
 		UtlLtgHeat->GenerateHeat(1.74);
-		//UtlLtgHeat->GenerateHeat(0.87);	//Use half heat power
 	}
 	//LMP Utility Lights Bright
 	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(3.3);
 		UtlLtgHeat->GenerateHeat(3.267); 
-		//UtlLtgHeat->GenerateHeat(1.63);	//Use half heat power
 	}
 }
 
@@ -979,7 +1134,6 @@ void LEM_COASLights::SystemTimestep(double simdt)
 	if (IsPowered() && COASSwitch->GetState() != THREEPOSSWITCH_CENTER) {
 		COASCB->DrawPower(8.4);
 		COASHeat->GenerateHeat(8.4);
-		//COASHeat->GenerateHeat(4.2); 	//Use half heat power
 	}
 }
 
@@ -1065,7 +1219,9 @@ void LEM_FloodLights::Timestep(double simdt)
 void LEM_FloodLights::SystemTimestep(double simdt)
 {
 	FloodCB->DrawPower(GetPowerDraw());
-	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V
+
+	//LM8 Handbook Flood heat listed at 24.4W, this needs to be checked
+	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V.
 }
 
 LEM_PFIRA::LEM_PFIRA()

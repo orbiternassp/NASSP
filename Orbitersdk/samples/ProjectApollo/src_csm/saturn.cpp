@@ -2722,8 +2722,11 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	double noiseth = 0.0, noisedp = 0.0, noisefreq = 0.0, latlonratio = 1.0;
 	double pogoamp = 0.0, pogofreq = 0.0;
 	double proplev = GetTotalPropellantMass(), propratio = 0.0;
-
-	if (stage <= LAUNCH_STAGE_ONE) {
+	if (stage < PRELAUNCH_STAGE)
+	{
+		//Nothing
+	}
+	else if (stage <= LAUNCH_STAGE_ONE) {
 		double groundcoeff = max((300.0 - GetAltitude(ALTMODE_GROUND)) / 300.0, 0.0);
 		if (SaturnType == SAT_SATURNV) {
 			nth = 5;

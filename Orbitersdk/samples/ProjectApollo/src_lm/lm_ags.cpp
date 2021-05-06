@@ -443,7 +443,6 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	AEAInitialized = false;
 	PowerSwitch = 0;
 	aeaHeat = 0;
-	secaeaHeat = 0;
 
 	ASACycleCounter = 0;
 	LastCycled = 0.0;

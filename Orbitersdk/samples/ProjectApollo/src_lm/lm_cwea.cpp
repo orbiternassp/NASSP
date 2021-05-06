@@ -331,8 +331,20 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS27 BATTERY FAILURE CAUTION
 		// On when over-current, reverse-current, or over-temperature condition occurs in any ascent or descent battery.
 		// Disabled if affected battery is turned off.
-		// FIXME: We'll ignore this for now until these data points are implemented in the ECA
-		SetLight(1, 5, 0);
+
+		lightlogic = false;
+
+		if (lem->scera2.GetVoltage(13, 7) >= 2.5) lightlogic = true;
+		else if (lem->scera2.GetVoltage(13, 8) >= 2.5) lightlogic = true;
+		else if (lem->scera2.GetVoltage(13, 9) >= 2.5) lightlogic = true;
+		else if (lem->scera2.GetVoltage(13, 10) >= 2.5) lightlogic = true;
+		else if (lem->scera2.GetVoltage(13, 11) >= 2.5) lightlogic = true;
+		else if (lem->scera2.GetVoltage(13, 12) >= 2.5) lightlogic = true;
+
+		if (lightlogic)
+			SetLight(1, 5, 1);
+		else
+			SetLight(1, 5, 0);
 
 		// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 		// On when RR indicates Data-Not-Good.

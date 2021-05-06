@@ -296,6 +296,13 @@ void Saturn::SystemsInit() {
 	GaugePower.WireToBuses(MainBusA, MainBusB);
 
 	//
+	// GSE devices
+	//
+
+	GSEGlycolPump = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:GSEGLYCOLPUMP");
+	GSERadiator = (h_Radiator*)Panelsdk.GetPointerByString("ELECTRIC:GSERADIATOR");
+
+	//
 	// ECS devices
 	//
 
@@ -312,6 +319,8 @@ void Saturn::SystemsInit() {
 	PrimEcsRadiatorExchanger2 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER2");
 	SecEcsRadiatorExchanger1 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:SECECSRADIATOREXCHANGER1");
 	SecEcsRadiatorExchanger2 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:SECECSRADIATOREXCHANGER2");
+
+	PrimGlycolPump = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP");
 	
 	CabinHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:CABINHEATER");
 	
@@ -732,7 +741,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				CabinPressureRegulator.SetPressurePSI(14.7);
 				
 				// ECS radiators in prelaunch configuration
-				PrimEcsRadiatorExchanger1->SetLength(8.0);
+				PrimEcsRadiatorExchanger1->SetLength(8.0); //Why are these adjusted?
 				PrimEcsRadiatorExchanger2->SetLength(8.0);
 				SecEcsRadiatorExchanger1->SetLength(0);
 				SecEcsRadiatorExchanger2->SetLength(0);
@@ -740,6 +749,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				// GSE provides electrical power
 				MainBusAController.SetGSEState(1);
 				MainBusBController.SetGSEState(1);
+
+				// Enable GSE Glycol pump
+				GSEGlycolPump->SetPumpOn();
 
 				// Enable GSE SM RCS heaters
 				*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADAHEATER:PUMP") = SP_PUMP_AUTO;
@@ -758,6 +770,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				break;
 
 			case SATSYSTEMS_PRELAUNCH:
+				//Switches off GSE Glycol pump when CSM pump enabled
+				if (PrimGlycolPump->pumping || MissionTime >= -900) {
+					GSEGlycolPump->SetPumpOff();
+				}
 				//	Should be triggered by the suit compressor, the Mission Time condition is just in case 
 				// the suit compressor isn't turned on until 15 min before launch
 				if ((SuitCompressor1->pumping || SuitCompressor2->pumping) || MissionTime >= -900) {
@@ -938,16 +954,31 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 // Various debug prints
 //------------------------------------------------------------------------------------
 
-//
+//GSE Cooling Debug Lines
+	//double* primaccumTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
+	//double* primradinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET:TEMP");
+	//double* primradoutTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATOROUTLET:TEMP");
+	//double* primevapinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATORINLET:TEMP");
+	//double* primevapoutTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOROUTLET:TEMP");
+
+	//double* gseprimhxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGSEHEATEXCHANGER:POWER");
+	//double* gsesechxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:POWER");
+	//double* gseradTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:GSERADIATOR:TEMP");
+
+
+//sprintf(oapiDebugString(), "Prim: %.3f Sec: %.3f RadT: %.3f", *gseprimhxPower, *gsesechxPower, KelvinToFahrenheit(*gseradTemp));
+
+//sprintf(oapiDebugString(), "HX %.3f RadT %.3f Acc %.3f RadI %.3f RadO %.3f EvapI %.3f EvapO %.3f", *gseprimhxPower, KelvinToFahrenheit(*gseradTemp), KelvinToFahrenheit(*primaccumTemp), KelvinToFahrenheit(*primradinTemp), KelvinToFahrenheit(*primradoutTemp), KelvinToFahrenheit(*primevapinTemp), KelvinToFahrenheit(*primevapoutTemp));
+
 //GSE Oxygen Purge Debug Lines	
 	
-//double *CSMCabinO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:O2_PPRESS");
-//double *CSMCabinN2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:N2_PPRESS");
-//double *WMFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEPIPE:FLOW");
-//int *WMValve = (int*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE:ISOPEN");
+	//double *CSMCabinO2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:O2_PPRESS");
+	//double *CSMCabinN2 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:N2_PPRESS");
+	//double *WMFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEPIPE:FLOW");
+	//int *WMValve = (int*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE:ISOPEN");
+
 //sprintf(oapiDebugString(), "CSM PPO2: %lf PPN2: %lf WMFlowPPH %lf WMValve %d", *CSMCabinO2* PSI, *CSMCabinN2 * PSI, *WMFlow *LBH, *WMValve);
 
-// 
 //CSM Connector Debug Lines
 
 //h_Pipe* csmtunnelpipe = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");

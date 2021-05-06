@@ -725,6 +725,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 8 * H / 14, "Splashdown Update", 17);
 		skp->Text(1 * W / 8, 10 * H / 14, "RTE Constraints", 15);
 		skp->Text(1 * W / 8, 12 * H / 14, "Tradeoff", 15);
+
+		//skp->Text(7 * W / 8, 2 * H / 14, "AST", 3);
 	}
 	else if (screen == 7)
 	{
@@ -8698,6 +8700,62 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf_s(Buffer, "%06.2lf°", GC->rtcc->RZDRTSD.table[i + j].Azimuth);
 			skp->Text(39 * W / 44, (12 + i) * H / 26, Buffer, strlen(Buffer));
 		}
+	}
+	else if (screen == 107)
+	{
+		skp->Text(5 * W / 8, 1 * H / 32, "Abort Scan Table Inputs", 21);
+
+		if (G->RTEASTType == 0)
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "Unspecified Area", 21);
+		}
+		else if (G->RTEASTType == 1)
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "Specific Site", 21);
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "Lunar Search", 21);
+		}
+
+
+		//4: Type TCUA, FCUA or Site
+		//6: Vector time (all)
+		//8: Abort time (F75 and F76), Min abort time (F77)
+		//10: Delta V (F75), Max abort time (F77)
+		//12: Landing time (F76 and F77)
+		//2: Entry Profile
+		//4: Miss Distance (F76 and F77, PTP only)
+		//6: Inclination (F77)
+		
+		if (G->RTEASTType == 0)
+		{
+			sprintf_s(Buffer, "%s", GC->rtcc->med_f75.Type.c_str());
+			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+			if (GC->MissionPlanningActive)
+			{
+				GET_Display(Buffer, GC->rtcc->med_f75.T_V, false);
+				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+			}
+
+			GET_Display(Buffer, GC->rtcc->med_f75.T_0, false);
+			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.0lf", GC->rtcc->med_f75.DVMAX);
+			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_f75.EntryProfile == 1)
+			{
+				skp->Text(10 * W / 16, 2 * H / 14, "Constant G", 10);
+			}
+			else
+			{
+				skp->Text(10 * W / 16, 2 * H / 14, "G&N", 3);
+			}
+		}
+		
+
 	}
 	return true;
 }

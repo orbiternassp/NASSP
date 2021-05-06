@@ -1787,6 +1787,7 @@ struct PMMMPTInput
 	int VC;
 	double DT_10PCT;
 	double DPSScaleFactor;
+	double VehicleArea;
 	double VehicleWeight;
 	double CSMWeight;
 	double LMWeight;
@@ -2421,6 +2422,8 @@ public:
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, GPMPRESULTS &res);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
+	int DetermineSVBody(EphemerisData sv);
+	void RotateSVToSOI(EphemerisData &sv);
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
@@ -2459,7 +2462,7 @@ public:
 	bool LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargetingTable &res);
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
-	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv);
+	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	//Velocity maneuver performer
@@ -2592,9 +2595,9 @@ public:
 	//Impulsive Maneuver Transfer Math Module
 	int PMMMPT(PMMMPTInput in, MPTManeuver &man);
 	//Lunar Ascent Integrator
-	int PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E = NULL);
+	int PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E = NULL);
 	//LM Lunar Descent Numerical Integration Module
-	int PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E = NULL);
+	int PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E = NULL);
 	//LM Lunar Descent Pre-Thrust Targeting Module
 	int PMMLDP(PMMLDPInput in, MPTManeuver &man);
 	//Coast Numerical Integrator
@@ -2704,6 +2707,8 @@ public:
 	int EMGSTGENCode(const char *Buffer);
 	//GOST REFSMMAT Maintenance
 	void FormatREFSMMATCode(int ID, int num, char *buff);
+	//Sun-Moon-Earth Occultation
+	bool EMMGSTCK(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES);
 	//Guidance Optics Support Table
 	void EMMGSTMP();
 	//Guidance Optics Display
@@ -2750,7 +2755,7 @@ public:
 	//Variable Order Interpolation
 	int ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData &sv_out, unsigned &ORER_out);
 	//Generalized Coordinate System Conversion Subroutine
-	int ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out);
+	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
 	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
 	int ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out);
 	int ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out);
@@ -2966,11 +2971,11 @@ public:
 	//Generation of Abort Scan Table for unspecified area
 	struct MED_F75
 	{
-		std::string Site = "No Site!";
+		std::string Type = "TCUA";
 		double T_V = 0.0; //Vector time
 		double T_0 = 0.0; //Time of abort
-		double DVMAX = 0.0;
-		int EntryProfile = 0;
+		double DVMAX = 10000.0;
+		int EntryProfile = 1;
 	} med_f75;
 
 	//Update return to Earth constraints
@@ -3206,9 +3211,9 @@ public:
 
 	struct GuidanceOpticsSupportTable
 	{
-		std::string CODE = "ZZZZZZZZ";
-		VECTOR3 Att_H = _V(0, 0, 0);
-		double GETAC = 0.0;
+		std::string CODE = "ZZZZZZZZ";			//Identification of maneuver to be performed
+		VECTOR3 Att_H = _V(0, 0, 0);			//Pitch, yaw and roll attitudes for the maneuver references to the IMU aligned to a local vertical orientation. Associated with DMT REFSMMAT.
+		double GETAC = 0.0;						//Ground elapsed time of alignment check
 		double IGA = 0.0;
 		std::string IRA = "ZZZZZZ";
 		unsigned SXT_STAR[2] = { 0,0 };
@@ -3504,42 +3509,6 @@ public:
 		double DEC[2][15];
 		double t_D[2][15];
 	} PZSTARGP;
-
-	struct TLISystemParameters
-	{
-		//Time of ignition of first S-IVB burn
-		double T4IG = 9.0*60.0 + 15.0;
-		//Time of cutoff of first S-IVB
-		double T4C = 11.0*60.0 + 40.0;
-		//Time interval from time of restart preparations to time of ignition
-		double DTIG = 578.0;
-		//Nominal time duration of first S-IVB burn
-		double DT4N = 0.0;
-		//Limited value for difference between actual and nominal burn times for first S-IVB burn
-		double DTLIM = 100.0;
-		//Second coefficient of pitch polynomial
-		double KP1 = 0.0;
-		//Third coefficient of pitch polynomial
-		double KP2 = 0.0;
-		//Second coefficient of yaw polynomial
-		double KY1 = 0.0;
-		//Third coefficient of yaw polynomial
-		double KY2 = 0.0;
-		//Geodetic latitude of launch site
-		double PHIL = 0.0;
-		//Azimuth from time polynomial (radians)
-		double hx[3][5];
-		//Inclination from azimuth polynomial (radians)
-		double fx[7];
-		//Descending Node Angle from azimuth polynomial (radians)
-		double gx[7];
-		//Times of the opening and closing of launch windows
-		double t_D0, t_D1, t_D2, t_D3;
-		//Times to segment the azimuth calculation polynomial
-		double t_DS0, t_DS1, t_DS2, t_DS3;
-		//Times used to scale the azimuth polynomial
-		double t_SD1, t_SD2, t_SD3;
-	} MDVSTP;
 
 	struct SIVBTLIMatrixTable
 	{
@@ -4410,7 +4379,6 @@ private:
 	double GetClockTimeFromAGC(agc_t *agc);
 	double GetTEPHEMFromAGC(agc_t *agc);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
-	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
@@ -4479,7 +4447,7 @@ private:
 	//Two-Impulse Multiple Solution Display
 	void PMDTIMP();
 	//GOST CSM/LM LCV Computation
-	void EMMGLCVP(int L, double gmt);
+	void EMMGLCVP(int L, double gmt, int body);
 	//Trajectory Update On-line Print
 	void EMGPRINT(std::string source, int i);
 	void EMGPRINT(std::string source, std::vector<std::string> message);
@@ -4534,252 +4502,6 @@ protected:
 public:
 
 	RTCCSystemParameters SystemParameters;
-
-	//RTCC System Parameters
-
-	//Thrust of CSM RCS+X (2 quads)
-	double MCTCT1;
-	//Thrust of CSM RCS+X (4 quads)
-	double MCTCT2;
-	//Thrust of CSM RCS-X (2 quads)
-	double MCTCT3;
-	//Thrust of CSM RCS-X (4 quads)
-	double MCTCT4;
-	//On-board computer thrust level for CSM RCS+/-X thruster (2 quads)
-	double MCTCT5;
-	//On-board computer thrust level for CSM RCS+/-X thruster (4 quads)
-	double MCTCT6;
-	//Weight loss rate CSM RCS+X (2 quads)
-	double MCTCW1;
-	//Weight loss rate CSM RCS+X (4 quads)
-	double MCTCW2;
-	//Weight loss rate CSM RCS-X (2 quads)
-	double MCTCW3;
-	//Weight loss rate CSM RCS-X (4 quads)
-	double MCTCW4;
-	//Thrust of LM RCS+X (2 quads)
-	double MCTLT1;
-	//Thrust of LM RCS+X (4 quads)
-	double MCTLT2;
-	//Thrust of LM RCS-X (2 quads)
-	double MCTLT3;
-	//Thrust of LM RCS-X (4 quads)
-	double MCTLT4;
-	//On-board computer thrust level for LM RCS+/-X thruster (2 quads)
-	double MCTLT5;
-	//On-board computer thrust level for LM RCS+/-X thruster (4 quads)
-	double MCTLT6;
-	//Weight loss rate LM RCS+X (2 quads)
-	double MCTLW1;
-	//Weight loss rate LM RCS+X (4 quads)
-	double MCTLW2;
-	//Weight loss rate LM RCS-X (2 quads)
-	double MCTLW3;
-	//Weight loss rate LM RCS-X (4 quads)
-	double MCTLW4;
-	//APS thrust level
-	double MCTAT1;
-	//APS buildup thrust level
-	double MCTAT2;
-	//APS full load thrust level
-	double MCTAT4;
-	//On-board computer thrust level for LM APS thruster
-	double MCTAT9;
-	//APS weight loss rate
-	double MCTAW1;
-	//APS weight loss rate for buildup
-	double MCTAW2;
-	//APS weight loss rate for full load
-	double MCTAW4;
-	//APS phase two burn time
-	double MCTAD2;
-	//APS phase three burn time
-	double MCTAD3;
-	//Total APS ullage overlap
-	double MCTAD9;
-	//DPS thrust level
-	double MCTDT1;
-	//DPS phase 2 thrust level
-	double MCTDT2;
-	//DPS phase 3 thrust level
-	double MCTDT3;
-	//DPS 10% thrust level
-	double MCTDT4;
-	//DPS thrust for buildup from 10% to maximum
-	double MCTDT5;
-	//DPS full load thrust level
-	double MCTDT6;
-	//On-board computer thrust level for LM DPS thruster
-	double MCTDT9;
-	//DPS weight loss rate
-	double MCTDW1;
-	//DPS phase 2 weight loss rate
-	double MCTDW2;
-	//DPS phase 3 weight loss rate
-	double MCTDW3;
-	//DPS 10% weight loss rate
-	double MCTDW4;
-	//DPS weight loss rate for build from 10% to max.
-	double MCTDW5;
-	//DPS full load weight loss rate
-	double MCTDW6;
-	//DPS phase 2 burn time
-	double MCTDD2;
-	//DPS phase 3 burn time
-	double MCTDD3;
-	//Nominal dt of 10% DPS thrust
-	double MCTDD4;
-	//DPS burn time for building from 10% to max
-	double MCTDD5;
-	//DPS burn time used to determine if 20% thrust level is to be maintained throughout the burn
-	double MCTDD6;
-	//Total DPS ullage overlap
-	double MCTDD9;
-	//SPS thrust level
-	double MCTST1;
-	//SPS thrust level for buildup
-	double MCTST2;
-	//SPS thrust level for full load
-	double MCTST4;
-	//On-board computer thrust level for CSM SPS thruster
-	double MCTST9;
-	//SPS weight loss rate
-	double MCTSW1;
-	//SPS weight loss rate for buildup
-	double MCTSW2;
-	//SPS weight loss rate for full load
-	double MCTSW4;
-	//SPS phase two burn time
-	double MCTSD2;
-	//SPS phase three burn time
-	double MCTSD3;
-	//Total SPS ullage overlap
-	double MCTSD9;
-
-	//Impulse in one second SPS / APS / DPS burn
-	double MCTAK1;
-	//Initial value of SPS/APS/DPS minimum impulse curve
-	double MCTAK2;
-	//Slope of SPS/APS/DPS curve
-	double MCTAK3;
-	//LM RCS impulse due to 7 second, 2 jet ullage
-	double MCTAK4;
-
-	//SPS pitch electronic null parameter
-	double MCTSPP;
-	//SPS yaw electronic null parameter
-	double MCTSYP;
-	//SPS pitch gimbal system parameter
-	double MCTSPG;
-	//SPS yaw gimbal system parameter
-	double MCTSYG;
-	//APS pitch engine cant system parameter
-	double MCTAPG;
-	//APS roll engine cant system parameter
-	double MCTARG;
-	//DPS pitch gimbal system parameter
-	double MCTDPG;
-	//DPS roll gimbal system parameter
-	double MCTDRG;
-	//Nominal scaling factor for main DPS thrust level and weight loss rate
-	double MCTDTF;
-
-	//Phase 1 burn time for S-IVB TLI maneuver (vent and ullage)
-	double MCTJD1;
-	//Phase 3 burn time for S-IVB TLI maneuver (buildup)
-	double MCTJD3;
-	//Phase 4 burn time for S-IVB TLI maneuver (main burn)
-	double MCTJD4;
-	//Phase 5 burn time for S-IVB TLI maneuver (during MRS)
-	double MCTJDS;
-	//Phase 6 burn time for S-IVB TLI maneuver (main burn after MRS)
-	double MCTJD5;
-	//Phase 7 burn time for S-IVB TLI maneuver (tailoff)
-	double MCTJD6;
-	//Thrust level of first S-IVB thrust phase (vent and ullage)
-	double MCTJT1;
-	//Thrust level of second S-IVB thrust phase (chilldown)
-	double MCTJT2;
-	//Thrust level of third S-IVB thrust phase (buildup)
-	double MCTJT3;
-	//Thrust level of third S-IVB thrust phase (pre MRS)
-	double MCTJT4;
-	//Thrust level of fifth S-IVB thrust phase (high)
-	double MCTJTH;
-	//Thrust level of fifth S-IVB thrust phase (low)
-	double MCTJTL;
-	//Thrust level of sixth S-IVB thrust phase (main burn after MRS)
-	double MCTJT5;
-	//Thrust level of sevent S-IVB thrust phase (tailoff)
-	double MCTJT6;
-	//Weight flow rate for first S-IVB thrust phase
-	double MCTJW1;
-	//Weight flow rate for second S-IVB thrust phase
-	double MCTJW2;
-	//Weight flow rate for third S-IVB thrust phase
-	double MCTJW3;
-	//Weight flow rate for fourth S-IVB thrust phase
-	double MCTJW4;
-	//Weight flow rate for fifth S-IVB thrust phase (high)
-	double MCTJWH;
-	//Weight flow rate for fifth S-IVB thrust phase (low)
-	double MCTJWL;
-	//Weight flow rate for sixth S-IVB thrust phase
-	double MCTJW5;
-	//Weight flow rate for seventh S-IVB thrust phase
-	double MCTJW6;
-	//Time from ignition to start IGM guidance
-	double MCVIGM;
-	//Minimum allowable S-IVB weight
-	double MCVWMN;
-	//Fixed time increment to force MRS to occur
-	double MCVKPC;
-	//Duration of artificial tau for beginning of burn
-	double MCVCPQ;
-	//Epsilon to control range angle computation
-	double MCVEP1;
-	//Epsilon to terminate computation of K1, K2, K3, and K4
-	double MCVEP2;
-	//Epsilon to terminate recomputation of terminal values
-	double MCVEP3;
-	//Epsilon to allow cut-off computations to be sensed
-	double MCVEP4;
-	//Maximum allowable total yaw angle (IGM)
-	double MCVYMX;
-	//Maximum pitch rate (IGM)
-	double MCVPDL;
-	//Maximum yaw rate (IGM)
-	double MCVYDL;
-	//Time-to-go reference velocity increment
-	double MCVTGQ;
-	//IGM range angle constant
-	double MCVRQV;
-	//Terminal valus rotation indicator
-	double MCVRQT;
-	//High or low thrust indicator
-	int MCTIND;
-	//Second stage exhaust velocity
-	double MCVVX3;
-	//Second stage flow rate
-	double MCVWD3;
-	//Transition time for mixture ratio shift (MRS)
-	double MCVTB2;
-	//S-IVB thrust level
-	double MCTSAV;
-	//S-IVB weight loss rate
-	double MCTWAV;
-	//Nominal integration cycle for PMMSIU
-	double MCVDTM;
-	//Suppress integrator processing
-	bool MGREPH;
-
-	//CG table of LM with descent stage
-	struct CGTable
-	{
-		double Weight[40];
-		VECTOR3 CG[40];
-		int N;
-	} LMDSCCGTAB, LMASCCGTAB;
 };
 
 #endif

@@ -174,17 +174,21 @@ void LEM::SystemsInit()
 	// Batteries 1-4 and the Lunar Stay Battery are jettisoned with the descent stage.
 
 	// ECA #1 (DESCENT stage, LMP 28V DC bus)
+	ECA_1.Init(Battery1, Battery2, &ECA_1a, &ECA_1b, &DescentECAMainFeeder);
 	ECA_1a.Init(this, Battery1, 2); // Battery 1 starts on LV
 	ECA_1b.Init(this, Battery2, 2);
 
 	// ECA #2 (DESCENT stage, CDR 28V DC bus)
+	ECA_2.Init(Battery3, Battery4, &ECA_2a, &ECA_2b, &DescentECAMainFeeder);
 	ECA_2a.Init(this, Battery3, 2);
 	ECA_2b.Init(this, Battery4, 2); 
 
 	// ECA #1 and #2 are JETTISONED with the descent stage.
 	// ECA #3 and #4 have no low voltage taps and can feed either bus.
+	ECA_3.Init(Battery5, &ECA_3a, &ECA_3b, &AscentECAMainFeeder);
 	ECA_3a.Init(this, Battery5, 0);
 	ECA_3b.Init(this, Battery5, 0);
+	ECA_4.Init(Battery6, &ECA_4a, &ECA_4b, &AscentECAMainFeeder);
 	ECA_4a.Init(this, Battery6, 0);
 	ECA_4b.Init(this, Battery6, 0);
 
@@ -328,6 +332,11 @@ void LEM::SystemsInit()
 	// AC bus attenuator.
 	ACVoltsAttenuator.WireTo(&AC_A_BUS_VOLT_CB);
 
+	//Descent ECA power mergers
+	DescentECAMainFeeder.WireToBuses(&CDRDesECAMainCB, &LMPDesECAMainCB);
+	DescentECAContFeeder.WireToBuses(&CDRDesECAContCB, &LMPDesECAContCB);
+	DescentECAMainFeeder.WireToBuses(&CDRAscECAMainCB, &LMPAscECAMainCB);
+
 	// RCS valves
 	RCSMainSovASwitch.WireTo(&RCS_A_MAIN_SOV_CB);
 	RCSMainSovBSwitch.WireTo(&RCS_B_MAIN_SOV_CB);
@@ -400,7 +409,7 @@ void LEM::SystemsInit()
 	//IMU
 	imu.WireToBuses(&IMU_OPR_CB, NULL, NULL);
 	imu.WireHeaterToBuses(imuheater, &IMU_SBY_CB, NULL);
-	imu.InitThermals((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), imucase);
+	imu.InitThermals((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), imucase, (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:PTAHEAT"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:PSAHEAT"));
 
 	// Main Propulsion
 	PROP_DISP_ENG_OVRD_LOGIC_CB.MaxAmps = 2.0;
@@ -451,7 +460,7 @@ void LEM::SystemsInit()
 	omni_fwd.Init(this);
 	omni_aft.Init(this);
 	// S-Band Steerable Ant
-	SBandSteerable.Init(this, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater"));
+	SBandSteerable.Init(this, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:SBDANTHEAT"));
 	// SBand System
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"));
 	// VHF System
@@ -1425,6 +1434,10 @@ void LEM::SystemsInternalTimestep(double simdt)
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		EventTimerDisplay.SystemTimestep(tFactor);
 		CWEA.SystemTimestep(tFactor);
+		ECA_1.SystemTimestep(tFactor);
+		ECA_2.SystemTimestep(tFactor);
+		ECA_3.SystemTimestep(tFactor);
+		ECA_4.SystemTimestep(tFactor);
 		tle.SystemTimestep(tFactor);
 		DockLights.SystemTimestep(tFactor);
 		lca.SystemTimestep(tFactor);
@@ -1551,6 +1564,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tca4B.Timestep(simdt);
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
+	ECA_1.Timestep(simdt);
+	ECA_2.Timestep(simdt);
+	ECA_3.Timestep(simdt);
+	ECA_4.Timestep(simdt);
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
 	UtilLights.Timestep(simdt);
@@ -2325,20 +2342,20 @@ void LEM::CheckDescentStageSystems()
 		h_HeatExchanger* desbat2HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT2HX");
 		h_HeatExchanger* desbat3HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT3HX");
 		h_HeatExchanger* desbat4HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4HX");
-		h_HeatExchanger* desplate1HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT1ECAHX");
-		h_HeatExchanger* desplate2HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT2PBATHX");
-		h_HeatExchanger* desplate3HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT3ECAHX");
-		h_HeatExchanger* desplate4HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBAT4ECAHX");
-		h_HeatExchanger* edbatAHX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATAHX");
+		h_HeatExchanger* desplate1HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBATLeftPlateHX");
+		h_HeatExchanger* desplate2HX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:DESBATRightPlateHX");
 		desbat1HX->SetPumpOff();
 		desbat2HX->SetPumpOff();
 		desbat3HX->SetPumpOff();
 		desbat4HX->SetPumpOff();
 		desplate1HX->SetPumpOff();
 		desplate2HX->SetPumpOff();
-		desplate3HX->SetPumpOff();
-		desplate4HX->SetPumpOff();
+
+		h_HeatExchanger* edbatAHX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATAHX");
 		edbatAHX->SetPumpOff();
+
+		//h_HeatExchanger* staybatHX = (h_HeatExchanger*)Panelsdk.GetPointerByString("HYDRAULIC:STAYBATHX");
+		//staybatHX->SetPumpOff();
 
 		//LR
 
