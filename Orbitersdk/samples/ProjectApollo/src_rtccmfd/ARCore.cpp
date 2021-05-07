@@ -546,6 +546,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	RTECalcMode = 1;
 	RTEReturnInclination = 0.0;
 	RTETradeoffMode = 0;
+	RTEASTType = 76;
 
 	SVSlot = true; //true = CSM; false = Other
 	SVDesiredGET = -1;
@@ -1171,6 +1172,11 @@ void ARCore::TransferGPMToMPT()
 void ARCore::MPTTLIDirectInput()
 {
 	startSubthread(46);
+}
+
+void ARCore::AbortScanTableCalc()
+{
+	startSubthread(47);
 }
 
 void ARCore::TransferLOIorMCCtoMPT()
@@ -2956,7 +2962,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->NewMPTTrajectory(mptveh, opt.RV_MCC))
+			if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, opt.RV_MCC))
 			{
 				Result = 0;
 				break;
@@ -4198,7 +4204,7 @@ int ARCore::subThread()
 			{
 				if (GC->MissionPlanningActive)
 				{
-					if (!GC->rtcc->NewMPTTrajectory(mptveh, opt.sv0))
+					if (!GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, opt.sv0))
 					{
 						opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
 					}
@@ -4226,16 +4232,16 @@ int ARCore::subThread()
 	{
 		SV sv0;
 
-		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(mptveh))
+		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(RTCC_MPT_CSM))
 		{
 			if (mapUpdateGET <= 0.0)
 			{
-				GC->rtcc->NewMPTTrajectory(mptveh, sv0);
+				GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, sv0);
 			}
 			else
 			{
 				EphemerisData sv;
-				if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(mapUpdateGET), mptveh, sv))
+				if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(mapUpdateGET), RTCC_MPT_CSM, sv))
 				{
 					Result = 0;
 					break;
@@ -4277,16 +4283,16 @@ int ARCore::subThread()
 		LMARKTRKPADOpt opt;
 		SV sv0;
 
-		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(mptveh))
+		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(RTCC_MPT_CSM))
 		{
 			if (LmkTime <= 0.0)
 			{
-				GC->rtcc->NewMPTTrajectory(mptveh, sv0);
+				GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, sv0);
 			}
 			else
 			{
 				EphemerisData sv;
-				if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(LmkTime), mptveh, sv))
+				if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(LmkTime), RTCC_MPT_CSM, sv))
 				{
 					Result = 0;
 					break;
@@ -4601,8 +4607,55 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 47: //Spare
+	case 47: //Abort Scan Table
 	{
+		if (GC->MissionPlanningActive)
+		{
+			if (RTEASTType == 75)
+			{
+				GC->rtcc->GMGMED("F75;");
+			}
+			else if (RTEASTType == 76)
+			{
+				GC->rtcc->GMGMED("F76;");
+			}
+			else
+			{
+				GC->rtcc->GMGMED("F77;");
+			}
+		}
+		else
+		{
+			if (RTEASTType == 75)
+			{
+				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f75.T_0) / 3600.0;
+			}
+			else if (RTEASTType == 76)
+			{
+				bool found = GC->rtcc->DetermineRTESite(GC->rtcc->med_f76.Site);
+
+				if (found == false)
+				{
+					Result = 0;
+					break;
+				}
+
+				//Check vector time
+				//TBD: T_V greater than present time
+				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f76.T_0) / 3600.0;
+				GC->rtcc->PZREAP.RTETimeOfLanding = GC->rtcc->GMTfromGET(GC->rtcc->med_f76.T_Z) / 3600.0;
+				GC->rtcc->PZREAP.EntryProfile = GC->rtcc->med_f76.EntryProfile;
+				GC->rtcc->PZREAP.RTEPTPMissDistance = GC->rtcc->med_f76.MissDistance;
+			}
+			else
+			{
+
+			}
+			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(vessel);
+			GC->rtcc->PZREAP.RTEVectorTime = sv.GMT / 3600.0;
+			GC->rtcc->PMMREAST(RTEASTType, &sv);
+		}
+
 		Result = 0;
 	}
 	break;

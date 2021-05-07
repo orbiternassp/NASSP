@@ -442,10 +442,16 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 	sv1.R = sv.R;
 	sv1.V = sv.V;
 	sv1.GMT = sv.GMT;
-	return ELVCNV(sv1, in, out, sv_out2);
+	int err = ELVCNV(sv1, in, out, sv_out2);
+
+	if (err)
+	{
+		return err;
+	}
 	sv_out.R = sv_out2.R;
 	sv_out.V = sv_out2.V;
 	sv_out.GMT = sv_out2.GMT;
+	return 0;
 }
 
 int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)

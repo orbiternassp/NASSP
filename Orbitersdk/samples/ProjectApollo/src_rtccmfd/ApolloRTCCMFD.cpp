@@ -1272,9 +1272,15 @@ void ApolloRTCCMFD::menuSetRetrofireTargetSelectionPage()
 	coreButtons.SelectPage(this, screen);
 }
 
-void ApolloRTCCMFD::menuSetAbortScanTablePage()
+void ApolloRTCCMFD::menuSetAbortScanTableInputPage()
 {
 	screen = 107;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetAbortScanTablePage()
+{
+	screen = 108;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -1592,6 +1598,18 @@ void ApolloRTCCMFD::menuSetRTETradeoffMode()
 	}
 }
 
+void ApolloRTCCMFD::menuCycleASTType()
+{
+	if (G->RTEASTType < 77)
+	{
+		G->RTEASTType++;
+	}
+	else
+	{
+		G->RTEASTType = 75;
+	}
+}
+
 void ApolloRTCCMFD::menuSetASTSiteOrType()
 {
 	bool ASTSiteOrTypeInput(void *id, char *str, void *data);
@@ -1606,11 +1624,14 @@ bool ASTSiteOrTypeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_ASTSiteOrType(char *site)
 {
-	if (G->RTEASTType == 0)
+	if (G->RTEASTType == 75)
 	{
 		GC->rtcc->med_f75.Type.assign(site);
 	}
-	//TBD
+	else if (G->RTEASTType == 76)
+	{
+		GC->rtcc->med_f76.Site.assign(site);
+	}
 }
 
 void ApolloRTCCMFD::menuASTVectorTime()
@@ -1637,11 +1658,14 @@ bool ASTVectorTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_ASTVectorTime(double get)
 {
-	if (G->RTEASTType == 0)
+	if (G->RTEASTType == 75)
 	{
 		GC->rtcc->med_f75.T_V = get;
 	}
-	//TBD
+	else if (G->RTEASTType == 76)
+	{
+		GC->rtcc->med_f76.T_V = get;
+	}
 }
 
 void ApolloRTCCMFD::menuASTAbortTime()
@@ -1665,16 +1689,61 @@ bool ASTAbortTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_ASTAbortTime(double get)
 {
-	if (G->RTEASTType == 0)
+	if (G->RTEASTType == 75)
 	{
 		GC->rtcc->med_f75.T_0 = get;
+	}
+	else if (G->RTEASTType == 76)
+	{
+		GC->rtcc->med_f76.T_0 = get;
+	}
+}
+
+void ApolloRTCCMFD::menuASTLandingTime()
+{
+	bool ASTLandingTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the landing time (Format: hhh:mm:ss)", ASTLandingTimeInput, 0, 25, (void*)this);
+}
+
+bool ASTLandingTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, get;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_ASTLandingTime(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_ASTLandingTime(double get)
+{
+	if (G->RTEASTType == 76)
+	{
+		GC->rtcc->med_f76.T_Z = get;
 	}
 	//TBD
 }
 
 void ApolloRTCCMFD::menuASTCalc()
 {
-	GeneralMEDRequest("F75;");
+	G->AbortScanTableCalc();
+}
+
+void ApolloRTCCMFD::menuDeleteASTRow()
+{
+	bool DeleteASTRowInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the row to delete (1-7). Enter 0 to delete all rows.", DeleteASTRowInput, 0, 25, (void*)this);
+}
+
+bool DeleteASTRowInput(void *id, char *str, void *data)
+{
+	char Buff[128];
+	sprintf_s(Buff, "F79,%s;", str);
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+	return true;
 }
 
 void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()

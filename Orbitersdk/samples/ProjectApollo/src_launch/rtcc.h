@@ -1777,22 +1777,35 @@ struct PMMMCDInput
 
 struct PMMMPTInput
 {
+	//State vector before maneuver
 	EphemerisData sv_before;
+	//Velocity after maneuver
 	VECTOR3 V_aft;
+	//Selected thruster for maneuver
 	int Thruster;
+	//Attitude mode
 	int Attitude;
+	//Docking angle
 	double DockingAngle;
+	//Delta T ullage
 	double DETU;
+	//Ullage thruster code (false = 2 thrusters, true = 4 thrusters)
 	bool UT;
+	//Vehicle configuration code
 	int CONFIG;
+	//Maneuvering vehicle code
 	int VC;
+	//DT at 10% thrust for DPS
 	double DT_10PCT;
+	//Scale factor for DPS engine
 	double DPSScaleFactor;
 	double VehicleArea;
 	double VehicleWeight;
 	double CSMWeight;
 	double LMWeight;
+	//Time flag. false = start at impulsive time, true = use optimum time
 	bool IgnitionTimeOption;
+	//Iterate flag. false = don't iterate, true = iterate
 	bool IterationFlag;
 	double LowerTimeLimit;
 	double UpperTimeLimit;
@@ -1893,8 +1906,12 @@ struct PCMATCArray
 	VECTOR3 Vec1;
 	//Words 71-76: Position at MEI (RTED), output abort velocity vector (AST)
 	VECTOR3 Vec2;
-	//Words 83-84: CSM weight at abort
-	double CSMWeight;
+	//Words 77-78: Open (RTED). output abort GMT? (AST)
+	double Words77_78;
+	//Words 79-80: Total DV? (RTED), DVX (AST)
+	//Words 81-82: DV of tailoff (RTED), DVY (AST)
+	//Words 83-84: CSM weight at abort (RTED), DVZ (AST)
+	VECTOR3 Vec3;
 	//Words 85-86: LM weight at abort
 	double LMWeight;
 	//Words 87-88: Docking angle
@@ -2287,6 +2304,8 @@ struct ASTInput
 
 struct ASTSettings
 {
+	//
+	bool FuelCritical;
 	//Mode indicator to RMMYNI (1 = zero lift, 2 = max lift, 3 = G&N, 6 = Constant G, then roll, 10 = Constant G) 
 	int ReentryMode;
 	int Ref;
@@ -2302,7 +2321,7 @@ struct ASTSettings
 
 struct ASTData
 {
-	int ASTCode;
+	int ASTCode = 0;
 	std::string StationID;
 	//Time of abort (hr.)
 	double AbortGMT;
@@ -2327,7 +2346,7 @@ struct ASTData
 	//Time of vector in MPT (hr.)
 	double VectorGMT;
 	//Abort mode
-	int AbortMode;
+	std::string AbortMode;
 	//Primary reentry mode
 	int ReentryMode;
 	//Miss distance (Er)
@@ -2339,9 +2358,7 @@ struct ASTData
 	//Reentry range bias (Er)
 	double RRBIAS;
 	//State and time at reentry (Er, Er/hr.)
-	VECTOR3 R_EI;
-	VECTOR3 V_EI;
-	double MJD_EI;
+	EphemerisData2 sv_EI;
 	//Year of input
 	int Year;
 	//Geodetic latitude of target
@@ -2349,9 +2366,9 @@ struct ASTData
 	//Longitude of target
 	double lng_TGT;
 	//Preabort state and time (Er, Er/hr)
-	VECTOR3 R0;
-	VECTOR3 V0;
-	double T0;
+	EphemerisData2 sv_IG;
+	//DV vector. Not actually in array???
+	VECTOR3 DV;
 };
 
 struct ELVCTRInputTable
@@ -2446,6 +2463,7 @@ public:
 	void EngineParametersTable(int enginetype, double &Thrust, double &Isp);
 	VECTOR3 ConvertDVtoLVLH(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_imp);
 	VECTOR3 ConvertDVtoInertial(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_LVLH_imp);
+	void PoweredFlightProcessor(PMMMPTInput in, double &GMT_TIG, VECTOR3 &dV_LVLH);
 	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, SV &sv_pre, SV &sv_post, bool agc = true);
 	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
 	void PoweredFlightProcessor(EphemerisData sv0, double mass, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
@@ -2534,7 +2552,8 @@ public:
 	//Return to Earth Abort Planning Supervisor
 	void PMMREAP(int med);
 	//Return to Earth Abort Planning Supervisor (Abort Scan Table)
-	void PMMREAST();
+	void PMMREAST(int med, EphemerisData *sv = NULL);
+	bool DetermineRTESite(std::string Site);
 	//RTE Trajectory Computer
 	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 	//Lunar Orbit Insertion Computational Unit
@@ -2976,6 +2995,17 @@ public:
 		double DVMAX = 10000.0;
 		int EntryProfile = 1;
 	} med_f75;
+
+	//Abort Scan Table generation for a specific site
+	struct MED_F76
+	{
+		std::string Site = "MPL";
+		double T_V = 0.0;
+		double T_0 = 0.0;
+		double T_Z = 00;
+		int EntryProfile = 1;
+		double MissDistance = 0.0;
+	} med_f76;
 
 	//Update return to Earth constraints
 	struct MED_F86
@@ -3857,8 +3887,8 @@ public:
 		//Block 12
 		std::string RTESite = "No Site!";
 		double RTEVectorTime;
-		double RTET0Min;
-		double RTET0Max;
+		double RTET0Min; //Time of abort or minimum time
+		double RTET0Max; //Maximum time
 		double RTETimeOfLanding;
 		double RTEUADVMax;
 		double RTEPTPMissDistance;
@@ -3876,6 +3906,9 @@ public:
 
 		//Block 13
 		int RTETradeoffLabelling[5];
+
+		ASTData AbortScanTableData[7];
+		int LastASTCode = 0;
 	} PZREAP;
 	
 	RetrofireTransferTable RZRFTT;
@@ -4434,7 +4467,7 @@ private:
 	//PMMMPT Gaussian Elimination Subroutine
 	bool PCGAUS(double **A, double *Y, double *X, int N, double eps);
 	//RTE Abort Scan Table (AST) Subroutine
-	void PMMDAB(VECTOR3 R, VECTOR3 V, double GMT, ASTInput ARIN, ASTSettings IRIN, ASTData &AST, int &IER, int IPRT);
+	void PMMDAB(EphemerisData2 XIN, ASTInput ARIN, ASTSettings IRIN, ASTData &AST, int &IER, int IPRT);
 	//Return-to-Earth Tradeoff Display
 	void PMDTRDFF(int med, unsigned page);
 	//Mission Plan Table Display

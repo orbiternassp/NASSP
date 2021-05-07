@@ -342,7 +342,7 @@ struct DiscreteData
 	double eta_rz;
 	double theta_cr;
 	double T_rz;
-	int NOSOLN;
+	int NOSOLN = 1;
 };
 
 class ConicRTEEarthNew : public RTCCModule
@@ -363,7 +363,7 @@ protected:
 	void DVMINQ(int FLAG, int QE, int Q0, double beta_r, double &DV, int &QA, double &V_a, double &beta_a);
 	void FCUA(int FLAG, VECTOR3 R_a, double &beta_r, double &DV, double &U_r, double &V_a, double &beta_a);
 	void MSDS(double VR_a, double VT_a, double beta_r, double theta, double &delta, double &phi, double &phi_z, double &lambda, double &theta_z);
-	void RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a);
+	bool RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a);
 	void VELCOM(double T, double R_a, double &beta_r, double &dt, double &p, int &QA, int &sw6, double &U_r, double &VR_a, double &VT_a, double &beta_a, double &eta_ar, double &DV);
 	void VARMIN();
 	void TCOMP(double dv, double delta, double &T, double &TP);
@@ -501,6 +501,8 @@ protected:
 	bool STORE;
 	double T_ar_stored;
 	OBJHANDLE hEarth;
+	//
+	VECTOR3 RR_vec, VV_vec;
 };
 
 class RTEMoon
