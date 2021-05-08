@@ -560,7 +560,7 @@ public:
 	int h_pump;
 	double pumping;
 	int loaded;
-	int type;		// 0: TEMP, 1: PRESS
+	int type;		// 0: TEMP, 1: PRESS, 2: CHILLER
 	therm_obj *target;
 	double valueMin, valueMax;
 	int handleMin, handleMax;
