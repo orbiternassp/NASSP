@@ -534,7 +534,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	EntryTIGcor = 0.0;
 	EntryLatcor = 0.0;
 	EntryLngcor = 0.0;
-	EntryAng = 0.0;
+	EntryTZ = 0.0;
 	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	entrycritical = 1;
@@ -615,7 +615,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	svtargetnumber = -1;
 	TLCCSolGood = true;
 
-	entrylongmanual = true;
 	landingzone = 0;
 	entryprecision = -1;
 
@@ -3020,15 +3019,6 @@ int ARCore::subThread()
 			}
 		}
 
-		if (entrylongmanual)
-		{
-			opt.lng = EntryLng;
-		}
-		else
-		{
-			opt.lng = (double)landingzone;
-		}
-
 		opt.GETbase = GC->rtcc->CalcGETBase();
 
 		if (GC->rtcc->RTEManeuverCodeLogic(GC->rtcc->PZREAP.RTEManeuverCode, pout.CSMWeight, pout.LMAscWeight, pout.LMDscWeight, opt.enginetype, opt.RV_MCC.mass))
@@ -3038,13 +3028,15 @@ int ARCore::subThread()
 		}
 
 		opt.csmlmdocked = false;
-		opt.entrylongmanual = entrylongmanual;
-		opt.ReA = EntryAng;
+		opt.entrylongmanual = false;
+		opt.ATPLine = landingzone;
 		opt.TIGguess = EntryTIG;
+		opt.t_Z = EntryTZ;
 		opt.vessel = vessel;
 		opt.type = entrycritical;
 		opt.r_rbias = GC->rtcc->PZREAP.RRBIAS;
 		opt.csmlmdocked = false;
+		opt.dv_max = GC->rtcc->PZREAP.DVMAX*0.3048;
 
 		GC->rtcc->EntryTargeting(&opt, &res);
 
@@ -3350,7 +3342,7 @@ int ARCore::subThread()
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.RevsTillTEI = 0;
 		opt.vessel = vessel;
-		opt.entrylongmanual = entrylongmanual;
+		opt.entrylongmanual = false;
 		opt.TIGguess = EntryTIG;
 		opt.Inclination = EntryDesiredInclination;
 		opt.t_zmin = RTEReentryTime;
@@ -4644,12 +4636,27 @@ int ARCore::subThread()
 				//TBD: T_V greater than present time
 				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f76.T_0) / 3600.0;
 				GC->rtcc->PZREAP.RTETimeOfLanding = GC->rtcc->GMTfromGET(GC->rtcc->med_f76.T_Z) / 3600.0;
-				GC->rtcc->PZREAP.EntryProfile = GC->rtcc->med_f76.EntryProfile;
 				GC->rtcc->PZREAP.RTEPTPMissDistance = GC->rtcc->med_f76.MissDistance;
 			}
 			else
 			{
+				if (GC->rtcc->med_f77.Site != "FCUA")
+				{
+					bool found = GC->rtcc->DetermineRTESite(GC->rtcc->med_f77.Site);
 
+					if (found == false)
+					{
+						Result = 0;
+						break;
+					}
+				}
+
+				//Check vector time
+				//TBD: T_V greater than present time
+				GC->rtcc->PZREAP.RTEVectorTime = GC->rtcc->GMTfromGET(GC->rtcc->med_f77.T_V) / 3600.0;
+				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f77.T_min) / 3600.0;
+				GC->rtcc->PZREAP.RTETimeOfLanding = GC->rtcc->GMTfromGET(GC->rtcc->med_f77.T_Z) / 3600.0;
+				GC->rtcc->PZREAP.RTEPTPMissDistance = GC->rtcc->med_f77.MissDistance;
 			}
 			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(vessel);
 			GC->rtcc->PZREAP.RTEVectorTime = sv.GMT / 3600.0;

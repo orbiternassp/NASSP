@@ -2470,40 +2470,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (G->entrycritical != 3)
 		{
-			if (G->entrylongmanual)
-			{
-				skp->Text(1 * W / 8, 4 * H / 14, "Manual", 6);
-				sprintf(Buffer, "%f °", G->EntryLng*DEG);
-				skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
-				if (G->landingzone == 0)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Mid Pacific", 11);
-				}
-				else if (G->landingzone == 1)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "East Pacific", 12);
-				}
-				else if (G->landingzone == 2)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Atlantic Ocean", 14);
-				}
-				else if (G->landingzone == 3)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "Indian Ocean", 12);
-				}
-				else if (G->landingzone == 4)
-				{
-					skp->Text(1 * W / 8, 6 * H / 14, "West Pacific", 12);
-				}
-			}
-		}
+			skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
+			sprintf_s(Buffer, "%s", GC->rtcc->PZREAP.ATPSite[G->landingzone].c_str());
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%f °", G->EntryAng*DEG);
-		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			GET_Display(Buffer, G->EntryTZ);
+			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		}
 
 		if (G->entrycritical == 1)
 		{
@@ -2576,36 +2549,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (G->RTECalcMode == 0 || G->RTECalcMode == 1 || G->RTECalcMode == 2)
 		{
-			if (G->entrylongmanual)
-			{
-				skp->Text(1 * W / 8, 6 * H / 14, "Manual", 6);
-				sprintf(Buffer, "%f °", G->EntryLng*DEG);
-				skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text(1 * W / 8, 6 * H / 14, "Landing Zone", 12);
-				if (G->landingzone == 0)
-				{
-					skp->Text(1 * W / 8, 8 * H / 14, "Mid Pacific", 11);
-				}
-				else if (G->landingzone == 1)
-				{
-					skp->Text(1 * W / 8, 8 * H / 14, "East Pacific", 12);
-				}
-				else if (G->landingzone == 2)
-				{
-					skp->Text(1 * W / 8, 8 * H / 14, "Atlantic Ocean", 14);
-				}
-				else if (G->landingzone == 3)
-				{
-					skp->Text(1 * W / 8, 8 * H / 14, "Indian Ocean", 12);
-				}
-				else if (G->landingzone == 4)
-				{
-					skp->Text(1 * W / 8, 8 * H / 14, "West Pacific", 12);
-				}
-			}
+			skp->Text(1 * W / 8, 6 * H / 14, "Landing Zone", 12);
+
+			sprintf_s(Buffer, "%s", GC->rtcc->PZREAP.ATPSite[G->landingzone].c_str());
+			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		GET_Display(Buffer, G->RTEReentryTime);
@@ -8744,14 +8691,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf_s(Buffer, "%.0lf ft/s", GC->rtcc->med_f75.DVMAX);
 			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
-			if (GC->rtcc->med_f75.EntryProfile == 1)
-			{
-				skp->Text(10 * W / 16, 4 * H / 14, "Constant G", 10);
-			}
-			else
-			{
-				skp->Text(10 * W / 16, 4 * H / 14, "G&N", 3);
-			}
+			sprintf_s(Buffer, "%s", GC->rtcc->med_f75.EntryProfile.c_str());
+			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.2lf°", GC->rtcc->med_f75.Inclination*DEG);
+			skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (G->RTEASTType == 76)
 		{
@@ -8770,16 +8714,35 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			GET_Display(Buffer, GC->rtcc->med_f76.T_Z, false);
 			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 
-			if (GC->rtcc->med_f76.EntryProfile == 1)
-			{
-				skp->Text(10 * W / 16, 4 * H / 14, "Constant G", 10);
-			}
-			else
-			{
-				skp->Text(10 * W / 16, 4 * H / 14, "G&N", 3);
-			}
-		}
+			sprintf_s(Buffer, "%s", GC->rtcc->med_f76.EntryProfile.c_str());
+			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
+			sprintf_s(Buffer, "%.2lf°", GC->rtcc->med_f76.Inclination*DEG);
+			skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			sprintf_s(Buffer, "%s", GC->rtcc->med_f77.Site.c_str());
+			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+			if (GC->MissionPlanningActive)
+			{
+				GET_Display(Buffer, GC->rtcc->med_f77.T_V, false);
+				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+			}
+
+			GET_Display(Buffer, GC->rtcc->med_f77.T_min, false);
+			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->med_f77.T_Z, false);
+			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%s", GC->rtcc->med_f77.EntryProfile.c_str());
+			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.2lf°", GC->rtcc->med_f77.Inclination*DEG);
+			skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+		}
 	}
 	else if (screen == 108)
 	{
@@ -8829,9 +8792,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 32, (10 + 3 * i) * H / 32, Buffer, strlen(Buffer));
 
 			sprintf_s(Buffer, "%s", tab->SiteID.c_str());
-			skp->Text(5 * W / 32, (10 + 3 * i) * H / 32, Buffer, strlen(Buffer));
+			skp->Text(9 * W / 64, (10 + 3 * i) * H / 32, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%s", tab->AbortMode.c_str());
-			skp->Text(5 * W / 32, (11 + 3 * i) * H / 32, Buffer, strlen(Buffer));
+			skp->Text(9 * W / 64, (11 + 3 * i) * H / 32, Buffer, strlen(Buffer));
 
 			GET_Display(Buffer, GC->rtcc->GETfromGMT(tab->AbortGMT), false);
 			skp->Text(9 * W / 32, (10 + 3 * i) * H / 32, Buffer, strlen(Buffer));
@@ -8851,7 +8814,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				sprintf_s(Buffer, "%.2lf", tab->dv / 0.3048);
 			}
 			skp->Text(15 * W / 32, (10 + 3 * i) * H / 32, Buffer, strlen(Buffer));
-			sprintf_s(Buffer, "%.1lf", tab->incl_EI*DEG);
+			if (tab->incl_EI < 0)
+			{
+				sprintf(Buffer, "A%.2f", abs(tab->incl_EI*DEG));
+			}
+			else
+			{
+				sprintf(Buffer, "D%.2f", tab->incl_EI*DEG);
+			}
 			skp->Text(15 * W / 32, (11 + 3 * i) * H / 32, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.1lf", tab->h_PC / 1852.0);
 			skp->Text(15 * W / 32, (12 + 3 * i) * H / 32, Buffer, strlen(Buffer));
@@ -8862,9 +8832,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(19 * W / 32, (11 + 3 * i) * H / 32, Buffer, strlen(Buffer));
 
 			GET_Display(Buffer, GC->rtcc->GETfromGMT(tab->ReentryGMT), false);
-			skp->Text(24 * W / 32, (10 + 3 * i) * H / 32, Buffer, strlen(Buffer));
+			skp->Text(23 * W / 32, (10 + 3 * i) * H / 32, Buffer, strlen(Buffer));
 			GET_Display(Buffer, GC->rtcc->GETfromGMT(tab->SplashdownGMT), false);
-			skp->Text(24 * W / 32, (11 + 3 * i) * H / 32, Buffer, strlen(Buffer));
+			skp->Text(23 * W / 32, (11 + 3 * i) * H / 32, Buffer, strlen(Buffer));
 
 			FormatLatitude(Buffer, tab->lat_SPL*DEG);
 			skp->Text(29 * W / 32, (10 + 3 * i) * H / 32, Buffer, strlen(Buffer));

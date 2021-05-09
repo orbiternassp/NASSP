@@ -1807,7 +1807,7 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 	entopt.vessel = calcParams.src;
 	entopt.GETbase = CalcGETBase();
 	entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-	entopt.nominal = RTCC_ENTRY_NOMINAL;
+	entopt.nominal = true;
 	entopt.ReA = 0;
 	entopt.entrylongmanual = true;
 
@@ -1845,8 +1845,7 @@ void RTCC::AP11BlockData(AP11BLKOpt *opt, P37PAD &pad)
 	entopt.entrylongmanual = true;
 	entopt.GETbase = CalcGETBase();
 	entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-	entopt.ReA = 0;
-	entopt.type = RTCC_ENTRY_ABORT;
+	entopt.type = 1;
 	entopt.vessel = calcParams.src;
 
 	if (opt->useSV)
@@ -1862,6 +1861,7 @@ void RTCC::AP11BlockData(AP11BLKOpt *opt, P37PAD &pad)
 	{
 		entopt.TIGguess = opt->GETI[i];
 		entopt.lng = opt->lng[i];
+		entopt.t_Z = opt->T_Z[i];
 
 		EntryTargeting(&entopt, &res);
 
@@ -1925,8 +1925,10 @@ void RTCC::BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res)
 
 void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 {
+	if (opt->RV_MCC.gravref != hEarth) return;
+
 	RTEEarth* entry;
-	double GET;
+	double GET, LINE[10];
 	bool stop;
 	SV sv;
 
@@ -1935,8 +1937,31 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	sv = opt->RV_MCC;
 	GET = (sv.MJD - opt->GETbase)*24.0*3600.0;
 
-	entry = new RTEEarth(sv.R, sv.V, sv.MJD, sv.gravref, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->entrylongmanual, opt->r_rbias, opt->dv_max);
+	if (opt->entrylongmanual)
+	{
+		LINE[0] = PI05;
+		LINE[1] = opt->lng;
+		LINE[2] = -PI05;
+		LINE[3] = opt->lng;
+		LINE[4] = 1e10;
+		LINE[5] = 1e10;
+	}
+	else
+	{
+		if (opt->ATPLine < 0 || opt->ATPLine>4)
+		{
+			return;
+		}
 
+		for (int i = 0;i < 10;i++)
+		{
+			LINE[i] = PZREAP.ATPCoordinates[opt->ATPLine][i];
+		}
+	}
+
+	entry = new RTEEarth(sv.R, sv.V, sv.MJD, opt->GETbase, opt->TIGguess, opt->t_Z, opt->type);
+	entry->READ(opt->r_rbias, opt->dv_max, 2, 37500.0*0.3048);
+	entry->ATP(LINE);
 	while (!stop)
 	{
 		stop = entry->EntryIter();
@@ -7343,7 +7368,8 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 		}
 	}
 	
-	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->GETbase, LINE);
+	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->GETbase);
+	teicalc->ATP(LINE);
 	teicalc->READ(opt->SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, 2, 0.3, PZREAP.DVMAX, 0.0, opt->Inclination, 1.0*1852.0, TZMINI, 0.0);
 
 	endi = teicalc->MASTER();
@@ -22885,8 +22911,254 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	}
 	sv_abort = emmeniin.sv_cutoff;
 
+	//Lunar search only for Moon reference
+	if (med == 77 && sv_abort.RBI == BODY_EARTH)
+	{
+		return;
+	}
+
+	EphemerisData sv_ig, sv_r;
+	ASTData AST;
+	char typname[8];
+
+	//Entry profile handling
+	std::string EntryProfile;
+	int EPI;
+
+	if (med == 75)
+	{
+		EntryProfile = med_f75.EntryProfile;
+	}
+	else if (med == 76)
+	{
+		EntryProfile = med_f76.EntryProfile;
+	}
+	else
+	{
+		EntryProfile = med_f77.EntryProfile;
+	}
+
+	if (PZREAP.TGTLN == 1)
+	{
+		EPI = 2;
+	}
+	else
+	{
+		if (EntryProfile == "HB1")
+		{
+			EPI = 1;
+		}
+		else
+		{
+			EPI = 0;
+		}
+	}
+
+	SV sv_abort2 = ConvertEphemDatatoSV(sv_abort);
+
+	if (sv_abort.RBI == BODY_EARTH)
+	{
+		double dvmax;
+		int critical;
+
+		if (med == 75)
+		{
+			dvmax = med_f75.DVMAX*0.3048;
+			if (med_f75.Type == "TCUA")
+			{
+				critical = 2;
+				sprintf_s(typname, "TCUA");
+			}
+			else if (med_f75.Type == "FCUA")
+			{
+				critical = 3;
+				sprintf_s(typname, "FCUA");
+			}
+			else
+			{
+				return;
+			}
+		}
+		else
+		{
+			critical = 1;
+			dvmax = PZREAP.DVMAX*0.3048;
+			sprintf_s(typname, "ATP");
+		}
+
+		RTEEarth rte(sv_abort2.R, sv_abort2.V, sv_abort2.MJD, GetGMTBase(), PZREAP.RTET0Min*3600.0, PZREAP.RTETimeOfLanding*3600.0, critical);
+		rte.READ(PZREAP.RRBIAS, dvmax, EPI, PZREAP.VRMAX*0.3048);
+
+		if (critical == 1)
+		{
+			double LINE[10];
+			for (int i = 0;i < 10;i++)
+			{
+				LINE[i] = PZREAP.ATPCoordinates[PZREAP.RTESiteNum][i];
+			}
+			rte.ATP(LINE);
+		}
+		bool stop = false;
+		while (!stop)
+		{
+			stop = rte.EntryIter();
+		}
+
+		sv_ig = sv_abort;
+		sv_r.R = rte.R_r;
+		sv_r.V = rte.V_r;
+		sv_r.GMT = rte.t2;
+		AST.lat_SPL = rte.EntryLatcor;
+		AST.lng_SPL = rte.EntryLngcor;
+		AST.SplashdownGMT = rte.t_Z;
+		AST.DV = rte.DV;
+		AST.h_PC = 0.0;
+	}
+	else
+	{
+		int SMODE;
+		double Inclination;
+
+		if (med == 75)
+		{
+			if (med_f75.Type == "FCUA")
+			{
+				SMODE = 16;
+				sprintf_s(typname, "FCUA");
+			}
+			else
+			{
+				return;
+			}
+			Inclination = med_f75.Inclination;
+		}
+		else if (med == 76)
+		{
+			SMODE = 14;
+			sprintf_s(typname, "ATP");
+			Inclination = med_f76.Inclination;
+		}
+		else
+		{
+			if (med_f77.Site == "FCUA")
+			{
+				SMODE = 36;
+				sprintf_s(typname, "FCUA");
+			}
+			else
+			{
+				SMODE = 34;
+				sprintf_s(typname, "ATP");
+			}
+			Inclination = med_f77.Inclination;
+		}
+
+		RTEMoon rte(sv_abort2.R, sv_abort2.V, sv_abort2.MJD, hMoon, GetGMTBase());
+		if (SMODE == 14 || SMODE == 34)
+		{
+			double LINE[10];
+			for (int i = 0;i < 10;i++)
+			{
+				LINE[i] = PZREAP.ATPCoordinates[PZREAP.RTESiteNum][i];
+			}
+			rte.ATP(LINE);
+		}
+		rte.READ(SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, EPI, 0.3, PZREAP.DVMAX, 0.0, Inclination, 1.0*1852.0, PZREAP.RTETimeOfLanding*3600.0, 0.0);
+		if (rte.MASTER() == false)
+		{
+			return;
+		}
+
+		sv_ig.R = rte.Rig;
+		sv_ig.V = rte.Vig;
+		sv_ig.GMT = (rte.TIG - GetGMTBase())*24.0*3600.0;
+		sv_ig.RBI = BODY_MOON;
+		sv_r.R = rte.R_EI;
+		sv_r.V = rte.V_EI;
+		sv_r.GMT = (rte.EIMJD - GetGMTBase())*24.0*3600.0;
+		AST.lat_SPL = rte.EntryLatcor;
+		AST.lng_SPL = rte.EntryLngcor;
+		AST.SplashdownGMT = rte.t_Z;
+		AST.DV = rte.DV;
+		AST.h_PC = rte.FlybyPeriAlt;
+	}
+
+	if (PZREAP.LastASTCode == 0)
+	{
+		AST.ASTCode = 101;
+	}
+	else
+	{
+		AST.ASTCode = PZREAP.LastASTCode + 1;
+	}
+	PZREAP.LastASTCode = AST.ASTCode;
+	AST.StationID = PZMPTCSM.StationID; //TBD
+	AST.AbortGMT = sv_ig.GMT;
+
+	EphemerisData sv_r_ECT;
+	ELVCNV(sv_r, 0, 1, sv_r_ECT);
+	OELEMENTS coe = OrbMech::coe_from_sv(sv_r_ECT.R, sv_r_ECT.V, OrbMech::mu_Earth);
+	double r_r, v_r, lat_r, lng_r, gamma_r, azi_r;
+	PICSSC(true, sv_r.R, sv_r.V, r_r, v_r, lat_r, lng_r, gamma_r, azi_r);
+	AST.incl_EI = coe.i;
+	if (azi_r >= -PI05 && azi_r <= PI05)
+	{
+		AST.incl_EI = -AST.incl_EI;
+	}
+	AST.dv = length(AST.DV);
+	AST.v_EI = length(sv_r.V);
+	AST.gamma_EI = gamma_r;
+	AST.ReentryGMT = sv_r.GMT;
+	AST.VectorGMT = sv0.GMT;
+
+	char ref;
+	char discr[8], ModeName[16];
+
+	if (sv0.RBI == BODY_EARTH)
+	{
+		ref = 'E';
+	}
+	else
+	{
+		ref = 'L';
+	}
+	if (med == 77)
+	{
+		sprintf(discr, "S");
+	}
+	else
+	{
+		if (med != 75)
+		{
+			sprintf(discr, "D");
+		}
+		else
+		{
+			sprintf(discr, "");
+		}
+	}
+	sprintf(ModeName, "%c%s%s", ref, discr, typname);
+	AST.AbortMode.assign(ModeName);
+	AST.ReentryMode = EPI;
+	AST.MissDistance = 0.0;
+	if (med == 76 || (med == 77 && med_f77.Site != "FCUA"))
+	{
+		AST.SiteID = PZREAP.RTESite;
+	}
+	else
+	{
+		AST.SiteID = "";
+	}
+	AST.GLevel = 0.0;
+	AST.RRBIAS = PZREAP.RRBIAS;
+	AST.sv_EI.R = sv_r.R;
+	AST.sv_EI.V = sv_r.V;
+	AST.sv_EI.GMT = sv_r.GMT;
+	AST.sv_IG = sv_ig;
+	PZREAP.AbortScanTableData[ASTCode] = AST;
+
 	//Conic solutions
-	VECTOR3 DV, R_r, V_r;
+	/*VECTOR3 DV, R_r, V_r;
 	double dvmax, T_r, tzmin, tzmax;
 	//0 = TCUA, 1 = FCUA, 3 = PTP discrete, 5 = ATP discrete
 	int Mode;
@@ -23110,7 +23382,12 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	MATRIX3 Q_Xx = OrbMech::LVLH_Matrix(sv_abort.R, sv_abort.V);
 	DV_LVLH1 = mul(Q_Xx, DV) / 0.3048;
 	DV_LVLH2 = mul(Q_Xx, AST.DV) / 0.3048;
-	sprintf(oapiDebugString(), "DV1: %lf %lf %lf DV2: %lf %lf %lf", DV_LVLH1.x, DV_LVLH1.y, DV_LVLH1.z, DV_LVLH2.x, DV_LVLH2.y, DV_LVLH2.z);
+	sprintf(oapiDebugString(), "DV1: %lf %lf %lf DV2: %lf %lf %lf", DV_LVLH1.x, DV_LVLH1.y, DV_LVLH1.z, DV_LVLH2.x, DV_LVLH2.y, DV_LVLH2.z);*/
+}
+
+void RTCC::PMMPAB()
+{
+
 }
 
 bool RTCC::PMMLRBTI(EphemerisData sv)
@@ -24540,7 +24817,22 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 
 		PZREAP.RTEVectorTime = GMTfromGET(med_f75.T_V) / 3600.0;
 		PZREAP.RTET0Min = GMTfromGET(med_f75.T_0) / 3600.0;
-		PZREAP.EntryProfile = med_f75.EntryProfile;
+
+		if (PZREAP.TGTLN == 1)
+		{
+			PZREAP.EntryProfile = 2;
+		}
+		else
+		{
+			if (med_f75.EntryProfile == "HB1")
+			{
+				PZREAP.EntryProfile = 1;
+			}
+			else
+			{
+				PZREAP.EntryProfile = 0;
+			}
+		}
 
 		PMMREAP(75);
 	}
@@ -24559,10 +24851,61 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		PZREAP.RTEVectorTime = GMTfromGET(med_f76.T_V) / 3600.0;
 		PZREAP.RTET0Min = GMTfromGET(med_f76.T_0) / 3600.0;
 		PZREAP.RTETimeOfLanding = GMTfromGET(med_f76.T_Z) / 3600.0;
-		PZREAP.EntryProfile = med_f76.EntryProfile;
+		if (PZREAP.TGTLN == 1)
+		{
+			PZREAP.EntryProfile = 2;
+		}
+		else
+		{
+			if (med_f76.EntryProfile == "HB1")
+			{
+				PZREAP.EntryProfile = 1;
+			}
+			else
+			{
+				PZREAP.EntryProfile = 0;
+			}
+		}
 		PZREAP.RTEPTPMissDistance = med_f76.MissDistance;
 
 		PMMREAP(76);
+	}
+	//AST lunar search generation for specific site or FCUA
+	else if (med == "77")
+	{
+		if (med_f77.Site != "FCUA")
+		{
+			bool found = DetermineRTESite(med_f77.Site);
+
+			if (found == false)
+			{
+				return 2;
+			}
+		}
+
+		//Check vector time
+		//TBD: T_V greater than present time
+		PZREAP.RTEVectorTime = GMTfromGET(med_f77.T_V) / 3600.0;
+		PZREAP.RTET0Min = GMTfromGET(med_f77.T_min) / 3600.0;
+		PZREAP.RTETimeOfLanding = GMTfromGET(med_f77.T_Z) / 3600.0;
+		if (PZREAP.TGTLN == 1)
+		{
+			PZREAP.EntryProfile = 2;
+		}
+		else
+		{
+			if (med_f77.EntryProfile == "HB1")
+			{
+				PZREAP.EntryProfile = 1;
+			}
+			else
+			{
+				PZREAP.EntryProfile = 0;
+			}
+		}
+		PZREAP.RTEPTPMissDistance = med_f77.MissDistance;
+
+		PMMREAP(77);
 	}
 	//Abort Scan Table delete
 	else if (med == "79")
@@ -28435,7 +28778,10 @@ void RTCC::PMMDAB(EphemerisData2 XIN, ASTInput ARIN, ASTSettings IRIN, ASTData &
 	AST.sv_EI.GMT = AST.ReentryGMT;
 	AST.lat_TGT = 0.0;
 	AST.lng_TGT = 0.0;
-	AST.sv_IG = XIN;
+	AST.sv_IG.R = XIN.R;
+	AST.sv_IG.V = XIN.V;
+	AST.sv_IG.GMT = XIN.GMT;
+	AST.sv_IG.RBI = IRIN.Ref;
 	IER = 0;
 
 	if (PZREAP.RTEIsPTPSite)

@@ -82,6 +82,7 @@ namespace EntryCalculations
 	double AOL(double lat);
 	double IOL(double lat);
 	double WPL(double lat);
+	bool TBLOOK(double *LINE, double lat, double &lng);
 }
 
 //RTCC task RTSDBMP
@@ -258,69 +259,99 @@ private:
 
 class RTEEarth {
 public:
-	RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI, double DVMAXI);
+	RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, double GETbase, double EntryTIG, double t_Z, int critical);
+	void READ(double RRBI, double DVMAXI, int EPI, double URMAX);
+	void ATP(double *line);
 	bool EntryIter();
 
 	double EntryTIGcor; //Corrected Time of Ignition for the Reentry Maneuver
-	double EntryLngcor;	//Corrected Splashdown Longitude
-	double EntryLatcor;	//Corrected Splashdown Latitude
-	//VECTOR3 Entry_DV;
-	double EntryLatPred, EntryLngPred;	//Predicted Splashdown Latitude and Longitude
 	double EntryRET, EntryRTGO, EntryVIO;
 	double V400k, gamma400k;
 	double EntryAng;
-	double t2;
+	VECTOR3 DV; //Inertial DV
 	VECTOR3 Entry_DV; //Entry DV vector in LVLH coordinates
 	int precision; //0 = only conic, 1 = precision, 2 = PeA=-30 solution
-	OBJHANDLE SOIplan; //maneuver in earth or moon SOI
 	int errorstate;
+
+	//State vector at reentry
+	VECTOR3 R_r, V_r;
+	double t2;
+	//State at landing
+	double EntryLngcor;	//Corrected Splashdown Longitude
+	double EntryLatcor;	//Corrected Splashdown Latitude
+	double t_Z;			//Time of splashdown
 private:
 	void coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21);
 	void precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2);
 	void precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2, double &C_FPA);
 	void conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_FPA, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, double &x, int &n1);
 	void conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, double &theta1, double &theta2, double &theta3);
-	double dvmaxiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double dxmax, double dv);
+	//Find independent variable x for which the maximum allowed DV is expended
+	double dvmaxiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double dxmax, double dv_des);
+	double dtiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax,double dxmax, double dt_des);
 	void xdviterator(VECTOR3 R1B,VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x);
 	void limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1B, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x);
 	void dvcalc(VECTOR3 V1B, double theta1, double theta2, double theta3, double x, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, VECTOR3 &DV, double &p_CON);
 	void reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI);
 	void newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo);
-	void finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
+	void finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
 	void newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo);
-	OBJHANDLE AGCGravityRef(VESSEL *vessel);
 
-	OBJHANDLE gravref, hEarth;
-	double MA1, C0, C1, C2, C3;
-	VECTOR3 R0B, V0B;
-	double mjd;
+	//State vector at ignition
+	VECTOR3 R_ig, V_ig;
+	double mjd_ig;
+
+	OBJHANDLE hEarth;
+	//Maximum allowable major axis of return trajectories with a negative radial component
+	double MA1;
+	//Polynomial coefficients used to determine the maximum allowable major axis of return trajectories with a positive radial component based on the radius magnitude
+	double C0, C1, C2, C3;
 	double GETbase, get;
 	double RCON, RD;
 	double mu;
 	double EntryTIGcor_old, dlng_old;
+	//Iteration counter. First iteration is conic calculations
 	int ii;
 	double EntryLng;
-	int entryphase;
-	int critical; //1 = MCC calculation, 2 = TLC or TEC abort, 3 = MCC calculation (corridor control)
-	double xapo, dv_err;
-	VECTOR3 R11B, V11B;
+	//1 = Alternate Target Point (ATP), 2 = Time critical, 3 = Fuel critical
+	int critical;
+	double xapo;
 	int f2;
-	double dlngapo,dt0, x2, x2_apo;
+	double dlngapo, x2, x2_apo;
 	double EMSAlt;
-	double k1, k2, k3, k4;
+	//Radius used to determine which estimate of reentry angle should be used
+	double k1;
+	//Initial estimate of reentry radius
+	double k2;
+	//Initial estimate of the cotangent of the reentry angle used when the initial radius is less than k1 (equivalent to -3° 29.5')
+	double k3;
+	//Initial estimate of the cotangent of the reentry angle used when the initial radius is greater than k1 (equivalent to -5° 58')
+	double k4;
 	int revcor;
 	double phi2;
-	double R_E;
-	double dt1; //time between estimated maneuver time and actual (currently iterated) maneuver time
-	double x, dx, dxmax;
-	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
-	bool entrylongmanual;
+	//Independent variable, cotangent of the post-return flight path angle
+	double x;
+	//Change in x
+	double dx;
+	//Maximum allowed change in x
+	double dxmax;
+	//Limit on the cotangent of the post-return flight path angle
 	double xlim;
 	double t21;
-	double EntryInterface;
 	// relative range override (unit is nautical miles!)
 	double r_rbias;
+	//Maximum DV for the burn
 	double dv_max;
+	//Estimate time between maneuver and landing (ATP mode)
+	double dt_z;
+	//Alternate target line (lat, lng, lat, lng etc.)
+	double LINE[10];
+	// 0: guide reentry to the steep target line
+	// 1: manual reentry to the shallow target line
+	// 2: manual reentry to the steep target line
+	int ICRNGG;
+	//Maximum allowable reentry speed
+	double u_rmax;
 };
 
 struct TradeoffData
@@ -508,7 +539,8 @@ protected:
 class RTEMoon
 {
 public:
-	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double *line);
+	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase);
+	void ATP(double *line);
 	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
 	bool MASTER();
 	void MCSS();
@@ -519,7 +551,7 @@ public:
 
 	int precision;
 	double EntryLatcor, EntryLngcor;
-	VECTOR3 Entry_DV;
+	VECTOR3 DV, Entry_DV;
 	VECTOR3 R_EI, V_EI;
 	double EIMJD;
 	double EntryAng;
@@ -527,12 +559,10 @@ public:
 	double TIG;
 	double ReturnInclination;
 	double FlybyPeriAlt;
+	double t_Z;
 private:
 
-	bool TBLOOK(double lat, double &lng);
-
 	OBJHANDLE hMoon, hEarth;
-	VECTOR3 DV;
 	double mu_E, mu_M, w_E, R_E, R_M;
 	//double r_s; //Pseudostate sphere
 	CELBODY *cMoon;

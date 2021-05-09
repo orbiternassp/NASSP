@@ -52,14 +52,6 @@ class Saturn;
 #define RTCC_LAMBERT_SPHERICAL 0
 #define RTCC_LAMBERT_PERTURBED 1
 
-#define RTCC_ENTRY_DEORBIT 0
-#define RTCC_ENTRY_MCC 1
-#define RTCC_ENTRY_ABORT 2
-#define RTCC_ENTRY_CORRIDOR 3
-
-#define RTCC_ENTRY_MINDV 0
-#define RTCC_ENTRY_NOMINAL 1
-
 #define RTCC_MPT_CSM 1
 #define RTCC_MPT_SIVB 2
 #define RTCC_MPT_LM 3
@@ -462,8 +454,7 @@ struct EntryOpt
 	VESSEL* vessel; //Reentry vessel
 	double GETbase; //usually MJD at launch
 	double TIGguess; //Initial estimate for the TIG or baseline TIG for abort and MCC maneuvers
-	int type; //Type of reentry maneuver
-	double ReA = 0; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
+	int type; //Type of reentry maneuver (1 = ATP, 2 = TCUA, 3 = FCUA)
 	double lng; //Longitude of the desired splashdown coordinates
 	int enginetype;		//Engine type used for the maneuver
 	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
@@ -473,6 +464,8 @@ struct EntryOpt
 	double r_rbias = 1285.0;
 	//Maximum DV
 	double dv_max = 2804.0;
+	double t_Z = 0.0;	//Estimate time of landing
+	int ATPLine = 0;
 };
 
 struct EntryResults
@@ -630,6 +623,7 @@ struct AP11BLKOpt
 	int n; //number of PAD entries
 	std::vector<double> lng; //Splashdown longitudes
 	std::vector<double> GETI; //Ignition times
+	std::vector<double> T_Z; //Estimated landing time
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 };
@@ -2366,7 +2360,7 @@ struct ASTData
 	//Longitude of target
 	double lng_TGT;
 	//Preabort state and time (Er, Er/hr)
-	EphemerisData2 sv_IG;
+	EphemerisData sv_IG;
 	//DV vector. Not actually in array???
 	VECTOR3 DV;
 };
@@ -2556,6 +2550,8 @@ public:
 	bool DetermineRTESite(std::string Site);
 	//RTE Trajectory Computer
 	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	//Return to Earth Digital Supervisor
+	void PMMPAB();
 	//Lunar Orbit Insertion Computational Unit
 	bool PMMLRBTI(EphemerisData sv);
 	//Lunar Orbit Insertion Display
@@ -2993,7 +2989,8 @@ public:
 		double T_V = 0.0; //Vector time
 		double T_0 = 0.0; //Time of abort
 		double DVMAX = 10000.0;
-		int EntryProfile = 1;
+		std::string EntryProfile = "HB1";
+		double Inclination = 0.0; //Lunar reference only
 	} med_f75;
 
 	//Abort Scan Table generation for a specific site
@@ -3002,10 +2999,39 @@ public:
 		std::string Site = "MPL";
 		double T_V = 0.0;
 		double T_0 = 0.0;
-		double T_Z = 00;
-		int EntryProfile = 1;
+		double T_Z = 0.0;
+		std::string EntryProfile = "HB1";
 		double MissDistance = 0.0;
+		double Inclination = 0.0; //Lunar reference only
 	} med_f76;
+
+	//AST lunar search generation for specific site or FCUA
+	struct MED_F77
+	{
+		std::string Site = "MPL";
+		double T_V = 0.0;
+		double T_min = 0.0;
+		double T_max = 0.0;
+		double T_Z = 0.0;
+		std::string EntryProfile = "HB1";
+		double MissDistance = 0.0;
+		double Inclination = 0.0;
+	} med_f77;
+
+	//RTE Digitals maneuver description
+	struct MED_F80
+	{
+		int column = 1; //1 = Primary, 2 = Manual
+		int ASTCode = 101;
+		int REFSMMAT; //-1 = input, 0 = Reentry, 1 = deorbit, 2 = orbital preferred
+		std::string ManeuverCode; //e.g. CSUX for CSM, SPS, undocked, External DV
+		int NumQuads = 4; //2 or 4
+		double UllageDT = 15.0;
+		int TrimAngleInd = -1; //-1 = compute, 1 = system parameters
+		double DockingAngle = 60.0*RAD;
+		bool HeadsUp = true;
+		bool Iterate = true; //false = "single"
+	} med_f80;
 
 	//Update return to Earth constraints
 	struct MED_F86

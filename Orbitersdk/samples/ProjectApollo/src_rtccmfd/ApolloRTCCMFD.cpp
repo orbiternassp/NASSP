@@ -149,12 +149,10 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "ENTRYTIGCOR", G->EntryTIGcor);
 	papiWriteScenario_double(scn, "ENTRYLATCOR", G->EntryLatcor);
 	papiWriteScenario_double(scn, "ENTRYLNGCOR", G->EntryLngcor);
-	papiWriteScenario_double(scn, "ENTRYANG", G->EntryAng);
 	papiWriteScenario_double(scn, "ENTRYANGCOR", G->EntryAngcor);
 	papiWriteScenario_vec(scn, "ENTRYDV", G->Entry_DV);
 	oapiWriteScenario_int(scn, "ENTRYCRITICAL", G->entrycritical);
 	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
-	papiWriteScenario_bool(scn, "ENTRYLONGMANUAL", G->entrylongmanual);
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
 
@@ -258,12 +256,10 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "ENTRYTIGCOR", G->EntryTIGcor);
 		papiReadScenario_double(line, "ENTRYLATCOR", G->EntryLatcor);
 		papiReadScenario_double(line, "ENTRYLNGCOR", G->EntryLngcor);
-		papiReadScenario_double(line, "ENTRYANG", G->EntryAng);
 		papiReadScenario_double(line, "ENTRYANGCOR", G->EntryAngcor);
 		papiReadScenario_vec(line, "ENTRYDV", G->Entry_DV);
 		papiReadScenario_int(line, "ENTRYCRITICAL", G->entrycritical);
 		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
-		papiReadScenario_bool(line, "ENTRYLONGMANUAL", G->entrylongmanual);
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
 
@@ -1632,6 +1628,10 @@ void ApolloRTCCMFD::set_ASTSiteOrType(char *site)
 	{
 		GC->rtcc->med_f76.Site.assign(site);
 	}
+	else
+	{
+		GC->rtcc->med_f77.Site.assign(site);
+	}
 }
 
 void ApolloRTCCMFD::menuASTVectorTime()
@@ -1666,6 +1666,10 @@ void ApolloRTCCMFD::set_ASTVectorTime(double get)
 	{
 		GC->rtcc->med_f76.T_V = get;
 	}
+	else
+	{
+		GC->rtcc->med_f77.T_V = get;
+	}
 }
 
 void ApolloRTCCMFD::menuASTAbortTime()
@@ -1697,6 +1701,35 @@ void ApolloRTCCMFD::set_ASTAbortTime(double get)
 	{
 		GC->rtcc->med_f76.T_0 = get;
 	}
+	else
+	{
+		GC->rtcc->med_f77.T_min = get;
+	}
+}
+
+void ApolloRTCCMFD::menuASTTMAXandDVInput()
+{
+	bool ASTTMAXandDVInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the maximum abort DV:", ASTTMAXandDVInput, 0, 25, (void*)this);
+}
+
+bool ASTTMAXandDVInput(void *id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_ASTTMaxandDV(str);
+}
+
+bool ApolloRTCCMFD::set_ASTTMaxandDV(char *str)
+{
+	if (G->RTEASTType == 75)
+	{
+		double dv;
+		if (sscanf(str, "%lf", &dv) == 1)
+		{
+			GC->rtcc->med_f75.DVMAX = dv;
+			return true;
+		}
+	}
+	return false;
 }
 
 void ApolloRTCCMFD::menuASTLandingTime()
@@ -1724,7 +1757,38 @@ void ApolloRTCCMFD::set_ASTLandingTime(double get)
 	{
 		GC->rtcc->med_f76.T_Z = get;
 	}
-	//TBD
+	else if (G->RTEASTType == 77)
+	{
+		GC->rtcc->med_f77.T_Z = get;
+	}
+}
+
+void ApolloRTCCMFD::menuASTEntryProfile()
+{
+	bool ASTEntryProfileInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter HB1 for manual reentry or HGN for guided reentry. Only HB1 allowed for steep target line (HB1 default)", ASTEntryProfileInput, 0, 25, (void*)this);
+}
+
+bool ASTEntryProfileInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_ASTEntryProfile(str);
+	return true;
+}
+
+void ApolloRTCCMFD::set_ASTEntryProfile(char *str)
+{
+	if (G->RTEASTType == 75)
+	{
+		GC->rtcc->med_f75.EntryProfile.assign(str);
+	}
+	else if (G->RTEASTType == 76)
+	{
+		GC->rtcc->med_f76.EntryProfile.assign(str);
+	}
+	else
+	{
+		GC->rtcc->med_f77.EntryProfile.assign(str);
+	}
 }
 
 void ApolloRTCCMFD::menuASTCalc()
@@ -2466,25 +2530,28 @@ void ApolloRTCCMFD::set_EntryTime(double time)
 	this->G->EntryTIG = time;
 }
 
-void ApolloRTCCMFD::EntryAngDialogue()
+void ApolloRTCCMFD::EntryTZDialogue()
 {
-	bool EntryAngInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Entry FPA in degrees (°):", EntryAngInput, 0, 20, (void*)this);
+	bool EntryTZInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Estimated time of landing (Format: hhh:mm:ss)", EntryTZInput, 0, 20, (void*)this);
 }
 
-bool EntryAngInput(void *id, char *str, void *data)
+bool EntryTZInput(void *id, char *str, void *data)
 {
-	if (strlen(str)<20)
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
-		((ApolloRTCCMFD*)data)->set_entryang(atof(str));
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_entrytz(t1time);
+
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_entryang(double ang)
+void ApolloRTCCMFD::set_entrytz(double t_z)
 {
-	G->EntryAng = ang*RAD;
+	G->EntryTZ = t_z;
 }
 
 void ApolloRTCCMFD::EntryLatDialogue()
@@ -2510,21 +2577,13 @@ void ApolloRTCCMFD::set_entrylat(double lat)
 
 void ApolloRTCCMFD::EntryLngDialogue()
 {
-	if (G->entrylongmanual)
+	if (G->landingzone < 4)
 	{
-		bool EntryLngInput(void* id, char *str, void *data);
-		oapiOpenInputBox("Longitude in degree (°):", EntryLngInput, 0, 20, (void*)this);
+		G->landingzone++;
 	}
 	else
 	{
-		if (G->landingzone < 4)
-		{
-			G->landingzone++;
-		}
-		else
-		{
-			G->landingzone = 0;
-		}
+		G->landingzone = 0;
 	}
 }
 
@@ -2579,7 +2638,18 @@ bool EntryDesiredInclinationInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_EntryDesiredInclination(double inc)
 {
-	G->EntryDesiredInclination = inc * RAD;
+	if (G->RTEASTType == 75)
+	{
+		GC->rtcc->med_f75.Inclination = inc * RAD;
+	}
+	else if (G->RTEASTType == 75)
+	{
+		GC->rtcc->med_f76.Inclination = inc * RAD;
+	}
+	else
+	{
+		GC->rtcc->med_f77.Inclination = inc * RAD;
+	}
 }
 
 void ApolloRTCCMFD::menuSetRTEConstraintF86()
@@ -5538,11 +5608,6 @@ bool RTEReentryTimeInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_RTEReentryTime(double t)
 {
 	G->RTEReentryTime = t;
-}
-
-void ApolloRTCCMFD::EntryLongitudeModeDialogue()
-{
-	G->entrylongmanual = !G->entrylongmanual;
 }
 
 void ApolloRTCCMFD::menuTransferLOIMCCtoMPT()

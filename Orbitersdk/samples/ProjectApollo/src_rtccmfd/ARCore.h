@@ -252,9 +252,10 @@ public:
 	//ENTY PAGE	
 	int entrycritical; //1 = Midcourse, 2 = Abort, 3 = Corridor Control
 	double EntryTIG;
+	double EntryTZ;	//Estimate time of landing
 	double EntryLat;
 	double EntryLng;
-	double EntryAng, EntryAngcor;
+	double EntryAngcor;
 	double EntryTIGcor;
 	double EntryLatcor;
 	double EntryLngcor;
@@ -262,7 +263,6 @@ public:
 	double entryrange;
 	double EntryRET05G; //Time of 0.05g
 	double EntryRRT; //Time of entry interface (400k feet altitude)
-	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double RTEReentryTime; //Desired landing time

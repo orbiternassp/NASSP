@@ -924,9 +924,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu27[] =
 	{
 		{ "Est. Time of Ignition", 0, 'T' },
-		{ "Manual longitude or zone", 0, 'L' },
+		{ "", 0, ' ' },
 		{ "Des. Landing Long", 0, 'O' },
-		{ "Entry Angle", 0, 'A' },
+		{ "Time of landing", 0, 'A' },
 		{ "", 0, ' ' },
 		{ "Maneuver Type", 0, 'E' },
 
@@ -941,9 +941,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu27, sizeof(mnu27) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::EntryTimeDialogue);
-	RegisterFunction("LMO", OAPI_KEY_L, &ApolloRTCCMFD::EntryLongitudeModeDialogue);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::EntryLngDialogue);
-	RegisterFunction("ANG", OAPI_KEY_A, &ApolloRTCCMFD::EntryAngDialogue);
+	RegisterFunction("TZ", OAPI_KEY_A, &ApolloRTCCMFD::EntryTZDialogue);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TYP", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchCritical);
 
@@ -959,7 +959,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "Return-to-earth mode", 0, 'N' },
 		{ "Est. Time of Ignition", 0, 'T' },
-		{ "Manual longitude or zone", 0, 'L' },
+		{ "", 0, ' ' },
 		{ "Des. Landing Long", 0, 'O' },
 		{ "Est. time of reentry", 0, 'S' },
 		{ "FR Inclination", 0, 'I' },
@@ -976,7 +976,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("OPT", OAPI_KEY_N, &ApolloRTCCMFD::CycleRTECalcMode);
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::EntryTimeDialogue);
-	RegisterFunction("LMO", OAPI_KEY_L, &ApolloRTCCMFD::EntryLongitudeModeDialogue);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::EntryLngDialogue);
 	RegisterFunction("EIT", OAPI_KEY_S, &ApolloRTCCMFD::menuSetRTEReentryTime);
 	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::menuSetEntryDesiredInclination);
@@ -3642,17 +3642,17 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu107[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Cycle AST type", 0, 'T' },
+		{ "Enter AST site or area", 0, 'E' },
+		{ "Enter vector time", 0, 'D' },
+		{ "Enter abort time", 0, 'G' },
+		{ "Enter desired DV", 0, 'A' },
+		{ "Enter landing time", 0, 'V' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Go to AST display", 0, 'C' },
+		{ "Entry profile", 0, 'F' },
+		{ "Maximum miss distance", 0, 'P' },
+		{ "Desired inclination", 0, 'S' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
 	};
@@ -3663,13 +3663,13 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("SIT", OAPI_KEY_E, &ApolloRTCCMFD::menuSetASTSiteOrType);
 	RegisterFunction("VTI", OAPI_KEY_D, &ApolloRTCCMFD::menuASTVectorTime);
 	RegisterFunction("TIM", OAPI_KEY_G, &ApolloRTCCMFD::menuASTAbortTime);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TDV", OAPI_KEY_A, &ApolloRTCCMFD::menuASTTMAXandDVInput);
 	RegisterFunction("TZ", OAPI_KEY_V, &ApolloRTCCMFD::menuASTLandingTime);
 
 	RegisterFunction("AST", OAPI_KEY_C, &ApolloRTCCMFD::menuSetAbortScanTablePage);
-	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ENT", OAPI_KEY_F, &ApolloRTCCMFD::menuASTEntryProfile);
+	RegisterFunction("MD", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("INC", OAPI_KEY_S, &ApolloRTCCMFD::menuSetEntryDesiredInclination);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
 

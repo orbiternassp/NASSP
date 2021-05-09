@@ -123,8 +123,8 @@ public:
 	void menuP30UplinkCalc();
 	void menuRetrofireEXDVUplink();
 	void menuRetrofireEXDVUplinkCalc();
-	void EntryAngDialogue();
-	void set_entryang(double ang);
+	void EntryTZDialogue();
+	void set_entrytz(double t_z);
 	void EntryTimeDialogue();
 	void set_EntryTime(double time);
 	void set_entrylat(double lat);
@@ -208,7 +208,6 @@ public:
 	void GetEntryTargetfromAGC();
 	void menuSetRTEReentryTime();
 	void set_RTEReentryTime(double t);
-	void EntryLongitudeModeDialogue();
 	void menuSetLOIPage();
 	void menuTLCCVectorTime();
 	void set_TLCCVectorTime(double time);
@@ -771,6 +770,10 @@ public:
 	void menuASTLandingTime();
 	void set_ASTLandingTime(double get);
 	void menuSetAbortScanTablePage();
+	void menuASTTMAXandDVInput();
+	bool set_ASTTMaxandDV(char *str);
+	void menuASTEntryProfile();
+	void set_ASTEntryProfile(char *str);
 	void menuASTCalc();
 	void menuDeleteASTRow();
 

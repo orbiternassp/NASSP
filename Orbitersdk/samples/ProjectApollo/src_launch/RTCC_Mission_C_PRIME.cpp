@@ -174,11 +174,13 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			TLIplus = 90.0*60.0;
 			entopt.lng = -30.0*RAD;
+			entopt.t_Z = 17.0*3600.0 + 47.0*60.0;
 		}
 		else
 		{
 			TLIplus = 4.0*3600.0;
 			entopt.lng = -165.0 * RAD;
+			entopt.t_Z = 26.0*3600.0 + 43.0*60.0;
 		}
 
 		sv1.mass = PZMPTCSM.mantable[0].CommonBlock.CSMMass;
@@ -192,9 +194,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.entrylongmanual = true;
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		entopt.ReA = 0;
 		entopt.TIGguess = calcParams.TLI + TLIplus;//(TIGMJD - GETbase)*24.0*3600.0 + TLIplus;
-		entopt.type = RTCC_ENTRY_ABORT;
+		entopt.type = 1;
 		entopt.vessel = calcParams.src;
 		entopt.RV_MCC = sv2;
 		entopt.r_rbias = 1350.0;
@@ -307,21 +308,25 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			TLIplus = calcParams.TLI + 11.0*3600.0;
 			sprintf(manname, "TLI+11");
+			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
 		}
 		else if (fcn == 11)
 		{
 			TLIplus = calcParams.TLI + 25.0*3600.0;
 			sprintf(manname, "TLI+25");
+			entopt.t_Z = OrbMech::HHMMSSToSS(74.0, 38.0, 0.0);
 		}
 		else if (fcn == 12)
 		{
 			TLIplus = calcParams.TLI + 35.0*3600.0;
 			sprintf(manname, "TLI+35");
+			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
 		}
 		else if (fcn == 13)
 		{
 			TLIplus = calcParams.TLI + 44.0*3600.0;
 			sprintf(manname, "TLI+44");
+			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
 		}
 
 		GETbase = CalcGETBase();
@@ -331,10 +336,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -165.0*RAD;
-		entopt.ReA = 0;
 		entopt.RV_MCC = sv0;
 		entopt.TIGguess = TLIplus;
-		entopt.type = RTCC_ENTRY_ABORT;
+		entopt.type = 1;
 		entopt.vessel = calcParams.src;
 		entopt.r_rbias = 1350.0;
 		entopt.dv_max = 7000.0*0.3048;
@@ -1314,11 +1318,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		//Only corridor control after EI-24h
 		if (MCCtime > calcParams.EI - 24.0*3600.0)
 		{
-			entopt.type = RTCC_ENTRY_CORRIDOR;
+			entopt.type = 3;
 		}
 		else
 		{
-			entopt.type = RTCC_ENTRY_MCC;
+			entopt.type = 1;
+			entopt.t_Z = OrbMech::HHMMSSToSS(144.0, 0.0, 0.0);
 		}
 
 		GETbase = CalcGETBase();
@@ -1329,7 +1334,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -165.0*RAD;
-		entopt.ReA = 0;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
