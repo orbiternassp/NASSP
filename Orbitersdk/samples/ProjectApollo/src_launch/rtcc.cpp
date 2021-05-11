@@ -1715,7 +1715,10 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
 			papiReadScenario_int(Buff, "MCLTTD", SystemParameters.MCLTTD);
-			papiReadScenario_double(Buff, "PZREAP_RRBIAS", PZREAP.RRBIAS);
+			if (papiReadScenario_double(Buff, "RRBIAS", dtemp))
+			{
+				PZREAP.RRBIAS = PZMCCPLN.Reentry_range = dtemp;
+			}
 			papiReadScenario_double(Buff, "PZREAP_IRMAX", PZREAP.IRMAX);
 			papiReadScenario_double(Buff, "PDI_K_X", RTCCPDIIgnitionTargets.K_X);
 			papiReadScenario_double(Buff, "PDI_K_V", RTCCPDIIgnitionTargets.K_V);
@@ -5189,6 +5192,7 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMm
 	mccconst.T_t1_min_dps = PZMCCPLN.TT1_DPS_MIN;
 	mccconst.T_t1_max_dps = PZMCCPLN.TT1_DPS_MAX;
 	mccconst.INCL_PR_MAX = PZMCCPLN.INCL_PR_MAX;
+	mccconst.Reentry_range = PZMCCPLN.Reentry_range;
 
 	TLMCCProcessor tlmcc(this);
 	tlmcc.Init(datatab, medquant, mccconst);
@@ -14509,7 +14513,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			emsin.StopParamRefFrame = 1;
 			emsin.MaxIntegTime = 10.0*24.0*3600.0;
 			EMMENI(emsin);
-			if (emsin.TerminationCode == 1)
+			if (emsin.TerminationCode == 2)
 			{
 				double fpa = dotp(unit(emsin.sv_cutoff.R), unit(emsin.sv_cutoff.V));
 				if (fpa < 0)
@@ -14529,7 +14533,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				}
 
 				//Did we find the SOI radius?
-				if (emsin.TerminationCode == 1)
+				if (emsin.TerminationCode == 2)
 				{
 					EZSPACE.GETSE = GETfromGMT(emsin.sv_cutoff.GMT);
 				}
@@ -14583,7 +14587,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			emsin.IsForwardIntegration = -1.0;
 			EMMENI(emsin);
 
-			if (emsin.TerminationCode == 1)
+			if (emsin.TerminationCode == 3)
 			{
 				EZSPACE.GETEI = GETfromGMT(emsin.sv_cutoff.GMT);
 
@@ -25024,7 +25028,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		}
 		if (data.size() < 2 || data[1] == "")
 		{
-			PZMCCPLN.Reentry_range = -6.52*RAD;
+			PZMCCPLN.Reentry_range = 1285.0;
 		}
 		else
 		{
@@ -25033,7 +25037,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 			{
 				return 1;
 			}
-			PZMCCPLN.Reentry_range = 1350.0;
+			PZMCCPLN.Reentry_range = range;
 		}
 	}
 	//Delete column of midcourse correction display

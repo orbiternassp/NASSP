@@ -42,6 +42,8 @@ void E_system::Create_Boiler(char *line) {
 		type = 0;
 	else if (Compare(typeName, "PRESS"))
 		type = 1;
+	else if (Compare(typeName, "CHILLER"))
+		type = 2;
 
 	AddSystem(new Boiler(name, pump, src, watts, ewatts, type, valueMin, valueMax, t));
 }

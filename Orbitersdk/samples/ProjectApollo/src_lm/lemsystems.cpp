@@ -335,7 +335,7 @@ void LEM::SystemsInit()
 	//Descent ECA power mergers
 	DescentECAMainFeeder.WireToBuses(&CDRDesECAMainCB, &LMPDesECAMainCB);
 	DescentECAContFeeder.WireToBuses(&CDRDesECAContCB, &LMPDesECAContCB);
-	DescentECAMainFeeder.WireToBuses(&CDRAscECAMainCB, &LMPAscECAMainCB);
+	AscentECAMainFeeder.WireToBuses(&CDRAscECAMainCB, &LMPAscECAMainCB);
 
 	// RCS valves
 	RCSMainSovASwitch.WireTo(&RCS_A_MAIN_SOV_CB);

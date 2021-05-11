@@ -132,6 +132,7 @@ struct TLMCCMissionConstants
 	double T_t1_max_dps;
 	double H_LPO;
 	double INCL_PR_MAX;
+	double Reentry_range;
 };
 
 struct TLMCCDisplayData
@@ -356,13 +357,13 @@ protected:
 
 	double R_E, R_M, mu_E, mu_M;
 
-	EphemerisData sv_MCC;
+	EphemerisData sv_MCC; //In TLMCC coordinate system
+	EphemerisData sv_MCC_SOI; //In the "correct" coordinate system
 	double isp_SPS, isp_DPS, isp_MCC, Wdot;
 	int KREF_MCC;
 	VECTOR3 DV_MCC;
 
 	double gamma_reentry;
-	double Reentry_range; //In NM
 	double Reentry_dt;
 
 	TLMCCDataTable DataTable;

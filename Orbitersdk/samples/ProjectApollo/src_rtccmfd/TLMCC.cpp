@@ -33,7 +33,6 @@ TLMCCProcessor::TLMCCProcessor(RTCC *r) : RTCCModule(r)
 	mu_E = OrbMech::mu_Earth;
 	mu_M = OrbMech::mu_Moon;
 	gamma_reentry = -6.52*RAD;
-	Reentry_range = 1380.0;
 	Reentry_dt = 500.0;
 	isp_SPS = 3080.0;
 	isp_DPS = 3107.0;
@@ -56,6 +55,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	//Propagate state vector to time of ignition
 	int ITS;
 	pRTCC->PMMCEN(MEDQuantities.sv0, 0.0, 10.0*24.0*3600.0, 1, MEDQuantities.T_MCC - MEDQuantities.sv0.GMT, 1.0, sv_MCC, ITS);
+	sv_MCC_SOI = sv_MCC;
 
 	//SOI check
 	VECTOR3 R_EM, V_EM, R_ES, R2;
@@ -77,6 +77,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 		if (Ratio < 0.275)
 		{
 			pRTCC->ELVCNV(sv_MCC, 0, 2, sv_MCC);
+			sv_MCC.RBI = BODY_MOON;
 		}
 	}
 	else
@@ -84,6 +85,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 		if (Ratio < 1.0 / 0.275)
 		{
 			pRTCC->ELVCNV(sv_MCC, 2, 0, sv_MCC);
+			sv_MCC.RBI = BODY_EARTH;
 		}
 	}
 
@@ -160,17 +162,17 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	if (MEDQuantities.Mode <= 5)
 	{
 		EphemerisData sv_MCC_apo;
-		sv_MCC_apo = sv_MCC;
+		sv_MCC_apo = sv_MCC_SOI;
 		sv_MCC_apo.V += DV_MCC;
 		DV_LOI = CalcLOIDV(sv_MCC_apo, outarray.gamma_nd);
 	}
 	//Calc MPT parameters
-	out.R_MCC = sv_MCC.R;
-	out.V_MCC = sv_MCC.V;
-	out.GMT_MCC = sv_MCC.GMT;
-	out.RBI = sv_MCC.RBI;
+	out.R_MCC = sv_MCC_SOI.R;
+	out.V_MCC = sv_MCC_SOI.V;
+	out.GMT_MCC = sv_MCC_SOI.GMT;
+	out.RBI = sv_MCC_SOI.RBI;
 
-	out.V_MCC_apo = sv_MCC.V + DV_MCC;
+	out.V_MCC_apo = sv_MCC_SOI.V + DV_MCC;
 
 	//Calc display quantities
 	out.display.Mode = MEDQuantities.Mode;
@@ -207,7 +209,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	out.display.Config = MEDQuantities.Config;
 	double dv = length(DV_MCC);
 	double T_start = -outarray.M_i / Wdot * (1.0 + (exp(-dv / isp_MCC) - 1.0) / (dv / isp_MCC));
-	out.display.GET_MCC = pRTCC->GETfromGMT(sv_MCC.GMT) + T_start;
+	out.display.GET_MCC = pRTCC->GETfromGMT(sv_MCC_SOI.GMT) + T_start;
 	out.display.DV_MCC = DV_MCC;
 	out.display.h_PC = outarray.h_pl;
 	
@@ -292,8 +294,8 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	out.display.LMWT = MEDQuantities.LMMass;
 
 	VECTOR3 X_PHV, Y_PHV, Z_PHV;
-	Z_PHV = unit(-sv_MCC.R);
-	Y_PHV = unit(crossp(sv_MCC.V, sv_MCC.R));
+	Z_PHV = unit(-sv_MCC_SOI.R);
+	Y_PHV = unit(crossp(sv_MCC_SOI.V, sv_MCC_SOI.R));
 	X_PHV = crossp(Y_PHV, Z_PHV);
 	out.display.YAW_MCC = atan(dotp(Y_PHV, unit(DV_MCC)) / dotp(X_PHV, unit(DV_MCC)));
 
@@ -2652,6 +2654,17 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void
 		//Integrate backwards to time of MCC
 		int ITS;
 		pRTCC->PMMCEN(sv_pl, 0.0, 10.0*24.0*3600.0, 1, vars->sv0.GMT - sv_pl.GMT, -1.0, sv_mcc_temp, ITS);
+		//Convert if necessary
+		if (KREF_MCC == 1 && sv_mcc_temp.RBI == BODY_MOON)
+		{
+			pRTCC->ELVCNV(sv_mcc_temp, 2, 0, sv_mcc_temp);
+			sv_mcc_temp.RBI = BODY_EARTH;
+		}
+		else if (KREF_MCC == 2 && sv_mcc_temp.RBI == BODY_EARTH)
+		{
+			pRTCC->ELVCNV(sv_mcc_temp, 0, 2, sv_mcc_temp);
+			sv_mcc_temp.RBI = BODY_MOON;
+		}
 	}
 	else
 	{
@@ -3808,7 +3821,7 @@ void TLMCCProcessor::RNTSIM(VECTOR3 R, VECTOR3 V, double GMT, double lng_L, doub
 	v = length(V);
 
 	P = V / v / cos(gamma_reentry) - R / r * tan(gamma_reentry);
-	theta = Reentry_range / 3443.933585;
+	theta = Constants.Reentry_range / 3443.933585;
 	S = R / r * cos(theta) + P * sin(theta);
 	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MEDQuantities.GMTBase + (GMT + Reentry_dt) / 24.0 / 3600.0);
 	S_equ = rhtmul(Rot, S);
