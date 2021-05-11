@@ -14429,7 +14429,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			emsin.StopParamRefFrame = 1;
 			emsin.MaxIntegTime = 10.0*24.0*3600.0;
 			EMMENI(emsin);
-			if (emsin.TerminationCode == 1)
+			if (emsin.TerminationCode == 2)
 			{
 				double fpa = dotp(unit(emsin.sv_cutoff.R), unit(emsin.sv_cutoff.V));
 				if (fpa < 0)
@@ -14449,7 +14449,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				}
 
 				//Did we find the SOI radius?
-				if (emsin.TerminationCode == 1)
+				if (emsin.TerminationCode == 2)
 				{
 					EZSPACE.GETSE = GETfromGMT(emsin.sv_cutoff.GMT);
 				}
@@ -14503,7 +14503,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			emsin.IsForwardIntegration = -1.0;
 			EMMENI(emsin);
 
-			if (emsin.TerminationCode == 1)
+			if (emsin.TerminationCode == 3)
 			{
 				EZSPACE.GETEI = GETfromGMT(emsin.sv_cutoff.GMT);
 
