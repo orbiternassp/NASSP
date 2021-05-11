@@ -163,7 +163,6 @@ public:
 	void menuSetManPADPage();
 	void menuCalcEntryPAD();
 	void menuSetEntryPADPage();
-	void menuSwitchCritical();
 	void menuSwitchEntryPADOpt();
 	void menuManPADTIG();
 	void set_ManPADTIG(double ManPADTIG);
@@ -295,11 +294,11 @@ public:
 	void menuSetEMPPage();
 	void menuSetNavCheckPADPage();
 	void menuSetDeorbitPage();
-	void menuSetEarthEntryPage();
-	void menuSetMoonEntryPage();
+	void menuSetRTEDigitalsInputPage();
+	void menuCycleRTEDColumn();
+	void menuSetRTEDigitalsPage();
 	void menuSetRTEConstraintsPage();
 	void menuSetEntryUpdatePage();
-	void menuSetP37PADPage();
 	void menuSetRendezvousPage();
 	void menuSetDKIPage();
 	void menuSetDKIOptionsPage();

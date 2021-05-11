@@ -1938,7 +1938,13 @@ struct PCMATCArray
 	int TrimAngleInd;
 	//Words 137-138: Time of midnight prior to launch
 	double GMTBASE;
+	//Word 159: Error indicator (0 = no error, 1 = coast error, 2 = powered error)
+	int ErrInd;
 	bool h_pc_on;
+	//Words 259-272: State and time at main engine off
+	EphemerisData sv_CO;
+	//Words 273-286: Free flight state vect main engine on
+	EphemerisData sv_BI;
 };
 
 struct StationContact
@@ -2365,6 +2371,65 @@ struct ASTData
 	VECTOR3 DV;
 };
 
+struct RTEDMEDData
+{
+	int Thruster;
+	int AttitudeMode;
+	bool UllageThrusters;
+	int ConfigCode;
+	int ManVeh;
+	bool HeadsUp;
+	int PrimaryReentryMode;
+	int BackupReentryMode;
+	int REFSMMATNum; //-1 = input, 0 = Reentry, 1 = deorbit, 2 = orbital preferred
+	int StoppingMode; //-1 = Time, 1 = Gamma
+	bool ManualEntry;
+	int TrimInd;
+	int Ref;
+	int Column;
+};
+
+struct RTEDASTData
+{
+	EphemerisData sv_TIG;
+	VECTOR3 DV;
+	double h_r;
+	double lat_r;
+	double lng_r;
+	double azi_r;
+	double dt_ar;
+	double gamma_r;
+	double gamma_r_stop;
+	double lat_tgt;
+	double lng_tgt;
+};
+
+struct RTEDSPMData
+{
+	double UllageThrust;
+	double MainEngineThrust;
+	double UllageWLR;
+	double MainEngineWLR;
+	double dt_ullage;
+	double dt_10PCT;
+	double CSMWeight;
+	double LMWeight;
+	double DockingAngle;
+	double KFactor;
+	double CMWeight;
+	double CMArea;
+	double BankAngle;
+	double GLevelReentry;
+	double GLevelConstant;
+	double lng_T;
+	double RollDirection;
+	double TDPS; //Maximum DT for DPS (SPS) without iterating
+	double GNBankAngle;
+	double DPS10PCTThrust;
+	double DPS10PCTWLR;
+	double ComputerThrust; //In AGC
+};
+
 struct ELVCTRInputTable
 {
 	//Time to interpolate
@@ -2454,7 +2519,7 @@ public:
 	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
 	void FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc = true);
 	void FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_tig, SV &sv_cut, bool agc = true);
-	void EngineParametersTable(int enginetype, double &Thrust, double &Isp);
+	void EngineParametersTable(int enginetype, double &Thrust, double &WLR, double &OnboardThrust);
 	VECTOR3 ConvertDVtoLVLH(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_imp);
 	VECTOR3 ConvertDVtoInertial(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_LVLH_imp);
 	void PoweredFlightProcessor(PMMMPTInput in, double &GMT_TIG, VECTOR3 &dV_LVLH);
@@ -2547,11 +2612,13 @@ public:
 	void PMMREAP(int med);
 	//Return to Earth Abort Planning Supervisor (Abort Scan Table)
 	void PMMREAST(int med, EphemerisData *sv = NULL);
+	//Return to Earth Abort Planning Supervisor (RTED)
+	void PMMREDIG(bool mpt);
 	bool DetermineRTESite(std::string Site);
 	//RTE Trajectory Computer
 	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 	//Return to Earth Digital Supervisor
-	void PMMPAB();
+	void PMMPAB(RTEDMEDData MED, RTEDASTData AST, RTEDSPMData SPM, MATRIX3 *RFS, int &IRED);
 	//Lunar Orbit Insertion Computational Unit
 	bool PMMLRBTI(EphemerisData sv);
 	//Lunar Orbit Insertion Display
@@ -2666,7 +2733,7 @@ public:
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
 	double RTCCPresentTimeGMT();
 	OBJHANDLE GetGravref(int body);
-	bool RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, double lmdscmass, int &thruster, double &manmass);
+	bool RTEManeuverCodeLogic(char *code, double lmascmass, double lmdscmass, int UllageNum, int &thruster, int &AttMode, int &ConfigCode, int &ManVeh, double &lmmass);
 
 	// **MISSION PROGRAMS**
 
@@ -3021,10 +3088,10 @@ public:
 	//RTE Digitals maneuver description
 	struct MED_F80
 	{
-		int column = 1; //1 = Primary, 2 = Manual
+		int Column = 1; //1 = Primary, 2 = Manual
 		int ASTCode = 101;
-		int REFSMMAT; //-1 = input, 0 = Reentry, 1 = deorbit, 2 = orbital preferred
-		std::string ManeuverCode; //e.g. CSUX for CSM, SPS, undocked, External DV
+		std::string REFSMMAT = "CUR";
+		std::string ManeuverCode = "CSUX"; //e.g. CSUX for CSM, SPS, undocked, External DV
 		int NumQuads = 4; //2 or 4
 		double UllageDT = 15.0;
 		int TrimAngleInd = -1; //-1 = compute, 1 = system parameters
@@ -3032,6 +3099,32 @@ public:
 		bool HeadsUp = true;
 		bool Iterate = true; //false = "single"
 	} med_f80;
+
+	//RTE digitals manual maneuver input
+	struct MED_F81
+	{
+		double VectorTime = 0.0;
+		double IgnitionTime = 0.0;
+		double lat_tgt = 0.0;
+		double lng_tgt = 0.0;
+		int RefBody = BODY_EARTH;
+		VECTOR3 XDV;
+	} med_f81;
+
+	//RTE digitals entry profile
+	struct MED_F82
+	{
+		std::string PrimaryEP = "HGN";
+		double PrimaryInitialBank = 0.0;
+		double PrimaryGLIT = 0.05;
+		std::string PrimaryRollDirection = "N";
+		double PrimaryLongT = 9999.9;
+		std::string BackupEP = "HB1";
+		double BackupInitialBank = 0.0;
+		double BackupGLIT = 2.0;
+		std::string BackupRollDirection = "N";
+		double BackupLongT = 9999.9;
+	} med_f82;
 
 	//Update return to Earth constraints
 	struct MED_F86
@@ -4432,6 +4525,15 @@ public:
 	PMMAEG pmmaeg;
 	PMMLAEG pmmlaeg;
 
+	struct VehicleDataBuffer
+	{
+		EphemerisData sv;
+		double csmmass;
+		double lmascmass;
+		double lmdscmass;
+		double sivbmass;
+	} VEHDATABUF;
+
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	double GetClockTimeFromAGC(agc_t *agc);
@@ -4522,7 +4624,7 @@ private:
 	int MPTGetPrimaryThruster(int thruster);
 	void MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg);
 public:
-	void MPTMassUpdate(VESSEL *vessel);
+	void MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2);
 protected:
 
 	//Auxiliary subroutines

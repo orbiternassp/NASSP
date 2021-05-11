@@ -151,7 +151,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "ENTRYLNGCOR", G->EntryLngcor);
 	papiWriteScenario_double(scn, "ENTRYANGCOR", G->EntryAngcor);
 	papiWriteScenario_vec(scn, "ENTRYDV", G->Entry_DV);
-	oapiWriteScenario_int(scn, "ENTRYCRITICAL", G->entrycritical);
 	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
@@ -258,7 +257,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "ENTRYLNGCOR", G->EntryLngcor);
 		papiReadScenario_double(line, "ENTRYANGCOR", G->EntryAngcor);
 		papiReadScenario_vec(line, "ENTRYDV", G->Entry_DV);
-		papiReadScenario_int(line, "ENTRYCRITICAL", G->entrycritical);
 		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
@@ -840,13 +838,13 @@ void ApolloRTCCMFD::menuSetDeorbitPage()
 	coreButtons.SelectPage(this, screen);
 }
 
-void ApolloRTCCMFD::menuSetEarthEntryPage()
+void ApolloRTCCMFD::menuSetRTEDigitalsInputPage()
 {
 	screen = 27;
 	coreButtons.SelectPage(this, screen);
 }
 
-void ApolloRTCCMFD::menuSetMoonEntryPage()
+void ApolloRTCCMFD::menuSetRTEDigitalsPage()
 {
 	screen = 28;
 	coreButtons.SelectPage(this, screen);
@@ -861,12 +859,6 @@ void ApolloRTCCMFD::menuSetRTEConstraintsPage()
 void ApolloRTCCMFD::menuSetEntryUpdatePage()
 {
 	screen = 30;
-	coreButtons.SelectPage(this, screen);
-}
-
-void ApolloRTCCMFD::menuSetP37PADPage()
-{
-	screen = 31;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -2724,7 +2716,7 @@ void ApolloRTCCMFD::CycleRTECalcMode()
 void ApolloRTCCMFD::menuSetRTEManeuverCode()
 {
 	bool RTEManeuverCodeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Maneuver code: 1st char = C(CSM), L(LEM), 2nd char = S(SPS), R(RCS), D(DPS), 3rd char = D(docked), A(docked with ascent stage), U(undocked)", RTEManeuverCodeInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Maneuver code: 1st char = C(CSM), L(LEM), 2nd char = S(SPS), R(RCS), D(DPS), 3rd char = D(docked), A(docked with ascent stage), U(undocked), 4th char = X (External DV)", RTEManeuverCodeInput, 0, 20, (void*)this);
 }
 
 bool RTEManeuverCodeInput(void *id, char *str, void *data)
@@ -2739,7 +2731,19 @@ bool RTEManeuverCodeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_RTEManeuverCode(char *code)
 {
-	sprintf_s(GC->rtcc->PZREAP.RTEManeuverCode, code);
+	GC->rtcc->med_f80.ManeuverCode.assign(code);
+}
+
+void ApolloRTCCMFD::menuCycleRTEDColumn()
+{
+	if (GC->rtcc->med_f80.Column < 2)
+	{
+		GC->rtcc->med_f80.Column++;
+	}
+	else
+	{
+		GC->rtcc->med_f80.Column = 1;
+	}
 }
 
 void ApolloRTCCMFD::menusextantstartime()
@@ -5120,18 +5124,6 @@ void ApolloRTCCMFD::menuCalcEntryPAD()
 void ApolloRTCCMFD::menuCalcMapUpdate()
 {
 	G->MapUpdate();
-}
-
-void ApolloRTCCMFD::menuSwitchCritical()
-{
-	if (G->entrycritical < 3)
-	{
-		G->entrycritical++;
-	}
-	else
-	{
-		G->entrycritical = 1;
-	}
 }
 
 void ApolloRTCCMFD::menuSwitchEntryPADOpt()

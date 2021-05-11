@@ -250,7 +250,6 @@ public:
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	
-	int entrycritical; //1 = Midcourse, 2 = Abort, 3 = Corridor Control
 	double EntryTIG;
 	double EntryTZ;	//Estimate time of landing
 	double EntryLat;
