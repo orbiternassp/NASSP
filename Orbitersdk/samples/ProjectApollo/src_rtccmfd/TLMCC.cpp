@@ -33,7 +33,6 @@ TLMCCProcessor::TLMCCProcessor(RTCC *r) : RTCCModule(r)
 	mu_E = OrbMech::mu_Earth;
 	mu_M = OrbMech::mu_Moon;
 	gamma_reentry = -6.52*RAD;
-	Reentry_range = 1380.0;
 	Reentry_dt = 500.0;
 	isp_SPS = 3080.0;
 	isp_DPS = 3107.0;
@@ -3822,7 +3821,7 @@ void TLMCCProcessor::RNTSIM(VECTOR3 R, VECTOR3 V, double GMT, double lng_L, doub
 	v = length(V);
 
 	P = V / v / cos(gamma_reentry) - R / r * tan(gamma_reentry);
-	theta = Reentry_range / 3443.933585;
+	theta = Constants.Reentry_range / 3443.933585;
 	S = R / r * cos(theta) + P * sin(theta);
 	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MEDQuantities.GMTBase + (GMT + Reentry_dt) / 24.0 / 3600.0);
 	S_equ = rhtmul(Rot, S);

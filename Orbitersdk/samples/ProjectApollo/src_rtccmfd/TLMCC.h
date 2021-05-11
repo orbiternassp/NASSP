@@ -132,6 +132,7 @@ struct TLMCCMissionConstants
 	double T_t1_max_dps;
 	double H_LPO;
 	double INCL_PR_MAX;
+	double Reentry_range;
 };
 
 struct TLMCCDisplayData
@@ -363,7 +364,6 @@ protected:
 	VECTOR3 DV_MCC;
 
 	double gamma_reentry;
-	double Reentry_range; //In NM
 	double Reentry_dt;
 
 	TLMCCDataTable DataTable;

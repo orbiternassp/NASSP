@@ -1715,7 +1715,10 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
 			papiReadScenario_int(Buff, "MCLTTD", SystemParameters.MCLTTD);
-			papiReadScenario_double(Buff, "PZREAP_RRBIAS", PZREAP.RRBIAS);
+			if (papiReadScenario_double(Buff, "RRBIAS", dtemp))
+			{
+				PZREAP.RRBIAS = PZMCCPLN.Reentry_range = dtemp;
+			}
 			papiReadScenario_double(Buff, "PZREAP_IRMAX", PZREAP.IRMAX);
 			papiReadScenario_double(Buff, "PDI_K_X", RTCCPDIIgnitionTargets.K_X);
 			papiReadScenario_double(Buff, "PDI_K_V", RTCCPDIIgnitionTargets.K_V);
@@ -5164,6 +5167,7 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMm
 	mccconst.T_t1_min_dps = PZMCCPLN.TT1_DPS_MIN;
 	mccconst.T_t1_max_dps = PZMCCPLN.TT1_DPS_MAX;
 	mccconst.INCL_PR_MAX = PZMCCPLN.INCL_PR_MAX;
+	mccconst.Reentry_range = PZMCCPLN.Reentry_range;
 
 	TLMCCProcessor tlmcc(this);
 	tlmcc.Init(datatab, medquant, mccconst);
@@ -23914,7 +23918,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		}
 		if (data.size() < 2 || data[1] == "")
 		{
-			PZMCCPLN.Reentry_range = -6.52*RAD;
+			PZMCCPLN.Reentry_range = 1285.0;
 		}
 		else
 		{
@@ -23923,7 +23927,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 			{
 				return 1;
 			}
-			PZMCCPLN.Reentry_range = 1350.0;
+			PZMCCPLN.Reentry_range = range;
 		}
 	}
 	//Delete column of midcourse correction display
