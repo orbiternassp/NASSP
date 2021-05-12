@@ -300,7 +300,7 @@ void Saturn::SystemsInit() {
 	//
 
 	GSEGlycolPump = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:GSEGLYCOLPUMP");
-	GSERadiator = (h_Radiator*)Panelsdk.GetPointerByString("ELECTRIC:GSERADIATOR");
+	GSERadiator = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:GSERADIATOR");
 
 	//
 	// ECS devices
@@ -627,6 +627,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		dsky2.Timestep(MissionTime);
 		agc.Timestep(MissionTime, simdt);
 		optics.TimeStep(simdt);
+
 
 		//
 		// If we've seperated from the SIVb, the IU is history.
