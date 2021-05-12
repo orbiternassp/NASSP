@@ -1943,8 +1943,24 @@ struct PCMATCArray
 	bool h_pc_on;
 	//Words 259-272: State and time at main engine off
 	EphemerisData sv_CO;
-	//Words 273-286: Free flight state vect main engine on
+	//Words 273-286: Free flight state vector main engine on
 	EphemerisData sv_BI;
+	//Words 291-296: Velocity at main engine on
+	VECTOR3 V_BI;
+	//Words 297-298: Height at perigee
+	double h_p;
+	//Words 389-390: DVa total
+	double dv_total;
+	//Words 391-392: DT of main engine burn
+	double dt_ME;
+	//Words 393-394: Weight at end of maneuver
+	double W_end;
+	//Words-395-396: Weight at main engine on
+	double W_on;
+	//Words 397-398: T of main engine on
+	double GMT_BI;
+	//Words 399-400: Height at apogee
+	double h_a;
 };
 
 struct StationContact
@@ -2381,7 +2397,7 @@ struct RTEDMEDData
 	bool HeadsUp;
 	int PrimaryReentryMode;
 	int BackupReentryMode;
-	int REFSMMATNum; //-1 = input, 0 = Reentry, 1 = deorbit, 2 = orbital preferred
+	int IRM; //REFSMMAT number: -1 = input, 0 = Reentry, 1 = deorbit, 2 = orbital preferred
 	int StoppingMode; //-1 = Time, 1 = Gamma
 	bool ManualEntry;
 	int TrimInd;
@@ -2428,6 +2444,83 @@ struct RTEDSPMData
 	double DPS10PCTThrust;
 	double DPS10PCTWLR;
 	double ComputerThrust; //In AGC
+};
+
+struct RTEDOutputTable
+{
+	int ASTSolutionCode = -1;
+	std::string LandingSiteID;
+	int ThrusterCode = 0;
+	int SpecifiedREFSMMAT = 0;
+	double VehicleWeight = 0.0;
+	double TrueAnomaly = 0.0;
+	int PrimaryReentryMode = 0;
+	VECTOR3 LVLHAtt = _V(0, 0, 0);
+	VECTOR3 FDAIAtt = _V(0, 0, 0);
+	double DVC = 0.0;
+	double dt = 0.0;
+	double dv = 0.0;
+	int NumQuads = 0;
+	double dt_ullage = 0.0;
+	double PETI = 0.0;
+	double GETI = 0.0;
+	double GMTI = 0.0;
+	int BackupReentryMode = 0;
+	double RollPET = 0.0;
+	int LiftVectorOrientation = 0;
+	double ReentryPET = 0.0;
+	double v_EI = 0.0;
+	double gamma_EI = 0.0;
+	double lat_EI = 0.0;
+	double lng_EI = 0.0;
+	double lat_imp_2nd_max = 0.0;
+	double lng_imp_2nd_max = 0.0;
+	double lat_imp = 0.0;
+	double lng_imp = 0.0;
+	double lat_imp_2nd_min = 0.0;
+	double lng_imp_2nd_min = 0.0;
+	double md_lat = 0.0;
+	double md_lng = 0.0;
+	double ImpactGET = 0.0;
+	double VectorGET = 0.0;
+	double KFactor = 0.0;
+	double CMWeight = 0.0;
+	double PETReference = 0.0;
+	std::string StationID;
+	double MaxGLevelPrimary = 0.0;
+	double GLevelRoll = 0.0;
+	double R_Y = 0.0;
+	double R_Z = 0.0;
+	VECTOR3 IMUAtt = _V(0, 0, 0);
+	double dt_10PCT = 0.0;
+	VECTOR3 A_T = _V(0, 0, 0);
+	VECTOR3 X_B = _V(0, 0, 0);
+	VECTOR3 Y_B = _V(0, 0, 0);
+	VECTOR3 Z_B = _V(0, 0, 0);
+	double dv_TO = 0.0;
+	double dt_TO = 0.0;
+	double PostAbortWeight = 0.0;
+	double MaxGLevelGMT = 0.0;
+	double md_lat_bu = 0.0;
+	double md_lng_bu = 0.0;
+	VECTOR3 R_BI = _V(0, 0, 0);
+	VECTOR3 V_BI = _V(0, 0, 0);
+	double Inclination = 0.0;
+	double h_p = 0.0;
+	double h_a = 0.0;
+	VECTOR3 DV_XDV = _V(0, 0, 0);
+	VECTOR3 A_T_LVLH = _V(0, 0, 0);
+	VECTOR3 R_BO = _V(0, 0, 0);
+	VECTOR3 V_BO = _V(0, 0, 0);
+	double GMT_BO = 0.0;
+	double ImpactGET_max_lift = 0.0;
+	double ImpactGET_zero_lift = 0.0;
+	double RollGETBackup = 0.0;
+	double MaxGLevelBackup = 0.0;
+	double MaxGLevelGETBackup = 0.0;
+	double lat_imp_prim = 0.0;
+	double lng_imp_prim = 0.0;
+	double ImpactGET_prim = 0.0;
 };
 
 struct ELVCTRInputTable
@@ -2618,7 +2711,9 @@ public:
 	//RTE Trajectory Computer
 	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 	//Return to Earth Digital Supervisor
-	void PMMPAB(RTEDMEDData MED, RTEDASTData AST, RTEDSPMData SPM, MATRIX3 *RFS, int &IRED);
+	void PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMData &SPM, MATRIX3 &RFS, RTEDOutputTable &RID, int &IRED);
+	//RTE Digital Reentry Subroutine
+	void PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SPS, double PHIMP, double LIMP, RTEDOutputTable &RED, int &ICC);
 	//Lunar Orbit Insertion Computational Unit
 	bool PMMLRBTI(EphemerisData sv);
 	//Lunar Orbit Insertion Display
@@ -2946,7 +3041,7 @@ public:
 	//Reentry numerical integrator
 	void RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
 	//Reentry Constant G Iterator
-	void RMMGIT(EphemerisData sv_EI, double lng_T);
+	void RMMGIT(EphemerisData2 sv_EI, double lng_T);
 	//Retrofire Planning Control Module
 	void RMSDBMP(EphemerisData sv, double CSMmass);
 	//Recovery Target Selection Display
@@ -4028,6 +4123,8 @@ public:
 
 		ASTData AbortScanTableData[7];
 		int LastASTCode = 0;
+
+		RTEDOutputTable RTEDTable[2];
 	} PZREAP;
 	
 	RetrofireTransferTable RZRFTT;
