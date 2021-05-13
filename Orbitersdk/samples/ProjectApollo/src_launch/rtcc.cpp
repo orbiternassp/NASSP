@@ -67,6 +67,7 @@ RTCC::RTCC()
 	SplashLongitude = 0.0;
 	DeltaV_LVLH = _V(0.0, 0.0, 0.0);
 	calcParams.EI = 0.0;
+	calcParams.LOI = 0.0;
 	calcParams.TEI = 0.0;
 	calcParams.TLI = 0.0;
 	calcParams.R_TLI = _V(0,0,0);
