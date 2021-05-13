@@ -1478,7 +1478,7 @@ RTCC_LLBRTD_4_1:
 }
 
 //Weight Access Routine
-void RTCC::NewPLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
+void RTCC::PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
 {
 	//Time of area and weights in GET
 	double T_AW;
@@ -1489,7 +1489,7 @@ void RTCC::NewPLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
 	//Time to stop venting
 	double T_NV;
 	double dt;
-	int J, N, K;
+	unsigned int J, N, K, BLK;
 
 	MissionPlanTable *mpt;
 
@@ -1589,7 +1589,7 @@ void RTCC::NewPLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
 		}
 		J = N - K;
 	}
-	if (J = 0)
+	if (J == 0)
 	{
 		goto RTCC_PLAWDT_2_B;
 	}
@@ -1614,16 +1614,26 @@ RTCC_PLAWDT_2_C:
 	if (T_UP < mpt->TimeToEndManeuver[K - 1])
 	{
 		out.Err = 1;
-		K = N - (J + 1);
+		//K = N - (J + 1);
+		K = N - J;
+		goto RTCC_PLAWDT_2_B;
 	}
 RTCC_PLAWDT_2_B:
+	BLK = K;
+RTCC_PLAWDT_2_D:
 	if (K == 0)
 	{
 		T_AW = mpt->SIVBVentingBeginGET;
 		goto RTCC_PLAWDT_3_F;
 	}
-	//TBD: Maneuver not current
-	T_AW = mpt->TimeToEndManeuver[K];
+	//Maneuver not current?
+	if (mpt->CommonBlock.TUP != mpt->mantable[K - 1].CommonBlock.TUP)
+	{
+		out.Err = 2;
+		K = K - 1;
+		goto RTCC_PLAWDT_2_D;
+	}
+	T_AW = mpt->TimeToEndManeuver[K - 1];
 RTCC_PLAWDT_3_F:
 	if (CC == 0)
 	{
@@ -1633,21 +1643,31 @@ RTCC_PLAWDT_3_F:
 		}
 		else
 		{
-			CC = mpt->mantable[K].CommonBlock.ConfigCode;
+			CC = mpt->mantable[K - 1].CommonBlock.ConfigCode;
 		}
 	}
 RTCC_PLAWDT_3_G:
 	//Move areas and weights to output
 	if (in.TableCode > 0)
 	{
-		out.CSMWeight = mpt->mantable[K].CommonBlock.CSMMass;
-		out.CSMArea = mpt->mantable[K].CommonBlock.CSMArea;
-		out.SIVBWeight = mpt->mantable[K].CommonBlock.SIVBMass;
-		out.SIVBArea = mpt->mantable[K].CommonBlock.SIVBArea;
-		out.LMAscWeight = mpt->mantable[K].CommonBlock.LMAscentMass;
-		out.LMAscArea = mpt->mantable[K].CommonBlock.LMAscentArea;
-		out.LMDscWeight = mpt->mantable[K].CommonBlock.LMDescentMass;
-		out.LMDscArea = mpt->mantable[K].CommonBlock.LMDescentArea;
+		MPTVehicleDataBlock *tempb;
+		if (K == 0)
+		{
+			tempb = &mpt->CommonBlock;
+		}
+		else
+		{
+			tempb = &mpt->mantable[K - 1].CommonBlock;
+		}
+		out.CSMWeight = tempb->CSMMass;
+		out.CSMArea = tempb->CSMArea;
+		out.SIVBWeight = tempb->SIVBMass;
+		out.SIVBArea = tempb->SIVBArea;
+		out.LMAscWeight = tempb->LMAscentMass;
+		out.LMAscArea = tempb->LMAscentArea;
+		out.LMDscWeight = tempb->LMDescentMass;
+		out.LMDscArea = tempb->LMDescentArea;
+		out.CC = CC;
 	}
 	else
 	{
@@ -1659,6 +1679,7 @@ RTCC_PLAWDT_3_G:
 		out.LMAscArea = in.LMAscArea;
 		out.LMDscWeight = in.LMDscWeight;
 		out.LMDscArea = in.LMDscArea;
+		out.CC = in.Num;
 	}
 	//TBD: Expendables
 	dt = T_UP - T_AW;
@@ -1777,76 +1798,6 @@ RTCC_PLAWDT_9_T:
 	out.Err = 3;
 	//Move areas and weights to output
 	goto RTCC_PLAWDT_M_5;
-}
-
-
-int RTCC::PLAWDT(int L, double gmt, double &cfg_weight)
-{
-	double csm_weight, lma_weight, lmd_weight, sivb_weight;
-	std::bitset<4> cfg;
-
-	return PLAWDT(L, gmt, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight);
-}
-
-int RTCC::PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight)
-{
-	MissionPlanTable *table = GetMPTPointer(L);
-	unsigned i = 0;
-
-	//No maneuver in MPT or time is before first maneuver. Use initial values
-	if (table->mantable.size() == 0 || gmt <= table->mantable[0].GMT_BI)
-	{
-		cfg = table->CommonBlock.ConfigCode;
-		cfg_weight = table->TotalInitMass;
-		if (cfg[RTCC_CONFIG_C])
-		{
-			csm_weight = table->CommonBlock.CSMMass;
-		}
-		else
-		{
-			csm_weight = 0.0;
-		}
-		if (cfg[RTCC_CONFIG_A])
-		{
-			lm_asc_weight = table->CommonBlock.LMAscentMass;
-		}
-		else
-		{
-			lm_asc_weight = 0.0;
-		}
-		if (cfg[RTCC_CONFIG_D])
-		{
-			lm_dsc_weight = table->CommonBlock.LMDescentMass;
-		}
-		else
-		{
-			lm_dsc_weight = 0.0;
-		}
-		if (cfg[RTCC_CONFIG_S])
-		{
-			sivb_weight = table->CommonBlock.SIVBMass;
-		}
-		else
-		{
-			sivb_weight = 0.0;
-		}
-		return 0;
-	}
-
-	//Iterate to find maneuver
-	while ((i < table->mantable.size() - 1) && (gmt >= table->mantable[i + 1].GMT_BO))
-	{
-		i++;
-	}
-
-	cfg = table->mantable[i].CommonBlock.ConfigCode;
-	cfg_weight = table->mantable[i].TotalMassAfter;
-	csm_weight = table->mantable[i].CommonBlock.CSMMass;
-	lm_asc_weight = table->mantable[i].CommonBlock.LMAscentMass;
-	lm_dsc_weight = table->mantable[i].CommonBlock.LMDescentMass;
-	sivb_weight = table->mantable[i].CommonBlock.SIVBMass;
-
-	return 0;
 }
 
 //Sun/Moon Ephemeris Interpolation Program

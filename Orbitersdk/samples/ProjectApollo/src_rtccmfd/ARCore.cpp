@@ -2819,7 +2819,12 @@ int ARCore::subThread()
 				opt.RV_MCC.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 				opt.RV_MCC.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-				GC->rtcc->PLAWDT(mptveh, GMT, opt.RV_MCC.mass);
+				RTCC::PLAWDTInput pin;
+				RTCC::PLAWDTOutput pout;
+				pin.T_UP = GMT;
+				pin.TableCode = mptveh;
+				GC->rtcc->PLAWDT(pin, pout);
+				opt.RV_MCC.mass = pout.ConfigWeight;
 			}
 			else if (REFSMMATopt == 3)
 			{
@@ -2838,7 +2843,13 @@ int ARCore::subThread()
 				opt.RV_MCC.V = tab->mantable.back().V_BO;
 				opt.RV_MCC.MJD = OrbMech::MJDfromGET(tab->mantable.back().GMT_BO, GC->rtcc->GetGMTBase());
 				opt.RV_MCC.gravref = GC->rtcc->GetGravref(tab->mantable.back().RefBodyInd);
-				GC->rtcc->PLAWDT(mptveh, tab->mantable.back().GMT_BO, opt.RV_MCC.mass);
+
+				RTCC::PLAWDTInput pin;
+				RTCC::PLAWDTOutput pout;
+				pin.T_UP = tab->mantable.back().GMT_BO;
+				pin.TableCode = mptveh;
+				GC->rtcc->PLAWDT(pin, pout);
+				opt.RV_MCC.mass = pout.ConfigWeight;
 			}
 			else
 			{
@@ -2940,8 +2951,8 @@ int ARCore::subThread()
 	{
 		EntryResults res;
 		EntryOpt opt;
-		double csmmass, lmascmass, lmdscmass, cfg_weight, sivbmass;
-		std::bitset<4> cfg;
+		RTCC::PLAWDTInput pin;
+		RTCC::PLAWDTOutput pout;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -2950,11 +2961,13 @@ int ARCore::subThread()
 				Result = 0;
 				break;
 			}
-			if (GC->rtcc->PLAWDT(RTCC_MPT_CSM, GC->rtcc->GMTfromGET(EntryTIG), cfg, cfg_weight, csmmass, lmascmass, lmdscmass, sivbmass))
-			{
-				Result = 0;
-				break;
-			}
+
+			RTCC::PLAWDTInput pin;
+			RTCC::PLAWDTOutput pout;
+			pin.T_UP = GC->rtcc->GMTfromGET(EntryTIG);
+			pin.TableCode = RTCC_MPT_CSM;
+			GC->rtcc->PLAWDT(pin, pout);
+			opt.RV_MCC.mass = pout.ConfigWeight;
 		}
 		else
 		{
@@ -2962,18 +2975,18 @@ int ARCore::subThread()
 
 			if (vesseltype == 0)
 			{
-				csmmass = vessel->GetMass();
-				lmascmass = lmdscmass = 0.0;
+				pout.CSMWeight = vessel->GetMass();
+				pout.LMAscWeight = pout.LMDscWeight = 0.0;
 			}
 			else if (vesseltype == 1)
 			{
-				csmmass = vessel->GetMass();
+				pout.CSMWeight = vessel->GetMass();
 				double lmmass;
 				if (lmmass = GC->rtcc->GetDockedVesselMass(vessel))
 				{
 					LEM *l = (LEM *)oapiGetVesselInterface(vessel->GetDockStatus(vessel->GetDockHandle(0)));
-					lmascmass = l->GetAscentStageMass();
-					lmdscmass = lmmass - lmascmass;
+					pout.LMAscWeight = l->GetAscentStageMass();
+					pout.LMDscWeight = lmmass - pout.LMAscWeight;
 				}
 			}
 			else if (vesseltype == 2)
@@ -2986,10 +2999,10 @@ int ARCore::subThread()
 				double lmmass;
 				LEM *l = (LEM *)vessel;
 				lmmass = vessel->GetMass();
-				lmascmass = l->GetAscentStageMass();
-				lmdscmass = lmmass - lmascmass;
+				pout.LMAscWeight = l->GetAscentStageMass();
+				pout.LMDscWeight = lmmass - pout.LMAscWeight;
 
-				if (csmmass = GC->rtcc->GetDockedVesselMass(vessel))
+				if (pout.CSMWeight = GC->rtcc->GetDockedVesselMass(vessel))
 				{
 
 				}
@@ -3012,7 +3025,7 @@ int ARCore::subThread()
 
 		opt.GETbase = GC->rtcc->CalcGETBase();
 
-		if (GC->rtcc->RTEManeuverCodeLogic(GC->rtcc->PZREAP.RTEManeuverCode, csmmass, lmascmass, lmdscmass, opt.enginetype, opt.RV_MCC.mass))
+		if (GC->rtcc->RTEManeuverCodeLogic(GC->rtcc->PZREAP.RTEManeuverCode, pout.CSMWeight, pout.LMAscWeight, pout.LMDscWeight, opt.enginetype, opt.RV_MCC.mass))
 		{
 			Result = 0;
 			break;
@@ -3135,22 +3148,19 @@ int ARCore::subThread()
 			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			std::bitset<4> cfg;
-			double cfg_weight, csm_weight, sivb_weight, lma_weight, lmd_weight;
-
-			if (GC->rtcc->PLAWDT(mptveh, GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight))
-			{
-				Result = 0;
-				break;
-			}
+			RTCC::PLAWDTInput pin;
+			RTCC::PLAWDTOutput pout;
+			pin.T_UP = GMT;
+			pin.TableCode = mptveh;
+			GC->rtcc->PLAWDT(pin, pout);
 
 			if (vesseltype < 2)
 			{
-				sv_A.mass = csm_weight;
+				sv_A.mass = pout.CSMWeight;
 			}
 			else
 			{
-				sv_A.mass = lma_weight + lmd_weight;
+				sv_A.mass = pout.LMAscWeight + pout.LMDscWeight;
 			}
 		}
 		else
@@ -3249,8 +3259,8 @@ int ARCore::subThread()
 	{
 		RTEMoonOpt opt;
 		EntryResults res;
-		double csmmass, lmascmass, lmdscmass, cfg_weight, sivbmass;
-		std::bitset<4> cfg;
+		RTCC::PLAWDTInput pin;
+		RTCC::PLAWDTOutput pout;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -3259,11 +3269,10 @@ int ARCore::subThread()
 				Result = 0;
 				break;
 			}
-			if (GC->rtcc->PLAWDT(RTCC_MPT_CSM, GC->rtcc->GMTfromGET(EntryTIG), cfg, cfg_weight, csmmass, lmascmass, lmdscmass, sivbmass))
-			{
-				Result = 0;
-				break;
-			}
+
+			pin.T_UP = GC->rtcc->GMTfromGET(EntryTIG);
+			pin.TableCode = RTCC_MPT_CSM;
+			GC->rtcc->PLAWDT(pin, pout);
 		}
 		else
 		{
@@ -3271,18 +3280,18 @@ int ARCore::subThread()
 
 			if (vesseltype == 0)
 			{
-				csmmass = vessel->GetMass();
-				lmascmass = lmdscmass = 0.0;
+				pout.CSMWeight = vessel->GetMass();
+				pout.LMAscWeight = pout.LMDscWeight = 0.0;
 			}
 			else if (vesseltype == 1)
 			{
-				csmmass = vessel->GetMass();
+				pout.CSMWeight = vessel->GetMass();
 				double lmmass;
 				if (lmmass = GC->rtcc->GetDockedVesselMass(vessel))
 				{
 					LEM *l = (LEM *)oapiGetVesselInterface(vessel->GetDockStatus(vessel->GetDockHandle(0)));
-					lmascmass = l->GetAscentStageMass();
-					lmdscmass = lmmass - lmascmass;
+					pout.LMAscWeight = l->GetAscentStageMass();
+					pout.LMDscWeight = lmmass - pout.LMAscWeight;
 				}
 			}
 			else if (vesseltype == 2)
@@ -3295,10 +3304,10 @@ int ARCore::subThread()
 				double lmmass;
 				LEM *l = (LEM *)vessel;
 				lmmass = vessel->GetMass();
-				lmascmass = l->GetAscentStageMass();
-				lmdscmass = lmmass - lmascmass;
+				pout.LMAscWeight = l->GetAscentStageMass();
+				pout.LMDscWeight = lmmass - pout.LMAscWeight;
 
-				if (csmmass = GC->rtcc->GetDockedVesselMass(vessel))
+				if (pout.CSMWeight = GC->rtcc->GetDockedVesselMass(vessel))
 				{
 
 				}
@@ -3340,7 +3349,7 @@ int ARCore::subThread()
 		opt.Inclination = EntryDesiredInclination;
 		opt.t_zmin = RTEReentryTime;
 
-		if (GC->rtcc->RTEManeuverCodeLogic(GC->rtcc->PZREAP.RTEManeuverCode, csmmass, lmascmass, lmdscmass, opt.enginetype, opt.RV_MCC.mass))
+		if (GC->rtcc->RTEManeuverCodeLogic(GC->rtcc->PZREAP.RTEManeuverCode, pout.CSMWeight, pout.LMAscWeight, pout.LMDscWeight, opt.enginetype, opt.RV_MCC.mass))
 		{
 			Result = 0;
 			break;
@@ -3522,7 +3531,6 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			std::bitset<4> cfg;
 			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZMCCPLN.VectorGET);
 			EphemerisData EPHEM;
 			if (GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM))
@@ -3531,11 +3539,16 @@ int ARCore::subThread()
 				break;
 			}
 
-			double cfg_weight, lm_asc_weight, lm_dsc_weight, sivb_weight;
-
 			sv0 = EPHEM;
-			GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, cfg, cfg_weight, CSMmass, lm_asc_weight, lm_dsc_weight, sivb_weight);
-			LMmass = lm_asc_weight + lm_dsc_weight;
+
+			RTCC::PLAWDTInput pin;
+			RTCC::PLAWDTOutput pout;
+			pin.T_UP = GMT;
+			pin.TableCode = RTCC_MPT_CSM;
+			GC->rtcc->PLAWDT(pin, pout);
+
+			CSMmass = pout.CSMWeight;
+			LMmass = pout.LMAscWeight + pout.LMDscWeight;
 		}
 		else
 		{
@@ -3703,12 +3716,13 @@ int ARCore::subThread()
 				Result = 0;
 				break;
 			}
-			err = GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, CSMmass);
-			if (err)
-			{
-				Result = 0;
-				break;
-			}
+
+			RTCC::PLAWDTInput pin;
+			RTCC::PLAWDTOutput pout;
+			pin.T_UP = GMT;
+			pin.TableCode = RTCC_MPT_CSM;
+			GC->rtcc->PLAWDT(pin, pout);
+			CSMmass = pout.CSMWeight;
 		}
 		else
 		{
@@ -3838,14 +3852,13 @@ int ARCore::subThread()
 			sv_CSM.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_CSM.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			std::bitset<4> cfg;
-			double cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight;
-			if (GC->rtcc->PLAWDT(RTCC_MPT_LM, GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight))
-			{
-				Result = 0;
-				break;
-			}
-			m0 = lma_weight;
+			RTCC::PLAWDTInput pin;
+			RTCC::PLAWDTOutput pout;
+			pin.T_UP = GMT;
+			pin.TableCode = RTCC_MPT_LM;
+			GC->rtcc->PLAWDT(pin, pout);
+
+			m0 = pout.LMAscWeight;
 		}
 		else
 		{

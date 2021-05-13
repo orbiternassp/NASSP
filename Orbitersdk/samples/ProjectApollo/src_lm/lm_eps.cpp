@@ -118,6 +118,8 @@ LEM_ECABatMonitor::LEM_ECABatMonitor()
 {
 	batt = NULL;
 	chan = NULL;
+	OC = false;
+	RC = false;
 }
 
 void LEM_ECABatMonitor::Init(Battery *b, LEM_ECAch *c, PowerMerge *p)
