@@ -429,7 +429,7 @@ void LEM_XLBControl::UpdateFlow(double dt) {
 		lem->ECA_2a.input = 0; lem->ECA_2b.input = 0;
 		break;
 	case -1: 		//FIXME: The LM PWR CSM switch in RESET should only send a command to enable LV taps
-		// If the CSM latch is reset, turn on the LV taps on batteries 1 and 4. 
+		// If the CSM latch is reset, turn on the LV taps on batteries 1 and 4.
 		// And reset the latch to zero
 		lem->ECA_1a.input = 2; lem->ECA_1b.input = 2;
 		lem->ECA_2a.input = 2; lem->ECA_2b.input = 2;
