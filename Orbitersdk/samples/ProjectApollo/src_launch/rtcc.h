@@ -2435,7 +2435,8 @@ struct RTEDSPMData
 	double CMWeight;
 	double CMArea;
 	double BankAngle;
-	double GLevelReentry;
+	double GLevelReentryPrim;
+	double GLevelReentryBackup;
 	double GLevelConstant;
 	double lng_T;
 	double RollDirection;
@@ -2446,15 +2447,17 @@ struct RTEDSPMData
 	double ComputerThrust; //In AGC
 };
 
-struct RTEDOutputTable
+struct RTEDigitalSolutionTable
 {
-	int ASTSolutionCode = -1;
+	std::string RTEDCode;
+	std::string ASTSolutionCode;
 	std::string LandingSiteID;
+	std::string ManeuverCode;
 	int ThrusterCode = 0;
-	int SpecifiedREFSMMAT = 0;
+	std::string SpecifiedREFSMMAT;
 	double VehicleWeight = 0.0;
 	double TrueAnomaly = 0.0;
-	int PrimaryReentryMode = 0;
+	std::string PrimaryReentryMode;
 	VECTOR3 LVLHAtt = _V(0, 0, 0);
 	VECTOR3 FDAIAtt = _V(0, 0, 0);
 	double DVC = 0.0;
@@ -2465,23 +2468,25 @@ struct RTEDOutputTable
 	double PETI = 0.0;
 	double GETI = 0.0;
 	double GMTI = 0.0;
-	int BackupReentryMode = 0;
+	std::string BackupReentryMode;
 	double RollPET = 0.0;
 	int LiftVectorOrientation = 0;
 	double ReentryPET = 0.0;
 	double v_EI = 0.0;
 	double gamma_EI = 0.0;
-	double lat_EI = 0.0;
+	double lat_EI = 0.0; //Latitude and longitude at entry interface
 	double lng_EI = 0.0;
 	double lat_imp_2nd_max = 0.0;
 	double lng_imp_2nd_max = 0.0;
-	double lat_imp = 0.0;
-	double lng_imp = 0.0;
+	double lat_imp_tgt = 0.0; //Latitude and longitude of splashdown target
+	double lng_imp_tgt = 0.0;
 	double lat_imp_2nd_min = 0.0;
 	double lng_imp_2nd_min = 0.0;
 	double md_lat = 0.0;
 	double md_lng = 0.0;
-	double ImpactGET = 0.0;
+	double lat_imp_bu = 0.0; //Latitude and longitude of impact (backup mode)
+	double lng_imp_bu = 0.0;
+	double ImpactGET_bu = 0.0;
 	double VectorGET = 0.0;
 	double KFactor = 0.0;
 	double CMWeight = 0.0;
@@ -2518,9 +2523,10 @@ struct RTEDOutputTable
 	double RollGETBackup = 0.0;
 	double MaxGLevelBackup = 0.0;
 	double MaxGLevelGETBackup = 0.0;
-	double lat_imp_prim = 0.0;
+	double lat_imp_prim = 0.0;  //Latitude and longitude of impact (primary mode)
 	double lng_imp_prim = 0.0;
 	double ImpactGET_prim = 0.0;
+	int Error = 0;
 };
 
 struct ELVCTRInputTable
@@ -2711,9 +2717,9 @@ public:
 	//RTE Trajectory Computer
 	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 	//Return to Earth Digital Supervisor
-	void PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMData &SPM, MATRIX3 &RFS, RTEDOutputTable &RID, int &IRED);
+	void PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMData &SPM, MATRIX3 &RFS, RTEDigitalSolutionTable &RID, int &IRED);
 	//RTE Digital Reentry Subroutine
-	void PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SPS, double PHIMP, double LIMP, RTEDOutputTable &RED, int &ICC);
+	void PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SPS, double PHIMP, double LIMP, RTEDigitalSolutionTable &RED, int &ICC);
 	//Lunar Orbit Insertion Computational Unit
 	bool PMMLRBTI(EphemerisData sv);
 	//Lunar Orbit Insertion Display
@@ -4013,52 +4019,9 @@ public:
 		double Azimuth;
 	} GZLTRA;
 
-	struct RTEDigitalSolutionTable
-	{
-		int ASTSolutionCode;
-		std::string LandingSiteID;
-		int ThrusterCode;
-		int SpecifiedREFSMMAT;
-		double VehicleWeightTIG;
-		double TAAbort;
-		int PrimReentryMode;
-		VECTOR3 Att_LVLH;
-		VECTOR3 Att_FDAI;
-		double dV_C;
-		double dt_BD;
-		double dV;
-		bool Quads;
-		double dt_ullage;
-		double IgnitionPET;
-		double IgnitionGET;
-		double IgnitionGMT;
-		int BackupReentryMode;
-		double RollInitiatePET;
-		int LVOrientation;
-		double EI_PET;
-		double V_EI;
-		double gamma_EI;
-		double lat_EI;
-		double lng_EI;
-		double lat_splash;
-		double lng_splash;
-		double lat_tgt;
-		double lng_tgt;
-
-		double dt_10PCT;
-
-		VECTOR3 InertialDV; //or Lambert target
-		VECTOR3 UplinkDV; //or C and DT for Lambert
-	};
-
 	struct RTEConstraintsTable
 	{
 		RTEConstraintsTable();
-
-		//Block 1 (?)
-		RTEDigitalSolutionTable RTEPrimaryData;
-		//Block 2 (?)
-		RTEDigitalSolutionTable RTEManualData;
 
 		//Block 11
 
@@ -4124,7 +4087,7 @@ public:
 		ASTData AbortScanTableData[7];
 		int LastASTCode = 0;
 
-		RTEDOutputTable RTEDTable[2];
+		RTEDigitalSolutionTable RTEDTable[2];
 	} PZREAP;
 	
 	RetrofireTransferTable RZRFTT;

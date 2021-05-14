@@ -250,10 +250,6 @@ public:
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	
-	double EntryTIG;
-	double EntryTZ;	//Estimate time of landing
-	double EntryLat;
-	double EntryLng;
 	double EntryAngcor;
 	double EntryTIGcor;
 	double EntryLatcor;
@@ -265,10 +261,7 @@ public:
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double RTEReentryTime; //Desired landing time
-	double FlybyPeriAlt;
-	double EntryDesiredInclination;
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
-	double RTEReturnInclination;
 	int RTETradeoffMode; //0 = Near-Earth (F70), 1 = Remote-Earth (F71)
 	int RTEASTType; //75 = unspecified, 76 = specific site, 77 = lunar search
 

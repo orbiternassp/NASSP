@@ -528,22 +528,15 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		RetrofireEXDVOctals[i] = 0;
 	}
 
-	EntryTIG = 0.0;
-	EntryLat = 0.0;
-	EntryLng = 0.0;
 	EntryTIGcor = 0.0;
 	EntryLatcor = 0.0;
 	EntryLngcor = 0.0;
-	EntryTZ = 0.0;
 	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	RTEReentryTime = 0.0;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
-	FlybyPeriAlt = 0.0;
-	EntryDesiredInclination = 0.0;
 	RTECalcMode = 1;
-	RTEReturnInclination = 0.0;
 	RTETradeoffMode = 0;
 	RTEASTType = 76;
 
@@ -2963,10 +2956,12 @@ int ARCore::subThread()
 			MED_M55 med2;
 			GC->rtcc->MPTMassUpdate(vessel, med1, med2);
 
-			GC->rtcc->VEHDATABUF.csmmass = med1.CSMWT;
-			GC->rtcc->VEHDATABUF.lmascmass = med1.LMASCWT;
-			GC->rtcc->VEHDATABUF.lmdscmass = med1.LMWT - med1.LMASCWT;
+			GC->rtcc->VEHDATABUF.csmmass = 66500.0*0.453;//med1.CSMWT;//
+			GC->rtcc->VEHDATABUF.lmascmass = 10000.0*0.453;//med1.LMASCWT;//0.0;
+			GC->rtcc->VEHDATABUF.lmdscmass = 25000.0*0.453;//med1.LMWT - med1.LMASCWT;//0.0;
 			GC->rtcc->VEHDATABUF.sv = GC->rtcc->StateVectorCalcEphem(vessel);
+
+			GC->rtcc->PMMREDIG(false);
 		}
 
 		Result = 0;

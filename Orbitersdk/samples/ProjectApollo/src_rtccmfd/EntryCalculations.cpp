@@ -4068,11 +4068,11 @@ void RTEEarth::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI)
 void RTEEarth::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21)
 {
 	VECTOR3 U_R1, U_H, REI, VEI;
-	double MA2, x2_err, C_FPA, MJD_L;
+	double MA2, x2_err, MJD_L;
 	int n1;
 
 	x2_err = 1.0;
-	precomputations(1, R1B, V1B, U_R1, U_H, MA2, C_FPA);
+	precomputations(1, R1B, V1B, U_R1, U_H, MA2);
 	n1 = 1;
 	while (abs(x2_err) > 0.00001 && n1 <= 10)
 	{
@@ -4366,22 +4366,32 @@ void RTEEarth::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double 
 	{
 		if (ii == 0)
 		{
-			dx = dxmax;
-
 			//First iteration
 			if (critical == 1)
 			{
 				//ATP
+				dx = dxmax;
 				x = dtiterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, xmax, dxmax, dt_z);
 			}
 			else if (critical == 2)
 			{
 				//time critical
+				dx = dxmax;
 				x = dvmaxiterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, dxmax, dv_max);
 			}
 			else
 			{
 				//Fuel critical
+				if (C_FPA >= 0)
+				{
+					x = xmax;
+					dx = -dxmax;
+				}
+				else
+				{
+					x = xmin;
+					dx = dxmax;
+				}
 				xdviterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, dx, xmin, xmax, x);
 			}
 		}
@@ -4501,7 +4511,7 @@ void RTEEarth::conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, do
 	}
 }
 
-void RTEEarth::precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2, double &C_FPA)
+void RTEEarth::precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2)
 {
 	VECTOR3 U_V1, eta;
 	double r1b;

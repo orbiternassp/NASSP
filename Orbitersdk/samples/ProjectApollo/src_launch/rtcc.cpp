@@ -160,6 +160,35 @@ bool papiReadScenario_SV(char *line, char *item, RTCC::StateVectorTableEntry *ve
 	return false;
 }
 
+bool papiReadConfigFile_ATPSite(char *line, char *item, std::string &ATPSite, double *ATPCoordinates, int &num)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			char buffer2[64];
+			double CC[10];
+
+			if (sscanf(line, "%s %d %s %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", buffer, &num, buffer2, &CC[0], &CC[1], &CC[2], &CC[3], &CC[4], &CC[5], &CC[6], &CC[7], &CC[8], &CC[9]) == 13) {
+				ATPSite.assign(buffer2);
+				for (int i = 0;i < 10;i++)
+				{
+					if (CC[i] >= 1e9)
+					{
+						ATPCoordinates[i] = 1e10;
+					}
+					else
+					{
+						ATPCoordinates[i] = CC[i] * RAD;
+					}
+				}
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 FIDOOrbitDigitals::FIDOOrbitDigitals()
 {
 	A = 0.0;
@@ -1700,9 +1729,11 @@ void RTCC::LoadMissionConstantsFile(char *file)
 	ifstream startable(Buff);
 	if (startable.is_open())
 	{
-		std::string line;
+		std::string line, strtemp;
 		double dtemp;
 		VECTOR3 vtemp;
+		int itemp;
+		double darrtemp[10];
 
 		while (getline(startable, line))
 		{
@@ -1792,6 +1823,14 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			else if (papiReadScenario_double(Buff, "PDI_JARFGZ", dtemp))
 			{
 				RTCCDescentTargets.JARFGZ = dtemp * 0.3048;
+			}
+			else if (papiReadConfigFile_ATPSite(Buff, "ATPSite", strtemp, darrtemp, itemp))
+			{
+				PZREAP.ATPSite[itemp] = strtemp;
+				for (int i = 0;i < 10;i++)
+				{
+					PZREAP.ATPCoordinates[itemp][i] = darrtemp[i];
+				}
 			}
 		}
 	}
@@ -1999,11 +2038,6 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	}
 
 	PoweredFlightProcessor(opt->RV_MCC, opt->GETbase, TIG_imp, opt->enginetype, LMmass, DV_imp, true, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
-
-	PZREAP.RTEPrimaryData.IgnitionGET = res->P30TIG;
-	PZREAP.RTEPrimaryData.IgnitionGMT = GMTfromGET(res->P30TIG);
-	PZREAP.RTEPrimaryData.UplinkDV = res->dV_LVLH;
-	PZREAP.RTEPrimaryData.ThrusterCode = opt->enginetype;
 }
 
 int RTCC::PCZYCF(double R1, double R2, double PHIT, double DELT, double VXI2, double VYI2, double VXF1, double VYF1, double SQRMU, int NREVS, int body, double &a, double &e, double &f_T, double &t_PT)
@@ -7422,11 +7456,6 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	PoweredFlightProcessor(sv_tig, opt->GETbase, 0.0, opt->enginetype, LMmass, teicalc->Vig_apo - teicalc->Vig, false, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
 
 	delete teicalc;
-
-	PZREAP.RTEPrimaryData.IgnitionGET = res->P30TIG;
-	PZREAP.RTEPrimaryData.IgnitionGMT = GMTfromGET(res->P30TIG);
-	PZREAP.RTEPrimaryData.UplinkDV = res->dV_LVLH;
-	PZREAP.RTEPrimaryData.ThrusterCode = opt->enginetype;
 }
 
 void RTCC::LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, double pm)
@@ -20189,16 +20218,31 @@ int RTCC::PMMXFR(int id, void *data)
 				BurnParm76 = temptab->DeltaV.y;
 				BurnParm77 = temptab->DeltaV.z;
 			}
-			else if (inp->BurnParameterNumber == 2)
+			else
 			{
-				purpose = "RTE";
-				inp->GMTI = PZREAP.RTEPrimaryData.IgnitionGMT;
-				inp->ThrusterCode = PZREAP.RTEPrimaryData.ThrusterCode;
-				inp->dt_ullage = 0.0; //TBD
+				int itemp;
+				if (inp->BurnParameterNumber == 2)
+				{
+					itemp = 0;
+				}
+				else
+				{
+					itemp = 1;
+				}
 
-				BurnParm75 = PZREAP.RTEPrimaryData.UplinkDV.x;
-				BurnParm76 = PZREAP.RTEPrimaryData.UplinkDV.y;
-				BurnParm77 = PZREAP.RTEPrimaryData.UplinkDV.z;
+				RTEDigitalSolutionTable *rtetab = &PZREAP.RTEDTable[itemp];
+
+				if (rtetab->ASTSolutionCode == "") return 1;
+
+				purpose = "RTE";
+				inp->GMTI = rtetab->GMTI;
+				inp->ThrusterCode = rtetab->ThrusterCode;
+				inp->dt_ullage = rtetab->dt_ullage;
+				inp->DT10P = rtetab->dt_10PCT;
+
+				BurnParm75 = rtetab->DV_XDV.x;
+				BurnParm76 = rtetab->DV_XDV.y;
+				BurnParm77 = rtetab->DV_XDV.z;
 			}
 			BPIND = 2;
 		}
@@ -23041,6 +23085,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			}
 			rte.ATP(LINE);
 		}
+
 		bool stop = false;
 		while (!stop)
 		{
@@ -23433,9 +23478,9 @@ void RTCC::PMMREDIG(bool mpt)
 	RTEDMEDData MED;
 	RTEDASTData AST;
 	RTEDSPMData SPM;
-	RTEDOutputTable RID;
+	RTEDigitalSolutionTable RID;
 
-	char Buff[5];
+	char Buff[64];
 	sprintf_s(Buff, 5, "%s", med_f80.ManeuverCode.c_str());
 	double gmt;
 
@@ -23502,8 +23547,9 @@ void RTCC::PMMREDIG(bool mpt)
 		AST.lng_tgt = med_f81.lng_tgt;
 
 		MED.ManualEntry = true;
-		RID.ASTSolutionCode = 0;
+		RID.ASTSolutionCode = "MAN";
 		RID.LandingSiteID = "";
+		RID.VectorGET = sv_fetch.GMT;
 	}
 	else
 	{
@@ -23545,8 +23591,9 @@ void RTCC::PMMREDIG(bool mpt)
 		gmt = astin.sv_IG.GMT;
 
 		MED.ManualEntry = false;
-		RID.ASTSolutionCode = astin.ASTCode;
+		RID.ASTSolutionCode = astin.AbortMode;
 		RID.LandingSiteID = astin.SiteID;
+		RID.VectorGET = astin.VectorGMT;
 	}
 
 	double lmascmass, lmdscmass;
@@ -23571,7 +23618,10 @@ void RTCC::PMMREDIG(bool mpt)
 		lmdscmass = VEHDATABUF.lmdscmass;
 	}
 
-	RTEManeuverCodeLogic(Buff, lmascmass, lmdscmass, med_f80.NumQuads, MED.Thruster, MED.AttitudeMode, MED.ConfigCode, MED.ManVeh, SPM.LMWeight);
+	if (RTEManeuverCodeLogic(Buff, lmascmass, lmdscmass, med_f80.NumQuads, MED.Thruster, MED.AttitudeMode, MED.ConfigCode, MED.ManVeh, SPM.LMWeight))
+	{
+		return;
+	}
 	MED.StoppingMode = 1;
 	MED.HeadsUp = med_f80.HeadsUp;
 	MED.TrimInd = med_f80.TrimAngleInd;
@@ -23619,13 +23669,20 @@ void RTCC::PMMREDIG(bool mpt)
 				SPM.UllageWLR = SystemParameters.MCTLW1;
 			}
 		}
+		SPM.dt_ullage = med_f80.UllageDT; //Minus overlap?
 	}
-	SPM.dt_ullage = med_f80.UllageDT; //Minus overlap?
+	else
+	{
+		MED.UllageThrusters = false;
+		SPM.dt_ullage = 0.0;
+	}
+	
 	SPM.dt_10PCT = SystemParameters.MCTDD4;
 	SPM.DockingAngle = med_f80.DockingAngle;
 	SPM.KFactor = PZMPTCSM.KFactor;
 	SPM.CMWeight = 0.0; //TBD
 	SPM.CMArea = 0.0;//TBD
+	SPM.TDPS = 0.1; //TBD
 
 	EngineParametersTable(MED.Thruster, SPM.MainEngineThrust, SPM.MainEngineWLR, SPM.ComputerThrust);
 	if (MED.Thruster == RTCC_ENGINETYPE_LMDPS)
@@ -23717,12 +23774,9 @@ void RTCC::PMMREDIG(bool mpt)
 	{
 		MED.BackupReentryMode = 0;
 	}
-
-	//Default to splashdown target from AST
-	if (SPM.lng_T > PI2)
-	{
-		SPM.lng_T = AST.lng_tgt;
-	}
+	SPM.GLevelConstant = PZREAP.GMAX;
+	SPM.GLevelReentryPrim = med_f82.PrimaryGLIT;
+	SPM.GLevelReentryBackup = med_f82.BackupGLIT;
 
 	//REFSMMAT handling
 	MATRIX3 RFS;
@@ -23748,6 +23802,7 @@ void RTCC::PMMREDIG(bool mpt)
 
 	if (IRED)
 	{
+		PZREAP.RTEDTable[MED.Column - 1].Error = IRED;
 		return;
 	}
 
@@ -23757,7 +23812,7 @@ void RTCC::PMMREDIG(bool mpt)
 	RID.PETI = RID.GETI - RID.PETReference;
 	RID.RollPET = GETfromGMT(RID.RollPET)- RID.PETReference;
 	RID.ReentryPET = GETfromGMT(RID.ReentryPET) - RID.PETReference;
-	RID.ImpactGET = GETfromGMT(RID.ImpactGET);
+	RID.ImpactGET_bu = GETfromGMT(RID.ImpactGET_bu);
 	RID.VectorGET = GETfromGMT(RID.VectorGET);
 	RID.ImpactGET_max_lift = GETfromGMT(RID.ImpactGET_max_lift);
 	RID.ImpactGET_zero_lift = GETfromGMT(RID.ImpactGET_zero_lift);
@@ -23767,12 +23822,26 @@ void RTCC::PMMREDIG(bool mpt)
 
 	//Write some alphanumeric data
 	RID.ThrusterCode = MED.Thruster;
+	RID.RTEDCode = "Z1";
+	RID.ManeuverCode = med_f80.ManeuverCode;
+	if (refsnum != -1)
+	{
+		FormatREFSMMATCode(refsnum, EZJGMTX1.data[refsnum - 1].ID, Buff);
+		RID.SpecifiedREFSMMAT.assign(Buff);
+	}
+	else
+	{
+		RID.SpecifiedREFSMMAT = med_f80.REFSMMAT;
+	}
+	RID.PrimaryReentryMode = med_f82.PrimaryEP;
+	RID.BackupReentryMode = med_f82.BackupEP;
+	RID.NumQuads = med_f80.NumQuads;
 
 	//Finally, write to PZREAP
 	PZREAP.RTEDTable[MED.Column - 1] = RID;
 }
 
-void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMData &SPM, MATRIX3 &RFS, RTEDOutputTable &RID, int &IRED)
+void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMData &SPM, MATRIX3 &RFS, RTEDigitalSolutionTable &RID, int &IRED)
 {
 	PCMATCArray outarray;
 	double dv, Tmp, dt_BU, Isp;
@@ -23803,7 +23872,7 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 			if (MED.Thruster == RTCC_ENGINETYPE_CSMSPS)
 			{
 				DV[1] = DV_me;
-				Tmp = DV[1] * SPM.MainEngineWLR / SPM.MainEngineThrust;
+				Tmp = DV[1] * SPM.MainEngineWLR / SPM.MainEngineThrust;//DV[1] * SPM.MainEngineThrust / SPM.MainEngineWLR;
 				//DT[1] = W[1] * (1.0 + (exp(-Tmp) - 1.0) / Tmp) / SPM.MainEngineWLR;
 				DT[1] = W[1] / SPM.MainEngineWLR*(1.0 - exp(-Tmp));
 				WDOT[1] = SPM.MainEngineWLR;
@@ -23823,7 +23892,7 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 				T[1] = SPM.DPS10PCTThrust;
 				DV[2] = DV_me - DV[1];
 				W[2] = W[1] - Tmp;
-				Tmp = DV[2] * SPM.MainEngineThrust / SPM.MainEngineWLR;
+				Tmp = DV[2] * SPM.MainEngineWLR / SPM.MainEngineThrust;//DV[2] * SPM.MainEngineThrust / SPM.MainEngineWLR;
 				//DT[2] = W[2] * (1.0 + (exp(-Tmp) - 1.0) / Tmp) / Tmp;
 				DT[2] = W[2] / SPM.MainEngineWLR*(1.0 - exp(-Tmp));
 				WDOT[2] = SPM.MainEngineWLR;
@@ -23856,7 +23925,7 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		{
 			Isp = SPM.MainEngineThrust / SPM.MainEngineWLR;
 			Tmp = dv / Isp;
-			dt_BU = (SPM.CMArea + SPM.LMWeight)*Isp*(1.0 + (exp(-Tmp) - 1.0) / Tmp) / SPM.MainEngineThrust;
+			dt_BU = (SPM.CSMWeight + SPM.LMWeight)*Isp*(1.0 + (exp(-Tmp) - 1.0) / Tmp) / SPM.MainEngineThrust;
 		}
 		int ITS;
 		EphemerisData sv_ig;
@@ -24060,6 +24129,7 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 	RID.GMTI = outarray.GMT_BI;
 	RID.ReentryPET = outarray.T_r;
 	RID.v_EI = v_r;
+	RID.gamma_EI = gamma_r;
 	RID.lat_EI = lat_r;
 	RID.lng_EI = lng_r;
 	RID.R_Y = outarray.R_Y;
@@ -24144,6 +24214,14 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		Out = atan2(-dotp(YSM, outarray.Z_B), dotp(YSM, outarray.Y_B));
 		In = atan2(-dotp(ZSM, outarray.X_B), dotp(XSM, outarray.X_B));
 	}
+	if (Out < 0)
+	{
+		Out += PI2;
+	}
+	if (In < 0)
+	{
+		In += PI2;
+	}
 	if (MED.ManVeh == RTCC_MANVEHICLE_CSM)
 	{
 		RID.FDAIAtt.x = Out;
@@ -24153,6 +24231,10 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 	else
 	{
 		Y = asin(-cos(Mid)*sin(Out));
+		if (Y < 0)
+		{
+			Y += PI2;
+		}
 		if (sin(Y) == 1.0)
 		{
 			RID.FDAIAtt.x = 0.0;
@@ -24163,6 +24245,14 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		{
 			P = asin(sin(In)*cos(Out) / cos(Y) + cos(In)*sin(Mid)*sin(Out) / cos(Y));
 			R = asin(sin(Mid) / cos(Y));
+			if (P < 0)
+			{
+				P += PI2;
+			}
+			if (R < 0)
+			{
+				R += PI2;
+			}
 			RID.FDAIAtt.x = R;
 			RID.FDAIAtt.y = P;
 			RID.FDAIAtt.z = Y;
@@ -24194,7 +24284,7 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 	IRED = 0;
 }
 
-void RTCC::PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SPS, double PHIMP, double LIMP, RTEDOutputTable &RED, int &ICC)
+void RTCC::PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SPS, double PHIMP, double LIMP, RTEDigitalSolutionTable &RED, int &ICC)
 {
 	EphemerisData2 sv_r, sv_r_ECT;
 	sv_r.R = FD.R_r;
@@ -24208,11 +24298,13 @@ void RTCC::PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SP
 
 	RMMYNIInputTable inp;
 	RMMYNIOutputTable outp;
+	double g_level;
 
 	//Primary reentry mode is constant g iteration?
-	if (IMD.PrimaryReentryMode == 10)
+	if (IMD.PrimaryReentryMode == 10 && SPS.lng_T < PI2)
 	{
 		RMMGIT(sv_r_ECT, SPS.lng_T);
+		g_level = 0.0; //TBD: Output from RMMGIT
 	}
 	else
 	{
@@ -24229,8 +24321,10 @@ void RTCC::PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SP
 		{
 			inp.K1 = SPS.BankAngle;
 		}
-		inp.g_c_BU = inp.g_c_GN = SPS.GLevelReentry;
+		inp.g_c_BU = inp.g_c_GN = SPS.GLevelReentryPrim;
+		inp.D0 = SPS.GLevelConstant*9.80665;
 		RMMYNI(inp, outp);
+		g_level = SPS.GLevelConstant;
 	}
 
 	if (outp.IEND == 2)
@@ -24242,22 +24336,28 @@ void RTCC::PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SP
 	RTCC_PCRENT_1A:
 		//Store primary outputs
 		RED.PrimaryReentryMode = IMD.PrimaryReentryMode;
-		RED.RollPET = outp.t_gc;
+		RED.RollPET = sv_r_ECT.GMT + outp.t_gc;
 		//TBD: Lift vector orientation
-		RED.MaxGLevelGMT = outp.t_gmax;
-		RED.ImpactGET = outp.t_lc;
+		RED.MaxGLevelGMT = sv_r_ECT.GMT + outp.t_gmax;
+		RED.MaxGLevelPrimary = outp.gmax;
+		RED.ImpactGET_prim = sv_r_ECT.GMT + outp.t_lc;
+		RED.lat_imp_prim = outp.lat_IP;
+		RED.lng_imp_prim = outp.lng_IP;
+		RED.GLevelRoll = g_level;
+		RED.lat_imp_tgt = PHIMP;
+		RED.lng_imp_tgt = LIMP;
 	}
 
 	if (outp.IEND == 3)
 	{
 		//TBD: Skipout
 	}
-	if (IMD.PrimaryReentryMode == 3)
+	if (IMD.PrimaryReentryMode != 3)
 	{
 		goto RTCC_PCRENT_3B;
 	}
 	//Backup reentry mode is constant g iteration?
-	if (IMD.BackupReentryMode == 10)
+	if (IMD.BackupReentryMode == 10 && SPS.lng_T < PI2)
 	{
 		RMMGIT(sv_r_ECT, SPS.lng_T);
 	}
@@ -24269,12 +24369,16 @@ void RTCC::PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SP
 		inp.lng_T = LIMP;
 		inp.KSWCH = IMD.BackupReentryMode;
 		inp.K1 = SPS.BankAngle;
-		inp.g_c_BU = inp.g_c_GN = SPS.GLevelReentry;
+		inp.g_c_BU = inp.g_c_GN = SPS.GLevelReentryBackup;
+		inp.D0 = SPS.GLevelConstant*9.80665;
 		RMMYNI(inp, outp);
 	}
 	if (outp.IEND == 2)
 	{
 		//Store outputs
+		RED.lat_imp_bu = outp.lat_IP;
+		RED.lng_imp_bu = outp.lng_IP;
+		RED.ImpactGET_bu = sv_r_ECT.GMT + outp.t_lc;
 	}
 RTCC_PCRENT_3B:
 	ICC = 0;
@@ -26768,8 +26872,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		else if (data[2] == "RTEM")
 		{
-			//TBD
-			return 2;
+			type = 4;
 		}
 		else
 		{
