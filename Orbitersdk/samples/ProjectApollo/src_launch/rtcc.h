@@ -2439,7 +2439,8 @@ struct RTEDSPMData
 	double GLevelReentryBackup;
 	double GLevelConstant;
 	double lng_T;
-	double RollDirection;
+	double RollDirectionPrim;
+	double RollDirectionBackup;
 	double TDPS; //Maximum DT for DPS (SPS) without iterating
 	double GNBankAngle;
 	double DPS10PCTThrust;
@@ -2470,7 +2471,7 @@ struct RTEDigitalSolutionTable
 	double GMTI = 0.0;
 	std::string BackupReentryMode;
 	double RollPET = 0.0;
-	int LiftVectorOrientation = 0;
+	double LiftVectorOrientation = 0.0;
 	double ReentryPET = 0.0;
 	double v_EI = 0.0;
 	double gamma_EI = 0.0;
@@ -2527,6 +2528,12 @@ struct RTEDigitalSolutionTable
 	double lng_imp_prim = 0.0;
 	double ImpactGET_prim = 0.0;
 	int Error = 0;
+	MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+	//For transfer to MPT
+	bool HeadsUpDownIndicator = false;
+	int ConfigurationChangeIndicator = 0;
+	int EndConfiguration = 0;
 };
 
 struct ELVCTRInputTable
@@ -3209,7 +3216,7 @@ public:
 		double lat_tgt = 0.0;
 		double lng_tgt = 0.0;
 		int RefBody = BODY_EARTH;
-		VECTOR3 XDV;
+		VECTOR3 XDV = _V(0, 0, 0);
 	} med_f81;
 
 	//RTE digitals entry profile
@@ -4592,6 +4599,7 @@ public:
 		double lmascmass;
 		double lmdscmass;
 		double sivbmass;
+		std::string config;
 	} VEHDATABUF;
 
 private:

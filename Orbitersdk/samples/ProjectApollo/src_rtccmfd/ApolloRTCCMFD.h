@@ -109,6 +109,9 @@ public:
 	void AGC_Display(char * Buff, double time);
 	void FormatLatitude(char * Buff, double lat);
 	void FormatLongitude(char * Buff, double lng);
+	void FormatIMUAngle0(char *Buff, double ang); //0 digits
+	void FormatIMUAngle1(char *Buff, double ang); //0 digits
+	void FormatIMUAngle2(char *Buff, double ang); //0 digits
 	void REFSMMATName(char* Buff, int n);
 	void ThrusterName(char *Buff, int n);
 	bool ThrusterType(std::string name, int &id);
@@ -143,6 +146,9 @@ public:
 	void set_RTEManeuverCode(char *code);
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();
+	void menuSaveSplashdownTarget();
+	bool set_SaveSplashdownTarget(char *str);
+	void LoadSplashdownTargetToRTEDManualInput();
 	void menuDeorbitCalc();
 	void menuCycleRetrofireType();
 	void menuMoonRTECalc();
@@ -777,6 +783,15 @@ public:
 	void set_ASTEntryProfile(char *str);
 	void menuASTCalc();
 	void menuDeleteASTRow();
+	void menuSetRTEDManualManeuverInputPage();
+	void menuRTEDManualVectorTime();
+	void set_RTEDManualVectorTime(double get);
+	void menuRTEDManualIgnitionTime();
+	void set_RTEDManualIgnitionTime(double get);
+	void menuCycleRTEDManualReference();
+	void menuEnterRTEDManualDV();
+	void set_RTEDManualDV(VECTOR3 DV);
+	void menuSetRTEDEntryProfilePage();
 
 protected:
 	oapi::Font *font;

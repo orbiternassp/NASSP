@@ -43,15 +43,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	//Hardcoded for now, better solution at some point...
 	double t_land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 
-	//For old scenarios
-	if (GZGENCSN.Year == 0)
-	{
-		GZGENCSN.Year = 1968;
-		GZGENCSN.MonthofLiftoff = 12;
-		GZGENCSN.DayofLiftoff = 21;
-		LoadLaunchDaySpecificParameters(GZGENCSN.Year, GZGENCSN.MonthofLiftoff, GZGENCSN.DayofLiftoff);
-	}
-
 	switch (fcn) {
 	case 1: //MISSION INITIALIZATION GROUND LIFTOFF TIME UPDATE
 	{

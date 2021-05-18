@@ -1724,6 +1724,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		reentryin.KSWCH = 2;
 		reentryin.R0 = sv_ECT.R;
 		reentryin.V0 = sv_ECT.V;
+		reentryin.GMT0 = sv_ECT.GMT;
 		reentryin.RLDIR = 1.0;
 
 		//Integrate max lift to impact
@@ -1776,6 +1777,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		}
 		reentryin.R0 = sv_ECT.R;
 		reentryin.V0 = sv_ECT.V;
+		reentryin.GMT0 = sv_ECT.GMT;
 		reentryin.RLDIR = 1.0;
 
 		pRTCC->RMMYNI(reentryin, reentryout);
@@ -1922,7 +1924,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 	//Store parameters from last reentry run
 	gmax = reentryout.gmax;
-	gmt_gmax = reentryout.t_gmax + sv_EI.GMT;
+	gmt_gmax = reentryout.t_gmax;
 
 	//Integrate max lift to impact for display
 	reentryin.KSWCH = 2;
@@ -2224,9 +2226,10 @@ void RetrofirePlanning::RMMDBN(int entry)
 		t_RB = 350.0;
 
 		//Reverse bank time has to be greater than the time of initial bank angle plus margin
-		if (t_RB < reentryout.t_gc + 120.0)
+		double t_GC = reentryout.t_gc - sv_EI.GMT;
+		if (t_RB < t_GC + 120.0)
 		{
-			t_RB = reentryout.t_gc + 120.0;
+			t_RB = t_GC + 120.0;
 		}
 
 		//Footprint calculations

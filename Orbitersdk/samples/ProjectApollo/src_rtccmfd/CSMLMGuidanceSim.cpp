@@ -1367,8 +1367,16 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 		{
 			VG = TArr.VG;
 		}
-		A_T = unit(VG);
-
+		double dv = length(VG);
+		if (dv == 0.0)
+		{
+			A_T = _V(1, 0, 0);
+		}
+		else
+		{
+			A_T = unit(VG);
+		}
+		
 		Y_T = unit(crossp(A_T, sv_ff.R));
 
 		if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS4)

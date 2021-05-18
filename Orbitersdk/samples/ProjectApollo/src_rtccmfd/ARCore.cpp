@@ -2954,12 +2954,14 @@ int ARCore::subThread()
 		{
 			MED_M50 med1;
 			MED_M55 med2;
+			//This doesn't work in debug mode (with only RTCC MFD and MCC modules build), so below are some fake masses
 			GC->rtcc->MPTMassUpdate(vessel, med1, med2);
 
-			GC->rtcc->VEHDATABUF.csmmass = 66500.0*0.453;//med1.CSMWT;//
-			GC->rtcc->VEHDATABUF.lmascmass = 10000.0*0.453;//med1.LMASCWT;//0.0;
-			GC->rtcc->VEHDATABUF.lmdscmass = 25000.0*0.453;//med1.LMWT - med1.LMASCWT;//0.0;
+			GC->rtcc->VEHDATABUF.csmmass = med1.CSMWT;//66500.0*0.453;//
+			GC->rtcc->VEHDATABUF.lmascmass = med1.LMASCWT;//0.0;10000.0*0.453;//
+			GC->rtcc->VEHDATABUF.lmdscmass = med1.LMWT - med1.LMASCWT;//0.0;25000.0*0.453;//
 			GC->rtcc->VEHDATABUF.sv = GC->rtcc->StateVectorCalcEphem(vessel);
+			GC->rtcc->VEHDATABUF.config = med2.ConfigCode;//"CL";//"C";//
 
 			GC->rtcc->PMMREDIG(false);
 		}

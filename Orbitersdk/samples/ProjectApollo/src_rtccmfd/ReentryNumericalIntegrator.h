@@ -247,6 +247,8 @@ protected:
 
 	//Previous and current state vector
 	VECTOR3 R_cur, V_cur, R_prev, V_prev;
+	//GMT of initial state vector
+	double GMT0;
 	double T, T_prev;
 	//Time difference
 	double DT;

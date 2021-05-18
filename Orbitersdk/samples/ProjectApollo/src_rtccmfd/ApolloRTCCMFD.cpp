@@ -519,6 +519,36 @@ void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng)
 	}
 }
 
+void ApolloRTCCMFD::FormatIMUAngle0(char *Buff, double ang)
+{
+	ang *= DEG;
+	if (ang >= 359.5)
+	{
+		ang = 0.0;
+	}
+	sprintf_s(Buff, 16, "%.0lf", ang);
+}
+
+void ApolloRTCCMFD::FormatIMUAngle1(char *Buff, double ang)
+{
+	ang *= DEG;
+	if (ang >= 359.95)
+	{
+		ang = 0.0;
+	}
+	sprintf_s(Buff, 16, "%.1lf", ang);
+}
+
+void ApolloRTCCMFD::FormatIMUAngle2(char *Buff, double ang)
+{
+	ang *= DEG;
+	if (ang >= 359.995)
+	{
+		ang = 0.0;
+	}
+	sprintf_s(Buff, 16, "%.2lf", ang);
+}
+
 void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 {
 	if (n == RTCC_ENGINETYPE_CSMSPS)
@@ -1266,6 +1296,18 @@ void ApolloRTCCMFD::menuSetAbortScanTablePage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetRTEDManualManeuverInputPage()
+{
+	screen = 109;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetRTEDEntryProfilePage()
+{
+	screen = 110;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuCycleRecoveryTargetSelectionPages()
 {
 	if (GC->rtcc->RZDRTSD.CurrentPage < GC->rtcc->RZDRTSD.TotalNumPages)
@@ -1794,6 +1836,91 @@ bool DeleteASTRowInput(void *id, char *str, void *data)
 	sprintf_s(Buff, "F79,%s;", str);
 	((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
 	return true;
+}
+
+void ApolloRTCCMFD::menuRTEDManualVectorTime()
+{
+	if (GC->MissionPlanningActive)
+	{
+		bool RTEDManualVectorTimeInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the vector GET (Format: hhh:mm:ss)", RTEDManualVectorTimeInput, 0, 25, (void*)this);
+	}
+}
+
+bool RTEDManualVectorTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, get;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_RTEDManualVectorTime(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTEDManualVectorTime(double get)
+{
+	GC->rtcc->med_f81.VectorTime = get;
+}
+
+void ApolloRTCCMFD::menuRTEDManualIgnitionTime()
+{
+	bool RTEDManualIgnitionTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the ignition GET (Format: hhh:mm:ss)", RTEDManualIgnitionTimeInput, 0, 25, (void*)this);
+}
+
+bool RTEDManualIgnitionTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, get;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_RTEDManualIgnitionTime(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTEDManualIgnitionTime(double get)
+{
+	GC->rtcc->med_f81.IgnitionTime = get;
+}
+
+void ApolloRTCCMFD::menuCycleRTEDManualReference()
+{
+	if (GC->rtcc->med_f81.RefBody == BODY_EARTH)
+	{
+		GC->rtcc->med_f81.RefBody = BODY_MOON;
+	}
+	else
+	{
+		GC->rtcc->med_f81.RefBody = BODY_EARTH;
+	}
+}
+
+void ApolloRTCCMFD::menuEnterRTEDManualDV()
+{
+	bool EnterRTEDManualDVInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the maneuver DV in LVLH coordinates:", EnterRTEDManualDVInput, 0, 25, (void*)this);
+}
+
+bool EnterRTEDManualDVInput(void *id, char *str, void *data)
+{
+	VECTOR3 DV;
+	if (sscanf(str, "%lf %lf %lf", &DV.x, &DV.y, &DV.z) == 3)
+	{
+		((ApolloRTCCMFD*)data)->set_RTEDManualDV(DV);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTEDManualDV(VECTOR3 DV)
+{
+	GC->rtcc->med_f81.XDV = DV * 0.3048;
 }
 
 void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()
@@ -2518,7 +2645,7 @@ void ApolloRTCCMFD::set_RTEDASTCode(int code)
 void ApolloRTCCMFD::menuRTED_REFSMMAT()
 {
 	bool RTED_REFSMMATInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Enter REFSMMAT code:", RTED_REFSMMATInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Enter REFSMMAT code (special codes: ROP for preferred, ROY for deorbit, ROZ for reentry)", RTED_REFSMMATInput, 0, 20, (void*)this);
 }
 
 bool RTED_REFSMMATInput(void *id, char *str, void *data)
@@ -4844,12 +4971,53 @@ void ApolloRTCCMFD::menuEntryCalc()
 	G->EntryCalc();
 }
 
+void ApolloRTCCMFD::menuSaveSplashdownTarget()
+{
+	bool SaveSplashdownTargetInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Save splashdown target. Enter P for Primary or M for Manual Column:", SaveSplashdownTargetInput, 0, 50, (void*)this);
+}
+
+bool SaveSplashdownTargetInput(void *id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_SaveSplashdownTarget(str);
+}
+
+bool ApolloRTCCMFD::set_SaveSplashdownTarget(char *str)
+{
+	if (str[0] == 'P')
+	{
+		if (GC->rtcc->PZREAP.RTEDTable[0].RTEDCode != "")
+		{
+			G->EntryLatcor = GC->rtcc->PZREAP.RTEDTable[0].lat_imp_tgt;
+			G->EntryLngcor = GC->rtcc->PZREAP.RTEDTable[0].lng_imp_tgt;
+			return true;
+		}
+	}
+	else if (str[1] == 'M')
+	{
+		if (GC->rtcc->PZREAP.RTEDTable[1].RTEDCode != "")
+		{
+			G->EntryLatcor = GC->rtcc->PZREAP.RTEDTable[1].lat_imp_tgt;
+			G->EntryLngcor = GC->rtcc->PZREAP.RTEDTable[1].lng_imp_tgt;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::LoadSplashdownTargetToRTEDManualInput()
+{
+	GC->rtcc->med_f81.lat_tgt = G->EntryLatcor;
+	GC->rtcc->med_f81.lng_tgt = G->EntryLngcor;
+}
+
 void ApolloRTCCMFD::menuTransferRTEToMPT()
 {
 	if (GC->MissionPlanningActive)
 	{
 		bool TransferRTEMPTInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Format: M74,MPT (CSM or LEM), Replace Code (1-15 or missing), Maneuver Type (TTFM for deorbit, otherwise RTEP);", TransferRTEMPTInput, 0, 50, (void*)this);
+		oapiOpenInputBox("Format: M74,MPT (CSM or LEM), Replace Code (1-15 or missing), Maneuver Type (TTFM for deorbit, RTEP for RTE primary column, RTEM for manual column);", TransferRTEMPTInput, 0, 50, (void*)this);
 	}
 	else
 	{
