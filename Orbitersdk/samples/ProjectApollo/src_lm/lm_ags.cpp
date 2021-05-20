@@ -77,16 +77,14 @@ void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_
 	fineheater = fineht;
 	hsink = hr;
 	asaHeat = asah;
-	// Therm setup
-	hsink->isolation = 0.0000001;
-	hsink->Area = 975.0425;
+	// Therm setup; Need to check if these conflict with config values
+	//hsink->isolation = 0.0000001;
+	//hsink->Area = 975.0425;
 	//hsink.mass = 9389.36206;
 	//hsink.SetTemp(270);
 	if (lem != NULL) {
 		fastheater->WireTo(&lem->SCS_ASA_CB);
 		fineheater->WireTo(&lem->SCS_ASA_CB);
-		//lem->Panelsdk.AddHydraulic(&hsink);
-		//lem->Panelsdk.AddElectrical(&heater, false);
 	}
 }
 
@@ -115,7 +113,6 @@ void LEM_ASA::Timestep(double simdt){
 	// Fast Warmup is active below 116F.
 	// At 116F the Fine Warmup circuit takes over and gets to 120F and maintains it to within 0.2 degree F
 
-	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
 
 	// Do we have an ASA?
 	if (!lem->pMission->HasAEA()) return;

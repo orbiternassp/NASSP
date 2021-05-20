@@ -1234,7 +1234,7 @@ h_crew::h_crew(char *i_name, int nr, h_Tank *i_src) {
 
 void h_crew::refresh(double dt) {
 
-	double oxygen = 0.00949 * number * dt; //grams of O2	
+	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)	
 	if (SRC) {
 		double srcTemp = SRC->GetTemp();
 		therm_obj *t = SRC->GetThermalInterface();
@@ -1245,12 +1245,12 @@ void h_crew::refresh(double dt) {
 		SRC->space.composition[SUBSTANCE_O2].vapor_mass -= oxygen;
 		SRC->space.composition[SUBSTANCE_O2].SetTemp(srcTemp);
 
-		double co2 = 0.01013 * number * dt; //grams of CO2
+		double co2 = 0.01013 * number * dt; //grams of CO2 (0.096 to 0.146 LB/Man Hour (43.54 to 66.22 g/Man Hour) per LM-8 Systems Handbook)
 		SRC->space.composition[SUBSTANCE_CO2].mass += co2;
 		SRC->space.composition[SUBSTANCE_CO2].vapor_mass += co2;
 		SRC->space.composition[SUBSTANCE_CO2].SetTemp(srcTemp);
 
-		double h2o = 0.0264 * number * dt;  // grams of H2O water vapor
+		double h2o = 0.0264 * number * dt;  // grams of H2O water vapor (need a source for this)
 		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
@@ -1258,8 +1258,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.GetQ();
 		SRC->space.GetMass();
 			
-		//double heat = 138.72 * number * dt;  //heat 1420 btu/hr (416.16092 W) total from CSM data book (Watts * number of crew * seconds = J/crew member/s)
-		double heat = 30.0 * number * dt;  //heat
+		double heat = 30.0 * number * dt;  //heat (400 to 760 BTU/Man Hour (117.23 to 222.73 Watts) per LM-8 Systems Handbook)
 		t->thermic(heat);
 	}
 }

@@ -885,6 +885,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				if (MissionTime >= -135) {	// 2min 15sec before launch
 					// Disable GSE devices
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
+					*(int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 
 					// Next state
@@ -969,8 +970,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 
 //sprintf(oapiDebugString(), "Prim: %.3f Sec: %.3f RadT: %.3f", *gseprimhxPower, *gsesechxPower, KelvinToFahrenheit(*gseradTemp));
-
 //sprintf(oapiDebugString(), "Pwr %1f HX %.3f RadT %.3f Acc %.3f RadI %.3f RadO %.3f EvapI %.3f EvapO %.3f", *isonGSEchiller, *gseprimhxPower, KelvinToFahrenheit(*gseradTemp), KelvinToFahrenheit(*primaccumTemp), KelvinToFahrenheit(*primradinTemp), KelvinToFahrenheit(*primradoutTemp), KelvinToFahrenheit(*primevapinTemp), KelvinToFahrenheit(*primevapoutTemp));
+//sprintf(oapiDebugString(), "Acc %.3f RadI %.3f RadO %.3f EvapI %.3f EvapO %.3f", KelvinToFahrenheit(*primaccumTemp), KelvinToFahrenheit(*primradinTemp), KelvinToFahrenheit(*primradoutTemp), KelvinToFahrenheit(*primevapinTemp), KelvinToFahrenheit(*primevapoutTemp));
 
 //GSE Oxygen Purge Debug Lines	
 	
