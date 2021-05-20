@@ -7407,9 +7407,13 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 		}
 	}
 	
-	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->GETbase);
+	EphemerisData2 sv3;
+	sv3.R = sv2.R;
+	sv3.V = sv2.V;
+	sv3.GMT = OrbMech::GETfromMJD(sv2.MJD, GetGMTBase());
+	teicalc = new RTEMoon(this, sv3, GetGMTBase());
 	teicalc->ATP(LINE);
-	teicalc->READ(opt->SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, 2, 0.3, PZREAP.DVMAX, 0.0, opt->Inclination, 1.0*1852.0, TZMINI, 0.0);
+	teicalc->READ(opt->SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, 2, 0.3, PZREAP.DVMAX, 0.0, opt->Inclination, 1.0*1852.0, GMTfromGET(TZMINI), 0.0);
 
 	endi = teicalc->MASTER();
 
@@ -7424,10 +7428,10 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 
 	res->latitude = teicalc->EntryLatcor;
 	res->longitude = teicalc->EntryLngcor;
-	res->P30TIG = (teicalc->TIG - opt->GETbase)*24.0*3600.0;
+	res->P30TIG = GETfromGMT(teicalc->sv0.GMT);
 	res->dV_LVLH = teicalc->Entry_DV;
 	res->ReA = teicalc->EntryAng;
-	res->GET400K = (teicalc->EIMJD - opt->GETbase)*24.0*3600.0;
+	res->GET400K = GETfromGMT(teicalc->t_R);
 	res->GET05G = res->GET400K + dt22;
 	res->RTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(res->GET05G, opt->GETbase), res->latitude, res->longitude);
 	res->VIO = length(V05G);
@@ -7449,11 +7453,11 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 
 	sv_tig.gravref = hMoon;
 	sv_tig.mass = sv0.mass;
-	sv_tig.MJD = teicalc->TIG;
-	sv_tig.R = teicalc->Rig;
-	sv_tig.V = teicalc->Vig;
+	sv_tig.MJD = OrbMech::MJDfromGET(teicalc->sv0.GMT, GetGMTBase());
+	sv_tig.R = teicalc->sv0.R;
+	sv_tig.V = teicalc->sv0.V;
 
-	PoweredFlightProcessor(sv_tig, opt->GETbase, 0.0, opt->enginetype, LMmass, teicalc->Vig_apo - teicalc->Vig, false, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
+	PoweredFlightProcessor(sv_tig, opt->GETbase, 0.0, opt->enginetype, LMmass, teicalc->Vig_apo - teicalc->sv0.V, false, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
 
 	delete teicalc;
 }
@@ -23052,10 +23056,9 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		}
 	}
 
-	SV sv_abort2 = ConvertEphemDatatoSV(sv_abort);
-
 	if (sv_abort.RBI == BODY_EARTH)
 	{
+		SV sv_abort2 = ConvertEphemDatatoSV(sv_abort);
 		double dvmax;
 		int critical;
 
@@ -23152,7 +23155,11 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			Inclination = med_f77.Inclination;
 		}
 
-		RTEMoon rte(sv_abort2.R, sv_abort2.V, sv_abort2.MJD, hMoon, GetGMTBase());
+		EphemerisData2 sv_abort2;
+		sv_abort2.R = sv_abort.R;
+		sv_abort2.V = sv_abort.V;
+		sv_abort2.GMT = sv_abort.GMT;
+		RTEMoon rte(this, sv_abort2, GetGMTBase());
 		if (SMODE == 14 || SMODE == 34)
 		{
 			double LINE[10];
@@ -23168,16 +23175,16 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			return;
 		}
 
-		sv_ig.R = rte.Rig;
-		sv_ig.V = rte.Vig;
-		sv_ig.GMT = (rte.TIG - GetGMTBase())*24.0*3600.0;
+		sv_ig.R = rte.sv0.R;
+		sv_ig.V = rte.sv0.V;
+		sv_ig.GMT = rte.sv0.GMT;
 		sv_ig.RBI = BODY_MOON;
 		sv_r.R = rte.R_EI;
 		sv_r.V = rte.V_EI;
-		sv_r.GMT = (rte.EIMJD - GetGMTBase())*24.0*3600.0;
+		sv_r.GMT = rte.t_R;
 		AST.lat_SPL = rte.EntryLatcor;
 		AST.lng_SPL = rte.EntryLngcor;
-		AST.SplashdownGMT = rte.t_Z;
+		AST.SplashdownGMT = rte.t_z;
 		AST.DV = rte.DV;
 		AST.h_PC = rte.FlybyPeriAlt;
 	}

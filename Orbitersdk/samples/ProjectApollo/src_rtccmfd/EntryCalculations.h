@@ -54,7 +54,6 @@ namespace EntryCalculations
 	void augekugel(double ve, double gammae, double &phie, double &Te);
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double &lambda, double &phi);
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET);
-	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl = 0, bool asc = true);
 	void Abort(VECTOR3 R0, VECTOR3 V0, double RCON, double dt, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	bool Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, double INTER, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &Incl_apo);
 	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
@@ -69,11 +68,9 @@ namespace EntryCalculations
 	double URF(double T, double x);
 	void TFPCR(double mu, int k, double a_apo, double e, double r, double &T, double &P);
 	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
-	VECTOR3 MCDRIV(double t_I, double var, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, bool &NIR, double &Incl_apo, double &r_p);
 	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo);
 	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN);
 	double LNDING(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &MJD_L);
-	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
 	void SIDCOM(double JD0, double DT, double N, double &alpha_go, double &T);
 
 	double MPL(double lat);
@@ -538,10 +535,10 @@ protected:
 	VECTOR3 RR_vec, VV_vec;
 };
 
-class RTEMoon
+class RTEMoon : public RTCCModule
 {
 public:
-	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase);
+	RTEMoon(RTCC *r, EphemerisData2 sv0, double GMTBASE);
 	void ATP(double *line);
 	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
 	bool MASTER();
@@ -555,14 +552,17 @@ public:
 	double EntryLatcor, EntryLngcor;
 	VECTOR3 DV, Entry_DV;
 	VECTOR3 R_EI, V_EI;
-	double EIMJD;
 	double EntryAng;
-	VECTOR3 Rig, Vig, Vig_apo;
-	double TIG;
+	VECTOR3 Vig_apo;
 	double ReturnInclination;
 	double FlybyPeriAlt;
-	double t_Z;
+	double t_R, t_z;
+	EphemerisData2 sv0;
 private:
+
+	VECTOR3 ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_EI, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl = 0, bool asc = true);
+	VECTOR3 MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool INRFVsign, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p);
+	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
 
 	OBJHANDLE hMoon, hEarth;
 	double mu_E, mu_M, w_E, R_E, R_M;
@@ -571,8 +571,11 @@ private:
 	double EntryLng;
 	double dlngapo, dtapo;
 	bool INRFVsign;
-	double dTIG, mjd0, GETbase;
+	double dTIG, mjd0, GMTBASE;
 	double i_rmax, u_rmax;
+	//12 = PTP discrete, 14 = ATP discrete, 16 = UA discrete
+	//22 = PTP tradeoff, 24 = ATP tradeoff
+	//32 = PTP search, 34 = ATP search, 36 = UA search
 	int SMODE;
 	// 2: primary target point mode
 	// 4: alternate target point mode
