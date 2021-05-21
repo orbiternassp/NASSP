@@ -2962,8 +2962,6 @@ int ARCore::subThread()
 				break;
 			}
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
 			pin.T_UP = GC->rtcc->GMTfromGET(EntryTIG);
 			pin.TableCode = RTCC_MPT_CSM;
 			GC->rtcc->PLAWDT(pin, pout);
