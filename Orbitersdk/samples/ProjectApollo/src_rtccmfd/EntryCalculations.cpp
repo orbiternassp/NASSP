@@ -6214,6 +6214,12 @@ void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CI
 	{
 		LFLAG = 2;
 	}
+	bRTCC = false;
+	if (CIRI == 0 && CRIT != 6)
+	{
+		//If postmaneuver direction of motion is to be determined internally and mode is fuel critical, unspecified area
+		bRTCC = true;
+	}
 
 	if (SMODE == 12 || SMODE == 14 || SMODE == 32 || SMODE == 34)
 	{
@@ -6272,6 +6278,12 @@ bool RTEMoon::MASTER()
 		else
 		{
 			R_S = 24.0*R_E;
+		}
+
+		//QDFLG = 0;
+		if (bRTCC)
+		{
+
 		}
 
 		if (CRIT == 4)
@@ -6716,7 +6728,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, double &dv)
 bool RTEMoon::MCUA(double &i_r, double &INTER, double &dv)
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB, DVTAB1, IRTAB1, TZTAB1, Vig_apo;
-	double u_r, r_p, t_z, di_r, i_rmin, Di_r, Dt_z, TOL, zc, DV_est1, DV_est2, D1, D2, indvar, i_rmax_apo, SDV, Si_r, SSDV, SSi_r, t_z_apo, eps_ir;
+	double u_r, r_p, di_r, i_rmin, Di_r, Dt_z, TOL, zc, DV_est1, DV_est2, D1, D2, indvar, i_rmax_apo, SDV, Si_r, SSDV, SSi_r, t_z_apo, eps_ir;
 	double SSt_z, DVSSS, i_rest, i_rmins, i_rmaxs, Xi_r, t_zmin_apo;
 	int LOOP, LOCATE, ISUB, LOOPTZ, ISUBP, MM;
 	bool NIR, KIP, IOPT, IEND, IOPT1, IRFLAG, IRSCAN, ISOL;

@@ -23056,10 +23056,11 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		}
 	}
 
+	//Here the logic diverts between Earth vs. Moon centered state vectors
 	if (sv_abort.RBI == BODY_EARTH)
 	{
 		SV sv_abort2 = ConvertEphemDatatoSV(sv_abort);
-		double dvmax;
+		double dvmax, TZMINI;
 		int critical;
 
 		if (med == 75)
@@ -23079,15 +23080,17 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			{
 				return;
 			}
+			TZMINI = 0.0;
 		}
 		else
 		{
 			critical = 1;
 			dvmax = PZREAP.DVMAX*0.3048;
 			sprintf_s(typname, "ATP");
+			TZMINI = med_f77.T_Z;
 		}
 
-		RTEEarth rte(sv_abort2.R, sv_abort2.V, sv_abort2.MJD, GetGMTBase(), PZREAP.RTET0Min*3600.0, PZREAP.RTETimeOfLanding*3600.0, critical);
+		RTEEarth rte(sv_abort2.R, sv_abort2.V, sv_abort2.MJD, GetGMTBase(), PZREAP.RTET0Min*3600.0, TZMINI, critical);
 		rte.READ(PZREAP.RRBIAS, dvmax, EPI, PZREAP.VRMAX*0.3048);
 
 		if (critical == 1)
@@ -23119,7 +23122,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	else
 	{
 		int SMODE;
-		double Inclination;
+		double Inclination, TZMINI, TZMAXI;
 
 		if (med == 75)
 		{
@@ -23133,12 +23136,16 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 				return;
 			}
 			Inclination = med_f75.Inclination;
+			TZMINI = PZREAP.TZMIN*3600.0;
+			TZMAXI = PZREAP.TZMAX*3600.0;
 		}
 		else if (med == 76)
 		{
 			SMODE = 14;
 			sprintf_s(typname, "ATP");
 			Inclination = med_f76.Inclination;
+			TZMINI = med_f76.T_Z;
+			TZMAXI = 0.0;
 		}
 		else
 		{
@@ -23146,11 +23153,15 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			{
 				SMODE = 36;
 				sprintf_s(typname, "FCUA");
+				TZMINI = PZREAP.TZMIN*3600.0;
+				TZMAXI = PZREAP.TZMAX*3600.0;
 			}
 			else
 			{
 				SMODE = 34;
 				sprintf_s(typname, "ATP");
+				TZMINI = med_f77.T_Z;
+				TZMAXI = 0.0;
 			}
 			Inclination = med_f77.Inclination;
 		}
@@ -23169,7 +23180,12 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			}
 			rte.ATP(LINE);
 		}
-		rte.READ(SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, EPI, 0.3, PZREAP.DVMAX, 0.0, Inclination, 1.0*1852.0, PZREAP.RTETimeOfLanding*3600.0, 0.0);
+
+		//Convert to GMT
+		TZMINI = GMTfromGET(TZMINI);
+		TZMAXI = GMTfromGET(TZMAXI);
+
+		rte.READ(SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, EPI, 0.3, PZREAP.DVMAX, 0.0, Inclination, 1.0*1852.0, TZMINI, TZMAXI);
 		if (rte.MASTER() == false)
 		{
 			return;
@@ -23767,6 +23783,7 @@ void RTCC::PMMREDIG(bool mpt)
 		return;
 	}
 
+	//Reentry settings
 	if (MED.PrimaryReentryMode == 3)
 	{
 		if (med_f82.BackupEP == "HB1")
@@ -23884,7 +23901,15 @@ void RTCC::PMMREDIG(bool mpt)
 
 	//Write some alphanumeric data
 	RID.ThrusterCode = MED.Thruster;
-	RID.RTEDCode = "Z1";
+	if (PZREAP.LastRTEDCode == 0)
+	{
+		RID.RTEDCode = "Z1";
+	}
+	else
+	{
+		RID.RTEDCode = "Z" + std::to_string(PZREAP.LastRTEDCode + 1);
+	}
+	PZREAP.LastRTEDCode++;
 	RID.ManeuverCode = med_f80.ManeuverCode;
 	if (refsnum != -1)
 	{
@@ -24094,14 +24119,14 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		}
 
 		block.DepVarLowerLimit[0] = (AST.h_r - 400.0*0.3048) / OrbMech::R_Earth;
-		block.DepVarLowerLimit[1] = AST.lat_r - 0.05*RAD;
-		block.DepVarLowerLimit[2] = AST.lng_r - 0.05*RAD;
+		block.DepVarLowerLimit[1] = AST.lat_r - 0.03*RAD;
+		block.DepVarLowerLimit[2] = AST.lng_r - 0.03*RAD;
 		block.DepVarLowerLimit[3] = AST.azi_r - 0.01*RAD;
 		block.DepVarLowerLimit[4] = (AST.sv_TIG.GMT + AST.dt_ar - 0.5) / 3600.0;//AST.dt_ar / 3600.0 - 12.0;
 		block.DepVarLowerLimit[5] = AST.gamma_r - 0.001*RAD;
 		block.DepVarUpperLimit[0] = (AST.h_r + 400.0*0.3048) / OrbMech::R_Earth;
-		block.DepVarUpperLimit[1] = AST.lat_r + 0.05*RAD;
-		block.DepVarUpperLimit[2] = AST.lng_r + 0.05*RAD;
+		block.DepVarUpperLimit[1] = AST.lat_r + 0.03*RAD;
+		block.DepVarUpperLimit[2] = AST.lng_r + 0.03*RAD;
 		block.DepVarUpperLimit[3] = AST.azi_r + 0.01*RAD;
 		block.DepVarUpperLimit[4] = (AST.sv_TIG.GMT + AST.dt_ar + 0.5) / 3600.0;//AST.dt_ar / 3600.0 + 12.0;
 		block.DepVarUpperLimit[5] = AST.gamma_r + 0.001*RAD;
@@ -26044,7 +26069,6 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		//TBD: T_V greater than present time
 		PZREAP.RTEVectorTime = GMTfromGET(med_f76.T_V) / 3600.0;
 		PZREAP.RTET0Min = GMTfromGET(med_f76.T_0) / 3600.0;
-		PZREAP.RTETimeOfLanding = GMTfromGET(med_f76.T_Z) / 3600.0;
 		if (PZREAP.TGTLN == 1)
 		{
 			PZREAP.EntryProfile = 2;
@@ -26081,7 +26105,6 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		//TBD: T_V greater than present time
 		PZREAP.RTEVectorTime = GMTfromGET(med_f77.T_V) / 3600.0;
 		PZREAP.RTET0Min = GMTfromGET(med_f77.T_min) / 3600.0;
-		PZREAP.RTETimeOfLanding = GMTfromGET(med_f77.T_Z) / 3600.0;
 		if (PZREAP.TGTLN == 1)
 		{
 			PZREAP.EntryProfile = 2;

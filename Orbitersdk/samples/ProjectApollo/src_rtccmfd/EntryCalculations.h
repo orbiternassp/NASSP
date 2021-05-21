@@ -609,6 +609,8 @@ private:
 	int ICRNGG;
 	// desired inclination. Signed for the two azimuth options
 	double i_rk;
+	// true if postmaneuver direction of motion determined internally
+	bool bRTCC;
 	double t_zmin, t_zmax;
 	double mu_z, mu_z1;
 	double lambda_z, lambda_z1;

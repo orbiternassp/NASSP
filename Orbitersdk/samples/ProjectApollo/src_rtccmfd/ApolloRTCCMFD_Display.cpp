@@ -2623,11 +2623,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			FormatIMUAngle1(Buffer, tab->IMUAtt.z);
 			skp->Text((18 + 12 * i) * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
 
+			sprintf_s(Buffer, "%.1lf", tab->DVC / 0.3048);
+			skp->Text((13 + 12 * i) * W / 32, 14 * H / 32, Buffer, strlen(Buffer));
 			SStoHHMMSS(tab->dt, hh, mm, secs);
-			sprintf_s(Buffer, "%.1lf  %02d:%02.1lf", tab->DVC / 0.3048, mm, secs);
+			sprintf_s(Buffer, "%02d:%02.1lf", mm, secs);
 			skp->Text((18 + 12 * i) * W / 32, 14 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.1lf", tab->dv / 0.3048);
+			skp->Text((13 + 12 * i) * W / 32, 15 * H / 32, Buffer, strlen(Buffer));
 			SStoHHMMSS(tab->dt_ullage, hh, mm, secs);
-			sprintf_s(Buffer, "%.1lf %+d %02d:%02.1lf", tab->dv / 0.3048, tab->NumQuads, mm, secs);
+			sprintf_s(Buffer, "%+d %02d:%02.1lf", tab->NumQuads, mm, secs);
 			skp->Text((18 + 12 * i) * W / 32, 15 * H / 32, Buffer, strlen(Buffer));
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT, oapi::Sketchpad::BASELINE);
@@ -2689,7 +2694,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				sprintf_s(Buffer, "%.0lfS", abs(tab->md_lat / 1852.0));
 			}
-			skp->Text((14 + 12 * i) * W / 32, 30 * H / 32, Buffer, strlen(Buffer));
+			skp->Text((15 + 12 * i) * W / 32, 30 * H / 32, Buffer, strlen(Buffer));
 			if (tab->md_lng > 0)
 			{
 				sprintf_s(Buffer, "%.0lfE", tab->md_lng / 1852.0);
@@ -8794,8 +8799,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			GET_Display(Buffer, GC->rtcc->med_f77.T_min, false);
 			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer, GC->rtcc->med_f77.T_Z, false);
-			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+			if (GC->rtcc->med_f77.Site != "FCUA")
+			{
+				GET_Display(Buffer, GC->rtcc->med_f77.T_Z, false);
+				skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+			}
 
 			sprintf_s(Buffer, "%s", GC->rtcc->med_f77.EntryProfile.c_str());
 			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));

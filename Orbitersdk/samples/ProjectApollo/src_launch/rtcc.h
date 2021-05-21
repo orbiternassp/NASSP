@@ -4073,7 +4073,7 @@ public:
 		double RTEVectorTime;
 		double RTET0Min; //Time of abort or minimum time
 		double RTET0Max; //Maximum time
-		double RTETimeOfLanding;
+		//double RTETimeOfLanding;
 		double RTEUADVMax;
 		double RTEPTPMissDistance;
 		double RTEInclination;
@@ -4095,6 +4095,7 @@ public:
 		int LastASTCode = 0;
 
 		RTEDigitalSolutionTable RTEDTable[2];
+		int LastRTEDCode = 0;
 	} PZREAP;
 	
 	RetrofireTransferTable RZRFTT;
