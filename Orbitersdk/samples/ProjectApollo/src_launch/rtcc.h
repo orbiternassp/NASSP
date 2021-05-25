@@ -1797,7 +1797,7 @@ struct PMMMPTInput
 	double VehicleWeight;
 	double CSMWeight;
 	double LMWeight;
-	//Time flag. false = start at impulsive time, true = use optimum time
+	//Time flag. true = start at impulsive time, false = use optimum time
 	bool IgnitionTimeOption;
 	//Iterate flag. false = don't iterate, true = iterate
 	bool IterationFlag;
@@ -1806,6 +1806,8 @@ struct PMMMPTInput
 	MissionPlanTable *mpt;
 	unsigned CurrentManeuver;
 	EphemerisData sv_other;
+	bool HeadsUpIndicator = true;
+	int TrimAngleInd = -1;
 };
 
 struct PMMSPTInput
@@ -2418,6 +2420,9 @@ struct RTEDASTData
 	double gamma_r_stop;
 	double lat_tgt;
 	double lng_tgt;
+
+	//Not on actual array
+	EphemerisData2 sv_r;
 };
 
 struct RTEDSPMData

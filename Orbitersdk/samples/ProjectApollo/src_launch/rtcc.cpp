@@ -2001,7 +2001,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 		}
 	}
 
-	entry = new RTEEarth(sv.R, sv.V, sv.MJD, opt->GETbase, opt->TIGguess, opt->t_Z, opt->type);
+	entry = new RTEEarth(this, ConvertSVtoEphemData(sv), GetGMTBase(), GMTfromGET(opt->TIGguess), GMTfromGET(opt->t_Z), opt->type);
 	entry->READ(opt->r_rbias, opt->dv_max, 2, 37500.0*0.3048);
 	entry->ATP(LINE);
 	while (!stop)
@@ -2010,11 +2010,11 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	}
 
 	res->dV_LVLH = entry->Entry_DV;
-	res->P30TIG = entry->EntryTIGcor;
+	res->P30TIG = GETfromGMT(entry->sv_ig.GMT);
 	res->latitude = entry->EntryLatcor;
 	res->longitude = entry->EntryLngcor;
-	res->GET400K = entry->t2;
-	res->GET05G = entry->EntryRET;
+	res->GET400K = GETfromGMT(entry->t2);
+	res->GET05G = GETfromGMT(entry->EntryRET);
 	res->RTGO = entry->EntryRTGO;
 	res->VIO = entry->EntryVIO;
 	res->ReA = entry->EntryAng;
@@ -12912,8 +12912,8 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("ILLEGAL ENTRY. CODE = 32");
 		break;
 	case 33:
-		message.push_back("MPT REFLECTS REQUESTED CHANGES - NO VECTOR AVAILABLE");
-		message.push_back("FOR " + RTCCONLINEMON.TextBuffer[0] + " TRAJECTORY UPDATE.");
+		message.push_back("MPT REFLECTS REQUESTED CHANGES -");
+		message.push_back("NO VECTOR AVAILABLE FOR " + RTCCONLINEMON.TextBuffer[0] + " TRAJECTORY UPDATE.");
 		break;
 	case 35:
 		message.push_back("UNABLE TO MOVE VECTOR TO PRESENT TIME -");
@@ -15159,6 +15159,7 @@ RTCC_PMMMCD_17_1:
 int RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 {
 	EMMENIInputTable emsin;
+	//Reference orbital elements (post maneuver)
 	CELEMENTS ELA;
 	EphemerisData sv_gmti, sv_gmti_other;
 	VECTOR3 DV_LVLH;
@@ -15175,7 +15176,7 @@ int RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 
 	double TIMP = in.sv_before.GMT;
 
-	man.HeadsUpDownInd = true;
+	man.HeadsUpDownInd = in.HeadsUpIndicator;
 	man.TrajDet[0] = 1;
 	man.TrajDet[1] = 1;
 	man.TrajDet[2] = 1;
@@ -15193,7 +15194,7 @@ int RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 	}
 	else
 	{
-		man.TrimAngleInd = -1;
+		man.TrimAngleInd = in.TrimAngleInd;
 	}
 
 	if (in.sv_before.RBI == BODY_EARTH)
@@ -15441,6 +15442,7 @@ RTCC_PMMMPT_10_A:
 	EMMENI(emsin);
 	sv_gmti = emsin.sv_cutoff;
 	DV_LVLH = PIEXDV(sv_gmti.R, sv_gmti.V, in.VehicleWeight, GetOnboardComputerThrust(in.Thruster), DV, false);
+	man.dV_inertial = DV;
 	man.dV_LVLH = DV_LVLH;
 	man.Word67i[0] = 1;
 	goto RTCC_PMMMPT_11_B;
@@ -15572,7 +15574,15 @@ RTCC_PMMMPT_12_A:
 	double WNULL[6] = { 0,0,0,0,0,0 };
 	LAMI = pow(2, -28);
 	LAML = 1.0;
-	EPS[0] = 1.0 / OrbMech::R_Earth;
+	//If eccentricity is close to 1 then the semi-major axis "a" becomes very large (above 1 even negative, so a shouldn't be used near 1). So widen the tolerance on "a" near e = 1.
+	if (abs(ELA.e - 1.0) < 0.001)
+	{
+		EPS[0] = abs(ELA.a) / (OrbMech::R_Earth*10.0);
+	}
+	else
+	{
+		EPS[0] = 1.0 / OrbMech::R_Earth;
+	}
 	EPS[1] = 0.0001;
 	EPS[2] = 0.00001;
 	EPS[3] = 0.00001;
@@ -23090,7 +23100,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			TZMINI = med_f77.T_Z;
 		}
 
-		RTEEarth rte(sv_abort2.R, sv_abort2.V, sv_abort2.MJD, GetGMTBase(), PZREAP.RTET0Min*3600.0, TZMINI, critical);
+		RTEEarth rte(this, sv_abort, GetGMTBase(), PZREAP.RTET0Min*3600.0, TZMINI, critical);
 		rte.READ(PZREAP.RRBIAS, dvmax, EPI, PZREAP.VRMAX*0.3048);
 
 		if (critical == 1)
@@ -23621,6 +23631,7 @@ void RTCC::PMMREDIG(bool mpt)
 		AST.lat_r = lat_r;
 		AST.lng_r = lng_r;
 		AST.sv_TIG = astin.sv_IG;
+		AST.sv_r = astin.sv_EI;
 
 		gmt = astin.sv_IG.GMT;
 
@@ -23725,7 +23736,7 @@ void RTCC::PMMREDIG(bool mpt)
 	}
 	
 	SPM.dt_10PCT = SystemParameters.MCTDD4;
-	SPM.DockingAngle = med_f80.DockingAngle;
+	SPM.DockingAngle = med_f80.DockingAngle - 60.0*RAD;
 	SPM.KFactor = PZMPTCSM.KFactor;
 	SPM.CMWeight = 0.0; //TBD
 	SPM.CMArea = 0.0;//TBD
@@ -23944,7 +23955,7 @@ void RTCC::PMMREDIG(bool mpt)
 void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMData &SPM, MATRIX3 &RFS, RTEDigitalSolutionTable &RID, int &IRED)
 {
 	PCMATCArray outarray;
-	double dv, Tmp, dt_BU, Isp;
+	double dv;//, Tmp, dt_BU, Isp;
 
 	//Prepare data for the trajectory computer
 	outarray.IASD = 1;
@@ -23970,6 +23981,78 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 	//Manual entry?
 	if (MED.ManualEntry == false)
 	{
+		PMMMPTInput in;
+		MPTManeuver man;
+		MissionPlanTable mpt;
+
+		in.Attitude = MED.AttitudeMode;
+		in.CONFIG = MED.ConfigCode;
+		in.CSMWeight = SPM.CSMWeight;
+		in.CurrentManeuver = 1;
+		in.DETU = SPM.dt_ullage;
+		in.DockingAngle = SPM.DockingAngle;
+		in.DPSScaleFactor = SystemParameters.MCTDTF;
+		in.DT_10PCT = SPM.dt_10PCT;
+		in.HeadsUpIndicator = MED.HeadsUp;
+		in.IgnitionTimeOption = false;
+		in.IterationFlag = med_f80.Iterate;
+		in.LMWeight = SPM.LMWeight;
+		in.LowerTimeLimit = 0.0;
+		in.mpt = &mpt;
+		in.sv_before = AST.sv_TIG;
+		in.Thruster = MED.Thruster;
+		in.TrimAngleInd = MED.TrimInd;
+		in.UpperTimeLimit = 1e10;
+		in.UT = MED.UllageThrusters;
+		in.VC = MED.ManVeh;
+		in.VehicleArea = 0.0;
+		in.VehicleWeight = SPM.CSMWeight + SPM.LMWeight;
+		in.V_aft = AST.sv_TIG.V + AST.DV;
+
+		if (PMMMPT(in, man))
+		{
+			//Error: "Forward iterator" failed to converge
+			IRED = 6;
+			return;
+		}
+
+		int ITS;
+		EphemerisData sv_ig;
+		PMMCEN(AST.sv_TIG, 0.0, 0.0, 1, man.GMTMAN - AST.sv_TIG.GMT, 1.0, sv_ig, ITS);
+		if (ITS != 1)
+		{
+			//Error: Coast NI failed backing up to ignition time
+			IRED = 2;
+			return;
+		}
+
+		std::vector<double> var, arr;
+		void * varPtr;
+		bool mode = false;
+
+		var.resize(5);
+		arr.resize(8);
+
+		var[0] = man.dV_inertial.x*3600.0 / OrbMech::R_Earth;
+		var[1] = man.dV_inertial.y*3600.0 / OrbMech::R_Earth;
+		var[2] = man.dV_inertial.z*3600.0 / OrbMech::R_Earth;
+		var[3] = 0.0;
+		var[4] = 0.0;
+
+		outarray.R0 = sv_ig.R;
+		outarray.V0 = sv_ig.V;
+		outarray.T0 = sv_ig.GMT;
+		outarray.REF = sv_ig.RBI;
+		varPtr = &outarray;
+
+		PCMATC(var, varPtr, arr, mode);
+
+		//Cheat a little
+		outarray.R_r = AST.sv_r.R;
+		outarray.V_r = AST.sv_r.V;
+		outarray.T_r = AST.sv_r.GMT;
+
+		/*
 		//No. SPS or DPS? (APS is not supported)
 		if (MED.Thruster == RTCC_ENGINETYPE_CSMSPS || MED.Thruster == RTCC_ENGINETYPE_LMDPS)
 		{
@@ -24110,7 +24193,7 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		block.DepVarSwitch[0] = true;
 		block.DepVarSwitch[1] = true;
 		block.DepVarSwitch[2] = true;
-		//block.DepVarSwitch[3] = true;
+		block.DepVarSwitch[3] = true;
 		block.DepVarSwitch[4] = true;
 		if (MED.StoppingMode == -1)
 		{
@@ -24119,16 +24202,16 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		}
 
 		block.DepVarLowerLimit[0] = (AST.h_r - 400.0*0.3048) / OrbMech::R_Earth;
-		block.DepVarLowerLimit[1] = AST.lat_r - 0.03*RAD;
-		block.DepVarLowerLimit[2] = AST.lng_r - 0.03*RAD;
+		block.DepVarLowerLimit[1] = AST.lat_r - 0.02*RAD;
+		block.DepVarLowerLimit[2] = AST.lng_r - 0.02*RAD;
 		block.DepVarLowerLimit[3] = AST.azi_r - 0.01*RAD;
-		block.DepVarLowerLimit[4] = (AST.sv_TIG.GMT + AST.dt_ar - 0.5) / 3600.0;//AST.dt_ar / 3600.0 - 12.0;
+		block.DepVarLowerLimit[4] = (AST.dt_ar - 0.2) / 3600.0;
 		block.DepVarLowerLimit[5] = AST.gamma_r - 0.001*RAD;
 		block.DepVarUpperLimit[0] = (AST.h_r + 400.0*0.3048) / OrbMech::R_Earth;
-		block.DepVarUpperLimit[1] = AST.lat_r + 0.03*RAD;
-		block.DepVarUpperLimit[2] = AST.lng_r + 0.03*RAD;
+		block.DepVarUpperLimit[1] = AST.lat_r + 0.02*RAD;
+		block.DepVarUpperLimit[2] = AST.lng_r + 0.02*RAD;
 		block.DepVarUpperLimit[3] = AST.azi_r + 0.01*RAD;
-		block.DepVarUpperLimit[4] = (AST.sv_TIG.GMT + AST.dt_ar + 0.5) / 3600.0;//AST.dt_ar / 3600.0 + 12.0;
+		block.DepVarUpperLimit[4] = (AST.dt_ar + 0.2) / 3600.0;
 		block.DepVarUpperLimit[5] = AST.gamma_r + 0.001*RAD;
 		block.DepVarClass[0] = 1;
 		block.DepVarClass[1] = 1;
@@ -24140,7 +24223,7 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 
 		std::vector<double> result;
 		std::vector<double> y_vals;
-		err = GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+		err = GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);*/
 
 		if (outarray.ErrInd)
 		{
@@ -24157,12 +24240,6 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 				return;
 			}
 		}
-		if (err)
-		{
-			//Error: Forward iterator failed to converge
-			IRED = 6;
-			return;
-		}
 	}
 	else
 	{
@@ -24177,6 +24254,8 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		var[0] = AST.DV.x*3600.0 / OrbMech::R_Earth;
 		var[1] = AST.DV.y*3600.0 / OrbMech::R_Earth;
 		var[2] = AST.DV.z*3600.0 / OrbMech::R_Earth;
+		var[3] = 0.0;
+		var[4] = 0.0;
 
 		outarray.R0 = AST.sv_TIG.R;
 		outarray.V0 = AST.sv_TIG.V;
@@ -24253,7 +24332,7 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 	RID.VehicleWeight = outarray.W_on;
 	RID.TrueAnomaly = coe.TA;
 	RID.DVC = outarray.DVC;
-	RID.dt = outarray.dt_ullage + outarray.dt_ME + outarray.DT_TO;
+	RID.dt = outarray.dt_ME + outarray.DT_TO;
 	RID.dv = outarray.dv_total;
 	RID.dt_ullage = outarray.dt_ullage;
 	RID.PETI = outarray.GMT_BI;
@@ -30037,7 +30116,7 @@ bool RTCC::PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& a
 	//7: Sigma
 
 	OELEMENTS coe;
-	double gamma_p, T_min, h_p = 0.0, m_cut, dt_ar;
+	double gamma_p, T_min, h_p = 0.0, m_cut, dt_ar, t_a;
 	int stop_ind;
 	//Pre abort
 	EphemerisData sv0;
@@ -30073,7 +30152,7 @@ bool RTCC::PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& a
 		}
 		PMMCEN(sv0, 0.0, 24.0*3600.0, 1, var[3] * 3600.0, dir, sv1, stop_ind);
 	}
-
+	t_a = sv1.GMT;
 	if (vars->IASD == 1)
 	{
 		goto PCMATC_5A;
@@ -30198,13 +30277,13 @@ PCMATC_3A:
 	double h_r = length(sv_r.R) - OrbMech::R_Earth;
 	double r_r, v_r, lat_r, lng_r, gamma_r, azi_r;
 	PICSSC(true, R_r_equ, V_r_equ, r_r, v_r, lat_r, lng_r, gamma_r, azi_r);
-	double T_ar = sv_r.GMT - sv2.GMT;
+	double T_ar = sv_r.GMT - t_a;
 
 	arr[0] = h_r / OrbMech::R_Earth;
 	arr[1] = lat_r;
 	arr[2] = lng_r;
 	arr[3] = azi_r;
-	arr[4] = sv_r.GMT / 3600.0;//T_ar / 3600.0;
+	arr[4] = T_ar / 3600.0;
 	arr[5] = gamma_r;
 	arr[6] = h_p / OrbMech::R_Earth;
 	arr[7] = m_cut;

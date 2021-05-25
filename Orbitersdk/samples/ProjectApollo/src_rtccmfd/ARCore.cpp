@@ -2957,7 +2957,7 @@ int ARCore::subThread()
 			//This doesn't work in debug mode (with only RTCC MFD and MCC modules build), so below are some fake masses
 			GC->rtcc->MPTMassUpdate(vessel, med1, med2);
 
-			GC->rtcc->VEHDATABUF.csmmass = med1.CSMWT;//66500.0*0.453;//
+			GC->rtcc->VEHDATABUF.csmmass = med1.CSMWT;//vessel->GetMass();//
 			GC->rtcc->VEHDATABUF.lmascmass = med1.LMASCWT;//0.0;10000.0*0.453;//
 			GC->rtcc->VEHDATABUF.lmdscmass = med1.LMWT - med1.LMASCWT;//0.0;25000.0*0.453;//
 			GC->rtcc->VEHDATABUF.sv = GC->rtcc->StateVectorCalcEphem(vessel);

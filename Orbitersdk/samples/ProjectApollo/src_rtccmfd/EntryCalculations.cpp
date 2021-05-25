@@ -3729,7 +3729,7 @@ bool EarthEntry::EntryIter()
 	}
 }
 
-RTEEarth::RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, double GETbase, double EntryTIG, double t_Z, int critical)
+RTEEarth::RTEEarth(RTCC *r, EphemerisData sv0, double GMTbase, double EntryTIG, double t_Z, int critical) : RTCCModule(r)
 {
 	MA1 = -6.986643e7;//8e8;
 	C0 = 1.81000432e8;
@@ -3741,23 +3741,18 @@ RTEEarth::RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, double GETbase, double 
 	k3 = -0.06105;//-0.043661;
 	k4 = -0.10453;
 
-	this->GETbase = GETbase;
+	this->GMTbase = GMTbase;
 	this->critical = critical;
-
-	get = (mjd - GETbase)*24.0*3600.0;
 
 	hEarth = oapiGetObjectByName("Earth");
 	RCON = OrbMech::R_Earth + 400000.0 * 0.3048;
 	RD = RCON;
 	mu = OrbMech::mu_Earth;
 
-	EntryTIGcor = EntryTIG;
-
 	ii = 0;
 
-	double dt0 = EntryTIGcor - get;
-	OrbMech::oneclickcoast(R0B, V0B, mjd, dt0, R_ig, V_ig, hEarth, hEarth);
-	mjd_ig = mjd + dt0 / 24.0 / 3600.0;
+	pRTCC->PMMCEN(sv0, 0.0, 0.0, 1, EntryTIG - sv0.GMT, 1.0, sv_ig, ITS);
+	sv_ig_apo = sv_ig;
 
 	EMSAlt = 297431.0*0.3048;
 	revcor = -5;
@@ -3765,7 +3760,7 @@ RTEEarth::RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, double GETbase, double 
 	precision = 1;
 	errorstate = 0;
 	
-	dt_z = t_Z - EntryTIGcor;
+	dt_z = t_Z - sv_ig.GMT;
 }
 
 void RTEEarth::READ(double RRBI, double DVMAXI, int EPI, double URMAXI)
@@ -3917,7 +3912,7 @@ void RTEEarth::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long
 	}
 	t2 = t1 + t21;
 	OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
-	EntryCalculations::LNDING(REI, VEI, GETbase + t2 / 24.0 / 3600.0, 0.3, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
+	EntryCalculations::LNDING(REI, VEI, GMTbase + t2 / 24.0 / 3600.0, 0.3, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
 }
 
 void RTEEarth::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
@@ -3992,7 +3987,7 @@ void RTEEarth::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, d
 		n2++;
 	}
 	t2 = t1 + t21;
-	EntryCalculations::LNDING(RPRE, VPRE, GETbase + t2 / 24.0 / 3600.0, 0.3, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
+	EntryCalculations::LNDING(RPRE, VPRE, GMTbase + t2 / 24.0 / 3600.0, 0.3, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
 	if (n1 == 21)
 	{
 		errorstate = 1;
@@ -4031,10 +4026,12 @@ void RTEEarth::newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRC
 
 void RTEEarth::finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE)
 {
+	EphemerisData sv_PRE, sv_PRE2;
 	VECTOR3 N;
 	double beta12, x2PRE, c3, alpha_N, sing, cosg, p_N, beta2, beta3, beta4, RF, phi4, dt21, beta13, dt21apo, beta14;
 
-	OrbMech::oneclickcoast(R_ig, V2, mjd_ig, t21, RPRE, VPRE, hEarth, hEarth);
+	sv_ig_apo.V = V2;
+	pRTCC->PMMCEN(sv_ig_apo, 0.0, 0.0, 1, t21, 1.0, sv_PRE, ITS);
 
 	beta12 = 100.0;
 	x2PRE = 1000000;
@@ -4042,11 +4039,11 @@ void RTEEarth::finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &
 
 	while (abs(beta12) > 0.000007 && abs(x2 - x2PRE) > 0.00001)
 	{
-		c3 = length(RPRE)*pow(length(VPRE), 2.0) / mu;
+		c3 = length(sv_PRE.R)*pow(length(sv_PRE.V), 2.0) / mu;
 		alpha_N = 2.0 - c3;
-		N = crossp(unit(RPRE), unit(VPRE));
+		N = crossp(unit(sv_PRE.R), unit(sv_PRE.V));
 		sing = length(N);
-		cosg = dotp(unit(RPRE), unit(VPRE));
+		cosg = dotp(unit(sv_PRE.R), unit(sv_PRE.V));
 		x2PRE = cosg / sing;
 		p_N = c3*sing*sing;
 		beta2 = p_N*beta1;
@@ -4062,7 +4059,7 @@ void RTEEarth::finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &
 		beta12 = beta4 - 1.0;
 		//if (abs(beta12) > 0.000007)
 		//{
-			RF = beta4*length(RPRE);
+			RF = beta4*length(sv_PRE.R);
 			if (beta12 > 0)
 			{
 				phi4 = -1.0;
@@ -4075,7 +4072,7 @@ void RTEEarth::finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &
 			{
 				phi4 = 1.0;
 			}
-			dt21 = OrbMech::time_radius(RPRE, VPRE*phi4, RF, -phi4, mu);
+			dt21 = OrbMech::time_radius(sv_PRE.R, sv_PRE.V*phi4, RF, -phi4, mu);
 			dt21 = phi4*dt21;
 			beta13 = dt21 / dt21apo;
 			if (beta13 > 0)
@@ -4091,10 +4088,17 @@ void RTEEarth::finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &
 				dt21 = beta14*dt21apo;
 			}
 			dt21apo = dt21;
-			OrbMech::oneclickcoast(RPRE, VPRE, mjd_ig + t21 / 24.0 / 3600.0, dt21, RPRE, VPRE, hEarth, hEarth);
+
+			pRTCC->PMMCEN(sv_PRE, 0.0, 0.0, 1, dt21, 1.0, sv_PRE2, ITS);
+			sv_PRE = sv_PRE2;
+
+			//OrbMech::oneclickcoast(RPRE, VPRE, mjd_ig + t21 / 24.0 / 3600.0, dt21, RPRE, VPRE, hEarth, hEarth);
 			t21 += dt21;
 		//}
 	}
+
+	RPRE = sv_PRE.R;
+	VPRE = sv_PRE.V;
 }
 
 double RTEEarth::dtiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double dxmax, double dt_des)
@@ -4116,7 +4120,7 @@ double RTEEarth::dtiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double thet
 		p = 2.0*R0*(R - 1.0) / (R*R*(1.0 + x2 * x2) - (1.0 + xx * xx));
 		V = (unit(R1B)*xx + unit(crossp(crossp(R1B, V1B), R1B)))*sqrt(mu*p) / R0;
 		
-		dt = OrbMech::time_radius(R_ig, V, RD, -1.0, mu);
+		dt = OrbMech::time_radius(sv_ig.R, V, RD, -1.0, mu);
 		dt_err = dt_des - dt;
 
 		if (i > 0)
@@ -4379,11 +4383,11 @@ bool RTEEarth::EntryIter()
 	
 	if (ii == 0)
 	{
-		coniciter(R_ig, V_ig, EntryTIGcor, theta_long, theta_lat, V2, x, dx, t21);
+		coniciter(sv_ig.R, sv_ig.V, sv_ig.GMT, theta_long, theta_lat, V2, x, dx, t21);
 	}
 	else
 	{
-		precisioniter(R_ig, V_ig, EntryTIGcor, t21, x, theta_long, theta_lat, V2);
+		precisioniter(sv_ig.R, sv_ig.V, sv_ig.GMT, t21, x, theta_long, theta_lat, V2);
 	}
 
 	if (critical == 1)
@@ -4405,7 +4409,7 @@ bool RTEEarth::EntryIter()
 		else
 		{
 			dx = (x - xapo) / (theta_long - dlngapo)*dlng;
-			if (length(V2 - V_ig) > dv_max && dx < 0)
+			if (length(V2 - sv_ig.V) > dv_max && dx < 0)
 			{
 				dx = 0.5*max(1.0, revcor);
 				revcor++;
@@ -4435,20 +4439,23 @@ bool RTEEarth::EntryIter()
 	}
 	else
 	{
-		VECTOR3 R05G, V05G, REI, VEI, R3, V3, UR3;
+		EphemerisData sv_EI;
+		VECTOR3 R05G, V05G, R3, V3, UR3;
 		double t32, dt22, v3, S_FPA, MJD_L;
 
-		t21 = OrbMech::time_radius_integ(R_ig, V2, mjd_ig, RD, -1, hEarth, hEarth, REI, VEI);//Maneuver to Entry Interface (400k ft)
+		sv_ig_apo.V = V2;
+		pRTCC->PMMCEN(sv_ig_apo, 0.0, 10.0*24.0*3600.0, 3, RD, 1.0, sv_EI, ITS);
+		//t21 = OrbMech::time_radius_integ(R_ig, V2, mjd_ig, RD, -1, hEarth, hEarth, REI, VEI);//Maneuver to Entry Interface (400k ft)
 		
-		R_r = REI;
-		V_r = VEI;
-		t2 = EntryTIGcor + t21;
+		R_r = sv_EI.R;
+		V_r = sv_EI.V;
+		t2 = sv_EI.GMT;
 
-		EntryCalculations::LNDING(REI, VEI, GETbase + t2 / 24.0 / 3600.0, 0.3, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
-		t_Z = (MJD_L - GETbase)*24.0*3600.0;
+		EntryCalculations::LNDING(sv_EI.R, sv_EI.V, GMTbase + t2 / 24.0 / 3600.0, 0.3, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
+		t_Z = (MJD_L - GMTbase)*24.0*3600.0;
 
-		t32 = OrbMech::time_radius(REI, VEI, length(REI) - 30480.0, -1, mu);
-		OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, mu); //Entry Interface to 300k ft
+		t32 = OrbMech::time_radius(sv_EI.R, sv_EI.V, length(sv_EI.R) - 30480.0, -1, mu);
+		OrbMech::rv_from_r0v0(sv_EI.R, sv_EI.V, t32, R3, V3, mu); //Entry Interface to 300k ft
 
 		dt22 = OrbMech::time_radius(R3, V3, length(R3) - (300000.0 * 0.3048 - EMSAlt), -1, mu);
 		OrbMech::rv_from_r0v0(R3, V3, dt22, R05G, V05G, mu); //300k ft to 0.05g
@@ -4457,17 +4464,17 @@ bool RTEEarth::EntryIter()
 		v3 = length(V3);
 		S_FPA = dotp(UR3, V3) / v3;
 
-		DV = V2 - V_ig;
+		DV = V2 - sv_ig.V;
 		VECTOR3 i, j, k;
 		MATRIX3 Q_Xx;
-		j = unit(crossp(V_ig, R_ig));
-		k = unit(-R_ig);
+		j = unit(crossp(sv_ig.V, sv_ig.R));
+		k = unit(-sv_ig.R);
 		i = crossp(j, k);
 		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
 		Entry_DV = mul(Q_Xx, DV);
 
-		EntryRTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(t2 + t32 + dt22, GETbase), theta_lat, theta_long);
+		EntryRTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(t2 + t32 + dt22, GMTbase), theta_lat, theta_long);
 		EntryVIO = length(V05G);
 		EntryRET = t2 + t32 + dt22;
 		EntryAng = atan(x2);//asin(dotp(unit(REI), VEI) / length(VEI));

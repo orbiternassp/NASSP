@@ -254,14 +254,18 @@ private:
 	double EntryInterface;
 };
 
-class RTEEarth {
+class RTEEarth : public RTCCModule
+{
 public:
-	RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, double GETbase, double EntryTIG, double t_Z, int critical);
+	RTEEarth(RTCC *r, EphemerisData sv0, double GMTbase, double EntryTIG, double t_Z, int critical);
 	void READ(double RRBI, double DVMAXI, int EPI, double URMAX);
 	void ATP(double *line);
 	bool EntryIter();
 
-	double EntryTIGcor; //Corrected Time of Ignition for the Reentry Maneuver
+	//OUTPUT
+	//State vector at ignition
+	EphemerisData sv_ig, sv_ig_apo;
+
 	double EntryRET, EntryRTGO, EntryVIO;
 	double V400k, gamma400k;
 	double EntryAng;
@@ -294,16 +298,12 @@ private:
 	void finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
 	void newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo);
 
-	//State vector at ignition
-	VECTOR3 R_ig, V_ig;
-	double mjd_ig;
-
 	OBJHANDLE hEarth;
 	//Maximum allowable major axis of return trajectories with a negative radial component
 	double MA1;
 	//Polynomial coefficients used to determine the maximum allowable major axis of return trajectories with a positive radial component based on the radius magnitude
 	double C0, C1, C2, C3;
-	double GETbase, get;
+	double GMTbase;
 	double RCON, RD;
 	double mu;
 	double EntryTIGcor_old, dlng_old;
@@ -351,6 +351,8 @@ private:
 	double u_rmax;
 	//Cosine of flight path angle
 	double C_FPA;
+	//Coast integrator status
+	int ITS;
 };
 
 struct TradeoffData
