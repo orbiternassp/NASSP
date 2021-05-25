@@ -318,7 +318,7 @@ struct EMSMISSInputTable
 struct RMMYNIInputTable
 {
 	VECTOR3 R0, V0;
-
+	double GMT0;
 	double lat_T, lng_T;
 	//Backup mode G-level
 	double g_c_BU = 0.05;

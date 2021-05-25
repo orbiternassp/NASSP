@@ -88,6 +88,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 {
 	R_cur = in.R0;
 	V_cur = in.V0;
+	GMT0 = in.GMT0;
 	LiftMode = in.KSWCH;
 	g_c_BU = in.g_c_BU;
 	g_c_GN = in.g_c_GN;
@@ -227,17 +228,25 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		}
 		out.lat_IP = lat;
 		out.lng_IP = lng;
-		out.t_lc = T;
+		out.t_lc = GMT0 + T;
 		if (K05G)
 		{
-			out.t_05g = t_05G;
+			out.t_05g = GMT0 + t_05G;
 		}
 		if (KGC)
 		{
-			out.t_gc = t_gc;
+			out.t_gc = GMT0 + t_gc;
 		}
-		out.t_gmax = t_gmax;
+		out.t_gmax = GMT0+ t_gmax;
 		out.gmax = gmax;
+		if (droguedeployed)
+		{
+			out.t_drogue = GMT0 + t_drogue;
+		}
+		if (maindeployed)
+		{
+			out.t_main = GMT0 + t_main;
+		}
 	}
 
 }

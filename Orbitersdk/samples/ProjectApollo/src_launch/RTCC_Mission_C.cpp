@@ -157,7 +157,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -163.0*RAD;
-		entopt.nominal = RTCC_ENTRY_NOMINAL;
+		entopt.nominal = true;
 		entopt.ReA = 0;
 		entopt.TIGguess = 8 * 60 * 60 + 55 * 60;
 		entopt.entrylongmanual = true;
@@ -1326,7 +1326,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -64.17*RAD;
-		entopt.nominal = RTCC_ENTRY_NOMINAL;
+		entopt.nominal = true;
 		entopt.ReA = -2.062*RAD;
 		entopt.TIGguess = OrbMech::HHMMSSToSS(259, 39, 16);
 		entopt.entrylongmanual = true;

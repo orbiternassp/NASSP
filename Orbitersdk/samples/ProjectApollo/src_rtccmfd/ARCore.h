@@ -99,6 +99,7 @@ public:
 	void TransferGPMToMPT();
 	void MPTDirectInputCalc();
 	void MPTTLIDirectInput();
+	void AbortScanTableCalc();
 	void TransferLOIorMCCtoMPT();
 	void TransferRTEToMPT();
 	void SLVNavigationUpdateCalc();
@@ -113,7 +114,7 @@ public:
 	void uplink_word(char *data, bool isCSM);
 	void P30UplinkCalc(bool isCSM);
 	void P30Uplink(bool isCSM);
-	void RetrofireEXDVUplinkCalc();
+	void RetrofireEXDVUplinkCalc(char source, char column);
 	void RetrofireEXDVUplink();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(bool isCSM);
@@ -174,7 +175,6 @@ public:
 	bool PADSolGood;
 	int manpadenginetype;
 	double t_TPI;				// Generally used TPI time
-	int RetrofireEXDVOctals[016];
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
@@ -249,11 +249,7 @@ public:
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	
-	int entrycritical; //1 = Midcourse, 2 = Abort, 3 = Corridor Control
-	double EntryTIG;
-	double EntryLat;
-	double EntryLng;
-	double EntryAng, EntryAngcor;
+	double EntryAngcor;
 	double EntryTIGcor;
 	double EntryLatcor;
 	double EntryLngcor;
@@ -261,16 +257,12 @@ public:
 	double entryrange;
 	double EntryRET05G; //Time of 0.05g
 	double EntryRRT; //Time of entry interface (400k feet altitude)
-	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double RTEReentryTime; //Desired landing time
-	double FlybyPeriAlt;
-	double EntryDesiredInclination;
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
-	double RTEReturnInclination;
 	int RTETradeoffMode; //0 = Near-Earth (F70), 1 = Remote-Earth (F71)
-	int RTEASTType = 0; //0 = unspecified, 1 = specific site, 2 = lunar search
+	int RTEASTType; //75 = unspecified, 76 = specific site, 77 = lunar search
 
 	//STATE VECTOR PAGE
 	bool SVSlot; //true = CSM, false = LEM
