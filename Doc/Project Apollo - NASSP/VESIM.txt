@@ -87,7 +87,7 @@ SUBDEVID - the ID of the subdevice connected to the input. It begins with the
     a name follows which is dependent on the type. For axis type the name
     should be one of the following: X, Y, Z, RX, RY, RZ. Sliders could be
     "Slider 0" or "Slider 1". For button type subdevices the name is simply an
-    integer between 0 and 127. For POV tpyes the name has a format of "<POV hat
+    integer between 0 and 127. For POV types the name has a format of "<POV hat
     index>{H,V}" where the index is a number between 0 and 3 (it is usually 0
     as on most of the controllers there is only one POV hat). "H" and "V"
     selects that the horizontal or vertical displacement of the POV hat should
