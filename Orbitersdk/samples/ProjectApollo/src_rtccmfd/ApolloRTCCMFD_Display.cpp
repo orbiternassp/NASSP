@@ -4433,24 +4433,24 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		for (int i = 0;i < 016;i++)
 		{
-			sprintf(Buffer, "%05d", G->RetrofireEXDVOctals[i]);
+			sprintf(Buffer, "%05d", GC->rtcc->CZREXTDV.Octals[i]);
 			skp->Text(15 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
 		skp->Text(27 * W / 32, 8 * H / 28, "DECIMAL", 7);
-		sprintf(Buffer, "%+.2f°", G->EntryLatcor*DEG);
+		sprintf(Buffer, "%+.2f°", GC->rtcc->CZREXTDV.Lat);
 		skp->Text(27 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+.2f°", G->EntryLngcor*DEG);
+		sprintf(Buffer, "%+.2f°", GC->rtcc->CZREXTDV.Lng);
 		skp->Text(27 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
+		sprintf(Buffer, "%+07.1f", GC->rtcc->CZREXTDV.DV.x);
 		skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
+		sprintf(Buffer, "%+07.1f", GC->rtcc->CZREXTDV.DV.y);
 		skp->Text(27 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
+		sprintf(Buffer, "%+07.1f", GC->rtcc->CZREXTDV.DV.z);
 		skp->Text(27 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->P30TIG, false);
+		GET_Display2(Buffer, GC->rtcc->CZREXTDV.GET_TIG);
 		skp->Text(27 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
 
 	}
@@ -8594,12 +8594,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(16 * W / 44, 19 * H / 26, Buffer, strlen(Buffer));
 			FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_ML);
 			skp->Text(24 * W / 44, 19 * H / 26, Buffer, strlen(Buffer));
-			if (GC->rtcc->RZRFDP.lat_T > -700.0)
-			{
-				FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_T);
-				skp->Text(16 * W / 44, 20 * H / 26, Buffer, strlen(Buffer));
-			}
-			FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_T);
+			FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_T*DEG);
+			skp->Text(16 * W / 44, 20 * H / 26, Buffer, strlen(Buffer));
+			FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_T*DEG);
 			skp->Text(24 * W / 44, 20 * H / 26, Buffer, strlen(Buffer));
 			FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_IP);
 			skp->Text(16 * W / 44, 21 * H / 26, Buffer, strlen(Buffer));

@@ -375,7 +375,28 @@ void ApolloRTCCMFD::menuRetrofireEXDVUplink()
 
 void ApolloRTCCMFD::menuRetrofireEXDVUplinkCalc()
 {
-	G->RetrofireEXDVUplinkCalc();
+	bool RetrofireEXDVUplinkCalcInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter source and column for uplink. Format: Source Column e.g. 'R P'. T for Time-to-Fire (Deorbit), R = for Return-to-Earth. P for Primary and M for Manual column.", RetrofireEXDVUplinkCalcInput, 0, 20, (void*)this);
+}
+
+bool RetrofireEXDVUplinkCalcInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		return ((ApolloRTCCMFD*)data)->set_RetrofireEXDVUplinkCalc(str);
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_RetrofireEXDVUplinkCalc(char *str)
+{
+	char str1, str2;
+	if (sscanf(str, "%c %c", &str1, &str2) == 2)
+	{
+		G->RetrofireEXDVUplinkCalc(str1, str2);
+		return true;
+	}
+	return false;
 }
 
 void ApolloRTCCMFD::menuTLANDUplinkCalc()

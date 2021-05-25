@@ -2886,6 +2886,8 @@ public:
 	void CMMCMCLS(int veh);
 	//LGC Descent Target Update Load Generator
 	void CMMDTGTU(double t_land);
+	//Retrofire External Delta V Update Generator
+	void CMMRXTDV(int source, int column);
 
 	// MISSION CONTROL (G)
 
@@ -4464,6 +4466,19 @@ public:
 	{
 		REFSMMATUpdateMakeupTableBlock Block[2];
 	} CZREFMAT;
+
+	struct CMCRetrofireExternalDVUpdateMakeupBuffer
+	{
+		std::string LoadType;
+		int UpdateNo = 0;
+		int SequenceNumber = 0;
+		double GETLoadGeneration = 0.0;
+		double Lat = 0.0;
+		double Lng = 0.0;
+		int Octals[016] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+		VECTOR3 DV = _V(0, 0, 0);
+		double GET_TIG = 0.0;
+	} CZREXTDV;
 
 	struct NavUpdateMakeupBuffer
 	{

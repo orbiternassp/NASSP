@@ -523,10 +523,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	P30TIG = 0;
 	dV_LVLH = _V(0.0, 0.0, 0.0);
-	for (int i = 0;i < 016;i++)
-	{
-		RetrofireEXDVOctals[i] = 0;
-	}
 
 	EntryTIGcor = 0.0;
 	EntryLatcor = 0.0;
@@ -1946,31 +1942,43 @@ void ARCore::P30Uplink(bool isCSM)
 	UplinkData(isCSM);
 }
 
-void ARCore::RetrofireEXDVUplinkCalc()
+void ARCore::RetrofireEXDVUplinkCalc(char source, char column)
 {
-	double getign = P30TIG;
+	int s, c;
+	if (source == 'T')
+	{
+		s = 1;
+	}
+	else if (source == 'R')
+	{
+		s = 2;
+	}
+	else
+	{
+		return;
+	}
 
-	RetrofireEXDVOctals[0] = 16;
-	RetrofireEXDVOctals[1] = 3400;
-	RetrofireEXDVOctals[2] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 1);
-	RetrofireEXDVOctals[3] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 0);
-	RetrofireEXDVOctals[4] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 1);
-	RetrofireEXDVOctals[5] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 0);
-	RetrofireEXDVOctals[6] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
-	RetrofireEXDVOctals[7] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
-	RetrofireEXDVOctals[8] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
-	RetrofireEXDVOctals[9] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
-	RetrofireEXDVOctals[10] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
-	RetrofireEXDVOctals[11] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
-	RetrofireEXDVOctals[12] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
-	RetrofireEXDVOctals[13] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
+	if (column == 'P')
+	{
+		c = 1;
+	}
+	else if (column == 'M')
+	{
+		c = 2;
+	}
+	else
+	{
+		return;
+	}
+
+	GC->rtcc->CMMRXTDV(s, c);
 }
 
 void ARCore::RetrofireEXDVUplink()
 {
 	for (int i = 0;i < 016;i++)
 	{
-		g_Data.emem[i] = RetrofireEXDVOctals[i];
+		g_Data.emem[i] = GC->rtcc->CZREXTDV.Octals[i];
 	}
 
 	UplinkData(true);

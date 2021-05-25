@@ -114,7 +114,7 @@ public:
 	void uplink_word(char *data, bool isCSM);
 	void P30UplinkCalc(bool isCSM);
 	void P30Uplink(bool isCSM);
-	void RetrofireEXDVUplinkCalc();
+	void RetrofireEXDVUplinkCalc(char source, char column);
 	void RetrofireEXDVUplink();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(bool isCSM);
@@ -175,7 +175,6 @@ public:
 	bool PADSolGood;
 	int manpadenginetype;
 	double t_TPI;				// Generally used TPI time
-	int RetrofireEXDVOctals[016];
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition

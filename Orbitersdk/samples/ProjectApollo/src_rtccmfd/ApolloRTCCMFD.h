@@ -126,6 +126,7 @@ public:
 	void menuP30UplinkCalc();
 	void menuRetrofireEXDVUplink();
 	void menuRetrofireEXDVUplinkCalc();
+	bool set_RetrofireEXDVUplinkCalc(char *str);
 	void menuRTED_REFSMMAT();
 	void set_RTED_REFSMMAT(char *str);
 	void menuRTEDASTCodeDialogue();

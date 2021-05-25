@@ -2445,13 +2445,16 @@ void RetrofirePlanning::RMSTTF()
 	tab->lng_ML = lng_ML * DEG;
 	if (pRTCC->RZJCTTC.Type == 2)
 	{
-		tab->lat_T = -750.0;
+		//Save predicted impact as target
+		tab->lat_T = lat_IP;
+		tab->lng_T = lng_IP;
 	}
 	else
 	{
-		tab->lat_T = lat_T * DEG;
+		//Save actual target as target
+		tab->lat_T = lat_T;
+		tab->lng_T = lng_T;
 	}
-	tab->lng_T = lng_T * DEG;
 	tab->lat_IP = lat_IP * DEG;
 	tab->lng_IP = lng_IP * DEG;
 	tab->lat_ZL = lat_ZL * DEG;

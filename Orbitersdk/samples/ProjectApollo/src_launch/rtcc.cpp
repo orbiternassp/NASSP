@@ -33535,6 +33535,87 @@ void RTCC::CMMDTGTU(double t_land)
 	CZTDTGTU.Octals[4] = OrbMech::DoubleToBuffer(t_land*100.0, 28, 0);
 }
 
+void RTCC::CMMRXTDV(int source, int column)
+{
+	//source: 1 = time-to-fire, 2 = Return to Earth
+	//column: 1 = primary, 2 = manual
+
+	double TIG, lat, lng;
+	VECTOR3 DV;
+
+	if (source == 1)
+	{
+		if (column == 1)
+		{
+			//TBD
+			return;
+		}
+		else
+		{
+			if (RZRFDP.Indicator != 0)
+			{
+				//Error
+				return;
+			}
+			TIG = RZRFTT.Manual.GMTI;
+			DV = RZRFTT.Manual.DeltaV;
+			lat = RZRFTT.Manual.lat_T;
+			lng = RZRFTT.Manual.lng_T;
+		}
+	}
+	else
+	{
+		RTEDigitalSolutionTable *tab;
+		if (column == 1)
+		{
+			tab = &PZREAP.RTEDTable[0];
+		}
+		else
+		{
+			tab = &PZREAP.RTEDTable[1];
+		}
+		if (tab->RTEDCode == "")
+		{
+			//Error
+			return;
+		}
+		TIG = tab->GMTI;
+		DV = tab->DV_XDV;
+		lat = tab->lat_imp_tgt;
+		lng = tab->lng_imp_tgt;
+	}
+
+	if (CZREXTDV.SequenceNumber == 0)
+	{
+		CZREXTDV.SequenceNumber = 1300;
+	}
+	CZREXTDV.LoadType = "13";
+	CZREXTDV.SequenceNumber++;
+
+	//Convert TIG to CMC time
+	TIG = TIG - GetCMCClockZero();
+
+	CZREXTDV.Octals[0] = 16;
+	CZREXTDV.Octals[1] = 3400;
+	CZREXTDV.Octals[2] = OrbMech::DoubleToBuffer(lat / PI2, 0, 1);
+	CZREXTDV.Octals[3] = OrbMech::DoubleToBuffer(lat / PI2, 0, 0);
+	CZREXTDV.Octals[4] = OrbMech::DoubleToBuffer(lng / PI2, 0, 1);
+	CZREXTDV.Octals[5] = OrbMech::DoubleToBuffer(lng / PI2, 0, 0);
+	CZREXTDV.Octals[6] = OrbMech::DoubleToBuffer(DV.x / 100.0, 7, 1);
+	CZREXTDV.Octals[7] = OrbMech::DoubleToBuffer(DV.x / 100.0, 7, 0);
+	CZREXTDV.Octals[8] = OrbMech::DoubleToBuffer(DV.y / 100.0, 7, 1);
+	CZREXTDV.Octals[9] = OrbMech::DoubleToBuffer(DV.y / 100.0, 7, 0);
+	CZREXTDV.Octals[10] = OrbMech::DoubleToBuffer(DV.z / 100.0, 7, 1);
+	CZREXTDV.Octals[11] = OrbMech::DoubleToBuffer(DV.z / 100.0, 7, 0);
+	CZREXTDV.Octals[12] = OrbMech::DoubleToBuffer(TIG*100.0, 28, 1);
+	CZREXTDV.Octals[13] = OrbMech::DoubleToBuffer(TIG*100.0, 28, 0);
+	CZREXTDV.GETLoadGeneration = GETfromGMT(RTCCPresentTimeGMT());
+	CZREXTDV.GET_TIG = TIG;
+	CZREXTDV.DV = DV / 0.3048;
+	CZREXTDV.Lat = lat * DEG;
+	CZREXTDV.Lng = lng * DEG;
+}
+
 void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)
 {
 	double J_D = TJUDAT(YEAR, MONTH, DAY);
