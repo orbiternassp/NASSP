@@ -54,7 +54,6 @@ namespace EntryCalculations
 	void augekugel(double ve, double gammae, double &phie, double &Te);
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double &lambda, double &phi);
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET);
-	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl = 0, bool asc = true);
 	void Abort(VECTOR3 R0, VECTOR3 V0, double RCON, double dt, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	bool Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, double INTER, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &Incl_apo);
 	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
@@ -69,11 +68,9 @@ namespace EntryCalculations
 	double URF(double T, double x);
 	void TFPCR(double mu, int k, double a_apo, double e, double r, double &T, double &P);
 	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
-	VECTOR3 MCDRIV(double t_I, double var, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, bool &NIR, double &Incl_apo, double &r_p);
 	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo);
 	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN);
 	double LNDING(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &MJD_L);
-	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
 	void SIDCOM(double JD0, double DT, double N, double &alpha_go, double &T);
 
 	double MPL(double lat);
@@ -82,6 +79,7 @@ namespace EntryCalculations
 	double AOL(double lat);
 	double IOL(double lat);
 	double WPL(double lat);
+	bool TBLOOK(double *LINE, double lat, double &lng);
 }
 
 //RTCC task RTSDBMP
@@ -256,71 +254,105 @@ private:
 	double EntryInterface;
 };
 
-class RTEEarth {
+class RTEEarth : public RTCCModule
+{
 public:
-	RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI, double DVMAXI);
+	RTEEarth(RTCC *r, EphemerisData sv0, double GMTbase, double EntryTIG, double t_Z, int critical);
+	void READ(double RRBI, double DVMAXI, int EPI, double URMAX);
+	void ATP(double *line);
 	bool EntryIter();
 
-	double EntryTIGcor; //Corrected Time of Ignition for the Reentry Maneuver
-	double EntryLngcor;	//Corrected Splashdown Longitude
-	double EntryLatcor;	//Corrected Splashdown Latitude
-	//VECTOR3 Entry_DV;
-	double EntryLatPred, EntryLngPred;	//Predicted Splashdown Latitude and Longitude
+	//OUTPUT
+	//State vector at ignition
+	EphemerisData sv_ig, sv_ig_apo;
+
 	double EntryRET, EntryRTGO, EntryVIO;
 	double V400k, gamma400k;
 	double EntryAng;
-	double t2;
+	VECTOR3 DV; //Inertial DV
 	VECTOR3 Entry_DV; //Entry DV vector in LVLH coordinates
 	int precision; //0 = only conic, 1 = precision, 2 = PeA=-30 solution
-	OBJHANDLE SOIplan; //maneuver in earth or moon SOI
 	int errorstate;
+
+	//State vector at reentry
+	VECTOR3 R_r, V_r;
+	double t2;
+	//State at landing
+	double EntryLngcor;	//Corrected Splashdown Longitude
+	double EntryLatcor;	//Corrected Splashdown Latitude
+	double t_Z;			//Time of splashdown
 private:
 	void coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21);
 	void precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2);
-	void precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2, double &C_FPA);
+	void precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2);
 	void conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_FPA, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, double &x, int &n1);
 	void conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, double &theta1, double &theta2, double &theta3);
-	double dvmaxiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double dxmax, double dv);
+	//Find independent variable x for which the maximum allowed DV is expended
+	double dvmaxiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double dxmax, double dv_des);
+	double dtiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax,double dxmax, double dt_des);
 	void xdviterator(VECTOR3 R1B,VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x);
 	void limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1B, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x);
 	void dvcalc(VECTOR3 V1B, double theta1, double theta2, double theta3, double x, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, VECTOR3 &DV, double &p_CON);
 	void reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI);
 	void newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo);
-	void finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
+	void finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
 	void newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo);
-	OBJHANDLE AGCGravityRef(VESSEL *vessel);
 
-	OBJHANDLE gravref, hEarth;
-	double MA1, C0, C1, C2, C3;
-	VECTOR3 R0B, V0B;
-	double mjd;
-	double GETbase, get;
+	OBJHANDLE hEarth;
+	//Maximum allowable major axis of return trajectories with a negative radial component
+	double MA1;
+	//Polynomial coefficients used to determine the maximum allowable major axis of return trajectories with a positive radial component based on the radius magnitude
+	double C0, C1, C2, C3;
+	double GMTbase;
 	double RCON, RD;
 	double mu;
 	double EntryTIGcor_old, dlng_old;
+	//Iteration counter. First iteration is conic calculations
 	int ii;
 	double EntryLng;
-	int entryphase;
-	int critical; //1 = MCC calculation, 2 = TLC or TEC abort, 3 = MCC calculation (corridor control)
-	double xapo, dv_err;
-	VECTOR3 R11B, V11B;
+	//1 = Alternate Target Point (ATP), 2 = Time critical, 3 = Fuel critical
+	int critical;
+	double xapo;
 	int f2;
-	double dlngapo,dt0, x2, x2_apo;
+	double dlngapo, x2, x2_apo;
 	double EMSAlt;
-	double k1, k2, k3, k4;
+	//Radius used to determine which estimate of reentry angle should be used
+	double k1;
+	//Initial estimate of reentry radius
+	double k2;
+	//Initial estimate of the cotangent of the reentry angle used when the initial radius is less than k1 (equivalent to -3° 29.5')
+	double k3;
+	//Initial estimate of the cotangent of the reentry angle used when the initial radius is greater than k1 (equivalent to -5° 58')
+	double k4;
 	int revcor;
 	double phi2;
-	double R_E;
-	double dt1; //time between estimated maneuver time and actual (currently iterated) maneuver time
-	double x, dx, dxmax;
-	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
-	bool entrylongmanual;
+	//Independent variable, cotangent of the post-return flight path angle
+	double x;
+	//Change in x
+	double dx;
+	//Maximum allowed change in x
+	double dxmax;
+	//Limit on the cotangent of the post-return flight path angle
 	double xlim;
 	double t21;
-	double EntryInterface;
 	// relative range override (unit is nautical miles!)
 	double r_rbias;
+	//Maximum DV for the burn
 	double dv_max;
+	//Estimate time between maneuver and landing (ATP mode)
+	double dt_z;
+	//Alternate target line (lat, lng, lat, lng etc.)
+	double LINE[10];
+	// 0: guide reentry to the steep target line
+	// 1: manual reentry to the shallow target line
+	// 2: manual reentry to the steep target line
+	int ICRNGG;
+	//Maximum allowable reentry speed
+	double u_rmax;
+	//Cosine of flight path angle
+	double C_FPA;
+	//Coast integrator status
+	int ITS;
 };
 
 struct TradeoffData
@@ -342,7 +374,7 @@ struct DiscreteData
 	double eta_rz;
 	double theta_cr;
 	double T_rz;
-	int NOSOLN;
+	int NOSOLN = 1;
 };
 
 class ConicRTEEarthNew : public RTCCModule
@@ -363,7 +395,7 @@ protected:
 	void DVMINQ(int FLAG, int QE, int Q0, double beta_r, double &DV, int &QA, double &V_a, double &beta_a);
 	void FCUA(int FLAG, VECTOR3 R_a, double &beta_r, double &DV, double &U_r, double &V_a, double &beta_a);
 	void MSDS(double VR_a, double VT_a, double beta_r, double theta, double &delta, double &phi, double &phi_z, double &lambda, double &theta_z);
-	void RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a);
+	bool RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a);
 	void VELCOM(double T, double R_a, double &beta_r, double &dt, double &p, int &QA, int &sw6, double &U_r, double &VR_a, double &VT_a, double &beta_a, double &eta_ar, double &DV);
 	void VARMIN();
 	void TCOMP(double dv, double delta, double &T, double &TP);
@@ -501,12 +533,15 @@ protected:
 	bool STORE;
 	double T_ar_stored;
 	OBJHANDLE hEarth;
+	//
+	VECTOR3 RR_vec, VV_vec;
 };
 
-class RTEMoon
+class RTEMoon : public RTCCModule
 {
 public:
-	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double *line);
+	RTEMoon(RTCC *r, EphemerisData2 sv0, double GMTBASE);
+	void ATP(double *line);
 	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
 	bool MASTER();
 	void MCSS();
@@ -517,28 +552,32 @@ public:
 
 	int precision;
 	double EntryLatcor, EntryLngcor;
-	VECTOR3 Entry_DV;
+	VECTOR3 DV, Entry_DV;
 	VECTOR3 R_EI, V_EI;
-	double EIMJD;
 	double EntryAng;
-	VECTOR3 Rig, Vig, Vig_apo;
-	double TIG;
+	VECTOR3 Vig_apo;
 	double ReturnInclination;
 	double FlybyPeriAlt;
+	double t_R, t_z;
+	EphemerisData2 sv0;
 private:
 
-	bool TBLOOK(double lat, double &lng);
+	VECTOR3 ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_EI, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl = 0, bool asc = true);
+	VECTOR3 MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool INRFVsign, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p);
+	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
 
 	OBJHANDLE hMoon, hEarth;
-	VECTOR3 DV;
 	double mu_E, mu_M, w_E, R_E, R_M;
 	//double r_s; //Pseudostate sphere
 	CELBODY *cMoon;
 	double EntryLng;
 	double dlngapo, dtapo;
 	bool INRFVsign;
-	double dTIG, mjd0, GETbase;
+	double dTIG, mjd0, GMTBASE;
 	double i_rmax, u_rmax;
+	//12 = PTP discrete, 14 = ATP discrete, 16 = UA discrete
+	//22 = PTP tradeoff, 24 = ATP tradeoff
+	//32 = PTP search, 34 = ATP search, 36 = UA search
 	int SMODE;
 	// 2: primary target point mode
 	// 4: alternate target point mode
@@ -572,6 +611,8 @@ private:
 	int ICRNGG;
 	// desired inclination. Signed for the two azimuth options
 	double i_rk;
+	// true if postmaneuver direction of motion determined internally
+	bool bRTCC;
 	double t_zmin, t_zmax;
 	double mu_z, mu_z1;
 	double lambda_z, lambda_z1;

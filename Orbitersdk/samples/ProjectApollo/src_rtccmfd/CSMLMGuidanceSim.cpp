@@ -667,19 +667,19 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		TArr.MANOP = 4;
 	}
 
-	double Thrust, isp;
-	pRTCC->EngineParametersTable(TArr.ThrusterCode, Thrust, isp);
+	double Thrust, wdot, OnboardThrust;
+	pRTCC->EngineParametersTable(TArr.ThrusterCode, Thrust, wdot, OnboardThrust);
 
 	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS4)
 	{
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 
 		THPS[6] = Thrust;
 		THPS[9] = Thrust;
 
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
+		WDOTPS[6] = wdot;
+		WDOTPS[9] = wdot;
 
 		DTSPAN[3] = 6.0;
 		DTSPAN[5] = 4.0;
@@ -687,13 +687,13 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS4)
 	{
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 
 		THPS[6] = Thrust;
 		THPS[9] = Thrust;
 
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
+		WDOTPS[6] = wdot;
+		WDOTPS[9] = wdot;
 
 		DTSPAN[3] = 6.0;
 		DTSPAN[5] = 4.0;
@@ -701,13 +701,13 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LOX_DUMP)
 	{
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 
 		THPS[6] = Thrust;
 		THPS[9] = Thrust;
 
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
+		WDOTPS[6] = wdot;
+		WDOTPS[9] = wdot;
 
 		DTSPAN[3] = TLARGE;
 		DTSPAN[5] = TLARGE;
@@ -722,7 +722,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 
 		WDOTPS[1] = pRTCC->SystemParameters.MCTSW2;
 		WDOTPS[2] = pRTCC->SystemParameters.MCTSW4;
-		WDOTPS[6] = Thrust / isp;
+		WDOTPS[6] = wdot;
 		WDOTPS[7] = pRTCC->SystemParameters.MCTSW4;
 		WDOTPS[9] = pRTCC->SystemParameters.MCTSW4;
 
@@ -758,7 +758,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 
 		WDOTPS[1] = pRTCC->SystemParameters.MCTAW2;
 		WDOTPS[2] = pRTCC->SystemParameters.MCTAW4;
-		WDOTPS[6] = Thrust / isp;
+		WDOTPS[6] = wdot;
 		WDOTPS[7] = pRTCC->SystemParameters.MCTAW4;
 		WDOTPS[9] = pRTCC->SystemParameters.MCTAW4;
 
@@ -795,7 +795,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		WDOTPS[2] = pRTCC->SystemParameters.MCTDW3;
 		WDOTPS[3] = pRTCC->SystemParameters.MCTDW4;
 		WDOTPS[4] = pRTCC->SystemParameters.MCTDW5 * TArr.DPSScale;
-		WDOTPS[6] = THPS[6] / isp;
+		WDOTPS[6] = wdot;
 		WDOTPS[7] = pRTCC->SystemParameters.MCTDW6 * TArr.DPSScale;
 		WDOTPS[9] = pRTCC->SystemParameters.MCTDW6 * TArr.DPSScale;
 
@@ -823,27 +823,27 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	{
 		if (TArr.UllageOption)
 		{
-			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS4, Thrust, isp);
+			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS4, Thrust, wdot, OnboardThrust);
 		}
 		else
 		{
-			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS2, Thrust, isp);
+			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS2, Thrust, wdot, OnboardThrust);
 		}
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 	}
 	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS)
 	{
 		if (TArr.UllageOption)
 		{
-			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS4, Thrust, isp);
+			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS4, Thrust, wdot, OnboardThrust);
 		}
 		else
 		{
-			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS2, Thrust, isp);
+			pRTCC->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS2, Thrust, wdot, OnboardThrust);
 		}
 		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
+		WDOTPS[0] = wdot;
 	}
 
 	if (TArr.DTU > 0)
@@ -1367,8 +1367,16 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 		{
 			VG = TArr.VG;
 		}
-		A_T = unit(VG);
-
+		double dv = length(VG);
+		if (dv == 0.0)
+		{
+			A_T = _V(1, 0, 0);
+		}
+		else
+		{
+			A_T = unit(VG);
+		}
+		
 		Y_T = unit(crossp(A_T, sv_ff.R));
 
 		if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS4)

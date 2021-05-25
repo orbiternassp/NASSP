@@ -2076,7 +2076,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -59.9*RAD;
-		entopt.nominal = RTCC_ENTRY_NOMINAL;
+		entopt.nominal = true;
 		entopt.TIGguess = OrbMech::HHMMSSToSS(238, 11, 47);
 		entopt.entrylongmanual = true;
 		entopt.useSV = false;

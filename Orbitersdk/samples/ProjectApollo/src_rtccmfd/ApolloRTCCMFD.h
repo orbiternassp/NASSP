@@ -109,6 +109,9 @@ public:
 	void AGC_Display(char * Buff, double time);
 	void FormatLatitude(char * Buff, double lat);
 	void FormatLongitude(char * Buff, double lng);
+	void FormatIMUAngle0(char *Buff, double ang); //0 digits
+	void FormatIMUAngle1(char *Buff, double ang); //0 digits
+	void FormatIMUAngle2(char *Buff, double ang); //0 digits
 	void REFSMMATName(char* Buff, int n);
 	void ThrusterName(char *Buff, int n);
 	bool ThrusterType(std::string name, int &id);
@@ -123,14 +126,16 @@ public:
 	void menuP30UplinkCalc();
 	void menuRetrofireEXDVUplink();
 	void menuRetrofireEXDVUplinkCalc();
-	void EntryAngDialogue();
-	void set_entryang(double ang);
-	void EntryTimeDialogue();
-	void set_EntryTime(double time);
-	void set_entrylat(double lat);
-	void EntryLatDialogue();
-	void set_entrylng(double lng);
-	void EntryLngDialogue();
+	bool set_RetrofireEXDVUplinkCalc(char *str);
+	void menuRTED_REFSMMAT();
+	void set_RTED_REFSMMAT(char *str);
+	void menuRTEDASTCodeDialogue();
+	void set_RTEDASTCode(int code);
+	void menuSetRTEDUllage();
+	void set_RTEDUllage(int thrusters, double duration);
+	void menuCycleRTEDTrimAnglesOption();
+	void menuCycleRTEDHeadsOption();
+	void menuCycleRTEDIterateOption();
 	void menuSetEntryDesiredInclination();
 	void set_EntryDesiredInclination(double inc);
 	void menuSetRTEConstraintF86();
@@ -142,10 +147,14 @@ public:
 	void set_RTEManeuverCode(char *code);
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();
+	void menuSaveSplashdownTarget();
+	bool set_SaveSplashdownTarget(char *str);
+	void LoadSplashdownTargetToRTEDManualInput();
 	void menuDeorbitCalc();
 	void menuCycleRetrofireType();
 	void menuMoonRTECalc();
 	void menuTransferRTEToMPT();
+	bool set_RTESolution(char *str);
 	void menuGeneralMEDRequest();
 	void GeneralMEDRequest(char *str);
 	void set_entryrange(double range);
@@ -163,7 +172,6 @@ public:
 	void menuSetManPADPage();
 	void menuCalcEntryPAD();
 	void menuSetEntryPADPage();
-	void menuSwitchCritical();
 	void menuSwitchEntryPADOpt();
 	void menuManPADTIG();
 	void set_ManPADTIG(double ManPADTIG);
@@ -208,7 +216,6 @@ public:
 	void GetEntryTargetfromAGC();
 	void menuSetRTEReentryTime();
 	void set_RTEReentryTime(double t);
-	void EntryLongitudeModeDialogue();
 	void menuSetLOIPage();
 	void menuTLCCVectorTime();
 	void set_TLCCVectorTime(double time);
@@ -296,11 +303,11 @@ public:
 	void menuSetEMPPage();
 	void menuSetNavCheckPADPage();
 	void menuSetDeorbitPage();
-	void menuSetEarthEntryPage();
-	void menuSetMoonEntryPage();
+	void menuSetRTEDigitalsInputPage();
+	void menuCycleRTEDColumn();
+	void menuSetRTEDigitalsPage();
 	void menuSetRTEConstraintsPage();
 	void menuSetEntryUpdatePage();
-	void menuSetP37PADPage();
 	void menuSetRendezvousPage();
 	void menuSetDKIPage();
 	void menuSetDKIOptionsPage();
@@ -760,14 +767,32 @@ public:
 	void menuMakeDODREFSMMATCurrent();
 	void menuSetRetrofireMissDistance();
 	bool set_RetrofireMissDistance(double val);
-	void menuSetAbortScanTablePage();
+	void menuSetAbortScanTableInputPage();
+	void menuCycleASTType();
 	void menuSetASTSiteOrType();
 	void set_ASTSiteOrType(char *site);
 	void menuASTVectorTime();
 	void set_ASTVectorTime(double get);
 	void menuASTAbortTime();
 	void set_ASTAbortTime(double get);
+	void menuASTLandingTime();
+	void set_ASTLandingTime(double get);
+	void menuSetAbortScanTablePage();
+	void menuASTTMAXandDVInput();
+	bool set_ASTTMaxandDV(char *str);
+	void menuASTEntryProfile();
+	void set_ASTEntryProfile(char *str);
 	void menuASTCalc();
+	void menuDeleteASTRow();
+	void menuSetRTEDManualManeuverInputPage();
+	void menuRTEDManualVectorTime();
+	void set_RTEDManualVectorTime(double get);
+	void menuRTEDManualIgnitionTime();
+	void set_RTEDManualIgnitionTime(double get);
+	void menuCycleRTEDManualReference();
+	void menuEnterRTEDManualDV();
+	void set_RTEDManualDV(VECTOR3 DV);
+	void menuSetRTEDEntryProfilePage();
 
 protected:
 	oapi::Font *font;

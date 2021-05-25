@@ -568,7 +568,7 @@ void LM_PCM::perform_io(double simt){
 				rx_data[rx_offset] = mcc_data[mcc_offset];
 				mcc_offset++;
 				// If uplink isn't blocked
-				if (lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+				if (lem->COMM_UP_DATA_LINK_CB.IsPowered() && lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
 					// Handle it
 					handle_uplink();
 				}
@@ -653,7 +653,7 @@ void LM_PCM::perform_io(double simt){
 					rx_data[rx_offset] = mcc_data[mcc_offset];
 					mcc_offset++;
 					// If the telemetry data-path is disconnected, discard the data
-					if (lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
+					if (lem->COMM_UP_DATA_LINK_CB.IsPowered() && lem->Panel12UpdataLinkSwitch.GetState() == THREEPOSSWITCH_DOWN) {
 						// otherwise handle it
 						handle_uplink();
 					}
@@ -666,7 +666,7 @@ void LM_PCM::perform_io(double simt){
 			}else{
 				// FIXME: Check to make sure the up-data equipment is powered
 				// Reject uplink if switch is not down.
-				if(lem->Panel12UpdataLinkSwitch.GetState() != THREEPOSSWITCH_DOWN){
+				if(lem->COMM_UP_DATA_LINK_CB.IsPowered() == false || lem->Panel12UpdataLinkSwitch.GetState() != THREEPOSSWITCH_DOWN){
 					return; // Discard the data
 				}
 				if(bytesRecv > 0){
