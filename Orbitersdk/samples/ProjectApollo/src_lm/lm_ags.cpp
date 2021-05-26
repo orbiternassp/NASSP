@@ -78,8 +78,8 @@ void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_
 	hsink = hr;
 	asaHeat = asah;
 	// Therm setup; Need to see if these values are necessary, temp and mass are set in config
-	hsink->isolation = 0.0000001;
-	hsink->Area = 975.0425;
+	//hsink->isolation = 0.0000001;
+	//hsink->Area = 975.0425;
 	//hsink.mass = 9389.36206;
 	//hsink.SetTemp(270);
 
