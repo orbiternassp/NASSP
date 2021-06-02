@@ -1051,6 +1051,7 @@ public:
 	//CSM to LM interface functions
 	h_Pipe* GetCMTunnelPipe() { return CMTunnel; }
 	void ConnectTunnelToCabinVent();
+	h_Pipe* GetCSMO2Hose();
 
 	///
 	/// \brief Triggers Virtual AGC core dump

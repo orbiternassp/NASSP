@@ -801,6 +801,31 @@ void CSMToLEMECSConnector::ConnectLMTunnelToCabinVent()
 	SendMessage(cm);
 }
 
+h_Valve* CSMToLEMECSConnector::GetCSMO2HoseOutlet()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = 2;
+
+	if (SendMessage(cm))
+	{
+		return static_cast<h_Valve*> (cm.val1.pValue);
+	}
+
+	return NULL;
+}
+
+void CSMToLEMECSConnector::ConnectCSMO2Hose()
+{
+
+}
+
+void CSMToLEMECSConnector::DisconnectCSMO2Hose()
+{
+
+}
+
 CSMToPayloadConnector::CSMToPayloadConnector(Saturn *s) : SaturnConnector(s)
 {
 	type = CSM_PAYLOAD_COMMAND;

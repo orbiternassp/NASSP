@@ -2143,6 +2143,11 @@ h_Pipe* LEM::GetLMTunnelPipe()
 	return (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED");
 }
 
+h_Valve* LEM::GetCSMO2HoseOutlet()
+{
+	return (h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:IN");
+}
+
 void LEM::ConnectTunnelToCabinVent()
 {
 	h_Pipe *pipe = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED");

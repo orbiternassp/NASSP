@@ -528,6 +528,7 @@ public:
 	// Panel SDK
 	void SetPipeMaxFlow(char *pipe, double flow);
 	h_Pipe* GetLMTunnelPipe();
+	h_Valve* GetCSMO2HoseOutlet();
 	void ConnectTunnelToCabinVent();
 	double GetRCSQuadTempF(int index);
 	virtual void GetECSStatus(LEMECSStatus &ecs);
