@@ -81,6 +81,7 @@ public:
 };
 
 class h_Pipe;
+class h_Valve;
 
 class CSMToLEMECSConnector : public SaturnConnector
 {
