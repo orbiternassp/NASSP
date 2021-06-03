@@ -983,10 +983,16 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //sprintf(oapiDebugString(), "CSM PPO2: %lf PPN2: %lf WMFlowPPH %lf WMValve %d", *CSMCabinO2* PSI, *CSMCabinN2 * PSI, *WMFlow *LBH, *WMValve);
 
 //CSM Connector Debug Lines
-
+	
 //h_Pipe* csmtunnelpipe = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
 //double *pressequalFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE:FLOW");
+// 
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
+
+h_Pipe* csmO2hose = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTOLMO2HOSE");
+
+sprintf(oapiDebugString(), "InPress: %lf HoseFlow: %lf", (csmO2hose->in->parent->space.Press)*PSI, (csmO2hose->flow)*LBH);
+
 
 #ifdef _DEBUG
 

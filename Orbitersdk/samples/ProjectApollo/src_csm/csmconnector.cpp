@@ -763,6 +763,8 @@ bool CSMToLEMECSConnector::ConnectTo(Connector *other)
 		lmpipe->in = NULL;
 
 		return true;
+
+		ConnectCSMO2Hose();
 	}
 
 	return false;
@@ -772,6 +774,8 @@ void CSMToLEMECSConnector::Disconnect()
 {
 	OurVessel->ConnectTunnelToCabinVent();
 	ConnectLMTunnelToCabinVent();
+
+	DisconnectCSMO2Hose();
 
 	SaturnConnector::Disconnect();
 }
@@ -818,12 +822,12 @@ h_Valve* CSMToLEMECSConnector::GetCSMO2HoseOutlet()
 
 void CSMToLEMECSConnector::ConnectCSMO2Hose()
 {
-
+	OurVessel->GetCSMO2Hose()->out = GetCSMO2HoseOutlet();
 }
 
 void CSMToLEMECSConnector::DisconnectCSMO2Hose()
 {
-
+	OurVessel->GetCSMO2Hose()->out = NULL;
 }
 
 CSMToPayloadConnector::CSMToPayloadConnector(Saturn *s) : SaturnConnector(s)
