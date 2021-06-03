@@ -991,7 +991,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 h_Pipe* csmO2hose = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTOLMO2HOSE");
 
-sprintf(oapiDebugString(), "InPress: %lf HoseFlow: %lf", (csmO2hose->in->parent->space.Press)*PSI, (csmO2hose->flow)*LBH);
+//sprintf(oapiDebugString(), "InPress: %lf OutPress %lf HoseFlow: %lf CSMCO2 %lf LMCO2: %lf", (csmO2hose->in->parent->space.Press)*PSI, (csmO2hose->out->parent->space.Press)* PSI, (csmO2hose->flow)*LBH, (csmO2hose->in->parent->space.composition[SUBSTANCE_CO2].p_press)* MMHG, (csmO2hose->out->parent->space.composition[SUBSTANCE_CO2].p_press)* MMHG);
 
 
 #ifdef _DEBUG

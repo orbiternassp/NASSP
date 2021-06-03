@@ -762,9 +762,9 @@ bool CSMToLEMECSConnector::ConnectTo(Connector *other)
 		cmpipe->out = lmpipe->in;
 		lmpipe->in = NULL;
 
-		return true;
-
 		ConnectCSMO2Hose();
+
+		return true;
 	}
 
 	return false;
