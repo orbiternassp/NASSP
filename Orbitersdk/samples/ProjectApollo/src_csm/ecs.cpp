@@ -1548,3 +1548,36 @@ void SaturnWasteStowageVentValve::SystemTimestep(double simdt)
 		WasteStowageValve->Open();
 
 }
+
+SaturnSuitFlowValves::SaturnSuitFlowValves()
+{
+	SuitManifoldTank = NULL;
+	SuitFlowValve = NULL;
+	SuitFlowSwitch = NULL;
+
+}
+
+void SaturnSuitFlowValves::Init(h_Tank* sc, h_Valve* flowvlv, ThreePosSwitch* flowsw)
+{
+	SuitManifoldTank = sc;
+	SuitFlowValve = flowvlv;
+	SuitFlowSwitch = flowsw; //0=Full Flow 1=Cabin Flow 2=Close
+
+}
+
+void SaturnSuitFlowValves::SystemTimestep(double simdt)
+{
+	if (!SuitFlowValve) return;
+
+	// Valve in motion
+	if (SuitFlowValve->pz) return;
+
+	if (SuitFlowSwitch->GetState() == 2)
+	{
+		SuitFlowValve->Close();
+	}
+
+	else
+		SuitFlowValve->Open();
+
+}

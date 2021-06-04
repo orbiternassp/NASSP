@@ -3752,6 +3752,9 @@ protected:
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
 	SaturnWasteStowageVentValve WasteStowageVentValve;
+	SaturnSuitFlowValves SaturnSuitFlowValve300;
+	SaturnSuitFlowValves SaturnSuitFlowValve301;
+	SaturnSuitFlowValves SaturnSuitFlowValve302;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;

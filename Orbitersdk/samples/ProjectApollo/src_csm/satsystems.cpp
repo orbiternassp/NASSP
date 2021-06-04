@@ -567,6 +567,13 @@ void Saturn::SystemsInit() {
 	WasteStowageVentValve.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE"),
 		&WasteMGMTStoageVentRotary);
 
+	SaturnSuitFlowValve300.Init((h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD"),(h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
+		&SuitCircuitFlow300Switch);
+	SaturnSuitFlowValve301.Init((h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD"),(h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
+		&SuitCircuitFlow301Switch);
+	SaturnSuitFlowValve302.Init((h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD"),(h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
+		&SuitCircuitFlow302Switch);
+
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
 	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
@@ -1488,6 +1495,9 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LMTunnelVent.SystemTimestep(tFactor);
 		PressureEqualizationValve.SystemTimestep(tFactor);
 		WasteStowageVentValve.SystemTimestep(tFactor);
+		SaturnSuitFlowValve300.SystemTimestep(tFactor);
+		SaturnSuitFlowValve301.SystemTimestep(tFactor);
+		SaturnSuitFlowValve302.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);
