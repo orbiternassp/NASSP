@@ -402,10 +402,9 @@ class SaturnSuitFlowValves
 {
 public:
 	SaturnSuitFlowValves();
-	void Init(h_Tank* sc, h_Valve* flowvlv, ThreePosSwitch* flowsw);
+	void Init(h_Valve* flowvlv, ThreePosSwitch* flowsw);
 	void SystemTimestep(double simdt);
 protected:
-	h_Tank* SuitManifoldTank;
 	h_Valve* SuitFlowValve;
 	ThreePosSwitch* SuitFlowSwitch;
 };

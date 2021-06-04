@@ -567,11 +567,11 @@ void Saturn::SystemsInit() {
 	WasteStowageVentValve.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE"),
 		&WasteMGMTStoageVentRotary);
 
-	SaturnSuitFlowValve300.Init((h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD"),(h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
+	SaturnSuitFlowValve300.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD:OUT2"),
 		&SuitCircuitFlow300Switch);
-	SaturnSuitFlowValve301.Init((h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD"),(h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
+	SaturnSuitFlowValve301.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD:LEAK"),
 		&SuitCircuitFlow301Switch);
-	SaturnSuitFlowValve302.Init((h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD"),(h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
+	SaturnSuitFlowValve302.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
 		&SuitCircuitFlow302Switch);
 
 	// Initialize joystick
