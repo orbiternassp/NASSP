@@ -1167,6 +1167,8 @@ protected:
 	// AC Inverter 1 feed
 	CircuitBrakerSwitch CDRInverter1CB;
 
+	bool CMPowerToCDRBusRelayA, CMPowerToCDRBusRelayB; //Relays 3K3 and 3K4
+
 	/////////////////
 	// LEM Panel 5 //
 	/////////////////
@@ -1244,17 +1246,17 @@ protected:
 	ThreeSourceSwitch EPSEDVoltSelect;
 
 	SwitchRow DSCHiVoltageSwitchRow;
-	LEMBatterySwitch DSCSEBat1HVSwitch;
-	LEMBatterySwitch DSCSEBat2HVSwitch;
-	LEMBatterySwitch DSCCDRBat3HVSwitch;
-	LEMBatterySwitch DSCCDRBat4HVSwitch;	
-	LEMDeadFaceSwitch DSCBattFeedSwitch;
+	ThreePosSwitch DSCSEBat1HVSwitch;
+	ThreePosSwitch DSCSEBat2HVSwitch;
+	ThreePosSwitch DSCCDRBat3HVSwitch;
+	ThreePosSwitch DSCCDRBat4HVSwitch;
+	ThreePosSwitch DSCBattFeedSwitch;
 
 	SwitchRow DSCLoVoltageSwitchRow;
-	LEMBatterySwitch DSCSEBat1LVSwitch;
-	LEMBatterySwitch DSCSEBat2LVSwitch;
-	LEMBatterySwitch DSCCDRBat3LVSwitch;
-	LEMBatterySwitch DSCCDRBat4LVSwitch;	
+	ThreePosSwitch DSCSEBat1LVSwitch;
+	ThreePosSwitch DSCSEBat2LVSwitch;
+	ThreePosSwitch DSCCDRBat3LVSwitch;
+	ThreePosSwitch DSCCDRBat4LVSwitch;
 
 	SwitchRow DSCBatteryTBSwitchRow;
 	LEMDoubleSCEATalkback DSCBattery1TB;
@@ -1270,10 +1272,10 @@ protected:
 	LEMSCEATalkback ASCBattery6BTB;
 
 	SwitchRow ASCBatterySwitchRow;
-	LEMBatterySwitch ASCBat5SESwitch;
-	LEMBatterySwitch ASCBat5CDRSwitch;
-	LEMBatterySwitch ASCBat6CDRSwitch;
-	LEMBatterySwitch ASCBat6SESwitch;
+	ThreePosSwitch ASCBat5SESwitch;
+	ThreePosSwitch ASCBat5CDRSwitch;
+	ThreePosSwitch ASCBat6CDRSwitch;
+	ThreePosSwitch ASCBat6SESwitch;
 	ToggleSwitch UpDataSquelchSwitch;
 
 	SwitchRow Panel12AudioCtlSwitchRow;
@@ -1351,6 +1353,7 @@ protected:
 	PowerMerge DescentECAMainFeeder;
 	PowerMerge DescentECAContFeeder;
 	PowerMerge AscentECAMainFeeder;
+	PowerMerge AscentECAContFeeder;
 
 	//////////////////
 	// LEM panel 16 //
@@ -1805,6 +1808,12 @@ protected:
 	// Bus Cross Tie Multiplex (Not real object)
 	LEM_BusCrossTie BTC_MPX;
 
+	//Relay Junction Box
+	LEM_RelayJunctionBox rjb;
+
+	//Deadface Relay Box
+	LEM_DeadfaceRelayBox drb;
+
 	// XLUNAR Bus Controller
 	LEM_XLBControl BTC_XLunar;
 
@@ -1813,14 +1822,6 @@ protected:
 	LEM_DescentECA ECA_2;
 	LEM_AscentECA ECA_3;
 	LEM_AscentECA ECA_4;
-	LEM_ECAch ECA_1a; // (DESCENT stage, LMP DC bus)
-	LEM_ECAch ECA_1b; // (DESCENT stage, LMP DC bus)
-	LEM_ECAch ECA_2a; // (DESCENT stage, CDR DC bus)
-	LEM_ECAch ECA_2b; // (DESCENT stage, CDR DC bus)
-	LEM_ECAch ECA_3a; // (ASCENT  stage, LMP DC bus)
-	LEM_ECAch ECA_3b; // (ASCENT  stage, CDR DC bus)
-	LEM_ECAch ECA_4a; // (ASCENT  stage, CDR DC bus)
-	LEM_ECAch ECA_4b; // (ASCENT  stage, LMP DC bus)
 
 	// Descent stage deadface bus stubs
 	DCbus DES_CDRs28VBusA;
@@ -1955,11 +1956,13 @@ protected:
 	friend class LEMDCVoltMeter;
 	friend class LEMDCAmMeter;
 	friend class LMOptics;
-	friend class LEMBatterySwitch;
-	friend class LEMDeadFaceSwitch;
 	friend class LEMInverterSwitch;
 	friend class LEM_BusCrossTie;
 	friend class LEM_XLBControl;
+	friend class LEM_DescentECASector;
+	friend class LEM_AscentECASector;
+	friend class LEM_RelayJunctionBox;
+	friend class LEM_DeadfaceRelayBox;
 	friend class LEM_LR;
 	friend class LEM_RR;
 	friend class LEM_RadarTape;

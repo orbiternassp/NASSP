@@ -136,4 +136,25 @@ protected:
 	VHFAMTransceiver *pVHFxcvr;
 };
 
+class PowerDrainConnectorObject;
+
+///
+/// \ingroup Connectors
+/// \brief Connector class for power drain.
+///
+class PowerDrainConnector : public SaturnConnector
+{
+public:
+	PowerDrainConnector(Saturn *s);
+	~PowerDrainConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+	void Disconnected();
+
+	void SetPowerDrain(PowerDrainConnectorObject *p);
+
+private:
+	PowerDrainConnectorObject *power_drain;
+};
+
 #endif // _PA_CSMCONNECTOR_H

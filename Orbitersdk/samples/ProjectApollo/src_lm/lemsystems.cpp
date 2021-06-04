@@ -174,32 +174,24 @@ void LEM::SystemsInit()
 	// Batteries 1-4 and the Lunar Stay Battery are jettisoned with the descent stage.
 
 	// ECA #1 (DESCENT stage, LMP 28V DC bus)
-	ECA_1.Init(Battery1, Battery2, &ECA_1a, &ECA_1b, &DescentECAMainFeeder);
-	ECA_1a.Init(this, Battery1, 2); // Battery 1 starts on LV
-	ECA_1b.Init(this, Battery2, 2);
+	ECA_1.Init(this, Battery1, Battery2, &DSCSEBat1HVSwitch, &DSCSEBat1LVSwitch, &DSCSEBat2HVSwitch, &DSCSEBat2LVSwitch, 2);
 
 	// ECA #2 (DESCENT stage, CDR 28V DC bus)
-	ECA_2.Init(Battery3, Battery4, &ECA_2a, &ECA_2b, &DescentECAMainFeeder);
-	ECA_2a.Init(this, Battery3, 2);
-	ECA_2b.Init(this, Battery4, 2); 
+	ECA_2.Init(this, Battery3, Battery4, &DSCCDRBat3HVSwitch, &DSCCDRBat3LVSwitch, &DSCCDRBat4HVSwitch, &DSCCDRBat4LVSwitch, 2);
 
 	// ECA #1 and #2 are JETTISONED with the descent stage.
 	// ECA #3 and #4 have no low voltage taps and can feed either bus.
-	ECA_3.Init(Battery5, &ECA_3a, &ECA_3b, &AscentECAMainFeeder);
-	ECA_3a.Init(this, Battery5, 0);
-	ECA_3b.Init(this, Battery5, 0);
-	ECA_4.Init(Battery6, &ECA_4a, &ECA_4b, &AscentECAMainFeeder);
-	ECA_4a.Init(this, Battery6, 0);
-	ECA_4b.Init(this, Battery6, 0);
+	ECA_3.Init(this, &ASCBat5SESwitch, &ASCBat5CDRSwitch, Battery5);
+	ECA_4.Init(this, &ASCBat6CDRSwitch, &ASCBat6SESwitch, Battery6);
 
 	// Descent Stage Deadface Bus Stubs wire to the ECAs
 	// stage is not defined here, so we can't do this.
 
 	// Bus Tie Blocks (Not real objects)
-	BTB_LMP_B.Init(this,&DES_LMPs28VBusA,&ECA_4b);
-	BTB_LMP_C.Init(this,&DES_LMPs28VBusB,&ECA_3a);
-	BTB_CDR_B.Init(this,&DES_CDRs28VBusA,&ECA_3b);
-	BTB_CDR_C.Init(this,&DES_CDRs28VBusB,&ECA_4a);
+	BTB_LMP_B.Init(this,&DES_LMPs28VBusA,&ECA_4.AFChannel);
+	BTB_LMP_C.Init(this,&DES_LMPs28VBusB,&ECA_3.MFChannel);
+	BTB_CDR_B.Init(this,&DES_CDRs28VBusA,&ECA_3.AFChannel);
+	BTB_CDR_C.Init(this,&DES_CDRs28VBusB,&ECA_4.MFChannel);
 
 	// Bus feed tie breakers are sourced from the descent busses AND from ECA 3/4
 	// via ficticious Bus Tie Blocks
@@ -214,6 +206,10 @@ void LEM::SystemsInit()
 
 	// Set up XLunar system
 	BTC_XLunar.Init(this);
+
+	//Relay Junction Box and Deadface Relay Box
+	rjb.Init(this, true);
+	drb.Init(this, true);
 
 	// Main busses can be fed from the ECAs via the BAT FEED TIE CBs,
 	// the other bus via the CROSS TIE BUS / CROSS TIE BAL LOADS CBs,
@@ -336,6 +332,7 @@ void LEM::SystemsInit()
 	DescentECAMainFeeder.WireToBuses(&CDRDesECAMainCB, &LMPDesECAMainCB);
 	DescentECAContFeeder.WireToBuses(&CDRDesECAContCB, &LMPDesECAContCB);
 	AscentECAMainFeeder.WireToBuses(&CDRAscECAMainCB, &LMPAscECAMainCB);
+	AscentECAContFeeder.WireToBuses(&CDRAscECAContCB, &LMPAscECAContCB);
 
 	// RCS valves
 	RCSMainSovASwitch.WireTo(&RCS_A_MAIN_SOV_CB);
@@ -644,14 +641,14 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&DES_LMPs28VBusB, false); 
 
 	// Arrange for updates of ECAs
-	Panelsdk.AddElectrical(&ECA_1a, false);
-	Panelsdk.AddElectrical(&ECA_1b, false);
-	Panelsdk.AddElectrical(&ECA_2a, false);
-	Panelsdk.AddElectrical(&ECA_2b, false);
-	Panelsdk.AddElectrical(&ECA_3a, false);
-	Panelsdk.AddElectrical(&ECA_3b, false);
-	Panelsdk.AddElectrical(&ECA_4a, false);
-	Panelsdk.AddElectrical(&ECA_4b, false);
+	Panelsdk.AddElectrical(&ECA_1.ECAChannelA, false);
+	Panelsdk.AddElectrical(&ECA_1.ECAChannelB, false);
+	Panelsdk.AddElectrical(&ECA_2.ECAChannelA, false);
+	Panelsdk.AddElectrical(&ECA_2.ECAChannelB, false);
+	Panelsdk.AddElectrical(&ECA_3.MFChannel, false);
+	Panelsdk.AddElectrical(&ECA_3.AFChannel, false);
+	Panelsdk.AddElectrical(&ECA_4.MFChannel, false);
+	Panelsdk.AddElectrical(&ECA_4.AFChannel, false);
 
 	// Arrange for updates of tie points and bus balancer
 
@@ -1564,6 +1561,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tca4B.Timestep(simdt);
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
+
+	CMPowerToCDRBusRelayA = (CSMToLEMPowerConnector.GetBatteriesLVHVOffA() || CSMToLEMPowerConnector.GetBatteriesLVHVOffB()) && !ECA_1.GetSectALVOn() && !ECA_1.GetSectBLVOn() && !ECA_2.GetSectALVOn() && !ECA_2.GetSectBLVOn();
+	CMPowerToCDRBusRelayB = CMPowerToCDRBusRelayA;
+	rjb.Timestep();
+	drb.Timestep();
 	ECA_1.Timestep(simdt);
 	ECA_2.Timestep(simdt);
 	ECA_3.Timestep(simdt);
@@ -2299,25 +2301,16 @@ void LEM::StartEVA()
 
 void LEM::CheckDescentStageSystems()
 {
+	rjb.CheckStatus();
+	drb.CheckStatus();
 	if (stage < 2) {
-		// Descent Stage Deadface Bus Stubs wire to the ECAs
 
-		DES_LMPs28VBusA.WireTo(&ECA_1a);
-		DES_LMPs28VBusB.WireTo(&ECA_1b);
-		DES_CDRs28VBusA.WireTo(&ECA_2a);
-		DES_CDRs28VBusB.WireTo(&ECA_2b);
-		DSCBattFeedTB.SetState(1);
 	}
 	else {
-		DES_LMPs28VBusA.Disconnect();
-		DES_LMPs28VBusB.Disconnect();
-		DES_CDRs28VBusA.Disconnect();
-		DES_CDRs28VBusB.Disconnect();
 		Battery1->Disable();
 		Battery2->Disable();
 		Battery3->Disable();
 		Battery4->Disable();
-		DSCBattFeedTB.SetState(0);
 		EDBatteryA->Disable();
 
 		//ECS

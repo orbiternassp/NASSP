@@ -573,13 +573,7 @@ void LEM_EDS::Timestep(double simdt) {
 
 	if ((pyroA || pyroB) && !Deadface)
 	{
-		// Disconnect EPS stuff
-		lem->DES_LMPs28VBusA.Disconnect();
-		lem->DES_LMPs28VBusB.Disconnect();
-		lem->DES_CDRs28VBusA.Disconnect();
-		lem->DES_CDRs28VBusB.Disconnect();
-		// Change descent TB
-		lem->DSCBattFeedTB.SetState(0);
+		//TBD: In the future this should cause the electrical circuit interrupters to fire and disconnect all electrical connections, independent from lem->stage
 		Deadface = true;
 	}
 

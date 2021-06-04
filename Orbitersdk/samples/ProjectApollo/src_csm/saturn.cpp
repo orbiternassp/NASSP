@@ -238,6 +238,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	payloadCommandConnector(this),
 	CSM_RRTto_LM_RRConnector(this, &RRTsystem),
 	csm_vhfto_lm_vhfconnector(this, &vhftransceiver, &vhfranging),
+	CSMToLEMPowerConnector(this),
 	cdi(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
@@ -4685,6 +4686,21 @@ void Saturn::ConnectTunnelToCabinVent()
 	h_Vent *vent = (h_Vent *)Panelsdk.GetPointerByString("HYDRAULIC:CABINVENT");
 
 	pipe->out = &vent->IN_valve;
+}
+
+bool Saturn::GetLMDesBatLVOn()
+{
+	return LMPowerSwitch.IsDown() && MnbLMPWR2CircuitBraker.IsPowered();
+}
+
+bool Saturn::GetLMDesBatLVHVOffA()
+{
+	return LMPowerSwitch.IsUp() && MnbLMPWR1CircuitBraker.IsPowered();
+}
+
+bool Saturn::GetLMDesBatLVHVOffB()
+{
+	return LMPowerSwitch.IsUp() && MnbLMPWR2CircuitBraker.IsPowered();
 }
 
 void Saturn::SetContrailLevel(double level)

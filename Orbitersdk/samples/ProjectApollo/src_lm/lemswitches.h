@@ -47,32 +47,6 @@ protected:
 	int sw;
 };
 
-class LEMBatterySwitch: public LEMThreePosSwitch {
-public:
-	LEMBatterySwitch() { eca = NULL; lem = NULL; srcno=0; afl=0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, LEM_ECAch *lem_eca, int src_no, int asc);
-	//bool CheckMouseClick(int event, int mx, int my);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-
-protected:
-	void CheckValve(int s);
-
-	LEM *lem;
-	int srcno,afl;
-	LEM_ECAch *eca;
-};
-
-class LEMDeadFaceSwitch: public LEMThreePosSwitch {
-public:
-	LEMDeadFaceSwitch() { };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s);
-	//bool CheckMouseClick(int event, int mx, int my);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-
-protected:
-	void CheckValve(int s);
-};
-
 class LEMInverterSwitch: public LEMThreePosSwitch {
 public:
 	LEMInverterSwitch() { inv1 = NULL; inv2 = NULL; };
