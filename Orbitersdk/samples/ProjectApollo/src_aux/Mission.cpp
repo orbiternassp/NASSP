@@ -106,6 +106,7 @@ namespace mission {
 		dATCA_PRM_Factor = 0.3;
 		//LM-7 data from Operational Data Book
 		LM_CG_Coefficients = _M(8.7719e-08, -7.9329e-04, 7.9773e+00, 2.1488e-10, -2.5485e-06, 1.2769e-02, 6.1788e-09, -6.9019e-05, 2.5186e-01);
+		iCMtoLMPowerConnectionVersion = 0;
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -174,7 +175,7 @@ namespace mission {
 		{
 			LM_CG_Coefficients.m31 = vtemp.x; LM_CG_Coefficients.m32 = vtemp.y; LM_CG_Coefficients.m33 = vtemp.z;
 		}
-
+		oapiReadItem_int(hFile, "CMtoLMPowerConnectionVersion", iCMtoLMPowerConnectionVersion);
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
 	}
@@ -262,5 +263,10 @@ namespace mission {
 	MATRIX3 Mission::GetLMCGCoefficients() const
 	{
 		return LM_CG_Coefficients;
+	}
+
+	int Mission::GetCMtoLMPowerConnectionVersion() const
+	{
+		return iCMtoLMPowerConnectionVersion;
 	}
 }

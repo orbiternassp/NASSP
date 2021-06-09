@@ -1581,10 +1581,10 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ECA_4_START", sizeof("ECA_4_START"))) {
 			ECA_4.LoadState(scn, "ECA_4_END");
 		}
-		else if (!strnicmp(line, "RELAYJUNCTIONBOX", sizeof("RELAYJUNCTIONBOX"))) {
+		else if (!strnicmp(line, "RELAYJUNCTIONBOX", 16)) {
 			rjb.LoadState(line);
 		}
-		else if (!strnicmp(line, "DEADFACERELAYBOX", sizeof("DEADFACERELAYBOX"))) {
+		else if (!strnicmp(line, "DEADFACERELAYBOX", 16)) {
 			drb.LoadState(line);
 		}
 		else if (!strnicmp(line, "CMPowerToCDRBusRelayA", 21)) {
@@ -2038,8 +2038,11 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	PSH.SaveState(scn);	
 
 	// Save ECAs
-	ECA_1.SaveState(scn, "ECA_1_START", "ECA_1_END");
-	ECA_2.SaveState(scn, "ECA_2_START", "ECA_2_END");
+	if (stage < 2)
+	{
+		ECA_1.SaveState(scn, "ECA_1_START", "ECA_1_END");
+		ECA_2.SaveState(scn, "ECA_2_START", "ECA_2_END");
+	}
 	ECA_3.SaveState(scn, "ECA_3_START", "ECA_3_END");
 	ECA_4.SaveState(scn, "ECA_4_START", "ECA_4_END");
 	rjb.SaveState(scn);

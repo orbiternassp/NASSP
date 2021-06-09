@@ -1431,8 +1431,11 @@ void LEM::SystemsInternalTimestep(double simdt)
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		EventTimerDisplay.SystemTimestep(tFactor);
 		CWEA.SystemTimestep(tFactor);
-		ECA_1.SystemTimestep(tFactor);
-		ECA_2.SystemTimestep(tFactor);
+		if (stage < 2)
+		{
+			ECA_1.SystemTimestep(tFactor);
+			ECA_2.SystemTimestep(tFactor);
+		}
 		ECA_3.SystemTimestep(tFactor);
 		ECA_4.SystemTimestep(tFactor);
 		tle.SystemTimestep(tFactor);
@@ -1561,13 +1564,32 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tca4B.Timestep(simdt);
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
-
-	CMPowerToCDRBusRelayA = (CSMToLEMPowerConnector.GetBatteriesLVHVOffA() || CSMToLEMPowerConnector.GetBatteriesLVHVOffB()) && !ECA_1.GetSectALVOn() && !ECA_1.GetSectBLVOn() && !ECA_2.GetSectALVOn() && !ECA_2.GetSectBLVOn();
+	//TBD: Apollo 14 version with EMER CM PWR circuit breaker. Also, move these relays into a class for the panel
+	if (pMission->GetCMtoLMPowerConnectionVersion() == 0)
+	{
+		//Apollo 13 and earlier: CM to LM power doesn't work after staging
+		CMPowerToCDRBusRelayA = stage < 2 && (CSMToLEMPowerConnector.GetBatteriesLVHVOffA() || CSMToLEMPowerConnector.GetBatteriesLVHVOffB()) && !ECA_1.GetSectALVOn() && !ECA_1.GetSectBLVOn() && !ECA_2.GetSectALVOn() && !ECA_2.GetSectBLVOn();
+	}
+	else
+	{
+		//Apollo 15 and later: circuit to descent stage bypassed after staging
+		if (eds.GetDeadface())
+		{
+			CMPowerToCDRBusRelayA = (CSMToLEMPowerConnector.GetBatteriesLVHVOffA() || CSMToLEMPowerConnector.GetBatteriesLVHVOffB());
+		}
+		else
+		{
+			CMPowerToCDRBusRelayA = (CSMToLEMPowerConnector.GetBatteriesLVHVOffA() || CSMToLEMPowerConnector.GetBatteriesLVHVOffB()) && !ECA_1.GetSectALVOn() && !ECA_1.GetSectBLVOn() && !ECA_2.GetSectALVOn() && !ECA_2.GetSectBLVOn();
+		}
+	}
 	CMPowerToCDRBusRelayB = CMPowerToCDRBusRelayA;
 	rjb.Timestep();
 	drb.Timestep();
-	ECA_1.Timestep(simdt);
-	ECA_2.Timestep(simdt);
+	if (stage < 2)
+	{
+		ECA_1.Timestep(simdt);
+		ECA_2.Timestep(simdt);
+	}
 	ECA_3.Timestep(simdt);
 	ECA_4.Timestep(simdt);
 	tle.Timestep(simdt);
