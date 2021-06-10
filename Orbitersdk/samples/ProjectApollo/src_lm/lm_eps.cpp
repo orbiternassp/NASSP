@@ -152,9 +152,9 @@ void LEM_RelayJunctionBox::Timestep()
 	//TBD: GSE relays
 }
 
-bool LEM_RelayJunctionBox::GetHVLVOffSignalCM()
+bool LEM_RelayJunctionBox::GetHVLVOffSignal()
 {
-	return HVLVOffSignalCM;
+	return HVLVOffSignalCM || HVLVOffSignalAbort;
 }
 
 bool LEM_RelayJunctionBox::GetHVLVOffSignalAbort()
@@ -352,7 +352,7 @@ void LEM_DescentECASector::Timestep()
 
 	SIG1 = POWER1 && HV_SW->IsUp(); //HV on signal
 	SIG2 = (POWER1 && HV_SW->IsCenter() && LV_SW->IsUp()) || lem->rjb.GetLVOnSignal(); //LV on signal
-	SIG3 = (POWER1 && (HV_SW->IsDown() || LV_SW->IsDown())) || lem->rjb.GetHVLVOffSignalCM() || lem->rjb.GetHVLVOffSignalAbort(); //Off
+	SIG3 = (POWER1 && (HV_SW->IsDown() || LV_SW->IsDown())) || lem->rjb.GetHVLVOffSignal(); //Off
 
 	TEMP1 = POWER2 && OC;
 	TEMP2 = SIG3 || TEMP1;

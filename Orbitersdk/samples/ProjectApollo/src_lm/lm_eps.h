@@ -52,7 +52,7 @@ public:
 	void CheckStatus();
 
 	bool GetLVOnSignal();
-	bool GetHVLVOffSignalCM();
+	bool GetHVLVOffSignal();
 	bool GetHVLVOffSignalAbort();
 	bool GetAscentECAOn();
 protected:
