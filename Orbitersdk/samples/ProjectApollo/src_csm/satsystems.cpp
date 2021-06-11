@@ -3432,6 +3432,8 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 	ecs.SecECSTestHeating = 0;
 	if (SecECSTestHeater->pumping)
 		ecs.SecECSTestHeating += SecECSTestHeater->boiler_power;
+
+	ecs.CSMO2HoseConnected = GetCSMO2Hose()->out != NULL;
 }
 
 void Saturn::SetCrewNumber(int number) {

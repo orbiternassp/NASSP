@@ -95,8 +95,8 @@ public:
 	h_Pipe* GetDockingTunnelPipe();
 	void ConnectLMTunnelToCabinVent();
 	h_Valve* GetCSMO2HoseOutlet();
-	void ConnectCSMO2Hose();
-	void DisconnectCSMO2Hose();
+	virtual void ConnectCSMO2Hose();
+	virtual void DisconnectCSMO2Hose();
 };
 
 class CSMToPayloadConnector : public SaturnConnector

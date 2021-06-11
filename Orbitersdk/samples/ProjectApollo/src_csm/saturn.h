@@ -202,6 +202,7 @@ typedef struct {
 	double PrimECSTestHeating;
 	double SecECSHeating;
 	double SecECSTestHeating;
+	bool CSMO2HoseConnected;
 } ECSStatus;
 
 ///

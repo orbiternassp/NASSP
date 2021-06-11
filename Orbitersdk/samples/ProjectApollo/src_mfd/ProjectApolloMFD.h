@@ -85,6 +85,7 @@ public:
 	void menuSetCDRInSuit();
 	void menuSetLMPInSuit();
 	void menuStartEVA();
+	void menuConnectCSMO2Hose();
 	void menuSetPrimECSTestHeaterPower();
 	void menuSetSecECSTestHeaterPower();
 	void menuAbortUplink();

@@ -762,8 +762,6 @@ bool CSMToLEMECSConnector::ConnectTo(Connector *other)
 		cmpipe->out = lmpipe->in;
 		lmpipe->in = NULL;
 
-		ConnectCSMO2Hose();
-
 		return true;
 	}
 
@@ -774,7 +772,6 @@ void CSMToLEMECSConnector::Disconnect()
 {
 	OurVessel->ConnectTunnelToCabinVent();
 	ConnectLMTunnelToCabinVent();
-
 	DisconnectCSMO2Hose();
 
 	SaturnConnector::Disconnect();
