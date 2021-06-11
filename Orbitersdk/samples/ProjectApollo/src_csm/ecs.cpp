@@ -1410,6 +1410,9 @@ void SaturnForwardHatch::Toggle()
 		}
 		else
 		{
+			//Is hose connected? If yes prevent hatch from being closed
+			if (saturn->GetCSMO2Hose()->out != NULL) return;
+
 			open = false;
 			toggle = 2;
 			CloseSound.play();
