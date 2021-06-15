@@ -77,11 +77,12 @@ void LEM_ASA::Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_
 	fineheater = fineht;
 	hsink = hr;
 	asaHeat = asah;
-	// Therm setup; Need to check if these conflict with config values
+	// Therm setup; Need to see if these values are necessary, temp and mass are set in config
 	//hsink->isolation = 0.0000001;
 	//hsink->Area = 975.0425;
 	//hsink.mass = 9389.36206;
 	//hsink.SetTemp(270);
+
 	if (lem != NULL) {
 		fastheater->WireTo(&lem->SCS_ASA_CB);
 		fineheater->WireTo(&lem->SCS_ASA_CB);
