@@ -998,7 +998,6 @@ LunarLiftoffTimeOpt::LunarLiftoffTimeOpt()
 	theta_1 = 17.0*RAD;
 	dt_1 = 7.0*60.0 + 15.0;
 	DH_SRCH = 15.0*1852.0;
-	IsInsVelInput = false;
 	v_LH = 5509.5*0.3048;
 	v_LV = 19.5*0.3048;
 	theta_F = 130.0*RAD;
@@ -10238,53 +10237,6 @@ RTCC_PMMLLWP_22_19:
 	}
 }
 
-void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res)
-{
-	VECTOR3 R_LS;
-	double h_1, theta_Ins, MJD_guess, t_L_guess;
-	SV sv_P, sv_Ins;
-	OBJHANDLE hMoon;
-
-	hMoon = oapiGetObjectByName("Moon");
-	h_1 = 60000.0*0.3048;
-	theta_Ins = 18.2*RAD;
-
-	R_LS = OrbMech::r_from_latlong(opt.lat, opt.lng, opt.R_LLS);
-
-	if (opt.I_TPI > 1)
-	{
-		//TPI time fixed for concentric profile
-		res.t_TPI = opt.t_hole;
-		t_L_guess = res.t_TPI - 1.5*7200.0;
-		sv_P = coast(opt.sv_CSM, t_L_guess - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
-	}
-	else
-	{
-		//Initial guess for launch is CSM flying over landing site longitude
-		sv_P = coast(opt.sv_CSM, opt.t_hole - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
-		MJD_guess = OrbMech::P29TimeOfLongitude(sv_P.R, sv_P.V, sv_P.MJD, sv_P.gravref, opt.lng);
-		t_L_guess = OrbMech::GETfromMJD(MJD_guess, opt.GETbase);
-	}
-
-	if (opt.I_TPI <= 1)
-	{
-		SV sv_TPI_guess;
-		double t_TPI_guess, ttoMidnight;
-		OBJHANDLE hSun;
-
-		hSun = oapiGetObjectByName("Sun");
-
-		//About 2.5 hours between liftoff and TPI
-		t_TPI_guess = t_L_guess + 2.5*3600.0;
-		sv_TPI_guess = coast(sv_P, t_TPI_guess - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
-
-		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, hMoon, hSun, 1, 1, false);
-		res.t_TPI = t_TPI_guess + ttoMidnight;
-	}
-
-	LunarLiftoffTimePredictionCFP(opt, R_LS, sv_P, hMoon, h_1, theta_Ins, t_L_guess, res.t_TPI, res);
-}
-
 void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res)
 {
 	OBJHANDLE hEarth;
@@ -12581,112 +12533,6 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	res.ABTCOF4 = coeff[3];
 
 	OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.DEDA227, res.DEDA224);
-
-	return true;
-}
-
-bool RTCC::LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res)
-{
-	// NOMENCLATURE:
-	// R = position vector, V = velocity vector
-	// A = active vehicle, P = passive vehicle
-	// 1 = Insertion, 2 = CSI, 3 = CDH, 4 = TPI (actual), 5 = TPI (LM, desired), 6 = TPI (CSM, desired), 7 = TPF (CSM and LM)
-	SV sv_6;
-	MATRIX3 Rot;
-	VECTOR3 u, R_1, V_1, R_2, V_2, R_5, V_2F, R_3, V_3, R_L, U_L, R_3F, V_3F, R_PJ, V_PJ, R_P3S, V_P3S, R_4, V_4, V_4F, R_7, V_7, R_7F, V_7F;
-	int n;
-	double r_M, r_A, dt_3, MJD_TPI, dt, MJD_L, t_3, r_Ins, dV_CSI;
-	double dt_2, t_L, t_1, t_2, dt_4, e_P, eps, to_L, eo_P, c_F, p_C;
-	int s_F;
-
-	r_M = length(R_LS);
-	MJD_TPI = opt.GETbase + t_TPI / 24.0 / 3600.0;
-
-	s_F = 0;
-	c_F = p_C = 0.0;
-	eps = 0.002*RAD;
-	n = 0;
-	dt = 100.0;
-	t_L = t_L_guess;
-	r_Ins = r_M + h_1;
-	dV_CSI = 10.0*0.3048;
-
-	sv_6 = coast(sv_P, (MJD_TPI - sv_P.MJD)*24.0*3600.0);
-	u = unit(crossp(sv_6.R, sv_6.V));
-
-	OrbMech::QDRTPI(sv_6.R, sv_6.V, MJD_TPI, hMoon, OrbMech::mu_Moon, opt.DH_SRCH, opt.E, 0, R_PJ, V_PJ);
-	R_5 = R_PJ - unit(R_PJ)*opt.DH_SRCH;
-	r_A = length(R_5);
-
-	if (opt.IsInsVelInput)
-	{
-		res.v_LH = opt.v_LH;
-		res.v_LV = opt.v_LV;
-	}
-	else
-	{
-		double e_Ins, h_Ins;
-		e_Ins = (r_A - r_Ins) / (r_A + cos(theta_Ins)*r_Ins);
-		h_Ins = sqrt(r_A* OrbMech::mu_Moon*(1.0 - e_Ins));
-		res.v_LV = OrbMech::mu_Moon / h_Ins * e_Ins*sin(theta_Ins);
-		res.v_LH = OrbMech::mu_Moon / h_Ins * (1.0 + e_Ins * cos(theta_Ins));
-	}
-
-	do
-	{
-		//Launch to Insertion
-		MJD_L = opt.GETbase + t_L / 24.0 / 3600.0;
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD_L);
-		R_L = rhmul(Rot, R_LS);
-		U_L = unit(R_L - u * dotp(u, R_L));
-		R_1 = (U_L*cos(opt.theta_1) + crossp(u, U_L)*sin(opt.theta_1))*r_Ins;
-		V_1 = unit(crossp(u, unit(R_1)))*res.v_LH + unit(R_1)*res.v_LV;
-		t_1 = t_L + opt.dt_1;
-		//Insertion to CSI
-		dt_2 = OrbMech::timetoapo(R_1, V_1, OrbMech::mu_Moon);
-		OrbMech::rv_from_r0v0(R_1, V_1, dt_2, R_2, V_2, OrbMech::mu_Moon);
-		t_2 = t_1 + dt_2;
-		OrbMech::CSIToDH(R_2, V_2, sv_6.R, sv_6.V, opt.DH_SRCH, OrbMech::mu_Moon, dV_CSI);
-		V_2F = V_2 + unit(crossp(u, R_2))*dV_CSI;
-		//CSI to CDH
-		OrbMech::REVUP(R_2, V_2F, 0.5, OrbMech::mu_Moon, R_3, V_3, dt_3);
-		t_3 = t_2 + dt_3;
-		OrbMech::RADUP(sv_6.R, sv_6.V, R_3, OrbMech::mu_Moon, R_P3S, V_P3S);
-		OrbMech::COE(R_P3S, V_P3S, length(R_P3S) - length(R_3), OrbMech::mu_Moon, R_3F, V_3F);
-
-		//CDH to TPI
-		dt_4 = t_TPI - t_3;
-		OrbMech::rv_from_r0v0(R_3, V_3F, dt_4, R_4, V_4, OrbMech::mu_Moon);
-
-		e_P = OrbMech::sign(dotp(crossp(R_4, R_5), u))*acos(dotp(unit(R_5), unit(R_4)));
-		if (abs(e_P) >= eps)
-		{
-			OrbMech::ITER(c_F, s_F, e_P, p_C, t_L, eo_P, to_L);
-			if (s_F == 1)
-			{
-				return false;
-			}
-		}
-	} while (abs(e_P) >= eps);
-
-	double dt_F;
-
-	res.t_L = t_L;
-	res.t_Ins = t_1;
-	res.t_CSI = t_2;
-	res.t_CDH = t_3;
-
-	dt_F = OrbMech::time_theta(sv_6.R, sv_6.V, opt.theta_F, OrbMech::mu_Moon);
-	OrbMech::rv_from_r0v0(sv_6.R, sv_6.V, dt_F, R_7, V_7, OrbMech::mu_Moon);
-	V_4F = OrbMech::elegant_lambert(R_4, V_4, R_7, dt_F, 0, false, OrbMech::mu_Moon);
-	OrbMech::rv_from_r0v0(R_4, V_4F, dt_F, R_7F, V_7F, OrbMech::mu_Moon);
-
-	res.t_TPF = t_TPI + dt_F;
-	res.DV_CSI = length(V_2F - V_2);
-	res.DV_CDH = length(V_3F - V_3);
-	res.DV_TPI = length(V_4F - V_4);
-	res.DV_TPF = length(V_7 - V_7F);
-	res.DV_T = res.DV_CSI + res.DV_CDH + res.DV_TPI + res.DV_TPF;
 
 	return true;
 }
@@ -16145,8 +15991,14 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 			return;
 		}
 
-		mpt->LastExecutedManeuver -= man;
-		mpt->LastFrozenManeuver -= man;
+		if (mpt->LastExecutedManeuver > 0)
+		{
+			mpt->LastExecutedManeuver -= man;
+		}
+		if (mpt->LastFrozenManeuver > 0)
+		{
+			mpt->LastFrozenManeuver -= man;
+		}
 
 		for (unsigned i = man;i < mpt->ManeuverNum;i++)
 		{
@@ -23246,7 +23098,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	char ref;
 	char discr[8], ModeName[16];
 
-	if (sv0.RBI == BODY_EARTH)
+	if (sv_abort.RBI == BODY_EARTH)
 	{
 		ref = 'E';
 	}
@@ -23633,7 +23485,7 @@ void RTCC::PMMREDIG(bool mpt)
 		AST.sv_TIG = astin.sv_IG;
 		AST.sv_r = astin.sv_EI;
 
-		gmt = astin.sv_IG.GMT;
+		gmt = astin.sv_IG.GMT;//astin.VectorGMT;//
 
 		MED.ManualEntry = false;
 		RID.ASTSolutionCode = astin.AbortMode;
