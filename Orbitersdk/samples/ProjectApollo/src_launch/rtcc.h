@@ -857,11 +857,7 @@ struct LunarLiftoffTimeOpt
 	double R_LLS;
 	//Longitude at which TPI is to be scheduled
 	double lng_TPI;
-
-	double GETbase;		//usually MJD at launch
 	SV sv_CSM;			//CSM State vector
-	
-	bool IsInsVelInput;	//0 = calculate insertion velocity, 1 = use input velocity
 };
 
 struct LLTPOpt
@@ -888,23 +884,6 @@ struct LunarLaunchTargetingTable
 	double HA_TPI = 0.0, HP_TPI = 0.0;
 	double HA_TPF = 0.0, HP_TPF = 0.0;
 	double HA_T = 0.0, HP_T = 0.0;
-};
-
-struct LunarLiftoffResults
-{
-	double t_L;
-	double t_Ins;
-	double t_CSI;
-	double t_CDH;
-	double t_TPI;
-	double t_TPF;
-	double v_LH;
-	double v_LV;
-	double DV_CSI;
-	double DV_CDH;
-	double DV_TPI;
-	double DV_TPF;
-	double DV_T;
 };
 
 struct PDIPADOpt
@@ -2647,8 +2626,6 @@ public:
 	void LLWP_PERHAP(AEGHeader Header, AEGDataBlock sv, double &RAP, double &RPE);
 	void LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp, int M, int P, int I_CDH, double DH, double &dv_CSI, double &dv_CDH, double &t_CDH);
 	void LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt);
-	void LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
-	bool LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargetingTable &res);
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv);
