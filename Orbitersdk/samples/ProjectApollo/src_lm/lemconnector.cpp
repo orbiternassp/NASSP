@@ -67,9 +67,17 @@ bool LEMECSConnector::ReceiveMessage(Connector *from, ConnectorMessage &m) {
 
 		return true;
 	}
+
 	else if (m.messageType == 1)
 	{
 		OurVessel->ConnectTunnelToCabinVent();
+
+		return true;
+	}
+
+	else if (m.messageType == 2)
+	{
+		m.val1.pValue = OurVessel->GetCSMO2HoseOutlet();
 
 		return true;
 	}

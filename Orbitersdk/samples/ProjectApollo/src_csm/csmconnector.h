@@ -81,6 +81,7 @@ public:
 };
 
 class h_Pipe;
+class h_Valve;
 
 class CSMToLEMECSConnector : public SaturnConnector
 {
@@ -93,6 +94,9 @@ public:
 
 	h_Pipe* GetDockingTunnelPipe();
 	void ConnectLMTunnelToCabinVent();
+	h_Valve* GetCSMO2HoseOutlet();
+	virtual void ConnectCSMO2Hose();
+	virtual void DisconnectCSMO2Hose();
 };
 
 class CSMToPayloadConnector : public SaturnConnector

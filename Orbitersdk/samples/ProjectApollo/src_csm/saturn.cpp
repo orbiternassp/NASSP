@@ -4688,6 +4688,11 @@ void Saturn::ConnectTunnelToCabinVent()
 	pipe->out = &vent->IN_valve;
 }
 
+h_Pipe* Saturn::GetCSMO2Hose()
+{
+	return (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:CSMTOLMO2HOSE");
+}
+
 bool Saturn::GetLMDesBatLVOn()
 {
 	return LMPowerSwitch.IsDown() && MnbLMPWR2CircuitBraker.IsPowered();
