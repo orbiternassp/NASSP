@@ -772,6 +772,7 @@ void CSMToLEMECSConnector::Disconnect()
 {
 	OurVessel->ConnectTunnelToCabinVent();
 	ConnectLMTunnelToCabinVent();
+	DisconnectCSMO2Hose();
 
 	SaturnConnector::Disconnect();
 }
@@ -799,6 +800,31 @@ void CSMToLEMECSConnector::ConnectLMTunnelToCabinVent()
 	cm.messageType = 1;
 
 	SendMessage(cm);
+}
+
+h_Valve* CSMToLEMECSConnector::GetCSMO2HoseOutlet()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = 2;
+
+	if (SendMessage(cm))
+	{
+		return static_cast<h_Valve*> (cm.val1.pValue);
+	}
+
+	return NULL;
+}
+
+void CSMToLEMECSConnector::ConnectCSMO2Hose()
+{
+	OurVessel->GetCSMO2Hose()->out = GetCSMO2HoseOutlet();
+}
+
+void CSMToLEMECSConnector::DisconnectCSMO2Hose()
+{
+	OurVessel->GetCSMO2Hose()->out = NULL;
 }
 
 CSMToPayloadConnector::CSMToPayloadConnector(Saturn *s) : SaturnConnector(s)

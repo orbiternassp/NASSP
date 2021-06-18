@@ -919,6 +919,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.65), "Actual:", 7);
 			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.7), "Test:", 5);
 			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.8), "Total:", 6);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.9), "CSM O2 Hose:", 12);
 
 			SetTextAlign(hDC, TA_CENTER);
 			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating);
@@ -936,6 +937,15 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 			MoveToEx(hDC, (int)(width * 0.5), (int)(height * 0.775), 0);
 			LineTo(hDC, (int)(width * 0.9), (int)(height * 0.775));
+
+			if (ecs.CSMO2HoseConnected)
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.9), "Connected", 9);
+			}
+			else
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.9), "Disconnected", 12);
+			}
 
 		}
 		else if (lem)
@@ -2313,6 +2323,27 @@ void ProjectApolloMFD::menuStartEVA()
 	if (lem)
 	{
 		lem->StartEVA();
+	}
+}
+
+void ProjectApolloMFD::menuConnectCSMO2Hose()
+{
+	if (saturn)
+	{
+		ECSStatus ecs;
+		saturn->GetECSStatus(ecs);
+
+		if (ecs.CSMO2HoseConnected)
+		{
+			saturn->lemECSConnector.DisconnectCSMO2Hose();
+		}
+		else
+		{
+			if (saturn->ForwardHatch.IsOpen()) //TBD: Require LM hatch to be open as well
+			{
+				saturn->lemECSConnector.ConnectCSMO2Hose();
+			}
+		}
 	}
 }
 
