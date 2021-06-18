@@ -202,6 +202,7 @@ typedef struct {
 	double PrimECSTestHeating;
 	double SecECSHeating;
 	double SecECSTestHeating;
+	bool CSMO2HoseConnected;
 } ECSStatus;
 
 ///
@@ -1050,7 +1051,11 @@ public:
 
 	//CSM to LM interface functions
 	h_Pipe* GetCMTunnelPipe() { return CMTunnel; }
+	h_Pipe* GetCSMO2Hose();
 	void ConnectTunnelToCabinVent();
+	bool GetLMDesBatLVOn();
+	bool GetLMDesBatLVHVOffA();
+	bool GetLMDesBatLVHVOffB();
 
 	///
 	/// \brief Triggers Virtual AGC core dump
@@ -3751,6 +3756,9 @@ protected:
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
 	SaturnWasteStowageVentValve WasteStowageVentValve;
+	SaturnSuitFlowValves SaturnSuitFlowValve300;
+	SaturnSuitFlowValves SaturnSuitFlowValve301;
+	SaturnSuitFlowValves SaturnSuitFlowValve302;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;

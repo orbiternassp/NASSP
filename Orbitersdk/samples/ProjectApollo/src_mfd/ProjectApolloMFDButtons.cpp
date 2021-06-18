@@ -56,7 +56,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "CDR in suit", 0, 'D' },
 		{ "LMP in suit", 0, 'L' },
 		{ "Start EVA",0,'E' },
-		{ 0,0,0 },
+		{ "Connect CSM O2 Hose to LM",0,'H' },
 		{ "Primary coolant loop test heating", 0, 'P' },
 		{ "Secondary coolant loop test heating", 0, 'S' }
 	};
@@ -68,7 +68,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("CDR", OAPI_KEY_D, &ProjectApolloMFD::menuSetCDRInSuit);
 	RegisterFunction("LMP", OAPI_KEY_L, &ProjectApolloMFD::menuSetLMPInSuit);
 	RegisterFunction("EVA", OAPI_KEY_E, &ProjectApolloMFD::menuStartEVA);
-	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("HOS", OAPI_KEY_A, &ProjectApolloMFD::menuConnectCSMO2Hose);
 
 	RegisterFunction("PRM", OAPI_KEY_P, &ProjectApolloMFD::menuSetPrimECSTestHeaterPower);
 	RegisterFunction("SEC", OAPI_KEY_S, &ProjectApolloMFD::menuSetSecECSTestHeaterPower);

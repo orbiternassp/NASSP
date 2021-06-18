@@ -81,6 +81,7 @@ public:
 };
 
 class h_Pipe;
+class h_Valve;
 
 class CSMToLEMECSConnector : public SaturnConnector
 {
@@ -93,6 +94,9 @@ public:
 
 	h_Pipe* GetDockingTunnelPipe();
 	void ConnectLMTunnelToCabinVent();
+	h_Valve* GetCSMO2HoseOutlet();
+	virtual void ConnectCSMO2Hose();
+	virtual void DisconnectCSMO2Hose();
 };
 
 class CSMToPayloadConnector : public SaturnConnector
@@ -134,6 +138,27 @@ public:
 protected:
 	VHFRangingSystem *pVHFRngSys;
 	VHFAMTransceiver *pVHFxcvr;
+};
+
+class PowerDrainConnectorObject;
+
+///
+/// \ingroup Connectors
+/// \brief Connector class for power drain.
+///
+class PowerDrainConnector : public SaturnConnector
+{
+public:
+	PowerDrainConnector(Saturn *s);
+	~PowerDrainConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+	void Disconnected();
+
+	void SetPowerDrain(PowerDrainConnectorObject *p);
+
+private:
+	PowerDrainConnectorObject *power_drain;
 };
 
 #endif // _PA_CSMCONNECTOR_H

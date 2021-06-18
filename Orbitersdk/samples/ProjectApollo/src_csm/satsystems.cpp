@@ -567,6 +567,13 @@ void Saturn::SystemsInit() {
 	WasteStowageVentValve.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE"),
 		&WasteMGMTStoageVentRotary);
 
+	SaturnSuitFlowValve300.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD:OUT2"),
+		&SuitCircuitFlow300Switch);
+	SaturnSuitFlowValve301.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD:LEAK"),
+		&SuitCircuitFlow301Switch);
+	SaturnSuitFlowValve302.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
+		&SuitCircuitFlow302Switch);
+
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
 	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
@@ -983,10 +990,16 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //sprintf(oapiDebugString(), "CSM PPO2: %lf PPN2: %lf WMFlowPPH %lf WMValve %d", *CSMCabinO2* PSI, *CSMCabinN2 * PSI, *WMFlow *LBH, *WMValve);
 
 //CSM Connector Debug Lines
-
+	
 //h_Pipe* csmtunnelpipe = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
 //double *pressequalFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE:FLOW");
+
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
+
+//h_Pipe* csmO2hose = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTOLMO2HOSE");
+
+//sprintf(oapiDebugString(), "InPress: %lf OutPress %lf HoseFlow: %lf CSMCO2 %lf LMCO2: %lf", (csmO2hose->in->parent->space.Press)*PSI, (csmO2hose->out->parent->space.Press)* PSI, (csmO2hose->flow)*LBH, (csmO2hose->in->parent->space.composition[SUBSTANCE_CO2].p_press)* MMHG, (csmO2hose->out->parent->space.composition[SUBSTANCE_CO2].p_press)* MMHG);
+
 
 #ifdef _DEBUG
 
@@ -1482,6 +1495,9 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LMTunnelVent.SystemTimestep(tFactor);
 		PressureEqualizationValve.SystemTimestep(tFactor);
 		WasteStowageVentValve.SystemTimestep(tFactor);
+		SaturnSuitFlowValve300.SystemTimestep(tFactor);
+		SaturnSuitFlowValve301.SystemTimestep(tFactor);
+		SaturnSuitFlowValve302.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);
@@ -3416,6 +3432,8 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 	ecs.SecECSTestHeating = 0;
 	if (SecECSTestHeater->pumping)
 		ecs.SecECSTestHeating += SecECSTestHeater->boiler_power;
+
+	ecs.CSMO2HoseConnected = GetCSMO2Hose()->out != NULL;
 }
 
 void Saturn::SetCrewNumber(int number) {

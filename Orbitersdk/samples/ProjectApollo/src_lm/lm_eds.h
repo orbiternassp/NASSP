@@ -120,10 +120,9 @@ public:
 	void Timestep(double simdt);
 	bool GetHeliumPressDelayContactClosed() { return HeliumPressurizationDelayA.ContactClosed() || HeliumPressurizationDelayB.ContactClosed(); }
 	bool GetLGDeployed() { return LG_Deployed; }
+	bool GetDeadface() { return Deadface; }
 
 	LEM *lem;					// Pointer at LEM
-	bool LG_Deployed;           // Landing Gear Deployed Flag
-	bool Deadface;				// Deadface Flag
 
 	LEM_EDRelayBox RelayBoxA;
 	LEM_EDRelayBox RelayBoxB;
@@ -131,6 +130,9 @@ public:
 protected:
 	DelayTimer HeliumPressurizationDelayA;
 	DelayTimer HeliumPressurizationDelayB;
+
+	bool LG_Deployed;           // Landing Gear Deployed Flag
+	bool Deadface;				// Deadface Flag
 
 	AnimState2 gear_state;
 	UINT anim_Gear;

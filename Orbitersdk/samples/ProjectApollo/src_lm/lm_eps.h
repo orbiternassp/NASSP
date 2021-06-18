@@ -24,6 +24,199 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+class LEM_DeadfaceRelayBox
+{
+public:
+	LEM_DeadfaceRelayBox();
+	void Init(LEM *l, bool dfrstate = false);
+	void Timestep();
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+	void CheckStatus();
+
+	bool GetDeadFaceRelay() { return DFR; }
+protected:
+	bool DFR;
+
+	LEM *lem;
+};
+
+class LEM_RelayJunctionBox
+{
+public:
+	LEM_RelayJunctionBox();
+	void Init(LEM *l, bool dfrstate = false);
+	void Timestep();
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+	void CheckStatus();
+
+	bool GetLVOnSignal();
+	bool GetHVLVOffSignal();
+	bool GetHVLVOffSignalAbort();
+	bool GetAscentECAOn();
+protected:
+	bool CalcHVLVOffSignalCM();
+	bool CalcHVLVOffSignalAbort();
+	//Relays
+	bool K1;
+	bool K2;
+	bool DFR;
+	bool LDA;
+	bool LDR;
+
+	//Signal
+	bool HVLVOffSignalCM, HVLVOffSignalAbort;
+
+	LEM *lem;
+};
+
+// Electrical Control Assembly Subchannel
+class LEM_ECAch : public e_object {
+public:
+	LEM_ECAch();								 // Cons
+	virtual ~LEM_ECAch() {}
+	virtual void Init(LEM *s, e_object *src); // Init
+	virtual void UpdateFlow(double dt) = 0;
+	void DrawPower(double watts);
+
+	LEM *lem;					// Pointer at LEM
+	e_object *dc_source;		// Associated battery
+};
+
+class LEM_AscentECAch : public LEM_ECAch
+{
+public:
+	LEM_AscentECAch();
+	void Init(LEM *s, e_object *src, bool *r); // Init
+	void UpdateFlow(double dt);
+protected:
+	bool *relay;
+};
+
+class LEM_DescentECASector;
+
+class LEM_DescentECAch : public LEM_ECAch
+{
+public:
+	LEM_DescentECAch();
+	void Init(LEM *s, e_object *src, LEM_DescentECASector *e); // Init
+	void UpdateFlow(double dt);
+protected:
+	LEM_DescentECASector *eca;
+};
+
+class LEM_DescentECASector
+{
+public:
+	LEM_DescentECASector();
+	void Init(LEM *l, ThreePosSwitch *hvs, ThreePosSwitch *lvs, Battery *b, int inp);
+	void Timestep();
+	void SaveState(FILEHANDLE scn, char *name_str);
+	void LoadState(char *line, int strlen);
+
+	bool GetMalfunction();
+	bool GetLVOn() { return LV; }
+	bool GetHVOn() { return HV; }
+protected:
+	//Relays
+	bool AUX;
+	bool HV;
+	bool LV;
+	bool LOR;
+	bool OC;
+	bool RC;
+
+	LEM *lem;
+	ThreePosSwitch *HV_SW, *LV_SW;
+	Battery *batt;
+
+	//temporary variables
+	bool POWER1, POWER2, POWER3, TEMP1, TEMP2, POWER_SUPPLY;
+	bool SIG1, SIG2, SIG3, HV_SIG, LV_SIG;
+};
+
+class LEM_AscentECASector
+{
+public:
+	LEM_AscentECASector();
+	void Init(LEM *l, ThreePosSwitch *mfs, ThreePosSwitch *afs, Battery *b);
+	void Timestep();
+	void SaveState(FILEHANDLE scn, char *name_str);
+	void LoadState(char *line, int strlen);
+
+	bool GetMalfunction();
+	bool *GetMFCPointer() { return &MFC; }
+	bool *GetAFCPointer() { return &AFC; }
+	bool GetMFCOn() { return MFC; }
+	bool GetAFCOn() { return AFC; }
+protected:
+	//Relays
+
+	bool MFC;
+	bool AFC;
+	bool OC;
+	bool RC;
+	bool LOR;
+
+	LEM *lem;
+	ThreePosSwitch *MF_SW, *AF_SW;
+	Battery *batt;
+
+	//Temporary variables
+	bool POWER1, POWER2, POWER3, POWER4, POWER_SUPPLY;
+	bool TEMP1, TEMP2, RESET1, RESET2;
+};
+
+class LEM_ECA
+{
+public:
+	LEM_ECA();
+protected:
+};
+
+class LEM_DescentECA : public LEM_ECA
+{
+public:
+	LEM_DescentECA();
+	void Init(LEM *l, Battery *b1, Battery *b2, ThreePosSwitch *hv_sw1, ThreePosSwitch *lv_sw1, ThreePosSwitch *hv_sw2, ThreePosSwitch *lv_sw2, int inp = 0);
+	void Timestep(double dt);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	bool GetMalfunctionA() { return SectA.GetMalfunction(); }
+	bool GetMalfunctionB() { return SectB.GetMalfunction(); }
+	bool GetSectALVOn() { return SectA.GetLVOn(); }
+	bool GetSectBLVOn() { return SectB.GetLVOn(); }
+	bool GetSectAHVOn() { return SectA.GetHVOn(); }
+	bool GetSectBHVOn() { return SectB.GetHVOn(); }
+
+	LEM_DescentECAch ECAChannelA, ECAChannelB;
+protected:
+	LEM_DescentECASector SectA, SectB;
+};
+
+class LEM_AscentECA : public LEM_ECA
+{
+public:
+	LEM_AscentECA();
+	void Init(LEM *l, ThreePosSwitch *mfs, ThreePosSwitch *afs, Battery *b);
+	void Timestep(double dt);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	bool GetMalfunction() { return SectA.GetMalfunction(); }
+
+	bool GetBattMFCOn() { return SectA.GetMFCOn(); }
+	bool GetBattAFCOn() { return SectA.GetAFCOn(); }
+
+	LEM_AscentECAch MFChannel, AFChannel;
+protected:
+	LEM_AscentECASector SectA;
+};
+
 // XLunar Bus Controller Voltage Source
 class LEM_XLBSource : public e_object {
 public:
@@ -40,84 +233,9 @@ public:
 	void Init(LEM *s);
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
 
 	LEM *lem;					// Pointer at LEM
 	LEM_XLBSource dc_output;	// DC output
-};
-
-// Electrical Control Assembly Subchannel
-class LEM_ECAch : public e_object {
-public:
-	LEM_ECAch();								 // Cons
-	void Init(LEM *s, e_object *src, int inp); // Init
-	void UpdateFlow(double dt);
-	void DrawPower(double watts);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-
-	LEM *lem;					// Pointer at LEM
-	e_object *dc_source;		// Associated battery
-	int input;                  // Channel input selector
-};
-
-class LEM_ECABatMonitor
-{
-public:
-	LEM_ECABatMonitor();
-	void Init(Battery *b, LEM_ECAch *c, PowerMerge *p);
-	void Timestep(double dt);
-	void SaveState(FILEHANDLE scn, char *start_str);
-	void LoadState(char *line);
-
-	bool GetMalfunction();
-protected:
-
-	bool OC;
-	bool RC;
-
-	Battery *batt;
-	LEM_ECAch *chan;
-	PowerMerge *power;
-};
-
-class LEM_ECA
-{
-public:
-	LEM_ECA();
-protected:
-};
-
-class LEM_DescentECA : public LEM_ECA
-{
-public:
-	LEM_DescentECA();
-	void Init(Battery *b1, Battery *b2, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p);
-	void Timestep(double dt);
-	void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-
-	bool GetMalfunctionA() { return bat1mon.GetMalfunction(); }
-	bool GetMalfunctionB() { return bat2mon.GetMalfunction(); }
-protected:
-	LEM_ECABatMonitor bat1mon, bat2mon;
-};
-
-class LEM_AscentECA : public LEM_ECA
-{
-public:
-	LEM_AscentECA();
-	void Init(Battery *b, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p);
-	void Timestep(double dt);
-	void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-
-	bool GetMalfunction() { return batmon.GetMalfunction(); }
-protected:
-	LEM_ECABatMonitor batmon;
 };
 
 // Bus feed controller object

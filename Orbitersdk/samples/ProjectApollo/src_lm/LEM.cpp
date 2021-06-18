@@ -398,6 +398,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	DescentECAMainFeeder("Descent-ECA-Main-Feeder", Panelsdk),
 	DescentECAContFeeder("Descent-ECA-Cont-Feeder", Panelsdk),
 	AscentECAMainFeeder("Ascent-ECA-Main-Feeder", Panelsdk),
+	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk),
 	vesim(&cbLMVesim, this)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
@@ -473,6 +474,9 @@ void LEM::Init()
 	status = 0;
 	CDRinPLSS = 0;
 	LMPinPLSS = 0;
+
+	CMPowerToCDRBusRelayA = false;
+	CMPowerToCDRBusRelayB = false;
 
 	InVC = false;
 	InPanel = false;
@@ -1145,7 +1149,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	// Descent Propellant Tank Venting
 	// Ascent Propellant Tank Pressurization
 	if (status < 2) {
-		if (StagingBoltsPyros.Blown() && StagingNutsPyros.Blown() && CableCuttingPyros.Blown()) {
+		if ((StagingBoltsPyros.Blown() || StagingNutsPyros.Blown()) && CableCuttingPyros.Blown() && eds.GetDeadface()) {
 			AbortFire();
 			// Stage
 			SeparateStage(stage);
@@ -1577,32 +1581,21 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ECA_4_START", sizeof("ECA_4_START"))) {
 			ECA_4.LoadState(scn, "ECA_4_END");
 		}
-		else if (!strnicmp(line, "ECA_1A_START", sizeof("ECA_1A_START"))) {
-			ECA_1a.LoadState(scn, "ECA_1A_END");
+		else if (!strnicmp(line, "RELAYJUNCTIONBOX", 16)) {
+			rjb.LoadState(line);
 		}
-		else if (!strnicmp(line, "ECA_2A_START", sizeof("ECA_2A_START"))) {
-			ECA_2a.LoadState(scn, "ECA_2A_END");
+		else if (!strnicmp(line, "DEADFACERELAYBOX", 16)) {
+			drb.LoadState(line);
 		}
-		else if (!strnicmp(line, "ECA_1B_START", sizeof("ECA_1B_START"))) {
-			ECA_1b.LoadState(scn, "ECA_1B_END");
+		else if (!strnicmp(line, "CMPowerToCDRBusRelayA", 21)) {
+			int i;
+			sscanf(line + 21, "%d", &i);
+			CMPowerToCDRBusRelayA = (i == 1);
 		}
-		else if (!strnicmp(line, "ECA_2B_START", sizeof("ECA_2B_START"))) {
-			ECA_2b.LoadState(scn, "ECA_2B_END");
-		}
-		else if (!strnicmp(line, "ECA_3A_START", sizeof("ECA_3A_START"))) {
-			ECA_3a.LoadState(scn, "ECA_3A_END");
-		}
-		else if (!strnicmp(line, "ECA_4A_START", sizeof("ECA_4A_START"))) {
-			ECA_4a.LoadState(scn, "ECA_4A_END");
-		}
-		else if (!strnicmp(line, "ECA_3B_START", sizeof("ECA_3B_START"))) {
-			ECA_3b.LoadState(scn, "ECA_3B_END");
-		}
-		else if (!strnicmp(line, "ECA_4B_START", sizeof("ECA_4B_START"))) {
-			ECA_4b.LoadState(scn, "ECA_4B_END");
-		}
-		else if (!strnicmp(line, "BTC_XLUNAR_START", sizeof("BTC_XLUNAR_START"))) {
-			BTC_XLunar.LoadState(scn, "BTC_XLUNAR_END");
+		else if (!strnicmp(line, "CMPowerToCDRBusRelayB", 21)) {
+			int i;
+			sscanf(line + 21, "%d", &i);
+			CMPowerToCDRBusRelayB = (i == 1);
 		}
 		else if (!strnicmp(line, "UNIFIEDSBAND", 12)) {
 			SBand.LoadState(line);
@@ -2045,19 +2038,17 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	PSH.SaveState(scn);	
 
 	// Save ECAs
-	ECA_1.SaveState(scn, "ECA_1_START", "ECA_1_END");
-	ECA_2.SaveState(scn, "ECA_2_START", "ECA_2_END");
+	if (stage < 2)
+	{
+		ECA_1.SaveState(scn, "ECA_1_START", "ECA_1_END");
+		ECA_2.SaveState(scn, "ECA_2_START", "ECA_2_END");
+	}
 	ECA_3.SaveState(scn, "ECA_3_START", "ECA_3_END");
 	ECA_4.SaveState(scn, "ECA_4_START", "ECA_4_END");
-	ECA_1a.SaveState(scn,"ECA_1A_START","ECA_1A_END");
-	ECA_1b.SaveState(scn,"ECA_1B_START","ECA_1B_END");
-	ECA_2a.SaveState(scn,"ECA_2A_START","ECA_2A_END");
-	ECA_2b.SaveState(scn,"ECA_2B_START","ECA_2B_END");
-	ECA_3a.SaveState(scn,"ECA_3A_START","ECA_3A_END");
-	ECA_3b.SaveState(scn,"ECA_3B_START","ECA_3B_END");
-	ECA_4a.SaveState(scn,"ECA_4A_START","ECA_4A_END");
-	ECA_4b.SaveState(scn,"ECA_4B_START","ECA_4B_END");
-	BTC_XLunar.SaveState(scn, "BTC_XLUNAR_START", "BTC_XLUNAR_END");
+	rjb.SaveState(scn);
+	drb.SaveState(scn);
+	papiWriteScenario_bool(scn, "CMPowerToCDRBusRelayA", CMPowerToCDRBusRelayA);
+	papiWriteScenario_bool(scn, "CMPowerToCDRBusRelayB", CMPowerToCDRBusRelayB);
 
 	// Save COMM
 	SBand.SaveState(scn);
