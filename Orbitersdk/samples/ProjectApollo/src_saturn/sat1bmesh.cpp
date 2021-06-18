@@ -183,6 +183,40 @@ static PARTICLESTREAMSPEC prelaunchvent_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
 };
 
+void SaturnIB3rdStage_Coeff(double aoa, double M, double Re, double *cl, double *cm, double *cd)
+{
+	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
+	int i;
+	const int nabsc = 9;
+	static const double AOA[nabsc] = { -180 * RAD, -90 * RAD,-30 * RAD, -10 * RAD,0 * RAD, 10 * RAD,30 * RAD,90 * RAD,180 * RAD };
+	//static const double CL[nabsc] = { 0,      0,   -0.004,     0,     0.008,     0,      0 };
+	static const double CD_free[nabsc] = { 3.1275, 11.08, 6.1147, 3.3497, 2.9251, 3.3497, 6.1147, 11.08, 3.1275 }; //free flow
+	static const double CD_cont[nabsc] = { 1.5, 2.78, 1.12, 0.59, 0.44, 0.59, 1.12, 2.78, 1.5 }; //continuum flow
+	//static const double CM[nabsc] = { 0,      0,   0.0014,  0,-0.0012,     0,      0 };
+
+	for (i = 0; i < nabsc - 1 && AOA[i + 1] < aoa; i++);
+	double f = (aoa - AOA[i]) / (AOA[i + 1] - AOA[i]);
+	*cl = 0.0;//CL[i] + (CL[i + 1] - CL[i]) * f;  // aoa-dependent lift coefficient
+	*cm = 0.0;//CM[i] + (CM[i + 1] - CM[i]) * f;  // aoa-dependent moment coefficient
+	if (Kn > 10.0)
+	{
+		//Free flow
+		*cd = CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f;
+	}
+	else if (Kn < 0.01)
+	{
+		//Continuum flow
+		*cd = CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04);
+	}
+	else
+	{
+		//Mix
+		double g = (Kn - 0.01) / 9.99;
+		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
+	}
+
+	sprintf(oapiDebugString(), "M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", M, Re, Kn, *cd, *cl, *cm);
+}
 
 void Saturn1b::SetFirstStage ()
 {
@@ -356,12 +390,10 @@ void Saturn1b::SetSecondStage ()
 	SetEmptyMass (EmptyMass);
 	SetPMI (_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
-	SetCW (0.1, 0.3, 1.4, 1.4);
+	SetCW(0.1, 0.3, 1.4, 1.4);
+	ClearAirfoilDefinitions();
+	CreateAirfoil(LIFT_VERTICAL, _V(0, 0, 0), SaturnIB3rdStage_Coeff, 6.604, 34.2534, 0.1);
 	SetRotDrag (_V(0.7,0.7,1.2));
-	SetPitchMomentScale (0);
-	SetYawMomentScale (0);
-	SetLiftCoeffFunc (0);
-
     ClearMeshes();
 	SetSecondStageMeshes(13.95-12.25);
 }

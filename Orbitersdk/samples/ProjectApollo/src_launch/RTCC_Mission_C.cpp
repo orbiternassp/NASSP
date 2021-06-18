@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "saturn.h"
 #include "saturn1b.h"
+#include "sivb.h"
 #include "iu.h"
 #include "LVDC.h"
 #include "../src_rtccmfd/OrbMech.h"
@@ -94,8 +95,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 1: // MISSION C PHASING BURN
 	{
-		LambertMan lambert;
-		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
 		SV sv_A, sv_P;
 		double GET_TIG;
@@ -107,23 +106,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GET_TIG = OrbMech::HHMMSSToSS(3, 20, 0);
 
-		lambert.mode = 0;
-		lambert.GETbase = CalcGETBase();
-		lambert.T1 = GET_TIG;
-		lambert.T2 = OrbMech::HHMMSSToSS(26, 25, 0);
-		lambert.N = 15;
-		lambert.axis = RTCC_LAMBERT_XAXIS;
-		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
-		lambert.Offset = _V(76.5 * 1852, 0, 0);
-		lambert.sv_A = sv_A;
-		lambert.sv_P = sv_P;
-
-		LambertTargeting(&lambert, res);
-
 		opt.GETbase = CalcGETBase();
 		opt.vessel = calcParams.src;
 		opt.TIG = GET_TIG;
-		opt.dV_LVLH = res.dV_LVLH;
+		opt.dV_LVLH = _V(3.0, 0.0, 0.0)*0.3048;
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
 		opt.HeadsUp = false;
 		opt.sxtstardtime = 0;
@@ -133,6 +119,27 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "PHASING BURN");
 		sprintf(form->remarks, "heads down, retrograde, -X thrusters");
+	}
+	break;
+	case 101: //S-IVB STATE VECTOR UPLINK
+	{
+		void *uplink = NULL;
+		DCSSLVNAVUPDATE upl;
+
+		SIVB *iuv = (SIVB *)calcParams.tgt;
+		IU *iu = iuv->GetIU();
+
+		EphemerisData sv = StateVectorCalcEphem(calcParams.tgt);
+		CMMSLVNAV(sv.R, sv.V, sv.GMT);
+
+		upl.PosS = CZNAVSLV.PosS;
+		upl.DotS = CZNAVSLV.DotS;
+		upl.NUPTIM = CZNAVSLV.NUPTIM;
+
+		uplink = &upl;
+		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SLV_NAVIGATION_UPDATE, uplink);
+
+		sprintf(upMessage, "S-IVB Navigation Update");
 	}
 	break;
 	case 2: // MISSION C CONTINGENCY DEORBIT (6-4) TARGETING
@@ -218,32 +225,90 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 4: //MISSION C 2ND PHASING MANEUVER
 	{
 		AP7ManPADOpt opt;
-		LambertMan lambert;
-		TwoImpulseResuls res;
-		SV sv_A, sv_P;
-		double GET_TIG;
+		EphemerisData sv_A, sv_P, sv_A1, sv_P2, sv_A1_apo, sv_A2;
+		VECTOR3 dV_LVLH;
+		double GET_TIG, GMT_TIG, csm_weight, sivb_weight, GMT_NCC1, dr_des;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		sv_A = StateVectorCalc(calcParams.src);
-		sv_P = StateVectorCalc(calcParams.tgt);
+		sv_A = StateVectorCalcEphem(calcParams.src);
+		csm_weight = calcParams.src->GetMass();
+		sv_P = StateVectorCalcEphem(calcParams.tgt);
+		sivb_weight = calcParams.tgt->GetMass();
 
 		GET_TIG = OrbMech::HHMMSSToSS(15, 52, 0);
+		GMT_TIG = GMTfromGET(GET_TIG);
+		GMT_NCC1 = GMTfromGET(OrbMech::HHMMSSToSS(26, 25, 0));
+		dr_des = 76.5*1852.0;
 
-		lambert.mode = 0;
-		lambert.GETbase = CalcGETBase();
-		lambert.T1 = GET_TIG;
-		lambert.T2 = OrbMech::HHMMSSToSS(26, 25, 0);
-		lambert.N = 7;
-		lambert.axis = RTCC_LAMBERT_XAXIS;
-		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
-		lambert.Offset = _V(76.5 * 1852, 0, 0);
-		lambert.sv_A = sv_A;
-		lambert.sv_P = sv_P;
+		EMMENIInputTable in_csm, in_sivb;
 
-		LambertTargeting(&lambert, res);
+		//Initial settings
+		in_csm.Area = 129.4*0.3048*0.3048;
+		in_csm.CutoffIndicator = 1;
+		in_csm.DensityMultiplier = 1.0;
+		in_csm.IsForwardIntegration = 1.0;
+		in_csm.Weight = csm_weight;
 
-		if (length(res.dV_LVLH) < 1.0*0.3048)
+		in_sivb.Area = 368.7*0.3048*0.3048;
+		in_sivb.CutoffIndicator = 1;
+		in_sivb.DensityMultiplier = 1.0;
+		in_sivb.IsForwardIntegration = 1.0;
+		in_sivb.Weight = csm_weight;
+
+		//Coast to TIG
+		in_csm.AnchorVector = sv_A;
+		in_csm.MaxIntegTime = GMT_TIG - sv_A.GMT;
+		EMMENI(in_csm);
+		sv_A1 = in_csm.sv_cutoff;
+
+		//Coast to NCC1
+		in_sivb.AnchorVector = sv_P;
+		in_sivb.MaxIntegTime = GMT_NCC1 - sv_P.GMT;
+		EMMENI(in_sivb);
+		sv_P2 = in_sivb.sv_cutoff;
+
+		sv_A1_apo = sv_A1;
+
+		MATRIX3 Q_Xx;
+		VECTOR3 i, j, k, dr;
+		double dv, err, eps, p_H, c_F, erro, dvo;
+		int s_F;
+		j = unit(crossp(sv_A1.V, sv_A1.R));
+		k = unit(-sv_A1.R);
+		i = crossp(j, k);
+
+		dv = 0.0;
+		Q_Xx = OrbMech::LVLH_Matrix(sv_P2.R, sv_P2.V);
+		eps = 0.1*1852.0;
+		s_F = 0;
+		p_H = c_F = 0.0;
+
+		do
+		{
+			//Coast to NCC1
+			sv_A1_apo.V = sv_A1.V + i*dv;
+			in_csm.AnchorVector = sv_A1_apo;
+			in_csm.MaxIntegTime = GMT_NCC1 - sv_A1_apo.GMT;
+			EMMENI(in_csm);
+			sv_A2 = in_csm.sv_cutoff;
+
+			dr = mul(Q_Xx, sv_A2.R - sv_P2.R);
+			err = dr.x - dr_des;
+
+			if (p_H == 0 || abs(err) >= eps)
+			{
+				OrbMech::ITER(c_F, s_F, err, p_H, dv, erro, dvo);
+				if (s_F == 1)
+				{
+					return false;
+				}
+			}
+		} while (abs(err) >= eps);
+
+		dV_LVLH = _V(dv, 0, 0);
+
+		if (length(dV_LVLH) < 1.0*0.3048)
 		{
 			scrubbed = true;
 		}
@@ -257,8 +322,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.GETbase = CalcGETBase();
 			opt.vessel = calcParams.src;
 			opt.TIG = GET_TIG;
-			opt.dV_LVLH = res.dV_LVLH;
-			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
+			opt.dV_LVLH = dV_LVLH;
+			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
 			opt.HeadsUp = true;
 			opt.sxtstardtime = 0;
 			opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);

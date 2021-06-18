@@ -222,7 +222,7 @@ void SIVB::InitS4b()
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;
 	MainFuel = 5000.0;
-	ApsFuel1Kg = ApsFuel2Kg = S4B_APS_FUEL_PER_TANK;
+	ApsFuel1Kg = ApsFuel2Kg = S4B_APS_FUEL_PER_TANK_SV;
 
 	THRUST_THIRD_VAC = 1000.0;
 	ISP_THIRD_VAC = 300.0;
@@ -383,7 +383,7 @@ void SIVB::CreateAirfoils()
 	}
 	else
 	{
-		cw_z_pos = 0.2;
+		cw_z_pos = 2.0;
 	}
 	if (hDockSI && GetDockStatus(hDockSI))
 	{
@@ -391,10 +391,10 @@ void SIVB::CreateAirfoils()
 	}
 	else
 	{
-		cw_z_neg = 0.3;
+		cw_z_neg = 2.0;
 	}
 
-	SetCW(cw_z_pos, cw_z_neg, 1.4, 1.4);
+	SetCW(cw_z_pos, cw_z_neg, 2.0, 2.0);
 }
 
 void SIVB::SetS4b()
@@ -406,7 +406,7 @@ void SIVB::SetS4b()
 	SetSize (15);
 	SetPMI (_V(94,94,20));
 	SetCOG_elev (10);
-	SetCrossSections (_V(267, 267, 97));
+	SetCrossSections (_V(130.0, 130.0, 34.2534));
 	CreateAirfoils();
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
@@ -1010,11 +1010,21 @@ void SIVB::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 	double offset = -2.05;
 
+	double APSMass;
+	if (SaturnVStage)
+	{
+		APSMass = S4B_APS_FUEL_PER_TANK_SV;
+	}
+	else
+	{
+		APSMass = S4B_APS_FUEL_PER_TANK_SIB;
+	}
+
 	if (!ph_aps1)
-		ph_aps1  = CreatePropellantResource(S4B_APS_FUEL_PER_TANK, ApsFuel1Kg);
+		ph_aps1  = CreatePropellantResource(APSMass, ApsFuel1Kg);
 
 	if (!ph_aps2)
-		ph_aps2 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK, ApsFuel2Kg);
+		ph_aps2 = CreatePropellantResource(APSMass, ApsFuel2Kg);
 
 	if (!ph_main)
 		ph_main = CreatePropellantResource(MainFuel);

@@ -344,11 +344,12 @@ static inline double sign(double x)
 
 #define LM_RCS_FUEL_PER_TANK	133.084001
 
-#define S4B_APS_FUEL_PER_TANK	143.0
-#define S4B_APS_THRUST			670.0
-#define S4B_APS_ULL_THRUST		310.0
-#define S4B_APS_ISP				(290.0 * G)
-#define S4B_APS_ISP_SL			50.0
+#define S4B_APS_FUEL_PER_TANK_SV	143.0
+#define S4B_APS_FUEL_PER_TANK_SIB	29.71
+#define S4B_APS_THRUST				670.0
+#define S4B_APS_ULL_THRUST			310.0
+#define S4B_APS_ISP					(290.0 * G)
+#define S4B_APS_ISP_SL				50.0
 
 //
 // Mission times for specific events.
