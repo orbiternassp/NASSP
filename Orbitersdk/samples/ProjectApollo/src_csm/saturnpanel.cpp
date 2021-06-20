@@ -62,6 +62,181 @@ void BaseInit()
 	g_Param.col[5] = oapiGetColour(255, 0, 255);
 }
 
+double ReticleDigit0[9][2]  = { {0,1}, {0,7}, {1,8}, {4,8}, {5,7}, {5,1}, {4,0}, {1,0}, {0,1} };
+double ReticleDigit1[3][2]  = { {0,5}, {3,8}, {3,0} };
+double ReticleDigit2[9][2]  = { {5,0}, {0,0}, {0,1}, {5,5}, {5,6}, {4,8}, {1,8}, {0,6}, {0,5} };
+double ReticleDigit3[11][2] = { {0,1}, {1,0}, {4,0}, {5,1}, {5,3}, {3,4}, {5,5}, {5,7}, {4,8}, {1,8}, {0,7} };
+double ReticleDigit4[4][2]  = { {4,0} , {4,8}, {0,3}, {5,3} };
+double ReticleDigit5[9][2] = { {0,1}, {2,0}, {3,0}, {5,1}, {5,4}, {3,5}, {0,5}, {0,8}, {5,8} };
+int ReticleDigitLen[6] = { 9, 3, 9, 11, 4, 9 };
+
+#define reticleDrawLine(fromX, fromY, toX, toY) {\
+	line.emplace_back(tan(RAD*fromX), tan(RAD*fromY));\
+	line.emplace_back(tan(RAD*toX), tan(RAD*toY));\
+	linelen.push_back(2);\
+}
+
+#define reticleDrawNumber(number, Y) {\
+	double offsx=tan(RAD*3.0), offsy=tan(RAD*Y);\
+	for(int i=0; i<2; i++){\
+		char c=(number)[i];\
+		if (c >= '0' && c <= '5'){\
+			int npt=ReticleDigitLen[c-'0'];\
+			for (int k = 0; k < npt; k++) {\
+				double* digpt; \
+				switch(c){\
+				case '0': digpt=ReticleDigit0[k]; break;\
+				case '1': digpt=ReticleDigit1[k]; break;\
+				case '2': digpt=ReticleDigit2[k]; break;\
+				case '3': digpt=ReticleDigit3[k]; break;\
+				case '4': digpt=ReticleDigit4[k]; break;\
+				case '5': digpt=ReticleDigit5[k]; break;\
+				default: break;\
+				}\
+				line.emplace_back(offsx+0.1*RAD*(digpt[0]+8.0*i), offsy+0.1*RAD*(digpt[1]-4.0));\
+			}\
+			linelen.push_back(npt);\
+		}\
+	}\
+}
+void Saturn::InitReticle() {
+	std::vector<std::tuple<double, double>> line;
+	std::vector<int> linelen;
+	ReticleLineMaxLen = 0;
+
+	//SCT
+
+	// Outer Crosshair (30 deg range)
+	reticleDrawLine(0.0, 1.0, 0.0, 30.0);
+	reticleDrawLine(0.0, -1.0, 0.0, -24.0);
+	reticleDrawLine(0.0, -26.0, 0.0, -30.0);
+	reticleDrawLine(1.0, 0.0, 30.0, 0.0);
+	reticleDrawLine(-1.0, 0.0, -30.0, 0.0);
+
+	// Inner Crosshair (0.5 deg range)
+	reticleDrawLine(0.0, 4.0/60.0, 0.0, 0.5);
+	reticleDrawLine(0.0, -4.0 / 60.0, 0.0, -0.5);
+	reticleDrawLine(4.0 / 60.0, 0.0, 0.5, 0.0);
+	reticleDrawLine(-4.0 / 60.0, 0.0, -0.5, 0.0);
+
+	// Ticks on the right side of vertical line...
+	for (int i = 1; i <= 5; i++) {
+		reticleDrawLine(1.0, 5.0*i, 2.0, 5.0*i);
+		reticleDrawLine(1.0, -5.0*i, 2.0, -5.0*i);
+	}
+	// ...and one tick at 0 deg mark on the left side
+	reticleDrawLine(-1.0, -25.0, -2.0, -25.0);
+
+	// Ticks on the horizontal line (100', 200', 300', 400', 10deg, 15deg, 20deg, 25deg)
+	double x = 0.0;
+	for (int i = 1; i <= 7; i++) {
+		double height1= 4.0 / 60.0, height2=1.0;
+		if (i <= 4) {
+			x = x + (5.0 / 3.0);
+			height2 = 0.5;
+		}
+		else if (i == 5)
+			x = x + (10.0 / 3.0);
+		else
+			x = x + 5.0;
+
+		reticleDrawLine(x, height1, x, height2);
+		reticleDrawLine(-x, height1, -x, height2);
+		reticleDrawLine(x, -height1, x, -height2);
+		reticleDrawLine(-x, -height1, -x, -height2);
+
+	}
+
+	// Degree numbers
+	reticleDrawNumber("0 ", -25.0);
+	reticleDrawNumber("5 ", -20.0);
+	reticleDrawNumber("10", -15.0);
+	reticleDrawNumber("15", -10.0);
+	reticleDrawNumber("20", -5.0);
+	reticleDrawNumber("30", 5.0);
+	reticleDrawNumber("35", 10.0);
+	reticleDrawNumber("40", 15.0);
+	reticleDrawNumber("45", 20.0);
+	reticleDrawNumber("50", 25.0);
+
+	int cnt = linelen.size(), ptcnt= line.size();
+
+	ReticleLineCnt[0] = cnt;
+	ReticleLineLen[0] = new int[cnt];
+	ReticleLine[0][0] = new double[ptcnt];
+	ReticleLine[0][1] = new double[ptcnt];
+
+	for (int i = 0; i < cnt; i++) {
+		ReticleLineLen[0][i] = linelen[i];
+		if (linelen[i] > ReticleLineMaxLen)  ReticleLineMaxLen = linelen[i];
+	}
+
+	for (int i = 0; i < ptcnt; i++) {
+		ReticleLine[0][0][i] = std::get<0>(line[i]);
+		ReticleLine[0][1][i] = std::get<1>(line[i]);
+	}
+
+	//SXT
+	line.clear();
+	linelen.clear();
+
+	reticleDrawLine(0.5, -125.0 / 3600.0, 0.5, 125.0 / 3600.0); //30` right, vertically from -2'5'' to 2'5''
+	reticleDrawLine(-0.5, -125.0 / 3600.0, -0.5, 125.0 / 3600.0); //30` left, vertically from -2'5'' to 2'5''
+
+	reticleDrawLine(25.0 / 3600.0, 37.5 / 3600.0, 25.0 / 3600.0, 337.5 / 3600.0);   //Up ||, left-right 25'', horizontally 37.5'' to 5'37.5''
+	reticleDrawLine(-25.0 / 3600.0, 37.5 / 3600.0, -25.0 / 3600.0, 337.5 / 3600.0);
+
+	reticleDrawLine(0.0, -37.5 / 3600.0, 0.0, -337.5 / 3600.0); //Down |, horizontally middle, down from 37.5'' to 5'37.5''
+
+	reticleDrawLine(-37.5 / 3600.0, 25.0 / 3600.0, -337.5 / 3600.0, 25.0 / 3600.0);   //Left =, Up-down 25'', horizontally 37.5'' to 5'37.5''
+	reticleDrawLine(-37.5 / 3600.0, -25.0 / 3600.0, -337.5 / 3600.0, -25.0 / 3600.0);
+
+	reticleDrawLine(37.5 / 3600.0, 0.0, 337.5 / 3600.0, 0.0); //Right -, vertically middle, right from 37.5'' to 5'37.5''
+
+	cnt = linelen.size(), ptcnt = line.size();
+
+	ReticleLineCnt[1] = cnt;
+	ReticleLineLen[1] = new int[cnt];
+	ReticleLine[1][0] = new double[ptcnt];
+	ReticleLine[1][1] = new double[ptcnt];
+
+	for (int i = 0; i < cnt; i++) {
+		ReticleLineLen[1][i] = linelen[i];
+		if (linelen[i] > ReticleLineMaxLen)  ReticleLineMaxLen = linelen[i];
+	}
+
+	for (int i = 0; i < ptcnt; i++) {
+		ReticleLine[1][0][i] = std::get<0>(line[i]);
+		ReticleLine[1][1][i] = std::get<1>(line[i]);
+	}
+
+	ReticlePoint = new POINT[ReticleLineMaxLen];
+}
+
+void drawReticle(SURFHANDLE surf, double shaft, int reticleLineCnt, int reticleLineLen[], double **reticleLine, POINT ptbuf[]) {
+	HGDIOBJ oldObj;
+	HDC hDC = oapiGetDC(surf);
+	HPEN pen = CreatePen(PS_SOLID, 1, RGB(211, 171, 23));
+	oldObj = SelectObject(hDC, pen);
+	DWORD w, h;
+	oapiGetViewportSize(&w, &h);
+	double reticleMul = 0.5*((double)h) / tan(oapiCameraAperture());
+	double cosShaft = cos(shaft), sinShaft = sin(shaft);
+	int idx = 0;
+	for (int i = 0; i < reticleLineCnt; i++) {
+		for (int k = 0; k < reticleLineLen[i]; k++) {
+			double xorig = reticleLine[0][idx], yorig = reticleLine[1][idx];
+			ptbuf[k].x = 268 + reticleMul*(cosShaft*xorig + sinShaft*yorig);
+			ptbuf[k].y = 268 - reticleMul*(-sinShaft*xorig + cosShaft*yorig);
+			idx++;
+		}
+		Polyline(hDC, ptbuf, reticleLineLen[i]);
+	}
+	SelectObject(hDC, oldObj);
+	DeleteObject(pen);
+	oapiReleaseDC(surf, hDC);
+}
+
 void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist) {
 
 	HDC hDC = oapiGetDC (surf);
@@ -4344,6 +4519,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		if (optics.OpticsCovered && stage >= LAUNCH_STAGE_ONE) {
 			oapiBlt(surf,srf[SRF_CSM_TELESCOPECOVER], 0, 0, 0, 0, 536, 535);
 		}
+
+		drawReticle(surf, optics.OpticsShaft, ReticleLineCnt[0], ReticleLineLen[0], ReticleLine[0], ReticlePoint);
+
 		return true;
 
 	case AID_CSM_SEXTANTCOVER:
@@ -4351,6 +4529,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		if (optics.OpticsCovered && stage >= LAUNCH_STAGE_ONE) {
 			oapiBlt(surf,srf[SRF_CSM_SEXTANTCOVER], 0, 0, 0, 0, 535, 535);
 		}
+
+		drawReticle(surf, optics.OpticsShaft, ReticleLineCnt[1], ReticleLineLen[1], ReticleLine[1], ReticlePoint);
+
 		return true;
 
 	case AID_DSKY_LIGHTS:
