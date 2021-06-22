@@ -54,8 +54,11 @@ class LEMPowerConnector : public LEMConnector
 {
 public:
 	LEMPowerConnector(LEM *l);
-	int csm_power_latch;
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+	bool GetBatteriesLVOn();
+	bool GetBatteriesLVHVOffA();
+	bool GetBatteriesLVHVOffB();
 };
 
 ///

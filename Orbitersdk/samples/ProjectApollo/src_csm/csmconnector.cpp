@@ -772,6 +772,7 @@ void CSMToLEMECSConnector::Disconnect()
 {
 	OurVessel->ConnectTunnelToCabinVent();
 	ConnectLMTunnelToCabinVent();
+	DisconnectCSMO2Hose();
 
 	SaturnConnector::Disconnect();
 }
@@ -799,6 +800,31 @@ void CSMToLEMECSConnector::ConnectLMTunnelToCabinVent()
 	cm.messageType = 1;
 
 	SendMessage(cm);
+}
+
+h_Valve* CSMToLEMECSConnector::GetCSMO2HoseOutlet()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = 2;
+
+	if (SendMessage(cm))
+	{
+		return static_cast<h_Valve*> (cm.val1.pValue);
+	}
+
+	return NULL;
+}
+
+void CSMToLEMECSConnector::ConnectCSMO2Hose()
+{
+	OurVessel->GetCSMO2Hose()->out = GetCSMO2HoseOutlet();
+}
+
+void CSMToLEMECSConnector::DisconnectCSMO2Hose()
+{
+	OurVessel->GetCSMO2Hose()->out = NULL;
 }
 
 CSMToPayloadConnector::CSMToPayloadConnector(Saturn *s) : SaturnConnector(s)
@@ -954,4 +980,107 @@ bool CSM_VHFto_LM_VHFConnector::ReceiveMessage(Connector * from, ConnectorMessag
 	{
 		return false;
 	}
+}
+
+PowerDrainConnector::PowerDrainConnector(Saturn *s) : SaturnConnector(s)
+{
+	power_drain = 0;
+}
+
+PowerDrainConnector::~PowerDrainConnector()
+
+{
+}
+
+void PowerDrainConnector::SetPowerDrain(PowerDrainConnectorObject *p)
+
+{
+	power_drain = p;
+}
+
+void PowerDrainConnector::Disconnected()
+
+{
+	//
+	// If we've disconnected then stop drawing power.
+	//
+	if (power_drain)
+	{
+		power_drain->Disconnected();
+	}
+}
+
+bool PowerDrainConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	PowerSourceMessageType messageType;
+
+	messageType = (PowerSourceMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case POWERCON_GET_VOLTAGE:
+		if (power_drain)
+		{
+			m.val1.dValue = power_drain->Voltage();
+			return true;
+		}
+		break;
+
+	case POWERCON_GET_CURRENT:
+		if (power_drain)
+		{
+			m.val1.dValue = power_drain->Current();
+			return true;
+		}
+		break;
+
+	case POWERCON_DRAW_POWER:
+		if (power_drain)
+		{
+			power_drain->ProcessDrawPower(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case POWERCON_UPDATE_FLOW:
+		if (power_drain)
+		{
+			power_drain->ProcessUpdateFlow(m.val1.dValue);
+			return true;
+		}
+		break;
+	case 10:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetLMDesBatLVOn();
+			return true;
+		}
+		break;
+	case 11:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetLMDesBatLVHVOffA();
+			return true;
+		}
+		break;
+	case 12:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetLMDesBatLVHVOffB();
+			return true;
+		}
+		break;
+	}
+
+	return false;
 }

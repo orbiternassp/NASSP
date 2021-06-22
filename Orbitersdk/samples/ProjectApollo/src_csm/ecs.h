@@ -398,4 +398,15 @@ protected:
 	h_Valve* WasteStowageValve;
 };
 
+class SaturnSuitFlowValves
+{
+public:
+	SaturnSuitFlowValves();
+	void Init(h_Valve* flowvlv, ThreePosSwitch* flowsw);
+	void SystemTimestep(double simdt);
+protected:
+	h_Valve* SuitFlowValve;
+	ThreePosSwitch* SuitFlowSwitch;
+};
+
 #endif // _PA_ECS_H

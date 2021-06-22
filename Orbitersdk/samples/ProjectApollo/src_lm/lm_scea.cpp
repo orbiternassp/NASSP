@@ -771,29 +771,29 @@ void SCERA2::Timestep()
 	SA3.SetOutput(12, val11[ISSWarning]);
 
 	//Battery 1 High Tap (GC4361X)
-	SA4.SetOutput(1, lem->stage < 2 && lem->ECA_1a.input == 1);
+	SA4.SetOutput(1, lem->stage < 2 && lem->ECA_1.GetSectAHVOn());
 	//Battery 1 Low Tap (GC4362X)
-	SA4.SetOutput(2, lem->stage < 2 && lem->ECA_1a.input == 2);
+	SA4.SetOutput(2, lem->stage < 2 && lem->ECA_1.GetSectALVOn());
 	//Battery 2 High Tap (GC4363X)
-	SA4.SetOutput(3, lem->stage < 2 && lem->ECA_1b.input == 1);
+	SA4.SetOutput(3, lem->stage < 2 && lem->ECA_1.GetSectBHVOn());
 	//Battery 2 Low Tap (GC43664X)
-	SA4.SetOutput(4, lem->stage < 2 && lem->ECA_1b.input == 2);
+	SA4.SetOutput(4, lem->stage < 2 && lem->ECA_1.GetSectBLVOn());
 	//Battery 3 High Tap (GC4365X)
-	SA4.SetOutput(5, lem->stage < 2 && lem->ECA_2a.input == 1);
+	SA4.SetOutput(5, lem->stage < 2 && lem->ECA_2.GetSectAHVOn());
 	//Battery 3 Low Tap (GC4366X)
-	SA4.SetOutput(6, lem->stage < 2 && lem->ECA_2a.input == 2);
+	SA4.SetOutput(6, lem->stage < 2 && lem->ECA_2.GetSectALVOn());
 	//Battery 4 High Tap (GC4367X)
-	SA4.SetOutput(7, lem->stage < 2 && lem->ECA_2b.input == 1);
+	SA4.SetOutput(7, lem->stage < 2 && lem->ECA_2.GetSectBHVOn());
 	//Battery 4 Low Tap (GC4368X)
-	SA4.SetOutput(8, lem->stage < 2 && lem->ECA_2b.input == 2);
+	SA4.SetOutput(8, lem->stage < 2 && lem->ECA_2.GetSectBLVOn());
 	//Battery 5 Backup Feed (GC4369X)
-	SA4.SetOutput(9, lem->ECA_3b.input == 1);
+	SA4.SetOutput(9, lem->ECA_3.GetBattAFCOn());
 	//Battery 6 Normal Feed (GC4370X)
-	SA4.SetOutput(10, lem->ECA_4a.input == 1);
+	SA4.SetOutput(10, lem->ECA_4.GetBattMFCOn());
 	//Battery 5 Normal Feed (GC4371X)
-	SA4.SetOutput(11, lem->ECA_3a.input == 1);
+	SA4.SetOutput(11, lem->ECA_3.GetBattMFCOn());
 	//Battery 6 Backup Feed (GC4372X)
-	SA4.SetOutput(12, lem->ECA_4b.input == 1);
+	SA4.SetOutput(12, lem->ECA_4.GetBattAFCOn());
 
 	//CO2 secondary cartridge (GF1241)
 	SA5.SetOutput(1, lem->CO2CanisterSelectSwitch.GetState() == 0);

@@ -210,27 +210,6 @@ private:
 	Connector *Inputs[N_MULTICONNECT_INPUTS];
 };
 
-class PowerDrainConnectorObject;
-
-///
-/// \ingroup Connectors
-/// \brief Connector class for power drain.
-///
-class PowerDrainConnector : public Connector
-{
-public:
-	PowerDrainConnector();
-	~PowerDrainConnector();
-
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-	void Disconnected();
-
-	void SetPowerDrain(PowerDrainConnectorObject *p);
-
-private:
-	PowerDrainConnectorObject *power_drain;
-};
-
 class PanelSwitches;
 class ChecklistController;
 

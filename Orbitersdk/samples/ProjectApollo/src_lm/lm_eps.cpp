@@ -29,132 +29,393 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEM.h"
 #include "lm_eps.h"
 
+LEM_DeadfaceRelayBox::LEM_DeadfaceRelayBox()
+{
+	DFR = false;
+	lem = NULL;
+}
+
+void LEM_DeadfaceRelayBox::Init(LEM *l, bool dfrstate)
+{
+	lem = l;
+	DFR = dfrstate;
+}
+
+void LEM_DeadfaceRelayBox::Timestep()
+{
+	if (lem->AscentECAContFeeder.Voltage() > SP_MIN_DCVOLTAGE && !DFR && lem->DSCBattFeedSwitch.IsUp())
+	{
+		DFR = true;
+		CheckStatus();
+	}
+	else if (lem->rjb.GetHVLVOffSignalAbort() || (lem->AscentECAContFeeder.Voltage() > SP_MIN_DCVOLTAGE && DFR && lem->DSCBattFeedSwitch.IsDown()))
+	{
+		DFR = false;
+		CheckStatus();
+	}
+}
+
+void LEM_DeadfaceRelayBox::SaveState(FILEHANDLE scn)
+{
+	char buffer[1000];
+
+	sprintf(buffer, "%d", DFR);
+	oapiWriteScenario_string(scn, "DEADFACERELAYBOX", buffer);
+}
+
+void LEM_DeadfaceRelayBox::LoadState(char *line)
+{
+	int var;
+	sscanf(line + 16, "%d", &var);
+	DFR = (var != 0);
+
+	CheckStatus();
+}
+
+void LEM_DeadfaceRelayBox::CheckStatus()
+{
+	if (DFR && lem->stage < 2)
+	{
+		// Reconnect ECA outputs
+		lem->DES_CDRs28VBusA.WireTo(&lem->ECA_2.ECAChannelA);
+		lem->DES_CDRs28VBusB.WireTo(&lem->ECA_2.ECAChannelB);
+	}
+	else
+	{
+		lem->DES_CDRs28VBusA.Disconnect();
+		lem->DES_CDRs28VBusB.Disconnect();
+	}
+}
+
+LEM_RelayJunctionBox::LEM_RelayJunctionBox()
+{
+	K1 = false;
+	K2 = false;
+	DFR = false;
+	LDA = false;
+	LDR = false;
+	HVLVOffSignalCM = false;
+	HVLVOffSignalAbort = false;
+	lem = NULL;
+}
+
+void LEM_RelayJunctionBox::Init(LEM *l, bool dfrstate)
+{
+	lem = l;
+	DFR = dfrstate;
+}
+
+void LEM_RelayJunctionBox::Timestep()
+{
+	if (lem->stage < 2 && lem->LMPDesECAMainCB.IsPowered() && lem->scca1.GetK10())
+	{
+		K1 = true;
+	}
+	else
+	{
+		K1 = false;
+	}
+	if (lem->stage < 2 && lem->CDRDesECAMainCB.IsPowered() && lem->scca1.GetK20())
+	{
+		K2 = true;
+	}
+	else
+	{
+		K2 = false;
+	}
+	//Signal to switch off descent ECAs
+	HVLVOffSignalCM = CalcHVLVOffSignalCM();
+	HVLVOffSignalAbort = CalcHVLVOffSignalAbort();
+
+	//Deadface relay
+	if (lem->AscentECAContFeeder.Voltage() > SP_MIN_DCVOLTAGE && !DFR && lem->DSCBattFeedSwitch.IsUp())
+	{
+		DFR = true;
+		CheckStatus();
+	}
+	else if (HVLVOffSignalAbort ||(lem->AscentECAContFeeder.Voltage() > SP_MIN_DCVOLTAGE && DFR && lem->DSCBattFeedSwitch.IsDown()))
+	{
+		DFR = false;
+		CheckStatus();
+	}
+
+	//DES BATTS TB
+	if (DFR && lem->drb.GetDeadFaceRelay())
+	{
+		lem->DSCBattFeedTB.SetState(1);
+	}
+	else
+	{
+		lem->DSCBattFeedTB.SetState(0);
+	}
+
+	//TBD: GSE relays
+}
+
+bool LEM_RelayJunctionBox::GetHVLVOffSignal()
+{
+	return HVLVOffSignalCM || HVLVOffSignalAbort;
+}
+
+bool LEM_RelayJunctionBox::GetHVLVOffSignalAbort()
+{
+	return HVLVOffSignalAbort;
+}
+
+bool LEM_RelayJunctionBox::GetLVOnSignal()
+{
+	return lem->CSMToLEMPowerConnector.GetBatteriesLVOn(); //TBD: Also from GSE
+}
+
+bool LEM_RelayJunctionBox::CalcHVLVOffSignalCM()
+{
+	if ((lem->CSMToLEMPowerConnector.GetBatteriesLVHVOffA() || lem->CSMToLEMPowerConnector.GetBatteriesLVHVOffB()) && !lem->CMPowerToCDRBusRelayA && !lem->CMPowerToCDRBusRelayB)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool LEM_RelayJunctionBox::CalcHVLVOffSignalAbort()
+{
+	if ((K2 && lem->CDRDesECAContCB.IsPowered() && (lem->ECA_4.GetBattAFCOn() || lem->ECA_4.GetBattMFCOn())) || ((K1 && lem->LMPDesECAContCB.IsPowered() && (lem->ECA_3.GetBattAFCOn() || lem->ECA_3.GetBattMFCOn()))))
+	{
+		return true;
+	}
+	return false;
+}
+
+bool LEM_RelayJunctionBox::GetAscentECAOn()
+{
+	return (K1 || K2);
+}
+
+void LEM_RelayJunctionBox::CheckStatus()
+{
+	if (DFR && lem->stage < 2)
+	{
+		// Reconnect ECA outputs
+		lem->DES_LMPs28VBusA.WireTo(&lem->ECA_1.ECAChannelA);
+		lem->DES_LMPs28VBusB.WireTo(&lem->ECA_1.ECAChannelB);
+	}
+	else
+	{
+		lem->DES_LMPs28VBusA.Disconnect();
+		lem->DES_LMPs28VBusB.Disconnect();
+	}
+}
+
+void LEM_RelayJunctionBox::SaveState(FILEHANDLE scn)
+{
+	char buffer[1000];
+
+	sprintf(buffer, "%d %d %d %d %d", K1, K2, DFR, LDA, LDR);
+	oapiWriteScenario_string(scn, "RELAYJUNCTIONBOX", buffer);
+}
+
+void LEM_RelayJunctionBox::LoadState(char *line)
+{
+	int var[5];
+	sscanf(line + 16, "%d %d %d %d %d", &var[0], &var[1], &var[2], &var[3], &var[4]);
+	K1 = (var[0] != 0);
+	K2 = (var[1] != 0);
+	DFR = (var[2] != 0);
+	LDA = (var[3] != 0);
+	LDR = (var[4] != 0);
+
+	CheckStatus();
+}
+
 // ELECTRICAL CONTROL ASSEMBLY SUBCHANNEL
 LEM_ECAch::LEM_ECAch() {
 	lem = NULL;
-	input = -1; // Flag uninit
 }
 
-void LEM_ECAch::Init(LEM *s, e_object *src, int inp) {
+void LEM_ECAch::Init(LEM *s, e_object *src) {
 	lem = s;
-	if (input == -1) { input = inp; }
 	dc_source = src;
 	Volts = 24;
-}
-
-void LEM_ECAch::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
-
-{
-	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_int(scn, "INPUT", input);
-	oapiWriteLine(scn, end_str);
-}
-
-void LEM_ECAch::LoadState(FILEHANDLE scn, char *end_str)
-
-{
-	char *line;
-	int dec = 0;
-	int end_len = strlen(end_str);
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, end_str, end_len))
-			return;
-		if (!strnicmp(line, "INPUT", 5)) {
-			sscanf(line + 6, "%d", &dec);
-			input = dec;
-		}
-	}
 }
 
 void LEM_ECAch::DrawPower(double watts) {
 	power_load += watts;
 };
 
-void LEM_ECAch::UpdateFlow(double dt) {
-	// ECA INPUTS CAN BE PARALLELED, BUT NOT IN THE SAME CHANNEL
-	// That is, Battery 1 and 2 can be on at the same time.
-	// Draw power from the source, and retake voltage, etc.
+LEM_AscentECAch::LEM_AscentECAch()
+{
+	relay = NULL;
+}
 
-	// Take power
-	switch (input) {
-	case 1: // HI tap
-		if (dc_source != NULL) {
-			dc_source->DrawPower(power_load); // Draw 1:1
-		}
-		break;
-	case 2: // LO tap
-		if (dc_source != NULL) {
-			dc_source->DrawPower(power_load*1.06); // Draw 6% more (Why is this drawing 6% more??)
-		}
-		break;
+void LEM_AscentECAch::Init(LEM *s, e_object *src, bool *r)
+{
+	LEM_ECAch::Init(s, src);
+	relay = r;
+}
+
+void LEM_AscentECAch::UpdateFlow(double dt)
+{
+	if ((*relay) && dc_source != NULL)
+	{
+		dc_source->DrawPower(power_load);
+
+		Volts = dc_source->Voltage();
+		Amperes = dc_source->Current();
 	}
-
-	// Resupply from source
-	switch (input) {
-	case 0: // NULL
+	else
+	{
 		Volts = 0;
 		Amperes = 0;
-		break;
-	case 1: // HV
-		if (dc_source != NULL) {
-			Volts = dc_source->Voltage();
-			Amperes = dc_source->Current();
-		}
-		break;
-	case 2: // LV
-		if (dc_source != NULL) {
-			Volts = (dc_source->Voltage()*0.85);
-			Amperes = dc_source->Current();
-		}
-		break;
 	}
 
 	// Reset for next pass.
 	e_object::UpdateFlow(dt);
 }
 
-LEM_ECABatMonitor::LEM_ECABatMonitor()
+LEM_DescentECAch::LEM_DescentECAch()
 {
-	batt = NULL;
-	chan = NULL;
+	eca = NULL;
+}
+
+void LEM_DescentECAch::Init(LEM *s, e_object *src, LEM_DescentECASector *e)
+{
+	LEM_ECAch::Init(s, src);
+	eca = e;
+}
+
+void LEM_DescentECAch::UpdateFlow(double dt)
+{
+	// ECA INPUTS CAN BE PARALLELED, BUT NOT IN THE SAME CHANNEL
+	// That is, Battery 1 and 2 can be on at the same time.
+	// Draw power from the source, and retake voltage, etc.
+
+	// Take power. It shouldn't be possible for HV and LV to be on at the same time
+	if (eca->GetHVOn())
+	{
+		if (dc_source != NULL) {
+			dc_source->DrawPower(power_load); // Draw 1:1
+			Volts = dc_source->Voltage();
+			Amperes = dc_source->Current();
+		}
+	}
+	else if (eca->GetLVOn())
+	{
+		if (dc_source != NULL) {
+			dc_source->DrawPower(power_load*1.06); // Draw 6% more (Why is this drawing 6% more??)
+			Volts = (dc_source->Voltage()*0.85);
+			Amperes = dc_source->Current();
+		}
+	}
+	else
+	{
+		Volts = 0;
+		Amperes = 0;
+	}
+
+	// Reset for next pass.
+	e_object::UpdateFlow(dt);
+}
+
+LEM_DescentECASector::LEM_DescentECASector()
+{
+	LV = false;
+	HV = false;
+	AUX = false;
+	LOR = false;
 	OC = false;
 	RC = false;
+	lem = NULL;
 }
 
-void LEM_ECABatMonitor::Init(Battery *b, LEM_ECAch *c, PowerMerge *p)
+void LEM_DescentECASector::Init(LEM *l, ThreePosSwitch *hvs, ThreePosSwitch *lvs, Battery *b, int inp)
 {
+	lem = l;
+	HV_SW = hvs;
+	LV_SW = lvs;
 	batt = b;
-	chan = c;
-	power = p;
+
+	if (inp == 1)
+	{
+		HV = true;
+		AUX = true;
+	}
+	else if (inp == 2)
+	{
+		LV = true;
+		AUX = true;
+	}
 }
 
-void LEM_ECABatMonitor::Timestep(double dt)
+void LEM_DescentECASector::Timestep()
 {
-	if (chan->input && power->Voltage() > SP_MIN_DCVOLTAGE)
+	POWER1 = lem->DescentECAContFeeder.Voltage() > SP_MIN_DCVOLTAGE;
+	POWER2 = lem->DescentECAMainFeeder.Voltage() > SP_MIN_DCVOLTAGE;
+
+	SIG1 = POWER1 && HV_SW->IsUp(); //HV on signal
+	SIG2 = (POWER1 && HV_SW->IsCenter() && LV_SW->IsUp()) || lem->rjb.GetLVOnSignal(); //LV on signal
+	SIG3 = (POWER1 && (HV_SW->IsDown() || LV_SW->IsDown())) || lem->rjb.GetHVLVOffSignal(); //Off
+
+	TEMP1 = POWER2 && OC;
+	TEMP2 = SIG3 || TEMP1;
+
+	LOR = TEMP2;
+
+	HV_SIG = SIG1 && !LOR && !LV;
+	LV_SIG = SIG2 && !LOR && !HV;
+
+	if (HV_SIG && !HV)
 	{
-		if (!OC && batt->Current() > 150.0)
-		{
-			OC = true;
-		}
+		HV = true;
+	}
+	else if (TEMP2 && HV)
+	{
+		HV = false;
+	}
+
+	if (LV_SIG && !LV)
+	{
+		LV = true;
+	}
+	else if (TEMP2 && LV)
+	{
+		LV = false;
+	}
+
+	if (HV_SIG || LV_SIG)
+	{
+		AUX = true;
+	}
+	else if (TEMP2)
+	{
+		AUX = false;
+	}
+
+	TEMP1 = POWER2 && (LV || HV);
+	POWER_SUPPLY = SIG3 || TEMP1;
+
+	if (POWER_SUPPLY && batt->Current() > 150.0)
+	{
+		OC = true;
+	}
+	else if (SIG3)
+	{
+		OC = false;
+	}
+	if (POWER_SUPPLY)
+	{
 		if (!RC && batt->Current() < -10.0)
 		{
 			RC = true;
 		}
-		else if (RC && batt->Current() >= -10.0)
+		else if (RC && batt->Current() > -4.0)
 		{
 			RC = false;
 		}
 	}
-	if (OC && chan->input == 0)
-	{
-		OC = false;
-	}
 }
 
-bool LEM_ECABatMonitor::GetMalfunction()
+bool LEM_DescentECASector::GetMalfunction()
 {
-	if (chan->input && batt->GetTemp() > 335.928) //145°F
+	if (AUX && batt->GetTemp() > 335.928) //145°F
 	{
 		return true;
 	}
@@ -165,21 +426,130 @@ bool LEM_ECABatMonitor::GetMalfunction()
 	return false;
 }
 
-void LEM_ECABatMonitor::SaveState(FILEHANDLE scn, char *start_str) {
-
+void LEM_DescentECASector::SaveState(FILEHANDLE scn, char *name_str)
+{
 	char buffer[100];
 
-	sprintf(buffer, "%i %i", (OC ? 1 : 0), (RC ? 1 : 0));
-	oapiWriteScenario_string(scn, start_str, buffer);
+	sprintf(buffer, "%d %d %d %d %d %d", AUX, HV, LV, LOR, OC, RC);
+	oapiWriteScenario_string(scn, name_str, buffer);
 }
 
-void LEM_ECABatMonitor::LoadState(char *line) {
+void LEM_DescentECASector::LoadState(char *line, int strlen)
+{
+	int var[6];
+	sscanf(line + strlen + 1, "%i %i %i %i %i %i", &var[0], &var[1], &var[2], &var[3], &var[4], &var[5]);
 
-	int i1, i2;
+	AUX = (var[0] != 0);
+	HV = (var[1] != 0);
+	LV = (var[2] != 0);
+	LOR = (var[3] != 0);
+	OC = (var[4] != 0);
+	RC = (var[5] != 0);
+}
 
-	sscanf(line + 5, "%i %i", &i1, &i2);
-	OC = (i1 != 0);
-	RC = (i2 != 0);
+LEM_AscentECASector::LEM_AscentECASector()
+{
+	MFC = false;
+	AFC = false;
+	LOR = false;
+	OC = false;
+	RC = false;
+	lem = NULL;
+}
+
+void LEM_AscentECASector::Init(LEM *l, ThreePosSwitch *mfs, ThreePosSwitch *afs, Battery *b)
+{
+	lem = l;
+	MF_SW = mfs;
+	AF_SW = afs;
+	batt = b;
+}
+
+void LEM_AscentECASector::Timestep()
+{
+	POWER1 = lem->AscentECAContFeeder.Voltage() > SP_MIN_DCVOLTAGE;
+	POWER2 = lem->AscentECAMainFeeder.Voltage() > SP_MIN_DCVOLTAGE;
+	POWER3 = batt->Voltage() > 5.0; //TBD
+
+	LOR = POWER1 && MF_SW->IsDown();
+
+	TEMP1 = lem->rjb.GetAscentECAOn() && !AFC;
+	TEMP2 = MF_SW->IsUp();
+	RESET1 = POWER1 && MF_SW->IsDown();
+	RESET2 = POWER1 && AF_SW->IsDown();
+
+	if (POWER3 && !MFC && !LOR && (TEMP1 || TEMP2))
+	{
+		MFC = true;
+	}
+	else if (MFC && RESET1)
+	{
+		MFC = false;
+	}
+	if (POWER3 && !AFC && AF_SW->IsUp())
+	{
+		AFC = true;
+	}
+	else if (AFC && RESET2)
+	{
+		AFC = false;
+	}
+
+	POWER4 = POWER2 && (AFC || MFC);
+	POWER_SUPPLY = POWER4 || RESET1 || RESET2;
+
+	if (POWER_SUPPLY && batt->Current() > 150.0)
+	{
+		OC = true;
+	}
+	else if (MF_SW->IsDown())
+	{
+		OC = false;
+	}
+	if (POWER_SUPPLY)
+	{
+		if (!RC && batt->Current() < -10.0)
+		{
+			RC = true;
+		}
+		else if (RC && batt->Current() > -4.0)
+		{
+			RC = false;
+		}
+	}
+}
+
+bool LEM_AscentECASector::GetMalfunction()
+{
+	if (batt->GetTemp() > 335.928) //145°F
+	{
+		return true;
+	}
+	else if (OC || RC)
+	{
+		return true;
+	}
+	return false;
+}
+
+void LEM_AscentECASector::SaveState(FILEHANDLE scn, char *name_str)
+{
+	char buffer[100];
+
+	sprintf(buffer, "%d %d %d %d %d", MFC, AFC, LOR, OC, RC);
+	oapiWriteScenario_string(scn, name_str, buffer);
+}
+
+void LEM_AscentECASector::LoadState(char *line, int strlen)
+{
+	int var[5];
+	sscanf(line + strlen + 1, "%i %i %i %i %i", &var[0], &var[1], &var[2], &var[3], &var[4]);
+
+	MFC = (var[0] != 0);
+	AFC = (var[1] != 0);
+	LOR = (var[2] != 0);
+	OC = (var[3] != 0);
+	RC = (var[4] != 0);
 }
 
 LEM_ECA::LEM_ECA()
@@ -192,16 +562,19 @@ LEM_DescentECA::LEM_DescentECA()
 
 }
 
-void LEM_DescentECA::Init(Battery *b1, Battery *b2, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p)
+void LEM_DescentECA::Init(LEM *l, Battery *b1, Battery *b2, ThreePosSwitch *hv_sw1, ThreePosSwitch *lv_sw1, ThreePosSwitch *hv_sw2, ThreePosSwitch *lv_sw2, int inp)
 {
-	bat1mon.Init(b1, c1, p);
-	bat2mon.Init(b2, c2, p);
+	SectA.Init(l, hv_sw1, lv_sw1, b1, inp);
+	SectB.Init(l, hv_sw2, lv_sw2, b2, inp);
+
+	ECAChannelA.Init(l, b1, &SectA);
+	ECAChannelB.Init(l, b2, &SectB);
 }
 
 void LEM_DescentECA::Timestep(double dt)
 {
-	bat1mon.Timestep(dt);
-	bat2mon.Timestep(dt);
+	SectA.Timestep();
+	SectB.Timestep();
 }
 
 void LEM_DescentECA::SystemTimestep(double dt)
@@ -212,8 +585,8 @@ void LEM_DescentECA::SystemTimestep(double dt)
 void LEM_DescentECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
 	oapiWriteLine(scn, start_str);
-	bat1mon.SaveState(scn, "BAT1");
-	bat2mon.SaveState(scn, "BAT2");
+	SectA.SaveState(scn, "BAT1");
+	SectB.SaveState(scn, "BAT2");
 	oapiWriteLine(scn, end_str);
 }
 
@@ -227,10 +600,10 @@ void LEM_DescentECA::LoadState(FILEHANDLE scn, char *end_str)
 		if (!strnicmp(line, end_str, end_len))
 			return;
 		if (!strnicmp(line, "BAT1", 4)) {
-			bat1mon.LoadState(line);
+			SectA.LoadState(line, 4);
 		}
 		else if (!strnicmp(line, "BAT2", 4)) {
-			bat2mon.LoadState(line);
+			SectB.LoadState(line, 4);
 		}
 	}
 }
@@ -239,14 +612,16 @@ LEM_AscentECA::LEM_AscentECA()
 {
 
 }
-void LEM_AscentECA::Init(Battery *b, LEM_ECAch* c1, LEM_ECAch* c2, PowerMerge *p)
+void LEM_AscentECA::Init(LEM *l, ThreePosSwitch *mfs, ThreePosSwitch *afs, Battery *b)
 {
-	batmon.Init(b, c1, p);
+	SectA.Init(l, mfs, afs, b);
+	MFChannel.Init(l, b, SectA.GetMFCPointer());
+	AFChannel.Init(l, b, SectA.GetAFCPointer());
 }
 
 void LEM_AscentECA::Timestep(double dt)
 {
-	batmon.Timestep(dt);
+	SectA.Timestep();
 }
 
 void LEM_AscentECA::SystemTimestep(double dt)
@@ -257,7 +632,7 @@ void LEM_AscentECA::SystemTimestep(double dt)
 void LEM_AscentECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
 	oapiWriteLine(scn, start_str);
-	batmon.SaveState(scn, "BAT1");
+	SectA.SaveState(scn, "BAT1");
 	oapiWriteLine(scn, end_str);
 }
 
@@ -271,7 +646,7 @@ void LEM_AscentECA::LoadState(FILEHANDLE scn, char *end_str)
 		if (!strnicmp(line, end_str, end_len))
 			return;
 		if (!strnicmp(line, "BAT1", 4)) {
-			batmon.LoadState(line);
+			SectA.LoadState(line, 4);
 		}
 	}
 }
@@ -413,28 +788,13 @@ void LEM_XLBControl::UpdateFlow(double dt) {
 	// Do we have power from the other side?
 	double sVoltage = lem->CSMToLEMPowerSource.Voltage();
 	// Is the CSM Power relay latched?
-	if (lem->CSMToLEMPowerConnector.csm_power_latch == 1) {
+	if (lem->CMPowerToCDRBusRelayA || lem->CMPowerToCDRBusRelayB) { //TBD: two separate power lines
 		// Yes, we can put voltage on the CDR bus
 		dc_output.SetVoltage(sVoltage);
 	}
 	else {
 		// No, we have no return path, so we have no voltage.
 		dc_output.SetVoltage(0);
-	}
-	// Handle switchery
-	switch (lem->CSMToLEMPowerConnector.csm_power_latch) {
-	case 1:			//FIXME: The LM PWR CSM switch should only send a command to disable LV / HV taps, and not keep them from being switched back on in the LM
-		// If the CSM latch is set, keep the descent ECAs off
-		lem->ECA_1a.input = 0; lem->ECA_1b.input = 0;
-		lem->ECA_2a.input = 0; lem->ECA_2b.input = 0;
-		break;
-	case -1: 		//FIXME: The LM PWR CSM switch in RESET should only send a command to enable LV taps
-		// If the CSM latch is reset, turn on the LV taps on batteries 1 and 4.
-		// And reset the latch to zero
-		lem->ECA_1a.input = 2; lem->ECA_1b.input = 2;
-		lem->ECA_2a.input = 2; lem->ECA_2b.input = 2;
-		lem->CSMToLEMPowerConnector.csm_power_latch = 0;
-		break;
 	}
 	// So then, do we have xlunar voltage?
 	if (dc_output.Voltage() > 0) {
@@ -445,31 +805,6 @@ void LEM_XLBControl::UpdateFlow(double dt) {
 	}
 
 };
-
-void LEM_XLBControl::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
-
-{
-	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_int(scn, "CSMPOWERLATCH", lem->CSMToLEMPowerConnector.csm_power_latch);
-	oapiWriteLine(scn, end_str);
-}
-
-void LEM_XLBControl::LoadState(FILEHANDLE scn, char *end_str)
-
-{
-	char *line;
-	int dec = 0;
-	int end_len = strlen(end_str);
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, end_str, end_len))
-			return;
-		if (!strnicmp(line, "CSMPOWERLATCH", 13)) {
-			sscanf(line + 14, "%d", &dec);
-			lem->CSMToLEMPowerConnector.csm_power_latch = dec;
-		}
-	}
-}
 
 // CROSS-TIE BALANCER OUTPUT SOURCE
 LEM_BCTSource::LEM_BCTSource() {
@@ -903,7 +1238,7 @@ void LEM_LCA::UpdateFlow(double dt)
 
 	HasDCPower = false;
 
-	if (lem->CSMToLEMPowerConnector.csm_power_latch == 0 && CDRAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE)
+	if (!lem->CMPowerToCDRBusRelayA && !lem->CMPowerToCDRBusRelayB && CDRAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE) //TBD: LM/SLA pressure switch
 	{
 		CDR_Volts = CDRAnnunDockCompCB->Voltage();
 		HasDCPower = true;

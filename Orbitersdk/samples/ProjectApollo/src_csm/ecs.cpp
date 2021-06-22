@@ -1410,6 +1410,9 @@ void SaturnForwardHatch::Toggle()
 		}
 		else
 		{
+			//Is hose connected? If yes prevent hatch from being closed
+			if (saturn->GetCSMO2Hose()->out != NULL) return;
+
 			open = false;
 			toggle = 2;
 			CloseSound.play();
@@ -1546,5 +1549,34 @@ void SaturnWasteStowageVentValve::SystemTimestep(double simdt)
 
 	else
 		WasteStowageValve->Open();
+
+}
+
+SaturnSuitFlowValves::SaturnSuitFlowValves()
+{
+	SuitFlowValve = NULL;
+	SuitFlowSwitch = NULL;
+}
+
+void SaturnSuitFlowValves::Init(h_Valve* flowvlv, ThreePosSwitch* flowsw)
+{
+	SuitFlowValve = flowvlv;
+	SuitFlowSwitch = flowsw; //0=Full Flow 1=Cabin Flow 2=Close
+}
+
+void SaturnSuitFlowValves::SystemTimestep(double simdt)
+{
+	if (!SuitFlowValve) return;
+
+	// Valve in motion
+	if (SuitFlowValve->pz) return;
+
+	if (SuitFlowSwitch->GetState() == 2)
+	{
+		SuitFlowValve->Close();
+	}
+
+	else
+		SuitFlowValve->Open();
 
 }

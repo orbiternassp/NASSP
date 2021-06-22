@@ -72,6 +72,8 @@ namespace mission
 		double GetATCA_PRM_Factor() const;
 		//Get matrix with coefficients for calculating the LM center of gravity as a quadratic function of mass
 		MATRIX3 GetLMCGCoefficients() const;
+		//CM to LM power connection version. 0 = connection doesn't work with LM staged, 1 = LM has a CB to bypass circuit to descent stage, 2 = circuit bypassed automatically at stating
+		int GetCMtoLMPowerConnectionVersion() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
@@ -93,6 +95,7 @@ namespace mission
 		bool bInvertLMStageBit;
 		double dATCA_PRM_Factor;
 		MATRIX3 LM_CG_Coefficients;
+		int iCMtoLMPowerConnectionVersion;
 
 		void SetDefaultValues();
 	};
