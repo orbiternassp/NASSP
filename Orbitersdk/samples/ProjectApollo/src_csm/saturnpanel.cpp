@@ -49,6 +49,11 @@
 
 extern GDIParams g_Param;
 
+// CSM Optics base direction, as given in the Colossus code CSM_GEOMETRY.agc
+// All flown Colossus versions uses the same values
+#define OPTICS_BASE_COS  0.8431756920
+#define OPTICS_BASE_SIN  0.5376381241
+
 void BaseInit() 
 
 {
@@ -211,6 +216,7 @@ void Saturn::InitReticle() {
 	}
 
 	ReticlePoint = new POINT[ReticleLineMaxLen];
+	printf("RetMaxlen:%d\n", ReticleLineMaxLen);
 }
 
 void drawReticle(SURFHANDLE surf, double shaft, int reticleLineCnt, int reticleLineLen[], double **reticleLine, POINT ptbuf[]) {
@@ -236,6 +242,20 @@ void drawReticle(SURFHANDLE surf, double shaft, int reticleLineCnt, int reticleL
 	DeleteObject(pen);
 	oapiReleaseDC(surf, hDC);
 }
+
+void setCameraLOS(double shaft, double trunnion) {
+	double cosShaft = cos(shaft), sinShaft = sin(shaft);
+	double cosTrun = cos(trunnion), sinTrun = sin(trunnion);
+	double uzx = cosShaft*sinTrun, uzy = sinShaft*sinTrun, uzz = cosTrun;
+	double oldAz = oapiCameraAzimuth(), oldPol= oapiCameraPolar();
+	double azimuth = 0.5*PI - acos(uzx), polar =-atan2(uzy, uzz);
+	oapiCameraSetCockpitDir(polar, azimuth, false);
+	//sat->SetCameraDefaultDirection(_V(uzy, uzx*OPTICS_BASE_SIN - uzz*OPTICS_BASE_COS, uzx*OPTICS_BASE_COS + uzz*OPTICS_BASE_SIN), 0.0);
+	sprintf(oapiDebugString(), "Shaft:%lf Trunnion:%lf Polar:%lf Azimuth:%lf OldPolar:%lf OldAzimuth:%lf", shaft, trunnion, polar, azimuth ,oldAz, oldPol);
+	//double wx = (1.0 + cosShaft*cosShaft*(cosTrun - 1.0))*OPTICS_BASE_SIN + cosShaft*sinTrun*OPTICS_BASE_COS;
+	//double wy = sinShaft*cosShaft*(cosTrun - 1.0)*OPTICS_BASE_SIN + sinShaft*sinTrun*OPTICS_BASE_COS;
+}
+
 
 void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist) {
 
@@ -1399,7 +1419,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,			_R(0, 0, 10, 10),								PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
+		SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
 		oapiCameraSetCockpitDir(0,0);
 		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
 	}
@@ -1436,9 +1456,9 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE,			_R(0, 0, 10, 10),								PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
+		SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
 		oapiCameraSetCockpitDir(0,0);
-		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);			
+		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
 	}
 
 	InitPanel (id);
@@ -4728,18 +4748,21 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	// OPTICS
 	case AID_OPTICSCLKAREASEXT:
 		if (optics.SextDualView && optics.SextDVLOSTog){
-			oapiCameraSetCockpitDir (-optics.OpticsShaft,-PI/2.,true); //when both are true show fixed line of sight
+			//oapiCameraSetCockpitDir (-optics.OpticsShaft,-PI/2.,true); //when both are true show fixed line of sight
+			setCameraLOS(optics.OpticsShaft, 0.0);
 		}
 		else
 		{
-			oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.SextTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+			//oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.SextTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+			setCameraLOS(optics.OpticsShaft, optics.SextTrunion);
 		}
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.SextTrunion/RAD);
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft, optics.SextTrunion);
 		return true;
 
 	case AID_OPTICSCLKAREATELE:
-		oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.TeleTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		//oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.TeleTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		setCameraLOS(optics.OpticsShaft, optics.TeleTrunion);
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.TeleTrunion/RAD);
 		return true;
 
