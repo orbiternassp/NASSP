@@ -107,13 +107,16 @@ void MCC::MissionSequence_C()
 	case MST_C_DAY1STATE1: // S-IVB navigation update to 6-4 Deorbit Maneuver update
 		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(4 * 60 * 60 + 45 * 60), 101, MST_C_DAY1STATE2);
 		break;
-	case MST_C_DAY1STATE2: // 6-4 Deorbit Maneuver update to Block Data 2
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(10 * 60 * 60 + 30 * 60), 2, MST_C_DAY1STATE3);
+	case MST_C_DAY1STATE2: // 6-4 Deorbit Maneuver update to Retro Orientation Test
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 5.0*60.0, 2, MST_C_DAY1STATE3);
 		break;
-	case MST_C_DAY1STATE3: //Block Data 2 to 2nd Phasing Maneuver Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(14 * 60 * 60 + 16 * 60), 3, MST_C_DAY1STATE4);
+	case MST_C_DAY1STATE3: // Retro Orientation Test update to Block Data 2
+		UpdateMacro(UTP_PADONLY, PT_RETROORIENTATION, rtcc->GETEval2(10 * 60 * 60 + 30 * 60), 102, MST_C_DAY1STATE4);
 		break;
-	case MST_C_DAY1STATE4: // 2nd Phasing Maneuver Update to Block Data 3
+	case MST_C_DAY1STATE4: //Block Data 2 to 2nd Phasing Maneuver Update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(14 * 60 * 60 + 16 * 60), 3, MST_C_DAY1STATE5);
+		break;
+	case MST_C_DAY1STATE5: // 2nd Phasing Maneuver Update to Block Data 3
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(21 * 60 * 60 + 50 * 60), 4, MST_C_DAY2STATE1);
 		break;
 	case MST_C_DAY2STATE1: // Block Data 3 to Preliminary NCC1 Update

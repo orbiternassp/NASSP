@@ -2618,7 +2618,7 @@ public:
 	void PoweredFlightProcessor(EphemerisData sv0, double mass, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
-	EphemerisData StateVectorCalcEphem(VESSEL *vessel, double SVGMT = 0.0);
+	EphemerisData StateVectorCalcEphem(VESSEL *vessel);
 	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
 	bool TLIFlyby(SV sv_TLI, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
@@ -4716,6 +4716,31 @@ protected:
 	double TJUDAT(int Y, int M, int D);
 	EphemerisData ConvertSVtoEphemData(SV sv);
 	SV ConvertEphemDatatoSV(EphemerisData sv);
+
+	//RTACF Routines
+
+	struct RTACFGOSTInput
+	{
+		EphemerisData sv;
+		double Weight;
+		double get;
+		VECTOR3 IMUAttitde; //All options except 4
+		MATRIX3 REFSMMAT; //All options except 1
+
+		int option;
+		int starid1, starid2; //Options 1 and 3
+		double LVLHRoll, LVLHYaw, WindowLine = 31.7*RAD;
+		double star_ta1, star_ta2, star_sh1, star_sh2; //Options 1 and 5
+		VECTOR3 Att1, Att2; //Option 5
+	};
+
+	struct RTACFGOSTOutput
+	{
+		VECTOR3 IMUAtt; //Option 4
+		VECTOR3 LVLHAtt; //Option 4
+	};
+
+	void RTACFGuidanceOpticsSupportTable(RTACFGOSTInput in, RTACFGOSTOutput &out);
 
 protected:
 	double TimeofIgnition;

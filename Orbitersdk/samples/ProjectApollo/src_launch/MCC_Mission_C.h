@@ -34,6 +34,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY1STATE2	14
 #define MST_C_DAY1STATE3	15
 #define MST_C_DAY1STATE4	16
+#define MST_C_DAY1STATE5	17
 #define MST_C_DAY2STATE1	20
 #define MST_C_DAY2STATE2	21
 #define MST_C_DAY2STATE3	22

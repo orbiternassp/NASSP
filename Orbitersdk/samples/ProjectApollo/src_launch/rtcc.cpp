@@ -4674,7 +4674,7 @@ SV RTCC::StateVectorCalc(VESSEL *vessel, double SVMJD)
 	return sv1;
 }
 
-EphemerisData RTCC::StateVectorCalcEphem(VESSEL *vessel, double SVGMT)
+EphemerisData RTCC::StateVectorCalcEphem(VESSEL *vessel)
 {
 	VECTOR3 R, V;
 	double MJD;
@@ -33701,5 +33701,119 @@ void RTCC::RMSSCS(int entry)
 	if (entry == 1)
 	{
 		//Transfer TTF, Manual column data
+	}
+}
+
+void RTCC::RTACFGuidanceOpticsSupportTable(RTACFGOSTInput in, RTACFGOSTOutput &out)
+{
+	//Propagate to GET
+	EMMENIInputTable emmin;
+	emmin.AnchorVector = in.sv;
+	if (in.option == 4)
+	{
+		emmin.Area = PZMPTCSM.ConfigurationArea;
+	}
+	else
+	{
+		emmin.Area = PZMPTLEM.ConfigurationArea;
+	}
+	emmin.CutoffIndicator = 1;
+	emmin.DensityMultiplier = 1.0;
+	emmin.Weight = in.Weight;
+	emmin.MaxIntegTime = GMTfromGET(in.get) - in.sv.GMT;
+	if (emmin.MaxIntegTime > 0)
+	{
+		emmin.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		emmin.IsForwardIntegration = -1.0;
+		emmin.MaxIntegTime = abs(emmin.MaxIntegTime);
+	}
+	EMMENI(emmin);
+
+	//Compute REFSMMAT from two star IDs and shaft and trunnion angles (and attitude)
+	if (in.option == 1)
+	{
+		//TBD
+	}
+	//Compute location of two stars in the scanning telescope at a specific attitude and IMU alignment
+	else if (in.option == 2)
+	{
+		//TBD
+	}
+	//Compute shaft and trunnion angles for two input stars
+	else if (in.option == 3)
+	{
+		//TBD
+	}
+	//Compute gimbal angles and LVLH pitch angle from spacecraft LVLH roll and yaw angle plus spacecraft pitch angle to the horizon
+	else if (in.option == 4 || in.option == 14)
+	{
+		//Calculate LVLH pitch angle
+		out.LVLHAtt.x = in.LVLHRoll;
+		out.LVLHAtt.y = -in.WindowLine - acos(OrbMech::R_Earth / length(emmin.sv_cutoff.R));
+		out.LVLHAtt.z = in.LVLHYaw;
+
+		double SINP, SINY, SINR, COSP, COSY, COSR;
+		SINP = sin(out.LVLHAtt.y);
+		SINY = sin(in.LVLHYaw);
+		SINR = sin(in.LVLHRoll);
+		COSP = cos(out.LVLHAtt.y);
+		COSY = cos(in.LVLHYaw);
+		COSR = cos(in.LVLHRoll);
+
+		VECTOR3 Z_P, Y_P, X_P;
+		Z_P = -unit(emmin.sv_cutoff.R);
+		Y_P = -unit(crossp(emmin.sv_cutoff.R, emmin.sv_cutoff.V));
+		X_P = crossp(Y_P, Z_P);
+
+		double AL, BE, a1, a2, a3, b1, b2, b3, c1, c2, c3;
+		AL = SINP * SINR;
+		BE = SINP * COSR;
+		a1 = COSY * COSP;
+		a2 = SINY * COSP;
+		a3 = -SINP;
+		b1 = AL * COSY - SINY * COSR;
+		b2 = AL * SINY + COSY * COSR;
+		b3 = COSP * SINR;
+		c1 = BE * COSY + SINY * SINR;
+		c2 = BE * SINY - COSY * SINR;
+		c3 = COSP * COSR;
+
+		VECTOR3 X_B, Y_B, Z_B;
+		X_B = X_P * a1 + Y_P * a2 + Z_P * a3;
+		Y_B = X_P * b1 + Y_P * b2 + Z_P * b3;
+		Z_B = X_P * c1 + Y_P * c2 + Z_P * c3;
+
+		//Calculate IMU angles
+		X_P = _V(in.REFSMMAT.m11, in.REFSMMAT.m12, in.REFSMMAT.m13);
+		Y_P = _V(in.REFSMMAT.m21, in.REFSMMAT.m22, in.REFSMMAT.m23);
+		Z_P = _V(in.REFSMMAT.m31, in.REFSMMAT.m32, in.REFSMMAT.m33);
+
+		out.IMUAtt.z = asin(dotp(Y_P, X_B));
+		if (abs(abs(out.IMUAtt.z) - PI05) < 1e-8)
+		{
+			out.IMUAtt.x = 0.0;
+			out.IMUAtt.y = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
+		}
+		else
+		{
+			out.IMUAtt.x = atan2(-dotp(Y_P, Z_B), dotp(Y_P, Y_B));
+			out.IMUAtt.y = atan2(-dotp(Z_P, X_B), dotp(X_P, X_B));
+		}
+
+		if (out.IMUAtt.x < 0)
+		{
+			out.IMUAtt.x += PI2;
+		}
+		if (out.IMUAtt.y < 0)
+		{
+			out.IMUAtt.y += PI2;
+		}
+		if (out.IMUAtt.z < 0)
+		{
+			out.IMUAtt.z += PI2;
+		}
 	}
 }

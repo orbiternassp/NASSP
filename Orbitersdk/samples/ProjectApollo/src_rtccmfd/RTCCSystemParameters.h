@@ -325,7 +325,7 @@ struct RTCCSystemParameters
 		{
 			MHALLD[i] = MHACLD[i];
 		}
-		MCADRG = 0.1; //Should be 2.0
+		MCADRG = 2.0;
 
 		MCTJD1 = 570.0;
 		MCTJD3 = 2.5;

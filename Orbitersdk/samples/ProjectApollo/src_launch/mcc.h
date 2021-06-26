@@ -172,6 +172,7 @@
 #define PT_AP11LMASCPAD		28
 #define PT_LIFTOFFTIMES		29
 #define PT_LMACTDATA		30
+#define PT_RETROORIENTATION	31
 #define PT_NONE				99
 #define PT_GENERIC			100
 

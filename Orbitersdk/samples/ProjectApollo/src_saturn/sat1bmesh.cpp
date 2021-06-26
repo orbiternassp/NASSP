@@ -215,7 +215,7 @@ void SaturnIB3rdStage_Coeff(double aoa, double M, double Re, double *cl, double 
 		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
 	}
 
-	sprintf(oapiDebugString(), "M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", M, Re, Kn, *cd, *cl, *cm);
+	sprintf(oapiDebugString(), "aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
 }
 
 void Saturn1b::SetFirstStage ()
@@ -388,14 +388,14 @@ void Saturn1b::SetSecondStage ()
 	double EmptyMass = Stage2Mass + (LESAttached ? Abort_Mass : 0.0);
 
 	SetEmptyMass (EmptyMass);
-	SetPMI (_V(94,94,20));
+	SetPMI(_V(116.0, 116.0, 4.3));
 	SetCrossSections (_V(267,267,97));
 	SetCW(0.1, 0.3, 1.4, 1.4);
 	ClearAirfoilDefinitions();
 	CreateAirfoil(LIFT_VERTICAL, _V(0, 0, 0), SaturnIB3rdStage_Coeff, 6.604, 34.2534, 0.1);
 	SetRotDrag (_V(0.7,0.7,1.2));
     ClearMeshes();
-	SetSecondStageMeshes(13.95-12.25);
+	SetSecondStageMeshes(STG1OF);
 }
 
 void Saturn1b::SetSecondStageMeshes(double offset)
@@ -520,11 +520,11 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
-	SetCameraOffset (_V(-1,1.0,31.15-STG1O));
-    SetView(22.7, false);
+	SetCameraOffset(_V(-1, 1.0, 29.45 - STG1O + offset));
+	SetView(21.0 + offset, false);
 }
 
-void Saturn1b::SetSecondStageEngines ()
+void Saturn1b::SetSecondStageEngines (double offset)
 
 {
 	ClearThrusters();
@@ -534,8 +534,8 @@ void Saturn1b::SetSecondStageEngines ()
 	//Add CSM RCS
 	if (SaturnHasCSM())
 	{
-		AddRCSJets(20.62, SM_RCS_THRUST);
-		AddRCS_CM(CM_RCS_THRUST, 22.9, false);
+		AddRCSJets(18.92 + offset, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 21.2 + offset, false);
 	}
 
 	//
@@ -580,7 +580,7 @@ void Saturn1b::SetSecondStageEngines ()
 	// *********************** thruster definitions ********************************
 	//
 
-	VECTOR3 m_exhaust_pos1= {0,0,-9.-STG1O+10};
+	VECTOR3 m_exhaust_pos1 = { 0,0,-9. - STG1O + 8.3 + offset };
 
 	//
 	// orbiter main thrusters
@@ -601,9 +601,8 @@ void Saturn1b::SetSecondStageEngines ()
 
 	sivb->RecalculateEngineParameters(THRUST_SECOND_VAC);
 
-	// Thrust "calibrated" for apoapsis after venting is about 167.5 nmi
-	// To match the predicted dV of about 25 ft/s (21.7 ft/s actual / 25.6 predicted), use about 320 N thrust, but apoapsis is too high then (> 170 nmi)
-	th_3rd_lox = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 220., ph_3rd, 300., 300.);
+	// Thrust "calibrated" for DV of 21.7 ft/s (predicted was 25.6 ft/s)
+	th_3rd_lox = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 280., ph_3rd, 300., 300.);
 
 	fuel_venting_spec.tex = oapiRegisterParticleTexture("ProjectApollo/Contrail_SaturnVenting");
 	AddExhaustStream(th_3rd_lox, &fuel_venting_spec);
@@ -612,9 +611,9 @@ void Saturn1b::SetSecondStageEngines ()
 	//  Ullage rockets (3)
 	//
 
-	VECTOR3	m_exhaust_pos6= _V(-3.27,-0.46,-2-STG1O+9);
-	VECTOR3 m_exhaust_pos7= _V(1.65,2.86,-2-STG1O+9);
-	VECTOR3	m_exhaust_pos8= _V(1.65,-2.86,-2-STG1O+9);
+	VECTOR3	m_exhaust_pos6 = _V(-3.27, -0.46, -2 - STG1O + 7.3 + offset);
+	VECTOR3 m_exhaust_pos7= _V(1.65,2.86,-2-STG1O+ 7.3 + offset);
+	VECTOR3	m_exhaust_pos8= _V(1.65,-2.86,-2-STG1O+ 7.3 + offset);
 
 	int i;
 
@@ -756,8 +755,8 @@ void Saturn1b::SeparateStage (int new_stage)
 		}
 
 		SetSecondStage ();
-		SetSecondStageEngines ();
-		ShiftCentreOfMass (_V(0,0,12.25));
+		SetSecondStageEngines (STG1OF);
+		ShiftCentreOfMass(_V(0, 0, 12.95));
 	}
 
 	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)

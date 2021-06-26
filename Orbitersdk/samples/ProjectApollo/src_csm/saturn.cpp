@@ -3533,7 +3533,7 @@ void Saturn::AddRCS_S4B()
 	double APSMass;
 	if (SaturnType == SAT_SATURN1B)
 	{
-		offset = 7.7;
+		offset = 0.0;
 		APSMass = S4B_APS_FUEL_PER_TANK_SIB;
 	}
 	else

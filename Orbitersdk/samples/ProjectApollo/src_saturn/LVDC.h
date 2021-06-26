@@ -129,6 +129,8 @@ private:								// Saturn LV
 	void NonInterruptSequencer(bool phase13);
 
 	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att);
+	VECTOR3 VentSubroutine(VECTOR3 Att);
+	VECTOR3 OrbitalNavigationAcceleration(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att);
 	bool TimeCheck(double t_event);
 	void StartTimebase4A();
 	void StartTimebase5();
@@ -522,6 +524,8 @@ private:								// Saturn LV
 	double hx[3][5];								// Azimuth from time polynomial
 	double Rho[6];									// Coasting flight air density polynomial (ref. orbital radius)
 	double Drag_Area[5];							// Coasting flight drag area polynomial (ref. flight path angle)
+	double VENTA[5];								// Orbital vent accelerations
+	double VTIM[4];									// Segment switch times for orbital vent accelerations measured from TB5
 
 
 	// LVDC software variables, NOT PAD-LOADED
@@ -597,7 +601,6 @@ private:								// Saturn LV
 	VECTOR3 Sbardot;								// Velocity of pseudonodal vector
 	VECTOR3 Cbar_1;									// Unit vector normal to transfer ellipse plane
 	VECTOR3 Sbar_1;									// Unit vector normal to nodal vector
-	VECTOR3 DDotS_D;								// Atmospheric drag
 	VECTOR3 DotM_act;								// actual sensed velocity from platform
 	VECTOR3 ddotG_act;								// actual computed acceleration from gravity
 	VECTOR3 DotG_act;								// actual computed velocity from gravity

@@ -96,7 +96,7 @@ protected:
 	void SetFirstStageEngines ();
 	void SetSecondStage ();
 	void SetSecondStageMeshes(double offset);
-	void SetSecondStageEngines ();
+	void SetSecondStageEngines (double offset);
 
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
@@ -137,5 +137,8 @@ const VECTOR3 OFS_CM_CONE = { 0, 0, 36.05-12.25-21.5};
 
 const double STG0O = 0;
 const double STG1O = 10.25;
+const double STG1OF = 13.95 - 12.25 - 7.7;
+//const VECTOR3 OFS_MESH_STAGE2 = { 0, 0, 35.9335216 }; //Offset of the origin of the S-IVB mesh (nsat1stg2.msh) from the origin of the Saturn IB coordinate system (empirically determined)
+//const double OFS_STAGE2_ENGINE = 983.603*0.0254; //Location of the thrust of the J-2 engine (from current NASSP value, improve this)
 
 extern void Saturn1bLoadMeshes();

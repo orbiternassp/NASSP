@@ -110,6 +110,7 @@ void Saturn1b::initSaturn1b()
 
 	initSaturn();
 
+	sib = NULL;
 	SaturnType = SAT_SATURN1B;
 	RelPos = _V(0.0,0.0,0.0);
 	hSoyuz = 0;
@@ -455,7 +456,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		SetSecondStage();
-		SetSecondStageEngines();
+		SetSecondStageEngines(STG1OF);
 		AddRCS_S4B();
 		break;
 
@@ -585,7 +586,7 @@ void Saturn1b::ConfigureStageEngines(int stage_state)
 
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
-		SetSecondStageEngines();
+		SetSecondStageEngines(STG1OF);
 		break;
 	}
 }

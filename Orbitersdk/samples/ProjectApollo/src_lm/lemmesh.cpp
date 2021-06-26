@@ -794,7 +794,7 @@ void LEM::CreateAirfoils()
 	}
 	else
 	{
-		SetCW(2.0, 2.0, 2.0, 2.0);
+		SetCW(4.0, 4.0, 4.0, 4.0);
 	}
 }
 

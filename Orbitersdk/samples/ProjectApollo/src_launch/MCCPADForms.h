@@ -478,6 +478,15 @@ struct AP11LMASCPAD
 	char remarks[128];
 };
 
+//APOLLO 7 MANUAL RETRO ATTITUDE ORIENTATION
+struct AP7RETRORIENTPAD
+{
+	double GET_Day = 0.0;
+	double GET_Night = 0.0;
+	VECTOR3 RetroAtt_Day = _V(0, 0, 0);
+	VECTOR3 RetroAtt_Night = _V(0, 0, 0);
+};
+
 //GENERIC STRING
 
 struct GENERICPAD

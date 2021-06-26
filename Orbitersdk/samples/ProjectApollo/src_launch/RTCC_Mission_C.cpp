@@ -91,6 +91,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EMSGSUPP(1, 1);
 		//Make telemetry matrix current
 		GMGMED("G00,CSM,TLM,CSM,CUR;");
+
+		//Store some MPT data
+		PZMPTCSM.ConfigurationArea = 129.4*0.3048*0.3048;
+		PZMPTLEM.ConfigurationArea = 368.7*0.3048*0.3048;
 	}
 	break;
 	case 1: // MISSION C PHASING BURN
@@ -109,7 +113,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = CalcGETBase();
 		opt.vessel = calcParams.src;
 		opt.TIG = GET_TIG;
-		opt.dV_LVLH = _V(3.0, 0.0, 0.0)*0.3048;
+		opt.dV_LVLH = _V(-3.0, 0.0, 0.0)*0.3048;
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
 		opt.HeadsUp = false;
 		opt.sxtstardtime = 0;
@@ -129,8 +133,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SIVB *iuv = (SIVB *)calcParams.tgt;
 		IU *iu = iuv->GetIU();
 
-		EphemerisData sv = StateVectorCalcEphem(calcParams.tgt);
-		CMMSLVNAV(sv.R, sv.V, sv.GMT);
+		EphemerisData sv1 = StateVectorCalcEphem(calcParams.tgt);
+		EphemerisData sv2 = coast(sv1, GMTfromGET(17460.0) - sv1.GMT); //TBD: Take drag into account?
+		CMMSLVNAV(sv2.R, sv2.V, sv2.GMT);
 
 		upl.PosS = CZNAVSLV.PosS;
 		upl.DotS = CZNAVSLV.DotS;
@@ -204,6 +209,39 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 102: //MANUAL RETRO ATTITUDE ORIENTATION TEST
+	{
+		AP7RETRORIENTPAD * form = (AP7RETRORIENTPAD *)pad;
+
+		RTACFGOSTInput in;
+		RTACFGOSTOutput out;
+
+		in.get = OrbMech::HHMMSSToSS(6, 10, 0);
+		in.LVLHRoll = 0.0;
+		in.LVLHYaw = PI;
+		in.option = 4;
+		in.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		in.sv = StateVectorCalcEphem(calcParams.src);
+		in.Weight = calcParams.src->GetMass();
+		
+		RTACFGuidanceOpticsSupportTable(in, out);
+
+		form->GET_Day = in.get;
+		form->RetroAtt_Day = out.IMUAtt*DEG;
+		form->RetroAtt_Day.x = round(form->RetroAtt_Day.x);
+		form->RetroAtt_Day.y = round(form->RetroAtt_Day.y);
+		form->RetroAtt_Day.z = round(form->RetroAtt_Day.z);
+
+		in.get = OrbMech::HHMMSSToSS(6, 50, 0);
+		RTACFGuidanceOpticsSupportTable(in, out);
+
+		form->GET_Night = in.get;
+		form->RetroAtt_Night = out.IMUAtt*DEG;
+		form->RetroAtt_Night.x = round(form->RetroAtt_Night.x);
+		form->RetroAtt_Night.y = round(form->RetroAtt_Night.y);
+		form->RetroAtt_Night.z = round(form->RetroAtt_Night.z);
+	}
+	break;
 	case 3: //MISSION C BLOCK DATA UPDATE 2
 	{
 		AP7BLK * form = (AP7BLK *)pad;
@@ -254,7 +292,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in_sivb.CutoffIndicator = 1;
 		in_sivb.DensityMultiplier = 1.0;
 		in_sivb.IsForwardIntegration = 1.0;
-		in_sivb.Weight = csm_weight;
+		in_sivb.Weight = sivb_weight;
 
 		//Coast to TIG
 		in_csm.AnchorVector = sv_A;
@@ -396,6 +434,37 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LambertTargeting(&lambert, res);
 		PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
+		//State vectors for uplink
+		EMMENIInputTable in_csm, in_sivb;
+		EphemerisData sv_A1, sv_P1;
+		double csm_weight, sivb_weight;
+		csm_weight = sv_A.mass;
+		sivb_weight = sv_P.mass;
+
+		in_csm.Area = 129.4*0.3048*0.3048;
+		in_csm.CutoffIndicator = 1;
+		in_csm.DensityMultiplier = 1.0;
+		in_csm.IsForwardIntegration = 1.0;
+		in_csm.Weight = csm_weight;
+
+		in_sivb.Area = 368.7*0.3048*0.3048;
+		in_sivb.CutoffIndicator = 1;
+		in_sivb.DensityMultiplier = 1.0;
+		in_sivb.IsForwardIntegration = 1.0;
+		in_sivb.Weight = csm_weight;
+
+		//Coast to TIG
+		in_csm.AnchorVector = ConvertSVtoEphemData(sv_A);
+		in_csm.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(26, 13, 0)) - in_csm.AnchorVector.GMT;
+		EMMENI(in_csm);
+		sv_A1 = in_csm.sv_cutoff;
+
+		//Coast to NCC1
+		in_sivb.AnchorVector = ConvertSVtoEphemData(sv_P);
+		in_sivb.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(26, 37, 0)) - in_sivb.AnchorVector.GMT;
+		EMMENI(in_sivb);
+		sv_P1 = in_sivb.sv_cutoff;
+
 		opt.GETbase = GETBase;
 		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
@@ -425,8 +494,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "NCC1");
 
-		AGCStateVectorUpdate(buffer1, sv_A, true, GETBase);
-		AGCStateVectorUpdate(buffer2, sv_P, false, GETBase);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_LM, sv_A1);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -540,6 +609,37 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		ConcentricRendezvousProcessor(spqopt, res);
 		PoweredFlightProcessor(sv_A, GETbase, res.t_CDH, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
 
+		//State vectors for uplink
+		EMMENIInputTable in_csm, in_sivb;
+		EphemerisData sv_A1, sv_P1;
+		double csm_weight, sivb_weight;
+		csm_weight = sv_A.mass;
+		sivb_weight = sv_P.mass;
+
+		in_csm.Area = 129.4*0.3048*0.3048;
+		in_csm.CutoffIndicator = 1;
+		in_csm.DensityMultiplier = 1.0;
+		in_csm.IsForwardIntegration = 1.0;
+		in_csm.Weight = csm_weight;
+
+		in_sivb.Area = 368.7*0.3048*0.3048;
+		in_sivb.CutoffIndicator = 1;
+		in_sivb.DensityMultiplier = 1.0;
+		in_sivb.IsForwardIntegration = 1.0;
+		in_sivb.Weight = csm_weight;
+
+		//Coast to TIG
+		in_csm.AnchorVector = ConvertSVtoEphemData(sv_A);
+		in_csm.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(27, 48, 0)) - in_csm.AnchorVector.GMT; //TBD: Only one update for NCC2 and NSR. Time tag should be NCC2-12min
+		EMMENI(in_csm);
+		sv_A1 = in_csm.sv_cutoff;
+
+		//Coast to NCC1
+		in_sivb.AnchorVector = ConvertSVtoEphemData(sv_P);
+		in_sivb.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(28, 12, 0)) - in_sivb.AnchorVector.GMT;
+		EMMENI(in_sivb);
+		sv_P1 = in_sivb.sv_cutoff;
+
 		opt.GETbase = GETbase;
 		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
@@ -554,8 +654,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "NSR");
 		sprintf(form->remarks, "heads down, retrograde");
 
-		AGCStateVectorUpdate(buffer1, sv_A, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv_P, false, GETbase);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_LM, sv_P1);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);

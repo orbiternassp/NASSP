@@ -383,7 +383,7 @@ void SIVB::CreateAirfoils()
 	}
 	else
 	{
-		cw_z_pos = 2.0;
+		cw_z_pos = 2.9251*2.0;
 	}
 	if (hDockSI && GetDockStatus(hDockSI))
 	{
@@ -391,10 +391,10 @@ void SIVB::CreateAirfoils()
 	}
 	else
 	{
-		cw_z_neg = 2.0;
+		cw_z_neg = 3.1275*2.0;
 	}
 
-	SetCW(cw_z_pos, cw_z_neg, 2.0, 2.0);
+	SetCW(cw_z_pos, cw_z_neg, 2.4*2.0, 2.4*2.0);
 }
 
 void SIVB::SetS4b()
@@ -403,10 +403,11 @@ void SIVB::SetS4b()
 	double mass = EmptyMass;
 
 	ClearThrusterDefinitions();
+	ClearAirfoilDefinitions();
 	SetSize (15);
 	SetPMI (_V(94,94,20));
 	SetCOG_elev (10);
-	SetCrossSections (_V(130.0, 130.0, 34.2534));
+	SetCrossSections (_V(159.33, 159.33, 34.2534));
 	CreateAirfoils();
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
