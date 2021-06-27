@@ -1461,6 +1461,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 {
 	TRACESETUP("Saturn::clbkVCRedrawEvent");
 	//int i;
+	SetCameraCatchAngle(5.0*RAD);
 
 	switch (id) {
 	//case areaidentifier
