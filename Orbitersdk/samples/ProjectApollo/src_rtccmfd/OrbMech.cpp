@@ -3494,11 +3494,12 @@ VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 	MATRIX3 SBNB,SMNB;
 
 	a = -0.5676353234;
-	TA = 7.5*RAD;
+	TA = 32.5*RAD; //50° mark is at 7.5° trunnion plus 25° from center 
 	SA = PI;
 
-	starset[0][0] = 29;
-	starset[0][1] = 34;
+	//Star 1: 50° mark. Star 2: R line
+	starset[0][0] = 34;
+	starset[0][1] = 29;
 
 	starset[1][0] = 2;
 	starset[1][1] = 4;
@@ -3518,14 +3519,12 @@ VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 		s_NBA = mul(SBNB, _V(sin(TA)*cos(SA), sin(TA)*sin(SA), cos(TA)));
 		s_NBB = mul(SBNB, _V(sin(TA - dTA)*cos(SA), sin(TA - dTA)*sin(SA), cos(TA - dTA)));
 
-		//s_SMA = navstars[29];// mul(REFS, navstars[29]);
-		//s_SMB = navstars[34]; //mul(REFS, navstars[34]);
-
 		SMNB = AXISGEN(s_NBA, s_NBB, s_SMA, s_SMB);
 
 		imuang = CALCGAR(REFS, SMNB);
 
-		if (cos(imuang.z*2.0) + 0.5>0 && isnotocculted(s_SMA, R_C, R_E) && isnotocculted(s_SMB, R_C, R_E))
+		//The first check is to prevent yaw angle from getting too large. 0.74 is roughly 1-cos(75°)
+		if (cos(imuang.z*2.0) + 0.74>0 && isnotocculted(s_SMA, R_C, R_E) && isnotocculted(s_SMB, R_C, R_E))
 		{
 			return imuang;
 		}

@@ -388,6 +388,13 @@ Saturn::~Saturn()
 		dx8ppv = NULL;
 	}
 
+	for (int i = 0; i < 2; i++) {
+		delete[] ReticleLineLen[i];
+		for (int k = 0; k < 2; k++)
+			delete[] ReticleLine[i][k];
+	}
+	delete[] ReticlePoint;
+
 	//fclose(PanelsdkLogFile);
 }
 
@@ -950,6 +957,7 @@ void Saturn::initSaturn()
 		SystemsInit();
 
 		InitVCAnimations();
+		InitReticle();
 
 		// Initialize the panel
 		fdaiDisabled = false;

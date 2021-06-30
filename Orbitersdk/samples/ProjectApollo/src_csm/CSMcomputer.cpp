@@ -591,9 +591,12 @@ VESSEL *CSMcomputer::GetLM()
 CMOptics::CMOptics() {
 
 	sat = NULL;
-	OpticsShaft = 0.0;
+	SextShaft = 0.0;
+	TeleShaft = 0.0;
 	SextTrunion = 0.0;
 	TeleTrunion = 0.0;
+	TeleShaftRate = 0.0;
+	TeleTrunionRate = 0.0;
 	dTrunion = 0.0;
 	dShaft = 0.0;
 	OpticsManualMovement = 0;
@@ -644,7 +647,7 @@ void CMOptics::SystemTimestep(double simdt) {
 // The counters are mechanically connected to the telescope, so it is assumed to be decimal degrees.
 
 bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	int value = (int)(OpticsShaft*100.0*DEG);
+	int value = (int)(TeleShaft*100.0*DEG);
 	if (value < 0) { value += 36000; }
 	return PaintDisplay(surf, digits, value);
 }
@@ -710,7 +713,7 @@ void CMOptics::TimeStep(double simdt) {
 
 	// Optics cover handling
 	if (OpticsCovered && sat->GetStage() >= STAGE_ORBIT_SIVB) {
-		if (OpticsShaft > 150. * RAD) {
+		if (TeleShaft > 150. * RAD) {
 			OpticsCovered = false;			
 			sat->SetOpticsCoverMesh();
 			sat->JettisonOpticsCover();
@@ -723,7 +726,7 @@ void CMOptics::TimeStep(double simdt) {
 	if (sat->OpticsZeroSwitch.IsUp())
 	{
 		//Optics zero speed is twice the angle, limit to max drive rate
-		ShaftRate = min(abs(2.0*OpticsShaft), 19.5*RAD);
+		ShaftRate = min(abs(2.0*SextShaft), 19.5*RAD);
 		TrunRate = min(abs(2.0*SextTrunion), 10.0*RAD);
 	}
 	else
@@ -751,7 +754,7 @@ void CMOptics::TimeStep(double simdt) {
 	//ZERO OPTICS
 	if (sat->OpticsZeroSwitch.IsUp())
 	{
-		if (OpticsShaft > 0)
+		if (SextShaft > 0)
 		{
 			dShaft = -ShaftRate * simdt;
 		}
@@ -799,8 +802,8 @@ void CMOptics::TimeStep(double simdt) {
 			// RESOLVED
 			else
 			{
-				dShaft += (A_s_dot*cos(OpticsShaft) - A_t_dot * sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
-				dTrunion += A_s_dot * sin(OpticsShaft) + A_t_dot * cos(OpticsShaft);
+				dShaft += (A_s_dot*cos(SextShaft) - A_t_dot * sin(SextShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
+				dTrunion += A_s_dot * sin(SextShaft) + A_t_dot * cos(SextShaft);
 			}
 		}
 
@@ -815,17 +818,17 @@ void CMOptics::TimeStep(double simdt) {
 		//sprintf(oapiDebugString(), "Trun: %lf %d Shaft: %lf %d", dTrunion / simdt * DEG, sat->tcdu.GetErrorCounter(), dShaft / simdt * DEG, sat->scdu.GetErrorCounter());
 	}
 
-	OpticsShaft += dShaft;
+	SextShaft += dShaft;
 	SextTrunion += dTrunion;
 
 	//Limits
-	if (OpticsShaft > 270.0*RAD)
+	if (SextShaft > 270.0*RAD)
 	{
-		OpticsShaft = 270.0*RAD;
+		SextShaft = 270.0*RAD;
 	}
-	if (OpticsShaft < -270.0*RAD)
+	if (SextShaft < -270.0*RAD)
 	{
-		OpticsShaft = -270.0*RAD;
+		SextShaft = -270.0*RAD;
 	}
 	if (SextTrunion < 0.0)
 	{
@@ -837,7 +840,7 @@ void CMOptics::TimeStep(double simdt) {
 	}
 
 	sat->tcdu.SetReadCounter(SextTrunion * 4.0);
-	sat->scdu.SetReadCounter(OpticsShaft);
+	sat->scdu.SetReadCounter(SextShaft);
 
 	//sprintf(oapiDebugString(), "%d %d", sat->tcdu.GetErrorCounter(), sat->scdu.GetErrorCounter());
 
@@ -858,11 +861,52 @@ void CMOptics::TimeStep(double simdt) {
 			break;
 	}
 
-	//Roughly from the transfer function (Apollo 15 Delco manual)
-	TeleTrunion += (TeleTrunionTarget - TeleTrunion)*2.0*simdt;
+	//Telescope Servo Drive
+	TelescopeServoDrive(simdt, TeleTrunionTarget, TeleTrunion, TeleTrunionRate);
+	TelescopeServoDrive(simdt, SextShaft, TeleShaft, TeleShaftRate);
+	//sprintf(oapiDebugString(), "TA %lf %lf %lf SH %lf %lf %lf", TeleTrunionTarget*DEG, TeleTrunion*DEG, TeleTrunionRate*DEG, SextShaft*DEG, TeleShaft*DEG, TeleShaftRate*DEG);
+
+	//Limits
+	if (TeleShaft > 270.0*RAD)
+	{
+		TeleShaft = 270.0*RAD;
+		TeleShaftRate = 0.0;
+	}
+	if (TeleShaft < -270.0*RAD)
+	{
+		TeleShaft = -270.0*RAD;
+		TeleShaftRate = 0.0;
+	}
+	if (TeleTrunion < 0.0)
+	{
+		TeleTrunion = 0.0;
+		TeleTrunionRate = 0.0;
+	}
+	if (TeleTrunion > 59.0*RAD)
+	{
+		TeleTrunion = 59.0*RAD;
+		TeleTrunionRate = 0.0;
+	}
 
 	//sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
 	//sprintf(oapiDebugString(), "Sext Trunion EMEM %o", sat->agc.vagc.Erasable[0][RegOPTY]);
+}
+
+void CMOptics::TelescopeServoDrive(double dt, double sxt_angle, double &sct_angle, double &sct_rate)
+{
+	//Direct solution of the transfer function in the Apollo 15 Delco manual
+	double C1, C2, TEMP1, TEMP2, TEMP3;
+	static const double SCT_SERVO_CONST1 = 1.98673;
+	static const double SCT_SERVO_CONST2 = 1.77;
+
+	C2 = sct_angle - sxt_angle;
+	C1 = (sct_rate + SCT_SERVO_CONST2 * C2) / SCT_SERVO_CONST1;
+	TEMP3 = exp(-SCT_SERVO_CONST2 * dt);
+	TEMP1 = TEMP3 * sin(SCT_SERVO_CONST1*dt);
+	TEMP2 = TEMP3 * cos(SCT_SERVO_CONST1*dt);
+
+	sct_rate = -SCT_SERVO_CONST2 * C1*TEMP1 + SCT_SERVO_CONST1 * C1*TEMP2 - SCT_SERVO_CONST1 * C2*TEMP1 - SCT_SERVO_CONST2 * C2*TEMP2;
+	sct_angle = sxt_angle + C1 * TEMP1 + C2 * TEMP2;
 }
 
 void CMOptics::SaveState(FILEHANDLE scn) {
@@ -870,8 +914,9 @@ void CMOptics::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, CMOPTICS_START_STRING);
 	oapiWriteScenario_int(scn, "POWERED", Powered);
 	oapiWriteScenario_int(scn, "OPTICSMANUALMOVEMENT", OpticsManualMovement);
-	papiWriteScenario_double(scn, "OPTICSSHAFT", OpticsShaft);
+	papiWriteScenario_double(scn, "OPTICSSHAFT", SextShaft); //Keep it named OPTICSSHAFT for backwards compatibility
 	papiWriteScenario_double(scn, "SEXTTRUNION", SextTrunion);
+	papiWriteScenario_double(scn, "TELESHAFT", TeleShaft);
 	papiWriteScenario_double(scn, "TELETRUNION", TeleTrunion);
 	papiWriteScenario_bool(scn, "OPTICSCOVERED", OpticsCovered); 
 	oapiWriteLine(scn, CMOPTICS_END_STRING);
@@ -891,10 +936,13 @@ void CMOptics::LoadState(FILEHANDLE scn) {
 			sscanf (line+20, "%d", &OpticsManualMovement);
 		}
 		else if (!strnicmp (line, "OPTICSSHAFT", 11)) {
-			sscanf (line+11, "%lf", &OpticsShaft);
+			sscanf (line+11, "%lf", &SextShaft);
 		}
 		else if (!strnicmp (line, "SEXTTRUNION", 11)) {
 			sscanf (line+11, "%lf", &SextTrunion);
+		}
+		else if (!strnicmp(line, "TELESHAFT", 9)) {
+			sscanf(line + 9, "%lf", &TeleShaft);
 		}
 		else if (!strnicmp (line, "TELETRUNION", 11)) {
 			sscanf (line+11, "%lf", &TeleTrunion);
