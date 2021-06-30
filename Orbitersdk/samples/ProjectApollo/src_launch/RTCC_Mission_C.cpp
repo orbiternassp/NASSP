@@ -113,7 +113,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = CalcGETBase();
 		opt.vessel = calcParams.src;
 		opt.TIG = GET_TIG;
-		opt.dV_LVLH = _V(-3.0, 0.0, 0.0)*0.3048;
+		opt.dV_LVLH = _V(-2.5, 0.0, 0.0)*0.3048; //-2.5 ft/s assumes that the S-IVB doesn't run out of APS propellant until late into the mission and therefore stays in the least draggy attitude
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
 		opt.HeadsUp = false;
 		opt.sxtstardtime = 0;
@@ -184,6 +184,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
 
+		//Save REFSMMAT as if it came from the new deorbit targeting (it will at some point)
+		RZRFDP.Indicator = 0;
+		RZRFDP.REFSMMAT = REFSMMAT;
+		RZRFDP.GETI = res.P30TIG;
+		//Save REFSMMAT in DOD slot
+		GMGMED("G11,CSM,DOM;");
+		//Move REFSMMAT to current
+		GMGMED("G00,CSM,DOD,CSM,CUR;");
+
 		opt.vessel = calcParams.src;
 		opt.GETbase = GETbase;
 		opt.TIG = res.P30TIG;
@@ -220,7 +229,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.LVLHRoll = 0.0;
 		in.LVLHYaw = PI;
 		in.option = 4;
-		in.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		in.REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
 		in.sv = StateVectorCalcEphem(calcParams.src);
 		in.Weight = calcParams.src->GetMass();
 		

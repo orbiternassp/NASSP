@@ -32695,7 +32695,7 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 					return;
 				}
 				REFSMMAT = RZRFDP.REFSMMAT;
-				gmt = RZRFDP.GETI;
+				gmt = GMTfromGET(RZRFDP.GETI);
 			}
 			else if (refs2 == 2)
 			{
