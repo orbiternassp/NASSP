@@ -4542,7 +4542,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[SRF_CSM_TELESCOPECOVER], 0, 0, 0, 0, 536, 535);
 		}
 
-		drawReticle(surf, optics.OpticsShaft, ReticleLineCnt[0], ReticleLineLen[0], ReticleLine[0], ReticlePoint);
+		drawReticle(surf, optics.TeleShaft, ReticleLineCnt[0], ReticleLineLen[0], ReticleLine[0], ReticlePoint);
 
 		return true;
 
@@ -4552,7 +4552,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[SRF_CSM_SEXTANTCOVER], 0, 0, 0, 0, 535, 535);
 		}
 
-		drawReticle(surf, optics.OpticsShaft, ReticleLineCnt[1], ReticleLineLen[1], ReticleLine[1], ReticlePoint);
+		drawReticle(surf, optics.SextShaft, ReticleLineCnt[1], ReticleLineLen[1], ReticleLine[1], ReticlePoint);
 
 		return true;
 
@@ -4750,18 +4750,18 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	// OPTICS
 	case AID_OPTICSCLKAREASEXT:
 		if (optics.SextDualView && optics.SextDVLOSTog){
-			setCameraLOS(optics.OpticsShaft, 0.0);
+			setCameraLOS(optics.SextShaft, 0.0);
 		}
 		else
 		{
-			setCameraLOS(optics.OpticsShaft, optics.SextTrunion);
+			setCameraLOS(optics.SextShaft, optics.SextTrunion);
 		}
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.SextTrunion/RAD);
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft, optics.SextTrunion);
 		return true;
 
 	case AID_OPTICSCLKAREATELE:
-		setCameraLOS(optics.OpticsShaft, optics.TeleTrunion);
+		setCameraLOS(optics.TeleShaft, optics.TeleTrunion);
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.TeleTrunion/RAD);
 		return true;
 
