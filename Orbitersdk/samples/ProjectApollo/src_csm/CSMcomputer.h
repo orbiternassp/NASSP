@@ -188,9 +188,12 @@ public:
 
 	int Powered;                                                    // 0 = NO, 1 = MNA, 2 = MNB, 3 = Both
 	int OpticsManualMovement;										// Manual Movement Demand Flags
-	double OpticsShaft;												// Shaft Position
+	double SextShaft;												// SXT Shaft
+	double TeleShaft;												// SCT Shaft
 	double SextTrunion;												// SXT Trunion
 	double TeleTrunion;												// SCT Trunion
+	double TeleShaftRate;
+	double TeleTrunionRate;
 	double dShaft;
 	double dTrunion;
 	bool SextDualView;												// Toggle logical for sextant dual-view
@@ -199,6 +202,7 @@ public:
 	bool OpticsCovered;												// Are optics covers in place?
 protected:
 	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value);
+	void TelescopeServoDrive(double dt, double sxt_angle, double &sct_angle, double &sct_rate);
 };
 
 
