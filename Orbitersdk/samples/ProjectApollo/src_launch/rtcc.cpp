@@ -3785,7 +3785,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	{
 		if (GDCset == 0)
 		{
-			sprintf(pad.SetStars, "Vega, Deneb");
+			sprintf(pad.SetStars, "Deneb, Vega");
 		}
 		else if (GDCset == 1)
 		{
@@ -7562,6 +7562,28 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt)
 	return sv2;
 }
 
+EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor)
+{
+	EMMENIInputTable in;
+
+	in.AnchorVector = sv1;
+	in.Area = Area;
+	in.CutoffIndicator = 1;
+	in.DensityMultiplier = KFactor;
+	if (dt >= 0)
+	{
+		in.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		in.IsForwardIntegration = -1.0;
+	}
+	in.MaxIntegTime = abs(dt);
+	in.Weight = Weight;
+	EMMENI(in);
+	return in.sv_cutoff;
+}
+
 void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD)
 {
 	VECTOR3 RIgn, VIgn;
@@ -8510,7 +8532,8 @@ void RTCC::PoweredFlightProcessor(PMMMPTInput in, double &GMT_TIG, VECTOR3 &dV_L
 	in.UpperTimeLimit = 10e70;
 	in.CurrentManeuver = 1;
 	in.IterationFlag = true;
-	in.IgnitionTimeOption = true;
+	in.IgnitionTimeOption = false;
+	in.mpt = &mpt;
 
 	PMMMPT(in, man);
 
@@ -25111,6 +25134,7 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			}
 			else if (data[1] == "REP")
 			{
+				sprintf(oapiDebugString(), "Test1");
 				EMSGSUPP(1, 6, 3);
 			}
 			else if (data[1] == "REM")
@@ -32703,7 +32727,7 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 				EMGPRINT("EMSGSUPP", 22);
 				return;
 			}
-			else if (refs == 3)
+			else if (refs2 == 3)
 			{
 				if (PZREAP.RTEDTable[0].RTEDCode == "")
 				{
@@ -32713,7 +32737,7 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 				REFSMMAT = PZREAP.RTEDTable[0].REFSMMAT;
 				gmt = PZREAP.RTEDTable[0].GMTI;
 			}
-			else if (refs == 4)
+			else if (refs2 == 4)
 			{
 				if (PZREAP.RTEDTable[1].RTEDCode == "")
 				{

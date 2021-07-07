@@ -406,12 +406,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	case 6: //MISSION C PRELIMINARY NCC1 MANEUVER
 	{
+		EMMENIInputTable in_csm, in_sivb;
+		EphemerisData sv_A, sv_P, sv_A1, sv_P1, sv_A2, sv_P2;
 		LambertMan lambert;
 		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
 		VECTOR3 dV_LVLH;
-		double GET_TIG_imp, P30TIG, GETBase;
-		SV sv_A, sv_P;
+		double GET_TIG_imp, P30TIG, GETBase, CSMmass, SIVBmass;
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
@@ -420,11 +421,38 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GETBase = CalcGETBase();
 
-		sv_A = StateVectorCalc(calcParams.src);
-		sv_P = StateVectorCalc(calcParams.tgt);
+		//Get state vectors and masses
+		sv_A = StateVectorCalcEphem(calcParams.src);
+		CSMmass = calcParams.src->GetMass();
+		sv_P = StateVectorCalcEphem(calcParams.tgt);
+		SIVBmass = calcParams.tgt->GetMass();
 
+		//Coast integrator settings
+		in_csm.Area = 129.4*0.3048*0.3048;
+		in_csm.CutoffIndicator = 1;
+		in_csm.DensityMultiplier = 1.0;
+		in_csm.IsForwardIntegration = 1.0;
+		in_csm.Weight = CSMmass;
+
+		in_sivb.Area = 368.7*0.3048*0.3048;
+		in_sivb.CutoffIndicator = 1;
+		in_sivb.DensityMultiplier = 1.0;
+		in_sivb.IsForwardIntegration = 1.0;
+		in_sivb.Weight = SIVBmass;
+
+		//Propagate both to TIG-12min
+		in_csm.AnchorVector = sv_A;
+		in_csm.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(26, 13, 0)) - in_csm.AnchorVector.GMT;
+		EMMENI(in_csm);
+		sv_A1 = in_csm.sv_cutoff;
+
+		in_sivb.AnchorVector = sv_P;
+		in_sivb.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(26, 13, 0)) - in_sivb.AnchorVector.GMT;
+		EMMENI(in_sivb);
+		sv_P1 = in_sivb.sv_cutoff;
+
+		//Calculate maneuver
 		GET_TIG_imp = OrbMech::HHMMSSToSS(26, 25, 0);
-
 		GZGENCSN.TIElevationAngle = 27.45*RAD;
 
 		lambert.mode = 1;
@@ -435,45 +463,45 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lambert.N = 1;
 		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
 		lambert.PhaseAngle = 1.32*RAD;
-		lambert.sv_A = sv_A;
-		lambert.sv_P = sv_P;
+		lambert.sv_A = ConvertEphemDatatoSV(sv_A1);
+		lambert.sv_P = ConvertEphemDatatoSV(sv_P1);
 		lambert.T1 = GET_TIG_imp;
 		lambert.T2 = OrbMech::HHMMSSToSS(28, 0, 0);
 
 		LambertTargeting(&lambert, res);
-		PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
-		//State vectors for uplink
-		EMMENIInputTable in_csm, in_sivb;
-		EphemerisData sv_A1, sv_P1;
-		double csm_weight, sivb_weight;
-		csm_weight = sv_A.mass;
-		sivb_weight = sv_P.mass;
-
-		in_csm.Area = 129.4*0.3048*0.3048;
-		in_csm.CutoffIndicator = 1;
-		in_csm.DensityMultiplier = 1.0;
-		in_csm.IsForwardIntegration = 1.0;
-		in_csm.Weight = csm_weight;
-
-		in_sivb.Area = 368.7*0.3048*0.3048;
-		in_sivb.CutoffIndicator = 1;
-		in_sivb.DensityMultiplier = 1.0;
-		in_sivb.IsForwardIntegration = 1.0;
-		in_sivb.Weight = csm_weight;
-
-		//Coast to TIG
-		in_csm.AnchorVector = ConvertSVtoEphemData(sv_A);
-		in_csm.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(26, 13, 0)) - in_csm.AnchorVector.GMT;
+		//Propagate to TIG
+		in_csm.AnchorVector = sv_A1;
+		in_csm.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(26, 25, 0)) - in_csm.AnchorVector.GMT;
 		EMMENI(in_csm);
-		sv_A1 = in_csm.sv_cutoff;
+		sv_A2 = in_csm.sv_cutoff;
 
-		//Coast to NCC1
-		in_sivb.AnchorVector = ConvertSVtoEphemData(sv_P);
+		//Convert to finite burn
+		PMMMPTInput burnin;
+		double GMT_TIG;
+
+		burnin.sv_before = sv_A2;
+		burnin.V_aft = sv_A2.V + res.dV;
+		burnin.Thruster = RTCC_ENGINETYPE_CSMSPS;
+		burnin.DETU = 15.0;
+		burnin.UT = true;
+		burnin.CONFIG = 1; //CSM only
+		burnin.VC = RTCC_MANVEHICLE_CSM;
+		burnin.VehicleArea = in_csm.Area;
+		burnin.VehicleWeight = burnin.CSMWeight = in_csm.Weight;
+		burnin.LMWeight = 0.0;
+		burnin.HeadsUpIndicator = true;
+
+		PoweredFlightProcessor(burnin, GMT_TIG, dV_LVLH);
+		P30TIG = GETfromGMT(GMT_TIG);
+
+		//State vector for uplink
+		in_sivb.AnchorVector = sv_P1;
 		in_sivb.MaxIntegTime = GMTfromGET(OrbMech::HHMMSSToSS(26, 37, 0)) - in_sivb.AnchorVector.GMT;
 		EMMENI(in_sivb);
-		sv_P1 = in_sivb.sv_cutoff;
+		sv_P2 = in_sivb.sv_cutoff;
 
+		//Maneuver PAD
 		opt.GETbase = GETBase;
 		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
@@ -502,9 +530,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "NCC1");
+		sprintf(form->remarks, "15 seconds ullage, 4 jets");
 
-		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1);
-		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_LM, sv_A1);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_P1);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_LM, sv_P2);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);

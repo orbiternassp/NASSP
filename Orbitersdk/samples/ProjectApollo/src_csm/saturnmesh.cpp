@@ -271,40 +271,101 @@ void CMLETHoriCoeffFunc(double aoa, double M, double Re, double *cl, double *cm,
 	*cm = factor * (frac*CM[j + 1] + (1.0 - frac)*CM[j]);
 }
 
-/*void CSMAeroCoeff(double aoa, double M, double Re, double *cl, double *cm, double *cd)
+void CSMAeroVertCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
 {
-	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
-	int i;
-	const int nabsc = 9;
-	static const double AOA[nabsc] = { -180 * RAD, -90 * RAD,-30 * RAD, -10 * RAD,0 * RAD, 10 * RAD,30 * RAD,90 * RAD,180 * RAD };
-	//static const double CL[nabsc] = { 0,      0,   -0.004,     0,     0.008,     0,      0 };
-	static const double CD_free[nabsc] = { 3.1275, 11.08, 6.1147, 3.3497, 2.9251, 3.3497, 6.1147, 11.08, 3.1275 }; //free flow
-	static const double CD_cont[nabsc] = { 1.5, 2.78, 1.12, 0.59, 0.44, 0.59, 1.12, 2.78, 1.5 }; //continuum flow
-	//static const double CM[nabsc] = { 0,      0,   0.0014,  0,-0.0012,     0,      0 };
+	//User this definition of the aoa instead
+	VECTOR3 vec;
+	v->GetAirspeedVector(FRAME_LOCAL, vec);
+	double aoa_T = acos(unit(vec).z);
 
-	for (i = 0; i < nabsc - 1 && AOA[i + 1] < aoa; i++);
-	double f = (aoa - AOA[i]) / (AOA[i + 1] - AOA[i]);
-	*cl = 0.0;//CL[i] + (CL[i + 1] - CL[i]) * f;  // aoa-dependent lift coefficient
-	*cm = 0.0;//CM[i] + (CM[i + 1] - CM[i]) * f;  // aoa-dependent moment coefficient
+	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
+	int i, j;
+	const int nabsc = 9;
+	static const double AOA[nabsc] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
+	static const double CD_free[nabsc] = { 2.41, 2.73, 3.14, 3.61, 5.01, 2.92, 2.46, 2.08, 1.96}; //free flow
+	static const double CD_cont[nabsc] = { 0.54, 0.59, 0.77, 1.12, 2.78, 1.32, 1.41, 1.50, 1.69 }; //continuum flow
+	static const double CM_free[nabsc] = { 0, 0.0440, -0.1436, -0.4349, -0.7682, -0.2369, 0.3820, -0.0115, 0 };
+	static const double CM_cont[nabsc] = { 0, 0.0977, 0.1069, 0.0230, -0.5803, 0.0206, 0.0981, 0.0145, 0 };
+
+	//For drag
+	for (i = 0; i < nabsc - 1 && AOA[i + 1] < aoa_T; i++);
+	double f = (aoa_T - AOA[i]) / (AOA[i + 1] - AOA[i]);
+
+	//For moments
+	for (j = 0; j < nabsc - 1 && AOA[j + 1] < abs(aoa); j++);
+	double f2 = (abs(aoa) - AOA[i]) / (AOA[i + 1] - AOA[i]);
+
+	//No lift simulation
+	*cl = 0.0;
+
 	if (Kn > 10.0)
 	{
 		//Free flow
 		*cd = CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f;
+		*cm = CM_free[j] + (CM_free[j + 1] - CM_free[j]) * f2;
 	}
 	else if (Kn < 0.01)
 	{
 		//Continuum flow
 		*cd = CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04);
+		*cm = CM_cont[j] + (CM_cont[j + 1] - CM_cont[j]) * f2;
 	}
 	else
 	{
 		//Mix
 		double g = (Kn - 0.01) / 9.99;
 		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
+		*cm = g * (CM_free[j] + (CM_free[j + 1] - CM_free[j]) * f2) + (1.0 - g)*(CM_cont[j] + (CM_cont[j + 1] - CM_cont[j]) * f2);
 	}
 
-	sprintf(oapiDebugString(), "aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
-}*/
+	if (aoa < 0)
+	{
+		*cm = -(*cm);
+	}
+
+	//sprintf(oapiDebugString(), "Vertical: aoa %lf aoa_T %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, aoa_T*DEG, M, Re, Kn, *cd, *cl, *cm);
+}
+
+void CSMAeroHorizCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
+{
+	//Only moment calculations
+	*cl = 0;
+	*cd = 0;
+
+	const int nabsc = 9;
+	static const double AOA[nabsc] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
+	static const double CM_free[nabsc] = { 0, -0.0440, 0.1436, 0.4349, 0.7682, 0.2369, -0.3820, 0.0115, 0 };
+	static const double CM_cont[nabsc] = { 0, -0.0977, -0.1069, -0.0230, 0.5803, -0.0206, -0.0981, -0.0145, 0 };
+
+	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
+	int i;
+	for (i = 0; i < nabsc - 1 && AOA[i + 1] < abs(aoa); i++);
+	double f = (abs(aoa) - AOA[i]) / (AOA[i + 1] - AOA[i]);
+
+	if (Kn > 10.0)
+	{
+		//Free flow
+		*cm = CM_free[i] + (CM_free[i + 1] - CM_free[i]) * f;
+	}
+	else if (Kn < 0.01)
+	{
+		//Continuum flow
+		*cm = CM_cont[i] + (CM_cont[i + 1] - CM_cont[i]) * f;
+	}
+	else
+	{
+		//Mix
+		double g = (Kn - 0.01) / 9.99;
+		*cm = g * (CM_free[i] + (CM_free[i + 1] - CM_free[i]) * f) + (1.0 - g)*(CM_cont[i] + (CM_cont[i + 1] - CM_cont[i]) * f);
+	}
+
+	if (aoa < 0)
+	{
+		*cm = -(*cm);
+	}
+
+	//sprintf(oapiDebugString(), "Horizontal: beta %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
+}
 
 void SaturnInitMeshes()
 
@@ -686,7 +747,8 @@ void Saturn::SetCSMStage ()
 	SetPMI(_V(4.3972, 4.6879, 1.6220));
 	SetCrossSections(_V(26.0,26.0,12.02));
 	SetCW(2.41*2.0, 1.96*2.0, 2.36*2.0, 2.36*2.0);
-	//CreateAirfoil(LIFT_VERTICAL, _V(0, 0, 0), CSMAeroCoeff, 254.0*0.0254, 129.4*0.3048*0.3048, 0.1);
+	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), CSMAeroVertCoeff, NULL, 254.0*0.0254, 129.4*0.3048*0.3048, 0.1);
+	CreateAirfoil3(LIFT_HORIZONTAL, _V(0, 0, 0), CSMAeroHorizCoeff, NULL, 254.0*0.0254, 129.4*0.3048*0.3048, 0.1);
 	SetRotDrag(_V(0.7,0.7,0.3));
 	SetPitchMomentScale(0);
 	SetYawMomentScale(0);

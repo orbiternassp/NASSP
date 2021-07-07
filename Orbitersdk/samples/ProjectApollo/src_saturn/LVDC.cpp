@@ -2014,6 +2014,10 @@ gtupdate:	// Target of jump from further down
 			goto limittest;
 		}
 	}
+	else
+	{
+		lvda.SetFCCAttitudeError(_V(0, 0, 0));
+	}
 
 	/*
 		sprintf(oapiDebugString(),"LVDC: TB%d + %f | PS %f %f %f | VS %f %f %f",
@@ -5842,6 +5846,10 @@ void LVDCSV::TimeStep(double simdt) {
 		//	CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,V);								
 
 		// End of test for LVDC_Stop
+	}
+	else
+	{
+		lvda.SetFCCAttitudeError(_V(0, 0, 0));
 	}
 }
 
