@@ -2049,9 +2049,7 @@ void Saturn::SetView(double offset, bool update_direction)
 				FovSave = oapiCameraAperture();
 				FovFixed = true;
 			}
-			DWORD w, h;
-			oapiGetViewportSize(&w, &h);
-			oapiCameraSetAperture(atan(0.000029418*((double)h))); //1.8deg FOV for 534px; tan(0.9*PI/180)/534 = 2.9418e-5
+			oapiCameraSetAperture(atan(0.000029418*PanelPixelHeight)); //1.8deg FOV for 534px; tan(0.9*PI/180)/534 = 2.9418e-5
 
 		}
 		else if (InPanel && PanelId == SATPANEL_TELESCOPE) { // Telescope
@@ -2059,9 +2057,7 @@ void Saturn::SetView(double offset, bool update_direction)
 				FovSave = oapiCameraAperture();
 				FovFixed = true;
 			}
-			DWORD w, h;
-			oapiGetViewportSize(&w, &h);
-			oapiCameraSetAperture(atan(0.0010811*((double)h))); //60deg FOV for 534px; tan(30*PI/180)/534 = 1.0811e-3
+			oapiCameraSetAperture(atan(0.0010811*PanelPixelHeight)); //60deg FOV for 534px; tan(30*PI/180)/534 = 1.0811e-3
 
 		}
 		else {
