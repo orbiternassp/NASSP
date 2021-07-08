@@ -540,7 +540,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and LM state vectors, target load");
+			sprintf(upDesc, "CSM and S-IVB state vectors, target load");
 		}
 	}
 	break;
@@ -700,7 +700,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and LM state vectors, target load");
+			sprintf(upDesc, "CSM and S-IVB state vectors, target load");
 		}
 	}
 	break;
@@ -1661,7 +1661,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and LM state vectors");
+			sprintf(upDesc, "CSM and S-IVB state vectors");
 		}
 	}
 	break;
@@ -1709,7 +1709,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and LM state vectors");
+			sprintf(upDesc, "CSM and S-IVB state vectors");
 		}
 	}
 	break;
