@@ -3956,6 +3956,8 @@ protected:
 	double *ReticleLine[2][2]; //[SCT=0 | SXT=1][X=0 | Y=1]
 	POINT *ReticlePoint;
 
+	double PanelPixelHeight;
+
 	//
 	// Virtual cockpit
 	//
