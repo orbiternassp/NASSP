@@ -293,7 +293,7 @@ void CSMAeroVertCoeff(VESSEL *v, double aoa, double M, double Re, void *context,
 
 	//For moments
 	for (j = 0; j < nabsc - 1 && AOA[j + 1] < abs(aoa); j++);
-	double f2 = (abs(aoa) - AOA[i]) / (AOA[i + 1] - AOA[i]);
+	double f2 = (abs(aoa) - AOA[j]) / (AOA[j + 1] - AOA[j]);
 
 	//No lift simulation
 	*cl = 0.0;

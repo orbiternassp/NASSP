@@ -129,10 +129,10 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(27 * 60 * 60), 7, MST_C_DAY2STATE4);
 		break;
 	case MST_C_DAY2STATE4: //  NCC2 Update to NSR Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(27 * 60 * 60 + 32 * 60), 8, MST_C_DAY2STATE5);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 3.0*60.0, 8, MST_C_DAY2STATE5);
 		break;
 	case MST_C_DAY2STATE5: // NSR Update to TPI Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(28 * 60 * 60 + 50 * 60), 9, MST_C_DAY2STATE6);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(28 * 60 * 60 + 50 * 60), 9, MST_C_DAY2STATE6);
 		break;
 	case MST_C_DAY2STATE6: // TPI Update to Final Separation Maneuver update
 		UpdateMacro(UTP_PADONLY, PT_AP7TPI, rtcc->GETEval2(30 * 60 * 60 + 9 * 60), 10, MST_C_DAY2STATE7);
