@@ -41,17 +41,17 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu1[] =
 	{
 		{ "Mode", 0, 'T' },
-		{ "Vector times", 0, 'P' },
-		{ "Maneuver Time", 0, 'M' },
-		{ "Arrival Time", 0, 'A' },
-		{ "Number of revolutions", 0, 'N' },
-		{ "Gravity sources", 0, 'G' },
+		{ "Target vehicle", 0, 'P' },
+		{ "Chaser vector time", 0, 'M' },
+		{ "Target vector time", 0, 'A' },
+		{ "Time of 1st maneuver", 0, 'N' },
+		{ "Time of 2nd maneuver", 0, 'G' },
 
-		{ "Target Vessel", 0, 'V' },
-		{ "Calculate burn", 0, 'C' },
+		{ "Time increment", 0, 'V' },
+		{ "Time range", 0, 'C' },
 		{ "Set Offset", 0, 'O' },
-		{ "LVLH maneuver axis", 0, 'U' },
-		{ "Transfer maneuver", 0, 'L' },
+		{ "Go to display", 0, 'U' },
+		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -64,8 +64,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("T1", OAPI_KEY_N, &ApolloRTCCMFD::t1dialogue);
 	RegisterFunction("T2", OAPI_KEY_G, &ApolloRTCCMFD::t2dialogue);
 
-	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("INC", OAPI_KEY_U, &ApolloRTCCMFD::menuTITimeIncrement);
+	RegisterFunction("RAN", OAPI_KEY_V, &ApolloRTCCMFD::menuTITimeRange);
 	RegisterFunction("OFF", OAPI_KEY_O, &ApolloRTCCMFD::TwoImpulseOffset);
 	RegisterFunction("DIS", OAPI_KEY_C, &ApolloRTCCMFD::menuSetTIMultipleSolutionPage);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
@@ -2657,14 +2657,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu78[] =
 	{
-		{ "Transfer plan to SFP table", 0, 'T' },
+		{ "Transfer plan to SFP", 0, 'T' },
 		{ "Delete column", 0, 'D' },
-		{ "", 0, ' ' },
+		{ "Go to SFP display", 0, 'V' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
-		{ "Calculate maneuver", 0, 'C' },
+		{ "Calc. maneuver", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -2676,7 +2676,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("F30", OAPI_KEY_T, &ApolloRTCCMFD::menuTransferMCCPlanToSFP);
 	RegisterFunction("F26", OAPI_KEY_D, &ApolloRTCCMFD::menuDeleteMidcourseColumn);
-	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("SFP", OAPI_KEY_V, &ApolloRTCCMFD::menuSetSkeletonFlightPlanPage);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);

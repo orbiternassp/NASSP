@@ -44,6 +44,10 @@ public:
 	void set_TIChaserVectorTime(double get);
 	void menuTITargetVectorTime();
 	void set_TITargetVectorTime(double get);
+	void menuTITimeIncrement();
+	void set_TITimeIncrement(double dt);
+	void menuTITimeRange();
+	void set_TITimeRange(double dt);
 	void t1dialogue();
 	void set_t1(double t1);
 	void t2dialogue();
