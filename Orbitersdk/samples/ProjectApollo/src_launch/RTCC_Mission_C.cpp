@@ -407,11 +407,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 6: //MISSION C PRELIMINARY NCC1 MANEUVER
 	{
 		EphemerisData sv_A, sv_P, sv_A1, sv_P1, sv_A2, sv_P2;
-		LambertMan lambert;
-		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
 		VECTOR3 dV_LVLH;
-		double GET_TIG_imp, P30TIG, GETBase, CSMmass, SIVBmass, csm_area, sivb_area;
+		double P30TIG, GETBase, CSMmass, SIVBmass, csm_area, sivb_area, TPI_guess, NCC1_guess, GMT_TPI;
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
@@ -419,6 +417,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 
 		GETBase = CalcGETBase();
+
+		//Some estimates
+		TPI_guess = OrbMech::HHMMSSToSS(29, 23, 0);
+		NCC1_guess = OrbMech::HHMMSSToSS(26, 25, 0);
+		calcParams.CDH = OrbMech::HHMMSSToSS(28, 0, 0);
 
 		//Get state vectors and masses
 		sv_A = StateVectorCalcEphem(calcParams.src);
@@ -429,27 +432,56 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sivb_area = 368.7*0.3048*0.3048;
 
 		//Propagate both to TIG-12min
-		sv_A1 = coast(sv_A, GMTfromGET(OrbMech::HHMMSSToSS(26, 13, 0)) - sv_A.GMT, CSMmass, csm_area);
-		sv_P1 = coast(sv_P, GMTfromGET(OrbMech::HHMMSSToSS(26, 13, 0)) - sv_P.GMT, SIVBmass, sivb_area);
+		sv_A1 = coast(sv_A, GMTfromGET(NCC1_guess - 12.0*60.0) - sv_A.GMT, CSMmass, csm_area);
+		sv_P1 = coast(sv_P, GMTfromGET(NCC1_guess - 12.0*60.0) - sv_P.GMT, SIVBmass, sivb_area);
+
+		//Calculate TPI time. First coast (with drag) to estimated time
+		sv_P2 = coast(sv_P, GMTfromGET(TPI_guess) - sv_P1.GMT, SIVBmass, sivb_area);
+		calcParams.TPI = FindOrbitalMidnight(ConvertEphemDatatoSV(sv_P2), GETBase, TPI_guess);
+		GMT_TPI = GMTfromGET(calcParams.TPI);
 
 		//Calculate maneuver
-		GET_TIG_imp = OrbMech::HHMMSSToSS(26, 25, 0);
+		TwoImpulseOpt tiopt;
+		TwoImpulseResuls tires;
+
+		GZGENCSN.TIDeltaH = 8.0*1852.0;
+		GZGENCSN.TIPhaseAngle = 1.32*RAD;
 		GZGENCSN.TIElevationAngle = 27.45*RAD;
+		GZGENCSN.TITravelAngle = 140.0*RAD;
 
-		lambert.mode = 1;
-		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
-		lambert.DH = 8.0*1852.0;
-		lambert.ElevationAngle = 27.45*RAD;
-		lambert.GETbase = GETBase;
-		lambert.N = 1;
-		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lambert.PhaseAngle = 1.32*RAD;
-		lambert.sv_A = ConvertEphemDatatoSV(sv_A1);
-		lambert.sv_P = ConvertEphemDatatoSV(sv_P1);
-		lambert.T1 = GET_TIG_imp;
-		lambert.T2 = OrbMech::HHMMSSToSS(28, 0, 0);
+		tiopt.mode = 2;
+		tiopt.T1 = GMTfromGET(NCC1_guess);
+		tiopt.T2 = GMTfromGET(calcParams.CDH - 2.0*60.0);
+		tiopt.sv_A = sv_A1;
+		tiopt.sv_P = sv_P1;
+		tiopt.IVFLAG = 1;
+		tiopt.TimeStep = 20.0;
+		tiopt.TimeRange = 240.0;
 
-		LambertTargeting(&lambert, res);
+		PMSTICN(tiopt, tires);
+
+		//Find the closest solution
+		double dt_err = 1000000.0;
+		int i_closest = 0;
+		for (int ii = 0; ii < PZTIPREG.Solutions; ii++)
+		{
+			if (abs(PZTIPREG.data[ii].T_TPI - GMT_TPI) < dt_err)
+			{
+				i_closest = ii;
+				dt_err = abs(PZTIPREG.data[ii].T_TPI - GMT_TPI);
+			}
+		}
+
+		//Calculate full data for final NCC1 maneuver
+		tiopt.sv_A = PZMYSAVE.SV_mult[0];
+		tiopt.sv_P = PZMYSAVE.SV_mult[1];
+		tiopt.DH = GZGENCSN.TIDeltaH;
+		tiopt.PhaseAngle = GZGENCSN.TIPhaseAngle;
+		tiopt.T1 = PZTIPREG.data[i_closest].Time1;
+		tiopt.T2 = PZTIPREG.data[i_closest].Time2;
+		tiopt.mode = 5;
+
+		PMSTICN(tiopt, tires);
 
 		//Propagate to TIG
 		sv_A2 = coast(sv_A1, GMTfromGET(OrbMech::HHMMSSToSS(26, 25, 0)) - sv_A1.GMT, CSMmass, csm_area);
@@ -459,7 +491,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GMT_TIG;
 
 		burnin.sv_before = sv_A2;
-		burnin.V_aft = sv_A2.V + res.dV;
+		burnin.V_aft = sv_A2.V + tires.dV;
 		burnin.Thruster = RTCC_ENGINETYPE_CSMSPS;
 		burnin.DETU = 15.0;
 		burnin.UT = true;
@@ -623,19 +655,19 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			tiopt.mode = 2;
 			tiopt.T1 = GMTfromGET(OrbMech::HHMMSSToSS(27, 30, 0));
-			tiopt.T2 = GMTfromGET(OrbMech::HHMMSSToSS(27, 59, 0));
+			tiopt.T2 = GMTfromGET(OrbMech::HHMMSSToSS(27, 58, 0));
 			tiopt.sv_A = sv_A_upl;
 			tiopt.sv_P = sv_P_upl;
 			tiopt.IVFLAG = 1;
-			tiopt.TimeStep = 10.0;
-			tiopt.TimeRange = 120.0;
+			tiopt.TimeStep = 20.0;
+			tiopt.TimeRange = 240.0;
 
 			PMSTICN(tiopt, tires);
 
 			//Find the closest solution
 			double dt_err = 1000000.0;
 			int i_closest = 0;
-			for (int ii = 0; ii < 13; ii++)
+			for (int ii = 0; ii < PZTIPREG.Solutions; ii++)
 			{
 				if (abs(PZTIPREG.data[ii].T_TPI - GMT_TPI) < dt_err)
 				{
