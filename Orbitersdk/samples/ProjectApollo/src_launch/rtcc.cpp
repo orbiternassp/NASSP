@@ -1666,6 +1666,14 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 			{
 				PZMCCPLN.AZ_max = dtemp * RAD;
 			}
+			else if (papiReadScenario_double(Buff, "TLCC_TLMIN", dtemp))
+			{
+				PZMCCPLN.TLMIN = dtemp;
+			}
+			else if (papiReadScenario_double(Buff, "TLCC_TLMAX", dtemp))
+			{
+				PZMCCPLN.TLMAX = dtemp;
+			}
 			else if (papiReadScenario_double(Buff, "REVS1", dtemp))
 			{
 				PZMCCPLN.REVS1 = PZLOIPLN.REVS1 = dtemp;

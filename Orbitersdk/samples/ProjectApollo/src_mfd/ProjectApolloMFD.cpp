@@ -1361,9 +1361,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 						sprintf(buffer,"TEPHEM: %05o %05o %05o",tephem[0],tephem[1],tephem[2]);
 						TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
 						// Format gimbal angles and print them
-						sprintf(buffer, "CSM O/I/M: %3.2f %3.2f %3.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
+						sprintf(buffer, "CSM O/I/M: %+07.2f %+07.2f %+07.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
 						TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-						sprintf(buffer, "LM O/I/M: %3.2f %3.2f %3.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
+						sprintf(buffer, "LM O/I/M: %+07.2f %+07.2f %+07.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
 						TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
 
 						//Docked IMU Fine Alignment

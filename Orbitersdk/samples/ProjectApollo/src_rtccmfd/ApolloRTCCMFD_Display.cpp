@@ -2165,7 +2165,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 10 * H / 14, "Undocked", 8);
 		}
 
-		sprintf(Buffer, "%d", GC->rtcc->PZMCCPLN.SFPBlockNum);
+		if (GC->rtcc->PZMCCPLN.SFPBlockNum == 1)
+		{
+			sprintf(Buffer, "1 (Preflight)");
+		}
+		else
+		{
+			sprintf(Buffer, "2 (Nominal Targets)");
+		}
 		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
 		if (GC->rtcc->PZMCCPLN.Mode == 7)
