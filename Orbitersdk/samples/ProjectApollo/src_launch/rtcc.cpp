@@ -15407,7 +15407,9 @@ RTCC_PMMMPT_12_A:
 	VECTOR3 H, YT;
 	double P, Y, PARM[6], SUMN, DA[6], DAS[6], X, LAMI, LAMP, WX[6], WY[6], EPS[6], SAVEX, DP[6], TIG, YV[6], DELP[6], LAML;
 	int ICNT, i, ITMAX, J, IPI, ii, NIP, IPT;
-	bool IP[6], IFLAG, DFLAG, IC[6];
+	bool IP[6]; //Switches on/off independent variables (Pitch, Yaw, DV, TIG, Lambert time of flight, Lambert C)
+	bool IC[6]; //Switch on/off dependent variables (orbital elements)
+	bool IFLAG, DFLAG;
 	CELEMENTS ELPRES, OSCELB;
 
 	double **A, **XP;
@@ -15437,10 +15439,11 @@ RTCC_PMMMPT_12_A:
 	{
 		EPS[0] = 1.0 / OrbMech::R_Earth;
 	}
-	EPS[1] = 0.0001;
-	EPS[2] = 0.00001;
-	EPS[3] = 0.00001;
-	EPS[4] = 0.00001;
+	EPS[1] = 0.0001; //Eccentricity
+	EPS[2] = 0.00001; //Inclination
+	EPS[3] = 0.00001; //Longitude of the ascending node
+	EPS[4] = 0.00002; //Argument of periapsis
+
 	WX[0] = 1.0;
 	WX[1] = 1.0;
 	WX[2] = 0.01;
@@ -15458,6 +15461,12 @@ RTCC_PMMMPT_12_A:
 	DP[3] = 0.01;
 	IC[0] = IC[1] = IC[2] = IC[3] = IC[4] = true;
 	IC[5] = false;
+
+	//If eccentricity is smaller than 0.005 switch it off as iterating variable
+	if (ELA.e < 0.005)
+	{
+		IC[4] = false;
+	}
 
 	PARM[3] = GMTBB;
 	IP[3] = true;
