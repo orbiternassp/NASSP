@@ -15680,7 +15680,7 @@ RTCC_PMMMPT_19_B:
 	{
 		goto RTCC_PMMMPT_17_B;
 	}	
-	PCMATO(A, YV, XP, DA, 5, NIP, WY, 0.0, WNULL);
+	PCMATO(A, YV, XP, DA, ICNT, NIP, WY, 0.0, WNULL);
 	goto RTCC_PMMMPT_20_B;
 RTCC_PMMMPT_20_A:
 	//Reset independent variables
