@@ -653,30 +653,43 @@ bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits){
 }
 
 bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	int value = (int)(TeleTrunion*1000.0*DEG);
+	int value = (int)(TeleTrunion*100.0*DEG);
 	if (value < 0) { value += 36000; }
 	return PaintDisplay(surf, digits, value);
 }
 
 bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
 	int srx, sry, digit[5];
-	int x=value;	
+	int x=value;
 	digit[0] = (x%10);
 	digit[1] = (x%100)/10;
 	digit[2] = (x%1000)/100;
 	digit[3] = (x%10000)/1000;
 	digit[4] = x/10000;
-	sry = (int)(digit[0] * 1.2);
+
 	srx = 8 + (digit[4] * 25);
-	oapiBlt(surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	if (digit[4])
+		sry = 33;
+	else
+		sry = 22;
+	oapiBlt(surf, digits, 0, 0, srx, sry, 9, 12, SURF_PREDEF_CK);
+
 	srx = 8 + (digit[3] * 25);
-	oapiBlt(surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	if (digit[4] || digit[3])
+		sry = 33;
+	else
+		sry = 22;
+	oapiBlt(surf, digits, 10, 0, srx, sry, 9, 12, SURF_PREDEF_CK);
+
 	srx = 8 + (digit[2] * 25);
 	oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
 	srx = 8 + (digit[1] * 25);
 	oapiBlt(surf, digits, 30, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
 	srx = 8 + (digit[0] * 25);
+	sry = (int)(digit[0] * 1.2);
 	oapiBlt(surf, digits, 40, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+
+	oapiColourFill(surf, oapiGetColour(255, 255, 255), 29, 5, 1, 2);
 	return true;
 }
 
@@ -830,9 +843,9 @@ void CMOptics::TimeStep(double simdt) {
 	{
 		SextShaft = -270.0*RAD;
 	}
-	if (SextTrunion < 0.0)
+	if (SextTrunion < -59.0*RAD)
 	{
-		SextTrunion = 0.0;
+		SextTrunion = -59.0*RAD;
 	}
 	if (SextTrunion > 59.0*RAD)
 	{
@@ -877,9 +890,9 @@ void CMOptics::TimeStep(double simdt) {
 		TeleShaft = -270.0*RAD;
 		TeleShaftRate = 0.0;
 	}
-	if (TeleTrunion < 0.0)
+	if (TeleTrunion < -59.0*RAD)
 	{
-		TeleTrunion = 0.0;
+		TeleTrunion = -59.0*RAD;
 		TeleTrunionRate = 0.0;
 	}
 	if (TeleTrunion > 59.0*RAD)

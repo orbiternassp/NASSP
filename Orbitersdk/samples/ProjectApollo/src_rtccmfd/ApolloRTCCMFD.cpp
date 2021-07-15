@@ -2475,6 +2475,48 @@ void ApolloRTCCMFD::set_TITargetVectorTime(double get)
 	GC->rtcc->med_k30.TargetVectorTime = get;
 }
 
+void ApolloRTCCMFD::menuTITimeIncrement()
+{
+	bool TITimeIncrementInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter the time increment between the variable maneuver times:", TITimeIncrementInput, 0, 25, (void*)this);
+}
+
+bool TITimeIncrementInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_TITimeIncrement(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TITimeIncrement(double dt)
+{
+	GC->rtcc->med_k30.TimeStep = dt;
+}
+
+void ApolloRTCCMFD::menuTITimeRange()
+{
+	bool TITimeRange(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter the time increment between the variable maneuver times:", TITimeRange, 0, 25, (void*)this);
+}
+
+bool TITimeRange(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_TITimeRange(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TITimeRange(double dt)
+{
+	GC->rtcc->med_k30.TimeRange = dt;
+}
+
 void ApolloRTCCMFD::t1dialogue()
 {
 	bool T1GETInput(void *id, char *str, void *data);
@@ -5951,49 +5993,69 @@ void ApolloRTCCMFD::set_TLCCDesiredInclination(double inc)
 
 void ApolloRTCCMFD::menuSetTLMCCAzimuthConstraints()
 {
+	char Buff[128];
+	sprintf_s(Buff, "%.2lf,%.2lf", GC->rtcc->PZMCCPLN.AZ_min*DEG, GC->rtcc->PZMCCPLN.AZ_max*DEG);
+
 	bool TLMCCAzimuthConstraintsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F22,Minimum Azimuth,Maximum Azimuth; (must be between -110 and -70°)", TLMCCAzimuthConstraintsInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Input Format: Minimum Azimuth,Maximum Azimuth (must be between -110 and -70°)", TLMCCAzimuthConstraintsInput, Buff, 20, (void*)this);
 }
 
 bool TLMCCAzimuthConstraintsInput(void *id, char *str, void *data)
 {
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	char Buff[128];
+	sprintf_s(Buff, "F22,%s;", str);
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
 	return true;
 }
 
 void ApolloRTCCMFD::menuSetTLMCCTLCTimesConstraints()
 {
+	char Buff[128];
+	int hh1, hh2, mm1, mm2;
+	double ss1, ss2;
+
+	SStoHHMMSS(GC->rtcc->PZMCCPLN.TLMIN*3600.0, hh1, mm1, ss1);
+	SStoHHMMSS(GC->rtcc->PZMCCPLN.TLMAX*3600.0, hh2, mm2, ss2);
+
+	sprintf_s(Buff, "%d:%d:%.0lf,%d:%d:%.0lf", hh1, mm1, ss1, hh2, mm2, ss2);
+
 	bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint, enter F23; to clear both)", TLMCCTLCTimesConstraintsInput, 0, 40, (void*)this);
+	oapiOpenInputBox("Input Format: TLMIN,TLMAX (GET in HH:MM:SS, for no constraint)", TLMCCTLCTimesConstraintsInput, Buff, 40, (void*)this);
 }
 
 bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data)
 {
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	char Buff[128];
+	sprintf_s(Buff, "F23,%s;", str);
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
 	return true;
 }
 
 void ApolloRTCCMFD::menuSetTLMCCReentryContraints()
 {
 	bool TLMCCReentryContraintsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F24,Flight Path Angle,Reentry Range;", TLMCCReentryContraintsInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Input Format: Flight Path Angle,Reentry Range", TLMCCReentryContraintsInput, "-6.52,1285", 20, (void*)this);
 }
 
 bool TLMCCReentryContraintsInput(void *id, char *str, void *data)
 {
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	char Buff[128];
+	sprintf_s(Buff, "F24,%s;", str);
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
 	return true;
 }
 
 void ApolloRTCCMFD::menuSetTLMCCPericynthionHeightLimits()
 {
 	bool TLMCCPericynthionHeightLimitsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F29,height minimum,height maximum;", TLMCCPericynthionHeightLimitsInput, "F29,40,5000;", 40, (void*)this);
+	oapiOpenInputBox("Input Format: height minimum,height maximum", TLMCCPericynthionHeightLimitsInput, "40,5000", 40, (void*)this);
 }
 
 bool TLMCCPericynthionHeightLimitsInput(void *id, char *str, void *data)
 {
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	char Buff[128];
+	sprintf_s(Buff, "F29,%s;", str);
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
 	return true;
 }
 

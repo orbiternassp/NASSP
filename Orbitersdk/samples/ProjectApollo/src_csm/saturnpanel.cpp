@@ -219,14 +219,12 @@ void Saturn::InitReticle() {
 	//printf("RetMaxlen:%d\n", ReticleLineMaxLen);
 }
 
-void drawReticle(SURFHANDLE surf, double shaft, int reticleLineCnt, int reticleLineLen[], double **reticleLine, POINT ptbuf[]) {
+void drawReticle(SURFHANDLE surf, double shaft, double panelPixelHeight, int reticleLineCnt, int reticleLineLen[], double **reticleLine, POINT ptbuf[]) {
 	HGDIOBJ oldObj;
 	HDC hDC = oapiGetDC(surf);
 	HPEN pen = CreatePen(PS_SOLID, 1, RGB(211, 171, 23));
 	oldObj = SelectObject(hDC, pen);
-	DWORD w, h;
-	oapiGetViewportSize(&w, &h);
-	double reticleMul = 0.5*((double)h) / tan(oapiCameraAperture());
+	double reticleMul = 0.5*panelPixelHeight / tan(oapiCameraAperture());
 	double cosShaft = cos(shaft), sinShaft = sin(shaft);
 	int idx = 0;
 	for (int i = 0; i < reticleLineCnt; i++) {
@@ -1386,20 +1384,31 @@ bool Saturn::clbkLoadPanel (int id) {
 	if (id == SATPANEL_SEXTANT) { // Sextant
 
 		int offset1 = 0, offset2 = 0;
+		double panelw, panelh = 768;
 		if (renderViewportIsWideScreen == 1) {
 			offset1 = 103;
 			offset2 = 205;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_WIDE));
+			panelw = 1229;
 		} else if (renderViewportIsWideScreen == 2) {
 			offset1 = 171;
 			offset2 = 342;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_16_9));
+			panelw = 1366;
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
+			panelw = 1024;
 		}
 		if ( !hBmp ) {
 			return false;
 		}
+
+		double panelscale = oapiGetPanelScale(), hscale = panelscale, vscale = panelscale;
+		DWORD screenw, screenh;
+		oapiGetViewportSize(&screenw, &screenh);
+		if (screenw > panelw*panelscale) hscale = ((double)screenw) / panelw;
+		if (screenh > panelh*panelscale) vscale = ((double)screenh) / panelh;
+		PanelPixelHeight = ((double)screenh) / (min(hscale, vscale));
 
 		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, SATPANEL_GN, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
@@ -1424,20 +1433,31 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_TELESCOPE) { // Telescope
 		int offset1 = 0, offset2 = 0;
+		double panelw, panelh = 768;
 		if (renderViewportIsWideScreen == 1) {
 			offset1 = 103;
 			offset2 = 205;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_WIDE));
+			panelw = 1229;
 		} else if (renderViewportIsWideScreen == 2) {
 			offset1 = 171;
 			offset2 = 342;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_16_9));
+			panelw = 1366;
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
+			panelw = 1024;
 		}
 		if ( !hBmp ) {
 			return false;
 		}
+
+		double panelscale = oapiGetPanelScale(), hscale = panelscale, vscale = panelscale;
+		DWORD screenw, screenh;
+		oapiGetViewportSize(&screenw, &screenh);
+		if (screenw > panelw*panelscale) hscale = ((double)screenw) / panelw;
+		if (screenh > panelh*panelscale) vscale = ((double)screenh) / panelh;
+		PanelPixelHeight = ((double)screenh) / (min(hscale, vscale));
 
 		oapiSetPanelNeighbours(SATPANEL_SEXTANT, -1, SATPANEL_GN, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
@@ -4542,7 +4562,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[SRF_CSM_TELESCOPECOVER], 0, 0, 0, 0, 536, 535);
 		}
 
-		drawReticle(surf, optics.TeleShaft, ReticleLineCnt[0], ReticleLineLen[0], ReticleLine[0], ReticlePoint);
+		drawReticle(surf, optics.TeleShaft, PanelPixelHeight, ReticleLineCnt[0], ReticleLineLen[0], ReticleLine[0], ReticlePoint);
 
 		return true;
 
@@ -4552,7 +4572,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[SRF_CSM_SEXTANTCOVER], 0, 0, 0, 0, 535, 535);
 		}
 
-		drawReticle(surf, optics.SextShaft, ReticleLineCnt[1], ReticleLineLen[1], ReticleLine[1], ReticlePoint);
+		drawReticle(surf, optics.SextShaft, PanelPixelHeight, ReticleLineCnt[1], ReticleLineLen[1], ReticleLine[1], ReticlePoint);
 
 		return true;
 

@@ -113,6 +113,7 @@ protected:
 	bool TurnedOn;
 	bool Initialized;
 	bool Caged;
+	bool Powered;
 
 	union {
 		struct {

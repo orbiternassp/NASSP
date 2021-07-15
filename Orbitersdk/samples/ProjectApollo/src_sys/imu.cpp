@@ -65,6 +65,7 @@ void IMU::Init()
 	TurnedOn = false;
 	Initialized = false;
 	Caged = false;
+	Powered = false;
 	
 	RemainingPIPA.X = 0;
 	RemainingPIPA.Y = 0;
@@ -153,7 +154,6 @@ void IMU::TurnOn()
 {
 	if (!Operate) {
 		SetCaged(false);
-		agc.SetInputChannelBit(030, IMUOperate, true);
 		agc.SetInputChannelBit(030, ISSTurnOnRequest, true);
 		// Clear IMUFail
 		agc.SetInputChannelBit(030, IMUFail, false);
@@ -165,7 +165,6 @@ void IMU::TurnOff()
 
 {
 	if (Operate) {
-		agc.SetInputChannelBit(030, IMUOperate, false);
 		agc.SetInputChannelBit(030, ISSTurnOnRequest, false);
 
 		// The IMU is monitored by a separate "IMU Fail Detect Logic",
@@ -355,13 +354,25 @@ void IMU::Timestep(double simdt)
 		}
 	}
 
+	//IMU On
+	Powered = IsPowered();
+
+	if (Powered)
+	{
+		agc.SetInputChannelBit(030, IMUOperate, true);
+	}
+	else
+	{
+		agc.SetInputChannelBit(030, IMUOperate, false);
+	}
+	
 	if (!Operate) {
-		if (IsPowered())
+		if (Powered)
 			TurnOn();
 		else
 			return; 
 	}
-	else if (!IsPowered()) {
+	else if (!Powered) {
 		TurnOff();
 		return;
 	}
