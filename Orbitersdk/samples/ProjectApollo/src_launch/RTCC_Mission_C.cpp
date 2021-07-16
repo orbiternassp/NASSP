@@ -95,6 +95,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Store some MPT data
 		PZMPTCSM.ConfigurationArea = 129.4*0.3048*0.3048;
 		PZMPTLEM.ConfigurationArea = 368.7*0.3048*0.3048;
+		PZMPTCSM.CommonBlock.SPSFuelRemaining = 4430.0;
 	}
 	break;
 	case 1: // MISSION C PHASING BURN
@@ -274,7 +275,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		EphemerisData sv_A, sv_P, sv_A1, sv_P2, sv_A1_apo, sv_A2;
 		VECTOR3 dV_LVLH;
-		double GET_TIG, GMT_TIG, csm_weight, sivb_weight, GMT_NCC1, dr_des;
+		double GET_TIG, GMT_TIG, csm_weight, sivb_weight, GMT_NCC1, dr_des, csm_area, sivb_area;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -282,40 +283,20 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		csm_weight = calcParams.src->GetMass();
 		sv_P = StateVectorCalcEphem(calcParams.tgt);
 		sivb_weight = calcParams.tgt->GetMass();
+		csm_area = 129.4*0.3048*0.3048;
+		sivb_area = 368.7*0.3048*0.3048;
 
 		GET_TIG = OrbMech::HHMMSSToSS(15, 52, 0);
 		GMT_TIG = GMTfromGET(GET_TIG);
 		GMT_NCC1 = GMTfromGET(OrbMech::HHMMSSToSS(26, 25, 0));
 		dr_des = 76.5*1852.0;
 
-		EMMENIInputTable in_csm, in_sivb;
-
-		//Initial settings
-		in_csm.Area = 129.4*0.3048*0.3048;
-		in_csm.CutoffIndicator = 1;
-		in_csm.DensityMultiplier = 1.0;
-		in_csm.IsForwardIntegration = 1.0;
-		in_csm.Weight = csm_weight;
-
-		in_sivb.Area = 1400.0*0.3048*0.3048;
-		in_sivb.CutoffIndicator = 1;
-		in_sivb.DensityMultiplier = 1.0;
-		in_sivb.IsForwardIntegration = 1.0;
-		in_sivb.Weight = sivb_weight;
-
 		//Coast to TIG
-		in_csm.AnchorVector = sv_A;
-		in_csm.MaxIntegTime = GMT_TIG - sv_A.GMT;
-		EMMENI(in_csm);
-		sv_A1 = in_csm.sv_cutoff;
+		sv_A1 = coast(sv_A, GMT_TIG - sv_A.GMT, csm_weight, csm_area);
+		sv_A1_apo = sv_A1;
 
 		//Coast to NCC1
-		in_sivb.AnchorVector = sv_P;
-		in_sivb.MaxIntegTime = GMT_NCC1 - sv_P.GMT;
-		EMMENI(in_sivb);
-		sv_P2 = in_sivb.sv_cutoff;
-
-		sv_A1_apo = sv_A1;
+		sv_P2 = coast(sv_P, GMT_NCC1 - sv_P.GMT, sivb_weight, sivb_area, 2.0); //K-Factor of 2 is a low estimate, but better than 1.0 for a drifting S-IVB
 
 		MATRIX3 Q_Xx;
 		VECTOR3 i, j, k, dr;
@@ -334,11 +315,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		do
 		{
 			//Coast to NCC1
-			sv_A1_apo.V = sv_A1.V + i*dv;
-			in_csm.AnchorVector = sv_A1_apo;
-			in_csm.MaxIntegTime = GMT_NCC1 - sv_A1_apo.GMT;
-			EMMENI(in_csm);
-			sv_A2 = in_csm.sv_cutoff;
+			sv_A1_apo.V = sv_A1.V + i * dv;
+			sv_A2 = coast(sv_A1_apo, GMT_NCC1 - sv_A1_apo.GMT, csm_weight, csm_area);
 
 			dr = mul(Q_Xx, sv_A2.R - sv_P2.R);
 			err = dr.x - dr_des;
@@ -433,7 +411,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Propagate both to TIG-12min
 		sv_A1 = coast(sv_A, GMTfromGET(NCC1_guess - 12.0*60.0) - sv_A.GMT, CSMmass, csm_area);
-		sv_P1 = coast(sv_P, GMTfromGET(NCC1_guess - 12.0*60.0) - sv_P.GMT, SIVBmass, sivb_area);
+		sv_P1 = coast(sv_P, GMTfromGET(NCC1_guess - 12.0*60.0) - sv_P.GMT, SIVBmass, sivb_area, 2.0); //K-Factor of 2 is a low estimate, but better than 1.0 for a drifting S-IVB
 
 		//Calculate TPI time. First coast (with drag) to estimated time
 		sv_P2 = coast(sv_P, GMTfromGET(TPI_guess) - sv_P1.GMT, SIVBmass, sivb_area);
@@ -539,8 +517,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "NCC1");
 		sprintf(form->remarks, "15 seconds ullage, 4 jets");
 
-		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_P1);
-		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_LM, sv_P2);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_P2);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -626,7 +604,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Check on DH to see if NCC-2 can be scrubbed
 		if (spqres.DH < 9.0*1852.0 && spqres.DH > 7.0*1852.0)
 		{
-			//scrubbed = true;
+			scrubbed = true;
 		}
 
 		char buffer1[1000], buffer2[1000], buffer3[1000];
@@ -640,6 +618,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			PoweredFlightProcessor(sv_A, GETBase, spqres.t_CDH, RTCC_ENGINETYPE_CSMSPS, 0.0, spqres.sv_C_apo[0].V - spqres.sv_C[0].V, false, P30TIG, dV_LVLH);
 			TimeofIgnition = P30TIG;
 			DeltaV_LVLH = dV_LVLH;
+
+			calcParams.SVSTORE1 = sv_A;
 		}
 		else
 		{
@@ -713,6 +693,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			AP7ManeuverPAD(&opt, *form);
 			sprintf(form->purpose, "NCC2");
+			if (enginetype == RTCC_ENGINETYPE_CSMSPS)
+			{
+				sprintf(form->remarks, "SPS maneuver, 15 seconds ullage with 4 jets");
+			}
+			else
+			{
+				sprintf(form->remarks, "RCS maneuver");
+			}
 
 			//Calculate NSR based on executed NCC-2
 			spqopt.sv_A = sv_A_post_NCC2;
