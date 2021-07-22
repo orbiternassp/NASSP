@@ -1025,7 +1025,7 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 	}
 
 	//Average G
-	if (KCODE == 1 && TArr.MANOP > 3)
+	if (KCODE == 1 && TArr.MANOP >= 3)
 	{
 		AverageGRoutine();
 	}

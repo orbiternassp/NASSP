@@ -732,9 +732,9 @@ double SPSEngine::SPSThrustOnDelayDual(double t)
 	{
 		return 0.0;
 	}
-	else if (t < tau16_D + 0.1)
+	else if (t < tau16_D + tau20_D)
 	{
-		return 10.0*(t - tau16_D);
+		return 1.0 / tau20_D * (t - tau16_D);
 	}
 	else
 	{
@@ -748,9 +748,9 @@ double SPSEngine::SPSThrustOnDelaySingle(double t)
 	{
 		return 0.0;
 	}
-	else if (t < tau16_S + 0.1)
+	else if (t < tau16_S + tau20_S)
 	{
-		return 10.0*(t - tau16_S);
+		return 1.0 / tau20_S * (t - tau16_S);
 	}
 	else
 	{
@@ -770,7 +770,7 @@ double SPSEngine::SPSThrustOffDelayDual(double t)
 	}
 	else
 	{
-		return tau20_D * exp(-K2 * (t - tau18));
+		return K3_D * exp(-K2 * (t - tau18));
 	}
 }
 
@@ -786,7 +786,7 @@ double SPSEngine::SPSThrustOffDelaySingle(double t)
 	}
 	else
 	{
-		return tau20_S * exp(-K2 * (t - tau18));
+		return K3_S * exp(-K2 * (t - tau18));
 	}
 }
 

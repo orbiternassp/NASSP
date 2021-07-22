@@ -3737,7 +3737,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	{
 		pad.Vc = -pad.Vc;
 	}
-	pad.Vt = aux.DV / 0.3048;//length(pad.dV);//
+	pad.Vt = length(pad.dV);//aux.DV / 0.3048;//
 	
 	//Calculate height of periapsis and apoapsis
 	if (sv1.gravref == oapiGetObjectByName("Earth"))
