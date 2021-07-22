@@ -66,6 +66,7 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 	TCO = 0.0;
 	KEND = 0;
 	TPREV = TBM;
+	DTP = -1.0;
 
 	DVGO = abs(TArr.DVMAN);
 	THRUST = THPS[MPHASE - 1];
@@ -114,8 +115,8 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 
 	KTHSWT = 1;
 
-	R = RSAVE;
-	V = VSAVE;
+	R = RP = RSAVE;
+	V = VP = VSAVE;
 	T = TSAVE;
 	if (TArr.KEPHOP != 0)
 	{
@@ -294,6 +295,14 @@ PMMRKJ_LABEL_12B:
 	}
 	MPHASE = 7;
 PMMRKJ_LABEL_13B:
+
+	//Special hacky SPS short burn logic
+	if (T - TBI < 1.0)
+	{
+		double dt_sb = T - TBI;
+		DTSPAN[7] = 0.405 + (dt_sb - 0.5)*(0.6 - 0.405) / (1.0 - 0.5);
+	}
+
 	TI = T + DTSPAN[7];
 	THRUST = THRUST / THPS[9] * THPS[7];
 	WTLRT = WTLRT / WDOTPS[9] * WDOTPS[7] * TArr.WDMULT;
@@ -732,13 +741,13 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		DTSPAN[4] = 0.0;
 		DTSPAN[5] = 4.0;
 		DTSPAN[6] = 1.0;
-		DTSPAN[7] = 0.0;
+		DTSPAN[7] = pRTCC->SystemParameters.MCTSD5;
 		DTSPAN[8] = pRTCC->SystemParameters.MCTSD9;
 
-		XK[0] = Thrust;
-		XK[1] = 0.0;
-		XK[2] = Thrust;
-		XK[3] = 6975.34;
+		XK[0] = pRTCC->SystemParameters.MCTSK1;
+		XK[1] = pRTCC->SystemParameters.MCTSK2;
+		XK[2] = pRTCC->SystemParameters.MCTSK3;
+		XK[3] = pRTCC->SystemParameters.MCTSK4;
 		if (TArr.UllageOption)
 		{
 			XK[3] *= 2.0;
@@ -1015,6 +1024,12 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 		return;
 	}
 
+	//Average G
+	if (KCODE == 1 && TArr.MANOP > 3)
+	{
+		AverageGRoutine();
+	}
+
 	if (MPHASE == 1)
 	{
 		if (KTHSWT < 0)
@@ -1072,6 +1087,7 @@ PCRDD_LABEL_3C:
 		{
 			WL = WL - DW;
 		}
+		//TBD: MPHASE = 2 has some RCS ullage, take that into account
 		if (MPHASE == 1)
 		{
 			RCSFUELUSED += DW;
@@ -1116,7 +1132,7 @@ PCRDD_LABEL_3C:
 	return;
 
 PCRDD_LABEL_6A:
-	if (MPHASE == 7)
+	if (MPHASE == 6)
 	{
 		//THRUST = TL;
 		//WTLRT = WDOT;
@@ -1272,7 +1288,7 @@ PCGUID_4_A:
 		A_TR = VG / Vg;
 		A_TM = A_TR;
 		A_TL = A_TR;
-		DTN = Tg - T;
+		//DTN = Tg - T;
 	}
 PCGUID_4_B:
 	Vgo = Vg - XK[3] / WT;
@@ -1318,10 +1334,10 @@ PCGUID_6_A:
 	DTSPAN[3] = TLARGE;
 
 PCGUID_6_B:
-	Vn_apo = V;
-	g_apo = RDDP;
-	DTP = DTN;
-	Vg_apo = Vg;
+	//Vn_apo = V;
+	//g_apo = RDDP;
+	//DTP = DTN;
+	//Vg_apo = Vg;
 	return;
 PCGUID_7_A:
 	KGN = 5;
@@ -1331,14 +1347,14 @@ PCGUID_7_A:
 	}
 	return;
 PCGUID_8_A:
-	VECTOR3 g_av = (RDDP + g_apo) / 2.0;
-	DTN = DT;
-	VECTOR3 DVV = V - Vn_apo - g_av * DTP;
-	VG = VG - DVV;
+	//VECTOR3 g_av = (RDDP + g_apo) / 2.0;
+	//DTN = DT;
+	//VECTOR3 DVV = V - Vn_apo - g_av * DTP;
+	//VG = VG - DVV;
 	Vg = length(VG);
 	A = -WTLRT * Vg / THRUST;
 	TGO = WT / WTLRT * (1.0 - exp(A)) - DTSPAN[7];
-	if (TGO > DTSPAN[5])
+	if (TGO > 4.0)
 	{
 	PCGUID_8_B:
 		A_T = VG / Vg;
@@ -1450,4 +1466,20 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 			}
 		}
 	}
+}
+
+void CSMLMPoweredFlightIntegration::AverageGRoutine()
+{
+	//Average G
+	DTN = DT;
+	if (DTP > 0.0)
+	{
+		VECTOR3 g_av = (RDDP + g_apo) / 2.0;
+		VECTOR3 DVV = V - Vn_apo - g_av * DTP;
+		VG = VG - DVV;
+	}
+
+	Vn_apo = V;
+	g_apo = RDDP;
+	DTP = DTN;
 }
