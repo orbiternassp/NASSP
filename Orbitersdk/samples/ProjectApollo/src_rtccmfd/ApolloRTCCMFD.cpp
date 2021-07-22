@@ -2343,6 +2343,43 @@ void ApolloRTCCMFD::GPMPCalc()
 	}
 }
 
+void ApolloRTCCMFD::menuManPADUllage()
+{
+	bool ManPADUllageOptionInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the number and duration of ullage (Format: number time)", ManPADUllageOptionInput, 0, 20, (void*)this);
+}
+
+bool ManPADUllageOptionInput(void *id, char *str, void *data)
+{
+	double ss;
+	int num;
+	if (sscanf(str, "%d %lf", &num, &ss) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_ManPADUllageOption(num, ss);
+		return true;
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_ManPADUllageOption(int num, double dt)
+{
+	if (num == 2)
+	{
+		G->manpad_ullage_opt = false;
+	}
+	else if (num == 4)
+	{
+		G->manpad_ullage_opt = true;
+	}
+	else
+	{
+		return false;
+	}
+
+	G->manpad_ullage_dt = dt;
+	return true;
+}
+
 void ApolloRTCCMFD::menuManPADTIG()
 {
 	bool ManPADTIGInput(void *id, char *str, void *data);
@@ -2351,9 +2388,10 @@ void ApolloRTCCMFD::menuManPADTIG()
 
 bool ManPADTIGInput(void *id, char *str, void *data)
 {
-	int hh, mm, ss, ManPADTIG;
+	int hh, mm;
+	double ss, ManPADTIG;
 
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
 		ManPADTIG = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_ManPADTIG(ManPADTIG);
