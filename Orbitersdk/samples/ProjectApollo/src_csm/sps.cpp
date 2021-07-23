@@ -681,8 +681,6 @@ void SPSEngine::Timestep(double simt, double simdt) {
 				}
 			}
 
-			
-
 			//Reset
 			if (t_off != 0.0 && t4 > tau19)
 			{
