@@ -98,6 +98,7 @@ private:
 	void PCRDD();
 	void PCGUID();
 	void CalcBodyAttitude();
+	void AverageGRoutine();
 
 	//Current position vector
 	VECTOR3 R;
@@ -138,10 +139,13 @@ private:
 	double TE;
 	//Manuever phase
 	//1 = Ullage
-	//2 = Thrust buildup during ullage
-	//3 = Mainstage thrust during ullage
-	//7 = Max thrust phase
-	//8 = Tailoff
+	//2 = Thrust buildup during ullage (SPS, APS), Buildup to 10% during ullage (DPS)
+	//3 = Mainstage thrust during ullage (SPS, APS), Buildup to 10% from ullage end (DPS)
+	//4 = 10% FTP (DPS)
+	//5 = Buildup from 10% to FTP (DPS)
+	//6 = Max thrust phase
+	//7 = Tailoff
+	//8 = Ending
 	int MPHASE;
 	//Short maneuver test
 	int KGN;

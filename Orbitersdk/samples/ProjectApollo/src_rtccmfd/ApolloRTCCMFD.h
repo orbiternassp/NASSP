@@ -177,6 +177,8 @@ public:
 	void menuCalcEntryPAD();
 	void menuSetEntryPADPage();
 	void menuSwitchEntryPADOpt();
+	void menuManPADUllage();
+	bool set_ManPADUllageOption(int num, double dt);
 	void menuManPADTIG();
 	void set_ManPADTIG(double ManPADTIG);
 	void menusextantstartime();
