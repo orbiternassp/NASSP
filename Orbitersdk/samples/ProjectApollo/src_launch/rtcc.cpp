@@ -3804,10 +3804,18 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	}
 
 	//Trim angles
-	ManPADPTrim = aux.P_G - SystemParameters.MCTSPP;
-	ManPADYTrim = aux.Y_G - SystemParameters.MCTSYP;
-	pad.pTrim = ManPADPTrim*DEG;
-	pad.yTrim = ManPADYTrim*DEG;
+	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
+	{
+		ManPADPTrim = aux.P_G - SystemParameters.MCTSPP;
+		ManPADYTrim = aux.Y_G - SystemParameters.MCTSYP;
+		pad.pTrim = ManPADPTrim * DEG;
+		pad.yTrim = ManPADYTrim * DEG;
+	}
+	else
+	{
+		pad.pTrim = 0.0;
+		pad.yTrim = 0.0;
+	}
 
 	if (length(GDCangles) == 0.0)
 	{
@@ -4001,10 +4009,18 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 	pad.Att = _V(OrbMech::imulimit(IMUangles.x*DEG), OrbMech::imulimit(IMUangles.y*DEG), OrbMech::imulimit(IMUangles.z*DEG));
 
 	//Trim angles
-	ManPADPTrim = aux.P_G - SystemParameters.MCTSPP;
-	ManPADYTrim = aux.Y_G - SystemParameters.MCTSYP;
-	pad.pTrim = ManPADPTrim * DEG;
-	pad.yTrim = ManPADYTrim * DEG;
+	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
+	{
+		ManPADPTrim = aux.P_G - SystemParameters.MCTSPP;
+		ManPADYTrim = aux.Y_G - SystemParameters.MCTSYP;
+		pad.pTrim = ManPADPTrim * DEG;
+		pad.yTrim = ManPADYTrim * DEG;
+	}
+	else
+	{
+		pad.pTrim = 0.0;
+		pad.yTrim = 0.0;
+	}
 
 	pad.Shaft *= DEG;
 	pad.Trun *= DEG;
