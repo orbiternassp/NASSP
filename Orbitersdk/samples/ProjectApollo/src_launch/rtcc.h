@@ -360,6 +360,8 @@ struct AP7ManPADOpt
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
+	bool UllageThrusterOpt = true; // false = 2 thrusters, true = 4 thrusters
+	double UllageDT = 0.0;
 };
 
 struct AP11ManPADOpt
@@ -376,6 +378,8 @@ struct AP11ManPADOpt
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	double R_LLS = OrbMech::R_Moon;	//Landing site radius
+	bool UllageThrusterOpt = true; // false = 2 thrusters, true = 4 thrusters
+	double UllageDT = 0.0;
 };
 
 struct AP11LMManPADOpt

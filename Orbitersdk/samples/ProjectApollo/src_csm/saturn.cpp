@@ -1240,7 +1240,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		// to inhibit Orbiter's thrust control
 		//
 		
-		SPSEngine.Timestep(simdt);
+		SPSEngine.Timestep(MissionTime, simdt);
 
 		// Better acceleration measurement stability
 		imu.Timestep(simdt);
