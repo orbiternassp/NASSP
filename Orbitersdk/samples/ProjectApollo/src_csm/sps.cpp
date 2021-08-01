@@ -445,6 +445,19 @@ void SPSPropellantSource::CheckPropellantMass() {
 		our_vessel->SetPropellantMass(source_prop, propellantBuffer);
 }
 
+const double SPSEngine::tau16_D = 0.55;
+const double SPSEngine::tau16_S = 0.6;
+const double SPSEngine::tau17_D = 0.425;
+const double SPSEngine::tau17_S = 0.4;
+const double SPSEngine::tau18 = 0.6;
+const double SPSEngine::tau19 = 1.6;
+const double SPSEngine::tau20_D = 0.1;
+const double SPSEngine::tau20_S = 0.15;
+const double SPSEngine::K1_D = 7.921682064;
+const double SPSEngine::K1_S = 8.046682064;
+const double SPSEngine::K2 = 3.0;
+const double SPSEngine::K3_D = 0.25;
+const double SPSEngine::K3_S = 0.2;
 
 SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	spsThruster(sps) {
@@ -453,10 +466,13 @@ SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	thrustOnB = false;
 	injectorValves12Open = false;
 	injectorValves34Open = false;
+	dualBoreStatus = false;
 	saturn = 0;
-	engineOnCommanded = false;
 	nitrogenPressureAPSI = 2500.0;
 	nitrogenPressureBPSI = 2500.0;
+	t_on = 0.0;
+	t_off = 0.0;
+	T_SPS = 0.0;
 
 	anim_SPSGimbalPitch = -1;
 	anim_SPSGimbalYaw = -1;
@@ -500,7 +516,7 @@ void SPSEngine::DeleteAnimations() {
 	anim_SPSGimbalYaw = -1;
 }
 
-void SPSEngine::Timestep(double simdt) {
+void SPSEngine::Timestep(double simt, double simdt) {
 
 	if (!saturn) return;
 
@@ -584,20 +600,109 @@ void SPSEngine::Timestep(double simdt) {
 	// Engine control
 	//
 	
-	if (saturn->GetStage() == CSM_LEM_STAGE && saturn->GetSPSPropellant()->Handle() && spsThruster) {
-		if (injectorValves12Open || injectorValves34Open) {
+	if (saturn->GetStage() == CSM_LEM_STAGE && saturn->GetSPSPropellant()->Handle() && spsThruster)
+	{
+		if (injectorValves12Open || injectorValves34Open)
+		{
+			//Check if dual or single bore. Do this here so that the status doesn't change when switching off the engine.
+			if (injectorValves12Open && injectorValves34Open)
+			{
+				dualBoreStatus = true;
+			}
+			else
+			{
+				dualBoreStatus = false;
+			}
+
+			//Normal engine start
+			if (t_on == 0.0)
+			{
+				t_on = simt;
+				t_off = 0.0; //Is this right?
+			}
+			//Engine restart during shutdown
+			else if (t_on != 0 && t_off != 0)
+			{
+				//Interrupt shutdown
+				t_off = 0.0;
+			}
+		}
+		else
+		{
+			//Normal engine shutdown
+			if (t_on != 0 && t_off == 0.0)
+			{
+				t_off = simt;
+			}
+		}
+
+		if (t_on == 0.0)
+		{
+			T_SPS = 0.0;
+		}
+		else
+		{
+			double t3; //Time from thrust-on signal
+			double t4; //Time from thrust-off signal
+
+			t3 = simt - t_on;
+			t4 = simt - t_off;
+
+			if (dualBoreStatus)
+			{
+				if (t_off == 0.0 || t4 < tau17_D)
+				{
+					T_SPS = SPSThrustOnDelayDual(t3);
+				}
+				else
+				{
+					double T_SPS2 = SPSThrustOffDelayDual(t4);
+					//This makes sure the thrust doesn't jump up when switching off then engine
+					if (T_SPS2 < T_SPS)
+					{
+						T_SPS = T_SPS2;
+					}
+				}
+			}
+			else
+			{
+				if (t_off == 0.0 || t4 < tau17_S)
+				{
+					T_SPS = SPSThrustOnDelaySingle(t3);
+				}
+				else
+				{
+					double T_SPS2 = SPSThrustOffDelaySingle(t4);
+					//This makes sure the thrust doesn't jump up when switching off then engine
+					if (T_SPS2 < T_SPS)
+					{
+						T_SPS = T_SPS2;
+					}
+				}
+			}
+
+			//Reset
+			if (t_off != 0.0 && t4 > tau19)
+			{
+				t_on = 0.0;
+				t_off = 0.0;
+				T_SPS = 0.0;
+			}
+
+			//sprintf(oapiDebugString(), "t_on %lf t_off %lf t3 %lf t4 %lf T_SPS %lf dualBoreStatus %d", t_on, t_off, t3, t4, T_SPS, dualBoreStatus);
+		}
+
+		if (T_SPS > 0.0) {
 			// Burn engine
 			saturn->SetThrusterResource(spsThruster, saturn->GetSPSPropellant()->Handle());
 			// Thrust decay if propellant pressure below 170 psi 
 			double thrust = min(1, saturn->GetSPSPropellant()->GetPropellantPressurePSI() / 170.0);
-			saturn->SetThrusterLevel(spsThruster, thrust);
-			engineOnCommanded = true;
+			saturn->SetThrusterLevel(spsThruster, T_SPS*thrust);
 
 		} else {
 			// Stop engine
 			saturn->SetThrusterResource(spsThruster, NULL);
 			saturn->SetThrusterLevel(spsThruster, 0);
-			engineOnCommanded = false;
 		}
 	}
 
@@ -616,6 +721,70 @@ void SPSEngine::Timestep(double simdt) {
 		spsvector.y = (pitchGimbalActuator.GetPosition() + SPS_PITCH_OFFSET) * RAD;
 		spsvector.z = 1;
 		saturn->SetThrusterDir(spsThruster, spsvector);
+	}
+}
+
+double SPSEngine::SPSThrustOnDelayDual(double t)
+{
+	if (t < tau16_D)
+	{
+		return 0.0;
+	}
+	else if (t < tau16_D + tau20_D)
+	{
+		return 1.0 / tau20_D * (t - tau16_D);
+	}
+	else
+	{
+		return 1.0;
+	}
+}
+
+double SPSEngine::SPSThrustOnDelaySingle(double t)
+{
+	if (t < tau16_S)
+	{
+		return 0.0;
+	}
+	else if (t < tau16_S + tau20_S)
+	{
+		return 1.0 / tau20_S * (t - tau16_S);
+	}
+	else
+	{
+		return 1.0;
+	}
+}
+
+double SPSEngine::SPSThrustOffDelayDual(double t)
+{
+	if (t < tau17_D)
+	{
+		return 1.0;
+	}
+	else if (t < tau18)
+	{
+		return exp(-K1_D * (t - tau17_D));
+	}
+	else
+	{
+		return K3_D * exp(-K2 * (t - tau18));
+	}
+}
+
+double SPSEngine::SPSThrustOffDelaySingle(double t)
+{
+	if (t < tau17_S)
+	{
+		return 1.0;
+	}
+	else if (t < tau18)
+	{
+		return exp(-K1_S * (t - tau17_S));
+	}
+	else
+	{
+		return K3_S * exp(-K2 * (t - tau18));
 	}
 }
 
@@ -670,9 +839,11 @@ void SPSEngine::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "THRUSTONB", (thrustOnB ? 1 : 0));
 	oapiWriteScenario_int(scn, "INJECTORVALVES12OPEN", (injectorValves12Open ? 1 : 0));
 	oapiWriteScenario_int(scn, "INJECTORVALVES34OPEN", (injectorValves34Open ? 1 : 0));
-	oapiWriteScenario_int(scn, "ENGINEONCOMMANDED", (engineOnCommanded ? 1 : 0));
 	papiWriteScenario_double(scn, "NITROGENPRESSUREAPSI", nitrogenPressureAPSI);
 	papiWriteScenario_double(scn, "NITROGENPRESSUREBPSI", nitrogenPressureBPSI);
+	if (t_on > 0) papiWriteScenario_double(scn, "T_ON", t_on);
+	if (t_off > 0) papiWriteScenario_double(scn, "T_OFF", t_off);
+	if (T_SPS > 0) papiWriteScenario_double(scn, "T_SPS", T_SPS);
 	oapiWriteLine(scn, SPSENGINE_END_STRING);
 }
 
@@ -701,16 +872,15 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 			sscanf (line+20, "%d", &i);
 			injectorValves34Open = (i != 0);
 		}
-		else if (!strnicmp (line, "ENGINEONCOMMANDED", 17)) {
-			sscanf (line+17, "%d", &i);
-			engineOnCommanded = (i != 0);
-		}
 		else if (!strnicmp (line, "NITROGENPRESSUREAPSI", 20)) {
 			sscanf (line+20, "%lf", &nitrogenPressureAPSI);
 		}
 		else if (!strnicmp (line, "NITROGENPRESSUREBPSI", 20)) {
 			sscanf (line+20, "%lf", &nitrogenPressureBPSI);
 		}
+		papiReadScenario_double(line, "T_ON", t_on);
+		papiReadScenario_double(line, "T_OFF", t_off);
+		papiReadScenario_double(line, "T_SPS", T_SPS);
 	}
 }
 

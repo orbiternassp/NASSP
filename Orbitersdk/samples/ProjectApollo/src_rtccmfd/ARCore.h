@@ -282,6 +282,8 @@ public:
 	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
 	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
 	double sxtstardtime;
+	double manpad_ullage_dt;
+	bool manpad_ullage_opt; //true = 4 jets, false = 2 jets
 	TLIPAD tlipad;
 	AP11PDIPAD pdipad;
 

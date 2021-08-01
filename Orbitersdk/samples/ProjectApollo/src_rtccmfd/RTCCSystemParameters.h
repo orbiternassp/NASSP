@@ -425,15 +425,23 @@ struct RTCCSystemParameters
 		MCTDD6 = 95.0;
 		MCTDD9 = 0.5;
 		MCTST1 = 91188.544;
-		MCTST2 = 424.015 * 4.4482216152605;
+		MCTST2 = 244.995 * 4.4482216152605;
 		MCTST4 = 91188.544;
+		MCTST5 = 91188.544;
 		MCTST9 = 91188.544;
 		MCTSW1 = 29.60667013;
-		MCTSW2 = 0.6107646462;
+		MCTSW2 = 0.2742;
 		MCTSW4 = 29.60667013;
-		MCTSD2 = 0.0;
-		MCTSD3 = 0.0;
+		MCTSW5 = 29.60667013;
+		MCTSD2 = 0.533;
+		MCTSD3 = 0.467;
+		MCTSD5 = 0.6;
 		MCTSD9 = 1.0;
+		MCTSK1 = 19885.0*4.44822 + 9500.0; //TBD
+		MCTSK2 = 6590.0*4.44822;
+		MCTSK3 = 26475.0*4.44822 + 9500.0; //TBD
+		MCTSK4 = 6975.34;
+
 		MCTAK1 = 12455.0;
 		MCTAK2 = 31138.0;
 		MCTAK3 = 15569.0;
@@ -913,7 +921,7 @@ struct RTCCSystemParameters
 	double MCTDD4;
 	//DPS burn time for building from 10% to max
 	double MCTDD5;
-	//DPS burn time used to determine if 20% thrust level is to be maintained throughout the burn
+	//DPS burn time used to determine if 10% thrust level is to be maintained throughout the burn
 	double MCTDD6;
 	//Total DPS ullage overlap
 	double MCTDD9;
@@ -923,6 +931,8 @@ struct RTCCSystemParameters
 	double MCTST2;
 	//SPS thrust level for full load
 	double MCTST4;
+	//SPS tail-off thrust level
+	double MCTST5;
 	//On-board computer thrust level for CSM SPS thruster
 	double MCTST9;
 	//SPS weight loss rate
@@ -931,18 +941,30 @@ struct RTCCSystemParameters
 	double MCTSW2;
 	//SPS weight loss rate for full load
 	double MCTSW4;
+	//SPS tail-off weight loss rate
+	double MCTSW5;
 	//SPS phase two burn time
 	double MCTSD2;
 	//SPS phase three burn time
 	double MCTSD3;
+	//SPS tail-off burn time
+	double MCTSD5;
 	//Total SPS ullage overlap
 	double MCTSD9;
+	//Impulse in one second SPS burn
+	double MCTSK1;
+	//Initial value of SPS minimum impulse curve
+	double MCTSK2;
+	//Slope of SPS curve
+	double MCTSK3;
+	//CSM RCS 7-second 2-jet ullage impulse
+	double MCTSK4;
 
-	//Impulse in one second SPS / APS / DPS burn
+	//Impulse in one second APS burn
 	double MCTAK1;
-	//Initial value of SPS/APS/DPS minimum impulse curve
+	//Initial value of APS minimum impulse curve
 	double MCTAK2;
-	//Slope of SPS/APS/DPS curve
+	//Slope of APS curve
 	double MCTAK3;
 	//LM RCS impulse due to 7 second, 2 jet ullage
 	double MCTAK4;

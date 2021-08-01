@@ -584,6 +584,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	TPIPAD_ddH = 0.0;
 	TPIPAD_BT = _V(0.0, 0.0, 0.0);
 	sxtstardtime = 0.0;
+	manpad_ullage_dt = 0.0;
+	manpad_ullage_opt = true;
 	EntryRRT = 0.0;
 	EntryRET05G = 0.0;
 
@@ -3104,6 +3106,8 @@ int ARCore::subThread()
 			opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
+			opt.UllageDT = manpad_ullage_dt;
+			opt.UllageThrusterOpt = manpad_ullage_opt;
 
 			GC->rtcc->AP11ManeuverPAD(&opt, manpad);
 		}

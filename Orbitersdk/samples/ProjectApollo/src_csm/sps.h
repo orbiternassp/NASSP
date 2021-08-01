@@ -129,7 +129,7 @@ public:
 	void Init(Saturn *s);
 	void DefineAnimations(UINT idx);
 	void DeleteAnimations();
-	void Timestep(double simdt);
+	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetChamberPressurePSI();
 	bool IsThrustOnA() { return thrustOnA; };
@@ -149,9 +149,12 @@ protected:
 	bool thrustOnA, thrustOnB;
 	bool injectorValves12Open;
 	bool injectorValves34Open;
-	bool engineOnCommanded;
 	double nitrogenPressureAPSI;
 	double nitrogenPressureBPSI;
+	double t_on;
+	double t_off;
+	double T_SPS;
+	bool dualBoreStatus;
 
 	Saturn *saturn;
 	THRUSTER_HANDLE &spsThruster;
@@ -160,6 +163,25 @@ protected:
 	UINT anim_SPSGimbalPitch, anim_SPSGimbalYaw;
 	double spsgimbal_proc[2];
 	double spsgimbal_proc_last[2];
+
+	static const double tau16_D; //Thrust on delay (dual)
+	static const double tau16_S; //Thrust on delay (single)
+	static const double tau17_D; //Thrust off delay (dual)
+	static const double tau17_S; //Thrust off delay (single)
+	static const double tau18;
+	static const double tau19; //End of thrust decay
+	static const double tau20_D; //Thrust on slope (dual)
+	static const double tau20_S; //Thrust on slope (single)
+	static const double K1_D; //Dual bore
+	static const double K1_S; //Single bore
+	static const double K2;
+	static const double K3_D; //Initial thrust of second decay phase (dual)
+	static const double K3_S; //Initial thrust of second decay phase (single)
+
+	double SPSThrustOnDelayDual(double t);
+	double SPSThrustOffDelayDual(double t);
+	double SPSThrustOnDelaySingle(double t);
+	double SPSThrustOffDelaySingle(double t);
 };
 
 

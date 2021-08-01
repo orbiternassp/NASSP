@@ -918,10 +918,20 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Down", 10);
 			}
 
-			skp->Text((int)(0.5 * W / 8), 8 * H / 14, "REFSMMAT:", 9);
+			if (G->manpad_ullage_opt)
+			{
+				sprintf_s(Buffer, "4 quads, %.1f s", G->manpad_ullage_dt);
+			}
+			else
+			{
+				sprintf_s(Buffer, "2 quads, %.1f s", G->manpad_ullage_dt);
+			}
+			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
-			REFSMMATName(Buffer, G->REFSMMATcur);
-			skp->Text((int)(0.5 * W / 8), 9 * H / 14, Buffer, strlen(Buffer));
+			//TBD: Find a new place for this?
+			//skp->Text((int)(0.5 * W / 8), 8 * H / 14, "REFSMMAT:", 9);
+			//REFSMMATName(Buffer, G->REFSMMATcur);
+			//skp->Text((int)(0.5 * W / 8), 9 * H / 14, Buffer, strlen(Buffer));
 
 			if (G->vesseltype < 2)
 			{
@@ -1028,7 +1038,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				sprintf(Buffer, "%+07.1f HP", G->manpad.HP);
 				skp->Text((int)(3.5 * W / 8), 16 * H / 26, Buffer, strlen(Buffer));
 
-				sprintf(Buffer, "%+07.1f VT", length(G->dV_LVLH) / 0.3048);
+				sprintf(Buffer, "%+07.1f VT", G->manpad.Vt);// length(G->dV_LVLH) / 0.3048);
 				skp->Text((int)(3.5 * W / 8), 17 * H / 26, Buffer, strlen(Buffer));
 
 				SStoHHMMSS(G->manpad.burntime, hh, mm, secs);
