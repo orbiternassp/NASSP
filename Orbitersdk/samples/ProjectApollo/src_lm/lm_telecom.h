@@ -238,6 +238,7 @@ class LM_PCM
 {
 public:
 	LM_PCM();
+	~LM_PCM();
 	void Init(LEM *vessel, h_HeatLoad *pcmh);	       // Initialization
 	void Timestep(double simt);     // TimeStep
 	void SystemTimestep(double simdt);

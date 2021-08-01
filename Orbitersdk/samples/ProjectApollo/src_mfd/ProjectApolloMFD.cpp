@@ -2891,13 +2891,6 @@ bool AEAACommandsInput(void *id, char *str, void *data)
 
 ProjectApolloMFD::ScreenData ProjectApolloMFD::screenData = {PROG_NONE};
 
-
-DLLCLBK bool pacDefineSocket(SOCKET sockettoclose)
-{
-	close_Socket = sockettoclose;
-	return true;
-}
-
 DLLCLBK char *pacMFDGetDebugString()
 {
 	return debugStringBuffer;
