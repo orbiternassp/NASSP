@@ -1855,7 +1855,7 @@ void PCM::Init(Saturn *vessel){
 	service.sin_port = htons( 14242 );
 
 	if ( ::bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
-		sprintf(wsk_emsg,"TELECOM: bind() failed: %ld", WSAGetLastError());
+		sprintf(wsk_emsg,"Failed to start CSM telemetry. Please completely exit Orbiter and restart. Please file a bug report if this message persists.");
 		wsk_error = 1;
 		closesocket(m_socket);
 		WSACleanup();

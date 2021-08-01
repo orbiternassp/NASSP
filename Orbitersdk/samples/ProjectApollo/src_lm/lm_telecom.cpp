@@ -425,7 +425,7 @@ void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh)
 	service.sin_port = htons(14243); // CM on 14242, LM on 14243
 
 	if (::bind(m_socket, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR) {
-		sprintf(wsk_emsg, "LM-TELECOM: bind() failed: %ld", WSAGetLastError());
+		sprintf(wsk_emsg, "Failed to start LM telemetry. Please completely exit Orbiter and restart. Please file a bug report if this message persists.");
 		wsk_error = 1;
 		closesocket(m_socket);
 		WSACleanup();
