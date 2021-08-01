@@ -14,7 +14,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ 0,0,0 },
 		{ 0,0,0 },
 		{ 0,0,0 },
-		{ "Socket info", 0, 'S' },
+		{ 0,0,0 },
 		{ "Debug String",0,'D' }
 	};
 
@@ -31,7 +31,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("", OAPI_KEY_C, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("SOCK", OAPI_KEY_S, &ProjectApolloMFD::menuSetSOCKPage);
+	RegisterFunction("", OAPI_KEY_S, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetDebugPage);
 
 
@@ -134,14 +134,6 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("SAB", OAPI_KEY_F, &ProjectApolloMFD::menuSunburstSuborbitalAbort);
 	RegisterFunction("COI", OAPI_KEY_G, &ProjectApolloMFD::menuSunburstCOI);
 	RegisterFunction("SLT", OAPI_KEY_T, &ProjectApolloMFD::menuSetSVSlot);
-
-
-	//This menu set is just for the Socket program, remove before release.
-	static const MFDBUTTONMENU mnuSOCK[1] = {
-		{ "Back", 0, 'B' }
-	};
-
-	RegisterPage(mnuSOCK, sizeof(mnuSOCK) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 

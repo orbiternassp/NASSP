@@ -65,8 +65,6 @@ static int g_MFDmode; // identifier for new MFD mode
 #define PROG_ECS		2
 #define PROG_IU			3
 #define PROG_TELE		4
-//This program displays info on the current telcom socket.  For debugging only.
-#define PROG_SOCK		5	
 #define PROG_DEBUG		6
 // This screen pulls data from the CMC to be used for initializing the LGC
 #define PROG_LGC		7
@@ -870,14 +868,8 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign (hDC, TA_CENTER);
 			TextOut(hDC, width / 2, (int) (height * 0.9), "*** KILL ROTATION ACTIVE ***", 28);
 		}
+	}
 
-	//Draw Socket details.
-	}
-	else if (screen == PROG_SOCK) {
-		TextOut(hDC, width / 2, (int) (height * 0.3), "Socket details", 14);
-		sprintf(buffer, "Socket: %i", close_Socket);
-		TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
-	}
 	// Draw ECS
 	else if (screen == PROG_ECS) {
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Environmental Control System", 28);
@@ -2262,12 +2254,6 @@ void ProjectApolloMFD::menuSetLGCPage()
 void ProjectApolloMFD::menuSetFailuresPage()
 {
 	screen = PROG_FAIL;
-	m_buttonPages.SelectPage(this, screen);
-}
-
-void ProjectApolloMFD::menuSetSOCKPage()
-{
-	screen = PROG_SOCK;
 	m_buttonPages.SelectPage(this, screen);
 }
 
