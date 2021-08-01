@@ -219,8 +219,9 @@ class MFDButtonPage
             \endcode
             \param menu - \b STATICALLY declared button menu
             \param size - menu size. Use sizeof(menu) / sizeof(MFDBUTTONMENU)
+            \return page index to access registered pages
         */
-        void RegisterPage( const MFDBUTTONMENU * menu, int size );
+        int RegisterPage( const MFDBUTTONMENU * menu, int size );
 
     private:
 
@@ -383,12 +384,13 @@ void MFDButtonPage<MFDClass>::RegisterFunctionCont( const std::string & label, D
 }
 
 template <class MFDClass>
-void MFDButtonPage<MFDClass>::RegisterPage( const MFDBUTTONMENU * menu, int size )
+int MFDButtonPage<MFDClass>::RegisterPage( const MFDBUTTONMENU * menu, int size )
 {
     Page p;
     p.m_menu = menu;
     p.m_menuSize = size;
     m_pages.push_back(p);
+    return m_pages.size()-1;
 }
 
 // Private:
