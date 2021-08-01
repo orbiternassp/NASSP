@@ -135,9 +135,6 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("COI", OAPI_KEY_G, &ProjectApolloMFD::menuSunburstCOI);
 	RegisterFunction("SLT", OAPI_KEY_T, &ProjectApolloMFD::menuSetSVSlot);
 
-	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
-
-
 	static const MFDBUTTONMENU mnuDebug[12] = {
 		{ 0,0,0 },
 		{ 0,0,0 },
