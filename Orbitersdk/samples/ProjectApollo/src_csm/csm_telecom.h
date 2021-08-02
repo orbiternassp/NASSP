@@ -286,6 +286,7 @@ protected:
 class PCM {
 public:		
 	PCM();                          // Cons
+	~PCM();
 	void Init(Saturn *vessel);	    // Initialization
 	void TimeStep(double simt);     // TimeStep
 	void SystemTimestep(double simdt); // System Timestep (consume power)

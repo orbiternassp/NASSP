@@ -26,6 +26,7 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
+#include <winsock.h> // TODO: Replace with winsock2 after yaAGC updates
 #include "soundlib.h"
 #include "resource.h"
 #include "nasspdefs.h"
@@ -1790,24 +1791,9 @@ void VHFRangingSystem::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "VHFRANGING", buffer);
 }
 
-// Socket registration method (registers sockets to be deinitialized
-bool PCM::registerSocket(SOCKET sock)
-{
-	HMODULE hpac = GetModuleHandle("modules\\startup\\ProjectApolloConfigurator.dll");
-	if (hpac) {
-		bool (__cdecl *regSocket1)(SOCKET);
-		regSocket1 = (bool (__cdecl *)(SOCKET)) GetProcAddress(hpac,"pacDefineSocket");
-		if (regSocket1)	{
-			if (!regSocket1(sock))
-				return false;
-		} else {
-			return false;
-		}
-	}
-	return true;
-}
 // PCM SYSTEM
-PCM::PCM(){
+PCM::PCM()
+{
 	sat = NULL;
 	conn_state = 0;
 	uplink_state = 0; rx_offset = 0; 
@@ -1818,6 +1804,15 @@ PCM::PCM(){
 	pcm_rate_override = 0;
 	frame_addr = 0;
 	frame_count = 0;
+	m_socket = INVALID_SOCKET;
+}
+
+PCM::~PCM()
+{
+	if (m_socket != INVALID_SOCKET) {
+		shutdown(m_socket, 2); // Shutdown both streams
+		closesocket(m_socket);
+	}
 }
 
 void PCM::Init(Saturn *vessel){
@@ -1859,7 +1854,7 @@ void PCM::Init(Saturn *vessel){
 	service.sin_port = htons( 14242 );
 
 	if ( ::bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
-		sprintf(wsk_emsg,"TELECOM: bind() failed: %ld", WSAGetLastError());
+		sprintf(wsk_emsg,"Failed to start CSM telemetry. Please completely exit Orbiter and restart. Please file a bug report if this message persists.");
 		wsk_error = 1;
 		closesocket(m_socket);
 		WSACleanup();
@@ -1872,11 +1867,7 @@ void PCM::Init(Saturn *vessel){
 		WSACleanup();
 		return;
 	}
-	if(!registerSocket(m_socket))
-	{
-		sprintf(wsk_emsg,"TELECOM: Failed to register socket %i for cleanup",m_socket);
-		wsk_error = 1;
-	}
+
 	conn_state = 1; // INITIALIZED, LISTENING
 	uplink_state = 0; rx_offset = 0;
 }

@@ -3640,13 +3640,16 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 
 void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 {
-	MATRIX3 Q_Xx, M_R, M, M_RTM;
-	VECTOR3 V_G, X_B, UX, UY, UZ, IMUangles, GDCangles;
-	double dt, LMmass, headsswitch, mu, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, p_T, y_T, ManPADDVC, ManPADBurnTime;
+	PMMRKJInputArray integin;
+	int Ierr;
+	RTCCNIAuxOutputTable aux;
+	VECTOR3 IMUangles, GDCangles;
+	double dt, LMmass, mu, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim;
 	double Mantrunnion, Manshaft, ManBSSpitch, ManBSSXPos, R_E;
 	int GDCset, Manstaroct, ManCOASstaroct;
 	SV sv, sv1, sv2;
 
+	//Get initial state vector
 	if (opt->useSV)
 	{
 		sv = opt->RV_MCC;
@@ -3656,10 +3659,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 		sv = StateVectorCalc(opt->vessel);
 	}
 
-	dt = opt->TIG - (sv.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-
-	sv1 = coast(sv, dt);
-
+	//Get LM mass, depending on vesseltype
 	if (opt->vesseltype == 1)
 	{
 		LMmass = GetDockedVesselMass(opt->vessel);
@@ -3669,109 +3669,130 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 		LMmass = 0.0;
 	}
 
-	//Execute maneuver, output state vector at cutoff
-	sv2 = ExecuteManeuver(sv1, opt->GETbase, opt->TIG, opt->dV_LVLH, LMmass, opt->enginetype, Q_Xx, V_G);
-	ManPADBurnTime = (sv2.MJD - sv1.MJD)*24.0*3600.0;
-
-	//Only use landing site radius for the Moon
-	if (sv1.gravref == oapiGetObjectByName("Moon"))
-	{
-		R_E = opt->R_LLS;
-		mu = OrbMech::mu_Moon;
-	}
-	else
-	{
-		R_E = OrbMech::R_Earth;
-		mu = OrbMech::mu_Earth;
-	}
-
-	if (opt->HeadsUp)
-	{
-		headsswitch = 1.0;
-	}
-	else
-	{
-		headsswitch = -1.0;
-	}
-
-	OrbMech::periapo(sv2.R, sv2.V, mu, apo, peri);
-	ManPADApo = apo - R_E;
-	ManPADPeri = peri - R_E;
-
+	//Calculate time of ullage on for burn simulation
 	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
 	{
-		double T, WDOT;
-		unsigned IC;
-		if (LMmass > 0)
+		double dt_ullage_overlap;
+
+		if (opt->UllageDT == 0.0)
 		{
-			IC = 13;
+			dt_ullage_overlap = 0.0;
 		}
 		else
 		{
-			IC = 1;
+			dt_ullage_overlap = SystemParameters.MCTSD9;
 		}
-		GIMGBL(sv1.mass, LMmass, p_T, y_T, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0, 0.0);
 
-		ManPADPTrim = p_T + 2.15*RAD;
-		ManPADYTrim = y_T - 0.95*RAD;
+		double get_bb = opt->TIG - opt->UllageDT + dt_ullage_overlap; //GET of burn begin (ullage)
+		dt = get_bb - GETfromGMT(OrbMech::GETfromMJD(sv.MJD, GetGMTBase()));
 
-		X_B = unit(V_G);
-		UX = X_B;
-		UY = unit(crossp(X_B, sv1.R*headsswitch));
-		UZ = unit(crossp(X_B, crossp(X_B, sv1.R*headsswitch)));
-
-
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-		M_RTM = mul(OrbMech::tmat(M_R), M);
-
-		ManPADDVC = length(opt->dV_LVLH)*cos(p_T)*cos(y_T);// -60832.18 / m1;
+		integin.DTU = opt->UllageDT;
 	}
 	else
 	{
-		ManPADPTrim = 0.0;
-		ManPADYTrim = 0.0;
+		dt = opt->TIG - (sv.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+		integin.DTU = 0.0;
+	}
+	sv1 = coast(sv, dt);
 
-		X_B = unit(V_G);
-		if (opt->enginetype == RTCC_ENGINETYPE_CSMRCSPLUS2 || opt->enginetype == RTCC_ENGINETYPE_CSMRCSPLUS4)
-		{
-			UX = X_B;
-			ManPADDVC = length(opt->dV_LVLH);
-		}
-		else
-		{
-			UX = -X_B;
-			ManPADDVC = -length(opt->dV_LVLH);
-		}
-		UY = unit(crossp(UX, sv1.R*headsswitch));
-		UZ = unit(crossp(UX, crossp(UX, sv1.R*headsswitch)));
+	//Settings for burn simulation
+	integin.sv0 = ConvertSVtoEphemData(sv1);
+	integin.CAPWT = sv.mass + LMmass;
+	integin.KEPHOP = 0;
+	integin.KAUXOP = true;
+	integin.CSMWT = sv.mass;
+	integin.LMAWT = LMmass;
+	integin.MANOP = RTCC_ATTITUDE_PGNS_EXDV;
+	integin.ThrusterCode = opt->enginetype;
+	integin.UllageOption = opt->UllageThrusterOpt;
+	if (opt->vesseltype == 1)
+	{
+		integin.IC = 13;
+	}
+	else
+	{
+		integin.IC = 1;
+	}
+	integin.TVC = 1;
+	integin.KTRIMOP = -1;
+	integin.DOCKANG = 0.0;
+	integin.VG = opt->dV_LVLH;
+	integin.HeadsUpDownInd = opt->HeadsUp;
+	integin.ExtDVCoordInd = true;
 
+	//Burn simulation
+	CSMLMPoweredFlightIntegration numin(this, integin, Ierr, NULL, &aux);
+	numin.PMMRKJ();
 
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	//Store PAD data from inputs
+	pad.GETI = opt->TIG;
+	pad.dV = opt->dV_LVLH / 0.3048;
+	pad.Weight = sv1.mass / 0.45359237;
+	pad.LMWeight = LMmass / 0.45359237;
+
+	//Store PAD data from burn simulation
+	pad.burntime = aux.DT_B;
+	pad.Vc = aux.DV_C / 0.3048;
+	if (opt->enginetype == RTCC_ENGINETYPE_CSMRCSMINUS2 || opt->enginetype == RTCC_ENGINETYPE_CSMRCSMINUS4)
+	{
+		pad.Vc = -pad.Vc;
+	}
+	pad.Vt = length(pad.dV);//aux.DV / 0.3048;//
+	
+	//Calculate height of periapsis and apoapsis
+	if (sv1.gravref == oapiGetObjectByName("Earth"))
+	{
+		mu = OrbMech::mu_Earth;
+		R_E = OrbMech::R_Earth;
+	}
+	else
+	{
+		mu = OrbMech::mu_Moon;
+		R_E = opt->R_LLS;
 	}
 
-	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), M_R));
-	//sprintf(oapiDebugString(), "%f, %f, %f", IMUangles.x*DEG, IMUangles.y*DEG, IMUangles.z*DEG);
+	OrbMech::periapo(aux.R_BO, aux.V_BO, mu, apo, peri);
+	ManPADApo = apo - R_E;
+	ManPADPeri = peri - R_E;
+	pad.HA = min(9999.9, ManPADApo / 1852.0);
+	pad.HP = ManPADPeri / 1852.0;
 
-	GDCangles = OrbMech::backupgdcalignment(opt->REFSMMAT, sv1.R, oapiGetSize(sv1.gravref), GDCset);
+	//Attitude
+	VECTOR3 X_P, Y_P, Z_P;
+	X_P = _V(opt->REFSMMAT.m11, opt->REFSMMAT.m12, opt->REFSMMAT.m13);
+	Y_P = _V(opt->REFSMMAT.m21, opt->REFSMMAT.m22, opt->REFSMMAT.m23);
+	Z_P = _V(opt->REFSMMAT.m31, opt->REFSMMAT.m32, opt->REFSMMAT.m33);
+
+	double MG, OG, IG, C;
+
+	MG = asin(dotp(Y_P, aux.X_B));
+	C = abs(MG);
+
+	if (abs(C - PI05) < 0.0017)
+	{
+		OG = 0.0;
+		IG = atan2(dotp(X_P, aux.Z_B), dotp(Z_P, aux.Z_B));
+	}
+	else
+	{
+		OG = atan2(-dotp(aux.Z_B, Y_P), dotp(aux.Y_B, Y_P));
+		IG = atan2(-dotp(aux.X_B, Z_P), dotp(aux.X_B, X_P));
+	}
+
+	IMUangles = _V(OG, IG, MG);
+
+	//Star checks
+	GDCangles = OrbMech::backupgdcalignment(opt->REFSMMAT, sv1.R, R_E, GDCset);
 
 	VECTOR3 Rsxt, Vsxt;
-
 	OrbMech::oneclickcoast(sv1.R, sv1.V, sv1.MJD, opt->sxtstardtime, Rsxt, Vsxt, sv1.gravref, sv1.gravref);
 
-	OrbMech::checkstar(opt->REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD), Rsxt, oapiGetSize(sv1.gravref), Manstaroct, Mantrunnion, Manshaft);
-
-	OrbMech::coascheckstar(opt->REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD), Rsxt, oapiGetSize(sv1.gravref), ManCOASstaroct, ManBSSpitch, ManBSSXPos);
+	OrbMech::checkstar(opt->REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD), Rsxt, R_E, Manstaroct, Mantrunnion, Manshaft);
+	OrbMech::coascheckstar(opt->REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD), Rsxt, R_E, ManCOASstaroct, ManBSSpitch, ManBSSXPos);
 
 	pad.Att = _V(OrbMech::imulimit(IMUangles.x*DEG), OrbMech::imulimit(IMUangles.y*DEG), OrbMech::imulimit(IMUangles.z*DEG));
 	pad.BSSStar = ManCOASstaroct;
-	pad.burntime = ManPADBurnTime;
-	pad.dV = opt->dV_LVLH / 0.3048;
 	pad.GDCangles = _V(OrbMech::imulimit(GDCangles.x*DEG), OrbMech::imulimit(GDCangles.y*DEG), OrbMech::imulimit(GDCangles.z*DEG));
-	pad.GETI = opt->TIG;
-	pad.HA = min(9999.9, ManPADApo / 1852.0);
-	pad.HP = ManPADPeri / 1852.0;
 
 	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
 	{
@@ -3782,8 +3803,19 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 		sprintf(pad.PropGuid, "RCS/G&N");
 	}
 
-	pad.pTrim = ManPADPTrim*DEG;
-	pad.yTrim = ManPADYTrim*DEG;
+	//Trim angles
+	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
+	{
+		ManPADPTrim = aux.P_G - SystemParameters.MCTSPP;
+		ManPADYTrim = aux.Y_G - SystemParameters.MCTSYP;
+		pad.pTrim = ManPADPTrim * DEG;
+		pad.yTrim = ManPADYTrim * DEG;
+	}
+	else
+	{
+		pad.pTrim = 0.0;
+		pad.yTrim = 0.0;
+	}
 
 	if (length(GDCangles) == 0.0)
 	{
@@ -3809,10 +3841,6 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	pad.Star = Manstaroct;
 	pad.SXP = ManBSSXPos*DEG;
 	pad.Trun = Mantrunnion*DEG;
-	pad.Vc = ManPADDVC / 0.3048;
-	pad.Vt = length(opt->dV_LVLH) / 0.3048;
-	pad.Weight = sv1.mass / 0.45359237;
-	pad.LMWeight = LMmass / 0.45359237;
 
 	pad.GET05G = 0;
 	pad.lat = 0;
@@ -3822,11 +3850,15 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 
 void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 {
-	MATRIX3 Q_Xx, M, M_R, M_RTM;
-	VECTOR3 V_G, X_B, UX, UY, UZ, Att;
-	double dt, LMmass, mu, headsswitch, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, y_T, p_T, R_E;
+	PMMRKJInputArray integin;
+	int Ierr;
+	RTCCNIAuxOutputTable aux;
+	VECTOR3 IMUangles;
+	double dt, LMmass, mu, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim;
+	double R_E;
 	SV sv, sv1, sv2;
 
+	//Get initial state vector
 	if (opt->useSV)
 	{
 		sv = opt->RV_MCC;
@@ -3836,9 +3868,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		sv = StateVectorCalc(opt->vessel);
 	}
 
-	dt = opt->TIG - (sv.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-	sv1 = coast(sv, dt);
-
+	//Get LM mass, depending on vesseltype
 	if (opt->vesseltype == 1)
 	{
 		LMmass = GetDockedVesselMass(opt->vessel);
@@ -3848,10 +3878,75 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		LMmass = 0.0;
 	}
 
-	//Execute maneuver, output state vector at cutoff
-	sv2 = ExecuteManeuver(sv1, opt->GETbase, opt->TIG, opt->dV_LVLH, LMmass, opt->enginetype, Q_Xx, V_G);
-	pad.burntime = (sv2.MJD - sv1.MJD)*24.0*3600.0;
+	//Calculate time of ullage on for burn simulation
+	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
+	{
+		double dt_ullage_overlap;
 
+		if (opt->UllageDT == 0.0)
+		{
+			dt_ullage_overlap = 0.0;
+		}
+		else
+		{
+			dt_ullage_overlap = SystemParameters.MCTSD9;
+		}
+
+		double get_bb = opt->TIG - opt->UllageDT + dt_ullage_overlap; //GET of burn begin (ullage)
+		dt = get_bb - GETfromGMT(OrbMech::GETfromMJD(sv.MJD, GetGMTBase()));
+
+		integin.DTU = opt->UllageDT;
+	}
+	else
+	{
+		dt = opt->TIG - (sv.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+		integin.DTU = 0.0;
+	}
+	sv1 = coast(sv, dt);
+
+	//Settings for burn simulation
+	integin.sv0 = ConvertSVtoEphemData(sv1);
+	integin.CAPWT = sv.mass + LMmass;
+	integin.KEPHOP = 0;
+	integin.KAUXOP = true;
+	integin.CSMWT = sv.mass;
+	integin.LMAWT = LMmass;
+	integin.MANOP = RTCC_ATTITUDE_PGNS_EXDV;
+	integin.ThrusterCode = opt->enginetype;
+	integin.UllageOption = opt->UllageThrusterOpt;
+	if (opt->vesseltype == 1)
+	{
+		integin.IC = 13;
+	}
+	else
+	{
+		integin.IC = 1;
+	}
+	integin.TVC = 1;
+	integin.KTRIMOP = -1;
+	integin.DOCKANG = 0.0;
+	integin.VG = opt->dV_LVLH;
+	integin.HeadsUpDownInd = opt->HeadsUp;
+	integin.ExtDVCoordInd = true;
+
+	//Burn simulation
+	CSMLMPoweredFlightIntegration numin(this, integin, Ierr, NULL, &aux);
+	numin.PMMRKJ();
+
+	//Store PAD data from inputs
+	pad.GETI = opt->TIG;
+	pad.dV = opt->dV_LVLH / 0.3048;
+	pad.Weight = sv1.mass / 0.45359237;
+
+	//Store PAD data from burn simulation
+	pad.burntime = aux.DT_B;
+	pad.Vc = aux.DV_C / 0.3048;
+	if (opt->enginetype == RTCC_ENGINETYPE_CSMRCSMINUS2 || opt->enginetype == RTCC_ENGINETYPE_CSMRCSMINUS4)
+	{
+		pad.Vc = -pad.Vc;
+	}
+
+	//Calculate height of periapsis and apoapsis
 	if (sv1.gravref == oapiGetObjectByName("Earth"))
 	{
 		mu = OrbMech::mu_Earth;
@@ -3863,82 +3958,40 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		R_E = OrbMech::R_Moon;
 	}
 
-	if (opt->HeadsUp)
-	{
-		headsswitch = 1.0;
-	}
-	else
-	{
-		headsswitch = -1.0;
-	}
-
-	OrbMech::periapo(sv2.R, sv2.V, mu, apo, peri);
+	OrbMech::periapo(aux.R_BO, aux.V_BO, mu, apo, peri);
 	ManPADApo = apo - R_E;
 	ManPADPeri = peri - R_E;
+	pad.HA = min(9999.9, ManPADApo / 1852.0);
+	pad.HP = ManPADPeri / 1852.0;
 
-	pad.Weight = sv1.mass / 0.45359237;
+	//Attitude
+	VECTOR3 X_P, Y_P, Z_P;
+	X_P = _V(opt->REFSMMAT.m11, opt->REFSMMAT.m12, opt->REFSMMAT.m13);
+	Y_P = _V(opt->REFSMMAT.m21, opt->REFSMMAT.m22, opt->REFSMMAT.m23);
+	Z_P = _V(opt->REFSMMAT.m31, opt->REFSMMAT.m32, opt->REFSMMAT.m33);
 
-	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
+	double MG, OG, IG, C;
+
+	MG = asin(dotp(Y_P, aux.X_B));
+	C = abs(MG);
+
+	if (abs(C - PI05) < 0.0017)
 	{
-		double T, WDOT;
-		unsigned IC;
-		if (LMmass > 0)
-		{
-			IC = 13;
-		}
-		else
-		{
-			IC = 1;
-		}
-		GIMGBL(sv1.mass, LMmass, p_T, y_T, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0, 0.0);
-
-		ManPADPTrim = p_T + 2.15*RAD;
-		ManPADYTrim = y_T - 0.95*RAD;
-
-		X_B = unit(V_G);
-		UX = X_B;
-		UY = unit(crossp(X_B, sv1.R*headsswitch));
-		UZ = unit(crossp(X_B, UY));
-
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-		M_RTM = mul(OrbMech::tmat(M_R), M);
-
-		pad.Vc = length(opt->dV_LVLH)*cos(p_T)*cos(y_T);// -60832.18 / m1;
+		OG = 0.0;
+		IG = atan2(dotp(X_P, aux.Z_B), dotp(Z_P, aux.Z_B));
 	}
 	else
 	{
-		ManPADPTrim = 0.0;
-		ManPADYTrim = 0.0;
-
-		X_B = unit(V_G);
-		if (opt->enginetype == RTCC_ENGINETYPE_CSMRCSPLUS2 || opt->enginetype == RTCC_ENGINETYPE_CSMRCSPLUS4)
-		{
-			UX = X_B;
-			pad.Vc = length(opt->dV_LVLH);
-		}
-		else
-		{
-			UX = -X_B;
-			pad.Vc = -length(opt->dV_LVLH);
-		}
-		UY = unit(crossp(UX, sv1.R*headsswitch));
-		UZ = unit(crossp(UX, crossp(UX, sv1.R*headsswitch)));
-
-
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+		OG = atan2(-dotp(aux.Z_B, Y_P), dotp(aux.Y_B, Y_P));
+		IG = atan2(-dotp(aux.X_B, Z_P), dotp(aux.X_B, X_P));
 	}
-	Att = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), M_R));
-	//sprintf(oapiDebugString(), "%f, %f, %f", IMUangles.x*DEG, IMUangles.y*DEG, IMUangles.z*DEG);
 
-	//GDCangles = OrbMech::backupgdcalignment(REFSMMAT, R1B, oapiGetSize(gravref), GDCset);
-
+	IMUangles = _V(OG, IG, MG);
 	VECTOR3 Rsxt, Vsxt;
 
 	OrbMech::oneclickcoast(sv1.R, sv1.V, sv1.MJD, opt->sxtstardtime, Rsxt, Vsxt, sv1.gravref, sv1.gravref);
 
-	OrbMech::checkstar(opt->REFSMMAT, _V(round(Att.x*DEG)*RAD, round(Att.y*DEG)*RAD, round(Att.z*DEG)*RAD), Rsxt, oapiGetSize(sv1.gravref), pad.Star, pad.Trun, pad.Shaft);
+	OrbMech::checkstar(opt->REFSMMAT, _V(round(IMUangles.x*DEG)*RAD, round(IMUangles.y*DEG)*RAD, round(IMUangles.z*DEG)*RAD), Rsxt, R_E, pad.Star, pad.Trun, pad.Shaft);
 
 	if (opt->navcheckGET != 0.0)
 	{
@@ -3953,17 +4006,24 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		pad.alt = alt / 1852;
 	}
 
-	pad.Att = _V(OrbMech::imulimit(Att.x*DEG), OrbMech::imulimit(Att.y*DEG), OrbMech::imulimit(Att.z*DEG));
+	pad.Att = _V(OrbMech::imulimit(IMUangles.x*DEG), OrbMech::imulimit(IMUangles.y*DEG), OrbMech::imulimit(IMUangles.z*DEG));
 
-	pad.GETI = opt->TIG;
-	pad.pTrim = ManPADPTrim*DEG;
-	pad.yTrim = ManPADYTrim*DEG;
-	pad.dV = opt->dV_LVLH / 0.3048;
-	pad.Vc /= 0.3048;
+	//Trim angles
+	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
+	{
+		ManPADPTrim = aux.P_G - SystemParameters.MCTSPP;
+		ManPADYTrim = aux.Y_G - SystemParameters.MCTSYP;
+		pad.pTrim = ManPADPTrim * DEG;
+		pad.yTrim = ManPADYTrim * DEG;
+	}
+	else
+	{
+		pad.pTrim = 0.0;
+		pad.yTrim = 0.0;
+	}
+
 	pad.Shaft *= DEG;
 	pad.Trun *= DEG;
-	pad.HA = min(9999.9, ManPADApo / 1852.0);
-	pad.HP = ManPADPeri / 1852.0;
 }
 
 void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
@@ -15680,7 +15740,7 @@ RTCC_PMMMPT_19_B:
 	{
 		goto RTCC_PMMMPT_17_B;
 	}	
-	PCMATO(A, YV, XP, DA, 5, NIP, WY, 0.0, WNULL);
+	PCMATO(A, YV, XP, DA, ICNT, NIP, WY, 0.0, WNULL);
 	goto RTCC_PMMMPT_20_B;
 RTCC_PMMMPT_20_A:
 	//Reset independent variables

@@ -313,7 +313,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Maneuver Vehicle", 0, 'V' },
 		{ "Maneuver Engine", 0, 'E' },
 		{ "Heads-up/down", 0, 'H' },
-		{ "", 0, ' ' },
+		{ "Ullage option", 0, 'U' },
 		{ "Manual TIG", 0, 'T' },
 		{ "Manual DV", 0, 'D' },
 
@@ -330,7 +330,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchManPADEngine);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::menuSwitchHeadsUp);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ULL", OAPI_KEY_U, &ApolloRTCCMFD::menuManPADUllage);
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::menuManPADTIG);
 	RegisterFunction("DV", OAPI_KEY_D, &ApolloRTCCMFD::menuManPADDV);
 
