@@ -750,8 +750,8 @@ void HGA::TimeStep(double simt, double simdt)
 
 	const double TrkngCtrlGain = 5.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
 	const double ServoFeedbackGain = 3.2; //this works too...
-	const double BeamSwitchingTrkErThreshhold = 1.5; 
-
+	const double BeamSwitchingTrkErThreshhold = 0.001; 
+	const double BeamSwitchingTime = 0.1;
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
 
@@ -796,7 +796,7 @@ void HGA::TimeStep(double simt, double simdt)
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
 			}
-			ModeSwitchTimer = simt + 1; 
+			ModeSwitchTimer = simt + BeamSwitchingTime;
 		}
 	}
 	else
@@ -806,7 +806,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 		if (ModeSwitchTimer < simt)
 		{
-			if ((SignalStrength > 0.5) && (scanlimitwarn == false) && (scanlimit == false)) //
+			if ((SignalStrength > 0.0) && (scanlimitwarn == false) && (scanlimit == false)) //
 			{
 				AutoTrackingMode = true; //if it somehow wasn't on...
 				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold)) //acquire mode in auto
@@ -830,10 +830,8 @@ void HGA::TimeStep(double simt, double simdt)
 					RcvBeamWidthSelect = 3;
 					XmtBeamWidthSelect = 3;
 				}
-				ModeSwitchTimer = simt + 1; 
-
 			}
-			else if ((SignalStrength > 0.5) && (scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
+			else if ((SignalStrength > 0.0) && (scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
 			{
 				AutoTrackingMode = true;
 				RcvBeamWidthSelect = 1;
@@ -845,6 +843,7 @@ void HGA::TimeStep(double simt, double simdt)
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
 			}
+			ModeSwitchTimer = simt + BeamSwitchingTime;
 		}
 		
 	}
