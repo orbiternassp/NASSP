@@ -5649,8 +5649,8 @@ void LVDCSV::TimeStep(double simdt) {
 					fprintf(lvlog, "[TB%d+%f] Lunar impact burn stopped\r\n", LVDC_Timebase, LVDC_TB_ETime);
 				}
 
-				//For now, disable LVDC at TB8+10,000 seconds
-				if (LVDC_TB_ETime > 10000.0)
+				//For now, disable LVDC at TB8+30,000 seconds to allow lunar impact burns
+				if (LVDC_TB_ETime > 30000.0)
 				{
 					LVDC_Stop = true;
 					return;
