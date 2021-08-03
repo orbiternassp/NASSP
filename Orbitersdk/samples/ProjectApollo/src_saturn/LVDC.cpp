@@ -8339,18 +8339,26 @@ void LVDCSV::MinorLoop(int entry)
 
 void LVDCSV::CutoffLogic()
 {
-	if (ModeCode25[MC25_FirstSIVBCutoffCommand] == false && T_GO - sinceLastCycle <= 0 && HSL == true && S4B_IGN == true)
+	if (ModeCode25[MC25_FirstSIVBCutoffCommand] == false && HSL == true && S4B_IGN == true)
 	{
-		SwitchSelectorProcessor(8);
-		fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-		ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
+		//Accounts for an average half minor loop delay
+		if (T_CO - TMM <= 0.02)
+		{
+			SwitchSelectorProcessor(8);
+			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
+			ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
+		}
 	}
-	if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false && T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true)
+	if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false && HSL == true && S4B_REIGN == true)
 	{
-		DVASW = DVASW | MSKSSS4C1;
-		SwitchSelectorProcessor(0);
-		fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-		ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+		//Accounts for an average half minor loop delay and also a 20ms delay in issuing the cutoff command
+		if (T_CO - TMM <= 0.04)
+		{
+			DVASW = DVASW | MSKSSS4C1;
+			SwitchSelectorProcessor(0);
+			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
+			ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+		}
 	}
 }
 
