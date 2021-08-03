@@ -14397,7 +14397,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				EphemerisData sv_SI;
 				EMMENI(emsin);
 				sv_SI = emsin.sv_cutoff;
-				if (emsin.TerminationCode == 2)
+				if (emsin.TerminationCode == 5)
 				{
 					EZSPACE.GETSI = GETfromGMT(sv_SI.GMT);
 				}

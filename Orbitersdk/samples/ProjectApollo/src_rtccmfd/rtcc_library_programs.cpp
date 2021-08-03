@@ -1044,9 +1044,9 @@ RTCC_GLUNIV_2:
 			beta = abs(beta / beta * PI*4.0 / sqrt(T));
 		}
 	}
-RTCC_GLUNIV_LOPP:
 	Dbeta0 = 0.0;
 	count = 20;
+RTCC_GLUNIV_LOPP:
 	alpha = -T * beta*beta;
 	if (EVTRANS(alpha, F1, F2, F3, F4))
 	{
