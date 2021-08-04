@@ -8016,7 +8016,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 	VECTOR3 U_R, U_Z, a_dP, a_d, a_dQ, a_dS;
 	a_dP = _V(0, 0, 0);
 	r = length(R);
-	if (r < r_dP)
+	if (r > R_E && r < r_dP)
 	{
 		U_R = unit(R);
 		if (P == BODY_EARTH)

@@ -725,19 +725,19 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	{
 		THPS[1] = pRTCC->SystemParameters.MCTST2;
 		THPS[2] = pRTCC->SystemParameters.MCTST4;
-		THPS[6] = Thrust;
+		THPS[6] = pRTCC->SystemParameters.MCTST6;
 		THPS[7] = pRTCC->SystemParameters.MCTST4;
 		THPS[9] = pRTCC->SystemParameters.MCTST4;
 
 		WDOTPS[1] = pRTCC->SystemParameters.MCTSW2;
 		WDOTPS[2] = pRTCC->SystemParameters.MCTSW4;
-		WDOTPS[6] = wdot;
+		WDOTPS[6] = pRTCC->SystemParameters.MCTSW6;
 		WDOTPS[7] = pRTCC->SystemParameters.MCTSW4;
 		WDOTPS[9] = pRTCC->SystemParameters.MCTSW4;
 
 		DTSPAN[1] = pRTCC->SystemParameters.MCTSD2;
 		DTSPAN[2] = pRTCC->SystemParameters.MCTSD3;
-		DTSPAN[3] = 6.0;
+		DTSPAN[3] = pRTCC->SystemParameters.MCTSD4;
 		DTSPAN[4] = 0.0;
 		DTSPAN[5] = 4.0;
 		DTSPAN[6] = 1.0;
