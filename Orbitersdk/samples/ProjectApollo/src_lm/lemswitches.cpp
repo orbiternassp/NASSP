@@ -1519,6 +1519,7 @@ bool LMAbortButton::SwitchTo(int newState)
 			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
 		}
 		else if (state == 1) {
+			//lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true); //Test abort discrete set for Apollo 14
 			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
 			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
 		}
@@ -2156,15 +2157,13 @@ void LMLiquidGarmentCoolingRotationalSwitch::CheckValve()
 
 LMForwardHatchHandle::LMForwardHatchHandle()
 {
-	cabin = NULL;
 	forwardHatch = NULL;
 }
 
-void LMForwardHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Tank *cab, LEMForwardHatch *fh)
+void LMForwardHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEMForwardHatch *fh)
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 
-	cabin = cab;
 	forwardHatch = fh;
 }
 
@@ -2172,7 +2171,7 @@ bool LMForwardHatchHandle::SwitchTo(int newState, bool dontspring)
 {
 	if (!forwardHatch->IsOpen())
 	{
-		if (state == 1 || cabin->space.Press < 0.08 / PSI)
+		if (state == 1)
 		{
 			return ToggleSwitch::SwitchTo(newState, dontspring);
 		}
@@ -2183,15 +2182,13 @@ bool LMForwardHatchHandle::SwitchTo(int newState, bool dontspring)
 
 LMOverheadHatchHandle::LMOverheadHatchHandle()
 {
-	pipe = NULL;
 	ovhdHatch = NULL;
 }
 
-void LMOverheadHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p, LEMOverheadHatch *oh)
+void LMOverheadHatchHandle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEMOverheadHatch *oh)
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 
-	pipe = p;
 	ovhdHatch = oh;
 }
 
@@ -2199,7 +2196,7 @@ bool LMOverheadHatchHandle::SwitchTo(int newState, bool dontspring)
 {
 	if (!ovhdHatch->IsOpen())
 	{
-		if (state == 1 || pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI)
+		if (state == 1)
 		{
 			return ToggleSwitch::SwitchTo(newState, dontspring);
 		}
