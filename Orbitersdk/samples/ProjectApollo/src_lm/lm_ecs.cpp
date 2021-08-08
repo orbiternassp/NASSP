@@ -230,6 +230,7 @@ LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
 	ovhdHatchHandle = NULL;
 	ovhdReliefValve = NULL;
 	lem = NULL;
+	pipe = NULL;
 
 	ovhdhatch_state.SetOperatingSpeed(0.2);
 	anim_OvhdHatch = -1;
@@ -237,11 +238,12 @@ LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
 	anim_OvhdHatchReliefValve = -1;
 }
 
-void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *orv)
+void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *orv, h_Pipe *p)
 {
 	lem = l;
 	ovhdHatchHandle = fhh;
 	ovhdReliefValve = orv;
+	pipe = p;
 }
 
 void LEMOverheadHatch::DefineAnimations(UINT idx)
@@ -313,7 +315,7 @@ void LEMOverheadHatch::Toggle()
 {
 	if (open == false)
 	{
-		if (ovhdHatchHandle->GetState() == 1)
+		if (ovhdHatchHandle->GetState() == 1 && pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI)
 		{
 			open = true;
 			OpenSound.play();
@@ -430,6 +432,7 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	ForwardHatchHandle = NULL;
 	ForwardHatchReliefValve = NULL;
 	lem = NULL;
+	cabin = NULL;
 
 	hatch_state.SetOperatingSpeed(0.2);
 	anim_Hatch = -1;
@@ -438,11 +441,12 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	anim_FwdHatchReliefValve = -1;
 }
 
-void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr)
+void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab)
 {
 	lem = l;
 	ForwardHatchHandle = fhh;
 	ForwardHatchReliefValve = fhr;
+	cabin = cab;
 }
 
 void LEMForwardHatch::DefineAnimations(UINT idx)
@@ -515,7 +519,7 @@ void LEMForwardHatch::Toggle()
 {
 	if (open == false)
 	{
-		if (ForwardHatchHandle->GetState() == 1)
+		if (ForwardHatchHandle->GetState() == 1 && cabin->space.Press < 0.08 / PSI)
 		{
 			open = true;
 			OpenSound.play();
@@ -749,7 +753,7 @@ void LEMSuitIsolValve::SystemTimestep(double simdt)
 	if (!suitisolvlv) return;
 
 	//Pressure Switch/Override Actuation (Suit Disconnect)
-	if (suitisolvlv->GetState() == 0 && lem->ECS_SUIT_FLOW_CONT_CB.IsPowered() && (actuatorovrdswitch->GetState() == 1 || lem->SuitPressureSwitch.GetPressureSwitch() != 0))
+	if (suitisolvlv->GetState() == 0 && ((actuatorovrdswitch->GetState() == 1) || (lem->ECS_SUIT_FLOW_CONT_CB.IsPowered() && lem->SuitPressureSwitch.GetPressureSwitch() != 0)))
 	{
 		suitisolvlv->SwitchTo(1); //Suit Disconnect
 	}
