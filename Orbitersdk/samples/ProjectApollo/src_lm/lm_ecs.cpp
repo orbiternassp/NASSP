@@ -315,7 +315,7 @@ void LEMOverheadHatch::Toggle()
 {
 	if (open == false)
 	{
-		if (ovhdHatchHandle->GetState() == 1 && pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI)
+		if (ovhdHatchHandle->GetState() == 1 && (pipe->in->parent->space.Press - pipe->out->parent->space.Press < 0.08 / PSI))
 		{
 			open = true;
 			OpenSound.play();
@@ -519,7 +519,7 @@ void LEMForwardHatch::Toggle()
 {
 	if (open == false)
 	{
-		if (ForwardHatchHandle->GetState() == 1 && cabin->space.Press < 0.08 / PSI)
+		if (ForwardHatchHandle->GetState() == 1 && (cabin->space.Press < 0.08 / PSI))
 		{
 			open = true;
 			OpenSound.play();

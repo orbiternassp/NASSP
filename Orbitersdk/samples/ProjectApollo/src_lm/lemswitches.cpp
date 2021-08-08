@@ -2171,10 +2171,7 @@ bool LMForwardHatchHandle::SwitchTo(int newState, bool dontspring)
 {
 	if (!forwardHatch->IsOpen())
 	{
-		if (state == 1)
-		{
-			return ToggleSwitch::SwitchTo(newState, dontspring);
-		}
+		return ToggleSwitch::SwitchTo(newState, dontspring);
 	}
 
 	return false;
@@ -2196,10 +2193,7 @@ bool LMOverheadHatchHandle::SwitchTo(int newState, bool dontspring)
 {
 	if (!ovhdHatch->IsOpen())
 	{
-		if (state == 1)
-		{
-			return ToggleSwitch::SwitchTo(newState, dontspring);
-		}
+		return ToggleSwitch::SwitchTo(newState, dontspring);
 	}
 
 	return false;
