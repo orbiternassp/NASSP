@@ -3143,8 +3143,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		if (G->target != NULL)
 		{
 			sprintf(Buffer, G->target->GetName());
-			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 		}
+		else
+		{
+			sprintf(Buffer, "No Target!");
+		}
+		skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 
 		int hh, mm;
 		double secs;
@@ -3167,7 +3171,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(2 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%+06d DEDA 053", G->lmascentpad.DEDA053);
 		skp->Text(2 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+06.0f DEDA 225/226", G->lmascentpad.DEDA225_226);
+		if (GC->mission >= 14)
+		{
+			sprintf(Buffer, "%+06.0f DEDA 224/226", G->lmascentpad.DEDA225_226);
+		}
+		else
+		{
+			sprintf(Buffer, "%+06.0f DEDA 225/226", G->lmascentpad.DEDA225_226);
+		}
 		skp->Text(2 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%+06.0f DEDA 231", G->lmascentpad.DEDA231);
 		skp->Text(2 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
