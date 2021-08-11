@@ -695,10 +695,10 @@ void LEM::SystemsInit()
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegAValve);
 	SuitCircuitPressureRegulatorB.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGBOUT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegBValve);
-	OverheadHatch.Init(this, &UpperHatchHandle, &UpperHatchReliefValve);
+	OverheadHatch.Init(this, &UpperHatchHandle, &UpperHatchReliefValve, (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"));
 	OVHDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"),
 		&UpperHatchReliefValve, &OverheadHatch);
-	ForwardHatch.Init(this, &ForwardHatchHandle, &ForwardHatchReliefValve);
+	ForwardHatch.Init(this, &ForwardHatchHandle, &ForwardHatchReliefValve, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 	FWDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINFWDHATCHVALVE"),
 		&ForwardHatchReliefValve, &ForwardHatch);
 	SuitCircuitReliefValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE"),
