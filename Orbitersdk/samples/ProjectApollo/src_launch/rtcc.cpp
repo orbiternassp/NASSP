@@ -189,6 +189,26 @@ bool papiReadConfigFile_ATPSite(char *line, char *item, std::string &ATPSite, do
 	return false;
 }
 
+bool papiReadConfigFile_PTPSite(char *line, char *item, std::string &PTPSite, double *PTPCoordinates, int &num)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			char buffer2[64];
+			double CC[2];
+
+			if (sscanf(line, "%s %d %s %lf %lf", buffer, &num, buffer2, &CC[0], &CC[1]) == 5) {
+				PTPSite.assign(buffer2);
+				PTPCoordinates[0] = CC[0] * RAD;
+				PTPCoordinates[1] = CC[1] * RAD;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 FIDOOrbitDigitals::FIDOOrbitDigitals()
 {
 	A = 0.0;
@@ -1632,8 +1652,8 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 	ifstream startable(Buff);
 	if (startable.is_open())
 	{
-		std::string line;
-		double dtemp;
+		std::string line, strtemp;
+		double dtemp, darrtemp[2];
 		int itemp;
 
 		while (getline(startable, line))
@@ -1722,6 +1742,12 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 			{
 				PZLOIPLN.DW = dtemp;
 				PZMCCPLN.SITEROT = dtemp * RAD;
+			}
+			else if (papiReadConfigFile_PTPSite(Buff, "PTPSite", strtemp, darrtemp, itemp))
+			{
+				PZREAP.PTPSite[itemp] = strtemp;
+				PZREAP.PTPLatitude[itemp] = darrtemp[0];
+				PZREAP.PTPLongitude[itemp] = darrtemp[1];
 			}
 		}
 	}
@@ -23025,7 +23051,15 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		{
 			critical = 1;
 			dvmax = PZREAP.DVMAX*0.3048;
-			sprintf_s(typname, "ATP");
+			if (PZREAP.RTEIsPTPSite)
+			{
+				sprintf_s(typname, "PTP");
+			}
+			else
+			{
+				sprintf_s(typname, "ATP");
+			}
+			
 			TZMINI = med_f77.T_Z;
 		}
 
@@ -23035,9 +23069,20 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		if (critical == 1)
 		{
 			double LINE[10];
-			for (int i = 0;i < 10;i++)
+			if (PZREAP.RTEIsPTPSite)
 			{
-				LINE[i] = PZREAP.ATPCoordinates[PZREAP.RTESiteNum][i];
+				for (int i = 0;i < 5;i++)
+				{
+					LINE[2 * i] = 80.0*RAD - 40.0*RAD*(double)i;	//So table has 80, 40, 0, -40, -80 deg as latitude
+					LINE[2 * i + 1] = PZREAP.PTPLongitude[PZREAP.RTESiteNum];
+				}
+			}
+			else
+			{
+				for (int i = 0;i < 10;i++)
+				{
+					LINE[i] = PZREAP.ATPCoordinates[PZREAP.RTESiteNum][i];
+				}
 			}
 			rte.ATP(LINE);
 		}
@@ -23081,7 +23126,14 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		else if (med == 76)
 		{
 			SMODE = 14;
-			sprintf_s(typname, "ATP");
+			if (PZREAP.RTEIsPTPSite)
+			{
+				sprintf_s(typname, "PTP");
+			}
+			else
+			{
+				sprintf_s(typname, "ATP");
+			}
 			Inclination = med_f76.Inclination;
 			TZMINI = med_f76.T_Z;
 			TZMAXI = 0.0;
@@ -23098,7 +23150,14 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			else
 			{
 				SMODE = 34;
-				sprintf_s(typname, "ATP");
+				if (PZREAP.RTEIsPTPSite)
+				{
+					sprintf_s(typname, "PTP");
+				}
+				else
+				{
+					sprintf_s(typname, "ATP");
+				}
 				TZMINI = med_f77.T_Z;
 				TZMAXI = 0.0;
 			}
@@ -23113,9 +23172,20 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		if (SMODE == 14 || SMODE == 34)
 		{
 			double LINE[10];
-			for (int i = 0;i < 10;i++)
+			if (PZREAP.RTEIsPTPSite)
 			{
-				LINE[i] = PZREAP.ATPCoordinates[PZREAP.RTESiteNum][i];
+				for (int i = 0;i < 5;i++)
+				{
+					LINE[2 * i] = 80.0*RAD - 40.0*RAD*(double)i;	//So table has 80, 40, 0, -40, -80 deg as latitude
+					LINE[2 * i + 1] = PZREAP.PTPLongitude[PZREAP.RTESiteNum];
+				}
+			}
+			else
+			{
+				for (int i = 0;i < 10;i++)
+				{
+					LINE[i] = PZREAP.ATPCoordinates[PZREAP.RTESiteNum][i];
+				}
 			}
 			rte.ATP(LINE);
 		}
@@ -26168,7 +26238,23 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 	//Update the target table for return to Earth
 	else if (med == "85")
 	{
-		
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		int action;
+		if (data[0] == "ADD")
+		{
+			action = 1;
+		}
+		else if (data[0] == "REPLACE")
+		{
+			action = 2;
+		}
+		else if (data[0] == "DELETE")
+		{
+			action = 3;
+		}
 	}
 	//Update return to Earth constraints
 	else if (med == "86")

@@ -2814,6 +2814,22 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				skp->Text((11 + i * 4) * W / 32, (8 + j * 2) * H / 28, Buffer, strlen(Buffer));
 			}
 		}
+
+		for (unsigned i = 0;i < 5;i++)
+		{
+			//If name is not valid, skip this PTP
+			if (GC->rtcc->PZREAP.PTPSite[i] == "")
+			{
+				continue;
+			}
+
+			sprintf(Buffer, GC->rtcc->PZREAP.PTPSite[i].c_str());
+			skp->Text((11 + i * 4) * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2f", GC->rtcc->PZREAP.PTPLatitude[i] * DEG);
+			skp->Text((11 + i * 4) * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2f", GC->rtcc->PZREAP.PTPLongitude[i] * DEG);
+			skp->Text((11 + i * 4) * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
+		}
 	}
 	else if (screen == 30)
 	{
