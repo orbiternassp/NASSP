@@ -3250,7 +3250,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	T_S1 = 0;
 	T_S2 = 0;
 	T_S3 = 0;
-	t_S1C_CECO = 0;
 	TS4BS = 0;
 	TSMC1 = 0;
 	TSMC2 = 0;
@@ -3430,7 +3429,6 @@ void LVDCSV::Init(){
 	T_EO2 = 0;								// allows single pass through IGM engine-out presettings when 0
 	dT_F=0;									// Period of frozen pitch in S1C
 	dt_LET = 35.1;							// Nominal time between SII ign and LET jet
-	t_S1C_CECO = 125.9;
 	t_TB8Start = 3600.0;
 	//IGM BOOST TO ORBIT
 	Ct = 0;
@@ -4452,7 +4450,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_S1", T_S1);
 	papiWriteScenario_double(scn, "LVDC_T_S2", T_S2);
 	papiWriteScenario_double(scn, "LVDC_T_S3", T_S3);
-	papiWriteScenario_double(scn, "LVDC_t_S1C_CECO", t_S1C_CECO);
 	papiWriteScenario_double(scn, "LVDC_TS4BS", TS4BS);
 	papiWriteScenario_double(scn, "LVDC_t_SD1", t_SD1);
 	papiWriteScenario_double(scn, "LVDC_t_SD2", t_SD2);
@@ -5221,7 +5218,6 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_T_S1", T_S1);
 		papiReadScenario_double(line, "LVDC_T_S2", T_S2);
 		papiReadScenario_double(line, "LVDC_T_S3", T_S3);
-		papiReadScenario_double(line, "LVDC_t_S1C_CECO", t_S1C_CECO);
 		papiReadScenario_double(line, "LVDC_TS4BS", TS4BS);
 		papiReadScenario_double(line, "LVDC_t_SD1", t_SD1);
 		papiReadScenario_double(line, "LVDC_t_SD2", t_SD2);

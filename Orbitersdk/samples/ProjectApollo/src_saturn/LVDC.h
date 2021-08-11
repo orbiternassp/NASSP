@@ -347,7 +347,6 @@ private:								// Saturn LV
 	VECTOR3 WV;										// Gravity
 	double sinceLastCycle;							// Time since last IGM run
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
-	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
 	bool SIICenterEngineCutoff;
 	bool FixedAttitudeBurn;
 	double t_TB8Start;
