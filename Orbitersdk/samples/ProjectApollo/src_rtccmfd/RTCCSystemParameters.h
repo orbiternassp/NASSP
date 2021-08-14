@@ -331,7 +331,7 @@ struct RTCCSystemParameters
 		MCTJD3 = 2.5;
 		MCTJDS = 1.0;
 		MCTJD5 = 99999.0;
-		MCTJD6 = 1.8;
+		MCTJD6 = 1.9;
 
 		MCTJT1 = 38.8 * 4.4482216152605;
 		MCTJT2 = 5889.0 * 4.4482216152605;
