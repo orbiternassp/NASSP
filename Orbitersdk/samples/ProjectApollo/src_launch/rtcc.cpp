@@ -7931,7 +7931,11 @@ RTCC_PMMSPT_8_2:
 	}
 	double t_D = GetGMTLO()*3600.0 - PZSTARGP.T_LO;
 	double cos_sigma, C3, e_N, RA, DEC;
-	PCMSP2(J, t_D, cos_sigma, C3, e_N, RA, DEC);
+	int GRP15 = PCMSP2(J, t_D, cos_sigma, C3, e_N, RA, DEC);
+	if (GRP15)
+	{
+		return GRP15;
+	}
 	VECTOR3 TargetVector = _V(cos(RA)*cos(DEC), sin(RA)*cos(DEC), sin(DEC));
 	double theta_E = PZSTARGP.theta_EO + PZSTARGP.omega_E * t_D;
 	MATRIX3 N = mul(RMAT, _M(cos(theta_E), sin(theta_E), 0, -sin(theta_E), cos(theta_E), 0, 0, 0, 1));
@@ -8205,7 +8209,7 @@ RTCC_PMMSPT_21_1:
 	goto RTCC_PMMSPT_19_1;
 }
 
-void RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC)
+int RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC)
 {
 	int k = J - 1;
 	int i = 0;
@@ -8227,7 +8231,7 @@ void RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N,
 		{
 			if (i >= 14)
 			{
-				break;
+				return 85;
 			}
 			else
 			{
@@ -8243,7 +8247,7 @@ void RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N,
 		e_N = PZSTARGP.e_N[k][i];
 		RA = PZSTARGP.RA[k][i];
 		DEC = PZSTARGP.DEC[k][i];
-		return;
+		return 0;
 	}
 
 	double A = (t_D - PZSTARGP.t_D[k][i - 1]) / (PZSTARGP.t_D[k][i] - PZSTARGP.t_D[k][i - 1]);
@@ -8252,6 +8256,7 @@ void RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N,
 	e_N = PZSTARGP.e_N[k][i - 1] + A * (PZSTARGP.e_N[k][i] - PZSTARGP.e_N[k][i - 1]);
 	RA = PZSTARGP.RA[k][i - 1] + A * (PZSTARGP.RA[k][i] - PZSTARGP.RA[k][i - 1]);
 	DEC = PZSTARGP.DEC[k][i - 1] + A * (PZSTARGP.DEC[k][i] - PZSTARGP.DEC[k][i - 1]);
+	return 0;
 }
 
 void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, double m0, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI)
