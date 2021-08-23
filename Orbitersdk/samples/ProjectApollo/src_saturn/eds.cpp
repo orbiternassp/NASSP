@@ -196,7 +196,7 @@ void EDS::Timestep(double simdt)
 		TwoEngineOutAutoAbortInhibitNo2 = false;
 
 	if (iu->ESEGetTwoEngineOutAutoAbortInhibit(3) || tempsignal1)
-		TwoEngineOutAutoAbortInhibitNo2 = true;
+		TwoEngineOutAutoAbortInhibitNo3 = true;
 	else
 		TwoEngineOutAutoAbortInhibitNo3 = false;
 

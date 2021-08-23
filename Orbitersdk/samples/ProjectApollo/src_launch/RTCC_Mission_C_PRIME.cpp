@@ -450,6 +450,13 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (scrubbed)
 		{
 			sprintf(upMessage, "%s has been scrubbed.", manname);
+
+			//Always save table 2 data for MCC-1
+			if (fcn == 20)
+			{
+				//Transfer MCC plan to skeleton flight plan table
+				GMGMED("F30,1;");
+			}
 		}
 		else
 		{

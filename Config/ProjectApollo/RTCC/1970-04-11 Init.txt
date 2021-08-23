@@ -9,3 +9,4 @@ eta_1 14.4
 LOPC_M 5
 LOPC_N 12
 H_P_LPO1 59.0
+PTPSite 0 EOM -1.559 -157.5

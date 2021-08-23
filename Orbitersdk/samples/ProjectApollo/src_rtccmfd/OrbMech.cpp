@@ -369,7 +369,7 @@ void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, do
 
 double kepler_U(double dt, double ro, double vro, double a, double mu, double x0) //This function uses Newton's method to solve the universal Kepler equation for the universal anomaly.
 {
-	double error2, ratio, C, S, F, dFdx, x;
+	double error2, ratio, C, S, F, dFdx, x, Z, ddFddx, delta_n;
 	int n, nMax;
 
 	error2 = 1e-8;
@@ -383,11 +383,15 @@ double kepler_U(double dt, double ro, double vro, double a, double mu, double x0
 	x = x0;
 	while ((abs(ratio) > error2) && (n <= nMax)) {
 		n = n + 1;
-		C = stumpC(a*x*x);
-		S = stumpS(a*x*x);
+		Z = a * x*x;
+		C = stumpC(Z);
+		S = stumpS(Z);
 		F = ro*vro / sqrt(mu)*x*x*C + (1.0 - a*ro)*OrbMech::power(x, 3.0)*S + ro*x - sqrt(mu)*dt;
 		dFdx = ro*vro / sqrt(mu)*x*(1.0 - a*x*x*S) + (1.0 - a*ro)*x*x*C + ro;
-		ratio = F / dFdx;
+		ddFddx = (1.0 - ro * a)*(1.0 - S * Z)*x + ro * vro / sqrt(mu)*(1.0 - C * Z);
+		//ratio = F / dFdx;
+		delta_n = 2.0 * sqrt(abs(4.0 * pow(dFdx, 2) - 5.0 * F*ddFddx));
+		ratio = 5.0 * F / (dFdx + sign(dFdx)*delta_n);
 		x = x - ratio;
 	}
 	return x;
@@ -8012,7 +8016,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 	VECTOR3 U_R, U_Z, a_dP, a_d, a_dQ, a_dS;
 	a_dP = _V(0, 0, 0);
 	r = length(R);
-	if (r < r_dP)
+	if (r > R_E && r < r_dP)
 	{
 		U_R = unit(R);
 		if (P == BODY_EARTH)
