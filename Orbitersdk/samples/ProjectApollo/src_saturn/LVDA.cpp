@@ -141,9 +141,14 @@ bool LVDA::GetSIIInboardEngineOut()
 	return iu->GetSIIInboardEngineOut();
 }
 
-bool LVDA::GetSIIEngineOut()
+bool LVDA::GetSIIOutboardEngineOut()
 {
-	return iu->GetSIIEngineOut();
+	return iu->GetSIIOutboardEngineOut();
+}
+
+bool LVDA::GetSIIEnginesOut()
+{
+	return iu->GetSIIEnginesOut();
 }
 
 bool LVDA::GetCMCSIVBIgnitionSequenceStart()

@@ -208,6 +208,8 @@ private:								// Saturn LV
 	void RestartCalculations();
 	//Acquisition Gain/Loss (GL)
 	void AcquisitionGainLoss();
+	//Steering Misalignment Correction (SM)
+	void SteeringMisalignmentCorrection();
 
 	char FSPFileName[256];
 	bool Initialized;								// Clobberness flag
@@ -402,8 +404,8 @@ private:								// Saturn LV
 	bool ImpactBurnEnabled;							// Lunar impact burn has been enabled
 	bool ImpactBurnInProgress;						// Lunar impact burn is in progress
 	std::bitset<26> ModeCode24, ModeCode25, ModeCode26, ModeCode27;
-	std::bitset<26> DPM;							//Mask word that specifies which DIN's are to be processed when they change from OFF to ON
-	std::bitset<12> DVIH;							//Interrupt inhibit
+	std::bitset<26> DPM;							//Mask word that specifies which DIN's are to be processed when they change from OFF to ON.
+	std::bitset<12> DVIH;							//Interrupt inhibit.
 	std::bitset<12> InterruptState;					//To prevent continual interrupts
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
@@ -480,7 +482,6 @@ private:								// Saturn LV
 	double Cf;										// Constant used for S2/S4B direct staging
 	double SMCG;									// Steering misalignment correction gain
 	double TS4BS;									// Time from direct-stage interrupt to start IGM.
-	double TSMC1, TSMC2, TSMC3;						// Time test for steering misalignment test relative to TB3,TB4,TB6
 	double V_S2T;									// Nominal S2 cutoff velocity
 	double alpha_1;									// orbital guidance pitch
 	double alpha_2;									// orbital guidance yaw
@@ -529,10 +530,13 @@ private:								// Saturn LV
 	double Inclination;								// Inclination
 	double Azo,Azs;									// Variables for scaling the -from-azimuth polynomials
 	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
-	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS)
-	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)
+	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS), also called DVCC
+	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)	
 	VECTOR3 N;										// Unit vector normal to parking-orbit plane
 	VECTOR3 T_P;									// Unit target vector in ephemeral coordinates
+	double DVCA[2];									// Average of present and past minor loop commanded CHI at the time of major computer cycle accelerometer read
+	double VCCYA;									// Previous pitch command CHI
+	double VCCZA;									// Present yaw command CHI
 	double F;										// Force in Newtons, I assume.	
 	double A1, A2, A3, A4, A5;
 	double K_Y,K_P,D_P,D_Y;							// Intermediate variables in IGM
@@ -596,7 +600,8 @@ private:								// Saturn LV
 	VECTOR3 Cbar_1;									// Unit vector normal to transfer ellipse plane
 	VECTOR3 Sbar_1;									// Unit vector normal to nodal vector
 	VECTOR3 DDotS_D;								// Atmospheric drag
-	VECTOR3 DotM_act;								// actual sensed velocity from platform
+	VECTOR3 ddotM_act;								// actual sensed acceleration from platform
+	VECTOR3 DotM_act;								// actual sensed velocity from platform (DVDM)
 	VECTOR3 ddotG_act;								// actual computed acceleration from gravity
 	VECTOR3 DotG_act;								// actual computed velocity from gravity
 	VECTOR3 DotM_last;								// last sensed velocity from platform
@@ -642,7 +647,7 @@ private:								// Saturn LV
 	double X_S1,X_S2,X_S3;							// Direction cosines of the thrust vector
 	double sin_gam,cos_gam;							// Sine and cosine of gamma (flight-path angle)
 	double dot_phi_1,dot_phi_T;						// ???
-	double dt_c;									// Actual computation cycle time
+	double dt_c;									// Actual computation cycle time (DVDT)
 	double dt_g;									// Actual guidance cylce time
 	double dtt_1,dtt_2;								// Used in TGO determination
 	double a_1,a_2;									// Acceleration terms used to determine TGO
@@ -686,6 +691,13 @@ private:								// Saturn LV
 	double R_STA;									// Mean radius of telemetry stations
 	double TBA;										// Time of station acquisition
 	double TBL;										// Time of station loss
+	double SMCY;									// Pitch SMC term
+	double SMCZ;									// Yaw SMC term
+	bool DFSMC;										// Steering misalignment flag
+	VECTOR3 DVAC;									// Accelerometer reading
+	VECTOR3 VOAC;									// Previous accelerometer reading
+	VECTOR3 DVDA;									// Optisyn A change in velocity
+	VECTOR3 DVDB;									// Optisyn B change in velocity
 
 	//Switch Selector Table
 	std::vector<SwitchSelectorSet> SSTABLE;

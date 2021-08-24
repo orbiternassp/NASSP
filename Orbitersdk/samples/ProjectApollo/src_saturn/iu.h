@@ -120,7 +120,6 @@ enum IULVMessageType
 	IULV_GET_SI_INBOARD_ENGINE_OUT,
 	IULV_GET_SI_OUTBOARD_ENGINE_OUT,
 	IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY,
-	IULV_GET_SII_ENGINE_OUT,
 	IULV_CSM_SEPARATION_SENSED,
 	IULV_GET_SII_FUEL_TANK_PRESSURE,
 	IULV_GET_SIVB_FUEL_TANK_PRESSURE,
@@ -219,7 +218,6 @@ public:
 	bool GetSIBLowLevelSensorsDry();
 	void GetSIIThrustOK(bool *ok);
 	bool GetSIIPropellantDepletionEngineCutoff();
-	bool GetSIIEngineOut();
 	bool GetSIVBThrustOK();
 	double GetSIIFuelTankPressurePSI();
 	double GetSIVBLOXTankPressurePSI();
@@ -275,8 +273,9 @@ public:
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
-	virtual bool GetSIIInboardEngineOut();
-	virtual bool GetSIIEngineOut();
+	virtual bool GetSIIInboardEngineOut() { return false; }
+	virtual bool GetSIIOutboardEngineOut() { return false; }
+	virtual bool GetSIIEnginesOut();
 	bool IsUmbilicalConnected();
 	bool GetSCControlPoweredFlight() { return SCControlPoweredFlight; }
 	VECTOR3 GetTheodoliteAlignment(double azimuth);
@@ -405,8 +404,9 @@ public:
 	~IUSV();
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool GetSIIPropellantDepletionEngineCutoff();
-	bool GetSIIEngineOut();
+	bool GetSIIEnginesOut();
 	bool GetSIIInboardEngineOut();
+	bool GetSIIOutboardEngineOut();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 
