@@ -32,6 +32,8 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
+#include <thread>
+#include <mutex>
 #include "dsky.h"
 #include "lemcomputer.h"
 #include "papi.h"
@@ -107,7 +109,7 @@ void LEMcomputer::Run ()
 	{
 		timeStepEvent.Wait();
 		{
-			Lock lock(agcCycleMutex);
+			std::lock_guard<std::mutex> guard(agcCycleMutex);
 			agcTimestep(thread_simt,thread_simdt);
 		}
 	}
@@ -180,12 +182,14 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	// If MultiThread is enabled and the simulation is accellerated, the run vAGC in the AGC Thread,
 	// otherwise run in main thread. at x1 acceleration, it is better to run vAGC totally synchronized
 	//
-	if (lem->isMultiThread && oapiGetTimeAcceleration() > 1.0) {
-		Lock lock(agcCycleMutex);
+	if (lem->isMultiThread && oapiGetTimeAcceleration() > 1.0)
+	{
+		std::lock_guard<std::mutex> guard(agcCycleMutex);
 		thread_simt = simt;
 		thread_simdt = simdt;
 		timeStepEvent.Raise();
 	} else {
+		std::lock_guard<std::mutex> guard(agcCycleMutex);
 		agcTimestep(simt,simdt);
 	}
 
