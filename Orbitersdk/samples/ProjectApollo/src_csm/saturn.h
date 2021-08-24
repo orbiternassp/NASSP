@@ -1024,7 +1024,6 @@ public:
 	virtual bool GetSIInboardEngineOut() = 0;
 	virtual bool GetSIOutboardEngineOut() = 0;
 	virtual bool GetSIBLowLevelSensorsDry();
-	virtual bool GetSIIEngineOut();
 	virtual void SetSIThrusterDir(int n, double yaw, double pitch) = 0;
 	virtual void SetSIIThrusterDir(int n, double yaw, double pitch) {};
 	void SetSIVBThrusterDir(double yaw, double pitch);
