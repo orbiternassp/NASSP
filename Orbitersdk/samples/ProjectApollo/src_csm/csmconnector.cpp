@@ -254,14 +254,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_SII_ENGINE_OUT:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIIEngineOut();
-			return true;
-		}
-		break;
-
 	case IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
 		if (OurVessel)
 		{

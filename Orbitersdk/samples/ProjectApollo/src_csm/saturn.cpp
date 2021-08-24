@@ -4622,11 +4622,6 @@ bool Saturn::GetSIIPropellantDepletionEngineCutoff()
 	return false;
 }
 
-bool Saturn::GetSIIEngineOut()
-{
-	return false;
-}
-
 bool Saturn::GetSIBLowLevelSensorsDry()
 {
 	return false;

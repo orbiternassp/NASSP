@@ -349,13 +349,6 @@ bool SIISystems::GetPropellantDepletionEngineCutoff()
 	return false;
 }
 
-bool SIISystems::GetEngineOut()
-{
-	for (int i = 0;i < 5;i++) if (!ThrustOK[i]) return true;
-
-	return false;
-}
-
 void SIISystems::SwitchSelector(int channel)
 {
 	switch (channel)

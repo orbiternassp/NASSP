@@ -96,7 +96,6 @@ public:
 	void GetSIIThrustOK(bool *ok);
 	void SIIEDSCutoff(bool cut);
 	bool GetSIIPropellantDepletionEngineCutoff();
-	bool GetSIIEngineOut();
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	double GetSIIFuelTankPressurePSI();
 
