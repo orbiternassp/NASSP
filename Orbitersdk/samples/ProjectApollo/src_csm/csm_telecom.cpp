@@ -40,6 +40,7 @@
 #include "tracer.h"
 #include "Mission.h"
 #include "RF_calc.h"
+#include "papi.h"
 
 // DS20060326 TELECOM OBJECTS
 
@@ -1789,6 +1790,167 @@ void VHFRangingSystem::SaveState(FILEHANDLE scn) {
 	sprintf(buffer, "%d %d %d %lf %lf %lf", dataGood, isRanging, hasLock, internalrange, range, phaseLockTimer);
 
 	oapiWriteScenario_string(scn, "VHFRANGING", buffer);
+}
+
+// UP DATA LINK EQUIPMENT
+
+UDL::UDL()
+{
+	for (int i = 0;i < 32;i++)
+	{
+		Relays[i] = false;
+	}
+}
+
+void UDL::Init(Saturn *v)
+{
+	vessel = v;
+}
+
+void UDL::Timestep()
+{
+	if (vessel->UPTLMSwitch2.IsUp() && vessel->UDLCB.IsPowered())
+	{
+		OverrideReset();
+	}
+}
+
+bool UDL::IsPowered()
+{
+	return (vessel->UDLCB.IsPowered() && vessel->UPTLMSwitch2.IsCenter());
+}
+
+void UDL::Decoder(int uplink_state, int data)
+{
+	//Convert to bitset
+	IntBits = data;
+	//Convert to lines
+	settemp[0] = IntBits[0];
+	settemp[1] = IntBits[1];
+	linestemp[0] = IntBits[2];
+	linestemp[1] = IntBits[3];
+	linestemp[2] = IntBits[4];
+	linestemp[3] = IntBits[5];
+
+	lines[0] = (settemp[1] == false && settemp[0]);
+	lines[1] = (settemp[1] && settemp[0]);
+	lines[2] = (settemp[1] == false && settemp[0] == false);
+	lines[3] = (settemp[1] && settemp[0] == false);
+
+	if (uplink_state == 40)
+	{
+		//Salvo reset
+		select.reset();
+		if (lines[3] == true)
+		{
+			for (unsigned i = 0;i < 8;i++)
+			{
+				select[i] = true;
+			}
+		}
+		else
+		{
+			for (unsigned i = 8;i < 16;i++)
+			{
+				select[i] = true;
+			}
+		}
+	}
+	else if (uplink_state == 50)
+	{
+		//Command
+		select.reset();
+		select.set(linestemp.to_ulong());
+	}
+	EvaluateState();
+	//Reset lines
+	lines.reset();
+	select.reset();
+}
+
+void UDL::EvaluateState()
+{
+	for (unsigned int i = 0;i < 16;i++)
+	{
+		if (select[i] == true)
+		{
+			//Set 1
+			if (lines[0])
+			{
+				SetRelayState(i, 1, true);
+			}
+			//Set 2
+			else if (lines[1])
+			{
+				SetRelayState(i, 2, true);
+			}
+			//Reset 1
+			else if (lines[2])
+			{
+				SetRelayState(i, 1, false);
+			}
+			//Reset 2
+			else if (lines[3])
+			{
+				SetRelayState(i, 2, false);
+			}
+		}
+	}
+}
+
+void UDL::SetRelayState(unsigned int sel, int sys, bool set)
+{
+	if (sys == 1)
+	{
+		if (BankNum1[0][sel] >= 0)
+		{
+			Relays[BankNum1[0][sel]] = set;
+		}
+		if (BankNum1[1][sel] >= 0)
+		{
+			Relays[BankNum1[1][sel]] = set;
+		}
+	}
+	else if (sys == 2)
+	{
+		if (BankNum2[0][sel] >= 0)
+		{
+			Relays[BankNum2[0][sel]] = set;
+		}
+		if (BankNum2[1][sel] >= 0)
+		{
+			Relays[BankNum2[1][sel]] = set;
+		}
+	}
+}
+
+void UDL::OverrideReset()
+{
+	for (int i = 5;i < 32;i++)
+	{
+		Relays[i] = false;
+	}
+}
+
+void UDL::SaveState(FILEHANDLE scn)
+{
+	oapiWriteLine(scn, UDL_START_STRING);
+	papiWriteScenario_boolarr(scn, "BANK1", Relays, 16);
+	papiWriteScenario_boolarr(scn, "BANK2", Relays + 16, 16);
+	oapiWriteLine(scn, UDL_END_STRING);
+}
+
+void UDL::LoadState(FILEHANDLE scn)
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, UDL_END_STRING, sizeof(UDL_END_STRING)))
+			return;
+
+		papiReadScenario_boolarr(line, "BANK1", Relays, 16);
+		papiReadScenario_boolarr(line, "BANK2", Relays + 16, 16);
+	}
 }
 
 // PCM SYSTEM

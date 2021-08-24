@@ -282,6 +282,45 @@ protected:
 	double lastEventTime;				/// Last event time.
 };
 
+//Up Data Link Equipment
+class UDL
+{
+public:
+	UDL();
+	void Init(Saturn *v);
+	void Timestep();
+	void Decoder(int uplink_state, int data);
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+	bool GetAbortLightA() { return Relays[0]; }
+protected:
+	bool IsPowered();
+	void OverrideReset();
+	void EvaluateState();
+	void SetRelayState(unsigned int sel, int sys, bool set);
+
+	bool Relays[32];
+	std::bitset<8> IntBits;
+	//Bit 1: Set or Reset. Bit 2: System 1 or 2
+	std::bitset<2> settemp;
+	std::bitset<4> linestemp;
+	//Power to set 1, set 2, reset 1, reset 2
+	std::bitset<4> lines;
+	//Lines 1 to 16
+	std::bitset<16> select;
+
+	Saturn *vessel;
+
+	//Maps set, reset, select lines to relays
+	const int BankNum1[2][16] = { {0, 1, 2, 3, 4, -1, -1, -1, 5, 7, 9, 11, 12, 13, 14, 15},{-1, -1, -1, -1, -1, -1, -1, -1, 6, 8, 10, -1, -1, -1, -1, -1} };
+	const int BankNum2[2][16] = { {16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1} };
+};
+
+#define UDL_START_STRING "UDL_BEGIN"
+#define UDL_END_STRING   "UDL_END"
+
 // PCM system
 class PCM {
 public:		
