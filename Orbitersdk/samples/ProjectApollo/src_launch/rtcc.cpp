@@ -7303,7 +7303,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		EZEPH1.EPHEM.Header.TUP--;
 		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9].Vector, EZANCHR1.AnchorVectors[9].LandingSiteIndicator, PZMPTCSM.StationID);
 	}
-	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0)
+	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0 || EZANCHR3.AnchorVectors[9].LandingSiteIndicator)
 	{
 		EZEPH2.EPHEM.Header.TUP--;
 		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9].Vector, EZANCHR3.AnchorVectors[9].LandingSiteIndicator, PZMPTLEM.StationID);
@@ -18034,6 +18034,7 @@ RTCC_PMSVCT_8:
 					if (err = PMMSPT(intab2))
 					{
 						PMXSPT("PMMSPT", err);
+						EMSNAP(L, 2);
 						return;
 					}
 				}
@@ -18059,6 +18060,7 @@ RTCC_PMSVCT_12:
 	return;
 RTCC_PMSVCT_14:
 	//TBD
+	EMSNAP(L, 2);
 	return;
 RTCC_PMSVCT_15:
 	//Trajectory update
@@ -18119,6 +18121,7 @@ RTCC_PMSVCT_15:
 				RTCCONLINEMON.TextBuffer[0] = "LEM";
 			}
 			PMXSPT("PMSVCT", 33);
+			EMSNAP(L, 2);
 			return;
 		}
 	}
