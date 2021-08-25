@@ -257,11 +257,6 @@ public:
 	///
 	void PushMasterAlarm();
 
-	///
-	/// \brief What's the current light test state commanded by telemetry?
-	///
-	int UplinkTestState;
-
 protected:
 
 	///
