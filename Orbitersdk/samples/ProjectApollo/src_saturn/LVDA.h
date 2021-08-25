@@ -88,8 +88,9 @@ public:
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
 	bool GetSICInboardEngineCutoff();
-	bool GetSIIInboardEngineOut();
-	bool GetSIIEngineOut();
+	bool GetSIIInboardEngineOut();	//DIN 13
+	bool GetSIIOutboardEngineOut();	//DIN 14
+	bool GetSIIEnginesOut();		//DIN 19
 	bool GetCMCSIVBIgnitionSequenceStart();
 	bool GetCMCSIVBCutoff();
 	bool GetCMCSIVBTakeover();

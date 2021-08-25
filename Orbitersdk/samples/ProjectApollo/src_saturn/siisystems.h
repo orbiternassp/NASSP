@@ -67,7 +67,6 @@ public:
 
 	void GetThrustOK(bool *ok);
 	bool GetPropellantDepletionEngineCutoff();
-	bool GetEngineOut();
 
 	//To IU
 	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }

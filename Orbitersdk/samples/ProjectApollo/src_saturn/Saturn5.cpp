@@ -993,13 +993,6 @@ bool SaturnV::GetSIIPropellantDepletionEngineCutoff()
 	return sii->GetPropellantDepletionEngineCutoff();
 }
 
-bool SaturnV::GetSIIEngineOut()
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
-
-	return sii->GetEngineOut();
-}
-
 void SaturnV::SIEDSCutoff(bool cut)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
