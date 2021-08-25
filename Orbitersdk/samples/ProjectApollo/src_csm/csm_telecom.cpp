@@ -94,7 +94,7 @@ double SBandAntenna::dBm2SignalStrength(double dBm)
 USB::USB(){
 	sat = NULL;
 	ant = NULL;
-	fm_ena = 1; pa_ovr_1 = 1; pa_ovr_2 = 1;
+	fm_ena = 1;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
 	xpdr_sel = THREEPOSSWITCH_CENTER; // OFF
@@ -104,7 +104,7 @@ USB::USB(){
 void USB::Init(Saturn *vessel){
 	sat = vessel;
 	ant = &sat->omnib;
-	fm_ena = 1; pa_ovr_1 = 1; pa_ovr_2 = 1;
+	fm_ena = 1;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
 	xpdr_sel = THREEPOSSWITCH_CENTER; // OFF
@@ -171,49 +171,32 @@ void USB::SystemTimestep(double simdt) {
 	if(fm_opr){
 		if(sat->TelcomGroup1Switch.Voltage() > 100){ sat->TelcomGroup1Switch.DrawPower(6.7); }
 	}
+
+	//Power logic. 0 = off, 1 = low, 2 = high
+	int papwrlogic = PAPowerLogic();
+
 	// S-Band Power Amplifier #1
-	if (pa_ovr_1 > 0) {
-		// Enabled
-		if (pa_ovr_1 > 1) {
-			// TLM forced on
-			if (pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
-		} else {
-			// Normal
-			if (sat->SBandNormalPwrAmpl1Switch.IsUp()) {
-				if (!sat->SBandNormalPwrAmpl2Switch.IsCenter()) {
-					// Turned on
-					if (pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
-				} else {
-					// Turned off
-					if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
-				}
-			}
+	if (sat->SBandNormalPwrAmpl1Switch.IsUp()) {
+		if (papwrlogic > 0) {
+			// Turned on
+			if (pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24) { pa_mode_1 = 2; } // Start warming up
 		}
-	} else {
-		// TLM commanded off
-		if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
+		else {
+			// Turned off
+			if (pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24) { pa_mode_1 = 1; } // Start shutting down
+		}
 	}
+
 	// S-Band Power Amplifier #2
-	if (pa_ovr_2 > 0) { 
-		// Enabled
-		if (pa_ovr_2 > 1) {
-			// TLM forced on
-			if (pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
-		} else {
-			// Normal
-			if (sat->SBandNormalPwrAmpl1Switch.IsDown()) {
-				if (!sat->SBandNormalPwrAmpl2Switch.IsCenter()) {
-					// Turned on
-					if(pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
-				} else {
-					// Turned off
-					if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
-				}
-			}
+	if (sat->SBandNormalPwrAmpl1Switch.IsDown()) {
+		if (papwrlogic > 0) {
+			// Turned on
+			if (pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24) { pa_mode_2 = 2; } // Start warming up
 		}
-	} else {
-		// TLM commanded off
-		if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
+		else {
+			// Turned off
+			if (pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24) { pa_mode_2 = 1; } // Start shutting down
+		}
 	}
 
 	// Power Amplifier #1 
@@ -297,6 +280,9 @@ void USB::TimeStep(double simt) {
 			ant = NULL;
 		}
 	}
+
+	//Power logic. 0 = off, 1 = low, 2 = high
+	int papwrlogic = PAPowerLogic();
 	 
 	// Power Amplifier #1 
 	switch(pa_mode_1){
@@ -344,11 +330,11 @@ void USB::TimeStep(double simt) {
 			}
 			if(simt > (pa_timer_1+90)){
 				// Tubes are warm and we're ready to operate.
-				if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
+				if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 1){
 					// Change to low power
 					pa_mode_1 = 3; pa_timer_1 = 0;
 				}
-				if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
+				if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 2){
 					// Change to high power
 					pa_mode_1 = 4; pa_timer_1 = 0;
 				}
@@ -364,11 +350,11 @@ void USB::TimeStep(double simt) {
 					pa_mode_1 = 1; break;
 				}
 			}
-			if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
+			if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 2){
 				// Change to high power
 				pa_mode_1 = 4;
 			}
-			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
+			if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 0){
 				// Change to warm-up
 				pa_mode_1 = 2; pa_timer_1 = (simt-95);
 			}
@@ -383,11 +369,11 @@ void USB::TimeStep(double simt) {
 					pa_mode_1 = 1; break;
 				}
 			}
-			if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
+			if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic== 1){
 				// Change to low power
 				pa_mode_1 = 3;
 			}
-			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
+			if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 0){
 				// Change to warm-up
 				pa_mode_1 = 2; pa_timer_1 = (simt-95);
 			}
@@ -439,11 +425,11 @@ void USB::TimeStep(double simt) {
 			}
 			if(simt > (pa_timer_2+90)){
 				// Tubes are warm and we're ready to operate.
-				if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
+				if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 1){
 					// Change to low power
 					pa_mode_2 = 3; pa_timer_2 = 0;
 				}
-				if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
+				if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 2){
 					// Change to high power
 					pa_mode_2 = 4; pa_timer_2 = 0;
 				}
@@ -459,11 +445,11 @@ void USB::TimeStep(double simt) {
 					pa_mode_2 = 1; break;
 				}
 			}
-			if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
+			if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 2){
 				// Change to high power
 				pa_mode_2 = 4;
 			}
-			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
+			if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 0){
 				// Change to warm-up
 				pa_mode_2 = 2; pa_timer_2 = (simt-95);
 			}
@@ -478,11 +464,11 @@ void USB::TimeStep(double simt) {
 					pa_mode_2 = 1; break;
 				}
 			}
-			if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter())){
+			if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 1){
 				// Change to low power
 				pa_mode_2 = 3;
 			}
-			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
+			if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 0){
 				// Change to warm-up
 				pa_mode_2 = 2; pa_timer_2 = (simt-95);
 			}
@@ -528,12 +514,23 @@ void USB::TimeStep(double simt) {
 	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
 }
 
+int USB::PAPowerLogic()
+{
+	//High
+	if (sat->SBandNormalPwrAmpl2Switch.IsUp() && !sat->udl.GetSBandPALogic1() && !sat->udl.GetSBandPALogic2()) return 2;
+	if (!sat->udl.GetSBandPALogic1() && sat->udl.GetSBandPALogic2()) return 2;
+	//Low
+	if (sat->SBandNormalPwrAmpl2Switch.IsDown() && !sat->udl.GetSBandPALogic1() && !sat->udl.GetSBandPALogic2()) return 1;
+	if (sat->udl.GetSBandPALogic1() && sat->udl.GetSBandPALogic2()) return 1;
+	//Off
+	return 0;
+}
 
 void USB::LoadState(char *line) {
 	int i;
 
-	sscanf(line + 12, "%i %i %i %i %i %lf %lf %i %i", &fm_ena, &xpdr_sel, &i, 
-		&pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2, &pa_ovr_1, &pa_ovr_2);
+	sscanf(line + 12, "%i %i %i %i %i %lf %lf", &fm_ena, &xpdr_sel, &i, 
+		&pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2);
 	fm_opr  = (i != 0);
 }
 
@@ -541,8 +538,8 @@ void USB::LoadState(char *line) {
 void USB::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%i %i %i %i %i %lf %lf %i %i", fm_ena, xpdr_sel, (fm_opr ? 1 : 0), 
-		pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2, pa_ovr_1, pa_ovr_2);
+	sprintf(buffer, "%i %i %i %i %i %lf %lf", fm_ena, xpdr_sel, (fm_opr ? 1 : 0), 
+		pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2);
 
 	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
 }
@@ -1766,11 +1763,18 @@ bool VHFRangingSystem::IsPowered()
 	// Do we have a VHF Ranging System?
 	if (!sat->pMission->CSMHasVHFRanging()) return false;
 
-	if (powerswitch->IsUp() && powercb && powercb->IsPowered())
+	if (powercb && powercb->IsPowered() && RangingOffLogic() == false)
 	{
 		return true;
 	}
 
+	return false;
+}
+
+bool VHFRangingSystem::RangingOffLogic()
+{
+	if (sat->udl.GetRangingSignal1()) return true;
+	if (powerswitch->IsDown() && !sat->udl.GetRangingSignal1() && !sat->udl.GetRangingSignal2()) return true;
 	return false;
 }
 
@@ -1813,6 +1817,8 @@ void UDL::Timestep()
 	{
 		OverrideReset();
 	}
+
+	//sprintf(oapiDebugString(), "K1 %d K17 %d K2 %d K18 %d", Relays[0], Relays[16], Relays[1], Relays[17]);
 }
 
 bool UDL::IsPowered()
@@ -1837,29 +1843,32 @@ void UDL::Decoder(int uplink_state, int data)
 	lines[2] = (settemp[1] == false && settemp[0] == false);
 	lines[3] = (settemp[1] && settemp[0] == false);
 
+	select.reset();
 	if (uplink_state == 40)
 	{
 		//Salvo reset
-		select.reset();
-		if (lines[3] == true)
+		//What is the actual logic that decides here?
+		if (linestemp[0] == false && linestemp[1] && linestemp[2])
 		{
-			for (unsigned i = 0;i < 8;i++)
+			if (linestemp[3] == false)
 			{
-				select[i] = true;
+				for (unsigned i = 0;i < 8;i++)
+				{
+					select[i] = true;
+				}
 			}
-		}
-		else
-		{
-			for (unsigned i = 8;i < 16;i++)
+			else
 			{
-				select[i] = true;
+				for (unsigned i = 8;i < 16;i++)
+				{
+					select[i] = true;
+				}
 			}
 		}
 	}
 	else if (uplink_state == 50)
 	{
 		//Command
-		select.reset();
 		select.set(linestemp.to_ulong());
 	}
 	EvaluateState();
@@ -1963,7 +1972,6 @@ PCM::PCM()
 	wsk_error = 0;
 	last_update = 0;
 	last_rx = 0;
-	pcm_rate_override = 0;
 	frame_addr = 0;
 	frame_count = 0;
 	m_socket = INVALID_SOCKET;
@@ -1986,7 +1994,6 @@ void PCM::Init(Saturn *vessel){
 	last_update = 0;
 	last_rx = MINUS_INFINITY;
 	word_addr = 0;
-	pcm_rate_override = 0;
 	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
 	if ( iResult != NO_ERROR ){
 		sprintf(wsk_emsg,"TELECOM: Error at WSAStartup()");
@@ -2069,6 +2076,13 @@ void PCM::SystemTimestep(double simdt) {
 	return;
 }
 
+bool PCM::LowBitrateLogic()
+{
+	if (sat->udl.GetBitrateLogic1()) return true;
+	if (sat->PCMBitRateSwitch.IsDown() && !sat->udl.GetBitrateLogic1() && !sat->udl.GetBitrateLogic2()) return true;
+	return false;
+}
+
 void PCM::TimeStep(double simt){
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
@@ -2088,7 +2102,7 @@ void PCM::TimeStep(double simt){
 	*/
 
 	// Generate PCM datastream
-	if(pcm_rate_override == 1 || (pcm_rate_override == 0 && sat->PCMBitRateSwitch.GetState() == TOGGLESWITCH_DOWN)){
+	if(LowBitrateLogic()){
 		tx_size = (int)((simt - last_update) / 0.005);
 		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
@@ -2104,7 +2118,7 @@ void PCM::TimeStep(double simt){
 		}
 		return; // Don't waste time checking for HBR
 	}
-	if(pcm_rate_override == 2 || (pcm_rate_override == 0 && sat->PCMBitRateSwitch.GetState() == TOGGLESWITCH_UP)){
+	else{
 		tx_size = (int)((simt - last_update) / 0.00015625);
 		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
@@ -5117,142 +5131,11 @@ void PCM::handle_uplink() {
 
 	case 30: // CTE UPDATE CMD
 		rx_offset = 0; uplink_state = 0; break;
-
 	case 40: // RTC SALVO CMD
-		switch (rx_data[rx_offset]) {
-		case 030: // LATCH RELAYS FOR RESET 1
-			rx_offset = 0; uplink_state = 0; break;
-		case 032: // RESET SALVO 1
-				  // SENDS RTC-COMMANDS
-				  // 00 04 20 10 14 02,16 06 12 22,26 32,36
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 070: // LATCH RELAYS FOR RESET 2
-			rx_offset = 0; uplink_state = 0; break;
-		case 072: // RESET SALVO 2
-				  // SENDS SENDS RTC-COMMANDS
-				  // 40,50 44,54,60 64,70 74 42,46 52,56 62,66 72,76
-			rx_offset = 0; uplink_state = 0; break;
-
-		default:
-			sprintf(sat->debugString(), "UNKNOWN RTC SALVO CMD %o", rx_data[rx_offset]);
-			rx_offset = 0; uplink_state = 0;
-			break;
-		}
-		break;
-
 	case 50: // RTC CMD
-		switch (rx_data[rx_offset]) {
-		case 00: // ABORT LT A OFF
-		{
-			sat->cws.UplinkTestState &= 012;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 01: // ABORT LT A ON
-		{
-			sat->cws.UplinkTestState |= 001;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 04: // CREW ALERT OFF
-		{
-			sat->cws.UplinkTestState &= 003;
 
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 05: // CREW ALERT ON
-		{
-			sat->cws.UplinkTestState |= 010;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 06: // ABORT LT B OFF
-		{
-			sat->cws.UplinkTestState &= 011;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 07: // ABORT LT B ON
-		{
-			sat->cws.UplinkTestState |= 002;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-
-		case 010: // ACE CMC ZERO DISABLE
-		case 011: // ACE CMC ZERO ENABLE
-		case 014: // ACE CMC ONE DISABLE
-		case 015: // ACE CMC ONE ENABLE
-				  // Ignore these
-			rx_offset = 0; uplink_state = 0;
-			break;
-
-		case 022: // LATCH RELAYS FOR VHF RANGING CONTROL
-		case 023: // RANGING DISABLE
-		case 026: // RANGING RESET
-		case 027: // RANGING ENABLE
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 032: // LATCH RELAYS FOR R/T PCM CONTROL
-		case 033: // SAME
-		case 036: // R/T PCM RESET
-		case 037: // R/T PCM 1024 ON (IF 32 LATCHED) or R/T PCM OFF (IF 33 LATCHED)
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 040: // LATCH RELAYS FOR UNIFIED S-BAND SYSTEM CONTROL
-		case 041: // SAME
-		case 042: // SAME
-		case 043: // SAME
-		case 044: // FM OFF, TAPE OFF
-		case 045: // FM ON, TAPE ON
-		case 046: // POWER AMP RESET (IF 42 LATCHED), POWER AMP OFF (IF 43 LATCHED)
-		case 047: // POWER AMP HIGH (IF 42 LATCHED), POWER AMP LOW (IF 43 LATCHED)
-		case 050: // USB MODE RESET 
-		case 051: // BACKUP VOICE FM OFF
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 052: // LATCH RELAYS FOR DSE PLAYBACK MODE CONTROL
-		case 053: // SELECT LM PLAYBACK DATA
-		case 056: // PLAYBACK MODE RESET
-		case 057: // SELECT CSM PLAYBACK DATA
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 062: // LATCH RELAYS FOR DSE CONTROL
-		case 063: // SAME
-		case 064: // LATCH RELAYS FOR PCM DOWNTELEMETRY RATE CONTROL
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 065: // DOWNTLM MODE LBR
-			pcm_rate_override = 1;
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 066: // DSE RESET (IF 62 LATCHED), DSE OFF (IF 63 LATCHED)
-		case 067: // DSE RECORD (IF 62 LATCHED), DSE PLAYBACK (IF 63 LATCHED)
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 070: // DOWNTLM MODE RESET
-			pcm_rate_override = 0;
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 071: // DOWNTLM MODE HBR
-			pcm_rate_override = 2;
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 072: // LATCH RELAYS FOR DSE TAPE CONTROL
-		case 073: // SAME
-		case 074: // ANTENNA SELECT RESET
-		case 075: // ANTENNA SELECT OMNI "D" 
-		case 076: // DSE TAPE RESET (IF 72 LATCHED), DSE TAPE STOP (IF 73 LATCHED)
-		case 077: // DSE TAPE FORWARD (IF 72 LATCHED), DSE TAPE REWIND (IF 73 LATCHED)
-			rx_offset = 0; uplink_state = 0; break;
-
-		default:
-			sprintf(sat->debugString(), "UNKNOWN RTC COMMAND %o", rx_data[rx_offset]);
-			rx_offset = 0; uplink_state = 0;
-			break;
-		}
+		sat->udl.Decoder(uplink_state, rx_data[rx_offset]);
+		rx_offset = 0; uplink_state = 0;
 		break;
 	}
 }

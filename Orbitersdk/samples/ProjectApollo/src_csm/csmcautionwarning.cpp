@@ -277,7 +277,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	// CREW ALERT
 	//
 
-	if ((UplinkTestState & 010) != 0) {
+	if (sat->udl.GetCrewAlert()) {
 		SetLight(CSM_CWS_CREW_ALERT,true);		
 	} else {
 		SetLight(CSM_CWS_CREW_ALERT,false);

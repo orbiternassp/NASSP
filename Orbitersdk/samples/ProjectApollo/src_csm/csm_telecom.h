@@ -295,6 +295,14 @@ public:
 	void LoadState(FILEHANDLE scn);
 
 	bool GetAbortLightA() { return Relays[0]; }
+	bool GetCrewAlert() { return Relays[1]; }
+	bool GetBitrateLogic1() { return Relays[13]; }
+	bool GetBitrateLogic2() { return Relays[14]; }
+	bool GetAbortLightB() { return Relays[17]; }
+	bool GetRangingSignal1() { return Relays[20]; }
+	bool GetRangingSignal2() { return Relays[21]; }
+	bool GetSBandPALogic1() { return Relays[24]; }
+	bool GetSBandPALogic2() { return Relays[25]; }
 protected:
 	bool IsPowered();
 	void OverrideReset();
@@ -359,7 +367,6 @@ public:
 	int rx_offset;					// RX offset to use
 	int mcc_offset;					// RX offset into MCC data block
 	int mcc_size;					// Size of MCC data block
-	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
 	unsigned char mcc_data[2048];	// MCC-provided incoming data
@@ -368,6 +375,8 @@ public:
 
 	Saturn *sat;					// Ship we're installed in
 	friend class MCC;				// Allow MCC to write directly to buffer
+protected:
+	bool LowBitrateLogic();
 };
 
 // Premodulation Processor
@@ -410,9 +419,10 @@ public:
 	bool fm_opr;                       // FM transmitter operating
 	int pa_mode_1, pa_mode_2;          // Power amplifier mode
 	double pa_timer_1, pa_timer_2;	   // Tube heater timer
-	int pa_ovr_1, pa_ovr_2;				// PA mode override for uptelemetry channel
 	double rcvr_agc_voltage;			//Receiver AGC Voltage
 	SBandAntenna *ant;
+protected:
+	int PAPowerLogic(); //0 = off, 1 = low, 2 = high
 };
 
 // High Gain Antenna system
@@ -590,6 +600,8 @@ public:
 	double GetRange() { return range / 185.20; }
 	void RangingReturnSignal(); // ################# DELETE ME #######################
 protected:
+
+	bool RangingOffLogic();
 
 	bool dataGood;
 	double internalrange;
