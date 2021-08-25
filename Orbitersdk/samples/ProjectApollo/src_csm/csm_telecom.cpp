@@ -250,27 +250,21 @@ void USB::TimeStep(double simt) {
 	/// \todo Move all DrawPower's to SystemTimestep
 
 	//S-Band Antenna switches
-	if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_UP)
+	switch (SBandAntennaSelectionLogic())
 	{
-		if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_UP)
-		{
-			ant = &sat->omnia;
-		}
-		else if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_CENTER)
-		{
-			ant = &sat->omnib;
-		}
-		else if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_DOWN)
-		{
-			ant = &sat->omnic;
-		}
-	}
-	else if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_CENTER)
-	{
+	case 0:
+		ant = &sat->omnia;
+		break;
+	case 1:
+		ant = &sat->omnib;
+		break;
+	case 2:
+		ant = &sat->omnic;
+		break;
+	case 3:
 		ant = &sat->omnid;
-	}
-	else if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_DOWN)
-	{
+		break;
+	default:
 		if (sat->GetStage() == CSM_LEM_STAGE)
 		{
 			ant = &sat->hga;
@@ -279,6 +273,7 @@ void USB::TimeStep(double simt) {
 		{
 			ant = NULL;
 		}
+		break;
 	}
 
 	//Power logic. 0 = off, 1 = low, 2 = high
@@ -511,7 +506,7 @@ void USB::TimeStep(double simt) {
 	}
 
 	//sprintf(oapiDebugString(), "rcvr_agc_voltage %lf", rcvr_agc_voltage);
-	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
+	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d papwrlogic %d", pa_mode_1, pa_mode_2, papwrlogic);
 }
 
 int USB::PAPowerLogic()
@@ -524,6 +519,49 @@ int USB::PAPowerLogic()
 	if (sat->udl.GetSBandPALogic1() && sat->udl.GetSBandPALogic2()) return 1;
 	//Off
 	return 0;
+}
+
+int USB::SBandAntennaSelectionLogic()
+{
+	bool pwr;
+	if (sat->SBandNormalXPDRSwitch.IsUp() & sat->SBandPWRAmpl2FLTBusCB.IsPowered())
+	{
+		pwr = true;
+	}
+	else if (sat->SBandNormalXPDRSwitch.IsDown() && sat->SBandPWRAmpl1FLTBusCB.IsPowered())
+	{
+		pwr = true;
+	}
+	else
+	{
+		pwr = false;
+	}
+
+	//Defaults to HGA
+	if (pwr == false) return 4;
+
+	//Antenna D
+	if (sat->SBandAntennaSwitch2.IsCenter() || sat->udl.GetAntennaSelect())
+	{
+		return 3;
+	}
+	//HGA
+	if (sat->SBandAntennaSwitch2.IsDown())
+	{
+		return 4;
+	}
+	//Antenna A
+	if (sat->SBandAntennaSwitch1.IsUp())
+	{
+		return 0;
+	}
+	//Antenna B
+	if (sat->SBandAntennaSwitch1.IsCenter())
+	{
+		return 1;
+	}
+	//Else, Antenna C
+	return 2;
 }
 
 void USB::LoadState(char *line) {

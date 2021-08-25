@@ -298,6 +298,7 @@ public:
 	bool GetCrewAlert() { return Relays[1]; }
 	bool GetBitrateLogic1() { return Relays[13]; }
 	bool GetBitrateLogic2() { return Relays[14]; }
+	bool GetAntennaSelect() { return Relays[15]; }
 	bool GetAbortLightB() { return Relays[17]; }
 	bool GetRangingSignal1() { return Relays[20]; }
 	bool GetRangingSignal2() { return Relays[21]; }
@@ -423,6 +424,7 @@ public:
 	SBandAntenna *ant;
 protected:
 	int PAPowerLogic(); //0 = off, 1 = low, 2 = high
+	int SBandAntennaSelectionLogic(); //0 = A, 1 = B, 2 = C, 3 = D, 4 = HGA
 };
 
 // High Gain Antenna system
