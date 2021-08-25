@@ -3145,40 +3145,39 @@ public:
 		int EntryProfile = 1;
 	} med_f71;
 
+	//Common variables of MED 75-77
+	struct MED_F75_F77
+	{
+		std::string EntryProfile = "HB1";
+		double Inclination = 0.0;
+		double T_V = 0.0; //Vector time
+		double T_0_min = 0.0; //Time of abort (or minimum time for F77)
+	} med_f75_f77;
+
 	//Generation of Abort Scan Table for unspecified area
 	struct MED_F75
 	{
 		std::string Type = "TCUA";
-		double T_V = 0.0; //Vector time
-		double T_0 = 0.0; //Time of abort
 		double DVMAX = 10000.0;
-		std::string EntryProfile = "HB1";
-		double Inclination = 0.0; //Lunar reference only
+		
 	} med_f75;
 
 	//Abort Scan Table generation for a specific site
 	struct MED_F76
 	{
 		std::string Site = "MPL";
-		double T_V = 0.0;
-		double T_0 = 0.0;
 		double T_Z = 0.0;
-		std::string EntryProfile = "HB1";
 		double MissDistance = 0.0;
-		double Inclination = 0.0; //Lunar reference only
 	} med_f76;
 
 	//AST lunar search generation for specific site or FCUA
 	struct MED_F77
 	{
 		std::string Site = "MPL";
-		double T_V = 0.0;
-		double T_min = 0.0;
 		double T_max = 0.0;
 		double T_Z = 0.0;
-		std::string EntryProfile = "HB1";
 		double MissDistance = 0.0;
-		double Inclination = 0.0;
+		
 	} med_f77;
 
 	//RTE Digitals maneuver description

@@ -23000,18 +23000,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	std::string EntryProfile;
 	int EPI;
 
-	if (med == 75)
-	{
-		EntryProfile = med_f75.EntryProfile;
-	}
-	else if (med == 76)
-	{
-		EntryProfile = med_f76.EntryProfile;
-	}
-	else
-	{
-		EntryProfile = med_f77.EntryProfile;
-	}
+	EntryProfile = med_f75_f77.EntryProfile;
 
 	if (PZREAP.TGTLN == 1)
 	{
@@ -23116,6 +23105,8 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		int SMODE;
 		double Inclination, TZMINI, TZMAXI;
 
+		Inclination = med_f75_f77.Inclination;
+
 		if (med == 75)
 		{
 			if (med_f75.Type == "FCUA")
@@ -23127,7 +23118,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			{
 				return;
 			}
-			Inclination = med_f75.Inclination;
+			
 			TZMINI = PZREAP.TZMIN*3600.0;
 			TZMAXI = PZREAP.TZMAX*3600.0;
 		}
@@ -23142,7 +23133,6 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			{
 				sprintf_s(typname, "ATP");
 			}
-			Inclination = med_f76.Inclination;
 			TZMINI = med_f76.T_Z;
 			TZMAXI = 0.0;
 		}
@@ -23169,7 +23159,6 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 				TZMINI = med_f77.T_Z;
 				TZMAXI = 0.0;
 			}
-			Inclination = med_f77.Inclination;
 		}
 
 		EphemerisData2 sv_abort2;
@@ -26120,8 +26109,8 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 			return 2;
 		}
 
-		PZREAP.RTEVectorTime = GMTfromGET(med_f75.T_V) / 3600.0;
-		PZREAP.RTET0Min = GMTfromGET(med_f75.T_0) / 3600.0;
+		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
+		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
 
 		if (PZREAP.TGTLN == 1)
 		{
@@ -26129,7 +26118,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		}
 		else
 		{
-			if (med_f75.EntryProfile == "HB1")
+			if (med_f75_f77.EntryProfile == "HB1")
 			{
 				PZREAP.EntryProfile = 1;
 			}
@@ -26153,15 +26142,15 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 
 		//Check vector time
 		//TBD: T_V greater than present time
-		PZREAP.RTEVectorTime = GMTfromGET(med_f76.T_V) / 3600.0;
-		PZREAP.RTET0Min = GMTfromGET(med_f76.T_0) / 3600.0;
+		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
+		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
 		if (PZREAP.TGTLN == 1)
 		{
 			PZREAP.EntryProfile = 2;
 		}
 		else
 		{
-			if (med_f76.EntryProfile == "HB1")
+			if (med_f75_f77.EntryProfile == "HB1")
 			{
 				PZREAP.EntryProfile = 1;
 			}
@@ -26189,15 +26178,15 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 
 		//Check vector time
 		//TBD: T_V greater than present time
-		PZREAP.RTEVectorTime = GMTfromGET(med_f77.T_V) / 3600.0;
-		PZREAP.RTET0Min = GMTfromGET(med_f77.T_min) / 3600.0;
+		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
+		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
 		if (PZREAP.TGTLN == 1)
 		{
 			PZREAP.EntryProfile = 2;
 		}
 		else
 		{
-			if (med_f77.EntryProfile == "HB1")
+			if (med_f75_f77.EntryProfile == "HB1")
 			{
 				PZREAP.EntryProfile = 1;
 			}
