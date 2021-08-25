@@ -39,7 +39,8 @@
 #include "saturn.h"
 #include "ioChannels.h"
 #include "papi.h"
-#include "thread.h"
+#include <thread>
+#include <mutex>
 
 CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) :
 	ApolloGuidance(s, display, im, sc, tc, p), dsky2(display2)
@@ -111,7 +112,7 @@ void CSMcomputer::Run ()
 		{
 			timeStepEvent.Wait();
 			{
-				Lock lock(agcCycleMutex);
+				std::lock_guard<std::mutex> guard(agcCycleMutex);
 				agcTimestep(thread_simt,thread_simdt);
 			}
 		}
@@ -286,14 +287,14 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if(sat->IsMultiThread && oapiGetTimeAcceleration() > 1.0)
 		{
-			
-			Lock lock(agcCycleMutex);
+			std::lock_guard<std::mutex> guard(agcCycleMutex);
 			thread_simt = simt;
 			thread_simdt = simdt;
 			timeStepEvent.Raise();
+		} else {
+			std::lock_guard<std::mutex> guard(agcCycleMutex);
+			agcTimestep(simt, simdt);
 		}
-		else
-			agcTimestep(simt,simdt);
 
 		//
 		// Check nonspherical gravity sources
