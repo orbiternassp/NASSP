@@ -3695,6 +3695,12 @@ int ARCore::subThread()
 	break;
 	case 21: //LM Ascent PAD
 	{
+		if (target == NULL)
+		{
+			Result = 0;
+			break;
+		}
+
 		ASCPADOpt opt;
 		SV sv_CSM;
 		MATRIX3 Rot, Rot2;

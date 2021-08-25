@@ -93,6 +93,7 @@ void RCSC::Timestep(double simdt)
 
 	Mode1ASignal = false;
 	
+	OxidizerDumpA = false;
 	if (Sat->secs.MESCA.GetCMSMDeadFace())
 	{
 		RCSCCMSMTransferA = true;
@@ -118,6 +119,7 @@ void RCSC::Timestep(double simdt)
 		Sat->agc.SetInputChannelBit(030, CMSMSeperate, false);
 	}
 
+	OxidizerDumpB = false;
 	if (Sat->secs.MESCB.GetCMSMDeadFace())
 	{
 		RCSCCMSMTransferB = true;

@@ -3250,7 +3250,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	T_S1 = 0;
 	T_S2 = 0;
 	T_S3 = 0;
-	t_S1C_CECO = 0;
 	TS4BS = 0;
 	TSMC1 = 0;
 	TSMC2 = 0;
@@ -3430,7 +3429,6 @@ void LVDCSV::Init(){
 	T_EO2 = 0;								// allows single pass through IGM engine-out presettings when 0
 	dT_F=0;									// Period of frozen pitch in S1C
 	dt_LET = 35.1;							// Nominal time between SII ign and LET jet
-	t_S1C_CECO = 125.9;
 	t_TB8Start = 3600.0;
 	//IGM BOOST TO ORBIT
 	Ct = 0;
@@ -4452,7 +4450,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_S1", T_S1);
 	papiWriteScenario_double(scn, "LVDC_T_S2", T_S2);
 	papiWriteScenario_double(scn, "LVDC_T_S3", T_S3);
-	papiWriteScenario_double(scn, "LVDC_t_S1C_CECO", t_S1C_CECO);
 	papiWriteScenario_double(scn, "LVDC_TS4BS", TS4BS);
 	papiWriteScenario_double(scn, "LVDC_t_SD1", t_SD1);
 	papiWriteScenario_double(scn, "LVDC_t_SD2", t_SD2);
@@ -5221,7 +5218,6 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_T_S1", T_S1);
 		papiReadScenario_double(line, "LVDC_T_S2", T_S2);
 		papiReadScenario_double(line, "LVDC_T_S3", T_S3);
-		papiReadScenario_double(line, "LVDC_t_S1C_CECO", t_S1C_CECO);
 		papiReadScenario_double(line, "LVDC_TS4BS", TS4BS);
 		papiReadScenario_double(line, "LVDC_t_SD1", t_SD1);
 		papiReadScenario_double(line, "LVDC_t_SD2", t_SD2);
@@ -5649,8 +5645,8 @@ void LVDCSV::TimeStep(double simdt) {
 					fprintf(lvlog, "[TB%d+%f] Lunar impact burn stopped\r\n", LVDC_Timebase, LVDC_TB_ETime);
 				}
 
-				//For now, disable LVDC at TB8+10,000 seconds
-				if (LVDC_TB_ETime > 10000.0)
+				//For now, disable LVDC at TB8+30,000 seconds to allow lunar impact burns
+				if (LVDC_TB_ETime > 30000.0)
 				{
 					LVDC_Stop = true;
 					return;
@@ -8339,18 +8335,26 @@ void LVDCSV::MinorLoop(int entry)
 
 void LVDCSV::CutoffLogic()
 {
-	if (ModeCode25[MC25_FirstSIVBCutoffCommand] == false && T_GO - sinceLastCycle <= 0 && HSL == true && S4B_IGN == true)
+	if (ModeCode25[MC25_FirstSIVBCutoffCommand] == false && HSL == true && S4B_IGN == true)
 	{
-		SwitchSelectorProcessor(8);
-		fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-		ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
+		//Accounts for an average half minor loop delay
+		if (T_CO - TMM <= 0.02)
+		{
+			SwitchSelectorProcessor(8);
+			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
+			ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
+		}
 	}
-	if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false && T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true)
+	if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false && HSL == true && S4B_REIGN == true)
 	{
-		DVASW = DVASW | MSKSSS4C1;
-		SwitchSelectorProcessor(0);
-		fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-		ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+		//Accounts for an average half minor loop delay and also a 20ms delay in issuing the cutoff command
+		if (T_CO - TMM <= 0.04)
+		{
+			DVASW = DVASW | MSKSSS4C1;
+			SwitchSelectorProcessor(0);
+			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
+			ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+		}
 	}
 }
 
