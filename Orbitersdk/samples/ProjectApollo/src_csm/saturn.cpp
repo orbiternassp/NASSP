@@ -2220,7 +2220,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			RRTsystem.LoadState(line);
 		}
 		else if (!strnicmp(line, UDL_START_STRING, sizeof(UDL_START_STRING))) {
-			udl.LoadState(line);
+			udl.LoadState(scn);
 		}
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
