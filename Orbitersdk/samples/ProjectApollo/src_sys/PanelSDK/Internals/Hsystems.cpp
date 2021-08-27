@@ -966,30 +966,18 @@ h_Radiator::~h_Radiator() {
 
 void h_Radiator::refresh(double dt) 
 {
-	//if (parent->Vessel->GetAtmDensity() < 0.00001846) //~80km
-	//{
-		Qr = rad * size * 5.67e-8 * dt * pow((Temp), 4); //Stefan–Boltzmann law
-		thermic(-Qr);
-
-		// if (!strcmp(name, "LEM-LR-Antenna")) 
-		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
-
-		return;
-	//}
-
-	/*
-	AirTemp = parent->Vessel->GetAtmTemperature();
-
-	Qc = AirHeatTransferCoefficient* size * (Temp - AirTemp) * dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
-	Qc *= parent->Vessel->GetAtmDensity() / 1.225; //simple model for correcting for density
-
-	Qr = rad * size * 5.67e-8 * dt * pow(Temp - ((AirTemp) * (parent->Vessel->GetAtmDensity() / 1.225)), 4); //Stefan–Boltzmann law 
+	Qr = rad * size * 5.67e-8 * dt * pow(Temp - 2.7, 4); //Stefan–Boltzmann law
+	Qc = rad * (100 * size * (Temp - parent->Vessel->GetAtmTemperature()))*(parent->Vessel->GetAtmDensity() / 1.225)*dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
 	
-	//if (!strcmp(name, "FUELCELLRADIATOR1")) 
-	//sprintf(oapiDebugString(), "Temp=%lf K, Qc=%lf, Qr=%lf",Temp, Qc/dt, Qr/dt);
+	//if (!strcmp(name, "ECSRADIATOR1"))
+		//sprintf(oapiDebugString(), "Qr = %lf, Qc = %lf, Temp = %lf, Air Temp = %lf, Air Density = %lf, rad %lf, size %lf, %lf %lf", Qr/dt, Qc/dt, Temp, parent->Vessel->GetAtmTemperature(), parent->Vessel->GetAtmDensity(), rad, size, Qr, Qc);
+	
+	
+	
+	thermic(-(Qc+Qr));
 
-	thermic( - ( Qc + Qr));
-	*/
+	// if (!strcmp(name, "LEM-LR-Antenna")) 
+	//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 }
 
 void h_Radiator::Save(FILEHANDLE scn) {
