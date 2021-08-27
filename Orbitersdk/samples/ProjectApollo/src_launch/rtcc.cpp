@@ -23057,7 +23057,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 				sprintf_s(typname, "ATP");
 			}
 			
-			TZMINI = med_f77.T_Z;
+			TZMINI = PZREAP.RTETimeOfLanding*3600.0;
 		}
 
 		RTEEarth rte(this, sv_abort, GetGMTBase(), PZREAP.RTET0Min*3600.0, TZMINI, critical);
@@ -23121,6 +23121,10 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			
 			TZMINI = PZREAP.TZMIN*3600.0;
 			TZMAXI = PZREAP.TZMAX*3600.0;
+
+			//Convert to GMT
+			TZMINI = GMTfromGET(TZMINI);
+			TZMAXI = GMTfromGET(TZMAXI);
 		}
 		else if (med == 76)
 		{
@@ -23133,7 +23137,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			{
 				sprintf_s(typname, "ATP");
 			}
-			TZMINI = med_f76.T_Z;
+			TZMINI = PZREAP.RTETimeOfLanding*3600.0;
 			TZMAXI = 0.0;
 		}
 		else
@@ -23144,6 +23148,10 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 				sprintf_s(typname, "FCUA");
 				TZMINI = PZREAP.TZMIN*3600.0;
 				TZMAXI = PZREAP.TZMAX*3600.0;
+
+				//Convert to GMT
+				TZMINI = GMTfromGET(TZMINI);
+				TZMAXI = GMTfromGET(TZMAXI);
 			}
 			else
 			{
@@ -23156,7 +23164,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 				{
 					sprintf_s(typname, "ATP");
 				}
-				TZMINI = med_f77.T_Z;
+				TZMINI = PZREAP.RTETimeOfLanding*3600.0;
 				TZMAXI = 0.0;
 			}
 		}
@@ -23186,10 +23194,6 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			}
 			rte.ATP(LINE);
 		}
-
-		//Convert to GMT
-		TZMINI = GMTfromGET(TZMINI);
-		TZMAXI = GMTfromGET(TZMAXI);
 
 		rte.READ(SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, EPI, 0.3, PZREAP.DVMAX, 0.0, Inclination, 1.0*1852.0, TZMINI, TZMAXI);
 		if (rte.MASTER() == false)
@@ -26144,6 +26148,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		//TBD: T_V greater than present time
 		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
 		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
+		PZREAP.RTETimeOfLanding = GMTfromGET(med_f75_f77.T_Z) / 3600.0;
 		if (PZREAP.TGTLN == 1)
 		{
 			PZREAP.EntryProfile = 2;
@@ -26180,6 +26185,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		//TBD: T_V greater than present time
 		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
 		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
+		PZREAP.RTETimeOfLanding = GMTfromGET(med_f75_f77.T_Z) / 3600.0;
 		if (PZREAP.TGTLN == 1)
 		{
 			PZREAP.EntryProfile = 2;
