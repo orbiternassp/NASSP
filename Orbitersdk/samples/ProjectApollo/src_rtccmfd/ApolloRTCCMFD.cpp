@@ -1780,13 +1780,9 @@ bool ASTLandingTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_ASTLandingTime(double get)
 {
-	if (G->RTEASTType == 76)
+	if (G->RTEASTType == 76 || G->RTEASTType == 77)
 	{
-		GC->rtcc->med_f76.T_Z = get;
-	}
-	else if (G->RTEASTType == 77)
-	{
-		GC->rtcc->med_f77.T_Z = get;
+		GC->rtcc->med_f75_f77.T_Z = get;
 	}
 }
 
