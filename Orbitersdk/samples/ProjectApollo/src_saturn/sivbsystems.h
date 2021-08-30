@@ -24,6 +24,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "DelayTimer.h"
+
 #define PUVALVE_CLOSED 0
 #define PUVALVE_NULL 1
 #define PUVALVE_OPEN 2
@@ -45,7 +47,7 @@ public:
 	void LVDCEngineCutoff() { LVDCEngineStopRelay = true; }
 	void LVDCEngineCutoffOff() { LVDCEngineStopRelay = false; }
 	void EDSEngineCutoff(bool cut) { EDSEngineStop = cut; }
-	void EngineReadyBypass() { EngineReady = true; }
+	void SetEngineReadyBypass() { EngineReadyBypass = true; }
 	void EngineStartOn() { EngineStart = true; }
 	void EngineStartOff() { EngineStart = false; }
 	void FirstBurnRelayOn() { FirstBurnRelay = true; }
@@ -79,9 +81,14 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 protected:
+
+	bool EngineOnLogic();
+
 	bool FirstBurnRelay;
 	bool SecondBurnRelay;
 	bool EngineReady;
+	//K11
+	bool EngineReadyBypass;
 
 	//K100 and K101
 	bool ThrustOKRelay;
@@ -91,17 +98,21 @@ protected:
 	bool LVDCEngineStopRelay;
 	//K46 (K198)
 	bool PrevalvesCloseOn;
+	//K91
+	bool PassivationRelay;
+	//K95
+	bool EngineMainstageControlValveOpen;
 
 	bool RSSEngineStop;
 	bool EDSEngineStop;
 	bool PropellantDepletionSensors;
 
 	bool EnginePower;
-	bool EngineCutoffBus;
+	//K55
+	bool FuelInjTempOKBypass;
 	//K63 (K57)
 	bool EngineStart;
 	bool EngineStop;
-	bool ThrustOKCutoffInhibit;
 
 	bool EDSCutoffDisabled;
 
@@ -130,6 +141,25 @@ protected:
 	THGROUP_HANDLE &vernier;
 
 	PROPELLANT_HANDLE &main_propellant;
+
+	//Logic
+	bool CutoffSignalA, CutoffSignalX;
+	bool HeliumControlOn;
+	bool EMTEMP1, EngineReady1;
+	bool StartTankDischargeControlOn;
+	bool EngineStartLockUp, SparkSystemOn, EngineStart3, EngineStart4;
+	bool SparksDeenergized;
+	bool PBSignal1, StartTurbines, PBSignal4;
+	bool MainstageSignal, MainstageOn, IgnitionPhaseControlOn;
+	bool VCBSignal1, VCBSignal2, VCBSignal3;
+	bool IgnitionDetector, CC1Signal1, IgnitionDetectionLockup;
+	bool CC2Signal1, CC2Signal2, CC2Signal3, CutoffLockup;
+	int EngineState; //0 = Off, 1 = Starting, 2 = Running, 3 = Stopping
+
+	DelayTimer HeliumControlDeenergizedTimer;
+	DelayTimer StartTankDischargeDelayTimer;
+	DelayTimer IgnitionPhaseTimer;
+	DelayTimer SparksDeenergizedTimer;
 };
 
 class SIVB200Systems : public SIVBSystems

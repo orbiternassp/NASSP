@@ -426,11 +426,12 @@ private:								// Saturn LV
 	double tau3N;
 	double Fm;										// Sensed acceleration
 	double MFS;										// Current smoothed (filtered) value of (M/F)
-	double MFK[9];									// (M/F)S filter coefficients
+	double MFK[9];									// (M/F)S filter coefficients, for S-II
+	double S4MFK[9];								// (M/F)S filter coefficients, for S-IVB
 	double MFSArr[4];								// First through fourth consecutive past values of (M/F)S
 	double MF[5];									// Present through third past consecuitve values of (M/F)
-	double LVIMUMJD;
-	double DTTEMP;
+	double MF0;										// Mass-to-thrust ratio used to initialize S-II (M/F) smoothing filter
+	double MF1;										// Mass-to-thrust ratio used to initialize S-IVB first burn (M/F) smoothing filter
 	VECTOR3 TargetVector;							// Target vector for out-of-orbit targeting
 	double X_1, X_2;								// Intermediate variables for out-of-orbit targeting
 	double Tt_T;									// Time-To-Go computed using Tt_3
@@ -978,6 +979,7 @@ private:
 	double T_1;										// Time left in first-stage IGM
 	double T_2;										// Time left in second and fourth stage IGM
 	double t_D;										// Time of launch after reference launch time (time of launch after window opens)
+	double T_d;										// Time tilt bias constant
 
 	// These are boolean flags that are real flags in the LVDC SOFTWARE.
 	bool GRR_init;									// GRR initialization done
@@ -1005,8 +1007,11 @@ private:
 	double tau1;									// Time to consume all fuel before S4 MRS
 	double tau2;									// Time to consume all fuel between MRS and S2 Cutoff
 	double Fm;										// Sensed acceleration
-	double LVIMUMJD;
-	double DTTEMP;
+	double MFS;										// Current smoothed (filtered) value of (M/F)
+	double MFK[8];									// (M/F)S filter coefficients
+	double MFSArr[4];								// First through fourth consecutive past values of (M/F)S
+	double MF[4];									// Present through third past consecuitve values of (M/F)
+	double MF0;										// Mass-to-thrust ratio used to initialize S-IVB (M/F) smoothing filter
 	double Tt_T;									// Time-To-Go computed using Tt_3
 	double Tt_2;									// Estimated second stage burn time
 	double eps_2;									// Guidance option selection time
