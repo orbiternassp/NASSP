@@ -6341,7 +6341,7 @@ bool RTEMoon::MASTER()
 		t_z += dt;
 
 		ii++;
-	} while (abs(dt) > 0.1);
+	} while (abs(dt) > 0.2);
 	t_R = (EIMJD - GMTBASE)*24.0*3600.0;
 
 	// Final Calculations
@@ -6613,6 +6613,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, double &dv)
 	//Main iteration loop for the DV optimization
 	while (KOUNT <= 10)
 	{
+		ii = 0;
 		do
 		{
 			Vig_apo = MCDRIV(sv0.R, sv0.V, sv0.GMT, t_z_apo, INRFVsign, i_r, INTER, true, t_zmin, R_EI, V_EI, t_z, NIR, i_r_apo, r_p);
@@ -6628,7 +6629,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, double &dv)
 			dt = dlng / w_E;
 			t_z_apo += dt;
 			ii++;
-		} while (abs(dt) > 0.1);
+		} while (abs(dt) > 1.0);
 
 		h_p = r_p - R_M;
 		dv = length(Vig_apo - sv0.V);

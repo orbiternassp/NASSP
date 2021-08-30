@@ -1024,7 +1024,6 @@ public:
 	virtual bool GetSIInboardEngineOut() = 0;
 	virtual bool GetSIOutboardEngineOut() = 0;
 	virtual bool GetSIBLowLevelSensorsDry();
-	virtual bool GetSIIEngineOut();
 	virtual void SetSIThrusterDir(int n, double yaw, double pitch) = 0;
 	virtual void SetSIIThrusterDir(int n, double yaw, double pitch) {};
 	void SetSIVBThrusterDir(double yaw, double pitch);
@@ -3559,6 +3558,7 @@ protected:
 	// Telecom equipment
 	DSE  dataRecorder;
 	PCM  pcm;
+	UDL	 udl;
 	PMP	 pmp;
 	USB  usb;
 	HGA  hga;
@@ -4518,6 +4518,7 @@ protected:
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 	friend class LEMcomputer; 
 	friend class PCM;         // Otherwise reading telemetry is a pain
+	friend class UDL;
 	friend class PMP;
 	friend class USB;
 	friend class HGA;

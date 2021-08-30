@@ -199,5 +199,5 @@ void J2Engine::SetThrusterDir(double beta_y, double beta_p)
 
 	j2vector.z = 1.0;
 
-	vessel->SetThrusterDir(th_j2, j2vector);
+	vessel->SetThrusterDir(th_j2, unit(j2vector));
 }

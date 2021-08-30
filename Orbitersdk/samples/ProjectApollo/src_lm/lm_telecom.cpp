@@ -25,8 +25,9 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include "stdio.h"
-#include "math.h"
+#include <stdio.h>
+#include <math.h>
+#include <winsock.h> // TODO: Replace with winsock2 when yaAGC updates
 #include "lmresource.h"
 
 #include "nasspdefs.h"
@@ -372,6 +373,16 @@ LM_PCM::LM_PCM()
 	last_rx = 0;
 	frame_addr = 0;
 	frame_count = 0;
+	m_socket = INVALID_SOCKET;
+}
+
+LM_PCM::~LM_PCM()
+{
+	// Close telemetry socket
+	if (m_socket != INVALID_SOCKET) {
+		shutdown(m_socket, 2); // Shutdown both streams
+		closesocket(m_socket);
+	}
 }
 
 void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh)
@@ -414,7 +425,7 @@ void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh)
 	service.sin_port = htons(14243); // CM on 14242, LM on 14243
 
 	if (::bind(m_socket, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR) {
-		sprintf(wsk_emsg, "LM-TELECOM: bind() failed: %ld", WSAGetLastError());
+		sprintf(wsk_emsg, "Failed to start LM telemetry. Please completely exit Orbiter and restart. Please file a bug report if this message persists.");
 		wsk_error = 1;
 		closesocket(m_socket);
 		WSACleanup();
@@ -427,30 +438,8 @@ void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh)
 		WSACleanup();
 		return;
 	}
-	if (!registerSocket(m_socket))
-	{
-		sprintf(wsk_emsg, "LM-TELECOM: Failed to register socket %i for cleanup", m_socket);
-		wsk_error = 1;
-	}
 	conn_state = 1; // INITIALIZED, LISTENING
 	uplink_state = 0; rx_offset = 0;
-}
-
-bool LM_PCM::registerSocket(SOCKET sock)
-{
-	HMODULE hpac = GetModuleHandle("modules\\startup\\ProjectApolloConfigurator.dll");
-	if (hpac) {
-		bool(__cdecl *regSocket1)(SOCKET);
-		regSocket1 = (bool(__cdecl *)(SOCKET)) GetProcAddress(hpac, "pacDefineSocket");
-		if (regSocket1) {
-			if (!regSocket1(sock))
-				return false;
-		}
-		else {
-			return false;
-		}
-	}
-	return true;
 }
 
 void LM_PCM::SystemTimestep(double simdt)
@@ -2778,8 +2767,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
 	{
-		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm);
-		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm);
+		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm*exp(-simdt*10));
+		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*exp(-simdt*10));
 	}
 	else
 	{

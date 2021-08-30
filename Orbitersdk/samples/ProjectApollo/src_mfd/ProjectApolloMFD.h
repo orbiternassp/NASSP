@@ -74,7 +74,6 @@ public:
 	void menuSetIUPage();
 	void menuSetTELEPage();
 	void menuSetLGCPage();
-	void menuSetSOCKPage();
 	void menuSetDebugPage();
 	void menuSetFailuresPage();
 

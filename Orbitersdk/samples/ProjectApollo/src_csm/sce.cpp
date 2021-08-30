@@ -161,9 +161,9 @@ void SCE::Timestep()
 	//BMAG MODE SW - YAW RATE 2 (CH3642X)
 	AA[11] = (sat->BMAGYawSwitch.IsUp() && sat->SCSLogicBus3.Voltage() > 10.0) ? 5.0 : 0.0;
 	//SM EDS ABORT REQUEST A (BS0080X)
-	AA[12] = (sat->secs.AbortLightPowerA() && ((sat->cws.UplinkTestState & 001) != 0)) ? 5.0 : 0.0;
+	AA[12] = (sat->secs.AbortLightPowerA() && sat->udl.GetAbortLightA()) ? 5.0 : 0.0;
 	//SM EDS ABORT REQUEST B (BS0081X)
-	AA[13] = (sat->secs.AbortLightPowerB() && ((sat->cws.UplinkTestState & 002) != 0)) ? 5.0 : 0.0;
+	AA[13] = (sat->secs.AbortLightPowerB() && sat->udl.GetAbortLightB()) ? 5.0 : 0.0;
 	//MASTER CAUTION WARNING ON (CS0150X)
 	AA[14] = sat->cws.GetMasterAlarm() ? 5.0 : 0.0;
 

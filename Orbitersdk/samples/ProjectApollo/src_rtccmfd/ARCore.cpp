@@ -3695,6 +3695,12 @@ int ARCore::subThread()
 	break;
 	case 21: //LM Ascent PAD
 	{
+		if (target == NULL)
+		{
+			Result = 0;
+			break;
+		}
+
 		ASCPADOpt opt;
 		SV sv_CSM;
 		MATRIX3 Rot, Rot2;
@@ -4422,7 +4428,7 @@ int ARCore::subThread()
 		{
 			if (RTEASTType == 75)
 			{
-				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f75.T_0) / 3600.0;
+				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f75_f77.T_0_min) / 3600.0;
 			}
 			else if (RTEASTType == 76)
 			{
@@ -4436,7 +4442,8 @@ int ARCore::subThread()
 
 				//Check vector time
 				//TBD: T_V greater than present time
-				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f76.T_0) / 3600.0;
+				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f75_f77.T_0_min) / 3600.0;
+				GC->rtcc->PZREAP.RTETimeOfLanding = GC->rtcc->GMTfromGET(GC->rtcc->med_f75_f77.T_Z) / 3600.0;
 				GC->rtcc->PZREAP.RTEPTPMissDistance = GC->rtcc->med_f76.MissDistance;
 			}
 			else
@@ -4454,8 +4461,9 @@ int ARCore::subThread()
 
 				//Check vector time
 				//TBD: T_V greater than present time
-				GC->rtcc->PZREAP.RTEVectorTime = GC->rtcc->GMTfromGET(GC->rtcc->med_f77.T_V) / 3600.0;
-				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f77.T_min) / 3600.0;
+				GC->rtcc->PZREAP.RTEVectorTime = GC->rtcc->GMTfromGET(GC->rtcc->med_f75_f77.T_V) / 3600.0;
+				GC->rtcc->PZREAP.RTET0Min = GC->rtcc->GMTfromGET(GC->rtcc->med_f75_f77.T_0_min) / 3600.0;
+				GC->rtcc->PZREAP.RTETimeOfLanding = GC->rtcc->GMTfromGET(GC->rtcc->med_f75_f77.T_Z) / 3600.0;
 				GC->rtcc->PZREAP.RTEPTPMissDistance = GC->rtcc->med_f77.MissDistance;
 			}
 			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(vessel);

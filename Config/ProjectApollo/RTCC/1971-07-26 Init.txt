@@ -8,3 +8,4 @@ LDPPDwellOrbits 11
 REVS1 1.9
 eta_1 36.0
 PZLTRT_DT_Ins_TPI 45.0
+PTPSite 0 EOM 26.119 -158.0

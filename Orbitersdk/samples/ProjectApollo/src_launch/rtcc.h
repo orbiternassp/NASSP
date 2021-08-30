@@ -2609,7 +2609,7 @@ public:
 	void LVDCTLIPredict(LVDCTLIparam lvdc, double m0, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI);
 	//S-IVB TLI IGM Pre-Thrust Targeting Module
 	int PMMSPT(PMMSPTInput &in);
-	void PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC);
+	int PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC);
 	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
 	void FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc = true);
 	void FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_tig, SV &sv_cut, bool agc = true);
@@ -3146,40 +3146,38 @@ public:
 		int EntryProfile = 1;
 	} med_f71;
 
+	//Common variables of MED F75-77
+	struct MED_F75_F77
+	{
+		std::string EntryProfile = "HB1";
+		double Inclination = 0.0;
+		double T_V = 0.0;		//Vector time
+		double T_0_min = 0.0;	//Time of abort (or minimum time for F77)
+		double T_Z = 0.0;		//Estimated time of landing (F76 and F77)
+	} med_f75_f77;
+
 	//Generation of Abort Scan Table for unspecified area
 	struct MED_F75
 	{
 		std::string Type = "TCUA";
-		double T_V = 0.0; //Vector time
-		double T_0 = 0.0; //Time of abort
 		double DVMAX = 10000.0;
-		std::string EntryProfile = "HB1";
-		double Inclination = 0.0; //Lunar reference only
+		
 	} med_f75;
 
 	//Abort Scan Table generation for a specific site
 	struct MED_F76
 	{
 		std::string Site = "MPL";
-		double T_V = 0.0;
-		double T_0 = 0.0;
-		double T_Z = 0.0;
-		std::string EntryProfile = "HB1";
 		double MissDistance = 0.0;
-		double Inclination = 0.0; //Lunar reference only
 	} med_f76;
 
 	//AST lunar search generation for specific site or FCUA
 	struct MED_F77
 	{
 		std::string Site = "MPL";
-		double T_V = 0.0;
-		double T_min = 0.0;
 		double T_max = 0.0;
-		double T_Z = 0.0;
-		std::string EntryProfile = "HB1";
 		double MissDistance = 0.0;
-		double Inclination = 0.0;
+		
 	} med_f77;
 
 	//RTE Digitals maneuver description
@@ -4062,7 +4060,7 @@ public:
 		double RTEVectorTime;
 		double RTET0Min; //Time of abort or minimum time
 		double RTET0Max; //Maximum time
-		//double RTETimeOfLanding;
+		double RTETimeOfLanding;
 		double RTEUADVMax;
 		double RTEPTPMissDistance;
 		double RTEInclination;

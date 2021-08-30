@@ -696,10 +696,10 @@ void SaturnV::SetSecondStageEngines(double offset)
 
 	int i;
 
-	VECTOR3 m_exhaust_pos1= {-1.8,-1.8,-33 + offset};
-	VECTOR3 m_exhaust_pos2= {1.8,1.8,-33 + offset};
-	VECTOR3 m_exhaust_pos3= {-1.8,1.8,-33 + offset};
-	VECTOR3 m_exhaust_pos4 = {1.8,-1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos1 = {1.8,1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos2 = {1.8,-1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos3 = { -1.8,-1.8,-33 + offset };
+	VECTOR3 m_exhaust_pos4 = { -1.8,1.8,-33 + offset };
 	VECTOR3 m_exhaust_pos5 = {0,0,-33 + offset};
 	VECTOR3 s_exhaust_pos = {0, 0, -35.0 + offset};
 
@@ -755,7 +755,7 @@ void SaturnV::SetSecondStageEngines(double offset)
 	// orbiter main thrusters
 	//
 	th_2nd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
-	th_2nd[1] = CreateThruster (m_exhaust_pos2,_V( 0,0,1),  THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
+	th_2nd[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_2nd[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_2nd[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_2nd[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);

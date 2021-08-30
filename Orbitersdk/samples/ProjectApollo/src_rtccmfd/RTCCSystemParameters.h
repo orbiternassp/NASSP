@@ -331,7 +331,7 @@ struct RTCCSystemParameters
 		MCTJD3 = 2.5;
 		MCTJDS = 1.0;
 		MCTJD5 = 99999.0;
-		MCTJD6 = 1.8;
+		MCTJD6 = 1.9;
 
 		MCTJT1 = 38.8 * 4.4482216152605;
 		MCTJT2 = 5889.0 * 4.4482216152605;
@@ -428,13 +428,16 @@ struct RTCCSystemParameters
 		MCTST2 = 244.995 * 4.4482216152605;
 		MCTST4 = 91188.544;
 		MCTST5 = 91188.544;
+		MCTST6 = 91188.544;
 		MCTST9 = 91188.544;
 		MCTSW1 = 29.60667013;
 		MCTSW2 = 0.2742;
 		MCTSW4 = 29.60667013;
 		MCTSW5 = 29.60667013;
+		MCTSW6 = 63.8 * 0.45359237;
 		MCTSD2 = 0.533;
 		MCTSD3 = 0.467;
+		MCTSD4 = 6.0;
 		MCTSD5 = 0.6;
 		MCTSD9 = 1.0;
 		MCTSK1 = 19885.0*4.44822 + 9500.0; //TBD
@@ -933,6 +936,8 @@ struct RTCCSystemParameters
 	double MCTST4;
 	//SPS tail-off thrust level
 	double MCTST5;
+	//SPS thrust level for short maneuver test
+	double MCTST6;
 	//On-board computer thrust level for CSM SPS thruster
 	double MCTST9;
 	//SPS weight loss rate
@@ -943,10 +948,14 @@ struct RTCCSystemParameters
 	double MCTSW4;
 	//SPS tail-off weight loss rate
 	double MCTSW5;
+	//SPS weight loss rate for short maneuver test
+	double MCTSW6;
 	//SPS phase two burn time
 	double MCTSD2;
 	//SPS phase three burn time
 	double MCTSD3;
+	//SPS burn time for short maneuver test
+	double MCTSD4;
 	//SPS tail-off burn time
 	double MCTSD5;
 	//Total SPS ullage overlap

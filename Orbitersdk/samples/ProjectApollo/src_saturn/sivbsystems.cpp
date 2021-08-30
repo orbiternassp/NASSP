@@ -34,7 +34,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "sivbsystems.h"
 
 SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
-	j2engine(j2), loxvent(lox), vernier(ver), main_propellant(j2prop), apsThrusters(aps), ullage(ull) {
+	j2engine(j2), loxvent(lox), vernier(ver), main_propellant(j2prop), apsThrusters(aps), ullage(ull),
+	HeliumControlDeenergizedTimer(1.0),
+	StartTankDischargeDelayTimer(1.0),
+	IgnitionPhaseTimer(0.45),
+	SparksDeenergizedTimer(3.3)
+{
 
 	vessel = v;
 
@@ -44,6 +49,7 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	LVDCEngineStopRelay = false;
 	EDSEngineStop = false;
 	EngineReady = false;
+	EngineReadyBypass = false;
 	EnginePower = false;
 	PropellantDepletionSensors = false;
 	RSSEngineStop = false;
@@ -52,10 +58,12 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	FireUllageIgnition = false;
 	PointLevelSensorArmed = false;
 	LH2ContinuousVentValveOpen = false;
-	ThrustOKCutoffInhibit = false;
 	PrevalvesCloseOn = false;
 	//Gets switched on at about T-8 minutes
 	AuxHydPumpFlightMode = true;
+	FuelInjTempOKBypass = false;
+	PassivationRelay = false;
+	EngineMainstageControlValveOpen = false;
 
 	for (int i = 0;i < 2;i++)
 	{
@@ -70,6 +78,19 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	BoiloffTime = 0.0;
 	LH2TankUllagePressurePSI = 50.0;
 	LOXTankUllagePressurePSI = 50.0;
+
+	CutoffSignalA = CutoffSignalX = false;
+	HeliumControlOn = false;
+	EMTEMP1 = EngineReady1 = false;
+	StartTankDischargeControlOn = false;
+	EngineStartLockUp = SparkSystemOn = EngineStart3 = EngineStart4 = false;
+	SparksDeenergized = false;
+	PBSignal1 = StartTurbines = PBSignal4 = false;
+	MainstageSignal = MainstageOn = IgnitionPhaseControlOn = false;
+	VCBSignal1 = VCBSignal2= VCBSignal3 = false;
+	IgnitionDetector = CC1Signal1 = IgnitionDetectionLockup = false;
+	CC2Signal1 = CC2Signal2 = CC2Signal3 = CutoffLockup = false;
+	EngineState = 0;
 }
 
 SIVBSystems::~SIVBSystems()
@@ -84,19 +105,36 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "LVDCENGINESTOPRELAY", LVDCEngineStopRelay);
 	papiWriteScenario_bool(scn, "EDSENGINESTOP", EDSEngineStop);
 	papiWriteScenario_bool(scn, "RSSENGINESTOP", RSSEngineStop);
-	papiWriteScenario_bool(scn, "ENGINESTOP", EngineStop);
-	papiWriteScenario_bool(scn, "ENGINEREADY", EngineReady);
 	papiWriteScenario_bool(scn, "LOXVENTVALVEOPEN", LOXVentValveOpen);
 	papiWriteScenario_bool(scn, "FIREULLAGEIGNITION", FireUllageIgnition);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "LH2CONTINUOUSVENTVALVEOPEN", LH2ContinuousVentValveOpen);
-	papiWriteScenario_bool(scn, "THRUSTOKCUTOFFINHIBIT", ThrustOKCutoffInhibit);
+	papiWriteScenario_bool(scn, "FUELINJTEMPOKBYPASS", FuelInjTempOKBypass);
+	papiWriteScenario_bool(scn, "HeliumControlOn", HeliumControlOn);
+	papiWriteScenario_bool(scn, "StartTankDischargeControlOn", StartTankDischargeControlOn);
+	papiWriteScenario_bool(scn, "EngineStartLockUp", EngineStartLockUp);
+	papiWriteScenario_bool(scn, "SparkSystemOn", SparkSystemOn);
+	papiWriteScenario_bool(scn, "SparksDeenergized", SparksDeenergized);
+	papiWriteScenario_bool(scn, "StartTurbines", StartTurbines);
+	papiWriteScenario_bool(scn, "MainstageSignal", MainstageSignal);
+	papiWriteScenario_bool(scn, "MainstageOn", MainstageOn);
+	papiWriteScenario_bool(scn, "IgnitionPhaseControlOn", IgnitionPhaseControlOn);
+	papiWriteScenario_bool(scn, "IgnitionDetectionLockup", IgnitionDetectionLockup);
+	papiWriteScenario_bool(scn, "CutoffLockup", CutoffLockup);
+	papiWriteScenario_bool(scn, "PassivationRelay", PassivationRelay);
+	papiWriteScenario_bool(scn, "EngineMainstageControlValveOpen", EngineMainstageControlValveOpen);
 	papiWriteScenario_boolarr(scn, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
+	oapiWriteScenario_int(scn, "EngineState", EngineState);
 	papiWriteScenario_double(scn, "BOILOFFTIME", BoiloffTime);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
+
+	HeliumControlDeenergizedTimer.SaveState(scn, "HeliumControlDeenergizedTimer_BEGIN", "TD_END");
+	StartTankDischargeDelayTimer.SaveState(scn, "StartTankDischargeDelayTimer_BEGIN", "TD_END");
+	IgnitionPhaseTimer.SaveState(scn, "IgnitionPhaseTimer_BEGIN", "TD_END");
+	SparksDeenergizedTimer.SaveState(scn, "SparksDeenergizedTimer_BEGIN", "TD_END");
 
 	oapiWriteLine(scn, SIVBSYSTEMS_END_STRING);
 }
@@ -114,20 +152,44 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "LVDCENGINESTOPRELAY", LVDCEngineStopRelay);
 		papiReadScenario_bool(line, "EDSENGINESTOP", EDSEngineStop);
 		papiReadScenario_bool(line, "RSSENGINESTOP", RSSEngineStop);
-		papiReadScenario_bool(line, "ENGINESTOP", EngineStop);
-		papiReadScenario_bool(line, "ENGINEREADY", EngineReady);
 		papiReadScenario_bool(line, "LOXVENTVALVEOPEN", LOXVentValveOpen);
 		papiReadScenario_bool(line, "FIREULLAGEIGNITION", FireUllageIgnition);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "LH2CONTINUOUSVENTVALVEOPEN", LH2ContinuousVentValveOpen);
-		papiReadScenario_bool(line, "THRUSTOKCUTOFFINHIBIT", ThrustOKCutoffInhibit);
+		papiReadScenario_bool(line, "FUELINJTEMPOKBYPASS", FuelInjTempOKBypass);
+		papiReadScenario_bool(line, "HeliumControlOn", HeliumControlOn);
+		papiReadScenario_bool(line, "StartTankDischargeControlOn", StartTankDischargeControlOn);
+		papiReadScenario_bool(line, "EngineStartLockUp", EngineStartLockUp);
+		papiReadScenario_bool(line, "SparkSystemOn", SparkSystemOn);
+		papiReadScenario_bool(line, "SparksDeenergized", SparksDeenergized);
+		papiReadScenario_bool(line, "StartTurbines", StartTurbines);
+		papiReadScenario_bool(line, "MainstageSignal", MainstageSignal);
+		papiReadScenario_bool(line, "MainstageOn", MainstageOn);
+		papiReadScenario_bool(line, "IgnitionPhaseControlOn", IgnitionPhaseControlOn);
+		papiReadScenario_bool(line, "IgnitionDetectionLockup", IgnitionDetectionLockup);
+		papiReadScenario_bool(line, "CutoffLockup", CutoffLockup);
+		papiReadScenario_bool(line, "PassivationRelay", PassivationRelay);
+		papiReadScenario_bool(line, "EngineMainstageControlValveOpen", EngineMainstageControlValveOpen);
 		papiReadScenario_boolarr(line, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
+		papiReadScenario_int(line, "EngineState", EngineState);
 		papiReadScenario_double(line, "BOILOFFTIME", BoiloffTime);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
 
+		if (!strnicmp(line, "HeliumControlDeenergizedTimer_BEGIN", sizeof("HeliumControlDeenergizedTimer_BEGIN"))) {
+			HeliumControlDeenergizedTimer.LoadState(scn, "TD_END");
+		}
+		else if (!strnicmp(line, "StartTankDischargeDelayTimer_BEGIN", sizeof("StartTankDischargeDelayTimer_BEGIN"))) {
+			StartTankDischargeDelayTimer.LoadState(scn, "TD_END");
+		}
+		else if (!strnicmp(line, "IgnitionPhaseTimer_BEGIN", sizeof("IgnitionPhaseTimer_BEGIN"))) {
+			IgnitionPhaseTimer.LoadState(scn, "TD_END");
+		}
+		else if (!strnicmp(line, "SparksDeenergizedTimer_BEGIN", sizeof("SparksDeenergizedTimer_BEGIN"))) {
+			SparksDeenergizedTimer.LoadState(scn, "TD_END");
+		}
 	}
 }
 
@@ -135,25 +197,15 @@ void SIVBSystems::Timestep(double simdt)
 {
 	if (j2engine == NULL) return;
 
+	HeliumControlDeenergizedTimer.Timestep(simdt);
+	StartTankDischargeDelayTimer.Timestep(simdt);
+	IgnitionPhaseTimer.Timestep(simdt);
+	SparksDeenergizedTimer.Timestep(simdt);
+
 	//Thrust OK switch
 	bool ThrustOK = vessel->GetThrusterLevel(j2engine) > 0.65;
 
-	//Propellant Systems
-	if (main_propellant)
-	{
-		LOXTankUllagePressurePSI = vessel->GetPropellantMass(main_propellant) / vessel->GetPropellantMaxMass(main_propellant)*50.0;
-		LH2TankUllagePressurePSI = LOXTankUllagePressurePSI * 0.9362 + 3.19;
-	}
-
-	//Propellant Depletion
-	if (PropellantLowLevel())
-	{
-		PropellantDepletionSensors = true;
-	}
-	else
-	{
-		PropellantDepletionSensors = false;
-	}
+	bool PowerH = (PassivationRelay == false);
 
 	//Engine Control Power Switch (EDS no. 1, range safety no. 1)
 	if (EDSEngineStop || RSSEngineStop)
@@ -184,103 +236,170 @@ void SIVBSystems::Timestep(double simdt)
 		ThrustOKRelay = false;
 	}
 
-	if (EngineReady && EngineStart && !ThrustOKRelay)
+	//Propellant Systems
+	if (main_propellant)
 	{
-		ThrustOKCutoffInhibit = true;
+		LOXTankUllagePressurePSI = vessel->GetPropellantMass(main_propellant) / vessel->GetPropellantMaxMass(main_propellant)*50.0;
+		LH2TankUllagePressurePSI = LOXTankUllagePressurePSI * 0.9362 + 3.19;
 	}
 
+	bool K101 = true; //TBD: Power
+	//Engine ignition bus
+	bool K103 = true;
+
+	//Propellant Depletion
+	if (PropellantLowLevel())
+	{
+		PropellantDepletionSensors = true;
+	}
+	else
+	{
+		PropellantDepletionSensors = false;
+	}
+
+	//Signals A and X from Saturn Systems Handbook
 	//Engine Cutoff Bus (switch selector, range safety system no. 2, EDS no. 2, propellant depletion sensors)
-	if (LVDCEngineStopRelay || (!EDSCutoffDisabled && EDSEngineStop) || RSSEngineStop || PropellantDepletionSensors)
-	{
-		EngineCutoffBus = true;
-	}
-	else
-	{
-		EngineCutoffBus = false;
-	}
+	CutoffSignalX = ((!EDSCutoffDisabled && EDSEngineStop) || RSSEngineStop || PropellantDepletionSensors);
+	CutoffSignalA = CutoffSignalX || LVDCEngineStopRelay;
+	EngineStop = (CutoffSignalX || CutoffSignalA || CutoffLockup);
 
-	if (EngineCutoffBus)
-	{
-		EngineStop = true;
-	}
-	else
-	{
-		EngineStop = false;
-	}
+	//ENGINE MONITOR BOARD (EM)
+	EMTEMP1 = (EngineStartLockUp || HeliumControlOn || IgnitionPhaseControlOn || StartTankDischargeControlOn || MainstageOn || SparkSystemOn || ThrustOKRelay);
+	EngineReady1 = (!ThrustOKRelay && !EMTEMP1); //TBD: More
+	EngineReady = (EngineReady1 || EngineReadyBypass);
 
+	//sprintf(oapiDebugString(), "ENGINE MONITOR BOARD: EMTEMP1 %d EngineReady1 %d EngineReady %d", EMTEMP1, EngineReady1, EngineReady);
+
+	//EngineReadyBypass would only set be as long as the switch selector powers it
+	EngineReadyBypass = false;
+
+	//ENGINE START BOARD
 	if (EngineStop)
 	{
-		if (EngineReady == true)
-		{
-			ThrustTimer = 0.0;
-			EngineStart = false;
-			EngineReady = false;
-			ThrustOKCutoffInhibit = false;
-		}
-
-		if (ThrustLevel > 0.0)
-		{
-			ThrustTimer += simdt;
-
-			// Cutoff transient thrust
-			if (ThrustTimer < 2.0) {
-				if (ThrustTimer < 0.25) {
-					// 95% of thrust dies in the first .25 second
-					ThrustLevel = 1.0 - (ThrustTimer*3.3048);
-					vessel->SetThrusterLevel(j2engine, ThrustLevel);
-				}
-				else {
-					if (ThrustTimer < 1.5) {
-						// The remainder dies over the next 1.25 second
-						ThrustLevel = 0.1738 - ((ThrustTimer - 0.25)*0.1390);
-						vessel->SetThrusterLevel(j2engine, ThrustLevel);
-					}
-					else {
-						// Engine is completely shut down at 1.5 second
-						ThrustLevel = 0.0;
-						vessel->SetThrusterLevel(j2engine, ThrustLevel);
-					}
-				}
-			}
-		}
+		HeliumControlDeenergizedTimer.SetRunning(true);
 	}
-	else if ((EngineReady && EngineStart) || ThrustLevel > 0.0 || ThrustOKCutoffInhibit)
-	{
-		ThrustTimer += simdt;
+	EngineStart4 = (EngineStop || SparksDeenergized);
+	EngineStartLockUp = (EngineStart || SparkSystemOn); //TBD: Require S-II/S-IVB staging
+	SparkSystemOn = (EngineStartLockUp && K101 && !EngineStart4);
+	EngineStart3 = HeliumControlOn || SparkSystemOn;
+	HeliumControlOn = EngineStart3 && K101 && !HeliumControlDeenergizedTimer.ContactClosed();
 
-		if (SecondBurnRelay)
+	//sprintf(oapiDebugString(), "ENGINE START BOARD: EngineStart %d EngineStartLockUp %d SparkSystemOn %d EngineStart3 %d EngineStart4 %d EngineStart5 %d HeliumControlOn %d Timer %lf", EngineStart, EngineStartLockUp, SparkSystemOn, EngineStart3, EngineStart4, EngineStart5, HeliumControlOn, HeliumControlDeenergizedTimer.GetTime());
+
+	//PROGRAMMER BOARD
+	PBSignal1 = (FuelInjTempOKBypass || StartTurbines);
+	if (HeliumControlOn)
+	{
+		StartTankDischargeDelayTimer.SetRunning(true);
+	}
+	StartTurbines = (K101 && PBSignal1 && StartTankDischargeDelayTimer.ContactClosed());
+	if (StartTurbines)
+	{
+		IgnitionPhaseTimer.SetRunning(true);
+	}
+	PBSignal4 = IgnitionPhaseTimer.ContactClosed();
+	if (PBSignal4)
+	{
+		SparksDeenergizedTimer.SetRunning(true);
+	}
+	SparksDeenergized = SparksDeenergizedTimer.ContactClosed();
+
+	//sprintf(oapiDebugString(), "PB: Byp %d R1: %d Tim1 %lf R3: %d Tim2 %lf R4: %d Tim3 %lf Spark %d", FuelInjTempOKBypass, PBSignal1, StartTankDischargeDelayTimer.GetTime(), StartTurbines, IgnitionPhaseTimer.GetTime(), PBSignal4, SparksDeenergizedTimer.GetTime(), SparksDeenergized);
+
+	//VALVE CONTROL BOARD
+	VCBSignal1 = EngineStop || PBSignal4;
+	StartTankDischargeControlOn = (StartTurbines && K101 && !VCBSignal1);
+	VCBSignal2 = MainstageSignal || SparkSystemOn;
+	VCBSignal3 = VCBSignal2 && K101 && !EngineStop;
+	MainstageSignal = K101 && VCBSignal3 && (MainstageSignal || PBSignal4) && !EngineStop;
+
+	IgnitionPhaseControlOn = VCBSignal3; //TBD: Some switch selector signal
+	MainstageOn = MainstageSignal || (EngineMainstageControlValveOpen && PowerH);
+
+	//sprintf(oapiDebugString(), "He %d STDV: %d Ign: %d Main: %d", HeliumControlOn, StartTankDischargeControlOn, IgnitionPhaseControlOn, MainstageOn);
+
+	//CUTOFF CONTROL NO. 1 BOARD
+	IgnitionDetector = true;
+	CC1Signal1 = HeliumControlOn && IgnitionDetectionLockup;
+	IgnitionDetectionLockup = CC1Signal1 || IgnitionDetector;
+
+	//CUTOFF CONTROL NO. 2 BOARD
+	CC2Signal1 = PBSignal4 && !IgnitionDetectionLockup;
+	CC2Signal2 = !ThrustOKRelay && SparksDeenergized;
+	CC2Signal3 = CC2Signal1 || CC2Signal2 || EngineStop || CutoffLockup;
+	CutoffLockup = !EngineReady && CC2Signal3 && K101;
+
+	//sprintf(oapiDebugString(), "CCB 1: %d 2: %d 3: %d 4: %d", CC2Signal1, CC2Signal2, CC2Signal3, CutoffLockup);
+
+	switch (EngineState)
+	{
+	case 0: //Off
+		if (EngineOnLogic())
 		{
-			//Second Burn
-			if (ThrustTimer >= 8.6 && ThrustTimer < 11.4) {
-				ThrustLevel = (ThrustTimer - 8.6)*0.357;
-				vessel->SetThrusterLevel(j2engine, ThrustLevel);
-			}
-			else if (ThrustTimer > 11.4 && ThrustLevel < 1.0)
-			{
-				ThrustLevel = 1.0;
-				vessel->SetThrusterLevel(j2engine, ThrustLevel);
-				ThrustOKCutoffInhibit = false;
-			}
+			EngineState = 1;
+			ThrustTimer = 0.0;
 		}
 		else
 		{
-			//First Burn
-			if (ThrustTimer >= 3.0 && ThrustTimer < 5.8) {
-				ThrustLevel = (ThrustTimer - 3.0)*0.357;
-				vessel->SetThrusterLevel(j2engine, ThrustLevel);
-			}
-			else if (ThrustTimer > 5.8 && ThrustLevel < 1.0)
-			{
-				ThrustLevel = 1.0;
-				vessel->SetThrusterLevel(j2engine, ThrustLevel);
-				ThrustOKCutoffInhibit = false;
-			}
+			break;
 		}
+	case 1: //Starting
+		if (!EngineOnLogic())
+		{
+			ThrustTimer = 0.0;
+			EngineState = 3;
+			break;
+		}
+		ThrustTimer += simdt;
+
+		//Thrust rising linearly from STDV opening for 2.8 seconds to 100%
+		if (ThrustTimer < 2.8)
+		{
+			ThrustLevel = min(ThrustTimer*0.357, 1.0);
+		}
+		else
+		{
+			ThrustLevel = 1.0;
+			EngineState = 2;
+		}
+		vessel->SetThrusterLevel(j2engine, ThrustLevel);
+		break;
+	case 2: //Running
+		if (!EngineOnLogic())
+		{
+			ThrustTimer = 0.0;
+			EngineState = 3;
+		}
+		else
+		{
+			ThrustLevel = 1.0;
+			vessel->SetThrusterLevel(j2engine, ThrustLevel);
+			break;
+		}
+	case 3: //Stopping
+		ThrustTimer += simdt;
+		if (ThrustTimer < 0.25)
+		{
+			// 95% of thrust dies in the first .25 second
+			ThrustLevel = 1.0 - (ThrustTimer*3.3048);
+		}
+		else if (ThrustTimer < 1.5)
+		{
+			// The remainder dies over the next 1.25 second
+			ThrustLevel = 0.1738 - ((ThrustTimer - 0.25)*0.1390);
+		}
+		else
+		{
+			// Engine is completely shut down at 1.5 second
+			ThrustLevel = 0.0;
+			EngineState = 0;
+			ThrustTimer = 0.0;
+		}
+		vessel->SetThrusterLevel(j2engine, ThrustLevel);
+		break;
 	}
-	else if (ThrustTimer > 0.0)
-	{
-		ThrustTimer = 0.0;
-	}
+
+	//sprintf(oapiDebugString(), "State: %d Timer %lf Level: %lf", EngineState, ThrustTimer, ThrustLevel);
 
 	//Venting
 
@@ -316,7 +435,12 @@ void SIVBSystems::Timestep(double simdt)
 		}
 	}
 
-	//sprintf(oapiDebugString(), "First %d Second %d Start %d Stop %d Ready %d Cut Inhibit %d Level %f Timer %f", FirstBurnRelay, SecondBurnRelay, EngineStart, EngineStop, EngineReady, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
+	//sprintf(oapiDebugString(), "Ready %d Start %d FuelInjTempOKBypass %d Stop %d Cut Inhibit %d Level %f Timer %f", EngineReady, EngineStart, FuelInjTempOKBypass, EngineStop, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
+}
+
+bool SIVBSystems::EngineOnLogic()
+{
+	return HeliumControlOn && (StartTankDischargeControlOn || MainstageOn);
 }
 
 void SIVBSystems::SIVBBoiloff()
@@ -528,7 +652,10 @@ void SIVB200Systems::SwitchSelector(int channel)
 		EngineStartOn();
 		break;
 	case 10: //Engine Ready Bypass On
-		EngineReadyBypass();
+		SetEngineReadyBypass();
+		break;
+	case 11: //Fuel Injection Temperature Ok Bypass
+		FuelInjTempOKBypass = true;
 		break;
 	case 12: //S-IVB Engine Cutoff No. 1 On
 		LVDCEngineCutoff();
@@ -536,8 +663,11 @@ void SIVB200Systems::SwitchSelector(int channel)
 	case 13: //S-IVB Engine Cutoff No. 1 Off
 		LVDCEngineCutoffOff();
 		break;
+	case 16: //Fuel Injection Temperature Ok Bypass Reset
+		FuelInjTempOKBypass = false;
+		break;
 	case 19: //Engine Ready Bypass On
-		EngineReadyBypass();
+		SetEngineReadyBypass();
 		break;
 	case 22: //LOX Chilldown Pump On
 		break;
@@ -652,8 +782,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 	switch (channel)
 	{
 	case 1: //Passivation Enable
+		PassivationRelay = true;
 		break;
 	case 2: //Passivation Disable
+		PassivationRelay = false;
 		break;
 	case 3: //LOX Tank Repressurization Control Valve Open On
 		break;
@@ -671,9 +803,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 		EngineStartOn();
 		break;
 	case 10: //Engine Ready Bypass
-		EngineReadyBypass();
+		SetEngineReadyBypass();
 		break;
 	case 11: //Fuel Injection Temperature OK Bypass
+		FuelInjTempOKBypass = true;
 		break;
 	case 12: //S-IVB Engine Cutoff
 		LVDCEngineCutoff();
@@ -688,6 +821,7 @@ void SIVB500Systems::SwitchSelector(int channel)
 		EndLOXVenting();
 		break;
 	case 16: //Fuel Injector Temperature OK Bypass Reset
+		FuelInjTempOKBypass = false;
 		break;
 	case 17: //PU Valve Hardover Position On
 		SetPUValve(PUVALVE_OPEN);
@@ -722,8 +856,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 		AuxHydPumpFlightModeOff();
 		break;
 	case 30: //Start Bottle Vent Control Valve Open On
+		//EngineMainstageControlValveOpen = true;
 		break;
 	case 31: //Start Bottle Vent Control Valve Open Off
+		//EngineMainstageControlValveOpen = false;
 		break;
 	case 32: //Second Burn Relay On
 		SecondBurnRelayOn();

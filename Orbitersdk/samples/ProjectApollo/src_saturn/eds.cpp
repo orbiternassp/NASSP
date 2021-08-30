@@ -195,7 +195,7 @@ void EDS::Timestep(double simdt)
 		TwoEngineOutAutoAbortInhibitNo2 = false;
 
 	if (iu->ESEGetTwoEngineOutAutoAbortInhibit(3) || tempsignal1)
-		TwoEngineOutAutoAbortInhibitNo2 = true;
+		TwoEngineOutAutoAbortInhibitNo3 = true;
 	else
 		TwoEngineOutAutoAbortInhibitNo3 = false;
 
@@ -781,7 +781,17 @@ EDSSV::EDSSV(IU *iu) : EDS(iu)
 
 bool EDSSV::GetSIIInboardEngineOut()
 {
-	return (SIIEngineThrustMonitorA[4] || SIIEngineThrustMonitorB[4]);
+	return SIIEngineThrustMonitorA[4];
+}
+
+bool EDSSV::GetSIIOutboardEngineOut()
+{
+	return SIIEngineThrustMonitorA[0] || SIIEngineThrustMonitorA[1] || SIIEngineThrustMonitorA[2] || SIIEngineThrustMonitorA[3];
+}
+
+bool EDSSV::GetSIIEnginesOut()
+{
+	return SIIEngineThrustMonitorA[0] && SIIEngineThrustMonitorA[1] && SIIEngineThrustMonitorA[2] && SIIEngineThrustMonitorA[3] && SIIEngineThrustMonitorA[4];
 }
 
 double EDSSV::GetLVTankPressure(int n)
@@ -870,8 +880,8 @@ void EDSSV::Timestep(double simdt)
 		iu->GetLVCommandConnector()->GetSIIThrustOK(ThrustOKSignal);
 		for (int i = 0;i < 5;i++)
 		{
-			SIIEngineThrustMonitorA[i] = SIIEngineOutIndicationA && !ThrustOKSignal[SIIEngInd[i]];
-			SIIEngineThrustMonitorB[i] = SIIEngineOutIndicationB && !ThrustOKSignal[SIIEngInd[i]];
+			SIIEngineThrustMonitorA[i] = SIIEngineOutIndicationA && !ThrustOKSignal[i];
+			SIIEngineThrustMonitorB[i] = SIIEngineOutIndicationB && !ThrustOKSignal[i];
 		}
 	}
 	else
