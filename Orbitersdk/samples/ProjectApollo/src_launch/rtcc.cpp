@@ -4719,7 +4719,7 @@ void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double 
 	else
 	{
 		gamma = 1;
-		r_0 = OrbMech::R_Moon;
+		r_0 = BZLAND.rad[RTCC_LMPOS_BEST];
 		Rot2 = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
 	}
 
