@@ -522,11 +522,6 @@ VECTOR3 LVIMU::GetTotalAttitude()
 	return v;
 }
 
-double LVIMU::GetLastTime()
-{
-	return LastTime;
-}
-
 typedef union
 
 {

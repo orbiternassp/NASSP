@@ -96,11 +96,6 @@ void LVDA::ZeroLVIMUPIPACounters()
 	iu->GetLVIMU()->ZeroPIPACounters();
 }
 
-double LVDA::GetLVIMULastTime()
-{
-	return iu->GetLVIMU()->GetLastTime();
-}
-
 void LVDA::ZeroLVIMUCDUs()
 {
 	iu->GetLVIMU()->ZeroIMUCDUFlag = true;
