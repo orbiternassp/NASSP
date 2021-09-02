@@ -4550,7 +4550,7 @@ void ApolloRTCCMFD::set_SPQDH(double DH)
 void ApolloRTCCMFD::menuSetSVTime()
 {
 	bool SVGETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the state vector (Format: hhh:mm:ss)", SVGETInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the GET for the state vector (Format: hhh:mm:ss). Negative value for present GET.", SVGETInput, 0, 20, (void*)this);
 }
 
 bool SVGETInput(void *id, char *str, void *data)
@@ -4707,12 +4707,6 @@ void ApolloRTCCMFD::lambertcalc()
 	{
 		G->lambertcalc();
 	}
-}
-
-void ApolloRTCCMFD::menuMoonRTECalc()
-{
-	G->TLCCSolGood = true;
-	G->MoonRTECalc();
 }
 
 void ApolloRTCCMFD::menuDeorbitCalc()
@@ -8257,8 +8251,11 @@ bool FIDOOrbitDigitalsGETBVInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::menuSpaceDigitalsInit()
 {
-	bool SpaceDigitalsInitInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U00, CSM or LEM, E or M (optional);", SpaceDigitalsInitInput, 0, 20, (void*)this);
+	if (GC->MissionPlanningActive)
+	{
+		bool SpaceDigitalsInitInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Format: U00, CSM or LEM, E or M (optional);", SpaceDigitalsInitInput, 0, 20, (void*)this);
+	}
 }
 
 bool SpaceDigitalsInitInput(void *id, char *str, void *data)
@@ -8269,8 +8266,41 @@ bool SpaceDigitalsInitInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::menuGenerateSpaceDigitals()
 {
-	bool GenerateSpaceDigitalsInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Generate Space Digitals, format: U01, column (1-3), option (GET or MNV), parameter (time or mnv number), Inclination (Col. 2), Long Ascending Node (Col. 2);", GenerateSpaceDigitalsInput, 0, 50, (void*)this);
+	if (GC->MissionPlanningActive)
+	{
+		bool GenerateSpaceDigitalsInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Generate Space Digitals, format: U01, column (1-3), option (GET or MNV), parameter (time or mnv number), Inclination (Col. 2), Long Ascending Node (Col. 2);", GenerateSpaceDigitalsInput, 0, 50, (void*)this);
+	}
+	else
+	{
+		bool GenerateSpaceDigitalsNoMPTInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Generate Space Digitals, format: Option GET (e.g. 1 100:00:00)", GenerateSpaceDigitalsNoMPTInput, 0, 50, (void*)this);
+	}
+}
+
+bool GenerateSpaceDigitalsNoMPTInput(void* id, char *str, void *data)
+{
+	int opt, hh, mm;
+	double ss;
+	if (sscanf(str, "%d %d:%d:%lf", &opt, &hh, &mm, &ss) == 4)
+	{
+		if (opt < 1 || opt > 3)
+		{
+			return false;
+		}
+
+		double get = hh * 3600.0 + mm * 60.0 + ss;
+		((ApolloRTCCMFD*)data)->set_SpaceDigitalsNoMPT(opt, get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SpaceDigitalsNoMPT(int opt, double get)
+{
+	G->SpaceDigitalsOption = opt;
+	G->SpaceDigitalsGET = get;
+	G->GenerateSpaceDigitalsNoMPT();
 }
 
 bool GenerateSpaceDigitalsInput(void *id, char *str, void *data)

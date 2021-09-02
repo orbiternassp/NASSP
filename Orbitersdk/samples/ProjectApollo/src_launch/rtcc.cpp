@@ -14116,6 +14116,329 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 }
 
 //Space Digitals
+
+int RTCC::EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl, double ascnode)
+{
+	//queid:
+	//3 = MED Column 1
+	//4 = MED Column 2
+	//5 = MED Column 3
+
+	EZSPACE.errormessage = "";
+
+	EphemerisData sv = ConvertSVtoEphemData(sv0);
+
+	//Generate display values for current state vector
+	EZSPACE.GET = GETfromGMT(sv.GMT);
+	EZSPACE.WEIGHT = sv0.mass * LBS*1000.0;
+	EZSPACE.GMTV = 0.0;
+	EZSPACE.GETV = EZSPACE.GETAxis = 0.0;
+
+	if (sv.RBI == BODY_EARTH)
+	{
+		sprintf(EZSPACE.REF, "EARTH");
+	}
+	else
+	{
+		sprintf(EZSPACE.REF, "MOON");
+	}
+
+	TimeConstraintsTable newtab;
+	EMMDYNEL(sv, newtab);
+
+	EZSPACE.V = newtab.V / 0.3048;
+	EZSPACE.GAM = newtab.gamma*DEG;
+	EZSPACE.H = newtab.h / 1852.0;
+	EZSPACE.PHI = newtab.lat*DEG;
+	EZSPACE.LAM = newtab.lng*DEG;
+	EZSPACE.PSI = newtab.azi*DEG;
+	EZSPACE.ADA = newtab.TA*DEG;
+
+	EZSPACE.GETR = EZSPACE.GET - SystemParameters.MCGREF * 3600.0;
+
+	//Propagate to input time
+	EMMENIInputTable emsin;
+	emsin.AnchorVector = sv;
+	emsin.MaxIntegTime = abs(gmt - sv.GMT);
+	if (gmt - sv.GMT >= 0)
+	{
+		emsin.IsForwardIntegration = 1.0;
+	}
+	else
+	{
+		emsin.IsForwardIntegration = -1.0;
+	}
+	EMMENI(emsin);
+	sv = emsin.sv_cutoff;
+
+	//Column 1
+	if (queid == 3)
+	{
+		EphemerisData sv_EMP, sv_true;
+		double R_E, mu;
+
+		EZSPACE.GETVector1 = GETfromGMT(sv.GMT);
+		if (sv.RBI == BODY_EARTH)
+		{
+			sprintf(EZSPACE.REF1, "E");
+			mu = OrbMech::mu_Earth;
+		}
+		else
+		{
+			sprintf(EZSPACE.REF1, "M");
+			mu = OrbMech::mu_Moon;
+		}
+
+		EZSPACE.WT = sv0.mass * LBS*1000.0;
+
+		int csi_in, csi_out;
+		if (sv.RBI == BODY_EARTH)
+		{
+			csi_in = 0;
+			csi_out = 1;
+			R_E = OrbMech::R_Earth;
+		}
+		else
+		{
+			csi_in = 2;
+			csi_out = 3;
+			R_E = BZLAND.rad[RTCC_LMPOS_BEST];
+		}
+
+		EZSPACE.H1 = EZSPACE.HS = EZSPACE.HO = (length(sv.R) - R_E) / 1852.0;
+		ELVCNV(sv, csi_in, 4, sv_EMP);
+		ELVCNV(sv, csi_in, csi_out, sv_true);
+
+		EMMDYNEL(sv_EMP, newtab);
+		EZSPACE.IEMP = newtab.i*DEG;
+
+		EMMDYNEL(sv_true, newtab);
+		EZSPACE.V1 = newtab.V / 0.3048;
+		EZSPACE.PHI1 = EZSPACE.PHIO = newtab.lat * DEG;
+		EZSPACE.LAM1 = newtab.lng*DEG;
+		EZSPACE.GAM1 = newtab.gamma*DEG;
+		EZSPACE.PSI1 = newtab.azi*DEG;
+		EZSPACE.A1 = newtab.a / 1852.0;
+		EZSPACE.L1 = (newtab.TA + newtab.AoP)*DEG;
+		if (EZSPACE.L1 > 360.0)
+		{
+			EZSPACE.L1 -= 360.0;
+		}
+		EZSPACE.E1 = newtab.e;
+		EZSPACE.I1 = newtab.i*DEG;
+
+		if (newtab.e < 0.85)
+		{
+			SV sv0, sv_a, sv_p;
+			sv0.R = sv.R;
+			sv0.V = sv.V;
+			sv0.MJD = OrbMech::MJDfromGET(sv.GMT, SystemParameters.GMTBASE);
+			sv0.gravref = GetGravref(sv.RBI);
+			PMMAPD(sv0, sv_a, sv_p);
+
+			EZSPACE.GETA = OrbMech::GETfromMJD(sv_a.MJD, CalcGETBase());
+			EZSPACE.HA = (length(sv_a.R) - R_E) / 1852.0;
+			EZSPACE.HP = (length(sv_p.R) - R_E) / 1852.0;
+		}
+		else
+		{
+			double peri, apo;
+			OrbMech::periapo(sv.R, sv.V, mu, apo, peri);
+			EZSPACE.HA = (apo - R_E) / 1852.0;
+			if (EZSPACE.HA > 999999.9)
+			{
+				EZSPACE.HA = 999999.9;
+			}
+			EZSPACE.HP = (peri - R_E) / 1852.0;
+			EZSPACE.GETA = 0.0;
+		}
+	}
+	//Column 2
+	else if (queid == 4)
+	{
+		//Null all values
+		EZSPACE.GETSI = 0.0;
+		EZSPACE.GETCA = 0.0;
+		EZSPACE.VCA = 0.0;
+		EZSPACE.HCA = 0.0;
+		EZSPACE.PCA = 0.0;
+		EZSPACE.LCA = 0.0;
+		EZSPACE.PSICA = 0.0;
+		EZSPACE.GETMN = 0.0;
+		EZSPACE.HMN = 0.0;
+		EZSPACE.PMN = 0.0;
+		EZSPACE.LMN = 0.0;
+		EZSPACE.DMN = 0.0;
+
+		EZSPACE.GETVector2 = GETfromGMT(sv.GMT);
+
+		EMMENIInputTable emsin;
+
+		if (sv.RBI == BODY_EARTH)
+		{
+			//Try to find lunar sphere entry
+			emsin.AnchorVector = sv;
+			emsin.CutoffIndicator = 5;
+			emsin.MaxIntegTime = 10.0*24.0*3600.0;
+
+			EphemerisData sv_SI;
+			EMMENI(emsin);
+			sv_SI = emsin.sv_cutoff;
+			if (emsin.TerminationCode == 5)
+			{
+				EZSPACE.GETSI = GETfromGMT(sv_SI.GMT);
+			}
+		}
+
+		//Try to find perilune
+		emsin.AnchorVector = sv;
+		emsin.CutoffIndicator = 4;
+		emsin.StopParamRefFrame = 1;
+		emsin.MoonRelStopParam = 0.0;
+		emsin.MaxIntegTime = 10.0*24.0*3600.0;
+		EphemerisData sv1;
+		EMMENI(emsin);
+		sv1 = emsin.sv_cutoff;
+		if (emsin.TerminationCode != 4)
+		{
+			return 0;
+		}
+
+		EphemerisData svtempout;
+		TimeConstraintsTable newtab;
+
+		ELVCNV(sv1, 2, 3, svtempout);
+		EMMDYNEL(svtempout, newtab);
+
+		EZSPACE.GETCA = GETfromGMT(sv1.GMT);
+		EZSPACE.VCA = newtab.V / 0.3048;
+		EZSPACE.HCA = newtab.h / 1852.0;
+		EZSPACE.PCA = newtab.lat * DEG;
+		EZSPACE.LCA = newtab.lng * DEG;
+		EZSPACE.PSICA = newtab.azi*DEG;
+	}
+	//Column 3
+	else
+	{
+		//Null all values
+		EZSPACE.GETSE = 0.0;
+		EZSPACE.GETEI = 0.0;
+		EZSPACE.VEI = 0.0;
+		EZSPACE.GEI = 0.0;
+		EZSPACE.PEI = 0.0;
+		EZSPACE.LEI = 0.0;
+		EZSPACE.PSIEI = 0.0;
+		EZSPACE.GETVP = 0.0;
+		EZSPACE.VVP = 0.0;
+		EZSPACE.HVP = 0.0;
+		EZSPACE.PVP = 0.0;
+		EZSPACE.LVP = 0.0;
+		EZSPACE.PSIVP = 0.0;
+		EZSPACE.IE = 0.0;
+		EZSPACE.LN = 0.0;
+
+		EMMENIInputTable emsin;
+		EZSPACE.GETVector3 = GETfromGMT(sv.GMT);
+
+		//Find Moon SOI exit
+		emsin.AnchorVector = sv;
+		emsin.CutoffIndicator = 2;
+		emsin.MoonRelStopParam = 9.0*OrbMech::R_Earth;
+		emsin.StopParamRefFrame = 1;
+		emsin.MaxIntegTime = 10.0*24.0*3600.0;
+		EMMENI(emsin);
+		if (emsin.TerminationCode == 2)
+		{
+			double fpa = dotp(unit(emsin.sv_cutoff.R), unit(emsin.sv_cutoff.V));
+			if (fpa < 0)
+			{
+				//We found an Moon SOI entry
+				//Try to find exit, first 1 hour into the future, then find next passage of SOI
+				emsin.AnchorVector = emsin.sv_cutoff;
+				emsin.CutoffIndicator = 1;
+				emsin.MaxIntegTime = 1.0*3600.0;
+				EMMENI(emsin);
+
+				emsin.AnchorVector = emsin.sv_cutoff;
+				emsin.CutoffIndicator = 2;
+				emsin.MoonRelStopParam = 9.0*OrbMech::R_Earth;
+				emsin.MaxIntegTime = 10.0*24.0*3600.0;
+				EMMENI(emsin);
+			}
+
+			//Did we find the SOI radius?
+			if (emsin.TerminationCode == 2)
+			{
+				EZSPACE.GETSE = GETfromGMT(emsin.sv_cutoff.GMT);
+			}
+		}
+
+		//Find vacuum perigee
+		emsin.AnchorVector = sv;
+		emsin.CutoffIndicator = 4;
+		emsin.StopParamRefFrame = 0;
+		emsin.EarthRelStopParam = 0.0;
+		emsin.MaxIntegTime = 10.0*24.0*3600.0;
+		EMMENI(emsin);
+		if (emsin.TerminationCode != 4)
+		{
+			return 0;
+		}
+
+		if (length(emsin.sv_cutoff.R) > 10.0*OrbMech::R_Earth)
+		{
+			return 0;
+		}
+
+		TimeConstraintsTable newtab;
+		EphemerisData svtempout;
+
+		EZSPACE.GETVP = GETfromGMT(emsin.sv_cutoff.GMT);
+
+		ELVCNV(emsin.sv_cutoff, 0, 1, svtempout);
+		EMMDYNEL(svtempout, newtab);
+
+		EZSPACE.VVP = newtab.V / 0.3048;
+		EZSPACE.HVP = newtab.h / 1852.0;
+		EZSPACE.PVP = newtab.lat * DEG;
+		EZSPACE.LVP = newtab.lng * DEG;
+		EZSPACE.PSIVP = newtab.azi*DEG;
+		EZSPACE.IE = newtab.i*DEG;
+		EZSPACE.LN = newtab.RA*DEG;
+
+		//Have we passed EI?
+		if (length(emsin.sv_cutoff.R) > OrbMech::R_Earth + 400000.0*0.3048)
+		{
+			return 0;
+		}
+
+		//Find EI
+		emsin.AnchorVector = emsin.sv_cutoff;
+		emsin.CutoffIndicator = 3;
+		emsin.StopParamRefFrame = 0;
+		emsin.EarthRelStopParam = 400000.0*0.3048;
+		emsin.MaxIntegTime = 3600.0; //Should be enough
+		emsin.IsForwardIntegration = -1.0;
+		EMMENI(emsin);
+
+		if (emsin.TerminationCode == 3)
+		{
+			EZSPACE.GETEI = GETfromGMT(emsin.sv_cutoff.GMT);
+
+			ELVCNV(emsin.sv_cutoff, 0, 1, svtempout);
+			EMMDYNEL(svtempout, newtab);
+
+			EZSPACE.VEI = newtab.V / 0.3048;
+			EZSPACE.GEI = newtab.gamma*DEG;
+			EZSPACE.PEI = newtab.lat * DEG;
+			EZSPACE.LEI = newtab.lng * DEG;
+			EZSPACE.PSIEI = newtab.azi*DEG;
+		}
+	}
+
+	return 0;
+}
+
 int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnode)
 {
 	//queid:
