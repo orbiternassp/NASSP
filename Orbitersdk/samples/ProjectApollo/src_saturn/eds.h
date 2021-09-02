@@ -272,6 +272,8 @@ public:
 	double GetLVTankPressure(int n);
 	bool GetSIISIVBSepSeqStart() { return SIISIVBSepSeqStart; }
 	bool GetSIIInboardEngineOut();
+	bool GetSIIOutboardEngineOut();
+	bool GetSIIEnginesOut();
 
 	//GSE Reset Buses
 	void ResetBus1();
@@ -302,7 +304,4 @@ protected:
 	bool UllageThrustIndicate;
 
 	bool SIIEDSCutoff;
-
-private:
-	const int SIIEngInd[5] = { 1,3,0,2,4 };
 };

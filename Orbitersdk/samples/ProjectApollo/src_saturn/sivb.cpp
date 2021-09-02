@@ -1803,6 +1803,7 @@ void SIVB::StartSeparationPyros()
 		UINT i;
 		if (GetDockingPortFromHandle(hDock, i))
 		{
+			Undock(i);
 			DelDock(hDock);
 			hDock = NULL;
 		}

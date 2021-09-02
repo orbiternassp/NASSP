@@ -96,11 +96,6 @@ void LVDA::ZeroLVIMUPIPACounters()
 	iu->GetLVIMU()->ZeroPIPACounters();
 }
 
-double LVDA::GetLVIMULastTime()
-{
-	return iu->GetLVIMU()->GetLastTime();
-}
-
 void LVDA::ZeroLVIMUCDUs()
 {
 	iu->GetLVIMU()->ZeroIMUCDUFlag = true;
@@ -141,9 +136,14 @@ bool LVDA::GetSIIInboardEngineOut()
 	return iu->GetSIIInboardEngineOut();
 }
 
-bool LVDA::GetSIIEngineOut()
+bool LVDA::GetSIIOutboardEngineOut()
 {
-	return iu->GetSIIEngineOut();
+	return iu->GetSIIOutboardEngineOut();
+}
+
+bool LVDA::GetSIIEnginesOut()
+{
+	return iu->GetSIIEnginesOut();
 }
 
 bool LVDA::GetCMCSIVBIgnitionSequenceStart()

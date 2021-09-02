@@ -1707,18 +1707,7 @@ bool ASTVectorTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_ASTVectorTime(double get)
 {
-	if (G->RTEASTType == 75)
-	{
-		GC->rtcc->med_f75.T_V = get;
-	}
-	else if (G->RTEASTType == 76)
-	{
-		GC->rtcc->med_f76.T_V = get;
-	}
-	else
-	{
-		GC->rtcc->med_f77.T_V = get;
-	}
+	GC->rtcc->med_f75_f77.T_V = get;
 }
 
 void ApolloRTCCMFD::menuASTAbortTime()
@@ -1742,18 +1731,7 @@ bool ASTAbortTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_ASTAbortTime(double get)
 {
-	if (G->RTEASTType == 75)
-	{
-		GC->rtcc->med_f75.T_0 = get;
-	}
-	else if (G->RTEASTType == 76)
-	{
-		GC->rtcc->med_f76.T_0 = get;
-	}
-	else
-	{
-		GC->rtcc->med_f77.T_min = get;
-	}
+	GC->rtcc->med_f75_f77.T_0_min = get;
 }
 
 void ApolloRTCCMFD::menuASTTMAXandDVInput()
@@ -1802,13 +1780,9 @@ bool ASTLandingTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_ASTLandingTime(double get)
 {
-	if (G->RTEASTType == 76)
+	if (G->RTEASTType == 76 || G->RTEASTType == 77)
 	{
-		GC->rtcc->med_f76.T_Z = get;
-	}
-	else if (G->RTEASTType == 77)
-	{
-		GC->rtcc->med_f77.T_Z = get;
+		GC->rtcc->med_f75_f77.T_Z = get;
 	}
 }
 
@@ -1826,18 +1800,7 @@ bool ASTEntryProfileInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_ASTEntryProfile(char *str)
 {
-	if (G->RTEASTType == 75)
-	{
-		GC->rtcc->med_f75.EntryProfile.assign(str);
-	}
-	else if (G->RTEASTType == 76)
-	{
-		GC->rtcc->med_f76.EntryProfile.assign(str);
-	}
-	else
-	{
-		GC->rtcc->med_f77.EntryProfile.assign(str);
-	}
+	GC->rtcc->med_f75_f77.EntryProfile.assign(str);
 }
 
 void ApolloRTCCMFD::menuASTCalc()
@@ -2842,18 +2805,7 @@ bool EntryDesiredInclinationInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_EntryDesiredInclination(double inc)
 {
-	if (G->RTEASTType == 75)
-	{
-		GC->rtcc->med_f75.Inclination = inc * RAD;
-	}
-	else if (G->RTEASTType == 75)
-	{
-		GC->rtcc->med_f76.Inclination = inc * RAD;
-	}
-	else
-	{
-		GC->rtcc->med_f77.Inclination = inc * RAD;
-	}
+	GC->rtcc->med_f75_f77.Inclination = inc * RAD;
 }
 
 void ApolloRTCCMFD::menuSetRTEConstraintF86()

@@ -4719,7 +4719,7 @@ void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double 
 	else
 	{
 		gamma = 1;
-		r_0 = OrbMech::R_Moon;
+		r_0 = BZLAND.rad[RTCC_LMPOS_BEST];
 		Rot2 = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
 	}
 
@@ -7303,7 +7303,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		EZEPH1.EPHEM.Header.TUP--;
 		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9].Vector, EZANCHR1.AnchorVectors[9].LandingSiteIndicator, PZMPTCSM.StationID);
 	}
-	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0)
+	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0 || EZANCHR3.AnchorVectors[9].LandingSiteIndicator)
 	{
 		EZEPH2.EPHEM.Header.TUP--;
 		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9].Vector, EZANCHR3.AnchorVectors[9].LandingSiteIndicator, PZMPTLEM.StationID);
@@ -13017,12 +13017,12 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("PROCESSING TERMINATED");
 		break;
 	case 85:
-		message.push_back("TARGET PARAMETERS UNAVAILABLE FOR SPECIFIED LAUNCH DAY -");
-		message.push_back("PROCESSING TERMINATED");
+		message.push_back("TARGET PARAMETERS UNAVAILABLE FOR");
+		message.push_back("SPECIFIED LAUNCH DAY - PROCESSING TERMINATED");
 		break;
 	case 86:
-		message.push_back("TARGET PARAMETERS UNAVAILABLE FOR SPECIFIED INJECTION");
-		message.push_back("OPPORTUNITY - PROCESSING TERMINATED");
+		message.push_back("TARGET PARAMETERS UNAVAILABLE FOR");
+		message.push_back("SPECIFIED INJECTION OPPORTUNITY - PROCESSING TERMINATED");
 		break;
 	case 92:
 		message.push_back("CONSTRAINT " + RTCCONLINEMON.TextBuffer[0] + " VIOLATED IN");
@@ -18034,6 +18034,7 @@ RTCC_PMSVCT_8:
 					if (err = PMMSPT(intab2))
 					{
 						PMXSPT("PMMSPT", err);
+						EMSNAP(L, 2);
 						return;
 					}
 				}
@@ -18059,6 +18060,7 @@ RTCC_PMSVCT_12:
 	return;
 RTCC_PMSVCT_14:
 	//TBD
+	EMSNAP(L, 2);
 	return;
 RTCC_PMSVCT_15:
 	//Trajectory update
@@ -18119,6 +18121,7 @@ RTCC_PMSVCT_15:
 				RTCCONLINEMON.TextBuffer[0] = "LEM";
 			}
 			PMXSPT("PMSVCT", 33);
+			EMSNAP(L, 2);
 			return;
 		}
 	}
@@ -22997,18 +23000,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	std::string EntryProfile;
 	int EPI;
 
-	if (med == 75)
-	{
-		EntryProfile = med_f75.EntryProfile;
-	}
-	else if (med == 76)
-	{
-		EntryProfile = med_f76.EntryProfile;
-	}
-	else
-	{
-		EntryProfile = med_f77.EntryProfile;
-	}
+	EntryProfile = med_f75_f77.EntryProfile;
 
 	if (PZREAP.TGTLN == 1)
 	{
@@ -23065,7 +23057,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 				sprintf_s(typname, "ATP");
 			}
 			
-			TZMINI = med_f77.T_Z;
+			TZMINI = PZREAP.RTETimeOfLanding*3600.0;
 		}
 
 		RTEEarth rte(this, sv_abort, GetGMTBase(), PZREAP.RTET0Min*3600.0, TZMINI, critical);
@@ -23113,6 +23105,8 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		int SMODE;
 		double Inclination, TZMINI, TZMAXI;
 
+		Inclination = med_f75_f77.Inclination;
+
 		if (med == 75)
 		{
 			if (med_f75.Type == "FCUA")
@@ -23124,9 +23118,13 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			{
 				return;
 			}
-			Inclination = med_f75.Inclination;
+			
 			TZMINI = PZREAP.TZMIN*3600.0;
 			TZMAXI = PZREAP.TZMAX*3600.0;
+
+			//Convert to GMT
+			TZMINI = GMTfromGET(TZMINI);
+			TZMAXI = GMTfromGET(TZMAXI);
 		}
 		else if (med == 76)
 		{
@@ -23139,8 +23137,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			{
 				sprintf_s(typname, "ATP");
 			}
-			Inclination = med_f76.Inclination;
-			TZMINI = med_f76.T_Z;
+			TZMINI = PZREAP.RTETimeOfLanding*3600.0;
 			TZMAXI = 0.0;
 		}
 		else
@@ -23151,6 +23148,10 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 				sprintf_s(typname, "FCUA");
 				TZMINI = PZREAP.TZMIN*3600.0;
 				TZMAXI = PZREAP.TZMAX*3600.0;
+
+				//Convert to GMT
+				TZMINI = GMTfromGET(TZMINI);
+				TZMAXI = GMTfromGET(TZMAXI);
 			}
 			else
 			{
@@ -23163,10 +23164,9 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 				{
 					sprintf_s(typname, "ATP");
 				}
-				TZMINI = med_f77.T_Z;
+				TZMINI = PZREAP.RTETimeOfLanding*3600.0;
 				TZMAXI = 0.0;
 			}
-			Inclination = med_f77.Inclination;
 		}
 
 		EphemerisData2 sv_abort2;
@@ -23194,10 +23194,6 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 			}
 			rte.ATP(LINE);
 		}
-
-		//Convert to GMT
-		TZMINI = GMTfromGET(TZMINI);
-		TZMAXI = GMTfromGET(TZMAXI);
 
 		rte.READ(SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, EPI, 0.3, PZREAP.DVMAX, 0.0, Inclination, 1.0*1852.0, TZMINI, TZMAXI);
 		if (rte.MASTER() == false)
@@ -26117,8 +26113,8 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 			return 2;
 		}
 
-		PZREAP.RTEVectorTime = GMTfromGET(med_f75.T_V) / 3600.0;
-		PZREAP.RTET0Min = GMTfromGET(med_f75.T_0) / 3600.0;
+		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
+		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
 
 		if (PZREAP.TGTLN == 1)
 		{
@@ -26126,7 +26122,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		}
 		else
 		{
-			if (med_f75.EntryProfile == "HB1")
+			if (med_f75_f77.EntryProfile == "HB1")
 			{
 				PZREAP.EntryProfile = 1;
 			}
@@ -26150,15 +26146,16 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 
 		//Check vector time
 		//TBD: T_V greater than present time
-		PZREAP.RTEVectorTime = GMTfromGET(med_f76.T_V) / 3600.0;
-		PZREAP.RTET0Min = GMTfromGET(med_f76.T_0) / 3600.0;
+		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
+		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
+		PZREAP.RTETimeOfLanding = GMTfromGET(med_f75_f77.T_Z) / 3600.0;
 		if (PZREAP.TGTLN == 1)
 		{
 			PZREAP.EntryProfile = 2;
 		}
 		else
 		{
-			if (med_f76.EntryProfile == "HB1")
+			if (med_f75_f77.EntryProfile == "HB1")
 			{
 				PZREAP.EntryProfile = 1;
 			}
@@ -26186,15 +26183,16 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 
 		//Check vector time
 		//TBD: T_V greater than present time
-		PZREAP.RTEVectorTime = GMTfromGET(med_f77.T_V) / 3600.0;
-		PZREAP.RTET0Min = GMTfromGET(med_f77.T_min) / 3600.0;
+		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
+		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
+		PZREAP.RTETimeOfLanding = GMTfromGET(med_f75_f77.T_Z) / 3600.0;
 		if (PZREAP.TGTLN == 1)
 		{
 			PZREAP.EntryProfile = 2;
 		}
 		else
 		{
-			if (med_f77.EntryProfile == "HB1")
+			if (med_f75_f77.EntryProfile == "HB1")
 			{
 				PZREAP.EntryProfile = 1;
 			}
