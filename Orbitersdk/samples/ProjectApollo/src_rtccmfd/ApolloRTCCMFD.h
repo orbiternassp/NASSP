@@ -156,7 +156,6 @@ public:
 	void LoadSplashdownTargetToRTEDManualInput();
 	void menuDeorbitCalc();
 	void menuCycleRetrofireType();
-	void menuMoonRTECalc();
 	void menuTransferRTEToMPT();
 	bool set_RTESolution(char *str);
 	void menuGeneralMEDRequest();
@@ -478,6 +477,7 @@ public:
 	void menuSetSpaceDigitalsPage();
 	void menuSpaceDigitalsInit();
 	void menuGenerateSpaceDigitals();
+	void set_SpaceDigitalsNoMPT(int opt, double get);
 	void menuSetMPTPage();
 	void menuMPTCycleActive();
 	void menuMPTDeleteManeuver();

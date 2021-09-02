@@ -847,6 +847,9 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	NodeConvGET = 0.0;
 	NodeConvResLat = 0.0;
 	NodeConvResLng = 0.0;
+
+	SpaceDigitalsOption = 1;
+	SpaceDigitalsGET = 0.0;
 }
 
 ARCore::~ARCore()
@@ -960,11 +963,6 @@ void ARCore::DeorbitCalc()
 	startSubthread(17);
 }
 
-void ARCore::MoonRTECalc()
-{
-	startSubthread(11);
-}
-
 void ARCore::SPQcalc()
 {
 	startSubthread(2);
@@ -1074,6 +1072,11 @@ void ARCore::SpaceDigitalsMSKRequest()
 	{
 		startSubthread(30);
 	}
+}
+
+void ARCore::GenerateSpaceDigitalsNoMPT()
+{
+	startSubthread(11);
 }
 
 void ARCore::CycleNextStationContactsDisplay()
@@ -3179,8 +3182,11 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 11: //Spare
+	case 11: //Space Digitals without MPT
 	{
+		SV sv0 = GC->rtcc->StateVectorCalc(vessel);
+		GC->rtcc->EMDSPACENoMPT(sv0, SpaceDigitalsOption + 2, GC->rtcc->GMTfromGET(SpaceDigitalsGET));
+
 		Result = 0;
 	}
 	break;

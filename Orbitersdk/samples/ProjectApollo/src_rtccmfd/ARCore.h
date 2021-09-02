@@ -61,7 +61,6 @@ public:
 	void LunarLiftoffCalc();
 	void LOICalc();
 	void LmkCalc();
-	void MoonRTECalc();
 	void EntryCalc();
 	void DeorbitCalc();
 	void TLCCCalc();
@@ -140,6 +139,7 @@ public:
 	void GetStateVectorsFromAGS();
 	void VectorCompareDisplayCalc();
 	void UpdateTLITargetTable();
+	void GenerateSpaceDigitalsNoMPT();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -381,6 +381,10 @@ public:
 	double NodeConvHeight;
 	double NodeConvResLat;
 	double NodeConvResLng;
+
+	//SPACE DIGITALS
+	int SpaceDigitalsOption;
+	double SpaceDigitalsGET;
 
 private:
 
