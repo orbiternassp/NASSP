@@ -1015,6 +1015,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 //sprintf(oapiDebugString(), "InPress: %lf OutPress %lf HoseFlow: %lf CSMCO2 %lf LMCO2: %lf", (csmO2hose->in->parent->space.Press)*PSI, (csmO2hose->out->parent->space.Press)* PSI, (csmO2hose->flow)*LBH, (csmO2hose->in->parent->space.composition[SUBSTANCE_CO2].p_press)* MMHG, (csmO2hose->out->parent->space.composition[SUBSTANCE_CO2].p_press)* MMHG);
 
+//CM RCS Valve Debug Lines
+
+	double *ROLLJET12 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12:TEMP");
+	double *PITCHJET14 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14:TEMP");
+	double *YAWJET16 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16:TEMP");
+
+	sprintf(oapiDebugString(), "12 %.3f 14 %.3f 16 %.3f", (KelvinToFahrenheit(*ROLLJET12), KelvinToFahrenheit(*PITCHJET14), KelvinToFahrenheit(*YAWJET16)));
+
 #ifdef _DEBUG
 
 		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",
