@@ -2292,7 +2292,7 @@ void Saturn::JoystickTimestep()
 	}
 
 	//
-	// CM RCS propellant dump 
+	// CM RCS propellant dump & heaters
 	//
 	
 	// Manual control
