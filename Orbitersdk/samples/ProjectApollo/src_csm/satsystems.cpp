@@ -2283,21 +2283,33 @@ void Saturn::JoystickTimestep()
 	//
 	
 	// Manual control
-	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayA() && secs.rcsc.GetPropellantDumpInhibitA() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetCMRCSDumpA() || secs.rcsc.GetCMRCSHeatersA())
+	{
 		SetCMRCSState(2, true);	
 		SetCMRCSState(4, true);	
 		SetCMRCSState(7, true);	
 		SetCMRCSState(8, true);	
 		SetCMRCSState(11, true);	
 	}
+
+	if (secs.rcsc.GetCMRCSHeatersA())
+	{
+		SetCMRCSState(0, true);
+	}
 		
 	// Manual control
-	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayB() && secs.rcsc.GetPropellantDumpInhibitB() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetCMRCSDumpB() || secs.rcsc.GetCMRCSHeatersB())
+	{
 		SetCMRCSState(3, true);	
 		SetCMRCSState(5, true);	
 		SetCMRCSState(6, true);	
 		SetCMRCSState(9, true);	
 		SetCMRCSState(10, true);	
+	}
+
+	if (secs.rcsc.GetCMRCSHeatersB())
+	{
+		SetCMRCSState(1, true);
 	}
 }
 
