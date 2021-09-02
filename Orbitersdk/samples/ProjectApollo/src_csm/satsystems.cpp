@@ -1018,10 +1018,15 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //CM RCS Valve Debug Lines
 
 	double *ROLLJET12 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12:TEMP");
+	double* ROLLJET21 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12:TEMP");
 	double *PITCHJET14 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14:TEMP");
+	double* PITCHJET24 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14:TEMP");
 	double *YAWJET16 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16:TEMP");
+	double* YAWJET25 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16:TEMP");
 
-	sprintf(oapiDebugString(), "12 %.3f 14 %.3f 16 %.3f", (KelvinToFahrenheit(*ROLLJET12), KelvinToFahrenheit(*PITCHJET14), KelvinToFahrenheit(*YAWJET16)));
+	sprintf(oapiDebugString(), "12 %.3f 21 %.3f 14 %.3f 24 %.3f 16 %.3f 25 %.3f", KelvinToFahrenheit(*ROLLJET12), KelvinToFahrenheit(*ROLLJET21),
+		KelvinToFahrenheit(*PITCHJET14), KelvinToFahrenheit(*PITCHJET24),
+		KelvinToFahrenheit(*YAWJET16), KelvinToFahrenheit(*YAWJET25));
 
 #ifdef _DEBUG
 
