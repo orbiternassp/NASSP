@@ -549,6 +549,19 @@ void Saturn::SystemsInit() {
 	CMRCSProp1Talkback.WireTo(&SMHeatersBMnACircuitBraker);
 	CMRCSProp2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
 
+	CMRCSHeat[0] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH13COIL");
+	CMRCSHeat[1] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH23COIL");
+	CMRCSHeat[2] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH14COIL");
+	CMRCSHeat[3] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH24COIL");
+	CMRCSHeat[4] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAW15COIL");
+	CMRCSHeat[5] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAW25COIL");
+	CMRCSHeat[6] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAW26COIL");
+	CMRCSHeat[7] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAW16COIL");
+	CMRCSHeat[8] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL11COIL");
+	CMRCSHeat[9] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL21COIL");
+	CMRCSHeat[10] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL22COIL");
+	CMRCSHeat[11] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL12COIL");
+
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
 	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
 
@@ -2324,11 +2337,12 @@ void Saturn::JoystickTimestep()
 		RCSLogicMnBCircuitBraker.DrawPower(262.5);
 	}
 
+	//Code for generating heat in the CM RCS thrusters. Is this the best place for this?
 	for (int i = 0;i < 12;i++)
 	{
 		if (th_att_cm_commanded[i])
 		{
-			//TBD: Put heat into thruster
+			CMRCSHeat[i]->GenerateHeat(52.5);
 		}
 	}
 }
