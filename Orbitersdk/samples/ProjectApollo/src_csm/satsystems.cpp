@@ -2283,33 +2283,53 @@ void Saturn::JoystickTimestep()
 	//
 	
 	// Manual control
-	if (secs.rcsc.GetCMRCSDumpA() || secs.rcsc.GetCMRCSHeatersA())
+	if (secs.rcsc.GetCMRCSHeatersA())
+	{
+		SetCMRCSState(0, true);
+		SetCMRCSState(2, true);
+		SetCMRCSState(4, true);
+		SetCMRCSState(7, true);
+		SetCMRCSState(8, true);
+		SetCMRCSState(11, true);
+		CMHeater1MnACircuitBraker.DrawPower(315.0);
+	}
+	else if (secs.rcsc.GetCMRCSDumpA())
 	{
 		SetCMRCSState(2, true);	
 		SetCMRCSState(4, true);	
 		SetCMRCSState(7, true);	
 		SetCMRCSState(8, true);	
-		SetCMRCSState(11, true);	
-	}
-
-	if (secs.rcsc.GetCMRCSHeatersA())
-	{
-		SetCMRCSState(0, true);
+		SetCMRCSState(11, true);
+		RCSLogicMnACircuitBraker.DrawPower(262.5);
 	}
 		
 	// Manual control
-	if (secs.rcsc.GetCMRCSDumpB() || secs.rcsc.GetCMRCSHeatersB())
+	if (secs.rcsc.GetCMRCSHeatersB())
+	{
+		SetCMRCSState(1, true);
+		SetCMRCSState(3, true);
+		SetCMRCSState(5, true);
+		SetCMRCSState(6, true);
+		SetCMRCSState(9, true);
+		SetCMRCSState(10, true);
+		CMHeater2MnBCircuitBraker.DrawPower(315.0);
+	}
+	else if (secs.rcsc.GetCMRCSDumpB())
 	{
 		SetCMRCSState(3, true);	
 		SetCMRCSState(5, true);	
 		SetCMRCSState(6, true);	
 		SetCMRCSState(9, true);	
-		SetCMRCSState(10, true);	
+		SetCMRCSState(10, true);
+		RCSLogicMnBCircuitBraker.DrawPower(262.5);
 	}
 
-	if (secs.rcsc.GetCMRCSHeatersB())
+	for (int i = 0;i < 12;i++)
 	{
-		SetCMRCSState(1, true);
+		if (th_att_cm_commanded[i])
+		{
+			//TBD: Put heat into thruster
+		}
 	}
 }
 
