@@ -29,6 +29,8 @@
 #include "inttypes.h"
 #include <stdio.h>
 #include <math.h>
+#include <thread>
+#include <mutex>
 #include "soundlib.h"
 
 #include "yaAGC/agc_engine.h"
@@ -44,7 +46,7 @@
 
 #include "tracer.h"
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc), agcCycleMutex()
 
 {
 	Reset = false;
@@ -288,7 +290,7 @@ void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses)
 	if (pulses == 0 ) 
 		return;
 
-	Lock lock(agcCycleMutex);
+	std::lock_guard<std::mutex> guard(agcCycleMutex);
 
 
 	if (pulses >= 0) {

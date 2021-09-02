@@ -56,7 +56,6 @@ public:
 	void SetFCCAttitudeError(VECTOR3 atterr);
 	VECTOR3 GetLVIMUAttitude();
 	void ZeroLVIMUPIPACounters();
-	double GetLVIMULastTime();
 	void ZeroLVIMUCDUs();
 	void ReleaseLVIMUCDUs();
 	void ReleaseLVIMU();
@@ -88,8 +87,9 @@ public:
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
 	bool GetSICInboardEngineCutoff();
-	bool GetSIIInboardEngineOut();
-	bool GetSIIEngineOut();
+	bool GetSIIInboardEngineOut();	//DIN 13
+	bool GetSIIOutboardEngineOut();	//DIN 14
+	bool GetSIIEnginesOut();		//DIN 19
 	bool GetCMCSIVBIgnitionSequenceStart();
 	bool GetCMCSIVBCutoff();
 	bool GetCMCSIVBTakeover();

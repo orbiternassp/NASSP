@@ -2767,8 +2767,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
 	{
-		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm);
-		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm);
+		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm*exp(-simdt*10));
+		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*exp(-simdt*10));
 	}
 	else
 	{

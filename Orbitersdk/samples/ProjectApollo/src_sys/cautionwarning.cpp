@@ -58,7 +58,6 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	MasterAlarmPressed = false;
 	InhibitNextMasterAlarm = false;
 	PlaySounds = true;
-	UplinkTestState = 0;
 
 	for (int i = 0; i < 30; i++) {
 		LeftLights[i] = false;
@@ -203,8 +202,7 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 	if (LightsPowered() && (
 	       (MasterAlarmLit && (MasterAlarmLightEnabled || position != CWS_MASTERALARMPOSITION_LEFT)) || 
 	       (TestState == CWS_TEST_LIGHTS_LEFT && position == CWS_MASTERALARMPOSITION_LEFT && MasterAlarmLightEnabled) ||
-	       (TestState == CWS_TEST_LIGHTS_RIGHT && position == CWS_MASTERALARMPOSITION_RIGHT) ||
-		   ((UplinkTestState&(int)position) != 0)
+	       (TestState == CWS_TEST_LIGHTS_RIGHT && position == CWS_MASTERALARMPOSITION_RIGHT)
 	   )) {
 		//
 		// Draw the master alarm lit bitmap.

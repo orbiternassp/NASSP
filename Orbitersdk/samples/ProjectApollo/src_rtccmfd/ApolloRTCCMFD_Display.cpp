@@ -8779,78 +8779,48 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		//4: Entry Profile
 		//6: Miss Distance (F76 and F77, PTP only)
 		//8: Inclination (F77)
+
+		if (GC->MissionPlanningActive)
+		{
+			GET_Display(Buffer, GC->rtcc->med_f75_f77.T_V, false);
+			skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		GET_Display(Buffer, GC->rtcc->med_f75_f77.T_0_min, false);
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%s", GC->rtcc->med_f75_f77.EntryProfile.c_str());
+		skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.2lf°", GC->rtcc->med_f75_f77.Inclination*DEG);
+		skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		
 		if (G->RTEASTType == 75)
 		{
 			sprintf_s(Buffer, "%s", GC->rtcc->med_f75.Type.c_str());
 			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-			if (GC->MissionPlanningActive)
-			{
-				GET_Display(Buffer, GC->rtcc->med_f75.T_V, false);
-				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-			}
-
-			GET_Display(Buffer, GC->rtcc->med_f75.T_0, false);
-			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
-
 			sprintf_s(Buffer, "%.0lf ft/s", GC->rtcc->med_f75.DVMAX);
 			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf_s(Buffer, "%s", GC->rtcc->med_f75.EntryProfile.c_str());
-			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf_s(Buffer, "%.2lf°", GC->rtcc->med_f75.Inclination*DEG);
-			skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (G->RTEASTType == 76)
 		{
 			sprintf_s(Buffer, "%s", GC->rtcc->med_f76.Site.c_str());
 			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-			if (GC->MissionPlanningActive)
-			{
-				GET_Display(Buffer, GC->rtcc->med_f76.T_V, false);
-				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-			}
-
-			GET_Display(Buffer, GC->rtcc->med_f76.T_0, false);
-			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
-
-			GET_Display(Buffer, GC->rtcc->med_f76.T_Z, false);
+			GET_Display(Buffer, GC->rtcc->med_f75_f77.T_Z, false);
 			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf_s(Buffer, "%s", GC->rtcc->med_f76.EntryProfile.c_str());
-			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf_s(Buffer, "%.2lf°", GC->rtcc->med_f76.Inclination*DEG);
-			skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
 			sprintf_s(Buffer, "%s", GC->rtcc->med_f77.Site.c_str());
 			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-			if (GC->MissionPlanningActive)
-			{
-				GET_Display(Buffer, GC->rtcc->med_f77.T_V, false);
-				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-			}
-
-			GET_Display(Buffer, GC->rtcc->med_f77.T_min, false);
-			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
-
 			if (GC->rtcc->med_f77.Site != "FCUA")
 			{
-				GET_Display(Buffer, GC->rtcc->med_f77.T_Z, false);
+				GET_Display(Buffer, GC->rtcc->med_f75_f77.T_Z, false);
 				skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 			}
-
-			sprintf_s(Buffer, "%s", GC->rtcc->med_f77.EntryProfile.c_str());
-			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf_s(Buffer, "%.2lf°", GC->rtcc->med_f77.Inclination*DEG);
-			skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 108)
