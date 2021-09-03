@@ -5463,12 +5463,12 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 
 unsigned char RNDZXPDRSystem::GetScaledRFPower()
 {
-	const double min_value = -122.0;
-	const double max_value = -18.0;
+	const double min_value = 0;
+	const double max_value = 0.250;
 	
-	if(XPDRon && (haslock == LOCKED))
+	if(XPDRon)
 	{ 
-		return static_cast<unsigned char>(((RCVDPowerdB - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>(((XMITpower - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
 	}
 	else
 	{
@@ -5534,7 +5534,7 @@ double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
 
 void RNDZXPDRSystem::SendRF()
 {
-	if (XPDRon && (haslock == LOCKED))//act like a transponder
+	if (XPDRon && !XPDRtest && (haslock == LOCKED))//act like a transponder
 	{
 		sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq*(240.0 / 241.0), XMITpower, RNDZXPDRGain, 0.0);
 	}
@@ -5596,7 +5596,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		}
 		else if ((HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP) && (TestOperateSwitch->GetState() == TOGGLESWITCH_UP))
 		{
-			XPDRon = false;
+			XPDRon = true;
 			XPDRheaterOn = true;
 			XPDRtest = true;
 		}
@@ -5684,6 +5684,13 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		{
 			haslock = UNLOCKED;
 			lockTimer = 0.0;
+		}
+
+		if (XPDRtest)
+		{
+			haslock = LOCKED;
+			lockTimer = 0.0;
+			RCVDPowerdB = -103; //simulated 200nm range for self-test
 		}
 
 		//sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);
