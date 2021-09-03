@@ -3589,7 +3589,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 43)
 	{
-		G->CycleSpaceDigitals();
+		if (GC->MissionPlanningActive)
+		{
+			G->CycleSpaceDigitals();
+		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
@@ -3678,6 +3681,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		sprintf_s(Buffer, "%s", GC->rtcc->EZSPACE.errormessage.c_str());
 		skp->Text(14 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%s", GC->rtcc->EZSPACE.VecID);
+		skp->Text(5 * W / 32, 2 * H / 28, Buffer, strlen(Buffer));
 
 		GET_Display(Buffer, GC->rtcc->EZSPACE.GMTV, false);
 		skp->Text(4 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
