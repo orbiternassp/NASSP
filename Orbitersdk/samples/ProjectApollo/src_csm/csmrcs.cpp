@@ -555,7 +555,7 @@ void CMRCSPropellantSource::SetPurgeLevel(bool on, double simdt) {
 
 double CMRCSPropellantSource::GetInjectorTempF(int j) 
 {
-	for (int j = 0; j < 6; j++) {
+	for (int j = 0; j < 3; j++) {
 		if (j = 0) {
 			return KelvinToFahrenheit(pitchJet->GetTemp());
 		}
