@@ -553,19 +553,23 @@ void CMRCSPropellantSource::SetPurgeLevel(bool on, double simdt) {
 	}
 }
 
-double CMRCSPropellantSource::GetInjectorTempF(int j) 
+double CMRCSPropellantSource::GetInjectorTempF(int j)
 {
-	for (int j = 0; j < 3; j++) {
-		if (j = 0) {
+	switch(j)
+	{
+		case 0:
 			return KelvinToFahrenheit(pitchJet->GetTemp());
-		}
-		if (j = 1) {
+			break;
+
+		case 1:
 			return KelvinToFahrenheit(yawJet->GetTemp());
-		}
-		if (j = 2) {
+			break;
+
+		case 2:
 			return KelvinToFahrenheit(rollJet->GetTemp());
-		}
-		else
+			break;
+
+		default:
 			return -100.0;
 	}
 }
