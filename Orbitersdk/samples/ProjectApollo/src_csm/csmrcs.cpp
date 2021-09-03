@@ -338,7 +338,7 @@ CMRCSPropellantSource::~CMRCSPropellantSource() {
 	// Nothing for now.
 }
 
-void CMRCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *t, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp, e_object *isol) {
+void CMRCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *t, h_Radiator *MPR, h_Radiator *PY, h_Radiator *CCW, h_Radiator *MPL, h_Radiator *MY, h_Radiator *CW, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp, e_object *isol) {
 
 	thrusters = th;
 	heliumTank = t;
@@ -346,6 +346,12 @@ void CMRCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *t, CMRCSPropel
 	purgePower = pp;
 	purgePyroPower = ppp;
 	isolPower = isol;
+	MinusPitchRight = MPR;
+	PlusYaw = PY;
+	CCWRoll = CCW;
+	MinusPitchLeft = MPL;
+	MinusYaw = MY;
+	CWRoll = CW;
 }
 
 void CMRCSPropellantSource::Timestep(double simt, double simdt) {
@@ -547,6 +553,11 @@ void CMRCSPropellantSource::SetPurgeLevel(bool on, double simdt) {
 			purgeLevel[i] = 0;
 		}
 	}
+}
+
+double CMRCSPropellantSource::GetInjectorTempF() 
+{
+	return 0;
 }
 
 double CMRCSPropellantSource::GetHeliumTempF() {
