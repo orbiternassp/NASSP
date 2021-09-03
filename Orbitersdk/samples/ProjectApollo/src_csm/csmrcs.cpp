@@ -338,7 +338,7 @@ CMRCSPropellantSource::~CMRCSPropellantSource() {
 	// Nothing for now.
 }
 
-void CMRCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *t, h_Radiator *MPR, h_Radiator *PY, h_Radiator *CCW, h_Radiator *MPL, h_Radiator *MY, h_Radiator *CW, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp, e_object *isol) {
+void CMRCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *t, h_Radiator* p, h_Radiator* y, h_Radiator* r, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp, e_object *isol) {
 
 	thrusters = th;
 	heliumTank = t;
@@ -346,12 +346,10 @@ void CMRCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *t, h_Radiator 
 	purgePower = pp;
 	purgePyroPower = ppp;
 	isolPower = isol;
-	MinusPitchRight = MPR;
-	PlusYaw = PY;
-	CCWRoll = CCW;
-	MinusPitchLeft = MPL;
-	MinusYaw = MY;
-	CWRoll = CW;
+	pitchJet = p;
+	yawJet = y;
+	rollJet = r;
+
 }
 
 void CMRCSPropellantSource::Timestep(double simt, double simdt) {
@@ -555,9 +553,21 @@ void CMRCSPropellantSource::SetPurgeLevel(bool on, double simdt) {
 	}
 }
 
-double CMRCSPropellantSource::GetInjectorTempF() 
+double CMRCSPropellantSource::GetInjectorTempF(int j) 
 {
-	return 0;
+	for (int j = 0; j < 6; j++) {
+		if (j = 0) {
+			return KelvinToFahrenheit(pitchJet->GetTemp());
+		}
+		if (j = 1) {
+			return KelvinToFahrenheit(yawJet->GetTemp());
+		}
+		if (j = 2) {
+			return KelvinToFahrenheit(rollJet->GetTemp());
+		}
+		else
+			return -100.0;
+	}
 }
 
 double CMRCSPropellantSource::GetHeliumTempF() {

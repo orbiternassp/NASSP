@@ -541,19 +541,13 @@ void Saturn::SystemsInit() {
 
 	// CM RCS initialization
 	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"),
-		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24"),
-		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25"),
-		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12"),
 		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14"),
 		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16"),
-		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
+		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
 
 	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"),
 		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24"),
 		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25"),
-		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12"),
-		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14"),
-		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16"),
 		(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21"), NULL, &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
 
 	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBraker);
