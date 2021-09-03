@@ -1323,10 +1323,10 @@ double SaturnSystemTestAttenuator::GetValue()
 			val = Sat->pcm.measure(10, TLM_A, 120);
 			break;
 		case 2:	//TEMP -P ENG INJECTOR SYS 2
-			val = Sat->CMRCS2.GetInjectorTempF(0) + 50.0 / 20.0;	//Scaled -50F = 0V & 50F = 5V
+			val = (Sat->CMRCS2.GetInjectorTempF(0) + 50.0) / 20.0;	//Scaled -50F = 0V & 50F = 5V
 			break;
 		case 3:	//TEMP +Y ENG INJECTOR SYS 2
-			val = Sat->CMRCS2.GetInjectorTempF(1) + 50.0 / 20.0;	//Scaled -50F = 0V & 50F = 5V
+			val = (Sat->CMRCS2.GetInjectorTempF(1) + 50.0) / 20.0;	//Scaled -50F = 0V & 50F = 5V
 			break;
 		}
 		break;
@@ -1334,16 +1334,16 @@ double SaturnSystemTestAttenuator::GetValue()
 		switch (right)
 		{
 		case 0:	//TEMP CCW ENG INJECTOR SYS 1
-			val = Sat->CMRCS1.GetInjectorTempF(2) + 50.0 / 20.0;	//Scaled -50F = 0V & 50F = 5V
+			val = (Sat->CMRCS1.GetInjectorTempF(2) + 50.0) / 20.0;	//Scaled -50F = 0V & 50F = 5V
 			break;
 		case 1:	//TEMP -P ENG INJECTOR SYS 1
-			val = Sat->CMRCS1.GetInjectorTempF(0) + 50.0 / 20.0;	//Scaled -50F = 0V & 50F = 5V
+			val = (Sat->CMRCS1.GetInjectorTempF(0) + 50.0) / 20.0;	//Scaled -50F = 0V & 50F = 5V
 			break;
 		case 2:	//TEMP -Y ENG INJECTOR SYS 1
-			val = Sat->CMRCS1.GetInjectorTempF(1) + 50.0 / 20.0;	//Scaled -50F = 0V & 50F = 5V
+			val = (Sat->CMRCS1.GetInjectorTempF(1) + 50.0) / 20.0;	//Scaled -50F = 0V & 50F = 5V
 			break;
 		case 3:	//TEMP CW ENG INJECTOR SYS 2
-			val = Sat->CMRCS2.GetInjectorTempF(2) + 50.0 / 20.0;	//Scaled -50F = 0V & 50F = 5V
+			val = (Sat->CMRCS2.GetInjectorTempF(2) + 50.0) / 20.0;	//Scaled -50F = 0V & 50F = 5V
 			break;
 		}
 		break;
