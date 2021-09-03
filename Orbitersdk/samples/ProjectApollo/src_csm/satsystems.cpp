@@ -562,6 +562,14 @@ void Saturn::SystemsInit() {
 	CMRCSHeat[10] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL22COIL");
 	CMRCSHeat[11] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL12COIL");
 
+	//CM RCS Transducer Locations
+	CMRCSTemp[0] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12");
+	CMRCSTemp[1] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14");
+	CMRCSTemp[2] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16");
+	CMRCSTemp[3] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21");
+	CMRCSTemp[4] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24");
+	CMRCSTemp[5] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25");
+
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
 	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
 
@@ -2357,6 +2365,12 @@ void Saturn::JoystickTimestep()
 		{
 			CMRCSHeat[i]->GenerateHeat(52.5);
 		}
+	}
+
+	//Code for returning CM RCS temperatures. Is this the best place for this?
+	for (int i = 0; i < 6; i++)
+	{
+		CMRCSTemp[i]->GetTemp();
 	}
 }
 

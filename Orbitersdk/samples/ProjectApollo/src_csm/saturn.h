@@ -4356,6 +4356,7 @@ protected:
 	Boiler *SPSPropellantLineHeaterA;
 	Boiler *SPSPropellantLineHeaterB;
 	h_HeatLoad *CMRCSHeat[12];
+	h_Radiator* CMRCSTemp[12];
 
 	//
 	// LEM data.
