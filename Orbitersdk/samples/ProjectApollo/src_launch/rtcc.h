@@ -2756,6 +2756,7 @@ public:
 	double GetLGCClockZero() { return SystemParameters.MCGZSL * 3600.0; }
 	double GetIUClockZero() { return SystemParameters.MCGRIC * 3600.0; }
 	double GetAGSClockZero() { return SystemParameters.MCGZSS * 3600.0; }
+	double GetIULaunchAzimuth() { return SystemParameters.MCLABN; }
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -2897,6 +2898,7 @@ public:
 	void EMMDYNMC(int L, int queid, int ind = 0, double param = 0.0);
 	//FDO Space Digitals
 	int EMDSPACE(int queid, int option = 0, double val = 0.0, double incl = 0.0, double ascnode = 0.0);
+	int EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl = 0.0, double ascnode = 0.0);
 	//Orbit Station Contact Generation Control
 	void EMSTAGEN(int L);
 	//Next Station Contact Display
