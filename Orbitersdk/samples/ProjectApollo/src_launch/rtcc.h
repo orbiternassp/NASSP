@@ -2755,6 +2755,7 @@ public:
 	double GetLGCClockZero() { return SystemParameters.MCGZSL * 3600.0; }
 	double GetIUClockZero() { return SystemParameters.MCGRIC * 3600.0; }
 	double GetAGSClockZero() { return SystemParameters.MCGZSS * 3600.0; }
+	double GetIULaunchAzimuth() { return SystemParameters.MCLABN; }
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

@@ -1,5 +1,6 @@
 #include "Orbitersdk.h"
 #include "ApolloRTCCMFD.h"
+#include "iu.h"
 
 char Buffer[100];
 
@@ -8323,7 +8324,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(3 * W / 32, 5 * H / 32, "LOAD NO", 7);
 		skp->Text(11 * W / 32, 5 * H / 32, "GETSV", 5);
-		skp->Text(11 * W / 32, 7 * H / 32, "GRR/S", 5);
+		skp->Text(9 * W / 32, 7 * H / 32, "GRR/S", 5);
+		skp->Text(23 * W / 32, 7 * H / 32, "AZI", 3);
 
 		skp->Text(4 * W / 32, 10 * H / 32, "FCT", 3);
 		skp->Text(14 * W / 32, 10 * H / 32, "ENGLISH", 31);
@@ -8357,7 +8359,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		skp->Text(16 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
 		GET_Display2(Buffer, GC->rtcc->GetIUClockZero());
-		skp->Text(16 * W / 32, 7 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(14 * W / 32, 7 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.3lf°", GC->rtcc->GetIULaunchAzimuth()*DEG);
+		skp->Text(26 * W / 32, 7 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->CZNAVSLV.DotS.z / 0.3048);
 		skp->Text(14 * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
