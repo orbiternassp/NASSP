@@ -3772,7 +3772,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	if (type == UTP_PADONLY)
 	{
 		// Ask RTCC for numbers
-		rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr, upMessage);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr, upMessage);
 		// Done filling form, OK to show
 		padState = 0;
 	}
