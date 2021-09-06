@@ -4385,7 +4385,8 @@ void RTCC::EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad)
 		}
 
 		pad.Att400K[0] = _V(OrbMech::imulimit(EIangles.x*DEG), OrbMech::imulimit(EIangles.y*DEG), OrbMech::imulimit(EIangles.z*DEG));
-		pad.dVTO[0] = 0.0;//-60832.18 / m1 / 0.3048;
+		pad.dVTO[0] = -SystemParameters.MCTST5 / sv1.mass*SystemParameters.MCTSD5;
+		pad.dVTO[0] /= 0.3048;
 		if (opt.lat == 0)
 		{
 			pad.Lat[0] = lat*DEG;
