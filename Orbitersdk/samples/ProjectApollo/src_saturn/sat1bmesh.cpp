@@ -183,12 +183,12 @@ static PARTICLESTREAMSPEC prelaunchvent_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
 };
 
-void SaturnIB1stdStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
+void SaturnIB1stStage_VCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
 {
 	//Redefine the aoa
 	VECTOR3 vec;
 	v->GetAirspeedVector(FRAME_LOCAL, vec);
-	aoa = acos(unit(vec).z);
+	double aoa_t = acos(unit(vec).z);
 
 	//Mach dependent drag
 	double cd0;
@@ -206,16 +206,25 @@ void SaturnIB1stdStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *c
 	}
 	else
 	{
-		cd0 = 0.8 * sqrt(0.21) / sqrt(M*M - 1.0);
+		cd0 = 0.8 * sqrt(0.2) / sqrt(M - 0.9);
 	}
 
 	*cl = 0.0;
-	*cm = 0.0;
+	*cm = -sin(aoa);
 
 	//Add aoa dependent drag
-	*cd = cd0 + sin(aoa)*5.5;
+	*cd = cd0 + sin(aoa_t)*5.5;
 
-	sprintf(oapiDebugString(), "aoa %lf M %lf Re %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, *cd, *cl, *cm);
+	sprintf(oapiDebugString(), "First Stage (Vert): aoa %lf aoa_t %lf M %lf Re %lf CD %lf CL %lf CM %lf", aoa*DEG, aoa_t*DEG, M, Re, *cd, *cl, *cm);
+}
+
+void SaturnIB1stStage_HCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
+{
+	*cl = 0.0;
+	*cd = 0.0;
+	*cm = -sin(aoa);
+
+	//sprintf(oapiDebugString(), "First Stage (Hori): aoa %lf M %lf Re %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, *cd, *cl, *cm);
 }
 
 void SaturnIB3rdStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
@@ -253,7 +262,7 @@ void SaturnIB3rdStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *co
 		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
 	}
 
-	//sprintf(oapiDebugString(), "aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
+	sprintf(oapiDebugString(), "Second Stage: aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
 }
 
 void Saturn1b::SetFirstStage ()
@@ -264,7 +273,8 @@ void Saturn1b::SetFirstStage ()
 	SetCrossSections (_V(395, 380, 40));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	ClearAirfoilDefinitions();
-	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), SaturnIB1stdStage_Coeff, NULL, 6.5278, 33.4675, 0.1);
+	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), SaturnIB1stStage_VCoeff, NULL, 6.5278, 33.4675, 0.1);
+	CreateAirfoil3(LIFT_HORIZONTAL, _V(0, 0, 0), SaturnIB1stStage_HCoeff, NULL, 6.5278, 33.4675, 0.1);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);

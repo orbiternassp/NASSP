@@ -131,7 +131,7 @@ void Saturn1b::initSaturn1b()
 
 	ISP_FIRST_SL     = 262*G;	// See Apollo 7 Saturn IB Report, NTRS ID 19900067467
 	ISP_FIRST_VAC    = 294*G; 
-	THRUST_FIRST_VAC = 1008000;  // between 875.000-1.025.000 N, calibrated to meet staging target
+	THRUST_FIRST_VAC = 1025000;  // between 875.000-1.025.000 N, calibrated to meet staging target
 
 	ISP_SECOND_SL   = 424*G;
 	ISP_SECOND_VAC  = 424*G;
