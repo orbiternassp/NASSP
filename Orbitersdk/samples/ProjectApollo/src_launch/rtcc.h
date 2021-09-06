@@ -38,6 +38,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/LMGuidanceSim.h"
 #include "../src_rtccmfd/CoastNumericalIntegrator.h"
 #include "../src_rtccmfd/EnckeIntegrator.h"
+#include "../src_rtccmfd/RTCC_EMSMISS.h"
 #include "../src_rtccmfd/RTCCSystemParameters.h"
 #include "MCCPADForms.h"
 
@@ -2990,45 +2991,6 @@ public:
 	void GLUNIV(const GLUNIVInput &in, GLUNIVOutput &out);
 	// MISSION PLANNING (P)
 	//Weight Determination at a Time
-	struct PLAWDTInput
-	{
-		double T_UP;				//Option 1: Time of desired, areas/weights. Option 2: Time to stop adjustment
-		int Num = 0;				//Option 1: Maneuver number of last maneuver to be ignored (zero to consider all maneuvers). Option 2: Configuration code associated with input values (same format as MPT code)
-		bool KFactorOpt = false;	//0 = No K-factor desired, 1 = K-factor desired
-		int TableCode;		//1 = CSM, 3 = LM (MPT and Expandables Tables). Negative for option 2.
-		bool VentingOpt = false;	//0 = No venting, 1 = venting
-		double CSMArea;
-		double SIVBArea;
-		double LMAscArea;
-		double LMDscArea;
-		double CSMWeight;
-		double SIVBWeight;
-		double LMAscWeight;
-		double LMDscWeight;
-		//Time of input areas/weights
-		double T_IN;
-	};
-
-	struct PLAWDTOutput
-	{
-		//0: No error
-		//1: Request time within a maneuver - previous maneuver values used
-		//2: Maneuver not current - last current values used
-		//3: Time to stop adjustment is before time of input areas/weights - input values returned as output
-		int Err;
-		std::bitset<4> CC;
-		double ConfigArea;
-		double ConfigWeight;
-		double CSMArea;
-		double SIVBArea;
-		double LMAscArea;
-		double LMDscArea;
-		double CSMWeight;
-		double SIVBWeight;
-		double LMAscWeight;
-		double LMDscWeight;
-		double KFactor;
-	};
 	void PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out);
 	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	bool PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB);

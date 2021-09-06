@@ -2829,8 +2829,8 @@ int ARCore::subThread()
 				opt.RV_MCC.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 				opt.RV_MCC.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-				RTCC::PLAWDTInput pin;
-				RTCC::PLAWDTOutput pout;
+				PLAWDTInput pin;
+				PLAWDTOutput pout;
 				pin.T_UP = GMT;
 				pin.TableCode = mptveh;
 				GC->rtcc->PLAWDT(pin, pout);
@@ -2854,8 +2854,8 @@ int ARCore::subThread()
 				opt.RV_MCC.MJD = OrbMech::MJDfromGET(tab->mantable.back().GMT_BO, GC->rtcc->GetGMTBase());
 				opt.RV_MCC.gravref = GC->rtcc->GetGravref(tab->mantable.back().RefBodyInd);
 
-				RTCC::PLAWDTInput pin;
-				RTCC::PLAWDTOutput pout;
+				PLAWDTInput pin;
+				PLAWDTOutput pout;
 				pin.T_UP = tab->mantable.back().GMT_BO;
 				pin.TableCode = mptveh;
 				GC->rtcc->PLAWDT(pin, pout);
@@ -3073,8 +3073,8 @@ int ARCore::subThread()
 			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 			pin.T_UP = GMT;
 			pin.TableCode = mptveh;
 			GC->rtcc->PLAWDT(pin, pout);
@@ -3347,8 +3347,8 @@ int ARCore::subThread()
 
 			sv0 = EPHEM;
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 			pin.T_UP = GMT;
 			pin.TableCode = RTCC_MPT_CSM;
 			GC->rtcc->PLAWDT(pin, pout);
@@ -3523,8 +3523,8 @@ int ARCore::subThread()
 				break;
 			}
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 			pin.T_UP = GMT;
 			pin.TableCode = RTCC_MPT_CSM;
 			GC->rtcc->PLAWDT(pin, pout);
@@ -3658,8 +3658,8 @@ int ARCore::subThread()
 			sv_CSM.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_CSM.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 			pin.T_UP = GMT;
 			pin.TableCode = RTCC_MPT_LM;
 			GC->rtcc->PLAWDT(pin, pout);
