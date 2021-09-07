@@ -3368,210 +3368,210 @@ PANELSWITCHES_BEGIN
   AccelGMeter -0.000000 -0.000000
   MasterAlarmSwitch 0 0
 PANELSWITCHES_END
-  <checklist> 
+   <checklist> 
   FILE Doc\Project Apollo - NASSP\Checklists\Apollo 8 Checklists.xls
   COMPLETE 1
   FLASHING 1
-  LASTITEMTIME 31097.277666
+  LASTITEMTIME 31378.345284
   AUTOEXECUTESLOWDELAY 2.000000
   WAITFORCOMPLETION 0
   <container> 
-  INDEX 48
+  INDEX 49
   <item> 
   INDEX 0
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 1
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 2
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 3
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 4
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 5
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 6
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 7
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 8
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 9
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 10
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 11
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 12
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 13
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 14
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 15
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 16
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 17
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 18
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 19
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 20
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 21
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 22
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 23
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 24
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 25
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 26
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 27
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 28
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 29
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 30
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 31
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 32
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 33
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 34
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 35
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 36
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 37
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 38
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 39
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 40
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 41
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 42
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 43
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 44
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 45
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 46
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 47
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 48
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 49
@@ -4117,33 +4117,33 @@ PANELSWITCHES_END
   INDEX 229
   </item> 
   SEQUENCE 49
-  TIME 30738.552091
+  TIME 31378.345284
   </container> 
   <container> 
-  INDEX 56
+  INDEX 57
   <item> 
   INDEX 0
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 1
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 2
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 3
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 4
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 5
-  STATUS 1
+  STATUS -1
   </item> 
   <item> 
   INDEX 6
@@ -4162,7 +4162,7 @@ PANELSWITCHES_END
   INDEX 10
   </item> 
   SEQUENCE 7
-  TIME 28568.031657
+  TIME 31369.252077
   </container> 
   <container> 
   INDEX 9
@@ -5719,7 +5719,7 @@ PANELSWITCHES_END
   INDEX 509
   </item> 
   SEQUENCE 22
-  TIME 14000.513741
+  TIME 14000.513672
   </container> 
   <group> 
   INDEX 0
@@ -5826,11 +5826,19 @@ PANELSWITCHES_END
   CALLED 1
   </group> 
   <group> 
+  INDEX 49
+  CALLED 1
+  </group> 
+  <group> 
   INDEX 54
   CALLED 1
   </group> 
   <group> 
   INDEX 56
+  CALLED 1
+  </group> 
+  <group> 
+  INDEX 57
   CALLED 1
   </group> 
   </checklist> 
