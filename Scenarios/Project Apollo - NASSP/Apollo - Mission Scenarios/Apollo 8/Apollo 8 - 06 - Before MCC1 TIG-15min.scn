@@ -3368,7 +3368,7 @@ PANELSWITCHES_BEGIN
   AccelGMeter -0.000000 -0.000000
   MasterAlarmSwitch 0 0
 PANELSWITCHES_END
-   <checklist> 
+  <checklist> 
   FILE Doc\Project Apollo - NASSP\Checklists\Apollo 8 Checklists.xls
   COMPLETE 1
   FLASHING 1
