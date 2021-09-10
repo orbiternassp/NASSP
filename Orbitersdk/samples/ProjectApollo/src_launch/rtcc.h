@@ -2807,9 +2807,10 @@ public:
 	//Ephemeris Storage and Control Module
 	EphemerisData EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGMT, bool landed = false);
 	//Miscellaneous Numerical Integration Control Module
+	void NewEMSMISS(EMSMISSInputTable *in);
 	void EMSMISS(EMSMISSInputTable &in);
 	//Lunar Surface Ephemeris Generator
-	void EMSLSF(EMSMISSInputTable &in);
+	void EMSLSF(EMSLSFInputTable &in);
 	//Encke Integrator
 	void EMMENI(EMMENIInputTable &in);
 	//Spherical to inertial conversion
@@ -4657,10 +4658,10 @@ private:
 	void MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg);
 public:
 	void MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2);
+	MissionPlanTable *GetMPTPointer(int L);
 protected:
 
 	//Auxiliary subroutines
-	MissionPlanTable *GetMPTPointer(int L);
 	int PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan, double &VectorFetchTime);
 	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
 	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI);

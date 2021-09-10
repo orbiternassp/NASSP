@@ -296,7 +296,7 @@ struct RTCCSystemParameters
 		MDVDCC[0] = 0.0;
 		MDVDCC[1] = 0.0;
 		MCGVNT = 2.0 / 3600.0;
-		MCGVEN = 15.0 / 60.0;
+		MCGVEN = 0.2*3600.0;
 		for (int i = 0;i < 2;i++)
 		{
 			for (int j = 0;j < 10;j++)
@@ -304,7 +304,26 @@ struct RTCCSystemParameters
 				MDTVTV[i][j] = 0.0;
 			}
 		}
-		MCTVSP = 1000.0;
+
+		//Vent thrust
+		MDTVTV[0][0] = 175.0;
+		MDTVTV[0][1] = 170.0;
+		MDTVTV[0][2] = 80.0;
+		MDTVTV[0][3] = 65.0;
+		MDTVTV[0][4] = 45.0;
+		MDTVTV[0][5] = 40.0;
+		MDTVTV[0][6] = 40.0;
+		//Vent times
+		MDTVTV[1][0] = 0.0;
+		MDTVTV[1][1] = 1300.0;
+		MDTVTV[1][2] = 3300.0;
+		MDTVTV[1][3] = 6500.0;
+		MDTVTV[1][4] = 11000.0;
+		MDTVTV[1][5] = 15000.0;
+		MDTVTV[1][6] = 9999999999.9;
+		MCTVSP = 850.0; //Find better value
+		MCTVEN = 1.0;
+
 		MCLABN = MCLCBN = MCLSBN = 0.0;
 		MGREPH = false;
 
@@ -341,6 +360,7 @@ struct RTCCSystemParameters
 		MCTJTH = 202256.0 * 4.4482216152605;
 		MCTJT5 = 202256.0 * 4.4482216152605;
 		MCTJT6 = 27784.0 * 4.4482216152605;
+		MCTJT7 = 145.0*4.4482216152605;
 
 		MCTJW1 = 0.111 * 0.45359237;
 		MCTJW2 = 0.75 * 0.45359237;
@@ -350,6 +370,7 @@ struct RTCCSystemParameters
 		MCTJWH = 472.18 * 0.45359237;
 		MCTJW5 = 472.18* 0.45359237;
 		MCTJW6 = 61.7 * 0.45359237;
+		MCTJW7 = 75960.0*0.45359237 / 3600.0;
 
 		MCTSAV = 202097.0 * 4.4482216152605;
 		MCTWAV = 472.121 * 0.45359237;
@@ -633,7 +654,7 @@ struct RTCCSystemParameters
 	//Phase reference time - GET (hrs.)
 	double MCGREF = 0.0;
 	//Venting scale factor
-	double MCTVEN = 0.0;
+	double MCTVEN;
 	//Lambda Zero
 	double MCLAMD = 0.0;
 	//P80 first launch vehicle
@@ -767,8 +788,10 @@ struct RTCCSystemParameters
 	double MCTJTL;
 	//Thrust level of sixth S-IVB thrust phase (main burn after MRS)
 	double MCTJT5;
-	//Thrust level of sevent S-IVB thrust phase (tailoff)
+	//Thrust level of seventh S-IVB thrust phase (tailoff)
 	double MCTJT6;
+	//Thrust level of S-IVB blowdown vent
+	double MCTJT7;
 	//Weight flow rate for first S-IVB thrust phase
 	double MCTJW1;
 	//Weight flow rate for second S-IVB thrust phase
@@ -785,6 +808,8 @@ struct RTCCSystemParameters
 	double MCTJW5;
 	//Weight flow rate for seventh S-IVB thrust phase
 	double MCTJW6;
+	//Weight flow rate of S-IVB blowdown vent
+	double MCTJW7;
 	//Time from ignition to start IGM guidance
 	double MCVIGM;
 	//Minimum allowable S-IVB weight

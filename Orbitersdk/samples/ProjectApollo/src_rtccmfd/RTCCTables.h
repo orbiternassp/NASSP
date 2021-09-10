@@ -241,7 +241,13 @@ struct ManeuverTimesTable
 struct EMSMISSAuxOutputTable
 {
 	EphemerisData sv_cutoff;
+	//0 = no errors detected, 1 = input time cannot be referenced on sun/moon ephemeris, 2 = MPT is being updated, 3 = error from maneuver integrator
+	//5 = maneuver in interval maybe preventing the minimum number of points from being satisfied, 6 = ephemeris space filled before request was satisfied
 	int ErrorCode;
+	double InputArea;
+	double InputWeight;
+	double CutoffArea;
+	double CutoffWeight;
 	//1 = maximum time, 2 = radius, 3 = altitude, 4 = flight path angle, 5 = reference switch, 6 = beginning of maneuver, 7 = end of maneuver, 8 = ascending node
 	int TerminationCode;
 	//Maneuver number of last processed maneuver
@@ -290,6 +296,32 @@ struct PLAWDTOutput
 	double KFactor;
 };
 
+struct EMSLSFInputTable
+{
+	bool ECIEphemerisIndicator = false;
+	bool ECTEphemerisIndicator = false;
+	bool MCIEphemerisIndicator = false;
+	bool MCTEphemerisIndicator = false;
+	//Left limit of ephemeris (time to begin ephemeris)
+	double EphemerisLeftLimitGMT;
+	//Right limit of ephemeris (time to end ephemeris)
+	double EphemerisRightLimitGMT;
+	EphemerisDataTable2 *ECIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *ECTEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCTEphemTableIndicator = NULL;
+	//Storage interval for lunar surface ephemeris
+	double LunarEphemDT = 3.0*60.0;
+};
+
+struct ReferenceSwitchTable
+{
+	EphemerisData InputVector;
+	EphemerisData BeforeRefSwitchVector;
+	EphemerisData AfterRefSwitchVector;
+	EphemerisData LastVector;
+};
+
 struct EMSMISSInputTable
 {
 	EphemerisData AnchorVector;
@@ -325,7 +357,7 @@ struct EMSMISSInputTable
 	//Maneuver cut-off indicator (0 = cut at begin of maneuver, 1 = cut at end of maneuver, 2 = don't cut off)
 	int ManCutoffIndicator;
 	//Descent burn indicator
-	bool DescentBurnIndicator;
+	bool DescentBurnIndicator = false;
 	//Cut-off indicator (1 = Time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch)
 	int CutoffIndicator = 1;
 	//Integration direction indicator (+X-forward, -X-backward)
@@ -344,6 +376,7 @@ struct EMSMISSInputTable
 	EphemerisDataTable2 *MCIEphemTableIndicator = NULL;
 	EphemerisDataTable2 *MCTEphemTableIndicator = NULL;
 	//Reference switch table indicator
+	ReferenceSwitchTable *RefSwitchTabIndicator = NULL;
 	//Maneuver times table indicator
 	ManeuverTimesTable *ManTimesIndicator = NULL;
 	//Runge-Kutta auxiliary output table indicator
@@ -355,7 +388,7 @@ struct EMSMISSInputTable
 	unsigned IgnoreManueverNumber = 10000U;
 	EMSMISSAuxOutputTable NIAuxOutputTable;
 	bool useInputWeights = false;
-	PLAWDTOutput *WeightsTable;
+	PLAWDTOutput *WeightsTable = NULL;
 };
 
 struct RMMYNIInputTable

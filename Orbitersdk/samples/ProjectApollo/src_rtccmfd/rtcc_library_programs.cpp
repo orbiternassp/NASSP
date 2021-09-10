@@ -1509,6 +1509,7 @@ void RTCC::PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
 		//Option 2
 		CC = in.Num;
 		T_AW = in.T_IN - GetGMTLO()*3600.0;
+		//Input time is greater than output time
 		if (in.T_IN > T_UP)
 		{
 			goto RTCC_PLAWDT_9_T;
@@ -1545,6 +1546,8 @@ void RTCC::PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
 			//No, end time for venting is requested time
 			T_NV = T_UP;
 		}
+		//Convert to GET
+		T_NV = T_NV - GetGMTLO()*3600.0;
 		goto RTCC_PLAWDT_3_G;
 	}
 	//Option 1
@@ -1575,6 +1578,8 @@ void RTCC::PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
 		//No, end time for venting is requested time
 		T_NV = T_UP;
 	}
+	//Convert to GET
+	T_NV = T_NV - GetGMTLO()*3600.0;
 	//How many maneuvers on MPT?
 	if (mpt->ManeuverNum == 0)
 	{
@@ -1687,7 +1692,10 @@ RTCC_PLAWDT_3_G:
 		out.LMDscArea = in.LMDscArea;
 		out.CC = in.Num;
 	}
-	//TBD: Expendables
+	//Read Expendables Table
+	//Make T_UP a GET
+	T_UP = T_UP - GetGMTLO()*3600.0;
+	//TBD: Expendables stuff
 	dt = T_UP - T_AW;
 RTCC_PLAWDT_M_5:
 	if (CC[RTCC_CONFIG_C])
@@ -1739,8 +1747,8 @@ RTCC_PLAWDT_M_5:
 		T_UP = T_NV;
 	}
 	double TV, Th;
-	TV = T_AW + dt;
 	dt = 3.0*60.0;
+	TV = T_AW + dt;
 	N = 1;
 	K = 10;
 RTCC_PLAWDT_7_Q:
@@ -1773,6 +1781,7 @@ RTCC_PLAWDT_8_WDOT:
 	out.SIVBWeight = out.SIVBWeight - dt * Th / SystemParameters.MCTVSP*SystemParameters.MCTVEN;
 	if (TV < T_UP)
 	{
+		TV = TV + dt;
 		goto RTCC_PLAWDT_7_Q;
 	}
 RTCC_PLAWDT_8_Y:

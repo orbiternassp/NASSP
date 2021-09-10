@@ -27,13 +27,82 @@
 #include "Orbitersdk.h"
 #include "RTCCModule.h"
 #include "RTCCTables.h"
+#include "EnckeIntegrator.h"
+
+struct MissionPlanTable;
+
+struct EMSMISSState
+{
+	EphemerisData StateVector;
+	PLAWDTOutput WeightsTable;
+	bool isLanded;
+};
 
 class RTCC_EMSMISS : public RTCCModule
 {
 public:
 	RTCC_EMSMISS(RTCC *r);
 
-	void Call(EMSMISSInputTable &in);
+	void Call(EMSMISSInputTable *in);
 protected:
 
+	void CutoffModeLogic();
+	void EphemerisModeLogic();
+	void CallCoastIntegrator();
+	void CallManeuverIntegrator();
+	void CallCSMLMIntegrator();
+	void CallSIVBIntegrator();
+	void CallDescentIntegrator();
+	void CallAscentIntegrator();
+	void LunarStayPhase();
+
+	bool NextManeuverTime(double &gmt);
+	double NextEventTime(double gmt);
+
+	void UpdateWeightsTableAndSVAfterCoast();
+	void UpdateWeightsTableAndSVAfterManeuver();
+	void WriteNIAuxOutputTable();
+	void WeightsAtManeuverBegin();
+
+	bool InitEphemTables();
+	void AddCoastOrSurfaceEphemeris();
+	void AddManeuverEphemeris();
+
+	MissionPlanTable *mpt;
+	int nierror;
+
+	//Temporary variables and tables
+	EphemerisData svtemp;
+	EphemerisDataTable2 tempephemtable, tempcoastephemtable[4];
+	RTCCNIAuxOutputTable AuxTableIndicator;
+	ManeuverTimesTable ManTimesTable;
+
+	//Inputs
+	bool EphemerisIndicatorList[4];
+	EphemerisDataTable2 * EphemerisTableIndicatorList[4];
+	double DensityMultiplier;
+
+	//Tables
+	EMMENIInputTable emmeniin;
+	PLAWDTOutput CurrentWeightsTable, InitialWeightsTable;
+	EMSMISSAuxOutputTable *NIAuxOutputTable;
+
+	//Current maneuver
+	unsigned int i;	
+	int TerminationCode;
+	bool manflag;
+	//Ephemeris building switched on
+	bool EphemerisBuildOn;
+
+	//Absolute limit for GMT
+	double gmt_lim;
+	//Maximum time for coast integrator
+	double gmt_coast;
+
+	EMSMISSState state;
+	EphemerisData sv0;
+	int ErrorCode;
+	double LunarStayBeginGMT, LunarStayEndGMT;
+
+	EMSMISSInputTable *intab;
 };

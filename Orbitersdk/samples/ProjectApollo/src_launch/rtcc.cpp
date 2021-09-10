@@ -16930,6 +16930,12 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 	return InTable.NIAuxOutputTable.sv_cutoff;
 }
 
+void RTCC::NewEMSMISS(EMSMISSInputTable *in)
+{
+	RTCC_EMSMISS integrator(this);
+	integrator.Call(in);
+}
+
 void RTCC::EMSMISS(EMSMISSInputTable &in)
 {
 	EphemerisDataTable2 tempephemtable;
@@ -17599,14 +17605,13 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	}
 }
 
-void RTCC::EMSLSF(EMSMISSInputTable &in)
+void RTCC::EMSLSF(EMSLSFInputTable &in)
 {
-	if (in.EphemerisBuildIndicator == false) return;
 	if (in.EphemerisRightLimitGMT < in.EphemerisLeftLimitGMT) return;
 
 	EphemerisData2 sv_MCT, sv_temp;
 	double T;
-	bool *EphemerisIndicators[4] = {&in.ECIEphemerisIndicator, &in.ECTEphemerisIndicator, &in.MCIEphemerisIndicator, &in.MCTEphemerisIndicator};
+	bool EphemerisIndicators[4] = {in.ECIEphemerisIndicator, in.ECTEphemerisIndicator, in.MCIEphemerisIndicator, in.MCTEphemerisIndicator};
 	EphemerisDataTable2 *pEphemerides[4] = { in.ECIEphemTableIndicator, in.ECTEphemTableIndicator, in.MCIEphemTableIndicator, in.MCTEphemTableIndicator };
 
 	for (int i = 0;i < 4;i++)
