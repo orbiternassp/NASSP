@@ -63,6 +63,7 @@ protected:
 	void UpdateWeightsTableAndSVAfterManeuver();
 	void WriteNIAuxOutputTable();
 	void WeightsAtManeuverBegin();
+	void WriteEphemerisHeaders();
 
 	bool InitEphemTables();
 	void AddCoastOrSurfaceEphemeris();
@@ -85,7 +86,6 @@ protected:
 	//Tables
 	EMMENIInputTable emmeniin;
 	PLAWDTOutput CurrentWeightsTable, InitialWeightsTable;
-	EMSMISSAuxOutputTable *NIAuxOutputTable;
 
 	//Current maneuver
 	unsigned int i;	

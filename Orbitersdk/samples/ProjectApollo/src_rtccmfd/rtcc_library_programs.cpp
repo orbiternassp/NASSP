@@ -396,6 +396,106 @@ int RTCC::ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP
 	return ERR;
 }
 
+int RTCC::ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData2 &sv_out, unsigned &ORER_out)
+{
+	EphemerisData2 RES;
+	VECTOR3 TERM1, TERM2;
+	double TERM3;
+	unsigned DESLEF, DESRI;
+	unsigned i = EPH.Header.Offset;
+	int ERR = 0;
+	//Ephemeris too small
+	if (EPH.Header.NumVec < 2)
+	{
+		return 128;
+	}
+	//Requested order too high
+	if (ORER > 8)
+	{
+		return 64;
+	}
+	if (EPH.Header.NumVec > ORER)
+	{
+		//Store Order(?)
+	}
+	else
+	{
+		ERR += 2;
+		ORER = EPH.Header.NumVec - 1;
+	}
+
+	if (GMT < EPH.Header.TL)
+	{
+		if (EXTRAP == false) return 32;
+		if (GMT < EPH.Header.TL - 4.0) { return 8; }
+		else { ERR += 1; }
+	}
+	if (GMT > EPH.Header.TR)
+	{
+		if (EXTRAP == false) return 16;
+		if (GMT > EPH.Header.TR + 4.0) { return 4; }
+		else { ERR += 1; }
+	}
+
+	while (GMT > EPH.table[i].GMT)
+	{
+		i++;
+	}
+
+	//Direct hit
+	if (GMT == EPH.table[i].GMT)
+	{
+		sv_out = EPH.table[i];
+		return ERR;
+	}
+
+	if (ORER % 2)
+	{
+		DESLEF = DESRI = (ORER + 1) / 2;
+	}
+	else
+	{
+		DESLEF = ORER / 2 + 1;
+		DESRI = ORER / 2;
+	}
+
+	if (i < DESLEF + EPH.Header.Offset)
+	{
+		i = EPH.Header.Offset;
+	}
+	else if (i > EPH.Header.Offset + EPH.Header.NumVec - DESRI)
+	{
+		i = EPH.Header.Offset + EPH.Header.NumVec - ORER - 1;
+	}
+	else
+	{
+		i = i - DESLEF;
+	}
+
+	for (unsigned j = 0; j < ORER + 1; j++)
+	{
+		TERM1 = EPH.table[i + j].R;
+		TERM2 = EPH.table[i + j].V;
+		TERM3 = 1.0;
+		for (unsigned k = 0;k < ORER + 1;k++)
+		{
+			if (k != j)
+			{
+				TERM3 *= (GMT - EPH.table[i + k].GMT) / (EPH.table[i + j].GMT - EPH.table[i + k].GMT);
+			}
+		}
+		RES.R += TERM1 * TERM3;
+		RES.V += TERM2 * TERM3;
+	}
+
+	RES.GMT = GMT;
+
+	sv_out = RES;
+	ORER_out = ORER;
+
+	return ERR;
+}
+
 //Generalized Coordinate Conversion Routine
 int RTCC::ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out)
 {

@@ -2937,6 +2937,7 @@ public:
 	int ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP);
 	//Variable Order Interpolation
 	int ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData &sv_out, unsigned &ORER_out);
+	int ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData2 &sv_out, unsigned &ORER_out);
 	//Generalized Coordinate System Conversion Subroutine
 	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
 	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);

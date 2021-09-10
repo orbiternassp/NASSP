@@ -37,6 +37,7 @@ RTCC_EMSMISS::RTCC_EMSMISS(RTCC *r) : RTCCModule(r)
 	}
 
 	nierror = 0;
+	ErrorCode = 0;
 }
 
 void RTCC_EMSMISS::Call(EMSMISSInputTable *in)
@@ -45,8 +46,6 @@ void RTCC_EMSMISS::Call(EMSMISSInputTable *in)
 
 	intab = in;
 	mpt = pRTCC->GetMPTPointer(intab->VehicleCode);
-
-	NIAuxOutputTable = &in->NIAuxOutputTable;
 
 	if (in->DensityMultOverrideIndicator)
 	{
@@ -132,6 +131,10 @@ void RTCC_EMSMISS::Call(EMSMISSInputTable *in)
 	if (intab->CutoffIndicator == 5)
 	{
 		//TBD: Reference switch table
+	}
+	if (intab->EphemerisBuildIndicator)
+	{
+		WriteEphemerisHeaders();
 	}
 }
 
@@ -220,12 +223,19 @@ RTCC_EMSMISS_CutoffModeLogic_START:
 void RTCC_EMSMISS::EphemerisModeLogic()
 {
 	bool initerr = InitEphemTables();	
+	if (initerr)
+	{
+		ErrorCode = 99;
+		return;
+	}
 
 	//First get to the initial time of ephemeris storing
 	gmt_lim = intab->EphemerisLeftLimitGMT;
 
 	//Propagate state to EphemerisLeftLimitGMT
 	CutoffModeLogic();
+
+	if (ErrorCode) return;
 
 	//Switch on ephemeris writing
 	EphemerisBuildOn = true;
@@ -239,16 +249,17 @@ void RTCC_EMSMISS::EphemerisModeLogic()
 
 void RTCC_EMSMISS::WriteNIAuxOutputTable()
 {
-	NIAuxOutputTable->sv_cutoff = state.StateVector;
-	NIAuxOutputTable->InputArea = InitialWeightsTable.ConfigArea;
-	NIAuxOutputTable->InputWeight = InitialWeightsTable.ConfigWeight;
-	NIAuxOutputTable->CutoffArea = state.WeightsTable.ConfigArea;
-	NIAuxOutputTable->CutoffWeight = state.WeightsTable.ConfigWeight;
-	NIAuxOutputTable->ErrorCode = ErrorCode;
-	NIAuxOutputTable->TerminationCode = TerminationCode;
-	NIAuxOutputTable->ManeuverNumber = i;
-	NIAuxOutputTable->LunarStayBeginGMT = LunarStayBeginGMT;
-	NIAuxOutputTable->LunarStayEndGMT = LunarStayEndGMT;
+	intab->NIAuxOutputTable.sv_cutoff = state.StateVector;
+	intab->NIAuxOutputTable.landed = state.isLanded;
+	intab->NIAuxOutputTable.InputArea = InitialWeightsTable.ConfigArea;
+	intab->NIAuxOutputTable.InputWeight = InitialWeightsTable.ConfigWeight;
+	intab->NIAuxOutputTable.CutoffArea = state.WeightsTable.ConfigArea;
+	intab->NIAuxOutputTable.CutoffWeight = state.WeightsTable.ConfigWeight;
+	intab->NIAuxOutputTable.ErrorCode = ErrorCode;
+	intab->NIAuxOutputTable.TerminationCode = TerminationCode;
+	intab->NIAuxOutputTable.ManeuverNumber = i;
+	intab->NIAuxOutputTable.LunarStayBeginGMT = LunarStayBeginGMT;
+	intab->NIAuxOutputTable.LunarStayEndGMT = LunarStayEndGMT;
 }
 
 void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterCoast()
@@ -352,11 +363,11 @@ bool RTCC_EMSMISS::NextManeuverTime(double &gmt)
 
 	for (unsigned j = i;j < mpt->mantable.size();j++)
 	{
-		t_right = mpt->mantable[j].GMTMAN;
+		t_right = mpt->TimeToBeginManeuver[j];
 		if (state.StateVector.GMT <= t_right)
 		{
 			//Found an upcoming maneuver
-
+			/*
 			//Special PDI logic. This is probably not the right way to do it.
 			if (mpt->mantable[j].AttitudeCode == RTCC_ATTITUDE_PGNS_DESCENT)
 			{
@@ -376,7 +387,7 @@ bool RTCC_EMSMISS::NextManeuverTime(double &gmt)
 				tigin.TrimAngleInd = mpt->mantable[j].TrimAngleInd;
 
 				nierror = pRTCC->PMMLDP(tigin, mpt->mantable[j]);
-			}
+			}*/
 
 			i = j;
 			gmt = t_right;
@@ -389,7 +400,7 @@ bool RTCC_EMSMISS::NextManeuverTime(double &gmt)
 
 void RTCC_EMSMISS::LunarStayPhase()
 {
-	LunarStayBeginGMT = state.StateVector.GMT;
+	LunarStayBeginGMT = state.StateVector.GMT + 0.1;
 	LunarStayEndGMT = gmt_coast;
 
 	//Move only GMT of state vector to current time. Actual state vector shouldn't matter
@@ -503,28 +514,32 @@ bool RTCC_EMSMISS::InitEphemTables()
 	return false;
 }
 
+void RTCC_EMSMISS::WriteEphemerisHeaders()
+{
+	for (int ii = 0;ii < 4;ii++)
+	{
+		if (EphemerisIndicatorList[ii])
+		{
+			EphemerisTableIndicatorList[ii]->Header.CSI = ii;
+			EphemerisTableIndicatorList[ii]->Header.NumVec = EphemerisTableIndicatorList[ii]->table.size();
+			EphemerisTableIndicatorList[ii]->Header.Offset = 0;
+			EphemerisTableIndicatorList[ii]->Header.Status = 0;
+			EphemerisTableIndicatorList[ii]->Header.TL = EphemerisTableIndicatorList[ii]->table.front().GMT;
+			EphemerisTableIndicatorList[ii]->Header.TR = EphemerisTableIndicatorList[ii]->table.back().GMT;
+			EphemerisTableIndicatorList[ii]->Header.TUP = mpt->CommonBlock.TUP;
+			EphemerisTableIndicatorList[ii]->Header.VEH = intab->VehicleCode;
+		}
+	}
+}
+
 void RTCC_EMSMISS::AddCoastOrSurfaceEphemeris()
 {
-	unsigned int size, start;
-
 	for (unsigned int ii = 0;ii < 4;ii++)
 	{
 		if (EphemerisIndicatorList[ii])
 		{
-			size = EphemerisTableIndicatorList[ii]->table.size();
-
-			//Start at 1  if there is already stuff in the table
-			if (size == 0)
-			{
-				start = 0;
-			}
-			else
-			{
-				start = 1;
-			}
-
 			//Add ephemeris data from temporary storage to final storage
-			for (unsigned int jj = start;jj < tempcoastephemtable[ii].table.size();jj++)
+			for (unsigned int jj = 0;jj < tempcoastephemtable[ii].table.size();jj++)
 			{
 				//If the GMT is identical to the last GMT in the table then don't write the same state vector again
 				if (EphemerisTableIndicatorList[ii]->table.size() > 0 && (EphemerisTableIndicatorList[ii]->table.back().GMT == tempcoastephemtable[ii].table[jj].GMT))
@@ -543,8 +558,7 @@ void RTCC_EMSMISS::AddCoastOrSurfaceEphemeris()
 void RTCC_EMSMISS::AddManeuverEphemeris()
 {
 	EphemerisData2 sv_out;
-	unsigned int size, start;
-	int in;
+	int in, converr;
 
 	if (tempephemtable.Header.CSI == BODY_EARTH)
 	{
@@ -559,20 +573,8 @@ void RTCC_EMSMISS::AddManeuverEphemeris()
 	{
 		if (EphemerisIndicatorList[ii])
 		{
-			size = EphemerisTableIndicatorList[ii]->table.size();
-
-			//Start at 1  if there is already stuff in the table
-			if (size == 0)
-			{
-				start = 0;
-			}
-			else
-			{
-				start = 1;
-			}
-
 			//Add ephemeris data from temporary storage to final storage
-			for (unsigned int jj = start;jj < tempephemtable.table.size();jj++)
+			for (unsigned int jj = 0;jj < tempephemtable.table.size();jj++)
 			{
 				//If the GMT is identical to the last GMT in the table then don't write the same state vector again
 				if (EphemerisTableIndicatorList[ii]->table.size() > 0 && (EphemerisTableIndicatorList[ii]->table.back().GMT == tempephemtable.table[jj].GMT))
@@ -581,7 +583,7 @@ void RTCC_EMSMISS::AddManeuverEphemeris()
 				}
 
 				//Convert to desired coordinate system
-				pRTCC->ELVCNV(tempephemtable.table[jj], in, ii, sv_out);
+				converr = pRTCC->ELVCNV(tempephemtable.table[jj], in, ii, sv_out);
 
 				//Put on table
 				EphemerisTableIndicatorList[ii]->table.push_back(sv_out);
@@ -853,18 +855,9 @@ void RTCC_EMSMISS::CallDescentIntegrator()
 
 	integin.TLAND = pRTCC->GETfromGMT(mpt->mantable[i].GMT_BO);
 
-	if (i == 0)
-	{
-		integin.sv.mass = mpt->CommonBlock.LMAscentMass + mpt->CommonBlock.LMDescentMass;
-		integin.W_LMA = mpt->CommonBlock.LMAscentMass;
-		integin.W_LMD = mpt->CommonBlock.LMDescentMass;
-	}
-	else
-	{
-		integin.sv.mass = mpt->mantable[i - 1].CommonBlock.LMAscentMass + mpt->mantable[i - 1].CommonBlock.LMDescentMass;
-		integin.W_LMA = mpt->mantable[i - 1].CommonBlock.LMAscentMass;
-		integin.W_LMD = mpt->mantable[i - 1].CommonBlock.LMDescentMass;
-	}
+	integin.sv.mass = state.WeightsTable.ConfigWeight;
+	integin.W_LMA = state.WeightsTable.LMAscWeight;
+	integin.W_LMD = state.WeightsTable.LMDscWeight;
 
 	nierror = 0;
 	pRTCC->PMMLDI(integin, AuxTableIndicator, &tempephemtable);
@@ -874,14 +867,7 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 {
 	PMMLAIInput integin;
 
-	if (i == 0)
-	{
-		integin.m0 = mpt->CommonBlock.LMAscentMass;
-	}
-	else
-	{
-		integin.m0 = mpt->mantable[i - 1].CommonBlock.LMAscentMass;
-	}
+	integin.m0 = state.WeightsTable.ConfigWeight;
 
 	if (mpt->mantable[i].FrozenManeuverInd)
 	{
@@ -897,7 +883,7 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 	else
 	{
 		EphemerisData SV;
-		pRTCC->ELFECH(svtemp.GMT, RTCC_MPT_CSM, SV);
+		pRTCC->ELFECH(state.StateVector.GMT, RTCC_MPT_CSM, SV);
 		integin.sv_CSM.R = SV.R;
 		integin.sv_CSM.V = SV.V;
 		integin.sv_CSM.MJD = OrbMech::MJDfromGET(SV.GMT, pRTCC->SystemParameters.GMTBASE);

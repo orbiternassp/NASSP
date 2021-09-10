@@ -7737,8 +7737,8 @@ int RTCC::PMMSPT(PMMSPTInput &in)
 	//37: Direct input S-IVB TLI maneuver (called by PMMXFR)
 	//38: Confirm the S-IVB TLI maneuver (called by PMMXFR)
 	//39: Continue processing of direct input of S-IVB TLI maneuver with only injection opportunity input (called by PMMXFR)
-	EphemerisDataTable ephtab;
-	EphemerisData sv_out;
+	EphemerisDataTable2 ephtab;
+	EphemerisData2 sv_out;
 	EMSMISSInputTable emsin;
 	double T_TH, alpha_TSS, alpha_TS, beta, T_RP, f, R_N, KP0, KY0, T3_apo, T_ST, tau3R, T2, Vex2, Mdot2, DV_BR, tau2N;
 	int J, OrigTLIInd, CurTLIInd;
@@ -7897,7 +7897,7 @@ RTCC_PMMSPT_7_1:
 	emsin.MCIEphemerisIndicator = false;
 	emsin.MCTEphemerisIndicator = false;
 	emsin.EphemerisBuildIndicator = true;
-	emsin.EphemTableIndicator = &ephtab;
+	emsin.ECIEphemTableIndicator = &ephtab;
 RTCC_PMMSPT_7_2:
 	emsin.AnchorVector.R = in.R;
 	emsin.AnchorVector.V = in.V;
@@ -7907,11 +7907,11 @@ RTCC_PMMSPT_7_2:
 	emsin.CutoffIndicator = 1;
 	emsin.ManeuverIndicator = false;
 	emsin.VehicleCode = in.Table;
-	emsin.DensityMultiplier = 1.0;
+	emsin.DensityMultOverrideIndicator = false;
 	emsin.ManTimesIndicator = NULL;
 	emsin.AuxTableIndicator = NULL;
 	emsin.IgnoreManueverNumber = 0;
-	EMSMISS(emsin);
+	NewEMSMISS(&emsin);
 	if (emsin.NIAuxOutputTable.ErrorCode)
 	{
 		return 72;
@@ -20760,6 +20760,7 @@ int RTCC::PMMXFR(int id, void *data)
 		{
 			mpt->mantable[CurMan - 1] = man;
 		}
+		mpt->ManeuverNum = mpt->mantable.size();
 
 		if (working_man == 1 && man.GMTI < mpt->UpcomingManeuverGMT)
 		{
@@ -20996,6 +20997,7 @@ int RTCC::PMMXFR(int id, void *data)
 		{
 			mpt->mantable[CurMan - 1] = man;
 		}
+		mpt->ManeuverNum = mpt->mantable.size();
 
 		if (working_man == 1 && man.GMTI < mpt->UpcomingManeuverGMT)
 		{
@@ -21095,6 +21097,7 @@ int RTCC::PMMXFR(int id, void *data)
 		man.code = code;
 		mpt->mantable.push_back(man);
 		mpt->TimeToBeginManeuver[CurMan - 1] = mpt->TimeToEndManeuver[CurMan - 1] = man.GMTMAN;
+		mpt->ManeuverNum = mpt->mantable.size();
 
 		if (man.GMTI < mpt->UpcomingManeuverGMT)
 		{
@@ -21155,6 +21158,7 @@ int RTCC::PMMXFR(int id, void *data)
 		man.AttitudeCode = RTCC_ATTITUDE_PGNS_ASCENT;
 		mpt->mantable.push_back(man);
 		mpt->TimeToBeginManeuver[CurMan - 1] = mpt->TimeToEndManeuver[CurMan - 1] = man.GMTMAN;
+		mpt->ManeuverNum = mpt->mantable.size();
 
 		if (man.GMTI < mpt->UpcomingManeuverGMT)
 		{
@@ -21263,7 +21267,6 @@ int RTCC::PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned Replac
 			PMXSPT("PMMXFR", 3);
 			return 3;
 		}
-		mpt->ManeuverNum = CurMan;
 		UpperLimit = 1e70;
 	}
 
