@@ -3868,6 +3868,9 @@ bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char *str, bool csm)
 {
+	//To update display immediately
+	GC->rtcc->VectorPanelSummaryBuffer.gmt = -1.0;
+
 	OBJHANDLE hVessel = oapiGetVesselByName(str);
 	if (hVessel)
 	{
@@ -4133,6 +4136,9 @@ bool EphemerisUpdateLEMInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::VectorControlPBI(int code)
 {
+	//To update display immediately
+	GC->rtcc->VectorPanelSummaryBuffer.gmt = -1.0;
+
 	GC->rtcc->BMSVPS(0, code);
 }
 
@@ -9294,6 +9300,9 @@ void ApolloRTCCMFD::menuSLVNavigationUpdateUplink()
 
 void ApolloRTCCMFD::menuGetOnboardStateVectors()
 {
+	//To update display immediately
+	GC->rtcc->VectorPanelSummaryBuffer.gmt = -1.0;
+
 	G->GetStateVectorFromAGC(true);
 	G->GetStateVectorFromAGC(false);
 	G->GetStateVectorFromIU();

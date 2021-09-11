@@ -436,7 +436,7 @@ void RTCC_EMSMISS::CallCoastIntegrator()
 	emmeniin.DensityMultiplier = DensityMultiplier;
 	emmeniin.EarthRelStopParam = intab->EarthRelStopParam;
 	emmeniin.MaxIntegTime = gmt_coast - state.StateVector.GMT;
-	if (emmeniin.MaxIntegTime > 0)
+	if (emmeniin.MaxIntegTime >= 0)
 	{
 		emmeniin.IsForwardIntegration = abs(intab->IsForwardIntegration);
 	}

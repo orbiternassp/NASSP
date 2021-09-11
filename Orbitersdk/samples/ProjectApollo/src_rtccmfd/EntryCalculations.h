@@ -380,7 +380,7 @@ struct DiscreteData
 class ConicRTEEarthNew : public RTCCModule
 {
 public:
-	ConicRTEEarthNew(RTCC *r, std::vector<EphemerisData> &SVArray);
+	ConicRTEEarthNew(RTCC *r, std::vector<EphemerisData2> &SVArray);
 	void MAIN();
 	void Init(double dvm, int icrngg, double irmax, double urmax, double rrbi, int imsfn);
 	void READ(int Mode, double gmtbase, double tzmin, double tzmax);
@@ -414,7 +414,7 @@ protected:
 	//0 = TCUA, 1 = FCUA, 2 = PTP tradeoff, 3 = PTP discrete, 4 = ATP tradeoff, 5 = ATP discrete
 	int Mode;
 	//State vector array
-	std::vector<EphemerisData> &XArray;
+	std::vector<EphemerisData2> &XArray;
 	//Maximum DV to be used for the abort manuever
 	double DVMAX;
 	//Time at which maneuver is to be computed

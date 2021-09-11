@@ -2019,6 +2019,8 @@ void ARCore::TLANDUplink(void)
 
 void ARCore::EMPP99Uplink(int i)
 {
+	if (vesseltype < 2 || vesseltype > 3) return;
+
 	if (i == 0)
 	{
 		g_Data.emem[0] = 24;

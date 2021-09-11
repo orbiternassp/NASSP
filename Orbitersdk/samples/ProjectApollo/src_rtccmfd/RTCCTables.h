@@ -348,7 +348,7 @@ struct EMSMISSInputTable
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame = 2;
 	//Minimum number of points desired in ephemeris
-	unsigned MinNumEphemPoints;
+	unsigned MinNumEphemPoints = 9;
 	bool ECIEphemerisIndicator = false;
 	bool ECTEphemerisIndicator = false;
 	bool MCIEphemerisIndicator = false;
