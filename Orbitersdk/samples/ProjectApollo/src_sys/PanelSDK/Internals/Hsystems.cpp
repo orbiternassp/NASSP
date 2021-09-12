@@ -1392,11 +1392,11 @@ void h_WaterSeparator::refresh(double dt) {
 	drpmcmd = rpmcmd - RPM;
 	if (drpmcmd >= 0.0)
 	{
-		delay = 7.0;	// Gives delay for WS spool up RPM/sec
+		delay = 7.0;	// Gives delay for WS spool up RPM/sec, approximately 2 minutes
 	}
 	else
 	{
-		delay = 28.0;	// Gives delay for WS spin down RPM/sec
+		delay = 30.0;	// Gives delay for WS spin down RPM/sec, approximately 1 minute
 	}
 	if (abs(drpmcmd) > delay*dt)
 	{
