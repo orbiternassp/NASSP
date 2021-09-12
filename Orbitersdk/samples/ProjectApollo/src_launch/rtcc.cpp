@@ -4385,7 +4385,8 @@ void RTCC::EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad)
 		}
 
 		pad.Att400K[0] = _V(OrbMech::imulimit(EIangles.x*DEG), OrbMech::imulimit(EIangles.y*DEG), OrbMech::imulimit(EIangles.z*DEG));
-		pad.dVTO[0] = 0.0;//-60832.18 / m1 / 0.3048;
+		pad.dVTO[0] = -SystemParameters.MCTST5 / sv1.mass*SystemParameters.MCTSD5;
+		pad.dVTO[0] /= 0.3048;
 		if (opt.lat == 0)
 		{
 			pad.Lat[0] = lat*DEG;
@@ -33053,9 +33054,17 @@ void RTCC::LMMGRP(int veh, double gmt)
 	//IU
 	else
 	{
-		double DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * gmt / 3600.0;
-		GZLTRA.IU1_REFSMMAT = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -phi, 2, -SystemParameters.MCLABN, 1);
-		GZLTRA.IU1_REFSMMAT = mul(GZLTRA.IU1_REFSMMAT, OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)); //Remove when coordinate system is correct
+		double MJD_GRR = OrbMech::MJDfromGET(gmt, SystemParameters.GMTBASE);
+		MATRIX3 M_equ_ecl_LH = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_GRR);
+		MATRIX3 M_equ_ecl = MatrixRH_LH(M_equ_ecl_LH);
+		MATRIX3 MSG = OrbMech::MSGMatrix(phi, SystemParameters.MCLABN);
+		MATRIX3 MEG = OrbMech::MEGMatrix(SystemParameters.MCLGRA);
+		MATRIX3 MES = mul(OrbMech::tmat(MSG), MEG);
+		GZLTRA.IU1_REFSMMAT = mul(MES, OrbMech::tmat(M_equ_ecl));
+
+		//double DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * gmt / 3600.0;
+		//GZLTRA.IU1_REFSMMAT = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -phi, 2, -SystemParameters.MCLABN, 1);
+		//GZLTRA.IU1_REFSMMAT = mul(GZLTRA.IU1_REFSMMAT, OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)); //Remove when coordinate system is correct
 
 		RTCCONLINEMON.TextBuffer[0] = "IU1";
 		RTCCONLINEMON.MatrixBuffer = GZLTRA.IU1_REFSMMAT;

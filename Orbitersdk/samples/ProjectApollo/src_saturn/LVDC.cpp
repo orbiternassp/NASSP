@@ -2315,7 +2315,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Xtt_p", Xtt_p);
 	papiWriteScenario_double(scn, "LVDC_X_Zi", X_Zi);
 	papiWriteScenario_double(scn, "LVDC_X_Yi", X_Yi);
-	papiWriteScenario_double(scn, "LVDC_Y_u", Y_u);
 	papiWriteScenario_doublearr(scn, "LVDC_SP_M", SP_M, 10);
 	papiWriteScenario_doublearr(scn, "LVDC_CP_M", CP_M, 10);
 	papiWriteScenario_doublearr(scn, "LVDC_SY_M", SY_M, 10);
@@ -2679,7 +2678,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Xtt_p", Xtt_p);
 		papiReadScenario_double(line, "LVDC_X_Zi", X_Zi);
 		papiReadScenario_double(line, "LVDC_X_Yi", X_Yi);
-		papiReadScenario_double(line, "LVDC_Y_u", Y_u);
 		papiReadScenario_doublearr(line, "LVDC_SP_M", SP_M, 10);
 		papiReadScenario_doublearr(line, "LVDC_CP_M", CP_M, 10);
 		papiReadScenario_doublearr(line, "LVDC_SY_M", SY_M, 10);
@@ -2901,10 +2899,10 @@ VECTOR3 LVDC1B::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 {
 	VECTOR3 GTEMP;
 	double P_34, S_34;
-	double Y_G = (Rvec.x*MX_A.m21 + Rvec.y*MX_A.m22 + Rvec.z*MX_A.m23); //position component south of equator
+	Y_u = -(Rvec.x*MX_A.m21 + Rvec.y*MX_A.m22 + Rvec.z*MX_A.m23); //position component south of equator
 	double rtemp = length(Rvec); //instantaneous distance from earth's center
 	double AoverR = a / rtemp;
-	double YoverR = Y_G / rtemp;
+	double YoverR = Y_u / rtemp;
 	if (J2only)
 	{
 		S_34 = 0.0;
@@ -2913,13 +2911,13 @@ VECTOR3 LVDC1B::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 	else
 	{
 		S_34 = H * pow(AoverR, 3)*(YoverR)*(3.0 - 7.0*pow(YoverR, 2)) + D / 7.0*pow(AoverR, 4)*(3.0 - 42.0*pow(YoverR, 2) + 63.0*pow(YoverR, 4));
-		P_34 = H / 5.0*pow(AoverR, 2)*(15.0*(YoverR) - 3.0) + D / 7.0*pow(AoverR, 2)*YoverR*(12.0 - 28.0*pow(YoverR, 2));
+		P_34 = H / 5.0*(AoverR)*(15.0*pow(YoverR, 2) - 3.0) + D / 7.0*pow(AoverR, 2)*YoverR*(12.0 - 28.0*pow(YoverR, 2));
 	}
 	S = (-mu / pow(rtemp, 3))*(1.0 + J * pow(AoverR, 2)*(1.0 - 5.0 * pow(YoverR, 2)) + S_34);
 	P = (-mu / pow(rtemp, 2))*pow(AoverR, 2) *(2.0*J*(YoverR) + P_34);
-	GTEMP.x = Rvec.x*S + MX_A.m21*P; //gravity acceleration vector
-	GTEMP.y = Rvec.y*S + MX_A.m22*P;
-	GTEMP.z = Rvec.z*S + MX_A.m23*P;
+	GTEMP.x = Rvec.x*S - MX_A.m21*P; //gravity acceleration vector
+	GTEMP.y = Rvec.y*S - MX_A.m22*P;
+	GTEMP.z = Rvec.z*S - MX_A.m23*P;
 	return GTEMP;
 }
 
@@ -3579,9 +3577,9 @@ void LVDCSV::Init(){
 	MSK5 = 0.48*RAD;
 	rho = 0;
 	rho_c = 0.5e-7;
-	ROV = 1.48119724870249; //0.75-17
+	ROV = 1.5;
 	ROVs = 1.5;
-	ROVR = 0.0;
+	ROVR = -0.4;
 	PHI = 28.6082888*RAD;
 	PHIP = 28.6082888*RAD;
 	R_L = 6373418.5;
@@ -3663,7 +3661,7 @@ void LVDCSV::Init(){
 	ART = 0;
 
 	//Not in boeing doc, but needed for nav:
-	a = 6378137;							// earth's equatorial radius
+	a = 6.373338e6;							// earth's equatorial radius
 	J = 1.62345e-3;							// first coefficient of earth's gravity
 	D = 0.7875e-5;
 	H = 0.575e-5;
@@ -6767,7 +6765,7 @@ void LVDCSV::BoostNavigation()
 	R = length(PosS); //instantaneous distance from earth's center
 	//Gravitation Subroutine
 	ddotG_act = GravitationSubroutine(PosS, true);
-	CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
+	CG = length(ddotG_act);
 	//Compute Gravitational Velocity
 	DotG_act = DotG_last + (ddotG_act + ddotG_last)*dt_c / 2.0;
 	//Compute Space-Fixed Velocity
@@ -9739,7 +9737,7 @@ VECTOR3 LVDCSV::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 {
 	VECTOR3 GTEMP;
 	double P_34, S_34;
-	Y_u = (Rvec.x*MX_A.m21 + Rvec.y*MX_A.m22 + Rvec.z*MX_A.m23); //position component south of equator
+	Y_u = -(Rvec.x*MX_A.m21 + Rvec.y*MX_A.m22 + Rvec.z*MX_A.m23); //position component south of equator
 	double rtemp = length(Rvec); //instantaneous distance from earth's center
 	double AoverR = a / rtemp;
 	double YoverR = Y_u / rtemp;
@@ -9751,13 +9749,13 @@ VECTOR3 LVDCSV::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 	else
 	{
 		S_34 = H * pow(AoverR, 3)*(YoverR)*(3.0 - 7.0*pow(YoverR, 2)) + D / 7.0*pow(AoverR, 4)*(3.0 - 42.0*pow(YoverR, 2) + 63.0*pow(YoverR, 4));
-		P_34 = H / 5.0*pow(AoverR, 2)*(15.0*(YoverR)-3.0) + D / 7.0*pow(AoverR, 2)*YoverR*(12.0 - 28.0*pow(YoverR, 2));
+		P_34 = H / 5.0*(AoverR)*(15.0*pow(YoverR, 2) - 3.0) + D / 7.0*pow(AoverR, 2)*YoverR*(12.0 - 28.0*pow(YoverR, 2));
 	}
 	S = (-mu / pow(rtemp, 3))*(1.0 + J * pow(AoverR, 2)*(1.0 - 5.0 * pow(YoverR, 2)) + S_34);
 	P = (-mu / pow(rtemp, 2))*pow(AoverR, 2) *(2.0*J*(YoverR)+P_34);
-	GTEMP.x = Rvec.x*S + MX_A.m21*P; //gravity acceleration vector
-	GTEMP.y = Rvec.y*S + MX_A.m22*P;
-	GTEMP.z = Rvec.z*S + MX_A.m23*P;
+	GTEMP.x = Rvec.x*S - MX_A.m21*P; //gravity acceleration vector
+	GTEMP.y = Rvec.y*S - MX_A.m22*P;
+	GTEMP.z = Rvec.z*S - MX_A.m23*P;
 	return GTEMP;
 }
 
