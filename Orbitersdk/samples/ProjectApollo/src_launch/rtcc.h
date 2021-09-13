@@ -2872,6 +2872,10 @@ public:
 	void CMMDTGTU(double t_land);
 	//Retrofire External Delta V Update Generator
 	void CMMRXTDV(int source, int column);
+	//CSM/LM Liftoff Update
+	void CMMLIFTF(int L, double hrs);
+	//CSM/LM Time Increment Update Generator
+	void CMMTMEIN(int L, double hrs);
 
 	// MISSION CONTROL (G)
 
@@ -4486,6 +4490,42 @@ public:
 		double GETTD = 0.0; //Time of landing
 	} CZTDTGTU;
 
+	struct AGCLiftoffTimeUpdateMakeupTableBlock
+	{
+		int UpdateNo = 0;
+		int SequenceNumber = 0;
+		std::string PrimarySite;
+		std::string BackupSite;
+		double GETofGeneration = 0.0;
+		double TimeIncrement = 0.0;
+		int Octals[2] = { 0,0 };
+		int VehicleID = 0;
+		int VerbSymbol = 70;
+	};
+
+	struct AGCLiftoffTimeUpdateMakeupTable
+	{
+		AGCLiftoffTimeUpdateMakeupTableBlock Blocks[2];
+	} CZLIFTFF;
+
+	struct AGCTimeIncrementMakeupTableBlock
+	{
+		int UpdateNo = 0;
+		int SequenceNumber = 0;
+		std::string PrimarySite;
+		std::string BackupSite;
+		double GETofGeneration = 0.0;
+		double TimeIncrement = 0.0;
+		int Octals[2] = { 0,0 };
+		int VehicleID = 0;
+		int VerbSymbol = 73;
+	};
+
+	struct AGCTimeIncrementMakeupTable
+	{
+		AGCTimeIncrementMakeupTableBlock Blocks[2];
+	} CZTMEINC;
+
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{
 		double LastUpdateTime = -1.0;
@@ -4569,10 +4609,11 @@ public:
 		std::string config;
 	} VEHDATABUF;
 
-private:
-	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	double GetClockTimeFromAGC(agc_t *agc);
 	double GetTEPHEMFromAGC(agc_t *agc);
+
+private:
+	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
@@ -4585,10 +4626,9 @@ private:
 	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoordSystem = false);
 	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
-	void IncrementAGCTime(char *list, double dt);
+	void IncrementAGCTime(char *list, int veh, double dt);
 	void TLANDUpdate(char *list, double t_land);
-	void V71Update(char *list, int* emem, int n);
-	void V72Update(char *list, int *emem, int n);
+	void V7XUpdate(int verb, char *list, int* emem, int n);
 	void SunburstAttitudeManeuver(char *list, VECTOR3 imuangles);
 	void SunburstLMPCommand(char *list, int code);
 	void SunburstMassUpdate(char *list, double masskg);

@@ -6266,13 +6266,13 @@ void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 void RTCC::CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
 {
 	CMMAXTDV(P30TIG, dV_LVLH);
-	V71Update(str, CZAXTRDV.Octals, 10);
+	V7XUpdate(71, str, CZAXTRDV.Octals, 10);
 }
 
 void RTCC::LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
 {
 	CMMLXTDV(P30TIG, dV_LVLH);
-	V71Update(str, CZLXTRDV.Octals, 10);
+	V7XUpdate(71, str, CZLXTRDV.Octals, 10);
 }
 
 void RTCC::CMMCMNAV(int veh, int mpt, double GETSV)
@@ -6476,7 +6476,7 @@ void RTCC::AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, 
 			buf = &CZNAVGEN.LGCLEMUpdate;
 		}
 	}
-	V71Update(str, buf->Octals, 17);
+	V7XUpdate(71, str, buf->Octals, 17);
 	if (v66)
 	{
 		sprintf(str, "%sV66EV37E00E", str);
@@ -6557,7 +6557,7 @@ void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double GETbase, bool
 		emem[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
 		emem[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
 	}
-	V71Update(str, emem, 17);
+	V7XUpdate(71, str, emem, 17);
 	if (v66)
 	{
 		sprintf(str, "%sV66EV37E00E", str);
@@ -6576,26 +6576,28 @@ void RTCC::LandingSiteUplink(char *str, int veh)
 	{
 		octals = CZLSVECT.LMLSUpdate.Octals;
 	}
-	V71Update(str, octals, 8);
+	V7XUpdate(71, str, octals, 8);
 }
 
-void RTCC::IncrementAGCTime(char *list, double dt)
+void RTCC::IncrementAGCTime(char *list, int veh, double dt)
 {
-	int emem[2];
+	CMMTMEIN(veh, dt / 3600.0);
+	int *octals;
+	if (veh == RTCC_MPT_CSM)
+	{
+		octals = CZTMEINC.Blocks[0].Octals;
+	}
+	else
+	{
+		octals = CZTMEINC.Blocks[1].Octals;
+	}
 
-	sprintf(list, "V73E");
-
-	emem[0] = OrbMech::DoubleToBuffer(dt, 28, 1);
-	emem[1] = OrbMech::DoubleToBuffer(dt, 28, 0);
-
-	sprintf(list, "%s%dE", list, emem[0]);
-	sprintf(list, "%s%dE", list, emem[1]);
-	sprintf(list, "%sV33E", list);
+	V7XUpdate(73, list, octals, 3);
 }
 
-void RTCC::V71Update(char *list, int *emem, int n)
+void RTCC::V7XUpdate(int verb, char *list, int* emem, int n)
 {
-	sprintf(list, "V71E%dE", emem[0]);
+	sprintf(list, "V%dE%dE", verb, emem[0]);
 	for (int i = 1;i < n;i++)
 	{
 		sprintf(list, "%s%dE", list, emem[i]);
@@ -6606,17 +6608,7 @@ void RTCC::V71Update(char *list, int *emem, int n)
 void RTCC::TLANDUpdate(char *list, double t_land)
 {
 	CMMDTGTU(t_land);
-	V72Update(list, CZTDTGTU.Octals, 5);
-}
-
-void RTCC::V72Update(char *list, int *emem, int n)
-{
-	sprintf(list, "V72E%dE", emem[0]);
-	for (int i = 1;i < n;i++)
-	{
-		sprintf(list, "%s%dE", list, emem[i]);
-	}
-	sprintf(list, "%sV33E", list);
+	V7XUpdate(72, list, CZTDTGTU.Octals, 5);
 }
 
 void RTCC::SunburstAttitudeManeuver(char *list, VECTOR3 imuangles)
@@ -6700,7 +6692,7 @@ void RTCC::AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool
 	emem[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
 	emem[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
-	V71Update(list, emem, 20);
+	V7XUpdate(71, list, emem, 20);
 }
 
 void RTCC::AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoordSystem)
@@ -6748,7 +6740,7 @@ void RTCC::AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoo
 	emem[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
 	emem[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
-	V71Update(list, emem, 20);
+	V7XUpdate(71, list, emem, 20);
 }
 
 void RTCC::CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH)
@@ -6771,7 +6763,7 @@ void RTCC::CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double Ln
 	emem[12] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
 	emem[13] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
 
-	V71Update(list, emem, 14);
+	V7XUpdate(71, list, emem, 14);
 }
 
 void RTCC::CMCEntryUpdate(char *list, double LatSPL, double LngSPL)
@@ -6785,7 +6777,7 @@ void RTCC::CMCEntryUpdate(char *list, double LatSPL, double LngSPL)
 	emem[4] = OrbMech::DoubleToBuffer(LngSPL / PI2, 0, 1);
 	emem[5] = OrbMech::DoubleToBuffer(LngSPL / PI2, 0, 0);
 
-	V71Update(list, emem, 6);
+	V7XUpdate(71, list, emem, 6);
 }
 
 void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
@@ -16889,6 +16881,16 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 			else
 			{
 				InTable.AnchorVector = InTable.NIAuxOutputTable.sv_cutoff;
+				double dt = PresentGMT - InTable.AnchorVector.GMT;
+				InTable.MaxIntegTime = abs(PresentGMT - InTable.AnchorVector.GMT);
+				if (dt >= 0.0)
+				{
+					InTable.IsForwardIntegration = 1.0;
+				}
+				else
+				{
+					InTable.IsForwardIntegration = -1.0;
+				}
 			}
 			InTable.IgnoreManueverNumber = InTable.NIAuxOutputTable.ManeuverNumber;
 		}
@@ -18716,11 +18718,21 @@ bool RTCC::MEDTimeInputHHMMSS(std::string vec, double &hours)
 {
 	int hh, mm;
 	double ss;
+	bool pos = true;
 	if (sscanf_s(vec.c_str(), "%d:%d:%lf", &hh, &mm, &ss) != 3)
 	{
 		return true;
 	}
+	if (vec[0] == '-')
+	{
+		pos = false;
+		hh = abs(hh);
+	}
 	hours = (double)hh + (double)mm / 60.0 + ss / 3600.0;
+	if (pos == false)
+	{
+		hours = -hours;
+	}
 	return false;
 }
 
@@ -25964,8 +25976,94 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 
 int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 {
+	//Landing Site Vector Update
+	if (med == "06")
+	{
+		if (data.size() < 1)
+		{
+			return 1;
+		}
+		int VehicleType;
+		if (data[0] == "CMC")
+		{
+			VehicleType = 1;
+		}
+		else if (data[0] == "LGC")
+		{
+			VehicleType = 2;
+		}
+		else
+		{
+			return 2;
+		}
+		CMMCMCLS(VehicleType);
+	}
+	//Initiate a DCS Time Increment Update
+	else if (med == "07")
+	{
+		if (data.size() < 2)
+		{
+			return 1;
+		}
+		int VehicleType;
+		if (data[0] == "CMC")
+		{
+			VehicleType = 1;
+		}
+		else if (data[0] == "LGC")
+		{
+			VehicleType = 2;
+		}
+		else
+		{
+			return 2;
+		}
+
+		double Inc;
+		if (MEDTimeInputHHMMSS(data[1], Inc))
+		{
+			return 2;
+		}
+		if (abs(Inc) > 745.5)
+		{
+			return 2;
+		}
+		CMMTMEIN(VehicleType, Inc);
+	}
+	//Initiate Liftoff Time Update
+	else if (med == "08")
+	{
+		if (data.size() < 2)
+		{
+			return 1;
+		}
+		int VehicleType;
+		if (data[0] == "CMC")
+		{
+			VehicleType = 1;
+		}
+		else if (data[0] == "LGC")
+		{
+			VehicleType = 2;
+		}
+		else
+		{
+			return 2;
+		}
+
+		double Inc;
+		if (MEDTimeInputHHMMSS(data[1], Inc))
+		{
+			return 2;
+		}
+		if (abs(Inc) > 745.5)
+		{
+			return 2;
+		}
+		CMMLIFTF(VehicleType, Inc);
+	}
 	//Initiate a CMC/LGC external delta-V update
-	if (med == "10")
+	else if (med == "10")
 	{
 		if (data.size() != 3)
 		{
@@ -32147,7 +32245,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 			goto RTCC_PMMDMT_PB2_6;
 		}
 
-		OrbMech::latlong_from_r(sv_true.R, mptman->lat_a, mptman->lng_p);
+		OrbMech::latlong_from_r(sv_true.R, mptman->lat_a, mptman->lng_a);
 
 		mptman->h_p = length(sv_p.R) - R_E;
 		mptman->GMT_p = OrbMech::GETfromMJD(sv_p.MJD,SystemParameters.GMTBASE);
@@ -32669,13 +32767,15 @@ RTCC_BMSVPS_1:
 	//To ephemeris update?
 	else if (PBIID >= 324 && PBIID <= 335)
 	{
+		int id = PBIID - 324;
+
 		//Get vector to cause ephemeris update
-		if (BZUSEVEC.data[PBIID - 324].ID < 0)
+		if (BZUSEVEC.data[id].ID < 0)
 		{
 			//Error
 			return;
 		}
-		EphemerisData sv = BZUSEVEC.data[PBIID - 324].Vector;
+		EphemerisData sv = BZUSEVEC.data[id].Vector;
 		int queid, L;
 		switch (PBIID)
 		{
@@ -32699,7 +32799,14 @@ RTCC_BMSVPS_1:
 		{
 			L = RTCC_MPT_LM;
 		}
-		PMSVCT(queid, L, &sv, BZUSEVEC.data[PBIID - 324].LandingSiteIndicator, BZUSEVEC.data[PBIID - 324].VectorCode);
+
+		//Never use a landing site vector for the CSM ephemeris
+		if (L == RTCC_MPT_CSM && BZUSEVEC.data[id].LandingSiteIndicator)
+		{
+			return;
+		}
+
+		PMSVCT(queid, L, &sv, BZUSEVEC.data[id].LandingSiteIndicator, BZUSEVEC.data[id].VectorCode);
 	}
 }
 
@@ -34127,6 +34234,84 @@ void RTCC::CMMRXTDV(int source, int column)
 	CZREXTDV.DV = DV / 0.3048;
 	CZREXTDV.Lat = lat * DEG;
 	CZREXTDV.Lng = lng * DEG;
+}
+
+void RTCC::CMMLIFTF(int L, double hrs)
+{
+	AGCLiftoffTimeUpdateMakeupTableBlock *block;
+
+	if (L == 1)
+	{
+		block = &CZLIFTFF.Blocks[0];
+
+		if (block->SequenceNumber == 0)
+		{
+			block->SequenceNumber = 800;
+		}
+		else
+		{
+			block->SequenceNumber++;
+		}
+	}
+	else
+	{
+		block = &CZLIFTFF.Blocks[1];
+
+		if (block->SequenceNumber == 0)
+		{
+			block->SequenceNumber = 2500;
+		}
+		else
+		{
+			block->SequenceNumber++;
+		}
+	}
+
+	block->GETofGeneration = GETfromGMT(RTCCPresentTimeGMT());
+
+	double centiseconds = hrs * 360000.0;
+	block->Octals[0] = OrbMech::DoubleToBuffer(centiseconds, 28, 1);
+	block->Octals[1] = OrbMech::DoubleToBuffer(centiseconds, 28, 0);
+	block->TimeIncrement = hrs * 3600.0;
+}
+
+void RTCC::CMMTMEIN(int L, double hrs)
+{
+	AGCTimeIncrementMakeupTableBlock *block;
+
+	if (L == 1)
+	{
+		block = &CZTMEINC.Blocks[0];
+
+		if (block->SequenceNumber == 0)
+		{
+			block->SequenceNumber = 700;
+		}
+		else
+		{
+			block->SequenceNumber++;
+		}
+	}
+	else
+	{
+		block = &CZTMEINC.Blocks[1];
+
+		if (block->SequenceNumber == 0)
+		{
+			block->SequenceNumber = 2400;
+		}
+		else
+		{
+			block->SequenceNumber++;
+		}
+	}
+
+	block->GETofGeneration = GETfromGMT(RTCCPresentTimeGMT());
+
+	double centiseconds = hrs * 360000.0;
+	block->Octals[0] = OrbMech::DoubleToBuffer(centiseconds, 28, 1);
+	block->Octals[1] = OrbMech::DoubleToBuffer(centiseconds, 28, 0);
+	block->TimeIncrement = hrs * 3600.0;
 }
 
 void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)
