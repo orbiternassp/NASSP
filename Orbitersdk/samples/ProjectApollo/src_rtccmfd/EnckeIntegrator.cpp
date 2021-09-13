@@ -35,6 +35,10 @@ EnckeFreeFlightIntegrator::EnckeFreeFlightIntegrator(RTCC *r) : RTCCModule(r)
 	{
 		pEph[i] = NULL;
 	}
+
+	P_S = 0;
+	SRTB = SRDTB = SY = SYP = _V(0, 0, 0);
+	STRECT = SDELT = 0.0;
 }
 
 EnckeFreeFlightIntegrator::~EnckeFreeFlightIntegrator()
@@ -288,7 +292,10 @@ EMMENI_Edit_4A:
 	{
 		//Now try to find TMAX
 		ISTOPS = 1;
-		RestoreVariables();
+		if (TMAX != 0.0)
+		{
+			RestoreVariables();
+		}
 		//Go back to find new dt
 		goto EMMENI_Edit_3B;
 	}
