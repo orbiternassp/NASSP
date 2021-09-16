@@ -1908,7 +1908,7 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 		BlockDataProcessor(&entopt, &res);
 
 		m1 = calcParams.src->GetMass()*exp(-length(res.dV_LVLH) / v_e);
-		Vc = length(res.dV_LVLH)*cos(-2.15*RAD)*cos(0.95*RAD);// -60832.18 / m1;
+		Vc = length(res.dV_LVLH) - 60832.18 / m1; //TBD
 
 		sprintf(pad.Area[i], opt->area[i].c_str());
 		sprintf(pad.Wx[i], weather);
@@ -4277,8 +4277,8 @@ void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
 
 	pad.ThisVehicleWeight = CSMmass / 0.45359237;
 	pad.OtherVehicleWeight = LMmass / 0.45359237;
-	pad.PitchTrim = p_T * DEG + 2.15;
-	pad.YawTrim = y_T * DEG - 0.95;
+	pad.PitchTrim = (p_T - SystemParameters.MCTSPP)*DEG;
+	pad.YawTrim = (y_T - SystemParameters.MCTSYP)*DEG;
 }
 
 void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc)
@@ -21680,8 +21680,8 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	res.DV_TO = man->dv_TO / 0.3048;
 	if (man->Thruster == RTCC_ENGINETYPE_CSMSPS)
 	{
-		res.DEL_P = man->P_G*DEG + 2.15;
-		res.DEL_Y = man->Y_G*DEG - 0.95;
+		res.DEL_P = (man->P_G - SystemParameters.MCTSPP)*DEG;
+		res.DEL_Y = (man->Y_G - SystemParameters.MCTSYP)*DEG;
 	}
 	else
 	{

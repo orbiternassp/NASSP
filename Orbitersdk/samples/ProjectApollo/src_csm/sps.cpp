@@ -720,7 +720,10 @@ void SPSEngine::Timestep(double simt, double simdt) {
 		spsvector.x = (yawGimbalActuator.GetPosition() + SPS_YAW_OFFSET) * RAD; // Convert deg to rad
 		spsvector.y = (pitchGimbalActuator.GetPosition() + SPS_PITCH_OFFSET) * RAD;
 		spsvector.z = 1;
+		spsvector = unit(spsvector);
 		saturn->SetThrusterDir(spsThruster, spsvector);
+
+		//sprintf(oapiDebugString(), "%lf %lf", pitchGimbalActuator.GetPosition(), yawGimbalActuator.GetPosition());
 	}
 }
 

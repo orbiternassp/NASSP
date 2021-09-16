@@ -947,6 +947,10 @@ void Saturn::initSaturn()
 
 	COASreticlevisible = false;
 
+	CurrentFuelWeight = 0;
+	LastFuelWeight = 999999; // Ensure update at first opportunity
+	currentCoG = _V(0, 0, 0);
+
 	// call only once 
 	if (!InitSaturnCalled) {
 
@@ -4337,6 +4341,9 @@ void Saturn::LoadDefaultSounds()
 void Saturn::StageSix(double simt)
 
 {
+	//TBD: Use this function to shift the CG
+	//UpdateMassAndCoG();
+
 	if (ApolloNo == 1301) {
 
 		//
@@ -4748,6 +4755,97 @@ void Saturn::VHFRangingReturnSignal() //DELETE ME WHEN YOU ADD THE CONNECTOR
 void Saturn::StartSeparationPyros()
 {
 	payloadCommandConnector.StartSeparationPyros();
+}
+
+void Saturn::UpdateMassAndCoG()
+{
+	CurrentFuelWeight = 0;
+	if (ph_sps != NULL) { CurrentFuelWeight += GetPropellantMass(ph_sps); }
+	if ((LastFuelWeight - CurrentFuelWeight) > 100.0)
+	{
+		// Update physical parameters
+		VECTOR3 pmi, CoG;
+		CalculatePMIandCOG(pmi, CoG);
+		// Use SetPMI, ShiftCG, etc.
+		VECTOR3 CoGShift = CoG - currentCoG;
+		ShiftCG(CoGShift);
+		SetPMI(pmi);
+		currentCoG = CoG;
+
+		//Touchdown Points
+		//DefineTouchdownPoints(stage);
+
+		//Lights
+
+		// All done!
+		LastFuelWeight = CurrentFuelWeight;
+	}
+}
+
+void Saturn::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
+{
+	//Empty SM including SM RCS prop and SPS residuals
+	static const double MSM = 10675.0;
+	static const VECTOR3 CGSM = _V(918.7, -5.7, 11.2);
+	//CM including CM RCS
+	static const double MCM = 12392.0;
+	static const VECTOR3 CGCM = _V(1042.1, -0.2, 5.8);
+	//Sump tank capacity
+	static const double MSUMP = 22300;
+
+	double propmass = CurrentFuelWeight / 0.453597;
+
+	double mass, sumpm, storem, oxstorem, fuelstorem, oxsumpm, fuelsumpm;
+	
+	mass = propmass + MCM + MSM;
+
+	if (propmass > MSUMP)
+	{
+		sumpm = MSUMP;
+		storem = propmass - MSUMP;
+	}
+	else
+	{
+		sumpm = propmass;
+		storem = 0;
+	}
+
+	oxstorem = storem * 1.6 / (1.0 + 1.6);
+	fuelstorem = storem * 1.0 / (1.0 + 1.6);
+	oxsumpm = sumpm * 1.6 / (1.0 + 1.6);
+	fuelsumpm = sumpm * 1.0 / (1.0 + 1.6);
+
+	static const double oxid_store_tank_param[3] = { -8.385141e-9, 0.0061750118, 838.7809363 };
+	static const double fuel_store_tank_param[3] = { -2.144163e-8, 0.0098738581, 838.7809363 };
+	static const double oxid_sump_tank_param[3] = { -2.599892e-9, 0.0047770151, 839.7803146 };
+	static const double fuel_sump_tank_param[3] = { -6.63916e-9, 0.0076383695, 839.7803146 };
+
+	double cgx;
+
+	cgx = oxid_store_tank_param[0] * pow(oxstorem, 2) + oxid_store_tank_param[1] * oxstorem + oxid_store_tank_param[2];
+	VECTOR3 ox_store_CG = _V(cgx, 14.8, 47.8);
+
+	cgx = fuel_store_tank_param[0] * pow(oxstorem, 2) + fuel_store_tank_param[1] * fuelstorem + fuel_store_tank_param[2];
+	VECTOR3 fuel_store_CG = _V(cgx, -14.8, -47.8);
+
+	cgx = oxid_sump_tank_param[0] * pow(oxsumpm, 2) + oxid_sump_tank_param[1] * oxsumpm + oxid_sump_tank_param[2];
+	VECTOR3 ox_sump_CG = _V(cgx, 48.3, 6.6);
+
+	cgx = fuel_sump_tank_param[0] * pow(fuelsumpm, 2) + fuel_sump_tank_param[1] * fuelsumpm + fuel_sump_tank_param[2];
+	VECTOR3 fuel_sump_CG = _V(cgx, -48.3, -6.6);
+
+	COG = (CGCM*MCM + CGSM * MSM + ox_store_CG * oxstorem + ox_sump_CG * oxsumpm + fuel_store_CG * fuelstorem + fuel_sump_CG * fuelsumpm) / mass;
+	//sprintf(oapiDebugString(), "%lf %lf %lf %lf", propmass, COG.x, COG.y, COG.z);
+	COG = COG * 0.0254;
+
+	//Convert to Orbiter
+	COG = _V(COG.y, -COG.z, COG.x - 24.538);
+
+	//PMI
+	//Empirical data from CSM-109, Spacecraft Operational Data Book Volume III
+	PMI.x = -1.626316e-6*propmass + 1.661697874;
+	PMI.y = -4.372105e-5*propmass + 5.318744779;
+	PMI.z = -4.190526e-5*propmass + 5.371149095;
 }
 
 //
