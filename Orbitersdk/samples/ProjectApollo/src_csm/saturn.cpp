@@ -4851,9 +4851,9 @@ void Saturn::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 
 	//PMI
 	//Empirical data from CSM-109, Spacecraft Operational Data Book Volume III
-	PMI.x = -1.626316e-6*propmass + 1.661697874;
-	PMI.y = -4.372105e-5*propmass + 5.318744779;
-	PMI.z = -4.190526e-5*propmass + 5.371149095;
+	PMI.x = -4.372105e-5*propmass + 5.318744779;
+	PMI.y = -4.190526e-5*propmass + 5.371149095;
+	PMI.z = -1.626316e-6*propmass + 1.661697874;
 }
 
 //
