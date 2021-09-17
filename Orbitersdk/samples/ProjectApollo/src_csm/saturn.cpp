@@ -4077,7 +4077,7 @@ void Saturn::SetGenericStageState()
 
 	case CM_STAGE:
 	case CM_ENTRY_STAGE_TWO:
-		SetReentryStage();
+		SetReentryStage(_V(0,0,0));
 		break;
 
 	case CM_ENTRY_STAGE_THREE:
@@ -4105,7 +4105,7 @@ void Saturn::SetGenericStageState()
 		break;
 
 	case CM_ENTRY_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 	}
 }
@@ -4342,7 +4342,7 @@ void Saturn::StageSix(double simt)
 
 {
 	//TBD: Use this function to shift the CG
-	//UpdateMassAndCoG();
+	UpdateMassAndCoG();
 
 	if (ApolloNo == 1301) {
 
@@ -4773,31 +4773,39 @@ void Saturn::UpdateMassAndCoG()
 		currentCoG = CoG;
 
 		//Touchdown Points
-		//DefineTouchdownPoints(stage);
-
-		//Lights
+		ConfigTouchdownPoints();
 
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;
+
+		//char Buffer[128];
+		//sprintf(Buffer, "New CG: %lf %lf %lf", currentCoG.x, currentCoG.y, currentCoG.z);
+		//oapiWriteLog(Buffer);
+		//sprintf(Buffer, "New PMI: %lf %lf %lf", pmi.x, pmi.y, pmi.z);
+		//oapiWriteLog(Buffer);
 	}
 }
 
 void Saturn::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 {
-	//Empty SM including SM RCS prop and SPS residuals
-	static const double MSM = 10675.0;
-	static const VECTOR3 CGSM = _V(918.7, -5.7, 11.2);
+	//Empty SM including SM RCS prop and SPS residuals (and SLA ring?)
+	static const double MSM = SM_EmptyMass / 0.453597;// 10675.0;
+	const VECTOR3 CGSM = pMission->GetCGOfEmptySM();
 	//CM including CM RCS
-	static const double MCM = 12392.0;
-	static const VECTOR3 CGCM = _V(1042.1, -0.2, 5.8);
+	const double MCM = (CM_EmptyMass + 2.0*55.5) / 0.453597;
+	static const VECTOR3 CGCM = _V(1041.7, -0.4, 5.6); // Apollo 9 - Contingency Deorbit Abort Plan, End of Mission
 	//Sump tank capacity
-	static const double MSUMP = 22300;
+	static const double MSUMP = 23068.1; //22300.0;
+	//Full SM RCS mass
+	static const double MRCINIT = 1344.82;
+	//CG of SM RCS
+	static const VECTOR3 CGRCS = _V(941.8, 0, 0);
 
 	double propmass = CurrentFuelWeight / 0.453597;
 
 	double mass, sumpm, storem, oxstorem, fuelstorem, oxsumpm, fuelsumpm;
 	
-	mass = propmass + MCM + MSM;
+	mass = propmass + MRCINIT + MCM + MSM;
 
 	if (propmass > MSUMP)
 	{
@@ -4834,7 +4842,7 @@ void Saturn::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 	cgx = fuel_sump_tank_param[0] * pow(fuelsumpm, 2) + fuel_sump_tank_param[1] * fuelsumpm + fuel_sump_tank_param[2];
 	VECTOR3 fuel_sump_CG = _V(cgx, -48.3, -6.6);
 
-	COG = (CGCM*MCM + CGSM * MSM + ox_store_CG * oxstorem + ox_sump_CG * oxsumpm + fuel_store_CG * fuelstorem + fuel_sump_CG * fuelsumpm) / mass;
+	COG = (CGCM*MCM + CGSM * MSM + ox_store_CG * oxstorem + ox_sump_CG * oxsumpm + fuel_store_CG * fuelstorem + fuel_sump_CG * fuelsumpm + CGRCS*MRCINIT) / mass;
 	//sprintf(oapiDebugString(), "%lf %lf %lf %lf", propmass, COG.x, COG.y, COG.z);
 	COG = COG * 0.0254;
 

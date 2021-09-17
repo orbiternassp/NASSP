@@ -658,12 +658,7 @@ void Saturn::SetCSMStage ()
 	const double CGOffset = 12.25+21.5-1.8+0.35;
 	AddSM(30.25 - CGOffset, true);
 
-	double td_mass = CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2);
-	double td_width = 4.0;
-	double td_tdph = -6.0;
-	double td_height = 5.5;
-
-	ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height, -0.1);
+	ConfigTouchdownPoints();
 
 	VECTOR3 mesh_dir;
 
@@ -1042,7 +1037,7 @@ void Saturn::SetCOASMesh() {
 	}
 }
 
-void Saturn::SetReentryStage ()
+void Saturn::SetReentryStage (VECTOR3 cg_ofs)
 
 {
     ClearThrusters();
@@ -1056,6 +1051,9 @@ void Saturn::SetReentryStage ()
 	agc.SetInputChannelBit(030, LiftOff, false);
 	agc.SetInputChannelBit(030, GuidanceReferenceRelease, false);
 	agc.SetInputChannelBit(030, UllageThrust, false);
+
+	ShiftCG(-currentCoG + cg_ofs);
+	currentCoG = _V(0, 0, 0);
 
 	hga.DeleteAnimations();
 	SPSEngine.DeleteAnimations();
@@ -1261,7 +1259,7 @@ void Saturn::SetReentryMeshes() {
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 	// VC
-	UpdateVC(mesh_dir);
+	//UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
@@ -1844,6 +1842,24 @@ void Saturn::CMLETCanardAirfoilConfig()
 	CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.0, 1.12), CMLETCanardVertCoeffFunc, 3.5, 11.95 / 2.0, 1.0);
 	CreateAirfoil(LIFT_HORIZONTAL, _V(0.0, 0.0, 1.12), CMLETHoriCoeffFunc, 3.5, 11.95 / 2.0, 1.0);
 }
+
+void Saturn::ConfigTouchdownPoints()
+{
+	double td_mass, td_width, td_tdph, td_height;
+
+	switch (stage)
+	{
+	case CSM_LEM_STAGE:
+		td_mass = CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2);
+		td_width = 4.0;
+		td_tdph = -6.0;
+		td_height = 5.5;
+
+		ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height, -0.1);
+		break;
+	}
+}
+
 void Saturn::ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target)
 {
 
@@ -1868,6 +1884,11 @@ void Saturn::ConfigTouchdownPoints(double mass, double ro, double tdph, double h
 	td[3].pos.x = 0;
 	td[3].pos.y = 0;
 	td[3].pos.z = tdph + height;
+
+	for (int i = 0;i < 4;i++)
+	{
+		td[i].pos -= currentCoG;
+	}
 
 	SetTouchdownPoints(td, 4);
 }

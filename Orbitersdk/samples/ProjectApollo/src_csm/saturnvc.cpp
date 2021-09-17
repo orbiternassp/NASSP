@@ -926,6 +926,9 @@ void Saturn::RegisterActiveAreas() {
 		}
 	}
 
+	//Apply center of gravity offset here
+	ofs -= currentCoG;
+
 	//
 	// Register active areas for switches/animations here
 	//
