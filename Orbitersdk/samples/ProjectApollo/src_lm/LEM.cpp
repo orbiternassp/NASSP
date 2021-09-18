@@ -1972,7 +1972,13 @@ void LEM::SetStateEx(const void *status)
 void LEM::clbkSaveState (FILEHANDLE scn)
 
 {
-	SaveDefaultState (scn);	
+	// save default vessel parameters
+	// set CoG to center of mesh before saving scenario; otherwise, LM position will change slightly when saved scenario is loaded
+	ShiftCG(-currentCoG);
+	VESSEL4::clbkSaveState(scn);
+	// reset CoG to correct position
+	ShiftCG(currentCoG); 
+
 	oapiWriteScenario_int (scn, "CONFIGURATION", status);
 	if (CDREVA_IP){
 		oapiWriteScenario_int (scn, "EVA", int(TO_EVA));

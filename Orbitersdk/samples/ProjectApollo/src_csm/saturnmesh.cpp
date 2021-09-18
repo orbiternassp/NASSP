@@ -712,7 +712,6 @@ void Saturn::SetCSMStage ()
 
 	// VC
 	UpdateVC(mesh_dir);
-	VCMeshOffset = mesh_dir;
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
@@ -1283,8 +1282,6 @@ void Saturn::SetReentryMeshes() {
 		probeidx = -1;
 		probeextidx = -1;
 	}
-
-	VCMeshOffset = mesh_dir;
 }
 
 void Saturn::StageSeven(double simt)
@@ -1560,7 +1557,6 @@ void Saturn::SetRecovery()
 
 	// VC
 	UpdateVC(mesh_dir);
-	VCMeshOffset = mesh_dir;
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();

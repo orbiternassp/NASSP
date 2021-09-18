@@ -1275,7 +1275,18 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 void Saturn::clbkSaveState(FILEHANDLE scn)
 
 {
-	VESSEL2::clbkSaveState (scn);
+	// set CoG to center of mesh before saving scenario; otherwise, CSM position will change slightly when saved scenario is loaded
+	if (stage == CSM_LEM_STAGE)
+	{
+		ShiftCG(-currentCoG);
+	}
+	// save default vessel parameters
+	VESSEL4::clbkSaveState(scn);
+	// reset CoG to correct position
+	if (stage == CSM_LEM_STAGE)
+	{
+		ShiftCG(currentCoG);
+	}
 
 	int i = 1;
 	char str[256];

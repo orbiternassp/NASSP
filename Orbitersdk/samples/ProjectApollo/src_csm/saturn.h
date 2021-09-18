@@ -3967,13 +3967,6 @@ protected:
 
 	double PanelPixelHeight;
 
-	//
-	// Virtual cockpit
-	//
-
-	VECTOR3 VCCameraOffset;
-	VECTOR3 VCMeshOffset;
-
 	bool KranzPlayed;
 	bool PostSplashdownPlayed;
 	bool SplashdownPlayed;
