@@ -4761,7 +4761,8 @@ void Saturn::UpdateMassAndCoG()
 {
 	CurrentFuelWeight = 0;
 	if (ph_sps != NULL) { CurrentFuelWeight += GetPropellantMass(ph_sps); }
-	if ((LastFuelWeight - CurrentFuelWeight) > 100.0) {
+	if ((LastFuelWeight - CurrentFuelWeight) > 100.0)
+	{
 		// Update physical parameters
 		VECTOR3 pmi, CoG;
 		CalculatePMIandCOG(pmi, CoG);
@@ -4814,7 +4815,7 @@ void Saturn::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 	oxsumpm = sumpm * 1.6 / (1.0 + 1.6);
 	fuelsumpm = sumpm * 1.0 / (1.0 + 1.6);
 
-	static const double oxid_store_tank_param[3] = { -8.385141e-9, 0.0061750118, 838.7809363};
+	static const double oxid_store_tank_param[3] = { -8.385141e-9, 0.0061750118, 838.7809363 };
 	static const double fuel_store_tank_param[3] = { -2.144163e-8, 0.0098738581, 838.7809363 };
 	static const double oxid_sump_tank_param[3] = { -2.599892e-9, 0.0047770151, 839.7803146 };
 	static const double fuel_sump_tank_param[3] = { -6.63916e-9, 0.0076383695, 839.7803146 };
@@ -4841,7 +4842,6 @@ void Saturn::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 	COG = _V(COG.y, -COG.z, COG.x - 24.538);
 
 	//PMI
-	//PMI = _V(4.3972, 4.6879, 1.6220);
 	//Empirical data from CSM-109, Spacecraft Operational Data Book Volume III
 	PMI.x = -1.626316e-6*propmass + 1.661697874;
 	PMI.y = -4.372105e-5*propmass + 5.318744779;
