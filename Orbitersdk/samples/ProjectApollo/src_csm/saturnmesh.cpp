@@ -1729,7 +1729,7 @@ void Saturn::JettisonDockingProbe()
 	VECTOR3 vel = {0.0, 0.0, 2.5};
 	VESSELSTATUS vs4b;
 	GetStatus (vs4b);
-	StageTransform(this, &vs4b,ofs,vel);
+	StageTransform(this, &vs4b, ofs - currentCoG, vel);
 	vs4b.vrot.x = 0.0;
 	vs4b.vrot.y = 0.0;
 	vs4b.vrot.z = 0.0;
@@ -1757,7 +1757,7 @@ void Saturn::JettisonSIMBayPanel()
 
 	VECTOR3 rofs1, rvel1 = { vs1.rvel.x, vs1.rvel.y, vs1.rvel.z };
 
-	Local2Rel(ofs1, vs1.rpos);
+	Local2Rel(ofs1 - currentCoG, vs1.rpos);
 	GlobalRot(vel1, rofs1);
 
 	vs1.rvel.x = rvel1.x + rofs1.x;
@@ -1785,7 +1785,7 @@ void Saturn::JettisonOpticsCover()
 	VECTOR3 vel = {0.0, -0.16, 0.1};
 	VESSELSTATUS vs4b;
 	GetStatus (vs4b);
-	StageTransform(this, &vs4b, ofs, vel);
+	StageTransform(this, &vs4b, ofs - currentCoG, vel);
 	vs4b.vrot.x = 0.05;
 	vs4b.vrot.y = 0.0;
 	vs4b.vrot.z = 0.0;
