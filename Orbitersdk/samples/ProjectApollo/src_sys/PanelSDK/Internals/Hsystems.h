@@ -48,8 +48,8 @@ const double L_DENSITY	[MAX_SUB]=	{1141.0,	70.0,		1000.0,		807.0,		1014.0,		1038
 const double BULK_MOD	[MAX_SUB]=	{32e6,		24e6,		2.18e6,		32e6,		32e6,		2.55e6,			1.47397e6,		1.362e6,		10e6		};		//Pa .. assume constant and converted from m^3 to L
 const double CRITICAL_P [MAX_SUB]=  {350115.0,	89631.0,	1523741.0,	234421.0,	508833.0,	3097574.75,		11692906.154,	10132500.0,		226968.0224 };		//Pa.. critical pressure
 const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,		256.9525,		607.15,			431.15,			5.19		};		//K.. critical temperature
-const double ANTIONE_A	[MAX_SUB] = {9.3199656,	6.59723,	12.490095,	9.0020008,	12.0892,	15.8817,		13.7222,		8.91712,		5.32072 };			//Antione Equation A constant
-const double ANTIONE_B	[MAX_SUB] = {838.91339,	133.793,	4658.1375,	694.78356,	2353.762,	7441.964,		5309.7973,		1798.54,		14.6500 };			//Antione Equation B constant
+const double ANTIONE_A	[MAX_SUB] = {9.3199656,	6.59723,	12.490095,	9.0020008,	12.0892,	8.32957,		13.7222,		14.47645,		4.41952 };			//Antione Equation A constant gives results in bar, must be converter to Pa
+const double ANTIONE_B	[MAX_SUB] = {838.91339,	133.793,	4658.1375,	694.78356,	2353.762,	3158.1575,		5309.7973,		4256.07694,		18.65037 };			//Antione Equation B constant gives results in bar, must be converter to Pa
 
 const double FaradaysConstant = 96485.3321233100184; //Coulombs/mol
 
