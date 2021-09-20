@@ -687,6 +687,7 @@ void Saturn::SetCSMStage ()
 	if (LESAttached) {
 		TowerOffset = 4.95;
 		VECTOR3 mesh_dir_tower = mesh_dir + _V(0, 0, TowerOffset);
+		TowerOffset += 2.1; //Additional offset for CSM stage
 
 		meshidx = AddMesh(hsat5tower, &mesh_dir_tower);
 		SetMeshVisibilityMode(meshidx, MESHVIS_VCEXTERNAL);
@@ -1624,7 +1625,7 @@ void Saturn::JettisonLET(bool AbortJettison)
 	//
 	// Otherwise jettison the LES.
 	//
-	VECTOR3 ofs1 = _V(0.0, 0.0, TowerOffset);
+	VECTOR3 ofs1 = _V(0.0, 0.0, TowerOffset) - currentCoG;
 	VECTOR3 vel1 = _V(0.0,0.0,0.5);
 
 	VESSELSTATUS vs1;
