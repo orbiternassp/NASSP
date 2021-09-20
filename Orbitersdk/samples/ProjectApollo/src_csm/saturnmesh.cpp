@@ -564,6 +564,12 @@ void Saturn::SetCSMStage ()
 	agc.SetInputChannelBit(030, GuidanceReferenceRelease, false);
 	agc.SetInputChannelBit(030, UllageThrust, false);
 
+	// Because all meshes are getting reloaded, we have to shift CG back to the center of the mesh, and then re-apply the offset CG on the next timestep
+	// Only necessary because of LET jettison function reloading all meshes.
+	ShiftCG(-currentCoG);
+	currentCoG = _V(0, 0, 0);
+	LastFuelWeight = 999999;
+
 	//
 	// Delete any dangling propellant resources.
 	//
