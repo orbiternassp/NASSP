@@ -4206,6 +4206,7 @@ protected:
 	void RCSSoundTimestep();
 	void LoadVC();
 	void UpdateVC(VECTOR3 meshdir);
+	void DefineCMAttachments();
 
 	//
 	// Sounds

@@ -1061,6 +1061,8 @@ void Saturn::SetReentryStage (VECTOR3 cg_ofs)
 	ShiftCG(-currentCoG + cg_ofs);
 	currentCoG = _V(0, 0, 0);
 
+	DefineCMAttachments();
+
 	hga.DeleteAnimations();
 	SPSEngine.DeleteAnimations();
 	double EmptyMass = CM_EmptyMass + (LESAttached ? 2000.0 : 0.0);
@@ -1929,4 +1931,13 @@ void Saturn::ClearMeshes() {
 			DelMesh(i);
 		}
 	}
+}
+
+void Saturn::DefineCMAttachments()
+{
+	//Reset attachment points
+	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0);
+	SetAttachmentParams(ah, _V(0, 0, 0), _V(0, 0, 1), _V(1, 0, 0)); //FloatBag
+	ah = GetAttachmentHandle(false, 1);
+	SetAttachmentParams(ah, _V(0, 0, 0), _V(0, 0, 1), _V(1, 0, 0)); //Chute
 }
