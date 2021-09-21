@@ -109,6 +109,7 @@ public:
 
 	void UplinkData(bool isCSM);
 	void UplinkData2(bool isCSM);
+	void UplinkDataV70V73(bool v70, bool isCSM);
 	void send_agc_key(char key, bool isCSM);
 	void uplink_word(char *data, bool isCSM);
 	void P30UplinkCalc(bool isCSM);
@@ -120,6 +121,8 @@ public:
 	void StateVectorUplink(int type);
 	void TLANDUplinkCalc(void);
 	void TLANDUplink(void);
+	void AGCClockIncrementUplink(bool csm);
+	void AGCLiftoffTimeIncrementUplink(bool csm);
 	void EMPP99Uplink(int i);
 	void ManeuverPAD();
 	void EntryPAD();
@@ -385,6 +388,12 @@ public:
 	//SPACE DIGITALS
 	int SpaceDigitalsOption;
 	double SpaceDigitalsGET;
+
+	//UPLINK
+	double AGCClockTime[2];
+	double RTCCClockTime[2];
+	double DeltaClockTime[2];
+	double DesiredRTCCLiftoffTime[2];
 
 private:
 

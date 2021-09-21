@@ -45,19 +45,11 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	//SPS engine gimbal plane
 	static const double K2 = 833.2*0.0254;
 	//Distance between SPS and DPS gimbal planes
-	static const double K3 = 13.2;//435.55*0.0254;
-	//Yaw
-	static const double K4 = -0.0829031395;
-	//Pitch
-	static const double K5 = 0.1876228946;
-
-	/*x1 = LMmass / (CSMmass + LMmass)*6.2;
-	p_T = atan2(-2.15 * RAD * 5.0, 5.0 + x1);
-	y_T = atan2(0.95 * RAD * 5.0, 5.0 + x1);*/
+	static const double K3 = 435.55*0.0254;
 
 	int IND;
-	double R, W[3];
-	VECTOR3 XCG[2], XI, K;
+	double R, W[3], K;
+	VECTOR3 XCG[2], XI;
 
 	//CSM only
 	if (IC == 1)
@@ -90,9 +82,9 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 			goto RTCC_GIMGBL_LABEL_3_5;
 		}
 		IND = 2;
-		K = _V(K1, 0, 0);
+		K = K1;
 		//Use LM DSC CG Table
-		XI = GIMGB2(SystemParameters.LMDSCCGTAB.Weight, SystemParameters.LMDSCCGTAB.CG, SystemParameters.LMDSCCGTAB.N, W[1]);
+		XI = GIMGB2(SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG, SystemParameters.MHVLCG.N, W[1]);
 	}
 	else
 	{
@@ -108,13 +100,14 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		{
 			IND = 1;
 		}
-		K = _V(K2, K4, K5);
+		K = K2;
 		//Use CSM CG Table
-		//GIMGB2();
-		XI = _V(26.16328, 0.0, 0.0);
+		XI = GIMGB2(SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG, SystemParameters.MHVCCG.N, W[0]);
 	}
 
-	XCG[IND - 1] = XI - K;
+	XCG[IND - 1].x = XI.x - K;
+	XCG[IND - 1].y = XI.y;
+	XCG[IND - 1].z = XI.z;
 
 	//CSM or LM, but not docked?
 	if (IC <= 12 && IC != 5)
@@ -124,36 +117,30 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	if (IND > 1)
 	{
 		//Use CSM CG Table
-		//GIMGB2();
+		XI = GIMGB2(SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG, SystemParameters.MHVCCG.N, W[0]);
 		IND = 1;
-		K = _V(K2 + K3, 0, 0);
-		XI = _V(26.16328, 0.0, 0.0);
+		K = K2 + K3;
 	}
 	else
 	{
 		if (IJ != 0)
 		{
 			//Use LM w/o descent CG table
-			XI = GIMGB2(SystemParameters.LMASCCGTAB.Weight, SystemParameters.LMASCCGTAB.CG, SystemParameters.LMASCCGTAB.N, W[1]);
-			//XI = _V(7.6616, 0, 0);
+			XI = GIMGB2(SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG, SystemParameters.MHVACG.N, W[1]);
 		}
 		else
 		{
 			//Use LM w/ descent CG table
-			XI = GIMGB2(SystemParameters.LMDSCCGTAB.Weight, SystemParameters.LMDSCCGTAB.CG, SystemParameters.LMDSCCGTAB.N, W[1]);
+			XI = GIMGB2(SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG, SystemParameters.MHVLCG.N, W[1]);
 		}
 		IND = 2;
-		K = _V(K1 + K3, 0, 0);
+		K = K1 + K3;
 	}
 
-	XI = XI - K;
+	XI.x = XI.x - K;
 
 	XCG[IND - 1] = mul(_M(-1.0, 0.0, 0.0, 0.0, -cos(240.0*RAD - D), -sin(240.0*RAD - D), 0.0, -sin(240.0*RAD - D), cos(240.0*RAD - D)), XI);
-	//Remove this when SPS is centered again
-	if (ITC == 33)
-	{
-		XCG[IND - 1] -= _V(0, K4, K5);
-	}
+
 	XCG[1] = (XCG[0] * W[0] + XCG[1] * W[1]) / W[2];
 
 RTCC_GIMGBL_LABEL_3_2:

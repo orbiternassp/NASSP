@@ -30,6 +30,7 @@
     <ClInclude Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCSystemParameters.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCC_EMSMISS.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h" />
@@ -54,6 +55,7 @@
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\RTCCModule.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\RTCC_EMSMISS.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />

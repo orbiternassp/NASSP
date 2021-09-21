@@ -9018,5 +9018,136 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 		}
 	}
+	else if (screen == 111 || screen == 112)
+	{
+		int blocknum;
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		if (screen == 111)
+		{
+			skp->Text(1 * W / 2, 3 * H / 32, "CMC TIME INCREMENT UPDATE (MSK 340)", 35);
+			blocknum = 0;
+		}
+		else
+		{
+			skp->Text(1 * W / 2, 3 * H / 32, "LGC TIME INCREMENT UPDATE (MSK 353)", 35);
+			blocknum = 1;
+		}
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		RTCC::AGCTimeIncrementMakeupTableBlock *block = &GC->rtcc->CZTMEINC.Blocks[blocknum];
+
+		skp->Text(1 * W / 16, 3 * H / 14, "RTCC TIME:", 10);
+		GET_Display2(Buffer, G->RTCCClockTime[blocknum]);
+		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 5 * H / 14, "AGC TIME:", 9);
+		GET_Display2(Buffer, G->AGCClockTime[blocknum]);
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 7 * H / 14, "DELTA T:", 8);
+		GET_Display2(Buffer, G->DeltaClockTime[blocknum]);
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 10 * H / 14, "AGC CLOCK ZERO:", 15);
+		if (blocknum == 0)
+		{
+			GET_Display2(Buffer, GC->rtcc->GetCMCClockZero());
+		}
+		else
+		{
+			GET_Display2(Buffer, GC->rtcc->GetLGCClockZero());
+		}
+		skp->Text(1 * W / 16, 11 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(8 * W / 16, 5 * H / 14, "OID", 3);
+		skp->Text(8 * W / 16, 6 * H / 14, "1", 1);
+		skp->Text(8 * W / 16, 7 * H / 14, "2", 1);
+
+		skp->Text(10 * W / 16, 5 * H / 14, "FCT", 3);
+		skp->Text(10 * W / 16, 6 * H / 14, "DELTAT", 6);
+		skp->Text(10 * W / 16, 7 * H / 14, "DELTAT", 6);
+
+		skp->Text(12 * W / 16, 5 * H / 14, "DSKY V73", 8);
+
+		sprintf_s(Buffer, "%05d", block->Octals[0]);
+		skp->Text(13 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05d", block->Octals[1]);
+		skp->Text(13 * W / 16, 7 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(8 * W / 16, 9 * H / 14, "INCREMENT:", 10);
+		GET_Display2(Buffer, block->TimeIncrement);
+		skp->Text(8 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 113 || screen == 114)
+	{
+		int blocknum;
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		if (screen == 113)
+		{
+			skp->Text(1 * W / 2, 3 * H / 32, "CMC LIFTOFF TIME UPDATE (MSK 341)", 33);
+			blocknum = 0;
+		}
+		else
+		{
+			skp->Text(1 * W / 2, 3 * H / 32, "LGC LIFTOFF TIME UPDATE (MSK 339)", 33);
+			blocknum = 1;
+		}
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		RTCC::AGCLiftoffTimeUpdateMakeupTableBlock *block = &GC->rtcc->CZLIFTFF.Blocks[blocknum];
+
+		skp->Text(1 * W / 16, 3 * H / 14, "DESIRED LIFTOFF:", 16);
+		GET_Display2(Buffer, G->DesiredRTCCLiftoffTime[blocknum]);
+		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 5 * H / 14, "AGC CLOCK ZERO:", 15);
+		double lotime;
+		if (blocknum == 0)
+		{
+			lotime = GC->rtcc->GetCMCClockZero();
+		}
+		else
+		{
+			lotime = GC->rtcc->GetLGCClockZero();
+		}
+		GET_Display2(Buffer, lotime);
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 7 * H / 14, "DELTA T:", 8);
+		GET_Display2(Buffer, G->DesiredRTCCLiftoffTime[blocknum] - lotime);
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 10 * H / 14, "RTCC LIFTOFF:", 15);
+		GET_Display2(Buffer, GC->rtcc->GetGMTLO()*3600.0);
+		skp->Text(1 * W / 16, 11 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(8 * W / 16, 4 * H / 14, "OID", 3);
+		skp->Text(8 * W / 16, 5 * H / 14, "1", 1);
+		skp->Text(8 * W / 16, 6 * H / 14, "2", 1);
+
+		skp->Text(10 * W / 16, 4 * H / 14, "FCT", 3);
+		skp->Text(10 * W / 16, 5 * H / 14, "DELTAT", 6);
+		skp->Text(10 * W / 16, 6 * H / 14, "DELTAT", 6);
+
+		skp->Text(12 * W / 16, 4 * H / 14, "DSKY V70", 8);
+
+		sprintf_s(Buffer, "%05d", block->Octals[0]);
+		skp->Text(13 * W / 16, 5 * H / 14, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05d", block->Octals[1]);
+		skp->Text(13 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(8 * W / 16, 8 * H / 14, "INCREMENT:", 10);
+		GET_Display2(Buffer, block->TimeIncrement);
+		skp->Text(8 * W / 16, 9 * H / 14, Buffer, strlen(Buffer));
+
+		//skp->Text(8 * W / 16, 10 * H / 14, "TEPHEM:", 10);
+
+		//sprintf_s(Buffer, "%05o", OrbMech::DoubleToBuffer(lotime*100.0, 56.0, 0));
+		//skp->Text(8 * W / 16, 11 * H / 14, Buffer, strlen(Buffer));
+		//sprintf_s(Buffer, "%05o", OrbMech::DoubleToBuffer(lotime*100.0, 42.0, 0));
+		//skp->Text(8 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+		//sprintf_s(Buffer, "%05o", OrbMech::DoubleToBuffer(lotime*100.0, 28.0, 0));
+		//skp->Text(8 * W / 16, 13 * H / 14, Buffer, strlen(Buffer));
+	}
 	return true;
 }
