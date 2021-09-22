@@ -568,7 +568,7 @@ void Saturn::SetCSMStage ()
 	// Only necessary because of LET jettison function reloading all meshes.
 	ShiftCG(-currentCoG);
 	currentCoG = _V(0, 0, 0);
-	LastFuelWeight = 999999;
+	LastFuelWeight = numeric_limits<double>::infinity();
 
 	//
 	// Delete any dangling propellant resources.
@@ -1267,7 +1267,7 @@ void Saturn::SetReentryMeshes() {
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 	// VC
-	//UpdateVC(mesh_dir);
+	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();

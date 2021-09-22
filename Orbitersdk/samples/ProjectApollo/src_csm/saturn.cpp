@@ -948,7 +948,7 @@ void Saturn::initSaturn()
 	COASreticlevisible = false;
 
 	CurrentFuelWeight = 0;
-	LastFuelWeight = 999999; // Ensure update at first opportunity
+	LastFuelWeight = numeric_limits<double>::infinity(); // Ensure update at first opportunity
 	currentCoG = _V(0, 0, 0);
 
 	// call only once 
@@ -4352,7 +4352,6 @@ void Saturn::LoadDefaultSounds()
 void Saturn::StageSix(double simt)
 
 {
-	//TBD: Use this function to shift the CG
 	UpdateMassAndCoG();
 
 	if (ApolloNo == 1301) {
