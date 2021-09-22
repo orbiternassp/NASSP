@@ -4494,7 +4494,7 @@ bool RTEEarth::EntryIter()
 	}
 }
 
-ConicRTEEarthNew::ConicRTEEarthNew(RTCC *r, std::vector<EphemerisData> &SVArray) : RTCCModule(r),
+ConicRTEEarthNew::ConicRTEEarthNew(RTCC *r, std::vector<EphemerisData2> &SVArray) : RTCCModule(r),
 	XArray(SVArray)
 {
 	mu = OrbMech::mu_Earth*pow(SCPHR, 2) / pow(KMPER*1000.0, 3);
@@ -4546,7 +4546,7 @@ void ConicRTEEarthNew::MAIN()
 	VECTOR3 DV, V_a_uncal, V_a_cal;
 	double beta_r, dv, U_r, DVC, T, VT_a, VR_a, v_a, beta_a, T_z, alpha, delta, lambda, p, eta_ar, phi, phi_z, theta_z, TP;
 	int J, J_m, FLAG, QA;
-	EphemerisData sv;
+	EphemerisData2 sv;
 
 	J = 0;
 	J_m = XArray.size();
@@ -4554,11 +4554,6 @@ void ConicRTEEarthNew::MAIN()
 	do
 	{
 		sv = XArray[J];
-
-		if (sv.RBI != BODY_EARTH)
-		{
-			goto ConicRTEEarth_MAIN_E;
-		}
 
 		OrbMech::EclipticToECI(sv.R, sv.V, OrbMech::MJDfromGET(sv.GMT, GMTbase), sv.R, sv.V);
 

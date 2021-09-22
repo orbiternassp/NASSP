@@ -445,11 +445,24 @@ void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display
 
 void ApolloRTCCMFD::GET_Display2(char* Buff, double time) //Display a time in the format hhh:mm:ss.ss
 {
+	bool pos = true;
+	if (time < 0)
+	{
+		pos = false;
+		time = abs(time);
+	}
 	int cs = (int)(round(time*100.0));
 	int hr = cs / 360000;
 	int min = (cs - 360000*hr) / 6000;
 	double sec = (double)(cs - 360000 * hr - 6000 * min) / 100.0;
-	sprintf(Buff, "%03d:%02d:%05.2lf", hr, min, sec);
+	if (pos)
+	{
+		sprintf(Buff, "%03d:%02d:%05.2lf", hr, min, sec);
+	}
+	else
+	{
+		sprintf(Buff, "-%03d:%02d:%05.2lf", hr, min, sec);
+	}
 }
 
 void ApolloRTCCMFD::GET_Display3(char* Buff, double time) //Display a time in the format hhh:mm:ss.s
@@ -3868,13 +3881,19 @@ bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char *str, bool csm)
 {
+	//To update display immediately
+	GC->rtcc->VectorPanelSummaryBuffer.gmt = -1.0;
+
 	OBJHANDLE hVessel = oapiGetVesselByName(str);
 	if (hVessel)
 	{
 		VESSEL *v = oapiGetVesselInterface(hVessel);
 		if (v)
 		{
-			GC->MPTTrajectoryUpdate(v, csm);
+			if (GC->MPTTrajectoryUpdate(v, csm))
+			{
+				return false;
+			}
 			return true;
 		}
 	}
@@ -4133,6 +4152,9 @@ bool EphemerisUpdateLEMInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::VectorControlPBI(int code)
 {
+	//To update display immediately
+	GC->rtcc->VectorPanelSummaryBuffer.gmt = -1.0;
+
 	GC->rtcc->BMSVPS(0, code);
 }
 
@@ -5595,6 +5617,12 @@ void ApolloRTCCMFD::menuCycleLMStage()
 	G->lemdescentstage = !G->lemdescentstage;
 }
 
+void ApolloRTCCMFD::AGCSignedValue(int &val)
+{
+	if (val > 037777)
+		val = -(077777 - val);
+}
+
 void ApolloRTCCMFD::menuUpdateLiftoffTime()
 {
 	if (G->vesseltype == 4) return;
@@ -5618,26 +5646,39 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 		TEPHEM0 = 41133.;
 	}
 
+	int tephem_int[3];
+
 	if (G->vesseltype < 2)
 	{
 		saturn = (Saturn *)G->vessel;
 
-		double tephem = saturn->agc.vagc.Erasable[0][01710] +
-			saturn->agc.vagc.Erasable[0][01707] * pow((double) 2., (double) 14.) +
-			saturn->agc.vagc.Erasable[0][01706] * pow((double) 2., (double) 28.);
-		LaunchMJD = (tephem / 8640000.) + TEPHEM0;
+		tephem_int[0] = saturn->agc.vagc.Erasable[0][01706];
+		tephem_int[1] = saturn->agc.vagc.Erasable[0][01707];
+		tephem_int[2] = saturn->agc.vagc.Erasable[0][01710];
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
 
-		double tephem = lem->agc.vagc.Erasable[0][01710] +
-			lem->agc.vagc.Erasable[0][01707] * pow((double) 2., (double) 14.) +
-			lem->agc.vagc.Erasable[0][01706] * pow((double) 2., (double) 28.);
-		LaunchMJD = (tephem / 8640000.) + TEPHEM0;
+		tephem_int[0] = lem->agc.vagc.Erasable[0][01706];
+		tephem_int[1] = lem->agc.vagc.Erasable[0][01707];
+		tephem_int[2] = lem->agc.vagc.Erasable[0][01710];
 	}
 
+	//Make negative numbers actually negative
+	for (int i = 0;i < 3;i++)
+	{
+		AGCSignedValue(tephem_int[i]);
+	}
+
+	//Calculate TEPHEM in centiseconds
+	double tephem = tephem_int[2] + tephem_int[1] * pow((double) 2., (double) 14.) + tephem_int[0] * pow((double) 2., (double) 28.);
+	//Calculate MJD of TEPHEM
+	LaunchMJD = (tephem / 8640000.) + TEPHEM0;
+
+	//Calculate MJD at midnight of launch day
 	double GMTBase = floor(LaunchMJD);
+	//Calculate GMT of TEPHEM in hours
 	LaunchMJD = (LaunchMJD - GMTBase)*24.0;
 
 	int hh, mm;
@@ -9294,10 +9335,158 @@ void ApolloRTCCMFD::menuSLVNavigationUpdateUplink()
 
 void ApolloRTCCMFD::menuGetOnboardStateVectors()
 {
+	//To update display immediately
+	GC->rtcc->VectorPanelSummaryBuffer.gmt = -1.0;
+
 	G->GetStateVectorFromAGC(true);
 	G->GetStateVectorFromAGC(false);
 	G->GetStateVectorFromIU();
 	G->GetStateVectorsFromAGS();
+}
+
+void ApolloRTCCMFD::menuAGCTimeUpdateComparison()
+{
+	int i;
+	switch (screen)
+	{
+	case 111:
+		i = 0;
+		break;
+	case 112:
+		i = 1;
+		break;
+	default:
+		return;
+	}
+
+	agc_t *agc;
+	double ClockZero;
+
+	if (i == 0)
+	{
+		if (G->vesseltype == 0 || G->vesseltype == 1)
+		{
+			agc = &((Saturn *)G->vessel)->agc.vagc;
+		}
+		else
+		{
+			return;
+		}
+		ClockZero = GC->rtcc->GetCMCClockZero();
+	}
+	else
+	{
+		if (G->vesseltype == 2 || G->vesseltype == 3)
+		{
+			agc = &((LEM *)G->vessel)->agc.vagc;
+		}
+		else
+		{
+			return;
+		}
+		ClockZero = GC->rtcc->GetLGCClockZero();
+	}
+
+	G->AGCClockTime[i] = GC->rtcc->GetClockTimeFromAGC(agc) / 100.0;
+	double MJD = oapiGetSimMJD();
+	double tephem = GC->rtcc->GetGMTBase() + ClockZero / 24.0 / 3600.0;
+	G->RTCCClockTime[i] = (MJD - tephem)*24.0*3600.0;
+	G->DeltaClockTime[i] = G->RTCCClockTime[i] - G->AGCClockTime[i];
+}
+
+void ApolloRTCCMFD::menuAGCLiftoffTimeComparision()
+{
+	bool AGCLiftoffTimeComparisionInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter desired liftoff time. Format: HHH:MM:SS.SS", AGCLiftoffTimeComparisionInput, 0, 20, (void*)this);
+}
+
+bool AGCLiftoffTimeComparisionInput(void* id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, tim;
+
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		tim = ss + mm * 60.0 + hh * 3600.0;
+		((ApolloRTCCMFD*)data)->set_AGCLiftoffTimeComparision(tim);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCLiftoffTimeComparision(double tim)
+{
+	int i;
+	switch (screen)
+	{
+	case 113:
+		i = 0;
+		break;
+	case 114:
+		i = 1;
+		break;
+	default:
+		return;
+	}
+
+	G->DesiredRTCCLiftoffTime[i] = tim;
+}
+
+void ApolloRTCCMFD::menuAGCTimeUpdateCalc()
+{
+	bool AGCTimeUpdateCalcInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose time increment (Format: hhh:mm:ss.ss)", AGCTimeUpdateCalcInput, 0, 20, (void*)this);
+}
+
+bool AGCTimeUpdateCalcInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_AGCTimeUpdateCalc(str);
+	return true;
+}
+
+void ApolloRTCCMFD::set_AGCTimeUpdateCalc(char *dt)
+{
+	char MED[9];
+	switch (screen)
+	{
+	case 111:
+		sprintf(MED, "C07,CMC,");
+		break;
+	case 112:
+		sprintf(MED, "C07,LGC,");
+		break;
+	case 113:
+		sprintf(MED, "C08,CMC,");
+		break;
+	case 114:
+		sprintf(MED, "C08,LGC,");
+		break;
+	default:
+		return;
+	}
+
+	char FullMED[128];
+	sprintf_s(FullMED, "%s%s;", MED, dt);
+	GeneralMEDRequest(FullMED);
+}
+
+void ApolloRTCCMFD::menuAGCTimeUpdateUplink()
+{
+	switch (screen)
+	{
+	case 111:
+		G->AGCClockIncrementUplink(true);
+		break;
+	case 112:
+		G->AGCClockIncrementUplink(false);
+		break;
+	case 113:
+		G->AGCLiftoffTimeIncrementUplink(true);
+		break;
+	case 114:
+		G->AGCLiftoffTimeIncrementUplink(false);
+		break;
+	}
 }
 
 void ApolloRTCCMFD::menuUplinkDisplayRequest()
@@ -9327,6 +9516,12 @@ void ApolloRTCCMFD::SelectUplinkScreen(int num)
 	case 6: //CMC Landing Site Vector
 		screen = 50;
 		break;
+	case 7: //CMC Clock Increment
+		screen = 111;
+		break;
+	case 8: //CMC Liftoff Time Update
+		screen = 113;
+		break;
 	case 9: //CMC LM State Vector
 		screen = 99;
 		break;
@@ -9350,6 +9545,12 @@ void ApolloRTCCMFD::SelectUplinkScreen(int num)
 		break;
 	case 23: //LGC REFSMMAT Update
 		screen = 94;
+		break;
+	case 24: //LGC Clock Increment
+		screen = 112;
+		break;
+	case 25: //LGC Liftoff Time Update
+		screen = 114;
 		break;
 	case 26: //LGC Landing Site Vector
 		screen = 98;

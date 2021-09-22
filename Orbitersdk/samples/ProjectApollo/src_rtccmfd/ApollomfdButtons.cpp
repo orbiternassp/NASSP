@@ -3774,6 +3774,141 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("RDI", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("LNG", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+
+	static const MFDBUTTONMENU mnu111[] =
+	{
+		{ "Compare AGC and RTCC time", 0, 'D' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Update liftoff time", 0, 'L' },
+		{ "", 0, ' ' },
+
+		{ "Input time increment", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Uplink clock increment", 0, 'R' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu111, sizeof(mnu111) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("CLC", OAPI_KEY_D, &ApolloRTCCMFD::menuAGCTimeUpdateComparison);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPD", OAPI_KEY_L, &ApolloRTCCMFD::menuUpdateLiftoffTime);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("INP", OAPI_KEY_C, &ApolloRTCCMFD::menuAGCTimeUpdateCalc);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_R, &ApolloRTCCMFD::menuAGCTimeUpdateUplink);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
+
+
+	static const MFDBUTTONMENU mnu112[] =
+	{
+		{ "Compare AGC and RTCC time", 0, 'D' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Update liftoff time", 0, 'L' },
+		{ "", 0, ' ' },
+
+		{ "Input time increment", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Uplink clock increment", 0, 'R' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu112, sizeof(mnu112) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("CLC", OAPI_KEY_D, &ApolloRTCCMFD::menuAGCTimeUpdateComparison);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPD", OAPI_KEY_L, &ApolloRTCCMFD::menuUpdateLiftoffTime);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("INP", OAPI_KEY_C, &ApolloRTCCMFD::menuAGCTimeUpdateCalc);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_R, &ApolloRTCCMFD::menuAGCTimeUpdateUplink);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
+
+
+	static const MFDBUTTONMENU mnu113[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Update liftoff time", 0, 'L' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu113, sizeof(mnu113) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("CLC", OAPI_KEY_D, &ApolloRTCCMFD::menuAGCLiftoffTimeComparision);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPD", OAPI_KEY_L, &ApolloRTCCMFD::menuUpdateLiftoffTime);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("INP", OAPI_KEY_C, &ApolloRTCCMFD::menuAGCTimeUpdateCalc);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_R, &ApolloRTCCMFD::menuAGCTimeUpdateUplink);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
+
+
+	static const MFDBUTTONMENU mnu114[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Update liftoff time", 0, 'L' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu114, sizeof(mnu114) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("CLC", OAPI_KEY_D, &ApolloRTCCMFD::menuAGCLiftoffTimeComparision);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPD", OAPI_KEY_L, &ApolloRTCCMFD::menuUpdateLiftoffTime);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("INP", OAPI_KEY_C, &ApolloRTCCMFD::menuAGCTimeUpdateCalc);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_R, &ApolloRTCCMFD::menuAGCTimeUpdateUplink);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

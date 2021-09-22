@@ -215,6 +215,7 @@ public:
 	void menuChangeVesselType();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
+	void AGCSignedValue(int &val);
 	void set_svtarget();
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
@@ -799,6 +800,12 @@ public:
 	void menuEnterRTEDManualDV();
 	void set_RTEDManualDV(VECTOR3 DV);
 	void menuSetRTEDEntryProfilePage();
+	void menuAGCTimeUpdateCalc();
+	void set_AGCTimeUpdateCalc(char *dt);
+	void menuAGCTimeUpdateComparison();
+	void menuAGCTimeUpdateUplink();
+	void menuAGCLiftoffTimeComparision();
+	void set_AGCLiftoffTimeComparision(double tim);
 
 protected:
 	oapi::Font *font;
