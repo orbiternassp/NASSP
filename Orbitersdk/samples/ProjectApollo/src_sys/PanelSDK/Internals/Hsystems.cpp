@@ -326,15 +326,30 @@ void h_substance::operator -=(h_substance add) {
 	}
 }
 
+double h_substance::VAPENTH()
+{
+	if(Temp > CRITICAL_T[subst_type] || Temp < 0.0){return 0.0;}
+
+	
+	return (R_CONST/1000*CRITICAL_T[subst_type]*
+		(7.08*pow((1-Temp/CRITICAL_T[subst_type]),0.354) +
+			10.95 * ACENTRIC[subst_type] * pow((1 - Temp / CRITICAL_T[subst_type]), 0.456)))/ MMASS[subst_type]; //[1]
+
+
+	//[1] [29] G.F. Carruth, R. Kobayashi, Extension to low reduced temperatures of three-parameter corresponding states: vapor pressures,
+	//enthalpies and entropies of vaporization, and liquid fugacity coefficients, Industrial & Engineering Chemistry Fundamentals, 11 (1972) 509-517.
+
+}
+
 double h_substance::Condense(double dt) {
 
 	if (vapor_mass < dt)
 		dt = vapor_mass;
 
 	vapor_mass -= dt;
-	Q += VAPENTH[subst_type] * dt;
+	Q += VAPENTH() * dt;
 
-	return VAPENTH[subst_type] * dt;
+	return VAPENTH() * dt;
 }
 
 double h_substance::Boil(double dt) {
@@ -345,12 +360,12 @@ double h_substance::Boil(double dt) {
 	if (dt < 0)
 		return 0;
 
-	if (Q < VAPENTH[subst_type] * dt)
-		dt = Q / VAPENTH[subst_type];
+	if (Q < VAPENTH() * dt)
+		dt = Q / VAPENTH();
 
 	vapor_mass += dt;
-	Q -= VAPENTH[subst_type] * dt;
-	return -VAPENTH[subst_type] * dt;
+	Q -= VAPENTH() * dt;
+	return -VAPENTH() * dt;
 }
 
 double h_substance::BoilAll() {
@@ -1127,7 +1142,7 @@ void h_Evaporator::refresh(double dt) {  //Need to look at these values (-0.11, 
 			// evaporate liquid
 			if (flow - vapor_flow > 0)
 			{
-				double Q = VAPENTH[SUBSTANCE_H2O] * (flow - vapor_flow);
+				double Q = 2260.0 * (flow - vapor_flow); //FIXME the evaporator needs an overhaul. this line used to use VAPENTH[SUBSTANCE_H2O] before that was upgraded to the VAPENTH() function
 
 				if (target->energy < Q)
 					Q = 0;
