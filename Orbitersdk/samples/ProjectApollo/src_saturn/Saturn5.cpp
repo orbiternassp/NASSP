@@ -817,11 +817,11 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CM_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_THREE:
@@ -849,7 +849,7 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CM_ENTRY_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 	}
 }

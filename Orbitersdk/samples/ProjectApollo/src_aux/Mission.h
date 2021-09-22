@@ -74,6 +74,8 @@ namespace mission
 		MATRIX3 GetLMCGCoefficients() const;
 		//CM to LM power connection version. 0 = connection doesn't work with LM staged, 1 = LM has a CB to bypass circuit to descent stage, 2 = circuit bypassed automatically at stating
 		int GetCMtoLMPowerConnectionVersion() const;
+		//Get CG of the empty SM (but including SM RCS) in inches
+		VECTOR3 GetCGOfEmptySM() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
@@ -96,6 +98,7 @@ namespace mission
 		double dATCA_PRM_Factor;
 		MATRIX3 LM_CG_Coefficients;
 		int iCMtoLMPowerConnectionVersion;
+		VECTOR3 EmptySMCG;
 
 		void SetDefaultValues();
 	};

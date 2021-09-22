@@ -270,7 +270,7 @@ void LEM::SetLmAscentHoverStage()
 	ShiftCG(_V(0.0,1.75,0.0) - currentCoG);
 	//We have shifted everything to the center of the mesh. If currentCoG gets used by the ascent stage it will be updated on the next timestep
 	currentCoG = _V(0, 0, 0);
-	LastFuelWeight = 999999; // Ensure update at first opportunity
+	LastFuelWeight = numeric_limits<double>::infinity(); // Ensure update at first opportunity
 	SetSize (5);
 	SetVisibilityLimit(1e-3, 3.8668e-4);
 	SetEmptyMass (AscentEmptyMassKg);

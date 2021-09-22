@@ -1084,7 +1084,7 @@ void SaturnV::SeparateStage (int new_stage)
 
 	if (stage == CSM_LEM_STAGE)
 	{
-	 	ofs1 = OFS_SM;
+		ofs1 = OFS_SM - currentCoG;
 		vel1 = _V(0,0,-0.1);
 	}
 
@@ -1391,13 +1391,11 @@ void SaturnV::SeparateStage (int new_stage)
 		if (ph_rcs_cm_1) cmprop1 = GetPropellantMass(ph_rcs_cm_1);
 		if (ph_rcs_cm_2) cmprop2 = GetPropellantMass(ph_rcs_cm_2);
 
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 2.1));
 
 		// Restore CM Propellant
 		if (cmprop1 != -1) SetPropellantMass(ph_rcs_cm_1, cmprop1);
 		if (cmprop2 != -1) SetPropellantMass(ph_rcs_cm_2, cmprop2);
-
-		ShiftCentreOfMass(_V(0, 0, 2.1));
 	}
 
 	if (stage == CM_STAGE)
@@ -1449,7 +1447,7 @@ void SaturnV::SeparateStage (int new_stage)
 			{
 				vs3.vrot.x = 102.5 + 23.25;
 				DefSetStateEx(&vs3);
-				SetReentryStage();
+				SetReentryStage(_V(0, 0, 0));
 			}
 		}
 		else
@@ -1472,8 +1470,7 @@ void SaturnV::SeparateStage (int new_stage)
 			}
 			else
 			{
-				SetReentryStage();
-				ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
+				SetReentryStage(_V(0, 0, STG0O + 23.25));
 			}
 		}
 	}
@@ -1514,8 +1511,7 @@ void SaturnV::SeparateStage (int new_stage)
 		}
 		else
 		{
-			SetReentryStage();
-			ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
+			SetReentryStage(_V(0, 0, -STG1O + 23.25));
 		}
 	}
 
@@ -1537,8 +1533,7 @@ void SaturnV::SeparateStage (int new_stage)
 		secs.SMJCB->GetState(stb);
 		stage3->SetState(LowRes, VehicleNo, MainBusAController.IsSMBusPowered(), MainBusBController.IsSMBusPowered(), &sta, &stb);
 		
-		SetReentryStage();
-		ShiftCentreOfMass(_V(0, 0, 13.15 + 2.0499));
+		SetReentryStage(_V(0, 0, 13.15 + 2.0499));
 	}
 }
 
