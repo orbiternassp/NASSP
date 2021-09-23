@@ -150,7 +150,7 @@ RTCC_GIMGBL_LABEL_3_2:
 		RZ = asin(XCG[1].y / R);
 		if (XCG[1].x > 10e-6)
 		{
-			RY = atan(XCG[1].z / XCG[1].x);
+			RY = atan(-XCG[1].z / XCG[1].x);
 		}
 		else
 		{
