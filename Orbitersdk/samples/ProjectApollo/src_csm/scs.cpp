@@ -336,6 +336,8 @@ MATRIX3 AttitudeReference::GetRotationMatrixZ(double angle) {
 
 // BMAG
 
+const double BMAG::GYRO_OUTPUT_LIMIT = 16.0*RAD;
+
 BMAG::BMAG() {
 
 	sat = NULL;
@@ -372,6 +374,7 @@ void BMAG::Timestep(double simdt) {
 			if (ac_source != NULL && ac_source->Voltage() > SP_MIN_ACVOLTAGE) {
 				powered = true;
 				sat->GetAngularVel(rates); // From those, generate ROTATION RATE data.
+				OrbiterToCSMCoordinates(rates); //Convert
 			}
 		}
 	}
@@ -385,19 +388,19 @@ void BMAG::Timestep(double simdt) {
 	heater->WireTo(dc_source);	// Take DC power to heat the gyro
 
 	if (uncaged.x == 1) {
-		errorAttitude.x -= rates.z * simdt;
-		while (errorAttitude.x <= TWO_PI) errorAttitude.x += TWO_PI;
-		while (errorAttitude.x >= TWO_PI) errorAttitude.x -= TWO_PI;
+		errorAttitude.x -= rates.x * simdt;
+		if (errorAttitude.x > GYRO_OUTPUT_LIMIT) errorAttitude.x = GYRO_OUTPUT_LIMIT;
+		if (errorAttitude.x < -GYRO_OUTPUT_LIMIT) errorAttitude.x = -GYRO_OUTPUT_LIMIT;
 	}
 	if (uncaged.y == 1) {
-		errorAttitude.y -= rates.x * simdt;
-		while (errorAttitude.y <= TWO_PI) errorAttitude.y += TWO_PI;
-		while (errorAttitude.y >= TWO_PI) errorAttitude.y -= TWO_PI;
+		errorAttitude.y -= rates.y * simdt;
+		if (errorAttitude.y > GYRO_OUTPUT_LIMIT) errorAttitude.y = GYRO_OUTPUT_LIMIT;
+		if (errorAttitude.y < -GYRO_OUTPUT_LIMIT) errorAttitude.y = -GYRO_OUTPUT_LIMIT;
 	}
 	if (uncaged.z == 1) {
-		errorAttitude.z += rates.y * simdt;
-		while (errorAttitude.z <= TWO_PI) errorAttitude.z += TWO_PI;
-		while (errorAttitude.z >= TWO_PI) errorAttitude.z -= TWO_PI;
+		errorAttitude.z -= rates.z * simdt;
+		if (errorAttitude.z > GYRO_OUTPUT_LIMIT) errorAttitude.z = GYRO_OUTPUT_LIMIT;
+		if (errorAttitude.z < -GYRO_OUTPUT_LIMIT) errorAttitude.z = -GYRO_OUTPUT_LIMIT;
 	}
 }
 
@@ -830,7 +833,7 @@ void GDC::Timestep(double simdt) {
 		//Euler mode
 		if (E1_504 && E2_502)
 		{
-			pitchrate = pitchBmag->GetRates().x*cos(Attitude.x) + yawBmag->GetRates().y*sin(Attitude.x);
+			pitchrate = pitchBmag->GetRates().y*cos(Attitude.x) - yawBmag->GetRates().z*sin(Attitude.x);
 			if (A9K3)
 			{
 				//Assumption: secant amplifier gets saturated at +/-80° yaw
@@ -865,7 +868,7 @@ void GDC::Timestep(double simdt) {
 			else
 			{
 				//Non-Euler
-				pitchrate = pitchBmag->GetRates().x;
+				pitchrate = pitchBmag->GetRates().y;
 			}
 		}
 	}
@@ -875,7 +878,7 @@ void GDC::Timestep(double simdt) {
 	if (A3K1)
 	{
 		//Euler mode
-		rollrate = primRollBmag->GetRates().z - pitchrate * sin(Attitude.z);
+		rollrate = primRollBmag->GetRates().x - pitchrate * sin(Attitude.z);
 	}
 	else
 	{
@@ -892,12 +895,12 @@ void GDC::Timestep(double simdt) {
 			if (A3K2)
 			{
 				//Entry (0.05G)
-				rollrate = primRollBmag->GetRates().z*cos(21.0*RAD) +  sat->bmag1.GetRates().y*sin(21.0*RAD);
+				rollrate = primRollBmag->GetRates().x*cos(21.0*RAD) - sat->bmag1.GetRates().z*sin(21.0*RAD);
 			}
 			else
 			{
 				//Non-Euler
-				rollrate = primRollBmag->GetRates().z;
+				rollrate = primRollBmag->GetRates().x;
 			}
 		}
 	}
@@ -909,7 +912,7 @@ void GDC::Timestep(double simdt) {
 		if (E1_504 && E2_502)
 		{
 			//Euler mode
-			yawrate = -yawBmag->GetRates().y*cos(Attitude.x) + pitchBmag->GetRates().x*sin(Attitude.x);
+			yawrate = yawBmag->GetRates().z*cos(Attitude.x) + pitchBmag->GetRates().y*sin(Attitude.x);
 		}
 		else
 			yawrate = 0.0;
@@ -929,12 +932,12 @@ void GDC::Timestep(double simdt) {
 			if (A4K2)
 			{
 				//Entry (0.05G)
-				yawrate = redunRollBmag->GetRates().z*cos(21.0*RAD) + yawBmag->GetRates().y*sin(21.0*RAD);
+				yawrate = redunRollBmag->GetRates().x*cos(21.0*RAD) - yawBmag->GetRates().z*sin(21.0*RAD);
 			}
 			else
 			{
 				//Non-Euler
-				yawrate = -yawBmag->GetRates().y;
+				yawrate = yawBmag->GetRates().z;
 			}
 		}
 	}
@@ -2422,7 +2425,7 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		//Disable logic
-		rate = (T3QS76 ? 0.0 : bmag1rates.x) + (T3QS64 ? 0.0 : bmag2rates.x);
+		rate = (T3QS76 ? 0.0 : bmag1rates.y) + (T3QS64 ? 0.0 : bmag2rates.y);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2440,7 +2443,7 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		//Disable logic
-		rate = (T3QS77 ? 0.0 : bmag1rates.x) + (T3QS65 ? 0.0 : bmag2rates.x);
+		rate = (T3QS77 ? 0.0 : bmag1rates.y) + (T3QS65 ? 0.0 : bmag2rates.y);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2545,7 +2548,7 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		//Disable logic
-		rate = (T2QS76 ? 0.0 : bmag1rates.y) + (T2QS64 ? 0.0 : bmag2rates.y) + (T2QS68 ? 0.0 : -bmag1rates.z*tan(21.0*RAD)) + (T2QS63 ? 0.0 : -bmag2rates.z*tan(21.0*RAD));
+		rate = (T2QS76 ? 0.0 : -bmag1rates.z) + (T2QS64 ? 0.0 : -bmag2rates.z) + (T2QS68 ? 0.0 : -bmag1rates.x*tan(21.0*RAD)) + (T2QS63 ? 0.0 : -bmag2rates.x*tan(21.0*RAD));
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2563,7 +2566,7 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		//Disable logic
-		rate = (T2QS77 ? 0.0 : bmag1rates.y) + (T2QS65 ? 0.0 : bmag2rates.y) + (T2QS69 ? 0.0 : -bmag1rates.z*tan(21.0*RAD)) + (T2QS66 ? 0.0 : -bmag2rates.z*tan(21.0*RAD));
+		rate = (T2QS77 ? 0.0 : -bmag1rates.z) + (T2QS65 ? 0.0 : -bmag2rates.z) + (T2QS69 ? 0.0 : -bmag1rates.x*tan(21.0*RAD)) + (T2QS66 ? 0.0 : -bmag2rates.x*tan(21.0*RAD));
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2670,7 +2673,7 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		//Disable logic
-		rate = (T1QS64 ? 0.0 : bmag1rates.z) + (T1QS68 ? 0.0 : bmag2rates.z);
+		rate = (T1QS64 ? 0.0 : bmag1rates.x) + (T1QS68 ? 0.0 : bmag2rates.x);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2687,7 +2690,7 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		//Disable logic
-		rate = (T1QS65 ? 0.0 : bmag1rates.z) + (T1QS63 ? 0.0 : bmag2rates.z);
+		rate = (T1QS65 ? 0.0 : bmag1rates.x) + (T1QS63 ? 0.0 : bmag2rates.x);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -3446,6 +3449,9 @@ void ECAIntegrator::Timestep(double input, double simdt)
 // Electronic Control Assembly
 //
 
+const double ECA::L4_upper = 15.0*RAD;
+const double ECA::L4_lower = -14.0*RAD;
+
 ECA::ECA() :
 	PitchMTVCIntegrator(0.125, 14.0*RAD, -10.0*RAD),
 	YawMTVCIntegrator(0.125, 14.0*RAD, -10.0*RAD),
@@ -3882,35 +3888,18 @@ void ECA::TimeStep(double simdt) {
 		target.y = (E1_506 && T3QS21) ? sat->bmag1.GetAttitudeError().y : 0.0;
 		target.z = (E1_506 && T2QS21) ? sat->bmag1.GetAttitudeError().z : 0.0;
 				
-		// Now process
-		if(target.x > 0){ // Positive Error
-			if(target.x > PI){ 
-				errors.x = -(TWO_PI-target.x); }else{ errors.x = target.x;	}
-		}else{
-			if(target.x < -PI){
-				errors.x = TWO_PI+target.x; }else{ errors.x = target.x;	}
-		}
-		if(target.y > 0){ 
-			if(target.y > PI){ 
-				errors.y = TWO_PI-target.y; }else{ errors.y = -target.y;	}
-		}else{
-			if(target.y < -PI){
-				errors.y = -(TWO_PI+target.y); }else{ errors.y = -target.y;	}
-		}
-		if(target.z > 0){ 
-			if(target.z > PI){ 
-				errors.z = -(TWO_PI-target.z); }else{ errors.z = target.z;	}
-		}else{
-			if(target.z < -PI){
-				errors.z = TWO_PI+target.z; }else{ errors.z = target.z;	}
-		}
 		//Limit
-		if (errors.x > 15.0*RAD) errors.x = 15.0*RAD;
-		if (errors.x < -14.0*RAD) errors.x = -14.0*RAD;
-		if (errors.y > 15.0*RAD) errors.y = 15.0*RAD;
-		if (errors.y < -14.0*RAD) errors.y = -14.0*RAD;
-		if (errors.z > 15.0*RAD) errors.z = 15.0*RAD;
-		if (errors.z < -14.0*RAD) errors.z = -14.0*RAD;
+		if (target.x > L4_upper) errors.x = L4_upper;
+		else if (target.x < L4_lower) errors.x = L4_lower;
+		else errors.x = target.x;
+
+		if (target.y > L4_upper) errors.y = L4_upper;
+		else if (target.y < L4_lower) errors.y = L4_lower;
+		else errors.y = target.y;
+
+		if (target.z > L4_upper) errors.z = L4_upper;
+		else if (target.z < L4_lower) errors.z = L4_lower;
+		else errors.z = target.z;
 
 		//Attitude error deadband
 		if (!R1K22)
@@ -3926,22 +3915,22 @@ void ECA::TimeStep(double simdt) {
 		if (!R3K22)
 		{
 			if (errors.y < -4.0 * RAD)
-				cmd_rate.y = (-errors.y - 4.0 * RAD);
+				cmd_rate.y = (errors.y + 4.0 * RAD);
 			if (errors.y > 4.0 * RAD)
-				cmd_rate.y = (-errors.y + 4.0 * RAD);
+				cmd_rate.y = (errors.y - 4.0 * RAD);
 		}
 		else
-			cmd_rate.y = -errors.y;
+			cmd_rate.y = errors.y;
 
 		if (!R2K22)
 		{
 			if (errors.z < -4.0 * RAD)
-				cmd_rate.z = (-errors.z - 4.0 * RAD);
+				cmd_rate.z = (errors.z + 4.0 * RAD);
 			if (errors.z > 4.0 * RAD)
-				cmd_rate.z = (-errors.z + 4.0 * RAD);
+				cmd_rate.z = (errors.z - 4.0 * RAD);
 		}
 		else
-			cmd_rate.z = -errors.z;
+			cmd_rate.z = errors.z;
 		
 		//Attitude error gain
 		if (R1K25)
@@ -3978,14 +3967,14 @@ void ECA::TimeStep(double simdt) {
 
 			if (E1_509) rhc_rate.z += sat->rhc1.GetYawPropRate();
 			if (E2_509) rhc_rate.z += sat->rhc2.GetYawPropRate();
-			rhc_rate.z *= -9.0*RAD;
+			rhc_rate.z *= 9.0*RAD;
 		}
 
 		//MTVC Rate
-		if (E1_509 && R3K31) rhc_rate.y -= 0.495 / 0.4*sat->bmag1.GetRates().x;
-		if (E2_509 && R3K30) rhc_rate.y -= 0.495 / 0.4*sat->bmag2.GetRates().x;
-		if (E1_509 && R2K31) rhc_rate.z -= 0.495 / 0.4*sat->bmag1.GetRates().y;
-		if (E2_509 && R2K30) rhc_rate.z -= 0.495 / 0.4*sat->bmag2.GetRates().y;
+		if (E1_509 && R3K31) rhc_rate.y -= 0.495 / 0.4*sat->bmag1.GetRates().y;
+		if (E2_509 && R3K30) rhc_rate.y -= 0.495 / 0.4*sat->bmag2.GetRates().y;
+		if (E1_509 && R2K31) rhc_rate.z -= 0.495 / 0.4*sat->bmag1.GetRates().z;
+		if (E2_509 && R2K30) rhc_rate.z -= 0.495 / 0.4*sat->bmag2.GetRates().z;
 
 		//MTVC Integrator
 		if (E2_507 && T3QS30)
@@ -4013,9 +4002,9 @@ void ECA::TimeStep(double simdt) {
 		double rollrate, pitchrate, yawrate;
 
 		// BMAG RATES are Z = ROLL, X = PITCH, Y = YAW
-		rollrate = (T1QS28 ? sat->bmag1.GetRates().z : 0.0) + (T1QS29 ? sat->bmag2.GetRates().z : 0.0);
-		yawrate = (T2QS28 ? sat->bmag1.GetRates().y : 0.0) + (T2QS29 ? sat->bmag2.GetRates().y : 0.0);
-		pitchrate = (T3QS28 ? sat->bmag1.GetRates().x : 0.0) + (T3QS29 ? sat->bmag2.GetRates().x : 0.0);
+		rollrate = (T1QS28 ? sat->bmag1.GetRates().x : 0.0) + (T1QS29 ? sat->bmag2.GetRates().x : 0.0);
+		yawrate = (T2QS28 ? sat->bmag1.GetRates().z : 0.0) + (T2QS29 ? sat->bmag2.GetRates().z : 0.0);
+		pitchrate = (T3QS28 ? sat->bmag1.GetRates().y : 0.0) + (T3QS29 ? sat->bmag2.GetRates().y : 0.0);
 
 		//Amplifier
 		if (!E1_506)
@@ -4086,9 +4075,9 @@ void ECA::TimeStep(double simdt) {
 			pseudorate.y = 0;
 		}
 		if (E1_506 && !T2QS44 && sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER){
-			if (sat->rjec.GetThruster(6) || sat->rjec.GetThruster(8)) {
+			if (sat->rjec.GetThruster(5) || sat->rjec.GetThruster(7)) {
 				pseudorate.z += 0.1 * simdt; 
-			} else if (sat->rjec.GetThruster(5) || sat->rjec.GetThruster(7)) {
+			} else if (sat->rjec.GetThruster(6) || sat->rjec.GetThruster(8)) {
 				pseudorate.z -= 0.1 * simdt;
 			} else {
 				if (pseudorate.z > 0) {
@@ -4226,18 +4215,18 @@ void ECA::TimeStep(double simdt) {
 				// Automatic mode and proportional-rate mode
 				if(rate_err.z > 0.034906585){
 					// ACCEL PLUS
-					sat->rjec.SetThruster(6,1);
-					sat->rjec.SetThruster(8,1);
-					sat->rjec.SetThruster(5,0);
-					sat->rjec.SetThruster(7,0);
+					sat->rjec.SetThruster(5, 1);
+					sat->rjec.SetThruster(7, 1);
+					sat->rjec.SetThruster(6, 0);
+					sat->rjec.SetThruster(8, 0);
 					accel_yaw_trigger=1; accel_yaw_flag=-1;
 				}
 				if(rate_err.z < -0.034906585){
 					// ACCEL MINUS
-					sat->rjec.SetThruster(5,1);
-					sat->rjec.SetThruster(7,1);
-					sat->rjec.SetThruster(6,0);
-					sat->rjec.SetThruster(8,0);
+					sat->rjec.SetThruster(6, 1);
+					sat->rjec.SetThruster(8, 1);
+					sat->rjec.SetThruster(5, 0);
+					sat->rjec.SetThruster(7, 0);
 					accel_yaw_trigger=1; accel_yaw_flag=1;
 				}							
 				break;
@@ -4264,7 +4253,7 @@ void ECA::TimeStep(double simdt) {
 
 		//MTVC
 		if (T2QS1)
-			yawMTVCPosition = 0.4*rhc_rate.z;
+			yawMTVCPosition = -0.4*rhc_rate.z;
 		else
 			yawMTVCPosition = 0.0;
 
@@ -4278,37 +4267,41 @@ void ECA::TimeStep(double simdt) {
 		double y = sat->tvsa.GetYawGimbalPosition() - sat->tvsa.GetYawGimbalTrim();
 
 		if (E1_506 && R3K11)
-			PitchAutoTVCIntegrator.Timestep(p + errors.y, simdt);
+			PitchAutoTVCIntegrator.Timestep(p - errors.y, simdt);
 		else
 			PitchAutoTVCIntegrator.Reset();
 
 		if (E1_506 && R2K11)
-			YawAutoTVCIntegrator.Timestep(y + errors.z, simdt);
+			YawAutoTVCIntegrator.Timestep(y - errors.z, simdt);
 		else
 			YawAutoTVCIntegrator.Reset();
+
+		//sprintf(oapiDebugString(), "Error %lf %lf Delt %lf %lf Gimb %lf %lf Trim %lf %lf Integin %lf %lf Integ %lf %lf", errors.y*DEG, errors.z*DEG, p*DEG, y*DEG, 
+		//	sat->tvsa.GetPitchGimbalPosition()*DEG, sat->tvsa.GetYawGimbalPosition()*DEG, sat->tvsa.GetPitchGimbalTrim()*DEG, sat->tvsa.GetYawGimbalTrim()*DEG, 
+		//	(p - errors.y)*DEG, (y - errors.z)*DEG, PitchAutoTVCIntegrator.GetState()*DEG, YawAutoTVCIntegrator.GetState()*DEG);
 
 		if (E1_506 && E1_509)
 		{
 			//TBD: LM-on/off filters
 
-			pitchAutoTVCPosition = PitchAutoTVCIntegrator.GetState() + errors.y + rate_damp.y;
 			if (T3QS11)
-				pitchAutoTVCPosition *= 1.0;
+				pitchAutoTVCPosition = PitchAutoTVCIntegrator.GetState() - 0.3115*errors.y + 0.399*rate_damp.y;
 			else if (T3QS12)
-				pitchAutoTVCPosition *= 1.0;
+				pitchAutoTVCPosition = 0.372*PitchAutoTVCIntegrator.GetState() - 0.166*errors.y + 0.998*rate_damp.y;
 			else
 				pitchAutoTVCPosition = 0.0;
 
-			yawAutoTVCPosition = -(YawAutoTVCIntegrator.GetState() + errors.z + rate_damp.z);
 			if (T2QS11)
-				yawAutoTVCPosition *= 1.0;
+				yawAutoTVCPosition = YawAutoTVCIntegrator.GetState() - 0.3115*errors.z + 0.399*rate_damp.z;
 			else if (T2QS12)
-				yawAutoTVCPosition *= 1.0;
+				yawAutoTVCPosition = 0.372*YawAutoTVCIntegrator.GetState() - 0.166*errors.z + 0.998*rate_damp.z;
 			else
 				yawAutoTVCPosition = 0.0;
 		}
 		else
+		{
 			pitchAutoTVCPosition = yawAutoTVCPosition = 0.0;
+		}
 
 		//Limit
 		if (pitchAutoTVCPosition > 14.0*RAD) pitchAutoTVCPosition = 14.0*RAD;
