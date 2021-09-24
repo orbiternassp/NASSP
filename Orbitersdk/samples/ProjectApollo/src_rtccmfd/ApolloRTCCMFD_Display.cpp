@@ -6063,17 +6063,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(29 * W / 64, 12 * H / 32, "OR", 2);
 			skp->Text(29 * W / 64, 13 * H / 32, "IP", 2);
 			skp->Text(29 * W / 64, 14 * H / 32, "MY", 2);
+
+			skp->Text(40 * W / 64, 12 * H / 32, "RB", 2);
+			skp->Text(40 * W / 64, 13 * H / 32, "PB", 2);
+			skp->Text(40 * W / 64, 14 * H / 32, "YB", 2);
 		}
 		else
 		{
 			skp->Text(29 * W / 64, 12 * H / 32, "OY", 2);
 			skp->Text(29 * W / 64, 13 * H / 32, "IP", 2);
 			skp->Text(29 * W / 64, 14 * H / 32, "MR", 2);
-		}
 
-		skp->Text(40 * W / 64, 12 * H / 32, "YB", 2);
-		skp->Text(40 * W / 64, 13 * H / 32, "PB", 2);
-		skp->Text(40 * W / 64, 14 * H / 32, "RB", 2);
+			skp->Text(40 * W / 64, 12 * H / 32, "YB", 2);
+			skp->Text(40 * W / 64, 13 * H / 32, "PB", 2);
+			skp->Text(40 * W / 64, 14 * H / 32, "RB", 2);
+		}
 
 		skp->Text(52 * W / 64, 12 * H / 32, "YH", 2);
 		skp->Text(52 * W / 64, 13 * H / 32, "PH", 2);

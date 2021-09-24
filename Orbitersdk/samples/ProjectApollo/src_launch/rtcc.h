@@ -3128,7 +3128,7 @@ public:
 	//Generation of Abort Scan Table for unspecified area
 	struct MED_F75
 	{
-		std::string Type = "TCUA";
+		std::string Type = "FCUA";
 		double DVMAX = 10000.0;
 		
 	} med_f75;
