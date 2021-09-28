@@ -314,6 +314,17 @@ static inline double sign(double x)
 	else return -1.0;
 }
 
+// Functions to convert between coordinate systems
+static inline void OrbiterToCSMCoordinates(VECTOR3 &vec)
+{
+	vec = _V(vec.z, vec.x, -vec.y);
+}
+
+static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
+{
+	vec = _V(vec.y, -vec.z, vec.x);
+}
+
 //
 // Engine information.
 //
