@@ -1291,6 +1291,8 @@ public:
 	//
 	void ConfigTouchdownPoints();
 	void ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target = -0.5);
+	
+	void SetWaterDumpParticleStreams(VECTOR3 ofs);
 
 	// Functions to recalculate moments of inertia and center of gravity
 	void UpdateMassAndCoG();

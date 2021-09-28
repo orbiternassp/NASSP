@@ -3644,8 +3644,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 
 	case CM_STAGE:
 		if (ApexCoverPyros.Blown() && !HasProbe) {
+			ShiftCG(_V(0, 0, 1.2));
 			StageEight(simt);
-			ShiftCentreOfMass(_V(0, 0, 1.2));
 
 		} else {
 			// DS20070622 Do not run stage seven if we still have the LET.
@@ -3657,8 +3657,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 
 	case CM_ENTRY_STAGE:
 		if (ApexCoverPyros.Blown() && !HasProbe) {
+			ShiftCG(_V(0, 0, 1.2));
 			StageEight(simt);
-			ShiftCentreOfMass(_V(0, 0, 1.2));
 		}
 		// sprintf(oapiDebugString(), "AtmPressure %f (37680)", GetAtmPressure());
 		break;
@@ -4784,6 +4784,9 @@ void Saturn::UpdateMassAndCoG()
 
 		//Touchdown Points
 		ConfigTouchdownPoints();
+
+		//Particle streams
+		SetWaterDumpParticleStreams(currentCoG + _V(0, 0, 32.3));
 
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;
