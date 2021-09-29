@@ -1069,7 +1069,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		else if (g_Data.iuUplinkType == DCSUPLINK_EVASIVE_MANEUVER_ENABLE)
 		{
 			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Maneuver Enable", 23);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Yaw Maneuver Enable", 27);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_EXECUTE_COMM_MANEUVER)
 		{

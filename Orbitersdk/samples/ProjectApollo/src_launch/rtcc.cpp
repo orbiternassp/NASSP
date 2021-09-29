@@ -20980,13 +20980,24 @@ int RTCC::PMMXFR(int id, void *data)
 		}
 		if (working_man == 1)
 		{
-			in.DockingAngle = mpt->DeltaDockingAngle;
-			if (mpt->mantable.size() > 0)
+			//Calculate number of previous maneuver, if applicable
+			unsigned int prevman;
+			if (inp->ReplaceCode > 0)
+			{
+				prevman = inp->ReplaceCode - 1;
+			}
+			else
+			{
+				prevman = mpt->ManeuverNum;
+			}
+
+			if (prevman > 0)
 			{
 				in.CSMWeight = 0.0;
 				in.LMWeight = 0.0;
-				in.VehicleWeight = mpt->mantable.back().TotalMassAfter;
-				in.VehicleArea = mpt->mantable.back().TotalAreaAfter;
+				in.VehicleWeight = mpt->mantable[prevman - 1].TotalMassAfter;
+				in.VehicleArea = mpt->mantable[prevman - 1].TotalAreaAfter;
+				in.DockingAngle = mpt->mantable[prevman - 1].DockingAngle;
 			}
 			else
 			{
@@ -20994,6 +21005,7 @@ int RTCC::PMMXFR(int id, void *data)
 				in.LMWeight = 0.0;
 				in.VehicleWeight = mpt->TotalInitMass;
 				in.VehicleArea = mpt->ConfigurationArea;
+				in.DockingAngle = mpt->DeltaDockingAngle;
 			}
 			if (replace)
 			{
