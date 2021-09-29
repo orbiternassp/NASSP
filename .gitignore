@@ -106,3 +106,5 @@ XRSound/
 /TrackIR.cfg
 .vs
 /RTCCDebug.txt
+/EphemData.txt
+/PrecessionData.txt
