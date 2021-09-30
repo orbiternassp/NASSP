@@ -545,7 +545,7 @@ void SaturnV::SetFirstStageEngines ()
 	th_1st[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_1st[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 
-	thg_1st = CreateThrusterGroup (th_1st, SI_EngineNum, THGROUP_MAIN);
+	thg_1st = CreateThrusterGroup (th_1st, SI_EngineNum, THGROUP_USER);
 	
 	EXHAUSTSPEC es_1st[5] = {
 		{ th_1st[0], NULL, NULL, NULL, 120.0, 3.5, 0, 0.1, exhaust_tex },
@@ -725,7 +725,7 @@ void SaturnV::SetSecondStageEngines(double offset)
 	th_2nd[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_2nd[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 
-	thg_2nd = CreateThrusterGroup (th_2nd, SII_EngineNum, THGROUP_MAIN);
+	thg_2nd = CreateThrusterGroup (th_2nd, SII_EngineNum, THGROUP_USER);
 
 	EXHAUSTSPEC es_2nd[5] = {
 	    { th_2nd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex },
@@ -893,7 +893,6 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 void SaturnV::SetThirdStageEngines (double offset)
 {
-	DelThrusterGroup(THGROUP_MAIN, true);
 	ClearThrusterDefinitions();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
@@ -988,7 +987,7 @@ void SaturnV::SetThirdStageEngines (double offset)
 	//
 
 	th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_THIRD_VAC, ph_3rd, ISP_THIRD_VAC);
-	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
+	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_USER);
 
 	EXHAUSTSPEC es_3rd[1] = {
 		{ th_3rd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex }

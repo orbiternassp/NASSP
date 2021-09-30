@@ -1917,7 +1917,7 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 
 	char weather[] = "GOOD";
 
-	v_e = calcParams.src->GetThrusterIsp0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0));
+	v_e = SystemParameters.MCTST1 / SystemParameters.MCTSW1;
 
 	entopt.vessel = calcParams.src;
 	entopt.GETbase = CalcGETBase();
@@ -5031,16 +5031,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	VECTOR3 DV_P, DV_C, V_G, X_SM, Y_SM, Z_SM;
 	double theta_T;
 	SV sv0, sv2;
-	THGROUP_TYPE th_main;
-
-	if (opt->vessel->GetGroupThruster(THGROUP_MAIN, 0) == NULL)
-	{
-		th_main = THGROUP_HOVER;
-	}
-	else
-	{
-		th_main = THGROUP_MAIN;
-	}
 
 	if (opt->useSV)
 	{
@@ -6146,8 +6136,8 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 		UZ = unit(-sv1.R);
 		UX = crossp(UY, UZ);
 
-		v_e = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-		F = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
+		F = SystemParameters.MCTJT5;
+		v_e = F / SystemParameters.MCTJW5;
 
 		DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
 		if (length(DV_P) != 0.0)

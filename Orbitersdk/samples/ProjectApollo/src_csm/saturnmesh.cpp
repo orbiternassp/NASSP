@@ -642,9 +642,7 @@ void Saturn::SetCSMStage ()
 	// *********************** thruster definitions ********************************
 
 	th_sps[0] = CreateThruster(_V(0.0, 0.0, -3.37472), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
-
-	DelThrusterGroup(THGROUP_MAIN, true);
-	thg_sps = CreateThrusterGroup(th_sps, 1, THGROUP_MAIN);
+	thg_sps = CreateThrusterGroup(th_sps, 1, THGROUP_USER);
 
 	VECTOR3 spspos0 = _V(0.0, 0.0, -5);
 	EXHAUSTSPEC es_sps[1] = {
