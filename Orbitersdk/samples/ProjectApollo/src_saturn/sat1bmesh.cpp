@@ -277,7 +277,7 @@ void Saturn1b::SetFirstStageEngines()
 	th_1st[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
-	thg_1st = CreateThrusterGroup (th_1st, 8, THGROUP_MAIN);
+	thg_1st = CreateThrusterGroup (th_1st, 8, THGROUP_USER);
 	
 	EXHAUSTSPEC es_1st[8] = {
 		{ th_1st[0], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
@@ -555,7 +555,7 @@ void Saturn1b::SetSecondStageEngines ()
 	//
 
 	th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
-	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
+	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_USER);
 	
 	EXHAUSTSPEC es_3rd[1] = {
 		{ th_3rd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex }
