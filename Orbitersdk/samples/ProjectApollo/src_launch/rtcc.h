@@ -1121,6 +1121,7 @@ struct FIDOOrbitDigitals
 	double PPR;		//Latitude of next apogee at GETP, as requested
 	double LPR;		//Longitude of next apogee at GETP, as requested
 	double GETPR;	//Time of arrival at next apogee, as requested
+	int Error;
 };
 
 struct FIDOOrbitDigitalsOpt
@@ -2549,6 +2550,18 @@ struct ELVCTROutputTable
 	int TUP;
 };
 
+struct ELVCTROutputTable2
+{
+	EphemerisData2 SV;
+	int ErrorCode;
+	//Order of interpolation performed
+	unsigned ORER;
+	//Vector property indicator (0 = Free flight, -1 = Lunar Stay, +1 = Maneuver)
+	int VPI;
+	//Update number
+	int TUP;
+};
+
 class RTCC {
 
 	friend class MCC;
@@ -2950,6 +2963,7 @@ public:
 	//Extended Interpolation Routine
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out);
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out, EphemerisDataTable &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY = NULL);
+	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, EphemerisDataTable2 &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY = NULL);
 	// MISSION CONTROL (G)
 	//Fixed Point Centiseconds to Floating Point Hours
 	double GLCSTH(double FIXCSC);
@@ -3008,7 +3022,7 @@ public:
 	//Computes and outputs pitch, yaw, roll
 	void RLMPYR(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll);
 	//Time of Longitude Crossing Subroutine
-	double RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, LunarStayTimesTable *LUNRSTAY = NULL);
+	double RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, EphemerisData2 &sv, LunarStayTimesTable *LUNRSTAY = NULL);
 	//Reentry numerical integrator
 	void RMMYNI(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
 	//Reentry Constant G Iterator

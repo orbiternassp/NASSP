@@ -902,6 +902,154 @@ RTCC_ELVCTR_5A:
 	return;
 }
 
+void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, EphemerisDataTable2 &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY)
+{
+	//Is order of interpolation correct?
+	if (in.ORER == 0 || in.ORER > 8)
+	{
+		out.ErrorCode = 64;
+		return;
+	}
+
+	unsigned nvec = 0;
+	double TS_stored = 0, TE_stored = 0;
+	bool restore = false;
+	unsigned ORER = in.ORER;
+	int I;
+	out.VPI = 0;
+	out.ErrorCode = 0;
+
+	if (in.GMT < EPH.table[0].GMT)
+	{
+		out.ErrorCode = 8;
+		return;
+	}
+	if (in.GMT > EPH.table.back().GMT)
+	{
+		out.ErrorCode = 16;
+		return;
+	}
+	out.TUP = EPH.Header.TUP;
+	if (LUNRSTAY != NULL)
+	{
+		if (in.GMT >= LUNRSTAY->LunarStayBeginGMT && in.GMT <= LUNRSTAY->LunarStayEndGMT)
+		{
+			out.VPI = -1;
+		}
+	}
+	I = 0;
+	if (mantimes.Table.size() > 0)
+	{
+		double TS = EPH.Header.TL;
+		double TE = EPH.Header.TR;
+		unsigned J = 0;
+		for (J = 0;J < mantimes.Table.size();J++)
+		{
+			//Equal to maneuver initiate time, go directly to 5A
+			if (mantimes.Table[J].ManData[1] == in.GMT)
+			{
+				goto RTCC_ELVCTR_5A;
+			}
+			else if (mantimes.Table[J].ManData[1] > in.GMT)
+			{
+				//Equal to maneuver end time, go directly to 5A
+				if (mantimes.Table[J].ManData[0] == in.GMT)
+				{
+					goto RTCC_ELVCTR_5A;
+				}
+				//Inside burn
+				if (mantimes.Table[J].ManData[0] < in.GMT)
+				{
+					out.VPI = 1;
+					goto RTCC_ELVCTR_3;
+				}
+				if (J == 0)
+				{
+					//Maneuver outside ephemeris range, let ELVARY handle the error
+					if (mantimes.Table[J].ManData[0] > TE)
+					{
+						goto RTCC_ELVCTR_5A;
+					}
+					//Constrain ephemeris end to begin of first maneuver
+					TE = mantimes.Table[J].ManData[0];
+					goto RTCC_ELVCTR_H;
+				}
+				else
+				{
+					if (mantimes.Table[J].ManData[0] < TE)
+					{
+						TE = mantimes.Table[J].ManData[0];
+					}
+					break;
+				}
+			}
+		}
+		//Constrain ephemeris start to end of previous maneuver
+		if (mantimes.Table[J - 1].ManData[1] > TS)
+		{
+			TS = mantimes.Table[J - 1].ManData[1];
+		}
+		goto RTCC_ELVCTR_H;
+	RTCC_ELVCTR_3:
+		ORER = 1;
+		unsigned E = 0;
+		while (EPH.table[E].GMT <= in.GMT)
+		{
+			//Direct hit
+			if (EPH.table[E].GMT == in.GMT)
+			{
+				goto RTCC_ELVCTR_5A;
+			}
+			E++;
+		}
+		TE = EPH.table[E].GMT;
+		TS = EPH.table[E - 1].GMT;
+	RTCC_ELVCTR_H:
+		unsigned V = 0;
+		while (TS >= EPH.table[V].GMT)
+		{
+			if (TS == EPH.table[V].GMT)
+			{
+				goto RTCC_ELVCTR_4;
+			}
+			V++;
+		}
+		out.ErrorCode = 255;
+		return;
+	RTCC_ELVCTR_4:
+		//Save stuff
+		restore = true;
+		nvec = EPH.Header.NumVec;
+		TS_stored = EPH.Header.TL;
+		TE_stored = EPH.Header.TR;
+		unsigned NV = 1;
+		while (TE != EPH.table[NV - 1].GMT)
+		{
+			if (TE < EPH.table[NV - 1].GMT)
+			{
+				out.ErrorCode = 255;
+				return;
+			}
+			NV++;
+		}
+		EPH.Header.NumVec = NV - V;
+		EPH.Header.Offset = V;
+		EPH.Header.TL = TS;
+		EPH.Header.TR = TE;
+	}
+
+RTCC_ELVCTR_5A:
+	out.ErrorCode = ELVARY(EPH, ORER, in.GMT, false, out.SV, out.ORER);
+	if (restore)
+	{
+		EPH.Header.NumVec = nvec;
+		EPH.Header.Offset = 0;
+		EPH.Header.TL = TS_stored;
+		EPH.Header.TR = TE_stored;
+	}
+	return;
+}
+
 //Fixed point centiseconds to floating point hours
 double RTCC::GLCSTH(double FIXCSC)
 {
@@ -2047,21 +2195,20 @@ void RTCC::RLMPYR(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_
 }
 
 //Computes time of longitude crossing
-double RTCC::RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, LunarStayTimesTable *LUNRSTAY)
+double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, EphemerisData2 &sv_cur, LunarStayTimesTable *LUNRSTAY)
 {
-	if (ephemeris.Header.TUP <= 0) return -1.0;
-	if (ephemeris.table.size() == 0) return -1.0;
+	if (EPHEM.Header.TUP <= 0) return -1.0;
+	if (EPHEM.table.size() == 0) return -1.0;
+	if (EPHEM.Header.CSI != 1 && EPHEM.Header.CSI != 3) return -1.0;
 
 	ELVCTRInputTable interin;
-	ELVCTROutputTable interout;
-	EphemerisData sv_cur;
+	ELVCTROutputTable2 interout;
 	double T1, lat, lng, dlng1, T2, dlng2, Tx, dlngx;
-	int RBI_search;
 	unsigned i = 0;
 
-	if (GMT_min > ephemeris.table.front().GMT)
+	if (GMT_min > EPHEM.Header.TL)
 	{
-		if (GMT_min > ephemeris.table.back().GMT)
+		if (GMT_min > EPHEM.Header.TR)
 		{
 			return -1.0;
 		}
@@ -2069,25 +2216,24 @@ double RTCC::RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 	}
 	else
 	{
-		T1 = ephemeris.table.front().GMT;
+		T1 = EPHEM.Header.TL;
 	}
 
-	while (T1 > ephemeris.table[i + 1].GMT)
+	while (T1 > EPHEM.table[i + 1].GMT)
 	{
 		i++;
 	}
 
 	interin.GMT = T1;
-	ELVCTR(interin, interout, ephemeris, MANTIMES, LUNRSTAY);
+	ELVCTR(interin, interout, EPHEM, MANTIMES, LUNRSTAY);
 
 	if (interout.ErrorCode)
 	{
 		return -1.0;
 	}
 
-	RBI_search = interout.SV.RBI;
 	sv_cur = interout.SV;
-	OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, SystemParameters.GMTBASE), sv_cur.RBI, lat, lng);
+	OrbMech::latlong_from_r(sv_cur.R, lat, lng);
 	dlng1 = lng - long_des;
 	if (dlng1 > PI) { dlng1 -= PI2; }
 	else if (dlng1 < -PI) { dlng1 += PI2; }
@@ -2098,23 +2244,18 @@ double RTCC::RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 		return 0;
 	}
 
-	if (i >= ephemeris.table.size() - 1)
+	if (i >= EPHEM.table.size() - 1)
 	{
 		return -1.0;
 	}
 
-	while (i < ephemeris.table.size() - 1)
+	while (i < EPHEM.table.size() - 1)
 	{
 		i++;
-		sv_cur = ephemeris.table[i];
-		//Reference body inconsistency, abort
-		if (sv_cur.RBI != RBI_search)
-		{
-			return -1.0;
-		}
+		sv_cur = EPHEM.table[i];
 		T2 = sv_cur.GMT;
 
-		OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, SystemParameters.GMTBASE), sv_cur.RBI, lat, lng);
+		OrbMech::latlong_from_r(sv_cur.R, lat, lng);
 		dlng2 = lng - long_des;
 		if (dlng2 > PI) { dlng2 -= PI2; }
 		else if (dlng2 < -PI) { dlng2 += PI2; }
@@ -2129,7 +2270,7 @@ double RTCC::RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 		{
 			break;
 		}
-		if (i == ephemeris.table.size() - 1)
+		if (i == EPHEM.table.size() - 1)
 		{
 			return -1.0;
 		}
@@ -2144,20 +2285,15 @@ double RTCC::RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 		Tx = T1 - (T2 - T1) / (dlng2 - dlng1)*dlng1;
 
 		interin.GMT = Tx;
-		ELVCTR(interin, interout, ephemeris, MANTIMES, LUNRSTAY);
+		ELVCTR(interin, interout, EPHEM, MANTIMES, LUNRSTAY);
 
 		if (interout.ErrorCode)
 		{
 			return -1.0;
 		}
-		//Reference body inconsistency, abort
-		if (interout.SV.RBI != RBI_search)
-		{
-			return -1.0;
-		}
 
 		sv_cur = interout.SV;
-		OrbMech::latlong_from_J2000(sv_cur.R, OrbMech::MJDfromGET(sv_cur.GMT, SystemParameters.GMTBASE), sv_cur.RBI, lat, lng);
+		OrbMech::latlong_from_r(sv_cur.R, lat, lng);
 		dlngx = lng - long_des;
 		if (dlngx > PI) { dlngx -= PI2; }
 		else if (dlngx < -PI) { dlngx += PI2; }

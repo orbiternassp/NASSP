@@ -4282,11 +4282,21 @@ int ARCore::subThread()
 	{
 		EphemerisDataTable tab;
 		EphemerisDataTable *tab2;
-		double gmt = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
+		double gmt_guess, gmt_min, gmt_max;
+		
+		gmt_guess = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
+		gmt_min = gmt_guess;
+		gmt_max = gmt_guess + 2.75*60.0*60.0;
 
 		if (GC->MissionPlanningActive)
 		{
-			tab2 = &GC->rtcc->EZEPH1.EPHEM;
+			unsigned int NumVec;
+			int TUP;
+			ManeuverTimesTable MANTIMES;
+			LunarStayTimesTable LUNSTAY;
+
+			GC->rtcc->ELNMVC(gmt_min, gmt_max, RTCC_MPT_CSM, NumVec, TUP);
+			GC->rtcc->ELFECH(gmt_min, NumVec, 0, RTCC_MPT_CSM, tab, MANTIMES, LUNSTAY);
 		}
 		else
 		{
@@ -4296,17 +4306,15 @@ int ARCore::subThread()
 
 			intab.AnchorVector = sv;
 			intab.EphemerisBuildIndicator = true;
-			intab.EphemerisLeftLimitGMT = gmt - 20.0*60.0;
-			intab.EphemerisRightLimitGMT = gmt + 2.5*60.0*60.0;
+			intab.EphemerisLeftLimitGMT = gmt_min;
+			intab.EphemerisRightLimitGMT = gmt_max;
 			intab.EphemTableIndicator = &tab;
 
 			GC->rtcc->EMSMISS(intab);
 			tab.Header.TUP = 1;
-
-			tab2 = &tab;
 		}
-
-		GC->rtcc->RMDRTSD(*tab2, 1, gmt, GC->rtcc->RZJCTTC.R20_lng);
+		tab2 = &tab;
+		GC->rtcc->RMDRTSD(*tab2, 1, gmt_guess, GC->rtcc->RZJCTTC.R20_lng);
 
 		Result = 0;
 	}

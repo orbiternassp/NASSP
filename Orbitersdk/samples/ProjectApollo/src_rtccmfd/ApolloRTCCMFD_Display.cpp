@@ -3552,6 +3552,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(12 * W / 16, 20 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, tab->GETPR, false);
 		skp->Text(12 * W / 16, 21 * H / 28, Buffer, strlen(Buffer));
+
+		if (tab->Error > 0)
+		{
+			sprintf(Buffer, "Error: %d", tab->Error);
+			skp->Text(8 * W / 16, 27 * H / 28, Buffer, strlen(Buffer));
+		}
 	}
 	else if (screen == 42)
 	{

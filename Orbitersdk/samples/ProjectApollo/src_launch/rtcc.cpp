@@ -282,6 +282,7 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	PPR = 0.0;
 	LPR = 0.0;
 	GETPR = 0.0;
+	Error = 0;
 }
 
 SpaceDigitals::SpaceDigitals()
@@ -13802,6 +13803,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 
 	CurGMT = RTCCPresentTimeGMT();
 	CurGET = GETfromGMT(CurGMT);
+	tab->Error = 0;
 
 	if (queid == 1 || queid == 2)
 	{
@@ -14119,14 +14121,69 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	{
 		int rev = ind;
 		double lng = param;
-		double GET = GETfromGMT(CapeCrossingGMT(L, rev));
-		if (GET < 0)
+		double GMT_guess = CapeCrossingGMT(L, rev);
+		if (GMT_guess < 0)
 		{
-			GET = CurGET;
+			//Error
+			tab->Error = 5;
+			return;
 		}
 
-		double GMT_cross;
-		RLMTLC(ephtab->EPHEM, ephtab->MANTIMES, lng, GMTfromGET(GET), GMT_cross);
+		double GMT_cross, GMT_min, GMT_max; 
+
+		GMT_min = GMT_guess - 5.0*60.0;
+		GMT_max = GMT_guess + 2.5*3600.0;
+
+		EphemerisDataTable EPHEM;
+		ManeuverTimesTable MANTIMES;
+		LunarStayTimesTable LUNSTAY;
+		unsigned int NumVec;
+		int TUP;
+
+		ELNMVC(GMT_min, GMT_max, L, NumVec, TUP);
+		ELFECH(GMT_min, NumVec, 0, L, EPHEM, MANTIMES, LUNSTAY);
+
+		//Convert to ECT/MCT
+		EphemerisDataTable2 tab2;
+		EphemerisData sv_out;
+		EphemerisData2 sv_inter, sv_cross;
+		int in, out;
+
+		if (EPHEM.table.front().RBI == BODY_EARTH)
+		{
+			out = 1;
+		}
+		else
+		{
+			out = 3;
+		}
+
+		tab2.Header = EPHEM.Header;
+		tab2.Header.CSI = out;
+		tab2.table.resize(EPHEM.table.size());
+
+		for (unsigned int j = 0;j < EPHEM.Header.NumVec;j++)
+		{
+			if (EPHEM.table.front().RBI == BODY_EARTH)
+			{
+				in = 0;
+			}
+			else
+			{
+				in = 2;
+			}
+
+			ELVCNV(EPHEM.table[j], in, out, sv_out);
+			tab2.table[j].R = sv_out.R;
+			tab2.table[j].V = sv_out.V;
+			tab2.table[j].GMT = sv_out.GMT;
+		}
+		
+		if (RLMTLC(tab2, ephtab->MANTIMES, lng, GMT_guess, GMT_cross, sv_cross))
+		{
+			tab->Error = 7;
+			return;
+		}
 		tab->GETL = GETfromGMT(GMT_cross);
 		tab->REVL = rev;
 		tab->L = lng * DEG;
@@ -18410,7 +18467,7 @@ RTCC_PMSVCT_8:
 					intab.EphemerisBuildIndicator = false;
 					intab.IgnoreManueverNumber = 0;
 					intab.ManCutoffIndicator = 2;
-					intab.ManeuverIndicator = true;
+					intab.ManeuverIndicator = false;
 					intab.MaxIntegTime = mpt->mantable[i].GMTMAN - sv0->GMT;
 					intab.VehicleCode = L;
 					NewEMSMISS(&intab);
@@ -22452,7 +22509,7 @@ RTCC_GLMRTM_1:
 int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 {
 	int i, rev, rev_max = 24;
-	double lng_des, GMT_min, GMT_cross, GMT_cur;
+	double lng_des, GMT_min, GMT_cross;
 
 	OrbitEphemerisTable *ephemeris;
 	CapeCrossingTable *cctab;
@@ -22476,16 +22533,85 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 		return 1;
 	}
 
-	GMT_cur = RTCCPresentTimeGMT();
+	//Get entire ephemeris and convert to ECT or MCT
+	EphemerisDataTable EPHEM;
+	ManeuverTimesTable MANTIMES;
+	LunarStayTimesTable LUNSTAY;
 
-	//Find current rev
-	for (i = 0;i < cctab->NumRev;i++)
+	ELFECH(ephemeris->EPHEM.Header.TL, ephemeris->EPHEM.Header.NumVec, 0, L, EPHEM, MANTIMES, LUNSTAY);
+	
+	if (EPHEM.Header.NumVec < 9)
 	{
-		if (GMT_cur < cctab->GMTCross[i])
+		//Error
+		return 1;
+	}
+
+	EphemerisDataTable2 EPHEM2;
+	EphemerisData2 temp_in, temp_out;
+	VECTOR3 W_ES, V_true, h_true;
+	double sign;
+	int in, out;
+
+	if (ref_frame == 0)
+	{
+		W_ES = _V(0, 0, 1)*OrbMech::w_Earth;
+		sign = 1.0;
+		out = 1;
+	}
+	else
+	{
+		W_ES = _V(0, 0, 1)*OrbMech::w_Moon;
+		sign = -1.0;
+		out = 3;
+	}
+
+	for (unsigned int j = 0;j < EPHEM.Header.NumVec;j++)
+	{
+		temp_in.R = EPHEM.table[j].R;
+		temp_in.V = EPHEM.table[j].V;
+		temp_in.GMT = EPHEM.table[j].GMT;
+
+		if (EPHEM.table[j].RBI == BODY_EARTH)
 		{
-			rev0 = i + 1;
+			in = 0;
+		}
+		else
+		{
+			in = 2;
+		}
+
+		if (ELVCNV(temp_in, in, out, temp_out))
+		{
+			//Error
+			return 1;
+		}
+		
+		V_true = temp_out.V - crossp(W_ES, temp_out.R);
+		h_true = crossp(unit(temp_out.R), unit(V_true));
+
+		if (h_true.z*sign < 0.0)
+		{
+			//Ground track reversal
 			break;
 		}
+
+		EPHEM2.table.push_back(temp_out);
+	}
+
+	//Write header
+	EPHEM2.Header.CSI = out;
+	EPHEM2.Header.NumVec = EPHEM2.table.size();
+	EPHEM2.Header.Offset = 0;
+	EPHEM2.Header.Status = 0;
+	EPHEM2.Header.TL = EPHEM2.table.front().GMT;
+	EPHEM2.Header.TR = EPHEM2.table.back().GMT;
+	EPHEM2.Header.TUP = EPHEM.Header.TUP;
+	EPHEM2.Header.VEH = EPHEM.Header.VEH;
+
+	if (EPHEM2.Header.NumVec < 9)
+	{
+		//Error
+		return 1;
 	}
 
 	for (i = 0;i < 30;i++)
@@ -22493,7 +22619,7 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 		cctab->GMTCross[i] = 0.0;
 	}
 
-	if (ephemeris->EPHEM.table.front().RBI == BODY_EARTH)
+	if (out == 1)
 	{
 		lng_des = -80.0*RAD;
 	}
@@ -22502,27 +22628,34 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 		lng_des = -180.0*RAD;
 	}
 
-	cctab->TUP = ephemeris->EPHEM.Header.TUP;
-	cctab->GMTEphemFirst = ephemeris->EPHEM.table.front().GMT;
-	cctab->GMTEphemLast = ephemeris->EPHEM.table.back().GMT;
+	cctab->TUP = EPHEM2.Header.TUP;
+	cctab->GMTEphemFirst = EPHEM2.table.front().GMT;
+	cctab->GMTEphemLast = EPHEM2.table.back().GMT;
 
-	GMT_min = ephemeris->EPHEM.table.front().GMT;
+	GMT_min = EPHEM2.table.front().GMT;
 
-	for (rev = 0;rev < rev_max;rev++)
+	//Use current time as start of current rev
+	rev = 0;
+	cctab->GMTCross[rev] = GMT_min;
+
+	EphemerisData2 sv_cross;
+
+	while (rev < rev_max)
 	{
-		if (RLMTLC(ephemeris->EPHEM, ephemeris->MANTIMES, lng_des, GMT_min, GMT_cross))
+		if (RLMTLC(EPHEM2, MANTIMES, lng_des, GMT_min, GMT_cross, sv_cross, &LUNSTAY))
 		{
 			break;
 		}
 
+		rev++;
 		cctab->GMTCross[rev] = GMT_cross;
 
 		GMT_min = GMT_cross + 3600.0;
 	}
 
-	cctab->NumRevFirst = rev0 + 1;
+	cctab->NumRevFirst = rev0;
 	cctab->NumRevLast = rev0 + rev;
-	cctab->NumRev = rev;
+	cctab->NumRev = rev + 1;
 
 	return 0;
 }
@@ -34518,9 +34651,26 @@ void RTCC::RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng_des)
 	lng = lng_des;
 	GMT_guess = val;
 
+	//Convert to ECT
+	EphemerisDataTable2 tab2;
+	EphemerisData sv_out;
+	EphemerisData2 sv_inter;
+
+	tab2.Header = tab.Header;
+	tab2.Header.CSI = 1;
+	tab2.table.resize(tab.table.size());
+
+	for (unsigned int j = 0;j < tab.Header.NumVec;j++)
+	{
+		ELVCNV(tab.table[j], 0, 1, sv_out);
+		tab2.table[j].R = sv_out.R;
+		tab2.table[j].V = sv_out.V;
+		tab2.table[j].GMT = sv_out.GMT;
+	}
+
 	do
 	{
-		out = RLMTLC(tab, MANTIMES, lng, GMT_guess, GMT_cross);
+		out = RLMTLC(tab2, MANTIMES, lng, GMT_guess, GMT_cross, sv_inter);
 		if (out == -1)
 		{
 			//No convergence
