@@ -499,7 +499,7 @@ int RTCC::ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRA
 //Generalized Coordinate Conversion Routine
 int RTCC::ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out)
 {
-	EphemerisData eph, sv_out;
+	EphemerisData2 eph, sv_out;
 	int err = 0;
 
 	eph.R = vec;
@@ -515,20 +515,11 @@ int RTCC::ELVCNV(std::vector<EphemerisData> &svtab, int out, std::vector<Ephemer
 {
 	EphemerisData sv, sv_out;
 	EphemerisData2 sv_out2;
-	int in, err = 0;
+	int err = 0;
 	for (unsigned i = 0;i < svtab.size();i++)
 	{
-		if (svtab[i].RBI == BODY_EARTH)
-		{
-			in = 0;
-		}
-		else
-		{
-			in = 2;
-		}
-
 		sv = svtab[i];
-		err = ELVCNV(sv, in, out, sv_out);
+		err = ELVCNV(sv, out, sv_out);
 		if (err)
 		{
 			break;
@@ -572,13 +563,24 @@ int RTCC::ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vecto
 	return err;
 }
 
-int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
+int RTCC::ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out)
 {
-	EphemerisData sv1, sv_out2;
+	EphemerisData2 sv1, sv_out2;
+	int in;
 
 	sv1.R = sv.R;
 	sv1.V = sv.V;
 	sv1.GMT = sv.GMT;
+
+	if (sv.RBI == BODY_EARTH)
+	{
+		in = 0;
+	}
+	else
+	{
+		in = 2;
+	}
+
 	int err = ELVCNV(sv1, in, out, sv_out2);
 
 	if (err)
@@ -591,7 +593,7 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 	return 0;
 }
 
-int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
+int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 {
 	if (in == out)
 	{
@@ -599,6 +601,7 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 		return 0;
 	}
 
+	EphemerisData2 sv1;
 	int err;
 
 	sv_out = sv;
@@ -692,7 +695,7 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//ECI to MCT
 	else if (in == 0 && out == 3)
 	{
-		EphemerisData sv1;
+		
 
 		err = ELVCNV(sv, 0, 2, sv1);
 		if (err) return err;
@@ -702,7 +705,6 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//MCT to ECI
 	else if (in == 3 && out == 0)
 	{
-		EphemerisData sv1;
 		err = ELVCNV(sv, 3, 2, sv1);
 		if (err) return err;
 		err = ELVCNV(sv1, 2, 0, sv_out);
@@ -711,8 +713,6 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//ECI to EMP
 	else if (in == 0 && out == 4)
 	{
-		EphemerisData sv1;
-
 		err = ELVCNV(sv, 0, 2, sv1);
 		if (err) return err;
 		err = ELVCNV(sv1, 2, 4, sv_out);
@@ -721,7 +721,6 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//EMP to ECI
 	else if (in == 4 && out == 0)
 	{
-		EphemerisData sv1;
 		err = ELVCNV(sv, 4, 2, sv1);
 		if (err) return err;
 		err = ELVCNV(sv1, 2, 0, sv_out);
@@ -730,7 +729,7 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//ECT to EMP
 	else if (in == 1 && out == 4)
 	{
-		EphemerisData sv1, sv2;
+		EphemerisData2 sv2;
 
 		err = ELVCNV(sv, 1, 0, sv1);
 		if (err) return err;
@@ -742,7 +741,7 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//EMP to ECT
 	else if (in == 4 && out == 1)
 	{
-		EphemerisData sv1, sv2;
+		EphemerisData2 sv2;
 
 		err = ELVCNV(sv, 4, 2, sv1);
 		if (err) return err;
@@ -754,7 +753,6 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//MCT to EMP
 	else if (in == 3 && out == 4)
 	{
-		EphemerisData sv1;
 		err = ELVCNV(sv, 3, 2, sv1);
 		if (err) return err;
 		err = ELVCNV(sv1, 2, 4, sv_out);
@@ -763,7 +761,6 @@ int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 	//EMP to MCT
 	else if (in == 4 && out == 3)
 	{
-		EphemerisData sv1;
 		err = ELVCNV(sv, 4, 2, sv1);
 		if (err) return err;
 		err = ELVCNV(sv1, 2, 3, sv_out);
@@ -1202,19 +1199,17 @@ int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 {
 	EphemerisData sv_out;
 	VECTOR3 u;
-	int in, out;
+	int out;
 	if (sv.RBI == BODY_EARTH)
 	{
-		in = 0;
 		out = 1;
 	}
 	else
 	{
-		in = 2;
 		out = 3;
 	}
 
-	if (ELVCNV(sv, in, out, sv_out))
+	if (ELVCNV(sv, out, sv_out))
 	{
 		return 1;
 	}

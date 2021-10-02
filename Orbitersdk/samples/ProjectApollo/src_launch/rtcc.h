@@ -2106,6 +2106,7 @@ struct CapeCrossingTable
 {
 	CapeCrossingTable();
 	int TUP;
+	int ref_body;
 	int NumRev;
 	int NumRevFirst;
 	int NumRevLast;
@@ -2706,7 +2707,7 @@ public:
 	//Ascending Node Computation
 	int RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double GMT_min, double &lng_asc);
 	//Environment Change Calculations
-	int EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double GMT_begin, int option, SunriseSunsetTable &table, VECTOR3 *u_inter = NULL);
+	int EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, double GMT_begin, int option, SunriseSunsetTable &table, VECTOR3 *u_inter = NULL);
 	//Sunrise/Sunset Display
 	void EMDSSEMD(int ind, double param);
 	//Moonrise/Moonset Display
@@ -2958,7 +2959,7 @@ public:
 	//Generalized Coordinate System Conversion Subroutine
 	int ELVCNV(std::vector<EphemerisData> &svtab, int out, std::vector<EphemerisData2> &svtab_out);
 	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
-	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
+	int ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out);
 	int ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out);
 	int ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out);
 	//Extended Interpolation Routine
