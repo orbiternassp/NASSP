@@ -6070,23 +6070,19 @@ double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
 	return theta_rad * 3437.7468;
 }
 
-void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body, VECTOR3 &N, VECTOR3 &rho, double &sinang)
+void EMXINGElev(VECTOR3 R, VECTOR3 R_S, VECTOR3 &N, VECTOR3 &rho, double &sinang)
 {
-	MATRIX3 Rot;
-	VECTOR3 rho_apo, R_S;
+	VECTOR3 rho_apo;
 
-	Rot = OrbMech::GetRotationMatrix(body, MJDfromGET(GMT, GMTBASE));
-	R_S = rhmul(Rot, R_S_equ);
 	N = unit(R_S);
 	rho = R - R_S;
 	rho_apo = unit(rho);
 	sinang = dotp(rho_apo, N);
 }
 
-double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body)
+double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S, int body)
 {
-	MATRIX3 Rot;
-	VECTOR3 R_S, V_S, N, rho, rho_apo, W_E, rho_dot, N_dot;
+	VECTOR3 V_S, N, rho, rho_apo, W_E, rho_dot, N_dot;
 	double w_E;
 
 	if (body == BODY_EARTH)
@@ -6098,13 +6094,11 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, do
 		w_E = w_Moon;
 	}
 
-	Rot = OrbMech::GetRotationMatrix(body, MJDfromGET(GMT, GMTBASE));
-	R_S = rhmul(Rot, R_S_equ);
 	N = unit(R_S);
 	rho = R - R_S;
 	rho_apo = unit(rho);
 	
-	W_E = rhmul(Rot, _V(0, 0, 1))*w_E;
+	W_E = _V(0, 0, 1)*w_E;
 	V_S = crossp(W_E, R_S);
 	rho_dot = (V - V_S) / length(rho);
 

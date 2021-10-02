@@ -15068,7 +15068,11 @@ void RTCC::EMSTAGEN(int L)
 		}
 	}
 
-	EMGENGEN(EPHEM, MANTIMES, contact, BODY_EARTH, *tab);
+	EphemerisDataTable2 EPHEM2;
+	ELVCNV(EPHEM.table, 1, EPHEM2.table);
+	EPHEM2.Header = EPHEM.Header;
+	EPHEM2.Header.CSI = 1;
+	EMGENGEN(EPHEM2, MANTIMES, contact, BODY_EARTH, *tab);
 
 	//Reset this, so next station contacts display updates immedately
 	NextStationContactsBuffer.GET = -1;
@@ -18925,7 +18929,7 @@ void RTCC::PMMIEV(double T_L)
 	//TBD: ETMSCTRL for trajectory update
 }
 
-void RTCC::EMGENGEN(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res)
+void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res)
 {
 	std::vector<StationContact> acquisitions;
 	StationContact current;
@@ -18955,13 +18959,16 @@ void RTCC::EMGENGEN(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 	}
 }
 
-bool RTCC::EMXING(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions)
+bool RTCC::EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station &station, int body, std::vector<StationContact> &acquisitions)
 {
 	if (ephemeris.table.size() == 0) return false;
+	//Has to be ECT or MCT
+	if (body == BODY_EARTH && ephemeris.Header.CSI != 1) return false;
+	if (body == BODY_MOON && ephemeris.Header.CSI != 3) return false;
 
 	ELVCTRInputTable interin;
-	ELVCTROutputTable interout;
-	EphemerisData svtemp, sv_AOS;
+	ELVCTROutputTable2 interout;
+	EphemerisData2 svtemp, sv_AOS;
 	StationContact current;
 	VECTOR3 R_S_equ, R, rho, N, Ntemp, rhotemp, V;
 	double GMT, sinang, GMT_AOS, LastGMT, LastSinang, GMT0, f, last_f, GMT_EMAX, sinangtemp, EMAX, GMT_LOS;
@@ -18986,14 +18993,8 @@ EMXING_LOOP:
 		V = ephemeris.table[iter].V;
 		GMT = ephemeris.table[iter].GMT;
 
-		//For now
-		if (ephemeris.table[iter].RBI != body)
-		{
-			return false;
-		}
-
-		OrbMech::EMXINGElev(R, R_S_equ,SystemParameters.GMTBASE, GMT, body, N, rho, sinang);
-		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ,SystemParameters.GMTBASE, GMT, body);
+		OrbMech::EMXINGElev(R, R_S_equ, N, rho, sinang);
+		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, body);
 
 		//Elevation angle above 0, there is an AOS
 		if (sinang >= 0) break;
@@ -19009,7 +19010,7 @@ EMXING_LOOP:
 			}
 			svtemp = interout.SV;
 
-			OrbMech::EMXINGElev(svtemp.R, R_S_equ,SystemParameters.GMTBASE, svtemp.GMT, body, Ntemp, rhotemp, sinangtemp);
+			OrbMech::EMXINGElev(svtemp.R, R_S_equ, Ntemp, rhotemp, sinangtemp);
 			//Elevation angle above 0, there is an AOS
 			if (sinangtemp >= 0) break;
 		}
@@ -19052,7 +19053,7 @@ EMXING_LOOP:
 			V = svtemp.V;
 			GMT = svtemp.GMT;
 
-			OrbMech::EMXINGElev(R, R_S_equ,SystemParameters.GMTBASE, GMT, body, N, rho, sinang);
+			OrbMech::EMXINGElev(R, R_S_equ, N, rho, sinang);
 
 			GMT_AOS = OrbMech::LinearInterpolation(sinang, GMT, LastSinang, LastGMT, 0.0);
 			interin.GMT = GMT_AOS;
@@ -19080,7 +19081,7 @@ EMXING_LOOP:
 		V = ephemeris.table[iter].V;
 		GMT = ephemeris.table[iter].GMT;
 
-		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ,SystemParameters.GMTBASE, GMT, body);
+		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, body);
 
 		//EMAX before first SV in ephemeris
 		if (iter == 0 && f < 0)
@@ -19131,7 +19132,7 @@ EMXING_LOOP:
 				V = svtemp.V;
 				GMT = svtemp.GMT;
 
-				f = OrbMech::EMXINGElevSlope(R, V, R_S_equ,SystemParameters.GMTBASE, GMT, body);
+				f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, body);
 
 				GMT_EMAX = OrbMech::LinearInterpolation(f, GMT, last_f, LastGMT, 0.0);
 				interin.GMT = GMT_EMAX;
@@ -19149,7 +19150,7 @@ EMXING_LOOP:
 		}
 	}
 
-	OrbMech::EMXINGElev(svtemp.R, R_S_equ,SystemParameters.GMTBASE, svtemp.GMT, body, N, rho, sinang);
+	OrbMech::EMXINGElev(svtemp.R, R_S_equ, N, rho, sinang);
 	EMAX = asin(sinang);
 
 	//Find LOS
@@ -19161,8 +19162,8 @@ EMXING_LOOP:
 		V = ephemeris.table[iter].V;
 		GMT = ephemeris.table[iter].GMT;
 
-		OrbMech::EMXINGElev(R, R_S_equ,SystemParameters.GMTBASE, GMT, body, N, rho, sinang);
-		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ,SystemParameters.GMTBASE, GMT, body);
+		OrbMech::EMXINGElev(R, R_S_equ, N, rho, sinang);
+		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, body);
 
 		//Elevation angle below 0, there is an LOS
 		if (sinang < 0 && f < 0) break;
@@ -19196,7 +19197,7 @@ EMXING_LOOP:
 			V = svtemp.V;
 			GMT = svtemp.GMT;
 
-			OrbMech::EMXINGElev(R, R_S_equ,SystemParameters.GMTBASE, GMT, body, N, rho, sinang);
+			OrbMech::EMXINGElev(R, R_S_equ, N, rho, sinang);
 
 			GMT_LOS = OrbMech::LinearInterpolation(sinang, GMT, LastSinang, LastGMT, 0.0);
 			interin.GMT = GMT_LOS;
@@ -19214,7 +19215,7 @@ EMXING_LOOP:
 	}
 
 	//If in lunar SOI check if Moon occults AOS
-	if (sv_AOS.RBI == BODY_MOON)
+	if (ephemeris.Header.CSI == 3)
 	{
 		//TBD: Implement this
 	}
@@ -19336,15 +19337,29 @@ void RTCC::EMDLANDM(int L, double get, double dt, int ref)
 		contact.table.push_back(station);
 	}
 
-	int TUP;
+	int TUP, out;
 	unsigned NumVec;
 	OrbitEphemerisTable ephem;
+
+	if (stat_body == BODY_EARTH)
+	{
+		out = 1;
+	}
+	else
+	{
+		out = 3;
+	}
 
 	ELNMVC(GMT_Begin, GMT_End, RTCC_MPT_CSM, NumVec, TUP);
 	ELFECH(GMT_Begin, NumVec, 1, RTCC_MPT_CSM, ephem.EPHEM, ephem.MANTIMES, ephem.LUNRSTAY);
 
+	EphemerisDataTable2 ephem2;
+	ELVCNV(ephem.EPHEM.table, out, ephem2.table);
+	ephem2.Header = ephem.EPHEM.Header;
+	ephem2.Header.CSI = out;
+
 	OrbitStationContactsTable res;
-	EMGENGEN(ephem.EPHEM, ephem.MANTIMES, contact, stat_body, res);
+	EMGENGEN(ephem2, ephem.MANTIMES, contact, stat_body, res);
 }
 
 void RTCC::ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt)
@@ -19443,15 +19458,29 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 		}
 	}
 
-	int TUP;
+	int TUP, out;
 	unsigned NumVec;
 	OrbitEphemerisTable ephem;
+
+	if (stat_body == BODY_EARTH)
+	{
+		out = 1;
+	}
+	else
+	{
+		out = 3;
+	}
 
 	ELNMVC(GMT_Begin, GMT_End, veh, NumVec, TUP);
 	ELFECH(GMT_Begin, NumVec, 1, veh, ephem.EPHEM, ephem.MANTIMES, ephem.LUNRSTAY);
 
+	EphemerisDataTable2 ephem2;
+	ELVCNV(ephem.EPHEM.table, out, ephem2.table);
+	ephem2.Header = ephem.EPHEM.Header;
+	ephem2.Header.CSI = out;
+
 	OrbitStationContactsTable res;
-	EMGENGEN(ephem.EPHEM, ephem.MANTIMES, contact, stat_body, res);
+	EMGENGEN(ephem2, ephem.MANTIMES, contact, stat_body, res);
 
 	//Experimental site
 	if (num == 3)
