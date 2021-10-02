@@ -19409,7 +19409,15 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 	else
 	{
 		GMT_Begin = CapeCrossingGMT(veh, (int)vala);
+		if (GMT_Begin < 0)
+		{
+			GMT_Begin = CapeCrossingFirst(veh);
+		}
 		GMT_End = CapeCrossingGMT(veh, 1 + (int)valb);
+		if (GMT_End < 0)
+		{
+			GMT_End = CapeCrossingLast(veh);
+		}
 	}
 
 	if (GMT_End < 0)
@@ -19478,6 +19486,11 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 	ELVCNV(ephem.EPHEM.table, out, ephem2.table);
 	ephem2.Header = ephem.EPHEM.Header;
 	ephem2.Header.CSI = out;
+
+	if (ephem2.Header.NumVec < 9)
+	{
+		return;
+	}
 
 	OrbitStationContactsTable res;
 	EMGENGEN(ephem2, ephem.MANTIMES, contact, stat_body, res);
@@ -23213,6 +23226,46 @@ double RTCC::CapeCrossingGMT(int L, int rev)
 	}
 
 	return table->GMTCross[rev - table->NumRevFirst];
+}
+
+double RTCC::CapeCrossingFirst(int L)
+{
+	CapeCrossingTable *table;
+	if (L == RTCC_MPT_LM)
+	{
+		table = &EZCLEM;
+	}
+	else
+	{
+		table = &EZCCSM;
+	}
+
+	if (table->NumRev == 0)
+	{
+		return -1.0;
+	}
+
+	return table->GMTCross[0];
+}
+
+double RTCC::CapeCrossingLast(int L)
+{
+	CapeCrossingTable *table;
+	if (L == RTCC_MPT_LM)
+	{
+		table = &EZCLEM;
+	}
+	else
+	{
+		table = &EZCCSM;
+	}
+
+	if (table->NumRev == 0)
+	{
+		return -1.0;
+	}
+
+	return table->GMTCross[table->NumRev - 1];
 }
 
 void RTCC::ECMPAY(EphemerisDataTable &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw)
