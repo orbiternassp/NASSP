@@ -511,6 +511,43 @@ int RTCC::ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out)
 	return err;
 }
 
+int RTCC::ELVCNV(std::vector<EphemerisData> &svtab, int out, std::vector<EphemerisData2> &svtab_out)
+{
+	EphemerisData sv, sv_out;
+	EphemerisData2 sv_out2;
+	int in, err = 0;
+	for (unsigned i = 0;i < svtab.size();i++)
+	{
+		if (svtab[i].RBI == BODY_EARTH)
+		{
+			in = 0;
+		}
+		else
+		{
+			in = 2;
+		}
+
+		sv = svtab[i];
+		err = ELVCNV(sv, in, out, sv_out);
+		if (err)
+		{
+			break;
+		}
+		sv_out2.R = sv_out.R;
+		sv_out2.V = sv_out.V;
+		sv_out2.GMT = sv_out.GMT;
+		if (svtab_out.size() > i)
+		{
+			svtab_out[i] = sv_out2;
+		}
+		else
+		{
+			svtab_out.push_back(sv_out2);
+		}
+	}
+	return err;
+}
+
 int RTCC::ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out)
 {
 	EphemerisData2 sv, sv_out;

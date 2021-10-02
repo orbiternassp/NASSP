@@ -2704,7 +2704,7 @@ public:
 	//Cape Crossing Table Generation
 	int RMMEACC(int L, int ref_frame, int ephem_type, int rev0);
 	//Ascending Node Computation
-	int RMMASCND(int L, double GMT_min, double &lng_asc);
+	int RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double GMT_min, double &lng_asc);
 	//Environment Change Calculations
 	int EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double GMT_begin, int option, SunriseSunsetTable &table, VECTOR3 *u_inter = NULL);
 	//Sunrise/Sunset Display
@@ -2956,6 +2956,7 @@ public:
 	int ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData &sv_out, unsigned &ORER_out);
 	int ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData2 &sv_out, unsigned &ORER_out);
 	//Generalized Coordinate System Conversion Subroutine
+	int ELVCNV(std::vector<EphemerisData> &svtab, int out, std::vector<EphemerisData2> &svtab_out);
 	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
 	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
 	int ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out);

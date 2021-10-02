@@ -13868,8 +13868,33 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 
 	if (queid == 2 || (tcontab->lat > 0 && tab->PPP < 0))
 	{
+		EphemerisDataTable EPHEM;
+		ManeuverTimesTable MANTIMES;
+		LunarStayTimesTable LUNSTAY;
+		ELFECH(CurGMT, 100, 1, L, EPHEM, MANTIMES, LUNSTAY);
+		if (EPHEM.Header.NumVec < 9)
+		{
+			//Error
+			return;
+		}
+
+		int out;
+		if (EPHEM.table[0].RBI == BODY_EARTH)
+		{
+			out = 1;
+		}
+		else
+		{
+			out = 3;
+		}
+
+		EphemerisDataTable2 EPHEM2;
+		ELVCNV(EPHEM.table, out, EPHEM2.table);
+		EPHEM2.Header = EPHEM.Header;
+		EPHEM2.Header.CSI = out;
+
 		double lng;
-		int err = RMMASCND(L, CurGMT, lng);
+		int err = RMMASCND(EPHEM2, MANTIMES, CurGMT, lng);
 		if (err)
 		{
 			EMGPRINT("EMMDYNMC", 29);
@@ -22508,7 +22533,7 @@ RTCC_GLMRTM_1:
 
 int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 {
-	int i, rev, rev_max = 24;
+	int rev, rev_max = 24;
 	double lng_des, GMT_min, GMT_cross;
 
 	OrbitEphemerisTable *ephemeris;
@@ -22532,6 +22557,9 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 		//TBD
 		return 1;
 	}
+
+	//Reset table
+	*cctab = CapeCrossingTable();
 
 	//Get entire ephemeris and convert to ECT or MCT
 	EphemerisDataTable EPHEM;
@@ -22598,6 +22626,12 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 		EPHEM2.table.push_back(temp_out);
 	}
 
+	if (EPHEM2.table.size() < 9)
+	{
+		//Error
+		return 1;
+	}
+
 	//Write header
 	EPHEM2.Header.CSI = out;
 	EPHEM2.Header.NumVec = EPHEM2.table.size();
@@ -22607,17 +22641,6 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 	EPHEM2.Header.TR = EPHEM2.table.back().GMT;
 	EPHEM2.Header.TUP = EPHEM.Header.TUP;
 	EPHEM2.Header.VEH = EPHEM.Header.VEH;
-
-	if (EPHEM2.Header.NumVec < 9)
-	{
-		//Error
-		return 1;
-	}
-
-	for (i = 0;i < 30;i++)
-	{
-		cctab->GMTCross[i] = 0.0;
-	}
 
 	if (out == 1)
 	{
@@ -22660,53 +22683,38 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 	return 0;
 }
 
-int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
+int RTCC::RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double GMT_min, double &lng_asc)
 {
+	if (EPHEM.Header.CSI != 1 && EPHEM.Header.CSI != 3) return 5;
 	double GMT;
-	OrbitEphemerisTable *tab;
-	if (L == 1)
+
+	ELVCTRInputTable intab;
+	ELVCTROutputTable2 outtab;
+	EphemerisData2 sv_true;
+	double mu;
+
+	if (EPHEM.Header.CSI == 1)
 	{
-		tab = &EZEPH1;
+		mu = OrbMech::mu_Earth;
 	}
 	else
 	{
-		tab = &EZEPH2;
+		mu = OrbMech::mu_Moon;
 	}
-
-	ELVCTRInputTable intab;
-	ELVCTROutputTable outtab;
-	EphemerisData sv_true;
 
 	GMT = GMT_min;
 	intab.GMT = GMT;
-	intab.L = L;
-	ELVCTR(intab, outtab);
+	ELVCTR(intab, outtab, EPHEM, MANTIMES);
 	if (outtab.ErrorCode)
 	{
 		return 1;
 	}
 
-	double mu, u, du, a, n, dt;
-	int in, out;
+	sv_true = outtab.SV;
+
+	double u, du, a, n, dt;
 	OELEMENTS coe;
 
-	if (outtab.SV.RBI == BODY_EARTH)
-	{
-		in = 0;
-		out = 1;
-		mu = OrbMech::mu_Earth;
-	}
-	else
-	{
-		in = 2;
-		out = 3;
-		mu = OrbMech::mu_Moon;
-	}
-
-	if (ELVCNV(outtab.SV, in, out, sv_true))
-	{
-		return 2;
-	}
 	coe = OrbMech::coe_from_sv(sv_true.R, sv_true.V, mu);
 	if (coe.e >= 1.0)
 	{
@@ -22730,15 +22738,12 @@ int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
 	while (abs(dt) >= 2.0 && i < imax)
 	{
 		intab.GMT = GMT;
-		ELVCTR(intab, outtab);
+		ELVCTR(intab, outtab, EPHEM, MANTIMES);
 		if (outtab.ErrorCode)
 		{
 			return 1;
 		}
-		if (ELVCNV(outtab.SV, in, out, sv_true))
-		{
-			return 2;
-		}
+		sv_true = outtab.SV;
 		coe = OrbMech::coe_from_sv(sv_true.R, sv_true.V, mu);
 		if (coe.e >= 1.0)
 		{
