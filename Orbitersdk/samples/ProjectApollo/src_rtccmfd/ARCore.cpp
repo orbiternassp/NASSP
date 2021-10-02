@@ -4280,8 +4280,8 @@ int ARCore::subThread()
 	break;
 	case 37: //Recovery Target Selection Display
 	{
-		EphemerisDataTable tab;
-		EphemerisDataTable *tab2;
+		EphemerisDataTable2 tab;
+		EphemerisDataTable2 *tab2;
 		double gmt_guess, gmt_min, gmt_max;
 		
 		gmt_guess = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
@@ -4290,27 +4290,47 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
+			EphemerisDataTable tab_temp;
 			unsigned int NumVec;
 			int TUP;
 			ManeuverTimesTable MANTIMES;
 			LunarStayTimesTable LUNSTAY;
 
 			GC->rtcc->ELNMVC(gmt_min, gmt_max, RTCC_MPT_CSM, NumVec, TUP);
-			GC->rtcc->ELFECH(gmt_min, NumVec, 0, RTCC_MPT_CSM, tab, MANTIMES, LUNSTAY);
+			GC->rtcc->ELFECH(gmt_min, NumVec, 0, RTCC_MPT_CSM, tab_temp, MANTIMES, LUNSTAY);
+
+			if (tab_temp.Header.NumVec < 9 || tab_temp.table[0].RBI != BODY_EARTH)
+			{
+				Result = 0;
+				break;
+			}
+
+			GC->rtcc->ELVCNV(tab_temp.table, 0, tab.table);
+			tab.Header = tab_temp.Header;
+			tab.Header.CSI = 0;
 		}
 		else
 		{
 			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(vessel);
 
+			if (sv.RBI != BODY_EARTH)
+			{
+				Result = 0;
+				break;
+			}
+
 			EMSMISSInputTable intab;
 
 			intab.AnchorVector = sv;
 			intab.EphemerisBuildIndicator = true;
+			intab.ECIEphemerisIndicator = true;
+			intab.ECIEphemTableIndicator = &tab;
 			intab.EphemerisLeftLimitGMT = gmt_min;
 			intab.EphemerisRightLimitGMT = gmt_max;
-			intab.EphemTableIndicator = &tab;
+			intab.ManCutoffIndicator = false;
+			intab.VehicleCode = RTCC_MPT_CSM;
 
-			GC->rtcc->EMSMISS(intab);
+			GC->rtcc->NewEMSMISS(&intab);
 			tab.Header.TUP = 1;
 		}
 		tab2 = &tab;

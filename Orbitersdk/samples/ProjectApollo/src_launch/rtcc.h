@@ -3032,7 +3032,7 @@ public:
 	//Retrofire Planning Control Module
 	void RMSDBMP(EphemerisData sv, double CSMmass);
 	//Recovery Target Selection Display
-	void RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng);
+	void RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng);
 	//Reentry MED Decoder
 	int RMRMED(std::string med, std::vector<std::string> data);
 	//Spacecraft Setting Control

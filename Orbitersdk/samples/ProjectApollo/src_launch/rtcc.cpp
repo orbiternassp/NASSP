@@ -34591,15 +34591,15 @@ void RTCC::RMSDBMP(EphemerisData sv, double CSMmass)
 	}
 }
 
-void RTCC::RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng_des)
+void RTCC::RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng_des)
 {
 	if (tab.Header.CSI != BODY_EARTH) return;
 
 	ELVCTRInputTable intab;
-	ELVCTROutputTable outtab;
+	ELVCTROutputTable2 outtab;
 	ManeuverTimesTable MANTIMES;
 	TimeConstraintsTable tctab;
-	EphemerisData sv_ECT;
+	EphemerisData2 sv_ECT;
 	double GMT_cross, out, lng, GMT_guess;
 	int i;
 
@@ -34617,20 +34617,12 @@ void RTCC::RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng_des)
 
 	//Convert to ECT
 	EphemerisDataTable2 tab2;
-	EphemerisData sv_out;
+	EphemerisData2 sv_out;
 	EphemerisData2 sv_inter;
 
+	ELVCNV(tab.table, 0, 1, tab2.table);
 	tab2.Header = tab.Header;
 	tab2.Header.CSI = 1;
-	tab2.table.resize(tab.table.size());
-
-	for (unsigned int j = 0;j < tab.Header.NumVec;j++)
-	{
-		ELVCNV(tab.table[j], 1, sv_out);
-		tab2.table[j].R = sv_out.R;
-		tab2.table[j].V = sv_out.V;
-		tab2.table[j].GMT = sv_out.GMT;
-	}
 
 	do
 	{
@@ -34657,8 +34649,14 @@ void RTCC::RMDRTSD(EphemerisDataTable &tab, int opt, double val, double lng_des)
 			//Not converged
 			RZDRTSD.table[i].AlternateLongitudeIndicator = true;
 		}
-		ELVCNV(outtab.SV, 1, sv_ECT);
-		EMMDYNEL(sv_ECT, tctab);
+		ELVCNV(outtab.SV, 0, 1, sv_ECT);
+		EphemerisData sv_ECT2;
+		sv_ECT2.R = sv_ECT.R;
+		sv_ECT2.V = sv_ECT.V;
+		sv_ECT2.GMT = sv_ECT.GMT;
+		sv_ECT2.RBI = 0;
+
+		EMMDYNEL(sv_ECT2, tctab);
 		RZDRTSD.table[i].Azimuth = tctab.azi*DEG;
 		RZDRTSD.table[i].GET = GETfromGMT(GMT_cross);
 		RZDRTSD.table[i].GMT = GMT_cross;
