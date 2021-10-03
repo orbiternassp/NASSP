@@ -787,7 +787,7 @@ void HGA::TimeStep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
 
 	const double TrkngCtrlGain = 5.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
-	const double ServoFeedbackGain = 3.2; //this works too...
+	const double ServoFeedbackGain = 3.2E-2; //this works too...
 	const double BeamSwitchingTrkErThreshhold = 0.005; 
 	const double BeamSwitchingTime = 0.5;
 
@@ -886,6 +886,8 @@ void HGA::TimeStep(double simt, double simdt)
 		
 	}
 
+	double HGATrkTimeFactor = exp(-simdt);
+
 	//select control mode for high gain antenna 
 	if (AutoTrackingMode == false) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
 	{
@@ -907,29 +909,29 @@ void HGA::TimeStep(double simt, double simdt)
 		if (Gamma > 45 * RAD)	//mode select A-C servo control
 		{
 
-			double HGATrkTimeFactor = exp(-simdt);
+			
 
 			if (AzmuthTrackErrorDeg > 3.0)
 			{
-				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
-				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 			}
 			else
 			{
-				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt);
-				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
-				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor) - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 			}
 		}
 		else					//mode select B-C servo control
 		{
 			if (!WhiparoundIsSet)
 			{
-				AAxisCmd = Alpha - (Beta*ServoFeedbackGain*simdt);
+				AAxisCmd = Alpha - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
 			}
-			BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-			CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+			BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor);
+			CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 
 			if ((Gamma <= -1.0 * RAD) && !WhiparoundIsSet)
 			{
@@ -1145,8 +1147,8 @@ void HGA::TimeStep(double simt, double simdt)
 		scanlimitwarn = false;
 	}
 
-	sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf°, SignalStrength %lf, RelAng %lf°, CSMrelang %lf°, Warn: %d, Limit: %d, Beam: %d, Auto: %d, Whiparound: %d",
-		Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, CSMrelang*DEG, scanlimitwarn, scanlimit, RcvBeamWidthMode, AutoTrackingMode, WhiparoundIsSet);
+	/*sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf°, SignalStrength %lf, RelAng %lf°, CSMrelang %lf°, Warn: %d, Limit: %d, Beam: %d, Auto: %d, Whiparound: %d",
+		Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, CSMrelang*DEG, scanlimitwarn, scanlimit, RcvBeamWidthMode, AutoTrackingMode, WhiparoundIsSet);*/
 }
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
