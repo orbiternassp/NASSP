@@ -620,6 +620,8 @@ HGA::HGA(){
 	hga_proc[0] = hga_proc_last[0] = 0.0;
 	hga_proc[1] = hga_proc_last[1] = 0.0;
 	hga_proc[2] = hga_proc_last[2] = 0.0;
+
+	CSMToOrbiterCoordinates(boomAxis); //convert to orbiter coordinates
 }
 
 void HGA::Init(Saturn *vessel){
@@ -785,9 +787,9 @@ void HGA::TimeStep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
 
 	const double TrkngCtrlGain = 5.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
-	const double ServoFeedbackGain = 3.2; //this works too...
-	const double BeamSwitchingTrkErThreshhold = 0.001; 
-	const double BeamSwitchingTime = 0.1;
+	const double ServoFeedbackGain = 3.2E-2; //this works too...
+	const double BeamSwitchingTrkErThreshhold = 0.005; 
+	const double BeamSwitchingTime = 0.5;
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
 
@@ -837,7 +839,7 @@ void HGA::TimeStep(double simt, double simdt)
 	}
 	else
 	{
-		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscilates between manual and auto and won't acquire. 
+		//AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscilates between manual and auto and won't acquire. 
 									//It get's set to manual later if we actually have no signal
 
 		if (ModeSwitchTimer < simt)
@@ -884,6 +886,8 @@ void HGA::TimeStep(double simt, double simdt)
 		
 	}
 
+	double HGATrkTimeFactor = exp(-simdt);
+
 	//select control mode for high gain antenna 
 	if (AutoTrackingMode == false) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
 	{
@@ -904,27 +908,30 @@ void HGA::TimeStep(double simt, double simdt)
 		//auto control, added by n72.75 204020
 		if (Gamma > 45 * RAD)	//mode select A-C servo control
 		{
+
+			
+
 			if (AzmuthTrackErrorDeg > 3.0)
 			{
-				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
-				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 			}
 			else
 			{
-				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt);
-				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
-				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor) - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 			}
 		}
 		else					//mode select B-C servo control
 		{
 			if (!WhiparoundIsSet)
 			{
-				AAxisCmd = Alpha - (Beta*ServoFeedbackGain*simdt);
+				AAxisCmd = Alpha - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
 			}
-			BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-			CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+			BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor);
+			CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 
 			if ((Gamma <= -1.0 * RAD) && !WhiparoundIsSet)
 			{
@@ -1064,8 +1071,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
-
-	const VECTOR3 boomAxis = {-0.402019, -0.915631, 0.00 };
+	
 	U_CSM = unit(mul(Rot, unit(boomAxis)));
 
 	CSMrelang = acos(dotp(U_CSM, unit(R_E- pos)));
@@ -1079,7 +1085,7 @@ void HGA::TimeStep(double simt, double simdt)
 			HornSignalStrength[i] = 0.0;
 		}
 	}
-	else if (CSMrelang > 125*RAD) //CSM body shadowing the antenna
+	else if (CSMrelang > 100*RAD) //CSM body shadowing the antenna
 	{
 		SignalStrength = 0.0;
 		for (int i = 0; i < 4; i++)
@@ -1099,11 +1105,10 @@ void HGA::TimeStep(double simt, double simdt)
 			//Calculate antenna pointing vector in global frame
 			U_R = mul(Rot, U_RP);
 			//relative angle between antenna pointing vector and direction of Earth
-			relang = acos(dotp(U_R, unit(R_E - pos)));
+			relang = acos(dotp(U_R, unit(R_E - pos)))-0.9*RAD;
 
 			if (relang < PI05 / a)
 			{
-				//HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*gain;
 				HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*SignalStrengthScaleFactor;
 			}
 			else
@@ -1132,6 +1137,7 @@ void HGA::TimeStep(double simt, double simdt)
 	{
 		scanlimit = false;
 	}
+
 	if (Gamma > scanlimwarn)
 	{
 		scanlimitwarn = true;
