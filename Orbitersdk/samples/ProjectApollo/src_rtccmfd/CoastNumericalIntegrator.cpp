@@ -30,7 +30,9 @@ const double CoastIntegrator2::dt_lim = 1000.0;
 
 CoastIntegrator2::CoastIntegrator2(RTCC *r) : RTCCModule(r)
 {
-	
+	P_S = 0;
+	R_S = V_S = _V(0, 0, 0);
+	T_S = 0.0;
 }
 
 CoastIntegrator2::~CoastIntegrator2()
@@ -264,7 +266,10 @@ PMMCEN_Edit_4A:
 		//Now try to find TMAX
 		ISTOPS = 1;
 		STOPVA = TMAX;
-		RestoreVariables();
+		if (TMAX != 0.0)
+		{
+			RestoreVariables();
+		}
 		//Go back to find new dt
 		goto PMMCEN_Edit_3B;
 	}

@@ -1544,7 +1544,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	if (pRTCC->RZJCTTC.Type == 1)
 	{
 		//Simulate reentry
-		pRTCC->ELVCNV(sv_EI, 0, 1, sv_ECT);
+		pRTCC->ELVCNV(sv_EI, 1, sv_ECT);
 		reentryin.g_c_BU = pRTCC->RZC1RCNS.GLevel;
 		reentryin.K1 = pRTCC->RZC1RCNS.InitialBankAngle;
 		reentryin.K2 = pRTCC->RZC1RCNS.FinalBankAngle;
@@ -1589,7 +1589,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	do
 	{
 		//Simulate reentry
-		pRTCC->ELVCNV(sv_EI, 0, 1, sv_ECT);
+		pRTCC->ELVCNV(sv_EI, 1, sv_ECT);
 		reentryin.g_c_BU = pRTCC->RZC1RCNS.GLevel;
 		reentryin.K1 = pRTCC->RZC1RCNS.InitialBankAngle;
 		reentryin.K2 = pRTCC->RZC1RCNS.FinalBankAngle;
@@ -1797,7 +1797,7 @@ void RetrofirePlanning::RMMDBF()
 	//Convert vector to ECT
 	EphemerisData sv0_ECT, sv_ECT;
 	double GMT_sv, lng_v, dlambda;
-	pRTCC->ELVCNV(sv0, 0, 1, sv0_ECT);
+	pRTCC->ELVCNV(sv0, 1, sv0_ECT);
 	GMT_sv = sv0_ECT.GMT;
 
 	lng_v = atan2(sv0_ECT.R.y, sv0_ECT.R.x) - OrbMech::w_Earth*(sv0_ECT.GMT - GMT_sv);
@@ -2481,7 +2481,7 @@ void RetrofirePlanning::RMSTTF()
 	tab->VG_XDX = DV_EXDV / 0.3048;
 	//TBD: VG THR
 	EphemerisData sv_BO_ECT;
-	pRTCC->ELVCNV(sv_BO, 0, 1, sv_BO_ECT);
+	pRTCC->ELVCNV(sv_BO, 1, sv_BO_ECT);
 	pRTCC->EMMDYNEL(sv_BO_ECT, elem);
 	double r_apo, r_peri;
 	pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_ECT.R), r_apo, r_peri);
@@ -4494,7 +4494,7 @@ bool RTEEarth::EntryIter()
 	}
 }
 
-ConicRTEEarthNew::ConicRTEEarthNew(RTCC *r, std::vector<EphemerisData> &SVArray) : RTCCModule(r),
+ConicRTEEarthNew::ConicRTEEarthNew(RTCC *r, std::vector<EphemerisData2> &SVArray) : RTCCModule(r),
 	XArray(SVArray)
 {
 	mu = OrbMech::mu_Earth*pow(SCPHR, 2) / pow(KMPER*1000.0, 3);
@@ -4546,7 +4546,7 @@ void ConicRTEEarthNew::MAIN()
 	VECTOR3 DV, V_a_uncal, V_a_cal;
 	double beta_r, dv, U_r, DVC, T, VT_a, VR_a, v_a, beta_a, T_z, alpha, delta, lambda, p, eta_ar, phi, phi_z, theta_z, TP;
 	int J, J_m, FLAG, QA;
-	EphemerisData sv;
+	EphemerisData2 sv;
 
 	J = 0;
 	J_m = XArray.size();
@@ -4554,11 +4554,6 @@ void ConicRTEEarthNew::MAIN()
 	do
 	{
 		sv = XArray[J];
-
-		if (sv.RBI != BODY_EARTH)
-		{
-			goto ConicRTEEarth_MAIN_E;
-		}
 
 		OrbMech::EclipticToECI(sv.R, sv.V, OrbMech::MJDfromGET(sv.GMT, GMTbase), sv.R, sv.V);
 

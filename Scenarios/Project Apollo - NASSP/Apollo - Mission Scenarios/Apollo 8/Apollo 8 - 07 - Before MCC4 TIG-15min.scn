@@ -58,9 +58,9 @@ AS-503:ProjectApollo\Saturn5
   S4EMPTYMASS 14189.000000
   INTERSTAGE 4376.000000
   SMFUELLOAD 18408.138671875000
-  SMMASS 4842.098632812500
+  SMMASS 4232.09855
   CMFUELLOAD 111.000000000000
-  CMMASS 5620.916503906250
+  CMMASS 5509.916649
   AUTOSLOW 1
   S4PL 4
   LANG English
@@ -1140,6 +1140,8 @@ AGC_BEGIN
   EMEM3022 4000
   EMEM3023 1000
   EMEM3024 1000
+  EMEM3025 77677
+  EMEM3026 66
   EMEM3027 10000
   EMEM3030 75024
   EMEM3031 47207
@@ -3425,11 +3427,11 @@ PANELSWITCHES_BEGIN
   AccelGMeter -0.000000 -0.000000
   MasterAlarmSwitch 0 0
 PANELSWITCHES_END
-  <checklist> 
+   <checklist> 
   FILE Doc\Project Apollo - NASSP\Checklists\Apollo 8 Checklists.xls
   COMPLETE 1
   FLASHING 1
-  LASTITEMTIME 218202.304691
+  LASTITEMTIME 218202.312500
   AUTOEXECUTESLOWDELAY 2.000000
   WAITFORCOMPLETION 0
   <container> 
@@ -3596,30 +3598,39 @@ PANELSWITCHES_END
   </item> 
   <item> 
   INDEX 40
+  STATUS -1
   </item> 
   <item> 
   INDEX 41
+  STATUS -1
   </item> 
   <item> 
   INDEX 42
+  STATUS -1
   </item> 
   <item> 
   INDEX 43
+  STATUS -1
   </item> 
   <item> 
   INDEX 44
+  STATUS -1
   </item> 
   <item> 
   INDEX 45
+  STATUS -1
   </item> 
   <item> 
   INDEX 46
+  STATUS -1
   </item> 
   <item> 
   INDEX 47
+  STATUS -1
   </item> 
   <item> 
   INDEX 48
+  STATUS -1
   </item> 
   <item> 
   INDEX 49
@@ -3777,8 +3788,395 @@ PANELSWITCHES_END
   <item> 
   INDEX 100
   </item> 
-  SEQUENCE 40
-  TIME 217892.906275
+  <item> 
+  INDEX 101
+  </item> 
+  <item> 
+  INDEX 102
+  </item> 
+  <item> 
+  INDEX 103
+  </item> 
+  <item> 
+  INDEX 104
+  </item> 
+  <item> 
+  INDEX 105
+  </item> 
+  <item> 
+  INDEX 106
+  </item> 
+  <item> 
+  INDEX 107
+  </item> 
+  <item> 
+  INDEX 108
+  </item> 
+  <item> 
+  INDEX 109
+  </item> 
+  <item> 
+  INDEX 110
+  </item> 
+  <item> 
+  INDEX 111
+  </item> 
+  <item> 
+  INDEX 112
+  </item> 
+  <item> 
+  INDEX 113
+  </item> 
+  <item> 
+  INDEX 114
+  </item> 
+  <item> 
+  INDEX 115
+  </item> 
+  <item> 
+  INDEX 116
+  </item> 
+  <item> 
+  INDEX 117
+  </item> 
+  <item> 
+  INDEX 118
+  </item> 
+  <item> 
+  INDEX 119
+  </item> 
+  <item> 
+  INDEX 120
+  </item> 
+  <item> 
+  INDEX 121
+  </item> 
+  <item> 
+  INDEX 122
+  </item> 
+  <item> 
+  INDEX 123
+  </item> 
+  <item> 
+  INDEX 124
+  </item> 
+  <item> 
+  INDEX 125
+  </item> 
+  <item> 
+  INDEX 126
+  </item> 
+  <item> 
+  INDEX 127
+  </item> 
+  <item> 
+  INDEX 128
+  </item> 
+  <item> 
+  INDEX 129
+  </item> 
+  <item> 
+  INDEX 130
+  </item> 
+  <item> 
+  INDEX 131
+  </item> 
+  <item> 
+  INDEX 132
+  </item> 
+  <item> 
+  INDEX 133
+  </item> 
+  <item> 
+  INDEX 134
+  </item> 
+  <item> 
+  INDEX 135
+  </item> 
+  <item> 
+  INDEX 136
+  </item> 
+  <item> 
+  INDEX 137
+  </item> 
+  <item> 
+  INDEX 138
+  </item> 
+  <item> 
+  INDEX 139
+  </item> 
+  <item> 
+  INDEX 140
+  </item> 
+  <item> 
+  INDEX 141
+  </item> 
+  <item> 
+  INDEX 142
+  </item> 
+  <item> 
+  INDEX 143
+  </item> 
+  <item> 
+  INDEX 144
+  </item> 
+  <item> 
+  INDEX 145
+  </item> 
+  <item> 
+  INDEX 146
+  </item> 
+  <item> 
+  INDEX 147
+  </item> 
+  <item> 
+  INDEX 148
+  </item> 
+  <item> 
+  INDEX 149
+  </item> 
+  <item> 
+  INDEX 150
+  </item> 
+  <item> 
+  INDEX 151
+  </item> 
+  <item> 
+  INDEX 152
+  </item> 
+  <item> 
+  INDEX 153
+  </item> 
+  <item> 
+  INDEX 154
+  </item> 
+  <item> 
+  INDEX 155
+  </item> 
+  <item> 
+  INDEX 156
+  </item> 
+  <item> 
+  INDEX 157
+  </item> 
+  <item> 
+  INDEX 158
+  </item> 
+  <item> 
+  INDEX 159
+  </item> 
+  <item> 
+  INDEX 160
+  </item> 
+  <item> 
+  INDEX 161
+  </item> 
+  <item> 
+  INDEX 162
+  </item> 
+  <item> 
+  INDEX 163
+  </item> 
+  <item> 
+  INDEX 164
+  </item> 
+  <item> 
+  INDEX 165
+  </item> 
+  <item> 
+  INDEX 166
+  </item> 
+  <item> 
+  INDEX 167
+  </item> 
+  <item> 
+  INDEX 168
+  </item> 
+  <item> 
+  INDEX 169
+  </item> 
+  <item> 
+  INDEX 170
+  </item> 
+  <item> 
+  INDEX 171
+  </item> 
+  <item> 
+  INDEX 172
+  </item> 
+  <item> 
+  INDEX 173
+  </item> 
+  <item> 
+  INDEX 174
+  </item> 
+  <item> 
+  INDEX 175
+  </item> 
+  <item> 
+  INDEX 176
+  </item> 
+  <item> 
+  INDEX 177
+  </item> 
+  <item> 
+  INDEX 178
+  </item> 
+  <item> 
+  INDEX 179
+  </item> 
+  <item> 
+  INDEX 180
+  </item> 
+  <item> 
+  INDEX 181
+  </item> 
+  <item> 
+  INDEX 182
+  </item> 
+  <item> 
+  INDEX 183
+  </item> 
+  <item> 
+  INDEX 184
+  </item> 
+  <item> 
+  INDEX 185
+  </item> 
+  <item> 
+  INDEX 186
+  </item> 
+  <item> 
+  INDEX 187
+  </item> 
+  <item> 
+  INDEX 188
+  </item> 
+  <item> 
+  INDEX 189
+  </item> 
+  <item> 
+  INDEX 190
+  </item> 
+  <item> 
+  INDEX 191
+  </item> 
+  <item> 
+  INDEX 192
+  </item> 
+  <item> 
+  INDEX 193
+  </item> 
+  <item> 
+  INDEX 194
+  </item> 
+  <item> 
+  INDEX 195
+  </item> 
+  <item> 
+  INDEX 196
+  </item> 
+  <item> 
+  INDEX 197
+  </item> 
+  <item> 
+  INDEX 198
+  </item> 
+  <item> 
+  INDEX 199
+  </item> 
+  <item> 
+  INDEX 200
+  </item> 
+  <item> 
+  INDEX 201
+  </item> 
+  <item> 
+  INDEX 202
+  </item> 
+  <item> 
+  INDEX 203
+  </item> 
+  <item> 
+  INDEX 204
+  </item> 
+  <item> 
+  INDEX 205
+  </item> 
+  <item> 
+  INDEX 206
+  </item> 
+  <item> 
+  INDEX 207
+  </item> 
+  <item> 
+  INDEX 208
+  </item> 
+  <item> 
+  INDEX 209
+  </item> 
+  <item> 
+  INDEX 210
+  </item> 
+  <item> 
+  INDEX 211
+  </item> 
+  <item> 
+  INDEX 212
+  </item> 
+  <item> 
+  INDEX 213
+  </item> 
+  <item> 
+  INDEX 214
+  </item> 
+  <item> 
+  INDEX 215
+  </item> 
+  <item> 
+  INDEX 216
+  </item> 
+  <item> 
+  INDEX 217
+  </item> 
+  <item> 
+  INDEX 218
+  </item> 
+  <item> 
+  INDEX 219
+  </item> 
+  <item> 
+  INDEX 220
+  </item> 
+  <item> 
+  INDEX 221
+  </item> 
+  <item> 
+  INDEX 222
+  </item> 
+  <item> 
+  INDEX 223
+  </item> 
+  <item> 
+  INDEX 224
+  </item> 
+  <item> 
+  INDEX 225
+  </item> 
+  <item> 
+  INDEX 226
+  </item> 
+  <item> 
+  INDEX 227
+  </item> 
+  <item> 
+  INDEX 228
+  </item> 
+  <item> 
+  INDEX 229
+  </item> 
+  SEQUENCE 49
+  TIME 217892.906250
   </container> 
   <container> 
   INDEX 9

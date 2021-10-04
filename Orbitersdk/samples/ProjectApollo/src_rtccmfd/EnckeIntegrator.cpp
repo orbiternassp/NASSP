@@ -35,6 +35,10 @@ EnckeFreeFlightIntegrator::EnckeFreeFlightIntegrator(RTCC *r) : RTCCModule(r)
 	{
 		pEph[i] = NULL;
 	}
+
+	P_S = 0;
+	SRTB = SRDTB = SY = SYP = _V(0, 0, 0);
+	STRECT = SDELT = 0.0;
 }
 
 EnckeFreeFlightIntegrator::~EnckeFreeFlightIntegrator()
@@ -53,7 +57,15 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	HMULT = in.IsForwardIntegration;
 	DRAG = in.DensityMultiplier;
 	CSA = -0.5*in.Area*pRTCC->SystemParameters.MCADRG;
-	WT = in.Weight;
+	if (in.Weight == 0.0)
+	{
+		//Might happen with uninitialized MPT
+		WT = 99999999.9;
+	}
+	else
+	{
+		WT = in.Weight;
+	}
 
 	SetBodyParameters(in.AnchorVector.RBI);
 	ISTOPS = in.CutoffIndicator;
@@ -288,7 +300,10 @@ EMMENI_Edit_4A:
 	{
 		//Now try to find TMAX
 		ISTOPS = 1;
-		RestoreVariables();
+		if (TMAX != 0.0)
+		{
+			RestoreVariables();
+		}
 		//Go back to find new dt
 		goto EMMENI_Edit_3B;
 	}

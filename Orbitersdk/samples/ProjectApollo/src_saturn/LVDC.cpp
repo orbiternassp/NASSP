@@ -3704,9 +3704,9 @@ void LVDCSV::Init(){
 	eps_1 = 0;								// IGM range angle calculation selection
 	eps_1R = 500.0;
 	eps_2 = 32;								// Time to begin chi bar steering
-	eps_2R = 15;
+	eps_2R = 30.0;
 	eps_3 = 10000;							// Terminal condition freeze time
-	eps_3R = 3.59;
+	eps_3R = 30.0;
 	eps_4 = 3;								// Time to enable HSL loop & chi freeze
 	eps_4R = 3.59;
 	mu = 398603200000000;					// Product of G and Earth's mass

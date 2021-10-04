@@ -287,6 +287,10 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 	if (ves == NULL) return 1;
 
 	bool landed = ves->GroundContact();
+
+	//CSM state vector can't be landed of course...
+	if (csm && landed) return 1;
+
 	EphemerisData sv2;
 
 	if (landed)
@@ -850,6 +854,14 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	SpaceDigitalsOption = 1;
 	SpaceDigitalsGET = 0.0;
+
+	for (int i = 0;i < 2;i++)
+	{
+		AGCClockTime[i] = 0.0;
+		RTCCClockTime[i] = 0.0;
+		DeltaClockTime[i] = 0.0;
+		DesiredRTCCLiftoffTime[i] = 0.0;
+	}
 }
 
 ARCore::~ARCore()
@@ -2017,8 +2029,53 @@ void ARCore::TLANDUplink(void)
 	UplinkData2(false); // Go for uplink
 }
 
+
+void ARCore::AGCClockIncrementUplink(bool csm)
+{
+	RTCC::AGCTimeIncrementMakeupTableBlock *block;
+
+	if (csm)
+	{
+		block = &GC->rtcc->CZTMEINC.Blocks[0];
+	}
+	else
+	{
+		block = &GC->rtcc->CZTMEINC.Blocks[1];
+	}
+
+	for (int i = 0;i < 2;i++)
+	{
+		g_Data.emem[i] = block->Octals[i];
+	}
+
+	UplinkDataV70V73(false, csm);
+}
+
+void ARCore::AGCLiftoffTimeIncrementUplink(bool csm)
+{
+	RTCC::AGCLiftoffTimeUpdateMakeupTableBlock *block;
+
+	if (csm)
+	{
+		block = &GC->rtcc->CZLIFTFF.Blocks[0];
+	}
+	else
+	{
+		block = &GC->rtcc->CZLIFTFF.Blocks[1];
+	}
+
+	for (int i = 0;i < 2;i++)
+	{
+		g_Data.emem[i] = block->Octals[i];
+	}
+
+	UplinkDataV70V73(true, csm);
+}
+
 void ARCore::EMPP99Uplink(int i)
 {
+	if (vesseltype < 2 || vesseltype > 3) return;
+
 	if (i == 0)
 	{
 		g_Data.emem[0] = 24;
@@ -2247,6 +2304,66 @@ void ARCore::UplinkData2(bool isCSM)
 		int cnt = (g_Data.emem[0] - (cnt2 * 10)) + cnt2 * 8;
 
 		while (g_Data.uplinkState < cnt && cnt <= 20 && cnt >= 3)
+		{
+			sprintf(buffer, "%ld", g_Data.emem[g_Data.uplinkState]);
+			uplink_word(buffer, isCSM);
+			g_Data.uplinkState++;
+		}
+		send_agc_key('V', isCSM);
+		send_agc_key('3', isCSM);
+		send_agc_key('3', isCSM);
+		send_agc_key('E', isCSM);
+		g_Data.connStatus = 1;
+		g_Data.uplinkState = 0;
+		//g_Data.uplinkBufferSimt = oapiGetSimTime() + 5.0; //6 second delay
+	}
+}
+
+void ARCore::UplinkDataV70V73(bool v70, bool isCSM)
+{
+	if (g_Data.connStatus == 0) {
+		int bytesRecv = SOCKET_ERROR;
+		char addr[256];
+		char buffer[8];
+		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (m_socket == INVALID_SOCKET) {
+			//g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		if (isCSM)
+		{
+			clientService.sin_port = htons(14242);
+		}
+		else
+		{
+			clientService.sin_port = htons(14243);
+		}
+		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			//g_Data.uplinkDataReady = 0;
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "CONNECTED");
+		g_Data.uplinkState = 0;
+		send_agc_key('V', isCSM);
+		send_agc_key('7', isCSM);
+		if (v70)
+		{
+			send_agc_key('0', isCSM);
+		}
+		else
+		{
+			send_agc_key('3', isCSM);
+		}
+		send_agc_key('E', isCSM);
+
+		while (g_Data.uplinkState < 2)
 		{
 			sprintf(buffer, "%ld", g_Data.emem[g_Data.uplinkState]);
 			uplink_word(buffer, isCSM);
@@ -2829,8 +2946,8 @@ int ARCore::subThread()
 				opt.RV_MCC.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 				opt.RV_MCC.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-				RTCC::PLAWDTInput pin;
-				RTCC::PLAWDTOutput pout;
+				PLAWDTInput pin;
+				PLAWDTOutput pout;
 				pin.T_UP = GMT;
 				pin.TableCode = mptveh;
 				GC->rtcc->PLAWDT(pin, pout);
@@ -2854,8 +2971,8 @@ int ARCore::subThread()
 				opt.RV_MCC.MJD = OrbMech::MJDfromGET(tab->mantable.back().GMT_BO, GC->rtcc->GetGMTBase());
 				opt.RV_MCC.gravref = GC->rtcc->GetGravref(tab->mantable.back().RefBodyInd);
 
-				RTCC::PLAWDTInput pin;
-				RTCC::PLAWDTOutput pout;
+				PLAWDTInput pin;
+				PLAWDTOutput pout;
 				pin.T_UP = tab->mantable.back().GMT_BO;
 				pin.TableCode = mptveh;
 				GC->rtcc->PLAWDT(pin, pout);
@@ -3073,8 +3190,8 @@ int ARCore::subThread()
 			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 			pin.T_UP = GMT;
 			pin.TableCode = mptveh;
 			GC->rtcc->PLAWDT(pin, pout);
@@ -3347,8 +3464,8 @@ int ARCore::subThread()
 
 			sv0 = EPHEM;
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 			pin.T_UP = GMT;
 			pin.TableCode = RTCC_MPT_CSM;
 			GC->rtcc->PLAWDT(pin, pout);
@@ -3523,8 +3640,8 @@ int ARCore::subThread()
 				break;
 			}
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 			pin.T_UP = GMT;
 			pin.TableCode = RTCC_MPT_CSM;
 			GC->rtcc->PLAWDT(pin, pout);
@@ -3658,8 +3775,8 @@ int ARCore::subThread()
 			sv_CSM.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_CSM.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			RTCC::PLAWDTInput pin;
-			RTCC::PLAWDTOutput pout;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 			pin.T_UP = GMT;
 			pin.TableCode = RTCC_MPT_LM;
 			GC->rtcc->PLAWDT(pin, pout);
@@ -4163,33 +4280,61 @@ int ARCore::subThread()
 	break;
 	case 37: //Recovery Target Selection Display
 	{
-		EphemerisDataTable tab;
-		EphemerisDataTable *tab2;
-		double gmt = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
+		EphemerisDataTable2 tab;
+		EphemerisDataTable2 *tab2;
+		double gmt_guess, gmt_min, gmt_max;
+		
+		gmt_guess = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
+		gmt_min = gmt_guess;
+		gmt_max = gmt_guess + 2.75*60.0*60.0;
 
 		if (GC->MissionPlanningActive)
 		{
-			tab2 = &GC->rtcc->EZEPH1.EPHEM;
+			EphemerisDataTable tab_temp;
+			unsigned int NumVec;
+			int TUP;
+			ManeuverTimesTable MANTIMES;
+			LunarStayTimesTable LUNSTAY;
+
+			GC->rtcc->ELNMVC(gmt_min, gmt_max, RTCC_MPT_CSM, NumVec, TUP);
+			GC->rtcc->ELFECH(gmt_min, NumVec, 0, RTCC_MPT_CSM, tab_temp, MANTIMES, LUNSTAY);
+
+			if (tab_temp.Header.NumVec < 9 || tab_temp.table[0].RBI != BODY_EARTH)
+			{
+				Result = 0;
+				break;
+			}
+
+			GC->rtcc->ELVCNV(tab_temp.table, 0, tab.table);
+			tab.Header = tab_temp.Header;
+			tab.Header.CSI = 0;
 		}
 		else
 		{
 			EphemerisData sv = GC->rtcc->StateVectorCalcEphem(vessel);
 
+			if (sv.RBI != BODY_EARTH)
+			{
+				Result = 0;
+				break;
+			}
+
 			EMSMISSInputTable intab;
 
 			intab.AnchorVector = sv;
 			intab.EphemerisBuildIndicator = true;
-			intab.EphemerisLeftLimitGMT = gmt - 20.0*60.0;
-			intab.EphemerisRightLimitGMT = gmt + 2.5*60.0*60.0;
-			intab.EphemTableIndicator = &tab;
+			intab.ECIEphemerisIndicator = true;
+			intab.ECIEphemTableIndicator = &tab;
+			intab.EphemerisLeftLimitGMT = gmt_min;
+			intab.EphemerisRightLimitGMT = gmt_max;
+			intab.ManCutoffIndicator = false;
+			intab.VehicleCode = RTCC_MPT_CSM;
 
-			GC->rtcc->EMSMISS(intab);
+			GC->rtcc->NewEMSMISS(&intab);
 			tab.Header.TUP = 1;
-
-			tab2 = &tab;
 		}
-
-		GC->rtcc->RMDRTSD(*tab2, 1, gmt, GC->rtcc->RZJCTTC.R20_lng);
+		tab2 = &tab;
+		GC->rtcc->RMDRTSD(*tab2, 1, gmt_guess, GC->rtcc->RZJCTTC.R20_lng);
 
 		Result = 0;
 	}

@@ -661,6 +661,12 @@ void Saturn::SetCSMStage ()
 	agc.SetInputChannelBit(030, GuidanceReferenceRelease, false);
 	agc.SetInputChannelBit(030, UllageThrust, false);
 
+	// Because all meshes are getting reloaded, we have to shift CG back to the center of the mesh, and then re-apply the offset CG on the next timestep
+	// Only necessary because of LET jettison function reloading all meshes.
+	ShiftCG(-currentCoG);
+	currentCoG = _V(0, 0, 0);
+	LastFuelWeight = numeric_limits<double>::infinity();
+
 	//
 	// Delete any dangling propellant resources.
 	//
@@ -732,12 +738,10 @@ void Saturn::SetCSMStage ()
 
 	// *********************** thruster definitions ********************************
 
-	th_sps[0] = CreateThruster(_V(-SPS_YAW_OFFSET * RAD * 5.0, -SPS_PITCH_OFFSET * RAD * 5.0, -5.0), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
+	th_sps[0] = CreateThruster(_V(0.0, 0.0, -3.37472), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
+	thg_sps = CreateThrusterGroup(th_sps, 1, THGROUP_USER);
 
-	DelThrusterGroup(THGROUP_MAIN, true);
-	thg_sps = CreateThrusterGroup(th_sps, 1, THGROUP_MAIN);
-
-	VECTOR3 spspos0 = _V(-0.000043, -0.001129, -5);
+	VECTOR3 spspos0 = _V(0.0, 0.0, -5);
 	EXHAUSTSPEC es_sps[1] = {
 		{ th_sps[0], NULL, &spspos0, NULL, 20.0, 2.25, 0, 0.1, SMExhaustTex, EXHAUST_CONSTANTPOS }
 	};
@@ -757,12 +761,7 @@ void Saturn::SetCSMStage ()
 	const double CGOffset = 12.25+21.5-1.8+0.35;
 	AddSM(30.25 - CGOffset, true);
 
-	double td_mass = CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2);
-	double td_width = 4.0;
-	double td_tdph = -6.0;
-	double td_height = 5.5;
-
-	ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height, -0.1);
+	ConfigTouchdownPoints();
 
 	VECTOR3 mesh_dir;
 
@@ -785,6 +784,7 @@ void Saturn::SetCSMStage ()
 	if (LESAttached) {
 		TowerOffset = 4.95;
 		VECTOR3 mesh_dir_tower = mesh_dir + _V(0, 0, TowerOffset);
+		TowerOffset += 2.1; //Additional offset for CSM stage
 
 		meshidx = AddMesh(hsat5tower, &mesh_dir_tower);
 		SetMeshVisibilityMode(meshidx, MESHVIS_VCEXTERNAL);
@@ -816,7 +816,6 @@ void Saturn::SetCSMStage ()
 
 	// VC
 	UpdateVC(mesh_dir);
-	VCMeshOffset = mesh_dir;
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
@@ -863,13 +862,7 @@ void Saturn::SetCSMStage ()
 	//
 	// Waste dump streams
 	//
-	wastewaterdump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/WaterDump");
-	if (wastewaterdump) DelExhaustStream(wastewaterdump);
-	wastewaterdump = AddParticleStream(&wastewaterdump_spec, _V(-1.258, 1.282, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetWasteWaterDumpLevelRef());
-
-	urinedump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/UrineDump");
-	if (urinedump) DelExhaustStream(urinedump);
-	urinedump = AddParticleStream(&urinedump_spec, _V(-1.358, 1.192, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetUrineDumpLevelRef());
+	SetWaterDumpParticleStreams(currentCoG + _V(0, 0, 32.3));
 
 	//
 	// Apollo 13 special handling
@@ -1141,7 +1134,7 @@ void Saturn::SetCOASMesh() {
 	}
 }
 
-void Saturn::SetReentryStage ()
+void Saturn::SetReentryStage (VECTOR3 cg_ofs)
 
 {
     ClearThrusters();
@@ -1155,6 +1148,11 @@ void Saturn::SetReentryStage ()
 	agc.SetInputChannelBit(030, LiftOff, false);
 	agc.SetInputChannelBit(030, GuidanceReferenceRelease, false);
 	agc.SetInputChannelBit(030, UllageThrust, false);
+
+	ShiftCG(-currentCoG + cg_ofs);
+	currentCoG = _V(0, 0, 0);
+
+	DefineCMAttachments();
 
 	hga.DeleteAnimations();
 	SPSEngine.DeleteAnimations();
@@ -1287,13 +1285,7 @@ void Saturn::SetReentryStage ()
 	// Waste dump streams
 	//
 
-	wastewaterdump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/WaterDump");
-	if (wastewaterdump) DelExhaustStream(wastewaterdump);
-	wastewaterdump = AddParticleStream(&wastewaterdump_spec, _V(-1.258, 1.282, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetWasteWaterDumpLevelRef());
-
-	urinedump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/UrineDump");
-	if (urinedump) DelExhaustStream(urinedump);
-	urinedump = AddParticleStream(&urinedump_spec, _V(-1.358, 1.192, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetUrineDumpLevelRef());
+	SetWaterDumpParticleStreams(_V(0, 0, CGOffset));
 }
 
 void Saturn::SetReentryMeshes() {
@@ -1384,8 +1376,6 @@ void Saturn::SetReentryMeshes() {
 		probeidx = -1;
 		probeextidx = -1;
 	}
-
-	VCMeshOffset = mesh_dir;
 }
 
 void Saturn::StageSeven(double simt)
@@ -1661,7 +1651,6 @@ void Saturn::SetRecovery()
 
 	// VC
 	UpdateVC(mesh_dir);
-	VCMeshOffset = mesh_dir;
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
@@ -1723,7 +1712,7 @@ void Saturn::JettisonLET(bool AbortJettison)
 	//
 	// Otherwise jettison the LES.
 	//
-	VECTOR3 ofs1 = _V(0.0, 0.0, TowerOffset);
+	VECTOR3 ofs1 = _V(0.0, 0.0, TowerOffset) - currentCoG;
 	VECTOR3 vel1 = _V(0.0,0.0,0.5);
 
 	VESSELSTATUS vs1;
@@ -1834,7 +1823,7 @@ void Saturn::JettisonDockingProbe()
 	VECTOR3 vel = {0.0, 0.0, 2.5};
 	VESSELSTATUS vs4b;
 	GetStatus (vs4b);
-	StageTransform(this, &vs4b,ofs,vel);
+	StageTransform(this, &vs4b, ofs - currentCoG, vel);
 	vs4b.vrot.x = 0.0;
 	vs4b.vrot.y = 0.0;
 	vs4b.vrot.z = 0.0;
@@ -1862,7 +1851,7 @@ void Saturn::JettisonSIMBayPanel()
 
 	VECTOR3 rofs1, rvel1 = { vs1.rvel.x, vs1.rvel.y, vs1.rvel.z };
 
-	Local2Rel(ofs1, vs1.rpos);
+	Local2Rel(ofs1 - currentCoG, vs1.rpos);
 	GlobalRot(vel1, rofs1);
 
 	vs1.rvel.x = rvel1.x + rofs1.x;
@@ -1890,7 +1879,7 @@ void Saturn::JettisonOpticsCover()
 	VECTOR3 vel = {0.0, -0.16, 0.1};
 	VESSELSTATUS vs4b;
 	GetStatus (vs4b);
-	StageTransform(this, &vs4b, ofs, vel);
+	StageTransform(this, &vs4b, ofs - currentCoG, vel);
 	vs4b.vrot.x = 0.05;
 	vs4b.vrot.y = 0.0;
 	vs4b.vrot.z = 0.0;
@@ -1943,6 +1932,24 @@ void Saturn::CMLETCanardAirfoilConfig()
 	CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.0, 1.12), CMLETCanardVertCoeffFunc, 3.5, 11.95 / 2.0, 1.0);
 	CreateAirfoil(LIFT_HORIZONTAL, _V(0.0, 0.0, 1.12), CMLETHoriCoeffFunc, 3.5, 11.95 / 2.0, 1.0);
 }
+
+void Saturn::ConfigTouchdownPoints()
+{
+	double td_mass, td_width, td_tdph, td_height;
+
+	switch (stage)
+	{
+	case CSM_LEM_STAGE:
+		td_mass = CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2);
+		td_width = 4.0;
+		td_tdph = -6.0;
+		td_height = 5.5;
+
+		ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height, -0.1);
+		break;
+	}
+}
+
 void Saturn::ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target)
 {
 
@@ -1968,7 +1975,23 @@ void Saturn::ConfigTouchdownPoints(double mass, double ro, double tdph, double h
 	td[3].pos.y = 0;
 	td[3].pos.z = tdph + height;
 
+	for (int i = 0;i < 4;i++)
+	{
+		td[i].pos -= currentCoG;
+	}
+
 	SetTouchdownPoints(td, 4);
+}
+
+void Saturn::SetWaterDumpParticleStreams(VECTOR3 ofs)
+{
+	wastewaterdump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/WaterDump");
+	if (wastewaterdump) DelExhaustStream(wastewaterdump);
+	wastewaterdump = AddParticleStream(&wastewaterdump_spec, _V(-1.258, 1.282, 33.69) - ofs, _V(-0.57, 0.57, 0.59), WaterController.GetWasteWaterDumpLevelRef());
+
+	urinedump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/UrineDump");
+	if (urinedump) DelExhaustStream(urinedump);
+	urinedump = AddParticleStream(&urinedump_spec, _V(-1.358, 1.192, 33.69) - ofs, _V(-0.57, 0.57, 0.59), WaterController.GetUrineDumpLevelRef());
 }
 
 void Saturn::LoadVC()
@@ -2004,4 +2027,13 @@ void Saturn::ClearMeshes() {
 			DelMesh(i);
 		}
 	}
+}
+
+void Saturn::DefineCMAttachments()
+{
+	//Reset attachment points
+	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0);
+	SetAttachmentParams(ah, _V(0, 0, 0), _V(0, 0, 1), _V(1, 0, 0)); //FloatBag
+	ah = GetAttachmentHandle(false, 1);
+	SetAttachmentParams(ah, _V(0, 0, 0), _V(0, 0, 1), _V(1, 0, 0)); //Chute
 }

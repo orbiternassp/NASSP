@@ -871,7 +871,7 @@ void CMOptics::TimeStep(double simdt) {
 			TeleTrunionTarget = 0;
 			break;
 		case THREEPOSSWITCH_DOWN:		// OFFSET 25 DEG
-			TeleTrunionTarget = SextTrunion + 0.218166156; // Add 12.5 degrees to sextant angle
+			TeleTrunionTarget = SextTrunion + 25.0*RAD;
 			break;
 	}
 

@@ -567,7 +567,7 @@ void LEM::Init()
 
 	// DS20160916 Physical parameters updation
 	CurrentFuelWeight = 0;
-	LastFuelWeight = 999999; // Ensure update at first opportunity
+	LastFuelWeight = numeric_limits<double>::infinity(); // Ensure update at first opportunity
 	currentCoG = _V(0, 0, 0);
 
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
@@ -1972,7 +1972,13 @@ void LEM::SetStateEx(const void *status)
 void LEM::clbkSaveState (FILEHANDLE scn)
 
 {
-	SaveDefaultState (scn);	
+	// save default vessel parameters
+	// set CoG to center of mesh before saving scenario; otherwise, LM position will change slightly when saved scenario is loaded
+	ShiftCG(-currentCoG);
+	VESSEL4::clbkSaveState(scn);
+	// reset CoG to correct position
+	ShiftCG(currentCoG); 
+
 	oapiWriteScenario_int (scn, "CONFIGURATION", status);
 	if (CDREVA_IP){
 		oapiWriteScenario_int (scn, "EVA", int(TO_EVA));

@@ -361,7 +361,7 @@ void Saturn1b::SetFirstStageEngines()
 	th_1st[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
-	thg_1st = CreateThrusterGroup (th_1st, 8, THGROUP_MAIN);
+	thg_1st = CreateThrusterGroup (th_1st, 8, THGROUP_USER);
 	
 	EXHAUSTSPEC es_1st[8] = {
 		{ th_1st[0], NULL, NULL, NULL, 30.0, 0.80, 0, 0.1, tex },
@@ -637,7 +637,7 @@ void Saturn1b::SetSecondStageEngines (double offset)
 	//
 
 	th_3rd[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
-	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_MAIN);
+	thg_3rd = CreateThrusterGroup (th_3rd, 1, THGROUP_USER);
 	
 	EXHAUSTSPEC es_3rd[1] = {
 		{ th_3rd[0], NULL, NULL, NULL, 30.0, 2.9, 0, 0.1, J2Tex }
@@ -732,7 +732,7 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if (stage == CSM_LEM_STAGE)
 	{
-	 	ofs1 = OFS_SM;
+		ofs1 = OFS_SM - currentCoG;
 		vel1 = _V(0, 0, -0.1);
 	}
 
@@ -887,13 +887,11 @@ void Saturn1b::SeparateStage (int new_stage)
 		if (ph_rcs_cm_1) cmprop1 = GetPropellantMass(ph_rcs_cm_1);
 		if (ph_rcs_cm_2) cmprop2 = GetPropellantMass(ph_rcs_cm_2);
 
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 2.1));
 
 		// Restore CM Propellant
 		if (cmprop1 != -1) SetPropellantMass(ph_rcs_cm_1, cmprop1); 
 		if (cmprop2 != -1) SetPropellantMass(ph_rcs_cm_2, cmprop2); 
-
-		ShiftCentreOfMass(_V(0, 0, 2.1));
 	}
 
 	if (stage == CM_STAGE)
@@ -943,7 +941,7 @@ void Saturn1b::SeparateStage (int new_stage)
 			{
 				vs3.vrot.x = 39.5 + 31;
 				DefSetStateEx(&vs3);
-				SetReentryStage();
+				SetReentryStage(_V(0,0,0));
 			}
 		}
 		else
@@ -964,8 +962,7 @@ void Saturn1b::SeparateStage (int new_stage)
 			}
 			else
 			{
-				SetReentryStage();
-				ShiftCentreOfMass(_V(0, 0, 35.15));
+				SetReentryStage(_V(0, 0, 35.15));
 			}
 		}
 	}
@@ -982,8 +979,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		Sat1Abort2 *stage1 = static_cast<Sat1Abort2 *> (oapiGetVesselInterface(habort));
 		stage1->SetState(LowRes);
 
-		SetReentryStage();
-		ShiftCentreOfMass(_V(0, 0, 22.9));
+		SetReentryStage(_V(0, 0, 22.9));
 	}
  }
 

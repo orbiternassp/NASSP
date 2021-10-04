@@ -947,6 +947,10 @@ void Saturn::initSaturn()
 
 	COASreticlevisible = false;
 
+	CurrentFuelWeight = 0;
+	LastFuelWeight = numeric_limits<double>::infinity(); // Ensure update at first opportunity
+	currentCoG = _V(0, 0, 0);
+
 	// call only once 
 	if (!InitSaturnCalled) {
 
@@ -1271,7 +1275,18 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 void Saturn::clbkSaveState(FILEHANDLE scn)
 
 {
-	VESSEL2::clbkSaveState (scn);
+	// set CoG to center of mesh before saving scenario; otherwise, CSM position will change slightly when saved scenario is loaded
+	if (stage == CSM_LEM_STAGE)
+	{
+		ShiftCG(-currentCoG);
+	}
+	// save default vessel parameters
+	VESSEL4::clbkSaveState(scn);
+	// reset CoG to correct position
+	if (stage == CSM_LEM_STAGE)
+	{
+		ShiftCG(currentCoG);
+	}
 
 	int i = 1;
 	char str[256];
@@ -3155,8 +3170,21 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}
 		return 0;
 	}
-	if (KEYMOD_CONTROL(kstate) || KEYMOD_ALT(kstate)) {
-		return 0; 
+	if (KEYMOD_CONTROL(kstate)) {
+		return 0;
+	}
+	if (KEYMOD_ALT(kstate))
+	{
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_R:
+				if (stage == CM_ENTRY_STAGE_SEVEN && SideHatch.IsOpen()) {
+					bRecovery = true;
+				}
+				return 1;
+			}
+		}
+		return 0;
 	}
 
 	// OPTICS CONTROL
@@ -3341,26 +3369,26 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 
 	const double CENTEROFFS  = 0.25; 
 
-	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(-CENTEROFFS,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(CENTEROFFS,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS,TRANZ+RCSOFFSET2), _V(0.1,0,1), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,CENTEROFFS,TRANZ+RCSOFFSET2), _V(-0.1,0,1), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(-CENTEROFFS,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(CENTEROFFS,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS,TRANZ+RCSOFFSET), _V(0.1,0,-1), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,CENTEROFFS,TRANZ+RCSOFFSET), _V(-0.1,0,-1), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(-CENTEROFFS,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0.021914, -0.172260, 0.984808), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL); //A4
+	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(CENTEROFFS,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(-0.021914, 0.172260, 0.984808), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL); //C3
+	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS,TRANZ+RCSOFFSET2), _V(0.172260, 0.021914, 0.984808), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL); //D3
+	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,CENTEROFFS,TRANZ+RCSOFFSET2), _V(-0.172260, -0.021914, 0.984808), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL); //B4
+	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(-CENTEROFFS,ATTCOOR2,TRANZ+RCSOFFSET), _V(0.021914, -0.172260, -0.984808), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL); //A3
+	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(CENTEROFFS,-ATTCOOR2,TRANZ+RCSOFFSET), _V(-0.021914, 0.172260, -0.984808), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL); //C4
+	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS,TRANZ+RCSOFFSET), _V(0.172260, 0.021914, -0.984808), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL); //D4
+	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,CENTEROFFS,TRANZ+RCSOFFSET), _V(-0.172260, -0.021914, -0.984808), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL); //B3
 
-	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-CENTEROFFS - 0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(CENTEROFFS -0.2,-ATTCOOR3,TRANZ+RCSOFFSETM2), _V(1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-CENTEROFFS - 0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(0.998848, -0.047978, 0.0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL); //A1
+	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(CENTEROFFS -0.2,-ATTCOOR3,TRANZ+RCSOFFSETM2), _V(0.955020, 0.296542, 0.0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL); //C2
 
-	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(-CENTEROFFS + 0.2,ATTCOOR3,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(CENTEROFFS + 0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(-CENTEROFFS + 0.2,ATTCOOR3,TRANZ+RCSOFFSETM2), _V(-0.955020, -0.296542, 0.0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL); //A2
+	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(CENTEROFFS + 0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-0.998848, 0.047978, 0.0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL); //C1
 
-	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR3,CENTEROFFS -0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS -0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR3,CENTEROFFS -0.2,TRANZ+RCSOFFSETM2), _V(-0.296542, 0.955020, 0.0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL); //B2
+	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS -0.2,TRANZ+RCSOFFSETM), _V(0.047978, 0.998848, 0.0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL); //D1
 
-	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,CENTEROFFS + 0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR3,-CENTEROFFS + 0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,CENTEROFFS + 0.2,TRANZ+RCSOFFSETM), _V(-0.047978, -0.998848, 0.0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL); //B1
+	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR3,-CENTEROFFS + 0.2,TRANZ+RCSOFFSETM2), _V(0.296542, -0.955020, 0.0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL); //D2
 
 	for (i = 0; i < 24; i++) {
 		if (th_att_lin[i])
@@ -3638,8 +3666,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 
 	case CM_STAGE:
 		if (ApexCoverPyros.Blown() && !HasProbe) {
+			ShiftCG(_V(0, 0, 1.2));
 			StageEight(simt);
-			ShiftCentreOfMass(_V(0, 0, 1.2));
 
 		} else {
 			// DS20070622 Do not run stage seven if we still have the LET.
@@ -3651,8 +3679,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 
 	case CM_ENTRY_STAGE:
 		if (ApexCoverPyros.Blown() && !HasProbe) {
+			ShiftCG(_V(0, 0, 1.2));
 			StageEight(simt);
-			ShiftCentreOfMass(_V(0, 0, 1.2));
 		}
 		// sprintf(oapiDebugString(), "AtmPressure %f (37680)", GetAtmPressure());
 		break;
@@ -4082,7 +4110,7 @@ void Saturn::SetGenericStageState()
 
 	case CM_STAGE:
 	case CM_ENTRY_STAGE_TWO:
-		SetReentryStage();
+		SetReentryStage(_V(0,0,0));
 		break;
 
 	case CM_ENTRY_STAGE_THREE:
@@ -4110,7 +4138,7 @@ void Saturn::SetGenericStageState()
 		break;
 
 	case CM_ENTRY_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 	}
 }
@@ -4346,6 +4374,8 @@ void Saturn::LoadDefaultSounds()
 void Saturn::StageSix(double simt)
 
 {
+	UpdateMassAndCoG();
+
 	if (ApolloNo == 1301) {
 
 		//
@@ -4757,6 +4787,108 @@ void Saturn::VHFRangingReturnSignal() //DELETE ME WHEN YOU ADD THE CONNECTOR
 void Saturn::StartSeparationPyros()
 {
 	payloadCommandConnector.StartSeparationPyros();
+}
+
+void Saturn::UpdateMassAndCoG()
+{
+	CurrentFuelWeight = 0;
+	if (ph_sps != NULL) { CurrentFuelWeight += GetPropellantMass(ph_sps); }
+	if ((LastFuelWeight - CurrentFuelWeight) > 100.0)
+	{
+		// Update physical parameters
+		VECTOR3 pmi, CoG;
+		CalculatePMIandCOG(pmi, CoG);
+		// Use SetPMI, ShiftCG, etc.
+		VECTOR3 CoGShift = CoG - currentCoG;
+		ShiftCG(CoGShift);
+		SetPMI(pmi);
+		currentCoG = CoG;
+
+		//Touchdown Points
+		ConfigTouchdownPoints();
+
+		//Particle streams
+		SetWaterDumpParticleStreams(currentCoG + _V(0, 0, 32.3));
+
+		// All done!
+		LastFuelWeight = CurrentFuelWeight;
+
+		//char Buffer[128];
+		//sprintf(Buffer, "New CG: %lf %lf %lf", currentCoG.x, currentCoG.y, currentCoG.z);
+		//oapiWriteLog(Buffer);
+		//sprintf(Buffer, "New PMI: %lf %lf %lf", pmi.x, pmi.y, pmi.z);
+		//oapiWriteLog(Buffer);
+	}
+}
+
+void Saturn::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
+{
+	//Empty SM including SM RCS prop and SPS residuals (and SLA ring?)
+	static const double MSM = SM_EmptyMass / 0.453597;// 10675.0;
+	const VECTOR3 CGSM = pMission->GetCGOfEmptySM();
+	//CM including CM RCS
+	const double MCM = (CM_EmptyMass + 2.0*55.5) / 0.453597;
+	static const VECTOR3 CGCM = _V(1041.7, -0.4, 5.6); // Apollo 9 - Contingency Deorbit Abort Plan, End of Mission
+	//Sump tank capacity
+	static const double MSUMP = 23068.1; //22300.0;
+	//Full SM RCS mass
+	static const double MRCINIT = 1344.82;
+	//CG of SM RCS
+	static const VECTOR3 CGRCS = _V(941.8, 0, 0);
+
+	double propmass = CurrentFuelWeight / 0.453597;
+
+	double mass, sumpm, storem, oxstorem, fuelstorem, oxsumpm, fuelsumpm;
+	
+	mass = propmass + MRCINIT + MCM + MSM;
+
+	if (propmass > MSUMP)
+	{
+		sumpm = MSUMP;
+		storem = propmass - MSUMP;
+	}
+	else
+	{
+		sumpm = propmass;
+		storem = 0;
+	}
+
+	oxstorem = storem * 1.6 / (1.0 + 1.6);
+	fuelstorem = storem * 1.0 / (1.0 + 1.6);
+	oxsumpm = sumpm * 1.6 / (1.0 + 1.6);
+	fuelsumpm = sumpm * 1.0 / (1.0 + 1.6);
+
+	static const double oxid_store_tank_param[3] = { -8.385141e-9, 0.0061750118, 838.7809363 };
+	static const double fuel_store_tank_param[3] = { -2.144163e-8, 0.0098738581, 838.7809363 };
+	static const double oxid_sump_tank_param[3] = { -2.599892e-9, 0.0047770151, 839.7803146 };
+	static const double fuel_sump_tank_param[3] = { -6.63916e-9, 0.0076383695, 839.7803146 };
+
+	double cgx;
+
+	cgx = oxid_store_tank_param[0] * pow(oxstorem, 2) + oxid_store_tank_param[1] * oxstorem + oxid_store_tank_param[2];
+	VECTOR3 ox_store_CG = _V(cgx, 14.8, 47.8);
+
+	cgx = fuel_store_tank_param[0] * pow(oxstorem, 2) + fuel_store_tank_param[1] * fuelstorem + fuel_store_tank_param[2];
+	VECTOR3 fuel_store_CG = _V(cgx, -14.8, -47.8);
+
+	cgx = oxid_sump_tank_param[0] * pow(oxsumpm, 2) + oxid_sump_tank_param[1] * oxsumpm + oxid_sump_tank_param[2];
+	VECTOR3 ox_sump_CG = _V(cgx, 48.3, 6.6);
+
+	cgx = fuel_sump_tank_param[0] * pow(fuelsumpm, 2) + fuel_sump_tank_param[1] * fuelsumpm + fuel_sump_tank_param[2];
+	VECTOR3 fuel_sump_CG = _V(cgx, -48.3, -6.6);
+
+	COG = (CGCM*MCM + CGSM * MSM + ox_store_CG * oxstorem + ox_sump_CG * oxsumpm + fuel_store_CG * fuelstorem + fuel_sump_CG * fuelsumpm + CGRCS*MRCINIT) / mass;
+	//sprintf(oapiDebugString(), "%lf %lf %lf %lf", propmass, COG.x, COG.y, COG.z);
+	COG = COG * 0.0254;
+
+	//Convert to Orbiter
+	COG = _V(COG.y, -COG.z, COG.x - 24.538);
+
+	//PMI
+	//Empirical data from CSM-109, Spacecraft Operational Data Book Volume III
+	PMI.x = -4.372105e-5*propmass + 5.318744779;
+	PMI.y = -4.190526e-5*propmass + 5.371149095;
+	PMI.z = -1.626316e-6*propmass + 1.661697874;
 }
 
 //
