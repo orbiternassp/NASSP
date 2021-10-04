@@ -38,6 +38,7 @@ RTCC_EMSMISS::RTCC_EMSMISS(RTCC *r) : RTCCModule(r)
 
 	nierror = 0;
 	ErrorCode = 0;
+	min_ephem_dt = 0.001;
 }
 
 void RTCC_EMSMISS::Call(EMSMISSInputTable *in)
@@ -257,7 +258,7 @@ void RTCC_EMSMISS::WriteNIAuxOutputTable()
 	intab->NIAuxOutputTable.CutoffWeight = state.WeightsTable.ConfigWeight;
 	intab->NIAuxOutputTable.ErrorCode = ErrorCode;
 	intab->NIAuxOutputTable.TerminationCode = TerminationCode;
-	intab->NIAuxOutputTable.ManeuverNumber = i;
+	intab->NIAuxOutputTable.ManeuverNumber = i + 1;
 	intab->NIAuxOutputTable.LunarStayBeginGMT = LunarStayBeginGMT;
 	intab->NIAuxOutputTable.LunarStayEndGMT = LunarStayEndGMT;
 }
@@ -534,6 +535,7 @@ void RTCC_EMSMISS::WriteEphemerisHeaders()
 
 void RTCC_EMSMISS::AddCoastOrSurfaceEphemeris()
 {
+	double dt;
 	for (unsigned int ii = 0;ii < 4;ii++)
 	{
 		if (EphemerisIndicatorList[ii])
@@ -542,9 +544,13 @@ void RTCC_EMSMISS::AddCoastOrSurfaceEphemeris()
 			for (unsigned int jj = 0;jj < tempcoastephemtable[ii].table.size();jj++)
 			{
 				//If the GMT is identical to the last GMT in the table then don't write the same state vector again
-				if (EphemerisTableIndicatorList[ii]->table.size() > 0 && (EphemerisTableIndicatorList[ii]->table.back().GMT == tempcoastephemtable[ii].table[jj].GMT))
+				if (EphemerisTableIndicatorList[ii]->table.size() > 0)
 				{
-					continue;
+					dt = EphemerisTableIndicatorList[ii]->table.back().GMT - tempcoastephemtable[ii].table[jj].GMT;
+					if (abs(dt) < min_ephem_dt)
+					{
+						continue;
+					}
 				}
 
 				EphemerisTableIndicatorList[ii]->table.push_back(tempcoastephemtable[ii].table[jj]);
@@ -558,6 +564,7 @@ void RTCC_EMSMISS::AddCoastOrSurfaceEphemeris()
 void RTCC_EMSMISS::AddManeuverEphemeris()
 {
 	EphemerisData2 sv_out;
+	double dt;
 	int in, converr;
 
 	if (tempephemtable.Header.CSI == BODY_EARTH)
@@ -577,9 +584,14 @@ void RTCC_EMSMISS::AddManeuverEphemeris()
 			for (unsigned int jj = 0;jj < tempephemtable.table.size();jj++)
 			{
 				//If the GMT is identical to the last GMT in the table then don't write the same state vector again
-				if (EphemerisTableIndicatorList[ii]->table.size() > 0 && (EphemerisTableIndicatorList[ii]->table.back().GMT == tempephemtable.table[jj].GMT))
+				if (EphemerisTableIndicatorList[ii]->table.size() > 0)
 				{
-					continue;
+					dt = EphemerisTableIndicatorList[ii]->table.back().GMT - tempephemtable.table[jj].GMT;
+
+					if (abs(dt) < min_ephem_dt)
+					{
+						continue;
+					}
 				}
 
 				//Convert to desired coordinate system
@@ -618,6 +630,18 @@ void RTCC_EMSMISS::CallManeuverIntegrator()
 	}
 	if (nierror)
 	{
+		pRTCC->RTCCONLINEMON.IntBuffer[0] = nierror;
+		pRTCC->RTCCONLINEMON.IntBuffer[1] = i + 1;
+		if (intab->VehicleCode == RTCC_MPT_CSM)
+		{
+			pRTCC->RTCCONLINEMON.TextBuffer[0] = "CSM";
+		}
+		else
+		{
+			pRTCC->RTCCONLINEMON.TextBuffer[0] = "LEM";
+		}
+
+		pRTCC->EMGPRINT("EMSMISS", 17);
 		return;
 	}
 

@@ -185,7 +185,7 @@ protected:
 	//Area
 	double Area;
 
-	EphemerisDataTable ephem;
+	EphemerisDataTable2 ephem;
 	RTCCNIAuxOutputTable burnaux;
 	RMMYNIOutputTable reentryout;
 };

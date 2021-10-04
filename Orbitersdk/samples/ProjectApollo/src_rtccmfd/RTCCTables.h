@@ -63,12 +63,6 @@ struct EphemerisHeader
 	double TR = 0.0;
 };
 
-struct EphemerisDataTable
-{
-	EphemerisHeader Header;
-	std::vector<EphemerisData> table;
-};
-
 struct EphemerisDataTable2
 {
 	EphemerisHeader Header;
@@ -371,7 +365,6 @@ struct EMSMISSInputTable
 	//Density multiplication override indicator
 	bool DensityMultOverrideIndicator = false;
 	//Table of ephemeris addresses indicator
-	EphemerisDataTable *EphemTableIndicator = NULL; //Delete me
 	EphemerisDataTable2 *ECIEphemTableIndicator = NULL;
 	EphemerisDataTable2 *ECTEphemTableIndicator = NULL;
 	EphemerisDataTable2 *MCIEphemTableIndicator = NULL;

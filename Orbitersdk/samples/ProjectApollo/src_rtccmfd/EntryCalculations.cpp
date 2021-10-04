@@ -1395,29 +1395,13 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	}
 
 	//Generate ephemeris
-	EphemerisDataTable2 tempephem;
-
 	coastin.AnchorVector = sv_L;
 	coastin.EphemerisBuildIndicator = true;
 	coastin.ECIEphemerisIndicator = true;
-	coastin.ECIEphemTableIndicator = &tempephem;
+	coastin.ECIEphemTableIndicator = &ephem;
 	coastin.IsForwardIntegration = 1.0;
 	coastin.MaxIntegTime = TR - TL;
 	pRTCC->EMMENI(coastin);
-
-	//Bad code, hopefully gets fixed soon
-	EphemerisData2 svtemp;
-	EphemerisData svtemp2;
-	ephem.Header = tempephem.Header;
-	for (unsigned int i = 0;i < tempephem.table.size();i++)
-	{
-		svtemp = tempephem.table[i];
-		svtemp2.R = svtemp.R;
-		svtemp2.V = svtemp.V;
-		svtemp2.GMT = svtemp.GMT;
-		svtemp2.RBI = BODY_EARTH;
-		ephem.table.push_back(svtemp2);
-	}
 
 	//Coverge two body solution
 	RMMDBM();
@@ -1436,7 +1420,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	int PMMRKJerr;
 	CSMLMPoweredFlightIntegration integ(pRTCC, integin, PMMRKJerr, NULL, &burnaux);
 	ELVCTRInputTable in;
-	ELVCTROutputTable out;
+	ELVCTROutputTable2 out;
 	ManeuverTimesTable mantimes;
 	EphemerisData sv_ECT;
 	RMMYNIInputTable reentryin;
@@ -1454,7 +1438,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		RMGTTF("RMSDBMP", 32);
 		return true;
 	}
-	sv_BI = out.SV;
+	sv_BI = pRTCC->RotateSVToSOI(out.SV);
 
 	//Get state vector at main engine on
 	if (dt_ullage == 0.0)
@@ -1475,7 +1459,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 			RMGTTF("RMSDBMP", 32);
 			return true;
 		}
-		sv_TIG = out.SV;
+		sv_TIG = pRTCC->RotateSVToSOI(out.SV);
 	}
 
 	//Calculate thrust direction
@@ -1656,7 +1640,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 			RMGTTF("RMSDBMP", 32);
 			return true;
 		}
-		sv_BI = out.SV;
+		sv_BI = pRTCC->RotateSVToSOI(out.SV);
 
 		//Get state vector at main engine on
 		if (dt_ullage == 0.0)
@@ -1677,7 +1661,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 				RMGTTF("RMSDBMP", 32);
 				return true;
 			}
-			sv_TIG = out.SV;
+			sv_TIG = pRTCC->RotateSVToSOI(out.SV);
 		}
 
 		//Calculate thrust direction
@@ -1875,7 +1859,7 @@ void RetrofirePlanning::RMMDBM()
 	double R_E;//, MJD_L;
 	int iter;
 	ELVCTRInputTable in;
-	ELVCTROutputTable out;
+	ELVCTROutputTable2 out;
 	ManeuverTimesTable mantimes;
 
 	//Calculate fixed DV for BurnMode 1 and 2
@@ -1904,7 +1888,7 @@ void RetrofirePlanning::RMMDBM()
 			return;
 		}
 
-		sv_TIG = sv_apo = out.SV;
+		sv_TIG = sv_apo = pRTCC->RotateSVToSOI(out.SV);
 
 		if (pRTCC->RZC1RCNS.AttitudeMode == 1)
 		{

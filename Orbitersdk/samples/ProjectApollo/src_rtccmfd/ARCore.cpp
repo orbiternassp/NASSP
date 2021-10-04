@@ -1747,7 +1747,7 @@ void ARCore::StateVectorCalc(int type)
 			get = SVDesiredGET;
 		}
 
-		GC->rtcc->CMMCMNAV(uplveh, mptveh, get);
+		GC->rtcc->CMMCMNAV(uplveh, mptveh, get, 0); //TBD
 	}
 	else
 	{
@@ -4290,24 +4290,19 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			EphemerisDataTable tab_temp;
 			unsigned int NumVec;
 			int TUP;
 			ManeuverTimesTable MANTIMES;
 			LunarStayTimesTable LUNSTAY;
 
 			GC->rtcc->ELNMVC(gmt_min, gmt_max, RTCC_MPT_CSM, NumVec, TUP);
-			GC->rtcc->ELFECH(gmt_min, NumVec, 0, RTCC_MPT_CSM, tab_temp, MANTIMES, LUNSTAY);
+			GC->rtcc->ELFECH(gmt_min, NumVec, 0, RTCC_MPT_CSM, tab, MANTIMES, LUNSTAY);
 
-			if (tab_temp.Header.NumVec < 9 || tab_temp.table[0].RBI != BODY_EARTH)
+			if (tab.Header.NumVec < 9 || GC->rtcc->DetermineSVBody(tab.table[0]) != BODY_EARTH)
 			{
 				Result = 0;
 				break;
 			}
-
-			GC->rtcc->ELVCNV(tab_temp.table, 0, tab.table);
-			tab.Header = tab_temp.Header;
-			tab.Header.CSI = 0;
 		}
 		else
 		{
