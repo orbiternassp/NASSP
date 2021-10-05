@@ -479,6 +479,8 @@ private:
 
 	VECTOR3 U_Horn[4];
 
+	VECTOR3 boomAxis = _V(0., -0.612217, 0.790690); //In Apollo CSM coordinates. this gets converted in the constructor.
+
 	// Animations
 	UINT anim_HGAalpha, anim_HGAbeta, anim_HGAgamma;
 	double	hga_proc[3];

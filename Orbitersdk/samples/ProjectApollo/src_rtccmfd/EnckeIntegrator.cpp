@@ -57,7 +57,15 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	HMULT = in.IsForwardIntegration;
 	DRAG = in.DensityMultiplier;
 	CSA = -0.5*in.Area*pRTCC->SystemParameters.MCADRG;
-	WT = in.Weight;
+	if (in.Weight == 0.0)
+	{
+		//Might happen with uninitialized MPT
+		WT = 99999999.9;
+	}
+	else
+	{
+		WT = in.Weight;
+	}
 
 	SetBodyParameters(in.AnchorVector.RBI);
 	ISTOPS = in.CutoffIndicator;

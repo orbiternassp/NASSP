@@ -3170,8 +3170,21 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}
 		return 0;
 	}
-	if (KEYMOD_CONTROL(kstate) || KEYMOD_ALT(kstate)) {
-		return 0; 
+	if (KEYMOD_CONTROL(kstate)) {
+		return 0;
+	}
+	if (KEYMOD_ALT(kstate))
+	{
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_R:
+				if (stage == CM_ENTRY_STAGE_SEVEN && SideHatch.IsOpen()) {
+					bRecovery = true;
+				}
+				return 1;
+			}
+		}
+		return 0;
 	}
 
 	// OPTICS CONTROL

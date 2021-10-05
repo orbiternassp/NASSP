@@ -169,9 +169,7 @@ void LEM::SetLmVesselDockStage()
 	//RCS plane is at 254 inches in LM coordinates. DPS gimbal plane is at 154 inches in LM coordinates
 	//Therefore: 3.9116 m - (6.4516 m - 0.99 m) = -1.55 m for the DPS reference position
 	th_hover[0] = CreateThruster(_V(0.0, -1.55, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
-
-	DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
+	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_USER);
 	
 	EXHAUSTSPEC es_hover[1] = {
 		{ th_hover[0], NULL, NULL, NULL, 10.0, 1.5, 1.16, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
@@ -182,7 +180,6 @@ void LEM::SetLmVesselDockStage()
 	AddDust();
 
 	SetCameraOffset(_V(-0.58, 1.60, 1.40) - currentCoG); // Has to be the same as LPD view
-	SetEngineLevel(ENGINE_HOVER,0);
 
 	AddRCS_LMH(-5.4616); //254 inches minus the 0.99m offset from mesh_asc = 5.4616 m
 	status = 0;
@@ -238,9 +235,7 @@ void LEM::SetLmVesselHoverStage()
 	//RCS plane is at 254 inches in LM coordinates. DPS gimbal plane is at 154 inches in LM coordinates
 	//Therefore: 3.9116 m - (6.4516 m - 0.99 m) = -1.55 m for the DPS reference position
 	th_hover[0] = CreateThruster(_V(0.0, -1.55, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
-
-	DelThrusterGroup(THGROUP_HOVER, true);
-	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
+	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_USER);
 
 	EXHAUSTSPEC es_hover[1] = {
 		{ th_hover[0], NULL, NULL, NULL, 10.0, 1.5, 1.16, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
@@ -253,7 +248,6 @@ void LEM::SetLmVesselHoverStage()
 	SetCameraOffset(_V(-0.58, 1.60, 1.40) - currentCoG); // Has to be the same as LPD view
 	status = 1;
 	stage = 1;
-	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-5.4616); //254 inches minus the 0.99m offset from mesh_asc = 5.4616 m
 
 	InitNavRadios (4);
@@ -319,9 +313,7 @@ void LEM::SetLmAscentHoverStage()
 	//Point of thrust application is also shifted 3.75 in (0.09525 m) in the z-axis.
 	//And it's canted at 1.5° to point through the CG which is located forward of the centerline
     th_hover[0] = CreateThruster (_V( 0.0,  -1.294416, 0.09525), _V( 0,cos(1.5*RAD),sin(1.5*RAD)), APS_THRUST, ph_Asc, APS_ISP);
-
-    DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
+	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_USER);
 	
 	EXHAUSTSPEC es_hover[1] = {
 		{ th_hover[0], NULL, NULL, NULL, 6.0, 0.8, 0.5, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
@@ -332,7 +324,6 @@ void LEM::SetLmAscentHoverStage()
 	SetCameraOffset(_V(-0.58, -0.15, 1.40)); // Has to be the same as LPD view
 	status = 2;
 	stage = 2;
-	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-7.2116);  //254 inches minus the 0.99m offset from mesh_asc and plus 1.75 m from the ShiftCG = 7.2116 m
 
 	if(ph_Dsc){

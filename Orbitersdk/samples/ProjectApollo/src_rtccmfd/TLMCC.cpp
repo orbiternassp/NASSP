@@ -76,7 +76,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	{
 		if (Ratio < 0.275)
 		{
-			pRTCC->ELVCNV(sv_MCC, 0, 2, sv_MCC);
+			pRTCC->ELVCNV(sv_MCC, 2, sv_MCC);
 			sv_MCC.RBI = BODY_MOON;
 		}
 	}
@@ -84,7 +84,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	{
 		if (Ratio < 1.0 / 0.275)
 		{
-			pRTCC->ELVCNV(sv_MCC, 2, 0, sv_MCC);
+			pRTCC->ELVCNV(sv_MCC, 0, sv_MCC);
 			sv_MCC.RBI = BODY_EARTH;
 		}
 	}
@@ -2657,12 +2657,12 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void
 		//Convert if necessary
 		if (KREF_MCC == 1 && sv_mcc_temp.RBI == BODY_MOON)
 		{
-			pRTCC->ELVCNV(sv_mcc_temp, 2, 0, sv_mcc_temp);
+			pRTCC->ELVCNV(sv_mcc_temp, 0, sv_mcc_temp);
 			sv_mcc_temp.RBI = BODY_EARTH;
 		}
 		else if (KREF_MCC == 2 && sv_mcc_temp.RBI == BODY_EARTH)
 		{
-			pRTCC->ELVCNV(sv_mcc_temp, 0, 2, sv_mcc_temp);
+			pRTCC->ELVCNV(sv_mcc_temp, 2, sv_mcc_temp);
 			sv_mcc_temp.RBI = BODY_MOON;
 		}
 	}
