@@ -331,7 +331,7 @@ double RTCC_EMSMISS::NextEventTime(double gmt)
 {
 	if (gmt_lim - state.StateVector.GMT >= 0.0)
 	{
-		if (gmt > gmt_lim)
+		if (gmt >= gmt_lim)
 		{
 			manflag = false;
 			return gmt_lim;
