@@ -291,19 +291,7 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 	//CSM state vector can't be landed of course...
 	if (csm && landed) return 1;
 
-	EphemerisData sv2;
-
-	if (landed)
-	{
-		double lat, lng, rad;
-		ves->GetEquPos(lng, lat, rad);
-
-		rtcc->BZLAND.lat[RTCC_LMPOS_BEST] = lat;
-		rtcc->BZLAND.lng[RTCC_LMPOS_BEST] = lng;
-		rtcc->BZLAND.rad[RTCC_LMPOS_BEST] = rad;
-	}
 	EphemerisData sv = rtcc->StateVectorCalcEphem(ves);
-	sv2 = sv;
 
 	int id;
 	char letter;
@@ -323,7 +311,7 @@ int AR_GCore::MPTTrajectoryUpdate(VESSEL *ves, bool csm)
 		rtcc->BZUSEVEC.data[id].ID = 0;
 	}
 	rtcc->BZUSEVEC.data[id].ID++;
-	rtcc->BZUSEVEC.data[id].Vector = sv2;
+	rtcc->BZUSEVEC.data[id].Vector = sv;
 	if (landed)
 	{
 		rtcc->BZUSEVEC.data[id].LandingSiteIndicator = true;

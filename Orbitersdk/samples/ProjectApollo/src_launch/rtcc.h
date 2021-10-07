@@ -1845,7 +1845,7 @@ struct PMMLDPInput
 	MissionPlanTable *mpt;
 	unsigned CurrentManeuver;
 	int TrimAngleInd;
-	int HeadsUpDownInd;
+	bool HeadsUpDownInd;
 };
 
 struct PMMLDIInput

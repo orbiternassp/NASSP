@@ -12239,10 +12239,13 @@ bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GET
 	t_UL = 7.9;
 	dv = 0.0;
 
+	//Just for t_go and U_FDP, call to this function should be removed
 	if (!PDIIgnitionAlgorithm(sv, GETbase, R_LS, TLAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
 	{
 		return false;
 	}
+	//Use input SV instead
+	sv_IG = sv;
 	t_go = -t_go;
 	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, GETbase);
 	t_D = t_PDI - t_UL;
@@ -17309,6 +17312,8 @@ int RTCC::PMMWTC(int med)
 {
 	MPTVehicleDataBlock CommonBlock;
 	MissionPlanTable *table;
+	PLAWDTInput pin;
+	PLAWDTOutput pout;
 	double W, WDOT[6], TL[6], DVREM, FuelR[6];
 	unsigned IBLK;
 	int Thruster, TabInd;
@@ -17583,8 +17588,45 @@ int RTCC::PMMWTC(int med)
 			goto RTCC_PMMWTC_17A;
 		}
 	RTCC_PMMWTC_17B:
-		//TBD: Call PLAWDT
-		//TBD: Adjust total and vehicle weights for expendables
+		//Compute expendables and venting for weight change
+		pin.CSMArea = 0.0;
+		pin.CSMWeight = 0.0;
+		pin.KFactorOpt = false;
+		pin.LMAscArea = 0.0;
+		pin.LMAscWeight = 0.0;
+		pin.LMDscArea = 0.0;
+		pin.LMDscWeight = 0.0;
+		pin.Num = CommonBlock.ConfigCode.to_ulong();
+		pin.SIVBArea = 0.0;
+		pin.SIVBWeight = 0.0;
+		pin.TableCode = -TabInd;
+		//Determine start of venting
+		if (IBLK == 1)
+		{
+			//No maneuver executed, use actual start of venting
+			pin.T_IN = table->SIVBVentingBeginGET;
+			if (pin.T_IN < SystemParameters.MCGVEN)
+			{
+				pin.T_IN = SystemParameters.MCGVEN;
+			}
+			pin.T_IN += GetGMTLO()*3600.0;
+		}
+		else
+		{
+			//Calculate weight loss since last maneuver
+			pin.T_IN = table->mantable[IBLK - 2].GMT_BO;
+		}
+		pin.T_UP = WeightGMT;
+		pin.VentingOpt = true;
+		PLAWDT(pin, pout);
+
+		//Adjust total and vehicle weights for expendables
+		W -= pout.ConfigWeight;
+		CommonBlock.CSMMass -= pout.CSMWeight;
+		CommonBlock.LMAscentMass -= pout.LMAscWeight;
+		CommonBlock.LMDescentMass -= pout.LMDscWeight;
+		CommonBlock.SIVBMass -= pout.SIVBWeight;
+
 		if (IBLK <= 1)
 		{
 			goto RTCC_PMMWTC_19;
@@ -17872,13 +17914,13 @@ RTCC_PMSVCT_8:
 	bool tli = false;
 	for (unsigned i = 0;i < mpt->mantable.size();i++)
 	{
-		if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+		if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM || mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_PGNS_DESCENT)
 		{
 			if (mpt->mantable[i].GMTMAN > sv0->GMT)
 			{
 				if (mpt->mantable[i].FrozenManeuverInd == false)
 				{
-					//EMSMISS and PMMSPT for TLI
+					//EMSMISS and PMMSPT for TLI/PDI
 					EMSMISSInputTable intab;
 					intab.AnchorVector.R = sv0->R;
 					intab.AnchorVector.V = sv0->V;
@@ -17889,33 +17931,65 @@ RTCC_PMSVCT_8:
 					intab.EphemerisBuildIndicator = false;
 					intab.IgnoreManueverNumber = 0;
 					intab.ManCutoffIndicator = 2;
-					intab.ManeuverIndicator = false;
-					intab.MaxIntegTime = mpt->mantable[i].GMTMAN - sv0->GMT;
+					if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+					{
+						intab.ManeuverIndicator = false;
+					}
+					else
+					{
+						intab.ManeuverIndicator = true;
+					}
+					intab.MaxIntegTime = mpt->mantable[i].GMTMAN - sv0->GMT - 1.0; //One second earlier so that EMSMISS isn't trying to simulate the maneuver
 					intab.VehicleCode = L;
 					NewEMSMISS(&intab);
 
-					if (intab.NIAuxOutputTable.ErrorCode)
+					if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
 					{
-						RTCCONLINEMON.TextBuffer[0] = "TLI INITIATION";
-						PMXSPT("PMSVCT", 35);
-						return;
+						if (intab.NIAuxOutputTable.ErrorCode)
+						{
+							RTCCONLINEMON.TextBuffer[0] = "TLI INITIATION";
+							PMXSPT("PMSVCT", 35);
+							return;
+						}
+						EphemerisData sv1 = intab.NIAuxOutputTable.sv_cutoff;
+
+						PMMSPTInput intab2;
+						intab2.QUEID = 32;
+						intab2.GMT = sv1.GMT;
+						intab2.R = sv1.R;
+						intab2.V = sv1.V;
+						intab2.CurMan = &mpt->mantable[i];
+						intab2.Table = L;
+
+						int err;
+						if (err = PMMSPT(intab2))
+						{
+							PMXSPT("PMMSPT", err);
+							EMSNAP(L, 2);
+							return;
+						}
 					}
-					EphemerisData sv1 = intab.NIAuxOutputTable.sv_cutoff;
-
-					PMMSPTInput intab2;
-					intab2.QUEID = 32;
-					intab2.GMT = sv1.GMT;
-					intab2.R = sv1.R;
-					intab2.V = sv1.V;
-					intab2.CurMan = &mpt->mantable[i];
-					intab2.Table = L;
-
-					int err;
-					if (err = PMMSPT(intab2))
+					else
 					{
-						PMXSPT("PMMSPT", err);
-						EMSNAP(L, 2);
-						return;
+						if (intab.NIAuxOutputTable.ErrorCode)
+						{
+							RTCCONLINEMON.TextBuffer[0] = "POWERED DESCENT";
+							PMXSPT("PMSVCT", 35);
+							return;
+						}
+						EphemerisData sv1 = intab.NIAuxOutputTable.sv_cutoff;
+
+						PMMLDPInput intab2;
+
+						intab2.CurrentManeuver = i;
+						intab2.HeadsUpDownInd = mpt->mantable[i].HeadsUpDownInd;
+						intab2.mpt = mpt;
+						intab2.sv = ConvertEphemDatatoSV(sv1);
+						intab2.sv.mass = intab.NIAuxOutputTable.CutoffWeight;
+						intab2.TLAND = GETfromGMT(mpt->mantable[i].GMT_BO);
+						intab2.TrimAngleInd = mpt->mantable[i].TrimAngleInd;
+
+						PMMLDP(intab2, mpt->mantable[i]);
 					}
 				}
 			}
