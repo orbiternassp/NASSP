@@ -567,3 +567,11 @@ struct REFSMMATLocker
 {
 	REFSMMATData data[12];
 };
+
+struct StateVectorTableEntry
+{
+	EphemerisData Vector;
+	int ID = -1;
+	std::string VectorCode;
+	bool LandingSiteIndicator = false;
+};
