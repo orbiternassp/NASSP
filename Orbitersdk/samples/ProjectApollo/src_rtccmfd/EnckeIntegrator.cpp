@@ -616,7 +616,7 @@ void EnckeFreeFlightIntegrator::EphemerisStorage()
 	{
 		if (bStoreEphemeris[i] && pEph[i])
 		{
-			if (pEph[i]->table.size() == 0 || abs(pEph[i]->table.back().GMT - CurrentTime()) > 3.6e-11)
+			if (pEph[i]->table.size() == 0 || abs(pEph[i]->table.back().GMT - CurrentTime()) > 0.001)
 			{
 				if (P == BODY_EARTH)
 				{

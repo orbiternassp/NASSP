@@ -98,6 +98,8 @@ protected:
 	double gmt_lim;
 	//Maximum time for coast integrator
 	double gmt_coast;
+	//Minimum interval between two state vectors being stored on the ephemeris
+	double min_ephem_dt;
 
 	EMSMISSState state;
 	EphemerisData sv0;
