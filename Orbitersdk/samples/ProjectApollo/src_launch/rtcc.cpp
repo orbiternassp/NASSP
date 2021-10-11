@@ -6714,7 +6714,7 @@ void RTCC::SunburstAttitudeManeuver(char *list, VECTOR3 imuangles)
 	emem[1] = OrbMech::DoubleToBuffer(imuangles.y / PI, 0, 1);
 	emem[2] = OrbMech::DoubleToBuffer(imuangles.z / PI, 0, 1);
 
-	sprintf(list, "V21N1E372E0EV25N1E1631E%dE%dE%dEV25N26E20001E2067E70063EV30ER", emem[0], emem[1], emem[2]);
+	sprintf(list, "V21N1E372E0EV25N1E1631E%dE%dE%dEV25N26E4001E2067E70063EV30ER", emem[0], emem[1], emem[2]);
 }
 
 void RTCC::SunburstLMPCommand(char *list, int code)
@@ -7065,6 +7065,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_MCLAMD", SystemParameters.MCLAMD);
 	SAVE_DOUBLE("RTCC_MDVSTP_T4IG", SystemParameters.MDVSTP.T4IG);
 	SAVE_DOUBLE("RTCC_MDVSTP_T4C", SystemParameters.MDVSTP.T4C);
+	if (SystemParameters.MGRTAG == 0) { SAVE_INT("MGRTAG", SystemParameters.MGRTAG); }
 	
 	SAVE_DOUBLE("RTCC_GZGENCSN_DKIELEVATIONANGLE", GZGENCSN.DKIElevationAngle);
 	SAVE_DOUBLE("RTCC_GZGENCSN_DKITERMINALPHASEANGLE", GZGENCSN.DKITerminalPhaseAngle);
@@ -7256,6 +7257,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_MCLAMD", SystemParameters.MCLAMD);
 		LOAD_DOUBLE("RTCC_MDVSTP_T4IG", SystemParameters.MDVSTP.T4IG);
 		LOAD_DOUBLE("RTCC_MDVSTP_T4C", SystemParameters.MDVSTP.T4C);
+		LOAD_INT("MGRTAG", SystemParameters.MGRTAG);
 
 		LOAD_DOUBLE("RTCC_GZGENCSN_DKIELEVATIONANGLE", GZGENCSN.DKIElevationAngle);
 		LOAD_DOUBLE("RTCC_GZGENCSN_DKITERMINALPHASEANGLE", GZGENCSN.DKITerminalPhaseAngle);
@@ -7383,11 +7385,11 @@ void RTCC::LoadState(FILEHANDLE scn) {
 
 	if (EZANCHR1.AnchorVectors[9].Vector.GMT != 0)
 	{
-		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9].Vector, EZANCHR1.AnchorVectors[9].LandingSiteIndicator, PZMPTCSM.StationID);
+		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9]);
 	}
 	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0 || EZANCHR3.AnchorVectors[9].LandingSiteIndicator)
 	{
-		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9].Vector, EZANCHR3.AnchorVectors[9].LandingSiteIndicator, PZMPTLEM.StationID);
+		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9]);
 	}
 	//Update Mission Plan Table display
 	PMDMPT();
@@ -15092,7 +15094,19 @@ void RTCC::EMSTAGEN(int L)
 	ManeuverTimesTable MANTIMES;
 	LunarStayTimesTable LUNSTAY;
 
-	ELFECH(RTCCPresentTimeGMT(), 300, 1, L, EPHEM, MANTIMES, LUNSTAY);
+	//Get at least 10 hours worth of vectors. Or 200 vectors.
+	double GMT_start, GMT_end;
+	unsigned int NumVec;
+	int TUP;
+	GMT_start = RTCCPresentTimeGMT();
+	GMT_end = GMT_start + 10.0*3600.0;
+
+	ELNMVC(GMT_start, GMT_end, L, NumVec, TUP);
+	if (NumVec < 200)
+	{
+		NumVec = 200;
+	}
+	ELFECH(GMT_start, NumVec, 1, L, EPHEM, MANTIMES, LUNSTAY);
 
 	Station station;
 	StationTable contact;
@@ -15117,9 +15131,6 @@ void RTCC::EMSTAGEN(int L)
 		tab = &EZSTACT3;
 	}
 
-	double GMT_start, GMT_end;
-	GMT_start = RTCCPresentTimeGMT();
-	GMT_end = GMT_start + 24.0*3600.0;
 	if (GMT_start < EPHEM.Header.TL)
 	{
 		GMT_start = EPHEM.Header.TL;
@@ -15135,11 +15146,22 @@ void RTCC::EMSTAGEN(int L)
 		}
 	}
 
-	EphemerisDataTable2 EPHEM2;
-	ELVCNV(EPHEM.table, 0, 1, EPHEM2.table);
-	EPHEM2.Header = EPHEM.Header;
-	EPHEM2.Header.CSI = 1;
-	EMGENGEN(EPHEM2, MANTIMES, contact, BODY_EARTH, *tab);
+	//Convert vectors to ECT
+	ELVCNV(EPHEM.table, 0, 1, EPHEM.table);
+	EPHEM.Header.CSI = 1;
+	//Generate station contacts
+	EMGENGEN(EPHEM, MANTIMES, contact, BODY_EARTH, *tab, &LUNSTAY);
+
+	RTCCONLINEMON.IntBuffer[0] = tab->Num;
+	if (L == 1)
+	{
+		RTCCONLINEMON.TextBuffer[0] = "CSM";
+	}
+	else
+	{
+		RTCCONLINEMON.TextBuffer[0] = "LEM";
+	}
+	EMGPRINT("EMSTAGEN", 31);
 
 	//Reset this, so next station contacts display updates immedately
 	NextStationContactsBuffer.GET = -1;
@@ -15155,6 +15177,7 @@ void RTCC::EMSTAGEN(int L)
 		table = &EZCCSM;
 	}
 
+	//Assign rev numbers to AOS times, if available
 	if (table->NumRev == 0) return;
 
 	for (int i = 0;i < 45;i++)
@@ -16520,9 +16543,9 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 	man.TVC = RTCC_MANVEHICLE_LM;
 	man.TrimAngleInd = in.TrimAngleInd - 1;
 	man.HeadsUpDownInd = in.HeadsUpDownInd;
-	if (in.CurrentManeuver > 1U)
+	if (in.CurrentManeuver > 0)
 	{
-		man.DockingAngle = in.mpt->mantable[in.CurrentManeuver - 2U].DockingAngle;
+		man.DockingAngle = in.mpt->mantable[in.CurrentManeuver - 1].DockingAngle;
 	}
 	else
 	{
@@ -16531,7 +16554,7 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 	man.GMTMAN = GMTBB;// -7.5;
 	man.GMTI = GMTBB;
 	man.GMT_BO = GMTfromGET(in.TLAND);
-	in.mpt->TimeToBeginManeuver[in.CurrentManeuver - 1] = in.mpt->TimeToEndManeuver[in.CurrentManeuver - 1] = GMTBB;
+	in.mpt->TimeToBeginManeuver[in.CurrentManeuver] = in.mpt->TimeToEndManeuver[in.CurrentManeuver] = GMTBB;
 
 	return 0;
 }
@@ -17820,7 +17843,7 @@ int RTCC::PMMWTC(int med)
 	return 0;
 }
 
-void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed, std::string StationID)
+void RTCC::PMSVCT(int QUEID, int L, StateVectorTableEntry* sv0)
 {
 	//QUEID:
 	//0 = Nominal Insertion
@@ -17837,11 +17860,8 @@ void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed, std::string
 
 	OrbitEphemerisTable *maineph;
 	MissionPlanTable *mpt;
-	StateVectorTableEntry sv1, sv2;
+	StateVectorTableEntry sv1;
 	unsigned I, K;
-
-	sv1.LandingSiteIndicator = landed;
-	sv1.VectorCode = StationID;
 
 	if (L == RTCC_MPT_CSM)
 	{
@@ -17880,17 +17900,17 @@ RTCC_PMSVCT_3:
 	//TBD: Time of insertion = time of anchor vector
 RTCC_PMSVCT_4:
 	//New anchor vector
-	if (landed)
+	if (sv0->LandingSiteIndicator)
 	{
 		mpt->GMTAV = RTCCPresentTimeGMT();
 	}
 	else
 	{
-		mpt->GMTAV = sv0->GMT;
+		mpt->GMTAV = sv0->Vector.GMT;
 	}
 
 	//Station ID to MPT
-	mpt->StationID.assign(StationID);
+	mpt->StationID.assign(sv0->VectorCode);
 	K = 1;
 	I = mpt->ManeuverNum;
 RTCC_PMSVCT_5:
@@ -17908,9 +17928,9 @@ RTCC_PMSVCT_5:
 	//DTWRITE MPT Header
 	//DTREAD MPT mnvr descriptive block
 	//Set maneuver burnout vector = anchor vector
-	mpt->mantable[K - 1].GMT_BO = sv0->GMT;
-	mpt->mantable[K - 1].R_BO = sv0->R;
-	mpt->mantable[K - 1].V_BO = sv0->V;
+	mpt->mantable[K - 1].GMT_BO = sv0->Vector.GMT;
+	mpt->mantable[K - 1].R_BO = sv0->Vector.R;
+	mpt->mantable[K - 1].V_BO = sv0->Vector.V;
 	mpt->mantable[K - 1].CommonBlock.TUP = -abs(mpt->mantable[K - 1].CommonBlock.TUP);
 	//DTWRITE descriptive maneuver block
 	//Page 7
@@ -17921,16 +17941,13 @@ RTCC_PMSVCT_8:
 	{
 		if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM || mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_PGNS_DESCENT)
 		{
-			if (mpt->mantable[i].GMTMAN > sv0->GMT)
+			if (mpt->mantable[i].GMTMAN > sv0->Vector.GMT)
 			{
 				if (mpt->mantable[i].FrozenManeuverInd == false)
 				{
 					//EMSMISS and PMMSPT for TLI/PDI
 					EMSMISSInputTable intab;
-					intab.AnchorVector.R = sv0->R;
-					intab.AnchorVector.V = sv0->V;
-					intab.AnchorVector.GMT = sv0->GMT;
-					intab.AnchorVector.RBI = sv0->RBI;
+					intab.AnchorVector = sv0->Vector;
 					intab.AuxTableIndicator = NULL;
 					intab.CutoffIndicator = 1;
 					intab.EphemerisBuildIndicator = false;
@@ -17944,7 +17961,7 @@ RTCC_PMSVCT_8:
 					{
 						intab.ManeuverIndicator = true;
 					}
-					intab.MaxIntegTime = mpt->mantable[i].GMTMAN - sv0->GMT - 1.0; //One second earlier so that EMSMISS isn't trying to simulate the maneuver
+					intab.MaxIntegTime = mpt->mantable[i].GMTMAN - sv0->Vector.GMT - 1.0; //One second earlier so that EMSMISS isn't trying to simulate the maneuver
 					intab.VehicleCode = L;
 					NewEMSMISS(&intab);
 
@@ -17986,7 +18003,7 @@ RTCC_PMSVCT_8:
 
 						PMMLDPInput intab2;
 
-						intab2.CurrentManeuver = i + 1;
+						intab2.CurrentManeuver = i;
 						intab2.HeadsUpDownInd = mpt->mantable[i].HeadsUpDownInd;
 						intab2.mpt = mpt;
 						intab2.sv = ConvertEphemDatatoSV(sv1);
@@ -18002,26 +18019,23 @@ RTCC_PMSVCT_8:
 	}
 	if (QUEID == 0)
 	{
-		sv1.Vector = *sv0;
-		sv1.LandingSiteIndicator = false;
+		sv1 = *sv0;
 		goto RTCC_PMSVCT_12;
 	}
 
-	if (landed == false)
+	if (sv0->LandingSiteIndicator == false)
 	{
-		sv1.Vector = *sv0;
-		sv2 = EMSEPH(1, sv1, L, RTCCPresentTimeGMT());
+		sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
 		//TBD: Error 35
 	}
 	else
 	{
-		sv2 = sv1;
-		sv2.Vector = *sv0;
+		sv1 = *sv0;
 	}
 RTCC_PMSVCT_12:
 	mpt->CommonBlock.TUP++;
 	mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
-	EMSTRAJ(sv2, L);
+	EMSTRAJ(sv1, L);
 	return;
 RTCC_PMSVCT_14:
 	//TBD
@@ -18036,14 +18050,14 @@ RTCC_PMSVCT_15:
 
 	if (maineph->LUNRSTAY.LunarStayBeginGMT < T_P && T_P < maineph->LUNRSTAY.LunarStayEndGMT)
 	{
-		landed = true;
+		sv1.LandingSiteIndicator = true;
 	}
 	else
 	{
-		landed = false;
+		sv1.LandingSiteIndicator = false;
 	}
 
-	if (landed)
+	if (sv1.LandingSiteIndicator)
 	{
 
 	}
@@ -18100,7 +18114,6 @@ RTCC_PMSVCT_15:
 
 	sv1.Vector = sv;
 	sv1.VectorCode = mpt->StationID;
-	sv1.LandingSiteIndicator = landed;
 	EMSTRAJ(sv1, L);
 }
 
@@ -18430,7 +18443,7 @@ void RTCC::PMMIEV(double T_L)
 	//TBD: ETMSCTRL for trajectory update
 }
 
-void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res)
+void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY)
 {
 	std::vector<StationContact> acquisitions;
 	StationContact current;
@@ -18440,18 +18453,20 @@ void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES
 
 	for (unsigned i = 0;i < stationlist.table.size();i++)
 	{
-		EMXING(ephemeris, MANTIMES, stationlist.table[i], body, acquisitions);
+		EMXING(ephemeris, MANTIMES, stationlist.table[i], body, acquisitions, LUNSTAY);
 	}
 
 	//Sort
 	std::sort(acquisitions.begin(), acquisitions.end());
 
 	//Put first 45 in table
+	res.Num = 0;
 	for (unsigned i = 0;i < 45;i++)
 	{
 		if (i < acquisitions.size())
 		{
 			res.Stations[i] = acquisitions[i];
+			res.Num++;
 		}
 		else
 		{
@@ -18460,7 +18475,55 @@ void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES
 	}
 }
 
-bool RTCC::EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station &station, int body, std::vector<StationContact> &acquisitions)
+bool RTCC::EMXINGLunarOccultation(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, double gmt, VECTOR3 R_S_equ, double &g_func, LunarStayTimesTable *LUNSTAY)
+{
+	ELVCTRInputTable interin;
+	ELVCTROutputTable2 interout;
+
+	interin.GMT = gmt;
+	//Interpolate ephemeris
+	ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
+	if (interout.ErrorCode > 2) return true;
+	//If radius is smaller than 50 er it can't be occulted by the Moon
+	if (length(interout.SV.R) < 50.0*OrbMech::R_Earth)
+	{
+		g_func = 1000.0;
+		return false;
+	}
+
+	VECTOR3 N, rho, R_ES, r_M, rho1, rho_apo1;
+	double sinang;
+	EphemerisData2 sv_E, sv_ET;
+
+	//Calculate elevation
+	OrbMech::EMXINGElev(interout.SV.R, R_S_equ, N, rho, sinang);
+	//Get moon state vector at interpolation time
+	if (PLEFEM(1, interin.GMT / 3600.0, 0, sv_E.R, sv_E.V, R_ES))
+	{
+		return true;
+	}
+	//Is spacecraft further away from the Earth than the Moon is?
+	if (length(interout.SV.R) <= length(sv_E.R))
+	{
+		//No
+		g_func = 1000.0;
+		return false;
+	}
+	//Convert moon state vector to ECT
+	sv_E.GMT = interin.GMT;
+	if (ELVCNV(sv_E, 0, 1, sv_ET))
+	{
+		return true;
+	}
+
+	r_M = interout.SV.R - sv_ET.R;
+	rho1 = crossp(unit(crossp(rho, r_M)), rho);
+	rho_apo1 = unit(rho1);
+	g_func = dotp(rho_apo1, r_M) - SystemParameters.MCSMLR;
+	return false;
+}
+
+bool RTCC::EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station &station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY)
 {
 	if (ephemeris.table.size() == 0) return false;
 	//Has to be ECT or MCT
@@ -18479,6 +18542,7 @@ bool RTCC::EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, 
 
 	GMT0 = ephemeris.table[0].GMT;
 	R_S_equ = OrbMech::r_from_latlong(station.lat, station.lng, OrbMech::R_Earth + station.alt);
+	current.StationID = station.code;
 
 EMXING_LOOP:
 
@@ -18504,7 +18568,7 @@ EMXING_LOOP:
 		{
 			GMT_EMAX = OrbMech::LinearInterpolation(f, GMT, last_f, LastGMT, 0.0);
 			interin.GMT = GMT_EMAX;
-			ELVCTR(interin, interout, ephemeris, MANTIMES);
+			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 			if (interout.ErrorCode)
 			{
 				return false;
@@ -18539,7 +18603,7 @@ EMXING_LOOP:
 	{
 		GMT_AOS = OrbMech::LinearInterpolation(sinang, GMT, LastSinang, LastGMT, 0.0);
 		interin.GMT = GMT_AOS;
-		ELVCTR(interin, interout, ephemeris, MANTIMES);
+		ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 		if (interout.ErrorCode)
 		{
 			return false;
@@ -18558,7 +18622,7 @@ EMXING_LOOP:
 
 			GMT_AOS = OrbMech::LinearInterpolation(sinang, GMT, LastSinang, LastGMT, 0.0);
 			interin.GMT = GMT_AOS;
-			ELVCTR(interin, interout, ephemeris, MANTIMES);
+			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 			if (interout.ErrorCode)
 			{
 				return false;
@@ -18597,7 +18661,7 @@ EMXING_LOOP:
 		{
 			GMT_EMAX = OrbMech::LinearInterpolation(f, GMT, last_f, LastGMT, 0.0);
 			interin.GMT = GMT_EMAX;
-			ELVCTR(interin, interout, ephemeris, MANTIMES);
+			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 			if (interout.ErrorCode)
 			{
 				return false;
@@ -18637,7 +18701,7 @@ EMXING_LOOP:
 
 				GMT_EMAX = OrbMech::LinearInterpolation(f, GMT, last_f, LastGMT, 0.0);
 				interin.GMT = GMT_EMAX;
-				ELVCTR(interin, interout, ephemeris, MANTIMES);
+				ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 				if (interout.ErrorCode)
 				{
 					return false;
@@ -18683,7 +18747,7 @@ EMXING_LOOP:
 	{
 		GMT_LOS = OrbMech::LinearInterpolation(sinang, GMT, LastSinang, LastGMT, 0.0);
 		interin.GMT = GMT_LOS;
-		ELVCTR(interin, interout, ephemeris, MANTIMES);
+		ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 		if (interout.ErrorCode)
 		{
 			return false;
@@ -18702,7 +18766,7 @@ EMXING_LOOP:
 
 			GMT_LOS = OrbMech::LinearInterpolation(sinang, GMT, LastSinang, LastGMT, 0.0);
 			interin.GMT = GMT_LOS;
-			ELVCTR(interin, interout, ephemeris, MANTIMES);
+			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 			if (interout.ErrorCode)
 			{
 				return false;
@@ -18715,22 +18779,181 @@ EMXING_LOOP:
 		}
 	}
 
-	//If in lunar SOI check if Moon occults AOS
-	if (ephemeris.Header.CSI == 3)
+	//Check if Moon occults AOS
+	if (body == BODY_EARTH && ephemeris.Header.CSI == 1)
 	{
+		//Preliminary, write station contact data
+		current.GMTAOS = GMT_AOS;
+		current.GMTLOS = GMT_LOS;
+		current.GMTEMAX = GMT_EMAX;
+		current.MAXELEV = EMAX;
+		current.BestAvailableAOS = BestAvailableAOS;
+		current.BestAvailableLOS = BestAvailableLOS;
+		current.BestAvailableEMAX = BestAvailableEMAX;
+
 		//TBD: Implement this
+		double g_func, GMT_iter2, g_func_last, LastGMT_lunar, GMT_new;
+		unsigned int iter2 = 0;
+
+		GMT_iter2 = GMT_AOS;
+
+		//Find first SV after AOS
+		while (iter2 < (ephemeris.table.size() - 1) && ephemeris.table[iter2].GMT <= GMT_iter2)
+		{
+			iter2++;
+		}
+
+		//Look if already in AOS at horizon crossing
+		EMXINGLunarOccultation(ephemeris, MANTIMES, GMT_iter2, R_S_equ, g_func, LUNSTAY);
+		if (g_func >= 0)
+		{
+			goto RTCC_EMXING_LUNAR_LOS1;
+		}
+
+	RTCC_EMXING_LUNAR_AOS1:
+
+		g_func = -100.0;
+
+		//Find AOS
+		while (g_func < 0)
+		{
+			EMXINGLunarOccultation(ephemeris, MANTIMES, GMT_iter2, R_S_equ, g_func, LUNSTAY);
+			if (g_func >= 0)
+			{
+				break;
+			}
+			LastGMT_lunar = GMT_iter2;
+			g_func_last = g_func;
+			GMT_iter2 = ephemeris.table[iter2].GMT;
+			if (GMT_iter2 >= GMT_LOS)
+			{
+				//Found no more AOS, go to end
+				goto RTCC_EMXING_END;
+			}
+			iter2++;
+		}
+
+		//Bracket AOS
+		GMT_iter2 = OrbMech::LinearInterpolation(g_func, GMT_iter2, g_func_last, LastGMT_lunar, 0.0);
+		do
+		{
+			EMXINGLunarOccultation(ephemeris, MANTIMES, GMT_iter2, R_S_equ, g_func, LUNSTAY);
+			GMT_new = GMT_iter2;
+			GMT_iter2 = OrbMech::LinearInterpolation(g_func, GMT_iter2, g_func_last, LastGMT_lunar, 0.0);
+		} while (abs(GMT_new - GMT_iter2) > 3.0);
+
+		current.GMTAOS = GMT_iter2;
+		current.BestAvailableAOS = true;
+
+	RTCC_EMXING_LUNAR_LOS1:
+		g_func = 100.0;
+		//Find first SV in ephemeris after GMT_iter2
+		while (iter2 < (ephemeris.table.size() - 1) && ephemeris.table[iter2].GMT <= GMT_iter2)
+		{
+			iter2++;
+		}
+		GMT_iter2 = ephemeris.table[iter2].GMT;
+		while (g_func >= 0)
+		{
+			EMXINGLunarOccultation(ephemeris, MANTIMES, GMT_iter2, R_S_equ, g_func, LUNSTAY);
+			if (g_func < 0)
+			{
+				break;
+			}
+			LastGMT_lunar = GMT_iter2;
+			g_func_last = g_func;
+			GMT_iter2 = ephemeris.table[iter2].GMT;
+			if (GMT_iter2 >= GMT_LOS)
+			{
+				//Last state vector to consider
+				GMT_iter2 = GMT_LOS;
+				goto RTCC_EMXING_LUNAR_LOS3;
+			}
+			iter2++;
+		}
+
+		//Bracket LOS
+		GMT_iter2 = OrbMech::LinearInterpolation(g_func, GMT_iter2, g_func_last, LastGMT_lunar, 0.0);
+		do
+		{
+			EMXINGLunarOccultation(ephemeris, MANTIMES, GMT_iter2, R_S_equ, g_func, LUNSTAY);
+			GMT_new = GMT_iter2;
+			GMT_iter2 = OrbMech::LinearInterpolation(g_func, GMT_iter2, g_func_last, LastGMT_lunar, 0.0);
+		} while (abs(GMT_new - GMT_iter2) > 3.0);
+
+		if (GMT_iter2 >= GMT_LOS)
+		{
+			GMT_iter2 = GMT_LOS;
+		}
+
+	RTCC_EMXING_LUNAR_LOS3:
+
+		//Write station contact
+		current.GMTLOS = GMT_iter2;
+		if (current.GMTLOS >= GMT_LOS)
+		{
+			current.BestAvailableLOS = BestAvailableLOS;
+		}
+		else
+		{
+			current.BestAvailableLOS = true;
+		}
+
+		if (GMT_EMAX >= current.GMTAOS && GMT_EMAX <= current.GMTLOS)
+		{
+			//EMAX within AOS and LOS
+			current.GMTEMAX = current.GMTLOS;
+			current.MAXELEV = EMAX;
+			current.BestAvailableEMAX = BestAvailableEMAX;
+		}
+		else
+		{
+			//Only best available EMAX
+			current.BestAvailableEMAX = true;
+			if (GMT_EMAX < current.GMTAOS)
+			{
+				current.GMTEMAX = current.GMTAOS;
+			}
+			else if (GMT_EMAX > current.GMTLOS)
+			{
+				current.GMTEMAX = current.GMTLOS;
+			}
+			//Calculate EMAX
+			interin.GMT = current.GMTEMAX;
+			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
+			OrbMech::EMXINGElev(interout.SV.R, R_S_equ, N, rho, sinang);
+			current.MAXELEV = asin(sinang);
+		}
+		
+		acquisitions.push_back(current);
+
+		//Find next ephemeris SV
+		while (iter2 < (ephemeris.table.size() - 1) && ephemeris.table[iter2].GMT <= GMT_iter2)
+		{
+			iter2++;
+		}
+		GMT_iter2 = ephemeris.table[iter2].GMT;
+
+		if (GMT_iter2 < GMT_LOS)
+		{
+			//Find next AOS
+			goto RTCC_EMXING_LUNAR_AOS1;
+		}
+	}
+	else
+	{
+		current.GMTAOS = GMT_AOS;
+		current.GMTLOS = GMT_LOS;
+		current.GMTEMAX = GMT_EMAX;
+		current.MAXELEV = EMAX;
+		current.BestAvailableAOS = BestAvailableAOS;
+		current.BestAvailableLOS = BestAvailableLOS;
+		current.BestAvailableEMAX = BestAvailableEMAX;
+
+		acquisitions.push_back(current);
 	}
 
-	current.GMTAOS = GMT_AOS;
-	current.GMTLOS = GMT_LOS;
-	current.GMTEMAX = GMT_EMAX;
-	current.MAXELEV = EMAX;
-	current.BestAvailableAOS = BestAvailableAOS;
-	current.BestAvailableLOS = BestAvailableLOS;
-	current.BestAvailableEMAX = BestAvailableEMAX;
-	current.StationID = station.code;
-
-	acquisitions.push_back(current);
+RTCC_EMXING_END:
 
 	if (iter < ephemeris.table.size() && acquisitions.size() <= 45)
 	{
@@ -18860,7 +19083,7 @@ void RTCC::EMDLANDM(int L, double get, double dt, int ref)
 	ephem2.Header.CSI = out;
 
 	OrbitStationContactsTable res;
-	EMGENGEN(ephem2, ephem.MANTIMES, contact, stat_body, res);
+	EMGENGEN(ephem2, ephem.MANTIMES, contact, stat_body, res, &ephem.LUNRSTAY);
 }
 
 void RTCC::ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt)
@@ -18994,7 +19217,7 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 	}
 
 	OrbitStationContactsTable res;
-	EMGENGEN(ephem2, ephem.MANTIMES, contact, stat_body, res);
+	EMGENGEN(ephem2, ephem.MANTIMES, contact, stat_body, res, &ephem.LUNRSTAY);
 
 	//Experimental site
 	if (num == 3)
@@ -19014,7 +19237,7 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 		int numcontacts = 0;
 		for (int i = 0;i < 42;i++)
 		{
-			if (res.Stations[i].GMTAOS < GMT_Begin || res.Stations[i].GMTAOS > GMT_End)
+			if (res.Stations[i].GMTAOS <= 0.0 || res.Stations[i].GMTAOS > GMT_End)
 			{
 				continue;
 			}
@@ -19104,7 +19327,7 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 		int numcontacts = 0;
 		for (int i = 0;i < 42;i++)
 		{
-			if (res.Stations[i].GMTAOS < GMT_Begin || res.Stations[i].GMTAOS > GMT_End)
+			if (res.Stations[i].GMTAOS <= 0.0 || res.Stations[i].GMTAOS > GMT_End)
 			{
 				continue;
 			}
@@ -27964,7 +28187,11 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				landed = false;
 			}
 		}
-		PMSVCT(4, veh2, &sv0, landed, StationID);
+		StateVectorTableEntry sv1;
+		sv1.Vector = sv0;
+		sv1.LandingSiteIndicator = landed;
+		sv1.VectorCode = StationID;
+		PMSVCT(4, veh2, &sv1);
 	}
 	//Condition for Launch (Simulation)
 	else if (med == "92")
@@ -29882,6 +30109,10 @@ void RTCC::EMGPRINT(std::string source, int i)
 		break;
 	case 29:
 		message.push_back("RMMASCND CONVERGENCE LIMIT");
+		break;
+	case 31:
+		sprintf_s(Buffer, "%d %s STATION CONTACTS GENERATED", RTCCONLINEMON.IntBuffer[0], RTCCONLINEMON.TextBuffer[0].c_str());
+		message.push_back(Buffer);
 		break;
 	case 35:
 		message.push_back("C-BAND CONTACT GENERATION " + RTCCONLINEMON.TextBuffer[0]);
@@ -32520,7 +32751,7 @@ RTCC_BMSVPS_1:
 			//Error
 			return;
 		}
-		EphemerisData sv = BZUSEVEC.data[id].Vector;
+
 		int queid, L;
 		switch (PBIID)
 		{
@@ -32551,7 +32782,7 @@ RTCC_BMSVPS_1:
 			return;
 		}
 
-		PMSVCT(queid, L, &sv, BZUSEVEC.data[id].LandingSiteIndicator, BZUSEVEC.data[id].VectorCode);
+		PMSVCT(queid, L, &BZUSEVEC.data[id]);
 	}
 }
 

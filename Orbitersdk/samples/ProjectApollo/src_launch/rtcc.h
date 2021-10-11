@@ -1969,6 +1969,7 @@ struct StationContact
 
 struct OrbitStationContactsTable
 {
+	int Num = 0;
 	StationContact Stations[45];
 };
 
@@ -2789,7 +2790,7 @@ public:
 	//Vehicle Orientation Change Processor
 	void PMMUDT(int L, unsigned man, int headsup, int trim);
 	//Vector Routing Load Module
-	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false, std::string StationID = "");
+	void PMSVCT(int QUEID, int L, StateVectorTableEntry* sv0 = NULL);
 	//Vector Fetch Load Module
 	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	//Maneuver Execution Program
@@ -4648,9 +4649,10 @@ private:
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
-	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res);
+	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
 	//Horizon Crossing Subprogram
-	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions);
+	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
+	bool EMXINGLunarOccultation(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, double gmt, VECTOR3 R_S_equ, double &g_func, LunarStayTimesTable *LUNSTAY);
 	int CapeCrossingRev(int L, double GMT);
 	double CapeCrossingGMT(int L, int rev);
 	double CapeCrossingFirst(int L);
