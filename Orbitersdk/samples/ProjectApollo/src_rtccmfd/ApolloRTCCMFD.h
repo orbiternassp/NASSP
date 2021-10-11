@@ -184,6 +184,8 @@ public:
 	void set_sextantstartime(double time);
 	void menuManPADDV();
 	void set_P30DV(VECTOR3 dv);
+	void menuREFSMMATAtt();
+	void set_REFSMMATAtt(VECTOR3 att);
 	void menuSwitchManPADEngine();
 	void CycleThrusterOption(int &thruster);
 	void set_lambertelev(double elev);
