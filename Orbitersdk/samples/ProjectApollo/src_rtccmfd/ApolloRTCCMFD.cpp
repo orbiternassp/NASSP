@@ -2425,6 +2425,28 @@ void ApolloRTCCMFD::set_P30DV(VECTOR3 dv)
 	G->dV_LVLH = dv*0.3048;
 }
 
+void ApolloRTCCMFD::menuREFSMMATAtt()
+{
+	bool REFSMMATAttInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the attitude for the REFSMMAT (Format: XX.X XX.X XX.X)", REFSMMATAttInput, 0, 20, (void*)this);
+}
+
+bool REFSMMATAttInput(void *id, char *str, void *data)
+{
+	VECTOR3 att;
+	if (sscanf(str, "%lf %lf %lf", &att.x, &att.y, &att.z) == 3)
+	{
+		((ApolloRTCCMFD*)data)->set_REFSMMATAtt(att);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_REFSMMATAtt(VECTOR3 att)
+{
+	G->VECangles = att * RAD;
+}
+
 bool GenerateEXDVfromMPTInput(void *id, char *str, void *data)
 {
 	if (strlen(str) < 40)
