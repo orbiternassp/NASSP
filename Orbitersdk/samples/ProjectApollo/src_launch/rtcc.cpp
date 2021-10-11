@@ -5058,7 +5058,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	}
 
 	double dt, LMmass;
-	VECTOR3 X_B;
 	VECTOR3 DV_P, DV_C, V_G, X_SM, Y_SM, Z_SM;
 	double theta_T;
 	SV sv0, sv2;
@@ -5155,7 +5154,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 
 			if (opt->vesseltype < 2)
 			{
-				MATRIX3 M, M_R, M_RTM;
+				VECTOR3 AT, YPH, ZPH;
 				double p_T, y_T;
 
 				double T, WDOT;
@@ -5170,26 +5169,23 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 				}
 				GIMGBL(sv4.mass, LMmass, p_T, y_T, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0, 0.0);
 
-				if (opt->REFSMMATopt == 0)
+				AT = unit(V_G);
+				YPH = unit(crossp(AT, sv4.R));
+				if (opt->REFSMMATopt == 0 && opt->HeadsUp == false)
 				{
-					X_B = unit(V_G);
+					YPH = -YPH;
 				}
-				else
-				{
-					headsswitch = 1.0;
-					p_T = 2.15*RAD;
-					X_B = -unit(V_G);
-				}
-				UX = X_B;
-				UY = unit(crossp(UX, sv4.R*headsswitch));
-				UZ = unit(crossp(UX, UY));
+				ZPH = unit(crossp(AT, YPH));
+				X_SM = AT * cos(y_T)*cos(p_T) - YPH * sin(y_T)*cos(p_T) + ZPH * sin(p_T);
+				Y_SM = AT * sin(y_T) + YPH * cos(y_T);
+				Z_SM = unit(crossp(X_SM, Y_SM));
 
-				M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-				M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-				M_RTM = mul(OrbMech::tmat(M_R), M);
-				X_SM = mul(M_RTM, _V(1.0, 0.0, 0.0));
-				Y_SM = mul(M_RTM, _V(0.0, 1.0, 0.0));
-				Z_SM = mul(M_RTM, _V(0.0, 0.0, 1.0));
+				if (opt->REFSMMATopt != 0)
+				{
+					//Retro
+					X_SM = -X_SM;
+					Y_SM = -Y_SM;
+				}
 			}
 			else
 			{
