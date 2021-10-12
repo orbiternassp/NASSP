@@ -28,19 +28,22 @@ See http://nassp.sourceforge.net/license/ for more details.
 //Ephemeris Fetch Routine
 int RTCC::ELFECH(double GMT, int L, EphemerisData &SV)
 {
-	EphemerisDataTable EPHEM;
+	EphemerisDataTable2 EPHEM;
 	ManeuverTimesTable MANTIMES;
 	LunarStayTimesTable LUNSTAY;
 	int err = ELFECH(GMT, 1, 1, L, EPHEM, MANTIMES, LUNSTAY);
 	if (err == 0)
 	{
-		SV = EPHEM.table[0];
+		SV.R = EPHEM.table[0].R;
+		SV.V = EPHEM.table[0].V;
+		SV.GMT = EPHEM.table[0].GMT;
+		SV.RBI = BODY_EARTH;
 		RotateSVToSOI(SV); //Probably shouldn't be here, but it's convenient
 	}
 	return err;
 }
 
-int RTCC::ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, EphemerisDataTable &EPHEM, ManeuverTimesTable &MANTIMES, LunarStayTimesTable &LUNSTAY)
+int RTCC::ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, LunarStayTimesTable &LUNSTAY)
 {
 	OrbitEphemerisTable *maintable;
 	unsigned LO, HI, temp;
@@ -133,8 +136,18 @@ int RTCC::ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, Ephemeri
 	EPHEM.Header.TUP = maintable->EPHEM.Header.TUP;
 	EPHEM.Header.NumVec = EPHEM.table.size();
 	EPHEM.Header.Offset = 0;
-	EPHEM.Header.TL = EPHEM.table.front().GMT;
-	EPHEM.Header.TR = EPHEM.table.back().GMT;
+	EPHEM.Header.CSI = 0;
+	if (EPHEM.Header.NumVec > 0)
+	{
+		EPHEM.Header.TL = EPHEM.table.front().GMT;
+		EPHEM.Header.TR = EPHEM.table.back().GMT;
+	}
+	else
+	{
+		EPHEM.Header.TL = maintable->EPHEM.Header.TL;
+		EPHEM.Header.TR = maintable->EPHEM.Header.TR;
+		return 1;
+	}
 
 	return 0;
 }
@@ -255,147 +268,6 @@ RTCC_ELNMVC_2B:
 }
 
 //Vector interpolation routine
-int RTCC::ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData &sv_out, unsigned &ORER_out)
-{
-	EphemerisData RES;
-	VECTOR3 TERM1, TERM2;
-	double TERM3;
-	unsigned DESLEF, DESRI;
-	unsigned i = EPH.Header.Offset;
-	int ERR = 0;
-	//Ephemeris too small
-	if (EPH.Header.NumVec < 2)
-	{
-		return 128;
-	}
-	//Requested order too high
-	if (ORER > 8)
-	{
-		return 64;
-	}
-	if (EPH.Header.NumVec > ORER)
-	{
-		//Store Order(?)
-	}
-	else
-	{
-		ERR += 2;
-		ORER = EPH.Header.NumVec - 1;
-	}
-
-	if (GMT < EPH.Header.TL)
-	{
-		if (EXTRAP == false) return 32;
-		if (GMT < EPH.Header.TL - 4.0) { return 8; }
-		else { ERR += 1; }
-	}
-	if (GMT > EPH.Header.TR)
-	{
-		if (EXTRAP == false) return 16;
-		if (GMT > EPH.Header.TR + 4.0) { return 4; }
-		else { ERR += 1; }
-	}
-
-	while (GMT > EPH.table[i].GMT)
-	{
-		i++;
-	}
-
-	//Direct hit
-	if (GMT == EPH.table[i].GMT)
-	{
-		sv_out = EPH.table[i];
-		return ERR;
-	}
-
-	if (ORER % 2)
-	{
-		DESLEF = DESRI = (ORER + 1) / 2;
-	}
-	else
-	{
-		DESLEF = ORER / 2 + 1;
-		DESRI = ORER / 2;
-	}
-
-	if (i < DESLEF + EPH.Header.Offset)
-	{
-		i = EPH.Header.Offset;
-	}
-	else if (i > EPH.Header.Offset + EPH.Header.NumVec - DESRI)
-	{
-		i = EPH.Header.Offset + EPH.Header.NumVec - ORER - 1;
-	}
-	else
-	{
-		i = i - DESLEF;
-	}
-
-	//Reference body inconsistency
-	if (EPH.table[i].RBI != EPH.table[i + ORER].RBI)
-	{
-		unsigned l;
-		unsigned RBI_counter = 0;
-		for (l = 0;l < ORER + 1;l++)
-		{
-			if (EPH.table[i + l].RBI == EPH.table[i].RBI)
-			{
-				RBI_counter++;
-			}
-		}
-		if (RBI_counter > ORER + 1 - RBI_counter)
-		{
-			//Most SVs have the same reference as i
-			RES.RBI = EPH.table[i].RBI;
-			l = ORER;
-			while (EPH.table[i + l].RBI != EPH.table[i].RBI)
-			{
-				ORER--;
-				l--;
-			}
-		}
-		else
-		{
-			//Most SVs have the same reference as i+ORER
-			RES.RBI = EPH.table[i + ORER].RBI;
-			l = 0;
-			while (EPH.table[i + l].RBI != EPH.table[i + ORER].RBI)
-			{
-				ORER--;
-				i++;
-				l++;
-			}
-		}
-	}
-	else
-	{
-		RES.RBI = EPH.table[i].RBI;
-	}
-
-	for (unsigned j = 0; j < ORER + 1; j++)
-	{
-		TERM1 = EPH.table[i + j].R;
-		TERM2 = EPH.table[i + j].V;
-		TERM3 = 1.0;
-		for (unsigned k = 0;k < ORER + 1;k++)
-		{
-			if (k != j)
-			{
-				TERM3 *= (GMT - EPH.table[i + k].GMT) / (EPH.table[i + j].GMT - EPH.table[i + k].GMT);
-			}
-		}
-		RES.R += TERM1 * TERM3;
-		RES.V += TERM2 * TERM3;
-	}
-
-	RES.GMT = GMT;
-
-	sv_out = RES;
-	ORER_out = ORER;
-
-	return ERR;
-}
-
 int RTCC::ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData2 &sv_out, unsigned &ORER_out)
 {
 	EphemerisData2 RES;
@@ -508,34 +380,6 @@ int RTCC::ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out)
 
 	err = ELVCNV(eph, in, out, sv_out);
 	vec_out = sv_out.R;
-	return err;
-}
-
-int RTCC::ELVCNV(std::vector<EphemerisData> &svtab, int out, std::vector<EphemerisData2> &svtab_out)
-{
-	EphemerisData sv, sv_out;
-	EphemerisData2 sv_out2;
-	int err = 0;
-	for (unsigned i = 0;i < svtab.size();i++)
-	{
-		sv = svtab[i];
-		err = ELVCNV(sv, out, sv_out);
-		if (err)
-		{
-			break;
-		}
-		sv_out2.R = sv_out.R;
-		sv_out2.V = sv_out.V;
-		sv_out2.GMT = sv_out.GMT;
-		if (svtab_out.size() > i)
-		{
-			svtab_out[i] = sv_out2;
-		}
-		else
-		{
-			svtab_out.push_back(sv_out2);
-		}
-	}
 	return err;
 }
 
@@ -771,9 +615,9 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 }
 
 //Extended Interpolation Routine
-void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out)
+void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out)
 {
-	EphemerisDataTable EPHEM;
+	EphemerisDataTable2 EPHEM;
 	ManeuverTimesTable MANTIMES;
 	LunarStayTimesTable LUNSTAY;
 	unsigned vec_tot = in.ORER * 2;
@@ -786,154 +630,6 @@ void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out)
 	}
 
 	ELVCTR(in, out, EPHEM, MANTIMES, &LUNSTAY);
-}
-
-void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out, EphemerisDataTable &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY)
-{
-	//Is order of interpolation correct?
-	if (in.ORER == 0 || in.ORER > 8)
-	{
-		out.ErrorCode = 64;
-		return;
-	}
-
-	unsigned nvec = 0;
-	double TS_stored = 0, TE_stored = 0;
-	bool restore = false;
-	unsigned ORER = in.ORER;
-	int I;
-	out.VPI = 0;
-	out.ErrorCode = 0;
-
-	if (in.GMT < EPH.table[0].GMT)
-	{
-		out.ErrorCode = 8;
-		return;
-	}
-	if (in.GMT > EPH.table.back().GMT)
-	{
-		out.ErrorCode = 16;
-		return;
-	}
-	out.TUP = EPH.Header.TUP;
-	if (LUNRSTAY != NULL)
-	{
-		if (in.GMT >= LUNRSTAY->LunarStayBeginGMT && in.GMT <= LUNRSTAY->LunarStayEndGMT)
-		{
-			out.VPI = -1;
-		}
-	}
-	I = 0;
-	if (mantimes.Table.size() > 0)
-	{
-		double TS = EPH.Header.TL;
-		double TE = EPH.Header.TR;
-		unsigned J = 0;
-		for (J = 0;J < mantimes.Table.size();J++)
-		{
-			//Equal to maneuver initiate time, go directly to 5A
-			if (mantimes.Table[J].ManData[1] == in.GMT)
-			{
-				goto RTCC_ELVCTR_5A;
-			}
-			else if (mantimes.Table[J].ManData[1] > in.GMT)
-			{
-				//Equal to maneuver end time, go directly to 5A
-				if (mantimes.Table[J].ManData[0] == in.GMT)
-				{
-					goto RTCC_ELVCTR_5A;
-				}
-				//Inside burn
-				if (mantimes.Table[J].ManData[0] < in.GMT)
-				{
-					out.VPI = 1;
-					goto RTCC_ELVCTR_3;
-				}
-				if (J == 0)
-				{
-					//Maneuver outside ephemeris range, let ELVARY handle the error
-					if (mantimes.Table[J].ManData[0] > TE)
-					{
-						goto RTCC_ELVCTR_5A;
-					}
-					//Constrain ephemeris end to begin of first maneuver
-					TE = mantimes.Table[J].ManData[0];
-					goto RTCC_ELVCTR_H;
-				}
-				else
-				{
-					if (mantimes.Table[J].ManData[0] < TE)
-					{
-						TE = mantimes.Table[J].ManData[0];
-					}
-					break;
-				}
-			}
-		}
-		//Constrain ephemeris start to end of previous maneuver
-		if (mantimes.Table[J - 1].ManData[1] > TS)
-		{
-			TS = mantimes.Table[J - 1].ManData[1];
-		}
-		goto RTCC_ELVCTR_H;
-	RTCC_ELVCTR_3:
-		ORER = 1;
-		unsigned E = 0;
-		while (EPH.table[E].GMT <= in.GMT)
-		{
-			//Direct hit
-			if (EPH.table[E].GMT == in.GMT)
-			{
-				goto RTCC_ELVCTR_5A;
-			}
-			E++;
-		}
-		TE = EPH.table[E].GMT;
-		TS = EPH.table[E - 1].GMT;
-	RTCC_ELVCTR_H:
-		unsigned V = 0;
-		while (TS >= EPH.table[V].GMT)
-		{
-			if (TS == EPH.table[V].GMT)
-			{
-				goto RTCC_ELVCTR_4;
-			}
-			V++;
-		}
-		out.ErrorCode = 255;
-		return;
-	RTCC_ELVCTR_4:
-		//Save stuff
-		restore = true;
-		nvec = EPH.Header.NumVec;
-		TS_stored = EPH.Header.TL;
-		TE_stored = EPH.Header.TR;
-		unsigned NV = 1;
-		while (TE != EPH.table[NV - 1].GMT)
-		{
-			if (TE < EPH.table[NV - 1].GMT)
-			{
-				out.ErrorCode = 255;
-				return;
-			}
-			NV++;
-		}
-		EPH.Header.NumVec = NV - V;
-		EPH.Header.Offset = V;
-		EPH.Header.TL = TS;
-		EPH.Header.TR = TE;
-	}
-
-RTCC_ELVCTR_5A:
-	out.ErrorCode = ELVARY(EPH, ORER, in.GMT, false, out.SV, out.ORER);
-	if (restore)
-	{
-		EPH.Header.NumVec = nvec;
-		EPH.Header.Offset = 0;
-		EPH.Header.TL = TS_stored;
-		EPH.Header.TR = TE_stored;
-	}
-	return;
 }
 
 void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, EphemerisDataTable2 &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY)
@@ -1918,7 +1614,7 @@ RTCC_PLAWDT_2_D:
 		goto RTCC_PLAWDT_3_F;
 	}
 	//Maneuver not current?
-	if (mpt->CommonBlock.TUP != mpt->mantable[K - 1].CommonBlock.TUP)
+	if (K > mpt->LastExecutedManeuver && (abs(mpt->CommonBlock.TUP) != abs(mpt->mantable[K - 1].CommonBlock.TUP)))
 	{
 		out.Err = 2;
 		K = K - 1;

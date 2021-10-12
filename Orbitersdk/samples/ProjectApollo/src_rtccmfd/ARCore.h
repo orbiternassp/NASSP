@@ -272,6 +272,8 @@ public:
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
+
+	//AGS STATE VECTOR
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
 	AP11AGSSVPAD agssvpad;

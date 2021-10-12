@@ -179,7 +179,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Time of Alignment", 0, 'G' },
 		{ "", 0, ' ' },
 		{ "Heads up/down for P30", 0, 'H' },
-		{ "", 0, ' ' },
+		{ "Attitude input", 0, 'A' },
 		{ "REFSMMAT from AGC", 0, 'D' },
 		{ "", 0, ' ' },
 
@@ -196,14 +196,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::REFSMMATTimeDialogue);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::cycleREFSMMATHeadsUp);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuREFSMMATAtt);
 	RegisterFunction("DWN", OAPI_KEY_D, &ApolloRTCCMFD::GetREFSMMATfromAGC);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::CycleREFSMMATopt);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::calcREFSMMAT);
 	RegisterFunction("G00", OAPI_KEY_U, &ApolloRTCCMFD::menuREFSMMATLockerMovement);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
 
