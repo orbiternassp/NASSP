@@ -18019,15 +18019,9 @@ RTCC_PMSVCT_8:
 		goto RTCC_PMSVCT_12;
 	}
 
-	if (sv0->LandingSiteIndicator == false)
-	{
-		sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
-		//TBD: Error 35
-	}
-	else
-	{
-		sv1 = *sv0;
-	}
+	//Take state vector to current time
+	sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
+	//TBD: Error 35
 RTCC_PMSVCT_12:
 	mpt->CommonBlock.TUP++;
 	mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
@@ -21054,6 +21048,7 @@ int RTCC::PMMXFR(int id, void *data)
 		man.CommonBlock.ConfigCode = CC;
 		man.Thruster = RTCC_ENGINETYPE_LMAPS;
 		man.AttitudeCode = RTCC_ATTITUDE_PGNS_ASCENT;
+		man.TVC = RTCC_MANVEHICLE_LM;
 		mpt->mantable.push_back(man);
 		mpt->TimeToBeginManeuver[CurMan - 1] = mpt->TimeToEndManeuver[CurMan - 1] = man.GMTMAN;
 		mpt->ManeuverNum = mpt->mantable.size();
