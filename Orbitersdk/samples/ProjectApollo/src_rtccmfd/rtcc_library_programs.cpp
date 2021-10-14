@@ -909,7 +909,7 @@ int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 	{
 		return 1;
 	}
-	u = unit(sv.R);
+	u = unit(sv_out.R);
 	lat = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
 	lng = atan2(u.y, u.x);
 	if (sv.RBI == BODY_EARTH)
