@@ -221,32 +221,6 @@ bool papiReadConfigFile_PTPSite(char *line, char *item, std::string &PTPSite, do
 	return false;
 }
 
-bool papiReadConfigFile_CGTable(char *line, char *item, double *WeightTable, VECTOR3 *CGTable)
-{
-	char buffer[256];
-
-	if (sscanf(line, "%s", buffer) == 1)
-	{
-		if (!strcmp(buffer, item))
-		{
-			int num;
-			double W;
-			VECTOR3 CG;
-			if (sscanf(line, "%s %d %lf %lf %lf %lf", buffer, &num, &W, &CG.x, &CG.y, &CG.z) == 6)
-			{
-				if (num >= 0 && num <= 39)
-				{
-					WeightTable[num] = W * 0.453597;
-					CGTable[num] = CG * 0.0254;
-				}
-
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
 FIDOOrbitDigitals::FIDOOrbitDigitals()
 {
 	A = 0.0;
@@ -1913,12 +1887,6 @@ void RTCC::LoadMissionConstantsFile(char *file)
 					PZREAP.ATPCoordinates[itemp][i] = darrtemp[i];
 				}
 			}
-			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG);
-			papiReadScenario_int(Buff, "MHVCCG_N", SystemParameters.MHVCCG.N);
-			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG);
-			papiReadScenario_int(Buff, "MHVLCG_N", SystemParameters.MHVLCG.N);
-			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG);
-			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
 		}
 	}
 }
@@ -4327,12 +4295,6 @@ void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
 	pad.YawTrim = (y_T - SystemParameters.MCTSYP)*DEG;
 }
 
-void ConvertDPSGimbalAnglesToTrim(double P_G, double R_G, double &P_G_trim, double &R_G_trim)
-{
-	P_G_trim = 6.0*RAD + P_G;
-	R_G_trim = 6.0*RAD + R_G;
-}
-
 void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc)
 {
 	double CSMmass, LMmass;
@@ -4356,33 +4318,10 @@ void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc)
 
 	CSMmass = GetDockedVesselMass(v);
 
-	if (asc)
-	{
-		pad.PitchTrim = 6.0;
-		pad.YawTrim = 6.0;
-	}
-	else
-	{
-		double T, WDOT, p_T, r_T;
-		unsigned IC;
-		if (CSMmass > 0)
-		{
-			IC = 13;
-		}
-		else
-		{
-			IC = 12;
-		}
-		GIMGBL(CSMmass, LMmass, p_T, r_T, T, WDOT, RTCC_ENGINETYPE_LMDPS, IC, 1, 0, 0.0);
-
-		ConvertDPSGimbalAnglesToTrim(p_T, r_T, pad.PitchTrim, pad.YawTrim);
-
-		pad.PitchTrim *= DEG;
-		pad.YawTrim *= DEG;
-	}
-
 	pad.ThisVehicleWeight = LMmass / 0.45359237;
 	pad.OtherVehicleWeight = CSMmass / 0.45359237;
+	pad.PitchTrim = 6.0;
+	pad.YawTrim = 6.0;
 }
 
 void RTCC::EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad)
@@ -21542,13 +21481,6 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	{
 		res.DEL_P = (man->P_G - SystemParameters.MCTSPP)*DEG;
 		res.DEL_Y = (man->Y_G - SystemParameters.MCTSYP)*DEG;
-	}
-	else if (man->Thruster == RTCC_ENGINETYPE_LMDPS)
-	{
-		ConvertDPSGimbalAnglesToTrim(man->P_G, man->Y_G, res.DEL_P, res.DEL_Y);
-
-		res.DEL_P *= DEG;
-		res.DEL_Y *= DEG;
 	}
 	else
 	{

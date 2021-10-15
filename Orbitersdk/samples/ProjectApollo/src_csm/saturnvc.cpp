@@ -926,9 +926,6 @@ void Saturn::RegisterActiveAreas() {
 		}
 	}
 
-	//Apply center of gravity offset here
-	ofs -= currentCoG;
-
 	//
 	// Register active areas for switches/animations here
 	//
@@ -2036,8 +2033,11 @@ void Saturn::SetView(double offset, bool update_direction)
 		v.y += ViewOffsety;
 		v.z += ViewOffsetz;
 	}
+	SetCameraOffset(v);
 
-	SetCameraOffset(v - _V(currentCoG.x, currentCoG.y, 0.0)); //We already use the mesh offset in the z-axis
+	VCCameraOffset.x = v.x - VCMeshOffset.x;
+	VCCameraOffset.y = v.y - VCMeshOffset.y;
+	VCCameraOffset.z = v.z - VCMeshOffset.z;
 
 	//
 	// FOV handling
