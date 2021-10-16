@@ -515,18 +515,21 @@ struct TimeConstraintsTable
 	double lng = 0.0;
 	double h = 0.0;
 	double T0 = 0.0;
-	double TA = 0.0;
+	double TA = 0.0; //True anomaly
+	double MA = 0.0; //Mean anomaly
 	double V = 0.0;
 	double azi = 0.0;
 	double AoP = 0.0;
 	double RA = 0.0;
-	double l = 0.0;
+	double l = 0.0;	//Semi-latus rectum
 	int OrbitNum = 0;
 	int RevNum = 0;
 	//EI time?
 	double GMTPI = 0.0;
 	std::string StationID;
 	int TUP = 0;
+	double h_a = 0.0;
+	double h_p = 0.0;
 };
 
 struct RetrofireTransferTableEntry

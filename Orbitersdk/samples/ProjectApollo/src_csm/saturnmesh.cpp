@@ -1322,6 +1322,8 @@ void Saturn::StageEight(double simt)
 	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 
+	DefineCMAttachments();
+
 	SetView(-1.35);
 
 	if (!Crewed)

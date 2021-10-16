@@ -13354,7 +13354,7 @@ void RTCC::EMGGPCHR(double lat, double lng, double alt, int body, Station *stat)
 void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 {
 	VECTOR3 H, E, N, K;
-	double mu, eps, v, r, lng, lat, fpa, azi, h;
+	double mu, eps, v, r, lng, lat, fpa, azi, h, r_apo, r_peri, R_E;
 
 	if (sv.RBI == BODY_EARTH)
 	{
@@ -13373,12 +13373,13 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 	N = crossp(K, H);
 	if (sv.RBI == BODY_EARTH)
 	{
-		h = r - OrbMech::R_Earth;
+		R_E = OrbMech::R_Earth;
 	}
 	else
 	{
-		h = r - BZLAND.rad[RTCC_LMPOS_BEST];
+		R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 	}
+	h = r - R_E;
 
 	tab.a = -mu / (2.0*eps);
 	tab.AoP = acos2(dotp(unit(N), unit(E)));
@@ -13405,8 +13406,13 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 	if (dotp(sv.R, sv.V) < 0)
 	{
 		tab.TA = PI2 - tab.TA;
-	}	
+	}
+	tab.MA = OrbMech::TrueToMeanAnomaly(tab.TA, tab.e);
 	tab.V = v;
+
+	OrbMech::periapo(sv.R, sv.V, mu, r_apo, r_peri);
+	tab.h_a = r_apo - R_E;
+	tab.h_p = r_peri - R_E;
 }
 
 void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis, int ref_body, int mode, VECTOR3 Att, double PYRGET)
@@ -16913,11 +16919,38 @@ void RTCC::EMSTRAJ(StateVectorTableEntry sv, int L)
 	if (sv.LandingSiteIndicator)
 	{
 		cctab->NumRev = 0;
+		EMGPRINT("EMSTRAJ", 42);
 	}
 	else
 	{
 		//Generate cape crossing
 		RMMEACC(L, sv.Vector.RBI, 0, CapeCrossingRev(L, gmt));
+
+		//Orbital elements
+		if (L == RTCC_MPT_CSM)
+		{
+			RTCCONLINEMON.TextBuffer[0] = "CSM";
+		}
+		else
+		{
+			RTCCONLINEMON.TextBuffer[0] = "LEM";
+		}
+		TimeConstraintsTable temptab;
+		EMMDYNEL(sv.Vector, temptab);
+		RTCCONLINEMON.IntBuffer[0] = maineph->EPHEM.Header.TUP;
+		RTCCONLINEMON.DoubleBuffer[0] = temptab.a / 1852.0;
+		RTCCONLINEMON.DoubleBuffer[1] = temptab.MA*DEG;
+		RTCCONLINEMON.DoubleBuffer[2] = temptab.h_a / 1852.0;
+		if (RTCCONLINEMON.DoubleBuffer[2] > 999999.0)
+		{
+			RTCCONLINEMON.DoubleBuffer[2] = 999999.0;
+		}
+		RTCCONLINEMON.DoubleBuffer[3] = temptab.i*DEG;
+		RTCCONLINEMON.DoubleBuffer[4] = temptab.AoP*DEG;
+		RTCCONLINEMON.DoubleBuffer[5] = temptab.h_p / 1852.0;
+		RTCCONLINEMON.DoubleBuffer[6] = temptab.e;
+		RTCCONLINEMON.DoubleBuffer[7] = temptab.RA*DEG;
+		EMGPRINT("EMSTRAJ", 14);
 	}
 	//Generate station contacts
 	EMSTAGEN(L);
@@ -17126,6 +17159,32 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 				{
 					table->LUNRSTAY.LunarStayBeginGMT = InTable.NIAuxOutputTable.LunarStayBeginGMT;
 				}
+			}
+
+			if (InTable.NIAuxOutputTable.TerminationCode == 3)
+			{
+				//NI ended on altitude
+				if (L == RTCC_MPT_CSM)
+				{
+					RTCCONLINEMON.TextBuffer[0] = "CSM";
+				}
+				else
+				{
+					RTCCONLINEMON.TextBuffer[0] = "LEM";
+				}
+				RTCCONLINEMON.TextBuffer[1] = "EI";
+
+				double get = GETfromGMT(InTable.NIAuxOutputTable.sv_cutoff.GMT);
+				char Buff[64];
+				format_time_rtcc(Buff, get);
+				RTCCONLINEMON.TextBuffer[2].assign(Buff);
+
+				double lat, lng, alt;
+				GLSSAT(InTable.NIAuxOutputTable.sv_cutoff, lat, lng, alt);
+				RTCCONLINEMON.DoubleBuffer[0] = lat * DEG;
+				RTCCONLINEMON.DoubleBuffer[1] = lng * DEG;
+
+				EMGPRINT("EMSEPH", 11);
 			}
 		}
 	} while (InTable.NIAuxOutputTable.TerminationCode == 7 && InTable.NIAuxOutputTable.ErrorCode == 0);
@@ -18019,15 +18078,9 @@ RTCC_PMSVCT_8:
 		goto RTCC_PMSVCT_12;
 	}
 
-	if (sv0->LandingSiteIndicator == false)
-	{
-		sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
-		//TBD: Error 35
-	}
-	else
-	{
-		sv1 = *sv0;
-	}
+	//Take state vector to current time
+	sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
+	//TBD: Error 35
 RTCC_PMSVCT_12:
 	mpt->CommonBlock.TUP++;
 	mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
@@ -21054,6 +21107,7 @@ int RTCC::PMMXFR(int id, void *data)
 		man.CommonBlock.ConfigCode = CC;
 		man.Thruster = RTCC_ENGINETYPE_LMAPS;
 		man.AttitudeCode = RTCC_ATTITUDE_PGNS_ASCENT;
+		man.TVC = RTCC_MANVEHICLE_LM;
 		mpt->mantable.push_back(man);
 		mpt->TimeToBeginManeuver[CurMan - 1] = mpt->TimeToEndManeuver[CurMan - 1] = man.GMTMAN;
 		mpt->ManeuverNum = mpt->mantable.size();
@@ -30061,11 +30115,42 @@ void RTCC::EMGPRINT(std::string source, int i)
 	case 4:
 		message.push_back("HISTORY VECTOR IS UNAVAILABLE");
 		break;
+	case 11:
+		message.push_back(RTCCONLINEMON.TextBuffer[0] + " BELOW " + RTCCONLINEMON.TextBuffer[1] + " ALTITUDE");
+		if (RTCCONLINEMON.DoubleBuffer[0] >= 0)
+		{
+			sprintf_s(Buffer, "GET = %s LAT = %06.2lf N", RTCCONLINEMON.TextBuffer[2].c_str(), RTCCONLINEMON.DoubleBuffer[0]);
+		}
+		else
+		{
+			sprintf_s(Buffer, "GET = %s LAT = %06.2lf S", RTCCONLINEMON.TextBuffer[2].c_str(), abs(RTCCONLINEMON.DoubleBuffer[0]));
+		}
+		message.push_back(Buffer);
+		if (RTCCONLINEMON.DoubleBuffer[1] >= 0)
+		{
+			sprintf_s(Buffer, "LON = %06.2lf E", RTCCONLINEMON.DoubleBuffer[1]);
+		}
+		else
+		{
+			sprintf_s(Buffer, "LON = %06.2lf W", abs(RTCCONLINEMON.DoubleBuffer[1]));
+		}
+		message.push_back(Buffer);
+		break;
 	case 12:
 		message.push_back(RTCCONLINEMON.TextBuffer[0] + " EPHEMERIS UPDATE COMPLETED");
 		break;
 	case 13:
 		message.push_back(RTCCONLINEMON.TextBuffer[0] + " MINIMUM EPHEMERIS WAS NOT GENERATED");
+		break;
+	case 14:
+		sprintf_s(Buffer, "%s ORBITAL ELEM. FOR UPDATE NO. %d", RTCCONLINEMON.TextBuffer[0].c_str(), RTCCONLINEMON.IntBuffer[0]);
+		message.push_back(Buffer);
+		sprintf_s(Buffer, "A = %.1lf NM MEAN ANOMALY = %.2lf H(AP) = %.0lf", RTCCONLINEMON.DoubleBuffer[0], RTCCONLINEMON.DoubleBuffer[1], RTCCONLINEMON.DoubleBuffer[2]);
+		message.push_back(Buffer);
+		sprintf_s(Buffer, "E = %.3lf ARG. PERIGEE = %.2lf H(PER) = %.0lf", RTCCONLINEMON.DoubleBuffer[3], RTCCONLINEMON.DoubleBuffer[4], RTCCONLINEMON.DoubleBuffer[5]);
+		message.push_back(Buffer);
+		sprintf_s(Buffer, "I = %.2lf ARG ASCEND. NODE = %.2lf", RTCCONLINEMON.DoubleBuffer[6], RTCCONLINEMON.DoubleBuffer[7]);
+		message.push_back(Buffer);
 		break;
 	case 15:
 		message.push_back(RTCCONLINEMON.TextBuffer[0] + " EPHEMERIS LIMITS");
@@ -30115,6 +30200,13 @@ void RTCC::EMGPRINT(std::string source, int i)
 		break;
 	case 36:
 		message.push_back("ANCHOR TIME ADJUSTED FOR" + RTCCONLINEMON.TextBuffer[0] + "STATION CONTACTS");
+		break;
+	case 37:
+		message.push_back("GRR MATRIX NOT AVAILABLE");
+		break;
+	case 42:
+		message.push_back("ANCHOR VECTOR IS LUNAR SURFACE");
+		message.push_back("NO ELEMENTS CALCULATED");
 		break;
 	default:
 		return;
