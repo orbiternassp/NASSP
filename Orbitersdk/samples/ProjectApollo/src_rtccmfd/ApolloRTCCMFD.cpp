@@ -734,262 +734,225 @@ void ApolloRTCCMFD::CycleREFSMMATopt()
 	}
 }
 
+void ApolloRTCCMFD::SelectPage(int page)
+{
+	screen = page;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuSetMenu()
 {
-	screen = 0;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(0);
 }
 
 void ApolloRTCCMFD::menuSetLambertPage()
 {
-	screen = 1;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(1);
 }
 
 void ApolloRTCCMFD::menuSetTIMultipleSolutionPage()
 {
-	screen = 2;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(2);
 }
 
 void ApolloRTCCMFD::menuSetSPQPage()
 {
-	screen = 3;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(3);
 }
 
 void ApolloRTCCMFD::menuSetOrbAdjPage()
 {
-	screen = 4;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(4);
 }
 
 void ApolloRTCCMFD::menuSetREFSMMATPage()
 {
-	screen = 5;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(5);
 }
 
 void ApolloRTCCMFD::menuSetEntryPage()
 {
-	screen = 6;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(6);
 }
 
 void ApolloRTCCMFD::menuSetAGSSVPage()
 {
-	screen = 7;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(7);
 }
 
 void ApolloRTCCMFD::menuSetConfigPage()
 {
-	screen = 8;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(8);
 }
 
 void ApolloRTCCMFD::menuSetManPADPage()
 {
-	screen = 9;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(9);
 }
 
 void ApolloRTCCMFD::menuSetEntryPADPage()
 {
-	screen = 10;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(10);
 }
 
 void ApolloRTCCMFD::menuSetMapUpdatePage()
 {
-	screen = 11;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(11);
 }
 
 void ApolloRTCCMFD::menuSetLOIPage()
 {
-	screen = 12;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(12);
 }
 
 void ApolloRTCCMFD::menuSetLandmarkTrkPage()
 {
-	screen = 13;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(13);
 }
 
 void ApolloRTCCMFD::menuSetTargetingMenu()
 {
-	screen = 14;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(14);
 }
 
 void ApolloRTCCMFD::menuSetVECPOINTPage()
 {
-	screen = 15;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(15);
 }
 
 void ApolloRTCCMFD::menuSetDescPlanCalcPage()
 {
-	screen = 16;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(16);
 }
 
 void ApolloRTCCMFD::menuSetSkylabPage()
 {
-	screen = 17;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(17);
 }
 
 void ApolloRTCCMFD::menuSetDescPlanInitPage()
 {
-	screen = 18;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(18);
 }
 
 void ApolloRTCCMFD::menuSetTerrainModelPage()
 {
-	screen = 19;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(19);
 }
 
 void ApolloRTCCMFD::menuSetPADMenu()
 {
-	screen = 20;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(20);
 }
 
 void ApolloRTCCMFD::menuSetUtilityMenu()
 {
-	screen = 21;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(21);
 }
 
 void ApolloRTCCMFD::menuMidcoursePage()
 {
-	screen = 22;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(22);
 }
 
 void ApolloRTCCMFD::menuSetLunarLiftoffPage()
 {
-	screen = 23;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(23);
 }
 
 void ApolloRTCCMFD::menuSetEMPPage()
 {
-	screen = 24;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(24);
 }
 
 void ApolloRTCCMFD::menuSetNavCheckPADPage()
 {
-	screen = 25;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(25);
 }
 
 void ApolloRTCCMFD::menuSetDeorbitPage()
 {
-	screen = 26;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(26);
 }
 
 void ApolloRTCCMFD::menuSetRTEDigitalsInputPage()
 {
-	screen = 27;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(27);
 }
 
 void ApolloRTCCMFD::menuSetRTEDigitalsPage()
 {
-	screen = 28;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(28);
 }
 
 void ApolloRTCCMFD::menuSetRTEConstraintsPage()
 {
-	screen = 29;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(29);
 }
 
 void ApolloRTCCMFD::menuSetEntryUpdatePage()
 {
-	screen = 30;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(30);
 }
 
 void ApolloRTCCMFD::menuSetRendezvousPage()
 {
-	screen = 32;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(32);
 }
 
 void ApolloRTCCMFD::menuSetDKIPage()
 {
-	screen = 33;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(33);
 }
 
 void ApolloRTCCMFD::menuSetDKIOptionsPage()
 {
-	screen = 34;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(34);
 }
 
 void ApolloRTCCMFD::menuSetDAPPADPage()
 {
-	screen = 35;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(35);
 }
 
 void ApolloRTCCMFD::menuSetLVDCPage()
 {
-	screen = 36;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(36);
 }
 
 void ApolloRTCCMFD::menuSetAGCEphemerisPage()
 {
-	screen = 37;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(37);
 }
 
 void ApolloRTCCMFD::menuSetLunarAscentPage()
 {
-	screen = 38;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(38);
 }
 
 void ApolloRTCCMFD::menuSetLMAscentPADPage()
 {
-	screen = 39;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(39);
 }
 
 void ApolloRTCCMFD::menuSetPDAPPage()
 {
-	screen = 40;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(40);
 }
 
 void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsCSMPage()
 {
-	screen = 41;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(41);
 }
 
 void ApolloRTCCMFD::menuSetMCCDisplaysPage()
 {
-	screen = 42;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(42);
 }
 
 void ApolloRTCCMFD::menuSetSpaceDigitalsPage()
 {
-	screen = 43;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(43);
 
 	//MSK request
 	G->SpaceDigitalsMSKRequest();
@@ -997,38 +960,32 @@ void ApolloRTCCMFD::menuSetSpaceDigitalsPage()
 
 void ApolloRTCCMFD::menuSetMPTPage()
 {
-	screen = 44;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(44);
 }
 
 void ApolloRTCCMFD::menuSetNextStationContactsPage()
 {
-	screen = 45;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(45);
 }
 
 void ApolloRTCCMFD::menuSetPredSiteAcquisitionCSM1Page()
 {
-	screen = 46;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(46);
 }
 
 void ApolloRTCCMFD::menuSetUplinkMenu()
 {
-	screen = 47;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(47);
 }
 
 void ApolloRTCCMFD::menuSetLSUpdateMenu()
 {
-	screen = 49;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(49);
 }
 
 void ApolloRTCCMFD::menuSetTITransferPage()
 {
-	screen = 54;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(54);
 }
 
 void ApolloRTCCMFD::menuSetSPQorDKIRTransferPage()
@@ -1046,300 +1003,364 @@ void ApolloRTCCMFD::menuSetSPQorDKIRTransferPage()
 		GC->rtcc->med_m70.Plan = -1;
 	}
 
-	screen = 55;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(55);
 }
 
 void ApolloRTCCMFD::menuSetMPTDirectInputPage()
 {
-	screen = 56;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(56);
 }
 
 void ApolloRTCCMFD::menuSetGPMTransferPage()
 {
-	screen = 57;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(57);
 }
 
 void ApolloRTCCMFD::menuSetCheckoutMonitorPage()
 {
-	screen = 58;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(58);
 }
 
 void ApolloRTCCMFD::menuSetMPTInitPage()
 {
-	screen = 59;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(59);
 
 	GC->mptInitError = 0;
 }
 
 void ApolloRTCCMFD::menuSetDescPlanTablePage()
 {
-	screen = 60;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(60);
 }
 
 void ApolloRTCCMFD::menuSetSunriseSunsetTablePage()
 {
-	screen = 62;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(62);
 }
 
 void ApolloRTCCMFD::menuSetMoonriseMoonsetTablePage()
 {
-	screen = 63;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(63);
 }
 
 void ApolloRTCCMFD::menuSetFIDOLaunchAnalogNo1Page()
 {
-	screen = 64;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(64);
 }
 
 void ApolloRTCCMFD::menuSetFIDOLaunchAnalogNo2Page()
 {
-	screen = 65;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(65);
 }
 
 void ApolloRTCCMFD::menuSetRTETradeoffDisplayPage()
 {
-	screen = 66;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(66);
 }
 
 void ApolloRTCCMFD::menuSetDetailedManeuverTableNo1Page()
 {
-	screen = 67;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(67);
 }
 
 void ApolloRTCCMFD::menuSetDetailedManeuverTableNo2Page()
 {
-	screen = 68;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(68);
 }
 
 void ApolloRTCCMFD::menuSetSPQInitializationPage()
 {
-	screen = 69;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(69);
 }
 
 void ApolloRTCCMFD::menuSetDKIInitializationPage()
 {
-	screen = 70;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(70);
 }
 
 void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsLMPage()
 {
-	screen = 71;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(71);
 }
 
 void ApolloRTCCMFD::menuSetPredSiteAcquisitionLM1Page()
 {
-	screen = 72;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(72);
 }
 
 void ApolloRTCCMFD::menuSetPredSiteAcquisitionCSM2Page()
 {
-	screen = 73;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(73);
 }
 
 void ApolloRTCCMFD::menuSetPredSiteAcquisitionLM2Page()
 {
-	screen = 74;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(74);
 }
 
 void ApolloRTCCMFD::menuSetOnlineMonitorPage()
 {
-	screen = 75;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(75);
 }
 
 void ApolloRTCCMFD::menuLOITransferPage()
 {
 	GC->rtcc->med_m78.Type = true;
-	screen = 76;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(76);
 }
 
 void ApolloRTCCMFD::menuMCCTransferPage()
 {
 	GC->rtcc->med_m78.Type = false;
-	screen = 76;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(76);
 }
 
 void ApolloRTCCMFD::menuSetSkeletonFlightPlanPage()
 {
-	screen = 77;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(77);
 }
 
 void ApolloRTCCMFD::menuMidcourseTradeoffPage()
 {
-	screen = 78;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(78);
 }
 
 void ApolloRTCCMFD::menuTLIPlanningPage()
 {
-	screen = 79;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(79);
 }
 
 void ApolloRTCCMFD::menuSetMidcourseConstraintsPage()
 {
-	screen = 80;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(80);
 }
 
 void ApolloRTCCMFD::menuSetNodalTargetConversionPage()
 {
-	screen = 81;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(81);
 }
 
 void ApolloRTCCMFD::menuSetLOIInitPage()
 {
-	screen = 82;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(82);
 }
 
 void ApolloRTCCMFD::menuSetLOIDisplayPage()
 {
-	screen = 83;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(83);
 }
 
 void ApolloRTCCMFD::menuMPTDirectInputSecondPage()
 {
-	screen = 84;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(84);
 }
 
 void ApolloRTCCMFD::menuSetExpSiteAcqPage()
 {
-	screen = 85;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(85);
 }
 
 void ApolloRTCCMFD::menuSetRelativeMotionDigitalsPage()
 {
-	screen = 86;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(86);
 }
 
 void ApolloRTCCMFD::menuSetRendezvousEvaluationDisplayPage()
 {
-	screen = 87;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(87);
 }
 
 void ApolloRTCCMFD::menuSetLaunchTargetingInitPage()
 {
-	screen = 88;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(88);
 }
 
 void ApolloRTCCMFD::menuSetLLWPInitPage()
 {
-	screen = 89;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(89);
 }
 
 void ApolloRTCCMFD::menuSetLLWPDisplayPage()
 {
-	screen = 90;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(90);
 }
 
 void ApolloRTCCMFD::menuSetLunarLaunchTargetingPage()
 {
-	screen = 91;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(91);
 }
 
 void ApolloRTCCMFD::menuSetTPITimesPage()
 {
-	screen = 92;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(92);
 }
 
 void ApolloRTCCMFD::menuSetVectorCompareDisplay()
 {
-	screen = 93;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(93);
 }
 
 void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
 {
-	screen = 95;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(95);
 }
 
 void ApolloRTCCMFD::menuVectorPanelSummaryPage()
 {
-	screen = 97;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(97);
 }
 
 void ApolloRTCCMFD::menuSetRetrofireConstraintsPage()
 {
-	screen = 103;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(103);
 }
 
 void ApolloRTCCMFD::menuSetRetrofireDigitalsPage()
 {
-	screen = 104;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(104);
 }
 
 void ApolloRTCCMFD::menuSetRetrofireXDVPage()
 {
-	screen = 105;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(105);
 }
 
 void ApolloRTCCMFD::menuSetRetrofireTargetSelectionPage()
 {
-	screen = 106;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(106);
 }
 
 void ApolloRTCCMFD::menuSetAbortScanTableInputPage()
 {
-	screen = 107;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(107);
 }
 
 void ApolloRTCCMFD::menuSetAbortScanTablePage()
 {
-	screen = 108;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(108);
 }
 
 void ApolloRTCCMFD::menuSetRTEDManualManeuverInputPage()
 {
-	screen = 109;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(109);
 }
 
 void ApolloRTCCMFD::menuSetRTEDEntryProfilePage()
 {
-	screen = 110;
-	coreButtons.SelectPage(this, screen);
+	SelectPage(110);
+}
+
+void ApolloRTCCMFD::menuSetLunarTargetingProgramPage()
+{
+	SelectPage(115);
+}
+
+void ApolloRTCCMFD::LUNTAR_TIGInput()
+{
+	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS)");
+}
+
+void ApolloRTCCMFD::LUNTAR_BTInput()
+{
+	GenericDoubleInput(&G->LUNTAR_bt_guess, "Enter burn time in seconds:", 1.0);
+}
+
+void ApolloRTCCMFD::LUNTAR_PitchInput()
+{
+	GenericDoubleInput(&G->LUNTAR_pitch_guess, "Enter estimated pitch in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::LUNTAR_YawInput()
+{
+	GenericDoubleInput(&G->LUNTAR_yaw_guess, "Enter estimated yaw in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::LUNTAR_LatInput()
+{
+	GenericDoubleInput(&G->LUNTAR_lat, "Enter desired impact latitude in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::LUNTAR_LngInput()
+{
+	GenericDoubleInput(&G->LUNTAR_lng, "Enter desired impact longitude in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::LUNTARCalc()
+{
+	G->LUNTARCalc();
+}
+
+void ApolloRTCCMFD::GenericGETInput(double *get, char *message)
+{
+	bool GenericGETInputBox(void *id, char *str, void *data);
+	oapiOpenInputBox(message, GenericGETInputBox, 0, 25, (void*)(get));
+}
+
+bool GenericGETInputBox(void *id, char *str, void *data)
+{
+	double *get2 = static_cast<double*>(data);
+
+	int hh, mm;
+	double ss, get;
+
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		*get2 = get;
+		
+		return true;
+
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::GenericDoubleInput(double *val, char *message, double factor)
+{
+	void *data2;
+
+	tempData.dVal = val;
+	tempData.factor = factor;
+	data2 = &tempData;
+
+	bool GenericDoubleInputBox(void *id, char *str, void *data);
+	oapiOpenInputBox(message, GenericDoubleInputBox, 0, 25, data2);
+}
+
+bool GenericDoubleInputBox(void *id, char *str, void *data)
+{
+	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
+	double val;
+
+	if (sscanf(str, "%lf", &val) == 1)
+	{
+		*arr->dVal = val * arr->factor;
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::GenericIntInput(int *val, char *message)
+{
+	void *data2;
+
+	tempData.iVal = val;
+	data2 = &tempData;
+
+	bool GenericIntInputBox(void *id, char *str, void *data);
+	oapiOpenInputBox(message, GenericIntInputBox, 0, 25, data2);
+}
+
+bool GenericIntInputBox(void *id, char *str, void *data)
+{
+	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
+	int val;
+
+	if (sscanf(str, "%d", &val) == 1)
+	{
+		*arr->iVal = val;
+		return true;
+	}
+	return false;
 }
 
 void ApolloRTCCMFD::menuCycleRecoveryTargetSelectionPages()
@@ -2358,29 +2379,7 @@ bool ApolloRTCCMFD::set_ManPADUllageOption(int num, double dt)
 
 void ApolloRTCCMFD::menuManPADTIG()
 {
-	bool ManPADTIGInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", ManPADTIGInput, 0, 20, (void*)this);
-}
-
-bool ManPADTIGInput(void *id, char *str, void *data)
-{
-	int hh, mm;
-	double ss, ManPADTIG;
-
-	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
-	{
-		ManPADTIG = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_ManPADTIG(ManPADTIG);
-
-		return true;
-		
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_ManPADTIG(double ManPADTIG)
-{
-	G->P30TIG = ManPADTIG;
+	GenericGETInput(&G->P30TIG, "Choose the GET for the maneuver (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuManPADDV()
@@ -2461,216 +2460,56 @@ void ApolloRTCCMFD::menuTIChaserVectorTime()
 {
 	if (GC->MissionPlanningActive)
 	{
-		bool TIChaserVectorTimeInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the chaser vector GET (Format: hhh:mm:ss), 0 or smaller for present time", TIChaserVectorTimeInput, 0, 25, (void*)this);
+		GenericGETInput(&GC->rtcc->med_k30.ChaserVectorTime, "Choose the chaser vector GET (Format: hhh:mm:ss), 0 or smaller for present time");
 	}
-}
-
-bool TIChaserVectorTimeInput(void *id, char *str, void *data)
-{
-	int hh, mm;
-	double ss, get;
-	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
-	{
-		get = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_TIChaserVectorTime(get);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TIChaserVectorTime(double get)
-{
-	GC->rtcc->med_k30.ChaserVectorTime = get;
 }
 
 void ApolloRTCCMFD::menuTITargetVectorTime()
 {
 	if (GC->MissionPlanningActive)
 	{
-		bool TITargetVectorTimeInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the target vector GET (Format: hhh:mm:ss), 0 or smaller for present time", TITargetVectorTimeInput, 0, 25, (void*)this);
+		GenericGETInput(&GC->rtcc->med_k30.TargetVectorTime, "Choose the target vector GET (Format: hhh:mm:ss), 0 or smaller for present time");
 	}
-}
-
-bool TITargetVectorTimeInput(void *id, char *str, void *data)
-{
-	int hh, mm;
-	double ss, get;
-	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
-	{
-		get = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_TITargetVectorTime(get);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TITargetVectorTime(double get)
-{
-	GC->rtcc->med_k30.TargetVectorTime = get;
 }
 
 void ApolloRTCCMFD::menuTITimeIncrement()
 {
-	bool TITimeIncrementInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Enter the time increment between the variable maneuver times:", TITimeIncrementInput, 0, 25, (void*)this);
-}
-
-bool TITimeIncrementInput(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_TITimeIncrement(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TITimeIncrement(double dt)
-{
-	GC->rtcc->med_k30.TimeStep = dt;
+	GenericDoubleInput(&GC->rtcc->med_k30.TimeStep, "Enter the time increment between the variable maneuver times:", 1.0);
 }
 
 void ApolloRTCCMFD::menuTITimeRange()
 {
-	bool TITimeRange(void *id, char *str, void *data);
-	oapiOpenInputBox("Enter the time increment between the variable maneuver times:", TITimeRange, 0, 25, (void*)this);
-}
-
-bool TITimeRange(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_TITimeRange(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TITimeRange(double dt)
-{
-	GC->rtcc->med_k30.TimeRange = dt;
+	GenericDoubleInput(&GC->rtcc->med_k30.TimeRange, "Enter the range of time for the variable maneuver times:", 1.0);
 }
 
 void ApolloRTCCMFD::t1dialogue()
 {
-	bool T1GETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss), negative time for TPI search", T1GETInput, 0, 20, (void*)this);
+	GenericGETInput(&GC->rtcc->med_k30.StartTime, "Choose the GET for the maneuver (Format: hhh:mm:ss), negative time for TPI search");
 }
 
-bool T1GETInput(void *id, char *str, void *data)
+void ApolloRTCCMFD::t2dialogue()
 {
-	int hh, mm, ss;
-	double t1time;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		t1time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_t1(t1time);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_t1(double t1)
-{
-	GC->rtcc->med_k30.StartTime = t1;
+	GenericGETInput(&GC->rtcc->med_k30.EndTime, "Choose the GET for the arrival (Format: hhh:mm:ss), negative time for TPF search");
 }
 
 void ApolloRTCCMFD::OrbAdjGETDialogue()
 {
-	bool OrbAdjGETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", OrbAdjGETInput, 0, 20, (void*)this);
-}
-
-bool OrbAdjGETInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, SPSGET;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		SPSGET = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_OrbAdjGET(SPSGET);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_OrbAdjGET(double SPSGET)
-{
-	this->G->SPSGET = SPSGET;
+	GenericGETInput(&G->SPSGET, "Choose the GET for the maneuver (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::OrbAdjRevDialogue()
 {
-	bool OrbAdjRevInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Number of revolutions:", OrbAdjRevInput, 0, 20, (void*)this);
-}
-
-bool OrbAdjRevInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_OrbAdjRevs(atoi(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_OrbAdjRevs(int N)
-{
-	G->GMPRevs = N;
+	GenericIntInput(&G->GMPRevs, "Number of revolutions:");
 }
 
 void ApolloRTCCMFD::menuSetSPQChaserThresholdTime()
 {
-	bool SPQChaserThresholdInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the SPQ chaser threshold (Format: hhh:mm:ss)", SPQChaserThresholdInput, 0, 20, (void*)this);
-}
-
-bool SPQChaserThresholdInput(void *id, char *str, void *data)
-{
-	int hh, mm;
-	double ss, get;
-	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
-	{
-		get = ss + (double)(60 * (mm + 60 * hh));
-		((ApolloRTCCMFD*)data)->set_SPQChaserThresholdTime(get);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_SPQChaserThresholdTime(double get)
-{
-	GC->rtcc->med_k01.ChaserThresholdGET = get;
+	GenericGETInput(&GC->rtcc->med_k01.ChaserThresholdGET, "Choose the SPQ chaser threshold (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuSetSPQTargetThresholdTime()
 {
-	bool SPQTargetThresholdInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the SPQ target threshold (Format: hhh:mm:ss)", SPQTargetThresholdInput, 0, 20, (void*)this);
-}
-
-bool SPQTargetThresholdInput(void *id, char *str, void *data)
-{
-	int hh, mm;
-	double ss, get;
-	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
-	{
-		get = ss + (double)(60 * (mm + 60 * hh));
-		((ApolloRTCCMFD*)data)->set_SPQTargetThresholdTime(get);
-
-		return true;
-	}
-
-	return false;
-}
-
-void ApolloRTCCMFD::set_SPQTargetThresholdTime(double get)
-{
-	GC->rtcc->med_k01.TargetThresholdGET = get;
+	GenericGETInput(&GC->rtcc->med_k01.TargetThresholdGET, "Choose the SPQ target threshold (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::SPQtimedialogue()
@@ -2720,25 +2559,7 @@ void ApolloRTCCMFD::set_SPQtime(double tig)
 
 void ApolloRTCCMFD::menuRTEDASTCodeDialogue()
 {
-	bool RTEDASTCodeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the AST code (enter 0 for manual entry):", RTEDASTCodeInput, 0, 20, (void*)this);
-}
-
-bool RTEDASTCodeInput(void *id, char *str, void *data)
-{
-	int code;
-	if (sscanf(str, "%d", &code) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_RTEDASTCode(code);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_RTEDASTCode(int code)
-{
-	GC->rtcc->med_f80.ASTCode = code;
+	GenericIntInput(&GC->rtcc->med_f80.ASTCode, "Choose the AST code (enter 0 for manual entry):");
 }
 
 void ApolloRTCCMFD::menuRTED_REFSMMAT()
@@ -4657,31 +4478,6 @@ void ApolloRTCCMFD::menuGetAGSKFactor()
 	G->GetAGSKFactor();
 }
 
-void ApolloRTCCMFD::t2dialogue()
-{
-	bool T2GETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the arrival (Format: hhh:mm:ss), negative time for TPF search", T2GETInput, 0, 20, (void*)this);
-}
-
-bool T2GETInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss;
-	double t2time;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		t2time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_t2(t2time);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_t2(double t2)
-{
-	GC->rtcc->med_k30.EndTime = t2;
-}
-
 void ApolloRTCCMFD::menuCycleK30Vehicle()
 {
 	if (GC->MissionPlanningActive)
@@ -5152,8 +4948,13 @@ bool TransferRTEMPTInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::menuGeneralMEDRequest()
 {
+	menuGeneralMEDRequest("Manual Entry Device Input:");
+}
+
+void ApolloRTCCMFD::menuGeneralMEDRequest(char *message)
+{
 	bool GeneralMEDRequestInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Manual Entry Device Input:", GeneralMEDRequestInput, 0, 50, (void*)this);
+	oapiOpenInputBox(message, GeneralMEDRequestInput, 0, 50, (void*)this);
 }
 
 bool GeneralMEDRequestInput(void *id, char *str, void *data)
@@ -5475,25 +5276,7 @@ void ApolloRTCCMFD::menuSwitchMapUpdate()
 
 void ApolloRTCCMFD::menuSetMapUpdateGET()
 {
-	bool MapUpdateGETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the anchor vector (Format: hhh:mm:ss)", MapUpdateGETInput, 0, 20, (void*)this);
-}
-
-bool MapUpdateGETInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, t1time;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		t1time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_MapUpdateGET(t1time);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MapUpdateGET(double time)
-{
-	G->mapUpdateGET = time;
+	GenericGETInput(&G->mapUpdateGET, "Choose the GET for the anchor vector (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuSwitchUplinkInhibit()
@@ -5728,20 +5511,7 @@ void ApolloRTCCMFD::cycleREFSMMATHeadsUp()
 
 void ApolloRTCCMFD::TwoImpulseOffset()
 {
-	bool MPTP51Input(void *id, char *str, void *data);
-	oapiOpenInputBox("Format: P51, Delta Height, Phase Angle, Elevation Angle, Travel Angle; (leave open for no update)", MPTP51Input, 0, 50, (void*)this);
-}
-
-bool MPTP51Input(void *id, char *str, void *data)
-{
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
-	return true;
-}
-
-bool MPTP52Input(void *id, char *str, void *data)
-{
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
-	return true;
+	menuGeneralMEDRequest("Format: P51, Delta Height, Phase Angle, Elevation Angle, Travel Angle; (leave open for no update)");
 }
 
 void ApolloRTCCMFD::cycleVECDirOpt()
@@ -5802,9 +5572,8 @@ void ApolloRTCCMFD::StoreStatus(void) const
 
 void ApolloRTCCMFD::RecallStatus(void)
 {
-	screen = screenData.screen;
+	SelectPage(screenData.screen);
 	RTETradeoffScreen = screenData.RTETradeoffScreen;
-	coreButtons.SelectPage(this, screen);
 }
 
 ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
@@ -6281,152 +6050,37 @@ void ApolloRTCCMFD::set_TLMCCLOPCRevs(int m, int n)
 
 void ApolloRTCCMFD::menuSetLOIVectorTime()
 {
-	bool LOIVectorTimeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the vector time for LOI computation:", LOIVectorTimeInput, 0, 20, (void*)this);
-}
-
-bool LOIVectorTimeInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, Lmktime;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		Lmktime = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LOIVectorTime(Lmktime);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOIVectorTime(double time)
-{
-	GC->rtcc->med_k18.VectorTime = time;
+	GenericGETInput(&GC->rtcc->med_k18.VectorTime, "Choose the vector time for LOI computation:");
 }
 
 void ApolloRTCCMFD::menuSetLOIApo()
 {
-	bool LOIApoInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the apocynthion altitude:", LOIApoInput, 0, 20, (void*)this);
-}
-
-bool LOIApoInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOIApo(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOIApo(double alt)
-{
-	GC->rtcc->med_k18.HALOI1 = alt;
+	GenericDoubleInput(&GC->rtcc->med_k18.HALOI1, "Choose the apocynthion altitude:", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIPeri()
 {
-	bool LOIPeriInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the perilune altitude:", LOIPeriInput, 0, 20, (void*)this);
-}
-
-bool LOIPeriInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOIPeri(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOIPeri(double alt)
-{
-	GC->rtcc->med_k18.HPLOI1 = alt;
+	GenericDoubleInput(&GC->rtcc->med_k18.HPLOI1, "Choose the perilune altitude:", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIMaxDVPos()
 {
-	bool LOIMaxDVPosInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose max DV for positive solution:", LOIMaxDVPosInput, 0, 20, (void*)this);
-}
-
-bool LOIMaxDVPosInput(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOIMaxDVPos(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOIMaxDVPos(double dv)
-{
-	GC->rtcc->med_k18.DVMAXp = dv;
+	GenericDoubleInput(&GC->rtcc->med_k18.DVMAXp, "Choose max DV for positive solution:", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIMaxDVNeg()
 {
-	bool LOIMaxDVNegInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose max DV for negative solution:", LOIMaxDVNegInput, 0, 20, (void*)this);
-}
-
-bool LOIMaxDVNegInput(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOIMaxDVNeg(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOIMaxDVNeg(double dv)
-{
-	GC->rtcc->med_k18.DVMAXm = dv;
+	GenericDoubleInput(&GC->rtcc->med_k18.DVMAXm, "Choose max DV for negative solution:", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOI_HALLS()
 {
-	bool LOI_HALLSInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the apolune altitude at the landing site:", LOI_HALLSInput, 0, 20, (void*)this);
-}
-
-bool LOI_HALLSInput(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOI_HALLS(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOI_HALLS(double ha)
-{
-	GC->rtcc->PZLOIPLN.HA_LLS = ha;
+	GenericDoubleInput(&GC->rtcc->PZLOIPLN.HA_LLS, "Choose the apolune altitude at the landing site:", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOI_HPLLS()
 {
-	bool LOI_HPLLSInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the perilune altitude at the landing site:", LOI_HPLLSInput, 0, 20, (void*)this);
-}
-
-bool LOI_HPLLSInput(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOI_HPLLS(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOI_HPLLS(double hp)
-{
-	GC->rtcc->PZLOIPLN.HP_LLS = hp;
+	GenericDoubleInput(&GC->rtcc->PZLOIPLN.HP_LLS, "Choose the perilune altitude at the landing site:", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIDW()
@@ -6583,65 +6237,17 @@ void ApolloRTCCMFD::set_TLCCAltMode5(double alt)
 
 void ApolloRTCCMFD::menuSetLOIDesiredAzi()
 {
-	bool LOIAziInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the desired approach azimuth:", LOIAziInput, 0, 20, (void*)this);
-}
-
-bool LOIAziInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOIDesiredAzi(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOIDesiredAzi(double azi)
-{
-	this->GC->rtcc->med_k18.psi_DS = azi;
+	GenericDoubleInput(&GC->rtcc->med_k18.psi_DS, "Choose the desired approach azimuth:", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIMinAzi()
 {
-	bool LOIMinAziInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the minimum approach azimuth:", LOIMinAziInput, 0, 20, (void*)this);
-}
-
-bool LOIMinAziInput(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOIMinAzi(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOIMinAzi(double azi)
-{
-	this->GC->rtcc->med_k18.psi_MN = azi;
+	GenericDoubleInput(&GC->rtcc->med_k18.psi_MN, "Choose the minimum approach azimuth:", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIMaxAzi()
 {
-	bool LOIMaxAziInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the maximum approach azimuth:", LOIMaxAziInput, 0, 20, (void*)this);
-}
-
-bool LOIMaxAziInput(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_LOIMaxAzi(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LOIMaxAzi(double azi)
-{
-	this->GC->rtcc->med_k18.psi_MX = azi;
+	GenericDoubleInput(&GC->rtcc->med_k18.psi_MX, "Choose the maximum approach azimuth:", 1.0);
 }
 
 void ApolloRTCCMFD::menuLOICalc()

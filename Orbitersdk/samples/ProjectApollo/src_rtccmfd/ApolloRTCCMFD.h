@@ -24,6 +24,13 @@
 #include "saturnv.h"
 #include "LEM.h"
 
+struct RTCCMFDInputBoxData
+{
+	double *dVal;
+	int *iVal;
+	double factor;
+};
+
 class ApolloRTCCMFD: public MFD2 {
 public:
 	ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im);
@@ -40,25 +47,18 @@ public:
 
 	bool Text(oapi::Sketchpad *skp, int x, int y, const std::string & str);
 
+	void SelectPage(int page);
 	void menuTIChaserVectorTime();
-	void set_TIChaserVectorTime(double get);
 	void menuTITargetVectorTime();
-	void set_TITargetVectorTime(double get);
 	void menuTITimeIncrement();
-	void set_TITimeIncrement(double dt);
 	void menuTITimeRange();
-	void set_TITimeRange(double dt);
 	void t1dialogue();
-	void set_t1(double t1);
 	void t2dialogue();
-	void set_t2(double t2);
 	void menuCycleK30Vehicle();
 	void SPQtimedialogue();
 	void set_SPQtime(double tig);
 	void menuSetSPQChaserThresholdTime();
-	void set_SPQChaserThresholdTime(double get);
 	void menuSetSPQTargetThresholdTime();
-	void set_SPQTargetThresholdTime(double get);
 	void DKIDHdialogue();
 	void set_DKIDH(double DH);
 	void SPQDHdialogue();
@@ -89,9 +89,7 @@ public:
 	void GMPInput4Dialogue();
 	void set_GMPInput4(double val);
 	void OrbAdjGETDialogue();
-	void set_OrbAdjGET(double SPSGET);
 	void OrbAdjRevDialogue();
-	void set_OrbAdjRevs(int N);
 	void GPMPCalc();
 	void menuCycleGMPManeuverVehicle();
 	void menuCycleGMPManeuverPoint();
@@ -134,7 +132,6 @@ public:
 	void menuRTED_REFSMMAT();
 	void set_RTED_REFSMMAT(char *str);
 	void menuRTEDASTCodeDialogue();
-	void set_RTEDASTCode(int code);
 	void menuSetRTEDUllage();
 	void set_RTEDUllage(int thrusters, double duration);
 	void menuCycleRTEDTrimAnglesOption();
@@ -159,6 +156,7 @@ public:
 	void menuTransferRTEToMPT();
 	bool set_RTESolution(char *str);
 	void menuGeneralMEDRequest();
+	void menuGeneralMEDRequest(char *message);
 	void GeneralMEDRequest(char *str);
 	void set_entryrange(double range);
 	void EntryRangeDialogue();
@@ -179,7 +177,6 @@ public:
 	void menuManPADUllage();
 	bool set_ManPADUllageOption(int num, double dt);
 	void menuManPADTIG();
-	void set_ManPADTIG(double ManPADTIG);
 	void menusextantstartime();
 	void set_sextantstartime(double time);
 	void menuManPADDV();
@@ -203,7 +200,6 @@ public:
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSetMapUpdateGET();
-	void set_MapUpdateGET(double time);
 	void menuSwitchUplinkInhibit();
 	void menuCycleSPQMode();
 	void set_CDHtimemode();
@@ -259,25 +255,15 @@ public:
 	void menuSetTLMCCLOPCRevs();
 	void set_TLMCCLOPCRevs(int m, int n);
 	void menuSetLOIVectorTime();
-	void set_LOIVectorTime(double get);
 	void menuSetLOIApo();
-	void set_LOIApo(double alt);
 	void menuSetLOIPeri();
-	void set_LOIPeri(double alt);
 	void menuSetLOIDesiredAzi();
-	void set_LOIDesiredAzi(double azi);
 	void menuSetLOIMinAzi();
-	void set_LOIMinAzi(double azi);
 	void menuSetLOIMaxAzi();
-	void set_LOIMaxAzi(double azi);
 	void menuSetLOIMaxDVPos();
-	void set_LOIMaxDVPos(double dv);
 	void menuSetLOIMaxDVNeg();
-	void set_LOIMaxDVNeg(double dv);
 	void menuSetLOI_HALLS();
-	void set_LOI_HALLS(double ha);
 	void menuSetLOI_HPLLS();
-	void set_LOI_HPLLS(double hp);
 	void menuSetLOIDHBias();
 	void set_LOIDHBias(double dh);
 	void menuSetLOIDW();
@@ -808,7 +794,17 @@ public:
 	void menuAGCTimeUpdateUplink();
 	void menuAGCLiftoffTimeComparision();
 	void set_AGCLiftoffTimeComparision(double tim);
-
+	void menuSetLunarTargetingProgramPage();
+	void LUNTAR_TIGInput();
+	void LUNTAR_BTInput();
+	void LUNTAR_PitchInput();
+	void LUNTAR_YawInput();
+	void LUNTAR_LatInput();
+	void LUNTAR_LngInput();
+	void LUNTARCalc();
+	void GenericGETInput(double *get, char *message);
+	void GenericDoubleInput(double *val, char* message, double factor);
+	void GenericIntInput(int *val, char* message);
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;
@@ -831,7 +827,9 @@ private:
 
 	ARCore* G;
 	AR_GCore* GC;
-	ApolloRTCCMFDButtons coreButtons;	
+	ApolloRTCCMFDButtons coreButtons;
+
+	RTCCMFDInputBoxData tempData;
 };
 
 #endif // !__ApolloRTCCMFD_H
