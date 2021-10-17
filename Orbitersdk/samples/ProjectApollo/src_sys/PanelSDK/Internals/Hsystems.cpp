@@ -328,7 +328,7 @@ void h_substance::operator -=(h_substance add) {
 
 double h_substance::VAPENTH()
 {
-	if(Temp > CRITICAL_T[subst_type] || Temp < 0.0){return 0.0;}
+	if(Temp > CRITICAL_T[subst_type] || Temp <= 0.0){return 0.0;}
 
 	
 	return (R_CONST/1000*CRITICAL_T[subst_type]*
@@ -343,16 +343,20 @@ double h_substance::VAPENTH()
 
 double h_substance::Condense(double dt) {
 
+	double vapenth_temporary = VAPENTH();
+
 	if (vapor_mass < dt)
 		dt = vapor_mass;
 
 	vapor_mass -= dt;
-	Q += VAPENTH() * dt;
+	Q += vapenth_temporary * dt;
 
-	return VAPENTH() * dt;
+	return vapenth_temporary * dt;
 }
 
 double h_substance::Boil(double dt) {
+
+	double vapenth_temporary = VAPENTH();
 
 	if (vapor_mass + dt > mass - 1.0)
 		dt = mass - 1.0 - vapor_mass;
@@ -360,12 +364,12 @@ double h_substance::Boil(double dt) {
 	if (dt < 0)
 		return 0;
 
-	if (Q < VAPENTH() * dt)
-		dt = Q / VAPENTH();
+	if (Q < vapenth_temporary * dt)
+		dt = Q / vapenth_temporary;
 
 	vapor_mass += dt;
-	Q -= VAPENTH() * dt;
-	return -VAPENTH() * dt;
+	Q -= vapenth_temporary * dt;
+	return -vapenth_temporary * dt;
 }
 
 double h_substance::BoilAll() {
@@ -536,7 +540,13 @@ void h_volume::ThermalComps(double dt) {
 
 	for (i = 0; i < MAX_SUB; i++) {
 		//recompute the vapor press
-		vap_press = exp(ANTIONE_A[composition[i].subst_type]-(ANTIONE_B[composition[i].subst_type]/Temp))*1E5; //this is vapor pressure of current substance
+
+		if (Temp <= 0.0) {
+			vap_press = 0.0;
+		}
+		else {
+			vap_press = exp(ANTIONE_A[composition[i].subst_type] - (ANTIONE_B[composition[i].subst_type] / Temp))*1E5; //this is vapor pressure of current substance
+		}
 		//need to boil material if vapor pressure > pressure, otherwise condense
 		if (vap_press > Press)	
 			Q += composition[i].Boil(dt);
