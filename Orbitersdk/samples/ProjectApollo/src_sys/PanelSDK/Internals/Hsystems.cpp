@@ -326,9 +326,9 @@ void h_substance::operator -=(h_substance add) {
 	}
 }
 
-double h_substance::VAPENTH()
+double h_substance::VAPENTH() const
 {
-	if(Temp > CRITICAL_T[subst_type] || Temp <= 0.0){return 0.0;}
+	if(Temp > CRITICAL_T[subst_type] || Temp <= 0.0) return 0.0;
 
 	
 	return (R_CONST/1000*CRITICAL_T[subst_type]*

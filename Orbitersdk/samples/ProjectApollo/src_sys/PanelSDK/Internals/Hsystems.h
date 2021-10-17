@@ -80,7 +80,7 @@ class h_substance
 	void operator+= (h_substance);	//add some block to this..
 	h_substance operator* (float);	//returns a subst block that is "Ratio" part of the main (ie. 0.5 will generate half of the block)
 	void operator-= (h_substance);  //substact this block from itself
-	double VAPENTH();
+	double VAPENTH() const;
 	double Condense(double dt);
 	double Boil(double dt);
 	double BoilAll();
