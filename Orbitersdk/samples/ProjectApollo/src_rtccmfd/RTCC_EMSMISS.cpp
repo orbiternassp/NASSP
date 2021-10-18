@@ -300,14 +300,14 @@ void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterManeuver()
 	double dmass = AuxTableIndicator.MainFuelUsed + AuxTableIndicator.RCSFuelUsed;
 	switch (mpt->mantable[i].TVC)
 	{
-	case 1:
+	case RTCC_MANVEHICLE_CSM:
 		state.WeightsTable.CSMWeight -= dmass;
 		break;
-	case 2:
+	case RTCC_MANVEHICLE_SIVB:
 		state.WeightsTable.SIVBWeight -= dmass;
 		break;
-	case 3:
-		if (mpt->mantable[i].Thruster = RTCC_ENGINETYPE_LMDPS)
+	case RTCC_MANVEHICLE_LM:
+		if (mpt->mantable[i].Thruster == RTCC_ENGINETYPE_LMDPS)
 		{
 			state.WeightsTable.LMDscWeight -= dmass;
 		}
@@ -655,9 +655,10 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 	{
 		CurrentWeightsTable.CC = mpt->mantable[i].CommonBlock.ConfigCode;
 
-		CurrentWeightsTable.ConfigWeight = CurrentWeightsTable.ConfigArea = CurrentWeightsTable.CSMArea = CurrentWeightsTable.LMAscArea = CurrentWeightsTable.LMDscArea = 0.0;
+		CurrentWeightsTable.ConfigWeight = CurrentWeightsTable.CSMWeight = CurrentWeightsTable.LMAscWeight = CurrentWeightsTable.LMDscWeight = CurrentWeightsTable.SIVBWeight = 0.0;
+		CurrentWeightsTable.ConfigArea = CurrentWeightsTable.CSMArea = CurrentWeightsTable.LMAscArea = CurrentWeightsTable.LMDscArea = 0.0;
 
-		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_C])
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_C])
 		{
 			CurrentWeightsTable.CSMWeight = state.WeightsTable.CSMWeight;
 			CurrentWeightsTable.ConfigWeight += CurrentWeightsTable.CSMWeight;
@@ -666,7 +667,7 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 				CurrentWeightsTable.ConfigArea = state.WeightsTable.CSMArea;
 			}
 		}
-		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_S])
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_S])
 		{
 			CurrentWeightsTable.SIVBWeight = state.WeightsTable.SIVBWeight;
 			CurrentWeightsTable.ConfigWeight += CurrentWeightsTable.SIVBWeight;
@@ -675,7 +676,7 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 				CurrentWeightsTable.ConfigArea = state.WeightsTable.SIVBArea;
 			}
 		}
-		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_A])
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_A])
 		{
 			CurrentWeightsTable.LMAscWeight = state.WeightsTable.LMAscWeight;
 			CurrentWeightsTable.ConfigWeight += CurrentWeightsTable.LMAscWeight;
@@ -685,7 +686,7 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 			}
 		}
 
-		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_D])
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_D])
 		{
 			CurrentWeightsTable.LMDscWeight = state.WeightsTable.LMDscWeight;
 			CurrentWeightsTable.ConfigWeight += CurrentWeightsTable.LMDscWeight;
@@ -907,7 +908,21 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 	else
 	{
 		EphemerisData SV;
-		pRTCC->ELFECH(state.StateVector.GMT, RTCC_MPT_CSM, SV);
+		double gmt_sv;
+		//If desired GMT is before start of CSM ephemeris use start of CSM ephemeris instead
+		if (state.StateVector.GMT < pRTCC->EZEPH1.EPHEM.Header.TL)
+		{
+			gmt_sv = pRTCC->EZEPH1.EPHEM.Header.TL;
+		}
+		else
+		{
+			gmt_sv = state.StateVector.GMT;
+		}
+		if (pRTCC->ELFECH(gmt_sv, RTCC_MPT_CSM, SV))
+		{
+			nierror = 1;
+			return;
+		}
 		integin.sv_CSM.R = SV.R;
 		integin.sv_CSM.V = SV.V;
 		integin.sv_CSM.MJD = OrbMech::MJDfromGET(SV.GMT, pRTCC->SystemParameters.GMTBASE);

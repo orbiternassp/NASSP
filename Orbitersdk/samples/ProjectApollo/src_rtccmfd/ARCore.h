@@ -13,6 +13,7 @@
 #include "saturn.h"
 #include "mcc.h"
 #include "rtcc.h"
+#include "LunarTargetingProgram.h"
 #include <queue>
 
 struct ApolloRTCCMFDData {  // global data storage
@@ -143,6 +144,7 @@ public:
 	void VectorCompareDisplayCalc();
 	void UpdateTLITargetTable();
 	void GenerateSpaceDigitalsNoMPT();
+	void LUNTARCalc();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -396,6 +398,15 @@ public:
 	double RTCCClockTime[2];
 	double DeltaClockTime[2];
 	double DesiredRTCCLiftoffTime[2];
+
+	//LUNAR TARGETING PROGRAM
+	double LUNTAR_lat;
+	double LUNTAR_lng;
+	double LUNTAR_bt_guess;
+	double LUNTAR_pitch_guess;
+	double LUNTAR_yaw_guess;
+	double LUNTAR_TIG;
+	LunarTargetingProgramOutput LUNTAR_Output;
 
 private:
 

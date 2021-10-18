@@ -25,6 +25,7 @@
     <ClInclude Include="..\..\src_rtccmfd\LDPP.h" />
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\LOITargeting.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LunarTargetingProgram.h" />
     <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.h" />
@@ -51,6 +52,7 @@
     <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LunarTargetingProgram.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LWP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.cpp" />

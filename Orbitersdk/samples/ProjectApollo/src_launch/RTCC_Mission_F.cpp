@@ -114,9 +114,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_m50.Table = RTCC_MPT_CSM;
 		med_m50.WeightGET = GETfromGMT(RTCCPresentTimeGMT());
 		PMMWTC(50);
+
 		//Trajectory Update
-		EphemerisData sv0 = StateVectorCalcEphem(calcParams.src);
-		PMSVCT(4, RTCC_MPT_CSM, &sv0, false, "APIC001");
+		StateVectorTableEntry sv0;
+		sv0.Vector = StateVectorCalcEphem(calcParams.src);
+		sv0.LandingSiteIndicator = false;
+		sv0.VectorCode = "APIC001";
+
+		PMSVCT(4, RTCC_MPT_CSM, &sv0);
 
 		//Add TLI to MPT
 		if (GETEval2(3.0*3600.0))

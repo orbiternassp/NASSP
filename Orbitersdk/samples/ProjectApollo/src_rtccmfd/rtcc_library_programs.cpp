@@ -136,9 +136,18 @@ int RTCC::ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, Ephemeri
 	EPHEM.Header.TUP = maintable->EPHEM.Header.TUP;
 	EPHEM.Header.NumVec = EPHEM.table.size();
 	EPHEM.Header.Offset = 0;
-	EPHEM.Header.TL = EPHEM.table.front().GMT;
-	EPHEM.Header.TR = EPHEM.table.back().GMT;
 	EPHEM.Header.CSI = 0;
+	if (EPHEM.Header.NumVec > 0)
+	{
+		EPHEM.Header.TL = EPHEM.table.front().GMT;
+		EPHEM.Header.TR = EPHEM.table.back().GMT;
+	}
+	else
+	{
+		EPHEM.Header.TL = maintable->EPHEM.Header.TL;
+		EPHEM.Header.TR = maintable->EPHEM.Header.TR;
+		return 1;
+	}
 
 	return 0;
 }
@@ -900,7 +909,7 @@ int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 	{
 		return 1;
 	}
-	u = unit(sv.R);
+	u = unit(sv_out.R);
 	lat = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
 	lng = atan2(u.y, u.x);
 	if (sv.RBI == BODY_EARTH)
@@ -1605,7 +1614,7 @@ RTCC_PLAWDT_2_D:
 		goto RTCC_PLAWDT_3_F;
 	}
 	//Maneuver not current?
-	if (abs(mpt->CommonBlock.TUP) != abs(mpt->mantable[K - 1].CommonBlock.TUP))
+	if (K > mpt->LastExecutedManeuver && (abs(mpt->CommonBlock.TUP) != abs(mpt->mantable[K - 1].CommonBlock.TUP)))
 	{
 		out.Err = 2;
 		K = K - 1;

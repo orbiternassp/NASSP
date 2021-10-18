@@ -850,6 +850,13 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		DeltaClockTime[i] = 0.0;
 		DesiredRTCCLiftoffTime[i] = 0.0;
 	}
+
+	LUNTAR_lat = 0.0;
+	LUNTAR_lng = 0.0;
+	LUNTAR_bt_guess = 10.0;
+	LUNTAR_pitch_guess = 0.0;
+	LUNTAR_yaw_guess = 0.0;
+	LUNTAR_TIG = 0.0;
 }
 
 ARCore::~ARCore()
@@ -1077,6 +1084,11 @@ void ARCore::SpaceDigitalsMSKRequest()
 void ARCore::GenerateSpaceDigitalsNoMPT()
 {
 	startSubthread(11);
+}
+
+void ARCore::LUNTARCalc()
+{
+	startSubthread(50);
 }
 
 void ARCore::CycleNextStationContactsDisplay()
@@ -4667,8 +4679,68 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 50: //Spare
+	case 50: //Lunar Targeting Program (S-IVB Lunar Impact)
 	{
+		if (target == NULL)
+		{
+			Result = 0;
+			break;
+		}
+
+		IU *iu = NULL;
+		LVDCSV * lvdc = NULL;
+
+		bool uplinkaccepted = false;
+
+		if (!stricmp(target->GetClassName(), "ProjectApollo\\Saturn5") ||
+			!stricmp(target->GetClassName(), "ProjectApollo/Saturn5")) {
+			Saturn *iuv = (Saturn *)target;
+
+			iu = iuv->GetIU();
+		}
+		else if (!stricmp(target->GetClassName(), "ProjectApollo\\sat5stg3") ||
+			!stricmp(target->GetClassName(), "ProjectApollo/sat5stg3"))
+		{
+			SIVB *iuv = (SIVB *)target;
+
+			iu = iuv->GetIU();
+		}
+		if (iu == NULL)
+		{
+			Result = 0;
+			break;
+		}
+		lvdc = (LVDCSV*)((IUSV*)iu)->GetLVDC();
+
+		if (lvdc == NULL)
+		{
+			Result = 0;
+			break;
+		}
+
+		if (lvdc->LVDC_Timebase != 8)
+		{
+			//TB8 not enabled yet
+			LUNTAR_Output.err = 3;
+			Result = 0;
+			break;
+		}
+
+		LunarTargetingProgramInput in;
+		
+		in.sv_in = GC->rtcc->StateVectorCalcEphem(target);
+		in.mass = target->GetMass();
+		in.lat_tgt = LUNTAR_lat;
+		in.lng_tgt = LUNTAR_lng;
+		in.bt_guess = LUNTAR_bt_guess;
+		in.pitch_guess = LUNTAR_pitch_guess;
+		in.yaw_guess = LUNTAR_yaw_guess;
+		in.tig_guess = GC->rtcc->GMTfromGET(LUNTAR_TIG);
+		in.TB8 = lvdc->TB8;
+
+		LunarTargetingProgram luntar(GC->rtcc);
+		luntar.Call(in, LUNTAR_Output);
+
 		Result = 0;
 	}
 	break;

@@ -1969,6 +1969,7 @@ struct StationContact
 
 struct OrbitStationContactsTable
 {
+	int Num = 0;
 	StationContact Stations[45];
 };
 
@@ -2790,7 +2791,7 @@ public:
 	//Vehicle Orientation Change Processor
 	void PMMUDT(int L, unsigned man, int headsup, int trim);
 	//Vector Routing Load Module
-	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false, std::string StationID = "");
+	void PMSVCT(int QUEID, int L, StateVectorTableEntry* sv0 = NULL);
 	//Vector Fetch Load Module
 	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	//Maneuver Execution Program
@@ -2807,9 +2808,9 @@ public:
 	void GMSPRINT(std::string source, int n);
 	void GMSPRINT(std::string source, std::vector<std::string> message);
 	//Trajectory Update Control Module
-	void EMSTRAJ(EphemerisData sv, int L, bool landed, std::string StationID);
+	void EMSTRAJ(StateVectorTableEntry sv, int L);
 	//Ephemeris Storage and Control Module
-	EphemerisData EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGMT, bool landed = false);
+	StateVectorTableEntry EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, double PresentGMT);
 	//Miscellaneous Numerical Integration Control Module
 	void NewEMSMISS(EMSMISSInputTable *in);
 	//Lunar Surface Ephemeris Generator
@@ -2821,7 +2822,7 @@ public:
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Anchor Vector Maintenance Module
-	void EMGVECSTInput(int L, EphemerisData sv, bool landed, std::string StationID);
+	void EMGVECSTInput(int L, StateVectorTableEntry sv);
 	int EMGVECSTOutput(int L, EphemerisData &sv);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
@@ -3486,14 +3487,6 @@ public:
 	ExperimentalSiteAcquisitionTable EZDPSAD2;
 	LandmarkAcquisitionTable EZLANDU1;
 	LunarLaunchTargetingTable PZLLTT;
-
-	struct StateVectorTableEntry
-	{
-		EphemerisData Vector;
-		int ID = -1;
-		std::string VectorCode;
-		bool LandingSiteIndicator = false;
-	};
 
 	struct EvaluationVectorTable
 	{
@@ -4591,7 +4584,7 @@ public:
 	{
 		std::deque<OnlineMonitorMessage> data;
 		std::string TextBuffer[3];
-		double DoubleBuffer[4];
+		double DoubleBuffer[8];
 		int IntBuffer[2];
 		VECTOR3 VectorBuffer[2];
 		MATRIX3 MatrixBuffer;
@@ -4657,9 +4650,10 @@ private:
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
-	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res);
+	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
 	//Horizon Crossing Subprogram
-	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions);
+	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
+	bool EMXINGLunarOccultation(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, double gmt, VECTOR3 R_S_equ, double &g_func, LunarStayTimesTable *LUNSTAY);
 	int CapeCrossingRev(int L, double GMT);
 	double CapeCrossingGMT(int L, int rev);
 	double CapeCrossingFirst(int L);
