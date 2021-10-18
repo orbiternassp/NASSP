@@ -72,7 +72,6 @@ EDS::EDS(IU *iu)
 	SCControlEnableRelay = false;
 	LVAttRefFail1 = false;
 	LVAttRefFail2 = false;
-	IUCommandSystemEnable = false;
 	LVEnginesCutoffCommand1 = false;
 	LVEnginesCutoffCommand2 = false;
 	LVEnginesCutoffCommand3 = false;
@@ -636,6 +635,7 @@ EDS1B::EDS1B(IU *iu) : EDS(iu)
 		SIThrustNotOK[i] = false;
 		ThrustOKSignal[i] = false;
 	}
+	IUCommandSystemEnable = true;
 }
 
 void EDS1B::Timestep(double simdt)
@@ -776,6 +776,7 @@ EDSSV::EDSSV(IU *iu) : EDS(iu)
 	SIIEngineOutIndicationA = false;
 	SIIEngineOutIndicationB = false;
 	SIIEDSCutoff = false;
+	IUCommandSystemEnable = false;
 }
 
 bool EDSSV::GetSIIInboardEngineOut()
