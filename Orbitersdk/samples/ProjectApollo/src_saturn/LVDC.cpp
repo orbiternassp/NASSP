@@ -3504,6 +3504,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	MX_phi_T = _M(0,0,0,0,0,0,0,0,0);
 	MGA = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	MSA = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	MEG = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	//TABLE15 and TABLE 25
 	TABLE15[0] = {};
 	TABLE15[1] = {};
@@ -3554,6 +3555,12 @@ void LVDCSV::Init(){
 	Drag_Area[2] = -2.1771971;
 	Drag_Area[3] = -0.28074902;
 	Drag_Area[4] = -5.8764139;
+
+	VTIM[0] = 1800.0;
+	VTIM[1] = 4300.0;
+	VTIM[2] = 99999999.9;
+	VTIM[3] = 99999999.9;
+
 	// PITCH POLYNOMIAL (Apollo 11)
 	Fx[1][0] = 0.104707442e1;
 	Fx[1][1] = -0.147669484;
@@ -9820,8 +9827,8 @@ VECTOR3 LVDCSV::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 
 VECTOR3 LVDCSV::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
 {
-	fprintf(lvlog, "DRAG SUBROUTINE\r\n");
-	fprintf(lvlog, "Rvec = %f %f %f Vvec = %f %f %f\r\n", Rvec.x, Rvec.y, Rvec.z, Vvec.x, Vvec.y, Vvec.z);
+	//fprintf(lvlog, "DRAG SUBROUTINE\r\n");
+	//fprintf(lvlog, "Rvec = %f %f %f Vvec = %f %f %f\r\n", Rvec.x, Rvec.y, Rvec.z, Vvec.x, Vvec.y, Vvec.z);
 	//Hack for old scenarios. Remove at some point
 	if (length(W_ES) == 0.0)
 	{
@@ -9840,15 +9847,15 @@ VECTOR3 LVDCSV::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
 	{
 		rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
 	}
-	fprintf(lvlog, "h = %f rho = %e\r\n", h, rho);
+	//fprintf(lvlog, "h = %f rho = %e\r\n", h, rho);
 	V_R = Vvec - crossp(W_ES, Rvec);
 	v_R = length(V_R);
-	fprintf(lvlog, "V_R = %f %f %f v_R = %f\r\n", V_R.x, V_R.y, V_R.z, v_R);
+	//fprintf(lvlog, "V_R = %f %f %f v_R = %f\r\n", V_R.x, V_R.y, V_R.z, v_R);
 	cos_alpha = 1.0 / v_R * (V_R.x*cos(Att.y)*cos(Att.z)+V_R.y*sin(Att.z)-V_R.z*sin(Att.y)*cos(Att.z));
 	drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
-	fprintf(lvlog, "cos_alpha = %f drag_area = %f\r\n", cos_alpha, drag_area);
+	//fprintf(lvlog, "cos_alpha = %f drag_area = %f\r\n", cos_alpha, drag_area);
 	VECTOR3 A_DS = -V_R * rho * drag_area*K_D*v_R;
-	fprintf(lvlog, "A_DS = %e %e %e\r\n", A_DS.x, A_DS.y, A_DS.z);
+	//fprintf(lvlog, "A_DS = %e %e %e\r\n", A_DS.x, A_DS.y, A_DS.z);
 	return A_DS;
 }
 
@@ -9859,14 +9866,13 @@ VECTOR3 LVDCSV::VentSubroutine(VECTOR3 Att)
 		return _V(0, 0, 0);
 	}
 
-	fprintf(lvlog, "VENT SUBROUTINE\r\n");
+	//fprintf(lvlog, "VENT SUBROUTINE\r\n");
 	for (i = 0;i < 4;i++)
 	{
 		if (LVDC_TB_ETime < VTIM[i]) break;
 	}
-
 	VECTOR3 A_V = _V(cos(Att.y)*cos(Att.z), sin(Att.z), -sin(Att.y)*cos(Att.z))*VENTA[i];
-	fprintf(lvlog, "Segment = %d Vent Acceleration = %f %f %f\r\n", i, A_V.x, A_V.y, A_V.z);
+	//fprintf(lvlog, "Segment = %d Vent Acceleration = %f %f %f\r\n", i, A_V.x, A_V.y, A_V.z);
 	return A_V;
 }
 

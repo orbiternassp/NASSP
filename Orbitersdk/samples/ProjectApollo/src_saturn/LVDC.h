@@ -528,7 +528,6 @@ private:								// Saturn LV
 	double VENTA[5];								// Orbital vent accelerations
 	double VTIM[4];									// Segment switch times for orbital vent accelerations measured from TB5
 
-
 	// LVDC software variables, NOT PAD-LOADED
 	double Azimuth;									// Azimuth
 	double Inclination;								// Inclination
