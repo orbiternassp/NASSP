@@ -3569,18 +3569,27 @@ void Saturn::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 
-	double offset = 0.0;
+	double offset;
+	double APSMass;
 	if (SaturnType == SAT_SATURN1B)
-		offset=7.7;
+	{
+		offset = 7.7;
+		APSMass = S4B_APS_FUEL_PER_TANK_SIB;
+	}
+	else
+	{
+		offset = 0.0;
+		APSMass = S4B_APS_FUEL_PER_TANK_SV;
+	}
 
 	if (!ph_aps1)
 	{
-		ph_aps1 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK);
+		ph_aps1 = CreatePropellantResource(APSMass);
 	}
 
 	if (!ph_aps2)
 	{
-		ph_aps2 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK);
+		ph_aps2 = CreatePropellantResource(APSMass);
 	}
 
 	th_aps_rot[0] = CreateThruster(_V(0, ATTCOOR2 + 0.15, TRANZ - 0.25 + offset), _V(0, -1, 0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
