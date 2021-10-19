@@ -166,6 +166,9 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	dtt_2 = 0;
 	DT_N = 0.0;
 	DT_N1 = DT_N2 = DT_N3 = DT_N4 = DT_N5 = DT_N6 = 0.0;
+	for (x = 0; x < 5; x++) {
+		Drag_Area[x] = 0;
+	}
 	MS25DT = 0.0;
 	MS04DT = 0.0;
 	dV = 0;
@@ -188,6 +191,9 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	J = 0;
 	D = 0;
 	H = 0;
+	h = 0;
+	h_1 = 0;
+	h_2 = 0;
 	J_1 = 0;
 	J_2 = 0;
 	Jt_2 = 0;
@@ -198,6 +204,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	K_3 = 0;
 	K_4 = 0;
 	K_5 = 0;
+	K_D = 0;
 	K_p = 0;
 	K_y = 0;
 	K_r = 0;
@@ -247,6 +254,10 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	R = 0;
 	ROV = 0;
 	R_T = 0;
+	for (x = 0; x < 6; x++) {
+		Rho[x] = 0;
+	}
+	rho_c = 0;
 	S_1 = 0;
 	S_2 = 0;
 	S_P = 0;
@@ -350,6 +361,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	Pos_Nav = _V(0, 0, 0);
 	R_OG = _V(0, 0, 0);
 	Vel_Nav = _V(0, 0, 0);
+	W_ES = _V(0, 0, 0);
 	ddotS = _V(0, 0, 0);
 	// MATRIX3
 	MX_A = _M(0,0,0,0,0,0,0,0,0);
@@ -433,6 +445,16 @@ void LVDC1B::Init(){
 	Ax[1] = 0.0;
 	Ax[2] = 0.0;
 	Ax[3] = 0.0;
+
+	// Air density polynomial
+	Rho[0] = 0.179142e-6;	Rho[1] = -0.37213949e-11;	Rho[2] = 0.31057886e-16;
+	Rho[3] = -0.12962178e-21;	Rho[4] = 0.2698641e-27;	Rho[5] = -0.2238826e-33;
+	Drag_Area[0] = 11.079923;
+	Drag_Area[1] = 0.17954281;
+	Drag_Area[2] = -2.1771971;
+	Drag_Area[3] = -0.28074902;
+	Drag_Area[4] = -5.8764139;
+
 	t_1 = 10;								// Backup timer for Pre-IGM pitch maneuver
 	t_2 = 25;								// Time to initiate pitch freeze for S1C engine failure
 	t_3 = 36;								// Constant pitch freeze for S1C engine failure prior to t_2
@@ -498,6 +520,11 @@ void LVDC1B::Init(){
 	J = 1.62345e-3;							//first coefficient of earth's gravity
 	D = 0.7875e-5;
 	H = 0.575e-5;
+
+	h_1 = 1.5e5;
+	h_2 = 3.0e5;
+	rho_c = 0.5e-7;
+	K_D = 5.7089e-04;//Apollo 7 weight at S-IVB cutoff //0.164311287e-2; Skylab EDD
 
 	//'real' software variable, i.e. those are computed at runtime
 	// Software flags
@@ -796,8 +823,8 @@ void LVDC1B::TimeStep(double simdt) {
 					lvda.SetStage(STAGE_ORBIT_SIVB);
 				}
 
-				//For now, disable LVDC at TB4+16,800 seconds
-				if (LVDC_TB_ETime > 16800.0)
+				//For now, disable LVDC at TB4+57,600 seconds (Apollo 7 power loss)
+				if (LVDC_TB_ETime > 57600.0)
 				{
 					LVDC_Stop = true;
 					return;
@@ -900,6 +927,7 @@ void LVDC1B::TimeStep(double simdt) {
 			MX_B.m33 = cos(DescNodeAngle)*cos(Inclination);
 
 			MX_G = mul(MX_B,MX_A); // Matrix Multiply
+			W_ES = -_V(MX_A.m21, MX_A.m22, MX_A.m23)*omega_E;
 
 			ddotG_last = GravitationSubroutine(PosS, true);
 			lvda.ZeroLVIMUPIPACounters();
@@ -1457,7 +1485,7 @@ gtupdate:	// Target of jump from further down
 		if(CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD){CommandedAttitude.z = 45 * RAD;}
 
 		//Attitude Increments
-		fprintf(lvlog, "MINOR LOOP SUPPORT\r\n");
+		//fprintf(lvlog, "MINOR LOOP SUPPORT\r\n");
 		DChi = CommandedAttitude - PCommandedAttitude;
 		for (int i = 0;i < 3;i++)
 		{
@@ -1475,7 +1503,7 @@ gtupdate:	// Target of jump from further down
 		DChi_apo.x = (DChi.x) / (MLR*DT_N);
 		DChi_apo.y = (DChi.y) / (MLR*DT_N);
 		DChi_apo.z = (DChi.z) / (MLR*DT_N);
-		fprintf(lvlog, "DChi_apo = %f %f %f\r\n", DChi_apo.x*DEG, DChi_apo.y*DEG, DChi_apo.z*DEG);
+		//fprintf(lvlog, "DChi_apo = %f %f %f\r\n", DChi_apo.x*DEG, DChi_apo.y*DEG, DChi_apo.z*DEG);
 		ModeCode25[MC25_SMCActive] = true;
 		//Magnitude limit
 		if (abs(DChi_apo.x) > MSLIM1)
@@ -1520,7 +1548,7 @@ gtupdate:	// Target of jump from further down
 		//Gimbal-to-Body Transformation
 		Chi_xp_apo = PCommandedAttitude.x + DChi_apo.x*MLR*DT_N;
 		Chi_zp_apo = PCommandedAttitude.z + DChi_apo.z*MLR*DT_N;
-		fprintf(lvlog, "Gimbal-to-Body Transformation. Chi_xp_apo = %f Chi_zp_apo = %f\r\n", Chi_xp_apo*DEG, Chi_zp_apo*DEG);
+		//fprintf(lvlog, "Gimbal-to-Body Transformation. Chi_xp_apo = %f Chi_zp_apo = %f\r\n", Chi_xp_apo*DEG, Chi_zp_apo*DEG);
 		theta_xa = 0.5*(Chi_xp_apo + CurrentAttitude.x);
 		if (abs(Chi_xp_apo - CurrentAttitude.x) > PI05)
 		{
@@ -1539,16 +1567,16 @@ gtupdate:	// Target of jump from further down
 		{
 			theta_za -= PI2;
 		}
-		fprintf(lvlog, "Gimbal-to-Body Transformation. theta_xa = %f theta_za = %f\r\n", theta_xa*DEG, theta_za*DEG);
+		//fprintf(lvlog, "Gimbal-to-Body Transformation. theta_xa = %f theta_za = %f\r\n", theta_xa*DEG, theta_za*DEG);
 		A1 = cos(theta_xa) * cos(theta_za);
 		A2 = sin(theta_xa);
 		A3 = sin(theta_za);
 		A4 = sin(theta_xa) * cos(theta_za);
 		A5 = cos(theta_xa);
-		fprintf(lvlog, "Euler Correction. A1 = %f A2 = %f A3 = %f A4 = %f A5 = %f\r\n", A1, A2, A3, A4, A5);
+		//fprintf(lvlog, "Euler Correction. A1 = %f A2 = %f A3 = %f A4 = %f A5 = %f\r\n", A1, A2, A3, A4, A5);
 
 		//DISCRETE BACKUPS
-		fprintf(lvlog, "[%d+%f] DISCRETE BACKUPS\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		//fprintf(lvlog, "[%d+%f] DISCRETE BACKUPS\r\n", LVDC_Timebase, LVDC_TB_ETime);
 		if (ModeCode25[MC25_BeginTB1] == false)
 		{
 			if (LVDC_Timebase == 0 && LVDC_TB_ETime >= 17.5 && LVDC_TB_ETime <= 150.0)
@@ -1806,7 +1834,7 @@ gtupdate:	// Target of jump from further down
 				TAS = NUPTIM;
 				PosS = Pos_Nav;
 				DotS = Vel_Nav;
-				ddotS = GravitationSubroutine(PosS, false) + DragSubroutine(PosS, DotS);
+				ddotS = GravitationSubroutine(PosS, false) + DragSubroutine(PosS, DotS, CurrentAttitude);
 				R = length(PosS);
 				V = length(DotS);
 				CG = length(ddotS);
@@ -1820,15 +1848,15 @@ gtupdate:	// Target of jump from further down
 			fprintf(lvlog, "[%d+%f] ORBITAL NAVIGATION\r\n", LVDC_Timebase, LVDC_TB_ETime);
 			RTEMP1 = PosS + DotS * 4.0 + ddotS * 8.0;
 			VTEMP1 = DotS + ddotS * 4.0;
-			ATEMP1 = GravitationSubroutine(RTEMP1, false) + DragSubroutine(RTEMP1, VTEMP1);
+			ATEMP1 = GravitationSubroutine(RTEMP1, false) + DragSubroutine(RTEMP1, VTEMP1, CurrentAttitude);
 			RPT = PosS + DotS * 8.0 + ATEMP1 * 32.0;
 			VPT = VTEMP1 + ATEMP1 * 8.0;
-			APT = GravitationSubroutine(RPT, false) + DragSubroutine(RPT, VPT);
+			APT = GravitationSubroutine(RPT, false) + DragSubroutine(RPT, VPT, CurrentAttitude); //TBD: Not CurrentAttitude
 			DRT = DotS * 8.0 + (ddotS + ATEMP1*2.0)*32.0 / 3.0;
 			PosS = PosS + DRT;
 			DVT = (ddotS + ATEMP1 * 4.0 + APT)*4.0 / 3.0;
 			DotS = DotS + DVT;
-			ddotS = GravitationSubroutine(PosS, false) + DragSubroutine(PosS, DotS);
+			ddotS = GravitationSubroutine(PosS, false) + DragSubroutine(PosS, DotS, CurrentAttitude);
 			TAS = TAS + 8.0;
 			R = length(PosS);
 			V = length(DotS);
@@ -2053,6 +2081,10 @@ gtupdate:	// Target of jump from further down
 			goto limittest;
 		}
 	}
+	else
+	{
+		lvda.SetFCCAttitudeError(_V(0, 0, 0));
+	}
 
 	/*
 		sprintf(oapiDebugString(),"LVDC: TB%d + %f | PS %f %f %f | VS %f %f %f",
@@ -2198,6 +2230,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_K_3", K_3);
 	papiWriteScenario_double(scn, "LVDC_K_4", K_4);
 	papiWriteScenario_double(scn, "LVDC_K_5", K_5);
+	papiWriteScenario_double(scn, "LVDC_K_D", K_D);
 	papiWriteScenario_double(scn, "LVDC_K_p", K_p);
 	papiWriteScenario_double(scn, "LVDC_K_y", K_y);
 	papiWriteScenario_double(scn, "LVDC_K_r", K_r);
@@ -2355,6 +2388,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LVDC_PosS", PosS);
 	papiWriteScenario_vec(scn, "LVDC_PosXEZ", PosXEZ);
 	papiWriteScenario_vec(scn, "LVDC_Vel_Nav", Vel_Nav);
+	papiWriteScenario_vec(scn, "LVDC_W_ES", W_ES);
 	// MATRIX3
 	papiWriteScenario_mx(scn, "LVDC_MX_A", MX_A);
 	papiWriteScenario_mx(scn, "LVDC_MX_B", MX_B);
@@ -2561,6 +2595,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_K_3", K_3);
 		papiReadScenario_double(line, "LVDC_K_4", K_4);
 		papiReadScenario_double(line, "LVDC_K_5", K_5);
+		papiReadScenario_double(line, "LVDC_K_D", K_D);
 		papiReadScenario_double(line, "LVDC_K_p", K_p);
 		papiReadScenario_double(line, "LVDC_K_y", K_y);
 		papiReadScenario_double(line, "LVDC_K_r", K_r);
@@ -2719,6 +2754,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_vec(line, "LVDC_PosS", PosS);
 		papiReadScenario_vec(line, "LVDC_PosXEZ", PosXEZ);
 		papiReadScenario_vec(line, "LVDC_Vel_Nav", Vel_Nav);
+		papiReadScenario_vec(line, "LVDC_W_ES", W_ES);
 
 		// MATRIX3
 		papiReadScenario_mat(line, "LVDC_MX_A", MX_A);
@@ -2921,9 +2957,38 @@ VECTOR3 LVDC1B::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 	return GTEMP;
 }
 
-VECTOR3 LVDC1B::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec)
+VECTOR3 LVDC1B::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
 {
-	return _V(0, 0, 0);
+	//fprintf(lvlog, "DRAG SUBROUTINE\r\n");
+	//fprintf(lvlog, "Rvec = %f %f %f Vvec = %f %f %f\r\n", Rvec.x, Rvec.y, Rvec.z, Vvec.x, Vvec.y, Vvec.z);
+	//Hack for old scenarios. Remove at some point
+	if (length(W_ES) == 0.0)
+	{
+		W_ES = -_V(MX_A.m21, MX_A.m22, MX_A.m23)*omega_E;
+	}
+	h = length(Rvec) - a;
+	if (h > h_2)
+	{
+		rho = 0.0;
+	}
+	else if (h < h_1)
+	{
+		rho = rho_c;
+	}
+	else
+	{
+		rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
+	}
+	//fprintf(lvlog, "h = %f rho = %e\r\n", h, rho);
+	V_R = Vvec - crossp(W_ES, Rvec);
+	v_R = length(V_R);
+	//fprintf(lvlog, "V_R = %f %f %f v_R = %f\r\n", V_R.x, V_R.y, V_R.z, v_R);
+	cos_alpha = 1.0 / v_R * (V_R.x*cos(Att.y)*cos(Att.z) + V_R.y*sin(Att.z) - V_R.z*sin(Att.y)*cos(Att.z));
+	drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
+	//fprintf(lvlog, "cos_alpha = %f drag_area = %f\r\n", cos_alpha, drag_area);
+	VECTOR3 A_DS = -V_R * rho * drag_area*K_D*v_R*0.02; //TBD: Remove 0.02 when drag properly implemented
+	//fprintf(lvlog, "A_DS = %e %e %e\r\n", A_DS.x, A_DS.y, A_DS.z);
+	return A_DS;
 }
 
 // ***************************
@@ -3361,6 +3426,10 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	V_2 = 0;
 	VATR4 = 0;
 	VATRR = 0;
+	for (x = 0;x < 5;x++)
+	{
+		VENTA[x] = 0.0;
+	}
 	VCCYA = VCCZA = 0.0;
 	VGBIA = 0;
 	VOLD = 0;
@@ -3372,6 +3441,10 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	VSTGO = 0;
 	V_T = 0;
 	V_TC = 0;
+	for (x = 0;x < 4;x++)
+	{
+		VTIM[x] = 0.0;
+	}
 	VTOLD = 0.0;
 	xi_T = 0;
 	X_1 = 0;
@@ -3418,8 +3491,8 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	TargetVector = _V(0, 0, 0);
 	T_P = _V(0, 0, 0);
 	Vel_Nav = _V(0, 0, 0);
+	W_ES = _V(0, 0, 0);
 	VOAC = _V(0, 0, 0);
-	WV = _V(0,0,0);
 	XLunarAttitude = _V(0,0,0);
 	XLunarSlingshotAttitude = _V(0, 0, 0);
 	XLunarCommAttitude = _V(0, 0, 0);
@@ -3431,6 +3504,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	MX_phi_T = _M(0,0,0,0,0,0,0,0,0);
 	MGA = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	MSA = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	MEG = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	//TABLE15 and TABLE 25
 	TABLE15[0] = {};
 	TABLE15[1] = {};
@@ -3476,11 +3550,17 @@ void LVDCSV::Init(){
 	B_21 = -0.77;							// dto.
 	B_22 = 50.9;							// dto.
 
-	Drag_Area[0] = 0.0;
-	Drag_Area[1] = 0.0;
-	Drag_Area[2] = 0.0;
-	Drag_Area[3] = 0.0;
-	Drag_Area[4] = 0.0;
+	Drag_Area[0] = 11.079923;
+	Drag_Area[1] = 0.17954281;
+	Drag_Area[2] = -2.1771971;
+	Drag_Area[3] = -0.28074902;
+	Drag_Area[4] = -5.8764139;
+
+	VTIM[0] = 1800.0;
+	VTIM[1] = 4300.0;
+	VTIM[2] = 99999999.9;
+	VTIM[3] = 99999999.9;
+
 	// PITCH POLYNOMIAL (Apollo 11)
 	Fx[1][0] = 0.104707442e1;
 	Fx[1][1] = -0.147669484;
@@ -3534,6 +3614,7 @@ void LVDCSV::Init(){
 	// Air density polynomial
 	Rho[0] = 0.179142e-6;	Rho[1] = -0.37213949e-11;	Rho[2] = 0.31057886e-16;
 	Rho[3] = -0.12962178e-21;	Rho[4] = 0.2698641e-27;	Rho[5] = -0.2238826e-33;
+
 	// Out-of-orbit parameters
 	TABLE15[0].alphaS_TS = 14.2691472;
 	TABLE15[0].beta = 61.89975;
@@ -4176,11 +4257,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dot_zeta_T", dot_zeta_T);
 	papiWriteScenario_double(scn, "LVDC_dot_xi_T", dot_xi_T);
 	papiWriteScenario_double(scn, "LVDC_dot_eta_T", dot_eta_T);
-	papiWriteScenario_double(scn, "LVDC_Drag_Area[0]", Drag_Area[0]);
-	papiWriteScenario_double(scn, "LVDC_Drag_Area[1]", Drag_Area[1]);
-	papiWriteScenario_double(scn, "LVDC_Drag_Area[2]", Drag_Area[2]);
-	papiWriteScenario_double(scn, "LVDC_Drag_Area[3]", Drag_Area[3]);
-	papiWriteScenario_double(scn, "LVDC_Drag_Area[4]", Drag_Area[4]);
 	papiWriteScenario_double(scn, "LVDC_dT_3", dT_3);
 	papiWriteScenario_double(scn, "LVDC_dT_4", dT_4);
 	papiWriteScenario_double(scn, "LVDC_dt_c", dt_c);
@@ -4417,13 +4493,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASB14", TABLE15[1].target[14].RAS);
 	papiWriteScenario_double(scn, "LVDC_RealTimeClock", RealTimeClock);
-	papiWriteScenario_double(scn, "LVDC_rho_c", rho_c);
-	papiWriteScenario_double(scn, "LVDC_Rho[0]", Rho[0]);
-	papiWriteScenario_double(scn, "LVDC_Rho[1]", Rho[1]);
-	papiWriteScenario_double(scn, "LVDC_Rho[2]", Rho[2]);
-	papiWriteScenario_double(scn, "LVDC_Rho[3]", Rho[3]);
-	papiWriteScenario_double(scn, "LVDC_Rho[4]", Rho[4]);
-	papiWriteScenario_double(scn, "LVDC_Rho[5]", Rho[5]);
 	papiWriteScenario_double(scn, "LVDC_R_L", R_L);
 	papiWriteScenario_double(scn, "LVDC_R_N", R_N);
 	papiWriteScenario_double(scn, "LVDC_RNA", TABLE15[0].R_N);
@@ -4627,8 +4696,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LVDC_TargetVector", TargetVector);
 	papiWriteScenario_vec(scn, "LVDC_T_P", T_P);
 	papiWriteScenario_vec(scn, "LVDC_Vel_Nav", Vel_Nav);
+	papiWriteScenario_vec(scn, "LVDC_W_ES", W_ES);
 	papiWriteScenario_vec(scn, "LVDC_VOAC", VOAC);
-	papiWriteScenario_vec(scn, "LVDC_WV", WV);
 	papiWriteScenario_vec(scn, "LVDC_XLunarAttitude", XLunarAttitude);
 	papiWriteScenario_vec(scn, "LVDC_XLunarCommAttitude", XLunarCommAttitude);
 	papiWriteScenario_vec(scn, "LVDC_XLunarSlingshotAttitude", XLunarSlingshotAttitude);
@@ -4946,11 +5015,6 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_dot_zeta_T", dot_zeta_T);
 		papiReadScenario_double(line, "LVDC_dot_xi_T", dot_xi_T);
 		papiReadScenario_double(line, "LVDC_dot_eta_T", dot_eta_T);
-		papiReadScenario_double(line, "LVDC_Drag_Area[0]", Drag_Area[0]);
-		papiReadScenario_double(line, "LVDC_Drag_Area[1]", Drag_Area[1]);
-		papiReadScenario_double(line, "LVDC_Drag_Area[2]", Drag_Area[2]);
-		papiReadScenario_double(line, "LVDC_Drag_Area[3]", Drag_Area[3]);
-		papiReadScenario_double(line, "LVDC_Drag_Area[4]", Drag_Area[4]);
 		papiReadScenario_double(line, "LVDC_dT_3", dT_3);
 		papiReadScenario_double(line, "LVDC_dT_4", dT_4);
 		papiReadScenario_double(line, "LVDC_dt_c", dt_c);
@@ -5188,17 +5252,10 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 		papiReadScenario_double(line, "LVDC_RASB14", TABLE15[1].target[14].RAS);
 		papiReadScenario_double(line, "LVDC_RealTimeClock", RealTimeClock);
-		papiReadScenario_double(line, "LVDC_rho_c", rho_c);
 		papiReadScenario_double(line, "LVDC_R_L", R_L);
 		papiReadScenario_double(line, "LVDC_R_N", R_N);
 		papiReadScenario_double(line, "LVDC_RNA", TABLE15[0].R_N);
 		papiReadScenario_double(line, "LVDC_RNB", TABLE15[1].R_N);
-		papiReadScenario_double(line, "LVDC_Rho[0]", Rho[0]);
-		papiReadScenario_double(line, "LVDC_Rho[1]", Rho[1]);
-		papiReadScenario_double(line, "LVDC_Rho[2]", Rho[2]);
-		papiReadScenario_double(line, "LVDC_Rho[3]", Rho[3]);
-		papiReadScenario_double(line, "LVDC_Rho[4]", Rho[4]);
-		papiReadScenario_double(line, "LVDC_Rho[5]", Rho[5]);
 		papiReadScenario_double(line, "LVDC_ROV", ROV);
 		papiReadScenario_double(line, "LVDC_ROVR", ROVR);
 		papiReadScenario_double(line, "LVDC_ROVs", ROVs);
@@ -5404,8 +5461,8 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_vec(line, "LVDC_TargetVector", TargetVector);
 		papiReadScenario_vec(line, "LVDC_T_P", T_P);
 		papiReadScenario_vec(line, "LVDC_Vel_Nav", Vel_Nav);
+		papiReadScenario_vec(line, "LVDC_W_ES", W_ES);
 		papiReadScenario_vec(line, "LVDC_VOAC", VOAC);
-		papiReadScenario_vec(line, "LVDC_WV", WV);
 		papiReadScenario_vec(line, "LVDC_XLunarAttitude", XLunarAttitude);
 		papiReadScenario_vec(line, "LVDC_XLunarCommAttitude", XLunarCommAttitude);
 		papiReadScenario_vec(line, "LVDC_XLunarSlingshotAttitude", XLunarSlingshotAttitude);
@@ -5815,9 +5872,14 @@ void LVDCSV::TimeStep(double simdt) {
 
 			MX_G = mul(MX_B,MX_A); // Matrix Multiply
 
+			theta_E = theta_EO + TVRATE * t_D;
+			MEG = _M(cos(theta_E), sin(theta_E), 0.0, 0.0, 0.0, -1.0, -sin(theta_E), cos(theta_E), 0.0);
+			MX_EPH = mul(tmat(MX_A), MEG);
+			W_ES = -_V(MX_A.m21, MX_A.m22, MX_A.m23)*omega_E;
+
 			PosS = _V(cos(PHI - PHIP), sin(PHI - PHIP)*sin(Azimuth), -sin(PHI - PHIP)*cos(Azimuth))*R_L;
 			DotS = _V(0, cos(PHIP)*cos(Azimuth), cos(PHIP)*sin(Azimuth))*R_L*omega_E;
-
+			
 			fprintf(lvlog, "Initial Position = %f %f %f\r\n", PosS.x, PosS.y, PosS.z);
 			fprintf(lvlog, "Initial Velocity = %f %f %f\r\n", DotS.x, DotS.y, DotS.z);
 		
@@ -5902,6 +5964,10 @@ void LVDCSV::TimeStep(double simdt) {
 		//	CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,V);								
 
 		// End of test for LVDC_Stop
+	}
+	else
+	{
+		lvda.SetFCCAttitudeError(_V(0, 0, 0));
 	}
 }
 
@@ -6364,7 +6430,7 @@ void LVDCSV::Timer2Interrupt(bool timer2schedule)
 			TAS = NUPTIM;
 			PosS = Pos_Nav;
 			DotS = Vel_Nav;
-			ddotS = GravitationSubroutine(PosS, false) + DragSubroutine(PosS, DotS);
+			ddotS = OrbitalNavigationAcceleration(PosS, DotS, CurrentAttitude);
 			R = length(PosS);
 			V = length(DotS);
 			CG = length(ddotS);
@@ -8941,15 +9007,15 @@ void LVDCSV::OrbitNavigation()
 	fprintf(lvlog, "[%d+%f] ORBITAL NAVIGATION\r\n", LVDC_Timebase, LVDC_TB_ETime);
 	RTEMP1 = PosS + DotS * 4.0 + ddotS * 8.0;
 	VTEMP1 = DotS + ddotS * 4.0;
-	ATEMP1 = GravitationSubroutine(RTEMP1, false) + DragSubroutine(RTEMP1, VTEMP1);
+	ATEMP1 =  OrbitalNavigationAcceleration(RTEMP1, VTEMP1, CurrentAttitude);
 	RPT = PosS + DotS * 8.0 + ATEMP1 * 32.0;
 	VPT = VTEMP1 + ATEMP1 * 8.0;
-	APT = GravitationSubroutine(RPT, false) + DragSubroutine(RPT, VPT);
+	APT = OrbitalNavigationAcceleration(RPT, VPT, CurrentAttitude); //TBD: Not CurrentAttitude
 	DRT = DotS * 8.0 + (ddotS + ATEMP1 * 2.0)*32.0 / 3.0;
 	PosS = PosS + DRT;
 	DVT = (ddotS + ATEMP1 * 4.0 + APT)*4.0 / 3.0;
 	DotS = DotS + DVT;
-	ddotS = GravitationSubroutine(PosS, false) + DragSubroutine(PosS, DotS);
+	ddotS = OrbitalNavigationAcceleration(PosS, DotS, CurrentAttitude);
 	TAS = TAS + 8.0;
 	R = length(PosS);
 	V = length(DotS);
@@ -9374,8 +9440,8 @@ restartprep:
 
 	//Determination of S-bar and S-bar-dot
 	theta_E = theta_EO + TVRATE * t_D;
-
-	MX_EPH = mul(tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+	MEG = _M(cos(theta_E), sin(theta_E), 0.0, 0.0, 0.0, -1.0, -sin(theta_E), cos(theta_E), 0.0);
+	MX_EPH = mul(tmat(MX_A), MEG);
 
 	T_P = mul(MX_EPH, unit(TargetVector));
 	N = unit(crossp(R_OG, DotS));
@@ -9759,9 +9825,60 @@ VECTOR3 LVDCSV::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 	return GTEMP;
 }
 
-VECTOR3 LVDCSV::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec)
+VECTOR3 LVDCSV::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
 {
-	return _V(0, 0, 0);
+	//fprintf(lvlog, "DRAG SUBROUTINE\r\n");
+	//fprintf(lvlog, "Rvec = %f %f %f Vvec = %f %f %f\r\n", Rvec.x, Rvec.y, Rvec.z, Vvec.x, Vvec.y, Vvec.z);
+	//Hack for old scenarios. Remove at some point
+	if (length(W_ES) == 0.0)
+	{
+		W_ES = -_V(MX_A.m21, MX_A.m22, MX_A.m23)*omega_E;
+	}
+	h = length(Rvec) - a;
+	if (h > h_2)
+	{
+		rho = 0.0;
+	}
+	else if (h < h_1)
+	{
+		rho = rho_c;
+	}
+	else
+	{
+		rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
+	}
+	//fprintf(lvlog, "h = %f rho = %e\r\n", h, rho);
+	V_R = Vvec - crossp(W_ES, Rvec);
+	v_R = length(V_R);
+	//fprintf(lvlog, "V_R = %f %f %f v_R = %f\r\n", V_R.x, V_R.y, V_R.z, v_R);
+	cos_alpha = 1.0 / v_R * (V_R.x*cos(Att.y)*cos(Att.z)+V_R.y*sin(Att.z)-V_R.z*sin(Att.y)*cos(Att.z));
+	drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
+	//fprintf(lvlog, "cos_alpha = %f drag_area = %f\r\n", cos_alpha, drag_area);
+	VECTOR3 A_DS = -V_R * rho * drag_area*K_D*v_R*0.02; //TBD: Remove 0.02 when drag properly implemented
+	//fprintf(lvlog, "A_DS = %e %e %e\r\n", A_DS.x, A_DS.y, A_DS.z);
+	return A_DS;
+}
+
+VECTOR3 LVDCSV::VentSubroutine(VECTOR3 Att)
+{
+	if (LVDC_Timebase != 5)
+	{
+		return _V(0, 0, 0);
+	}
+
+	//fprintf(lvlog, "VENT SUBROUTINE\r\n");
+	for (i = 0;i < 4;i++)
+	{
+		if (LVDC_TB_ETime < VTIM[i]) break;
+	}
+	VECTOR3 A_V = _V(cos(Att.y)*cos(Att.z), sin(Att.z), -sin(Att.y)*cos(Att.z))*VENTA[i];
+	//fprintf(lvlog, "Segment = %d Vent Acceleration = %f %f %f\r\n", i, A_V.x, A_V.y, A_V.z);
+	return A_V;
+}
+
+VECTOR3 LVDCSV::OrbitalNavigationAcceleration(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
+{
+	return GravitationSubroutine(Rvec, false) + DragSubroutine(Rvec, Vvec, Att) + VentSubroutine(Att);
 }
 
 bool LVDCSV::TimeCheck(double t_event)
