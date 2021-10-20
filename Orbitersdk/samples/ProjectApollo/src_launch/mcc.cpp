@@ -2952,7 +2952,7 @@ void MCC::drawPad(bool writetofile){
 		SStoHHMMSS(form->GET_Day, hh1, mm1, ss1);
 		SStoHHMMSS(form->GET_Night, hh2, mm2, ss2);
 
-		sprintf_s(buffer, "RETRO ORIENTATION\nMODE A: DAY\nHRS %05d\nMIN %05d\nSEC %06.2f\nR %06.2lf\nP %06.2lf\nY %06.2lf\nMODE B: NIGHT\nHRS %05d\nMIN %05d\nSEC %06.2f\nR %06.2lf\nP %06.2lf\nY %06.2lf", 
+		sprintf_s(buffer, "RETRO ORIENTATION\nMODE A: DAY\nHRS %05d\nMIN %05d\nSEC %06.2f\nR %06.2lf\nP %06.2lf\nY %06.2lf\nMODE B: NIGHT\nHRS %05d\nMIN %05d\nSEC %06.2f\nR %06.2lf\nP %06.2lf\nY %06.2lf",
 			hh1, mm1, ss1, form->RetroAtt_Day.x, form->RetroAtt_Day.y, form->RetroAtt_Day.z, hh2, mm2, ss2, form->RetroAtt_Night.x, form->RetroAtt_Night.y, form->RetroAtt_Night.z);
 
 		oapiAnnotationSetText(NHpad, buffer);
