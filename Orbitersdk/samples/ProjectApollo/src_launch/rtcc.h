@@ -2657,6 +2657,7 @@ public:
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt);
+	EphemerisData coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor = 1.0);
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
@@ -4722,6 +4723,31 @@ protected:
 	double TJUDAT(int Y, int M, int D);
 	EphemerisData ConvertSVtoEphemData(SV sv);
 	SV ConvertEphemDatatoSV(EphemerisData sv);
+
+	//RTACF Routines
+
+	struct RTACFGOSTInput
+	{
+		EphemerisData sv;
+		double Weight;
+		double get;
+		VECTOR3 IMUAttitde; //All options except 4
+		MATRIX3 REFSMMAT; //All options except 1
+
+		int option;
+		int starid1, starid2; //Options 1 and 3
+		double LVLHRoll, LVLHYaw, WindowLine = 31.7*RAD;
+		double star_ta1, star_ta2, star_sh1, star_sh2; //Options 1 and 5
+		VECTOR3 Att1, Att2; //Option 5
+	};
+
+	struct RTACFGOSTOutput
+	{
+		VECTOR3 IMUAtt; //Option 4
+		VECTOR3 LVLHAtt; //Option 4
+	};
+
+	void RTACFGuidanceOpticsSupportTable(RTACFGOSTInput in, RTACFGOSTOutput &out);
 
 protected:
 	double TimeofIgnition;
