@@ -96,7 +96,7 @@ protected:
 	void SetFirstStageEngines ();
 	void SetSecondStage ();
 	void SetSecondStageMeshes(double offset);
-	void SetSecondStageEngines ();
+	void SetSecondStageEngines (double offset);
 
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
@@ -137,5 +137,6 @@ const VECTOR3 OFS_CM_CONE = { 0, 0, 36.05-12.25-21.5};
 
 const double STG0O = 0;
 const double STG1O = 10.25;
+const double STG1OF = -6.0; //S-IVB stage mesh offset from CG
 
 extern void Saturn1bLoadMeshes();
