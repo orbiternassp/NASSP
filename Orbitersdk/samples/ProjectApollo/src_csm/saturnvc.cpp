@@ -916,7 +916,7 @@ void Saturn::RegisterActiveAreas() {
 		if (stage < 12) {
 			ofs.z = 35.15;
 		} else if (stage < 30) {
-			ofs.z = 22.9;
+			ofs.z = 15.2;
 		} else if (stage < 40) {
 			ofs.z = 2.1;
 		} else if (stage < 42) {
