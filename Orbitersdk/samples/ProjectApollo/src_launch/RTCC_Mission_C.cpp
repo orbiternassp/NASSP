@@ -93,9 +93,19 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMGMED("G00,CSM,TLM,CSM,CUR;");
 
 		//Store some MPT data
-		PZMPTCSM.ConfigurationArea = 129.4*0.3048*0.3048;
-		PZMPTLEM.ConfigurationArea = 368.7*0.3048*0.3048;
-		PZMPTCSM.CommonBlock.SPSFuelRemaining = 4430.0;
+		GMGMED("M55,CSM,CS;"); //Configuration code CSM + S-IVB (until phasing)
+		GMGMED("M55,LEM,S;");   //Configuration code S-IVB
+		GMGMED("M51,CSM,129.4,365.0;"); //CSM+S-IVB vehicle areas
+		GMGMED("M51,LEM,,365.0;");		//S-IVB vehicle area
+		GMGMED("M49,CSM,9379,,0,0,0,0;"); //Loaded propellant
+		GMGMED("M49,LEM,,,0,0,0,0;"); //Loaded propellant
+
+		//Mass update
+		MPTMassUpdate(calcParams.src, med_m50, med_m55);
+		med_m50.Table = RTCC_MPT_CSM;
+		PMMWTC(50);
+		med_m50.Table = RTCC_MPT_LM;
+		PMMWTC(50);
 	}
 	break;
 	case 1: // MISSION C PHASING BURN
