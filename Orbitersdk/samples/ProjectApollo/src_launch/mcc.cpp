@@ -1772,7 +1772,6 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Day", form->RetroAtt_Day);
 			SAVE_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Night", form->RetroAtt_Night);
 		}
-
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
