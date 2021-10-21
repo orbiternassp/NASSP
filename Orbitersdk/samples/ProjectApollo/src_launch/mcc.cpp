@@ -1765,7 +1765,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 		}
 		else if (padNumber == PT_RETROORIENTATION)
 		{
-			AP7RETRORIENTPAD * form = (AP7RETRORIENTPAD*)padForm;
+			AP7RETRORIENTPAD *form = (AP7RETRORIENTPAD*)padForm;
 
 			SAVE_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Day", form->GET_Day);
 			SAVE_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Night", form->GET_Night);
@@ -2296,7 +2296,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == PT_RETROORIENTATION)
 		{
-			AP7RETRORIENTPAD * form = (AP7RETRORIENTPAD*)padForm;
+			AP7RETRORIENTPAD *form = (AP7RETRORIENTPAD*)padForm;
 
 			LOAD_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Day", form->GET_Day);
 			LOAD_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Night", form->GET_Night);
@@ -2945,7 +2945,7 @@ void MCC::drawPad(bool writetofile){
 	break;
 	case PT_RETROORIENTATION:
 	{
-		AP7RETRORIENTPAD * form = (AP7RETRORIENTPAD*)padForm;
+		AP7RETRORIENTPAD *form = (AP7RETRORIENTPAD*)padForm;
 
 		int hh1, hh2, mm1, mm2;
 		double ss1, ss2;
