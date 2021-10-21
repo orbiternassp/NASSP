@@ -52,78 +52,6 @@
 #include "Sat5Abort3.h"
 #include "Mission.h"
 
-void SaturnV1stStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
-{
-	//Redefine the aoa
-	VECTOR3 vec;
-	v->GetAirspeedVector(FRAME_LOCAL, vec);
-	aoa = acos(unit(vec).z);
-
-	//Mach dependent drag
-	double cd0;
-	if (M < 0.7)
-	{
-		cd0 = 0.4;
-	}
-	else if (M < 1.0)
-	{
-		cd0 = 0.4 + (M - 0.7)*1.0;
-	}
-	else if (M < 1.1)
-	{
-		cd0 = 0.7;
-	}
-	else
-	{
-		cd0 = 0.7 * sqrt(0.5) / sqrt(M - 0.6);
-	}
-
-	*cl = 0.0;
-	*cm = 0.0;
-
-	//Add aoa dependent drag
-	*cd = cd0 + sin(aoa)*5.5;
-
-	sprintf(oapiDebugString(), "First Stage: aoa %lf M %lf Re %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, *cd, *cl, *cm);
-}
-
-void SaturnV2ndStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
-{
-	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
-
-	//Redefine the aoa
-	VECTOR3 vec;
-	v->GetAirspeedVector(FRAME_LOCAL, vec);
-	aoa = acos(unit(vec).z);
-
-	//Mach dependent drag
-	double cd0;
-	if (M < 0.7)
-	{
-		cd0 = 0.5;
-	}
-	else if (M < 1.0)
-	{
-		cd0 = 0.5 + (M - 0.7)*1.0;
-	}
-	else if (M < 1.1)
-	{
-		cd0 = 0.8;
-	}
-	else
-	{
-		cd0 = 0.8 * sqrt(0.5) / sqrt(M - 0.6);
-	}
-
-	*cl = 0.0;
-	*cm = 0.0;
-
-	//Add aoa dependent drag
-	*cd = cd0 + sin(aoa)*5.5;
-
-	sprintf(oapiDebugString(), "Second Stage: aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
-}
-
 void SaturnV3rdStage_Coeff(double aoa, double M, double Re, double *cl, double *cm, double *cd)
 {
 	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
@@ -558,8 +486,6 @@ void SaturnV::SetFirstStage ()
 	SetPMI(_V(440.0, 440.0, 5.875));
 	SetCrossSections (_V(1129,1133,52.4));
 	SetCW (0.1, 0.3, 1.4, 1.4);
-	ClearAirfoilDefinitions();
-	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), SaturnV1stStage_Coeff, NULL, 10.0584, 79.46, 0.1);
 	SetRotDrag(_V(0.7, 0.7, 0.1));
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
@@ -700,8 +626,6 @@ void SaturnV::SetSecondStage ()
 	SetPMI (_V(374,374,60));
 	SetCrossSections (_V(524,524,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);
-	ClearAirfoilDefinitions();
-	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), SaturnV2ndStage_Coeff, NULL, 10.0584, 79.46, 0.1);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
