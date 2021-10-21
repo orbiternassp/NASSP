@@ -25749,7 +25749,6 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			}
 			else if (data[1] == "REP")
 			{
-				sprintf(oapiDebugString(), "Test1");
 				EMSGSUPP(1, 6, 3);
 			}
 			else if (data[1] == "REM")
