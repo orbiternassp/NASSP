@@ -27229,6 +27229,63 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		PMMWTC(51);
 	}
+	//Input initialization parameters
+	else if (med == "55")
+	{
+		if (data.size() < 1)
+		{
+			return 1;
+		}
+		int mpt;
+		if (data[0] == "CSM")
+		{
+			mpt = RTCC_MPT_CSM;
+		}
+		else if (data[0] == "LEM")
+		{
+			mpt = RTCC_MPT_LM;
+		}
+		else
+		{
+			return 2;
+		}
+		med_m55.Table = mpt;
+		if (data.size() < 2 || data[1] == "")
+		{
+			med_m55.ConfigCode = "";
+		}
+		else
+		{
+			med_m55.ConfigCode = data[1];
+		}
+		if (data.size() < 3 || data[2] == "")
+		{
+			med_m55.VentingGET = -1.0;
+		}
+		else
+		{
+			double hrs;
+			if (MEDTimeInputHHMMSS(data[2], hrs))
+			{
+				return 2;
+			}
+			med_m55.VentingGET = hrs * 3600.0;
+		}
+		if (data.size() < 4 || data[3] == "")
+		{
+			med_m55.DeltaDockingAngle = -720.0;
+		}
+		else
+		{
+			double ang;
+			if (sscanf_s(data[3].c_str(), "%lf", &ang) != 1)
+			{
+				return 2;
+			}
+			med_m55.DeltaDockingAngle = ang * RAD;
+		}
+		PMMWTC(55);
+	}
 	//Change vehicle body orientation and trim angles for MPT maneuver
 	else if (med == "58")
 	{
