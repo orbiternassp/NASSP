@@ -222,7 +222,7 @@ void SIVB::InitS4b()
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;
 	MainFuel = 5000.0;
-	ApsFuel1Kg = ApsFuel2Kg = S4B_APS_FUEL_PER_TANK;
+	ApsFuel1Kg = ApsFuel2Kg = S4B_APS_FUEL_PER_TANK_SV;
 
 	THRUST_THIRD_VAC = 1000.0;
 	ISP_THIRD_VAC = 300.0;
@@ -1010,11 +1010,21 @@ void SIVB::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 	double offset = -2.05;
 
+	double APSMass;
+	if (SaturnVStage)
+	{
+		APSMass = S4B_APS_FUEL_PER_TANK_SV;
+	}
+	else
+	{
+		APSMass = S4B_APS_FUEL_PER_TANK_SIB;
+	}
+
 	if (!ph_aps1)
-		ph_aps1  = CreatePropellantResource(S4B_APS_FUEL_PER_TANK, ApsFuel1Kg);
+		ph_aps1  = CreatePropellantResource(APSMass, ApsFuel1Kg);
 
 	if (!ph_aps2)
-		ph_aps2 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK, ApsFuel2Kg);
+		ph_aps2 = CreatePropellantResource(APSMass, ApsFuel2Kg);
 
 	if (!ph_main)
 		ph_main = CreatePropellantResource(MainFuel);

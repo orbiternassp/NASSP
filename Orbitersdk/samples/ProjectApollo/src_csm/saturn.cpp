@@ -3569,30 +3569,36 @@ void Saturn::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 
-	double offset = 0.0;
+	double APSMass;
 	if (SaturnType == SAT_SATURN1B)
-		offset=7.7;
+	{
+		APSMass = S4B_APS_FUEL_PER_TANK_SIB;
+	}
+	else
+	{
+		APSMass = S4B_APS_FUEL_PER_TANK_SV;
+	}
 
 	if (!ph_aps1)
 	{
-		ph_aps1 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK);
+		ph_aps1 = CreatePropellantResource(APSMass);
 	}
 
 	if (!ph_aps2)
 	{
-		ph_aps2 = CreatePropellantResource(S4B_APS_FUEL_PER_TANK);
+		ph_aps2 = CreatePropellantResource(APSMass);
 	}
 
-	th_aps_rot[0] = CreateThruster(_V(0, ATTCOOR2 + 0.15, TRANZ - 0.25 + offset), _V(0, -1, 0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
-	th_aps_rot[1] = CreateThruster(_V(0, -ATTCOOR2 - 0.15, TRANZ - 0.25 + offset), _V(0, 1, 0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[0] = CreateThruster(_V(0, ATTCOOR2 + 0.15, TRANZ - 0.25), _V(0, -1, 0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[1] = CreateThruster(_V(0, -ATTCOOR2 - 0.15, TRANZ - 0.25), _V(0, 1, 0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
 	
 	AddExhaust (th_aps_rot[0], 0.6, 0.078, SIVBRCSTex);
 	AddExhaust (th_aps_rot[1], 0.6, 0.078, SIVBRCSTex);
 
-	th_aps_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
-	th_aps_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
-	th_aps_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
-	th_aps_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.2), _V(-1,0,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25), _V( 1,0,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25), _V( 1,0,0), S4B_APS_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+	th_aps_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25), _V(-1,0,0), S4B_APS_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
 
 	AddExhaust (th_aps_rot[2], 0.6, 0.078, SIVBRCSTex);
 	AddExhaust (th_aps_rot[3], 0.6, 0.078, SIVBRCSTex);
@@ -3605,8 +3611,8 @@ void Saturn::AddRCS_S4B()
 
 	if (SaturnType == SAT_SATURNV)
 	{
-		th_aps_ull[0] = CreateThruster(_V(0, ATTCOOR2 - 0.15, TRANZ - .25 + offset), _V(0, 0, 1), S4B_APS_ULL_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
-		th_aps_ull[1] = CreateThruster(_V(0, -ATTCOOR2 + .15, TRANZ - .25 + offset), _V(0, 0, 1), S4B_APS_ULL_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
+		th_aps_ull[0] = CreateThruster(_V(0, ATTCOOR2 - 0.15, TRANZ - .25), _V(0, 0, 1), S4B_APS_ULL_THRUST, ph_aps1, S4B_APS_ISP, S4B_APS_ISP_SL);
+		th_aps_ull[1] = CreateThruster(_V(0, -ATTCOOR2 + .15, TRANZ - .25), _V(0, 0, 1), S4B_APS_ULL_THRUST, ph_aps2, S4B_APS_ISP, S4B_APS_ISP_SL);
 		AddExhaust(th_aps_ull[0], 7, 0.15, SIVBRCSTex);
 		AddExhaust(th_aps_ull[1], 7, 0.15, SIVBRCSTex);
 	}
