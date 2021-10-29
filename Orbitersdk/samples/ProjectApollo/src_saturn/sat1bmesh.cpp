@@ -363,7 +363,7 @@ void Saturn1b::SetSecondStage ()
 	SetLiftCoeffFunc (0);
 
     ClearMeshes();
-	SetSecondStageMeshes(13.95-12.25);
+	SetSecondStageMeshes(STG1OF);
 }
 
 void Saturn1b::SetSecondStageMeshes(double offset)
@@ -488,11 +488,11 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
-	SetCameraOffset (_V(-1,1.0,31.15-STG1O));
-    SetView(22.7, false);
+	SetCameraOffset(_V(-1, 1.0, 29.45 - STG1O + offset));
+    SetView(21.0 + offset, false);
 }
 
-void Saturn1b::SetSecondStageEngines ()
+void Saturn1b::SetSecondStageEngines (double offset)
 
 {
 	ClearThrusters();
@@ -502,8 +502,8 @@ void Saturn1b::SetSecondStageEngines ()
 	//Add CSM RCS
 	if (SaturnHasCSM())
 	{
-		AddRCSJets(20.62, SM_RCS_THRUST);
-		AddRCS_CM(CM_RCS_THRUST, 22.9, false);
+		AddRCSJets(18.92 + offset, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 21.2 + offset, false);
 	}
 
 	//
@@ -548,7 +548,7 @@ void Saturn1b::SetSecondStageEngines ()
 	// *********************** thruster definitions ********************************
 	//
 
-	VECTOR3 m_exhaust_pos1= {0,0,-9.-STG1O+10};
+	VECTOR3 m_exhaust_pos1 = { 0,0,-9. - STG1O + 8.3 + offset };
 
 	//
 	// orbiter main thrusters
@@ -580,9 +580,9 @@ void Saturn1b::SetSecondStageEngines ()
 	//  Ullage rockets (3)
 	//
 
-	VECTOR3	m_exhaust_pos6= _V(-3.27,-0.46,-2-STG1O+9);
-	VECTOR3 m_exhaust_pos7= _V(1.65,2.86,-2-STG1O+9);
-	VECTOR3	m_exhaust_pos8= _V(1.65,-2.86,-2-STG1O+9);
+	VECTOR3	m_exhaust_pos6 = _V(-3.27, -0.46, -2 - STG1O + 7.3 + offset);
+	VECTOR3 m_exhaust_pos7 = _V(1.65, 2.86, -2 - STG1O + 7.3 + offset);
+	VECTOR3	m_exhaust_pos8 = _V(1.65, -2.86, -2 - STG1O + 7.3 + offset);
 
 	int i;
 
@@ -639,13 +639,13 @@ void Saturn1b::SeparateStage (int new_stage)
 	
 	if (stage == STAGE_ORBIT_SIVB && new_stage == CM_STAGE)
 	{
-		ofs1 = _V(0, 0, 4.35);
+		ofs1 = _V(0, 0, -3.35);
 		vel1 = _V(0, 0, -0.2);
 	}
 
 	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)
 	{
-	 	ofs1 = _V(0, 0, 1.7);
+	 	ofs1 = _V(0, 0, -6.0);
 		vel1 = _V(0, 0, 0);
 	}
 
@@ -724,8 +724,8 @@ void Saturn1b::SeparateStage (int new_stage)
 		}
 
 		SetSecondStage ();
-		SetSecondStageEngines ();
-		ShiftCentreOfMass (_V(0,0,12.25));
+		SetSecondStageEngines(STG1OF);
+		ShiftCentreOfMass(_V(0, 0, 19.95));
 	}
 
 	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)
@@ -759,7 +759,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		if (proptemp[4] != -1) SetPropellantMass(ph_rcs2, proptemp[4]);
 		if (proptemp[5] != -1) SetPropellantMass(ph_rcs3, proptemp[5]);
 
-		ShiftCentreOfMass(_V(0, 0, 20.8));
+		ShiftCentreOfMass(_V(0, 0, 13.1));
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -898,7 +898,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		Sat1Abort2 *stage1 = static_cast<Sat1Abort2 *> (oapiGetVesselInterface(habort));
 		stage1->SetState(LowRes);
 
-		SetReentryStage(_V(0, 0, 22.9));
+		SetReentryStage(_V(0, 0, 15.2));
 	}
  }
 

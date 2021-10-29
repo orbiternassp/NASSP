@@ -2111,13 +2111,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "Landing Site", 12);
 		skp->Text(1 * W / 8, 4 * H / 14, "REFSMMAT", 8);
 		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
-		skp->Text(1 * W / 8, 8 * H / 14, "Erasable Memory Programs", 24);
+		skp->Text(1 * W / 8, 8 * H / 14, "EMP", 3);
 		skp->Text(1 * W / 8, 10 * H / 14, "Nodal Target Conversion", 23);
 		skp->Text(1 * W / 8, 12 * H / 14, "Descent Abort", 13);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "LVDC", 4);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 6 * H / 14, "AGC Ephemeris", 13);
+		skp->Text(5 * W / 8, 8 * H / 14, "Lunar Impact", 12);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 22)
@@ -9158,6 +9159,75 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		//skp->Text(8 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 		//sprintf_s(Buffer, "%05o", OrbMech::DoubleToBuffer(lotime*100.0, 28.0, 0));
 		//skp->Text(8 * W / 16, 13 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 115)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(1 * W / 2, 3 * H / 32, "LUNAR TARGETING PROGRAM", 33);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		GET_Display(Buffer, G->LUNTAR_TIG, false);
+		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.1lf s", G->LUNTAR_bt_guess);
+		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_pitch_guess*DEG);
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_yaw_guess*DEG);
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lat*DEG);
+		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lng*DEG);
+		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text(10 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(10 * W / 16, 2 * H / 14, "No S-IVB!", 9);
+		}
+
+		skp->Text(10 * W / 16, 9 * H / 20, "Burn Data:", 10);
+		sprintf_s(Buffer, "TIG: TB8 + %.0lf s", G->LUNTAR_Output.tig);
+		skp->Text(10 * W / 16, 10 * H / 20, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "Burn time: %.1lf s", G->LUNTAR_Output.bt);
+		skp->Text(10 * W / 16, 11 * H / 20, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "Pitch: %.1lf°", G->LUNTAR_Output.pitch*DEG);
+		skp->Text(10 * W / 16, 12 * H / 20, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "Yaw: %.1lf°", G->LUNTAR_Output.yaw*DEG);
+		skp->Text(10 * W / 16, 13 * H / 20, Buffer, strlen(Buffer));
+
+		skp->Text(10 * W / 16, 14 * H / 20, "Impact:", 7);
+		GET_Display(Buffer, G->LUNTAR_Output.get_imp);
+		skp->Text(10 * W / 16, 15 * H / 20, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "Lat: %.2lf°", G->LUNTAR_Output.lat_imp*DEG);
+		skp->Text(10 * W / 16, 16 * H / 20, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "Lng: %.2lf°", G->LUNTAR_Output.lng_imp*DEG);
+		skp->Text(10 * W / 16, 17 * H / 20, Buffer, strlen(Buffer));
+
+		if (G->LUNTAR_Output.err > 0)
+		{
+			if (G->LUNTAR_Output.err == 1)
+			{
+				sprintf_s(Buffer, "INITIAL GUESS DID NOT IMPACT");
+			}
+			else if (G->LUNTAR_Output.err == 2)
+			{
+				sprintf_s(Buffer, "SOLUTION DID NOT CONVERGE");
+			}
+			else if (G->LUNTAR_Output.err == 3)
+			{
+				sprintf_s(Buffer, "TIMEBASE 8 NOT STARTED");
+			}
+			skp->Text(4 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }

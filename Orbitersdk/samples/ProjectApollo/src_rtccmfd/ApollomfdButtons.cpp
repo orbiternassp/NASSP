@@ -729,7 +729,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "LVDC options", 0, 'L' },
 		{ "Terrain Model Generation", 0, 'T' },
 		{ "AGC Ephemeris Generator", 0, 'A' },
-		{ "", 0, ' ' },
+		{ "Lunar Impact Targeting", 0, 'H' },
 		{ "", 0, ' ' },
 		{ "Back to main menu", 0, 'B' }
 	};
@@ -746,7 +746,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("IU", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLVDCPage);
 	RegisterFunction("TER", OAPI_KEY_T, &ApolloRTCCMFD::menuSetTerrainModelPage);
 	RegisterFunction("EPH", OAPI_KEY_A, &ApolloRTCCMFD::menuSetAGCEphemerisPage);
-	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("LUN", OAPI_KEY_H, &ApolloRTCCMFD::menuSetLunarTargetingProgramPage);
 	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
 
@@ -3909,6 +3909,41 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPL", OAPI_KEY_R, &ApolloRTCCMFD::menuAGCTimeUpdateUplink);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
+
+
+	static const MFDBUTTONMENU mnu115[] =
+	{
+		{ "Desired TIG", 0, 'E' },
+		{ "Estimated burn time", 0, 'T' },
+		{ "Estimated pitch", 0, 'G' },
+		{ "Estimated yaw", 0, 'L' },
+		{ "Impact latitude", 0, 'F' },
+		{ "Impact longitude", 0, 'P' },
+
+		{ "S-IVB vessel", 0, 'D' },
+		{ "Calculate solution", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu115, sizeof(mnu115) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("TIG", OAPI_KEY_E, &ApolloRTCCMFD::LUNTAR_TIGInput);
+	RegisterFunction("BT", OAPI_KEY_T, &ApolloRTCCMFD::LUNTAR_BTInput);
+	RegisterFunction("PIT", OAPI_KEY_G, &ApolloRTCCMFD::LUNTAR_PitchInput);
+	RegisterFunction("YAW", OAPI_KEY_L, &ApolloRTCCMFD::LUNTAR_YawInput);
+	RegisterFunction("LAT", OAPI_KEY_F, &ApolloRTCCMFD::LUNTAR_LatInput);
+	RegisterFunction("LNG", OAPI_KEY_P, &ApolloRTCCMFD::LUNTAR_LngInput);
+	
+
+	RegisterFunction("S4B", OAPI_KEY_D, &ApolloRTCCMFD::set_target);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::LUNTARCalc);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
