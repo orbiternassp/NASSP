@@ -3069,7 +3069,7 @@ public:
 	//Universal Cartesian to Kepler Coordinates
 	void PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h);
 	//Time from perifocal pass to radius (TRW routine TFPCR)
-	void PITFPC(double MUE, int K, double AORP, double ECC, double rad, double &TIME, double &P);
+	void PITFPC(double MUE, int K, double AORP, double ECC, double rad, double &TIME, double &P, bool erunits = true);
 
 	// ** MISCELLANEOUS UTILITY PROGRAMS**
 	//Sun/Moon ephemeris table from tape
