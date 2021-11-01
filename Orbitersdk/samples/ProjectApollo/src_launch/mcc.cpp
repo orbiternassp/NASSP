@@ -1763,6 +1763,15 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_LMACTDATA_RollTrim", form->RollTrim);
 			SAVE_V3("MCC_LMACTDATA_V42Angles", form->V42Angles);
 		}
+		else if (padNumber == PT_RETROORIENTATION)
+		{
+			AP7RETRORIENTPAD *form = (AP7RETRORIENTPAD*)padForm;
+
+			SAVE_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Day", form->GET_Day);
+			SAVE_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Night", form->GET_Night);
+			SAVE_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Day", form->RetroAtt_Day);
+			SAVE_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Night", form->RetroAtt_Night);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2283,6 +2292,15 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_LMACTDATA_PitchTrim", form->PitchTrim);
 			LOAD_DOUBLE("MCC_LMACTDATA_RollTrim", form->RollTrim);
 			LOAD_V3("MCC_LMACTDATA_V42Angles", form->V42Angles);
+		}
+		else if (padNumber == PT_RETROORIENTATION)
+		{
+			AP7RETRORIENTPAD *form = (AP7RETRORIENTPAD*)padForm;
+
+			LOAD_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Day", form->GET_Day);
+			LOAD_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Night", form->GET_Night);
+			LOAD_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Day", form->RetroAtt_Day);
+			LOAD_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Night", form->RetroAtt_Night);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -2924,6 +2942,22 @@ void MCC::drawPad(bool writetofile){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_RETROORIENTATION:
+	{
+		AP7RETRORIENTPAD *form = (AP7RETRORIENTPAD*)padForm;
+
+		int hh1, hh2, mm1, mm2;
+		double ss1, ss2;
+
+		SStoHHMMSS(form->GET_Day, hh1, mm1, ss1);
+		SStoHHMMSS(form->GET_Night, hh2, mm2, ss2);
+
+		sprintf_s(buffer, "RETRO ORIENTATION\nMODE A: DAY\nHRS %05d\nMIN %05d\nSEC %06.2f\nR %06.2lf\nP %06.2lf\nY %06.2lf\nMODE B: NIGHT\nHRS %05d\nMIN %05d\nSEC %06.2f\nR %06.2lf\nP %06.2lf\nY %06.2lf",
+			hh1, mm1, ss1, form->RetroAtt_Day.x, form->RetroAtt_Day.y, form->RetroAtt_Day.z, hh2, mm2, ss2, form->RetroAtt_Night.x, form->RetroAtt_Night.y, form->RetroAtt_Night.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3058,6 +3092,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_LMACTDATA: // LMACTDATA
 		padForm = calloc(1, sizeof(LMACTDATA));
+		break;
+	case PT_RETROORIENTATION: // AP7RETRORIENTPAD
+		padForm = calloc(1, sizeof(AP7RETRORIENTPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

@@ -4178,6 +4178,10 @@ int ARCore::subThread()
 		else
 		{
 			sv0 = GC->rtcc->StateVectorCalc(vessel);
+			if (mapUpdateGET > 0)
+			{
+				sv0 = GC->rtcc->coast(sv0, mapUpdateGET - OrbMech::GETfromMJD(sv0.MJD, GC->rtcc->CalcGETBase()));
+			}
 		}
 
 		if (mappage == 0)
