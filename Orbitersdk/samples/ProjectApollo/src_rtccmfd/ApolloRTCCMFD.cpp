@@ -5293,15 +5293,16 @@ bool AGCEpochInput(void *id, char *str, void *data)
 {
 	if (strlen(str)<20)
 	{
-		((ApolloRTCCMFD*)data)->set_AGCEpoch(atof(str));
+		((ApolloRTCCMFD*)data)->set_AGCEpoch(atoi(str));
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_AGCEpoch(double mjd)
+void ApolloRTCCMFD::set_AGCEpoch(int epoch)
 {
-	this->GC->rtcc->SystemParameters.AGCEpoch = mjd;
+	this->GC->rtcc->SystemParameters.AGCEpoch = epoch;
+	GC->rtcc->SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(epoch);
 }
 
 void ApolloRTCCMFD::menuChangeVesselType()
@@ -6914,7 +6915,7 @@ void ApolloRTCCMFD::menuSetAGCEphemMission()
 
 void ApolloRTCCMFD::menuSetAGCEphemBRCSEpoch()
 {
-	GenericDoubleInput(&G->AGCEphemBRCSEpoch, "MJD of BRCS epoch:");
+	GenericIntInput(&G->AGCEphemBRCSEpoch, "Year of BRCS epoch:");
 }
 
 void ApolloRTCCMFD::menuSetAGCEphemTEphemZero()

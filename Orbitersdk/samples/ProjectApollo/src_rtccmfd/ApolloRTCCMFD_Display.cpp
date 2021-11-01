@@ -845,7 +845,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display2(Buffer, GC->rtcc->GetGMTLO()*3600.0);
 		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "AGC Epoch: %f", GC->rtcc->SystemParameters.AGCEpoch);
+		sprintf(Buffer, "AGC Epoch: %d", GC->rtcc->SystemParameters.AGCEpoch);
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(4 * W / 8, 8 * H / 14, "Update Liftoff Time", 19);
@@ -3068,7 +3068,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 2 * H / 14, "Epoch of BRCS:", 14);
 			skp->Text(1 * W / 8, 4 * H / 14, "TEphemZero:", 11);
 
-			sprintf(Buffer, "%f", G->AGCEphemBRCSEpoch);
+			sprintf(Buffer, "%d", G->AGCEphemBRCSEpoch);
 			skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%f", G->AGCEphemTEphemZero);
 			skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));

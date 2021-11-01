@@ -4097,11 +4097,28 @@ MATRIX3 GetObliquityMatrix(int plan, double t)
 	return mul(Rot5, Rot6);
 }
 
-MATRIX3 J2000EclToBRCS(double mjd)
+double TJUDAT(int Y, int M, int D)
+{
+	int Y_apo = Y - 1900;
+	int TMM[] = { 0,31,59,90,120,151,181,212,243,273,304,334 };
+
+	int Z = Y_apo / 4;
+	if (Y_apo % 4 == 0)
+	{
+		Z = Z - 1;
+		for (int i = 2;i < 12;i++)
+		{
+			TMM[i] += 1;
+		}
+	}
+	return 2415020.5 + (double)(365 * Y_apo + Z + TMM[M - 1] + D - 1);
+}
+
+MATRIX3 J2000EclToBRCSMJD(double mjd)
 {
 	double t1 = (mjd - 51544.5) / 36525.0;
-	double t2 = t1*t1;
-	double t3 = t2*t1;
+	double t2 = t1 * t1;
+	double t3 = t2 * t1;
 
 	t1 *= 4.848136811095359e-6;
 	t2 *= 4.848136811095359e-6;
@@ -4117,6 +4134,33 @@ MATRIX3 J2000EclToBRCS(double mjd)
 	double obl = 0.4090928023;
 
 	return mul(mul(_MRz(rot), _MRx(inc)), mul(_MRz(lan), _MRx(-obl)));
+}
+
+double MJDOfNBYEpoch(int epoch)
+{
+	//Calculate MJD of Besselian epoch
+	double C, DE, MJD, JD, T;
+	int E, XN;
+	const double A = 0.0929;
+	const double B = 8640184.542;
+	const double W1 = 1.720217954160054e-2;
+
+	E = epoch;
+	XN = (E - 1901) / 4;
+	C = -86400.0*(double)(E - 1900) - 74.164;
+	T = 2.0 * C / (-B - sqrt(B*B - 4.0 * A*C));
+	DE = 36525.0*T - 365.0*(double)(E - 1900) + 0.5 - (double)XN;
+
+	JD = TJUDAT(epoch, 1, 0);
+	MJD = JD - 2400000.5 + DE;
+	return MJD;
+}
+
+MATRIX3 J2000EclToBRCS(int epoch)
+{
+	//Calculate the rotation matrix between J2000 and mean Besselian of epoch coordinate systems 
+	double MJD = MJDOfNBYEpoch(epoch);
+	return J2000EclToBRCSMJD(MJD);
 }
 
 MATRIX3 _MRx(double a)

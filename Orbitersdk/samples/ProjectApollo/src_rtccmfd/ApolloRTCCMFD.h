@@ -208,7 +208,7 @@ public:
 	void menuSetLaunchTime();
 	void set_LaunchTime(int hours, int minutes, double seconds);
 	void menuSetAGCEpoch();
-	void set_AGCEpoch(double mjd);
+	void set_AGCEpoch(int epoch);
 	void menuChangeVesselType();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();

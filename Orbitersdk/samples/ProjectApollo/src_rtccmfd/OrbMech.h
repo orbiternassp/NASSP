@@ -511,7 +511,11 @@ namespace OrbMech {
 	double calculateDifferenceBetweenAngles(double firstAngle, double secondAngle);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
 	MATRIX3 GetObliquityMatrix(int plan, double t);
-	MATRIX3 J2000EclToBRCS(double mjd);
+	//Year, month, day to Julian Date
+	double TJUDAT(int Y, int M, int D);
+	double MJDOfNBYEpoch(int epoch);
+	MATRIX3 J2000EclToBRCSMJD(double mjd);
+	MATRIX3 J2000EclToBRCS(int epoch);
 	MATRIX3 _MRx(double a);
 	MATRIX3 _MRy(double a);
 	MATRIX3 _MRz(double a);

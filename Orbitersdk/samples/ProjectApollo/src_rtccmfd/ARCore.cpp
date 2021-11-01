@@ -1542,7 +1542,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 		V.z *= pow(2, 7);
 	}
 
-	Rot = OrbMech::J2000EclToBRCS(GC->rtcc->SystemParameters.AGCEpoch);
+	Rot = GC->rtcc->SystemParameters.MAT_J2000_BRCS;
 
 	EphemerisData sv;
 	sv.R = tmul(Rot, R);
@@ -5117,7 +5117,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	VECTOR3 l;
 	double mjd_mid, brcsmjd, w_E, t0, B_0, Omega_I0, F_0, B_dot, Omega_I_dot, F_dot, cosI, sinI;
 	double A_Z, A_Z0, A_X, minA_Y, mjd_land;
-	int mem;
+	int mem, epoch;
 	char AGC[64];
 
 	mjd_mid = mjd_launch + 7.0;
@@ -5132,7 +5132,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	{
 		if (mission < 11)
 		{
-			brcsmjd = 40221.525;    //Nearest Besselian Year 1969
+			epoch = 1969;    //Nearest Besselian Year 1969
 			w_E = 7.29211515e-5;
 			B_0 = 0.409164173;              
 			Omega_I0 = -6.03249419;
@@ -5158,7 +5158,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 14)
 		{
-			brcsmjd = 40586.767239; //Nearest Besselian Year 1970
+			epoch = 1970;			//Nearest Besselian Year 1970
 			w_E = 7.29211494e-5;    //Comanche 055 (Apollo 11 CM AGC)
 			B_0 = 0.40916190299;
 			Omega_I0 = 6.19653663041;
@@ -5173,7 +5173,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 15)
 		{
-			brcsmjd = 40952.009432; //Nearest Besselian Year 1971
+			epoch = 1971;			//Nearest Besselian Year 1971
 			w_E = 7.292115147e-5;	//Comanche 108 (Apollo 14 CM AGC)
 			B_0 = 0.40915963316;
 			Omega_I0 = 5.859196887;
@@ -5188,7 +5188,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else
 		{
-			brcsmjd = 41317.251625; //Nearest Besselian Year 1972
+			epoch = 1972;			//Nearest Besselian Year 1972
 			w_E = 7.29211514667e-5; //Artemis 072 (Apollo 15 CM AGC)
 			B_0 = 0.409157363336;
 			Omega_I0 = 5.52185714700;
@@ -5206,7 +5206,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	{
 		if (mission < 11)
 		{
-			brcsmjd = 40221.525;    //Nearest Besselian Year 1969
+			epoch = 1969;		    //Nearest Besselian Year 1969
 			w_E = 7.29211515e-5;    //Luminary 069 (Apollo 10 LM AGC)
 			B_0 = 0.409164173;
 			Omega_I0 = -6.03249419;
@@ -5221,7 +5221,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 12)
 		{
-			brcsmjd = 40586.767239;		//Nearest Besselian Year 1970
+			epoch = 1970;				//Nearest Besselian Year 1970
 			w_E = 7.29211319606104e-5;  //Luminary 099 (Apollo 11 LM AGC)
 			B_0 = 0.40916190299;
 			Omega_I0 = 6.1965366255107;
@@ -5236,7 +5236,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 13)
 		{
-			brcsmjd = 40586.767239; //Nearest Besselian Year 1970
+			epoch = 1970;			//Nearest Besselian Year 1970
 			w_E = 7.29211494e-5;    //Luminary 116 (Apollo 12 LM AGC)
 			B_0 = 0.4091619030;
 			Omega_I0 = 6.196536640;
@@ -5251,7 +5251,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 14)
 		{
-			brcsmjd = 40586.767239;		//Nearest Besselian Year 1970
+			epoch = 1970;				//Nearest Besselian Year 1970
 			w_E = 7.292115145489943e-05;//Luminary 131 (Apollo 13 LM AGC)
 			B_0 = 0.4091619030;
 			Omega_I0 = 6.196536640;
@@ -5266,7 +5266,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 15)
 		{
-			brcsmjd = 40952.009432; //Nearest Besselian Year 1971
+			epoch = 1971;			//Nearest Besselian Year 1971
 			w_E = 7.292115147e-5;	//Luminary 178 (Apollo 14 LM AGC)
 			B_0 = 0.40915963316;
 			Omega_I0 = 5.859196887;
@@ -5281,7 +5281,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else
 		{
-			brcsmjd = 41317.251625; //Nearest Besselian Year 1972
+			epoch = 1972;			//Nearest Besselian Year 1972
 			w_E = 7.29211514667e-5; //Luminary 210 (Apollo 15 LM AGC)
 			B_0 = 0.409157363336;
 			Omega_I0 = 5.52185714700;
@@ -5297,7 +5297,8 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	}
 
 	//EARTH ROTATIONS
-	J2000 = OrbMech::J2000EclToBRCS(brcsmjd);
+	brcsmjd = OrbMech::MJDOfNBYEpoch(epoch);
+	J2000 = OrbMech::J2000EclToBRCSMJD(brcsmjd);
 	R2 = mul(OrbMech::tmat(Rot2), mul(R, Rot2));
 	R3 = mul(J2000, R2);
 
@@ -5327,6 +5328,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	//TBD: Print stuff here
 	FILE *file = fopen("PrecessionData.txt", "w");
 	fprintf(file, "------- AGC Correction Vectors for Apollo %d using %s -------\n", mission, AGC);
+	fprintf(file, "Epoch   = %d (Year) Epoch of Basic Reference Coordinate System\n", epoch);
 	fprintf(file, "Epoch   = %6.6f (MJD) Epoch of Basic Reference Coordinate System\n", brcsmjd);
 	fprintf(file, "TEphem0 = %6.6f (MJD) Ephemeris Time Zero\n", t0);
 	fprintf(file, "TEPHEM  = %6.6f (MJD) Mission launch time\n", mjd_launch);

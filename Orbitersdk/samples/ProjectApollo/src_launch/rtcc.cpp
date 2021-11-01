@@ -1393,6 +1393,9 @@ RTCC::RTCC()
 	PZMPTCSM.CommonBlock.SIVBMass = PZMPTLEM.CommonBlock.SIVBMass = 90851.2;
 
 	PZMPTCSM.CommonBlock.ConfigCode = PZMPTLEM.CommonBlock.ConfigCode = 15; //CSM + LM + S-IVB
+
+	//Calculate conversion matrix
+	SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
 }
 
 RTCC::~RTCC()
@@ -1430,7 +1433,7 @@ void RTCC::LoadLaunchDaySpecificParameters(int year, int month, int day)
 	//Skeleton flight plan table
 	QMSEARCH(year, month, day);
 	QMMBLD(year, month, day);
-	QMEPHEM(0, year, month, day, 0.0);
+	QMEPHEM(SystemParameters.AGCEpoch, year, month, day, 0.0);
 }
 
 void RTCC::QMSEARCH(int year, int month, int day)
@@ -1820,7 +1823,10 @@ void RTCC::LoadMissionConstantsFile(char *file)
 		{
 			sprintf_s(Buff, line.c_str());
 
-			papiReadScenario_double(Buff, "AGCEpoch", SystemParameters.AGCEpoch);
+			if (papiReadScenario_int(Buff, "AGCEpoch", SystemParameters.AGCEpoch))
+			{
+				SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+			}
 			papiReadScenario_int(Buff, "MCCLEX", SystemParameters.MCCLEX);
 			papiReadScenario_int(Buff, "MCCLRF", SystemParameters.MCCLRF);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
@@ -4768,7 +4774,7 @@ MATRIX3 RTCC::GetREFSMMATfromAGC(agc_t *agc, bool cmc)
 	REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
 	REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
 	
-	return mul(REFSMMAT, OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch));
+	return mul(REFSMMAT, SystemParameters.MAT_J2000_BRCS);
 }
 
 double RTCC::GetClockTimeFromAGC(agc_t *agc)
@@ -6413,7 +6419,7 @@ void RTCC::CMMCMNAV(int veh, int mpt, EphemerisData sv)
 		buf->VehicleID = "LEM";
 	}
 	
-	Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+	Rot = SystemParameters.MAT_J2000_BRCS;
 	if (veh == 1)
 	{
 		tclockzero = SystemParameters.MCGZSA*3600.0;
@@ -6566,7 +6572,7 @@ void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double GETbase, bool
 	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 
-	MATRIX3 Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+	MATRIX3 Rot = SystemParameters.MAT_J2000_BRCS;
 
 	VECTOR3 vel, pos;
 	double get;
@@ -6739,7 +6745,7 @@ void RTCC::AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool
 	}
 	else
 	{
-		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)));
+		a = mul(REFSMMAT, OrbMech::tmat(SystemParameters.MAT_J2000_BRCS));
 	}
 
 	emem[0] = 24;
@@ -6785,7 +6791,7 @@ void RTCC::AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoo
 	}
 	else
 	{
-		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)));
+		a = mul(REFSMMAT, OrbMech::tmat(SystemParameters.MAT_J2000_BRCS));
 	}
 
 	if (cmc)
@@ -6964,8 +6970,8 @@ void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
 	pad.Index[0] = 21;
 	pad.Verb[0] = 71;
 
-	pos = mul(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch), sv.R);
-	vel = mul(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch), sv.V)*0.01;
+	pos = mul(SystemParameters.MAT_J2000_BRCS, sv.R);
+	vel = mul(SystemParameters.MAT_J2000_BRCS, sv.V)*0.01;
 	get = opt->SVGET;
 
 	if (sv.gravref == hMoon) {
@@ -28918,7 +28924,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 			}
 		}
 
-		double J_D = TJUDAT(Year, Month, Day);
+		double J_D = OrbMech::TJUDAT(Year, Month, Day);
 		SystemParameters.GMTBASE = J_D - 2400000.5;
 
 		SystemParameters.MCLAMD = PIGBHA();
@@ -29920,23 +29926,6 @@ SV RTCC::ConvertEphemDatatoSV(EphemerisData sv)
 	}
 
 	return svnew;
-}
-
-double RTCC::TJUDAT(int Y, int M, int D)
-{
-	int Y_apo = Y - 1900;
-	int TMM[] = { 0,31,59,90,120,151,181,212,243,273,304,334 };
-
-	int Z = Y_apo / 4;
-	if (Y_apo % 4 == 0)
-	{
-		Z = Z - 1;
-		for (int i = 2;i < 12;i++)
-		{
-			TMM[i] += 1;
-		}
-	}
-	return 2415020.5 + (double)(365 * Y_apo + Z + TMM[M - 1] + D - 1);
 }
 
 double RTCC::PCDETA(double beta1, double beta2, double r1, double r2)
@@ -32587,7 +32576,7 @@ void RTCC::CMMRFMAT(int L, int id, int addr)
 	FormatREFSMMATCode(id, refs.ID, buff);
 	block->MatrixID.assign(buff);
 
-	MATRIX3 a = mul(refs.REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)));
+	MATRIX3 a = mul(refs.REFSMMAT, OrbMech::tmat(SystemParameters.MAT_J2000_BRCS));
 	block->REFSMMAT = a;
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
@@ -32975,7 +32964,7 @@ void RTCC::BMSVEC()
 	//Reset
 	BZCCANOE = VectorCompareTable();
 	//Get transformation matrix
-	Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+	Rot = SystemParameters.MAT_J2000_BRCS;
 
 	ELVCTRInputTable intab;
 	ELVCTROutputTable2 outtab;
@@ -33470,7 +33459,7 @@ void RTCC::LMMGRP(int veh, double gmt)
 
 		//double DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * gmt / 3600.0;
 		//GZLTRA.IU1_REFSMMAT = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -phi, 2, -SystemParameters.MCLABN, 1);
-		//GZLTRA.IU1_REFSMMAT = mul(GZLTRA.IU1_REFSMMAT, OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch)); //Remove when coordinate system is correct
+		//GZLTRA.IU1_REFSMMAT = mul(GZLTRA.IU1_REFSMMAT, SystemParameters.MAT_J2000_BRCS); //Remove when coordinate system is correct
 
 		RTCCONLINEMON.TextBuffer[0] = "IU1";
 		RTCCONLINEMON.MatrixBuffer = GZLTRA.IU1_REFSMMAT;
@@ -34003,7 +33992,7 @@ void RTCC::EMMGSTMP()
 	{
 		EZJGSTTB.Landmark_GET = 0.0;
 		VECTOR3 u = EZJGSTAR[EZGSTMED.G14_Star - 1];
-		MATRIX3 Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+		MATRIX3 Rot = SystemParameters.MAT_J2000_BRCS;
 		u = mul(Rot, u);
 		char buff[4];
 		sprintf_s(buff, "%03o", EZGSTMED.G14_Star);
@@ -34110,7 +34099,7 @@ void RTCC::EMMGSTMP()
 				}
 				R_VL = R_BL - R_BV;
 
-				MATRIX3 Rot = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+				MATRIX3 Rot = SystemParameters.MAT_J2000_BRCS;
 				VECTOR3 u = mul(Rot, unit(R_VL));
 				EZJGSTTB.Landmark_SC = "";
 				if (EZGSTMED.G14_Vehicle == 1)
@@ -34452,14 +34441,40 @@ void RTCC::CMMTMEIN(int L, double hrs)
 
 void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)
 {
-	double J_D = TJUDAT(YEAR, MONTH, DAY);
+	double J_D = OrbMech::TJUDAT(YEAR, MONTH, DAY);
 	double gmtbase = J_D - 2400000.5;
-	QMGEPH(gmtbase, HOURS);
-	//TBD: QMPNREAD
+	QMGEPH(EPOCH, gmtbase, HOURS);
+	QMPNREAD(gmtbase);
 }
 
-bool RTCC::QMGEPH(double gmtbase, double HOURS)
+void RTCC::QMPNREAD(double gmtbase)
 {
+	MATRIX3 Rot, Rot2, E, Rot3;
+	double dt;
+
+	E = { 1,0,0, 0,1,0, 0,0,1 };
+	Rot3 = SystemParameters.MAT_J2000_BRCS;
+
+	//Table starts 5 days prior to launch
+	double mjd = gmtbase - 5.0;
+	EZNPMATX.mjd0 = mjd;
+	for (int i = 0;i < 141;i++)
+	{
+		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, mjd);
+		Rot = MatrixRH_LH(Rot);
+		dt = (mjd - gmtbase) * 24.0 * 3600.0;
+		//Rotate from true coordinates back to midnight before launch. Then rotate to ecliptic coordinates
+		Rot2 = mul(Rot, GLMRTM(E, OrbMech::w_Earth * dt, 3));
+		//Lastly rotate to basic reference coordinate system
+		EZNPMATX.Mat[i] = mul(Rot3, Rot2);
+		//One matrix every 6 hours
+		mjd = mjd + 0.25;
+	}
+}
+
+bool RTCC::QMGEPH(int epoch, double gmtbase, double HOURS)
+{
+	MATRIX3 Rot_J_B, Rot_SG_ECL;
 	double MJD, MoonPos[12], EarthPos[12];
 	OBJHANDLE hMoon, hEarth;
 	CELBODY *cMoon, *cEarth;
@@ -34473,6 +34488,9 @@ bool RTCC::QMGEPH(double gmtbase, double HOURS)
 	//Store beginning time of ephemeris
 	MDGSUN.MJD = gmtbase - 5.0;
 
+	//Get matrix at epoch
+	Rot_J_B = OrbMech::J2000EclToBRCS(epoch);
+
 	for (int i = 0;i < 71;i++)
 	{
 		MJD = MDGSUN.MJD + 0.5*(double)(i);
@@ -34485,6 +34503,11 @@ bool RTCC::QMGEPH(double gmtbase, double HOURS)
 		//Sun Ephemers
 		cEarth->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
 		MDGSUN.R_ES[i] = -OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]) / OrbMech::R_Earth;
+
+		//Libration matrix (already in NBY coordinates, so don't use yet!)
+		Rot_SG_ECL = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
+		Rot_SG_ECL = MatrixRH_LH(Rot_SG_ECL);
+		MDGSUN.R_LIB[i] = mul(Rot_J_B, Rot_SG_ECL);
 	}
 
 	//MCCBES stored as the time of midnight on launch day since beginning of the year

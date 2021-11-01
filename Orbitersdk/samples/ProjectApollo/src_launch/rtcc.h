@@ -3075,7 +3075,9 @@ public:
 	//Sun/Moon ephemeris table from tape
 	void QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS);
 	//Sun-Moon ephemeris offline
-	bool QMGEPH(double gmtbase, double HOURS);
+	bool QMGEPH(int epoch, double gmtbase, double HOURS);
+	//Reading of P&N ephemeris table
+	void QMPNREAD(double gmtbase);
 
 	// **AUXILIARY SUBROUTINES**
 	//Delta True Anomaly Function
@@ -3684,6 +3686,12 @@ public:
 		ManeuverTimesTable MANTIMES;
 		LunarStayTimesTable LUNRSTAY;
 	} EZEPH1, EZEPH2;
+
+	struct NutationPrecessionMatrices
+	{
+		MATRIX3 Mat[141];
+		double mjd0 = 0.0;
+	} EZNPMATX;
 
 	struct TLITargetingParametersTable
 	{
@@ -4566,6 +4574,8 @@ public:
 		VECTOR3 R_EM[71];
 		//Table of velocity vectors of the Moon relative to the Earth, in Er/hr
 		VECTOR3 V_EM[71];
+		//Libration matrices
+		MATRIX3 R_LIB[71];
 	} MDGSUN;
 
 	//System parameters for PDI
@@ -4720,7 +4730,6 @@ protected:
 	//Build TLI targeting parameters table
 	void QMMBLD(int year, int month, int day);
 
-	double TJUDAT(int Y, int M, int D);
 	EphemerisData ConvertSVtoEphemData(SV sv);
 	SV ConvertEphemDatatoSV(EphemerisData sv);
 
