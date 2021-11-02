@@ -3690,6 +3690,7 @@ public:
 	struct NutationPrecessionMatrices
 	{
 		MATRIX3 Mat[141];
+		//MJD of first matrix
 		double mjd0 = 0.0;
 	} EZNPMATX;
 

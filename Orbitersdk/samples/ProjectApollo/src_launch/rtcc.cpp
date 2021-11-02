@@ -4842,6 +4842,10 @@ SV RTCC::StateVectorCalc(VESSEL *vessel, double SVMJD)
 	sv.R = _V(R.x, R.z, R.y);
 	sv.V = _V(V.x, V.z, V.y);
 
+	//TBD: Not yet..
+	//sv.R = mul(SystemParameters.MAT_J2000_BRCS, sv.R);
+	//sv.V = mul(SystemParameters.MAT_J2000_BRCS, sv.V);
+
 	sv.gravref = gravref;
 	sv.mass = vessel->GetMass();
 
@@ -4873,6 +4877,11 @@ EphemerisData RTCC::StateVectorCalcEphem(VESSEL *vessel)
 
 	sv.R = _V(R.x, R.z, R.y);
 	sv.V = _V(V.x, V.z, V.y);
+
+	//TBD: Not yet..
+	//sv.R = mul(SystemParameters.MAT_J2000_BRCS, sv.R);
+	//sv.V = mul(SystemParameters.MAT_J2000_BRCS, sv.V);
+
 	sv.GMT = OrbMech::GETfromMJD(MJD, SystemParameters.GMTBASE);
 	if (gravref == hEarth)
 	{

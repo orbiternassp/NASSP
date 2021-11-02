@@ -457,6 +457,31 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 	{
 		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, OrbMech::MJDfromGET(sv.GMT, SystemParameters.GMTBASE));
 
+		//Get closest RNP matrix to input time
+		//Time in days between first matrix and input time
+		/*double dt = GetGMTBase() - EZNPMATX.mjd0 + sv.GMT / 24.0 / 3600.0;
+		int ii = (int)(floor(dt * 4.0 + 0.5));
+		if (ii < 0 || ii > 140)
+		{
+			//Not available
+			return;
+		}
+		MATRIX3 Rot1 = EZNPMATX.Mat[ii];
+		//Remove this when ECT is a pseudo inertial coordinate system
+		//double a = OrbMech::w_Earth*sv.GMT;
+		//MATRIX3 Rot2 = OrbMech::_MRz(a);
+		//Rot = mul(Rot2, Rot1);
+		if (in == 0)
+		{
+			sv_out.R = mul(Rot, sv.R);
+			sv_out.V = mul(Rot, sv.V);
+		}
+		else
+		{
+			sv_out.R = tmul(Rot, sv.R);
+			sv_out.V = tmul(Rot, sv.V);
+		}*/
+
 		if (in == 0)
 		{
 			sv_out.R = rhtmul(Rot, sv.R);

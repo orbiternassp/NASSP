@@ -604,12 +604,32 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	{
 		theta = PI2 - theta;
 	}
-	double EE = atan2(sqrt(1.0 - e * e)*sin(theta), e + cos(theta));
-	if (EE < 0)
+	if (e > 1.0)
 	{
-		EE += PI2;
+		//Hyperbolic
+		double F = log((sqrt(e + 1.0) + sqrt(e - 1.0)*tan(theta / 2.0)) / (sqrt(e + 1.0) - sqrt(e - 1.0)*tan(theta / 2.0)));
+		if (F < 0)
+		{
+			F += PI2;
+		}
+		l = e * sinh(F) - F;
 	}
-	l = EE - e * sin(EE);
+	else if (e == 1.0)
+	{
+		//Parabolic
+		double tan_theta2 = tan(theta / 2.0);
+		l = 0.5*tan_theta2 + 1.0 / 6.0*pow(tan_theta2 / 2.0, 3);
+	}
+	else
+	{
+		//Elliptic
+		double EE = atan2(sqrt(1.0 - e * e)*sin(theta), e + cos(theta));
+		if (EE < 0)
+		{
+			EE += PI2;
+		}
+		l = EE - e * sin(EE);
+	}
 	VECTOR3 K = _V(0, 0, 1);
 	VECTOR3 N = crossp(K, H);
 	g = acos2(dotp(unit(N), unit(E)));
