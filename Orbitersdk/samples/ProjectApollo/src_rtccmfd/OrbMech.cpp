@@ -6207,15 +6207,19 @@ CELEMENTS EquinoctialToKepler(CELEMENTS aeq)
 	kep.h = atan2(aeq.h, aeq.g);
 	if (kep.h < 0)
 	{
-		kep.h = kep.h + PI2;
+		kep.h += PI2;
 	}
 	kep.g = atan2(aeq.e, aeq.i) - kep.h;
 	if (kep.g < 0)
 	{
-		kep.g = kep.g + PI2;
+		kep.g += PI2;
 	}
 	kep.l = aeq.l - atan2(aeq.e, aeq.i);
-	if (kep.l < 0)
+	if (kep.l >= PI2)
+	{
+		kep.l -= PI2;
+	}
+	else if (kep.l < 0)
 	{
 		kep.l += PI2;
 	}
@@ -6527,77 +6531,24 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 		}
 	}
 
-	//Lyddane-Cohen improvement on the SMA
-	//double f = OrbMech::MeanToTrueAnomaly(out.l, out.e);
-	//double ar = (1.0 + out.e*cos(f)) / (1.0 - out.e*out.e);
-	//double psi = (-1.0 + 3.0*pow(cos(out.i), 2))*(pow(ar, 3) - pow(sqrt(1.0 - out.e*out.e), 3)) + 3.0*(1.0 - pow(cos(out.i), 2))*pow(ar, 3)*cos(2.0*out.g + 2.0*f);
-	//double da = 1.0 / pow(a1, 3)*(k2*psi*(a1*a1 - k2 * psi + 3.0 / 2.0*(k2 / (cn*cn2))*(1.0 - 3.0*theta2))
-	//	- k2 * k2 / (16.0*pow(cn, 7))*(15.0*cn2*(1.0 - 18.0 / 5.0*theta2 + theta4)
-	//		+ 12.0*cn*(1.0 - 6.0*theta2 + 9.0*theta4) - 15.0*(1.0 - 2.0*theta2 - 7.0*theta4)
-	//		+ 6.0*eccdp2*(1.0 - 16.0*theta2 + 15.0*theta4)*cos(2.0*arr.g))
-	//	+ 9.0*k2*k2 / (2.0*pow(cn, 7))*(1.0 - 6.0*theta2 + 5.0*theta4)*(cos(2.0*arr.g + 2.0*fm)
-	//		+ arr.e*cos(2.0*arr.g + fm) + 1.0 / 3.0*arr.e*cos(2.0*arr.g + 3.0*fm)));
-	//
-	//out.a = (am + da)*R_Earth;
-	//double a1r = a1 * R_Earth;
-
-	//Lyddane-Cohen improvement on the SMA (second attempt)
-	/*double beta = sin(arr.i);
-	double C1 = -1.0 + 5.0*theta2;
-	double C2 = -3.0 + 7.0*theta2;
-	double C3 = 3.0 - 5.0*theta2;
-	double C4 = 15.0 / 32.0*(1.0 - 18.0 / 5.0*theta2 + theta4);
-	double C5 = 3.0 / 8.0*(1.0 - 6.0*theta2 + 9.0*theta4);
-	double C6 = 15.0 / 32.0*(1.0 - 2.0*theta2 - 7.0*theta4);
-	double C7 = 3.0 / 2.0*(3.0*theta2 - 1.0);
-	double C8 = 9.0 / 4.0*(1.0 - 6.0*theta2 + 5.0*theta4);
-	double C9 = 3.0 / 16.0*(1.0 - 16.0*theta2 + 15.0*theta4);
-	double C10 = 5.0 / 2.0*beta*theta2;
-	double C11 = 3.0 / 2.0*beta;
-	double C12 = -3.0 / 8.0*beta*C1;
-	double C13 = 1.0 / 3.0*(35.0 - 70.0*theta2 + 35.0*theta4);
-	double C14 = 10.0 / 3.0*(4.0 - 11.0*theta2 + 7.0*theta4);
-	double C15 = 1.0 / 3.0*(8.0 - 40.0*theta2 + 35.0*theta4);
-	double C16 = 1.0 / 16.0*(3.0 - 30.0*theta2 + 35.0*theta4);
-	double C17 = 1.0 / 4.0*(5.0 - 40.0*theta2 + 35.0*theta4);
-	double f = MeanToTrueAnomaly(out.l, out.e);
-	double u = f + out.g;
-	double O1 = sin(f);
-	double O2 = cos(f);
-	double O3 = sin(u);
-	double O4 = cos(u);
-	double O5 = sin(2.0*u);
-	double O6 = cos(2.0*u);
-	double O7 = sin(out.g);
-	double O8 = cos(out.g);
-	double eta = sqrt(1.0 - arr.e*arr.e);
-	double I4 = cos(out.i);
-	double I5 = sin(out.i);
-	double a1 = -gamma2 * gamma2_apo*(C4*eta*eta + C5 * eta - C6);
-	double a2 = gamma2 * (1.0 - C7 * gamma2_apo*eta);
-	double a3 = -3.0 / 2.0*gamma2*gamma2_apo*eta;
-	double a4 = C8 * gamma2*gamma2_apo;
-	double a5 = 4.0 / 3.0*a4;
-	double a6 = 2.0 / 3.0*a4;
-	double a7 = -C9 * gamma2*gamma2_apo;
-	double a8 = C10 * gamma3;
-	double a9 = -C11 * gamma3;
-	double a10 = -eta * (C12*gamma3_apo);
-	double a11 = C13 * gamma4;
-	double a12 = C14 * gamma4;
-	double a13 = C15 * gamma4;
-	double a14 = -C16 * eta*gamma4_apo*(2.0 + 3.0*arr.e*arr.e);
-	double a15 = C17 * gamma4_apo*eta;
-	double a16 = (1.0 + arr.e*O2) / (1.0 - arr.e*arr.e);
-	double a17 = 0.5*(1.0 - 3.0*I4*I4) + (3.0 / 2.0*I5*I5*(1.0 - 2.0*O3*O3) - 0.5*(1.0 - 3.0*I4*I4))*pow(a16, 3)*pow(eta, 3);
-	double a18 = 1.0 / pow(eta, 3)*(a1 + a2 * a17 + a3 * a17*a17 + a4 * O6 + a5 * O6*O2*arr.e + a6 * O1*O5*arr.e + a7 * arr.e*arr.e*cos(2.0*out.g));
-	double a19 = (a8*O3*O3 + a9)*O3*pow(a16, 4) + a10 * arr.e*O7 + ((a11*O4*O4 + a12)*O4*O4 + a13)*pow(a16, 5) + a14 + a15 * arr.e*arr.e*O8*O8;
-	double da = am * (a18*(2.0 - 5.0*a18) + 2.0*a19);
-	out.a = (am + da)*R_e;
-	double a1r = a * R_e;*/
-
 	out.a = a * R_e;
 	return out;
+
+	//Lyddane-Cohen improvement on the SMA
+	/*double a1 = a;
+	double f = OrbMech::MeanToTrueAnomaly(out.l, out.e);
+	double ar = (1.0 + out.e*cos(f)) / (1.0 - out.e*out.e);
+	double psi = (-1.0 + 3.0*pow(cos(out.i), 2))*(pow(ar, 3) - pow(sqrt(1.0 - out.e*out.e), 3)) + 3.0*(1.0 - pow(cos(out.i), 2))*pow(ar, 3)*cos(2.0*out.g + 2.0*f);
+	double da = 1.0 / pow(a1, 3)*(k2*psi*(a1*a1 - k2 * psi + 3.0 / 2.0*(k2 / (cn*cn2))*(1.0 - 3.0*theta2))
+		- k2 * k2 / (16.0*pow(cn, 7))*(15.0*cn2*(1.0 - 18.0 / 5.0*theta2 + theta4)
+			+ 12.0*cn*(1.0 - 6.0*theta2 + 9.0*theta4) - 15.0*(1.0 - 2.0*theta2 - 7.0*theta4)
+			+ 6.0*eccdp2*(1.0 - 16.0*theta2 + 15.0*theta4)*cos(2.0*arr.g))
+		+ 9.0*k2*k2 / (2.0*pow(cn, 7))*(1.0 - 6.0*theta2 + 5.0*theta4)*(cos(2.0*arr.g + 2.0*fm)
+			+ arr.e*cos(2.0*arr.g + fm) + 1.0 / 3.0*arr.e*cos(2.0*arr.g + 3.0*fm)));
+	
+	out.a = (am + da)*R_Earth;
+	double a1r = a1 * R_Earth;
+	return out;*/
 }
 
 void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double &l_dot, double &g_dot, double &h_dot)
@@ -6648,7 +6599,7 @@ void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double
 		J4 * pow(R_e, 4) / pow(R, 5)*(1.0 - 10.0*pow(sin_lat, 2) + 35.0 / 3.0*pow(sin_lat, 4));
 	l_dot = sqrt(mu*pow(ainv, 3));
 
-	//l_dot = n0 * cn*(gmp2*(3.0 / 2.0*(3.0*theta2 - 1.0) + 3.0 / 32.0*gmp2*(25.0*cn2 + 16.0*cn - 15.0 + (30.0 - 96.0*cn - 90.0*cn2)*theta2
+	//l_dot = n0 + n0 * cn*(gmp2*(3.0 / 2.0*(3.0*theta2 - 1.0) + 3.0 / 32.0*gmp2*(25.0*cn2 + 16.0*cn - 15.0 + (30.0 - 96.0*cn - 90.0*cn2)*theta2
 	//	+ (105.0 + 144.0*cn + 25.0*cn2)*theta4)) + 15.0 / 16.0*gmp4*eccdp2*(3.0 - 30.0*theta2 + 35.0*theta4));
 	g_dot = n0 * (gmp2*(3.0 / 2.0*(5.0*theta2 - 1.0) + 3.0 / 32.0*gmp2*(25.0*cn2 + 24.0*cn - 35.0
 		+ (90.0 - 192.0*cn - 126.0*cn2)*theta2 + (385.0 + 360.0*cn + 45.0*cn2)*theta4))
