@@ -1322,28 +1322,28 @@ double SaturnSystemTestAttenuator::GetValue()
 		case 0:	//SPS OX LINE TEMP
 			val = Sat->pcm.measure(10, TLM_A, 120);
 			break;
-		case 2:	//TEMP -P ENG INJECTOR SYS B
-			val = Sat->pcm.scale_data(30, -50, 50);
+		case 2:	//TEMP JET 24 -P ENG INJECTOR SYS 2
+			val = Sat->pcm.scale_data(Sat->CMRCS2.GetInjectorTempF(0), -50, 50);	//Scaled -50F = 0V & 50F = 5V
 			break;
-		case 3:	//TEMP +Y ENG INJECTOR SYS B
-			val = Sat->pcm.scale_data(30, -50, 50);
+		case 3:	//TEMP JET 25 +Y ENG INJECTOR SYS 2
+			val = Sat->pcm.scale_data(Sat->CMRCS2.GetInjectorTempF(1), -50, 50);	//Scaled -50F = 0V & 50F = 5V
 			break;
 		}
 		break;
 	case 6:
 		switch (right)
 		{
-		case 0:	//TEMP CCW ENG INJECTOR SYS A
-			val = Sat->pcm.scale_data(30, -50, 50);
+		case 0:	//TEMP JET 12 CCW ENG INJECTOR SYS 1
+			val = Sat->pcm.scale_data(Sat->CMRCS1.GetInjectorTempF(2), -50, 50);	//Scaled -50F = 0V & 50F = 5V
 			break;
-		case 1:	//TEMP -P ENG INJECTOR SYS A
-			val = Sat->pcm.scale_data(30, -50, 50);
+		case 1:	//TEMP JET 14 -P ENG INJECTOR SYS 1
+			val = Sat->pcm.scale_data(Sat->CMRCS1.GetInjectorTempF(0), -50, 50);	//Scaled -50F = 0V & 50F = 5V
 			break;
-		case 2:	//TEMP -Y ENG INJECTOR SYS A
-			val = Sat->pcm.scale_data(30, -50, 50);
+		case 2:	//TEMP JET 16 -Y ENG INJECTOR SYS 1
+			val = Sat->pcm.scale_data(Sat->CMRCS1.GetInjectorTempF(1), -50, 50);	//Scaled -50F = 0V & 50F = 5V
 			break;
-		case 3:	//TEMP CW ENG INJECTOR SYS B
-			val = Sat->pcm.scale_data(30, -50, 50);
+		case 3:	//TEMP JET 21 CW ENG INJECTOR SYS 2
+			val = Sat->pcm.scale_data(Sat->CMRCS2.GetInjectorTempF(2), -50, 50);	//Scaled -50F = 0V & 50F = 5V
 			break;
 		}
 		break;
