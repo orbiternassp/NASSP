@@ -1845,7 +1845,11 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB)
 	double MJD = SystemParameters.GMTBASE + HOUR / 24.0;
 	//Moon Libration Matrix
 	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
+	//For now this
 	M_LIB = MatrixRH_LH(Rot);
+	//TBD: Use this instead
+	//MATRIX3 M_ecl = MatrixRH_LH(Rot);
+	//M_LIB = mul(SystemParameters.MAT_J2000_BRCS, M_ecl);
 	return false;
 }
 
