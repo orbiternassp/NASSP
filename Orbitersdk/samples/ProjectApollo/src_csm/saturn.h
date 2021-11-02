@@ -1289,7 +1289,10 @@ public:
 	// \ mass in kg, ro (distance from center of the bottom points), tdph (height of bottom points),
 	// \ height (of the top point), x_target (stiffness/damping factor, stable default is -0.5)
 	//
+	void ConfigTouchdownPoints();
 	void ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target = -0.5);
+	
+	void SetWaterDumpParticleStreams(VECTOR3 ofs);
 
 	// Functions to recalculate moments of inertia and center of gravity
 	void UpdateMassAndCoG();
@@ -3966,13 +3969,6 @@ protected:
 
 	double PanelPixelHeight;
 
-	//
-	// Virtual cockpit
-	//
-
-	VECTOR3 VCCameraOffset;
-	VECTOR3 VCMeshOffset;
-
 	bool KranzPlayed;
 	bool PostSplashdownPlayed;
 	bool SplashdownPlayed;
@@ -4199,7 +4195,7 @@ protected:
 	void SetSplashStage();
 	void SetCSMStage();
 	void CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage);
-	void SetReentryStage();
+	void SetReentryStage(VECTOR3 cg_ofs);
 	void SetReentryMeshes();
 	void AddRCS_CM(double MaxThrust, double offset = 0.0, bool createThrusterGroups = true);
 	void GenericTimestepStage(double simt, double simdt);
@@ -4212,6 +4208,7 @@ protected:
 	void RCSSoundTimestep();
 	void LoadVC();
 	void UpdateVC(VECTOR3 meshdir);
+	void DefineCMAttachments();
 
 	//
 	// Sounds

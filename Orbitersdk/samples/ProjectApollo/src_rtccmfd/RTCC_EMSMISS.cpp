@@ -38,6 +38,7 @@ RTCC_EMSMISS::RTCC_EMSMISS(RTCC *r) : RTCCModule(r)
 
 	nierror = 0;
 	ErrorCode = 0;
+	min_ephem_dt = 0.001;
 }
 
 void RTCC_EMSMISS::Call(EMSMISSInputTable *in)
@@ -257,7 +258,7 @@ void RTCC_EMSMISS::WriteNIAuxOutputTable()
 	intab->NIAuxOutputTable.CutoffWeight = state.WeightsTable.ConfigWeight;
 	intab->NIAuxOutputTable.ErrorCode = ErrorCode;
 	intab->NIAuxOutputTable.TerminationCode = TerminationCode;
-	intab->NIAuxOutputTable.ManeuverNumber = i;
+	intab->NIAuxOutputTable.ManeuverNumber = i + 1;
 	intab->NIAuxOutputTable.LunarStayBeginGMT = LunarStayBeginGMT;
 	intab->NIAuxOutputTable.LunarStayEndGMT = LunarStayEndGMT;
 }
@@ -299,14 +300,14 @@ void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterManeuver()
 	double dmass = AuxTableIndicator.MainFuelUsed + AuxTableIndicator.RCSFuelUsed;
 	switch (mpt->mantable[i].TVC)
 	{
-	case 1:
+	case RTCC_MANVEHICLE_CSM:
 		state.WeightsTable.CSMWeight -= dmass;
 		break;
-	case 2:
+	case RTCC_MANVEHICLE_SIVB:
 		state.WeightsTable.SIVBWeight -= dmass;
 		break;
-	case 3:
-		if (mpt->mantable[i].Thruster = RTCC_ENGINETYPE_LMDPS)
+	case RTCC_MANVEHICLE_LM:
+		if (mpt->mantable[i].Thruster == RTCC_ENGINETYPE_LMDPS)
 		{
 			state.WeightsTable.LMDscWeight -= dmass;
 		}
@@ -331,7 +332,7 @@ double RTCC_EMSMISS::NextEventTime(double gmt)
 {
 	if (gmt_lim - state.StateVector.GMT >= 0.0)
 	{
-		if (gmt > gmt_lim)
+		if (gmt >= gmt_lim)
 		{
 			manflag = false;
 			return gmt_lim;
@@ -534,6 +535,7 @@ void RTCC_EMSMISS::WriteEphemerisHeaders()
 
 void RTCC_EMSMISS::AddCoastOrSurfaceEphemeris()
 {
+	double dt;
 	for (unsigned int ii = 0;ii < 4;ii++)
 	{
 		if (EphemerisIndicatorList[ii])
@@ -542,9 +544,13 @@ void RTCC_EMSMISS::AddCoastOrSurfaceEphemeris()
 			for (unsigned int jj = 0;jj < tempcoastephemtable[ii].table.size();jj++)
 			{
 				//If the GMT is identical to the last GMT in the table then don't write the same state vector again
-				if (EphemerisTableIndicatorList[ii]->table.size() > 0 && (EphemerisTableIndicatorList[ii]->table.back().GMT == tempcoastephemtable[ii].table[jj].GMT))
+				if (EphemerisTableIndicatorList[ii]->table.size() > 0)
 				{
-					continue;
+					dt = EphemerisTableIndicatorList[ii]->table.back().GMT - tempcoastephemtable[ii].table[jj].GMT;
+					if (abs(dt) < min_ephem_dt)
+					{
+						continue;
+					}
 				}
 
 				EphemerisTableIndicatorList[ii]->table.push_back(tempcoastephemtable[ii].table[jj]);
@@ -558,6 +564,7 @@ void RTCC_EMSMISS::AddCoastOrSurfaceEphemeris()
 void RTCC_EMSMISS::AddManeuverEphemeris()
 {
 	EphemerisData2 sv_out;
+	double dt;
 	int in, converr;
 
 	if (tempephemtable.Header.CSI == BODY_EARTH)
@@ -577,9 +584,14 @@ void RTCC_EMSMISS::AddManeuverEphemeris()
 			for (unsigned int jj = 0;jj < tempephemtable.table.size();jj++)
 			{
 				//If the GMT is identical to the last GMT in the table then don't write the same state vector again
-				if (EphemerisTableIndicatorList[ii]->table.size() > 0 && (EphemerisTableIndicatorList[ii]->table.back().GMT == tempephemtable.table[jj].GMT))
+				if (EphemerisTableIndicatorList[ii]->table.size() > 0)
 				{
-					continue;
+					dt = EphemerisTableIndicatorList[ii]->table.back().GMT - tempephemtable.table[jj].GMT;
+
+					if (abs(dt) < min_ephem_dt)
+					{
+						continue;
+					}
 				}
 
 				//Convert to desired coordinate system
@@ -618,6 +630,18 @@ void RTCC_EMSMISS::CallManeuverIntegrator()
 	}
 	if (nierror)
 	{
+		pRTCC->RTCCONLINEMON.IntBuffer[0] = nierror;
+		pRTCC->RTCCONLINEMON.IntBuffer[1] = i + 1;
+		if (intab->VehicleCode == RTCC_MPT_CSM)
+		{
+			pRTCC->RTCCONLINEMON.TextBuffer[0] = "CSM";
+		}
+		else
+		{
+			pRTCC->RTCCONLINEMON.TextBuffer[0] = "LEM";
+		}
+
+		pRTCC->EMGPRINT("EMSMISS", 17);
 		return;
 	}
 
@@ -631,9 +655,10 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 	{
 		CurrentWeightsTable.CC = mpt->mantable[i].CommonBlock.ConfigCode;
 
-		CurrentWeightsTable.ConfigWeight = CurrentWeightsTable.ConfigArea = CurrentWeightsTable.CSMArea = CurrentWeightsTable.LMAscArea = CurrentWeightsTable.LMDscArea = 0.0;
+		CurrentWeightsTable.ConfigWeight = CurrentWeightsTable.CSMWeight = CurrentWeightsTable.LMAscWeight = CurrentWeightsTable.LMDscWeight = CurrentWeightsTable.SIVBWeight = 0.0;
+		CurrentWeightsTable.ConfigArea = CurrentWeightsTable.CSMArea = CurrentWeightsTable.LMAscArea = CurrentWeightsTable.LMDscArea = 0.0;
 
-		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_C])
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_C])
 		{
 			CurrentWeightsTable.CSMWeight = state.WeightsTable.CSMWeight;
 			CurrentWeightsTable.ConfigWeight += CurrentWeightsTable.CSMWeight;
@@ -642,7 +667,7 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 				CurrentWeightsTable.ConfigArea = state.WeightsTable.CSMArea;
 			}
 		}
-		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_S])
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_S])
 		{
 			CurrentWeightsTable.SIVBWeight = state.WeightsTable.SIVBWeight;
 			CurrentWeightsTable.ConfigWeight += CurrentWeightsTable.SIVBWeight;
@@ -651,7 +676,7 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 				CurrentWeightsTable.ConfigArea = state.WeightsTable.SIVBArea;
 			}
 		}
-		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_A])
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_A])
 		{
 			CurrentWeightsTable.LMAscWeight = state.WeightsTable.LMAscWeight;
 			CurrentWeightsTable.ConfigWeight += CurrentWeightsTable.LMAscWeight;
@@ -661,7 +686,7 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 			}
 		}
 
-		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_D])
+		if (mpt->mantable[i].CommonBlock.ConfigCode[RTCC_CONFIG_D])
 		{
 			CurrentWeightsTable.LMDscWeight = state.WeightsTable.LMDscWeight;
 			CurrentWeightsTable.ConfigWeight += CurrentWeightsTable.LMDscWeight;
@@ -883,7 +908,21 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 	else
 	{
 		EphemerisData SV;
-		pRTCC->ELFECH(state.StateVector.GMT, RTCC_MPT_CSM, SV);
+		double gmt_sv;
+		//If desired GMT is before start of CSM ephemeris use start of CSM ephemeris instead
+		if (state.StateVector.GMT < pRTCC->EZEPH1.EPHEM.Header.TL)
+		{
+			gmt_sv = pRTCC->EZEPH1.EPHEM.Header.TL;
+		}
+		else
+		{
+			gmt_sv = state.StateVector.GMT;
+		}
+		if (pRTCC->ELFECH(gmt_sv, RTCC_MPT_CSM, SV))
+		{
+			nierror = 1;
+			return;
+		}
 		integin.sv_CSM.R = SV.R;
 		integin.sv_CSM.V = SV.V;
 		integin.sv_CSM.MJD = OrbMech::MJDfromGET(SV.GMT, pRTCC->SystemParameters.GMTBASE);

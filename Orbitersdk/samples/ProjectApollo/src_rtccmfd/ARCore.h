@@ -13,6 +13,7 @@
 #include "saturn.h"
 #include "mcc.h"
 #include "rtcc.h"
+#include "LunarTargetingProgram.h"
 #include <queue>
 
 struct ApolloRTCCMFDData {  // global data storage
@@ -143,6 +144,7 @@ public:
 	void VectorCompareDisplayCalc();
 	void UpdateTLITargetTable();
 	void GenerateSpaceDigitalsNoMPT();
+	void LUNTARCalc();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -153,7 +155,7 @@ public:
 	void GenerateAGCEphemeris();
 	int agcCelBody_RH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
 	int agcCelBody_LH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
-	void AGCEphemeris(double T0, double Epoch, double TEphem0);
+	void AGCEphemeris(double T0, int Epoch, double TEphem0);
 	void AGCCorrectionVectors(double mjd_launch, double t_land, int mission, bool isCMC);
 	void GenerateAGCCorrectionVectors();
 
@@ -272,6 +274,8 @@ public:
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
+
+	//AGS STATE VECTOR
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
 	AP11AGSSVPAD agssvpad;
@@ -368,7 +372,7 @@ public:
 
 	//AGC EPHEMERIS
 	int AGCEphemOption;	//0 = AGC ephemerides, 1 = AGC precession/nutation/libration correction vectors
-	double AGCEphemBRCSEpoch;
+	int AGCEphemBRCSEpoch;
 	double AGCEphemTEphemZero;
 	double AGCEphemTIMEM0;
 	double AGCEphemTEPHEM;
@@ -394,6 +398,15 @@ public:
 	double RTCCClockTime[2];
 	double DeltaClockTime[2];
 	double DesiredRTCCLiftoffTime[2];
+
+	//LUNAR TARGETING PROGRAM
+	double LUNTAR_lat;
+	double LUNTAR_lng;
+	double LUNTAR_bt_guess;
+	double LUNTAR_pitch_guess;
+	double LUNTAR_yaw_guess;
+	double LUNTAR_TIG;
+	LunarTargetingProgramOutput LUNTAR_Output;
 
 private:
 

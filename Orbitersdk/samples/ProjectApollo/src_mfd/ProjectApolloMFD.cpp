@@ -1069,7 +1069,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		else if (g_Data.iuUplinkType == DCSUPLINK_EVASIVE_MANEUVER_ENABLE)
 		{
 			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Maneuver Enable", 23);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Yaw Mnvr Enable", 23);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_EXECUTE_COMM_MANEUVER)
 		{
@@ -1126,8 +1126,12 @@ void ProjectApolloMFD::Update (HDC hDC)
 		if (g_Data.iuVessel)
 		{
 			oapiGetObjectName(g_Data.iuVessel->GetHandle(), buffer, 100);
-			TextOut(hDC, (int)(width * 0.05), (int)(height * 0.95), buffer, strlen(buffer));
 		}
+		else
+		{
+			sprintf(buffer, "No Target!");
+		}
+		TextOut(hDC, (int)(width * 0.05), (int)(height * 0.95), buffer, strlen(buffer));
 	}
 	//Draw Telemetry
 	else if (screen == m_buttonPages.page.TELE) {

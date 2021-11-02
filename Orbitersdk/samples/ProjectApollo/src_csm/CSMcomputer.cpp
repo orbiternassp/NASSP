@@ -178,10 +178,12 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// Turn on EL display and CMC Light (DSKYWarn).
 			vagc.DskyChannel163 = 1;
 			SetOutputChannel(0163, 1);
-			// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
+			// Light OSCILLATOR FAILURE and VOLTAGE FAIL to signify power transient, and be forceful about it.
 			vagc.InputChannel[033] &= 037777;
 			OutputChannel[033] &= 037777;
-			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+			vagc.InputChannel[077] |= 040;
+			OutputChannel[077] |= 040;
+			// Also turn off STBY and RESTART light while power is off.
 			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 			vagc.RestartLight = 1;

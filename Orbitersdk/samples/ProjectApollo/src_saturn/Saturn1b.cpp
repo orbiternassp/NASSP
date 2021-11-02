@@ -455,7 +455,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		SetSecondStage();
-		SetSecondStageEngines();
+		SetSecondStageEngines(STG1OF);
 		AddRCS_S4B();
 		break;
 
@@ -531,11 +531,11 @@ void Saturn1b::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CM_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_THREE:
@@ -563,7 +563,7 @@ void Saturn1b::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CM_ENTRY_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 	}
 }
@@ -585,7 +585,7 @@ void Saturn1b::ConfigureStageEngines(int stage_state)
 
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
-		SetSecondStageEngines();
+		SetSecondStageEngines(STG1OF);
 		break;
 	}
 }

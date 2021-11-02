@@ -24,6 +24,13 @@
 #include "saturnv.h"
 #include "LEM.h"
 
+struct RTCCMFDInputBoxData
+{
+	double *dVal;
+	int *iVal;
+	double factor;
+};
+
 class ApolloRTCCMFD: public MFD2 {
 public:
 	ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im);
@@ -40,25 +47,18 @@ public:
 
 	bool Text(oapi::Sketchpad *skp, int x, int y, const std::string & str);
 
+	void SelectPage(int page);
 	void menuTIChaserVectorTime();
-	void set_TIChaserVectorTime(double get);
 	void menuTITargetVectorTime();
-	void set_TITargetVectorTime(double get);
 	void menuTITimeIncrement();
-	void set_TITimeIncrement(double dt);
 	void menuTITimeRange();
-	void set_TITimeRange(double dt);
 	void t1dialogue();
-	void set_t1(double t1);
 	void t2dialogue();
-	void set_t2(double t2);
 	void menuCycleK30Vehicle();
 	void SPQtimedialogue();
 	void set_SPQtime(double tig);
 	void menuSetSPQChaserThresholdTime();
-	void set_SPQChaserThresholdTime(double get);
 	void menuSetSPQTargetThresholdTime();
-	void set_SPQTargetThresholdTime(double get);
 	void DKIDHdialogue();
 	void set_DKIDH(double DH);
 	void SPQDHdialogue();
@@ -89,9 +89,7 @@ public:
 	void GMPInput4Dialogue();
 	void set_GMPInput4(double val);
 	void OrbAdjGETDialogue();
-	void set_OrbAdjGET(double SPSGET);
 	void OrbAdjRevDialogue();
-	void set_OrbAdjRevs(int N);
 	void GPMPCalc();
 	void menuCycleGMPManeuverVehicle();
 	void menuCycleGMPManeuverPoint();
@@ -134,7 +132,6 @@ public:
 	void menuRTED_REFSMMAT();
 	void set_RTED_REFSMMAT(char *str);
 	void menuRTEDASTCodeDialogue();
-	void set_RTEDASTCode(int code);
 	void menuSetRTEDUllage();
 	void set_RTEDUllage(int thrusters, double duration);
 	void menuCycleRTEDTrimAnglesOption();
@@ -159,8 +156,8 @@ public:
 	void menuTransferRTEToMPT();
 	bool set_RTESolution(char *str);
 	void menuGeneralMEDRequest();
+	void menuGeneralMEDRequest(char *message);
 	void GeneralMEDRequest(char *str);
-	void set_entryrange(double range);
 	void EntryRangeDialogue();
 	void menuSVCalc();
 	void menuSwitchSVSlot();
@@ -179,11 +176,12 @@ public:
 	void menuManPADUllage();
 	bool set_ManPADUllageOption(int num, double dt);
 	void menuManPADTIG();
-	void set_ManPADTIG(double ManPADTIG);
 	void menusextantstartime();
 	void set_sextantstartime(double time);
 	void menuManPADDV();
 	void set_P30DV(VECTOR3 dv);
+	void menuREFSMMATAtt();
+	void set_REFSMMATAtt(VECTOR3 att);
 	void menuSwitchManPADEngine();
 	void CycleThrusterOption(int &thruster);
 	void set_lambertelev(double elev);
@@ -201,7 +199,6 @@ public:
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSetMapUpdateGET();
-	void set_MapUpdateGET(double time);
 	void menuSwitchUplinkInhibit();
 	void menuCycleSPQMode();
 	void set_CDHtimemode();
@@ -211,7 +208,7 @@ public:
 	void menuSetLaunchTime();
 	void set_LaunchTime(int hours, int minutes, double seconds);
 	void menuSetAGCEpoch();
-	void set_AGCEpoch(double mjd);
+	void set_AGCEpoch(int epoch);
 	void menuChangeVesselType();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
@@ -224,19 +221,14 @@ public:
 	void set_RTEReentryTime(double t);
 	void menuSetLOIPage();
 	void menuTLCCVectorTime();
-	void set_TLCCVectorTime(double time);
 	void menuCycleTLCCColumnNumber();
 	void menuCycleTLCCCSFPBlockNumber();
 	void menuSwitchTLCCManeuver();
 	void menuSetTLCCGET();
-	void set_TLCCGET(double time);
 	void menuCycleTLCCConfiguration();
 	void menuSetTLCCAlt();
-	void set_TLCCAlt(double alt);
 	void menuSetTLCCAltMode5();
-	void set_TLCCAltMode5(double alt);
 	void menuSetTLCCDesiredInclination();
-	void set_TLCCDesiredInclination(double inc);
 	void menuSetMidcourseConstraintsPage();
 	void menuSetTLMCCAzimuthConstraints();
 	void menuSetTLMCCTLCTimesConstraints();
@@ -257,36 +249,21 @@ public:
 	void menuSetTLMCCLOPCRevs();
 	void set_TLMCCLOPCRevs(int m, int n);
 	void menuSetLOIVectorTime();
-	void set_LOIVectorTime(double get);
 	void menuSetLOIApo();
-	void set_LOIApo(double alt);
 	void menuSetLOIPeri();
-	void set_LOIPeri(double alt);
 	void menuSetLOIDesiredAzi();
-	void set_LOIDesiredAzi(double azi);
 	void menuSetLOIMinAzi();
-	void set_LOIMinAzi(double azi);
 	void menuSetLOIMaxAzi();
-	void set_LOIMaxAzi(double azi);
 	void menuSetLOIMaxDVPos();
-	void set_LOIMaxDVPos(double dv);
 	void menuSetLOIMaxDVNeg();
-	void set_LOIMaxDVNeg(double dv);
 	void menuSetLOI_HALLS();
-	void set_LOI_HALLS(double ha);
 	void menuSetLOI_HPLLS();
-	void set_LOI_HPLLS(double hp);
 	void menuSetLOIDHBias();
-	void set_LOIDHBias(double dh);
 	void menuSetLOIDW();
-	void set_LOIDW(double dw);
 	void menuCycleLOIInterSolnFlag();
 	void menuSetLOIRevs1();
-	void set_LOIRevs1(double revs1);
 	void menuSetLOIRevs2();
-	void set_LOIRevs2(int revs2);
 	void menuSetLOIEta1();
-	void set_LOIEta1(double eta);
 	void menuSetLOIInitPage();
 	void menuSetLOIDisplayPage();
 	void menuSetTLAND();
@@ -294,11 +271,8 @@ public:
 	void menuRequestLTMFD();
 	void menuSetLandmarkTrkPage();
 	void menuSetLmkTime();
-	void set_LmkTime(double time);
 	void menuSetLmkLat();
-	void set_LmkLat(double lat);
 	void menuSetLmkLng();
-	void set_LmkLng(double lng);
 	void menuLmkPADCalc();
 	void menuSetTargetingMenu();
 	void menuSetPADMenu();
@@ -323,18 +297,12 @@ public:
 	void set_vecbody(OBJHANDLE body);
 	void menuVECPOINTCalc();
 	void menuSetLDPPVectorTime();
-	void set_LDPPVectorTime(double time);
 	void menuLSRadius();
-	void set_LSRadius(double rad);
 	void menuSetLDPPDwellOrbits();
-	void set_LDPPDwellOrbits(int N);
 	void menuSetLDPPDescentFlightArc();
-	void set_LDPPDescentFlightArc(double ang);
 	void menuSetLDPPDescIgnHeight();
-	void set_LDPPDescIgnHeight(double alt);
 	void cycleLDPPPoweredDescSimFlag();
 	void menuSetLDPPPoweredDescTime();
-	void set_LDPPPoweredDescTime(double pdi);
 	void menuLDPPCalc();
 	void menuSetDescPlanCalcPage();
 	void menuSetLDPPMode();
@@ -347,13 +315,9 @@ public:
 	void set_SkylabGET(double time);
 	void menuSkylabCalc();
 	void menuSetSkylabNC();
-	void set_SkylabNC(double N);
 	void menuSetSkylabDH1();
-	void set_SkylabDH1(double dh);
 	void menuSetSkylabDH2();
-	void set_SkylabDH2(double dh);
 	void menuSetSkylabEL();
-	void set_SkylabEL(double E_L);
 	void set_t_TPI(double time);
 	void menuCyclePlaneChange();
 	void menuCyclePCManeuver();
@@ -361,11 +325,8 @@ public:
 	void menuSetDescPlanInitPage();
 	void menuCycleLLWPChaserOption();
 	void menuSetLiftoffguess();
-	void set_Liftoffguess(double time);
 	void menuLLWPVectorTime();
-	void set_LLWPVectorTime(double get);
 	void menuSetLLWPCSIFlag();
-	void set_LLWPCSIFlag(double val);
 	void menuSetLLWPCDHFlag();
 	void menuSetLLWPDeltaHeights();
 	void set_LLWPDeltaHeights(double dh1, double dh2, double dh3);
@@ -380,35 +341,25 @@ public:
 	void set_LLTPThresholdTime(double get);
 	void menuLLTPVectorTime();
 	void set_LLTPVectorTime(double get);
-	void set_TPIguess(double time);
 	void menuLunarLiftoffVHorInput();
-	void set_LunarLiftoffVHorInput(double v_lh);
 	void menuLunarLiftoffVVertInput();
-	void set_LunarLiftoffVVertInput(double v_lv);
 	void menuSetEMPUplinkP99();
 	void menuEMPUplink();
 	void menuSetEMPUplinkNumber();
 	void menuTMLat();
-	void set_TMLat(double lat);
 	void menuTMLng();
-	void set_TMLng(double lng);
 	void menuTMAzi();
-	void set_TMAzi(double azi);
 	void menuSetTerrainModelPage();
 	void menuTMDistance();
-	void set_TMDistance(double distance);
 	void menuTMStepSize();
-	void set_TMStepSize(double step);
 	void menuTerrainModelCalc();
 	void set_TLand(double time);
 	void menuTLCCCalc();
 	void menuNavCheckPADCalc();
 	void menuSetNavCheckGET();
-	void set_NavCheckGET(double time);
 	void menuLAPCalc();
 	void menuCycleDKIChaser();
 	void menuSetDKIThresholdTime();
-	void set_DKIThresholdInput(double get);
 	void menuDKICalc();
 	void DKITIGDialogue();
 	void set_DKITIG(double time);
@@ -429,19 +380,12 @@ public:
 	void menuCycleDKIManeuverLine();
 	void menuCycleDKIRadialComponent();
 	void DKITPIDTDialogue();
-	void set_DKITPIDT(double time);
 	void DKINHCDialogue();
-	void set_DKINHC(int N);
 	void DKINPBDialogue();
-	void set_DKINPB(int N);
 	void menuDKIDeltaT1();
-	void set_DKIDT1(double dt);
 	void menuDKIDeltaT2();
-	void set_DKIDT2(double dt);
 	void menuDKIDeltaT3();
-	void set_DKIDT3(double dt);
 	void menuSetLAPLiftoffTime();
-	void set_LAPLiftoffTime(double time);
 	void menuSetDAPPADPage();
 	void menuDAPPADCalc();
 	void menuSetLVDCPage();
@@ -450,17 +394,11 @@ public:
 	void menuCycleAGCEphemOpt();
 	void menuCycleAGCEphemAGCType();
 	void menuSetAGCEphemMission();
-	void set_AGCEphemMission(int ApolloNo);
 	void menuSetAGCEphemBRCSEpoch();
-	void set_AGCEphemBRCSEpoch(double mjd);
 	void menuSetAGCEphemTEphemZero();
-	void set_AGCEphemTEphemZero(double mjd);
 	void menuSetAGCEphemTEPHEM();
-	void set_AGCEphemTEPHEM(double mjd);
 	void menuSetAGCEphemTIMEM0();
-	void set_AGCEphemTIMEM0(double mjd);
 	void menuSetAGCEphemTLAND();
-	void set_AGCEphemTLAND(double get);
 	void menuGenerateAGCEphemeris();
 	void cycleVECPOINTOpt();
 	void menuSetLMAscentPADPage();
@@ -644,12 +582,10 @@ public:
 	void VectorControlPBI(int code);
 	void menuSetDescPlanTablePage();
 	void menuSetLDPPAzimuth();
-	void set_LDPPAzimuth(double azi);
 	void menuSetLDPPDescentFlightTime();
 	void set_LDPPDescentFlightTime(double dt);
 	void cycleLDPPVehicle();
 	void menuSetLDPPDesiredHeight();
-	void set_LDPPDesiredHeight(double alt);
 	void menuLDPPThresholdTime1();
 	void menuLDPPThresholdTime2();
 	void menuLDPPThresholdTime3();
@@ -742,11 +678,8 @@ public:
 	void menuSetRetrofireConstraintsPage();
 	void menuSetRetrofireDigitalsPage();
 	void menuRetrofireGETIDialogue();
-	void set_RetrofireGETI(double time);
 	void menuRetrofireLatDialogue();
-	void set_RetrofireLat(double lat);
 	void menuRetrofireLngDialogue();
-	void set_RetrofireLng(double lng);
 	void menuSetRetrofireXDVPage();
 	void menuSwitchRetrofireEngine();
 	void menuSwitchRetrofireBurnMode();
@@ -806,7 +739,17 @@ public:
 	void menuAGCTimeUpdateUplink();
 	void menuAGCLiftoffTimeComparision();
 	void set_AGCLiftoffTimeComparision(double tim);
-
+	void menuSetLunarTargetingProgramPage();
+	void LUNTAR_TIGInput();
+	void LUNTAR_BTInput();
+	void LUNTAR_PitchInput();
+	void LUNTAR_YawInput();
+	void LUNTAR_LatInput();
+	void LUNTAR_LngInput();
+	void LUNTARCalc();
+	void GenericGETInput(double *get, char *message);
+	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
+	void GenericIntInput(int *val, char* message);
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;
@@ -829,7 +772,9 @@ private:
 
 	ARCore* G;
 	AR_GCore* GC;
-	ApolloRTCCMFDButtons coreButtons;	
+	ApolloRTCCMFDButtons coreButtons;
+
+	RTCCMFDInputBoxData tempData;
 };
 
 #endif // !__ApolloRTCCMFD_H

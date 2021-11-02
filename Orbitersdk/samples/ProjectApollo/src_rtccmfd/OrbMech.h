@@ -511,7 +511,11 @@ namespace OrbMech {
 	double calculateDifferenceBetweenAngles(double firstAngle, double secondAngle);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
 	MATRIX3 GetObliquityMatrix(int plan, double t);
-	MATRIX3 J2000EclToBRCS(double mjd);
+	//Year, month, day to Julian Date
+	double TJUDAT(int Y, int M, int D);
+	double MJDOfNBYEpoch(int epoch);
+	MATRIX3 J2000EclToBRCSMJD(double mjd);
+	MATRIX3 J2000EclToBRCS(int epoch);
 	MATRIX3 _MRx(double a);
 	MATRIX3 _MRy(double a);
 	MATRIX3 _MRz(double a);
@@ -569,9 +573,9 @@ namespace OrbMech {
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
 	double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng);
 	//RTCC EMXING support routine, calculate direction vectors and sine of elevation angle
-	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body, VECTOR3 &N, VECTOR3 &rho, double &sinang);
+	void EMXINGElev(VECTOR3 R, VECTOR3 R_S, VECTOR3 &N, VECTOR3 &rho, double &sinang);
 	//RTCC EMXING support routine, calculates elevation slope function
-	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body);
+	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S, int body);
 	//Generate orbit normal and ascending node vectors from elements, and vice versa
 	void PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h);
 	void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W);
