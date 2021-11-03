@@ -6321,8 +6321,7 @@ void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 	MJD_TIG = OrbMech::MJDfromGET(opt.TIG, opt.GETbase);
 	sv_CSM_TIG = coast(opt.sv_CSM, opt.TIG - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
 
-	Rot_LG = OrbMech::GetRotationMatrix(BODY_MOON, MJD_TIG);
-	R_LSP = rhmul(Rot_LG, opt.R_LS);
+	ELVCNV(opt.R_LS, GMTfromGET(opt.TIG), 3, 2, R_LSP);
 
 	Q = unit(crossp(sv_CSM_TIG.V, sv_CSM_TIG.R));
 	U_R = unit(R_LSP);
@@ -6334,6 +6333,7 @@ void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 	sv_Ins.gravref = sv_CSM_TIG.gravref;
 	SMa = GetSemiMajorAxis(sv_Ins);
 
+	Rot_LG = OrbMech::GetRotationMatrix(BODY_MOON, MJD_TIG);
 	Rot_VG = OrbMech::GetVesselToGlobalRotMatrix(opt.Rot_VL, Rot_LG);
 	Z_B = mul(Rot_VG, _V(0, 0, 1));
 	Z_B = unit(_V(Z_B.x, Z_B.z, Z_B.y));
@@ -7807,15 +7807,13 @@ bool RTCC::REFSMMATDecision(VECTOR3 Att)
 	return false;
 }
 
-SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double GETbase, double P30TIG, double TB5, double mu, double T_RG)
+SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG)
 {
 	//Inputs:
 	//
-	//R_TLI: TLI cutoff position vector, right-handed, ecliptic coordinate system
-	//V_TLI: TLI cutoff velocity vector, right-handed, ecliptic coordinate system
+	//R_TLI: TLI cutoff position vector, right-handed, ECI coordinate system
+	//V_TLI: TLI cutoff velocity vector, right-handed, ECI coordinate system
 
-	MATRIX3 Rot;
-	VECTOR3 R_TLI2, V_TLI2;
 	double T_RP, tb5start;
 	SevenParameterUpdate param;
 	OELEMENTS coe;
@@ -7823,12 +7821,14 @@ SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TL
 	tb5start = TB5 - 17.0;
 	T_RP = P30TIG - tb5start - T_RG;
 
-	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, GETbase - 17.0 / 24.0 / 3600.0);
+	EphemerisData2 sv, sv_out;
+	sv.R = R_TLI;
+	sv.V = V_TLI;
+	sv.GMT = GMTfromGET(P30TIG);
 
-	R_TLI2 = rhtmul(Rot, R_TLI);
-	V_TLI2 = rhtmul(Rot, V_TLI);
+	ELVCNV(sv, 0, 1, sv_out);
 
-	coe = OrbMech::coe_from_PACSS4(R_TLI2, V_TLI2, mu);
+	coe = OrbMech::coe_from_PACSS4(sv_out.R, sv_out.V, mu);
 
 	param.alpha_D = coe.w;
 	param.C3 = coe.h;

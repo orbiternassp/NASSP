@@ -333,7 +333,7 @@ void ApolloRTCCMFD::menuIUUplink()
 	testves = (SaturnV*)G->g_Data.progVessel;
 	LVDCSV *lvdc = (LVDCSV*)testves->iu->GetLVDC();
 
-	coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, GC->rtcc->CalcGETBase(), G->P30TIG, lvdc->TB5, lvdc->mu, 578.6);
+	coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->P30TIG, lvdc->TB5, lvdc->mu, 578.6);
 
 	lvdc->TU = true;
 	lvdc->TU10 = false;
