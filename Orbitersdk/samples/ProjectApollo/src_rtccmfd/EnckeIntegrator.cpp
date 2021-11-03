@@ -455,7 +455,7 @@ void EnckeFreeFlightIntegrator::adfunc()
 
 		TS = tau;
 		OrbMech::rv_from_r0v0(R0, V0, tau, R_CON, V_CON, mu);
-		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, R_EM, V_EM, R_ES);
+		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
 	}
 
 	//Calculate actual state

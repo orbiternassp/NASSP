@@ -3001,7 +3001,7 @@ public:
 	// MISSION PLANNING (P)
 	//Weight Determination at a Time
 	void PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out);
-	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
+	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, VECTOR3 *R_ES, MATRIX3 *PNL);
 	bool PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB);
 
 	// REENTRY COMPUTATIONS (R)
@@ -4569,14 +4569,9 @@ public:
 		int EPOCH;
 		//MJD of first entry
 		double MJD;
-		//Table of vectors pointing from Earth to Sun, in Er
-		VECTOR3 R_ES[71];
-		//Table of vectors pointing from Earth to Moon, in Er
-		VECTOR3 R_EM[71];
-		//Table of velocity vectors of the Moon relative to the Earth, in Er/hr
-		VECTOR3 V_EM[71];
-		//Libration matrices
-		MATRIX3 R_LIB[71];
+		//71 sets of data, 12 hours apart, covering 35 days, starting 5 days before midnight of launch day
+		//0-2: Sun position vector (Er), 3-5: Moon position vector (Er), 6-8: Moon velocity vector (Er/hr), 9-17: Moon libration vector
+		double data[71][18];
 	} MDGSUN;
 
 	//System parameters for PDI
@@ -4670,8 +4665,6 @@ private:
 	double CapeCrossingFirst(int L);
 	double CapeCrossingLast(int L);
 	void ECMPAY(EphemerisDataTable2 &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw);
-	//Spherical to Inertial Conversion
-	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
 	//PMMMPT Matrix Utility Subroutine

@@ -498,7 +498,7 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 	{
 		VECTOR3 R_EM, V_EM, R_ES;
 
-		if (PLEFEM(1, sv.GMT / 3600.0, 0, R_EM, V_EM, R_ES))
+		if (PLEFEM(1, sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
 		{
 			return 1;
 		}
@@ -520,6 +520,9 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 		MATRIX3 Rot;
 		PLEFEM(1, sv.GMT / 3600.0, 0, Rot);
 
+		//Soon to be used
+		//PLEFEM(5, sv.GMT / 3600.0, 0, NULL, NULL, NULL, &Rot);
+
 		if (in == 2)
 		{
 			//MCI to MCT
@@ -540,7 +543,7 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 		VECTOR3 R_EM, V_EM, R_ES;
 		VECTOR3 X_EMP, Y_EMP, Z_EMP;
 
-		if (PLEFEM(1, sv.GMT / 3600.0, 0, R_EM, V_EM, R_ES))
+		if (PLEFEM(1, sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
 		{
 			return 1;
 		}
@@ -1817,10 +1820,12 @@ RTCC_PLAWDT_9_T:
 }
 
 //Sun/Moon Ephemeris Interpolation Program
-bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES)
+bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, VECTOR3 *R_ES, MATRIX3 *PNL)
 {
+	//INPUTS:
+	//IND: 1 = Sun and Moon ephemerides. 2 = all data. 3 = all Moon data. 4 = Moon ephemerides. 5 = libration matrix only
 	double T, C[6];
-	int i, j, k, l;
+	int i, j, k;
 
 	if (IND > 0)
 	{
@@ -1835,7 +1840,7 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, 
 	C[3] = ((T + 2.0)*(T + 1.0)*T*(T - 2.0)*(T - 3.0)) / 12.0;
 	C[4] = -((T + 2.0)*(T + 1.0)*T*(T - 1.0)*(T - 3.0)) / 24.0;
 	C[5] = ((T + 2.0)*(T + 1.0)*T*(T - 1.0)*(T - 2.0)) / 120.0;
-	
+
 	//Calculate MJD from GMT
 	double MJD = SystemParameters.GMTBASE + HOUR / 24.0;
 	//Calculate position of time in array
@@ -1845,18 +1850,71 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, 
 	//Is time contained in Sun/Moon data array?
 	if (j < 0 || j > 65) goto RTCC_PLEFEM_A;
 
-	VECTOR3 *X[3] = {MDGSUN.R_EM, MDGSUN.V_EM, MDGSUN.R_ES };
-	double x[9];
-	for (k = 0;k < 3;k++)
+	double x[18];
+	bool des[4] = {false, false, false, false};
+
+	//Which data to get?
+	switch (abs(IND))
 	{
-		for (l = 0;l < 3;l++)
-		{
-			x[k * 3 + l] = C[0] * X[k][j].data[l] + C[1] * X[k][j + 1].data[l] + C[2] * X[k][j + 2].data[l] + C[3] * X[k][j + 3].data[l] + C[4] * X[k][j + 4].data[l] + C[5] * X[k][j + 5].data[l];
-		}
+	case 1:
+		des[0] = des[1] = des[2] = true;
+		break;
+	case 2:
+		des[0] = des[1] = des[2] = des[3] = true;
+		break;
+	case 3:
+		des[1] = des[2] = des[3] = true;
+		break;
+	case 4:
+		des[1] = des[2] = true;
+		break;
+	case 5:
+		des[3] = true;
+		break;
+	default:
+		goto RTCC_PLEFEM_A;
 	}
-	R_EM = _V(x[0], x[1], x[2])*OrbMech::R_Earth;
-	V_EM = _V(x[3], x[4], x[5])*OrbMech::R_Earth / 3600.0;
-	R_ES = _V(x[6], x[7], x[8])*OrbMech::R_Earth;
+
+	for (k = 0;k < 18;k++)
+	{
+		if (k < 3)
+		{
+			//Sun position
+			if (des[0] == false) continue;
+		}
+		else if (k < 6)
+		{
+			//Moon position
+			if (des[1] == false) continue;
+		}
+		else if (k < 9)
+		{
+			//Moon velocity
+			if (des[2] == false) continue;
+		}
+		else
+		{
+			//Moon libration
+			if (des[3] == false) break;
+		}
+		x[k] = C[0] * MDGSUN.data[j][k] + C[1] * MDGSUN.data[j + 1][k] + C[2] * MDGSUN.data[j + 2][k] + C[3] * MDGSUN.data[j + 3][k] + C[4] * MDGSUN.data[j + 4][k] + C[5] * MDGSUN.data[j + 5][k];
+	}
+	if (des[0] && R_ES)
+	{
+		*R_ES = _V(x[0], x[1], x[2])*OrbMech::R_Earth;
+	}
+	if (des[1] && R_EM)
+	{
+		*R_EM = _V(x[3], x[4], x[5])*OrbMech::R_Earth;
+	}
+	if (des[2] && V_EM)
+	{
+		*V_EM = _V(x[6], x[7], x[8])*OrbMech::R_Earth / 3600.0;
+	}
+	if (des[3] && PNL)
+	{
+		*PNL = _M(x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17]);
+	}
 	
 	return false;
 RTCC_PLEFEM_A:

@@ -5824,7 +5824,7 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 	double deltat, deltat1, cos_PV, deltaT, Tr, T_arm, T_arm2, Z3, TERM, dt_dbetaa, dt_dva, dbetar_dbetaa, dbetar_dva, ALVA, D, dv, dbeta, T_art, dw;
 	double DUM, DUM2, ES, ESS, PS, h, Sbeta_s, beta_s, CDB, DLBET, ZIT;
 
-	pRTCC->PLEFEM(1, T0, 0, R_EM, V_EM, R_ES);
+	pRTCC->PLEFEM(1, T0, 0, &R_EM, &V_EM, &R_ES, NULL);
 	R_Moon = R_EM / (KMPER*1000.0);
 	R_Moon = OrbMech::EclipticToECI(R_Moon, GMTbase + T0 / 24.0);
 
@@ -5861,7 +5861,7 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 		AMAA = EAA - e * sin(EAA);
 		TAA = a * sqrt(a / mu)*(PI - AMAA);
 		TJ = T0 + TAA;
-		pRTCC->PLEFEM(1, TJ, 0, R_EM, V_EM, R_ES);
+		pRTCC->PLEFEM(1, TJ, 0, &R_EM, &V_EM, &R_ES, NULL);
 		RMAP = R_EM / (KMPER*1000.0);
 		RMAP = OrbMech::EclipticToECI(RMAP, GMTbase + T0 / 24.0);
 		theta = PI - eta - beta_a;
@@ -6838,7 +6838,7 @@ VECTOR3 RTEMoon::ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E
 	RCON = OrbMech::R_Earth + EntryInterface;
 	tol = 20.0;
 
-	pRTCC->PLEFEM(1, t_I / 3600.0, 0, R_m, V_m, R_s);
+	pRTCC->PLEFEM(1, t_I / 3600.0, 0, &R_m, &V_m, &R_s, NULL);
 
 	R_I_star = delta_I_star = delta_I_star_dot = _V(0.0, 0.0, 0.0);
 	V_I_star = V_I;
@@ -6910,7 +6910,7 @@ VECTOR3 RTEMoon::MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool I
 		beta_r = EntryCalculations::ReentryTargetLine(u_r, false);
 	}
 
-	pRTCC->PLEFEM(1, t_I/3600.0, 0, R_m, V_m, R_s);
+	pRTCC->PLEFEM(1, t_I/3600.0, 0, &R_m, &V_m, &R_s, NULL);
 
 	for (int i = 0;i < 2;i++)
 	{

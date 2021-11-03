@@ -439,7 +439,7 @@ VECTOR3 CoastIntegrator2::adfunc(VECTOR3 R)
 		}
 
 		TS = tau;
-		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, R_EM, V_EM, R_ES);
+		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
 	}
 
 	r = length(R);

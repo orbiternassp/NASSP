@@ -3522,7 +3522,7 @@ void TLMCCProcessor::FCOMP(double a, double &F1, double &F2, double &F3, double 
 
 bool TLMCCProcessor::EPHEM(double GMT, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES)
 {
-	return pRTCC->PLEFEM(1, GMT / 3600.0, 0, R_EM, V_EM, R_ES);
+	return pRTCC->PLEFEM(1, GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
 }
 
 bool TLMCCProcessor::LIBRAT(VECTOR3 &R, double GMT, int K)
