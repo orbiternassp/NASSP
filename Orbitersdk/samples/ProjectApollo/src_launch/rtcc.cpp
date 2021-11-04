@@ -11619,6 +11619,168 @@ void RTCC::DockingAlignmentProcessor(DockAlignOpt &opt)
 	}
 }
 
+AEGBlock RTCC::SVToAEG(EphemerisData sv)
+{
+	AEGBlock aeg;
+
+	EphemerisData sv1 = sv;
+	if (sv.RBI == BODY_EARTH)
+	{
+		sv1.R = mul(SystemParameters.MAT_J2000_BRCS, sv.R);
+		sv1.V = mul(SystemParameters.MAT_J2000_BRCS, sv.V);
+		aeg.Data.Item7 = 0.0;
+	}
+	else
+	{
+		aeg.Data.Item7 = GetGMTBase();
+	}
+
+	aeg.Header.AEGInd = sv1.RBI;
+
+	PIMCKC(sv1.R, sv1.V, sv1.RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.l, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h);
+
+	aeg.Data.TS = aeg.Data.TE = sv1.GMT;
+
+	return aeg;
+}
+
+void RTCC::PMMAPD(AEGBlock Z, int KAOP, double *INFO)
+{
+	AEGDataBlock Z_A, Z_P;
+
+	//Decision logic for high vs. low e route
+	if (Z.Header.AEGInd == BODY_MOON || (Z.Data.ENTRY > 0 && Z.Data.coe_mean.e > 0.005) || Z.Data.coe_osc.e > 0.005)
+	{
+		//High e route
+
+		//Propagate to periapsis (mean anomaly = 0)
+		Z.Data.TIMA = 1;
+		Z.Data.Item8 = 0.0;
+		Z.Data.Item10 = 0.0;
+		PMMAEGS(Z.Header, Z.Data, Z_P);
+
+		//Propagate to apoapsis (mean anomaly = PI)
+		Z.Data.TIMA = 1;
+		Z.Data.Item8 = PI;
+		if (Z.Data.coe_osc.l > PI)
+		{
+			Z.Data.Item10 = 1.0;
+		}
+		else
+		{
+			Z.Data.Item10 = 0.0;
+		}
+		PMMAEGS(Z.Header, Z.Data, Z_A);
+
+		goto RTCC_PMMAPD_1_2;
+	}
+
+	if (Z.Data.ENTRY == 0)
+	{
+		//Initialize
+		PMMAEGS(Z.Header, Z.Data, Z.Data);
+		if (Z.Header.ErrorInd)
+		{
+			//Error
+		}
+	}
+	double dt;
+	if (Z.Header.AEGInd == BODY_EARTH)
+	{
+		dt = 15.0*60.0;
+	}
+	else
+	{
+		dt = 20.0*60.0;
+	}
+	double u[3], r[3];
+
+	//Get three data sets of u and r
+	u[0] = Z.Data.U;
+	r[0] = Z.Data.R;
+
+	Z.Data.TE += dt;
+	PMMAEGS(Z.Header, Z.Data, Z_P);
+
+	u[1] = Z_P.U;
+	r[1] = Z_P.R;
+
+	Z.Data.TE += dt;
+	PMMAEGS(Z.Header, Z.Data, Z_P);
+
+	u[2] = Z_P.U;
+	r[2] = Z_P.R;
+
+	//Calculate argument of latitude of periapsis and apoapsis
+	double gamma, u0;
+	gamma = (r[0] - r[1]) / (r[0] - r[2]);
+	u0 = atan2(sin(u[0]) - sin(u[1]) - gamma * (sin(u[0]) - sin(u[2])), gamma*(cos(u[2]) - cos(u[0])) - cos(u[1]) + cos(u[0]));
+	if (u0 < 0)
+	{
+		u0 += PI2;
+	}
+	double ux, uy;
+
+	ux = u0 + PI05;
+	uy = u0 - PI05;
+	if (ux < 0)
+	{
+		ux += PI2;
+	}
+	if (uy < 0)
+	{
+		uy += PI2;
+	}
+
+	Z.Data.TIMA = 2;
+	Z.Data.Item8 = ux;
+	if (Z.Data.U > ux)
+	{
+		Z.Data.Item10 = 1.0;
+	}
+	else
+	{
+		Z.Data.Item10 = 0.0;
+	}
+	PMMAEGS(Z.Header, Z.Data, Z_P);
+
+	Z.Data.Item8 = uy;
+	if (Z.Data.U > uy)
+	{
+		Z.Data.Item10 = 1.0;
+	}
+	else
+	{
+		Z.Data.Item10 = 0.0;
+	}
+	PMMAEGS(Z.Header, Z.Data, Z_A);
+
+	//Check which one actually was periapsis. If it is wrong, switch them
+	if (Z_P.R > Z_A.R)
+	{
+		AEGDataBlock temp;
+		temp = Z_P;
+		Z_P = Z_A;
+		Z_A = temp;
+	}
+RTCC_PMMAPD_1_2:
+	//TBD: Fix for moon
+	double DELTA;
+	INFO[0] = Z_A.TS;
+	INFO[1] = Z_A.R;
+	INFO[2] = asin(sin(Z_A.U)*sin(Z_A.coe_osc.i));
+	DELTA = atan2(sin(Z_A.U)*cos(Z_A.coe_osc.i), cos(Z_A.U));
+	INFO[3] = Z_A.coe_osc.h + DELTA - (SystemParameters.MCLAMD + Z_A.TS*OrbMech::w_Earth);
+	INFO[4] = Z_A.R - OrbMech::R_Earth;
+
+	INFO[5] = Z_P.TS;
+	INFO[6] = Z_P.R;
+	INFO[7] = asin(sin(Z_P.U)*sin(Z_P.coe_osc.i));
+	DELTA = atan2(sin(Z_P.U)*cos(Z_P.coe_osc.i), cos(Z_P.U));
+	INFO[8] = Z_P.coe_osc.h + DELTA - (SystemParameters.MCLAMD + Z_P.TS*OrbMech::w_Earth);
+	INFO[9] = Z_P.R - OrbMech::R_Earth;
+}
+
 bool RTCC::PMMAPD(SV sv0, SV &sv_a, SV &sv_p)
 {
 	OELEMENTS coe;

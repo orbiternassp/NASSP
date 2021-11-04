@@ -140,6 +140,7 @@ const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
 #define CSI_ECT 1
 #define CSI_MCI 2
 #define CSI_MCT 3
+#define CSI_EMP 4
 
 struct SV
 {
