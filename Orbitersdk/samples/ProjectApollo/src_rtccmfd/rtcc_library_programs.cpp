@@ -369,17 +369,63 @@ int RTCC::ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRA
 }
 
 //Generalized Coordinate Conversion Routine
-int RTCC::ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out)
+int RTCC::ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &vec_out)
+{
+	std::vector<VECTOR3> inv, outv;
+
+	inv.push_back(vec);
+
+	int err = ELVCNV(inv, GMT, type, in, out, outv);
+	if (err) return err;
+
+	vec_out = outv[0];
+	return 0;
+}
+
+int RTCC::ELVCNV(std::vector<VECTOR3> vec, double GMT, int type, int in, int out, std::vector<VECTOR3> &vec_out)
 {
 	EphemerisData2 eph, sv_out;
+	VECTOR3 vec2;
 	int err = 0;
 
-	eph.R = vec;
-	eph.V = _V(1, 0, 0);
 	eph.GMT = GMT;
 
-	err = ELVCNV(eph, in, out, sv_out);
-	vec_out = sv_out.R;
+	for (unsigned i = 0;i < vec.size();i++)
+	{
+		if (type == 0 || type == 1)
+		{
+			//Unit vector or position vector
+			eph.R = vec[i];
+			eph.V = _V(1, 0, 0);
+		}
+		else
+		{
+			eph.R = _V(1, 0, 0);
+			eph.V = vec[i];
+		}
+
+		err = ELVCNV(eph, in, out, sv_out);
+		if (err)
+		{
+			return err;
+		}
+		if (type == 0 || type == 1)
+		{
+			vec2 = sv_out.R;
+		}
+		else
+		{
+			vec2 = sv_out.V;
+		}
+		if (vec_out.size() > i)
+		{
+			vec_out[i] = vec2;
+		}
+		else
+		{
+			vec_out.push_back(vec2);
+		}
+	}
 	return err;
 }
 

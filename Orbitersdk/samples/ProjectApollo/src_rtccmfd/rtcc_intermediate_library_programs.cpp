@@ -274,10 +274,11 @@ int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &
 	KE = 0;
 	K = 1;
 RTCC_PIATSU_1A:
-	Rot = OrbMech::GetRotationMatrix(BODY_MOON, SystemParameters.GMTBASE + AEGOUT.TS / 24.0 / 3600.0);
+	//Rotate from selenocentric to selenographic
+	PLEFEM(1, AEGOUT.TS / 24.0 / 3600.0, 0, Rot);
 	OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
-	P_apo = rhtmul(Rot, P);
-	W_apo = rhtmul(Rot, W);
+	P_apo = tmul(Rot, P);
+	W_apo = tmul(Rot, W);
 	OrbMech::PIVECT(P_apo, W_apo, isg, gsg, hsg);
 	if (isg < eps_i || isg > PI - eps_i)
 	{

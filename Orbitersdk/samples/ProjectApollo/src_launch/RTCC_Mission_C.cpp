@@ -668,7 +668,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.AltRef = 1;
-		orbopt.GETbase = GETbase;
 		orbopt.H_A = 160.1*1852.0;
 		orbopt.H_P = 90.3*1852.0;
 		//Over Carnarvon
@@ -949,7 +948,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.AltRef = 1;
-		orbopt.GETbase = GETbase;
 		orbopt.H_A = 240.6*1852.0;
 		orbopt.H_P = 89.8*1852.0;
 		//Eastern Test Range
@@ -1227,7 +1225,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.dLOA = -22.5*RAD;
-		orbopt.GETbase = GETbase;
 		orbopt.ManeuverCode = RTCC_GMP_SAO;
 		orbopt.RV_MCC = sv;
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 35, 0);

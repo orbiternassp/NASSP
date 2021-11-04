@@ -296,7 +296,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		gmpopt.dH_D = 64.0*1852.0;
 		gmpopt.dLAN = 2.87*RAD;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -64.68563*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_HNL;
 		gmpopt.RV_MCC = sv0;
@@ -362,7 +361,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		gmpopt.dH_D = 78.0*1852.0;
 		gmpopt.dLAN = 10.0*RAD;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -80.60192*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_HNL;
 		gmpopt.RV_MCC = sv0;
@@ -424,7 +422,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		gmpopt.dLAN = 1.0*RAD;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -97.37588*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSL;
 		gmpopt.RV_MCC = sv0;
@@ -517,7 +514,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		gmpopt.dLAN = 6.9*RAD;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -80.60192*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSL;
 		gmpopt.RV_MCC = sv0;
@@ -662,7 +658,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 		GETbase = CalcGETBase();
 
-		opt.GETbase = GETbase;
 		opt.H_D = 133.0*1852.0;
 		opt.ManeuverCode = RTCC_GMP_CRH;
 		opt.RV_MCC = sv;
@@ -1210,7 +1205,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.tgt);
 
 		gmpopt.dV = 7427.5*0.3048;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -100.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_FCL;
 		gmpopt.Pitch = 0.0;
@@ -1353,7 +1347,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		gmpopt.AltRef = 1;
-		gmpopt.GETbase = GETbase;
 		gmpopt.H_A = 130.0*1852.0;
 		gmpopt.H_P = 95.0*1852.0;
 		gmpopt.long_D = 110.0*RAD;
@@ -1837,7 +1830,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		gmpopt.AltRef = 1;
-		gmpopt.GETbase = GETbase;
 		gmpopt.H_A = 210.0*1852.0;
 		gmpopt.H_P = 95.0*1852.0;
 		gmpopt.long_D = -45.0*RAD;
