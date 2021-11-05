@@ -523,7 +523,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		GET_Display(Buffer, G->GMPResults.GET_A, false);
 		skp->Text(10 * W / 22, 13 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f", G->GMPResults.HA / 1852.0);
+		sprintf(Buffer, "%.1f", G->GMPResults.HA / 1852.0);
 		skp->Text(10 * W / 22, 14 * H / 22, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.2f°", G->GMPResults.long_A*DEG);
 		skp->Text(10 * W / 22, 15 * H / 22, Buffer, strlen(Buffer));
@@ -531,7 +531,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(10 * W / 22, 16 * H / 22, Buffer, strlen(Buffer));
 		GET_Display(Buffer, G->GMPResults.GET_P, false);
 		skp->Text(10 * W / 22, 17 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f", G->GMPResults.HP / 1852.0);
+		sprintf(Buffer, "%.1f", G->GMPResults.HP / 1852.0);
 		skp->Text(10 * W / 22, 18 * H / 22, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.2f°", G->GMPResults.long_P*DEG);
 		skp->Text(10 * W / 22, 19 * H / 22, Buffer, strlen(Buffer));

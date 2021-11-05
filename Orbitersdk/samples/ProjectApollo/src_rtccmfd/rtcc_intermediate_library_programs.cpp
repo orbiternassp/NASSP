@@ -720,3 +720,83 @@ void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double 
 		TIME = -TIME;
 	}
 }
+
+int RTCC::PITCIR(AEGBlock in, double ht, AEGDataBlock &out)
+{
+	double R_E, R_CIR, cos_f_CI, f_CI, dt, sgn, ddt, eps_t;
+
+	eps_t = 0.01;
+
+	if (in.Header.AEGInd == BODY_EARTH)
+	{
+		R_E = OrbMech::R_Earth;
+	}
+	else
+	{
+		R_E = BZLAND.rad[RTCC_LMPOS_BEST];
+	}
+
+	R_CIR = R_E + ht;
+
+	if (in.Data.ENTRY == 0)
+	{
+		//Initialize
+		PMMAEGS(in.Header, in.Data, in.Data);
+		if (in.Header.ErrorInd)
+		{
+			return 3;
+		}
+	}
+
+	cos_f_CI = (in.Data.coe_osc.a*(1.0 - in.Data.coe_osc.e*in.Data.coe_osc.e) - R_CIR) / (in.Data.coe_osc.e*R_CIR);
+	if (abs(cos_f_CI) > 1.0)
+	{
+		cos_f_CI = cos_f_CI / abs(cos_f_CI);
+	}
+	f_CI = acos(cos_f_CI);
+	if (f_CI >= in.Data.f)
+	{
+		dt = (f_CI - in.Data.f) / (in.Data.g_dot+in.Data.l_dot);
+		sgn = 1.0;
+	}
+	else
+	{
+		if (PI2 - f_CI - in.Data.f > 0)
+		{
+			dt = (PI2 - f_CI - in.Data.f) / (in.Data.g_dot + in.Data.l_dot);
+			sgn = -1.0;
+		}
+		else
+		{
+			dt = (f_CI + PI2 + in.Data.f) / (in.Data.g_dot + in.Data.l_dot);
+			sgn = 1.0;
+		}
+	}
+	do
+	{
+		in.Data.TE = in.Data.TS + dt;
+		PMMAEGS(in.Header, in.Data, out);
+		if (in.Header.ErrorInd)
+		{
+			return 3;
+		}
+		cos_f_CI = (out.coe_osc.a*(1.0 - out.coe_osc.e*out.coe_osc.e) - R_CIR) / (out.coe_osc.e*R_CIR);
+		if (abs(cos_f_CI) > 1.0)
+		{
+			//Closest already
+			return 1;
+		}
+		f_CI = sgn*acos(cos_f_CI);
+		if (f_CI < 0)
+		{
+			f_CI += PI2;
+		}
+		ddt = (f_CI - out.f) / (out.g_dot + out.l_dot);
+		if (abs(ddt) > eps_t)
+		{
+			dt = dt + ddt;
+		}
+	} while (abs(ddt) > eps_t);
+
+	return 0;
+}
