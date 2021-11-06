@@ -964,6 +964,82 @@ RTCC_GLFDEN_4:
 	DENS = exp(lnRho);
 }
 
+VECTOR3 RTCC::GLMRTV(VECTOR3 A, double THET1, int K1, double THET2, int K2, double THET3, int K3)
+{
+	MATRIX3 Rot;
+	VECTOR3 temp;
+	double cos_thet, sin_thet;
+	int Karr[3] = { K1,K2,K3 };
+	double THETarr[3] = { THET1, THET2, THET3 };
+	int i = 0;
+	temp = A;
+RTCC_GLMRTV_1:
+	if (Karr[i] == 0)
+	{
+		return temp;
+	}
+	cos_thet = cos(THETarr[i]);
+	sin_thet = sin(THETarr[i]);
+	if (Karr[i] == 1)
+	{
+		Rot = _M(1, 0, 0, 0, cos_thet, sin_thet, 0, -sin_thet, cos_thet);
+	}
+	else if (Karr[i] == 2)
+	{
+		Rot = _M(cos_thet, 0, -sin_thet, 0, 1, 0, sin_thet, 0, cos_thet);
+	}
+	else
+	{
+		Rot = _M(cos_thet, sin_thet, 0, -sin_thet, cos_thet, 0, 0, 0, 1);
+	}
+	temp = mul(Rot, temp);
+	i++;
+	if (i < 3)
+	{
+		goto RTCC_GLMRTV_1;
+	}
+	return temp;
+}
+
+MATRIX3 RTCC::GLMRTM(MATRIX3 A, double THET1, int K1, double THET2, int K2, double THET3, int K3)
+{
+	//A = matrix to rotate
+	//THET1 = angle of 1st rotation
+	//K1 = axis of first rotation, 1 = X, 2 = Y, 3 = Z
+	MATRIX3 Rot, temp;
+	double cos_thet, sin_thet;
+	int Karr[3] = { K1,K2,K3 };
+	double THETarr[3] = { THET1, THET2, THET3 };
+	int i = 0;
+	temp = A;
+RTCC_GLMRTM_1:
+	if (Karr[i] == 0)
+	{
+		return temp;
+	}
+	cos_thet = cos(THETarr[i]);
+	sin_thet = sin(THETarr[i]);
+	if (Karr[i] == 1)
+	{
+		Rot = _M(1, 0, 0, 0, cos_thet, sin_thet, 0, -sin_thet, cos_thet);
+	}
+	else if (Karr[i] == 2)
+	{
+		Rot = _M(cos_thet, 0, -sin_thet, 0, 1, 0, sin_thet, 0, cos_thet);
+	}
+	else
+	{
+		Rot = _M(cos_thet, sin_thet, 0, -sin_thet, cos_thet, 0, 0, 0, 1);
+	}
+	temp = mul(Rot, temp);
+	i++;
+	if (i < 3)
+	{
+		goto RTCC_GLMRTM_1;
+	}
+	return temp;
+}
+
 //Subsatellite position
 int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 {

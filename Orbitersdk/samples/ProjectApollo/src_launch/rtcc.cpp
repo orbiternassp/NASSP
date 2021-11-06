@@ -22449,82 +22449,6 @@ void RTCC::EMGLMRAT(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 
 	}
 }
 
-VECTOR3 RTCC::GLMRTV(VECTOR3 A, double THET1, int K1, double THET2, int K2, double THET3, int K3)
-{
-	MATRIX3 Rot;
-	VECTOR3 temp;
-	double cos_thet, sin_thet;
-	int Karr[3] = { K1,K2,K3 };
-	double THETarr[3] = {THET1, THET2, THET3};
-	int i = 0;
-	temp = A;
-RTCC_GLMRTV_1:
-	if (Karr[i] == 0)
-	{
-		return temp;
-	}
-	cos_thet = cos(THETarr[i]);
-	sin_thet = sin(THETarr[i]);
-	if (Karr[i] == 1)
-	{
-		Rot = _M(1, 0, 0, 0, cos_thet, sin_thet, 0, -sin_thet, cos_thet);
-	}
-	else if (Karr[i] == 2)
-	{
-		Rot = _M(cos_thet, 0, -sin_thet, 0, 1, 0, sin_thet, 0, cos_thet);
-	}
-	else
-	{
-		Rot = _M(cos_thet, sin_thet, 0, -sin_thet, cos_thet, 0, 0, 0, 1);
-	}
-	temp = mul(Rot, temp);
-	i++;
-	if (i < 3)
-	{
-		goto RTCC_GLMRTV_1;
-	}
-	return temp;
-}
-
-MATRIX3 RTCC::GLMRTM(MATRIX3 A, double THET1, int K1, double THET2, int K2, double THET3, int K3)
-{
-	//A = matrix to rotate
-	//THET1 = angle of 1st rotation
-	//K1 = axis of first rotation, 1 = X, 2 = Y, 3 = Z
-	MATRIX3 Rot, temp;
-	double cos_thet, sin_thet;
-	int Karr[3] = { K1,K2,K3 };
-	double THETarr[3] = { THET1, THET2, THET3 };
-	int i = 0;
-	temp = A;
-RTCC_GLMRTM_1:
-	if (Karr[i] == 0)
-	{
-		return temp;
-	}
-	cos_thet = cos(THETarr[i]);
-	sin_thet = sin(THETarr[i]);
-	if (Karr[i] == 1)
-	{
-		Rot = _M(1, 0, 0, 0, cos_thet, sin_thet, 0, -sin_thet, cos_thet);
-	}
-	else if (Karr[i] == 2)
-	{
-		Rot = _M(cos_thet, 0, -sin_thet, 0, 1, 0, sin_thet, 0, cos_thet);
-	}
-	else
-	{
-		Rot = _M(cos_thet, sin_thet, 0, -sin_thet, cos_thet, 0, 0, 0, 1);
-	}
-	temp = mul(Rot, temp);
-	i++;
-	if (i < 3)
-	{
-		goto RTCC_GLMRTM_1;
-	}
-	return temp;
-}
-
 int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 {
 	int rev, rev_max = 24;
@@ -33617,18 +33541,37 @@ void RTCC::BMGPRIME(std::string source, std::vector<std::string> message)
 
 void RTCC::LMMGRP(int veh, double gmt)
 {
-	double phi = atan2(SystemParameters.MCLSDA, SystemParameters.MCLCDA);
+	double phi, A;
+
+	phi = atan2(SystemParameters.MCLSDA, SystemParameters.MCLCDA);
+	A = SystemParameters.MCLABN;
+
 	//CSM
 	if (veh == 0)
 	{
-		double mjd = OrbMech::MJDfromGET(gmt,SystemParameters.GMTBASE);
-		MATRIX3 R = OrbMech::LaunchREFSMMAT(phi, SystemParameters.MCLGRA, mjd, SystemParameters.MCLABN);
+		VECTOR3 R, R_P, U_Z, REFS6, E, S, REFS0, REFS3;
+
+		//Unit vector in Earth fixed coordinates
+		R = OrbMech::r_from_latlong(phi, SystemParameters.MCLGRA);
+		//In ECI coordinates
+		ELVCNV(R, gmt, 1, 1, 0, R_P);
+		//Z-axis unit vector in ECI
+		ELVCNV(_V(0, 0, 1), gmt, 0, 1, 0, U_Z);
+		//MIT equations
+		REFS6 = unit(-R_P);
+		E = unit(crossp(REFS6, U_Z));
+		S = unit(crossp(E, REFS6));
+		REFS0 = E * sin(A) + S * cos(A);
+		REFS3 = unit(crossp(REFS6, REFS0));
+		MATRIX3 REFS = _M(REFS0.x, REFS0.y, REFS0.z, REFS3.x, REFS3.y, REFS3.z, REFS6.x, REFS6.y, REFS6.z);
+
 		EZJGMTX1.data[0].ID = 0;
-		EMGSTSTM(1, R, RTCC_REFSMMAT_TYPE_CUR, gmt);
+		EMGSTSTM(1, REFS, RTCC_REFSMMAT_TYPE_CUR, gmt);
 	}
 	//IU
 	else
 	{
+		//double DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * gmt / 3600.0;
 		double MJD_GRR = OrbMech::MJDfromGET(gmt, SystemParameters.GMTBASE);
 		MATRIX3 M_equ_ecl_LH = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_GRR);
 		MATRIX3 M_equ_ecl = MatrixRH_LH(M_equ_ecl_LH);
@@ -34680,10 +34623,13 @@ bool RTCC::QMGEPH(int epoch, double gmtbase, double HOURS)
 		cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
 		R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]) / OrbMech::R_Earth;
 		V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]) / OrbMech::R_Earth*3600.0;
+		//R_EM = mul(Rot_J_B, R_EM);
+		//V_EM = mul(Rot_J_B, V_EM);
 
 		//Sun Ephemeris
 		cEarth->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
 		R_ES = -OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]) / OrbMech::R_Earth;
+		//R_ES = mul(Rot_J_B, R_ES);
 
 		//Libration matrix (already in NBY coordinates, so don't use yet!)
 		Rot_SG_ECL = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
