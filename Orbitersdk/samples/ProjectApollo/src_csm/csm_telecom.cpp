@@ -2619,9 +2619,11 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
 							return(scale_data(rcsStatus.PropellantPressurePSI, 0, 300));
 						case 29:		// FC 1 N2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus(1, fcStatus);
+							return(scale_data(fcStatus.N2PressurePSI,0,75));
 						case 30:		// FC 2 N2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus(2, fcStatus);
+							return(scale_data(fcStatus.N2PressurePSI,0,75));
 						case 31:		// FU/OX VLV 1 POS
 							return(scale_data(0,0,90));
 						case 32:		// FU/OX VLV 2 POS
@@ -2631,7 +2633,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 34:		// FU/OX VLV 4 POS
 							return(scale_data(0,0,90));
 						case 35:		// FC 3 N2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus(3, fcStatus);
+							return(scale_data(fcStatus.N2PressurePSI,0,75));
 						case 36:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 37:		// SUIT-CABIN DELTA PRESS

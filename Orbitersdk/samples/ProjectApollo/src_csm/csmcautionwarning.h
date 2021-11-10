@@ -39,6 +39,7 @@ typedef struct {
 	double H2PressurePSI;		///< H2 pressure in PSI
 	double O2FlowLBH;			///< O2 flow in pounds per hour.
 	double O2PressurePSI;		///< O2 pressure in PSI.
+	double N2PressurePSI;		///< N2 pressure in PSI
 	double TempF;				///< Temperature in fahrenheit.
 	double CondenserTempF;		///< Condensor temperature in fahrenheit.
 	double CoolingTempF;		///< Cooling temperature in fahrenheit.
