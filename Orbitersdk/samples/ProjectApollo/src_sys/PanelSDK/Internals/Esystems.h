@@ -235,6 +235,8 @@ public:
 	h_Valve *H2_SRC;	//source for H2
 	h_Valve *H20_waste;	//pointer to a waste tank
 
+	h_Tank *N2_Blanket; //pointer to N2 Blanket.
+
 	unsigned int numCells = 31;
 
 	double H2_flow, O2_flow, H2_flowPerSecond, O2_flowPerSecond;
@@ -263,7 +265,7 @@ public:
 	double H2_purity;
 	double O2_purity;
 
-	FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts);
+	FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts, h_Tank *N2);
 	void DrawPower(double watts);
 	void PUNLOAD(double watts);
 	void refresh(double dt);
