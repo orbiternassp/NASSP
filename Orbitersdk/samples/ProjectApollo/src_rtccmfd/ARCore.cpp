@@ -445,9 +445,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPManeuverPoint = 0;
 	GMPManeuverType = 0;
 	OrbAdjAltRef = true;
-	OrbAdjDVX = _V(0, 0, 0);
 	SPSGET = 0.0;
-	GPM_TIG = 0.0;
 	GMPApogeeHeight = 0;
 	GMPPerigeeHeight = 0;
 	GMPWedgeAngle = 0.0;
@@ -460,24 +458,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPYaw = 0.0;
 	GMPRevs = 0;
 	GMPApseLineRotAngle = 0.0;
-	GMPResults.A = 0.0;
-	GMPResults.Del_G = 0.0;
-	GMPResults.E = 0.0;
-	GMPResults.GET_A = 0.0;
-	GMPResults.GET_P = 0.0;
-	GMPResults.HA = 0.0;
-	GMPResults.HP = 0.0;
-	GMPResults.H_Man = 0.0;
-	GMPResults.I = 0.0;
-	GMPResults.lat_A = 0.0;
-	GMPResults.lat_Man = 0.0;
-	GMPResults.lat_P = 0.0;
-	GMPResults.long_A = 0.0;
-	GMPResults.long_Man = 0.0;
-	GMPResults.long_P = 0.0;
-	GMPResults.Node_Ang = 0.0;
-	GMPResults.Pitch_Man = 0.0;
-	GMPResults.Yaw_Man = 0.0;
 
 	RTEASTType = 0;
 
@@ -2841,25 +2821,21 @@ int ARCore::subThread()
 	case 3:	//Orbital Adjustment Targeting
 	{
 		GMPOpt opt;
-		SV sv0, sv_pre, sv_post;
+		EphemerisData sv0;
+		SV sv_pre, sv_post;
 
 		if (GC->MissionPlanningActive)
 		{
 			double GMT = GC->rtcc->GMTfromGET(SPSGET);
-			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(GMT, GC->rtcc->med_k20.Vehicle, EPHEM))
+			if (GC->rtcc->ELFECH(GMT, GC->rtcc->med_k20.Vehicle, sv0))
 			{
 				Result = 0;
 				break;
 			}
-			sv0.R = EPHEM.R;
-			sv0.V = EPHEM.V;
-			sv0.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv0.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 		}
 		else
 		{
-			sv0 = GC->rtcc->StateVectorCalc(vessel);
+			sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
 		}
 
 		opt.ManeuverCode = GMPManeuverCode;
@@ -2877,11 +2853,11 @@ int ARCore::subThread()
 		opt.Yaw = GMPYaw;
 		opt.dLOA = GMPApseLineRotAngle;
 		opt.N = GMPRevs;
-		opt.RV_MCC = sv0;
+		opt.sv_in = sv0;
 
-		GC->rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, GPM_TIG, GMPResults);
-		SV GPM_SV = GC->rtcc->coast(opt.RV_MCC, GPM_TIG - OrbMech::GETfromMJD(opt.RV_MCC.MJD, GC->rtcc->CalcGETBase()));
-		OrbAdjDVX = mul(OrbMech::LVLH_Matrix(GPM_SV.R, GPM_SV.V), OrbAdjDVX);
+		VECTOR3 OrbAdjDVX;
+		double GPM_TIG;
+		GC->rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, GPM_TIG);
 
 		Result = 0;
 	}
@@ -4520,10 +4496,18 @@ int ARCore::subThread()
 		}
 		else
 		{
-			SV sv_pre, sv_post, sv_tig;
-			double attachedMass = 0.0;
-			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
-			sv_tig = GC->rtcc->coast(sv_now, GPM_TIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
+			if (GC->rtcc->PZGPMELM.SV_before.GMT == 0.0)
+			{
+				//No data
+				Result = 0;
+				break;
+			}
+			EphemerisData sv_tig;
+			double mass, attachedMass = 0.0;
+			
+			mass = vessel->GetMass();
+
+			sv_tig = GC->rtcc->PZGPMELM.SV_before;
 
 			if (docked)
 			{
@@ -4533,7 +4517,9 @@ int ARCore::subThread()
 			{
 				attachedMass = 0.0;
 			}
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), GPM_TIG, GC->rtcc->med_m65.Thruster, attachedMass, OrbAdjDVX, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			VECTOR3 DV = GC->rtcc->PZGPMELM.V_after - GC->rtcc->PZGPMELM.SV_before.V;
+			GC->rtcc->PoweredFlightProcessor(sv_tig, mass, GC->rtcc->GetGMTBase(), GC->rtcc->PZGPMELM.SV_before.GMT, GC->rtcc->med_m65.Thruster, attachedMass, DV, false, P30TIG, dV_LVLH);
+			P30TIG = GC->rtcc->GETfromGMT(P30TIG);
 		}
 
 		Result = 0;

@@ -120,6 +120,9 @@
     <ClCompile Include="..\..\src_rtccmfd\LunarTargetingProgram.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\GeneralPurposeManeuver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -195,6 +198,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\LunarTargetingProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\GeneralPurposeManeuver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

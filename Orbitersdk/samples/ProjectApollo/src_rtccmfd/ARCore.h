@@ -221,8 +221,6 @@ public:
 	double GMPApseLineRotAngle;
 	int GMPRevs;
 	double SPSGET;		//Maneuver GET
-	double GPM_TIG;		//Maneuver GET output
-	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
 	//0 = Apogee
 	//1 = Equatorial crossing
 	//2 = Perigee
@@ -245,7 +243,6 @@ public:
 	//11 = Combination height maneuver and node shift
 	//12 = Combination apogee/perigee change and line-of-apsides shift
 	int GMPManeuverType;
-	GPMPRESULTS GMPResults;
 
 	//REFSMMAT PAGE
 	double REFSMMATTime;
