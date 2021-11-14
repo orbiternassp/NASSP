@@ -43,13 +43,17 @@
 const double MMASS		[MAX_SUB]=	{31.998,	2.01588,	18.01528,	28.0134,	44.01,		33.434432,		92.146,			92.01,			4.00260		};		//g/mol
 //const double SPECIFICC	[MAX_SUB]=	{0.918,		1.434,		4.184,		1.040,		0.858,		3.625769,		2.9056392,		1.270			5.193		};		//J/g-K .. assume constant
 const double SPECIFICC	[MAX_SUB]=	{1.669,		9.668,		4.184,		1.040,		0.858,		  3.691041,		2.9056392,		1.270,			5.193		};		//J/g-K .. assume constant
-const double VAPENTH	[MAX_SUB]=	{213.13,	445.46,		2260.0,		198.83,		347.0,		1769.195,		991.01556,		414.3,			0.0829		};		//J/g
-const double VAPPRESS	[MAX_SUB]=	{1314841.0,	4925221.0,	39441.0,	1528361.0,	493284.0,	25639.45,		21722.212986,	206782.99342,	14778377.09 };		//Pa @ 273.00K
-const double VAPGRAD	[MAX_SUB]=	{6556.0,	19045.0,	680.0,		7228.0,		4800.0,		52.87,			111.1,			1754.255683,	874.9447005 };		//Pa/K.. assume linear dependence of PV / K
+//const double VAPENTH	[MAX_SUB]=	{213.13,	445.46,		2260.0,		198.83,		347.0,		1769.195,		991.01556,		414.3,			0.0829		};		//J/g
 const double L_DENSITY	[MAX_SUB]=	{1141.0,	70.0,		1000.0,		807.0,		1014.0,		1038.5,			899.0,			1450.0,			0.164		};		//g/L @ 103kPa ..assume constant wrt. temp
 const double BULK_MOD	[MAX_SUB]=	{32e6,		24e6,		2.18e6,		32e6,		32e6,		2.55e6,			1.47397e6,		1.362e6,		10e6		};		//Pa .. assume constant and converted from m^3 to L
 const double CRITICAL_P [MAX_SUB]=  {350115.0,	89631.0,	1523741.0,	234421.0,	508833.0,	3097574.75,		11692906.154,	10132500.0,		226968.0224 };		//Pa.. critical pressure
 const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,		256.9525,		607.15,			431.15,			5.19		};		//K.. critical temperature
+const double ANTIONE_A	[MAX_SUB]=	{9.3199656,	6.59723,	12.490095,	9.0020008,	12.0892,	8.32957,		13.7222,		14.47645,		4.41952 };			//Antione Equation A constant gives results in bar, must be converter to Pa	[1]
+const double ANTIONE_B	[MAX_SUB]=	{838.91339,	133.793,	4658.1375,	694.78356,	2353.762,	3158.1575,		5309.7973,		4256.07694,		18.65037 };			//Antione Equation B constant gives results in bar, must be converter to Pa	[2]
+const double ACENTRIC	[MAX_SUB]=  {0.022,		-0.216,		0.345,		0.040,		0.288,		0.416,			0.316,			0.0141345,			-0.390};		//[3] Acentric factor
+
+//source for [1-3] are https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781118135341.app1 or where they differ from the source they were adjusted by M. Hume to better fit a wide range of temperatures.
+// [3] https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nbsir86-3054.pdf
 
 const double FaradaysConstant = 96485.3321233100184; //Coulombs/mol
 
@@ -76,6 +80,7 @@ class h_substance
 	void operator+= (h_substance);	//add some block to this..
 	h_substance operator* (float);	//returns a subst block that is "Ratio" part of the main (ie. 0.5 will generate half of the block)
 	void operator-= (h_substance);  //substact this block from itself
+	double VAPENTH() const;
 	double Condense(double dt);
 	double Boil(double dt);
 	double BoilAll();
