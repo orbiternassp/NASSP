@@ -17732,7 +17732,14 @@ int RTCC::PMMWTC(int med)
 			FuelR[i] = FuelR[i] - MainEngineFuelUsed;
 		}
 	RTCC_PMMWTC_8:
-		DVREM = TL[i] / WDOT[i] * log(TotalMassAfter/(TotalMassAfter - FuelR[i]));
+		if (TotalMassAfter - FuelR[i] <= 0)
+		{
+			DVREM = 0.0;
+		}
+		else
+		{
+			DVREM = TL[i] / WDOT[i] * log(TotalMassAfter / (TotalMassAfter - FuelR[i]));
+		}
 		goto RTCC_PMMWTC_10;
 	RTCC_PMMWTC_9:
 		if (MPTIsUllageThruster(Thruster, i))
@@ -32282,7 +32289,16 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mpt->WeightAfterManeuver[man - 1] = mptman->TotalMassAfter;
 	mpt->AreaAfterManeuver[man - 1] = mptman->TotalAreaAfter;
 
-	mptman->DVREM = T / WDOT * log(mptman->TotalMassAfter / (mptman->TotalMassAfter - F));
+	//To prevent NaNs
+	if (mptman->TotalMassAfter - F <= 0.0)
+	{
+		mptman->DVREM = 0.0;
+	}
+	else
+	{
+		mptman->DVREM = T / WDOT * log(mptman->TotalMassAfter / (mptman->TotalMassAfter - F));
+	}
+	
 	if (mptman->Thruster == RTCC_ENGINETYPE_LOX_DUMP)
 	{
 		mptman->DVC = mptman->DVXBT = aux->DV*cos(0.0);
