@@ -3217,6 +3217,12 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			case OAPI_KEY_EQUALS:
 				MoveTHC(false);
 				return 1;
+			case OAPI_KEY_MULTIPLY:
+				dVThrust1Switch.SetState(0);
+				dVThrust1Switch.Guard();
+				dVThrust2Switch.SetState(0);
+				dVThrust2Switch.Guard();
+				return 1;
 		}
 	}else{
 		switch(key){

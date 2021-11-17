@@ -76,6 +76,7 @@ Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
 	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk)
 {
 	hMaster = hObj;
+	sib = NULL;
 	initSaturn1b();
 }
 

@@ -54,6 +54,10 @@ public:
 	void StartPropellantDumpInhibitTimerB() { TD8.SetStart(true); }
 	bool GetPropellantDumpInhibitA() { return TD1.ContactClosed(); }
 	bool GetPropellantDumpInhibitB() { return TD8.ContactClosed(); }
+	bool GetCMRCSHeatersA();
+	bool GetCMRCSHeatersB();
+	bool GetCMRCSDumpA();
+	bool GetCMRCSDumpB();
 
 	void SetPropellantDumpInhibitTimers(double del) { TD1.SetDelay(del); TD8.SetDelay(del); }
 
@@ -99,6 +103,10 @@ protected:
 	bool RCSCCMSMTransferA;
 	//K14
 	bool RCSCCMSMTransferB;
+	//K15 and K17
+	bool CMRCSHeatersA;
+	//K16 and K18
+	bool CMRCSHeatersB;
 
 	//Propellant Dump and Purge Disable Timer
 	RestartableDelayTimer TD1, TD8;

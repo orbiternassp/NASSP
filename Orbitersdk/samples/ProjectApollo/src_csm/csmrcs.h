@@ -132,10 +132,11 @@ public:
 	CMRCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
 	virtual ~CMRCSPropellantSource();
 
-	void Init(THRUSTER_HANDLE *th, h_Radiator *t, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp, e_object *isol);
+	void Init(THRUSTER_HANDLE *th, h_Radiator *t, h_Radiator *p, h_Radiator *y, h_Radiator *r, CMRCSPropellantSource *ic, e_object *pp, e_object *ppp, e_object *isol);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 
+	double GetInjectorTempF(int);
 	double GetHeliumTempF();
 	double GetHeliumPressurePSI();
 	double GetPropellantPressurePSI();
@@ -166,7 +167,7 @@ protected:
 	double purgeLevel[6];
 
 	THRUSTER_HANDLE *thrusters;
-	h_Radiator *heliumTank;
+	h_Radiator *heliumTank,	*pitchJet, *yawJet, *rollJet;
 	CMRCSPropellantSource *interconnectedSystem;
 	e_object *purgePower, *purgePyroPower, *isolPower;
 };
