@@ -392,8 +392,6 @@ double h_substance::BoilAll() {
 void h_substance::SetTemp(double _temp)
 {
 	Temp = _temp;
-	// Q = mass * specific_heat * temperature
-	// the average specific heat equation has 1/mass in it, and the Q equation has mass in it. These multiply to 1, so they have been omitted to simplify computation
 	Q = Temp * (vapor_mass * SPECIFICC_GAS[subst_type] + (mass - vapor_mass) * SPECIFICC_LIQ[subst_type]);
 }
 
@@ -492,10 +490,7 @@ void h_volume::ThermalComps(double dt) {
 	double AvgC = 0;
 	double vap_press;
 	for (i = 0; i < MAX_SUB; i++) {
-		if (composition[i].mass > 0.0) {
-			AvgC += ((composition[i].vapor_mass * SPECIFICC_GAS[composition[i].subst_type] +
-				(composition[i].mass - composition[i].vapor_mass) * SPECIFICC_LIQ[composition[i].subst_type]) / composition[i].mass);
-		}
+			AvgC += ((composition[i].vapor_mass * SPECIFICC_GAS[i]) + ((composition[i].mass - composition[i].vapor_mass) * SPECIFICC_LIQ[i]));
 	}
 
 	if (GetMass()) {
