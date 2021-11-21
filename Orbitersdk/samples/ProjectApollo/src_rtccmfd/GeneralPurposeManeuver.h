@@ -93,7 +93,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 struct GMPOpt
 {
 	int ManeuverCode;
-	SV RV_MCC;		//State vector as input or without
 	EphemerisData sv_in;		//State vector as input or without
 
 	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
@@ -128,16 +127,16 @@ protected:
 	void DetermineManeuverType();
 	void GetSelenographicElements(const AEGDataBlock &sv, double &u, double &i, double &g, double &h);
 	void GetSelenocentricElements(double i, double g, double h, AEGDataBlock &sv);
-	CELEMENTS PlaneChange(CELEMENTS coe, double f_b, double u_b, double dw);
-	CELEMENTS FlightControllerInput(CELEMENTS coe, double r_b, double f_b, double u_b, double dv, double p, double y, double &f_a, double &dw);
+	void PlaneChange();
+	void FlightControllerInput();
 	void HeightManeuver(bool circ);
 	int OptimumApsidesChange();
 	void NodeShift();
-	int ApsidesChange();
+	int ApsidesChange(int n = 0);
 	int OptimumPointForApsidesChange();
 	void ApseLineShift(double dang);
-	void ApseLineShiftToLongitude();
 	void ApsidesPlacementNRevsLater();
+	void OptimumApseLineShift(double dang);
 
 	void NormalizeAngle(double &ang); //0 to 2*pi
 
@@ -147,7 +146,7 @@ protected:
 
 	//INDICATORS
 	//0 = Time, 1 = apogee, 2 = perigee, 3 = equatorial crossing, 4 = longitude, 5 = height, 6 = optimum nodal shift, 7 = optimum apogee/perigee change
-	//8 = Optimum apse line rotation, 9 = Apogee and perigee change + apse line rotation to specified longitude
+	//8 = Optimum apse line rotation, 9 = Apogee and perigee change + apse line rotation to specified longitude, 10 = roate apse line to longitude
 	int ManeuverPoint;
 	//0 = Flight controller input, 1 = plane change, 2 = circularization 3 = optimum height change at apogee/perigee, 4 height maneuver, 5 = node shift, 6 = maneuver to change apogee/perigee
 	//7 = Combination node shift and apogee/perigee change, 8 = shift the line-of-apsides, 9 shift line-of-apsides to specific longitude, 10 = plane change and height maneuver
@@ -183,6 +182,7 @@ protected:
 	//
 	double DW;
 	int I;
+	double dLOA_temp;
 
 	//OPTIONS
 	const GMPOpt *opt;

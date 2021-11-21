@@ -787,7 +787,7 @@ int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &
 		}
 		else
 		{
-			dt = (f_CI + PI2 + in.f) / (in.g_dot + in.l_dot);
+			dt = (f_CI + PI2 - in.f) / (in.g_dot + in.l_dot);
 			sgn = 1.0;
 		}
 	}
@@ -804,6 +804,7 @@ int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &
 			PMXSPT("PITCIR", 17);
 			return 2;
 		}
+		//Calculate desired true anomaly
 		cos_f_CI = (out.coe_osc.a*(1.0 - out.coe_osc.e*out.coe_osc.e) - R_CIR) / (out.coe_osc.e*R_CIR);
 		if (abs(cos_f_CI) > 1.0)
 		{
@@ -814,7 +815,18 @@ int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &
 		{
 			f_CI += PI2;
 		}
-		ddt = (f_CI - out.f) / (out.g_dot + out.l_dot);
+		//Calculate angle difference
+		ddt = f_CI - out.f;
+		if (ddt > PI)
+		{
+			ddt -= PI2;
+		}
+		else if (ddt < -PI)
+		{
+			ddt += PI2;
+		}
+		//Calculate ddt
+		ddt = ddt / (out.g_dot + out.l_dot);
 		if (abs(ddt) > eps_t)
 		{
 			dt = dt + ddt;

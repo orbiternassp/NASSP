@@ -104,8 +104,8 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 	OrbMech::GIMKIC(sv_a.coe_osc, mu, R_A, V_A);
 
 	//Debug
-	VECTOR3 DR = R_A - R_B;
-	sprintf_s(oapiDebugString(), 128, "%lf %lf %lf", DR.x, DR.y, DR.z);
+	//VECTOR3 DR = R_A - R_B;
+	//sprintf_s(oapiDebugString(), 128, "%lf %lf %lf", DR.x, DR.y, DR.z);
 
 	if (aeg.Header.AEGInd == BODY_EARTH)
 	{
@@ -170,7 +170,7 @@ void RTCCGeneralPurposeManeuverProcessor::DetermineManeuverPoint()
 	}
 	//Apogee
 	else if (code == RTCC_GMP_HAO || code == RTCC_GMP_FCA || code == RTCC_GMP_PHA || code == RTCC_GMP_HNA ||
-		code == RTCC_GMP_CRA || code == RTCC_GMP_CPA || code == RTCC_GMP_CNA || code == RTCC_GMP_SAA)
+		code == RTCC_GMP_CRA || code == RTCC_GMP_CPA || code == RTCC_GMP_CNA)
 	{
 		ManeuverPoint = 1;
 	}
@@ -213,6 +213,10 @@ void RTCCGeneralPurposeManeuverProcessor::DetermineManeuverPoint()
 	else if (code == RTCC_GMP_HAS)
 	{
 		ManeuverPoint = 9;
+	}
+	else if (code == RTCC_GMP_SAA)
+	{
+		ManeuverPoint = 10;
 	}
 }
 
@@ -358,7 +362,7 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 		int err = pRTCC->PITCIR(aeg.Header, aeg.Data, R_E + opt->H_D, sv_b);
 
 		//Are some errors ok?
-		if (err != 0)
+		if (err == 2 || err == 4)
 		{
 			//Error
 			ErrorIndicator = 2;
@@ -424,37 +428,17 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	//Optimum apse line shift
 	else if (ManeuverPoint == 8)
 	{
-		double f_D, u_D;
-
-		f_D = 0.5*opt->dLOA;
-		u_D = f_D + aeg.Data.coe_osc.g;
-		if (aeg.Data.U < u_D)
-		{
-			aeg.Data.Item10 = 0.0;
-		}
-		else
-		{
-			if (aeg.Data.U < u_D + PI)
-			{
-				u_D += PI;
-				aeg.Data.Item10 = 0.0;
-			}
-			else
-			{
-				aeg.Data.Item10 = 1.0;
-			}
-		}
-		aeg.Data.TIMA = 2;
-		pRTCC->PMMAEGS(aeg.Header, aeg.Data, sv_b);
-		if (aeg.Header.ErrorInd)
-		{
-			ErrorIndicator = 4;
-			return;
-		}
+		OptimumApseLineShift(opt->dLOA);
 	}
 	else if (ManeuverPoint == 9)
 	{
 		ApsidesPlacementNRevsLater();
+	}
+	else if (ManeuverPoint == 10)
+	{
+		pRTCC->PMMAPD(aeg.Header, aeg.Data, -1, 0, INFO, NULL, &sv_b);
+		dLOA_temp = OrbMech::calculateDifferenceBetweenAngles(INFO[8], opt->long_D);
+		OptimumApseLineShift(dLOA_temp);
 	}
 
 	if (ErrorIndicator) return;
@@ -489,15 +473,14 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	//Flight controller input
 	if (ManeuverType == 0)
 	{
-		double f_a;
-		sv_a.coe_osc = FlightControllerInput(sv_b.coe_osc, sv_b.R, sv_b.f, sv_b.U, opt->dV, opt->Pitch, opt->Yaw, f_a, DW);
-		sv_a.coe_osc = PlaneChange(sv_a.coe_osc, f_a, sv_b.U, DW);
+		FlightControllerInput();
+		PlaneChange();
 	}
 	//Plane change
 	else if (ManeuverType == 1)
 	{
 		DW = opt->dW;
-		sv_a.coe_osc = PlaneChange(sv_b.coe_osc, sv_b.f, sv_b.U, DW);
+		PlaneChange();
 	}
 	//Circularization
 	else if (ManeuverType == 2)
@@ -508,12 +491,13 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	//Optimum apogee perigee change
 	else if (ManeuverType == 3)
 	{
-		int itemp = OptimumApsidesChange();
-		if (itemp == 1)
-		{
+		//OptimumApsidesChange gives bad results if maneuver is not exactly at apogee or perigee
+		//int itemp = OptimumApsidesChange();
+		//if (itemp == 1)
+		//{
 			//Switch to height maneuver logic
 			HeightManeuver(false);
-		}
+		//}
 		DW = 0.0;
 	}
 	else if (ManeuverType == 4)
@@ -546,20 +530,22 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	//Line of apsides shift to longitude
 	else if (ManeuverType == 9)
 	{
-		ApseLineShiftToLongitude();
+		ApseLineShift(dLOA_temp);
 		DW = 0.0;
 	}
 	//Plane change and height maneuver
 	else if (ManeuverType == 10)
 	{
-		sv_a.coe_osc = PlaneChange(sv_b.coe_osc, sv_b.f, sv_b.U, DW);
+		DW = opt->dW;
+		PlaneChange();
 		sv_b = sv_a;
 		HeightManeuver(false);
 	}
 	//Circularization and plane change
 	else if (ManeuverType == 11)
 	{
-		sv_a.coe_osc = PlaneChange(sv_b.coe_osc, sv_b.f, sv_b.U, DW);
+		DW = opt->dW;
+		PlaneChange();
 		sv_b = sv_a;
 		HeightManeuver(true);
 	}
@@ -580,16 +566,9 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	//Apsides change and shift to longitude N revs later
 	else if (ManeuverType == 14)
 	{
-		ApsidesChange();
+		ApsidesChange(opt->N);
 		if (ErrorIndicator) return;
 		DW = 0.0;
-
-		sv_a.TIMA = 1;
-		sv_a.Item8 = PI;
-		sv_a.Item10 = (double)opt->N;
-		pRTCC->PMMAEGS(aeg.Header, sv_a, sv_temp);
-		pRTCC->PMMAPD(aeg.Header, sv_temp, 0, 0, INFO, &sv_AP, &sv_PE);
-		K3 = 2;
 	}
 
 	if (ErrorIndicator) return;
@@ -600,13 +579,13 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	r_b_dot = (mu*sv_b_apo.coe_osc.e*sin(sv_b_apo.f)) / x_b;
 	v_H_b = x_b / sv_b_apo.R;
 	x_a = sqrt(mu*(sv_a.coe_osc.a)*(1.0 - sv_a.coe_osc.e*sv_a.coe_osc.e));
-	r_a_dot = (mu*sv_a.coe_osc.e*sin(sv_a.f)) / x_b;
+	r_a_dot = (mu*sv_a.coe_osc.e*sin(sv_a.f)) / x_a;
 	v_H_a = x_a / sv_b.R;
 
 	dv_H_OP = -v_H_a * sin(DW);
 	dv_H_IP = v_H_a * cos(DW) - v_H_b;
 	dr_dot = r_a_dot - r_b_dot;
-	DV_Vector = _V(dv_H_IP, dv_H_OP, dr_dot);
+	DV_Vector = _V(dv_H_IP, dv_H_OP, -dr_dot);
 	DV = sqrt(dr_dot*dr_dot + dv_H_IP * dv_H_IP + dv_H_OP * dv_H_OP);
 	Pitch_Man = asin(dr_dot / DV);
 
@@ -643,7 +622,7 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	{
 		double isg, gsg, hsg;
 		pRTCC->PIATSU(sv_a, sv_temp, isg, gsg, hsg);
-		Node_Ang = 0.0;
+		Node_Ang = hsg;
 	}
 	if (Node_Ang < 0)
 	{
@@ -697,66 +676,54 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenocentricElements(double i, dou
 	}
 }
 
-CELEMENTS RTCCGeneralPurposeManeuverProcessor::PlaneChange(CELEMENTS coe, double f_b, double u_b, double dw)
+void RTCCGeneralPurposeManeuverProcessor::PlaneChange()
 {
-	CELEMENTS out;
-	double sin_dw, cos_dw, sin_dh, cos_dh, dh, sin_u_b, cos_u_b, sin_u_a, cos_u_a, u_a;
+	double sin_dw, cos_dw, sin_dh, cos_dh, dh, sin_u_b, cos_u_b, sin_u_a, cos_u_a;
 
-	sin_dw = sin(dw);
-	cos_dw = cos(dw);
-	sin_u_b = sin(u_b);
-	cos_u_b = cos(u_b);
-	out.i = acos(cos(coe.i)*cos_dw - sin(coe.i)*sin_dw*cos_u_b);
-	sin_dh = sin_dw * sin_u_b / sin(out.i);
-	cos_dh = (cos_dw - cos(coe.i)*cos(out.i)) / (sin(coe.i)*sin(out.i));
+	sin_dw = sin(DW);
+	cos_dw = cos(DW);
+	sin_u_b = sin(sv_b.U);
+	cos_u_b = cos(sv_b.U);
+	sv_a.coe_osc.i = acos(cos(sv_b.coe_osc.i)*cos_dw - sin(sv_b.coe_osc.i)*sin_dw*cos_u_b);
+	sin_dh = sin_dw * sin_u_b / sin(sv_a.coe_osc.i);
+	cos_dh = (cos_dw - cos(sv_b.coe_osc.i)*cos(sv_a.coe_osc.i)) / (sin(sv_b.coe_osc.i)*sin(sv_a.coe_osc.i));
 	dh = atan(sin_dh / cos_dh);
-	out.h = coe.h + dh;
-	out.h = fmod(out.h, PI2);
-	sin_u_a = sin_u_b * sin(coe.i) / sin(out.i);
-	cos_u_a = cos_u_b * cos_dh + sin_u_b * sin_dh*cos(coe.i);
-	u_a = atan2(sin_u_a, cos_u_a);
-	out.g = u_a - f_b;
-	if (out.g < 0)
-	{
-		out.g += PI2;
-	}
-
-	out.a = coe.a;
-	out.e = coe.e;
-	out.l = coe.l;
-	return out;
+	sv_a.coe_osc.h = sv_b.coe_osc.h + dh;
+	NormalizeAngle(sv_a.coe_osc.h);
+	sin_u_a = sin_u_b * sin(sv_b.coe_osc.i) / sin(sv_a.coe_osc.i);
+	cos_u_a = cos_u_b * cos_dh + sin_u_b * sin_dh*cos(sv_b.coe_osc.i);
+	sv_a.U = atan2(sin_u_a, cos_u_a);
+	NormalizeAngle(sv_a.U);
+	sv_a.coe_osc.g = sv_a.U - sv_a.f;
+	NormalizeAngle(sv_a.coe_osc.g);
 }
 
-CELEMENTS RTCCGeneralPurposeManeuverProcessor::FlightControllerInput(CELEMENTS coe, double r_b, double f_b, double u_b, double dv, double p, double y, double &f_a, double &dw)
+void RTCCGeneralPurposeManeuverProcessor::FlightControllerInput()
 {
-	CELEMENTS out;
 	double dv_H_IP, dv_H_OP, dr_dot, x, r_b_dot, v_H_b, r_a_dot, V_a2, E_a, x_a;
 	double v_H_a_IP, v_H_a_OP, v_H_a2, e_a2, x_a2;
 
-	out = coe;
-
-	dv_H_IP = dv*cos(p)*cos(y);
-	dv_H_OP = dv*cos(p)*sin(y);
-	dr_dot = dv*sin(p);
+	dv_H_IP = opt->dV*cos(opt->Pitch)*cos(opt->Yaw);
+	dv_H_OP = opt->dV*cos(opt->Pitch)*sin(opt->Yaw);
+	dr_dot = opt->dV*sin(opt->Pitch);
 	
-	x = sqrt(mu*coe.a*(1.0 - coe.e*coe.e));
-	r_b_dot = (mu*coe.e*sin(f_b)) / x;
-	v_H_b = x / r_b;
+	x = sqrt(mu*sv_b.coe_osc.a*(1.0 - sv_b.coe_osc.e*sv_b.coe_osc.e));
+	r_b_dot = (mu*sv_b.coe_osc.e*sin(sv_b.f)) / x;
+	v_H_b = x / sv_b.R;
 	v_H_a_IP = v_H_b + dv_H_IP;
 	v_H_a_OP = dv_H_OP;
 	v_H_a2 = v_H_a_IP * v_H_a_IP + v_H_a_OP * v_H_a_OP;
 	r_a_dot = r_b_dot + dr_dot;
 	V_a2 = r_a_dot * r_a_dot + v_H_a2;
-	out.a = mu * r_b / (2.0*mu - r_b*V_a2);
-	e_a2 = 1.0 - (r_b*r_b*v_H_a2) / mu / out.a;
-	out.e = sqrt(e_a2);
-	E_a = pRTCC->GLQATN(r_b*r_a_dot*sqrt(out.a), (out.a - r_b)*sqrt(mu));
-	out.l = E_a - out.e*sin(E_a);
-	x_a2 = mu * out.a*(1.0 - e_a2);
+	sv_a.coe_osc.a = mu * sv_b.R / (2.0*mu - sv_b.R*V_a2);
+	e_a2 = 1.0 - (sv_b.R*sv_b.R*v_H_a2) / mu / sv_a.coe_osc.a;
+	sv_a.coe_osc.e = sqrt(e_a2);
+	E_a = pRTCC->GLQATN(sv_b.R*r_a_dot*sqrt(sv_a.coe_osc.a), (sv_a.coe_osc.a - sv_b.R)*sqrt(mu));
+	sv_a.coe_osc.l = E_a - sv_a.coe_osc.e*sin(E_a);
+	x_a2 = mu * sv_a.coe_osc.a*(1.0 - e_a2);
 	x_a = sqrt(x_a2);
-	f_a = atan(x_a*r_a_dot*r_b / (x_a2 - mu * r_b));
-	dw = atan2(-v_H_a_OP, v_H_a_IP);
-	return out;
+	sv_a.f = pRTCC->GLQATN(x_a*r_a_dot*sv_b.R, x_a2 - mu * sv_b.R);
+	DW = atan2(-v_H_a_OP, v_H_a_IP);
 }
 
 void RTCCGeneralPurposeManeuverProcessor::HeightManeuver(bool circ)
@@ -959,7 +926,7 @@ void RTCCGeneralPurposeManeuverProcessor::NodeShift()
 	}
 }
 
-int RTCCGeneralPurposeManeuverProcessor::ApsidesChange()
+int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(int n)
 {
 	double r_AD, r_PD, dr_a_max, dr_p_max, a_D, e_D, cos_theta_A, theta_A, r_a, r_p, cos_E_a;
 	double dr_ap0, dr_ap1, dr_p0, dr_p1, dr_ap_c, dr_p_c, ddr_ap, ddr_p, E_a;
@@ -1008,7 +975,8 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange()
 
 		if (abs(cos_E_a) > 1.0)
 		{
-			if (I > 3)
+			//Maneuver type HAS uses multi rev, don't fail for that case
+			if (n == 0 && I > 3)
 			{
 				//Maneuver cannot be performed
 				return 1;
@@ -1042,7 +1010,19 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange()
 		}
 
 		sv_a.ENTRY = 0;
-		pRTCC->PMMAPD(aeg.Header, sv_a, 0, 0, INFO, &sv_AP, &sv_PE);
+
+		if (n > 0)
+		{
+			sv_a.TIMA = 1;
+			sv_a.Item8 = sv_a.coe_osc.l;
+			sv_a.Item10 = 1.0 + (double)n;
+			pRTCC->PMMAEGS(aeg.Header, sv_a, sv_temp);
+			pRTCC->PMMAPD(aeg.Header, sv_temp, 0, 0, INFO, &sv_AP, &sv_PE);
+		}
+		else
+		{
+			pRTCC->PMMAPD(aeg.Header, sv_a, 0, 0, INFO, &sv_AP, &sv_PE);
+		}
 
 		if (I > 5)
 		{
@@ -1242,36 +1222,6 @@ void RTCCGeneralPurposeManeuverProcessor::NormalizeAngle(double &ang)
 	}
 }
 
-void RTCCGeneralPurposeManeuverProcessor::ApseLineShiftToLongitude()
-{
-	double eps, dLOA, ddLOA, lng_p;
-	int n, nmax;
-
-	n = 0;
-	nmax = 20;
-	eps = 0.01*RAD;
-	dLOA = 0.0;
-	ddLOA = 1.0;
-
-	while (abs(ddLOA) > eps && n < nmax)
-	{
-		pRTCC->PMMAPD(aeg.Header, sv_a, -1, 0, INFO, NULL, &sv_PE);
-		lng_p = INFO[8];
-
-		ddLOA = OrbMech::calculateDifferenceBetweenAngles(lng_p, opt->long_D);
-		dLOA += ddLOA;
-
-		ApseLineShift(dLOA);
-		if (ErrorIndicator) return;
-		n++;
-	}
-
-	if (n == nmax)
-	{
-		ErrorIndicator = 1;
-	}
-}
-
 void RTCCGeneralPurposeManeuverProcessor::ApsidesPlacementNRevsLater()
 {
 	double r_AD, r_PD, lng_p, dlng, dt, ddt, dlng_apo, eps, w_E, dt_max;
@@ -1306,23 +1256,10 @@ void RTCCGeneralPurposeManeuverProcessor::ApsidesPlacementNRevsLater()
 		pRTCC->PMMAEGS(aeg.Header, aeg.Data, sv_b);
 		if (ErrorIndicator) return;
 		sv_b_apo = sv_a = sv_b;
-		if (ApsidesChange() == 0)
+		if (ApsidesChange(opt->N) == 0)
 		{
-			//DV = ApoapsisPeriapsisChangeInteg(sv2, r_AD, r_PD);
-			//sv2_apo = sv2;
-			//sv2_apo.V += DV;
-			//T_P = OrbMech::REVTIM(sv2_apo.R, sv2_apo.V, sv2_apo.MJD, body, true);
-
-			//pRTCC->PMMAPD(aeg.Header,sv_a,)
-			//OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_p.gravref, lat_p, lng_p);
-			//lng_p += -T_P * w_E*(double)opt->N;
-			//lng_p = fmod(lng_p, PI2);
-
 			//Longitude of periapsis following maneuver
 			lng_p = INFO[8];
-			lng_p += -PI2 / (sv_a.l_dot + sv_a.g_dot + sv_a.h_dot)*w_E*(double)opt->N;
-			NormalizeAngle(lng_p);
-
 			dlng = OrbMech::calculateDifferenceBetweenAngles(lng_p, opt->long_D);
 
 			if (n > 0 && dlng*dlng_apo < 0 && abs(dlng_apo) < PI05)
@@ -1339,5 +1276,38 @@ void RTCCGeneralPurposeManeuverProcessor::ApsidesPlacementNRevsLater()
 	if (n == nmax || dt > dt_max)
 	{
 		ErrorIndicator = 2;
+	}
+}
+
+void RTCCGeneralPurposeManeuverProcessor::OptimumApseLineShift(double dang)
+{
+	double f_D, u_D;
+
+	f_D = 0.5*opt->dLOA;
+	u_D = f_D + aeg.Data.coe_osc.g;
+	NormalizeAngle(u_D);
+	if (aeg.Data.U < u_D)
+	{
+		aeg.Data.Item10 = 0.0;
+	}
+	else
+	{
+		if (aeg.Data.U < u_D + PI)
+		{
+			u_D += PI;
+			aeg.Data.Item10 = 0.0;
+		}
+		else
+		{
+			aeg.Data.Item10 = 1.0;
+		}
+	}
+	aeg.Data.TIMA = 2;
+	aeg.Data.Item8 = u_D;
+	pRTCC->PMMAEGS(aeg.Header, aeg.Data, sv_b);
+	if (aeg.Header.ErrorInd)
+	{
+		ErrorIndicator = 4;
+		return;
 	}
 }

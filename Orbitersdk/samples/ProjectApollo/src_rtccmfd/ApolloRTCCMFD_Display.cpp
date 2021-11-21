@@ -417,7 +417,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		//Height Change
 		if (G->GMPManeuverCode == RTCC_GMP_HOL || G->GMPManeuverCode == RTCC_GMP_HOT || G->GMPManeuverCode == RTCC_GMP_HAO || G->GMPManeuverCode == RTCC_GMP_HPO ||
 			G->GMPManeuverCode == RTCC_GMP_HNL || G->GMPManeuverCode == RTCC_GMP_HNT || G->GMPManeuverCode == RTCC_GMP_HNA || G->GMPManeuverCode == RTCC_GMP_HNP ||
-			G->GMPManeuverCode == RTCC_GMP_PHL || G->GMPManeuverCode == RTCC_GMP_PHT || G->GMPManeuverCode == RTCC_GMP_PHA || G->GMPManeuverCode == RTCC_GMP_PHP)
+			G->GMPManeuverCode == RTCC_GMP_PHL || G->GMPManeuverCode == RTCC_GMP_PHT || G->GMPManeuverCode == RTCC_GMP_PHA || G->GMPManeuverCode == RTCC_GMP_PHP || G->GMPManeuverCode == RTCC_GMP_HOH)
 		{
 			skp->Text(2 * W / 22, 9 * H / 22, "DH", 2);
 			sprintf(Buffer, "%.2f NM", G->GMPHeightChange / 1852.0);
@@ -459,8 +459,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		//Node Shift
 		else if (G->GMPManeuverCode == RTCC_GMP_NST || G->GMPManeuverCode == RTCC_GMP_NSO || G->GMPManeuverCode == RTCC_GMP_NSH || G->GMPManeuverCode == RTCC_GMP_NSL ||
-			G->GMPManeuverCode == RTCC_GMP_CNL || G->GMPManeuverCode == RTCC_GMP_CNH || G->GMPManeuverCode == RTCC_GMP_CNT ||
-			G->GMPManeuverCode == RTCC_GMP_CNA || G->GMPManeuverCode == RTCC_GMP_CNP)
+			G->GMPManeuverCode == RTCC_GMP_CNL || G->GMPManeuverCode == RTCC_GMP_CNH || G->GMPManeuverCode == RTCC_GMP_CNT || G->GMPManeuverCode == RTCC_GMP_CNA || G->GMPManeuverCode == RTCC_GMP_CNP || 
+			G->GMPManeuverCode == RTCC_GMP_HNL || G->GMPManeuverCode == RTCC_GMP_HNT || G->GMPManeuverCode == RTCC_GMP_HNA || G->GMPManeuverCode == RTCC_GMP_HNP)
 		{
 			skp->Text(2 * W / 22, 10 * H / 22, "DLN", 3);
 			sprintf(Buffer, "%.2f°", G->GMPNodeShiftAngle*DEG);
@@ -525,17 +525,17 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(10 * W / 22, 13 * H / 22, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.HA / 1852.0);
 		skp->Text(10 * W / 22, 14 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", GC->rtcc->PZGPMDIS.long_A*DEG);
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_A*DEG);
 		skp->Text(10 * W / 22, 15 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", GC->rtcc->PZGPMDIS.lat_A*DEG);
+		FormatLatitude(Buffer, GC->rtcc->PZGPMDIS.lat_A*DEG);
 		skp->Text(10 * W / 22, 16 * H / 22, Buffer, strlen(Buffer));
 		GET_Display(Buffer, GC->rtcc->PZGPMDIS.GET_P, false);
 		skp->Text(10 * W / 22, 17 * H / 22, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.HP / 1852.0);
 		skp->Text(10 * W / 22, 18 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", GC->rtcc->PZGPMDIS.long_P*DEG);
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_P*DEG);
 		skp->Text(10 * W / 22, 19 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", GC->rtcc->PZGPMDIS.lat_P*DEG);
+		FormatLatitude(Buffer, GC->rtcc->PZGPMDIS.lat_P*DEG);
 		skp->Text(10 * W / 22, 20 * H / 22, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
@@ -553,21 +553,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
 		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.A / 1852.0);
-		skp->Text(20 * W / 22, 7 * H / 22, Buffer, strlen(Buffer));
+		skp->Text(21 * W / 22, 7 * H / 22, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.6f", GC->rtcc->PZGPMDIS.E);
-		skp->Text(20 * W / 22, 8 * H / 22, Buffer, strlen(Buffer));
+		skp->Text(21 * W / 22, 8 * H / 22, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f°", GC->rtcc->PZGPMDIS.I*DEG);
-		skp->Text(20 * W / 22, 9 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f°", GC->rtcc->PZGPMDIS.Node_Ang*DEG);
-		skp->Text(20 * W / 22, 10 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", GC->rtcc->PZGPMDIS.Del_G*DEG);
-		skp->Text(20 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
+		skp->Text(21 * W / 22, 9 * H / 22, Buffer, strlen(Buffer));
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.Node_Ang*DEG);
+		skp->Text(21 * W / 22, 10 * H / 22, Buffer, strlen(Buffer));
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.Del_G*DEG);
+		skp->Text(21 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.H_Man / 1852.0);
-		skp->Text(20 * W / 22, 12 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", GC->rtcc->PZGPMDIS.long_Man*DEG);
-		skp->Text(20 * W / 22, 13 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", GC->rtcc->PZGPMDIS.lat_Man*DEG);
-		skp->Text(20 * W / 22, 14 * H / 22, Buffer, strlen(Buffer));
+		skp->Text(21 * W / 22, 12 * H / 22, Buffer, strlen(Buffer));
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_Man*DEG);
+		skp->Text(21 * W / 22, 13 * H / 22, Buffer, strlen(Buffer));
+		FormatLatitude(Buffer, GC->rtcc->PZGPMDIS.lat_Man*DEG);
+		skp->Text(21 * W / 22, 14 * H / 22, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
