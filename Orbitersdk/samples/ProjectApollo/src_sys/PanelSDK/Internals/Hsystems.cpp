@@ -490,7 +490,7 @@ void h_volume::ThermalComps(double dt) {
 	double AvgC = 0;
 	double vap_press;
 	for (i = 0; i < MAX_SUB; i++) {
-			AvgC += ((composition[i].vapor_mass * SPECIFICC_GAS[i]) + ((composition[i].mass - composition[i].vapor_mass) * SPECIFICC_LIQ[i]));
+			AvgC += ((composition[i].vapor_mass * SPECIFICC_GAS[composition[i].subst_type]) + ((composition[i].mass - composition[i].vapor_mass) * SPECIFICC_LIQ[composition[i].subst_type]));
 	}
 
 	if (GetMass()) {
