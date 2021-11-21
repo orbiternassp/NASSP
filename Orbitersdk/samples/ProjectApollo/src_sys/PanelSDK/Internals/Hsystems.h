@@ -41,8 +41,8 @@
 #define R_CONST					8314.4621	//(L*Pa)/(mol*K)
 								//		O2			H2			H20			N2			CO2			GLYCOL			Aerozine-50		N2O4			He
 const double MMASS			[MAX_SUB]=	{31.998,	2.01588,	18.01528,	28.0134,	44.01,		33.434432,		92.146,			92.01,			4.00260		};		//g/mol
-const double SPECIFICC_GAS	[MAX_SUB]=	{0.918,		14.34,		4.184,		1.040,		0.858,		3.625769,		2.9056392,		1.270,			5.193		};		//J/g-K .. assume constant
-const double SPECIFICC_LIQ	[MAX_SUB]=	{1.669,		9.668,		4.184,		1.040,		0.858,		3.691041,		2.9056392,		1.270,			5.193		};		//J/g-K .. assume constant
+const double SPECIFICC_GAS	[MAX_SUB]=	{0.658,		10.183,		1.4108,		0.743,		0.6553,		3.625769,		0.48102,		4.6,			3.12		};		//J/g-K .. assume constant
+const double SPECIFICC_LIQ	[MAX_SUB]=	{1.669,		9.668,		4.184,		1.040,		0.858,		3.691041,		1.0724,			1.5525,			5.193		};		//J/g-K .. assume constant
 const double L_DENSITY		[MAX_SUB]=	{1141.0,	70.0,		1000.0,		807.0,		1014.0,		1038.5,			899.0,			1450.0,			0.164		};		//g/L @ 103kPa ..assume constant wrt. temp
 const double BULK_MOD		[MAX_SUB]=	{32e6,		24e6,		2.18e6,		32e6,		32e6,		2.55e6,			1.47397e6,		1.362e6,		10e6		};		//Pa .. assume constant and converted from m^3 to L
 const double CRITICAL_P		[MAX_SUB]=  {350115.0,	89631.0,	1523741.0,	234421.0,	508833.0,	3097574.75,		11692906.154,	10132500.0,		226968.0224 };		//Pa.. critical pressure
