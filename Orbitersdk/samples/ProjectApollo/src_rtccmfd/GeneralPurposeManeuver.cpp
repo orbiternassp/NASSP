@@ -1097,21 +1097,26 @@ int RTCCGeneralPurposeManeuverProcessor::OptimumPointForApsidesChange()
 	r_AD = R_E + opt->H_A;
 	r_PD = R_E + opt->H_P;
 
+	//Determine whether the maneuver is theoretically possible or not
 	if (r_AD < sv_PE.R || r_PD > sv_AP.R)
 	{
 		return 1;
 	}
 
-	if (r_PD > sv_AP.R && r_PD > sv_PE.R)
+	//Determine which assumption to use to compute the optimum point
+	if (r_AD > sv_AP.R && r_PD > sv_PE.R)
 	{
+		//Raise both apogee and perigee, optimum is along velocity vector
 		K1 = -1;
 	}
-	else if (r_PD < sv_AP.R && r_PD < sv_PE.R)
+	else if (r_AD < sv_AP.R && r_PD < sv_PE.R)
 	{
+		//Lower both apogee and perigee, optimum is along velocity vector
 		K1 = -1;
 	}
 	else
 	{
+		//Otherwise, change a and e without shifting the line-of-apsides (true anomaly stays the same)
 		K1 = 1;
 	}
 
@@ -1122,19 +1127,20 @@ int RTCCGeneralPurposeManeuverProcessor::OptimumPointForApsidesChange()
 
 	I = 1;
 	R_MD_apo = 1.0;
+	sv_b = aeg.Data;
 
 	do
 	{
 		p_d = a_d * (1.0 - e_d * e_d);
-		p_b = aeg.Data.coe_osc.a * (1.0 - aeg.Data.coe_osc.e * aeg.Data.coe_osc.e);
+		p_b = sv_b.coe_osc.a * (1.0 - sv_b.coe_osc.e * sv_b.coe_osc.e);
 
 		if (K1 < 0)
 		{
-			R_MD = 2.0*(p_d - p_b)*a_d*aeg.Data.coe_osc.a / (p_d*a_d - p_b * aeg.Data.coe_osc.a);
+			R_MD = 2.0*(p_d - p_b)*a_d*sv_b.coe_osc.a / (p_d*a_d - p_b * sv_b.coe_osc.a);
 		}
 		else
 		{
-			R_MD = (aeg.Data.coe_osc.e*p_d - e_d * p_b) / (aeg.Data.coe_osc.e - e_d);
+			R_MD = (sv_b.coe_osc.e*p_d - e_d * p_b) / (sv_b.coe_osc.e - e_d);
 		}
 
 		if (abs(R_MD - R_MD_apo) < eps1 || I > 5)
@@ -1143,14 +1149,14 @@ int RTCCGeneralPurposeManeuverProcessor::OptimumPointForApsidesChange()
 		}
 		I++;
 		R_MD_apo = R_MD;
-		err = pRTCC->PITCIR(aeg.Header, aeg.Data, R_MD_apo, aeg.Data);
+		err = pRTCC->PITCIR(aeg.Header, aeg.Data, R_MD_apo, sv_b);
 		//Some errors acceptable
 		if (err == 1 || err == 2)
 		{
 			return 1;
 		}
 
-		cos_theta = (a_d*(1.0 - e_d) - R_MD_apo) / (e_d*R_MD_apo);
+		cos_theta = (a_d*(1.0 - e_d* e_d) - R_MD_apo) / (e_d*R_MD_apo);
 		if (abs(cos_theta) > 1.0)
 		{
 			if (cos_theta <= 0)
@@ -1170,7 +1176,6 @@ int RTCCGeneralPurposeManeuverProcessor::OptimumPointForApsidesChange()
 		e_d = abs((a_d - r_p_apo) / a_d);
 	} while (I <= 5);
 
-	sv_b = aeg.Data;
 	return 0;
 }
 
