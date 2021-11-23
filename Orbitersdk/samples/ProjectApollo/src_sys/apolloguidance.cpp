@@ -31,6 +31,7 @@
 #include <math.h>
 #include <thread>
 #include <mutex>
+#include <cassert>
 #include "soundlib.h"
 
 #include "yaAGC/agc_engine.h"
@@ -643,9 +644,9 @@ void ApolloGuidance::SetInputChannel(int channel, ChannelValue val)
 	else {
 		// If this is a keystroke from the DSKY, generate an interrupt req.
 		if (channel == 015){
-			vagc.InterruptRequests[5] = 1;
+			GenerateInterrupt(Interrupt::KEYRUPT1);
 		}else{ if (channel == 016){ // Secondary DSKY
-			vagc.InterruptRequests[6] = 1;
+			GenerateInterrupt(Interrupt::KEYRUPT2);
 		}}
 
 		//
@@ -702,9 +703,9 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 	// If this is a keystroke from the DSKY (Or MARK/MARKREJ), generate an interrupt req.
 	if (channel == 015 && val != 0){
-		vagc.InterruptRequests[5] = 1;
+		GenerateInterrupt(Interrupt::KEYRUPT1);
 	}else{ if (channel == 016 && val != 0){ // Secondary DSKY
-		vagc.InterruptRequests[6] = 1;
+		GenerateInterrupt(Interrupt::KEYRUPT2);
 	}}
 
 	WriteIO(&vagc, channel, data);
@@ -815,48 +816,34 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 // By default, do nothing for the RCS channels.
 //
 
-void ApolloGuidance::ProcessChannel5(ChannelValue val){
-}
+void ApolloGuidance::ProcessChannel5(ChannelValue val){}
 
-void ApolloGuidance::ProcessChannel6(ChannelValue val){
-}
+void ApolloGuidance::ProcessChannel6(ChannelValue val){}
 
 // DS20060226 Stubs for optics controls and TVC
-void ApolloGuidance::ProcessChannel14(ChannelValue val){
-}
+void ApolloGuidance::ProcessChannel14(ChannelValue val){}
 
-void ApolloGuidance::ProcessChannel34(ChannelValue val) {
-}
+void ApolloGuidance::ProcessChannel34(ChannelValue val) {}
 
 // Stub for LGC thrust drive
-void ApolloGuidance::ProcessChannel142(ChannelValue val) {
-}
+void ApolloGuidance::ProcessChannel142(ChannelValue val) {}
 
 // Stub for LGC altitude meter drive
-void ApolloGuidance::ProcessChannel143(ChannelValue val) {
-}
+void ApolloGuidance::ProcessChannel143(ChannelValue val) {}
 
 // DS20060308 Stub for FDAI
-void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
-}
+void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){}
 
-void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
-}
+void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {}
 
-void ApolloGuidance::GenerateHandrupt() {
-	vagc.InterruptRequests[10] = 1;
-}
+void ApolloGuidance::GenerateInterrupt(Interrupt rupt)
+{
+	// T3-6RUPT can not be set by peripherals
+	assert(rupt >= KEYRUPT1 && rupt <= NUM_INTERRUPT_TYPES);
 
-void ApolloGuidance::GenerateDownrupt(){
-	vagc.InterruptRequests[8] = 1;
-}
-
-void ApolloGuidance::GenerateUprupt(){
-	vagc.InterruptRequests[7] = 1;
-}
-
-void ApolloGuidance::GenerateRadarupt(){
-	vagc.InterruptRequests[9] = 1;
+	if (!vagc.Standby) {
+		vagc.InterruptRequests[rupt] = 1;
+	}
 }
 
 bool ApolloGuidance::IsUpruptActive() {

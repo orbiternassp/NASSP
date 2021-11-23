@@ -317,6 +317,25 @@ public:
 	bool GetTrackerAlarm() { return TrackerAlarm; }
 	bool GetGimbalLockAlarm() { return GimbalLockAlarm; }
 
+	///
+	/// \brief Interrupts
+	///
+	enum Interrupt {
+		T6RUPT = 1,
+		T5RUPT,
+		T3RUPT,
+		T4RUPT,
+		KEYRUPT1,
+		KEYRUPT2,
+		UPRUPT,
+		DOWNRUPT,
+		RADARUPT,
+		HANDRUPT
+		// Maybe add GOJAM here in the future?
+	};
+
+	virtual void GenerateInterrupt(Interrupt rupt) final;
+
 protected:
 
 	//
@@ -335,10 +354,6 @@ protected:
 	virtual void ProcessChannel143(ChannelValue val);
 	virtual void ProcessChannel163(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
-	public: virtual void GenerateHandrupt();
-	public: virtual void GenerateDownrupt();
-	public: virtual void GenerateUprupt();
-    public: virtual void GenerateRadarupt();
 	public: virtual bool IsUpruptActive();
 
 	//

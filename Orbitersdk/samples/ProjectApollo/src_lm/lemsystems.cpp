@@ -2503,7 +2503,7 @@ void LEM_LR::Timestep(double simdt){
 			case 5:
 			case 7:
 				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
+				lem->agc.GenerateInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 				break;
 			}
 		}
@@ -2729,7 +2729,7 @@ void LEM_LR::Timestep(double simdt){
 			// 0.643966 F/S PER COUNT
 			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 - (rate[0] / 0.643966));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-			lem->agc.GenerateRadarupt();
+			lem->agc.GenerateInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 			ruptSent = 1;
 
 			break;
@@ -2743,7 +2743,7 @@ void LEM_LR::Timestep(double simdt){
 			// 0.866807 F/S PER COUNT
 			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[2] / 0.866807));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-			lem->agc.GenerateRadarupt();
+			lem->agc.GenerateInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 			ruptSent = 3;
 
 			break;
@@ -2757,7 +2757,7 @@ void LEM_LR::Timestep(double simdt){
 			// 1.211975 F/S PER COUNT
 			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[1] / 1.211975));
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-			lem->agc.GenerateRadarupt();
+			lem->agc.GenerateInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 			ruptSent = 5;
 
 			break;
@@ -2774,7 +2774,7 @@ void LEM_LR::Timestep(double simdt){
 				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 1.079);
 			}
 			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-			lem->agc.GenerateRadarupt();
+			lem->agc.GenerateInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 			ruptSent = 7;
 
 			break;

@@ -4990,7 +4990,7 @@ int Saturn::Lua_GetAGCChannel(int ch) {
 
 void Saturn::Lua_SetAGCErasable(int page, int addr, int value) {
 	agc.SetErasable(page, addr, value);
-	agc.GenerateUprupt();	
+	agc.GenerateInterrupt(ApolloGuidance::Interrupt::UPRUPT);
 }
 
 int Saturn::Lua_GetAGCUplinkStatus() {

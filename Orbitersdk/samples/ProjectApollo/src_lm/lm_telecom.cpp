@@ -727,7 +727,7 @@ void LM_PCM::handle_uplink()
 		// Move to INLINK
 		lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
 		// Cause UPRUPT
-		lem->agc.GenerateUprupt();
+		lem->agc.GenerateInterrupt(ApolloGuidance::Interrupt::UPRUPT);
 
 		//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
 		rx_offset = 0; uplink_state = 0;
@@ -772,8 +772,8 @@ void LM_PCM::generate_stream_hbr(){
 	unsigned char data=0;
 	// 128 words per frame, 50 frames pre second
 	switch(word_addr){
-		case 0: tx_data[tx_offset] = 0375;                // SYNC 1
-			lem->agc.GenerateDownrupt();				  // And generate DOWNRUPT (We read the data out at 120)
+		case 0: tx_data[tx_offset] = 0375;										// SYNC 1
+			lem->agc.GenerateInterrupt(ApolloGuidance::Interrupt::DOWNRUPT);	// And generate DOWNRUPT (We read the data out at 120)
 			break;
 		case 1: tx_data[tx_offset] = 0312; break;         // SYNC 2
 		case 2: tx_data[tx_offset] = 0150; break;         // SYNC 3
