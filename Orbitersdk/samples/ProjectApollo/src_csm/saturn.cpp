@@ -4995,7 +4995,7 @@ void Saturn::Lua_SetAGCErasable(int page, int addr, int value) {
 
 int Saturn::Lua_GetAGCUplinkStatus() {
 	int st = 0;
-	if (agc.IsUpruptActive()) {
+	if (agc.InterruptRequested(ApolloGuidance::Interrupt::UPRUPT)) {
 		st = 1;
 	}
 	return st;

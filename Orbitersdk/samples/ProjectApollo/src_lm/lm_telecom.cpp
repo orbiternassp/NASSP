@@ -549,7 +549,7 @@ void LM_PCM::perform_io(double simt){
 			if (mcc_size > 0) {
 				// sprintf(oapiDebugString(), "MCCSIZE %d LRX %f LRXINT %f", mcc_size, last_rx, ((simt - last_rx) / 0.005));
 				// Should we recieve?
-				if ((fabs(simt - last_rx) / 0.1) < 1 || lem->agc.IsUpruptActive()) {
+				if ((fabs(simt - last_rx) / 0.1) < 1 || lem->agc.InterruptRequested(ApolloGuidance::Interrupt::UPRUPT)) {
 					return; // No
 				}
 				last_rx = simt;
@@ -607,7 +607,7 @@ void LM_PCM::perform_io(double simt){
 				}
 			}
 			// Should we receive?
-			if (((simt - last_rx) / 0.005) < 1 || lem->agc.IsUpruptActive()) {			
+			if (((simt - last_rx) / 0.005) < 1 || lem->agc.InterruptRequested(ApolloGuidance::Interrupt::UPRUPT)) {
 				return; // No
 			}
 			last_rx = simt;

@@ -846,15 +846,17 @@ void ApolloGuidance::GenerateInterrupt(Interrupt rupt)
 	}
 }
 
-bool ApolloGuidance::IsUpruptActive() {
-	// UPRUPT waiting to be processed
-	if (vagc.InterruptRequests[7] == 1)
+bool ApolloGuidance::InterruptRequested(Interrupt rupt)
+{
+	// Waiting to be serviced?
+	if (vagc.InterruptRequests[rupt] == 1)
 		return 1;
 
-	// UPRUPT currently being processed
-	if (vagc.InIsr && vagc.InterruptRequests[0] == 7)
+	// Currently being serviced?
+	if (vagc.InIsr && vagc.InterruptRequests[0] == rupt)
 		return 1;
 
+	// Neither
 	return 0;
 }
 

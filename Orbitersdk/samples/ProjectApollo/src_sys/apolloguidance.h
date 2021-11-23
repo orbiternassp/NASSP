@@ -335,6 +335,7 @@ public:
 	};
 
 	virtual void GenerateInterrupt(Interrupt rupt) final;
+	virtual bool InterruptRequested(Interrupt rupt) final;
 
 protected:
 
@@ -354,7 +355,8 @@ protected:
 	virtual void ProcessChannel143(ChannelValue val);
 	virtual void ProcessChannel163(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
-	public: virtual bool IsUpruptActive();
+
+public:
 
 	//
 	// Odds and ends.
