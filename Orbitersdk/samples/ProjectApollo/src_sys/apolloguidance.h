@@ -334,8 +334,8 @@ public:
 		// Maybe add GOJAM here in the future?
 	};
 
-	virtual void GenerateInterrupt(Interrupt rupt) final;
-	virtual bool InterruptRequested(Interrupt rupt) final;
+	virtual void RaiseInterrupt(Interrupt rupt) final;
+	virtual bool InterruptPending(Interrupt rupt) final;
 
 protected:
 

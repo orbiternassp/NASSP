@@ -644,9 +644,9 @@ void ApolloGuidance::SetInputChannel(int channel, ChannelValue val)
 	else {
 		// If this is a keystroke from the DSKY, generate an interrupt req.
 		if (channel == 015){
-			GenerateInterrupt(Interrupt::KEYRUPT1);
+			RaiseInterrupt(Interrupt::KEYRUPT1);
 		}else{ if (channel == 016){ // Secondary DSKY
-			GenerateInterrupt(Interrupt::KEYRUPT2);
+			RaiseInterrupt(Interrupt::KEYRUPT2);
 		}}
 
 		//
@@ -703,9 +703,9 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 	// If this is a keystroke from the DSKY (Or MARK/MARKREJ), generate an interrupt req.
 	if (channel == 015 && val != 0){
-		GenerateInterrupt(Interrupt::KEYRUPT1);
+		RaiseInterrupt(Interrupt::KEYRUPT1);
 	}else{ if (channel == 016 && val != 0){ // Secondary DSKY
-		GenerateInterrupt(Interrupt::KEYRUPT2);
+		RaiseInterrupt(Interrupt::KEYRUPT2);
 	}}
 
 	WriteIO(&vagc, channel, data);
@@ -836,7 +836,7 @@ void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){}
 
 void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {}
 
-void ApolloGuidance::GenerateInterrupt(Interrupt rupt)
+void ApolloGuidance::RaiseInterrupt(Interrupt rupt)
 {
 	// T3-6RUPT can not be set by peripherals
 	assert(rupt >= KEYRUPT1 && rupt <= NUM_INTERRUPT_TYPES);
@@ -846,7 +846,7 @@ void ApolloGuidance::GenerateInterrupt(Interrupt rupt)
 	}
 }
 
-bool ApolloGuidance::InterruptRequested(Interrupt rupt)
+bool ApolloGuidance::InterruptPending(Interrupt rupt)
 {
 	// Waiting to be serviced?
 	if (vagc.InterruptRequests[rupt] == 1)

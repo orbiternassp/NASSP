@@ -4990,12 +4990,12 @@ int Saturn::Lua_GetAGCChannel(int ch) {
 
 void Saturn::Lua_SetAGCErasable(int page, int addr, int value) {
 	agc.SetErasable(page, addr, value);
-	agc.GenerateInterrupt(ApolloGuidance::Interrupt::UPRUPT);
+	agc.RaiseInterrupt(ApolloGuidance::Interrupt::UPRUPT);
 }
 
 int Saturn::Lua_GetAGCUplinkStatus() {
 	int st = 0;
-	if (agc.InterruptRequested(ApolloGuidance::Interrupt::UPRUPT)) {
+	if (agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 		st = 1;
 	}
 	return st;
