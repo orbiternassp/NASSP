@@ -640,47 +640,6 @@ CpuWriteIO (agc_t * State, int Address, int Value)
 	*/
 }
 
-void
-GenerateHANDRUPT(agc_t * State)
-{
-	State->InterruptRequests[10] = 1;	// HANDRUPT
-}
-
-void
-GenerateRADARUPT (agc_t * State)
-{
-	State->InterruptRequests[9] = 1;	// RADARUPT
-}
-
-
-// DS20060402 Allow external DOWNRUPT generation
-void
-GenerateDOWNRUPT (agc_t * State)
-{
-	State->InterruptRequests[8] = 1;	// DOWNRUPT.
-}
-
-// DS20070101 Allow external UPRUPT generation
-void
-GenerateUPRUPT (agc_t * State)
-{
-	State->InterruptRequests[7] = 1;	// UPRUPT.
-}
-
-int
-IsUPRUPTActive (agc_t * State)
-{
-	// UPRUPT is waiting to be processed
-	if (State->InterruptRequests[7] == 1) {
-		return 1; 
-	}
-	// UPRUPT is processed currently
-	if (State->InIsr && State->InterruptRequests[0] == 7) {
-		return 1; 
-	}
-	return 0;
-}
-
 //-----------------------------------------------------------------------------
 // This function does all of the processing associated with converting a 
 // 12-bit "address" as used within instructions or in the Z register, to a
