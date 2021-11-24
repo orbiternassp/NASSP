@@ -1781,7 +1781,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 			// Docs says this should be 0.01 NM/bit, or 18.52 meters/bit
 			sat->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)fmod(range / 18.52, 32768.0);
 			sat->agc.SetInputChannelBit(013, RangeUnitActivity, 0);
-			sat->agc.GenerateRadarupt();
+			sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 			break;
 		default:
 			break;
@@ -3354,7 +3354,7 @@ void PCM::generate_stream_lbr(){
 	switch(word_addr){
 		case 0: // SYNC 1
 			// Trigger telemetry END PULSE
-			sat->agc.GenerateDownrupt();
+			sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::DOWNRUPT);
 			// And continue
 			tx_data[tx_offset] = 05;
 			break;
@@ -3600,7 +3600,7 @@ void PCM::generate_stream_lbr(){
 			break;
 		case 20:
 			// Trigger telemetry END PULSE
-			sat->agc.GenerateDownrupt();
+			sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::DOWNRUPT);
 			// and continue
 			switch(frame_count){
 				case 0: // 10DP1 
@@ -4196,7 +4196,7 @@ void PCM::generate_stream_hbr(){
 			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
 			tx_data[tx_offset] = data; 
 			// Trigger telemetry END PULSE
-			sat->agc.GenerateDownrupt();			
+			sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::DOWNRUPT);
 			break;
 		case 40:
 			switch(frame_count){
@@ -4987,7 +4987,7 @@ void PCM::perform_io(double simt){
 			if (mcc_size > 0) {
 				// sprintf(oapiDebugString(), "MCCSIZE %d LRX %f LRXINT %f", mcc_size, last_rx, ((simt - last_rx) / 0.005));
 				// Should we recieve?
-				if ((fabs(simt - last_rx) / 0.1) < 1 || sat->agc.IsUpruptActive()) {
+				if ((fabs(simt - last_rx) / 0.1) < 1 || sat->agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 					return; // No
 				}
 				last_rx = simt;
@@ -5044,7 +5044,7 @@ void PCM::perform_io(double simt){
 				}
 			}
 			// Should we recieve?
-			if ((fabs(simt - last_rx) / 0.005) < 1 || sat->agc.IsUpruptActive()) {			
+			if ((fabs(simt - last_rx) / 0.005) < 1 || sat->agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 				return; // No
 			}
 			last_rx = simt;
@@ -5166,7 +5166,7 @@ void PCM::handle_uplink() {
 		// Move to INLINK
 		sat->agc.vagc.Erasable[0][045] = cmc_uplink_wd;
 		// Cause UPRUPT
-		sat->agc.GenerateUprupt();
+		sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::UPRUPT);
 
 		//sprintf(oapiDebugString(),"CMC UPLINK DATA %05o",cmc_uplink_wd);
 		rx_offset = 0; uplink_state = 0;
