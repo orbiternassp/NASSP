@@ -3876,11 +3876,11 @@ void PCM::generate_stream_lbr(){
 	if(word_addr > 39){
 		word_addr = 0;
 		frame_addr++;
-		if(frame_addr > 4){
+		if(frame_addr > 49){
 			frame_addr = 0;
 		}
 		frame_count++;
-		if(frame_count > 5){
+		if(frame_count > 4){
 			frame_count = 0;
 		}
 	}
