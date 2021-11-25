@@ -1040,6 +1040,16 @@ RTCC_GLMRTM_1:
 	return temp;
 }
 
+double RTCC::GLQATN(double S, double C) const
+{
+	double T = atan2(S, C);
+	if (T < 0)
+	{
+		return T + PI2;
+	}
+	return T;
+}
+
 //Subsatellite position
 int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
 {

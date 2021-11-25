@@ -275,7 +275,7 @@ int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &
 	K = 1;
 RTCC_PIATSU_1A:
 	//Rotate from selenocentric to selenographic
-	PLEFEM(1, AEGOUT.TS / 24.0 / 3600.0, 0, Rot);
+	PLEFEM(1, AEGOUT.TS / 3600.0, 0, Rot);
 	OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
 	P_apo = tmul(Rot, P);
 	W_apo = tmul(Rot, W);
@@ -638,7 +638,7 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	{
 		g = PI2 - g;
 	}
-	h = acos2(N.z / length(N));
+	h = acos2(N.x / length(N));
 	if (N.y < 0)
 	{
 		h = PI2 - h;
@@ -721,82 +721,131 @@ void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double 
 	}
 }
 
-int RTCC::PITCIR(AEGBlock in, double ht, AEGDataBlock &out)
+int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &out)
 {
-	double R_E, R_CIR, cos_f_CI, f_CI, dt, sgn, ddt, eps_t;
+	//Output: 0 = no error, 1 = essentially circular orbit, 2 = unrecoverable AEG error, 3 = requested height not in orbit, 4 = failed to converge on radius
+
+	double cos_f_CI, f_CI, dt, sgn, ddt, eps_t;
+	int I;
+	bool fail;
 
 	eps_t = 0.01;
 
-	if (in.Header.AEGInd == BODY_EARTH)
-	{
-		R_E = OrbMech::R_Earth;
-	}
-	else
-	{
-		R_E = BZLAND.rad[RTCC_LMPOS_BEST];
-	}
-
-	R_CIR = R_E + ht;
-
-	if (in.Data.ENTRY == 0)
+	if (in.ENTRY == 0)
 	{
 		//Initialize
-		PMMAEGS(in.Header, in.Data, in.Data);
-		if (in.Header.ErrorInd)
+		PMMAEGS(header, in, in);
+		//Unrecoverable AEG error
+		if (header.ErrorInd)
 		{
-			return 3;
+			PMXSPT("PITCIR", 17);
+			return 2;
 		}
 	}
 
-	cos_f_CI = (in.Data.coe_osc.a*(1.0 - in.Data.coe_osc.e*in.Data.coe_osc.e) - R_CIR) / (in.Data.coe_osc.e*R_CIR);
+	out = in;
+
+	//Too circular?
+	if (header.AEGInd == BODY_EARTH)
+	{
+		if (in.coe_mean.e < 0.001)
+		{
+			PMXSPT("PITCIR", 17);
+			return 1;
+		}
+	}
+	else
+	{
+		if (in.coe_mean.e < 0.0001)
+		{
+			PMXSPT("PITCIR", 17);
+			return 1;
+		}
+	}
+
+	in.TIMA = 0;
+
+	cos_f_CI = (in.coe_osc.a*(1.0 - in.coe_osc.e*in.coe_osc.e) - R_CIR) / (in.coe_osc.e*R_CIR);
+	fail = false;
 	if (abs(cos_f_CI) > 1.0)
 	{
+		fail = true;
 		cos_f_CI = cos_f_CI / abs(cos_f_CI);
 	}
 	f_CI = acos(cos_f_CI);
-	if (f_CI >= in.Data.f)
+	if (f_CI >= in.f)
 	{
-		dt = (f_CI - in.Data.f) / (in.Data.g_dot+in.Data.l_dot);
+		dt = (f_CI - in.f) / (in.g_dot+in.l_dot);
 		sgn = 1.0;
 	}
 	else
 	{
-		if (PI2 - f_CI - in.Data.f > 0)
+		if (PI2 - f_CI - in.f > 0)
 		{
-			dt = (PI2 - f_CI - in.Data.f) / (in.Data.g_dot + in.Data.l_dot);
+			dt = (PI2 - f_CI - in.f) / (in.g_dot + in.l_dot);
 			sgn = -1.0;
 		}
 		else
 		{
-			dt = (f_CI + PI2 + in.Data.f) / (in.Data.g_dot + in.Data.l_dot);
+			dt = (f_CI + PI2 - in.f) / (in.g_dot + in.l_dot);
 			sgn = 1.0;
 		}
 	}
+
+	I = 0;
+
 	do
 	{
-		in.Data.TE = in.Data.TS + dt;
-		PMMAEGS(in.Header, in.Data, out);
-		if (in.Header.ErrorInd)
+		in.TE = in.TS + dt;
+		PMMAEGS(header, in, out);
+		//AEG error
+		if (header.ErrorInd)
 		{
-			return 3;
+			PMXSPT("PITCIR", 17);
+			return 2;
 		}
+		//Calculate desired true anomaly
 		cos_f_CI = (out.coe_osc.a*(1.0 - out.coe_osc.e*out.coe_osc.e) - R_CIR) / (out.coe_osc.e*R_CIR);
 		if (abs(cos_f_CI) > 1.0)
 		{
-			//Closest already
-			return 1;
+			cos_f_CI = cos_f_CI / abs(cos_f_CI);
 		}
 		f_CI = sgn*acos(cos_f_CI);
 		if (f_CI < 0)
 		{
 			f_CI += PI2;
 		}
-		ddt = (f_CI - out.f) / (out.g_dot + out.l_dot);
+		//Calculate angle difference
+		ddt = f_CI - out.f;
+		if (ddt > PI)
+		{
+			ddt -= PI2;
+		}
+		else if (ddt < -PI)
+		{
+			ddt += PI2;
+		}
+		//Calculate ddt
+		ddt = ddt / (out.g_dot + out.l_dot);
 		if (abs(ddt) > eps_t)
 		{
 			dt = dt + ddt;
 		}
-	} while (abs(ddt) > eps_t);
+		I++;
+	} while (abs(ddt) > eps_t && I < 10);
+
+	//Failed to converge
+	if (I == 10)
+	{
+		PMXSPT("PITCIR", 19);
+		return 4;
+	}
+	//Height not in orbit
+	if (fail)
+	{
+		PMXSPT("PITCIR", 18);
+		return 3;
+	}
 
 	return 0;
 }
