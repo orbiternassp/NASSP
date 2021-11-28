@@ -287,7 +287,7 @@ void LEM_RR::Timestep(double simdt) {
 			case 2:
 			case 4:
 				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
+				lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 				break;
 			}
 		}
@@ -701,7 +701,7 @@ void LEM_RR::Timestep(double simdt) {
 				// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
 				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0 - (rate / 0.191361));
 				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
+				lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 				ruptSent = 2;
 
 				break;
@@ -723,7 +723,7 @@ void LEM_RR::Timestep(double simdt) {
 					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 2.85902);
 				}
 				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
+				lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
 				ruptSent = 4;
 
 				break;

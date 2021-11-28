@@ -3217,6 +3217,12 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			case OAPI_KEY_EQUALS:
 				MoveTHC(false);
 				return 1;
+			case OAPI_KEY_MULTIPLY:
+				dVThrust1Switch.SetState(0);
+				dVThrust1Switch.Guard();
+				dVThrust2Switch.SetState(0);
+				dVThrust2Switch.Guard();
+				return 1;
 		}
 	}else{
 		switch(key){
@@ -4984,12 +4990,12 @@ int Saturn::Lua_GetAGCChannel(int ch) {
 
 void Saturn::Lua_SetAGCErasable(int page, int addr, int value) {
 	agc.SetErasable(page, addr, value);
-	agc.GenerateUprupt();	
+	agc.RaiseInterrupt(ApolloGuidance::Interrupt::UPRUPT);
 }
 
 int Saturn::Lua_GetAGCUplinkStatus() {
 	int st = 0;
-	if (agc.IsUpruptActive()) {
+	if (agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 		st = 1;
 	}
 	return st;

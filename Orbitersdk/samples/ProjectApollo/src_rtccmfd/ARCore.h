@@ -155,7 +155,7 @@ public:
 	void GenerateAGCEphemeris();
 	int agcCelBody_RH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
 	int agcCelBody_LH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
-	void AGCEphemeris(double T0, double Epoch, double TEphem0);
+	void AGCEphemeris(double T0, int Epoch, double TEphem0);
 	void AGCCorrectionVectors(double mjd_launch, double t_land, int mission, bool isCMC);
 	void GenerateAGCCorrectionVectors();
 
@@ -221,8 +221,6 @@ public:
 	double GMPApseLineRotAngle;
 	int GMPRevs;
 	double SPSGET;		//Maneuver GET
-	double GPM_TIG;		//Maneuver GET output
-	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
 	//0 = Apogee
 	//1 = Equatorial crossing
 	//2 = Perigee
@@ -245,7 +243,6 @@ public:
 	//11 = Combination height maneuver and node shift
 	//12 = Combination apogee/perigee change and line-of-apsides shift
 	int GMPManeuverType;
-	GPMPRESULTS GMPResults;
 
 	//REFSMMAT PAGE
 	double REFSMMATTime;
@@ -372,7 +369,7 @@ public:
 
 	//AGC EPHEMERIS
 	int AGCEphemOption;	//0 = AGC ephemerides, 1 = AGC precession/nutation/libration correction vectors
-	double AGCEphemBRCSEpoch;
+	int AGCEphemBRCSEpoch;
 	double AGCEphemTEphemZero;
 	double AGCEphemTIMEM0;
 	double AGCEphemTEPHEM;

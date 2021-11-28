@@ -930,7 +930,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.AltRef = 1;
-		orbopt.GETbase = GETbase;
 		orbopt.H_A = 160.1*1852.0;
 		orbopt.H_P = 90.3*1852.0;
 		//Over Carnarvon
@@ -938,7 +937,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		orbopt.ManeuverCode = RTCC_GMP_NHL;
 		//Gives DV we had previously, needs fixing eventually
 		orbopt.dLAN = 0.3*RAD;
-		orbopt.RV_MCC = sv;
+		orbopt.sv_in = ConvertSVtoEphemData(sv);
 		orbopt.TIG_GET= OrbMech::HHMMSSToSS(75, 18, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
@@ -1211,14 +1210,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.AltRef = 1;
-		orbopt.GETbase = GETbase;
 		orbopt.H_A = 240.6*1852.0;
 		orbopt.H_P = 89.8*1852.0;
 		//Eastern Test Range
 		orbopt.long_D = -88.455*RAD;
 		orbopt.dLAN = -6.7*RAD;
 		orbopt.ManeuverCode = RTCC_GMP_NHL;
-		orbopt.RV_MCC = sv;
+		orbopt.sv_in = ConvertSVtoEphemData(sv);
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(164, 30, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
@@ -1489,9 +1487,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 
 		orbopt.dLOA = -22.5*RAD;
-		orbopt.GETbase = GETbase;
 		orbopt.ManeuverCode = RTCC_GMP_SAO;
-		orbopt.RV_MCC = sv;
+		orbopt.sv_in = ConvertSVtoEphemData(sv);
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 35, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);

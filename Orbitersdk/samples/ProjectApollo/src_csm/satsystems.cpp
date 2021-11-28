@@ -540,14 +540,42 @@ void Saturn::SystemsInit() {
 	SMRCSHeaterDSwitch.WireTo(&SMHeatersDMnACircuitBraker);
 
 	// CM RCS initialization
-	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
-	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL,    &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
+	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"),
+		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14"),
+		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16"),
+		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
+
+	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"),
+		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24"),
+		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25"),
+		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21"), NULL, &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
 
 	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBraker);
 	CMRCSProp2Switch.WireTo(&PrplntIsolMnBCircuitBraker);
 
 	CMRCSProp1Talkback.WireTo(&SMHeatersBMnACircuitBraker);
 	CMRCSProp2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
+
+	CMRCSHeat[0] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH13COIL");
+	CMRCSHeat[1] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH23COIL");
+	CMRCSHeat[2] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH14COIL");
+	CMRCSHeat[3] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH24COIL");
+	CMRCSHeat[4] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAW15COIL");
+	CMRCSHeat[5] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAW25COIL");
+	CMRCSHeat[6] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAW26COIL");
+	CMRCSHeat[7] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAW16COIL");
+	CMRCSHeat[8] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL11COIL");
+	CMRCSHeat[9] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL21COIL");
+	CMRCSHeat[10] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL22COIL");
+	CMRCSHeat[11] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL12COIL");
+
+	//CM RCS Transducer Locations
+	CMRCSTemp[0] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12");
+	CMRCSTemp[1] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14");
+	CMRCSTemp[2] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16");
+	CMRCSTemp[3] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21");
+	CMRCSTemp[4] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24");
+	CMRCSTemp[5] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25");
 
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
 	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
@@ -1002,6 +1030,23 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 //sprintf(oapiDebugString(), "InPress: %lf OutPress %lf HoseFlow: %lf CSMCO2 %lf LMCO2: %lf", (csmO2hose->in->parent->space.Press)*PSI, (csmO2hose->out->parent->space.Press)* PSI, (csmO2hose->flow)*LBH, (csmO2hose->in->parent->space.composition[SUBSTANCE_CO2].p_press)* MMHG, (csmO2hose->out->parent->space.composition[SUBSTANCE_CO2].p_press)* MMHG);
 
+//CM RCS Valve Debug Lines
+/*
+	double *ROLLJET12 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12:TEMP");
+	double* ROLLJET21 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21:TEMP");
+	double *PITCHJET14 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14:TEMP");
+	double* PITCHJET24 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24:TEMP");
+	double *YAWJET16 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16:TEMP");
+	double* YAWJET25 = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25:TEMP");
+
+	sprintf(oapiDebugString(), "24:T%.2f V%.1f 25:T%.2f V%.1f 12:T%.2f V%.1f 14:T%.2f V%.1f 16:T%.2f V%.1f 21:T%.2f V%.1f", 
+		KelvinToFahrenheit(*PITCHJET24), (KelvinToFahrenheit(*PITCHJET24)+50.0) /20.0, 
+		KelvinToFahrenheit(*YAWJET25), (KelvinToFahrenheit(*YAWJET25) + 50.0) / 20.0,
+		KelvinToFahrenheit(*ROLLJET12), (KelvinToFahrenheit(*ROLLJET12) + 50.0) / 20.0,
+		KelvinToFahrenheit(*PITCHJET14), (KelvinToFahrenheit(*PITCHJET14) + 50.0) / 20.0,
+		KelvinToFahrenheit(*YAWJET16), (KelvinToFahrenheit(*YAWJET16) + 50.0) / 20.0,
+		KelvinToFahrenheit(*ROLLJET21), (KelvinToFahrenheit(*ROLLJET21) + 50.0) / 20.0);
+*/
 #ifdef _DEBUG
 
 		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",
@@ -2279,25 +2324,64 @@ void Saturn::JoystickTimestep()
 	}
 
 	//
-	// CM RCS propellant dump 
+	// CM RCS propellant dump & heaters
 	//
 	
 	// Manual control
-	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayA() && secs.rcsc.GetPropellantDumpInhibitA() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetCMRCSHeatersA())
+	{
+		SetCMRCSState(0, true);
+		SetCMRCSState(2, true);
+		SetCMRCSState(4, true);
+		SetCMRCSState(7, true);
+		SetCMRCSState(8, true);
+		SetCMRCSState(11, true);
+		CMHeater1MnACircuitBraker.DrawPower(315.0);
+	}
+	else if (secs.rcsc.GetCMRCSDumpA())
+	{
 		SetCMRCSState(2, true);	
 		SetCMRCSState(4, true);	
 		SetCMRCSState(7, true);	
 		SetCMRCSState(8, true);	
-		SetCMRCSState(11, true);	
+		SetCMRCSState(11, true);
+		RCSLogicMnACircuitBraker.DrawPower(262.5);
 	}
 		
 	// Manual control
-	if (secs.rcsc.GetInterconnectAndPropellantBurnRelayB() && secs.rcsc.GetPropellantDumpInhibitB() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
+	if (secs.rcsc.GetCMRCSHeatersB())
+	{
+		SetCMRCSState(1, true);
+		SetCMRCSState(3, true);
+		SetCMRCSState(5, true);
+		SetCMRCSState(6, true);
+		SetCMRCSState(9, true);
+		SetCMRCSState(10, true);
+		CMHeater2MnBCircuitBraker.DrawPower(315.0);
+	}
+	else if (secs.rcsc.GetCMRCSDumpB())
+	{
 		SetCMRCSState(3, true);	
 		SetCMRCSState(5, true);	
 		SetCMRCSState(6, true);	
 		SetCMRCSState(9, true);	
-		SetCMRCSState(10, true);	
+		SetCMRCSState(10, true);
+		RCSLogicMnBCircuitBraker.DrawPower(262.5);
+	}
+
+	//Code for generating heat in the CM RCS thrusters. Is this the best place for this?
+	for (int i = 0;i < 12;i++)
+	{
+		if (th_att_cm_commanded[i])
+		{
+			CMRCSHeat[i]->GenerateHeat(52.5);
+		}
+	}
+
+	//Code for returning CM RCS temperatures. Is this the best place for this?
+	for (int i = 0; i < 6; i++)
+	{
+		CMRCSTemp[i]->GetTemp();
 	}
 }
 

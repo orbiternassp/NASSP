@@ -240,8 +240,9 @@ struct RTCCSystemParameters
 	{
 		//DEFAULT VALUES
 
-		//Epoch of NBY 1969 (Apollo 7-10)
-		AGCEpoch = 40221.525;
+		//Epoch of NBY 1969
+		AGCEpoch = 1969;
+		MAT_J2000_BRCS = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 		//These are calculated with R_E = 6.373338e6
 		MCGMUM = 2.454405845045305e-01;
@@ -672,8 +673,8 @@ struct RTCCSystemParameters
 
 	//Nautical miles per Earth radii
 	double MCCNMC;
-	//MJD of epoch
-	double AGCEpoch;
+	//Year of epoch
+	int AGCEpoch;
 	//Mean lunar radius
 	double MCSMLR;
 	//Radians per degree
@@ -1078,4 +1079,7 @@ struct RTCCSystemParameters
 		VECTOR3 CG[40];
 		int N;
 	} MHVLCG, MHVACG, MHVCCG; //LM ascent+descent, LM ascent, CSM
+
+	//Matrix to convert from J2000 to NBY coordinates
+	MATRIX3 MAT_J2000_BRCS;
 };

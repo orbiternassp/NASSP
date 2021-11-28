@@ -445,9 +445,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPManeuverPoint = 0;
 	GMPManeuverType = 0;
 	OrbAdjAltRef = true;
-	OrbAdjDVX = _V(0, 0, 0);
 	SPSGET = 0.0;
-	GPM_TIG = 0.0;
 	GMPApogeeHeight = 0;
 	GMPPerigeeHeight = 0;
 	GMPWedgeAngle = 0.0;
@@ -460,24 +458,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPYaw = 0.0;
 	GMPRevs = 0;
 	GMPApseLineRotAngle = 0.0;
-	GMPResults.A = 0.0;
-	GMPResults.Del_G = 0.0;
-	GMPResults.E = 0.0;
-	GMPResults.GET_A = 0.0;
-	GMPResults.GET_P = 0.0;
-	GMPResults.HA = 0.0;
-	GMPResults.HP = 0.0;
-	GMPResults.H_Man = 0.0;
-	GMPResults.I = 0.0;
-	GMPResults.lat_A = 0.0;
-	GMPResults.lat_Man = 0.0;
-	GMPResults.lat_P = 0.0;
-	GMPResults.long_A = 0.0;
-	GMPResults.long_Man = 0.0;
-	GMPResults.long_P = 0.0;
-	GMPResults.Node_Ang = 0.0;
-	GMPResults.Pitch_Man = 0.0;
-	GMPResults.Yaw_Man = 0.0;
 
 	RTEASTType = 0;
 
@@ -1542,7 +1522,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 		V.z *= pow(2, 7);
 	}
 
-	Rot = OrbMech::J2000EclToBRCS(GC->rtcc->SystemParameters.AGCEpoch);
+	Rot = GC->rtcc->SystemParameters.MAT_J2000_BRCS;
 
 	EphemerisData sv;
 	sv.R = tmul(Rot, R);
@@ -2841,36 +2821,30 @@ int ARCore::subThread()
 	case 3:	//Orbital Adjustment Targeting
 	{
 		GMPOpt opt;
-		SV sv0, sv_pre, sv_post;
+		EphemerisData sv0;
+		SV sv_pre, sv_post;
 
 		if (GC->MissionPlanningActive)
 		{
 			double GMT = GC->rtcc->GMTfromGET(SPSGET);
-			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(GMT, GC->rtcc->med_k20.Vehicle, EPHEM))
+			if (GC->rtcc->ELFECH(GMT, GC->rtcc->med_k20.Vehicle, sv0))
 			{
 				Result = 0;
 				break;
 			}
-			sv0.R = EPHEM.R;
-			sv0.V = EPHEM.V;
-			sv0.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv0.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 		}
 		else
 		{
-			sv0 = GC->rtcc->StateVectorCalc(vessel);
+			sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
 		}
 
 		opt.ManeuverCode = GMPManeuverCode;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.H_A = GMPApogeeHeight;
 		opt.H_P = GMPPerigeeHeight;
 		opt.dH_D = GMPHeightChange;
 		opt.TIG_GET = SPSGET;
 		opt.AltRef = OrbAdjAltRef;
 		opt.dLAN = GMPNodeShiftAngle;
-		opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.dW = GMPWedgeAngle;
 		opt.long_D = GMPManeuverLongitude;
 		opt.H_D = GMPManeuverHeight;
@@ -2879,11 +2853,11 @@ int ARCore::subThread()
 		opt.Yaw = GMPYaw;
 		opt.dLOA = GMPApseLineRotAngle;
 		opt.N = GMPRevs;
-		opt.RV_MCC = sv0;
+		opt.sv_in = sv0;
 
-		GC->rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, GPM_TIG, GMPResults);
-		SV GPM_SV = GC->rtcc->coast(opt.RV_MCC, GPM_TIG - OrbMech::GETfromMJD(opt.RV_MCC.MJD, GC->rtcc->CalcGETBase()));
-		OrbAdjDVX = mul(OrbMech::LVLH_Matrix(GPM_SV.R, GPM_SV.V), OrbAdjDVX);
+		VECTOR3 OrbAdjDVX;
+		double GPM_TIG;
+		GC->rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, GPM_TIG);
 
 		Result = 0;
 	}
@@ -4522,10 +4496,18 @@ int ARCore::subThread()
 		}
 		else
 		{
-			SV sv_pre, sv_post, sv_tig;
-			double attachedMass = 0.0;
-			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
-			sv_tig = GC->rtcc->coast(sv_now, GPM_TIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
+			if (GC->rtcc->PZGPMELM.SV_before.GMT == 0.0)
+			{
+				//No data
+				Result = 0;
+				break;
+			}
+			EphemerisData sv_tig;
+			double mass, attachedMass = 0.0;
+			
+			mass = vessel->GetMass();
+
+			sv_tig = GC->rtcc->PZGPMELM.SV_before;
 
 			if (docked)
 			{
@@ -4535,7 +4517,9 @@ int ARCore::subThread()
 			{
 				attachedMass = 0.0;
 			}
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), GPM_TIG, GC->rtcc->med_m65.Thruster, attachedMass, OrbAdjDVX, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			VECTOR3 DV = GC->rtcc->PZGPMELM.V_after - GC->rtcc->PZGPMELM.SV_before.V;
+			GC->rtcc->PoweredFlightProcessor(sv_tig, mass, GC->rtcc->GetGMTBase(), GC->rtcc->PZGPMELM.SV_before.GMT, GC->rtcc->med_m65.Thruster, attachedMass, DV, false, P30TIG, dV_LVLH);
+			P30TIG = GC->rtcc->GETfromGMT(P30TIG);
 		}
 
 		Result = 0;
@@ -5117,7 +5101,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	VECTOR3 l;
 	double mjd_mid, brcsmjd, w_E, t0, B_0, Omega_I0, F_0, B_dot, Omega_I_dot, F_dot, cosI, sinI;
 	double A_Z, A_Z0, A_X, minA_Y, mjd_land;
-	int mem;
+	int mem, epoch;
 	char AGC[64];
 
 	mjd_mid = mjd_launch + 7.0;
@@ -5132,7 +5116,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	{
 		if (mission < 11)
 		{
-			brcsmjd = 40221.525;    //Nearest Besselian Year 1969
+			epoch = 1969;    //Nearest Besselian Year 1969
 			w_E = 7.29211515e-5;
 			B_0 = 0.409164173;              
 			Omega_I0 = -6.03249419;
@@ -5158,7 +5142,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 14)
 		{
-			brcsmjd = 40586.767239; //Nearest Besselian Year 1970
+			epoch = 1970;			//Nearest Besselian Year 1970
 			w_E = 7.29211494e-5;    //Comanche 055 (Apollo 11 CM AGC)
 			B_0 = 0.40916190299;
 			Omega_I0 = 6.19653663041;
@@ -5173,7 +5157,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 15)
 		{
-			brcsmjd = 40952.009432; //Nearest Besselian Year 1971
+			epoch = 1971;			//Nearest Besselian Year 1971
 			w_E = 7.292115147e-5;	//Comanche 108 (Apollo 14 CM AGC)
 			B_0 = 0.40915963316;
 			Omega_I0 = 5.859196887;
@@ -5188,7 +5172,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else
 		{
-			brcsmjd = 41317.251625; //Nearest Besselian Year 1972
+			epoch = 1972;			//Nearest Besselian Year 1972
 			w_E = 7.29211514667e-5; //Artemis 072 (Apollo 15 CM AGC)
 			B_0 = 0.409157363336;
 			Omega_I0 = 5.52185714700;
@@ -5206,7 +5190,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	{
 		if (mission < 11)
 		{
-			brcsmjd = 40221.525;    //Nearest Besselian Year 1969
+			epoch = 1969;		    //Nearest Besselian Year 1969
 			w_E = 7.29211515e-5;    //Luminary 069 (Apollo 10 LM AGC)
 			B_0 = 0.409164173;
 			Omega_I0 = -6.03249419;
@@ -5221,7 +5205,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 12)
 		{
-			brcsmjd = 40586.767239;		//Nearest Besselian Year 1970
+			epoch = 1970;				//Nearest Besselian Year 1970
 			w_E = 7.29211319606104e-5;  //Luminary 099 (Apollo 11 LM AGC)
 			B_0 = 0.40916190299;
 			Omega_I0 = 6.1965366255107;
@@ -5236,7 +5220,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 13)
 		{
-			brcsmjd = 40586.767239; //Nearest Besselian Year 1970
+			epoch = 1970;			//Nearest Besselian Year 1970
 			w_E = 7.29211494e-5;    //Luminary 116 (Apollo 12 LM AGC)
 			B_0 = 0.4091619030;
 			Omega_I0 = 6.196536640;
@@ -5251,7 +5235,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 14)
 		{
-			brcsmjd = 40586.767239;		//Nearest Besselian Year 1970
+			epoch = 1970;				//Nearest Besselian Year 1970
 			w_E = 7.292115145489943e-05;//Luminary 131 (Apollo 13 LM AGC)
 			B_0 = 0.4091619030;
 			Omega_I0 = 6.196536640;
@@ -5266,7 +5250,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 15)
 		{
-			brcsmjd = 40952.009432; //Nearest Besselian Year 1971
+			epoch = 1971;			//Nearest Besselian Year 1971
 			w_E = 7.292115147e-5;	//Luminary 178 (Apollo 14 LM AGC)
 			B_0 = 0.40915963316;
 			Omega_I0 = 5.859196887;
@@ -5281,7 +5265,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else
 		{
-			brcsmjd = 41317.251625; //Nearest Besselian Year 1972
+			epoch = 1972;			//Nearest Besselian Year 1972
 			w_E = 7.29211514667e-5; //Luminary 210 (Apollo 15 LM AGC)
 			B_0 = 0.409157363336;
 			Omega_I0 = 5.52185714700;
@@ -5297,7 +5281,8 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	}
 
 	//EARTH ROTATIONS
-	J2000 = OrbMech::J2000EclToBRCS(brcsmjd);
+	brcsmjd = OrbMech::MJDOfNBYEpoch(epoch);
+	J2000 = OrbMech::J2000EclToBRCSMJD(brcsmjd);
 	R2 = mul(OrbMech::tmat(Rot2), mul(R, Rot2));
 	R3 = mul(J2000, R2);
 
@@ -5327,6 +5312,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	//TBD: Print stuff here
 	FILE *file = fopen("PrecessionData.txt", "w");
 	fprintf(file, "------- AGC Correction Vectors for Apollo %d using %s -------\n", mission, AGC);
+	fprintf(file, "Epoch   = %d (Year) Epoch of Basic Reference Coordinate System\n", epoch);
 	fprintf(file, "Epoch   = %6.6f (MJD) Epoch of Basic Reference Coordinate System\n", brcsmjd);
 	fprintf(file, "TEphem0 = %6.6f (MJD) Ephemeris Time Zero\n", t0);
 	fprintf(file, "TEPHEM  = %6.6f (MJD) Mission launch time\n", mjd_launch);

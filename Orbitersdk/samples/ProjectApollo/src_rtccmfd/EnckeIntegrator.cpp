@@ -445,14 +445,17 @@ void EnckeFreeFlightIntegrator::adfunc()
 		if (INITF == false)
 		{
 			INITF = true;
+			//MATRIX3 Mat_J_B = SystemParameters.MAT_J2000_BRCS;
 			MATRIX3 obli = OrbMech::GetObliquityMatrix(P, pRTCC->GetGMTBase() + CurrentTime() / 24.0 / 3600.0);
-			U_Z = mul(obli, _V(0, 1, 0));
-			U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+			//Convert unit z-axis vector to ecliptic
+			U_Z = rhmul(obli, _V(0, 0, 1));
+			//TBD: Use this in the future
+			//U_Z = mul(Mat_J_B, rhmul(obli, _V(0, 0, 1)));
 		}
 
 		TS = tau;
 		OrbMech::rv_from_r0v0(R0, V0, tau, R_CON, V_CON, mu);
-		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, R_EM, V_EM, R_ES);
+		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
 	}
 
 	//Calculate actual state

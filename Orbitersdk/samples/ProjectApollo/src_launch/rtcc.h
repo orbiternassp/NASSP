@@ -40,6 +40,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/EnckeIntegrator.h"
 #include "../src_rtccmfd/RTCC_EMSMISS.h"
 #include "../src_rtccmfd/RTCCSystemParameters.h"
+#include "../src_rtccmfd/GeneralPurposeManeuver.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -115,69 +116,6 @@ class Saturn;
 #define RTCC_LMPOS_PGNCS 1
 #define RTCC_LMPOS_AGS 2
 #define RTCC_LMPOS_MED 3
-
-#define RTCC_GMP_PCE 1
-#define RTCC_GMP_PCL 2
-#define RTCC_GMP_PCT 3
-#define RTCC_GMP_CRL 4
-//Circularization at a specified height
-#define RTCC_GMP_CRH 5
-#define RTCC_GMP_HOL 6
-#define RTCC_GMP_HOT 7
-#define RTCC_GMP_HAO 8
-#define RTCC_GMP_HPO 9
-#define RTCC_GMP_NST 10
-#define RTCC_GMP_NSO 11
-#define RTCC_GMP_HBT 12
-#define RTCC_GMP_HBH 13
-#define RTCC_GMP_HBO 14
-#define RTCC_GMP_FCT 15
-#define RTCC_GMP_FCL 16
-#define RTCC_GMP_FCH 17
-#define RTCC_GMP_FCA 18
-#define RTCC_GMP_FCP 19
-#define RTCC_GMP_FCE 20
-#define RTCC_GMP_NHT 21
-//Combination maneuver to change both apogee and perigee and shift the node at a specified longitude
-#define RTCC_GMP_NHL 22
-//Maneuver to shift line-of-apsides some angle at a specified longitude
-#define RTCC_GMP_SAL 23
-//Maneuver to shift line-of-apsides to a specified longitude
-#define RTCC_GMP_SAA 24
-#define RTCC_GMP_PHL 25
-#define RTCC_GMP_PHT 26
-#define RTCC_GMP_PHA 27
-#define RTCC_GMP_PHP 28
-#define RTCC_GMP_CPL 29
-#define RTCC_GMP_CPH 30
-#define RTCC_GMP_SAT 31
-//Maneuver to shift line-of-apsides some angle and keep the same apogee and perigee altitudes
-#define RTCC_GMP_SAO 32
-//Maneuver to change both apogee and perigee at a specified longitude
-#define RTCC_GMP_HBL 33
-#define RTCC_GMP_CNL 34
-#define RTCC_GMP_CNH 35
-//Height maneuver and node shift at a specified longitude
-#define RTCC_GMP_HNL 36
-#define RTCC_GMP_HNT 37
-#define RTCC_GMP_HNA 38
-#define RTCC_GMP_HNP 39
-#define RTCC_GMP_CRT 40
-#define RTCC_GMP_CRA 41
-#define RTCC_GMP_CRP 42
-#define RTCC_GMP_CPT 43
-#define RTCC_GMP_CPA 44
-#define RTCC_GMP_CPP 45
-#define RTCC_GMP_CNT 46
-#define RTCC_GMP_CNA 47
-#define RTCC_GMP_CNP 48
-#define RTCC_GMP_PCH 49
-#define RTCC_GMP_NSH 50
-//Node shift at a longitude
-#define RTCC_GMP_NSL 51
-#define RTCC_GMP_HOH 52
-//Maneuver to change both apogee and perigee and place perigee at a certain longitude a certain number of revs later
-#define RTCC_GMP_HAS 53
 
 const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40140.62691,
@@ -678,39 +616,6 @@ struct TLIManFR
 	double PeriGET; //time of pericynthion, initial guess
 	double h_peri;	//flyby altitude
 	SV RV_MCC;		//State vector as input
-};
-
-struct GMPOpt
-{
-	//0 = Fixed TIG, specify inclination, apoapsis and periapsis altitude
-	//1 = Fixed TIG, specify apoapsis altitude
-	//2 = Fixed TIG, specify periapsis altitude
-	//3 = Fixed TIG, circularize orbit
-	//4 = Circularize orbit at specified altitude
-	//5 = Rotate velocity vector, specify apoapsis altitude
-	//6 = Rotate line of apsides, perigee at specific longitude
-	//7 = Optimal node shift maneuver
-	int ManeuverCode;
-	double GETbase; //usually MJD at launch
-	SV RV_MCC;		//State vector as inputn or without
-	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
-	double R_LLS;	//Landing site radius
-
-	//maneuver parameters
-
-	double TIG_GET;	//Threshold time or time of ignition
-	double dW;		//Desired wedge angle change
-	double long_D;	//Desired maneuver longitude
-	double H_D;		//Desired maneuver height
-	double dH_D;	//Desired change in height
-	double dLAN;	//Desired change in the ascending node
-	double H_A;		//Desired apogee height after the maneuver
-	double H_P;		//Desired perigee height after the maneuver
-	double dV;		//Input incremental velocity magnitude of the maneuver
-	double Pitch;	//Input pitch of the maneuver
-	double Yaw;		//Input yaw of the maneuver
-	double dLOA;	//Line-of-apsides shift
-	int N;			//Number of revolutions
 };
 
 struct TLIPADOpt
@@ -2256,28 +2161,6 @@ struct LVDCTLIparam
 	double t_clock;
 };
 
-struct GPMPRESULTS
-{
-	double GET_A;
-	double HA;
-	double long_A;	//longitude of apoapsis
-	double lat_A;	//latitude of apoapsis
-	double GET_P;
-	double HP;
-	double long_P;	//longitude of periapsis
-	double lat_P;	//latitude of periapsis
-	double A;
-	double E;
-	double I;
-	double Node_Ang;
-	double Del_G;
-	double Pitch_Man;
-	double Yaw_Man;
-	double H_Man;
-	double long_Man;
-	double lat_Man;
-};
-
 struct ASTInput
 {
 	double dgamma;
@@ -2595,7 +2478,6 @@ public:
 	void TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass);
 	int LunarDescentPlanningProcessor(SV sv);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
-	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, GPMPRESULTS &res);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	int DetermineSVBody(EphemerisData2 sv);
 	void RotateSVToSOI(EphemerisData &sv);
@@ -2610,7 +2492,7 @@ public:
 	void RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
-	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double GETbase, double P30TIG, double TB5, double mu, double T_RG);
+	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
 	void LVDCTLIPredict(LVDCTLIparam lvdc, double m0, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI);
 	//S-IVB TLI IGM Pre-Thrust Targeting Module
 	int PMMSPT(PMMSPTInput &in);
@@ -2661,11 +2543,10 @@ public:
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
+	AEGBlock SVToAEG(EphemerisData sv);
 	//Apsides Determination Subroutine
+	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
 	bool PMMAPD(SV sv0, SV &sv_a, SV &sv_p);
-	VECTOR3 HeightManeuverInteg(SV sv0, double dh);
-	VECTOR3 ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD);
-	VECTOR3 CircularizationManeuverInteg(SV sv0);
 	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval2(double get);
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
@@ -2693,6 +2574,8 @@ public:
 	VECTOR3 GLMRTV(VECTOR3 A, double THET1, int K1, double THET2 = 0.0, int K2 = 0.0, double THET3 = 0.0, int K3 = 0);
 	//Matrix rotation routine
 	MATRIX3 GLMRTM(MATRIX3 A, double THET1, int K1, double THET2 = 0.0, int K2 = 0.0, double THET3 = 0.0, int K3 = 0);
+	//Zero to Two Pi Arctangent Subroutine
+	double GLQATN(double S, double C) const;
 	//Cape Crossing Table Generation
 	int RMMEACC(int L, int ref_frame, int ephem_type, int rev0);
 	//Ascending Node Computation
@@ -2786,6 +2669,7 @@ public:
 	int PMMLDP(PMMLDPInput in, MPTManeuver &man);
 	//Coast Numerical Integrator
 	void PMMCEN(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
+	void PMMCEN2(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
 	//Freeze, Unfreeze, Delete Processor
 	void PMMFUD(int veh, unsigned man, int action, std::string StationID);
 	//Vehicle Orientation Change Processor
@@ -2949,7 +2833,8 @@ public:
 	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
 	int ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out);
 	int ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out);
-	int ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out);
+	int ELVCNV(std::vector<VECTOR3> vec, double GMT, int type, int in, int out, std::vector<VECTOR3> &vec_out);
+	int ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &vec_out);
 	//Extended Interpolation Routine
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out);
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, EphemerisDataTable2 &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY = NULL);
@@ -3001,7 +2886,7 @@ public:
 	// MISSION PLANNING (P)
 	//Weight Determination at a Time
 	void PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out);
-	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
+	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, VECTOR3 *R_ES, MATRIX3 *PNL);
 	bool PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB);
 
 	// REENTRY COMPUTATIONS (R)
@@ -3041,7 +2926,7 @@ public:
 	//Arrival time at selenographic argument of latitude
 	int PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg);
 	//Series Function Subroutine
-	void PIBETA(double BETA, double ONOVA, double &F1, double &F2, double &F3, double &F4);
+	void PIBETA(double BETA, double ONOVA, double *F);
 	//TBD: PIBGAM
 	//Hour angle with Besselian input time
 	double PIBSHA(double hour);
@@ -3069,13 +2954,17 @@ public:
 	//Universal Cartesian to Kepler Coordinates
 	void PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h);
 	//Time from perifocal pass to radius (TRW routine TFPCR)
-	void PITFPC(double MUE, int K, double AORP, double ECC, double rad, double &TIME, double &P);
+	void PITFPC(double MUE, int K, double AORP, double ECC, double rad, double &TIME, double &P, bool erunits = true);
+	//Determine time of arrival at specific height in orbit
+	int PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &out);
 
 	// ** MISCELLANEOUS UTILITY PROGRAMS**
 	//Sun/Moon ephemeris table from tape
 	void QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS);
 	//Sun-Moon ephemeris offline
-	bool QMGEPH(double gmtbase, double HOURS);
+	bool QMGEPH(int epoch, double gmtbase, double HOURS);
+	//Reading of P&N ephemeris table
+	void QMPNREAD(double gmtbase);
 
 	// **AUXILIARY SUBROUTINES**
 	//Delta True Anomaly Function
@@ -3685,6 +3574,13 @@ public:
 		LunarStayTimesTable LUNRSTAY;
 	} EZEPH1, EZEPH2;
 
+	struct NutationPrecessionMatrices
+	{
+		MATRIX3 Mat[141];
+		//MJD of first matrix
+		double mjd0 = 0.0;
+	} EZNPMATX;
+
 	struct TLITargetingParametersTable
 	{
 		int Day;
@@ -4155,6 +4051,37 @@ public:
 		std::string code;
 	} PZGPMELM;
 
+	struct GPMResults
+	{
+		std::string STAID; //Call letters of station used for last trajectory update of the maneuvering vehicle
+		double GETAV = 0.0;
+		double Weight = 0.0;
+		double GET_A = 0.0;
+		double HA = 0.0;
+		double long_A = 0.0;	//longitude of apoapsis
+		double lat_A = 0.0;	//latitude of apoapsis
+		double GET_P = 0.0;
+		double HP = 0.0;
+		double long_P = 0.0;	//longitude of periapsis
+		double lat_P = 0.0;	//latitude of periapsis
+		double A = 0.0;
+		double E = 0.0;
+		double I = 0.0;
+		double Node_Ang = 0.0;
+		double Del_G = 0.0;
+		double Pitch_Man = 0.0;
+		double Yaw_Man = 0.0;
+		double H_Man = 0.0;
+		double long_Man = 0.0;
+		double lat_Man = 0.0;
+		double GETTH = 0.0;
+		double dv = 0.0;
+		VECTOR3 DV = _V(0, 0, 0);
+		double GET_TIG = 0.0;
+		int Rev = 0;
+		int Err = 0;
+	} PZGPMDIS;
+
 	struct DKIElementsBlock
 	{
 		EphemerisData SV_before[5];
@@ -4560,12 +4487,9 @@ public:
 		int EPOCH;
 		//MJD of first entry
 		double MJD;
-		//Table of vectors pointing from Earth to Sun, in Er
-		VECTOR3 R_ES[71];
-		//Table of vectors pointing from Earth to Moon, in Er
-		VECTOR3 R_EM[71];
-		//Table of velocity vectors of the Moon relative to the Earth, in Er/hr
-		VECTOR3 V_EM[71];
+		//71 sets of data, 12 hours apart, covering 35 days, starting 5 days before midnight of launch day
+		//0-2: Sun position vector (Er), 3-5: Moon position vector (Er), 6-8: Moon velocity vector (Er/hr), 9-17: Moon libration vector
+		double data[71][18];
 	} MDGSUN;
 
 	//System parameters for PDI
@@ -4659,8 +4583,6 @@ private:
 	double CapeCrossingFirst(int L);
 	double CapeCrossingLast(int L);
 	void ECMPAY(EphemerisDataTable2 &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw);
-	//Spherical to Inertial Conversion
-	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
 	//PMMMPT Matrix Utility Subroutine
@@ -4720,7 +4642,6 @@ protected:
 	//Build TLI targeting parameters table
 	void QMMBLD(int year, int month, int day);
 
-	double TJUDAT(int Y, int M, int D);
 	EphemerisData ConvertSVtoEphemData(SV sv);
 	SV ConvertEphemDatatoSV(EphemerisData sv);
 

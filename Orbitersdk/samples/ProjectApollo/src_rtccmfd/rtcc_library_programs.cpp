@@ -369,17 +369,63 @@ int RTCC::ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRA
 }
 
 //Generalized Coordinate Conversion Routine
-int RTCC::ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out)
+int RTCC::ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &vec_out)
+{
+	std::vector<VECTOR3> inv, outv;
+
+	inv.push_back(vec);
+
+	int err = ELVCNV(inv, GMT, type, in, out, outv);
+	if (err) return err;
+
+	vec_out = outv[0];
+	return 0;
+}
+
+int RTCC::ELVCNV(std::vector<VECTOR3> vec, double GMT, int type, int in, int out, std::vector<VECTOR3> &vec_out)
 {
 	EphemerisData2 eph, sv_out;
+	VECTOR3 vec2;
 	int err = 0;
 
-	eph.R = vec;
-	eph.V = _V(1, 0, 0);
 	eph.GMT = GMT;
 
-	err = ELVCNV(eph, in, out, sv_out);
-	vec_out = sv_out.R;
+	for (unsigned i = 0;i < vec.size();i++)
+	{
+		if (type == 0 || type == 1)
+		{
+			//Unit vector or position vector
+			eph.R = vec[i];
+			eph.V = _V(1, 0, 0);
+		}
+		else
+		{
+			eph.R = _V(1, 0, 0);
+			eph.V = vec[i];
+		}
+
+		err = ELVCNV(eph, in, out, sv_out);
+		if (err)
+		{
+			return err;
+		}
+		if (type == 0 || type == 1)
+		{
+			vec2 = sv_out.R;
+		}
+		else
+		{
+			vec2 = sv_out.V;
+		}
+		if (vec_out.size() > i)
+		{
+			vec_out[i] = vec2;
+		}
+		else
+		{
+			vec_out.push_back(vec2);
+		}
+	}
 	return err;
 }
 
@@ -457,6 +503,31 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 	{
 		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, OrbMech::MJDfromGET(sv.GMT, SystemParameters.GMTBASE));
 
+		//Get closest RNP matrix to input time
+		//Time in days between first matrix and input time
+		/*double dt = GetGMTBase() - EZNPMATX.mjd0 + sv.GMT / 24.0 / 3600.0;
+		int ii = (int)(floor(dt * 4.0 + 0.5));
+		if (ii < 0 || ii > 140)
+		{
+			//Not available
+			return;
+		}
+		MATRIX3 Rot1 = EZNPMATX.Mat[ii];
+		//Remove this when ECT is a pseudo inertial coordinate system
+		//double a = OrbMech::w_Earth*sv.GMT;
+		//MATRIX3 Rot2 = OrbMech::_MRz(a);
+		//Rot = mul(Rot2, Rot1);
+		if (in == 0)
+		{
+			sv_out.R = mul(Rot, sv.R);
+			sv_out.V = mul(Rot, sv.V);
+		}
+		else
+		{
+			sv_out.R = tmul(Rot, sv.R);
+			sv_out.V = tmul(Rot, sv.V);
+		}*/
+
 		if (in == 0)
 		{
 			sv_out.R = rhtmul(Rot, sv.R);
@@ -473,7 +544,7 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 	{
 		VECTOR3 R_EM, V_EM, R_ES;
 
-		if (PLEFEM(1, sv.GMT / 3600.0, 0, R_EM, V_EM, R_ES))
+		if (PLEFEM(1, sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
 		{
 			return 1;
 		}
@@ -495,6 +566,9 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 		MATRIX3 Rot;
 		PLEFEM(1, sv.GMT / 3600.0, 0, Rot);
 
+		//Soon to be used
+		//PLEFEM(5, sv.GMT / 3600.0, 0, NULL, NULL, NULL, &Rot);
+
 		if (in == 2)
 		{
 			//MCI to MCT
@@ -515,7 +589,7 @@ int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
 		VECTOR3 R_EM, V_EM, R_ES;
 		VECTOR3 X_EMP, Y_EMP, Z_EMP;
 
-		if (PLEFEM(1, sv.GMT / 3600.0, 0, R_EM, V_EM, R_ES))
+		if (PLEFEM(1, sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
 		{
 			return 1;
 		}
@@ -888,6 +962,92 @@ RTCC_GLFDEN_4:
 	}
 	SPOS = sqrt(SystemParameters.MHGDEN.C2*T_M);
 	DENS = exp(lnRho);
+}
+
+VECTOR3 RTCC::GLMRTV(VECTOR3 A, double THET1, int K1, double THET2, int K2, double THET3, int K3)
+{
+	MATRIX3 Rot;
+	VECTOR3 temp;
+	double cos_thet, sin_thet;
+	int Karr[3] = { K1,K2,K3 };
+	double THETarr[3] = { THET1, THET2, THET3 };
+	int i = 0;
+	temp = A;
+RTCC_GLMRTV_1:
+	if (Karr[i] == 0)
+	{
+		return temp;
+	}
+	cos_thet = cos(THETarr[i]);
+	sin_thet = sin(THETarr[i]);
+	if (Karr[i] == 1)
+	{
+		Rot = _M(1, 0, 0, 0, cos_thet, sin_thet, 0, -sin_thet, cos_thet);
+	}
+	else if (Karr[i] == 2)
+	{
+		Rot = _M(cos_thet, 0, -sin_thet, 0, 1, 0, sin_thet, 0, cos_thet);
+	}
+	else
+	{
+		Rot = _M(cos_thet, sin_thet, 0, -sin_thet, cos_thet, 0, 0, 0, 1);
+	}
+	temp = mul(Rot, temp);
+	i++;
+	if (i < 3)
+	{
+		goto RTCC_GLMRTV_1;
+	}
+	return temp;
+}
+
+MATRIX3 RTCC::GLMRTM(MATRIX3 A, double THET1, int K1, double THET2, int K2, double THET3, int K3)
+{
+	//A = matrix to rotate
+	//THET1 = angle of 1st rotation
+	//K1 = axis of first rotation, 1 = X, 2 = Y, 3 = Z
+	MATRIX3 Rot, temp;
+	double cos_thet, sin_thet;
+	int Karr[3] = { K1,K2,K3 };
+	double THETarr[3] = { THET1, THET2, THET3 };
+	int i = 0;
+	temp = A;
+RTCC_GLMRTM_1:
+	if (Karr[i] == 0)
+	{
+		return temp;
+	}
+	cos_thet = cos(THETarr[i]);
+	sin_thet = sin(THETarr[i]);
+	if (Karr[i] == 1)
+	{
+		Rot = _M(1, 0, 0, 0, cos_thet, sin_thet, 0, -sin_thet, cos_thet);
+	}
+	else if (Karr[i] == 2)
+	{
+		Rot = _M(cos_thet, 0, -sin_thet, 0, 1, 0, sin_thet, 0, cos_thet);
+	}
+	else
+	{
+		Rot = _M(cos_thet, sin_thet, 0, -sin_thet, cos_thet, 0, 0, 0, 1);
+	}
+	temp = mul(Rot, temp);
+	i++;
+	if (i < 3)
+	{
+		goto RTCC_GLMRTM_1;
+	}
+	return temp;
+}
+
+double RTCC::GLQATN(double S, double C) const
+{
+	double T = atan2(S, C);
+	if (T < 0)
+	{
+		return T + PI2;
+	}
+	return T;
 }
 
 //Subsatellite position
@@ -1792,10 +1952,12 @@ RTCC_PLAWDT_9_T:
 }
 
 //Sun/Moon Ephemeris Interpolation Program
-bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES)
+bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, VECTOR3 *R_ES, MATRIX3 *PNL)
 {
+	//INPUTS:
+	//IND: 1 = Sun and Moon ephemerides. 2 = all data. 3 = all Moon data. 4 = Moon ephemerides. 5 = libration matrix only
 	double T, C[6];
-	int i, j, k, l;
+	int i, j, k;
 
 	if (IND > 0)
 	{
@@ -1810,7 +1972,7 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, 
 	C[3] = ((T + 2.0)*(T + 1.0)*T*(T - 2.0)*(T - 3.0)) / 12.0;
 	C[4] = -((T + 2.0)*(T + 1.0)*T*(T - 1.0)*(T - 3.0)) / 24.0;
 	C[5] = ((T + 2.0)*(T + 1.0)*T*(T - 1.0)*(T - 2.0)) / 120.0;
-	
+
 	//Calculate MJD from GMT
 	double MJD = SystemParameters.GMTBASE + HOUR / 24.0;
 	//Calculate position of time in array
@@ -1820,18 +1982,71 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 &R_EM, VECTOR3 &V_EM, 
 	//Is time contained in Sun/Moon data array?
 	if (j < 0 || j > 65) goto RTCC_PLEFEM_A;
 
-	VECTOR3 *X[3] = {MDGSUN.R_EM, MDGSUN.V_EM, MDGSUN.R_ES };
-	double x[9];
-	for (k = 0;k < 3;k++)
+	double x[18];
+	bool des[4] = {false, false, false, false};
+
+	//Which data to get?
+	switch (abs(IND))
 	{
-		for (l = 0;l < 3;l++)
-		{
-			x[k * 3 + l] = C[0] * X[k][j].data[l] + C[1] * X[k][j + 1].data[l] + C[2] * X[k][j + 2].data[l] + C[3] * X[k][j + 3].data[l] + C[4] * X[k][j + 4].data[l] + C[5] * X[k][j + 5].data[l];
-		}
+	case 1:
+		des[0] = des[1] = des[2] = true;
+		break;
+	case 2:
+		des[0] = des[1] = des[2] = des[3] = true;
+		break;
+	case 3:
+		des[1] = des[2] = des[3] = true;
+		break;
+	case 4:
+		des[1] = des[2] = true;
+		break;
+	case 5:
+		des[3] = true;
+		break;
+	default:
+		goto RTCC_PLEFEM_A;
 	}
-	R_EM = _V(x[0], x[1], x[2])*OrbMech::R_Earth;
-	V_EM = _V(x[3], x[4], x[5])*OrbMech::R_Earth / 3600.0;
-	R_ES = _V(x[6], x[7], x[8])*OrbMech::R_Earth;
+
+	for (k = 0;k < 18;k++)
+	{
+		if (k < 3)
+		{
+			//Sun position
+			if (des[0] == false) continue;
+		}
+		else if (k < 6)
+		{
+			//Moon position
+			if (des[1] == false) continue;
+		}
+		else if (k < 9)
+		{
+			//Moon velocity
+			if (des[2] == false) continue;
+		}
+		else
+		{
+			//Moon libration
+			if (des[3] == false) break;
+		}
+		x[k] = C[0] * MDGSUN.data[j][k] + C[1] * MDGSUN.data[j + 1][k] + C[2] * MDGSUN.data[j + 2][k] + C[3] * MDGSUN.data[j + 3][k] + C[4] * MDGSUN.data[j + 4][k] + C[5] * MDGSUN.data[j + 5][k];
+	}
+	if (des[0] && R_ES)
+	{
+		*R_ES = _V(x[0], x[1], x[2])*OrbMech::R_Earth;
+	}
+	if (des[1] && R_EM)
+	{
+		*R_EM = _V(x[3], x[4], x[5])*OrbMech::R_Earth;
+	}
+	if (des[2] && V_EM)
+	{
+		*V_EM = _V(x[6], x[7], x[8])*OrbMech::R_Earth / 3600.0;
+	}
+	if (des[3] && PNL)
+	{
+		*PNL = _M(x[9], x[10], x[11], x[12], x[13], x[14], x[15], x[16], x[17]);
+	}
 	
 	return false;
 RTCC_PLEFEM_A:
@@ -1845,7 +2060,11 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB)
 	double MJD = SystemParameters.GMTBASE + HOUR / 24.0;
 	//Moon Libration Matrix
 	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
+	//For now this
 	M_LIB = MatrixRH_LH(Rot);
+	//TBD: Use this instead
+	//MATRIX3 M_ecl = MatrixRH_LH(Rot);
+	//M_LIB = mul(SystemParameters.MAT_J2000_BRCS, M_ecl);
 	return false;
 }
 

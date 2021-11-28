@@ -140,6 +140,7 @@ const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
 #define CSI_ECT 1
 #define CSI_MCI 2
 #define CSI_MCT 3
+#define CSI_EMP 4
 
 struct SV
 {
@@ -385,8 +386,6 @@ namespace OrbMech {
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
-	double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref);
-	double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 &R2, VECTOR3 &V2);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);
 	double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s = 0);
@@ -394,10 +393,8 @@ namespace OrbMech {
 	double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu);
 	double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout);
 	double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE);
-	void GetLunarEphemeris(double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM);
 	void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double phi, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri);
 	void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri);
-	double PATCH(VECTOR3 R, VECTOR3 V, double mjd0, bool earthsoi, VECTOR3 &R3, VECTOR3 &V3, bool Q = true);
 	MATRIX3 GetRotationMatrix(int plan, double t);
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
 	void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V);
@@ -478,11 +475,6 @@ namespace OrbMech {
 	void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &radius);
 	void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl);
 	void EclToEMP(VECTOR3 R_Ecl, VECTOR3 V_Ecl, double MJD, VECTOR3 &R_EMP, VECTOR3 &V_EMP);
-	void RotatePerigeeToSpecifiedLongitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE plan, double lng_des, int N, double mu, double &dv, double &dTIG, double &dt);
-	OELEMENTS PlaneChange(OELEMENTS coe_b, double dW);
-	OELEMENTS NodeShift(OELEMENTS coe_b, double dLAN);
-	OELEMENTS ApoapsisPeriapsisChange(OELEMENTS coe_b, double mu, double r_A, double r_P);
-	VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu);
 	void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double MJD_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &MJD_BO);
 	double REVTIM(VECTOR3 R, VECTOR3 V, double MJD, int body, bool S_pert);
 	//private:
@@ -511,7 +503,11 @@ namespace OrbMech {
 	double calculateDifferenceBetweenAngles(double firstAngle, double secondAngle);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
 	MATRIX3 GetObliquityMatrix(int plan, double t);
-	MATRIX3 J2000EclToBRCS(double mjd);
+	//Year, month, day to Julian Date
+	double TJUDAT(int Y, int M, int D);
+	double MJDOfNBYEpoch(int epoch);
+	MATRIX3 J2000EclToBRCSMJD(double mjd);
+	MATRIX3 J2000EclToBRCS(int epoch);
 	MATRIX3 _MRx(double a);
 	MATRIX3 _MRy(double a);
 	MATRIX3 _MRz(double a);

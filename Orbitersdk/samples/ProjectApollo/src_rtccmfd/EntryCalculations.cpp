@@ -421,62 +421,6 @@ namespace EntryCalculations
 		return u_r;
 	}
 
-	void TFPCR(double mu, int k, double a_apo, double e, double r, double &T, double &P)
-	{
-		//INPUT:
-		//mu: gravitational constant
-		//k: outward leg (0.) and return lef (1.) flag. k is input as a floating point number
-		//a: semimajor axis or semilatus rectum
-		//e: eccentricity
-		//r: radial distance from focus
-
-		double a, c_3, eta_apo, E;
-
-		a = a_apo;
-		//Parabolic case
-		if (abs(e - 1.0) < 0.00001)
-		{
-			c_3 = mu * (e*e - 1.0) / a;
-			if (abs(c_3) < 1.0e-5)
-			{
-				eta_apo = acos(abs(a) / r - 1.0);
-				T = abs(a) / 2.0*sqrt(abs(a) / mu)*(tan(eta_apo / 2.0) + 1.0 / 3.0*pow(tan(eta_apo / 2.0), 3.0));
-
-				if (k == false)
-				{
-					T = -T;
-				}
-
-				return;
-			}
-			else
-			{
-				a = a / (1.0 - e * e);
-			}
-		}
-
-		//Elliptical case
-		if (e < 1.0)
-		{
-			E = acos(1.0 / e * (1.0 - r / a));
-			P = PI2 * a*sqrt(a / mu);
-			T = a * sqrt(a / mu)*(E - e * sin(E));
-		}
-		//Hyperbolic case
-		else
-		{
-			double coshE;
-			coshE = 1.0 / e * (1.0 - r / a);
-			E = log(coshE + sqrt(coshE*coshE - 1.0));
-			T = a * sqrt(abs(a) / mu)*(E - e * (exp(E) - exp(-E)) / 2.0);
-		}
-
-		if (k == false)
-		{
-			T = -T;
-		}
-	}
-
 	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1)
 	{
 		double tan_eta1_2, M_1, q, p, tan_eta2_2, M_2, T_P, DT, T_m, a_m, T_1, DDT_m, esinE_1, ecosE_1, E_1, DT_m, Q, k_1_apo, DT_1;
@@ -749,91 +693,6 @@ namespace EntryCalculations
 		OrbMech::latlong_from_r(R_geo, phi, lambda);
 
 		return eta_rzI * NMPER;
-	}
-
-	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo)
-	{
-		MATRIX3 Rot;
-		VECTOR3 X_x_equ_u, R_1, u_x_equ, U_x_equ, U_x;
-		double x_x, E, e, a, eta_r, eta_x, eta_xr, T_r, T_x, P, beta_x, alpha_x, delta_x, sin_delta_r, cos_delta_r, theta, alpha_r, eta_x1, t_z, T_xr;
-		bool NIR;
-
-		Incl_apo = i_r;
-		NIR = false;
-
-		x_x = length(R0);
-		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD0);
-		X_x_equ_u = unit(rhtmul(Rot, R0));
-		OrbMech::ra_and_dec_from_r(X_x_equ_u, alpha_x, delta_x);
-
-		E = u_r * u_r / mu - 2.0 / r_r;
-		if (abs(E) < pow(10, -10))
-		{
-			e = 1.0;
-		}
-		else
-		{
-			a = -1.0 / E;
-			e = sqrt(1.0 - r_r * r_r*u_r*u_r*sin(beta_r)*sin(beta_r) / (mu*a));
-		}
-		if (abs(e - 1.0) < pow(10, -5))
-		{
-			a = r_r * u_r*u_r*sin(beta_r)*sin(beta_r) / mu;
-			eta_r = PI2 * acos(a / r_r - 1.0);
-			eta_x = acos(a / x_x - 1.0);
-		}
-		else
-		{
-			eta_r = PI2 - acos((a*(1.0 - e * e) / r_r - 1.0) / e);
-			eta_x = acos((a*(1.0 - e * e) / x_x - 1.0) / e);
-		}
-		if (q_a == 0)
-		{
-			eta_x = PI2 - eta_x;
-		}
-		eta_xr = eta_r - eta_x;
-		TFPCR(mu, 0, a, e, r_r, T_r, P);
-		TFPCR(mu, 0, a, e, x_x, T_x, P);
-		if (q_a == 0 || (q_a == 1 && E >= 0))
-		{
-			t_z = T_x - T_r;
-		}
-		else
-		{
-			t_z = P - T_x - T_r;
-		}
-		T_xr = -t_z;
-		MJD_EI = MJD0 + T_xr / 24.0 / 3600.0;
-
-		beta_x = atan2(1.0 + e * cos(eta_x), e*sin(eta_x));
-		if (Incl_apo <= abs(delta_x))
-		{
-			Incl_apo = abs(delta_x) + 0.0001;
-			NIR = true;
-		}
-		sin_delta_r = sin(delta_x)*cos(eta_xr) + sin(eta_xr)*INTER*sqrt(sin(Incl_apo)*sin(Incl_apo) - sin(delta_x)*sin(delta_x));
-		cos_delta_r = sqrt(1.0 - sin_delta_r * sin_delta_r);
-
-		theta = asin(sin(eta_xr)*cos(Incl_apo) / (cos_delta_r*cos(delta_x)));
-		if (cos(eta_xr) < 0)
-		{
-			theta = PI - theta;
-		}
-		if (theta < 0)
-		{
-			theta = PI2 + theta;
-		}
-		
-		alpha_r = alpha_x + theta;
-		R_1 = _V(cos(alpha_r)*cos_delta_r, sin(alpha_r)*cos_delta_r, sin_delta_r);
-		eta_x1 = eta_xr;
-		u_x_equ = TVECT(X_x_equ_u, R_1, eta_x1, beta_x);
-		U_x_equ = u_x_equ * sqrt(u_r*u_r - 2.0*mu*(1.0 / r_r - 1.0 / x_x));
-		U_x = rhmul(Rot, U_x_equ);
-		OrbMech::rv_from_r0v0(R0, U_x, T_xr, R_EI, V_EI, mu);
-		DV = U_x - V0;
-
-		return NIR;
 	}
 
 	void SIDCOM(double JD0, double DT, double N, double &alpha_go, double &T)
@@ -4951,9 +4810,9 @@ bool ConicRTEEarthNew::RUBR(int QA, int QE, double R_a, double U_0, double U_r, 
 	//Change in velocity
 	DV = sqrt(U_0*U_0 + V_a * V_a - 2.0*U_0*V_a*cos(beta_a - beta_0));
 	//Time from abort to perigee
-	EntryCalculations::TFPCR(mu, 1 - QA, A, e, R_a, T_ap, Period);
+	pRTCC->PITFPC(mu, 1 - QA, A, e, R_a, T_ap, Period);
 	//Time from reentry to perigee
-	EntryCalculations::TFPCR(mu, 1 - QA, A, e, RR, T_rp, Period);
+	pRTCC->PITFPC(mu, 1 - QA, A, e, RR, T_rp, Period);
 	//Time from abort to reentry
 	T = T_ap - T_rp;
 	if (T < 0)
@@ -5917,8 +5776,8 @@ void ConicRTEEarthNew::VACOMP(double VR_a, double VT_a, double beta_r, double th
 		k = 0;
 	}
 
-	EntryCalculations::TFPCR(mu, k, A, e, r0, T_ap, Period);
-	EntryCalculations::TFPCR(mu, k, A, e, RR, T_rp, Period);
+	pRTCC->PITFPC(mu, k, A, e, r0, T_ap, Period);
+	pRTCC->PITFPC(mu, k, A, e, RR, T_rp, Period);
 	T = T_ap - T_rp;
 	if (T < 0)
 	{
@@ -5965,7 +5824,7 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 	double deltat, deltat1, cos_PV, deltaT, Tr, T_arm, T_arm2, Z3, TERM, dt_dbetaa, dt_dva, dbetar_dbetaa, dbetar_dva, ALVA, D, dv, dbeta, T_art, dw;
 	double DUM, DUM2, ES, ESS, PS, h, Sbeta_s, beta_s, CDB, DLBET, ZIT;
 
-	pRTCC->PLEFEM(1, T0, 0, R_EM, V_EM, R_ES);
+	pRTCC->PLEFEM(1, T0, 0, &R_EM, &V_EM, &R_ES, NULL);
 	R_Moon = R_EM / (KMPER*1000.0);
 	R_Moon = OrbMech::EclipticToECI(R_Moon, GMTbase + T0 / 24.0);
 
@@ -6002,7 +5861,7 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 		AMAA = EAA - e * sin(EAA);
 		TAA = a * sqrt(a / mu)*(PI - AMAA);
 		TJ = T0 + TAA;
-		pRTCC->PLEFEM(1, TJ, 0, R_EM, V_EM, R_ES);
+		pRTCC->PLEFEM(1, TJ, 0, &R_EM, &V_EM, &R_ES, NULL);
 		RMAP = R_EM / (KMPER*1000.0);
 		RMAP = OrbMech::EclipticToECI(RMAP, GMTbase + T0 / 24.0);
 		theta = PI - eta - beta_a;
@@ -6134,8 +5993,8 @@ double ConicRTEEarthNew::TripTime(double v_a, double beta_a)
 		k = 0;
 	}
 
-	EntryCalculations::TFPCR(mu, k, A, e, r0, T_ap, Period);
-	EntryCalculations::TFPCR(mu, k, A, e, RR, T_rp, Period);
+	pRTCC->PITFPC(mu, k, A, e, r0, T_ap, Period);
+	pRTCC->PITFPC(mu, k, A, e, RR, T_rp, Period);
 	T = T_ap - T_rp;
 	if (T < 0)
 	{
@@ -6979,7 +6838,7 @@ VECTOR3 RTEMoon::ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E
 	RCON = OrbMech::R_Earth + EntryInterface;
 	tol = 20.0;
 
-	pRTCC->PLEFEM(1, t_I / 3600.0, 0, R_m, V_m, R_s);
+	pRTCC->PLEFEM(1, t_I / 3600.0, 0, &R_m, &V_m, &R_s, NULL);
 
 	R_I_star = delta_I_star = delta_I_star_dot = _V(0.0, 0.0, 0.0);
 	V_I_star = V_I;
@@ -7051,7 +6910,7 @@ VECTOR3 RTEMoon::MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool I
 		beta_r = EntryCalculations::ReentryTargetLine(u_r, false);
 	}
 
-	pRTCC->PLEFEM(1, t_I/3600.0, 0, R_m, V_m, R_s);
+	pRTCC->PLEFEM(1, t_I/3600.0, 0, &R_m, &V_m, &R_s, NULL);
 
 	for (int i = 0;i < 2;i++)
 	{
@@ -7069,7 +6928,7 @@ VECTOR3 RTEMoon::MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool I
 			else
 			{
 				double MJD_EI;
-				NIR = EntryCalculations::FINDUX(R_I_sstar, V_I_sstar, GMTBASE + t_I / 24.0 / 3600.0, RCON, u_r, beta_r, Incl, INTER, false, mu_E, dV_I_sstar, R_EI, V_EI, MJD_EI, Incl_apo);
+				NIR = FINDUX(R_I_sstar, V_I_sstar, GMTBASE + t_I / 24.0 / 3600.0, RCON, u_r, beta_r, Incl, INTER, false, mu_E, dV_I_sstar, R_EI, V_EI, MJD_EI, Incl_apo);
 				T_EI = (MJD_EI - GMTBASE)*24.0*3600.0;
 			}
 			V_I_sstar = V_I_sstar + dV_I_sstar;
@@ -7139,4 +6998,89 @@ double RTEMoon::SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, 
 	{
 		return -dt / 2.0;
 	}
+}
+
+bool RTEMoon::FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo)
+{
+	MATRIX3 Rot;
+	VECTOR3 X_x_equ_u, R_1, u_x_equ, U_x_equ, U_x;
+	double x_x, E, e, a, eta_r, eta_x, eta_xr, T_r, T_x, P, beta_x, alpha_x, delta_x, sin_delta_r, cos_delta_r, theta, alpha_r, eta_x1, t_z, T_xr;
+	bool NIR;
+
+	Incl_apo = i_r;
+	NIR = false;
+
+	x_x = length(R0);
+	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD0);
+	X_x_equ_u = unit(rhtmul(Rot, R0));
+	OrbMech::ra_and_dec_from_r(X_x_equ_u, alpha_x, delta_x);
+
+	E = u_r * u_r / mu - 2.0 / r_r;
+	if (abs(E) < pow(10, -10))
+	{
+		e = 1.0;
+	}
+	else
+	{
+		a = -1.0 / E;
+		e = sqrt(1.0 - r_r * r_r*u_r*u_r*sin(beta_r)*sin(beta_r) / (mu*a));
+	}
+	if (abs(e - 1.0) < pow(10, -5))
+	{
+		a = r_r * u_r*u_r*sin(beta_r)*sin(beta_r) / mu;
+		eta_r = PI2 * acos(a / r_r - 1.0);
+		eta_x = acos(a / x_x - 1.0);
+	}
+	else
+	{
+		eta_r = PI2 - acos((a*(1.0 - e * e) / r_r - 1.0) / e);
+		eta_x = acos((a*(1.0 - e * e) / x_x - 1.0) / e);
+	}
+	if (q_a == 0)
+	{
+		eta_x = PI2 - eta_x;
+	}
+	eta_xr = eta_r - eta_x;
+	pRTCC->PITFPC(mu, 0, a, e, r_r, T_r, P, false);
+	pRTCC->PITFPC(mu, 0, a, e, x_x, T_x, P, false);
+	if (q_a == 0 || (q_a == 1 && E >= 0))
+	{
+		t_z = T_x - T_r;
+	}
+	else
+	{
+		t_z = P - T_x - T_r;
+	}
+	T_xr = -t_z;
+	MJD_EI = MJD0 + T_xr / 24.0 / 3600.0;
+
+	beta_x = atan2(1.0 + e * cos(eta_x), e*sin(eta_x));
+	if (Incl_apo <= abs(delta_x))
+	{
+		Incl_apo = abs(delta_x) + 0.0001;
+		NIR = true;
+	}
+	sin_delta_r = sin(delta_x)*cos(eta_xr) + sin(eta_xr)*INTER*sqrt(sin(Incl_apo)*sin(Incl_apo) - sin(delta_x)*sin(delta_x));
+	cos_delta_r = sqrt(1.0 - sin_delta_r * sin_delta_r);
+
+	theta = asin(sin(eta_xr)*cos(Incl_apo) / (cos_delta_r*cos(delta_x)));
+	if (cos(eta_xr) < 0)
+	{
+		theta = PI - theta;
+	}
+	if (theta < 0)
+	{
+		theta = PI2 + theta;
+	}
+
+	alpha_r = alpha_x + theta;
+	R_1 = _V(cos(alpha_r)*cos_delta_r, sin(alpha_r)*cos_delta_r, sin_delta_r);
+	eta_x1 = eta_xr;
+	u_x_equ = EntryCalculations::TVECT(X_x_equ_u, R_1, eta_x1, beta_x);
+	U_x_equ = u_x_equ * sqrt(u_r*u_r - 2.0*mu*(1.0 / r_r - 1.0 / x_x));
+	U_x = rhmul(Rot, U_x_equ);
+	OrbMech::rv_from_r0v0(R0, U_x, T_xr, R_EI, V_EI, mu);
+	DV = U_x - V0;
+
+	return NIR;
 }

@@ -296,10 +296,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		gmpopt.dH_D = 64.0*1852.0;
 		gmpopt.dLAN = 2.87*RAD;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -64.68563*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_HNL;
-		gmpopt.RV_MCC = sv0;
+		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(21.0, 40.0, 0.0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
@@ -362,10 +361,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		gmpopt.dH_D = 78.0*1852.0;
 		gmpopt.dLAN = 10.0*RAD;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -80.60192*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_HNL;
-		gmpopt.RV_MCC = sv0;
+		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(24.0, 50.0, 0.0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
@@ -424,10 +422,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		gmpopt.dLAN = 1.0*RAD;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -97.37588*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSL;
-		gmpopt.RV_MCC = sv0;
+		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(28, 0, 0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
@@ -517,10 +514,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		gmpopt.dLAN = 6.9*RAD;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -80.60192*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSL;
-		gmpopt.RV_MCC = sv0;
+		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 10, 0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
@@ -662,10 +658,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src);
 		GETbase = CalcGETBase();
 
-		opt.GETbase = GETbase;
 		opt.H_D = 133.0*1852.0;
 		opt.ManeuverCode = RTCC_GMP_CRH;
-		opt.RV_MCC = sv;
+		opt.sv_in = ConvertSVtoEphemData(sv);
 		opt.TIG_GET = OrbMech::HHMMSSToSS(54, 0, 0);
 
 		GeneralManeuverProcessor(&opt, dV_imp, TIG_imp);
@@ -1210,11 +1205,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.tgt);
 
 		gmpopt.dV = 7427.5*0.3048;
-		gmpopt.GETbase = GETbase;
 		gmpopt.long_D = -100.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_FCL;
 		gmpopt.Pitch = 0.0;
-		gmpopt.RV_MCC = sv0;
+		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(101, 30, 0);
 		gmpopt.Yaw = -45.0*RAD;
 
@@ -1353,12 +1347,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		gmpopt.AltRef = 1;
-		gmpopt.GETbase = GETbase;
 		gmpopt.H_A = 130.0*1852.0;
 		gmpopt.H_P = 95.0*1852.0;
 		gmpopt.long_D = 110.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_HBL;
-		gmpopt.RV_MCC = sv0;
+		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(121, 30, 0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
@@ -1837,15 +1830,15 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		gmpopt.AltRef = 1;
-		gmpopt.GETbase = GETbase;
 		gmpopt.H_A = 210.0*1852.0;
 		gmpopt.H_P = 95.0*1852.0;
 		gmpopt.long_D = -45.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_HAS;
-		gmpopt.RV_MCC = sv0;
+		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 0, 0);
 		gmpopt.N = 46;
 
+		//TBD: Error handling
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
 		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 
