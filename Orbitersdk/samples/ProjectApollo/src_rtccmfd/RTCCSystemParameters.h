@@ -349,7 +349,8 @@ struct RTCCSystemParameters
 		{
 			MHALLD[i] = MHACLD[i];
 		}
-		MCADRG = 2.0;
+		//TBD: Set to 2.0 when RTCC takes drag into account properly
+		MCADRG = 0.1;
 
 		MCTJD1 = 570.0;
 		MCTJD3 = 2.5;

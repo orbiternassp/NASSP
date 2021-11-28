@@ -203,6 +203,9 @@ void SIVB_Airfoil_Coeff(VESSEL *v, double aoa, double M, double Re, void *contex
 
 		//sprintf(oapiDebugString(), "Simple: aoa %lf CD %lf CL %lf CM %lf", acos(cos_aoa)*DEG, *cd, *cl, *cm);
 	}
+
+	//TBD: Remove when RTCC takes drag into account properly
+	*cd = (*cd)*0.05;
 }
 
 SIVB::SIVB(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),

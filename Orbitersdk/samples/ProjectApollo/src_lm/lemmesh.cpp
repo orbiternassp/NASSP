@@ -785,7 +785,7 @@ void LEM::CreateAirfoils()
 	}
 	else
 	{
-		SetCW(4.0, 4.0, 4.0, 4.0);
+		SetCW(0.2, 0.2, 0.2, 0.2); //TBD: Set to 4.0 when RTCC can take drag into account properly
 	}
 }
 
