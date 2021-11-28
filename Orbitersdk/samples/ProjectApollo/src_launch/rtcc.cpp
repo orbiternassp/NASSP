@@ -16080,6 +16080,19 @@ void RTCC::PMMCEN(EphemerisData sv, double tmin, double tmax, int opt, double en
 	ITS = pmmcen.ITS;
 }
 
+void RTCC::PMMCEN2(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS)
+{
+	CoastIntegrator3 pmmcen(this);
+
+	pmmcen.Propagate(sv.R, sv.V, sv.GMT, tmax, tmin, endcond, dir, sv.RBI, opt);
+
+	sv_out.R = pmmcen.R_out;
+	sv_out.V = pmmcen.V_out;
+	sv_out.GMT = pmmcen.T_out;
+	sv_out.RBI = pmmcen.outplanet;
+	ITS = pmmcen.ITS;
+}
+
 void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 {
 	bool tupind = false;

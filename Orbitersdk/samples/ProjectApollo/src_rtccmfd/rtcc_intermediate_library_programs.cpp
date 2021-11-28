@@ -332,14 +332,47 @@ RTCC_PIATSU_1A:
 	goto RTCC_PIATSU_1A;
 }
 
-void RTCC::PIBETA(double BETA, double ONOVA, double &F1, double &F2, double &F3, double &F4)
+void RTCC::PIBETA(double BETA, double ONOVA, double *F)
 {
-	double a = ONOVA * BETA*BETA;
-	F1 = OrbMech::stumpS(a);
-	F2 = OrbMech::stumpC(a);
+	double BETA2, THETA2, TH2, THETA, TH;
+	//false = normal logic, true = modified
+	bool flag;
+	static const double TWOPI2 = PI2 * PI2;
 
-	F3 = 1.0 - a * F1;
-	F4 = 1.0 - a * F2;
+	flag = false;
+	BETA2 = BETA * BETA;
+	THETA2 = BETA2 * ONOVA;
+	TH2 = THETA2;
+	if (TH2 < 0)
+	{
+		if (TWOPI2 + TH2 < 0)
+		{
+			flag = true;
+			THETA = sqrt(-THETA2);
+			TH = fmod(THETA, PI2);
+			//Diagnostic
+			if (TH == 0)
+			{
+				TH = PI2;
+			}
+			TH2 = -TH * TH;
+		}
+	}
+
+	F[0] = OrbMech::stumpS(-TH2);
+	F[1] = OrbMech::stumpC(-TH2);
+	F[2] = 1.0 + TH2 * F[0];
+	F[3] = 1.0 + TH2 * F[1];
+
+	if (flag)
+	{
+		F[0] = (F[0] * TH*TH2 + TH - THETA) / THETA / THETA2;
+		F[1] = F[1] * TH2 / THETA2;
+		F[2] = F[2] * TH / THETA;
+	}
+	F[0] = F[0] * BETA2*BETA;
+	F[1] = F[1] * BETA2;
+	F[2] = F[2] * BETA;
 }
 
 double RTCC::PIBSHA(double hour)

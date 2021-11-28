@@ -2669,6 +2669,7 @@ public:
 	int PMMLDP(PMMLDPInput in, MPTManeuver &man);
 	//Coast Numerical Integrator
 	void PMMCEN(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
+	void PMMCEN2(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
 	//Freeze, Unfreeze, Delete Processor
 	void PMMFUD(int veh, unsigned man, int action, std::string StationID);
 	//Vehicle Orientation Change Processor
@@ -2925,7 +2926,7 @@ public:
 	//Arrival time at selenographic argument of latitude
 	int PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg);
 	//Series Function Subroutine
-	void PIBETA(double BETA, double ONOVA, double &F1, double &F2, double &F3, double &F4);
+	void PIBETA(double BETA, double ONOVA, double *F);
 	//TBD: PIBGAM
 	//Hour angle with Besselian input time
 	double PIBSHA(double hour);
