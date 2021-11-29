@@ -218,7 +218,10 @@ void SaturnIB3rdStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *co
 		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
 	}
 
-	sprintf(oapiDebugString(), "Second Stage: aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
+	//TBD: Remove when RTCC takes drag into account properly
+	*cd = (*cd)*0.05;
+
+	//sprintf(oapiDebugString(), "Second Stage: aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
 }
 
 void Saturn1b::SetFirstStage ()
