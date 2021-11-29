@@ -367,9 +367,6 @@ void CSMAeroHorizCoeff(VESSEL *v, double aoa, double M, double Re, void *context
 		*cm = -(*cm);
 	}
 
-	//TBD: Remove when RTCC takes drag into account properly
-	*cd = (*cd)*0.05;
-
 	//sprintf(oapiDebugString(), "Horizontal: beta %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
 }
 
