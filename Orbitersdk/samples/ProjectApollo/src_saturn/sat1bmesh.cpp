@@ -607,8 +607,9 @@ void Saturn1b::SetSecondStageEngines (double offset)
 
 	sivb->RecalculateEngineParameters(THRUST_SECOND_VAC);
 
-	// Thrust "calibrated" for DV of 21.7 ft/s (predicted was 25.6 ft/s)
-	th_3rd_lox = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 280., ph_3rd, 300., 300.);
+	// Thrust "calibrated" for apoapsis after venting is about 167.5 nmi
+	// To match the predicted dV of about 25 ft/s (21.7 ft/s actual / 25.6 predicted), use about 320 N thrust, but apoapsis is too high then (> 170 nmi)
+	th_3rd_lox = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 220., ph_3rd, 300., 300.);
 
 	fuel_venting_spec.tex = oapiRegisterParticleTexture("ProjectApollo/Contrail_SaturnVenting");
 	AddExhaustStream(th_3rd_lox, &fuel_venting_spec);
