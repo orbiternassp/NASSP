@@ -7123,6 +7123,7 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Ar
 	return in.sv_cutoff;
 }
 
+
 void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD)
 {
 	VECTOR3 RIgn, VIgn;
