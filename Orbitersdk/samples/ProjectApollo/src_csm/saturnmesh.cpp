@@ -273,7 +273,7 @@ void CMLETHoriCoeffFunc(double aoa, double M, double Re, double *cl, double *cm,
 
 void CSMAeroVertCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
 {
-	//User this definition of the aoa instead
+	//Use this definition of the aoa instead
 	VECTOR3 vec;
 	v->GetAirspeedVector(FRAME_LOCAL, vec);
 	double aoa_T = acos(unit(vec).z);
