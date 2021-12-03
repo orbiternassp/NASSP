@@ -394,7 +394,7 @@ void Saturn1b::SetSecondStage ()
 	double EmptyMass = Stage2Mass + (LESAttached ? Abort_Mass : 0.0);
 
 	SetEmptyMass (EmptyMass);
-	SetPMI(_V(116.0, 116.0, 4.3));
+	SetPMI(_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
 	SetCW(0.1, 0.3, 1.4, 1.4);
 	ClearAirfoilDefinitions();
