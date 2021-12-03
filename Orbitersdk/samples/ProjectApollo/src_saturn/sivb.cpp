@@ -433,13 +433,15 @@ void SIVB::CreateAirfoils()
 {
 	ClearAirfoilDefinitions();
 
-	//if (hDockCSM == NULL && hDockSI == NULL)
-	//{
+	if (hDockCSM == NULL && hDockSI == NULL)
+	{
 		//All docking ports gone, use realistic airfoil model
 		CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), SIVB_Airfoil_Coeff, NULL, 6.604, 34.2534, 0.1);
-	//}
-	/*else
+	}
+	else
 	{
+		//TBD: Remove 0.05 factor when RTCC can take drag into account properly.
+		//But for the separate S-IVB stage used for the Apollo 5 launch there needs to be a more realistic solution.
 		double cw_z_pos, cw_z_neg;
 		if (hDockCSM && GetDockStatus(hDockCSM))
 		{
@@ -447,7 +449,7 @@ void SIVB::CreateAirfoils()
 		}
 		else
 		{
-			cw_z_pos = 2.9251*2.0;
+			cw_z_pos = 2.9251*2.0*0.05;
 		}
 		if (hDockSI && GetDockStatus(hDockSI))
 		{
@@ -455,11 +457,11 @@ void SIVB::CreateAirfoils()
 		}
 		else
 		{
-			cw_z_neg = 3.1275*2.0;
+			cw_z_neg = 3.1275*2.0*0.05;
 		}
 
-		SetCW(cw_z_pos, cw_z_neg, 2.4*2.0, 2.4*2.0);
-	}*/
+		SetCW(cw_z_pos, cw_z_neg, 2.4*2.0*0.05, 2.4*2.0*0.05);
+	}
 }
 
 void SIVB::SetS4b()
