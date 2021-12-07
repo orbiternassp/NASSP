@@ -158,54 +158,40 @@ void SIVB_Airfoil_Coeff(VESSEL *v, double aoa, double M, double Re, void *contex
 	//Redefine the aoa
 	VECTOR3 vec;
 	v->GetAirspeedVector(FRAME_LOCAL, vec);
-	double cos_aoa = unit(vec).z;
-	
-	if (v->DockCount() == 0)
+	aoa = acos(unit(vec).z);
+
+	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
+	int i;
+	const int nabsc = 6;
+	static const double AOA[nabsc] = { 0 * RAD, 10 * RAD,30 * RAD,90 * RAD,150 * RAD, 180 * RAD };
+	static const double CD_free[nabsc] = { 2.9251, 3.3497, 6.1147, 11.08, 6.1684, 3.1275 }; //free flow
+	static const double CD_cont[nabsc] = { 0.44, 0.59, 1.12, 2.78, 1.8, 1.5 }; //continuum flow
+
+	for (i = 0; i < nabsc - 1 && AOA[i + 1] < aoa; i++);
+	double f = (aoa - AOA[i]) / (AOA[i + 1] - AOA[i]);
+	*cl = 0.0;//CL[i] + (CL[i + 1] - CL[i]) * f;  // aoa-dependent lift coefficient
+	*cm = 0.0;//CM[i] + (CM[i + 1] - CM[i]) * f;  // aoa-dependent moment coefficient
+	if (Kn > 10.0)
 	{
-		//Realistic model for the S-IVB alone
-		aoa = acos(cos_aoa);
-		double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
-		int i;
-		const int nabsc = 6;
-		static const double AOA[nabsc] = { 0 * RAD, 10 * RAD,30 * RAD,90 * RAD,150 * RAD, 180 * RAD };
-		static const double CD_free[nabsc] = { 2.9251, 3.3497, 6.1147, 11.08, 6.1684, 3.1275 }; //free flow
-		static const double CD_cont[nabsc] = { 0.44, 0.59, 1.12, 2.78, 1.8, 1.5 }; //continuum flow
-
-		for (i = 0; i < nabsc - 1 && AOA[i + 1] < aoa; i++);
-		double f = (aoa - AOA[i]) / (AOA[i + 1] - AOA[i]);
-		*cl = 0.0;//CL[i] + (CL[i + 1] - CL[i]) * f;  // aoa-dependent lift coefficient
-		*cm = 0.0;//CM[i] + (CM[i + 1] - CM[i]) * f;  // aoa-dependent moment coefficient
-		if (Kn > 10.0)
-		{
-			//Free flow
-			*cd = CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f;
-		}
-		else if (Kn < 0.01)
-		{
-			//Continuum flow
-			*cd = CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04);
-		}
-		else
-		{
-			//Mix
-			double g = (Kn - 0.01) / 9.99;
-			*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
-		}
-
-		//sprintf(oapiDebugString(), "Complex: aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
+		//Free flow
+		*cd = CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f;
+	}
+	else if (Kn < 0.01)
+	{
+		//Continuum flow
+		*cd = CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04);
 	}
 	else
 	{
-		//Something is still docked
-		*cl = 0.0;
-		*cm = 0.0;
-		*cd = (1.0 - abs(cos_aoa))*11.1 + 0.01; //Gives 0.01 at 0°/180° and 11.11 at 90°/270°
-
-		//sprintf(oapiDebugString(), "Simple: aoa %lf CD %lf CL %lf CM %lf", acos(cos_aoa)*DEG, *cd, *cl, *cm);
+		//Mix
+		double g = (Kn - 0.01) / 9.99;
+		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
 	}
 
 	//TBD: Remove when RTCC takes drag into account properly
 	*cd = (*cd)*0.05;
+
+	//sprintf(oapiDebugString(), "aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
 }
 
 SIVB::SIVB(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
@@ -432,7 +418,6 @@ void SIVB::CreateSISIVBInterface()
 void SIVB::CreateAirfoils()
 {
 	ClearAirfoilDefinitions();
-
 	if (hDockCSM == NULL && hDockSI == NULL)
 	{
 		//All docking ports gone, use realistic airfoil model
@@ -441,7 +426,7 @@ void SIVB::CreateAirfoils()
 	else
 	{
 		//TBD: Remove 0.05 factor when RTCC can take drag into account properly.
-		//But for the separate S-IVB stage used for the Apollo 5 launch there needs to be a more realistic solution.
+		//But for the separate S-IVB stage used for the Apollo 5 launch there eventually needs to be a more realistic solution.
 		double cw_z_pos, cw_z_neg;
 		if (hDockCSM && GetDockStatus(hDockCSM))
 		{
@@ -470,7 +455,6 @@ void SIVB::SetS4b()
 	double mass = EmptyMass;
 
 	ClearThrusterDefinitions();
-	ClearAirfoilDefinitions();
 	SetSize (15);
 	SetPMI (_V(94,94,20));
 	SetCOG_elev (10);
