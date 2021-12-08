@@ -280,19 +280,21 @@ void CSMAeroVertCoeff(VESSEL *v, double aoa, double M, double Re, void *context,
 
 	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
 	int i, j;
-	const int nabsc = 9;
-	static const double AOA[nabsc] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
-	static const double CD_free[nabsc] = { 2.41, 2.73, 3.14, 3.61, 5.01, 2.92, 2.46, 2.08, 1.96}; //free flow
-	static const double CD_cont[nabsc] = { 0.54, 0.59, 0.77, 1.12, 2.78, 1.32, 1.41, 1.50, 1.69 }; //continuum flow
-	static const double CM_free[nabsc] = { 0, 0.0440, -0.1436, -0.4349, -0.7682, -0.2369, 0.3820, -0.0115, 0 };
-	static const double CM_cont[nabsc] = { 0, 0.0977, 0.1069, 0.0230, -0.5803, 0.0206, 0.0981, 0.0145, 0 };
+	const int nlift = 9;
+	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
+	static const double CD_free[nlift] = { 2.41, 2.73, 3.14, 3.61, 5.01, 2.92, 2.46, 2.08, 1.96}; //free flow
+	static const double CD_cont[nlift] = { 0.54, 0.59, 0.77, 1.12, 2.78, 1.32, 1.41, 1.50, 1.69 }; //continuum flow
+	static const double CM_free[nlift] = { 0, 0.0440, -0.1436, -0.4349, -0.7682, -0.2369, 0.3820, -0.0115, 0 };
+	static const double CM_cont[nlift] = { 0, 0.0977, 0.1069, 0.0230, -0.5803, 0.0206, 0.0981, 0.0145, 0 };
+
+	//Find angle of attack in array, then linearly interpolate
 
 	//For drag
-	for (i = 0; i < nabsc - 1 && AOA[i + 1] < aoa_T; i++);
+	for (i = 0; i < nlift - 1 && AOA[i + 1] < aoa_T; i++);
 	double f = (aoa_T - AOA[i]) / (AOA[i + 1] - AOA[i]);
 
 	//For moments
-	for (j = 0; j < nabsc - 1 && AOA[j + 1] < abs(aoa); j++);
+	for (j = 0; j < nlift - 1 && AOA[j + 1] < abs(aoa); j++);
 	double f2 = (abs(aoa) - AOA[j]) / (AOA[j + 1] - AOA[j]);
 
 	//No lift simulation
@@ -335,14 +337,16 @@ void CSMAeroHorizCoeff(VESSEL *v, double aoa, double M, double Re, void *context
 	*cl = 0;
 	*cd = 0;
 
-	const int nabsc = 9;
-	static const double AOA[nabsc] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
-	static const double CM_free[nabsc] = { 0, -0.0440, 0.1436, 0.4349, 0.7682, 0.2369, -0.3820, 0.0115, 0 };
-	static const double CM_cont[nabsc] = { 0, -0.0977, -0.1069, -0.0230, 0.5803, -0.0206, -0.0981, -0.0145, 0 };
+	int i;
+	const int nlift = 9;
+	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
+	static const double CM_free[nlift] = { 0, -0.0440, 0.1436, 0.4349, 0.7682, 0.2369, -0.3820, 0.0115, 0 };
+	static const double CM_cont[nlift] = { 0, -0.0977, -0.1069, -0.0230, 0.5803, -0.0206, -0.0981, -0.0145, 0 };
 
 	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
-	int i;
-	for (i = 0; i < nabsc - 1 && AOA[i + 1] < abs(aoa); i++);
+
+	//Find angle of attack in array, then linearly interpolate
+	for (i = 0; i < nlift - 1 && AOA[i + 1] < abs(aoa); i++);
 	double f = (abs(aoa) - AOA[i]) / (AOA[i + 1] - AOA[i]);
 
 	if (Kn > 10.0)

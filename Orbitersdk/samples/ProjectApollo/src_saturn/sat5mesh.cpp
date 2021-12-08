@@ -56,17 +56,19 @@ void SaturnV3rdStage_Coeff(double aoa, double M, double Re, double *cl, double *
 {
 	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
 	int i;
-	const int nabsc = 9;
-	static const double AOA[nabsc] = { -180 * RAD, -90 * RAD,-30 * RAD, -10 * RAD,0 * RAD, 10 * RAD,30 * RAD,90 * RAD,180 * RAD };
-	//static const double CL[nabsc] = { 0,      0,   -0.004,     0,     0.008,     0,      0 };
-	static const double CD_free[nabsc] = { 3.1275, 11.08, 6.1147, 3.3497, 2.9251, 3.3497, 6.1147, 11.08, 3.1275 }; //free flow
-	static const double CD_cont[nabsc] = { 1.69, 2.78, 1.12, 0.59, 0.54, 0.59, 1.12, 2.78, 1.69 }; //continuum flow
-	//static const double CM[nabsc] = { 0,      0,   0.0014,  0,-0.0012,     0,      0 };
+	const int nlift = 9;
+	static const double AOA[nlift] = { -180 * RAD, -90 * RAD,-30 * RAD, -10 * RAD, 0 * RAD, 10 * RAD, 30 * RAD, 90 * RAD, 180 * RAD };
+	static const double CD_free[nlift] = { 3.1275, 11.08, 6.1147, 3.3497, 2.9251, 3.3497, 6.1147, 11.08, 3.1275 }; //free flow
+	static const double CD_cont[nlift] = { 1.69, 2.78, 1.12, 0.59, 0.54, 0.59, 1.12, 2.78, 1.69 }; //continuum flow
 
-	for (i = 0; i < nabsc - 1 && AOA[i + 1] < aoa; i++);
+	//Find angle of attack in array, then linearly interpolate
+	for (i = 0; i < nlift - 1 && AOA[i + 1] < aoa; i++);
 	double f = (aoa - AOA[i]) / (AOA[i + 1] - AOA[i]);
-	*cl = 0.0;//CL[i] + (CL[i + 1] - CL[i]) * f;  // aoa-dependent lift coefficient
-	*cm = 0.0;//CM[i] + (CM[i + 1] - CM[i]) * f;  // aoa-dependent moment coefficient
+
+	//No lift and moment coefficients for now
+	*cl = 0.0;
+	*cm = 0.0;
+
 	if (Kn > 10.0)
 	{
 		//Free flow

@@ -192,15 +192,19 @@ void SaturnIB3rdStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *co
 
 	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
 	int i;
-	const int nabsc = 6;
-	static const double AOA[nabsc] = { 0 * RAD, 10 * RAD,30 * RAD,90 * RAD,150 * RAD, 180 * RAD };
-	static const double CD_free[nabsc] = { 2.9251, 3.3497, 6.1147, 11.08, 6.1684, 3.1275 }; //free flow
-	static const double CD_cont[nabsc] = { 0.44, 0.59, 1.12, 2.78, 1.8, 1.5 }; //continuum flow
+	const int nlift = 6;
+	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 180 * RAD };
+	static const double CD_free[nlift] = { 2.9251, 3.3497, 6.1147, 11.08, 6.1684, 3.1275 }; //free flow
+	static const double CD_cont[nlift] = { 0.44, 0.59, 1.12, 2.78, 1.8, 1.5 }; //continuum flow
 
-	for (i = 0; i < nabsc - 1 && AOA[i + 1] < aoa; i++);
+	//Find angle of attack in array, then linearly interpolate
+	for (i = 0; i < nlift - 1 && AOA[i + 1] < aoa; i++);
 	double f = (aoa - AOA[i]) / (AOA[i + 1] - AOA[i]);
-	*cl = 0.0;//CL[i] + (CL[i + 1] - CL[i]) * f;  // aoa-dependent lift coefficient
-	*cm = 0.0;//CM[i] + (CM[i + 1] - CM[i]) * f;  // aoa-dependent moment coefficient
+
+	//No lift and moment coefficients for now
+	*cl = 0.0;
+	*cm = 0.0;
+
 	if (Kn > 10.0)
 	{
 		//Free flow
