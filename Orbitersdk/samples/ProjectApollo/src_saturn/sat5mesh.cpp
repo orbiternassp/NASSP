@@ -52,14 +52,19 @@
 #include "Sat5Abort3.h"
 #include "Mission.h"
 
-void SaturnV3rdStage_Coeff(double aoa, double M, double Re, double *cl, double *cm, double *cd)
+void SaturnV3rdStage_Coeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
 {
+	//Redefine the aoa
+	VECTOR3 vec;
+	v->GetAirspeedVector(FRAME_LOCAL, vec);
+	aoa = acos(unit(vec).z);
+
 	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
 	int i;
-	const int nlift = 9;
-	static const double AOA[nlift] = { -180 * RAD, -90 * RAD,-30 * RAD, -10 * RAD, 0 * RAD, 10 * RAD, 30 * RAD, 90 * RAD, 180 * RAD };
-	static const double CD_free[nlift] = { 3.1275, 11.08, 6.1147, 3.3497, 2.9251, 3.3497, 6.1147, 11.08, 3.1275 }; //free flow
-	static const double CD_cont[nlift] = { 1.69, 2.78, 1.12, 0.59, 0.54, 0.59, 1.12, 2.78, 1.69 }; //continuum flow
+	const int nlift = 6;
+	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 180 * RAD };
+	static const double CD_free[nlift] = { 2.9251, 3.3497, 6.1147, 11.08, 6.1684, 3.1275 }; //free flow
+	static const double CD_cont[nlift] = { 0.44, 0.59, 1.12, 2.78, 1.8, 1.5 }; //continuum flow
 
 	//Find angle of attack in array, then linearly interpolate
 	for (i = 0; i < nlift - 1 && AOA[i + 1] < aoa; i++);
@@ -817,7 +822,7 @@ void SaturnV::SetThirdStage ()
 	SetCrossSections (_V(167,167,47));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	ClearAirfoilDefinitions();
-	CreateAirfoil(LIFT_VERTICAL, _V(0, 0, 0), SaturnV3rdStage_Coeff, 6.604, 34.2534, 0.1);
+	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), SaturnV3rdStage_Coeff, NULL, 6.604, 34.2534, 0.1);
 	SetRotDrag (_V(0.7,0.7,1.2));
 
 	double TCPS4B = -16;
