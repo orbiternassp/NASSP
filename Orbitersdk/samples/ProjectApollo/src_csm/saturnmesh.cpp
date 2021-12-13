@@ -271,6 +271,109 @@ void CMLETHoriCoeffFunc(double aoa, double M, double Re, double *cl, double *cm,
 	*cm = factor * (frac*CM[j + 1] + (1.0 - frac)*CM[j]);
 }
 
+void CSMAeroVertCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
+{
+	//Use this definition of the aoa instead
+	VECTOR3 vec;
+	v->GetAirspeedVector(FRAME_LOCAL, vec);
+	double aoa_T = acos(unit(vec).z);
+
+	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
+	int i, j;
+	const int nlift = 9;
+	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
+	static const double CD_free[nlift] = { 2.41, 2.73, 3.14, 3.61, 5.01, 2.92, 2.46, 2.08, 1.96}; //free flow
+	static const double CD_cont[nlift] = { 0.54, 0.59, 0.77, 1.12, 2.78, 1.32, 1.41, 1.50, 1.69 }; //continuum flow
+	static const double CM_free[nlift] = { 0, 0.0440, -0.1436, -0.4349, -0.7682, -0.2369, 0.3820, -0.0115, 0 };
+	static const double CM_cont[nlift] = { 0, 0.0977, 0.1069, 0.0230, -0.5803, 0.0206, 0.0981, 0.0145, 0 };
+
+	//Find angle of attack in array, then linearly interpolate
+
+	//For drag
+	for (i = 0; i < nlift - 1 && AOA[i + 1] < aoa_T; i++);
+	double f = (aoa_T - AOA[i]) / (AOA[i + 1] - AOA[i]);
+
+	//For moments
+	for (j = 0; j < nlift - 1 && AOA[j + 1] < abs(aoa); j++);
+	double f2 = (abs(aoa) - AOA[j]) / (AOA[j + 1] - AOA[j]);
+
+	//No lift simulation
+	*cl = 0.0;
+
+	if (Kn > 10.0)
+	{
+		//Free flow
+		*cd = CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f;
+		*cm = CM_free[j] + (CM_free[j + 1] - CM_free[j]) * f2;
+	}
+	else if (Kn < 0.01)
+	{
+		//Continuum flow
+		*cd = CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04);
+		*cm = CM_cont[j] + (CM_cont[j + 1] - CM_cont[j]) * f2;
+	}
+	else
+	{
+		//Mix
+		double g = (Kn - 0.01) / 9.99;
+		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
+		*cm = g * (CM_free[j] + (CM_free[j + 1] - CM_free[j]) * f2) + (1.0 - g)*(CM_cont[j] + (CM_cont[j + 1] - CM_cont[j]) * f2);
+	}
+
+	if (aoa < 0)
+	{
+		*cm = -(*cm);
+	}
+
+	//TBD: Remove when RTCC takes drag into account properly
+	*cd = (*cd)*0.05;
+
+	//sprintf(oapiDebugString(), "Vertical: aoa %lf aoa_T %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, aoa_T*DEG, M, Re, Kn, *cd, *cl, *cm);
+}
+
+void CSMAeroHorizCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
+{
+	//Only moment calculations
+	*cl = 0;
+	*cd = 0;
+
+	int i;
+	const int nlift = 9;
+	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
+	static const double CM_free[nlift] = { 0, -0.0440, 0.1436, 0.4349, 0.7682, 0.2369, -0.3820, 0.0115, 0 };
+	static const double CM_cont[nlift] = { 0, -0.0977, -0.1069, -0.0230, 0.5803, -0.0206, -0.0981, -0.0145, 0 };
+
+	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
+
+	//Find angle of attack in array, then linearly interpolate
+	for (i = 0; i < nlift - 1 && AOA[i + 1] < abs(aoa); i++);
+	double f = (abs(aoa) - AOA[i]) / (AOA[i + 1] - AOA[i]);
+
+	if (Kn > 10.0)
+	{
+		//Free flow
+		*cm = CM_free[i] + (CM_free[i + 1] - CM_free[i]) * f;
+	}
+	else if (Kn < 0.01)
+	{
+		//Continuum flow
+		*cm = CM_cont[i] + (CM_cont[i + 1] - CM_cont[i]) * f;
+	}
+	else
+	{
+		//Mix
+		double g = (Kn - 0.01) / 9.99;
+		*cm = g * (CM_free[i] + (CM_free[i + 1] - CM_free[i]) * f) + (1.0 - g)*(CM_cont[i] + (CM_cont[i + 1] - CM_cont[i]) * f);
+	}
+
+	if (aoa < 0)
+	{
+		*cm = -(*cm);
+	}
+
+	//sprintf(oapiDebugString(), "Horizontal: beta %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
+}
+
 void SaturnInitMeshes()
 
 {
@@ -556,6 +659,7 @@ void Saturn::SetCSMStage ()
 {
 	ClearMeshes();
     ClearThrusterDefinitions();
+	ClearAirfoilDefinitions();
 	ClearEngineIndicators();
 	ClearLVGuidLight();
 	ClearLVRateLight();
@@ -652,8 +756,10 @@ void Saturn::SetCSMStage ()
 	AddExhaust(es_sps);
 	//SetPMI(_V(12, 12, 7));
 	SetPMI(_V(4.3972, 4.6879, 1.6220));
-	SetCrossSections(_V(40,40,14));
-	SetCW(0.1, 0.3, 1.4, 1.4);
+	SetCrossSections(_V(26.0,26.0,12.02));
+	SetCW(2.41*2.0, 1.96*2.0, 2.36*2.0, 2.36*2.0);
+	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), CSMAeroVertCoeff, NULL, 254.0*0.0254, 129.4*0.3048*0.3048, 0.1);
+	CreateAirfoil3(LIFT_HORIZONTAL, _V(0, 0, 0), CSMAeroHorizCoeff, NULL, 254.0*0.0254, 129.4*0.3048*0.3048, 0.1);
 	SetRotDrag(_V(0.7,0.7,0.3));
 	SetPitchMomentScale(0);
 	SetYawMomentScale(0);

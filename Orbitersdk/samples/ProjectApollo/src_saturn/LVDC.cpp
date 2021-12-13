@@ -2986,7 +2986,8 @@ VECTOR3 LVDC1B::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
 	cos_alpha = 1.0 / v_R * (V_R.x*cos(Att.y)*cos(Att.z) + V_R.y*sin(Att.z) - V_R.z*sin(Att.y)*cos(Att.z));
 	drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
 	//fprintf(lvlog, "cos_alpha = %f drag_area = %f\r\n", cos_alpha, drag_area);
-	VECTOR3 A_DS = -V_R * rho * drag_area*K_D*v_R*0.02; //TBD: Remove 0.02 when drag properly implemented
+	//TBD: Remove factor 0.05 when RTCC takes drag into account properly
+	VECTOR3 A_DS = -V_R * rho * drag_area*K_D*v_R*0.05;
 	//fprintf(lvlog, "A_DS = %e %e %e\r\n", A_DS.x, A_DS.y, A_DS.z);
 	return A_DS;
 }
@@ -9854,7 +9855,8 @@ VECTOR3 LVDCSV::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
 	cos_alpha = 1.0 / v_R * (V_R.x*cos(Att.y)*cos(Att.z)+V_R.y*sin(Att.z)-V_R.z*sin(Att.y)*cos(Att.z));
 	drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
 	//fprintf(lvlog, "cos_alpha = %f drag_area = %f\r\n", cos_alpha, drag_area);
-	VECTOR3 A_DS = -V_R * rho * drag_area*K_D*v_R*0.02; //TBD: Remove 0.02 when drag properly implemented
+	//TBD: Remove factor 0.05 when RTCC takes drag into account properly
+	VECTOR3 A_DS = -V_R * rho * drag_area*K_D*v_R*0.05;
 	//fprintf(lvlog, "A_DS = %e %e %e\r\n", A_DS.x, A_DS.y, A_DS.z);
 	return A_DS;
 }

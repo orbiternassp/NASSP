@@ -153,6 +153,51 @@ void SIVbLoadMeshes()
 	seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 }
 
+void SIVB_Airfoil_Coeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
+{
+	//Redefine the aoa
+	VECTOR3 vec;
+	v->GetAirspeedVector(FRAME_LOCAL, vec);
+	aoa = acos(unit(vec).z);
+
+	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
+	int i;
+	const int nlift = 6;
+	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 180 * RAD };
+	static const double CD_free[nlift] = { 2.9251, 3.3497, 6.1147, 11.08, 6.1684, 3.1275 }; //free flow
+	static const double CD_cont[nlift] = { 0.44, 0.59, 1.12, 2.78, 1.8, 1.5 }; //continuum flow
+
+	//Find angle of attack in array, then linearly interpolate
+	for (i = 0; i < nlift - 1 && AOA[i + 1] < aoa; i++);
+	double f = (aoa - AOA[i]) / (AOA[i + 1] - AOA[i]);
+
+	//No lift and moment coefficients for now
+	*cl = 0.0;
+	*cm = 0.0;
+
+	if (Kn > 10.0)
+	{
+		//Free flow
+		*cd = CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f;
+	}
+	else if (Kn < 0.01)
+	{
+		//Continuum flow
+		*cd = CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04);
+	}
+	else
+	{
+		//Mix
+		double g = (Kn - 0.01) / 9.99;
+		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
+	}
+
+	//TBD: Remove when RTCC takes drag into account properly
+	*cd = (*cd)*0.05;
+
+	//sprintf(oapiDebugString(), "aoa %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
+}
+
 SIVB::SIVB(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
 CSMLVSeparationInitiator("CSM-LV-Separation-Initiator", Panelsdk),
 LMSLASeparationInitiators("LM-SLA-Separation-Initiators", Panelsdk),
@@ -376,25 +421,36 @@ void SIVB::CreateSISIVBInterface()
 
 void SIVB::CreateAirfoils()
 {
-	double cw_z_pos, cw_z_neg;
-	if (hDockCSM && GetDockStatus(hDockCSM))
+	ClearAirfoilDefinitions();
+	if (hDockCSM == NULL && hDockSI == NULL)
 	{
-		cw_z_pos = 0.01;
+		//All docking ports gone, use realistic airfoil model
+		CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), SIVB_Airfoil_Coeff, NULL, 6.604, 34.2534, 0.1);
 	}
 	else
 	{
-		cw_z_pos = 0.2;
-	}
-	if (hDockSI && GetDockStatus(hDockSI))
-	{
-		cw_z_neg = 0.01;
-	}
-	else
-	{
-		cw_z_neg = 0.3;
-	}
+		//TBD: Remove 0.05 factor when RTCC can take drag into account properly.
+		//But for the separate S-IVB stage used for the Apollo 5 launch there eventually needs to be a more realistic solution.
+		double cw_z_pos, cw_z_neg;
+		if (hDockCSM && GetDockStatus(hDockCSM))
+		{
+			cw_z_pos = 0.01;
+		}
+		else
+		{
+			cw_z_pos = 2.9251*2.0*0.05;
+		}
+		if (hDockSI && GetDockStatus(hDockSI))
+		{
+			cw_z_neg = 0.01;
+		}
+		else
+		{
+			cw_z_neg = 3.1275*2.0*0.05;
+		}
 
-	SetCW(cw_z_pos, cw_z_neg, 1.4, 1.4);
+		SetCW(cw_z_pos, cw_z_neg, 2.4*2.0*0.05, 2.4*2.0*0.05);
+	}
 }
 
 void SIVB::SetS4b()
@@ -406,7 +462,7 @@ void SIVB::SetS4b()
 	SetSize (15);
 	SetPMI (_V(94,94,20));
 	SetCOG_elev (10);
-	SetCrossSections (_V(267, 267, 97));
+	SetCrossSections (_V(159.33, 159.33, 34.2534));
 	CreateAirfoils();
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
