@@ -175,6 +175,8 @@ private:
 	double CSA;
 	//Vehicle weight
 	double WT;
+	//Drag acceleration
+	VECTOR3 a_drag;
 
 	//Values used in Step
 	double HP, HD2, H2D2, H2D8, HD6;
@@ -191,6 +193,8 @@ private:
 	static const double K, dt_lim;
 	//700km as radius (used to determine drag or no drag calculation)
 	static const double CONS;
+	//Threshold at which drag isn't recomputed because it would be too large
+	static const double drag_threshold;
 
 	//Stored data
 	int P_S;

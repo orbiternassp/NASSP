@@ -28,6 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 const double EnckeFreeFlightIntegrator::K = 0.1;
 const double EnckeFreeFlightIntegrator::dt_lim = 1000.0;
 const double EnckeFreeFlightIntegrator::CONS = 6.373338e6 + 700.0*1000.0;
+const double EnckeFreeFlightIntegrator::drag_threshold = 0.1;
 
 EnckeFreeFlightIntegrator::EnckeFreeFlightIntegrator(RTCC *r) : RTCCModule(r)
 {
@@ -81,6 +82,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	pEph[3] = in.MCTEphemTableIndicator;
 	EphemerisBuildIndicator = in.EphemerisBuildIndicator;
 
+	a_drag = _V(0, 0, 0);
 	delta = _V(0, 0, 0);
 	nu = _V(0, 0, 0);
 	HD2 = H2D2 = H2D8 = HD6 = HP = 0.0;
@@ -526,7 +528,13 @@ void EnckeFreeFlightIntegrator::adfunc()
 				CDRAG = DENS*DRAG * CSA / WT;
 				V_R = V - crossp(U_Z*OrbMech::w_Earth, R);
 				VRMAG = length(V_R);
-				a_d += V_R * VRMAG*CDRAG;
+				//When integrating in the atmosphere, if the altitude/relative velocity ratio reaches a certain minimum value,
+				//the drag perturbation will not be recomputed; but the last computed drag perturbation will be used.
+				if (FACT1 / VRMAG >= drag_threshold)
+				{
+					a_drag = V_R * VRMAG*CDRAG;
+				}
+				a_d += a_drag;
 			}
 		}
 	}
