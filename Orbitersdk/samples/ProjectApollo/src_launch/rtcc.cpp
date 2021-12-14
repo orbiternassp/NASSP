@@ -16520,6 +16520,7 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 	{
 		InTable.MaxIntegTime = 10.0*24.0*3600.0;
 		InTable.EphemerisBuildIndicator = true;
+		InTable.MinEphemDT = 180.0;
 
 		bool HighOrbit;
 
@@ -23884,7 +23885,14 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 	outarray.ISTP = MED.StoppingMode;
 	outarray.gamma_stop = AST.gamma_r_stop;
 	outarray.GMTBASE = GetGMTBase();
-	outarray.h_pc_on = false;
+	if (AST.sv_TIG.RBI == BODY_EARTH)
+	{
+		outarray.h_pc_on = false;
+	}
+	else
+	{
+		outarray.h_pc_on = true;
+	}
 	outarray.Vec3.z = SPM.CSMWeight;
 	outarray.LMWeight = SPM.LMWeight;
 	outarray.DockingAngle = SPM.DockingAngle;
@@ -30340,6 +30348,11 @@ PCMATC_2B:
 		//Propagate from abort to pericynthion
 		PMMCEN(sv2, 0.0, 10.0*24.0*3600.0, 2, 0.0, dir, sv_pc, stop_ind);
 		h_p = length(sv_pc.R) - BZLAND.rad[RTCC_LMPOS_BEST];
+		//If abort state vector was pre-pericynthion, use updated state vector
+		if (dir > 0.0)
+		{
+			sv2 = sv_pc;
+		}
 	}
 	T_min = 0.0;
 	dt_ar = var[4] * 3600.0 - sv2.GMT;
