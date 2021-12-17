@@ -25003,6 +25003,63 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			}
 			EMGSTGEN(2, L1, ID1, L2, ID2, gmt);
 		}
+		//Enter manual IMU matrix
+		else if (med == "01")
+		{
+			if (data.size() < 1)
+			{
+				return 1;
+			}
+			int L;
+			if (data[0] == "CSM")
+			{
+				L = 1;
+			}
+			else if (data[0] == "LEM")
+			{
+				L = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			if (data.size() > 1)
+			{
+				if (data[1] != "")
+				{
+					int ID = EMGSTGENCode(data[1].c_str());
+					if (ID < 0)
+					{
+						return 2;
+					}
+					EZGSTMED.G01_Type = ID;
+				}
+				if (data.size() > 2)
+				{
+					double val;
+					for (unsigned int i = 0;i < 9;i++)
+					{
+						//MED doesn't have more data, break
+						if (i + 3 > data.size()) break;
+						//Entry is empty, continue
+						if (data[i + 2] == "") continue;
+						//Get value
+						if (sscanf(data[i + 2].c_str(), "%lf", &val) != 1)
+						{
+							return 2;
+						}
+						//Check if between -1.0 and 1.0
+						if (val > 1.0 || val < -1.0)
+						{
+							return 2;
+						}
+						//Save
+						EZGSTMED.G01_REFSMMAT.data[i] = val;
+					}
+				}
+			}
+			EMGSTGEN(3, L, 0, 0, 0, RTCCPresentTimeGMT());
+		}
 		//COMPUTE AND SAVE LOCAL VERTICAL CSM/LM PLATFORM ALIGNMENT
 		else if (med == "03")
 		{
@@ -29444,6 +29501,42 @@ void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MAT
 			EMGSTSTM(L2, tab2->data[0].REFSMMAT, RTCC_REFSMMAT_TYPE_PCR, gmt);
 		}
 		EMGSTSTM(L2, tab1->data[ID1 - 1].REFSMMAT, ID2, gmt);
+	}
+	//Enter manual IMU matrix
+	else if (QUEID == 3)
+	{
+		//Check allowed types
+		switch (EZGSTMED.G01_Type)
+		{
+		case RTCC_REFSMMAT_TYPE_PCR:
+		case RTCC_REFSMMAT_TYPE_TLM:
+		case RTCC_REFSMMAT_TYPE_MED:
+		case RTCC_REFSMMAT_TYPE_LCV:
+			break;
+		default:
+			return;
+		}
+
+		//Check if orthogonal
+		MATRIX3 Rot = mul(OrbMech::tmat(EZGSTMED.G01_REFSMMAT), EZGSTMED.G01_REFSMMAT);
+
+		double tol = 1e-7;
+
+		for (int i = 0;i < 9;i++)
+		{
+			if (i == 0 || i == 4 || i == 8)
+			{
+				if (abs(Rot.data[i] - 1.0) > tol) return;
+			}
+			else
+			{
+				if (abs(Rot.data[i]) > tol) return;
+			}
+		}
+
+		//TBD: For now convert to ecliptic reference
+		MATRIX3 a = mul(EZGSTMED.G01_REFSMMAT, SystemParameters.MAT_J2000_BRCS);
+		EMGSTSTM(L1, a, EZGSTMED.G01_Type, gmt);
 	}
 }
 

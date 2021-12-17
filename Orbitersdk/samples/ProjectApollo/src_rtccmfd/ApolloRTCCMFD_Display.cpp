@@ -4612,7 +4612,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		for (int i = 0;i < 9;i++)
 		{
-			sprintf(Buffer, "%f", block->REFSMMAT.data[i]);
+			sprintf(Buffer, "%.8lf", block->REFSMMAT.data[i]);
 			skp->Text(27 * W / 32, (i * 2 + 12) * H / 32, Buffer, strlen(Buffer));
 		}
 

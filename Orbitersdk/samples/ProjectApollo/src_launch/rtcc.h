@@ -4292,6 +4292,8 @@ public:
 
 	struct GMEDSaveTable
 	{
+		int G01_Type = RTCC_REFSMMAT_TYPE_MED;
+		MATRIX3 G01_REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 		double GMT = 0.0;
 		unsigned StartingStar = 0;
 		int MTX1 = -1, MTX2 = -1, MTX3 = -1;
