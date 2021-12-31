@@ -30,16 +30,25 @@ public:
 	virtual ~Sat5LMDSC();
 	void init();
 	void Setup();
+	void DefineAnimations(UINT idx);
 	virtual void SetState(int stage);
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void clbkSetClassCaps(FILEHANDLE cfg);
+	void HideProbes();
+	void clbkVisualCreated(VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 protected:
 
-	int state;
+	int state; // 0 = no legs, 1 = gear retracted, 2 = gear extended w/probes, 3 = gear extended no probes
 	THGROUP_HANDLE thg_sep;
 	double ro1; // Distance from center of middle touchdown points
 	double ro2; // Distance from center of lower (footpad) touchdown points
+	UINT dscidx;
+	DEVMESHHANDLE probes;
+
+	UINT anim_Gear;
+	MGROUP_TRANSFORM	*mgt_Leg[4], *mgt_Strut[4], *mgt_Downlock[4], *mgt_Probes1[3], *mgt_Probes2[3];
 
 };
