@@ -367,11 +367,11 @@ void LEM::SeparateStage (UINT stage)
 		Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
 		if (!pMission->LMHasLegs())
 		{
-			dscstage->SetState(10);
+			dscstage->SetState(0);
 		}
 		else
 		{
-			dscstage->SetState(0);
+			dscstage->SetState(1);
 		}
 
 		SetLmAscentHoverStage();
@@ -389,15 +389,15 @@ void LEM::SeparateStage (UINT stage)
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
 			if (!pMission->LMHasLegs())
 			{
-				dscstage->SetState(10);
+				dscstage->SetState(0);
 			}
 			else if (Landed)
 			{
-				dscstage->SetState(1);
+				dscstage->SetState(3);
 			}
 			else
 			{
-				dscstage->SetState(11);
+				dscstage->SetState(2);
 			}
 			
 			vs2.vrot.x = 5.32;
@@ -415,15 +415,15 @@ void LEM::SeparateStage (UINT stage)
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
 			if (!pMission->LMHasLegs())
 			{
-				dscstage->SetState(10);
+				dscstage->SetState(0);
 			}
 			else if (Landed)
 			{
-				dscstage->SetState(1);
+				dscstage->SetState(3);
 			}
 			else
 			{
-				dscstage->SetState(11);
+				dscstage->SetState(2);
 			}
 
 			SetLmAscentHoverStage();
