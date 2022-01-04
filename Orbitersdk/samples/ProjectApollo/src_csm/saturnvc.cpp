@@ -1321,11 +1321,9 @@ void Saturn::RegisterActiveAreas() {
 	const VECTOR3 Prim_Gly_HandleLocation = { -1.1482, 0.9682, -0.2071 };
 
 	oapiVCRegisterArea(AID_VC_Cab_Press_Rel_Handle1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle1, Cab_Press_Rel_Handle1Location + P325_CLICK + ofs, 0.04);
-	//oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Cab_Press_Rel_Handle1, _V(-1.1716, 0.797558, -0.2383) + ofs, _V(-1.26138, 0.797558, -0.225946) + ofs, _V(-1.17143, 0.749602, -0.2383) + ofs, _V(-1.26138, 0.749602, -0.225946) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Cab_Press_Rel_Handle1, _V(-1.1716, 0.797558, -0.2383) + ofs, _V(-1.26138, 0.797558, -0.225946) + ofs, _V(-1.17143, 0.749602, -0.2383) + ofs, _V(-1.26138, 0.749602, -0.225946) + ofs);
 
 	oapiVCRegisterArea(AID_VC_Cab_Press_Rel_Handle2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	//oapiVCSetAreaClickmode_Spherical(AID_VC_Cab_Press_Rel_Handle2, Cab_Press_Rel_Handle2Location + P325_CLICK + ofs, 0.04);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Cab_Press_Rel_Handle2, _V(-1.10395, 0.716629, -0.2383) + ofs, _V(-1.26248, 0.716629, -0.218411) + ofs, _V(-1.10413, 0.664093, -0.2383) + ofs, _V(-1.26248, 0.664093, -0.218411) + ofs);
 
 	oapiVCRegisterArea(AID_VC_Prim_Gly_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);

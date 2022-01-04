@@ -3141,10 +3141,10 @@ protected:
 	CircuitBrakerSwitch GlycolToRadiatorsLever;
 
 	SwitchRow CabinPressureReliefLever1Row;
-	ThumbwheelSwitch CabinPressureReliefLever1;
+	SaturnCabinPressureReliefLever1 CabinPressureReliefLever1;
 
 	SwitchRow CabinPressureReliefLever2Row;
-	SaturnCabinPressureReliefLever CabinPressureReliefLever2;
+	SaturnCabinPressureReliefLever2 CabinPressureReliefLever2;
 
 	SwitchRow GlycolReservoirRotariesRow;
 	RotationalSwitch GlycolReservoirInletRotary;

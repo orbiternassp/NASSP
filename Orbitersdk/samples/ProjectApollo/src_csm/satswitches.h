@@ -817,11 +817,17 @@ protected:
 	Sound &ClickSound;
 };
 
-class SaturnCabinPressureReliefLever: public ThumbwheelSwitch {
+class SaturnCabinPressureReliefLever1 : public ThumbwheelSwitch
+{
+public:
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
+};
+
+class SaturnCabinPressureReliefLever2: public ThumbwheelSwitch {
 
 public:
-	SaturnCabinPressureReliefLever() { guardState = 0; guardAnim = -1; };
-	virtual ~SaturnCabinPressureReliefLever() { guardClick.done(); };
+	SaturnCabinPressureReliefLever2() { guardState = 0; guardAnim = -1; };
+	virtual ~SaturnCabinPressureReliefLever2() { guardClick.done(); };
 
 	void InitGuard(SURFHANDLE surf, SoundLib *soundlib);
 	void DrawSwitch(SURFHANDLE drawSurface);
