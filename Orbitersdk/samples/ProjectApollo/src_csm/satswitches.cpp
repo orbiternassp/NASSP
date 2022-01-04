@@ -1939,17 +1939,17 @@ bool SaturnEMSDvSetSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 	int oldPos = position;
 	switch (event) {
 	case PANEL_MOUSE_LBPRESSED:
-		if (p.x < 0.0125)
-			position = 2;
-		else
+		if (p.y < 0.5)
 			position = 1;
+		else
+			position = 3;
 		break;
 
 	case PANEL_MOUSE_RBPRESSED:
-		if (p.x < 0.0125)
-			position = 4;
+		if (p.y < 0.5)
+			position = 2;
 		else
-			position = 3;
+			position = 4;
 		break;
 
 	case PANEL_MOUSE_LBUP:

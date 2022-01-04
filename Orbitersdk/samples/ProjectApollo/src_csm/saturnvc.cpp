@@ -942,54 +942,59 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCSetAreaClickmode_Spherical(AID_VC_SEATSCYCLE, _V(-0.9187, 0.200999, -0.258652) + ofs, 0.05);
 
 	// Side Hatch
-	const VECTOR3 SideHatchLocation = { 0.2436, 1.1710, 0.1699 };
-	const VECTOR3 SideHatch_HandleRot1Location = { 0.3076, 1.3543, -0.1137 };
-	const VECTOR3 SideHatch_HandleRot2Location = { 0.2348, 1.2453, 0.0608 };
-	const VECTOR3 SideHatch_VentValveLocation = { -0.2637, 1.1932, 0.1462 };
-	const VECTOR3 SideHatch_openLocation = { -0.4243, 1.7647, 0.6818 };
-	const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.4944, 2.0370, 0.4730 };
-	const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.4556, 1.8491, 0.5764 };
-	const VECTOR3 SideHatch_VentValve_openLocation = { -0.4557, 1.4090, 0.3188 };
+	if (viewpos != SATVIEW_LOWER_CENTER) {
+		const VECTOR3 SideHatchLocation = { 0.2436, 1.1710, 0.1699 };
+		const VECTOR3 SideHatch_HandleRot1Location = { 0.3076, 1.3543, -0.1137 };
+		const VECTOR3 SideHatch_HandleRot2Location = { 0.2348, 1.2453, 0.0608 };
+		const VECTOR3 SideHatch_VentValveLocation = { -0.2637, 1.1932, 0.1462 };
+		const VECTOR3 SideHatch_openLocation = { -0.4243, 1.7647, 0.6818 };
+		const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.4944, 2.0370, 0.4730 };
+		const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.4556, 1.8491, 0.5764 };
+		const VECTOR3 SideHatch_VentValve_openLocation = { -0.4557, 1.4090, 0.3188 };
 
-	if (!SideHatch.IsOpen()) {
+		if (!SideHatch.IsOpen()) {
 
-		oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatchLocation + ofs, 0.1);
+			oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatchLocation + ofs, 0.1);
 
-		oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1Location + ofs, ROT);
+			oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1Location + ofs, ROT);
 
-		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, SideHatch_HandleRot2Location + ofs, ROT);
+			oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, SideHatch_HandleRot2Location + ofs, ROT);
 
-		oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValveLocation + ofs, ROT);
+			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValveLocation + ofs, ROT);
 
-	} else {
+		}
+		else {
 
-		oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatch_openLocation + ofs, 0.1);
+			oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatch_openLocation + ofs, 0.1);
 
-		oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1_openLocation + ofs, ROT);
+			oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1_openLocation + ofs, ROT);
 
-		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, SideHatch_HandleRot2_openLocation + ofs, ROT);
+			oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, SideHatch_HandleRot2_openLocation + ofs, ROT);
 
-		oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValve_openLocation + ofs, ROT);
+			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValve_openLocation + ofs, ROT);
+		}
 	}
 
 	// Forward Hatch
-	const VECTOR3 FwdHatch_Location = { -0.1495, 0.0705, 1.0980 };
-	const VECTOR3 FwdHatch_Equal_ValveLocation = { 0.0011, -0.0000, 1.0773 };
+	if (viewpos == SATVIEW_TUNNEL) {
+		const VECTOR3 FwdHatch_Location = { -0.1495, 0.0705, 1.0980 };
+		const VECTOR3 FwdHatch_Equal_ValveLocation = { 0.0011, -0.0000, 1.0773 };
 
-	oapiVCRegisterArea(AID_VC_FWDHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_HANDLE, FwdHatch_Location + ofs, 0.1);
+		oapiVCRegisterArea(AID_VC_FWDHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_HANDLE, FwdHatch_Location + ofs, 0.1);
 
-	if (!ForwardHatch.IsOpen()) {
-		oapiVCRegisterArea(AID_VC_FWDHATCH_PRESS_EQU_VLV, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, ROT);
+		if (!ForwardHatch.IsOpen()) {
+			oapiVCRegisterArea(AID_VC_FWDHATCH_PRESS_EQU_VLV, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, ROT);
+		}
 	}
 
     // COAS
@@ -1047,14 +1052,14 @@ void Saturn::RegisterActiveAreas() {
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P1_01 + i, P1_PUSHB_POS[i] + ofs, PUSHB);
 	}
 
-	for (i = 0; i < P1_TWCOUNT; i++)
-	{
-		oapiVCRegisterArea(AID_VC_TW_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P1_01 + i, P1_TW_POS[i] + P1_3_TWCLICK + ofs, TW);
-	}
+	oapiVCRegisterArea(AID_VC_TW_P1_01, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_TW_P1_01, _V(-0.6744, 0.4004, 0.2644) + ofs, _V(-0.6641, 0.4004, 0.2644) + ofs, _V(-0.6744, 0.3769, 0.2566) + ofs, _V(-0.6641, 0.3769, 0.2566) + ofs);
+
+	oapiVCRegisterArea(AID_VC_TW_P1_02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_TW_P1_02, _V(-0.6258, 0.3935, 0.2621) + ofs, _V(-0.6011, 0.3935, 0.2621) + ofs, _V(-0.6258, 0.3838, 0.2588) + ofs, _V(-0.6011, 0.3838, 0.2588) + ofs);
 
 	oapiVCRegisterArea(AID_VC_EMS_DVSET, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_EMS_DVSET, _V(-0.507344, 0.732746, 0.370513) + ofs, 0.025);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_EMS_DVSET, _V(-0.521, 0.757, 0.3755) + ofs, _V(-0.4936, 0.757, 0.3755) + ofs, _V(-0.521, 0.7102, 0.3599) + ofs, _V(-0.4936, 0.7102, 0.3599) + ofs);
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, PUSHB);
 
@@ -1067,33 +1072,35 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_ASCPYAW, PANEL_REDRAW_NEVER, PANEL_MOUSE_PRESSED | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ASCPYAW, _V(-0.993077, 0.289921, 0.227431) + ofs, _V(-0.982356, 0.289921, 0.227431) + ofs, _V(-0.993077, 0.268953, 0.220424) + ofs, _V(-0.982356, 0.268953, 0.220424) + ofs);
 
-	oapiVCRegisterArea(AID_VC_POSTLDGVENTHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_POSTLDGVENTHANDLE, _V(0.183459, 0.922476, 0.408289) + ofs, 0.02);
-
 	//Panel 2
 
-	for (i = 0; i < P2_SWITCHCOUNT; i++)
-	{
-		oapiVCRegisterArea(AID_VC_SWITCH_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS[i] + P1_3_CLICK + ofs, SWITCH);
-	}
+	if (viewpos != SATVIEW_LOWER_CENTER) {
+		for (i = 0; i < P2_SWITCHCOUNT; i++)
+		{
+			oapiVCRegisterArea(AID_VC_SWITCH_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS[i] + P1_3_CLICK + ofs, SWITCH);
+		}
 
-	for (i = 0; i < P2_ROTCOUNT; i++)
-	{
-		oapiVCRegisterArea(AID_VC_ROT_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + ofs, ROT);
-	}
+		for (i = 0; i < P2_ROTCOUNT; i++)
+		{
+			oapiVCRegisterArea(AID_VC_ROT_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + ofs, ROT);
+		}
 
-	for (i = 0; i < P2_PUSHBCOUNT; i++)
-	{
-		oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P2_01 + i, P2_PUSHB_POS[i] + ofs, PUSHB);
-	}
+		for (i = 0; i < P2_PUSHBCOUNT; i++)
+		{
+			oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P2_01 + i, P2_PUSHB_POS[i] + ofs, PUSHB);
+		}
 
-	for (i = 0; i < P2_TWCOUNT; i++)
-	{
-		oapiVCRegisterArea(AID_VC_TW_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P2_01 + i, P2_TW_POS[i] + P1_3_TWCLICK + ofs, TW);
+		for (i = 0; i < P2_TWCOUNT; i++)
+		{
+			oapiVCRegisterArea(AID_VC_TW_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P2_01 + i, P2_TW_POS[i] + P1_3_TWCLICK + ofs, TW);
+		}
+
+		oapiVCRegisterArea(AID_VC_POSTLDGVENTHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_POSTLDGVENTHANDLE, _V(0.183459, 0.922476, 0.408289) + ofs, 0.02);
 	}
 
 	// Panel 3
@@ -1218,23 +1225,26 @@ void Saturn::RegisterActiveAreas() {
 	}
 
 	// Panel 10
-	for (i = 0; i < P10_SWITCHCOUNT; i++)
-	{
-		oapiVCRegisterArea(AID_VC_SWITCH_P10_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P10_01 + i, P10_TOGGLE_POS[i] + P10_CLICK + ofs, SWITCH);
-	}
+	if (viewpos == SATVIEW_LOWER_CENTER) {
 
-	for (i = 0; i < P10_TWCOUNT; i++)
-	{
-		oapiVCRegisterArea(AID_VC_TW_P10_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P10_01 + i, P10_TW_POS[i] + P10_TWCLICK + ofs, TW);
-	}
+		for (i = 0; i < P10_SWITCHCOUNT; i++)
+		{
+			oapiVCRegisterArea(AID_VC_SWITCH_P10_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P10_01 + i, P10_TOGGLE_POS[i] + P10_CLICK + ofs, SWITCH);
+		}
 
-	// Panel 12
-	for (i = 0; i < P12_ROTCOUNT; i++)
-	{
-		oapiVCRegisterArea(AID_VC_ROT_P12_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P12_01 + i, P12_ROT_POS[i] + ofs, ROT);
+		for (i = 0; i < P10_TWCOUNT; i++)
+		{
+			oapiVCRegisterArea(AID_VC_TW_P10_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P10_01 + i, P10_TW_POS[i] + P10_TWCLICK + ofs, TW);
+		}
+
+		// Panel 12
+		for (i = 0; i < P12_ROTCOUNT; i++)
+		{
+			oapiVCRegisterArea(AID_VC_ROT_P12_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P12_01 + i, P12_ROT_POS[i] + ofs, ROT);
+		}
 	}
 
 	// Panel 13
