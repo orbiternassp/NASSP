@@ -2007,14 +2007,14 @@ void SaturnEMSDvSetSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 	}
 }
 
-bool SaturnCabinPressureReliefLever1::CheckMouseClickVC(int event, VECTOR3 &p) {
+bool SaturnCabinPressureReliefLever::CheckMouseClickVC(int event, VECTOR3 &p) {
 	int mx = (int)(p.x * (x + width));
 	int my = (int)(p.y * (y + height));
 
 	return CheckMouseClick(event, mx, my);
 }
 
-void SaturnCabinPressureReliefLever2::InitGuard(SURFHANDLE surf, SoundLib *soundlib)
+void SaturnGuardedCabinPressureReliefLever::InitGuard(SURFHANDLE surf, SoundLib *soundlib)
 {	
 	guardSurface = surf;
 
@@ -2022,13 +2022,13 @@ void SaturnCabinPressureReliefLever2::InitGuard(SURFHANDLE surf, SoundLib *sound
 		soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
 }
 
-void SaturnCabinPressureReliefLever2::DrawSwitch(SURFHANDLE drawSurface)
+void SaturnGuardedCabinPressureReliefLever::DrawSwitch(SURFHANDLE drawSurface)
 {
 	oapiBlt(drawSurface, guardSurface, 0, 0, guardState * 152, 0, 152, 79, SURF_PREDEF_CK);
 	ThumbwheelSwitch::DrawSwitch(drawSurface);
 }
 
-void SaturnCabinPressureReliefLever2::DrawSwitchVC(int id, int event, SURFHANDLE surf) {
+void SaturnGuardedCabinPressureReliefLever::DrawSwitchVC(int id, int event, SURFHANDLE surf) {
 
 	ThumbwheelSwitch::DrawSwitchVC(id, event, surf);
 
@@ -2039,7 +2039,7 @@ void SaturnCabinPressureReliefLever2::DrawSwitchVC(int id, int event, SURFHANDLE
 	}
 }
 
-bool SaturnCabinPressureReliefLever2::CheckMouseClick(int event, int mx, int my)
+bool SaturnGuardedCabinPressureReliefLever::CheckMouseClick(int event, int mx, int my)
 {
 	if (event & PANEL_MOUSE_RBDOWN) {
 		if (mx <= 152 &&  my <= 79) {			
@@ -2065,14 +2065,7 @@ bool SaturnCabinPressureReliefLever2::CheckMouseClick(int event, int mx, int my)
 	}
 }
 
-bool SaturnCabinPressureReliefLever2::CheckMouseClickVC(int event, VECTOR3 &p) {
-	int mx = (int)(p.x * (x + width));
-	int my = (int)(p.y * (y + height));
-
-	return CheckMouseClick(event, mx, my);
-}
-
-bool SaturnCabinPressureReliefLever2::SwitchTo(int newState)
+bool SaturnGuardedCabinPressureReliefLever::SwitchTo(int newState)
 {
 	if (ThumbwheelSwitch::SwitchTo(newState))
 	{
@@ -2087,7 +2080,7 @@ bool SaturnCabinPressureReliefLever2::SwitchTo(int newState)
 	return false;
 }
 
-void SaturnCabinPressureReliefLever2::SetState(int value)
+void SaturnGuardedCabinPressureReliefLever::SetState(int value)
 {
 	if (ThumbwheelSwitch::SwitchTo(value))
 	{
@@ -2098,7 +2091,7 @@ void SaturnCabinPressureReliefLever2::SetState(int value)
 	}
 }
 
-void SaturnCabinPressureReliefLever2::Guard()
+void SaturnGuardedCabinPressureReliefLever::Guard()
 {
 	if (guardState) {
 		guardState = 0;
@@ -2110,7 +2103,7 @@ void SaturnCabinPressureReliefLever2::Guard()
 	}
 }
 
-void SaturnCabinPressureReliefLever2::SaveState(FILEHANDLE scn)
+void SaturnGuardedCabinPressureReliefLever::SaveState(FILEHANDLE scn)
 {
 	char buffer[100];
 
@@ -2118,7 +2111,7 @@ void SaturnCabinPressureReliefLever2::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_string(scn, name, buffer);
 }
 
-void SaturnCabinPressureReliefLever2::LoadState(char *line)
+void SaturnGuardedCabinPressureReliefLever::LoadState(char *line)
 {
 	char buffer[100];
 	int st, gst;
@@ -2130,7 +2123,7 @@ void SaturnCabinPressureReliefLever2::LoadState(char *line)
 	}
 }
 
-void SaturnCabinPressureReliefLever2::DefineVCAnimations(UINT vc_idx)
+void SaturnGuardedCabinPressureReliefLever::DefineVCAnimations(UINT vc_idx)
 {
 	ThumbwheelSwitch::DefineVCAnimations(vc_idx);
 
