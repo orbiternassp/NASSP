@@ -1420,6 +1420,7 @@ public:
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal, int multPos);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
+	void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
 	bool SwitchTo(int newPosition);
 	void LoadState(char *line);
 	void SetState(int value);

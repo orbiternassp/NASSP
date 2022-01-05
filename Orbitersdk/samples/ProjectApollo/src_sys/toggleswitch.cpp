@@ -3278,66 +3278,62 @@ bool ContinuousThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (p.x < 0.005)
-	{
-		if (event == PANEL_MOUSE_LBDOWN) {
-			if (isHorizontal) {
-				if (position < numPositions) {
-					SwitchTo(position + 1);
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (isHorizontal) {
+			if (p.x < 0.5) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
 					sclick.play();
 				}
 			}
 			else {
-				if (position > 0) {
-					SwitchTo(position - 1);
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
 					sclick.play();
 				}
 			}
 		}
-		else if (event == PANEL_MOUSE_RBDOWN)
-		{
-			if (isHorizontal) {
-				if (position > 0) {
-					SwitchTo(position - 1);
+		else {
+			if (p.y < 0.5) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
 					sclick.play();
 				}
 			}
 			else {
-				if (position < numPositions) {
-					SwitchTo(position + 1);
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
 					sclick.play();
 				}
 			}
 		}
-
 	}
-	else
+	else if (event == PANEL_MOUSE_RBDOWN)
 	{
-		if (event == PANEL_MOUSE_LBDOWN) {
-			if (isHorizontal) {
-				if (position + multiplicator <= numPositions) {
-					SwitchTo(position + multiplicator);
+		if (isHorizontal) {
+			if (p.x < 0.5) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
 					sclick.play();
 				}
 			}
 			else {
-				if (position - multiplicator >= 0) {
-					SwitchTo(position - multiplicator);
+				if (position > 0) {
+					SwitchTo(position - 1);
 					sclick.play();
 				}
 			}
 		}
-		else if (event == PANEL_MOUSE_RBDOWN)
-		{
-			if (isHorizontal) {
-				if (position - multiplicator >= 0) {
-					SwitchTo(position - multiplicator);
+		else {
+			if (p.y < 0.5) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
 					sclick.play();
 				}
 			}
 			else {
-				if (position + multiplicator <= numPositions) {
-					SwitchTo(position + multiplicator);
+				if (position > 0) {
+					SwitchTo(position - 1);
 					sclick.play();
 				}
 			}
@@ -3345,6 +3341,12 @@ bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 	}
 
 	return true;
+}
+
+void ContinuousThumbwheelSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
+
+	double s = position / (double)numPositions;
+	OurVessel->SetAnimation(anim_switch, s);
 }
 
 bool ContinuousThumbwheelSwitch::SwitchTo(int newPosition) {

@@ -817,17 +817,22 @@ protected:
 	Sound &ClickSound;
 };
 
-class SaturnCabinPressureReliefLever: public ThumbwheelSwitch {
+class SaturnCabinPressureReliefLever : public ThumbwheelSwitch
+{
+public:
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
+};
+
+class SaturnGuardedCabinPressureReliefLever: public SaturnCabinPressureReliefLever {
 
 public:
-	SaturnCabinPressureReliefLever() { guardState = 0; guardAnim = -1; };
-	virtual ~SaturnCabinPressureReliefLever() { guardClick.done(); };
+	SaturnGuardedCabinPressureReliefLever() { guardState = 0; guardAnim = -1; };
+	virtual ~SaturnGuardedCabinPressureReliefLever() { guardClick.done(); };
 
 	void InitGuard(SURFHANDLE surf, SoundLib *soundlib);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState);

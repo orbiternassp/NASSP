@@ -627,6 +627,8 @@ void LEM::Init()
 		fdaiDisabled = false;
 		fdaiSmooth = false;
 
+		InitVCAnimations();
+
 		PanelId = LMPANEL_MAIN;	// default panel
 		InitSwitches();
 		// "dummy" SetSwitches to enable the panel event handling

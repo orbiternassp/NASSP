@@ -868,8 +868,8 @@
 #define AID_VC_PUSHB_P1_10              3160
 #define AID_VC_PUSHB_P1_11              3161
 
-#define AID_VC_TW_P1_01                 3163
-#define AID_VC_TW_P1_02                 3164
+#define AID_VC_TW_P1_01                 3163   // SPS Gimbal Pitch Thumbwheel
+#define AID_VC_TW_P1_02                 3164   // SPS Gimbal Yaw Thumbwheel
 
 #define AID_VC_FDAI_LEFT                3168
 #define AID_VC_MASTER_ALARM             3169
