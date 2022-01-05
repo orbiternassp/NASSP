@@ -1726,6 +1726,19 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	//return false;
 }
 
+void LEM::InitVCAnimations() {
+
+	anim_fdaiR_cdr = anim_fdaiR_lmp = -1;
+	anim_fdaiP_cdr = anim_fdaiP_lmp = -1;
+	anim_fdaiY_cdr = anim_fdaiY_lmp = -1;
+	anim_fdaiRerror_cdr = anim_fdaiRerror_lmp = -1;
+	anim_fdaiPerror_cdr = anim_fdaiPerror_lmp = -1;
+	anim_fdaiYerror_cdr = anim_fdaiYerror_lmp = -1;
+	anim_fdaiRrate_cdr = anim_fdaiRrate_lmp = -1;
+	anim_fdaiPrate_cdr = anim_fdaiPrate_lmp = -1;
+	anim_fdaiYrate_cdr = anim_fdaiYrate_lmp = -1;
+}
+
 void LEM::DefineVCAnimations()
 {
 	MainPanelVC.ClearSwitches();

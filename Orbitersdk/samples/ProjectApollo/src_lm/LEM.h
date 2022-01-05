@@ -693,6 +693,7 @@ protected:
 	void GuardClick();
 	void AbortFire();
 	void InitSwitches();
+	void InitVCAnimations();
 	void DefineVCAnimations();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
