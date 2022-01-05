@@ -3345,7 +3345,7 @@ bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 void ContinuousThumbwheelSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
 
-	double s = ((double)position) / ((double)numPositions);
+	double s = position / (double)numPositions;
 	OurVessel->SetAnimation(anim_switch, s);
 }
 
