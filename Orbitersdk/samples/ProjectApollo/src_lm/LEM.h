@@ -232,12 +232,30 @@ namespace mission
 #define LM_BUTTON_ABORT_STAGE       14
 #define LM_BUTTON_ABORT_STAGE_GRD   15
 #define LM_BUTTON_DSKY_PRO          16
-#define LM_BUTTON_DSKY_ENTER        17
-#define LM_BUTTON_MDCTRL_PGNS       18
-#define LM_BUTTON_MDCTRL_PGNS_AUT   19
-#define LM_BUTTON_MDCTRL_PGNS_ATH   20
-#define LM_BUTTON_MDCTRL_PGNS_OFF   21
-#define LM_AXIS_THR_JET_LEVER       22
+#define LM_BUTTON_DSKY_KEY_REL      17
+#define LM_BUTTON_DSKY_VERB         18
+#define LM_BUTTON_DSKY_NOUN         19
+#define LM_BUTTON_DSKY_ENTR         20
+#define LM_BUTTON_DSKY_CLR          21
+#define LM_BUTTON_DSKY_PLUS         22
+#define LM_BUTTON_DSKY_MINUS        23
+#define LM_BUTTON_DSKY_RSET         24
+#define LM_BUTTON_DSKY_NUM_0        25
+#define LM_BUTTON_DSKY_NUM_1        26
+#define LM_BUTTON_DSKY_NUM_2        27
+#define LM_BUTTON_DSKY_NUM_3        28
+#define LM_BUTTON_DSKY_NUM_4        29
+#define LM_BUTTON_DSKY_NUM_5        30
+#define LM_BUTTON_DSKY_NUM_6        31
+#define LM_BUTTON_DSKY_NUM_7        32
+#define LM_BUTTON_DSKY_NUM_8        33
+#define LM_BUTTON_DSKY_NUM_9        34
+#define LM_BUTTON_MDCTRL_PGNS       35
+#define LM_BUTTON_MDCTRL_PGNS_AUT   36
+#define LM_BUTTON_MDCTRL_PGNS_ATH   37
+#define LM_BUTTON_MDCTRL_PGNS_OFF   38
+#define LM_AXIS_THR_JET_LEVER       39
+
 
 // Callback for Vesim events
 void cbLMVesim(int inputID, int eventType, int newValue, void *pdata);
