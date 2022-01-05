@@ -320,13 +320,52 @@ typedef struct {
 } SPSStatus;
 
 // Vesim input IDs
-#define CSM_AXIS_INPUT_RHCR    1
-#define CSM_AXIS_INPUT_RHCP    2
-#define CSM_AXIS_INPUT_RHCY    3
-#define CSM_AXIS_INPUT_THCX    4
-#define CSM_AXIS_INPUT_THCY    5
-#define CSM_AXIS_INPUT_THCZ    6
-#define CSM_BUTTON_ROT_LIN     7
+#define CSM_AXIS_INPUT_RHCR         1
+#define CSM_AXIS_INPUT_RHCP         2
+#define CSM_AXIS_INPUT_RHCY         3
+#define CSM_AXIS_INPUT_THCX         4
+#define CSM_AXIS_INPUT_THCY         5
+#define CSM_AXIS_INPUT_THCZ         6
+#define CSM_BUTTON_ROT_LIN          7
+#define CSM_BUTTON_DSKY1_PRO        8
+#define CSM_BUTTON_DSKY1_KEY_REL    9
+#define CSM_BUTTON_DSKY1_VERB      10
+#define CSM_BUTTON_DSKY1_NOUN      11
+#define CSM_BUTTON_DSKY1_ENTR      12
+#define CSM_BUTTON_DSKY1_CLR       13
+#define CSM_BUTTON_DSKY1_PLUS      14
+#define CSM_BUTTON_DSKY1_MINUS     15
+#define CSM_BUTTON_DSKY1_RSET      16
+#define CSM_BUTTON_DSKY1_NUM_0     17
+#define CSM_BUTTON_DSKY1_NUM_1     18
+#define CSM_BUTTON_DSKY1_NUM_2     19
+#define CSM_BUTTON_DSKY1_NUM_3     20
+#define CSM_BUTTON_DSKY1_NUM_4     21
+#define CSM_BUTTON_DSKY1_NUM_5     22
+#define CSM_BUTTON_DSKY1_NUM_6     23
+#define CSM_BUTTON_DSKY1_NUM_7     24
+#define CSM_BUTTON_DSKY1_NUM_8     25
+#define CSM_BUTTON_DSKY1_NUM_9     26
+#define CSM_BUTTON_DSKY2_PRO       27
+#define CSM_BUTTON_DSKY2_KEY_REL   28
+#define CSM_BUTTON_DSKY2_VERB      29
+#define CSM_BUTTON_DSKY2_NOUN      30
+#define CSM_BUTTON_DSKY2_ENTR      31
+#define CSM_BUTTON_DSKY2_CLR       32
+#define CSM_BUTTON_DSKY2_PLUS      33
+#define CSM_BUTTON_DSKY2_MINUS     34
+#define CSM_BUTTON_DSKY2_RSET      35
+#define CSM_BUTTON_DSKY2_NUM_0     36
+#define CSM_BUTTON_DSKY2_NUM_1     37
+#define CSM_BUTTON_DSKY2_NUM_2     38
+#define CSM_BUTTON_DSKY2_NUM_3     39
+#define CSM_BUTTON_DSKY2_NUM_4     40
+#define CSM_BUTTON_DSKY2_NUM_5     41
+#define CSM_BUTTON_DSKY2_NUM_6     42
+#define CSM_BUTTON_DSKY2_NUM_7     43
+#define CSM_BUTTON_DSKY2_NUM_8     44
+#define CSM_BUTTON_DSKY2_NUM_9     45
+
 
 // Callback for Vesim events
 void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
@@ -4579,6 +4618,8 @@ protected:
 	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+
+	friend void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
 
 extern void BaseInit();

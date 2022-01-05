@@ -69,28 +69,191 @@ extern "C" {
 
 //extern FILE *PanelsdkLogFile;
 
-#define CSM_AXIS_INPUT_CNT  7
+#define CSM_AXIS_INPUT_CNT  45
 VesimInputDefinition vesim_csm_inputs[CSM_AXIS_INPUT_CNT] = {
-	{ CSM_AXIS_INPUT_RHCR,   "RHC Roll",                      VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_RHCP,   "RHC Pitch",                     VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_RHCY,   "RHC Yaw",                       VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCX,   "THC X",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCY,   "THC Y",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCZ,   "THC Z",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_BUTTON_ROT_LIN,    "Rotation/Translation toggle",   VESIM_INPUTTYPE_BUTTON,  0, true }
+	{ CSM_AXIS_INPUT_RHCR,        "RHC Roll",                      VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHCP,        "RHC Pitch",                     VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHCY,        "RHC Yaw",                       VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCX,        "THC X",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCY,        "THC Y",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THCZ,        "THC Z",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_BUTTON_ROT_LIN,         "Rotation/Translation toggle",   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_PRO,       "Main DSKY PRO",                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_KEY_REL,   "Main DSKY KEY REL",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_VERB,      "Main DSKY VERB",                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NOUN,      "Main DSKY NOUN",                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_ENTR,      "Main DSKY ENTR",                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_CLR,       "Main DSKY CLR",                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_PLUS,      "Main DSKY +",                   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_MINUS,     "Main DSKY -",                   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_RSET,      "Main DSKY RSET",                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_0,     "Main DSKY Number 0",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_1,     "Main DSKY Number 1",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_2,     "Main DSKY Number 2",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_3,     "Main DSKY Number 3",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_4,     "Main DSKY Number 4",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_5,     "Main DSKY Number 5",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_6,     "Main DSKY Number 6",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_7,     "Main DSKY Number 7",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_8,     "Main DSKY Number 8",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY1_NUM_9,     "Main DSKY Number 9",            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_PRO,       "LEB DSKY PRO",                  VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_KEY_REL,   "LEB DSKY KEY REL",              VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_VERB,      "LEB DSKY VERB",                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NOUN,      "LEB DSKY NOUN",                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_ENTR,      "LEB DSKY ENTR",                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_CLR,       "LEB DSKY CLR",                  VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_PLUS,      "LEB DSKY +",                    VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_MINUS,     "LEB DSKY -",                    VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_RSET,      "LEB DSKY RSET",                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_0,     "LEB DSKY Number 0",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_1,     "LEB DSKY Number 1",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_2,     "LEB DSKY Number 2",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_3,     "LEB DSKY Number 3",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_4,     "LEB DSKY Number 4",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_5,     "LEB DSKY Number 5",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_6,     "LEB DSKY Number 6",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_7,     "LEB DSKY Number 7",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_8,     "LEB DSKY Number 8",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DSKY2_NUM_9,     "LEB DSKY Number 9",             VESIM_INPUTTYPE_BUTTON,  0, true }
+
 };
 
 void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata) {
 	Saturn *pSaturn = (Saturn *)pdata;
-	switch (inputID) {
-	case CSM_BUTTON_ROT_LIN:
-		if (eventType == VESIM_EVTTYPE_BUTTON_ON) {
+	if (eventType == VESIM_EVTTYPE_BUTTON_ON) {
+		switch (inputID) {
+		case CSM_BUTTON_ROT_LIN:			
 			if (pSaturn->GetAttitudeMode() == RCS_ROT)
 				pSaturn->SetAttitudeMode(RCS_LIN);
 			else
 				pSaturn->SetAttitudeMode(RCS_ROT);
+			break;
+		case CSM_BUTTON_DSKY1_PRO:
+			pSaturn->dsky.ProgPressed();
+			break;
+		case CSM_BUTTON_DSKY1_KEY_REL:
+			pSaturn->dsky.KeyRel();
+			break;
+		case CSM_BUTTON_DSKY1_VERB:
+			pSaturn->dsky.VerbPressed();
+			break;
+		case CSM_BUTTON_DSKY1_NOUN:
+			pSaturn->dsky.NounPressed();
+			break;
+		case CSM_BUTTON_DSKY1_ENTR:
+			pSaturn->dsky.EnterPressed();
+			break;
+		case CSM_BUTTON_DSKY1_CLR:
+			pSaturn->dsky.ClearPressed();
+			break;
+		case CSM_BUTTON_DSKY1_PLUS:
+			pSaturn->dsky.PlusPressed();
+			break;
+		case CSM_BUTTON_DSKY1_MINUS:
+			pSaturn->dsky.MinusPressed();
+			break;
+		case CSM_BUTTON_DSKY1_RSET:
+			pSaturn->dsky.ResetPressed();
+			break;
+		case CSM_BUTTON_DSKY1_NUM_0:
+			pSaturn->dsky.NumberPressed(0);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_1:
+			pSaturn->dsky.NumberPressed(1);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_2:
+			pSaturn->dsky.NumberPressed(2);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_3:
+			pSaturn->dsky.NumberPressed(3);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_4:
+			pSaturn->dsky.NumberPressed(4);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_5:
+			pSaturn->dsky.NumberPressed(5);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_6:
+			pSaturn->dsky.NumberPressed(6);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_7:
+			pSaturn->dsky.NumberPressed(7);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_8:
+			pSaturn->dsky.NumberPressed(8);
+			break;
+		case CSM_BUTTON_DSKY1_NUM_9:
+			pSaturn->dsky.NumberPressed(9);
+			break;
+		case CSM_BUTTON_DSKY2_PRO:
+			pSaturn->dsky2.ProgPressed();
+			break;
+		case CSM_BUTTON_DSKY2_KEY_REL:
+			pSaturn->dsky2.KeyRel();
+			break;
+		case CSM_BUTTON_DSKY2_VERB:
+			pSaturn->dsky2.VerbPressed();
+			break;
+		case CSM_BUTTON_DSKY2_NOUN:
+			pSaturn->dsky2.NounPressed();
+			break;
+		case CSM_BUTTON_DSKY2_ENTR:
+			pSaturn->dsky2.EnterPressed();
+			break;
+		case CSM_BUTTON_DSKY2_CLR:
+			pSaturn->dsky2.ClearPressed();
+			break;
+		case CSM_BUTTON_DSKY2_PLUS:
+			pSaturn->dsky2.PlusPressed();
+			break;
+		case CSM_BUTTON_DSKY2_MINUS:
+			pSaturn->dsky2.MinusPressed();
+			break;
+		case CSM_BUTTON_DSKY2_RSET:
+			pSaturn->dsky2.ResetPressed();
+			break;
+		case CSM_BUTTON_DSKY2_NUM_0:
+			pSaturn->dsky2.NumberPressed(0);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_1:
+			pSaturn->dsky2.NumberPressed(1);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_2:
+			pSaturn->dsky2.NumberPressed(2);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_3:
+			pSaturn->dsky2.NumberPressed(3);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_4:
+			pSaturn->dsky2.NumberPressed(4);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_5:
+			pSaturn->dsky2.NumberPressed(5);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_6:
+			pSaturn->dsky2.NumberPressed(6);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_7:
+			pSaturn->dsky2.NumberPressed(7);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_8:
+			pSaturn->dsky2.NumberPressed(8);
+			break;
+		case CSM_BUTTON_DSKY2_NUM_9:
+			pSaturn->dsky2.NumberPressed(9);
+			break;
 		}
-		break;
+	}
+	else if (eventType == VESIM_EVTTYPE_BUTTON_OFF) {
+		switch (inputID) {		
+		case CSM_BUTTON_DSKY1_PRO:
+			pSaturn->dsky.ProgReleased();
+			break;
+		case CSM_BUTTON_DSKY2_PRO:
+			pSaturn->dsky2.ProgReleased();
+			break;
+		}
 	}
 }
 
