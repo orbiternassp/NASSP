@@ -69,14 +69,16 @@ extern "C" {
 
 //extern FILE *PanelsdkLogFile;
 
-#define CSM_AXIS_INPUT_CNT  45
+#define CSM_AXIS_INPUT_CNT  53
 VesimInputDefinition vesim_csm_inputs[CSM_AXIS_INPUT_CNT] = {
-	{ CSM_AXIS_INPUT_RHCR,        "RHC Roll",                      VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_RHCP,        "RHC Pitch",                     VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_RHCY,        "RHC Yaw",                       VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCX,        "THC X",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCY,        "THC Y",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THCZ,        "THC Z",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHC_R,       "RHC Roll",                      VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHC_P,       "RHC Pitch",                     VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_RHC_Y,       "RHC Yaw",                       VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THC_X,       "THC X",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THC_Y,       "THC Y",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_AXIS_INPUT_THC_Z,       "THC Z",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
+	{ CSM_BUTTON_INPUT_THC_CCW,   "THC Move CCW",                  VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_INPUT_THC_CW,    "THC Move CW",                   VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ CSM_BUTTON_ROT_LIN,         "Rotation/Translation toggle",   VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ CSM_BUTTON_DSKY1_PRO,       "Main DSKY PRO",                 VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ CSM_BUTTON_DSKY1_KEY_REL,   "Main DSKY KEY REL",             VESIM_INPUTTYPE_BUTTON,  0, true },
@@ -115,8 +117,13 @@ VesimInputDefinition vesim_csm_inputs[CSM_AXIS_INPUT_CNT] = {
 	{ CSM_BUTTON_DSKY2_NUM_6,     "LEB DSKY Number 6",             VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ CSM_BUTTON_DSKY2_NUM_7,     "LEB DSKY Number 7",             VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ CSM_BUTTON_DSKY2_NUM_8,     "LEB DSKY Number 8",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_9,     "LEB DSKY Number 9",             VESIM_INPUTTYPE_BUTTON,  0, true }
-
+	{ CSM_BUTTON_DSKY2_NUM_9,     "LEB DSKY Number 9",             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DIR_ULL,         "Direct Ullage",                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_THR_ON,          "Thrust On",                     VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DVTA_NORM,       "DV Thrust A Norm",              VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DVTA_OFF,        "DV Thrust A Off",               VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DVTB_NORM,       "DV Thrust B Norm",              VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ CSM_BUTTON_DVTB_OFF,        "DV Thrust B Off",               VESIM_INPUTTYPE_BUTTON,  0, true }
 };
 
 void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata) {
@@ -128,6 +135,12 @@ void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata) {
 				pSaturn->SetAttitudeMode(RCS_LIN);
 			else
 				pSaturn->SetAttitudeMode(RCS_ROT);
+			break;
+		case CSM_BUTTON_INPUT_THC_CCW:
+			pSaturn->MoveTHC(1);
+			break;
+		case CSM_BUTTON_INPUT_THC_CW:
+			pSaturn->MoveTHC(0);
 			break;
 		case CSM_BUTTON_DSKY1_PRO:
 			pSaturn->dsky.ProgPressed();
@@ -243,6 +256,24 @@ void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata) {
 		case CSM_BUTTON_DSKY2_NUM_9:
 			pSaturn->dsky2.NumberPressed(9);
 			break;
+		case CSM_BUTTON_DIR_ULL:
+			pSaturn->DirectUllageButton.VesimSwitchTo(1);
+			break;
+		case CSM_BUTTON_THR_ON:
+			pSaturn->ThrustOnButton.VesimSwitchTo(1);
+			break;
+		case CSM_BUTTON_DVTA_NORM:
+			pSaturn->dVThrust1Switch.VesimSwitchTo(TOGGLESWITCH_UP);
+			break;
+		case CSM_BUTTON_DVTA_OFF:
+			pSaturn->dVThrust1Switch.VesimSwitchTo(TOGGLESWITCH_DOWN);
+			break;
+		case CSM_BUTTON_DVTB_NORM:
+			pSaturn->dVThrust2Switch.VesimSwitchTo(TOGGLESWITCH_UP);
+			break;
+		case CSM_BUTTON_DVTB_OFF:
+			pSaturn->dVThrust2Switch.VesimSwitchTo(TOGGLESWITCH_DOWN);
+			break;
 		}
 	}
 	else if (eventType == VESIM_EVTTYPE_BUTTON_OFF) {
@@ -252,6 +283,12 @@ void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata) {
 			break;
 		case CSM_BUTTON_DSKY2_PRO:
 			pSaturn->dsky2.ProgReleased();
+			break;
+		case CSM_BUTTON_DIR_ULL:
+			pSaturn->DirectUllageButton.VesimSwitchTo(0);
+			break;
+		case CSM_BUTTON_THR_ON:
+			pSaturn->ThrustOnButton.VesimSwitchTo(0);
 			break;
 		}
 	}

@@ -333,6 +333,7 @@ public:
 	virtual void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	virtual bool CheckMouseClick(int event, int mx, int my);
 	virtual bool CheckMouseClickVC(int event, VECTOR3 &p);
+	virtual void VesimSwitchTo(int newState);
 	virtual void DefineVCAnimations(UINT vc_idx) = 0;
 	virtual void SaveState(FILEHANDLE scn);
 	virtual void LoadState(char *line);
@@ -746,7 +747,7 @@ public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
-	
+	void VesimSwitchTo(int newState);
 
 protected:
 	virtual void InitSound(SoundLib *s);
@@ -939,6 +940,7 @@ public:
 	void DrawFlash(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
+	void VesimSwitchTo(int newState);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };

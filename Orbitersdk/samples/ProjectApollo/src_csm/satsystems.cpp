@@ -1681,9 +1681,9 @@ void Saturn::JoystickTimestep()
 		int rhc_rot_pos = 32768; 
 		if (enableVESIM) {
 			if (GetAttitudeMode() == RCS_ROT) {
-				rhc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCR);
-				rhc_y_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCP);
-				rhc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCY);
+				rhc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_R);
+				rhc_y_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_P);
+				rhc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_Y);
 			}
 			//sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_x_pos, rhc_y_pos, rhc_rot_pos, rhc_rzx_id, rhc_rot_id);
 		}
@@ -2127,14 +2127,14 @@ void Saturn::JoystickTimestep()
 		
 		if (enableVESIM) {
 			if (GetAttitudeMode() == RCS_ROT) {
-				thc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_THCY);
-				thc_y_pos = 65535 - vesim.getInputValue(CSM_AXIS_INPUT_THCZ);
-				thc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_THCX);
+				thc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_THC_Y);
+				thc_y_pos = 65535 - vesim.getInputValue(CSM_AXIS_INPUT_THC_Z);
+				thc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_THC_X);
 			}
 			else{
-				thc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCR);
-				thc_y_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCP);
-				thc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHCY);
+				thc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_R);
+				thc_y_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_P);
+				thc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_Y);
 			}
 		}
 		else if (thc_id != -1 && thc_id < js_enabled){
