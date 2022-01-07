@@ -495,6 +495,24 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		IuESE->Timestep(MissionTime, simdt);
 		SIBESE->Timestep();
 	}
+
+	// This code forces the vehicle in a landed state, ensuring any thruster firing will not move the vehicle until liftoff. From here: https://www.orbiter-forum.com/threads/how-to-keep-vessels-landed-for-good-in-orbiter-2016-walkthrough.39702/
+	if (sat) {
+		if (sat->GetStage() < LAUNCH_STAGE_ONE) {
+			OBJHANDLE h_Planet;
+			h_Planet = oapiGetGbodyByName("Earth");
+			VESSELSTATUS2 vs;
+			memset(&vs, 0, sizeof(vs));
+			vs.version = 2;
+			vs.rbody = h_Planet;
+			vs.status = 1;
+			vs.arot.x = 10; // <----- Undocumented feature "magic value" to land on touchdown points !! IMPORTANT !! It has to be 10, no more, no less !
+			vs.surf_lng = -80.5612465 * RAD;
+			vs.surf_lat = 28.5217969 * RAD;
+			vs.surf_hdg = -80.0 * RAD;
+			sat->DefSetStateEx(&vs);
+		}
+	}
 }
 
 void LC34::clbkPostStep (double simt, double simdt, double mjd) {

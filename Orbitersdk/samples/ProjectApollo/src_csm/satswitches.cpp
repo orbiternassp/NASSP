@@ -1939,17 +1939,17 @@ bool SaturnEMSDvSetSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 	int oldPos = position;
 	switch (event) {
 	case PANEL_MOUSE_LBPRESSED:
-		if (p.x < 0.0125)
-			position = 2;
-		else
+		if (p.y < 0.5)
 			position = 1;
+		else
+			position = 3;
 		break;
 
 	case PANEL_MOUSE_RBPRESSED:
-		if (p.x < 0.0125)
-			position = 4;
+		if (p.y < 0.5)
+			position = 2;
 		else
-			position = 3;
+			position = 4;
 		break;
 
 	case PANEL_MOUSE_LBUP:
@@ -2007,7 +2007,14 @@ void SaturnEMSDvSetSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 	}
 }
 
-void SaturnCabinPressureReliefLever::InitGuard(SURFHANDLE surf, SoundLib *soundlib)
+bool SaturnCabinPressureReliefLever::CheckMouseClickVC(int event, VECTOR3 &p) {
+	int mx = (int)(p.x * (x + width));
+	int my = (int)(p.y * (y + height));
+
+	return CheckMouseClick(event, mx, my);
+}
+
+void SaturnGuardedCabinPressureReliefLever::InitGuard(SURFHANDLE surf, SoundLib *soundlib)
 {	
 	guardSurface = surf;
 
@@ -2015,13 +2022,13 @@ void SaturnCabinPressureReliefLever::InitGuard(SURFHANDLE surf, SoundLib *soundl
 		soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
 }
 
-void SaturnCabinPressureReliefLever::DrawSwitch(SURFHANDLE drawSurface)
+void SaturnGuardedCabinPressureReliefLever::DrawSwitch(SURFHANDLE drawSurface)
 {
 	oapiBlt(drawSurface, guardSurface, 0, 0, guardState * 152, 0, 152, 79, SURF_PREDEF_CK);
 	ThumbwheelSwitch::DrawSwitch(drawSurface);
 }
 
-void SaturnCabinPressureReliefLever::DrawSwitchVC(int id, int event, SURFHANDLE surf) {
+void SaturnGuardedCabinPressureReliefLever::DrawSwitchVC(int id, int event, SURFHANDLE surf) {
 
 	ThumbwheelSwitch::DrawSwitchVC(id, event, surf);
 
@@ -2032,7 +2039,7 @@ void SaturnCabinPressureReliefLever::DrawSwitchVC(int id, int event, SURFHANDLE 
 	}
 }
 
-bool SaturnCabinPressureReliefLever::CheckMouseClick(int event, int mx, int my)
+bool SaturnGuardedCabinPressureReliefLever::CheckMouseClick(int event, int mx, int my)
 {
 	if (event & PANEL_MOUSE_RBDOWN) {
 		if (mx <= 152 &&  my <= 79) {			
@@ -2058,14 +2065,7 @@ bool SaturnCabinPressureReliefLever::CheckMouseClick(int event, int mx, int my)
 	}
 }
 
-bool SaturnCabinPressureReliefLever::CheckMouseClickVC(int event, VECTOR3 &p) {
-	int mx = (int)(p.x * (x + width));
-	int my = (int)(p.y * (y + height));
-
-	return CheckMouseClick(event, mx, my);
-}
-
-bool SaturnCabinPressureReliefLever::SwitchTo(int newState)
+bool SaturnGuardedCabinPressureReliefLever::SwitchTo(int newState)
 {
 	if (ThumbwheelSwitch::SwitchTo(newState))
 	{
@@ -2080,7 +2080,7 @@ bool SaturnCabinPressureReliefLever::SwitchTo(int newState)
 	return false;
 }
 
-void SaturnCabinPressureReliefLever::SetState(int value)
+void SaturnGuardedCabinPressureReliefLever::SetState(int value)
 {
 	if (ThumbwheelSwitch::SwitchTo(value))
 	{
@@ -2091,7 +2091,7 @@ void SaturnCabinPressureReliefLever::SetState(int value)
 	}
 }
 
-void SaturnCabinPressureReliefLever::Guard()
+void SaturnGuardedCabinPressureReliefLever::Guard()
 {
 	if (guardState) {
 		guardState = 0;
@@ -2103,7 +2103,7 @@ void SaturnCabinPressureReliefLever::Guard()
 	}
 }
 
-void SaturnCabinPressureReliefLever::SaveState(FILEHANDLE scn)
+void SaturnGuardedCabinPressureReliefLever::SaveState(FILEHANDLE scn)
 {
 	char buffer[100];
 
@@ -2111,7 +2111,7 @@ void SaturnCabinPressureReliefLever::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_string(scn, name, buffer);
 }
 
-void SaturnCabinPressureReliefLever::LoadState(char *line)
+void SaturnGuardedCabinPressureReliefLever::LoadState(char *line)
 {
 	char buffer[100];
 	int st, gst;
@@ -2123,7 +2123,7 @@ void SaturnCabinPressureReliefLever::LoadState(char *line)
 	}
 }
 
-void SaturnCabinPressureReliefLever::DefineVCAnimations(UINT vc_idx)
+void SaturnGuardedCabinPressureReliefLever::DefineVCAnimations(UINT vc_idx)
 {
 	ThumbwheelSwitch::DefineVCAnimations(vc_idx);
 
@@ -2135,7 +2135,6 @@ void SaturnCabinPressureReliefLever::DefineVCAnimations(UINT vc_idx)
 	ach_guardAnim = OurVessel->AddAnimationComponent(guardAnim, 0.0f, 1.0f, &mgt_guardAnim);
 	OurVessel->SetAnimation(guardAnim, 1.0);
 }
-
 
 void OpticsHandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s)
 {
