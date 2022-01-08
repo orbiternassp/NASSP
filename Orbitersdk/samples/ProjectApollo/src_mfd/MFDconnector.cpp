@@ -322,3 +322,25 @@ bool MFDConnector::RetrieveChecklist(ChecklistContainer *input)
 		return cm.val2.bValue;
 	return false;
 }
+
+bool MFDConnector::GetAutoExecute()
+{
+	ConnectorMessage cm;
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_GET_CHECKLIST_AUTOEXECUTE;
+
+	if (SendMessage(cm))
+		return cm.val1.bValue;
+
+	return false;
+}
+
+void MFDConnector::SetAutoExecute(bool autoExecute)
+{
+	ConnectorMessage cm;
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE;
+	cm.val1.bValue = autoExecute;
+
+	SendMessage(cm);
+}

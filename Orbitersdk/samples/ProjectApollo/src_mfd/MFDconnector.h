@@ -158,6 +158,18 @@ public:
 
 	bool GetFlashing(char *n);
 
+	///
+	/// Get automatic checklist execution state
+	///
+	/// \return autoExecute status
+	bool GetAutoExecute();
+
+	///
+	/// Set automatic checklist execution sate
+	///
+	/// \paran bool new autoexec state
+	void SetAutoExecute(bool autoExec);
+
 protected:
 };
 
