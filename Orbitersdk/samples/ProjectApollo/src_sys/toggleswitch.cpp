@@ -417,6 +417,14 @@ bool TwoPositionSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 	return DoCheckMouseClickVC(event, p);
 }
 
+void TwoPositionSwitch::VesimSwitchTo(int newState)
+{
+	if (newState != state) {
+		SwitchTo(newState, true);
+		Sclick.play();
+	}
+}
+
 void TwoPositionSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
 {
@@ -1069,6 +1077,13 @@ bool PushSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 		SwitchTo(0, true);
 	}
 	return true;
+}
+
+void PushSwitch::VesimSwitchTo(int newState) {
+	if (newState != state) {
+		SwitchTo(newState, true);
+		if (newState) Sclick.play();
+	}
 }
 
 void PushSwitch::InitSound(SoundLib *s) {
@@ -1919,6 +1934,12 @@ bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 		}
 	}
 	return false;
+}
+
+void GuardedToggleSwitch::VesimSwitchTo(int newState) {
+	if (guardState) {
+		return ToggleSwitch::VesimSwitchTo(newState);
+	}
 }
 
 void GuardedToggleSwitch::SaveState(FILEHANDLE scn) {

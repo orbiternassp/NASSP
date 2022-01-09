@@ -134,7 +134,7 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 	if (vessel) delete static_cast<LEM *> (vessel);
 }
 
-#define LM_AXIS_INPUT_CNT  22
+#define LM_AXIS_INPUT_CNT  39
 VesimInputDefinition vesim_lm_inputs[LM_AXIS_INPUT_CNT] = {
 	{ LM_AXIS_INPUT_ACAR,          "ACA Roll",                                 VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
 	{ LM_AXIS_INPUT_ACAP,          "ACA Pitch",                                VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
@@ -152,7 +152,24 @@ VesimInputDefinition vesim_lm_inputs[LM_AXIS_INPUT_CNT] = {
 	{ LM_BUTTON_ABORT_STAGE,       "Abort Stage toggle",                       VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_ABORT_STAGE_GRD,   "Abort Stage Guard toggle",                 VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_DSKY_PRO,          "DSKY PRO",                                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_ENTER,        "DSKY ENTER",                               VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_KEY_REL,      "DSKY KEY REL",                             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_VERB,         "DSKY VERB",                                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NOUN,         "DSKY NOUN",                                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_ENTR,         "DSKY ENTR",                                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_CLR,          "DSKY CLR",                                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_PLUS,         "DSKY +",                                   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_MINUS,        "DSKY -",                                   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_RSET,         "DSKY RSET",                                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_0,        "DSKY Number 0",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_1,        "DSKY Number 1",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_2,        "DSKY Number 2",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_3,        "DSKY Number 3",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_4,        "DSKY Number 4",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_5,        "DSKY Number 5",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_6,        "DSKY Number 6",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_7,        "DSKY Number 7",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_8,        "DSKY Number 8",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_9,        "DSKY Number 9",                            VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_MDCTRL_PGNS,       "Mode Control PGNS Auto/Att Hold toggle",   VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_MDCTRL_PGNS_AUT,   "Mode Control PGNS Auto",                   VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_MDCTRL_PGNS_ATH,   "Mode Control PGNS Att Hold",               VESIM_INPUTTYPE_BUTTON,  0, true },
@@ -221,8 +238,59 @@ void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
 		case LM_BUTTON_DSKY_PRO:
 			pLM->dsky.ProgPressed();
 			break;
-		case LM_BUTTON_DSKY_ENTER:
+		case LM_BUTTON_DSKY_KEY_REL:
+			pLM->dsky.KeyRel();
+			break;
+		case LM_BUTTON_DSKY_VERB:
+			pLM->dsky.VerbPressed();
+			break;
+		case LM_BUTTON_DSKY_NOUN:
+			pLM->dsky.NounPressed();
+			break;
+		case LM_BUTTON_DSKY_ENTR:
 			pLM->dsky.EnterPressed();
+			break;
+		case LM_BUTTON_DSKY_CLR:
+			pLM->dsky.ClearPressed();
+			break;
+		case LM_BUTTON_DSKY_PLUS:
+			pLM->dsky.PlusPressed();
+			break;
+		case LM_BUTTON_DSKY_MINUS:
+			pLM->dsky.MinusPressed();
+			break;
+		case LM_BUTTON_DSKY_RSET:
+			pLM->dsky.ResetPressed();
+			break;
+		case LM_BUTTON_DSKY_NUM_0:
+			pLM->dsky.NumberPressed(0);
+			break;
+		case LM_BUTTON_DSKY_NUM_1:
+			pLM->dsky.NumberPressed(1);
+			break;
+		case LM_BUTTON_DSKY_NUM_2:
+			pLM->dsky.NumberPressed(2);
+			break;
+		case LM_BUTTON_DSKY_NUM_3:
+			pLM->dsky.NumberPressed(3);
+			break;
+		case LM_BUTTON_DSKY_NUM_4:
+			pLM->dsky.NumberPressed(4);
+			break;
+		case LM_BUTTON_DSKY_NUM_5:
+			pLM->dsky.NumberPressed(5);
+			break;
+		case LM_BUTTON_DSKY_NUM_6:
+			pLM->dsky.NumberPressed(6);
+			break;
+		case LM_BUTTON_DSKY_NUM_7:
+			pLM->dsky.NumberPressed(7);
+			break;
+		case LM_BUTTON_DSKY_NUM_8:
+			pLM->dsky.NumberPressed(8);
+			break;
+		case LM_BUTTON_DSKY_NUM_9:
+			pLM->dsky.NumberPressed(9);
 			break;
 		case LM_BUTTON_MDCTRL_PGNS:
 			//Mode Control PGNS - cycle between Auto & Att Hold
