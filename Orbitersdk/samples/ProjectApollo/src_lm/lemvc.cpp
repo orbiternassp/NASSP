@@ -1296,7 +1296,7 @@ void LEM::RegisterActiveAreas()
 	EDDesOxidVentTB.InitVC(srf[SRF_INDICATORVC]);
 	EDLGTB.InitVC(srf[SRF_INDICATORVC]);
 
-	TapeRecorderTB.InitVC(srf[SRF_INDICATORVC]);
+	//TapeRecorderTB.InitVC(srf[SRF_INDICATORVC]);
 
 	DSCBattery1TB.InitVC(srf[SRF_INDICATORVC]);
 	DSCBattery2TB.InitVC(srf[SRF_INDICATORVC]);
@@ -2675,6 +2675,8 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&Panel12SignalStrengthMeter);
 	Panel12SignalStrengthMeter.SetReference(P12_NEEDLE_POS[2], P12_ROT_AXIS);
 	Panel12SignalStrengthMeter.DefineMeshGroup(VC_GRP_Needle_P12_03);
+
+	//MainPanelVC.AddSwitch(&TapeRecorderTB, AID_VC_RECORDER_TALKBACK);
 
 	//Panel 14
 
