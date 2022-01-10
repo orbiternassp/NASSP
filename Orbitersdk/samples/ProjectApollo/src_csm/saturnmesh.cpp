@@ -655,7 +655,7 @@ void Saturn::SetupEVA()
 */
 
 
-void Saturn::SetCSMStage ()
+void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 {
 	ClearMeshes();
     ClearThrusterDefinitions();
@@ -670,7 +670,7 @@ void Saturn::SetCSMStage ()
 
 	// Because all meshes are getting reloaded, we have to shift CG back to the center of the mesh, and then re-apply the offset CG on the next timestep
 	// Only necessary because of LET jettison function reloading all meshes.
-	ShiftCG(-currentCoG);
+	ShiftCG(-currentCoG + cg_ofs);
 	currentCoG = _V(0, 0, 0);
 	LastFuelWeight = numeric_limits<double>::infinity();
 

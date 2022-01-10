@@ -4308,7 +4308,7 @@ void Saturn::SetGenericStageState()
 {
 	switch(stage) {
 	case CSM_LEM_STAGE:
-		SetCSMStage();
+		SetCSMStage(_V(0, 0, 0));
 		break;
 
 	case CM_STAGE:
@@ -4657,7 +4657,7 @@ void Saturn::StageSix(double simt)
 			// Update the mesh.
 			//
 
-			SetCSMStage();
+			SetCSMStage(_V(0, 0, 0));
 
 			//
 			// Blow off Panel 4.

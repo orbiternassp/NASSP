@@ -813,7 +813,7 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CSM_LEM_STAGE:
-		SetCSMStage();
+		SetCSMStage(_V(0, 0, 0));
 		break;
 
 	case CM_STAGE:
