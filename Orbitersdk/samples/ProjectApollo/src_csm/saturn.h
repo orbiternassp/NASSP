@@ -4239,7 +4239,7 @@ protected:
 	void SetChuteStage3();
 	void SetChuteStage4();
 	void SetSplashStage();
-	void SetCSMStage();
+	void SetCSMStage(VECTOR3 cg_ofs);
 	void CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage);
 	void SetReentryStage(VECTOR3 cg_ofs);
 	void SetReentryMeshes();

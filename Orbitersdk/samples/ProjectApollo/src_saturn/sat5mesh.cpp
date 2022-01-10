@@ -1203,6 +1203,18 @@ void SaturnV::SeparateStage (int new_stage)
 			stage1->SetState(S1Config);
 		}
 
+		if (SaturnType == SAT_INT20)
+		{
+			//
+			// What's the correct value for the INT20?
+			//
+			ShiftCG(_V(0, 0, STG0O + STG2O - 24.5));
+		}
+		else
+		{
+			ShiftCG(_V(0, 0, STG0O + STG1O));
+		}
+
 		ConfigureStageMeshes (new_stage);
 		ConfigureStageEngines (new_stage);
 
@@ -1219,18 +1231,6 @@ void SaturnV::SeparateStage (int new_stage)
 		{
 			oapiSetFocusObject(hstg1);
 			oapiCameraAttach(hstg1, CAM_COCKPIT);
-		}
-
-		if (SaturnType == SAT_INT20)
-		{
-			//
-			// What's the correct value for the INT20?
-			//
-			ShiftCentreOfMass(_V(0, 0, STG0O + STG2O - 24.5));
-		}
-		else
-		{
-			ShiftCentreOfMass(_V(0, 0, STG0O + STG1O));
 		}
 	}
 
@@ -1328,6 +1328,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SII *stage2 = static_cast<SII *> (oapiGetVesselInterface(hstg2));
 		stage2->SetState(S2Config);
 
+		ShiftCG(_V(0, 0, STG2O - STG1O));
 		ConfigureStageMeshes(new_stage);
 		ConfigureStageEngines(new_stage);
 
@@ -1339,8 +1340,6 @@ void SaturnV::SeparateStage (int new_stage)
 		{
 			FireSeperationThrusters(th_sep);
 		}
-
-		ShiftCentreOfMass(_V(0, 0, STG2O - STG1O));
 	}
 
 	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)
@@ -1364,7 +1363,7 @@ void SaturnV::SeparateStage (int new_stage)
 		if (ph_rcs3) proptemp[5] = GetPropellantMass(ph_rcs3);
 		ClearPropellants();
 
-		SetCSMStage();
+		SetCSMStage(_V(0, 0, 13.15));
 
 		// Restore RCS Propellant
 		if (proptemp[0] != -1) SetPropellantMass(ph_rcs_cm_1, proptemp[0]);
@@ -1373,8 +1372,6 @@ void SaturnV::SeparateStage (int new_stage)
 		if (proptemp[3] != -1) SetPropellantMass(ph_rcs1, proptemp[3]);
 		if (proptemp[4] != -1) SetPropellantMass(ph_rcs2, proptemp[4]);
 		if (proptemp[5] != -1) SetPropellantMass(ph_rcs3, proptemp[5]);
-
-     	ShiftCentreOfMass(_V(0, 0, 13.15));
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1484,13 +1481,13 @@ void SaturnV::SeparateStage (int new_stage)
 			{
 				vs3.vrot.x = 102.5 + 21;
 				DefSetStateEx(&vs3);
-				SetCSMStage();
+				SetCSMStage(_V(0, 0, STG0O + 21.15));
 			}
 			else
 			{
 				vs3.vrot.x = 102.5 + 23.25;
 				DefSetStateEx(&vs3);
-				SetReentryStage(_V(0, 0, 0));
+				SetReentryStage(_V(0, 0, STG0O + 23.25));
 			}
 		}
 		else
@@ -1508,8 +1505,7 @@ void SaturnV::SeparateStage (int new_stage)
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
-				SetCSMStage();
-				ShiftCentreOfMass(_V(0, 0, STG0O + 21));
+				SetCSMStage(_V(0, 0, STG0O + 21.15));
 			}
 			else
 			{
@@ -1549,8 +1545,7 @@ void SaturnV::SeparateStage (int new_stage)
 
 		if (new_stage == CSM_LEM_STAGE)
 		{
-			SetCSMStage();
-			ShiftCentreOfMass(_V(0, 0, -STG1O + 21));
+			SetCSMStage(_V(0, 0, -STG1O + 21.15));
 		}
 		else
 		{
@@ -1576,7 +1571,7 @@ void SaturnV::SeparateStage (int new_stage)
 		secs.SMJCB->GetState(stb);
 		stage3->SetState(LowRes, VehicleNo, MainBusAController.IsSMBusPowered(), MainBusBController.IsSMBusPowered(), &sta, &stb);
 		
-		SetReentryStage(_V(0, 0, 13.15 + 2.0499));
+		SetReentryStage(_V(0, 0, 13.15 + 2.1));
 	}
 }
 
