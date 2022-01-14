@@ -35,6 +35,7 @@ _$*
 *.ln
 *.hgtags
 core
+*.core
 
 # Project ignores (converted from .cvsignore files)
 !/Config
