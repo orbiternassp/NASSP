@@ -765,9 +765,9 @@ void Saturn1b::SeparateStage (int new_stage)
 			stage1->SetState(S1Config);
 		}
 
+		ShiftCG(_V(0, 0, 19.95));
 		SetSecondStage ();
 		SetSecondStageEngines(STG1OF);
-		ShiftCentreOfMass(_V(0, 0, 19.95));
 	}
 
 	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)
@@ -791,7 +791,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		if (ph_rcs3) proptemp[5] = GetPropellantMass(ph_rcs3);
 		ClearPropellants();
 
-		SetCSMStage();
+		SetCSMStage(_V(0, 0, 13.1));
 
 		// Restore RCS Propellant
 		if (proptemp[0] != -1) SetPropellantMass(ph_rcs_cm_1, proptemp[0]);
@@ -800,8 +800,6 @@ void Saturn1b::SeparateStage (int new_stage)
 		if (proptemp[3] != -1) SetPropellantMass(ph_rcs1, proptemp[3]);
 		if (proptemp[4] != -1) SetPropellantMass(ph_rcs2, proptemp[4]);
 		if (proptemp[5] != -1) SetPropellantMass(ph_rcs3, proptemp[5]);
-
-		ShiftCentreOfMass(_V(0, 0, 13.1));
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -896,13 +894,13 @@ void Saturn1b::SeparateStage (int new_stage)
 			{
 				vs3.vrot.x = 39.5 + 28.4;
 				DefSetStateEx(&vs3);
-				SetCSMStage();
+				SetCSMStage(_V(0, 0, 33.05));
 			}
 			else
 			{
 				vs3.vrot.x = 39.5 + 31;
 				DefSetStateEx(&vs3);
-				SetReentryStage(_V(0,0,0));
+				SetReentryStage(_V(0, 0, 35.15));
 			}
 		}
 		else
@@ -918,8 +916,7 @@ void Saturn1b::SeparateStage (int new_stage)
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
-				SetCSMStage();
-				ShiftCentreOfMass(_V(0, 0, 32.55));
+				SetCSMStage(_V(0, 0, 33.05));
 			}
 			else
 			{
