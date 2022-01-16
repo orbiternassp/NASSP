@@ -1,5 +1,5 @@
 /*
-  Copyright 2005 Ronald S. Burkey <info@sandroid.org>
+  Copyright 2005,2017,2022 Ronald S. Burkey <info@sandroid.org>
   
   This file is part of yaAGC.
 
@@ -55,6 +55,14 @@
 		2017-10-11 MAS	Changed a "1" to "1LL" in LLS mask calculations.
 				This fixes overflow being incorrectly set for
 				certain cases of LLS.
+		2022-01-15 RSB  A reader known as "spacex15" has pointed out
+				the treatment of overflow in the MPR opcode
+				could backfire, and indeed had already presented
+				problems in NASSP radar updates.  There's no
+				way to guarantee that their suggested fix is
+				correct, absent electrical schematics, but it
+				seems reasonable enough.  I've incorporated it
+				and marked it with the notation "2022-02-15 RSB".
   
   The scans of the original AGS/AEA technical documentation can be found
   at the website listed above.  Also at that site you can find the source code
@@ -922,19 +930,25 @@ aea_engine (ags_t * State)
       if (i == 0400000)		// Special case.
         State->Quotient = 0;	// Accumulator unchanged.
       else
-        {
-	  lli = SignExtend (State->Accumulator);
-	  lli *= SignExtend (i);
-	  PutLongAccumulator (State, lli);
-	  // I don't know if this formula for rounding makes any 
-	  // sense for negative values.  I'm just slavishly 
-	  // implementing it as written.
-	  if (OpCode != 006)		// Don't round for MPY
-	    {
-	      if (State->Quotient & 0200000)
-		State->Accumulator++;
+      {
+		lli = SignExtend (State->Accumulator);
+		lli *= SignExtend (i);
+		PutLongAccumulator (State, lli);
+		// I don't know if this formula for rounding makes any 
+		// sense for negative values.  I'm just slavishly 
+		 // implementing it as written.
+		if (OpCode != 006)		// Don't round for MPY
+		{
+			if (State->Quotient & 0200000)
+			{
+			  // 2022-01-15 RSB.  Was just "State->Accumulator++;"
+			  if (State->Accumulator != 0777777)
+				  State->Accumulator++;
+			  else
+				  State->Accumulator = 0;
+			}
 	    }
-        }
+      }
       if (OpCode == 036)		// Don't zero unless MPZ
         NewValueForY = 0;
       break;
