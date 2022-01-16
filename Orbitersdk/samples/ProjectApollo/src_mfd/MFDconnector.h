@@ -167,7 +167,7 @@ public:
 	///
 	/// Set automatic checklist execution sate
 	///
-	/// \paran bool new autoexec state
+	/// \param bool new autoexec state
 	void SetAutoExecute(bool autoExec);
 
 protected:
