@@ -1572,6 +1572,7 @@ protected:
 #define LMVIEW_OVHDHATCH 8
 #define LMVIEW_ECS		 9
 #define LMVIEW_ECS2		 10
+#define LMVIEW_RDVZWIN   11
 
 #define VIEWANGLE 30
 

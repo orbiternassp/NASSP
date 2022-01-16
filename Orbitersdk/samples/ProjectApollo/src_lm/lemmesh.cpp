@@ -626,8 +626,10 @@ void LEM::SetCOAS() {
 	if (!vcmesh)
 		return;
 
-	static UINT meshgroup_COAS[3] = { VC_GRP_COAS_1, VC_GRP_COAS_2, VC_GRP_zzzCOAS_Glass };
-	static UINT meshgroup_Reticle = VC_GRP_COAS_Reticle;
+	static UINT meshgroup_COASfwd[3] = { VC_GRP_COAS_1, VC_GRP_COAS_2, VC_GRP_zzzCOAS_Glass };
+	static UINT meshgroup_COASovhd[3] = { VC_GRP_COAS_1ovhd, VC_GRP_COAS_2ovhd, VC_GRP_zzzCOAS_Glassovhd };
+	static UINT meshgroup_ReticleFwd = VC_GRP_COAS_Reticle;
+	static UINT meshgroup_ReticleOvhd = VC_GRP_COAS_Reticleovhd;
 
 	GROUPEDITSPEC ges_on;
 	ges_on.flags = (GRPEDIT_SETUSERFLAG);
@@ -639,18 +641,37 @@ void LEM::SetCOAS() {
 	// FWD COAS
 	if (LEMCoas2Enabled) {
 		for (int i = 0; i < 3; i++) {
-			oapiEditMeshGroup(vcmesh, meshgroup_COAS[i], &ges_on);
+			oapiEditMeshGroup(vcmesh, meshgroup_COASfwd[i], &ges_on);
 		}
 		if (InVC && oapiCameraInternal() && viewpos == LMVIEW_CDR && COASreticlevisible == 1) {
-			oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_on);
+			oapiEditMeshGroup(vcmesh, meshgroup_ReticleFwd, &ges_on);
 		} else {
-			oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_off);
+			oapiEditMeshGroup(vcmesh, meshgroup_ReticleFwd, &ges_off);
 		}
 	} else {
 		for (int i = 0; i < 3; i++) {
-			oapiEditMeshGroup(vcmesh, meshgroup_COAS[i], &ges_off);
+			oapiEditMeshGroup(vcmesh, meshgroup_COASfwd[i], &ges_off);
 		}
-		oapiEditMeshGroup(vcmesh, meshgroup_Reticle, &ges_off);
+		oapiEditMeshGroup(vcmesh, meshgroup_ReticleFwd, &ges_off);
+	}
+
+	// OVHD COAS
+	if (LEMCoas1Enabled) {
+		for (int i = 0; i < 3; i++) {
+			oapiEditMeshGroup(vcmesh, meshgroup_COASovhd[i], &ges_on);
+		}
+		if (InVC && oapiCameraInternal() && viewpos == LMVIEW_RDVZWIN && COASreticlevisible == 2) {
+			oapiEditMeshGroup(vcmesh, meshgroup_ReticleOvhd, &ges_on);
+		}
+		else {
+			oapiEditMeshGroup(vcmesh, meshgroup_ReticleOvhd, &ges_off);
+		}
+	}
+	else {
+		for (int i = 0; i < 3; i++) {
+			oapiEditMeshGroup(vcmesh, meshgroup_COASovhd[i], &ges_off);
+		}
+		oapiEditMeshGroup(vcmesh, meshgroup_ReticleOvhd, &ges_off);
 	}
 }
 

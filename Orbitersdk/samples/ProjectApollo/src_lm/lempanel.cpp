@@ -759,7 +759,7 @@ void LEM::InitSwitches() {
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 
 	LEMCoas1Enabled = false;
-	LEMCoas2Enabled = false;
+	LEMCoas2Enabled = true;
 	ordealEnabled = false;
 
 	RRGyroSelSwitch.Register(PSH,"RRGyroSelSwitch",THREEPOSSWITCH_UP);
