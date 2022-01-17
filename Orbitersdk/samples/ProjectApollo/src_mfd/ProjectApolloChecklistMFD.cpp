@@ -154,9 +154,9 @@ ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {
 	// 2nd was "MET", disabled for now, MET is shown by default
-	static char *labelCHKLST[12] = {"NAV","","INFO","","FLSH","AUTO","PgUP","UP","","","DN","PgDN"};
-	static char *labelCHKLSTActiveItem[12] = {"NAV","","INFO","","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
-	static char *labelCHKLSTNAV[12] = {"BCK","","INFO","","FLSH","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
+	static char *labelCHKLST[12] = {"NAV","","INFO","EXEC","FLSH","AUTO","PgUP","UP","","","DN","PgDN"};
+	static char *labelCHKLSTActiveItem[12] = {"NAV","","INFO","EXEC","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
+	static char *labelCHKLSTNAV[12] = {"BCK","","INFO","EXEC","FLSH","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
 	static char *labelCHKLSTREV[12] = {"NAV","","INFO","","","AUTO","PgUP","UP","","","DN","PgDN"};
 	static char *labelCHKLSTINFO[12] = {"BCK","","","","","","","","","","",""};
 
@@ -186,7 +186,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		// {"Toggle Display","Mission Elapsed Time",'M'},
 		{0,0,0},
 		{"More Information","About This Step",'N'},
-		{0,0,0},
+		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
 		{"Toggle AutoComplete",0,'A'},
 		{"Scroll Up","One Page",'<'},
@@ -201,7 +201,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		// {"Toggle Display","Mission Elapsed Time",'M'},
 		{0,0,0},
 		{"More Information","About This Step",'N'},
-		{0,0,0},
+		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
 		{"Toggle AutoComplete",0,'A'},
 		{"Scroll Up","One Page",'<'},
@@ -216,7 +216,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		// {"Toggle Display","Mission Elapsed Time",'M'},
 		{0,0,0},
 		{"More Information","About This Checklist",'N'},
-		{0,0,0},
+		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
 		{"Toggle AutoComplete",0,'A'},
 		{"Scroll Up","One Page",'<'},
@@ -286,8 +286,8 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 	
-	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
-	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
+	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
+	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,0,0,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTINFO[12] = { OAPI_KEY_B,OAPI_KEY_M,0,0,0,0,0,0,0,0,0,0};
 
@@ -333,6 +333,12 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 
 			InvalidateDisplay();
 			InvalidateButtons();
+			return true;
+		}
+		if (key == OAPI_KEY_E)
+		{
+			conn.SetAutoExecute(!conn.GetAutoExecute());
+			InvalidateDisplay();
 			return true;
 		}
 		if (key == OAPI_KEY_A)
@@ -447,6 +453,12 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		else if (key == OAPI_KEY_N)
 		{
+			return true;
+		}
+		if (key == OAPI_KEY_E)
+		{
+			conn.SetAutoExecute(!conn.GetAutoExecute());
+			InvalidateDisplay();
 			return true;
 		}
 		if (key == OAPI_KEY_A)
@@ -592,6 +604,12 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 
 			InvalidateDisplay();
 			InvalidateButtons();
+			return true;
+		}
+		if (key == OAPI_KEY_E)
+		{
+			conn.SetAutoExecute(!conn.GetAutoExecute());
+			InvalidateDisplay();
 			return true;
 		}
 		if (key == OAPI_KEY_A)
@@ -802,29 +820,17 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		MoveToEx (hDC, (int) (width * 0.02), (int) (height * 0.94), 0);
 		LineTo (hDC, (int) (width * 0.98), (int) (height * 0.94));
 
-		//display AutoToggle selection box.
-		hBr = CreateSolidBrush( RGB(0, 150, 0));
-		if (!conn.ChecklistAutocomplete()) {
-			SetRect(&ShadedBox,(int) (width * 0.34),(int) (height * 0.955),(int) (width * 0.47),(int) (height*.999));
-		} else {
-			SetRect(&ShadedBox,(int) (width * 0.24),(int) (height * 0.955),(int) (width * 0.34),(int) (height*.999));
-		}
-		FillRect(hDC, &ShadedBox, hBr);
-		SetTextColor (hDC, RGB(0, 255, 0));
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * .05), (int) (height * .95), " AUTO:  ON  OFF", 15);
-
-		//display flashing selection box. 
-		if (!conn.GetChecklistFlashing()) {
-			SetRect(&ShadedBox,(int) (width * 0.82),(int) (height * 0.955),(int) (width * 0.95),(int) (height*.999));
-		} else {
-			SetRect(&ShadedBox,(int) (width * 0.72),(int) (height * 0.955),(int) (width * 0.82),(int) (height*.999));
-		}
-		FillRect(hDC, &ShadedBox, hBr);
-		DeleteObject(hBr);
-		SetTextColor (hDC, RGB(0, 255, 0));
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * .5), (int) (height * .95), " FLASH:  ON  OFF", 16);
+		// Display bottom flag row
+		bool autocomplete = conn.ChecklistAutocomplete();
+		bool autoexec = conn.GetAutoExecute();
+		bool flash = conn.GetChecklistFlashing();
+		SetTextColor(hDC, RGB(0, 255, 0));
+		SetTextAlign(hDC, TA_LEFT);
+		TextOut(hDC, (int)(width * 0.05), (int)(height * .95), autocomplete ? "AUTO: ON " : "AUTO: OFF", strlen("AUTO: OFF"));
+		SetTextAlign(hDC, TA_CENTER);
+		TextOut(hDC, width / 2, (int)(height * .95), autoexec ? "EXEC: ON " : "EXEC: OFF", strlen("EXEC: OFF"));
+		SetTextAlign(hDC, TA_RIGHT);
+		TextOut(hDC, width - (int)(width * 0.05), (int)(height * .95), flash ? "FLASH: ON " : "FLASH: OFF", strlen("FLASH: OFF"));
 
 		//Retrieve 15 visible checklist steps  (all are displayed on two lines)
 		//Lines 1,2,3,4,5,6,7,8,9 (index 0/1,2/3,4/5,6/7,8/9,10/11,12/13,14/15,16/17)

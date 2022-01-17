@@ -5341,6 +5341,12 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	case MFD_PANEL_CHECKLIST_FLASHING:
 		checklist.setFlashing(m.val1.bValue);
 		return true;
+	case MFD_PANEL_GET_CHECKLIST_AUTOEXECUTE:
+		m.val1.bValue = checklist.autoExecute();
+		return true;
+	case MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE:
+		checklist.autoExecute(m.val1.bValue);
+		return true;
 	}
 
 	return false;
