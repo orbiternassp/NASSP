@@ -157,6 +157,8 @@ public:
 	bool IsPowered();
 	bool IsACPowered();
 	bool GetTestModeFailure();
+	bool GetEngineOnSignal();
+	bool GetEngineOffSignal();
 	LEM *lem;					// Pointer at LEM
 	h_HeatLoad *aeaHeat;
 

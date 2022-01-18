@@ -457,6 +457,7 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	AGSLateralVelocity = 0.0;
 	Altitude = 0.0;
 	AltitudeRate = 0.0;
+	powered = false;
 
 	//
 	// Virtual AGS.
@@ -931,6 +932,24 @@ bool LEM_AEA::GetTestModeFailure()
 	AGSChannelValue40 agsval40;
 	agsval40 = OutputPorts[IO_ODISCRETES];
 	return ~agsval40[AGSTestModeFailure];
+}
+
+bool LEM_AEA::GetEngineOnSignal()
+{
+	if (!IsPowered())
+		return false;
+	AGSChannelValue40 agsval40;
+	agsval40 = OutputPorts[IO_ODISCRETES];
+	return ~agsval40[AGSEngineOn];
+}
+
+bool LEM_AEA::GetEngineOffSignal()
+{
+	if (!IsPowered())
+		return false;
+	AGSChannelValue40 agsval40;
+	agsval40 = OutputPorts[IO_ODISCRETES];
+	return ~agsval40[AGSEngineOff];
 }
 
 void LEM_AEA::InitVirtualAGS(char *binfile)

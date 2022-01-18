@@ -2508,14 +2508,12 @@ void SCCA2::Timestep(double simdt)
 	}
 
 	ChannelValue val11;
-	AGSChannelValue40 agsval40;
 
 	val11 = lem->agc.GetOutputChannel(011);
-	agsval40 = lem->aea.GetOutputChannel(IO_ODISCRETES);
 
 	if (K8)
 	{
-		AutoEngOn = ~agsval40[AGSEngineOn];
+		AutoEngOn = lem->aea.GetEngineOnSignal();
 	}
 	else
 	{
@@ -2526,7 +2524,7 @@ void SCCA2::Timestep(double simdt)
 	{
 		if (lem->ModeControlAGSSwitch.IsUp())
 		{
-			AutoEngOff = ~agsval40[AGSEngineOff];
+			AutoEngOff = lem->aea.GetEngineOffSignal();
 		}
 		else
 		{
