@@ -447,6 +447,8 @@ void TwoPositionSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 
 void TwoPositionSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
+	if (!bHasAnimations) return;
+
 	if (IsUp()) {
 		OurVessel->SetAnimation(anim_switch, 1.0);
 	}
@@ -685,6 +687,8 @@ void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 
 void ThreePosSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
+	if (!bHasAnimations) return;
+
 	if (IsUp()) {
 		OurVessel->SetAnimation(anim_switch, 1.0);
 	}
@@ -2711,6 +2715,8 @@ void RotationalSwitch::DefineVCAnimations(UINT vc_idx)
 
 void RotationalSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface)
 {
+	if (!bHasAnimations) return;
+
 	double state = 0;
 
 	if (position) state = position->GetAngle();
