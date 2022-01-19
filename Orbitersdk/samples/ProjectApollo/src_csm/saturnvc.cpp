@@ -1446,6 +1446,10 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		return true;
 	}
 
+	case AID_VC_FWDHATCH_HANDLE:
+		ForwardHatch.Toggle();
+		return true;
+
 	case AID_VC_COAS:
 		if (coasEnabled) {
 			coasEnabled = false;
