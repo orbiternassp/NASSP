@@ -1346,24 +1346,8 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			OverheadHatch.Toggle();
 			return true;
 
-		case AID_VC_OVERHEADHATCHHANDLE:
-			UpperHatchHandle.CheckMouseClickVC(event, p);
-			return true;
-
-		case AID_VC_OVERHEADHATCHRELIEFVALVE:
-			UpperHatchReliefValve.CheckMouseClickVC(event, p);
-			return true;
-
 		case AID_VC_FORWARDHATCH:
 			ForwardHatch.Toggle();
-			return true;
-
-		case AID_VC_FORWARDHATCHHANDLE:
-			ForwardHatchHandle.CheckMouseClickVC(event, p);
-			return true;
-
-		case AID_VC_FORWARDHATCHRELIEFVALVE:
-			ForwardHatchReliefValve.CheckMouseClickVC(event, p);
 			return true;
 
 		case AID_VC_COAS1:
@@ -2976,6 +2960,13 @@ void LEM::DefineVCAnimations()
 	LMPActuatorOvrd.SetReference(Sw_ActOvrdLmpLocation, _V(-0.567684017188507, 0.544856511735439, -0.617143612336876));
 	LMPActuatorOvrd.DefineMeshGroup(VC_GRP_Sw_ActOvrdLmp);
 	LMPActuatorOvrd.SetRotationRange(RAD * 20.0);
+
+	// Hatches
+	MainPanelVC.AddSwitch(&UpperHatchHandle, AID_VC_OVERHEADHATCHHANDLE);
+	MainPanelVC.AddSwitch(&UpperHatchReliefValve, AID_VC_OVERHEADHATCHRELIEFVALVE);
+
+	MainPanelVC.AddSwitch(&ForwardHatchHandle, AID_VC_FORWARDHATCHHANDLE);
+	MainPanelVC.AddSwitch(&ForwardHatchReliefValve, AID_VC_FORWARDHATCHRELIEFVALVE);
 
 	// Utility Lights
 	MainPanelVC.AddSwitch(&UtilityLightSwitchCDR, AID_VC_UTILITYLIGHTCDR);

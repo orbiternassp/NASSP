@@ -1446,34 +1446,6 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		return true;
 	}
 
-	case AID_VC_FWDHATCH_HANDLE:
-		ForwardHatch.Toggle();
-		return true;
-
-	case AID_VC_FWDHATCH_PRESS_EQU_VLV:
-		PressEqualValve.CheckMouseClickVC(event, p);
-		return true;
-
-	case AID_VC_SIDEHATCH_HANDLE:
-		SideHatch.Toggle();
-		return true;
-
-	case AID_VC_SIDEHATCH_GEARBOX_SEL:
-		HatchGearBoxSelector.CheckMouseClickVC(event, p);
-		return true;
-
-	case AID_VC_SIDEHATCH_ACT_HANDLE_SEL:
-		HatchActuatorHandleSelector.CheckMouseClickVC(event, p);
-		return true;
-
-	case AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN:
-		HatchActuatorHandleSelectorOpen.CheckMouseClickVC(event, p);
-		return true;
-
-	case AID_VC_SIDEHATCH_VENT_VALVE:
-		HatchVentValveRotary.CheckMouseClickVC(event, p);
-		return true;
-
 	case AID_VC_COAS:
 		if (coasEnabled) {
 			coasEnabled = false;
@@ -4506,6 +4478,16 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&EmergencyCabinPressureTestSwitch, AID_VC_PUSHB_LEB_L_04);
 	EmergencyCabinPressureTestSwitch.SetDirection(pb_leb_l_vector);
 	EmergencyCabinPressureTestSwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_04);
+
+	// Side Hatch
+	MainPanelVC.AddSwitch(&HatchToggle, AID_VC_SIDEHATCH_HANDLE);
+	MainPanelVC.AddSwitch(&HatchGearBoxSelector, AID_VC_SIDEHATCH_GEARBOX_SEL);
+	MainPanelVC.AddSwitch(&HatchActuatorHandleSelector, AID_VC_SIDEHATCH_ACT_HANDLE_SEL);
+	MainPanelVC.AddSwitch(&HatchActuatorHandleSelectorOpen, AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN);
+	MainPanelVC.AddSwitch(&HatchVentValveRotary, AID_VC_SIDEHATCH_VENT_VALVE);
+
+	// Forward Hatch
+	MainPanelVC.AddSwitch(&PressEqualValve, AID_VC_FWDHATCH_PRESS_EQU_VLV);
 
 	// Panel 600
 	const VECTOR3	P600_SW_AXIS = { -1, 0, 0 };
