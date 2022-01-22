@@ -5734,6 +5734,7 @@ void RTCC::CMMCMNAV(int veh, int mpt, double GETSV, int ref)
 void RTCC::CMMCMNAV(int veh, int mpt, EphemerisData sv)
 {
 	//veh: 1 = CMC, 2 = LGC
+	//mpt: 1 = CSM, 3 = LM
 
 	MissionPlanTable *mptab;
 	NavUpdateMakeupBuffer *buf;

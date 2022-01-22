@@ -1307,8 +1307,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Choose target", 0, 'A' },
 		{ "Calculate lunar ascent", 0, 'C' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Transfer insertion SV to CMC uplink", 0, 'R' },
+		{ "Transfer maneuver to MPT", 0, 'U' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -1324,7 +1324,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TGT", OAPI_KEY_A, &ApolloRTCCMFD::set_target);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLAPCalc);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_R, &ApolloRTCCMFD::menuLunarLiftoffSaveInsertionSV);
 	RegisterFunction("MPT", OAPI_KEY_U, &ApolloRTCCMFD::menuTransferPoweredAscentToMPT);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 

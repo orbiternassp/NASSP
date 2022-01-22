@@ -6491,6 +6491,12 @@ void ApolloRTCCMFD::menuLunarLiftoffVVertInput()
 	GenericDoubleInput(&GC->rtcc->PZLTRT.InsertionRadialVelocity, "Input vertical velocity in ft/s (LGC default is 19.5):", 0.3048);
 }
 
+void ApolloRTCCMFD::menuLunarLiftoffSaveInsertionSV()
+{
+	GC->rtcc->CMMCMNAV(1, 3, GC->rtcc->JZLAI.sv_Insertion);
+	SelectUplinkScreen(9); //Go to CMC LM state vector page
+}
+
 void ApolloRTCCMFD::menuSetEMPUplinkP99()
 {
 	G->EMPUplinkNumber = 0;
