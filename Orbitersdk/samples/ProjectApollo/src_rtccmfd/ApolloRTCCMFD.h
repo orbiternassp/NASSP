@@ -343,6 +343,7 @@ public:
 	void set_LLTPVectorTime(double get);
 	void menuLunarLiftoffVHorInput();
 	void menuLunarLiftoffVVertInput();
+	void menuLunarLiftoffSaveInsertionSV();
 	void menuSetEMPUplinkP99();
 	void menuEMPUplink();
 	void menuSetEMPUplinkNumber();

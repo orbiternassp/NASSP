@@ -758,8 +758,8 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	SetPMI(_V(4.3972, 4.6879, 1.6220));
 	SetCrossSections(_V(26.0,26.0,12.02));
 	SetCW(2.41*2.0, 1.96*2.0, 2.36*2.0, 2.36*2.0);
-	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), CSMAeroVertCoeff, NULL, 254.0*0.0254, 129.4*0.3048*0.3048, 0.1);
-	CreateAirfoil3(LIFT_HORIZONTAL, _V(0, 0, 0), CSMAeroHorizCoeff, NULL, 254.0*0.0254, 129.4*0.3048*0.3048, 0.1);
+	CreateAirfoil3(LIFT_VERTICAL, _V(0, 0, 0), CSMAeroVertCoeff, NULL, 154.0*0.0254, 129.4*0.3048*0.3048, 0.1);
+	CreateAirfoil3(LIFT_HORIZONTAL, _V(0, 0, 0), CSMAeroHorizCoeff, NULL, 154.0*0.0254, 129.4*0.3048*0.3048, 0.1);
 	SetRotDrag(_V(0.7,0.7,0.3));
 	SetPitchMomentScale(0);
 	SetYawMomentScale(0);

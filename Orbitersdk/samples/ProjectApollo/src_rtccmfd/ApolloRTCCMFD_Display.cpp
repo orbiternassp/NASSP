@@ -3124,12 +3124,20 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+07.1f ft/s", GC->rtcc->PZLTRT.InsertionRadialVelocity / 0.3048);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 9 * H / 14, "Powered Flight Arc:", 19);
+		skp->Text(1 * W / 8, 8 * H / 14, "Powered Flight Arc:", 19);
 		sprintf(Buffer, "%.3f°", GC->rtcc->PZLTRT.PoweredFlightArc*DEG);
-		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		skp->Text(1 * W / 8, 11 * H / 14, "Powered Flight Time:", 20);
+		skp->Text(1 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 10 * H / 14, "Powered Flight Time:", 20);
 		sprintf(Buffer, "%.1f s", GC->rtcc->PZLTRT.PoweredFlightTime);
-		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 12 * H / 14, "Insertion GET:", 14);
+		double get = GC->rtcc->GETfromGMT(GC->rtcc->JZLAI.sv_Insertion.GMT);
+		if (get < 0)
+		{
+			get = 0.0;
+		}
+		GET_Display(Buffer, get, false);
+		skp->Text(1 * W / 8, 13 * H / 14, Buffer, strlen(Buffer));
 
 		if (!GC->MissionPlanningActive)
 		{
@@ -4283,6 +4291,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(15 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 		}
 
+		if (tab->sv.RBI == BODY_EARTH)
+		{
+			skp->Text(22 * W / 32, 11 * H / 28, "EARTH", 5);
+		}
+		else
+		{
+			skp->Text(22 * W / 32, 11 * H / 28, "MOON", 4);
+		}
 		sprintf(Buffer, "%.1f", tab->sv.R.x);
 		skp->Text(22 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.1f", tab->sv.R.y);
