@@ -1721,6 +1721,7 @@ protected:
 	bool RefreshPanelIdInTimestep;
 	bool VcInfoActive;
 	bool VcInfoEnabled;
+	int FrictionCounter;
 
 	//
 	// Random motion.

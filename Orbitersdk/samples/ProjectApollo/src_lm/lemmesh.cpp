@@ -715,8 +715,8 @@ void LEM::ConfigTouchdownPoints(double mass, double ro1, double ro2, double tdph
 			tdv[i].damping = damping / 200;
 			tdv[i].stiffness = stiffness / 200;
 		}
-		tdv[i].mu = 3;
-		tdv[i].mu_lng = 3;
+		tdv[i].mu = 20;
+		tdv[i].mu_lng = 20;
 	}
 
 	tdv[0].pos.x = 0;
