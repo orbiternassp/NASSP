@@ -680,22 +680,22 @@ void LEM::DefineTouchdownPoints(int s)
 	//Touchdown Points
 	if (s == 0)
 	{
-		ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86, -0.25); // landing gear retracted
+		ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86); // landing gear retracted
 	}
 	else if (s == 1)
 	{
 		if (pMission->LMHasLegs())
 		{
-			ConfigTouchdownPoints(7137.75, 3.5, 4.25, -3.60, -5.31, 3.86, -0.25); // landing gear extended
+			ConfigTouchdownPoints(7137.75, 3.5, 4.25, -3.60, -5.31, 3.86); // landing gear extended
 		}
 		else
 		{
-			ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86, -0.25); // landing gear retracted
+			ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86); // landing gear retracted
 		}
 	}
 	else
 	{
-		ConfigTouchdownPoints(4495.0, 3, 3, -5.42, 0, 2.8, -0.5);
+		ConfigTouchdownPoints(4495.0, 3, 3, -5.42, 0, 2.8);
 	}
 }
 
