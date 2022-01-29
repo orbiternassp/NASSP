@@ -363,7 +363,7 @@ void CMVertCoeffFunc(VESSEL *v, double aoa, double M, double Re, void *context, 
 	fact = sqrt(vec.y*vec.y + vec.z*vec.z);
 	*cl = C_L * cos_phi_A*fact;
 	*cd = C_D;
-	*cm = cos_phi_A * (C_M_A + C_NY * (1141.25 - 1040.9) / 154.0); //TBD: make CG variable. 1141.25 inches is reference for moment coefficients, 1040.9 is current hardcoded CG, 154 is chord length
+	*cm = cos_phi_A * C_M_A;
 
 	//sprintf(oapiDebugString(), "aoa %lf alpha %lf Mach %Lf Kn %lf cl %lf cd %lf cm %lf", aoa*DEG, alpha*DEG, M, Kn, *cl, *cd, *cm);
 }
@@ -415,7 +415,7 @@ void CMHorizCoeffFunc(VESSEL *v, double aoa, double M, double Re, void *context,
 	fact = sqrt(vec.x*vec.x + vec.z*vec.z);
 	*cl = -C_L * sin_phi_A*fact;
 	*cd = 0.0;
-	*cm = sin_phi_A*(C_M_A + C_NY * (1141.25 - 1040.9) / 154.0); //TBD: make CG variable. 1141.25 inches is reference for moment coefficients, 1040.9 is current hardcoded CG, 154 is chord length
+	*cm = sin_phi_A * C_M_A;
 
 	//sprintf(oapiDebugString(), "aoa %lf alpha %lf Mach %Lf Kn %lf cl %lf cd %lf cm %lf", aoa*DEG, alpha*DEG, M, Kn, *cl, *cd, *cm);
 }
@@ -1431,8 +1431,9 @@ void Saturn::SetReentryStage (VECTOR3 cg_ofs)
 		}
 		else
 		{
-			CreateAirfoil3(LIFT_VERTICAL, _V(0.0, 5.8*0.0254, 0.0), CMVertCoeffFunc, NULL, 154.0*0.0254, 129.4*0.3048*0.3048, 1.0);
-			CreateAirfoil3(LIFT_HORIZONTAL, _V(0.0, 5.8*0.0254, 0.0), CMHorizCoeffFunc, NULL, 154.0*0.0254, 129.4*0.3048*0.3048, 1.0);
+			//TBD: make CG variable. 1141.25 inches is reference for moment coefficients, 1040.9 is current hardcoded CG
+			CreateAirfoil3(LIFT_VERTICAL, _V(0.0, 5.8*0.0254, (1141.25 - 1040.9)*0.0254), CMVertCoeffFunc, NULL, 154.0*0.0254, 129.4*0.3048*0.3048, 1.0);
+			CreateAirfoil3(LIFT_HORIZONTAL, _V(0.0, 5.8*0.0254, (1141.25 - 1040.9)*0.0254), CMHorizCoeffFunc, NULL, 154.0*0.0254, 129.4*0.3048*0.3048, 1.0);
 		}
     }
 
