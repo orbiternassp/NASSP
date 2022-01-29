@@ -556,7 +556,7 @@ void LEM::Init()
 	VcInfoActive = false;
 	VcInfoEnabled = false;
 
-	FrictionCounter = 0;
+	//FrictionCounter = 0;
 
 	Crewed = true;
 	AutoSlow = false;
@@ -1265,7 +1265,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Sets low surface friction for 10 timesteps to avoid instability at session start, then set once to high friction
-	if (FrictionCounter == 10)
+	/*if (FrictionCounter == 10)
 	{
 		SetSurfaceFrictionCoeff(20, 20);
 		FrictionCounter++;
@@ -1274,7 +1274,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	{
 		SetSurfaceFrictionCoeff(1, 1);
 		FrictionCounter++;
-	}
+	}*/
 }
 
 
