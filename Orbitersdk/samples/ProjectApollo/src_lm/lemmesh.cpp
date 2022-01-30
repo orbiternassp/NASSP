@@ -678,24 +678,25 @@ void LEM::SetCOAS() {
 void LEM::DefineTouchdownPoints(int s)
 {
 	//Touchdown Points
+	double xtarget = -1.0;
 	if (s == 0)
 	{
-		ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86); // landing gear retracted
+		ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.7, 0, 3.86, xtarget); // landing gear retracted
 	}
 	else if (s == 1)
 	{
 		if (pMission->LMHasLegs())
 		{
-			ConfigTouchdownPoints(7137.75, 3.5, 4.25, -3.60, -5.31, 3.86); // landing gear extended
+			ConfigTouchdownPoints(7137.75, 3.5, 4.25, -3.7, -5.41, 3.86, xtarget); // landing gear extended
 		}
 		else
 		{
-			ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86); // landing gear retracted
+			ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.7, 0, 3.86, xtarget); // landing gear retracted
 		}
 	}
 	else
 	{
-		ConfigTouchdownPoints(4495.0, 3, 3, -5.42, 0, 2.8);
+		ConfigTouchdownPoints(4495.0, 3, 3, -5.42, 0, 2.8, xtarget);
 	}
 }
 
@@ -715,16 +716,8 @@ void LEM::ConfigTouchdownPoints(double mass, double ro1, double ro2, double tdph
 			tdv[i].damping = damping / 200;
 			tdv[i].stiffness = stiffness / 200;
 		}
-		if (FirstTimestep)
-		{
-			tdv[i].mu = 1;
-			tdv[i].mu_lng = 1;
-		}
-		else
-		{
-			tdv[i].mu = 20;
-			tdv[i].mu_lng = 20;
-		}
+		tdv[i].mu = 10;
+		tdv[i].mu_lng = 10;
 	}
 
 	tdv[0].pos.x = 0;
