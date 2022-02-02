@@ -2808,7 +2808,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 120:		// SENSOR EXCITATION 10V
 							return(scale_data(0,0,15));
 						case 121:		// USB RCVR AGC VOLTAGE
-							return(scale_data(0,-130,-50));
+							return(scale_data(sat->usb.rcvr_agc_voltage, 0, 100)); //this should be changed to a 0-5V range not %
 						case 122:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 123:		// UNKNOWN - HBR ONLY
