@@ -42,9 +42,8 @@ core
 /Config/*
 !/Config/ProjectApollo
 !/Config/Collision/ProjectApollo
-!/Doc
 /Doc/*
-!/Doc/ProjectApollo - NASSP
+!/Doc/Project Apollo - NASSP/
 /Html
 !/Html/Ncpp.chm
 !/Html/Project_Apollo.chm
