@@ -45,7 +45,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	{
 		mission = 8;
 	}
-	else if (strcmp(v->GetName(), "AS-504") == 0 || strcmp(v->GetName(), "Spider") == 0)
+	else if (strcmp(v->GetName(), "AS-504") == 0 || strcmp(v->GetName(), "Gumdrop") == 0 || strcmp(v->GetName(), "Spider") == 0)
 	{
 		mission = 9;
 	}
