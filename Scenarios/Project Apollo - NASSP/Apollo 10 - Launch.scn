@@ -12,11 +12,11 @@ BEGIN_ENVIRONMENT
 END_ENVIRONMENT
 
 BEGIN_FOCUS
-  Ship AS-505
+  Ship Charlie-Brown
 END_FOCUS
 
 BEGIN_CAMERA
-  TARGET AS-505
+  TARGET Charlie-Brown
   MODE Extern
   POS 2.44 0.0 -90.0
   TRACKMODE TargetRelative
@@ -27,7 +27,7 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-505:ProjectApollo\Saturn5
+Charlie-Brown:ProjectApollo\Saturn5
   STATUS Landed Earth
   BASE Cape Canaveral:2
   POS -80.620899 28.627151
@@ -731,19 +731,19 @@ Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
   POS -80.6208716 28.5950241
   HEADING 65.81
-  LVNAME AS-505
+  LVNAME Charlie-Brown
 END
 ML:ProjectApollo\ML
   STATUS Landed Earth
   POS -80.6208972 28.6272345
   HEADING 0.58
-  LVNAME AS-505
+  LVNAME Charlie-Brown
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
   POS -80.6509353 28.5860469
   HEADING 75.67
-  LVNAME AS-505
+  LVNAME Charlie-Brown
 END
 MSS:ProjectApollo\MSS
   STATUS Landed Earth
@@ -767,7 +767,7 @@ MCC:ProjectApollo\MCC
   POS -95.08833333 29.55805556
   HEADING 270.00
   MISSIONTRACKING 1
-  CSMNAME AS-505
+  CSMNAME Charlie-Brown
   LVNAME AS-505-S4BSTG
   LEMNAME Snoopy
   RTCC_BEGIN
