@@ -64,7 +64,7 @@ core
 /Textures/
 !/Textures/ProjectApollo/
 /Scenarios
-!/Scenarios/ProjectApollo - NASSP
+!/Scenarios/Project Apollo - NASSP/
 *.vcxproj.user
 
 # Stuff that wasn't previously ignored
