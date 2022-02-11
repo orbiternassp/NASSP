@@ -42,9 +42,8 @@ core
 /Config/*
 !/Config/ProjectApollo
 !/Config/Collision/ProjectApollo
-!/Doc
 /Doc/*
-!/Doc/ProjectApollo - NASSP
+!/Doc/Project Apollo - NASSP/
 /Html
 !/Html/Ncpp.chm
 !/Html/Project_Apollo.chm
@@ -65,7 +64,7 @@ core
 /Textures/
 !/Textures/ProjectApollo/
 /Scenarios
-!/Scenarios/ProjectApollo - NASSP
+!/Scenarios/Project Apollo - NASSP/
 *.vcxproj.user
 
 # Stuff that wasn't previously ignored
