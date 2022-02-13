@@ -915,6 +915,10 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_NUMPAD0:
 				deda.NumberPressed(0);
 				break;
+			case OAPI_KEY_D:
+				// Orbiter undocking messes with our undocking system. We consume the keybind here to block it.
+				// This won't work if the user has changed this keybind. Unfortunately Orbiter does not export the keymap through the API (yet). :(
+				return 1;
 			}
 		}
 		else {
