@@ -34149,7 +34149,7 @@ void RTCC::RMMGIT(EphemerisData2 sv_EI, double lng_T)
 void RTCC::RMSDBMP(EphemerisData sv, double CSMmass)
 {
 	RetrofirePlanning plan(this);
-	if (plan.RMSDBMP(sv, RZJCTTC.GETI, RZJCTTC.lat_T, RZJCTTC.lng_T, CSMmass))
+	if (plan.RMSDBMP(sv, RZJCTTC.GETI, RZJCTTC.lat_T, RZJCTTC.lng_T, CSMmass, PZMPTCSM.CommonBlock.CSMArea))
 	{
 		RZRFDP.Indicator = -1;
 	}

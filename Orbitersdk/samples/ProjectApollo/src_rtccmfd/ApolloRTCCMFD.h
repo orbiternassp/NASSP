@@ -748,6 +748,7 @@ public:
 	void LUNTAR_LatInput();
 	void LUNTAR_LngInput();
 	void LUNTARCalc();
+	void menuSetRetrofireSeparationPage();
 	void GenericGETInput(double *get, char *message);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericIntInput(int *val, char* message);

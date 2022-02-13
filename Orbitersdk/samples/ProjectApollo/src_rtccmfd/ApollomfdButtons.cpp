@@ -898,7 +898,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 		{ "Retrofire Digitals", 0, 'C' },
 		{ "Retrofire External DV", 0, 'V' },
-		{ "", 0, ' ' },
+		{ "Retrofire Separation", 0, 'Q' },
 		{ "", 0, ' ' },
 		{ "Miss distance", 0, 'M' },
 		{ "Back to menu", 0, 'B' },
@@ -915,7 +915,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("DIG", OAPI_KEY_C, &ApolloRTCCMFD::menuSetRetrofireDigitalsPage);
 	RegisterFunction("XDV", OAPI_KEY_V, &ApolloRTCCMFD::menuSetRetrofireXDVPage);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("SEP", OAPI_KEY_Q, &ApolloRTCCMFD::menuSetRetrofireSeparationPage);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("MD", OAPI_KEY_M, &ApolloRTCCMFD::menuSetRetrofireMissDistance);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
@@ -3937,13 +3937,46 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LAT", OAPI_KEY_F, &ApolloRTCCMFD::LUNTAR_LatInput);
 	RegisterFunction("LNG", OAPI_KEY_P, &ApolloRTCCMFD::LUNTAR_LngInput);
 	
-
 	RegisterFunction("S4B", OAPI_KEY_D, &ApolloRTCCMFD::set_target);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::LUNTARCalc);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
+
+
+	static const MFDBUTTONMENU mnu116[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu116, sizeof(mnu116) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDeorbitPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

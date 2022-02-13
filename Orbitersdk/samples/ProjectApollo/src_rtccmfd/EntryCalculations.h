@@ -86,7 +86,7 @@ class RetrofirePlanning : public RTCCModule
 public:
 	RetrofirePlanning(RTCC *r);
 	//Retrofire Planning Control Module
-	bool RMSDBMP(EphemerisData sv, double GETI, double lat_T, double lng_T, double CSMmass);
+	bool RMSDBMP(EphemerisData sv, double GETI, double lat_T, double lng_T, double CSMmass, double Area);
 protected:
 	//Retrofire Planning Boundary Computation
 	void RMMDBF();
@@ -95,7 +95,7 @@ protected:
 	//Retrofire Convergence
 	void RMMDBN(int entry);
 	//Thrust Direction and Body Attitude Routine
-	void RMMATT(int entry, int opt, bool calcDesired, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, VECTOR3 &U_T, VECTOR3 &OtherAtt);
+	void RMMATT(int entry, int opt, bool calcDesired, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, double mass, VECTOR3 &U_T, VECTOR3 &OtherAtt);
 	//Retrofire Output Control
 	void RMSTTF();
 	//Retrofire On-Line Printing
@@ -104,11 +104,16 @@ protected:
 	bool WasGETIInput;
 	//Time left and right for the ephemeris
 	double TL, TR;
+	//Time of ignition of main burn
 	double GMTI;
-	EphemerisData sv0;
+	//Time of propulsion initiation (either main burn or sep/shaping, always main engine)
+	double GMT_TI;
 	double lat_T;
 	double lng_T;
+	//Initial CSM mass
 	double CSMmass;
+	//CSM mass after sep/shaping, if applicable
+	double CSMmass_Sep;
 	int refsid;
 	REFSMMATData refsdata;
 	int Thruster;
@@ -121,6 +126,8 @@ protected:
 	int GimbalIndicator = -1;
 	//Ullage time
 	double dt_ullage;
+	//Ullage time of sep/shaping maneuver
+	double dt_ullage_sep;
 	//Gradient of DV vs. flight path angle for V, gamma targeting
 	double p_gam;
 	//Partials
@@ -162,7 +169,19 @@ protected:
 	double dlat_0, dlng_0, dlat_TRB, dlng_TRB, partialprod;
 	//G-max and time of G-max
 	double gmax, gmt_gmax;
+	//0 = Retro maneuver only, 1 = Sep + Retro, 2 = Shaping + Retro
+	int ManeuverType;
 
+	//Input state vector
+	EphemerisData sv0;
+	//State vector to be used as input for ephemeris creation
+	EphemerisData sv0_apo;
+	//State vector at sep/shaping burn initiation (ullage on)
+	EphemerisData sv_BI_SEP;
+	//State vector at sep/shaping main engine on
+	EphemerisData sv_TIG_SEP;
+	//State vector at sep/shaping burnout (tailoff end)
+	EphemerisData sv_BO_SEP;
 	//State vector at burn initiation (ullage on)
 	EphemerisData sv_BI;
 	//State vector at main engine on
@@ -184,7 +203,7 @@ protected:
 	double Area;
 
 	EphemerisDataTable2 ephem;
-	RTCCNIAuxOutputTable burnaux;
+	RTCCNIAuxOutputTable burnaux, burnaux_sep;
 	RMMYNIOutputTable reentryout;
 };
 

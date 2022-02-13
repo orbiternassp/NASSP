@@ -1254,6 +1254,11 @@ void ApolloRTCCMFD::menuSetLunarTargetingProgramPage()
 	SelectPage(115);
 }
 
+void ApolloRTCCMFD::menuSetRetrofireSeparationPage()
+{
+	SelectPage(116);
+}
+
 void ApolloRTCCMFD::LUNTAR_TIGInput()
 {
 	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS)");
@@ -1426,6 +1431,15 @@ bool ApolloRTCCMFD::set_RecoveryTarget(int num)
 		{
 			GC->rtcc->RZJCTTC.lat_T = GC->rtcc->RZDRTSD.table[num - 1].Latitude*RAD;
 			GC->rtcc->RZJCTTC.lng_T = GC->rtcc->RZDRTSD.table[num - 1].Longitude*RAD;
+			if (GC->rtcc->RZC1RCNS.Thruster == RTCC_ENGINETYPE_CSMSPS)
+			{
+				GC->rtcc->RZJCTTC.GETI = GC->rtcc->RZDRTSD.table[num - 1].GET - 20.0*60.0;
+			}
+			else
+			{
+				GC->rtcc->RZJCTTC.GETI = GC->rtcc->RZDRTSD.table[num - 1].GET - 30.0*60.0;
+			}
+			
 			return true;
 		}
 	}
@@ -4538,13 +4552,13 @@ void ApolloRTCCMFD::menuDeorbitCalc()
 
 void ApolloRTCCMFD::menuCycleRetrofireType()
 {
-	if (GC->rtcc->RZJCTTC.Type < 2)
+	if (GC->rtcc->RZJCTTC.R32_Code < 2)
 	{
-		GC->rtcc->RZJCTTC.Type++;
+		GC->rtcc->RZJCTTC.R32_Code++;
 	}
 	else
 	{
-		GC->rtcc->RZJCTTC.Type = 1;
+		GC->rtcc->RZJCTTC.R32_Code = 1;
 	}
 }
 
@@ -4555,7 +4569,7 @@ void ApolloRTCCMFD::menuRetrofireGETIDialogue()
 
 void ApolloRTCCMFD::menuRetrofireLatDialogue()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.lat_T, "Latitude in degree (°):", RAD);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.lat_T, "Latitude in degree (°), enter -720 or less for no iteration on latitude:", RAD);
 }
 
 void ApolloRTCCMFD::menuRetrofireLngDialogue()
@@ -4840,7 +4854,7 @@ void ApolloRTCCMFD::menuTransferRTEToMPT()
 	else
 	{
 		bool TransferRTEInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Enter P for Primary or M for Manual to make the maneuver available for the Maneuver PAD etc.", TransferRTEInput, 0, 50, (void*)this);
+		oapiOpenInputBox("Make burn solution available for Maneuver PAD etc. (enter RTEP for RTE primary column, RTEM for manual. TTFM for deorbit burn)", TransferRTEInput, 0, 50, (void*)this);
 	}
 }
 
@@ -4853,21 +4867,36 @@ bool ApolloRTCCMFD::set_RTESolution(char *str)
 {
 	int i;
 
-	if (str[0] == 'P')
+	if (strcmp(str, "RTEP") == 0)
 	{
 		i = 0;
 	}
-	else if (str[0] == 'M')
+	else if (str[0] == 'RTEM')
 	{
 		i = 1;
+	}
+	else if (strcmp(str, "TTFM") == 0)
+	{
+		i = 2;
 	}
 	else
 	{
 		return false;
 	}
 
-	G->P30TIG = GC->rtcc->PZREAP.RTEDTable[i].GETI;
-	G->dV_LVLH = GC->rtcc->PZREAP.RTEDTable[i].DV_XDV;
+	if (i < 2)
+	{
+		G->P30TIG = GC->rtcc->PZREAP.RTEDTable[i].GETI;
+		G->dV_LVLH = GC->rtcc->PZREAP.RTEDTable[i].DV_XDV;
+	}
+	else
+	{
+		if (GC->rtcc->RZRFDP.Indicator == 0)
+		{
+			G->P30TIG = GC->rtcc->RZRFDP.GETI;
+			G->dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
+		}
+	}
 	return true;
 }
 
