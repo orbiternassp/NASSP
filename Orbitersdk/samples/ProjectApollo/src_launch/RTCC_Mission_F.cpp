@@ -316,7 +316,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		double TLIbase = floor((calcParams.TLI / 1800.0) + 0.5)*1800.0; //Round to next half hour
 
-		if (fcn == 5)
+		if (fcn == 8)
 		{
 			opt.n = 3;
 
