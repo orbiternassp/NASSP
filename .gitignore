@@ -108,3 +108,6 @@ XRSound/
 /RTCCDebug.txt
 /EphemData.txt
 /PrecessionData.txt
+
+# Ignore EMS scroll
+/*.bmp
