@@ -3958,7 +3958,7 @@ public:
 		double R20_lng = 0.0;
 		//R30
 		int ColumnIndicator = 7; //Bitfield. 7 = all
-		double GMTI_SH = 0.0; //GETI of shaping for manual input
+		double GETI_SH = 0.0; //GETI of shaping for manual input
 		double DeltaT_Sep = 20.0*60.0; //DT of sep maneuver
 		int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4;
 		double DeltaV = 5.0*0.3048;

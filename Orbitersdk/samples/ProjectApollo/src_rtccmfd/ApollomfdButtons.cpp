@@ -209,14 +209,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu6[] =
 	{
-		{ "Deorbit Maneuver", 0, 'D' },
+		{ "RTE Tradeoff", 0, 'T' },
 		{ "Abort Scan Table", 0, 'A' },
 		{ "Return to Earth Digitals", 0, 'M' },
 		{ "Splashdown Update", 0, 'S' },
 		{ "RTE Constraints", 0, 'C' },
-		{ "RTE Tradeoff", 0, 'T' },
+		{ "", 0, ' ' },
 
-		{ "", 0, 'A' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -226,12 +226,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu6, sizeof(mnu6) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("DEO", OAPI_KEY_D, &ApolloRTCCMFD::menuSetDeorbitPage);
+	RegisterFunction("TRD", OAPI_KEY_T, &ApolloRTCCMFD::menuSetRTETradeoffDisplayPage);
 	RegisterFunction("AST", OAPI_KEY_A, &ApolloRTCCMFD::menuSetAbortScanTableInputPage);
 	RegisterFunction("RTE", OAPI_KEY_M, &ApolloRTCCMFD::menuSetRTEDigitalsInputPage);
 	RegisterFunction("SPL", OAPI_KEY_S, &ApolloRTCCMFD::menuSetEntryUpdatePage);
 	RegisterFunction("CON", OAPI_KEY_C, &ApolloRTCCMFD::menuSetRTEConstraintsPage);
-	RegisterFunction("TRD", OAPI_KEY_T, &ApolloRTCCMFD::menuSetRTETradeoffDisplayPage);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("MAN", OAPI_KEY_E, &ApolloRTCCMFD::menuSetRTEDManualManeuverInputPage);
 	RegisterFunction("ENT", OAPI_KEY_V, &ApolloRTCCMFD::menuSetRTEDEntryProfilePage);
@@ -482,10 +482,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "Rendezvous Targeting", 0, 'R' },
 		{ "Orbit Adjustment", 0, 'O' },
-		{ "TLI Planning", 0, 'T' },
 		{ "Midcourse", 0, 'M' },
 		{ "Lunar Orbit", 0, 'S' },
-		{ "Entry", 0, 'E' },
+		{ "Return to Earth", 0, 'E' },
+		{ "Deorbit", 0, 'T' },
 
 		{ "DOI Targeting", 0, 'D' },
 		{ "Lunar Launch Winodw", 0, 'W' },
@@ -499,10 +499,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("REN", OAPI_KEY_R, &ApolloRTCCMFD::menuSetRendezvousPage);
 	RegisterFunction("ORB", OAPI_KEY_O, &ApolloRTCCMFD::menuSetOrbAdjPage);
-	RegisterFunction("TLI", OAPI_KEY_T, &ApolloRTCCMFD::menuTLIPlanningPage);
 	RegisterFunction("MCC", OAPI_KEY_M, &ApolloRTCCMFD::menuMidcoursePage);
 	RegisterFunction("LOI", OAPI_KEY_S, &ApolloRTCCMFD::menuSetLOIPage);
-	RegisterFunction("ENT", OAPI_KEY_E, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("ENT", OAPI_KEY_E, &ApolloRTCCMFD::menuSetReturnToEarthPage);
+	RegisterFunction("DEO", OAPI_KEY_T, &ApolloRTCCMFD::menuSetRetrofireSubsystemPage);
 
 	RegisterFunction("LDP", OAPI_KEY_D, &ApolloRTCCMFD::menuSetDescPlanCalcPage);
 	RegisterFunction("LLW", OAPI_KEY_W, &ApolloRTCCMFD::menuSetLunarLiftoffPage);
@@ -889,36 +889,36 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu26[] =
 	{
-		{ "Retrofire constraints", 0, 'C' },
-		{ "Target Selection", 0, 'E' },
 		{ "Target type", 0, 'L' },
 		{ "Estimated TIG", 0, 'D' },
 		{ "Target latitude", 0, 'O' },
 		{ "Target longitude", 0, 'A' },
+		{ "Miss distance", 0, 'M' },
+		{ "", 0, ' ' },
 
 		{ "Retrofire Digitals", 0, 'C' },
 		{ "Retrofire External DV", 0, 'V' },
 		{ "Retrofire Separation", 0, 'Q' },
 		{ "", 0, ' ' },
-		{ "Miss distance", 0, 'M' },
+		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
 	};
 
 	RegisterPage(mnu26, sizeof(mnu26) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("CON", OAPI_KEY_C, &ApolloRTCCMFD::menuSetRetrofireConstraintsPage);
-	RegisterFunction("TAR", OAPI_KEY_E, &ApolloRTCCMFD::menuSetRetrofireTargetSelectionPage);
 	RegisterFunction("TYP", OAPI_KEY_L, &ApolloRTCCMFD::menuCycleRetrofireType);
 	RegisterFunction("GET", OAPI_KEY_D, &ApolloRTCCMFD::menuRetrofireGETIDialogue);
 	RegisterFunction("LAT", OAPI_KEY_O, &ApolloRTCCMFD::menuRetrofireLatDialogue);
 	RegisterFunction("LNG", OAPI_KEY_A, &ApolloRTCCMFD::menuRetrofireLngDialogue);
+	RegisterFunction("MD", OAPI_KEY_M, &ApolloRTCCMFD::menuSetRetrofireMissDistance);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("DIG", OAPI_KEY_C, &ApolloRTCCMFD::menuSetRetrofireDigitalsPage);
 	RegisterFunction("XDV", OAPI_KEY_V, &ApolloRTCCMFD::menuSetRetrofireXDVPage);
 	RegisterFunction("SEP", OAPI_KEY_Q, &ApolloRTCCMFD::menuSetRetrofireSeparationPage);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("MD", OAPI_KEY_M, &ApolloRTCCMFD::menuSetRetrofireMissDistance);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRetrofireSubsystemPage);
 
 
 	static const MFDBUTTONMENU mnu27[] =
@@ -952,7 +952,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::menuCycleRTEDHeadsOption);
 	RegisterFunction("ITE", OAPI_KEY_I, &ApolloRTCCMFD::menuCycleRTEDIterateOption);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetReturnToEarthPage);
 
 
 	static const MFDBUTTONMENU mnu28[] =
@@ -1019,7 +1019,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetReturnToEarthPage);
 
 
 	static const MFDBUTTONMENU mnu30[] =
@@ -1053,7 +1053,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("RAN", OAPI_KEY_R, &ApolloRTCCMFD::EntryRangeDialogue);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuEntryUpdateUpload);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetReturnToEarthPage);
 
 
 	static const MFDBUTTONMENU mnu31[] =
@@ -2278,7 +2278,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("ENT", OAPI_KEY_E, &ApolloRTCCMFD::menuSetRTETradeoffEntryProfile);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetReturnToEarthPage);
 
 
 	static const MFDBUTTONMENU mnu67[] =
@@ -3535,7 +3535,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("K1", OAPI_KEY_I, &ApolloRTCCMFD::menuChooseRetrofireK1);
 	RegisterFunction("GC", OAPI_KEY_H, &ApolloRTCCMFD::menuChooseRetrofireGs);
 	RegisterFunction("K2", OAPI_KEY_F, &ApolloRTCCMFD::menuChooseRetrofireK2);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDeorbitPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRetrofireSubsystemPage);
 
 
 	static const MFDBUTTONMENU mnu104[] =
@@ -3548,7 +3548,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 
 		{ "Calculate deorbit solution", 0, 'C' },
-		{ "Transfer to MPT", 0, 'F' },
+		{ "Save maneuver for PAD or MPT", 0, 'F' },
 		{ "Save as DOD REFSMMAT", 0, 'D' },
 		{ "Make DOD the current REFSMMAT", 0, 'R' },
 		{ "Go to online monitor", 0, 'U' },
@@ -3565,7 +3565,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuDeorbitCalc);
-	RegisterFunction("MPT", OAPI_KEY_F, &ApolloRTCCMFD::menuTransferRTEToMPT);
+	RegisterFunction("PAD", OAPI_KEY_F, &ApolloRTCCMFD::menuTransferRTEToMPT);
 	RegisterFunction("DOD", OAPI_KEY_D, &ApolloRTCCMFD::menuSaveDODREFSMMAT);
 	RegisterFunction("CUR", OAPI_KEY_R, &ApolloRTCCMFD::menuMakeDODREFSMMATCurrent);
 	RegisterFunction("ONL", OAPI_KEY_U, &ApolloRTCCMFD::menuSetOnlineMonitorPage);
@@ -3637,7 +3637,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("SEL", OAPI_KEY_P, &ApolloRTCCMFD::menuSelectRecoveryTarget);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDeorbitPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRetrofireSubsystemPage);
 
 
 	static const MFDBUTTONMENU mnu107[] =
@@ -3671,7 +3671,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("MD", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("INC", OAPI_KEY_S, &ApolloRTCCMFD::menuSetEntryDesiredInclination);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetReturnToEarthPage);
 
 
 	static const MFDBUTTONMENU mnu108[] =
@@ -3739,7 +3739,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("SPL", OAPI_KEY_R, &ApolloRTCCMFD::LoadSplashdownTargetToRTEDManualInput);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetReturnToEarthPage);
 
 
 	static const MFDBUTTONMENU mnu110[] =
@@ -3773,7 +3773,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("GLE", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("RDI", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("LNG", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetReturnToEarthPage);
 
 	static const MFDBUTTONMENU mnu111[] =
 	{
@@ -3977,6 +3977,74 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDeorbitPage);
+
+
+	static const MFDBUTTONMENU mnu117[] =
+	{
+		{ "GET of shaping maneuver", 0, 'S' },
+		{ "Delta T of sep maneuver", 0, 'D' },
+		{ "Thruster for sep/shaping", 0, 'T' },
+		{ "DV of sep/shaping", 0, 'V' },
+		{ "DT of sep/shaping", 0, 'C' },
+		{ "LVLH attitude", 0, 'A' },
+
+		{ "Ullage DT", 0, 'U' },
+		{ "Ullage thrusters", 0, 'L' },
+		{ "SPS gimbal angles", 0, 'G' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu117, sizeof(mnu117) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("SHA", OAPI_KEY_S, &ApolloRTCCMFD::menuRetroShapingGET);
+	RegisterFunction("SEP", OAPI_KEY_D, &ApolloRTCCMFD::menuRetroSepDeltaTTIG);
+	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuRetroSepThruster);
+	RegisterFunction("DV", OAPI_KEY_V, &ApolloRTCCMFD::menuRetroSepDeltaV);
+	RegisterFunction("DT", OAPI_KEY_C, &ApolloRTCCMFD::menuRetroSepDeltaT);
+	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuRetroSepAtt);
+
+	RegisterFunction("UDT", OAPI_KEY_U, &ApolloRTCCMFD::menuRetroSepUllageDT);
+	RegisterFunction("UTH", OAPI_KEY_L, &ApolloRTCCMFD::menuRetroSepUllageThrusters);
+	RegisterFunction("GBL", OAPI_KEY_G, &ApolloRTCCMFD::menuRetroSepGimbalIndicator);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRetrofireSubsystemPage);
+
+
+	static const MFDBUTTONMENU mnu118[] =
+	{
+		{ "Inputs for sep/shaping", 0, 'T' },
+		{ "Retrofire constraints", 0, 'C' },
+		{ "Target Selection", 0, 'L' },
+		{ "Deorbit Maneuver", 0, 'D' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu118, sizeof(mnu118) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("SEP", OAPI_KEY_T, &ApolloRTCCMFD::menuSetRetrofireSeparationInputsPage);
+	RegisterFunction("CON", OAPI_KEY_C, &ApolloRTCCMFD::menuSetRetrofireConstraintsPage);
+	RegisterFunction("TAR", OAPI_KEY_L, &ApolloRTCCMFD::menuSetRetrofireTargetSelectionPage);
+	RegisterFunction("DEO", OAPI_KEY_D, &ApolloRTCCMFD::menuSetDeorbitPage);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

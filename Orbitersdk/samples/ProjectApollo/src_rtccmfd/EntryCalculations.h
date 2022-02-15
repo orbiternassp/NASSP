@@ -108,6 +108,8 @@ protected:
 	double GMTI;
 	//Time of propulsion initiation (either main burn or sep/shaping, always main engine)
 	double GMT_TI;
+	//Time of shaping maneuver
+	double GMTI_SH;
 	double lat_T;
 	double lng_T;
 	//Initial CSM mass

@@ -1240,6 +1240,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		break;
 	}
 
+	//Convert GETs to GMTs
 	if (GETI < 0)
 	{
 		WasGETIInput = false;
@@ -1250,6 +1251,15 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		GMTI = pRTCC->GMTfromGET(GETI);
 	}
 
+	if (pRTCC->RZJCTTC.GETI_SH > 0)
+	{
+		GMTI_SH = pRTCC->GMTfromGET(pRTCC->RZJCTTC.GETI_SH);
+	}
+	else
+	{
+		GMTI_SH = 0.0;
+	}
+	
 	//Determine maneuver type
 	if (pRTCC->RZJCTTC.R32_Code == 1)
 	{
@@ -1257,7 +1267,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	}
 	else
 	{
-		if (pRTCC->RZJCTTC.GMTI_SH > 0)
+		if (GMTI_SH > 0)
 		{
 			ManeuverType = 2;
 		}
@@ -1285,11 +1295,11 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		double GMT_BI;
 		if (dt_ullage_sep != 0.0)
 		{
-			GMT_BI = GMT_TI - dt_ullage_sep + ullage_overlap;
+			GMT_BI = GMTI_SH - dt_ullage_sep + ullage_overlap;
 		}
 		else
 		{
-			GMT_BI = GMT_TI;
+			GMT_BI = GMTI_SH;
 		}
 
 		coastin.AnchorVector = sv0;
@@ -1988,13 +1998,13 @@ void RetrofirePlanning::RMMDBF()
 	}
 	else
 	{
-		if (pRTCC->RZJCTTC.GMTI_SH < GMTI)
+		if (GMTI < GMTI_SH)
 		{
 			RMGTTF("RMMDBF", 22);
 			ERR = 1;
 			return;
 		}
-		GMT_TI = pRTCC->RZJCTTC.GMTI_SH;
+		GMT_TI = GMTI;
 	}
 }
 
@@ -2059,7 +2069,7 @@ void RetrofirePlanning::RMMDBM()
 			}
 			else
 			{
-				DVBURN_SEP = pRTCC->RZJCTTC.DeltaV; //TBD
+				DVBURN_SEP = pRTCC->SystemParameters.MCTCT2 / pRTCC->SystemParameters.MCTCW2 * log(CSMmass / (CSMmass - pRTCC->SystemParameters.MCTCW2 * pRTCC->RZJCTTC.DeltaT)); //TBD: Assumes RCS right now
 			}
 
 			//Burn simulation
