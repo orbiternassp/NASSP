@@ -3956,7 +3956,19 @@ public:
 		//R20
 		double R20GET = 0.0;
 		double R20_lng = 0.0;
+		//R30
+		int ColumnIndicator = 7; //Bitfield. 7 = all
+		double GETI_SH = 0.0; //GETI of shaping for manual input
+		double DeltaT_Sep = 20.0*60.0; //DT of sep maneuver
+		int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4;
+		double DeltaV = 5.0*0.3048;
+		double DeltaT = 0.0;
+		VECTOR3 Att = _V(0.0, -45.4*RAD, 180.0*RAD);
+		double Ullage_DT = 15.0;
+		bool Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
+		int GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
 		//R32
+		int R32_Code = 1; //1 = Type 1, 2 = Type 2
 		double GETI = 0.0;
 		double lat_T = 0.0;
 		double lng_T = 0.0;
