@@ -727,12 +727,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Entry Options", 13);
 
-		skp->Text(1 * W / 8, 2 * H / 14, "Deorbit Maneuver", 16);
+		skp->Text(1 * W / 8, 2 * H / 14, "Tradeoff", 15);
 		skp->Text(1 * W / 8, 4 * H / 14, "Abort Scan Table", 16);
 		skp->Text(1 * W / 8, 6 * H / 14, "Return to Earth Digitals", 24);
 		skp->Text(1 * W / 8, 8 * H / 14, "Splashdown Update", 17);
 		skp->Text(1 * W / 8, 10 * H / 14, "RTE Constraints", 15);
-		skp->Text(1 * W / 8, 12 * H / 14, "Tradeoff", 15);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "RTED Manual Input", 17);
 		skp->Text(5 * W / 8, 4 * H / 14, "RTED Entry Profile", 18);
@@ -1644,10 +1643,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(1 * W / 16, 2 * H / 14, "Rendezvous", 10);
 		skp->Text(1 * W / 16, 4 * H / 14, "General Purpose Maneuver", 24);
-		skp->Text(1 * W / 16, 6 * H / 14, "TLI Planning", 12);
-		skp->Text(1 * W / 16, 8 * H / 14, "Midcourse", 9);
-		skp->Text(1 * W / 16, 10 * H / 14, "Lunar Insertion", 15);
-		skp->Text(1 * W / 16, 12 * H / 14, "Entry", 5);
+		skp->Text(1 * W / 16, 6 * H / 14, "Midcourse", 9);
+		skp->Text(1 * W / 16, 8 * H / 14, "Lunar Insertion", 15);
+		skp->Text(1 * W / 16, 10 * H / 14, "Return to Earth", 15);
+		skp->Text(1 * W / 16, 12 * H / 14, "Deorbit", 7);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "Descent Planning", 16);
 		skp->Text(5 * W / 8, 4 * H / 14, "LLWP", 4);
@@ -2459,34 +2458,39 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Deorbit", 7);
 
-		skp->Text(1 * W / 16, 2 * H / 14, "Constraints", 11);
-		skp->Text(1 * W / 16, 4 * H / 14, "Target Selection", 16);
-
-		if (GC->rtcc->RZJCTTC.Type == 1)
+		if (GC->rtcc->RZJCTTC.R32_Code == 1)
 		{
-			skp->Text(1 * W / 16, 6 * H / 14, "Primary Area", 12);
-
-			sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lat_T*DEG);
-			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 16, 2 * H / 14, "Type 1 (No Sep/Shaping)", 23);
 		}
 		else
 		{
-			skp->Text(1 * W / 16, 6 * H / 14, "Contingency Area", 16);
+			skp->Text(1 * W / 16, 2 * H / 14, "Type 2 (With Sep/Shaping)", 25);
 		}
 
 		GET_Display(Buffer, GC->rtcc->RZJCTTC.GETI);
-		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->RZJCTTC.lat_T <= -720.0*RAD)
+		{
+			sprintf(Buffer, "No latitude iteration");
+		}
+		else
+		{
+			sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lat_T*DEG);
+		}
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lng_T*DEG);
-		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.2lf NM", GC->rtcc->RZJCTTC.MD);
+		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
 		skp->Text(15 * W / 16, 2 * H / 14, "Retrofire Digitals", 18);
 		skp->Text(15 * W / 16, 4 * H / 14, "Retrofire External DV", 21);
-
-		sprintf(Buffer, "%.2lf NM", GC->rtcc->RZJCTTC.MD);
-		skp->Text(15 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(15 * W / 16, 6 * H / 14, "Retrofire Separation", 20);
 	}
 	else if (screen == 27)
 	{
@@ -8682,9 +8686,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(16 * W / 44, 19 * H / 26, Buffer, strlen(Buffer));
 			FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_ML);
 			skp->Text(24 * W / 44, 19 * H / 26, Buffer, strlen(Buffer));
-			FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_T*DEG);
+			FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_T);
 			skp->Text(16 * W / 44, 20 * H / 26, Buffer, strlen(Buffer));
-			FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_T*DEG);
+			FormatLongitude(Buffer, GC->rtcc->RZRFDP.lng_T);
 			skp->Text(24 * W / 44, 20 * H / 26, Buffer, strlen(Buffer));
 			FormatLatitude(Buffer, GC->rtcc->RZRFDP.lat_IP);
 			skp->Text(16 * W / 44, 21 * H / 26, Buffer, strlen(Buffer));
@@ -9251,6 +9255,140 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			skp->Text(4 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
 		}
+	}
+	else if (screen == 116)
+	{
+		int hh, mm;
+		double secs;
+
+		skp->Text(2 * W / 8, 2 * H / 26, "Retrofire Separation (MSK 355)", 30);
+
+		skp->SetFont(font3);
+		skp->SetPen(pen2);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(2 * W / 44, 5 * H / 26, "AREA", 4);
+		skp->Text(2 * W / 44, 6 * H / 26, "MATRIX", 6);
+		skp->Text(2 * W / 44, 7 * H / 26, "WT TAA", 6);
+		skp->Text(2 * W / 44, 8 * H / 26, "RLH PLH YLH", 11);
+		skp->Text(2 * W / 44, 9 * H / 26, "RO PI YM", 8);
+		skp->Text(2 * W / 44, 10 * H / 26, "VC BT", 5);
+		skp->Text(2 * W / 44, 11 * H / 26, "VT U DT", 7);
+		skp->Text(2 * W / 44, 12 * H / 26, "H", 1);
+		skp->Text(2 * W / 44, 13 * H / 26, "GETI", 4);
+		skp->Text(2 * W / 44, 14 * H / 26, "GMTI", 4);
+
+		skp->Line(14 * W / 44, 6 * H / 26, 14 * W / 44, 24 * H / 26);
+
+		if (GC->rtcc->RZRFDP.Indicator_Sep == 0)
+		{
+			sprintf_s(Buffer, "%s", GC->rtcc->RZRFDP.RefsID.c_str());
+			skp->Text(16 * W / 44, 6 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.CSMWeightSep);
+			skp->Text(16 * W / 44, 7 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.0lf", GC->rtcc->RZRFDP.TrueAnomalySep);
+			skp->Text(22 * W / 44, 7 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf %.1lf %.1lf", GC->rtcc->RZRFDP.Att_LVLH_Sep.x, GC->rtcc->RZRFDP.Att_LVLH_Sep.y, GC->rtcc->RZRFDP.Att_LVLH_Sep.z);
+			skp->Text(16 * W / 44, 8 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf %.1lf %.1lf", GC->rtcc->RZRFDP.Att_IMU_Sep.x, GC->rtcc->RZRFDP.Att_IMU_Sep.y, GC->rtcc->RZRFDP.Att_IMU_Sep.z);
+			skp->Text(16 * W / 44, 9 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.DVC_Sep);
+			skp->Text(16 * W / 44, 10 * H / 26, Buffer, strlen(Buffer));
+			SStoHHMMSS(GC->rtcc->RZRFDP.BurnTime_Sep, hh, mm, secs);
+			sprintf_s(Buffer, "%02d:%04.1lf", mm, secs);
+			skp->Text(22 * W / 44, 10 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.DVT_Sep);
+			skp->Text(16 * W / 44, 11 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%+d", GC->rtcc->RZRFDP.UllageQuads_Sep);
+			skp->Text(21 * W / 44, 11 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.UllageDT_Sep);
+			skp->Text(24 * W / 44, 11 * H / 26, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->RZRFDP.H_Sep);
+			skp->Text(16 * W / 44, 12 * H / 26, Buffer, strlen(Buffer));
+			GET_Display2(Buffer, GC->rtcc->RZRFDP.GETI_Sep);
+			skp->Text(16 * W / 44, 13 * H / 26, Buffer, strlen(Buffer));
+			GET_Display(Buffer, GC->rtcc->RZRFDP.GMTI_Sep, false);
+			skp->Text(16 * W / 44, 14 * H / 26, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->RZRFDP.Indicator_Sep == 1)
+		{
+			skp->Text(16 * W / 44, 13 * H / 26, "NO DATA", 7);
+		}
+		else
+		{
+			skp->Text(16 * W / 44, 13 * H / 26, "ERROR - REFER TO ONLINE", 23);
+		}
+	}
+	else if (screen == 117)
+	{
+		skp->Text(1 * W / 8, 2 * H / 26, "Definition of Separation/Shaping Maneuver", 41);
+
+		if (GC->rtcc->RZJCTTC.GETI_SH > 0)
+		{
+			GET_Display2(Buffer, GC->rtcc->RZJCTTC.GETI_SH);
+		}
+		else
+		{
+			sprintf(Buffer, "No Shaping Maneuver");
+		}
+		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->RZJCTTC.GETI_SH > 0)
+		{
+			sprintf(Buffer, "No Separation Maneuver");
+		}
+		else
+		{
+			sprintf(Buffer, "%.1lf min", GC->rtcc->RZJCTTC.DeltaT_Sep/60.0);
+		}
+		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+		ThrusterName(Buffer, GC->rtcc->RZJCTTC.Thruster);
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.1lf ft/s", GC->rtcc->RZJCTTC.DeltaV / 0.3048);
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.1lf s", GC->rtcc->RZJCTTC.DeltaT);
+		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.2lf %.2lf %.2lf", GC->rtcc->RZJCTTC.Att.x*DEG, GC->rtcc->RZJCTTC.Att.y*DEG, GC->rtcc->RZJCTTC.Att.z*DEG);
+		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->RZJCTTC.Thruster == RTCC_ENGINETYPE_CSMSPS)
+		{
+			sprintf(Buffer, "%.1lf s", GC->rtcc->RZJCTTC.Ullage_DT);
+			skp->Text(9 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->RZJCTTC.Use4UllageThrusters)
+			{
+				sprintf(Buffer, "4 jet ullage");
+			}
+			else
+			{
+				sprintf(Buffer, "2 jet ullage");
+			}
+			skp->Text(9 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->RZJCTTC.GimbalIndicator == 1)
+			{
+				sprintf(Buffer, "Use System Parameters");
+			}
+			else
+			{
+				sprintf(Buffer, "Compute Gimbal Trims");
+			}
+			skp->Text(9 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+		}
+	}
+	else if (screen == 118)
+	{
+		skp->Text(4 * W / 8, 1 * H / 28, "Retrofire Planning", 18);
+
+		skp->Text(1 * W / 8, 2 * H / 14, "Separation/Shaping Constraints", 30);
+		skp->Text(1 * W / 8, 4 * H / 14, "Retrofire Constraints", 21);
+		skp->Text(1 * W / 8, 6 * H / 14, "Target Selection Display", 24);
+		skp->Text(1 * W / 8, 8 * H / 14, "Retrofire Maneuver", 18);
 	}
 	return true;
 }

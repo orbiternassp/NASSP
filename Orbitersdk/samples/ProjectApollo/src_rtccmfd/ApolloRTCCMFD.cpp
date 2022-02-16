@@ -769,7 +769,7 @@ void ApolloRTCCMFD::menuSetREFSMMATPage()
 	SelectPage(5);
 }
 
-void ApolloRTCCMFD::menuSetEntryPage()
+void ApolloRTCCMFD::menuSetReturnToEarthPage()
 {
 	SelectPage(6);
 }
@@ -1254,6 +1254,21 @@ void ApolloRTCCMFD::menuSetLunarTargetingProgramPage()
 	SelectPage(115);
 }
 
+void ApolloRTCCMFD::menuSetRetrofireSeparationPage()
+{
+	SelectPage(116);
+}
+
+void ApolloRTCCMFD::menuSetRetrofireSeparationInputsPage()
+{
+	SelectPage(117);
+}
+
+void ApolloRTCCMFD::menuSetRetrofireSubsystemPage()
+{
+	SelectPage(118);
+}
+
 void ApolloRTCCMFD::LUNTAR_TIGInput()
 {
 	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS)");
@@ -1287,6 +1302,70 @@ void ApolloRTCCMFD::LUNTAR_LngInput()
 void ApolloRTCCMFD::LUNTARCalc()
 {
 	G->LUNTARCalc();
+}
+
+void ApolloRTCCMFD::menuRetroShapingGET()
+{
+	GenericGETInput(&GC->rtcc->RZJCTTC.GETI_SH, "Enter GET of shaping burn (Format: HH:MM:SS). Enter 0:0:0 for no shaping burn.");
+}
+
+void ApolloRTCCMFD::menuRetroSepDeltaTTIG()
+{
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.DeltaT_Sep, "Enter Delta T of separation maneuver in minutes:", 60.0);
+}
+
+void ApolloRTCCMFD::menuRetroSepThruster()
+{
+	bool ChooseRetroSepThrusterInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Thruster for the sep or shaping maneuver (Options: S or C1-C4)", ChooseRetroSepThrusterInput, 0, 20, (void*)this);
+}
+
+bool ChooseRetroSepThrusterInput(void *id, char *str, void *data)
+{
+	std::string th(str);
+	return ((ApolloRTCCMFD*)data)->set_RetroSepThruster(th);
+}
+
+bool ApolloRTCCMFD::set_RetroSepThruster(std::string th)
+{
+	return ThrusterType(th, GC->rtcc->RZJCTTC.Thruster);
+}
+
+void ApolloRTCCMFD::menuRetroSepDeltaT()
+{
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.DeltaT, "Enter burn time of separation maneuver in seconds (only choose DT or DV, not both):", 1.0);
+}
+
+void ApolloRTCCMFD::menuRetroSepDeltaV()
+{
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.DeltaV, "Enter Delta V of separation maneuver in ft/s (only choose DT or DV, not both):", 0.3048);
+}
+
+void ApolloRTCCMFD::menuRetroSepUllageDT()
+{
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.Ullage_DT, "Enter ullage time in seconds:", 1.0);
+}
+
+void ApolloRTCCMFD::menuRetroSepUllageThrusters()
+{
+	GC->rtcc->RZJCTTC.Use4UllageThrusters = !GC->rtcc->RZJCTTC.Use4UllageThrusters;
+}
+
+void ApolloRTCCMFD::menuRetroSepGimbalIndicator()
+{
+	if (GC->rtcc->RZJCTTC.GimbalIndicator == 1)
+	{
+		GC->rtcc->RZJCTTC.GimbalIndicator = -1;
+	}
+	else
+	{
+		GC->rtcc->RZJCTTC.GimbalIndicator = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuRetroSepAtt()
+{
+	GenericVectorInput(&GC->rtcc->RZJCTTC.Att, "Enter attitude of sep/shaping maneuver:", RAD);
 }
 
 void ApolloRTCCMFD::GenericGETInput(double *get, char *message)
@@ -1362,6 +1441,33 @@ bool GenericIntInputBox(void *id, char *str, void *data)
 	return false;
 }
 
+void ApolloRTCCMFD::GenericVectorInput(VECTOR3 *val, char* message, double factor)
+{
+	void *data2;
+
+	tempData.vVal = val;
+	tempData.factor = factor;
+	data2 = &tempData;
+
+	bool GenericVectorInputBox(void *id, char *str, void *data);
+	oapiOpenInputBox(message, GenericVectorInputBox, 0, 25, data2);
+}
+
+bool GenericVectorInputBox(void *id, char *str, void *data)
+{
+	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
+	double val1, val2, val3;
+
+	if (sscanf(str, "%lf %lf %lf", &val1, &val2, &val3) == 3)
+	{
+		arr->vVal->x = val1 * arr->factor;
+		arr->vVal->y = val2 * arr->factor;
+		arr->vVal->z = val3 * arr->factor;
+		return true;
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuCycleRecoveryTargetSelectionPages()
 {
 	if (GC->rtcc->RZDRTSD.CurrentPage < GC->rtcc->RZDRTSD.TotalNumPages)
@@ -1426,6 +1532,15 @@ bool ApolloRTCCMFD::set_RecoveryTarget(int num)
 		{
 			GC->rtcc->RZJCTTC.lat_T = GC->rtcc->RZDRTSD.table[num - 1].Latitude*RAD;
 			GC->rtcc->RZJCTTC.lng_T = GC->rtcc->RZDRTSD.table[num - 1].Longitude*RAD;
+			if (GC->rtcc->RZC1RCNS.Thruster == RTCC_ENGINETYPE_CSMSPS)
+			{
+				GC->rtcc->RZJCTTC.GETI = GC->rtcc->RZDRTSD.table[num - 1].GET - 20.0*60.0;
+			}
+			else
+			{
+				GC->rtcc->RZJCTTC.GETI = GC->rtcc->RZDRTSD.table[num - 1].GET - 30.0*60.0;
+			}
+			
 			return true;
 		}
 	}
@@ -4538,13 +4653,13 @@ void ApolloRTCCMFD::menuDeorbitCalc()
 
 void ApolloRTCCMFD::menuCycleRetrofireType()
 {
-	if (GC->rtcc->RZJCTTC.Type < 2)
+	if (GC->rtcc->RZJCTTC.R32_Code < 2)
 	{
-		GC->rtcc->RZJCTTC.Type++;
+		GC->rtcc->RZJCTTC.R32_Code++;
 	}
 	else
 	{
-		GC->rtcc->RZJCTTC.Type = 1;
+		GC->rtcc->RZJCTTC.R32_Code = 1;
 	}
 }
 
@@ -4555,7 +4670,7 @@ void ApolloRTCCMFD::menuRetrofireGETIDialogue()
 
 void ApolloRTCCMFD::menuRetrofireLatDialogue()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.lat_T, "Latitude in degree (°):", RAD);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.lat_T, "Latitude in degree (°), enter -720 or less for no iteration on latitude:", RAD);
 }
 
 void ApolloRTCCMFD::menuRetrofireLngDialogue()
@@ -4840,7 +4955,7 @@ void ApolloRTCCMFD::menuTransferRTEToMPT()
 	else
 	{
 		bool TransferRTEInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Enter P for Primary or M for Manual to make the maneuver available for the Maneuver PAD etc.", TransferRTEInput, 0, 50, (void*)this);
+		oapiOpenInputBox("Make burn solution available for Maneuver PAD etc. (enter RTEP for RTE primary column, RTEM for manual. TTFM for deorbit burn)", TransferRTEInput, 0, 50, (void*)this);
 	}
 }
 
@@ -4853,21 +4968,36 @@ bool ApolloRTCCMFD::set_RTESolution(char *str)
 {
 	int i;
 
-	if (str[0] == 'P')
+	if (strcmp(str, "RTEP") == 0)
 	{
 		i = 0;
 	}
-	else if (str[0] == 'M')
+	else if (str[0] == 'RTEM')
 	{
 		i = 1;
+	}
+	else if (strcmp(str, "TTFM") == 0)
+	{
+		i = 2;
 	}
 	else
 	{
 		return false;
 	}
 
-	G->P30TIG = GC->rtcc->PZREAP.RTEDTable[i].GETI;
-	G->dV_LVLH = GC->rtcc->PZREAP.RTEDTable[i].DV_XDV;
+	if (i < 2)
+	{
+		G->P30TIG = GC->rtcc->PZREAP.RTEDTable[i].GETI;
+		G->dV_LVLH = GC->rtcc->PZREAP.RTEDTable[i].DV_XDV;
+	}
+	else
+	{
+		if (GC->rtcc->RZRFDP.Indicator == 0)
+		{
+			G->P30TIG = GC->rtcc->RZRFDP.GETI;
+			G->dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
+		}
+	}
 	return true;
 }
 

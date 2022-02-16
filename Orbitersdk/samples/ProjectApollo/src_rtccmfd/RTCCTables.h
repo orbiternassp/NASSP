@@ -502,6 +502,28 @@ struct RetrofireDisplayParametersTable
 	VECTOR3 VG_XDX;
 	VECTOR3 VGX_THR;
 	double H_apo, H_peri;
+
+	//Sep/shaping maneuver
+	//0 = good data, +1 = no data, -1 = bad data
+	int Indicator_Sep = 1;
+	//Ullage quad (2 or 4)
+	int UllageQuads_Sep;
+	double CSMWeightSep;
+	double TrueAnomalySep;
+	VECTOR3 Att_LVLH_Sep;
+	VECTOR3 Att_IMU_Sep;
+	//Velocity counter - tailoff
+	double DVC_Sep;
+	double BurnTime_Sep;
+	//Total velocity + tailoff
+	double DVT_Sep;
+	double UllageDT_Sep;
+	double GMTI_Sep;
+	double GETI_Sep;
+	//Height at sep/shaping above the oblate Earth
+	double H_Sep;
+	double H_apo_sep, H_peri_sep;
+	double P_G_Sep, Y_G_Sep;
 };
 
 struct TimeConstraintsTable
