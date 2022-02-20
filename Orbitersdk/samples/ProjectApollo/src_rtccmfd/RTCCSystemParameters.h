@@ -668,6 +668,16 @@ struct RTCCSystemParameters
 		MHVCCG.Weight[19] = 64400.000000*0.453597;
 		MHVCCG.CG[19] = _V(934.701130, 3.973806, 6.541933)*0.0254;
 		MHVCCG.N = 20;
+
+		MDZBLK[0] = -0.9174410e1;
+		MDZBLK[1] = -0.8217687e1;
+		MDZBLK[2] = 0.6120521e1;
+		MDZBLK[3] = -0.7693073e0;
+		MDZBLK[4] = 0.5298784e-1;
+		MDZBLK[5] = -0.2185130e-2;
+		MDZBLK[6] = 0.5340257e-4;
+		MDZBLK[7] = -0.7113728e-6;
+		MDZBLK[8] = 0.3971388e-8;
 	}
 
 	//DEFINITIONS
@@ -1083,4 +1093,9 @@ struct RTCCSystemParameters
 
 	//Matrix to convert from J2000 to NBY coordinates
 	MATRIX3 MAT_J2000_BRCS;
+
+	//Reentry
+
+	//Blackout
+	double MDZBLK[9];
 };

@@ -2136,7 +2136,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
 		opt.dV_LVLH = DeltaV_LVLH;
-		opt.GETbase = CalcGETBase();
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = REFSMMAT;
 		opt.sv0 = StateVectorCalc(calcParams.src);
@@ -2157,7 +2156,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EarthEntryPADOpt opt;
 
 		opt.dV_LVLH = DeltaV_LVLH;
-		opt.GETbase = CalcGETBase();
 		opt.lat = SplashLatitude;
 		opt.lng = SplashLongitude;
 		opt.P30TIG = TimeofIgnition;
