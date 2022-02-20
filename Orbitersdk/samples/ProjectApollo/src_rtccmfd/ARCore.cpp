@@ -4053,7 +4053,6 @@ int ARCore::subThread()
 			EarthEntryPADOpt opt;
 
 			opt.dV_LVLH = dV_LVLH;
-			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.P30TIG = P30TIG;
 			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.sv0 = GC->rtcc->StateVectorCalc(vessel);

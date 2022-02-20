@@ -2455,11 +2455,53 @@ void MCC::drawPad(bool writetofile){
 	case PT_AP7ENT:
 		{
 			AP7ENT * form = (AP7ENT *)padForm;
-			int hh, mm, hh2, mm2;
-			double ss, ss2;
+
+			char buffer2[1024];
+			std::string buffer3;
+			int hh, mm;
+			double ss;
+
+			buffer3 = "ENTRY UPDATE\nPREBURN\n";
+			sprintf_s(buffer2, "X%s AREA\nXX%+5.1f DV TO\n", form->Area[0], form->dVTO[0]);
+			buffer3.append(buffer2);
+			sprintf_s(buffer2, "XXX%03.0f R400K\nXXX%03.0f P400K\nXXX%03.0f Y400K\n", form->Att400K[0].x, form->Att400K[0].y, form->Att400K[0].z);
+			buffer3.append(buffer2);
+			sprintf_s(buffer2, "%+07.1f RTGO .05G\n%+06.0f VIO .05G\n", form->RTGO[0], form->VIO[0]);
+			buffer3.append(buffer2);
 			SStoHHMMSS(form->Ret05[0], hh, mm, ss);
-			SStoHHMMSS(form->PB_Ret05[0], hh2, mm2, ss2);
-			sprintf(buffer, "ENTRY UPDATE\nPREBURN\nX%s AREA\nXX%+5.1f DV TO\nXXX%03.0f R400K\nXXX%03.0f P400K\nXXX%03.0f Y400K\n%+07.1f RTGO .05G\n%+06.0f VIO .05G\nXX%0d:%02.0f RET .05G\n%+07.2f LAT\n%+07.2f LONG\nPOSTBURN\nXXX%03.0f R400K\n%+07.1f RTGO .05G\n%+06.0f VIO .05G\nXX%0d:%02.0f RET .05G", form->Area[0], form->dVTO[0], form->Att400K[0].x, form->Att400K[0].y, form->Att400K[0].z, form->RTGO[0], form->VIO[0], mm, ss, form->Lat[0], form->Lng[0], form->PB_R400K[0], form->PB_RTGO[0], form->PB_VIO[0], mm2, ss2);
+			sprintf_s(buffer2, "XX%0d:%02.0f RET .05G\n%+07.2f LAT\n%+07.2f LONG\n", mm, ss, form->Lat[0], form->Lng[0]);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->Ret2[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RET .2G\n%+07.1lf DRE (55°) N66\n", mm, ss, form->DRE[0]);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->RetBBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETBBO\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->RetEBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETEBO\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->RetDrog[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETDROG\n", mm, ss);
+			buffer3.append(buffer2);
+			sprintf_s(buffer2, "POSTBURN\nXXX%03.0f R400K\n%+07.1f RTGO .05G\n%+06.0f VIO .05G\n", form->PB_R400K[0], form->PB_RTGO[0], form->PB_VIO[0]);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_Ret05[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RET .05G\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_Ret2[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RET .2G\n%+07.1lf DRE (55°) N66\n", mm, ss, form->PB_DRE[0]);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_RetBBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETBBO\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_RetEBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETEBO\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_RetDrog[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETDROG\n", mm, ss);
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer, "%s", buffer3.c_str());
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;

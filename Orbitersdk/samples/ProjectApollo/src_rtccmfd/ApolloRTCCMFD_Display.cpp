@@ -1381,23 +1381,26 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (G->entrypadopt == 0)
 		{
-			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Earth Entry PAD", 15);
-			skp->Text(4 * W / 8, 2 * H / 20, "PREBURN", 7);
+			skp->Text(5 * W / 8, 1 * H / 28, "Earth Entry PAD", 15);
+
+			skp->SetFont(font2);
+
+			skp->Text(7 * W / 16, 3 * H / 32, "PREBURN", 7);
 
 			sprintf(Buffer, "XX%+05.1f dV TO", G->earthentrypad.dVTO[0]);
-			skp->Text(3 * W / 8, 3 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 4 * H / 32, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "XXX%03.0f R 0.05G", G->earthentrypad.Att400K[0].x);
-			skp->Text(3 * W / 8, 4 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 5 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "XXX%03.0f P 0.05G", G->earthentrypad.Att400K[0].y);
-			skp->Text(3 * W / 8, 5 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 6 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "XXX%03.0f Y 0.05G", G->earthentrypad.Att400K[0].z);
-			skp->Text(3 * W / 8, 6 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 7 * H / 32, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.1f RTGO .05G", G->earthentrypad.RTGO[0]);
-			skp->Text(3 * W / 8, 7 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 8 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+06.0f VIO  .05G", G->earthentrypad.VIO[0]);
-			skp->Text(3 * W / 8, 8 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 9 * H / 32, Buffer, strlen(Buffer));
 
 			double secs;
 			int mm, hh;
@@ -1405,26 +1408,99 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			SStoHHMMSS(G->earthentrypad.Ret05[0], hh, mm, secs);
 
 			sprintf(Buffer, "XX%02d:%02.0f RET  .05G", mm, secs);
-			skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 10 * H / 32, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.2f LAT", G->earthentrypad.Lat[0]);
-			skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 11 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.2f LONG", G->earthentrypad.Lng[0]);
-			skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 12 * H / 32, Buffer, strlen(Buffer));
 
-			skp->Text(4 * W / 8, 12 * H / 20, "POSTBURN", 8);
+			SStoHHMMSS(G->earthentrypad.Ret2[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RET  .2G", mm, secs);
+			skp->Text(3 * W / 8, 13 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+07.1lf DRE (55°)  N66", G->earthentrypad.DRE[0]);
+			skp->Text(3 * W / 8, 14 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "RR55/55 BANK AN");
+			skp->Text(3 * W / 8, 15 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.RetRB[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RET RB", mm, secs);
+			skp->Text(3 * W / 8, 16 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.RetBBO[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETBBO", mm, secs);
+			skp->Text(3 * W / 8, 17 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.RetEBO[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETEBO", mm, secs);
+			skp->Text(3 * W / 8, 18 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.RetDrog[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETDROG", mm, secs);
+			skp->Text(3 * W / 8, 19 * H / 32, Buffer, strlen(Buffer));
+
+			skp->Text(7 * W / 16, 20 * H / 32, "POSTBURN", 8);
 
 			sprintf(Buffer, "XXX%03.0f R 0.05G", G->earthentrypad.PB_R400K[0]);
-			skp->Text(3 * W / 8, 13 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 21 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.1f RTGO .05G", G->earthentrypad.PB_RTGO[0]);
-			skp->Text(3 * W / 8, 14 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 22 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+06.0f VIO  .05G", G->earthentrypad.PB_VIO[0]);
-			skp->Text(3 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 23 * H / 32, Buffer, strlen(Buffer));
 
 			SStoHHMMSS(G->earthentrypad.PB_Ret05[0], hh, mm, secs);
 
 			sprintf(Buffer, "XX%02d:%02.0f RET  .05G", mm, secs);
-			skp->Text(3 * W / 8, 16 * H / 20, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 24 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.PB_Ret2[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RET  .2G", mm, secs);
+			skp->Text(3 * W / 8, 25 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+07.1lf DRE +/- 100nm  N66", G->earthentrypad.PB_DRE[0]);
+			skp->Text(3 * W / 8, 26 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "RR55/55 BANK AN");
+			skp->Text(3 * W / 8, 27 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.PB_RetRB[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RET RB", mm, secs);
+			skp->Text(3 * W / 8, 28 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.PB_RetBBO[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETBBO", mm, secs);
+			skp->Text(3 * W / 8, 29 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.PB_RetEBO[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETEBO", mm, secs);
+			skp->Text(3 * W / 8, 30 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->earthentrypad.PB_RetDrog[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETDROG", mm, secs);
+			skp->Text(3 * W / 8, 31 * H / 32, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 16, 7 * H / 21, "Deorbit:", 8);
+			GET_Display(Buffer, G->P30TIG);
+			skp->Text(1 * W / 16, 8 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 16, 9 * H / 21, "DVX", 3);
+			skp->Text(1 * W / 16, 10 * H / 21, "DVY", 3);
+			skp->Text(1 * W / 16, 11 * H / 21, "DVZ", 3);
+
+			AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
+			skp->Text(3 * W / 16, 9 * H / 21, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
+			skp->Text(3 * W / 16, 10 * H / 21, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
+			skp->Text(3 * W / 16, 11 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 16, 12 * H / 21, "Splashdown:", 11);
+			sprintf(Buffer, "Lat:  %+.2f°", G->EntryLatcor*DEG);
+			skp->Text(1 * W / 16, 13 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "Long: %+.2f°", G->EntryLngcor*DEG);
+			skp->Text(1 * W / 16, 14 * H / 21, Buffer, strlen(Buffer));
 		}
 		else
 		{

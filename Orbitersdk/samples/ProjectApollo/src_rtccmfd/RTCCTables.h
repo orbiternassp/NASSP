@@ -425,9 +425,15 @@ struct RMMYNIOutputTable
 	double t_lc = 0.0;
 	double t_05g = 0.0;
 	double t_2g = 0.0;
+	double DRE_2g = 0.0;
 	double t_gc = 0.0;
 	double gmax = 0.0;
 	double t_gmax = 0.0;
+	double t_BBO = 0.0;
+	double t_EBO = 0.0;
+	double R_EMS = 0.0;
+	double V_EMS = 0.0;
+	double t_V_Circ = 0.0;
 	//1 = time limit, 2 = impact, 3 = skipout
 	int IEND;
 };
