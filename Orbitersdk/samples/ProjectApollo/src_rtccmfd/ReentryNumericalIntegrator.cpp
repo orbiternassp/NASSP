@@ -259,6 +259,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		out.gmax = gmax;
 		out.t_BBO = t_BBO;
 		out.t_EBO = t_EBO;
+		out.t_V_Circ = t_V_Circ;
 		out.R_EMS = R_EMS;
 		out.V_EMS = V_EMS0;
 		if (droguedeployed)

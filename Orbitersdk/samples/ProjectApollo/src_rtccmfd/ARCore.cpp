@@ -777,6 +777,10 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lunarentrypad.TRN[0] = 0;
 	lunarentrypad.V400K[0] = 0.0;
 	lunarentrypad.VIO[0] = 0.0;
+	lunarentrypad.RETBBO[0] = 0.0;
+	lunarentrypad.RETEBO[0] = 0.0;
+	lunarentrypad.RETDRO[0] = 0.0;
+	lunarentrypad.RETVCirc[0] = 0.0;
 
 	navcheckpad.alt[0] = 0.0;
 	navcheckpad.lat[0] = 0.0;
@@ -4090,7 +4094,6 @@ int ARCore::subThread()
 			LunarEntryPADOpt opt;
 
 			opt.dV_LVLH = dV_LVLH;
-			opt.GETbase = GC->rtcc->CalcGETBase();
 
 			if (EntryLatcor == 0)
 			{

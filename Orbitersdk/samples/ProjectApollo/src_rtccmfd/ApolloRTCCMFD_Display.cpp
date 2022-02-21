@@ -1504,7 +1504,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else
 		{
-			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Entry PAD", 15);
+			skp->Text(5 * W / 8, 1 * H / 28, "Lunar Entry PAD", 15);
+
+			skp->SetFont(font2);
 
 			if (G->entryrange != 0)
 			{
@@ -1514,38 +1516,38 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 
 			sprintf(Buffer, "XXX%03.0f R 0.05G", G->lunarentrypad.Att05[0].x);
-			skp->Text(3 * W / 8, 2 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 5 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "XXX%03.0f P 0.05G", G->lunarentrypad.Att05[0].y);
-			skp->Text(3 * W / 8, 3 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 6 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "XXX%03.0f Y 0.05G", G->lunarentrypad.Att05[0].z);
-			skp->Text(3 * W / 8, 4 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 7 * H / 32, Buffer, strlen(Buffer));
 
 			GET_Display(Buffer, G->lunarentrypad.GETHorCheck[0]);
-			skp->Text(3 * W / 8, 5 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 8 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "XXX%03.0f P HOR CK", G->lunarentrypad.PitchHorCheck[0]);
-			skp->Text(3 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 9 * H / 32, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.2f LAT", G->lunarentrypad.Lat[0]);
-			skp->Text(3 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 10 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.2f LONG", G->lunarentrypad.Lng[0]);
-			skp->Text(3 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 11 * H / 32, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "XXX%04.1f MAX G", G->lunarentrypad.MaxG[0]);
-			skp->Text(3 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 12 * H / 32, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+06.0f V400k", G->lunarentrypad.V400K[0]);
-			skp->Text(3 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 13 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+07.2f y400k", G->lunarentrypad.Gamma400K[0]);
-			skp->Text(3 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 14 * H / 32, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+07.1f RTGO .05G", G->lunarentrypad.RTGO[0]);
-			skp->Text(3 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 15 * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+06.0f VIO  .05G", G->lunarentrypad.VIO[0]);
-			skp->Text(3 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 16 * H / 32, Buffer, strlen(Buffer));
 
 			GET_Display(Buffer, G->lunarentrypad.RRT[0]);
 			sprintf(Buffer, "%s RRT", Buffer);
-			skp->Text(3 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 17 * H / 32, Buffer, strlen(Buffer));
 
 			double secs;
 			int mm, hh;
@@ -1553,32 +1555,66 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			SStoHHMMSS(G->lunarentrypad.RET05[0], hh, mm, secs);
 
 			sprintf(Buffer, "XX%02d:%02.0f RET  .05G", mm, secs);
-			skp->Text(3 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 18 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+07.2lf DL MAX", G->lunarentrypad.DLMax[0]);
+			skp->Text(3 * W / 8, 19 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+07.2lf DL MIN", G->lunarentrypad.DLMin[0]);
+			skp->Text(3 * W / 8, 20 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+06.0lf VL MAX", G->lunarentrypad.VLMax[0]);
+			skp->Text(3 * W / 8, 21 * H / 32, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+06.0lf VL MIN", G->lunarentrypad.VLMin[0]);
+			skp->Text(3 * W / 8, 22 * H / 32, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "XXX%04.2f DO", G->lunarentrypad.DO[0]);
-			skp->Text(3 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 23 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->lunarentrypad.RETVCirc[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RET V CIRC", mm, secs);
+			skp->Text(3 * W / 8, 24 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->lunarentrypad.RETBBO[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETBBO", mm, secs);
+			skp->Text(3 * W / 8, 25 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->lunarentrypad.RETEBO[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETEBO", mm, secs);
+			skp->Text(3 * W / 8, 26 * H / 32, Buffer, strlen(Buffer));
+
+			SStoHHMMSS(G->lunarentrypad.RETDRO[0], hh, mm, secs);
+			sprintf(Buffer, "XX%02d:%02.0f RETDRO", mm, secs);
+			skp->Text(3 * W / 8, 27 * H / 32, Buffer, strlen(Buffer));
 
 			if (G->lunarentrypad.SXTS[0] == 0)
 			{
 				sprintf(Buffer, "N/A     SXTS");
-				skp->Text(3 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+				skp->Text(3 * W / 8, 28 * H / 32, Buffer, strlen(Buffer));
 				sprintf(Buffer, "N/A     SFT");
-				skp->Text(3 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+				skp->Text(3 * W / 8, 29 * H / 32, Buffer, strlen(Buffer));
 				sprintf(Buffer, "N/A     TRN");
-				skp->Text(3 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+				skp->Text(3 * W / 8, 30 * H / 32, Buffer, strlen(Buffer));
 			}
 			else
 			{
 				sprintf(Buffer, "XXXX%02d SXTS", G->lunarentrypad.SXTS[0]);
-				skp->Text(3 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+				skp->Text(3 * W / 8, 28 * H / 32, Buffer, strlen(Buffer));
 				sprintf(Buffer, "%+07.2f SFT", G->lunarentrypad.SFT[0]);
-				skp->Text(3 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+				skp->Text(3 * W / 8, 29 * H / 32, Buffer, strlen(Buffer));
 				sprintf(Buffer, "%+07.3f TRN", G->lunarentrypad.TRN[0]);
-				skp->Text(3 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+				skp->Text(3 * W / 8, 30 * H / 32, Buffer, strlen(Buffer));
 			}
 
 			sprintf(Buffer, "XXXX%s LIFT VECTOR", G->lunarentrypad.LiftVector[0]);
-			skp->Text(3 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 31 * H / 32, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 16, 12 * H / 21, "Splashdown:", 11);
+			sprintf(Buffer, "Lat:  %+.2f°", G->EntryLatcor*DEG);
+			skp->Text(1 * W / 16, 13 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "Long: %+.2f°", G->EntryLngcor*DEG);
+			skp->Text(1 * W / 16, 14 * H / 21, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 11)
