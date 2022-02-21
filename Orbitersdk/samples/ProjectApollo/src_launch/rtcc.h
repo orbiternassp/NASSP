@@ -584,7 +584,6 @@ struct EarthEntryPADOpt
 
 struct LunarEntryPADOpt
 {
-	double GETbase; //usually MJD at launch
 	double P30TIG; //Time of Ignition (MCC)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
 	MATRIX3 REFSMMAT;
