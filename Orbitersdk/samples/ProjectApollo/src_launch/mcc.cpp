@@ -1494,6 +1494,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			SAVE_DOUBLE("MCC_TLIPAD_VI", form->VI);
 			SAVE_STRING("MCC_TLIPAD_remarks", form->remarks);
+			SAVE_INT("MCC_TLIPAD_type", form->type);
 		}
 		else if (padNumber == 11)
 		{
@@ -2038,6 +2039,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			LOAD_DOUBLE("MCC_TLIPAD_VI", form->VI);
 			LOAD_STRING("MCC_TLIPAD_remarks", form->remarks, 128);
+			LOAD_INT("MCC_TLIPAD_type", form->type);
 		}
 		else if (padNumber == 11)
 		{
@@ -2595,14 +2597,28 @@ void MCC::drawPad(bool writetofile){
 		{
 			TLIPAD * form = (TLIPAD *)padForm;
 
+			char buffer2[1024];
+			std::string buffer3;
 			int hh, mm;
 			double ss;
 
-			sprintf(buffer, "TLI");
+			buffer3 = "TLI\n";
 			format_time(tmpbuf, form->TB6P);
 			SStoHHMMSS(form->BurnTime, hh, mm, ss);
 
-			sprintf(buffer, "%s\n%s TB6p\nXXX%03.0f R\nXXX%03.0f P TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P SEP\nXXX%03.0f Y\nXXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y\nRemarks: %s", buffer, tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z, form->ExtATT.x, form->ExtATT.y, form->ExtATT.z, form->remarks);
+			sprintf_s(buffer2, "%s TB6p\nXXX%03.0f R\nXXX%03.0f P TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P SEP\nXXX%03.0f Y\n", tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z);
+			buffer3.append(buffer2);
+
+			if (form->type == 2)
+			{
+				sprintf_s(buffer2, "XXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y\n", form->ExtATT.x, form->ExtATT.y, form->ExtATT.z);
+				buffer3.append(buffer2);
+			}
+
+			sprintf_s(buffer2, "Remarks: %s", form->remarks);
+			buffer3.append(buffer2);
+			
+			sprintf_s(buffer, "%s", buffer3.c_str());
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 	break;
