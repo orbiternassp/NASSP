@@ -62,7 +62,6 @@ GNDataTab::GNDataTab()
 
 ReentryNumericalIntegrator::ReentryNumericalIntegrator(RTCC *r) : RTCCModule(r)
 {
-	N = 12.021653 / 5498.219913;
 	Bank = 0.0;
 	BRATE = 0.0;
 	K1 = 0.0;
@@ -104,6 +103,35 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	K2 = in.K2;
 	EphemerisBuildInd = false; //TBD
 
+	//Use system parameter or override
+	if (in.CMArea < 0)
+	{
+		CMArea = pRTCC->SystemParameters.MCVCMA;
+	}
+	else
+	{
+		CMArea = in.CMArea;
+	}
+	if (in.CMWeight < 0)
+	{
+		CMWeight = pRTCC->SystemParameters.MCVCMW;
+	}
+	else
+	{
+		CMWeight = in.CMWeight;
+	}
+
+	N = CMArea / CMWeight;
+
+	if (LiftMode == 3)
+	{
+		Bank = ROLLC = GNData.C10;
+	}
+	else
+	{
+		Bank = ROLLC = K1;
+	}
+	BRATE = 0.0;
 	gmax = 0;
 	T = T_prev = 0.0;
 	ISGNInit = false;
@@ -121,6 +149,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	dt_prev = dt2 = dt22 = dt28 = dt6 = 0.0;
 	R_EMS = V_EMS = 0.0;
 	t_V_Circ = 0.0;
+	TLAST = 0.0;
 
 	//Null output table
 	out.lat_IP = 0.0;
@@ -226,6 +255,18 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		{
 			//Skipout
 			IEND = 3;
+		}
+
+		if (K05G == false && STEP > 0.5)
+		{
+			//predicted time of 0.05g
+			double t_005g_red = T_prev + (0.05*9.80665 - G_prev)*(T - T_prev) / (A_X - G_prev);
+			//Is it within the next step?
+			if (t_005g_red < TE + STEP)
+			{
+				//Set to 0.1 until 0.05g
+				STEP = 0.1;
+			}
 		}
 
 		TE += STEP;
@@ -398,6 +439,7 @@ void ReentryNumericalIntegrator::EventsRoutine()
 			K05G = true;
 			t_05G = T;
 			V_EMS0 = V_EMS = vel;
+			STEP = 1.0; //Reset to 1.0
 		}
 	}
 	if (t_2G == 0.0)
@@ -473,7 +515,12 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 			GNInitialization();
 			ISGNInit = true;
 		}
-		GNTargeting();
+
+		if (T == 0.0 || (T - TLAST - GNData.dt_guid >= -EPS))
+		{
+			GNTargeting();
+			TLAST = T;
+		}
 		RollControl();
 	}
 	else if (LiftMode == 4)

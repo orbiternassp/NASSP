@@ -399,7 +399,6 @@ struct RMMYNIInputTable
 	double CGBIAS = 0.0;
 	//Initial bank angle for G&N simulation
 	double C10 = 0.0;
-	double CMWT;
 	double H_EMS = -1.0;
 	//Mode: 1 = Zero lift, 2 = Max Lift, 3 = G&N, 4 = Bank angle - time to reverse bank angle, 5 = Constant bank angle, 6 = Constant bank to G, then roll, 7 = Bank angle to G-level then maximum lift
 	//8 = Bank angle to a G-level then bank angle-time to reverse bank angle, 9 = Bank angle to a G-level then another bank angle to impact prediction, 10 = constant G
@@ -414,6 +413,8 @@ struct RMMYNIInputTable
 	double RLDIR = 1.0;
 	//Time to reverse bank angle
 	double t_RB = 0.0;
+	double CMArea = -1.0;
+	double CMWeight = -1.0;
 };
 
 struct RMMYNIOutputTable

@@ -94,6 +94,8 @@ struct GNDataTab
 	const double K13P = 4.0;
 	//Maximum acceleration
 	const double GMAX = 257.6*0.3048;
+	//Guidance cycle
+	const double dt_guid = 2.0;
 	double VREF_TAB[13];
 	double RDTRF_TAB[13];
 	double AREF_TAB[13];
@@ -343,6 +345,10 @@ protected:
 	double t_V_Circ;
 	//Atmospheric density
 	double rho;
+	//Last guidance time
+	double TLAST;
+	double CMArea;
+	double CMWeight;
 
 	//Parameters for constant G and G&N
 	double VSAT;

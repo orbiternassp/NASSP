@@ -263,6 +263,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->BurnTime = DMTBuffer[0].DT_B;
 		form->dVC = DMTBuffer[0].DVC;
 		form->VI = length(PZMPTCSM.mantable[0].V_BO) / 0.3048;
+		form->type = 1; //Don't show extraction angles
 
 		//DMT for sep maneuver
 		GMGMED("U20,CSM,2;");
