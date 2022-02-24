@@ -62,7 +62,6 @@ GNDataTab::GNDataTab()
 
 ReentryNumericalIntegrator::ReentryNumericalIntegrator(RTCC *r) : RTCCModule(r)
 {
-	N = 12.021653 / 5498.219913;
 	Bank = 0.0;
 	BRATE = 0.0;
 	K1 = 0.0;
@@ -82,6 +81,7 @@ ReentryNumericalIntegrator::ReentryNumericalIntegrator(RTCC *r) : RTCCModule(r)
 	HS = 28500.0*0.3048;
 	RE = 21202900.0*0.3048;
 	ATK = 3437.7468*1852.0;
+	K_D = 0.948;
 }
 
 void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTable &out)
@@ -103,29 +103,69 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	K2 = in.K2;
 	EphemerisBuildInd = false; //TBD
 
+	//Use system parameter or override
+	if (in.CMArea < 0)
+	{
+		CMArea = pRTCC->SystemParameters.MCVCMA;
+	}
+	else
+	{
+		CMArea = in.CMArea;
+	}
+	if (in.CMWeight < 0)
+	{
+		CMWeight = pRTCC->SystemParameters.MCVCMW;
+	}
+	else
+	{
+		CMWeight = in.CMWeight;
+	}
+
+	N = CMArea / CMWeight;
+
+	if (LiftMode == 3)
+	{
+		Bank = ROLLC = GNData.C10;
+	}
+	else
+	{
+		Bank = ROLLC = K1;
+	}
+	BRATE = 0.0;
 	gmax = 0;
 	T = T_prev = 0.0;
 	ISGNInit = false;
 	t_2G = 0.0;
+	t_BBO = t_EBO = 0.0;
+	DRE_2g = 0.0;
 	droguedeployed = false;
 	maindeployed = false;
 	TNEXT = 0.0;
-	STEP = 2.0;
+	STEP = 1.0;
 	TE = STEP;
 	IREVBANK = false;
 	EPS = 1e-14*3600.0;
+	H_prev = G_prev = 0.0;
+	dt_prev = dt2 = dt22 = dt28 = dt6 = 0.0;
+	R_EMS = V_EMS = 0.0;
+	t_V_Circ = 0.0;
+	TLAST = 0.0;
 
 	//Null output table
 	out.lat_IP = 0.0;
 	out.lng_IP = 0.0;
 	out.t_05g = 0.0;
 	out.t_2g = 0.0;
+	out.DRE_2g = 0.0;
 	out.t_lc = 0.0;
 	out.t_gc = 0.0;
 	out.t_drogue = 0.0;
 	out.t_main = 0.0;
+	out.t_EBO = out.t_BBO = 0.0;
+	out.R_EMS = out.V_EMS = 0.0;
+	out.t_V_Circ = 0.0;
 
-	double v, fpa;
+	double fpa;
 
 	IEND = 0;
 
@@ -133,6 +173,9 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	{
 		GNData.URTO = OrbMech::r_from_latlong(in.lat_T, in.lng_T);
 	}
+
+	//Calculate initial acceleration
+	SecondDerivativeRoutine(R_cur, V_cur);
 
 	do
 	{
@@ -154,15 +197,21 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 			}
 		}
 
+		DT = TE - T;
+
+		//Store
+		H_prev = alt;
+		G_prev = A_X;
 		R_prev = R_cur;
 		V_prev = V_cur;
 		T_prev = T;
+
+		EventsRoutine();
+
 		if (droguedeployed == false)
 		{
 			GuidanceRoutine(R_cur, V_cur);
 		}
-
-		DT = TE - T;
 
 		RungeKuttaIntegrationRoutine(R_prev, V_prev, DT, R_cur, V_cur);
 		T += DT;
@@ -176,12 +225,8 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 			}
 		}
 
-		alt = length(R_cur) - OrbMech::R_Earth;
-		v = length(V_cur);
 		fpa = asin(dotp(unit(R_cur), unit(V_cur)))*DEG;
-		CalculateDragAcceleration(R_cur, V_cur);
 		
-
 		//Configuration changes
 		if (droguedeployed == false && alt < 23500.0*0.3048)
 		{
@@ -212,6 +257,18 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 			IEND = 3;
 		}
 
+		if (K05G == false && STEP > 0.5)
+		{
+			//predicted time of 0.05g
+			double t_005g_red = T_prev + (0.05*9.80665 - G_prev)*(T - T_prev) / (A_X - G_prev);
+			//Is it within the next step?
+			if (t_005g_red < TE + STEP)
+			{
+				//Set to 0.1 until 0.05g
+				STEP = 0.1;
+			}
+		}
+
 		TE += STEP;
 	} while (IEND == 0);
 
@@ -237,8 +294,15 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		{
 			out.t_gc = GMT0 + t_gc;
 		}
-		out.t_gmax = GMT0+ t_gmax;
+		out.t_2g = GMT0 + t_2G;
+		out.DRE_2g = DRE_2g;
+		out.t_gmax = GMT0 + t_gmax;
 		out.gmax = gmax;
+		out.t_BBO = t_BBO;
+		out.t_EBO = t_EBO;
+		out.t_V_Circ = t_V_Circ;
+		out.R_EMS = R_EMS;
+		out.V_EMS = V_EMS0;
 		if (droguedeployed)
 		{
 			out.t_drogue = GMT0 + t_drogue;
@@ -253,29 +317,49 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 
 void ReentryNumericalIntegrator::RungeKuttaIntegrationRoutine(VECTOR3 R_N, VECTOR3 V_N, double dt, VECTOR3 &R_N1, VECTOR3 &V_N1)
 {
-	VECTOR3 K1, K2, K3, K4;
+	VECTOR3 K1, K2, K3;
 
-	K1 = SecondDerivativeRoutine(R_N, V_N)*dt;
-	Bank += BRATE * dt / 2.0;
+	if (dt != dt_prev)
+	{
+		dt2 = dt / 2.0;
+		dt22 = dt * dt2;
+		dt28 = dt22 / 4.0;
+		dt6 = dt / 6.0;
+		dt_prev = dt;
+	}
+
+	K1 = YPP;
+	Bank += BRATE * dt2;
 	Limit02PI(Bank);
-	K2 = SecondDerivativeRoutine(R_N + V_N * dt / 2.0 + K1 * dt / 8.0, V_N + K1 / 2.0)*dt;
-	K3 = SecondDerivativeRoutine(R_N + V_N * dt / 2.0 + K1 * dt / 8.0, V_N + K2 / 2.0)*dt;
-	Bank += BRATE * dt / 2.0;
+	SecondDerivativeRoutine(R_N + V_N * dt2 + K1 * dt28, V_N + K1 * dt2);
+	K2 = YPP;
+	SecondDerivativeRoutine(R_N + V_N * dt2 + K1 * dt28, V_N + K2 * dt2);
+	K3 = YPP;
+	Bank += BRATE * dt2;
 	Limit02PI(Bank);
-	K4 = SecondDerivativeRoutine(R_N + V_N * dt + K3 * dt / 2.0, V_N + K3)*dt;
+	SecondDerivativeRoutine(R_N + V_N * dt + K3 * dt22, V_N + K3 * dt);
 
-	R_N1 = R_N + (V_N + (K1 + K2 + K3) / 6.0)*dt;
-	V_N1 = V_N + (K1 + K2 * 2.0 + K3 * 2.0 + K4) / 6.0;
+	R_N1 = R_N + (V_N + (K1 + K2 + K3)*dt6)*dt;
+	V_N1 = V_N + (K1 + (K2 + K3) * 2.0 + YPP)*dt6;
 
-	//TBD: EMS integration
-	//R_EMS1 = R_EMS + (V_EMS + (K1EMS + K2EMS + K3EMS) / 6.0)*dt;
-	//V_EMS1 = V_EMS + (K1EMS + K2EMS * 2.0 + K3EMS * 2.0 + K4EMS) / 6.0;
+	//Evaluate final acceleration
+	SecondDerivativeRoutine(R_N1, V_N1);
+
+	//EMS integration
+	if (K05G)
+	{
+		double V_EMS1 = V_EMS - K_D * A_X*dt;
+		if (V_EMS1 > 0)
+		{
+			R_EMS = R_EMS + 0.98433070866*dt2 * (V_EMS + V_EMS1); //factor is 1852.0*0.000162/0.3048
+			V_EMS = V_EMS1;
+		}
+	}
 }
 
-VECTOR3 ReentryNumericalIntegrator::SecondDerivativeRoutine(VECTOR3 R, VECTOR3 V)
+void ReentryNumericalIntegrator::SecondDerivativeRoutine(VECTOR3 R, VECTOR3 V)
 {
-	double AOA;
-	return GravityAcceleration(R) + LiftDragAcceleration(R, V, AOA);
+	YPP = GravityAcceleration(R) + LiftDragAcceleration(R, V);
 }
 
 VECTOR3 ReentryNumericalIntegrator::GravityAcceleration(VECTOR3 R)
@@ -291,10 +375,10 @@ VECTOR3 ReentryNumericalIntegrator::GravityAcceleration(VECTOR3 R)
 	return -U_R * OrbMech::mu_Earth / r2 + g_b;
 }
 
-VECTOR3 ReentryNumericalIntegrator::LiftDragAcceleration(VECTOR3 R, VECTOR3 V, double &AOA)
+VECTOR3 ReentryNumericalIntegrator::LiftDragAcceleration(VECTOR3 R, VECTOR3 V)
 {
 	VECTOR3 A_D, A_L, p_apo, h_apo;
-	double alt, rho, spos, mach, C_L, C_D;
+	double spos, mach, C_L, C_D, AOA, fact, C_A;
 
 	alt = length(R) - OrbMech::R_Earth;
 	pRTCC->GLFDEN(alt, rho, spos);
@@ -303,6 +387,9 @@ VECTOR3 ReentryNumericalIntegrator::LiftDragAcceleration(VECTOR3 R, VECTOR3 V, d
 	V_R.y = V.y - R.x*OrbMech::w_Earth;
 	V_R.z = V.z;
 	v_R = length(V_R);
+	vel = length(V);
+
+	fact = 0.5*rho*N*v_R;
 
 	p_apo = unit(crossp(V_R, crossp(R, V_R)));
 	h_apo = unit(crossp(R, V_R));
@@ -310,9 +397,17 @@ VECTOR3 ReentryNumericalIntegrator::LiftDragAcceleration(VECTOR3 R, VECTOR3 V, d
 	mach = v_R / spos;
 	CalculateLiftDrag(mach, C_L, C_D, AOA);
 
-	A_D = -V_R * 0.5*C_D*rho*N*v_R;
-	A_L = (p_apo*cos(Bank) + h_apo * sin(Bank))*0.5*C_L*rho*N*v_R*v_R; //changed from -sin(Bank)
-	return A_D + A_L;
+	A_D = -V_R * C_D*fact;
+	A_L = (p_apo*cos(Bank) + h_apo * sin(Bank))*C_L*fact*v_R; //changed from -sin(Bank)
+
+	//Along longitudinal axis
+	C_A = -C_L * sin(AOA) + C_D * cos(AOA);
+	A_X = -fact * C_A*v_R;
+
+	DELV = A_D + A_L;
+	DRAG = length(DELV);
+
+	return DELV;
 }
 
 void ReentryNumericalIntegrator::CalculateLiftDrag(double mach, double &CL, double &CD, double &AOA)
@@ -335,7 +430,7 @@ void ReentryNumericalIntegrator::CalculateLiftDrag(double mach, double &CL, doub
 	}
 }
 
-void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
+void ReentryNumericalIntegrator::EventsRoutine()
 {
 	if (K05G == false)
 	{
@@ -343,6 +438,8 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 		{
 			K05G = true;
 			t_05G = T;
+			V_EMS0 = V_EMS = vel;
+			STEP = 1.0; //Reset to 1.0
 		}
 	}
 	if (t_2G == 0.0)
@@ -366,7 +463,32 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 		gmax = A_X / 9.80665;
 		t_gmax = T;
 	}
+	//Blackout
+	if (t_BBO == 0.0)
+	{
+		if (IsInBlackout(v_R, alt))
+		{
+			t_BBO = GMT0 + T;
+		}
+	}
+	else if (t_EBO == 0.0)
+	{
+		if (IsInBlackout(v_R, alt) == false)
+		{
+			t_EBO = GMT0 + T;
+		}
+	}
+	if (K05G && t_V_Circ == 0.0)
+	{
+		if (vel < 25500.0*0.3048)
+		{
+			t_V_Circ = GMT0 + T;
+		}
+	}
+}
 
+void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
+{
 	if (LiftMode == 1)
 	{
 		//Zero lift to 0.05G, then rolling reentry
@@ -393,10 +515,13 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 			GNInitialization();
 			ISGNInit = true;
 		}
-		GNTargeting();
-		//TBD: DAP
-		Bank = ROLLC;
-		BRATE = 0.0;
+
+		if (T == 0.0 || (T - TLAST - GNData.dt_guid >= -EPS))
+		{
+			GNTargeting();
+			TLAST = T;
+		}
+		RollControl();
 	}
 	else if (LiftMode == 4)
 	{
@@ -500,14 +625,43 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 		//Bank angle to a G-level then constant G
 		if (KGC == false)
 		{
-			Bank = K1;
-			BRATE = 0.0;
+			ROLLC = K1;
 		}
 		else
 		{
-			Bank = ConstantGLogic(unit(R), V, DRAG);
-			BRATE = 0.0;
+			ROLLC = ConstantGLogic(unit(R), V, DRAG);
 		}
+		RollControl();
+	}
+}
+
+void ReentryNumericalIntegrator::RollControl()
+{
+	double DROLL, ROLLRATE;
+
+	DROLL = ROLLC - Bank;
+
+	if (DROLL > PI)
+	{
+		DROLL -= PI2;
+	}
+	else if (DROLL < -PI)
+	{
+		DROLL += PI2;
+	}
+
+	ROLLRATE = DROLL / DT;
+	if (ROLLRATE > 15.0*RAD)
+	{
+		BRATE = 15.0*RAD;
+	}
+	else if (ROLLRATE < -15.0*RAD)
+	{
+		BRATE = -15.0*RAD;
+	}
+	else
+	{
+		BRATE = ROLLRATE;
 	}
 }
 
@@ -534,16 +688,6 @@ double ReentryNumericalIntegrator::ConstantGLogic(VECTOR3 unitR, VECTOR3 VI, dou
 		LD = LAD * LD / abs(LD);
 	}
 	return RLDIR * acos(LD / LAD);
-}
-
-void ReentryNumericalIntegrator::CalculateDragAcceleration(VECTOR3 R, VECTOR3 V)
-{
-	VECTOR3 A_aero;
-	double AOA;
-
-	A_aero = LiftDragAcceleration(R, V, AOA);
-	DRAG = length(A_aero);
-	A_X = -DRAG *cos(AOA);
 }
 
 void ReentryNumericalIntegrator::Limit02PI(double &val)
@@ -807,8 +951,8 @@ void ReentryNumericalIntegrator::GNRangePrediction()
 	double ASP3 = GNData.Q5*(GNData.Q6 - GNData.GAMMAL);
 	double ASPDWN = -GNData.RDOT*GNData.v*ATK / (GNData.A0*LAD*RE);
 	double ASP = ASKEP + ASP1 + ASPUP + ASP3 + ASPDWN;
-	double DIFF = GNData.THETNM - ASP;
-	if (abs(DIFF) - 25.0*1852.0 < 0.0)
+	GNData.DIFF = GNData.THETNM - ASP;
+	if (abs(GNData.DIFF) - 25.0*1852.0 < 0.0)
 	{
 		GNData.SELECTOR = 3;
 		GNUpcontrol();
@@ -816,9 +960,9 @@ void ReentryNumericalIntegrator::GNRangePrediction()
 	}
 	if (GNData.HIND == false)
 	{
-		if (DIFF < 0)
+		if (GNData.DIFF < 0)
 		{
-			GNData.DIFFOLD = DIFF;
+			GNData.DIFFOLD = GNData.DIFF;
 			GNData.Q7 = GNData.Q7F;
 			GNConstD();
 			return;
@@ -829,14 +973,14 @@ void ReentryNumericalIntegrator::GNRangePrediction()
 		GNRoutine380();
 		return;
 	}
-	GNData.DLEWD = GNData.DLEWD*DIFF / (GNData.DIFFOLD - DIFF);
+	GNData.DLEWD = GNData.DLEWD*GNData.DIFF / (GNData.DIFFOLD - GNData.DIFF);
 	if (GNData.LEWD + GNData.DLEWD < 0)
 	{
 		GNData.DLEWD = -GNData.LEWD / 2.0;
 	}
 	GNData.LEWD = GNData.LEWD + GNData.DLEWD;
 	GNData.HIND = true;
-	GNData.DIFFOLD = DIFF;
+	GNData.DIFFOLD = GNData.DIFF;
 	GNData.Q7 = GNData.Q7F;
 	GNData.HUNTCN++;
 	GNHuntest();
@@ -969,7 +1113,12 @@ void ReentryNumericalIntegrator::GNFinalPhase()
 	double PREDANG2 = F1 * (GNData.D - DREFR);
 	double PREDANG3 = F2 * (GNData.RDOT - RDTRF);
 	double PREDANGL = PREDANG1 + PREDANG2 + PREDANG3;
-	double X = (GNData.THETA*ATK - PREDANGL) / P;
+	GNData.DNRNGERR = PREDANGL - GNData.THETA*ATK;
+	if (DRE_2g == 0.0)
+	{
+		DRE_2g = GNData.DNRNGERR;
+	}
+	double X = -GNData.DNRNGERR / P;
 	if (GNData.GONEPAST)
 	{
 		GNData.LD = -LAD;
@@ -1117,37 +1266,18 @@ void ReentryNumericalIntegrator::GNRoutine380()
 	}
 }
 
-bool ReentryNumericalIntegrator::IsInSBandBlackout(double v_r, double h)
+bool ReentryNumericalIntegrator::IsInBlackout(double v_r, double h)
 {
 	double v_r_fps, h_ft, h_bo;
 
-	v_r_fps = v_r / 0.3048;
-	h_ft = h / 0.3048;
+	v_r_fps = v_r / 304.8;
+	h_ft = h / 304.8;
 
-	//Curve fit based on Apollo 17 SCOT figure 4.17-8
-	h_bo = -3.335751e-4*v_r_fps*v_r_fps + 25.79421769*v_r_fps - 157525.8344;
+	h_bo = pRTCC->SystemParameters.MDZBLK[0] + pRTCC->SystemParameters.MDZBLK[1] * v_r_fps + pRTCC->SystemParameters.MDZBLK[2] * pow(v_r_fps, 2) + pRTCC->SystemParameters.MDZBLK[3] * pow(v_r_fps, 3) +
+		pRTCC->SystemParameters.MDZBLK[4] * pow(v_r_fps, 4) + pRTCC->SystemParameters.MDZBLK[5] * pow(v_r_fps, 5) + pRTCC->SystemParameters.MDZBLK[6] * pow(v_r_fps, 6) +
+		pRTCC->SystemParameters.MDZBLK[7] * pow(v_r_fps, 7) + pRTCC->SystemParameters.MDZBLK[8] * pow(v_r_fps, 8);
 
-	if (h < h_bo)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-bool ReentryNumericalIntegrator::IsInVHFBlackout(double v_r, double h)
-{
-	double v_r_fps, h_ft, h_bo;
-
-	v_r_fps = v_r / 0.3048;
-	h_ft = h / 0.3048;
-
-	//Curve fit based on Apollo 7 SCOT figure 13
-	h_bo = -3.030303e-4*v_r_fps*v_r_fps + 21.51515152*v_r_fps - 41818.18182;
-
-	if (h < h_bo)
+	if (h_ft < h_bo)
 	{
 		return true;
 	}

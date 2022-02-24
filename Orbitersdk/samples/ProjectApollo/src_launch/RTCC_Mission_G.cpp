@@ -315,6 +315,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->BurnTime = DMTBuffer[0].DT_B;
 		form->dVC = DMTBuffer[0].DVC;
 		form->VI = length(PZMPTCSM.mantable[0].V_BO) / 0.3048;
+		form->type = 2;
 
 		//DMT for sep maneuver
 		GMGMED("U20,CSM,2;");
@@ -2758,7 +2759,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		entopt.dV_LVLH = DeltaV_LVLH;
-		entopt.GETbase = GETbase;
 		entopt.lat = SplashLatitude;
 		entopt.lng = SplashLongitude;
 		entopt.P30TIG = TimeofIgnition;
