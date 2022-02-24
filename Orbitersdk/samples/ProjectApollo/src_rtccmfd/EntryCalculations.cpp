@@ -1322,6 +1322,10 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 		sv_BI_SEP = coastin.sv_cutoff;
 
+		//Calculate attitude
+		VECTOR3 U_T_SEP, IMUAtt_SEP;
+		RMMATT(1, 1, false, pRTCC->RZJCTTC.Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
+
 		//Maneuver simulation
 		integin.sv0 = sv_BI_SEP;
 		integin.A = Area;
@@ -1330,7 +1334,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		integin.TVC = 1;
 		integin.KEPHOP = 0;
 		integin.KAUXOP = 1;
-		integin.MANOP = 1;
+		integin.MANOP = -1;
 		integin.ThrusterCode = pRTCC->RZJCTTC.Thruster;
 		integin.UllageOption = pRTCC->RZJCTTC.Use4UllageThrusters;
 		integin.IC = 1;
@@ -1338,6 +1342,10 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		integin.KTRIMOP = pRTCC->RZJCTTC.GimbalIndicator;
 		integin.DTMAN = pRTCC->RZJCTTC.DeltaT;
 		integin.DVMAN = pRTCC->RZJCTTC.DeltaV;
+		integin.AT = U_T_SEP;
+		integin.XB = X_B;
+		integin.YB = Y_B;
+		integin.ZB = Z_B;
 
 		integ.PMMRKJ();
 
@@ -1473,15 +1481,20 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	{
 		sv_BI_SEP = pRTCC->RotateSVToSOI(out.SV);
 
+		//Calculate attitude
+		VECTOR3 U_T_SEP, IMUAtt_SEP;
+		RMMATT(1, 1, false, pRTCC->RZJCTTC.Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
+
 		//Maneuver simulation
 		integin.sv0 = sv_BI_SEP;
 		integin.A = Area;
+		integin.AT = U_T_SEP;
 		integin.CAPWT = CSMmass;
 		integin.CSMWT = CSMmass;
 		integin.TVC = 1;
 		integin.KEPHOP = 0;
 		integin.KAUXOP = 1;
-		integin.MANOP = 1;
+		integin.MANOP = -1;
 		integin.ThrusterCode = pRTCC->RZJCTTC.Thruster;
 		integin.UllageOption = pRTCC->RZJCTTC.Use4UllageThrusters;
 		integin.IC = 1;
@@ -1489,6 +1502,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		integin.KTRIMOP = pRTCC->RZJCTTC.GimbalIndicator;
 		integin.DTMAN = pRTCC->RZJCTTC.DeltaT;
 		integin.DVMAN = pRTCC->RZJCTTC.DeltaV;
+		integin.XB = X_B;
+		integin.YB = Y_B;
+		integin.ZB = Z_B;
 
 		integ.PMMRKJ();
 
@@ -1552,6 +1568,10 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	integin.ExtDVCoordInd = false;
 	integin.DTMAN = 0.0;
 	integin.DVMAN = 0.0;
+	integin.XB = X_B;
+	integin.YB = Y_B;
+	integin.ZB = Z_B;
+	integin.HeadsUpDownInd = true; //TBD
 
 	integ.PMMRKJ();
 
@@ -1750,15 +1770,20 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		{
 			sv_BI_SEP = pRTCC->RotateSVToSOI(out.SV);
 
+			//Calculate attitude
+			VECTOR3 U_T_SEP, IMUAtt_SEP;
+			RMMATT(1, 1, false, pRTCC->RZJCTTC.Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
+
 			//Maneuver simulation
 			integin.sv0 = sv_BI_SEP;
 			integin.A = Area;
+			integin.AT = U_T_SEP;
 			integin.CAPWT = CSMmass;
 			integin.CSMWT = CSMmass;
 			integin.TVC = 1;
 			integin.KEPHOP = 0;
 			integin.KAUXOP = 1;
-			integin.MANOP = 1;
+			integin.MANOP = -1;
 			integin.ThrusterCode = pRTCC->RZJCTTC.Thruster;
 			integin.UllageOption = pRTCC->RZJCTTC.Use4UllageThrusters;
 			integin.IC = 1;
@@ -1766,6 +1791,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 			integin.KTRIMOP = pRTCC->RZJCTTC.GimbalIndicator;
 			integin.DTMAN = pRTCC->RZJCTTC.DeltaT;
 			integin.DVMAN = pRTCC->RZJCTTC.DeltaV;
+			integin.XB = X_B;
+			integin.YB = Y_B;
+			integin.ZB = Z_B;
 
 			integ.PMMRKJ();
 
@@ -1823,6 +1851,10 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		integin.ExtDVCoordInd = false;
 		integin.DTMAN = 0.0;
 		integin.DVMAN = 0.0;
+		integin.XB = X_B;
+		integin.YB = Y_B;
+		integin.ZB = Z_B;
+		integin.HeadsUpDownInd = true; //TBD
 
 		integ.PMMRKJ();
 
@@ -2014,8 +2046,8 @@ void RetrofirePlanning::RMMDBM()
 	EphemerisData sv_TIG;
 	//State vector at cutoff of deorbit burn
 	EphemerisData sv_apo;
-	VECTOR3 Att;
-	double R_E;//, MJD_L;
+	VECTOR3 Att, Y;
+	double R_E, theta_T;//, MJD_L;
 	int iter;
 	ELVCTRInputTable in;
 	ELVCTROutputTable2 out;
@@ -2091,6 +2123,11 @@ void RetrofirePlanning::RMMDBM()
 
 		//Calculate thrust direction
 		RMMATT(1, 1, false, Att, refsdata.REFSMMAT, Thruster, sv_TIG.R, sv_TIG.V, GimbalIndicator, CSMmass, U_T, IMUAtt);
+
+		//Adjust thrust direction for impulsive maneuver
+		Y = unit(crossp(sv_TIG.V, sv_TIG.R));
+		theta_T = -length(crossp(sv_TIG.R, sv_TIG.V))*DVBURN*CSMmass / pow(length(sv_TIG.R), 2) / F;
+		U_T = U_T * cos(theta_T / 2.0) + unit(crossp(U_T, Y))*sin(theta_T / 2.0);
 
 		//Calculate DV fo V, gamma targeting
 		if (BurnMode == 3)
@@ -2215,7 +2252,7 @@ void RetrofirePlanning::RMMDBM()
 		}
 		iter++;
 
-	} while (abs(dlng) > 0.0001 && iter < 15);
+	} while (abs(dlng) > 0.0072591411 && iter < 15); //25 NM tolerance
 
 	if (iter >= 15)
 	{
@@ -2404,7 +2441,7 @@ void RetrofirePlanning::RMMATT(int entry, int opt, bool calcDesired, VECTOR3 Att
 	//entry: 1 = calculate unit vector. 2 = calculate attitude in the other coordinate system and the deorbit REFSMMAT
 	//opt: 1 = Att is LVLH, 2 = Att is IMU
 
-	VECTOR3 X_P, Y_P, Z_P, X_B, Y_B, Z_B;
+	VECTOR3 X_P, Y_P, Z_P;
 	double SINP, SINY, SINR, COSP, COSY, COSR;
 	double AL, BE, a1, a2, a3, b1, b2, b3, c1, c2, c3;
 	double P_G = 0.0, Y_G = 0.0;

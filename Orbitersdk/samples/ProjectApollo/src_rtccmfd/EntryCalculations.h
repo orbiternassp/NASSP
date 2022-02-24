@@ -201,6 +201,9 @@ protected:
 	//Maximum lift landing point
 	double lat_ML, lng_ML;
 
+	//Body axes as output from RMMATT
+	VECTOR3 X_B, Y_B, Z_B;
+
 	//Area
 	double Area;
 
