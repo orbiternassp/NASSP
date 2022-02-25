@@ -1177,14 +1177,14 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	this->lng_T = lng_T;
 	this->CSMmass = CSMmass;
 	this->Area = Area;
-	Thruster = pRTCC->RZC1RCNS.Thruster;
-	BurnMode = pRTCC->RZC1RCNS.BurnMode;
-	GimbalIndicator = pRTCC->RZC1RCNS.GimbalIndicator;
-	refsid = pRTCC->RZC1RCNS.REFSMMAT;
-	MD_max = pRTCC->RZJCTTC.MD;
+	Thruster = pRTCC->RZJCTTC.R31_Thruster;
+	BurnMode = pRTCC->RZJCTTC.R31_BurnMode;
+	GimbalIndicator = pRTCC->RZJCTTC.R31_GimbalIndicator;
+	refsid = pRTCC->RZJCTTC.R31_REFSMMAT;
+	MD_max = pRTCC->RZJCTTC.R32_MD;
 	if (Thruster == RTCC_ENGINETYPE_CSMSPS)
 	{
-		dt_ullage = pRTCC->RZC1RCNS.UllageTime;
+		dt_ullage = pRTCC->RZJCTTC.R31_UllageTime;
 	}
 	else
 	{
@@ -1193,9 +1193,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 	if (pRTCC->RZJCTTC.R32_Code == 2)
 	{
-		if (pRTCC->RZJCTTC.Thruster == RTCC_ENGINETYPE_CSMSPS)
+		if (pRTCC->RZJCTTC.R30_Thruster == RTCC_ENGINETYPE_CSMSPS)
 		{
-			dt_ullage_sep = pRTCC->RZJCTTC.Ullage_DT;
+			dt_ullage_sep = pRTCC->RZJCTTC.R30_Ullage_DT;
 		}
 		else
 		{
@@ -1251,9 +1251,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		GMTI = pRTCC->GMTfromGET(GETI);
 	}
 
-	if (pRTCC->RZJCTTC.GETI_SH > 0)
+	if (pRTCC->RZJCTTC.R30_GETI_SH > 0)
 	{
-		GMTI_SH = pRTCC->GMTfromGET(pRTCC->RZJCTTC.GETI_SH);
+		GMTI_SH = pRTCC->GMTfromGET(pRTCC->RZJCTTC.R30_GETI_SH);
 	}
 	else
 	{
@@ -1324,7 +1324,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 		//Calculate attitude
 		VECTOR3 U_T_SEP, IMUAtt_SEP;
-		RMMATT(1, 1, false, pRTCC->RZJCTTC.Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
+		RMMATT(1, 1, false, pRTCC->RZJCTTC.R30_Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.R30_Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.R30_GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
 
 		//Maneuver simulation
 		integin.sv0 = sv_BI_SEP;
@@ -1335,13 +1335,13 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		integin.KEPHOP = 0;
 		integin.KAUXOP = 1;
 		integin.MANOP = -1;
-		integin.ThrusterCode = pRTCC->RZJCTTC.Thruster;
-		integin.UllageOption = pRTCC->RZJCTTC.Use4UllageThrusters;
+		integin.ThrusterCode = pRTCC->RZJCTTC.R30_Thruster;
+		integin.UllageOption = pRTCC->RZJCTTC.R30_Use4UllageThrusters;
 		integin.IC = 1;
 		integin.DTU = dt_ullage_sep;
-		integin.KTRIMOP = pRTCC->RZJCTTC.GimbalIndicator;
-		integin.DTMAN = pRTCC->RZJCTTC.DeltaT;
-		integin.DVMAN = pRTCC->RZJCTTC.DeltaV;
+		integin.KTRIMOP = pRTCC->RZJCTTC.R30_GimbalIndicator;
+		integin.DTMAN = pRTCC->RZJCTTC.R30_DeltaT;
+		integin.DVMAN = pRTCC->RZJCTTC.R30_DeltaV;
 		integin.AT = U_T_SEP;
 		integin.XB = X_B;
 		integin.YB = Y_B;
@@ -1425,7 +1425,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 	if (ManeuverType == 1)
 	{
-		GMT_TI = GMTI - pRTCC->RZJCTTC.DeltaT_Sep;
+		GMT_TI = GMTI - pRTCC->RZJCTTC.R30_DeltaT_Sep;
 	}
 	else
 	{
@@ -1483,7 +1483,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 		//Calculate attitude
 		VECTOR3 U_T_SEP, IMUAtt_SEP;
-		RMMATT(1, 1, false, pRTCC->RZJCTTC.Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
+		RMMATT(1, 1, false, pRTCC->RZJCTTC.R30_Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.R30_Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.R30_GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
 
 		//Maneuver simulation
 		integin.sv0 = sv_BI_SEP;
@@ -1495,13 +1495,13 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		integin.KEPHOP = 0;
 		integin.KAUXOP = 1;
 		integin.MANOP = -1;
-		integin.ThrusterCode = pRTCC->RZJCTTC.Thruster;
-		integin.UllageOption = pRTCC->RZJCTTC.Use4UllageThrusters;
+		integin.ThrusterCode = pRTCC->RZJCTTC.R30_Thruster;
+		integin.UllageOption = pRTCC->RZJCTTC.R30_Use4UllageThrusters;
 		integin.IC = 1;
 		integin.DTU = dt_ullage_sep;
-		integin.KTRIMOP = pRTCC->RZJCTTC.GimbalIndicator;
-		integin.DTMAN = pRTCC->RZJCTTC.DeltaT;
-		integin.DVMAN = pRTCC->RZJCTTC.DeltaV;
+		integin.KTRIMOP = pRTCC->RZJCTTC.R30_GimbalIndicator;
+		integin.DTMAN = pRTCC->RZJCTTC.R30_DeltaT;
+		integin.DVMAN = pRTCC->RZJCTTC.R30_DeltaV;
 		integin.XB = X_B;
 		integin.YB = Y_B;
 		integin.ZB = Z_B;
@@ -1540,9 +1540,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	}
 
 	//Calculate thrust direction
-	if (pRTCC->RZC1RCNS.AttitudeMode == 1)
+	if (pRTCC->RZJCTTC.R31_AttitudeMode == 1)
 	{
-		LVLHAtt = pRTCC->RZC1RCNS.LVLHAttitude;
+		LVLHAtt = pRTCC->RZJCTTC.R31_LVLHAttitude;
 	}
 	else
 	{
@@ -1558,9 +1558,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	integin.TVC = 1;
 	integin.KEPHOP = 0;
 	integin.KAUXOP = 1;
-	integin.MANOP = pRTCC->RZC1RCNS.GuidanceMode;
+	integin.MANOP = pRTCC->RZJCTTC.R31_GuidanceMode;
 	integin.ThrusterCode = Thruster;
-	integin.UllageOption = pRTCC->RZC1RCNS.Use4UllageThrusters;
+	integin.UllageOption = pRTCC->RZJCTTC.R31_Use4UllageThrusters;
 	integin.IC = 1;
 	integin.DTU = dt_ullage;
 	integin.KTRIMOP = GimbalIndicator;
@@ -1618,9 +1618,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	{
 		//Simulate reentry
 		pRTCC->ELVCNV(sv_EI, 1, sv_ECT);
-		reentryin.g_c_BU = pRTCC->RZC1RCNS.GLevel;
-		reentryin.K1 = pRTCC->RZC1RCNS.InitialBankAngle;
-		reentryin.K2 = pRTCC->RZC1RCNS.FinalBankAngle;
+		reentryin.g_c_BU = pRTCC->RZJCTTC.R31_GLevel;
+		reentryin.K1 = pRTCC->RZJCTTC.R31_InitialBankAngle;
+		reentryin.K2 = pRTCC->RZJCTTC.R31_FinalBankAngle;
 		reentryin.KSWCH = 2;
 		reentryin.R0 = sv_ECT.R;
 		reentryin.V0 = sv_ECT.V;
@@ -1663,9 +1663,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	{
 		//Simulate reentry
 		pRTCC->ELVCNV(sv_EI, 1, sv_ECT);
-		reentryin.g_c_BU = pRTCC->RZC1RCNS.GLevel;
-		reentryin.K1 = pRTCC->RZC1RCNS.InitialBankAngle;
-		reentryin.K2 = pRTCC->RZC1RCNS.FinalBankAngle;
+		reentryin.g_c_BU = pRTCC->RZJCTTC.R31_GLevel;
+		reentryin.K1 = pRTCC->RZJCTTC.R31_InitialBankAngle;
+		reentryin.K2 = pRTCC->RZJCTTC.R31_FinalBankAngle;
 		if (pRTCC->RZJCTTC.Type == 1)
 		{
 			reentryin.KSWCH = 8;
@@ -1719,7 +1719,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		//Get state vector at ullage on or ignition of first maneuver
 		if (ManeuverType == 1)
 		{
-			GMT_TI = GMTI - pRTCC->RZJCTTC.DeltaT_Sep;
+			GMT_TI = GMTI - pRTCC->RZJCTTC.R30_DeltaT_Sep;
 
 			if (dt_ullage_sep != 0.0)
 			{
@@ -1772,7 +1772,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 			//Calculate attitude
 			VECTOR3 U_T_SEP, IMUAtt_SEP;
-			RMMATT(1, 1, false, pRTCC->RZJCTTC.Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
+			RMMATT(1, 1, false, pRTCC->RZJCTTC.R30_Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.R30_Thruster, sv_BI_SEP.R, sv_BI_SEP.V, pRTCC->RZJCTTC.R30_GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
 
 			//Maneuver simulation
 			integin.sv0 = sv_BI_SEP;
@@ -1784,13 +1784,13 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 			integin.KEPHOP = 0;
 			integin.KAUXOP = 1;
 			integin.MANOP = -1;
-			integin.ThrusterCode = pRTCC->RZJCTTC.Thruster;
-			integin.UllageOption = pRTCC->RZJCTTC.Use4UllageThrusters;
+			integin.ThrusterCode = pRTCC->RZJCTTC.R30_Thruster;
+			integin.UllageOption = pRTCC->RZJCTTC.R30_Use4UllageThrusters;
 			integin.IC = 1;
 			integin.DTU = dt_ullage_sep;
-			integin.KTRIMOP = pRTCC->RZJCTTC.GimbalIndicator;
-			integin.DTMAN = pRTCC->RZJCTTC.DeltaT;
-			integin.DVMAN = pRTCC->RZJCTTC.DeltaV;
+			integin.KTRIMOP = pRTCC->RZJCTTC.R30_GimbalIndicator;
+			integin.DTMAN = pRTCC->RZJCTTC.R30_DeltaT;
+			integin.DVMAN = pRTCC->RZJCTTC.R30_DeltaV;
 			integin.XB = X_B;
 			integin.YB = Y_B;
 			integin.ZB = Z_B;
@@ -1824,9 +1824,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		}
 
 		//Calculate thrust direction
-		if (pRTCC->RZC1RCNS.AttitudeMode == 1)
+		if (pRTCC->RZJCTTC.R31_AttitudeMode == 1)
 		{
-			LVLHAtt = pRTCC->RZC1RCNS.LVLHAttitude;
+			LVLHAtt = pRTCC->RZJCTTC.R31_LVLHAttitude;
 		}
 		else
 		{
@@ -1841,9 +1841,9 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 		integin.TVC = 1;
 		integin.KEPHOP = 0;
 		integin.KAUXOP = 1;
-		integin.MANOP = pRTCC->RZC1RCNS.GuidanceMode;
+		integin.MANOP = pRTCC->RZJCTTC.R31_GuidanceMode;
 		integin.ThrusterCode = Thruster;
-		integin.UllageOption = pRTCC->RZC1RCNS.Use4UllageThrusters;
+		integin.UllageOption = pRTCC->RZJCTTC.R31_Use4UllageThrusters;
 		integin.IC = 1;
 		integin.DTU = dt_ullage;
 		integin.KTRIMOP = GimbalIndicator;
@@ -2026,7 +2026,7 @@ void RetrofirePlanning::RMMDBF()
 	}
 	else if (ManeuverType == 1)
 	{
-		GMT_TI = GMTI - pRTCC->RZJCTTC.DeltaT_Sep;
+		GMT_TI = GMTI - pRTCC->RZJCTTC.R30_DeltaT_Sep;
 	}
 	else
 	{
@@ -2057,11 +2057,11 @@ void RetrofirePlanning::RMMDBM()
 	if (BurnMode == 1)
 	{
 		//Fixed DV
-		DVBURN = pRTCC->RZC1RCNS.dv;
+		DVBURN = pRTCC->RZJCTTC.R31_dv;
 	}
 	else if (BurnMode == 2)
 	{
-		DVBURN = F / mdot * log(CSMmass / (CSMmass - mdot * pRTCC->RZC1RCNS.dt));
+		DVBURN = F / mdot * log(CSMmass / (CSMmass - mdot * pRTCC->RZJCTTC.R31_dt));
 	}
 
 	iter = 0;
@@ -2093,15 +2093,15 @@ void RetrofirePlanning::RMMDBM()
 			sv_TIG_SEP = sv_apo_SEP = pRTCC->RotateSVToSOI(out.SV);
 
 			//Calculate thrust direction
-			RMMATT(1, 1, false, pRTCC->RZJCTTC.Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_TIG_SEP.R, sv_TIG_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
+			RMMATT(1, 1, false, pRTCC->RZJCTTC.R30_Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.R30_Thruster, sv_TIG_SEP.R, sv_TIG_SEP.V, pRTCC->RZJCTTC.R30_GimbalIndicator, CSMmass, U_T_SEP, IMUAtt_SEP);
 
-			if (pRTCC->RZJCTTC.DeltaV > 0)
+			if (pRTCC->RZJCTTC.R30_DeltaV > 0)
 			{
-				DVBURN_SEP = pRTCC->RZJCTTC.DeltaV;
+				DVBURN_SEP = pRTCC->RZJCTTC.R30_DeltaV;
 			}
 			else
 			{
-				DVBURN_SEP = pRTCC->SystemParameters.MCTCT2 / pRTCC->SystemParameters.MCTCW2 * log(CSMmass / (CSMmass - pRTCC->SystemParameters.MCTCW2 * pRTCC->RZJCTTC.DeltaT)); //TBD: Assumes RCS right now
+				DVBURN_SEP = pRTCC->SystemParameters.MCTCT2 / pRTCC->SystemParameters.MCTCW2 * log(CSMmass / (CSMmass - pRTCC->SystemParameters.MCTCW2 * pRTCC->RZJCTTC.R30_DeltaT)); //TBD: Assumes RCS right now
 			}
 
 			//Burn simulation
@@ -2112,9 +2112,9 @@ void RetrofirePlanning::RMMDBM()
 			sv_apo = sv_TIG;
 		}
 
-		if (pRTCC->RZC1RCNS.AttitudeMode == 1)
+		if (pRTCC->RZJCTTC.R31_AttitudeMode == 1)
 		{
-			Att = pRTCC->RZC1RCNS.LVLHAttitude;
+			Att = pRTCC->RZJCTTC.R31_LVLHAttitude;
 		}
 		else
 		{
@@ -2248,7 +2248,7 @@ void RetrofirePlanning::RMMDBM()
 		}
 		else
 		{
-			GMT_TI = GMTI - pRTCC->RZJCTTC.DeltaT_Sep;
+			GMT_TI = GMTI - pRTCC->RZJCTTC.R30_DeltaT_Sep;
 		}
 		iter++;
 
@@ -2595,8 +2595,16 @@ void RetrofirePlanning::RMMATT(int entry, int opt, bool calcDesired, VECTOR3 Att
 		//Retrofire preferred alignment
 		VECTOR3 X_SM, Y_SM, Z_SM;
 		X_SM = -X_B;
-		Y_SM = -Y_B;
-		Z_SM = Z_B;
+		if (thruster == RTCC_ENGINETYPE_CSMSPS)
+		{
+			Y_SM = -Y_B;
+			Z_SM = Z_B;
+		}
+		else
+		{
+			Y_SM = Y_B;
+			Z_SM = -Z_B;
+		}
 		DesREFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
 	}
 }
@@ -2628,9 +2636,9 @@ void RetrofirePlanning::RMSTTF()
 		tab->TrueAnomalySep = elem.TA*DEG;
 		tab->H_Sep = elem.h / 1852.0;
 
-		if (pRTCC->RZJCTTC.Thruster == RTCC_ENGINETYPE_CSMSPS)
+		if (pRTCC->RZJCTTC.R30_Thruster == RTCC_ENGINETYPE_CSMSPS)
 		{
-			if (pRTCC->RZJCTTC.Use4UllageThrusters)
+			if (pRTCC->RZJCTTC.R30_Use4UllageThrusters)
 			{
 				tab->UllageQuads_Sep = 4;
 			}
@@ -2644,9 +2652,9 @@ void RetrofirePlanning::RMSTTF()
 			tab->UllageQuads_Sep = 0;
 		}
 
-		RMMATT(2, 1, true, pRTCC->RZJCTTC.Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_TIG_SEP.R, sv_TIG_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T, IMUAtt);
+		RMMATT(2, 1, true, pRTCC->RZJCTTC.R30_Att, refsdata.REFSMMAT, pRTCC->RZJCTTC.R30_Thruster, sv_TIG_SEP.R, sv_TIG_SEP.V, pRTCC->RZJCTTC.R30_GimbalIndicator, CSMmass, U_T, IMUAtt);
 		tab->Att_IMU_Sep = IMUAtt * DEG;
-		RMMATT(2, 2, false, IMUAtt, refsdata.REFSMMAT, pRTCC->RZJCTTC.Thruster, sv_TIG_SEP.R, sv_TIG_SEP.V, pRTCC->RZJCTTC.GimbalIndicator, CSMmass, U_T, BodyAtt);
+		RMMATT(2, 2, false, IMUAtt, refsdata.REFSMMAT, pRTCC->RZJCTTC.R30_Thruster, sv_TIG_SEP.R, sv_TIG_SEP.V, pRTCC->RZJCTTC.R30_GimbalIndicator, CSMmass, U_T, BodyAtt);
 		tab->Att_LVLH_Sep = BodyAtt * DEG;
 		for (int i = 0;i < 3;i++)
 		{
@@ -2662,7 +2670,7 @@ void RetrofirePlanning::RMSTTF()
 		tab->GMTI_Sep = burnaux_sep.GMT_BI;
 		tab->GETI_Sep = pRTCC->GETfromGMT(tab->GMTI_Sep);
 
-		if (pRTCC->RZJCTTC.Thruster == RTCC_ENGINETYPE_CSMSPS)
+		if (pRTCC->RZJCTTC.R30_Thruster == RTCC_ENGINETYPE_CSMSPS)
 		{
 			tab->P_G_Sep = (burnaux_sep.P_G - pRTCC->SystemParameters.MCTSPP)*DEG;
 			tab->Y_G_Sep = (burnaux_sep.Y_G - pRTCC->SystemParameters.MCTSYP)*DEG;
@@ -2678,7 +2686,7 @@ void RetrofirePlanning::RMSTTF()
 		tab->Indicator_Sep = 1;
 	}
 
-	if (pRTCC->RZC1RCNS.Use4UllageThrusters)
+	if (pRTCC->RZJCTTC.R31_Use4UllageThrusters)
 	{
 		tab->UllageQuads = 4;
 	}
@@ -2689,7 +2697,7 @@ void RetrofirePlanning::RMSTTF()
 	//TBD: Burn code
 	//TBD: Area
 	char Buffer[16];
-	pRTCC->EMGSTGENName(pRTCC->RZC1RCNS.REFSMMAT, Buffer);
+	pRTCC->EMGSTGENName(pRTCC->RZJCTTC.R31_REFSMMAT, Buffer);
 	tab->RefsID.assign(Buffer);
 	tab->CSMWeightRetro = burnaux.WTENGON *LBS*1000.0;
 
@@ -2720,7 +2728,7 @@ void RetrofirePlanning::RMSTTF()
 
 	tab->V400k = v_EI / 0.3048;
 	tab->Gamma400k = (PI05 - gamma_EI) * DEG;
-	tab->BankAngle = pRTCC->RZC1RCNS.FinalBankAngle*DEG;
+	tab->BankAngle = pRTCC->RZJCTTC.R31_FinalBankAngle*DEG;
 	if (pRTCC->RZJCTTC.Type == 1)
 	{
 		tab->RETRB = (sv_EI.GMT + t_RB) - sv_TIG.GMT;
@@ -2784,19 +2792,27 @@ void RetrofirePlanning::RMSTTF()
 	tab2->GMTI = sv_TIG.GMT;
 	tab2->DeltaV = DV_EXDV;
 	tab2->Thruster = Thruster;
-	tab2->UllageThrusterOption = pRTCC->RZC1RCNS.Use4UllageThrusters;
+	tab2->UllageThrusterOption = pRTCC->RZJCTTC.R31_Use4UllageThrusters;
 	tab2->dt_ullage = dt_ullage;
 
 	if (pRTCC->RZJCTTC.Type == 1)
 	{
-		tab2->lat_T = lat_T;
-		tab2->lng_T = lng_T;
+		tab2->entry.lat_T = lat_T;
+		tab2->entry.lng_T = lng_T;
 	}
 	else
 	{
-		tab2->lat_T = lat_IP;
-		tab2->lng_T = lng_IP;
+		tab2->entry.lat_T = lat_IP;
+		tab2->entry.lng_T = lng_IP;
 	}
+	tab2->entry.LiftMode = 3;
+	tab2->entry.GNInitialBank = tab2->entry.InitialBankAngle = pRTCC->RZJCTTC.R31_InitialBankAngle;
+	tab2->entry.FinalBankAngle = pRTCC->RZJCTTC.R31_FinalBankAngle;
+	tab2->entry.GMTReverseBank = 0.0;
+	tab2->entry.GLevel = pRTCC->RZJCTTC.R31_GLevel;
+	tab2->entry.BackupLiftMode = 0;
+	tab2->entry.RollDirection = 1.0;
+	tab2->entry.ConstantGLevel = 0.0;
 
 	//Print
 	RMGTTF("RMGTTF", 100);
@@ -3021,7 +3037,7 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 			Buffer2 += Buffer3;
 			Buffer2 += " THR=";
 
-			switch (pRTCC->RZJCTTC.Thruster)
+			switch (pRTCC->RZJCTTC.R30_Thruster)
 			{
 			case RTCC_ENGINETYPE_CSMSPS:
 				Buffer3 = "SPS";
@@ -3043,7 +3059,7 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 			message.push_back(Buffer2);
 
 			Buffer2.assign("CONSTRAINT=");
-			if (pRTCC->RZJCTTC.DeltaV > 0)
+			if (pRTCC->RZJCTTC.R30_DeltaV > 0)
 			{
 				Buffer3 = "DV";
 			}
@@ -3067,9 +3083,9 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 			Buffer2 += " QUADS";
 			message.push_back(Buffer2);
 
-			sprintf_s(Buffer, "INPUT ATT-ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf TRIM ANGLE IND=", pRTCC->RZJCTTC.Att.x*DEG, pRTCC->RZJCTTC.Att.y*DEG, pRTCC->RZJCTTC.Att.z*DEG);
+			sprintf_s(Buffer, "INPUT ATT-ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf TRIM ANGLE IND=", pRTCC->RZJCTTC.R30_Att.x*DEG, pRTCC->RZJCTTC.R30_Att.y*DEG, pRTCC->RZJCTTC.R30_Att.z*DEG);
 			Buffer2.assign(Buffer);
-			if (pRTCC->RZJCTTC.GimbalIndicator == -1)
+			if (pRTCC->RZJCTTC.R30_GimbalIndicator == -1)
 			{
 				Buffer2.append("C");
 			}
@@ -3085,7 +3101,7 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 			//Line 6
 			sprintf_s(Buffer, "IMU-------ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf DT SEP=", pRTCC->RZRFDP.Att_IMU_Sep.x, pRTCC->RZRFDP.Att_IMU_Sep.y, pRTCC->RZRFDP.Att_IMU_Sep.z);
 			Buffer2.assign(Buffer);
-			pRTCC->OnlinePrintTimeHHHMMSS(pRTCC->RZJCTTC.DeltaT_Sep, Buffer3);
+			pRTCC->OnlinePrintTimeHHHMMSS(pRTCC->RZJCTTC.R30_DeltaT_Sep, Buffer3);
 			Buffer2 += Buffer3;
 			sprintf_s(Buffer, " TRUE ANOMALY AT GETI(SEP)=%+07.2lf", pRTCC->RZRFDP.TrueAnomalySep);
 			Buffer2.append(Buffer);
@@ -3205,18 +3221,18 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		message.push_back(Buffer2);
 		//Line 13
 		Buffer2.assign("ENTRY PROFILE=() INITIAL BANK=");
-		sprintf_s(Buffer, "%+07.2lf", pRTCC->RZC1RCNS.InitialBankAngle*DEG);
+		sprintf_s(Buffer, "%+07.2lf", pRTCC->RZJCTTC.R31_InitialBankAngle*DEG);
 		Buffer2.append(Buffer);
-		sprintf_s(Buffer, " G-LEVEL=%.2lf", pRTCC->RZC1RCNS.GLevel);
+		sprintf_s(Buffer, " G-LEVEL=%.2lf", pRTCC->RZJCTTC.R31_GLevel);
 		Buffer2.append(Buffer);
 		Buffer2 += " FINAL-BANK=";
-		if (pRTCC->RZC1RCNS.FinalBankAngle > 0)
+		if (pRTCC->RZJCTTC.R31_FinalBankAngle > 0)
 		{
-			sprintf_s(Buffer, "RL%03.0lf", pRTCC->RZC1RCNS.FinalBankAngle*DEG);
+			sprintf_s(Buffer, "RL%03.0lf", pRTCC->RZJCTTC.R31_FinalBankAngle*DEG);
 		}
 		else
 		{
-			sprintf_s(Buffer, "RR%03.0lf", abs(pRTCC->RZC1RCNS.FinalBankAngle)*DEG);
+			sprintf_s(Buffer, "RR%03.0lf", abs(pRTCC->RZJCTTC.R31_FinalBankAngle)*DEG);
 		}
 		Buffer2.append(Buffer);
 		Buffer2 += " GETRB=";

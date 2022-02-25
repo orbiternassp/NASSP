@@ -580,6 +580,9 @@ struct EarthEntryPADOpt
 	double lat; //splashdown latitude
 	double lng; //splashdown longitude
 	SV sv0;
+	int Thruster = RTCC_ENGINETYPE_CSMSPS;
+	double InitialBank = 0.0;
+	double GLevel = 0.05;
 };
 
 struct LunarEntryPADOpt
@@ -3949,28 +3952,51 @@ public:
 	RetrofireDisplayParametersTable RZRFDP;
 	SpacecraftSettingTable RZDBSC1;
 
+	struct ReentryOutputTable
+	{
+
+	} RZC1READ;
+
 	struct RetrofireMEDSaveTable
 	{
 		//R20
-		double R20GET = 0.0;
+		double R20_GET = 0.0;
 		double R20_lng = 0.0;
-		//R30
-		int ColumnIndicator = 7; //Bitfield. 7 = all
-		double GETI_SH = 0.0; //GETI of shaping for manual input
-		double DeltaT_Sep = 20.0*60.0; //DT of sep maneuver
-		int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4;
-		double DeltaV = 5.0*0.3048;
-		double DeltaT = 0.0;
-		VECTOR3 Att = _V(0.0, -45.4*RAD, 180.0*RAD);
-		double Ullage_DT = 15.0;
-		bool Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
-		int GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
+
+		//R30 (Separation or Shaping Maneuver)
+		int R30_ColumnIndicator = 7; //Bitfield. 7 = all
+		double R30_GETI_SH = 0.0; //GETI of shaping for manual input
+		double R30_DeltaT_Sep = 20.0*60.0; //DT of sep maneuver
+		int R30_Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4;
+		double R30_DeltaV = 5.0*0.3048;
+		double R30_DeltaT = 0.0;
+		VECTOR3 R30_Att = _V(0.0, -45.4*RAD, 180.0*RAD);
+		double R30_Ullage_DT = 15.0;
+		bool R30_Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
+		int R30_GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
+
+		//R31 (Retrofire Maneuver)
+		int R31_Thruster = RTCC_ENGINETYPE_CSMSPS;		//1 = RCS+2, 2 = RCS+4, 3 = RCS-2, 4 = RCS-4, 33 = SPS
+		int R31_GuidanceMode = 4;	//1 = Inertial, 4 = Guided (G&N)
+		int R31_BurnMode = 3;		//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
+		double R31_dt = 0.0;
+		double R31_dv = 0.0;
+		int R31_AttitudeMode = 2;	//1 = LVLH, 2 = 31.7° window line on horizon
+		VECTOR3 R31_LVLHAttitude = _V(0.0, -48.5*RAD, PI);
+		double R31_UllageTime = 15.0;
+		bool R31_Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
+		int R31_REFSMMAT = 1;		//1 = CUR...
+		int R31_GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
+		double R31_InitialBankAngle = 0.0;
+		double R31_GLevel = 0.2;
+		double R31_FinalBankAngle = 55.0*RAD;
+
 		//R32
 		int R32_Code = 1; //1 = Type 1, 2 = Type 2
-		double GETI = 0.0;
-		double lat_T = 0.0;
-		double lng_T = 0.0;
-		double MD = 1.0;
+		double R32_GETI = 0.0;
+		double R32_lat_T = 0.0;
+		double R32_lng_T = 0.0;
+		double R32_MD = 1.0;
 
 		//Actually determined by leaving the latitude blank on the MED
 		int Type = 2;			//1 = Primary (lat and long), 2 = Contingency (long only)

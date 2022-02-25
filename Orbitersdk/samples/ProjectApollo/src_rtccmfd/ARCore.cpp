@@ -3610,7 +3610,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.GETI);
+			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R32_GETI);
 			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, sv);
 			if (err)
 			{
@@ -3642,8 +3642,12 @@ int ARCore::subThread()
 		{
 			P30TIG = GC->rtcc->RZRFDP.GETI;
 			dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
-			EntryLatcor = GC->rtcc->RZRFTT.Manual.lat_T;
-			EntryLngcor = GC->rtcc->RZRFTT.Manual.lng_T;
+
+			GC->rtcc->RZC1RCNS.entry = GC->rtcc->RZRFTT.Manual.entry;
+
+			EntryLatcor = GC->rtcc->RZRFTT.Manual.entry.lat_T;
+			EntryLngcor = GC->rtcc->RZRFTT.Manual.entry.lng_T;
+			manpadenginetype = GC->rtcc->RZRFTT.Manual.Thruster;
 		}
 
 		Result = 0;
@@ -4060,6 +4064,9 @@ int ARCore::subThread()
 			opt.P30TIG = P30TIG;
 			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
+			opt.Thruster = manpadenginetype;
+			opt.InitialBank = GC->rtcc->RZC1RCNS.entry.GNInitialBank;
+			opt.GLevel = GC->rtcc->RZC1RCNS.entry.GLevel;
 
 			if (EntryLatcor == 0)
 			{
@@ -4265,7 +4272,7 @@ int ARCore::subThread()
 		EphemerisDataTable2 *tab2;
 		double gmt_guess, gmt_min, gmt_max;
 		
-		gmt_guess = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
+		gmt_guess = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20_GET);
 		gmt_min = gmt_guess;
 		gmt_max = gmt_guess + 2.75*60.0*60.0;
 
