@@ -648,6 +648,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 				if (bCommit)
 				{
+					// Activate liftoff circuit
+					IuUmb->SetEDSLiftoffEnableA();
+					IuUmb->SetEDSLiftoffEnableB();
+					// Disconnect Umbilicals
 					IuUmb->Disconnect();
 					TSMUmb->Disconnect();
 					// Move swingarms

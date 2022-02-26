@@ -385,8 +385,6 @@ void IU_ESE::SetEDSMode(int mode)
 		ExcessivePitchYawRateAutoAbortInhibit[1] = true;
 		ExcessivePitchYawRateAutoAbortInhibit[2] = true;
 		EDSPowerInhibit = false;
-		Umbilical->SetEDSLiftoffEnableA();
-		Umbilical->SetEDSLiftoffEnableB();
 	}
 }
 
