@@ -1164,7 +1164,8 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 
 	//Save data in class
 	sv0 = sv;
-	if (lat_T < -720.0*RAD)
+	//If latitude less than -90° don't iterate on it
+	if (lat_T < -PI05)
 	{
 		pRTCC->RZJCTTC.Type = 2;
 	}
