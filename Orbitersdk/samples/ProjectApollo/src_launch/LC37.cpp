@@ -288,6 +288,10 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 
 		// Disconnect IU Umbilical
 		if (MissionTime >= -0.05) {
+			// Activate liftoff circuit
+			IuUmb->SetEDSLiftoffEnableA();
+			IuUmb->SetEDSLiftoffEnableB();
+			// Disconnect Umbilicals
 			IuUmb->Disconnect();
 			SCMUmb->Disconnect();
 		}
