@@ -1182,11 +1182,11 @@ void ARCore::DAPPADCalc()
 	if (vesseltype == 4) return;
 	if (vesseltype < 2)
 	{
-		GC->rtcc->CSMDAPUpdate(vessel, DAP_PAD);
+		GC->rtcc->CSMDAPUpdate(vessel, DAP_PAD, vesseltype == 1);
 	}
 	else
 	{
-		GC->rtcc->LMDAPUpdate(vessel, DAP_PAD, lemdescentstage == false);
+		GC->rtcc->LMDAPUpdate(vessel, DAP_PAD, vesseltype == 3, lemdescentstage == false);
 	}
 }
 
