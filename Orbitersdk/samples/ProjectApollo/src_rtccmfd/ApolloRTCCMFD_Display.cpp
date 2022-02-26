@@ -1481,7 +1481,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "XX%02d:%02.0f RETDROG", mm, secs);
 			skp->Text(3 * W / 8, 31 * H / 32, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 16, 7 * H / 21, "Deorbit:", 8);
+			skp->Text(1 * W / 16, 6 * H / 21, "Deorbit:", 8);
+
+			ThrusterName(Buffer, G->manpadenginetype);
+			skp->Text(1 * W / 16, 7 * H / 21, Buffer, strlen(Buffer));
+
 			GET_Display(Buffer, G->P30TIG);
 			skp->Text(1 * W / 16, 8 * H / 21, Buffer, strlen(Buffer));
 
@@ -1496,11 +1500,19 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
 			skp->Text(3 * W / 16, 11 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 16, 12 * H / 21, "Splashdown:", 11);
-			sprintf(Buffer, "Lat:  %+.2f°", G->EntryLatcor*DEG);
+			skp->Text(1 * W / 16, 12 * H / 21, "Initial Bank:", 13);
+			sprintf(Buffer, "%+.2lf°", GC->rtcc->RZC1RCNS.entry.GNInitialBank*DEG);
 			skp->Text(1 * W / 16, 13 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 16, 14 * H / 21, "G-Level:", 8);
+			sprintf(Buffer, "%+.2lf", GC->rtcc->RZC1RCNS.entry.GLevel);
+			skp->Text(1 * W / 16, 15 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 16, 16 * H / 21, "Splashdown:", 11);
+			sprintf(Buffer, "Lat:  %+.2f°", G->EntryLatcor*DEG);
+			skp->Text(1 * W / 16, 17 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "Long: %+.2f°", G->EntryLngcor*DEG);
-			skp->Text(1 * W / 16, 14 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 16, 18 * H / 21, Buffer, strlen(Buffer));
 		}
 		else
 		{
@@ -2579,23 +2591,23 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 2 * H / 14, "Type 2 (With Sep/Shaping)", 25);
 		}
 
-		GET_Display(Buffer, GC->rtcc->RZJCTTC.GETI);
+		GET_Display(Buffer, GC->rtcc->RZJCTTC.R32_GETI);
 		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->RZJCTTC.lat_T <= -720.0*RAD)
+		if (GC->rtcc->RZJCTTC.R32_lat_T <= -720.0*RAD)
 		{
 			sprintf(Buffer, "No latitude iteration");
 		}
 		else
 		{
-			sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lat_T*DEG);
+			sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.R32_lat_T*DEG);
 		}
 		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.lng_T*DEG);
+		sprintf(Buffer, "%f °", GC->rtcc->RZJCTTC.R32_lng_T*DEG);
 		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.2lf NM", GC->rtcc->RZJCTTC.MD);
+		sprintf(Buffer, "%.2lf NM", GC->rtcc->RZJCTTC.R32_MD);
 		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
@@ -8645,21 +8657,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, 1 * H / 32, "Retrofire Constraints", 21);
 
-		ThrusterName(Buffer, GC->rtcc->RZC1RCNS.Thruster);
+		ThrusterName(Buffer, GC->rtcc->RZJCTTC.R31_Thruster);
 		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->RZC1RCNS.BurnMode == 1)
+		if (GC->rtcc->RZJCTTC.R31_BurnMode == 1)
 		{
 			skp->Text(1 * W / 16, 4 * H / 14, "DV", 2);
 
-			sprintf_s(Buffer, "DV = %.1lf", GC->rtcc->RZC1RCNS.dv / 0.3048);
+			sprintf_s(Buffer, "DV = %.1lf", GC->rtcc->RZJCTTC.R31_dv / 0.3048);
 			skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 		}
-		else if (GC->rtcc->RZC1RCNS.BurnMode == 2)
+		else if (GC->rtcc->RZJCTTC.R31_BurnMode == 2)
 		{
 			skp->Text(1 * W / 16, 4 * H / 14, "DT", 2);
 
-			sprintf_s(Buffer, "DT = %.1lf", GC->rtcc->RZC1RCNS.dt);
+			sprintf_s(Buffer, "DT = %.1lf", GC->rtcc->RZJCTTC.R31_dt);
 			skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
@@ -8667,11 +8679,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 4 * H / 14, "V, Gamma", 8);
 		}
 
-		if (GC->rtcc->RZC1RCNS.AttitudeMode == 1)
+		if (GC->rtcc->RZJCTTC.R31_AttitudeMode == 1)
 		{
 			skp->Text(1 * W / 16, 8 * H / 14, "LVLH", 4);
 
-			sprintf_s(Buffer, "%+.1lf %+.1lf %+.1lf", GC->rtcc->RZC1RCNS.LVLHAttitude.x*DEG, GC->rtcc->RZC1RCNS.LVLHAttitude.y*DEG, GC->rtcc->RZC1RCNS.LVLHAttitude.z*DEG);
+			sprintf_s(Buffer, "%+.1lf %+.1lf %+.1lf", GC->rtcc->RZJCTTC.R31_LVLHAttitude.x*DEG, GC->rtcc->RZJCTTC.R31_LVLHAttitude.y*DEG, GC->rtcc->RZJCTTC.R31_LVLHAttitude.z*DEG);
 			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
@@ -8680,23 +8692,23 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 
 
-		if (GC->rtcc->RZC1RCNS.Thruster == RTCC_ENGINETYPE_CSMSPS)
+		if (GC->rtcc->RZJCTTC.R31_Thruster == RTCC_ENGINETYPE_CSMSPS)
 		{
-			if (GC->rtcc->RZC1RCNS.Use4UllageThrusters)
+			if (GC->rtcc->RZJCTTC.R31_Use4UllageThrusters)
 			{
-				sprintf_s(Buffer, "4 quads, %.1lf s ullage", GC->rtcc->RZC1RCNS.UllageTime);
+				sprintf_s(Buffer, "4 quads, %.1lf s ullage", GC->rtcc->RZJCTTC.R31_UllageTime);
 			}
 			else
 			{
-				sprintf_s(Buffer, "2 quads, %.1lf s ullage", GC->rtcc->RZC1RCNS.UllageTime);
+				sprintf_s(Buffer, "2 quads, %.1lf s ullage", GC->rtcc->RZJCTTC.R31_UllageTime);
 			}
 			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		GC->rtcc->EMGSTGENName(GC->rtcc->RZC1RCNS.REFSMMAT, Buffer);
+		GC->rtcc->EMGSTGENName(GC->rtcc->RZJCTTC.R31_REFSMMAT, Buffer);
 		skp->Text(9 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->RZC1RCNS.GimbalIndicator == 1)
+		if (GC->rtcc->RZJCTTC.R31_GimbalIndicator == 1)
 		{
 			skp->Text(9 * W / 16, 4 * H / 14, "Use System Parameters", 21);
 		}
@@ -8705,13 +8717,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(9 * W / 16, 4 * H / 14, "Compute Gimbal Trims", 20);
 		}
 
-		sprintf_s(Buffer, "%+.1lf°", GC->rtcc->RZC1RCNS.InitialBankAngle*DEG);
+		sprintf_s(Buffer, "%+.1lf°", GC->rtcc->RZJCTTC.R31_InitialBankAngle*DEG);
 		skp->Text(9 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.1lf gs", GC->rtcc->RZC1RCNS.GLevel);
+		sprintf_s(Buffer, "%.1lf gs", GC->rtcc->RZJCTTC.R31_GLevel);
 		skp->Text(9 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%+.1lf°", GC->rtcc->RZC1RCNS.FinalBankAngle*DEG);
+		sprintf_s(Buffer, "%+.1lf°", GC->rtcc->RZJCTTC.R31_FinalBankAngle*DEG);
 		skp->Text(9 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 104)
@@ -9435,9 +9447,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(1 * W / 8, 2 * H / 26, "Definition of Separation/Shaping Maneuver", 41);
 
-		if (GC->rtcc->RZJCTTC.GETI_SH > 0)
+		if (GC->rtcc->RZJCTTC.R30_GETI_SH > 0)
 		{
-			GET_Display2(Buffer, GC->rtcc->RZJCTTC.GETI_SH);
+			GET_Display2(Buffer, GC->rtcc->RZJCTTC.R30_GETI_SH);
 		}
 		else
 		{
@@ -9445,34 +9457,34 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->RZJCTTC.GETI_SH > 0)
+		if (GC->rtcc->RZJCTTC.R30_GETI_SH > 0)
 		{
 			sprintf(Buffer, "No Separation Maneuver");
 		}
 		else
 		{
-			sprintf(Buffer, "%.1lf min", GC->rtcc->RZJCTTC.DeltaT_Sep/60.0);
+			sprintf(Buffer, "%.1lf min", GC->rtcc->RZJCTTC.R30_DeltaT_Sep/60.0);
 		}
 		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-		ThrusterName(Buffer, GC->rtcc->RZJCTTC.Thruster);
+		ThrusterName(Buffer, GC->rtcc->RZJCTTC.R30_Thruster);
 		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.1lf ft/s", GC->rtcc->RZJCTTC.DeltaV / 0.3048);
+		sprintf(Buffer, "%.1lf ft/s", GC->rtcc->RZJCTTC.R30_DeltaV / 0.3048);
 		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.1lf s", GC->rtcc->RZJCTTC.DeltaT);
+		sprintf(Buffer, "%.1lf s", GC->rtcc->RZJCTTC.R30_DeltaT);
 		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.2lf %.2lf %.2lf", GC->rtcc->RZJCTTC.Att.x*DEG, GC->rtcc->RZJCTTC.Att.y*DEG, GC->rtcc->RZJCTTC.Att.z*DEG);
+		sprintf(Buffer, "%.2lf %.2lf %.2lf", GC->rtcc->RZJCTTC.R30_Att.x*DEG, GC->rtcc->RZJCTTC.R30_Att.y*DEG, GC->rtcc->RZJCTTC.R30_Att.z*DEG);
 		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->RZJCTTC.Thruster == RTCC_ENGINETYPE_CSMSPS)
+		if (GC->rtcc->RZJCTTC.R30_Thruster == RTCC_ENGINETYPE_CSMSPS)
 		{
-			sprintf(Buffer, "%.1lf s", GC->rtcc->RZJCTTC.Ullage_DT);
+			sprintf(Buffer, "%.1lf s", GC->rtcc->RZJCTTC.R30_Ullage_DT);
 			skp->Text(9 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
-			if (GC->rtcc->RZJCTTC.Use4UllageThrusters)
+			if (GC->rtcc->RZJCTTC.R30_Use4UllageThrusters)
 			{
 				sprintf(Buffer, "4 jet ullage");
 			}
@@ -9482,7 +9494,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			skp->Text(9 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-			if (GC->rtcc->RZJCTTC.GimbalIndicator == 1)
+			if (GC->rtcc->RZJCTTC.R30_GimbalIndicator == 1)
 			{
 				sprintf(Buffer, "Use System Parameters");
 			}

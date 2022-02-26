@@ -1306,12 +1306,12 @@ void ApolloRTCCMFD::LUNTARCalc()
 
 void ApolloRTCCMFD::menuRetroShapingGET()
 {
-	GenericGETInput(&GC->rtcc->RZJCTTC.GETI_SH, "Enter GET of shaping burn (Format: HH:MM:SS). Enter 0:0:0 for no shaping burn.");
+	GenericGETInput(&GC->rtcc->RZJCTTC.R30_GETI_SH, "Enter GET of shaping burn (Format: HH:MM:SS). Enter 0:0:0 for no shaping burn.");
 }
 
 void ApolloRTCCMFD::menuRetroSepDeltaTTIG()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.DeltaT_Sep, "Enter Delta T of separation maneuver in minutes:", 60.0);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaT_Sep, "Enter Delta T of separation maneuver in minutes:", 60.0);
 }
 
 void ApolloRTCCMFD::menuRetroSepThruster()
@@ -1328,44 +1328,44 @@ bool ChooseRetroSepThrusterInput(void *id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_RetroSepThruster(std::string th)
 {
-	return ThrusterType(th, GC->rtcc->RZJCTTC.Thruster);
+	return ThrusterType(th, GC->rtcc->RZJCTTC.R30_Thruster);
 }
 
 void ApolloRTCCMFD::menuRetroSepDeltaT()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.DeltaT, "Enter burn time of separation maneuver in seconds (only choose DT or DV, not both):", 1.0);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaT, "Enter burn time of separation maneuver in seconds (only choose DT or DV, not both):", 1.0);
 }
 
 void ApolloRTCCMFD::menuRetroSepDeltaV()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.DeltaV, "Enter Delta V of separation maneuver in ft/s (only choose DT or DV, not both):", 0.3048);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaV, "Enter Delta V of separation maneuver in ft/s (only choose DT or DV, not both):", 0.3048);
 }
 
 void ApolloRTCCMFD::menuRetroSepUllageDT()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.Ullage_DT, "Enter ullage time in seconds:", 1.0);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_Ullage_DT, "Enter ullage time in seconds:", 1.0);
 }
 
 void ApolloRTCCMFD::menuRetroSepUllageThrusters()
 {
-	GC->rtcc->RZJCTTC.Use4UllageThrusters = !GC->rtcc->RZJCTTC.Use4UllageThrusters;
+	GC->rtcc->RZJCTTC.R30_Use4UllageThrusters = !GC->rtcc->RZJCTTC.R30_Use4UllageThrusters;
 }
 
 void ApolloRTCCMFD::menuRetroSepGimbalIndicator()
 {
-	if (GC->rtcc->RZJCTTC.GimbalIndicator == 1)
+	if (GC->rtcc->RZJCTTC.R30_GimbalIndicator == 1)
 	{
-		GC->rtcc->RZJCTTC.GimbalIndicator = -1;
+		GC->rtcc->RZJCTTC.R30_GimbalIndicator = -1;
 	}
 	else
 	{
-		GC->rtcc->RZJCTTC.GimbalIndicator = 1;
+		GC->rtcc->RZJCTTC.R30_GimbalIndicator = 1;
 	}
 }
 
 void ApolloRTCCMFD::menuRetroSepAtt()
 {
-	GenericVectorInput(&GC->rtcc->RZJCTTC.Att, "Enter attitude of sep/shaping maneuver:", RAD);
+	GenericVectorInput(&GC->rtcc->RZJCTTC.R30_Att, "Enter attitude of sep/shaping maneuver:", RAD);
 }
 
 void ApolloRTCCMFD::GenericGETInput(double *get, char *message)
@@ -1504,7 +1504,7 @@ bool RecoveryTargetSelectionCalcInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_RecoveryTargetSelectionCalc(double get, double lng)
 {
-	GC->rtcc->RZJCTTC.R20GET = get;
+	GC->rtcc->RZJCTTC.R20_GET = get;
 	GC->rtcc->RZJCTTC.R20_lng = lng * RAD;
 	G->RecoveryTargetSelectionCalc();
 }
@@ -1530,15 +1530,15 @@ bool ApolloRTCCMFD::set_RecoveryTarget(int num)
 	{
 		if (GC->rtcc->RZDRTSD.table[num - 1].DataIndicator == false)
 		{
-			GC->rtcc->RZJCTTC.lat_T = GC->rtcc->RZDRTSD.table[num - 1].Latitude*RAD;
-			GC->rtcc->RZJCTTC.lng_T = GC->rtcc->RZDRTSD.table[num - 1].Longitude*RAD;
-			if (GC->rtcc->RZC1RCNS.Thruster == RTCC_ENGINETYPE_CSMSPS)
+			GC->rtcc->RZJCTTC.R32_lat_T = GC->rtcc->RZDRTSD.table[num - 1].Latitude*RAD;
+			GC->rtcc->RZJCTTC.R32_lng_T = GC->rtcc->RZDRTSD.table[num - 1].Longitude*RAD;
+			if (GC->rtcc->RZJCTTC.R31_Thruster == RTCC_ENGINETYPE_CSMSPS)
 			{
-				GC->rtcc->RZJCTTC.GETI = GC->rtcc->RZDRTSD.table[num - 1].GET - 20.0*60.0;
+				GC->rtcc->RZJCTTC.R32_GETI = GC->rtcc->RZDRTSD.table[num - 1].GET - 20.0*60.0;
 			}
 			else
 			{
-				GC->rtcc->RZJCTTC.GETI = GC->rtcc->RZDRTSD.table[num - 1].GET - 30.0*60.0;
+				GC->rtcc->RZJCTTC.R32_GETI = GC->rtcc->RZDRTSD.table[num - 1].GET - 30.0*60.0;
 			}
 			
 			return true;
@@ -1576,7 +1576,7 @@ bool ApolloRTCCMFD::set_RetrofireMissDistance(double val)
 {
 	if (val >= 0 && val <= 1500)
 	{
-		GC->rtcc->RZJCTTC.MD = val;
+		GC->rtcc->RZJCTTC.R32_MD = val;
 		return true;
 	}
 	return false;
@@ -4665,62 +4665,62 @@ void ApolloRTCCMFD::menuCycleRetrofireType()
 
 void ApolloRTCCMFD::menuRetrofireGETIDialogue()
 {
-	GenericGETInput(&GC->rtcc->RZJCTTC.GETI, "Choose the GET (Format: hhh:mm:ss)");
+	GenericGETInput(&GC->rtcc->RZJCTTC.R32_GETI, "Choose the GET (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuRetrofireLatDialogue()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.lat_T, "Latitude in degree (°), enter -720 or less for no iteration on latitude:", RAD);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R32_lat_T, "Latitude in degree (°), enter -720 or less for no iteration on latitude:", RAD);
 }
 
 void ApolloRTCCMFD::menuRetrofireLngDialogue()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.lng_T, "Longitude in degree (°):", RAD);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R32_lng_T, "Longitude in degree (°):", RAD);
 }
 
 void ApolloRTCCMFD::menuSwitchRetrofireEngine()
 {
-	if (GC->rtcc->RZC1RCNS.Thruster < RTCC_ENGINETYPE_CSMRCSMINUS4)
+	if (GC->rtcc->RZJCTTC.R31_Thruster < RTCC_ENGINETYPE_CSMRCSMINUS4)
 	{
-		GC->rtcc->RZC1RCNS.Thruster++;
+		GC->rtcc->RZJCTTC.R31_Thruster++;
 	}
-	else if (GC->rtcc->RZC1RCNS.Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4)
+	else if (GC->rtcc->RZJCTTC.R31_Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4)
 	{
-		GC->rtcc->RZC1RCNS.Thruster = RTCC_ENGINETYPE_CSMSPS;
+		GC->rtcc->RZJCTTC.R31_Thruster = RTCC_ENGINETYPE_CSMSPS;
 	}
 	else
 	{
-		GC->rtcc->RZC1RCNS.Thruster = RTCC_ENGINETYPE_CSMRCSPLUS2;
+		GC->rtcc->RZJCTTC.R31_Thruster = RTCC_ENGINETYPE_CSMRCSPLUS2;
 	}
 
 	//BurnMode 3 is only compatible with SPS
-	if (GC->rtcc->RZC1RCNS.Thruster != RTCC_ENGINETYPE_CSMSPS && GC->rtcc->RZC1RCNS.BurnMode == 3)
+	if (GC->rtcc->RZJCTTC.R31_Thruster != RTCC_ENGINETYPE_CSMSPS && GC->rtcc->RZJCTTC.R31_BurnMode == 3)
 	{
-		GC->rtcc->RZC1RCNS.BurnMode = 1;
+		GC->rtcc->RZJCTTC.R31_BurnMode = 1;
 	}
 }
 
 void ApolloRTCCMFD::menuSwitchRetrofireBurnMode()
 {
-	if (GC->rtcc->RZC1RCNS.BurnMode < 3)
+	if (GC->rtcc->RZJCTTC.R31_BurnMode < 3)
 	{
-		GC->rtcc->RZC1RCNS.BurnMode++;
+		GC->rtcc->RZJCTTC.R31_BurnMode++;
 	}
 	else
 	{
-		GC->rtcc->RZC1RCNS.BurnMode = 1;
+		GC->rtcc->RZJCTTC.R31_BurnMode = 1;
 	}
 
 	//BurnMode 3 is only compatible with SPS
-	if (GC->rtcc->RZC1RCNS.BurnMode == 3 && GC->rtcc->RZC1RCNS.Thruster != RTCC_ENGINETYPE_CSMSPS)
+	if (GC->rtcc->RZJCTTC.R31_BurnMode == 3 && GC->rtcc->RZJCTTC.R31_Thruster != RTCC_ENGINETYPE_CSMSPS)
 	{
-		GC->rtcc->RZC1RCNS.BurnMode = 1;
+		GC->rtcc->RZJCTTC.R31_BurnMode = 1;
 	}
 }
 
 void ApolloRTCCMFD::menuChooseRetrofireValue()
 {
-	if (GC->rtcc->RZC1RCNS.BurnMode < 3)
+	if (GC->rtcc->RZJCTTC.R31_BurnMode < 3)
 	{
 		bool ChooseRetrofireValueInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose retrofire DV in ft/s or DT in seconds:", ChooseRetrofireValueInput, 0, 20, (void*)this);
@@ -4739,36 +4739,36 @@ bool ChooseRetrofireValueInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_RetrofireValue(double val)
 {
-	if (GC->rtcc->RZC1RCNS.BurnMode == 1)
+	if (GC->rtcc->RZJCTTC.R31_BurnMode == 1)
 	{
-		GC->rtcc->RZC1RCNS.dv = val * 0.3048;
+		GC->rtcc->RZJCTTC.R31_dv = val * 0.3048;
 	}
 	else
 	{
-		GC->rtcc->RZC1RCNS.dt = val;
+		GC->rtcc->RZJCTTC.R31_dt = val;
 	}
 }
 
 void ApolloRTCCMFD::menuSwitchRetrofireAttitudeMode()
 {
-	if (GC->rtcc->RZC1RCNS.AttitudeMode < 2)
+	if (GC->rtcc->RZJCTTC.R31_AttitudeMode < 2)
 	{
-		GC->rtcc->RZC1RCNS.AttitudeMode++;
+		GC->rtcc->RZJCTTC.R31_AttitudeMode++;
 	}
 	else
 	{
-		GC->rtcc->RZC1RCNS.AttitudeMode = 1;
+		GC->rtcc->RZJCTTC.R31_AttitudeMode = 1;
 	}
 }
 
 void ApolloRTCCMFD::menuSwitchRetrofireGimbalIndicator()
 {
-	GC->rtcc->RZC1RCNS.GimbalIndicator = -GC->rtcc->RZC1RCNS.GimbalIndicator;
+	GC->rtcc->RZJCTTC.R31_GimbalIndicator = -GC->rtcc->RZJCTTC.R31_GimbalIndicator;
 }
 
 void ApolloRTCCMFD::menuChooseRetrofireAttitude()
 {
-	if (GC->rtcc->RZC1RCNS.AttitudeMode == 1)
+	if (GC->rtcc->RZJCTTC.R31_AttitudeMode == 1)
 	{
 		bool ChooseRetrofireAttitudeInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose LVLH burn attitude in roll, pitch, yaw:", ChooseRetrofireAttitudeInput, 0, 20, (void*)this);
@@ -4788,7 +4788,7 @@ bool ChooseRetrofireAttitudeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_RetrofireAttitude(VECTOR3 att)
 {
-	GC->rtcc->RZC1RCNS.LVLHAttitude = att * RAD;
+	GC->rtcc->RZJCTTC.R31_LVLHAttitude = att * RAD;
 }
 
 void ApolloRTCCMFD::menuChooseRetrofireK1()
@@ -4809,7 +4809,7 @@ bool ChooseRetrofireK1Input(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_RetrofireK1(double val)
 {
-	GC->rtcc->RZC1RCNS.InitialBankAngle = val * RAD;
+	GC->rtcc->RZJCTTC.R31_InitialBankAngle = val * RAD;
 }
 
 void ApolloRTCCMFD::menuChooseRetrofireGs()
@@ -4831,7 +4831,7 @@ bool ApolloRTCCMFD::set_RetrofireGs(double val)
 {
 	if (val >= 0.0 && val <= 1.0)
 	{
-		GC->rtcc->RZC1RCNS.GLevel = val;
+		GC->rtcc->RZJCTTC.R31_GLevel = val;
 		return true;
 	}
 	return false;
@@ -4855,7 +4855,7 @@ bool ChooseRetrofireK2Input(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_RetrofireK2(double val)
 {
-	GC->rtcc->RZC1RCNS.FinalBankAngle = val * RAD;
+	GC->rtcc->RZJCTTC.R31_FinalBankAngle = val * RAD;
 }
 
 void ApolloRTCCMFD::menuChooseRetrofireUllage()
@@ -4881,13 +4881,13 @@ bool ApolloRTCCMFD::set_RetrofireUllage(int num, double dt)
 	{
 		if (num == 4)
 		{
-			GC->rtcc->RZC1RCNS.Use4UllageThrusters = true;
+			GC->rtcc->RZJCTTC.R31_Use4UllageThrusters = true;
 		}
 		else
 		{
-			GC->rtcc->RZC1RCNS.Use4UllageThrusters = false;
+			GC->rtcc->RZJCTTC.R31_Use4UllageThrusters = false;
 		}
-		GC->rtcc->RZC1RCNS.UllageTime = dt;
+		GC->rtcc->RZJCTTC.R31_UllageTime = dt;
 
 		return true;
 	}
