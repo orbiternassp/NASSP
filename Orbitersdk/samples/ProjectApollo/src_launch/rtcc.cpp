@@ -4308,7 +4308,7 @@ void RTCC::AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad)
 	pad.Vg = opt->dV_LVLH / 0.3048;
 }
 
-void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
+void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked)
 {
 	double CSMmass, LMmass, p_T, y_T;
 
@@ -4317,13 +4317,13 @@ void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
 
 	double T, WDOT;
 	unsigned IC;
-	if (LMmass > 0)
+	if (docked)
 	{
-		IC = 13;
+		IC = 13; //CSM + LM
 	}
 	else
 	{
-		IC = 1;
+		IC = 1; //CSM
 	}
 	GIMGBL(CSMmass, LMmass, p_T, y_T, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0, 0.0);
 
@@ -4339,7 +4339,7 @@ void ConvertDPSGimbalAnglesToTrim(double P_G, double R_G, double &P_G_trim, doub
 	R_G_trim = 6.0*RAD + R_G;
 }
 
-void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc)
+void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked, bool asc)
 {
 	double CSMmass, LMmass;
 
@@ -4371,13 +4371,13 @@ void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc)
 	{
 		double T, WDOT, p_T, r_T;
 		unsigned IC;
-		if (CSMmass > 0)
+		if (docked)
 		{
-			IC = 13;
+			IC = 13; //CSM + LM
 		}
 		else
 		{
-			IC = 12;
+			IC = 12; //LM
 		}
 		GIMGBL(CSMmass, LMmass, p_T, r_T, T, WDOT, RTCC_ENGINETYPE_LMDPS, IC, 1, 0, 0.0);
 

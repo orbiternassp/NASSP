@@ -1208,7 +1208,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)pad;
 
-		CSMDAPUpdate(calcParams.src, *form);
+		CSMDAPUpdate(calcParams.src, *form, false);
 	}
 	break;
 	case 34: //LM DAP DATA
@@ -1217,7 +1217,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP10DAPDATA dap;
 
-		LMDAPUpdate(calcParams.tgt, dap);
+		LMDAPUpdate(calcParams.tgt, dap, false);
 		
 		LEM *lem = (LEM *)calcParams.tgt;
 
