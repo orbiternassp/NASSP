@@ -501,107 +501,119 @@ void CMLETHoriCoeffFunc(double aoa, double M, double Re, double *cl, double *cm,
 	*cm = factor * (frac*CM[j + 1] + (1.0 - frac)*CM[j]);
 }
 
-void CSMAeroVertCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
+void CSMAeroAxisSymmetricalCoeff(double aoa_T, double Kn, double &C_M, double &C_A, double &C_NY)
 {
-	//Use this definition of the aoa instead
-	VECTOR3 vec;
-	v->GetAirspeedVector(FRAME_LOCAL, vec);
-	double aoa_T = acos(unit(vec).z);
+	//From the CSM Data Book, table 5-6.
+	static const double alpha_arr[19] = { 0, 10 * RAD, 20 * RAD, 30 * RAD, 40 * RAD, 50 * RAD, 60 * RAD, 70 * RAD, 80 * RAD, 90 * RAD, 100 * RAD, 110 * RAD, 120 * RAD, 130 * RAD, 140 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
+	static const double C_A_free[19] = { 2.41,2.72,2.97,3.08,3.06,2.84,2.4,1.72,0.88,0.01,-0.84,-1.3,-1.6,-2.08,-2.31,-2.36,-2.26,-2.05,-1.96 };
+	static const double C_N_free[19] = { 0,0.43,1.06,1.84,2.68,3.51,4.23,4.73,4.97,5.01,5.07,4.86,4.39,3.7,2.89,2.08,1.29,0.49,0 };
+	static const double C_A_cont[19] = { 0.54,0.55,0.57,0.61,0.66,0.69,0.69,0.65,0.56,0.46,0.28,0.01,-0.31,-0.65,-0.97,-1.22,-1.41,-1.52,-1.69 };
+	static const double C_N_cont[19] = { 0,0.28,0.69,1.17,1.66,2.1,2.48,2.72,2.81,2.78,2.55,2.2,1.77,1.32,0.89,0.54,0.24,0.06,0 };
 
-	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
-	int i, j;
-	const int nlift = 9;
-	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
-	static const double CD_free[nlift] = { 2.41, 2.73, 3.14, 3.61, 5.01, 2.92, 2.46, 2.08, 1.96}; //free flow
-	static const double CD_cont[nlift] = { 0.54, 0.59, 0.77, 1.12, 2.78, 1.32, 1.41, 1.50, 1.69 }; //continuum flow
-	static const double CM_free[nlift] = { 0, 0.0440, -0.1436, -0.4349, -0.7682, -0.2369, 0.3820, -0.0115, 0 };
-	static const double CM_cont[nlift] = { 0, 0.0977, 0.1069, 0.0230, -0.5803, 0.0206, 0.0981, 0.0145, 0 };
+	//Calculated for CG location X=950, Y=0, Z=0 inches
+	static const double C_M_cg_free[19] = { 0,0.0440, -0.1436, -0.4349, -0.7318, -0.9010, -1.0068, -0.9859, -0.8778, -0.7682, -0.9437, -1.0544, -1.0481, -0.9350, -0.6710, -0.2369,  0.3820, -0.0115, 0 };
+	static const double C_M_cg_cont[19] = { 0,0.0977,  0.1069,  0.0230, -0.1085, -0.2520, -0.3901, -0.5021, -0.5803, -0.6476, -0.6132, -0.5379, -0.4219, -0.2707, -0.1247,   0.0206, 0.0981,  0.0145, 0 };
 
-	//Find angle of attack in array, then linearly interpolate
-
-	//For drag
-	for (i = 0; i < nlift - 1 && AOA[i + 1] < aoa_T; i++);
-	double f = (aoa_T - AOA[i]) / (AOA[i + 1] - AOA[i]);
-
-	//For moments
-	for (j = 0; j < nlift - 1 && AOA[j + 1] < abs(aoa); j++);
-	double f2 = (abs(aoa) - AOA[j]) / (AOA[j + 1] - AOA[j]);
-
-	//No lift simulation
-	*cl = 0.0;
+	int i;
+	for (i = 0; i < 18 && alpha_arr[i + 1] < aoa_T; i++);
+	double f = (aoa_T - alpha_arr[i]) / (alpha_arr[i + 1] - alpha_arr[i]);
 
 	if (Kn > 10.0)
 	{
 		//Free flow
-		*cd = CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f;
-		*cm = CM_free[j] + (CM_free[j + 1] - CM_free[j]) * f2;
+		C_A = C_A_free[i] + (C_A_free[i + 1] - C_A_free[i]) * f;
+		C_NY = C_N_free[i] + (C_N_free[i + 1] - C_N_free[i]) * f;
+		C_M = C_M_cg_free[i] + (C_M_cg_free[i + 1] - C_M_cg_free[i]) * f;
 	}
 	else if (Kn < 0.01)
 	{
 		//Continuum flow
-		*cd = CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04);
-		*cm = CM_cont[j] + (CM_cont[j + 1] - CM_cont[j]) * f2;
+		C_A = C_A_cont[i] + (C_A_cont[i + 1] - C_A_cont[i]) * f;
+		C_NY = C_N_cont[i] + (C_N_cont[i + 1] - C_N_cont[i]) * f;
+		C_M = C_M_cg_cont[i] + (C_M_cg_cont[i + 1] - C_M_cg_cont[i]) * f;
 	}
 	else
 	{
 		//Mix
 		double g = (Kn - 0.01) / 9.99;
-		*cd = g * (CD_free[i] + (CD_free[i + 1] - CD_free[i]) * f) + (1.0 - g)*(CD_cont[i] + (CD_cont[i + 1] - CD_cont[i]) * f + oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04));
-		*cm = g * (CM_free[j] + (CM_free[j + 1] - CM_free[j]) * f2) + (1.0 - g)*(CM_cont[j] + (CM_cont[j + 1] - CM_cont[j]) * f2);
+		C_A = g * (C_A_free[i] + (C_A_free[i + 1] - C_A_free[i]) * f) + (1.0 - g)*(C_A_cont[i] + (C_A_cont[i + 1] - C_A_cont[i]) * f);
+		C_NY = g * (C_N_free[i] + (C_N_free[i + 1] - C_N_free[i]) * f) + (1.0 - g)*(C_N_cont[i] + (C_N_cont[i + 1] - C_N_cont[i]) * f);
+		C_M = g * (C_M_cg_free[i] + (C_M_cg_free[i + 1] - C_M_cg_free[i]) * f) + (1.0 - g)*(C_M_cg_cont[i] + (C_M_cg_cont[i + 1] - C_M_cg_cont[i]) * f);
 	}
 
-	if (aoa < 0)
-	{
-		*cm = -(*cm);
-	}
+	//sprintf(oapiDebugString(), "aoa_T %lf Kn %lf C_M %lf C_A %lf C_NY %lf i %d", aoa_T*DEG, Kn, C_M, C_A, C_NY, i);
+}
+
+void CSMAeroVertCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
+{
+	//Calculate unit airspeed vector
+	VECTOR3 vec;
+	v->GetAirspeedVector(FRAME_LOCAL, vec);
+	vec = unit(vec);
+
+	//Calculate axis symmetric angles
+	double cos_alpha, sin_alpha, alpha, phi_A, C_L, C_D, cos_phi_A;
+
+	cos_alpha = vec.z;
+	alpha = acos(vec.z);
+	sin_alpha = sin(alpha);
+	phi_A = atan2(vec.x, -vec.y);
+	cos_phi_A = cos(phi_A);
+
+	//Calculate Knudsen number
+	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
+
+	double C_A, C_NY, C_M;
+	CSMAeroAxisSymmetricalCoeff(alpha, Kn, C_M, C_A, C_NY);
+
+	//Calculate total lift and drag coefficients
+	C_L = cos_alpha * C_NY - sin_alpha * C_A;
+	C_D = sin_alpha * C_NY + cos_alpha * C_A;
+
+	double fact = sqrt(vec.y*vec.y + vec.z*vec.z);
+	*cl = 0.0; //C_L * cos_phi_A*fact; //TBD: Use lift when full drag gets used, too
+	*cd = C_D;
+	*cm = C_M * cos_phi_A;
 
 	//TBD: Remove when RTCC takes drag into account properly
 	*cd = (*cd)*0.05;
-
-	//sprintf(oapiDebugString(), "Vertical: aoa %lf aoa_T %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, aoa_T*DEG, M, Re, Kn, *cd, *cl, *cm);
+	
+	//sprintf(oapiDebugString(), "C_L %lf C_D %lf cos_phi_A %lf fact %lf cl %lf cd %lf cm %lf", C_L, C_D, cos_phi_A, fact, *cl, *cd, *cm);
+	//sprintf(oapiDebugString(), "Vertical: aoa %lf aoa_T %lf phi_A %Lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, alpha*DEG, phi_A*DEG, M, Re, Kn, *cd, *cl, *cm);
 }
 
 void CSMAeroHorizCoeff(VESSEL *v, double aoa, double M, double Re, void *context, double *cl, double *cm, double *cd)
 {
-	//Only moment calculations
-	*cl = 0;
-	*cd = 0;
+	//Calculate unit airspeed vector
+	VECTOR3 vec;
+	v->GetAirspeedVector(FRAME_LOCAL, vec);
+	vec = unit(vec);
 
-	int i;
-	const int nlift = 9;
-	static const double AOA[nlift] = { 0 * RAD, 10 * RAD, 20 * RAD, 30 * RAD, 90 * RAD, 150 * RAD, 160 * RAD, 170 * RAD, 180 * RAD };
-	static const double CM_free[nlift] = { 0, -0.0440, 0.1436, 0.4349, 0.7682, 0.2369, -0.3820, 0.0115, 0 };
-	static const double CM_cont[nlift] = { 0, -0.0977, -0.1069, -0.0230, 0.5803, -0.0206, -0.0981, -0.0145, 0 };
+	//Calculate axis symmetric angles
+	double cos_alpha, sin_alpha, alpha, phi_A, C_L, sin_phi_A;
 
+	cos_alpha = vec.z;
+	alpha = acos(vec.z);
+	sin_alpha = sin(alpha);
+	phi_A = atan2(vec.x, -vec.y);
+	sin_phi_A = sin(phi_A);
+
+	//Calculate Knudsen number
 	double Kn = M / Re * 1.482941286; //Knudsen number. Factor is sqrt(1.4*pi/2)
 
-	//Find angle of attack in array, then linearly interpolate
-	for (i = 0; i < nlift - 1 && AOA[i + 1] < abs(aoa); i++);
-	double f = (abs(aoa) - AOA[i]) / (AOA[i + 1] - AOA[i]);
+	double C_A, C_NY, C_M;
+	CSMAeroAxisSymmetricalCoeff(alpha, Kn, C_M, C_A, C_NY);
 
-	if (Kn > 10.0)
-	{
-		//Free flow
-		*cm = CM_free[i] + (CM_free[i + 1] - CM_free[i]) * f;
-	}
-	else if (Kn < 0.01)
-	{
-		//Continuum flow
-		*cm = CM_cont[i] + (CM_cont[i + 1] - CM_cont[i]) * f;
-	}
-	else
-	{
-		//Mix
-		double g = (Kn - 0.01) / 9.99;
-		*cm = g * (CM_free[i] + (CM_free[i + 1] - CM_free[i]) * f) + (1.0 - g)*(CM_cont[i] + (CM_cont[i + 1] - CM_cont[i]) * f);
-	}
+	//Calculate total lift coefficient
+	C_L = cos_alpha * C_NY - sin_alpha * C_A;
 
-	if (aoa < 0)
-	{
-		*cm = -(*cm);
-	}
+	double fact = sqrt(vec.x*vec.x + vec.z*vec.z);
+	*cl = 0.0;	//-C_L * sin_phi_A*fact; //TBD: Use lift when full drag gets used, too
+	*cd = 0;	//Total drag is applied in other airfoil function
+	*cm = C_M * sin_phi_A;
 
-	//sprintf(oapiDebugString(), "Horizontal: beta %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, M, Re, Kn, *cd, *cl, *cm);
+	//sprintf(oapiDebugString(), "C_L %lf sin_phi_A %lf fact %lf cl %lf cm %lf", C_L, sin_phi_A, fact, *cl, *cm);
+	//sprintf(oapiDebugString(), "Horizontal: beta %lf aoa_T %lf phi_A %lf M %lf Re %lf Kn %lf CD %lf CL %lf CM %lf", aoa*DEG, alpha*DEG, phi_A*DEG, M, Re, Kn, *cd, *cl, *cm);
 }
 
 void SaturnInitMeshes()
