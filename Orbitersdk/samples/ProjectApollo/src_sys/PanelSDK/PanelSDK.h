@@ -59,6 +59,7 @@ class VesselMgmt;
 class e_object;
 class h_object;
 class therm_obj;
+class SPSDK_WorkerPool;
 
 ///
 /// \ingroup PanelSDK

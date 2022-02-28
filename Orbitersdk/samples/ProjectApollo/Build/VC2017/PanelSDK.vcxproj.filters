@@ -53,6 +53,9 @@
     <ClCompile Include="..\..\src_sys\PanelSDK\Internals\Thermal.cpp">
       <Filter>Source Files\Internals</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\PanelSDK\SPSDK_WorkerThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\PanelSDK\BUILD.H">
@@ -80,6 +83,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_sys\PanelSDK\VSMGMT.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_sys\PanelSDK\SPSDK_WorkerThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

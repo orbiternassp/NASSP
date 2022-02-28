@@ -114,6 +114,7 @@
     <ClCompile Include="..\..\src_sys\PanelSDK\intruments.cpp" />
     <ClCompile Include="..\..\src_sys\PanelSDK\Panel.cpp" />
     <ClCompile Include="..\..\src_sys\PanelSDK\PanelSDK.cpp" />
+    <ClCompile Include="..\..\src_sys\PanelSDK\SPSDK_WorkerThread.cpp" />
     <ClCompile Include="..\..\src_sys\PanelSDK\VSMGMT.CPP" />
     <ClCompile Include="..\..\src_sys\PanelSDK\Matrix.cpp" />
     <ClCompile Include="..\..\src_sys\PanelSDK\Vectors.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="..\..\src_sys\PanelSDK\Matrix.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\PanelSDK.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Internals\Thermal.h" />
+    <ClInclude Include="..\..\src_sys\PanelSDK\SPSDK_WorkerThread.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Vectors.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\VSMGMT.H" />
   </ItemGroup>
