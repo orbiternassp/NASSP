@@ -6269,19 +6269,27 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(42 * W / 64, 20 * H / 32, "L LLS", 5);
 		skp->Text(42 * W / 64, 21 * H / 32, "R LLS", 5);
 
-		skp->Text(1 * W / 64, 25 * H / 32, "PGNS", 4);
-		skp->Text(1 * W / 64, 26 * H / 32, "EXT DV", 6);
-		skp->Text(1 * W / 64, 27 * H / 32, "GETI", 4);
-		skp->Text(2 * W / 64, 28 * H / 32, "VX", 2);
-		skp->Text(2 * W / 64, 29 * H / 32, "VY", 2);
-		skp->Text(2 * W / 64, 30 * H / 32, "VZ", 2);
+		if (tab->Attitude == RTCC_ATTITUDE_SIVB_IGM)
+		{
+			skp->Text(1 * W / 64, 25 * H / 32, "IU IGM", 6);
+			skp->Text(1 * W / 64, 27 * H / 32, "TB6", 3);
+		}
+		else
+		{
+			skp->Text(1 * W / 64, 25 * H / 32, "PGNS", 4);
+			skp->Text(1 * W / 64, 26 * H / 32, "EXT DV", 6);
+			skp->Text(1 * W / 64, 27 * H / 32, "GETI", 4);
+			skp->Text(2 * W / 64, 28 * H / 32, "VX", 2);
+			skp->Text(2 * W / 64, 29 * H / 32, "VY", 2);
+			skp->Text(2 * W / 64, 30 * H / 32, "VZ", 2);
 
-		skp->Text(18 * W / 64, 25 * H / 32, "AGS", 3);
-		skp->Text(18 * W / 64, 26 * H / 32, "EXT DV", 6);
-		skp->Text(18 * W / 64, 27 * H / 32, "GETI", 4);
-		skp->Text(19 * W / 64, 28 * H / 32, "VX", 2);
-		skp->Text(19 * W / 64, 29 * H / 32, "VY", 2);
-		skp->Text(19 * W / 64, 30 * H / 32, "VZ", 2);
+			skp->Text(18 * W / 64, 25 * H / 32, "AGS", 3);
+			skp->Text(18 * W / 64, 26 * H / 32, "EXT DV", 6);
+			skp->Text(18 * W / 64, 27 * H / 32, "GETI", 4);
+			skp->Text(19 * W / 64, 28 * H / 32, "VX", 2);
+			skp->Text(19 * W / 64, 29 * H / 32, "VY", 2);
+			skp->Text(19 * W / 64, 30 * H / 32, "VZ", 2);
+		}
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
@@ -6471,23 +6479,31 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%.2f", tab->R_LLS);
 		skp->Text(57 * W / 64, 21 * H / 32, Buffer, strlen(Buffer));
 
-		GET_Display3(Buffer, tab->PGNS_GETI);
-		skp->Text(17 * W / 64, 27 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.4f", tab->PGNS_DV.x);
-		skp->Text(17 * W / 64, 28 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.4f", tab->PGNS_DV.y);
-		skp->Text(17 * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.4f", tab->PGNS_DV.z);
-		skp->Text(17 * W / 64, 30 * H / 32, Buffer, strlen(Buffer));
+		if (tab->Attitude == RTCC_ATTITUDE_SIVB_IGM)
+		{
+			GET_Display3(Buffer, tab->PGNS_GETI);
+			skp->Text(17 * W / 64, 27 * H / 32, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			GET_Display3(Buffer, tab->PGNS_GETI);
+			skp->Text(17 * W / 64, 27 * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.4f", tab->PGNS_DV.x);
+			skp->Text(17 * W / 64, 28 * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.4f", tab->PGNS_DV.y);
+			skp->Text(17 * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.4f", tab->PGNS_DV.z);
+			skp->Text(17 * W / 64, 30 * H / 32, Buffer, strlen(Buffer));
 
-		GET_Display3(Buffer, tab->AGS_GETI);
-		skp->Text(34 * W / 64, 27 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.4f", tab->AGS_DV.x);
-		skp->Text(34 * W / 64, 28 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.4f", tab->AGS_DV.y);
-		skp->Text(34 * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.4f", tab->AGS_DV.z);
-		skp->Text(34 * W / 64, 30 * H / 32, Buffer, strlen(Buffer));
+			GET_Display3(Buffer, tab->AGS_GETI);
+			skp->Text(34 * W / 64, 27 * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.4f", tab->AGS_DV.x);
+			skp->Text(34 * W / 64, 28 * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.4f", tab->AGS_DV.y);
+			skp->Text(34 * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.4f", tab->AGS_DV.z);
+			skp->Text(34 * W / 64, 30 * H / 32, Buffer, strlen(Buffer));
+		}
 
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		sprintf_s(Buffer, "%s", tab->error.c_str());
