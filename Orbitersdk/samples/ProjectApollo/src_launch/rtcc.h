@@ -1278,6 +1278,7 @@ struct DetailedManeuverTable
 	char CFP_OPTION[8];
 	bool isCSMTV;
 	std::string error;
+	int Attitude;
 };
 
 struct MPTVehicleDataBlock

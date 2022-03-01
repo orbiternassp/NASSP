@@ -522,6 +522,7 @@ DetailedManeuverTable::DetailedManeuverTable()
 	CFP_DT = 0.0;
 	sprintf_s(CFP_OPTION, "");
 	isCSMTV = true;
+	Attitude = 0;
 }
 
 TradeoffDataDisplayBuffer::TradeoffDataDisplayBuffer()
@@ -21065,8 +21066,17 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	man = &table->mantable[ManNo - 1];
 
 	sprintf_s(res.CODE, man->code.c_str());
+	res.Attitude = man->AttitudeCode;
 	res.GETI = GETfromGMT(man->GMTI);
-	res.AGS_GETI = res.CFP_GETI = res.Lam_GETI = res.PGNS_GETI = res.GETI;
+	if (man->AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+	{
+		res.PGNS_GETI = GETfromGMT(man->GMTMAN);
+		res.AGS_GETI = res.CFP_GETI = res.Lam_GETI = 0.0;
+	}
+	else
+	{
+		res.AGS_GETI = res.CFP_GETI = res.Lam_GETI = res.PGNS_GETI = res.GETI;
+	}
 	res.GETR = SystemParameters.MCGREF * 3600.0;
 	res.PETI = res.GETI - res.GETR;
 	res.DVM = man->DV_M / 0.3048;
