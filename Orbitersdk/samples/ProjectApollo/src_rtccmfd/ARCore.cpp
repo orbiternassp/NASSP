@@ -3079,8 +3079,21 @@ int ARCore::subThread()
 	break;
 	case 8: //TLI PAD
 	{
-		SaturnV *SatV = (SaturnV*)g_Data.progVessel;
-		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
+		LVDCSV *lvdc = NULL;
+		if (!stricmp(g_Data.progVessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+			!stricmp(g_Data.progVessel->GetClassName(), "ProjectApollo/Saturn5"))
+		{
+			SaturnV *SatV = (SaturnV *)g_Data.progVessel;
+			if (SatV->iu)
+			{
+				lvdc = (LVDCSV*)SatV->iu->GetLVDC();
+			}
+		}
+		if (lvdc == NULL)
+		{
+			Result = 0;
+			break;
+		}
 
 		TLIPADOpt opt;
 
