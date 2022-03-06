@@ -1082,10 +1082,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "S-IVB/IU Lunar Impact", 21);
 
 			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "TIG:", 6);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "BT:", 8);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "Pitch:", 8);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.6), "Yaw:", 8);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "TIG:", 4);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "BT:", 3);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "Pitch:", 6);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.6), "Yaw:", 4);
 
 			sprintf(buffer, "TB8+%.0f s", g_Data.iuUplinkTIG);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));

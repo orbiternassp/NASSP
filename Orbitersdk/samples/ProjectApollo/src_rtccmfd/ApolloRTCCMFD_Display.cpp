@@ -2972,15 +2972,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Entry Update", 12);
 
-		sprintf(Buffer, "Lat:  %f °", G->EntryLatcor*DEG);
-		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "Long: %f °", G->EntryLngcor*DEG);
-		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
 		sprintf(Buffer, "Desired Range: %.1f NM", G->entryrange);
-		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "Actual Range:  %.1f NM", G->EntryRTGO);
-		skp->Text(4 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "Lat:  %.2f °", G->EntryLatcor*DEG);
+		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "Long: %.2f °", G->EntryLngcor*DEG);
+		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 31)
 	{
@@ -9529,6 +9527,54 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 4 * H / 14, "Retrofire Constraints", 21);
 		skp->Text(1 * W / 8, 6 * H / 14, "Target Selection Display", 24);
 		skp->Text(1 * W / 8, 8 * H / 14, "Retrofire Maneuver", 18);
+	}
+	else if (screen == 119)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 2 * H / 14, "CMC ENTRY UPDATE (343)", 38);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(5 * W / 32, 8 * H / 28, "LAT", 3);
+		sprintf(Buffer, "%+.2f°", G->EntryLatcor*DEG);
+		skp->Text(8 * W / 32, 8 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(14 * W / 32, 8 * H / 28, "LNG", 3);
+		sprintf(Buffer, "%+.2f°", G->EntryLngcor*DEG);
+		skp->Text(17 * W / 32, 8 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 32, 10 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 10 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 10 * H / 28, "DSKY V71", 8);
+
+		for (int i = 1;i <= 6;i++)
+		{
+			sprintf(Buffer, "%o", i);
+			skp->Text(5 * W / 32, (i + 11) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(10 * W / 32, 12 * H / 28, "INDEX", 5);
+		skp->Text(10 * W / 32, 13 * H / 28, "ADD", 3);
+		skp->Text(10 * W / 32, 14 * H / 28, "LAT", 3);
+		skp->Text(10 * W / 32, 15 * H / 28, "LAT", 3);
+		skp->Text(10 * W / 32, 16 * H / 28, "LONG", 4);
+		skp->Text(10 * W / 32, 17 * H / 28, "LONG", 4);
+
+		for (int i = 0;i < 6;i++)
+		{
+			sprintf(Buffer, "%05d", GC->rtcc->CZENTRY.Octals[i]);
+			skp->Text(15 * W / 32, (i + 12) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		skp->Text(27 * W / 32, 10 * H / 28, "DECIMAL", 7);
+		sprintf(Buffer, "%+.2f°", GC->rtcc->CZENTRY.Lat);
+		skp->Text(27 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.2f°", GC->rtcc->CZENTRY.Lng);
+		skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+
 	}
 	return true;
 }

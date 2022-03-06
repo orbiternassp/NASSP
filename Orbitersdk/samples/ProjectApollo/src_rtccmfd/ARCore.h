@@ -117,6 +117,7 @@ public:
 	void P30Uplink(bool isCSM);
 	void RetrofireEXDVUplinkCalc(char source, char column);
 	void RetrofireEXDVUplink();
+	void EntryUplinkCalc();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(bool isCSM);
 	void StateVectorUplink(int type);
@@ -251,7 +252,6 @@ public:
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	
-	double EntryAngcor;
 	double EntryTIGcor;
 	double EntryLatcor;
 	double EntryLngcor;
@@ -295,7 +295,6 @@ public:
 	AP11ENT lunarentrypad;
 	AP7ENT earthentrypad;
 	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
-	double EntryRTGO;
 
 	//MAP UPDATE PAGE
 	AP10MAPUPDATE mapupdate;
