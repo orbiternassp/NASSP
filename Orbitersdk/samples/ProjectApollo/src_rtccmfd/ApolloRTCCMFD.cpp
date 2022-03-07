@@ -146,7 +146,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "ENTRYTIGCOR", G->EntryTIGcor);
 	papiWriteScenario_double(scn, "ENTRYLATCOR", G->EntryLatcor);
 	papiWriteScenario_double(scn, "ENTRYLNGCOR", G->EntryLngcor);
-	papiWriteScenario_double(scn, "ENTRYANGCOR", G->EntryAngcor);
 	papiWriteScenario_vec(scn, "ENTRYDV", G->Entry_DV);
 	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
@@ -249,7 +248,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "ENTRYTIGCOR", G->EntryTIGcor);
 		papiReadScenario_double(line, "ENTRYLATCOR", G->EntryLatcor);
 		papiReadScenario_double(line, "ENTRYLNGCOR", G->EntryLngcor);
-		papiReadScenario_double(line, "ENTRYANGCOR", G->EntryAngcor);
 		papiReadScenario_vec(line, "ENTRYDV", G->Entry_DV);
 		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
@@ -396,6 +394,11 @@ bool ApolloRTCCMFD::set_RetrofireEXDVUplinkCalc(char *str)
 		return true;
 	}
 	return false;
+}
+
+void ApolloRTCCMFD::menuEntryUplinkCalc()
+{
+	G->EntryUplinkCalc();
 }
 
 void ApolloRTCCMFD::menuTLANDUplinkCalc()
@@ -1267,6 +1270,11 @@ void ApolloRTCCMFD::menuSetRetrofireSeparationInputsPage()
 void ApolloRTCCMFD::menuSetRetrofireSubsystemPage()
 {
 	SelectPage(118);
+}
+
+void ApolloRTCCMFD::menuSetEntryUplinkPage()
+{
+	SelectPage(119);
 }
 
 void ApolloRTCCMFD::LUNTAR_TIGInput()
@@ -5714,6 +5722,16 @@ void ApolloRTCCMFD::set_RTEReentryTime(double t)
 	G->RTEReentryTime = t;
 }
 
+void ApolloRTCCMFD::menuEnterSplashdownLat()
+{
+	GenericDoubleInput(&G->EntryLatcor, "Choose the splashdown latitude:", RAD);
+}
+
+void ApolloRTCCMFD::menuEnterSplashdownLng()
+{
+	GenericDoubleInput(&G->EntryLngcor, "Choose the splashdown longitude:", RAD);
+}
+
 void ApolloRTCCMFD::menuTransferLOIMCCtoMPT()
 {
 	G->TransferLOIorMCCtoMPT();
@@ -8305,8 +8323,11 @@ void ApolloRTCCMFD::SelectUplinkScreen(int num)
 	case 12: //CMC REFSMMAT Update
 		screen = 53;
 		break;
-	case 13: //Retrofire External DV Update
+	case 13: //CMC Retrofire External DV Update
 		screen = 52;
+		break;
+	case 14: //CMC Entry Update
+		screen = 119;
 		break;
 	case 20: //LGC LM State Vector
 		screen = 101;

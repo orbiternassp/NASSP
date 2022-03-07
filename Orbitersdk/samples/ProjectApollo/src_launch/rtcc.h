@@ -2762,6 +2762,8 @@ public:
 	void CMMDTGTU(double t_land);
 	//Retrofire External Delta V Update Generator
 	void CMMRXTDV(int source, int column);
+	//Entry Update Generator
+	void CMMENTRY(double lat, double lng);
 	//CSM/LM Liftoff Update
 	void CMMLIFTF(int L, double hrs);
 	//CSM/LM Time Increment Update Generator
@@ -4390,6 +4392,17 @@ public:
 		VECTOR3 DV = _V(0, 0, 0);
 		double GET_TIG = 0.0;
 	} CZREXTDV;
+
+	struct CMCEntryUpdateMakeupBuffer
+	{
+		std::string LoadType;
+		int UpdateNo = 0;
+		int SequenceNumber = 0;
+		double GETLoadGeneration = 0.0;
+		double Lat = 0.0;
+		double Lng = 0.0;
+		int Octals[6] = { 0,0,0,0,0,0};
+	} CZENTRY;
 
 	struct NavUpdateMakeupBuffer
 	{

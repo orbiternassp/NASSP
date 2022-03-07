@@ -130,6 +130,9 @@ public:
 	void menuRetrofireEXDVUplink();
 	void menuRetrofireEXDVUplinkCalc();
 	bool set_RetrofireEXDVUplinkCalc(char *str);
+	void menuEntryUplinkCalc();
+	void menuEnterSplashdownLat();
+	void menuEnterSplashdownLng();
 	void menuRTED_REFSMMAT();
 	void set_RTED_REFSMMAT(char *str);
 	void menuRTEDASTCodeDialogue();
@@ -762,6 +765,7 @@ public:
 	void menuRetroSepAtt();
 	void menuSetRetrofireSeparationInputsPage();
 	void menuSetRetrofireSubsystemPage();
+	void menuSetEntryUplinkPage();
 	void GenericGETInput(double *get, char *message);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericIntInput(int *val, char* message);
