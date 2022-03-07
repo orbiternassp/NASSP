@@ -399,7 +399,6 @@ struct RMMYNIInputTable
 	double CGBIAS = 0.0;
 	//Initial bank angle for G&N simulation
 	double C10 = 0.0;
-	double CMWT;
 	double H_EMS = -1.0;
 	//Mode: 1 = Zero lift, 2 = Max Lift, 3 = G&N, 4 = Bank angle - time to reverse bank angle, 5 = Constant bank angle, 6 = Constant bank to G, then roll, 7 = Bank angle to G-level then maximum lift
 	//8 = Bank angle to a G-level then bank angle-time to reverse bank angle, 9 = Bank angle to a G-level then another bank angle to impact prediction, 10 = constant G
@@ -414,6 +413,8 @@ struct RMMYNIInputTable
 	double RLDIR = 1.0;
 	//Time to reverse bank angle
 	double t_RB = 0.0;
+	double CMArea = -1.0;
+	double CMWeight = -1.0;
 };
 
 struct RMMYNIOutputTable
@@ -425,30 +426,65 @@ struct RMMYNIOutputTable
 	double t_lc = 0.0;
 	double t_05g = 0.0;
 	double t_2g = 0.0;
+	double DRE_2g = 0.0;
 	double t_gc = 0.0;
 	double gmax = 0.0;
 	double t_gmax = 0.0;
+	double t_BBO = 0.0;
+	double t_EBO = 0.0;
+	double R_EMS = 0.0;
+	double V_EMS = 0.0;
+	double t_V_Circ = 0.0;
 	//1 = time limit, 2 = impact, 3 = skipout
 	int IEND;
 };
 
+struct ReentryManeuverDefinition
+{
+	//State vector at main engine on
+	EphemerisData sv0;
+	//Vehicle area
+	double A;
+	//Configuration weight
+	double WT;
+	//1 = fixed inertial, 2 = manual holding body orientation, 3 = Lambert Guidance, 4 = External DV (primary), 5 = External DV (LM AGS)
+	int Attitude;
+	int Thruster;
+	//0 = two thrusters, 1 = four thrusters
+	bool UllageOption;
+	//Configuration code at maneuver initiation
+	unsigned Config;
+	//DT of ullage
+	double dt_ullage;
+	//DT of maneuver
+	double DTMAN;
+	//DV desired
+	double DVMAN;
+	//Unit thrust vector at burn initiate
+	VECTOR3 AT;
+	//Velocity-to-be-gained for External DV
+	VECTOR3 VG;
+};
+
+struct ReentryConstraintsDefinition
+{
+	int LiftMode = 0;
+	double GNInitialBank = 0.0;
+	double InitialBankAngle = 0.0;
+	double FinalBankAngle = 0.0;
+	double GMTReverseBank = 0.0;
+	double GLevel = 0.0;
+	double BackupLiftMode = 0.0;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
+	//1 or -1
+	double RollDirection = 0.0;
+	double ConstantGLevel = 0.0;
+};
+
 struct ReentryConstraintsTable
 {
-	//R31
-	int Thruster = 33;		//1 = RCS+2, 2 = RCS+4, 3 = RCS-2, 4 = RCS-4, 33 = SPS
-	int GuidanceMode = 4;	//1 = Inertial, 4 = Guided (G&N)
-	int BurnMode = 3;		//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
-	double dt = 0.0;
-	double dv = 0.0;
-	int AttitudeMode = 2;	//1 = LVLH, 2 = 31.7° window line on horizon
-	VECTOR3 LVLHAttitude = _V(0.0, -48.5*RAD, PI);
-	double UllageTime = 15.0;
-	bool Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
-	int REFSMMAT = 1;		//1 = CUR...
-	int GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
-	double InitialBankAngle = 0.0;
-	double GLevel = 0.2;
-	double FinalBankAngle = 55.0*RAD;
+	ReentryConstraintsDefinition entry;
 };
 
 struct RetrofireDisplayParametersTable
@@ -502,6 +538,28 @@ struct RetrofireDisplayParametersTable
 	VECTOR3 VG_XDX;
 	VECTOR3 VGX_THR;
 	double H_apo, H_peri;
+
+	//Sep/shaping maneuver
+	//0 = good data, +1 = no data, -1 = bad data
+	int Indicator_Sep = 1;
+	//Ullage quad (2 or 4)
+	int UllageQuads_Sep;
+	double CSMWeightSep;
+	double TrueAnomalySep;
+	VECTOR3 Att_LVLH_Sep;
+	VECTOR3 Att_IMU_Sep;
+	//Velocity counter - tailoff
+	double DVC_Sep;
+	double BurnTime_Sep;
+	//Total velocity + tailoff
+	double DVT_Sep;
+	double UllageDT_Sep;
+	double GMTI_Sep;
+	double GETI_Sep;
+	//Height at sep/shaping above the oblate Earth
+	double H_Sep;
+	double H_apo_sep, H_peri_sep;
+	double P_G_Sep, Y_G_Sep;
 };
 
 struct TimeConstraintsTable
@@ -539,8 +597,8 @@ struct RetrofireTransferTableEntry
 	int Thruster = 33;
 	double dt_ullage = 0.0;
 	bool UllageThrusterOption = true;
-	double lat_T = 0.0;
-	double lng_T = 0.0;
+
+	ReentryConstraintsDefinition entry;
 };
 
 struct RetrofireTransferTable
@@ -552,11 +610,7 @@ struct RetrofireTransferTable
 struct SpacecraftSettingTable
 {
 	int Indicator = 1; //-1 = bad data, 0 = good data, 1 = no data
-	int EnryMode = 0;
-	int REFSMMATID = 0;
-	double GMTI = 0.0;
-	double lat_T = 0.0;
-	double lng_T = 0.0;
+	bool IsRTE = false; //true = RTE, false = TTF
 };
 
 struct REFSMMATData

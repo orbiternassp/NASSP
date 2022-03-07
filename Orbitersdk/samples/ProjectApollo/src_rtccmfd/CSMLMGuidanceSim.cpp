@@ -1373,7 +1373,7 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 	VECTOR3 Y_T;
 	double TTT = pRTCC->GetOnboardComputerThrust(TArr.ThrusterCode);
 
-	if (AttGiven == false)
+	if (TArr.MANOP == 4)
 	{
 		if (TArr.ExtDVCoordInd)
 		{
@@ -1383,14 +1383,25 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 		{
 			VG = TArr.VG;
 		}
-		double dv = length(VG);
-		if (dv == 0.0)
+	}
+
+	if (AttGiven == false)
+	{
+		if (TArr.MANOP == 1)
 		{
-			A_T = _V(1, 0, 0);
+			A_T = A_T_in;
 		}
 		else
 		{
-			A_T = unit(VG);
+			double dv = length(VG);
+			if (dv == 0.0)
+			{
+				A_T = _V(1, 0, 0);
+			}
+			else
+			{
+				A_T = unit(VG);
+			}
 		}
 		
 		Y_T = unit(crossp(A_T, sv_ff.R));

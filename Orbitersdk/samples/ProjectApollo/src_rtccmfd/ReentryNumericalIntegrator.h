@@ -94,6 +94,8 @@ struct GNDataTab
 	const double K13P = 4.0;
 	//Maximum acceleration
 	const double GMAX = 257.6*0.3048;
+	//Guidance cycle
+	const double dt_guid = 2.0;
 	double VREF_TAB[13];
 	double RDTRF_TAB[13];
 	double AREF_TAB[13];
@@ -141,6 +143,8 @@ struct GNDataTab
 	double THETA;
 	//Desired great circle range (meters)
 	double THETNM;
+	//Downrange error
+	double DNRNGERR;
 	//Parameter used in calculation of roll command
 	double K2ROLL;
 	//Lateral switch gain
@@ -196,6 +200,8 @@ struct GNDataTab
 	double GAMMAL;
 	//Simple form of GAMMAL
 	double GAMMAL1;
+	//THETNM - ASP (range difference)
+	double DIFF;
 	//Previous value of DIFF
 	double DIFFOLD;
 	//Constant for HUNTEST
@@ -218,16 +224,16 @@ public:
 	void Main(const RMMYNIInputTable &in, RMMYNIOutputTable &out);
 protected:
 	void RungeKuttaIntegrationRoutine(VECTOR3 R_N, VECTOR3 V_N, double dt, VECTOR3 &R_N1, VECTOR3 &V_N1);
-	VECTOR3 SecondDerivativeRoutine(VECTOR3 R, VECTOR3 V);
+	void SecondDerivativeRoutine(VECTOR3 R, VECTOR3 V);
 	VECTOR3 GravityAcceleration(VECTOR3 R);
-	VECTOR3 LiftDragAcceleration(VECTOR3 R, VECTOR3 V, double &AOA);
+	VECTOR3 LiftDragAcceleration(VECTOR3 R, VECTOR3 V);
 	void CalculateLiftDrag(double mach, double &CL, double &CD, double &AOA);
 	void GuidanceRoutine(VECTOR3 R, VECTOR3 V);
-	void CalculateDragAcceleration(VECTOR3 R, VECTOR3 V);
 	void Limit02PI(double &val);
 	double ConstantGLogic(VECTOR3 unitR, VECTOR3 VI, double D);
-	bool IsInSBandBlackout(double v_r, double h);
-	bool IsInVHFBlackout(double v_r, double h);
+	bool IsInBlackout(double v_r, double h);
+	void EventsRoutine();
+	void RollControl();
 
 	//G&N
 	void GNInitialization();
@@ -255,6 +261,7 @@ protected:
 	//Ratio of area to mass of spacecraft
 	double N;
 	double Bank;
+	VECTOR3 DELV;
 	double DRAG;
 	double A_X;
 	//Initial bank angle
@@ -290,10 +297,14 @@ protected:
 	double t_05G;
 	//Time when 0.2g was passed
 	double t_2G;
+	//Downrange error at 0.2g
+	double DRE_2g;
 	//Time when specific g level was passed
 	double t_gc;
 	//Altitude
 	double alt;
+	//Inertial velocity
+	double vel;
 	//Wind relative velocity
 	VECTOR3 V_R;
 	//Wind relative speed
@@ -313,6 +324,31 @@ protected:
 	//Reverse bank angle implemented
 	bool IREVBANK;
 	double EPS;
+	//Time of blackout begin
+	double t_BBO;
+	//Time of blackout end
+	double t_EBO;
+	//Last height
+	double H_prev;
+	//Last G-Level
+	double G_prev;
+	//Acceleration vector
+	VECTOR3 YPP;
+	//Previous dt
+	double dt_prev;
+	double dt2, dt22, dt28, dt6;
+	//Velocity to initialize the EMS
+	double V_EMS0, V_EMS;
+	//EMS Range
+	double R_EMS;
+	//Time of circular velocity (25500 ft/s)
+	double t_V_Circ;
+	//Atmospheric density
+	double rho;
+	//Last guidance time
+	double TLAST;
+	double CMArea;
+	double CMWeight;
 
 	//Parameters for constant G and G&N
 	double VSAT;
@@ -325,6 +361,7 @@ protected:
 	double KWE;
 	double RE;
 	double ATK; //Angle in RAD to meters (meters/rad)
+	double K_D;
 
 	//G&N
 	GNDataTab GNData;

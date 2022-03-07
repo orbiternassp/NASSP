@@ -349,6 +349,7 @@ struct RTCCSystemParameters
 		{
 			MHALLD[i] = MHACLD[i];
 		}
+		MCZBAB = 0.0;
 		//TBD: Set to 2.0 when RTCC takes drag into account properly
 		MCADRG = 0.1;
 
@@ -402,16 +403,16 @@ struct RTCCSystemParameters
 		MCVDTM = 2.0;
 		MCCRAM = 0.5;
 
-		MCTCT1 = 441.5*2.0;
-		MCTCT2 = 441.5*4.0;
-		MCTCT3 = 441.5*2.0;
-		MCTCT4 = 441.5*4.0;
+		MCTCT1 = 196.6 * 4.4482216152605;
+		MCTCT2 = 393.2 * 4.4482216152605;
+		MCTCT3 = 196.6 * 4.4482216152605;
+		MCTCT4 = 393.2 * 4.4482216152605;
 		MCTCT5 = 874.37837;
 		MCTCT6 = 874.37837*2.0;
-		MCTCW1 = 0.31038;
-		MCTCW2 = 0.62076;
-		MCTCW3 = 0.31038;
-		MCTCW4 = 0.62076;
+		MCTCW1 = 2599.2 / 3600.0 * 0.45359237;
+		MCTCW2 = 5198.4 / 3600.0 * 0.45359237;
+		MCTCW3 = 2599.2 / 3600.0 * 0.45359237;
+		MCTCW4 = 5198.4 / 3600.0 * 0.45359237;
 		MCTLT1 = 441.5*2.0;
 		MCTLT2 = 441.5*4.0;
 		MCTLT3 = 441.5*2.0;
@@ -668,6 +669,19 @@ struct RTCCSystemParameters
 		MHVCCG.Weight[19] = 64400.000000*0.453597;
 		MHVCCG.CG[19] = _V(934.701130, 3.973806, 6.541933)*0.0254;
 		MHVCCG.N = 20;
+
+		MDZBLK[0] = -0.9174410e1;
+		MDZBLK[1] = -0.8217687e1;
+		MDZBLK[2] = 0.6120521e1;
+		MDZBLK[3] = -0.7693073e0;
+		MDZBLK[4] = 0.5298784e-1;
+		MDZBLK[5] = -0.2185130e-2;
+		MDZBLK[6] = 0.5340257e-4;
+		MDZBLK[7] = -0.7113728e-6;
+		MDZBLK[8] = 0.3971388e-8;
+
+		MCVCMA = 129.4*0.3048*0.3048;
+		MCVCMW = 5541.0; //Default CM empty + full CM RCS
 	}
 
 	//DEFINITIONS
@@ -805,6 +819,8 @@ struct RTCCSystemParameters
 	RTCCDensityTables MHGDEN;
 	//Lift/Drag coefficients (Words: 1-25 Mach Number, 26-50 Coefficients of drag, 51-75 Coefficients of lift, 76-100: Trim angle, 101 DX, 102 DZ, 103 DD)
 	double MHACLD[103], MHALLD[103];
+	//Bank angle bias
+	double MCZBAB;
 
 	//Coefficient of drag for Earth orbit
 	double MCADRG;
@@ -1083,4 +1099,14 @@ struct RTCCSystemParameters
 
 	//Matrix to convert from J2000 to NBY coordinates
 	MATRIX3 MAT_J2000_BRCS;
+
+	//Reentry
+
+	//Blackout
+	double MDZBLK[9];
+
+	//CM area
+	double MCVCMA;
+	//CM weight
+	double MCVCMW;
 };

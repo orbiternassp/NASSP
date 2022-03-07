@@ -1494,6 +1494,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			SAVE_DOUBLE("MCC_TLIPAD_VI", form->VI);
 			SAVE_STRING("MCC_TLIPAD_remarks", form->remarks);
+			SAVE_INT("MCC_TLIPAD_type", form->type);
 		}
 		else if (padNumber == 11)
 		{
@@ -2038,6 +2039,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			LOAD_DOUBLE("MCC_TLIPAD_VI", form->VI);
 			LOAD_STRING("MCC_TLIPAD_remarks", form->remarks, 128);
+			LOAD_INT("MCC_TLIPAD_type", form->type);
 		}
 		else if (padNumber == 11)
 		{
@@ -2455,11 +2457,53 @@ void MCC::drawPad(bool writetofile){
 	case PT_AP7ENT:
 		{
 			AP7ENT * form = (AP7ENT *)padForm;
-			int hh, mm, hh2, mm2;
-			double ss, ss2;
+
+			char buffer2[1024];
+			std::string buffer3;
+			int hh, mm;
+			double ss;
+
+			buffer3 = "ENTRY UPDATE\nPREBURN\n";
+			sprintf_s(buffer2, "X%s AREA\nXX%+5.1f DV TO\n", form->Area[0], form->dVTO[0]);
+			buffer3.append(buffer2);
+			sprintf_s(buffer2, "XXX%03.0f R400K\nXXX%03.0f P400K\nXXX%03.0f Y400K\n", form->Att400K[0].x, form->Att400K[0].y, form->Att400K[0].z);
+			buffer3.append(buffer2);
+			sprintf_s(buffer2, "%+07.1f RTGO .05G\n%+06.0f VIO .05G\n", form->RTGO[0], form->VIO[0]);
+			buffer3.append(buffer2);
 			SStoHHMMSS(form->Ret05[0], hh, mm, ss);
-			SStoHHMMSS(form->PB_Ret05[0], hh2, mm2, ss2);
-			sprintf(buffer, "ENTRY UPDATE\nPREBURN\nX%s AREA\nXX%+5.1f DV TO\nXXX%03.0f R400K\nXXX%03.0f P400K\nXXX%03.0f Y400K\n%+07.1f RTGO .05G\n%+06.0f VIO .05G\nXX%0d:%02.0f RET .05G\n%+07.2f LAT\n%+07.2f LONG\nPOSTBURN\nXXX%03.0f R400K\n%+07.1f RTGO .05G\n%+06.0f VIO .05G\nXX%0d:%02.0f RET .05G", form->Area[0], form->dVTO[0], form->Att400K[0].x, form->Att400K[0].y, form->Att400K[0].z, form->RTGO[0], form->VIO[0], mm, ss, form->Lat[0], form->Lng[0], form->PB_R400K[0], form->PB_RTGO[0], form->PB_VIO[0], mm2, ss2);
+			sprintf_s(buffer2, "XX%0d:%02.0f RET .05G\n%+07.2f LAT\n%+07.2f LONG\n", mm, ss, form->Lat[0], form->Lng[0]);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->Ret2[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RET .2G\n%+07.1lf DRE (55°) N66\n", mm, ss, form->DRE[0]);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->RetBBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETBBO\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->RetEBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETEBO\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->RetDrog[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETDROG\n", mm, ss);
+			buffer3.append(buffer2);
+			sprintf_s(buffer2, "POSTBURN\nXXX%03.0f R400K\n%+07.1f RTGO .05G\n%+06.0f VIO .05G\n", form->PB_R400K[0], form->PB_RTGO[0], form->PB_VIO[0]);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_Ret05[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RET .05G\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_Ret2[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RET .2G\n%+07.1lf DRE +/-100nm N66\n", mm, ss, form->PB_DRE[0]);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_RetBBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETBBO\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_RetEBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETEBO\n", mm, ss);
+			buffer3.append(buffer2);
+			SStoHHMMSS(form->PB_RetDrog[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%0d:%02.0f RETDROG\n", mm, ss);
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer, "%s", buffer3.c_str());
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
@@ -2501,19 +2545,51 @@ void MCC::drawPad(bool writetofile){
 		{
 			AP11ENT * form = (AP11ENT *)padForm;
 
+			char buffer2[1024];
+			std::string buffer3;
 			int hh, mm;
 			double ss;
 
-			sprintf(buffer, "LUNAR ENTRY");
+			buffer3 = "LUNAR ENTRY\n";
+
 			format_time(tmpbuf, form->GETHorCheck[0]);
-			format_time(tmpbuf2, form->RRT[0]);
+			sprintf_s(buffer2, "%s AREA\nXXX%03.0f R 0.05G\nXXX%03.0f P 0.05G\nXXX%03.0f Y 0.05G\n%s GET HOR CHK\n", form->Area[0], form->Att05[0].x, form->Att05[0].y, form->Att05[0].z, tmpbuf);
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer2, "XXX%03.0f P\n%+07.2f LAT N61\n%+07.2f LONG\nXXX%04.1f MAX G\n", form->PitchHorCheck[0], form->Lat[0], form->Lng[0], form->MaxG[0]);
+			buffer3.append(buffer2);
+
+			format_time(tmpbuf, form->RRT[0]);
+			sprintf_s(buffer2, "%+06.0f V400K N60\n%+07.2f y400K\n%+07.1f RTGO EMS\n%+06.0f VI0\n%s RRT\n", form->V400K[0], form->Gamma400K[0], form->RTGO[0], form->VIO[0], tmpbuf);
+			buffer3.append(buffer2);
+
 			SStoHHMMSS(form->RET05[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%02d:%02.0f RET 0.05G\nXXX%04.2f DO\n", mm, ss, form->DO[0]);
+			buffer3.append(buffer2);
 
-			sprintf(buffer, "%s\n%s AREA\nXXX%03.0f R 0.05G\nXXX%03.0f P 0.05G\nXXX%03.0f Y 0.05G\n%s GET HOR CHK\nXXX%03.0f P\n%+07.2f LAT N61\n%+07.2f LONG\nXXX%04.1f MAX G\n%+06.0f V400K N60\n%+07.2f y400K\n%+07.1f RTGO EMS\n%+06.0f VI0\n%s RRT\nXX%02d:%02.0f RET 0.05G\nXXX%04.2f DO\nXXXX%02d SXTS\n%+06.1f0 SFT\n%+05.1f00 TRN\nXXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\nXXXX%s LIFT VECTOR\nRemarks:\n%s", \
-				buffer, form->Area[0], form->Att05[0].x, form->Att05[0].y, form->Att05[0].z, tmpbuf, form->PitchHorCheck[0], form->Lat[0], form->Lng[0], form->MaxG[0], form->V400K[0], \
-				form->Gamma400K[0], form->RTGO[0], form->VIO[0], tmpbuf2, mm, ss, form->DO[0], form->SXTS[0], form->SFT[0], form->TRN[0], form->BSS[0], form->SPA[0], \
-				form->SXP[0], form->LiftVector[0], form->remarks[0]);
+			SStoHHMMSS(form->RETVCirc[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%02d:%02.0f RET V CIRC\n", mm, ss);
+			buffer3.append(buffer2);
 
+			SStoHHMMSS(form->RETBBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%02d:%02.0f RETBBO\n", mm, ss);
+			buffer3.append(buffer2);
+
+			SStoHHMMSS(form->RETEBO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%02d:%02.0f RETEBO\n", mm, ss);
+			buffer3.append(buffer2);
+
+			SStoHHMMSS(form->RETDRO[0], hh, mm, ss);
+			sprintf_s(buffer2, "XX%02d:%02.0f RETDRO\n", mm, ss);
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer2, "XXXX%02d SXTS\n%+06.1f0 SFT\n%+05.1f00 TRN\nXXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\n", form->SXTS[0], form->SFT[0], form->TRN[0], form->BSS[0], form->SPA[0], form->SXP[0]);
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer2, "XXXX%s LIFT VECTOR\nRemarks:\n%s", form->LiftVector[0], form->remarks[0]);
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer, "%s", buffer3.c_str());
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
@@ -2521,14 +2597,28 @@ void MCC::drawPad(bool writetofile){
 		{
 			TLIPAD * form = (TLIPAD *)padForm;
 
+			char buffer2[1024];
+			std::string buffer3;
 			int hh, mm;
 			double ss;
 
-			sprintf(buffer, "TLI");
+			buffer3 = "TLI\n";
 			format_time(tmpbuf, form->TB6P);
 			SStoHHMMSS(form->BurnTime, hh, mm, ss);
 
-			sprintf(buffer, "%s\n%s TB6p\nXXX%03.0f R\nXXX%03.0f P TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P SEP\nXXX%03.0f Y\nXXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y\nRemarks: %s", buffer, tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z, form->ExtATT.x, form->ExtATT.y, form->ExtATT.z, form->remarks);
+			sprintf_s(buffer2, "%s TB6p\nXXX%03.0f R\nXXX%03.0f P TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P SEP\nXXX%03.0f Y\n", tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z);
+			buffer3.append(buffer2);
+
+			if (form->type == 2)
+			{
+				sprintf_s(buffer2, "XXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y\n", form->ExtATT.x, form->ExtATT.y, form->ExtATT.z);
+				buffer3.append(buffer2);
+			}
+
+			sprintf_s(buffer2, "Remarks: %s", form->remarks);
+			buffer3.append(buffer2);
+			
+			sprintf_s(buffer, "%s", buffer3.c_str());
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 	break;

@@ -3328,7 +3328,7 @@ SCE_END
   </HYDRAULIC> 
   <ELECTRIC> 
       <DCBUSCONTROLLER>  MainBusAController 1 1 0 0 0 0 0 0 0
-      <DCBUSCONTROLLER>  MainBusBController 0 0 1 0 0 0 0 0 0
+      <DCBUSCONTROLLER>  MainBusBController 0 1 1 0 0 0 0 0 0
       <BATTERYCHARGER>  BatteryCharger 0
       <PYRO>  CM-SM-Pyros 0 0.0000
       <PYRO>  CM-DockingRing-Pyros 0 0.0000
@@ -4084,7 +4084,7 @@ PANELSWITCHES_BEGIN
   MainBusBIndicator1 1
   MainBusBResetSwitch 1 0
   MainBusBSwitch3 1 0
-  MainBusBSwitch2 0 0
+  MainBusBSwitch2 1 0
   MainBusBSwitch1 0 0
   MainBusAResetSwitch 1 0
   MainBusASwitch3 0 0
@@ -4772,6 +4772,7 @@ MCC_BEGIN
   MCC_TLIPAD_TB6P 9265.655959437427
   MCC_TLIPAD_VI 35586.384064811187
   MCC_TLIPAD_remarks TLI 10-minute abort pitch, 223°
+  MCC_TLIPAD_type 2
 MCC_END
 RTCC_BEGIN
   RTCC_MISSIONFILE Apollo 11 Constants
