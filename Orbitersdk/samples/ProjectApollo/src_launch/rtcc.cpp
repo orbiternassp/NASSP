@@ -6145,16 +6145,8 @@ void RTCC::CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double Ln
 
 void RTCC::CMCEntryUpdate(char *list, double LatSPL, double LngSPL)
 {
-	int emem[24];
-
-	emem[0] = 06;
-	emem[1] = 3400;
-	emem[2] = OrbMech::DoubleToBuffer(LatSPL / PI2, 0, 1);
-	emem[3] = OrbMech::DoubleToBuffer(LatSPL / PI2, 0, 0);
-	emem[4] = OrbMech::DoubleToBuffer(LngSPL / PI2, 0, 1);
-	emem[5] = OrbMech::DoubleToBuffer(LngSPL / PI2, 0, 0);
-
-	V7XUpdate(71, list, emem, 6);
+	CMMENTRY(LatSPL, LngSPL);
+	V7XUpdate(71, list, CZENTRY.Octals, 6);
 }
 
 void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
@@ -33867,6 +33859,26 @@ void RTCC::CMMRXTDV(int source, int column)
 	CZREXTDV.DV = DV / 0.3048;
 	CZREXTDV.Lat = lat * DEG;
 	CZREXTDV.Lng = lng * DEG;
+}
+
+void RTCC::CMMENTRY(double lat, double lng)
+{
+	if (CZENTRY.SequenceNumber == 0)
+	{
+		CZENTRY.SequenceNumber = 1400;
+	}
+	CZENTRY.LoadType = "14";
+	CZENTRY.SequenceNumber++;
+
+	CZENTRY.Octals[0] = 6;
+	CZENTRY.Octals[1] = 3400;
+	CZENTRY.Octals[2] = OrbMech::DoubleToBuffer(lat / PI2, 0, 1);
+	CZENTRY.Octals[3] = OrbMech::DoubleToBuffer(lat / PI2, 0, 0);
+	CZENTRY.Octals[4] = OrbMech::DoubleToBuffer(lng / PI2, 0, 1);
+	CZENTRY.Octals[5] = OrbMech::DoubleToBuffer(lng / PI2, 0, 0);
+	CZENTRY.GETLoadGeneration = GETfromGMT(RTCCPresentTimeGMT());
+	CZENTRY.Lat = lat * DEG;
+	CZENTRY.Lng = lng * DEG;
 }
 
 void RTCC::CMMLIFTF(int L, double hrs)
