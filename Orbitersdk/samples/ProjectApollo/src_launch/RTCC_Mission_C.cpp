@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "apolloguidance.h"
 #include "saturn.h"
 #include "saturn1b.h"
+#include "sivb.h"
 #include "iu.h"
 #include "LVDC.h"
 #include "../src_rtccmfd/OrbMech.h"
@@ -135,6 +136,28 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->remarks, "heads down, retrograde, -X thrusters");
 	}
 	break;
+	case 101: //S-IVB STATE VECTOR UPLINK
+	{
+		void *uplink = NULL;
+		DCSSLVNAVUPDATE upl;
+
+		SIVB *iuv = (SIVB *)calcParams.tgt;
+		IU *iu = iuv->GetIU();
+
+		EphemerisData sv1 = StateVectorCalcEphem(calcParams.tgt);
+		EphemerisData sv2 = coast(sv1, GMTfromGET(17460.0) - sv1.GMT); //TBD: Take drag into account?
+		CMMSLVNAV(sv2.R, sv2.V, sv2.GMT);
+
+		upl.PosS = CZNAVSLV.PosS;
+		upl.DotS = CZNAVSLV.DotS;
+		upl.NUPTIM = CZNAVSLV.NUPTIM;
+
+		uplink = &upl;
+		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SLV_NAVIGATION_UPDATE, uplink);
+
+		sprintf(upMessage, "S-IVB Navigation Update");
+	}
+	break;
 	case 2: // MISSION C CONTINGENCY DEORBIT (6-4) TARGETING
 	{
 		AP7MNV * form = (AP7MNV *)pad;
@@ -195,6 +218,39 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM state vector, target load, REFSMMAT");
 		}
+	}
+	break;
+	case 102: //MANUAL RETRO ATTITUDE ORIENTATION TEST
+	{
+		AP7RETRORIENTPAD * form = (AP7RETRORIENTPAD *)pad;
+
+		RTACFGOSTInput in;
+		RTACFGOSTOutput out;
+
+		in.get = OrbMech::HHMMSSToSS(6, 10, 0);
+		in.LVLHRoll = 0.0;
+		in.LVLHYaw = PI;
+		in.option = 4;
+		in.REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
+		in.sv = StateVectorCalcEphem(calcParams.src);
+		in.Weight = calcParams.src->GetMass();
+
+		RTACFGuidanceOpticsSupportTable(in, out);
+
+		form->GET_Day = in.get;
+		form->RetroAtt_Day = out.IMUAtt*DEG;
+		form->RetroAtt_Day.x = round(form->RetroAtt_Day.x);
+		form->RetroAtt_Day.y = round(form->RetroAtt_Day.y);
+		form->RetroAtt_Day.z = round(form->RetroAtt_Day.z);
+
+		in.get = OrbMech::HHMMSSToSS(6, 50, 0);
+		RTACFGuidanceOpticsSupportTable(in, out);
+
+		form->GET_Night = in.get;
+		form->RetroAtt_Night = out.IMUAtt*DEG;
+		form->RetroAtt_Night.x = round(form->RetroAtt_Night.x);
+		form->RetroAtt_Night.y = round(form->RetroAtt_Night.y);
+		form->RetroAtt_Night.z = round(form->RetroAtt_Night.z);
 	}
 	break;
 	case 3: //MISSION C BLOCK DATA UPDATE 2
@@ -471,7 +527,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		spqopt.sv_P = sv_P;
 		spqopt.t_CSI = -1;
 		spqopt.t_CDH = FindDH(sv_A, sv_P, GETbase, 28.0*3600.0, 8.0*1852.0);
-		
+
 		ConcentricRendezvousProcessor(spqopt, res);
 		PoweredFlightProcessor(sv_A, GETbase, res.t_CDH, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
 
@@ -515,7 +571,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_P = StateVectorCalc(calcParams.tgt);
 		GETbase = CalcGETBase();
 
-		GZGENCSN.TIElevationAngle= 27.45*RAD;
+		GZGENCSN.TIElevationAngle = 27.45*RAD;
 		GZGENCSN.TITravelAngle = 140.0*RAD;
 
 		lambert.mode = 2;
@@ -676,7 +732,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Gives DV we had previously, needs fixing eventually
 		orbopt.dLAN = 0.3*RAD;
 		orbopt.sv_in = ConvertSVtoEphemData(sv);
-		orbopt.TIG_GET= OrbMech::HHMMSSToSS(75, 18, 0);
+		orbopt.TIG_GET = OrbMech::HHMMSSToSS(75, 18, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
 		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
