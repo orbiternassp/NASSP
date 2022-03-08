@@ -499,11 +499,9 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	EntryTIGcor = 0.0;
 	EntryLatcor = 0.0;
 	EntryLngcor = 0.0;
-	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	RTEReentryTime = 0.0;
 	entryrange = 0.0;
-	EntryRTGO = 0.0;
 	RTECalcMode = 1;
 	RTETradeoffMode = 0;
 	RTEASTType = 76;
@@ -941,7 +939,6 @@ void ARCore::EntryUpdateCalc()
 
 	EntryLatcor = res.latitude;
 	EntryLngcor = res.longitude;
-	EntryRTGO = res.RTGO;
 }
 
 void ARCore::EntryCalc()
@@ -1985,17 +1982,19 @@ void ARCore::RetrofireEXDVUplink()
 	UplinkData(true);
 }
 
-void ARCore::EntryUpdateUplink(void)
+void ARCore::EntryUplinkCalc()
 {
-	g_Data.emem[0] = 06;
-	g_Data.emem[1] = 3400;
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 1);
-	g_Data.emem[3] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 0);
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 1);
-	g_Data.emem[5] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 0);
+	GC->rtcc->CMMENTRY(EntryLatcor, EntryLngcor);
+}
 
-	//g_Data.uplinkDataReady = 2;
-	UplinkData(true); // Go for uplink
+void ARCore::EntryUpdateUplink()
+{
+	for (int i = 0;i < 6;i++)
+	{
+		g_Data.emem[i] = GC->rtcc->CZENTRY.Octals[i];
+	}
+
+	UplinkData(true);
 }
 
 void ARCore::TLANDUplinkCalc(void)
