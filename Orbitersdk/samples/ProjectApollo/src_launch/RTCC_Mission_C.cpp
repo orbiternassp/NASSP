@@ -195,6 +195,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
 
+		//Save REFSMMAT as if it came from the new deorbit targeting (it will at some point)
+		RZRFDP.Indicator = 0;
+		RZRFDP.REFSMMAT = REFSMMAT;
+		RZRFDP.GETI = res.P30TIG;
+		//Save REFSMMAT in DOD slot
+		GMGMED("G11,CSM,DOM;");
+		//Move REFSMMAT to current
+		GMGMED("G00,CSM,DOD,CSM,CUR;");
+
 		opt.vessel = calcParams.src;
 		opt.GETbase = GETbase;
 		opt.TIG = res.P30TIG;
