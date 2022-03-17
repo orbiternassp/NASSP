@@ -13672,10 +13672,21 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		ManeuverTimesTable MANTIMES;
 		LunarStayTimesTable LUNSTAY;
 		unsigned int NumVec;
-		int TUP;
+		int TUP, err;
 
-		ELNMVC(GMT_min, GMT_max, L, NumVec, TUP);
-		ELFECH(GMT_min, NumVec, 0, L, EPHEM, MANTIMES, LUNSTAY);
+		err = ELNMVC(GMT_min, GMT_max, L, NumVec, TUP);
+		if (err > 8)
+		{
+			//The revolution number on the U13 MED is valid. However, the longitude crossing request is outside the range of the ephemeris.
+			tab->Error = 7;
+			return;
+		}
+		err = ELFECH(GMT_min, NumVec, 0, L, EPHEM, MANTIMES, LUNSTAY);
+		if (err)
+		{
+			tab->Error = 7;
+			return;
+		}
 
 		//Convert to ECT/MCT
 		EphemerisDataTable2 tab2;
@@ -29785,10 +29796,8 @@ void RTCC::EMMGLCVP(int L, double gmt, int body)
 	ELVCTROutputTable2 out;
 
 	in.GMT = gmt;
-	in.L = L;
-	in.ORER = 8;
 
-	ELVCTR(in, out);
+	ELVCTR(in, out, EPHEM, MANTIMES, &LUNSTAY);
 
 	if (out.ErrorCode)
 	{

@@ -2830,7 +2830,7 @@ public:
 	void ELGLCV(double lat, double lng, VECTOR3 &out, double rad = 0.0);
 	void ELGLCV(double lat, double lng, MATRIX3 &out, double rad = 0.0);
 	//Vector Count Routine
-	int ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP);
+	int ELNMVC(double &TL, double TR, int L, unsigned &NumVec, int &TUP);
 	//Variable Order Interpolation
 	int ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData2 &sv_out, unsigned &ORER_out);
 	//Generalized Coordinate System Conversion Subroutine
