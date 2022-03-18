@@ -356,19 +356,19 @@ double ChecklistItem::checkIterate(MFDConnector *conn) {
 	return false;
 }
 
-
-double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector *conn) {
+double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector* conn) {
 
 	if (!stricmp(item, "DSKY")) {
 		if (dskyIndex == 0) {
-			return 4;
-		} else {
+			return 2;
+		}
+		else {
 			return 1;
 		}
 	}
 	if (!stricmp(item, "DEDA")) {
 		if (dedaIndex == 0) {
-			return 4;
+			return 2;
 		}
 		else {
 			return 1;
@@ -378,9 +378,9 @@ double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector *conn) {
 		return 2;
 	}
 	if (conn->GetState(item) == position) {
-		return 2;
+		return 1;
 	}
-	return 4;
+	return 2;
 }
 
 // Todo: Verify
