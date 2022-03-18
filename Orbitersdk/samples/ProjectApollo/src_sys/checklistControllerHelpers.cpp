@@ -356,13 +356,13 @@ double ChecklistItem::checkIterate(MFDConnector *conn) {
 	return false;
 }
 
-
-double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector *conn) {
+double ChecklistItem::getAutoexecuteSlowDelay(MFDConnector* conn) {
 
 	if (!stricmp(item, "DSKY")) {
 		if (dskyIndex == 0) {
 			return 2;
-		} else {
+		}
+		else {
 			return 1;
 		}
 	}
