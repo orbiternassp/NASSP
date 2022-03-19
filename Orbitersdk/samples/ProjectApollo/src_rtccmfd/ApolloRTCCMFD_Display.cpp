@@ -3730,11 +3730,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(8 * W / 16, 5 * H / 28, "1502 Sunrise/Sunset Times", 25);
 		skp->Text(8 * W / 16, 6 * H / 28, "1503 Next Station Contacts", 26);
 		skp->Text(8 * W / 16, 7 * H / 28, "1506 Experimental Site Acquisition", 26);
-		skp->Text(8 * W / 16, 8 * H / 28, "1590 Vector Compare Display", 27);
-		skp->Text(8 * W / 16, 9 * H / 28, "1591 Vector Panel Summary", 25);
-		skp->Text(8 * W / 16, 10 * H / 28, "1597 Skeleton Flight Plan Table", 31);
-		skp->Text(8 * W / 16, 11 * H / 28, "1619 Checkout Monitor", 21);
-		skp->Text(8 * W / 16, 12 * H / 28, "1629 On Line Monitor", 20);
+		skp->Text(8 * W / 16, 8 * H / 28, "1508 Landmark Acquisition Display", 25);
+		skp->Text(8 * W / 16, 9 * H / 28, "1590 Vector Compare Display", 27);
+		skp->Text(8 * W / 16, 10 * H / 28, "1591 Vector Panel Summary", 25);
+		skp->Text(8 * W / 16, 11 * H / 28, "1597 Skeleton Flight Plan Table", 31);
+		skp->Text(8 * W / 16, 12 * H / 28, "1619 Checkout Monitor", 21);
+		skp->Text(8 * W / 16, 13 * H / 28, "1629 On Line Monitor", 20);
 	}
 	else if (screen == 43)
 	{
@@ -9575,6 +9576,75 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+.2f°", GC->rtcc->CZENTRY.Lng);
 		skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
 
+	}
+	else if (screen == 120)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 2 * H / 28, "LANDMARK ACQUISITION (MSK 1508)", 40);
+
+		skp->SetFont(font2);
+
+		skp->Text(22 * W / 32, 4 * H / 28, "STA ID", 6);
+
+		skp->Text(4 * W / 64, 6 * H / 28, "STA", 3);
+		skp->Text(13 * W / 64, 6 * H / 28, "GETAOS", 6);
+		skp->Text(22 * W / 64, 6 * H / 28, "GETCA", 5);
+		skp->Text(29 * W / 64, 6 * H / 28, "LAM", 3);
+		skp->Text(33 * W / 64, 6 * H / 28, "H", 1);
+		skp->Text(39 * W / 64, 6 * H / 28, "GETLOS", 6);
+		skp->Text(48 * W / 64, 6 * H / 28, "GETSR", 5);
+		skp->Text(57 * W / 64, 6 * H / 28, "GETSS", 5);
+
+		sprintf_s(Buffer, "PAGE %02d OF %02d", GC->rtcc->EZLANDU1.curpage, GC->rtcc->EZLANDU1.pages);
+		skp->Text(6 * W / 32, 4 * H / 28, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%s", GC->rtcc->EZLANDU1.VectorID.c_str());
+		skp->Text(26 * W / 32, 4 * H / 28, Buffer, strlen(Buffer));
+
+		for (unsigned i = 0;i < GC->rtcc->EZLANDU1.numcontacts[GC->rtcc->EZLANDU1.curpage - 1];i++)
+		{
+			sprintf_s(Buffer, GC->rtcc->EZLANDU1.STAID[GC->rtcc->EZLANDU1.curpage - 1][i].c_str());
+			skp->Text(4 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->EZLANDU1.BestAvailableAOS[GC->rtcc->EZLANDU1.curpage - 1][i])
+			{
+				skp->Text(12 * W / 64, (i + 8) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, GC->rtcc->EZLANDU1.GETAOS[GC->rtcc->EZLANDU1.curpage - 1][i], false);
+			skp->Text(13 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->EZLANDU1.BestAvailableCA[GC->rtcc->EZLANDU1.curpage - 1][i])
+			{
+				skp->Text(21 * W / 64, (i + 8) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, GC->rtcc->EZLANDU1.GETCA[GC->rtcc->EZLANDU1.curpage - 1][i], false);
+			skp->Text(22 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZLANDU1.Lambda[GC->rtcc->EZLANDU1.curpage - 1][i]);
+			skp->Text(29 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.0lf", GC->rtcc->EZLANDU1.h[GC->rtcc->EZLANDU1.curpage - 1][i]);
+			skp->Text(33 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->EZLANDU1.BestAvailableLOS[GC->rtcc->EZLANDU1.curpage - 1][i])
+			{
+				skp->Text(35 * W / 64, (i + 8) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, GC->rtcc->EZLANDU1.GETLOS[GC->rtcc->EZLANDU1.curpage - 1][i], false);
+			skp->Text(39 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display_HHMM(Buffer, GC->rtcc->EZLANDU1.GETSR[GC->rtcc->EZLANDU1.curpage - 1][i]);
+			skp->Text(48 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display_HHMM(Buffer, GC->rtcc->EZLANDU1.GETSS[GC->rtcc->EZLANDU1.curpage - 1][i]);
+			skp->Text(57 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		if (GC->rtcc->EZLANDU1.err > 0)
+		{
+			sprintf_s(Buffer, "Error: %d", GC->rtcc->EZLANDU1.err);
+			skp->Text(4 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }
