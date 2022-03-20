@@ -965,8 +965,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 
 		{ "Calculate solution", 0, 'C' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Save as DOD REFSMMAT", 0, 'D' },
+		{ "Make DOD the current REFSMMAT", 0, 'R' },
 		{ "Save splashdown coordinates", 0, 'S' },
 		{ "Transfer to MPT or PAD", 0, 'M' },
 		{ "Back to menu", 0, 'B' },
@@ -982,8 +982,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuEntryCalc);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("REF", OAPI_KEY_D, &ApolloRTCCMFD::menuSaveRTEREFSMMAT);
+	RegisterFunction("CUR", OAPI_KEY_R, &ApolloRTCCMFD::menuMakeDODREFSMMATCurrent);
 	RegisterFunction("SPL", OAPI_KEY_S, &ApolloRTCCMFD::menuSaveSplashdownTarget);
 	RegisterFunction("TRA", OAPI_KEY_M, &ApolloRTCCMFD::menuTransferRTEToMPT);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRTEDigitalsInputPage);
