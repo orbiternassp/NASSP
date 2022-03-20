@@ -1980,10 +1980,12 @@ struct LandmarkAcquisitionTable
 	int pages;
 	//Total number of contacts
 	unsigned numcontacts[3];
-	//Station ID of anchor vector
-	std::string STAID;
 	//Trajectory update number of subject vehicle ephemeris
 	int TUN;
+	//Identification of last vector used to update the ephemeris
+	std::string VectorID;
+	//Identification of landmark
+	std::string STAID[3][20];
 	//GET of acquisition of landmark site by vehicle
 	double GETAOS[3][20];
 	//If true, AOS occured before current GET
@@ -1992,6 +1994,8 @@ struct LandmarkAcquisitionTable
 	double GETLOS[3][20];
 	//If true, LOS occurs after end of ephemeris
 	bool BestAvailableLOS[3][20];
+	//If true, closest approach occurs after end of ephemeris
+	bool BestAvailableCA[3][20];
 	//GET of closest approach of vehicle to the landmark
 	double GETCA[3][20];
 	//GET of local sunrise
@@ -2002,6 +2006,7 @@ struct LandmarkAcquisitionTable
 	double Lambda[3][20];
 	//Spacecraft altitude at GETCA
 	double h[3][20];
+	int err;
 };
 
 struct LunarStayTimesTable
@@ -2805,7 +2810,7 @@ public:
 	//Ground Range and Altitude Subprogram
 	void ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt);
 	//Landmark Acquisition Display
-	void EMDLANDM(int L, double get, double dt, int ref);
+	void EMDLANDM(int L, double gmt, double dt, int ref);
 	//Display Updates
 	void EMSNAP(int L, int ID);
 
