@@ -23927,6 +23927,10 @@ void RTCC::PMMREDIG(bool mpt)
 		{
 			MED.IRM = 1;
 		}
+		else if (med_f80.REFSMMAT == "TEI")
+		{
+			MED.IRM = 3;
+		}
 		else
 		{
 			return;
@@ -24408,13 +24412,6 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		YSM = _V(RFS.m21, RFS.m22, RFS.m23);
 		ZSM = _V(RFS.m31, RFS.m32, RFS.m33);
 	}
-	else if (MED.IRM == 3)
-	{
-		//REFSMMAT type DEI: LVLH at entry interface
-		ZSM = unit(-sv_r.R);
-		YSM = unit(crossp(sv_r.V, sv_r.R));
-		XSM = crossp(YSM, ZSM);
-	}
 	else
 	{
 		//Burn related REFSMMAT
@@ -24425,13 +24422,19 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 		alpha = outarray.R_Z;
 		beta = outarray.R_Y;
 
+		if (MED.IRM == 3)
+		{
+			alpha = -alpha;
+			beta = -beta;
+		}
+
 		YPH = unit(crossp(AT, outarray.sv_BI.R));
 		ZPH = unit(crossp(AT, YPH));
 		XSM = AT * cos(alpha)*cos(beta) - YPH * sin(alpha)*cos(beta) + ZPH * sin(beta);
 		YSM = AT * sin(alpha) + YPH * cos(alpha);
 		ZSM = unit(crossp(XSM, YSM));
 
-		if (MED.IRM != 2)
+		if (MED.IRM < 2)
 		{
 			double LVO;
 

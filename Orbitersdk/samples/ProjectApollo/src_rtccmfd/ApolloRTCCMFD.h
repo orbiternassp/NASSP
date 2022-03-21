@@ -712,6 +712,7 @@ public:
 	void menuSelectRecoveryTarget();
 	bool set_RecoveryTarget(int num);
 	void menuSaveDODREFSMMAT();
+	void menuSaveRTEREFSMMAT();
 	void menuMakeDODREFSMMATCurrent();
 	void menuSetRetrofireMissDistance();
 	bool set_RetrofireMissDistance(double val);

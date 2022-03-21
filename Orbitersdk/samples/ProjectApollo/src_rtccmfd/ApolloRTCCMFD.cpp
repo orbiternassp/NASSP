@@ -1565,6 +1565,39 @@ void ApolloRTCCMFD::menuSaveDODREFSMMAT()
 	GeneralMEDRequest("G11,CSM,DOM;");
 }
 
+void ApolloRTCCMFD::menuSaveRTEREFSMMAT()
+{
+	bool SaveRTEREFSMMATInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Save RTE REFSMMAT. P for primary or M for manual column.", SaveRTEREFSMMATInput, 0, 20, (void*)this);
+}
+
+bool SaveRTEREFSMMATInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 3)
+	{
+		char *code;
+		if (str[0] == 'P')
+		{
+			code = "REP";
+		}
+		else if (str[0] == 'M')
+		{
+			code = "REM";
+		}
+		else
+		{
+			return false;
+		}
+		char Buff[128];
+		sprintf(Buff, "G11,CSM,%s;", code);
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+
+		return true;
+	}
+
+	return false;
+}
+
 void ApolloRTCCMFD::menuMakeDODREFSMMATCurrent()
 {
 	GeneralMEDRequest("G00,CSM,DOD,CSM,CUR;");
@@ -2682,7 +2715,7 @@ void ApolloRTCCMFD::menuRTEDASTCodeDialogue()
 void ApolloRTCCMFD::menuRTED_REFSMMAT()
 {
 	bool RTED_REFSMMATInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Enter REFSMMAT code (special codes: ROP for preferred, ROY for deorbit, ROZ for reentry)", RTED_REFSMMATInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Enter REFSMMAT code (special codes: ROP for preferred, ROY for deorbit, ROZ for reentry, TEI for Apollo 12+ TEI)", RTED_REFSMMATInput, 0, 20, (void*)this);
 }
 
 bool RTED_REFSMMATInput(void *id, char *str, void *data)
