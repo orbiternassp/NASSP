@@ -1570,14 +1570,14 @@ bool SaveRTEREFSMMATInput(void *id, char *str, void *data)
 {
 	if (strlen(str) < 3)
 	{
-		char code[4];
+		char *code;
 		if (str[0] == 'P')
 		{
-			sprintf(code, "REP");
+			code = "REP";
 		}
 		else if (str[0] == 'M')
 		{
-			sprintf(code, "REM");
+			code = "REM";
 		}
 		else
 		{
