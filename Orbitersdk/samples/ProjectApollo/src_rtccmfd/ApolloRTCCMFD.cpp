@@ -1277,6 +1277,11 @@ void ApolloRTCCMFD::menuSetEntryUplinkPage()
 	SelectPage(119);
 }
 
+void ApolloRTCCMFD::menuSetLandmarkAcquisitionDisplayPage()
+{
+	SelectPage(120);
+}
+
 void ApolloRTCCMFD::LUNTAR_TIGInput()
 {
 	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS)");
@@ -7365,6 +7370,18 @@ bool ExpSiteAcqLMCalcInput(void* id, char *str, void *data)
 	return true;
 }
 
+void ApolloRTCCMFD::LandmarkAcqDisplayCalc()
+{
+	bool LandmarkAcqDisplayCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: U17, CSM, GET (threshold), Delta Time (0 to 24 hours), Ref Body (E or M);", LandmarkAcqDisplayCalcInput, 0, 50, (void*)this);
+}
+
+bool LandmarkAcqDisplayCalcInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::GroundPointTableUpdate()
 {
 	bool GroundPointTableUpdateInput(void* id, char *str, void *data);
@@ -7416,6 +7433,18 @@ void ApolloRTCCMFD::CycleExpSiteAcqPage()
 	else
 	{
 		GC->rtcc->EZDPSAD2.curpage = 1;
+	}
+}
+
+void ApolloRTCCMFD::CycleLandmarkAcqDisplayPage()
+{
+	if (GC->rtcc->EZLANDU1.curpage < GC->rtcc->EZLANDU1.pages)
+	{
+		GC->rtcc->EZLANDU1.curpage++;
+	}
+	else
+	{
+		GC->rtcc->EZLANDU1.curpage = 1;
 	}
 }
 
@@ -8455,6 +8484,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 1506:
 		menuSetExpSiteAcqPage();
+		break;
+	case 1508:
+		menuSetLandmarkAcquisitionDisplayPage();
 		break;
 	case 1590:
 		menuSetVectorCompareDisplay();
