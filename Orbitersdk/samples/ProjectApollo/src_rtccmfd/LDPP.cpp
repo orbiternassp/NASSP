@@ -626,6 +626,8 @@ LDPP_32_1:
 	if (opt.I_PD <= 0)
 	{
 	LDPP_32_2:
+		//For now return an error if we try this
+		return 1;
 		if (opt.I_TPD <= 0)
 		{
 
