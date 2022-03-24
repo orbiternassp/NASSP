@@ -5321,7 +5321,7 @@ MCC_BEGIN
   MCC_NCOption_Enabled 1
   MCC_MissionType 2
   MCC_MissionPhase 2
-  MCC_MissionState 69
+  MCC_MissionState 133
   MCC_SubState 6
   MCC_EarthRev 162
   MCC_MoonRev 0

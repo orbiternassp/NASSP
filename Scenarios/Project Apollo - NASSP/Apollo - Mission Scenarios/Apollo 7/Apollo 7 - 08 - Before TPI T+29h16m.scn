@@ -7540,7 +7540,7 @@ MCC_BEGIN
   MCC_NCOption_Enabled 0
   MCC_MissionType 2
   MCC_MissionPhase 2
-  MCC_MissionState 20
+  MCC_MissionState 33
   MCC_SubState 2
   MCC_EarthRev 19
   MCC_MoonRev 0
