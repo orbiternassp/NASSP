@@ -2412,11 +2412,66 @@ void MCC::drawPad(bool writetofile){
 		{
 			int hh, mm;
 			double ss;
+			char buffer2[1024];
+			std::string buffer3;
+
 			AP7MNV * form = (AP7MNV *)padForm;
-			format_time_prec(tmpbuf, form->GETI);
-			format_time_prec(tmpbuf2, form->NavChk);
+
+			if (MissionType == MTP_D)
+			{
+				buffer3 = "MANEUVER UPDATE (P30)\n";
+			}
+			else
+			{
+				buffer3 = "MANEUVER\n";
+			}
+
+			SStoHHMMSS(form->GETI, hh, mm, ss);
+			sprintf_s(buffer2, "%s PURPOSE\n%+06d HRS GETI N33\n%+06d MIN\n%+07.2f SEC\n%+07.1f DVX\n%+07.1f DVY\n%+07.1f DVZ\n", form->purpose, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z);
+			buffer3.append(buffer2);
+
+			if (MissionType == MTP_D)
+			{
+				sprintf_s(buffer2, "%+07.1f DVR\n", length(form->dV));
+			}
+			else
+			{
+				sprintf_s(buffer2, "%+07.1f HA\n%+07.1f HP\n", form->HA, form->HP);
+			}
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer2, "%+07.1f DVC\n", form->Vc);
+			buffer3.append(buffer2);
+
 			SStoHHMMSS(form->burntime, hh, mm, ss);
-			sprintf(buffer,"MANEUVER PAD\nPURPOSE: %s\nGETI (N33):\n%s\ndV X: %+07.1f\ndV Y: %+07.1f\ndV Z: %+07.1f\nHA: %+07.1f\nHP: %+07.1f\nVC: %+07.1f\nWGT: %+06.0f\nPTRM: %+07.2f\n YTRM: %+07.2f\nBT: XXX%d:%02.0f\nSXTS: %02d\n SFT: %+07.2f\nTRN: %+07.3f\nTLAT,LONG\n%s\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\nRemarks:\n%s",form->purpose,tmpbuf,form->dV.x,form->dV.y,form->dV.z, form->HA, form->HP, form->Vc, form->Weight, form->pTrim, form->yTrim, mm, ss, form->Star, form->Shaft, form->Trun, tmpbuf2, form->lat, form->lng, form->alt, form->Att.x, form->Att.y, form->Att.z, form->remarks);			
+			if (MissionType == MTP_D)
+			{
+				sprintf_s(buffer2, "XX%d:%04.1f BT\n%+06.0f CSM WT\n%+07.2f PTRM\n%+07.2f YTRM\n", mm, ss, form->Weight, form->pTrim, form->yTrim);
+			}
+			else
+			{
+				sprintf_s(buffer2, "%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nXXX%d:%02.0f BT (MIN:SEC)\n", form->Weight, form->pTrim, form->yTrim, mm, ss);
+			}
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer2, "XXXX%02d SXTS\n%+07.2f SFT\n%+07.3f TRN\n", form->Star, form->Shaft, form->Trun);
+			buffer3.append(buffer2);
+
+			if (MissionType == MTP_D)
+			{
+				sprintf_s(buffer2, "%+07.2f LAT NAV\n%+07.2f LONG CHECK\n%+07.1f ALT TIG-30\n", form->lat, form->lng, form->alt);
+			}
+			else
+			{
+				SStoHHMMSS(form->NavChk, hh, mm, ss);
+				sprintf_s(buffer2, "%+06d HRS\n%+06d MIN TLAT, LONG\n%+07.2f SEC\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\n", hh, mm, ss, form->lat, form->lng, form->alt);
+			}
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer2, "XXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\nRemarks:\n%s", form->Att.x, form->Att.y, form->Att.z, form->remarks);
+			buffer3.append(buffer2);
+
+			sprintf_s(buffer, "%s", buffer3.c_str());
 			oapiAnnotationSetText(NHpad,buffer);
 		}
 		break;
