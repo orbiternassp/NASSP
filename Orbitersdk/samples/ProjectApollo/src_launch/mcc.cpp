@@ -2412,66 +2412,66 @@ void MCC::drawPad(bool writetofile){
 		{
 			int hh, mm;
 			double ss;
-			char buffer2[1024];
-			std::string buffer3;
+			char tempString[1024];
+			std::string fullString;
 
 			AP7MNV * form = (AP7MNV *)padForm;
 
 			if (MissionType == MTP_D)
 			{
-				buffer3 = "MANEUVER UPDATE (P30)\n";
+				fullString = "MANEUVER UPDATE (P30)\n";
 			}
 			else
 			{
-				buffer3 = "MANEUVER\n";
+				fullString = "MANEUVER\n";
 			}
 
 			SStoHHMMSS(form->GETI, hh, mm, ss);
-			sprintf_s(buffer2, "%s PURPOSE\n%+06d HRS GETI N33\n%+06d MIN\n%+07.2f SEC\n%+07.1f DVX\n%+07.1f DVY\n%+07.1f DVZ\n", form->purpose, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z);
-			buffer3.append(buffer2);
+			snprintf(tempString, 1024, "%s PURPOSE\n%+06d HRS GETI N33\n%+06d MIN\n%+07.2f SEC\n%+07.1f DVX\n%+07.1f DVY\n%+07.1f DVZ\n", form->purpose, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z);
+			fullString.append(tempString);
 
 			if (MissionType == MTP_D)
 			{
-				sprintf_s(buffer2, "%+07.1f DVR\n", length(form->dV));
+				snprintf(tempString, 1024, "%+07.1f DVR\n", length(form->dV));
 			}
 			else
 			{
-				sprintf_s(buffer2, "%+07.1f HA\n%+07.1f HP\n", form->HA, form->HP);
+				snprintf(tempString, 1024, "%+07.1f HA\n%+07.1f HP\n", form->HA, form->HP);
 			}
-			buffer3.append(buffer2);
+			fullString.append(tempString);
 
-			sprintf_s(buffer2, "%+07.1f DVC\n", form->Vc);
-			buffer3.append(buffer2);
+			snprintf(tempString, 1024, "%+07.1f DVC\n", form->Vc);
+			fullString.append(tempString);
 
 			SStoHHMMSS(form->burntime, hh, mm, ss);
 			if (MissionType == MTP_D)
 			{
-				sprintf_s(buffer2, "XX%d:%04.1f BT\n%+06.0f CSM WT\n%+07.2f PTRM\n%+07.2f YTRM\n", mm, ss, form->Weight, form->pTrim, form->yTrim);
+				snprintf(tempString, 1024, "XX%d:%04.1f BT\n%+06.0f CSM WT\n%+07.2f PTRM\n%+07.2f YTRM\n", mm, ss, form->Weight, form->pTrim, form->yTrim);
 			}
 			else
 			{
-				sprintf_s(buffer2, "%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nXXX%d:%02.0f BT (MIN:SEC)\n", form->Weight, form->pTrim, form->yTrim, mm, ss);
+				snprintf(tempString, 1024, "%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nXXX%d:%02.0f BT (MIN:SEC)\n", form->Weight, form->pTrim, form->yTrim, mm, ss);
 			}
-			buffer3.append(buffer2);
+			fullString.append(tempString);
 
-			sprintf_s(buffer2, "XXXX%02d SXTS\n%+07.2f SFT\n%+07.3f TRN\n", form->Star, form->Shaft, form->Trun);
-			buffer3.append(buffer2);
+			snprintf(tempString, 1024, "XXXX%02d SXTS\n%+07.2f SFT\n%+07.3f TRN\n", form->Star, form->Shaft, form->Trun);
+			fullString.append(tempString);
 
 			if (MissionType == MTP_D)
 			{
-				sprintf_s(buffer2, "%+07.2f LAT NAV\n%+07.2f LONG CHECK\n%+07.1f ALT TIG-30\n", form->lat, form->lng, form->alt);
+				snprintf(tempString, 1024, "%+07.2f LAT NAV\n%+07.2f LONG CHECK\n%+07.1f ALT TIG-30\n", form->lat, form->lng, form->alt);
 			}
 			else
 			{
 				SStoHHMMSS(form->NavChk, hh, mm, ss);
-				sprintf_s(buffer2, "%+06d HRS\n%+06d MIN TLAT, LONG\n%+07.2f SEC\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\n", hh, mm, ss, form->lat, form->lng, form->alt);
+				snprintf(tempString, 1024, "%+06d HRS\n%+06d MIN TLAT, LONG\n%+07.2f SEC\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\n", hh, mm, ss, form->lat, form->lng, form->alt);
 			}
-			buffer3.append(buffer2);
+			fullString.append(tempString);
 
-			sprintf_s(buffer2, "XXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\nRemarks:\n%s", form->Att.x, form->Att.y, form->Att.z, form->remarks);
-			buffer3.append(buffer2);
+			snprintf(tempString, 1024, "XXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\nRemarks:\n%s", form->Att.x, form->Att.y, form->Att.z, form->remarks);
+			fullString.append(tempString);
 
-			sprintf_s(buffer, "%s", buffer3.c_str());
+			snprintf(buffer, 1024, "%s", fullString.c_str());
 			oapiAnnotationSetText(NHpad,buffer);
 		}
 		break;
