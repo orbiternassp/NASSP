@@ -1228,7 +1228,7 @@ void LEM::InitPanel (int panel)
 		srf[0]						= oapiCreateSurface (LOADBMP (IDB_ECSG));
 		srf[SRF_INDICATOR]			= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 		srf[SRF_NEEDLE]				= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
-		srf[SRF_DIGITAL]			= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+		srf[SRF_DIGITAL]			= (agc.CheckVariant()) ? oapiCreateSurface (LOADBMP (IDB_DIGITALA)) : oapiCreateSurface (LOADBMP (IDB_DIGITAL));
 		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		// Unused surface 5 was
 		// srf[5]						= oapiCreateSurface (LOADBMP (IDB_FDAI));
@@ -1259,7 +1259,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LMMFDFRAME]			= oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
 		srf[SRF_LMTHREEPOSLEVER]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
 		srf[SRF_LMTHREEPOSSWITCH]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
-		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
+		srf[SRF_DSKYDISP]			= (agc.CheckVariant()) ? oapiCreateSurface (LOADBMP (IDB_DSKY_DISPA)) : oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));
 		//srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));		//The LM FDAI texture doesn't need this
 		srf[SRF_FDAIROLL]			= oapiCreateSurface (LOADBMP (IDB_LEM_FDAI_ROLL));
 		srf[SRF_CWSLIGHTS]			= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
@@ -1282,7 +1282,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_FIVE_POS_SWITCH]	= oapiCreateSurface (LOADBMP (IDB_FIVE_POS_SWITCH));
 		srf[SRF_RR_NOTRACK]         = oapiCreateSurface (LOADBMP (IDB_RR_NOTRACK));
 		srf[SRF_LEM_STAGESWITCH]	= oapiCreateSurface (LOADBMP (IDB_LEM_STAGESWITCH));
-		srf[SRF_DIGITALDISP2]		= oapiCreateSurface (LOADBMP (IDB_DIGITALDISP2));
+		srf[SRF_DIGITALDISP2]		= (agc.CheckVariant()) ? oapiCreateSurface (LOADBMP (IDB_DIGITALDISP2A)) : oapiCreateSurface (LOADBMP (IDB_DIGITALDISP2));
 		srf[SRF_RADAR_TAPE]         = oapiCreateSurface (LOADBMP (IDB_RADAR_TAPE));
 		srf[SRF_RADAR_TAPE2]        = oapiCreateSurface(LOADBMP(IDB_RADAR_TAPE2));
 		srf[SRF_SEQ_LIGHT]			= oapiCreateSurface (LOADBMP (IDB_SEQ_LIGHT));
