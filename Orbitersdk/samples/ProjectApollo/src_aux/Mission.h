@@ -76,6 +76,8 @@ namespace mission
 		int GetCMtoLMPowerConnectionVersion() const;
 		//Get CG of the empty SM (but including SM RCS) in inches
 		VECTOR3 GetCGOfEmptySM() const;
+		//false = Optics mode switch is not bypassed for CMC to optics commands, true = optics mode switch is bypassed for CMC to optics commands (ECP 792)
+		bool HasRateAidedOptics() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
@@ -99,6 +101,7 @@ namespace mission
 		MATRIX3 LM_CG_Coefficients;
 		int iCMtoLMPowerConnectionVersion;
 		VECTOR3 EmptySMCG;
+		bool bHasRateAidedOptics;
 
 		void SetDefaultValues();
 	};
