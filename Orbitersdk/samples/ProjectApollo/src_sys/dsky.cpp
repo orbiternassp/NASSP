@@ -634,6 +634,8 @@ void DSKY::ResetKeyDown()
 void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off)
 
 {
+	const int DigitWidth = 17;
+	const int DigitHeight = 19;
 	int Curdigit;
 
 	if (Flash || Off)
@@ -641,12 +643,12 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
 		Curdigit = Str[0] - '0';
-		oapiBlt(surf,digits,dstx,dsty,16*Curdigit,0,16,19);
+		oapiBlt(surf, digits, dstx, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 
 	if (Str[1] >= '0' && Str[1] <= '9') {
 		Curdigit = Str[1] - '0';
-		oapiBlt(surf,digits,dstx+16,dsty,16*Curdigit,0,16,19);
+		oapiBlt(surf, digits, dstx + DigitWidth, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 }
 
@@ -673,6 +675,9 @@ int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off)
 void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off)
 
 {
+
+	const int DigitWidth = 17;
+	const int DigitHeight = 19;
 	int	Curdigit;
 	int i;
 
@@ -680,16 +685,16 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 		return;
 
 	if (Str[0] == '-') {
-		oapiBlt(surf,digits,dstx,dsty,161,0,10,19);
+		oapiBlt(surf, digits, dstx, dsty, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 	else if (Str[0] == '+') {
-		oapiBlt(surf,digits,dstx,dsty,174,0,12,19);
+		oapiBlt(surf, digits, dstx, dsty, 11 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 
 	for (i = 1; i < 6; i++) {
 		if (Str[i] >= '0' && Str[i] <= '9') {
 			Curdigit = Str[i] - '0';
-			oapiBlt(surf, digits, dstx + (16*i), dsty, 16*Curdigit, 0, 16,19);
+			oapiBlt(surf, digits, dstx + (DigitWidth * i) - 1, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);	// Offset digits slightly closer to the plus/minus sign like a real DSKY, also helps with centering
 		}
 		else {
 //			oapiBlt(surf, digits, dstx + (10*i), dsty, 440, 6, 10, 15);
@@ -742,17 +747,17 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int x
 		oapiBlt(surf, disp,  6 + xOffset,   4 + yOffset,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, false, ELOff);
-	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing, ELOff);
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing, ELOff);
+	RenderTwoDigitDisplay(surf, digits, 66 + xOffset, 16 + yOffset, Prog, false, ELOff);
+	RenderTwoDigitDisplay(surf, digits,  7 + xOffset, 51 + yOffset, Verb, VerbFlashing, ELOff);
+	RenderTwoDigitDisplay(surf, digits, 66 + xOffset, 51 + yOffset, Noun, NounFlashing, ELOff);
 
 	//
 	// Register contents.
 	//
 
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 83 + yOffset, R1, ELOff);
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 117 + yOffset, R2, ELOff);
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 151 + yOffset, R3, ELOff);
+	RenderSixDigitDisplay(surf, digits, 1 + xOffset, 83 + yOffset, R1, ELOff);
+	RenderSixDigitDisplay(surf, digits, 1 + xOffset, 117 + yOffset, R2, ELOff);
+	RenderSixDigitDisplay(surf, digits, 1 + xOffset, 151 + yOffset, R3, ELOff);
 }
 
 void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)

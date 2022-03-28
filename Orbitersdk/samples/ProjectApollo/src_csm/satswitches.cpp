@@ -1743,8 +1743,11 @@ void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (Voltage() < SP_MIN_DCVOLTAGE || Sat->ems.IsOff() || !Sat->ems.IsDisplayPowered()) return;
 
-	if (v < 0) {
-		oapiBlt(drawSurface, Digits, 0, 0, 161, 0, 10, 19);
+	const int DigitWidth = 17;
+	const int DigitHeight = 19;
+
+	if (v < 0) {	// Draw minus sign
+		oapiBlt(drawSurface, Digits, 0, 0, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 
 	int i, Curdigit;
@@ -1753,11 +1756,11 @@ void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	for (i = 0; i < 7; i++) {
 		if (buffer[i] >= '0' && buffer[i] <= '9') {
 			Curdigit = buffer[i] - '0';
-			oapiBlt(drawSurface, Digits, (i == 6 ? 0 : 10) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
+			oapiBlt(drawSurface, Digits, (i == 6 ? -2 : 8) + DigitWidth * i, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);	// Offset final (6th) digit
 		} else if (buffer[i] == '.') {
 			if (!Sat->ems.IsDecimalPointBlanked())
 			{
-				oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
+				oapiBlt(drawSurface, Digits, 8 + DigitWidth * i, 0, 12 * DigitWidth, 0, 4, DigitHeight);	// Draw decimal point
 			}
 		}
 	}
@@ -1767,8 +1770,11 @@ void SaturnEMSDvDisplay::DoDrawSwitchVC(SURFHANDLE surf, double v, SURFHANDLE dr
 {
 	if (Voltage() < SP_MIN_DCVOLTAGE || Sat->ems.IsOff() || !Sat->ems.IsDisplayPowered()) return;
 
-	if (v < 0) {
-		oapiBlt(surf, drawSurface, 0, 0, 161, 0, 10, 19);
+	const int DigitWidth = 17;
+	const int DigitHeight = 19;
+
+	if (v < 0) {	// Draw minus sign
+		oapiBlt(surf, drawSurface, 0, 0, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 
 	int i, Curdigit;
@@ -1777,12 +1783,12 @@ void SaturnEMSDvDisplay::DoDrawSwitchVC(SURFHANDLE surf, double v, SURFHANDLE dr
 	for (i = 0; i < 7; i++) {
 		if (buffer[i] >= '0' && buffer[i] <= '9') {
 			Curdigit = buffer[i] - '0';
-			oapiBlt(surf, drawSurface, (i == 6 ? 0 : 10) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
+			oapiBlt(surf, drawSurface, (i == 6 ? -2 : 8) + DigitWidth * i, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);	// Offset final (6th) digit
 		}
 		else if (buffer[i] == '.') {
 			if (!Sat->ems.IsDecimalPointBlanked())
 			{
-				oapiBlt(surf, drawSurface, 10 + 16 * i, 0, 200, 0, 4, 19);
+				oapiBlt(surf, drawSurface, 8 + DigitWidth * i, 0, 12 * DigitWidth, 0, 4, DigitHeight);	// Draw decimal point
 			}
 		}
 	}

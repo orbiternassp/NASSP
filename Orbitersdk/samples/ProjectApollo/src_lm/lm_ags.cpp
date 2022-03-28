@@ -1367,21 +1367,23 @@ int LEM_DEDA::ThreeDigitDisplaySegmentsLit(char *Str)
 void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
 
 {
+	const int DigitWidth = 19;
+	const int DigitHeight = 21;
 	int Curdigit;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
 		Curdigit = Str[0] - '0';
-		oapiBlt(surf,digits,dstx+0,dsty,19*Curdigit,0,19,21);
+		oapiBlt(surf, digits, dstx + 0, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 
 	if (Str[1] >= '0' && Str[1] <= '9') {
 		Curdigit = Str[1] - '0';
-		oapiBlt(surf,digits,dstx+20,dsty,19*Curdigit,0,19,21);
+		oapiBlt(surf, digits, dstx + 20, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 
 	if (Str[2] >= '0' && Str[2] <= '9') {
 		Curdigit = Str[2] - '0';
-		oapiBlt(surf,digits,dstx+39,dsty,19*Curdigit,0,19,21);
+		oapiBlt(surf, digits, dstx + 39, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 }
 
@@ -1407,20 +1409,22 @@ int LEM_DEDA::SixDigitDisplaySegmentsLit(char *Str)
 void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
 
 {
+	const int DigitWidth = 19;
+	const int DigitHeight = 21;
 	int	Curdigit;
 	int i;
 
 	if (Str[0] == '-') {
-		oapiBlt(surf,digits,dstx+4,dsty,191,0,19,21);
+		oapiBlt(surf, digits, dstx + 4, dsty, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 	else if (Str[0] == '+') {
-		oapiBlt(surf,digits,dstx+4,dsty,210,0,19,21);
+		oapiBlt(surf, digits, dstx + 4, dsty, 11 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 
 	for (i = 1; i < 6; i++) {
 		if (Str[i] >= '0' && Str[i] <= '9') {
 			Curdigit = Str[i] - '0';
-			oapiBlt(surf, digits, dstx + (20*i)+ 4, dsty, 19*Curdigit, 0, 19,21);
+			oapiBlt(surf, digits, dstx + ((DigitWidth + 1) * i) + 4, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 		}
 		else {
 //			oapiBlt(surf, digits, dstx + (10*i), dsty, 440, 6, 10, 15);
