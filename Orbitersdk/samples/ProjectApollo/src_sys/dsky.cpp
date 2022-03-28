@@ -675,7 +675,6 @@ int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off)
 void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off)
 
 {
-
 	const int DigitWidth = 17;
 	const int DigitHeight = 19;
 	int	Curdigit;
