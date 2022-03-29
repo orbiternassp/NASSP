@@ -18,13 +18,20 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	//sprintf(Buffer, "%d", G->screen);
 	//skp->Text(7.5 * W / 8,(int)(0.5 * H / 14), Buffer, strlen(Buffer));
 
+
+	if (G->vesseltype < 0)
+	{
+		skp->Text(3 * W / 8, 7 * H / 14, "Unsupported Vessel", 18);
+		return true;
+	}
+
 	if (screen == 0)
 	{
-		if (G->vesseltype < 2)
+		if (G->vesseltype == 0)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
 		}
-		else if (G->vesseltype < 4)
+		else if(G->vesseltype == 1)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
 		}
@@ -711,7 +718,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		for (int i = 0; i < 9; i++)
 		{
-			if (G->vesseltype < 2)
+			if (G->vesseltype == 0)
 			{
 				sprintf(Buffer, "%f", GC->rtcc->EZJGMTX1.data[0].REFSMMAT.data[i]);
 			}
@@ -856,28 +863,40 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(4 * W / 8, 8 * H / 14, "Update Liftoff Time", 19);
 
+
+
 		if (G->vesseltype == 0)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "CSM", 3);
+			if (G->vesselisdocked)
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "CSM/LM docked", 13);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "CSM", 3);
+			}
 		}
 		else if (G->vesseltype == 1)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "CSM/LM docked", 13);
+			if (G->vesselisdocked)
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "LM/CSM docked", 13);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 4 * H / 14, "LM", 3);
+			}
 		}
 		else if (G->vesseltype == 2)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "LM", 3);
-		}
-		else if (G->vesseltype == 3)
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "LM/CSM docked", 13);
+			skp->Text(1 * W / 8, 4 * H / 14, "MCC", 3);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "MCC", 3);
+			skp->Text(1 * W / 8, 4 * H / 14, "Unsupported", 11);
 		}
 
-		if (G->vesseltype == 2 || G->vesseltype == 3)
+		if (G->vesseltype == 1)
 		{
 			if (G->lemdescentstage)
 			{
@@ -940,11 +959,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			//REFSMMATName(Buffer, G->REFSMMATcur);
 			//skp->Text((int)(0.5 * W / 8), 9 * H / 14, Buffer, strlen(Buffer));
 
-			if (G->vesseltype < 2)
+			if (G->vesseltype == 0)
 			{
 				skp->Text(5 * W / 8, (int)(0.5 * H / 14), "P30 Maneuver", 12);
 
-				if (G->vesseltype == 0)
+				if (G->vesselisdocked == false)
 				{
 					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM", 3);
 				}
@@ -956,7 +975,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				ThrusterName(Buffer, G->manpadenginetype);
 				skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-				if (G->vesseltype == 1)
+				if (G->vesselisdocked)
 				{
 					sprintf(Buffer, "LM Weight: %5.0f", G->manpad.LMWeight);
 					skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
@@ -1101,7 +1120,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				ThrusterName(Buffer, G->manpadenginetype);
 				skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-				if (G->vesseltype == 2)
+				if (G->vesselisdocked == false)
 				{
 					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "LM", 3);
 				}
@@ -1113,7 +1132,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				sprintf(Buffer, "LM Weight: %5.0f", G->lmmanpad.LMWeight);
 				skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
 
-				if (G->vesseltype == 3)
+				if (G->vesselisdocked)
 				{
 					sprintf(Buffer, "CSM Weight: %5.0f", G->lmmanpad.CSMWeight);
 					skp->Text((int)(0.5 * W / 8), 11 * H / 14, Buffer, strlen(Buffer));
@@ -1252,7 +1271,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else
 		{
-			if (G->vesseltype < 2)
+			if (G->vesseltype == 0)
 			{
 				skp->Text(4 * W / 8, (int)(0.5 * H / 14), "TLI PAD", 7);
 
@@ -1752,11 +1771,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 14)
 	{
-		if (G->vesseltype < 2)
+		if (G->vesseltype == 0)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
 		}
-		else if (G->vesseltype < 4)
+		else if (G->vesseltype == 1)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
 		}
@@ -2202,11 +2221,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 20)
 	{
-		if (G->vesseltype < 2)
+		if (G->vesseltype == 0)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
 		}
-		else if (G->vesseltype < 4)
+		else if (G->vesseltype == 1)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
 		}
@@ -2229,7 +2248,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 21)
 	{
-		if (G->vesseltype < 2)
+		if (G->vesseltype == 0)
 		{
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "CSM", 3);
 		}
@@ -4786,6 +4805,49 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		ThrusterName(Buffer, GC->rtcc->med_m72.Thruster);
 		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
+		if (GC->rtcc->med_m72.UllageDT < 0)
+		{
+			sprintf_s(Buffer, "Nominal ullage");
+		}
+		else
+		{
+			if (GC->rtcc->med_m72.UllageQuads)
+			{
+				sprintf_s(Buffer, "4 quads, %.1f s", GC->rtcc->med_m72.UllageDT);
+			}
+			else
+			{
+				sprintf_s(Buffer, "2 quads, %.1f s", GC->rtcc->med_m72.UllageDT);
+			}
+		}
+		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_m72.Thruster == RTCC_ENGINETYPE_LMDPS)
+		{
+			sprintf_s(Buffer, "%.1f s", GC->rtcc->med_m72.TenPercentDT);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.3f", GC->rtcc->med_m72.DPSThrustFactor);
+			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		if (GC->rtcc->med_m72.Iteration)
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "Iterate", 7);
+		}
+		else
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "Do not iterate", 14);
+		}
+
+		if (GC->rtcc->med_m72.TimeFlag)
+		{
+			skp->Text(5 * W / 8, 8 * H / 14, "Impulsive TIG", 13);
+		}
+		else
+		{
+			skp->Text(5 * W / 8, 8 * H / 14, "Optimum TIG", 11);
+		}
+
 		if (GC->MissionPlanningActive)
 		{
 			if (GC->rtcc->med_m72.DeleteGET > 0)
@@ -4800,66 +4862,22 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 			MPTAttitudeName(Buffer, GC->rtcc->med_m72.Attitude);
 			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-
-			if (GC->rtcc->med_m72.UllageDT < 0)
-			{
-				sprintf_s(Buffer, "Nominal ullage");
-			}
-			else
-			{
-				if (GC->rtcc->med_m72.UllageQuads)
-				{
-					sprintf_s(Buffer, "4 quads, %.1f s", GC->rtcc->med_m72.UllageDT);
-				}
-				else
-				{
-					sprintf_s(Buffer, "2 quads, %.1f s", GC->rtcc->med_m72.UllageDT);
-				}
-			}
-			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-
-			if (GC->rtcc->med_m72.Iteration)
-			{
-				skp->Text(5 * W / 8, 4 * H / 14, "Iterate", 7);
-			}
-			else
-			{
-				skp->Text(5 * W / 8, 4 * H / 14, "Do not iterate", 14);
-			}
-
-			
-			if (GC->rtcc->med_m72.Thruster == RTCC_ENGINETYPE_LMDPS)
-			{
-				sprintf_s(Buffer, "%.1f s", GC->rtcc->med_m72.TenPercentDT);
-				skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-				sprintf_s(Buffer, "%.3f", GC->rtcc->med_m72.DPSThrustFactor);
-				skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-			}
-
-			if (GC->rtcc->med_m72.TimeFlag)
-			{
-				skp->Text(5 * W / 8, 10 * H / 14, "Impulsive TIG", 13);
-			}
-			else
-			{
-				skp->Text(5 * W / 8, 10 * H / 14, "Optimum TIG", 11);
-			}
 		}
 		else
 		{
-			GET_Display(Buffer, G->P30TIG);
-			skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			GET_Display2(Buffer, G->P30TIG);
+			skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(5 * W / 8, 11 * H / 21, "DVX", 3);
-			skp->Text(5 * W / 8, 12 * H / 21, "DVY", 3);
-			skp->Text(5 * W / 8, 13 * H / 21, "DVZ", 3);
+			skp->Text(5 * W / 8, 16 * H / 21, "DVX", 3);
+			skp->Text(5 * W / 8, 17 * H / 21, "DVY", 3);
+			skp->Text(5 * W / 8, 18 * H / 21, "DVZ", 3);
 
 			AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
-			skp->Text(6 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
 			AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
-			skp->Text(6 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
 			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
-			skp->Text(6 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 55)
