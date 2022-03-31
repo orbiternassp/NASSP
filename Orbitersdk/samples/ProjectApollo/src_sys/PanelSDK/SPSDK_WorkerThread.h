@@ -32,13 +32,24 @@
 #include <atomic>
 
 
-class SPSDK_WorkerPool {
+class ThreadPool {
 public:
-	SPSDK_WorkerPool();
+	ThreadPool();
+	~ThreadPool();
+	void StartWork(const double Setdt, const std::vector<std::function<void(double)>> SetQueue);
 private:
-	std::atomic<bool> finished;
-	std::vector<std::thread> WorkerPool;
-	std::vector<std::function<void(double)>> WorkerPoolQueue;
-	void workerLoopFunction();
+	double dt;
+	//std::atomic<bool> working;
+	std::atomic<bool> terminate;
+	int idleThreads;
+	int numThreads;
+	std::vector<std::thread> workerPool;
+	std::vector<std::function<void(double)>> queue;
+	std::condition_variable cv;
+	std::condition_variable cvWork;
+	std::mutex readQueueLock;
+	std::mutex runningLock;
+	std::mutex workLock;
+	void workerThreadFunction();
 };
 

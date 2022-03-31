@@ -26,18 +26,69 @@
 
 #include "SPSDK_WorkerThread.h"
 
-SPSDK_WorkerPool::SPSDK_WorkerPool(){
-	const int numWorkers = std::thread::hardware_concurrency();
-	for (int i = 0; i < numWorkers; i++) {
-		//TODO: catch exceptions for creating threads and all that fun stuff
-		WorkerPool.push_back(std::thread(&SPSDK_WorkerPool::workerLoopFunction,this));
+  //create the threadpool and start it
+ThreadPool::ThreadPool()
+{
+	dt = 0;
+	terminate = false;
+	numThreads = std::thread::hardware_concurrency();
+	idleThreads = numThreads;
+	for (int i = 0; i < numThreads; i++) {
+		workerPool.push_back(std::thread(&ThreadPool::workerThreadFunction, this));
+		workerPool[i].detach();
 	}
-	finished = false;
 }
 
-void SPSDK_WorkerPool::workerLoopFunction()
+ThreadPool::~ThreadPool()
 {
-	while (!finished) {
-		//TODO: fetch work from queue
+	terminate = true;
+	cv.notify_all();
+}
+
+//copies a predetermined queue vector of jobs to be run
+void ThreadPool::StartWork(const double Setdt, const std::vector<std::function<void(double)>> SetQueue) {
+
+	{
+		std::unique_lock<std::mutex> lock(readQueueLock);
+		dt = Setdt;
+		queue = SetQueue;
 	}
+	idleThreads = 0;
+
+	std::unique_lock<std::mutex> RunningLock(runningLock);
+	cv.notify_all();
+	cvWork.wait(RunningLock, [this]() { return (idleThreads == numThreads); });
+}
+
+//always runs waiting for work
+void ThreadPool::workerThreadFunction()
+{
+	std::function<void(double)> Job;
+
+
+	while (!terminate) {
+
+		{
+			std::unique_lock<std::mutex> RunningLock(runningLock);
+			while (queue.empty()) {
+				if (++idleThreads > numThreads) { idleThreads = numThreads; }
+				cvWork.notify_all();
+				cv.wait(RunningLock);
+			}
+		}
+
+		{
+			std::unique_lock<std::mutex> lock(readQueueLock);
+			if (!queue.empty()) {
+				Job = queue.back();
+				queue.pop_back();
+			}
+			else {
+				continue;
+			}
+		}
+
+		Job(dt);
+	}
+	return;
 }
