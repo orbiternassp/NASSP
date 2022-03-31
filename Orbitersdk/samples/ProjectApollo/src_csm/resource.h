@@ -782,6 +782,10 @@
 #define IDB_CRYO_IND_J                                     1067
 #define IDB_SWITCHGUARDS90_RIGHT                           1068
 #define AID_DUMMY_PANEL_AREA							   1069
+#define IDB_DSKY_DISPA					2024
+#define IDB_DIGITALA					2025
+#define IDB_DIGITALDISP2A				2026
+#define	IDB_DIGITAL2A					2027
 
 // VC Active Areas
 #define AID_VC_SEATSCYCLE		                3000
