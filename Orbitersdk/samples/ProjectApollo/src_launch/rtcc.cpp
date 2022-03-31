@@ -3034,6 +3034,7 @@ RTCC_PMSTICN_9_2:
 	else
 	{
 		//Pass solution back
+		res.sv_tig = sv_A1;
 		res.dV = sv_A1_apo.V - sv_A1.V;
 		res.dV2 = sv_A2_apo.V - sv_A2.V;
 		res.dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V), res.dV);
@@ -8054,7 +8055,7 @@ void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, in
 	FiniteBurntimeCompensation(sv, attachedMass, DV, engine, DV_imp, t_slip, sv_tig, sv_cut, agc);
 }
 
-void RTCC::PoweredFlightProcessor(PMMMPTInput in, double &GMT_TIG, VECTOR3 &dV_LVLH)
+int RTCC::PoweredFlightProcessor(PMMMPTInput in, double &GMT_TIG, VECTOR3 &dV_LVLH)
 {
 	MissionPlanTable mpt;
 	MPTManeuver man;
@@ -8064,14 +8065,15 @@ void RTCC::PoweredFlightProcessor(PMMMPTInput in, double &GMT_TIG, VECTOR3 &dV_L
 	in.LowerTimeLimit = 0.0;
 	in.UpperTimeLimit = 10e70;
 	in.CurrentManeuver = 1;
-	in.IterationFlag = true;
-	in.IgnitionTimeOption = false;
+	in.DockingAngle = 0.0;
 	in.mpt = &mpt;
 
-	PMMMPT(in, man);
+	int err = PMMMPT(in, man);
 
 	GMT_TIG = man.GMTI;
 	dV_LVLH = man.dV_LVLH;
+
+	return err;
 }
 
 void RTCC::PoweredFlightProcessor(EphemerisData sv0, double mass, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc)
@@ -11449,7 +11451,7 @@ bool RTCC::GETEval2(double get)
 	return false;
 }
 
-void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2)
+void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool docked)
 {
 	int vesseltype = 0;
 	std::string cfg;
@@ -11510,7 +11512,7 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2)
 		else
 		{
 			cmmass = vessel->GetMass();
-			if (lmmass = GetDockedVesselMass(vessel))
+			if (docked && (lmmass = GetDockedVesselMass(vessel)))
 			{
 				DOCKHANDLE dock;
 				OBJHANDLE hLM;
@@ -11549,7 +11551,7 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2)
 
 		if (lem->GetStage() < 2)
 		{
-			if (cmmass = GetDockedVesselMass(vessel))
+			if (docked && (cmmass = GetDockedVesselMass(vessel)))
 			{
 				cfg = "CL";
 			}
@@ -11560,7 +11562,7 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2)
 		}
 		else
 		{
-			if (cmmass = GetDockedVesselMass(vessel))
+			if (docked && (cmmass = GetDockedVesselMass(vessel)))
 			{
 				cfg = "CA";
 			}
@@ -27354,18 +27356,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		if (med_m72.UllageDT < 0)
 		{
-			if (med_m72.Thruster == RTCC_ENGINETYPE_LMAPS)
-			{
-				inp.dt_ullage[0] = 4.0;
-			}
-			else if (med_m72.Thruster == RTCC_ENGINETYPE_LMDPS)
-			{
-				inp.dt_ullage[0] = 8.0;
-			}
-			else
-			{
-				inp.dt_ullage[0] = 0.0;
-			}
+			inp.dt_ullage[0] = SystemParameters.MCTNDU;
 		}
 		else
 		{

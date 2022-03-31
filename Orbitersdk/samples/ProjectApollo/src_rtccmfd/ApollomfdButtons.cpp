@@ -277,7 +277,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu8[] =
 	{
 		{ "Mission (GET base)", 0, 'G' },
-		{ "Vessel type", 0, 'V' },
+		{ "Vessel status", 0, 'V' },
 		{ "LM stage", 0, 'T' },
 		{ "", 0, ' ' },
 		{ "Sextant Star Time", 0, 'S' },
@@ -294,7 +294,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu8, sizeof(mnu8) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("MIS", OAPI_KEY_G, &ApolloRTCCMFD::menuMissionNumberInput);
-	RegisterFunction("TYP", OAPI_KEY_V, &ApolloRTCCMFD::menuChangeVesselType);
+	RegisterFunction("TYP", OAPI_KEY_V, &ApolloRTCCMFD::menuChangeVesselStatus);
 	RegisterFunction("STA", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleLMStage);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("SXT", OAPI_KEY_S, &ApolloRTCCMFD::menusextantstartime);
@@ -327,7 +327,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu9, sizeof(mnu9) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuChangeVesselStatus);
 	RegisterFunction("ENG", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchManPADEngine);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::menuSwitchHeadsUp);
 	RegisterFunction("ULL", OAPI_KEY_U, &ApolloRTCCMFD::menuManPADUllage);
@@ -1848,11 +1848,11 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Attitude mode", 0, 'A' },
 		{ "Ullage options", 0, 'U' },
 
-		{ "Calc maneuver", 0, 'C' },
 		{ "Iteration flag", 0, 'I' },
 		{ "DPS 10% time", 0, 'P' },
 		{ "DPS scale factor", 0, 'S' },
 		{ "Time flag", 0, 'F' },
+		{ "Calc maneuver", 0, 'C' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -1865,11 +1865,11 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleTIAttitude);
 	RegisterFunction("ULL", OAPI_KEY_U, &ApolloRTCCMFD::menuTIUllageOption);
 
-	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuTransferTIToMPT);
 	RegisterFunction("ITE", OAPI_KEY_I, &ApolloRTCCMFD::menuCycleTIIterationFlag);
 	RegisterFunction("10P", OAPI_KEY_P, &ApolloRTCCMFD::menuTIDPSTenPercentTime);
 	RegisterFunction("DPS", OAPI_KEY_S, &ApolloRTCCMFD::menuTIDPSScaleFactor);
 	RegisterFunction("TIM", OAPI_KEY_F, &ApolloRTCCMFD::menuCycleTITimeFlag);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuTransferTIToMPT);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLambertPage);
 
 
