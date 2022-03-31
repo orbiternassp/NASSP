@@ -478,6 +478,7 @@ struct RTCCSystemParameters
 		MCTAK3 = 15569.0;
 		MCTAK4 = 6181.0;
 		MCTDTF = 0.925;
+		MCTNDU = 15.0;
 
 		MCTSPP = -2.15*RAD;
 		MCTSYP = 0.95*RAD;
@@ -1086,6 +1087,8 @@ struct RTCCSystemParameters
 	double MCTDRG;
 	//Nominal scaling factor for main DPS thrust level and weight loss rate
 	double MCTDTF;
+	//Nominal delta t of ullage
+	double MCTNDU;
 
 	TLISystemParameters MDVSTP;
 

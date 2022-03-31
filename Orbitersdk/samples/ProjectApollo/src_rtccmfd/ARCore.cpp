@@ -355,28 +355,34 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	REFSMMATopt = 4;
 	REFSMMATcur = 4;
 	manpadopt = 0;
-	vesseltype = 0;
 	lemdescentstage = true;
 
-	if (strcmp(v->GetName(), "MCC") == 0)
+	vesseltype = -1;
+
+	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
 	{
-		vesseltype = 4;
+		vesseltype = 0;
 	}
-	else if (strcmp(v->GetName(), "Spider") == 0)
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM"))
+	{
+		vesseltype = 1;
+	}
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\MCC") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/MCC"))
 	{
 		vesseltype = 2;
 	}
-	else if (strcmp(v->GetName(), "Snoopy") == 0)
-	{
-		vesseltype = 2;
-	}
-	else if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0)
+
+	if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0)
 	{
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Eagle") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0)
@@ -385,7 +391,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Intrepid") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Odyssey") == 0)
@@ -394,7 +399,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Aquarius") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0)
@@ -403,7 +407,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Antares") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 40768.0;
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
@@ -412,7 +415,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Falcon") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Casper") == 0)
@@ -421,7 +423,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Orion") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "America") == 0)
@@ -430,13 +431,13 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Challenger") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 41133.0;
 	}
 
+	vesselisdocked = false;
 	if (vessel->DockingStatus(0) == 1)
 	{
-		vesseltype++;
+		vesselisdocked = true;
 	}
 
 	REFSMMATHeadsUp = true;
@@ -464,19 +465,16 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
 	g_Data.uplinkState = 0;
-	if (vesseltype >= 2)
+	if (vesseltype == 1)
 	{
-		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
-			LEM *lem = (LEM *)vessel;
-			if (lem->GetStage() < 2)
-			{
-				lemdescentstage = true;
-			}
-			else
-			{
-				lemdescentstage = false;
-			}
+		LEM *lem = (LEM *)vessel;
+		if (lem->GetStage() < 2)
+		{
+			lemdescentstage = true;
+		}
+		else
+		{
+			lemdescentstage = false;
 		}
 	}
 	for (int i = 0; i < 24; i++)
@@ -727,7 +725,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	AGCEphemTEPHEM = GC->rtcc->CalcGETBase();
 	AGCEphemTLAND = GC->rtcc->CZTDTGTU.GETTD;
 	AGCEphemMission = GC->mission;
-	AGCEphemIsCMC = vesseltype < 2;
+	AGCEphemIsCMC = vesseltype != 1;
 
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
@@ -1176,14 +1174,13 @@ void ARCore::TransferRTEToMPT()
 
 void ARCore::DAPPADCalc()
 {
-	if (vesseltype == 4) return;
-	if (vesseltype < 2)
+	if (vesseltype == 0)
 	{
-		GC->rtcc->CSMDAPUpdate(vessel, DAP_PAD, vesseltype == 1);
+		GC->rtcc->CSMDAPUpdate(vessel, DAP_PAD, vesselisdocked);
 	}
-	else
+	else if (vesseltype == 1)
 	{
-		GC->rtcc->LMDAPUpdate(vessel, DAP_PAD, vesseltype == 3, lemdescentstage == false);
+		GC->rtcc->LMDAPUpdate(vessel, DAP_PAD, vesselisdocked, lemdescentstage == false);
 	}
 }
 
@@ -1363,7 +1360,7 @@ void ARCore::GetStateVectorFromIU()
 void ARCore::GetStateVectorsFromAGS()
 {
 	//Are we a LM?
-	if (vesseltype < 2 || vesseltype == 4) return;
+	if (vesseltype == 1) return;
 
 	//0-6: pos and vel
 	int csmvecoct[6], lmvecoct[6];
@@ -1450,11 +1447,11 @@ void ARCore::GetStateVectorsFromAGS()
 
 void ARCore::GetStateVectorFromAGC(bool csm)
 {
-	if (vesseltype == 4) return;
+	if (vesseltype < 0 || vesseltype > 1) return;
 
 	agc_t* vagc;
 
-	if (vesseltype < 2)
+	if (vesseltype == 0)
 	{
 		Saturn *saturn = (Saturn *)vessel;
 
@@ -1528,7 +1525,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 	EphemerisData sv;
 	sv.R = tmul(Rot, R);
 	sv.V = tmul(Rot, V);
-	if (vesseltype < 2)
+	if (vesseltype == 0)
 	{
 		sv.GMT = GET + GC->rtcc->GetCMCClockZero();
 	}
@@ -1548,7 +1545,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 
 	if (csm)
 	{
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			GC->rtcc->BZSTLM.HighSpeedCMCCSMVector = sv;
 		}
@@ -1559,7 +1556,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 	}
 	else
 	{
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			GC->rtcc->BZSTLM.HighSpeedCMCLEMVector = sv;
 		}
@@ -2057,7 +2054,7 @@ void ARCore::AGCLiftoffTimeIncrementUplink(bool csm)
 
 void ARCore::EMPP99Uplink(int i)
 {
-	if (vesseltype < 2 || vesseltype > 3) return;
+	if (vesseltype != 1) return;
 
 	if (i == 0)
 	{
@@ -2571,27 +2568,15 @@ int ARCore::subThread()
 {
 	int Result = 0;
 
-	int mptveh, docked;
+	int mptveh;
 
-	if (GC->MissionPlanningActive)
+	if (vesseltype == 0)
 	{
-		if (vesseltype < 2)
-		{
-			mptveh = RTCC_MPT_CSM;
-		}
-		else
-		{
-			mptveh = RTCC_MPT_LM;
-		}
-	}
-
-	if (vesseltype == 1 || vesseltype == 3)
-	{
-		docked = true;
+		mptveh = RTCC_MPT_CSM;
 	}
 	else
 	{
-		docked = false;
+		mptveh = RTCC_MPT_LM;
 	}
 
 	subThreadStatus = 2; // Running
@@ -2757,7 +2742,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			if (vesseltype < 2)
+			if (vesseltype == 0)
 			{
 				opt.ChaserID = 1;
 			}
@@ -2890,9 +2875,32 @@ int ARCore::subThread()
 		}
 
 		opt.vessel = vessel;
-		opt.vesseltype = vesseltype;
+
+		if (vesseltype == 0)
+		{
+			if (vesselisdocked)
+			{
+				opt.vesseltype = 1;
+			}
+			else
+			{
+				opt.vesseltype = 0;
+			}
+		}
+		else
+		{
+			if (vesselisdocked)
+			{
+				opt.vesseltype = 3;
+			}
+			else
+			{
+				opt.vesseltype = 2;
+			}
+		}
+
 		opt.HeadsUp = REFSMMATHeadsUp;
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			opt.PresentREFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 		}
@@ -2902,7 +2910,7 @@ int ARCore::subThread()
 		}
 
 		opt.IMUAngles = VECangles;
-		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
+		opt.csmlmdocked = !GC->MissionPlanningActive && vesselisdocked;
 
 		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(mptveh))
 		{
@@ -2966,7 +2974,7 @@ int ARCore::subThread()
 		}
 
 		MATRIX3 REFSMMAT = GC->rtcc->REFSMMATCalc(&opt);
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			GC->rtcc->EMGSTSTM(1, REFSMMAT, RTCC_REFSMMAT_TYPE_CUR, GC->rtcc->RTCCPresentTimeGMT());
 		}
@@ -3186,7 +3194,7 @@ int ARCore::subThread()
 			pin.TableCode = mptveh;
 			GC->rtcc->PLAWDT(pin, pout);
 
-			if (vesseltype < 2)
+			if (vesseltype == 0)
 			{
 				sv_A.mass = pout.CSMWeight;
 			}
@@ -3200,7 +3208,7 @@ int ARCore::subThread()
 			sv_A = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			AP11ManPADOpt opt;
 
@@ -3212,7 +3220,14 @@ int ARCore::subThread()
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
-			opt.vesseltype = vesseltype;
+			if (vesselisdocked)
+			{
+				opt.vesseltype = 1;
+			}
+			else
+			{
+				opt.vesseltype = 0;
+			}
 			opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
@@ -3233,7 +3248,7 @@ int ARCore::subThread()
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
-			opt.csmlmdocked = !GC->MissionPlanningActive && docked;
+			opt.csmlmdocked = !GC->MissionPlanningActive && vesselisdocked;
 			opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
@@ -3867,7 +3882,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			if (vesseltype < 2 || vesseltype == 4 || target == NULL)
+			if (vesseltype != 1 || target == NULL)
 			{
 				Result = 0;
 				break;
@@ -4251,7 +4266,7 @@ int ARCore::subThread()
 	break;
 	case 35: //AGS Clock Sync
 	{
-		if (vesseltype < 2 || vesseltype == 4)
+		if (vesseltype != 1)
 		{
 			Result = 0;
 			break;
@@ -4372,19 +4387,41 @@ int ARCore::subThread()
 			opt.mode = 5;
 			GC->rtcc->PMSTICN(opt, res);
 
-			double attachedMass = 0.0;
-			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
+			PMMMPTInput in;
 
-			if (docked)
+			//Get all required data for PMMMPT and error checking
+			if (GetVesselParameters(GC->rtcc->med_m72.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
-				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
-			}
-			else
-			{
-				attachedMass = 0.0;
+				//Error
+				Result = 0;
+				break;
 			}
 
-			GC->rtcc->PoweredFlightProcessor(sv_now, GC->rtcc->CalcGETBase(), res.T1, GC->rtcc->med_m72.Thruster, 0.0, res.dV, false, P30TIG, dV_LVLH);
+			in.VehicleArea = 0.0;
+			in.VehicleWeight = in.CSMWeight + in.LMWeight;
+			in.IterationFlag = GC->rtcc->med_m72.Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m72.TimeFlag;
+			in.Thruster = GC->rtcc->med_m72.Thruster;
+
+			in.sv_before = res.sv_tig;
+			in.V_aft = res.sv_tig.V + res.dV;
+			in.DETU = GC->rtcc->med_m72.UllageDT;
+			in.UT = GC->rtcc->med_m72.UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m72.TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m72.DPSThrustFactor;
+
+			double GMT_TIG;
+			VECTOR3 DV;
+			if (GC->rtcc->PoweredFlightProcessor(in, GMT_TIG, DV) == 0)
+			{
+				//Save for Maneuver PAD and uplink
+				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
+				dV_LVLH = DV;
+				manpadenginetype = GC->rtcc->med_m72.Thruster;
+				HeadsUp = true;
+				manpad_ullage_dt = GC->rtcc->med_m72.UllageDT;
+				manpad_ullage_opt = GC->rtcc->med_m72.UllageQuads;
+			}
 		}
 
 		Result = 0;
@@ -4405,7 +4442,7 @@ int ARCore::subThread()
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
 			sv_tig = GC->rtcc->coast(sv_now, SPQTIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4434,7 +4471,7 @@ int ARCore::subThread()
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
 			sv_tig = GC->rtcc->coast(sv_now, DKI_TIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4473,7 +4510,7 @@ int ARCore::subThread()
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
 			sv_tig = GC->rtcc->coast(sv_now, GC->rtcc->PZLDPDIS.GETIG[0] - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4531,7 +4568,7 @@ int ARCore::subThread()
 
 			sv_tig = GC->rtcc->PZGPMELM.SV_before;
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4668,7 +4705,7 @@ int ARCore::subThread()
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
 			sv_tig = GC->rtcc->coast(sv_now, tig - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -5409,4 +5446,38 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(lm.z, 0, 0)); mem++;
 
 	if (file) fclose(file);
+}
+
+
+int ARCore::GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass)
+{
+	//Error checking
+	if (Thruster == RTCC_ENGINETYPE_CSMSPS || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS4)
+	{
+		//CSM thruster
+		if (vesseltype != 0) return 1;
+
+		TVC = 1;
+	}
+	else
+	{
+		//LM thruster
+		if (vesseltype != 1) return 1;
+
+		TVC = 3;
+	}
+
+	MED_M50 m50;
+	MED_M55 m55;
+
+	GC->rtcc->MPTMassUpdate(vessel, m50, m55, vesselisdocked);
+
+	std::bitset<4> cfg;
+	GC->rtcc->MPTGetConfigFromString(m55.ConfigCode, cfg);
+
+	Config = cfg.to_ulong();
+	CSMMass = m50.CSMWT;
+	LMMass = m50.LMWT;
+
+	return 0;
 }
