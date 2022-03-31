@@ -146,6 +146,7 @@ public:
 	void UpdateTLITargetTable();
 	void GenerateSpaceDigitalsNoMPT();
 	void LUNTARCalc();
+	int GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -175,7 +176,8 @@ public:
 	//GENERAL PARAMETERS
 	double P30TIG;				//Maneuver GET
 	VECTOR3 dV_LVLH;			//LVLH maneuver vector
-	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked, 4 = MCC
+	int vesseltype;				// 0 = CSM, 1 = LM, 2 = MCC
+	bool vesselisdocked;		// false = undocked, true = docked
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
 	bool inhibUplLOS;
 	bool PADSolGood;
