@@ -284,38 +284,40 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
+	const int DigitWidth = 19;
+	const int DigitHeight = 21;
 	int Curdigit, Curdigit2;
 
 	// Hour display on three digit
 	Curdigit = hours / 100;
 	Curdigit2 = hours / 1000;
-	oapiBlt(surf, digits, 0,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	oapiBlt(surf, digits, 0,0, DigitWidth*(Curdigit-(Curdigit2*10)),0,DigitWidth,DigitHeight);
 
 	Curdigit = hours / 10;
 	Curdigit2 = hours / 100;
-	oapiBlt(surf, digits, 0+20,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	oapiBlt(surf, digits, 0+20,0, DigitWidth*(Curdigit-(Curdigit2*10)),0,DigitWidth,DigitHeight);
 
 	Curdigit = hours;
 	Curdigit2 = hours / 10;
-	oapiBlt(surf, digits,0+39,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	oapiBlt(surf, digits,0+39,0, DigitWidth*(Curdigit-(Curdigit2*10)),0,DigitWidth,DigitHeight);
 
 	// Minute display on two digit
 	Curdigit = minutes / 10;
 	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits,0+62,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	oapiBlt(surf, digits,0+62,0, DigitWidth*(Curdigit-(Curdigit2*10)),0,DigitWidth,DigitHeight);
 
 	Curdigit = minutes;
 	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits,0+81,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	oapiBlt(surf, digits,0+81,0, DigitWidth*(Curdigit-(Curdigit2*10)),0,DigitWidth,DigitHeight);
 
 	// second display on two digit
 	Curdigit = seconds / 10;
 	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits,0+104,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	oapiBlt(surf, digits,0+104,0, DigitWidth*(Curdigit-(Curdigit2*10)),0,DigitWidth,DigitHeight);
 
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
-	oapiBlt(surf, digits,0+123,0, 19*(Curdigit-(Curdigit2*10)),0,19,21);
+	oapiBlt(surf, digits,0+123,0, DigitWidth*(Curdigit-(Curdigit2*10)),0,DigitWidth,DigitHeight);
 }
 
 void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
@@ -323,38 +325,40 @@ void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
+	const int DigitWidth = 21;
+	const int DigitHeight = 19;
 	int Curdigit, Curdigit2;
 
 	// Hour display on three digit
 	Curdigit = hours / 100;
 	Curdigit2 = hours / 1000;
-	oapiBlt(surf, digits, 0, 0, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+	oapiBlt(surf, digits, 0, 0, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 
 	Curdigit = hours / 10;
 	Curdigit2 = hours / 100;
-	oapiBlt(surf, digits, 0, 0 + 20, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+	oapiBlt(surf, digits, 0, 0 + 20, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 
 	Curdigit = hours;
 	Curdigit2 = hours / 10;
-	oapiBlt(surf, digits, 0, 0 + 39, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+	oapiBlt(surf, digits, 0, 0 + 39, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 
 	// Minute display on two digit
 	Curdigit = minutes / 10;
 	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits, 0, 0 + 62, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+	oapiBlt(surf, digits, 0, 0 + 62, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 
 	Curdigit = minutes;
 	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits, 0, 0 + 81, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+	oapiBlt(surf, digits, 0, 0 + 81, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 
 	// second display on two digit
 	Curdigit = seconds / 10;
 	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits, 0, 0 + 104, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+	oapiBlt(surf, digits, 0, 0 + 104, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 
 	Curdigit = seconds;
 	Curdigit2 = seconds / 10;
-	oapiBlt(surf, digits, 0, 0 + 123, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
+	oapiBlt(surf, digits, 0, 0 + 123, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 }
 
 void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent)
@@ -418,27 +422,29 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	// Digits are 16x19.
 	//
 
+	const int DigitWidth = 19;
+	const int DigitHeight = 21;
 	int Curdigit, Curdigit2;
 
 	// Minute display on two digit
 	Curdigit = minutes / 10;
 	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits, 0, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
+	oapiBlt(surf, digits, 0, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
 
 	Curdigit = minutes;
 	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits, 20, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
+	oapiBlt(surf, digits, 20, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
 
-	//oapiBlt(surf, digits, 37, 0, 192, 0, 4, 19);
+	//oapiBlt(surf, digits, 37, 0, DigitWidth2, 0, 4, DigitWidth);
 
 	// second display on two digit
 	Curdigit = seconds / 10;
 	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits, 43, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
+	oapiBlt(surf, digits, 43, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
 
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
-	oapiBlt(surf, digits, 62, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
+	oapiBlt(surf, digits, 62, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
 }
 
 EventTimer::EventTimer(PanelSDK &p) : MissionTimer(p)
