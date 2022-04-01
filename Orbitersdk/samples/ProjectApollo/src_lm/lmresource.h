@@ -844,6 +844,9 @@
 #define IDB_BORDER_104x106              2021
 #define IDB_BORDER_286x197              2022
 #define AID_DUMMY_PANEL_AREA			2023
+#define IDB_DSKY_DISPA					2024
+#define IDB_DIGITALA					2025
+#define IDB_DIGITALDISP2A				2026
 
 // VC Active Areas
 #define AID_VC_OVERHEADHATCH            3000
