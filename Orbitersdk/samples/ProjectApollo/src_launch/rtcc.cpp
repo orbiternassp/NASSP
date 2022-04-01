@@ -5301,6 +5301,9 @@ int RTCC::LunarDescentPlanningProcessor(SV sv)
 	opt.T_PD = GZGENCSN.LDPPTimeofPDI;
 	opt.W_LM = 0.0;
 
+	//Mode 6 doesn't work yet
+	if (opt.MODE == 6) return 1;
+
 	LDPP ldpp;
 	LDPPResults res;
 	ldpp.Init(opt);
