@@ -299,8 +299,8 @@ void Saturn::InitPanel (int panel)
 
 	srf[SRF_INDICATOR]								= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 	srf[SRF_NEEDLE]									= oapiCreateSurface (LOADBMP (IDB_NEEDLE));
-	srf[SRF_DIGITAL] = (agc.CheckVariant()) ? oapiCreateSurface(LOADBMP(IDB_DIGITALA)) : oapiCreateSurface(LOADBMP(IDB_DIGITAL));
-	srf[SRF_DIGITAL2] = (agc.CheckVariant()) ? oapiCreateSurface(LOADBMP(IDB_DIGITAL2A)) : oapiCreateSurface(LOADBMP(IDB_DIGITAL2));
+	srf[SRF_DIGITAL]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+	srf[SRF_DIGITAL2]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL2));
 	srf[SRF_SWITCHUP]								= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 	srf[SRF_SWITCHLEVER]							= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
 	srf[SRF_SWITCHGUARDS]							= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS));
@@ -325,7 +325,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_THREEPOSSWITCH305]						= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH305));
 	srf[SRF_THREEPOSSWITCH305LEFT]					= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH305LEFT));
 	srf[SRF_SWITCH305LEFT]							= oapiCreateSurface (LOADBMP (IDB_SWITCH305LEFT));
-	srf[SRF_DSKYDISP] = (agc.CheckVariant()) ? oapiCreateSurface(LOADBMP(IDB_DSKY_DISPA)) : oapiCreateSurface(LOADBMP(IDB_DSKY_DISP));
+	srf[SRF_DSKYDISP]       						= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));
 	srf[SRF_FDAI]	        						= oapiCreateSurface (LOADBMP (IDB_FDAI));
 	srf[SRF_FDAIROLL]       						= oapiCreateSurface (LOADBMP (IDB_FDAI_ROLL));
 	srf[SRF_CWSLIGHTS]       						= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));

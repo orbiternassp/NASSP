@@ -538,9 +538,9 @@ void Saturn::InitVC()
 
 	// Load CM VC surfaces
 
-	srf[SRF_VC_DIGITALDISP] = (agc.CheckVariant()) ? oapiLoadTexture("ProjectApollo/VC/digitaldispa.dds") : oapiLoadTexture("ProjectApollo/VC/digitaldisp.dds");
-	srf[SRF_VC_DIGITALDISP2] = (agc.CheckVariant()) ? oapiLoadTexture("ProjectApollo/VC/digitaldisp_2a.dds") : oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
-	srf[SRF_VC_DSKYDISP] = (agc.CheckVariant()) ? oapiLoadTexture("ProjectApollo/VC/dsky_dispa.dds") : oapiLoadTexture("ProjectApollo/VC/dsky_disp.dds");
+	srf[SRF_VC_DIGITALDISP] = oapiLoadTexture("ProjectApollo/VC/digitaldisp.dds");
+	srf[SRF_VC_DIGITALDISP2] = oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
+	srf[SRF_VC_DSKYDISP] = oapiLoadTexture("ProjectApollo/VC/dsky_disp.dds");
 	srf[SRF_VC_DSKY_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/dsky_lights.dds");
 	srf[SRF_VC_MASTERALARM] = oapiLoadTexture("ProjectApollo/VC/masteralarmbright.dds");
 	srf[SRF_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/cw_lights.dds");
@@ -561,7 +561,7 @@ void Saturn::InitVC()
 	srf[SRF_VC_SPSMININDICATOR] = oapiLoadTexture("ProjectApollo/VC/SPSmin_indicator.dds");
 	srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV] = oapiLoadTexture("ProjectApollo/VC/thumbwheel_large_fonts_inv.dds");
 	srf[SRF_VC_CWS_GNLIGHTS] = oapiLoadTexture("ProjectApollo/VC/csm_lower_equip_bay_lights.dds");
-	srf[SRF_VC_DIGITAL90] = (agc.CheckVariant()) ? oapiLoadTexture("ProjectApollo/VC/digitaldisp90a.dds") : oapiLoadTexture("ProjectApollo/VC/digitaldisp90.dds");
+	srf[SRF_VC_DIGITAL90] = oapiLoadTexture("ProjectApollo/VC/digitaldisp90.dds");
 	srf[SRF_VC_EVENT_TIMER_DIGITS90] = oapiLoadTexture("ProjectApollo/VC/event_timer90.dds");
 
 	// Set Colour Key
