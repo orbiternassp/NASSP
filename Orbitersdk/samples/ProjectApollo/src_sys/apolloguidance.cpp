@@ -55,7 +55,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	LastTimestep = 0;
 	LastCycled = 0;
 	AGCHeat = NULL;
-	GetLocalTime(&EarthTime);
 
 	OtherVesselName[0] = 0;
 
@@ -100,11 +99,6 @@ ApolloGuidance::~ApolloGuidance()
 #ifdef _DEBUG
 	fclose(out_file);
 #endif
-}
-
-bool ApolloGuidance::CheckVariant()
-{
-	return (EarthTime.wMonth == 4 && EarthTime.wDay == 1);
 }
 
 void ApolloGuidance::InitVirtualAGC(char *binfile)

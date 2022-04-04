@@ -367,7 +367,6 @@ public:
 	bool GenericTimestep(double simt, double simdt);
 	bool GenericReadMemory(unsigned int loc, int &val);
 	void GenericWriteMemory(unsigned int loc, int val);
-	bool CheckVariant();
 
 	int16_t ConvertDecimalToAGCOctal(double x, bool highByte);
 
@@ -437,10 +436,6 @@ public:
 	/// \brief The sound library for the vessel we're controlling.
 	///
 	SoundLib &soundlib;
-
-	///
-	/// \brief Current time on Earth
-	SYSTEMTIME EarthTime;
 
 	///
 	/// The rendevouz programs require the AGC to track another vessel which is the target
