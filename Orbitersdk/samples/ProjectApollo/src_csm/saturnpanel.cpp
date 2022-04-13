@@ -291,7 +291,7 @@ void Saturn::InitPanel (int panel)
 
 {
 	int kk;
-      for (kk = 0; kk < 2500; kk++)
+    for (kk = 0; kk < 2500; kk++)
 	{				
 		lastredrawtimechrono[kk] = std::chrono::high_resolution_clock::now() - std::chrono::hours(1);
 	}
@@ -4359,7 +4359,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	
 			
 	sttime = std::chrono::high_resolution_clock::now();
-      duration = std::chrono::duration_cast<std::chrono::milliseconds> (sttime - lastredrawtimechrono[id]);
+    duration = std::chrono::duration_cast<std::chrono::milliseconds> (sttime - lastredrawtimechrono[id]);
 	_int64 elapsedMs = duration.count();
 
 	if ((id == AID_EMSDVDISPLAY) || (id == AID_GPFPI_METERS))
