@@ -953,6 +953,8 @@ void Saturn::initSaturn()
 	FovExternal = false;
 	FovSave = 0;
 
+	Panel2DRefresh = 200;
+
 	//
 	// Save the last view offset set.
 	//
@@ -2354,6 +2356,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf (line+11, "%d", &value);
 			IsMultiThread=(value>0)?true:false;
 		}
+		else if (!strnicmp(line, "PANEL2DREFRESH", 14)) {
+			double dd;
+			sscanf(line + 14, "%lf", &dd);
+			Panel2DRefresh = (int)(dd * 1000);
+		}
 		else if (!strnicmp(line, "NOMANUALTLI", 11)) {
 			//
 			// NOMANUALTLI isn't saved in the scenario, this is solely to allow you
@@ -2900,10 +2907,12 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	// Panel flash counter.
 	//
 
+/* elsewhere now
 	if (MissionTime >= NextFlashUpdate) {
 		PanelFlashOn = !PanelFlashOn;
 		NextFlashUpdate = MissionTime + 0.25;
 	}
+*/
 
 	//
 	// Timestep tracking.

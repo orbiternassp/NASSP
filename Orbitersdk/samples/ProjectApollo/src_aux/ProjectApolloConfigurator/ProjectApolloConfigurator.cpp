@@ -69,6 +69,7 @@ static struct {
 	int Saturn_VAGCChecklistAutoSlow;
 	int Saturn_VAGCChecklistAutoEnabled;
 	int Saturn_VcInfoEnabled;
+	double Saturn_Panel2DRefresh;
 } gParams;
 
 
@@ -137,7 +138,10 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf(line + 14, "%i", &gParams.Saturn_VESIM);
 		} else if (!strnicmp(line, "VCINFOENABLED", 13)) {
 			sscanf(line + 13, "%i", &gParams.Saturn_VcInfoEnabled);
+		} else if (!strnicmp(line, "PANEL2DREFRESH", 14)) {
+			sscanf(line + 14, "%lf", &gParams.Saturn_Panel2DRefresh);
 		}
+
 	}	
 	oapiCloseFile (hFile, FILE_IN);
 }
@@ -145,7 +149,11 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 bool ProjectApolloConfigurator::clbkOpen (HWND hLaunchpad)
 {
 	// respond to user double-clicking the item in the list
+#ifdef _WIN64
+	DialogBox(gParams.hInst, MAKEINTRESOURCE(IDD_MYFRAME), hLaunchpad, (DLGPROC) DlgProcFrame);
+#else
 	DialogBox(gParams.hInst, MAKEINTRESOURCE (IDD_MYFRAME), hLaunchpad, DlgProcFrame);
+#endif
 	return true;
 }
 
@@ -218,6 +226,10 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	sprintf(cbuf, "VCINFOENABLED %d", gParams.Saturn_VcInfoEnabled);
 	oapiWriteLine(hFile, cbuf);
 
+	sprintf(cbuf, "PANEL2DREFRESH %f", gParams.Saturn_Panel2DRefresh);
+	oapiWriteLine(hFile, cbuf);
+
+
 	oapiCloseFile (hFile, FILE_OUT);
 }
 
@@ -230,6 +242,7 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 	RECT rc;
 	char buffer[100];
 	int i;
+	double d;
 
 	switch (uMsg) {
 	case WM_INITDIALOG: // display the current value
@@ -404,6 +417,14 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 				else {
 					gParams.Saturn_VcInfoEnabled = 0;
 				}
+				SendDlgItemMessage(gParams.hDlgTabs[2], IDC_EDIT_PANEL2DREFRESH, WM_GETTEXT, 4, (LPARAM)(LPCTSTR)buffer);
+				if (sscanf(buffer, "%lf", &d) == 1) {
+					gParams.Saturn_Panel2DRefresh = d;
+				}
+				else {
+					gParams.Saturn_Panel2DRefresh = 0.2;
+				}
+
 
 				EndDialog (hWnd, 0);
 				return 0;
@@ -505,6 +526,9 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 		SendDlgItemMessage(hWnd, IDC_CHECK_VCINFOENABLED, BM_SETCHECK, gParams.Saturn_VcInfoEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
 
+		sprintf(buffer, "%f", gParams.Saturn_Panel2DRefresh);
+		SendDlgItemMessage(hWnd, IDC_EDIT_PANEL2DREFRESH, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
+
 		UpdateControlState(hWnd);
 		return TRUE;
 
@@ -530,7 +554,11 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG)) {
 			std::string configdir = "Config\\ProjectApollo\\Vesim\\";
 			LPDIRECTINPUT8 dx8ppv;
+#ifdef _WIN64
+			HRESULT hr = DirectInput8Create((HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&dx8ppv, NULL); // Give us a DirectInput context
+#else
 			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLong(hWnd, GWL_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
+#endif
 			if (!FAILED(hr)) {
 				Vesim lmvm(NULL, NULL), csmvm(NULL, NULL);
 				lmvm.setupDevices("LM", dx8ppv);
@@ -679,6 +707,7 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 	gParams.Saturn_VAGCChecklistAutoSlow = 1;
 	gParams.Saturn_VAGCChecklistAutoEnabled = 0;
 	gParams.Saturn_VcInfoEnabled = 0;
+	gParams.Saturn_Panel2DRefresh = 0.2;
 
 	gParams.item = new ProjectApolloConfigurator;
 	for (i = 0; i < MAX_TABNUM; i++)

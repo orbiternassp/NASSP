@@ -42,6 +42,9 @@
 #define IDC_CHECK_VCINFOENABLED         1030
 #define IDC_BUTTON1                     1031
 #define IDC_BUTTON_CREATECONFIG         1032
+#define IDC_STATIC_PANEL2DREFRESH       1033
+#define IDC_EDIT_PANEL2DREFRESH         1034
+
 
 // Next default values for new objects
 // 

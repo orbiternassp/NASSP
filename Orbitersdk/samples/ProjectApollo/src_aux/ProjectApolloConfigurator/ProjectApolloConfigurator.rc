@@ -98,6 +98,10 @@ BEGIN
     GROUPBOX        "Other",IDC_STATIC,7,105,219,32
     CONTROL         "Enable VC flight instruments in debug string (e.g. during PDI)",IDC_CHECK_VCINFOENABLED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,119,206,10
+	GROUPBOX        "Panel2D", IDC_STATIC, 7, 155, 219, 32
+	LTEXT           "Panel2D refresh (in sec 0=unlimited):", IDC_STATIC_PANEL2DREFRESH, 13, 167, 116, 10
+	EDITTEXT        IDC_EDIT_PANEL2DREFRESH, 134, 165, 50, 13, ES_RIGHT | ES_AUTOHSCROLL 
+
 END
 
 

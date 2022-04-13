@@ -1224,6 +1224,15 @@ void LEM::ReleaseSurfaces ()
 void LEM::InitPanel (int panel)
 
 {
+
+
+	int kk;
+	for (kk = 0; kk < 2500; kk++)
+	{
+		lastredrawtimechrono[kk] = std::chrono::high_resolution_clock::now() - std::chrono::hours(1);					
+	}
+
+
     // LEM Main Panel
 		srf[0]						= oapiCreateSurface (LOADBMP (IDB_ECSG));
 		srf[SRF_INDICATOR]			= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
@@ -3074,6 +3083,8 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 {
 	static int ctrl = 0;
 
+	lastredrawtimechrono[id] = std::chrono::high_resolution_clock::now() - std::chrono::minutes(1);
+
 	//
 	// Special handling ORDEAL
 	//
@@ -3210,6 +3221,29 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf) 
 
 {
+	std::chrono::steady_clock::time_point sttime;
+	std::chrono::milliseconds duration;
+
+	sttime = std::chrono::high_resolution_clock::now();
+
+	duration = std::chrono::duration_cast<std::chrono::milliseconds>
+		(sttime - lastredrawtimechrono[id]);
+
+	_int64 elapsedMs = duration.count();
+
+	if ((elapsedMs) < Panel2DRefresh)	
+		return false;
+	else
+	{
+		lastredrawtimechrono[id] = sttime;
+		if (MissionTime >= NextFlashUpdate) {
+			PanelFlashOn = !PanelFlashOn;
+			if (Panel2DRefresh < 0.2)
+				NextFlashUpdate = MissionTime + 0.2;
+			else NextFlashUpdate = MissionTime + (double)Panel2DRefresh / 1000.0;
+		}
+	}
+
 	//
 	// Special handling ORDEAL
 	//
@@ -3269,22 +3303,27 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		{
 			dsky.RenderLights(surf, srf[SRF_DSKY], 0, 0, false);
 		}
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_DSKY_DISPLAY:
 		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_LM_DEDA_LIGHTS:
 		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTS]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_LM_DEDA_DISP:
 		deda.RenderData(surf, srf[SRF_DIGITALDISP2]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_LM_DEDA_ADR:
 		deda.RenderAdr(surf, srf[SRF_DIGITALDISP2]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	/*case AID_LM_DEDA_KEYS:
@@ -3500,6 +3539,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.z < -41) { errors.z = -41; } }
 			fdaiLeft.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
+		lastredrawtimechrono[id] = sttime - std::chrono::milliseconds(100);
 		return true;
 
 	case AID_FDAI_RIGHT:
@@ -3568,6 +3608,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.z < -41) { errors.z = -41; } }
 			fdaiRight.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
+		lastredrawtimechrono[id] = sttime - std::chrono::milliseconds(100);
 		return true;
 
 	case AID_MISSION_CLOCK:
@@ -3580,6 +3621,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_AOT_RETICLE:
 		RedrawPanel_AOTReticle(surf);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_AOT_RETICLE_KNOB:
@@ -3592,6 +3634,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_AOT_RETICLEDISPLAY:
 		optics.PaintReticleAngle(surf, srf[SRF_AOT_FONT]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_COAS:
@@ -3605,9 +3648,11 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_RANGE_TAPE:
 		RadarTape.RenderRange(surf);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 	case AID_RATE_TAPE:
 		RadarTape.RenderRate(surf);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_LEM_MA_LEFT:

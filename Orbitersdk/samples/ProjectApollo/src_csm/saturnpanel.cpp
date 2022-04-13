@@ -290,6 +290,13 @@ void Saturn::ReleaseSurfaces ()
 void Saturn::InitPanel (int panel)
 
 {
+	int kk;
+      for (kk = 0; kk < 2500; kk++)
+	{				
+		lastredrawtimechrono[kk] = std::chrono::high_resolution_clock::now() - std::chrono::hours(1);
+	}
+	
+
 	//
 	// I'm pretty sure that some of these bitmaps aren't used anymore.
 	// We need to go through these and delete the unused ones at some
@@ -3604,6 +3611,8 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 {
 	static int ctrl = 0;
 
+	lastredrawtimechrono[id] = std::chrono::high_resolution_clock::now() - std::chrono::minutes(1);
+
 	//
 	// Foreward the mouse clicks on the optics cover to the DSKYs 
 	// because of overlapping
@@ -4344,6 +4353,36 @@ void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src
 bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 {
+
+	std::chrono::steady_clock::time_point sttime;
+	std::chrono::milliseconds duration;
+	
+			
+	sttime = std::chrono::high_resolution_clock::now();
+      duration = std::chrono::duration_cast<std::chrono::milliseconds> (sttime - lastredrawtimechrono[id]);
+	_int64 elapsedMs = duration.count();
+
+	if ((id == AID_EMSDVDISPLAY) || (id == AID_GPFPI_METERS))
+	{				
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
+	}
+	else
+	{
+		if ((elapsedMs) < Panel2DRefresh)  
+			return false;
+		else
+		{			
+			lastredrawtimechrono[id] = sttime;
+			if (MissionTime >= NextFlashUpdate) {
+				PanelFlashOn = !PanelFlashOn;
+				if(Panel2DRefresh < 0.2)
+				     NextFlashUpdate = MissionTime + 0.2;
+				else NextFlashUpdate = MissionTime + (double)Panel2DRefresh/1000.0;
+			}
+		}
+	}
+
+
 	// Enable this to trace the redraws, but then it's running horrible slow!
 	// char tracebuffer[100];
 	// sprintf(tracebuffer, "Saturn::clbkPanelRedrawEvent id %i", id);
@@ -4456,6 +4495,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf, srf[SRF_OPTICS_DSKY], 0, 0, 0, 0, 303, 349);
 		dsky2.RenderLights(surf, srf[SRF_DSKY], 27, 28, false);
 		dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP], 171, 23);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 	}
 
 	//
@@ -4561,9 +4601,8 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		if (optics.OpticsCovered && stage >= LAUNCH_STAGE_ONE) {
 			oapiBlt(surf,srf[SRF_CSM_TELESCOPECOVER], 0, 0, 0, 0, 536, 535);
 		}
-
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		drawReticle(surf, optics.TeleShaft, PanelPixelHeight, ReticleLineCnt[0], ReticleLineLen[0], ReticleLine[0], ReticlePoint);
-
 		return true;
 
 	case AID_CSM_SEXTANTCOVER:
@@ -4571,17 +4610,18 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		if (optics.OpticsCovered && stage >= LAUNCH_STAGE_ONE) {
 			oapiBlt(surf,srf[SRF_CSM_SEXTANTCOVER], 0, 0, 0, 0, 535, 535);
 		}
-
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		drawReticle(surf, optics.SextShaft, PanelPixelHeight, ReticleLineCnt[1], ReticleLineLen[1], ReticleLine[1], ReticlePoint);
-
 		return true;
 
 	case AID_DSKY_LIGHTS:
 		dsky.RenderLights(surf, srf[SRF_DSKY]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_DSKY_DISPLAY:
 		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	// ASCP
@@ -4639,6 +4679,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
 			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
 		}
+		lastredrawtimechrono[id] = sttime - std::chrono::milliseconds(100);
 		return true;
 
 	case AID_FDAI_RIGHT:
@@ -4655,14 +4696,17 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
 			fdaiRight.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
+		lastredrawtimechrono[id] = sttime - std::chrono::milliseconds(100);
 		return true;
 
 	case AID_DSKY2_LIGHTS:
 		dsky2.RenderLights(surf, srf[SRF_DSKY]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_DSKY2_DISPLAY:
 		dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
+		lastredrawtimechrono[id] = sttime - std::chrono::minutes(1);
 		return true;
 
 	case AID_ABORT_LIGHT:

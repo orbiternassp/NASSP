@@ -556,6 +556,8 @@ void LEM::Init()
 	VcInfoActive = false;
 	VcInfoEnabled = false;
 
+	Panel2DRefresh = 200;
+
 	Crewed = true;
 	AutoSlow = false;
 
@@ -1209,11 +1211,12 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	//
 	// Panel flash counter.
 	//
-
+      /* elsewhere now
 	if (MissionTime >= NextFlashUpdate) {
 		PanelFlashOn = !PanelFlashOn;
 		NextFlashUpdate = MissionTime + 0.25;
 	}
+      */
 
 	SystemsTimestep(MissionTime, simdt);
 
@@ -1952,6 +1955,11 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		int value;
 		sscanf (line+11, "%d", &value);
 		isMultiThread=(value>0)?true:false;
+	}
+	else if (!strnicmp(line, "PANEL2DREFRESH", 14)) {
+		double dd;
+		sscanf(line + 14, "%lf", &dd);
+		Panel2DRefresh = (int)(dd * 1000);
 	}
 	else if (!strnicmp (line, "JOYSTICK_RHC", 12)) {
 		sscanf (line + 12, "%i", &rhc_id);

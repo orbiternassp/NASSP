@@ -3380,6 +3380,7 @@ protected:
 
 	SaturnAltimeter Altimeter;
 
+      std::chrono::steady_clock::time_point lastredrawtimechrono[2500];
 
 	///
 	/// Stage is the main stage of the flight.
@@ -4004,6 +4005,7 @@ protected:
 	double FovSave;
 	int maxTimeAcceleration;
 	bool IsMultiThread;
+	int  Panel2DRefresh;
 
 	//
 	// Helpers for drawing the telescope and sextant reticles.

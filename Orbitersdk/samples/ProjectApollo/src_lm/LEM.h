@@ -1593,6 +1593,8 @@ protected:
 	UINT stage;
 	int status;
 
+	std::chrono::steady_clock::time_point lastredrawtimechrono[2500];
+
 	//
 	// Panel flash.
 	//
@@ -1721,6 +1723,8 @@ protected:
 	bool RefreshPanelIdInTimestep;
 	bool VcInfoActive;
 	bool VcInfoEnabled;
+	int  Panel2DRefresh;
+
 
 	//
 	// Random motion.
