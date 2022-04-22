@@ -108,8 +108,9 @@ private:
 	H_system *HYDRAULIC;
 	Thermal_engine *THERMAL;
     VesselMgmt *VESSELMGMT;
+	
+	//thread pool and work queue definitions 
 	ThreadPool spsdkThreadPool;
-
 	PoolWorkQueue electricalWorkQueue;
 	PoolWorkQueue hydraulicWorkQueue;
 	PoolWorkQueue thermalWorkQueue;
