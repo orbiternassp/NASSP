@@ -34,8 +34,7 @@
 class PoolWorkQueue {
 public:
 	inline void add(std::function<void(double)> function) { queue.push_back(function); }
-	inline std::vector<std::function<void(double)>> getQueue() { return queue; }
-private:
+	//inline std::vector<std::function<void(double)>> getQueue() { return queue; }
 	std::vector<std::function<void(double)>> queue;
 };
 
