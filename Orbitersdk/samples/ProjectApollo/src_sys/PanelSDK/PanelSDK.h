@@ -26,6 +26,7 @@
 #define __PANELSDK_H_
 
 #include <stdio.h>
+#include "SPSDK_WorkerThread.h"
 
 #define PANELSDK_VERSION	 "1.9.10"
 
@@ -59,7 +60,6 @@ class VesselMgmt;
 class e_object;
 class h_object;
 class therm_obj;
-class SPSDK_WorkerPool;
 
 ///
 /// \ingroup PanelSDK
@@ -108,6 +108,7 @@ private:
 	H_system *HYDRAULIC;
 	Thermal_engine *THERMAL;
     VesselMgmt *VESSELMGMT;
+	ThreadPool spsdkThreadPool;
 
 	double lastTime;
 	bool firstTimestepDone;
