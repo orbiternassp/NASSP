@@ -110,6 +110,10 @@ private:
     VesselMgmt *VESSELMGMT;
 	ThreadPool spsdkThreadPool;
 
+	PoolWorkQueue electricalWorkQueue;
+	PoolWorkQueue hydraulicWorkQueue;
+	PoolWorkQueue thermalWorkQueue;
+
 	double lastTime;
 	bool firstTimestepDone;
 

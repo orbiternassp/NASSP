@@ -31,6 +31,15 @@
 #include <functional>
 #include <atomic>
 
+class PoolWorkQueue {
+public:
+	inline void push(std::function<void(double)> function) { queue.push_back(function); }
+	inline std::vector<std::function<void(double)>> getQueue() { return queue; }
+private:
+	std::vector<std::function<void(double)>> queue;
+};
+
+
 
 class ThreadPool {
 public:
