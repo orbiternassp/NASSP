@@ -76,9 +76,6 @@ void ThreadPool::StartWork(const double Setdt, const std::vector<void*> SetQueue
 void ThreadPool::workerThreadFunction()
 {
 	void* Job;				//pointer to the system that needs updating
-	h_object* h_ptr;		//pointer to hydraulic objects so that their members can be used
-	e_object* e_ptr;		//pointer to electrical objects so that their members can be used
-	therm_obj* therm_ptr;	//pointer to thermal objects so that their members can be used
 
 	while (!terminate) {
 
@@ -104,24 +101,19 @@ void ThreadPool::workerThreadFunction()
 
 		switch (calltype) {
 			case SPSDK_ThreadPoolType::systype::hydraulicRefresh:
-				h_ptr = (h_object*)Job;
-				h_ptr->refresh(dt);
+				((h_object*)Job)->refresh(dt);
 				break;
 			case SPSDK_ThreadPoolType::systype::hydraulicUpdate:
-				h_ptr = (h_object*)Job;
-				h_ptr->UpdateFlow(dt);
+				((h_object*)Job)->UpdateFlow(dt);
 				break;
 			case SPSDK_ThreadPoolType::systype::electricRefresh:
-				e_ptr = (e_object*)Job;
-				e_ptr->refresh(dt);
+				((e_object*)Job)->refresh(dt);
 				break;
 			case SPSDK_ThreadPoolType::systype::electricUpdate:
-				e_ptr = (e_object*)Job;
-				e_ptr->UpdateFlow(dt);
+				((e_object*)Job)->UpdateFlow(dt);
 				break;
 			case SPSDK_ThreadPoolType::systype::thermal:
-				therm_ptr = (therm_obj*)Job;
-				therm_ptr->thermic(dt);
+				((therm_obj*)Job)->thermic(dt);
 				break;
 		}
 	}
