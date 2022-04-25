@@ -42,8 +42,6 @@ ThreadPool::ThreadPool()
 		numThreads = 1;
 	}
 
-	numThreads = 4;
-
 	idleThreads = numThreads;
 	for (int i = 0; i < numThreads; i++) {
 		workerPool.push_back(std::thread(&ThreadPool::workerThreadFunction, this));
