@@ -31,28 +31,24 @@
 #include <functional>
 #include <atomic>
 
-class PoolWorkQueue {
-public:
-	inline void add(std::function<void(double)> function) { queue.push_back(function); }
-	//inline std::vector<std::function<void(double)>> getQueue() { return queue; }
-	std::vector<std::function<void(double)>> queue;
-};
-
-
+namespace SPSDK_ThreadPoolType {
+	enum systype { hydraulicRefresh, hydraulicUpdate, electricRefresh, electricUpdate, thermal };
+}
 
 class ThreadPool {
 public:
 	ThreadPool();
 	~ThreadPool();
-	void StartWork(const double Setdt, const std::vector<std::function<void(double)>> SetQueue);
+	void StartWork(const double Setdt, const std::vector<void*> SetQueue, SPSDK_ThreadPoolType::systype typ);
 private:
+	SPSDK_ThreadPoolType::systype calltype;
 	double dt;
 	//std::atomic<bool> working;
 	std::atomic<bool> terminate;
 	int idleThreads;
 	int numThreads;
 	std::vector<std::thread> workerPool;
-	std::vector<std::function<void(double)>> queue;
+	std::vector<void*> queue;
 	std::condition_variable cv;
 	std::condition_variable cvWork;
 	std::mutex readQueueLock;

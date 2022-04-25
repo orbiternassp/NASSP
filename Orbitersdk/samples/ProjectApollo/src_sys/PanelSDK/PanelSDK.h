@@ -111,9 +111,10 @@ private:
 	
 	//thread pool and work queue definitions 
 	ThreadPool spsdkThreadPool;
-	PoolWorkQueue electricalWorkQueue;
-	PoolWorkQueue hydraulicWorkQueue;
-	PoolWorkQueue thermalWorkQueue;
+	std::vector<void*> electricalWorkQueue;
+	std::vector<void*> hydraulicWorkQueue;
+	std::vector<void*> thermalWorkQueue;
+	void makePoolWorkQueue();
 
 	double lastTime;
 	bool firstTimestepDone;

@@ -253,13 +253,12 @@ void PanelSDK::Timestep(double time)
 	double mintFactor = __max(dt / 100.0, 0.5);
 	double tFactor = __min(mintFactor, dt);
 	while (dt > 0) {
-		/*THERMAL->Radiative(tFactor);
-		HYDRAULIC->Refresh(tFactor);
-		ELECTRIC->Refresh(tFactor);*/
 
-		spsdkThreadPool.StartWork(tFactor, thermalWorkQueue.queue);
-		spsdkThreadPool.StartWork(tFactor, hydraulicWorkQueue.queue);
-		spsdkThreadPool.StartWork(tFactor, electricalWorkQueue.queue);
+		spsdkThreadPool.StartWork(tFactor, thermalWorkQueue, SPSDK_ThreadPoolType::systype::thermal);
+		spsdkThreadPool.StartWork(tFactor, hydraulicWorkQueue, SPSDK_ThreadPoolType::systype::hydraulicRefresh);
+		//spsdkThreadPool.StartWork(tFactor, hydraulicWorkQueue, SPSDK_ThreadPoolType::systype::hydraulicUpdate); //not used currently
+		spsdkThreadPool.StartWork(tFactor, electricalWorkQueue, SPSDK_ThreadPoolType::systype::electricRefresh);
+		spsdkThreadPool.StartWork(tFactor, electricalWorkQueue, SPSDK_ThreadPoolType::systype::electricUpdate);
 
 		dt -= tFactor;
 		tFactor = __min(mintFactor, dt);
@@ -267,15 +266,12 @@ void PanelSDK::Timestep(double time)
 }
 
 void PanelSDK::SimpleTimestep(double simdt) 
-
 {
-	/*THERMAL->Radiative(simdt);
-	HYDRAULIC->Refresh(simdt);
-	ELECTRIC->Refresh(simdt);*/
-
-	spsdkThreadPool.StartWork(simdt, thermalWorkQueue.queue);
-	spsdkThreadPool.StartWork(simdt, hydraulicWorkQueue.queue);
-	spsdkThreadPool.StartWork(simdt, electricalWorkQueue.queue);
+	spsdkThreadPool.StartWork(simdt, thermalWorkQueue, SPSDK_ThreadPoolType::systype::thermal);
+	spsdkThreadPool.StartWork(simdt, hydraulicWorkQueue, SPSDK_ThreadPoolType::systype::hydraulicRefresh);
+	//spsdkThreadPool.StartWork(simdt, hydraulicWorkQueue, SPSDK_ThreadPoolType::systype::hydraulicUpdate); //not used currently
+	spsdkThreadPool.StartWork(simdt, electricalWorkQueue, SPSDK_ThreadPoolType::systype::electricRefresh);
+	spsdkThreadPool.StartWork(simdt, electricalWorkQueue, SPSDK_ThreadPoolType::systype::electricUpdate);
 }
 
 void PanelSDK::SetStage(int stage,int load)
@@ -319,20 +315,19 @@ void PanelSDK::AddElectrical(e_object *e, bool can_delete)
 	ELECTRIC->AddSystem(e);
 	e->deletable = can_delete;
 
-	std::function<void(double)> refreshPointer = std::bind(&e_object::refresh,	e,	std::placeholders::_1);
-	electricalWorkQueue.add(refreshPointer);
+	electricalWorkQueue.push_back(e);
 }
 
 void PanelSDK::AddHydraulic(h_object *h)
 {
 	HYDRAULIC->AddSystem(h);
-	std::function<void(double)> refreshPointer = std::bind(&h_object::refresh, h, std::placeholders::_1);
-	hydraulicWorkQueue.add(refreshPointer);
+
+	hydraulicWorkQueue.push_back(h);
 }
 
 void PanelSDK::AddThermal(therm_obj *t)
 {
 	THERMAL->AddThermalObject(t,false);
-	std::function<void(double)> refreshPointer = std::bind(&therm_obj::thermic, t, std::placeholders::_1);
-	thermalWorkQueue.add(refreshPointer);
+
+	thermalWorkQueue.push_back(t);
 }

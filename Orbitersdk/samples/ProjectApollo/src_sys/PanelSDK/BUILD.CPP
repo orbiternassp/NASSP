@@ -94,6 +94,36 @@ void BuildError(int err)
 }
 
 
+void PanelSDK::makePoolWorkQueue()
+{
+	{
+		ship_object* runner;
+		runner = HYDRAULIC->List.next;
+		while (runner) {
+			hydraulicWorkQueue.push_back(runner);
+			runner = runner->next;
+		}
+	}
+
+	{
+		ship_object* runner;
+		runner = ELECTRIC->List.next;
+		while (runner) {
+			electricalWorkQueue.push_back(runner);
+			runner = runner->next;
+		}
+	}
+
+	{
+		therm_obj* runner;
+		runner = THERMAL->List.next_t;
+		while (runner) {
+			thermalWorkQueue.push_back(runner);
+			runner = runner->next_t;
+		}
+	}
+}
+
 //*******************************************************
 // PanelResouces
 // Loads up a bunch of instrument descriptors from a prd file
@@ -185,72 +215,76 @@ fclose(resources);
 // Loads everything needed from the .cfg file of the module
 //
 //*******************************************************
-void PanelSDK::InitFromFile(char *FileName)
+void PanelSDK::InitFromFile(char* FileName)
+{
+	char* line;
+	char name[40];
+	char type[40];
+	int stage;
+	sprintf(name, "Config\\\\%s.cfg", FileName);
 
-{char *line;
-char name[40];
-char type[40];
-int stage;
-sprintf(name,"Config\\\\%s.cfg",FileName);
-
-config_file=fopen(name,"rt");
+	config_file = fopen(name, "rt");
 
 #ifdef _DEBUG
-debug=fopen("ProjectApollo PanelSDK.log","wt");
+	debug = fopen("ProjectApollo PanelSDK.log", "wt");
 #endif
 
-while (!feof(config_file))
-{
-	line=ReadConfigLine();
-	if (Compare(line,"Panel"))	//pointer to the PRD
-		{sscanf(line+7,"%s",name);
-				PanelResources(name);
+	while (!feof(config_file))
+	{
+		line = ReadConfigLine();
+		if (Compare(line, "Panel"))	//pointer to the PRD
+		{
+			sscanf(line + 7, "%s", name);
+			PanelResources(name);
 		}
-	else if (Compare(line,"<VESSEL>"))
-		VESSELMGMT->Build();
-	else if (Compare(line,"<HYDRAULIC>"))
-		HYDRAULIC->Build();
-	else if (Compare(line,"<ELECTRIC>"))
-		ELECTRIC->Build();
-	else if (Compare(line,"<PANEL>"))
-		{sscanf(line+7,"%s",name);
-				DoPanel(name);
+		else if (Compare(line, "<VESSEL>"))
+			VESSELMGMT->Build();
+		else if (Compare(line, "<HYDRAULIC>"))
+			HYDRAULIC->Build();
+		else if (Compare(line, "<ELECTRIC>"))
+			ELECTRIC->Build();
+		else if (Compare(line, "<PANEL>"))
+		{
+			sscanf(line + 7, "%s", name);
+			DoPanel(name);
 		}
-	else if (Compare(line,"<KEYBOARD>"))
-	{	line=ReadConfigLine();
-		while (!Compare(line,"</KEYBOARD>")){
+		else if (Compare(line, "<KEYBOARD>"))
+		{
+			line = ReadConfigLine();
+			while (!Compare(line, "</KEYBOARD>")) {
 
-			sscanf(line,"%s %s %i",name, type, &stage);
-			KeyPress *new_k=new KeyPress;
-			new_k->index=stage;
-			if (Compare(type,"SEPARATION")) new_k->trigger_type=1;
-			else new_k->trigger_type=2;
-			new_k->key=GetDWORDfromChar(&name[0]);
-			if (VESSELMGMT->DefinedKeys)
+				sscanf(line, "%s %s %i", name, type, &stage);
+				KeyPress* new_k = new KeyPress;
+				new_k->index = stage;
+				if (Compare(type, "SEPARATION")) new_k->trigger_type = 1;
+				else new_k->trigger_type = 2;
+				new_k->key = GetDWORDfromChar(&name[0]);
+				if (VESSELMGMT->DefinedKeys)
 					VESSELMGMT->DefinedKeys->AddToList(new_k);
-			else VESSELMGMT->DefinedKeys=new_k;
-			line=ReadConfigLine();
-											}
-	}
-    else if (Compare(line,"<SEPARATION>"))
-		while (!Compare(line,"</SEPARATION>")){
-				line=ReadConfigLine();
-				if (Compare(line,"<CONFIG>")){
-					sscanf(line+8,"%i",&stage);
-					while (!Compare(line,"</CONFIG>")){
-						if (Compare(line,"<DELETE>"))
-							if (Compare(line+9,"HYDRAULIC:"))
-								HYDRAULIC->SetMaxStage(line+19,stage);
-							else if (Compare(line+9,"ELECTRIC:"))
-								ELECTRIC->SetMaxStage(line+18,stage);
-						if (Compare(line,"<CGOFFSET>"))
-							sscanf(line+10," <%lf %lf %lf>",
-							&VESSELMGMT->Stages[stage].cgoffset.x,
-							&VESSELMGMT->Stages[stage].cgoffset.y,
-							&VESSELMGMT->Stages[stage].cgoffset.z);
-						if (Compare(line,"<EJECT>"))
-						{ Ejector *new_e=new Ejector;
-						  sscanf(line+7," %s <%lf %lf %lf> <%lf %lf %lf>",
+				else VESSELMGMT->DefinedKeys = new_k;
+				line = ReadConfigLine();
+			}
+		}
+		else if (Compare(line, "<SEPARATION>"))
+			while (!Compare(line, "</SEPARATION>")) {
+				line = ReadConfigLine();
+				if (Compare(line, "<CONFIG>")) {
+					sscanf(line + 8, "%i", &stage);
+					while (!Compare(line, "</CONFIG>")) {
+						if (Compare(line, "<DELETE>"))
+							if (Compare(line + 9, "HYDRAULIC:"))
+								HYDRAULIC->SetMaxStage(line + 19, stage);
+							else if (Compare(line + 9, "ELECTRIC:"))
+								ELECTRIC->SetMaxStage(line + 18, stage);
+						if (Compare(line, "<CGOFFSET>"))
+							sscanf(line + 10, " <%lf %lf %lf>",
+								&VESSELMGMT->Stages[stage].cgoffset.x,
+								&VESSELMGMT->Stages[stage].cgoffset.y,
+								&VESSELMGMT->Stages[stage].cgoffset.z);
+						if (Compare(line, "<EJECT>"))
+						{
+							Ejector* new_e = new Ejector;
+							sscanf(line + 7, " %s <%lf %lf %lf> <%lf %lf %lf>",
 								new_e->class_name,
 								&new_e->offset.x,
 								&new_e->offset.y,
@@ -258,30 +292,34 @@ while (!feof(config_file))
 								&new_e->rotation.x,
 								&new_e->rotation.y,
 								&new_e->rotation.z);
-						  if (VESSELMGMT->Stages[stage].EJ_list)
-						  VESSELMGMT->Stages[stage].EJ_list->AddToList(new_e);
-						  else VESSELMGMT->Stages[stage].EJ_list=new_e;
+							if (VESSELMGMT->Stages[stage].EJ_list)
+								VESSELMGMT->Stages[stage].EJ_list->AddToList(new_e);
+							else VESSELMGMT->Stages[stage].EJ_list = new_e;
 
 
 
-								}
-						line=ReadConfigLine();
-														}
-												}
+						}
+						line = ReadConfigLine();
+					}
+				}
 
-		}
-	//do something
-	//do something
-};
-fclose(config_file);
+			}
+		//do something
+		//do something
+	}
+
+	fclose(config_file);
 
 #ifdef _DEBUG
-fclose(debug);
+	fclose(debug);
 #endif
 
-if (NumPanels) panels[0]->GDI_Init_Resources();
-THERMAL->InitThermal();
-THERMAL->v=v;
+	if (NumPanels) panels[0]->GDI_Init_Resources();
+	THERMAL->InitThermal();
+	THERMAL->v = v;
+
+	makePoolWorkQueue();
+
 }
 
 void PanelSDK::DoPanel(char *name)
