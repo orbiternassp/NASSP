@@ -90,6 +90,8 @@ public:
 	void RTETradeoffDisplayCalc();
 	void GetAGSKFactor();
 	void GeneralMEDRequest();
+	void SkylabSaturnIBLaunchCalc();
+	void SkylabSaturnIBLaunchUplink();
 	void TransferTIToMPT();
 	void TransferSPQToMPT();
 	void TransferDKIToMPT();

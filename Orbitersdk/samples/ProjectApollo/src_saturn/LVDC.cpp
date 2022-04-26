@@ -877,8 +877,8 @@ void LVDC1B::TimeStep(double simdt) {
 			t_D = T_GRR - T_GRR0;
 			fprintf(lvlog, "Time into launch window (if applicable) = %f\r\n", t_D);
 
-			DescNodeAngle = Lambda_0 - lambda_dot * t_D;
-			fprintf(lvlog, "DescNodeAngle = %f\r\n", DescNodeAngle);
+			DescNodeAngle = Lambda_0 + lambda_dot * t_D;
+			fprintf(lvlog, "Lambda_0 = %f, lambda_dot = %f, DescNodeAngle = %f\r\n", Lambda_0, lambda_dot, DescNodeAngle);
 
 			Azimuth = Ax[0] + Ax[1] * Inclination + Ax[2] * DescNodeAngle + Ax[3] * Inclination*DescNodeAngle;
 			fprintf(lvlog, "Azimuth = %f\r\n", Azimuth);

@@ -41,6 +41,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/RTCC_EMSMISS.h"
 #include "../src_rtccmfd/RTCCSystemParameters.h"
 #include "../src_rtccmfd/GeneralPurposeManeuver.h"
+#include "../src_rtccmfd/LWP.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -652,8 +653,6 @@ struct AGSSVOpt
 
 struct SkyRendOpt
 {
-	VESSEL* vessel;		//vessel
-	VESSEL* target;		//Target vessel
 	double GETbase;		//usually MJD at launch
 	int man;			//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
 	bool PCManeuver;	//0 = NC1 is setting up NPC, 1 = NC2 is setting up NPC
@@ -667,8 +666,9 @@ struct SkyRendOpt
 	double n_C;
 	double t_NC;		//Reference time for the NPC maneuver
 	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
-	bool csmlmdocked; //0 = CSM alone, 1 = CSM/DM
+	SV sv_C;		//Chaser state vector
+	SV sv_T;		//Target state vector
+	double DMMass; //Docking module mass
 };
 
 struct SkylabRendezvousResults
@@ -2690,6 +2690,8 @@ public:
 	void PMSEXE(int L, double gmt);
 	//Earth Orbit Insertion Processor
 	void PMMIEV(double T_L);
+	//SLV Targeting Load Module
+	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
 	//Mission Planning Print Load Module
 	void PMXSPT(std::string source, int n);
 	void PMXSPT(std::string source, std::vector<std::string> message);
@@ -3315,6 +3317,8 @@ public:
 	MissionPlanTable PZMPTCSM, PZMPTLEM;
 	DetailedManeuverTable DMTBuffer[2];
 	BurnParameterTable PZBURN;
+	LWPInputTable PZSLVCON;
+	SLVTargetingParametersTable PZSLVTAR;
 
 	std::vector<VECTOR3> EZJGSTAR;
 

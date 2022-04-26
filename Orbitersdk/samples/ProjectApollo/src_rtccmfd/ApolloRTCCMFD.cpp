@@ -919,7 +919,14 @@ void ApolloRTCCMFD::menuSetDAPPADPage()
 
 void ApolloRTCCMFD::menuSetLVDCPage()
 {
-	SelectPage(36);
+	if (GC->mission >= 8 && GC->mission <= 17)
+	{
+		SelectPage(36);
+	}
+	else
+	{
+		SelectPage(121);
+	}
 }
 
 void ApolloRTCCMFD::menuSetAGCEphemerisPage()
@@ -1282,9 +1289,56 @@ void ApolloRTCCMFD::menuSetLandmarkAcquisitionDisplayPage()
 	SelectPage(120);
 }
 
+void ApolloRTCCMFD::menuSetLWPDisplayPage()
+{
+	SelectPage(122);
+}
+
+void ApolloRTCCMFD::menuLWPLiftoffTimeOption()
+{
+	if (GC->rtcc->PZSLVCON.LOT < 6)
+	{
+		GC->rtcc->PZSLVCON.LOT++;
+	}
+	else
+	{
+		GC->rtcc->PZSLVCON.LOT = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuLWPLiftoffTime()
+{
+	GenericGETInput(&GC->rtcc->PZSLVCON.GMTLOR, "Enter desired GMT of liftoff (Format: HH:MM:SS)");
+}
+
 void ApolloRTCCMFD::LUNTAR_TIGInput()
 {
 	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS)");
+}
+
+void ApolloRTCCMFD::menuLWP_RINS()
+{
+	GenericDoubleInput(&GC->rtcc->PZSLVCON.RINS, "Radius of insertion in meters:", 1.0);
+}
+
+void ApolloRTCCMFD::menuLWP_VINS()
+{
+	GenericDoubleInput(&GC->rtcc->PZSLVCON.VINS, "Velocity of insertion in m/s:", 1.0);
+}
+
+void ApolloRTCCMFD::menuLWP_GAMINS()
+{
+	GenericDoubleInput(&GC->rtcc->PZSLVCON.GAMINS, "Flight-path angle of insertion in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::menuLWPCycleDELNOF()
+{
+	GC->rtcc->PZSLVCON.DELNOF = !GC->rtcc->PZSLVCON.DELNOF;
+}
+
+void ApolloRTCCMFD::menuLWP_DELNO()
+{
+	GenericDoubleInput(&GC->rtcc->PZSLVCON.DELNO, "Differential nodal regression in degrees:", RAD);
 }
 
 void ApolloRTCCMFD::LUNTAR_BTInput()
@@ -4637,6 +4691,22 @@ void ApolloRTCCMFD::menuCycleK30Vehicle()
 	else
 	{
 		set_target();
+	}
+}
+
+void ApolloRTCCMFD::menuSLVLaunchTargeting()
+{
+	if (GC->mission < 8 || GC->mission > 17)
+	{
+		G->SkylabSaturnIBLaunchCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuSLVLaunchUplink()
+{
+	if (GC->mission < 8 || GC->mission > 17)
+	{
+		G->SkylabSaturnIBLaunchUplink();
 	}
 }
 

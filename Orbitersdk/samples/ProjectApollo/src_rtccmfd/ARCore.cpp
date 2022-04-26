@@ -1107,6 +1107,16 @@ void ARCore::GeneralMEDRequest()
 	startSubthread(53);
 }
 
+void ARCore::SkylabSaturnIBLaunchCalc()
+{
+	startSubthread(54);
+}
+
+void ARCore::SkylabSaturnIBLaunchUplink()
+{
+	startSubthread(55);
+}
+
 void ARCore::GetAGSKFactor()
 {
 	startSubthread(35);
@@ -3323,11 +3333,9 @@ int ARCore::subThread()
 		opt.DH1 = SkylabDH1;
 		opt.DH2 = SkylabDH2;
 		opt.n_C = Skylab_n_C;
-		opt.target = target;
 		opt.t_TPI = t_TPI;
 		opt.PCManeuver = Skylab_PCManeuver;
 		opt.NPCOption = Skylab_NPCOption;
-		opt.vessel = vessel;
 
 		if (Skylabmaneuver == 0)
 		{
@@ -3368,6 +3376,40 @@ int ARCore::subThread()
 				opt.t_NC = Skylab_t_NC2;
 			}
 		}
+
+		if (GC->MissionPlanningActive)
+		{
+			double gmt = GC->rtcc->GMTfromGET(opt.t_C);
+
+			EphemerisData EPHEM;
+			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_CSM, EPHEM))
+			{
+				Result = 0;
+				break;
+			}
+
+			opt.sv_C.R = EPHEM.R;
+			opt.sv_C.V = EPHEM.V;
+			opt.sv_C.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
+			opt.sv_C.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+
+			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_LM, EPHEM))
+			{
+				Result = 0;
+				break;
+			}
+
+			opt.sv_T.R = EPHEM.R;
+			opt.sv_T.V = EPHEM.V;
+			opt.sv_T.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
+			opt.sv_T.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+		}
+		else
+		{
+			opt.sv_C = GC->rtcc->StateVectorCalc(vessel);
+			opt.sv_T = GC->rtcc->StateVectorCalc(target);
+		}
+		opt.DMMass = GC->rtcc->GetDockedVesselMass(vessel);
 
 		SkylabSolGood = GC->rtcc->SkylabRendezvous(&opt, &res);
 
@@ -4822,6 +4864,78 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
+	case 54: //Skylab Saturn IB Launch Targeting
+	{
+		if (target == NULL)
+		{
+			Result = 0;
+			break;
+		}
+		
+		MATRIX3 Rot;
+		VECTOR3 RT, VT;
+		SV sv;
+		double TT, GMTBASE;
+
+		sv = GC->rtcc->StateVectorCalc(target);
+
+		if (GC->rtcc->GetGMTBase() == 0.0)
+		{
+			GMTBASE = floor(sv.MJD);
+		}
+		else
+		{
+			GMTBASE = GC->rtcc->GetGMTBase();
+		}
+		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, GMTBASE);
+		RT = rhtmul(Rot, sv.R);
+		VT = rhtmul(Rot, sv.V);
+		TT = (sv.MJD - GMTBASE)*24.0*3600.0;
+
+		GC->rtcc->PMMPAR(RT, VT, TT);
+
+		Result = 0;
+	}
+	break;
+	case 55: //SLV Target Update Uplink
+	{
+		if (GC->rtcc->PZSLVTAR.VIGM == 0.0)
+		{
+			Result = 0;
+			break;
+		}
+
+		IU *iu;
+
+		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
+			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
+		{
+			Saturn *iuv = (Saturn *)vessel;
+			iu = iuv->GetIU();
+		}
+		else
+		{
+			Result = 0;
+			break;
+		}
+
+		void *uplink = NULL;
+		DCSLAUNCHTARGET upl;
+
+		upl.i = GC->rtcc->PZSLVTAR.IIGM;
+		upl.lambda_0 = GC->rtcc->PZSLVTAR.TIGM;
+		upl.lambda_dot = GC->rtcc->PZSLVTAR.TDIGM;
+		upl.R_T = GC->rtcc->PZSLVTAR.RIGM;
+		upl.theta_T = GC->rtcc->PZSLVTAR.GIGM*RAD;
+		upl.T_GRR0 = GC->rtcc->PZSLVTAR.TGRR;
+		upl.V_T = GC->rtcc->PZSLVTAR.VIGM;
+
+		uplink = &upl;
+		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SATURNIB_LAUNCH_TARGETING, uplink);
+
+		Result = 0;
+	}
+	break;
 	}
 
 	subThreadStatus = Result;
@@ -5157,9 +5271,9 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 {
 	OBJHANDLE hEarth, hMoon;
 	MATRIX3 R, Rot2, J2000, R2, R3, M, M_AGC;
-	VECTOR3 l;
+	VECTOR3 UNITW;
 	double mjd_mid, brcsmjd, w_E, t0, B_0, Omega_I0, F_0, B_dot, Omega_I_dot, F_dot, cosI, sinI;
-	double A_Z, A_Z0, A_X, minA_Y, mjd_land;
+	double A_Z, A_Z0, mjd_land;
 	int mem, epoch;
 	char AGC[64];
 
@@ -5345,6 +5459,8 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	R2 = mul(OrbMech::tmat(Rot2), mul(R, Rot2));
 	R3 = mul(J2000, R2);
 
+	UNITW = mul(R3, _V(0, 0, 1));
+
 	A_Z = atan2(R3.m21, R3.m11);
 	if (mission < 14)
 	{
@@ -5362,9 +5478,6 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 
 	M = _M(cos(A_Z), sin(A_Z), 0., -sin(A_Z), cos(A_Z), 0., 0., 0., 1.);
 	M_AGC = mul(R3, M);
-	A_X = atan2(M_AGC.m32, M_AGC.m33);
-	minA_Y = -atan2(-M_AGC.m31, sqrt(M_AGC.m32*M_AGC.m32 + M_AGC.m33*M_AGC.m33));
-	l = _V(A_X, -minA_Y, 0.);
 
 	mem = 01711;
 
@@ -5382,17 +5495,22 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	{
 		fprintf(file, "AZO %.10f DEG\n", A_Z0*DEG);
 	}
-	fprintf(file, "-AYO %.10f DEG\n", minA_Y*DEG);
-	fprintf(file, "AXO %.10f DEG\n", A_X*DEG);
+	fprintf(file, "-AYO %.10f DEG\n", UNITW.x*DEG);
+	fprintf(file, "AXO %.10f DEG\n", UNITW.y*DEG);
 	if (mission < 14)
 	{
 		fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(A_Z0 / PI2, 0, 1)); mem++;
 		fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(A_Z0 / PI2, 0, 0)); mem++;
 	}	
-	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(minA_Y / PI2, 0, 1)); mem++;
-	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(minA_Y / PI2, 0, 0)); mem++;
-	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(A_X / PI2, 0, 1)); mem++;
-	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(A_X / PI2, 0, 0)); mem++;
+	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.x, 0, 1)); mem++;
+	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.x, 0, 0)); mem++;
+	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.y, 0, 1)); mem++;
+	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.y, 0, 0)); mem++;
+	if (isCMC)
+	{
+		fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.z, 0, 1)); mem++;
+		fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.z, 0, 0)); mem++;
+	}
 
 	//MOON ROTATIONS
 	MATRIX3 M1, M2, M3, M4, MM, M_AGC_M, RM, R2M, R3M;
