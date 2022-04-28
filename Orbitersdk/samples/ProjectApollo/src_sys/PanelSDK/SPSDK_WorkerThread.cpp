@@ -36,6 +36,7 @@ ThreadPool::ThreadPool()
 {
 	dt = 0;
 	terminate = false;
+	queuePosition = 0;
 	
 	numThreads = std::thread::hardware_concurrency() - 2;
 	if (numThreads < 1) { 
@@ -56,7 +57,7 @@ ThreadPool::~ThreadPool()
 }
 
 //copies a predetermined queue vector of jobs to be run
-void ThreadPool::StartWork(const double Setdt, const std::vector<void*> SetQueue, SPSDK_ThreadPoolType::systype typ) {
+void ThreadPool::StartWork(const double Setdt, std::vector<void*> *SetQueue, SPSDK_ThreadPoolType::systype typ) {
 
 	calltype = typ;
 
@@ -64,8 +65,10 @@ void ThreadPool::StartWork(const double Setdt, const std::vector<void*> SetQueue
 		std::unique_lock<std::mutex> lock(readQueueLock);
 		dt = Setdt;
 		queue = SetQueue;
+		queuePosition = queue->size();
 	}
 	idleThreads = 0;
+	//queueSize = ;
 
 	std::unique_lock<std::mutex> RunningLock(runningLock);
 	cv.notify_all();
@@ -81,7 +84,7 @@ void ThreadPool::workerThreadFunction()
 
 		{
 			std::unique_lock<std::mutex> RunningLock(runningLock);
-			while (queue.empty()) {
+			while (queuePosition == 0) {
 				if (++idleThreads > numThreads) { idleThreads = numThreads; }
 				cvWork.notify_all();
 				cv.wait(RunningLock);
@@ -89,10 +92,10 @@ void ThreadPool::workerThreadFunction()
 		}
 
 		{
-			std::unique_lock<std::mutex> lock(readQueueLock);
-			if (!queue.empty()) {
-				Job = queue.back();
-				queue.pop_back();
+			std::unique_lock<std::mutex> ReadLock(readQueueLock);
+			if (queuePosition >= 0) {
+				Job = (*queue)[queuePosition];
+				--queuePosition;
 			}
 			else {
 				continue;

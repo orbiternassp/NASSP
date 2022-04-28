@@ -39,7 +39,7 @@ class ThreadPool {
 public:
 	ThreadPool();
 	~ThreadPool();
-	void StartWork(const double Setdt, const std::vector<void*> SetQueue, SPSDK_ThreadPoolType::systype typ);
+	void StartWork(const double Setdt, std::vector<void*> *SetQueue, SPSDK_ThreadPoolType::systype typ);
 private:
 	SPSDK_ThreadPoolType::systype calltype;
 	double dt;
@@ -47,8 +47,9 @@ private:
 	std::atomic<bool> terminate;
 	int idleThreads;
 	int numThreads;
+	int queuePosition;
 	std::vector<std::thread> workerPool;
-	std::vector<void*> queue;
+	std::vector<void*> *queue;
 	std::condition_variable cv;
 	std::condition_variable cvWork;
 	std::mutex readQueueLock;
