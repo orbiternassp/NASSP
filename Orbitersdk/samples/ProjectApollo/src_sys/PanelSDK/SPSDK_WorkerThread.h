@@ -31,17 +31,19 @@
 #include <functional>
 #include <atomic>
 
-namespace SPSDK_ThreadPoolType {
-	enum systype { hydraulicRefresh, hydraulicUpdate, electricRefresh, electricUpdate, thermal };
-}
+#define SPSDKthreadPoolHydraulicRefresh		1
+#define SPSDKthreadPoolHydraulicUpdate		2
+#define SPSDKthreadPoolElectricRefresh		3
+#define SPSDKthreadPoolElectricUpdate		4
+#define SPSDKthreadPoolThermal				5
 
 class ThreadPool {
 public:
 	ThreadPool();
 	~ThreadPool();
-	void StartWork(const double Setdt, std::vector<void*> *SetQueue, SPSDK_ThreadPoolType::systype typ);
+	void StartWork(const double Setdt, std::vector<void*> *SetQueue, int updateType);
 private:
-	SPSDK_ThreadPoolType::systype calltype;
+	int calltype;
 	double dt;
 	//std::atomic<bool> working;
 	std::atomic<bool> terminate;

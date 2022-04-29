@@ -36,7 +36,7 @@ ThreadPool::ThreadPool()
 {
 	dt = 0;
 	terminate = false;
-	queuePosition = 0;
+	queuePosition = -1;
 	
 	numThreads = std::thread::hardware_concurrency() - 2;
 	if (numThreads < 1) { 
@@ -57,18 +57,17 @@ ThreadPool::~ThreadPool()
 }
 
 //copies a predetermined queue vector of jobs to be run
-void ThreadPool::StartWork(const double Setdt, std::vector<void*> *SetQueue, SPSDK_ThreadPoolType::systype typ) {
+void ThreadPool::StartWork(const double Setdt, std::vector<void*> *SetQueue, int updateType) {
 
-	calltype = typ;
+	calltype = updateType;
 
 	{
 		std::unique_lock<std::mutex> lock(readQueueLock);
 		dt = Setdt;
 		queue = SetQueue;
-		queuePosition = queue->size();
+		queuePosition = queue->size() - 1;
 	}
 	idleThreads = 0;
-	//queueSize = ;
 
 	std::unique_lock<std::mutex> RunningLock(runningLock);
 	cv.notify_all();
@@ -84,7 +83,7 @@ void ThreadPool::workerThreadFunction()
 
 		{
 			std::unique_lock<std::mutex> RunningLock(runningLock);
-			while (queuePosition == 0) {
+			while (queuePosition < 0) {
 				if (++idleThreads > numThreads) { idleThreads = numThreads; }
 				cvWork.notify_all();
 				cv.wait(RunningLock);
@@ -103,19 +102,19 @@ void ThreadPool::workerThreadFunction()
 		}
 
 		switch (calltype) {
-			case SPSDK_ThreadPoolType::systype::hydraulicRefresh:
+			case SPSDKthreadPoolHydraulicRefresh:
 				((h_object*)Job)->refresh(dt);
 				break;
-			case SPSDK_ThreadPoolType::systype::hydraulicUpdate:
+			case SPSDKthreadPoolHydraulicUpdate:
 				((h_object*)Job)->UpdateFlow(dt);
 				break;
-			case SPSDK_ThreadPoolType::systype::electricRefresh:
+			case SPSDKthreadPoolElectricRefresh:
 				((e_object*)Job)->refresh(dt);
 				break;
-			case SPSDK_ThreadPoolType::systype::electricUpdate:
+			case SPSDKthreadPoolElectricUpdate:
 				((e_object*)Job)->UpdateFlow(dt);
 				break;
-			case SPSDK_ThreadPoolType::systype::thermal:
+			case SPSDKthreadPoolThermal:
 				((therm_obj*)Job)->thermic(dt);
 				break;
 		}

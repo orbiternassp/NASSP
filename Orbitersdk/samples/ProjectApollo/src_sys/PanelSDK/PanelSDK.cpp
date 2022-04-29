@@ -254,11 +254,11 @@ void PanelSDK::Timestep(double time)
 	double tFactor = __min(mintFactor, dt);
 	while (dt > 0) {
 
-		spsdkThreadPool.StartWork(tFactor, &thermalWorkQueue, SPSDK_ThreadPoolType::systype::thermal);
-		spsdkThreadPool.StartWork(tFactor, &hydraulicWorkQueue, SPSDK_ThreadPoolType::systype::hydraulicRefresh);
-		//spsdkThreadPool.StartWork(tFactor, &hydraulicWorkQueue, SPSDK_ThreadPoolType::systype::hydraulicUpdate); //not used currently
-		spsdkThreadPool.StartWork(tFactor, &electricalWorkQueue, SPSDK_ThreadPoolType::systype::electricRefresh);
-		spsdkThreadPool.StartWork(tFactor, &electricalWorkQueue, SPSDK_ThreadPoolType::systype::electricUpdate);
+		spsdkThreadPool.StartWork(tFactor, &thermalWorkQueue, SPSDKthreadPoolThermal);
+		spsdkThreadPool.StartWork(tFactor, &hydraulicWorkQueue, SPSDKthreadPoolHydraulicRefresh);
+		//spsdkThreadPool.StartWork(tFactor, &hydraulicWorkQueue, SPSDKthreadPoolHydraulicUpdate); //not used currently
+		spsdkThreadPool.StartWork(tFactor, &electricalWorkQueue, SPSDKthreadPoolElectricRefresh);
+		spsdkThreadPool.StartWork(tFactor, &electricalWorkQueue, SPSDKthreadPoolElectricUpdate);
 
 		dt -= tFactor;
 		tFactor = __min(mintFactor, dt);
@@ -267,11 +267,11 @@ void PanelSDK::Timestep(double time)
 
 void PanelSDK::SimpleTimestep(double simdt) 
 {
-	spsdkThreadPool.StartWork(simdt, &thermalWorkQueue, SPSDK_ThreadPoolType::systype::thermal);
-	spsdkThreadPool.StartWork(simdt, &hydraulicWorkQueue, SPSDK_ThreadPoolType::systype::hydraulicRefresh);
-	//spsdkThreadPool.StartWork(simdt, hydraulicWorkQueue, SPSDK_ThreadPoolType::systype::hydraulicUpdate); //not used currently
-	spsdkThreadPool.StartWork(simdt, &electricalWorkQueue, SPSDK_ThreadPoolType::systype::electricRefresh);
-	spsdkThreadPool.StartWork(simdt, &electricalWorkQueue, SPSDK_ThreadPoolType::systype::electricUpdate);
+	spsdkThreadPool.StartWork(simdt, &thermalWorkQueue, SPSDKthreadPoolThermal);
+	spsdkThreadPool.StartWork(simdt, &hydraulicWorkQueue, SPSDKthreadPoolHydraulicRefresh);
+	//spsdkThreadPool.StartWork(simdt, hydraulicWorkQueue, SPSDKthreadPoolHydraulicUpdate); //not used currently
+	spsdkThreadPool.StartWork(simdt, &electricalWorkQueue, SPSDKthreadPoolElectricRefresh);
+	spsdkThreadPool.StartWork(simdt, &electricalWorkQueue, SPSDKthreadPoolElectricUpdate);
 }
 
 void PanelSDK::SetStage(int stage,int load)
