@@ -257,8 +257,8 @@ void PanelSDK::Timestep(double time)
 		spsdkThreadPool.StartWork(tFactor, &thermalWorkQueue, SPSDKthreadPoolThermal);
 		spsdkThreadPool.StartWork(tFactor, &hydraulicWorkQueue, SPSDKthreadPoolHydraulicRefresh);
 		//spsdkThreadPool.StartWork(tFactor, &hydraulicWorkQueue, SPSDKthreadPoolHydraulicUpdate); //not used currently
-		spsdkThreadPool.StartWork(tFactor, &electricalWorkQueue, SPSDKthreadPoolElectricRefresh);
 		spsdkThreadPool.StartWork(tFactor, &electricalWorkQueue, SPSDKthreadPoolElectricUpdate);
+		spsdkThreadPool.StartWork(tFactor, &electricalWorkQueue, SPSDKthreadPoolElectricRefresh);
 
 		dt -= tFactor;
 		tFactor = __min(mintFactor, dt);
@@ -270,8 +270,8 @@ void PanelSDK::SimpleTimestep(double simdt)
 	spsdkThreadPool.StartWork(simdt, &thermalWorkQueue, SPSDKthreadPoolThermal);
 	spsdkThreadPool.StartWork(simdt, &hydraulicWorkQueue, SPSDKthreadPoolHydraulicRefresh);
 	//spsdkThreadPool.StartWork(simdt, hydraulicWorkQueue, SPSDKthreadPoolHydraulicUpdate); //not used currently
-	spsdkThreadPool.StartWork(simdt, &electricalWorkQueue, SPSDKthreadPoolElectricRefresh);
 	spsdkThreadPool.StartWork(simdt, &electricalWorkQueue, SPSDKthreadPoolElectricUpdate);
+	spsdkThreadPool.StartWork(simdt, &electricalWorkQueue, SPSDKthreadPoolElectricRefresh);
 }
 
 void PanelSDK::SetStage(int stage,int load)
