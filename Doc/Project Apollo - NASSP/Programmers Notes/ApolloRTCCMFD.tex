@@ -738,6 +738,77 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 \textbf{GETL:} GET at drogue chute deployment using the primary entry mode:\\
 \textbf{MD:} Miss distance of the primary entry mode to the target splashdown coordinates. In nautical miles.\\
 
+\newpage
+\subsection{Launch Window Processor}
+
+The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. At present there is no capability to stop and re-start the countdown for Saturn launches, so only at the predetermined time in a launch scenario can the launch be done. The liftoff time options other than input time should therefore not used for now.\\
+
+\subsubsection{Inputs}
+
+\textbf{LOT:} Liftoff time option. The options are: 
+
+\begin{itemize}
+\item{"Input time", lift-off on input time.}
+\item{"Phase angle offset", compute lift-off time to achieve a desired phase angle (OFFSET) at insertion.}
+\item{"Biased phase zero (GMTLOR)", lift-off on GMTLO* plus BIAS, using input time as threshold.}
+\item{"Biased phase zero (TPLANE)", lift-off on GMTLO* + BIAS, using TPLANE as threshold time.}
+\item{"In-plane", lift-off based on inplane launch time (GMTLO = TPLANE + TRANS).}
+\item{"In-plane with nodal regression", iterate on lift-off on inplane launch time based on target orbit phase angle (final GMTLO = TYAW + TRANS).}
+\end{itemize}
+
+\textbf{TLO:} Input liftoff time.\\
+\textbf{RINS:} Radius of insertion in meters.\\
+\textbf{VINS:} Velocity of insertion in meters per second.\\
+\textbf{GINS:} Flight-path angle of insertion in degrees.\\
+
+\textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
+\textbf{NOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\
+\textbf{DNO:} Angle that is added to the target descending node to account for differential nodal regression.\\
+\textbf{DIS:} Go to launch targeting display.\\ 
+\textbf{BCK:} Go back to utilities page.\\
+
+\newpage
+\subsubsection{Display}
+
+\begin{figure}[hp]
+	\centering
+		\includegraphics{./ApolloRTCCMFDFiles/LaunchTargetingDisplay.png}
+	\caption{Launch Targeting Display for Skylab 2}
+	\label{fig:LaunchTargetingDisplayExample1}
+\end{figure}
+
+\textbf{GMTLO:} Greenwich mean time of lift-off, in hours, minutes, seconds\\
+\textbf{TINS:} Greenwich mean time of insertion, in hours, minutes, seconds\\
+\textbf{GMTLO*:} Greenwich mean time of phase match, in hours, minutes, seconds\\
+\textbf{PFA:} Powered flight arc.\\
+\textbf{PFT:} Powered flight time.\\
+\textbf{DN:} Descending node of chaser.\\
+\textbf{TPLANE:} Greenwich mean time of inplane launch, in hours, minutes, seconds\\
+\textbf{AZL:} Optimum launch azimuth.\\
+\textbf{LATLS:} Geocentric latitude of launch site.\\
+\textbf{LONGLS:} Geographic longitude of launch site.\\
+\textbf{DELNO:} Angle between the target and chaser descending nodes, defined at insertion.\\
+\textbf{DELNOD:} Rate of change of DELNO, defined at insertion.\\
+\textbf{TYAW:} Greenwich mean time of lift-off to achieve minimum yaw steering, in hours, minutes, seconds\\
+\textbf{TGRR:} Greenwich mean time of guidance reference release\\
+\textbf{VIGM:} Velocity magnitude at insertion, in meters per second and feet per second.\\
+\textbf{RIGM:} Radius magnitude at insertion, in meters and feet\\
+\textbf{GIGM:} Flightpath angle at insertion\\
+\textbf{IIGM:} Inclination at insertion\\
+\textbf{TIGM:} Angle measured from launch site meridian to chaser descending node, defined at TGRR\\
+\textbf{TDIGM:} Rate of change of TIGM, defined at TGRR\\
+\textbf{APOGEE:} Height of apogee in nautical miles\\
+\textbf{PERIGEE:} Height of perigee in nautical miles\\
+\textbf{INCLINATION:} Inclination of orbit plane\\
+\textbf{INS PHASE:} Phase angle at insertion\\
+\textbf{DN TARGET:} Descending node of target\\
+\textbf{BIAS:} Time added to GMTLO* time to obtain a lift-off time\\
+\textbf{T ANOMALY:} True anomaly\\
+\textbf{ALTITUDE:} Height of chaser at, insertion\\
+\textbf{DH:} Delta height between chaser and target, at insertion\\
+\textbf{TIME:} Greenwich mean time of lift-off\\
+
+\newpage
 \subsection{REFSMMAT}
 
 \subsubsection{Explanation}

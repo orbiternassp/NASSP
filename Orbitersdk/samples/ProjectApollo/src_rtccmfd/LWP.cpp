@@ -605,6 +605,7 @@ void LaunchWindowProcessor::NSERT(VECTOR3 RB, VECTOR3 VB, double GMTB, double &U
 	TT = GMTB;
 
 	LENSR(GMTLO);
+	TINS = TP;
 
 	PA = PHANG();
 	DH = length(RT) - length(RP); //TBD
