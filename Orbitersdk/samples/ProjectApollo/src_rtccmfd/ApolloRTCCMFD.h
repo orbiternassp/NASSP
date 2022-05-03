@@ -65,6 +65,8 @@ public:
 	void SPQDHdialogue();
 	void set_SPQDH(double DH);
 	void set_target();
+	void menuSLVLaunchTargeting();
+	void menuSLVLaunchUplink();
 	void menuVoid();
 	void menuSetLambertPage();
 	void menuSetSPQPage();
@@ -770,6 +772,14 @@ public:
 	void menuSetRetrofireSeparationInputsPage();
 	void menuSetRetrofireSubsystemPage();
 	void menuSetEntryUplinkPage();
+	void menuLWPLiftoffTimeOption();
+	void menuLWPLiftoffTime();
+	void menuLWP_RINS();
+	void menuLWP_VINS();
+	void menuLWP_GAMINS();
+	void menuLWPCycleDELNOF();
+	void menuLWP_DELNO();
+	void menuSetLWPDisplayPage();
 	void GenericGETInput(double *get, char *message);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericIntInput(int *val, char* message);

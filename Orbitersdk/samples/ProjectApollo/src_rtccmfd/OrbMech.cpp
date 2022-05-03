@@ -5796,21 +5796,21 @@ CELEMENTS EquinoctialToKepler(CELEMENTS aeq)
 		kep.i = acos2(1.0 - 2.0*1.0);
 
 	kep.h = atan2(aeq.h, aeq.g);
-	if (kep.h < 0)
+	while (kep.h < 0)
 	{
 		kep.h += PI2;
 	}
 	kep.g = atan2(aeq.e, aeq.i) - kep.h;
-	if (kep.g < 0)
+	while (kep.g < 0)
 	{
 		kep.g += PI2;
 	}
 	kep.l = aeq.l - atan2(aeq.e, aeq.i);
-	if (kep.l >= PI2)
+	while (kep.l >= PI2)
 	{
 		kep.l -= PI2;
 	}
-	else if (kep.l < 0)
+	while (kep.l < 0)
 	{
 		kep.l += PI2;
 	}

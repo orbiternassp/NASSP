@@ -8546,7 +8546,8 @@ void RTCC::NCCProgram(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, 
 	OrbMech::oneclickcoast(sv_W.R, sv_W.V, sv_W.MJD, (GETbase - sv_W.MJD)*24.0*3600.0 + t_F, R_WF, V_WF, gravref, gravref);
 	OrbMech::QDRTPI(R_WF, V_WF, MJD, gravref, mu, dh, E_L, 1, R_WJ, V_WJ);
 	OrbMech::COE(R_WJ, V_WJ, dh, mu, R_CF, V_CF);
-	OrbMech::oneclickcoast(R_CF, V_CF, MJD, t_C + dt - t_F, R_CT, V_CT, gravref, gravref);
+	t_NSR = t_C + dt;
+	OrbMech::oneclickcoast(R_CF, V_CF, MJD, t_NSR - t_F, R_CT, V_CT, gravref, gravref);
 	V_CCF = OrbMech::Vinti(R_CC, V_CC, R_CT, MJD, dt, 0, true, body, body, body, _V(0, 0, 0));
 	OrbMech::oneclickcoast(R_CC, V_CCF, sv_C.MJD, dt, R_CTF, V_CTF, gravref, gravref);
 
@@ -8649,26 +8650,12 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 	OBJHANDLE gravref;
 	bool SolutionGood = true;	//True = Calculation successful, False = Calculation failed
 
-	if (opt->useSV)
-	{
-		sv_C = opt->RV_MCC;
-	}
-	else
-	{
-		sv_C = StateVectorCalc(opt->vessel);
-	}
+	sv_C = opt->sv_C;
 
-	sv_W = StateVectorCalc(opt->target);
+	sv_W = opt->sv_T;
 	gravref = sv_C.gravref;
 
-	if (opt->csmlmdocked)
-	{
-		LMmass = GetDockedVesselMass(opt->vessel);
-	}
-	else
-	{
-		LMmass = 0;
-	}
+	LMmass = opt->DMMass;
 
 	if (opt->man == 0)
 	{
@@ -10996,6 +10983,8 @@ int RTCC::PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INF
 	//Z: AEG block
 	//KAOP: -1 = periapsis only, 0 = apoapsis and periapsis, 1 = apoapsis only
 	//KE: < 0 for ECT, >= 0 for ECI (only needed for Earth)
+	//OUTPUTS:
+	//INFO: Array of size 10. Contains Time, radius, latitude, longitude, height of apogee and perigee
 	AEGDataBlock Z_A, Z_P;
 
 	for (int i = 0;i < 10;i++)
@@ -17939,6 +17928,66 @@ bool RTCC::MEDTimeInputHHMMSS(std::string vec, double &hours)
 		hours = -hours;
 	}
 	return false;
+}
+
+void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)
+{
+	LWPInputTable in;
+	LWPGlobalConstants gl;
+	LaunchWindowProcessor lwp;
+
+	gl.mu = OrbMech::mu_Earth;
+	gl.RREF = OrbMech::R_Earth;
+	gl.w_E = OrbMech::w_Earth;
+
+	in = PZSLVCON;
+	in.RT = RT;
+	in.VT = VT;
+	in.TT = TT;
+
+	lwp.SetGlobalConstants(gl);
+	lwp.LWP(in);
+
+	if (lwp.lwsum.LWPERROR) return;
+
+	PZSLVTAR.GMTLO = lwp.lwsum.GMTLO;
+	PZSLVTAR.TINS = lwp.lwsum.TINS;
+	PZSLVTAR.GSTAR = lwp.rlott.GSTAR;
+	PZSLVTAR.DN = lwp.lwsum.DN*DEG;
+	PZSLVTAR.TPLANE = lwp.lwsum.TPLANE;
+	PZSLVTAR.TYAW = lwp.rlott.TYAW;
+	
+	PZSLVTAR.TGRR = lwp.lwsum.GMTLO - in.DTGRR;
+	PZSLVTAR.AZL = lwp.lwsum.AZL*DEG;
+	PZSLVTAR.VIGM = lwp.lwsum.VIGM;
+	PZSLVTAR.H = (lwp.lwsum.RIGM - OrbMech::R_Earth) / 1852.0;
+	PZSLVTAR.AZP = 0.0; //TBD
+	PZSLVTAR.RIGM = lwp.lwsum.RIGM;
+	PZSLVTAR.GIGM = lwp.lwsum.GIGM*DEG;
+	PZSLVTAR.IIGM = lwp.lwsum.IIGM*DEG;
+	PZSLVTAR.TIGM = lwp.lwsum.TIGM*DEG;
+	PZSLVTAR.TDIGM = lwp.lwsum.TDIGM*DEG;
+	PZSLVTAR.DELNO = lwp.lwsum.DELNO*DEG;
+	PZSLVTAR.DELNOD = lwp.rlott.DELNOD*DEG;
+	PZSLVTAR.PA = lwp.lwsum.PA*DEG;
+	PZSLVTAR.BIAS = PZSLVCON.BIAS;
+
+	AEGHeader header;
+	AEGDataBlock sv_apo, sv_peri;
+	double INFO[10];
+	PMMAPD(header, lwp.svtab.sv_T1, 0, -1, INFO, &sv_apo, &sv_peri);
+
+	PZSLVTAR.HA_T = INFO[4] / 1852.0;
+	PZSLVTAR.HP_T = INFO[9] / 1852.0;
+	PZSLVTAR.I_T = lwp.svtab.sv_T1.coe_mean.i*DEG;
+	PZSLVTAR.DN_T = lwp.svtab.sv_T1.coe_mean.h*DEG;
+
+	PMMAPD(header, lwp.svtab.sv_C, 0, -1, INFO, &sv_apo, &sv_peri);
+
+	PZSLVTAR.HA_C = INFO[4] / 1852.0;
+	PZSLVTAR.HP_C = INFO[9] / 1852.0;
+	PZSLVTAR.TA_C = lwp.svtab.sv_C.coe_osc.l*DEG;
+	PZSLVTAR.DH = lwp.rlott.DH / 1852.0;
 }
 
 void RTCC::PMMIEV(double T_L)

@@ -9664,5 +9664,203 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(4 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 121)
+	{
+		skp->Text(1 * W / 8, 2 * H / 28, "LAUNCH WINDOW PROCESSOR INPUTS", 30);
+
+		switch (GC->rtcc->PZSLVCON.LOT)
+		{
+		case 1:
+			sprintf(Buffer, "Input time");
+			break;
+		case 2:
+			sprintf(Buffer, "Phase angle offset");
+			break;
+		case 3:
+			sprintf(Buffer, "Biased phase zero (GMTLOR)");
+			break;
+		case 4:
+			sprintf(Buffer, "Biased phase zero (TPLANE)");
+			break;
+		case 5:
+			sprintf(Buffer, "In-plane");
+			break;
+		case 6:
+			sprintf(Buffer, "In-plane with nodal regression");
+			break;
+		default:
+			sprintf(Buffer, "");
+			break;
+		}
+		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->PZSLVCON.LOT == 1)
+		{
+			GET_Display2(Buffer, GC->rtcc->PZSLVCON.GMTLOR);
+			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		sprintf(Buffer, "%+.2lf", GC->rtcc->PZSLVCON.RINS);
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+.2lf", GC->rtcc->PZSLVCON.VINS);
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+.3lf°", GC->rtcc->PZSLVCON.GAMINS*DEG);
+		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "No Target!", 10);
+		}
+
+		if (GC->rtcc->PZSLVCON.DELNOF)
+		{
+			sprintf(Buffer, "Compute DELNO");
+			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			sprintf(Buffer, "Input DELNO");
+			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%+.3lf°", GC->rtcc->PZSLVCON.DELNO*DEG);
+			skp->Text(10 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+		}
+		
+	}
+	else if (screen == 122)
+	{
+		skp->Text(3 * W / 8, 2 * H / 28, "LAUNCH TARGETING", 16);
+
+		skp->SetFont(font2);
+
+		skp->Text(1 * W / 32, 5 * H / 32, "GMTLO", 5);
+		skp->Text(1 * W / 32, 6 * H / 32, "TINS", 4);
+
+		skp->Text(1 * W / 32, 8 * H / 32, "GMTLO*", 6);
+		skp->Text(1 * W / 32, 9 * H / 32, "PFA", 3);
+		skp->Text(1 * W / 32, 10 * H / 32, "PFT", 3);
+		skp->Text(1 * W / 32, 11 * H / 32, "DN", 2);
+
+		skp->Text(1 * W / 32, 13 * H / 32, "TYAW", 4);
+		skp->Text(1 * W / 32, 14 * H / 32, "TPLANE", 6);
+
+		skp->Text(1 * W / 32, 16 * H / 32, "AZL", 3);
+		skp->Text(1 * W / 32, 17 * H / 32, "LATLS", 5);
+		skp->Text(1 * W / 32, 18 * H / 32, "LONGLS", 6);
+		skp->Text(1 * W / 32, 19 * H / 32, "GPAZ", 4);
+		skp->Text(1 * W / 32, 20 * H / 32, "YP", 2);
+
+		skp->Text(1 * W / 32, 22 * H / 32, "DELNO", 5);
+		skp->Text(1 * W / 32, 23 * H / 32, "DELNOD", 6);
+
+		skp->Text(21 * W / 32, 5 * H / 32, "TGRR", 4);
+		skp->Text(21 * W / 32, 6 * H / 32, "VIGM", 4);
+		skp->Text(21 * W / 32, 8 * H / 32, "RIGM", 4);
+		skp->Text(21 * W / 32, 10 * H / 32, "GIGM", 4);
+		skp->Text(21 * W / 32, 11 * H / 32, "IIGM", 4);
+		skp->Text(21 * W / 32, 12 * H / 32, "TIGM", 4);
+		skp->Text(21 * W / 32, 13 * H / 32, "TDIGM", 5);
+
+		skp->Text(21 * W / 32, 15 * H / 32, "LAUNCH ORBIT", 12);
+
+		skp->Text(18 * W / 32, 17 * H / 32, "APOGEE", 6);
+		skp->Text(18 * W / 32, 18 * H / 32, "PERIGEE", 7);
+		skp->Text(18 * W / 32, 19 * H / 32, "T ANOMALY", 9);
+		skp->Text(18 * W / 32, 20 * H / 32, "ALTITUDE", 8);
+		skp->Text(18 * W / 32, 21 * H / 32, "DH", 2);
+		skp->Text(18 * W / 32, 22 * H / 32, "TIME", 4);
+
+		skp->Text(21 * W / 32, 24 * H / 32, "TARGET ORBIT", 12);
+
+		skp->Text(18 * W / 32, 26 * H / 32, "APOGEE", 6);
+		skp->Text(18 * W / 32, 27 * H / 32, "PERIGEE", 7);
+		skp->Text(18 * W / 32, 28 * H / 32, "INCLINATION", 11);
+		skp->Text(18 * W / 32, 29 * H / 32, "INS PHASE", 9);
+		skp->Text(18 * W / 32, 30 * H / 32, "DN TARGET", 9);
+		skp->Text(18 * W / 32, 31 * H / 32, "BIAS", 4);
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.GMTLO);
+		skp->Text(15 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.TINS);
+		skp->Text(15 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.GSTAR);
+		skp->Text(15 * W / 32, 8 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3lf", GC->rtcc->PZSLVCON.PFA*DEG);
+		skp->Text(15 * W / 32, 9 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3lf", GC->rtcc->PZSLVCON.PFT);
+		skp->Text(15 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVTAR.DN);
+		skp->Text(15 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.TYAW);
+		skp->Text(15 * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.TPLANE);
+		skp->Text(15 * W / 32, 14 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3lf", GC->rtcc->PZSLVTAR.AZL);
+		skp->Text(15 * W / 32, 16 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVCON.LATLS*DEG);
+		skp->Text(15 * W / 32, 17 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVCON.LONGLS*DEG);
+		skp->Text(15 * W / 32, 18 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.DELNO);
+		skp->Text(15 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.DELNOD);
+		skp->Text(15 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
+
+		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.TGRR);
+		skp->Text(31 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.VIGM);
+		skp->Text(31 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.VIGM / 0.3048);
+		skp->Text(31 * W / 32, 7 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.RIGM);
+		skp->Text(31 * W / 32, 8 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.RIGM / 0.3048);
+		skp->Text(31 * W / 32, 9 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.GIGM);
+		skp->Text(31 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3lf", GC->rtcc->PZSLVTAR.IIGM);
+		skp->Text(31 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3lf", GC->rtcc->PZSLVTAR.TIGM);
+		skp->Text(31 * W / 32, 12 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.7lf", GC->rtcc->PZSLVTAR.TDIGM);
+		skp->Text(31 * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.HA_C);
+		skp->Text(31 * W / 32, 17 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.HP_C);
+		skp->Text(31 * W / 32, 18 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.2lf", GC->rtcc->PZSLVTAR.TA_C);
+		skp->Text(31 * W / 32, 19 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.H);
+		skp->Text(31 * W / 32, 20 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.DH);
+		skp->Text(31 * W / 32, 21 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%E", GC->rtcc->PZSLVTAR.GMTLO);
+		skp->Text(31 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.HA_T);
+		skp->Text(31 * W / 32, 26 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.HP_T);
+		skp->Text(31 * W / 32, 27 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVTAR.I_T);
+		skp->Text(31 * W / 32, 28 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVTAR.PA);
+		skp->Text(31 * W / 32, 29 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVTAR.DN_T);
+		skp->Text(31 * W / 32, 30 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3lf", GC->rtcc->PZSLVTAR.BIAS);
+		skp->Text(31 * W / 32, 31 * H / 32, Buffer, strlen(Buffer));
+	}
 	return true;
 }
