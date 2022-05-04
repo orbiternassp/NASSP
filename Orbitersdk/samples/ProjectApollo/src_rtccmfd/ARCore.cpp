@@ -359,20 +359,15 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	vesseltype = -1;
 
-	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
+	if (IsSaturn(v))
 	{
 		vesseltype = 0;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM"))
+	else if (IsLEM(v))
 	{
 		vesseltype = 1;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\MCC") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/MCC"))
+	else if (IsMCC(v))
 	{
 		vesseltype = 2;
 	}
@@ -481,9 +476,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		g_Data.emem[i] = 0;
 	}
-	ZeroMemory(&g_Data.burnData, sizeof(IMFD_BURN_DATA));
-	g_Data.isRequesting = false;
-	g_Data.progVessel = (Saturn *)vessel;
 	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != NO_ERROR) {
 		sprintf(debugWinsock, "ERROR AT WSAStartup()");
@@ -856,43 +848,8 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 	else if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() == 0) {
 		if (g_Data.connStatus == 1)	{
 			sprintf(debugWinsock, "DISCONNECTED");
-			//g_Data.uplinkDataReady = 0;
-			//g_Data.updateClockReady = 0;
 			g_Data.connStatus = 0;
 			closesocket(m_socket);
-		}
-		//else if (g_Data.connStatus == 2 && g_Data.updateClockReady == 2) {
-		//	UpdateClock();
-		//}
-	}
-	if (g_Data.isRequesting && g_Data.progVessel->GetIMFDClient()->IsBurnDataValid()) {
-		g_Data.burnData = g_Data.progVessel->GetIMFDClient()->GetBurnData();
-		StopIMFDRequest();
-		if (g_Data.burnData.p30mode && !g_Data.burnData.impulsive) {
-			//g_Data.errorMessage = "IMFD not in Off-Axis, P30 Mode";
-			//g_Data.progState = PROGSTATE_TLI_ERROR;
-			dV_LVLH = g_Data.burnData._dV_LVLH;
-			P30TIG = (g_Data.burnData.IgnMJD - GC->rtcc->CalcGETBase())*24.0*3600.0;
-
-			double *EarthPos;
-			EarthPos = new double[12];
-			VECTOR3 EarthVec, EarthVecVel;
-			CELBODY *cEarth;
-			OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-
-			cEarth = oapiGetCelbodyInterface(hEarth);
-			cEarth->clbkEphemeris(g_Data.burnData.IgnMJD + g_Data.burnData.BT / 24.0 / 3600.0, EPHEM_BARYPOS | EPHEM_BARYVEL, EarthPos);
-
-			EarthVec = _V(EarthPos[0], EarthPos[1], EarthPos[2]);
-			EarthVecVel = _V(EarthPos[3], EarthPos[4], EarthPos[5]);
-
-			R_TLI = g_Data.burnData._RCut - EarthVec;
-			R_TLI = _V(R_TLI.x, R_TLI.z, R_TLI.y);
-			V_TLI = g_Data.burnData._VCut - EarthVecVel;
-			V_TLI = _V(V_TLI.x, V_TLI.z, V_TLI.y);
-		}
-		else {
-			//g_Data.progState = PROGSTATE_TLI_WAITING;
 		}
 	}
 }
@@ -1242,29 +1199,25 @@ void ARCore::UpdateGRRTime()
 	double T_L, Azi;
 	LVDC *lvdc;
 
-	if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+	if (IsSaturnV(svtarget))
 	{
 		Saturn *iuv = (Saturn *)svtarget;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = true;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+	else if (IsSaturnIB(svtarget))
 	{
 		Saturn *iuv = (Saturn *)svtarget;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = false;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+	else if (IsSaturnVSIVB(svtarget))
 	{
 		SIVB *iuv = (SIVB *)svtarget;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = true;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+	else if (IsSaturnIBSIVB(svtarget))
 	{
 		SIVB *iuv = (SIVB *)svtarget;
 		lvdc = iuv->GetIU()->GetLVDC();
@@ -1301,29 +1254,25 @@ void ARCore::GetStateVectorFromIU()
 	bool isSaturnV;
 	IU* iu;
 
-	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5"))
+	if (IsSaturnV(vessel))
 	{
 		Saturn *iuv = (Saturn *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = true;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
+	else if (IsSaturnIB(vessel))
 	{
 		Saturn *iuv = (Saturn *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = false;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/sat5stg3"))
+	else if (IsSaturnVSIVB(vessel))
 	{
 		SIVB *iuv = (SIVB *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = true;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/nsat1stg2"))
+	else if (IsSaturnIBSIVB(vessel))
 	{
 		SIVB *iuv = (SIVB *)vessel;
 		iu = iuv->GetIU();
@@ -1588,7 +1537,9 @@ void ARCore::NavCheckPAD()
 
 void ARCore::UpdateTLITargetTable()
 {
-	SaturnV *SatV = (SaturnV*)g_Data.progVessel;
+	if (!IsSaturnV(vessel)) return;
+
+	SaturnV *SatV = (SaturnV*)vessel;
 	LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
 	GC->rtcc->SystemParameters.MDVSTP.T4IG = lvdc->t_3i - 17.0;
@@ -3097,10 +3048,9 @@ int ARCore::subThread()
 	case 8: //TLI PAD
 	{
 		LVDCSV *lvdc = NULL;
-		if (!stricmp(g_Data.progVessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!stricmp(g_Data.progVessel->GetClassName(), "ProjectApollo/Saturn5"))
+		if (IsSaturnV(vessel))
 		{
-			SaturnV *SatV = (SaturnV *)g_Data.progVessel;
+			SaturnV *SatV = (SaturnV *)vessel;
 			if (SatV->iu)
 			{
 				lvdc = (LVDCSV*)SatV->iu->GetLVDC();
@@ -4059,29 +4009,20 @@ int ARCore::subThread()
 			Result = 0;
 			break;
 		}
+		if (svtarget == NULL)
+		{
+			Result = 0;
+			break;
+		}
 
 		IU *iu;
 
-		if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+		if (IsSaturn(svtarget))
 		{
 			Saturn *iuv = (Saturn *)svtarget;
 			iu = iuv->GetIU();
 		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
-		{
-			Saturn *iuv = (Saturn *)svtarget;
-			iu = iuv->GetIU();
-		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
-		{
-			SIVB *iuv = (SIVB *)svtarget;
-			iu = iuv->GetIU();
-		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+		else if (IsSIVB(svtarget))
 		{
 			SIVB *iuv = (SIVB *)svtarget;
 			iu = iuv->GetIU();
@@ -4781,14 +4722,12 @@ int ARCore::subThread()
 
 		bool uplinkaccepted = false;
 
-		if (!stricmp(target->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!stricmp(target->GetClassName(), "ProjectApollo/Saturn5")) {
+		if (IsSaturnV(target)) {
 			Saturn *iuv = (Saturn *)target;
 
 			iu = iuv->GetIU();
 		}
-		else if (!stricmp(target->GetClassName(), "ProjectApollo\\sat5stg3") ||
-			!stricmp(target->GetClassName(), "ProjectApollo/sat5stg3"))
+		else if (IsSaturnVSIVB(target))
 		{
 			SIVB *iuv = (SIVB *)target;
 
@@ -4907,8 +4846,7 @@ int ARCore::subThread()
 
 		IU *iu;
 
-		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
+		if (IsSaturnIB(vessel))
 		{
 			Saturn *iuv = (Saturn *)vessel;
 			iu = iuv->GetIU();
@@ -4942,19 +4880,6 @@ int ARCore::subThread()
 	if (hThread != NULL) { CloseHandle(hThread); }
 
 	return(0);
-}
-
-void ARCore::StartIMFDRequest() {
-
-	g_Data.isRequesting = true;
-	if (!g_Data.progVessel->GetIMFDClient()->IsBurnDataRequesting())
-		g_Data.progVessel->GetIMFDClient()->StartBurnDataRequests();
-}
-
-void ARCore::StopIMFDRequest() {
-
-	g_Data.isRequesting = false;
-		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
 }
 
 void ARCore::DetermineGMPCode()
@@ -5598,4 +5523,50 @@ int ARCore::GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSM
 	LMMass = m50.LMWT;
 
 	return 0;
+}
+
+bool ARCore::IsSaturnIB(VESSEL *v)
+{
+	if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") || !stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) return true;
+	return false;
+}
+
+bool ARCore::IsSaturnV(VESSEL *v)
+{
+	if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") || !stricmp(v->GetClassName(), "ProjectApollo/Saturn5")) return true;
+	return false;
+}
+
+bool ARCore::IsSaturn(VESSEL *v)
+{
+	return (IsSaturnIB(v) || IsSaturnV(v));
+}
+
+bool ARCore::IsLEM(VESSEL *v)
+{
+	if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") || !stricmp(v->GetClassName(), "ProjectApollo/LEM")) return true;
+	return false;
+}
+
+bool ARCore::IsMCC(VESSEL *v)
+{
+	if (!stricmp(v->GetClassName(), "ProjectApollo\\MCC") || !stricmp(v->GetClassName(), "ProjectApollo/MCC")) return true;
+	return false;
+}
+
+bool ARCore::IsSaturnIBSIVB(VESSEL *v)
+{
+	if (!stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") || !stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) return true;
+	return false;
+}
+
+bool ARCore::IsSaturnVSIVB(VESSEL *v)
+{
+	if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") || !stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) return true;
+	return false;
+}
+
+bool ARCore::IsSIVB(VESSEL *v)
+{
+	return (IsSaturnIBSIVB(v) || IsSaturnVSIVB(v));
 }

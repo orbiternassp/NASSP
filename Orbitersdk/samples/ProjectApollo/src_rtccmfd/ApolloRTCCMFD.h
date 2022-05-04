@@ -274,7 +274,6 @@ public:
 	void menuSetLOIDisplayPage();
 	void menuSetTLAND();
 	void menuLOICalc();
-	void menuRequestLTMFD();
 	void menuSetLandmarkTrkPage();
 	void menuSetLmkTime();
 	void menuSetLmkLat();
