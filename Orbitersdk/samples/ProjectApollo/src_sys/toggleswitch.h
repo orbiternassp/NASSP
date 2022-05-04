@@ -1571,6 +1571,7 @@ public:
 
 	int GetState(const char *n);
 	bool SetState(const char *n, int value, bool guard = false, bool hold = false);
+	void SetFailedState(const char *n, bool fail, int fail_state = 0);
 	bool GetFailedState(const char *n);
 	bool GetFlashing(const char *n);
 
