@@ -393,6 +393,7 @@ public:
 	double RTCCClockTime[2];
 	double DeltaClockTime[2];
 	double DesiredRTCCLiftoffTime[2];
+	int iuUplinkResult; //0 = no uplink, 1 = uplink accepted, 2 = vessel has no IU, 3 = uplink rejected, 4 = No targeting parameters
 
 	//LUNAR TARGETING PROGRAM
 	double LUNTAR_lat;

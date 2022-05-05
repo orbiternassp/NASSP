@@ -2927,6 +2927,7 @@ bool LVDC1B::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM
 		Vel_Nav = DCSVVEC;
 		ModeCode27[MC27_DCSNavigationUpdateAccepted] = true;
 		fprintf(lvlog, "Navigation update received! R %f %f %f V %f %f %f T %f \r\n", DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSNUPTIM);
+		return true;
 	}
 	return false;
 }
@@ -9796,6 +9797,7 @@ bool LVDCSV::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM
 		DLTTL[4] = NUPTIM;
 		Timer2Interrupt(true);
 		fprintf(lvlog, "Navigation update received! R %f %f %f V %f %f %f T %f \r\n", DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSNUPTIM);
+		return true;
 	}
 	return false;
 }

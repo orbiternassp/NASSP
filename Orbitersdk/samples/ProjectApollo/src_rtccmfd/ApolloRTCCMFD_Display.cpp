@@ -8583,6 +8583,26 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%+.4lf", GC->rtcc->CZNAVSLV.NUPTIM / 3600.0);
 		skp->Text(24 * W / 32, 25 * H / 32, Buffer, strlen(Buffer));
 
+		switch (G->iuUplinkResult)
+		{
+		case 1:
+			sprintf(Buffer, "Uplink accepted!");
+			break;
+		case 2:
+			sprintf(Buffer, "No vessel or IU!");
+			break;
+		case 3:
+			sprintf(Buffer, "Uplink rejected!");
+			break;
+		case 4:
+			sprintf(Buffer, "No state vector!");
+			break;
+		default:
+			sprintf(Buffer, "No Uplink");
+			break;
+		}
+		skp->Text(13 * W / 32, 30 * H / 32, Buffer, strlen(Buffer));
+
 	}
 	else if (screen == 97)
 	{
@@ -9780,6 +9800,26 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(18 * W / 32, 29 * H / 32, "INS PHASE", 9);
 		skp->Text(18 * W / 32, 30 * H / 32, "DN TARGET", 9);
 		skp->Text(18 * W / 32, 31 * H / 32, "BIAS", 4);
+
+		switch (G->iuUplinkResult)
+		{
+		case 1:
+			sprintf(Buffer, "Uplink accepted!");
+			break;
+		case 2:
+			sprintf(Buffer, "Vessel has no IU!");
+			break;
+		case 3:
+			sprintf(Buffer, "Uplink rejected!");
+			break;
+		case 4:
+			sprintf(Buffer, "No targeting parameters!");
+			break;
+		default:
+			sprintf(Buffer, "No Uplink");
+			break;
+		}
+		skp->Text(2 * W / 32, 28 * H / 32, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 

@@ -27277,13 +27277,18 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 			return 2;
 		}
 		inp.DockingAngle = med_m66.DeltaDA*SystemParameters.MCCRPD;
-		if (med_m66.DPSThrustFactor == -1)
+
+		if (med_m66.DPSThrustFactor <= 0 || med_m66.DPSThrustFactor > 1)
+		{
+			return 2;
+		}
+		else if (med_m66.DPSThrustFactor == -1)
 		{
 			inp.DPSScaleFactor = SystemParameters.MCTDTF;
 		}
-		else if (med_m66.DPSThrustFactor <= 0 || med_m66.DPSThrustFactor > 1)
+		else
 		{
-			return 2;
+			inp.DPSScaleFactor = med_m66.DPSThrustFactor;
 		}
 
 		if (med_m66.TrimAngleIndicator != 0 && med_m66.TrimAngleIndicator != 2)
