@@ -825,6 +825,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		DeltaClockTime[i] = 0.0;
 		DesiredRTCCLiftoffTime[i] = 0.0;
 	}
+	iuUplinkResult = 0;
 
 	LUNTAR_lat = 0.0;
 	LUNTAR_lng = 0.0;
@@ -4007,31 +4008,36 @@ int ARCore::subThread()
 	break;
 	case 28: //SLV Navigation Update Uplink
 	{
+		iuUplinkResult = 0;
+
 		if (GC->rtcc->CZNAVSLV.NUPTIM == 0.0)
 		{
+			iuUplinkResult = 4;
 			Result = 0;
 			break;
 		}
 		if (svtarget == NULL)
 		{
+			iuUplinkResult = 2;
 			Result = 0;
 			break;
 		}
 
-		IU *iu;
+		IU *iu = NULL;
 
-		if (utils::IsVessel(vessel, utils::Saturn))
+		if (utils::IsVessel(svtarget, utils::Saturn))
 		{
 			Saturn *iuv = (Saturn *)svtarget;
 			iu = iuv->GetIU();
 		}
-		else if (utils::IsVessel(vessel, utils::SIVB))
+		else if (utils::IsVessel(svtarget, utils::SIVB))
 		{
 			SIVB *iuv = (SIVB *)svtarget;
 			iu = iuv->GetIU();
 		}
 		else
 		{
+			iuUplinkResult = 2;
 			Result = 0;
 			break;
 		}
@@ -4045,6 +4051,15 @@ int ARCore::subThread()
 
 		uplink = &upl;
 		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SLV_NAVIGATION_UPDATE, uplink);
+
+		if (uplinkaccepted)
+		{
+			iuUplinkResult = 1;
+		}
+		else
+		{
+			iuUplinkResult = 3;
+		}
 
 		Result = 0;
 	}
@@ -4842,8 +4857,11 @@ int ARCore::subThread()
 	break;
 	case 55: //SLV Target Update Uplink
 	{
+		iuUplinkResult = 0;
+
 		if (GC->rtcc->PZSLVTAR.VIGM == 0.0)
 		{
+			iuUplinkResult = 4;
 			Result = 0;
 			break;
 		}
@@ -4857,6 +4875,7 @@ int ARCore::subThread()
 		}
 		else
 		{
+			iuUplinkResult = 2;
 			Result = 0;
 			break;
 		}
@@ -4874,6 +4893,15 @@ int ARCore::subThread()
 
 		uplink = &upl;
 		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SATURNIB_LAUNCH_TARGETING, uplink);
+
+		if (uplinkaccepted)
+		{
+			iuUplinkResult = 1;
+		}
+		else
+		{
+			iuUplinkResult = 3;
+		}
 
 		Result = 0;
 	}
