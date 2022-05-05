@@ -41,6 +41,9 @@
     <ClInclude Include="..\..\src_mfd\ProjectApolloMFDButtons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_aux\nassputils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_mfd\MFDResources.rc">

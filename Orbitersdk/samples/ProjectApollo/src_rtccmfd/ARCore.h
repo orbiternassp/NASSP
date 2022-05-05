@@ -406,16 +406,6 @@ public:
 private:
 
 	AR_GCore* GC;
-
-	//Utility functions
-	bool IsSaturnIB(VESSEL *v);
-	bool IsSaturnV(VESSEL *v);
-	bool IsSaturn(VESSEL *v);
-	bool IsLEM(VESSEL *v);
-	bool IsMCC(VESSEL *v);
-	bool IsSaturnIBSIVB(VESSEL *v);
-	bool IsSaturnVSIVB(VESSEL *v);
-	bool IsSIVB(VESSEL *v);
 };
 
 
