@@ -328,7 +328,7 @@ void ApolloRTCCMFD::menuIUUplink()
 	SevenParameterUpdate coe;
 	SaturnV* testves;
 
-	testves = (SaturnV*)G->g_Data.progVessel;
+	testves = (SaturnV*)G->vessel;
 	LVDCSV *lvdc = (LVDCSV*)testves->iu->GetLVDC();
 
 	coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->P30TIG, lvdc->TB5, lvdc->mu, 578.6);
@@ -6767,24 +6767,6 @@ void ApolloRTCCMFD::menuNavCheckPADCalc()
 void ApolloRTCCMFD::menuSetNavCheckGET()
 {
 	GenericGETInput(&G->navcheckpad.NavChk[0], "Choose the GET for the Nav Check (Format: hhh:mm:ss)");
-}
-
-void ApolloRTCCMFD::menuRequestLTMFD()
-{
-	if (G->vesseltype == 0)
-	{
-		if (G->manpadopt == 0 || G->manpadopt == 2)
-		{
-			if (G->g_Data.isRequesting)
-			{
-				G->StopIMFDRequest();
-			}
-			else
-			{
-				G->StartIMFDRequest();
-			}
-		}
-	}
 }
 
 void ApolloRTCCMFD::menuCycleDKIChaser()

@@ -20,11 +20,8 @@ struct ApolloRTCCMFDData {  // global data storage
 	int connStatus;
 	int emem[24];
 	int uplinkState;
-	IMFD_BURN_DATA burnData;
 	std::queue<unsigned char> uplinkBuffer;
 	double uplinkBufferSimt;
-	bool isRequesting;
-	Saturn *progVessel;
 };
 
 class AR_GCore
@@ -152,8 +149,6 @@ public:
 
 	int startSubthread(int fcn);
 	int subThread();
-	void StartIMFDRequest();
-	void StopIMFDRequest();
 
 	//EPHEM PROGRAM
 	void GenerateAGCEphemeris();
