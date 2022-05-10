@@ -59,7 +59,7 @@ using namespace nassp;
 
 static HINSTANCE g_hDLL;
 static int g_MFDmode; // identifier for new MFD mode
-int failmode;
+int failmode;		// should find a better spot for this variable
 
 #define SD_RECEIVE      0x00
 #define SD_SEND         0x01
@@ -1474,7 +1474,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 	if (failmode == 3) { fail_dice = rand() % 2; }
 	sysdice = rand() % 10;
 
-	if (fail_dice == 1) {
+	if (fail_dice == 1) {						//Would like to make this a class array, to make it easire to print to the Log, or eventually have MCC reference the sysdice variable and udnerstand it
 		if (sysdice == 1) { saturn->GNPowerAc1CircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN PWR AC1"); }
 		if (sysdice == 2) { saturn->GNPowerAc2CircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN PWR AC2"); }
 		if (sysdice == 3) {saturn->GNIMUMnACircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: IMU MnA");}
