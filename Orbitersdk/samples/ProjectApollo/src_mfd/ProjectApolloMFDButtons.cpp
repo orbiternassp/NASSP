@@ -208,7 +208,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("PLAT", OAPI_KEY_D, &ProjectApolloMFD::menuSetIUPlatformFailure);
 	RegisterFunction("SI", OAPI_KEY_E, &ProjectApolloMFD::menuSetSIEngineFailure);
 	RegisterFunction("SII", OAPI_KEY_G, &ProjectApolloMFD::menuSetSIIEngineFailure);
-	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("SYS", OAPI_KEY_H, &ProjectApolloMFD::menuSystemFailures);
 	RegisterFunction("", OAPI_KEY_I, &ProjectApolloMFD::menuVoid);
 
 	RegisterFunction("PAG", OAPI_KEY_P, &ProjectApolloMFD::menuCycleFailuresSubpage);
