@@ -112,6 +112,7 @@ public:
 	void menuSetIUPlatformFailure();
 	void menuSetSIEngineFailure();
 	void menuSetSIIEngineFailure();
+	bool menuSystemFailures(int n);
 	void menuSetRandomFailures();
 	void menuAEAACommands();
 
