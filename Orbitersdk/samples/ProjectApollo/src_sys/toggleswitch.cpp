@@ -487,7 +487,7 @@ void TwoPositionSwitch::SaveState(FILEHANDLE scn)
 {
 	char buffer[1000];
 
-	sprintf(buffer, "%i %u", state, GetFlags()); 
+	sprintf(buffer, "%i %i %u", state, Failed, GetFlags()); 		//Saves Failed attribute in second field
 	oapiWriteScenario_string(scn, name, buffer);
 }
 
@@ -496,14 +496,16 @@ void TwoPositionSwitch::LoadState(char *line)
 	// Load state
 	char buffer[100];
 	int st = 0;
+	int fl = 0;
 	unsigned int f = 0;
 
-	sscanf(line, "%s %i %u", buffer, &st, &f);
+	sscanf(line, "%s %i %i %u", buffer, &st, &fl, &f);
 	if (!strnicmp(buffer, name, strlen(name))) {
 		state = st;
+		Failed = fl;
 		SetFlags(f);
 	}
-}
+}	
 
 void TwoPositionSwitch::SetState(int value)
 {
@@ -1140,6 +1142,9 @@ bool CircuitBrakerSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 
 double CircuitBrakerSwitch::Voltage()
 {
+	GetState();
+	if (Failed) return 0.0;			//If a braker has failed, the braker will not supply voltage
+	
 	if ((state != 0) && SRC)
 		return SRC->Voltage();
 
