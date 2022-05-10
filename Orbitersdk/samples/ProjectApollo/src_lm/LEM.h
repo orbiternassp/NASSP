@@ -615,7 +615,6 @@ public:
 	virtual void StopEVA();
 	virtual bool IsForwardHatchOpen() { return ForwardHatch.IsOpen(); }
 
-	char *getOtherVesselName() { return agc.OtherVesselName;};
 	APSPropellantSource *GetAPSPropellant() { return &APSPropellant; };
 	DPSPropellantSource *GetDPSPropellant() { return &DPSPropellant; };
 

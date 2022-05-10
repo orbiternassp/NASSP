@@ -919,8 +919,6 @@ public:
 
 	bool GetCMRCSStateCommanded(THRUSTER_HANDLE th);
 
-	char *getOtherVesselName() { return agc.OtherVesselName;};
-
 	//
 	// RHC/THC 
 	//
