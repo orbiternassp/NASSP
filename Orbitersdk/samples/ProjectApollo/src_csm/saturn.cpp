@@ -763,8 +763,8 @@ void Saturn::initSaturn()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this, false);
-	dsky.Init(&LightingNumIntLMDCCB, &NumericRotarySwitch);
-	dsky2.Init(&LightingNumIntLEBCB, &Panel100NumericRotarySwitch);
+	dsky.Init(agc.GetPS(), &NumericRotarySwitch);
+	dsky2.Init(agc.GetPS(), &Panel100NumericRotarySwitch);
 
 	//
 	// Configure SECS.

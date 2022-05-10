@@ -41,7 +41,7 @@ public:
 	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel = 015);
 	virtual ~DSKY();
 
-	void Init(e_object *powered, RotationalSwitch *dimmer);
+	void Init(PowerMerge *ps, RotationalSwitch *dimmer);
 	void Reset();
 
 	//
@@ -163,6 +163,11 @@ protected:
 
 	bool IsPowered();
 	void SendKeyCode(int val);
+
+	//
+	// Power supplies
+	//
+	PowerMerge *AGCPower;
 
 	//
 	// Lights.

@@ -301,6 +301,12 @@ public:
 	void WirePower(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); }
 
 	///
+	/// \brief Get a pointer to the AGC PSU for use by the DSKY
+	/// \return Pointer to PowerMerge used by AGC
+	///
+	PowerMerge* GetPS() { return &DCPower; }
+
+	///
 	/// \brief Is the AGC supplied with power.
 	/// \return True if the AGC is powered.
 	///

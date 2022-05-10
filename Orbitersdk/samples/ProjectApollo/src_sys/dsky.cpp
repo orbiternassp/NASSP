@@ -204,10 +204,11 @@ DSKY::~DSKY()
 	//
 }
 
-void DSKY::Init(e_object *powered, RotationalSwitch *dimmer)
+void DSKY::Init(PowerMerge *ps, RotationalSwitch *dimmer)
 
 {
-	WireTo(powered);
+	AGCPower = ps;
+	WireTo(AGCPower); // TODO: Rewrite this when power for indicators and integral lighting is added.
 	DimmerRotationalSwitch = dimmer;
 	Reset();
 	FirstTimeStep = true;
