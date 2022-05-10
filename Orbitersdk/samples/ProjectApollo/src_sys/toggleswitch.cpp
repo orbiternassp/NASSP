@@ -428,7 +428,7 @@ void TwoPositionSwitch::VesimSwitchTo(int newState)
 void TwoPositionSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
 {
-	if (IsUp())
+	if (state == TOGGLESWITCH_UP)
 	{
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
 	}
@@ -449,7 +449,7 @@ void TwoPositionSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
 	if (!bHasAnimations) return;
 
-	if (IsUp()) {
+	if (state == TOGGLESWITCH_UP) {
 		OurVessel->SetAnimation(anim_switch, 1.0);
 	}
 	else
@@ -1142,10 +1142,7 @@ bool CircuitBrakerSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 
 double CircuitBrakerSwitch::Voltage()
 {
-	GetState();
-	if (Failed) return 0.0;			//If a braker has failed, the braker will not supply voltage
-	
-	if ((state != 0) && SRC)
+	if ((GetState() != 0) && SRC)
 		return SRC->Voltage();
 
 	return 0.0;
