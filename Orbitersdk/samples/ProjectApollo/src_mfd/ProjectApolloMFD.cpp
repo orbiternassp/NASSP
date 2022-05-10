@@ -99,6 +99,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	VECTOR3 V42angles;
 
 	int killrot;
+	int failmode;
 } g_Data;
 
 static WSADATA wsaData;
@@ -841,11 +842,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lf nm  ", peDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
-		sprintf(buffer, "%.2lf°   ", elem.i * DEG);
+		sprintf(buffer, "%.2lfÂ°   ", elem.i * DEG);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.7), buffer, strlen(buffer));
-		sprintf(buffer, "%.2lf°   ", lat * DEG);
+		sprintf(buffer, "%.2lfÂ°   ", lat * DEG);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.8), buffer, strlen(buffer));
-		sprintf(buffer, "%.2lf°   ", lon * DEG);
+		sprintf(buffer, "%.2lfÂ°   ", lon * DEG);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.85), buffer, strlen(buffer));
 
 		if (g_Data.killrot) {
@@ -1087,9 +1088,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
 			sprintf(buffer, "%.1f s", g_Data.iuUplinkDT);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
-			sprintf(buffer, "%.01f°", g_Data.iuUplinkPitch*DEG);
+			sprintf(buffer, "%.01fÂ°", g_Data.iuUplinkPitch*DEG);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), buffer, strlen(buffer));
-			sprintf(buffer, "%.01f°", g_Data.iuUplinkYaw*DEG);
+			sprintf(buffer, "%.01fÂ°", g_Data.iuUplinkYaw*DEG);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.6), buffer, strlen(buffer));
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_REMOVE_INHIBIT_MANEUVER4)
@@ -1466,6 +1467,25 @@ void ProjectApolloMFD::Update (HDC hDC)
 		{
 			TextOut(hDC, width / 2, (int)(height * 0.5), "Failures not supported!", 23);
 		}
+	int sysdice = 0;										//Failure code
+	int fail_dice = 0;
+	if (failmode == 1) { fail_dice = rand() % 10000; }
+	if (failmode == 2) { fail_dice = rand() % 100; }
+	if (failmode == 3) { fail_dice = rand() % 2; }
+	sysdice = rand() % 10;
+
+	if (fail_dice == 1) {
+		if (sysdice == 1) { saturn->GNPowerAc1CircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN PWR AC1"); }
+		if (sysdice == 2) { saturn->GNPowerAc2CircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN PWR AC2"); }
+		if (sysdice == 3) {saturn->GNIMUMnACircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: IMU MnA");}
+		if (sysdice == 4) { saturn->GNIMUMnBCircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: IMU MnB"); }
+		if (sysdice == 5) { saturn->GNIMUHTRMnACircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: IMU HTR MnA"); }
+		if (sysdice == 6) { saturn->GNIMUHTRMnBCircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: IMU HTR MnB"); }
+		if (sysdice == 7) { saturn->GNComputerMnACircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN Computer MnA"); }
+		if (sysdice == 8) { saturn->GNComputerMnBCircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN Computer MnB"); }
+		if (sysdice == 9) { saturn->GNOpticsMnACircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: Optics MnA"); }
+		if (sysdice == 10) { saturn->GNOpticsMnBCircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: Optics MnB"); }	
+	};
 	}
 }
 
@@ -1835,6 +1855,13 @@ void ProjectApolloMFD::SetSIIEngineFailure(int n, double misst)
 			saturn->SetEngineFailure(2, n, misst, true);
 		}
 	}
+}
+
+bool ProjectApolloMFD::menuSystemFailures(int n)
+{
+	switch (n);
+	failmode = n;
+	return true;
 }
 
 void ProjectApolloMFD::SetRandomFailures(double FailureMultiplier)
@@ -2715,6 +2742,12 @@ void ProjectApolloMFD::menuSetSIIEngineFailure()
 	oapiOpenInputBox("S-II engine failure (number of engine, time of failure, 0 to disable):", SIIEngineFailureInput, 0, 20, (void*)this);
 }
 
+void ProjectApolloMFD::menuSystemFailures()
+{
+	bool SystemFailureInput(void* id, char* str, void* data);
+	oapiOpenInputBox("Failure Mode (0-None 1-Realistic 2-Sim 3-Debug):", SystemFailureInput, 0, 20, (void*)this);
+}	
+
 void ProjectApolloMFD::menuSetRandomFailures()
 {
 	bool RandomFailuresInput(void *id, char *str, void *data);
@@ -2848,6 +2881,11 @@ bool SIIEngineFailureInput(void *id, char *str, void *data)
 		return true;
 	}
 	return false;
+}
+
+bool SystemFailureInput(void* id, char* str, void* data)					//OK
+{
+	return ((ProjectApolloMFD*)data)->menuSystemFailures(atoi(str));
 }
 
 bool RandomFailuresInput(void *id, char *str, void *data)
