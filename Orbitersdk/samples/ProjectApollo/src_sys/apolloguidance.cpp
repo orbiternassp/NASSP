@@ -50,7 +50,6 @@
 ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc), agcCycleMutex()
 
 {
-	Reset = false;
 	CurrentTimestep = 0;
 	LastTimestep = 0;
 	LastCycled = 0;
@@ -160,23 +159,6 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 		vagc.InputChannel[033] = (int16_t)val33.to_ulong();
 	}
 }
-
-//
-// Force a hardware restart.
-//
-
-void ApolloGuidance::ForceRestart()
-
-{
-	Reset = false;
-}
-
-bool ApolloGuidance::OutOfReset()
-
-{
-	return true;
-}
-
 
 // Do a single timestep - Used by CM to maintain sync between telemetry and vAGC.
 bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
@@ -320,7 +302,7 @@ typedef union
 
 {
 	struct {
-		unsigned Reset:1;
+		unsigned Spare:1;
 		unsigned isFirstTimestep:1;
 		unsigned ExtraCode:1;
 		unsigned AllowInterrupt:1;
@@ -371,7 +353,6 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	AGCState state;
 
 	state.word = 0;
-	state.u.Reset = Reset;
 	state.u.isFirstTimestep = isFirstTimestep;
 	state.u.ExtraCode = vagc.ExtraCode;
 	state.u.AllowInterrupt = vagc.AllowInterrupt;
@@ -543,7 +524,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			AGCState state;
 			sscanf (line+5, "%d", &state.word);
 
-			Reset = state.u.Reset;
 			isFirstTimestep = (state.u.isFirstTimestep != 0);
 			vagc.ExtraCode = state.u.ExtraCode;
 			vagc.AllowInterrupt = state.u.AllowInterrupt;

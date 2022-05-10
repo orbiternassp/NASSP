@@ -224,8 +224,7 @@ public:
 	//
 
 	///
-	/// This function allows you read data back from the erasable memory in the Virtual AGC. If called on the
-	/// C++ AGC it returns zero.
+	/// This function allows you read data back from the erasable memory in the Virtual AGC.
 	///
 	/// \brief Return the contents of an erasable memory location
 	/// \param bank Memory bank to access.
@@ -235,8 +234,7 @@ public:
 	int GetErasable(int bank, int address);
 
 	///
-	/// This function sets data in the erasable memory in the Virtual AGC. If called on the
-	/// C++ AGC it does nothing.
+	/// This function sets data in the erasable memory in the Virtual AGC.
 	///
 	/// \param bank Memory bank to access.
 	/// \param address Memory location within the bank to access.
@@ -368,11 +366,6 @@ protected:
 	void GenericWriteMemory(unsigned int loc, int val);
 
 	int16_t ConvertDecimalToAGCOctal(double x, bool highByte);
-
-	///
-	/// \brief Are we running the reset program?
-	///
-	bool Reset;
 
 	///
 	/// \brief The primary DSKY attached to this AGC.
