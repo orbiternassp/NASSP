@@ -59,6 +59,7 @@ using namespace nassp;
 
 static HINSTANCE g_hDLL;
 static int g_MFDmode; // identifier for new MFD mode
+int failmode;
 
 #define SD_RECEIVE      0x00
 #define SD_SEND         0x01
@@ -99,7 +100,6 @@ static struct ProjectApolloMFDData {  // global data storage
 	VECTOR3 V42angles;
 
 	int killrot;
-	int failmode;
 } g_Data;
 
 static WSADATA wsaData;
@@ -1857,7 +1857,7 @@ void ProjectApolloMFD::SetSIIEngineFailure(int n, double misst)
 	}
 }
 
-bool ProjectApolloMFD::menuSystemFailures(int n)
+bool ProjectApolloMFD::SetSystemFailures(int n)
 {
 	switch (n);
 	failmode = n;
@@ -2885,7 +2885,7 @@ bool SIIEngineFailureInput(void *id, char *str, void *data)
 
 bool SystemFailureInput(void* id, char* str, void* data)					//OK
 {
-	return ((ProjectApolloMFD*)data)->menuSystemFailures(atoi(str));
+	return ((ProjectApolloMFD*)data)->SetSystemFailures(atoi(str));
 }
 
 bool RandomFailuresInput(void *id, char *str, void *data)
