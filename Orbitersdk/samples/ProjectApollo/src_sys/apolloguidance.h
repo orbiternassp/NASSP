@@ -316,6 +316,7 @@ public:
 	bool GetProgAlarm() { return ProgAlarm; }
 	bool GetTrackerAlarm() { return TrackerAlarm; }
 	bool GetGimbalLockAlarm() { return GimbalLockAlarm; }
+	bool GetRestartLight() { return vagc.RestartLight; }
 
 	///
 	/// \brief Interrupts
@@ -355,8 +356,6 @@ protected:
 	virtual void ProcessChannel143(ChannelValue val);
 	virtual void ProcessChannel163(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
-
-public:
 
 	//
 	// Odds and ends.
@@ -472,6 +471,20 @@ public:
 	bool ProgAlarm;
 	bool TrackerAlarm;
 	bool GimbalLockAlarm;
+
+	// These classes are misbehaving and should not be directly talking to vagc memory as it was inadvertently marked public.
+	// For now they are marked as friend until they are migrated to a proper interface.
+	friend class RTCC;
+	friend class ApolloRTCCMFD;
+	friend class ProjectApolloMFD;
+	friend class ARCore;
+
+	friend class LEM_LR;
+	friend class LEM_RR;
+	friend class CDU;
+	friend class VHFRangingSystem;
+	friend class LM_PCM;
+	friend class PCM;
 };
 
 //
