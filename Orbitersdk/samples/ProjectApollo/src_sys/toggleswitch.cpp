@@ -487,7 +487,7 @@ void TwoPositionSwitch::SaveState(FILEHANDLE scn)
 {
 	char buffer[1000];
 
-	sprintf(buffer, "%i %i %u", state, Failed, GetFlags()); 		//Saves Failed attribute in second field
+	sprintf(buffer, "%i %u %u", state, GetFlags(), Failed); 		//Saves Failed attribute in after flags
 	oapiWriteScenario_string(scn, name, buffer);
 }
 
@@ -499,7 +499,7 @@ void TwoPositionSwitch::LoadState(char *line)
 	int fl = 0;
 	unsigned int f = 0;
 
-	sscanf(line, "%s %i %i %u", buffer, &st, &fl, &f);
+	sscanf(line, "%s %i %i %u", buffer, &st, &f, &fl);
 	if (!strnicmp(buffer, name, strlen(name))) {
 		state = st;
 		Failed = fl;
