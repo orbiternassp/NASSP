@@ -1150,7 +1150,7 @@ double CircuitBrakerSwitch::Voltage()
 
 double CircuitBrakerSwitch::Current()
 {	
-	if ((state != 0) && SRC && SRC->IsEnabled()) {
+	if ((GetState() != 0) && SRC && SRC->IsEnabled()) {
 		Volts = SRC->Voltage();
 		if (Volts > 0.0)
 			Amperes = (power_load / Volts);
@@ -1165,7 +1165,7 @@ double CircuitBrakerSwitch::Current()
 
 double CircuitBrakerSwitch::Frequency()
 {
-	if ((state != 0) && SRC)
+	if ((GetState() != 0) && SRC)
 		return SRC->Frequency();
 
 	return 0.0;
