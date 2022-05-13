@@ -1469,13 +1469,15 @@ void ProjectApolloMFD::Update (HDC hDC)
 		}
 	int sysdice = 0;										//Failure code
 	int fail_dice = 0;
+	const char* systems[10] = { "GNPowerAc1CircuitBraker", "GNPowerAc2CircuitBraker", "GNIMUMnACircuitBraker", "GNIMUMnBCircuitBraker", "GNIMUHTRMnACircuitBraker", "GNIMUHTRMnBCircuitBraker", "GNComputerMnACircuitBraker", "GNComputerMnBCircuitBraker", "saturn->GNOpticsMnACircuitBraker", "GNOpticsMnBCircuitBraker"};
 	if (failmode == 1) { fail_dice = rand() % 10000; }
 	if (failmode == 2) { fail_dice = rand() % 100; }
 	if (failmode == 3) { fail_dice = rand() % 2; }
 	sysdice = rand() % 10;
 
 	if (fail_dice == 1) {						//Would like to make this a class array, to make it easire to print to the Log, or eventually have MCC reference the sysdice variable and udnerstand it
-		if (sysdice == 1) { saturn->GNPowerAc1CircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN PWR AC1"); }
+		saturn->MainPanel.SetFailedState(systems[sysdice], 1, 0);	//Updated way of failing brakers, currently causes an unresolved external when compiling
+		/* if (sysdice == 1) { saturn->GNPowerAc1CircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN PWR AC1"); }
 		if (sysdice == 2) { saturn->GNPowerAc2CircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN PWR AC2"); }
 		if (sysdice == 3) {saturn->GNIMUMnACircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: IMU MnA");}
 		if (sysdice == 4) { saturn->GNIMUMnBCircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: IMU MnB"); }
@@ -1484,7 +1486,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		if (sysdice == 7) { saturn->GNComputerMnACircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN Computer MnA"); }
 		if (sysdice == 8) { saturn->GNComputerMnBCircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN Computer MnB"); }
 		if (sysdice == 9) { saturn->GNOpticsMnACircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: Optics MnA"); }
-		if (sysdice == 10) { saturn->GNOpticsMnBCircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: Optics MnB"); }	
+		if (sysdice == 10) { saturn->GNOpticsMnBCircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: Optics MnB"); }	*/
 	};
 	}
 }
