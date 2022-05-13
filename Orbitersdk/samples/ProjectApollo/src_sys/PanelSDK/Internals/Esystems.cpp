@@ -1715,3 +1715,16 @@ void Diode::Save(FILEHANDLE scn)
 	sprintf(cbuf, "%s", name);
 	oapiWriteScenario_string(scn, "    <DIODE> ", cbuf);
 }
+
+//------------------------------ Light Class -----------------------------------
+electricLight::electricLight(char* name, e_object* i_src, const bool flashing, const double onTime, const double offTime, OBJHANDLE thisVessel, VECTOR3 pos, VECTOR3 dir, double range, double att0, double att1, double att2, double umbra, double penumbra, COLOUR4 diffuse, COLOUR4 specular, COLOUR4 ambient, double powerDraw, double nomVoltage)
+{
+	LightPosition = pos;
+	LightDirection = dir;
+	lamp = new SpotLight(thisVessel, LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra);
+}
+
+electricLight::~electricLight()
+{
+	delete lamp;
+}

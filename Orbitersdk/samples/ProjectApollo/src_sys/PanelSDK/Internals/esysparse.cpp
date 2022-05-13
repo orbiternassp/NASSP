@@ -163,6 +163,50 @@ void E_system::Create_Diode(char *line)
 	AddSystem(new Diode(name, Source, NominalTemperature, SaturationCurrent));
 }
 
+void E_system::Create_ElectricLight(char* line)
+{
+	char name[100] = "\0";
+	char sourceName[100] = "\0";
+	e_object* powerSource = nullptr;
+	bool flashing = false;
+	double onTime = 0;
+	double offTime = 0;
+	VECTOR3 pos = _V(0, 0, 0);
+	VECTOR3 dir = _V(1, 0, 0);
+	double range = 0;
+	double att0 = 0;
+	double att1 = 0;
+	double att2 = 0;
+	double umbra = 0;
+	double penumbra = 0;
+	COLOUR4 diffuse;
+	diffuse.r = 0;
+	diffuse.g = 0;
+	diffuse.b = 0;
+	diffuse.a = 0;
+	COLOUR4 specular;
+	specular.r = 0;
+	specular.g = 0;
+	specular.b = 0;
+	specular.a = 0;
+	COLOUR4 ambient;
+	ambient.r = 0;
+	ambient.g = 0;
+	ambient.b = 0;
+	ambient.a = 0;
+	double powerDraw = 0;
+	double nomVoltage = 0;
+
+	sscanf(line + 7, "%s %s %d %lf %lf <%lf %lf %lf> <%lf %lf %lf> %lf %lf %lf %lf %lf %lf <%lf %lf %lf %lf> <%lf %lf %lf %lf> <%lf %lf %lf %lf> %lf %lf",
+		name, sourceName, flashing, onTime, offTime, pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, range, att0, att1, att2, umbra, penumbra, diffuse.r, diffuse.g, diffuse.b, diffuse.a,
+		specular.r, specular.g, specular.b, specular.a, ambient.r, ambient.g, ambient.a, powerDraw,	nomVoltage);
+
+
+	OBJHANDLE Ves = this->Vessel->GetHandle();
+	e_object* SRC = (e_object*)GetPointerByString(sourceName);
+	electricLight* newLight = new electricLight(name, SRC, flashing, onTime, offTime, Ves, pos, dir, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient, powerDraw, nomVoltage);
+}
+
 void E_system::Create_Battery(char *line)
 {
 	char name[100];
@@ -235,6 +279,8 @@ void E_system::Build() {
 			Create_Pump(line);
 		else if (Compare(line, "<DIODE>"))
 			Create_Diode(line);
+		else if (Compare(line, "<LIGHT>"))
+			Create_ElectricLight(line);
 
 		line =ReadConfigLine();
 	}
