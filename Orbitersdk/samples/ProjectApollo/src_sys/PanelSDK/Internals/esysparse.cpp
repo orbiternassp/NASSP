@@ -198,8 +198,14 @@ void E_system::Create_ElectricLight(char* line)
 	double nomVoltage = 0;
 
 	sscanf(line + 7, "%s %s %d %lf %lf <%lf %lf %lf> <%lf %lf %lf> %lf %lf %lf %lf %lf %lf <%lf %lf %lf %lf> <%lf %lf %lf %lf> <%lf %lf %lf %lf> %lf %lf",
-		name, sourceName, &flashing, &onTime, &offTime, &pos.x, &pos.y, &pos.z, &dir.x, &dir.y, &dir.z, &range, &att0, &att1, &att2, &umbra, &penumbra, &diffuse.r, &diffuse.g, &diffuse.b, &diffuse.a,
-		&specular.r, &specular.g, &specular.b, &specular.a, &ambient.r, &ambient.g, &ambient.a, &powerDraw, &nomVoltage);
+		name, sourceName, &flashing, &onTime, &offTime,
+		&pos.x, &pos.y, &pos.z,
+		&dir.x, &dir.y, &dir.z,
+		&range, &att0, &att1, &att2, &umbra, &penumbra, 
+		&diffuse.r, &diffuse.g, &diffuse.b, &diffuse.a,
+		&specular.r, &specular.g, &specular.b, &specular.a, 
+		&ambient.r, &ambient.g, &ambient.b, &ambient.a,
+		&powerDraw, &nomVoltage);
 
 
 	OBJHANDLE Ves = this->Vessel->GetHandle();
