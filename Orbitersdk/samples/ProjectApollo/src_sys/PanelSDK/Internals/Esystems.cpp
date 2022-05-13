@@ -1721,7 +1721,8 @@ electricLight::electricLight(char* name, e_object* i_src, const bool flashing, c
 {
 	LightPosition = pos;
 	LightDirection = dir;
-	lamp = new SpotLight(thisVessel, LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra);
+	//lamp = new SpotLight(thisVessel, LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra);
+	lamp = (SpotLight*)((VESSEL3)thisVessel).AddSpotLight(LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient);
 }
 
 electricLight::~electricLight()
