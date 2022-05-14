@@ -1622,6 +1622,7 @@ void ProjectApolloMFD::WriteStatus (FILEHANDLE scn) const
 		oapiWriteScenario_string(scn, "PROGVESSEL", g_Data.progVessel->GetName());
 	if (g_Data.gorpVessel)
 		oapiWriteScenario_string(scn, "GORPVESSEL", g_Data.gorpVessel->GetName());
+	oapiWriteScenario_int(scn, "FAILMODE", failmode);
 }
 
 void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
@@ -1649,6 +1650,7 @@ void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
 		} 
 		papiReadScenario_int(line, "SCREEN", screen);
 		papiReadScenario_int(line, "PROGNO", g_Data.prog);
+		papiReadScenario_int(line, "FAILMODE", failmode);
 	}
 }
 
