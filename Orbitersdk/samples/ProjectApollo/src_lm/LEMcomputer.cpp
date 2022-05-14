@@ -133,17 +133,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		// Clear ISR flag
 		vagc.InIsr = 0;
 		// Clear interrupt requests
-		vagc.InterruptRequests[0] = 0;
-		vagc.InterruptRequests[1] = 0;
-		vagc.InterruptRequests[2] = 0;
-		vagc.InterruptRequests[3] = 0;
-		vagc.InterruptRequests[4] = 0;
-		vagc.InterruptRequests[5] = 0;
-		vagc.InterruptRequests[6] = 0;
-		vagc.InterruptRequests[7] = 0;
-		vagc.InterruptRequests[8] = 0;
-		vagc.InterruptRequests[9] = 0;
-		vagc.InterruptRequests[10] = 0;
+		memset(vagc.InterruptRequests, 0, sizeof(vagc.InterruptRequests));
 		// Reset cycle counter and Extracode flags
 		vagc.CycleCounter = 0;
 		vagc.ExtraCode = 0;
@@ -153,7 +143,11 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		vagc.PendFlag = 0;
 		vagc.PendDelay = 0;
 		// Don't disturb erasable core
-		// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+		// Zero all output channels while without power.
+		memset(OutputChannel, 0, sizeof(OutputChannel));
+		for (int i = 0; i < MAX_OUTPUT_CHANNELS; i++) {
+			SetOutputChannel(i, 0);
+		}
 		// Reset standby flip-flop
 		vagc.Standby = 0;
 		// Turn on EL display and LGC Light (DSKYWarn).
