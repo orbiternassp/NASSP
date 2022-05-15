@@ -27,13 +27,6 @@
 
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "Orbitersdk.h"
-#include <stdio.h>
-#include <math.h>
-#include "soundlib.h"
-
-#include "nasspdefs.h"
-#include "nasspsound.h"
 
 #include "toggleswitch.h"
 

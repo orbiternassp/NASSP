@@ -24,6 +24,14 @@
 
 #pragma once
 
+#include "Orbitersdk.h"
+#include <stdio.h>
+#include <math.h>
+#include "soundlib.h"
+
+#include "nasspdefs.h"
+#include "nasspsound.h"
+
 #include <vector>
 #include "cautionwarning.h"
 #include "powersource.h"

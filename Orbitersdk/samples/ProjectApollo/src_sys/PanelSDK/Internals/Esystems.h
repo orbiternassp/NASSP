@@ -628,6 +628,14 @@ public:
 	~electricLight();
 	virtual void refresh(double dt);
 private:
+	double nomPowerDraw;
+	double nomVoltage;
+	bool (*active)();
+	bool flash;
+	bool flashstate;
+	double ontime;
+	double offtime;
+	double flashtimer;
 	VECTOR3 LightPosition;
 	VECTOR3 LightDirection;
 	COLOUR4 Lightdiffuse;

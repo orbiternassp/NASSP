@@ -65,6 +65,7 @@
 #include "sce.h"
 #include "csmsensors.h"
 #include "rhc.h"
+#include "csm_lighting.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -3678,6 +3679,10 @@ protected:
 	Cooling *FuelCellCooling[3];
 	h_Tank *FuelCellO2Manifold[3];
 	h_Tank *FuelCellH2Manifold[3];
+	
+	//Electric Lights
+	electricLight* spotlight;
+	SpotlightControler spotlightcontroler;
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];

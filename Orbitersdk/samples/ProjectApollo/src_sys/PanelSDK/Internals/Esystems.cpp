@@ -1723,6 +1723,10 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	SRC = i_src;
 	max_stage = 99;
 
+	flash = flashing;
+	ontime = onTime;
+	offtime = offTime;
+
 	LightPosition = pos;
 	LightDirection = dir;
 	Lightdiffuse = diffuse;
@@ -1740,4 +1744,11 @@ void electricLight::refresh(double dt) {
 	//if(!strcmp(this->name, "SPOTLIGHT")) {
 	//	sprintf(oapiDebugString(), this->name);
 	//}
+	if (SRC && IsEnabled())
+	{
+		lamp->SetIntensity(1.0);
+	}
+	else {
+		lamp->SetIntensity(0.0);
+	}
 }
