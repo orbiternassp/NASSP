@@ -605,7 +605,7 @@ protected:
 ///
 class electricLight : public e_object, public therm_obj {
 public:
-	electricLight(char* name,
+	electricLight(char* lightname,
 				e_object* i_src,
 				const bool flashing,
 				const double onTime,
@@ -626,9 +626,13 @@ public:
 				double nomVoltage);
 
 	~electricLight();
+	virtual void refresh(double dt);
 private:
 	VECTOR3 LightPosition;
 	VECTOR3 LightDirection;
+	COLOUR4 Lightdiffuse;
+	COLOUR4 Lightspecular;
+	COLOUR4 Lightambient;
 	SpotLight *lamp;
 	BEACONLIGHTSPEC lampBeacon;
 };

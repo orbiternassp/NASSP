@@ -1717,15 +1717,27 @@ void Diode::Save(FILEHANDLE scn)
 }
 
 //------------------------------ Light Class -----------------------------------
-electricLight::electricLight(char* name, e_object* i_src, const bool flashing, const double onTime, const double offTime, OBJHANDLE thisVessel, VECTOR3 pos, VECTOR3 dir, double range, double att0, double att1, double att2, double umbra, double penumbra, COLOUR4 diffuse, COLOUR4 specular, COLOUR4 ambient, double powerDraw, double nomVoltage)
+electricLight::electricLight(char* lightname, e_object* i_src, const bool flashing, const double onTime, const double offTime, OBJHANDLE thisVessel, VECTOR3 pos, VECTOR3 dir, double range, double att0, double att1, double att2, double umbra, double penumbra, COLOUR4 diffuse, COLOUR4 specular, COLOUR4 ambient, double powerDraw, double nomVoltage)
 {
+	strcpy(name, lightname);
+	SRC = i_src;
+	max_stage = 99;
+
 	LightPosition = pos;
 	LightDirection = dir;
-	//lamp = new SpotLight(thisVessel, LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra);
+	Lightdiffuse = diffuse;
+	Lightspecular = specular;
+	Lightambient = ambient;
 	lamp = (SpotLight*)((VESSEL3)thisVessel).AddSpotLight(LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient);
 }
 
 electricLight::~electricLight()
 {
 	delete lamp;
+}
+
+void electricLight::refresh(double dt) {
+	//if(!strcmp(this->name, "SPOTLIGHT")) {
+	//	sprintf(oapiDebugString(), this->name);
+	//}
 }

@@ -165,8 +165,8 @@ void E_system::Create_Diode(char *line)
 
 void E_system::Create_ElectricLight(char* line)
 {
-	char name[100] = "\0";
-	char sourceName[100] = "\0";
+	char name[100];
+	char sourceName[100];
 	e_object* powerSource = nullptr;
 	bool flashing = false;
 	double onTime = 0;
@@ -179,26 +179,14 @@ void E_system::Create_ElectricLight(char* line)
 	double att2 = 0;
 	double umbra = 0;
 	double penumbra = 0;
-	COLOUR4 diffuse;
-	diffuse.r = 0;
-	diffuse.g = 0;
-	diffuse.b = 0;
-	diffuse.a = 0;
-	COLOUR4 specular;
-	specular.r = 0;
-	specular.g = 0;
-	specular.b = 0;
-	specular.a = 0;
-	COLOUR4 ambient;
-	ambient.r = 0;
-	ambient.g = 0;
-	ambient.b = 0;
-	ambient.a = 0;
+	COLOUR4 diffuse = { 0, 0, 0, 0};
+	COLOUR4 specular = { 0, 0, 0, 0 };
+	COLOUR4 ambient = { 0, 0, 0, 0 };
 	double powerDraw = 0;
 	double nomVoltage = 0;
 
-	sscanf(line + 7, "%s %s %d %lf %lf <%lf %lf %lf> <%lf %lf %lf> %lf %lf %lf %lf %lf %lf <%lf %lf %lf %lf> <%lf %lf %lf %lf> <%lf %lf %lf %lf> %lf %lf",
-		name, sourceName, &flashing, &onTime, &offTime,
+	sscanf(line + 7, "%s %s %d %lf %lf <%lf %lf %lf> <%lf %lf %lf> %lf %lf %lf %lf %lf %lf <%f %f %f %f> <%f %f %f %f> <%f %f %f %f> %lf %lf",
+		&name, &sourceName, &flashing, &onTime, &offTime,
 		&pos.x, &pos.y, &pos.z,
 		&dir.x, &dir.y, &dir.z,
 		&range, &att0, &att1, &att2, &umbra, &penumbra, 
