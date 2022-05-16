@@ -1732,12 +1732,23 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	nomPowerDraw = powerDraw;
 	nomVolts = nomVoltage;
 
+	this_V = (VESSEL3*)thisVessel;
+
 	LightPosition = pos;
 	LightDirection = dir;
 	Lightdiffuse = diffuse;
 	Lightspecular = specular;
 	Lightambient = ambient;
 	lamp = (SpotLight*)((VESSEL3)thisVessel).AddSpotLight(LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient);
+	lampBeacon.period = 0.0;
+	lampBeacon.pos = &LightPosition;
+	lampBeacon.active = false;
+	lampBeacon.tofs = 0.0;
+	lampBeacon.falloff = 0.5;
+	lampBeacon.size = 0.1;
+	lampBeaconColor = _V(diffuse.r, diffuse.g, diffuse.b);
+	lampBeacon.col = &lampBeaconColor;
+	((VESSEL3)thisVessel).AddBeacon(&lampBeacon);
 }
 
 electricLight::~electricLight()
@@ -1770,8 +1781,10 @@ void electricLight::refresh(double dt) {
 		double intensityFactor = SRC->Voltage() / nomVolts;
 		lamp->SetIntensity(intensityFactor * (double)flashstate);
 		DrawPower(intensityFactor * nomPowerDraw);
+		lampBeacon.active = flashstate;
 	}
 	else {
 		lamp->SetIntensity(0.0);
+		lampBeacon.active = false;
 	}
 }

@@ -635,12 +635,14 @@ private:
 	double ontime;
 	double offtime;
 	double flashtimer;
+	VESSEL3 *this_V;
 	VECTOR3 LightPosition;
 	VECTOR3 LightDirection;
 	COLOUR4 Lightdiffuse;
 	COLOUR4 Lightspecular;
 	COLOUR4 Lightambient;
 	SpotLight *lamp;
+	VECTOR3 lampBeaconColor;
 	BEACONLIGHTSPEC lampBeacon;
 };
 
