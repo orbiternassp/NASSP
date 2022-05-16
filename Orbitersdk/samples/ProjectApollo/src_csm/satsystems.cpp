@@ -135,11 +135,18 @@ void Saturn::SystemsInit() {
 	FuelCellH2Manifold[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD");
 
 	//
+	// AC Circuit Breakers
+	//
+
+	RunEVATRGTAC1CB.WireTo((e_object *)&ACBus1PhaseA);
+	RunEVATRGTAC2CB.WireTo((e_object *)&ACBus2PhaseB);
+
+	//
 	// Electric Lights
 	//
 
 	spotlight = (electricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
-	spotlight->WireTo((e_object*)&RunEVATRGTAC1CB);
+	spotlight->WireTo((e_object *)&RunEVATRGTAC2CB);
 	spotlightcontroler.setLight(spotlight);
 	spotlightcontroler.setSwitch(&RndzLightSwitch);
 

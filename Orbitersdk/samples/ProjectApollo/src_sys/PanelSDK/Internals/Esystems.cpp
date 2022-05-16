@@ -1726,6 +1726,11 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	flash = flashing;
 	ontime = onTime;
 	offtime = offTime;
+	flashtimer = 0;
+	flashstate = false;
+
+	nomPowerDraw = powerDraw;
+	nomVolts = nomVoltage;
 
 	LightPosition = pos;
 	LightDirection = dir;
@@ -1742,11 +1747,29 @@ electricLight::~electricLight()
 
 void electricLight::refresh(double dt) {
 	//if(!strcmp(this->name, "SPOTLIGHT")) {
-	//	sprintf(oapiDebugString(), this->name);
+	//	sprintf(oapiDebugString(), "%lf",SRC->Voltage());
 	//}
+
+	if (flash) {
+		if (flashtimer > offtime && !flashstate) {
+			flashstate = true;
+			flashtimer = 0.0;
+		}
+		else if (flashtimer > ontime && flashstate){
+			flashstate = false;
+			flashtimer = 0.0;
+		}
+		flashtimer += dt;
+	}
+	else {
+		flashstate = true;
+	}
+
 	if (SRC && IsEnabled())
 	{
-		lamp->SetIntensity(1.0);
+		double intensityFactor = SRC->Voltage() / nomVolts;
+		lamp->SetIntensity(intensityFactor * (double)flashstate);
+		DrawPower(intensityFactor * nomPowerDraw);
 	}
 	else {
 		lamp->SetIntensity(0.0);

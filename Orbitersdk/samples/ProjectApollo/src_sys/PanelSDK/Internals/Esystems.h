@@ -629,8 +629,7 @@ public:
 	virtual void refresh(double dt);
 private:
 	double nomPowerDraw;
-	double nomVoltage;
-	bool (*active)();
+	double nomVolts;
 	bool flash;
 	bool flashstate;
 	double ontime;
