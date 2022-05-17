@@ -635,7 +635,7 @@ private:
 	double ontime;
 	double offtime;
 	double flashtimer;
-	VESSEL3 *this_V;
+	OBJHANDLE this_V;
 	VECTOR3 LightPosition;
 	VECTOR3 LightDirection;
 	COLOUR4 Lightdiffuse;

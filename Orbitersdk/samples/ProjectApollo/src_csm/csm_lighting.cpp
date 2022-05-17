@@ -25,12 +25,18 @@
 
 #include "csm_lighting.h"
 
-void SpotlightControler::timestep(double dt)
+void SpotRndzlightControler::timestep(double dt)
 {
 	if (RndzLightSwitch->IsDown()) {
-		light->Enable();
+		spotlight->Enable();
+		rndzlight->Disable();
+	}
+	else if(RndzLightSwitch->IsUp()) {
+		rndzlight->Enable();
+		spotlight->Disable();
 	}
 	else {
-		light->Disable();
+		spotlight->Disable();
+		rndzlight->Disable();
 	}
 }

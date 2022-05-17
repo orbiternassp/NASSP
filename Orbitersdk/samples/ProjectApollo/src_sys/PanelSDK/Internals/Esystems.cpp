@@ -1732,7 +1732,7 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	nomPowerDraw = powerDraw;
 	nomVolts = nomVoltage;
 
-	this_V = (VESSEL3*)thisVessel;
+	this_V = thisVessel;
 
 	LightPosition = pos;
 	LightDirection = dir;
@@ -1745,7 +1745,7 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	lampBeacon.active = false;
 	lampBeacon.tofs = 0.0;
 	lampBeacon.falloff = 0.5;
-	lampBeacon.size = 0.1;
+	lampBeacon.size = 0.5;
 	lampBeaconColor = _V(diffuse.r, diffuse.g, diffuse.b);
 	lampBeacon.col = &lampBeaconColor;
 	((VESSEL3)thisVessel).AddBeacon(&lampBeacon);
@@ -1753,11 +1753,12 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 
 electricLight::~electricLight()
 {
-	delete lamp;
+	((VESSEL3)this_V).DelBeacon(&lampBeacon);
+	((VESSEL3)this_V).DelLightEmitter(lamp);
 }
 
 void electricLight::refresh(double dt) {
-	//if(!strcmp(this->name, "SPOTLIGHT")) {
+	//if(!strcmp(this->name, "RNDZLIGHT")) {
 	//	sprintf(oapiDebugString(), "%lf",SRC->Voltage());
 	//}
 

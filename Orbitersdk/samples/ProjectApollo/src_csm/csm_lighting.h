@@ -25,12 +25,14 @@
 #pragma once
 #include <toggleswitch.h>
 
-class SpotlightControler {
+class SpotRndzlightControler {
 public:
 	void setSwitch(ThreePosSwitch* LightSwitch) { RndzLightSwitch = LightSwitch; };
-	inline void setLight(electricLight* Light) { light = Light; };
+	inline void setSpotLight(electricLight* Light) { spotlight = Light; };
+	inline void setRndzLight(electricLight* Light) { rndzlight = Light; };
 	void timestep(double dt);
 private:
 	ThreePosSwitch *RndzLightSwitch;
-	electricLight *light;
+	electricLight *spotlight;
+	electricLight* rndzlight;
 };

@@ -146,9 +146,12 @@ void Saturn::SystemsInit() {
 	//
 
 	spotlight = (electricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
+	rndzlight = (electricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
 	spotlight->WireTo((e_object *)&RunEVATRGTAC2CB);
-	spotlightcontroler.setLight(spotlight);
-	spotlightcontroler.setSwitch(&RndzLightSwitch);
+	rndzlight->WireTo((e_object *)&LightingRndzMNACB);
+	spotrndzlightcontroler.setSpotLight(spotlight);
+	spotrndzlightcontroler.setRndzLight(rndzlight);
+	spotrndzlightcontroler.setSwitch(&RndzLightSwitch);
 
 	
 
@@ -728,7 +731,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		CMRCS2.Timestep(MissionTime, simdt);
 		SideHatch.Timestep(simdt);
 		ForwardHatch.Timestep(simdt);
-		spotlightcontroler.timestep(simdt);
+		spotrndzlightcontroler.timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
 		udl.Timestep();

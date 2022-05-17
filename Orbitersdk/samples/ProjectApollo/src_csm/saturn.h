@@ -3682,7 +3682,8 @@ protected:
 	
 	//Electric Lights
 	electricLight* spotlight;
-	SpotlightControler spotlightcontroler;
+	electricLight* rndzlight;
+	SpotRndzlightControler spotrndzlightcontroler;
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];
