@@ -609,25 +609,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	DOI_dV_LVLH = _V(0, 0, 0);
 
-	DKI_Profile = 0;
-	DKI_TPI_Mode = 0;
-	DKI_Radial_DV = false;
-	DKI_TIG = 0.0;
-	DKI_DV = _V(0, 0, 0);
-	DKI_Maneuver_Line = true;
-	DKI_dt_TPI_sunrise = 16.0*60.0;
-	DKI_N_HC = 1;
-	DKI_N_PB = 1;
-	DKI_dt_PBH = DKI_dt_BHAM = DKI_dt_HAMH = 3600.0;
-	dkiresult.DV_Phasing = _V(0, 0, 0);
-	dkiresult.t_CDH = 0.0;
-	dkiresult.dv_CSI = 0.0;
-	dkiresult.t_CSI = 0.0;
-	dkiresult.t_TPI = 0.0;
-	dkiresult.DV_CDH = _V(0, 0, 0);
-	dkiresult.t_Boost = 0.0;
-	dkiresult.dv_Boost = 0.0;
-	dkiresult.t_HAM = 0.0;
+	TPI_Mode = 0;
+	dt_TPI_sunrise = 16.0*60.0;
 
 	PDAPEngine = 0;
 	PDAPTwoSegment = false;
@@ -3678,44 +3661,37 @@ int ARCore::subThread()
 	break;
 	case 19: //Docking Initiation Processor
 	{
-		DKIOpt opt;
-		SV sv_A, sv_P, sv_pre, sv_post;
+		RTCC::NewDKIOpt opt;
 
 		if (GC->MissionPlanningActive)
 		{
 			EphemerisData EPHEM;
 			double GMT;
 
-			if (GC->rtcc->med_k10.MLDTime < 0)
+			if (GC->rtcc->med_k00.THT < 0)
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
 			else
 			{
-				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k10.MLDTime);
+				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k00.THT);
 			}
 
-			int err = GC->rtcc->ELFECH(GMT, GC->rtcc->med_k00.ChaserVehicle, EPHEM);
+			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM);
 			if (err)
 			{
 				Result = 0;
 				break;
 			}
-			sv_A.R = EPHEM.R;
-			sv_A.V = EPHEM.V;
-			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+			opt.sv_CSM = EPHEM;
 
-			err = GC->rtcc->ELFECH(GMT, 4 - GC->rtcc->med_k00.ChaserVehicle, EPHEM);
+			err = GC->rtcc->ELFECH(GMT, RTCC_MPT_LM, EPHEM);
 			if (err)
 			{
 				Result = 0;
 				break;
 			}
-			sv_P.R = EPHEM.R;
-			sv_P.V = EPHEM.V;
-			sv_P.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_P.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+			opt.sv_LM = EPHEM;
 		}
 		else
 		{
@@ -3725,36 +3701,74 @@ int ARCore::subThread()
 				break;
 			}
 
-			sv_A = GC->rtcc->StateVectorCalc(vessel);
-			sv_P = GC->rtcc->StateVectorCalc(target);
+			EphemerisData sv[2];
+			sv[0] = GC->rtcc->StateVectorCalcEphem(vessel);
+			sv[1] = GC->rtcc->StateVectorCalcEphem(target);
+
+			if (utils::IsVessel(vessel, utils::Saturn))
+			{
+				opt.sv_CSM = sv[0];
+				opt.sv_LM = sv[1];
+			}
+			else
+			{
+				opt.sv_CSM = sv[1];
+				opt.sv_LM = sv[0];
+			}
 		}		
 
-		opt.DH = GC->rtcc->GZGENCSN.DKIDeltaH;
-		opt.E = GC->rtcc->GZGENCSN.DKIElevationAngle;
-		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.maneuverline = DKI_Maneuver_Line;
-		opt.N_HC = DKI_N_HC;
-		opt.N_PB = DKI_N_PB;
-		opt.plan = DKI_Profile;
-		opt.radial_dv = DKI_Radial_DV;
-		opt.tpimode = DKI_TPI_Mode;
-		opt.dt_TPI_sunrise = DKI_dt_TPI_sunrise;
-		opt.sv_A = sv_A;
-		opt.sv_P = sv_P;
-		opt.t_TIG = DKI_TIG;
-		opt.t_TPI_guess = t_TPIguess;
-		opt.DeltaT_BHAM = DKI_dt_BHAM;
-		opt.DeltaT_PBH = DKI_dt_PBH;
-		opt.Delta_HAMH = DKI_dt_HAMH;
+		opt.IPUTNA = GC->rtcc->med_k10.MLDOption;
+		opt.PUTNA = GC->rtcc->med_k10.MLDValue;
+		opt.PUTTNA = GC->rtcc->GMTfromGET(GC->rtcc->med_k10.MLDTime);
 
-		GC->rtcc->DockingInitiationProcessor(opt, dkiresult);
-
-		if (DKI_Profile != 3)
+		if (GC->rtcc->GZGENCSN.DKI_TP_Definition == 0)
 		{
-			DKI_DV = dkiresult.DV_Phasing;
+			opt.KCOSR = true;
+			opt.COSR = GC->rtcc->GZGENCSN.DKI_TPDefinitionValue;
+		}
+		else
+		{
+			opt.KCOSR = false;
+			opt.K46 = GC->rtcc->GZGENCSN.DKI_TP_Definition;
+			if (GC->rtcc->GZGENCSN.DKI_TP_Definition == 1)
+			{
+				opt.TTPI = GC->rtcc->GMTfromGET(GC->rtcc->GZGENCSN.DKI_TPDefinitionValue);
+			}
+			else if (GC->rtcc->GZGENCSN.DKI_TP_Definition == 2)
+			{
+				opt.TTPF = GC->rtcc->GMTfromGET(GC->rtcc->GZGENCSN.DKI_TPDefinitionValue);
+			}
+			else
+			{
+				opt.TIMLIT = GC->rtcc->GZGENCSN.DKI_TPDefinitionValue;
+			}
 		}
 
-		t_TPI = dkiresult.t_TPI;
+		opt.DHNCC = GC->rtcc->GZGENCSN.DKIDeltaH_NCC;
+		opt.DHSR = GC->rtcc->GZGENCSN.DKIDeltaH_NSR;
+		opt.DTSR = 10.0*60.0;
+		opt.dt_NCC_NSR = GC->rtcc->med_k00.dt_NCC_NSR;
+		opt.Elev = GC->rtcc->GZGENCSN.DKIElevationAngle;
+		opt.I4 = GC->rtcc->med_k00.I4;
+		//TBD: opt.IHALF
+		opt.NC1 = GC->rtcc->med_k00.NC1;
+		opt.NH = GC->rtcc->med_k00.NH;
+		opt.NCC = GC->rtcc->med_k00.NCC;
+		opt.NSR = GC->rtcc->med_k00.NSR;
+		opt.NPC = GC->rtcc->med_k00.NPC;
+		opt.MI = GC->rtcc->med_k00.MI;
+		if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_CSM)
+		{
+			opt.MV = 1;
+		}
+		else
+		{
+			opt.MV = 2;
+		}
+		opt.WT = GC->rtcc->GZGENCSN.DKITerminalPhaseAngle;
+		opt.KRAP = GC->rtcc->GZGENCSN.DKIPhaseAngleSetting;
+
+		GC->rtcc->NewDockingInitiationProcessor(opt);
 
 		Result = 0;
 	}
@@ -3959,7 +3973,7 @@ int ARCore::subThread()
 	case 23: //Calculate TPI times
 	{
 		SV sv0 = GC->rtcc->StateVectorCalc(target);
-		t_TPI = GC->rtcc->CalculateTPITimes(sv0, DKI_TPI_Mode, t_TPIguess, DKI_dt_TPI_sunrise);
+		t_TPI = GC->rtcc->CalculateTPITimes(sv0, TPI_Mode, t_TPIguess, dt_TPI_sunrise);
 
 		Result = 0;
 	}
@@ -4466,22 +4480,48 @@ int ARCore::subThread()
 		}
 		else
 		{
-			SV sv_pre, sv_post, sv_tig;
-			double attachedMass = 0.0;
+			PMMMPTInput in;
 
-			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
-			sv_tig = GC->rtcc->coast(sv_now, DKI_TIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
-
-			if (vesselisdocked)
+			//Get all required data for PMMMPT and error checking
+			if (GetVesselParameters(GC->rtcc->med_m70.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
-				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
+				//Error
+				Result = 0;
+				break;
+			}
+
+			in.VehicleArea = 0.0;
+			in.VehicleWeight = in.CSMWeight + in.LMWeight;
+			in.IterationFlag = GC->rtcc->med_m70.Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m70.TimeFlag;
+			in.Thruster = GC->rtcc->med_m70.Thruster;
+
+			in.sv_before = GC->rtcc->PZDKIELM.Block[0].SV_before[0];
+			in.V_aft = GC->rtcc->PZDKIELM.Block[0].V_after[0];
+			if (GC->rtcc->med_m70.UllageDT < 0)
+			{
+				in.DETU = GC->rtcc->SystemParameters.MCTNDU;
 			}
 			else
 			{
-				attachedMass = 0.0;
+				in.DETU = GC->rtcc->med_m70.UllageDT;
 			}
+			in.UT = GC->rtcc->med_m70.UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m70.TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m70.DPSThrustFactor;
 
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), DKI_TIG, GC->rtcc->med_m70.Thruster, 0.0, DKI_DV, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			double GMT_TIG;
+			VECTOR3 DV;
+			if (GC->rtcc->PoweredFlightProcessor(in, GMT_TIG, DV) == 0)
+			{
+				//Save for Maneuver PAD and uplink
+				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
+				dV_LVLH = DV;
+				manpadenginetype = GC->rtcc->med_m70.Thruster;
+				HeadsUp = true;
+				manpad_ullage_dt = GC->rtcc->med_m70.UllageDT;
+				manpad_ullage_opt = GC->rtcc->med_m70.UllageQuads;
+			}
 		}
 
 		Result = 0;

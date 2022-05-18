@@ -48,6 +48,7 @@ public:
 
 	bool Text(oapi::Sketchpad *skp, int x, int y, const std::string & str);
 
+	void menuPreviousPage();
 	void SelectPage(int page);
 	void menuTIChaserVectorTime();
 	void menuTITargetVectorTime();
@@ -60,8 +61,8 @@ public:
 	void set_SPQtime(double tig);
 	void menuSetSPQChaserThresholdTime();
 	void menuSetSPQTargetThresholdTime();
-	void DKIDHdialogue();
-	void set_DKIDH(double DH);
+	void menuDKINSRDHInput();
+	void menuDKINCCDHInput();
 	void SPQDHdialogue();
 	void set_SPQDH(double DH);
 	void set_target();
@@ -364,14 +365,13 @@ public:
 	void menuNavCheckPADCalc();
 	void menuSetNavCheckGET();
 	void menuLAPCalc();
-	void menuCycleDKIChaser();
-	void menuSetDKIThresholdTime();
+	void menuDKINC1Line();
+	void menuDKINHLine();
+	void menuCycleDKIChaserVehicle();
 	void menuDKICalc();
-	void DKITIGDialogue();
-	void set_DKITIG(double time);
-	void set_DKITIG_DT_PDI(double dt);
-	void menuCycleDKIProfile();
-	void menuCycleDKITPIMode();
+	void menuDKINSRLine();
+	void menuDKIMILine();
+	void menuDKINPCLine();
 	void menuSetSPQElevation();
 	void set_SPQElevation(double elev);
 	void menuSetSPQTerminalPhaseAngle();
@@ -382,15 +382,15 @@ public:
 	void menuSPQCDHValue();
 	bool set_SPQCDHValue(char* val);
 	void menuSetDKIElevation();
-	void set_DKIElevation(double elev);
-	void menuCycleDKIManeuverLine();
-	void menuCycleDKIRadialComponent();
-	void DKITPIDTDialogue();
-	void DKINHCDialogue();
-	void DKINPBDialogue();
-	void menuDKIDeltaT1();
-	void menuDKIDeltaT2();
-	void menuDKIDeltaT3();
+	void menuCycleDKIManeuverLineDefinition();
+	void menuCycleDKIProfile();
+	void menuDKITIG();
+	void menuDKIManeuverLineValue();
+	void menuDKIInitialPhaseFlag();
+	void menuCycleDKITerminalPhaseOption();
+	void menuDKITerminalPhaseDefinitionValue();
+	void menuCycleTPIMode();
+	void TPIDTDialogue();
 	void menuSetLAPLiftoffTime();
 	void menuSetDAPPADPage();
 	void menuDAPPADCalc();
@@ -471,7 +471,8 @@ public:
 	bool set_ChooseTIThruster(std::string th);
 	void menuCycleTIAttitude();
 	void menuTIUllageOption();
-	bool set_TIUllageOption(int num, double dt);
+	void menuM70UllageOption();
+	bool set_UllageOption(int med, int num, double dt);
 	void menuCycleTIIterationFlag();
 	void menuCycleTITimeFlag();
 	void menuTIDPSTenPercentTime();
@@ -481,7 +482,6 @@ public:
 	void menuTransferTIToMPT();
 	void menuSetSPQorDKIRTransferPage();
 	void menuTransferSPQorDKIToMPT();
-	void menuBackToSPQorDKIPage();
 	void menuChooseSPQDKIThruster();
 	bool set_ChooseSPQDKIThruster(std::string th);
 	void menuM70DeleteGET();
@@ -779,6 +779,7 @@ public:
 	void menuLWPCycleDELNOF();
 	void menuLWP_DELNO();
 	void menuSetLWPDisplayPage();
+	void menuSetRendezvousPlanningDisplayPage();
 	void GenericGETInput(double *get, char *message);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericIntInput(int *val, char* message);
@@ -797,6 +798,7 @@ protected:
 	int screen;
 	int marker;
 	int RTETradeoffScreen;
+	std::deque<int> pastscreens;
 	static struct ScreenData {
 		int screen;
 		int RTETradeoffScreen;

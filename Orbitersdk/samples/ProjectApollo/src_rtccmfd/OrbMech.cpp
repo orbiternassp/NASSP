@@ -6880,6 +6880,8 @@ void PMMAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 {
 	AEGDataBlock tempblock;
 
+	header.ErrorInd = 0;
+
 	if (abs(in.TE - in.TS) > 96.0*3600.0)
 	{
 		goto NewPMMAEG_V846;
@@ -7121,8 +7123,8 @@ NewPMMAEG_V2000:
 
 	if (in.TIMA >= 5)
 	{
-		CurrentBlock.Item8 = tempblock.R - CurrentBlock.R;
-		CurrentBlock.Item9 = tempblock.TE - CurrentBlock.TE;
+		CurrentBlock.Item8 = CurrentBlock.R - tempblock.R;
+		CurrentBlock.Item9 = CurrentBlock.TE - tempblock.TE;
 		dt += -theta_R / (CurrentBlock.l_dot + CurrentBlock.g_dot);
 		if (abs(theta_R) > 0.0001)
 		{
@@ -7151,6 +7153,8 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	CELEMENTS coe_osc0, coe_osc1, coe_mean1;
 	MATRIX3 Rot;
 	VECTOR3 P, W;
+
+	header.ErrorInd = 0;
 
 	if (in.coe_osc.a<0.27*OrbMech::R_Earth || in.coe_osc.a > 5.0*OrbMech::R_Earth)
 	{
@@ -7418,8 +7422,8 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 	if (in.TIMA >= 5)
 	{
-		CurrentBlock.Item8 = tempblock.R - CurrentBlock.R;
-		CurrentBlock.Item9 = tempblock.TE - CurrentBlock.TE;
+		CurrentBlock.Item8 = CurrentBlock.R - tempblock.R;
+		CurrentBlock.Item9 = CurrentBlock.TE - tempblock.TE;
 		dt += -theta_R / (CurrentBlock.l_dot + CurrentBlock.g_dot);
 		if (abs(theta_R) > 0.0001)
 		{
