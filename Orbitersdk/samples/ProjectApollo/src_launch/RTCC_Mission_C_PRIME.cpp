@@ -457,9 +457,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			sprintf(upMessage, "%s has been scrubbed.", manname);
 
-			//Always save table 2 data for MCC-1
+			//Always save LOI time and table 2 data for MCC-1, even if the maneuver is scrubbed
 			if (fcn == 20)
 			{
+				//Store new LOI time
+				calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
 				//Transfer MCC plan to skeleton flight plan table
 				GMGMED("F30,1;");
 			}
@@ -469,8 +471,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			//Update targeting parameters
 			if (fcn == 20 || fcn == 21)
 			{
+				//Store new LOI time
 				calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
-
 				//Transfer MCC plan to skeleton flight plan table
 				GMGMED("F30,1;");
 			}
