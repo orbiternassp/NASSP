@@ -24,6 +24,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+class LEM;
+
 class LEM_DeadfaceRelayBox
 {
 public:

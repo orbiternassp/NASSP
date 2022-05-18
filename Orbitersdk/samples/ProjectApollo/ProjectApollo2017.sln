@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32413.511
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "Build\VC2017\ASTP.vcxproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
@@ -31,8 +31,14 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sat5Abort2", "Build\VC2017\Sat5Abort2.vcxproj", "{CCCE5F37-9749-4E83-A9F5-893855CD1850}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Saturn1b", "Build\VC2017\Saturn1b.vcxproj", "{1151EE87-AB2E-4ABD-B0EB-EC5974A0BC9A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1E53A199-CCDF-4FCF-B2E8-5F8FF80AFEC8} = {1E53A199-CCDF-4FCF-B2E8-5F8FF80AFEC8}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Saturn5NASP", "Build\VC2017\Saturn5NASP.vcxproj", "{5AE2D199-E94E-4E65-A0F5-7242EE0227E9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1E53A199-CCDF-4FCF-B2E8-5F8FF80AFEC8} = {1E53A199-CCDF-4FCF-B2E8-5F8FF80AFEC8}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EVA", "Build\VC2017\EVA.vcxproj", "{4427BC2F-CA34-48A6-8EC3-DF7CAC42F11E}"
 EndProject

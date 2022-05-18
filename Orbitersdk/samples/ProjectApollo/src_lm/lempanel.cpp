@@ -2637,11 +2637,13 @@ void LEM::SetSwitches(int panel) {
 	TimerSlewMinutes.Init(405, 64, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 2);
 	TimerSlewSeconds.Init(477, 64, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 3);
 	LtgORideAnunSwitch.Init(323, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
+	LtgORideAnunSwitch.WireTo(&LTG_ANUN_DOCK_COMPNT_CB);
 	LtgORideNumSwitch.Init(380, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
 	LtgORideIntegralSwitch.Init(437, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
 	LtgSidePanelsSwitch.Init(494, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
 	LtgFloodOhdFwdKnob.Init(173, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 	LtgAnunNumKnob.Init(333, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
+	LtgAnunNumKnob.WireTo(&LtgORideAnunSwitch);
 	LtgIntegralKnob.Init(457, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 	PlusXTranslationButton.Init(46, 256, 79, 68, srf[SRF_LMTRANSLBUTTON], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 	ManualEngineStart.Init(32, 114, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], Panel5SwitchRow, 0, 138, &CDRManualEngineStop, this);

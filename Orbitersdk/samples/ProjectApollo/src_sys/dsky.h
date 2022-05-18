@@ -33,15 +33,15 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 
-class DSKY : public e_object
+class DSKY
 
 {
 public:
 
 	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel = 015);
-	virtual ~DSKY();
+	virtual ~DSKY() = default;
 
-	void Init(PowerMerge *ps, RotationalSwitch *dimmer);
+	void Init(PowerMerge *ps, e_object *IndicatorPower);
 	void Reset();
 
 	//
@@ -161,13 +161,15 @@ public:
 
 protected:
 
-	bool IsPowered();
+	bool IsDisplayPowered();
+	bool IsIndicatorPowered();
 	void SendKeyCode(int val);
 
 	//
 	// Power supplies
 	//
 	PowerMerge *AGCPower;
+	e_object* IndicatorPower;
 
 	//
 	// Lights.
@@ -274,7 +276,6 @@ protected:
 	Sound Sclick;
 
 	bool FirstTimeStep;
-	RotationalSwitch *DimmerRotationalSwitch;
 
 	//
 	// Local helper functions.

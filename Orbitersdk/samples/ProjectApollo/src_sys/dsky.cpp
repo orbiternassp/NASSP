@@ -136,8 +136,10 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include "stdio.h"
-#include "math.h"
+
+#include <cstdio>
+#include <cmath>
+#include <cassert>
 
 #include "soundlib.h"
 #include "nasspsound.h"
@@ -145,8 +147,10 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "ioChannels.h"
+#include "lm_eps.h"
 
 #include "nasspdefs.h"
+#include "nassputils.h"
 
 static char TwoSpace[] = "  ";
 static char SixSpace[] = "      ";
@@ -154,16 +158,14 @@ static char SixSpace[] = "      ";
 static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
 
 DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), agc(computer)
-
 {
-	DimmerRotationalSwitch = NULL;
+	IndicatorPower = NULL;
 	Reset();
 	ResetKeyDown();
 	KeyCodeIOChannel = IOChannel;
 }
 
 void DSKY::Reset()
-
 {
 	CompActy = false;
 	UplinkLight = false;
@@ -196,37 +198,52 @@ void DSKY::Reset()
 	ELOff = false;
 }
 
-DSKY::~DSKY()
-
+void DSKY::Init(PowerMerge *ps, e_object *IndicatorPower)
 {
-	//
-	// Nothing for now.
-	//
-}
+	// IndicatorPower must be LEM_LCA if LGC or RotationalSwitch if CMC
+	if ((agc.IsLGC() && dynamic_cast<LEM_LCA*>(IndicatorPower) == nullptr) && dynamic_cast<RotationalSwitch*>(IndicatorPower) == nullptr) {
+		abort();
+	}
 
-void DSKY::Init(PowerMerge *ps, RotationalSwitch *dimmer)
-
-{
 	AGCPower = ps;
-	WireTo(AGCPower); // TODO: Rewrite this when power for indicators and integral lighting is added.
-	DimmerRotationalSwitch = dimmer;
+	this->IndicatorPower = IndicatorPower;
 	Reset();
 	FirstTimeStep = true;
 }
 
-bool DSKY::IsPowered() {
-	if (Voltage() < SP_MIN_DCVOLTAGE){ return false; }
-
-	if (DimmerRotationalSwitch != NULL) {
-		if (DimmerRotationalSwitch->GetState() == 0) {
-			return false;
-		}
+bool DSKY::IsDisplayPowered()
+{
+	// 14VSW supply from AGC. (Still uses SP_MIN_DCVOLTAGE upstream)
+	if (AGCPower->Voltage() < 14.) {
+		return false;
 	}
+
+	if (agc.IsLGC()) {
+		LEM_LCA* lca = static_cast<LEM_LCA*>(IndicatorPower);
+	} else {
+		RotationalSwitch* dimmer = static_cast<RotationalSwitch*>(IndicatorPower);
+		return dimmer->GetState() > 0;
+	}
+
 	return true;
 }
 
-void DSKY::Timestep(double simt)
+bool DSKY::IsIndicatorPowered()
+{
+	const float minVolt = 2.; // Lowest dimmer voltage
+	const float transformerRatio = 23.; // ref. dwg 3.1
+	
+	if (agc.IsLGC()) {
+		LEM_LCA* lca = static_cast<LEM_LCA*>(IndicatorPower);
+		return lca->GetAnnunVoltage() >= minVolt;
+	} else {
+		RotationalSwitch* dimmer = static_cast<RotationalSwitch*>(IndicatorPower);
+		double volts = IndicatorPower->Voltage() / transformerRatio; // Transformer T4
+		return volts >= minVolt && dimmer->GetState() > 1;
+	}
+}
 
+void DSKY::Timestep(double simt)
 {
 	if(FirstTimeStep)
 	{
@@ -236,9 +253,7 @@ void DSKY::Timestep(double simt)
 }
 
 void DSKY::SystemTimestep(double simdt)
-
 {
-	if (!IsPowered()){ return; }
 	//
 	// The DSKY power consumption is a little bit hard to figure out. According 
 	// to the Systems Handbook the complete interior lightning draws about 30W, so
@@ -280,9 +295,16 @@ void DSKY::SystemTimestep(double simdt)
 	SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
 
 	// 10 lights with together max. 6W, 184 segments with together max. 4W  
-	DrawPower((LightsLit * 0.6) + (SegmentsLit * 0.022));
+	if (IsDisplayPowered())
+		AGCPower->DrawPower(SegmentsLit * 0.022);
+	if (IsIndicatorPowered()) {
+		//IndicatorPower->DrawPower(LightsLit * 0.6);
+		//if (auto lca = dynamic_cast<LEM_LCA*>(IndicatorPower); lca != nullptr) {
 
-	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
+		//}
+	}
+
+	//sprintf(oapiDebugString(), "AGC: %fA Numerics: %fA", AGCPower->Current(), DimmerRotationalSwitch->Current());
 }
 
 void DSKY::KeyClick()
@@ -440,7 +462,7 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel, bool hasDAPPrioDisp)
 
 {
-	if (!IsPowered())
+	if (!IsIndicatorPowered())
 	{
 		if (hasAltVel) {
 			DSKYLightBlt(surf, lights, 52, 121, false, xOffset, yOffset);
@@ -728,7 +750,7 @@ int DSKY::SixDigitDisplaySegmentsLit(char *Str, bool Off)
 void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xOffset, int yOffset)
 
 {
-	if (!IsPowered() || ELOff)
+	if (!IsDisplayPowered() || ELOff)
 		return;
 
 	oapiBlt(surf, disp, 66 + xOffset,   3 + yOffset, 35,  0, 35, 10, SURF_PREDEF_CK);
@@ -1019,28 +1041,7 @@ void DSKY::ProcessChannel11Bit(int bit, bool val)
 	case 4:
 		SetTemp(val);
 		break;
-/*
-	// 5 - Kbd Rel
-	case 5:
-		SetKbRel(val);
-		break;
-
-	// 6 - flash verb and noun
-	case 6:
-		if (val) {
-			SetVerbDisplayFlashing();
-			SetNounDisplayFlashing();
-		}
-		else {
-			ClearVerbDisplayFlashing();
-			ClearNounDisplayFlashing();
-		}
-		break;
-
-	// 7 - Opr Err
-	case 7:
-		SetOprErr(val);
-		break;*/
+	// Other lights handled by CH163. This is specific to yaAGC.
 	}
 }
 

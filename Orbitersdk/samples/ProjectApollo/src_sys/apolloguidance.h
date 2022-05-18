@@ -103,19 +103,9 @@ public:
 	void ControlVessel(VESSEL *v) { OurVessel = v; };
 
 	///
-	/// \brief Force the AGC to restart.
-	///
-	void ForceRestart();
-
-	///
 	/// \brief Is the AGC in standby mode?
 	///
 	bool OnStandby() { return vagc.Standby; };
-
-	///
-	/// \brief Is the AGC out of reset?
-	///
-	bool OutOfReset();
 
 	//
 	// External event handlers.
@@ -311,6 +301,12 @@ public:
 	/// \return True if the AGC is powered.
 	///
 	bool IsPowered();
+
+	///
+	/// \brief Check if the current AGC is a LGC.
+	///
+	/// \return True for LGC, False for CMC.
+	bool IsLGC() { return isLGC; }
 
 	void SetDSKY2(DSKY *d2) { dsky2 = d2; }
 

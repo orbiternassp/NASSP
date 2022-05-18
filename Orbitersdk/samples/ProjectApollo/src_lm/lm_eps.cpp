@@ -1301,7 +1301,7 @@ double LEM_LCA::GetAnnunVoltage()
 	{
 		if (lem->LtgORideAnunSwitch.IsUp())
 		{
-			return 5.0;
+			return 6.;
 		}
 		else
 		{
@@ -1327,7 +1327,7 @@ double LEM_LCA::GetNumericVoltage()
 	{
 		if (lem->LtgORideNumSwitch.IsUp())
 		{
-			return 115.0;
+			return lem->NUM_LTG_AC_CB.Voltage();
 		}
 		else
 		{
