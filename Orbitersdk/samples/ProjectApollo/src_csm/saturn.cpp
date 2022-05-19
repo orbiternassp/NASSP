@@ -5018,6 +5018,10 @@ void Saturn::UpdateMassAndCoG()
 
 		//Particle streams
 		SetWaterDumpParticleStreams(currentCoG + _V(0, 0, 32.3));
+		
+		//lights
+		spotlight->UpdatePosition(CoGShift);
+		rndzlight->UpdatePosition(CoGShift);
 
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;

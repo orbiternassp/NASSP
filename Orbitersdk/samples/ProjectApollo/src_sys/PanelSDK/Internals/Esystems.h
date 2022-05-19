@@ -627,6 +627,7 @@ public:
 
 	~electricLight();
 	virtual void refresh(double dt);
+	void UpdatePosition(VECTOR3 offset);
 private:
 	double nomPowerDraw;
 	double nomVolts;
@@ -636,6 +637,7 @@ private:
 	double offtime;
 	double flashtimer;
 	OBJHANDLE this_V;
+	VECTOR3 BeaconPosition;
 	VECTOR3 LightPosition;
 	VECTOR3 LightDirection;
 	COLOUR4 Lightdiffuse;
