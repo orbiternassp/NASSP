@@ -1738,12 +1738,13 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	LightDirection = dir;
 
 	lamp = (SpotLight*)((VESSEL3)thisVessel).AddSpotLight(LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient);
+	lampBeacon.shape = 2;
 	lampBeacon.period = 0.0;
 	lampBeacon.pos = &BeaconPosition;
 	lampBeacon.active = false;
 	lampBeacon.tofs = 0.0;
-	lampBeacon.falloff = 0.1;
-	lampBeacon.size = 0.5;
+	lampBeacon.falloff = 1.;
+	lampBeacon.size = 0.2;
 	lampBeaconColor = _V(diffuse.r, diffuse.g, diffuse.b);
 	lampBeacon.col = &lampBeaconColor;
 	((VESSEL3)thisVessel).AddBeacon(&lampBeacon);
@@ -1751,8 +1752,6 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 
 electricLight::~electricLight()
 {
-	((VESSEL3)this_V).DelBeacon(&lampBeacon);
-	((VESSEL3)this_V).DelLightEmitter(lamp);
 }
 
 void electricLight::refresh(double dt) {
@@ -1790,6 +1789,5 @@ void electricLight::refresh(double dt) {
 
 void electricLight::UpdatePosition(VECTOR3 offset)
 {
-	lamp->SetPosition((LightPosition + offset));
 	BeaconPosition -= offset;
 }
