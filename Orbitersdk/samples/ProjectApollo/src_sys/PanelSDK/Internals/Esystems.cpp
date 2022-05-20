@@ -1789,5 +1789,6 @@ void electricLight::refresh(double dt) {
 
 void electricLight::UpdatePosition(VECTOR3 offset)
 {
+	lamp->SetPosition((LightPosition + offset));
 	BeaconPosition -= offset;
 }
