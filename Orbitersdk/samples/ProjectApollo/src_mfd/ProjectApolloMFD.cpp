@@ -59,7 +59,6 @@ using namespace nassp;
 
 static HINSTANCE g_hDLL;
 static int g_MFDmode; // identifier for new MFD mode
-int failmode;		// should find a better spot for this variable
 
 #define SD_RECEIVE      0x00
 #define SD_SEND         0x01
@@ -109,6 +108,7 @@ static SOCKET close_Socket = INVALID_SOCKET;
 static char debugString[100];
 static char debugStringBuffer[100];
 static char debugWinsock[100];
+
 
 void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 {
@@ -623,14 +623,13 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 	if (g_Data.gorpVessel && g_Data.killrot && g_Data.gorpVessel == g_Data.vessel) {
 		g_Data.gorpVessel->SetAngularVel(_V(0, 0, 0));
 	}
-
 }
 
 // ==============================================================
 // MFD class implementation
 
 // Constructor
-ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, h, vessel)
+ProjectApolloMFD::ProjectApolloMFD(DWORD w, DWORD h, VESSEL* vessel) : MFD(w, h, vessel)
 
 {
 	saturn = NULL;
@@ -640,15 +639,16 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 	lem = NULL;
 	width = w;
 	height = h;
-	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
+	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE(IDB_LOGO));
 	screen = 0;
 	debug_frozen = false;
 	char buffer[8];
 
+
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
 	if (utils::IsVessel(vessel, utils::Saturn)) {
-		saturn = (Saturn *)vessel;
+		saturn = (Saturn*)vessel;
 		g_Data.progVessel = saturn;
 		g_Data.vessel = vessel;
 		oapiGetObjectName(saturn->GetGravityRef(), buffer, 8);
@@ -667,19 +667,19 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 		}
 	}
 	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler"))  {
-			crawler = (Crawler *)vessel;
-			g_Data.planet = crawler->GetGravityRef();
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler")) {
+		crawler = (Crawler*)vessel;
+		g_Data.planet = crawler->GetGravityRef();
 	}
 	else if (utils::IsVessel(vessel, utils::LEM)) {
-			lem = (LEM *)vessel;
-			g_Data.vessel = vessel;
-			g_Data.gorpVessel = lem;
-			oapiGetObjectName(lem->GetGravityRef(), buffer, 8);
-			if(strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
-				g_Data.planet = lem->GetGravityRef();
-			else
-				g_Data.planet = oapiGetGbodyByName("Earth");
+		lem = (LEM*)vessel;
+		g_Data.vessel = vessel;
+		g_Data.gorpVessel = lem;
+		oapiGetObjectName(lem->GetGravityRef(), buffer, 8);
+		if (strcmp(buffer, "Earth") == 0 || strcmp(buffer, "Moon") == 0)
+			g_Data.planet = lem->GetGravityRef();
+		else
+			g_Data.planet = oapiGetGbodyByName("Earth");
 	}
 }
 
@@ -1467,36 +1467,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 		{
 			TextOut(hDC, width / 2, (int)(height * 0.5), "Failures not supported!", 23);
 		}
-	int sysdice = 0;										//Failure code
-	int fail_dice = 0;
-	srand(time(0));
-	char* sysl = NULL;
-	const char* systems[257] = { "GNPowerAc1CircuitBraker", "GNPowerAc2CircuitBraker", "GNIMUMnACircuitBraker", "GNIMUMnBCircuitBraker", "GNIMUHTRMnACircuitBraker", "GNIMUHTRMnBCircuitBraker", "GNComputerMnACircuitBraker", "GNComputerMnBCircuitBraker", "GNOpticsMnACircuitBraker", "GNOpticsMnBCircuitBraker", "SuitCompressorsAc1ACircuitBraker", "SuitCompressorsAc1BCircuitBraker", "SuitCompressorsAc1CCircuitBraker", "SuitCompressorsAc2ACircuitBraker", "SuitCompressorsAc2BCircuitBraker", "SuitCompressorsAc2CCircuitBraker", "ECSGlycolPumpsAc1ACircuitBraker", "ECSGlycolPumpsAc1BCircuitBraker", "ECSGlycolPumpsAc1CCircuitBraker",
-		"ECSGlycolPumpsAc2ACircuitBraker," "CSGlycolPumpsAc2BCircuitBraker", "ECSGlycolPumpsAc2CCircuitBraker", "EpsSensorSignalDcMnaCircuitBraker," "EpsSensorSignalDcMnbCircuitBraker", "EpsSensorSignalAc1CircuitBraker," "EpsSensorSignalAc2CircuitBraker", "CWMnaCircuitBraker", "CWMnbCircuitBraker", "MnbLMPWR1CircuitBraker", "InverterControl1CircuitBraker", "InverterControl2CircuitBraker", "InverterControl3CircuitBraker", "EPSSensorUnitDcBusACircuitBraker", "EPSSensorUnitDcBusBCircuitBraker", "EPSSensorUnitAcBus1CircuitBraker", "EPSSensorUnitAcBus2CircuitBraker", "BATRLYBusBatACircuitBraker", "BATRLYBusBatBCircuitBraker", "MnbLMPWR2CircuitBraker", "ControllerAc1CircuitBraker", "ControllerAc2CircuitBraker",
-		"CONTHTRSMnACircuitBraker", "CONTHTRSMnBCircuitBraker", "HTRSOVLDBatACircuitBraker", "HTRSOVLDBatBCircuitBraker", "BatteryChargerBatACircuitBraker", "BatteryChargerBatBCircuitBraker", "BatteryChargerMnACircuitBraker", "BatteryChargerMnBCircuitBraker", "BatteryChargerAcPwrCircuitBraker", "InstrumentLightingESSMnACircuitBraker", "InstrumentLightingESSMnBCircuitBraker", "InstrumentLightingNonESSCircuitBraker", "InstrumentLightingSCIEquipSEP1CircuitBraker", "InstrumentLightingSCIEquipSEP2CircuitBraker", "InstrumentLightingSCIEquipHatchCircuitBraker", "ECSPOTH2OHTRMnACircuitBraker", "ECSPOTH2OHTRMnBCircuitBraker", "ECSH2OAccumMnACircuitBraker", "ECSH2OAccumMnBCircuitBraker", "ECSTransducerWastePOTH2OMnACircuitBraker", "ECSTransducerWastePOTH2OMnBCircuitBraker", "ECSTransducerPressGroup1MnACircuitBraker", "ECSTransducerPressGroup1MnBCircuitBraker", "ECSTransducerPressGroup2MnACircuitBraker", "ECSTransducerPressGroup2MnBCircuitBraker", "ECSTransducerTempMnACircuitBraker",
-		"ECSTransducerTempMnBCircuitBraker", "ECSSecCoolLoopAc1CircuitBraker", "ECSSecCoolLoopAc2CircuitBraker", "ECSSecCoolLoopRADHTRMnACircuitBraker", "ECSSecCoolLoopXducersMnACircuitBraker", "ECSSecCoolLoopXducersMnBCircuitBraker", "ECSWasteH2OUrineDumpHTRMnACircuitBraker", "ECSWasteH2OUrineDumpHTRMnBCircuitBraker", "ECSCabinFanAC1ACircuitBraker", "ECSCabinFanAC1BCircuitBraker", "ECSCabinFanAC1CCircuitBraker", "ECSCabinFanAC2ACircuitBraker", "ECSCabinFanAC2BCircuitBraker", "ECSCabinFanAC2CCircuitBraker", "StabContSystemTVCAc1CircuitBraker", "StabContSystemAc1CircuitBraker", "StabContSystemAc2CircuitBraker", "ECATVCAc2CircuitBraker", "DirectUllMnACircuitBraker", "DirectUllMnBCircuitBraker", "ContrDirectMnA1CircuitBraker", "ContrDirectMnB1CircuitBraker", "ContrDirectMnA2CircuitBraker", "ContrDirectMnB2CircuitBraker", "ACRollMnACircuitBraker", "ACRollMnBCircuitBraker", "BDRollMnACircuitBraker", "BDRollMnBCircuitBraker", "PitchMnACircuitBraker", "PitchMnBCircuitBraker", "YawMnACircuitBraker", "YawMnBCircuitBraker", "OrdealAc2CircuitBraker", "OrdealMnBCircuitBraker", "ContrAutoMnACircuitBraker", "ContrAutoMnBCircuitBraker", "LogicBus12MnACircuitBraker",
-		"LogicBus34MnACircuitBraker", "LogicBus14MnBCircuitBraker", "LogicBus23MnBCircuitBraker", "SystemMnACircuitBraker", "SystemMnBCircuitBraker", "CMHeater1MnACircuitBraker", "CMHeater2MnBCircuitBraker", "SMHeatersAMnBCircuitBraker", "SMHeatersCMnBCircuitBraker", "SMHeatersBMnACircuitBraker", "SMHeatersDMnACircuitBraker", "PrplntIsolMnACircuitBraker", "PrplntIsolMnBCircuitBraker",
-		"RCSLogicMnACircuitBraker", "RCSLogicMnBCircuitBraker", "EMSMnACircuitBraker", "EMSMnBCircuitBraker", "DockProbeMnACircuitBraker", "DockProbeMnBCircuitBraker", "GaugingMnACircuitBraker", "GaugingMnBCircuitBraker", "GaugingAc1CircuitBraker", "GaugingAc2CircuitBraker", "HeValveMnACircuitBraker", "HeValveMnBCircuitBraker", "PitchBatACircuitBraker", "PitchBatBCircuitBraker",
-		"YawBatACircuitBraker", "YawBatBCircuitBraker", "PilotValveMnACircuitBraker", "PilotValveMnBCircuitBraker", "FloatBag1BatACircuitBraker", "FloatBag2BatBCircuitBraker", "FloatBag3FLTPLCircuitBraker", "SECSLogicBatACircuitBraker", "SECSLogicBatBCircuitBraker", "SECSArmBatACircuitBraker", "SECSArmBatBCircuitBraker", "EDS1BatACircuitBraker", "EDS2BatCCircuitBraker",
-		"EDS3BatBCircuitBraker", "ELSBatACircuitBraker", "ELSBatBCircuitBraker", "FLTPLCircuitBraker", "EPSMnBGroup1CircuitBraker", "EPSMnAGroup1CircuitBraker", "TimersMnACircuitBraker", "TimersMnBCircuitBraker", "EPSMnAGroup2CircuitBraker", "EPSMnBGroup2CircuitBraker", "SPSLineHtrsMnACircuitBraker", "SPSLineHtrsMnBCircuitBraker", "EPSMnAGroup3CircuitBraker",
-		"EPSMnBGroup3CircuitBraker", "O2VacIonPumpsMnACircuitBraker", "O2VacIonPumpsMnBCircuitBraker", "EPSMnAGroup4CircuitBraker", "EPSMnBGroup4CircuitBraker", "MainReleasePyroACircuitBraker", "MainReleasePyroBCircuitBraker", "EPSMnAGroup5CircuitBraker", "EPSMnBGroup5CircuitBraker", "UtilityCB1", "UtilityCB2",
-		"EPSBatBusACircuitBraker", "EPSBatBusBCircuitBraker", "PCMTLMGroup1CB", "PCMTLMGroup2CB", "FLTBusMNACB", "FLTBusMNBCB", "PMPPowerPrimCB", "PMPPowerAuxCB", "VHFStationAudioLCB", "VHFStationAudioCTRCB", "VHFStationAudioRCB", "UDLCB", "HGAFLTBus1CB", "HGAGroup2CB", "SBandFMXMTRFLTBusCB", "SBandFMXMTRGroup1CB",
-		"CentralTimingEquipMNACB", "CentralTimingEquipMNBCB", "RNDZXPNDRFLTBusCB", "SIGCondrFLTBusCB", "SBandPWRAmpl1FLTBusCB", "SBandPWRAmpl1Group1CB", "SBandPWRAmpl2FLTBusCB", "SBandPWRAmpl2Group1CB", "FuelCell1PumpsACCB", "FuelCell1ReacsCB", "FuelCell1BusContCB", "FuelCell1PurgeCB", "FuelCell1RadCB", "CryogenicH2HTR1CB", "CryogenicH2HTR2CB", "FuelCell2PumpsACCB", "FuelCell2ReacsCB", "FuelCell2BusContCB", "FuelCell2PurgeCB", "FuelCell2RadCB", "CryogenicO2HTR1CB", "CryogenicO2HTR2CB",
-		"FuelCell3PumpsACCB", "FuelCell3ReacsCB", "FuelCell3BusContCB", "FuelCell3PurgeCB", "FuelCell3RadCB", "CryogenicQTYAmpl1CB", "CryogenicQTYAmpl2CB", "CryogenicFanMotorsAC1ACB", "CryogenicFanMotorsAC1BCB", "CryogenicFanMotorsAC1CCB", "CryogenicFanMotorsAC2ACB", "CryogenicFanMotorsAC2BCB", "CryogenicFanMotorsAC2CCB",
-		"LightingRndzMNACB", "LightingRndzMNBCB", "LightingFloodMNACB", "LightingFloodMNBCB", "LightingFloodFLTPLCB", "LightingNumIntLEBCB", "LightingNumIntLMDCCB", "LightingNumIntRMDCCB", "RunEVATRGTAC1CB","RunEVATRGTAC2CB", "BatBusAToPyroBusTieCircuitBraker", "PyroASeqACircuitBraker", "BatBusBToPyroBusTieCircuitBraker", "PyroBSeqBCircuitBraker", "BatAPWRCircuitBraker", "BatBPWRCircuitBraker", "BatCPWRCircuitBraker", "BatCtoBatBusACircuitBraker", "BatCtoBatBusBCircuitBraker", "BatCCHRGCircuitBraker", "MainABatBusACircuitBraker", "MainABatCCircuitBraker", "MainBBatCCircuitBraker", "MainBBatBusBCircuitBraker", "FlightPostLandingBatBusACircuitBraker", "FlightPostLandingBatBusBCircuitBraker", "FlightPostLandingBatCCircuitBraker", "FlightPostLandingMainACircuitBraker",
-		"FlightPostLandingMainBCircuitBraker", "InverterPower1MainACircuitBraker", "InverterPower2MainBCircuitBraker", "InverterPower3MainACircuitBraker", "InverterPower3MainBCircuitBraker",
-		"Panel276CB1", "Panel276CB2", "Panel276CB3", "Panel276CB4", "UprightingSystemCompressor1CircuitBraker", "UprightingSystemCompressor2CircuitBraker", "SIVBLMSepPyroACircuitBraker", "SIVBLMSepPyroBCircuitBraker"};
-	char* sysl = NULL;
-	if (failmode == 1) { fail_dice = rand() % 10000; sysdice = (rand() % 257) + 1; }
-	if (failmode == 2) { fail_dice = rand() % 100; sysdice = (rand() % 257) + 1; }
-	if (failmode == 3) { fail_dice = rand() % 2; sysdice = (rand() % 257) + 1; }
-
-	if (fail_dice == 1) {						//Would like to make this a class array, to make it easire to print to the Log, or eventually have MCC reference the sysdice variable and udnerstand it
-		sysl = (char*)systems[sysdice];
-		saturn->MainPanel.SetFailedState(systems[sysdice], 1, 0);	//Updated way of failing brakers, currently causes an unresolved external when compiling
-		oapiWriteLog(sysl);
-	};
+			
 	}
+	
+
 }
 
 // =============================================================================================
@@ -1630,7 +1604,6 @@ void ProjectApolloMFD::WriteStatus (FILEHANDLE scn) const
 		oapiWriteScenario_string(scn, "PROGVESSEL", g_Data.progVessel->GetName());
 	if (g_Data.gorpVessel)
 		oapiWriteScenario_string(scn, "GORPVESSEL", g_Data.gorpVessel->GetName());
-	oapiWriteScenario_int(scn, "FAILMODE", failmode);
 }
 
 void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
@@ -1658,7 +1631,6 @@ void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
 		} 
 		papiReadScenario_int(line, "SCREEN", screen);
 		papiReadScenario_int(line, "PROGNO", g_Data.prog);
-		papiReadScenario_int(line, "FAILMODE", failmode);
 	}
 }
 
@@ -1872,7 +1844,7 @@ void ProjectApolloMFD::SetSIIEngineFailure(int n, double misst)
 bool ProjectApolloMFD::SetSystemFailures(int n)
 {
 	switch (n);
-	failmode = n;
+	saturn->failuremode = n;
 	return true;
 }
 
