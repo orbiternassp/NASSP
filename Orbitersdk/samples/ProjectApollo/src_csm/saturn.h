@@ -1626,6 +1626,7 @@ protected:
 	LandingFailures LandFail;
 	LaunchFailures LaunchFail;
 	SwitchFailures SwitchFail;
+	int failuremode;
 
 	//
 	// Ground Systems
