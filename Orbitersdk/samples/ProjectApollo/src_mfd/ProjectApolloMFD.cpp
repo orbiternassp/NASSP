@@ -623,13 +623,14 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 	if (g_Data.gorpVessel && g_Data.killrot && g_Data.gorpVessel == g_Data.vessel) {
 		g_Data.gorpVessel->SetAngularVel(_V(0, 0, 0));
 	}
+	
 }
 
 // ==============================================================
 // MFD class implementation
 
 // Constructor
-ProjectApolloMFD::ProjectApolloMFD(DWORD w, DWORD h, VESSEL* vessel) : MFD(w, h, vessel)
+ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD(w, h, vessel)
 
 {
 	saturn = NULL;
@@ -639,16 +640,15 @@ ProjectApolloMFD::ProjectApolloMFD(DWORD w, DWORD h, VESSEL* vessel) : MFD(w, h,
 	lem = NULL;
 	width = w;
 	height = h;
-	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE(IDB_LOGO));
+	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
 	screen = 0;
 	debug_frozen = false;
 	char buffer[8];
 
-
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
 	if (utils::IsVessel(vessel, utils::Saturn)) {
-		saturn = (Saturn*)vessel;
+		saturn = (Saturn *)vessel;
 		g_Data.progVessel = saturn;
 		g_Data.vessel = vessel;
 		oapiGetObjectName(saturn->GetGravityRef(), buffer, 8);
@@ -668,18 +668,18 @@ ProjectApolloMFD::ProjectApolloMFD(DWORD w, DWORD h, VESSEL* vessel) : MFD(w, h,
 	}
 	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
 		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler")) {
-		crawler = (Crawler*)vessel;
-		g_Data.planet = crawler->GetGravityRef();
+			crawler = (Crawler *)vessel;
+			g_Data.planet = crawler->GetGravityRef();
 	}
 	else if (utils::IsVessel(vessel, utils::LEM)) {
-		lem = (LEM*)vessel;
-		g_Data.vessel = vessel;
-		g_Data.gorpVessel = lem;
-		oapiGetObjectName(lem->GetGravityRef(), buffer, 8);
-		if (strcmp(buffer, "Earth") == 0 || strcmp(buffer, "Moon") == 0)
-			g_Data.planet = lem->GetGravityRef();
-		else
-			g_Data.planet = oapiGetGbodyByName("Earth");
+			lem = (LEM *)vessel;
+			g_Data.vessel = vessel;
+			g_Data.gorpVessel = lem;
+			oapiGetObjectName(lem->GetGravityRef(), buffer, 8);
+			if (strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
+				g_Data.planet = lem->GetGravityRef();
+			else
+				g_Data.planet = oapiGetGbodyByName("Earth");
 	}
 }
 
@@ -1467,10 +1467,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		{
 			TextOut(hDC, width / 2, (int)(height * 0.5), "Failures not supported!", 23);
 		}
-			
 	}
-	
-
 }
 
 // =============================================================================================
