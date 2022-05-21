@@ -1164,7 +1164,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Chaser vehicle", 0, 'C' },
 		{ "Skylab or regular DKI", 0, 'P' },
 		{ "Maneuver line definition", 0, 'R' },
-		{ "Time of ignition", 0, 'O' },
+		{ "Time of maneuver line", 0, 'O' },
 		{ "Maneuver line value", 0, 'S' },
 		{ "Phase angle setting", 0, 'M' },
 
@@ -1181,7 +1181,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("VEH", OAPI_KEY_C, &ApolloRTCCMFD::menuCycleDKIChaserVehicle);
 	RegisterFunction("PRO", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleDKIProfile);
 	RegisterFunction("MAN", OAPI_KEY_R, &ApolloRTCCMFD::menuCycleDKIManeuverLineDefinition);
-	RegisterFunction("TIG", OAPI_KEY_O, &ApolloRTCCMFD::menuDKITIG);
+	RegisterFunction("GET", OAPI_KEY_O, &ApolloRTCCMFD::menuDKITIG);
 	RegisterFunction("ML", OAPI_KEY_S, &ApolloRTCCMFD::menuDKIManeuverLineValue);
 	RegisterFunction("PHA", OAPI_KEY_M, &ApolloRTCCMFD::menuDKIInitialPhaseFlag);
 

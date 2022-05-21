@@ -10354,7 +10354,7 @@ void RTCC::PMMITL(DKICommon &DKI, AEGHeader aegh, AEGDataBlock *sv, int J)
 		V1 = sqrt(mu*(2.0 / sv[M].R - 1.0 / sv[M].coe_osc.a));
 		V2 = sqrt(mu*(2.0 / sv[M].R - 1.0 / A2));
 		dv[0].data[0] = V2 - V1;
-		sprintf(oapiDebugString(), "%lf", dv[0].data[0]);
+		//sprintf(oapiDebugString(), "%lf", dv[0].data[0]);
 	}
 
 	while (converged == false)
@@ -10557,10 +10557,12 @@ bool RTCC::NewDockingInitiationProcessor(NewDKIOpt opt)
 	double PUTNA;
 	//Threshold time of TPI
 	double TXX;
-	double TSR1, TSI, P, ECF2, ESF2, TR, DNSR, mu, Elev, theta_TPI, theta_S, SONEL, RTPM, TTPF;
-	int ILOOP, i;
+	double TSR1, TSI, P, ECF2, ESF2, TR, DNSR, mu, Elev, theta_TPI, theta_S, SONEL, RTPM, TTPF, R_E, r_per, PMIN, NHS;
+	int ILOOP, i, block;
+	bool failed, INH, store, recycle, end;
 
 	PZDKIT.UpdatingIndicator = true;
+	PZDKIT.NumSolutions = 0;
 
 	//Convert to aeg format
 	aeg_init = SVToAEG(opt.sv_CSM);
@@ -10594,15 +10596,21 @@ bool RTCC::NewDockingInitiationProcessor(NewDKIOpt opt)
 	if (opt.sv_CSM.RBI == BODY_EARTH)
 	{
 		mu = OrbMech::mu_Earth;
+		R_E = OrbMech::R_Earth;
 	}
 	else
 	{
 		mu = OrbMech::mu_Moon;
+		R_E = OrbMech::R_Moon;
 	}
+	PMIN = opt.PMIN + R_E;
 
 	//Initial flag settings
 	M = opt.MV - 1;
 	I = 1 - M;
+	block = 0;
+	NHS = opt.NH;
+	INH = false;
 
 	//Initialze both vehicles
 	sv[0].TIMA = 0;
@@ -10624,10 +10632,30 @@ bool RTCC::NewDockingInitiationProcessor(NewDKIOpt opt)
 		double INFO[10];
 		PMMAPD(aegh, sv[M], 1, 0, INFO, &sv_temp, NULL);
 		TNA = sv_temp.TE;
+		//If no initial maneuver line was defined, use 1.0 for the apoapsis that was found
+		if (PUTNA <= 0.0)
+		{
+			PUTNA = 1.0;
+		}
 	}
 	else
 	{
-		//TBD
+		//Apoapsis of inactive vehicle
+		double INFO[10];
+		PMMAPD(aegh, sv[I], 1, 0, INFO, &sv_temp, NULL);
+		//Just to store the AEG block in the AEG
+		sv_temp.TIMA = 0;
+		sv_temp.TE = sv_temp.TS;
+		PMMAEGS(aegh, sv_temp, sv_temp);
+		//Phase match
+		sv[M].TIMA = 6;
+		PMMAEGS(aegh, sv[M], sv_temp);
+		TNA = sv_temp.TE;
+		//If no initial maneuver line was defined, use 1.0 for the apoapsis that was found
+		if (PUTNA <= 0.0)
+		{
+			PUTNA = 1.0;
+		}
 	}
 
 	//Update both vehicles to time TNA
@@ -10641,9 +10669,6 @@ bool RTCC::NewDockingInitiationProcessor(NewDKIOpt opt)
 	DKI.ANAI = PUTNA;
 	UOCI = sv[M].U;
 	DKI.TNAI = TNA;
-
-	sv_init[M] = sv[M];
-	sv_init[I] = sv[I];
 
 	if (opt.I4)
 	{
@@ -10681,6 +10706,12 @@ bool RTCC::NewDockingInitiationProcessor(NewDKIOpt opt)
 			DKI.theta_init = DKI.theta_init + PI2 * (double)(opt.KRAP - 1);
 		}
 	}
+
+	//Save both vectors for future use
+	sv_init[M] = sv[M];
+	sv_init[I] = sv[I];
+
+PMMDKI_2_1:
 
 	//Take maneuvering vehicle to arrival at NSR
 	sv[M].TIMA = 3;
@@ -10802,78 +10833,137 @@ bool RTCC::NewDockingInitiationProcessor(NewDKIOpt opt)
 
 	PMMITL(DKI, aegh, sv, J);
 
+	failed = false;
 	//Minimum periapsis check
 	for (i = 0;i < DKI.NOM;i++)
 	{
-
-	}
-
-	//Store
-	PZDKIT.NumSolutions = 1;
-	PZDKIT.Block[0].PlanStatus = 1;
-	PZDKIT.Block[0].NumMan = DKI.NOM;
-	PZDKIT.Block[0].Plan_M = (int)ceil(DKI.MI);
-	PZDKIT.Block[0].NC1 = DKI.NC1;
-	PZDKIT.Block[0].NH = DKI.NH;
-	if (opt.I4)
-	{
-		PZDKIT.Block[0].NCC = DKI.NCC;
-	}
-	else
-	{
-		PZDKIT.Block[0].NCC = -1.0;
-	}
-	PZDKIT.Block[0].NSR = DKI.NSR;
-	PZDKIT.Block[0].NPC = DKI.NPC;
-	PZDKIT.Block[0].TTPI = DKI.TTPI;
-	for (int i = 0;i < DKI.NOM;i++)
-	{
-		PZDKIT.Block[0].Display[i].Man_ID = DKI.ID[i];
-
-		OrbMech::GIMKIC(DKI.sv_before[i].coe_osc, mu, PZDKIELM.Block[0].SV_before[i].R, PZDKIELM.Block[0].SV_before[i].V);
-		OrbMech::GIMKIC(DKI.sv_after[i].coe_osc, mu, PZDKIELM.Block[0].SV_before[i].R, PZDKIELM.Block[0].V_after[i]);
-
-		if (aegh.AEGInd == BODY_EARTH)
+		r_per = (1.0 - DKI.sv_after[i].coe_osc.e)*DKI.sv_after[i].coe_osc.a;
+		if (r_per < PMIN)
 		{
-			//For now, back to ecliptic
-			PZDKIELM.Block[0].SV_before[i].R = tmul(SystemParameters.MAT_J2000_BRCS, PZDKIELM.Block[0].SV_before[i].R);
-			PZDKIELM.Block[0].SV_before[i].V = tmul(SystemParameters.MAT_J2000_BRCS, PZDKIELM.Block[0].SV_before[i].V);
-			PZDKIELM.Block[0].V_after[i] = tmul(SystemParameters.MAT_J2000_BRCS, PZDKIELM.Block[0].V_after[i]);
-		}
-
-		PZDKIELM.Block[0].SV_before[i].GMT = DKI.sv_before[i].TS;
-		PZDKIELM.Block[0].SV_before[i].RBI = opt.sv_CSM.RBI;
-		PZDKIT.Block[0].Display[0].ManGMT = PZDKIELM.Block[0].SV_before[i].GMT;
-
-		if (M == 0)
-		{
-			PZDKIT.Block[0].Display[i].VEH = RTCC_MPT_CSM;
-		}
-		else
-		{
-			PZDKIT.Block[0].Display[i].VEH = RTCC_MPT_LM;
+			failed = true;
+			break;
 		}
 	}
 	
+	store = true;
+	recycle = false;
 
-	//Calculate more display data
-	MATRIX3 Q_Xx;
-	double DH, Phase, HA, HP;
-
-	for (i = 0;i < PZDKIT.Block[0].NumMan;i++)
+	if (failed)
 	{
-		PCPICK(aegh, DKI.sv_after[i], sv[I], DH, Phase, HA, HP);
+		store = false;
+		if (opt.I4 || opt.LNH == false || DKI.NSR - DKI.NH <= 1.0)
+		{
+			//Plan failed cannot reschedule NH
+		}
+		else
+		{
+			DKI.NH = DKI.NSR - 0.5;
+			INH = true;
+			recycle = true;
+		}
+	}
 
-		PZDKIT.Block[0].Display[i].DH = DH;
-		PZDKIT.Block[0].Display[i].PhaseAngle = Phase;
-		PZDKIT.Block[0].Display[i].HA = HA;
-		PZDKIT.Block[0].Display[i].HP = HP;
-		PZDKIT.Block[0].Display[i].ManGMT = DKI.sv_after[i].TS;
-		Q_Xx = OrbMech::LVLH_Matrix(PZDKIELM.Block[0].SV_before[i].R, PZDKIELM.Block[0].SV_before[i].V);
-		PZDKIT.Block[0].Display[i].DV_LVLH = mul(Q_Xx, PZDKIELM.Block[0].V_after[i] - PZDKIELM.Block[0].SV_before[i].V);
-		PZDKIT.Block[0].Display[i].dv = length(PZDKIT.Block[0].Display[i].DV_LVLH);
-		PZDKIT.Block[0].Display[i].Yaw = atan2(PZDKIT.Block[0].Display[i].DV_LVLH.y, PZDKIT.Block[0].Display[i].DV_LVLH.x);
-		PZDKIT.Block[0].Display[i].Pitch = atan2(-PZDKIT.Block[0].Display[i].DV_LVLH.z, sqrt(pow(PZDKIT.Block[0].Display[i].DV_LVLH.x, 2) + pow(PZDKIT.Block[0].Display[i].DV_LVLH.y, 2)));
+	if (store)
+	{
+		//Store
+		PZDKIT.NumSolutions++;
+		PZDKIT.Block[block].PlanStatus = 1;
+		PZDKIT.Block[block].NumMan = DKI.NOM;
+		PZDKIT.Block[block].Plan_M = (int)ceil(DKI.MI);
+		PZDKIT.Block[block].NC1 = DKI.NC1;
+		PZDKIT.Block[block].NH = DKI.NH;
+		if (opt.I4)
+		{
+			PZDKIT.Block[block].NCC = DKI.NCC;
+		}
+		else
+		{
+			PZDKIT.Block[block].NCC = -1.0;
+		}
+		PZDKIT.Block[block].NSR = DKI.NSR;
+		PZDKIT.Block[block].NPC = DKI.NPC;
+		PZDKIT.Block[block].TTPI = DKI.TTPI;
+		for (int i = 0;i < DKI.NOM;i++)
+		{
+			PZDKIT.Block[block].Display[i].Man_ID = DKI.ID[i];
+
+			OrbMech::GIMKIC(DKI.sv_before[i].coe_osc, mu, PZDKIELM.Block[block].SV_before[i].R, PZDKIELM.Block[block].SV_before[i].V);
+			OrbMech::GIMKIC(DKI.sv_after[i].coe_osc, mu, PZDKIELM.Block[block].SV_before[i].R, PZDKIELM.Block[block].V_after[i]);
+
+			if (aegh.AEGInd == BODY_EARTH)
+			{
+				//For now, back to ecliptic
+				PZDKIELM.Block[block].SV_before[i].R = tmul(SystemParameters.MAT_J2000_BRCS, PZDKIELM.Block[block].SV_before[i].R);
+				PZDKIELM.Block[block].SV_before[i].V = tmul(SystemParameters.MAT_J2000_BRCS, PZDKIELM.Block[block].SV_before[i].V);
+				PZDKIELM.Block[block].V_after[i] = tmul(SystemParameters.MAT_J2000_BRCS, PZDKIELM.Block[block].V_after[i]);
+			}
+
+			PZDKIELM.Block[block].SV_before[i].GMT = DKI.sv_before[i].TS;
+			PZDKIELM.Block[block].SV_before[i].RBI = opt.sv_CSM.RBI;
+			PZDKIT.Block[block].Display[0].ManGMT = PZDKIELM.Block[block].SV_before[i].GMT;
+
+			if (M == 0)
+			{
+				PZDKIT.Block[block].Display[i].VEH = RTCC_MPT_CSM;
+			}
+			else
+			{
+				PZDKIT.Block[block].Display[i].VEH = RTCC_MPT_LM;
+			}
+		}
+
+
+		//Calculate more display data
+		MATRIX3 Q_Xx;
+		double DH, Phase, HA, HP;
+
+		for (i = 0;i < PZDKIT.Block[block].NumMan;i++)
+		{
+			PCPICK(aegh, DKI.sv_after[i], sv[I], DH, Phase, HA, HP);
+
+			PZDKIT.Block[block].Display[i].DH = DH;
+			PZDKIT.Block[block].Display[i].PhaseAngle = Phase;
+			PZDKIT.Block[block].Display[i].HA = HA;
+			PZDKIT.Block[block].Display[i].HP = HP;
+			PZDKIT.Block[block].Display[i].ManGMT = DKI.sv_after[i].TS;
+			Q_Xx = OrbMech::LVLH_Matrix(PZDKIELM.Block[block].SV_before[i].R, PZDKIELM.Block[block].SV_before[i].V);
+			PZDKIT.Block[block].Display[i].DV_LVLH = mul(Q_Xx, PZDKIELM.Block[block].V_after[i] - PZDKIELM.Block[block].SV_before[i].V);
+			PZDKIT.Block[block].Display[i].dv = length(PZDKIT.Block[block].Display[i].DV_LVLH);
+			PZDKIT.Block[block].Display[i].Yaw = atan2(PZDKIT.Block[block].Display[i].DV_LVLH.y, PZDKIT.Block[block].Display[i].DV_LVLH.x);
+			PZDKIT.Block[block].Display[i].Pitch = atan2(-PZDKIT.Block[block].Display[i].DV_LVLH.z, sqrt(pow(PZDKIT.Block[block].Display[i].DV_LVLH.x, 2) + pow(PZDKIT.Block[block].Display[i].DV_LVLH.y, 2)));
+		}
+		block++;
+	}
+
+	end = false;
+	if (recycle == false)
+	{
+		if (INH)
+		{
+			DKI.NH = NHS;
+		}
+		if (opt.IDM > DKI.MI)
+		{
+			DKI.MI += 1.0;
+			DKI.NCC += 1.0;
+			DKI.NSR += 1.0;
+			if (opt.MNH)
+			{
+				DKI.NH += 1.0;
+				NHS = DKI.NH;
+			}
+		}
+		else
+		{
+			end = true;
+		}
+	}
+
+	if (end == false)
+	{
+		sv[M] = sv_init[M];
+		sv[I] = sv_init[I];
+		goto PMMDKI_2_1;
 	}
 
 	//We are done updating

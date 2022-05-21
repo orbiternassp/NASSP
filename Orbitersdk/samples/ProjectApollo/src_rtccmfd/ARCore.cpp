@@ -3662,20 +3662,20 @@ int ARCore::subThread()
 	case 19: //Docking Initiation Processor
 	{
 		RTCC::NewDKIOpt opt;
+		double GMT;
+
+		if (GC->rtcc->med_k10.MLDTime == 0.0)
+		{
+			GMT = GC->rtcc->RTCCPresentTimeGMT();
+		}
+		else
+		{
+			GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k10.MLDTime);
+		}
 
 		if (GC->MissionPlanningActive)
 		{
 			EphemerisData EPHEM;
-			double GMT;
-
-			if (GC->rtcc->med_k00.THT < 0)
-			{
-				GMT = GC->rtcc->RTCCPresentTimeGMT();
-			}
-			else
-			{
-				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k00.THT);
-			}
 
 			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM);
 			if (err)
@@ -3715,6 +3715,10 @@ int ARCore::subThread()
 				opt.sv_CSM = sv[1];
 				opt.sv_LM = sv[0];
 			}
+
+			//Coast to threshold time
+			opt.sv_CSM = GC->rtcc->coast(opt.sv_CSM, GMT - opt.sv_CSM.GMT);
+			opt.sv_LM = GC->rtcc->coast(opt.sv_LM, GMT - opt.sv_LM.GMT);
 		}		
 
 		opt.IPUTNA = GC->rtcc->med_k10.MLDOption;

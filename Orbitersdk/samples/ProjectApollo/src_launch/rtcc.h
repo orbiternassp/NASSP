@@ -2574,9 +2574,9 @@ public:
 		double NC1;
 		//Maneuver line point for the height maneuver
 		double NH;
-		//control flag for phase angle at NSR
+		//control flag for phase angle at TPI. true = input phase angle, false = no input
 		bool KCOSR = false;
-		//Phase angle desired at NSR (if input)
+		//Phase angle desired at TPI (if input)
 		double COSR;
 		//Height tolerance
 		double DHT = 100.0*0.3048;
@@ -2597,6 +2597,14 @@ public:
 		double NPC;
 		//Control flag for initial phase angle wrapping. 0 = -180 to 180. 1 = 0 to 360. -1 = -360 to 0 and so on...
 		int KRAP = 0;
+		//Minimum height allowed in DKI plan
+		double PMIN = 0.0;
+		//Flag to relocated NH if minimum height is violated. false = no, true = yes
+		bool LNH = false;
+		//Number of additional M-lines desired
+		int IDM = 0;
+		//Flag to determine where to place in multiple plans. false = same point, 1 = relative to NSR
+		bool MNH = false;
 
 		//Skylab only
 		//Skylab four-maneuver route
@@ -3239,8 +3247,6 @@ public:
 	//Generate DKI
 	struct MED_K00
 	{
-		//Threshold time
-		double THT = 0.0;
 		//false = normal DKI, true = Skylab four-maneuver route.
 		bool I4 = false;
 		//Maneuver line point for the phasing maneuver
@@ -3918,8 +3924,6 @@ public:
 		double DKI_TPDefinitionValue = -23.0; //Can be input phase angle, TPI, TPF time or day/night
 		//Block 27
 		double DKIMinPerigee = 0.0;
-		//Block 28 Bytes 1-4
-		double DeltaNSR;
 		//Block 29
 		double TPIDefinitionValue = 0.0;
 		//Block 30

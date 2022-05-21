@@ -3013,8 +3013,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 16, 2 * H / 14, "TIG and TPI Definition", 22);
 		skp->Text(1 * W / 16, 4 * H / 14, "Init Parameters", 15);
 
-		sprintf(Buffer, "%.2f", GC->rtcc->med_k00.NC1);
+		if (GC->rtcc->med_k00.NC1 > 0)
+		{
+			sprintf(Buffer, "%.2f", GC->rtcc->med_k00.NC1);
+		}
+		else
+		{
+			sprintf(Buffer, "No NC1 maneuver");
+		}
 		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
 		sprintf(Buffer, "%.2f", GC->rtcc->med_k00.NH);
 		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
@@ -3076,18 +3084,31 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (GC->rtcc->med_k10.MLDOption == 1)
 		{
-			skp->Text(1 * W / 16, 6 * H / 14, "TIG at input time", 17);
+			skp->Text(1 * W / 16, 6 * H / 14, "ML at input time", 16);
 
 			GET_Display(Buffer, GC->rtcc->med_k10.MLDTime, false);
 			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
-		else if(GC->rtcc->med_k10.MLDOption == 2)
-		{
-			skp->Text(1 * W / 16, 6 * H / 14, "TIG at chaser apoapsis", 22);
-		}
 		else
 		{
-			skp->Text(1 * W / 16, 6 * H / 14, "TIG at target apogee", 20);
+			if (GC->rtcc->med_k10.MLDOption == 2)
+			{
+				skp->Text(1 * W / 16, 6 * H / 14, "ML at chaser apoapsis", 21);
+			}
+			else
+			{
+				skp->Text(1 * W / 16, 6 * H / 14, "ML at target apogee", 19);
+			}
+			skp->Text(1 * W / 16, 7 * H / 14, "Threshold time:", 15);
+			if (GC->rtcc->med_k10.MLDTime == 0.0)
+			{
+				sprintf(Buffer, "Current Time");
+			}
+			else
+			{
+				GET_Display(Buffer, GC->rtcc->med_k10.MLDTime, false);
+			}
+			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		sprintf(Buffer, "%.1lf", GC->rtcc->med_k10.MLDValue);
