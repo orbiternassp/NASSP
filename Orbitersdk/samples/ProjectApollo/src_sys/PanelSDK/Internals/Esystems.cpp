@@ -1717,7 +1717,7 @@ void Diode::Save(FILEHANDLE scn)
 }
 
 //------------------------------ Light Class -----------------------------------
-electricLight::electricLight(char* lightname, e_object* i_src, const bool flashing, const double onTime, const double offTime, OBJHANDLE thisVessel, VECTOR3 pos, VECTOR3 dir, double range, double att0, double att1, double att2, double umbra, double penumbra, COLOUR4 diffuse, COLOUR4 specular, COLOUR4 ambient, double powerDraw, double nomVoltage)
+electricLight::electricLight(char* lightname, e_object* i_src, const bool flashing, const double onTime, const double offTime, VESSEL *thisVessel, VECTOR3 pos, VECTOR3 dir, double range, double att0, double att1, double att2, double umbra, double penumbra, COLOUR4 diffuse, COLOUR4 specular, COLOUR4 ambient, double powerDraw, double nomVoltage)
 {
 	strcpy(name, lightname);
 	SRC = i_src;
@@ -1732,12 +1732,10 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	nomPowerDraw = powerDraw;
 	nomVolts = nomVoltage;
 
-	this_V = thisVessel;
-
 	LightPosition = BeaconPosition = pos;
 	LightDirection = dir;
 
-	lamp = (SpotLight*)((VESSEL3)thisVessel).AddSpotLight(LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient);
+	lamp = (SpotLight*)(thisVessel->AddSpotLight(LightPosition, LightDirection, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient));
 	lampBeacon.shape = 2;
 	lampBeacon.period = 0.0;
 	lampBeacon.pos = &BeaconPosition;
@@ -1747,7 +1745,7 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	lampBeacon.size = 0.2;
 	lampBeaconColor = _V(diffuse.r, diffuse.g, diffuse.b);
 	lampBeacon.col = &lampBeaconColor;
-	((VESSEL3)thisVessel).AddBeacon(&lampBeacon);
+	thisVessel->AddBeacon(&lampBeacon);
 }
 
 electricLight::~electricLight()
@@ -1758,6 +1756,10 @@ void electricLight::refresh(double dt) {
 	//if(!strcmp(this->name, "RNDZLIGHT")) {
 	//	sprintf(oapiDebugString(), "%lf",SRC->Voltage());
 	//}
+
+	/*if (!strcmp(this->name, "RNDZLIGHT")) {
+		sprintf(oapiDebugString(), "Beacon: <%lf %lf %lf> Lamp: <%lf %lf %lf>", BeaconPosition.x, BeaconPosition.y, BeaconPosition.z, lamp->GetPosition().x, lamp->GetPosition().y, lamp->GetPosition().z);
+	}*/
 
 	if (flash) {
 		if (flashtimer > offtime && !flashstate) {
@@ -1789,6 +1791,6 @@ void electricLight::refresh(double dt) {
 
 void electricLight::UpdatePosition(VECTOR3 offset)
 {
-	lamp->SetPosition((LightPosition + offset));
 	BeaconPosition -= offset;
+	lamp->SetPosition(BeaconPosition);
 }

@@ -610,7 +610,7 @@ public:
 				const bool flashing,
 				const double onTime,
 				const double offTime,
-				OBJHANDLE thisVessel,
+				VESSEL* thisVessel,
 				VECTOR3 pos, 
 				VECTOR3 dir,
 				double range, 
@@ -636,7 +636,6 @@ private:
 	double ontime;
 	double offtime;
 	double flashtimer;
-	OBJHANDLE this_V;
 	VECTOR3 BeaconPosition;
 	VECTOR3 LightPosition;
 	VECTOR3 LightDirection;
