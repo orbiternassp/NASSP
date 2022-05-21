@@ -2575,6 +2575,10 @@ void Saturn::CheckSMSystemsState()
 			delete secs.SMJCB;
 			secs.SMJCB = NULL;
 		}
+
+		//Disconnect Exterior SM lights
+		rndzlight->WireTo(NULL);
+		spotlight->WireTo(NULL);
 	}
 }
 
