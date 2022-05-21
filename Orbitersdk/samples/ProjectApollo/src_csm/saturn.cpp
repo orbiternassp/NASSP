@@ -3181,8 +3181,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//Failures
 	int sysdice = 0;										//Failure code
 	int fail_dice = 0;
-	int lsysdice = 1;
-	const char* Lemsystems[1] = { "LGC_DSKY_CB" };
 	srand(time(0));
 	const char* systems[257] = { "GNPowerAc1CircuitBraker", "GNPowerAc2CircuitBraker", "GNIMUMnACircuitBraker", "GNIMUMnBCircuitBraker", "GNIMUHTRMnACircuitBraker", "GNIMUHTRMnBCircuitBraker", "GNComputerMnACircuitBraker", "GNComputerMnBCircuitBraker", "GNOpticsMnACircuitBraker", "GNOpticsMnBCircuitBraker", "SuitCompressorsAc1ACircuitBraker", "SuitCompressorsAc1BCircuitBraker", "SuitCompressorsAc1CCircuitBraker", "SuitCompressorsAc2ACircuitBraker", "SuitCompressorsAc2BCircuitBraker", "SuitCompressorsAc2CCircuitBraker", "ECSGlycolPumpsAc1ACircuitBraker", "ECSGlycolPumpsAc1BCircuitBraker", "ECSGlycolPumpsAc1CCircuitBraker",
 		"ECSGlycolPumpsAc2ACircuitBraker," "CSGlycolPumpsAc2BCircuitBraker", "ECSGlycolPumpsAc2CCircuitBraker", "EpsSensorSignalDcMnaCircuitBraker," "EpsSensorSignalDcMnbCircuitBraker", "EpsSensorSignalAc1CircuitBraker," "EpsSensorSignalAc2CircuitBraker", "CWMnaCircuitBraker", "CWMnbCircuitBraker", "MnbLMPWR1CircuitBraker", "InverterControl1CircuitBraker", "InverterControl2CircuitBraker", "InverterControl3CircuitBraker", "EPSSensorUnitDcBusACircuitBraker", "EPSSensorUnitDcBusBCircuitBraker", "EPSSensorUnitAcBus1CircuitBraker", "EPSSensorUnitAcBus2CircuitBraker", "BATRLYBusBatACircuitBraker", "BATRLYBusBatBCircuitBraker", "MnbLMPWR2CircuitBraker", "ControllerAc1CircuitBraker", "ControllerAc2CircuitBraker",
@@ -3208,7 +3206,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		sysl = (char*)systems[sysdice];
 		MainPanel.SetFailedState(systems[sysdice], 1, 0);
 		oapiWriteLog(sysl);
-		//if (sysdice == 2) { saturn->GNPowerAc1CircuitBraker.SetFailed(true); oapiWriteLog("NASSP Failure: GN PWR AC1"); }
 	};
 }
 
