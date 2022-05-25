@@ -1242,6 +1242,21 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			TimeofIgnition = res.P30TIG;
 			DeltaV_LVLH = res.dV_LVLH;
+
+			//Calculate nominal entry REFSMMAT
+			REFSMMATOpt refsopt;
+
+			refsopt.GETbase = GETbase;
+			refsopt.REFSMMATopt = 3;
+			refsopt.vessel = calcParams.src;
+			refsopt.useSV = true;
+			refsopt.RV_MCC = res.sv_postburn;
+
+			//Save as LCV REFSMMAT
+			int id = RTCC_REFSMMAT_TYPE_LCV - 1;
+			EZJGMTX1.data[id].ID = 1;
+			EZJGMTX1.data[id].GMT = GMTfromGET(res.GET400K);
+			EZJGMTX1.data[id].REFSMMAT = REFSMMATCalc(&refsopt);
 		}
 		if (fcn != 201)	//Don't save it for TEI-11
 		{
@@ -1255,16 +1270,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 202: //Entry REFSMMAT
 	{
-		REFSMMATOpt refsopt;
-		MATRIX3 REFSMMAT;
 		char buffer1[1000];
 
-		refsopt.GETbase = CalcGETBase();
-		refsopt.REFSMMATopt = 3;
-		refsopt.vessel = calcParams.src;
-
-		REFSMMAT = REFSMMATCalc(&refsopt);
-		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT);
+		AGCDesiredREFSMMATUpdate(buffer1, EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1347,7 +1355,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
 
-									  //Apollo 8 Mission Rules
+		//Apollo 8 Mission Rules
 		if (MCCtime > calcParams.EI - 50.0*3600.0)
 		{
 			if (length(res.dV_LVLH) < 1.0*0.3048)
@@ -1372,6 +1380,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			res.dV_LVLH = _V(0, 0, 0);
 			res.P30TIG = entopt.TIGguess;
+
+			char buffer1[1000];
+			AGCStateVectorUpdate(buffer1, sv, false, GETbase);
+
+			sprintf(uplinkdata, "%s", buffer1);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector");
+			}
 		}
 		else
 		{
@@ -1392,7 +1410,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			}
 
 			opt.dV_LVLH = res.dV_LVLH;
-			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);;
+			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
 			opt.GETbase = GETbase;
 			opt.HeadsUp = false;
 			opt.REFSMMAT = REFSMMAT;
