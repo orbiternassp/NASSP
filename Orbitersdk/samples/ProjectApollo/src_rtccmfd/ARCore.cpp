@@ -3661,7 +3661,7 @@ int ARCore::subThread()
 	break;
 	case 19: //Docking Initiation Processor
 	{
-		RTCC::NewDKIOpt opt;
+		DKIOpt opt;
 		double GMT;
 
 		if (GC->rtcc->med_k10.MLDTime == 0.0)
@@ -3772,7 +3772,7 @@ int ARCore::subThread()
 		opt.WT = GC->rtcc->GZGENCSN.DKITerminalPhaseAngle;
 		opt.KRAP = GC->rtcc->GZGENCSN.DKIPhaseAngleSetting;
 
-		GC->rtcc->NewDockingInitiationProcessor(opt);
+		GC->rtcc->DockingInitiationProcessor(opt);
 
 		Result = 0;
 	}
