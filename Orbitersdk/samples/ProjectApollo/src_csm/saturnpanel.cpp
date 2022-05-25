@@ -1867,7 +1867,7 @@ void Saturn::SetSwitches(int panel) {
 
 	CSMLightSwitchesRow.Init(AID_CSMLIGHTSWITCHES, MainPanel);
 	RunEVALightSwitch.Init(  0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
-	RndzLightSwitch.Init  ( 57, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
+	RndzLightSwitch.Init( 57, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CSMLightSwitchesRow, &RunEVATRGTAC2CB, NULL, &LightingRndzMNACB, spotlight, rndzlight);
 	TunnelLightSwitch.Init(111, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
 
 	LMPowerSwitchRow.Init(AID_LMPOWERSWITCH, MainPanel);

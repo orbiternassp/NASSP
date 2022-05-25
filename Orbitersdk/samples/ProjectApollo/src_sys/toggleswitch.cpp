@@ -4538,16 +4538,22 @@ void ThreeSourceTwoDestSwitch::UpdateSourceState()
 		//
 		// Source 1 to dest 1, source 3 to dest 2
 		//
+		dest1->WireTo(source[0]);
+		dest2->WireTo(source[1]);
 	}
 	else if (IsCenter()) {
 		//
-		// Disconnect.
+		// Disconnect. Center is usually wired to NULL, for an "Off" state
 		//
+		dest1->WireTo(source[1]);
+		dest2->WireTo(source[1]);
 	}
 	else if (IsDown()) {
 		//
 		// Source 2 to dest 2, source 3 to dest 1.
 		//
+		dest1->WireTo(source[1]);
+		dest2->WireTo(source[2]);
 	}
 }
 

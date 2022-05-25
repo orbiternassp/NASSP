@@ -240,9 +240,6 @@
     <ClCompile Include="..\..\src_aux\animations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_csm\csm_lighting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">
@@ -468,9 +465,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_aux\animations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_csm\csm_lighting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

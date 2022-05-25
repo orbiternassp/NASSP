@@ -153,7 +153,6 @@
     <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_aux\vesim.cpp" />
     <ClCompile Include="..\..\src_csm\csmsensors.cpp" />
-    <ClCompile Include="..\..\src_csm\csm_lighting.cpp" />
     <ClCompile Include="..\..\src_csm\rhc.cpp" />
     <ClCompile Include="..\..\src_csm\sce.cpp" />
     <ClCompile Include="..\..\src_csm\smjc.cpp" />
@@ -455,7 +454,6 @@
     <ClInclude Include="..\..\src_aux\RF_calc.h" />
     <ClInclude Include="..\..\src_aux\vesim.h" />
     <ClInclude Include="..\..\src_csm\csmsensors.h" />
-    <ClInclude Include="..\..\src_csm\csm_lighting.h" />
     <ClInclude Include="..\..\src_csm\rhc.h" />
     <ClInclude Include="..\..\src_csm\sce.h" />
     <ClInclude Include="..\..\src_csm\smjc.h" />

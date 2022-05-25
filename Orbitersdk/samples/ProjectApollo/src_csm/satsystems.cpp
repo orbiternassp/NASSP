@@ -140,13 +140,7 @@ void Saturn::SystemsInit() {
 
 	spotlight = (electricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
 	rndzlight = (electricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
-	spotlight->WireTo((e_object *)&RunEVATRGTAC2CB);
-	rndzlight->WireTo((e_object *)&LightingRndzMNACB);
-	spotrndzlightcontroler.setSpotLight(spotlight);
-	spotrndzlightcontroler.setRndzLight(rndzlight);
-	spotrndzlightcontroler.setSwitch(&RndzLightSwitch);
 
-	
 
 	//
 	// O2 tanks.
@@ -724,7 +718,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		CMRCS2.Timestep(MissionTime, simdt);
 		SideHatch.Timestep(simdt);
 		ForwardHatch.Timestep(simdt);
-		spotrndzlightcontroler.timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
 		udl.Timestep();
@@ -740,6 +733,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		sce.Timestep();
 		dataRecorder.TimeStep( MissionTime, simdt );
 		RRTsystem.TimeStep(simdt);
+
+		//
+		// Switches MAYBE THIS SHOULD GO SOMEWHERE ELSE? They only need to be updated every timestep, not every substep
+		///
+		RndzLightSwitch.refresh(simdt);
 
 		//
 		// Systems state handling

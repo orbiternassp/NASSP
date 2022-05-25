@@ -65,7 +65,6 @@
 #include "sce.h"
 #include "csmsensors.h"
 #include "rhc.h"
-#include "csm_lighting.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -1901,7 +1900,7 @@ protected:
 
 	SwitchRow CSMLightSwitchesRow;
 	ToggleSwitch RunEVALightSwitch;
-	ThreePosSwitch RndzLightSwitch;
+	ThreeSourceTwoDestSwitch RndzLightSwitch;
 	ToggleSwitch TunnelLightSwitch;
 
 	SwitchRow LMPowerSwitchRow;
@@ -3683,7 +3682,6 @@ protected:
 	//Electric Lights
 	electricLight* spotlight;
 	electricLight* rndzlight;
-	SpotRndzlightControler spotrndzlightcontroler;
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];
