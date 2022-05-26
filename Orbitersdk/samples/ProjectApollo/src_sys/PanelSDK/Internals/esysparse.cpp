@@ -197,7 +197,7 @@ void E_system::Create_ElectricLight(char* line)
 
 
 	powerSource = (e_object*)GetPointerByString(sourceName);
-	electricLight* newLight = new electricLight(name, powerSource, flashing, onTime, offTime, (VESSEL*)(this->Vessel), pos, dir, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient, powerDraw, nomVoltage);
+	ElectricLight* newLight = new ElectricLight(name, powerSource, flashing, onTime, offTime, (VESSEL*)(this->Vessel), pos, dir, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient, powerDraw, nomVoltage);
 	AddSystem(newLight);
 }
 

@@ -1717,7 +1717,7 @@ void Diode::Save(FILEHANDLE scn)
 }
 
 //------------------------------ Light Class -----------------------------------
-electricLight::electricLight(char* lightname, e_object* i_src, const bool flashing, const double onTime, const double offTime, VESSEL *thisVessel, VECTOR3 pos, VECTOR3 dir, double range, double att0, double att1, double att2, double umbra, double penumbra, COLOUR4 diffuse, COLOUR4 specular, COLOUR4 ambient, double powerDraw, double nomVoltage)
+ElectricLight::ElectricLight(char* lightname, e_object* i_src, const bool flashing, const double onTime, const double offTime, VESSEL *thisVessel, VECTOR3 pos, VECTOR3 dir, double range, double att0, double att1, double att2, double umbra, double penumbra, COLOUR4 diffuse, COLOUR4 specular, COLOUR4 ambient, double powerDraw, double nomVoltage)
 {
 	strcpy(name, lightname);
 	SRC = i_src;
@@ -1748,11 +1748,7 @@ electricLight::electricLight(char* lightname, e_object* i_src, const bool flashi
 	thisVessel->AddBeacon(&lampBeacon);
 }
 
-electricLight::~electricLight()
-{
-}
-
-void electricLight::refresh(double dt) {
+void ElectricLight::refresh(double dt) {
 	//if(!strcmp(this->name, "RNDZLIGHT")) {
 	//	sprintf(oapiDebugString(), "%lf",SRC->Voltage());
 	//}
@@ -1789,7 +1785,7 @@ void electricLight::refresh(double dt) {
 	}
 }
 
-void electricLight::UpdatePosition(VECTOR3 offset)
+void ElectricLight::UpdatePosition(VECTOR3 offset)
 {
 	BeaconPosition -= offset;
 	lamp->SetPosition(BeaconPosition);

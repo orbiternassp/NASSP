@@ -3679,9 +3679,9 @@ protected:
 	h_Tank *FuelCellO2Manifold[3];
 	h_Tank *FuelCellH2Manifold[3];
 	
-	//Electric Lights
-	electricLight* spotlight;
-	electricLight* rndzlight;
+	// Electric Lights
+	ElectricLight* SpotLight;
+	ElectricLight* RndzLight;
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];

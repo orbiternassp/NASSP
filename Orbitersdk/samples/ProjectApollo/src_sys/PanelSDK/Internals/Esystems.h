@@ -603,9 +603,9 @@ protected:
 /// \ingroup PanelSDK
 /// Electric lighting with OAPI light emitter
 ///
-class electricLight : public e_object, public therm_obj {
+class ElectricLight : public e_object, public therm_obj {
 public:
-	electricLight(char* lightname,
+	ElectricLight(char* lightname,
 				e_object* i_src,
 				const bool flashing,
 				const double onTime,
@@ -625,7 +625,7 @@ public:
 				double powerDraw,
 				double nomVoltage);
 
-	~electricLight();
+	~ElectricLight() = default;
 	virtual void refresh(double dt);
 	void UpdatePosition(VECTOR3 offset);
 private:

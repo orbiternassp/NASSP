@@ -138,8 +138,8 @@ void Saturn::SystemsInit() {
 	// Electric Lights
 	//
 
-	spotlight = (electricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
-	rndzlight = (electricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
+	SpotLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
+	RndzLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
 
 
 	//
@@ -2554,7 +2554,7 @@ void Saturn::CheckSMSystemsState()
 		// Close O2 SM supply
 		O2SMSupply.Close();
 
-		//SM sensors
+		// SM sensors
 		H2Tank1TempSensor.WireTo(NULL);
 		H2Tank2TempSensor.WireTo(NULL);
 		O2Tank1TempSensor.WireTo(NULL);
@@ -2574,9 +2574,9 @@ void Saturn::CheckSMSystemsState()
 			secs.SMJCB = NULL;
 		}
 
-		//Disconnect Exterior SM lights
-		rndzlight->WireTo(NULL);
-		spotlight->WireTo(NULL);
+		// Disconnect Exterior SM lights
+		RndzLight->WireTo(NULL);
+		SpotLight->WireTo(NULL);
 	}
 }
 
