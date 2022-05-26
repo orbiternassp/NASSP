@@ -901,6 +901,14 @@ void h_Pipe::refresh(double dt) {
 		double out_t = out->GetTemp();
 		double trQ = (in_t - out_t) * dt;
 
+		// Simulate diffusion between pipe-connected volumes
+		if (two_ways) {
+			h_volume DiffusionOut = out->GetFlow(dt * (GlobalDiffusivity * out_t * exp(-abs(in_p - out_p))), flowMax * dt);
+			h_volume DiffusionIn = in->GetFlow(dt * (GlobalDiffusivity * in_t * exp(-abs(in_p - out_p))), flowMax * dt);
+			in->Flow(DiffusionOut);
+			out->Flow(DiffusionIn);
+		}
+
 		// conductive heat transfer should depend on valve-size
 		// as a "quick hack" it's proportional to the minimum size,
 		// but this has to be improved
