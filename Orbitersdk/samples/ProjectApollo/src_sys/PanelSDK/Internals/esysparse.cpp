@@ -165,6 +165,42 @@ void E_system::Create_Diode(char *line)
 
 void E_system::Create_ElectricLight(char* line)
 {
+	/* Config file creation string is as follows
+	
+	A single line begining with "<LIGHT>"
+
+	Followed by the fields:
+
+			Field			|			Unit			|			Type			|
+	---------------------------------------------------------------------------------
+		name						n/a							string
+		sourceName					n/a							string
+		flashing					n/a							string
+		OnTime						seconds						double
+		OffTime						seconds						double
+		<position>					meters						VECTOR3
+		<direction>					meters						VECTOR3
+		CutoffRange					meters						double
+		ConstantAttenuation			meters						double
+		LinearAttenuation			meters^-1					double
+		QuadraticAttenuation		meters^-2					double
+		Umbra						radians						double
+		Penumbra					radians						double
+		<%f %f %f %f>				n/a							COLOUR4
+		<%f %f %f %f>				n/a							COLOUR4
+		<%f %f %f %f>				n/a							COLOUR4
+		%lf							Watts						double
+		%lf							Volts						double
+	
+	
+	Example:
+
+	<LIGHT> SPOTLIGHT DC_DUMMY 0 0.0 0.0 <-1.439 1.390 0.920> <0.0045 -0.0046 0.9999> 5000.0 0.0 0.0 0.0015 0.174533 0.5 <1.0 0.945 0.878 0.0> <1.0 0.945 0.878 0.0> <0.0 0.0 0.0 0.0> 100.0 115.0
+
+
+	*/ 
+
+
 	char name[100];
 	char sourceName[100];
 	e_object* powerSource = nullptr;
