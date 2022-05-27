@@ -903,9 +903,10 @@ void h_Pipe::refresh(double dt) {
 
 		// Simulate diffusion between pipe-connected volumes
 		if (two_ways) {
-			h_volume DiffusionOut = out->GetFlow(dt * (GlobalDiffusivity * out_t * exp(-abs(in_p - out_p))), flowMax * dt);
-			h_volume DiffusionIn = in->GetFlow(dt * (GlobalDiffusivity * in_t * exp(-abs(in_p - out_p))), flowMax * dt);
+			double DiffusionFlow = dt * (GlobalDiffusivity * (out_t + in_t) / 2 * exp(-abs(in_p - out_p)));
+			h_volume DiffusionOut = out->GetFlow(DiffusionFlow, flowMax * dt);
 			in->Flow(DiffusionOut);
+			h_volume DiffusionIn = in->GetFlow(DiffusionFlow, flowMax * dt);
 			out->Flow(DiffusionIn);
 		}
 
