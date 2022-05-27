@@ -5450,98 +5450,193 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG)
 	return true;
 }
 
-void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
+void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 {
+	PMMSPTInput in;
+	MPTManeuver man;
+	MissionPlanTable mpt;
+	EMMENIInputTable emmeniin;
+	PLAWDTInput plain;
+	PLAWDTOutput plaout;
+	EphemerisData sv_TH;
+	double dt;
+
+	//Take backup of S-IVB matrix table, as it might interfere with MPT
+	SIVBTLIMatrixTable ADRMAT = PZMATCSM;
+
+	in.AttitudeMode = RTCC_ATTITUDE_SIVB_IGM;
+	in.CC = in.CCMI = 2; //Doesn't really matter
+	in.CCI = RTCC_CONFIGCHANGE_NONE;
+	in.CurMan = &man;
+	in.dt = 0.0;
+	in.EndTimeLimit = 1.e10; //Just needs to be high
+	in.GMT = opt.sv0.GMT;
+	in.InjOpp = opt.InjOpp;
+	in.mpt = &mpt;
+	in.PresentGMT = 0.0; //Is this ok?
+	in.PrevMan = NULL;
+	in.QUEID = 37;
+	in.R = opt.sv0.R;
+	in.ReplaceCode = 0;
+	in.StartTimeLimit = 0.0;
+	in.Table = RTCC_MPT_CSM;
+	in.ThrusterCode = RTCC_ENGINETYPE_SIVB_MAIN;
+	in.TVC = RTCC_MPT_CSM;
+	in.T_RP = -1.0;
+	in.V = opt.sv0.V;
+
+	int err = PMMSPT(in);
+
+	//Error checking?
+	if (err) return;
+
+	//Take SV to threshold
+	dt = in.T_RP - opt.sv0.GMT;
+	sv_TH = coast(opt.sv0, dt, opt.ConfigMass, PZMPTCSM.ConfigurationArea);
+
+	//Continue processing
+	in.QUEID = 39;
+	in.R = sv_TH.R;
+	in.V = sv_TH.V;
+	in.GMT = sv_TH.GMT;
+	in.T_RP = 0.0;
+	err = PMMSPT(in);
+
+	if (err) return;
+
+	//Take SV to TB6
+	EphemerisData sv_TB6 = coast(opt.sv0, man.GMTMAN - opt.sv0.GMT, opt.ConfigMass, PZMPTCSM.ConfigurationArea);
+
+	//Update mass
+	plain.CSMArea = 0.0;
+	plain.CSMWeight = 0.0;
+	plain.KFactorOpt = false;
+	plain.LMAscArea = 0.0;
+	plain.LMAscWeight = 0.0;
+	plain.LMDscArea = 0.0;
+	plain.LMDscWeight = 0.0;
+	plain.Num = 2;
+	plain.SIVBArea = PZMPTCSM.ConfigurationArea;
+	plain.SIVBWeight = opt.ConfigMass;
+	plain.TableCode = -1;
+	plain.T_IN = opt.sv0.GMT;
+	plain.T_UP = sv_TB6.GMT;
+	plain.VentingOpt = true;
+
+	PLAWDT(plain, plaout);
+
+	//Simulate TLI maneuver
+	RTCCNIInputTable integin;
+
+	integin.R = sv_TB6.R;
+	integin.V = sv_TB6.V;
+	integin.DTOUT = 2.0;
+	integin.WDMULT = 1.0;
+	integin.DENSMULT = 1.0;
+	integin.IEPHOP = 0; //No ephemeris storage
+	integin.KAUXOP = true;
+	integin.MAXSTO = 1000;
+
+	integin.CAPWT = plaout.ConfigWeight;
+	integin.Area = PZMPTCSM.ConfigurationArea;
+	integin.CSMWT = 0.0;
+	integin.SIVBWT = plaout.SIVBWeight;
+	integin.LMAWT = 0.0;
+	integin.LMDWT = 0.0;
+
+	integin.MANOP = in.AttitudeMode;
+	integin.ThrusterCode = in.ThrusterCode;
+	integin.IC = in.CC;
+	integin.MVC = in.TVC;
+	integin.IFROZN = false;
+	integin.IREF = BODY_EARTH;
+	integin.ICOORD = 0;
+	integin.GMTBASE = SystemParameters.GMTBASE;
+	integin.GMTI = man.GMTMAN;
+	integin.DTINP = in.dt;
+	//e_N
+	integin.Params[0] = man.dV_inertial.z;
+	//C3
+	integin.Params[1] = man.dV_LVLH.x;
+	//alpha_D
+	integin.Params[2] = man.dV_LVLH.y;
+	//f
+	integin.Params[3] = man.dV_LVLH.z;
+	//P
+	integin.Params[4] = man.Word67d;
+	//K5
+	integin.Params[5] = man.Word68;
+	//R_T or T_M
+	integin.Params[6] = man.Word69;
+	//V_T
+	integin.Params[7] = man.Word70;
+	//gamma_T
+	integin.Params[8] = man.Word71;
+	//G_T
+	integin.Params[9] = man.Word72;
+	integin.Params[10] = man.Word73;
+	integin.Params[11] = man.Word74;
+	integin.Params[13] = man.Word76;
+	integin.Params[14] = man.Word77;
+	integin.Word68i[0] = man.Word78i[0];
+	integin.Word68i[1] = man.Word78i[1];
+	integin.Params2[0] = man.Word79;
+	integin.Params2[1] = man.Word80;
+	integin.Params2[2] = man.Word81;
+	integin.Params2[3] = man.Word82;
+	integin.Params2[4] = man.Word83;
+	integin.Params2[5] = man.Word84;
+
+	//Link to TLI matrix table
+	MATRIX3 ADRM[3];
+	ADRM[0] = PZMATCSM.EPH;
+	ADRM[1] = PZMATCSM.GG;
+	ADRM[2] = PZMATCSM.G;
+
+	int nierror;
+	RTCCNIAuxOutputTable AuxTableIndicator;
+
+	TLIGuidanceSim numin(this, integin, nierror, NULL, &AuxTableIndicator, ADRM);
+	numin.PCMTRL();
+
+	//Restore matrix table
+	PZMATCSM = ADRMAT;
+
+	EphemerisData sv_TLI, sv_TDE;
 	MATRIX3 M_R, M, M_RTM;
-	VECTOR3 UX, UY, UZ, DV_P, DV_C, V_G, U_TD, X_B, IgnAtt, SepATT, ExtATT;
-	double boil, m0, dt, t_go, F, v_e, theta_T, dVC;
-	SV sv1, sv2, sv3;
+	VECTOR3 UX, UY, UZ, IgnAtt, SepATT, ExtATT;
 
-	boil = (1.0 - 0.99998193) / 10.0;
-	m0 = opt->vessel->GetEmptyMass();
+	UY = unit(crossp(AuxTableIndicator.V_BI, -AuxTableIndicator.R_BI));
+	UZ = unit(AuxTableIndicator.R_BI);
+	UX = crossp(UY, UZ);
 
-	dt = opt->TIG - (opt->sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	IgnAtt = OrbMech::CALCGAR(opt.REFSMMAT, M_R);
 
-	sv1 = coast(opt->sv0, dt);
-	sv1.mass = m0 + (opt->sv0.mass - m0)*exp(-boil*dt);
+	sv_TLI.R = AuxTableIndicator.R_BO;
+	sv_TLI.V = AuxTableIndicator.V_BO;
+	sv_TLI.GMT = AuxTableIndicator.GMT_BO;
+	sv_TLI.RBI = BODY_EARTH;
 
-	if (opt->uselvdc)
-	{
-		t_go = opt->TLI - opt->TIG;
+	sv_TDE = coast(sv_TLI, 900.0);
 
-		UY = unit(crossp(sv1.V, -sv1.R));
-		UZ = unit(sv1.R);
-		UX = crossp(UY, UZ);
-
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		IgnAtt = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
-
-		sv2 = sv1;
-		sv2.R = opt->R_TLI;
-		sv2.V = opt->V_TLI;
-		sv2.MJD += t_go / 24.0 / 3600.0;
-
-		sv3 = coast(sv2, 900.0);
-	}
-	else
-	{
-		//TBD: This is broken
-		sv2 = ExecuteManeuver(sv1, opt->GETbase, opt->TIG, opt->dV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
-
-		sv3 = coast(sv2, 900.0);
-
-		t_go = (sv2.MJD - sv1.MJD)*24.0*3600.0;
-
-		UY = unit(crossp(sv1.V, sv1.R));
-		UZ = unit(-sv1.R);
-		UX = crossp(UY, UZ);
-
-		F = SystemParameters.MCTJT5;
-		v_e = F / SystemParameters.MCTJW5;
-
-		DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
-		if (length(DV_P) != 0.0)
-		{
-			theta_T = length(crossp(sv1.R, sv1.V))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(sv1.R), 2.0) / F;
-			DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
-			V_G = DV_C + UY*opt->dV_LVLH.y;
-		}
-		else
-		{
-			V_G = UX*opt->dV_LVLH.x + UY*opt->dV_LVLH.y + UZ*opt->dV_LVLH.z;
-		}
-
-		U_TD = unit(V_G);
-		X_B = unit(V_G);
-
-		UX = X_B;
-		UY = unit(crossp(X_B, -sv1.R));
-		UZ = unit(crossp(X_B, crossp(X_B, -sv1.R)));
-
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-
-		IgnAtt = OrbMech::CALCGAR(opt->REFSMMAT, M_R);
-	}
-
-	UY = unit(crossp(sv3.V, sv3.R));
-	UZ = unit(-sv3.R);
+	UY = unit(crossp(sv_TDE.V, sv_TDE.R));
+	UZ = unit(-sv_TDE.R);
 	UX = crossp(UY, UZ);
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	M = OrbMech::CALCSMSC(_V(PI - opt->SeparationAttitude.x, opt->SeparationAttitude.y, opt->SeparationAttitude.z));
+	M = OrbMech::CALCSMSC(_V(PI - opt.SeparationAttitude.x, opt.SeparationAttitude.y, opt.SeparationAttitude.z));
 	M_RTM = mul(M, M_R);
 
-	SepATT = OrbMech::CALCGAR(opt->REFSMMAT, M_RTM);
+	SepATT = OrbMech::CALCGAR(opt.REFSMMAT, M_RTM);
 	ExtATT = _V(300.0*RAD - SepATT.x, SepATT.y + PI, PI2 - SepATT.z);
 
-	dVC = length(opt->dV_LVLH);
-
-	pad.BurnTime = t_go;
-	pad.dVC = dVC / 0.3048;
+	pad.BurnTime = AuxTableIndicator.DT_B;
+	pad.dVC = AuxTableIndicator.DV_C / 0.3048;
 	pad.IgnATT = _V(OrbMech::imulimit(IgnAtt.x*DEG), OrbMech::imulimit(IgnAtt.y*DEG), OrbMech::imulimit(IgnAtt.z*DEG));
 	pad.SepATT = _V(OrbMech::imulimit(SepATT.x*DEG), OrbMech::imulimit(SepATT.y*DEG), OrbMech::imulimit(SepATT.z*DEG));
 	pad.ExtATT = _V(OrbMech::imulimit(ExtATT.x*DEG), OrbMech::imulimit(ExtATT.y*DEG), OrbMech::imulimit(ExtATT.z*DEG));
-	pad.TB6P = opt->TIG - 577.6;
-	pad.VI = length(sv2.V) / 0.3048;
+	pad.TB6P = GETfromGMT(sv_TB6.GMT);
+	pad.VI = length(sv_TLI.V) / 0.3048;
 }
 
 bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
@@ -7717,220 +7812,6 @@ int RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, 
 	RA = PZSTARGP.RA[k][i - 1] + A * (PZSTARGP.RA[k][i] - PZSTARGP.RA[k][i - 1]);
 	DEC = PZSTARGP.DEC[k][i - 1] + A * (PZSTARGP.DEC[k][i] - PZSTARGP.DEC[k][i - 1]);
 	return 0;
-}
-
-void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, double m0, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI)
-{
-	SV sv1, sv2;
-	double day, theta_E, MJD_GRR, MJD_TST, dt, cos_psiT, sin_psiT, Inclination, X_1, X_2, theta_N, p_N, T_M, R, e, p, alpha_D;
-	double MJD_TIG, R_T, V_T, K_5, G_T, gamma_T, boil, tau3, dL_3, F2, F3, V_ex2, V_ex3, dt_tailoff;
-	VECTOR3 PosS, DotS, T_P, N, PosP, Sbar, DotP, Sbardot, Sbar_1, Cbar_1, R_TLI, V_TLI, TargetVector;
-	MATRIX3 mat, MX_A, MX_EPH, MX_B, MX_G;
-	OELEMENTS coe;
-
-	//Constants
-	boil = (1.0 - 0.99998193) / 10.0;
-	F2 = 802543.5;
-	V_ex2 = 4226.708571;
-	V_ex3 = 4188.581306;
-	F3 = 906114.066;
-	dt_tailoff = 0.25538125;
-
-	//State Vector
-	modf(oapiGetSimMJD(), &day);
-	if (lvdc.t_clock + lvdc.T_L > 24.0*3600.0)
-	{
-		day -= 1.0;
-	}
-	MJD_GRR = day + lvdc.T_L / 24.0 / 3600.0;
-	mat = OrbMech::Orbiter2PACSS13(MJD_GRR, lvdc.phi_L, -80.6041140*RAD, lvdc.Azimuth);
-
-	//Find TB6 start
-	//Determination of S-bar and S-bar-dot
-	theta_E = lvdc.theta_EO + lvdc.omega_E*lvdc.t_D;
-	MX_A.m11 = cos(lvdc.phi_L);  MX_A.m12 = sin(lvdc.phi_L)*sin(lvdc.Azimuth); MX_A.m13 = -(sin(lvdc.phi_L)*cos(lvdc.Azimuth));
-	MX_A.m21 = -sin(lvdc.phi_L); MX_A.m22 = cos(lvdc.phi_L)*sin(lvdc.Azimuth); MX_A.m23 = -(cos(lvdc.phi_L)*cos(lvdc.Azimuth));
-	MX_A.m31 = 0;  MX_A.m32 = cos(lvdc.Azimuth);  MX_A.m33 = sin(lvdc.Azimuth);
-	MX_EPH = mul(OrbMech::tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
-	TargetVector = _V(cos(lvdc.RA)*cos(lvdc.DEC), sin(lvdc.RA)*cos(lvdc.DEC), sin(lvdc.DEC));
-	T_P = mul(MX_EPH, unit(TargetVector));
-
-	MJD_TST = MJD_GRR + (lvdc.T4C + 17.0 + lvdc.T_ST) / 24.0 / 3600.0;
-	sv1 = coast(sv_A, (MJD_TST - sv_A.MJD) * 24.0 * 3600.0);
-
-	dt = 0;
-
-	do
-	{
-		sv2 = coast(sv1, dt);
-		PosS = mul(mat, _V(sv2.R.x, sv2.R.z, sv2.R.y));
-		DotS = mul(mat, _V(sv2.V.x, sv2.V.z, sv2.V.y));
-
-		N = unit(crossp(PosS, DotS));
-		PosP = crossp(N, unit(PosS));
-		Sbar = unit(PosS)*cos(lvdc.beta) + PosP*sin(lvdc.beta);
-		DotP = crossp(N, DotS / length(PosS));
-
-		Sbardot = DotS / length(PosS)*cos(lvdc.beta) + DotP*sin(lvdc.beta);
-		dt += 1.0;
-
-	} while (!((dotp(Sbardot, T_P) < 0 && dotp(Sbar, T_P) <= cos(lvdc.alpha_TS))));
-
-	//Advance to Ignition State
-	sv_IG = coast(sv2, lvdc.T_RG);
-	PosS = mul(mat, _V(sv_IG.R.x, sv_IG.R.z, sv_IG.R.y));
-	DotS = mul(mat, _V(sv_IG.V.x, sv_IG.V.z, sv_IG.V.y));
-
-	cos_psiT = dotp(Sbar,T_P);
-	sin_psiT = sqrt(1.0 - pow(cos_psiT, 2));
-	Sbar_1 = (Sbar*cos_psiT - T_P)*(1.0 / sin_psiT);
-	Cbar_1 = crossp(Sbar_1, Sbar);
-	Inclination = acos(dotp(_V(MX_A.m21, MX_A.m22, MX_A.m23),Cbar_1));
-	X_1 = dotp(_V(MX_A.m31, MX_A.m32, MX_A.m33), crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
-	X_2 = dotp(_V(MX_A.m11, MX_A.m12, MX_A.m13), crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
-	theta_N = atan2(X_1, X_2);
-	p_N = lvdc.mu / lvdc.C_3*(pow(lvdc.e_N, 2) - 1.0);
-	T_M = p_N / (1.0 - lvdc.e_N*lvdc.cos_sigma);
-	R = length(PosS);
-	e = R / lvdc.R_N*(lvdc.e_N - 1.0) + 1.0;
-	p = lvdc.mu / lvdc.C_3*(pow(e, 2) - 1.0);
-
-	alpha_D = acos(dotp(Sbar, T_P)) - acos((1.0 - p / T_M) / e) + atan2(dotp(Sbar_1, crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23))), dotp(Sbar, crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23))));
-
-	MJD_TIG = MJD_TST + (dt + lvdc.T_RG) / 24.0 / 3600.0;
-	P30TIG = (MJD_TIG - GETbase) * 24.0 * 3600.0;
-
-	MX_B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(Inclination), cos(Inclination), -cos(theta_N)*sin(Inclination),
-		-sin(theta_N)*cos(Inclination), sin(Inclination), cos(theta_N)*cos(Inclination));
-	MX_G = mul(MX_B, MX_A);
-	R_T = p / (1.0 + e*cos(lvdc.f));
-	K_5 = sqrt(lvdc.mu / p);
-	V_T = K_5*sqrt(1.0 + 2.0 * e*cos(lvdc.f) + pow(e, 2));
-	gamma_T = atan((e*sin(lvdc.f)) / (1.0 + cos(lvdc.f)));
-	G_T = -lvdc.mu / pow(R_T, 2);
-
-	int UP;
-	double mass, a_T, tau2, V, sin_gam, cos_gam, dot_phi_1, dot_phi_T, phi_T, xi_T, dot_zeta_T, dot_xi_T, ddot_zeta_GT, ddot_xi_GT, m1, dt1;
-	double dot_dxit, dot_detat, dot_dzetat, dV, f, T_1c, Tt_3, T_2, L_2, L_12, Lt_3, Lt_Y, Tt_T, dT_3, T_3, T_T, dT, Tt_T_old, m2, m3, a_T3, a_T_cut;
-	VECTOR3 Pos4, PosXEZ, DotXEZ, ddotG_act, DDotXEZ_G;
-	MATRIX3 MX_phi_T, MX_K;
-
-	dT = 1.0;
-	Tt_T_old = 0.0;
-	UP = 0;
-	T_2 = lvdc.T_2R;
-	T_1c = T_2;
-	Tt_3 = lvdc.Tt_3R;
-	Tt_T = T_2 + Tt_3;
-
-	mass = sv_A.mass;
-	dt1 = dt + (MJD_TST - sv_A.MJD) * 24.0 * 3600.0;
-	m1 = (mass - m0)*exp(-boil*dt1);
-	m2 = m0 + m1;
-
-	a_T = F2 / m2;
-	tau2 = V_ex2 / a_T;
-	m3 = m2 - F2 / V_ex2*T_2;
-	a_T3 = F3 / m3;
-	tau3 = V_ex3 / a_T3;
-
-	while (abs(dT) > 0.01)
-	{
-		//IGM
-		ddotG_act = -PosS*OrbMech::mu_Earth / OrbMech::power(length(PosS), 3.0);
-		Pos4 = mul(MX_G, PosS);
-
-		L_2 = V_ex2 * log(tau2 / (tau2 - T_2));
-		L_12 = L_2;
-		Lt_3 = V_ex3 * log(tau3 / (tau3 - Tt_3));
-
-		Lt_Y = (L_12 + Lt_3);
-gtupdate:
-		V = length(DotS);
-		R = length(PosS);
-		sin_gam = ((PosS.x*DotS.x) + (PosS.y*DotS.y) + (PosS.z*DotS.z)) / (R*V);
-		cos_gam = pow(1.0 - pow(sin_gam, 2), 0.5);
-		dot_phi_1 = (V*cos_gam) / R;
-		dot_phi_T = (V_T*cos(gamma_T)) / R_T;
-		phi_T = atan2(Pos4.z, Pos4.x) + (((dot_phi_1 + dot_phi_T) / 2.0)*Tt_T);
-
-		f = phi_T + alpha_D;
-		R_T = p / (1 + ((e*(cos(f)))));
-		V_T = K_5 * pow(1 + ((2 * e)*(cos(f))) + pow(e, 2), 0.5);
-		gamma_T = atan2((e*(sin(f))), (1 + (e*(cos(f)))));
-		G_T = -OrbMech::mu_Earth / pow(R_T, 2);
-
-		xi_T = R_T*cos(gamma_T);
-		dot_zeta_T = V_T;
-		dot_xi_T = 0.0;
-		ddot_zeta_GT = G_T*sin(gamma_T);
-		ddot_xi_GT = G_T*cos(gamma_T);
-		phi_T = phi_T - gamma_T;
-
-		MX_phi_T.m11 = (cos(phi_T));    MX_phi_T.m12 = 0; MX_phi_T.m13 = ((sin(phi_T)));
-		MX_phi_T.m21 = 0;               MX_phi_T.m22 = 1; MX_phi_T.m23 = 0;
-		MX_phi_T.m31 = (-sin(phi_T)); MX_phi_T.m32 = 0; MX_phi_T.m33 = (cos(phi_T));
-		MX_K = mul(MX_phi_T, MX_G);
-		PosXEZ = mul(MX_K, PosS);
-		DotXEZ = mul(MX_K, DotS);
-		VECTOR3 RTT_T1, RTT_T2;
-		RTT_T1.x = ddot_xi_GT; RTT_T1.y = 0;        RTT_T1.z = ddot_zeta_GT;
-		RTT_T2 = ddotG_act;
-		RTT_T2 = mul(MX_K, RTT_T2);
-		RTT_T1 = RTT_T1 + RTT_T2;
-		DDotXEZ_G = _V(0.5*RTT_T1.x, 0.5*RTT_T1.y, 0.5*RTT_T1.z);
-
-		dot_dxit = dot_xi_T - DotXEZ.x - (DDotXEZ_G.x*Tt_T);
-		dot_detat = -DotXEZ.y - (DDotXEZ_G.y * Tt_T);
-		dot_dzetat = dot_zeta_T - DotXEZ.z - (DDotXEZ_G.z * Tt_T);
-
-		dV = pow((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)), 0.5);
-		dL_3 = (((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)) / Lt_Y) - Lt_Y) / 2;
-
-		dT_3 = (dL_3*(tau3 - Tt_3)) / V_ex3;
-		T_3 = Tt_3 + dT_3;
-		T_T = Tt_T + dT_3;
-
-		// TARGET PARAMETER UPDATE
-		if (!(UP > 0)) {
-			UP = 1;
-			Tt_3 = T_3;
-			Tt_T = T_T;
-			Lt_3 = Lt_3 + dL_3;
-			Lt_Y = Lt_Y + dL_3;
-			goto gtupdate; // Recycle. 
-		}
-
-		UP = -1;
-
-		Tt_3 = T_3;
-		T_1c = T_2;
-		Tt_T = T_1c + Tt_3;
-
-		dT = Tt_T - Tt_T_old;
-		Tt_T_old = Tt_T;
-	}
-
-	coe.e = e;
-	coe.h = lvdc.C_3;
-	coe.i = Inclination;
-	coe.RA = theta_N;
-	coe.TA = f;
-	coe.w = alpha_D;
-
-	OrbMech::PACSS13_from_coe(coe, lvdc.phi_L, lvdc.Azimuth, OrbMech::mu_Earth, R_TLI, V_TLI);
-
-	R_TLI = tmul(mat, R_TLI);
-	V_TLI = tmul(mat, V_TLI);
-	sv_TLI.R = _V(R_TLI.x, R_TLI.z, R_TLI.y);
-	sv_TLI.V = _V(V_TLI.x, V_TLI.z, V_TLI.y);
-	sv_TLI.MJD = OrbMech::MJDfromGET(P30TIG + Tt_T, GETbase);
-	sv_TLI.mass = m3 - F3 / V_ex3 * T_3;
-	sv_TLI.gravref = sv_A.gravref;
-
-	a_T_cut = F3 / sv_TLI.mass;
-
-	dV_LVLH = _V(1.0, 0.0, 0.0)*(dV - a_T_cut * dt_tailoff);
 }
 
 void RTCC::EngineParametersTable(int enginetype, double &Thrust, double &WLR, double &OnboardThrust)

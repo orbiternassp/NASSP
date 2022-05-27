@@ -623,17 +623,11 @@ struct TLIManFR
 
 struct TLIPADOpt
 {
-	VESSEL* vessel; //vessel
-	SV sv0; //vessel state vector
-	double GETbase; //usually MJD at launch
-	double TIG; //Time of Ignition
-	double TLI;	//Time of Injection
-	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	EphemerisData sv0; //vessel state vector
 	MATRIX3 REFSMMAT;
 	VECTOR3 SeparationAttitude; //LVLH IMU angles
-	VECTOR3 R_TLI;
-	VECTOR3 V_TLI;
-	bool uselvdc;	//LVDC in use/or not
+	double ConfigMass;
+	int InjOpp; //Injection opportunity (1 or 2)
 };
 
 struct P27Opt
@@ -1726,14 +1720,14 @@ struct PMMSPTInput
 	//Word 14-19
 	std::string StationID;
 	//Targeting Parameters
-	//Word 20 (DT of burn, negative if not input)
+	//Word 20 (DT of burn for maneuver confirmation, negative if not input)
 	double dt;
-	//Word 29
+	//Word 29, configuration change indicator
 	int CCI;
-	//Word 30
+	//Word 30, configuration code at end of maneuver
 	int CC;
 	int TVC;
-	//Word 32
+	//Word 32, configuration code at start of maneuver
 	int CCMI;
 	MPTManeuver *CurMan;
 	MPTManeuver *PrevMan = NULL;
@@ -2139,36 +2133,6 @@ struct SevenParameterUpdate
 	double theta_N;
 };
 
-struct LVDCTLIparam
-{
-	double alpha_TS;
-	double Azimuth;
-	double beta;
-	double C_3;
-	double cos_sigma;
-	double DEC;
-	double e_N;
-	double f;
-	double mu;
-	double omega_E;
-	double phi_L;
-	double RA;
-	double R_N;
-	double T_2R;
-	double theta_EO;
-	//Time of ignition of first S-IVB burn
-	double T4IG;
-	//Time of cutoff of first S-IVB burn
-	double T4C;
-	double T_L;
-	double T_LO;
-	double t_D;
-	double T_RG;
-	double T_ST;
-	double Tt_3R;
-	double t_clock;
-};
-
 struct ASTInput
 {
 	double dgamma;
@@ -2465,7 +2429,7 @@ public:
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
 	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
 	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
-	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
+	void TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad);
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad);
 	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
@@ -2501,7 +2465,6 @@ public:
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
-	void LVDCTLIPredict(LVDCTLIparam lvdc, double m0, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI);
 	//S-IVB TLI IGM Pre-Thrust Targeting Module
 	int PMMSPT(PMMSPTInput &in);
 	int PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC);
