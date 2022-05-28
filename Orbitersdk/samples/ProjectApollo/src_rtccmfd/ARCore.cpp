@@ -3069,7 +3069,14 @@ int ARCore::subThread()
 		TLIPADOpt opt;
 
 		opt.ConfigMass = vessel->GetMass();
-		opt.InjOpp = 1;
+		if (lvdc->first_op)
+		{
+			opt.InjOpp = 1;
+		}
+		else
+		{
+			opt.InjOpp = 2;
+		}
 		opt.REFSMMAT= GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 		opt.SeparationAttitude = lvdc->XLunarAttitude;
 		opt.sv0 = GC->rtcc->StateVectorCalcEphem(vessel);

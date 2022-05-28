@@ -5465,17 +5465,17 @@ void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 	SIVBTLIMatrixTable ADRMAT = PZMATCSM;
 
 	in.AttitudeMode = RTCC_ATTITUDE_SIVB_IGM;
-	in.CC = in.CCMI = 2; //Doesn't really matter
+	in.CC = in.CCMI = 2; //Configuration code doesn't really matter, just has to include S-IVB. 2 = CSM+S-IVB
 	in.CCI = RTCC_CONFIGCHANGE_NONE;
 	in.CurMan = &man;
 	in.dt = 0.0;
-	in.EndTimeLimit = 1.e10; //Just needs to be high
+	in.EndTimeLimit = 1.e10; //Just needs to be high to not generate failure
 	in.GMT = opt.sv0.GMT;
 	in.InjOpp = opt.InjOpp;
 	in.mpt = &mpt;
 	in.PresentGMT = 0.0; //Is this ok?
 	in.PrevMan = NULL;
-	in.QUEID = 37;
+	in.QUEID = 37; //Direct input S-IVB TLI	maneuver
 	in.R = opt.sv0.R;
 	in.ReplaceCode = 0;
 	in.StartTimeLimit = 0.0;
@@ -5494,11 +5494,13 @@ void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 	dt = in.T_RP - opt.sv0.GMT;
 	sv_TH = coast(opt.sv0, dt, opt.ConfigMass, PZMPTCSM.ConfigurationArea);
 
-	//Continue processing
+	//Continue processing, when the MPT uses PMMSPT with QUEID = 37 then it returns the threshold time first, before it continues processing with QUEID = 39
 	in.QUEID = 39;
+	//Input state vector at threshold, MPT would input a state vector from the ephemeris at the threshold time
 	in.R = sv_TH.R;
 	in.V = sv_TH.V;
 	in.GMT = sv_TH.GMT;
+	//T_RP reset to zero so that the actual time of restart preparations is calculated
 	in.T_RP = 0.0;
 	err = PMMSPT(in);
 
@@ -5521,7 +5523,7 @@ void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 	plain.TableCode = -1;
 	plain.T_IN = opt.sv0.GMT;
 	plain.T_UP = sv_TB6.GMT;
-	plain.VentingOpt = true;
+	plain.VentingOpt = true; //Take venting mass loss into account
 
 	PLAWDT(plain, plaout);
 
@@ -5530,12 +5532,10 @@ void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 
 	integin.R = sv_TB6.R;
 	integin.V = sv_TB6.V;
-	integin.DTOUT = 2.0;
 	integin.WDMULT = 1.0;
 	integin.DENSMULT = 1.0;
 	integin.IEPHOP = 0; //No ephemeris storage
 	integin.KAUXOP = true;
-	integin.MAXSTO = 1000;
 
 	integin.CAPWT = plaout.ConfigWeight;
 	integin.Area = PZMPTCSM.ConfigurationArea;
@@ -5602,6 +5602,7 @@ void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 	//Restore matrix table
 	PZMATCSM = ADRMAT;
 
+	//Now all the calculations for the PAD itself
 	EphemerisData sv_TLI, sv_TDE;
 	MATRIX3 M_R, M, M_RTM;
 	VECTOR3 UX, UY, UZ, IgnAtt, SepATT, ExtATT;
@@ -5618,6 +5619,7 @@ void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 	sv_TLI.GMT = AuxTableIndicator.GMT_BO;
 	sv_TLI.RBI = BODY_EARTH;
 
+	//Take state vector to time of CSM separation
 	sv_TDE = coast(sv_TLI, 900.0);
 
 	UY = unit(crossp(sv_TDE.V, sv_TDE.R));
