@@ -414,7 +414,7 @@ void ApolloRTCCMFD::menuTLANDUpload()
 void ApolloRTCCMFD::Angle_Display(char *Buff, double angle, bool DispPlus)
 {
 	double angle2 = abs(round(angle));
-	if (time >= 0)
+	if (angle >= 0)
 	{
 		if (DispPlus)
 		{
