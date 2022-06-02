@@ -374,7 +374,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11ManPADOpt manopt;
 		EphemerisData sv_ephem;
 		SV sv, sv_ig1, sv_cut1;
-		double P30TIG, MCCGET, tig;
+		double P30TIG, MCCGET, tig, GETBase, dv_thres;
 		int engine;
 		MATRIX3 REFSMMAT;
 		VECTOR3 dV_LVLH, dv;
@@ -388,6 +388,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "MCC1");
 			REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR].REFSMMAT;
 			PZMCCPLN.SFPBlockNum = 1;
+			dv_thres = 5.0*0.3048;
 		}
 		else if (fcn == 21)
 		{
@@ -395,6 +396,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "MCC2");
 			REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR].REFSMMAT;
 			PZMCCPLN.SFPBlockNum = 2;
+			dv_thres = 5.0*0.3048;
 		}
 		else if (fcn == 22)
 		{
@@ -402,13 +404,17 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "MCC3");
 			REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR].REFSMMAT;
 			PZMCCPLN.SFPBlockNum = 2;
+			dv_thres = 1.0*0.3048;
 		}
 		else
 		{
 			MCCGET = calcParams.LOI - 8.0*3600.0;
 			sprintf(manname, "MCC4");
 			PZMCCPLN.SFPBlockNum = 2;
+			dv_thres = 0.2*0.3048; //Mission techniques say "MCC-4 will be performed regardless of its magnitude and residuals will also be nulled to 0.2 foot per second."
 		}
+
+		GETBase = CalcGETBase();
 
 		//Yeah, this is bad
 		sv = StateVectorCalc(calcParams.src);
@@ -431,7 +437,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
 
 			engine = SPSRCSDecision(SPS_THRUST / sv.mass, dv);
-			PoweredFlightProcessor(sv, CalcGETBase(), tig, engine, 0.0, dv, false, P30TIG, dV_LVLH);
+			PoweredFlightProcessor(sv, GETBase, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH);
 		}
 		else //Nodal Targeting
 		{
@@ -442,34 +448,27 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
 
 			engine = SPSRCSDecision(SPS_THRUST / sv.mass, dv);
-			PoweredFlightProcessor(sv, CalcGETBase(), tig, engine, 0.0, dv, false, P30TIG, dV_LVLH, sv_ig1, sv_cut1);
+			PoweredFlightProcessor(sv, GETBase, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH, sv_ig1, sv_cut1);
 		}
 
-		if (fcn != 23)
+		if (length(dV_LVLH) < dv_thres)
 		{
-			if (length(dV_LVLH) < 5.0*0.3048)
-			{
-				scrubbed = true;
-			}
+			scrubbed = true;
 		}
 
+		//Message for scrubbed maneuvers
 		if (scrubbed)
 		{
 			sprintf(upMessage, "%s has been scrubbed.", manname);
-
-			//Always save LOI time and table 2 data for MCC-1, even if the maneuver is scrubbed
-			if (fcn == 20)
-			{
-				//Store new LOI time
-				calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
-				//Transfer MCC plan to skeleton flight plan table
-				GMGMED("F30,1;");
-			}
 		}
-		else
+
+		char buffer1[1000];
+
+		//MCC-1 through 3
+		if (fcn != 23)
 		{
-			//Update targeting parameters
-			if (fcn == 20 || fcn == 21)
+			//Store data from MCC calculation. Always for MCC-1, for MCC-2 only if the maneuver will be done
+			if (fcn == 20 || (fcn == 21 && scrubbed == false))
 			{
 				//Store new LOI time
 				calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
@@ -477,104 +476,33 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				GMGMED("F30,1;");
 			}
 
-			if (fcn == 23)
+			//LM state vector
+			AGCStateVectorUpdate(buffer1, sv, false, GETBase);
+
+			if (scrubbed)
 			{
-				REFSMMATOpt refsopt;
-				SV sv_node, sv_ig2, sv_cut2;
-				double P30TIG_LOI2;
-
-				//Step 1: Calculate LOI-1 with MCC-4 burnout vector
-
-				PZLOIPLN.dh_bias = 0.0;
-				PZLOIPLN.DW = -15.0;
-				PZLOIPLN.eta_1 = 0.0;
-				PZLOIPLN.HA_LLS = 60.0;
-				PZLOIPLN.HP_LLS = 60.0;
-				PZLOIPLN.PlaneSolnForInterSoln = true;
-				PZLOIPLN.REVS1 = 2.0;
-				PZLOIPLN.REVS2 = 4;
-
-				med_k18.HALOI1 = 170.0;
-				med_k18.HPLOI1 = 60.0;
-				med_k18.DVMAXp = 10000.0;
-				med_k18.DVMAXm = 10000.0;
-				med_k18.psi_DS = 282.0;
-				med_k18.psi_MN = med_k18.psi_DS - 1.0;
-				med_k18.psi_MX = med_k18.psi_DS + 1.0;
-
-				EphemerisData sv_cut1b;
-
-				sv_cut1b.R = sv_cut1.R;
-				sv_cut1b.V = sv_cut1.V;
-				sv_cut1b.GMT = OrbMech::GETfromMJD(sv_cut1.MJD, SystemParameters.GMTBASE);
-				sv_cut1b.RBI = BODY_MOON;
-
-				PMMLRBTI(sv_cut1b);
-
-				sv_cut2.R = PZLRBELM.sv_man_bef[6].R;
-				sv_cut2.V = PZLRBELM.V_man_after[6];
-				sv_cut2.MJD = OrbMech::MJDfromGET(PZLRBELM.sv_man_bef[6].GMT, SystemParameters.GMTBASE);
-				sv_cut2.gravref = hMoon;
-
-				//Step 2: Calculate LOI-2 to get the TIG
-				med_k16.Mode = 2;
-				med_k16.Sequence = 3;
-				med_k16.GETTH1 = GETfromGMT(PZLRBELM.sv_man_bef[6].GMT) + 3.5*3600.0;
-				med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
-				med_k16.DesiredHeight = 60.0*1852.0;
-
-				LunarDescentPlanningProcessor(sv_cut2);
-				P30TIG_LOI2 = PZLDPDIS.GETIG[0];
-
-				//Step 3: Calculate LVLH REFSMMAT at LOI-2 TIG taking into account the trajectory leading up to that point
-				refsopt.GETbase = CalcGETBase();
-				refsopt.REFSMMATopt = 2;
-				refsopt.REFSMMATTime = P30TIG_LOI2;
-				refsopt.vessel = calcParams.src;
-				refsopt.useSV = true;
-				refsopt.RV_MCC = coast(sv_cut2, refsopt.REFSMMATTime - OrbMech::GETfromMJD(sv_cut2.MJD, CalcGETBase()));
-
-				REFSMMAT = REFSMMATCalc(&refsopt);
-
-				//Step 4: Store SV for use with PC+2
-				calcParams.SVSTORE1 = sv_cut1;
-			}
-
-			manopt.dV_LVLH = dV_LVLH;
-			manopt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
-			manopt.GETbase = CalcGETBase();
-			manopt.HeadsUp = false;
-			manopt.REFSMMAT = REFSMMAT;
-			manopt.TIG = P30TIG;
-			manopt.vessel = calcParams.src;
-			manopt.vesseltype = 0;
-
-			AP11ManeuverPAD(&manopt, *form);
-			sprintf(form->purpose, manname);
-
-			if (fcn == 23)
-			{
-				char buffer1[1000];
-				char buffer2[1000];
-				char buffer3[1000];
-
-				AGCStateVectorUpdate(buffer1, sv, false, CalcGETBase());
-				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
-				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
-
-				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+				sprintf(uplinkdata, "%s", buffer1);
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "LM state vector, target load, LOI-2 REFSMMAT");
+					sprintf(upDesc, "LM state vector");
 				}
 			}
 			else
 			{
-				char buffer1[1000];
-				char buffer2[1000];
+				manopt.dV_LVLH = dV_LVLH;
+				manopt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
+				manopt.GETbase = GETBase;
+				manopt.HeadsUp = false;
+				manopt.REFSMMAT = REFSMMAT;
+				manopt.TIG = P30TIG;
+				manopt.vessel = calcParams.src;
+				manopt.vesseltype = 0;
 
-				AGCStateVectorUpdate(buffer1, sv, false, CalcGETBase());
+				AP11ManeuverPAD(&manopt, *form);
+				sprintf(form->purpose, manname);
+
+				char buffer2[1000];
 				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -582,6 +510,118 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
 					sprintf(upDesc, "LM state vector, target load");
+				}
+			}
+		}
+		//MCC-4
+		else
+		{
+
+			REFSMMATOpt refsopt;
+			SV sv_node, sv_ig2, sv_cut2;
+			double P30TIG_LOI2;
+			char buffer2[1000];
+
+			//Step 1: Calculate LOI-1 with MCC-4 burnout vector
+
+			//If maneuver scrubbed, use state vector without maneuver
+			if (scrubbed)
+			{
+				sv_cut1 = sv;
+			}
+
+			PZLOIPLN.dh_bias = 0.0;
+			PZLOIPLN.DW = -15.0;
+			PZLOIPLN.eta_1 = 0.0;
+			PZLOIPLN.HA_LLS = 60.0;
+			PZLOIPLN.HP_LLS = 60.0;
+			PZLOIPLN.PlaneSolnForInterSoln = true;
+			PZLOIPLN.REVS1 = 2.0;
+			PZLOIPLN.REVS2 = 4;
+
+			med_k18.HALOI1 = 170.0;
+			med_k18.HPLOI1 = 60.0;
+			med_k18.DVMAXp = 10000.0;
+			med_k18.DVMAXm = 10000.0;
+			med_k18.psi_DS = 282.0;
+			med_k18.psi_MN = med_k18.psi_DS - 1.0;
+			med_k18.psi_MX = med_k18.psi_DS + 1.0;
+
+			EphemerisData sv_cut1b;
+
+			sv_cut1b.R = sv_cut1.R;
+			sv_cut1b.V = sv_cut1.V;
+			sv_cut1b.GMT = OrbMech::GETfromMJD(sv_cut1.MJD, SystemParameters.GMTBASE);
+			sv_cut1b.RBI = BODY_MOON;
+
+			PMMLRBTI(sv_cut1b);
+
+			sv_cut2.R = PZLRBELM.sv_man_bef[6].R;
+			sv_cut2.V = PZLRBELM.V_man_after[6];
+			sv_cut2.MJD = OrbMech::MJDfromGET(PZLRBELM.sv_man_bef[6].GMT, SystemParameters.GMTBASE);
+			sv_cut2.gravref = hMoon;
+
+			//Step 2: Calculate LOI-2 to get the TIG
+			med_k16.Mode = 2;
+			med_k16.Sequence = 3;
+			med_k16.GETTH1 = GETfromGMT(PZLRBELM.sv_man_bef[6].GMT) + 3.5*3600.0;
+			med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
+			med_k16.DesiredHeight = 60.0*1852.0;
+
+			LunarDescentPlanningProcessor(sv_cut2);
+			P30TIG_LOI2 = PZLDPDIS.GETIG[0];
+
+			//Step 3: Calculate LVLH REFSMMAT at LOI-2 TIG taking into account the trajectory leading up to that point
+			refsopt.GETbase = GETBase;
+			refsopt.REFSMMATopt = 2;
+			refsopt.REFSMMATTime = P30TIG_LOI2;
+			refsopt.vessel = calcParams.src;
+			refsopt.useSV = true;
+			refsopt.RV_MCC = coast(sv_cut2, refsopt.REFSMMATTime - OrbMech::GETfromMJD(sv_cut2.MJD, GETBase));
+
+			REFSMMAT = REFSMMATCalc(&refsopt);
+
+			//Step 4: Store SV for use with PC+2
+			calcParams.SVSTORE1 = sv_cut1;
+
+			//CSM state vector with V66
+			AGCStateVectorUpdate(buffer1, sv, true, GETBase, true);
+
+			if (scrubbed)
+			{
+				AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT);
+
+				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM+LM state vectors, LOI-2 REFSMMAT");
+				}
+			}
+			else
+			{
+				manopt.dV_LVLH = dV_LVLH;
+				manopt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
+				manopt.GETbase = GETBase;
+				manopt.HeadsUp = false;
+				manopt.REFSMMAT = REFSMMAT;
+				manopt.TIG = P30TIG;
+				manopt.vessel = calcParams.src;
+				manopt.vesseltype = 0;
+
+				AP11ManeuverPAD(&manopt, *form);
+				sprintf(form->purpose, manname);
+
+				char buffer3[1000];
+
+				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
+
+				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM+LM state vectors, target load, LOI-2 REFSMMAT");
 				}
 			}
 		}
@@ -1382,13 +1422,23 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			res.P30TIG = entopt.TIGguess;
 
 			char buffer1[1000];
-			AGCStateVectorUpdate(buffer1, sv, false, GETbase);
+
+			//Every update except final MCC-7 gets a LM state vector
+			if (fcn != 206)
+			{
+				AGCStateVectorUpdate(buffer1, sv, false, GETbase);
+				sprintf(upDesc, "LM state vector");
+			}
+			else
+			{
+				AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
+				sprintf(upDesc, "CSM+LM state vector");
+			}
 
 			sprintf(uplinkdata, "%s", buffer1);
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "LM state vector");
 			}
 		}
 		else
@@ -1477,7 +1527,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer2[1000];
 				char buffer3[1000];
 
-				AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+				AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
 				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
 				AGCREFSMMATUpdate(buffer3, REFSMMAT, true);
 
@@ -1485,7 +1535,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+					sprintf(upDesc, "CSM+LM state vector, target load, Entry REFSMMAT");
 				}
 			}
 			else if (fcn == 300)//generic MCC
