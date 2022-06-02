@@ -48,7 +48,6 @@ public:
 
 	bool Text(oapi::Sketchpad *skp, int x, int y, const std::string & str);
 
-	void menuPreviousPage();
 	void SelectPage(int page);
 	void menuTIChaserVectorTime();
 	void menuTITargetVectorTime();
@@ -482,6 +481,7 @@ public:
 	void menuTransferTIToMPT();
 	void menuSetSPQorDKIRTransferPage();
 	void menuTransferSPQorDKIToMPT();
+	void menuBackToSPQorDKIPage();
 	void menuChooseSPQDKIThruster();
 	bool set_ChooseSPQDKIThruster(std::string th);
 	void menuM70DeleteGET();
@@ -798,7 +798,6 @@ protected:
 	int screen;
 	int marker;
 	int RTETradeoffScreen;
-	std::deque<int> pastscreens;
 	static struct ScreenData {
 		int screen;
 		int RTETradeoffScreen;

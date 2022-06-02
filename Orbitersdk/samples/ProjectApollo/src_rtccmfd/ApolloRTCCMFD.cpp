@@ -722,27 +722,8 @@ void ApolloRTCCMFD::CycleREFSMMATopt()
 	}
 }
 
-void ApolloRTCCMFD::menuPreviousPage()
-{
-	if (pastscreens.size() > 0)
-	{
-		screen = pastscreens.back();
-		pastscreens.pop_back();
-	}
-	else
-	{
-		screen = 0;
-	}
-	coreButtons.SelectPage(this, screen);
-}
-
 void ApolloRTCCMFD::SelectPage(int page)
 {
-	pastscreens.push_back(screen);
-	if (pastscreens.size() > 10)
-	{
-		pastscreens.pop_front();
-	}
 	screen = page;
 	coreButtons.SelectPage(this, screen);
 }
@@ -2178,6 +2159,22 @@ void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()
 	else
 	{
 		G->TransferDescentPlanToMPT();
+	}
+}
+
+void ApolloRTCCMFD::menuBackToSPQorDKIPage()
+{
+	if (GC->rtcc->med_m70.Plan == 0)
+	{
+		menuSetSPQPage();
+	}
+	else if (GC->rtcc->med_m70.Plan == 1)
+	{
+		menuSetDKIPage();
+	}
+	else
+	{
+		menuSetDescPlanTablePage();
 	}
 }
 
