@@ -10605,6 +10605,13 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt)
 	}
 	PMIN = opt.PMIN + R_E;
 
+	//For compatibility with AGC. Rendezvous from above is usually done with a elevation angle of 208.3°, but the DKI wants an angle from 0° to 180°
+	//So both 28.3° or 208.3° can be input and give the same result. This operation is equivalent to what the routine QRDTPI in Skylark does.
+	if (Elev > PI)
+	{
+		Elev = Elev - PI;
+	}
+
 	//Initial flag settings
 	M = opt.MV - 1;
 	I = 1 - M;
