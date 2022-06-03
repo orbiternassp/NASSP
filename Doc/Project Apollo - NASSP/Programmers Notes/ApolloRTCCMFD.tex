@@ -210,6 +210,10 @@ On this page the time of ignition and time of the TPI maneuver are defined.
 \textbf{DH2:} The Delta Height at the NSR maneuver point. A positive value indicates the chaser vehicle being below the target. Usually 10 to 20 NM.\\
 \textbf{E:} Elevation angle at TPI. Typical value is 26.6 DEG for a rendezvous from below. For rendezvous from above, for example if the CSM needs to rescue the LM in lunar orbit, the value 208.3 DEG is usually used.\\
 
+\paragraph{Example: Apollo 10 PDI Abort}\mbox{} \\
+
+A simple example for a DKI targeted maneuver is the Apollo 10 PDI Abort. Similar in concept to the PDI+12 maneuvers of the lunar landing missions, Apollo 10 would have done an abort maneuver at perilune after DOI to return to the CSM one orbit earlier than in the normal rendezvous plan. The sequence of maneuvers would be the abort initiation 0.5 revolutions after DOI, targeted as a phasing (NC1) maneuver. CSI or NH would follow another half revolution later, and again the CDH or NSR maneuver would be half an orbit after that. If we assign 1.0 as the maneuver line to the DOI maneuver then we would have NC1 = 1.5, NH = 2.0, NSR = 2.5, M = 3. The maneuver line definition is using the time option with the DOI TIG as input.
+
 \newpage
 \subsection{General Purpose Maneuver (GPM)}
 
