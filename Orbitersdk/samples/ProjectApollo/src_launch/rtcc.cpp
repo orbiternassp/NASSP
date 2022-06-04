@@ -5455,7 +5455,6 @@ void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 	PMMSPTInput in;
 	MPTManeuver man;
 	MissionPlanTable mpt;
-	EMMENIInputTable emmeniin;
 	PLAWDTInput plain;
 	PLAWDTOutput plaout;
 	EphemerisData sv_TH;
