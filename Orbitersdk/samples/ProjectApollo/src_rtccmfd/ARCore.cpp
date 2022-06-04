@@ -3054,7 +3054,7 @@ int ARCore::subThread()
 		LVDCSV *lvdc = NULL;
 		if (utils::IsVessel(vessel, utils::SaturnV))
 		{
-			SaturnV *SatV = (SaturnV *)vessel;
+			SaturnV * SatV = (SaturnV *)vessel;
 			if (SatV->iu)
 			{
 				lvdc = (LVDCSV*)SatV->iu->GetLVDC();
@@ -3068,68 +3068,20 @@ int ARCore::subThread()
 
 		TLIPADOpt opt;
 
-		SV sv_A, sv_IG, sv_TLI;
-		sv_A = GC->rtcc->StateVectorCalc(vessel);
-
-		if (lvdc->TU)
+		opt.ConfigMass = vessel->GetMass();
+		if (lvdc->first_op)
 		{
-			opt.dV_LVLH = dV_LVLH;
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
-			opt.TIG = P30TIG;
-			opt.vessel = vessel;
-			opt.uselvdc = false;
-			opt.SeparationAttitude = _V(PI, 120.0*RAD, 0.0);
+			opt.InjOpp = 1;
 		}
 		else
 		{
-			LVDCTLIparam tliparam;
-
-			tliparam.alpha_TS = lvdc->alpha_TS;
-			tliparam.Azimuth = lvdc->Azimuth;
-			tliparam.beta = lvdc->beta;
-			tliparam.cos_sigma = lvdc->cos_sigma;
-			tliparam.C_3 = lvdc->C_3;
-			tliparam.DEC = lvdc->DEC;
-			tliparam.e_N = lvdc->e_N;
-			tliparam.f = lvdc->f;
-			tliparam.mu = lvdc->mu;
-			tliparam.omega_E = lvdc->omega_E;
-			tliparam.phi_L = lvdc->PHI;
-			tliparam.RA = lvdc->RAS;
-			tliparam.R_N = lvdc->R_N;
-			tliparam.T_2R = lvdc->T_2R;
-			tliparam.T4C = lvdc->TB5 - lvdc->TB1;
-			tliparam.theta_EO = lvdc->theta_EO;
-			tliparam.t_D = lvdc->t_D;
-			tliparam.T_L = lvdc->T_L;
-			tliparam.T_LO = lvdc->T_LO + 17.0;
-			tliparam.T_RG = 578.6;
-			tliparam.T_ST = lvdc->T_ST;
-			tliparam.Tt_3R = lvdc->Tt_3R;
-			tliparam.t_clock = lvdc->t_clock;
-
-			double m0 = vessel->GetEmptyMass();
-			GC->rtcc->LVDCTLIPredict(tliparam, m0, sv_A, GC->rtcc->CalcGETBase(), dV_LVLH, P30TIG, sv_IG, sv_TLI);
-
-			R_TLI = sv_TLI.R;
-			V_TLI = sv_TLI.V;
-
-			opt.dV_LVLH = dV_LVLH;
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
-			opt.TIG = P30TIG;
-			opt.vessel = vessel;
-			opt.SeparationAttitude = lvdc->XLunarAttitude;
-			opt.TLI = OrbMech::GETfromMJD(sv_TLI.MJD, GC->rtcc->CalcGETBase());
-			opt.R_TLI = R_TLI;
-			opt.V_TLI = V_TLI;
-			opt.uselvdc = true;
+			opt.InjOpp = 2;
 		}
+		opt.REFSMMAT= GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
+		opt.SeparationAttitude = lvdc->XLunarAttitude;
+		opt.sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
 
-		opt.sv0 = sv_A;
-
-		GC->rtcc->TLI_PAD(&opt, tlipad);
+		GC->rtcc->TLI_PAD(opt, tlipad);
 
 		Result = 0;
 	}
