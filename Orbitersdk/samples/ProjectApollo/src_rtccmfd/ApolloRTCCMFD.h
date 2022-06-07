@@ -381,6 +381,8 @@ public:
 	void menuSPQCDHValue();
 	bool set_SPQCDHValue(char* val);
 	void menuSetDKIElevation();
+	void menuSetDKITerminalPhaseAngle();
+	void menuSetDKIMinimumPerigee();
 	void menuCycleDKIManeuverLineDefinition();
 	void menuCycleDKIProfile();
 	void menuDKITIG();

@@ -2388,8 +2388,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "DH at NCC", 0, 'V' },
 		{ "DH at NSR", 0, 'D' },
 		{ "Elevation angle at TPI", 0, 'E' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Angle from TPI to TPF", 0, 'L' },
+		{ "Minimum perigee", 0, 'H' },
 		{ "", 0, ' ' },
 
 		{ "", 0, ' ' },
@@ -2405,8 +2405,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("DH1", OAPI_KEY_V, &ApolloRTCCMFD::menuDKINCCDHInput);
 	RegisterFunction("DH2", OAPI_KEY_D, &ApolloRTCCMFD::menuDKINSRDHInput);
 	RegisterFunction("E", OAPI_KEY_E, &ApolloRTCCMFD::menuSetDKIElevation);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("WT", OAPI_KEY_L, &ApolloRTCCMFD::menuSetDKITerminalPhaseAngle);
+	RegisterFunction("MIN", OAPI_KEY_H, &ApolloRTCCMFD::menuSetDKIMinimumPerigee);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);

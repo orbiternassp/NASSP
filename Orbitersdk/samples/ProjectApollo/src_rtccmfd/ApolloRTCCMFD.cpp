@@ -5101,7 +5101,7 @@ bool ApolloRTCCMFD::set_RTESolution(char *str)
 	{
 		i = 0;
 	}
-	else if (str[0] == 'RTEM')
+	else if (strcmp(str, "RTEM") == 0)
 	{
 		i = 1;
 	}
@@ -6992,6 +6992,16 @@ bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
 void ApolloRTCCMFD::menuSetDKIElevation()
 {
 	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIElevationAngle, "Elevation in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::menuSetDKITerminalPhaseAngle()
+{
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKITerminalPhaseAngle, "Terminal phase angle in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::menuSetDKIMinimumPerigee()
+{
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIMinPerigee, "Minimum perigee in nautical miles:", 1852.0);
 }
 
 void ApolloRTCCMFD::menuDKIManeuverLineValue()
