@@ -108,6 +108,7 @@ namespace mission {
 		LM_CG_Coefficients = _M(8.7719e-08, -7.9329e-04, 7.9773e+00, 2.1488e-10, -2.5485e-06, 1.2769e-02, 6.1788e-09, -6.9019e-05, 2.5186e-01);
 		iCMtoLMPowerConnectionVersion = 0;
 		EmptySMCG = _V(914.5916, -6.6712, 12.2940); //Includes: empty SM and SLA ring, but no SM RCS
+		bHasRateAidedOptics = false;
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -181,6 +182,7 @@ namespace mission {
 		{
 			EmptySMCG = vtemp;
 		}
+		oapiReadItem_bool(hFile, "HasRateAidedOptics", bHasRateAidedOptics);
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
 	}
@@ -278,5 +280,10 @@ namespace mission {
 	VECTOR3 Mission::GetCGOfEmptySM() const
 	{
 		return EmptySMCG;
+	}
+
+	bool Mission::HasRateAidedOptics() const
+	{
+		return bHasRateAidedOptics;
 	}
 }

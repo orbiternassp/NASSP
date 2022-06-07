@@ -5796,21 +5796,21 @@ CELEMENTS EquinoctialToKepler(CELEMENTS aeq)
 		kep.i = acos2(1.0 - 2.0*1.0);
 
 	kep.h = atan2(aeq.h, aeq.g);
-	if (kep.h < 0)
+	while (kep.h < 0)
 	{
 		kep.h += PI2;
 	}
 	kep.g = atan2(aeq.e, aeq.i) - kep.h;
-	if (kep.g < 0)
+	while (kep.g < 0)
 	{
 		kep.g += PI2;
 	}
 	kep.l = aeq.l - atan2(aeq.e, aeq.i);
-	if (kep.l >= PI2)
+	while (kep.l >= PI2)
 	{
 		kep.l -= PI2;
 	}
-	else if (kep.l < 0)
+	while (kep.l < 0)
 	{
 		kep.l += PI2;
 	}
@@ -6942,7 +6942,8 @@ void PMMAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	//Initial values for final state
 	CurrentBlock = in;
 
-	double dt;
+	double dt, theta_R;
+	bool firstpass = true;
 
 	if (in.TIMA == 0 || in.TIMA >= 4)
 	{
@@ -7095,14 +7096,26 @@ NewPMMAEG_V2000:
 
 	if (in.TIMA >= 4)
 	{
-		CurrentBlock.Item10 = CurrentBlock.U - tempblock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - tempblock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + tempblock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - tempblock.coe_osc.i + PI))));
-		if (CurrentBlock.Item10 < -PI)
+		theta_R = CurrentBlock.U - tempblock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - tempblock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + tempblock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - tempblock.coe_osc.i + PI))));
+		if (theta_R < -PI)
 		{
-			CurrentBlock.Item10 += PI2;
+			theta_R += PI2;
 		}
-		else if (CurrentBlock.Item10 >= PI)
+		else if (theta_R >= PI)
 		{
-			CurrentBlock.Item10 -= PI2;
+			theta_R -= PI2;
+		}
+		if (in.TIMA == 4)
+		{
+			CurrentBlock.Item10 = theta_R;
+		}
+		else
+		{
+			if (firstpass)
+			{
+				CurrentBlock.Item10 = theta_R;
+				firstpass = false;
+			}
 		}
 	}
 
@@ -7110,8 +7123,8 @@ NewPMMAEG_V2000:
 	{
 		CurrentBlock.Item8 = tempblock.R - CurrentBlock.R;
 		CurrentBlock.Item9 = tempblock.TE - CurrentBlock.TE;
-		dt += -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
-		if (abs(CurrentBlock.Item10) > 0.0001)
+		dt += -theta_R / (CurrentBlock.l_dot + CurrentBlock.g_dot);
+		if (abs(theta_R) > 0.0001)
 		{
 			goto NewPMMAEG_V1000;
 		}
@@ -7218,7 +7231,8 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 	coe_mean1 = in.coe_mean;
 
-	double dt;
+	double dt, theta_R;
+	bool firstpass = true;
 
 	if (in.TIMA == 0 || in.TIMA >= 4)
 	{
@@ -7379,14 +7393,26 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 	if (in.TIMA >= 4)
 	{
-		CurrentBlock.Item10 = CurrentBlock.U - tempblock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - tempblock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + tempblock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - tempblock.coe_osc.i + PI))));
-		if (CurrentBlock.Item10 < -PI)
+		theta_R = CurrentBlock.U - tempblock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - tempblock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + tempblock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - tempblock.coe_osc.i + PI))));
+		if (theta_R < -PI)
 		{
-			CurrentBlock.Item10 += PI2;
+			theta_R += PI2;
 		}
-		else if (CurrentBlock.Item10 >= PI)
+		else if (theta_R >= PI)
 		{
-			CurrentBlock.Item10 -= PI2;
+			theta_R -= PI2;
+		}
+		if (in.TIMA == 4)
+		{
+			CurrentBlock.Item10 = theta_R;
+		}
+		else
+		{
+			if (firstpass)
+			{
+				CurrentBlock.Item10 = theta_R;
+				firstpass = false;
+			}
 		}
 	}
 
@@ -7394,8 +7420,8 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	{
 		CurrentBlock.Item8 = tempblock.R - CurrentBlock.R;
 		CurrentBlock.Item9 = tempblock.TE - CurrentBlock.TE;
-		dt += -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
-		if (abs(CurrentBlock.Item10) > 0.0001)
+		dt += -theta_R / (CurrentBlock.l_dot + CurrentBlock.g_dot);
+		if (abs(theta_R) > 0.0001)
 		{
 			goto NewPMMLAEG_V1000;
 		}

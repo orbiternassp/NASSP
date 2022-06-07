@@ -44,6 +44,7 @@
 #include "iu.h"
 #include "papi.h"
 #include "OrbMech.h"
+#include "nassputils.h"
 #include <stdio.h>
 
 #include "MFDResource.h"
@@ -51,7 +52,7 @@
 
 #include <queue>
 
-
+using namespace nassp;
 
 // ==============================================================
 // Global variables
@@ -645,21 +646,17 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
-	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+	if (utils::IsVessel(vessel, utils::Saturn)) {
 		saturn = (Saturn *)vessel;
 		g_Data.progVessel = saturn;
 		g_Data.vessel = vessel;
 		oapiGetObjectName(saturn->GetGravityRef(), buffer, 8);
-		if(strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
+		if (strcmp(buffer, "Earth") == 0 || strcmp(buffer, "Moon") == 0)
 			g_Data.planet = saturn->GetGravityRef();
 		else
 			g_Data.planet = oapiGetGbodyByName("Earth");
 
-		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
+		if (utils::IsVessel(vessel, utils::SaturnIB))
 		{
 			isSaturnV = false;
 		}
@@ -673,8 +670,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 			crawler = (Crawler *)vessel;
 			g_Data.planet = crawler->GetGravityRef();
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+	else if (utils::IsVessel(vessel, utils::LEM)) {
 			lem = (LEM *)vessel;
 			g_Data.vessel = vessel;
 			g_Data.gorpVessel = lem;
@@ -1082,10 +1078,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "S-IVB/IU Lunar Impact", 21);
 
 			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "TIG:", 6);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "BT:", 8);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "Pitch:", 8);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.6), "Yaw:", 8);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "TIG:", 4);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "BT:", 3);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "Pitch:", 6);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.6), "Yaw:", 4);
 
 			sprintf(buffer, "TB8+%.0f s", g_Data.iuUplinkTIG);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
@@ -1321,10 +1317,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			if(object != NULL){
 				vessel = oapiGetVesselInterface(object);
 				// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
-				if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-					!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-					!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-					!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+				if (utils::IsVessel(vessel, utils::Saturn)) {
 						saturn = (Saturn *)vessel;
 
 						VECTOR3 CMattitude,LMattitude;
@@ -2142,10 +2135,7 @@ void ProjectApolloMFD::GetCSM()
 	if (object != NULL) {
 		vessel = oapiGetVesselInterface(object);
 		// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
-		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+		if (utils::IsVessel(vessel, utils::Saturn)) {
 			saturn = (Saturn *)vessel;
 		}
 	}
@@ -2153,6 +2143,9 @@ void ProjectApolloMFD::GetCSM()
 
 void ProjectApolloMFD::CalculateV42Angles()
 {
+	//Only do this in the LM
+	if (lem == NULL) return;
+
 	GetCSM();
 	
 	if (saturn && lem)
@@ -2184,6 +2177,9 @@ void ProjectApolloMFD::menuPressEnterOnDSKYDEDA()
 
 void ProjectApolloMFD::menuPressEnterOnCMCLGC()
 {
+	//Only do this in the LM
+	if (lem == NULL) return;
+
 	GetCSM();
 
 	if (lem && saturn)
@@ -2616,18 +2612,12 @@ void ProjectApolloMFD::menuIUUplink()
 
 	bool uplinkaccepted = false;
 
-	if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/Saturn5") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+	if (utils::IsVessel(g_Data.iuVessel, utils::Saturn)) {
 		Saturn *iuv = (Saturn *)g_Data.iuVessel;
 
 		iu = iuv->GetIU();
 	}
-	else if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/sat5stg3") ||
-			!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-			!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/nsat1stg2"))
+	else if (utils::IsVessel(g_Data.iuVessel, utils::SIVB))
 	{
 		SIVB *iuv = (SIVB *)g_Data.iuVessel;
 

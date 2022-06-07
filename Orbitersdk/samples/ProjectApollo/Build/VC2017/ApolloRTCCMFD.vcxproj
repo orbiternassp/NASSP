@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_aux\nassputils.h" />
     <ClInclude Include="..\..\src_launch\MCCPADForms.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApollomfdButtons.h" />

@@ -250,7 +250,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 5: //TLI PAD
 	{
-		TLIPADOpt opt;
 		SV sv;
 
 		TLIPAD * form = (TLIPAD *)pad;
@@ -1493,14 +1492,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)pad;
 
-		CSMDAPUpdate(calcParams.src, *form);
+		CSMDAPUpdate(calcParams.src, *form, false);
 	}
 	break;
 	case 62: //LM DAP DATA
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)pad;
 
-		LMDAPUpdate(calcParams.tgt, *form);
+		LMDAPUpdate(calcParams.tgt, *form, false);
 	}
 	break;
 	case 63: //GYRO TORQUING ANGLES

@@ -602,6 +602,8 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	if (K3 != 2)
 	{
 		sv_a.ENTRY = 0;
+		sv_a.TIMA = 0;
+		sv_a.TE = sv_a.TS;
 		if (pRTCC->PMMAPD(aeg.Header, sv_a, 0, 0, INFO, &sv_AP, &sv_PE))
 		{
 			ErrorIndicator = 8;

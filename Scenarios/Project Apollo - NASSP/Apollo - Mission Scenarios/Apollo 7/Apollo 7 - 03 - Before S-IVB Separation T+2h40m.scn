@@ -4854,13 +4854,13 @@ MCC_BEGIN
   MCC_NCOption_Enabled 1
   MCC_MissionType 2
   MCC_MissionPhase 2
-  MCC_MissionState 100
-  MCC_SubState 7
+  MCC_MissionState 12
+  MCC_SubState 0
   MCC_EarthRev 2
   MCC_MoonRev 0
   MCC_AbortMode 0
-  MCC_StateTime 8961.693457869220
-  MCC_SubStateTime 6194.901569619079
+  MCC_StateTime 0.0
+  MCC_SubStateTime 0.0
   MCC_NCOption_Text Repeat uplink
 MCC_END
 RTCC_BEGIN

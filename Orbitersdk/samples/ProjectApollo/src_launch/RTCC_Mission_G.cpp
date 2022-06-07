@@ -302,7 +302,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 14: //TLI PAD
 	{
-		TLIPADOpt opt;
 		SV sv;
 
 		TLIPAD * form = (TLIPAD *)pad;
@@ -1208,7 +1207,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)pad;
 
-		CSMDAPUpdate(calcParams.src, *form);
+		CSMDAPUpdate(calcParams.src, *form, false);
 	}
 	break;
 	case 34: //LM DAP DATA
@@ -1217,7 +1216,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP10DAPDATA dap;
 
-		LMDAPUpdate(calcParams.tgt, dap);
+		LMDAPUpdate(calcParams.tgt, dap, false);
 		
 		LEM *lem = (LEM *)calcParams.tgt;
 
@@ -2623,7 +2622,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (scrubbed)
 		{
 			//Scrubbed MCC-5 and MCC-6
-			if (fcn == 110 || fcn == 111 || fcn == 112)
+			if (fcn == 110 || fcn == 112)
 			{
 				char buffer1[1000];
 				char buffer2[1000];
@@ -2640,8 +2639,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 					strncpy(upString, uplinkdata, 1024 * 3);
 				}
 			}
-			//MCC-7 decision
-			else if (fcn == 113)
+			//MCC-6 and 7 decision
+			else if (fcn == 111 || fcn == 113)
 			{
 				sprintf(upMessage, "%s has been scrubbed", manname);
 			}
@@ -2669,7 +2668,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else
 		{
 			//MCC-5 and MCC-6
-			if (fcn == 110 || fcn == 111 || fcn == 112)
+			if (fcn == 110 || fcn == 112)
 			{
 				char buffer1[1000];
 				char buffer2[1000];
@@ -2684,8 +2683,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 					sprintf(upDesc, "CSM state vector, target load");
 				}
 			}
-			//MCC-7 decision
-			else if (fcn == 113)
+			//MCC-6 and 7 decision
+			else if (fcn == 111 || fcn == 113)
 			{
 				sprintf(upMessage, "%s will be executed", manname);
 			}

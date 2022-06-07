@@ -126,14 +126,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)pad;
 
-		CSMDAPUpdate(calcParams.src, *form);
+		CSMDAPUpdate(calcParams.src, *form, false);
 	}
 	break;
 	case 6: //LM DAP DATA
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)pad;
 
-		LMDAPUpdate(calcParams.tgt, *form);
+		LMDAPUpdate(calcParams.tgt, *form, false);
 	}
 	break;
 	case 7: //MISSION INITIALIZATION
@@ -603,7 +603,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.vessel = calcParams.tgt;
 
 		AP11LMManeuverPAD(&manopt, *form);
-		LMDAPUpdate(calcParams.tgt, dappad);
+		LMDAPUpdate(calcParams.tgt, dappad, true);
 
 		sprintf(form->remarks, "LM weight is %.0f, CSM weight is %.0f", dappad.ThisVehicleWeight, dappad.OtherVehicleWeight);
 
@@ -694,7 +694,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "SPS-5");
 
-		CSMDAPUpdate(calcParams.src, dappad);
+		CSMDAPUpdate(calcParams.src, dappad, false);
 		sprintf(form->remarks, "LM weight is %.0f", dappad.OtherVehicleWeight);
 
 		AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
@@ -1227,7 +1227,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11LMManeuverPAD(&opt, *form);
 
-		LMDAPUpdate(calcParams.tgt, dappad);
+		LMDAPUpdate(calcParams.tgt, dappad, false);
 		sprintf(form->purpose, "APS Depletion");
 		sprintf(form->remarks, "LM weight is %.0f", dappad.ThisVehicleWeight);
 

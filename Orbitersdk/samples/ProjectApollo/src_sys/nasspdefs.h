@@ -346,7 +346,7 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 #define PRIM_RCS_FUEL_PER_QUAD	93.5	// AOH
 #define SM_RCS_ISP				(290.0 * G)
 #define SM_RCS_ISP_SL			50.0
-#define SM_RCS_THRUST			441.5
+#define SM_RCS_THRUST			443.9325	// 99.8 lbf
 
 #define CM_RCS_FUEL_PER_TANK	55.5		// The CM has 2 tanks (Apollo 11 Mission Report)
 #define CM_RCS_ISP				(340.0 * G) // AOH, dumping takes 88s with 10 of 12 thrusters

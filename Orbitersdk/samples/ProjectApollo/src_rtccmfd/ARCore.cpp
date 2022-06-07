@@ -14,6 +14,9 @@
 #include "mcc.h"
 #include "TLMCC.h"
 #include "rtcc.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 static WSADATA wsaData;
 static SOCKET m_socket;
@@ -355,28 +358,29 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	REFSMMATopt = 4;
 	REFSMMATcur = 4;
 	manpadopt = 0;
-	vesseltype = 0;
 	lemdescentstage = true;
 
-	if (strcmp(v->GetName(), "MCC") == 0)
+	vesseltype = -1;
+
+	if (utils::IsVessel(v,utils::Saturn))
 	{
-		vesseltype = 4;
+		vesseltype = 0;
 	}
-	else if (strcmp(v->GetName(), "Spider") == 0)
+	else if (utils::IsVessel(v, utils::LEM))
+	{
+		vesseltype = 1;
+	}
+	else if (utils::IsVessel(v, utils::MCC))
 	{
 		vesseltype = 2;
 	}
-	else if (strcmp(v->GetName(), "Snoopy") == 0)
-	{
-		vesseltype = 2;
-	}
-	else if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0)
+
+	if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0)
 	{
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Eagle") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0)
@@ -385,7 +389,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Intrepid") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Odyssey") == 0)
@@ -394,7 +397,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Aquarius") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0)
@@ -403,7 +405,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Antares") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 40768.0;
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
@@ -412,7 +413,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Falcon") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Casper") == 0)
@@ -421,7 +421,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Orion") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "America") == 0)
@@ -430,13 +429,13 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "Challenger") == 0)
 	{
-		vesseltype = 2;
 		AGCEphemTEphemZero = 41133.0;
 	}
 
+	vesselisdocked = false;
 	if (vessel->DockingStatus(0) == 1)
 	{
-		vesseltype++;
+		vesselisdocked = true;
 	}
 
 	REFSMMATHeadsUp = true;
@@ -464,28 +463,22 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
 	g_Data.uplinkState = 0;
-	if (vesseltype >= 2)
+	if (vesseltype == 1)
 	{
-		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
-			LEM *lem = (LEM *)vessel;
-			if (lem->GetStage() < 2)
-			{
-				lemdescentstage = true;
-			}
-			else
-			{
-				lemdescentstage = false;
-			}
+		LEM *lem = (LEM *)vessel;
+		if (lem->GetStage() < 2)
+		{
+			lemdescentstage = true;
+		}
+		else
+		{
+			lemdescentstage = false;
 		}
 	}
 	for (int i = 0; i < 24; i++)
 	{
 		g_Data.emem[i] = 0;
 	}
-	ZeroMemory(&g_Data.burnData, sizeof(IMFD_BURN_DATA));
-	g_Data.isRequesting = false;
-	g_Data.progVessel = (Saturn *)vessel;
 	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != NO_ERROR) {
 		sprintf(debugWinsock, "ERROR AT WSAStartup()");
@@ -499,11 +492,9 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	EntryTIGcor = 0.0;
 	EntryLatcor = 0.0;
 	EntryLngcor = 0.0;
-	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	RTEReentryTime = 0.0;
 	entryrange = 0.0;
-	EntryRTGO = 0.0;
 	RTECalcMode = 1;
 	RTETradeoffMode = 0;
 	RTEASTType = 76;
@@ -729,7 +720,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	AGCEphemTEPHEM = GC->rtcc->CalcGETBase();
 	AGCEphemTLAND = GC->rtcc->CZTDTGTU.GETTD;
 	AGCEphemMission = GC->mission;
-	AGCEphemIsCMC = vesseltype < 2;
+	AGCEphemIsCMC = vesseltype != 1;
 
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
@@ -834,6 +825,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		DeltaClockTime[i] = 0.0;
 		DesiredRTCCLiftoffTime[i] = 0.0;
 	}
+	iuUplinkResult = 0;
 
 	LUNTAR_lat = 0.0;
 	LUNTAR_lng = 0.0;
@@ -860,43 +852,8 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 	else if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() == 0) {
 		if (g_Data.connStatus == 1)	{
 			sprintf(debugWinsock, "DISCONNECTED");
-			//g_Data.uplinkDataReady = 0;
-			//g_Data.updateClockReady = 0;
 			g_Data.connStatus = 0;
 			closesocket(m_socket);
-		}
-		//else if (g_Data.connStatus == 2 && g_Data.updateClockReady == 2) {
-		//	UpdateClock();
-		//}
-	}
-	if (g_Data.isRequesting && g_Data.progVessel->GetIMFDClient()->IsBurnDataValid()) {
-		g_Data.burnData = g_Data.progVessel->GetIMFDClient()->GetBurnData();
-		StopIMFDRequest();
-		if (g_Data.burnData.p30mode && !g_Data.burnData.impulsive) {
-			//g_Data.errorMessage = "IMFD not in Off-Axis, P30 Mode";
-			//g_Data.progState = PROGSTATE_TLI_ERROR;
-			dV_LVLH = g_Data.burnData._dV_LVLH;
-			P30TIG = (g_Data.burnData.IgnMJD - GC->rtcc->CalcGETBase())*24.0*3600.0;
-
-			double *EarthPos;
-			EarthPos = new double[12];
-			VECTOR3 EarthVec, EarthVecVel;
-			CELBODY *cEarth;
-			OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-
-			cEarth = oapiGetCelbodyInterface(hEarth);
-			cEarth->clbkEphemeris(g_Data.burnData.IgnMJD + g_Data.burnData.BT / 24.0 / 3600.0, EPHEM_BARYPOS | EPHEM_BARYVEL, EarthPos);
-
-			EarthVec = _V(EarthPos[0], EarthPos[1], EarthPos[2]);
-			EarthVecVel = _V(EarthPos[3], EarthPos[4], EarthPos[5]);
-
-			R_TLI = g_Data.burnData._RCut - EarthVec;
-			R_TLI = _V(R_TLI.x, R_TLI.z, R_TLI.y);
-			V_TLI = g_Data.burnData._VCut - EarthVecVel;
-			V_TLI = _V(V_TLI.x, V_TLI.z, V_TLI.y);
-		}
-		else {
-			//g_Data.progState = PROGSTATE_TLI_WAITING;
 		}
 	}
 }
@@ -941,7 +898,6 @@ void ARCore::EntryUpdateCalc()
 
 	EntryLatcor = res.latitude;
 	EntryLngcor = res.longitude;
-	EntryRTGO = res.RTGO;
 }
 
 void ARCore::EntryCalc()
@@ -1112,6 +1068,16 @@ void ARCore::GeneralMEDRequest()
 	startSubthread(53);
 }
 
+void ARCore::SkylabSaturnIBLaunchCalc()
+{
+	startSubthread(54);
+}
+
+void ARCore::SkylabSaturnIBLaunchUplink()
+{
+	startSubthread(55);
+}
+
 void ARCore::GetAGSKFactor()
 {
 	startSubthread(35);
@@ -1179,14 +1145,13 @@ void ARCore::TransferRTEToMPT()
 
 void ARCore::DAPPADCalc()
 {
-	if (vesseltype == 4) return;
-	if (vesseltype < 2)
+	if (vesseltype == 0)
 	{
-		GC->rtcc->CSMDAPUpdate(vessel, DAP_PAD);
+		GC->rtcc->CSMDAPUpdate(vessel, DAP_PAD, vesselisdocked);
 	}
-	else
+	else if (vesseltype == 1)
 	{
-		GC->rtcc->LMDAPUpdate(vessel, DAP_PAD, lemdescentstage == false);
+		GC->rtcc->LMDAPUpdate(vessel, DAP_PAD, vesselisdocked, lemdescentstage == false);
 	}
 }
 
@@ -1238,29 +1203,25 @@ void ARCore::UpdateGRRTime()
 	double T_L, Azi;
 	LVDC *lvdc;
 
-	if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+	if (utils::IsVessel(svtarget,utils::SaturnV))
 	{
 		Saturn *iuv = (Saturn *)svtarget;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = true;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+	else if (utils::IsVessel(svtarget, utils::SaturnIB))
 	{
 		Saturn *iuv = (Saturn *)svtarget;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = false;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+	else if (utils::IsVessel(svtarget, utils::SaturnV_SIVB))
 	{
 		SIVB *iuv = (SIVB *)svtarget;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = true;
 	}
-	else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-		!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+	if (utils::IsVessel(svtarget, utils::SaturnIB_SIVB))
 	{
 		SIVB *iuv = (SIVB *)svtarget;
 		lvdc = iuv->GetIU()->GetLVDC();
@@ -1297,29 +1258,25 @@ void ARCore::GetStateVectorFromIU()
 	bool isSaturnV;
 	IU* iu;
 
-	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5"))
+	if (utils::IsVessel(vessel, utils::SaturnV))
 	{
 		Saturn *iuv = (Saturn *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = true;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
+	else if (utils::IsVessel(vessel, utils::SaturnIB))
 	{
 		Saturn *iuv = (Saturn *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = false;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/sat5stg3"))
+	else if (utils::IsVessel(vessel, utils::SaturnV_SIVB))
 	{
 		SIVB *iuv = (SIVB *)vessel;
 		iu = iuv->GetIU();
 		isSaturnV = true;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/nsat1stg2"))
+	else if (utils::IsVessel(vessel, utils::SaturnIB_SIVB))
 	{
 		SIVB *iuv = (SIVB *)vessel;
 		iu = iuv->GetIU();
@@ -1366,7 +1323,7 @@ void ARCore::GetStateVectorFromIU()
 void ARCore::GetStateVectorsFromAGS()
 {
 	//Are we a LM?
-	if (vesseltype < 2 || vesseltype == 4) return;
+	if (vesseltype == 1) return;
 
 	//0-6: pos and vel
 	int csmvecoct[6], lmvecoct[6];
@@ -1453,11 +1410,11 @@ void ARCore::GetStateVectorsFromAGS()
 
 void ARCore::GetStateVectorFromAGC(bool csm)
 {
-	if (vesseltype == 4) return;
+	if (vesseltype < 0 || vesseltype > 1) return;
 
 	agc_t* vagc;
 
-	if (vesseltype < 2)
+	if (vesseltype == 0)
 	{
 		Saturn *saturn = (Saturn *)vessel;
 
@@ -1531,7 +1488,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 	EphemerisData sv;
 	sv.R = tmul(Rot, R);
 	sv.V = tmul(Rot, V);
-	if (vesseltype < 2)
+	if (vesseltype == 0)
 	{
 		sv.GMT = GET + GC->rtcc->GetCMCClockZero();
 	}
@@ -1551,7 +1508,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 
 	if (csm)
 	{
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			GC->rtcc->BZSTLM.HighSpeedCMCCSMVector = sv;
 		}
@@ -1562,7 +1519,7 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 	}
 	else
 	{
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			GC->rtcc->BZSTLM.HighSpeedCMCLEMVector = sv;
 		}
@@ -1584,7 +1541,9 @@ void ARCore::NavCheckPAD()
 
 void ARCore::UpdateTLITargetTable()
 {
-	SaturnV *SatV = (SaturnV*)g_Data.progVessel;
+	if (!utils::IsVessel(vessel, utils::SaturnV)) return;
+
+	SaturnV *SatV = (SaturnV*)vessel;
 	LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
 	GC->rtcc->SystemParameters.MDVSTP.T4IG = lvdc->t_3i - 17.0;
@@ -1985,17 +1944,19 @@ void ARCore::RetrofireEXDVUplink()
 	UplinkData(true);
 }
 
-void ARCore::EntryUpdateUplink(void)
+void ARCore::EntryUplinkCalc()
 {
-	g_Data.emem[0] = 06;
-	g_Data.emem[1] = 3400;
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 1);
-	g_Data.emem[3] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 0);
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 1);
-	g_Data.emem[5] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 0);
+	GC->rtcc->CMMENTRY(EntryLatcor, EntryLngcor);
+}
 
-	//g_Data.uplinkDataReady = 2;
-	UplinkData(true); // Go for uplink
+void ARCore::EntryUpdateUplink()
+{
+	for (int i = 0;i < 6;i++)
+	{
+		g_Data.emem[i] = GC->rtcc->CZENTRY.Octals[i];
+	}
+
+	UplinkData(true);
 }
 
 void ARCore::TLANDUplinkCalc(void)
@@ -2058,7 +2019,7 @@ void ARCore::AGCLiftoffTimeIncrementUplink(bool csm)
 
 void ARCore::EMPP99Uplink(int i)
 {
-	if (vesseltype < 2 || vesseltype > 3) return;
+	if (vesseltype != 1) return;
 
 	if (i == 0)
 	{
@@ -2572,27 +2533,15 @@ int ARCore::subThread()
 {
 	int Result = 0;
 
-	int mptveh, docked;
+	int mptveh;
 
-	if (GC->MissionPlanningActive)
+	if (vesseltype == 0)
 	{
-		if (vesseltype < 2)
-		{
-			mptveh = RTCC_MPT_CSM;
-		}
-		else
-		{
-			mptveh = RTCC_MPT_LM;
-		}
-	}
-
-	if (vesseltype == 1 || vesseltype == 3)
-	{
-		docked = true;
+		mptveh = RTCC_MPT_CSM;
 	}
 	else
 	{
-		docked = false;
+		mptveh = RTCC_MPT_LM;
 	}
 
 	subThreadStatus = 2; // Running
@@ -2758,7 +2707,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			if (vesseltype < 2)
+			if (vesseltype == 0)
 			{
 				opt.ChaserID = 1;
 			}
@@ -2891,9 +2840,32 @@ int ARCore::subThread()
 		}
 
 		opt.vessel = vessel;
-		opt.vesseltype = vesseltype;
+
+		if (vesseltype == 0)
+		{
+			if (vesselisdocked)
+			{
+				opt.vesseltype = 1;
+			}
+			else
+			{
+				opt.vesseltype = 0;
+			}
+		}
+		else
+		{
+			if (vesselisdocked)
+			{
+				opt.vesseltype = 3;
+			}
+			else
+			{
+				opt.vesseltype = 2;
+			}
+		}
+
 		opt.HeadsUp = REFSMMATHeadsUp;
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			opt.PresentREFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 		}
@@ -2903,7 +2875,7 @@ int ARCore::subThread()
 		}
 
 		opt.IMUAngles = VECangles;
-		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
+		opt.csmlmdocked = !GC->MissionPlanningActive && vesselisdocked;
 
 		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(mptveh))
 		{
@@ -2967,7 +2939,7 @@ int ARCore::subThread()
 		}
 
 		MATRIX3 REFSMMAT = GC->rtcc->REFSMMATCalc(&opt);
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			GC->rtcc->EMGSTSTM(1, REFSMMAT, RTCC_REFSMMAT_TYPE_CUR, GC->rtcc->RTCCPresentTimeGMT());
 		}
@@ -3079,73 +3051,37 @@ int ARCore::subThread()
 	break;
 	case 8: //TLI PAD
 	{
-		SaturnV *SatV = (SaturnV*)g_Data.progVessel;
-		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
+		LVDCSV *lvdc = NULL;
+		if (utils::IsVessel(vessel, utils::SaturnV))
+		{
+			SaturnV * SatV = (SaturnV *)vessel;
+			if (SatV->iu)
+			{
+				lvdc = (LVDCSV*)SatV->iu->GetLVDC();
+			}
+		}
+		if (lvdc == NULL)
+		{
+			Result = 0;
+			break;
+		}
 
 		TLIPADOpt opt;
 
-		SV sv_A, sv_IG, sv_TLI;
-		sv_A = GC->rtcc->StateVectorCalc(vessel);
-
-		if (lvdc->TU)
+		opt.ConfigMass = vessel->GetMass();
+		if (lvdc->first_op)
 		{
-			opt.dV_LVLH = dV_LVLH;
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
-			opt.TIG = P30TIG;
-			opt.vessel = vessel;
-			opt.uselvdc = false;
-			opt.SeparationAttitude = _V(PI, 120.0*RAD, 0.0);
+			opt.InjOpp = 1;
 		}
 		else
 		{
-			LVDCTLIparam tliparam;
-
-			tliparam.alpha_TS = lvdc->alpha_TS;
-			tliparam.Azimuth = lvdc->Azimuth;
-			tliparam.beta = lvdc->beta;
-			tliparam.cos_sigma = lvdc->cos_sigma;
-			tliparam.C_3 = lvdc->C_3;
-			tliparam.DEC = lvdc->DEC;
-			tliparam.e_N = lvdc->e_N;
-			tliparam.f = lvdc->f;
-			tliparam.mu = lvdc->mu;
-			tliparam.omega_E = lvdc->omega_E;
-			tliparam.phi_L = lvdc->PHI;
-			tliparam.RA = lvdc->RAS;
-			tliparam.R_N = lvdc->R_N;
-			tliparam.T_2R = lvdc->T_2R;
-			tliparam.T4C = lvdc->TB5 - lvdc->TB1;
-			tliparam.theta_EO = lvdc->theta_EO;
-			tliparam.t_D = lvdc->t_D;
-			tliparam.T_L = lvdc->T_L;
-			tliparam.T_LO = lvdc->T_LO + 17.0;
-			tliparam.T_RG = 578.6;
-			tliparam.T_ST = lvdc->T_ST;
-			tliparam.Tt_3R = lvdc->Tt_3R;
-			tliparam.t_clock = lvdc->t_clock;
-
-			double m0 = vessel->GetEmptyMass();
-			GC->rtcc->LVDCTLIPredict(tliparam, m0, sv_A, GC->rtcc->CalcGETBase(), dV_LVLH, P30TIG, sv_IG, sv_TLI);
-
-			R_TLI = sv_TLI.R;
-			V_TLI = sv_TLI.V;
-
-			opt.dV_LVLH = dV_LVLH;
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
-			opt.TIG = P30TIG;
-			opt.vessel = vessel;
-			opt.SeparationAttitude = lvdc->XLunarAttitude;
-			opt.TLI = OrbMech::GETfromMJD(sv_TLI.MJD, GC->rtcc->CalcGETBase());
-			opt.R_TLI = R_TLI;
-			opt.V_TLI = V_TLI;
-			opt.uselvdc = true;
+			opt.InjOpp = 2;
 		}
+		opt.REFSMMAT= GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
+		opt.SeparationAttitude = lvdc->XLunarAttitude;
+		opt.sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
 
-		opt.sv0 = sv_A;
-
-		GC->rtcc->TLI_PAD(&opt, tlipad);
+		GC->rtcc->TLI_PAD(opt, tlipad);
 
 		Result = 0;
 	}
@@ -3174,7 +3110,7 @@ int ARCore::subThread()
 			pin.TableCode = mptveh;
 			GC->rtcc->PLAWDT(pin, pout);
 
-			if (vesseltype < 2)
+			if (vesseltype == 0)
 			{
 				sv_A.mass = pout.CSMWeight;
 			}
@@ -3188,7 +3124,7 @@ int ARCore::subThread()
 			sv_A = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		if (vesseltype < 2)
+		if (vesseltype == 0)
 		{
 			AP11ManPADOpt opt;
 
@@ -3200,7 +3136,14 @@ int ARCore::subThread()
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
-			opt.vesseltype = vesseltype;
+			if (vesselisdocked)
+			{
+				opt.vesseltype = 1;
+			}
+			else
+			{
+				opt.vesseltype = 0;
+			}
 			opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
@@ -3221,7 +3164,7 @@ int ARCore::subThread()
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
-			opt.csmlmdocked = !GC->MissionPlanningActive && docked;
+			opt.csmlmdocked = !GC->MissionPlanningActive && vesselisdocked;
 			opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
@@ -3296,11 +3239,9 @@ int ARCore::subThread()
 		opt.DH1 = SkylabDH1;
 		opt.DH2 = SkylabDH2;
 		opt.n_C = Skylab_n_C;
-		opt.target = target;
 		opt.t_TPI = t_TPI;
 		opt.PCManeuver = Skylab_PCManeuver;
 		opt.NPCOption = Skylab_NPCOption;
-		opt.vessel = vessel;
 
 		if (Skylabmaneuver == 0)
 		{
@@ -3341,6 +3282,40 @@ int ARCore::subThread()
 				opt.t_NC = Skylab_t_NC2;
 			}
 		}
+
+		if (GC->MissionPlanningActive)
+		{
+			double gmt = GC->rtcc->GMTfromGET(opt.t_C);
+
+			EphemerisData EPHEM;
+			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_CSM, EPHEM))
+			{
+				Result = 0;
+				break;
+			}
+
+			opt.sv_C.R = EPHEM.R;
+			opt.sv_C.V = EPHEM.V;
+			opt.sv_C.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
+			opt.sv_C.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+
+			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_LM, EPHEM))
+			{
+				Result = 0;
+				break;
+			}
+
+			opt.sv_T.R = EPHEM.R;
+			opt.sv_T.V = EPHEM.V;
+			opt.sv_T.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
+			opt.sv_T.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+		}
+		else
+		{
+			opt.sv_C = GC->rtcc->StateVectorCalc(vessel);
+			opt.sv_T = GC->rtcc->StateVectorCalc(target);
+		}
+		opt.DMMass = GC->rtcc->GetDockedVesselMass(vessel);
 
 		SkylabSolGood = GC->rtcc->SkylabRendezvous(&opt, &res);
 
@@ -3610,7 +3585,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.GETI);
+			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R32_GETI);
 			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, sv);
 			if (err)
 			{
@@ -3642,8 +3617,12 @@ int ARCore::subThread()
 		{
 			P30TIG = GC->rtcc->RZRFDP.GETI;
 			dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
-			EntryLatcor = GC->rtcc->RZRFTT.Manual.lat_T;
-			EntryLngcor = GC->rtcc->RZRFTT.Manual.lng_T;
+
+			GC->rtcc->RZC1RCNS.entry = GC->rtcc->RZRFTT.Manual.entry;
+
+			EntryLatcor = GC->rtcc->RZRFTT.Manual.entry.lat_T;
+			EntryLngcor = GC->rtcc->RZRFTT.Manual.entry.lng_T;
+			manpadenginetype = GC->rtcc->RZRFTT.Manual.Thruster;
 		}
 
 		Result = 0;
@@ -3851,7 +3830,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			if (vesseltype < 2 || vesseltype == 4 || target == NULL)
+			if (vesseltype != 1 || target == NULL)
 			{
 				Result = 0;
 				break;
@@ -3981,40 +3960,36 @@ int ARCore::subThread()
 	break;
 	case 28: //SLV Navigation Update Uplink
 	{
+		iuUplinkResult = 0;
+
 		if (GC->rtcc->CZNAVSLV.NUPTIM == 0.0)
 		{
+			iuUplinkResult = 4;
+			Result = 0;
+			break;
+		}
+		if (svtarget == NULL)
+		{
+			iuUplinkResult = 2;
 			Result = 0;
 			break;
 		}
 
-		IU *iu;
+		IU *iu = NULL;
 
-		if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+		if (utils::IsVessel(svtarget, utils::Saturn))
 		{
 			Saturn *iuv = (Saturn *)svtarget;
 			iu = iuv->GetIU();
 		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
-		{
-			Saturn *iuv = (Saturn *)svtarget;
-			iu = iuv->GetIU();
-		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
-		{
-			SIVB *iuv = (SIVB *)svtarget;
-			iu = iuv->GetIU();
-		}
-		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-			!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+		else if (utils::IsVessel(svtarget, utils::SIVB))
 		{
 			SIVB *iuv = (SIVB *)svtarget;
 			iu = iuv->GetIU();
 		}
 		else
 		{
+			iuUplinkResult = 2;
 			Result = 0;
 			break;
 		}
@@ -4028,6 +4003,15 @@ int ARCore::subThread()
 
 		uplink = &upl;
 		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SLV_NAVIGATION_UPDATE, uplink);
+
+		if (uplinkaccepted)
+		{
+			iuUplinkResult = 1;
+		}
+		else
+		{
+			iuUplinkResult = 3;
+		}
 
 		Result = 0;
 	}
@@ -4060,6 +4044,9 @@ int ARCore::subThread()
 			opt.P30TIG = P30TIG;
 			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
+			opt.Thruster = manpadenginetype;
+			opt.InitialBank = GC->rtcc->RZC1RCNS.entry.GNInitialBank;
+			opt.GLevel = GC->rtcc->RZC1RCNS.entry.GLevel;
 
 			if (EntryLatcor == 0)
 			{
@@ -4232,7 +4219,7 @@ int ARCore::subThread()
 	break;
 	case 35: //AGS Clock Sync
 	{
-		if (vesseltype < 2 || vesseltype == 4)
+		if (vesseltype != 1)
 		{
 			Result = 0;
 			break;
@@ -4265,7 +4252,7 @@ int ARCore::subThread()
 		EphemerisDataTable2 *tab2;
 		double gmt_guess, gmt_min, gmt_max;
 		
-		gmt_guess = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20GET);
+		gmt_guess = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R20_GET);
 		gmt_min = gmt_guess;
 		gmt_max = gmt_guess + 2.75*60.0*60.0;
 
@@ -4353,19 +4340,41 @@ int ARCore::subThread()
 			opt.mode = 5;
 			GC->rtcc->PMSTICN(opt, res);
 
-			double attachedMass = 0.0;
-			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
+			PMMMPTInput in;
 
-			if (docked)
+			//Get all required data for PMMMPT and error checking
+			if (GetVesselParameters(GC->rtcc->med_m72.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
-				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
-			}
-			else
-			{
-				attachedMass = 0.0;
+				//Error
+				Result = 0;
+				break;
 			}
 
-			GC->rtcc->PoweredFlightProcessor(sv_now, GC->rtcc->CalcGETBase(), res.T1, GC->rtcc->med_m72.Thruster, 0.0, res.dV, false, P30TIG, dV_LVLH);
+			in.VehicleArea = 0.0;
+			in.VehicleWeight = in.CSMWeight + in.LMWeight;
+			in.IterationFlag = GC->rtcc->med_m72.Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m72.TimeFlag;
+			in.Thruster = GC->rtcc->med_m72.Thruster;
+
+			in.sv_before = res.sv_tig;
+			in.V_aft = res.sv_tig.V + res.dV;
+			in.DETU = GC->rtcc->med_m72.UllageDT;
+			in.UT = GC->rtcc->med_m72.UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m72.TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m72.DPSThrustFactor;
+
+			double GMT_TIG;
+			VECTOR3 DV;
+			if (GC->rtcc->PoweredFlightProcessor(in, GMT_TIG, DV) == 0)
+			{
+				//Save for Maneuver PAD and uplink
+				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
+				dV_LVLH = DV;
+				manpadenginetype = GC->rtcc->med_m72.Thruster;
+				HeadsUp = true;
+				manpad_ullage_dt = GC->rtcc->med_m72.UllageDT;
+				manpad_ullage_opt = GC->rtcc->med_m72.UllageQuads;
+			}
 		}
 
 		Result = 0;
@@ -4386,7 +4395,7 @@ int ARCore::subThread()
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
 			sv_tig = GC->rtcc->coast(sv_now, SPQTIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4415,7 +4424,7 @@ int ARCore::subThread()
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
 			sv_tig = GC->rtcc->coast(sv_now, DKI_TIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4454,7 +4463,7 @@ int ARCore::subThread()
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
 			sv_tig = GC->rtcc->coast(sv_now, GC->rtcc->PZLDPDIS.GETIG[0] - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4512,7 +4521,7 @@ int ARCore::subThread()
 
 			sv_tig = GC->rtcc->PZGPMELM.SV_before;
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4649,7 +4658,7 @@ int ARCore::subThread()
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
 			sv_tig = GC->rtcc->coast(sv_now, tig - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
-			if (docked)
+			if (vesselisdocked)
 			{
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
@@ -4683,14 +4692,13 @@ int ARCore::subThread()
 
 		bool uplinkaccepted = false;
 
-		if (!stricmp(target->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!stricmp(target->GetClassName(), "ProjectApollo/Saturn5")) {
+		if (utils::IsVessel(vessel, utils::SaturnV))
+		{
 			Saturn *iuv = (Saturn *)target;
 
 			iu = iuv->GetIU();
 		}
-		else if (!stricmp(target->GetClassName(), "ProjectApollo\\sat5stg3") ||
-			!stricmp(target->GetClassName(), "ProjectApollo/sat5stg3"))
+		else if (utils::IsVessel(vessel, utils::SaturnV_SIVB))
 		{
 			SIVB *iuv = (SIVB *)target;
 
@@ -4766,25 +4774,96 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
+	case 54: //Skylab Saturn IB Launch Targeting
+	{
+		if (target == NULL)
+		{
+			Result = 0;
+			break;
+		}
+		
+		MATRIX3 Rot;
+		VECTOR3 RT, VT;
+		SV sv;
+		double TT, GMTBASE;
+
+		sv = GC->rtcc->StateVectorCalc(target);
+
+		if (GC->rtcc->GetGMTBase() == 0.0)
+		{
+			GMTBASE = floor(sv.MJD);
+		}
+		else
+		{
+			GMTBASE = GC->rtcc->GetGMTBase();
+		}
+		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, GMTBASE);
+		RT = rhtmul(Rot, sv.R);
+		VT = rhtmul(Rot, sv.V);
+		TT = (sv.MJD - GMTBASE)*24.0*3600.0;
+
+		GC->rtcc->PMMPAR(RT, VT, TT);
+
+		Result = 0;
+	}
+	break;
+	case 55: //SLV Target Update Uplink
+	{
+		iuUplinkResult = 0;
+
+		if (GC->rtcc->PZSLVTAR.VIGM == 0.0)
+		{
+			iuUplinkResult = 4;
+			Result = 0;
+			break;
+		}
+
+		IU *iu;
+
+		if (utils::IsVessel(vessel, utils::SaturnIB))
+		{
+			Saturn *iuv = (Saturn *)vessel;
+			iu = iuv->GetIU();
+		}
+		else
+		{
+			iuUplinkResult = 2;
+			Result = 0;
+			break;
+		}
+
+		void *uplink = NULL;
+		DCSLAUNCHTARGET upl;
+
+		upl.i = GC->rtcc->PZSLVTAR.IIGM;
+		upl.lambda_0 = GC->rtcc->PZSLVTAR.TIGM;
+		upl.lambda_dot = GC->rtcc->PZSLVTAR.TDIGM;
+		upl.R_T = GC->rtcc->PZSLVTAR.RIGM;
+		upl.theta_T = GC->rtcc->PZSLVTAR.GIGM*RAD;
+		upl.T_GRR0 = GC->rtcc->PZSLVTAR.TGRR;
+		upl.V_T = GC->rtcc->PZSLVTAR.VIGM;
+
+		uplink = &upl;
+		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SATURNIB_LAUNCH_TARGETING, uplink);
+
+		if (uplinkaccepted)
+		{
+			iuUplinkResult = 1;
+		}
+		else
+		{
+			iuUplinkResult = 3;
+		}
+
+		Result = 0;
+	}
+	break;
 	}
 
 	subThreadStatus = Result;
 	if (hThread != NULL) { CloseHandle(hThread); }
 
 	return(0);
-}
-
-void ARCore::StartIMFDRequest() {
-
-	g_Data.isRequesting = true;
-	if (!g_Data.progVessel->GetIMFDClient()->IsBurnDataRequesting())
-		g_Data.progVessel->GetIMFDClient()->StartBurnDataRequests();
-}
-
-void ARCore::StopIMFDRequest() {
-
-	g_Data.isRequesting = false;
-		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
 }
 
 void ARCore::DetermineGMPCode()
@@ -5101,9 +5180,9 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 {
 	OBJHANDLE hEarth, hMoon;
 	MATRIX3 R, Rot2, J2000, R2, R3, M, M_AGC;
-	VECTOR3 l;
+	VECTOR3 UNITW;
 	double mjd_mid, brcsmjd, w_E, t0, B_0, Omega_I0, F_0, B_dot, Omega_I_dot, F_dot, cosI, sinI;
-	double A_Z, A_Z0, A_X, minA_Y, mjd_land;
+	double A_Z, A_Z0, mjd_land;
 	int mem, epoch;
 	char AGC[64];
 
@@ -5289,6 +5368,8 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	R2 = mul(OrbMech::tmat(Rot2), mul(R, Rot2));
 	R3 = mul(J2000, R2);
 
+	UNITW = mul(R3, _V(0, 0, 1));
+
 	A_Z = atan2(R3.m21, R3.m11);
 	if (mission < 14)
 	{
@@ -5306,9 +5387,6 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 
 	M = _M(cos(A_Z), sin(A_Z), 0., -sin(A_Z), cos(A_Z), 0., 0., 0., 1.);
 	M_AGC = mul(R3, M);
-	A_X = atan2(M_AGC.m32, M_AGC.m33);
-	minA_Y = -atan2(-M_AGC.m31, sqrt(M_AGC.m32*M_AGC.m32 + M_AGC.m33*M_AGC.m33));
-	l = _V(A_X, -minA_Y, 0.);
 
 	mem = 01711;
 
@@ -5326,17 +5404,22 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	{
 		fprintf(file, "AZO %.10f DEG\n", A_Z0*DEG);
 	}
-	fprintf(file, "-AYO %.10f DEG\n", minA_Y*DEG);
-	fprintf(file, "AXO %.10f DEG\n", A_X*DEG);
+	fprintf(file, "-AYO %.10f DEG\n", UNITW.x*DEG);
+	fprintf(file, "AXO %.10f DEG\n", UNITW.y*DEG);
 	if (mission < 14)
 	{
 		fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(A_Z0 / PI2, 0, 1)); mem++;
 		fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(A_Z0 / PI2, 0, 0)); mem++;
 	}	
-	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(minA_Y / PI2, 0, 1)); mem++;
-	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(minA_Y / PI2, 0, 0)); mem++;
-	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(A_X / PI2, 0, 1)); mem++;
-	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(A_X / PI2, 0, 0)); mem++;
+	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.x, 0, 1)); mem++;
+	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.x, 0, 0)); mem++;
+	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.y, 0, 1)); mem++;
+	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.y, 0, 0)); mem++;
+	if (isCMC)
+	{
+		fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.z, 0, 1)); mem++;
+		fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(UNITW.z, 0, 0)); mem++;
+	}
 
 	//MOON ROTATIONS
 	MATRIX3 M1, M2, M3, M4, MM, M_AGC_M, RM, R2M, R3M;
@@ -5390,4 +5473,38 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(lm.z, 0, 0)); mem++;
 
 	if (file) fclose(file);
+}
+
+
+int ARCore::GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass)
+{
+	//Error checking
+	if (Thruster == RTCC_ENGINETYPE_CSMSPS || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS4)
+	{
+		//CSM thruster
+		if (vesseltype != 0) return 1;
+
+		TVC = 1;
+	}
+	else
+	{
+		//LM thruster
+		if (vesseltype != 1) return 1;
+
+		TVC = 3;
+	}
+
+	MED_M50 m50;
+	MED_M55 m55;
+
+	GC->rtcc->MPTMassUpdate(vessel, m50, m55, vesselisdocked);
+
+	std::bitset<4> cfg;
+	GC->rtcc->MPTGetConfigFromString(m55.ConfigCode, cfg);
+
+	Config = cfg.to_ulong();
+	CSMMass = m50.CSMWT;
+	LMMass = m50.LMWT;
+
+	return 0;
 }

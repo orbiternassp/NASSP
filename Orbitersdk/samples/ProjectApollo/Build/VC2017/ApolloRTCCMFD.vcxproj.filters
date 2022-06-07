@@ -87,6 +87,9 @@
     <ClInclude Include="..\..\src_rtccmfd\GeneralPurposeManeuver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_aux\nassputils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp">

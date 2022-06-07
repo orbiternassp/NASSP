@@ -4470,6 +4470,8 @@ void TVSA::TimeStep(double simdt)
 {
 	if (sat->TVCServoPower1Switch.IsCenter() && sat->TVCServoPower2Switch.IsCenter())
 	{
+		pitchGimbalPosition1 = yawGimbalPosition1 = pitchGimbalPosition2 = yawGimbalPosition2 = 0.0;
+		pitchGimbalTrim1 = yawGimbalTrim1 = pitchGimbalTrim2 = yawGimbalTrim2 = 0.0;
 		return;
 	}
 	//POWER

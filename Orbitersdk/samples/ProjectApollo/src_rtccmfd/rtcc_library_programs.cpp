@@ -178,9 +178,18 @@ void RTCC::ELGLCV(double lat, double lng, MATRIX3 &out, double rad)
 }
 
 //Vector Count Routine
-int RTCC::ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP)
+int RTCC::ELNMVC(double &TL, double TR, int L, unsigned &NumVec, int &TUP)
 {
-	int err;
+	//Error returns:
+	//0 = all ok
+	//8 = on if TL < ephemeris begin time
+	//16 = on if TR > ephemeris end time (TBD)
+	//32 = On if requested vehicle is not active
+	//64 = On if requested ephemeris is not being carried
+	//128 = On if requested interval does not overlap ephemeris span
+	int err = 0;
+
+	//Obtain pointer to ephemeris table name
 	OrbitEphemerisTable *tab;
 	if (L == 1)
 	{
@@ -191,11 +200,13 @@ int RTCC::ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP)
 		tab = &EZEPH2;
 	}
 
+	//Vehicle active? TBD: This should probably check some flag instead
 	if (tab->EPHEM.table.size() == 0)
 	{
 		err = 32;
 		goto RTCC_ELNMVC_2B;
 	}
+	//Table being carried?
 	TUP = abs(tab->EPHEM.Header.TUP);
 	if (TUP == 0)
 	{
@@ -203,23 +214,31 @@ int RTCC::ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP)
 		goto RTCC_ELNMVC_2B;
 	}
 
+	//Read-lock ephemeris
 	tab->EPHEM.Header.TUP = -tab->EPHEM.Header.TUP;
 
+	//Left request time < ephemeris begin?
 	if (TL < tab->EPHEM.Header.TL)
 	{
+		//Right request time < ephemeris begin?
 		if (TR < tab->EPHEM.Header.TL)
 		{
+			//Time outside ephemeris error
 			err = 128;
 			goto RTCC_ELNMVC_2B;
 		}
+		//Store ephemeris begin in user TL. Set 'TL adjusted' bit
 		TL = tab->EPHEM.Header.TL;
 		err = 8;
 	}
+	//Left request time > ephemeris end?
 	if (TL > tab->EPHEM.Header.TR)
 	{
+		//Time outside ephemeris error
 		err = 128;
 		goto RTCC_ELNMVC_2B;
 	}
+	//Set up counters and flags to find location of TL in ephemeris table
 	double TREQ, T_Mid;
 	unsigned LB, UB, Mid;
 	bool firstpass = true;
@@ -227,19 +246,25 @@ int RTCC::ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP)
 	UB = tab->EPHEM.table.size() - 1;
 	TREQ = TL;
 RTCC_ELNMVC_1B:
+	//Is one vector left?
 	if (UB - LB <= 1)
 	{
 		goto RTCC_ELNMVC_1D;
 	}
+	//Compute midpoint of ephemeris
 	Mid = (LB + UB) / 2;
 	T_Mid = tab->EPHEM.table[Mid].GMT;
+	//TREQ < T midpoint?
 	if (TREQ < T_Mid)
 	{
+		//Upper bound = midpoint
 		UB = Mid;
 		goto RTCC_ELNMVC_1B;
 	}
+	//TREQ > T midpoint?
 	if (TREQ > T_Mid)
 	{
+		//Lower bound = midpoint
 		LB = Mid;
 		goto RTCC_ELNMVC_1B;
 	}
@@ -254,6 +279,7 @@ RTCC_ELNMVC_1D:
 RTCC_ELNMVC_2A:
 	if (firstpass)
 	{
+		//Set up search for TR
 		NumVec = LB;
 		LB = NumVec;
 		UB = tab->EPHEM.table.size() - 1;

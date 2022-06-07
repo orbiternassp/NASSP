@@ -439,23 +439,52 @@ struct RMMYNIOutputTable
 	int IEND;
 };
 
+struct ReentryManeuverDefinition
+{
+	//State vector at main engine on
+	EphemerisData sv0;
+	//Vehicle area
+	double A;
+	//Configuration weight
+	double WT;
+	//1 = fixed inertial, 2 = manual holding body orientation, 3 = Lambert Guidance, 4 = External DV (primary), 5 = External DV (LM AGS)
+	int Attitude;
+	int Thruster;
+	//0 = two thrusters, 1 = four thrusters
+	bool UllageOption;
+	//Configuration code at maneuver initiation
+	unsigned Config;
+	//DT of ullage
+	double dt_ullage;
+	//DT of maneuver
+	double DTMAN;
+	//DV desired
+	double DVMAN;
+	//Unit thrust vector at burn initiate
+	VECTOR3 AT;
+	//Velocity-to-be-gained for External DV
+	VECTOR3 VG;
+};
+
+struct ReentryConstraintsDefinition
+{
+	int LiftMode = 0;
+	double GNInitialBank = 0.0;
+	double InitialBankAngle = 0.0;
+	double FinalBankAngle = 0.0;
+	double GMTReverseBank = 0.0;
+	double GLevel = 0.0;
+	double BackupLiftMode = 0.0;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
+	//1 or -1
+	double RollDirection = 0.0;
+	double ConstantGLevel = 0.0;
+};
+
 struct ReentryConstraintsTable
 {
-	//R31
-	int Thruster = 33;		//1 = RCS+2, 2 = RCS+4, 3 = RCS-2, 4 = RCS-4, 33 = SPS
-	int GuidanceMode = 4;	//1 = Inertial, 4 = Guided (G&N)
-	int BurnMode = 3;		//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
-	double dt = 0.0;
-	double dv = 0.0;
-	int AttitudeMode = 2;	//1 = LVLH, 2 = 31.7° window line on horizon
-	VECTOR3 LVLHAttitude = _V(0.0, -48.5*RAD, PI);
-	double UllageTime = 15.0;
-	bool Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
-	int REFSMMAT = 1;		//1 = CUR...
-	int GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
-	double InitialBankAngle = 0.0;
-	double GLevel = 0.2;
-	double FinalBankAngle = 55.0*RAD;
+	ReentryConstraintsDefinition entry;
 };
 
 struct RetrofireDisplayParametersTable
@@ -568,8 +597,8 @@ struct RetrofireTransferTableEntry
 	int Thruster = 33;
 	double dt_ullage = 0.0;
 	bool UllageThrusterOption = true;
-	double lat_T = 0.0;
-	double lng_T = 0.0;
+
+	ReentryConstraintsDefinition entry;
 };
 
 struct RetrofireTransferTable
@@ -581,11 +610,7 @@ struct RetrofireTransferTable
 struct SpacecraftSettingTable
 {
 	int Indicator = 1; //-1 = bad data, 0 = good data, 1 = no data
-	int EnryMode = 0;
-	int REFSMMATID = 0;
-	double GMTI = 0.0;
-	double lat_T = 0.0;
-	double lng_T = 0.0;
+	bool IsRTE = false; //true = RTE, false = TTF
 };
 
 struct REFSMMATData
@@ -606,4 +631,36 @@ struct StateVectorTableEntry
 	int ID = -1;
 	std::string VectorCode;
 	bool LandingSiteIndicator = false;
+};
+
+struct SLVTargetingParametersTable
+{
+	double GMTLO = 0.0;
+	double TINS = 0.0;
+	double GSTAR = 0.0;
+	double DN = 0.0;
+	double TYAW = 0.0;
+	double TPLANE = 0.0;
+	double TGRR = 0.0;
+	double AZL = 0.0;
+	double VIGM = 0.0;
+	double H = 0.0;
+	double AZP = 0.0;
+	double RIGM = 0.0;
+	double GIGM = 0.0;
+	double IIGM = 0.0;
+	double TIGM = 0.0;
+	double TDIGM = 0.0;
+	double DELNO = 0.0;
+	double DELNOD = 0.0;
+	double PA = 0.0;
+	double HA_C = 0.0;
+	double HP_C = 0.0;
+	double TA_C = 0.0;
+	double DH = 0.0;
+	double HA_T = 0.0;
+	double HP_T = 0.0;
+	double I_T = 0.0;
+	double DN_T = 0.0;
+	double BIAS = 0.0;
 };

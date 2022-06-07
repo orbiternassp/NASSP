@@ -1670,6 +1670,22 @@ int PanelSwitches::GetState(const char *n)
 	return -1;
 }
 
+void PanelSwitches::SetFailedState(const char *n, bool fail, int fail_state)
+{
+	PanelSwitchItem *p;
+	SwitchRow *row = RowList;
+
+	while (row) {
+		p = row->GetItemByName(n);
+		if (p)
+		{
+			p->SetFailed(fail, fail_state);
+			return;
+		}
+		row = row->GetNext();
+	}
+}
+
 bool PanelSwitches::GetFailedState(const char *n)
 
 {
