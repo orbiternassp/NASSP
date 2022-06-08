@@ -204,7 +204,7 @@ void E_system::Create_ElectricLight(char* line)
 	char name[100];
 	char sourceName[100];
 	e_object* powerSource = nullptr;
-	bool flashing = false;
+	int flashing = 0;
 	double onTime = 0;
 	double offTime = 0;
 	VECTOR3 pos = _V(0, 0, 0);
@@ -233,7 +233,7 @@ void E_system::Create_ElectricLight(char* line)
 
 
 	powerSource = (e_object*)GetPointerByString(sourceName);
-	ElectricLight* newLight = new ElectricLight(name, powerSource, flashing, onTime, offTime, (VESSEL*)(this->Vessel), pos, dir, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient, powerDraw, nomVoltage);
+	ElectricLight* newLight = new ElectricLight(name, powerSource, (bool)flashing, onTime, offTime, this->Vessel, pos, dir, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient, powerDraw, nomVoltage);
 	AddSystem(newLight);
 }
 
