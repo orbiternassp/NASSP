@@ -103,6 +103,7 @@ void MSS::clbkSetClassCaps(FILEHANDLE cfg) {
 }
 
 void MSS::clbkPostCreation() {
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void MSS::clbkPreStep(double simt, double simdt, double mjd) {

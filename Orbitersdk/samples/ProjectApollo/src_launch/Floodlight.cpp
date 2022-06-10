@@ -103,6 +103,7 @@ void Floodlight::clbkSetClassCaps(FILEHANDLE cfg) {
 }
 
 void Floodlight::clbkPostCreation() {
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void Floodlight::clbkPreStep(double simt, double simdt, double mjd) {
