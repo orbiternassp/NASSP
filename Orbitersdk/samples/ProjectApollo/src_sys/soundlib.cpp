@@ -253,26 +253,26 @@ SoundData *SoundLib::DoLoadSound(char *SoundPath, EXTENDEDPLAY extended)
 
 	switch (extended) {
 	case INTERNAL_ONLY:
-		t = XRSound::InternalOnly;
+		t = XRSound::PlaybackType::InternalOnly;
 		break;
 	case BOTHVIEW_FADED_CLOSE:
-		t = XRSound::BothViewClose;
+		t = XRSound::PlaybackType::BothViewClose;
 		break;
 	case BOTHVIEW_FADED_MEDIUM:
-		t = XRSound::BothViewMedium;
+		t = XRSound::PlaybackType::BothViewMedium;
 		break;
 	case BOTHVIEW_FADED_FAR:
-		t = XRSound::BothViewFar;
+		t = XRSound::PlaybackType::BothViewFar;
 		break;
 	case EXTERNAL_ONLY_FADED_CLOSE:
 	case EXTERNAL_ONLY_FADED_MEDIUM:
 	case EXTERNAL_ONLY_FADED_FAR:
 		// Will hope these all will work with Wind
-		t = XRSound::Wind;
+		t = XRSound::PlaybackType::Wind;
 		break;
 	case DEFAULT:
 	default:
-		t = XRSound::Global;
+		t = XRSound::PlaybackType::Global;
 	}
 
 	//

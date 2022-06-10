@@ -477,7 +477,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	pMission = paGetDefaultMission();
 
 	// VESSELSOUND initialisation
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
+	soundlib.InitSoundLib(oapiGetVesselInterface(hObj), SOUND_DIRECTORY);
 
 	// Switch to compatible dock mode
 	SetDockMode(0);
