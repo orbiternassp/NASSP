@@ -201,6 +201,8 @@ void LC34::clbkPostCreation()
 	SetAnimation(mssAnim, mssProc);
 	SetAnimation(cmarmAnim, cmarmProc);
 	SetAnimation(swingarmAnim, swingarmState.pos);
+
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void LC34::clbkPreStep(double simt, double simdt, double mjd)

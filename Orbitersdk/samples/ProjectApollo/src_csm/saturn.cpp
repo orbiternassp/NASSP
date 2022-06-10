@@ -1219,6 +1219,14 @@ void Saturn::clbkPostCreation()
 			}
 		}
 	}
+
+
+	//
+	// VESSELSOUND initialisation
+	// 
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
+	soundlib.SetLanguage(AudioLanguage);
+	LoadDefaultSounds();
 }
 
 void Saturn::GetPayloadName(char *s)
@@ -2610,9 +2618,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			ParseScenarioLineEx (line, vstatus);
         }
     }
-
-	soundlib.SetLanguage(AudioLanguage);
-	LoadDefaultSounds();
 
 	//
 	// Recalculate stage masses.

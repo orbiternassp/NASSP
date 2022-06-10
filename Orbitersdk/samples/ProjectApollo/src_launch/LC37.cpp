@@ -166,6 +166,8 @@ void LC37::clbkPostCreation()
 			IuUmb->Connect(sivb->GetIU());
 		}
 	}
+
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void LC37::clbkPreStep(double simt, double simdt, double mjd)

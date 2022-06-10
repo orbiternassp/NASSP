@@ -106,7 +106,6 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	meshidxPanelReverse = 0;
 
 	soundlib.InitSoundLib(oapiGetVesselInterface(hObj), SOUND_DIRECTORY);
-	soundlib.LoadSound(soundEngine, "CrawlerEngine.wav", BOTHVIEW_FADED_MEDIUM);
 
 	panelMeshoffset = _V(0,0,0);
     panelMeshidx = 0;
@@ -354,6 +353,11 @@ void Crawler::clbkPostStep(double simt, double simdt, double mjd) {
 			MissionTime = lv -> GetMissionTime();
 		}
 	}
+}
+
+void Crawler::clbkPostCreation() {
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
+	soundlib.LoadSound(soundEngine, "CrawlerEngine.wav", BOTHVIEW_FADED_MEDIUM);
 }
 
 void Crawler::DoFirstTimestep() {

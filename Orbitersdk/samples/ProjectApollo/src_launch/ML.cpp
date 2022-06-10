@@ -214,6 +214,7 @@ void ML::clbkPostCreation()
 	SetAnimation(mastAnim, mastState.pos);
 	SetAnimation(mastcoversAnim, mastcoversState.pos);
 
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void ML::clbkPreStep(double simt, double simdt, double mjd) {

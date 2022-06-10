@@ -1466,12 +1466,6 @@ void LEM::PostLoadSetup(bool define_anims)
 
 	}
 
-	//
-	// Load sounds, this is mandatory if loading in cockpit view, 
-	// because OrbiterSound crashes when loading sounds during clbkLoadPanel
-	//
-	LoadDefaultSounds();
-
 	// Also cause the AC busses to wire up
 	switch (EPSInverterSwitch.GetState()) {
 	case THREEPOSSWITCH_UP:      // INV 2
@@ -1874,6 +1868,25 @@ void LEM::clbkPostCreation()
 	}
 
 	CreateAirfoils();
+
+	// VESSELSOUND initialisation
+	//soundlib.InitSoundLib(this, SOUND_DIRECTORY);
+	
+	// Get handle for LEM for initializing XRSound
+	for (int v = 0; v < oapiGetVesselCount(); ++v) {
+		VESSEL* pVessel = oapiGetVesselInterface(oapiGetVesselByIndex(v));
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\LEM", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17)) {
+			soundlib.InitSoundLib(pVessel, SOUND_DIRECTORY);
+
+			//
+			// Load sounds, this is mandatory if loading in cockpit view, 
+			// because OrbiterSound crashes when loading sounds during clbkLoadPanel
+			//
+			LoadDefaultSounds();
+
+			break;
+		}
+	}
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
