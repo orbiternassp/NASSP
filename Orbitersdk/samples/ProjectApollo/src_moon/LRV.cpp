@@ -655,7 +655,8 @@ void LRV::DoFirstTimestep()
 	//
 
 	if (StateSet) {
-		soundlib.InitSoundLib(GetHandle(), SOUND_DIRECTORY);
+		// Probably a better way but I'm not familiar with the API
+		soundlib.InitSoundLib(oapiGetVesselInterface(GetHandle()), SOUND_DIRECTORY);
 		SetMissionPath();
 
 		//
