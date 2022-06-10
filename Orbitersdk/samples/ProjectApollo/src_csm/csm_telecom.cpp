@@ -620,8 +620,6 @@ HGA::HGA(){
 	hga_proc[0] = hga_proc_last[0] = 0.0;
 	hga_proc[1] = hga_proc_last[1] = 0.0;
 	hga_proc[2] = hga_proc_last[2] = 0.0;
-
-	CSMToOrbiterCoordinates(boomAxis); //convert to orbiter coordinates
 }
 
 void HGA::Init(Saturn *vessel){
@@ -1007,7 +1005,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_CSM;
+	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_Earth, U_Moon, U_CSM;
 	MATRIX3 Rot;
 	double relang, beamwidth, Moonrelang, EarthSignalDist, CSMrelang;
 
@@ -1069,14 +1067,18 @@ void HGA::TimeStep(double simt, double simdt)
 
 	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
 
-	//Moon in the way
-	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+	//Unit vector pointing from CSM to Earth, global frame
+	U_Earth = unit(R_E - pos);
+	//Unit vector pointing from CSM to Moon, global frame
+	U_Moon = unit(R_M - pos);
+	//Cosine of angle between Moon and Earth as viewed from the CSM
+	Moonrelang = dotp(U_Moon, U_Earth);
+	//Unit vector of CSM X-axis (Z-axis in Orbiter), global frame
+	U_CSM = mul(Rot, _V(0, 0, 1));
+	//Angle between CSM X-axis and Earth
+	CSMrelang = acos(dotp(U_CSM, U_Earth));
 	
-	U_CSM = unit(mul(Rot, unit(boomAxis)));
-
-	CSMrelang = acos(dotp(U_CSM, unit(R_E- pos)));
-	
-
+	//Is the Moon in the way?
 	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
 		SignalStrength = 0.0;
@@ -1085,7 +1087,7 @@ void HGA::TimeStep(double simt, double simdt)
 			HornSignalStrength[i] = 0.0;
 		}
 	}
-	else if (CSMrelang > 100*RAD) //CSM body shadowing the antenna
+	else if (CSMrelang < 45.0*RAD) //CSM body shadowing the antenna
 	{
 		SignalStrength = 0.0;
 		for (int i = 0; i < 4; i++)
@@ -1105,7 +1107,7 @@ void HGA::TimeStep(double simt, double simdt)
 			//Calculate antenna pointing vector in global frame
 			U_R = mul(Rot, U_RP);
 			//relative angle between antenna pointing vector and direction of Earth
-			relang = acos(dotp(U_R, unit(R_E - pos)))-0.9*RAD;
+			relang = acos(dotp(U_R, U_Earth)) - 0.9*RAD;
 
 			if (relang < PI05 / a)
 			{
