@@ -1872,6 +1872,7 @@ void LEM::clbkPostCreation()
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 	LoadDefaultSounds();
+	this->CWEA.LoadSounds();
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)

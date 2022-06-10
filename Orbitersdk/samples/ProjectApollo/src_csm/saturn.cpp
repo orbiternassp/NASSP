@@ -1227,6 +1227,170 @@ void Saturn::clbkPostCreation()
 	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 	soundlib.SetLanguage(AudioLanguage);
 	LoadDefaultSounds();
+
+	//
+	// Disable cabin fans.
+	//
+
+	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
+
+	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
+	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
+
+	//
+	// We do our own countdown, so ignore the standard one.
+	//
+
+	if (!UseATC)
+		soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
+
+	//
+	// Load mission-based sound files. Some of these are just being
+	// preloaded here for the CSM computer.
+	//
+
+	char MissionName[24];
+
+	_snprintf(MissionName, 23, "Apollo%d", ApolloNo);
+	soundlib.SetSoundLibMissionPath(MissionName);
+
+	timedSounds.LoadFromFile("csmsound.csv", MissionTime);
+
+
+	//
+	// Set up options for prelaunch stage.
+	//
+
+	if (MissionTime < 0) {
+
+		//
+		// Open the countdown sound file.
+		//
+
+		if (!UseATC) {
+			soundlib.LoadMissionSound(LaunchS, LAUNCH_SOUND, LAUNCH_SOUND);
+			if (SaturnType == SAT_SATURNV)
+				soundlib.LoadMissionSound(CabincloseoutS, CABINCLOSEOUT_SOUND, CABINCLOSEOUT_SOUND);
+			LaunchS.setFlags(SOUNDFLAG_1XORLESS | SOUNDFLAG_COMMS);
+		}
+	}
+
+	//
+	// Load the window sound if the launch escape tower is attached.
+	//
+
+	if (LESAttached)
+		soundlib.LoadMissionSound(SwindowS, WINDOW_SOUND, POST_TOWER_JET_SOUND);
+
+	//
+	// Only the CSM and LEM have translational thrusters, so disable the message
+	// telling us that they're being switched in other stages.
+	//
+
+	if (stage > CSM_LEM_STAGE || stage < PRELAUNCH_STAGE)
+	{
+		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
+	}
+	else
+	{
+		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
+	}
+
+	if (stage < LAUNCH_STAGE_TWO) {
+		soundlib.LoadMissionSound(SShutS, SI_CUTOFF_SOUND, SISHUTDOWN_SOUND);
+	}
+
+	if (stage < STAGE_ORBIT_SIVB) {
+
+		//
+		// We'll do our own radio playback during launch.
+		//
+
+		if (!UseATC)
+			soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
+
+		soundlib.LoadMissionSound(S2ShutS, SII_CUTOFF_SOUND, SIISHUTDOWN_SOUND);
+		soundlib.LoadMissionSound(S4CutS, GO_FOR_ORBIT_SOUND, SIVBSHUTDOWN_SOUND);
+
+		SwindowS.setFlags(SOUNDFLAG_COMMS);
+		S4CutS.setFlags(SOUNDFLAG_COMMS);
+		S2ShutS.setFlags(SOUNDFLAG_COMMS);
+	}
+
+	if (stage < CSM_LEM_STAGE) {
+		soundlib.LoadSound(TowerJS, TOWERJET_SOUND);
+		soundlib.LoadSound(SepS, SEPMOTOR_SOUND, INTERNAL_ONLY);
+		soundlib.LoadMissionSound(Scount, LAUNCH_COUNT_10_SOUND, DEFAULT_LAUNCH_COUNT_SOUND);
+		Scount.setFlags(SOUNDFLAG_1XORLESS | SOUNDFLAG_COMMS);
+	}
+
+	if (!TLISoundsLoaded)
+	{
+		LoadTLISounds();
+	}
+
+	if (stage <= CSM_LEM_STAGE) {
+		soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
+	}
+
+	if (stage >= CM_ENTRY_STAGE_SEVEN)
+	{
+		soundlib.LoadSound(Swater, WATERLOOP_SOUND);
+		soundlib.LoadMissionSound(PostSplashdownS, POSTSPLASHDOWN_SOUND, POSTSPLASHDOWN_SOUND);
+	}
+
+	//
+	// Load Apollo-13 specific sounds.
+	//
+
+	if (ApolloNo == 1301) {
+		if (!KranzPlayed)
+			soundlib.LoadMissionSound(SKranz, A13_KRANZ, NULL, INTERNAL_ONLY);
+		if (!CryoStir)
+			soundlib.LoadMissionSound(SApollo13, A13_CRYO_STIR, NULL);
+		if (!ApolloExploded)
+			soundlib.LoadMissionSound(SExploded, A13_PROBLEM, NULL);
+
+		if (stage <= CSM_LEM_STAGE) {
+			soundlib.LoadMissionSound(SSMSepExploded, A13_SM_SEP_SOUND, NULL);
+		}
+
+		SKranz.setFlags(SOUNDFLAG_1XORLESS | SOUNDFLAG_COMMS);
+		SApollo13.setFlags(SOUNDFLAG_1XORLESS | SOUNDFLAG_COMMS);
+		SExploded.setFlags(SOUNDFLAG_1XORLESS | SOUNDFLAG_COMMS);
+	}
+
+	//
+	// Turn off the timer display on launch.
+	//
+
+	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
+
+	//
+	// Turn off docking sound
+	//
+
+	soundlib.SoundOptionOnOff(PLAYDOCKINGSOUND, FALSE);
+
+	//
+	// Check Saturn devices.
+	//
+	CheckSaturnSystemsState();
+
+	//
+	// Initialize the IU
+	//
+
+	if (stage < CSM_LEM_STAGE)
+	{
+		iu->SetMissionInfo(Crewed, IUSCContPermanentEnabled);
+	}
+
+	//
+	// Disable master alarm sound on unmanned flights.
+	//
+
+	cws.SetPlaySounds(Crewed);
 }
 
 void Saturn::GetPayloadName(char *s)
@@ -4091,175 +4255,6 @@ void Saturn::GenericLoadStateSetup()
 
 	CSMToLEMConnector.AddTo(&CSMToLEMPowerConnector);
 	CSMToLEMConnector.AddTo(&payloadCommandConnector);
-
-	//
-	// Disable cabin fans.
-	//
-
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-
-	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
-	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
-
-	//
-	// We do our own countdown, so ignore the standard one.
-	//
-
-	if (!UseATC)
-		soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-
-	//
-	// Load mission-based sound files. Some of these are just being
-	// preloaded here for the CSM computer.
-	//
-
-	char MissionName[24];
-
-	_snprintf(MissionName, 23, "Apollo%d", ApolloNo);
-	soundlib.SetSoundLibMissionPath(MissionName);
-
-    timedSounds.LoadFromFile("csmsound.csv", MissionTime);
-
-	//
-	// Set up options for prelaunch stage.
-	//
-
-	if (MissionTime < 0) {
-
-		//
-		// Open the countdown sound file.
-		//
-
-		if (!UseATC) {
-			soundlib.LoadMissionSound(LaunchS, LAUNCH_SOUND, LAUNCH_SOUND);
-			if (SaturnType == SAT_SATURNV)
-				soundlib.LoadMissionSound(CabincloseoutS, CABINCLOSEOUT_SOUND, CABINCLOSEOUT_SOUND);
-			LaunchS.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
-		}
-	}
-
-	//
-	// Load the window sound if the launch escape tower is attached.
-	//
-
-	if (LESAttached)
-		soundlib.LoadMissionSound(SwindowS, WINDOW_SOUND, POST_TOWER_JET_SOUND);
-
-	//
-	// Only the CSM and LEM have translational thrusters, so disable the message
-	// telling us that they're being switched in other stages.
-	//
-
-	if (stage > CSM_LEM_STAGE || stage < PRELAUNCH_STAGE)
-	{
-		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
-	}
-	else
-	{
-		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
-	}
-
-	if (stage < LAUNCH_STAGE_TWO) {
-		soundlib.LoadMissionSound(SShutS, SI_CUTOFF_SOUND, SISHUTDOWN_SOUND);
-	}
-
-	if (stage < STAGE_ORBIT_SIVB) {
-
-		//
-		// We'll do our own radio playback during launch.
-		//
-
-		if (!UseATC)
-			soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-
-		soundlib.LoadMissionSound(S2ShutS, SII_CUTOFF_SOUND, SIISHUTDOWN_SOUND);
-		soundlib.LoadMissionSound(S4CutS, GO_FOR_ORBIT_SOUND, SIVBSHUTDOWN_SOUND);
-
-		SwindowS.setFlags(SOUNDFLAG_COMMS);
-		S4CutS.setFlags(SOUNDFLAG_COMMS);
-		S2ShutS.setFlags(SOUNDFLAG_COMMS);
-	}
-
-	if (stage < CSM_LEM_STAGE) {
-		soundlib.LoadSound(TowerJS, TOWERJET_SOUND);
-		soundlib.LoadSound(SepS, SEPMOTOR_SOUND, INTERNAL_ONLY);
-		soundlib.LoadMissionSound(Scount, LAUNCH_COUNT_10_SOUND, DEFAULT_LAUNCH_COUNT_SOUND);
-		Scount.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
-	}
-
-	if (!TLISoundsLoaded)
-	{
-		LoadTLISounds();
-	}
-
-	if (stage <= CSM_LEM_STAGE) {
-		soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
-	}
-
-	if (stage >= CM_ENTRY_STAGE_SEVEN)
-	{
-		soundlib.LoadSound(Swater, WATERLOOP_SOUND);
-		soundlib.LoadMissionSound(PostSplashdownS, POSTSPLASHDOWN_SOUND, POSTSPLASHDOWN_SOUND);
-	}
-
-	//
-	// Load Apollo-13 specific sounds.
-	//
-
-	if (ApolloNo == 1301) {
-		if (!KranzPlayed)
-			soundlib.LoadMissionSound(SKranz, A13_KRANZ, NULL, INTERNAL_ONLY);
-		if (!CryoStir)
-			soundlib.LoadMissionSound(SApollo13, A13_CRYO_STIR, NULL);
-		if (!ApolloExploded)
-			soundlib.LoadMissionSound(SExploded, A13_PROBLEM, NULL);
-
-		if (stage <= CSM_LEM_STAGE) {
-			soundlib.LoadMissionSound(SSMSepExploded, A13_SM_SEP_SOUND, NULL);
-		}
-
-		SKranz.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
-		SApollo13.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
-		SExploded.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
-	}
-
-	//
-	// Turn off the timer display on launch.
-	//
-	
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-
-	//
-	// Turn off docking sound
-	//
-	
-	soundlib.SoundOptionOnOff(PLAYDOCKINGSOUND, FALSE);
-
-	//
-	// Check Saturn devices.
-	//
-	CheckSaturnSystemsState();
-
-	//
-	// Initialize the IU
-	//
-
-	if (stage < CSM_LEM_STAGE)
-	{
-		iu->SetMissionInfo(Crewed, IUSCContPermanentEnabled);
-	}
-
-	//
-	// Disable master alarm sound on unmanned flights.
-	//
-
-	cws.SetPlaySounds(Crewed);
-
-	//
-	// Fake up a timestep to get Orbitersound started.
-	//
-
-	timedSounds.Timestep(MissionTime, 0.0, AutoSlow);
 
 	//
 	// Check SM devices.
