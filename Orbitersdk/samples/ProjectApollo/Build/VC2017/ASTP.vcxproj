@@ -140,7 +140,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalOptions>/NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
