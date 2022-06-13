@@ -599,6 +599,7 @@ HGA::HGA(){
 	
 	scanlimit = false;
 	scanlimitwarn = false;
+	DriveToReacqSetPoint = false;
 
 	for (int i = 0;i < 0;i++)
 	{
@@ -835,14 +836,12 @@ void HGA::TimeStep(double simt, double simdt)
 			ModeSwitchTimer = simt + BeamSwitchingTime;
 		}
 	}
-	else
+	else // reacq mode selected
 	{
-		//AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscilates between manual and auto and won't acquire. 
-									//It get's set to manual later if we actually have no signal
 
 		if (ModeSwitchTimer < simt)
 		{
-			if ((SignalStrength > 0.0) && (scanlimitwarn == false) && (scanlimit == false)) //
+			if ((SignalStrength > 0.0) && (scanlimitwarn == false) && (scanlimit == false) && (DriveToReacqSetPoint == false)) //
 			{
 				AutoTrackingMode = true; //if it somehow wasn't on...
 				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold)) //acquire mode in auto
@@ -867,7 +866,7 @@ void HGA::TimeStep(double simt, double simdt)
 					XmtBeamWidthSelect = 3;
 				}
 			}
-			else if ((SignalStrength > 0.0) && (scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
+			else if ((SignalStrength > 0.0) && (scanlimitwarn == true) && (scanlimit == false) && (DriveToReacqSetPoint == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
 			{
 				AutoTrackingMode = true;
 				RcvBeamWidthSelect = 1;
@@ -878,6 +877,8 @@ void HGA::TimeStep(double simt, double simdt)
 				AutoTrackingMode = false;
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
+
+				DriveToReacqSetPoint = true;
 			}
 			ModeSwitchTimer = simt + BeamSwitchingTime;
 		}
@@ -892,6 +893,10 @@ void HGA::TimeStep(double simt, double simdt)
 		double PitchCmd, YawCmd;
 		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*15.0 + 90.0;
 		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*15.0;
+
+		if (abs((YawRes * DEG) - YawCmd) < 1.0 && abs((PitchRes * DEG) - PitchCmd) < 1.0) {
+			DriveToReacqSetPoint = false;
+		}
 
 		//Command Resolver
 		VECTOR3 U_RB;

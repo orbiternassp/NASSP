@@ -446,6 +446,7 @@ public:
 	int RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	int XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	bool AutoTrackingMode;
+	bool DriveToReacqSetPoint;
 	double HGAWavelength;
 	double HGAFrequency;
 	double Gain85ft;
