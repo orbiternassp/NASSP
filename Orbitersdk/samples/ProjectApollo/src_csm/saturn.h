@@ -65,6 +65,7 @@
 #include "sce.h"
 #include "csmsensors.h"
 #include "rhc.h"
+#include "inertial.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -3593,6 +3594,8 @@ protected:
 	///////////////////////////////////////////////////////
 	// Internal systems devices.						 //
 	///////////////////////////////////////////////////////
+
+	IntertialData intertialData;
 
 	// SCS components
 	BMAG bmag1;

@@ -362,6 +362,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	imu(agc, Panelsdk),
 	scdu(agc, RegOPTX, 0140, 2),
 	tcdu(agc, RegOPTY, 0141, 2),
+	intertialData(this),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
@@ -2890,6 +2891,8 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		SetView();
 	}
 
+	intertialData.timestep(simdt);
+
 	//
 	// Update mission time.
 	//
@@ -2936,13 +2939,10 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 	//  This model of vibration is visual only and has no effect on other parts of the simulation.
 	double dynpress = GetDynPressure();
-	VECTOR3 vAccel, vWeight;
-	GetForceVector(vAccel);
-	GetWeightVector(vWeight);
-	
-	vAccel -= vWeight;
-	vAccel /= GetMass();
-	
+	VECTOR3 vAccel;
+
+	intertialData.getIntertialAccel(vAccel);
+	vAccel = -vAccel;
 	THRUSTER_HANDLE *tharr;
 	VECTOR3 seatacc = vAccel;
 	double thsum = 0.0;
