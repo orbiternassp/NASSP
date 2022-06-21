@@ -1651,55 +1651,102 @@ double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, do
 
 MATRIX3 GetRotationMatrix(int plan, double t)
 {
-	double t0, T_p, L_0, e_rel, phi_0, T_s, e_ref, L_ref, L_rel, phi;
-	MATRIX3 Rot1, Rot2, R_ref, Rot3, Rot4, R_rel, R_rot, R, Rot;
+	double T_p, L_0, e_rel, phi_0, T_s, L_rel, phi, CL, SL, CP, SP;
+	MATRIX3 R_ref, Rot3, Rot4, R_rel, R_rot;
 
 	if (plan == BODY_EARTH)
 	{
-		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = -9413040.4;							//Precession Period
-		L_0 = 0.00001553343;						//LAN in the "beginning"
-		e_rel = 0.4090928023;						//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.894942829;						//Sidereal Rotational Offset
-		T_s = 86164.098904 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0;									//Precession Obliquity
-		L_ref = 0;									//Precession LAN
+		T_p = T_p_Earth;		//Precession Period
+		L_0 = L_0_Earth;		//LAN in the "beginning"
+		e_rel = e_rel_Earth;	//Obliquity / axial tilt of the earth in radians
+		phi_0 = phi_0_Earth;	//Sidereal Rotational Offset
+		T_s = T_s_Earth;		//Sidereal Rotational Period
+		R_ref = R_ref_Earth;
+		Rot4 = R_obl_Earth;
 	}
 	else
 	{
-		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = -6793.468728092782;				//Precession Period
-		L_0 = 1.71817749;						//LAN in the "beginning"
-		e_rel = 0.026699886264850;				//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.769465382;					//Sidereal Rotational Offset
-		T_s = 2360588.15 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 7.259562816e-005;				//Precession Obliquity
-		L_ref = 0.4643456618;					//Precession LAN
+		T_p = T_p_Moon;			//Precession Period
+		L_0 = L_0_Moon;			//LAN in the "beginning"
+		e_rel = e_rel_Moon;		//Obliquity / axial tilt of the earth in radians
+		phi_0 = phi_0_Moon;		//Sidereal Rotational Offset
+		T_s = T_s_Moon;			//Sidereal Rotational Period
+		R_ref = R_ref_Moon;
+		Rot4 = R_obl_Moon;
 	}
 
-	Rot1 = _M(cos(L_ref), 0, -sin(L_ref), 0, 1, 0, sin(L_ref), 0, cos(L_ref));
-	Rot2 = _M(1, 0, 0, 0, cos(e_ref), -sin(e_ref), 0, sin(e_ref), cos(e_ref));
-	R_ref = mul(Rot1, Rot2);
-	L_rel = L_0 + PI2*(t - t0) / T_p;
-	Rot3 = _M(cos(L_rel), 0, -sin(L_rel), 0, 1, 0, sin(L_rel), 0, cos(L_rel));
-	Rot4 = _M(1, 0, 0, 0, cos(e_rel), -sin(e_rel), 0, sin(e_rel), cos(e_rel));
+	L_rel = L_0 + PI2*(t - LAN_MJD) / T_p;
+	CL = cos(L_rel);
+	SL = sin(L_rel);
+	Rot3 = _M(CL, 0, -SL, 0, 1, 0, SL, 0, CL);
 	R_rel = mul(Rot3, Rot4);
-	phi = phi_0 + PI2*(t - t0) / T_s + (L_0 - L_rel)*cos(e_rel);
-	R_rot = _M(cos(phi), 0, -sin(phi), 0, 1, 0, sin(phi), 0, cos(phi));
-	Rot = mul(R_rel, R_rot);
-	R = mul(R_ref, Rot);
-	return R;
+	phi = phi_0 + PI2*(t - LAN_MJD) / T_s + (L_0 - L_rel)*cos(e_rel);
+	CP = cos(phi);
+	SP = sin(phi);
+	R_rot = _M(CP, 0, -SP, 0, 1, 0, SP, 0, CP);
+	return mul(R_ref, mul(R_rel, R_rot));
 }
 
-/*MATRIX3 GetRotationMatrix2(OBJHANDLE plan, double t)
+MATRIX3 GetObliquityMatrix(int plan, double t)
 {
-	MATRIX3 Ra;
-	double w;
+	MATRIX3 Rot, Rot5, Rot6;
+	VECTOR3 s;
+	double e_ecl, L_ecl;
 
-	Ra = GetObliquityMatrix(plan, t);
-	w = GetPlanetCurrentRotation(plan, t);
-	return mul(Ra, _M(cos(w), 0, -sin(w), 0, 1.0, 0.0, sin(w), 0, cos(w)));
-}*/
+	Rot = GetRotationMatrix(plan, t);
+
+	s = mul(Rot, _V(0.0, 1.0, 0.0));
+	e_ecl = acos(s.y);
+	L_ecl = atan(-s.x / s.z);
+	Rot5 = _M(cos(L_ecl), 0.0, -sin(L_ecl), 0.0, 1.0, 0.0, sin(L_ecl), 0.0, cos(L_ecl));
+	Rot6 = _M(1.0, 0.0, 0.0, 0.0, cos(e_ecl), -sin(e_ecl), 0.0, sin(e_ecl), cos(e_ecl));
+	return mul(Rot5, Rot6);
+}
+
+double GetPlanetCurrentRotation(int plan, double t)
+{
+	double T_p, L_0, e_rel, phi_0, T_s, L_rel, phi, e_ecl, L_ecl, phi_off,r;
+	MATRIX3 R_ref, Rot3, Rot4, Rot5, Rot6, R_rel, R_rot, Rot, R_ecl, R_off;
+	VECTOR3 s;
+
+	if (plan == BODY_EARTH)
+	{
+		T_p = T_p_Earth;		//Precession Period
+		L_0 = L_0_Earth;		//LAN in the "beginning"
+		e_rel = e_rel_Earth;	//Obliquity / axial tilt of the earth in radians
+		phi_0 = phi_0_Earth;	//Sidereal Rotational Offset
+		T_s = T_s_Earth;		//Sidereal Rotational Period
+		R_ref = R_ref_Earth;
+		Rot4 = R_obl_Earth;
+	}
+	else
+	{
+		T_p = T_p_Moon;			//Precession Period
+		L_0 = L_0_Moon;			//LAN in the "beginning"
+		e_rel = e_rel_Moon;		//Obliquity / axial tilt of the earth in radians
+		phi_0 = phi_0_Moon;		//Sidereal Rotational Offset
+		T_s = T_s_Moon;			//Sidereal Rotational Period
+		R_ref = R_ref_Moon;
+		Rot4 = R_obl_Moon;
+	}
+
+	L_rel = L_0 + PI2*(t - LAN_MJD) / T_p;
+	Rot3 = _M(cos(L_rel), 0.0, -sin(L_rel), 0.0, 1.0, 0.0, sin(L_rel), 0.0, cos(L_rel));
+	R_rel = mul(Rot3, Rot4);
+	phi = phi_0 + PI2*(t - LAN_MJD) / T_s + (L_0 - L_rel)*cos(e_rel);
+	R_rot = _M(cos(phi), 0.0, -sin(phi), 0.0, 1.0, 0.0, sin(phi), 0.0, cos(phi));
+	Rot = mul(R_ref,mul(R_rel, R_rot));
+	s = mul(Rot, _V(0.0, 1.0, 0.0));
+	e_ecl = acos(s.y);
+	L_ecl = atan(-s.x / s.z);
+	Rot5 = _M(cos(L_ecl), 0.0, -sin(L_ecl), 0.0, 1.0, 0.0, sin(L_ecl), 0.0, cos(L_ecl));
+	Rot6 = _M(1.0, 0.0, 0.0, 0.0, cos(e_ecl), -sin(e_ecl), 0.0, sin(e_ecl), cos(e_ecl));
+	R_ecl = mul(Rot5, Rot6);
+	R_off = mul(tmat(R_ecl), mul(R_ref, R_rel));
+	phi_off = atan(-R_off.m13 / R_off.m11);
+	r = phi + phi_off;
+	return r;
+}
 
 MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi)
 {
@@ -1717,57 +1764,6 @@ MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi)
 	Rot4 = _M(1.0, 0.0, 0.0, 0.0, cos(-azi), -sin(-azi), 0.0, sin(-azi), cos(-azi));
 
 	return mul(tmat(Rot4), mul(Rot3, mul(Rot2, tmat(Rot1))));
-}
-
-double GetPlanetCurrentRotation(int plan, double t)
-{
-	double t0, T_p, L_0, e_rel, phi_0, T_s, e_ref, L_ref, L_rel, phi, e_ecl, L_ecl, phi_off,r;
-	MATRIX3 Rot1, Rot2, R_ref, Rot3, Rot4, Rot5, Rot6, R_rel, R_rot, Rot, R_ecl, R_off;
-	VECTOR3 s;
-
-	if (plan == BODY_EARTH)
-	{
-		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = -9413040.4;							//Precession Period
-		L_0 = 0.00001553343;						//LAN in the "beginning"
-		e_rel = 0.4090928023;						//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.894942829;						//Sidereal Rotational Offset
-		T_s = 86164.098904 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0;									//Precession Obliquity
-		L_ref = 0;									//Precession LAN
-	}
-	else
-	{
-		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = -6793.468728092782;				//Precession Period
-		L_0 = 1.71817749;						//LAN in the "beginning"
-		e_rel = 0.026699886264850;				//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.769465382;					//Sidereal Rotational Offset
-		T_s = 2360588.15 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 7.259562816e-005;				//Precession Obliquity
-		L_ref = 0.4643456618;					//Precession LAN
-	}
-
-	Rot1 = _M(cos(L_ref), 0.0, -sin(L_ref), 0.0, 1.0, 0.0, sin(L_ref), 0.0, cos(L_ref));
-	Rot2 = _M(1.0, 0.0, 0.0, 0.0, cos(e_ref), -sin(e_ref), 0.0, sin(e_ref), cos(e_ref));
-	R_ref = mul(Rot1, Rot2);
-	L_rel = L_0 + PI2*(t - t0) / T_p;
-	Rot3 = _M(cos(L_rel), 0.0, -sin(L_rel), 0.0, 1.0, 0.0, sin(L_rel), 0.0, cos(L_rel));
-	Rot4 = _M(1.0, 0.0, 0.0, 0.0, cos(e_rel), -sin(e_rel), 0.0, sin(e_rel), cos(e_rel));
-	R_rel = mul(Rot3, Rot4);
-	phi = phi_0 + PI2*(t - t0) / T_s + (L_0 - L_rel)*cos(e_rel);
-	R_rot = _M(cos(phi), 0.0, -sin(phi), 0.0, 1.0, 0.0, sin(phi), 0.0, cos(phi));
-	Rot = mul(R_ref,mul(R_rel, R_rot));
-	s = mul(Rot, _V(0.0, 1.0, 0.0));
-	e_ecl = acos(s.y);
-	L_ecl = atan(-s.x / s.z);
-	Rot5 = _M(cos(L_ecl), 0.0, -sin(L_ecl), 0.0, 1.0, 0.0, sin(L_ecl), 0.0, cos(L_ecl));
-	Rot6 = _M(1.0, 0.0, 0.0, 0.0, cos(e_ecl), -sin(e_ecl), 0.0, sin(e_ecl), cos(e_ecl));
-	R_ecl = mul(Rot5, Rot6);
-	R_off = mul(tmat(R_ecl), mul(R_ref, R_rel));
-	phi_off = atan(-R_off.m13 / R_off.m11);
-	r = phi + phi_off;
-	return r;
 }
 
 double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref)
@@ -3239,12 +3235,12 @@ int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 {
 	int starset[3][2];
-	double a,SA,TA,dTA;
+	double a, SA, TA1, dTA, TA2;
 	VECTOR3 s_SMA, s_SMB, s_NBA, s_NBB, imuang;
 	MATRIX3 SBNB,SMNB;
 
 	a = -0.5676353234;
-	TA = 32.5*RAD; //50° mark is at 7.5° trunnion plus 25° from center 
+	TA1 = 32.5*RAD; //50° mark is at 7.5° trunnion plus 25° from center 
 	SA = PI;
 
 	//Star 1: 50° mark. Star 2: R line
@@ -3261,16 +3257,24 @@ VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 
 	for (set = 0; set < 3; set++)
 	{
+		//Get star unit vectors
 		s_SMA = navstars[starset[set][0]];
 		s_SMB = navstars[starset[set][1]];
 
-		dTA = dotp(s_SMA, s_SMB);
+		//Calculate angle between the two stars
+		dTA = acos(dotp(s_SMA, s_SMB));
 
-		s_NBA = mul(SBNB, _V(sin(TA)*cos(SA), sin(TA)*sin(SA), cos(TA)));
-		s_NBB = mul(SBNB, _V(sin(TA - dTA)*cos(SA), sin(TA - dTA)*sin(SA), cos(TA - dTA)));
+		//Calculate trunnion angle pointing to second star
+		TA2 = TA1 - dTA;
 
+		//Calculate star unit vectors in navigation base coordinates
+		s_NBA = mul(SBNB, _V(sin(TA1)*cos(SA), sin(TA1)*sin(SA), cos(TA1)));
+		s_NBB = mul(SBNB, _V(sin(TA2)*cos(SA), sin(TA2)*sin(SA), cos(TA2)));
+
+		//Calculate stable member to navigation base matrix from sighting data
 		SMNB = AXISGEN(s_NBA, s_NBB, s_SMA, s_SMB);
 
+		//Calculate IMU/GDC angles from REFSMMAT and SMNB matrix
 		imuang = CALCGAR(REFS, SMNB);
 
 		//The first check is to prevent yaw angle from getting too large. 0.74 is roughly 1-cos(75°)
@@ -3794,53 +3798,6 @@ double vektor_max(double* vektor, int n)
 		}
 	}
 	return max;
-}
-
-MATRIX3 GetObliquityMatrix(int plan, double t)
-{
-	double t0, T_p, L_0, e_rel, phi_0, T_s, e_ref, L_ref, L_rel, phi, e_ecl, L_ecl;
-	MATRIX3 Rot1, Rot2, Rot3, Rot4, Rot5, Rot6, R_ref, R_rel, R_rot, Rot;
-	VECTOR3 s;
-
-	if (plan == BODY_EARTH)
-	{
-		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = -9413040.4;							//Precession Period
-		L_0 = 0.00001553343;						//LAN in the "beginning"
-		e_rel = 0.4090928023;						//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.894942829;						//Sidereal Rotational Offset
-		T_s = 86164.098904 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 0;									//Precession Obliquity
-		L_ref = 0;									//Precession LAN
-	}
-	else
-	{
-		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
-		T_p = -6793.468728092782;				//Precession Period
-		L_0 = 1.71817749;						//LAN in the "beginning"
-		e_rel = 0.026699886264850;				//Obliquity / axial tilt of the earth in radians
-		phi_0 = 4.769465382;					//Sidereal Rotational Offset
-		T_s = 2360588.15 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
-		e_ref = 7.259562816e-005;				//Precession Obliquity
-		L_ref = 0.4643456618;					//Precession LAN
-	}
-
-	L_rel = L_0 + PI2*(t - t0) / T_p;
-	Rot1 = _M(cos(L_ref), 0.0, -sin(L_ref), 0.0, 1.0, 0.0, sin(L_ref), 0.0, cos(L_ref));
-	Rot2 = _M(1.0, 0.0, 0.0, 0.0, cos(e_ref), -sin(e_ref), 0.0, sin(e_ref), cos(e_ref));
-	R_ref = mul(Rot1, Rot2);
-	Rot3 = _M(cos(L_rel), 0.0, -sin(L_rel), 0.0, 1.0, 0.0, sin(L_rel), 0.0, cos(L_rel));
-	Rot4 = _M(1.0, 0.0, 0.0, 0.0, cos(e_rel), -sin(e_rel), 0.0, sin(e_rel), cos(e_rel));
-	R_rel = mul(Rot3, Rot4);
-	phi = phi_0 + PI2*(t - t0) / T_s + (L_0 - L_rel)*cos(e_rel);
-	R_rot = _M(cos(phi), 0.0, -sin(phi), 0.0, 1.0, 0.0, sin(phi), 0.0, cos(phi));
-	Rot = mul(R_ref, mul(R_rel, R_rot));
-	s = mul(Rot, _V(0.0, 1.0, 0.0));
-	e_ecl = acos(s.y);
-	L_ecl = atan(-s.x / s.z);
-	Rot5 = _M(cos(L_ecl), 0.0, -sin(L_ecl), 0.0, 1.0, 0.0, sin(L_ecl), 0.0, cos(L_ecl));
-	Rot6 = _M(1.0, 0.0, 0.0, 0.0, cos(e_ecl), -sin(e_ecl), 0.0, sin(e_ecl), cos(e_ecl));
-	return mul(Rot5, Rot6);
 }
 
 double TJUDAT(int Y, int M, int D)
@@ -5930,7 +5887,7 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 	else
 	{
 		J2 = J2_Moon;
-		J3 = 0;
+		J3 = J3_Moon;
 		J4 = 0;
 		J5 = 0;
 		R_e = R_Moon;
@@ -6159,7 +6116,7 @@ void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double
 	{
 		mu = mu_Moon;
 		J2 = J2_Moon;
-		J3 = 0;
+		J3 = J3_Moon;
 		J4 = 0;
 		R_e = R_Moon;
 	}
@@ -7789,6 +7746,8 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 		else
 		{
 			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Moon * OrbMech::power(R_E / r, 2.0);
+			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
+			a_dP += (U_R*P4 - U_Z * P3)*OrbMech::J3_Moon * OrbMech::power(R_E / r, 3.0);
 		}
 		
 		a_dP *= mu / OrbMech::power(r, 2.0);

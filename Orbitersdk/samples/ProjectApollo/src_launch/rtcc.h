@@ -2640,7 +2640,6 @@ public:
 	int PMMLDP(PMMLDPInput in, MPTManeuver &man);
 	//Coast Numerical Integrator
 	void PMMCEN(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
-	void PMMCEN2(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
 	//Freeze, Unfreeze, Delete Processor
 	void PMMFUD(int veh, unsigned man, int action, std::string StationID);
 	//Vehicle Orientation Change Processor

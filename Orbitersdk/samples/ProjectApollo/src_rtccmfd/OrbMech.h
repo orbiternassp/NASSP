@@ -359,6 +359,31 @@ namespace OrbMech {
 	const double J2_Moon = 207.108e-6;
 	const double J3_Moon = -2.1e-5;
 
+	//Earth and Moon rotational parameters
+	const double LAN_MJD = 51544.5;				//MJD of the LAN in the "beginning", J2000
+
+	const double L_ref_Earth = 0.0;
+	const double e_ref_Earth = 0.0;
+	const double e_rel_Earth = 0.4090928023;
+	const double T_s_Earth = 86164.098904 / 24.0 / 60.0 / 60.0;		//Sidereal Rotational Period
+	const double T_p_Earth = -9413040.4;							//Precession Period
+	const double L_0_Earth = 0.00001553343;							//LAN in the "beginning"
+	const double phi_0_Earth = 4.894942829;							//Sidereal Rotational Offset
+
+	const MATRIX3 R_ref_Earth = mul(_M(cos(L_ref_Earth), 0, -sin(L_ref_Earth), 0, 1, 0, sin(L_ref_Earth), 0, cos(L_ref_Earth)), _M(1, 0, 0, 0, cos(e_ref_Earth), -sin(e_ref_Earth), 0, sin(e_ref_Earth), cos(e_ref_Earth)));
+	const MATRIX3 R_obl_Earth = _M(1, 0, 0, 0, cos(e_rel_Earth), -sin(e_rel_Earth), 0, sin(e_rel_Earth), cos(e_rel_Earth));
+
+	const double L_ref_Moon = 0.4643456618;
+	const double e_ref_Moon = 7.259562816e-5;
+	const double e_rel_Moon  = 0.026699886264850;
+	const double T_s_Moon = 2360588.15 / 24.0 / 60.0 / 60.0;	//Sidereal Rotational Period
+	const double T_p_Moon = -6793.468728092782;					//Precession Period
+	const double L_0_Moon = 1.71817749;							//LAN in the "beginning"
+	const double phi_0_Moon = 4.769465382;						//Sidereal Rotational Offset
+
+	const MATRIX3 R_ref_Moon = mul(_M(cos(L_ref_Moon), 0, -sin(L_ref_Moon), 0, 1, 0, sin(L_ref_Moon), 0, cos(L_ref_Moon)), _M(1, 0, 0, 0, cos(e_ref_Moon), -sin(e_ref_Moon), 0, sin(e_ref_Moon), cos(e_ref_Moon)));
+	const MATRIX3 R_obl_Moon = _M(1, 0, 0, 0, cos(e_rel_Moon), -sin(e_rel_Moon), 0, sin(e_rel_Moon), cos(e_rel_Moon));
+
 	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, double J2, double mu, double R_E, int P, VECTOR3 &R2, VECTOR3 &V2);
 	double kepler_E(double e, double M, double error2 = 1.e-8);
 	double kepler_H(double e, double M);
