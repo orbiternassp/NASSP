@@ -251,7 +251,7 @@ struct AEGDataBlock
 	double VehArea = 0.0;
 	//Item 7, vehicle weight for Earth AEG, GMTBASE for Lunar AEG
 	double Item7;
-	//Item 8, Input: Mean anomaly (option 1), argument of latitude (option 2), Output: DH (options 5-6) otherwise same as input
+	//Item 8, Input: Mean anomaly (option 1), argument of latitude (option 2-3), Output: DH (options 5-6) otherwise same as input
 	double Item8;
 	//Item 9, crossing time of the reference counter line (input), time lag (options 5-6), otherwise same as input (output)
 	double Item9;
