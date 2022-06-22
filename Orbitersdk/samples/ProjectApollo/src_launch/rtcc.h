@@ -2812,9 +2812,9 @@ public:
 	//CMC External Delta-V Update Display
 	void CMDAXTDV();
 	//CMC External Delta-V Update Generator
-	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man = 0);
+	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, int mpt = 0, unsigned man = 0);
 	//LGC External Delta-V Update Generator
-	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man = 0);
+	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, int mpt = 0, unsigned man = 0);
 	//CMC and LGC REFSMMAT Update Generator
 	void CMMRFMAT(int L, int id, int addr);
 	//SLV Navigation Update

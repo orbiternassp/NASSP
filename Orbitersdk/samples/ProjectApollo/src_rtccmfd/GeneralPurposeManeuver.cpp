@@ -932,6 +932,7 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(int n)
 {
 	double r_AD, r_PD, dr_a_max, dr_p_max, a_D, e_D, cos_theta_A, theta_A, r_a, r_p, cos_E_a;
 	double dr_ap0, dr_ap1, dr_p0, dr_p1, dr_ap_c, dr_p_c, ddr_ap, ddr_p, E_a;
+	int err;
 
 	pRTCC->PMMAPD(aeg.Header, sv_b, 0, 0, INFO, &sv_AP, &sv_PE);
 
@@ -941,6 +942,19 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(int n)
 	if (r_AD == r_PD)
 	{
 		r_PD = r_PD - eps1;
+	}
+
+	//Limit apoapsis and periapsis to current radius, but only for non multi rev cases
+	if (n == 0)
+	{
+		if (sv_b.R > r_AD)
+		{
+			r_AD = sv_b.R;
+		}
+		if (sv_b.R < r_PD)
+		{
+			r_PD = sv_b.R;
+		}
 	}
 
 	//Can maneuver be performed?
@@ -1019,11 +1033,16 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(int n)
 			sv_a.Item8 = sv_a.coe_osc.l;
 			sv_a.Item10 = 1.0 + (double)n;
 			pRTCC->PMMAEGS(aeg.Header, sv_a, sv_temp);
-			pRTCC->PMMAPD(aeg.Header, sv_temp, 0, 0, INFO, &sv_AP, &sv_PE);
+			err = pRTCC->PMMAPD(aeg.Header, sv_temp, 0, 0, INFO, &sv_AP, &sv_PE);
 		}
 		else
 		{
-			pRTCC->PMMAPD(aeg.Header, sv_a, 0, 0, INFO, &sv_AP, &sv_PE);
+			err = pRTCC->PMMAPD(aeg.Header, sv_a, 0, 0, INFO, &sv_AP, &sv_PE);
+		}
+		if (aeg.Header.ErrorInd || err)
+		{
+			ErrorIndicator = 4;
+			return 1;
 		}
 
 		if (I > 5)
