@@ -167,50 +167,54 @@ Coelliptic orbits are two orbits that are coplanar (identical inclination and lo
 
 \paragraph{Explanation}\mbox{} \\
 
-The basic function of the DKI is to compute impulsive maneuvers; the result of these maneuver is the rendezvous of the CSM and LM spacecraft. The DKI attains a coelliptic orbit by doing three maneuvers: (1) phase, (2) height, (3) a coelliptic maneuver that puts the chaser in a coelliptic orbit with the target. From this orbit a terminal phase maneuver (TPI) and a terminal velocity match maneuver (TPF) maybe be performed to achieve the actual rendezvous.\\
+The basic function of the DKI is to compute impulsive maneuvers; the result of these maneuver is the rendezvous of the CSM and LM spacecraft. The DKI attains a coelliptic orbit by doing three maneuvers: (1) phase, (2) height, (3) a coelliptic maneuver that puts the chaser in a coelliptic orbit with the target. From this orbit a terminal phase maneuver (TPI) and a terminal velocity match maneuver (TPF) may be performed to achieve the actual rendezvous. The Skylab rendezvous sequences with an additional height maneuver is also supported.\\
 
-Several plans are available:
+The sequence of maneuvers are defined by so called maneuver lines. This terminology stems from the Gemini program. The first apogee after orbital insertion was assigned the number 1.0, the apogee one orbit later was maneuver line 2.0 and so forth. The Gemini 10 rendezvous for example had this maneuver schedule:
 
-\begin{itemize}
-	\item CSI/CDH Sequence: DKI maneuver is phasing, followed by CSI, CDH and TPI.
-	\item HAM-CSI/CDH Sequence: DKI maneuver is phasing, followed by a boost (10 ft/s), height, CSI, CDH and TPI maneuvers.
-	\item Rescue-2 Sequence: DKI maneuver is height, followed by CSI, CDH and TPI.
-	\item TPI Time Only: Calculates only the TPI time based on lighting.
-	\item High Dwell Sequence: DKI maneuver is phasing, followed by height, CSI, CDH and TPI.
-\end{itemize}
+\begin{enumerate}
+\item N=1.0: First apogee
+\item N=1.5: Height maneuver (NH)
+\item N=2.0: Phase maneuver (NC1)
+\item N=3.0: Coelliptic maneuver (NSR)
+\end{enumerate}
 
-\paragraph{Buttons}\mbox{} \\
+This results in the actual rendezvous (TPF) happening at roughly the fourth orbit after launch, in the Gemini terminology this was called M=4.\\
 
-\textbf{INI:} Go to DKI initialization page.\\
-\textbf{PRO:} Choose the rendezvous profile.\\
-\textbf{CHA:} Choose which vehicle is chaser, and which is the target.\\
-\textbf{VTI:} Choose time at which the state vectors should be taken from the ephemerides (MPT mode only)\\
-\textbf{TIG:} Choose the time of ignition for the DKI maneuver.\\
-\textbf{TPI:} Estimate for the time of the TPI maneuver.\\
-\textbf{TGT:} Choose the other vehicle involved in the rendezvous sequence (non-MPT mode only)\\
-\textbf{OPT:} Go to DKI options page.\\
-\textbf{MPT:} Create finite maneuver from impulsive burn.\\
-\textbf{BCK:} Go back to the main menu.\\
+Terminology:\\
 
-\paragraph{Init page buttons}\mbox{} \\
+\begin{center}
+\begin{tabular}{ p{1cm} p{10cm} }
+M&The number of spacecraft apogee nearest the rendezvous point (M=4 is a fourth-apogee rendezvous)\\
+N&The in-orbit maneuver line counter. Apogee point is N=X, perigee point is N=X.5, common nodal (plane change) points are N= X.25 or X.75\\
+NH&Apogee height adjustment maneuver performed at perigee end of maneuver line. NH = 1.5 denotes height adjustment near first spacecraft perigee\\
+NC1&Phase adjustment maneuver performed at apogee end of maneuver line to change the catch-up rate. NC1 = 2 denotes phase adjustment near second spacecraft apogee.\\
+\end{tabular}
+\end{center}
 
-\textbf{DH:} Delta height at the CDH maneuver.\\
-\textbf{E:} Desired elevation angle at TPI.\\
-\textbf{BCK:} Go back to DKI calculation page.\\
+\paragraph{TIG and TPI Definition}\mbox{} \\
 
-\paragraph{Options page buttons}\mbox{} \\
+On this page the time of ignition and time of the TPI maneuver are defined.
 
-\textbf{MAN:} Maneuvers separated by half orbits (or multiples of them) or time differences.\\
-\textbf{RAD:} Adds a 50 ft/s radial component for the burn, as done on some missions.\\
-\textbf{TPI:} Cycle through TPI options.\\
-\textbf{SUN:} Input time for TPI options.\\
-\textbf{NHC:} Choose the number of half-revs between CSI and CDH.\\
-\textbf{NPB:} Choose the number of half-revs between Phasing and Boost.\\
-\textbf{DT1:} Choose the time between abort and Boost/CSI.\\
-\textbf{DT2:} Choose the time between boost and HAM.\\
-\textbf{DT3:} Choose the time between HAM and CSI.\\
-\textbf{BCK:} Go back to the DKI page.\\
+\textbf{VEH:} Choose the active vehicle for the rendezvous. Options are CSM or LM. The MFD automatically detects if the current vehicle is a CSM or not.\\
+\textbf{PRO:} For the Skylab rendezvous profile with an additional height adjustment maneuver this option can be set, otherwise the Regular DKI option should be used.\\
+\textbf{MAN:} Options for the initial maneuver line. The line can be defined for an input time, chaser apoapsis or target apoapsis. Input time is useful if the time of ignition or number of orbits to time of ignition is given. Chaser apoapsis is the typical option for ground-up Earth orbit rendezvous. Should the target be in an elliptical orbit the target apoapsis option is useful to keep the maneuver line near the line-of-apsides of the targeting, which prevents large vertical Delta V components for the coelliptic maneuver.\\
+\textbf{ML:} Value of the initial maneuver line. This can be chosen arbitrarily, but usually an X.0 value is assigned to a chaser apoapsis. Another example is a CSM rescue maneuver in lunar orbit, which is supposed to happen one orbit after DOI. Then the time of DOI is used for the initial maneuver line, the value entered with this button should be 1.0 and then first maneuver should be scheduled at the 2.0 maneuver line point\\
+\textbf{PHA:} Flag to describe the initial phase angle. Normally set to 0 to indicate a phase angle of -180 to 180 DEG. In this case the chaser needs to catch up if it is behind the target by e.g. 10 DEG. If the chaser is ahead of the target by 10 DEG it needs to slow down, which means a higher orbit. If the flag is set to -1 in the first case the phase angle is interpreted as -350 DEG instead of 10 DEG and the chaser will slow down, go into a higher orbit, to achieve rendezvous. This is mainly useful for rendezvous sequences that take many orbits.\\
 
+\textbf{TPD:} Definition of the terminal phase. There are three options for both TPI and TPF, so in total six combinations. The three options are input time, time from sunrise and time from sunset. Usually the time of TPI is known from an external calculation or the time from sunrise option with a negative time is used, to set the TPI maneuver in darkness at a fixed time before sunrise.\\
+\textbf{TPV:} Input value associated with the terminal phase definition. Either a GET or a time in minutes from sunset or sunrise.\\
+
+\paragraph{Init Parameters}\mbox{} \\
+
+\textbf{DH1:} The Delta Height at the NCC maneuver point. Only required for Skylab rendezvous profile. Usually 20 NM\\
+\textbf{DH2:} The Delta Height at the NSR maneuver point. A positive value indicates the chaser vehicle being below the target. Usually 10 to 20 NM.\\
+\textbf{E:} Elevation angle at TPI. Typical value is 26.6 DEG for a rendezvous from below. For rendezvous from above, for example if the CSM needs to rescue the LM in lunar orbit, the value 208.3 DEG is usually used.\\
+
+\paragraph{Example: Apollo 10 PDI Abort}\mbox{} \\
+
+A simple example for a DKI targeted maneuver is the Apollo 10 PDI Abort. Similar in concept to the PDI+12 maneuvers of the lunar landing missions, Apollo 10 would have done an abort maneuver at perilune after DOI to return to the CSM one orbit earlier than in the normal rendezvous plan. The sequence of maneuvers would be the abort initiation 0.5 revolutions after DOI, targeted as a phasing (NC1) maneuver. CSI or NH would follow another half revolution later, and again the CDH or NSR maneuver would be half an orbit after that. If we assign 1.0 as the maneuver line to the DOI maneuver then we would have NC1 = 1.5, NH = 2.0, NSR = 2.5, M = 3. The maneuver line definition is using the time option with the DOI TIG as input.
+
+\newpage
 \subsection{General Purpose Maneuver (GPM)}
 
 \subsubsection{Explanation}
