@@ -5120,7 +5120,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 			UZ = unit(-sv4.R);
 			UX = crossp(UY, UZ);
 
-			double headsswitch;
+			double headsswitch, F;
 
 			if (opt->HeadsUp)
 			{
@@ -5130,11 +5130,19 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 			{
 				headsswitch = -1.0;
 			}
+			if (opt->vesseltype < 2)
+			{
+				F = SystemParameters.MCTST1;
+			}
+			else
+			{
+				F = SystemParameters.MCTDT1;
+			}
 
 			DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
 			if (length(DV_P) != 0.0)
 			{
-				theta_T = length(crossp(sv4.R, sv4.V))*length(opt->dV_LVLH)*(sv4.mass + LMmass) / OrbMech::power(length(sv4.R), 2.0) / SPS_THRUST;
+				theta_T = length(crossp(sv4.R, sv4.V))*length(opt->dV_LVLH)*(sv4.mass + LMmass) / OrbMech::power(length(sv4.R), 2.0) / F;
 				DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 				V_G = DV_C + UY*opt->dV_LVLH.y;
 			}
@@ -24554,9 +24562,17 @@ void RTCC::PMMREDIG(bool mpt)
 		MPTGetConfigFromString(VEHDATABUF.config, oldconfig);
 	}
 
+	//Save MED values
+	MED.StoppingMode = 1;
+	MED.HeadsUp = med_f80.HeadsUp;
+	MED.TrimInd = med_f80.TrimAngleInd;
+	MED.Column = med_f80.Column;
+
 	//Check configuration
 	if (RTEManeuverCodeLogic(Buff, lmascmass, lmdscmass, med_f80.NumQuads, MED.Thruster, MED.AttitudeMode, MED.ConfigCode, MED.ManVeh, SPM.LMWeight))
 	{
+		//Illegal maneuver code
+		PZREAP.RTEDTable[MED.Column - 1].Error = 11;
 		return;
 	}
 	std::bitset<4> newconfig;
@@ -24565,13 +24581,9 @@ void RTCC::PMMREDIG(bool mpt)
 	if (oldconfig != newconfig && MPTConfigSubset(oldconfig, newconfig) == false)
 	{
 		//Not a valid configuration
+		PZREAP.RTEDTable[MED.Column - 1].Error = 12;
 		return;
 	}
-
-	MED.StoppingMode = 1;
-	MED.HeadsUp = med_f80.HeadsUp;
-	MED.TrimInd = med_f80.TrimAngleInd;
-	MED.Column = med_f80.Column;
 
 	if (MED.Thruster == RTCC_ENGINETYPE_CSMSPS || MED.Thruster == RTCC_ENGINETYPE_LMDPS)
 	{
@@ -24585,7 +24597,8 @@ void RTCC::PMMREDIG(bool mpt)
 		}
 		else
 		{
-			//Error
+			//Invalid number of ullage quads
+			PZREAP.RTEDTable[MED.Column - 1].Error = 13;
 			return;
 		}
 
@@ -24678,7 +24691,8 @@ void RTCC::PMMREDIG(bool mpt)
 	}
 	else
 	{
-		//Error
+		//Invalid entry mode
+		PZREAP.RTEDTable[MED.Column - 1].Error = 14;
 		return;
 	}
 
@@ -24713,7 +24727,8 @@ void RTCC::PMMREDIG(bool mpt)
 		}
 		else
 		{
-			//Error
+			//Invalid entry mode
+			PZREAP.RTEDTable[MED.Column - 1].Error = 14;
 			return;
 		}
 	}
@@ -26636,12 +26651,12 @@ int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 		if (VehicleType == 1)
 		{
 			TIG = tab->mantable[ManeuverNum - 1].GMTI - SystemParameters.MCGZSA * 3600.0;
-			CMMAXTDV(TIG, DV, ManeuverNum);
+			CMMAXTDV(TIG, DV, L, ManeuverNum);
 		}
 		else
 		{
 			TIG = tab->mantable[ManeuverNum - 1].GMTI - SystemParameters.MCGZSL * 3600.0;
-			CMMLXTDV(TIG, DV, ManeuverNum);
+			CMMLXTDV(TIG, DV, L, ManeuverNum);
 		}
 	}
 	//Initiate a CMC/LGC REFSMMAT update
@@ -32981,7 +32996,7 @@ RTCC_PMMDMT_PB2_6:;
 }
 
 //CMC External Delta-V Update Generator
-void RTCC::CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man)
+void RTCC::CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, int mpt, unsigned man)
 {
 	if (CZAXTRDV.LoadNumber == 0)
 	{
@@ -33007,11 +33022,12 @@ void RTCC::CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man)
 	CZAXTRDV.GET = GETIG;
 	CZAXTRDV.DV = DV_EXDV / 0.3048;
 
-	if (man)
+	if (mpt)
 	{
-		CZAXTRDV.ManeuverCode = PZMPTCSM.mantable[man - 1].code;
-		CZAXTRDV.GMTID = PZMPTCSM.GMTAV;
-		CZAXTRDV.StationID = PZMPTCSM.StationID;
+		MissionPlanTable *m = GetMPTPointer(mpt);
+		CZAXTRDV.ManeuverCode = m->mantable[man - 1].code;
+		CZAXTRDV.GMTID = m->GMTAV;
+		CZAXTRDV.StationID = m->StationID;
 	}
 	else
 	{
@@ -33028,7 +33044,7 @@ void RTCC::CMDAXTDV()
 }
 
 //LGC External Delta-V Update Generator
-void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man)
+void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, int mpt, unsigned man)
 {
 	if (CZLXTRDV.LoadNumber == 0)
 	{
@@ -33054,11 +33070,12 @@ void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man)
 	CZLXTRDV.GET = GETIG;
 	CZLXTRDV.DV = DV_EXDV / 0.3048;
 
-	if (man)
+	if (mpt)
 	{
-		CZLXTRDV.ManeuverCode = PZMPTLEM.mantable[man - 1].code;
-		CZLXTRDV.GMTID = PZMPTLEM.GMTAV;
-		CZLXTRDV.StationID = PZMPTLEM.StationID;
+		MissionPlanTable *m = GetMPTPointer(mpt);
+		CZLXTRDV.ManeuverCode = m->mantable[man - 1].code;
+		CZLXTRDV.GMTID = m->GMTAV;
+		CZLXTRDV.StationID = m->StationID;
 	}
 	else
 	{
