@@ -4817,9 +4817,6 @@ extern GDIParams g_Param;
 EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 
 	status = EMS_STATUS_OFF;
-	dVInitialized = false;
-	lastWeight = _V(0, 0, 0);
-	lastGlobalVel = _V(0, 0, 0);
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
@@ -5140,7 +5137,7 @@ void EMS::SystemTimestep(double simdt) {
 }
 
 void EMS::AccelerometerTimeStep(double simdt) {
-
+	/*
 	VECTOR3 arot, w, vel;
 
 	sat->GetGlobalOrientation(arot);
@@ -5188,9 +5185,19 @@ void EMS::AccelerometerTimeStep(double simdt) {
 			xacc -= constG;
 		}
 	}
+	*/
+	VECTOR3 accel;
+	sat->inertialData.getAcceleration(accel);
+	xacc = -accel.z;
+	// Ground test switch
 
+	constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
+
+	if (sat->GTASwitch.IsUp()) {
+		xacc -= constG;
+	}
 }
-
+/*
 VECTOR3 EMS::GetGravityVector()
 {
 	OBJHANDLE gravref = sat->GetGravityRef();
@@ -5262,7 +5269,7 @@ VECTOR3 EMS::GetGravityVector()
 
 	return a_dP;
 }
-
+*/
 void EMS::SwitchChanged() {
 
 	if (!IsPowered()) return;
@@ -5279,13 +5286,11 @@ void EMS::SwitchChanged() {
 
 		case 1: // dV
 			if (sat->EMSModeSwitch.IsUp()) {
-				status = EMS_STATUS_DV;
-				dVInitialized = false;
+				status = EMS_STATUS_DV;				
 			} else if (sat->EMSModeSwitch.IsCenter()) {
 				status = EMS_STATUS_STANDBY;
 			} else {
-				status = EMS_STATUS_DV_BACKUP;
-				dVInitialized = false;
+				status = EMS_STATUS_DV_BACKUP;				
 			}
 			break;
 
@@ -5493,10 +5498,6 @@ void EMS::SaveState(FILEHANDLE scn) {
 	
 	oapiWriteLine(scn, EMS_START_STRING);
 	oapiWriteScenario_int(scn, "STATUS", status);
-	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
-	papiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
-	papiWriteScenario_vec(scn, "LASTGLOBALVEL", lastGlobalVel);
-	papiWriteScenario_double(scn, "LASTSIMDT", lastSimDT);
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
 	papiWriteScenario_double(scn, "VINERTIAL", vinert);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
@@ -5528,15 +5529,6 @@ void EMS::LoadState(FILEHANDLE scn) {
 
 		if (!strnicmp (line, "STATUS", 6)) {
 			sscanf(line + 6, "%i", &status);
-		} else if (!strnicmp (line, "DVINITIALIZED", 13)) {
-			sscanf(line + 13, "%i", &i);
-			dVInitialized = (i == 1);
-		} else if (!strnicmp (line, "LASTWEIGHT", 10)) {
-			sscanf(line + 10, "%lf %lf %lf", &lastWeight.x, &lastWeight.y, &lastWeight.z);
-		} else if (!strnicmp (line, "LASTGLOBALVEL", 13)) {
-			sscanf(line + 13, "%lf %lf %lf", &lastGlobalVel.x, &lastGlobalVel.y, &lastGlobalVel.z);
-		} else if (!strnicmp(line, "LASTSIMDT", 9)) {
-			sscanf(line + 9, "%lf", &lastSimDT);
 		} else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
 			sscanf(line + 14, "%lf", &dVRangeCounter);
 		} else if (!strnicmp (line, "VINERTIAL", 9)) {

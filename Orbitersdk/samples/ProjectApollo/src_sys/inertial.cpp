@@ -1,12 +1,9 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2004-2022
+Copyright 2022
 
-Generic Apollo Guidance computer class which is hooked
-up to the DSKY to allow easy support for the CSM and LEM
-computers. This defines the interfaces that the DSKY will
-use to either computer, so only parts specific to the CSM
-or LEM will need to be written specially.
+IntertialData class is the common source of intertial acceleration data
+for variety of instruments (e.g. IMU, EMS, etc.).
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,13 +24,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #include "inertial.h"
+#include "papi.h"
 
-IntertialData::IntertialData(VESSEL *vessel) {
+InertialData::InertialData(VESSEL *vessel) {
 	this->vessel = vessel;
 	accel = _V(0.0, 0.0, 0.0);
 }
 
-VECTOR3 IntertialData::GetGravityVector() {
+VECTOR3 InertialData::GetGravityVector() {
 	OBJHANDLE gravref = vessel->GetGravityRef();
 	OBJHANDLE hSun = oapiGetObjectByName("Sun");
 	VECTOR3 R, U_R;
@@ -105,7 +103,7 @@ VECTOR3 IntertialData::GetGravityVector() {
 }
 
 
-void IntertialData::timestep(double simdt) {
+void InertialData::timestep(double simdt) {
 	VECTOR3 w, vel;
 
 	vessel->GetWeightVector(w);
@@ -141,8 +139,45 @@ void IntertialData::timestep(double simdt) {
 	}
 }
 
-void IntertialData::getIntertialAccel(VECTOR3 &acc) {
+void InertialData::getAcceleration(VECTOR3 &acc) {
 	acc.x = accel.x;
 	acc.y = accel.y;
 	acc.z = accel.z;
+}
+
+void InertialData::SaveState(FILEHANDLE scn){
+	char buffer[100];
+
+	oapiWriteLine(scn, INERTIAL_DATA_START_STRING);
+	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
+	papiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
+	papiWriteScenario_vec(scn, "LASTGLOBALVEL", lastGlobalVel);
+	papiWriteScenario_double(scn, "LASTSIMDT", lastSimDT);
+
+	oapiWriteLine(scn, INERTIAL_DATA_END_STRING);
+}
+
+void InertialData::LoadState(FILEHANDLE scn) {
+	int i;
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, INERTIAL_DATA_END_STRING, sizeof(INERTIAL_DATA_END_STRING))) {
+			return;
+		}
+
+		if (!strnicmp(line, "DVINITIALIZED", 13)) {
+			sscanf(line + 13, "%i", &i);
+			dVInitialized = (i == 1);
+		}
+		else if (!strnicmp(line, "LASTWEIGHT", 10)) {
+			sscanf(line + 10, "%lf %lf %lf", &lastWeight.x, &lastWeight.y, &lastWeight.z);
+		}
+		else if (!strnicmp(line, "LASTGLOBALVEL", 13)) {
+			sscanf(line + 13, "%lf %lf %lf", &lastGlobalVel.x, &lastGlobalVel.y, &lastGlobalVel.z);
+		}
+		else if (!strnicmp(line, "LASTSIMDT", 9)) {
+			sscanf(line + 9, "%lf", &lastSimDT);
+		}
+	}
 }

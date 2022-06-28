@@ -29,7 +29,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 #include "Orbitersdk.h"
 
-class IntertialData {
+#define INERTIAL_DATA_START_STRING	 "INERTIAL_DATA_BEGIN"
+#define INERTIAL_DATA_END_STRING    "INERTIAL_DATA_END"
+
+class InertialData {
 	VECTOR3 accel;
 	MATRIX3 rotmat;
 	VESSEL *vessel;
@@ -39,8 +42,10 @@ class IntertialData {
 	double lastSimDT;
 
 public:
-	IntertialData(VESSEL *vessel);
-	VECTOR3 IntertialData::GetGravityVector();
+	InertialData(VESSEL *vessel);
+	VECTOR3 GetGravityVector();
 	void timestep(double simdt);
-	void getIntertialAccel(VECTOR3 &acc);
+	void getAcceleration(VECTOR3 &acc);
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
 };

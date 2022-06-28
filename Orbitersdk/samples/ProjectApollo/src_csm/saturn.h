@@ -3595,7 +3595,7 @@ protected:
 	// Internal systems devices.						 //
 	///////////////////////////////////////////////////////
 
-	IntertialData intertialData;
+	InertialData inertialData;
 
 	// SCS components
 	BMAG bmag1;

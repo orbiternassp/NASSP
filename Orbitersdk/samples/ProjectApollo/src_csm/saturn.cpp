@@ -355,14 +355,13 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 #pragma warning ( disable:4355 )
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
-
+	inertialData(this),
 	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
 	scdu(agc, RegOPTX, 0140, 2),
-	tcdu(agc, RegOPTY, 0141, 2),
-	intertialData(this),
+	tcdu(agc, RegOPTY, 0141, 2),	
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
@@ -1438,6 +1437,8 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		debugConnected = true;
 	}
 
+	inertialData.timestep(simdt);
+
 	if (stage >= PRELAUNCH_STAGE && !GenericFirstTimestep) {
 
 		//
@@ -1625,6 +1626,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		}
 	}
 
+	inertialData.SaveState(scn);
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
 	agc.SaveState(scn);
@@ -2218,6 +2220,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
+	}
+	else if (!strnicmp(line, INERTIAL_DATA_START_STRING, sizeof(INERTIAL_DATA_START_STRING))) {
+		inertialData.LoadState(scn);
 	}
 	else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 		dsky.LoadState(scn, DSKY_END_STRING);
@@ -2891,8 +2896,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		SetView();
 	}
 
-	intertialData.timestep(simdt);
-
 	//
 	// Update mission time.
 	//
@@ -2941,7 +2944,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	double dynpress = GetDynPressure();
 	VECTOR3 vAccel;
 
-	intertialData.getIntertialAccel(vAccel);
+	inertialData.getAcceleration(vAccel);
 	vAccel = -vAccel;
 	THRUSTER_HANDLE *tharr;
 	VECTOR3 seatacc = vAccel;
