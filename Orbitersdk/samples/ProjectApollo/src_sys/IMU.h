@@ -28,13 +28,14 @@
 #define _PA_IMU_H
 
 #include "apolloguidance.h"
+#include "inertial.h"
 
 #include "powersource.h"
 
 class IMU {
 
 public:
-	IMU(ApolloGuidance &comp, PanelSDK &p);
+	IMU(ApolloGuidance &comp, PanelSDK &p, InertialData &inertialData);
 	~IMU();
 
 	void Init();
@@ -75,7 +76,6 @@ protected:
 	void SetOrbiterAttitudeReference();
 	void DoZeroIMUCDUs();
 	void DoZeroIMUGimbals();
-	VECTOR3 GetGravityVector();
 
 	//
 	// Logging.
@@ -131,17 +131,12 @@ protected:
 	} RemainingPIPA;
 
 	struct {
-		struct {
-			double X;
-			double Y;
-			double Z;
-		} Attitude;
-
+		MATRIX3 Attitude_v2g;
+		MATRIX3 Attitude_g2v;
 		MATRIX3 AttitudeReference;
 	} Orbiter;
 
-	VECTOR3 LastWeightAcceleration;
-	VECTOR3 LastGlobalVel;
+	InertialData &inertialData;
 
 	PowerMerge DCPower;
 	PowerMerge DCHeaterPower;

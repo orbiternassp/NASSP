@@ -427,7 +427,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
-	imu(agc, Panelsdk),
+	inertialData(this),
+	imu(agc, Panelsdk, inertialData),
 	scdu(agc, RegOPTX, 0140, 1),
 	tcdu(agc, RegOPTY, 0141, 1),
 	aea(Panelsdk, deda),
@@ -1286,6 +1287,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			}
 		}
 	}
+
+	inertialData.timestep(simdt);
 
 	// Update VC animations
 	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)

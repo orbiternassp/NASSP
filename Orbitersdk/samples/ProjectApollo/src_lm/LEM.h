@@ -54,6 +54,7 @@
 #include "LEMcomputer.h"
 #include "lm_rr.h"
 #include "lm_aeaa.h"
+#include "inertial.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -1872,6 +1873,7 @@ protected:
 	LEM_INV INV_2;
 
 	// GNC
+	InertialData inertialData;
 	ATCA atca;
 	DECA deca;
 	LEM_LR LR;

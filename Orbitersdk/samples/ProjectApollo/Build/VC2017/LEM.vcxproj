@@ -272,6 +272,7 @@
     <ClCompile Include="..\..\src_lm\lm_telecom.cpp" />
     <ClCompile Include="..\..\src_lm\lmscs.cpp" />
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp" />
+    <ClCompile Include="..\..\src_sys\inertial.cpp" />
     <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -401,6 +402,7 @@
     <ClInclude Include="..\..\src_sys\dsky.h" />
     <ClInclude Include="..\..\src_sys\FDAI.h" />
     <ClInclude Include="..\..\src_sys\IMU.h" />
+    <ClInclude Include="..\..\src_sys\inertial.h" />
     <ClInclude Include="..\..\src_sys\ioChannels.h" />
     <ClInclude Include="..\..\src_lm\LEM.h" />
     <ClInclude Include="..\..\src_lm\LEMcomputer.h" />
