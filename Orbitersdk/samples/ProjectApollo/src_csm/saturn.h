@@ -4432,11 +4432,6 @@ protected:
 
 	double CurrentViewOffset;
 
-	///
-	/// Time of last timestep call.
-	///
-	double LastTimestep;
-
 	//
 	// Panel flash.
 	//
