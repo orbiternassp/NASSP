@@ -136,6 +136,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LMDAPUpdate(calcParams.tgt, *form, false);
 	}
 	break;
+	case 8: //LM DAP DATA (DOCKED)
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		LMDAPUpdate(calcParams.tgt, *form, true);
+	}
+	break;
 	case 7: //MISSION INITIALIZATION
 	{
 		char Buff[128];
@@ -605,7 +612,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManeuverPAD(&manopt, *form);
 		LMDAPUpdate(calcParams.tgt, dappad, true);
 
-		sprintf(form->remarks, "LM weight is %.0f, CSM weight is %.0f", dappad.ThisVehicleWeight, dappad.OtherVehicleWeight);
+		sprintf(form->purpose, "Docked DPS");
 
 		AGCStateVectorUpdate(buffer1, sv0, false, GETbase, true);
 		AGCREFSMMATUpdate(buffer2, calcParams.StoredREFSMMAT, false);
