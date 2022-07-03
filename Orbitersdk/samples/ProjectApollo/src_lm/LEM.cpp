@@ -1623,6 +1623,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "COASRETICLEVISIBLE", 18)) {
 			sscanf(line + 18, "%i", &COASreticlevisible);
 		}
+		else if (!strnicmp(line, INERTIAL_DATA_START_STRING, sizeof(INERTIAL_DATA_START_STRING))) {
+			inertialData.LoadState(scn);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -2094,6 +2097,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
+	inertialData.SaveState(scn);
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
