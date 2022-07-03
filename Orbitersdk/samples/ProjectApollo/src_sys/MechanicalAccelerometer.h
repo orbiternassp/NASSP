@@ -23,32 +23,19 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #pragma once
-
-#define MECHACCEL_START_STRING	"MECHACCEL_BEGIN"
-#define MECHACCEL_END_STRING	"MECHACCEL_END"
+#include "inertial.h"
 
 class MechanicalAccelerometer
 {
 public:
-	MechanicalAccelerometer();
+	MechanicalAccelerometer(InertialData &inertialData);
 	void Init(VESSEL* v);
 	void Timestep(double simdt);
-	void SaveState(FILEHANDLE scn);
-	void LoadState(FILEHANDLE scn);
 
 	double GetXAccel();
 	double GetYAccel();
 private:
-
-	MATRIX3 GetRotationMatrixX(double angle);
-	MATRIX3 GetRotationMatrixY(double angle);
-	MATRIX3 GetRotationMatrixZ(double angle);
-	VECTOR3 GetGravityVector();
-
 	VESSEL *vessel;
-	bool dVInitialized;
-	VECTOR3 lastWeight;
-	VECTOR3 lastGlobalVel;
-	double lastSimDT;
+	InertialData &inertialData;
 	double xacc, yacc;
 };

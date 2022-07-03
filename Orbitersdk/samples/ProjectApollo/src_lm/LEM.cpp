@@ -433,6 +433,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	tcdu(agc, RegOPTY, 0141, 1),
 	aea(Panelsdk, deda),
 	deda(this,soundlib, aea),
+	mechanicalAccelerometer(inertialData),
 	CWEA(soundlib, Bclick),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
@@ -1806,9 +1807,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
 		}
-		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
-			mechanicalAccelerometer.LoadState(scn);
-		}
 		else if (!strnicmp(line, ATCA_START_STRING, sizeof(ATCA_START_STRING))) {
 			atca.LoadState(scn);
 		}
@@ -2193,7 +2191,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	tca3B.SaveState(scn, "RCSTCA_3B_BEGIN", "RCSTCA_END");
 	tca4B.SaveState(scn, "RCSTCA_4B_BEGIN", "RCSTCA_END");
 	ordeal.SaveState(scn);
-	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);
 	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
 	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);
