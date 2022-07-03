@@ -1,12 +1,9 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2004-2022
+Copyright 2022
 
-Generic Apollo Guidance computer class which is hooked
-up to the DSKY to allow easy support for the CSM and LEM
-computers. This defines the interfaces that the DSKY will
-use to either computer, so only parts specific to the CSM
-or LEM will need to be written specially.
+IntertialData class is the common source of intertial acceleration data
+for variety of instruments (e.g. IMU, EMS, etc.).
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
