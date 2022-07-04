@@ -104,6 +104,7 @@ public:
 	void SLVNavigationUpdateCalc();
 	void SLVNavigationUpdateUplink();
 	void UpdateGRRTime();
+	void PerigeeAdjustCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 

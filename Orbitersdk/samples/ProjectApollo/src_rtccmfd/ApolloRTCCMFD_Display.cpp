@@ -1790,6 +1790,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 4 * H / 14, "LLWP", 4);
 		skp->Text(5 * W / 8, 6 * H / 14, "LLTP", 4);
 		skp->Text(5 * W / 8, 8 * H / 14, "Lunar Ascent", 12);
+		skp->Text(5 * W / 8, 10 * H / 14, "Perigee Adjust", 14);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 15)
@@ -9948,6 +9949,91 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			GET_Display3(Buffer, GC->rtcc->PZRPDT.data[i].GETTPI);
 			skp->Text(28 * W / 32, (11 + 3 * i) * H / 32, Buffer, strlen(Buffer));
+		}
+	}
+	else if (screen == 124)
+	{
+		skp->Text(4 * W / 8, 2 * H / 32, "PERIGEE ADJUST INPUTS (K28)", 27);
+
+		if (GC->MissionPlanningActive)
+		{
+			if (GC->rtcc->med_k28.VEH == RTCC_MPT_CSM)
+			{
+				sprintf(Buffer, "CSM");
+			}
+				else
+			{
+				sprintf(Buffer, "LEM");
+			}
+			skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->med_k28.VectorTime, false);
+			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		GET_Display(Buffer, GC->rtcc->med_k28.ThresholdTime, false);
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.0lf s", GC->rtcc->med_k28.TimeIncrement);
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.0lf NM", GC->rtcc->med_k28.H_P);
+		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+
+		ThrusterName(Buffer, GC->rtcc->med_k28.Thruster);
+		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_k28.Thruster == RTCC_ENGINETYPE_LMDPS)
+		{
+			sprintf_s(Buffer, "%.3lf", GC->rtcc->med_k28.DPSScaleFactor);
+			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+	}
+	else if (screen == 125)
+	{
+		skp->Text(1 * W / 8, 2 * H / 32, "PERIGEE ADJUST DISPLAY", 27);
+
+		skp->Text(5 * W / 32, 5 * H / 32, "HP DES", 6);
+		skp->Text(4 * W / 32, 4 * H / 16, "TIG", 3);
+		skp->Text(11 * W / 32, 4 * H / 16, "DV", 2);
+		skp->Text(15 * W / 32, 4 * H / 16, "BT", 2);
+		skp->Text(19 * W / 32, 4 * H / 16, "TAA", 3);
+		skp->Text(24 * W / 32, 4 * H / 16, "H", 1);
+		skp->Text(27 * W / 32, 4 * H / 16, "HA", 2);
+
+		if (GC->rtcc->MSK0050Buffer.size() == 0) return true;
+
+		int j = 0;
+
+		sprintf(Buffer, "%s", GC->rtcc->MSK0050Buffer[j].c_str());
+		skp->Text(10 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+		j++;
+
+		for (unsigned i = 0;i < 6;i++)
+		{
+			sprintf(Buffer, "%s", GC->rtcc->MSK0050Buffer[j].c_str());
+			skp->Text(2 * W / 32, (5 + i) * H / 16, Buffer, strlen(Buffer));
+			j++;
+
+			sprintf(Buffer, "%s", GC->rtcc->MSK0050Buffer[j].c_str());
+			skp->Text(11 * W / 32, (5 + i) * H / 16, Buffer, strlen(Buffer));
+			j++;
+
+			sprintf(Buffer, "%s", GC->rtcc->MSK0050Buffer[j].c_str());
+			skp->Text(15 * W / 32, (5 + i) * H / 16, Buffer, strlen(Buffer));
+			j++;
+
+			sprintf(Buffer, "%s", GC->rtcc->MSK0050Buffer[j].c_str());
+			skp->Text(19 * W / 32, (5 + i) * H / 16, Buffer, strlen(Buffer));
+			j++;
+
+			sprintf(Buffer, "%s", GC->rtcc->MSK0050Buffer[j].c_str());
+			skp->Text(23 * W / 32, (5 + i) * H / 16, Buffer, strlen(Buffer));
+			j++;
+
+			sprintf(Buffer, "%s", GC->rtcc->MSK0050Buffer[j].c_str());
+			skp->Text(27 * W / 32, (5 + i) * H / 16, Buffer, strlen(Buffer));
+			j++;
 		}
 	}
 	return true;

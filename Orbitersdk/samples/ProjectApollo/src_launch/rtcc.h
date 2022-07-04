@@ -2749,6 +2749,8 @@ public:
 	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
 	//Perigee Adjust
 	void PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor);
+	//Perigee Adjust Display
+	void PMDPAD();
 	//Mission Planning Print Load Module
 	void PMXSPT(std::string source, int n);
 	void PMXSPT(std::string source, std::vector<std::string> message);
@@ -3254,6 +3256,18 @@ public:
 		double ThresholdTime = 0.0;
 	} med_k20;
 
+	//Perifocus Adjust Computation
+	struct MED_K28
+	{
+		int VEH = RTCC_MPT_CSM;
+		double VectorTime = 0.0;
+		double ThresholdTime = 0.0;
+		double TimeIncrement = 0.0;
+		double H_P = 0.0;
+		int Thruster = RTCC_ENGINETYPE_CSMSPS;
+		double DPSScaleFactor = 0.0;
+	} med_k28;
+
 	//Two Impulse Computation
 	struct MED_K30
 	{
@@ -3415,6 +3429,8 @@ public:
 		double H_P = 0.0;
 		PerigeeAdjustTableEntry Man[6];
 	} PZPADDIS;
+
+	std::vector<std::string> MSK0050Buffer; //Perigee Adjust Display
 
 	std::vector<VECTOR3> EZJGSTAR;
 

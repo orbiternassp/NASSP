@@ -1285,6 +1285,53 @@ void ApolloRTCCMFD::menuSetRendezvousPlanningDisplayPage()
 	SelectPage(123);
 }
 
+void ApolloRTCCMFD::menuSetPerigeeAdjustInputPage()
+{
+	SelectPage(124);
+}
+
+void ApolloRTCCMFD::menuSetPerigeeAdjustDisplayPage()
+{
+	SelectPage(125);
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustCalc()
+{
+	G->PerigeeAdjustCalc();
+}
+
+void ApolloRTCCMFD::CyclePerigeeAdjustVehicle()
+{
+	if (GC->rtcc->med_k28.VEH == RTCC_MPT_CSM)
+	{
+		GC->rtcc->med_k28.VEH = RTCC_MPT_LM;
+	}
+	else
+	{
+		GC->rtcc->med_k28.VEH = RTCC_MPT_CSM;
+	}
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustVectorTime()
+{
+	GenericGETInput(&GC->rtcc->med_k28.VectorTime, "Enter desired vector GET (Format: HH:MM:SS)");
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustThresholdTime()
+{
+	GenericGETInput(&GC->rtcc->med_k28.ThresholdTime, "Enter desired threshold GET (Format: HH:MM:SS)");
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustTimeIncrement()
+{
+	GenericDoubleInput(&GC->rtcc->med_k28.TimeIncrement, "Time increment in seconds:", 1.0);
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustHeight()
+{
+	GenericDoubleInput(&GC->rtcc->med_k28.H_P, "Perigee height in nautical miles:", 1.0);
+}
+
 void ApolloRTCCMFD::menuLWPLiftoffTimeOption()
 {
 	if (GC->rtcc->PZSLVCON.LOT < 6)
