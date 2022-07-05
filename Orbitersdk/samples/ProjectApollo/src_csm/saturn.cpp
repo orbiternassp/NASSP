@@ -1575,7 +1575,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		if (AEAPadCount > 0) {
 			oapiWriteScenario_int(scn, "AEAPADCNT", AEAPadCount);
 			for (i = 0; i < AEAPadCount; i++) {
-				sprintf(str, "%04o %05o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
+				sprintf(str, "%04o %06o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
 				oapiWriteScenario_string(scn, "AEAPAD", str);
 			}
 		}
