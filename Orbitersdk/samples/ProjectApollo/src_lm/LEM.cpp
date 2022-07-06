@@ -1175,7 +1175,6 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	{
 		DoFirstTimestep();
 		FirstTimestep = false;
-		return;
 	}
 
 	// Prevent Orbiter navmodes from doing stuff
