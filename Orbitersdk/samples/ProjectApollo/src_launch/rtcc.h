@@ -989,6 +989,8 @@ struct SPQOpt //Coelliptic Sequence Processor
 	bool ParallelDVInd = false;
 	//Angle from CSI to CDH (for I_CDH = 3)
 	double DU_D = PI;
+	//Optimum CSI range
+	double dt_CSI_Range = 15.0*60.0;
 };
 
 struct PDAPOpt //Powered Descent Abort Program

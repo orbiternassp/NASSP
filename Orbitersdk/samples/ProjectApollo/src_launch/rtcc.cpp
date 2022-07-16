@@ -10911,18 +10911,18 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 			OrbMech::ITER(c_TPI, s_TPI, e_TPI, p_TPI, t_CSI, e_TPIo, t_CSIo, 60.0);
 		}
 		//Iteration checking
-		if (t_CSI > opt.t_CSI + 15.0*60.0)
+		if (t_CSI > opt.t_CSI + opt.dt_CSI_Range)
 		{
 			//Warning message
 			PMXSPT("PMMDKI", 101);
-			t_CSI = opt.t_CSI + 15.0*60.0;
+			t_CSI = opt.t_CSI + opt.dt_CSI_Range;
 			break;
 		}
-		if (t_CSI < opt.t_CSI - 15.0*60.0)
+		if (t_CSI < opt.t_CSI - opt.dt_CSI_Range)
 		{
 			//Warning message
 			PMXSPT("PMMDKI", 101);
-			t_CSI = opt.t_CSI - 15.0*60.0;
+			t_CSI = opt.t_CSI - opt.dt_CSI_Range;
 			break;
 		}
 		if (s_TPI == 1)
@@ -27909,18 +27909,11 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		if (med_m65.UllageDT < 0)
 		{
-			if (med_m65.Thruster == RTCC_ENGINETYPE_LMAPS)
-			{
-				inp.dt_ullage[0] = 4.0;
-			}
-			else if (med_m65.Thruster == RTCC_ENGINETYPE_LMDPS)
-			{
-				inp.dt_ullage[0] = 8.0;
-			}
-			else
-			{
-				inp.dt_ullage[0] = 0.0;
-			}
+			inp.dt_ullage[0] = SystemParameters.MCTNDU;
+		}
+		else
+		{
+			inp.dt_ullage[0] = med_m65.UllageDT;
 		}
 
 		inp.IterationFlag[0] = med_m65.Iteration;
@@ -28007,23 +28000,13 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		if (med_m66.UllageDT < 0)
 		{
-			if (med_m66.Thruster == RTCC_ENGINETYPE_LMAPS)
-			{
-				inp.dt_ullage = 4.0;
-			}
-			else if (med_m66.Thruster == RTCC_ENGINETYPE_LMDPS)
-			{
-				inp.dt_ullage = 8.0;
-			}
-			else
-			{
-				inp.dt_ullage = 0.0;
-			}
+			inp.dt_ullage = SystemParameters.MCTNDU;
 		}
 		else
 		{
 			inp.dt_ullage = med_m66.UllageDT;
 		}
+
 		inp.UllageThrusterOption = med_m66.UllageQuads;
 		inp.HeadsUpDownIndicator = med_m66.HeadsUp;
 
@@ -28157,18 +28140,11 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		if (med_m70.UllageDT < 0)
 		{
-			if (med_m70.Thruster == RTCC_ENGINETYPE_LMAPS)
-			{
-				inp.dt_ullage[0] = 4.0;
-			}
-			else if (med_m70.Thruster == RTCC_ENGINETYPE_LMDPS)
-			{
-				inp.dt_ullage[0] = 8.0;
-			}
-			else
-			{
-				inp.dt_ullage[0] = 0.0;
-			}
+			inp.dt_ullage[0] = SystemParameters.MCTNDU;
+		}
+		else
+		{
+			inp.dt_ullage[0] = med_m70.UllageDT;
 		}
 
 		inp.IterationFlag[0] = med_m70.Iteration;
@@ -28317,18 +28293,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		if (med_m78.UllageDT < 0)
 		{
-			if (med_m78.Thruster == RTCC_ENGINETYPE_LMAPS)
-			{
-				inp.dt_ullage[0] = 4.0;
-			}
-			else if (med_m78.Thruster == RTCC_ENGINETYPE_LMDPS)
-			{
-				inp.dt_ullage[0] = 8.0;
-			}
-			else
-			{
-				inp.dt_ullage[0] = 0.0;
-			}
+			inp.dt_ullage[0] = SystemParameters.MCTNDU;
 		}
 		else
 		{
