@@ -1306,7 +1306,7 @@ void ARCore::GetStateVectorFromIU()
 void ARCore::GetStateVectorsFromAGS()
 {
 	//Are we a LM?
-	if (vesseltype == 1) return;
+	if (vesseltype != 1) return;
 
 	//0-6: pos and vel
 	int csmvecoct[6], lmvecoct[6];
@@ -4736,13 +4736,13 @@ int ARCore::subThread()
 
 		bool uplinkaccepted = false;
 
-		if (utils::IsVessel(vessel, utils::SaturnV))
+		if (utils::IsVessel(target, utils::SaturnV))
 		{
 			Saturn *iuv = (Saturn *)target;
 
 			iu = iuv->GetIU();
 		}
-		else if (utils::IsVessel(vessel, utils::SaturnV_SIVB))
+		else if (utils::IsVessel(target, utils::SaturnV_SIVB))
 		{
 			SIVB *iuv = (SIVB *)target;
 
