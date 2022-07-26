@@ -659,3 +659,19 @@ class CDRCOASPowerSwitch : public LEMThreePosSwitch
 public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
+
+class LEM_CWEA;
+
+class LEMMasterAlarmSwitch : public PushSwitch {
+
+public:
+	LEMMasterAlarmSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM_CWEA *c);
+	void InitVC(SURFHANDLE surf);
+	void DoDrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	bool SwitchTo(int newState);
+protected:
+	LEM_CWEA *cwea;
+	SURFHANDLE switchsurfacevc;
+};

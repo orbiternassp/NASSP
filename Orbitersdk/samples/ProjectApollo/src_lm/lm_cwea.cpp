@@ -866,7 +866,7 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
 	}
 }
 
-void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border) {
+void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit) {
 
 	//
 	// Draw the master alarm lit bitmap.
@@ -883,13 +883,6 @@ void LEM_CWEA::PushMasterAlarm()
 		SetMasterAlarm(false);
 	}
 	ButtonSound.play(NOLOOP, 255);
-}
-
-bool LEM_CWEA::CheckMasterAlarmMouseClick(int event) {
-	if (event & PANEL_MOUSE_LBDOWN) {
-		PushMasterAlarm();
-	}
-	return true;
 }
 
 void LEM_CWEA::SetLight(int row, int column, int state, bool TriggerMA)

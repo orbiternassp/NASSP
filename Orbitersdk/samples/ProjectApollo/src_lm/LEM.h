@@ -804,6 +804,9 @@ protected:
 	ModeSelectSwitch ModeSelSwitch;
 	ToggleSwitch AltRngMonSwitch;
 
+	SwitchRow LeftMasterAlarmSwitchRow;
+	LEMMasterAlarmSwitch LeftMasterAlarmSwitch;
+
 	SwitchRow LeftMonitorSwitchRow;
 	ToggleSwitch RateErrorMonSwitch;
 	ToggleSwitch AttitudeMonSwitch;
@@ -866,6 +869,9 @@ protected:
 	LMGlycolPressMeter LMGlycolPressMeter;
 	LMOxygenQtyMeter LMOxygenQtyMeter;
 	LMWaterQtyMeter LMWaterQtyMeter;
+
+	SwitchRow RightMasterAlarmSwitchRow;
+	LEMMasterAlarmSwitch RightMasterAlarmSwitch;
 
 	SwitchRow RightMonitorSwitchRow;
 	ToggleSwitch RightRateErrorMonSwitch;
