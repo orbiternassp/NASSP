@@ -10876,9 +10876,10 @@ PMMDKI_2_1:
 void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 {
 	double t_CSI0, e_TPI, t_CSI, eps_TPI, c_TPI, e_TPIo, t_CSIo, p_TPI;
-	int s_TPI, err;
+	int s_TPI;
 
 	PZDKIT.UpdatingIndicator = true;
+	res.err = 0;
 
 	p_TPI = c_TPI = 0.0;
 	eps_TPI = 1.0;
@@ -10887,11 +10888,11 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 	do
 	{
 		opt.t_CSI = t_CSI;
-		err = ConcentricRendezvousProcessor(opt, res);
-		if (err)
+		res.err = ConcentricRendezvousProcessor(opt, res);
+		if (res.err)
 		{
 			//Time violation
-			if (err == 3)
+			if (res.err == 3)
 			{
 				RTCCONLINEMON.TextBuffer[0] = "TIME";
 				PMXSPT("PMMDKI", 92);
@@ -10968,9 +10969,9 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 
 		//Calculate TPI and TPF maneuvers
 		double t_TPI, t_TPF;
-		err = PCTETR(res.sv_C_apo[1], res.sv_T[1], opt.GETbase, opt.WT, opt.E, t_TPI, t_TPF);
+		res.err = PCTETR(res.sv_C_apo[1], res.sv_T[1], opt.GETbase, opt.WT, opt.E, t_TPI, t_TPF);
 
-		if (err == 0)
+		if (res.err == 0)
 		{
 			//Coast to TPI
 			res.sv_C[2] = coast(res.sv_C_apo[1], t_TPI - OrbMech::GETfromMJD(res.sv_C_apo[1].MJD, opt.GETbase));
@@ -11533,43 +11534,154 @@ RTCC_PMMSPQ_A:
 		//Apply maneuver
 		PCMVMR(sv_C_CSI.R, sv_C_CSI.V, sv_T_CSI.R, sv_T_CSI.V, dv_CSI, 0.0, 0.0, PCMVMR_IND, sv_C_CSI_apo.V, Pitch, Yaw);
 
+		//CDH at upcoming apsis (AEG)
+		if (opt.I_CDH == 1 || opt.I_CDH == 3)
+		{
+			//true = CDH at upcoming apsis, false = CDH at angle from CSI
+			bool apsissw;
+
+			if (opt.I_CDH == 3)
+			{
+				//Don't use apsis option if angle option was requested
+				apsissw = false;
+			}
+			else
+			{
+				//Otherwise decide based on eccentricity
+				elem = OrbMech::GIMIKC(sv_C_CSI_apo.R, sv_C_CSI_apo.V, mu);
+				if (elem.e < 0.0001)
+				{
+					apsissw = false;
+				}
+				else
+				{
+					apsissw = true;
+				}
+			}
+
+			if (apsissw)
+			{
+				double l_c, DN;
+				int N_CK;
+
+				N_CK = 1;
+				DN = 0.0;
+				sv_C_CDH = sv_C_CSI_apo;
+				elem = OrbMech::GIMIKC(sv_C_CDH.R, sv_C_CDH.V, mu);
+
+				if (elem.l >= PI)
+				{
+					l_c = PI2;
+				}
+				else
+				{
+					l_c = PI;
+				}
+
+				do
+				{
+					sv_C_CDH = OrbMech::PMMAEGS(sv_C_CDH, 1, l_c, err, DN);
+					if (opt.N_CDH > N_CK)
+					{
+						N_CK++;
+						elem = OrbMech::GIMIKC(sv_C_CDH.R, sv_C_CDH.V, mu);
+						l_c = elem.l + PI;
+						if (l_c > PI2)
+						{
+							l_c -= PI2;
+							DN = 1.0;
+						}
+						else
+						{
+							DN = 0.0;
+						}
+					}
+					else
+					{
+						break;
+					}
+				} while (opt.N_CDH >= N_CK);
+				t_CDH = OrbMech::GETfromMJD(sv_C_CDH.MJD, opt.GETbase);
+			}
+			else
+			{
+				double DU_D;
+
+				if (opt.I_CDH == 1)
+				{
+					DU_D = PI * (double)opt.N_CDH;
+				}
+				else
+				{
+					DU_D = opt.DU_D;
+				}
+				double u_CSI, u_CDH, DN = 0;
+
+				//Calculate argument of latitude at CSI
+				if (opt.sv_A.gravref == hEarth)
+				{
+					OrbMech::EclipticToECI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+				}
+				else
+				{
+					OrbMech::EclipticToMCI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+				}
+				elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
+				u_CSI = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
+				u_CSI = fmod(u_CSI, PI2);
+				if (u_CSI < 0)
+					u_CSI += PI2;
+
+				//Calculate required argument of latitude at CDH
+				u_CDH = u_CSI + DU_D;
+				while (u_CDH > PI2)
+				{
+					u_CDH -= PI2;
+					DN += 1.0;
+				}
+
+				//Propagate to CDH
+				sv_C_CDH = OrbMech::PMMAEGS(sv_C_CSI_apo, 2, u_CDH, err, DN);
+				t_CDH = OrbMech::GETfromMJD(sv_C_CDH.MJD, opt.GETbase);
+			}
+		}
 		//CDH on time
-		if (opt.I_CDH == 2)
+		else if (opt.I_CDH == 2)
 		{
 			t_CDH = opt.t_CDH;
 			sv_C_CDH = coast(sv_C_CSI_apo, t_CDH - OrbMech::GETfromMJD(sv_C_CSI_apo.MJD, opt.GETbase));
 		}
-		else if (opt.I_CDH == 3)
+		//CDH at next apsis (Keplerian)
+		else
 		{
-			double u_CSI, u_CDH, DN = 0;
-			//Calculate argument of latitude at CSI
-			if (opt.sv_A.gravref == hEarth)
+			OELEMENTS coe;
+			double V_R, t_P, t_CSI;
+			
+			t_CSI = OrbMech::GETfromMJD(sv_C_CSI_apo.MJD, opt.GETbase);
+			coe = OrbMech::coe_from_sv(sv_C_CSI_apo.R, sv_C_CSI_apo.V, mu);
+			t_P = OrbMech::period(sv_C_CSI_apo.R, sv_C_CSI_apo.V, mu);
+			V_R = dotp(sv_C_CSI_apo.R, sv_C_CSI_apo.V);
+
+			if ((coe.e < 0.0001) || (V_R / length(sv_C_CSI_apo.R) < 7.0*0.3048))
 			{
-				OrbMech::EclipticToECI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+				t_CDH = t_CSI + t_P / 2.0*(double)opt.N_CDH;
 			}
 			else
 			{
-				OrbMech::EclipticToMCI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+				double theta, dt;
+				//Next apsis
+				if (coe.TA > PI)
+				{
+					theta = PI2 - coe.TA;
+				}
+				else
+				{
+					theta = PI - coe.TA;
+				}
+				dt = OrbMech::time_theta(sv_C_CSI_apo.R, sv_C_CSI_apo.V, theta, mu);
+				t_CDH = t_CSI + dt + t_P / 2.0*(double)(opt.N_CDH - 1);
 			}
-			elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
-			u_CSI = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
-			u_CSI = fmod(u_CSI, PI2);
-			if (u_CSI < 0)
-				u_CSI += PI2;
-			u_CDH = u_CSI + opt.DU_D;
-			while (u_CDH > PI2)
-			{
-				u_CDH -= PI2;
-				DN += 1.0;
-			}
-			//Propagate to CDH
-			sv_C_CDH = OrbMech::PMMAEGS(sv_C_CSI_apo, 2, u_CDH, err, DN);
-			t_CDH = OrbMech::GETfromMJD(sv_C_CDH.MJD, opt.GETbase);
-		}
-		//CDH at next apsis
-		else
-		{
-			//TBD
+			sv_C_CDH = coast(sv_C_CSI_apo, t_CDH - t_CSI);
 		}
 		sv_T_CDH = coast(sv_T_CSI, t_CDH - OrbMech::GETfromMJD(sv_T_CSI.MJD, opt.GETbase));
 	}

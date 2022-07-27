@@ -6541,23 +6541,30 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
 		if (GC->rtcc->med_k01.I_CDH == 1)
 		{
-			skp->Text(8 * W / 16, 2 * H / 14, "CDH at upcoming apsis:", 21);
+			skp->Text(15 * W / 16, 2 * H / 14, "CDH at upcoming apsis (AEG):", 28);
 			sprintf_s(Buffer, "%d", GC->rtcc->med_k01.CDH_Apsis);
 		}
 		else if (GC->rtcc->med_k01.I_CDH == 2)
 		{
-			skp->Text(8 * W / 16, 2 * H / 14, "CDH on time:", 12);
+			skp->Text(15 * W / 16, 2 * H / 14, "CDH on time:", 12);
 			GET_Display3(Buffer, GC->rtcc->med_k01.CDH_Time);
+		}
+		else if (GC->rtcc->med_k01.I_CDH == 3)
+		{
+			skp->Text(15 * W / 16, 2 * H / 14, "Angle from CSI to CDH:", 22);
+			sprintf_s(Buffer, "%.1lf°", GC->rtcc->med_k01.CDH_Angle*DEG);
 		}
 		else
 		{
-			skp->Text(8 * W / 16, 2 * H / 14, "Angle from CSI to CDH:", 22);
-			sprintf_s(Buffer, "%.1lf°", GC->rtcc->med_k01.CDH_Angle*DEG);
+			skp->Text(15 * W / 16, 2 * H / 14, "CDH at upcoming apsis (Keplerian):", 34);
+			sprintf_s(Buffer, "%d", GC->rtcc->med_k01.CDH_Apsis);
 		}
 
-		skp->Text(8 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(15 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 70)
 	{
