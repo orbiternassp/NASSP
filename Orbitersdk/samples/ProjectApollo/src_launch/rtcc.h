@@ -469,6 +469,7 @@ struct SPQResults
 	SV sv_C[5];
 	SV sv_C_apo[5];
 	SV sv_T[5];
+	int err = 0;
 };
 
 struct RTEMoonOpt
@@ -980,9 +981,9 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int I_Theta = 0;
 	//0 = CDH not scheduled, 1 = CDH scheduled
 	bool CDH = true;
-	//1 = CDH at next apsis, 2 = CDH on time, 3 = angle from CSI
+	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (AEG)
 	int I_CDH = 3;
-	//Number of apsis since CSI (for CDH at next apsis option)
+	//Number of apsis since CSI (for CDH at next apsis options)
 	int N_CDH = 1;
 	bool OptimumCSI = false;
 	//0 = CSI and CDH in-plane, 1 = CSI and CDH parallel to target
@@ -3193,7 +3194,7 @@ public:
 		int ChaserVehicle = 1; //1 = CSM, 3 = LEM
 		double ChaserThresholdGET = -1.0;
 		double TargetThresholdGET = -1.0;
-		//1 = CDH at next apsis, 2 = CDH on time, 3 = angle from CSI
+		//1 = CDH at upcoming apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at upcoming apsis (Keplerian)
 		int I_CDH = 3;
 		//For option 1
 		int CDH_Apsis = 1;
