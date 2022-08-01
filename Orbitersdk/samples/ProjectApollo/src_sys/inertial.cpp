@@ -146,8 +146,6 @@ void InertialData::getAcceleration(VECTOR3 &acc) {
 }
 
 void InertialData::SaveState(FILEHANDLE scn){
-	char buffer[100];
-
 	oapiWriteLine(scn, INERTIAL_DATA_START_STRING);
 	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
 	papiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
