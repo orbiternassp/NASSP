@@ -174,6 +174,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_INERTIAL_ACCEL:
+		if (OurVessel)
+		{
+			OurVessel->GetInertialData()->getAcceleration(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_ROTATIONMATRIX:
 		if (OurVessel)
 		{

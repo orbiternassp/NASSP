@@ -1362,6 +1362,7 @@ public:
 	int Lua_GetAGCUplinkStatus();
 
 	//System Access
+	InertialData *GetInertialData() { return &inertialData; };
 	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 	SCE *GetSCE() { return &sce; }
