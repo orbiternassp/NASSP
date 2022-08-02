@@ -85,6 +85,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	pEph[2] = in.MCIEphemTableIndicator;
 	pEph[3] = in.MCTEphemTableIndicator;
 	EphemerisBuildIndicator = in.EphemerisBuildIndicator;
+	MinEphemDT = in.MinEphemDT;
 
 	a_drag = _V(0, 0, 0);
 	delta = _V(0, 0, 0);
@@ -143,7 +144,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 		}
 	} while (IEND == 0);
 
-	EphemerisStorage();
+	EphemerisStorage(true);
 	WriteEphemerisHeader();
 
 	in.sv_cutoff.R = R_CON + delta;
@@ -610,19 +611,56 @@ double EnckeFreeFlightIntegrator::CurrentTime()
 	return (t0 + TRECT + tau);
 }
 
-void EnckeFreeFlightIntegrator::EphemerisStorage()
+void EnckeFreeFlightIntegrator::EphemerisStorage(bool last)
 {
 	if (EphemerisBuildIndicator == false) return;
 
-	EphemerisData2 sv, sv2;
-	int in;
+	bool store = false, wastested = false;
 
 	for (int i = 0;i < 4;i++)
 	{
 		if (bStoreEphemeris[i] && pEph[i])
 		{
-			if (pEph[i]->table.size() == 0 || abs(pEph[i]->table.back().GMT - CurrentTime()) > 0.001)
+			//Only go through this once
+			if (wastested == false)
 			{
+				//Always store first and last vector and store them all if MinEphemDT is zero
+				if (pEph[i]->table.size() == 0 || MinEphemDT == 0.0 || last)
+				{
+					store = true;
+				}
+				else
+				{
+					double T_last, T_next, T_cur;
+
+					//Last stored state vector
+					T_last = pEph[i]->table.back().GMT;
+					//Next desired time to store state vector
+					T_next = T_last + MinEphemDT;
+					//Current time
+					T_cur = CurrentTime();
+					//Don't store if state vectors are too close
+					if (abs(T_last - T_cur) > 0.001)
+					{
+						double dt_next;
+
+						//Time difference from current to next desired store time
+						dt_next = T_next - T_cur;
+						//Algorithm: "when the time required to reach the next minimum output point is less than one-half of the time span of the last integration step"
+						if (dt_next < 0.5*dt)
+						{
+							store = true;
+						}
+					}
+				}
+				wastested = true;
+			}
+
+			if (store)
+			{
+				EphemerisData2 sv, sv2;
+				int in;
+
 				if (P == BODY_EARTH)
 				{
 					in = 0;

@@ -35,7 +35,7 @@ struct EMMENIInputTable
 	//Maximum time of integration
 	double MaxIntegTime = 10.0*24.0*3600.0;
 	//Minimum time between ephemeris points
-	double MinEphemDT;
+	double MinEphemDT = 0.0;
 	//Integration direction indicator (+X-forward, -X-backward)
 	double IsForwardIntegration = 1.0;
 	//Desired value of stopping parameter relative to the Earth
@@ -89,7 +89,7 @@ private:
 	double fq(double q);
 	void adfunc();
 	double CurrentTime();
-	void EphemerisStorage();
+	void EphemerisStorage(bool last = false);
 	void WriteEphemerisHeader();
 	void ACCEL_GRAV();
 
@@ -178,6 +178,8 @@ private:
 	double WT;
 	//Drag acceleration
 	VECTOR3 a_drag;
+	//Minimum output step
+	double MinEphemDT;
 
 	//ACCEL
 	//Rotation matrix from local to global coordinates, left handed
