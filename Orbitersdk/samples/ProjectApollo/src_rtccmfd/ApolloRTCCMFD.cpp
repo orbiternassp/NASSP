@@ -7168,7 +7168,7 @@ void ApolloRTCCMFD::menuSetAGCEphemTIMEM0()
 
 void ApolloRTCCMFD::menuSetAGCEphemTLAND()
 {
-	GenericGETInput(&G->AGCEphemTLAND, "Choose the GET of lunar landing (Format: hhh:mm:ss)");
+	GenericDoubleInput(&G->AGCEphemTLAND, "Calculate lunar libration vector to (in days):");
 }
 
 void ApolloRTCCMFD::menuGenerateAGCEphemeris()

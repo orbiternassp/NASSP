@@ -3194,22 +3194,25 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 			skp->Text(1 * W / 8, 2 * H / 14, "Epoch of BRCS:", 14);
 			skp->Text(1 * W / 8, 4 * H / 14, "TEphemZero:", 11);
+			skp->Text(1 * W / 8, 8 * H / 14, "TIMEM0:", 7);
 
 			sprintf(Buffer, "%d", G->AGCEphemBRCSEpoch);
 			skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%f", G->AGCEphemTEphemZero);
 			skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->AGCEphemTIMEM0);
+			skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
 			skp->Text(4 * W / 8, (int)(0.5 * H / 14), "AGC Correction Vectors", 23);
 
 			skp->Text(1 * W / 8, 6 * H / 14, "TEPHEM:", 7);
-			sprintf(Buffer, "%f", G->AGCEphemTEPHEM);
+			sprintf(Buffer, "%.4f", G->AGCEphemTEPHEM);
 			skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 			skp->Text(1 * W / 8, 10 * H / 14, "TLAND:", 6);
-			GET_Display(Buffer, G->AGCEphemTLAND);
+			sprintf(Buffer, "%+.2f Days", G->AGCEphemTLAND);
 			skp->Text(4 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
 			skp->Text(1 * W / 8, 12 * H / 14, "Mission:", 8);
@@ -3225,11 +3228,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				skp->Text(7 * W / 8, 6 * H / 14, "LGC", 3);
 			}
 		}
-
-
-		skp->Text(1 * W / 8, 8 * H / 14, "TIMEM0:", 7);
-		sprintf(Buffer, "%f", G->AGCEphemTIMEM0);
-		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 38)
 	{

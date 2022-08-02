@@ -155,7 +155,7 @@ public:
 	int agcCelBody_RH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
 	int agcCelBody_LH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
 	void AGCEphemeris(double T0, int Epoch, double TEphem0);
-	void AGCCorrectionVectors(double mjd_launch, double t_land, int mission, bool isCMC);
+	void AGCCorrectionVectors(double mjd_launchday, double dt_UNITW, double dt_504LM, int mission, bool isCMC);
 	void GenerateAGCCorrectionVectors();
 
 	// SUBTHREAD MANAGEMENT

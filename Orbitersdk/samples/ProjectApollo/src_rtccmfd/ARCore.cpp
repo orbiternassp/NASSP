@@ -107,8 +107,8 @@ AR_GCore::AR_GCore(VESSEL* v)
 	rtcc = pMCCVessel->rtcc;
 
 	
-	//If the year hasn't been loaded into the RTCC we can assume it hasn't been properly initialized yet
-	if (rtcc->GZGENCSN.Year == 0)
+	//If the GMTBase hasn't been loaded into the RTCC we can assume it hasn't been properly initialized yet
+	if (rtcc->GetGMTBase() == 0)
 	{
 		SetMissionSpecificParameters();
 	}
@@ -700,8 +700,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	AGCEphemOption = 0;
 	AGCEphemBRCSEpoch = GC->rtcc->SystemParameters.AGCEpoch;
 	AGCEphemTIMEM0 = floor(GC->rtcc->CalcGETBase()) + 6.75;
-	AGCEphemTEPHEM = GC->rtcc->CalcGETBase();
-	AGCEphemTLAND = GC->rtcc->CZTDTGTU.GETTD;
+	AGCEphemTEPHEM = floor(GC->rtcc->CalcGETBase() - 0.5) + 0.5; //Noon before launch
+	AGCEphemTLAND = 4.5;
 	AGCEphemMission = GC->mission;
 	AGCEphemIsCMC = vesseltype != 1;
 
@@ -1145,7 +1145,7 @@ void ARCore::GenerateAGCEphemeris()
 
 void ARCore::GenerateAGCCorrectionVectors()
 {
-	AGCCorrectionVectors(AGCEphemTEPHEM, AGCEphemTLAND, AGCEphemMission, AGCEphemIsCMC);
+	AGCCorrectionVectors(AGCEphemTEPHEM, -0.5, AGCEphemTLAND, AGCEphemMission, AGCEphemIsCMC);
 }
 
 void ARCore::EntryPAD()
@@ -5220,23 +5220,25 @@ void ARCore::DetermineGMPCode()
 	GMPManeuverCode = code;
 }
 
-void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission, bool isCMC)
+void ARCore::AGCCorrectionVectors(double mjd_launchday, double dt_UNITW, double dt_504LM, int mission, bool isCMC)
 {
-	OBJHANDLE hEarth, hMoon;
+	//INPUTS:
+	//mjd_launchday: MJD of noon (GMT) preceeding the launch
+	//dt_UNITW: //Time in days from mjd_launchday to calculate the Earth correction vector UNITW
+	//dt_504LM: //Time in days from mjd_launchday to calculate the Moon correction vector 504LM
+
 	MATRIX3 R, Rot2, J2000, R2, R3, M, M_AGC;
 	VECTOR3 UNITW;
-	double mjd_mid, brcsmjd, w_E, t0, B_0, Omega_I0, F_0, B_dot, Omega_I_dot, F_dot, cosI, sinI;
-	double A_Z, A_Z0, mjd_land;
+	double mjd_UNITW, mjd_504LM, brcsmjd, w_E, t0, B_0, Omega_I0, F_0, B_dot, Omega_I_dot, F_dot, cosI, sinI;
+	double A_Z, A_Z0;
 	int mem, epoch;
 	char AGC[64];
 
-	mjd_mid = mjd_launch + 7.0;
-	mjd_land = mjd_launch + t_land / 24.0 / 3600.0;
-	hEarth = oapiGetObjectByName("Earth");
-	hMoon = oapiGetObjectByName("Moon");
+	mjd_UNITW = mjd_launchday + dt_UNITW;
+	mjd_504LM = mjd_launchday + dt_504LM;
 
 	Rot2 = _M(1., 0., 0., 0., 0., 1., 0., 1., 0.);
-	R = OrbMech::GetRotationMatrix(BODY_EARTH, mjd_mid);
+	R = OrbMech::GetRotationMatrix(BODY_EARTH, mjd_UNITW);
 
 	if (isCMC)
 	{
@@ -5417,7 +5419,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	A_Z = atan2(R3.m21, R3.m11);
 	if (mission < 14)
 	{
-		A_Z0 = fmod((A_Z - w_E * (mjd_mid - t0) * 24.0 * 3600.0), PI2);  //AZ0 for mission
+		A_Z0 = fmod((A_Z - w_E * (mjd_UNITW - t0) * 24.0 * 3600.0), PI2);  //AZ0 for mission
 		if (A_Z0 < 0) A_Z0 += PI2;
 	}
 	else if (mission < 15)
@@ -5440,9 +5442,9 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	fprintf(file, "Epoch   = %d (Year) Epoch of Basic Reference Coordinate System\n", epoch);
 	fprintf(file, "Epoch   = %6.6f (MJD) Epoch of Basic Reference Coordinate System\n", brcsmjd);
 	fprintf(file, "TEphem0 = %6.6f (MJD) Ephemeris Time Zero\n", t0);
-	fprintf(file, "TEPHEM  = %6.6f (MJD) Mission launch time\n", mjd_launch);
-	fprintf(file, "MJDLAND = %6.6f (MJD) Mission lunar landing time\n", mjd_land);
-	fprintf(file, "TIMEM0  = %6.6f (MJD) Mission mid-range time\n\n", mjd_mid);
+	fprintf(file, "T0      = %6.6f (MJD) Mission start time\n", mjd_launchday);
+	fprintf(file, "UNITW computed to %+.2lf Days\n", dt_UNITW);
+	fprintf(file, "504LM computed to %+.2lf Days\n\n", dt_504LM);
 	fprintf(file, "------- Earth Orientation -------\n");
 	if (mission < 14)
 	{
@@ -5470,16 +5472,8 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	VECTOR3 lm;
 	double t_M, B, Omega_I, F;
 
-	if (isCMC)
-	{
-		t_M = (mjd_mid - t0) * 24.0 * 3600.0;
-		RM = OrbMech::GetRotationMatrix(BODY_MOON, mjd_mid);
-	}
-	else
-	{
-		t_M = (mjd_land - t0) * 24.0 * 3600.0;
-		RM = OrbMech::GetRotationMatrix(BODY_MOON, mjd_land);
-	}
+	t_M = (mjd_504LM - t0) * 24.0 * 3600.0;
+	RM = OrbMech::GetRotationMatrix(BODY_MOON, mjd_504LM);
 
 	B = B_0 + B_dot * t_M;
 	Omega_I = Omega_I0 + Omega_I_dot * t_M;
