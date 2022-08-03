@@ -1265,7 +1265,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "Epoch of BRCS", 0, 'E' },
 		{ "MJD of July 1st", 0, 'Z' },
-		{ "MJD of launch", 0, 'L' },
+		{ "Start time (MJD)", 0, 'L' },
 		{ "MJD of mid-mission", 0, 'M' },
 		{ "Time of landing", 0, 'T' },
 		{ "Apollo mission", 0, 'N' },
