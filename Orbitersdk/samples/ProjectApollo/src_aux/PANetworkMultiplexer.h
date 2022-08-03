@@ -27,16 +27,45 @@
 #define PANETWORKMULTIPLEXER_H
 
 #define ORBITER_MODULE
-
+#define WIN32_LEAN_AND_MEAN //aparently this is needed for winsock2
 
 #include "OrbiterSDK.h"
+#include "thread"
+#include "mutex"
+
+#include <winsock2.h>
+
+
 
 class ProjectApolloNetworkMultiplexer: public oapi::Module{
 public:
 	ProjectApolloNetworkMultiplexer(HINSTANCE HModule);
 	~ProjectApolloNetworkMultiplexer();
-	
 
+private:
+
+	uint8_t CSMTelemetryBuffer[1024];
+	uint8_t LMTelemetryBuffer[1024];
+
+	struct Ports {
+		unsigned int CSM;
+		unsigned int LM;
+		unsigned int CSMPlayback;
+		unsigned int LMPlayback;
+	};
+
+	Ports ports;
+
+	enum ConnectType {
+		CSMTelemetry,
+		LMTelemetry,
+		CSMPlayback,
+		LMPlayback,
+	};
+
+	void ConnectToHost(ConnectType);
+
+	void clbkPostStep(double simt, double simdt, double mjd);
 };
 
 #endif

@@ -38,8 +38,17 @@ DLLCLBK void ExitModule(HINSTANCE hModule){
 
 ProjectApolloNetworkMultiplexer::ProjectApolloNetworkMultiplexer(HINSTANCE HModule) : Module(HModule)
 {
+	ports.CSM = 14242;
+	ports.LM = 14243;
+	ports.CSMPlayback = 14244;
+	ports.LMPlayback = 14245;
 }
 
 ProjectApolloNetworkMultiplexer::~ProjectApolloNetworkMultiplexer()
 {
+}
+
+void ProjectApolloNetworkMultiplexer::clbkPostStep(double simt, double simdt, double mjd)
+{
+	sprintf(oapiDebugString(),"%lf",simt);
 }
