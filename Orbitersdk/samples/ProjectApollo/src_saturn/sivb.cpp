@@ -201,7 +201,8 @@ void SIVB_Airfoil_Coeff(VESSEL *v, double aoa, double M, double Re, void *contex
 SIVB::SIVB(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
 CSMLVSeparationInitiator("CSM-LV-Separation-Initiator", Panelsdk),
 LMSLASeparationInitiators("LM-SLA-Separation-Initiators", Panelsdk),
-SLAPanelDeployInitiator("SLA-Panel-Deploy-Initiator", Panelsdk)
+SLAPanelDeployInitiator("SLA-Panel-Deploy-Initiator", Panelsdk),
+inertialData(this)
 {
 	PanelSDKInitalised = false;
 
@@ -914,6 +915,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 
 void SIVB::clbkPostStep(double simt, double simdt, double mjd)
 {
+	inertialData.timestep(simdt);
 	iu->PostStep(simt, simdt, mjd);
 }
 
@@ -2131,6 +2133,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_INERTIAL_ACCEL:
+		if (OurVessel)
+		{
+			OurVessel->GetInertialData()->getAcceleration(*(VECTOR3 *)m.val1.pValue);
 			return true;
 		}
 		break;
