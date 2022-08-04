@@ -655,6 +655,7 @@ void MCC::TimeStep(double simdt){
 			}
 
 			y = 0;
+			TransmittingGroundStation = NULL;
 
 			while (x < MAX_GROUND_STATION) {
 				if (GroundStations[x].Active == true) {
@@ -681,6 +682,8 @@ void MCC::TimeStep(double simdt){
 							GroundStations[x].AOS = 1;
 							sprintf(buf, "AOS %s", GroundStations[x].Name);
 							addMessage(buf);
+
+							TransmittingGroundStation = &GroundStations[x];
 						}
 					}
 					if ((!OrbMech::sight(CM_Vector, GSVector, R_E) || length(CM_Vector - GSVector) > LOSRange || MoonInTheWay) && GroundStations[x].AOS == 1) {
