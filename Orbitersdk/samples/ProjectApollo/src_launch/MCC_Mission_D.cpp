@@ -134,28 +134,31 @@ void MCC::MissionSequence_D()
 	case MST_D_DAY3STATE3: //LM AOT STAR OBS PAD to Block Data 6
 		UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, rtcc->GETEval2(47 * 60 * 60 + 10 * 60), 19, MST_D_DAY3STATE5);
 		break;
-	case MST_D_DAY3STATE5: //Block Data 6 to CMC state vector updates
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(48 * 60 * 60), 20, MST_D_DAY3STATE6);
+	case MST_D_DAY3STATE5: //Block Data 6 to LM DAP PAD
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(47 * 3600 + 50 * 60), 20, MST_D_DAY3STATE6);
 		break;
-	case MST_D_DAY3STATE6: //CMC state vector updates to LGC Docked DPS Burn Update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(48 * 60 * 60 + 10 * 60), 3, MST_D_DAY3STATE7);
+	case MST_D_DAY3STATE6: //LM DAP PAD to CMC state vector updates
+		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, rtcc->GETEval2(48 * 60 * 60), 8, MST_D_DAY3STATE7);
 		break;
-	case MST_D_DAY3STATE7: //LGC Docked DPS Burn Update to LGC Gyro Torquing Angles
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 21, MST_D_DAY3STATE8);
+	case MST_D_DAY3STATE7: //CMC state vector updates to LGC Docked DPS Burn Update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(48 * 60 * 60 + 10 * 60), 3, MST_D_DAY3STATE8);
 		break;
-	case MST_D_DAY3STATE8: //LGC Gyro Torquing Angles to LGC Gyro Torquing Angles
-		UpdateMacro(UTP_PADONLY, PT_TORQANG, rtcc->GETEval2(49 * 60 * 60 + 5 * 60), 22, MST_D_DAY3STATE9);
+	case MST_D_DAY3STATE8: //LGC Docked DPS Burn Update to LGC Gyro Torquing Angles
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 21, MST_D_DAY3STATE9);
 		break;
-	case MST_D_DAY3STATE9: //LGC Gyro Torquing Angles to SPS-5
-		UpdateMacro(UTP_PADONLY, PT_TORQANG, rtcc->GETEval2(52 * 60 * 60 + 50 * 60), 22, MST_D_DAY3STATE10);
+	case MST_D_DAY3STATE9: //LGC Gyro Torquing Angles to LGC Gyro Torquing Angles
+		UpdateMacro(UTP_PADONLY, PT_TORQANG, rtcc->GETEval2(49 * 60 * 60 + 5 * 60), 22, MST_D_DAY3STATE10);
 		break;
-	case MST_D_DAY3STATE10: //SPS-5 to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(55 * 60 * 60 + 30 * 60), 23, MST_D_DAY3STATE11);
+	case MST_D_DAY3STATE10: //LGC Gyro Torquing Angles to SPS-5
+		UpdateMacro(UTP_PADONLY, PT_TORQANG, rtcc->GETEval2(52 * 60 * 60 + 50 * 60), 22, MST_D_DAY3STATE11);
 		break;
-	case MST_D_DAY3STATE11: //SV Update to Block Data 7
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(56 * 60 * 60 + 40 * 60), 2, MST_D_DAY3STATE12);
+	case MST_D_DAY3STATE11: //SPS-5 to SV Update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(55 * 60 * 60 + 30 * 60), 23, MST_D_DAY3STATE12);
 		break;
-	case MST_D_DAY3STATE12: //Block Data 7 to Block Data 8
+	case MST_D_DAY3STATE12: //SV Update to Block Data 7
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(56 * 60 * 60 + 40 * 60), 2, MST_D_DAY3STATE13);
+		break;
+	case MST_D_DAY3STATE13: //Block Data 7 to Block Data 8
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(67 * 60 * 60 + 30 * 60), 24, MST_D_DAY4STATE1);
 		break;
 	case MST_D_DAY4STATE1: //Block Data 8 to EVA REFSMMAT Update

@@ -192,15 +192,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "LDPPGETTH3", GC->rtcc->med_k16.GETTH3);
 	papiWriteScenario_double(scn, "LDPPGETTH4", GC->rtcc->med_k16.GETTH4);
 
-	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
 	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_LunarLiftoff);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
-	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
-	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
-	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
-	papiWriteScenario_bool(scn, "DKI_Radial_DV", G->DKI_Radial_DV);
-	oapiWriteScenario_int(scn, "DKI_N_HC", G->DKI_N_HC);
-	oapiWriteScenario_int(scn, "DKI_N_PB", G->DKI_N_PB);
 
 	papiWriteScenario_bool(scn, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
 }
@@ -294,15 +287,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "LDPPGETTH3", GC->rtcc->med_k16.GETTH3);
 		papiReadScenario_double(line, "LDPPGETTH4", GC->rtcc->med_k16.GETTH4);
 
-		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
 		papiReadScenario_double(line, "t_Liftoff_guess", G->t_LunarLiftoff);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
-		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
-		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
-		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
-		papiReadScenario_bool(line, "DKI_Radial_DV", G->DKI_Radial_DV);
-		papiReadScenario_int(line, "DKI_N_HC", G->DKI_N_HC);
-		papiReadScenario_int(line, "DKI_N_PB", G->DKI_N_PB);
 
 		papiReadScenario_bool(line, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
 
@@ -1003,7 +989,7 @@ void ApolloRTCCMFD::menuSetSPQorDKIRTransferPage()
 	{
 		GC->rtcc->med_m70.Plan = 0;
 	}
-	else if (screen == 33)
+	else if (screen == 123)
 	{
 		GC->rtcc->med_m70.Plan = 1;
 	}
@@ -1292,6 +1278,11 @@ void ApolloRTCCMFD::menuSetLandmarkAcquisitionDisplayPage()
 void ApolloRTCCMFD::menuSetLWPDisplayPage()
 {
 	SelectPage(122);
+}
+
+void ApolloRTCCMFD::menuSetRendezvousPlanningDisplayPage()
+{
+	SelectPage(123);
 }
 
 void ApolloRTCCMFD::menuLWPLiftoffTimeOption()
@@ -3122,28 +3113,61 @@ bool TIUllageOptionInput(void *id, char *str, void *data)
 	int num;
 	if (sscanf(str, "%d %lf", &num, &ss) == 2)
 	{
-		((ApolloRTCCMFD*)data)->set_TIUllageOption(num, ss);
+		((ApolloRTCCMFD*)data)->set_UllageOption(72, num, ss);
 		return true;
 	}
 	return false;
 }
 
-bool ApolloRTCCMFD::set_TIUllageOption(int num, double dt)
+void ApolloRTCCMFD::menuM70UllageOption()
 {
+	bool M70UllageOptionInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the number and duration of ullage (Format: number time)", M70UllageOptionInput, 0, 20, (void*)this);
+}
+
+bool M70UllageOptionInput(void *id, char *str, void *data)
+{
+	double ss;
+	int num;
+	if (sscanf(str, "%d %lf", &num, &ss) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_UllageOption(70, num, ss);
+		return true;
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_UllageOption(int med, int num, double dt)
+{
+	bool UllageQuads;
+	double UllageDT;
+
 	if (num == 2)
 	{
-		GC->rtcc->med_m72.UllageQuads = false;
+		UllageQuads = false;
 	}
 	else if (num == 4)
 	{
-		GC->rtcc->med_m72.UllageQuads = true;
+		UllageQuads = true;
 	}
 	else
 	{
 		return false;
 	}
 
-	GC->rtcc->med_m72.UllageDT = dt;
+	UllageDT = dt;
+
+	switch (med)
+	{
+	case 70:
+		GC->rtcc->med_m70.UllageQuads = UllageQuads;
+		GC->rtcc->med_m70.UllageDT = UllageDT;
+		break;
+	case 72:
+		GC->rtcc->med_m72.UllageQuads = UllageQuads;
+		GC->rtcc->med_m72.UllageDT = UllageDT;
+		break;
+	}
 	return true;
 }
 
@@ -4567,25 +4591,14 @@ void ApolloRTCCMFD::set_GMPInput4(double val)
 	}
 }
 
-void ApolloRTCCMFD::DKIDHdialogue()
+void ApolloRTCCMFD::menuDKINSRDHInput()
 {
-	bool DKIDHInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the DH:", DKIDHInput, 0, 20, (void*)this);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIDeltaH_NSR, "Enter DH at NSR:", 1852.0);
 }
 
-bool DKIDHInput(void *id, char *str, void *data)
+void ApolloRTCCMFD::menuDKINCCDHInput()
 {
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_DKIDH(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_DKIDH(double DH)
-{
-	this->GC->rtcc->GZGENCSN.DKIDeltaH = DH * 1852.0;
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIDeltaH_NCC, "Enter DH at NCC:", 1852.0);
 }
 
 void ApolloRTCCMFD::SPQDHdialogue()
@@ -5088,7 +5101,7 @@ bool ApolloRTCCMFD::set_RTESolution(char *str)
 	{
 		i = 0;
 	}
-	else if (str[0] == 'RTEM')
+	else if (strcmp(str, "RTEM") == 0)
 	{
 		i = 1;
 	}
@@ -6769,14 +6782,26 @@ void ApolloRTCCMFD::menuSetNavCheckGET()
 	GenericGETInput(&G->navcheckpad.NavChk[0], "Choose the GET for the Nav Check (Format: hhh:mm:ss)");
 }
 
-void ApolloRTCCMFD::menuCycleDKIChaser()
+void ApolloRTCCMFD::menuDKINC1Line()
 {
-	GC->rtcc->med_k00.ChaserVehicle = 4 - GC->rtcc->med_k00.ChaserVehicle;
+	GenericDoubleInput(&GC->rtcc->med_k00.NC1, "Enter NC1 maneuver line point:");
 }
 
-void ApolloRTCCMFD::menuSetDKIThresholdTime()
+void ApolloRTCCMFD::menuDKINHLine()
 {
-	GenericGETInput(&GC->rtcc->med_k10.MLDTime, "Choose the DKI threshold time (Format: hhh:mm:ss)");
+	GenericDoubleInput(&GC->rtcc->med_k00.NH, "Enter NH maneuver line point:");
+}
+
+void  ApolloRTCCMFD::menuCycleDKIChaserVehicle()
+{
+	if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_CSM)
+	{
+		GC->rtcc->med_k00.ChaserVehicle = RTCC_MPT_LM;
+	}
+	else
+	{
+		GC->rtcc->med_k00.ChaserVehicle = RTCC_MPT_CSM;
+	}
 }
 
 void ApolloRTCCMFD::menuDKICalc()
@@ -6797,86 +6822,41 @@ void ApolloRTCCMFD::menuSetLAPLiftoffTime()
 	GenericGETInput(&G->t_LunarLiftoff, "Choose the liftoff time (Format: hhh:mm:ss)");
 }
 
-void ApolloRTCCMFD::DKITIGDialogue()
+void ApolloRTCCMFD::menuDKINSRLine()
 {
-	bool DKITIGInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the time of ignition (Format: hhh:mm:ss)", DKITIGInput, 0, 20, (void*)this);
+	GenericDoubleInput(&GC->rtcc->med_k00.NSR, "Enter NSR maneuver line point:");
 }
 
-bool DKITIGInput(void *id, char *str, void *data)
+void ApolloRTCCMFD::menuDKIMILine()
 {
-	int hh, mm, ss, t1time;
-	double pdidt;
-	if (strcmp(str, "PeT") == 0)
-	{
-		double pet;
-		pet = ((ApolloRTCCMFD*)data)->timetoperi();
-		((ApolloRTCCMFD*)data)->set_DKITIG(pet);
-		return true;
-	}
-	else if (strcmp(str, "ApT") == 0)
-	{
-		double apt;
-		apt = ((ApolloRTCCMFD*)data)->timetoapo();
-		((ApolloRTCCMFD*)data)->set_DKITIG(apt);
-		return true;
-	}
-	else if (sscanf(str, "PDI+%lf", &pdidt) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_DKITIG_DT_PDI(pdidt * 60.0);
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		t1time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_DKITIG(t1time);
-		return true;
-	}
-	return false;
+	GenericDoubleInput(&GC->rtcc->med_k00.MI, "Enter approximate TPI maneuver line point:");
 }
 
-void ApolloRTCCMFD::set_DKITIG(double time)
+void ApolloRTCCMFD::menuDKINPCLine()
 {
-	G->DKI_TIG = time;
+	GenericDoubleInput(&GC->rtcc->med_k00.NPC, "Enter NPC maneuver line point:");
 }
 
-void ApolloRTCCMFD::set_DKITIG_DT_PDI(double dt)
+void ApolloRTCCMFD::menuCycleDKIManeuverLineDefinition()
 {
-	G->DKI_TIG = G->pdipad.GETI + dt;
+	if (GC->rtcc->med_k10.MLDOption < 3)
+	{
+		GC->rtcc->med_k10.MLDOption++;
+	}
+	else
+	{
+		GC->rtcc->med_k10.MLDOption = 1;
+	}
 }
 
 void ApolloRTCCMFD::menuCycleDKIProfile()
 {
-	if (G->DKI_Profile < 4)
-	{
-		G->DKI_Profile++;
-	}
-	else
-	{
-		G->DKI_Profile = 0;
-	}
+	GC->rtcc->med_k00.I4 = !GC->rtcc->med_k00.I4;
 }
 
-void ApolloRTCCMFD::menuCycleDKITPIMode()
+void ApolloRTCCMFD::menuDKITIG()
 {
-	if (G->DKI_TPI_Mode < 2)
-	{
-		G->DKI_TPI_Mode++;
-	}
-	else
-	{
-		G->DKI_TPI_Mode = 0;
-	}
-}
-
-void ApolloRTCCMFD::menuCycleDKIManeuverLine()
-{
-	G->DKI_Maneuver_Line = !G->DKI_Maneuver_Line;
-}
-
-void ApolloRTCCMFD::menuCycleDKIRadialComponent()
-{
-	G->DKI_Radial_DV = !G->DKI_Radial_DV;
+	GenericGETInput(&GC->rtcc->med_k10.MLDTime, "Enter time of ignition (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuSetSPQElevation()
@@ -6947,15 +6927,22 @@ void ApolloRTCCMFD::set_SPQTPIDefinitionValue(double get)
 
 void ApolloRTCCMFD::menuCycleSPQCDHPoint()
 {
-
+	if (GC->rtcc->med_k01.I_CDH < 4)
+	{
+		GC->rtcc->med_k01.I_CDH++;
+	}
+	else
+	{
+		GC->rtcc->med_k01.I_CDH = 1;
+	}
 }
 
 void ApolloRTCCMFD::menuSPQCDHValue()
 {
 	bool SPQCDHValueInput(void* id, char *str, void *data);
-	if (GC->rtcc->med_k01.I_CDH == 1)
+	if (GC->rtcc->med_k01.I_CDH == 3)
 	{
-		oapiOpenInputBox("No. of apsis since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
+		oapiOpenInputBox("Angle from CSI to CDH:", SPQCDHValueInput, 0, 20, (void*)this);
 	}
 	else if (GC->rtcc->med_k01.I_CDH == 2)
 	{
@@ -6963,7 +6950,7 @@ void ApolloRTCCMFD::menuSPQCDHValue()
 	}
 	else
 	{
-		oapiOpenInputBox("Angle from CSI to CDH:", SPQCDHValueInput, 0, 20, (void*)this);
+		oapiOpenInputBox("No. of apsis since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
 	}
 }
 
@@ -6978,12 +6965,12 @@ bool SPQCDHValueInput(void* id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
 {
-	if (GC->rtcc->med_k01.I_CDH == 1)
+	if (GC->rtcc->med_k01.I_CDH == 3)
 	{
-		int n;
-		if (sscanf(val, "%d", &n) == 1)
+		double angle;
+		if (sscanf(val, "%lf", &angle) == 1)
 		{
-			GC->rtcc->med_k01.CDH_Apsis = n;
+			GC->rtcc->med_k01.CDH_Angle = angle * RAD;
 			return true;
 		}
 	}
@@ -6999,10 +6986,10 @@ bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
 	}
 	else
 	{
-		double angle;
-		if (sscanf(val, "%lf", &angle) == 1)
+		int n;
+		if (sscanf(val, "%d", &n) == 1)
 		{
-			GC->rtcc->med_k01.CDH_Angle = angle * RAD;
+			GC->rtcc->med_k01.CDH_Apsis = n;
 			return true;
 		}
 	}
@@ -7011,64 +6998,89 @@ bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
 
 void ApolloRTCCMFD::menuSetDKIElevation()
 {
-	bool DKIElevInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Elevation in degrees:", DKIElevInput, 0, 20, (void*)this);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIElevationAngle, "Elevation in degrees:", RAD);
 }
 
-bool DKIElevInput(void *id, char *str, void *data)
+void ApolloRTCCMFD::menuSetDKITerminalPhaseAngle()
 {
-	if (strlen(str)<20)
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKITerminalPhaseAngle, "Terminal phase angle in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::menuSetDKIMinimumPerigee()
+{
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIMinPerigee, "Minimum perigee in nautical miles:", 1852.0);
+}
+
+void ApolloRTCCMFD::menuDKIManeuverLineValue()
+{
+	GenericDoubleInput(&GC->rtcc->med_k10.MLDValue, "Choose the maneuver line at TIG:", 1.0);
+}
+
+void ApolloRTCCMFD::menuDKIInitialPhaseFlag()
+{
+	GenericIntInput(&GC->rtcc->GZGENCSN.DKIPhaseAngleSetting, "Control flag for initial phase angle wrapping. 0 = -180 to 180. 1 = 0 to 360. -1 = -360 to 0 and so on...");
+}
+
+void ApolloRTCCMFD::menuCycleDKITerminalPhaseOption()
+{
+	if (GC->rtcc->GZGENCSN.DKI_TP_Definition < 6)
 	{
-		((ApolloRTCCMFD*)data)->set_DKIElevation(atof(str));
-		return true;
+		GC->rtcc->GZGENCSN.DKI_TP_Definition++;
 	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_DKIElevation(double elev)
-{
-	this->GC->rtcc->GZGENCSN.SPQElevationAngle = elev * RAD;
-}
-
-void ApolloRTCCMFD::DKITPIDTDialogue()
-{
-	if (G->DKI_TPI_Mode == 2)
+	else
 	{
-		GenericDoubleInput(&G->DKI_dt_TPI_sunrise, "Choose the TPI time before sunrise in minutes", 60.0);
+		GC->rtcc->GZGENCSN.DKI_TP_Definition = 1; //TBD: Should be 0, but option 0 doesn't work
+	}
+
+	//Set to 0
+	GC->rtcc->GZGENCSN.DKI_TPDefinitionValue = 0.0;
+}
+
+void ApolloRTCCMFD::menuDKITerminalPhaseDefinitionValue()
+{
+	switch (GC->rtcc->GZGENCSN.DKI_TP_Definition)
+	{
+	case 0: //TPI phase angle
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "Choose the phase angle at TPI:", RAD);
+		break;
+	case 1: //TPI TIG input
+		GenericGETInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "Choose the time of TPI (Format HHH:MM:SS)");
+		break;
+	case 2: //TPF TIG input
+		GenericGETInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "Choose the time of TPF (Format HHH:MM:SS)");
+		break;
+	case 3: //TPI at X minutes into night
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPI at X minutes into night:", 1.0);
+		break;
+	case 4: //TPI at X minutes into day
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPI at X minutes into day:", 1.0);
+		break;
+	case 5: //TPF at X minutes into night
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPF at X minutes into night:", 1.0);
+		break;
+	case 6: //TPF at X minutes into day
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPF at X minutes into day:", 1.0);
+		break;
 	}
 }
 
-void ApolloRTCCMFD::DKINHCDialogue()
+void ApolloRTCCMFD::menuCycleTPIMode()
 {
-	GenericIntInput(&G->DKI_N_HC, "Choose the number of half-revs between CSI and CDH");
-}
-
-void ApolloRTCCMFD::DKINPBDialogue()
-{
-	GenericIntInput(&G->DKI_N_PB, "Choose the number of half-revs between Phasing and Boost");
-}
-
-void ApolloRTCCMFD::menuDKIDeltaT1()
-{
-	if (G->DKI_Maneuver_Line == false)
+	if (G->TPI_Mode < 2)
 	{
-		GenericDoubleInput(&G->DKI_dt_PBH, "Choose the time between abort and Boost/CSI:", 60.0);
+		G->TPI_Mode++;
+	}
+	else
+	{
+		G->TPI_Mode = 0;
 	}
 }
 
-void ApolloRTCCMFD::menuDKIDeltaT2()
+void ApolloRTCCMFD::TPIDTDialogue()
 {
-	if (G->DKI_Maneuver_Line == false)
+	if (G->TPI_Mode == 2)
 	{
-		GenericDoubleInput(&G->DKI_dt_BHAM, "Choose the time between boost and HAM:", 60.0);
-	}
-}
-
-void ApolloRTCCMFD::menuDKIDeltaT3()
-{
-	if (G->DKI_Maneuver_Line == false)
-	{
-		GenericDoubleInput(&G->DKI_dt_HAMH, "Choose the time between HAM and CSI:", 60.0);
+		GenericDoubleInput(&G->dt_TPI_sunrise, "Choose the TPI time before sunrise in minutes", 60.0);
 	}
 }
 
@@ -7156,7 +7168,7 @@ void ApolloRTCCMFD::menuSetAGCEphemTIMEM0()
 
 void ApolloRTCCMFD::menuSetAGCEphemTLAND()
 {
-	GenericGETInput(&G->AGCEphemTLAND, "Choose the GET of lunar landing (Format: hhh:mm:ss)");
+	GenericDoubleInput(&G->AGCEphemTLAND, "Calculate lunar libration vector to (in days):");
 }
 
 void ApolloRTCCMFD::menuGenerateAGCEphemeris()
@@ -8513,6 +8525,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 60:
 		menuSetRelativeMotionDigitalsPage();
+		break;
+	case 66:
+		menuSetRendezvousPlanningDisplayPage();
 		break;
 	case 69:
 		menuSetDetailedManeuverTableNo2Page();

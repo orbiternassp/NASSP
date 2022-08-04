@@ -289,6 +289,7 @@ public:
 	bool GetK20() { return K20; }
 	bool GetK203() { return K203; }
 	bool GetK204() { return K204; }
+	bool GetK206() { return K206; }
 	bool GetThrustOn() { return thrustOn; }
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);

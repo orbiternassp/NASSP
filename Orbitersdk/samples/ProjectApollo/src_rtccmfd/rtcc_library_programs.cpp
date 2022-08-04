@@ -506,6 +506,14 @@ int RTCC::ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out)
 	sv_out.R = sv_out2.R;
 	sv_out.V = sv_out2.V;
 	sv_out.GMT = sv_out2.GMT;
+	if (out < 2) //Set to Earth for ECI and ECT, to Moon for MCI, MCT, EMP
+	{
+		sv_out.RBI = 0;
+	}
+	else
+	{
+		sv_out.RBI = 2;
+	}
 	return 0;
 }
 

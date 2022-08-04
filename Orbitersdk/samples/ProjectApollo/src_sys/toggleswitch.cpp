@@ -27,13 +27,6 @@
 
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "Orbitersdk.h"
-#include <stdio.h>
-#include <math.h>
-#include "soundlib.h"
-
-#include "nasspdefs.h"
-#include "nasspsound.h"
 
 #include "toggleswitch.h"
 
@@ -4545,16 +4538,22 @@ void ThreeSourceTwoDestSwitch::UpdateSourceState()
 		//
 		// Source 1 to dest 1, source 3 to dest 2
 		//
+		dest1->WireTo(source[0]);
+		dest2->WireTo(source[1]);
 	}
 	else if (IsCenter()) {
 		//
-		// Disconnect.
+		// Disconnect. Center is usually wired to NULL, for an "Off" state
 		//
+		dest1->WireTo(source[1]);
+		dest2->WireTo(source[1]);
 	}
 	else if (IsDown()) {
 		//
 		// Source 2 to dest 2, source 3 to dest 1.
 		//
+		dest1->WireTo(source[1]);
+		dest2->WireTo(source[2]);
 	}
 }
 
