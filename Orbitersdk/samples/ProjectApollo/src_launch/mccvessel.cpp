@@ -84,6 +84,11 @@ void MCCVessel::clbkPreStep(double simt, double simdt, double mjd)
 	if (rtcc) rtcc->Timestep(simt, simdt, mjd);
 }
 
+int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
+{
+	return 0;
+}
+
 void MCCVessel::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL4::clbkSaveState(scn);
