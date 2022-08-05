@@ -107,8 +107,8 @@ AR_GCore::AR_GCore(VESSEL* v)
 	rtcc = pMCCVessel->rtcc;
 
 	
-	//If the year hasn't been loaded into the RTCC we can assume it hasn't been properly initialized yet
-	if (rtcc->GZGENCSN.Year == 0)
+	//If the GMTBase hasn't been loaded into the RTCC we can assume it hasn't been properly initialized yet
+	if (rtcc->GetGMTBase() == 0)
 	{
 		SetMissionSpecificParameters();
 	}
@@ -609,25 +609,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	DOI_dV_LVLH = _V(0, 0, 0);
 
-	DKI_Profile = 0;
-	DKI_TPI_Mode = 0;
-	DKI_Radial_DV = false;
-	DKI_TIG = 0.0;
-	DKI_DV = _V(0, 0, 0);
-	DKI_Maneuver_Line = true;
-	DKI_dt_TPI_sunrise = 16.0*60.0;
-	DKI_N_HC = 1;
-	DKI_N_PB = 1;
-	DKI_dt_PBH = DKI_dt_BHAM = DKI_dt_HAMH = 3600.0;
-	dkiresult.DV_Phasing = _V(0, 0, 0);
-	dkiresult.t_CDH = 0.0;
-	dkiresult.dv_CSI = 0.0;
-	dkiresult.t_CSI = 0.0;
-	dkiresult.t_TPI = 0.0;
-	dkiresult.DV_CDH = _V(0, 0, 0);
-	dkiresult.t_Boost = 0.0;
-	dkiresult.dv_Boost = 0.0;
-	dkiresult.t_HAM = 0.0;
+	TPI_Mode = 0;
+	dt_TPI_sunrise = 16.0*60.0;
 
 	PDAPEngine = 0;
 	PDAPTwoSegment = false;
@@ -717,8 +700,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	AGCEphemOption = 0;
 	AGCEphemBRCSEpoch = GC->rtcc->SystemParameters.AGCEpoch;
 	AGCEphemTIMEM0 = floor(GC->rtcc->CalcGETBase()) + 6.75;
-	AGCEphemTEPHEM = GC->rtcc->CalcGETBase();
-	AGCEphemTLAND = GC->rtcc->CZTDTGTU.GETTD;
+	AGCEphemTEPHEM = floor(GC->rtcc->CalcGETBase() - 0.5) + 0.5; //Noon before launch
+	AGCEphemTLAND = 4.5;
 	AGCEphemMission = GC->mission;
 	AGCEphemIsCMC = vesseltype != 1;
 
@@ -1162,7 +1145,7 @@ void ARCore::GenerateAGCEphemeris()
 
 void ARCore::GenerateAGCCorrectionVectors()
 {
-	AGCCorrectionVectors(AGCEphemTEPHEM, AGCEphemTLAND, AGCEphemMission, AGCEphemIsCMC);
+	AGCCorrectionVectors(AGCEphemTEPHEM, -0.5, AGCEphemTLAND, AGCEphemMission, AGCEphemIsCMC);
 }
 
 void ARCore::EntryPAD()
@@ -1323,7 +1306,7 @@ void ARCore::GetStateVectorFromIU()
 void ARCore::GetStateVectorsFromAGS()
 {
 	//Are we a LM?
-	if (vesseltype == 1) return;
+	if (vesseltype != 1) return;
 
 	//0-6: pos and vel
 	int csmvecoct[6], lmvecoct[6];
@@ -3631,43 +3614,36 @@ int ARCore::subThread()
 	case 19: //Docking Initiation Processor
 	{
 		DKIOpt opt;
-		SV sv_A, sv_P, sv_pre, sv_post;
+		double GMT;
+
+		if (GC->rtcc->med_k10.MLDTime == 0.0)
+		{
+			GMT = GC->rtcc->RTCCPresentTimeGMT();
+		}
+		else
+		{
+			GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k10.MLDTime);
+		}
 
 		if (GC->MissionPlanningActive)
 		{
 			EphemerisData EPHEM;
-			double GMT;
 
-			if (GC->rtcc->med_k10.MLDTime < 0)
-			{
-				GMT = GC->rtcc->RTCCPresentTimeGMT();
-			}
-			else
-			{
-				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k10.MLDTime);
-			}
-
-			int err = GC->rtcc->ELFECH(GMT, GC->rtcc->med_k00.ChaserVehicle, EPHEM);
+			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM);
 			if (err)
 			{
 				Result = 0;
 				break;
 			}
-			sv_A.R = EPHEM.R;
-			sv_A.V = EPHEM.V;
-			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+			opt.sv_CSM = EPHEM;
 
-			err = GC->rtcc->ELFECH(GMT, 4 - GC->rtcc->med_k00.ChaserVehicle, EPHEM);
+			err = GC->rtcc->ELFECH(GMT, RTCC_MPT_LM, EPHEM);
 			if (err)
 			{
 				Result = 0;
 				break;
 			}
-			sv_P.R = EPHEM.R;
-			sv_P.V = EPHEM.V;
-			sv_P.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_P.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+			opt.sv_LM = EPHEM;
 		}
 		else
 		{
@@ -3677,36 +3653,78 @@ int ARCore::subThread()
 				break;
 			}
 
-			sv_A = GC->rtcc->StateVectorCalc(vessel);
-			sv_P = GC->rtcc->StateVectorCalc(target);
+			EphemerisData sv[2];
+			sv[0] = GC->rtcc->StateVectorCalcEphem(vessel);
+			sv[1] = GC->rtcc->StateVectorCalcEphem(target);
+
+			if (utils::IsVessel(vessel, utils::Saturn))
+			{
+				opt.sv_CSM = sv[0];
+				opt.sv_LM = sv[1];
+			}
+			else
+			{
+				opt.sv_CSM = sv[1];
+				opt.sv_LM = sv[0];
+			}
+
+			//Coast to threshold time
+			opt.sv_CSM = GC->rtcc->coast(opt.sv_CSM, GMT - opt.sv_CSM.GMT);
+			opt.sv_LM = GC->rtcc->coast(opt.sv_LM, GMT - opt.sv_LM.GMT);
 		}		
 
-		opt.DH = GC->rtcc->GZGENCSN.DKIDeltaH;
-		opt.E = GC->rtcc->GZGENCSN.DKIElevationAngle;
-		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.maneuverline = DKI_Maneuver_Line;
-		opt.N_HC = DKI_N_HC;
-		opt.N_PB = DKI_N_PB;
-		opt.plan = DKI_Profile;
-		opt.radial_dv = DKI_Radial_DV;
-		opt.tpimode = DKI_TPI_Mode;
-		opt.dt_TPI_sunrise = DKI_dt_TPI_sunrise;
-		opt.sv_A = sv_A;
-		opt.sv_P = sv_P;
-		opt.t_TIG = DKI_TIG;
-		opt.t_TPI_guess = t_TPIguess;
-		opt.DeltaT_BHAM = DKI_dt_BHAM;
-		opt.DeltaT_PBH = DKI_dt_PBH;
-		opt.Delta_HAMH = DKI_dt_HAMH;
+		opt.IPUTNA = GC->rtcc->med_k10.MLDOption;
+		opt.PUTNA = GC->rtcc->med_k10.MLDValue;
+		opt.PUTTNA = GC->rtcc->GMTfromGET(GC->rtcc->med_k10.MLDTime);
 
-		GC->rtcc->DockingInitiationProcessor(opt, dkiresult);
-
-		if (DKI_Profile != 3)
+		if (GC->rtcc->GZGENCSN.DKI_TP_Definition == 0)
 		{
-			DKI_DV = dkiresult.DV_Phasing;
+			opt.KCOSR = true;
+			opt.COSR = GC->rtcc->GZGENCSN.DKI_TPDefinitionValue;
+		}
+		else
+		{
+			opt.KCOSR = false;
+			opt.K46 = GC->rtcc->GZGENCSN.DKI_TP_Definition;
+			if (GC->rtcc->GZGENCSN.DKI_TP_Definition == 1)
+			{
+				opt.TTPI = GC->rtcc->GMTfromGET(GC->rtcc->GZGENCSN.DKI_TPDefinitionValue);
+			}
+			else if (GC->rtcc->GZGENCSN.DKI_TP_Definition == 2)
+			{
+				opt.TTPF = GC->rtcc->GMTfromGET(GC->rtcc->GZGENCSN.DKI_TPDefinitionValue);
+			}
+			else
+			{
+				opt.TIMLIT = GC->rtcc->GZGENCSN.DKI_TPDefinitionValue;
+			}
 		}
 
-		t_TPI = dkiresult.t_TPI;
+		opt.DHNCC = GC->rtcc->GZGENCSN.DKIDeltaH_NCC;
+		opt.DHSR = GC->rtcc->GZGENCSN.DKIDeltaH_NSR;
+		opt.DTSR = 10.0*60.0;
+		opt.dt_NCC_NSR = GC->rtcc->med_k00.dt_NCC_NSR;
+		opt.Elev = GC->rtcc->GZGENCSN.DKIElevationAngle;
+		opt.I4 = GC->rtcc->med_k00.I4;
+		//TBD: opt.IHALF
+		opt.NC1 = GC->rtcc->med_k00.NC1;
+		opt.NH = GC->rtcc->med_k00.NH;
+		opt.NCC = GC->rtcc->med_k00.NCC;
+		opt.NSR = GC->rtcc->med_k00.NSR;
+		opt.NPC = GC->rtcc->med_k00.NPC;
+		opt.MI = GC->rtcc->med_k00.MI;
+		if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_CSM)
+		{
+			opt.MV = 1;
+		}
+		else
+		{
+			opt.MV = 2;
+		}
+		opt.WT = GC->rtcc->GZGENCSN.DKITerminalPhaseAngle;
+		opt.KRAP = GC->rtcc->GZGENCSN.DKIPhaseAngleSetting;
+
+		GC->rtcc->DockingInitiationProcessor(opt);
 
 		Result = 0;
 	}
@@ -3911,7 +3929,7 @@ int ARCore::subThread()
 	case 23: //Calculate TPI times
 	{
 		SV sv0 = GC->rtcc->StateVectorCalc(target);
-		t_TPI = GC->rtcc->CalculateTPITimes(sv0, DKI_TPI_Mode, t_TPIguess, DKI_dt_TPI_sunrise);
+		t_TPI = GC->rtcc->CalculateTPITimes(sv0, TPI_Mode, t_TPIguess, dt_TPI_sunrise);
 
 		Result = 0;
 	}
@@ -4418,22 +4436,48 @@ int ARCore::subThread()
 		}
 		else
 		{
-			SV sv_pre, sv_post, sv_tig;
-			double attachedMass = 0.0;
+			PMMMPTInput in;
 
-			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
-			sv_tig = GC->rtcc->coast(sv_now, DKI_TIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
-
-			if (vesselisdocked)
+			//Get all required data for PMMMPT and error checking
+			if (GetVesselParameters(GC->rtcc->med_m70.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
-				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
+				//Error
+				Result = 0;
+				break;
+			}
+
+			in.VehicleArea = 0.0;
+			in.VehicleWeight = in.CSMWeight + in.LMWeight;
+			in.IterationFlag = GC->rtcc->med_m70.Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m70.TimeFlag;
+			in.Thruster = GC->rtcc->med_m70.Thruster;
+
+			in.sv_before = GC->rtcc->PZDKIELM.Block[0].SV_before[0];
+			in.V_aft = GC->rtcc->PZDKIELM.Block[0].V_after[0];
+			if (GC->rtcc->med_m70.UllageDT < 0)
+			{
+				in.DETU = GC->rtcc->SystemParameters.MCTNDU;
 			}
 			else
 			{
-				attachedMass = 0.0;
+				in.DETU = GC->rtcc->med_m70.UllageDT;
 			}
+			in.UT = GC->rtcc->med_m70.UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m70.TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m70.DPSThrustFactor;
 
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), DKI_TIG, GC->rtcc->med_m70.Thruster, 0.0, DKI_DV, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			double GMT_TIG;
+			VECTOR3 DV;
+			if (GC->rtcc->PoweredFlightProcessor(in, GMT_TIG, DV) == 0)
+			{
+				//Save for Maneuver PAD and uplink
+				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
+				dV_LVLH = DV;
+				manpadenginetype = GC->rtcc->med_m70.Thruster;
+				HeadsUp = true;
+				manpad_ullage_dt = GC->rtcc->med_m70.UllageDT;
+				manpad_ullage_opt = GC->rtcc->med_m70.UllageQuads;
+			}
 		}
 
 		Result = 0;
@@ -4692,13 +4736,13 @@ int ARCore::subThread()
 
 		bool uplinkaccepted = false;
 
-		if (utils::IsVessel(vessel, utils::SaturnV))
+		if (utils::IsVessel(target, utils::SaturnV))
 		{
 			Saturn *iuv = (Saturn *)target;
 
 			iu = iuv->GetIU();
 		}
-		else if (utils::IsVessel(vessel, utils::SaturnV_SIVB))
+		else if (utils::IsVessel(target, utils::SaturnV_SIVB))
 		{
 			SIVB *iuv = (SIVB *)target;
 
@@ -5176,23 +5220,25 @@ void ARCore::DetermineGMPCode()
 	GMPManeuverCode = code;
 }
 
-void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission, bool isCMC)
+void ARCore::AGCCorrectionVectors(double mjd_launchday, double dt_UNITW, double dt_504LM, int mission, bool isCMC)
 {
-	OBJHANDLE hEarth, hMoon;
+	//INPUTS:
+	//mjd_launchday: MJD of noon (GMT) preceeding the launch
+	//dt_UNITW: //Time in days from mjd_launchday to calculate the Earth correction vector UNITW
+	//dt_504LM: //Time in days from mjd_launchday to calculate the Moon correction vector 504LM
+
 	MATRIX3 R, Rot2, J2000, R2, R3, M, M_AGC;
 	VECTOR3 UNITW;
-	double mjd_mid, brcsmjd, w_E, t0, B_0, Omega_I0, F_0, B_dot, Omega_I_dot, F_dot, cosI, sinI;
-	double A_Z, A_Z0, mjd_land;
+	double mjd_UNITW, mjd_504LM, brcsmjd, w_E, t0, B_0, Omega_I0, F_0, B_dot, Omega_I_dot, F_dot, cosI, sinI;
+	double A_Z, A_Z0;
 	int mem, epoch;
 	char AGC[64];
 
-	mjd_mid = mjd_launch + 7.0;
-	mjd_land = mjd_launch + t_land / 24.0 / 3600.0;
-	hEarth = oapiGetObjectByName("Earth");
-	hMoon = oapiGetObjectByName("Moon");
+	mjd_UNITW = mjd_launchday + dt_UNITW;
+	mjd_504LM = mjd_launchday + dt_504LM;
 
 	Rot2 = _M(1., 0., 0., 0., 0., 1., 0., 1., 0.);
-	R = OrbMech::GetRotationMatrix(BODY_EARTH, mjd_mid);
+	R = OrbMech::GetRotationMatrix(BODY_EARTH, mjd_UNITW);
 
 	if (isCMC)
 	{
@@ -5224,11 +5270,11 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 		}
 		else if (mission < 14)
 		{
-			epoch = 1970;			//Nearest Besselian Year 1970
-			w_E = 7.29211494e-5;    //Comanche 055 (Apollo 11 CM AGC)
+			epoch = 1970;				//Nearest Besselian Year 1970
+			w_E = 7.29211319606104e-5;	//Comanche 055 (Apollo 11 CM AGC)
 			B_0 = 0.40916190299;
-			Omega_I0 = 6.19653663041;
-			F_0 = 5.20932947829;
+			Omega_I0 = 6.1965366255107;
+			F_0 = 5.20932947411685;
 			B_dot = -7.19757301e-14;
 			Omega_I_dot = -1.07047011e-8;
 			F_dot = 2.67240410e-6;
@@ -5237,6 +5283,31 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 			t0 = 40403;
 			sprintf(AGC, "Comanche055");
 		}
+		//Use this when we get Comanche 67:
+		/*
+		else if (mission < 14)
+		{
+			epoch = 1970;			//Nearest Besselian Year 1970
+			w_E = 7.292115145489943e-05;
+			B_0 = 0.4091619030;
+			Omega_I0 = 6.196536640;
+			F_0 = 5.209327056;
+			B_dot = -7.197573418e-14;
+			Omega_I_dot = -1.070470170e-8;
+			F_dot = 2.672404256e-6;
+			cosI = 0.9996417320;
+			sinI = 0.02676579050;
+			t0 = 40403;
+			if (mission < 13)
+			{
+				sprintf(AGC, "Comanche067");
+			}
+			else
+			{
+				sprintf(AGC, "Comanche072");
+			}
+		}
+		*/
 		else if (mission < 15)
 		{
 			epoch = 1971;			//Nearest Besselian Year 1971
@@ -5300,25 +5371,10 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 			t0 = 40403;
 			sprintf(AGC, "Luminary099");
 		}
-		else if (mission < 13)
-		{
-			epoch = 1970;			//Nearest Besselian Year 1970
-			w_E = 7.29211494e-5;    //Luminary 116 (Apollo 12 LM AGC)
-			B_0 = 0.4091619030;
-			Omega_I0 = 6.196536640;
-			F_0 = 5.209327056;
-			B_dot = -7.197573418e-14;
-			Omega_I_dot = -1.070470170e-8;
-			F_dot = 2.672404256e-6;
-			cosI = 0.9996417320;
-			sinI = 0.02676579050;
-			t0 = 40403;
-			sprintf(AGC, "Luminary116");
-		}
 		else if (mission < 14)
 		{
-			epoch = 1970;				//Nearest Besselian Year 1970
-			w_E = 7.292115145489943e-05;//Luminary 131 (Apollo 13 LM AGC)
+			epoch = 1970;			//Nearest Besselian Year 1970
+			w_E = 7.292115145489943e-05;
 			B_0 = 0.4091619030;
 			Omega_I0 = 6.196536640;
 			F_0 = 5.209327056;
@@ -5328,7 +5384,14 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 			cosI = 0.9996417320;
 			sinI = 0.02676579050;
 			t0 = 40403;
-			sprintf(AGC, "Luminary131");
+			if (mission < 13)
+			{
+				sprintf(AGC, "Luminary116");
+			}
+			else
+			{
+				sprintf(AGC, "Luminary131");
+			}
 		}
 		else if (mission < 15)
 		{
@@ -5373,7 +5436,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	A_Z = atan2(R3.m21, R3.m11);
 	if (mission < 14)
 	{
-		A_Z0 = fmod((A_Z - w_E * (mjd_mid - t0) * 24.0 * 3600.0), PI2);  //AZ0 for mission
+		A_Z0 = fmod((A_Z - w_E * (mjd_UNITW - t0) * 24.0 * 3600.0), PI2);  //AZ0 for mission
 		if (A_Z0 < 0) A_Z0 += PI2;
 	}
 	else if (mission < 15)
@@ -5396,9 +5459,9 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	fprintf(file, "Epoch   = %d (Year) Epoch of Basic Reference Coordinate System\n", epoch);
 	fprintf(file, "Epoch   = %6.6f (MJD) Epoch of Basic Reference Coordinate System\n", brcsmjd);
 	fprintf(file, "TEphem0 = %6.6f (MJD) Ephemeris Time Zero\n", t0);
-	fprintf(file, "TEPHEM  = %6.6f (MJD) Mission launch time\n", mjd_launch);
-	fprintf(file, "MJDLAND = %6.6f (MJD) Mission lunar landing time\n", mjd_land);
-	fprintf(file, "TIMEM0  = %6.6f (MJD) Mission mid-range time\n\n", mjd_mid);
+	fprintf(file, "T0      = %6.6f (MJD) Mission start time\n", mjd_launchday);
+	fprintf(file, "UNITW computed to %+.2lf Days\n", dt_UNITW);
+	fprintf(file, "504LM computed to %+.2lf Days\n\n", dt_504LM);
 	fprintf(file, "------- Earth Orientation -------\n");
 	if (mission < 14)
 	{
@@ -5426,16 +5489,8 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	VECTOR3 lm;
 	double t_M, B, Omega_I, F;
 
-	if (isCMC)
-	{
-		t_M = (mjd_mid - t0) * 24.0 * 3600.0;
-		RM = OrbMech::GetRotationMatrix(BODY_MOON, mjd_mid);
-	}
-	else
-	{
-		t_M = (mjd_land - t0) * 24.0 * 3600.0;
-		RM = OrbMech::GetRotationMatrix(BODY_MOON, mjd_land);
-	}
+	t_M = (mjd_504LM - t0) * 24.0 * 3600.0;
+	RM = OrbMech::GetRotationMatrix(BODY_MOON, mjd_504LM);
 
 	B = B_0 + B_dot * t_M;
 	Omega_I = Omega_I0 + Omega_I_dot * t_M;

@@ -155,7 +155,7 @@ public:
 	int agcCelBody_RH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
 	int agcCelBody_LH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
 	void AGCEphemeris(double T0, int Epoch, double TEphem0);
-	void AGCCorrectionVectors(double mjd_launch, double t_land, int mission, bool isCMC);
+	void AGCCorrectionVectors(double mjd_launchday, double dt_UNITW, double dt_504LM, int mission, bool isCMC);
 	void GenerateAGCCorrectionVectors();
 
 	// SUBTHREAD MANAGEMENT
@@ -182,20 +182,9 @@ public:
 	double t_TPI;				// Generally used TPI time
 
 	//DOCKING INITIATION
-	double DKI_TIG;		//Impulsive time of ignition
-	int DKI_Profile;	//0 = Four-impulse: Phasing/CSI/CDH/TPI, 1 = Six-Impulse: Phasing/Boost/HAM/CSI/CDH/TPI, 2 = Four-impulse rescue: Height/CSI/CDH/TPI, 3 = Calculate TPI time only
-	int DKI_TPI_Mode;	//0 = TPI on time, 1 = TPI at orbital midnight, 2 = TPI at X minutes before sunrise
-	bool DKI_Maneuver_Line;	//false = define relative times, true = 0.5 revolutions between maneuvers
-	bool DKI_Radial_DV;	//false = horizontal maneuver, true = 50 ft/s radial component
-	double DKI_dt_TPI_sunrise;
-	double DKI_dt_PBH;	//Delta time between phasing and boost/CSI
-	double DKI_dt_BHAM;	//Delta time between boost and HAM
-	double DKI_dt_HAMH;	//Delta time between HAM and CSI
-	int DKI_N_HC;		//Half revolutions between CSI and CDH
-	int DKI_N_PB;		//Number of half revs between Phasing and Boost/Height
+	int TPI_Mode;
+	double dt_TPI_sunrise;
 	double t_TPIguess;
-	DKIResults dkiresult;
-	VECTOR3 DKI_DV;
 
 	//CONCENTRIC RENDEZVOUS PAGE
 	int SPQMode;	//0 = CSI on time, 1 = CDH, 2 = optimum CSI

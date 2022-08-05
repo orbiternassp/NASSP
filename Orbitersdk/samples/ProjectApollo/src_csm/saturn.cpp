@@ -508,7 +508,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 {	
 	//_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF|_CRTDBG_CHECK_ALWAYS_DF );
 	InitSaturnCalled = false;
-	LastTimestep = 0;
 
 	//Mission File
 	InitMissionManagementMemory();
@@ -1575,7 +1574,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		if (AEAPadCount > 0) {
 			oapiWriteScenario_int(scn, "AEAPADCNT", AEAPadCount);
 			for (i = 0; i < AEAPadCount; i++) {
-				sprintf(str, "%04o %05o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
+				sprintf(str, "%04o %06o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
 				oapiWriteScenario_string(scn, "AEAPAD", str);
 			}
 		}
@@ -5018,6 +5017,10 @@ void Saturn::UpdateMassAndCoG()
 
 		//Particle streams
 		SetWaterDumpParticleStreams(currentCoG + _V(0, 0, 32.3));
+		
+		//lights
+		SpotLight->UpdatePosition(CoGShift);
+		RndzLight->UpdatePosition(CoGShift);
 
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;
