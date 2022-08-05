@@ -655,7 +655,6 @@ void MCC::TimeStep(double simdt){
 			}
 
 			y = 0;
-			TransmittingGroundStation = NULL;
 
 			while (x < MAX_GROUND_STATION) {
 				if (GroundStations[x].Active == true) {
@@ -695,8 +694,19 @@ void MCC::TimeStep(double simdt){
 				}
 				x++;
 			}
+			if (y == 0) {
+				TransmittingGroundStation = NULL;
+			}
 		}
 	}
+
+	//debugging
+	/*if (TransmittingGroundStation) {
+		sprintf(oapiDebugString(), TransmittingGroundStation->Name);
+	}
+	else {
+		sprintf(oapiDebugString(), "none");
+	}*/
 
 	// MISSION STATE EVALUATOR
 	if(MT_Enabled == true){
