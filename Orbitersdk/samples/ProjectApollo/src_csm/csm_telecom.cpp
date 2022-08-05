@@ -1016,11 +1016,12 @@ void HGA::TimeStep(double simt, double simdt)
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselByName("ProjectApollo\MCC");
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
 	oapiGetGlobalPos(hEarth, &R_E);
-	oapiGetGlobalPos(hMoon, &R_M);
+	//MCCVessel->clbkGeneric(ConnectorType::VHF_RNG, 0, &R_E);
 	sat->GetRotationMatrix(Rot);
 	
 	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
