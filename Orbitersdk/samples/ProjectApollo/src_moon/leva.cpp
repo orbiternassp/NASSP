@@ -613,7 +613,7 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 	// Get reference lat and long for the VC console, as soon as we have "landed" status
 	//
 
-	if (hMaster){
+	if (MotherShip && hMaster){
 		LEM *lmvessel = (LEM *) oapiGetVesselInterface(hMaster);					
 		oapiGetRelativePos (GetHandle() ,hMaster, &posr);
 		oapiGetRelativeVel (GetHandle() ,hMaster , &rvel);

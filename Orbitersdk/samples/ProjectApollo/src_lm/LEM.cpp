@@ -1549,10 +1549,10 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		if (!strnicmp(line, "CONFIGURATION", 13)) {
 			sscanf(line + 13, "%d", &status);
 		}
-		else if (!strnicmp(line, "EVA", 3)) {
+		else if (!strnicmp(line, "EVA_CDR", 7)) {
 			EVA_IP[0] = true;
 		}
-		else if (!strnicmp(line, "EVA2", 4)) {
+		else if (!strnicmp(line, "EVA_LMP", 7)) {
 			EVA_IP[1] = true;
 		}
 		else if (!strnicmp(line, "CSWITCH", 7)) {
@@ -2072,10 +2072,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "CONFIGURATION", status);
 	if (EVA_IP[0]){
-		oapiWriteScenario_int (scn, "EVA", int(TO_EVA));
+		oapiWriteScenario_int (scn, "EVA_CDR", int(TO_EVA));
 	}
 	if (EVA_IP[1]) {
-		oapiWriteScenario_int(scn, "EVA2", int(TO_EVA));
+		oapiWriteScenario_int(scn, "EVA_LMP", int(TO_EVA));
 	}
 
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
