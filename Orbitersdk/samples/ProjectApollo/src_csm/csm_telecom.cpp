@@ -1010,24 +1010,26 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_Earth, U_Moon, U_CSM;
+	VECTOR3 U_RP, pos, R_E = _V(0, 0, 0), R_M, U_R, U_Earth, U_Moon, U_CSM;
 	MATRIX3 Rot;
 	double relang, beamwidth, Moonrelang, EarthSignalDist, CSMrelang;
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselByName("ProjectApollo\MCC");
+	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
+	sprintf(oapiDebugString(), ((VESSEL4*)MCCVessel)->GetName());
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
-	//MCCVessel->clbkGeneric(ConnectorType::VHF_RNG, 0, &R_E);
+	MCCVessel->clbkGeneric(0, 0, &R_E);
 	sat->GetRotationMatrix(Rot);
 	
 	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
 	
-	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+	EarthSignalDist = length(pos - R_E); //distance from earth's surface in meters
+
+	//sprintf(oapiDebugString(), "<%lf %lf %lf> <%lf %lf %lf>", pos.x, pos.y, pos.z, R_E.x, R_E.y, R_E.z);
 	
 	int RcvBeamWidthMode = 1;
 

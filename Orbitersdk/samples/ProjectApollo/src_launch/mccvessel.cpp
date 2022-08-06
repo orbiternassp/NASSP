@@ -86,6 +86,9 @@ void MCCVessel::clbkPreStep(double simt, double simdt, double mjd)
 
 int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
 {
+	if (msgid == 0 && prm == 0 && mcc) { //PLACEHOLDER PARAMETERS. NEED DEFINITIONS
+		*(VECTOR3*)context = (mcc->TransmittingGroundStationVector);
+	}
 	return 0;
 }
 

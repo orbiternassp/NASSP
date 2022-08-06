@@ -156,6 +156,8 @@ void MCC::Init(){
 	// GROUND TRACKING INITIALIZATION
 	LastAOSUpdate=0;
 
+	TransmittingGroundStationVector = _V(0, 0, 0);
+
 	// Load ground station information.
 	// Later this can be made dynamic, but this will work for now.
 
@@ -698,6 +700,17 @@ void MCC::TimeStep(double simdt){
 				TransmittingGroundStation = NULL;
 			}
 		}
+	}
+
+
+	if (TransmittingGroundStation) {
+		VECTOR3 XmitGSVector = _V(cos(TransmittingGroundStation->Position[1] * RAD) * cos(TransmittingGroundStation->Position[0] * RAD),
+			sin(TransmittingGroundStation->Position[0] * RAD), 
+			sin(TransmittingGroundStation->Position[1] * RAD) * cos(TransmittingGroundStation->Position[0] * RAD)) * oapiGetSize(Earth);
+		oapiLocalToGlobal(Earth, &XmitGSVector, &TransmittingGroundStationVector);
+	}
+	else {
+		TransmittingGroundStationVector = _V(0, 0, 0);
 	}
 
 	//debugging
