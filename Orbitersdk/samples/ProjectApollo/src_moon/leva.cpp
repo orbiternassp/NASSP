@@ -98,7 +98,8 @@ void LEVA::init()
 	LRVDeployed=false;
 	GoDock1=false;
 	starthover=false;
-	Astro=true;						
+	Astro=true;		
+	isCDR = false;
 	MotherShip=false;
 	EVAName[0]=0;
 	LEMName[0]=0;
@@ -213,7 +214,14 @@ void LEVA::ScanMotherShip()
 		strcpy(EVAName,GetName());
 		oapiGetObjectName(hMaster,LEMName,256);
 		strcpy(MSName,LEMName);
-		strcat(LEMName,"-LEVA");
+		if (isCDR)
+		{
+			strcat(LEMName, "-LEVA-CDR");
+		}
+		else
+		{
+			strcat(LEMName, "-LEVA-LMP");
+		}
 		if (strcmp(LEMName, EVAName)==0){
 			MotherShip=true;
 			i=int(VessCount);
@@ -434,14 +442,14 @@ int LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	//
 
 	if (key == OAPI_KEY_V && down == true) {				
-		if ((ApolloNo > 14) || (ApolloNo == 0)) {
+		if (isCDR && ((ApolloNo > 14) || (ApolloNo == 0))) {
 			ToggleLRV();
 			return 1;
 		}
 	}
 		
 	if (key == OAPI_KEY_F && down == true) {				
-		if (Astro && !FlagPlanted )
+		if (Astro && isCDR && !FlagPlanted )
 			GoFlag = true;	
 		return 1;
 	}
@@ -518,6 +526,7 @@ void LEVA::SetEVAStats(LEVASettings &evas)
 
 {
 	ApolloNo = evas.MissionNo;
+	isCDR = evas.isCDR;
 	StateSet = true;
 }
 
@@ -615,7 +624,7 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 		if (GoDock1) {						
 			if (lmvessel->IsForwardHatchOpen() && dist <= 6.00550) {
 				GoDock1 = false;
-				lmvessel->StopEVA();
+				lmvessel->StopEVA(isCDR);
 				oapiSetFocusObject(hMaster);
 				oapiDeleteVessel(GetHandle());
 				return;
@@ -678,6 +687,7 @@ typedef union {
 		unsigned int StateSet:1;
 		unsigned int SLEVAPlayed:1;
 		unsigned int Astro:1;
+		unsigned int isCDR:1;
 	} u;
 	unsigned int word;
 } MainLEVAState;
@@ -692,6 +702,7 @@ int LEVA::GetMainState()
 	s.u.StateSet = StateSet;
 	s.u.SLEVAPlayed = SLEVAPlayed;
 	s.u.Astro = Astro;
+	s.u.isCDR = isCDR;
 
 	return s.word;
 }
@@ -706,6 +717,7 @@ void LEVA::SetMainState(int n)
 	StateSet = (s.u.StateSet != 0);
 	SLEVAPlayed = (s.u.SLEVAPlayed != 0);
 	Astro = (s.u.Astro != 0);
+	isCDR = (s.u.isCDR != 0);
 }
 
 void LEVA::clbkSaveState(FILEHANDLE scn)
