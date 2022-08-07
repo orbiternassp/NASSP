@@ -2234,7 +2234,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 6 * H / 14, "Landmark Tracking", 17);
 		skp->Text(1 * W / 8, 8 * H / 14, "Map Update", 10);
 		skp->Text(1 * W / 8, 10 * H / 14, "Nav Check PAD", 13);
-		skp->Text(1 * W / 8, 12 * H / 14, "P37 PAD", 7);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "DAP PAD", 7);
 		skp->Text(5 * W / 8, 4 * H / 14, "LM Ascent PAD", 13);
