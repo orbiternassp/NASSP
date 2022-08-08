@@ -1017,7 +1017,6 @@ void HGA::TimeStep(double simt, double simdt)
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
-	sprintf(oapiDebugString(), ((VESSEL4*)MCCVessel)->GetName());
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
@@ -1027,7 +1026,7 @@ void HGA::TimeStep(double simt, double simdt)
 	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
 	
-	EarthSignalDist = length(pos - R_E); //distance from earth's surface in meters
+	EarthSignalDist = length(pos - R_E); //distance from the transmitting station in meters
 
 	//sprintf(oapiDebugString(), "<%lf %lf %lf> <%lf %lf %lf>", pos.x, pos.y, pos.z, R_E.x, R_E.y, R_E.z);
 	
