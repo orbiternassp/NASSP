@@ -24,6 +24,7 @@
 #include "mccvessel.h"
 #include "rtcc.h"
 #include "mcc.h"
+#include "paCBGmessageID.h"
 
 #define ORBITER_MODULE
 
@@ -86,10 +87,47 @@ void MCCVessel::clbkPreStep(double simt, double simdt, double mjd)
 
 int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
 {
-	if (msgid == 0 && prm == 0 && mcc) { //PLACEHOLDER PARAMETERS. NEED DEFINITIONS
-		*(VECTOR3*)context = (mcc->TransmittingGroundStationVector);
+	if (!mcc) { return 0; }
+
+	if (msgid == paCBGmessageID::messageID::RF_PROPERTIES) {
+		if (prm == paCBGmessageID::parameterID::GetTxPosition) {
+			*(VECTOR3*)context = (mcc->TransmittingGroundStationVector);
+			return 1;
+		}
+		else if (prm == paCBGmessageID::parameterID::GetTxGain) {
+			if (mcc->TransmittingGroundStation->SBandAntenna == GSSA_26METER) {
+				*(double*)context = pow(10, (50 / 10));
+			}
+			else if (GSSA_9METER) {
+				*(double*)context = pow(10, (43 / 10));
+			}
+			else if (GSSA_3PT7METER) {
+				*(double*)context = pow(10, (37 / 10));
+			}
+			else {
+				*(double*)context = 0.0;
+			}
+			return 1;
+		}
+		else if (prm == paCBGmessageID::parameterID::GetTxPower) {
+			if (mcc->TransmittingGroundStation->SBandAntenna == GSSA_26METER) {
+				*(double*)context = 20E3;
+			}
+			else if (GSSA_9METER) {
+				*(double*)context = 20E3;
+			}
+			else if (GSSA_3PT7METER) {
+				*(double*)context = 22.9;
+			}
+			else {
+				*(double*)context = 0.0;
+			}
+			return 1;
+		}
 	}
+
 	return 0;
+
 }
 
 void MCCVessel::clbkSaveState(FILEHANDLE scn)

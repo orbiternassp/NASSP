@@ -41,6 +41,7 @@
 #include "Mission.h"
 #include "RF_calc.h"
 #include "papi.h"
+#include "paCBGmessageID.h"
 
 // DS20060326 TELECOM OBJECTS
 
@@ -640,8 +641,8 @@ void HGA::Init(Saturn *vessel){
 
 	HGAFrequency = 2119; //MHz. Should this get set somewhere else?
 	HGAWavelength = C0 / (HGAFrequency * 1000000); //meters
-	Gain85ft = pow(10,(50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
-	Power85ft = 20000; //watts
+	TransmitterGain = 0; //this is the gain, dB converted to ratio of the transmitter antennas on earth
+	TransmitterPower = 0; //transmitter power, watts
 }
 
 bool HGA::IsPowered()
@@ -1018,10 +1019,14 @@ void HGA::TimeStep(double simt, double simdt)
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
 
-	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	//Global position of the spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	MCCVessel->clbkGeneric(0, 0, &R_E);
 	sat->GetRotationMatrix(Rot);
+
+	//Get the gain, power and global position of the transmitter
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxPosition, &R_E);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxPower, &TransmitterPower);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxGain, &TransmitterGain);
 	
 	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
@@ -1066,7 +1071,7 @@ void HGA::TimeStep(double simt, double simdt)
 		gain = pow(10, (23.0 / 10)); //dB to ratio
 	}
 
-	RecvdHGAPower = Power85ft*Gain85ft*gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
+	RecvdHGAPower = TransmitterPower*TransmitterGain*gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
 	RecvdHGAPower_dBm = 10*log10(1000*RecvdHGAPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdHGAPower_dBm);
 
@@ -1297,8 +1302,8 @@ void OMNI::Init(Saturn *vessel) {
 
 	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
 	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
-	Gain30ft = pow(10, (43 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
-	Power30ft = 20000; //watts
+	TransmitterGain = 0; //this is the gain, dB converted to ratio of the transmitter antennas on earth
+	TransmitterPower = 0; //transmitter watts
 
 	
 }
@@ -1315,9 +1320,14 @@ void OMNI::TimeStep()
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
+
+	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
+	//Get the gain, power and global position of the transmitter
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxPosition, &R_E);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxPower, &TransmitterPower);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxGain, &TransmitterGain);
 
 	//Calculate antenna pointing vector in global frame
 	U_R = mul(Rot, direction);
@@ -1326,7 +1336,7 @@ void OMNI::TimeStep()
 
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	RecvdOMNIPower = Power30ft * Gain30ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower = TransmitterPower * TransmitterGain * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
 	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 

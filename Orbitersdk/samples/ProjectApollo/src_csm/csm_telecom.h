@@ -449,8 +449,8 @@ public:
 	bool DriveToReacqSetPoint;
 	double HGAWavelength;
 	double HGAFrequency;
-	double Gain85ft;
-	double Power85ft;
+	double TransmitterGain;
+	double TransmitterPower;
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }
@@ -495,8 +495,8 @@ public:
 	void TimeStep();			// TimeStep
 	double OMNIWavelength;
 	double OMNIFrequency;
-	double Gain30ft;
-	double Power30ft;
+	double TransmitterGain;
+	double TransmitterPower;
 	double OMNI_Gain;
 protected:
 	Saturn *sat;				// Ship we're installed in
