@@ -91,7 +91,7 @@ int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
 
 	if (msgid == paCBGmessageID::messageID::RF_PROPERTIES) {
 
-		if(!(mcc->TransmittingGroundStation)) { return 0; }
+		if(mcc->TransmittingGroundStation == NULL) { return 0; }
 
 		if (prm == paCBGmessageID::parameterID::GetTxPosition) {
 			*(VECTOR3*)context = (mcc->TransmittingGroundStationVector);
@@ -108,7 +108,7 @@ int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
 				*(double*)context = pow(10, (37 / 10));
 			}
 			else {
-				*(double*)context = 0.0;
+				*(double*)context = 1.0;
 			}
 			return 1;
 		}

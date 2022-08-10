@@ -49,6 +49,7 @@
 #include "LM_AscentStageResource.h"
 
 #include "RF_calc.h"
+#include "paCBGmessageID.h"
 
 //VHF Antenna
 
@@ -2698,8 +2699,8 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 	LEM_SteerableAntGain = pow(10, (16.5 / 10));
 	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
 	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
-	Gain85ft = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
-	Power85ft = 20000; //watts
+	TransmitterGain = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
+	TransmitterPower = 20000; //watts
 }
 
 void LEM_SteerableAnt::Timestep(double simdt){
@@ -2841,18 +2842,25 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (0.1 * RAD), yaw);
 	
 
+
+
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	lem->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
+
+	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
+	//Get the gain, power and global position of the transmitter
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxPosition, &R_E);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxPower, &TransmitterPower);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxGain, &TransmitterGain);
 	
 	double EarthSignalDist;
 	double RecvdLEM_SteerableAntPower, RecvdLEM_SteerableAntPower_dBm;
 
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft * LEM_SteerableAntGain * pow((LEM_SteerableAntWavelength /(4 * PI*EarthSignalDist)), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdLEM_SteerableAntPower = TransmitterPower * TransmitterGain * LEM_SteerableAntGain * pow((LEM_SteerableAntWavelength /(4 * PI*EarthSignalDist)), 2); //maximum recieved power to the HGA on axis in watts
 	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
 
 	double SignalStrengthScaleFactor = LEM_SteerableAnt::dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
@@ -2887,7 +2895,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		}
 	}
 
-	//sprintf(oapiDebugString(), "RecvdLEM_SteerableAntPower_dBm = %lf dBm, Power85ft = %lfW, Gain85ft = %lf, LEM_SteerableAntGain = %lf, LEM_SteerableAntWavelength = %lfM, EarthSignalDist = %lfM", RecvdLEM_SteerableAntPower_dBm, Power85ft, Gain85ft, LEM_SteerableAntGain, LEM_SteerableAntWavelength, EarthSignalDist);
+	//sprintf(oapiDebugString(), "RecvdLEM_SteerableAntPower_dBm = %lf dBm, TransmitterPower = %lfW, TransmitterGain = %lf, LEM_SteerableAntGain = %lf, LEM_SteerableAntWavelength = %lfM, EarthSignalDist = %lfM", RecvdLEM_SteerableAntPower_dBm, TransmitterPower, TransmitterGain, LEM_SteerableAntGain, LEM_SteerableAntWavelength, EarthSignalDist);
 
 	//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
 
@@ -3025,8 +3033,8 @@ void LM_OMNI::Init(LEM *vessel) {
 
 	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
 	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
-	Gain85ft = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
-	Power85ft = 20000; //watts
+	TransmitterGain = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
+	TransmitterPower = 20000; //watts
 }
 
 void LM_OMNI::Timestep()
@@ -3046,13 +3054,19 @@ void LM_OMNI::Timestep()
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
 
+	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
+	//Get the gain, power and global position of the transmitter
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxPosition, &R_E);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxPower, &TransmitterPower);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetTxGain, &TransmitterGain);
+
 	//Calculate antenna pointing vector in global frame
 	U_R = mul(Rot, U_RP);
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	RecvdOMNIPower = Power85ft * Gain85ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower = TransmitterPower * TransmitterGain * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
 	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
 	SignalStrengthScaleFactor = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
