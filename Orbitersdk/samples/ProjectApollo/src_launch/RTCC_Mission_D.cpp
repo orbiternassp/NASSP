@@ -1417,7 +1417,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		for (int i = 0;i < 4;i++)
 		{
-			strcpy(form->Area[i], "");
+			strcpy(form->Area[i], "N/A");
+			form->FDAIAngles[i] = _V(0, 0, 0);
+			form->GETStart[i] = 0.0;
+			form->TAlign[i] = 0.0;
+			form->ExposureInterval[i] = 0.0;
+			form->ExposureNum[i] = 0;
+			form->OrbRate[i] = false;
 		}
 
 		sv0 = StateVectorCalc(calcParams.src);

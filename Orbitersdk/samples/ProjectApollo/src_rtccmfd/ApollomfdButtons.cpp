@@ -962,7 +962,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "External DV", 0, 'I' },
 
 		{ "Calculate solution", 0, 'C' },
 		{ "Save as DOD REFSMMAT", 0, 'D' },
@@ -979,7 +979,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("DV", OAPI_KEY_I, &ApolloRTCCMFD::menuSetRetrofireXDVPage);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuEntryCalc);
 	RegisterFunction("REF", OAPI_KEY_D, &ApolloRTCCMFD::menuSaveRTEREFSMMAT);
@@ -3585,8 +3585,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "Back to menu", 0, 'B' },
+		{ "Back to RTE", 0, 'U' },
+		{ "Back to TTF", 0, 'B' },
 	};
 
 	RegisterPage(mnu105, sizeof(mnu105) / sizeof(MFDBUTTONMENU));
@@ -3602,8 +3602,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDeorbitPage);
+	RegisterFunction("RTE", OAPI_KEY_U, &ApolloRTCCMFD::menuSetRTEDigitalsPage);
+	RegisterFunction("TTF", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDeorbitPage);
 
 
 	static const MFDBUTTONMENU mnu106[] =
