@@ -154,8 +154,10 @@ void MCC::Init(){
 	Moon = oapiGetGbodyByName("Moon");
 	
 	// GROUND TRACKING INITIALIZATION
-	LastAOSUpdate=0;
+	LastAOSUpdate=2.0;
+	firstAOSUpdateDone = false;
 
+	TransmittingGroundStation = nullptr;
 	TransmittingGroundStationVector = _V(0, 0, 0);
 
 	// Load ground station information.
@@ -684,7 +686,11 @@ void MCC::TimeStep(double simdt){
 							sprintf(buf, "AOS %s", GroundStations[x].Name);
 							addMessage(buf);
 
-							TransmittingGroundStation = &GroundStations[x];
+							if (firstAOSUpdateDone){
+								if (GroundStations[x].USBCaps) {
+									TransmittingGroundStation = &GroundStations[x]; //only interested in picking a station to tx USB carrier
+								}
+							}
 						}
 					}
 					if ((!OrbMech::sight(CM_Vector, GSVector, R_E) || length(CM_Vector - GSVector) > LOSRange || MoonInTheWay) && GroundStations[x].AOS == 1) {
@@ -712,6 +718,8 @@ void MCC::TimeStep(double simdt){
 	else {
 		TransmittingGroundStationVector = _V(0, 0, 0);
 	}
+
+	firstAOSUpdateDone = true;
 
 	//debugging
 	/*if (TransmittingGroundStation) {
@@ -1296,6 +1304,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	// Strings
 	if (PCOption_Enabled == true) { SAVE_STRING("MCC_PCOption_Text", PCOption_Text); }
 	if (NCOption_Enabled == true) { SAVE_STRING("MCC_NCOption_Text", NCOption_Text); }
+	if (TransmittingGroundStation) { SAVE_STRING("MCC_TransmittingGroundstation", TransmittingGroundStation->Name); }
 	// Write PAD here!
 	//SAVE_INT("MCC_padState", padState);
 	if (padNumber != 0) { SAVE_INT("MCC_padNumber", padNumber); }
@@ -1815,6 +1824,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 	bool padisallocated = false;
 
 	char tmpbuf[64];
+	char TransmittingGroundStationName[64];
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, MCC_END_STRING, sizeof(MCC_END_STRING))) {
@@ -1838,8 +1848,17 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("MCC_MoonRevTime", MoonRevTime);
 		LOAD_STRING("MCC_PCOption_Text", PCOption_Text, 32);
 		LOAD_STRING("MCC_NCOption_Text", NCOption_Text, 32);
+		LOAD_STRING("MCC_TransmittingGroundstation", TransmittingGroundStationName, 64);
 		LOAD_INT("MCC_padNumber", padNumber);
 		//LOAD_INT("MCC_padState", padState);
+
+		for (int i = 0; i < MAX_GROUND_STATION; i++) {
+			if (strcmp(GroundStations[i].Name, TransmittingGroundStationName) == 0) {
+				TransmittingGroundStation = &GroundStations[i];
+				break;
+			}
+		}
+
 		if (padNumber > 0)
 		{
 			if (!padisallocated)

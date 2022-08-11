@@ -292,6 +292,7 @@ public:
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
 	GroundStation* TransmittingGroundStation;
 	VECTOR3 TransmittingGroundStationVector;
+	bool firstAOSUpdateDone;
 	double LastAOSUpdate;									// Last update to AOS data
 	double CM_Position[3];                                  // CM's position and altitude
 	double CM_Prev_Position[3];                             // CM's previous position and altitude
