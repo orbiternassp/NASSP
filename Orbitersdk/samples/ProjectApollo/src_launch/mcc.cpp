@@ -682,6 +682,16 @@ void MCC::TimeStep(double simdt){
 					if (OrbMech::sight(CM_Vector, GSVector, R_E) && GroundStations[x].AOS == 0 && ((GroundStations[x].USBCaps&GSSC_VOICE) || (GroundStations[x].CommCaps&GSGC_VHFAG_VOICE))) {
 						if (length(CM_Vector - GSVector) < LOSRange && !MoonInTheWay)
 						{
+							//Dont switch to a new station if we're transmitting an uplink;
+							if (cm) {
+								if (cm->pcm.mcc_size != 0);
+								break;
+							}
+							if (cm) {
+								if (lm->PCM.mcc_size != 0);
+								break;
+							}	
+
 							GroundStations[x].AOS = 1;
 							sprintf(buf, "AOS %s", GroundStations[x].Name);
 							addMessage(buf);
