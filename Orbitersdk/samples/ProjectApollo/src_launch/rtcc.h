@@ -2978,6 +2978,8 @@ public:
 	int RMRMED(std::string med, std::vector<std::string> data);
 	//Spacecraft Setting Control
 	void RMSSCS(int entry);
+	//External DV Parameters
+	void RMDRXDV(bool rte);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -4032,6 +4034,22 @@ public:
 		RTEDigitalSolutionTable RTEDTable[2];
 		int LastRTEDCode = 0;
 	} PZREAP;
+
+	struct RetrofireExternalDVDisplayData
+	{
+		bool Indicator = false;
+		double GETI;
+		VECTOR3 DV;
+		double P_G, Y_G;
+		double DT_TO, DV_TO;
+		double H_apo, H_peri;
+		double lat_IP, lng_IP;
+	};
+
+	struct RetrofireExternalDVDisplay
+	{
+		std::vector<RetrofireExternalDVDisplayData> data;
+	} RetrofireEXDV;
 	
 	RetrofireTransferTable RZRFTT;
 	ReentryConstraintsTable RZC1RCNS;

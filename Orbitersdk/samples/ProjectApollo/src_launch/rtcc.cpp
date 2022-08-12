@@ -24956,6 +24956,9 @@ void RTCC::PMMREDIG(bool mpt)
 
 	//Finally, write to PZREAP
 	PZREAP.RTEDTable[MED.Column - 1] = RID;
+
+	//External DV display
+	RMDRXDV(true);
 }
 
 //Return to Earth Digital Supervisor
@@ -34207,13 +34210,13 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 		{
 			if (refs2 == 1)
 			{
-				if (RZRFDP.Indicator != 0)
+				if (RZRFDP.data[2].Indicator != 0)
 				{
 					EMGPRINT("EMSGSUPP", 22);
 					return;
 				}
-				REFSMMAT = RZRFDP.REFSMMAT;
-				gmt = GMTfromGET(RZRFDP.GETI);
+				REFSMMAT = RZRFDP.data[2].REFSMMAT;
+				gmt = GMTfromGET(RZRFDP.data[2].GETI);
 			}
 			else if (refs2 == 2)
 			{
@@ -34922,7 +34925,7 @@ void RTCC::CMMRXTDV(int source, int column)
 		}
 		else
 		{
-			if (RZRFDP.Indicator != 0)
+			if (RZRFDP.data[2].Indicator != 0)
 			{
 				//Error
 				return;
@@ -35236,7 +35239,12 @@ void RTCC::RMSDBMP(EphemerisData sv, double CSMmass)
 	RetrofirePlanning plan(this);
 	if (plan.RMSDBMP(sv, RZJCTTC.R32_GETI, RZJCTTC.R32_lat_T, RZJCTTC.R32_lng_T, CSMmass, PZMPTCSM.CommonBlock.CSMArea))
 	{
-		RZRFDP.Indicator = -1;
+		RZRFDP.data[2].Indicator = -1;
+	}
+	else
+	{
+		//External DV display
+		RMDRXDV(false);
 	}
 }
 
@@ -35491,6 +35499,97 @@ void RTCC::RTACFGuidanceOpticsSupportTable(RTACFGOSTInput in, RTACFGOSTOutput &o
 		if (out.IMUAtt.z < 0)
 		{
 			out.IMUAtt.z += PI2;
+		}
+	}
+}
+
+void RTCC::RMDRXDV(bool rte)
+{
+	RetrofireEXDV.data.resize(2);
+
+	bool valid;
+	for (unsigned i = 0;i < 2;i++)
+	{
+		RetrofireExternalDVDisplayData *tab = &RetrofireEXDV.data[i];
+
+		if (rte)
+		{
+			valid = PZREAP.RTEDTable[i].RTEDCode != "";
+		}
+		else
+		{
+			if (i == 0)
+			{
+				valid = RZRFDP.data[0].Indicator == 0;
+			}
+			else
+			{
+				valid = RZRFDP.data[2].Indicator == 0;
+			}
+		}
+
+		if (valid)
+		{
+			if (rte)
+			{
+				RTEDigitalSolutionTable *tab2 = &PZREAP.RTEDTable[i];
+
+				tab->Indicator = true;
+				tab->GETI = tab2->GETI;
+				tab->DV = tab2->DV_XDV / 0.3048;
+
+				if (tab2->ThrusterCode == RTCC_ENGINETYPE_CSMSPS)
+				{
+					tab->P_G = (tab2->R_Y - SystemParameters.MCTSPP)*DEG;
+					tab->Y_G = (tab2->R_Z - SystemParameters.MCTSYP)*DEG;
+				}
+				else
+				{
+					tab->P_G = 0.0;
+					tab->Y_G = 0.0;
+				}
+
+				tab->DT_TO = tab2->dt_TO;
+				tab->DV_TO = tab2->dv_TO / 0.3048;
+				tab->H_apo = tab2->h_a / 1852.0;
+				tab->H_peri = tab2->h_p / 1852.0;
+				tab->lat_IP = tab2->lat_imp_tgt*DEG;
+				tab->lng_IP = tab2->lng_imp_tgt*DEG;
+			}
+			else
+			{
+				RetrofireDisplayParametersTableData *tab2;
+				if (i == 0)
+				{
+					tab2 = &RZRFDP.data[0];
+				}
+				else
+				{
+					tab2 = &RZRFDP.data[2];
+				}
+
+				tab->Indicator = true;
+				tab->GETI = tab2->GETI;
+				tab->DV = tab2->VG_XDX;
+				tab->P_G = tab2->P_G;
+				tab->Y_G = tab2->Y_G;
+				tab->DT_TO = tab2->DT_TO;
+				tab->DV_TO = tab2->DV_TO;
+				tab->H_apo = tab2->H_apo;
+				tab->H_peri = tab2->H_peri;
+				tab->lat_IP = tab2->lat_IP;
+				tab->lng_IP = tab2->lng_IP;
+			}
+		}
+		else
+		{
+			tab->Indicator = false;
+			tab->GETI = 0.0;
+			tab->DV = _V(0, 0, 0);
+			tab->P_G = tab->Y_G = 0.0;
+			tab->DT_TO = tab->DV_TO = 0.0;
+			tab->H_apo = tab->H_peri = 0.0;
+			tab->lat_IP = tab->lng_IP = 0.0;
 		}
 	}
 }

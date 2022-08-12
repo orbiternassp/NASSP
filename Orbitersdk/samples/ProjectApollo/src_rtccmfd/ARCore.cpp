@@ -3600,9 +3600,9 @@ int ARCore::subThread()
 
 		GC->rtcc->RMSDBMP(sv, CSMmass);
 
-		if (GC->rtcc->RZRFDP.Indicator == 0)
+		if (GC->rtcc->RZRFDP.data[2].Indicator == 0)
 		{
-			P30TIG = GC->rtcc->RZRFDP.GETI;
+			P30TIG = GC->rtcc->RZRFDP.data[2].GETI;
 			dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
 
 			GC->rtcc->RZC1RCNS.entry = GC->rtcc->RZRFTT.Manual.entry;
