@@ -154,8 +154,7 @@ void MCC::Init(){
 	Moon = oapiGetGbodyByName("Moon");
 	
 	// GROUND TRACKING INITIALIZATION
-	LastAOSUpdate=2.0;
-	firstAOSUpdateDone = false;
+	LastAOSUpdate = 0.0;
 
 	TransmittingGroundStation = nullptr;
 	TransmittingGroundStationVector = _V(0, 0, 0);
@@ -684,23 +683,20 @@ void MCC::TimeStep(double simdt){
 						{
 							//Dont switch to a new station if we're transmitting an uplink;
 							if (cm) {
-								if (cm->pcm.mcc_size != 0);
-								break;
+								if (cm->pcm.mcc_size != 0){ break; }
 							}
-							if (cm) {
-								if (lm->PCM.mcc_size != 0);
-								break;
+							if (lm) {
+								if (lm->PCM.mcc_size != 0) { break; }
 							}	
 
 							GroundStations[x].AOS = 1;
 							sprintf(buf, "AOS %s", GroundStations[x].Name);
 							addMessage(buf);
 
-							if (firstAOSUpdateDone){
-								if (GroundStations[x].USBCaps) {
-									TransmittingGroundStation = &GroundStations[x]; //only interested in picking a station to tx USB carrier
-								}
+							if (GroundStations[x].USBCaps) {
+								TransmittingGroundStation = &GroundStations[x]; //only interested in picking a station to tx USB carrier
 							}
+
 						}
 					}
 					if ((!OrbMech::sight(CM_Vector, GSVector, R_E) || length(CM_Vector - GSVector) > LOSRange || MoonInTheWay) && GroundStations[x].AOS == 1) {
@@ -728,8 +724,6 @@ void MCC::TimeStep(double simdt){
 	else {
 		TransmittingGroundStationVector = _V(0, 0, 0);
 	}
-
-	firstAOSUpdateDone = true;
 
 	//debugging
 	/*if (TransmittingGroundStation) {
@@ -1292,6 +1286,7 @@ int MCC::startSubthread(int fcn, int type){
 // Save State
 void MCC::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, MCC_START_STRING);
+	char GSLoadAOSNames[128];
 	// Booleans
 	SAVE_BOOL("MCC_GT_Enabled", GT_Enabled);	
 	SAVE_BOOL("MCC_MT_Enabled", MT_Enabled);
@@ -1307,6 +1302,11 @@ void MCC::SaveState(FILEHANDLE scn) {
 	SAVE_INT("MCC_EarthRev", EarthRev);
 	SAVE_INT("MCC_MoonRev", MoonRev);
 	SAVE_INT("MCC_AbortMode", AbortMode);
+	for (int i = 0; i < MAX_GROUND_STATION; i++) {
+		strcpy(GSLoadAOSNames, "MCC_GroundStationAOS_");
+		strcat(GSLoadAOSNames, GroundStations[i].Name);
+		SAVE_INT(GSLoadAOSNames, GroundStations[i].AOS);
+	}
 	// Floats
 	SAVE_DOUBLE("MCC_StateTime", StateTime);
 	SAVE_DOUBLE("MCC_SubStateTime", SubStateTime);
@@ -1862,10 +1862,17 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_INT("MCC_padNumber", padNumber);
 		//LOAD_INT("MCC_padState", padState);
 
-		for (int i = 0; i < MAX_GROUND_STATION; i++) {
+		char GSLoadAOSNames[128];
+
+		for (int i = 1; i < MAX_GROUND_STATION; i++) {
+			strcpy(GSLoadAOSNames, "MCC_GroundStationAOS_");
+			strcat(GSLoadAOSNames, GroundStations[i].Name);
+			LOAD_INT(GSLoadAOSNames, GroundStations[i].AOS);
+		}
+
+		for (int i = 1; i < MAX_GROUND_STATION; i++) {
 			if (strcmp(GroundStations[i].Name, TransmittingGroundStationName) == 0) {
 				TransmittingGroundStation = &GroundStations[i];
-				break;
 			}
 		}
 
