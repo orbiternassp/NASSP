@@ -24,7 +24,6 @@
 #pragma once
 
 #include "Orbitersdk.h"
-#include "connector.h"
 
 class MCC;
 class RTCC;
