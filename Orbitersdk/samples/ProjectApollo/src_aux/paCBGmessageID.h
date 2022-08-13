@@ -31,8 +31,7 @@ namespace paCBGmessageID {
 	};
 
 	enum parameterID {
-		GetTxPosition,
-		GetTxGain,
-		GetTxPower
+		Get,
+		Set,
 	};
 }

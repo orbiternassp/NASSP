@@ -24,6 +24,7 @@
 #pragma once
 
 #include "Orbitersdk.h"
+#include "RF_calc.h"
 
 class MCC;
 class RTCC;
