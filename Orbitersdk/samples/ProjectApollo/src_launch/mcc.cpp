@@ -154,7 +154,7 @@ void MCC::Init(){
 	Moon = oapiGetGbodyByName("Moon");
 	
 	// GROUND TRACKING INITIALIZATION
-	LastAOSUpdate = 0.0;
+	LastAOSUpdate = 2.0;
 
 	TransmittingGroundStation = nullptr;
 	TransmittingGroundStationVector = _V(0, 0, 0);
@@ -1304,7 +1304,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	SAVE_INT("MCC_AbortMode", AbortMode);
 	for (int i = 0; i < MAX_GROUND_STATION; i++) {
 		strcpy(GSLoadAOSNames, "MCC_GroundStationAOS_");
-		strcat(GSLoadAOSNames, GroundStations[i].Name);
+		strcat(GSLoadAOSNames, GroundStations[i].Code);
 		SAVE_INT(GSLoadAOSNames, GroundStations[i].AOS);
 	}
 	// Floats
@@ -1862,19 +1862,40 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_INT("MCC_padNumber", padNumber);
 		//LOAD_INT("MCC_padState", padState);
 
-		char GSLoadAOSNames[128];
-
-		for (int i = 1; i < MAX_GROUND_STATION; i++) {
-			strcpy(GSLoadAOSNames, "MCC_GroundStationAOS_");
-			strcat(GSLoadAOSNames, GroundStations[i].Name);
-			LOAD_INT(GSLoadAOSNames, GroundStations[i].AOS);
-		}
-
-		for (int i = 1; i < MAX_GROUND_STATION; i++) {
-			if (strcmp(GroundStations[i].Name, TransmittingGroundStationName) == 0) {
-				TransmittingGroundStation = &GroundStations[i];
-			}
-		}
+		LOAD_INT("MCC_GroundStationAOS_ANG", GroundStations[1].AOS);
+		LOAD_INT("MCC_GroundStationAOS_ASC", GroundStations[2].AOS);
+		LOAD_INT("MCC_GroundStationAOS_BDA", GroundStations[3].AOS);
+		LOAD_INT("MCC_GroundStationAOS_CYI", GroundStations[4].AOS);
+		LOAD_INT("MCC_GroundStationAOS_HSK", GroundStations[5].AOS);
+		LOAD_INT("MCC_GroundStationAOS_CRO", GroundStations[6].AOS);
+		LOAD_INT("MCC_GroundStationAOS_TEX", GroundStations[7].AOS);
+		LOAD_INT("MCC_GroundStationAOS_GDS", GroundStations[8].AOS);
+		LOAD_INT("MCC_GroundStationAOS_GBM", GroundStations[9].AOS);
+		LOAD_INT("MCC_GroundStationAOS_GWM", GroundStations[10].AOS);
+		LOAD_INT("MCC_GroundStationAOS_GYM", GroundStations[11].AOS);
+		LOAD_INT("MCC_GroundStationAOS_HAW", GroundStations[12].AOS);
+		LOAD_INT("MCC_GroundStationAOS_MAD", GroundStations[13].AOS);
+		LOAD_INT("MCC_GroundStationAOS_MIL", GroundStations[14].AOS);
+		LOAD_INT("MCC_GroundStationAOS_HTV", GroundStations[15].AOS);
+		LOAD_INT("MCC_GroundStationAOS_MER", GroundStations[16].AOS);
+		LOAD_INT("MCC_GroundStationAOS_RED", GroundStations[17].AOS);
+		LOAD_INT("MCC_GroundStationAOS_VAN", GroundStations[18].AOS);
+		LOAD_INT("MCC_GroundStationAOS_WTN", GroundStations[19].AOS);
+		//ARIA
+		LOAD_INT("MCC_GroundStationAOS_HSKX", GroundStations[29].AOS);
+		LOAD_INT("MCC_GroundStationAOS_GDSX", GroundStations[30].AOS);
+		LOAD_INT("MCC_GroundStationAOS_MADX", GroundStations[31].AOS);
+		LOAD_INT("MCC_GroundStationAOS_TAN", GroundStations[33].AOS);
+		//
+		LOAD_INT("MCC_GroundStationAOS_ANT", GroundStations[34].AOS);
+		LOAD_INT("MCC_GroundStationAOS_ASC", GroundStations[35].AOS);
+		LOAD_INT("MCC_GroundStationAOS_CNV", GroundStations[36].AOS);
+		LOAD_INT("MCC_GroundStationAOS_GBI", GroundStations[37].AOS);
+		LOAD_INT("MCC_GroundStationAOS_MLA", GroundStations[38].AOS);
+		LOAD_INT("MCC_GroundStationAOS_PAT", GroundStations[39].AOS);
+		LOAD_INT("MCC_GroundStationAOS_PRE", GroundStations[40].AOS);
+		LOAD_INT("MCC_GroundStationAOS_CAL", GroundStations[41].AOS);
+		LOAD_INT("MCC_GroundStationAOS_WHS", GroundStations[42].AOS);
 
 		if (padNumber > 0)
 		{
@@ -2370,6 +2391,12 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_STRING("MCC_upString", upString, 3072);
 		LOAD_INT("MCC_upType", upType);
 		LOAD_STRING("MCC_upDescr", upDescr, 1024);
+	}
+
+	for (int i = 1; i < MAX_GROUND_STATION; i++) {
+		if (strcmp(GroundStations[i].Name, TransmittingGroundStationName) == 0) {
+			TransmittingGroundStation = &GroundStations[i];
+		}
 	}
 
 	if (upString[0] != 0) {

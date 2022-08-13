@@ -632,7 +632,7 @@ void HGA::Init(Saturn *vessel){
 	SignalStrength = 0;
 	scanlimit = false;
 	scanlimitwarn = false;
-	ModeSwitchTimer = 0;
+	ModeSwitchTimer = 0.0;
 	AutoTrackingMode = false;
 	RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
@@ -1022,9 +1022,9 @@ void HGA::TimeStep(double simt, double simdt)
 	//Get the gain, power and global position of the transmitter
 	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
 	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
-	sprintf(oapiDebugString(), "%lf %lf <%lf %lf %lf>", GroundTransmitterRFProperties.Gain, GroundTransmitterRFProperties.Power, GroundTransmitterRFProperties.GlobalPosition.x,
+	/*sprintf(oapiDebugString(), "%lf %lf <%lf %lf %lf>", GroundTransmitterRFProperties.Gain, GroundTransmitterRFProperties.Power, GroundTransmitterRFProperties.GlobalPosition.x,
 		GroundTransmitterRFProperties.GlobalPosition.y,
-		GroundTransmitterRFProperties.GlobalPosition.z);
+		GroundTransmitterRFProperties.GlobalPosition.z);*/
 	
 	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
@@ -1265,14 +1265,14 @@ void HGA::clbkPostCreation()
 
 // Load
 void HGA::LoadState(char *line) {
-	sscanf(line + 15, "%lf %lf %lf %lf %lf %lf", &Alpha, &Beta, &Gamma, &AAxisCmd, &BAxisCmd, &CAxisCmd);
+	sscanf(line + 15, "%lf %lf %lf %lf %lf %lf %lf", &Alpha, &Beta, &Gamma, &AAxisCmd, &BAxisCmd, &CAxisCmd, &SignalStrength);
 }
 
 // Save
 void HGA::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf %lf %lf %lf", Alpha, Beta, Gamma, AAxisCmd, BAxisCmd, CAxisCmd);
+	sprintf(buffer, "%lf %lf %lf %lf %lf %lf %lf", Alpha, Beta, Gamma, AAxisCmd, BAxisCmd, CAxisCmd, SignalStrength);
 
 	oapiWriteScenario_string(scn, "HIGHGAINANTENNA", buffer);
 }
