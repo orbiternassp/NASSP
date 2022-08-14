@@ -4975,10 +4975,6 @@ double RTCC::GMTfromGET(double GET)
 MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 {
 	VECTOR3 UX, UY, UZ;
-	OBJHANDLE hMoon, hEarth;
-
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
 
 	//Here the options that don't require a state vector or thrust parameters
 	if (opt->REFSMMATopt == 7)

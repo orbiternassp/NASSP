@@ -1849,7 +1849,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.ManeuverCode = RTCC_GMP_HAS;
 		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 0, 0);
-		gmpopt.N = 46;
+		gmpopt.N = 45;
 
 		//TBD: Error handling
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
