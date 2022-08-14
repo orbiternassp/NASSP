@@ -1021,7 +1021,8 @@ void HGA::TimeStep(double simt, double simdt)
 	
 	//Get the gain, power and global position of the transmitter
 	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
-	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+	if (MCCVessel) { MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties); }
+
 	/*sprintf(oapiDebugString(), "%lf %lf <%lf %lf %lf>", GroundTransmitterRFProperties.Gain, GroundTransmitterRFProperties.Power, GroundTransmitterRFProperties.GlobalPosition.x,
 		GroundTransmitterRFProperties.GlobalPosition.y,
 		GroundTransmitterRFProperties.GlobalPosition.z);*/
