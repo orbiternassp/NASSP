@@ -284,7 +284,7 @@ void SIVBSystems::Timestep(double simdt)
 	EngineStart3 = HeliumControlOn || SparkSystemOn;
 	HeliumControlOn = EngineStart3 && K101 && !HeliumControlDeenergizedTimer.ContactClosed();
 
-	//sprintf(oapiDebugString(), "ENGINE START BOARD: EngineStart %d EngineStartLockUp %d SparkSystemOn %d EngineStart3 %d EngineStart4 %d EngineStart5 %d HeliumControlOn %d Timer %lf", EngineStart, EngineStartLockUp, SparkSystemOn, EngineStart3, EngineStart4, EngineStart5, HeliumControlOn, HeliumControlDeenergizedTimer.GetTime());
+	//sprintf(oapiDebugString(), "ENGINE START BOARD: EngineStart %d EngineStartLockUp %d SparkSystemOn %d EngineStart3 %d EngineStart4 %d HeliumControlOn %d Timer %lf", EngineStart, EngineStartLockUp, SparkSystemOn, EngineStart3, EngineStart4, HeliumControlOn, HeliumControlDeenergizedTimer.GetTime());
 
 	//PROGRAMMER BOARD
 	PBSignal1 = (FuelInjTempOKBypass || StartTurbines);

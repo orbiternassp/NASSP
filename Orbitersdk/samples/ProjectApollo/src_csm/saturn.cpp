@@ -622,8 +622,6 @@ void Saturn::initSaturn()
 	CSMAttached = true;
 	SIMBayPanelJett = false;
 
-	NosecapAttached = false;
-
 	TLICapableBooster = false;
 	TLISoundsLoaded = false;
 	IUSCContPermanentEnabled = true;
@@ -1100,6 +1098,7 @@ void Saturn::initSaturn()
 	seatsunfoldedidx = -1;
 	coascdridx = -1;
 	coascdrreticleidx = -1;
+	cuecardidx[0] = -1;
 
 	Scorrec = false;
 
@@ -1835,7 +1834,6 @@ int Saturn::GetAttachState()
 	AttachState state;
 
 	state.CSMAttached = CSMAttached;
-	state.NosecapAttached = NosecapAttached;
 	state.InterstageAttached = InterstageAttached;
 	state.LESAttached = LESAttached;
 	state.HasProbe = HasProbe;
@@ -1855,7 +1853,6 @@ void Saturn::SetAttachState(int s)
 	state.word = s;
 
 	CSMAttached = (state.CSMAttached != 0);
-	NosecapAttached = (state.NosecapAttached != 0);
 	LESAttached = (state.LESAttached != 0);
 	InterstageAttached = (state.InterstageAttached != 0);
 	HasProbe = (state.HasProbe != 0);

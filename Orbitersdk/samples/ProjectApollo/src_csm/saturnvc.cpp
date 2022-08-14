@@ -1373,6 +1373,11 @@ void Saturn::RegisterActiveAreas() {
 		oapiVCRegisterArea(AID_VC_PUSHB_LEB_L_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_LEB_L_01 + i, LEB_L_PUSHB_POS[i] + ofs, 0.012);
 	}
+
+	//Cue Cards
+
+	oapiVCRegisterArea(AID_VC_CUE_CARD_DAP_MONITOR_CARD, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_DAP_MONITOR_CARD, _V(-0.329979, 0.682787, 0.352857) + ofs, _V(-0.257461, 0.682787, 0.352857) + ofs, _V(-0.329979, 0.673671, 0.349805) + ofs, _V(-0.257461, 0.673671, 0.349805) + ofs);
 }
 
 // --------------------------------------------------------------
@@ -1458,6 +1463,10 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		}
 		SwitchClick();
 		SetCOASMesh();
+		return true;
+
+	case AID_VC_CUE_CARD_DAP_MONITOR_CARD:
+		CycleCueCard(0);
 		return true;
 	}
 

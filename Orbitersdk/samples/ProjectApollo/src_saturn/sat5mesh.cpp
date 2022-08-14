@@ -902,9 +902,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 	fwdhatchidx = AddMesh(hFHF, &mesh_dir);
 	SetFwdHatchMesh();
 
-	// Optics Cover
-	opticscoveridx = AddMesh (hopticscover, &mesh_dir);
-	SetOpticsCoverMesh();
+	AddCMMeshes(mesh_dir);
 
 	dockringidx = -1;
 	probeidx = -1;
