@@ -91,7 +91,7 @@ int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
 
 	if (msgid == paCBGmessageID::messageID::RF_PROPERTIES) {
 
-		if(mcc->TransmittingGroundStation == NULL) { return 0; }
+		if(mcc->TransmittingGroundStation == 0) { return 0; }
 		RFCALC_RFProperties *RFtemp = (RFCALC_RFProperties*)context;
 
 		if (prm == paCBGmessageID::parameterID::Get) {
@@ -100,15 +100,15 @@ int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
 
 			RFtemp->GlobalPosition = (mcc->TransmittingGroundStationVector);
 
-			if (mcc->TransmittingGroundStation->SBandAntenna == GSSA_26METER) {
+			if (mcc->GroundStations[mcc->TransmittingGroundStation].SBandAntenna == GSSA_26METER) {
 				RFtemp->Gain = pow(10.0, (50.0 / 10.0));
 				RFtemp->Power = 20.0E3;
 			}
-			else if (mcc->TransmittingGroundStation->SBandAntenna == GSSA_9METER) {
+			else if (mcc->GroundStations[mcc->TransmittingGroundStation].SBandAntenna == GSSA_9METER) {
 				RFtemp->Gain = pow(10.0, (43.0 / 10.0));
 				RFtemp->Power = 10E3;
 			}
-			else if (mcc->TransmittingGroundStation->SBandAntenna == GSSA_3PT7METER) {
+			else if (mcc->GroundStations[mcc->TransmittingGroundStation].SBandAntenna == GSSA_3PT7METER) {
 				RFtemp->Gain = pow(10.0, (37.0 / 10.0));
 				RFtemp->Power = 22.9;
 			}
