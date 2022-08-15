@@ -716,17 +716,25 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text((int)(0.5 * W / 8), 15 * H / 21, Buffer, strlen(Buffer));
 		}
 
+		REFSMMATData *refsdata;
+		if (G->vesseltype == 0)
+		{
+			refsdata = &GC->rtcc->EZJGMTX1.data[0];
+		}
+		else
+		{
+			refsdata = &GC->rtcc->EZJGMTX3.data[0];
+		}
+
+		GC->rtcc->FormatREFSMMATCode(RTCC_REFSMMAT_TYPE_CUR, refsdata->ID, Buffer);
+		skp->Text(7 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
+
+		MATRIX3 ref;
+		ref = mul(refsdata->REFSMMAT, OrbMech::tmat(GC->rtcc->SystemParameters.MAT_J2000_BRCS));
+
 		for (int i = 0; i < 9; i++)
 		{
-			if (G->vesseltype == 0)
-			{
-				sprintf(Buffer, "%f", GC->rtcc->EZJGMTX1.data[0].REFSMMAT.data[i]);
-			}
-			else
-			{
-				sprintf(Buffer, "%f", GC->rtcc->EZJGMTX3.data[0].REFSMMAT.data[i]);
-			}
-			
+			sprintf(Buffer, "%f", ref.data[i]);
 			skp->Text(7 * W / 16, (4 + i) * H / 14, Buffer, strlen(Buffer));
 		}
 	}
