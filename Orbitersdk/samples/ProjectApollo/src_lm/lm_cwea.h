@@ -59,8 +59,7 @@ public:
 	bool GetBatteryCaution() { return LightStatus[1][5] == 1; }
 	bool GetCWPowerFail() { return LightStatus[3][6] == 1; }
 
-	bool CheckMasterAlarmMouseClick(int event);
-	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border);
+	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit);
 	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf);
 	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
 
