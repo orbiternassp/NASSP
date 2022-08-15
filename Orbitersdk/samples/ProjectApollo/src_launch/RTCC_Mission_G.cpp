@@ -302,7 +302,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 14: //TLI PAD
 	{
-		TLIPADOpt opt;
 		SV sv;
 
 		TLIPAD * form = (TLIPAD *)pad;

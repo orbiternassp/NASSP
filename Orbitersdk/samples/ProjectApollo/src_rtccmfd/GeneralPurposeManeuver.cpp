@@ -602,6 +602,8 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	if (K3 != 2)
 	{
 		sv_a.ENTRY = 0;
+		sv_a.TIMA = 0;
+		sv_a.TE = sv_a.TS;
 		if (pRTCC->PMMAPD(aeg.Header, sv_a, 0, 0, INFO, &sv_AP, &sv_PE))
 		{
 			ErrorIndicator = 8;
@@ -930,6 +932,7 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(int n)
 {
 	double r_AD, r_PD, dr_a_max, dr_p_max, a_D, e_D, cos_theta_A, theta_A, r_a, r_p, cos_E_a;
 	double dr_ap0, dr_ap1, dr_p0, dr_p1, dr_ap_c, dr_p_c, ddr_ap, ddr_p, E_a;
+	int err;
 
 	pRTCC->PMMAPD(aeg.Header, sv_b, 0, 0, INFO, &sv_AP, &sv_PE);
 
@@ -939,6 +942,19 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(int n)
 	if (r_AD == r_PD)
 	{
 		r_PD = r_PD - eps1;
+	}
+
+	//Limit apoapsis and periapsis to current radius, but only for non multi rev cases
+	if (n == 0)
+	{
+		if (sv_b.R > r_AD)
+		{
+			r_AD = sv_b.R;
+		}
+		if (sv_b.R < r_PD)
+		{
+			r_PD = sv_b.R;
+		}
 	}
 
 	//Can maneuver be performed?
@@ -1017,11 +1033,16 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(int n)
 			sv_a.Item8 = sv_a.coe_osc.l;
 			sv_a.Item10 = 1.0 + (double)n;
 			pRTCC->PMMAEGS(aeg.Header, sv_a, sv_temp);
-			pRTCC->PMMAPD(aeg.Header, sv_temp, 0, 0, INFO, &sv_AP, &sv_PE);
+			err = pRTCC->PMMAPD(aeg.Header, sv_temp, 0, 0, INFO, &sv_AP, &sv_PE);
 		}
 		else
 		{
-			pRTCC->PMMAPD(aeg.Header, sv_a, 0, 0, INFO, &sv_AP, &sv_PE);
+			err = pRTCC->PMMAPD(aeg.Header, sv_a, 0, 0, INFO, &sv_AP, &sv_PE);
+		}
+		if (aeg.Header.ErrorInd || err)
+		{
+			ErrorIndicator = 4;
+			return 1;
 		}
 
 		if (I > 5)
@@ -1267,7 +1288,8 @@ void RTCCGeneralPurposeManeuverProcessor::ApsidesPlacementNRevsLater()
 			lng_p = INFO[8];
 			dlng = OrbMech::calculateDifferenceBetweenAngles(lng_p, opt->long_D);
 
-			if (n > 0 && dlng*dlng_apo < 0 && abs(dlng_apo) < PI05)
+			//Don't switch sign on ddt on first step. Change when dlng also switches sign, but only when passing through zero
+			if (n > 0 && dlng*dlng_apo < 0 && abs(dlng - dlng_apo) < PI05)
 			{
 				ddt = -ddt / 2.0;
 			}

@@ -24,6 +24,14 @@
 
 #pragma once
 
+#include "Orbitersdk.h"
+#include <stdio.h>
+#include <math.h>
+#include "soundlib.h"
+
+#include "nasspdefs.h"
+#include "nasspsound.h"
+
 #include <vector>
 #include "cautionwarning.h"
 #include "powersource.h"
@@ -608,6 +616,7 @@ class ThreeSourceTwoDestSwitch : public ThreeSourceSwitch {
 public:
 	ThreeSourceTwoDestSwitch() { dest1 = dest2 = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3, e_object *d1, e_object *d2);
+	void refresh(double dt) { UpdateSourceState(); };
 
 protected:
 	virtual void UpdateSourceState();
@@ -1571,6 +1580,7 @@ public:
 
 	int GetState(const char *n);
 	bool SetState(const char *n, int value, bool guard = false, bool hold = false);
+	void SetFailedState(const char *n, bool fail, int fail_state = 0);
 	bool GetFailedState(const char *n);
 	bool GetFlashing(const char *n);
 

@@ -148,6 +148,7 @@
     <None Include="..\..\Logo.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_aux\nassputils.h" />
     <ClInclude Include="..\..\src_mfd\MFDResource.h" />
     <ClInclude Include="..\..\src_mfd\ProjectApolloMFDButtons.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />

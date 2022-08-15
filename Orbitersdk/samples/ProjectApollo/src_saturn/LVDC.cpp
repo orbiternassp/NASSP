@@ -877,8 +877,8 @@ void LVDC1B::TimeStep(double simdt) {
 			t_D = T_GRR - T_GRR0;
 			fprintf(lvlog, "Time into launch window (if applicable) = %f\r\n", t_D);
 
-			DescNodeAngle = Lambda_0 - lambda_dot * t_D;
-			fprintf(lvlog, "DescNodeAngle = %f\r\n", DescNodeAngle);
+			DescNodeAngle = Lambda_0 + lambda_dot * t_D;
+			fprintf(lvlog, "Lambda_0 = %f, lambda_dot = %f, DescNodeAngle = %f\r\n", Lambda_0, lambda_dot, DescNodeAngle);
 
 			Azimuth = Ax[0] + Ax[1] * Inclination + Ax[2] * DescNodeAngle + Ax[3] * Inclination*DescNodeAngle;
 			fprintf(lvlog, "Azimuth = %f\r\n", Azimuth);
@@ -2901,6 +2901,8 @@ bool LVDC1B::LaunchTargetingUpdate(double v_t, double r_t, double theta_t, doubl
 		Inclination = inc;
 		Lambda_0 = dsc;
 		lambda_dot = dsc_dot;
+		fprintf(lvlog, "Navigation update received! R_T %f V_T %f gamma_T %f T_GRR0 %f\r\n", R_T, V_T, gamma_T, T_GRR0);
+		fprintf(lvlog, "Inclination %f Lambda_0 %f lambda_dot %f\r\n", Inclination, Lambda_0, lambda_dot);
 
 		return true;
 	}
@@ -2927,6 +2929,7 @@ bool LVDC1B::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM
 		Vel_Nav = DCSVVEC;
 		ModeCode27[MC27_DCSNavigationUpdateAccepted] = true;
 		fprintf(lvlog, "Navigation update received! R %f %f %f V %f %f %f T %f \r\n", DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSNUPTIM);
+		return true;
 	}
 	return false;
 }
@@ -9796,6 +9799,7 @@ bool LVDCSV::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM
 		DLTTL[4] = NUPTIM;
 		Timer2Interrupt(true);
 		fprintf(lvlog, "Navigation update received! R %f %f %f V %f %f %f T %f \r\n", DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSNUPTIM);
+		return true;
 	}
 	return false;
 }

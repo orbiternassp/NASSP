@@ -446,6 +446,7 @@ public:
 	int RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	int XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	bool AutoTrackingMode;
+	bool DriveToReacqSetPoint;
 	double HGAWavelength;
 	double HGAFrequency;
 	double Gain85ft;
@@ -478,8 +479,6 @@ private:
 	double HornSignalStrength[4];
 
 	VECTOR3 U_Horn[4];
-
-	VECTOR3 boomAxis = _V(0., -0.612217, 0.790690); //In Apollo CSM coordinates. this gets converted in the constructor.
 
 	// Animations
 	UINT anim_HGAalpha, anim_HGAbeta, anim_HGAgamma;

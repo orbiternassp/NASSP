@@ -41,6 +41,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/RTCC_EMSMISS.h"
 #include "../src_rtccmfd/RTCCSystemParameters.h"
 #include "../src_rtccmfd/GeneralPurposeManeuver.h"
+#include "../src_rtccmfd/LWP.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -468,6 +469,7 @@ struct SPQResults
 	SV sv_C[5];
 	SV sv_C_apo[5];
 	SV sv_T[5];
+	int err = 0;
 };
 
 struct RTEMoonOpt
@@ -622,17 +624,11 @@ struct TLIManFR
 
 struct TLIPADOpt
 {
-	VESSEL* vessel; //vessel
-	SV sv0; //vessel state vector
-	double GETbase; //usually MJD at launch
-	double TIG; //Time of Ignition
-	double TLI;	//Time of Injection
-	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	EphemerisData sv0; //vessel state vector
 	MATRIX3 REFSMMAT;
 	VECTOR3 SeparationAttitude; //LVLH IMU angles
-	VECTOR3 R_TLI;
-	VECTOR3 V_TLI;
-	bool uselvdc;	//LVDC in use/or not
+	double ConfigMass;
+	int InjOpp; //Injection opportunity (1 or 2)
 };
 
 struct P27Opt
@@ -652,8 +648,6 @@ struct AGSSVOpt
 
 struct SkyRendOpt
 {
-	VESSEL* vessel;		//vessel
-	VESSEL* target;		//Target vessel
 	double GETbase;		//usually MJD at launch
 	int man;			//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
 	bool PCManeuver;	//0 = NC1 is setting up NPC, 1 = NC2 is setting up NPC
@@ -667,8 +661,9 @@ struct SkyRendOpt
 	double n_C;
 	double t_NC;		//Reference time for the NPC maneuver
 	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
-	bool csmlmdocked; //0 = CSM alone, 1 = CSM/DM
+	SV sv_C;		//Chaser state vector
+	SV sv_T;		//Target state vector
+	double DMMass; //Docking module mass
 };
 
 struct SkylabRendezvousResults
@@ -834,46 +829,131 @@ struct LMARKTRKPADOpt
 	int entries;
 };
 
-struct DKIOpt	//Docking Initiation Processor
+struct DKIOpt
 {
-	SV sv_A;
-	SV sv_P;
-	double GETbase;
-	double t_TIG;
-	double t_TPI_guess;
-	double DH;
-	double E;
-	int ChaserID;
-	int tpimode = 0;	//0 = TPI on time, 1 = TPI at orbital midnight, 2 = TPI at X minutes before sunrise
-	//DKI RENDEZVOUS PLANS:
-	//0 = Phasing, CSI 0.5 revs later, CDH 0.5 revs later
-	//1 = Phasing with +50 ft/s DVZ, at apolune, CDH 0.5 revs later
-	//2 = Height, CSI (Phasing) 0.5 revs later, CDH 2xN revs later
-	//3 = Just calculate TPI time
-	//4 = High Dwell Sequence
-	int plan = 0;
-	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
-	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
-	int N_HC = 1;				//Number of half revs between CSI and CDH
-	int N_PB = 1;				//Number of half revs between Phasing and Boost/Height
+	EphemerisData sv_CSM;
+	EphemerisData sv_LM;
+	//Maneuvering vehicle. 1 = CSM, 2 = LM
+	int MV;
+	//Flag which determines how the maneuver line is defined or computed
+	//1 = input time, 2 = apoapsis, 3 = inactive vehicle apsis
+	int IPUTNA;
+	//Time of initial maneuver line
+	double PUTTNA;
+	//Value of initial maneuver line
+	double PUTNA;
+	//Maneuver line of NSR
+	double NSR;
+	//Delta height at TPI
+	double DHSR;
+	//Delta height at NCC
+	double DHNCC;
+	//M-line of maneuver line number at which rendezvous is to take place
+	double MI;
+	//Elevation angle at TPI
+	double Elev;
+	//Tolerance on phase angle
+	double DOS = 0.0115*RAD;
+	//Counter line or period option. false = counter line, true = period option
+	bool IHALF = false;
+	//Maneuver line point for the phasing maneuver
+	double NC1;
+	//Maneuver line point for the height maneuver
+	double NH;
+	//control flag for phase angle at TPI. true = input phase angle, false = no input
+	bool KCOSR = false;
+	//Phase angle desired at TPI (if input)
+	double COSR;
+	//Height tolerance
+	double DHT = 100.0*0.3048;
+	//Time of TPI
+	double TTPI;
+	//Time of TPF
+	double TTPF;
+	//Control flag for TPI time computation. 1 = Input TPI time, 2 = input TPF time, 3 = TPI at "TLIT" minutes into night, 
+	//4 = TPI at "TLIT" minutes into day, 5: TPF at "TLIT" minutes into night, 6 = TPF at "TLIT" minutes into day
+	int K46;
+	//Delta time of lighting condition for TPI
+	double TIMLIT;
+	//Minimum delta time required between NSR and TPI
+	double DTSR = 10.0*60.0;
+	//Terminal phase angle (TPI to TPF)
+	double WT;
+	//Maneuver line point for the plane change maneuver
+	double NPC = -1.0;
+	//Control flag for initial phase angle wrapping. 0 = -180 to 180. 1 = 0 to 360. -1 = -360 to 0 and so on...
+	int KRAP = 0;
+	//Minimum height allowed in DKI plan
+	double PMIN = 0.0;
+	//Flag to relocated NH if minimum height is violated. false = no, true = yes
+	bool LNH = false;
+	//Number of additional M-lines desired
+	int IDM = 0;
+	//Flag to determine where to place in multiple plans. false = same point, 1 = relative to NSR
+	bool MNH = false;
 
-	double dt_TPI_sunrise = 16.0*60.0;
-	double DeltaT_PBH = 55.0*60.0;	//Delta time between phasing and boost/CSI
-	double DeltaT_BHAM = 60.0*60.0;	//Delta time between boost and HAM
-	double Delta_HAMH = 60.0*60.0;	//Delta time between HAM and CSI
+	//Skylab only
+	//Skylab four-maneuver route
+	bool I4 = false;
+	//Maneuver line point for the NCC maneuver
+	double NCC;
+	//DT between NCC and NSR
+	double dt_NCC_NSR;
 };
 
-struct DKIResults
+struct DKICommon
 {
-	VECTOR3 DV_Phasing;
-	double t_Boost;
-	double dv_Boost;
-	double t_HAM;
-	double t_CSI;
-	double dv_CSI;
-	double t_CDH;
-	VECTOR3 DV_CDH;
-	double t_TPI;
+	//Maneuvering vehicle
+	int MV;
+	//DT between NCC and NSR
+	double dt_NCC_NSR;
+	//Initial maneuver line
+	double ANAI;
+	//Time of initial maneuver line
+	double TNAI;
+	//Maneuver line point for the phasing maneuver
+	double NC1;
+	//Maneuver line point for the height maneuver
+	double NH;
+	//Maneuver line at NCC
+	double NCC;
+	//Maneuver line at NSR
+	double NSR;
+	//Maneuver line at NPC
+	double NPC;
+	//M-line of maneuver line number at which rendezvous is to take place
+	double MI;
+	//Delta time of lighting condition for TPI
+	double TLIT;
+	//Control flag for TPI time computation. 1 = Input TPI time, 2 = input TPF time, 3 = TPI at "TLIT" minutes into night, 
+	//4 = TPI at "TLIT" minutes into day, 5: TPF at "TLIT" minutes into night, 6 = TPF at "TLIT" minutes into day
+	int K46;
+	//Minimum delta time required between NSR and TPI
+	double DTSR;
+	//Terminal phase angle (TPI to TPF)
+	double WT;
+	//Tolerance on phase angle
+	double DOS;
+	//Height tolerance
+	double DHT;
+	//Time of TPI
+	double TTPI;
+	//Phase angle at TPI
+	double COSR;
+	//Initial phase angle
+	double theta_init;
+	//Number of maneuvers scheduled
+	int NOM;
+	AEGDataBlock sv_before[5];
+	AEGDataBlock sv_after[5];
+	std::string ID[5];
+
+	//Delta height at TPI
+	double DHSR;
+	//Delta height at NCC
+	double DHNCC;
+	//Counter line or period option. false = counter line, true = period option
+	bool IHALF = false;
 };
 
 struct SPQOpt //Coelliptic Sequence Processor
@@ -901,15 +981,17 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int I_Theta = 0;
 	//0 = CDH not scheduled, 1 = CDH scheduled
 	bool CDH = true;
-	//1 = CDH at next apsis, 2 = CDH on time, 3 = angle from CSI
+	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (AEG)
 	int I_CDH = 3;
-	//Number of apsis since CSI (for CDH at next apsis option)
+	//Number of apsis since CSI (for CDH at next apsis options)
 	int N_CDH = 1;
 	bool OptimumCSI = false;
 	//0 = CSI and CDH in-plane, 1 = CSI and CDH parallel to target
 	bool ParallelDVInd = false;
 	//Angle from CSI to CDH (for I_CDH = 3)
 	double DU_D = PI;
+	//Optimum CSI range
+	double dt_CSI_Range = 15.0*60.0;
 };
 
 struct PDAPOpt //Powered Descent Abort Program
@@ -1726,14 +1808,14 @@ struct PMMSPTInput
 	//Word 14-19
 	std::string StationID;
 	//Targeting Parameters
-	//Word 20 (DT of burn, negative if not input)
+	//Word 20 (DT of burn for maneuver confirmation, negative if not input)
 	double dt;
-	//Word 29
+	//Word 29, configuration change indicator
 	int CCI;
-	//Word 30
+	//Word 30, configuration code at end of maneuver
 	int CC;
 	int TVC;
-	//Word 32
+	//Word 32, configuration code at start of maneuver
 	int CCMI;
 	MPTManeuver *CurMan;
 	MPTManeuver *PrevMan = NULL;
@@ -2139,36 +2221,6 @@ struct SevenParameterUpdate
 	double theta_N;
 };
 
-struct LVDCTLIparam
-{
-	double alpha_TS;
-	double Azimuth;
-	double beta;
-	double C_3;
-	double cos_sigma;
-	double DEC;
-	double e_N;
-	double f;
-	double mu;
-	double omega_E;
-	double phi_L;
-	double RA;
-	double R_N;
-	double T_2R;
-	double theta_EO;
-	//Time of ignition of first S-IVB burn
-	double T4IG;
-	//Time of cutoff of first S-IVB burn
-	double T4C;
-	double T_L;
-	double T_LO;
-	double t_D;
-	double T_RG;
-	double T_ST;
-	double Tt_3R;
-	double t_clock;
-};
-
 struct ASTInput
 {
 	double dgamma;
@@ -2465,7 +2517,7 @@ public:
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
 	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
 	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
-	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
+	void TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad);
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad);
 	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
@@ -2501,7 +2553,6 @@ public:
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
-	void LVDCTLIPredict(LVDCTLIparam lvdc, double m0, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI);
 	//S-IVB TLI IGM Pre-Thrust Targeting Module
 	int PMMSPT(PMMSPTInput &in);
 	int PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC);
@@ -2531,16 +2582,23 @@ public:
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	//Velocity maneuver performer
+	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
 	void PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DELVX, double DELVY, double DELVZ, int I, VECTOR3 &V_C_apo, double &Pitch, double &Yaw);
 	//Elevation angle search subroutine
 	int PCTETR(SV sv_C, SV sv_T, double GETBase, double WT, double ESP, double &TESP, double &TR);
 	//Apogee, perigee, and offset determination
+	void PCPICK(AEGHeader header, AEGDataBlock sv_C, AEGDataBlock sv_T, double &DH, double &Phase, double &HA, double &HP);
 	void PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, double &HP);
 	//Apogee and perigee radius magnitude
 	void PCHAPE(double R1, double R2, double R3, double U1, double U2, double U3, double &RAP, double &RPE);
 	//Plane change time and velocity increments computations
-	void PMMPNE(AEGBlock sv_C, AEGBlock sv_T, double TREF, double FNPC, int KPC, int IPC, AEGBlock &SAVE, double &DI1, double &DH1);
-	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
+	void PMMPNE(AEGHeader Header, AEGDataBlock sv_C, AEGDataBlock sv_T, double TREF, double FNPC, int KPC, int IPC, AEGDataBlock &SAVE, double &DI1, double &DH1);
+	//DKI phase lag routine
+	void PMMPHL(DKICommon &DKI, AEGHeader aegh, AEGDataBlock sv_I, double TXX, double &TTPI, double &TTPF);
+	//DKI maneuver convergence
+	void PMMITL(DKICommon &DKI, AEGHeader aegh, AEGDataBlock *sv, int J);
+	void PCMCEM(AEGHeader &h, AEGDataBlock &sv_M, AEGDataBlock &sv_I, double mu);
+	bool DockingInitiationProcessor(DKIOpt opt);
 	int ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	double CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
@@ -2569,7 +2627,7 @@ public:
 	//Time of Longitude Crossing Determination
 	void PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC);
 	//AEG Day/Night Determination
-	void PMMDAN(AEGBlock aeg, int IND, int &ERR, double &T1, double &T2);
+	void PMMDAN(AEGHeader Header, AEGDataBlock aeg, int IND, int &ERR, double &T1, double &T2);
 	//Checkout Monitor Display
 	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
 	//Detailed Maneuver Table Display
@@ -2677,7 +2735,6 @@ public:
 	int PMMLDP(PMMLDPInput in, MPTManeuver &man);
 	//Coast Numerical Integrator
 	void PMMCEN(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
-	void PMMCEN2(EphemerisData sv, double tmin, double tmax, int opt, double endcond, double dir, EphemerisData &sv_out, int &ITS);
 	//Freeze, Unfreeze, Delete Processor
 	void PMMFUD(int veh, unsigned man, int action, std::string StationID);
 	//Vehicle Orientation Change Processor
@@ -2690,6 +2747,8 @@ public:
 	void PMSEXE(int L, double gmt);
 	//Earth Orbit Insertion Processor
 	void PMMIEV(double T_L);
+	//SLV Targeting Load Module
+	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
 	//Mission Planning Print Load Module
 	void PMXSPT(std::string source, int n);
 	void PMXSPT(std::string source, std::vector<std::string> message);
@@ -2755,9 +2814,9 @@ public:
 	//CMC External Delta-V Update Display
 	void CMDAXTDV();
 	//CMC External Delta-V Update Generator
-	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man = 0);
+	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV, int mpt = 0, unsigned man = 0);
 	//LGC External Delta-V Update Generator
-	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, unsigned man = 0);
+	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV, int mpt = 0, unsigned man = 0);
 	//CMC and LGC REFSMMAT Update Generator
 	void CMMRFMAT(int L, int id, int addr);
 	//SLV Navigation Update
@@ -2919,6 +2978,8 @@ public:
 	int RMRMED(std::string med, std::vector<std::string> data);
 	//Spacecraft Setting Control
 	void RMSSCS(int entry);
+	//External DV Parameters
+	void RMDRXDV(bool rte);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -3109,6 +3170,23 @@ public:
 	//Generate DKI
 	struct MED_K00
 	{
+		//false = normal DKI, true = Skylab four-maneuver route.
+		bool I4 = false;
+		//Maneuver line point for the phasing maneuver
+		double NC1 = 1.0;
+		//Maneuver line point for the height maneuver
+		double NH = 1.5;
+		//Maneuver line point for the NCC maneuver
+		double NCC = 4.0;
+		//Maneuver line point for the coelliptic maneuver
+		double NSR = 2.0;
+		//Maneuver line point for the plane change maneuver
+		double NPC = -1.0;
+		//M-line or maneuver line number at which rendezvous is to take place
+		double MI = 3.0;
+		//DT between NCC and NSR maneuver (Skylab)
+		double dt_NCC_NSR = 37.0*60.0;
+
 		int ChaserVehicle = 1; //1 = CSM, 3 = LEM
 	} med_k00;
 
@@ -3118,7 +3196,7 @@ public:
 		int ChaserVehicle = 1; //1 = CSM, 3 = LEM
 		double ChaserThresholdGET = -1.0;
 		double TargetThresholdGET = -1.0;
-		//1 = CDH at next apsis, 2 = CDH on time, 3 = angle from CSI
+		//1 = CDH at upcoming apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at upcoming apsis (Keplerian)
 		int I_CDH = 3;
 		//For option 1
 		int CDH_Apsis = 1;
@@ -3131,9 +3209,9 @@ public:
 	//Maneuver Line Definition Initialization
 	struct MED_K10
 	{
-		int MLDOption = 2; //1 = Angle, 2 = Time, 3 = Delta Time, 4 = Time and Angle
-		double MLDTime = -1.0;
-		double MLDAngle = 0.0;
+		int MLDOption = 1; //1 = input time, 2 = apoapsis, 3 = inactive vehicle apsis
+		double MLDTime = 0.0;
+		double MLDValue = 1.0;
 	} med_k10;
 
 	//Generate Launch Window
@@ -3315,6 +3393,8 @@ public:
 	MissionPlanTable PZMPTCSM, PZMPTLEM;
 	DetailedManeuverTable DMTBuffer[2];
 	BurnParameterTable PZBURN;
+	LWPInputTable PZSLVCON;
+	SLVTargetingParametersTable PZSLVTAR;
 
 	std::vector<VECTOR3> EZJGSTAR;
 
@@ -3759,15 +3839,14 @@ public:
 		//Block 15
 		double TINSRNominalPhaseAngle = 0.0;
 		//Block 18 Bytes 5-8
-		int TPFDefinition;
+		int DKI_TP_Definition = 4; // 0 = input phase angle, 1-6: input or lighting
 		//Block 25
-		double DKIDeltaH = 0.0;
+		double DKIDeltaH_NSR = 0.0;
+		double DKIDeltaH_NCC = 0.0;
 		//Block 26
-		double TPFDefinitionValue;
+		double DKI_TPDefinitionValue = -23.0; //Can be input phase angle, TPI, TPF time or day/night
 		//Block 27
 		double DKIMinPerigee = 0.0;
-		//Block 28 Bytes 1-4
-		double DeltaNSR;
 		//Block 29
 		double TPIDefinitionValue = 0.0;
 		//Block 30
@@ -3776,8 +3855,8 @@ public:
 		int TPIDefinition = 3;
 		//Block 31 Bytes 5-8
 		int TPICounterNum;
-		//Block 32 Bytes 5-8
-		int PhaseAngleSetting;
+		//Block 32 Bytes 5-8. Control flag for initial phase angle wrapping. 0 = -180 to 180. 1 = 0 to 360. -1 = -360 to 0 and so on...
+		int DKIPhaseAngleSetting = 0;
 		//Block 34
 		int DeltaDays = 0;
 		//Block 36
@@ -3955,6 +4034,22 @@ public:
 		RTEDigitalSolutionTable RTEDTable[2];
 		int LastRTEDCode = 0;
 	} PZREAP;
+
+	struct RetrofireExternalDVDisplayData
+	{
+		bool Indicator = false;
+		double GETI;
+		VECTOR3 DV;
+		double P_G, Y_G;
+		double DT_TO, DV_TO;
+		double H_apo, H_peri;
+		double lat_IP, lng_IP;
+	};
+
+	struct RetrofireExternalDVDisplay
+	{
+		std::vector<RetrofireExternalDVDisplayData> data;
+	} RetrofireEXDV;
 	
 	RetrofireTransferTable RZRFTT;
 	ReentryConstraintsTable RZC1RCNS;
@@ -4164,6 +4259,13 @@ public:
 		int NumMan = 0;
 		//0 = No plan, 1 = DKI, 2 = SPQ
 		int PlanStatus = 0;
+		//Maneuver lines
+		double NC1 = 0.0;
+		double NH = 0.0;
+		double NCC = 0.0;
+		double NSR = 0.0;
+		double NPC = 0.0;
+		double TTPI = 0.0;
 	};
 
 	struct DKIDataTable
@@ -4200,6 +4302,26 @@ public:
 
 	struct RendezvousPlanningDisplayData
 	{
+		RendezvousPlanningDisplayData();
+		int ID;
+		int M;
+		double NC1;
+		double NH;
+		double NSR;
+		double NCC;
+		double GETTPI;
+		double NPC;
+	};
+
+	struct RendezvousPlanningDisplay
+	{
+		int plans = 0;
+		RendezvousPlanningDisplayData data[7];
+		std::string ErrorMessage;
+	} PZRPDT;
+
+	struct LunarRendezvousPlanningDisplayData
+	{
 		int ID = 0;
 		int N = 0;
 		double GETLO = 0.0;
@@ -4216,7 +4338,7 @@ public:
 		double DVT = 0.0;
 	};
 
-	struct RendezvousPlanningDisplay
+	struct LunarRendezvousPlanningDisplay
 	{
 		std::string CSMSTAID;
 		double CSM_GMTV = 0.0;
@@ -4234,7 +4356,7 @@ public:
 		double WT = 0.0;
 		int plans = 0;
 		std::string ErrorMessage;
-		RendezvousPlanningDisplayData data[7];
+		LunarRendezvousPlanningDisplayData data[7];
 	} PZLRPT;
 
 	struct SkeletonFlightPlanTable

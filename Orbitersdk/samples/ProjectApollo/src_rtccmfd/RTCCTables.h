@@ -338,7 +338,7 @@ struct EMSMISSInputTable
 	//Right limit of ephemeris (time to end ephemeris)
 	double EphemerisRightLimitGMT;
 	//Minimum time between ephemeris points
-	double MinEphemDT;
+	double MinEphemDT = 0.0;
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame = 2;
 	//Minimum number of points desired in ephemeris
@@ -487,7 +487,7 @@ struct ReentryConstraintsTable
 	ReentryConstraintsDefinition entry;
 };
 
-struct RetrofireDisplayParametersTable
+struct RetrofireDisplayParametersTableData
 {
 	//0 = good data, +1 = no data, -1 = bad data
 	int Indicator = 1;
@@ -562,6 +562,12 @@ struct RetrofireDisplayParametersTable
 	double P_G_Sep, Y_G_Sep;
 };
 
+struct RetrofireDisplayParametersTable
+{
+	//Primary, Contingency, Manual
+	RetrofireDisplayParametersTableData data[3];
+};
+
 struct TimeConstraintsTable
 {
 	EphemerisData sv_present;
@@ -631,4 +637,36 @@ struct StateVectorTableEntry
 	int ID = -1;
 	std::string VectorCode;
 	bool LandingSiteIndicator = false;
+};
+
+struct SLVTargetingParametersTable
+{
+	double GMTLO = 0.0;
+	double TINS = 0.0;
+	double GSTAR = 0.0;
+	double DN = 0.0;
+	double TYAW = 0.0;
+	double TPLANE = 0.0;
+	double TGRR = 0.0;
+	double AZL = 0.0;
+	double VIGM = 0.0;
+	double H = 0.0;
+	double AZP = 0.0;
+	double RIGM = 0.0;
+	double GIGM = 0.0;
+	double IIGM = 0.0;
+	double TIGM = 0.0;
+	double TDIGM = 0.0;
+	double DELNO = 0.0;
+	double DELNOD = 0.0;
+	double PA = 0.0;
+	double HA_C = 0.0;
+	double HP_C = 0.0;
+	double TA_C = 0.0;
+	double DH = 0.0;
+	double HA_T = 0.0;
+	double HP_T = 0.0;
+	double I_T = 0.0;
+	double DN_T = 0.0;
+	double BIAS = 0.0;
 };
