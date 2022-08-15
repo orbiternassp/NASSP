@@ -612,7 +612,7 @@ public:
 	virtual bool SetupPayload(PayloadSettings &ls);
 	virtual void PadLoad(unsigned int address, unsigned int value);
 	virtual void AEAPadLoad(unsigned int address, unsigned int value);
-	virtual void StopEVA();
+	virtual void StopEVA(bool isCDR);
 	virtual bool IsForwardHatchOpen() { return ForwardHatch.IsOpen(); }
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
@@ -700,8 +700,7 @@ protected:
 	void InitPanelVC();
 	void SetSwitches(int panel);
 	void AddRCS_LMH(double TRANY);
-	void ToggleEVA();
-	void SetupEVA();
+	void ToggleEVA(bool isCDR);
 	void SetView();
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_AOTReticle (SURFHANDLE surf);
@@ -804,6 +803,9 @@ protected:
 	ModeSelectSwitch ModeSelSwitch;
 	ToggleSwitch AltRngMonSwitch;
 
+	SwitchRow LeftMasterAlarmSwitchRow;
+	LEMMasterAlarmSwitch LeftMasterAlarmSwitch;
+
 	SwitchRow LeftMonitorSwitchRow;
 	ToggleSwitch RateErrorMonSwitch;
 	ToggleSwitch AttitudeMonSwitch;
@@ -866,6 +868,9 @@ protected:
 	LMGlycolPressMeter LMGlycolPressMeter;
 	LMOxygenQtyMeter LMOxygenQtyMeter;
 	LMWaterQtyMeter LMWaterQtyMeter;
+
+	SwitchRow RightMasterAlarmSwitchRow;
+	LEMMasterAlarmSwitch RightMasterAlarmSwitch;
 
 	SwitchRow RightMonitorSwitchRow;
 	ToggleSwitch RightRateErrorMonSwitch;
@@ -1556,7 +1561,7 @@ protected:
 	bool FirstTimestep;
 
 	bool ToggleEva;
-	bool CDREVA_IP;
+	bool EVA_IP[2];
 
 	int CDRinPLSS;
 	int LMPinPLSS;
@@ -1583,7 +1588,7 @@ protected:
 	bool Crewed;
 	bool AutoSlow;
 
-	OBJHANDLE hLEVA;
+	OBJHANDLE hLEVA[2];
 	OBJHANDLE hdsc;
 
 	ATTACHMENTHANDLE hattDROGUE;

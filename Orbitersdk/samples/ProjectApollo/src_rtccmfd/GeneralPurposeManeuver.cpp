@@ -1288,7 +1288,8 @@ void RTCCGeneralPurposeManeuverProcessor::ApsidesPlacementNRevsLater()
 			lng_p = INFO[8];
 			dlng = OrbMech::calculateDifferenceBetweenAngles(lng_p, opt->long_D);
 
-			if (n > 0 && dlng*dlng_apo < 0 && abs(dlng_apo) < PI05)
+			//Don't switch sign on ddt on first step. Change when dlng also switches sign, but only when passing through zero
+			if (n > 0 && dlng*dlng_apo < 0 && abs(dlng - dlng_apo) < PI05)
 			{
 				ddt = -ddt / 2.0;
 			}

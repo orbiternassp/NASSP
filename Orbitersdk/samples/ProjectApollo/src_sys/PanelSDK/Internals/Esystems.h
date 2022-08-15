@@ -196,6 +196,7 @@ class E_system : public ship_system {
 	void Create_Pump(char *line);
 	void Create_Inverter(char *line);
 	void Create_Diode(char *line);
+	void Create_ElectricLight(char* line);
 
 public:
 	E_system();
@@ -596,6 +597,54 @@ public:
 protected:
 	double Is; //Saturation Current
 	double kT_q; //Thermal Voltage. Currently statatic, as diode temperature is static.
+};
+
+///
+/// \ingroup PanelSDK
+/// Electric lighting with OAPI light emitter
+///
+class ElectricLight : public e_object, public therm_obj {
+public:
+	ElectricLight(char* lightname,
+				e_object* i_src,
+				const bool flashing,
+				const double onTime,
+				const double offTime,
+				VESSEL* thisVessel,
+				VECTOR3 pos, 
+				VECTOR3 dir,
+				double range, 
+				double att0,
+				double att1,
+				double att2,
+				double umbra,
+				double penumbra,
+				COLOUR4 diffuse,
+				COLOUR4 specular,
+				COLOUR4 ambient,
+				double powerDraw,
+				double nomVoltage);
+
+	~ElectricLight() = default;
+	virtual void refresh(double dt);
+	void UpdatePosition(VECTOR3 offset);
+private:
+	double nomPowerDraw;
+	double nomVolts;
+	bool flash;
+	bool flashstate;
+	double ontime;
+	double offtime;
+	double flashtimer;
+	VECTOR3 BeaconPosition;
+	VECTOR3 LightPosition;
+	VECTOR3 LightDirection;
+	COLOUR4 Lightdiffuse;
+	COLOUR4 Lightspecular;
+	COLOUR4 Lightambient;
+	SpotLight *lamp;
+	VECTOR3 lampBeaconColor;
+	BEACONLIGHTSPEC lampBeacon;
 };
 
 #endif
