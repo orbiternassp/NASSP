@@ -2238,9 +2238,9 @@ void LEMMasterAlarmSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, S
 	cwea = c;
 }
 
-bool LEMMasterAlarmSwitch::SwitchTo(int newState)
+bool LEMMasterAlarmSwitch::SwitchTo(int newState, bool dontspring)
 {
-	if (TwoPositionSwitch::SwitchTo(newState))
+	if (TwoPositionSwitch::SwitchTo(newState, dontspring))
 	{
 		if (state == 1)
 		{

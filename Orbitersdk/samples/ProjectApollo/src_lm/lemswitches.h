@@ -670,7 +670,7 @@ public:
 	void InitVC(SURFHANDLE surf);
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
-	bool SwitchTo(int newState);
+	bool SwitchTo(int newState, bool dontspring = false);
 protected:
 	LEM_CWEA *cwea;
 	SURFHANDLE switchsurfacevc;
