@@ -5116,15 +5116,27 @@ bool ApolloRTCCMFD::set_RTESolution(char *str)
 
 	if (i < 2)
 	{
-		G->P30TIG = GC->rtcc->PZREAP.RTEDTable[i].GETI;
-		G->dV_LVLH = GC->rtcc->PZREAP.RTEDTable[i].DV_XDV;
+		RTEDigitalSolutionTable *tab = &GC->rtcc->PZREAP.RTEDTable[i];
+		if (tab->RTEDCode != "")
+		{
+			G->P30TIG = tab->GETI;
+			G->dV_LVLH = tab->DV_XDV;
+			G->manpadenginetype = tab->ThrusterCode;
+			G->manpad_ullage_dt = tab->dt_ullage;
+			G->manpad_ullage_opt = tab->NumQuads == 4 ? true : false;
+			G->HeadsUp = tab->HeadsUpDownIndicator;
+		}
 	}
 	else
 	{
-		if (GC->rtcc->RZRFDP.Indicator == 0)
+		if (GC->rtcc->RZRFDP.data[2].Indicator == 0)
 		{
-			G->P30TIG = GC->rtcc->RZRFDP.GETI;
+			G->P30TIG = GC->rtcc->RZRFDP.data[2].GETI;
 			G->dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
+			G->manpadenginetype = GC->rtcc->RZRFTT.Manual.Thruster;
+			G->manpad_ullage_dt = GC->rtcc->RZRFTT.Manual.dt_ullage;
+			G->manpad_ullage_opt = GC->rtcc->RZRFTT.Manual.UllageThrusterOption;
+			G->HeadsUp = true;
 		}
 	}
 	return true;
@@ -6927,15 +6939,22 @@ void ApolloRTCCMFD::set_SPQTPIDefinitionValue(double get)
 
 void ApolloRTCCMFD::menuCycleSPQCDHPoint()
 {
-
+	if (GC->rtcc->med_k01.I_CDH < 4)
+	{
+		GC->rtcc->med_k01.I_CDH++;
+	}
+	else
+	{
+		GC->rtcc->med_k01.I_CDH = 1;
+	}
 }
 
 void ApolloRTCCMFD::menuSPQCDHValue()
 {
 	bool SPQCDHValueInput(void* id, char *str, void *data);
-	if (GC->rtcc->med_k01.I_CDH == 1)
+	if (GC->rtcc->med_k01.I_CDH == 3)
 	{
-		oapiOpenInputBox("No. of apsis since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
+		oapiOpenInputBox("Angle from CSI to CDH:", SPQCDHValueInput, 0, 20, (void*)this);
 	}
 	else if (GC->rtcc->med_k01.I_CDH == 2)
 	{
@@ -6943,7 +6962,7 @@ void ApolloRTCCMFD::menuSPQCDHValue()
 	}
 	else
 	{
-		oapiOpenInputBox("Angle from CSI to CDH:", SPQCDHValueInput, 0, 20, (void*)this);
+		oapiOpenInputBox("No. of apsis since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
 	}
 }
 
@@ -6958,12 +6977,12 @@ bool SPQCDHValueInput(void* id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
 {
-	if (GC->rtcc->med_k01.I_CDH == 1)
+	if (GC->rtcc->med_k01.I_CDH == 3)
 	{
-		int n;
-		if (sscanf(val, "%d", &n) == 1)
+		double angle;
+		if (sscanf(val, "%lf", &angle) == 1)
 		{
-			GC->rtcc->med_k01.CDH_Apsis = n;
+			GC->rtcc->med_k01.CDH_Angle = angle * RAD;
 			return true;
 		}
 	}
@@ -6979,10 +6998,10 @@ bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
 	}
 	else
 	{
-		double angle;
-		if (sscanf(val, "%lf", &angle) == 1)
+		int n;
+		if (sscanf(val, "%d", &n) == 1)
 		{
-			GC->rtcc->med_k01.CDH_Angle = angle * RAD;
+			GC->rtcc->med_k01.CDH_Apsis = n;
 			return true;
 		}
 	}
@@ -7161,7 +7180,7 @@ void ApolloRTCCMFD::menuSetAGCEphemTIMEM0()
 
 void ApolloRTCCMFD::menuSetAGCEphemTLAND()
 {
-	GenericGETInput(&G->AGCEphemTLAND, "Choose the GET of lunar landing (Format: hhh:mm:ss)");
+	GenericDoubleInput(&G->AGCEphemTLAND, "Calculate lunar libration vector to (in days):");
 }
 
 void ApolloRTCCMFD::menuGenerateAGCEphemeris()

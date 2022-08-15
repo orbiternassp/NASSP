@@ -469,6 +469,7 @@ struct SPQResults
 	SV sv_C[5];
 	SV sv_C_apo[5];
 	SV sv_T[5];
+	int err = 0;
 };
 
 struct RTEMoonOpt
@@ -980,15 +981,17 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int I_Theta = 0;
 	//0 = CDH not scheduled, 1 = CDH scheduled
 	bool CDH = true;
-	//1 = CDH at next apsis, 2 = CDH on time, 3 = angle from CSI
+	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (AEG)
 	int I_CDH = 3;
-	//Number of apsis since CSI (for CDH at next apsis option)
+	//Number of apsis since CSI (for CDH at next apsis options)
 	int N_CDH = 1;
 	bool OptimumCSI = false;
 	//0 = CSI and CDH in-plane, 1 = CSI and CDH parallel to target
 	bool ParallelDVInd = false;
 	//Angle from CSI to CDH (for I_CDH = 3)
 	double DU_D = PI;
+	//Optimum CSI range
+	double dt_CSI_Range = 15.0*60.0;
 };
 
 struct PDAPOpt //Powered Descent Abort Program
@@ -2975,6 +2978,8 @@ public:
 	int RMRMED(std::string med, std::vector<std::string> data);
 	//Spacecraft Setting Control
 	void RMSSCS(int entry);
+	//External DV Parameters
+	void RMDRXDV(bool rte);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -3191,7 +3196,7 @@ public:
 		int ChaserVehicle = 1; //1 = CSM, 3 = LEM
 		double ChaserThresholdGET = -1.0;
 		double TargetThresholdGET = -1.0;
-		//1 = CDH at next apsis, 2 = CDH on time, 3 = angle from CSI
+		//1 = CDH at upcoming apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at upcoming apsis (Keplerian)
 		int I_CDH = 3;
 		//For option 1
 		int CDH_Apsis = 1;
@@ -4029,6 +4034,22 @@ public:
 		RTEDigitalSolutionTable RTEDTable[2];
 		int LastRTEDCode = 0;
 	} PZREAP;
+
+	struct RetrofireExternalDVDisplayData
+	{
+		bool Indicator = false;
+		double GETI;
+		VECTOR3 DV;
+		double P_G, Y_G;
+		double DT_TO, DV_TO;
+		double H_apo, H_peri;
+		double lat_IP, lng_IP;
+	};
+
+	struct RetrofireExternalDVDisplay
+	{
+		std::vector<RetrofireExternalDVDisplayData> data;
+	} RetrofireEXDV;
 	
 	RetrofireTransferTable RZRFTT;
 	ReentryConstraintsTable RZC1RCNS;

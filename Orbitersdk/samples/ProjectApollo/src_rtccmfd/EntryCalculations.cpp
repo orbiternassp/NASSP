@@ -2613,7 +2613,7 @@ void RetrofirePlanning::RMMATT(int entry, int opt, bool calcDesired, VECTOR3 Att
 void RetrofirePlanning::RMSTTF()
 {
 	//Just for convenience, later we should have primary and contingency tables, too
-	RetrofireDisplayParametersTable *tab = &pRTCC->RZRFDP;
+	RetrofireDisplayParametersTableData *tab = &pRTCC->RZRFDP.data[2];
 
 	TimeConstraintsTable elem;
 	double r_apo, r_peri;
@@ -3014,6 +3014,9 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		break;
 	case 100: //The big one
 		std::string Buffer2, Buffer3;
+
+		RetrofireDisplayParametersTableData *tab = &pRTCC->RZRFDP.data[2];
+
 		//Line 1
 		sprintf_s(Buffer, "MANUAL TIME-TO-FIRE PARAMETERS TYPE %d COMPUTATION", pRTCC->RZJCTTC.R32_Code);
 		message.push_back(Buffer);
@@ -3031,10 +3034,10 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 			sprintf_s(Buffer, "%06.2lf", Area / 0.3048 / 0.3048);
 			Buffer2.append(Buffer);
 			Buffer2 += " WT=";
-			sprintf_s(Buffer, "%08.2lf", pRTCC->RZRFDP.CSMWeightSep);
+			sprintf_s(Buffer, "%08.2lf", tab->CSMWeightSep);
 			Buffer2.append(Buffer);
 			Buffer2 += " GETI=";
-			pRTCC->OnlinePrintTimeHHHMMSS(pRTCC->RZRFDP.GETI_Sep, Buffer3);
+			pRTCC->OnlinePrintTimeHHHMMSS(tab->GETI_Sep, Buffer3);
 			Buffer2 += Buffer3;
 			Buffer2 += " THR=";
 
@@ -3070,16 +3073,16 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 			}
 			Buffer2 += Buffer3;
 			Buffer2 += " DV=";
-			sprintf_s(Buffer, "%08.2lf", pRTCC->RZRFDP.DVT_Sep);
+			sprintf_s(Buffer, "%08.2lf", tab->DVT_Sep);
 			Buffer2.append(Buffer);
 			Buffer2 += " DT=";
-			sprintf_s(Buffer, "%06.2lf", pRTCC->RZRFDP.BurnTime_Sep);
+			sprintf_s(Buffer, "%06.2lf", tab->BurnTime_Sep);
 			Buffer2.append(Buffer);
 			Buffer2 += " DT ULL=";
-			sprintf_s(Buffer, "%05.2lf", pRTCC->RZRFDP.UllageDT_Sep);
+			sprintf_s(Buffer, "%05.2lf", tab->UllageDT_Sep);
 			Buffer2.append(Buffer);
 			Buffer2 += " ";
-			sprintf_s(Buffer, "%d", pRTCC->RZRFDP.UllageQuads_Sep);
+			sprintf_s(Buffer, "%d", tab->UllageQuads_Sep);
 			Buffer2.append(Buffer);
 			Buffer2 += " QUADS";
 			message.push_back(Buffer2);
@@ -3096,15 +3099,15 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 			}
 			message.push_back(Buffer2);
 			//Line 5
-			sprintf_s(Buffer, "LVLH BODY-ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf TRIM ANGLES--PITCH=%+07.2lf YAW=%+07.2lf", pRTCC->RZRFDP.Att_LVLH_Sep.x, pRTCC->RZRFDP.Att_LVLH_Sep.y, pRTCC->RZRFDP.Att_LVLH_Sep.z, pRTCC->RZRFDP.P_G_Sep, pRTCC->RZRFDP.Y_G_Sep);
+			sprintf_s(Buffer, "LVLH BODY-ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf TRIM ANGLES--PITCH=%+07.2lf YAW=%+07.2lf", tab->Att_LVLH_Sep.x, tab->Att_LVLH_Sep.y, tab->Att_LVLH_Sep.z, tab->P_G_Sep, tab->Y_G_Sep);
 			Buffer2.assign(Buffer);
 			message.push_back(Buffer2);
 			//Line 6
-			sprintf_s(Buffer, "IMU-------ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf DT SEP=", pRTCC->RZRFDP.Att_IMU_Sep.x, pRTCC->RZRFDP.Att_IMU_Sep.y, pRTCC->RZRFDP.Att_IMU_Sep.z);
+			sprintf_s(Buffer, "IMU-------ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf DT SEP=", tab->Att_IMU_Sep.x, tab->Att_IMU_Sep.y, tab->Att_IMU_Sep.z);
 			Buffer2.assign(Buffer);
 			pRTCC->OnlinePrintTimeHHHMMSS(pRTCC->RZJCTTC.R30_DeltaT_Sep, Buffer3);
 			Buffer2 += Buffer3;
-			sprintf_s(Buffer, " TRUE ANOMALY AT GETI(SEP)=%+07.2lf", pRTCC->RZRFDP.TrueAnomalySep);
+			sprintf_s(Buffer, " TRUE ANOMALY AT GETI(SEP)=%+07.2lf", tab->TrueAnomalySep);
 			Buffer2.append(Buffer);
 			message.push_back(Buffer2);
 		}
@@ -3113,10 +3116,10 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		sprintf_s(Buffer, "%06.2lf", Area / 0.3048 / 0.3048);
 		Buffer2.append(Buffer);
 		Buffer2 += " WT=";
-		sprintf_s(Buffer, "%08.2lf", pRTCC->RZRFDP.CSMWeightRetro);
+		sprintf_s(Buffer, "%08.2lf", tab->CSMWeightRetro);
 		Buffer2.append(Buffer);
 		Buffer2 += " GETI=";
-		pRTCC->OnlinePrintTimeHHHMMSS(pRTCC->RZRFDP.GETI, Buffer3);
+		pRTCC->OnlinePrintTimeHHHMMSS(tab->GETI, Buffer3);
 		Buffer2 += Buffer3;
 		Buffer2 += " THR=";
 
@@ -3156,16 +3159,16 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		}
 		Buffer2 += Buffer3;
 		Buffer2 += " DV=";
-		sprintf_s(Buffer, "%08.2lf", pRTCC->RZRFDP.DVT);
+		sprintf_s(Buffer, "%08.2lf", tab->DVT);
 		Buffer2.append(Buffer);
 		Buffer2 += " DT=";
-		sprintf_s(Buffer, "%06.2lf", pRTCC->RZRFDP.BurnTime);
+		sprintf_s(Buffer, "%06.2lf", tab->BurnTime);
 		Buffer2.append(Buffer);
 		Buffer2 += " DT ULL=";
-		sprintf_s(Buffer, "%05.2lf", pRTCC->RZRFDP.UllageDT);
+		sprintf_s(Buffer, "%05.2lf", tab->UllageDT);
 		Buffer2.append(Buffer);
 		Buffer2 += " ";
-		sprintf_s(Buffer, "%d", pRTCC->RZRFDP.UllageQuads);
+		sprintf_s(Buffer, "%d", tab->UllageQuads);
 		Buffer2.append(Buffer);
 		Buffer2 += " QUADS POSTBURN WT=";
 		sprintf_s(Buffer, "%08.2lf", burnaux.WTEND*LBS*1000.0);
@@ -3184,11 +3187,11 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		}
 		message.push_back(Buffer2);
 		//Line 5
-		sprintf_s(Buffer, "LVLH BODY-ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf TRIM ANGLES--PITCH=%+07.2lf YAW=%+07.2lf", BodyAtt.x*DEG, BodyAtt.y*DEG, BodyAtt.z*DEG, pRTCC->RZRFDP.P_G, pRTCC->RZRFDP.Y_G);
+		sprintf_s(Buffer, "LVLH BODY-ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf TRIM ANGLES--PITCH=%+07.2lf YAW=%+07.2lf", BodyAtt.x*DEG, BodyAtt.y*DEG, BodyAtt.z*DEG, tab->P_G, tab->Y_G);
 		Buffer2.assign(Buffer);
 		message.push_back(Buffer2);
 		//Line 6
-		sprintf_s(Buffer, "IMU-------ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf HT AT RETRO=%+07.2lf TRUE ANOMALY AT GETI(RET)=%+07.2lf", IMUAtt.x*DEG, IMUAtt.y*DEG, IMUAtt.z*DEG, pRTCC->RZRFDP.H_Retro, pRTCC->RZRFDP.TrueAnomalyRetro);
+		sprintf_s(Buffer, "IMU-------ROLL=%+07.2lf PITCH=%+07.2lf YAW=%+07.2lf HT AT RETRO=%+07.2lf TRUE ANOMALY AT GETI(RET)=%+07.2lf", IMUAtt.x*DEG, IMUAtt.y*DEG, IMUAtt.z*DEG, tab->H_Retro, tab->TrueAnomalyRetro);
 		Buffer2.assign(Buffer);
 		message.push_back(Buffer2);
 		//Line 7
@@ -3207,7 +3210,7 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		Buffer2.assign(Buffer);
 		message.push_back(Buffer2);
 		//Line 10
-		sprintf_s(Buffer, "LVLH XDV(TRUE) VGX=%+09.2lf VGY=%+09.2lf VGZ=%+09.2lf", pRTCC->RZRFDP.VG_XDX.x, pRTCC->RZRFDP.VG_XDX.y, pRTCC->RZRFDP.VG_XDX.z);
+		sprintf_s(Buffer, "LVLH XDV(TRUE) VGX=%+09.2lf VGY=%+09.2lf VGZ=%+09.2lf", tab->VG_XDX.x, tab->VG_XDX.y, tab->VG_XDX.z);
 		Buffer2.assign(Buffer);
 		message.push_back(Buffer2);
 		//Line 11
@@ -3237,77 +3240,77 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		}
 		Buffer2.append(Buffer);
 		Buffer2 += " GETRB=";
-		pRTCC->OnlinePrintTimeHHHMMSS(pRTCC->GETfromGMT(sv_EI.GMT + pRTCC->RZRFDP.RETRB), Buffer3);
+		pRTCC->OnlinePrintTimeHHHMMSS(pRTCC->GETfromGMT(sv_EI.GMT + tab->RETRB), Buffer3);
 		Buffer2.append(Buffer3);
 		message.push_back(Buffer2);
 		//Line 14
 		Buffer2.assign("TARGET LAT=");
-		if (pRTCC->RZRFDP.lat_T >= 0.0)
+		if (tab->lat_T >= 0.0)
 		{
-			sprintf_s(Buffer, "%07.4lfN", pRTCC->RZRFDP.lat_T);
+			sprintf_s(Buffer, "%07.4lfN", tab->lat_T);
 		}
 		else
 		{
-			sprintf_s(Buffer, "%07.4lfS", abs(pRTCC->RZRFDP.lat_T));
+			sprintf_s(Buffer, "%07.4lfS", abs(tab->lat_T));
 		}
 		Buffer2.append(Buffer);
 		Buffer2.append(" LONG=");
-		if (pRTCC->RZRFDP.lng_T >= 0.0)
+		if (tab->lng_T >= 0.0)
 		{
-			sprintf_s(Buffer, "%08.4lfE", pRTCC->RZRFDP.lng_T);
+			sprintf_s(Buffer, "%08.4lfE", tab->lng_T);
 		}
 		else
 		{
-			sprintf_s(Buffer, "%08.4lfW", abs(pRTCC->RZRFDP.lng_T));
+			sprintf_s(Buffer, "%08.4lfW", abs(tab->lng_T));
 		}
 		Buffer2.append(Buffer);
 		message.push_back(Buffer2);
 		//Line 15
 		Buffer2.assign("IMPACT LAT=");
-		if (pRTCC->RZRFDP.lat_IP >= 0.0)
+		if (tab->lat_IP >= 0.0)
 		{
-			sprintf_s(Buffer, "%07.4lfN", pRTCC->RZRFDP.lat_IP);
+			sprintf_s(Buffer, "%07.4lfN", tab->lat_IP);
 		}
 		else
 		{
-			sprintf_s(Buffer, "%07.4lfS", abs(pRTCC->RZRFDP.lat_IP));
+			sprintf_s(Buffer, "%07.4lfS", abs(tab->lat_IP));
 		}
 		Buffer2.append(Buffer);
 		Buffer2.append(" LONG=");
-		if (pRTCC->RZRFDP.lng_IP >= 0.0)
+		if (tab->lng_IP >= 0.0)
 		{
-			sprintf_s(Buffer, "%08.4lfE", pRTCC->RZRFDP.lng_IP);
+			sprintf_s(Buffer, "%08.4lfE", tab->lng_IP);
 		}
 		else
 		{
-			sprintf_s(Buffer, "%08.4lfW", abs(pRTCC->RZRFDP.lng_IP));
+			sprintf_s(Buffer, "%08.4lfW", abs(tab->lng_IP));
 		}
 		Buffer2.append(Buffer);
 		Buffer2.append(" GETEI=");
 		pRTCC->OnlinePrintTimeHHHMMSS(pRTCC->GETfromGMT(sv_EI.GMT), Buffer3);
 		Buffer2.append(Buffer3);
-		sprintf_s(Buffer, " VEI=%08.2lf GEI= %+06.2lf", pRTCC->RZRFDP.V400k, pRTCC->RZRFDP.Gamma400k);
+		sprintf_s(Buffer, " VEI=%08.2lf GEI= %+06.2lf", tab->V400k, tab->Gamma400k);
 		Buffer2.append(Buffer);
 		message.push_back(Buffer2);
 		//Line 16
 		Buffer2.assign("MAX IP LAT=");
-		if (pRTCC->RZRFDP.lat_ML >= 0.0)
+		if (tab->lat_ML >= 0.0)
 		{
-			sprintf_s(Buffer, "%07.4lfN", pRTCC->RZRFDP.lat_ML);
+			sprintf_s(Buffer, "%07.4lfN", tab->lat_ML);
 		}
 		else
 		{
-			sprintf_s(Buffer, "%07.4lfS", abs(pRTCC->RZRFDP.lat_ML));
+			sprintf_s(Buffer, "%07.4lfS", abs(tab->lat_ML));
 		}
 		Buffer2.append(Buffer);
 		Buffer2.append(" LONG=");
-		if (pRTCC->RZRFDP.lng_ML >= 0.0)
+		if (tab->lng_ML >= 0.0)
 		{
-			sprintf_s(Buffer, "%08.4lfE", pRTCC->RZRFDP.lng_ML);
+			sprintf_s(Buffer, "%08.4lfE", tab->lng_ML);
 		}
 		else
 		{
-			sprintf_s(Buffer, "%08.4lfW", abs(pRTCC->RZRFDP.lng_ML));
+			sprintf_s(Buffer, "%08.4lfW", abs(tab->lng_ML));
 		}
 		Buffer2.append(Buffer);
 		sprintf_s(Buffer, " MAX G=%05.2lf GET OF MAX G=", gmax);
@@ -3317,23 +3320,23 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 		message.push_back(Buffer2);
 		//Line 17
 		Buffer2.assign("MIN IP LAT=");
-		if (pRTCC->RZRFDP.lat_ZL >= 0.0)
+		if (tab->lat_ZL >= 0.0)
 		{
-			sprintf_s(Buffer, "%07.4lfN", pRTCC->RZRFDP.lat_ZL);
+			sprintf_s(Buffer, "%07.4lfN", tab->lat_ZL);
 		}
 		else
 		{
-			sprintf_s(Buffer, "%07.4lfS", abs(pRTCC->RZRFDP.lat_ZL));
+			sprintf_s(Buffer, "%07.4lfS", abs(tab->lat_ZL));
 		}
 		Buffer2.append(Buffer);
 		Buffer2.append(" LONG=");
-		if (pRTCC->RZRFDP.lng_ZL >= 0.0)
+		if (tab->lng_ZL >= 0.0)
 		{
-			sprintf_s(Buffer, "%08.4lfE", pRTCC->RZRFDP.lng_ZL);
+			sprintf_s(Buffer, "%08.4lfE", tab->lng_ZL);
 		}
 		else
 		{
-			sprintf_s(Buffer, "%08.4lfW", abs(pRTCC->RZRFDP.lng_ZL));
+			sprintf_s(Buffer, "%08.4lfW", abs(tab->lng_ZL));
 		}
 		Buffer2.append(Buffer);
 		message.push_back(Buffer2);

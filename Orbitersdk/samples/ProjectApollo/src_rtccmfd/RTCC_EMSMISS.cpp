@@ -449,6 +449,7 @@ void RTCC_EMSMISS::CallCoastIntegrator()
 	emmeniin.MoonRelStopParam = intab->MoonRelStopParam;
 	emmeniin.StopParamRefFrame = intab->StopParamRefFrame;
 	emmeniin.Weight = state.WeightsTable.ConfigWeight;
+	emmeniin.MinEphemDT = intab->MinEphemDT;
 
 	emmeniin.EphemerisBuildIndicator = EphemerisBuildOn;
 	emmeniin.ECIEphemerisIndicator = intab->ECIEphemerisIndicator;
