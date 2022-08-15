@@ -2227,3 +2227,42 @@ bool CDRCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
 	}
 	return false;
 }
+
+LEMMasterAlarmSwitch::LEMMasterAlarmSwitch()
+{
+	cwea = NULL;
+}
+
+void LEMMasterAlarmSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM_CWEA *c) {
+	PushSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	cwea = c;
+}
+
+bool LEMMasterAlarmSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (TwoPositionSwitch::SwitchTo(newState, dontspring))
+	{
+		if (state == 1)
+		{
+			cwea->PushMasterAlarm();
+		}
+
+		return true;
+	}
+	return false;
+}
+
+void LEMMasterAlarmSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
+{
+	cwea->RenderMasterAlarm(DrawSurface, SwitchSurface);
+}
+
+void LEMMasterAlarmSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	cwea->RenderMasterAlarm(surf, switchsurfacevc);
+}
+
+void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
+{
+	switchsurfacevc = surf;
+}
