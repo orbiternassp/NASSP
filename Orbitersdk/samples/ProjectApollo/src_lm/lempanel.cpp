@@ -171,6 +171,7 @@ void LEM::InitSwitches() {
 	ModeSelSwitch.Register(PSH, "ModeSelSwitch", THREEPOSSWITCH_UP);
 	AltRngMonSwitch.Register(PSH, "AltRngMonSwitch", TOGGLESWITCH_DOWN);
 	LeftMasterAlarmSwitch.Register(PSH, "LeftMasterAlarmSwitch", TOGGLESWITCH_DOWN);
+	LeftMasterAlarmSwitch.SetDelayTime(1);
 	RateErrorMonSwitch.Register(PSH, "RateErrorMonSwitch", TOGGLESWITCH_DOWN);
 	AttitudeMonSwitch.Register(PSH, "AttitudeMonSwitch", true);
 	ASCHeReg1TB.Register(PSH,"ASCHeReg1TB", true);
@@ -240,6 +241,7 @@ void LEM::InitSwitches() {
 	QTYMonSwitch.Register(PSH, "QTYMonSwitch", THREEPOSSWITCH_DOWN);
 	TempPressMonSwitch.Register(PSH, "TempPressMonSwitch", THREEPOSSWITCH_UP);
 	RightMasterAlarmSwitch.Register(PSH, "RightMasterAlarmSwitch", TOGGLESWITCH_DOWN);
+	RightMasterAlarmSwitch.SetDelayTime(1);
 	RightRateErrorMonSwitch.Register(PSH, "RightRateErrorMonSwitch", TOGGLESWITCH_DOWN);
 	RightAttitudeMonSwitch.Register(PSH, "RightAttitudeMonSwitch", TOGGLESWITCH_DOWN);
 	RightACAPropSwitch.Register(PSH, "RightACAPropSwitch", TOGGLESWITCH_UP);
