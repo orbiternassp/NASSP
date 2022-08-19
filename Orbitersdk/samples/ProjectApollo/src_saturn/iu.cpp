@@ -1148,6 +1148,18 @@ bool IUToLVCommandConnector::GetWeightVector(VECTOR3 &w)
 	return false;
 }
 
+void IUToLVCommandConnector::GetInertialAccel(VECTOR3 &a)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_INERTIAL_ACCEL;
+	cm.val1.pValue = &a;
+
+	SendMessage(cm);
+}
+
 void IUToLVCommandConnector::GetRotationMatrix(MATRIX3 &rot)
 
 {
