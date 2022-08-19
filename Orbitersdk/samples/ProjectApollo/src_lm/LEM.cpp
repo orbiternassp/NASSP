@@ -1289,7 +1289,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 	}
 
-	inertialData.timestep(simdt);
+	inertialData.Timestep(simdt);
 
 	// Update VC animations
 	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)

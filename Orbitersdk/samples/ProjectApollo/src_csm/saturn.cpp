@@ -1438,7 +1438,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		debugConnected = true;
 	}
 
-	inertialData.timestep(simdt);
+	inertialData.Timestep(simdt);
 
 	if (stage >= PRELAUNCH_STAGE && !GenericFirstTimestep) {
 

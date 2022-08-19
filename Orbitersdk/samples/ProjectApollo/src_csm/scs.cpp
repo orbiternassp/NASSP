@@ -5137,55 +5137,6 @@ void EMS::SystemTimestep(double simdt) {
 }
 
 void EMS::AccelerometerTimeStep(double simdt) {
-	/*
-	VECTOR3 arot, w, vel;
-
-	sat->GetGlobalOrientation(arot);
-	sat->GetWeightVector(w);
-	sat->GetGlobalVel(vel);
-
-	MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-arot.z);
-	tinv = mul(AttitudeReference::GetRotationMatrixY(-arot.y), tinv);
-	tinv = mul(AttitudeReference::GetRotationMatrixX(-arot.x), tinv);
-	w = mul(tinv, w) / sat->GetMass();
-
-	//Orbiter 2016 hack
-	if (length(w) == 0.0)
-	{
-		w = GetGravityVector();
-	}
-
-	if (!dVInitialized) {
-		lastWeight = w;
-		lastGlobalVel = vel;
-		lastSimDT = simdt;
-		dVInitialized = true;
-
-	} else {
-		// Acceleration calculation, see IMU
-		VECTOR3 dvel = (vel - lastGlobalVel) / lastSimDT;
-		VECTOR3 dw1 = w - dvel;
-		VECTOR3 dw2 = lastWeight - dvel;
-		lastWeight = w;
-		lastGlobalVel = vel;
-		lastSimDT = simdt;
-
-		// Transform to vessel coordinates
-		MATRIX3	t = AttitudeReference::GetRotationMatrixX(arot.x);
-		t = mul(AttitudeReference::GetRotationMatrixY(arot.y), t);
-		t = mul(AttitudeReference::GetRotationMatrixZ(arot.z), t);
-		VECTOR3 avg = (dw1 + dw2) / 2.0;
-		avg = mul(t, avg);	
-		xacc = -avg.z;
-		// Ground test switch
-	
-		constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
-
-		if (sat->GTASwitch.IsUp()) {
-			xacc -= constG;
-		}
-	}
-	*/
 	VECTOR3 accel;
 	sat->inertialData.getAcceleration(accel);
 	xacc = -accel.z;
@@ -5197,79 +5148,7 @@ void EMS::AccelerometerTimeStep(double simdt) {
 		xacc -= constG;
 	}
 }
-/*
-VECTOR3 EMS::GetGravityVector()
-{
-	OBJHANDLE gravref = sat->GetGravityRef();
-	OBJHANDLE hSun = oapiGetObjectByName("Sun");
-	VECTOR3 R, U_R;
-	sat->GetRelativePos(gravref, R);
-	U_R = unit(R);
-	double r = length(R);
-	VECTOR3 R_S, U_R_S;
-	sat->GetRelativePos(hSun, R_S);
-	U_R_S = unit(R_S);
-	double r_S = length(R_S);
-	double mu = GGRAV * oapiGetMass(gravref);
-	double mu_S = GGRAV * oapiGetMass(hSun);
-	int jcount = oapiGetPlanetJCoeffCount(gravref);
-	double JCoeff[5];
-	for (int i = 0; i < jcount; i++)
-	{
-		JCoeff[i] = oapiGetPlanetJCoeff(gravref, i);
-	}
-	double R_E = oapiGetSize(gravref);
 
-	VECTOR3 a_dP;
-
-	a_dP = -U_R;
-
-	if (jcount > 0)
-	{
-		MATRIX3 mat;
-		VECTOR3 U_Z;
-		double costheta, P2, P3;
-
-		oapiGetPlanetObliquityMatrix(gravref, &mat);
-		U_Z = mul(mat, _V(0, 1, 0));
-
-		costheta = dotp(U_R, U_Z);
-
-		P2 = 3.0 * costheta;
-		P3 = 0.5*(15.0*costheta*costheta - 3.0);
-		a_dP += (U_R*P3 - U_Z * P2)*JCoeff[0] * pow(R_E / r, 2.0);
-		if (jcount > 1)
-		{
-			double P4;
-			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-			a_dP += (U_R*P4 - U_Z * P3)*JCoeff[1] * pow(R_E / r, 3.0);
-			if (jcount > 2)
-			{
-				double P5;
-				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-				a_dP += (U_R*P5 - U_Z * P4)*JCoeff[2] * pow(R_E / r, 4.0);
-			}
-		}
-	}
-	a_dP *= mu / pow(r, 2.0);
-	a_dP -= U_R_S * mu_S / pow(r_S, 2.0);
-
-	if (gravref == oapiGetObjectByName("Moon"))
-	{
-		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-
-		VECTOR3 R_Ea, U_R_E;
-		sat->GetRelativePos(hEarth, R_Ea);
-		U_R_E = unit(R_Ea);
-		double r_E = length(R_Ea);
-		double mu_E = GGRAV * oapiGetMass(hEarth);
-
-		a_dP -= U_R_E * mu_E / pow(r_E, 2.0);
-	}
-
-	return a_dP;
-}
-*/
 void EMS::SwitchChanged() {
 
 	if (!IsPowered()) return;

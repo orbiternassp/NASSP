@@ -422,7 +422,6 @@ void IMU::Timestep(double simdt)
 		inertialData.getAcceleration(accel);
 		accel = mul(Orbiter.Attitude_v2g, -accel);
 		accel = tmul(Orbiter.AttitudeReference, accel);
-		//sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f l %.10f", accel.x, accel.y, accel.z, length(accel));
 
 		// pulse PIPAs
 		pulses = RemainingPIPA.X + (accel.x * LastSimDT / pipaRate);

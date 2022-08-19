@@ -103,7 +103,7 @@ VECTOR3 InertialData::GetGravityVector() {
 }
 
 
-void InertialData::timestep(double simdt) {
+void InertialData::Timestep(double simdt) {
 	VECTOR3 w, vel;
 
 	vessel->GetWeightVector(w);

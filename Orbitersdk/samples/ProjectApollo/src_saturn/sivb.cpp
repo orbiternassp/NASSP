@@ -915,7 +915,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 
 void SIVB::clbkPostStep(double simt, double simdt, double mjd)
 {
-	inertialData.timestep(simdt);
+	inertialData.Timestep(simdt);
 	iu->PostStep(simt, simdt, mjd);
 }
 

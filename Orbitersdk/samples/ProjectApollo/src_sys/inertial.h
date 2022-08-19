@@ -41,7 +41,7 @@ class InertialData {
 public:
 	InertialData(VESSEL *vessel);
 	VECTOR3 GetGravityVector();
-	void timestep(double simdt);
+	void Timestep(double simdt);
 	void getAcceleration(VECTOR3 &acc);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
