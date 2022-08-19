@@ -755,6 +755,10 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lunarentrypad.RETEBO[0] = 0.0;
 	lunarentrypad.RETDRO[0] = 0.0;
 	lunarentrypad.RETVCirc[0] = 0.0;
+	lunarentrypad.DLMax[0] = 0.0;
+	lunarentrypad.DLMin[0] = 0.0;
+	lunarentrypad.VLMax[0] = 0.0;
+	lunarentrypad.VLMin[0] = 0.0;
 
 	navcheckpad.alt[0] = 0.0;
 	navcheckpad.lat[0] = 0.0;
@@ -3596,9 +3600,9 @@ int ARCore::subThread()
 
 		GC->rtcc->RMSDBMP(sv, CSMmass);
 
-		if (GC->rtcc->RZRFDP.Indicator == 0)
+		if (GC->rtcc->RZRFDP.data[2].Indicator == 0)
 		{
-			P30TIG = GC->rtcc->RZRFDP.GETI;
+			P30TIG = GC->rtcc->RZRFDP.data[2].GETI;
 			dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
 
 			GC->rtcc->RZC1RCNS.entry = GC->rtcc->RZRFTT.Manual.entry;
@@ -4098,8 +4102,6 @@ int ARCore::subThread()
 		{
 			LunarEntryPADOpt opt;
 
-			opt.dV_LVLH = dV_LVLH;
-
 			if (EntryLatcor == 0)
 			{
 				//EntryPADLat = entry->EntryLatPred;
@@ -4109,7 +4111,7 @@ int ARCore::subThread()
 			{
 				if (GC->MissionPlanningActive)
 				{
-					if (!GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, opt.sv0))
+					if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, opt.sv0))
 					{
 						opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
 					}
@@ -4123,7 +4125,6 @@ int ARCore::subThread()
 				//EntryPADLng = EntryLngcor;
 				opt.lat = EntryLatcor;
 				opt.lng = EntryLngcor;
-				opt.P30TIG = P30TIG;
 				opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 
 				GC->rtcc->LunarEntryPAD(&opt, lunarentrypad);

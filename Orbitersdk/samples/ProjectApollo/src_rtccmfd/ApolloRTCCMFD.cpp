@@ -5116,15 +5116,27 @@ bool ApolloRTCCMFD::set_RTESolution(char *str)
 
 	if (i < 2)
 	{
-		G->P30TIG = GC->rtcc->PZREAP.RTEDTable[i].GETI;
-		G->dV_LVLH = GC->rtcc->PZREAP.RTEDTable[i].DV_XDV;
+		RTEDigitalSolutionTable *tab = &GC->rtcc->PZREAP.RTEDTable[i];
+		if (tab->RTEDCode != "")
+		{
+			G->P30TIG = tab->GETI;
+			G->dV_LVLH = tab->DV_XDV;
+			G->manpadenginetype = tab->ThrusterCode;
+			G->manpad_ullage_dt = tab->dt_ullage;
+			G->manpad_ullage_opt = tab->NumQuads == 4 ? true : false;
+			G->HeadsUp = tab->HeadsUpDownIndicator;
+		}
 	}
 	else
 	{
-		if (GC->rtcc->RZRFDP.Indicator == 0)
+		if (GC->rtcc->RZRFDP.data[2].Indicator == 0)
 		{
-			G->P30TIG = GC->rtcc->RZRFDP.GETI;
+			G->P30TIG = GC->rtcc->RZRFDP.data[2].GETI;
 			G->dV_LVLH = GC->rtcc->RZRFTT.Manual.DeltaV;
+			G->manpadenginetype = GC->rtcc->RZRFTT.Manual.Thruster;
+			G->manpad_ullage_dt = GC->rtcc->RZRFTT.Manual.dt_ullage;
+			G->manpad_ullage_opt = GC->rtcc->RZRFTT.Manual.UllageThrusterOption;
+			G->HeadsUp = true;
 		}
 	}
 	return true;

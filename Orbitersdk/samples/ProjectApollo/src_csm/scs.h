@@ -859,7 +859,6 @@ protected:
 	bool IsDisplayPowered();
 	
 	void AccelerometerTimeStep(double simdt);
-	//VECTOR3 GetGravityVector();
 	double xacc, xaccG, constG;
 	double vinert;
 
@@ -868,10 +867,6 @@ protected:
 	int GScribe; //pixels
 	double ScrollPosition; //fractional pixels
 	double MaxScrollPosition;
-	/*bool dVInitialized;
-	VECTOR3 lastWeight;
-	VECTOR3 lastGlobalVel;
-	double lastSimDT;*/
 	double dVRangeCounter;
 	double dVTestTime;
 

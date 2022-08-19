@@ -170,6 +170,8 @@ void LEM::InitSwitches() {
 	GuidContSwitch.Register(PSH, "GuidContSwitch", true);
 	ModeSelSwitch.Register(PSH, "ModeSelSwitch", THREEPOSSWITCH_UP);
 	AltRngMonSwitch.Register(PSH, "AltRngMonSwitch", TOGGLESWITCH_DOWN);
+	LeftMasterAlarmSwitch.Register(PSH, "LeftMasterAlarmSwitch", TOGGLESWITCH_DOWN);
+	LeftMasterAlarmSwitch.SetDelayTime(1);
 	RateErrorMonSwitch.Register(PSH, "RateErrorMonSwitch", TOGGLESWITCH_DOWN);
 	AttitudeMonSwitch.Register(PSH, "AttitudeMonSwitch", true);
 	ASCHeReg1TB.Register(PSH,"ASCHeReg1TB", true);
@@ -238,6 +240,8 @@ void LEM::InitSwitches() {
 	BALCPLSwitch.Register(PSH, "BALCPLSwitch", true);
 	QTYMonSwitch.Register(PSH, "QTYMonSwitch", THREEPOSSWITCH_DOWN);
 	TempPressMonSwitch.Register(PSH, "TempPressMonSwitch", THREEPOSSWITCH_UP);
+	RightMasterAlarmSwitch.Register(PSH, "RightMasterAlarmSwitch", TOGGLESWITCH_DOWN);
+	RightMasterAlarmSwitch.SetDelayTime(1);
 	RightRateErrorMonSwitch.Register(PSH, "RightRateErrorMonSwitch", TOGGLESWITCH_DOWN);
 	RightAttitudeMonSwitch.Register(PSH, "RightAttitudeMonSwitch", TOGGLESWITCH_DOWN);
 	RightACAPropSwitch.Register(PSH, "RightACAPropSwitch", TOGGLESWITCH_UP);
@@ -1621,7 +1625,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1962, 1221, 2010, 1269), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,				_R( 938,  515,  972,  544), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_GUIDCONTSWITCHROW,				_R(1269,  627, 1304,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LEM_MA_LEFT,						_R( 651, 620, 698,  663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_MA_LEFT,						_R( 651, 620, 698,  663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTMONITORSWITCHES,				_R( 659,  712,  693,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FDAILOWERSWITCHROW,				_R( 746,  920,  922,  959), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MPS_REG_CONTROLS_LEFT,			_R( 962,  918,  998, 1125), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1629,7 +1633,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ENGINETHRUSTCONTSWITCHES,		_R( 819, 1006,  928, 1117), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PROPELLANTSWITCHES,				_R(1092,  991, 1154, 1112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_HELIUMMONROTARY,					_R(1192,  992, 1276, 1076), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LEM_MA_RIGHT,						_R(2005, 620, 2052, 663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_MA_RIGHT,					_R(2005, 620, 2052, 663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RIGHTMONITORSWITCHES,			_R(2008,  712, 2042,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TEMPPRESSMONROTARY,				_R(1396, 1002, 1480, 1086), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACAPROPSWITCH,					_R(1620, 1012, 1654, 1051), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -2062,6 +2066,9 @@ void LEM::SetSwitches(int panel) {
 	ModeSelSwitch.Init(0, 83, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], GuidContSwitchRow, &agc);
 	AltRngMonSwitch.Init(0, 167, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], GuidContSwitchRow);
 
+	LeftMasterAlarmSwitchRow.Init(AID_LEM_MA_LEFT, MainPanel);
+	LeftMasterAlarmSwitch.Init(0, 0, 47, 43, srf[SRF_LEM_MASTERALARM], srf[SRF_BORDER_47x43], LeftMasterAlarmSwitchRow, &CWEA);
+
 	LeftMonitorSwitchRow.Init(AID_LEFTMONITORSWITCHES, MainPanel);
 	RateErrorMonSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LeftMonitorSwitchRow);
 	AttitudeMonSwitch.Init(0, 83, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LeftMonitorSwitchRow);
@@ -2101,6 +2108,9 @@ void LEM::SetSwitches(int panel) {
 
 	HeliumMonRotaryRow.Init(AID_HELIUMMONROTARY, MainPanel);
 	HeliumMonRotary.Init(0, 0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], HeliumMonRotaryRow);
+
+	RightMasterAlarmSwitchRow.Init(AID_LEM_MA_RIGHT, MainPanel);
+	RightMasterAlarmSwitch.Init(0, 0, 47, 43, srf[SRF_LEM_MASTERALARM], srf[SRF_BORDER_47x43], RightMasterAlarmSwitchRow, &CWEA);
 
 	RightMonitorSwitchRow.Init(AID_RIGHTMONITORSWITCHES, MainPanel);
 	RightRateErrorMonSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], RightMonitorSwitchRow);
@@ -3198,10 +3208,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_LEM_MA_LEFT:
-	case AID_LEM_MA_RIGHT:
-		return CWEA.CheckMasterAlarmMouseClick(event);
-
 		// panel 1 events:
 	}
 	return false;
@@ -3608,11 +3614,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 	case AID_RATE_TAPE:
 		RadarTape.RenderRate(surf);
-		return true;
-
-	case AID_LEM_MA_LEFT:
-	case AID_LEM_MA_RIGHT:
-		CWEA.RenderMasterAlarm(surf, srf[SRF_LEM_MASTERALARM], NULL);
 		return true;
 
 	// Power Failure Lights

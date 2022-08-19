@@ -1664,19 +1664,19 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_SPS_LIGHT:
 		if (ems.SPSThrustLight()) {
-			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 41, 16, 41, 16);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 41, 16, 41, 16);
 		}
 		else {
-			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 16, 41, 16);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 0, 16, 41, 16);
 		}
 		return true;
 
 	case AID_VC_PT05G_LIGHT:
 		if (ems.pt05GLight()) {
-			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 41, 0, 41, 16);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 41, 0, 41, 16);
 		}
 		else {
-			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 0, 41, 16);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 0, 0, 41, 16);
 		}
 		return true;
 
