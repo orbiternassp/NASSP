@@ -460,20 +460,9 @@ void SaturnV::DoFirstTimestep(double simt)
 void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 {
-	//
-	// On the first timestep we just do basic setup
-	// stuff and return. We seem to get called in at
-	// least some cases before Orbiter is properly set
-	// up, so the last thing we want to do is point the
-	// engines in a wacky direction and then not be
-	// called again for several seconds.
-	//
-
 	if (FirstTimestep) {
 		DoFirstTimestep(simt);
-		LastTimestep = simt;
 		FirstTimestep = false;
-		return;
 	}
 
 	GenericTimestep(simt, simdt, mjd);
@@ -550,8 +539,6 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 		SeparateStage(CM_STAGE);
 		SetStage(CM_STAGE);
 	}
-
-	LastTimestep = simt;
 }
 
 void SaturnV::clbkPostStep (double simt, double simdt, double mjd) {

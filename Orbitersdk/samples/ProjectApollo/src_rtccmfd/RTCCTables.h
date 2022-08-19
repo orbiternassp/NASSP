@@ -338,7 +338,7 @@ struct EMSMISSInputTable
 	//Right limit of ephemeris (time to end ephemeris)
 	double EphemerisRightLimitGMT;
 	//Minimum time between ephemeris points
-	double MinEphemDT;
+	double MinEphemDT = 0.0;
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame = 2;
 	//Minimum number of points desired in ephemeris

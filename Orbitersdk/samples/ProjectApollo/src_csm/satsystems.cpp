@@ -135,6 +135,14 @@ void Saturn::SystemsInit() {
 	FuelCellH2Manifold[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD");
 
 	//
+	// Electric Lights
+	//
+
+	SpotLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
+	RndzLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
+
+
+	//
 	// O2 tanks.
 	//
 
@@ -725,6 +733,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		sce.Timestep();
 		dataRecorder.TimeStep( MissionTime, simdt );
 		RRTsystem.TimeStep(simdt);
+
+		//
+		// Switches MAYBE THIS SHOULD GO SOMEWHERE ELSE? They only need to be updated every timestep, not every substep
+		///
+		RndzLightSwitch.refresh(simdt);
 
 		//
 		// Systems state handling
@@ -2541,7 +2554,7 @@ void Saturn::CheckSMSystemsState()
 		// Close O2 SM supply
 		O2SMSupply.Close();
 
-		//SM sensors
+		// SM sensors
 		H2Tank1TempSensor.WireTo(NULL);
 		H2Tank2TempSensor.WireTo(NULL);
 		O2Tank1TempSensor.WireTo(NULL);
@@ -2560,6 +2573,10 @@ void Saturn::CheckSMSystemsState()
 			delete secs.SMJCB;
 			secs.SMJCB = NULL;
 		}
+
+		// Disconnect Exterior SM lights
+		RndzLight->WireTo(NULL);
+		SpotLight->WireTo(NULL);
 	}
 }
 

@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2022
 
-IntertialData class is the common source of intertial acceleration data
+InertialData class is the common source of inertial acceleration data
 for variety of instruments (e.g. IMU, EMS, etc.).
 
 Project Apollo is free software; you can redistribute it and/or modify

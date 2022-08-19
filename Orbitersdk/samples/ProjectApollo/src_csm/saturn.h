@@ -1902,7 +1902,7 @@ protected:
 
 	SwitchRow CSMLightSwitchesRow;
 	ToggleSwitch RunEVALightSwitch;
-	ThreePosSwitch RndzLightSwitch;
+	ThreeSourceTwoDestSwitch RndzLightSwitch;
 	ToggleSwitch TunnelLightSwitch;
 
 	SwitchRow LMPowerSwitchRow;
@@ -3682,6 +3682,10 @@ protected:
 	Cooling *FuelCellCooling[3];
 	h_Tank *FuelCellO2Manifold[3];
 	h_Tank *FuelCellH2Manifold[3];
+	
+	// Electric Lights
+	ElectricLight* SpotLight;
+	ElectricLight* RndzLight;
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];
@@ -4435,11 +4439,6 @@ protected:
 	//
 
 	double CurrentViewOffset;
-
-	///
-	/// Time of last timestep call.
-	///
-	double LastTimestep;
 
 	//
 	// Panel flash.

@@ -35,7 +35,7 @@ struct EMMENIInputTable
 	//Maximum time of integration
 	double MaxIntegTime = 10.0*24.0*3600.0;
 	//Minimum time between ephemeris points
-	double MinEphemDT;
+	double MinEphemDT = 0.0;
 	//Integration direction indicator (+X-forward, -X-backward)
 	double IsForwardIntegration = 1.0;
 	//Desired value of stopping parameter relative to the Earth
@@ -89,8 +89,9 @@ private:
 	double fq(double q);
 	void adfunc();
 	double CurrentTime();
-	void EphemerisStorage();
+	void EphemerisStorage(bool last = false);
 	void WriteEphemerisHeader();
+	void ACCEL_GRAV();
 
 	double R_E, mu;
 	//State vector at last rectification (RBASE)
@@ -177,6 +178,32 @@ private:
 	double WT;
 	//Drag acceleration
 	VECTOR3 a_drag;
+	//Minimum output step
+	double MinEphemDT;
+
+	//ACCEL
+	//Rotation matrix from local to global coordinates, left handed
+	MATRIX3 Rot;
+	//Planet fixed position vector
+	VECTOR3 R_EF;
+	//Inverse of position radius
+	double R_INV;
+	//Unit position vector in planet fixed coordinates
+	VECTOR3 UR;
+	//Ratio of position and Earth radii
+	double R0_ZERO;
+	//Term in gravity calculation
+	double R0_N;
+	double MAT_A[5][2];
+	double ZETA_REAL[5], ZETA_IMAG[5];
+	//Degree and order of gravity calculations
+	int GMD, GMO;
+	int L, I, N, N1, J;
+	double AUXILIARY;
+	double F1, F2, F3, F4, DNM;
+	VECTOR3 G_VEC;
+	double ZONAL[4];
+	double C[9], S[9];
 
 	//Values used in Step
 	double HP, HD2, H2D2, H2D8, HD6;

@@ -427,7 +427,7 @@
     <ClInclude Include="..\..\src_saturn\s1csystems.h" />
     <ClInclude Include="..\..\src_saturn\siisystems.h" />
     <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
-    <ClInclude Include="..\..\src_sys\intertial.h" />
+    <ClInclude Include="..\..\src_sys\inertial.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />
