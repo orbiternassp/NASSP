@@ -1013,7 +1013,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
 
 	//Global position of the spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
@@ -1021,7 +1021,10 @@ void HGA::TimeStep(double simt, double simdt)
 	
 	//Get the gain, power and global position of the transmitter
 	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
-	if (MCCVessel) { MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties); }
+	if (MCCV) {
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+	}
 
 	/*sprintf(oapiDebugString(), "%lf %lf <%lf %lf %lf>", GroundTransmitterRFProperties.Gain, GroundTransmitterRFProperties.Power, GroundTransmitterRFProperties.GlobalPosition.x,
 		GroundTransmitterRFProperties.GlobalPosition.y,
@@ -1317,10 +1320,13 @@ void OMNI::TimeStep()
 	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
 
-	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
 	//Get the gain, power and global position of the transmitter
 	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
-	if(MCCVessel){ MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties); }
+	if (MCCV) {
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+	}
 
 	//Calculate antenna pointing vector in global frame
 	U_R = mul(Rot, direction);

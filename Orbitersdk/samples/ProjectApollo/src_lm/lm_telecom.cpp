@@ -2844,10 +2844,13 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
 
-	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
 	//Get the gain, power and global position of the transmitter
 	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
-	if (MCCVessel) { MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties); }
+	if (MCCV) {
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+	}
 	
 	double EarthSignalDist;
 	double RecvdLEM_SteerableAntPower, RecvdLEM_SteerableAntPower_dBm;
@@ -3045,10 +3048,13 @@ void LM_OMNI::Timestep()
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
 
-	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(oapiGetVesselByName("MCC"));
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
 	//Get the gain, power and global position of the transmitter
 	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
-	if (MCCVessel) { MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties); }
+	if (MCCV) { 
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+	}
 
 	//Calculate antenna pointing vector in global frame
 	U_R = mul(Rot, U_RP);
