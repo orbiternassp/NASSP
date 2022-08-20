@@ -686,21 +686,28 @@ void MCC::TimeStep(double simdt){
 					if (length(CM_Vector - GSVector) < LOSRange && !MoonInTheWay)
 					{
 						//Dont switch to a new station if we're transmitting an uplink;
+						bool uplinking = false;
 						if (cm) {
-							if (cm->pcm.mcc_size != 0) { break; }
+							if (cm->pcm.mcc_size != 0) {
+								uplinking = true;
+							}
 						}
 						if (lm) {
-							if (lm->PCM.mcc_size != 0) { break; }
+							if (lm->PCM.mcc_size != 0) { 
+								uplinking = true;
+							}
 						}
 
-						GroundStations[x].AOS = 1;
-						if (GT_Enabled == true) {
-							sprintf(buf, "AOS %s", GroundStations[x].Name);
-							addMessage(buf);
-						}
+						if (!uplinking) {
+							GroundStations[x].AOS = 1;
+							if (GT_Enabled == true) {
+								sprintf(buf, "AOS %s", GroundStations[x].Name);
+								addMessage(buf);
+							}
 
-						if (GroundStations[x].USBCaps) {
-							TransmittingGroundStation = x; //only interested in picking a station to tx USB carrier
+							if (GroundStations[x].USBCaps) {
+								TransmittingGroundStation = x; //only interested in picking a station to tx USB carrier
+							}
 						}
 
 					}
@@ -721,7 +728,6 @@ void MCC::TimeStep(double simdt){
 			TransmittingGroundStation = 0;
 		}
 	}
-
 
 	if (TransmittingGroundStation) {
 		VECTOR3 XmitGSVector = _V(cos(GroundStations[TransmittingGroundStation].Position[1] * RAD) * cos(GroundStations[TransmittingGroundStation].Position[0] * RAD),
