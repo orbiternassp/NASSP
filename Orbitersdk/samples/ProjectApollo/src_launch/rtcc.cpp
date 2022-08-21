@@ -7750,7 +7750,7 @@ RTCC_PMMSPT_20_1:
 			goto RTCC_PMMSPT_20_3;
 		}
 	}
-	in.CurMan->GMTMAN = T_RP;
+	in.mpt->TimeToBeginManeuver[0] = in.CurMan->GMTMAN = T_RP;
 	if (in.QUEID != 33)
 	{
 		//Trajectory Update
@@ -18448,6 +18448,7 @@ RTCC_PMSVCT_8:
 						intab2.V = sv1.V;
 						intab2.CurMan = &mpt->mantable[i];
 						intab2.Table = L;
+						intab2.mpt = mpt;
 
 						int err;
 						if (err = PMMSPT(intab2))
