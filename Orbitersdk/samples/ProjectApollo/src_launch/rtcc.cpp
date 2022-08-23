@@ -34537,6 +34537,7 @@ void RTCC::EMMGSTMP()
 		VECTOR3 S_SM;
 		double TA, SA, a;
 
+		sv = RotateSVToSOI(outtab.SV);
 		RM = refs.REFSMMAT;
 		SMNB = OrbMech::CALCSMSC(_V(EZJGSTTB.Att[0].z, EZJGSTTB.Att[0].x, EZJGSTTB.Att[0].y));
 		a = -0.5676353234;
@@ -34561,33 +34562,38 @@ void RTCC::EMMGSTMP()
 			u = EZJGSTAR[i];
 
 			//Occultation check
-			if (EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
+			if (!EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
 			{
-				continue;
-			}
-
-			S_SM = mul(RM, u);
-			OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
-
-			if (TA <= 50.0*RAD)
-			{
-				//Found one
-				EZJGSTTB.SXT_STAR[num] = i + 1;
-				EZJGSTTB.SXT_SFT_RTCC[num] = SA;
-				EZJGSTTB.SXT_TRN_RTCC[num] = TA;
-				num++;
-				if (num >= 2)
+				//Not occulated, check trunnion angle
+				S_SM = mul(RM, u);
+				OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
+				//Trunnion angle below 50°?
+				if (TA <= 50.0*RAD)
 				{
-					break;
+					//Found one
+					EZJGSTTB.SXT_STAR[num] = i + 1;
+					EZJGSTTB.SXT_SFT_RTCC[num] = SA;
+					EZJGSTTB.SXT_TRN_RTCC[num] = TA;
+					num++;
+					//Found 2 stars, get out of here
+					if (num >= 2)
+					{
+						break;
+					}
 				}
 			}
+
+			//Try next one
 			i++;
+			//Are we back at the start?
 			if (i >= EZJGSTAR.size())
 			{
+				//Continue from star 0 on
 				i = 0;
 			}
+			//Have we reached the end?
 		} while (i != endstar);
-
+		//If it didn't find two stars, return error
 		if (num < 2)
 		{
 			err = 3;
