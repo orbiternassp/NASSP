@@ -457,6 +457,7 @@ void MCC::Init(){
 	GroundStations[35].Position[0] = -7.969444; GroundStations[35].Position[1] = -14.393889;
 	GroundStations[35].HasRadar = true;
 	GroundStations[35].HasAcqAid = true;
+	GroundStations[35].SBandAntenna = GSSA_9METER;
 	GroundStations[35].StationPurpose = GSPT_ORBITAL;
 	GroundStations[35].TrackingCaps = GSTK_USB;
 	GroundStations[35].USBCaps = GSSC_VOICE|GSSC_COMMAND|GSSC_TELEMETRY;
