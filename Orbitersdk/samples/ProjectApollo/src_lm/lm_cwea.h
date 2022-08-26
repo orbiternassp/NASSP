@@ -30,7 +30,7 @@ class LEM;
 
 class LEM_CWEA : public e_object {
 public:
-	LEM_CWEA(SoundLib &s, Sound &buttonsound);
+	LEM_CWEA(SoundLib &s);
 	void Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah);
 	void LoadSounds();
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -60,8 +60,7 @@ public:
 	bool GetBatteryCaution() { return LightStatus[1][5] == 1; }
 	bool GetCWPowerFail() { return LightStatus[3][6] == 1; }
 
-	bool CheckMasterAlarmMouseClick(int event);
-	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border);
+	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit);
 	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf);
 	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
 
@@ -104,7 +103,6 @@ protected:
 	h_HeatLoad *CWEAHeat;
 
 	SoundLib &soundlib;
-	Sound &ButtonSound;
 	Sound MasterAlarmSound;
 
 	LEM *lem;					// Pointer at LEM

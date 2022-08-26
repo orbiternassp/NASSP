@@ -34,7 +34,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 // CWEA 
 
-LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(buttonsound) {
+LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	cwea_pwr = NULL;
 	ma_pwr = NULL;
 	lem = NULL;
@@ -868,7 +868,7 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
 	}
 }
 
-void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border) {
+void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit) {
 
 	//
 	// Draw the master alarm lit bitmap.
@@ -884,14 +884,6 @@ void LEM_CWEA::PushMasterAlarm()
 		MasterAlarmSound.stop();
 		SetMasterAlarm(false);
 	}
-	ButtonSound.play(NOLOOP, 255);
-}
-
-bool LEM_CWEA::CheckMasterAlarmMouseClick(int event) {
-	if (event & PANEL_MOUSE_LBDOWN) {
-		PushMasterAlarm();
-	}
-	return true;
 }
 
 void LEM_CWEA::SetLight(int row, int column, int state, bool TriggerMA)

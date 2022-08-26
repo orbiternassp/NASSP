@@ -427,12 +427,14 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
-	imu(agc, Panelsdk),
+	inertialData(this),
+	imu(agc, Panelsdk, inertialData),
 	scdu(agc, RegOPTX, 0140, 1),
 	tcdu(agc, RegOPTY, 0141, 1),
 	aea(Panelsdk, deda),
 	deda(this,soundlib, aea),
-	CWEA(soundlib, Bclick),
+	mechanicalAccelerometer(inertialData),
+	CWEA(soundlib),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
 	APSPropellant(ph_Asc, Panelsdk),
@@ -535,7 +537,9 @@ void LEM::Init()
 	DebugLineClearTimer = 0;
 
 	ToggleEva=false;
-	CDREVA_IP=false;
+	EVA_IP[0] = false;
+	EVA_IP[1] = false;
+	hLEVA[0] = hLEVA[1] = NULL;
 	refcount = 0;
 	viewpos = LMVIEW_CDR;
 	stage = 0;
@@ -724,10 +728,12 @@ void LEM::DoFirstTimestep()
 	NextEventTime = 0.0;
 #endif
 
-	char VName10[256]="";
+	char VName10[256] = "";
 
-	strcpy (VName10, GetName()); strcat (VName10, "-LEVA");
-	hLEVA=oapiGetVesselByName(VName10);
+	strcpy(VName10, GetName()); strcat(VName10, "-LEVA-CDR");
+	hLEVA[0] = oapiGetVesselByName(VName10);
+	strcpy(VName10, GetName()); strcat(VName10, "-LEVA-LMP");
+	hLEVA[1] = oapiGetVesselByName(VName10);
 }
 
 void LEM::LoadDefaultSounds()
@@ -1175,7 +1181,6 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	{
 		DoFirstTimestep();
 		FirstTimestep = false;
-		return;
 	}
 
 	// Prevent Orbiter navmodes from doing stuff
@@ -1287,6 +1292,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 	}
 
+	inertialData.Timestep(simdt);
+
 	// Update VC animations
 	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
 	{
@@ -1316,10 +1323,16 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	// the focus switch a few timesteps to allow it to initialise properly in the background.
 	//
 
-	if (SwitchFocusToLeva > 0 && hLEVA) {
+	if (SwitchFocusToLeva > 0 && hLEVA[0]) {
 		SwitchFocusToLeva--;
 		if (!SwitchFocusToLeva) {
-			oapiSetFocusObject(hLEVA);
+			oapiSetFocusObject(hLEVA[0]);
+		}
+	}
+	if (SwitchFocusToLeva < 0 && hLEVA[1]) {
+		SwitchFocusToLeva++;
+		if (!SwitchFocusToLeva) {
+			oapiSetFocusObject(hLEVA[1]);
 		}
 	}
 
@@ -1337,15 +1350,24 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	}else if (stage == 1 || stage == 5)	{
 
-		if (CDREVA_IP) {
-			if(!hLEVA) {
-				ToggleEVA();
+		if (EVA_IP[0]) {
+			if(!hLEVA[0]) {
+				ToggleEVA(true);
+			}
+		}
+		if (EVA_IP[1]) {
+			if (!hLEVA[1]) {
+				ToggleEVA(false);
 			}
 		}
 
-		if (ToggleEva && GroundContact()){
-			ToggleEVA();
+		if (ToggleEva && GroundContact() && CDRinPLSS > 0 && EVA_IP[0] == false){
+			ToggleEVA(true);
 		}
+		if (ToggleEva && GroundContact() && LMPinPLSS > 0 && EVA_IP[1] == false) {
+			ToggleEVA(false);
+		}
+		ToggleEva = false; //Always reset, in case the condition wasn't met
 
 		double vsAlt = GetAltitude(ALTMODE_GROUND);
 		if (!Landed && (GroundContact() || (vsAlt < 1.0))) {
@@ -1424,10 +1446,6 @@ void LEM::SetGenericStageState(int stat)
 		stage = 1;
 		SetLmVesselDockStage();
 		SetLmVesselHoverStage();
-
-		if (CDREVA_IP) {
-			SetupEVA();
-		}
 		break;
 
 	case 2:
@@ -1529,8 +1547,11 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		if (!strnicmp(line, "CONFIGURATION", 13)) {
 			sscanf(line + 13, "%d", &status);
 		}
-		else if (!strnicmp(line, "EVA", 3)) {
-			CDREVA_IP = true;
+		else if (!strnicmp(line, "EVA_CDR", 7)) {
+			EVA_IP[0] = true;
+		}
+		else if (!strnicmp(line, "EVA_LMP", 7)) {
+			EVA_IP[1] = true;
 		}
 		else if (!strnicmp(line, "CSWITCH", 7)) {
 			SwitchState = 0;
@@ -1612,6 +1633,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "COASRETICLEVISIBLE", 18)) {
 			sscanf(line + 18, "%i", &COASreticlevisible);
+		}
+		else if (!strnicmp(line, INERTIAL_DATA_START_STRING, sizeof(INERTIAL_DATA_START_STRING))) {
+			inertialData.LoadState(scn);
 		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
@@ -1796,9 +1820,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
-		}
-		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
-			mechanicalAccelerometer.LoadState(scn);
 		}
 		else if (!strnicmp(line, ATCA_START_STRING, sizeof(ATCA_START_STRING))) {
 			atca.LoadState(scn);
@@ -2053,8 +2074,11 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	ShiftCG(currentCoG); 
 
 	oapiWriteScenario_int (scn, "CONFIGURATION", status);
-	if (CDREVA_IP){
-		oapiWriteScenario_int (scn, "EVA", int(TO_EVA));
+	if (EVA_IP[0]){
+		oapiWriteScenario_int (scn, "EVA_CDR", int(TO_EVA));
+	}
+	if (EVA_IP[1]) {
+		oapiWriteScenario_int(scn, "EVA_LMP", int(TO_EVA));
 	}
 
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
@@ -2092,6 +2116,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
+	inertialData.SaveState(scn);
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
@@ -2189,7 +2214,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	tca3B.SaveState(scn, "RCSTCA_3B_BEGIN", "RCSTCA_END");
 	tca4B.SaveState(scn, "RCSTCA_4B_BEGIN", "RCSTCA_END");
 	ordeal.SaveState(scn);
-	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);
 	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
 	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);

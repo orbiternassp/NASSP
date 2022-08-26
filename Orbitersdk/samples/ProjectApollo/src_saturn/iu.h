@@ -108,6 +108,7 @@ enum IULVMessageType
 	IULV_GET_RELATIVE_POS,					///< Get relative position.
 	IULV_GET_RELATIVE_VEL,					///< Get relative velocity.
 	IULV_GET_WEIGHTVECTOR,					///< Get weight vector 
+	IULV_GET_INERTIAL_ACCEL,				///< Get inertial acceleration
 	IULV_GET_ROTATIONMATRIX,				///< Get rotation matrix
 	IULV_GET_GLOBAL_VEL,					///< Get global vel
 	IULV_GET_ANGULARVEL,					///< Get angular velocity
@@ -207,6 +208,7 @@ public:
 	double GetMass();
 	void GetGlobalOrientation(VECTOR3 &arot);
 	bool GetWeightVector(VECTOR3 &w);
+	void GetInertialAccel(VECTOR3 &a);
 	void GetRotationMatrix(MATRIX3 &rot);
 	void GetAngularVel(VECTOR3 &avel);
 	double GetMissionTime();

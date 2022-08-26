@@ -163,6 +163,78 @@ void E_system::Create_Diode(char *line)
 	AddSystem(new Diode(name, Source, NominalTemperature, SaturationCurrent));
 }
 
+
+/// 
+/// Create a new PanelSDK-based electric light, consisting of a OAPI lightemitter and beacon
+/// 
+///	Config file creation string is as follows
+/// 
+///	|Field					|Unit						|Type						|
+///	|-----------------------|---------------------------|---------------------------|
+///	|name					|n / a						|string						|
+///	|sourceName				|n / a						|string						|
+///	|flashing				|n / a						|string						|
+///	|OnTime					|seconds					|double						|
+///	|OffTime				|seconds					|double						|
+///	|<position>				|meters						|VECTOR3					|
+///	|<direction>			|meters						|VECTOR3					|
+///	|CutoffRange			|meters						|double						|
+///	|ConstantAttenuation	|meters						|double						|
+///	|LinearAttenuation		|meters^-1					|double						|
+///	|QuadraticAttenuation	|meters^-2					|double						|
+///	|Umbra					|radians					|double						|
+///	|Penumbra				|radians					|double						|
+///	|< % f % f % f % f>		|n / a						|COLOUR4					|
+///	|<% f% f% f% f>			|n / a						|COLOUR4					|
+///	|<% f% f% f% f>			|n / a						|COLOUR4					|
+///	|% lf					|Watts						|double						|
+///	|% lf					|Volts						|double						|
+/// 
+/// Example:
+/// <LIGHT> SPOTLIGHT DC_DUMMY 0 0.0 0.0 <-1.439 1.390 0.920> <0.0045 -0.0046 0.9999> 5000.0 0.0 0.0 0.0015 0.174533 0.5 <1.0 0.945 0.878 0.0> <1.0 0.945 0.878 0.0> <0.0 0.0 0.0 0.0> 100.0 115.0
+/// 
+/// \ingroup PanelSDK
+/// \brief Create a new electric light
+/// <param name="line">A single line begining with "<LIGHT>" followed by the fields shown in the table above</param>
+///
+void E_system::Create_ElectricLight(char* line)
+{
+	char name[100];
+	char sourceName[100];
+	e_object* powerSource = nullptr;
+	int flashing = 0;
+	double onTime = 0;
+	double offTime = 0;
+	VECTOR3 pos = _V(0, 0, 0);
+	VECTOR3 dir = _V(1, 0, 0);
+	double range = 0;
+	double att0 = 0;
+	double att1 = 0;
+	double att2 = 0;
+	double umbra = 0;
+	double penumbra = 0;
+	COLOUR4 diffuse = { 0, 0, 0, 0};
+	COLOUR4 specular = { 0, 0, 0, 0 };
+	COLOUR4 ambient = { 0, 0, 0, 0 };
+	double powerDraw = 0;
+	double nomVoltage = 0;
+
+	sscanf(line + 7, "%s %s %d %lf %lf <%lf %lf %lf> <%lf %lf %lf> %lf %lf %lf %lf %lf %lf <%f %f %f %f> <%f %f %f %f> <%f %f %f %f> %lf %lf",
+		&name, &sourceName, &flashing, &onTime, &offTime,
+		&pos.x, &pos.y, &pos.z,
+		&dir.x, &dir.y, &dir.z,
+		&range, &att0, &att1, &att2, &umbra, &penumbra, 
+		&diffuse.r, &diffuse.g, &diffuse.b, &diffuse.a,
+		&specular.r, &specular.g, &specular.b, &specular.a, 
+		&ambient.r, &ambient.g, &ambient.b, &ambient.a,
+		&powerDraw, &nomVoltage);
+
+
+	powerSource = (e_object*)GetPointerByString(sourceName);
+	ElectricLight* newLight = new ElectricLight(name, powerSource, (bool)flashing, onTime, offTime, this->Vessel, pos, dir, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient, powerDraw, nomVoltage);
+	AddSystem(newLight);
+}
+
 void E_system::Create_Battery(char *line)
 {
 	char name[100];
@@ -235,6 +307,8 @@ void E_system::Build() {
 			Create_Pump(line);
 		else if (Compare(line, "<DIODE>"))
 			Create_Diode(line);
+		else if (Compare(line, "<LIGHT>"))
+			Create_ElectricLight(line);
 
 		line =ReadConfigLine();
 	}

@@ -55,7 +55,6 @@ public:
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
 	VECTOR3 GetTotalAttitude();
-	double GetLastTime();
 
 	bool IsCaged();
 	bool IsPowered();
@@ -82,7 +81,6 @@ protected:
 	void PulsePIPA(int RegPIPA, double pulses);
 	void SetOrbiterAttitudeReference();
 	void ZeroIMUCDUs();
-	VECTOR3 GetGravityVector();
 
 	// Flags to replace IO channel discretes
 public: bool ZeroIMUCDUFlag;
@@ -130,22 +128,10 @@ public: MATRIX3 getRotationMatrixX(double angle);
 	} RemainingPIPA;
 
 	struct {
-		struct {
-			double X;
-			double Y;
-			double Z;
-		} Attitude;
-		struct {
-			double X;
-			double Y;
-			double Z;
-		} LastAttitude;
-
+		MATRIX3 Attitude_v2g;
+		MATRIX3 Attitude_g2v;
 		MATRIX3 AttitudeReference;
 	} Orbiter;
-
-	VECTOR3 LastWeightAcceleration;
-	VECTOR3 LastGlobalVel;
 
 	double LastTime;	// in seconds
 };

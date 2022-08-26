@@ -506,6 +506,14 @@ int RTCC::ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out)
 	sv_out.R = sv_out2.R;
 	sv_out.V = sv_out2.V;
 	sv_out.GMT = sv_out2.GMT;
+	if (out < 2) //Set to Earth for ECI and ECT, to Moon for MCI, MCT, EMP
+	{
+		sv_out.RBI = 0;
+	}
+	else
+	{
+		sv_out.RBI = 2;
+	}
 	return 0;
 }
 
@@ -853,7 +861,7 @@ void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, Ephemeris
 		TS_stored = EPH.Header.TL;
 		TE_stored = EPH.Header.TR;
 		unsigned NV = 1;
-		while (TE != EPH.table[NV - 1].GMT)
+		while (abs (TE - EPH.table[NV - 1].GMT) > 0.000001) //To avoid floating point issues
 		{
 			if (TE < EPH.table[NV - 1].GMT)
 			{

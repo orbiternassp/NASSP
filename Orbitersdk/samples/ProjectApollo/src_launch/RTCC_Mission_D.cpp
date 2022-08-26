@@ -136,6 +136,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LMDAPUpdate(calcParams.tgt, *form, false);
 	}
 	break;
+	case 8: //LM DAP DATA (DOCKED)
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		LMDAPUpdate(calcParams.tgt, *form, true);
+	}
+	break;
 	case 7: //MISSION INITIALIZATION
 	{
 		char Buff[128];
@@ -605,7 +612,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManeuverPAD(&manopt, *form);
 		LMDAPUpdate(calcParams.tgt, dappad, true);
 
-		sprintf(form->remarks, "LM weight is %.0f, CSM weight is %.0f", dappad.ThisVehicleWeight, dappad.OtherVehicleWeight);
+		sprintf(form->purpose, "Docked DPS");
 
 		AGCStateVectorUpdate(buffer1, sv0, false, GETbase, true);
 		AGCREFSMMATUpdate(buffer2, calcParams.StoredREFSMMAT, false);
@@ -1410,7 +1417,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		for (int i = 0;i < 4;i++)
 		{
-			strcpy(form->Area[i], "");
+			strcpy(form->Area[i], "N/A");
+			form->FDAIAngles[i] = _V(0, 0, 0);
+			form->GETStart[i] = 0.0;
+			form->TAlign[i] = 0.0;
+			form->ExposureInterval[i] = 0.0;
+			form->ExposureNum[i] = 0;
+			form->OrbRate[i] = false;
 		}
 
 		sv0 = StateVectorCalc(calcParams.src);
@@ -1836,7 +1849,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.ManeuverCode = RTCC_GMP_HAS;
 		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 0, 0);
-		gmpopt.N = 46;
+		gmpopt.N = 45;
 
 		//TBD: Error handling
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);

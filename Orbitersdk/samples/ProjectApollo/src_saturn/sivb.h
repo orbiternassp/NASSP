@@ -28,6 +28,7 @@
 #include "PanelSDK/PanelSDK.h"
 #include "payload.h"
 #include "pyro.h"
+#include "inertial.h"
 
 //
 // Data structure passed from main vessel to SIVB to configure stage.
@@ -295,6 +296,8 @@ public:
 
 	IU *GetIU() { return iu; };
 
+	InertialData *GetInertialData() { return &inertialData; };
+
 	///
 	/// \brief Get main propellant mass.
 	/// \return Propellant mass in kg.
@@ -467,6 +470,8 @@ protected:
 	/// \brief Instrument Unit.
 	///
 	IU* iu;
+
+	InertialData inertialData;
 
 	bool iuinitflag;
 

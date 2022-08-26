@@ -160,6 +160,7 @@
     <ClCompile Include="..\..\src_sys\connector.cpp" />
     <ClCompile Include="..\..\src_saturn\iu.cpp" />
     <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
+    <ClCompile Include="..\..\src_sys\inertial.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp" />
     <ClCompile Include="..\..\src_saturn\sivb.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -184,6 +185,7 @@
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_saturn\iu.h" />
     <ClInclude Include="..\..\src_sys\DelayTimer.h" />
+    <ClInclude Include="..\..\src_sys\inertial.h" />
     <ClInclude Include="..\..\src_sys\powersource.h" />
     <ClInclude Include="..\..\src_saturn\sivb.h" />
     <ClInclude Include="..\..\src_sys\pyro.h" />

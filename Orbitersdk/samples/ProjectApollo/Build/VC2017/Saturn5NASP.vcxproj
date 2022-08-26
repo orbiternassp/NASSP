@@ -262,6 +262,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp" />
+    <ClCompile Include="..\..\src_sys\inertial.cpp" />
     <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -426,6 +427,7 @@
     <ClInclude Include="..\..\src_saturn\s1csystems.h" />
     <ClInclude Include="..\..\src_saturn\siisystems.h" />
     <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
+    <ClInclude Include="..\..\src_sys\inertial.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />

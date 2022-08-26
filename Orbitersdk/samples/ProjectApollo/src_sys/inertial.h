@@ -1,8 +1,9 @@
-/****************************************************************************
+/***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2017
+Copyright 2022
 
-Mechanical Accelerometer Simulation
+InertialData class is the common source of inertial acceleration data
+for variety of instruments (e.g. IMU, EMS, etc.).
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,37 +23,26 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
+#pragma once
 #include "Orbitersdk.h"
-#include "papi.h"
-#include "MechanicalAccelerometer.h"
-#include "inertial.h"
 
-MechanicalAccelerometer::MechanicalAccelerometer(InertialData &inertialData) : inertialData(inertialData)
-{
-	vessel = NULL;
-	xacc = 0.0;
-	yacc = 0.0;
-}
+#define INERTIAL_DATA_START_STRING	 "INERTIAL_DATA_BEGIN"
+#define INERTIAL_DATA_END_STRING    "INERTIAL_DATA_END"
 
-void MechanicalAccelerometer::Init(VESSEL* v)
-{
-	vessel = v;
-}
-
-void MechanicalAccelerometer::Timestep(double simdt) {
+class InertialData {
 	VECTOR3 accel;
-	inertialData.getAcceleration(accel);
-	xacc = -accel.z;
-	yacc = -accel.y;
+	MATRIX3 rotmat;
+	VESSEL *vessel;
+	bool dVInitialized;
+	VECTOR3 lastWeight;
+	VECTOR3 lastGlobalVel;
+	double lastSimDT;
 
-}
-
-double MechanicalAccelerometer::GetXAccel()
-{
-	return xacc;
-}
-
-double MechanicalAccelerometer::GetYAccel()
-{
-	return yacc;
-}
+public:
+	InertialData(VESSEL *vessel);
+	VECTOR3 GetGravityVector();
+	void Timestep(double simdt);
+	void getAcceleration(VECTOR3 &acc);
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
+};

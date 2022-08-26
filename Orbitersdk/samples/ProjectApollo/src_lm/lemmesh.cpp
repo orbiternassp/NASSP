@@ -69,14 +69,14 @@ static PARTICLESTREAMSPEC lunar_dust = {
 VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
 VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
 
-void LEM::ToggleEVA()
-
+void LEM::ToggleEVA(bool isCDR)
 {
-	ToggleEva = false;	
+	ToggleEva = false;
+
+	int i = isCDR ? 0 : 1;
 	
-	if (CDREVA_IP) {
+	if (EVA_IP[i]) {
 		// Nothing for now, the EVA is ended, when the LEVA vessel calls StopEVA
-		/// \todo Support for 2 LEVA vessels
 	}
 	else {
 		VESSELSTATUS vs1;
@@ -85,7 +85,7 @@ void LEM::ToggleEVA()
 		// The LM must be in landed state
 		if (vs1.status != 1) return;
 
-		CDREVA_IP = true;
+		EVA_IP[i] = true;
 
 		OBJHANDLE hbody = GetGravityRef();
 		double radius = oapiGetSize(hbody);
@@ -93,36 +93,42 @@ void LEM::ToggleEVA()
 		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
 
 		char VName[256]="";
-		strcpy (VName, GetName()); strcat (VName, "-LEVA");
-		hLEVA = oapiCreateVessel(VName,"ProjectApollo/LEVA",vs1);
-		
-		SwitchFocusToLeva = 10;
+		strcpy (VName, GetName());
+		if (isCDR)
+		{
+			strcat(VName, "-LEVA-CDR");
+			SwitchFocusToLeva = 10;
+		}
+		else
+		{
+			strcat(VName, "-LEVA-LMP");
+			SwitchFocusToLeva = -10;
+		}
+		hLEVA[i] = oapiCreateVessel(VName,"ProjectApollo/LEVA",vs1);
 
-		LEVA *leva = (LEVA *) oapiGetVesselInterface(hLEVA);
+		LEVA *leva = (LEVA *) oapiGetVesselInterface(hLEVA[i]);
 		if (leva) {
 			LEVASettings evas;
 
 			evas.MissionNo = ApolloNo;
+			evas.isCDR = isCDR;
 			leva->SetEVAStats(evas);
 		}
 	}
 }
 
-
-void LEM::SetupEVA()
-
-{
-	if (CDREVA_IP) {
-		CDREVA_IP = true;
-		// nothing for now...
-	}
-}
-
-void LEM::StopEVA()
+void LEM::StopEVA(bool isCDR)
 
 {
 	// Called by LEVA vessel during destruction
-	CDREVA_IP = false;
+	if (isCDR)
+	{
+		EVA_IP[0] = false;
+	}
+	else
+	{
+		EVA_IP[1] = false;
+	}
 }
 
 void LEM::SetLmVesselDockStage()

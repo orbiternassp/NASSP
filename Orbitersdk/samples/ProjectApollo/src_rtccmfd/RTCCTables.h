@@ -338,7 +338,7 @@ struct EMSMISSInputTable
 	//Right limit of ephemeris (time to end ephemeris)
 	double EphemerisRightLimitGMT;
 	//Minimum time between ephemeris points
-	double MinEphemDT;
+	double MinEphemDT = 0.0;
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame = 2;
 	//Minimum number of points desired in ephemeris
@@ -487,7 +487,7 @@ struct ReentryConstraintsTable
 	ReentryConstraintsDefinition entry;
 };
 
-struct RetrofireDisplayParametersTable
+struct RetrofireDisplayParametersTableData
 {
 	//0 = good data, +1 = no data, -1 = bad data
 	int Indicator = 1;
@@ -560,6 +560,12 @@ struct RetrofireDisplayParametersTable
 	double H_Sep;
 	double H_apo_sep, H_peri_sep;
 	double P_G_Sep, Y_G_Sep;
+};
+
+struct RetrofireDisplayParametersTable
+{
+	//Primary, Contingency, Manual
+	RetrofireDisplayParametersTableData data[3];
 };
 
 struct TimeConstraintsTable

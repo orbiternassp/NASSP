@@ -317,7 +317,7 @@ void SCERA1::Timestep()
 	//Deadband select (wide) (GH1603)
 	SA3.SetOutput(1, lem->DeadBandSwitch.IsUp() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204());
 	//Ascent engine arm (GH1230)
-	SA3.SetOutput(2, lem->EngineArmSwitch.IsUp() && lem->SCS_ENG_ARM_CB.IsPowered());
+	SA3.SetOutput(2, lem->scca1.GetK206());
 	//RCS thrust chamber pressure A2A (GR5041)
 	SA3.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_A2A) > 0.1);
 	//RCS thrust chamber pressure B2L (GR5042)
