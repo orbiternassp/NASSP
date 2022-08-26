@@ -172,21 +172,21 @@ void MCC::Init(){
 	GroundStations[1].DownTlmCaps = GSDT_USB;
 	GroundStations[1].UpTlmCaps = GSCC_USB;
 	GroundStations[1].StationPurpose = GSPT_LV_CUTOFF|GSPT_NEAR_SPACE;
-	GroundStations[1].CommCaps = 0;
-	GroundStations[1].USBCaps = 0;
+	GroundStations[1].CommCaps = GSGC_DATAHISPEED|GSGC_TELETYPE|GSGC_SCAMA_VOICE|GSGC_VHFAG_VOICE|GSGC_VIDEO;
+	GroundStations[1].USBCaps = GSSC_VOICE|GSSC_COMMAND|GSSC_TELEMETRY;
 	GroundStations[1].TrackingCaps = 0;
 	GroundStations[1].Active = true;
 
-	sprintf(GroundStations[2].Name,"ASCENSION"); sprintf(GroundStations[2].Code,"ASC");
+	sprintf(GroundStations[2].Name,"ASCENSION"); sprintf(GroundStations[2].Code,"ACN");
 	GroundStations[2].Position[0] = -7.94354; GroundStations[2].Position[1] = -14.37105;
 	GroundStations[2].SBandAntenna = GSSA_9METER;
 	GroundStations[2].HasAcqAid = true;
 	GroundStations[2].DownTlmCaps = GSDT_USB|GSDT_VHF;
 	GroundStations[2].UpTlmCaps = GSCC_USB;
 	GroundStations[2].StationPurpose = GSPT_NEAR_SPACE;
-	GroundStations[2].CommCaps = 0;
-	GroundStations[2].USBCaps = 0;
-	GroundStations[2].TrackingCaps = GSTK_CBAND_LOWSPEED;
+	GroundStations[2].CommCaps = GSGC_DATAHISPEED|GSGC_TELETYPE|GSGC_SCAMA_VOICE|GSGC_VHFAG_VOICE|GSGC_VIDEO;
+	GroundStations[2].USBCaps = GSSC_VOICE|GSSC_COMMAND|GSSC_TELEMETRY;
+	GroundStations[2].TrackingCaps = GSTK_USB;
 	GroundStations[2].Active = true;
 
 	sprintf(GroundStations[3].Name,"BERMUDA"); sprintf(GroundStations[3].Code,"BDA");
@@ -457,10 +457,9 @@ void MCC::Init(){
 	GroundStations[35].Position[0] = -7.969444; GroundStations[35].Position[1] = -14.393889;
 	GroundStations[35].HasRadar = true;
 	GroundStations[35].HasAcqAid = true;
-	GroundStations[35].SBandAntenna = GSSA_9METER;
 	GroundStations[35].StationPurpose = GSPT_ORBITAL;
-	GroundStations[35].TrackingCaps = GSTK_USB;
-	GroundStations[35].USBCaps = GSSC_VOICE|GSSC_COMMAND|GSSC_TELEMETRY;
+	GroundStations[35].TrackingCaps = GSTK_CBAND_LOWSPEED;
+	GroundStations[35].USBCaps = 0;
 	GroundStations[35].CommCaps = GSGC_DATAHISPEED|GSGC_TELETYPE|GSGC_SCAMA_VOICE|GSGC_VHFAG_VOICE|GSGC_VIDEO;
 	GroundStations[35].Active = true;
 
