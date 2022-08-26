@@ -105,6 +105,7 @@ void IMU::LogTimeStep(long simt)
 	timeline = ctime(&(tstruct.time));
 	strcpy(buffer, timeline + 11);
 		
+	/* // Commented out because this broke at some point but nobody tried building as Debug, and IDK how to fix it.
 	fprintf(logFile, "%.8s.%03hu TimeStep                   Orbiter %.2f %.2f %.2f   IMU %.2f %.2f %.2f\n", buffer, tstruct.millitm, 
 			radToDeg(Orbiter.Attitude.X),
 			radToDeg(Orbiter.Attitude.Y),
@@ -114,6 +115,7 @@ void IMU::LogTimeStep(long simt)
 			radToDeg(Gimbal.Z));
 
 	fflush(logFile);
+	*/
 #endif
 }
 
