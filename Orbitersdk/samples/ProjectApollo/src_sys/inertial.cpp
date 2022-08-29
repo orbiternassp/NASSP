@@ -29,6 +29,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 InertialData::InertialData(VESSEL *vessel) {
 	this->vessel = vessel;
 	accel = _V(0.0, 0.0, 0.0);
+	dVInitialized = false;
 }
 
 VECTOR3 InertialData::GetGravityVector() {
