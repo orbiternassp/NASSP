@@ -86,7 +86,7 @@ private:
 		rhoEarth,
 		rhoMoon,
 		rhoMars,
-		rhoJuputer,
+		rhoJupiter,
 		rhoSaturn,
 	};
 

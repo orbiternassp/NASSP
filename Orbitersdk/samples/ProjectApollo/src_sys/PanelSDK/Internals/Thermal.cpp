@@ -210,6 +210,18 @@ void Thermal_engine::Radiative(double dt) {
 		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMars];
 		DifferentialIR = 0.15;
 	}
+	else if (!strcmp(planetName, "Jupiter")) {
+		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoJupiter];
+		DifferentialIR = 0.15;
+	}
+	else if (!strcmp(planetName, "Saturn")) {
+		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoSaturn];
+		DifferentialIR = 0.15;
+	}
+	else if (!strcmp(planetName, "Mercury")) {
+		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMercury];
+		DifferentialIR = 0.15;
+	}
 
 	if (!planetIsSun) {
 		VECTOR3 LocalR;
