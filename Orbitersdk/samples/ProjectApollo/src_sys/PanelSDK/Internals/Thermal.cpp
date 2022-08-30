@@ -192,40 +192,38 @@ void Thermal_engine::Radiative(double dt) {
 	//Flux=q*T^4*Area;
 
 	float q = (float) 5.67e-8;//Stefan-Boltzmann
-	float Q = 0, Q0 = 0, Q1 = 0, Q2 = 0, Q3 = 0, Q4 = 0;
+	float Q = 0;
+
+	float PlanetRadiation = 0.0;
+	float SolarRadiation = 0.0;;
+	float SelfRadiation = 0.0;;
+	float AtmosphericConvection = 0.0;
+
 	therm_obj *runner;
 	runner=List.next_t;
 
 	while (runner) {
+		PlanetRadiation = 0.0;
+		SolarRadiation = 0.0;;
+		SelfRadiation = 0.0;;
+		AtmosphericConvection = 0.0;;
+		
+		if (InSun || planetIsSun) {
+			SolarRadiation = (float)(1372.0 * (runner->pos % sun)); //we are not behind planet,
+		}	
+
 		if (planetIsEarth) {
-			Q = (float) (190.0 * (runner->pos % myr) * PlanetDistanceFactor); //blank radiation from Earth
-		} else {
-			Q = 0;
+			PlanetRadiation = (float)(190.0 * (runner->pos % myr) * PlanetDistanceFactor); //blank radiation from Earth
 		}
-		Q0 = Q;
-		if (Q < 0.0) Q = 0.0;
+		if (!planetIsSun && InPlanet > 0) {
+			PlanetRadiation += (float)(300.0 * (runner->pos % myr) * InPlanet);  //300W from planet's albedo
+		}
 		
-		Q1 = 0.0;
-		if (InSun || planetIsSun) Q1 = (float) (1372.0 * (runner->pos % sun));	//we are not behind planet,
-		if (Q1 > 0)	Q += Q1;
+		SelfRadiation = (float) (q * pow(runner->Temp - 2.7, 4));
 
-		Q2 = 0.0;
-		if (!planetIsSun && InPlanet > 0) Q2 = (float) (300.0 * (runner->pos % myr) * InPlanet);  //300W from planet's albedo
-		if (Q2 > 0) Q += Q2;
-
-		/*Q3 = (float) (q * pow(runner->Temp - 3.0, 4));
-		Q -= Q3;*/
-
+		AtmosphericConvection = (float)(100. * runner->Area * (runner->Temp - v->GetAtmTemperature())*v->GetAtmDensity() / 1.225);
 		
-		Q3 = (float) (q * pow(runner->Temp - 2.7, 4));
-		Q -= Q3;
-
-		Q4 = (float)(100. * runner->Area * (runner->Temp - v->GetAtmTemperature())*v->GetAtmDensity() / 1.225);
-		Q -= Q4;
-		
-
-		if (ObjToDebug && runner == ObjToDebug) 
-			sprintf(oapiDebugString(), "Earth %.1f Sun %.1f Albedo %.1f Space %.1f Ges %.1f Temp %.1f", (Q0>0?Q0:0) * runner->Area * runner->isolation, (Q1>0?Q1:0) * runner->Area * runner->isolation, (Q2>0?Q2:0) * runner->Area * runner->isolation, -Q3 * runner->Area * runner->isolation, Q * runner->Area * runner->isolation, runner->GetTemp());
+		Q = SolarRadiation + PlanetRadiation - SelfRadiation - AtmosphericConvection;
 
 		runner->thermic(Q * runner->Area * dt * runner->isolation);
 		runner=runner->next_t;
