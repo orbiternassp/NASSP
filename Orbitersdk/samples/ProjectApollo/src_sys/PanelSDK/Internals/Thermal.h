@@ -47,6 +47,14 @@ class therm_obj			//thermal object.an object that can receive thermal energy
   virtual void thermic( double _en);//thermic function.. negative values, if this looses energy
   void SetTemp(double _t);	//this is a hack, shouldn't be used. Violates energy conservation
   double GetTemp();			//get temp
+
+  enum thermalPolar {
+	  directional,
+	  cardioid,
+	  subcardioid,
+  };
+
+  thermalPolar polar;
 };
 
 class Thermal_engine  //main thermal parent. Handles most thermic problems

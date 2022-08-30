@@ -39,6 +39,7 @@ therm_obj::therm_obj()
 	isolation = 0.0;
 	Area = 0.0;
 	pos = _vector3(0, 0, 0);
+	polar = directional;
 }
 
 void therm_obj::thermic(double _en) {
@@ -201,6 +202,14 @@ void Thermal_engine::Radiative(double dt) {
 		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMoon];
 		DifferentialIR = 0.996830182;
 	}
+	else if (!strcmp(planetName, "Venus")) {
+		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoVenus];
+		DifferentialIR = 0.15;
+	}
+	else if (!strcmp(planetName, "Mars")) {
+		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMars];
+		DifferentialIR = 0.15;
+	}
 
 	if (!planetIsSun) {
 		VECTOR3 LocalR;
@@ -229,14 +238,36 @@ void Thermal_engine::Radiative(double dt) {
 		float SolarRadiation = 0.0;
 		float SelfRadiation = 0.0;
 		float AtmosphericConvection = 0.0;
+
+		double SunIncidence, PlanetIncidence = 0.0;
+
+		if (runner->polar == therm_obj::directional) {
+			SunIncidence = runner->pos % sun;
+			PlanetIncidence = runner->pos % myr;
+
+			if (SunIncidence < 0.0) { SunIncidence = 0.0; }
+			if (PlanetIncidence < 0.0) { PlanetIncidence = 0.0; }
+		}
+		else if (runner->polar == therm_obj::cardioid) {
+			SunIncidence = sqrt((runner->pos % sun) + 1.0)/sqrt(2.0);
+			PlanetIncidence = sqrt((runner->pos % myr) + 1.0) / sqrt(2.0);
+		}
+		else if (runner->polar == therm_obj::subcardioid) {
+			SunIncidence = sqrt((runner->pos % sun) + 2.0) / sqrt(3.0);
+			PlanetIncidence = sqrt((runner->pos % myr) + 2.0) / sqrt(3.0);
+		}
+		else { //omni
+			SunIncidence = 1.0;
+			PlanetIncidence = 1.0;
+		}
 		
 		if (InSun || planetIsSun) {
-			SolarRadiation = (float)(SolarFlux * (runner->pos % sun)); //we are not behind planet,
+			SolarRadiation = (float)(SolarFlux * SunIncidence); //we are not behind planet,
 		}	
 
 		if (!planetIsSun) {
-			PlanetInfaredRadiation = (float)(PlanetIRFlux * (runner->pos % myr) * PlanetDistanceFactor * (2 * InPlanet * DifferentialIR + (1 - DifferentialIR))); //infared radiation from the planet
-			PlanetAlbedoRadiation += (float)(PlanetaryBondAlbedo * SolarFlux * (runner->pos % myr) * InPlanet);  //300W from planet's albedo
+			PlanetInfaredRadiation = (float)(PlanetIRFlux * PlanetIncidence * PlanetDistanceFactor * (2 * InPlanet * DifferentialIR + (1 - DifferentialIR))); //infared radiation from the planet
+			PlanetAlbedoRadiation += (float)(PlanetaryBondAlbedo * SolarFlux * PlanetIncidence * InPlanet);  //300W from planet's albedo
 		}
 		
 		SelfRadiation = (float) (q * pow(runner->Temp - 2.7, 4));
