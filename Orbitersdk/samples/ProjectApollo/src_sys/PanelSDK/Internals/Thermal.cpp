@@ -288,8 +288,13 @@ void Thermal_engine::Radiative(double dt) {
 		
 		Q = SolarRadiation + PlanetAlbedoRadiation + PlanetInfaredRadiation - SelfRadiation - AtmosphericConvection;
 
+		if (ObjToDebug && runner == ObjToDebug) {
+			sprintf(oapiDebugString(), "SolarRadiation %lf, PlanetAlbedoRadiation %lf, PlanetInfaredRadiation %lf, SelfRadiation %lf, AtmosphericConvection %lf, Temperature %lf",
+				SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp());
+		}
+
 		runner->thermic(Q * runner->Area * dt * runner->isolation);
-		runner=runner->next_t;
+		runner = runner->next_t;
 	}
 }
 
