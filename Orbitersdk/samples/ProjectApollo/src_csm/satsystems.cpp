@@ -1027,8 +1027,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double* gsesechxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:POWER");
 	double* gseradTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:GSERADIATOR:TEMP");
 	double* isonGSEchiller = (double*)Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:ISON");
+	double* gseprimhxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGSEHEATEXCHANGER:POWER");
+	double* gsesechxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:POWER");
+	double* gseradTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:GSERADIATOR:TEMP");
+	double* isonGSEchiller = (double*)Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:ISON");
 	*/
-
 
 //sprintf(oapiDebugString(), "Prim: %.3f Sec: %.3f RadT: %.3f", *gseprimhxPower, *gsesechxPower, KelvinToFahrenheit(*gseradTemp));
 //sprintf(oapiDebugString(), "Pwr %1f HX %.3f RadT %.3f Acc %.3f RadI %.3f RadO %.3f EvapI %.3f EvapO %.3f", *isonGSEchiller, *gseprimhxPower, KelvinToFahrenheit(*gseradTemp), KelvinToFahrenheit(*primaccumTemp), KelvinToFahrenheit(*primradinTemp), KelvinToFahrenheit(*primradoutTemp), KelvinToFahrenheit(*primevapinTemp), KelvinToFahrenheit(*primevapoutTemp));
