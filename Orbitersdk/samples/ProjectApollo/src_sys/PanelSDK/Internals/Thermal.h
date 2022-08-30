@@ -30,6 +30,7 @@
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 
+
 class therm_obj			//thermal object.an object that can receive thermal energy
 { public:
 
@@ -51,37 +52,48 @@ class therm_obj			//thermal object.an object that can receive thermal energy
 class Thermal_engine  //main thermal parent. Handles most thermic problems
 {
 public:
-  Thermal_engine();		//basic constructor
-  ~Thermal_engine();	//basic destructor
+	Thermal_engine();		//basic constructor
+	~Thermal_engine();	//basic destructor
 
-  void InitThermal();	//builds a bunch of tables we'll need at runtime
+	void InitThermal();	//builds a bunch of tables we'll need at runtime
 
-  void GetSun();
-  void Conductive(double dt);	//runs the conductive calculations inbetween the thermal objects
-  void Radiative(double dt);	//- II -   radiative   - II -, only for external objects..
+	void GetSun();
+	void Conductive(double dt);	//runs the conductive calculations inbetween the thermal objects
+	void Radiative(double dt);	//- II -   radiative   - II -, only for external objects..
 
-  float *distance_matrix;	//table holding distances from item x to item y
-  int NumberOfObjects;		//in thr engine
-  therm_obj List;
-  therm_obj* AddThermalObject(therm_obj *n_obj, bool debug = false);
-  void RemoveThermalObject(therm_obj *n_obj);
-  therm_obj* GetElement(int i);
-  void Save(FILEHANDLE scn);
-  void Load(FILEHANDLE scn);
-  VESSEL *v;
+	float* distance_matrix;	//table holding distances from item x to item y
+	int NumberOfObjects;		//in thr engine
+	therm_obj List;
+	therm_obj* AddThermalObject(therm_obj* n_obj, bool debug = false);
+	void RemoveThermalObject(therm_obj* n_obj);
+	therm_obj* GetElement(int i);
+	void Save(FILEHANDLE scn);
+	void Load(FILEHANDLE scn);
+	VESSEL* v;
 
 private:
-  OBJHANDLE Planet;
-  float pl_radius;
-  vector3 myr;
-  vector3 sun;
-  VECTOR3 ToPlanet;
-  VECTOR3 ToSun;
-  int InSun;
-  double InPlanet;
-  double PlanetDistanceFactor;
+	enum PlanetBondAlbedoIndex {
+		rhoMercury,
+		rhoVenus,
+		rhoEarth,
+		rhoMoon,
+		rhoMars,
+		rhoJuputer,
+		rhoSaturn,
+	};
 
-  therm_obj* ObjToDebug;
+	double PlanetBondAlbedo[7];
+	OBJHANDLE Planet;
+	float pl_radius;
+	vector3 myr;
+	vector3 sun;
+	VECTOR3 ToPlanet;
+	VECTOR3 ToSun;
+	int InSun;
+	double InPlanet;
+	double PlanetDistanceFactor;
+
+	therm_obj* ObjToDebug;
 };
 
 ///

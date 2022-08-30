@@ -69,6 +69,15 @@ Thermal_engine::Thermal_engine() {
 	InPlanet = 0;
 
 	ObjToDebug = NULL;
+
+	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMercury] = 0.088;
+	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoVenus] = 0.76;
+	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoEarth] = 0.306;
+	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMoon] = 0.11;
+	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMars] = 0.25;
+	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoJuputer] = 0.503;
+	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoSaturn] = 0.342;
+
 }
 
 void Thermal_engine::Save(FILEHANDLE scn)
@@ -173,12 +182,25 @@ void Thermal_engine::Radiative(double dt) {
 
 	char planetName[1000];
 	bool planetIsSun = false;
-	bool planetIsEarth = false;
+	double PlanetaryBondAlbedo = 0.0;
 
 	oapiGetObjectName(Planet, planetName, 255);
 
-	if (!strcmp(planetName, "Sun")) planetIsSun = true;
-	if (!strcmp(planetName, "Earth")) planetIsEarth = true;
+	double SolarFlux = 3.014607552E+25 / (length2(LocalS)); // W/m^2
+	double PlanetIRFlux = 0.0;
+	double DifferentialIR = 0.0;
+
+	if (!strcmp(planetName, "Sun")) { 
+		planetIsSun = true; 
+	}
+	else if (!strcmp(planetName, "Earth")) {
+		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoEarth];
+		DifferentialIR = 0.15;
+	}
+	else if (!strcmp(planetName, "Moon")) {
+		PlanetaryBondAlbedo = PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMoon];
+		DifferentialIR = 0.996830182;
+	}
 
 	if (!planetIsSun) {
 		VECTOR3 LocalR;
@@ -187,43 +209,41 @@ void Thermal_engine::Radiative(double dt) {
 						   ToSun.z - ToPlanet.z), LocalR);
 		myr = _vector3(LocalR.x, LocalR.y, LocalR.z);
 		myr.selfnormalize();
+
+		VECTOR3 PlanetDistanceToSun;
+		oapiGetGlobalPos(Planet, &PlanetDistanceToSun);
+		double PlanetIRFlux = (3.014607552E+25 / (length2(PlanetDistanceToSun)))*(1-PlanetaryBondAlbedo)/4.0; // W/m^2
 	}
 
-	//Flux=q*T^4*Area;
+	//https://tfaws.nasa.gov/wp-content/uploads/On-Orbit_Thermal_Environments_TFAWS_2014.pdf
 
-	float q = (float) 5.67e-8;//Stefan-Boltzmann
-	float Q = 0;
-
-	float PlanetRadiation = 0.0;
-	float SolarRadiation = 0.0;;
-	float SelfRadiation = 0.0;;
-	float AtmosphericConvection = 0.0;
+	const float q = (float)5.67e-8;//Stefan-Boltzmann
 
 	therm_obj *runner;
 	runner=List.next_t;
 
 	while (runner) {
-		PlanetRadiation = 0.0;
-		SolarRadiation = 0.0;;
-		SelfRadiation = 0.0;;
-		AtmosphericConvection = 0.0;;
+		float Q = 0; //Flux=q*T^4*Area;
+		float PlanetAlbedoRadiation = 0.0;
+		float PlanetInfaredRadiation = 0.0;
+		float SolarRadiation = 0.0;
+		float SelfRadiation = 0.0;
+		float AtmosphericConvection = 0.0;
 		
 		if (InSun || planetIsSun) {
-			SolarRadiation = (float)(1372.0 * (runner->pos % sun)); //we are not behind planet,
+			SolarRadiation = (float)(SolarFlux * (runner->pos % sun)); //we are not behind planet,
 		}	
 
-		if (planetIsEarth) {
-			PlanetRadiation = (float)(190.0 * (runner->pos % myr) * PlanetDistanceFactor); //blank radiation from Earth
-		}
-		if (!planetIsSun && InPlanet > 0) {
-			PlanetRadiation += (float)(300.0 * (runner->pos % myr) * InPlanet);  //300W from planet's albedo
+		if (!planetIsSun) {
+			PlanetInfaredRadiation = (float)(PlanetIRFlux * (runner->pos % myr) * PlanetDistanceFactor * (2 * InPlanet * DifferentialIR + (1 - DifferentialIR))); //infared radiation from the planet
+			PlanetAlbedoRadiation += (float)(PlanetaryBondAlbedo * SolarFlux * (runner->pos % myr) * InPlanet);  //300W from planet's albedo
 		}
 		
 		SelfRadiation = (float) (q * pow(runner->Temp - 2.7, 4));
 
 		AtmosphericConvection = (float)(100. * runner->Area * (runner->Temp - v->GetAtmTemperature())*v->GetAtmDensity() / 1.225);
 		
-		Q = SolarRadiation + PlanetRadiation - SelfRadiation - AtmosphericConvection;
+		Q = SolarRadiation + PlanetAlbedoRadiation + PlanetInfaredRadiation - SelfRadiation - AtmosphericConvection;
 
 		runner->thermic(Q * runner->Area * dt * runner->isolation);
 		runner=runner->next_t;
