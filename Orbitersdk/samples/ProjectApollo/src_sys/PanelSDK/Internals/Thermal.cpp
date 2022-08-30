@@ -76,7 +76,7 @@ Thermal_engine::Thermal_engine() {
 	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoEarth] = 0.306;
 	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMoon] = 0.11;
 	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMars] = 0.25;
-	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoJuputer] = 0.503;
+	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoJupiter] = 0.503;
 	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoSaturn] = 0.342;
 
 }
