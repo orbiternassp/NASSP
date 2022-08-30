@@ -68,8 +68,9 @@ public:
   therm_obj* GetElement(int i);
   void Save(FILEHANDLE scn);
   void Load(FILEHANDLE scn);
-
   VESSEL *v;
+
+private:
   OBJHANDLE Planet;
   float pl_radius;
   vector3 myr;
