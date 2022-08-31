@@ -269,11 +269,15 @@ void H_system::Create_h_Tank(char *line) {
 			line = ReadConfigLine();
 		} while (line == NULL);
 	}
+
+	bool DebugThisTank = false;
+	if (!strcmp(name, "SUITCIRCUITMANIFOLD")) { DebugThisTank = true; }
+
 	new_one->mass=new_one->space.GetMass();//get all the mass,etc..
 	new_one->space.GetMaxSub();//recompute sub_number;
 	new_one->energy=new_one->space.GetQ();//sum up Qs
 	new_one->Original_volume=volume;
-	P_thermal->AddThermalObject(new_one);
+	P_thermal->AddThermalObject(new_one, true);
 	if (isol)
 		new_one->isolation=isol;
 	else

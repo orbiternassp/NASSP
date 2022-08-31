@@ -279,7 +279,7 @@ void Thermal_engine::Radiative(double dt) {
 
 		if (!planetIsSun) {
 			PlanetInfaredRadiation = (float)(PlanetIRFlux * PlanetIncidence * PlanetDistanceFactor * (2 * InPlanet * DifferentialIR + (1 - DifferentialIR))); //infared radiation from the planet
-			PlanetAlbedoRadiation += (float)(PlanetaryBondAlbedo * SolarFlux * PlanetIncidence * InPlanet);  //300W from planet's albedo
+			PlanetAlbedoRadiation = (float)(PlanetaryBondAlbedo * SolarFlux * PlanetIncidence * InPlanet);  //300W from planet's albedo
 		}
 		
 		SelfRadiation = (float) (q * pow(runner->Temp - 2.7, 4));
@@ -289,7 +289,7 @@ void Thermal_engine::Radiative(double dt) {
 		Q = SolarRadiation + PlanetAlbedoRadiation + PlanetInfaredRadiation - SelfRadiation - AtmosphericConvection;
 
 		if (ObjToDebug && runner == ObjToDebug) {
-			sprintf(oapiDebugString(), "SolarRadiation %lf, PlanetAlbedoRadiation %lf, PlanetInfaredRadiation %lf, SelfRadiation %lf, AtmosphericConvection %lf, Temperature %lf",
+			sprintf(oapiDebugString(), "SolarRadiation %f, PlanetAlbedoRadiation %f, PlanetInfaredRadiation %f, SelfRadiation %f, AtmosphericConvection %f, Temperature %lf",
 				SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp());
 		}
 
