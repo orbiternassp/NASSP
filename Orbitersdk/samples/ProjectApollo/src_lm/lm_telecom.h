@@ -22,6 +22,9 @@
 
   **************************************************************************/
 
+#include "RF_calc.h"
+#include "paCBGmessageID.h"
+
 /* PCM DOWN-TELEMETRY
 
 	HBR FRAME:
@@ -334,8 +337,7 @@ public:
 	double LEM_SteerableAntGain;
 	double LEM_SteerableAntFrequency;
 	double LEM_SteerableAntWavelength;
-	double Gain85ft;
-	double Power85ft;
+	RFCALC_RFProperties GroundTransmitterRFProperties;
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
@@ -370,8 +372,7 @@ public:
 
 	double OMNIWavelength;
 	double OMNIFrequency;
-	double Gain85ft;
-	double Power85ft;
+	RFCALC_RFProperties GroundTransmitterRFProperties;
 	double OMNI_Gain;
 protected:
 	LEM *lem;					// Ship we're installed in
