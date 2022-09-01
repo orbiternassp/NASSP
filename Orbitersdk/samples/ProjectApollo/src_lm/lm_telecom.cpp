@@ -522,9 +522,9 @@ unsigned char LM_PCM::scale_data(double data, double low, double high)
 	if(data <= low){  return 0; }
 	
 	// Now figure step value
-	double step = ( ( high - low ) / 256.0);
+	double step = ( ( high - low ) / 253.0);
 	// and return result
-	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
+	return static_cast<unsigned char>( ( ( data - low ) / step ) + 1.5 );
 }
 
 unsigned char LM_PCM::scale_scea(double data)
