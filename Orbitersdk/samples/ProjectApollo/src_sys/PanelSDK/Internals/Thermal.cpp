@@ -69,6 +69,11 @@ Thermal_engine::Thermal_engine() {
 	InSun = 0;
 	InPlanet = 0;
 
+	PlanetRelPos = _V(1.0, 0.0, 0.0);
+	PlanetRelPosNorm = _V(1.0, 0.0, 0.0);
+	SunRelPos = _V(1.0, 0.0, 0.0); 
+	SunRelPosNorm = _V(1.0, 0.0, 0.0);
+
 	ObjToDebug = NULL;
 
 	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMercury] = 0.088;
@@ -149,37 +154,38 @@ void Thermal_engine::InitThermal()
 	}
 }
 
-void Thermal_engine::GetSun() {
 
-	Planet = v->GetGravityRef();
-	pl_radius = (float) oapiGetSize(Planet);
-	v->GetRelativePos(Planet, ToPlanet);
-	v->GetGlobalPos(ToSun);
-
-	myr = _vector3(ToPlanet.x, ToPlanet.y, ToPlanet.z);
-	sun = _vector3(ToSun.x, ToSun.y, ToSun.z);
-	PlanetDistanceFactor = (pow(pl_radius, 2)) / myr.sqmod();
+void Thermal_engine::Radiative(double dt){
 	
-	float angle = (float) myr.angle(sun);	
-	if (angle > asin(pl_radius / myr.mod())) 
+	Planet = v->GetGravityRef();
+	PlanetRadius = oapiGetSize(Planet);
+	v->GetRelativePos(Planet, PlanetRelPos);
+
+	oapiGetGlobalPos(Planet, &PlanetGlobalPos);
+	v->Global2Local(PlanetGlobalPos, PlanetRelPosNorm);
+	PlanetRelPosNorm = unit(PlanetRelPosNorm);
+
+	v->Global2Local(_V(0.0, 0.0, 0.0), SunRelPosNorm);
+	SunRelPosNorm = unit(SunRelPosNorm);
+	
+
+	PlanetDistanceFactor = (pow(PlanetRadius, 2)) / length2(PlanetRelPos);
+	double angle = acos(dotp(PlanetRelPosNorm, SunRelPosNorm));
+
+	if (angle > asin(PlanetRadius / length(PlanetRelPos))) {
 		InSun = true;
-	else 
+	}
+	else {
 		InSun = false;
+	}
 
-	if (angle > PI / 2.0) 
+	if (angle > PI / 2.0) {
 		InPlanet = sin(angle - PI / 2.0) * PlanetDistanceFactor; // percentage of lighted from planet
-	else 
+	} 
+	else {
 		InPlanet = 0.0;
-}
+	}
 
-void Thermal_engine::Radiative(double dt) {
-
-	GetSun();// need to convert the myr and sun vectors to local coordinates
-
-	VECTOR3 LocalS;
-	v->Global2Local(_V(ToSun.x / 2.0, ToSun.y / 2.0, ToSun.z / 2.0), LocalS);
-	sun = _vector3(LocalS.x, LocalS.y, LocalS.z);
-	sun.selfnormalize();
 
 	char planetName[1000];
 	bool planetIsSun = false;
@@ -187,7 +193,7 @@ void Thermal_engine::Radiative(double dt) {
 
 	oapiGetObjectName(Planet, planetName, 255);
 
-	double SolarFlux = 3.014607552E+25 / (length2(LocalS)); // W/m^2
+	double SolarFlux = 3.014607552E+25 / (length2(SunRelPos)); // W/m^2
 	double PlanetIRFlux = 0.0;
 	double DifferentialIR = 0.0;
 
@@ -224,49 +230,43 @@ void Thermal_engine::Radiative(double dt) {
 	}
 
 	if (!planetIsSun) {
-		VECTOR3 LocalR;
-		v->Global2Local(_V(ToSun.x - ToPlanet.x,
-  	  					   ToSun.y - ToPlanet.y,
-						   ToSun.z - ToPlanet.z), LocalR);
-		myr = _vector3(LocalR.x, LocalR.y, LocalR.z);
-		myr.selfnormalize();
-
 		VECTOR3 PlanetDistanceToSun;
 		oapiGetGlobalPos(Planet, &PlanetDistanceToSun);
-		double PlanetIRFlux = (3.014607552E+25 / (length2(PlanetDistanceToSun)))*(1-PlanetaryBondAlbedo)/4.0; // W/m^2
+		PlanetIRFlux = (3.014607552E+25 / (length2(PlanetDistanceToSun))) * (1 - PlanetaryBondAlbedo) / 4.0; // W/m^2
 	}
 
 	//https://tfaws.nasa.gov/wp-content/uploads/On-Orbit_Thermal_Environments_TFAWS_2014.pdf
 
-	const float q = (float)5.67e-8;//Stefan-Boltzmann
+	const double q = 5.67e-8;//Stefan-Boltzmann
 
 	therm_obj *runner;
 	runner=List.next_t;
 
 	while (runner) {
-		float Q = 0; //Flux=q*T^4*Area;
-		float PlanetAlbedoRadiation = 0.0;
-		float PlanetInfaredRadiation = 0.0;
-		float SolarRadiation = 0.0;
-		float SelfRadiation = 0.0;
-		float AtmosphericConvection = 0.0;
-
+		double Q = 0; //Flux=q*T^4*Area;
+		double PlanetAlbedoRadiation = 0.0;
+		double PlanetInfaredRadiation = 0.0;
+		double SolarRadiation = 0.0;
+		double SelfRadiation = 0.0;
+		double AtmosphericConvection = 0.0;
 		double SunIncidence, PlanetIncidence = 0.0;
 
+		VECTOR3 SystemPosition = _V(runner->pos.x, runner->pos.y, runner->pos.z); // therm_obj::pos should eventually get converted over to a VECTOR3 and this line will not be necessary
+
 		if (runner->polar == therm_obj::directional) {
-			SunIncidence = runner->pos % sun;
-			PlanetIncidence = runner->pos % myr;
+			SunIncidence = dotp(SystemPosition,SunRelPosNorm);
+			PlanetIncidence = dotp(SystemPosition, PlanetRelPosNorm);
 
 			if (SunIncidence < 0.0) { SunIncidence = 0.0; }
 			if (PlanetIncidence < 0.0) { PlanetIncidence = 0.0; }
 		}
 		else if (runner->polar == therm_obj::cardioid) {
-			SunIncidence = sqrt((runner->pos % sun) + 1.0)/sqrt(2.0);
-			PlanetIncidence = sqrt((runner->pos % myr) + 1.0) / sqrt(2.0);
+			SunIncidence = sqrt(dotp(SystemPosition, SunRelPosNorm) + 1.0)/sqrt(2.0);
+			PlanetIncidence = sqrt(dotp(SystemPosition, PlanetRelPosNorm) + 1.0) / sqrt(2.0);
 		}
 		else if (runner->polar == therm_obj::subcardioid) {
-			SunIncidence = sqrt((runner->pos % sun) + 2.0) / sqrt(3.0);
-			PlanetIncidence = sqrt((runner->pos % myr) + 2.0) / sqrt(3.0);
+			SunIncidence = sqrt(dotp(SystemPosition, SunRelPosNorm) + 2.0) / sqrt(3.0);
+			PlanetIncidence = sqrt(dotp(SystemPosition, PlanetRelPosNorm) + 2.0) / sqrt(3.0);
 		}
 		else { //omni
 			SunIncidence = 1.0;
@@ -274,23 +274,26 @@ void Thermal_engine::Radiative(double dt) {
 		}
 		
 		if (InSun || planetIsSun) {
-			SolarRadiation = (float)(SolarFlux * SunIncidence); //we are not behind planet,
+			SolarRadiation = SolarFlux * SunIncidence; //we are not behind planet,
 		}	
 
 		if (!planetIsSun) {
-			PlanetInfaredRadiation = (float)(PlanetIRFlux * PlanetIncidence * PlanetDistanceFactor * (2 * InPlanet * DifferentialIR + (1 - DifferentialIR))); //infared radiation from the planet
-			PlanetAlbedoRadiation = (float)(PlanetaryBondAlbedo * SolarFlux * PlanetIncidence * InPlanet);  //300W from planet's albedo
+			PlanetInfaredRadiation = PlanetIRFlux * PlanetIncidence * PlanetDistanceFactor * (2 * InPlanet * DifferentialIR + (1 - DifferentialIR)); //infared radiation from the planet
+			PlanetAlbedoRadiation = PlanetaryBondAlbedo * SolarFlux * PlanetIncidence * InPlanet;  //300W from planet's albedo
 		}
 		
-		SelfRadiation = (float) (q * pow(runner->Temp - 2.7, 4));
+		SelfRadiation = q * pow(runner->Temp - 2.7, 4);
 
-		AtmosphericConvection = (float)(100. * runner->Area * (runner->Temp - v->GetAtmTemperature())*v->GetAtmDensity() / 1.225);
+		AtmosphericConvection = 100. * runner->Area * (runner->Temp - v->GetAtmTemperature())*v->GetAtmDensity() / 1.225;
 		
 		Q = SolarRadiation + PlanetAlbedoRadiation + PlanetInfaredRadiation - SelfRadiation - AtmosphericConvection;
 
 		if (ObjToDebug && runner == ObjToDebug) {
-			sprintf(oapiDebugString(), "SolarRadiation %f, PlanetAlbedoRadiation %f, PlanetInfaredRadiation %f, SelfRadiation %f, AtmosphericConvection %f, Temperature %lf",
-				SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp());
+			sprintf(oapiDebugString(), "SolarRadiation %fW, PlanetAlbedoRadiation %fW, PlanetInfaredRadiation %fW, SelfRadiation %fW, AtmosphericConvection %fW, Temp %lfK, Sun <% lf% lf% lf> Planet < % lf% lf% lf>",
+				SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp(),
+				SunRelPosNorm.x, SunRelPosNorm.y, SunRelPosNorm.z, PlanetRelPosNorm.x, PlanetRelPosNorm.y, PlanetRelPosNorm.z);
+
+			//sprintf(oapiDebugString(), "Sun <%lf %lf %lf> Planet <%lf %lf %lf>", sun.x, sun.y, sun.z, myr.x, myr.y, myr.z);
 		}
 
 		runner->thermic(Q * runner->Area * dt * runner->isolation);

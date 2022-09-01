@@ -65,7 +65,6 @@ public:
 
 	void InitThermal();	//builds a bunch of tables we'll need at runtime
 
-	void GetSun();
 	void Conductive(double dt);	//runs the conductive calculations inbetween the thermal objects
 	void Radiative(double dt);	//- II -   radiative   - II -, only for external objects..
 
@@ -92,11 +91,10 @@ private:
 
 	double PlanetBondAlbedo[7];
 	OBJHANDLE Planet;
-	float pl_radius;
-	vector3 myr;
-	vector3 sun;
-	VECTOR3 ToPlanet;
-	VECTOR3 ToSun;
+	double PlanetRadius;
+	VECTOR3 PlanetGlobalPos;
+	VECTOR3 PlanetRelPos, PlanetRelPosNorm;
+	VECTOR3 SunRelPos, SunRelPosNorm;
 	int InSun;
 	double InPlanet;
 	double PlanetDistanceFactor;
