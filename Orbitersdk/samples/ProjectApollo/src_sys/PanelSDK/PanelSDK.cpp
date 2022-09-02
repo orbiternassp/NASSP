@@ -79,6 +79,7 @@ void PanelSDK::RegisterVessel(VESSEL *vessel)
 	VESSELMGMT->vs = vessel;
 	ELECTRIC->Vessel = vessel;
 	HYDRAULIC->Vessel = vessel;
+	THERMAL->v = vessel;
 }
 
 void PanelSDK::RegisterCustomPointer(char *PointerName, void *point)

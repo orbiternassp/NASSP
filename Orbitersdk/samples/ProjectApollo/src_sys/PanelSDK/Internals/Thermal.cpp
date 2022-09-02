@@ -62,10 +62,11 @@ double therm_obj::GetTemp() {
 }
 
 Thermal_engine::Thermal_engine() {
+	v = nullptr;
 
-	List.next_t = NULL;
+	List.next_t = nullptr;
 	NumberOfObjects = 0;
-	distance_matrix = NULL;
+	distance_matrix = nullptr;
 	InSun = 0;
 	InPlanet = 0;
 
@@ -74,7 +75,7 @@ Thermal_engine::Thermal_engine() {
 	SunRelPos = _V(1.0, 0.0, 0.0); 
 	SunRelPosNorm = _V(1.0, 0.0, 0.0);
 
-	ObjToDebug = NULL;
+	ObjToDebug = nullptr;
 
 	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoMercury] = 0.088;
 	PlanetBondAlbedo[PlanetBondAlbedoIndex::rhoVenus] = 0.76;
@@ -159,14 +160,17 @@ void Thermal_engine::Radiative(double dt){
 	
 	Planet = v->GetGravityRef();
 	PlanetRadius = oapiGetSize(Planet);
-	v->GetRelativePos(Planet, PlanetRelPos);
+
+	oapiGetRelativePos(v->GetHandle(), Planet, &PlanetRelPos);
+	oapiGlobalToLocal(v->GetHandle(), &PlanetRelPos, &PlanetRelPosNorm);
+	normalise(PlanetRelPosNorm);
 
 	oapiGetGlobalPos(Planet, &PlanetGlobalPos);
-	v->Global2Local(PlanetGlobalPos, PlanetRelPosNorm);
-	PlanetRelPosNorm = unit(PlanetRelPosNorm);
 
-	v->Global2Local(_V(0.0, 0.0, 0.0), SunRelPosNorm);
-	SunRelPosNorm = unit(SunRelPosNorm);
+	const VECTOR3 SunPosition = _V(0.0, 0.0, 0.0);
+
+	oapiGlobalToLocal(v->GetHandle(), &SunPosition, &SunRelPosNorm);
+	normalise(SunRelPosNorm);
 	
 
 	PlanetDistanceFactor = (pow(PlanetRadius, 2)) / length2(PlanetRelPos);
@@ -289,11 +293,11 @@ void Thermal_engine::Radiative(double dt){
 		Q = SolarRadiation + PlanetAlbedoRadiation + PlanetInfaredRadiation - SelfRadiation - AtmosphericConvection;
 
 		if (ObjToDebug && runner == ObjToDebug) {
-			sprintf(oapiDebugString(), "SolarRadiation %fW, PlanetAlbedoRadiation %fW, PlanetInfaredRadiation %fW, SelfRadiation %fW, AtmosphericConvection %fW, Temp %lfK, Sun <% lf% lf% lf> Planet < % lf% lf% lf>",
-				SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp(),
-				SunRelPosNorm.x, SunRelPosNorm.y, SunRelPosNorm.z, PlanetRelPosNorm.x, PlanetRelPosNorm.y, PlanetRelPosNorm.z);
-
-			//sprintf(oapiDebugString(), "Sun <%lf %lf %lf> Planet <%lf %lf %lf>", sun.x, sun.y, sun.z, myr.x, myr.y, myr.z);
+			/*sprintf(oapiDebugString(), "SolarRadiation %fW, PlanetAlbedoRadiation %fW, PlanetInfaredRadiation %fW, SelfRadiation %fW, AtmosphericConvection %fW, Temp %lfK",
+				SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp());*/
+			
+			//sprintf(oapiDebugString(), "Sun <%lf %lf %lf>", SunRelPosNorm.x, SunRelPosNorm.y, SunRelPosNorm.z);
+			//sprintf(oapiDebugString(), "Planet <%lf %lf %lf>", PlanetRelPosNorm.x, PlanetRelPosNorm.y, PlanetRelPosNorm.z);
 		}
 
 		runner->thermic(Q * runner->Area * dt * runner->isolation);
