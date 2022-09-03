@@ -271,7 +271,7 @@ void H_system::Create_h_Tank(char *line) {
 	}
 
 	bool DebugThisTank = false;
-	if (!strcmp(name, "SUITCIRCUITMANIFOLD")) { DebugThisTank = true; }
+	if (!strcmp(name, "O2FUELCELL1MANIFOLD")) { DebugThisTank = true; }
 
 	new_one->mass=new_one->space.GetMass();//get all the mass,etc..
 	new_one->space.GetMaxSub();//recompute sub_number;

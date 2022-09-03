@@ -161,20 +161,27 @@ void Thermal_engine::Radiative(double dt){
 	Planet = v->GetGravityRef();
 	PlanetRadius = oapiGetSize(Planet);
 
-	oapiGetRelativePos(v->GetHandle(), Planet, &PlanetRelPos);
-	oapiGlobalToLocal(v->GetHandle(), &PlanetRelPos, &PlanetRelPosNorm);
-	normalise(PlanetRelPosNorm);
-
+	MATRIX3 VesselRotationMatrix;
+	VECTOR3 VesselPosition;
+	v->GetRotationMatrix(VesselRotationMatrix);
+	v->GetGlobalPos(VesselPosition);
 	oapiGetGlobalPos(Planet, &PlanetGlobalPos);
+	SunRelPos = -VesselPosition;
 
-	const VECTOR3 SunPosition = _V(0.0, 0.0, 0.0);
+	PlanetRelPos = PlanetGlobalPos - VesselPosition;
+	PlanetRelPosNorm = unit(tmul(VesselRotationMatrix, PlanetRelPos));
 
-	oapiGlobalToLocal(v->GetHandle(), &SunPosition, &SunRelPosNorm);
-	normalise(SunRelPosNorm);
-	
+	SunRelPosNorm = unit(tmul(VesselRotationMatrix, SunRelPos));
+
 
 	PlanetDistanceFactor = (pow(PlanetRadius, 2)) / length2(PlanetRelPos);
 	double angle = acos(dotp(PlanetRelPosNorm, SunRelPosNorm));
+
+	//VERY HELPFUL DEBUGGING CODE...
+	//if (!strcmp(v->GetName(), "Yankee-Clipper")) {
+	//	sprintf(oapiDebugString(), "Sun <%lf %lf %lf> Planet <%lf %lf %lf>", SunRelPosNorm.x, SunRelPosNorm.y, SunRelPosNorm.z, PlanetRelPosNorm.x, PlanetRelPosNorm.y, PlanetRelPosNorm.z);
+	//}
+
 
 	if (angle > asin(PlanetRadius / length(PlanetRelPos))) {
 		InSun = true;
@@ -234,9 +241,7 @@ void Thermal_engine::Radiative(double dt){
 	}
 
 	if (!planetIsSun) {
-		VECTOR3 PlanetDistanceToSun;
-		oapiGetGlobalPos(Planet, &PlanetDistanceToSun);
-		PlanetIRFlux = (3.014607552E+25 / (length2(PlanetDistanceToSun))) * (1 - PlanetaryBondAlbedo) / 4.0; // W/m^2
+		PlanetIRFlux = (3.014607552E+25 / (length2(PlanetGlobalPos))) * (1 - PlanetaryBondAlbedo) / 4.0; // W/m^2
 	}
 
 	//https://tfaws.nasa.gov/wp-content/uploads/On-Orbit_Thermal_Environments_TFAWS_2014.pdf
@@ -295,9 +300,6 @@ void Thermal_engine::Radiative(double dt){
 		if (ObjToDebug && runner == ObjToDebug) {
 			/*sprintf(oapiDebugString(), "SolarRadiation %fW, PlanetAlbedoRadiation %fW, PlanetInfaredRadiation %fW, SelfRadiation %fW, AtmosphericConvection %fW, Temp %lfK",
 				SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp());*/
-			
-			//sprintf(oapiDebugString(), "Sun <%lf %lf %lf>", SunRelPosNorm.x, SunRelPosNorm.y, SunRelPosNorm.z);
-			//sprintf(oapiDebugString(), "Planet <%lf %lf %lf>", PlanetRelPosNorm.x, PlanetRelPosNorm.y, PlanetRelPosNorm.z);
 		}
 
 		runner->thermic(Q * runner->Area * dt * runner->isolation);
