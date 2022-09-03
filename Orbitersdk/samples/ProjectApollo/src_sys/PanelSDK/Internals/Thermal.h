@@ -92,6 +92,8 @@ private:
 	double PlanetBondAlbedo[7];
 	OBJHANDLE Planet;
 	double PlanetRadius;
+	MATRIX3 VesselRotationMatrix;
+	VECTOR3 VesselPosition;
 	VECTOR3 PlanetGlobalPos;
 	VECTOR3 PlanetRelPos, PlanetRelPosNorm;
 	VECTOR3 SunRelPos, SunRelPosNorm;

@@ -161,8 +161,6 @@ void Thermal_engine::Radiative(double dt){
 	Planet = v->GetGravityRef();
 	PlanetRadius = oapiGetSize(Planet);
 
-	MATRIX3 VesselRotationMatrix;
-	VECTOR3 VesselPosition;
 	v->GetRotationMatrix(VesselRotationMatrix);
 	v->GetGlobalPos(VesselPosition);
 	oapiGetGlobalPos(Planet, &PlanetGlobalPos);
@@ -198,11 +196,11 @@ void Thermal_engine::Radiative(double dt){
 	}
 
 
-	char planetName[1000];
+	char planetName[16];
 	bool planetIsSun = false;
 	double PlanetaryBondAlbedo = 0.0;
 
-	oapiGetObjectName(Planet, planetName, 255);
+	oapiGetObjectName(Planet, planetName, 16);
 
 	double SolarFlux = 3.014607552E+25 / (length2(SunRelPos)); // W/m^2
 	double PlanetIRFlux = 0.0;
@@ -297,10 +295,10 @@ void Thermal_engine::Radiative(double dt){
 		
 		Q = SolarRadiation + PlanetAlbedoRadiation + PlanetInfaredRadiation - SelfRadiation - AtmosphericConvection;
 
-		if (ObjToDebug && runner == ObjToDebug) {
-			/*sprintf(oapiDebugString(), "SolarRadiation %fW, PlanetAlbedoRadiation %fW, PlanetInfaredRadiation %fW, SelfRadiation %fW, AtmosphericConvection %fW, Temp %lfK",
-				SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp());*/
-		}
+		//if (ObjToDebug && (runner == ObjToDebug) && (!strcmp(v->GetName(), "Eagle"))) {
+		//	sprintf(oapiDebugString(), "SolarRadiation %fW, PlanetAlbedoRadiation %fW, PlanetInfaredRadiation %fW, SelfRadiation %fW, AtmosphericConvection %fW, Temp %lfK",
+		//		SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp());
+		//}
 
 		runner->thermic(Q * runner->Area * dt * runner->isolation);
 		runner = runner->next_t;
