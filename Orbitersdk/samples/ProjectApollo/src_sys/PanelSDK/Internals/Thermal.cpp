@@ -93,24 +93,29 @@ void Thermal_engine::Load(FILEHANDLE scn)
 {};
 
 Thermal_engine::~Thermal_engine() {
-
+	 
 	if (distance_matrix) 
 		delete[] distance_matrix;
 }
 
-therm_obj* Thermal_engine::AddThermalObject(therm_obj *n_obj, bool debug) { 
+therm_obj* Thermal_engine::AddThermalObject(therm_obj *n_obj, bool debug, therm_obj::thermalPolar ThermPolar) {
 	
 	therm_obj *runner;
 	runner = &List;
 	NumberOfObjects++;
 
-	while (runner->next_t) 
+	while (runner->next_t) {
 		runner = runner->next_t;
+	}
 
 	runner->next_t = n_obj;
 	n_obj->next_t = NULL;
+	n_obj->polar = ThermPolar;
 
-	if (debug) ObjToDebug = n_obj;
+	if (debug) { 
+		ObjToDebug = n_obj; 
+	}
+
 	return n_obj;
 };
 
@@ -174,14 +179,22 @@ void Thermal_engine::Radiative(double dt){
 
 	PlanetDistanceFactor = (pow(PlanetRadius, 2)) / length2(PlanetRelPos);
 	double angle = acos(dotp(PlanetRelPosNorm, SunRelPosNorm));
+	double EclipseAngle;
+	double PlanetDistance = length(PlanetRelPos);
 
 	//VERY HELPFUL DEBUGGING CODE...
 	//if (!strcmp(v->GetName(), "Yankee-Clipper")) {
 	//	sprintf(oapiDebugString(), "Sun <%lf %lf %lf> Planet <%lf %lf %lf>", SunRelPosNorm.x, SunRelPosNorm.y, SunRelPosNorm.z, PlanetRelPosNorm.x, PlanetRelPosNorm.y, PlanetRelPosNorm.z);
 	//}
 
+	if (PlanetRadius > PlanetDistance) {
+		EclipseAngle = 90 * RAD;
+	}
+	else {
+		EclipseAngle = asin(PlanetRadius / length(PlanetRelPos));
+	}
 
-	if (angle > asin(PlanetRadius / length(PlanetRelPos))) {
+	if (angle > EclipseAngle) {
 		InSun = true;
 	}
 	else {
@@ -296,8 +309,8 @@ void Thermal_engine::Radiative(double dt){
 		Q = SolarRadiation + PlanetAlbedoRadiation + PlanetInfaredRadiation - SelfRadiation - AtmosphericConvection;
 
 		//if (ObjToDebug && (runner == ObjToDebug) && (!strcmp(v->GetName(), "Eagle"))) {
-		//	sprintf(oapiDebugString(), "SolarRadiation %fW, PlanetAlbedoRadiation %fW, PlanetInfaredRadiation %fW, SelfRadiation %fW, AtmosphericConvection %fW, Temp %lfK",
-		//		SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp());
+		//	sprintf(oapiDebugString(), "SolarRadiation %fW/m², PlanetAlbedoRadiation %fW/m², PlanetInfaredRadiation %fW/m², SelfRadiation %fW/m², AtmosphericConvection %fW/m², Temp %lfK, Angle %lf° %lf %lf",
+		//		SolarRadiation, PlanetAlbedoRadiation, PlanetInfaredRadiation, - SelfRadiation, - AtmosphericConvection, runner->GetTemp(), angle, PlanetRadius, length(PlanetRelPos));
 		//}
 
 		runner->thermic(Q * runner->Area * dt * runner->isolation);

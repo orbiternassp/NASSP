@@ -214,6 +214,8 @@ void H_system::Create_h_Vent(char *line) {
 void H_system::Create_h_Tank(char *line) {
 
 	char name[100], valvename[100];
+	char DirectionalitySpecifier;
+	therm_obj::thermalPolar Polar = therm_obj::thermalPolar::directional;
 	h_Tank *new_one;
 	vector3 pos;
 	double volume,isol=0;
@@ -221,12 +223,25 @@ void H_system::Create_h_Tank(char *line) {
 	int open;
 	h_Valve *valve;
 
-	sscanf (line+6, " %s <%lf %lf %lf> %lf %lf",
+	sscanf (line+6, " %s <%lf %lf %lf> %lf %lf %c",
 								name,
 								&pos.x,
 								&pos.y,
 								&pos.z,
-								&volume, &isol);
+								&volume, &isol, &DirectionalitySpecifier);
+
+	if (DirectionalitySpecifier == 'D') {
+		Polar = therm_obj::thermalPolar::directional;
+	}
+	else if (DirectionalitySpecifier == 'C') {
+		Polar = therm_obj::thermalPolar::cardioid;
+	}
+	else if (DirectionalitySpecifier == 'S') {
+		Polar = therm_obj::thermalPolar::subcardioid;
+	}
+	else if (DirectionalitySpecifier == 'O') {
+		Polar = therm_obj::thermalPolar::omni;
+	}
 
 	new_one=(h_Tank*)AddSystem(new h_Tank(name,pos, volume));
 
@@ -271,13 +286,13 @@ void H_system::Create_h_Tank(char *line) {
 	}
 
 	bool DebugThisTank = false;
-	/*if (!strcmp(name, "\0")) { DebugThisTank = true; }*/
+	/*if (!strcmp(name, "CABIN")) { DebugThisTank = true; }*/
 
 	new_one->mass=new_one->space.GetMass();//get all the mass,etc..
 	new_one->space.GetMaxSub();//recompute sub_number;
 	new_one->energy=new_one->space.GetQ();//sum up Qs
 	new_one->Original_volume=volume;
-	P_thermal->AddThermalObject(new_one, DebugThisTank);
+	P_thermal->AddThermalObject(new_one, DebugThisTank, Polar);
 	if (isol)
 		new_one->isolation=isol;
 	else

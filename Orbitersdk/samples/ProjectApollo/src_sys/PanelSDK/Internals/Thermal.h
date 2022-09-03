@@ -52,6 +52,7 @@ class therm_obj			//thermal object.an object that can receive thermal energy
 	  directional,
 	  cardioid,
 	  subcardioid,
+	  omni
   };
 
   thermalPolar polar;
@@ -71,7 +72,7 @@ public:
 	float* distance_matrix;	//table holding distances from item x to item y
 	int NumberOfObjects;		//in thr engine
 	therm_obj List;
-	therm_obj* AddThermalObject(therm_obj* n_obj, bool debug = false);
+	therm_obj* AddThermalObject(therm_obj* n_obj, bool debug = false, therm_obj::thermalPolar ThermPolar = therm_obj::thermalPolar::directional);
 	void RemoveThermalObject(therm_obj* n_obj);
 	therm_obj* GetElement(int i);
 	void Save(FILEHANDLE scn);
