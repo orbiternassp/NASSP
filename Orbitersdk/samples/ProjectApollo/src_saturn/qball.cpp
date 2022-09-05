@@ -51,9 +51,41 @@ double QBall::GetAOA()
 		{
 			aoa = 10.0*RAD;
 		}
-		else if (sat->GetDynPressure() > 100.0)
-		{
-			aoa = sat->GetAOA();
+		else {
+			/* There is no definite source on how to calculate the pressure
+			   difference measured by Q-ball, but we can safely assume that it
+			   has the form of deltap = mu*q*aoa, where mu is the unknown
+			   "gain" of the Q-ball. For each Saturn V mission where was Q-ball
+			   present (AS501-AS512), the Launch Vehicle Flight Evaluation
+			   Report gives the maximum measured deltap value and the time of
+			   the maximum as well. There are also diagrams with dynamic
+			   pressure and AOA, in the reports, so the mu value could be
+			   determined for these missions:
+			   AS501   0.0523
+			   AS502   0.0588
+			   AS503   0.0998
+			   AS504   0.0573
+			   AS505   0.0562
+			   AS506   0.0507
+			   AS507   0.0555
+			   AS508   0.0553
+			   AS509   0.0679
+			   AS510   0.0560
+			   AS511   0.0904
+			   AS512   0.0589
+			   The median of these values is 0.0568 1/degree, that is used as
+			   mu in this function. The indicator displayed the deltap in the
+			   percentage of Manual Abort Limit, defined as 3.2 psid =
+			   2.21 N/cm2. That gives the constant in this function as
+			   0.0568*10/22100 = 0.0000257 1/Pa
+			*/
+			double dynpress = sat->GetDynPressure();
+			if(dynpress > 100.0)
+			{
+				double aoa1 = sat->GetAOA();
+				double aoa2 = sat->GetSlipAngle();
+				aoa = 0.0000257*dynpress*sqrt(aoa1*aoa1 + aoa2*aoa2);
+			}
 		}
 	}
 
