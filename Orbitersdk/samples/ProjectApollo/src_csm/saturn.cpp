@@ -1472,7 +1472,7 @@ void Saturn::clbkPostStep(double simt, double simdt, double mjd)
 
 	// Do this last to override previous debug strings
 	if (nasspver != NASSP_VERSION) {
-		sprintf(oapiDebugString(), "The scenario you are using is too old (Scenario: %d, NASSP: %d). Please go here for more info: <URL>", nasspver, NASSP_VERSION);
+		sprintf(oapiDebugString(), "The scenario you are using is too old (Scenario: %d, NASSP: %d). Please go here for more info: https://nassp.space/index.php/Scenario_File_Updates", nasspver, NASSP_VERSION);
 	}
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 
