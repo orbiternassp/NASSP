@@ -432,7 +432,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
 
-
 		if (length(PZMCCDIS.data[0].DV_MCC) < 25.0*0.3048)
 		{
 			scrubbed = true;
@@ -528,11 +527,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		//Iterate LOI GET
 		double LOIFP = OrbMech::HHMMSSToSS(83.0, 25.0, 18.2); //Flight plan LOI TIG
-		if (PZMCCDIS.data[0].GET_LOI < LOIFP + 30.0*60.0)
+		if (PZMCCDIS.data[0].GET_LOI < LOIFP + 30.0*60.0 && PZMCCDIS.data[0].GET_LOI > LOIFP - 30.0*60.0)
 		{
 			double F23time = LOIFP - 10.0*60.0;
-			int hh, mm;
-			double ss;
+			int hh = 0, mm = 0;
+			double ss = 0.0;
 			while (PZMCCDIS.data[0].GET_LOI > LOIFP + 5.0 || PZMCCDIS.data[0].GET_LOI < LOIFP - 5.0)
 			{
 				char Buff[128];
@@ -544,67 +543,47 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			}
 		}
 
-		if (length(PZMCCDIS.data[0].DV_MCC) < 3.0*0.3048)
-		{
-			scrubbed = true;
+		scrubbed = false; //Mandatory hybrid transfer burn
 
-			char buffer1[1000];
+		char buffer1[1000];
+		char buffer2[1000];
+		AP11ManPADOpt manopt;
+		VECTOR3 dV_LVLH;
+		double P30TIG, GETbase;
+		int engine;
 
-			sprintf(upMessage, "MCC-2 has been scrubbed.");
-			sprintf(upDesc, "CSM state vector");
+		AP11MNV * form = (AP11MNV *)pad;
 
-			AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
+		GETbase = CalcGETBase();
 
-			sprintf(uplinkdata, "%s", buffer1);
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-			}
-		}
-		else
-		{
-			scrubbed = false;
+		//Transfer MCC plan to skeleton flight plan table
+		GMGMED("F30,1;");
 
-			char buffer1[1000];
-			char buffer2[1000];
-			AP11ManPADOpt manopt;
-			VECTOR3 dV_LVLH;
-			double P30TIG, GETbase;
-			int engine;
+		calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
+		engine = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), PZMCCDIS.data[0].DV_MCC);
+		PoweredFlightProcessor(sv, CSMmass, GETbase, PZMCCPLN.MidcourseGET, engine, LMmass, PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V, false, P30TIG, dV_LVLH);
 
-			AP11MNV * form = (AP11MNV *)pad;
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = engine;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.src;
+		manopt.vesseltype = 1;
 
-			GETbase = CalcGETBase();
+		AP11ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "MCC-2");
+		sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
 
-			//Transfer MCC plan to skeleton flight plan table
-			GMGMED("F30,1;");
+		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
+		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
-			calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
-			engine = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), PZMCCDIS.data[0].DV_MCC);
-			PoweredFlightProcessor(sv, CSMmass, GETbase, PZMCCPLN.MidcourseGET, engine, LMmass, PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V, false, P30TIG, dV_LVLH);
-
-			manopt.dV_LVLH = dV_LVLH;
-			manopt.enginetype = engine;
-			manopt.GETbase = GETbase;
-			manopt.HeadsUp = false;
-			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-			manopt.TIG = P30TIG;
-			manopt.vessel = calcParams.src;
-			manopt.vesseltype = 1;
-
-			AP11ManeuverPAD(&manopt, *form);
-			sprintf(form->purpose, "MCC-2");
-			sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
-
-			AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
-			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
-
-			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
-			}
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
 		}
 	}
 	break;
