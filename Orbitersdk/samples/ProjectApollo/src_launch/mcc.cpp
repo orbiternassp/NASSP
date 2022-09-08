@@ -41,6 +41,7 @@
 #include "MCC_Mission_D.h"
 #include "MCC_Mission_F.h"
 #include "MCC_Mission_G.h"
+#include "MCC_Mission_H1.h"
 #include "rtcc.h"
 #include "LVDC.h"
 #include "iu.h"
@@ -786,19 +787,28 @@ void MCC::TimeStep(double simdt){
 					setState(MST_SV_PRELAUNCH);
 					break;
 				case 12:
+					MissionType = MTP_H1;
+					setState(MST_SV_PRELAUNCH);
+					break;
 				case 13:
+					MissionType = MTP_H2;
+					break;
 				case 14:
-					MissionType = MTP_H;
+					MissionType = MTP_H3;
 					break;
 				case 15:
+					MissionType = MTP_J1;
+					break;
 				case 16:
+					MissionType = MTP_J2;
+					break;
 				case 17:
-					MissionType = MTP_J;
+					MissionType = MTP_J3;
 					break;
 				default:
 					// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
 					if (cm->SaturnType == SAT_SATURNV) {
-						MissionType = MTP_H;
+						MissionType = MTP_H1;
 					}
 					if (cm->SaturnType == SAT_SATURN1B) {
 						MissionType = MTP_C;
@@ -951,6 +961,9 @@ void MCC::TimeStep(double simdt){
 					case MTP_G:
 						setState(MST_G_INSERTION);
 						break;
+					case MTP_H1:
+						setState(MST_H1_INSERTION);
+						break;
 					}
 				}
 			}
@@ -993,6 +1006,12 @@ void MCC::TimeStep(double simdt){
 			* MISSION G: APOLLO 11 *
 			********************** */
 			MissionSequence_G();
+			break;
+		case MTP_H1:
+			/* *********************
+			* MISSION H1: APOLLO 12 *
+			********************** */
+			MissionSequence_H1();
 			break;
 		}
 	}
@@ -1243,7 +1262,7 @@ int MCC::subThread(){
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = 0;
 	}
-	else if (MissionType == MTP_F || MissionType == MTP_G)
+	else if (MissionType == MTP_F || MissionType == MTP_G || MissionType == MTP_H1)
 	{
 		//Try to find LEM
 		if (rtcc->calcParams.tgt == NULL)
@@ -4112,6 +4131,10 @@ void MCC::initiateAbort()
 		else if (MissionType == MTP_G)
 		{
 			setState(MST_G_ABORT_ORBIT);
+		}
+		else if (MissionType == MTP_H1)
+		{
+			setState(MST_H1_ABORT_ORBIT);
 		}
 	}
 	else if (MissionPhase == MMST_TL_COAST)

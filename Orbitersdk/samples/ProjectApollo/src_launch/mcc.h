@@ -125,13 +125,17 @@
 // MISSION G is a manned CSM and LM launched to lunar orbit for landing. Apollo 11.
 #define MTP_G				7
 // MISSION H is a manned CSM and LM launched to lunar orbit for landing and up to 2-day stay. Apollo 12-14.
-#define MTP_H				8
+#define MTP_H1				8
+#define MTP_H2				9
+#define MTP_H3				10
 // MISSION J is a manned CSM and modified LM launched to lunar orbit for landing, LRV operations, and extended stay. Apollo 15-17.
-#define MTP_J				9
+#define MTP_J1				11
+#define MTP_J2				12
+#define MTP_J3				13
 // SKYLAB is a manned CSM launched with a Saturn 1B to earth orbit to dock with the SKYLAB space station.
-#define MTP_SKYLAB			10
+#define MTP_SKYLAB			14
 // ASTP is a manned CSM launched with a Saturn 1B to earth orbit to dock with Soyuz 19.
-#define MTP_ASTP			11
+#define MTP_ASTP			15
 
 //UPDATE TYPES
 #define UTP_PADONLY				0
@@ -275,6 +279,7 @@ public:
 	void MissionSequence_D();
 	void MissionSequence_F();
 	void MissionSequence_G();
+	void MissionSequence_H1();
 
 	RTCC *rtcc;												// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
