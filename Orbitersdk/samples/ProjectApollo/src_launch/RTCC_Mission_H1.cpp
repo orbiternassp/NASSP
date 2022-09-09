@@ -40,6 +40,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	bool preliminary = false;
 	bool scrubbed = false;
 
+	double LOIFP = OrbMech::HHMMSSToSS(83.0, 25.0, 18.2); //Flight plan LOI TIG
+
 	switch (fcn) {
 	case 1: //GENERIC CMC CSM STATE VECTOR UPDATE
 	case 3: //GENERIC LGC CSM STATE VECTOR UPDATE
@@ -339,10 +341,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 	}
 	break;
-	case 16: //Evasive Maneuver
-	{
-	}
-	break;
 	case 17: //Block Data 1
 	case 18: //Block Data 2
 	{
@@ -399,6 +397,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
 		AGCDesiredREFSMMATUpdate(buffer, REFSMMAT);
+		sprintf(uplinkdata, "%s", buffer);
 
 		if (upString != NULL) {
 			// give to mcc
@@ -407,10 +406,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 	}
 	break;
-	case 20: //MCC-1 EVALUATION
 	case 21: //MCC-1 CALCULATION AND UPDATE
 	{
-		double GETbase, P30TIG, MCC1GET, CSMmass, LMmass;
+		double GETbase, P30TIG, MCC1GET, MCC2GET, CSMmass, LMmass;
 		int engine;
 		VECTOR3 dV_LVLH;
 		EphemerisData sv;
@@ -418,90 +416,107 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		double TLIbase = calcParams.TLI - 5.0*60.0 - 20.0; //Approximate TLI ignition
 
 		MCC1GET = TLIbase + 9.0*3600.0;
+		MCC2GET = TLIbase + 28.0*3600.0;
 
 		sv = StateVectorCalcEphem(calcParams.src);
 		GETbase = CalcGETBase();
 
-		PZMCCPLN.MidcourseGET = MCC1GET;
+		PZMCCPLN.MidcourseGET = MCC2GET;
 		PZMCCPLN.Config = true;
 		PZMCCPLN.Column = 1;
 		PZMCCPLN.SFPBlockNum = 1;
-		PZMCCPLN.Mode = 9;
+		PZMCCPLN.Mode = 5;
 		CSMmass = calcParams.src->GetMass();
 		LMmass = calcParams.tgt->GetMass();
 
 		TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
 
-		if (length(PZMCCDIS.data[0].DV_MCC) < 25.0*0.3048)
+		//Iterate LOI GET
+		if (PZMCCDIS.data[0].GET_LOI < LOIFP + 30.0*60.0 && PZMCCDIS.data[0].GET_LOI > LOIFP - 30.0*60.0)
+		{
+			double F23time = LOIFP - 11.0*60.0;
+			int hh = 0, mm = 0;
+			double ss = 0.0;
+			while (PZMCCDIS.data[0].GET_LOI > LOIFP + 5.0 || PZMCCDIS.data[0].GET_LOI < LOIFP - 5.0)
+			{
+				char Buff[128];
+				OrbMech::SStoHHMMSS(F23time, hh, mm, ss);
+				sprintf_s(Buff, "F23,%d:%d:%.2lf,%d:%d:%.2lf;", hh, mm, ss, hh, mm + 10, ss);
+				GMGMED(Buff);
+				TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
+				F23time = F23time + 5.0;
+			}
+		}
+
+		//Store new targeting data here, so even if we skip MCC-1 and MCC-2 these numbers are generated
+		//Store new LOI time
+		calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
+		//Transfer MCC plan to skeleton flight plan table
+		GMGMED("F30,1;");
+
+		if (length(PZMCCDIS.data[0].DV_MCC) < 188.8*0.3048)
 		{
 			scrubbed = true;
 		}
 		else
 		{
+			PZMCCPLN.MidcourseGET = MCC1GET;
+
+			TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
+
+			calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
+			//Transfer MCC plan to skeleton flight plan table
+			GMGMED("F30,1;");
+
 			engine = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), PZMCCDIS.data[0].DV_MCC);
 			PoweredFlightProcessor(sv, CSMmass, GETbase, PZMCCPLN.MidcourseGET, engine, LMmass, PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V, false, P30TIG, dV_LVLH);
 		}
 
-		//MCC-1 Evaluation
-		if (fcn == 20)
+		//MCC-1 Update
+		if (scrubbed)
 		{
-			if (scrubbed)
-			{
-				sprintf(upMessage, "MCC-1 has been scrubbed.");
-			}
-			else
-			{
-				sprintf(upMessage, "MCC-1 will have to be executed.");
+			char buffer1[1000];
+
+			sprintf(upMessage, "MCC-1 has been scrubbed.");
+			sprintf(upDesc, "CSM state vector");
+
+			AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
+
+			sprintf(uplinkdata, "%s", buffer1);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
 			}
 		}
-		//MCC-1 Update
 		else
 		{
-			if (scrubbed)
-			{
-				char buffer1[1000];
+			char buffer1[1000];
+			char buffer2[1000];
+			AP11ManPADOpt manopt;
 
-				sprintf(upMessage, "MCC-1 has been scrubbed.");
-				sprintf(upDesc, "CSM state vector");
+			AP11MNV * form = (AP11MNV *)pad;
 
-				AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
+			manopt.dV_LVLH = dV_LVLH;
+			manopt.enginetype = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), dV_LVLH);
+			manopt.GETbase = GETbase;
+			manopt.HeadsUp = false;
+			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+			manopt.TIG = P30TIG;
+			manopt.vessel = calcParams.src;
+			manopt.vesseltype = 1;
 
-				sprintf(uplinkdata, "%s", buffer1);
-				if (upString != NULL) {
-					// give to mcc
-					strncpy(upString, uplinkdata, 1024 * 3);
-				}
-			}
-			else
-			{
-				char buffer1[1000];
-				char buffer2[1000];
-				AP11ManPADOpt manopt;
+			AP11ManeuverPAD(&manopt, *form);
+			sprintf(form->purpose, "MCC-1");
+			sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
 
-				AP11MNV * form = (AP11MNV *)pad;
+			AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
-				manopt.dV_LVLH = dV_LVLH;
-				manopt.enginetype = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), dV_LVLH);
-				manopt.GETbase = GETbase;
-				manopt.HeadsUp = false;
-				manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-				manopt.TIG = P30TIG;
-				manopt.vessel = calcParams.src;
-				manopt.vesseltype = 1;
-
-				AP11ManeuverPAD(&manopt, *form);
-				sprintf(form->purpose, "MCC-1");
-				sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
-
-				AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
-				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
-
-				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-				if (upString != NULL) {
-					// give to mcc
-					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load");
-				}
+			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load");
 			}
 		}
 	}
@@ -526,10 +541,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
 
 		//Iterate LOI GET
-		double LOIFP = OrbMech::HHMMSSToSS(83.0, 25.0, 18.2); //Flight plan LOI TIG
 		if (PZMCCDIS.data[0].GET_LOI < LOIFP + 30.0*60.0 && PZMCCDIS.data[0].GET_LOI > LOIFP - 30.0*60.0)
 		{
-			double F23time = LOIFP - 10.0*60.0;
+			double F23time = LOIFP - 11.0*60.0;
 			int hh = 0, mm = 0;
 			double ss = 0.0;
 			while (PZMCCDIS.data[0].GET_LOI > LOIFP + 5.0 || PZMCCDIS.data[0].GET_LOI < LOIFP - 5.0)
@@ -543,47 +557,67 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			}
 		}
 
-		scrubbed = false; //Mandatory hybrid transfer burn
+		if (length(PZMCCDIS.data[0].DV_MCC) < 1.0*0.3048)
+		{
+			scrubbed = true;
 
-		char buffer1[1000];
-		char buffer2[1000];
-		AP11ManPADOpt manopt;
-		VECTOR3 dV_LVLH;
-		double P30TIG, GETbase;
-		int engine;
+			char buffer1[1000];
 
-		AP11MNV * form = (AP11MNV *)pad;
+			sprintf(upMessage, "MCC-2 has been scrubbed.");
+			sprintf(upDesc, "CSM state vector");
 
-		GETbase = CalcGETBase();
+			AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
 
-		//Transfer MCC plan to skeleton flight plan table
-		GMGMED("F30,1;");
+			sprintf(uplinkdata, "%s", buffer1);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+			}
+		}
+		else
+		{
+			scrubbed = false;
 
-		calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
-		engine = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), PZMCCDIS.data[0].DV_MCC);
-		PoweredFlightProcessor(sv, CSMmass, GETbase, PZMCCPLN.MidcourseGET, engine, LMmass, PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V, false, P30TIG, dV_LVLH);
+			char buffer1[1000];
+			char buffer2[1000];
+			AP11ManPADOpt manopt;
+			VECTOR3 dV_LVLH;
+			double P30TIG, GETbase;
+			int engine;
 
-		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = engine;
-		manopt.GETbase = GETbase;
-		manopt.HeadsUp = false;
-		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		manopt.TIG = P30TIG;
-		manopt.vessel = calcParams.src;
-		manopt.vesseltype = 1;
+			AP11MNV * form = (AP11MNV *)pad;
 
-		AP11ManeuverPAD(&manopt, *form);
-		sprintf(form->purpose, "MCC-2");
-		sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
+			GETbase = CalcGETBase();
 
-		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
-		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+			//Transfer MCC plan to skeleton flight plan table
+			GMGMED("F30,1;");
 
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
+			engine = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), PZMCCDIS.data[0].DV_MCC);
+			PoweredFlightProcessor(sv, CSMmass, GETbase, PZMCCPLN.MidcourseGET, engine, LMmass, PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V, false, P30TIG, dV_LVLH);
+
+			manopt.dV_LVLH = dV_LVLH;
+			manopt.enginetype = engine;
+			manopt.GETbase = GETbase;
+			manopt.HeadsUp = false;
+			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+			manopt.TIG = P30TIG;
+			manopt.vessel = calcParams.src;
+			manopt.vesseltype = 1;
+
+			AP11ManeuverPAD(&manopt, *form);
+			sprintf(form->purpose, "MCC-2");
+			sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
+
+			AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+
+			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load");
+			}
 		}
 	}
 	break;

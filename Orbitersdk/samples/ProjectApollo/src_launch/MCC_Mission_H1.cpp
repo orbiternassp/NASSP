@@ -50,7 +50,7 @@ void MCC::MissionSequence_H1()
 	case MST_H1_EPO4: //TLI PAD to TLI Evaluation
 		UpdateMacro(UTP_PADONLY, PT_TLIPAD, rtcc->GETEval2(rtcc->calcParams.TLI + 18.0), 14, MST_H1_TRANSLUNAR1);
 		break;
-	case MST_H1_TRANSLUNAR1: //TLI Evaluation to Evasive Maneuver Update
+	case MST_H1_TRANSLUNAR1: //TLI Evaluation to SIVB Evasive Maneuver
 		UpdateMacro(UTP_NONE, PT_NONE, true, 15, MST_H1_TRANSLUNAR2, scrubbed, rtcc->GETEval2(3.0*3600.0), MST_H1_EPO1);
 		break;
 	case MST_H1_TRANSLUNAR2:
@@ -64,7 +64,7 @@ void MCC::MissionSequence_H1()
 		break;
 		case 1:
 		{
-			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 10.0*60.0))
+			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 36.0*60.0))
 			{
 				SlowIfDesired();
 				setState(MST_H1_TRANSLUNAR3);
@@ -73,10 +73,56 @@ void MCC::MissionSequence_H1()
 		break;
 		}
 		break;
-	case MST_H1_TRANSLUNAR3: //Evasive Maneuver Update to TB8 Enable
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 30.0*60.0), 16, MST_H1_TRANSLUNAR4);
+	case MST_H1_TRANSLUNAR3: //SIVB Evasive Maneuver to TB8 Enable
+		switch (SubState) {
+		case 0:
+		{
+			if (cm->GetStage() >= CSM_LEM_STAGE)
+			{
+				setSubState(1);
+			}
+		}
 		break;
-	case MST_H1_TRANSLUNAR4:  //TB8 enable to Block Data 1
+		case 1:
+		{
+			if (SubStateTime > 2.0*60.0)
+			{
+				setSubState(2);
+			}
+		}
+		break;
+		case 2:
+		{
+			if (sivb == NULL)
+			{
+				VESSEL *v;
+				OBJHANDLE hLV;
+				hLV = oapiGetObjectByName(LVName);
+				if (hLV != NULL)
+				{
+					v = oapiGetVesselInterface(hLV);
+
+					if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
+						!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) {
+						sivb = (SIVB *)v;
+					}
+				}
+			}
+
+			sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_EVASIVE_MANEUVER_ENABLE, NULL);
+			setSubState(3);
+		}
+		break;
+		case 3:
+			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 57.0*60.0))
+			{
+				SlowIfDesired();
+				setState(MST_H1_TRANSLUNAR4);
+			}
+			break;
+		}
+		break;
+	case MST_H1_TRANSLUNAR4:  //TB8 enable to PTC REFSMMAT update
 		switch (SubState) {
 		case 0:
 		{
@@ -117,7 +163,7 @@ void MCC::MissionSequence_H1()
 		}
 		break;
 		case 3:
-			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3.0*3600.0))
+			if (rtcc->GETEval2(rtcc->calcParams.TLI + 2.0*3600.0 + 29.0*60.0))
 			{
 				SlowIfDesired();
 				setState(MST_H1_TRANSLUNAR5);
@@ -125,23 +171,14 @@ void MCC::MissionSequence_H1()
 			break;
 		}
 		break;
-	case MST_H1_TRANSLUNAR5: //Block Data 1 to MCC-1 Calculation
-		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval2(rtcc->calcParams.TLI + 3.0*3600.0 + 20.0*60.0), 17, MST_H1_TRANSLUNAR6);
+	case MST_H1_TRANSLUNAR5: //PTC REFSMMAT update to Block Data 1
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 2.0*3600.0 + 59.0*60.0), 19, MST_H1_TRANSLUNAR6);
 		break;
-	case MST_H1_TRANSLUNAR6: //MCC-1 Calculation to MCC-1 update (or PTC REFSMMAT)
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 7.0*3600.0 + 10.0*60.0), 20, MST_H1_TRANSLUNAR7, scrubbed, rtcc->GETEval2(rtcc->calcParams.TLI + 4.0*3600.0), MST_H1_TRANSLUNAR_NO_MCC1_1);
+	case MST_H1_TRANSLUNAR6: //Block Data 1 to MCC-1 update
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval2(rtcc->calcParams.TLI + 7.0*3600.0 + 15.0*60.0), 17, MST_H1_TRANSLUNAR8);
 		break;
-	case MST_H1_TRANSLUNAR7: //MCC-1 update to PTC REFSMMAT update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TLI + 9.0*3600.0 + 5.0*60.0), 21, MST_H1_TRANSLUNAR8);
-		break;
-	case MST_H1_TRANSLUNAR_NO_MCC1_1: //PTC REFSMMAT update to SV update (MCC-1 was scrubbed)
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 7.0*3600.0 + 10.0*60.0), 19, MST_H1_TRANSLUNAR_NO_MCC1_2);
-		break;
-	case MST_H1_TRANSLUNAR_NO_MCC1_2: //SV update to Block Data 2 (MCC-1 was scrubbed)
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TLI + 9.0*3600.0 + 5.0*60.0), 1, MST_H1_TRANSLUNAR9);
-		break;
-	case MST_H1_TRANSLUNAR8: //PTC REFSMMAT update to Block Data 2
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 19, MST_H1_TRANSLUNAR9);
+	case MST_H1_TRANSLUNAR8: //MCC-1 update to Block Data 2
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TLI + 11.0*3600.0 + 5.0*60.0), 21, MST_H1_TRANSLUNAR9);
 		break;
 	case MST_H1_TRANSLUNAR9: //Block Data 2 to MCC-2 update
 		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval2(rtcc->calcParams.TLI + 22.0*3600.0 + 40.0*60.0), 18, MST_H1_TRANSLUNAR10);
