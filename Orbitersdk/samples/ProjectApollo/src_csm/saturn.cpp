@@ -1423,12 +1423,12 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 }
 
-void Saturn::clbkPostStep (double simt, double simdt, double mjd)
+void Saturn::clbkPostStep(double simt, double simdt, double mjd)
 
 {
 	char buffer[100];
 	TRACESETUP("Saturn::clbkPostStep");
-	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %lld", MissionTime, simt, simdt, time(0)); 
+	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %lld", MissionTime, simt, simdt, time(0));
 	TRACE(buffer);
 
 	if (debugConnected == false)
@@ -1445,7 +1445,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		// The SPS engine must be in post time step 
 		// to inhibit Orbiter's thrust control
 		//
-		
+
 		SPSEngine.Timestep(MissionTime, simdt);
 
 		// Better acceleration measurement stability
@@ -1462,12 +1462,17 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 	}
 	// Order is important, otherwise delayed springloaded switches are reset immediately
 	MainPanel.timestep(MissionTime);
-	checkControl.timestep(MissionTime,eventControl);
+	checkControl.timestep(MissionTime, eventControl);
 
 	// Update VC animations
 	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
 	{
 		MainPanelVC.OnPostStep(simt, simdt, mjd);
+	}
+
+	// Do this last to override previous debug strings
+	if (nasspver != NASSP_VERSION) {
+		sprintf(oapiDebugString(), "The scenario you are using is too old (Scenario: %d, NASSP: %d). Please go here for more info: https://nassp.space/index.php/Scenario_File_Updates", nasspver, NASSP_VERSION);
 	}
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 
@@ -1493,7 +1498,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	int i = 1;
 	char str[256];
 
-	oapiWriteScenario_int (scn, "NASSPVER", NASSP_VERSION);
+	oapiWriteScenario_int (scn, "NASSPVER", nasspver);
 	oapiWriteScenario_int (scn, "STAGE", stage);
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
@@ -1935,7 +1940,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 {
 	float ftcp;
 	int SwitchState = 0;
-	int nasspver = 0, status = 0;
+	int status = 0;
 	int DummyLoad, i;
 	bool found;
 
