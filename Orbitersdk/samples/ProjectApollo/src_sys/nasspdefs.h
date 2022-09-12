@@ -211,7 +211,7 @@
 #define stricmp _stricmp
 #endif 
 
-#define NASSP_VERSION 80001		///< The version of the current scenario file. The first two digits are reserved to indicate the current NASSP version. The remaining 3 digit number is incremented each time a breaking change is made to a scenario parameter
+#define NASSP_VERSION 80001		///< https://nassp.space/index.php/Scenario_File_Options#Scenario_information
 
 ///
 /// We use this structure to store generic Windows information in one place, such as logical colors,

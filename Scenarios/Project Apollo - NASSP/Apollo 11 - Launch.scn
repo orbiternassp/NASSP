@@ -1,6 +1,6 @@
 BEGIN_DESC
 Neil Armstrong Mike Collins and Buzz Aldrin change history forever. The first manned Lunar
-Landing on July 16, 1969. The scenario starts at T-4h00min, launch azimuth is +72.06°.
+Landing on July 16, 1969. The scenario starts at T-4h00min, launch azimuth is +72.06ï¿½.
 
 Enabled features: MCC
 END_DESC
@@ -35,7 +35,7 @@ Columbia:ProjectApollo\Saturn5
   FUEL 1.000
   APOLLONO 11
   S4PL 0
-  NASSPVER 80000
+  NASSPVER 80001
   VECHNO 506
   STAGE 5
   STAGESTATUS 0
