@@ -853,47 +853,47 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		GETbase = CalcGETBase();
 		sv = StateVectorCalcEphem(calcParams.src);
 
-		bool loierr = PMMLRBTI(sv);
-
-		if (loierr == false)
+		if (fcn == 25)
 		{
-			//Choose solution with the lowest LOI-1 DV
-			if (PZLRBTI.sol[6].DVLOI1 > PZLRBTI.sol[7].DVLOI1)
-			{
-				loisol = 7;
-			}
-			else
-			{
-				loisol = 6;
-			}
+			bool loierr = PMMLRBTI(sv);
 
-			h_peri = PZLRBTI.h_pc;
-			h_node = PZLRBTI.sol[loisol].H_ND;
-			ApsidRot = PZLRBTI.sol[loisol].f_ND_E - PZLRBTI.sol[loisol].f_ND_H;
-			while (ApsidRot > 180.0)
+			if (loierr == false)
 			{
-				ApsidRot -= 360.0;
-			}
-			while (ApsidRot < -180.0)
-			{
-				ApsidRot += 360.0;
-			}
-
-			//Maneuver execution criteria
-			if (h_peri > 50.0 && h_peri < 70.0)
-			{
-				if (h_node > 50.0 && h_node < 75.0)
+				//Choose solution with the lowest LOI-1 DV
+				if (PZLRBTI.sol[6].DVLOI1 > PZLRBTI.sol[7].DVLOI1)
 				{
-					if (abs(ApsidRot) < 45.0)
+					loisol = 7;
+				}
+				else
+				{
+					loisol = 6;
+				}
+
+				h_peri = PZLRBTI.h_pc;
+				h_node = PZLRBTI.sol[loisol].H_ND;
+				ApsidRot = PZLRBTI.sol[loisol].f_ND_E - PZLRBTI.sol[loisol].f_ND_H;
+				while (ApsidRot > 180.0)
+				{
+					ApsidRot -= 360.0;
+				}
+				while (ApsidRot < -180.0)
+				{
+					ApsidRot += 360.0;
+				}
+
+				//Maneuver execution criteria
+				if (h_peri > 50.0 && h_peri < 70.0)
+				{
+					if (h_node > 50.0 && h_node < 75.0)
 					{
-						scrubbed = true;
+						if (abs(ApsidRot) < 45.0)
+						{
+							scrubbed = true;
+						}
 					}
 				}
 			}
-		}
 
-		if (fcn == 25)
-		{
 			//REFSMMAT calculation
 			refsopt.GETbase = GETbase;
 			refsopt.LSAzi = calcParams.LSAzi;
@@ -953,9 +953,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			manopt.vessel = calcParams.src;
 			manopt.vesseltype = 1;
 
-			TimeofIgnition = P30TIG;
-			DeltaV_LVLH = dV_LVLH;
-
 			AP11ManeuverPAD(&manopt, *form);
 			sprintf(form->purpose, "MCC-4");
 
@@ -971,6 +968,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 				strncpy(upString, uplinkdata, 1024 * 3);
 				sprintf(upDesc, "CSM state vector and V66, target load, Landing Site REFSMMAT");
 			}
+
+			//Save burn data for PC+2 calculation
+			TimeofIgnition = P30TIG;
+			DeltaV_LVLH = dV_LVLH;
 		}
 	}
 	break;
