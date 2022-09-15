@@ -1193,14 +1193,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
 
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
 		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector and V66, target load");
 		}
 	}
 	break;
@@ -1218,6 +1218,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		sv = StateVectorCalc(calcParams.tgt); //State vector for uplink
 		GETbase = CalcGETBase();
+
+		//Updated landing site vector after processing landmark tracking data
+		BZLAND.rad[RTCC_LMPOS_BEST] = 937.72*1852.0;
+		BZLAND.lat[RTCC_LMPOS_BEST] = -3.016*RAD;
+		BZLAND.lng[RTCC_LMPOS_BEST] = -23.42*RAD;
 
 		//MED K17
 		GZGENCSN.LDPPAzimuth = 0.0;
@@ -1250,25 +1255,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		//Also move to CSM LCV
 		GMGMED("G00,LEM,LLD,CSM,LCV;");
 
-		sprintf(form->LmkID[0], "130");
-		landmarkopt.alt[0] = -1.46*1852.0;
-		landmarkopt.GETbase = CalcGETBase();
-		landmarkopt.lat[0] = 1.243*RAD;
-		landmarkopt.LmkTime[0] = calcParams.LOI + 22.5*3600.0;
-		landmarkopt.lng[0] = 23.688*RAD;
-		landmarkopt.sv0 = sv;
-		landmarkopt.entries = 1;
-
-		LandmarkTrackingPAD(&landmarkopt, *form);
-
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
 		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, LS REFSMMAT");
+			sprintf(upDesc, "CSM state vector and V66, LS REFSMMAT");
 		}
 	}
 	break;
@@ -1341,11 +1335,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		AP11AGSACT *form = (AP11AGSACT*)pad;
 
-		form->KFactor = 90.0*3600.0;
-		form->DEDA224 = 60267;
-		form->DEDA225 = 58148;
+		form->KFactor = 100.0*3600.0;
+		form->DEDA224 = 60326;
+		form->DEDA225 = 58158;
 		form->DEDA226 = 70312;
-		form->DEDA227 = -50031;		
+		form->DEDA227 = -50181;
 	}
 	break;
 	case 37: //SEPARATION MANEUVER
@@ -1354,8 +1348,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		SV sv;
 		VECTOR3 dV_LVLH;
 		double GETbase, t_P, t_Sep;
-		char buffer1[1000];
-		char buffer2[1000];
+
+		int hh, mm;
+		double ss;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -1365,13 +1360,13 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		t_P = OrbMech::period(sv.R, sv.V, OrbMech::mu_Moon);
 		t_Sep = floor(calcParams.DOI - t_P / 2.0);
 		calcParams.SEP = t_Sep;
-		dV_LVLH = _V(0, 0, -2.5)*0.3048;
+		dV_LVLH = _V(2.5, 0, 0)*0.3048;
 
 		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
 		opt.GETbase = GETbase;
-		opt.HeadsUp = true;
+		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		opt.TIG = t_Sep;
 		opt.vessel = calcParams.src;
@@ -1379,16 +1374,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP11ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "SEP");
-
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv, false, GETbase);
-
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "State vectors");
-		}
+		OrbMech::SStoHHMMSS(form->GETI - 30.0*60.0, hh, mm, ss);
+		sprintf(form->remarks, "Undock time is %d:%d:%.2lf.", hh, mm, ss);
 	}
 	break;
 	case 38: //DESCENT ORBIT INSERTION
@@ -1453,10 +1440,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 41: //TEI-4 UPDATE (PRE LOI-1)
 	case 42: //TEI-5 UPDATE (PRE LOI-2)
 	case 43: //TEI-11 UPDATE
-	case 44: //TEI-30 UPDATE (PDI DAY)
-	case 45: //TEI-30 UPDATE (PRELIM)
-	case 46: //TEI-30 UPDATE (FINAL)
-	case 47: //TEI-31 UPDATE
+	case 44: //TEI-34 UPDATE (PDI DAY)
+	case 45: //TEI-45 UPDATE (PRELIM)
+	case 46: //TEI-45 UPDATE (FINAL)
+	case 47: //TEI-46 UPDATE
 	{
 		RTEMoonOpt entopt;
 		EntryResults res;
@@ -1509,12 +1496,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 		else if (fcn == 44)
 		{
-			sprintf(manname, "TEI-30");
-			sv2 = coast(sv1, 19.5*2.0*3600.0);
+			sprintf(manname, "TEI-34");
+			sv2 = coast(sv1, 23.5*2.0*3600.0);
 		}
 		else if (fcn == 45)
 		{
-			sprintf(manname, "TEI-30");
+			sprintf(manname, "TEI-45");
 			sv2 = coast(sv1, 1.5*2.0*3600.0);
 			//Nominal EOM area
 			entopt.EntryLng = -172.37*RAD;
@@ -1627,7 +1614,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->PMGET = upd_ellip.AOSGET;
 	}
 	break;
-	case 61: //REV 4 LANDMARK TRACKING PAD A-1
+	case 61: //REV 4 LANDMARK TRACKING PAD H-1
+	case 62: //REV 12 LANDMARK TRACKING PAD 193
 	case 63: //LM TRACKING PAD
 	case 64: //LM ACQUISITION TIME
 	{
@@ -1643,12 +1631,21 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		if (fcn == 61)
 		{
-			sprintf(form->LmkID[0], "A-1");
-			opt.alt[0] = 0;
-			opt.lat[0] = 2.0*RAD;
+			sprintf(form->LmkID[0], "H-1");
+			opt.alt[0] = -1.94*1852.0;
+			opt.lat[0] = -1.517*RAD;
 			opt.LmkTime[0] = calcParams.LOI + 6.5*3600.0;
-			opt.lng[0] = 65.5*RAD;
+			opt.lng[0] = -15.25*RAD;
 			opt.entries = 1;
+		}
+		else if (fcn == 62)
+		{
+		sprintf(form->LmkID[0], "193");
+		opt.alt[0] = -1.37*1852.0;
+		opt.lat[0] = -3.437*RAD;
+		opt.LmkTime[0] = calcParams.LOI + 23.0*3600.0;
+		opt.lng[0] = -23.228*RAD;
+		opt.entries = 1;
 		}
 		else if (fcn == 63 || fcn == 64)
 		{
@@ -1713,7 +1710,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.direct = false;
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.GETbase = GETbase;
-		opt.HeadsUp = false;
+		opt.HeadsUp = true;
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
