@@ -488,6 +488,23 @@ struct AP7RETRORIENTPAD
 	VECTOR3 RetroAtt_Night = _V(0, 0, 0);
 };
 
+//APOLLO 12 PDI ABORT PAD
+struct AP12PDIABORTPAD
+{
+	double T_TPI_Pre10Min;	//GET of TPI maneuver for abort prior to PDI+10 minutes
+	double T_TPI_Post10Min;	//GET of TPI maneuver for abort subsequent to PDI+10 minutes
+};
+
+//APOLLO 12 LUNAR SURFACE DATA CARD
+
+struct AP12LunarSurfaceDataCard
+{
+	double T2_TIG;
+	double T2_t_TPI;
+	double T3_TIG;
+	double P22_ACQ;
+};
+
 //GENERIC STRING
 
 struct GENERICPAD
