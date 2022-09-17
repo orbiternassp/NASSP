@@ -502,6 +502,12 @@ struct AP12LunarSurfaceDataCard
 	double T2_TIG;
 	double T2_t_TPI;
 	double T3_TIG;
+};
+
+//LM P22 ACQUISTION PAD
+
+struct LMP22ACQPAD
+{
 	double P22_ACQ;
 };
 

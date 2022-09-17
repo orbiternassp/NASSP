@@ -1867,6 +1867,11 @@ void MCC::SaveState(FILEHANDLE scn) {
 		SAVE_DOUBLE("MCC_AP12T2ABORTPAD_TIG", form->T2_TIG);
 		SAVE_DOUBLE("MCC_AP12T2ABORTPAD_t_TPI", form->T2_t_TPI);
 		SAVE_DOUBLE("MCC_AP12T3ABORTPAD_TIG", form->T3_TIG);
+		}
+		else if (padNumber == PT_LMP22ACQPAD)
+		{
+		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+
 		SAVE_DOUBLE("MCC_AP12P22ACQ", form->P22_ACQ);
 		}
 	}
@@ -2422,6 +2427,11 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("MCC_AP12T2ABORTPAD_TIG", form->T2_TIG);
 		LOAD_DOUBLE("MCC_AP12T2ABORTPAD_t_TPI", form->T2_t_TPI);
 		LOAD_DOUBLE("MCC_AP12T3ABORTPAD_TIG", form->T3_TIG);
+		}
+		else if (padNumber == PT_LMP22ACQPAD)
+		{
+		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+
 		LOAD_DOUBLE("MCC_AP12P22ACQ", form->P22_ACQ);
 		}
 
@@ -3242,17 +3252,29 @@ void MCC::drawPad(bool writetofile){
 	{
 		AP12LunarSurfaceDataCard *form = (AP12LunarSurfaceDataCard*)padForm;
 
-		int hh[4], mm[4];
-		double ss[4];
+		int hh[3], mm[3];
+		double ss[3];
 
 		SStoHHMMSS(form->T2_TIG, hh[0], mm[0], ss[0]);
 		SStoHHMMSS(form->T2_t_TPI, hh[1], mm[1], ss[1]);
 		SStoHHMMSS(form->T3_TIG, hh[2], mm[2], ss[2]);
-		SStoHHMMSS(form->P22_ACQ, hh[3], mm[3], ss[3]);
 
-		sprintf(buffer, "T2 ABORT\n%+06d HRS T2\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\nT3 ABORT\n%+06d HRS T3\n%+06d MIN TIG\n%+07.2f SEC\n"
-			"P22 ACQUISITION\n%+06d HRS\n%+06d MIN\n%+07.2f SEC",
-			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2], hh[3], mm[3], ss[3]);
+		sprintf(buffer, "T2 ABORT\n%+06d HRS T2\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\nT3 ABORT\n%+06d HRS T3\n%+06d MIN TIG\n%+07.2f SEC",
+			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_LMP22ACQPAD:
+	{
+		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+
+		int hh, mm;
+		double ss;
+
+		SStoHHMMSS(form->P22_ACQ, hh, mm, ss);
+
+		sprintf(buffer, "P22 ACQUISITION\n%+06d HRS\n%+06d MIN\n%+07.2f SEC", hh, mm, ss);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3400,6 +3422,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP12LUNSURFPAD: // AP12T2ABORTPAD
 		padForm = calloc(1, sizeof(AP12LunarSurfaceDataCard));
+		break;
+	case PT_LMP22ACQPAD: // LMP22ACQPAD
+		padForm = calloc(1, sizeof(LMP22ACQPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));
