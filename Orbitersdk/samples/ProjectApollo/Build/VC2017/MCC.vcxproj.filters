@@ -209,5 +209,8 @@
     <ClInclude Include="..\..\src_rtccmfd\LWP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_aux\paCBGmessageID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

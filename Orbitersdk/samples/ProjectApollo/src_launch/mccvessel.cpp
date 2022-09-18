@@ -24,6 +24,7 @@
 #include "mccvessel.h"
 #include "rtcc.h"
 #include "mcc.h"
+#include "paCBGmessageID.h"
 
 #define ORBITER_MODULE
 
@@ -82,6 +83,45 @@ void MCCVessel::clbkPreStep(double simt, double simdt, double mjd)
 	// Update Ground Data
 	if (mcc) mcc->TimeStep(simdt);
 	if (rtcc) rtcc->Timestep(simt, simdt, mjd);
+}
+
+int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
+{
+	if (!mcc) { return 0; }
+
+	if (msgid == paCBGmessageID::messageID::RF_PROPERTIES) {
+
+		if(mcc->TransmittingGroundStation == 0) { return 0; }
+		RFCALC_RFProperties *RFtemp = (RFCALC_RFProperties*)context;
+
+		if (prm == paCBGmessageID::parameterID::Get) {
+
+			//sprintf(oapiDebugString(), "hi");
+
+			RFtemp->GlobalPosition = (mcc->TransmittingGroundStationVector);
+
+			if (mcc->GroundStations[mcc->TransmittingGroundStation].SBandAntenna & GSSA_26METER) {
+				RFtemp->Gain = pow(10.0, (50.0 / 10.0));
+				RFtemp->Power = 20.0E3;
+			}
+			else if (mcc->GroundStations[mcc->TransmittingGroundStation].SBandAntenna & GSSA_9METER) {
+				RFtemp->Gain = pow(10.0, (43.0 / 10.0));
+				RFtemp->Power = 10E3;
+			}
+			else if (mcc->GroundStations[mcc->TransmittingGroundStation].SBandAntenna & GSSA_3PT7METER) {
+				RFtemp->Gain = pow(10.0, (37.0 / 10.0));
+				RFtemp->Power = 22.9;
+			}
+			else {
+				RFtemp->Gain = 1.0;
+				RFtemp->Power = 0.0;
+			}
+			return 1;
+		}
+	}
+
+	return 0;
+
 }
 
 void MCCVessel::clbkSaveState(FILEHANDLE scn)
