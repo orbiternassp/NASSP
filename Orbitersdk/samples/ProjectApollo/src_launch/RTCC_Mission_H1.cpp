@@ -1772,7 +1772,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		//Recalculate PDI and landing times
 		SV sv1, sv2;
-		double GETbase, t_sunrise, t_TPI;
+		double GETbase, GET_SV1, t_sunrise, t_TPI;
 		int emem[14];
 		char buffer1[1000];
 		char TLANDbuffer[64];
@@ -1786,13 +1786,15 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		sv2 = StateVectorCalc(calcParams.src);
 		GETbase = CalcGETBase();
 
+		GET_SV1 = OrbMech::GETfromMJD(sv1.MJD, GETbase);
+
 		//MED K17
 		GZGENCSN.LDPPPoweredDescentSimFlag = false;
 		GZGENCSN.LDPPDwellOrbits = 0;
 		//MED K16
 		med_k16.Mode = 4;
 		med_k16.Sequence = 1;
-		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LOI + 27.5*3600.0;
+		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = GET_SV1 + 0.5*3600.0;
 
 		LunarDescentPlanningProcessor(sv1);
 
