@@ -1992,8 +1992,8 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 
 	for (int i = 0;i < 8;i++)
 	{
-		pad.Area[i][0] = '\0';
-		pad.Wx[i][0] = '\0';
+		sprintf(pad.Area[i], "N/A");
+		sprintf(pad.Wx[i], "N/A");
 	}
 
 	for (int i = 0;i < opt->n;i++)
