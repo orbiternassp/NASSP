@@ -95,8 +95,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 1: // MISSION C PHASING BURN
 	{
-		LambertMan lambert;
-		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
 		SV sv_A, sv_P;
 		double GET_TIG;
@@ -108,23 +106,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GET_TIG = OrbMech::HHMMSSToSS(3, 20, 0);
 
-		lambert.mode = 0;
-		lambert.GETbase = CalcGETBase();
-		lambert.T1 = GET_TIG;
-		lambert.T2 = OrbMech::HHMMSSToSS(26, 25, 0);
-		lambert.N = 15;
-		lambert.axis = RTCC_LAMBERT_XAXIS;
-		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
-		lambert.Offset = _V(76.5 * 1852, 0, 0);
-		lambert.sv_A = sv_A;
-		lambert.sv_P = sv_P;
-
-		LambertTargeting(&lambert, res);
-
 		opt.GETbase = CalcGETBase();
 		opt.vessel = calcParams.src;
 		opt.TIG = GET_TIG;
-		opt.dV_LVLH = res.dV_LVLH;
+		opt.dV_LVLH = _V(-1.8, 0.0, 0.0)*0.3048; //TBD: Change to -5.7 when full drag is simulated
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
 		opt.HeadsUp = false;
 		opt.sxtstardtime = 0;
@@ -163,51 +148,81 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 
 		MATRIX3 REFSMMAT;
-		double GETbase;
-		EarthEntryOpt entopt;
-		EntryResults res;
+		double CSMmass, gmt_guess, gmt_min, gmt_max;
 		AP7ManPADOpt opt;
-		REFSMMATOpt refsopt;
-		SV sv;
+		EphemerisData sv;
+		EMSMISSInputTable intab;
+		EphemerisDataTable2 tab; 
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
 
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		GETbase = CalcGETBase();
+		sv = StateVectorCalcEphem(calcParams.src);
+		CSMmass = calcParams.src->GetMass();
 
-		entopt.vessel = calcParams.src;
-		entopt.GETbase = GETbase;
-		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		entopt.lng = -163.0*RAD;
-		entopt.nominal = true;
-		entopt.ReA = 0;
-		entopt.TIGguess = 8 * 60 * 60 + 55 * 60;
-		entopt.entrylongmanual = true;
+		//Generate epehemeris for recovery target selection
+		gmt_guess = GMTfromGET(8.0*3600.0 + 55.0*60.0);
+		gmt_min = gmt_guess;
+		gmt_max = gmt_guess + 2.75*60.0*60.0;
 
-		BlockDataProcessor(&entopt, &res); //Target Load for uplink
+		intab.AnchorVector = sv;
+		intab.EphemerisBuildIndicator = true;
+		intab.ECIEphemerisIndicator = true;
+		intab.ECIEphemTableIndicator = &tab;
+		intab.EphemerisLeftLimitGMT = gmt_min;
+		intab.EphemerisRightLimitGMT = gmt_max;
+		intab.ManCutoffIndicator = false;
+		intab.VehicleCode = RTCC_MPT_CSM;
 
-		refsopt.vessel = calcParams.src;
-		refsopt.GETbase = GETbase;
-		refsopt.dV_LVLH = res.dV_LVLH;
-		refsopt.REFSMMATTime = res.P30TIG;
-		refsopt.REFSMMATopt = 1;
+		NewEMSMISS(&intab);
+		tab.Header.TUP = 1;
 
-		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
+		//Run recovery target selection
+		RMDRTSD(tab, 1, gmt_guess, -163.0*RAD);
 
-		//Save REFSMMAT as if it came from the new deorbit targeting (it will at some point)
-		RZRFDP.data[2].Indicator = 0;
-		RZRFDP.data[2].REFSMMAT = REFSMMAT;
-		RZRFDP.data[2].GETI = res.P30TIG;
+		//Select first entry
+		RZJCTTC.R32_lat_T = RZDRTSD.table[0].Latitude*RAD;
+		RZJCTTC.R32_lng_T = RZDRTSD.table[0].Longitude*RAD;
+		RZJCTTC.R32_GETI = RZDRTSD.table[0].GET - 20.0*60.0;
+
+		//MEDs
+		RZJCTTC.R32_Code = 1;
+		RZJCTTC.Type = 1;
+
+		RZJCTTC.R31_Thruster = RTCC_ENGINETYPE_CSMSPS;
+		RZJCTTC.R31_GuidanceMode = 4;
+		RZJCTTC.R31_BurnMode = 3;
+		RZJCTTC.R31_dt = 0.0;
+		RZJCTTC.R31_dv = 0.0;
+		RZJCTTC.R31_AttitudeMode = 1;
+		RZJCTTC.R31_LVLHAttitude = _V(0.0, -48.5*RAD, PI);
+		RZJCTTC.R31_UllageTime = 15.0;
+		RZJCTTC.R31_Use4UllageThrusters = true;
+		RZJCTTC.R31_REFSMMAT = RTCC_REFSMMAT_TYPE_CUR;
+		RZJCTTC.R31_GimbalIndicator = -1;
+		RZJCTTC.R31_InitialBankAngle = 0.0;
+		RZJCTTC.R31_GLevel = 0.2;
+		RZJCTTC.R31_FinalBankAngle = 55.0*RAD;
+
+		RMSDBMP(sv, CSMmass);
+
+		//Save data
+		TimeofIgnition = RZRFDP.data[2].GETI;
+		SplashLatitude = RZRFDP.data[2].lat_T;
+		SplashLongitude = RZRFDP.data[2].lng_T;
+		DeltaV_LVLH = RZRFTT.Manual.DeltaV;
+
+		REFSMMAT = RZRFDP.data[2].REFSMMAT; //REFSMMAT for uplink
+
 		//Save REFSMMAT in DOD slot
 		GMGMED("G11,CSM,DOM;");
 		//Move REFSMMAT to current
 		GMGMED("G00,CSM,DOD,CSM,CUR;");
 
 		opt.vessel = calcParams.src;
-		opt.GETbase = GETbase;
-		opt.TIG = res.P30TIG;
-		opt.dV_LVLH = res.dV_LVLH;
+		opt.GETbase = CalcGETBase();
+		opt.TIG = TimeofIgnition;
+		opt.dV_LVLH = DeltaV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
 		opt.sxtstardtime = -25 * 60;
@@ -217,8 +232,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "6-4 DEORBIT");
 
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
-		CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
+		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
+		CMCRetrofireExternalDeltaVUpdate(buffer2, SplashLatitude, SplashLongitude, TimeofIgnition, DeltaV_LVLH);
 		AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -1459,7 +1474,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.lng = SplashLongitude;
 
 		EarthOrbitEntry(opt, *form);
-		sprintf(form->Area[0], "164-1A");
+		if (mcc->AbortMode == 0)
+		{
+			sprintf(form->Area[0], "164-1A");
+		}
+		else
+		{
+			sprintf(form->Area[0], "Abort");
+		}
 		form->Lat[0] = SplashLatitude * DEG;
 		form->Lng[0] = SplashLongitude * DEG;
 	}
