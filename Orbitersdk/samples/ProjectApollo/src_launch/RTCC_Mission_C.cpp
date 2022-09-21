@@ -208,8 +208,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Save data
 		TimeofIgnition = RZRFDP.data[2].GETI;
-		SplashLatitude = RZRFDP.data[2].lat_T;
-		SplashLongitude = RZRFDP.data[2].lng_T;
+		SplashLatitude = RZRFDP.data[2].lat_T*RAD;
+		SplashLongitude = RZRFDP.data[2].lng_T*RAD;
 		DeltaV_LVLH = RZRFTT.Manual.DeltaV;
 
 		REFSMMAT = RZRFDP.data[2].REFSMMAT; //REFSMMAT for uplink
