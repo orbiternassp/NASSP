@@ -552,7 +552,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		double LOIFP = OrbMech::HHMMSSToSS(83.0, 25.0, 18.2); //Flight plan LOI TIG
 
 		bool IterateNodeGET = false;
-		if (SystemParameters.MCLABN < 77.0*RAD || calcParams.TLI < OrbMech::HHMMSSToSS(3, 0, 0))
+		if (SystemParameters.MCLABN < 77.0*RAD && calcParams.TLI < OrbMech::HHMMSSToSS(3, 0, 0))
 		{
 			IterateNodeGET = true;
 		}
