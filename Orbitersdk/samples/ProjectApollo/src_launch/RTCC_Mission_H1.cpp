@@ -428,51 +428,79 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 16: //Block Data 1
 	case 17: //Block Data 2
 	{
-		AP11BLKOpt opt;
 		double GETbase;
+		EntryOpt entopt;
+		EntryResults res;
+		SV sv1, sv2;
 
 		P37PAD * form = (P37PAD *)pad;
 
 		GETbase = CalcGETBase();
 
+		sv1 = StateVectorCalc(calcParams.src);
+
 		if (length(DeltaV_LVLH) > 0.0)
 		{
-			SV sv1, sv2;
-
-			sv1 = StateVectorCalc(calcParams.src);
 			sv2 = ExecuteManeuver(sv1, GETbase, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
-
-			opt.useSV = true;
-			opt.RV_MCC = sv2;
-		}
-
-		if (fcn == 16)
-		{
-			opt.n = 1;
-
-			opt.GETI.push_back(OrbMech::HHMMSSToSS(15, 0, 0));
-			opt.T_Z.push_back(OrbMech::HHMMSSToSS(50.0, 6.0, 0.0));
-			opt.lng.push_back(-165.0*RAD);
 		}
 		else
 		{
-			opt.n = 4;
-
-			opt.GETI.push_back(OrbMech::HHMMSSToSS(25, 0, 0));
-			opt.T_Z.push_back(OrbMech::HHMMSSToSS(74.0, 12.0, 0.0));
-			opt.lng.push_back(-165.0*RAD);
-			opt.GETI.push_back(OrbMech::HHMMSSToSS(35, 0, 0));
-			opt.T_Z.push_back(OrbMech::HHMMSSToSS(73.0, 39.0, 0.0));
-			opt.lng.push_back(-165.0*RAD);
-			opt.GETI.push_back(OrbMech::HHMMSSToSS(45, 0, 0));
-			opt.T_Z.push_back(OrbMech::HHMMSSToSS(97.0, 58.0, 0.0));
-			opt.lng.push_back(-165.0*RAD);
-			opt.GETI.push_back(OrbMech::HHMMSSToSS(60, 0, 0));
-			opt.T_Z.push_back(OrbMech::HHMMSSToSS(122.0, 01.0, 0.0));
-			opt.lng.push_back(-165.0*RAD);
+			sv2 = sv1;
 		}
 
-		AP11BlockData(&opt, *form);
+		entopt.entrylongmanual = true;
+		entopt.lng = -165.0*RAD;
+		entopt.GETbase = GETbase;
+		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		entopt.type = 1;
+		entopt.vessel = calcParams.src;
+
+		if (fcn == 16)
+		{
+			entopt.TIGguess = form->GETI[0] = OrbMech::HHMMSSToSS(15, 0, 0);
+			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 6.0, 0.0);
+			entopt.RV_MCC = sv2;
+			EntryTargeting(&entopt, &res);
+			form->dVT[0] = length(res.dV_LVLH) / 0.3048;
+			form->GET400K[0] = res.GET05G;
+
+			form->lng[0] = -165.0;
+		}
+		else
+		{
+			entopt.TIGguess = form->GETI[0] = OrbMech::HHMMSSToSS(25, 0, 0);
+			entopt.t_Z = OrbMech::HHMMSSToSS(74.0, 12.0, 0.0);
+			entopt.RV_MCC = sv1;
+			EntryTargeting(&entopt, &res);
+			form->dVT[0] = length(res.dV_LVLH) / 0.3048;
+			form->GET400K[0] = res.GET05G;
+
+			entopt.TIGguess = form->GETI[1] = OrbMech::HHMMSSToSS(35, 0, 0);
+			entopt.t_Z = OrbMech::HHMMSSToSS(73.0, 39.0, 0.0);
+			entopt.RV_MCC = sv2;
+			EntryTargeting(&entopt, &res);
+			form->dVT[1] = length(res.dV_LVLH) / 0.3048;
+			form->GET400K[1] = res.GET05G;
+
+			entopt.TIGguess = form->GETI[2] = OrbMech::HHMMSSToSS(45, 0, 0);
+			entopt.t_Z = OrbMech::HHMMSSToSS(97.0, 58.0, 0.0);
+			entopt.RV_MCC = sv2;
+			EntryTargeting(&entopt, &res);
+			form->dVT[2] = length(res.dV_LVLH) / 0.3048;
+			form->GET400K[2] = res.GET05G;
+
+			entopt.TIGguess = form->GETI[3] = OrbMech::HHMMSSToSS(60, 0, 0);
+			entopt.t_Z = OrbMech::HHMMSSToSS(122.0, 01.0, 0.0);
+			entopt.RV_MCC = sv2;
+			EntryTargeting(&entopt, &res);
+			form->dVT[3] = length(res.dV_LVLH) / 0.3048;
+			form->GET400K[3] = res.GET05G;
+
+			for (int i = 0; i < 4; i++)
+			{
+				form->lng[i] = -165.0;
+			}
+		}
 	}
 	break;
 	case 18: //PTC REFSMMAT
