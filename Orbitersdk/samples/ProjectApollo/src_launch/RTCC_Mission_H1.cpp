@@ -551,6 +551,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		double TLIbase = calcParams.TLI - 5.0*60.0 - 20.0; //Approximate TLI ignition
 		double LOIFP = OrbMech::HHMMSSToSS(83.0, 25.0, 18.2); //Flight plan LOI TIG
 
+		bool IterateNodeGET = false;
+		if (SystemParameters.MCLABN < 77.0*RAD || calcParams.TLI < OrbMech::HHMMSSToSS(3, 0, 0))
+		{
+			IterateNodeGET = true;
+		}
+
 		MCC1GET = TLIbase + 9.0*3600.0;
 		MCC2GET = TLIbase + 28.0*3600.0;
 
@@ -570,7 +576,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
 
-		if (calcParams.IterateNodeGET)
+		if (IterateNodeGET)
 		{
 			//Iterate node GET for MCC-2
 			bool init = true;
@@ -598,40 +604,24 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			{
 				PZMCCPLN.MidcourseGET = MCC1GET;
 
-				//Re-iterate node GET for MCC-1
-				bool init = true;
-				F23time = LOIFP - 11.0*60.0;
-				while (PZMCCDIS.data[0].GET_LOI < LOIFP - 5.0 || init)
+				if (IterateNodeGET)
 				{
-					OrbMech::SStoHHMMSS(F23time, hh, mm, ss);
-					sprintf_s(Buff, "F23,%d:%d:%.2lf,%d:%d:%.2lf;", hh, mm, ss, hh, mm + 10, ss);
-					GMGMED(Buff);
-					TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
-					F23time = F23time + 5.0;
-					if (init) init = false;
-				}
-
-				if (length(PZMCCDIS.data[0].DV_MCC) > 120.0*0.3048) //DV still too high at MCC-1? We'll do an MCC-2 calculation with optimized node GET
-				{
-					PZMCCPLN.MidcourseGET = MCC2GET;
-
-					sprintf_s(Buff, "F23,0.0:0.0:0.0,0.0:0.0:0.0;");
-					GMGMED(Buff);
-
-					TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
-
-					if (fcn == 21) calcParams.IterateNodeGET = false; //Make sure future MCC-2 calculations also use optimized node GET.
-
-					if (length(PZMCCDIS.data[0].DV_MCC) > 120.0*0.3048) //DV still too high? We'll try it at MCC-1...Go back to TLI school.
+					//Re-iterate node GET for MCC-1
+					bool init = true;
+					F23time = LOIFP - 11.0*60.0;
+					while (PZMCCDIS.data[0].GET_LOI < LOIFP - 5.0 || init)
 					{
-						PZMCCPLN.MidcourseGET = MCC1GET;
-
+						OrbMech::SStoHHMMSS(F23time, hh, mm, ss);
+						sprintf_s(Buff, "F23,%d:%d:%.2lf,%d:%d:%.2lf;", hh, mm, ss, hh, mm + 10, ss);
+						GMGMED(Buff);
 						TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
+						F23time = F23time + 5.0;
+						if (init) init = false;
 					}
-					else
-					{
-						scrubbed = true;
-					}
+				}
+				else
+				{
+					TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
 				}
 			}
 		}

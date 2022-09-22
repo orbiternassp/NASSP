@@ -1396,7 +1396,6 @@ RTCC::RTCC()
 	calcParams.SVSTORE1.MJD = 0.0;
 	calcParams.SVSTORE1.R = _V(0, 0, 0);
 	calcParams.SVSTORE1.V = _V(0, 0, 0);
-	calcParams.IterateNodeGET = true;
 
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -6610,8 +6609,6 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TPI", calcParams.TPI);
 	SAVE_DOUBLE("RTCC_TIGSTORE1", calcParams.TIGSTORE1);
 
-	SAVE_BOOL("RTCC_ITERATENODEGET", calcParams.IterateNodeGET);
-
 	// Strings
 	// Vectors
 	SAVE_V3("RTCC_DVLVLH", DeltaV_LVLH);
@@ -6807,8 +6804,6 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_CDH", calcParams.CDH);
 		LOAD_DOUBLE("RTCC_TPI", calcParams.TPI);
 		LOAD_DOUBLE("RTCC_TIGSTORE1", calcParams.TIGSTORE1);
-
-		LOAD_BOOL("RTCC_ITERATENODEGET", calcParams.IterateNodeGET);
 
 		LOAD_V3("RTCC_DVLVLH", DeltaV_LVLH);
 		LOAD_V3("RTCC_DVSTORE1", calcParams.DVSTORE1);

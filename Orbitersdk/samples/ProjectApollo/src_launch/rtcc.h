@@ -2207,7 +2207,6 @@ struct calculationParameters {
 	double TIGSTORE1;		//Temporary TIG storage
 	VECTOR3 DVSTORE1;		//Temporary DV storage
 	SV SVSTORE1;			//Temporary state vector storage
-	bool IterateNodeGET; // Node GET iteration flag
 };
 
 //For LVDC
