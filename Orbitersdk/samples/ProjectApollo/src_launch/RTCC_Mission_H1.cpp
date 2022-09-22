@@ -311,7 +311,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		TLIBase = calcParams.TLI;
 		TIG = TLIBase + 90.0*60.0;
-		entopt.lng = -25.0*RAD;
+		entopt.ATPLine = 2; //AOL
+		entopt.r_rbias = 1250.0;
 
 		sv1.mass = PZMPTCSM.mantable[1].CommonBlock.CSMMass;
 		sv1.gravref = hEarth;
@@ -319,7 +320,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		sv1.R = PZMPTCSM.mantable[1].R_BO;
 		sv1.V = PZMPTCSM.mantable[1].V_BO;
 
-		entopt.entrylongmanual = true;
+		entopt.entrylongmanual = false;
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.TIGguess = TIG;
@@ -362,9 +363,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 	}
 	break;
-	case 13: //TLI+5 PAD
+	case 13: //LIFTOFF+8 PAD
 	{
-		AP11BLKOpt opt;
+		EntryOpt entopt;
+		EntryResults res;
 		SV sv1;
 
 		P37PAD * form = (P37PAD *)pad;
@@ -375,15 +377,21 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		sv1.R = PZMPTCSM.mantable[1].R_BO;
 		sv1.V = PZMPTCSM.mantable[1].V_BO;
 
-		opt.n = 1;
+		entopt.entrylongmanual = false;
+		entopt.ATPLine = 0; //MPL
+		entopt.GETbase = CalcGETBase();
+		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		entopt.type = 1;
+		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1250.0;
 
-		opt.GETI.push_back(OrbMech::HHMMSSToSS(8, 0, 0));
-		opt.T_Z.push_back(OrbMech::HHMMSSToSS(25.0, 43.0, 0.0));
-		opt.lng.push_back(-165.0*RAD);
-		opt.useSV = true;
-		opt.RV_MCC = sv1;
-
-		AP11BlockData(&opt, *form);
+		entopt.TIGguess = form->GETI[0] = OrbMech::HHMMSSToSS(8, 0, 0);
+		entopt.t_Z = OrbMech::HHMMSSToSS(25.0, 43.0, 0.0);
+		entopt.RV_MCC = sv1;
+		EntryTargeting(&entopt, &res);
+		form->dVT[0] = length(res.dV_LVLH) / 0.3048;
+		form->GET400K[0] = res.GET05G;
+		form->lng[0] = round(res.longitude*DEG);
 	}
 	break;
 	case 14: //TLI PAD
@@ -448,12 +456,13 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sv2 = sv1;
 		}
 
-		entopt.entrylongmanual = true;
-		entopt.lng = -165.0*RAD;
+		entopt.entrylongmanual = false;
+		entopt.ATPLine = 0; //MPL
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.type = 1;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1250.0;
 
 		if (fcn == 16)
 		{
@@ -463,8 +472,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			EntryTargeting(&entopt, &res);
 			form->dVT[0] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[0] = res.GET05G;
-
-			form->lng[0] = -165.0;
+			form->lng[0] = round(res.longitude*DEG);
 		}
 		else
 		{
@@ -474,6 +482,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			EntryTargeting(&entopt, &res);
 			form->dVT[0] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[0] = res.GET05G;
+			form->lng[0] = round(res.longitude*DEG);
 
 			entopt.TIGguess = form->GETI[1] = OrbMech::HHMMSSToSS(35, 0, 0);
 			entopt.t_Z = OrbMech::HHMMSSToSS(73.0, 39.0, 0.0);
@@ -481,6 +490,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			EntryTargeting(&entopt, &res);
 			form->dVT[1] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[1] = res.GET05G;
+			form->lng[1] = round(res.longitude*DEG);
 
 			entopt.TIGguess = form->GETI[2] = OrbMech::HHMMSSToSS(45, 0, 0);
 			entopt.t_Z = OrbMech::HHMMSSToSS(97.0, 58.0, 0.0);
@@ -488,6 +498,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			EntryTargeting(&entopt, &res);
 			form->dVT[2] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[2] = res.GET05G;
+			form->lng[2] = round(res.longitude*DEG);
 
 			entopt.TIGguess = form->GETI[3] = OrbMech::HHMMSSToSS(60, 0, 0);
 			entopt.t_Z = OrbMech::HHMMSSToSS(122.0, 01.0, 0.0);
@@ -495,11 +506,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			EntryTargeting(&entopt, &res);
 			form->dVT[3] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[3] = res.GET05G;
-
-			for (int i = 0; i < 4; i++)
-			{
-				form->lng[i] = -165.0;
-			}
+			form->lng[3] = round(res.longitude*DEG);
 		}
 	}
 	break;
@@ -575,7 +582,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 				GMGMED(Buff);
 				TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
 				F23time = F23time + 5.0;
-				init = false;
+				if (init) init = false;
 			}
 		}
 
@@ -601,7 +608,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 					GMGMED(Buff);
 					TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
 					F23time = F23time + 5.0;
-					init = false;
+					if (init) init = false;
 				}
 
 				if (length(PZMCCDIS.data[0].DV_MCC) > 120.0*0.3048) //DV still too high at MCC-1? We'll do an MCC-2 calculation with optimized node GET
@@ -613,7 +620,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 					TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
 
-					calcParams.IterateNodeGET = false; // Make sure future MCC caluculations use optimized node GET.
+					if (fcn == 21) calcParams.IterateNodeGET = false; //Make sure future MCC-2 calculations also use optimized node GET.
 
 					if (length(PZMCCDIS.data[0].DV_MCC) > 120.0*0.3048) //DV still too high? We'll try it at MCC-1...Go back to TLI school.
 					{
@@ -722,14 +729,15 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
 		entopt.SMODE = 14;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
-		PZREAP.RRBIAS = 1250.0;
+		//PZREAP.RRBIAS = 1250.0;
 		entopt.t_zmin = 145.0*3600.0;
+		entopt.entrylongmanual = false;
+		entopt.ATPLine = 0; //MPL
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -1051,15 +1059,16 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sv1 = sv;
 		}
 
-		entopt.EntryLng = -165.0*RAD;
 		entopt.returnspeed = 2;
 		entopt.GETbase = GETbase;
 		entopt.SMODE = 14;
 		entopt.RV_MCC = sv1;
 		entopt.vessel = calcParams.src;
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
-		PZREAP.RRBIAS = 1250.0;
+		//PZREAP.RRBIAS = 1250.0;
 		PZREAP.VRMAX = 37500.0;
+		entopt.entrylongmanual = false;
+		entopt.ATPLine = 0; //MPL
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -1537,7 +1546,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 
 		//Mid Pacific Contingency Landing Area
-		entopt.EntryLng = -165.0*RAD;
+		entopt.entrylongmanual = false;
+		entopt.ATPLine = 0; //MPL
 
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 
@@ -1573,14 +1583,16 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sprintf(manname, "TEI-45");
 			sv2 = coast(sv1, 1.5*2.0*3600.0);
 			//Nominal EOM area
-			entopt.EntryLng = -172.37*RAD;
+			entopt.entrylongmanual = true;
+			entopt.EntryLng = -165.0*RAD;
 		}
 		else if (fcn == 46)
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev);
 			sv2 = coast(sv1, 0.5*3600.0);
 			//Nominal EOM area
-			entopt.EntryLng = -172.37*RAD;
+			entopt.entrylongmanual = true;
+			entopt.EntryLng = -165.0*RAD;
 		}
 		else if (fcn == 47)
 		{
