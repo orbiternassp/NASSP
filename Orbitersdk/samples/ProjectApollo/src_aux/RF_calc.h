@@ -59,3 +59,20 @@ static inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, doubl
 
 	return rcvdPower;
 }
+
+class RFCALC_RFProperties {
+public:
+	double Power;
+	double Gain;
+	double Frequency;
+	double Phase;
+	VECTOR3 GlobalPosition;
+
+	RFCALC_RFProperties() {
+		Power = 0;
+		Gain = 0;
+		Frequency = 0;
+		Phase = 0;
+		GlobalPosition = _V(0, 0, 0);
+	}
+};

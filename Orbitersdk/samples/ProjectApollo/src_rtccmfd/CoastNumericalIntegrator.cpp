@@ -595,7 +595,7 @@ void CoastIntegrator2::ACCEL_GRAV()
 			{
 				F1 = F1 + (double)N1*MAT_A[N1 - 1][0] * (C[L - 1] * ZETA_REAL[N1 - 1] + S[L - 1] * ZETA_IMAG[N1 - 1]);
 				F2 = F2 + (double)N1*MAT_A[N1 - 1][0] * (S[L - 1] * ZETA_REAL[N1 - 1] - C[L - 1] * ZETA_IMAG[N1 - 1]);
-				DNM = C[L - 1] = ZETA_REAL[N1] + S[L - 1] * ZETA_IMAG[N1];
+				DNM = C[L - 1] * ZETA_REAL[N1] + S[L - 1] * ZETA_IMAG[N1];
 				F3 = F3 + DNM * MAT_A[N1][0];
 				F4 = F4 + DNM * MAT_A[N1][1];
 				L++;
