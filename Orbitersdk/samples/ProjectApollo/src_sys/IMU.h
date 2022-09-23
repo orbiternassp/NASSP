@@ -38,6 +38,8 @@ public:
 	IMU(ApolloGuidance &comp, PanelSDK &p, InertialData &inertialData);
 	~IMU();
 
+	const double MERU = 7.292115E-8; //rad/sec
+
 	void Init();
 	void ChannelOutput(int address, ChannelValue value);
 	void Timestep(double simdt);

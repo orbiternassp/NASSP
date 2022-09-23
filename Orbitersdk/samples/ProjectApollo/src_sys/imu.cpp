@@ -413,11 +413,14 @@ void IMU::Timestep(double simdt)
 		// calculate the new gimbal angles
 		VECTOR3 newAngles = getRotationAnglesXZY(t);
 
+		//Drift rates
+		double NBD = 0.3 * MERU * simdt; //normal bias drift
+
 		// drive gimbals to new angles
 		// CAUTION: gimbal angles are left-handed
-		DriveGimbalX(-newAngles.x - Gimbal.X);
-		DriveGimbalY(-newAngles.y - Gimbal.Y);
-		DriveGimbalZ(-newAngles.z - Gimbal.Z);
+		DriveGimbalX(-newAngles.x - Gimbal.X + NBD);
+		DriveGimbalY(-newAngles.y - Gimbal.Y + NBD);
+		DriveGimbalZ(-newAngles.z - Gimbal.Z + NBD);
 
 		// PIPAs
 		VECTOR3 accel;
