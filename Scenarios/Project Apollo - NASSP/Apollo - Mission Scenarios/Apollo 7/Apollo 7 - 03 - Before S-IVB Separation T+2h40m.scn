@@ -4869,25 +4869,25 @@ MPTCSM_BEGIN
   LMStagingGMT 0.000000000000
   UpcomingManeuverGMT 1e+70
   SIVBVentingBeginGET 0.000000000000
-  ConfigCode 15
+  ConfigCode 1
   ConfigChangeInd 0
   TUP 0
   CSMArea 12.021653376000
-  SIVBArea 34.253350848000
-  LMAscentArea 18.636349824000
-  LMDescentArea 18.636349824000
-  CSMMass 29021.000000000000
-  SIVBMass 90851.199999999997
-  LMAscentMass 4944.000000000000
-  LMDescentMass 10375.000000000000
+  SIVBArea 0.0
+  LMAscentArea 0.0
+  LMDescentArea 0.0
+  CSMMass 16465.0
+  SIVBMass 0.0
+  LMAscentMass 0.0
+  LMDescentMass 0.0
   CSMRCSFuelRemaining 557.011430372324
   SPSFuelRemaining 18234.413274403425
-  SIVBFuelRemaining 74542.009310339185
-  LMRCSFuelRemaining 249.022211135509
-  LMAPSFuelRemaining 2348.247699541953
-  LMDPSFuelRemaining 8128.828862949845
-  TotalInitMass 0.000000000000
-  ConfigurationArea 0.000000000000
+  SIVBFuelRemaining 0.0
+  LMRCSFuelRemaining 0.0
+  LMAPSFuelRemaining 0.0
+  LMDPSFuelRemaining 0.0
+  TotalInitMass 16465.0
+  ConfigurationArea 12.021653376000
   DeltaDockingAngle 0.000000000000
   LastFrozenManeuver 0
   LastExecutedManeuver 0
@@ -4900,25 +4900,25 @@ MPTLEM_BEGIN
   LMStagingGMT 0.000000000000
   UpcomingManeuverGMT 1e+70
   SIVBVentingBeginGET 0.000000000000
-  ConfigCode 15
+  ConfigCode 2
   ConfigChangeInd 0
   TUP 0
-  CSMArea 12.021653376000
+  CSMArea 0.0
   SIVBArea 34.253350848000
-  LMAscentArea 18.636349824000
-  LMDescentArea 18.636349824000
-  CSMMass 29021.000000000000
-  SIVBMass 90851.199999999997
-  LMAscentMass 4944.000000000000
-  LMDescentMass 10375.000000000000
-  CSMRCSFuelRemaining 557.011430372324
-  SPSFuelRemaining 18234.413274403425
-  SIVBFuelRemaining 74542.009310339185
-  LMRCSFuelRemaining 249.022211135509
-  LMAPSFuelRemaining 2348.247699541953
-  LMDPSFuelRemaining 8128.828862949845
-  TotalInitMass 0.000000000000
-  ConfigurationArea 0.000000000000
+  LMAscentArea 0.0
+  LMDescentArea 0.0
+  CSMMass 0.0
+  SIVBMass 13621.0
+  LMAscentMass 0.0
+  LMDescentMass 0.0
+  CSMRCSFuelRemaining 0.0
+  SPSFuelRemaining 0.0
+  SIVBFuelRemaining 0.0
+  LMRCSFuelRemaining 0.0
+  LMAPSFuelRemaining 0.0
+  LMDPSFuelRemaining 0.0
+  TotalInitMass 13621.0
+  ConfigurationArea 34.253350848000
   DeltaDockingAngle 0.000000000000
   LastFrozenManeuver 0
   LastExecutedManeuver 0
