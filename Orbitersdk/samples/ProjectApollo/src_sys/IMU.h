@@ -133,6 +133,18 @@ protected:
 	} RemainingPIPA;
 
 	struct {
+		double NBD_X;
+		double NBD_Y;
+		double NBD_Z;
+		double ADSRA_X;
+		double ADSRA_Y;
+		double ADSRA_Z;
+		double ADIA_X;
+		double ADIA_Y;
+		double ADIA_Z;
+	} IMU_DriftRates;
+
+	struct {
 		MATRIX3 Attitude_v2g;
 		MATRIX3 Attitude_g2v;
 		MATRIX3 AttitudeReference;

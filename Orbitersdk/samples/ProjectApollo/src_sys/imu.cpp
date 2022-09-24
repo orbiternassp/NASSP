@@ -75,6 +75,16 @@ void IMU::Init()
 	Gimbal.Y = 0;
 	Gimbal.Z = 0;
 
+	IMU_DriftRates.NBD_X = 0.0;
+	IMU_DriftRates.NBD_Y = 0.0;
+	IMU_DriftRates.NBD_Z = 0.0;
+	IMU_DriftRates.ADSRA_X = 0.0;
+	IMU_DriftRates.ADSRA_Y = 0.0;
+	IMU_DriftRates.ADSRA_Z = 0.0;
+	IMU_DriftRates.ADIA_X = 0.0;
+	IMU_DriftRates.ADIA_Y = 0.0;
+	IMU_DriftRates.ADIA_Z = 0.0;
+
 	Orbiter.Attitude_v2g = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	Orbiter.Attitude_g2v = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	Orbiter.AttitudeReference = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
@@ -413,14 +423,11 @@ void IMU::Timestep(double simdt)
 		// calculate the new gimbal angles
 		VECTOR3 newAngles = getRotationAnglesXZY(t);
 
-		//Drift rates
-		double NBD = 0.3 * MERU * simdt; //normal bias drift
-
 		// drive gimbals to new angles
 		// CAUTION: gimbal angles are left-handed
-		DriveGimbalX(-newAngles.x - Gimbal.X + NBD);
-		DriveGimbalY(-newAngles.y - Gimbal.Y + NBD);
-		DriveGimbalZ(-newAngles.z - Gimbal.Z + NBD);
+		DriveGimbalX(-newAngles.x - Gimbal.X);
+		DriveGimbalY(-newAngles.y - Gimbal.Y);
+		DriveGimbalZ(-newAngles.z - Gimbal.Z);
 
 		// PIPAs
 		VECTOR3 accel;
@@ -440,6 +447,15 @@ void IMU::Timestep(double simdt)
 		pulses = RemainingPIPA.Z + (accel.z * LastSimDT / pipaRate);
 		PulsePIPA(RegPIPAZ, (int) pulses);
 		RemainingPIPA.Z = pulses - (int) pulses;
+
+		//IMU Drift calculation
+		double X_drift = (IMU_DriftRates.NBD_X - (IMU_DriftRates.ADSRA_X * accel.y / 9.80665) + (IMU_DriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
+		double Y_drift = (IMU_DriftRates.NBD_Y - (IMU_DriftRates.ADSRA_Y * accel.z / 9.80665) + (IMU_DriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
+		double Z_drift = (IMU_DriftRates.NBD_Z + (IMU_DriftRates.ADSRA_Z * accel.y / 9.80665) + (IMU_DriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
+
+		DriveGimbalX(-X_drift - Gimbal.X);
+		DriveGimbalY(-Y_drift - Gimbal.Y);
+		DriveGimbalZ(-Z_drift - Gimbal.Z);
 	}
 	LastSimDT = simdt;
 }
