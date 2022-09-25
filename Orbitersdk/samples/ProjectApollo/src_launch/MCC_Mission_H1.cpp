@@ -417,17 +417,32 @@ void MCC::MissionSequence_H1()
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_8: //CMC LM State Vector update to SEP burn PAD
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff + 4.0*3600.0), 2, MST_H1_LUNAR_ORBIT_ASCENT_DAY_9);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_9: //SEP burn PAD to Impact burn PAD
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_9: //SEP burn PAD to DAP data
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 110, MST_H1_LUNAR_ORBIT_ASCENT_DAY_10);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_10: //Impact burn PAD to CSM P76 PAD
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff + 5.0*3600.0 + 12.0*60.0), 111, MST_H1_LUNAR_ORBIT_ASCENT_DAY_11);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_10: //DAP data to Impact burn PAD
+		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, SubStateTime > 5.0*60.0, 7, MST_H1_LUNAR_ORBIT_ASCENT_DAY_11);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_11: //CSM P76 PAD to P42 uplink
-		UpdateMacro(UTP_PADONLY, PT_AP11P76PAD, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff + 6.0*3600.0), 112, MST_H1_LUNAR_ORBIT_ASCENT_DAY_12);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_11: //Impact burn PAD to CSM P76 PAD
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, rtcc->GETEval2(rtcc->calcParams.SEP - 50.0*60.0), 111, MST_H1_LUNAR_ORBIT_ASCENT_DAY_12);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_12: //P42 uplink to TEI-39 PAD
-		UpdateMacro(UTP_NONE, PT_NONE, MoonRev >= 34 && MoonRevTime > 30.0*60.0, 112, MST_H1_LUNAR_ORBIT_ASCENT_DAY_13); //BM
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_12: //CSM P76 PAD to P42 uplink
+		UpdateMacro(UTP_PADONLY, PT_AP11P76PAD, rtcc->GETEval2(rtcc->calcParams.SEP + 5.0*60.0), 112, MST_H1_LUNAR_ORBIT_ASCENT_DAY_13);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_13: //P42 uplink to LM DSKY Pro
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, SubStateTime > 20.0, 120, MST_H1_LUNAR_ORBIT_ASCENT_DAY_14);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_14: //LM DSKY Pro to LM DSKY Enter
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, SubStateTime > 20.0, 121, MST_H1_LUNAR_ORBIT_ASCENT_DAY_15);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_15: //LM DSKY Enter to TEI-39 PAD
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, rtcc->GETEval2(rtcc->TimeofIgnition - 10.0*60.0), 122, MST_H1_LUNAR_ORBIT_ASCENT_DAY_16);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_16: //TEI-39 PAD to LM command ullage off
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TIGSTORE1), 45, MST_H1_LUNAR_ORBIT_ASCENT_DAY_17);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_17: //LM command ullage off to XXXXXX
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, MoonRev >= 40 && MoonRevTime > 55.0*60.0, 123, MST_H1_LUNAR_ORBIT_ASCENT_DAY_50); //BM
 		break;
 
 	////FIX BEYOND HERE

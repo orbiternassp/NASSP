@@ -1507,9 +1507,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 42: //TEI-5 UPDATE (PRE LOI-2)
 	case 43: //TEI-11 UPDATE
 	case 44: //TEI-34 UPDATE (PDI DAY)
-	case 45: //TEI-45 UPDATE (PRELIM)
-	case 46: //TEI-45 UPDATE (FINAL)
-	case 47: //TEI-46 UPDATE
+	case 45: //TEI-39 UPDATE
+	case 46: //TEI-41 UPDATE
+	case 47: //TEI-43 UPDATE
+	case 48: //TEI-45 UPDATE (PRELIM)
+	case 49: //TEI-45 UPDATE (FINAL)
+	case 50: //TEI-46 UPDATE
 	{
 		RTEMoonOpt entopt;
 		EntryResults res;
@@ -1523,8 +1526,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		GETbase = CalcGETBase();
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		//Simulate the maneuver preceeding TEI (LOI-1 or LOI-2)
-		if (fcn == 40 || fcn == 41 || fcn == 42)
+		//Simulate the maneuver preceeding TEI (LOI-1 or LOI-2 or PC-2)
+		if (fcn == 40 || fcn == 41 || fcn == 42 || fcn == 46)
 		{
 			sv1 = ExecuteManeuver(sv0, GETbase, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
 		}
@@ -1568,13 +1571,28 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 		else if (fcn == 45)
 		{
+			sprintf(manname, "TEI-39");
+			sv2 = coast(sv1, (39 - mcc->MoonRev) * 2.0*3600.0);
+		}
+		else if (fcn == 46)
+		{
+			sprintf(manname, "TEI-41");
+			sv2 = coast(sv1, (41 - mcc->MoonRev) * 2.0*3600.0);
+		}
+		else if (fcn == 47)
+		{
+			sprintf(manname, "TEI-43");
+			sv2 = coast(sv1, (43 - mcc->MoonRev) * 2.0*3600.0);
+		}
+		else if (fcn == 48)
+		{
 			sprintf(manname, "TEI-45");
 			sv2 = coast(sv1, 1.5*2.0*3600.0);
 			//Nominal EOM area
 			entopt.entrylongmanual = true;
 			entopt.EntryLng = -165.0*RAD;
 		}
-		else if (fcn == 46)
+		else if (fcn == 49)
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev);
 			sv2 = coast(sv1, 0.5*3600.0);
@@ -1582,7 +1600,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			entopt.entrylongmanual = true;
 			entopt.EntryLng = -165.0*RAD;
 		}
-		else if (fcn == 47)
+		else if (fcn == 50)
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev + 1);
 			sv2 = coast(sv1, 1.5*2.0*3600.0);
@@ -1615,6 +1633,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
+		//form->type = 2;
 
 		if (fcn == 40)
 		{
@@ -1628,12 +1647,20 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		{
 			sprintf(form->remarks, "Undocked, assumes LOI-2");
 		}
+		else if (fcn == 45)
+		{
+			sprintf(form->remarks, "Assumes no PC-2");
+		}
+		else if (fcn == 46)
+		{
+			sprintf(form->remarks, "Assumes PC-2");
+		}
 		else if (fcn == 45 || fcn == 46)
 		{
 			sprintf(form->remarks, "Two-jet ullage for 16 seconds");
 		}
 
-		if (fcn != 47)
+		if (fcn != 50)
 		{
 			//Save parameters for further use
 			SplashLatitude = res.latitude;
@@ -1642,7 +1669,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			calcParams.EI = res.GET400K;
 		}
 
-		if (fcn == 46)
+		if (fcn == 48)
 		{
 			char buffer1[1000], buffer2[1000];
 			TimeofIgnition = res.P30TIG;
@@ -2758,9 +2785,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.vesseltype = 0;
 
 		AP11ManeuverPAD(&opt, *form);
+		//form->type = 2;
 		sprintf(form->purpose, "SEP BURN");
 		OrbMech::SStoHHMMSS(form->GETI - 5.0*60.0, hh, mm, ss);
-		sprintf(form->remarks, "LM JETT: %d:%d:%.2lf R 219 P 358 Y 342", hh, mm, ss);
+		sprintf(form->remarks, "LM Jettison: GET: %d:%d:%.2lf R: 219 P: 358 Y: 342\nSep burn is Z-axis, retrograde", hh, mm, ss);
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
@@ -2781,7 +2809,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		AP11LMManPADOpt opt;
 
 		double GETbase;
-		SV sv;
+		SV sv, sv2;
 		char buffer1[1000];
 		char buffer2[1000];
 
@@ -2796,7 +2824,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.csmlmdocked = false;
 		opt.dV_LVLH = DeltaV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_LMDPS;
+		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
@@ -2805,6 +2833,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP11LMManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "IMPACT PAD");
+
+		//Save cutoff time for MCC
+		calcParams.TIGSTORE1 = TimeofIgnition + form->burntime - 1.0;
 
 		AGCStateVectorUpdate(buffer1, sv, false, GETbase);
 		LGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
@@ -2827,6 +2858,40 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->DV[0] = DeltaV_LVLH / 0.3048;
 	}
 	break;
+	case 120: //P42 GROUND COMMAND
+	case 121: //PRO
+	case 122: //ENTER
+	case 123: //COMMAND ULLAGE OFF
+	{
+		char updesc[128];
+
+		if (fcn == 120)
+		{
+			sprintf(uplinkdata, "V37E42ER");
+			sprintf(updesc, "LM: P42 APS thrusting");
+		}
+		else if (fcn == 121)
+		{
+			sprintf(uplinkdata, "V33ER");
+			sprintf(updesc, "");
+		}
+		else if (fcn == 122)
+		{
+			sprintf(uplinkdata, "ER");
+			sprintf(updesc, "");
+		}
+		else if (fcn == 123)
+		{
+			sprintf(uplinkdata, "ER");
+			sprintf(updesc, "LM: Command ullage off");
+		}
+
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, updesc);
+		}
+	}
 	case 200: //TEI EVALUATION
 	{
 		SV sv;
