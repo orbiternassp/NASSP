@@ -365,6 +365,30 @@ namespace mission {
 		oapiReadItem_float(hFile, "LMPIPASCALEZ", LM_PIPAScale.z);
 	}
 
+	MATRIX3 Mission::GetCM_IMU_Drift() const {
+		return CM_IMUDriftRates;
+	}
+
+	MATRIX3 Mission::GetLM_IMU_Drift() const {
+		return LM_IMUDriftRates;
+	}
+	
+	VECTOR3 Mission::GetCM_PIPA_Bias() const {
+		return CM_PIPABias;
+	}
+	
+	VECTOR3 Mission::GetLM_PIPA_Bias() const {
+		return LM_PIPABias;
+	}
+	
+	VECTOR3 Mission::GetCM_PIPA_Scale() const {
+		return CM_PIPAScale;
+	}
+	
+	VECTOR3 Mission::GetLM_PIPA_Scale() const {
+		return LM_PIPAScale;
+	}
+
 	int Mission::GetSMJCVersion() const
 	{
 		return iSMJCVersion;
