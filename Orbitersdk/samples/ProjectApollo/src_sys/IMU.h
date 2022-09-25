@@ -64,6 +64,28 @@ public:
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
+
+	typedef struct {
+		double NBD_X;
+		double NBD_Y;
+		double NBD_Z;
+		double ADSRA;
+		double ADSRA_Y;
+		double ADSRA_Z;
+		double ADIA_X;
+		double ADIA_Y;
+		double ADIA_Z;
+	} IMU_DriftRates;
+
+	typedef struct {
+		double PIPA_BiasX;
+		double PIPA_BiasY;
+		double PIPA_BiasZ;
+		double PIPA_ScalePPM_X;
+		double PIPA_ScalePPM_Y;
+		double PIPA_ScalePPM_Z;
+	} PIPA_BiasScale;
+
 protected:
 	
 	void DriveCDUX(int cducmd);
@@ -132,17 +154,8 @@ protected:
 		double Z;
 	} RemainingPIPA;
 
-	struct {
-		double NBD_X;
-		double NBD_Y;
-		double NBD_Z;
-		double ADSRA_X;
-		double ADSRA_Y;
-		double ADSRA_Z;
-		double ADIA_X;
-		double ADIA_Y;
-		double ADIA_Z;
-	} IMU_DriftRates;
+	IMU_DriftRates imuDriftRates;
+	PIPA_BiasScale pipaBiasScale;
 
 	struct {
 		MATRIX3 Attitude_v2g;

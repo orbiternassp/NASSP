@@ -75,15 +75,24 @@ void IMU::Init()
 	Gimbal.Y = 0;
 	Gimbal.Z = 0;
 
-	IMU_DriftRates.NBD_X = 0.0;
-	IMU_DriftRates.NBD_Y = 0.0;
-	IMU_DriftRates.NBD_Z = 0.0;
-	IMU_DriftRates.ADSRA_X = 0.0;
-	IMU_DriftRates.ADSRA_Y = 0.0;
-	IMU_DriftRates.ADSRA_Z = 0.0;
-	IMU_DriftRates.ADIA_X = 0.0;
-	IMU_DriftRates.ADIA_Y = 0.0;
-	IMU_DriftRates.ADIA_Z = 0.0;
+	imuDriftRates.NBD_X = 0.0;
+	imuDriftRates.NBD_Y = 0.0;
+	imuDriftRates.NBD_Z = 0.0;
+	imuDriftRates.ADSRA_X = 0.0;
+	imuDriftRates.ADSRA_Y = 0.0;
+	imuDriftRates.ADSRA_Z = 0.0;
+	imuDriftRates.ADIA_X = 0.0;
+	imuDriftRates.ADIA_Y = 0.0;
+	imuDriftRates.ADIA_Z = 0.0;
+
+
+	pipaBiasScale.PIPA_BiasX = 0.0;;
+	pipaBiasScale.PIPA_BiasY = 0.0;;
+	pipaBiasScale.PIPA_BiasZ = 0.0;;
+	pipaBiasScale.PIPA_ScalePPM_X = 0.0;;
+	pipaBiasScale.PIPA_ScalePPM_Y = 0.0;;
+	pipaBiasScale.PIPA_ScalePPM_Z = 0.0;;
+
 
 	Orbiter.Attitude_v2g = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	Orbiter.Attitude_g2v = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
@@ -435,6 +444,10 @@ void IMU::Timestep(double simdt)
 		accel = mul(Orbiter.Attitude_v2g, -accel);
 		accel = tmul(Orbiter.AttitudeReference, accel);
 
+		accel.x += pipaBiasScale.PIPA_BiasX + accel.x * pipaBiasScale.PIPA_ScalePPM_X;
+		accel.y += pipaBiasScale.PIPA_BiasY + accel.y * pipaBiasScale.PIPA_ScalePPM_Y;
+		accel.z += pipaBiasScale.PIPA_BiasZ + accel.z * pipaBiasScale.PIPA_ScalePPM_Z;
+
 		// pulse PIPAs
 		pulses = RemainingPIPA.X + (accel.x * LastSimDT / pipaRate);
 		PulsePIPA(RegPIPAX, (int) pulses);
@@ -449,13 +462,10 @@ void IMU::Timestep(double simdt)
 		RemainingPIPA.Z = pulses - (int) pulses;
 
 		//IMU Drift calculation
-		double X_drift = (IMU_DriftRates.NBD_X - (IMU_DriftRates.ADSRA_X * accel.y / 9.80665) + (IMU_DriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
-		double Y_drift = (IMU_DriftRates.NBD_Y - (IMU_DriftRates.ADSRA_Y * accel.z / 9.80665) + (IMU_DriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
-		double Z_drift = (IMU_DriftRates.NBD_Z + (IMU_DriftRates.ADSRA_Z * accel.y / 9.80665) + (IMU_DriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
+		Gimbal.X -= (imuDriftRates.NBD_X - (imuDriftRates.ADSRA_X * accel.y / 9.80665) + (imuDriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
+		Gimbal.Y -= (imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
+		Gimbal.Z -= (imuDriftRates.NBD_Z + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
 
-		DriveGimbalX(-X_drift - Gimbal.X);
-		DriveGimbalY(-Y_drift - Gimbal.Y);
-		DriveGimbalZ(-Z_drift - Gimbal.Z);
 	}
 	LastSimDT = simdt;
 }

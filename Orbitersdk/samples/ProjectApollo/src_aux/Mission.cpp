@@ -111,6 +111,14 @@ namespace mission {
 		iCMtoLMPowerConnectionVersion = 0;
 		EmptySMCG = _V(914.5916, -6.6712, 12.2940); //Includes: empty SM and SLA ring, but no SM RCS
 		bHasRateAidedOptics = false;
+
+		CM_IMUDriftRates = _M(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		CM_PIPABias = _V(0.0, 0.0, 0.0);
+		CM_PIPAScale = _V(0.0, 0.0, 0.0);
+
+		LM_IMUDriftRates = _M(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		LM_PIPABias = _V(0.0, 0.0, 0.0);;
+		LM_PIPAScale = _V(0.0, 0.0, 0.0);
 		iLMCWEAVersion = 0;
 		bCrossPointerReversePolarity = false;
 		bCrossPointerShades = false;
@@ -313,9 +321,48 @@ namespace mission {
 				ReadCueCardLine(line + 10, 1);
 			}
 		}
+		LoadIMU_AndPIPA_RatesAndBiases(hFile);
 		hFile.close();
 
 		return true;
+	}
+
+	void Mission::LoadIMU_AndPIPA_RatesAndBiases(FILEHANDLE hFile) {
+		oapiReadItem_float(hFile, "CMNBDX", CM_IMUDriftRates.m11);
+		oapiReadItem_float(hFile, "CMNBDY", CM_IMUDriftRates.m12);
+		oapiReadItem_float(hFile, "CMNBDZ", CM_IMUDriftRates.m13);
+		oapiReadItem_float(hFile, "CMADSRAX", CM_IMUDriftRates.m21);
+		oapiReadItem_float(hFile, "CMADSRAY", CM_IMUDriftRates.m22);
+		oapiReadItem_float(hFile, "CMADSRAZ", CM_IMUDriftRates.m23);
+		oapiReadItem_float(hFile, "CMADIAX", CM_IMUDriftRates.m31);
+		oapiReadItem_float(hFile, "CMADIAY", CM_IMUDriftRates.m32);
+		oapiReadItem_float(hFile, "CMADIAZ", CM_IMUDriftRates.m33);
+
+		oapiReadItem_float(hFile, "CMPIPABIASX", CM_PIPABias.x);
+		oapiReadItem_float(hFile, "CMPIPABIASY", CM_PIPABias.y);
+		oapiReadItem_float(hFile, "CMPIPABIASZ", CM_PIPABias.z);
+
+		oapiReadItem_float(hFile, "CMPIPASCALEX", CM_PIPAScale.x);
+		oapiReadItem_float(hFile, "CMPIPASCALEY", CM_PIPAScale.y);
+		oapiReadItem_float(hFile, "CMPIPASCALEZ", CM_PIPAScale.z);
+
+		oapiReadItem_float(hFile, "LMNBDX", LM_IMUDriftRates.m11);
+		oapiReadItem_float(hFile, "LMNBDY", LM_IMUDriftRates.m12);
+		oapiReadItem_float(hFile, "LMNBDZ", LM_IMUDriftRates.m13);
+		oapiReadItem_float(hFile, "LMADSRAX", LM_IMUDriftRates.m21);
+		oapiReadItem_float(hFile, "LMADSRAY", LM_IMUDriftRates.m22);
+		oapiReadItem_float(hFile, "LMADSRAZ", LM_IMUDriftRates.m23);
+		oapiReadItem_float(hFile, "LMADIAX", LM_IMUDriftRates.m31);
+		oapiReadItem_float(hFile, "LMADIAY", LM_IMUDriftRates.m32);
+		oapiReadItem_float(hFile, "LMADIAZ", LM_IMUDriftRates.m33);
+
+		oapiReadItem_float(hFile, "LMPIPABIASX", LM_PIPABias.x);
+		oapiReadItem_float(hFile, "LMPIPABIASY", LM_PIPABias.y);
+		oapiReadItem_float(hFile, "LMPIPABIASZ", LM_PIPABias.z);
+
+		oapiReadItem_float(hFile, "LMPIPASCALEX", LM_PIPAScale.x);
+		oapiReadItem_float(hFile, "LMPIPASCALEY", LM_PIPAScale.y);
+		oapiReadItem_float(hFile, "LMPIPASCALEZ", LM_PIPAScale.z);
 	}
 
 	int Mission::GetSMJCVersion() const

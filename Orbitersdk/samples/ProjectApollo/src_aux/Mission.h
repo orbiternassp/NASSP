@@ -162,6 +162,16 @@ namespace mission
 		double dTEPHEM0;
 		int iLMSystemsVersion;
 
+		MATRIX3 CM_IMUDriftRates;
+		VECTOR3 CM_PIPABias;
+		VECTOR3 CM_PIPAScale;
+
+		MATRIX3 LM_IMUDriftRates;
+		VECTOR3 LM_PIPABias;
+		VECTOR3 LM_PIPAScale;
+
+		void Mission::LoadIMU_AndPIPA_RatesAndBiases(FILEHANDLE hFile);
+
 		void SetDefaultValues();
 	};
 }
