@@ -372,47 +372,76 @@ void MCC::MissionSequence_H1()
 	case MST_H1_LUNAR_ORBIT_EVA_DAY_3: //LM Liftoff Times Update 3 to CMC CSM state vector update
 		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, MoonRev >= 25 && MoonRevTime > 60.0*60.0, 87, MST_H1_LUNAR_ORBIT_EVA_DAY_4);
 		break;
-	case MST_H1_LUNAR_ORBIT_EVA_DAY_4: //CMC CSM state vector update to LM Tracking PAD
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 21 && MoonRevTime > 65.0*60.0, 1, MST_H1_LUNAR_ORBIT_EVA_DAY_5); //BM
+	case MST_H1_LUNAR_ORBIT_EVA_DAY_4: //CMC CSM state vector update to LANSBERG A Tracking PAD
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 26 && MoonRevTime > 40.0*60.0, 1, MST_H1_LUNAR_ORBIT_EVA_DAY_5);
 		break;
-	case MST_H1_LUNAR_ORBIT_EVA_DAY_5: //LM Liftoff Times Update 3 to LGC CSM state vector update
-		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, MoonRev >= 24 && MoonRevTime > 35.0*60.0, 98, MST_H1_LUNAR_ORBIT_ASCENT_DAY_1);
+	case MST_H1_LUNAR_ORBIT_EVA_DAY_5: //LANSBERG A Tracking PAD to LM Liftoff Times Update 4
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, MoonRev >= 28 && MoonRevTime > 100.0*60.0, 64, MST_H1_LUNAR_ORBIT_EVA_DAY_6);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_1: //LGC CSM state vector update to Nominal Insertion targeting
-		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, MoonRev >= 24 && MoonRevTime > 70.0*60.0, 3, MST_H1_LUNAR_ORBIT_ASCENT_DAY_2);
+	case MST_H1_LUNAR_ORBIT_EVA_DAY_6: //Liftoff Times Update 4 to P22 Acquistion time
+		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, SubStateTime > 5.0*60.0, 88, MST_H1_LUNAR_ORBIT_EVA_DAY_7);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_2: //Nominal Insertion targeting to CMC State Vector uplinks
-		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 100, MST_H1_LUNAR_ORBIT_ASCENT_DAY_3);
+	case MST_H1_LUNAR_ORBIT_EVA_DAY_7: //P22 Acquistion time to CSM SV uplink
+		UpdateMacro(UTP_PADONLY, PT_LMP22ACQPAD, MoonRev >= 29 && MoonRevTime > 20.0*60.00, 59, MST_H1_LUNAR_ORBIT_EVA_DAY_8);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_3: //CMC State Vector uplinks to LM Ascent PAD
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 101, MST_H1_LUNAR_ORBIT_ASCENT_DAY_4);
+	case MST_H1_LUNAR_ORBIT_EVA_DAY_8: //CSM SV uplink to LM SV uplink
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 1, MST_H1_LUNAR_ORBIT_EVA_DAY_9);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_4: //LM Ascent PAD to CSI Data Card
-		UpdateMacro(UTP_PADONLY, PT_AP11LMASCPAD, SubStateTime > 5.0*60.0, 102, MST_H1_LUNAR_ORBIT_ASCENT_DAY_5);
+	case MST_H1_LUNAR_ORBIT_EVA_DAY_9: //LM SV uplink to Lmk 193 Landmark Tracking PAD
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 3, MST_H1_LUNAR_ORBIT_EVA_DAY_10);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_5: //CSI Data Card to LM Liftoff Evaluation
-		UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff + 20.0), 103, MST_H1_LUNAR_ORBIT_ASCENT_DAY_6);
+	case MST_H1_LUNAR_ORBIT_EVA_DAY_10: //Lmk 193 Landmark Tracking PAD to Nominal Insertion targeting + CMC SV update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, MoonRev >= 29 && MoonRevTime > 75.0*60.00, 63, MST_H1_LUNAR_ORBIT_ASCENT_DAY_1);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_6: //LM Liftoff Evaluation to CMC LM State Vector update
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(rtcc->calcParams.Insertion + 120.0), 104, MST_H1_LUNAR_ORBIT_ASCENT_DAY_7, scrubbed, SubStateTime > 15.0*60.0, MST_H1_LUNAR_ORBIT_ASCENT_DAY_2);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_1: //Nominal Insertion targeting + CMC SV update to LM Ascent PAD
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff - 90.0*60.0), 100, MST_H1_LUNAR_ORBIT_ASCENT_DAY_2);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_7: //CMC LM State Vector update to CSM state vector update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 27 && MoonRevTime > 95.0*60.0, 2, MST_H1_LUNAR_ORBIT_ASCENT_DAY_8);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_2: //LM Ascent PAD to CSI Data Card
+		UpdateMacro(UTP_PADONLY, PT_AP12LMASCPAD, SubStateTime > 5.0*60.0, 105, MST_H1_LUNAR_ORBIT_ASCENT_DAY_3);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_8: //CSM state vector update to Preliminary TEI-30 update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 29 && MoonRevTime > 40.0*60.0, 1, MST_H1_LUNAR_ORBIT_ASCENT_DAY_9);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_3: //CSI Data Card to LM Tracking PAD
+		UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff - 45.0*60.0), 106, MST_H1_LUNAR_ORBIT_ASCENT_DAY_4);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_9: //Preliminary TEI-30 update to Final TEI-30 Update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 30 && MoonRevTime > 55.0*60.0, 45, MST_H1_LUNAR_ORBIT_ASCENT_DAY_10);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_4: //LM Tracking PAD to CMC SV uplinks
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 66, MST_H1_LUNAR_ORBIT_ASCENT_DAY_5);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_10: //Final TEI-30 Update to TEI-31 PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 46, MST_H1_LUNAR_ORBIT_ASCENT_DAY_11);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_5: //CMC SV uplinks to LGC SV + RLS uplinks
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 101, MST_H1_LUNAR_ORBIT_ASCENT_DAY_6);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_11: //TEI-31 PAD to TEI Evaluation
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TEI + 300.0), 47, MST_H1_LUNAR_ORBIT_ASCENT_DAY_12);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_6: //LGC SV + RLS uplinks to LM Liftoff Evaluation
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff + 20.0), 102, MST_H1_LUNAR_ORBIT_ASCENT_DAY_7);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_12: //TEI Evaluation to TEI
-		UpdateMacro(UTP_NONE, PT_NONE, true, 105, MST_H1_TRANSEARTH_1, scrubbed, MoonRevTime > 40.0*60.0, MST_H1_LUNAR_ORBIT_ASCENT_DAY_10);
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_7: //LM Liftoff Evaluation to CMC LM State Vector update
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(rtcc->calcParams.Insertion + 120.0), 107, MST_H1_LUNAR_ORBIT_ASCENT_DAY_8, scrubbed, SubStateTime > 15.0*60.0, MST_H1_LUNAR_ORBIT_ASCENT_DAY_1);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_8: //CMC LM State Vector update to SEP burn PAD
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff + 4.0*3600.0), 2, MST_H1_LUNAR_ORBIT_ASCENT_DAY_9);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_9: //SEP burn PAD to Impact burn PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 110, MST_H1_LUNAR_ORBIT_ASCENT_DAY_10);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_10: //Impact burn PAD to CSM P76 PAD
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff + 5.0*3600.0 + 12.0*60.0), 111, MST_H1_LUNAR_ORBIT_ASCENT_DAY_11);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_11: //CSM P76 PAD to P42 uplink
+		UpdateMacro(UTP_PADONLY, PT_AP11P76PAD, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff + 6.0*3600.0), 112, MST_H1_LUNAR_ORBIT_ASCENT_DAY_12);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_12: //P42 uplink to TEI-39 PAD
+		UpdateMacro(UTP_NONE, PT_NONE, MoonRev >= 34 && MoonRevTime > 30.0*60.0, 112, MST_H1_LUNAR_ORBIT_ASCENT_DAY_13); //BM
+		break;
+
+	////FIX BEYOND HERE
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_50: //Preliminary TEI-30 update to Final TEI-30 Update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 30 && MoonRevTime > 55.0*60.0, 45, MST_H1_LUNAR_ORBIT_ASCENT_DAY_51);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_51: //Final TEI-30 Update to TEI-31 PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 46, MST_H1_LUNAR_ORBIT_ASCENT_DAY_52);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_52: //TEI-31 PAD to TEI Evaluation
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TEI + 300.0), 47, MST_H1_LUNAR_ORBIT_ASCENT_DAY_53);
+		break;
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_53: //TEI Evaluation to TEI
+		UpdateMacro(UTP_NONE, PT_NONE, true, 105, MST_H1_TRANSEARTH_1, scrubbed, MoonRevTime > 40.0*60.0, MST_H1_LUNAR_ORBIT_ASCENT_DAY_50);
 		break;
 	case MST_H1_TRANSEARTH_1: //TEI to PTC REFSMMAT
 		switch (SubState)

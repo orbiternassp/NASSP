@@ -511,6 +511,23 @@ struct LMP22ACQPAD
 	double P22_ACQ;
 };
 
+struct AP12LMASCPAD
+{
+	double TIG;			//Time of APS ignition for LM ascent
+	double V_hor;		//horizontal velocity at orbit insertion
+	double V_vert;		//Vertical velocity at orbit insertion
+	double CR;			//Crossrange distance at orbital insertion
+	int DEDA047;		//Sine of landing azimuth angle
+	int DEDA053;		//Cosine of landing azimuth angle
+	double DEDA225_226;	//Lower/Upper limit of semi-major axis at orbit insertion
+	double DEDA231;		//Radial distance of launch site from center of Moon
+	double DEDA465;     //Target radial rate at insertion
+	double TIG_2;		//Time of APS ignition for LM ascent on next revolution
+	double LMWeight;	// LM weight
+	double CSMWeight;	// CSM weight
+	char remarks[128];
+};
+
 //GENERIC STRING
 
 struct GENERICPAD
