@@ -441,23 +441,33 @@ void MCC::MissionSequence_H1()
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_16: //TEI-39 PAD to LM command ullage off
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TIGSTORE1), 45, MST_H1_LUNAR_ORBIT_ASCENT_DAY_17);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_17: //LM command ullage off to XXXXXX
-		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, MoonRev >= 40 && MoonRevTime > 55.0*60.0, 123, MST_H1_LUNAR_ORBIT_ASCENT_DAY_50); //BM
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_17: //LM command ullage off to PC-2 Update
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, MoonRev >= 38 && MoonRevTime > 50.0*60.0, 123, MST_H1_LUNAR_ORBIT_PC2_DAY_1);
+		break;
+	case MST_H1_LUNAR_ORBIT_PC2_DAY_1: //PC-2 Update to Photography REFSMMAT caclulation
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 95, MST_H1_LUNAR_ORBIT_PC2_DAY_2);
+		break;
+	case MST_H1_LUNAR_ORBIT_PC2_DAY_2: //Photography REFSMMAT caclulation to TEI-41 PAD
+		UpdateMacro(UTP_NONE, PT_NONE, true, 130, MST_H1_LUNAR_ORBIT_PC2_DAY_3);
+		break;
+	case MST_H1_LUNAR_ORBIT_PC2_DAY_3: //TEI-41 PAD to XXXXX
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 60.0*60.0, 46, MST_H1_LUNAR_ORBIT_PC2_DAY_4);
 		break;
 
 	////FIX BEYOND HERE
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_50: //Preliminary TEI-30 update to Final TEI-30 Update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 30 && MoonRevTime > 55.0*60.0, 45, MST_H1_LUNAR_ORBIT_ASCENT_DAY_51);
+	/*
+	case MST_H1_LUNAR_ORBIT_PC2_DAY_1: //Preliminary TEI-30 update to Final TEI-30 Update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 30 && MoonRevTime > 55.0*60.0, 45, MST_H1_LUNAR_ORBIT_PC2_DAY_2);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_51: //Final TEI-30 Update to TEI-31 PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 46, MST_H1_LUNAR_ORBIT_ASCENT_DAY_52);
+	case MST_H1_LUNAR_ORBIT_PC2_DAY_2: //Final TEI-30 Update to TEI-31 PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 46, MST_H1_LUNAR_ORBIT_PC2_DAY_3);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_52: //TEI-31 PAD to TEI Evaluation
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TEI + 300.0), 47, MST_H1_LUNAR_ORBIT_ASCENT_DAY_53);
+	case MST_H1_LUNAR_ORBIT_PC2_DAY_3: //TEI-31 PAD to TEI Evaluation
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TEI + 300.0), 47, MST_H1_LUNAR_ORBIT_PC2_DAY_4);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_53: //TEI Evaluation to TEI
-		UpdateMacro(UTP_NONE, PT_NONE, true, 105, MST_H1_TRANSEARTH_1, scrubbed, MoonRevTime > 40.0*60.0, MST_H1_LUNAR_ORBIT_ASCENT_DAY_50);
-		break;
+	case MST_H1_LUNAR_ORBIT_PC2_DAY_4: //TEI Evaluation to TEI
+		UpdateMacro(UTP_NONE, PT_NONE, true, 105, MST_H1_TRANSEARTH_1, scrubbed, MoonRevTime > 40.0*60.0, MST_H1_LUNAR_ORBIT_PC2_DAY_4);
+		break;*/
 	case MST_H1_TRANSEARTH_1: //TEI to PTC REFSMMAT
 		switch (SubState)
 		{

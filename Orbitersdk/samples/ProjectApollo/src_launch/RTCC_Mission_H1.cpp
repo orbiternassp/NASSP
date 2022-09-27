@@ -1546,13 +1546,13 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		{
 			sprintf(manname, "TEI-1");
 			sv2 = coast(sv1, 0.5*2.0*3600.0);
-			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT;
+			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT; //Landing site REFSMMAT
 		}
 		else if (fcn == 41)
 		{
 			sprintf(manname, "TEI-4");
 			sv2 = coast(sv1, 3.5*2.0*3600.0);
-			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT;
+			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT; //Landing site REFSMMAT
 		}
 		else if (fcn == 42)
 		{
@@ -1577,7 +1577,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		else if (fcn == 46)
 		{
 			sprintf(manname, "TEI-41");
-			sv2 = coast(sv1, (41 - mcc->MoonRev) * 2.0*3600.0);
+			sv2 = coast(sv1, 2.5*2.0*3600.0);
+			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT; //Photography REFSMMAT
 		}
 		else if (fcn == 47)
 		{
@@ -2409,7 +2410,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 95: //PLANE CHANGE 2 TARGETING
 	{
 		SV sv;
-		double GET_SV;
+		double GET_SV, THT;
 
 		AP11MNV * form = (AP11MNV*)pad;
 
@@ -2418,14 +2419,27 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		REFSMMATOpt refsopt;
 		MATRIX3 REFSMMAT;
 
-		char buffer1[1000], buffer2[1000], buffer3[1000];
+		char buffer1[1000], buffer2[1000], buffer3[1000], updesc[128];
 
 		sv = StateVectorCalc(calcParams.src);
 
 		GET_SV = OrbMech::GETfromMJD(sv.MJD, CalcGETBase());
 
 		med_k16.GETTH1 = GET_SV + 1.0*3600.0;
-		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LunarLiftoff - 0.5*3600.0;
+		if (fcn == 95)
+		{
+			//SCOT vol.1 pg 4-175: "Results in an orbit that passes directly over Descartes & Fra Mauro two revolutions later"
+			//Descartes coordinates
+			BZLAND.lat[RTCC_LMPOS_BEST] = -8.883*RAD;
+			BZLAND.lng[RTCC_LMPOS_BEST] = 15.55*RAD;
+
+			THT = med_k16.GETTH1 + 2.0*3600.0;
+		}
+		else
+		{
+			THT = calcParams.LunarLiftoff;
+		}
+		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = THT - 0.5*3600.0;
 		med_k16.Mode = 7;
 		med_k16.Sequence = 1;
 		med_k16.Vehicle = RTCC_MPT_CSM;
@@ -2438,7 +2452,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		refsopt.dV_LVLH = DeltaV_LVLH;
 		refsopt.GETbase = CalcGETBase();
-		refsopt.HeadsUp = false;
+		refsopt.HeadsUp = true;
 		refsopt.REFSMMATTime = TimeofIgnition;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -2450,16 +2464,27 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.dV_LVLH = DeltaV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.GETbase = CalcGETBase();
-		manopt.HeadsUp = false;
+		manopt.HeadsUp = true;
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = TimeofIgnition;
 		manopt.vessel = calcParams.src;
 		manopt.vesseltype = 0;
 
 		AP11ManeuverPAD(&manopt, *form);
-		sprintf(form->purpose, "PLANE CHANGE 1");
 
-		AGCStateVectorUpdate(buffer1, sv, true, CalcGETBase());
+		if (fcn == 94)
+		{
+			sprintf(form->purpose, "PLANE CHANGE 1");
+			sprintf(updesc, "CSM state vector, target load, PC REFSMMAT");
+			AGCStateVectorUpdate(buffer1, sv, true, CalcGETBase());
+		}
+		else
+		{
+			sprintf(form->purpose, "PLANE CHANGE 2");
+			sprintf(updesc, "CSM state vector and V66, target load, PC REFSMMAT");
+			AGCStateVectorUpdate(buffer1, sv, true, CalcGETBase(), true);
+		}
+
 		CMCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 		AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
 
@@ -2468,7 +2493,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load, PC REFSMMAT");
+			sprintf(upDesc, updesc);
 		}
 	}
 	break;
@@ -2892,6 +2917,36 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sprintf(upDesc, updesc);
 		}
 	}
+	case 130: //PHOTAGRAPHY REFSMMAT CACLULATION
+	case 131: //PHOTAGRAPHY REFSMMAT UPLINK
+	{
+		MATRIX3 REFSMMAT;
+
+		if (fcn == 130)
+		{
+			//Hard-coded from page 59 of "Final operational spacecraft attitude sequence for Apollo 12" (69-FM-304)
+			REFSMMAT = _M(-0.99920070, -0.03280089, -0.02284871, -0.00131239, -0.54435646, 0.83885300, -0.03995296, 0.83821248, 0.54387832);
+
+			//Store as LM LCV matrix
+			EMGSTSTM(RTCC_MPT_LM, REFSMMAT, RTCC_REFSMMAT_TYPE_LCV, RTCCPresentTimeGMT());
+		}
+		else
+		{
+			char buffer1[1000];
+
+			REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT;
+
+			AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, true, true);
+			sprintf(uplinkdata, "%s", buffer1);
+
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "Photography REFSMMAT");
+			}
+		}
+	}
+	break;
 	case 200: //TEI EVALUATION
 	{
 		SV sv;
