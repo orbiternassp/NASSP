@@ -4505,7 +4505,8 @@ void RTCC::EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad)
 	entin.lat_T = opt.lat;
 	entin.lng_T = opt.lng;
 	entin.KSWCH = 3;
-	entin.D0 = entin.K1 = opt.InitialBank;
+	entin.C10 = opt.InitialBank;
+	entin.g_c_GN = opt.GLevel;
 
 	RMMYNI(entin, entout);
 

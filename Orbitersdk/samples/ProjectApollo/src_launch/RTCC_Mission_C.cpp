@@ -173,11 +173,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 2: // MISSION C CONTINGENCY DEORBIT (6-4) TARGETING
+	case 42: //MISSION C NOMINAL DEORBIT MANEUVER PAD
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
 		MATRIX3 REFSMMAT;
-		double CSMmass, gmt_guess, gmt_min, gmt_max;
+		double get_guess, lng_des, CSMmass, gmt_guess, gmt_min, gmt_max;
 		AP7ManPADOpt opt;
 		EphemerisData sv;
 		EMSMISSInputTable intab;
@@ -186,11 +187,25 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer2[1000];
 		char buffer3[1000];
 
+		//Get state vector and mass
 		sv = StateVectorCalcEphem(calcParams.src);
 		CSMmass = calcParams.src->GetMass();
 
+		if (fcn == 2)
+		{
+			get_guess = OrbMech::HHMMSSToSS(8, 55, 0);
+			lng_des = -163.0*RAD;
+			opt.sxtstardtime = -25 * 60;
+		}
+		else
+		{
+			get_guess = OrbMech::HHMMSSToSS(259, 39, 16);
+			lng_des = -64.17*RAD;
+			opt.sxtstardtime = -20.0*60.0;
+		}
+
 		//Generate epehemeris for recovery target selection
-		gmt_guess = GMTfromGET(8.0*3600.0 + 55.0*60.0);
+		gmt_guess = GMTfromGET(get_guess);
 		gmt_min = gmt_guess;
 		gmt_max = gmt_guess + 2.75*60.0*60.0;
 
@@ -207,7 +222,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		tab.Header.TUP = 1;
 
 		//Run recovery target selection
-		RMDRTSD(tab, 1, gmt_guess, -163.0*RAD);
+		RMDRTSD(tab, 1, gmt_guess, lng_des);
 
 		//Select first entry
 		RZJCTTC.R32_lat_T = RZDRTSD.table[0].Latitude*RAD;
@@ -254,12 +269,19 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
-		opt.sxtstardtime = -25 * 60;
 		opt.REFSMMAT = REFSMMAT;
-		opt.navcheckGET = 8 * 60 * 60 + 17 * 60;
+		opt.navcheckGET = TimeofIgnition - 40.0*60.0;
 
 		AP7ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, "6-4 DEORBIT");
+
+		if (fcn == 2)
+		{
+			sprintf(form->purpose, "6-4 DEORBIT");
+		}
+		else
+		{
+			sprintf(form->purpose, "164-1A RETROFIRE");
+		}
 
 		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
 		CMCRetrofireExternalDeltaVUpdate(buffer2, SplashLatitude, SplashLongitude, TimeofIgnition, DeltaV_LVLH);
@@ -418,7 +440,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.vessel = calcParams.src;
 			opt.TIG = GET_TIG;
 			opt.dV_LVLH = dV_LVLH;
-			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
+			opt.enginetype = SPSRCSDecision(SystemParameters.MCTST1 / calcParams.src->GetMass(), dV_LVLH);
 			opt.HeadsUp = true;
 			opt.sxtstardtime = 0;
 			opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
@@ -614,7 +636,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			char buffer1[1000];
 			VECTOR3 dV_LVLH;
 			int enginetype;
-			enginetype = SPSRCSDecision(SPS_THRUST / CSMmass, res.dV);
+			enginetype = SPSRCSDecision(SystemParameters.MCTST1 / CSMmass, res.dV);
 
 			in.CONFIG = 1; //CSM
 			in.CSMWeight = med_m50.CSMWT;
@@ -883,32 +905,51 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
+		PMMMPTInput in;
 		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, GETbase, TIG_imp;
+		double P30TIG, GETbase, TIG_imp, mass;
 		MATRIX3 REFSMMAT;
-		SV sv;
+		EphemerisData sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		GETbase = CalcGETBase();
-		sv = StateVectorCalc(calcParams.src);
+		sv = StateVectorCalcEphem(calcParams.src);
+		mass = calcParams.src->GetMass();
 
 		orbopt.AltRef = 1;
-		orbopt.H_A = 160.1*1852.0;
-		orbopt.H_P = 90.3*1852.0;
-		//Over Carnarvon
-		orbopt.long_D = 113.72595*RAD;
+		orbopt.H_A = 160.0*1852.0;
+		orbopt.H_P = 90.0*1852.0;
+		//Average from mission report
+		orbopt.long_D = 105.79*RAD;
 		orbopt.ManeuverCode = RTCC_GMP_NHL;
-		//Gives DV we had previously, needs fixing eventually
-		orbopt.dLAN = 0.3*RAD;
-		orbopt.sv_in = ConvertSVtoEphemData(sv);
+		//Rough estimate to get near 200 ft/s DVY
+		orbopt.dLAN = 0.45*RAD;
+		orbopt.sv_in = sv;
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(75, 18, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
+
+		in.CONFIG = 1; //CSM
+		in.CSMWeight = mass;
+		in.sv_before = PZGPMELM.SV_before;
+		in.V_aft = PZGPMELM.V_after;
+		in.DETU = 15.0; //Ullage
+		in.UT = true; //4 jets
+		in.IgnitionTimeOption = false;
+		in.IterationFlag = false;
+		in.LMWeight = 0.0;
+		in.Thruster = RTCC_ENGINETYPE_CSMSPS;
+		in.VC = RTCC_MANVEHICLE_CSM;
+		in.VehicleArea = PZMPTCSM.ConfigurationArea;
+		in.HeadsUpIndicator = true;
+
+		double GMT_TIG;
+		PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
+		P30TIG = GETfromGMT(GMT_TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -926,12 +967,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = P30TIG;
 		manopt.vessel = calcParams.src;
-		manopt.sxtstardtime = 0.0;
+		manopt.sxtstardtime = -15.0*60.0;
 
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "SPS-3");
 
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		AGCStateVectorUpdate(buffer1, 1, 1, sv);
 		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -1045,10 +1086,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer2[1000];
 
 		GETbase = CalcGETBase();
-		F = SPS_THRUST;
+		F = SystemParameters.MCTST1;
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
-		dv = F / m * t_burn;
+		dv = F / m * t_burn + SystemParameters.MCTCT1 / m * 20.0;
 
 		sv = StateVectorCalc(calcParams.src);
 
@@ -1330,7 +1371,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		F = SPS_THRUST;
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
-		dv = F / m * t_burn;
+		dv = F / m * t_burn + SystemParameters.MCTCT1 / m * 20.0;
 
 		sv = StateVectorCalc(calcParams.src);
 		dV_LVLH = _V(0.0, dv, 0.0);
@@ -1528,74 +1569,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
-	}
-	break;
-	case 42: //MISSION C NOMINAL DEORBIT MANEUVER PAD
-	{
-		AP7MNV * form = (AP7MNV *)pad;
-
-		EarthEntryOpt entopt;
-		EntryResults res;
-		AP7ManPADOpt opt;
-		REFSMMATOpt refsopt;
-		MATRIX3 REFSMMAT;
-		double GETbase;
-		SV sv;
-		char buffer1[1000];
-		char buffer2[1000];
-		char buffer3[1000];
-
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		GETbase = CalcGETBase();
-
-		entopt.vessel = calcParams.src;
-		entopt.GETbase = GETbase;
-		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		entopt.lng = -64.17*RAD;
-		entopt.nominal = true;
-		entopt.ReA = -2.062*RAD;
-		entopt.TIGguess = OrbMech::HHMMSSToSS(259, 39, 16);
-		entopt.entrylongmanual = true;
-		entopt.useSV = false;
-
-		BlockDataProcessor(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
-
-		TimeofIgnition = res.P30TIG;
-		SplashLatitude = res.latitude;
-		SplashLongitude = res.longitude;
-		DeltaV_LVLH = res.dV_LVLH;
-
-		refsopt.vessel = calcParams.src;
-		refsopt.GETbase = GETbase;
-		refsopt.dV_LVLH = res.dV_LVLH;
-		refsopt.REFSMMATTime = res.P30TIG;
-		refsopt.REFSMMATopt = 1;
-
-		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
-
-		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		opt.GETbase = GETbase;
-		opt.HeadsUp = true;
-		opt.navcheckGET = res.P30TIG - 40.0*60.0;
-		opt.REFSMMAT = REFSMMAT;
-		opt.sxtstardtime = -20.0*60.0;
-		opt.TIG = res.P30TIG;
-		opt.vessel = calcParams.src;
-
-		AP7ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, "164-1A RETROFIRE");
-
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
-		CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-		AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
-
-		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load, Retrofire REFSMMAT");
-		}
 	}
 	break;
 	case 43: //MISSION C NOMINAL DEORBIT ENTRY PAD
