@@ -1896,6 +1896,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		GET_SV1 = OrbMech::GETfromMJD(sv1.MJD, GETbase);
 
+		calcParams.SEP = calcParams.PDI + 25 * 60.0;
+
 		//MED K17
 		GZGENCSN.LDPPPoweredDescentSimFlag = false;
 		GZGENCSN.LDPPDwellOrbits = 0;
