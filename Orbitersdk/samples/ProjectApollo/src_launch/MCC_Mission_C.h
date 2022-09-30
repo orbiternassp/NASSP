@@ -77,6 +77,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY5STATE4	83
 #define MST_C_DAY5STATE5	84
 #define MST_C_DAY5STATE6	85
+#define MST_C_DAY5STATE7	86
 
 // DAY 6
 #define MST_C_DAY6STATE1	90

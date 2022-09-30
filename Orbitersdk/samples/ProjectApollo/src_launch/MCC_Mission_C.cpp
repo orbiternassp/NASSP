@@ -194,25 +194,28 @@ void MCC::MissionSequence_C()
 	case MST_C_DAY4STATE4: // Block Data 13 to SPS-4
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(117 * 60 * 60 + 30 * 60), 22, MST_C_DAY4STATE5);
 		break;
-	case MST_C_DAY4STATE5: // SPS-4 to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(121 * 60 * 60 + 36 * 60), 23, MST_C_DAY5STATE1);
+	case MST_C_DAY4STATE5: // SPS-4 to landmark tracking update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(121 * 60 * 60 + 6 * 60), 23, MST_C_DAY5STATE1);
 		break;
-	case MST_C_DAY5STATE1: // SV Update to SV Update
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(123 * 60 * 60 + 40 * 60), 54, MST_C_DAY5STATE2);
+	case MST_C_DAY5STATE1: // Landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, rtcc->GETEval2(121 * 60 * 60 + 36 * 60), 55, MST_C_DAY5STATE2);
 		break;
-	case MST_C_DAY5STATE2: // SV Update to Block Data 14
+	case MST_C_DAY5STATE2: // SV Update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(123 * 60 * 60 + 40 * 60), 54, MST_C_DAY5STATE3);
+		break;
+	case MST_C_DAY5STATE3: // SV Update to Block Data 14
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(125 * 60 * 60 + 12 * 60), 52, MST_C_DAY5STATE3);
 		break;
-	case MST_C_DAY5STATE3: // Block Data 14 to Block Data 15
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(134 * 60 * 60 + 48 * 60), 24, MST_C_DAY5STATE4);
+	case MST_C_DAY5STATE4: // Block Data 14 to Block Data 15
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(134 * 60 * 60 + 48 * 60), 24, MST_C_DAY5STATE5);
 		break;
-	case MST_C_DAY5STATE4: // Block Data 15 to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(139 * 60 * 60 + 40 * 60), 25, MST_C_DAY5STATE5);
+	case MST_C_DAY5STATE5: // Block Data 15 to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(139 * 60 * 60 + 40 * 60), 25, MST_C_DAY5STATE6);
 		break;
-	case MST_C_DAY5STATE5: // SV Update to SV Update
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(143 * 60 * 60 + 20 * 60), 54, MST_C_DAY5STATE6);
+	case MST_C_DAY5STATE6: // SV Update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(143 * 60 * 60 + 20 * 60), 54, MST_C_DAY5STATE7);
 		break;
-	case MST_C_DAY5STATE6: // SV Update to Block Data 16
+	case MST_C_DAY5STATE7: // SV Update to Block Data 16
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(144 * 60 * 60 + 11 * 60), 52, MST_C_DAY6STATE1);
 		break;
 	case MST_C_DAY6STATE1: // Block Data 16 to SV Update
