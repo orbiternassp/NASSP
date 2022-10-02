@@ -1526,6 +1526,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP11MNV_Vt", form->Vt);
 			SAVE_DOUBLE("MCC_AP11MNV_Weight", form->Weight);
 			SAVE_DOUBLE("MCC_AP11MNV_yTrim", form->yTrim);
+			SAVE_INT("MCC_AP11MNV_type", form->type);
 		}
 		else if (padNumber == 9)
 		{
@@ -2118,6 +2119,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP11MNV_Vt", form->Vt);
 			LOAD_DOUBLE("MCC_AP11MNV_Weight", form->Weight);
 			LOAD_DOUBLE("MCC_AP11MNV_yTrim", form->yTrim);
+			LOAD_INT("MCC_AP11MNV_type", form->type);
 		}
 		else if (padNumber == 9)
 		{
@@ -2743,25 +2745,34 @@ void MCC::drawPad(bool writetofile){
 		}
 		break;
 	case PT_AP11MNV:
+	{
+		AP11MNV * form = (AP11MNV *)padForm;
+
+		int hh, hh2, mm, mm2;
+		double ss, ss2;
+
+		sprintf(buffer, "P30 MANEUVER");
+		SStoHHMMSS(form->GETI, hh, mm, ss);
+		SStoHHMMSS(form->burntime, hh2, mm2, ss2);
+
+		format_time(tmpbuf, form->GET05G);
+
+		sprintf(buffer, "%s\n%s PURPOSE\n%s PROP/GUID\n%+05.0f WT N47\n%+07.2f PTRIM N48\n%+07.2f YTRIM\n%+06d HRS GETI\n%+06d MIN N33\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY\n%+07.1f DVZ\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\n",
+			buffer, form->purpose, form->PropGuid, form->Weight, form->pTrim, form->yTrim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z);
+
+		if (form->type == 1)
 		{
-			AP11MNV * form = (AP11MNV *)padForm;
+			sprintf(buffer, "%s%+07.1f HA N44\n%+07.1f HP\n%+07.1f DVT\nXXX%d:%02.0f BT\nX%06.1f DVC\nXXXX%02d SXTS\n%+06.1f0 SFT\n%+05.1f00 TRN\nXXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\n%+07.2f LAT N61\n%+07.2f LONG\n%+07.1f RTGO EMS\n%+06.0f VI0\n%s GET 0.05G\n",
+				buffer, form->HA, form->HP, form->Vt, mm2, ss2, form->Vc, form->Star, form->Shaft, form->Trun, form->BSSStar, form->SPA, form->SXP, form->lat, form->lng, form->RTGO, form->VI0, tmpbuf);
 
-			int hh, hh2, mm, mm2;
-			double ss, ss2;
-
-			sprintf(buffer, "P30 MANEUVER");
-			SStoHHMMSS(form->GETI, hh, mm, ss);
-			SStoHHMMSS(form->burntime, hh2, mm2, ss2);
-
-			format_time(tmpbuf, form->GET05G);
-
-			sprintf(buffer, "%s\n%s PURPOSE\n%s PROP/GUID\n%+05.0f WT N47\n%+07.2f PTRIM N48\n%+07.2f YTRIM\n%+06d HRS GETI\n%+06d MIN N33\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY\n%+07.1f DVZ\nXXX%03.0f R\nXXX%03.0f P\nXXX%03.0f Y\n%+07.1f HA N44\n%+07.1f HP\n%+07.1f DVT\nXXX%d:%02.0f BT\nX%06.1f DVC\nXXXX%02d SXTS\n%+06.1f0 SFT\n%+05.1f00 TRN\nXXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\n%+07.2f LAT N61\n%+07.2f LONG\n%+07.1f RTGO EMS\n%+06.0f VI0\n%s GET 0.05G\n",\
-				buffer, form->purpose, form->PropGuid, form->Weight, form->pTrim, form->yTrim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->HA, form->HP, form->Vt,\
-				mm2, ss2, form->Vc, form->Star, form->Shaft, form->Trun, form->BSSStar, form->SPA, form->SXP, form->lat, form->lng, form->RTGO, form->VI0, tmpbuf);
-			sprintf(buffer, "%sSET STARS: %s\nRALIGN %03.0f\nPALIGN %03.0f\nYALIGN %03.0f\nRemarks:\n%s", buffer,form->SetStars, form->GDCangles.x, form->GDCangles.y, form->GDCangles.z, form->remarks);
-			oapiAnnotationSetText(NHpad, buffer);
+			sprintf(buffer, "%sSET STARS: %s\nRALIGN %03.0f\nPALIGN %03.0f\nYALIGN %03.0f\n", buffer, form->SetStars, form->GDCangles.x, form->GDCangles.y, form->GDCangles.z);
 		}
-		break;
+
+		sprintf(buffer, "%sRemarks:\n%s", buffer, form->remarks);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_AP11ENT:
 		{
 			AP11ENT * form = (AP11ENT *)padForm;
@@ -3404,6 +3415,7 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP11MNV: // AP11MNV
 		padForm = calloc(1, sizeof(AP11MNV));
+		((AP11MNV *)padForm)->type = 1;
 		break;
 	case PT_AP11ENT: // AP11ENT
 		padForm = calloc(1, sizeof(AP11ENT));

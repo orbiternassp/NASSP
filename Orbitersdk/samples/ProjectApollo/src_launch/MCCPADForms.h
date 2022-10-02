@@ -246,6 +246,7 @@ struct AP11MNV {
 	char SetStars[32]; // Stars for Backup GDC Alignment
 	VECTOR3 GDCangles;	// Backup GDC Align
 	char remarks[128];	// remarks
+	int type;           // 1 = Full PAD, 2 = Abbreviated PAD
 
 	double LMWeight;	// LM weight
 };
