@@ -1633,17 +1633,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		PZREAP.RTEVectorTime = sv_e.GMT / 3600.0;
 		med_f75_f77.T_Z = GET + DT_TEI_EI;
 
-	    bool found = DetermineRTESite(med_f77.Site);
+	    DetermineRTESite(med_f77.Site);
 
-		if (found)
-		{
-			PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
-			PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
-			PZREAP.RTETimeOfLanding = GMTfromGET(med_f75_f77.T_Z) / 3600.0;
-			PZREAP.RTEPTPMissDistance = med_f77.MissDistance;
+		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
+		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
+		PZREAP.RTETimeOfLanding = GMTfromGET(med_f75_f77.T_Z) / 3600.0;
+		PZREAP.RTEPTPMissDistance = med_f77.MissDistance;
 
-			PMMREAST(77, &sv_e);
-		}
+		PMMREAST(77, &sv_e);
 
 		med_f80.ASTCode = PZREAP.AbortScanTableData[0].ASTCode;
 		med_f80.REFSMMAT = "TEI";
@@ -1692,7 +1689,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->lng = PZREAP.RTEDTable[0].lng_imp_tgt*DEG;
 		form->RTGO = entout.R_EMS / 1852.0;
 		form->VI0 = entout.V_EMS / 0.3048;
-		form->GET05G = entout.t_05g;
+		form->GET05G = GETfromGMT(entout.t_05g);
 		form->type = 2;
 
 		if (fcn == 40)
