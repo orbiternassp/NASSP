@@ -1102,7 +1102,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
-		//form->type = 2;
+		form->type = 2;
 
 		//Save parameters for further use
 		SplashLatitude = res.latitude;
@@ -1445,7 +1445,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		sprintf(form->purpose, "SEP");
 		OrbMech::SStoHHMMSS(form->GETI - 30.0*60.0, hh, mm, ss);
 		sprintf(form->remarks, "Undock time is %d:%d:%.2lf.", hh, mm, ss);
-		//form->type = 2;
+		form->type = 2;
 	}
 	break;
 	case 38: //DESCENT ORBIT INSERTION
@@ -1517,12 +1517,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 50: //TEI-45 UPDATE (FINAL)
 	case 51: //TEI-46 UPDATE
 	{
-		RTEMoonOpt entopt;
-		EntryResults res;
 		AP11ManPADOpt opt;
-		double GETbase;
+		double GETbase, GET, returnspeed, DT_TEI_EI;
 		SV sv0, sv1, sv2;
 		char manname[8];
+		EphemerisData sv_e;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -1539,12 +1538,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sv1 = sv0;
 		}
 
-		//Mid Pacific Contingency Landing Area
-		entopt.entrylongmanual = false;
-		entopt.ATPLine = 0; //MPL
-
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		entopt.returnspeed = 1;
+		returnspeed = 1;
 
 		if (fcn == 40)
 		{
@@ -1588,7 +1583,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		{
 			sprintf(manname, "TEI-43");
 			sv2 = coast(sv1, (43 - mcc->MoonRev) * 2.0*3600.0);
-			entopt.returnspeed = 0;
+			returnspeed = 0;
 		}
 		else if (fcn == 48) //Block data
 		{
@@ -1599,17 +1594,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		{
 			sprintf(manname, "TEI-45");
 			sv2 = coast(sv1, 1.25*2.0*3600.0);
-			//Nominal EOM area
-			entopt.entrylongmanual = true;
-			entopt.EntryLng = -165.0*RAD;
 		}
 		else if (fcn == 50) //Final
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev);
 			sv2 = coast(sv1, 0.5*3600.0);
-			//Nominal EOM area
-			entopt.entrylongmanual = true;
-			entopt.EntryLng = -165.0*RAD;
 		}
 		else if (fcn == 51)
 		{
@@ -1617,59 +1606,94 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sv2 = coast(sv1, 1.25*2.0*3600.0);
 		}
 
-		entopt.GETbase = GETbase;
-		//entopt.Inclination = -40.0*RAD;
-		entopt.RV_MCC = sv2;
-		entopt.vessel = calcParams.src;
-		//PZREAP.RRBIAS = 1250.0;
+		DT_TEI_EI = 62.0*3600.0;
 
-		RTEMoonTargeting(&entopt, &res);
+		if (returnspeed == 0)
+		{
+			DT_TEI_EI += 24.0*3600.0;
+		}
+		else if (returnspeed == 2)
+		{
+			DT_TEI_EI -= 24.0*3600.0;
+		}
+
+		GET = OrbMech::GETfromMJD(sv2.MJD, GETbase);
+
+		sv_e.GMT = GMTfromGET(GET);
+		sv_e.R = sv2.R;
+		sv_e.V = sv2.V;
+		sv_e.RBI = BODY_MOON;
+
+		VEHDATABUF.csmmass = calcParams.src->GetMass();
+		VEHDATABUF.lmascmass = 0.0;
+		VEHDATABUF.lmdscmass = 0.0;
+		VEHDATABUF.sv = sv_e;
+		VEHDATABUF.config = "C";
+
+		PZREAP.RTEVectorTime = sv_e.GMT / 3600.0;
+		med_f75_f77.T_Z = GET + DT_TEI_EI;
+
+	    bool found = DetermineRTESite(med_f77.Site);
+
+		if (found)
+		{
+			PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
+			PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
+			PZREAP.RTETimeOfLanding = GMTfromGET(med_f75_f77.T_Z) / 3600.0;
+			PZREAP.RTEPTPMissDistance = med_f77.MissDistance;
+
+			PMMREAST(77, &sv_e);
+		}
+
+		med_f80.ASTCode = PZREAP.AbortScanTableData[0].ASTCode;
+		med_f80.REFSMMAT = "TEI";
+		med_f80.HeadsUp = false;
+
+		PMMREDIG(false);
+
+		if (fcn == 49)
+		{
+			GMGMED("G11,CSM,REP;");
+			GMGMED("G00,CSM,DOD,CSM,LCV;");
+
+			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT;
+		}
 
 		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
-		opt.dV_LVLH = res.dV_LVLH;
+		opt.dV_LVLH = PZREAP.RTEDTable[0].DV_XDV;;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.RV_MCC = sv1;
-		opt.TIG = res.P30TIG;
+		opt.TIG = PZREAP.RTEDTable[0].GETI;
 		opt.useSV = true;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
 
-		if (fcn == 49)
-		{
-			REFSMMATOpt refsopt;
-			MATRIX3 REFSMMAT;
-
-			//Biased DV vector to give as close to 180,0,0 TEI attitude as possible.
-			//Temporary solution until new RTE functions are used for MCC TEI calculations.
-			refsopt.dV_LVLH.x = res.dV_LVLH.x;
-			refsopt.dV_LVLH.y = res.dV_LVLH.y + 35.0;
-			refsopt.dV_LVLH.z = res.dV_LVLH.z + 85.0;
-
-			refsopt.GETbase = GETbase;
-			refsopt.HeadsUp = true;
-			refsopt.REFSMMATTime = res.P30TIG;
-			refsopt.REFSMMATopt = 0;
-			refsopt.vessel = calcParams.src;
-			refsopt.vesseltype = 0;
-
-			REFSMMAT = REFSMMATCalc(&refsopt);
-
-			//Store as CSM LCV matrix
-			EMGSTSTM(RTCC_MPT_CSM, REFSMMAT, RTCC_REFSMMAT_TYPE_LCV, RTCCPresentTimeGMT());
-
-			opt.REFSMMAT = REFSMMAT;
-		}
-
 		AP11ManeuverPAD(&opt, *form);
+
+		RMMYNIInputTable entin;
+		RMMYNIOutputTable entout;
+		EphemerisData2 sv_EI_ECT;
+
+		ELVCNV(PZREAP.AbortScanTableData[0].sv_EI, 0, 1, sv_EI_ECT);
+
+		entin.R0 = sv_EI_ECT.R;
+		entin.V0 = sv_EI_ECT.V;
+		entin.GMT0 = sv_EI_ECT.GMT;
+		entin.lat_T = PZREAP.RTEDTable[0].lat_imp_tgt;
+		entin.lng_T = PZREAP.RTEDTable[0].lng_imp_tgt;
+		entin.KSWCH = 3;
+
+		RMMYNI(entin, entout);
+
 		sprintf(form->purpose, manname);
-		form->lat = res.latitude*DEG;
-		form->lng = res.longitude*DEG;
-		form->RTGO = res.RTGO;
-		form->VI0 = res.VIO / 0.3048;
-		form->GET05G = res.GET05G;
-		//form->type = 2;
+		form->lat = PZREAP.RTEDTable[0].lat_imp_tgt*DEG;
+		form->lng = PZREAP.RTEDTable[0].lng_imp_tgt*DEG;
+		form->RTGO = entout.R_EMS / 1852.0;
+		form->VI0 = entout.V_EMS / 0.3048;
+		form->GET05G = entout.t_05g;
+		form->type = 2;
 
 		if (fcn == 40)
 		{
@@ -1694,26 +1718,26 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		else if (fcn == 49 || fcn == 50)
 		{
 			sprintf(form->remarks, "Four-jet ullage for 12 seconds");
-			//form->type = 1;
+			form->type = 1;
 		}
 
 		if (fcn != 51)
 		{
 			//Save parameters for further use
-			SplashLatitude = res.latitude;
-			SplashLongitude = res.longitude;
-			calcParams.TEI = res.P30TIG;
-			calcParams.EI = res.GET400K;
+			SplashLatitude = PZREAP.RTEDTable[0].lat_imp_tgt;
+			SplashLongitude = PZREAP.RTEDTable[0].lng_imp_tgt;
+			calcParams.TEI = PZREAP.RTEDTable[0].GETI;
+			calcParams.EI = PZREAP.RTEDTable[0].ReentryPET;
 		}
 
 		if (fcn == 50)
 		{
 			char buffer1[1000], buffer2[1000];
-			TimeofIgnition = res.P30TIG;
-			DeltaV_LVLH = res.dV_LVLH;
+			TimeofIgnition = PZREAP.RTEDTable[0].GETI;
+			DeltaV_LVLH = PZREAP.RTEDTable[0].DV_XDV;
 
 			AGCStateVectorUpdate(buffer1, sv2, true, GETbase, true);
-			CMCExternalDeltaVUpdate(buffer2, res.P30TIG, res.dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -1722,6 +1746,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 				sprintf(upDesc, "CSM state vector and V66, target load");
 			}
 		}
+
+		GMGMED("F79,0;");
 	}
 	break;
 	case 58: //LM P22 ACQUISITION TIME PRE-PDI
@@ -2851,7 +2877,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		sprintf(form->purpose, "SEP BURN");
 		OrbMech::SStoHHMMSS(form->GETI - 5.0*60.0, hh, mm, ss);
 		sprintf(form->remarks, "LM Jettison: GET: %d:%d:%.2lf R: 219 P: 358 Y: 342\nSep burn is Z-axis, retrograde", hh, mm, ss);
-		//form->type = 2;
+		form->type = 2;
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
@@ -2955,15 +2981,15 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sprintf(upDesc, updesc);
 		}
 	}
-	case 130: //PHOTAGRAPHY REFSMMAT CACLULATION
-	case 131: //PHOTAGRAPHY REFSMMAT UPLINK
+	case 130: //PHOTOGRAPHY REFSMMAT CACLULATION
+	case 131: //PHOTOGRAPHY REFSMMAT UPLINK
 	{
 		MATRIX3 REFSMMAT;
 
 		if (fcn == 130)
 		{
 			//Hard-coded from page 59 of "Final operational spacecraft attitude sequence for Apollo 12" (69-FM-304)
-			//TBD: Calculate this dynamically. It may have been a landing site orientation at one of the photo sights, more research required.
+			//TBD: Calculate this dynamically. It may have been a landing site orientation at one of the photo sites, more research required.
 			REFSMMAT = _M(-0.99920070, -0.00131239, -0.03995296, -0.03280089, -0.54435646, 0.83821248, -0.02284871, 0.83885300, 0.54387832);
 
 			REFSMMAT = mul(REFSMMAT, SystemParameters.MAT_J2000_BRCS);
