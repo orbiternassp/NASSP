@@ -1518,7 +1518,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 51: //TEI-46 UPDATE
 	{
 		AP11ManPADOpt opt;
-		double GETbase, GET, returnspeed, DT_TEI_EI;
+		double GETbase, GET_SV2, returnspeed, DT_TEI_EI;
 		SV sv0, sv1, sv2;
 		char manname[8];
 		EphemerisData sv_e;
@@ -1527,6 +1527,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		GETbase = CalcGETBase();
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		GMGMED("F79,0;"); //Clear abort scan table
 
 		//Simulate the maneuver preceeding TEI (LOI-1 or LOI-2 or PC-2)
 		if (fcn == 40 || fcn == 41 || fcn == 42 || fcn == 46)
@@ -1571,39 +1573,39 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		else if (fcn == 45)
 		{
 			sprintf(manname, "TEI-39");
-			sv2 = coast(sv1, (39 - mcc->MoonRev) * 2.0*3600.0);
+			sv2 = coast(sv1, 5.7*2.0*3600.0);
 		}
 		else if (fcn == 46)
 		{
 			sprintf(manname, "TEI-41");
-			sv2 = coast(sv1, 2.5*2.0*3600.0);
+			sv2 = coast(sv1, 2.8*2.0*3600.0);
 			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT; //Photography REFSMMAT
 		}
 		else if (fcn == 47)
 		{
 			sprintf(manname, "TEI-43");
-			sv2 = coast(sv1, (43 - mcc->MoonRev) * 2.0*3600.0);
+			sv2 = coast(sv1, 3.5*2.0*3600.0);
 			returnspeed = 0;
 		}
 		else if (fcn == 48) //Block data
 		{
 			sprintf(manname, "TEI-45");
-			sv2 = coast(sv1, (45 - mcc->MoonRev) * 2.0*3600.0);
+			sv2 = coast(sv1, 3.7*2.0*3600.0);
 		}
 		else if (fcn == 49) //Preliminary
 		{
 			sprintf(manname, "TEI-45");
-			sv2 = coast(sv1, 1.25*2.0*3600.0);
+			sv2 = coast(sv1, 1.7*2.0*3600.0);
 		}
 		else if (fcn == 50) //Final
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev);
-			sv2 = coast(sv1, 0.5*3600.0);
+			sv2 = coast(sv1, 1.0*3600.0);
 		}
 		else if (fcn == 51)
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev + 1);
-			sv2 = coast(sv1, 1.25*2.0*3600.0);
+			sv2 = coast(sv1, 1.9*2.0*3600.0);
 		}
 
 		DT_TEI_EI = 62.0*3600.0;
@@ -1617,9 +1619,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			DT_TEI_EI -= 24.0*3600.0;
 		}
 
-		GET = OrbMech::GETfromMJD(sv2.MJD, GETbase);
+		GET_SV2 = OrbMech::GETfromMJD(sv2.MJD, GETbase);
 
-		sv_e.GMT = GMTfromGET(GET);
+		sv_e.GMT = GMTfromGET(GET_SV2);
 		sv_e.R = sv2.R;
 		sv_e.V = sv2.V;
 		sv_e.RBI = BODY_MOON;
@@ -1631,7 +1633,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		VEHDATABUF.config = "C";
 
 		PZREAP.RTEVectorTime = sv_e.GMT / 3600.0;
-		med_f75_f77.T_Z = GET + DT_TEI_EI;
+		med_f75_f77.T_Z = GET_SV2 + DT_TEI_EI;
 
 	    DetermineRTESite(med_f77.Site);
 
@@ -1643,8 +1645,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		PMMREAST(77, &sv_e);
 
 		med_f80.ASTCode = PZREAP.AbortScanTableData[0].ASTCode;
+		med_f80.ManeuverCode = "CSUX";
 		med_f80.REFSMMAT = "TEI";
 		med_f80.HeadsUp = false;
+		med_f80.NumQuads = 4;
+		med_f80.UllageDT = 11.0;
 
 		PMMREDIG(false);
 
@@ -1692,29 +1697,30 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->GET05G = GETfromGMT(entout.t_05g);
 		form->type = 2;
 
+		sprintf(form->remarks, "Four-jet ullage for 11 seconds");
+
 		if (fcn == 40)
 		{
-			sprintf(form->remarks, "Undocked");
+			sprintf(form->remarks, "%s,\nUndocked", form->remarks);
 		}
 		else if (fcn == 41)
 		{
-			sprintf(form->remarks, "Undocked, assumes no LOI-2");
+			sprintf(form->remarks, "%s,\nUndocked, assumes no LOI-2", form->remarks);
 		}
 		else if (fcn == 42)
 		{
-			sprintf(form->remarks, "Undocked, assumes LOI-2");
+			sprintf(form->remarks, "%s,\nUndocked, assumes LOI-2", form->remarks);
 		}
 		else if (fcn == 45)
 		{
-			sprintf(form->remarks, "Assumes no PC-2");
+			sprintf(form->remarks, "%s,\nAssumes no PC-2", form->remarks);
 		}
 		else if (fcn == 46)
 		{
-			sprintf(form->remarks, "Assumes PC-2");
+			sprintf(form->remarks, "%s,\nAssumes PC-2", form->remarks);
 		}
 		else if (fcn == 49 || fcn == 50)
 		{
-			sprintf(form->remarks, "Four-jet ullage for 12 seconds");
 			form->type = 1;
 		}
 
@@ -1743,8 +1749,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 				sprintf(upDesc, "CSM state vector and V66, target load");
 			}
 		}
-
-		GMGMED("F79,0;");
 	}
 	break;
 	case 58: //LM P22 ACQUISITION TIME PRE-PDI
@@ -3092,7 +3096,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		entopt.entrylongmanual = true;
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		entopt.lng = -165.0*RAD;
+		entopt.lng = SplashLongitude;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
