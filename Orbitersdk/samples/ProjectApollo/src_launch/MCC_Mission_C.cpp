@@ -204,22 +204,31 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(123 * 60 * 60 + 40 * 60), 54, MST_C_DAY5STATE3);
 		break;
 	case MST_C_DAY5STATE3: // SV Update to Block Data 14
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(125 * 60 * 60 + 12 * 60), 52, MST_C_DAY5STATE3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(125 * 60 * 60 + 12 * 60), 52, MST_C_DAY5STATE4);
 		break;
 	case MST_C_DAY5STATE4: // Block Data 14 to Block Data 15
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(134 * 60 * 60 + 48 * 60), 24, MST_C_DAY5STATE5);
 		break;
-	case MST_C_DAY5STATE5: // Block Data 15 to SV Update
+	case MST_C_DAY5STATE5: // Block Data 15 to rev 90 landmark tracking update
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(139 * 60 * 60 + 40 * 60), 25, MST_C_DAY5STATE6);
 		break;
-	case MST_C_DAY5STATE6: // SV Update to SV Update
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(143 * 60 * 60 + 20 * 60), 54, MST_C_DAY5STATE7);
+	case MST_C_DAY5STATE6: // Rev 90 landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 56, MST_C_DAY5STATE7);
 		break;
-	case MST_C_DAY5STATE7: // SV Update to Block Data 16
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(144 * 60 * 60 + 11 * 60), 52, MST_C_DAY6STATE1);
+	case MST_C_DAY5STATE7: // SV Update to rev 91 landmark tracking
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(143 * 60 * 60), 54, MST_C_DAY5STATE8);
 		break;
-	case MST_C_DAY6STATE1: // Block Data 16 to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(147 * 60 * 60 + 10 * 60), 26, MST_C_DAY6STATE2);
+	case MST_C_DAY5STATE8: // Rev 91 landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, rtcc->GETEval2(143 * 60 * 60 + 20 * 60), 57, MST_C_DAY5STATE9);
+		break;
+	case MST_C_DAY5STATE9: // SV Update to Block Data 16
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(144 * 60 * 60 + 11 * 60), 52, MST_C_DAY5STATE10);
+		break;
+	case MST_C_DAY5STATE10: // Block Data 16 to rev 92 landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(145 * 60 * 60 + 30 * 60), 26, MST_C_DAY6STATE1);
+		break;
+	case MST_C_DAY6STATE1: // Rev 92 landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, rtcc->GETEval2(147 * 60 * 60 + 10 * 60), 58, MST_C_DAY6STATE2);
 		break;
 	case MST_C_DAY6STATE2: // SV Update to Block Data 17
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(153 * 60 * 60 + 47 * 60), 52, MST_C_DAY6STATE3);

@@ -1158,6 +1158,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 55: //Rev 77 Landmark Tracking Update
+	case 56: //Rev 90 Landmark Tracking Update
+	case 57: //Rev 91 Landmark Tracking Update
+	case 58: //Rev 92 Landmark Tracking Update
 	{
 		LMARKTRKPADOpt opt;
 		SV sv0;
@@ -1190,6 +1193,60 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.lng[2] = -35.245*RAD;
 
 			opt.entries = 3;
+		}
+		else if (fcn == 56)
+		{
+			sprintf(form->LmkID[0], "008");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(142, 30, 0);
+			opt.alt[0] = 0.0;
+			opt.lat[0] = 27.852*RAD;
+			opt.lng[0] = -115.081*RAD;
+
+			sprintf(form->LmkID[1], "037");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(142, 40, 0);
+			opt.alt[1] = 0.0;
+			opt.lat[1] = 30.077*RAD;
+			opt.lng[1] = -85.581*RAD;
+
+			sprintf(form->LmkID[2], "209");
+			opt.LmkTime[2] = OrbMech::HHMMSSToSS(142, 50, 0);
+			opt.alt[2] = 2833.56;
+			opt.lat[2] = 14.947*RAD;
+			opt.lng[2] = -24.353*RAD;
+
+			opt.entries = 3;
+		}
+		else if (fcn == 57)
+		{
+			sprintf(form->LmkID[0], "018");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(144, 10, 0);
+			opt.alt[0] = 1185.28;
+			opt.lat[0] = 31.855*RAD;
+			opt.lng[0] = -106.374*RAD;
+
+			sprintf(form->LmkID[1], "225");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(144, 20, 0);
+			opt.alt[1] = 0.0;
+			opt.lat[1] = -22.882*RAD;
+			opt.lng[1] = 14.445*RAD;
+
+			opt.entries = 2;
+		}
+		else if (fcn == 58)
+		{
+			sprintf(form->LmkID[0], "010");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(145, 30, 0);
+			opt.alt[0] = 18.52;
+			opt.lat[0] = 28.876*RAD;
+			opt.lng[0] = -112.584*RAD;
+
+			sprintf(form->LmkID[1], "142");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(145, 50, 0);
+			opt.alt[1] = 0.0;
+			opt.lat[1] = -6.966*RAD;
+			opt.lng[1] = -34.843*RAD;
+
+			opt.entries = 2;
 		}
 
 		LandmarkTrackingPAD(&opt, *form);
@@ -1302,10 +1359,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.CSMWeight = mass;
 		in.sv_before = PZGPMELM.SV_before;
 		in.V_aft = PZGPMELM.V_after;
-		in.DETU = 15.0; //Ullage
-		in.UT = true; //4 jets
+		in.DETU = 20.0; //Ullage
+		in.UT = false; //2 jets
 		in.IgnitionTimeOption = false;
-		in.IterationFlag = false;
+		in.IterationFlag = true;
 		in.LMWeight = 0.0;
 		in.Thruster = RTCC_ENGINETYPE_CSMSPS;
 		in.VC = RTCC_MANVEHICLE_CSM;
@@ -1333,8 +1390,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.TIG = P30TIG;
 		manopt.vessel = calcParams.src;
 		manopt.sxtstardtime = -20.0*60.0;
-		manopt.UllageThrusterOpt = true;
-		manopt.UllageDT = 15.0;
+		manopt.UllageThrusterOpt = false;
+		manopt.UllageDT = 20.0;
 
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "SPS-5");
