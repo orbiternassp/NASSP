@@ -1819,7 +1819,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.CSMWeight = 0.0;
 		in.LMWeight = sv_DOI.mass;
 		in.VehicleArea = 0.0;
-		in.VehicleWeight = in.CSMWeight + in.LMWeight;
 		in.IterationFlag = false;
 		in.IgnitionTimeOption = false;
 		in.Thruster = RTCC_ENGINETYPE_LMDPS;

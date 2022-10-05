@@ -220,8 +220,8 @@ struct MED_M72
 struct TwoImpulseOpt
 {
 	int mode;		//1 = Corrective Combination (NCC), 2 = Multiple Solution/Two-Impulse Computation (TPI), 3 = Single Solution, 4 = Transfer Plan, 5 = DKI/SPQ
-	double T1;	//GET of the maneuver
-	double T2;	// GET of the arrival
+	double T1;	//GMT of the maneuver
+	double T2;	// GMT of the arrival
 	EphemerisData sv_A;		//Chaser state vector
 	EphemerisData sv_P;		//Target state vector
 	int ChaserVehicle = 1;	//1 = CSM, 3 = LEM
@@ -262,6 +262,7 @@ struct TwoImpulseOpt
 	double DH = 0.0;
 	double PhaseAngle = 0.0;
 	double WT = 0.0;
+	double Elev = 0.0;
 };
 
 struct LambertMan //Data for Lambert targeting
@@ -355,8 +356,9 @@ struct AP7TPIPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	SV sv_A;
-	SV sv_P;
+	EphemerisData sv_A;
+	EphemerisData sv_P;
+	double mass;
 };
 
 struct AP9LMTPIPADOpt
@@ -2605,6 +2607,7 @@ public:
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt);
+	EphemerisData coast(EphemerisData sv1, double dt, int veh);
 	EphemerisData coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor = 1.0);
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);

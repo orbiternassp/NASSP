@@ -2994,8 +2994,9 @@ int ARCore::subThread()
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.TIG = P30TIG;
-		opt.sv_A = GC->rtcc->StateVectorCalc(vessel);
-		opt.sv_P = GC->rtcc->StateVectorCalc(target);
+		opt.sv_A = GC->rtcc->StateVectorCalcEphem(vessel);
+		opt.sv_P = GC->rtcc->StateVectorCalcEphem(target);
+		opt.mass = vessel->GetMass();
 
 		GC->rtcc->AP7TPIPAD(opt, pad);
 
@@ -4370,7 +4371,6 @@ int ARCore::subThread()
 			}
 
 			in.VehicleArea = 0.0;
-			in.VehicleWeight = in.CSMWeight + in.LMWeight;
 			in.IterationFlag = GC->rtcc->med_m72.Iteration;
 			in.IgnitionTimeOption = GC->rtcc->med_m72.TimeFlag;
 			in.Thruster = GC->rtcc->med_m72.Thruster;
@@ -4448,7 +4448,6 @@ int ARCore::subThread()
 			}
 
 			in.VehicleArea = 0.0;
-			in.VehicleWeight = in.CSMWeight + in.LMWeight;
 			in.IterationFlag = GC->rtcc->med_m70.Iteration;
 			in.IgnitionTimeOption = GC->rtcc->med_m70.TimeFlag;
 			in.Thruster = GC->rtcc->med_m70.Thruster;

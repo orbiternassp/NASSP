@@ -3031,6 +3031,7 @@ RTCC_PMSTICN_8_3:
 RTCC_PMSTICN_9_1:
 	DH = opt.DH;
 	PhaseAngle = opt.PhaseAngle;
+	Elev = opt.Elev;
 	WT = opt.WT;
 	T1 = opt.T1;
 	T2 = opt.T2;
@@ -4159,15 +4160,17 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
 {
-	SV sv_A2, sv_P2, sv_A3, sv_P3;
+	EphemerisData sv_A2, sv_P2, sv_A3, sv_P3;
 	double dt1, dt2;
 	VECTOR3 u, U_L, UX, UY, UZ, U_R, U_R2, U_P, TPIPAD_BT, TPIPAD_dV_LOS;
 	MATRIX3 Rot1, Rot2;
-	double TPIPAD_AZ, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5,TPIPAD_dH, TPIPAD_ddH;
+	double TPIPAD_AZ, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5,TPIPAD_dH, TPIPAD_ddH, TIG_GMT;
 	VECTOR3 U_F, LOS, U_LOS, NN;
 
-	dt1 = opt.TIG - (opt.sv_A.MJD - opt.GETbase) * 24.0 * 60.0 * 60.0;
-	dt2 = opt.TIG - (opt.sv_P.MJD - opt.GETbase) * 24.0 * 60.0 * 60.0;
+	TIG_GMT = GMTfromGET(opt.TIG);
+
+	dt1 = TIG_GMT - opt.sv_A.GMT;
+	dt2 = TIG_GMT - opt.sv_P.GMT;
 
 	sv_A3 = coast(opt.sv_A, dt1);
 	sv_P3 = coast(opt.sv_P, dt2);
@@ -4188,11 +4191,10 @@ void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
 
 	TPIPAD_dV_LOS = mul(Rot2, mul(Rot1, opt.dV_LVLH));
 	//TPIPAD_dH = abs(length(RP3) - length(RA3));
-	double mass, F;
+	double F;
 
-	mass = opt.sv_A.mass;
 	F = 200.0 * 4.448222;
-	TPIPAD_BT = _V(abs(0.5*TPIPAD_dV_LOS.x), abs(TPIPAD_dV_LOS.y), abs(TPIPAD_dV_LOS.z))*mass / F;
+	TPIPAD_BT = _V(abs(0.5*TPIPAD_dV_LOS.x), abs(TPIPAD_dV_LOS.y), abs(TPIPAD_dV_LOS.z))*opt.mass / F;
 
 	VECTOR3 i, j, k, dr, dv, dr0, dv0, Omega;
 	MATRIX3 Q_Xx;
@@ -7220,6 +7222,12 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Ar
 	return in.sv_cutoff;
 }
 
+EphemerisData RTCC::coast(EphemerisData sv1, double dt, int veh)
+{
+	MissionPlanTable *mpt = GetMPTPointer(veh);
+
+	return coast(sv1, dt, mpt->TotalInitMass, mpt->ConfigurationArea, mpt->KFactor);
+}
 
 void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD)
 {
@@ -7972,6 +7980,7 @@ int RTCC::PoweredFlightProcessor(PMMMPTInput in, double &GMT_TIG, VECTOR3 &dV_LV
 	in.CurrentManeuver = 1;
 	in.DockingAngle = 0.0;
 	in.mpt = &mpt;
+	in.VehicleWeight = in.CSMWeight + in.LMWeight;
 
 	int err = PMMMPT(in, man);
 
