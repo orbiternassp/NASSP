@@ -221,7 +221,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		GMGMED(Buff);
 		sprintf_s(Buff, "P15,LGC,%d:%d:%.2lf;", hh, mm, ss);
 		GMGMED(Buff);
-		GMGMED("P15,AGS,,90:00:00;");
+		GMGMED("P15,AGS,,100:00:00;");
 
 		//P12: IU GRR and Azimuth
 		OrbMech::SStoHHMMSS(T_GRR, hh, mm, ss);
@@ -1343,12 +1343,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		AP11AGSACT *form = (AP11AGSACT*)pad;
 
 		SV sv1, sv2, sv_INP;
-		double GETbase, t_sunrise, t_TPI;
+		double GETbase, t_sunrise, t_TPI, KFactor;
 		int emem[14];
 		char buffer1[1000];
 
 		PDAPOpt opt;
 		PDAPResults res;
+
+		LEM *l = (LEM*)calcParams.tgt;
 
 		sv1 = StateVectorCalc(calcParams.tgt);
 		sv2 = StateVectorCalc(calcParams.src);
@@ -1358,6 +1360,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
 		t_TPI = FindOrbitalSunrise(sv2, GETbase, t_sunrise) - 23.0*60.0;
+
+		bool res_k = CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
+		if (res_k)
+		{
+			SystemParameters.MCGZSS = SystemParameters.MCGZSL + KFactor / 3600.0;
+		}
 
 		opt.dt_stage = 999999.9;
 		opt.W_TAPS = 4711.0;
@@ -1374,7 +1382,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		PoweredDescentAbortProgram(opt, res);
 
-		form->KFactor = 100.0*3600.0;
+		form->KFactor = GETfromGMT(GetAGSClockZero());
 		form->DEDA224 = (int)(res.DEDA224 / 0.3048 / 100.0);
 		form->DEDA225 = (int)(res.DEDA225 / 0.3048 / 100.0);
 		form->DEDA226 = (int)(res.DEDA226 / 0.3048 / 100.0);
@@ -1959,7 +1967,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		PoweredDescentAbortProgram(opt, res);
 
-		form->KFactor = 100.0*3600.0;
+		form->KFactor = GETfromGMT(GetAGSClockZero());
 		form->DEDA224 = (int)(res.DEDA224 / 0.3048 / 100.0);
 		form->DEDA225 = (int)(res.DEDA225 / 0.3048 / 100.0);
 		form->DEDA226 = (int)(res.DEDA226 / 0.3048 / 100.0);
@@ -2770,7 +2778,18 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		SV sv_Ins, sv_CSM_TIG;
 		MATRIX3 Rot_LG, Rot_VG;
 		VECTOR3 R_LSP, Q, U_R, Z_B, X_AGS, Y_AGS, Z_AGS;
-		double CR, MJD_TIG, SMa, R_D, delta_L, sin_DL, cos_DL;
+		double CR, MJD_TIG, SMa, R_D, delta_L, sin_DL, cos_DL, KFactor;
+
+		int hh, mm;
+		double ss;
+
+		bool res_k = CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
+		if (res_k)
+		{
+			SystemParameters.MCGZSS = SystemParameters.MCGZSL + KFactor / 3600.0;
+		}
+
+		OrbMech::SStoHHMMSS(GETfromGMT(GetAGSClockZero()), hh, mm, ss);
 
 		MJD_TIG = OrbMech::MJDfromGET(TIG, GETbase);
 		sv_CSM_TIG = coast(sv_CSM, TIG - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
@@ -2811,7 +2830,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->TIG_2 = TimeofIgnition;
 		form->LMWeight = m0 / 0.45359237;
 		form->CSMWeight = m1 / 0.45359237;
-		sprintf(form->remarks, "");
+		sprintf(form->remarks, "K-Factor is %d:%02d:%05.2f", hh, mm, ss);
 	}
 	break;
 	case 106: //NOMINAL CSI PAD
@@ -2826,7 +2845,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.dV_LVLH = calcParams.DVSTORE1;
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		opt.GETbase = GETbase;
-		opt.KFactor = 140.0*3600.0;
+		opt.KFactor = GETfromGMT(GetAGSClockZero());
 		opt.REFSMMAT = EZJGMTX3.data[RTCC_REFSMMAT_TYPE_LLD - 1].REFSMMAT;
 		opt.sv0 = calcParams.SVSTORE1;
 		opt.t_CSI = calcParams.CSI;
