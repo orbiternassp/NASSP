@@ -1526,8 +1526,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 51: //TEI-46 UPDATE
 	{
 		AP11ManPADOpt opt;
-		double GETbase, GET_SV2, returnspeed, DT_TEI_EI;
-		SV sv0, sv1, sv2;
+		double GETbase, GET_SV1, returnspeed, DT_TEI_EI, AbortGuess, MoonRevTEI;
+		SV sv0, sv1;
 		char manname[8];
 		EphemerisData sv_e;
 
@@ -1548,73 +1548,82 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sv1 = sv0;
 		}
 
+		GET_SV1 = OrbMech::GETfromMJD(sv1.MJD, GETbase);
+
+		sv_e.GMT = GMTfromGET(GET_SV1);
+		sv_e.R = sv1.R;
+		sv_e.V = sv1.V;
+		sv_e.RBI = BODY_MOON;
+
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		returnspeed = 1;
 
 		if (fcn == 40)
 		{
 			sprintf(manname, "TEI-1");
-			sv2 = coast(sv1, 0.5*2.0*3600.0);
+			MoonRevTEI = 1.0;
 			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT; //Landing site REFSMMAT
 		}
 		else if (fcn == 41)
 		{
 			sprintf(manname, "TEI-4");
-			sv2 = coast(sv1, 3.5*2.0*3600.0);
+			MoonRevTEI = 4.25;
 			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT; //Landing site REFSMMAT
 		}
 		else if (fcn == 42)
 		{
 			sprintf(manname, "TEI-5");
-			sv2 = coast(sv1, 2.5*2.0*3600.0);
+			MoonRevTEI = 5.1;
 		}
 		else if (fcn == 43)
 		{
 			sprintf(manname, "TEI-11");
-			sv2 = coast(sv1, 6.5*2.0*3600.0);
+			MoonRevTEI = 11.0;
 		}
 		else if (fcn == 44)
 		{
 			sprintf(manname, "TEI-34");
-			sv2 = coast(sv1, 23.5*2.0*3600.0);
+			MoonRevTEI = 33.63;
 		}
 		else if (fcn == 45)
 		{
 			sprintf(manname, "TEI-39");
-			sv2 = coast(sv1, 5.7*2.0*3600.0);
+			MoonRevTEI = 38.63;
 		}
 		else if (fcn == 46)
 		{
 			sprintf(manname, "TEI-41");
-			sv2 = coast(sv1, 2.8*2.0*3600.0);
+			MoonRevTEI = 40.63;
 			opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT; //Photography REFSMMAT
 		}
 		else if (fcn == 47)
 		{
 			sprintf(manname, "TEI-43");
-			sv2 = coast(sv1, 3.5*2.0*3600.0);
+			MoonRevTEI = 42.5;
 			returnspeed = 0;
 		}
 		else if (fcn == 48) //Block data
 		{
 			sprintf(manname, "TEI-45");
-			sv2 = coast(sv1, 3.7*2.0*3600.0);
+			MoonRevTEI = 44.5;
 		}
 		else if (fcn == 49) //Preliminary
 		{
 			sprintf(manname, "TEI-45");
-			sv2 = coast(sv1, 1.7*2.0*3600.0);
+			MoonRevTEI = 44.5;
 		}
 		else if (fcn == 50) //Final
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev);
-			sv2 = coast(sv1, 1.0*3600.0);
+			MoonRevTEI = ((double)mcc->MoonRev) - 0.5;
 		}
 		else if (fcn == 51)
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev + 1);
-			sv2 = coast(sv1, 1.9*2.0*3600.0);
+			MoonRevTEI = ((double)mcc->MoonRev + 1) - 0.5;
 		}
+
+		AbortGuess = calcParams.LOI + (MoonRevTEI * 2.0*3600.0);
 
 		DT_TEI_EI = 62.0*3600.0;
 
@@ -1627,23 +1636,16 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			DT_TEI_EI -= 24.0*3600.0;
 		}
 
-		GET_SV2 = OrbMech::GETfromMJD(sv2.MJD, GETbase);
-
-		sv_e.GMT = GMTfromGET(GET_SV2);
-		sv_e.R = sv2.R;
-		sv_e.V = sv2.V;
-		sv_e.RBI = BODY_MOON;
-
 		VEHDATABUF.csmmass = calcParams.src->GetMass();
 		VEHDATABUF.lmascmass = 0.0;
 		VEHDATABUF.lmdscmass = 0.0;
 		VEHDATABUF.sv = sv_e;
 		VEHDATABUF.config = "C";
 
-		PZREAP.RTEVectorTime = sv_e.GMT / 3600.0;
-		med_f75_f77.T_Z = GET_SV2 + DT_TEI_EI;
+		med_f75_f77.T_0_min = AbortGuess;
+		med_f75_f77.T_Z = AbortGuess + DT_TEI_EI;
 
-	    DetermineRTESite(med_f77.Site);
+		DetermineRTESite(med_f77.Site);
 
 		PZREAP.RTEVectorTime = GMTfromGET(med_f75_f77.T_V) / 3600.0;
 		PZREAP.RTET0Min = GMTfromGET(med_f75_f77.T_0_min) / 3600.0;
@@ -1747,7 +1749,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			TimeofIgnition = PZREAP.RTEDTable[0].GETI;
 			DeltaV_LVLH = PZREAP.RTEDTable[0].DV_XDV;
 
-			AGCStateVectorUpdate(buffer1, sv2, true, GETbase, true);
+			AGCStateVectorUpdate(buffer1, sv1, true, GETbase, true);
 			CMCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -2896,7 +2898,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		AP11ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "SEP BURN");
 		OrbMech::SStoHHMMSS(form->GETI - 5.0*60.0, hh, mm, ss);
-		sprintf(form->remarks, "LM Jettison: GET: %d:%d:%.2lf R: 219 P: 358 Y: 342\nSep burn is Z-axis, retrograde", hh, mm, ss);
+		sprintf(form->remarks, "Jettison PAD: GET %d:%d:%.2lf R 219 P 358 Y 342\nSep burn is Z-axis, retrograde", hh, mm, ss);
 		form->type = 2;
 
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -3106,7 +3108,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		else
 		{
 			entopt.type = 1;
-			entopt.t_Z = calcParams.TEI + 72.0*3600.0;
+			entopt.t_Z = calcParams.EI;
 		}
 
 		GETbase = CalcGETBase();
