@@ -688,6 +688,19 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			else
 			{
 				skp->Text(5 * W / 8, 2 * H / 14, "Landing Site", 12);
+
+				if (G->vesseltype != 0 && GC->MissionPlanningActive == false)
+				{
+					if (G->target != NULL)
+					{
+						sprintf_s(Buffer, "CSM: %s", G->target->GetName());
+					}
+					else
+					{
+						sprintf_s(Buffer, "No Target!");
+					}
+					skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+				}
 			}
 
 		}
