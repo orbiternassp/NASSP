@@ -910,9 +910,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, GETbase, TIG_imp, mass;
+		double P30TIG, GETbase, TIG_imp, mass, LOA, GET_TH;
 		MATRIX3 REFSMMAT;
-		EphemerisData sv;
+		EphemerisData sv, sv1;
+		AEGBlock aeg;
+		AEGDataBlock sv_A;
+		int KAOP, KE;
+		double INFO[10], H_A;
 		char buffer1[1000];
 		char buffer2[1000];
 
@@ -920,18 +924,65 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalcEphem(calcParams.src);
 		mass = calcParams.src->GetMass();
 
-		orbopt.AltRef = 1;
-		orbopt.H_A = 160.0*1852.0;
-		orbopt.H_P = 90.0*1852.0;
-		//Average from mission report
-		orbopt.long_D = 105.79*RAD;
-		orbopt.ManeuverCode = RTCC_GMP_NHL;
-		//Rough estimate to get near 200 ft/s DVY
-		orbopt.dLAN = 0.45*RAD;
-		orbopt.sv_in = sv;
-		orbopt.TIG_GET = OrbMech::HHMMSSToSS(75, 18, 0);
+		//Threshold time
+		GET_TH = OrbMech::HHMMSSToSS(75, 18, 0);
 
-		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		//Take state vector to threshold
+		sv1 = coast(sv, GMTfromGET(GET_TH) - sv.GMT, RTCC_MPT_CSM);
+
+		//Convert to AEG and initialize
+		aeg = SVToAEG(sv1);
+		PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
+
+		//Calculate required apsidal shift
+		LOA = 90.0*RAD - aeg.Data.coe_mean.g;
+
+		//Calculate current apogee
+		KAOP = 1; //Perigee only
+		KE = 0; //ECI
+		PMMAPD(aeg.Header, aeg.Data, KAOP, KE, INFO, &sv_A, NULL);
+
+		//Use this apogee height, add 0.1 NM just to make sure it works
+		H_A = INFO[4] + 0.1*1852.0;
+		//Raise to 160 NM if it is currently lower
+		if (H_A < 160.0*1852.0)
+		{
+			H_A = 160.0*1852.0;
+		}
+
+		//Iterate on TIG to find solution that gives us the desired apsidal shift
+		orbopt.AltRef = 1;
+		orbopt.ManeuverCode = RTCC_GMP_HBT;
+		orbopt.sv_in = sv;
+		orbopt.H_A = H_A;
+		orbopt.H_P = 90.0*1852.0;
+		orbopt.TIG_GET = GET_TH;
+
+		int n = 0, nmax = 100;
+		double dloa_apo, dloa, ddt;
+
+		ddt = 2.0*60.0;
+
+		//Make sure it doesn't iterate forever
+		while (abs(ddt) > 1.0 && orbopt.TIG_GET < GET_TH + 2.0*3600.0 && n < nmax)
+		{
+			GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+
+			dloa = OrbMech::calculateDifferenceBetweenAngles(LOA, PZGPMDIS.Del_G);
+
+			//Don't switch sign on ddt on first step. Change when dloa also switches sign, but only when passing through zero
+			if (n > 0 && dloa*dloa_apo < 0 && abs(dloa - dloa_apo) < PI05)
+			{
+				ddt = -ddt / 2.0;
+			}
+
+			orbopt.TIG_GET += ddt;
+			dloa_apo = dloa;
+			n++;
+		}
+
+		//Finally, add out-of-plane DV
+		PZGPMELM.V_after += tmul(OrbMech::LVLH_Matrix(PZGPMELM.SV_before.R, PZGPMELM.SV_before.V), _V(-0.8, 200.0, 0.0)*0.3048);
 
 		in.CONFIG = 1; //CSM
 		in.CSMWeight = mass;
