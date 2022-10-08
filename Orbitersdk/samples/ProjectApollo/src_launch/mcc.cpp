@@ -41,6 +41,7 @@
 #include "MCC_Mission_D.h"
 #include "MCC_Mission_F.h"
 #include "MCC_Mission_G.h"
+#include "MCC_Mission_H1.h"
 #include "rtcc.h"
 #include "LVDC.h"
 #include "iu.h"
@@ -786,19 +787,28 @@ void MCC::TimeStep(double simdt){
 					setState(MST_SV_PRELAUNCH);
 					break;
 				case 12:
+					MissionType = MTP_H1;
+					setState(MST_SV_PRELAUNCH);
+					break;
 				case 13:
+					MissionType = MTP_H2;
+					break;
 				case 14:
-					MissionType = MTP_H;
+					MissionType = MTP_H3;
 					break;
 				case 15:
+					MissionType = MTP_J1;
+					break;
 				case 16:
+					MissionType = MTP_J2;
+					break;
 				case 17:
-					MissionType = MTP_J;
+					MissionType = MTP_J3;
 					break;
 				default:
 					// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
 					if (cm->SaturnType == SAT_SATURNV) {
-						MissionType = MTP_H;
+						MissionType = MTP_H1;
 					}
 					if (cm->SaturnType == SAT_SATURN1B) {
 						MissionType = MTP_C;
@@ -951,6 +961,9 @@ void MCC::TimeStep(double simdt){
 					case MTP_G:
 						setState(MST_G_INSERTION);
 						break;
+					case MTP_H1:
+						setState(MST_H1_INSERTION);
+						break;
 					}
 				}
 			}
@@ -993,6 +1006,12 @@ void MCC::TimeStep(double simdt){
 			* MISSION G: APOLLO 11 *
 			********************** */
 			MissionSequence_G();
+			break;
+		case MTP_H1:
+			/* *********************
+			* MISSION H1: APOLLO 12 *
+			********************** */
+			MissionSequence_H1();
 			break;
 		}
 	}
@@ -1243,7 +1262,7 @@ int MCC::subThread(){
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = 0;
 	}
-	else if (MissionType == MTP_F || MissionType == MTP_G)
+	else if (MissionType == MTP_F || MissionType == MTP_G || MissionType == MTP_H1)
 	{
 		//Try to find LEM
 		if (rtcc->calcParams.tgt == NULL)
@@ -1835,6 +1854,45 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Day", form->RetroAtt_Day);
 			SAVE_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Night", form->RetroAtt_Night);
 		}
+		else if (padNumber == PT_AP12PDIABORTPAD)
+		{
+		AP12PDIABORTPAD *form = (AP12PDIABORTPAD*)padForm;
+
+		SAVE_DOUBLE("MCC_PDIABORTPAD_T_TPI_Post10Min", form->T_TPI_Post10Min);
+		SAVE_DOUBLE("MCC_PDIABORTPAD_T_TPI_Pre10Min", form->T_TPI_Pre10Min);
+		}
+		else if (padNumber == PT_AP12LUNSURFPAD)
+		{
+		AP12LunarSurfaceDataCard *form = (AP12LunarSurfaceDataCard*)padForm;
+
+		SAVE_DOUBLE("MCC_AP12T2ABORTPAD_TIG", form->T2_TIG);
+		SAVE_DOUBLE("MCC_AP12T2ABORTPAD_t_TPI", form->T2_t_TPI);
+		SAVE_DOUBLE("MCC_AP12T3ABORTPAD_TIG", form->T3_TIG);
+		}
+		else if (padNumber == PT_LMP22ACQPAD)
+		{
+		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+
+		SAVE_DOUBLE("MCC_AP12P22ACQ", form->P22_ACQ);
+		}
+		else if (padNumber == PT_AP12LMASCPAD)
+		{
+		AP12LMASCPAD *form = (AP12LMASCPAD*)padForm;
+
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_CR", form->CR);
+		SAVE_INT("MCC_AP12LMASCPAD_DEDA047", form->DEDA047);
+		SAVE_INT("MCC_AP12LMASCPAD_DEDA053", form->DEDA053);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_DEDA225_226", form->DEDA225_226);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_DEDA231", form->DEDA231);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_TIG", form->TIG);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_V_hor", form->V_hor);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_V_vert", form->V_vert);
+		SAVE_STRING("MCC_AP12LMASCPAD_remarks", form->remarks);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_TIG_2", form->TIG_2);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_DEDA231", form->DEDA465);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_LM_WT", form->LMWeight);
+		SAVE_DOUBLE("MCC_AP12LMASCPAD_CSM_WT", form->CSMWeight);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2374,6 +2432,45 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP7RETRORIENTPAD_GET_Night", form->GET_Night);
 			LOAD_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Day", form->RetroAtt_Day);
 			LOAD_V3("MCC_AP7RETRORIENTPAD_RetroAtt_Night", form->RetroAtt_Night);
+		}
+		else if (padNumber == PT_AP12PDIABORTPAD)
+		{
+		AP12PDIABORTPAD *form = (AP12PDIABORTPAD*)padForm;
+
+		LOAD_DOUBLE("MCC_PDIABORTPAD_T_TPI_Post10Min", form->T_TPI_Post10Min);
+		LOAD_DOUBLE("MCC_PDIABORTPAD_T_TPI_Pre10Min", form->T_TPI_Pre10Min);
+		}
+		else if (padNumber == PT_AP12LUNSURFPAD)
+		{
+		AP12LunarSurfaceDataCard *form = (AP12LunarSurfaceDataCard*)padForm;
+
+		LOAD_DOUBLE("MCC_AP12T2ABORTPAD_TIG", form->T2_TIG);
+		LOAD_DOUBLE("MCC_AP12T2ABORTPAD_t_TPI", form->T2_t_TPI);
+		LOAD_DOUBLE("MCC_AP12T3ABORTPAD_TIG", form->T3_TIG);
+		}
+		else if (padNumber == PT_LMP22ACQPAD)
+		{
+		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+
+		LOAD_DOUBLE("MCC_AP12P22ACQ", form->P22_ACQ);
+		}
+		else if (padNumber == PT_AP12LMASCPAD)
+		{
+		AP12LMASCPAD *form = (AP12LMASCPAD*)padForm;
+
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_CR", form->CR);
+		LOAD_INT("MCC_AP12LMASCPAD_DEDA047", form->DEDA047);
+		LOAD_INT("MCC_AP12LMASCPAD_DEDA053", form->DEDA053);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_DEDA225_226", form->DEDA225_226);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_DEDA231", form->DEDA231);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_TIG", form->TIG);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_V_hor", form->V_hor);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_V_vert", form->V_vert);
+		LOAD_STRING("MCC_AP12LMASCPAD_remarks", form->remarks, 128);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_TIG_2", form->TIG_2);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_DEDA231", form->DEDA465);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_LM_WT", form->LMWeight);
+		LOAD_DOUBLE("MCC_AP12LMASCPAD_CSM_WT", form->CSMWeight);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -3183,6 +3280,70 @@ void MCC::drawPad(bool writetofile){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP12PDIABORTPAD:
+	{
+		AP12PDIABORTPAD *form = (AP12PDIABORTPAD*)padForm;
+
+		int hh[2], mm[2];
+		double ss[2];
+
+		SStoHHMMSS(form->T_TPI_Pre10Min, hh[0], mm[0], ss[0]);
+		SStoHHMMSS(form->T_TPI_Post10Min, hh[1], mm[1], ss[1]);
+
+		sprintf(buffer, "PDI ABORT <10 MIN\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\nPDI ABORT >10 MIN\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC", hh[0], mm[0], ss[0], hh[1], mm[1], ss[1]);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP12LUNSURFPAD:
+	{
+		AP12LunarSurfaceDataCard *form = (AP12LunarSurfaceDataCard*)padForm;
+
+		int hh[3], mm[3];
+		double ss[3];
+
+		SStoHHMMSS(form->T2_TIG, hh[0], mm[0], ss[0]);
+		SStoHHMMSS(form->T2_t_TPI, hh[1], mm[1], ss[1]);
+		SStoHHMMSS(form->T3_TIG, hh[2], mm[2], ss[2]);
+
+		sprintf(buffer, "T2 ABORT\n%+06d HRS T2\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\nT3 ABORT\n%+06d HRS T3\n%+06d MIN TIG\n%+07.2f SEC",
+			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_LMP22ACQPAD:
+	{
+		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+
+		int hh, mm;
+		double ss;
+
+		SStoHHMMSS(form->P22_ACQ, hh, mm, ss);
+
+		sprintf(buffer, "P22 ACQUISITION\n%+06d HRS\n%+06d MIN\n%+07.2f SEC", hh, mm, ss);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP12LMASCPAD:
+	{
+		AP12LMASCPAD *form = (AP12LMASCPAD*)padForm;
+
+		int hh[2], mm[2];
+		double ss[2];
+
+		SStoHHMMSS(form->TIG, hh[0], mm[0], ss[0]);
+		SStoHHMMSS(form->TIG_2, hh[1], mm[1], ss[1]);
+
+		sprintf(buffer, "LM ASCENT PAD\n%+06d HRS\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f V (HOR)\n%+07.1f V (VERT) N76\n%+07.1f CROSSRANGE\n"
+			"%+06d 047\n%+06d 053\n%+06.0f 225/226\n%+06.0f 231\n%+07.1f 465\n%+06d HRS\n%+06d MIN TIG\n%+07.2f SEC\n%+06.0f LM WT\n%+06.0f CSM WT\nRemarks: %s",
+			hh[0], mm[0], ss[0], form->V_hor, form->V_vert, form->CR, form->DEDA047, form->DEDA053, form->DEDA225_226, form->DEDA231, form->DEDA465, hh[1], mm[1], ss[1],
+			form->LMWeight, form->CSMWeight, form->remarks);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3321,6 +3482,18 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_RETROORIENTATION: // AP7RETRORIENTPAD
 		padForm = calloc(1, sizeof(AP7RETRORIENTPAD));
+		break;
+	case PT_AP12PDIABORTPAD: // AP12PDIABORTPAD
+		padForm = calloc(1, sizeof(AP12PDIABORTPAD));
+		break;
+	case PT_AP12LUNSURFPAD: // AP12T2ABORTPAD
+		padForm = calloc(1, sizeof(AP12LunarSurfaceDataCard));
+		break;
+	case PT_LMP22ACQPAD: // LMP22ACQPAD
+		padForm = calloc(1, sizeof(LMP22ACQPAD));
+		break;
+	case PT_AP12LMASCPAD: // AP12LMASCPAD
+		padForm = calloc(1, sizeof(AP12LMASCPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));
@@ -4124,6 +4297,10 @@ void MCC::initiateAbort()
 		else if (MissionType == MTP_G)
 		{
 			setState(MST_G_ABORT_ORBIT);
+		}
+		else if (MissionType == MTP_H1)
+		{
+			setState(MST_H1_ABORT_ORBIT);
 		}
 	}
 	else if (MissionPhase == MMST_TL_COAST)
