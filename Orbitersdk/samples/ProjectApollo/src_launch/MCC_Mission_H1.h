@@ -161,3 +161,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 //ABORTS
 // Ends at entry interface, goes to entry.
 #define MST_H1_ABORT_ORBIT	500
+// Abort from earth orbit, goes to MST_ORBIT_ENTRY
+#define MST_H1_ABORT		501
+// post-TLI abort, ends at abort burn (if any)
+// goes to MST_CP_TRANSEARTH with an abort flag.

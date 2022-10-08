@@ -565,5 +565,154 @@ void MCC::MissionSequence_H1()
 		}
 	}
 	break;
+	case MST_H1_ABORT:
+		if (AbortMode == 6)	//Translunar Coast
+		{
+			switch (SubState) {
+			case 0:
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.TEI))
+				{
+					setSubState(1);
+				}
+			}
+			break;
+			case 1:
+				if (rtcc->AGCGravityRef(cm) == oapiGetObjectByName("Moon"))
+				{
+					setSubState(12);//Flyby
+				}
+				else if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
+				{
+					setSubState(2);//Skip directly to normal entry procedures
+				}
+				else
+				{
+					setSubState(3);	//Include another course correction
+				}
+				break;
+			case 2:
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0))
+				{
+					SlowIfDesired();
+					setState(MST_H1_TRANSEARTH_9);
+				}
+			}
+			break;
+			case 3:
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.TEI + 4.0 * 60 * 60))
+				{
+					SlowIfDesired();
+					setSubState(4);
+				}
+			}
+			break;
+
+			case 4:
+				allocPad(8); // Allocate AP7 Maneuver Pad
+				if (padForm != NULL) {
+					// If success
+					startSubthread(300, UTP_PADWITHCMCUPLINK); // Start subthread to fill PAD
+				}
+				else {
+					// ERROR STATE
+				}
+				setSubState(5);
+				// FALL INTO
+			case 5: // Await pad read-up time (however long it took to compute it and give it to capcom)
+				if (SubStateTime > 1 && padState > -1) {
+					if (scrubbed)
+					{
+						if (upMessage[0] != 0)
+						{
+							addMessage(upMessage);
+						}
+						freePad();
+						scrubbed = false;
+						setSubState(10);
+					}
+					else
+					{
+
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+						addMessage("Ready for uplink?");
+						sprintf(PCOption_Text, "Ready for uplink");
+						PCOption_Enabled = true;
+						setSubState(6);
+					}
+				}
+				break;
+			case 6: // Awaiting user response
+			case 7: // Negative response / not ready for uplink
+				break;
+			case 8: // Ready for uplink
+				if (SubStateTime > 1 && padState > -1) {
+					// The uplink should also be ready, so flush the uplink buffer to the CMC
+					this->CM_uplink_buffer();
+					// uplink_size = 0; // Reset
+					PCOption_Enabled = false; // No longer needed
+					if (upDescr[0] != 0)
+					{
+						addMessage(upDescr);
+					}
+					setSubState(9);
+				}
+				break;
+			case 9: // Await uplink completion
+				if (cm->pcm.mcc_size == 0) {
+					addMessage("Uplink completed!");
+					NCOption_Enabled = true;
+					sprintf(NCOption_Text, "Repeat uplink");
+					setSubState(10);
+				}
+				break;
+			case 10: // Await burn
+				if (rtcc->GETEval2(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0))
+				{
+					SlowIfDesired();
+					setState(MST_H1_TRANSEARTH_9);
+				}
+				break;
+			case 11: //Repeat uplink
+			{
+				NCOption_Enabled = false;
+				setSubState(4);
+			}
+			break;
+			case 12:
+			{
+				//Wait for 10 minutes so the burn is over, then calculate Pericynthion time for return trajectory
+				if (rtcc->GETEval2(rtcc->calcParams.TEI + 10.0*60.0))
+				{
+					rtcc->calcParams.LOI = rtcc->PericynthionTime(cm);
+					setSubState(13);
+				}
+			}
+			case 13: //Flyby, go to nominal TEC procedures
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.LOI + 45.0*60.0) && rtcc->GETEval2(rtcc->calcParams.TEI + 45.0*60.0))
+				{
+					rtcc->calcParams.TEI = rtcc->calcParams.LOI;
+					setState(MST_H1_TRANSEARTH_1);
+				}
+			}
+			break;
+			}
+		}
+		else if (AbortMode == 7) //Lunar Orbit
+		{
+			if (rtcc->GETEval2(rtcc->calcParams.TEI))
+			{
+				setState(MST_H1_TRANSEARTH_1);
+			}
+		}
+		else if (AbortMode == 8)
+		{
+			//How to Abort?
+		}
 	}
 }

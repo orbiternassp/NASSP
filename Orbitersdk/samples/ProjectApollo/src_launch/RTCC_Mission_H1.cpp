@@ -392,6 +392,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->dVT[0] = length(res.dV_LVLH) / 0.3048;
 		form->GET400K[0] = res.GET05G;
 		form->lng[0] = round(res.longitude*DEG);
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 14: //TLI PAD
@@ -508,6 +514,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			form->GET400K[3] = res.GET05G;
 			form->lng[3] = round(res.longitude*DEG);
 		}
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 18: //PTC REFSMMAT
@@ -1516,9 +1528,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 41: //TEI-4 UPDATE (PRE LOI-1)
 	case 42: //TEI-5 UPDATE (PRE LOI-2)
 	case 43: //TEI-11 UPDATE
-	case 44: //TEI-34 UPDATE (PDI DAY)
+	case 44: //TEI-34 UPDATE
 	case 45: //TEI-39 UPDATE
-	case 46: //TEI-41 UPDATE
+	case 46: //TEI-41 UPDATE (PRE PC-2)
 	case 47: //TEI-43 UPDATE
 	case 48: //TEI-45 UPDATE (BLOCK DATA)
 	case 49: //TEI-45 UPDATE (PRELIM)
@@ -1709,7 +1721,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		sprintf(form->remarks, "Four-jet ullage for 11 seconds");
 
-		if (fcn == 40)
+		if (fcn == 40 || fcn == 43)
 		{
 			sprintf(form->remarks, "%s,\nUndocked", form->remarks);
 		}
@@ -3073,6 +3085,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 212: //MCC-6 UPDATE
 	case 213: //MCC-7 DECISION
 	case 214: //MCC-7 UPDATE
+	case 300: //GENERIC MCC
 	{
 		EntryOpt entopt;
 		EntryResults res;
@@ -3099,6 +3112,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			MCCtime = calcParams.EI - 3.0*3600.0;
 			sprintf(manname, "MCC-7");
 		}
+		else
+		{
+			MCCtime = calcParams.TEI + 5.0*3600.0;
+			sprintf(manname, "MCC");
+		}
 
 		//Only corridor control after EI-24h
 		if (MCCtime > calcParams.EI - 24.0*3600.0)
@@ -3121,6 +3139,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1250.0;
 
 		EntryTargeting(&entopt, &res);
 
@@ -3235,8 +3254,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 		else
 		{
-			//MCC-5 and MCC-6
-			if (fcn == 210 || fcn == 212)
+			//MCC-5 or MCC-6 or Generic MCC
+			if (fcn == 210 || fcn == 212 || fcn == 300)
 			{
 				char buffer1[1000];
 				char buffer2[1000];
