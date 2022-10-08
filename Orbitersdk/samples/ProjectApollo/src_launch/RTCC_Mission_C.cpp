@@ -1122,7 +1122,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else
 		{
 			opt.navcheckGET = OrbMech::HHMMSSToSS(209, 20, 0);
-			opt.sxtstardtime = 0.0;
+			opt.sxtstardtime = -20.0*60.0;
 		}
 
 		opt.dV_LVLH = dV_LVLH;
@@ -1161,6 +1161,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 56: //Rev 90 Landmark Tracking Update
 	case 57: //Rev 91 Landmark Tracking Update
 	case 58: //Rev 92 Landmark Tracking Update
+	case 59: //Rev 135 Landmark Tracking Update
+	case 60: //Rev 136 Landmark Tracking Update
 	{
 		LMARKTRKPADOpt opt;
 		SV sv0;
@@ -1247,6 +1249,50 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.lng[1] = -34.843*RAD;
 
 			opt.entries = 2;
+		}
+		else if (fcn == 59)
+		{
+			sprintf(form->LmkID[0], "048");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(214, 40, 0);
+			opt.alt[0] = 0.0;
+			opt.lat[0] = 25.666*RAD;
+			opt.lng[0] = -80.158*RAD;
+
+			sprintf(form->LmkID[1], "225");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(215, 0, 0);
+			opt.alt[1] = 0.0;
+			opt.lat[1] = -22.882*RAD;
+			opt.lng[1] = 14.445*RAD;
+
+			opt.entries = 2;
+		}
+		else if (fcn == 60)
+		{
+			sprintf(form->LmkID[0], "011");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(216, 10, 0);
+			opt.alt[0] = 0.0;
+			opt.lat[0] = 27.839*RAD;
+			opt.lng[0] = -110.885*RAD;
+
+			sprintf(form->LmkID[1], "128");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(216, 20, 0);
+			opt.alt[1] = 18.52;
+			opt.lat[1] = 10.576*RAD;
+			opt.lng[1] = -71.538*RAD;
+
+			sprintf(form->LmkID[2], "144");
+			opt.LmkTime[2] = OrbMech::HHMMSSToSS(216, 30, 0);
+			opt.alt[2] = 0.0;
+			opt.lat[2] = -10.506*RAD;
+			opt.lng[2] = -36.419*RAD;
+
+			sprintf(form->LmkID[3], "227");
+			opt.LmkTime[3] = OrbMech::HHMMSSToSS(216, 40, 0);
+			opt.alt[3] = 0.0;
+			opt.lat[3] = -28.637*RAD;
+			opt.lng[3] = 16.46*RAD;
+
+			opt.entries = 4;
 		}
 
 		LandmarkTrackingPAD(&opt, *form);
@@ -1578,34 +1624,43 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VECTOR3 dV_LVLH, dV_imp;
 		double P30TIG, GETbase, TIG_imp, mass;
 		MATRIX3 REFSMMAT;
-		EphemerisData sv, sv1;
+		EphemerisData sv, sv0, sv1;
 		char buffer1[1000];
 		char buffer2[1000];
-
-		GETbase = CalcGETBase();
-		sv = StateVectorCalcEphem(calcParams.src);
-		mass = calcParams.src->GetMass();
-
-		sv1 = coast(sv, GMTfromGET(258.5*3600.0) - sv.GMT, RTCC_MPT_CSM);
-
-		//Convert to AEG and initialize
 		AEGBlock aeg;
 		AEGDataBlock sv_P;
 		double INFO[10];
 		int KAOP, KE;
-		
-		aeg = SVToAEG(sv1);
-		PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
-		KAOP = -1; //Perigee only
-		KE = 0; //ECI
-		PMMAPD(aeg.Header, aeg.Data, KAOP, KE, INFO, NULL, &sv_P);
 
-		orbopt.dLOA = OrbMech::calculateDifferenceBetweenAngles(INFO[8], -45.0*RAD);
-		orbopt.ManeuverCode = RTCC_GMP_SAO;
-		orbopt.sv_in = sv;
-		orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 35, 0);
+		GETbase = CalcGETBase();
+		sv = StateVectorCalcEphem(calcParams.src);
+		mass = calcParams.src->GetMass();
+		sv0 = sv;
+		orbopt.dLOA = 0.0;
 
-		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		//Do this twice to converge properly
+		for (int i = 0;i < 2;i++)
+		{
+			//Take state vector to estimated time of rev 163 crossing
+			sv1 = coast(sv0, GMTfromGET(258.5*3600.0) - sv0.GMT, RTCC_MPT_CSM);
+
+			//Convert to AEG and initialize
+			aeg = SVToAEG(sv1);
+			PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
+			KAOP = -1; //Perigee only
+			KE = 0; //ECI
+			PMMAPD(aeg.Header, aeg.Data, KAOP, KE, INFO, NULL, &sv_P);
+
+			orbopt.dLOA += OrbMech::calculateDifferenceBetweenAngles(INFO[8], -45.0*RAD);
+			orbopt.ManeuverCode = RTCC_GMP_SAO;
+			orbopt.sv_in = sv;
+			orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 40, 0);
+
+			GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+
+			sv0 = PZGPMELM.SV_before;
+			sv0.V = PZGPMELM.V_after;
+		}
 
 		in.CONFIG = 1; //CSM
 		in.CSMWeight = mass;
@@ -1625,7 +1680,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
 		P30TIG = GETfromGMT(GMT_TIG);
 
-		dV_LVLH.y = -100.0*0.3048;
+		//If the maneuver is too short, add some out-of-plane DV
+		if (length(dV_LVLH) < 250.0*0.3048)
+		{
+			dV_LVLH.y = -100.0*0.3048;
+		}
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -1851,6 +1910,38 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.vessel = calcParams.src;
 
 		P27PADCalc(&opt, *form);
+	}
+	break;
+	case 61: //CSM STATE VECTOR UPDATE, W-MATRIX UPDATE AND NAV CHECK PAD
+	{
+		AP7NAV * form = (AP7NAV *)pad;
+
+		SV sv;
+		double GETbase;
+		char buffer1[1000], buffer2[1000];
+		int emem[5];
+
+		GETbase = CalcGETBase();
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		NavCheckPAD(sv, *form, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+
+		//W-Matrix update
+		emem[0] = 5;	//Size
+		emem[1] = 2004; //Address
+		emem[2] = 2;	//WORBPOS = 200 ft
+		emem[3] = 12;	//WORBVEL = 0.2 ft/s
+		emem[4] = 5;	//S22WSUBL = 500 ft
+
+		V7XUpdate(71, buffer2, emem, 5);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, W-Matrix update");
+		}
 	}
 	break;
 	}
