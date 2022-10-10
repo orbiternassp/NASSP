@@ -120,6 +120,16 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_m50.Table = RTCC_MPT_LM;
 		med_m50.SIVBWT = 30029.0* 0.453592;
 		PMMWTC(50);
+
+		//And propellants
+		med_m49.Table = RTCC_MPT_CSM;
+		med_m49.SPSFuelRemaining = 4430;
+		PMMWTC(49);
+
+		med_m49.Table = RTCC_MPT_LM;
+		med_m49.SPSFuelRemaining = -1;
+		med_m49.SIVBFuelRemaining = 0;
+		PMMWTC(49);
 	}
 	break;
 	case 1: // MISSION C PHASING BURN
@@ -910,7 +920,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, GETbase, TIG_imp, mass, LOA, GET_TH;
+		double P30TIG, GETbase, TIG_imp, LOA, GET_TH;
 		MATRIX3 REFSMMAT;
 		EphemerisData sv, sv1;
 		AEGBlock aeg;
@@ -922,7 +932,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GETbase = CalcGETBase();
 		sv = StateVectorCalcEphem(calcParams.src);
-		mass = calcParams.src->GetMass();
+		PZMPTCSM.TotalInitMass = calcParams.src->GetMass();
 
 		//Threshold time
 		GET_TH = OrbMech::HHMMSSToSS(75, 18, 0);
@@ -935,7 +945,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
 
 		//Calculate required apsidal shift
-		LOA = 90.0*RAD - aeg.Data.coe_mean.g;
+		LOA = 120.0*RAD - aeg.Data.coe_mean.g;
 
 		//Calculate current apogee
 		KAOP = 1; //Perigee only
@@ -985,7 +995,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PZGPMELM.V_after += tmul(OrbMech::LVLH_Matrix(PZGPMELM.SV_before.R, PZGPMELM.SV_before.V), _V(-0.8, 200.0, 0.0)*0.3048);
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = mass;
+		in.CSMWeight = PZMPTCSM.TotalInitMass;
 		in.sv_before = PZGPMELM.SV_before;
 		in.V_aft = PZGPMELM.V_after;
 		in.DETU = 15.0; //Ullage
@@ -1018,7 +1028,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = P30TIG;
 		manopt.vessel = calcParams.src;
-		manopt.sxtstardtime = -15.0*60.0;
+		manopt.sxtstardtime = -20.0*60.0;
 
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "SPS-3");
@@ -1430,18 +1440,17 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, GETbase, TIG_imp, mass;
+		double P30TIG, GETbase, TIG_imp, H_A;
 		MATRIX3 REFSMMAT;
-		EphemerisData sv;
+		EphemerisData sv, sv_aft, sv_rev163;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		GETbase = CalcGETBase();
 		sv = StateVectorCalcEphem(calcParams.src);
-		mass = calcParams.src->GetMass();
+		PZMPTCSM.TotalInitMass = calcParams.src->GetMass();
 
 		orbopt.AltRef = 1;
-		orbopt.H_A = 240.0*1852.0;
 		orbopt.H_P = 90.0*1852.0;
 		//Eastern Test Range
 		orbopt.long_D = -88.455*RAD;
@@ -1450,10 +1459,35 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		orbopt.sv_in = sv;
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(164, 30, 0);
 
-		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		H_A = 240.0;
+
+		double c_I, eo, xo, p_I, alt, lat, lng, dlng, dt;
+		int s_I;
+
+		c_I = 0.0;
+		s_I = 0;
+
+		do
+		{
+			orbopt.H_A = H_A * 1852.0;
+			GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+
+			//Adjust downrange error
+			sv_aft = PZGPMELM.SV_before;
+			sv_aft.V = PZGPMELM.V_after;
+
+			sv_rev163 = coast(sv_aft, GMTfromGET(OrbMech::HHMMSSToSS(258, 18, 0)) - sv_aft.GMT, RTCC_MPT_CSM);
+			GLSSAT(sv_rev163, lat, lng, alt);
+			dlng = OrbMech::calculateDifferenceBetweenAngles(lng, -80.0*RAD);
+
+			if (abs(dlng) > 1.0*RAD)
+			{
+				OrbMech::ITER(c_I, s_I, dlng, p_I, H_A, eo, xo);
+			}
+		} while (abs(dlng) > 1.0*RAD && s_I == 0);
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = mass;
+		in.CSMWeight = PZMPTCSM.TotalInitMass;
 		in.sv_before = PZGPMELM.SV_before;
 		in.V_aft = PZGPMELM.V_after;
 		in.DETU = 20.0; //Ullage
@@ -1673,7 +1707,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, GETbase, TIG_imp, mass;
+		double P30TIG, GETbase, TIG_imp;
 		MATRIX3 REFSMMAT;
 		EphemerisData sv, sv0, sv1;
 		char buffer1[1000];
@@ -1685,7 +1719,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GETbase = CalcGETBase();
 		sv = StateVectorCalcEphem(calcParams.src);
-		mass = calcParams.src->GetMass();
+		PZMPTCSM.TotalInitMass = calcParams.src->GetMass();
 		sv0 = sv;
 		orbopt.dLOA = 0.0;
 
@@ -1714,7 +1748,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = mass;
+		in.CSMWeight = PZMPTCSM.TotalInitMass;
 		in.sv_before = PZGPMELM.SV_before;
 		in.V_aft = PZGPMELM.V_after;
 		in.DETU = 15.0; //Ullage

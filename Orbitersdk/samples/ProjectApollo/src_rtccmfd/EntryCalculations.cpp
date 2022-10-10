@@ -4079,7 +4079,7 @@ bool EarthEntry::EntryIter()
 	}
 	else
 	{
-		if (precision && entrynominal)
+		if (precision == 1 && entrynominal)
 		{
 			if (abs(x - xlim) < OrbMech::power(2.0, -20.0) || abs(x + xlim) < OrbMech::power(2.0, -20.0) || ii == 60)
 				//if (ii == 40)

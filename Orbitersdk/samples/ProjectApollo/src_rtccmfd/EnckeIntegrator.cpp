@@ -113,7 +113,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 		//1 meter tolerance for radius and height
 		DEV = 1.0;
 	}
-	else if (ISTOPS == 4)
+	else if (ISTOPS == 4 || ISTOPS == 6)
 	{
 		//0.0001° tolerance
 		DEV = 0.0001*RAD;
@@ -247,6 +247,21 @@ EMMENI_Edit_3B:
 			{
 				RCALC = FUNCT - STOPVAM;
 			}
+		}
+		else if (ISTOPS == 6)
+		{
+			VECTOR3 NVEC, H_ECT;
+			EphemerisData2 sv_temp, sv_ECT;
+
+			sv_temp.R = R;
+			sv_temp.V = V;
+			sv_temp.GMT = CurrentTime();
+
+			pRTCC->ELVCNV(sv_temp, 0, 1, sv_ECT);
+
+			H_ECT = unit(crossp(sv_ECT.R, sv_ECT.V));
+			NVEC = unit(crossp(_V(0, 0, 1), H_ECT));
+			RCALC = OrbMech::PHSANG(sv_ECT.R, sv_ECT.V, NVEC);
 		}
 	}
 
