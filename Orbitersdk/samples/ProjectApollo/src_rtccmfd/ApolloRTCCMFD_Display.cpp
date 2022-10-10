@@ -8949,8 +8949,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 					skp->Text((9 + i * 6) * W / 16, 16 * H / 26, Buffer, strlen(Buffer));
 					sprintf_s(Buffer, "%.2lf", tab->DV_TO);
 					skp->Text((9 + i * 6) * W / 16, 17 * H / 26, Buffer, strlen(Buffer));
-					sprintf_s(Buffer, "%.1lf", tab->H_apo);
-					skp->Text((9 + i * 6) * W / 16, 18 * H / 26, Buffer, strlen(Buffer));
+					if (tab->H_apo < 99999.9)
+					{
+						sprintf_s(Buffer, "%.1lf", tab->H_apo);
+						skp->Text((9 + i * 6) * W / 16, 18 * H / 26, Buffer, strlen(Buffer));
+					}
 					sprintf_s(Buffer, "%.1lf", tab->H_peri);
 					skp->Text((9 + i * 6) * W / 16, 19 * H / 26, Buffer, strlen(Buffer));
 					FormatLatitude(Buffer, tab->lat_IP);
