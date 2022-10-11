@@ -1698,15 +1698,16 @@ void ARCore::StateVectorCalc(int type)
 void ARCore::AGSStateVectorCalc()
 {
 	AGSSVOpt opt;
-	SV sv;
+	EphemerisData sv;
 
-	sv = GC->rtcc->StateVectorCalc(svtarget);
+	sv = GC->rtcc->StateVectorCalcEphem(svtarget);
 
 	opt.csm = SVSlot;
 	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 	opt.sv = sv;
+	opt.landed = svtarget->GroundContact();
 
-	GC->rtcc->AGSStateVectorPAD(&opt, agssvpad);
+	GC->rtcc->AGSStateVectorPAD(opt, agssvpad);
 }
 
 void ARCore::StateVectorUplink(int type)
@@ -2826,7 +2827,21 @@ int ARCore::subThread()
 			opt.REFSMMATTime = REFSMMATTime;
 		}
 
-		opt.vessel = vessel;
+		//For LS REFSMMAT use target vessel, if we are not in the CSM
+		if (GC->MissionPlanningActive == false && vesseltype != 0 && REFSMMATopt == 5)
+		{
+			if (target == NULL)
+			{
+				Result = 0;
+				break;
+			}
+
+			opt.vessel = target;
+		}
+		else
+		{
+			opt.vessel = vessel;
+		}
 
 		if (vesseltype == 0)
 		{

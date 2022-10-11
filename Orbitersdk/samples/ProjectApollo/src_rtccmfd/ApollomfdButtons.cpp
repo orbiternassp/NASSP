@@ -177,7 +177,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu5[] =
 	{
 		{ "Time of Alignment", 0, 'G' },
-		{ "", 0, ' ' },
+		{ "Target for LS REFS", 0, 'K' },
 		{ "Heads up/down for P30", 0, 'H' },
 		{ "Attitude input", 0, 'A' },
 		{ "REFSMMAT from AGC", 0, 'D' },
@@ -194,7 +194,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu5, sizeof(mnu5) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::REFSMMATTimeDialogue);
-	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TGT", OAPI_KEY_K, &ApolloRTCCMFD::set_target);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::cycleREFSMMATHeadsUp);
 	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuREFSMMATAtt);
 	RegisterFunction("DWN", OAPI_KEY_D, &ApolloRTCCMFD::GetREFSMMATfromAGC);
