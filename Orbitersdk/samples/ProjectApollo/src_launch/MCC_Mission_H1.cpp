@@ -231,8 +231,11 @@ void MCC::MissionSequence_H1()
 	case MST_H1_TRANSLUNAR21: //Rev 1 Map Update to LOI-1 update (final)
 		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, SubStateTime > 5.0*60.0, 60, MST_H1_TRANSLUNAR22);
 		break;
-	case MST_H1_TRANSLUNAR22: //LOI-1 update (final) to Lunar orbit phase begin
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.LOI), 30, MST_H1_LUNAR_ORBIT_LOI_DAY_1);
+	case MST_H1_TRANSLUNAR22: //LOI-1 update (final) to LOI-1 Evaluation
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->TimeofIgnition + 6.0*60.0 + 30.0), 30, MST_H1_TRANSLUNAR23);
+		break;
+	case MST_H1_TRANSLUNAR23: //LOI-1 Evaluation to Lunar orbit phase begin or PC+2
+		UpdateMacro(UTP_NONE, PT_NONE, true, 33, MST_H1_LUNAR_ORBIT_LOI_DAY_1, scrubbed, true, MST_H1_ABORT);
 		break;
 	case MST_H1_LUNAR_ORBIT_LOI_DAY_1: //Lunar orbit phase begin
 		switch (SubState) {
@@ -571,27 +574,78 @@ void MCC::MissionSequence_H1()
 			switch (SubState) {
 			case 0:
 			{
-				if (rtcc->GETEval2(rtcc->calcParams.TEI))
+				if (rtcc->GETEval2(rtcc->calcParams.LOI - 5.0*3600.0)) //PC+2
 				{
-					setSubState(1);
+					rtcc->calcParams.TEI = rtcc->calcParams.LOI + 2.0*3600.0;
+					rtcc->calcParams.EI = rtcc->calcParams.LOI + 38.0*3600.0;
 				}
+				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(60, 0, 0))) //Flyby
+				{
+					rtcc->calcParams.TEI = rtcc->calcParams.LOI - 5.0*3600.0;
+					rtcc->calcParams.EI = rtcc->calcParams.LOI + 62.0*3600.0;
+				}
+				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(45, 0, 0))) //LO+60
+				{
+					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(60, 0, 0);
+					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(122.0, 01.0, 0.0);
+				}
+				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(35, 0, 0))) //LO+45
+				{
+					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(45, 0, 0);
+					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(97.0, 58.0, 0.0);
+				}
+				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(25, 0, 0))) //LO+35
+				{
+					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(35, 0, 0);
+					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(73.0, 39.0, 0.0);
+				}
+				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(15, 0, 0))) //LO+25
+				{
+					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(25, 0, 0);
+					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(74.0, 12.0, 0.0);
+				}
+				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(8, 0, 0))) //LO+15
+				{
+					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(15, 0, 0);
+					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(50.0, 6.0, 0.0);
+				}
+				else if (rtcc->GETEval2(rtcc->calcParams.TLI + 90.0*60.0)) //LO+8
+				{
+					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(8, 0, 0);
+					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(25.0, 43.0, 0.0);
+				}
+				else //TLI+90
+				{
+					rtcc->calcParams.TEI = rtcc->calcParams.TLI + 90.0*60.0;
+					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(16.0, 46.0, 0.0);
+				}
+
+				setSubState(1);
 			}
 			break;
 			case 1:
-				if (rtcc->AGCGravityRef(cm) == oapiGetObjectByName("Moon"))
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.TEI))
 				{
-					setSubState(12);//Flyby
+					setSubState(2);
+				}
+			}
+			break;
+			case 2:
+				if (rtcc->GETEval2(OrbMech::HHMMSSToSS(60, 0, 0)))
+				{
+					setSubState(13);//Flyby
 				}
 				else if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
 				{
-					setSubState(2);//Skip directly to normal entry procedures
+					setSubState(3);//Skip directly to normal entry procedures
 				}
 				else
 				{
-					setSubState(3);	//Include another course correction
+					setSubState(4);	//Include another course correction
 				}
 				break;
-			case 2:
+			case 3:
 			{
 				if (rtcc->GETEval2(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0))
 				{
@@ -600,17 +654,17 @@ void MCC::MissionSequence_H1()
 				}
 			}
 			break;
-			case 3:
+			case 4:
 			{
 				if (rtcc->GETEval2(rtcc->calcParams.TEI + 4.0 * 60 * 60))
 				{
 					SlowIfDesired();
-					setSubState(4);
+					setSubState(5);
 				}
 			}
 			break;
 
-			case 4:
+			case 5:
 				allocPad(8); // Allocate AP7 Maneuver Pad
 				if (padForm != NULL) {
 					// If success
@@ -619,9 +673,9 @@ void MCC::MissionSequence_H1()
 				else {
 					// ERROR STATE
 				}
-				setSubState(5);
+				setSubState(6);
 				// FALL INTO
-			case 5: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			case 6: // Await pad read-up time (however long it took to compute it and give it to capcom)
 				if (SubStateTime > 1 && padState > -1) {
 					if (scrubbed)
 					{
@@ -631,7 +685,7 @@ void MCC::MissionSequence_H1()
 						}
 						freePad();
 						scrubbed = false;
-						setSubState(10);
+						setSubState(11);
 					}
 					else
 					{
@@ -642,14 +696,14 @@ void MCC::MissionSequence_H1()
 						addMessage("Ready for uplink?");
 						sprintf(PCOption_Text, "Ready for uplink");
 						PCOption_Enabled = true;
-						setSubState(6);
+						setSubState(7);
 					}
 				}
 				break;
-			case 6: // Awaiting user response
-			case 7: // Negative response / not ready for uplink
+			case 7: // Awaiting user response
+			case 8: // Negative response / not ready for uplink
 				break;
-			case 8: // Ready for uplink
+			case 9: // Ready for uplink
 				if (SubStateTime > 1 && padState > -1) {
 					// The uplink should also be ready, so flush the uplink buffer to the CMC
 					this->CM_uplink_buffer();
@@ -659,45 +713,53 @@ void MCC::MissionSequence_H1()
 					{
 						addMessage(upDescr);
 					}
-					setSubState(9);
+					setSubState(10);
 				}
 				break;
-			case 9: // Await uplink completion
+			case 10: // Await uplink completion
 				if (cm->pcm.mcc_size == 0) {
 					addMessage("Uplink completed!");
 					NCOption_Enabled = true;
 					sprintf(NCOption_Text, "Repeat uplink");
-					setSubState(10);
+					setSubState(11);
 				}
 				break;
-			case 10: // Await burn
+			case 11: // Await burn
 				if (rtcc->GETEval2(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0))
 				{
 					SlowIfDesired();
 					setState(MST_H1_TRANSEARTH_9);
 				}
 				break;
-			case 11: //Repeat uplink
+			case 12: //Repeat uplink
 			{
 				NCOption_Enabled = false;
-				setSubState(4);
+				setSubState(5);
 			}
 			break;
-			case 12:
+			case 13:
 			{
 				//Wait for 10 minutes so the burn is over, then calculate Pericynthion time for return trajectory
 				if (rtcc->GETEval2(rtcc->calcParams.TEI + 10.0*60.0))
 				{
 					rtcc->calcParams.LOI = rtcc->PericynthionTime(cm);
-					setSubState(13);
+					setSubState(14);
 				}
 			}
-			case 13: //Flyby, go to nominal TEC procedures
+			case 14: //Flyby, go to nominal TEC procedures
 			{
 				if (rtcc->GETEval2(rtcc->calcParams.LOI + 45.0*60.0) && rtcc->GETEval2(rtcc->calcParams.TEI + 45.0*60.0))
 				{
 					rtcc->calcParams.TEI = rtcc->calcParams.LOI;
-					setState(MST_H1_TRANSEARTH_1);
+
+					if (rtcc->calcParams.EI - rtcc->calcParams.TEI > 45.0*3600.0) //Is this a flyby or fast PC+2?
+					{
+						setState(MST_H1_TRANSEARTH_1);
+					}
+					else
+					{
+						setSubState(4); //Go to genric MCC. Not enough time for the full transearth timeline.
+					}
 				}
 			}
 			break;
@@ -705,7 +767,13 @@ void MCC::MissionSequence_H1()
 		}
 		else if (AbortMode == 7) //Lunar Orbit
 		{
-			if (rtcc->GETEval2(rtcc->calcParams.TEI))
+		    if (MoonRev < 1) //FIX ME
+		    {
+				//TEI-1 TIG
+				rtcc->calcParams.TEI = rtcc->calcParams.TIGSTORE1;
+			}
+
+		    if (rtcc->GETEval2(rtcc->calcParams.TEI))
 			{
 				setState(MST_H1_TRANSEARTH_1);
 			}

@@ -392,12 +392,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->dVT[0] = length(res.dV_LVLH) / 0.3048;
 		form->GET400K[0] = res.GET05G;
 		form->lng[0] = round(res.longitude*DEG);
-
-		//Save parameters for further use
-		SplashLatitude = res.latitude;
-		SplashLongitude = res.longitude;
-		calcParams.TEI = res.P30TIG;
-		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 14: //TLI PAD
@@ -514,12 +508,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			form->GET400K[3] = res.GET05G;
 			form->lng[3] = round(res.longitude*DEG);
 		}
-
-		//Save parameters for further use
-		SplashLatitude = res.latitude;
-		SplashLongitude = res.longitude;
-		calcParams.TEI = res.P30TIG;
-		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 18: //PTC REFSMMAT
@@ -763,12 +751,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
-
-		//Save parameters for further use
-		SplashLatitude = res.latitude;
-		SplashLongitude = res.longitude;
-		calcParams.TEI = res.P30TIG;
-		calcParams.EI = res.GET400K;
 
 		AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
 
@@ -1115,12 +1097,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
 		form->type = 2;
-
-		//Save parameters for further use
-		SplashLatitude = res.latitude;
-		SplashLongitude = res.longitude;
-		calcParams.TEI = res.P30TIG;
-		calcParams.EI = res.GET400K;
 	}
 	break;
 	case 29:    // LOI-1 MANEUVER with LS REFSMMAT uplink
@@ -1323,6 +1299,23 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM state vector and V66, LS REFSMMAT");
+		}
+	}
+	break;
+	case 33: //LOI-1 EVALUATION
+	{
+		SV sv;
+		OELEMENTS coe;
+
+		sv = StateVectorCalc(calcParams.src);
+
+		coe = OrbMech::coe_from_sv(sv.R, sv.V, OrbMech::mu_Moon);
+
+		if (coe.e > 0.7)
+		{
+			sprintf(upMessage, "LOI-1 scrubbed, burn PC+2 PAD");
+			scrubbed = true;
+			mcc->AbortMode = 6;
 		}
 	}
 	break;
@@ -1744,6 +1737,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		else if (fcn == 49 || fcn == 50)
 		{
 			form->type = 1;
+		}
+
+		if (fcn == 40)
+		{
+			//Save TEI-1 TIG for abort logic
+			calcParams.TIGSTORE1 = PZREAP.RTEDTable[0].GETI;
 		}
 
 		if (fcn != 51)
@@ -3132,14 +3131,23 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		entopt.entrylongmanual = true;
+		entopt.entrylongmanual = false;
+		entopt.ATPLine = 0; //MPL
 		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		entopt.lng = SplashLongitude;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
 		entopt.r_rbias = 1250.0;
+
+		if (calcParams.src->DockingStatus(0) == 1)
+		{
+			entopt.csmlmdocked = true;
+		}
+		else
+		{
+			entopt.csmlmdocked = false;
+		}
 
 		EntryTargeting(&entopt, &res);
 
@@ -3188,13 +3196,21 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			else
 			{
 				opt.dV_LVLH = res.dV_LVLH;
-				opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
+				opt.enginetype = SPSRCSDecision(SPS_THRUST / (calcParams.src->GetMass() + GetDockedVesselMass(calcParams.src)), res.dV_LVLH);
 				opt.GETbase = GETbase;
 				opt.HeadsUp = false;
 				opt.REFSMMAT = REFSMMAT;
 				opt.TIG = res.P30TIG;
 				opt.vessel = calcParams.src;
-				opt.vesseltype = 0;
+
+				if (calcParams.src->DockingStatus(0) == 1)
+				{
+					opt.vesseltype = 1;
+				}
+				else
+				{
+					opt.vesseltype = 0;
+				}
 
 				AP11ManeuverPAD(&opt, *form);
 				sprintf(form->purpose, manname);
