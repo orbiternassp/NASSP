@@ -1659,6 +1659,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	}
 
 	MAINITER = 0;
+	HASCONVERGED = false;
 
 	do
 	{
@@ -2063,6 +2064,10 @@ void RetrofirePlanning::RMMDBM()
 	else if (BurnMode == 2)
 	{
 		DVBURN = F / mdot * log(CSMmass / (CSMmass - mdot * pRTCC->RZJCTTC.R31_dt));
+	}
+	else
+	{
+		DVBURN = 0.0;
 	}
 
 	iter = 0;
