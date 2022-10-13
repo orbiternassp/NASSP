@@ -211,7 +211,7 @@
 #define stricmp _stricmp
 #endif 
 
-#define NASSP_VERSION 80000		///< Current NASSP version.
+#define NASSP_VERSION 80001		///< https://nassp.space/index.php/Scenario_File_Options#Scenario_information
 
 ///
 /// We use this structure to store generic Windows information in one place, such as logical colors,

@@ -324,9 +324,31 @@ void MCC::MissionSequence_C()
 	{
 		if (AbortMode == 5) //Earth Orbit Abort
 		{
-			if (cm->GetStage() == CM_ENTRY_STAGE_SEVEN)
+			switch (SubState)
 			{
-				setState(MST_LANDING);
+			case 0:
+				//Are we past the calculated TIG?
+				if (cm->GetStage() >= CM_STAGE || rtcc->GETEval2(rtcc->TimeofIgnition))
+				{
+					setSubState(1); //No deorbit maneuver upcoming, just wait for CM/SM sep
+				}
+				else
+				{
+					setSubState(2);
+				}
+				break;
+			case 1:
+				if (cm->GetStage() >= CM_ENTRY_STAGE_SEVEN)
+				{
+					setState(MST_LANDING); //Deorbit maneuver upcoming, wait for Entry PAD
+				}
+				break;
+			case 2:
+				if (rtcc->GETEval2(rtcc->TimeofIgnition - 1.5*3600.0))
+				{
+					setState(MST_C_DAY10STATE6);
+				}
+				break;
 			}
 		}
 	}

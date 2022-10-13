@@ -1992,8 +1992,8 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 
 	for (int i = 0;i < 8;i++)
 	{
-		pad.Area[i][0] = '\0';
-		pad.Wx[i][0] = '\0';
+		sprintf(pad.Area[i], "N/A");
+		sprintf(pad.Wx[i], "N/A");
 	}
 
 	for (int i = 0;i < opt->n;i++)
@@ -3031,6 +3031,7 @@ RTCC_PMSTICN_8_3:
 RTCC_PMSTICN_9_1:
 	DH = opt.DH;
 	PhaseAngle = opt.PhaseAngle;
+	Elev = opt.Elev;
 	WT = opt.WT;
 	T1 = opt.T1;
 	T2 = opt.T2;
@@ -4159,15 +4160,17 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
 {
-	SV sv_A2, sv_P2, sv_A3, sv_P3;
+	EphemerisData sv_A2, sv_P2, sv_A3, sv_P3;
 	double dt1, dt2;
 	VECTOR3 u, U_L, UX, UY, UZ, U_R, U_R2, U_P, TPIPAD_BT, TPIPAD_dV_LOS;
 	MATRIX3 Rot1, Rot2;
-	double TPIPAD_AZ, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5,TPIPAD_dH, TPIPAD_ddH;
+	double TPIPAD_AZ, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5,TPIPAD_dH, TPIPAD_ddH, TIG_GMT;
 	VECTOR3 U_F, LOS, U_LOS, NN;
 
-	dt1 = opt.TIG - (opt.sv_A.MJD - opt.GETbase) * 24.0 * 60.0 * 60.0;
-	dt2 = opt.TIG - (opt.sv_P.MJD - opt.GETbase) * 24.0 * 60.0 * 60.0;
+	TIG_GMT = GMTfromGET(opt.TIG);
+
+	dt1 = TIG_GMT - opt.sv_A.GMT;
+	dt2 = TIG_GMT - opt.sv_P.GMT;
 
 	sv_A3 = coast(opt.sv_A, dt1);
 	sv_P3 = coast(opt.sv_P, dt2);
@@ -4188,11 +4191,10 @@ void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
 
 	TPIPAD_dV_LOS = mul(Rot2, mul(Rot1, opt.dV_LVLH));
 	//TPIPAD_dH = abs(length(RP3) - length(RA3));
-	double mass, F;
+	double F;
 
-	mass = opt.sv_A.mass;
 	F = 200.0 * 4.448222;
-	TPIPAD_BT = _V(abs(0.5*TPIPAD_dV_LOS.x), abs(TPIPAD_dV_LOS.y), abs(TPIPAD_dV_LOS.z))*mass / F;
+	TPIPAD_BT = _V(abs(0.5*TPIPAD_dV_LOS.x), abs(TPIPAD_dV_LOS.y), abs(TPIPAD_dV_LOS.z))*opt.mass / F;
 
 	VECTOR3 i, j, k, dr, dv, dr0, dv0, Omega;
 	MATRIX3 Q_Xx;
@@ -6296,14 +6298,14 @@ void RTCC::CMCEntryUpdate(char *list, double LatSPL, double LngSPL)
 	V7XUpdate(71, list, CZENTRY.Octals, 6);
 }
 
-void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
+void RTCC::AGSStateVectorPAD(const AGSSVOpt &opt, AP11AGSSVPAD &pad)
 {
-	SV sv1;
+	EphemerisData sv1;
 	VECTOR3 R, V;
 	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt, scalR, scalV;
 
 	//Calculate time in GMT
-	AGSEpochTime = (opt->sv.MJD -SystemParameters.GMTBASE)*24.0*3600.0;
+	AGSEpochTime = opt.sv.GMT;
 	//Calculate time in AGS time
 	AGSEpochTime2 = AGSEpochTime - GetAGSClockZero();
 	//Round to the next 6 seconds
@@ -6314,12 +6316,20 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 	//Determine coasting time
 	dt = AGSEpochTime3 - AGSEpochTime;
 
-	sv1 = coast(opt->sv, dt);
+	if (opt.landed)
+	{
+		sv1.R = opt.sv.R + opt.sv.V*dt;
+		sv1.V = opt.sv.V;
+	}
+	else
+	{
+		sv1 = coast(opt.sv, dt);
+	}
 
-	R = mul(opt->REFSMMAT, sv1.R);
-	V = mul(opt->REFSMMAT, sv1.V);
+	R = mul(opt.REFSMMAT, sv1.R);
+	V = mul(opt.REFSMMAT, sv1.V);
 
-	if (sv1.gravref == oapiGetObjectByName("Earth"))
+	if (opt.sv.RBI == BODY_EARTH)
 	{
 		scalR = 1000.0;
 		scalV = 1.0;
@@ -6330,7 +6340,7 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 		scalV = 0.1;
 	}
 
-	if (opt->csm)
+	if (opt.csm)
 	{
 		pad.DEDA244 = R.x / 0.3048 / scalR;
 		pad.DEDA245 = R.y / 0.3048 / scalR;
@@ -7220,6 +7230,12 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Ar
 	return in.sv_cutoff;
 }
 
+EphemerisData RTCC::coast(EphemerisData sv1, double dt, int veh)
+{
+	MissionPlanTable *mpt = GetMPTPointer(veh);
+
+	return coast(sv1, dt, mpt->TotalInitMass, mpt->ConfigurationArea, mpt->KFactor);
+}
 
 void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD)
 {
@@ -7750,7 +7766,7 @@ RTCC_PMMSPT_20_1:
 			goto RTCC_PMMSPT_20_3;
 		}
 	}
-	in.CurMan->GMTMAN = T_RP;
+	in.mpt->TimeToBeginManeuver[0] = in.CurMan->GMTMAN = T_RP;
 	if (in.QUEID != 33)
 	{
 		//Trajectory Update
@@ -7972,6 +7988,7 @@ int RTCC::PoweredFlightProcessor(PMMMPTInput in, double &GMT_TIG, VECTOR3 &dV_LV
 	in.CurrentManeuver = 1;
 	in.DockingAngle = 0.0;
 	in.mpt = &mpt;
+	in.VehicleWeight = in.CSMWeight + in.LMWeight;
 
 	int err = PMMMPT(in, man);
 
@@ -18448,6 +18465,7 @@ RTCC_PMSVCT_8:
 						intab2.V = sv1.V;
 						intab2.CurMan = &mpt->mantable[i];
 						intab2.Table = L;
+						intab2.mpt = mpt;
 
 						int err;
 						if (err = PMMSPT(intab2))
@@ -34851,6 +34869,7 @@ void RTCC::EMMGSTMP()
 		VECTOR3 S_SM;
 		double TA, SA, a;
 
+		sv = RotateSVToSOI(outtab.SV);
 		RM = refs.REFSMMAT;
 		SMNB = OrbMech::CALCSMSC(_V(EZJGSTTB.Att[0].z, EZJGSTTB.Att[0].x, EZJGSTTB.Att[0].y));
 		a = -0.5676353234;
@@ -34875,33 +34894,38 @@ void RTCC::EMMGSTMP()
 			u = EZJGSTAR[i];
 
 			//Occultation check
-			if (EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
+			if (!EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
 			{
-				continue;
-			}
-
-			S_SM = mul(RM, u);
-			OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
-
-			if (TA <= 50.0*RAD)
-			{
-				//Found one
-				EZJGSTTB.SXT_STAR[num] = i + 1;
-				EZJGSTTB.SXT_SFT_RTCC[num] = SA;
-				EZJGSTTB.SXT_TRN_RTCC[num] = TA;
-				num++;
-				if (num >= 2)
+				//Not occulated, check trunnion angle
+				S_SM = mul(RM, u);
+				OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
+				//Trunnion angle below 50°?
+				if (TA <= 50.0*RAD)
 				{
-					break;
+					//Found one
+					EZJGSTTB.SXT_STAR[num] = i + 1;
+					EZJGSTTB.SXT_SFT_RTCC[num] = SA;
+					EZJGSTTB.SXT_TRN_RTCC[num] = TA;
+					num++;
+					//Found 2 stars, get out of here
+					if (num >= 2)
+					{
+						break;
+					}
 				}
 			}
+
+			//Try next one
 			i++;
+			//Are we back at the start?
 			if (i >= EZJGSTAR.size())
 			{
+				//Continue from star 0 on
 				i = 0;
 			}
+			//Have we reached the end?
 		} while (i != endstar);
-
+		//If it didn't find two stars, return error
 		if (num < 2)
 		{
 			err = 3;

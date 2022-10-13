@@ -42,6 +42,7 @@ TLIGuidanceSim::TLIGuidanceSim(RTCC *r, RTCCNIInputTable tablin, int &iretn, Eph
 	DTPREV = 0.0;
 	DVMAG = 0.0;
 	DVTO = 0.0;
+	DVULL = 0.0;
 	DVX = 0.0;
 	DVXTO = 0.0;
 	for (int i = 0;i < 7;i++)

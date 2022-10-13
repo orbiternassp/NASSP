@@ -65,6 +65,7 @@
 #include "sce.h"
 #include "csmsensors.h"
 #include "rhc.h"
+#include "inertial.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -1361,6 +1362,7 @@ public:
 	int Lua_GetAGCUplinkStatus();
 
 	//System Access
+	InertialData *GetInertialData() { return &inertialData; };
 	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 	SCE *GetSCE() { return &sce; }
@@ -1489,6 +1491,11 @@ protected:
 	bool DeleteLaunchSite;
 
 	int buildstatus;
+
+	///
+	/// \brief NASSP scenario version
+	///
+	int nasspver;
 
 	//
 	// Current mission time and mission times for stage events.
@@ -3593,6 +3600,8 @@ protected:
 	///////////////////////////////////////////////////////
 	// Internal systems devices.						 //
 	///////////////////////////////////////////////////////
+
+	InertialData inertialData;
 
 	// SCS components
 	BMAG bmag1;

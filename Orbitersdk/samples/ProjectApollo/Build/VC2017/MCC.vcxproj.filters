@@ -54,6 +54,12 @@
     <ClCompile Include="..\..\src_launch\MCC_Mission_G.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+	<ClCompile Include="..\..\src_launch\RTCC_Mission_H1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\MCC_Mission_H1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src_launch\MCC_Mission_F.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -143,6 +149,9 @@
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+	<ClInclude Include="..\..\src_launch\MCC_Mission_H1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src_launch\MCC_Mission_G.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -207,6 +216,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\LWP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\paCBGmessageID.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
