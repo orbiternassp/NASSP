@@ -587,7 +587,7 @@ struct EarthEntryPADOpt
 	SV sv0;
 	int Thruster = RTCC_ENGINETYPE_CSMSPS;
 	double InitialBank = 0.0;
-	double GLevel = 0.05;
+	double GLevel = 0.2;
 };
 
 struct LunarEntryPADOpt

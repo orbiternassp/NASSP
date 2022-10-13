@@ -1311,7 +1311,7 @@ void RTCCGeneralPurposeManeuverProcessor::OptimumApseLineShift(double dang)
 	double f_D, u_D;
 
 	f_D = 0.5*opt->dLOA;
-	u_D = f_D + aeg.Data.coe_osc.g;
+	u_D = f_D + aeg.Data.coe_mean.g;
 	NormalizeAngle(u_D);
 	if (aeg.Data.U < u_D)
 	{

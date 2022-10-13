@@ -513,9 +513,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(4 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
 		}
 
-		/*skp->Text(12 * W / 22, 6 * H / 22, "Number:", 7);
-		sprintf(Buffer, "%d", G->GMPManeuverCode);
-		skp->Text(16 * W / 22, 6 * H / 22, Buffer, strlen(Buffer));*/
+		if (GC->rtcc->PZGPMDIS.Err)
+		{
+			sprintf(Buffer, "Error: %d", GC->rtcc->PZGPMDIS.Err);
+			skp->Text(3 * W / 8, 21 * H / 22, Buffer, strlen(Buffer));
+		}
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
@@ -547,58 +549,58 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		skp->Text(12 * W / 22, 6 * H / 22, "Orbital Parameters:", 19);
-		skp->Text(12 * W / 22, 7 * H / 22, "A", 1);
-		skp->Text(12 * W / 22, 8 * H / 22, "E", 1);
-		skp->Text(12 * W / 22, 9 * H / 22, "I", 1);
-		skp->Text(12 * W / 22, 10 * H / 22, "NODE AN", 7);
-		skp->Text(12 * W / 22, 11 * H / 22, "DEL G", 5);
-		skp->Text(12 * W / 22, 12 * H / 22, "H MAN", 5);
-		skp->Text(12 * W / 22, 13 * H / 22, "LONG MAN", 8);
-		skp->Text(12 * W / 22, 14 * H / 22, "LAT MAN", 7);
+		skp->Text(12 * W / 22, 5 * H / 22, "GETI", 4);
+		skp->Text(12 * W / 22, 6 * H / 22, "DEL V MAN", 9);
+		skp->Text(12 * W / 22, 7 * H / 22, "PIT MAN", 7);
+		skp->Text(12 * W / 22, 8 * H / 22, "YAW MAN", 7);
+		skp->Text(12 * W / 22, 9 * H / 22, "H MAN", 5);
+		skp->Text(12 * W / 22, 10 * H / 22, "LONG MAN", 8);
+		skp->Text(12 * W / 22, 11 * H / 22, "LAT MAN", 7);
+
+		skp->Text(12 * W / 22, 13 * H / 22, "A", 1);
+		skp->Text(12 * W / 22, 14 * H / 22, "E", 1);
+		skp->Text(12 * W / 22, 15 * H / 22, "I", 1);
+		skp->Text(12 * W / 22, 16 * H / 22, "NODE AN", 7);
+		skp->Text(12 * W / 22, 17 * H / 22, "DEL G", 5);
+
+		skp->Text(12 * W / 22, 19 * H / 22, "VX", 3);
+		skp->Text(12 * W / 22, 20 * H / 22, "VY", 3);
+		skp->Text(12 * W / 22, 21 * H / 22, "VZ", 3);
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
-		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.A / 1852.0);
-		skp->Text(21 * W / 22, 7 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.6f", GC->rtcc->PZGPMDIS.E);
-		skp->Text(21 * W / 22, 8 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.3f°", GC->rtcc->PZGPMDIS.I*DEG);
-		skp->Text(21 * W / 22, 9 * H / 22, Buffer, strlen(Buffer));
-		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.Node_Ang*DEG);
-		skp->Text(21 * W / 22, 10 * H / 22, Buffer, strlen(Buffer));
-		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.Del_G*DEG);
-		skp->Text(21 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.H_Man / 1852.0);
-		skp->Text(21 * W / 22, 12 * H / 22, Buffer, strlen(Buffer));
-		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_Man*DEG);
-		skp->Text(21 * W / 22, 13 * H / 22, Buffer, strlen(Buffer));
-		FormatLatitude(Buffer, GC->rtcc->PZGPMDIS.lat_Man*DEG);
-		skp->Text(21 * W / 22, 14 * H / 22, Buffer, strlen(Buffer));
-
-		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-
-		GET_Display(Buffer, GC->rtcc->PZGPMDIS.GET_TIG);
-		skp->Text(5 * W / 8, 16 * H / 22, Buffer, strlen(Buffer));
-
-		skp->Text(5 * W / 8, 17 * H / 22, "DVX", 3);
-		skp->Text(5 * W / 8, 18 * H / 22, "DVY", 3);
-		skp->Text(5 * W / 8, 19 * H / 22, "DVZ", 3);
-		skp->Text(5 * W / 8, 20 * H / 22, "DVT", 3);
-		AGC_Display(Buffer, GC->rtcc->PZGPMDIS.DV.x / 0.3048);
-		skp->Text(6 * W / 8, 17 * H / 22, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, GC->rtcc->PZGPMDIS.DV.y / 0.3048);
-		skp->Text(6 * W / 8, 18 * H / 22, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, GC->rtcc->PZGPMDIS.DV.z / 0.3048);
-		skp->Text(6 * W / 8, 19 * H / 22, Buffer, strlen(Buffer));
+		GET_Display(Buffer, GC->rtcc->PZGPMDIS.GET_TIG, false);
+		skp->Text(21 * W / 22, 5 * H / 22, Buffer, strlen(Buffer));
 		AGC_Display(Buffer, length(GC->rtcc->PZGPMDIS.DV) / 0.3048);
-		skp->Text(6 * W / 8, 20 * H / 22, Buffer, strlen(Buffer));
+		skp->Text(21 * W / 22, 6 * H / 22, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.2f", GC->rtcc->PZGPMDIS.Pitch_Man*DEG);
+		skp->Text(21 * W / 22, 7 * H / 22, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.2f", GC->rtcc->PZGPMDIS.Yaw_Man*DEG);
+		skp->Text(21 * W / 22, 8 * H / 22, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.H_Man / 1852.0);
+		skp->Text(21 * W / 22, 9 * H / 22, Buffer, strlen(Buffer));
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_Man*DEG);
+		skp->Text(21 * W / 22, 10 * H / 22, Buffer, strlen(Buffer));
+		FormatLatitude(Buffer, GC->rtcc->PZGPMDIS.lat_Man*DEG);
+		skp->Text(21 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->PZGPMDIS.Err)
-		{
-			sprintf(Buffer, "Error: %d", GC->rtcc->PZGPMDIS.Err);
-			skp->Text(3 * W / 8, 21 * H / 22, Buffer, strlen(Buffer));
-		}
+		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.A / 1852.0);
+		skp->Text(21 * W / 22, 13 * H / 22, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.6f", GC->rtcc->PZGPMDIS.E);
+		skp->Text(21 * W / 22, 14 * H / 22, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3f°", GC->rtcc->PZGPMDIS.I*DEG);
+		skp->Text(21 * W / 22, 15 * H / 22, Buffer, strlen(Buffer));
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.Node_Ang*DEG);
+		skp->Text(21 * W / 22, 16 * H / 22, Buffer, strlen(Buffer));
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.Del_G*DEG);
+		skp->Text(21 * W / 22, 17 * H / 22, Buffer, strlen(Buffer));
+
+		AGC_Display(Buffer, GC->rtcc->PZGPMDIS.DV.x / 0.3048);
+		skp->Text(21 * W / 22, 19 * H / 22, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, GC->rtcc->PZGPMDIS.DV.y / 0.3048);
+		skp->Text(21 * W / 22, 20 * H / 22, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, GC->rtcc->PZGPMDIS.DV.z / 0.3048);
+		skp->Text(21 * W / 22, 21 * H / 22, Buffer, strlen(Buffer));
 	}
 	else if (screen == 5)
 	{
