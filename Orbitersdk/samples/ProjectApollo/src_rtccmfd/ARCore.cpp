@@ -1065,6 +1065,11 @@ void ARCore::SkylabSaturnIBLaunchUplink()
 	startSubthread(55);
 }
 
+void ARCore::PerigeeAdjustCalc()
+{
+	startSubthread(56);
+}
+
 void ARCore::GetAGSKFactor()
 {
 	startSubthread(35);
@@ -4913,6 +4918,38 @@ int ARCore::subThread()
 		{
 			iuUplinkResult = 3;
 		}
+
+		Result = 0;
+	}
+	break;
+	case 56: //Perigee Adjust
+	{
+		EphemerisData sv0;
+		double mass, THT, dt, H_P, DPSScaleFactor;
+		int Thruster;
+
+		if (GC->MissionPlanningActive)
+		{
+			//TBD
+			Result = 0;
+			break;
+		}
+		else
+		{
+			sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
+			mass = vessel->GetMass();
+		}
+
+		THT = GC->rtcc->GMTfromGET(GC->rtcc->med_k28.ThresholdTime);
+		dt = GC->rtcc->med_k28.TimeIncrement;
+		H_P = GC->rtcc->med_k28.H_P*1852.0;
+		Thruster = GC->rtcc->med_k28.Thruster;
+		DPSScaleFactor = GC->rtcc->med_k28.DPSScaleFactor;
+
+		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0);
+
+		GC->rtcc->PMMPAD(sv1, mass, THT, dt, H_P, Thruster, DPSScaleFactor);
+		GC->rtcc->PMDPAD();
 
 		Result = 0;
 	}

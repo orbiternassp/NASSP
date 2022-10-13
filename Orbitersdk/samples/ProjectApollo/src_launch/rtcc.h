@@ -2753,6 +2753,10 @@ public:
 	void PMMIEV(double T_L);
 	//SLV Targeting Load Module
 	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
+	//Perigee Adjust
+	void PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor);
+	//Perigee Adjust Display
+	void PMDPAD();
 	//Mission Planning Print Load Module
 	void PMXSPT(std::string source, int n);
 	void PMXSPT(std::string source, std::vector<std::string> message);
@@ -3260,6 +3264,18 @@ public:
 		double ThresholdTime = 0.0;
 	} med_k20;
 
+	//Perifocus Adjust Computation
+	struct MED_K28
+	{
+		int VEH = RTCC_MPT_CSM;
+		double VectorTime = 0.0;
+		double ThresholdTime = 0.0;
+		double TimeIncrement = 0.0;
+		double H_P = 0.0;
+		int Thruster = RTCC_ENGINETYPE_CSMSPS;
+		double DPSScaleFactor = 0.0;
+	} med_k28;
+
 	//Two Impulse Computation
 	struct MED_K30
 	{
@@ -3399,6 +3415,30 @@ public:
 	BurnParameterTable PZBURN;
 	LWPInputTable PZSLVCON;
 	SLVTargetingParametersTable PZSLVTAR;
+
+	struct PerigeeAdjustTableEntry
+	{
+		double Pitch = 0.0;
+		double TIG = 0.0;
+		double DV = 0.0;
+		double DT = 0.0;
+		double TA = 0.0;
+		double H = 0.0;
+		double H_A = 0.0;
+	};
+
+	struct PerigeeAdjustTable
+	{
+		int Sol = 0;
+		double T_elem = 0.0;
+		double T_thresh = 0.0;
+		double TimeStep = 0.0;
+		double H_A = 0.0;
+		double H_P = 0.0;
+		PerigeeAdjustTableEntry Man[6];
+	} PZPADDIS;
+
+	std::vector<std::string> MSK0050Buffer; //Perigee Adjust Display
 
 	std::vector<VECTOR3> EZJGSTAR;
 
