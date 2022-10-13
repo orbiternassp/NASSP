@@ -203,6 +203,7 @@ protected:
 	const double ALTRATESCALEFACTOR = 0.3048*pow(2.0, -4.0);
 
 	friend class ARCore;
+	friend class RTCC;
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)
