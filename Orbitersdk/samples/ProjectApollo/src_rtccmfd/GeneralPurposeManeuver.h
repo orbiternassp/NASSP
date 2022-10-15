@@ -39,6 +39,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_GMP_HPO 9
 #define RTCC_GMP_NST 10
 #define RTCC_GMP_NSO 11
+//Maneuver to change both apogee and perigee at a specified time
 #define RTCC_GMP_HBT 12
 #define RTCC_GMP_HBH 13
 #define RTCC_GMP_HBO 14
