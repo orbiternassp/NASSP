@@ -3243,7 +3243,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 				}
 			}
 			//MCC-6 and 7 decision
-			else if (fcn == 211 || fcn == 213)
+			else if (fcn == 211 || fcn == 213 || fcn == 300)
 			{
 				sprintf(upMessage, "%s has been scrubbed", manname);
 			}
