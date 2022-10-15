@@ -1065,6 +1065,11 @@ void ARCore::SkylabSaturnIBLaunchUplink()
 	startSubthread(55);
 }
 
+void ARCore::PerigeeAdjustCalc()
+{
+	startSubthread(56);
+}
+
 void ARCore::GetAGSKFactor()
 {
 	startSubthread(35);
@@ -1698,15 +1703,16 @@ void ARCore::StateVectorCalc(int type)
 void ARCore::AGSStateVectorCalc()
 {
 	AGSSVOpt opt;
-	SV sv;
+	EphemerisData sv;
 
-	sv = GC->rtcc->StateVectorCalc(svtarget);
+	sv = GC->rtcc->StateVectorCalcEphem(svtarget);
 
 	opt.csm = SVSlot;
 	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 	opt.sv = sv;
+	opt.landed = svtarget->GroundContact();
 
-	GC->rtcc->AGSStateVectorPAD(&opt, agssvpad);
+	GC->rtcc->AGSStateVectorPAD(opt, agssvpad);
 }
 
 void ARCore::StateVectorUplink(int type)
@@ -2826,7 +2832,21 @@ int ARCore::subThread()
 			opt.REFSMMATTime = REFSMMATTime;
 		}
 
-		opt.vessel = vessel;
+		//For LS REFSMMAT use target vessel, if we are not in the CSM
+		if (GC->MissionPlanningActive == false && vesseltype != 0 && REFSMMATopt == 5)
+		{
+			if (target == NULL)
+			{
+				Result = 0;
+				break;
+			}
+
+			opt.vessel = target;
+		}
+		else
+		{
+			opt.vessel = vessel;
+		}
 
 		if (vesseltype == 0)
 		{
@@ -4898,6 +4918,38 @@ int ARCore::subThread()
 		{
 			iuUplinkResult = 3;
 		}
+
+		Result = 0;
+	}
+	break;
+	case 56: //Perigee Adjust
+	{
+		EphemerisData sv0;
+		double mass, THT, dt, H_P, DPSScaleFactor;
+		int Thruster;
+
+		if (GC->MissionPlanningActive)
+		{
+			//TBD
+			Result = 0;
+			break;
+		}
+		else
+		{
+			sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
+			mass = vessel->GetMass();
+		}
+
+		THT = GC->rtcc->GMTfromGET(GC->rtcc->med_k28.ThresholdTime);
+		dt = GC->rtcc->med_k28.TimeIncrement;
+		H_P = GC->rtcc->med_k28.H_P*1852.0;
+		Thruster = GC->rtcc->med_k28.Thruster;
+		DPSScaleFactor = GC->rtcc->med_k28.DPSScaleFactor;
+
+		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0);
+
+		GC->rtcc->PMMPAD(sv1, mass, THT, dt, H_P, Thruster, DPSScaleFactor);
+		GC->rtcc->PMDPAD();
 
 		Result = 0;
 	}

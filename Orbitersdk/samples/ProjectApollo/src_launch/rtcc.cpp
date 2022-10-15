@@ -4505,7 +4505,8 @@ void RTCC::EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad)
 	entin.lat_T = opt.lat;
 	entin.lng_T = opt.lng;
 	entin.KSWCH = 3;
-	entin.D0 = entin.K1 = opt.InitialBank;
+	entin.C10 = opt.InitialBank;
+	entin.g_c_GN = opt.GLevel;
 
 	RMMYNI(entin, entout);
 
@@ -6298,14 +6299,14 @@ void RTCC::CMCEntryUpdate(char *list, double LatSPL, double LngSPL)
 	V7XUpdate(71, list, CZENTRY.Octals, 6);
 }
 
-void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
+void RTCC::AGSStateVectorPAD(const AGSSVOpt &opt, AP11AGSSVPAD &pad)
 {
-	SV sv1;
+	EphemerisData sv1;
 	VECTOR3 R, V;
 	double AGSEpochTime, AGSEpochTime2, AGSEpochTime3, dt, scalR, scalV;
 
 	//Calculate time in GMT
-	AGSEpochTime = (opt->sv.MJD -SystemParameters.GMTBASE)*24.0*3600.0;
+	AGSEpochTime = opt.sv.GMT;
 	//Calculate time in AGS time
 	AGSEpochTime2 = AGSEpochTime - GetAGSClockZero();
 	//Round to the next 6 seconds
@@ -6316,12 +6317,20 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 	//Determine coasting time
 	dt = AGSEpochTime3 - AGSEpochTime;
 
-	sv1 = coast(opt->sv, dt);
+	if (opt.landed)
+	{
+		sv1.R = opt.sv.R + opt.sv.V*dt;
+		sv1.V = opt.sv.V;
+	}
+	else
+	{
+		sv1 = coast(opt.sv, dt);
+	}
 
-	R = mul(opt->REFSMMAT, sv1.R);
-	V = mul(opt->REFSMMAT, sv1.V);
+	R = mul(opt.REFSMMAT, sv1.R);
+	V = mul(opt.REFSMMAT, sv1.V);
 
-	if (sv1.gravref == oapiGetObjectByName("Earth"))
+	if (opt.sv.RBI == BODY_EARTH)
 	{
 		scalR = 1000.0;
 		scalV = 1.0;
@@ -6332,7 +6341,7 @@ void RTCC::AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad)
 		scalV = 0.1;
 	}
 
-	if (opt->csm)
+	if (opt.csm)
 	{
 		pad.DEDA244 = R.x / 0.3048 / scalR;
 		pad.DEDA245 = R.y / 0.3048 / scalR;
@@ -18833,6 +18842,321 @@ bool RTCC::MEDTimeInputHHMMSS(std::string vec, double &hours)
 		hours = -hours;
 	}
 	return false;
+}
+
+void RTCC::PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor)
+{
+	AEGDataBlock sv_temp, sv_a, sv_apo, sv_peri;
+	double INFO[10], T_next, R_PD, beta, rho0, R_E, A, B, C, D, rho, R, r, rr, RR, DV1, DV2, DV, mu, V_b, X, r_dot_b, V_H_b, r_dot_a, V_H_a, V_a2, eacosEa, easinEa;
+	double E_a, R_PC, R_PKEP, eps1, DR_PER_0, DR_PER_1, DR_PER_C, DDR_PER, dt_man, f_dot, DP, F, W_E;
+	int KAOP, KE, man = 0, iter, iter_max, err;
+	//0 = don't end, 1 = success, -1 = fail
+	int endloop;
+
+	PZPADDIS = PerigeeAdjustTable();
+
+	//Initialize, if it isn't already
+	PMMAEGS(sv.Header, sv.Data, sv_temp);
+
+	T_next = THT;
+	if (sv.Header.AEGInd == BODY_EARTH)
+	{
+		R_E = OrbMech::R_Earth;
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		R_E = OrbMech::R_Moon;
+		mu = OrbMech::mu_Moon;
+	}
+	R_PD = R_E + H_P;
+	beta = SystemParameters.MCGHZA;
+	//0.1 NM tolerance
+	eps1 = 185.2;
+	iter_max = 10;
+
+	W_E = mass;
+	if (Thruster == RTCC_ENGINETYPE_CSMSPS)
+	{
+		F = SystemParameters.MCTST1;
+	}
+	else if (Thruster == RTCC_ENGINETYPE_LMAPS)
+	{
+		F = SystemParameters.MCTAT1;
+	}
+	else if (Thruster == RTCC_ENGINETYPE_LMDPS)
+	{
+		F = SystemParameters.MCTDT1*DPSScaleFactor;
+	}
+	else
+	{
+		F = SystemParameters.MCTLT2;
+	}
+
+	//Obtain present perigee based on input elements
+	KAOP = 0;
+	KE = 0;
+	err = PMMAPD(sv.Header, sv.Data, KAOP, KE, INFO, &sv_temp, &sv_peri);
+
+	if (err == 0)
+	{
+		PZPADDIS.H_A = INFO[4];
+		PZPADDIS.H_P = INFO[9];
+	}
+
+	//Does present perifocus exceed desired?
+	if (INFO[6] > R_PD)
+	{
+		//No maneuvers required
+		PZPADDIS.Sol = 0;
+		return;
+	}
+
+	PZPADDIS.T_thresh = THT;
+	PZPADDIS.TimeStep = dt;
+
+	do
+	{
+		//Advance either to the threshold time or the impulsive time of the next maneuver
+		sv.Data.TIMA = 0;
+		sv.Data.TE = T_next;
+		PMMAEGS(sv.Header, sv.Data, sv_temp);
+
+		//Does desired perigee exceed the current maneuver height?
+		if (R_PD > sv_temp.R)
+		{
+			PZPADDIS.Man[man].TIG = -T_next;
+		}
+		else
+		{
+			//Compute the pitch and initialize iteration counter
+			rho0 = beta - acos(R_E / sv_temp.R);
+			iter = 0;
+
+			rho = rho0;
+			R = R_PD;
+
+			r = sv_temp.R;
+			V_b = sqrt(mu*(2.0 / r - 1.0 / sv_temp.coe_osc.a));
+			X = sqrt(mu*sv_temp.coe_osc.a*(1.0 - sv_temp.coe_osc.e*sv_temp.coe_osc.e));
+			r_dot_b = mu * sv_temp.coe_osc.e*sin(sv_temp.f) / X;
+			V_H_b = X / r;
+
+			endloop = 0;
+			DV = 0.0;
+
+			do
+			{
+				//Using original or corrected pitch, height of perigee desired (original or adjusted), and elements at T, compute the DV required
+				rr = r * r;
+				RR = R * R;
+				A = rr*pow(cos(rho), 2) - RR;
+				B = 2.0*V_H_b*cos(rho)*(rr - RR) - 2.0*RR*r_dot_b*sin(rho);
+				C = rr * V_H_b*V_H_b - RR * V_b*V_b + 2.0*mu*R*(R - r) / r;
+				D = B * B - 4.0*A*C;
+				if (D < 0)
+				{
+					DV1 = DV2 = -1.0;
+				}
+				else
+				{
+					DV1 = (-B + sqrt(D)) / (2.0*A);
+					DV2 = (-B - sqrt(D)) / (2.0*A);
+				}
+
+				//Is there a positive solution?
+				if (DV1 > 0 || DV2 > 0)
+				{
+					//Are there two positive solutions?
+					if (DV1 > 0 && DV2 > 0)
+					{
+						//Pick the smallest solution
+						if (DV1 > DV2)
+						{
+							DV = DV2;
+						}
+						else
+						{
+							DV = DV1;
+						}
+					}
+					else
+					{
+						//Pick the positive solution
+						if (DV1 > 0)
+						{
+							DV = DV1;
+						}
+						else
+						{
+							DV = DV2;
+						}
+					}
+
+					//Based on the DV required and pitch compute the elements after the maneuver
+					sv_a = sv_temp;
+					sv_a.ENTRY = 0;
+					r_dot_a = r_dot_b + DV * sin(rho);
+					V_H_a = V_H_b + DV * cos(rho);
+					V_a2 = r_dot_a * r_dot_a + V_H_a * V_H_a;
+					sv_a.coe_osc.a = mu * r / (2.0*mu - r * V_a2);
+					eacosEa = (sv_a.coe_osc.a - r) / sv_a.coe_osc.a;
+					easinEa = r_dot_a * r / sqrt(mu*sv_a.coe_osc.a);
+					E_a = atan2(easinEa, eacosEa);
+					if (E_a < 0)
+					{
+						E_a += PI2;
+					}
+					sv_a.coe_osc.e = sqrt(eacosEa*eacosEa + easinEa * easinEa);
+					sv_a.coe_osc.l = E_a - easinEa;
+					sv_a.f = atan2(sin(E_a)*(1.0 - sv_a.coe_osc.e*sv_a.coe_osc.e), cos(E_a) - sv_a.coe_osc.e);
+					if (sv_a.f < 0)
+					{
+						sv_a.f += PI2;
+					}
+					sv_a.coe_osc.g = sv_temp.U - sv_a.f;
+					if (sv_a.coe_osc.g < 0)
+					{
+						sv_a.coe_osc.g += PI2;
+					}
+					//With the elements after the maneuver, obtain perigee
+					KAOP = -1;
+					KE = 0;
+					PMMAPD(sv.Header, sv_a, KAOP, KE, INFO, NULL, &sv_peri);
+
+					//Is current perigee sufficiently close to the desired?
+					R_PC = INFO[6];
+					if (abs(R_PD - R_PC) < eps1)
+					{
+						//Good enough
+						endloop = 1;
+					}
+					else
+					{
+						iter++;
+						if (iter > iter_max)
+						{
+							endloop = 2;
+						}
+						else
+						{
+							if (iter == 1)
+							{
+								R_PKEP = sv_a.coe_osc.a*(1.0 - sv_a.coe_osc.e);
+								R = R_PD + (R_PKEP - R_PC);
+							}
+							else if (iter == 2)
+							{
+								DR_PER_0 = R_PD - R_PC;
+								DR_PER_C = DR_PER_0;
+								R = R + DR_PER_C;
+							}
+							else
+							{
+								DR_PER_1 = R_PD - R_PC;
+								DDR_PER = DR_PER_0 - DR_PER_1;
+								DR_PER_C = (DR_PER_1 - DR_PER_0) / DDR_PER;
+								DR_PER_0 = DR_PER_1;
+								R = R + DR_PER_C;
+							}
+							//Using the thruster information compute DT based on DV, also burn initiate time from DT and T
+							dt_man = DV / (F / W_E);
+							f_dot = sqrt(mu*sv_a.coe_osc.a*(1.0 - sv_a.coe_osc.e*sv_a.coe_osc.e)) / rr;
+							DP = dt_man / 2.0*f_dot;
+							rho = rho0 + DP;
+						}
+					}
+				}
+				else
+				{
+					//No maneuver possible at this time
+					PZPADDIS.Man[man].TIG = -T_next;
+					endloop = -1;
+				}
+			} while (endloop == 0);
+
+			if (endloop > 0)
+			{
+				//Obtain apogee height based on elements after the maneuver
+				KAOP = 1;
+				KE = 0;
+				PMMAPD(sv.Header, sv_a, KAOP, KE, INFO, &sv_apo, NULL);
+
+				//Store data
+				PZPADDIS.Man[man].Pitch = beta + DP;
+				PZPADDIS.Man[man].TIG = T_next - dt_man / 2.0;
+				PZPADDIS.Man[man].DT = dt_man;
+				PZPADDIS.Man[man].TA = sv_a.f;
+				PZPADDIS.Man[man].H = r - R_E;
+				PZPADDIS.Man[man].H_A = INFO[4];
+				PZPADDIS.Man[man].DV = DV;
+			}
+		}
+		//Have all maneuvers been computed?
+		if (man == 5)
+		{
+			PZPADDIS.Sol = 1;
+			return;
+		}
+		man++;
+		T_next = T_next + dt;
+	} while (man < 6);
+}
+
+void RTCC::PMDPAD()
+{
+	char Buffer[128];
+	unsigned num = 0;
+
+	MSK0050Buffer.clear();
+	MSK0050Buffer.resize(64);
+
+	if (PZPADDIS.Sol == 0)
+	{
+		sprintf(Buffer, "%.2lf", PZPADDIS.H_P / 1852.0);
+		MSK0050Buffer[0].assign(Buffer);
+		return;
+	}
+
+	sprintf(Buffer, "%.2lf", med_k28.H_P);
+	MSK0050Buffer[num].assign(Buffer);
+	num++;
+
+	for (unsigned i = 0;i < 6;i++)
+	{
+		if (PZPADDIS.Man[i].TIG < 0)
+		{
+			OrbMech::format_time_HHMMSS(Buffer, abs(GETfromGMT(PZPADDIS.Man[i].TIG)));
+			MSK0050Buffer[num].assign(Buffer);
+			num += 6;
+		}
+		else
+		{
+			OrbMech::format_time_HHMMSS(Buffer, GETfromGMT(PZPADDIS.Man[i].TIG));
+			MSK0050Buffer[num].assign(Buffer);
+			num++;
+
+			sprintf(Buffer, "%.0lf", PZPADDIS.Man[i].DV / 0.3048);
+			MSK0050Buffer[num].assign(Buffer);
+			num++;
+
+			sprintf(Buffer, "%.1lf", PZPADDIS.Man[i].DT);
+			MSK0050Buffer[num].assign(Buffer);
+			num++;
+
+			sprintf(Buffer, "%.0lf", PZPADDIS.Man[i].TA*DEG);
+			MSK0050Buffer[num].assign(Buffer);
+			num++;
+
+			sprintf(Buffer, "%.0lf", PZPADDIS.Man[i].H / 1852.0);
+			MSK0050Buffer[num].assign(Buffer);
+			num++;
+
+			sprintf(Buffer, "%.0lf", PZPADDIS.Man[i].H_A / 1852.0);
+			MSK0050Buffer[num].assign(Buffer);
+			num++;
+		}
+	}
 }
 
 void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)

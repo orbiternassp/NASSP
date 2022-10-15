@@ -177,7 +177,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu5[] =
 	{
 		{ "Time of Alignment", 0, 'G' },
-		{ "", 0, ' ' },
+		{ "Target for LS REFS", 0, 'K' },
 		{ "Heads up/down for P30", 0, 'H' },
 		{ "Attitude input", 0, 'A' },
 		{ "REFSMMAT from AGC", 0, 'D' },
@@ -194,7 +194,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu5, sizeof(mnu5) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::REFSMMATTimeDialogue);
-	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TGT", OAPI_KEY_K, &ApolloRTCCMFD::set_target);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::cycleREFSMMATHeadsUp);
 	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuREFSMMATAtt);
 	RegisterFunction("DWN", OAPI_KEY_D, &ApolloRTCCMFD::GetREFSMMATfromAGC);
@@ -491,7 +491,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Lunar Launch Winodw", 0, 'W' },
 		{ "Lunar Launch Targeting", 0, 'L' },
 		{ "Lunar Ascent", 0, 'A' },
-		{ "", 0, ' ' },
+		{ "Perigee Adjust", 0, 'P' },
 		{ "Back to main menu", 0, 'B' },
 	};
 
@@ -508,7 +508,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LLW", OAPI_KEY_W, &ApolloRTCCMFD::menuSetLunarLiftoffPage);
 	RegisterFunction("LLT", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLunarLaunchTargetingPage);
 	RegisterFunction("ASC", OAPI_KEY_A, &ApolloRTCCMFD::menuSetLunarAscentPage);
-	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("PAT", OAPI_KEY_P, &ApolloRTCCMFD::menuSetPerigeeAdjustInputPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
 
 
@@ -4215,6 +4215,74 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TRA", OAPI_KEY_U, &ApolloRTCCMFD::menuSetSPQorDKIRTransferPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDKIPage);
+
+
+	static const MFDBUTTONMENU mnu124[] =
+	{
+		{ "Vehicle", 0, 'V' },
+		{ "Vector time", 0, 'W' },
+		{ "Threshold time", 0, 'T' },
+		{ "Time increment", 0, 'I' },
+		{ "Perigee height", 0, 'P' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu124, sizeof(mnu124) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::CyclePerigeeAdjustVehicle);
+	RegisterFunction("VEC", OAPI_KEY_W, &ApolloRTCCMFD::menuPerigeeAdjustVectorTime);
+	RegisterFunction("THT", OAPI_KEY_T, &ApolloRTCCMFD::menuPerigeeAdjustThresholdTime);
+	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::menuPerigeeAdjustTimeIncrement);
+	RegisterFunction("HP", OAPI_KEY_P, &ApolloRTCCMFD::menuPerigeeAdjustHeight);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("DIS", OAPI_KEY_C, &ApolloRTCCMFD::menuSetPerigeeAdjustDisplayPage);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
+
+
+	static const MFDBUTTONMENU mnu125[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu125, sizeof(mnu125) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuPerigeeAdjustCalc);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetPerigeeAdjustInputPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
