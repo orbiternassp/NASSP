@@ -3152,7 +3152,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		EntryTargeting(&entopt, &res);
 
 		//Apollo 11 Mission Rules
-		if (MCCtime > calcParams.EI - 50.0*3600.0)
+		if (MCCtime > res.GET400K - 50.0*3600.0)
 		{
 			if (length(res.dV_LVLH) < 1.0*0.3048)
 			{

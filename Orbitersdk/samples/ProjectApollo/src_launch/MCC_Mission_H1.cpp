@@ -232,7 +232,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, SubStateTime > 5.0*60.0, 60, MST_H1_TRANSLUNAR22);
 		break;
 	case MST_H1_TRANSLUNAR22: //LOI-1 update (final) to LOI-1 Evaluation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->TimeofIgnition + 6.0*60.0 + 30.0), 30, MST_H1_TRANSLUNAR23);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->TimeofIgnition + 7.0*60.0), 30, MST_H1_TRANSLUNAR23);
 		break;
 	case MST_H1_TRANSLUNAR23: //LOI-1 Evaluation to Lunar orbit phase begin or PC+2
 		UpdateMacro(UTP_NONE, PT_NONE, true, 33, MST_H1_LUNAR_ORBIT_LOI_DAY_1, scrubbed, true, MST_H1_ABORT);
@@ -665,7 +665,7 @@ void MCC::MissionSequence_H1()
 			break;
 
 			case 5:
-				allocPad(8); // Allocate AP7 Maneuver Pad
+				allocPad(8); // Allocate AP11 Maneuver Pad
 				if (padForm != NULL) {
 					// If success
 					startSubthread(300, UTP_PADWITHCMCUPLINK); // Start subthread to fill PAD
@@ -750,14 +750,14 @@ void MCC::MissionSequence_H1()
 			{
 				if (rtcc->GETEval2(rtcc->calcParams.LOI + 45.0*60.0) && rtcc->GETEval2(rtcc->calcParams.TEI + 45.0*60.0))
 				{
-					rtcc->calcParams.TEI = rtcc->calcParams.LOI;
-
-					if (rtcc->calcParams.EI - rtcc->calcParams.TEI > 45.0*3600.0) //Is this a flyby or fast PC+2?
+					if (rtcc->calcParams.EI - rtcc->calcParams.LOI > 45.0*3600.0) //Is this a flyby or fast PC+2?
 					{
+						rtcc->calcParams.TEI = rtcc->calcParams.LOI;
 						setState(MST_H1_TRANSEARTH_1);
 					}
 					else
 					{
+						rtcc->calcParams.TEI = rtcc->calcParams.LOI + 7.0*3600.0;
 						setSubState(4); //Go to genric MCC. Not enough time for the full transearth timeline.
 					}
 				}
@@ -767,15 +767,25 @@ void MCC::MissionSequence_H1()
 		}
 		else if (AbortMode == 7) //Lunar Orbit
 		{
-		    if (MoonRev < 1) //FIX ME
-		    {
-				//TEI-1 TIG
-				rtcc->calcParams.TEI = rtcc->calcParams.TIGSTORE1;
-			}
-
-		    if (rtcc->GETEval2(rtcc->calcParams.TEI))
+			switch (SubState) {
+			case 0:
 			{
-				setState(MST_H1_TRANSEARTH_1);
+				if (MoonRev < 3 && !rtcc->GETEval2(rtcc->calcParams.TIGSTORE1))
+				{
+					rtcc->calcParams.TEI = rtcc->calcParams.TIGSTORE1; //Use TEI-1 TIG
+				}
+
+				setSubState(1);
+			}
+			break;
+			case 1:
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.TEI))
+				{
+					setState(MST_H1_TRANSEARTH_1);
+				}
+			}
+			break;
 			}
 		}
 		else if (AbortMode == 8)
