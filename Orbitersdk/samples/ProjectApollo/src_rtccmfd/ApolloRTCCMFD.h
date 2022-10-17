@@ -782,6 +782,14 @@ public:
 	void menuLWP_DELNO();
 	void menuSetLWPDisplayPage();
 	void menuSetRendezvousPlanningDisplayPage();
+	void menuSetPerigeeAdjustInputPage();
+	void menuSetPerigeeAdjustDisplayPage();
+	void menuPerigeeAdjustCalc();
+	void CyclePerigeeAdjustVehicle();
+	void menuPerigeeAdjustVectorTime();
+	void menuPerigeeAdjustThresholdTime();
+	void menuPerigeeAdjustTimeIncrement();
+	void menuPerigeeAdjustHeight();
 	void GenericGETInput(double *get, char *message);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericIntInput(int *val, char* message);
