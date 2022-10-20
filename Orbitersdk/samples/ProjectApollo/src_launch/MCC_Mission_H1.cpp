@@ -574,69 +574,56 @@ void MCC::MissionSequence_H1()
 			switch (SubState) {
 			case 0:
 			{
-				if (rtcc->GETEval2(rtcc->calcParams.LOI - 5.0*3600.0)) //PC+2
+				if (rtcc->GETEval2(OrbMech::HHMMSSToSS(60, 0, 0)))
 				{
-					rtcc->calcParams.TEI = rtcc->calcParams.LOI + 2.0*3600.0;
-					rtcc->calcParams.EI = rtcc->calcParams.LOI + 38.0*3600.0;
+					setSubState(13);//Flyby
 				}
-				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(60, 0, 0))) //Flyby
+				else
 				{
-					rtcc->calcParams.TEI = rtcc->calcParams.LOI - 5.0*3600.0;
-					rtcc->calcParams.EI = rtcc->calcParams.LOI + 62.0*3600.0;
-				}
-				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(45, 0, 0))) //LO+60
-				{
-					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(60, 0, 0);
-					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(122.0, 01.0, 0.0);
-				}
-				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(35, 0, 0))) //LO+45
-				{
-					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(45, 0, 0);
-					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(97.0, 58.0, 0.0);
-				}
-				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(25, 0, 0))) //LO+35
-				{
-					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(35, 0, 0);
-					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(73.0, 39.0, 0.0);
-				}
-				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(15, 0, 0))) //LO+25
-				{
-					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(25, 0, 0);
-					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(74.0, 12.0, 0.0);
-				}
-				else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(8, 0, 0))) //LO+15
-				{
-					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(15, 0, 0);
-					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(50.0, 6.0, 0.0);
-				}
-				else if (rtcc->GETEval2(rtcc->calcParams.TLI + 90.0*60.0)) //LO+8
-				{
-					rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(8, 0, 0);
-					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(25.0, 43.0, 0.0);
-				}
-				else //TLI+90
-				{
-					rtcc->calcParams.TEI = rtcc->calcParams.TLI + 90.0*60.0;
-					rtcc->calcParams.EI = OrbMech::HHMMSSToSS(16.0, 46.0, 0.0);
-				}
+					if (rtcc->GETEval2(OrbMech::HHMMSSToSS(45, 0, 0))) //LO+60
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(60, 0, 0);
+					}
+					else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(35, 0, 0))) //LO+45
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(45, 0, 0);
+					}
+					else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(25, 0, 0))) //LO+35
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(35, 0, 0);
+					}
+					else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(15, 0, 0))) //LO+25
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(25, 0, 0);
+					}
+					else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(8, 0, 0))) //LO+15
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(15, 0, 0);
+					}
+					else if (rtcc->GETEval2(rtcc->calcParams.TLI + 90.0*60.0)) //LO+8
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(8, 0, 0);
+					}
+					else //TLI+90
+					{
+						rtcc->calcParams.TEI = rtcc->calcParams.TLI + 90.0*60.0;
+					}
 
-				setSubState(1);
+					setSubState(1);
+				}
 			}
 			break;
 			case 1:
 			{
-				if (rtcc->GETEval2(rtcc->calcParams.TEI))
+				if (rtcc->GETEval2(rtcc->calcParams.TEI + 10.0*60.0))
 				{
+					startSubthread(205, UTP_NONE); //Evaluate EI conditions
 					setSubState(2);
 				}
 			}
 			break;
 			case 2:
-				if (rtcc->GETEval2(OrbMech::HHMMSSToSS(60, 0, 0)))
-				{
-					setSubState(13);//Flyby
-				}
-				else if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
+				if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
 				{
 					setSubState(3);//Skip directly to normal entry procedures
 				}
@@ -739,27 +726,26 @@ void MCC::MissionSequence_H1()
 			break;
 			case 13:
 			{
-				//Wait for 10 minutes so the burn is over, then calculate Pericynthion time for return trajectory
-				if (rtcc->GETEval2(rtcc->calcParams.TEI + 10.0*60.0))
+				//Wait until LOI + 2.5 hours, then calculate Pericynthion time and EI conditions for return trajectory
+				if (rtcc->GETEval2(rtcc->calcParams.LOI + 2.5*3600.0))
 				{
 					rtcc->calcParams.LOI = rtcc->PericynthionTime(cm);
+					startSubthread(205, UTP_NONE);
 					setSubState(14);
 				}
 			}
+			break;
 			case 14: //Flyby, go to nominal TEC procedures
 			{
-				if (rtcc->GETEval2(rtcc->calcParams.LOI + 45.0*60.0) && rtcc->GETEval2(rtcc->calcParams.TEI + 45.0*60.0))
+				if (rtcc->calcParams.EI - rtcc->calcParams.LOI > 45.0*3600.0) //Is this a flyby or fast PC+2?
 				{
-					if (rtcc->calcParams.EI - rtcc->calcParams.LOI > 45.0*3600.0) //Is this a flyby or fast PC+2?
-					{
-						rtcc->calcParams.TEI = rtcc->calcParams.LOI;
-						setState(MST_H1_TRANSEARTH_1);
-					}
-					else
-					{
-						rtcc->calcParams.TEI = rtcc->calcParams.LOI + 7.0*3600.0;
-						setSubState(4); //Go to genric MCC. Not enough time for the full transearth timeline.
-					}
+					rtcc->calcParams.TEI = rtcc->calcParams.LOI;
+					setState(MST_H1_TRANSEARTH_1);
+				}
+				else
+				{
+					rtcc->calcParams.TEI = rtcc->calcParams.EI - 30.0*3600.0;
+					setSubState(4); //Go to genric MCC. Not enough time for the full transearth timeline.
 				}
 			}
 			break;
@@ -770,19 +756,37 @@ void MCC::MissionSequence_H1()
 			switch (SubState) {
 			case 0:
 			{
-				if (MoonRev < 3 && !rtcc->GETEval2(rtcc->calcParams.TIGSTORE1))
+				if (MoonRevTime > 900.0)
 				{
-					rtcc->calcParams.TEI = rtcc->calcParams.TIGSTORE1; //Use TEI-1 TIG
+					setSubState(1);
 				}
-
-				setSubState(1);
 			}
 			break;
 			case 1:
 			{
-				if (rtcc->GETEval2(rtcc->calcParams.TEI))
+				SV sv;
+				OELEMENTS coe;
+
+				sv = rtcc->StateVectorCalc(rtcc->calcParams.src);
+
+				coe = OrbMech::coe_from_sv(sv.R, sv.V, OrbMech::mu_Moon);
+
+				if (coe.e > 0.7)
 				{
+					rtcc->calcParams.TEI = rtcc->PericynthionTime(cm);
 					setState(MST_H1_TRANSEARTH_1);
+				}
+				else
+				{
+					setSubState(2);
+				}
+			}
+			break;
+			case 2:
+			{
+				if (MoonRevTime < 100.0)
+				{
+					setSubState(0);
 				}
 			}
 			break;

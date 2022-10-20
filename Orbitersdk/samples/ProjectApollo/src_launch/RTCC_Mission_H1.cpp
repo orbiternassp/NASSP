@@ -1739,12 +1739,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			form->type = 1;
 		}
 
-		if (fcn == 40)
-		{
-			//Save TEI-1 TIG for abort logic
-			calcParams.TIGSTORE1 = PZREAP.RTEDTable[0].GETI;
-		}
-
 		if (fcn != 51)
 		{
 			//Save parameters for further use
@@ -3079,6 +3073,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 	}
 	break;
+	case 205: //EI Evaluation
 	case 210: //MCC-5 UPDATE
 	case 211: //PRELIMINARY MCC-6 UPDATE
 	case 212: //MCC-6 UPDATE
@@ -3088,13 +3083,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		EntryOpt entopt;
 		EntryResults res;
-		AP11ManPADOpt opt;
 		double GETbase, MCCtime;
-		MATRIX3 REFSMMAT;
 		char manname[8];
 		SV sv;
 
-		AP11MNV * form = (AP11MNV *)pad;
+		GETbase = CalcGETBase();
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		if (fcn == 210)
 		{
@@ -3111,25 +3105,20 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			MCCtime = calcParams.EI - 3.0*3600.0;
 			sprintf(manname, "MCC-7");
 		}
-		else
+		else if (fcn == 300)
 		{
 			MCCtime = calcParams.TEI + 5.0*3600.0;
 			sprintf(manname, "MCC");
 		}
-
-		//Only corridor control after EI-24h
-		if (MCCtime > calcParams.EI - 24.0*3600.0)
-		{
-			entopt.type = 3;
-		}
 		else
 		{
-			entopt.type = 1;
-			entopt.t_Z = calcParams.EI;
-		}
+			if (AGCGravityRef(calcParams.src) == oapiGetObjectByName("Moon"))
+			{
+				sv = coast(sv, 20.0*3600.0);
+			}
 
-		GETbase = CalcGETBase();
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+			MCCtime = OrbMech::GETfromMJD(sv.MJD, GETbase);
+		}
 
 		entopt.entrylongmanual = false;
 		entopt.ATPLine = 0; //MPL
@@ -3149,175 +3138,193 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			entopt.csmlmdocked = false;
 		}
 
+		entopt.type = 3;
 		EntryTargeting(&entopt, &res);
 
-		//Apollo 11 Mission Rules
-		if (MCCtime > res.GET400K - 50.0*3600.0)
+		if (fcn != 205)
 		{
-			if (length(res.dV_LVLH) < 1.0*0.3048)
-			{
-				scrubbed = true;
-			}
-		}
-		else
-		{
-			if (length(res.dV_LVLH) < 2.0*0.3048)
-			{
-				scrubbed = true;
-			}
-		}
+			AP11ManPADOpt opt;
+			MATRIX3 REFSMMAT;
 
-		if (fcn != 213)
-		{
-			if (fcn == 214)
-			{
-				REFSMMATOpt refsopt;
-				refsopt.GETbase = GETbase;
-				refsopt.REFSMMATopt = 3;
-				refsopt.vessel = calcParams.src;
-				refsopt.useSV = true;
-				refsopt.RV_MCC = res.sv_postburn;
+			AP11MNV * form = (AP11MNV *)pad;
 
-				REFSMMAT = REFSMMATCalc(&refsopt);
+			//Longitude control before EI-24h
+			if (MCCtime < res.GET400K - 24.0*3600.0)
+			{
+				entopt.type = 1;
+				entopt.t_Z = res.GET400K;
+				EntryTargeting(&entopt, &res);
+			}
+
+			//Apollo 11 Mission Rules
+			if (MCCtime > res.GET400K - 50.0*3600.0)
+			{
+				if (length(res.dV_LVLH) < 1.0*0.3048)
+				{
+					scrubbed = true;
+				}
 			}
 			else
 			{
-				REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+				if (length(res.dV_LVLH) < 2.0*0.3048)
+				{
+					scrubbed = true;
+				}
+			}
+
+			if (fcn != 213)
+			{
+				if (fcn == 214)
+				{
+					REFSMMATOpt refsopt;
+					refsopt.GETbase = GETbase;
+					refsopt.REFSMMATopt = 3;
+					refsopt.vessel = calcParams.src;
+					refsopt.useSV = true;
+					refsopt.RV_MCC = res.sv_postburn;
+
+					REFSMMAT = REFSMMATCalc(&refsopt);
+				}
+				else
+				{
+					REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+				}
+
+				if (scrubbed)
+				{
+					//Entry prediction without maneuver
+					EntryUpdateCalc(sv, entopt.GETbase, 1250.0, true, &res);
+
+					res.dV_LVLH = _V(0, 0, 0);
+					res.P30TIG = entopt.TIGguess;
+				}
+				else
+				{
+					opt.dV_LVLH = res.dV_LVLH;
+					opt.enginetype = SPSRCSDecision(SPS_THRUST / (calcParams.src->GetMass() + GetDockedVesselMass(calcParams.src)), res.dV_LVLH);
+					opt.GETbase = GETbase;
+					opt.HeadsUp = false;
+					opt.REFSMMAT = REFSMMAT;
+					opt.TIG = res.P30TIG;
+					opt.vessel = calcParams.src;
+
+					if (calcParams.src->DockingStatus(0) == 1)
+					{
+						opt.vesseltype = 1;
+					}
+					else
+					{
+						opt.vesseltype = 0;
+					}
+
+					AP11ManeuverPAD(&opt, *form);
+					sprintf(form->purpose, manname);
+					form->lat = res.latitude*DEG;
+					form->lng = res.longitude*DEG;
+					form->RTGO = res.RTGO;
+					form->VI0 = res.VIO / 0.3048;
+					form->GET05G = res.GET05G;
+				}
 			}
 
 			if (scrubbed)
 			{
-				//Entry prediction without maneuver
-				EntryUpdateCalc(sv, entopt.GETbase, 1250.0, true, &res);
+				//Scrubbed MCC-5 and MCC-6
+				if (fcn == 210 || fcn == 212)
+				{
+					char buffer1[1000];
+					char buffer2[1000];
 
-				res.dV_LVLH = _V(0, 0, 0);
-				res.P30TIG = entopt.TIGguess;
+					sprintf(upMessage, "%s has been scrubbed", manname);
+					sprintf(upDesc, "CSM state vector and V66, entry target");
+
+					AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
+					CMCEntryUpdate(buffer2, res.latitude, res.longitude);
+
+					sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+					if (upString != NULL) {
+						// give to mcc
+						strncpy(upString, uplinkdata, 1024 * 3);
+					}
+				}
+				//MCC-6 and 7 decision
+				else if (fcn == 211 || fcn == 213 || fcn == 300)
+				{
+					sprintf(upMessage, "%s has been scrubbed", manname);
+				}
+				//Scrubbed MCC-7
+				else if (fcn == 214)
+				{
+					char buffer1[1000];
+					char buffer2[1000];
+					char buffer3[1000];
+
+					sprintf(upMessage, "%s has been scrubbed", manname);
+					sprintf(upDesc, "CSM state vector and V66, entry target, Entry REFSMMAT");
+
+					AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
+					CMCEntryUpdate(buffer2, res.latitude, res.longitude);
+					AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
+
+					sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+					if (upString != NULL) {
+						// give to mcc
+						strncpy(upString, uplinkdata, 1024 * 3);
+					}
+				}
 			}
 			else
 			{
-				opt.dV_LVLH = res.dV_LVLH;
-				opt.enginetype = SPSRCSDecision(SPS_THRUST / (calcParams.src->GetMass() + GetDockedVesselMass(calcParams.src)), res.dV_LVLH);
-				opt.GETbase = GETbase;
-				opt.HeadsUp = false;
-				opt.REFSMMAT = REFSMMAT;
-				opt.TIG = res.P30TIG;
-				opt.vessel = calcParams.src;
-
-				if (calcParams.src->DockingStatus(0) == 1)
+				//MCC-5 or MCC-6 or Generic MCC
+				if (fcn == 210 || fcn == 212 || fcn == 300)
 				{
-					opt.vesseltype = 1;
+					char buffer1[1000];
+					char buffer2[1000];
+
+					AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
+					CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
+
+					sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+					if (upString != NULL) {
+						// give to mcc
+						strncpy(upString, uplinkdata, 1024 * 3);
+						sprintf(upDesc, "CSM state vector and V66, target load");
+					}
 				}
-				else
+				//MCC-6 and 7 decision
+				else if (fcn == 211 || fcn == 213)
 				{
-					opt.vesseltype = 0;
+					sprintf(upMessage, "%s will be executed", manname);
 				}
+				//MCC-7
+				else if (fcn == 214)
+				{
+					char buffer1[1000];
+					char buffer2[1000];
+					char buffer3[1000];
 
-				AP11ManeuverPAD(&opt, *form);
-				sprintf(form->purpose, manname);
-				form->lat = res.latitude*DEG;
-				form->lng = res.longitude*DEG;
-				form->RTGO = res.RTGO;
-				form->VI0 = res.VIO / 0.3048;
-				form->GET05G = res.GET05G;
+					AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
+					CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
+					AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
+
+					sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+					if (upString != NULL) {
+						// give to mcc
+						strncpy(upString, uplinkdata, 1024 * 3);
+						sprintf(upDesc, "CSM state vector and V66, target load, Entry REFSMMAT");
+					}
+				}
 			}
+
+			//Save for further use
+			DeltaV_LVLH = res.dV_LVLH;
+			TimeofIgnition = res.P30TIG;
+			SplashLatitude = res.latitude;
+			SplashLongitude = res.longitude;
+			calcParams.SVSTORE1 = res.sv_postburn;
 		}
 
-		if (scrubbed)
-		{
-			//Scrubbed MCC-5 and MCC-6
-			if (fcn == 210 || fcn == 212)
-			{
-				char buffer1[1000];
-				char buffer2[1000];
-
-				sprintf(upMessage, "%s has been scrubbed", manname);
-				sprintf(upDesc, "CSM state vector and V66, entry target");
-
-				AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
-				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
-
-				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-				if (upString != NULL) {
-					// give to mcc
-					strncpy(upString, uplinkdata, 1024 * 3);
-				}
-			}
-			//MCC-6 and 7 decision
-			else if (fcn == 211 || fcn == 213 || fcn == 300)
-			{
-				sprintf(upMessage, "%s has been scrubbed", manname);
-			}
-			//Scrubbed MCC-7
-			else if (fcn == 214)
-			{
-				char buffer1[1000];
-				char buffer2[1000];
-				char buffer3[1000];
-
-				sprintf(upMessage, "%s has been scrubbed", manname);
-				sprintf(upDesc, "CSM state vector and V66, entry target, Entry REFSMMAT");
-
-				AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
-				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
-				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
-
-				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
-				if (upString != NULL) {
-					// give to mcc
-					strncpy(upString, uplinkdata, 1024 * 3);
-				}
-			}
-		}
-		else
-		{
-			//MCC-5 or MCC-6 or Generic MCC
-			if (fcn == 210 || fcn == 212 || fcn == 300)
-			{
-				char buffer1[1000];
-				char buffer2[1000];
-
-				AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
-				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-
-				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-				if (upString != NULL) {
-					// give to mcc
-					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector and V66, target load");
-				}
-			}
-			//MCC-6 and 7 decision
-			else if (fcn == 211 || fcn == 213)
-			{
-				sprintf(upMessage, "%s will be executed", manname);
-			}
-			//MCC-7
-			else if (fcn == 214)
-			{
-				char buffer1[1000];
-				char buffer2[1000];
-				char buffer3[1000];
-
-				AGCStateVectorUpdate(buffer1, sv, true, GETbase, true);
-				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
-
-				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
-				if (upString != NULL) {
-					// give to mcc
-					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector and V66, target load, Entry REFSMMAT");
-				}
-			}
-		}
-
-		//Save for further use
 		calcParams.EI = res.GET400K;
-		DeltaV_LVLH = res.dV_LVLH;
-		TimeofIgnition = res.P30TIG;
-		SplashLatitude = res.latitude;
-		SplashLongitude = res.longitude;
-		calcParams.SVSTORE1 = res.sv_postburn;
 	}
 	break;
 	case 216: //ENTRY PAD (ASSUMES MCC-6)
