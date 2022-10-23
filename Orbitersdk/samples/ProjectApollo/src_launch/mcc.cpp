@@ -4310,6 +4310,10 @@ void MCC::initiateAbort()
 		{
 			setState(MST_CP_ABORT);
 		}
+		else if (MissionType == MTP_H1)
+		{
+			setState(MST_H1_ABORT);
+		}
 	}
 	else if (MissionPhase == MMST_LUNAR_ORBIT)
 	{
@@ -4318,6 +4322,10 @@ void MCC::initiateAbort()
 		{
 			setState(MST_CP_ABORT);
 		}
+		else if (MissionType == MTP_H1)
+		{
+			setState(MST_H1_ABORT);
+		}
 	}
 	else if (MissionPhase == MMST_TE_COAST)
 	{
@@ -4325,6 +4333,10 @@ void MCC::initiateAbort()
 		if (MissionType == MTP_C_PRIME)
 		{
 			setState(MST_CP_ABORT);
+		}
+		else if (MissionType == MTP_H1)
+		{
+			setState(MST_H1_ABORT);
 		}
 	}
 }
