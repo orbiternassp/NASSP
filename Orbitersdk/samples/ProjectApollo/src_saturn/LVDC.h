@@ -535,6 +535,7 @@ private:								// Saturn LV
 	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
 	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS), also called DVCC
 	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)	
+	VECTOR3 MidPointAttitude;						// Midpoint attitude for orbital navigation (RADIANS)
 	VECTOR3 N;										// Unit vector normal to parking-orbit plane
 	VECTOR3 T_P;									// Unit target vector in ephemeral coordinates
 	double DVCA[2];									// Average of present and past minor loop commanded CHI at the time of major computer cycle accelerometer read
@@ -1058,6 +1059,7 @@ private:
 	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
 	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS)
 	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)
+	VECTOR3 MidPointAttitude;						// Midpoint attitude for orbital navigation (RADIANS)
 	double F;										// Force in Newtons, I assume.	
 	double A1,A2,A3,A4,A5;
 	double K_p,K_y,K_r;
