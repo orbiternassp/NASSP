@@ -173,7 +173,11 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		dsky.ClearStby();
 		// Reset last cycling time
 		LastCycled = 0;
-		// We should issue telemetry though.
+		// We should issue telemetry though. Careful with the first timestep
+		if (lem->PCM.last_update == 0)
+		{
+			lem->PCM.last_update = simt - simdt;
+		}
 		lem->PCM.Timestep(simt);
 
 		// and do nothing more.

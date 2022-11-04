@@ -195,7 +195,11 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// Reset last cycling time
 			LastCycled = 0;
 
-			// We should issue telemetry though.
+			// We should issue telemetry though. Careful with the first timestep
+			if (sat->pcm.last_update == 0)
+			{
+				sat->pcm.last_update = simt - simdt;
+			}
 			sat->pcm.TimeStep(simt);
 			return;
 		}
