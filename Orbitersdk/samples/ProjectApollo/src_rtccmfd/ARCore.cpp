@@ -2400,13 +2400,13 @@ void ARCore::VecPointCalc()
 	}
 	else if (VECoption == 1)
 	{
-		VECangles = GC->rtcc->HatchOpenThermalControl(vessel, GC->rtcc->EZJGMTX1.data[0].REFSMMAT);
+		VECangles = GC->rtcc->HatchOpenThermalControl(GC->rtcc->RTCCPresentTimeGMT(), GC->rtcc->EZJGMTX1.data[0].REFSMMAT);
 	}
 	else
 	{
-		SV sv;
+		//SV sv;
 
-		GC->rtcc->PointAOTWithCSM(GC->rtcc->EZJGMTX1.data[0].REFSMMAT, sv, 2, 1, 0.0);
+		//GC->rtcc->PointAOTWithCSM(GC->rtcc->EZJGMTX1.data[0].REFSMMAT, sv, 2, 1, 0.0);
 	}
 }
 
@@ -4333,7 +4333,7 @@ int ARCore::subThread()
 			intab.ManCutoffIndicator = false;
 			intab.VehicleCode = RTCC_MPT_CSM;
 
-			GC->rtcc->NewEMSMISS(&intab);
+			GC->rtcc->EMSMISS(&intab);
 			tab.Header.TUP = 1;
 		}
 		tab2 = &tab;
@@ -4946,7 +4946,7 @@ int ARCore::subThread()
 		Thruster = GC->rtcc->med_k28.Thruster;
 		DPSScaleFactor = GC->rtcc->med_k28.DPSScaleFactor;
 
-		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0);
+		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0, 0.0, 1.0, 1.0); //TBD
 
 		GC->rtcc->PMMPAD(sv1, mass, THT, dt, H_P, Thruster, DPSScaleFactor);
 		GC->rtcc->PMDPAD();

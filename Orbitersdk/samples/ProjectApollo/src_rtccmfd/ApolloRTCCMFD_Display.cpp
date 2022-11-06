@@ -5228,15 +5228,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(9 * W / 32, 4 * H / 28, "VID", 3);
 		skp->Text(11 * W / 32, 4 * H / 28, GC->rtcc->EZCHECKDIS.VID, strlen(GC->rtcc->EZCHECKDIS.VID));
 		skp->Text(7 * W / 32, 5 * H / 28, "XT", 2);
-		skp->Text(18 * W / 32, 3 * H / 28, "K-FAC", 5);
+		skp->Text(19 * W / 32, 3 * H / 28, "K-FAC", 5);
 		skp->Text(16 * W / 32, 4 * H / 28, "RF", 2);
 		skp->Text(18 * W / 32, 4 * H / 28, GC->rtcc->EZCHECKDIS.RF, 3);
 		skp->Text(15 * W / 32, 5 * H / 28, "YT", 2);
 		skp->Text(21 * W / 32, 4 * H / 28, "A", 1);
 
-		skp->Text(25 * W / 32, 4 * H / 28, "CFG", 3);
+		skp->Text(26 * W / 32, 4 * H / 28, "CFG", 3);
 		skp->Text(23 * W / 32, 5 * H / 28, "ZT", 2);
-		skp->Text(25 * W / 32, 6 * H / 28, "OPTION", 6);
+		skp->Text(24 * W / 32, 6 * H / 28, "OPTION", 6);
 		skp->Text(26 * W / 32, 7 * H / 28, "NV", 2);
 		if (GC->rtcc->EZCHECKDIS.NV > 0)
 		{
@@ -5245,6 +5245,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		sprintf(Buffer, "%.2f", GC->rtcc->EZCHECKDIS.K_Fac);
+		skp->Text(25 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2f", GC->rtcc->EZCHECKDIS.A);
+		skp->Text(25 * W / 32, 4 * H / 28, Buffer, strlen(Buffer));
 
 		if (GC->rtcc->EZCHECKDIS.U_T.x > -1)
 		{
@@ -5256,8 +5261,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(29 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(31 * W / 32, 4 * H / 28, GC->rtcc->EZCHECKDIS.CFG, 3);
-		skp->Text(31 * W / 32, 6 * H / 28, GC->rtcc->EZCHECKDIS.Option, 3);
+		skp->Text(30 * W / 32, 4 * H / 28, GC->rtcc->EZCHECKDIS.CFG, 3);
+		skp->Text(30 * W / 32, 6 * H / 28, GC->rtcc->EZCHECKDIS.Option, 3);
 
 		skp->Text(2 * W / 32, 7 * H / 28, "X", 1);
 		skp->Text(2 * W / 32, 9 * H / 28, "Y", 1);
@@ -5322,8 +5327,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.EPHE);
 		skp->Text(10 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 32, 27 * H / 28, "THT", 4);
-		GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.THT);
-		skp->Text(10 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZCHECKDIS.THT > 0)
+		{
+			GET_Display2(Buffer, GC->rtcc->EZCHECKDIS.THT);
+			skp->Text(10 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+		}
 
 		skp->Text(13 * W / 32, 7 * H / 28, "V", 1);
 		sprintf(Buffer, "%07.1f", GC->rtcc->EZCHECKDIS.V_i);

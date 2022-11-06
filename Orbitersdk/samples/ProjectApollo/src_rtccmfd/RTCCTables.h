@@ -236,7 +236,7 @@ struct EMSMISSAuxOutputTable
 {
 	EphemerisData sv_cutoff;
 	bool landed;
-	//0 = no errors detected, 1 = input time cannot be referenced on sun/moon ephemeris, 2 = MPT is being updated, 3 = error from maneuver integrator
+	//0 = no errors detected, 1 = input time cannot be referenced on sun/moon ephemeris, 2 = MPT is being updated, 3 = error from maneuver integrator, 4 = PLAWDT error
 	//5 = maneuver in interval maybe preventing the minimum number of points from being satisfied, 6 = ephemeris space filled before request was satisfied
 	int ErrorCode;
 	double InputArea;

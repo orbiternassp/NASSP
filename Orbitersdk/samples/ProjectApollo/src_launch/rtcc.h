@@ -289,8 +289,6 @@ struct LambertMan //Data for Lambert targeting
 
 struct AP7ManPADOpt
 {
-	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
@@ -298,11 +296,13 @@ struct AP7ManPADOpt
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime; //time delay for the sextant star check (in case no star is available during the maneuver)
 	double navcheckGET; //Time for the navcheck. 0 = no nav check
-	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
 	bool UllageThrusterOpt = true; // false = 2 thrusters, true = 4 thrusters
 	double UllageDT = 0.0;
+
+	EphemerisData sv0;		//State vector as input
+	double CSMMass = 0.0;
+	double LMMass = 0.0;
+	double Area = 129.4*0.3048*0.3048; //Valid for CSM and LM
 };
 
 struct AP11ManPADOpt
@@ -363,10 +363,9 @@ struct AP7TPIPADOpt
 
 struct AP9LMTPIPADOpt
 {
-	SV sv_A; //Chaser state vector
-	SV sv_P; //Target state vector
-	double GETbase; //usually MJD at launch
-	double TIG; //Time of Ignition
+	EphemerisData sv_A; //Chaser state vector
+	EphemerisData sv_P; //Target state vector
+	double GMT_TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	MATRIX3 REFSMMAT;	//REFSMMAT
 };
@@ -984,7 +983,7 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int I_Theta = 0;
 	//0 = CDH not scheduled, 1 = CDH scheduled
 	bool CDH = true;
-	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (AEG)
+	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (Keplerian)
 	int I_CDH = 3;
 	//Number of apsis since CSI (for CDH at next apsis options)
 	int N_CDH = 1;
@@ -2610,10 +2609,10 @@ public:
 	EphemerisData coast(EphemerisData sv1, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt, int veh);
 	EphemerisData coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor = 1.0);
-	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
-	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
+	VECTOR3 HatchOpenThermalControl(double GMT, MATRIX3 REFSMMAT);
+	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, EphemerisData sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
-	AEGBlock SVToAEG(EphemerisData sv);
+	AEGBlock SVToAEG(EphemerisData sv, double Area, double Weight, double KFactor);
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
 	bool PMMAPD(SV sv0, SV &sv_a, SV &sv_p);
@@ -2771,7 +2770,7 @@ public:
 	//Ephemeris Storage and Control Module
 	StateVectorTableEntry EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, double PresentGMT);
 	//Miscellaneous Numerical Integration Control Module
-	void NewEMSMISS(EMSMISSInputTable *in);
+	void EMSMISS(EMSMISSInputTable *in);
 	//Lunar Surface Ephemeris Generator
 	void EMSLSF(EMSLSFInputTable &in);
 	//Encke Integrator
