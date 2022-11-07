@@ -334,7 +334,7 @@ void AR_GCore::MPTMassUpdate()
 	//Mass Update
 	if (pMPTVessel == NULL) return;
 
-	rtcc->MPTMassUpdate(pMPTVessel, rtcc->med_m50, rtcc->med_m55);
+	rtcc->MPTMassUpdate(pMPTVessel, rtcc->med_m50, rtcc->med_m55, rtcc->med_m49);
 }
 
 ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
@@ -359,6 +359,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	REFSMMATcur = 4;
 	manpadopt = 0;
 	lemdescentstage = true;
+	mptinitmode = 3;
 
 	vesseltype = -1;
 
@@ -3042,8 +3043,9 @@ int ARCore::subThread()
 		{
 			MED_M50 med1;
 			MED_M55 med2;
+			MED_M49 med3;
 			//This doesn't work in debug mode (with only RTCC MFD and MCC modules build), so below are some fake masses
-			GC->rtcc->MPTMassUpdate(vessel, med1, med2);
+			GC->rtcc->MPTMassUpdate(vessel, med1, med2, med3);
 
 			GC->rtcc->VEHDATABUF.csmmass = med1.CSMWT;//vessel->GetMass();//
 			GC->rtcc->VEHDATABUF.lmascmass = med1.LMASCWT;//0.0;10000.0*0.453;//
@@ -5603,8 +5605,9 @@ int ARCore::GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSM
 
 	MED_M50 m50;
 	MED_M55 m55;
+	MED_M49 m49;
 
-	GC->rtcc->MPTMassUpdate(vessel, m50, m55, vesselisdocked);
+	GC->rtcc->MPTMassUpdate(vessel, m50, m55, m49, vesselisdocked);
 
 	std::bitset<4> cfg;
 	GC->rtcc->MPTGetConfigFromString(m55.ConfigCode, cfg);

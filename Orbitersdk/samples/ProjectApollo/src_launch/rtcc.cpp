@@ -12394,12 +12394,15 @@ bool RTCC::GETEval2(double get)
 	return false;
 }
 
-void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool docked)
+void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &med3, bool docked)
 {
 	int vesseltype = 0;
 	std::string cfg;
 	double cmmass, lmmass, sivb_mass, lm_ascent_mass;
 	cmmass = lmmass = sivb_mass = lm_ascent_mass = 0.0;
+
+	double spsmass, csmrcsmass, sivbfuelmass, lmapsmass, lmrcsmass, lmdpsmass;
+	spsmass = csmrcsmass = sivbfuelmass = lmapsmass = lmrcsmass = lmdpsmass = 0;
 
 	if (vessel == NULL) return;
 
@@ -12438,19 +12441,28 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool dock
 		Saturn *sat = (Saturn *)vessel;
 		if (sat->GetStage() < CSM_LEM_STAGE)
 		{
-			cmmass = sat->SM_FuelMass + sat->SM_EmptyMass + sat->CM_FuelMass + sat->CM_EmptyMass + 4.0*152.5 + 2.0*55.5;
+			csmrcsmass = 4.0*152.5;
+
+			cmmass = sat->SM_FuelMass + sat->SM_EmptyMass + sat->CM_FuelMass + sat->CM_EmptyMass + csmrcsmass + 2.0*55.5;
 			if (sat->SIVBPayload == PAYLOAD_LEM)
 			{
 				cfg = "CSL";
-				lmmass = sat->LMDescentFuelMassKg + sat->LMAscentFuelMassKg + sat->LMDescentEmptyMassKg + sat->LMAscentEmptyMassKg + 2.0*133.084001;
-				lm_ascent_mass = sat->LMAscentFuelMassKg + sat->LMAscentEmptyMassKg + 2.0*133.084001;
 
+				lmrcsmass = 2.0*133.084001;
+				lmapsmass = sat->LMAscentFuelMassKg;
+				lmdpsmass = sat->LMDescentFuelMassKg;
+
+				lmmass = lmdpsmass + lmapsmass + sat->LMDescentEmptyMassKg + sat->LMAscentEmptyMassKg + lmrcsmass;
+				lm_ascent_mass = lmapsmass + sat->LMAscentEmptyMassKg + lmrcsmass;
 			}
 			else
 			{
 				cfg = "CS";
 			}
 			sivb_mass = vessel->GetMass() - cmmass - lmmass;
+
+			spsmass = sat->SM_FuelMass;
+			sivbfuelmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(6));
 		}
 		else
 		{
@@ -12471,18 +12483,25 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool dock
 				if (lem->GetStage() < 2)
 				{
 					cfg = "CL";
+					lmapsmass = lem->AscentFuelMassKg;
+					lmdpsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(0));
 				}
 				else
 				{
 					cfg = "CA";
+					lmapsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(0));
 				}
 
-
+				lmrcsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(1)) + lm->GetPropellantMass(lm->GetPropellantHandleByIndex(2));
 			}
 			else
 			{
 				cfg = "C";
 			}
+
+			spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
+			csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) + 
+				sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
 		}
 	}
 	else if (vesseltype == 1)
@@ -12502,6 +12521,8 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool dock
 			{
 				cfg = "L";
 			}
+			lmapsmass = lem->AscentFuelMassKg;
+			lmdpsmass = lem->GetPropellantMass(lem->GetPropellantHandleByIndex(0));
 		}
 		else
 		{
@@ -12513,12 +12534,32 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool dock
 			{
 				cfg = "A";
 			}
+			lmapsmass = lem->GetPropellantMass(lem->GetPropellantHandleByIndex(0));
+		}
+
+		lmrcsmass = vessel->GetPropellantMass(vessel->GetPropellantHandleByIndex(1)) + vessel->GetPropellantMass(vessel->GetPropellantHandleByIndex(2));
+
+		if (cfg[0] == 'C')
+		{
+			DOCKHANDLE dock;
+			OBJHANDLE hCSM;
+			VESSEL *csm;
+			dock = vessel->GetDockHandle(0);
+			hCSM = vessel->GetDockStatus(dock);
+			csm = oapiGetVesselInterface(hCSM);
+
+			Saturn *sat = (Saturn *)csm;
+
+			spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
+			csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) +
+				sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
 		}
 	}
 	else
 	{
 		cfg = "S";
 		sivb_mass = vessel->GetMass();
+		sivbfuelmass = vessel->GetPropellantMass(vessel->GetPropellantHandleByIndex(0));
 	}
 
 	med2.ConfigCode = cfg;
@@ -12527,6 +12568,14 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool dock
 	med1.LMWT = lmmass;
 	med1.LMASCWT = lm_ascent_mass;
 	med1.SIVBWT = sivb_mass;
+	med1.WeightGET = GETfromGMT(RTCCPresentTimeGMT());
+
+	med3.CSMRCSFuelRemaining = csmrcsmass;
+	med3.LMAPSFuelRemaining = lmapsmass;
+	med3.LMDPSFuelRemaining = lmdpsmass;
+	med3.LMRCSFuelRemaining = lmrcsmass;
+	med3.SIVBFuelRemaining = sivbfuelmass;
+	med3.SPSFuelRemaining = spsmass;
 }
 
 void RTCC::AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA)
@@ -21234,59 +21283,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	pin.VentingOpt = true;
 	PLAWDT(pin, pout);
 
-	unsigned cfgint = pout.CC.to_ulong();
-
-	switch (cfgint)
-	{
-	case 1:
-		sprintf(EZCHECKDIS.CFG, "C");
-		break;
-	case 2:
-		sprintf(EZCHECKDIS.CFG, "S");
-		break;
-	case 3:
-		sprintf(EZCHECKDIS.CFG, "CS");
-		break;
-	case 4:
-		sprintf(EZCHECKDIS.CFG, "A");
-		break;
-	case 5:
-		sprintf(EZCHECKDIS.CFG, "CA");
-		break;
-	case 6:
-		sprintf(EZCHECKDIS.CFG, "SA");
-		break;
-	case 7:
-		sprintf(EZCHECKDIS.CFG, "CSA");
-		break;
-	case 8:
-		sprintf(EZCHECKDIS.CFG, "D");
-		break;
-	case 9:
-		sprintf(EZCHECKDIS.CFG, "CD");
-		break;
-	case 10:
-		sprintf(EZCHECKDIS.CFG, "SD");
-		break;
-	case 11:
-		sprintf(EZCHECKDIS.CFG, "CSD");
-		break;
-	case 12:
-		sprintf(EZCHECKDIS.CFG, "L");
-		break;
-	case 13:
-		sprintf(EZCHECKDIS.CFG, "CL");
-		break;
-	case 14:
-		sprintf(EZCHECKDIS.CFG, "SL");
-		break;
-	case 15:
-		sprintf(EZCHECKDIS.CFG, "CSL");
-		break;
-	default:
-		sprintf(EZCHECKDIS.CFG, " ");
-		break;
-	}
+	MPTGetStringFromConfig(pout.CC, EZCHECKDIS.CFG);
 
 	EZCHECKDIS.WT = pout.ConfigWeight / 0.45359237;
 	EZCHECKDIS.WC = pout.CSMWeight / 0.45359237;
@@ -21344,6 +21341,63 @@ bool RTCC::MPTConfigSubset(const std::bitset<4> &CfgOld, const std::bitset<4> &C
 
 	//Otherwise ok
 	return true;
+}
+
+void RTCC::MPTGetStringFromConfig(const std::bitset<4> &cfg, char *str)
+{
+	unsigned cfgint = cfg.to_ulong();
+
+	switch (cfgint)
+	{
+	case 1:
+		sprintf(str, "C");
+		break;
+	case 2:
+		sprintf(str, "S");
+		break;
+	case 3:
+		sprintf(str, "CS");
+		break;
+	case 4:
+		sprintf(str, "A");
+		break;
+	case 5:
+		sprintf(str, "CA");
+		break;
+	case 6:
+		sprintf(str, "SA");
+		break;
+	case 7:
+		sprintf(str, "CSA");
+		break;
+	case 8:
+		sprintf(str, "D");
+		break;
+	case 9:
+		sprintf(str, "CD");
+		break;
+	case 10:
+		sprintf(str, "SD");
+		break;
+	case 11:
+		sprintf(str, "CSD");
+		break;
+	case 12:
+		sprintf(str, "L");
+		break;
+	case 13:
+		sprintf(str, "CL");
+		break;
+	case 14:
+		sprintf(str, "SL");
+		break;
+	case 15:
+		sprintf(str, "CSL");
+		break;
+	default:
+		sprintf(str, " ");
+		break;
+	}
 }
 
 void RTCC::MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg)

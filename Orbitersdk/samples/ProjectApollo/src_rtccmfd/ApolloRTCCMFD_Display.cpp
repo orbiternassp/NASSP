@@ -5478,83 +5478,291 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
+		skp->Text(1 * W / 16, (marker + 4) * H / 16, "*", 1);
+
+		skp->Text(10 * W / 16, 5 * H / 16, "MPT:", 4);
+
+		if (G->mptinitmode == 0)
 		{
-			skp->Text(1 * W / 16, 2 * H / 14, "LM", 2);
+			skp->Text(2 * W / 16, 4 * H / 16, "MED M49: Fuel Remaining", 23);
+
+			if (GC->rtcc->med_m49.Table == RTCC_MPT_LM)
+			{
+				skp->Text(2 * W / 16, 5 * H / 16, "Table: LM", 9);
+			}
+			else
+			{
+				skp->Text(2 * W / 16, 5 * H / 16, "Table: CSM", 10);
+			}
+
+			if (GC->rtcc->med_m49.SPSFuelRemaining >= 0)
+			{
+				sprintf(Buffer, "SPS: %.0f lbs", GC->rtcc->med_m49.SPSFuelRemaining / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "SPS: No Update");
+			}
+			skp->Text(2 * W / 16, 6 * H / 16, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m49.CSMRCSFuelRemaining >= 0)
+			{
+				sprintf(Buffer, "CSM RCS: %.0f lbs", GC->rtcc->med_m49.CSMRCSFuelRemaining / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "CSM RCS: No Update");
+			}
+			skp->Text(2 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m49.SIVBFuelRemaining >= 0)
+			{
+				sprintf(Buffer, "S-IVB: %.0f lbs", GC->rtcc->med_m49.SIVBFuelRemaining / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "S-IVB: No Update");
+			}
+			skp->Text(2 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m49.LMAPSFuelRemaining >= 0)
+			{
+				sprintf(Buffer, "LM APS: %.0f lbs", GC->rtcc->med_m49.LMAPSFuelRemaining / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "LM APS: No Update");
+			}
+			skp->Text(2 * W / 16, 9 * H / 16, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m49.LMRCSFuelRemaining >= 0)
+			{
+				sprintf(Buffer, "LM RCS: %.0f lbs", GC->rtcc->med_m49.LMRCSFuelRemaining / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "LM RCS: No Update");
+			}
+			skp->Text(2 * W / 16, 10 * H / 16, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m49.LMDPSFuelRemaining >= 0)
+			{
+				sprintf(Buffer, "LM DPS: %.0f lbs", GC->rtcc->med_m49.LMDPSFuelRemaining / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "LM DPS: No Update");
+			}
+			skp->Text(2 * W / 16, 11 * H / 16, Buffer, strlen(Buffer));
+
+			MissionPlanTable *mpt = GC->rtcc->GetMPTPointer(GC->rtcc->med_m49.Table);
+
+			sprintf(Buffer, "%.0f lbs", mpt->CommonBlock.SPSFuelRemaining / 0.45359237);
+			skp->Text(10 * W / 16, 6 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.0f lbs", mpt->CommonBlock.CSMRCSFuelRemaining / 0.45359237);
+			skp->Text(10 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.0f lbs", mpt->CommonBlock.SIVBFuelRemaining / 0.45359237);
+			skp->Text(10 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.0f lbs", mpt->CommonBlock.LMAPSFuelRemaining / 0.45359237);
+			skp->Text(10 * W / 16, 9 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.0f lbs", mpt->CommonBlock.LMRCSFuelRemaining / 0.45359237);
+			skp->Text(10 * W / 16, 10 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.0f lbs", mpt->CommonBlock.LMDPSFuelRemaining / 0.45359237);
+			skp->Text(10 * W / 16, 11 * H / 16, Buffer, strlen(Buffer));
+		}
+		else if (G->mptinitmode == 1)
+		{
+			skp->Text(2 * W / 16, 4 * H / 16, "MED M50: Weights", 16);
+
+			if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
+			{
+				skp->Text(2 * W / 16, 5 * H / 16, "Table: LM", 9);
+			}
+			else
+			{
+				skp->Text(2 * W / 16, 5 * H / 16, "Table: CSM", 10);
+			}
+
+			if (GC->rtcc->med_m50.CSMWT >= 0)
+			{
+				sprintf(Buffer, "CSM: %.0f lbs", GC->rtcc->med_m50.CSMWT / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "CSM: No Update");
+			}
+			skp->Text(2 * W / 16, 6 * H / 16, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m50.SIVBWT >= 0)
+			{
+				sprintf(Buffer, "S-IVB: %.0f lbs", GC->rtcc->med_m50.SIVBWT / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "S-IVB: No Update");
+			}
+			skp->Text(2 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m50.LMWT >= 0)
+			{
+				sprintf(Buffer, "LM Total: %.0f lbs", GC->rtcc->med_m50.LMWT / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "LM Total: No Update");
+			}
+			skp->Text(2 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m50.LMASCWT >= 0)
+			{
+				sprintf(Buffer, "LM Ascent: %.0f lbs", GC->rtcc->med_m50.LMASCWT / 0.45359237);
+			}
+			else
+			{
+				sprintf(Buffer, "LM Ascent: No Update");
+			}
+			skp->Text(2 * W / 16, 9 * H / 16, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->med_m50.WeightGET, true);
+			skp->Text(2 * W / 16, 10 * H / 16, Buffer, strlen(Buffer));
+
+			MissionPlanTable *mpt = GC->rtcc->GetMPTPointer(GC->rtcc->med_m50.Table);
+
+			sprintf(Buffer, "CSM %.0f lbs", mpt->CommonBlock.CSMMass / 0.45359237);
+			skp->Text(10 * W / 16, 6 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "S-IVB %.0f lbs", mpt->CommonBlock.SIVBMass / 0.45359237);
+			skp->Text(10 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "LM ASC %.0f lbs", mpt->CommonBlock.LMAscentMass / 0.45359237);
+			skp->Text(10 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "LM DSC %.0f lbs", mpt->CommonBlock.LMDescentMass / 0.45359237);
+			skp->Text(10 * W / 16, 9 * H / 16, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "Total %.0f lbs", mpt->TotalInitMass / 0.45359237);
+			skp->Text(10 * W / 16, 12 * H / 16, Buffer, strlen(Buffer));
+		}
+		else if (G->mptinitmode == 2)
+		{
+			skp->Text(2 * W / 16, 4 * H / 16, "MED M51: Areas", 14);
+
+			if (GC->rtcc->med_m51.Table == RTCC_MPT_LM)
+			{
+				skp->Text(2 * W / 16, 5 * H / 16, "Table: LM", 9);
+			}
+			else
+			{
+				skp->Text(2 * W / 16, 5 * H / 16, "Table: CSM", 10);
+			}
+
+			sprintf(Buffer, "CSM %.2f sq ft", GC->rtcc->med_m51.CSMArea / 0.3048 / 0.3048);
+			skp->Text(2 * W / 16, 6 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "S-IVB %.2f sq ft", GC->rtcc->med_m51.SIVBArea / 0.3048 / 0.3048);
+			skp->Text(2 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "LM ASC %.2f sq ft", GC->rtcc->med_m51.LMAscentArea / 0.3048 / 0.3048);
+			skp->Text(2 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "LM DSC %.2f sq ft", GC->rtcc->med_m51.LMDescentArea / 0.3048 / 0.3048);
+			skp->Text(2 * W / 16, 9 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "K-Factor %.2f", GC->rtcc->med_m51.KFactor);
+			skp->Text(2 * W / 16, 10 * H / 16, Buffer, strlen(Buffer));
+
+			MissionPlanTable *mpt = GC->rtcc->GetMPTPointer(GC->rtcc->med_m51.Table);
+
+			sprintf(Buffer, "%.2f sq ft", mpt->CommonBlock.CSMArea / 0.3048 / 0.3048);
+			skp->Text(10 * W / 16, 6 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2f sq ft", mpt->CommonBlock.SIVBArea / 0.3048 / 0.3048);
+			skp->Text(10 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2f sq ft", mpt->CommonBlock.LMAscentArea / 0.3048 / 0.3048);
+			skp->Text(10 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2f sq ft", mpt->CommonBlock.LMDescentArea / 0.3048 / 0.3048);
+			skp->Text(10 * W / 16, 9 * H / 16, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2f", mpt->KFactor);
+			skp->Text(10 * W / 16, 10 * H / 16, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "Total %.2f sq ft", mpt->ConfigurationArea / 0.3048 / 0.3048);
+			skp->Text(10 * W / 16, 12 * H / 16, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(1 * W / 16, 2 * H / 14, "CSM", 3);
+			skp->Text(2 * W / 16, 4 * H / 16, "MED M55: Configuration", 22);
+
+			if (GC->rtcc->med_m55.Table == RTCC_MPT_LM)
+			{
+				skp->Text(2 * W / 16, 5 * H / 16, "Table: LM", 9);
+			}
+			else
+			{
+				skp->Text(2 * W / 16, 5 * H / 16, "Table: CSM", 10);
+			}
+
+			if (GC->rtcc->med_m55.ConfigCode == "")
+			{
+				sprintf(Buffer, "Config: None");
+			}
+			else
+			{
+				sprintf(Buffer, "Config: %s", GC->rtcc->med_m55.ConfigCode.c_str());
+			}
+			skp->Text(2 * W / 16, 6 * H / 16, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "T BV:");
+			skp->Text(2 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+			if (GC->rtcc->med_m55.VentingGET >= 0)
+			{
+				GET_Display(Buffer, GC->rtcc->med_m55.VentingGET);
+			}
+			else
+			{
+				sprintf(Buffer, "No Update");
+			}
+			skp->Text(4 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "DDA:");
+			skp->Text(2 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
+			if (GC->rtcc->med_m55.DeltaDockingAngle >= 0)
+			{
+				sprintf(Buffer, "%.2f°", GC->rtcc->med_m55.DeltaDockingAngle*DEG);
+			}
+			else
+			{
+				sprintf(Buffer, "No Update");
+			}
+			skp->Text(4 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
+
+			MissionPlanTable *mpt = GC->rtcc->GetMPTPointer(GC->rtcc->med_m55.Table);
+
+			if (mpt->CommonBlock.ConfigCode == 0)
+			{
+				sprintf(Buffer, "None");
+			}
+			else
+			{
+				GC->rtcc->MPTGetStringFromConfig(mpt->CommonBlock.ConfigCode, Buffer);
+			}
+			skp->Text(10 * W / 16, 6 * H / 16, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, mpt->SIVBVentingBeginGET);
+			skp->Text(10 * W / 16, 7 * H / 16, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f°", mpt->DeltaDockingAngle*DEG);
+			skp->Text(10 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
 		}
 
 		if (GC->pMPTVessel != NULL)
 		{
-			sprintf(Buffer, GC->pMPTVessel->GetName());
-			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "Vessel: %s", GC->pMPTVessel->GetName());
 		}
 		else
 		{
-			skp->Text(1 * W / 16, 4 * H / 14, "None", 4);
+			sprintf(Buffer, "Vessel: None");
 		}
-
-		if (GC->rtcc->med_m50.CSMWT >= 0)
-		{
-			sprintf(Buffer, "%.0f lbs", GC->rtcc->med_m50.CSMWT / 0.45359237);
-			skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			skp->Text(1 * W / 16, 6 * H / 14, "No Update", 9);
-		}
-
-		if (GC->rtcc->med_m50.SIVBWT >= 0)
-		{
-			sprintf(Buffer, "%.0f lbs", GC->rtcc->med_m50.SIVBWT / 0.45359237);
-			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			skp->Text(1 * W / 16, 8 * H / 14, "No Update", 9);
-		}
-
-		if (GC->rtcc->med_m50.LMWT >= 0)
-		{
-			sprintf(Buffer, "%.0f lbs", GC->rtcc->med_m50.LMWT / 0.45359237);
-			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			skp->Text(1 * W / 16, 10 * H / 14, "No Update", 9);
-		}
-
-		if (GC->rtcc->med_m50.LMASCWT >= 0)
-		{
-			sprintf(Buffer, "%.0f lbs", GC->rtcc->med_m50.LMASCWT / 0.45359237);
-			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			skp->Text(1 * W / 16, 12 * H / 14, "No Update", 9);
-		}
-
-		sprintf_s(Buffer, GC->rtcc->med_m55.ConfigCode.c_str());
-		skp->Text(6 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(9 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
 		if (GC->mptInitError == 1)
 		{
-			skp->Text(7 * W / 16, 13 * H / 14, "Mass update successful!", 23);
+			skp->Text(7 * W / 16, 13 * H / 14, "Update successful!", 18);
 		}
 		else if (GC->mptInitError == 2)
 		{
-			skp->Text(7 * W / 16, 13 * H / 14, "Mass update rejected!", 21);
-		}
-		else if (GC->mptInitError == 3)
-		{
-			skp->Text(7 * W / 16, 13 * H / 14, "Config update successful!", 25);
-		}
-		else if (GC->mptInitError == 4)
-		{
-			skp->Text(7 * W / 16, 13 * H / 14, "Config update rejected!", 23);
+			skp->Text(7 * W / 16, 13 * H / 14, "Update rejected!", 16);
 		}
 	}
 	else if (screen == 60)

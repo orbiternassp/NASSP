@@ -148,6 +148,18 @@ struct MED_K16
 	int Vehicle = RTCC_MPT_CSM; //1 = CSM, 3 = LEM (Instead of Vector ID)
 };
 
+//Fuel Remaining
+struct MED_M49
+{
+	int Table = 1;
+	double SPSFuelRemaining = -1;
+	double CSMRCSFuelRemaining = -1;
+	double SIVBFuelRemaining = -1;
+	double LMAPSFuelRemaining = -1;
+	double LMRCSFuelRemaining = -1;
+	double LMDPSFuelRemaining = -1;
+};
+
 //Change Vehicle Weight
 struct MED_M50
 {
@@ -163,11 +175,11 @@ struct MED_M50
 struct MED_M51
 {
 	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
-	double CSMArea = 0.0;
-	double SIVBArea = 0.0;
-	double LMAscentArea = 0.0;
-	double LMDescentArea = 0.0;
-	double KFactor = 0.0;
+	double CSMArea = 129.4*0.3048*0.3048;
+	double SIVBArea = 365.0*0.3048*0.3048;
+	double LMAscentArea = 200.57*0.3048*0.3048;
+	double LMDescentArea = 200.57*0.3048*0.3048;
+	double KFactor = 1.0;
 };
 
 //Input initial configuration for Mission Plan Table
@@ -175,8 +187,8 @@ struct MED_M55
 {
 	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
 	std::string ConfigCode;
-	double VentingGET = 0.0;
-	double DeltaDockingAngle = 0.0;
+	double VentingGET = -1.0;
+	double DeltaDockingAngle = -720.0;
 };
 
 //TLI Direct Input
@@ -3373,17 +3385,7 @@ public:
 
 	MED_K16 med_k16;
 
-	struct MED_M49
-	{
-		int Table = 1;
-		double SPSFuelRemaining = -1;
-		double CSMRCSFuelRemaining = -1;
-		double SIVBFuelRemaining = -1;
-		double LMAPSFuelRemaining = -1;
-		double LMRCSFuelRemaining = -1;
-		double LMDPSFuelRemaining = -1;
-	} med_m49;
-
+	MED_M49 med_m49;
 	MED_M50 med_m50;
 	MED_M51 med_m51;
 	MED_M55 med_m55;
@@ -4842,8 +4844,9 @@ public:
 	//Trajectory Update On-line Print
 	void EMGPRINT(std::string source, int i);
 	void EMGPRINT(std::string source, std::vector<std::string> message);
-	void MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool docked = true);
+	void MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &med3, bool docked = true);
 	void MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg);
+	void MPTGetStringFromConfig(const std::bitset<4> &cfg, char *str);
 	MissionPlanTable *GetMPTPointer(int L);
 protected:
 
