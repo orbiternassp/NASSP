@@ -106,7 +106,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		//Config and mass update
 		med_m55.Table = RTCC_MPT_CSM;
-		MPTMassUpdate(calcParams.src, med_m50, med_m55);
+		MPTMassUpdate(calcParams.src, med_m50, med_m55, med_m49);
 		PMMWTC(55);
 		med_m50.Table = RTCC_MPT_CSM;
 		med_m50.WeightGET = GETfromGMT(RTCCPresentTimeGMT());

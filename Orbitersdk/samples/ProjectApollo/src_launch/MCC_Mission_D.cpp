@@ -107,22 +107,31 @@ void MCC::MissionSequence_D()
 	case MST_D_DAY1STATE4: //Block Data 2 to Block Data 3
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(19 * 60 * 60 + 15 * 60), 11, MST_D_DAY2STATE1);
 		break;
-	case MST_D_DAY2STATE1: //Block Data 3 to SPS-2
+	case MST_D_DAY2STATE1: //Block Data 3 to SPS-2 Calculation
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(20 * 60 * 60 + 37 * 60), 12, MST_D_DAY2STATE2);
 		break;
-	case MST_D_DAY2STATE2: //SPS-2 to SPS-3
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(23 * 60 * 60 + 55 * 60), 13, MST_D_DAY2STATE3);
+	case MST_D_DAY2STATE2: //SPS-2 Calculation to SPS-2 Update
+		UpdateMacro(UTP_NONE, PT_NONE, true, 13, MST_D_DAY2STATE3);
 		break;
-	case MST_D_DAY2STATE3: //SPS-3 to SPS-4
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(26 * 60 * 60 + 50 * 60), 14, MST_D_DAY2STATE4);
+	case MST_D_DAY2STATE3: //SPS-2 Update to SPS-3 Calculation
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(22 * 60 * 60 + 25 * 60), 100, MST_D_DAY2STATE4);
 		break;
-	case MST_D_DAY2STATE4: //SPS-4 to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(28 * 60 * 60 + 50 * 60), 15, MST_D_DAY2STATE5);
+	case MST_D_DAY2STATE4: //SPS-3 Calculation to SPS-3 Update
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(23 * 60 * 60 + 55 * 60), 14, MST_D_DAY2STATE5);
 		break;
-	case MST_D_DAY2STATE5: //SV Update to Block Data 4
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(28 * 60 * 60 + 55 * 60), 2, MST_D_DAY2STATE6);
+	case MST_D_DAY2STATE5: //SPS-3 Update to SPS-4 Calculation
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(25 * 60 * 60 + 30 * 60), 101, MST_D_DAY2STATE6);
 		break;
-	case MST_D_DAY2STATE6: //Block Data 4 to Block Data 5
+	case MST_D_DAY2STATE6: //SPS-4 Calculation to SPS-4 Update
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(26 * 60 * 60 + 50 * 60), 15, MST_D_DAY2STATE7);
+		break;
+	case MST_D_DAY2STATE7: //SPS-4 to SV Update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(28 * 60 * 60 + 50 * 60), 102, MST_D_DAY2STATE8);
+		break;
+	case MST_D_DAY2STATE8: //SV Update to Block Data 4
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(28 * 60 * 60 + 55 * 60), 2, MST_D_DAY2STATE9);
+		break;
+	case MST_D_DAY2STATE9: //Block Data 4 to Block Data 5
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(40 * 60 * 60 + 10 * 60), 16, MST_D_DAY3STATE1);
 		break;
 	case MST_D_DAY3STATE1: //Block Data 5 to CMC Docked DPS Burn Update
@@ -149,16 +158,19 @@ void MCC::MissionSequence_D()
 	case MST_D_DAY3STATE9: //LGC Gyro Torquing Angles to LGC Gyro Torquing Angles
 		UpdateMacro(UTP_PADONLY, PT_TORQANG, rtcc->GETEval2(49 * 60 * 60 + 5 * 60), 22, MST_D_DAY3STATE10);
 		break;
-	case MST_D_DAY3STATE10: //LGC Gyro Torquing Angles to SPS-5
+	case MST_D_DAY3STATE10: //LGC Gyro Torquing Angles to SPS-5 Calculation
 		UpdateMacro(UTP_PADONLY, PT_TORQANG, rtcc->GETEval2(52 * 60 * 60 + 50 * 60), 22, MST_D_DAY3STATE11);
 		break;
-	case MST_D_DAY3STATE11: //SPS-5 to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(55 * 60 * 60 + 30 * 60), 23, MST_D_DAY3STATE12);
+	case MST_D_DAY3STATE11: //SPS-5 Calculation to SPS-5 Update
+		UpdateMacro(UTP_NONE, PT_NONE, true, 23, MST_D_DAY3STATE12);
 		break;
-	case MST_D_DAY3STATE12: //SV Update to Block Data 7
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(56 * 60 * 60 + 40 * 60), 2, MST_D_DAY3STATE13);
+	case MST_D_DAY3STATE12: //SPS-5 Update to SV Update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(55 * 60 * 60 + 30 * 60), 103, MST_D_DAY3STATE13);
 		break;
-	case MST_D_DAY3STATE13: //Block Data 7 to Block Data 8
+	case MST_D_DAY3STATE13: //SV Update to Block Data 7
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(56 * 60 * 60 + 40 * 60), 2, MST_D_DAY3STATE14);
+		break;
+	case MST_D_DAY3STATE14: //Block Data 7 to Block Data 8
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(67 * 60 * 60 + 30 * 60), 24, MST_D_DAY4STATE1);
 		break;
 	case MST_D_DAY4STATE1: //Block Data 8 to EVA REFSMMAT Update
@@ -218,13 +230,16 @@ void MCC::MissionSequence_D()
 	case MST_D_DAY5STATE15: //LM jettison attitude update to Block Data 11
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(100.0*3600.0 + 35.0*60.0), 41, MST_D_DAY5STATE16);
 		break;
-	case MST_D_DAY5STATE16: //Block Data 11 to state vector update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(103.0*3600.0 + 5.0*60.0), 42, MST_D_DAY5STATE17);
+	case MST_D_DAY5STATE16: //Block Data 11 to post jettison sep maneuver
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(101.0*3600.0 + 10.0*60.0), 42, MST_D_DAY5STATE17);
 		break;
-	case MST_D_DAY5STATE17: //State vector update to Block Data 12
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(104.0*3600.0 + 15.0*60.0), 2, MST_D_DAY5STATE18);
+	case MST_D_DAY5STATE17: //Post jettison sep maneuver to state vector update
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(103.0*3600.0 + 5.0*60.0), 75, MST_D_DAY5STATE18);
 		break;
-	case MST_D_DAY5STATE18: //Block Data 12 to Block Data 13
+	case MST_D_DAY5STATE18: //State vector update to Block Data 12
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(104.0*3600.0 + 15.0*60.0), 2, MST_D_DAY5STATE19);
+		break;
+	case MST_D_DAY5STATE19: //Block Data 12 to Block Data 13
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(114.0*3600.0 + 55.0*60.0), 43, MST_D_DAY6STATE1);
 		break;
 	case MST_D_DAY6STATE1: //Block Data 13 to SPS-6 Update

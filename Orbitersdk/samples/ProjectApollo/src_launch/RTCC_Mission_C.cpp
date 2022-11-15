@@ -135,18 +135,16 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 1: // MISSION C PHASING BURN
 	{
 		AP7ManPADOpt opt;
-		SV sv_A, sv_P;
+		EphemerisData sv_A;
 		double GET_TIG;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		sv_A = StateVectorCalc(calcParams.src);
-		sv_P = StateVectorCalc(calcParams.tgt);
+		sv_A = StateVectorCalcEphem(calcParams.src);
+		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
 
 		GET_TIG = OrbMech::HHMMSSToSS(3, 20, 0);
 
-		opt.GETbase = CalcGETBase();
-		opt.vessel = calcParams.src;
 		opt.TIG = GET_TIG;
 		opt.dV_LVLH = _V(-1.8, 0.0, 0.0)*0.3048; //TBD: Change to -5.7 when full drag is simulated
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
@@ -154,6 +152,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sxtstardtime = 0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		opt.navcheckGET = 0;
+		opt.sv0 = sv_A;
+		opt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "PHASING BURN");
@@ -226,7 +226,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		intab.ManCutoffIndicator = false;
 		intab.VehicleCode = RTCC_MPT_CSM;
 
-		NewEMSMISS(&intab);
+		EMSMISS(&intab);
 		tab.Header.TUP = 1;
 
 		//Run recovery target selection
@@ -271,8 +271,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Move REFSMMAT to current
 		GMGMED("G00,CSM,DOD,CSM,CUR;");
 
-		opt.vessel = calcParams.src;
-		opt.GETbase = CalcGETBase();
 		opt.TIG = TimeofIgnition;
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
@@ -282,6 +280,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sxtstardtime = -25.0*60.0;
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
+		opt.sv0 = sv;
+		opt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		AP7ManeuverPAD(&opt, *form);
 
@@ -449,8 +449,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			AP7ManPADOpt opt;
 
-			opt.GETbase = CalcGETBase();
-			opt.vessel = calcParams.src;
 			opt.TIG = GET_TIG;
 			opt.dV_LVLH = dV_LVLH;
 			opt.enginetype = SPSRCSDecision(SystemParameters.MCTST1 / calcParams.src->GetMass(), dV_LVLH);
@@ -460,6 +458,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.navcheckGET = 0;
 			opt.UllageDT = 15.0;
 			opt.UllageThrusterOpt = true;
+			opt.sv0 = sv_A;
+			opt.CSMMass = PZMPTCSM.TotalInitMass;
 
 			AP7ManeuverPAD(&opt, *form);
 			sprintf(form->purpose, "PHASING BURN");
@@ -562,8 +562,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
 		P30TIG = GETfromGMT(GMT_TIG);
 
-		opt.GETbase = GETBase;
-		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
@@ -571,6 +569,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sxtstardtime = -30 * 60;
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
+		opt.sv0 = sv_A;
+		opt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		if (preliminary)
 		{
@@ -668,8 +668,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
 			P30TIG = GETfromGMT(GMT_TIG);
 
-			opt.GETbase = GETBase;
-			opt.vessel = calcParams.src;
 			opt.TIG = P30TIG;
 			opt.dV_LVLH = dV_LVLH;
 			opt.enginetype = enginetype;
@@ -679,6 +677,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.navcheckGET = 0;
 			opt.UllageDT = 15.0;
 			opt.UllageThrusterOpt = true;
+			opt.sv0 = sv_A;
+			opt.CSMMass = PZMPTCSM.TotalInitMass;
 
 			AP7ManeuverPAD(&opt, *form);
 			sprintf(form->purpose, "NCC2");
@@ -709,6 +709,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
+		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
 		GETbase = CalcGETBase();
 
 		AP7MNV * form = (AP7MNV *)pad;
@@ -740,8 +741,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
 		P30TIG = GETfromGMT(GMT_TIG);
 
-		opt.GETbase = GETbase;
-		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
@@ -751,6 +750,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.navcheckGET = 27 * 60 * 60 + 17 * 60;
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
+		opt.sv0 = ConvertSVtoEphemData(sv_A);
+		opt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		AP7ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "NSR");
@@ -809,18 +810,23 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7MNV * form = (AP7MNV *)pad;
 
+		EphemerisData sv;
+
+		sv = StateVectorCalcEphem(calcParams.src);
+		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+
 		opt.dV_LVLH = _V(2.0*0.3048, 0.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
-		opt.GETbase = CalcGETBase();
 		opt.HeadsUp = false;
 		opt.navcheckGET = 0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		opt.sxtstardtime = 0;
 		opt.TIG = OrbMech::HHMMSSToSS(30.0, 20.0, 0.0);
-		opt.vessel = calcParams.src;
+		opt.sv0 = sv;
+		opt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		AP7ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, "PHASING BURN");
+		sprintf(form->purpose, "SEPARATION");
 		sprintf(form->remarks, "posigrade, heads down, -X Thrusters");
 	}
 	break;
@@ -944,7 +950,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv1 = coast(sv, GMTfromGET(GET_TH) - sv.GMT, RTCC_MPT_CSM);
 
 		//Convert to AEG and initialize
-		aeg = SVToAEG(sv1);
+		aeg = SVToAEG(sv1, PZMPTCSM.ConfigurationArea, PZMPTCSM.TotalInitMass, PZMPTCSM.KFactor);
 		PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
 
 		//Calculate required apsidal shift
@@ -1025,13 +1031,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		manopt.GETbase = GETbase;
 		manopt.HeadsUp = true;
 		manopt.navcheckGET = OrbMech::HHMMSSToSS(75, 5, 0);
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = P30TIG;
-		manopt.vessel = calcParams.src;
 		manopt.sxtstardtime = -20.0*60.0;
+		manopt.sv0 = sv;
+		manopt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "SPS-3");
@@ -1157,7 +1163,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dv = F / m * t_burn + SystemParameters.MCTCT1 / m * 20.0;
 
 		sv = StateVectorCalc(calcParams.src);
-		GETbase = CalcGETBase();
 
 		if (fcn == 23)
 		{
@@ -1191,13 +1196,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = REFSMMAT;
 		opt.TIG = P30TIG;
-		opt.vessel = calcParams.src;
 		opt.UllageThrusterOpt = false;
 		opt.UllageDT = 20.0;
+		opt.sv0 = ConvertSVtoEphemData(sv);
+		opt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		AP7ManeuverPAD(&opt, *form);
 		if (fcn == 23)
@@ -1493,15 +1498,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		manopt.GETbase = GETbase;
 		manopt.HeadsUp = true;
 		manopt.navcheckGET = OrbMech::HHMMSSToSS(164, 18, 0);
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = P30TIG;
-		manopt.vessel = calcParams.src;
 		manopt.sxtstardtime = -20.0*60.0;
 		manopt.UllageThrusterOpt = false;
 		manopt.UllageDT = 20.0;
+		manopt.sv0 = sv;
+		manopt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "SPS-5");
@@ -1712,7 +1717,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			//Take state vector to estimated time of rev 164 crossing
 			sv1 = coast(sv0, GMTfromGET(260.0*3600.0) - sv0.GMT, RTCC_MPT_CSM);
 			//Convert to AEG and initialize
-			aeg = SVToAEG(sv1);
+			aeg = SVToAEG(sv1, PZMPTCSM.ConfigurationArea, PZMPTCSM.TotalInitMass, PZMPTCSM.KFactor);
 			PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
 			KAOP = -1; //Perigee only
 			KE = 0; //ECI
@@ -1760,15 +1765,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		manopt.GETbase = GETbase;
 		manopt.HeadsUp = true;
 		manopt.navcheckGET = OrbMech::HHMMSSToSS(238, 24, 0);
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = P30TIG;
-		manopt.vessel = calcParams.src;
 		manopt.sxtstardtime = 0.0;
 		manopt.UllageThrusterOpt = true;
 		manopt.UllageDT = 15.0;
+		manopt.sv0 = sv;
+		manopt.CSMMass = PZMPTCSM.TotalInitMass;
 
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "SPS-7");
