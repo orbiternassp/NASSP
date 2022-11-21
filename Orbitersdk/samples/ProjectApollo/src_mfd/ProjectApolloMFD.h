@@ -64,6 +64,7 @@ public:
 	bool SetIUPlatformFailure(double misst);
 	void SetSIEngineFailure(int n, double misst);
 	void SetSIIEngineFailure(int n, double misst);
+	bool SetSystemFailures(int n);
 	void SetRandomFailures(double FailureMultiplier);
 	void SetAEAACommands(int arm, int set);
 
@@ -112,6 +113,7 @@ public:
 	void menuSetIUPlatformFailure();
 	void menuSetSIEngineFailure();
 	void menuSetSIIEngineFailure();
+	void menuSystemFailures();
 	void menuSetRandomFailures();
 	void menuAEAACommands();
 

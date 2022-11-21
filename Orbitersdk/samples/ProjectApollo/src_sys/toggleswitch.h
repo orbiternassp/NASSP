@@ -369,7 +369,7 @@ protected:
 	bool Active;
 	bool SwitchToggled;
 	bool Held;
-	//0 = not sideways, 1 = sideways rotated 90° clockwise, 2 = sideways rotated 90° counterclockwise
+	//0 = not sideways, 1 = sideways rotated 90Â° clockwise, 2 = sideways rotated 90Â° counterclockwise
 	int Sideways;
 
 	double delayTime;
@@ -1580,7 +1580,7 @@ public:
 
 	int GetState(const char *n);
 	bool SetState(const char *n, int value, bool guard = false, bool hold = false);
-	void SetFailedState(const char *n, bool fail, int fail_state = 0);
+	virtual void SetFailedState(const char *n, bool fail, int fail_state = 0);
 	bool GetFailedState(const char *n);
 	bool GetFlashing(const char *n);
 

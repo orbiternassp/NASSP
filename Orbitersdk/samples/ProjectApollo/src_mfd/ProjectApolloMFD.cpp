@@ -109,6 +109,7 @@ static char debugString[100];
 static char debugStringBuffer[100];
 static char debugWinsock[100];
 
+
 void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 {
 	static char *name = "Project Apollo";      // MFD mode name
@@ -622,14 +623,14 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 	if (g_Data.gorpVessel && g_Data.killrot && g_Data.gorpVessel == g_Data.vessel) {
 		g_Data.gorpVessel->SetAngularVel(_V(0, 0, 0));
 	}
-
+	
 }
 
 // ==============================================================
 // MFD class implementation
 
 // Constructor
-ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, h, vessel)
+ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD(w, h, vessel)
 
 {
 	saturn = NULL;
@@ -666,7 +667,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 		}
 	}
 	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler"))  {
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler")) {
 			crawler = (Crawler *)vessel;
 			g_Data.planet = crawler->GetGravityRef();
 	}
@@ -675,7 +676,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 			g_Data.vessel = vessel;
 			g_Data.gorpVessel = lem;
 			oapiGetObjectName(lem->GetGravityRef(), buffer, 8);
-			if(strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
+			if (strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
 				g_Data.planet = lem->GetGravityRef();
 			else
 				g_Data.planet = oapiGetGbodyByName("Earth");
@@ -841,11 +842,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lf nm  ", peDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
-		sprintf(buffer, "%.2lf°   ", elem.i * DEG);
+		sprintf(buffer, "%.2lfÂ°   ", elem.i * DEG);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.7), buffer, strlen(buffer));
-		sprintf(buffer, "%.2lf°   ", lat * DEG);
+		sprintf(buffer, "%.2lfÂ°   ", lat * DEG);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.8), buffer, strlen(buffer));
-		sprintf(buffer, "%.2lf°   ", lon * DEG);
+		sprintf(buffer, "%.2lfÂ°   ", lon * DEG);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.85), buffer, strlen(buffer));
 
 		if (g_Data.killrot) {
@@ -1087,9 +1088,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
 			sprintf(buffer, "%.1f s", g_Data.iuUplinkDT);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
-			sprintf(buffer, "%.01f°", g_Data.iuUplinkPitch*DEG);
+			sprintf(buffer, "%.01fÂ°", g_Data.iuUplinkPitch*DEG);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), buffer, strlen(buffer));
-			sprintf(buffer, "%.01f°", g_Data.iuUplinkYaw*DEG);
+			sprintf(buffer, "%.01fÂ°", g_Data.iuUplinkYaw*DEG);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.6), buffer, strlen(buffer));
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_REMOVE_INHIBIT_MANEUVER4)
@@ -1835,6 +1836,13 @@ void ProjectApolloMFD::SetSIIEngineFailure(int n, double misst)
 			saturn->SetEngineFailure(2, n, misst, true);
 		}
 	}
+}
+
+bool ProjectApolloMFD::SetSystemFailures(int n)
+{
+	switch (n);
+	saturn->failuremode = n;
+	return true;
 }
 
 void ProjectApolloMFD::SetRandomFailures(double FailureMultiplier)
@@ -2715,6 +2723,12 @@ void ProjectApolloMFD::menuSetSIIEngineFailure()
 	oapiOpenInputBox("S-II engine failure (number of engine, time of failure, 0 to disable):", SIIEngineFailureInput, 0, 20, (void*)this);
 }
 
+void ProjectApolloMFD::menuSystemFailures()
+{
+	bool SystemFailureInput(void* id, char* str, void* data);
+	oapiOpenInputBox("Failure Mode (0-None 1-Realistic 2-Sim 3-Debug):", SystemFailureInput, 0, 20, (void*)this);
+}	
+
 void ProjectApolloMFD::menuSetRandomFailures()
 {
 	bool RandomFailuresInput(void *id, char *str, void *data);
@@ -2848,6 +2862,11 @@ bool SIIEngineFailureInput(void *id, char *str, void *data)
 		return true;
 	}
 	return false;
+}
+
+bool SystemFailureInput(void* id, char* str, void* data)					//OK
+{
+	return ((ProjectApolloMFD*)data)->SetSystemFailures(atoi(str));
 }
 
 bool RandomFailuresInput(void *id, char *str, void *data)
