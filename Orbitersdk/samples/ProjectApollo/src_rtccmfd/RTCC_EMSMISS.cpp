@@ -100,6 +100,30 @@ void RTCC_EMSMISS::Call(EMSMISSInputTable *in)
 		i = mpt->ManeuverNum;
 	}
 
+	//Determine if there is a TLI
+	bool tli = false;
+	unsigned tlinum;
+	for (unsigned i = 0;i < mpt->ManeuverNum;i++)
+	{
+		if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+		{
+			tli = true;
+			tlinum = i;
+		}
+	}
+	//Do we have a TLI?
+	if (tli)
+	{
+		//Yes, end time for venting is TLI plus MCGVNT
+		T_NV[1] = mpt->TimeToEndManeuver[tlinum] + pRTCC->SystemParameters.MCGVNT*3600.0;
+	}
+	else
+	{
+		//Don't stop venting
+		T_NV[1] = 999999999.9;
+	}
+	T_NV[0] = pRTCC->GMTfromGET(mpt->SIVBVentingBeginGET);
+
 	//Ephemeris or cutoff mode
 	if (intab->EphemerisBuildIndicator)
 	{
@@ -283,6 +307,11 @@ void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterCoast()
 
 	pRTCC->PLAWDT(plawdtin, CurrentWeightsTable);
 
+	if (CurrentWeightsTable.Err)
+	{
+		//TBD
+	}
+
 	//Update state
 	state.StateVector = svtemp;
 	state.WeightsTable = CurrentWeightsTable;
@@ -460,6 +489,15 @@ void RTCC_EMSMISS::CallCoastIntegrator()
 	emmeniin.MCIEphemTableIndicator = &tempcoastephemtable[2];
 	emmeniin.MCTEphemerisIndicator = intab->MCTEphemerisIndicator;
 	emmeniin.MCTEphemTableIndicator = &tempcoastephemtable[3];
+
+	if (CurrentWeightsTable.CC[RTCC_CONFIG_S] && (state.StateVector.GMT > T_NV[0]) && (state.StateVector.GMT < T_NV[1]))
+	{
+		emmeniin.VentPerturbationFactor = 1.0;
+	}
+	else
+	{
+		emmeniin.VentPerturbationFactor = -1.0;
+	}
 
 	pRTCC->EMMENI(emmeniin);
 	svtemp = emmeniin.sv_cutoff;

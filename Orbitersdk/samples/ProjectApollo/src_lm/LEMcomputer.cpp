@@ -83,7 +83,6 @@ void LEMcomputer::SetMissionInfo(std::string ProgramName, char *OtherVessel)
 void LEMcomputer::agcTimestep(double simt, double simdt)
 {
 	// Do single timesteps to maintain sync with telemetry engine
-	SingleTimestepPrep(simt, simdt);        // Setup
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
 		lem->PCM.last_update = LastCycled;
@@ -173,7 +172,11 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		dsky.ClearStby();
 		// Reset last cycling time
 		LastCycled = 0;
-		// We should issue telemetry though.
+		// We should issue telemetry though. Careful with the first timestep
+		if (lem->PCM.last_update == 0)
+		{
+			lem->PCM.last_update = simt - simdt;
+		}
 		lem->PCM.Timestep(simt);
 
 		// and do nothing more.

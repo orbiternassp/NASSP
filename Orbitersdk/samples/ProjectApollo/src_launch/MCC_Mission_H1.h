@@ -61,6 +61,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_H1_TRANSLUNAR20	44
 #define MST_H1_TRANSLUNAR21	45
 #define MST_H1_TRANSLUNAR22	46
+#define MST_H1_TRANSLUNAR23	47
 #define MST_H1_LUNAR_ORBIT_LOI_DAY_1 100
 #define MST_H1_LUNAR_ORBIT_LOI_DAY_2 101
 #define MST_H1_LUNAR_ORBIT_LOI_DAY_3 102
@@ -161,3 +162,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 //ABORTS
 // Ends at entry interface, goes to entry.
 #define MST_H1_ABORT_ORBIT	500
+// Abort from earth orbit, goes to MST_ORBIT_ENTRY
+#define MST_H1_ABORT		501
+// post-TLI abort, ends at abort burn (if any)
+// goes to MST_CP_TRANSEARTH with an abort flag.

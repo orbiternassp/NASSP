@@ -231,8 +231,11 @@ void MCC::MissionSequence_H1()
 	case MST_H1_TRANSLUNAR21: //Rev 1 Map Update to LOI-1 update (final)
 		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, SubStateTime > 5.0*60.0, 60, MST_H1_TRANSLUNAR22);
 		break;
-	case MST_H1_TRANSLUNAR22: //LOI-1 update (final) to Lunar orbit phase begin
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.LOI), 30, MST_H1_LUNAR_ORBIT_LOI_DAY_1);
+	case MST_H1_TRANSLUNAR22: //LOI-1 update (final) to LOI-1 Evaluation
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->TimeofIgnition + 7.0*60.0), 30, MST_H1_TRANSLUNAR23);
+		break;
+	case MST_H1_TRANSLUNAR23: //LOI-1 Evaluation to Lunar orbit phase begin or PC+2
+		UpdateMacro(UTP_NONE, PT_NONE, true, 33, MST_H1_LUNAR_ORBIT_LOI_DAY_1, scrubbed, true, MST_H1_ABORT);
 		break;
 	case MST_H1_LUNAR_ORBIT_LOI_DAY_1: //Lunar orbit phase begin
 		switch (SubState) {
@@ -565,5 +568,233 @@ void MCC::MissionSequence_H1()
 		}
 	}
 	break;
+	case MST_H1_ABORT:
+		if (AbortMode == 6)	//Translunar Coast
+		{
+			switch (SubState) {
+			case 0:
+			{
+				if (rtcc->GETEval2(OrbMech::HHMMSSToSS(60, 0, 0)))
+				{
+					setSubState(13);//Flyby
+				}
+				else
+				{
+					if (rtcc->GETEval2(OrbMech::HHMMSSToSS(45, 0, 0))) //LO+60
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(60, 0, 0);
+					}
+					else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(35, 0, 0))) //LO+45
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(45, 0, 0);
+					}
+					else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(25, 0, 0))) //LO+35
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(35, 0, 0);
+					}
+					else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(15, 0, 0))) //LO+25
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(25, 0, 0);
+					}
+					else if (rtcc->GETEval2(OrbMech::HHMMSSToSS(8, 0, 0))) //LO+15
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(15, 0, 0);
+					}
+					else if (rtcc->GETEval2(rtcc->calcParams.TLI + 90.0*60.0)) //LO+8
+					{
+						rtcc->calcParams.TEI = OrbMech::HHMMSSToSS(8, 0, 0);
+					}
+					else //TLI+90
+					{
+						rtcc->calcParams.TEI = rtcc->calcParams.TLI + 90.0*60.0;
+					}
+
+					setSubState(1);
+				}
+			}
+			break;
+			case 1:
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.TEI + 10.0*60.0))
+				{
+					startSubthread(205, UTP_NONE); //Evaluate EI conditions
+					setSubState(2);
+				}
+			}
+			break;
+			case 2:
+				if (rtcc->calcParams.TEI > rtcc->calcParams.EI - 12.0 * 60 * 60)
+				{
+					setSubState(3);//Skip directly to normal entry procedures
+				}
+				else
+				{
+					setSubState(4);	//Include another course correction
+				}
+				break;
+			case 3:
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0))
+				{
+					SlowIfDesired();
+					setState(MST_H1_TRANSEARTH_9);
+				}
+			}
+			break;
+			case 4:
+			{
+				if (rtcc->GETEval2(rtcc->calcParams.TEI + 4.0 * 60 * 60))
+				{
+					SlowIfDesired();
+					setSubState(5);
+				}
+			}
+			break;
+
+			case 5:
+				allocPad(8); // Allocate AP11 Maneuver Pad
+				if (padForm != NULL) {
+					// If success
+					startSubthread(300, UTP_PADWITHCMCUPLINK); // Start subthread to fill PAD
+				}
+				else {
+					// ERROR STATE
+				}
+				setSubState(6);
+				// FALL INTO
+			case 6: // Await pad read-up time (however long it took to compute it and give it to capcom)
+				if (SubStateTime > 1 && padState > -1) {
+					if (scrubbed)
+					{
+						if (upMessage[0] != 0)
+						{
+							addMessage(upMessage);
+						}
+						freePad();
+						scrubbed = false;
+						setSubState(11);
+					}
+					else
+					{
+
+						addMessage("You can has PAD");
+						if (padAutoShow == true && padState == 0) { drawPad(); }
+						// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+						addMessage("Ready for uplink?");
+						sprintf(PCOption_Text, "Ready for uplink");
+						PCOption_Enabled = true;
+						setSubState(7);
+					}
+				}
+				break;
+			case 7: // Awaiting user response
+			case 8: // Negative response / not ready for uplink
+				break;
+			case 9: // Ready for uplink
+				if (SubStateTime > 1 && padState > -1) {
+					// The uplink should also be ready, so flush the uplink buffer to the CMC
+					this->CM_uplink_buffer();
+					// uplink_size = 0; // Reset
+					PCOption_Enabled = false; // No longer needed
+					if (upDescr[0] != 0)
+					{
+						addMessage(upDescr);
+					}
+					setSubState(10);
+				}
+				break;
+			case 10: // Await uplink completion
+				if (cm->pcm.mcc_size == 0) {
+					addMessage("Uplink completed!");
+					NCOption_Enabled = true;
+					sprintf(NCOption_Text, "Repeat uplink");
+					setSubState(11);
+				}
+				break;
+			case 11: // Await burn
+				if (rtcc->GETEval2(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0))
+				{
+					SlowIfDesired();
+					setState(MST_H1_TRANSEARTH_9);
+				}
+				break;
+			case 12: //Repeat uplink
+			{
+				NCOption_Enabled = false;
+				setSubState(5);
+			}
+			break;
+			case 13:
+			{
+				//Wait until LOI + 2.5 hours, then calculate Pericynthion time and EI conditions for return trajectory
+				if (rtcc->GETEval2(rtcc->calcParams.LOI + 2.5*3600.0))
+				{
+					rtcc->calcParams.LOI = rtcc->PericynthionTime(cm);
+					startSubthread(205, UTP_NONE);
+					setSubState(14);
+				}
+			}
+			break;
+			case 14: //Flyby, go to nominal TEC procedures
+			{
+				if (rtcc->calcParams.EI - rtcc->calcParams.LOI > 45.0*3600.0) //Is this a flyby or fast PC+2?
+				{
+					rtcc->calcParams.TEI = rtcc->calcParams.LOI;
+					setState(MST_H1_TRANSEARTH_1);
+				}
+				else
+				{
+					rtcc->calcParams.TEI = rtcc->calcParams.EI - 30.0*3600.0;
+					setSubState(4); //Go to genric MCC. Not enough time for the full transearth timeline.
+				}
+			}
+			break;
+			}
+		}
+		else if (AbortMode == 7) //Lunar Orbit
+		{
+			switch (SubState) {
+			case 0:
+			{
+				if (MoonRevTime > 900.0)
+				{
+					setSubState(1);
+				}
+			}
+			break;
+			case 1:
+			{
+				SV sv;
+				OELEMENTS coe;
+
+				sv = rtcc->StateVectorCalc(rtcc->calcParams.src);
+
+				coe = OrbMech::coe_from_sv(sv.R, sv.V, OrbMech::mu_Moon);
+
+				if (coe.e > 0.7)
+				{
+					rtcc->calcParams.TEI = rtcc->PericynthionTime(cm);
+					setState(MST_H1_TRANSEARTH_1);
+				}
+				else
+				{
+					setSubState(2);
+				}
+			}
+			break;
+			case 2:
+			{
+				if (MoonRevTime < 100.0)
+				{
+					setSubState(0);
+				}
+			}
+			break;
+			}
+		}
+		else if (AbortMode == 8)
+		{
+			//How to Abort?
+		}
 	}
 }
