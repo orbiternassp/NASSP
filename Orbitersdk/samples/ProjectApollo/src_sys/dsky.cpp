@@ -428,17 +428,25 @@ void DSKY::ProcessChannel13(ChannelValue val)
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset)
 
 {
+	dstx *= 2;
+	dsty *= 2;
+	xOffset *= 2;
+	yOffset *= 2;
+
 	if (lit) {
-		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 101, dsty + 0, 49, 23);
+		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 101*2, dsty + 0, 49*2, 23*2);
 	}
 	else {
-		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 0, dsty + 0, 49, 23);
+		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 0, dsty + 0, 49*2, 23*2);
 	}
 }
 
 void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel, bool hasDAPPrioDisp)
 
 {
+	xOffset *= 2;
+	yOffset *= 2;
+
 	if (!IsPowered())
 	{
 		if (hasAltVel) {
@@ -634,8 +642,11 @@ void DSKY::ResetKeyDown()
 void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off)
 
 {
-	const int DigitWidth = 17;
-	const int DigitHeight = 19;
+	const int DigitWidth = 17*2;
+	const int DigitHeight = 19*2;
+	dstx *= 2;
+	dsty *= 2;
+
 	int Curdigit;
 
 	if (Flash || Off)
@@ -675,8 +686,11 @@ int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off)
 void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off)
 
 {
-	const int DigitWidth = 17;
-	const int DigitHeight = 19;
+	const int DigitWidth = 17*2;
+	const int DigitHeight = 19*2;
+	dstx *= 2;
+	dsty *= 2;
+
 	int	Curdigit;
 	int i;
 
@@ -727,23 +741,26 @@ int DSKY::SixDigitDisplaySegmentsLit(char *Str, bool Off)
 void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xOffset, int yOffset)
 
 {
+	xOffset *= 2;
+	yOffset *= 2;
+
 	if (!IsPowered() || ELOff)
 		return;
 
-	oapiBlt(surf, disp, 66 + xOffset,   3 + yOffset, 35,  0, 35, 10, SURF_PREDEF_CK);
-	oapiBlt(surf, disp, 66 + xOffset,  38 + yOffset, 35, 10, 35, 10, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  6 + xOffset,  38 + yOffset, 35, 20, 35, 10, SURF_PREDEF_CK);
+	oapiBlt(surf, disp, 66*2 + xOffset,   3*2 + yOffset, 35*2,  0, 35*2, 10*2, SURF_PREDEF_CK);
+	oapiBlt(surf, disp, 66*2 + xOffset,  38*2 + yOffset, 35*2, 10*2, 35*2, 10*2, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  6*2 + xOffset,  38*2 + yOffset, 35*2, 20*2, 35*2, 10*2, SURF_PREDEF_CK);
 
-	oapiBlt(surf, disp,  8 + xOffset,  73 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  8 + xOffset, 107 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  8 + xOffset, 141 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8*2 + xOffset,  73*2 + yOffset,  0, 32*2, 89*2,  4*2, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8*2 + xOffset, 107*2 + yOffset,  0, 32*2, 89*2,  4*2, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8*2 + xOffset, 141*2 + yOffset,  0, 32*2, 89*2,  4*2, SURF_PREDEF_CK);
 
 	if (CompActy) {
 		//
 		// Do stuff to update Comp Acty light.
 		//
 
-		oapiBlt(surf, disp,  6 + xOffset,   4 + yOffset,  0,  0, 35, 31, SURF_PREDEF_CK);
+		oapiBlt(surf, disp,  6*2 + xOffset,   4*2 + yOffset,  0,  0, 35*2, 31*2, SURF_PREDEF_CK);
 	}
 
 	RenderTwoDigitDisplay(surf, digits, 66 + xOffset, 16 + yOffset, Prog, false, ELOff);
@@ -792,11 +809,18 @@ void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset
 void DSKY::DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset) 
 
 {
+	xOffset *= 2;
+	yOffset *= 2;
+	srcx *= 2;
+	srcy *= 2;
+	dstx *= 2;
+	dsty *= 2;
+
 	if (lit) {
-		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy, 38, 37);
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy, 38*2, 37*2);
 	}
 	else {
-		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy + 120, 38, 37);
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy + 120*2, 38*2, 37*2);
 	}
 }
 
