@@ -4708,7 +4708,7 @@ void ApolloRTCCMFD::set_SVtime(double SVtime)
 
 void ApolloRTCCMFD::menuUpdateGRRTime()
 {
-	G->UpdateGRRTime();
+	G->UpdateGRRTime(G->svtarget);
 }
 
 void ApolloRTCCMFD::menuSetAGSKFactor()
@@ -5715,6 +5715,9 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	//Update GMT of zeroing LGC clock
 	sprintf_s(Buff, "P15,LGC,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
+
+	//Also update IU, if possible
+	G->UpdateGRRTime(G->vessel);
 }
 
 void ApolloRTCCMFD::cycleREFSMMATHeadsUp()
