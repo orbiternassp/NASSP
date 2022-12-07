@@ -1188,35 +1188,41 @@ void ARCore::VectorCompareDisplayCalc()
 	startSubthread(25);
 }
 
-void ARCore::UpdateGRRTime()
+void ARCore::UpdateGRRTime(VESSEL *v)
 {
-	if (svtarget == NULL) return;
+	if (v == NULL) return;
 
 	bool isSaturnV;
 	double T_L, Azi;
 	LVDC *lvdc;
 
-	if (utils::IsVessel(svtarget,utils::SaturnV))
+	if (utils::IsVessel(v,utils::SaturnV))
 	{
-		Saturn *iuv = (Saturn *)svtarget;
+		Saturn *iuv = (Saturn *)v;
+
+		if (iuv->GetStage() >= CSM_LEM_STAGE) return;
+
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = true;
 	}
-	else if (utils::IsVessel(svtarget, utils::SaturnIB))
+	else if (utils::IsVessel(v, utils::SaturnIB))
 	{
-		Saturn *iuv = (Saturn *)svtarget;
+		Saturn *iuv = (Saturn *)v;
+
+		if (iuv->GetStage() >= CSM_LEM_STAGE) return;
+
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = false;
 	}
-	else if (utils::IsVessel(svtarget, utils::SaturnV_SIVB))
+	else if (utils::IsVessel(v, utils::SaturnV_SIVB))
 	{
-		SIVB *iuv = (SIVB *)svtarget;
+		SIVB *iuv = (SIVB *)v;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = true;
 	}
-	if (utils::IsVessel(svtarget, utils::SaturnIB_SIVB))
+	else if (utils::IsVessel(v, utils::SaturnIB_SIVB))
 	{
-		SIVB *iuv = (SIVB *)svtarget;
+		SIVB *iuv = (SIVB *)v;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = false;
 	}

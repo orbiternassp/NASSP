@@ -103,7 +103,7 @@ public:
 	void TransferRTEToMPT();
 	void SLVNavigationUpdateCalc();
 	void SLVNavigationUpdateUplink();
-	void UpdateGRRTime();
+	void UpdateGRRTime(VESSEL *v);
 	void PerigeeAdjustCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
