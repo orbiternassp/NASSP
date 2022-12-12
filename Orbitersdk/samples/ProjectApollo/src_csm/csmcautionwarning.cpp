@@ -645,15 +645,15 @@ void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsu
 
 	// PGNS
 	if (GNLampState == 2 || GNPGNSAlarm) {
-		oapiBlt(surf, lightsurf, 0, 0, 54*2, 2*2, 49*2, 21*2);
+		oapiBlt(surf, lightsurf, 0, 0, 54*TexMul, 2*TexMul, 49*TexMul, 21*TexMul);
 	}
 	// CMC
 	if (GNLampState == 2 || RightLights[CSM_CWS_CMC_LIGHT - CWS_LIGHTS_PER_PANEL]) {
-		oapiBlt(surf, lightsurf, 0, 25*2, 54*2, 27*2, 49*2, 21*2);
+		oapiBlt(surf, lightsurf, 0, 25*TexMul, 54*TexMul, 27*TexMul, 49*TexMul, 21*TexMul);
 	}
 	// ISS
 	if (GNLampState == 2 || RightLights[CSM_CWS_ISS_LIGHT - CWS_LIGHTS_PER_PANEL]) {
-		oapiBlt(surf, lightsurf, 0, 50*2, 54*2, 52*2, 49*2, 21*2);
+		oapiBlt(surf, lightsurf, 0, 50*TexMul, 54*TexMul, 52*TexMul, 49*TexMul, 21*TexMul);
 	}
 }
 
@@ -718,7 +718,7 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 		for (column = 0; column < 4; column++) {
 			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK || MasterAlarmPressed))) {
 				if (!IsFailed(i + base) && LightPowered(i + base)) {
-					oapiBlt(surf, lightsurf, column * 53*2, row * 18*2, column * 53*2 + sdx, row * 18*2 + sdy, 50*2, 16*2);
+					oapiBlt(surf, lightsurf, column * 53*TexMul, row * 18*TexMul, column * 53*TexMul + sdx, row * 18*TexMul + sdy, 50*TexMul, 16*TexMul);
 				}
 			}
 			i++;

@@ -4331,13 +4331,15 @@ void Saturn::StopMasterAlarm()
 void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs)
 
 {
+	xoffs *= TexMul;
+	yoffs *= TexMul;
 	if (EngineOn)
 	{
-		oapiBlt(dest, src, xoffs, yoffs, xoffs, yoffs, 29, 29);
+		oapiBlt(dest, src, xoffs, yoffs, xoffs, yoffs, 29*TexMul, 29*TexMul);
 	}
 	else
 	{
-		oapiBlt(dest, src, xoffs, yoffs, xoffs + 101, yoffs, 29, 29);
+		oapiBlt(dest, src, xoffs, yoffs, xoffs + 101*TexMul, yoffs, 29*TexMul, 29*TexMul);
 	}
 }
 
