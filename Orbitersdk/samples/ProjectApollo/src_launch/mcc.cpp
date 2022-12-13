@@ -1257,12 +1257,7 @@ int MCC::subThread(){
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = 0;
 	}
-	else if (MissionType == MTP_D)
-	{
-		subThreadMacro(subThreadType, subThreadMode);
-		Result = 0;
-	}
-	else if (MissionType == MTP_F || MissionType == MTP_G || MissionType == MTP_H1)
+	else if (MissionType == MTP_D || MissionType == MTP_F || MissionType == MTP_G || MissionType == MTP_H1)
 	{
 		//Try to find LEM
 		if (rtcc->calcParams.tgt == NULL)
