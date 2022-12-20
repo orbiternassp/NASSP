@@ -492,16 +492,28 @@ void LEM_RR::Timestep(double simdt) {
 		TrackingModeSwitch = false;
 	}
 
+	//Auto gyro
+	if (mode == 1)
+	{
+		shaftAngle -= GyroRates.x*simdt;
+		trunnionAngle -= GyroRates.y*simdt;
+	}
+	else
+	{
+		shaftAngle -= GyroRates.x*simdt;
+		trunnionAngle -= GyroRates.z*simdt;
+	}
+
 	//AUTO TRACKING
 	if (TrackingModeSwitch)
 	{
 		ShaftErrorSignal = (SignalStrengthQuadrant[0] - SignalStrengthQuadrant[1])*0.25;
 		TrunnionErrorSignal = (SignalStrengthQuadrant[2] - SignalStrengthQuadrant[3])*0.25;
 
-		shaftAngle += (ShaftErrorSignal - GyroRates.x)*simdt;
+		shaftAngle += ShaftErrorSignal*simdt;
 		shaftVel = ShaftErrorSignal;
 
-		trunnionAngle += (TrunnionErrorSignal - GyroRates.y)*simdt;
+		trunnionAngle += TrunnionErrorSignal*simdt;
 		trunnionVel = TrunnionErrorSignal;
 
 		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, ShaftErrorSignal %f TrunnionErrorSignal %f", shaftAngle*DEG, trunnionAngle*DEG, ShaftErrorSignal, TrunnionErrorSignal);
