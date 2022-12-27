@@ -207,10 +207,10 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 		//
 		// Draw the master alarm lit bitmap.
 		//
-		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 45, 36);
+		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 45*TexMul, 36*TexMul);
 	}
 	if (border)
-		oapiBlt(surf, border, 0, 0, 0, 0, 45, 36, SURF_PREDEF_CK);
+		oapiBlt(surf, border, 0, 0, 0, 0, 45*TexMul, 36*TexMul, SURF_PREDEF_CK);
 }
 
 bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)

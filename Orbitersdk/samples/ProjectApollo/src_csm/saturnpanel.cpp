@@ -1899,10 +1899,10 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHelium1DSwitch.Init (129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSHelium1Row);
 
 	SMRCSHelium1TalkbackRow.Init(AID_RCS_HELIUM1_TALKBACK, MainPanel);
-	SMRCSHelium1ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, SMQuadARCS.GetHeliumValve1(), true);
-	SMRCSHelium1BTalkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, SMQuadBRCS.GetHeliumValve1(), true);
-	SMRCSHelium1CTalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, SMQuadCRCS.GetHeliumValve1(), true);
-	SMRCSHelium1DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, SMQuadDRCS.GetHeliumValve1(), true);
+	SMRCSHelium1ATalkback.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, SMQuadARCS.GetHeliumValve1(), true);
+	SMRCSHelium1BTalkback.Init(42*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, SMQuadBRCS.GetHeliumValve1(), true);
+	SMRCSHelium1CTalkback.Init(85*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, SMQuadCRCS.GetHeliumValve1(), true);
+	SMRCSHelium1DTalkback.Init(127*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, SMQuadDRCS.GetHeliumValve1(), true);
 
 	//
 	// SM RCS Helium 2
@@ -1925,10 +1925,10 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSIndSwitch.Init(131, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row);
 
 	SMRCSHelium2TalkbackRow.Init(AID_RCS_HELIUM2_TALKBACK, MainPanel);
-	SMRCSHelium2ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow, SMQuadARCS.GetHeliumValve2(), true);
-	SMRCSHelium2BTalkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow, SMQuadBRCS.GetHeliumValve2(), true);
-	SMRCSHelium2CTalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow, SMQuadCRCS.GetHeliumValve2(), true);
-	SMRCSHelium2DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow, SMQuadDRCS.GetHeliumValve2(), true);
+	SMRCSHelium2ATalkback.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow, SMQuadARCS.GetHeliumValve2(), true);
+	SMRCSHelium2BTalkback.Init(42*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow, SMQuadBRCS.GetHeliumValve2(), true);
+	SMRCSHelium2CTalkback.Init(85*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow, SMQuadCRCS.GetHeliumValve2(), true);
+	SMRCSHelium2DTalkback.Init(127*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow, SMQuadDRCS.GetHeliumValve2(), true);
 
 	//
 	// RCS Gauges.
@@ -1964,10 +1964,10 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSProp1DSwitch.Init (303, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSProp1Row);
 
 	SMRCSProp1TalkbackRow.Init(AID_RCS_PROP1_TALKBACK, MainPanel);
-	SMRCSProp1ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, SMQuadARCS.GetPrimPropellantValve(), true);
-	SMRCSProp1BTalkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, SMQuadBRCS.GetPrimPropellantValve(), true);
-	SMRCSProp1CTalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, SMQuadCRCS.GetPrimPropellantValve(), true);
-	SMRCSProp1DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, SMQuadDRCS.GetPrimPropellantValve(), true);
+	SMRCSProp1ATalkback.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, SMQuadARCS.GetPrimPropellantValve(), true);
+	SMRCSProp1BTalkback.Init(42*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, SMQuadBRCS.GetPrimPropellantValve(), true);
+	SMRCSProp1CTalkback.Init(85*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, SMQuadCRCS.GetPrimPropellantValve(), true);
+	SMRCSProp1DTalkback.Init(127*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, SMQuadDRCS.GetPrimPropellantValve(), true);
 
 	//
 	// SM RCS Secondary Propellant.
@@ -1987,10 +1987,10 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSProp2DSwitch.Init (303, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSProp2Row);
 
 	SMRCSProp2TalkbackRow.Init(AID_RCS_PROP2_TALKBACK, MainPanel);
-	SMRCSProp2ATalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadARCS.GetSecPropellantValve(), false);
-	SMRCSProp2BTalkback.Init(128, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadBRCS.GetSecPropellantValve(), false);
-	SMRCSProp2CTalkback.Init(171, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadCRCS.GetSecPropellantValve(), false);
-	SMRCSProp2DTalkback.Init(213, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadDRCS.GetSecPropellantValve(), false);
+	SMRCSProp2ATalkback.Init(85*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadARCS.GetSecPropellantValve(), false);
+	SMRCSProp2BTalkback.Init(128*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadBRCS.GetSecPropellantValve(), false);
+	SMRCSProp2CTalkback.Init(171*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadCRCS.GetSecPropellantValve(), false);
+	SMRCSProp2DTalkback.Init(213*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadDRCS.GetSecPropellantValve(), false);
 	
 	CMRCSProp1Talkback.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CMRCS1.GetPropellantValve(), true);
 	CMRCSProp2Talkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CMRCS2.GetPropellantValve(), true);
