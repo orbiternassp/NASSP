@@ -1670,7 +1670,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	{
 		GlycolPumpSound.stop();
 	}
-	/*
+	///*
 	// Debug tests //
 
 	// Mesh Index Order
@@ -2080,13 +2080,14 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "B1T %.3f B2T %.3f B3T %.3f B4T %.3f DGT %.3f B5T %.3f B6T %.3f B5PT %.3f B6PT %.3f AGT %.3f EDA %.3f EDB %.3f", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp), KelvinToFahrenheit(*desbatglycoltemp), KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatAtemp), KelvinToFahrenheit(*edbatBtemp));
 	//sprintf(oapiDebugString(), "B5T %.3f B6T %.3f B5PT %.3f B6PT %.3f AGT %.3f EDB %.3f", KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatBtemp));
 
-	//sprintf(oapiDebugString(), "Primary Glycol Heat 1 %lf Primary Glycol Heat 2 %lf Cabin Heat %lf Battery Heat %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat, (*bat1heat+*bat2heat+*bat3heat+*bat4heat+*bat5heat+*bat6heat+*edbatAheat+*edbatBheat));
+	sprintf(oapiDebugString(), "Primary Glycol Heat 1 %lf Primary Glycol Heat 2 %lf Cabin Heat %lf Battery Heat %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat, (*bat1heat+*bat2heat+*bat3heat+*bat4heat+*bat5heat+*bat6heat+*edbatAheat+*edbatBheat));
 
 	//sprintf(oapiDebugString(), "SCT %lf SCF %lf CT %lf SGDF %lf SGDT %lf GRVF %lf CO2MT %lf GlyCT %lf HXCT %lf HXCPwr %lf GlyHT %lf HXHT %lf HXHPwr %lf", KelvinToFahrenheit(*SuitCircuitTemp), *SuitCircuitOutFlow*LBH, KelvinToFahrenheit(*CabinTemp), *suitGasDiverterCabinFlow*LBH, KelvinToFahrenheit(*SGDTemp), *cabinGasReturnFlow*LBH, KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower);
 	//sprintf(oapiDebugString(), "SGDP %lf SGDV %d SGDF %lf CabP %lf GRV %d GRVF %lf CO2MP %lf", *SGDPress* PSI, *suitGasDiverterCabinVLV, *suitGasDiverterCabinFlow*LBH, *CabinPress* PSI, *gasreturnvlv, *cabinGasReturnFlow*LBH, *CO2ManifoldPress* PSI);
 
 	//sprintf(oapiDebugString(), "LGC %.2f CDU %.2f PSA %.2f GAS %.2f LCA %.2f DSE %.2f TLE %.2f ASA %.2f PTA %.2f IMU %.2f RGA %.2f CT %.2f CR %.2f HX1 %.2f HX2 %.2f", KelvinToFahrenheit(*LGCRad), KelvinToFahrenheit(*CDURad), KelvinToFahrenheit(*PSARad), KelvinToFahrenheit(*GASTARad), KelvinToFahrenheit(*LCARad), KelvinToFahrenheit(*DSERad), KelvinToFahrenheit(*TLERad), KelvinToFahrenheit(*ASARad), KelvinToFahrenheit(*PTARad), KelvinToFahrenheit(*IMURad), KelvinToFahrenheit(*RGARad), KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*CabinPlate), *CabinHX1, *CabinHX2);
 	//sprintf(oapiDebugString(), "SBD %lf AEAVHF %lf ATCAINV %lf SCERA %lf CWEAPCM %lf RRE %lf SCERAECA %lf P/S %lf Pwr1:%lf Pwr2:%lf", KelvinToFahrenheit(*SBDRad), KelvinToFahrenheit(*AEAVHFRad), KelvinToFahrenheit(*ATCAINVRad), KelvinToFahrenheit(*SCERARad), KelvinToFahrenheit(*CWEAPCMRad), KelvinToFahrenheit(*RRERad), KelvinToFahrenheit(*SCERAECARad), KelvinToFahrenheit(*PRIMSECRad), *PRIMSECHX1, *PRIMSECHX2);
+	//sprintf(oapiDebugString(), "RR T: %.3f RRE T: %.3f", KelvinToFahrenheit(*RRTemp), KelvinToFahrenheit(*RRERad));
 
 	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf CabinQ %lf CabinHeat %lf CabinPlate %lf HX %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTempF(), *CabinEnergy, *CabinHeat, KelvinToFahrenheit(*CabinPlate), *CabinHX1);
 	//sprintf(oapiDebugString(), "LM Cabin: %lf LM Tunnel: %lf", *lmcabinpress*PSI, *lmtunnelpress*PSI);

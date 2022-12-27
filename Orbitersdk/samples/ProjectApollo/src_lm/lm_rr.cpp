@@ -767,9 +767,12 @@ void LEM_RR::SystemTimestep(double simdt) {
 	if (IsACPowered())
 	{
 		ac_source->DrawPower(13.8);
-		//RREHeat->GenerateHeat(13.8);
+		rrheat->GenerateHeat(13.8);
 	}
 
+	//Not sure if movements generate this much heat at all
+
+	/*
 	if (abs(shaftVel) > 0.01*RAD)
 	{
 		ac_source->DrawPower(16.5);
@@ -781,7 +784,7 @@ void LEM_RR::SystemTimestep(double simdt) {
 		ac_source->DrawPower(16.5);
 		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
 	}
-
+	*/
 }
 
 void LEM_RR::DefineAnimations(UINT idx) {
