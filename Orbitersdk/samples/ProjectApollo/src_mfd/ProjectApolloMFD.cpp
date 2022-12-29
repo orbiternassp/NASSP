@@ -1386,9 +1386,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 				TextOut(hDC, width / 2, (int)(height * 0.45), buffer, strlen(buffer));
 				if (saturn->stage < CSM_LEM_STAGE)
 				{
-					sprintf(buffer, "3: Liftoff Signal A Fail: %d", saturn->LaunchFail.LiftoffSignalAFail);
+					sprintf(buffer, "3: Liftoff Signal A Fail: %d", saturn->GetIU()->GetEDS()->GetLiftoffCircuitAFailure());
 					TextOut(hDC, width / 2, (int)(height * 0.5), buffer, strlen(buffer));
-					sprintf(buffer, "4: Liftoff Signal B Fail: %d", saturn->LaunchFail.LiftoffSignalBFail);
+					sprintf(buffer, "4: Liftoff Signal B Fail: %d", saturn->GetIU()->GetEDS()->GetLiftoffCircuitBFailure());
 					TextOut(hDC, width / 2, (int)(height * 0.55), buffer, strlen(buffer));
 				}
 				sprintf(buffer, "5: Auto Abort Enable Fail: %d", saturn->LaunchFail.AutoAbortEnableFail);
@@ -1742,15 +1742,15 @@ bool ProjectApolloMFD::SetSaturnSwitchFailure(int n)
 		case 3:
 			if (saturn->stage < CSM_LEM_STAGE)
 			{
-				saturn->LaunchFail.LiftoffSignalAFail = !saturn->LaunchFail.LiftoffSignalAFail;
-				saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(saturn->LaunchFail.LiftoffSignalAFail != 0);
+				bool fail = saturn->GetIU()->GetEDS()->GetLiftoffCircuitAFailure();
+				saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(!fail);
 			}
 			return true;
 		case 4:
 			if (saturn->stage < CSM_LEM_STAGE)
 			{
-				saturn->LaunchFail.LiftoffSignalBFail = !saturn->LaunchFail.LiftoffSignalBFail;
-				saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(saturn->LaunchFail.LiftoffSignalBFail != 0);
+				bool fail = saturn->GetIU()->GetEDS()->GetLiftoffCircuitBFailure();
+				saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(!fail);
 			}
 			return true;
 		case 5:
@@ -1978,31 +1978,14 @@ void ProjectApolloMFD::SetRandomFailures(double FailureMultiplier)
 	{
 		if (!(rand() & (int)(255.0 / FailureMultiplier)))
 		{
-			saturn->LaunchFail.LiftoffSignalAFail = 1;
-		}
-		else
-		{
-			saturn->LaunchFail.LiftoffSignalAFail = 0;
-		}
-
-		if (!(rand() & (int)(255.0 / FailureMultiplier)))
-		{
-			saturn->LaunchFail.LiftoffSignalBFail = 1;
-		}
-		else
-		{
-			saturn->LaunchFail.LiftoffSignalBFail = 0;
-		}
-
-		if (saturn->LaunchFail.LiftoffSignalAFail)
-		{
 			saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(true);
 		}
 		else
 		{
 			saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(false);
 		}
-		if (saturn->LaunchFail.LiftoffSignalBFail)
+
+		if (!(rand() & (int)(255.0 / FailureMultiplier)))
 		{
 			saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(true);
 		}
