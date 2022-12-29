@@ -1154,7 +1154,7 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	char VName[256]="";
 
 	GetApolloName(VName); strcat (VName, "-S4BSTG");
-	hs4bM = oapiCreateVessel(VName, config, vs1);
+	OBJHANDLE hs4bM = oapiCreateVessel(VName, config, vs1);
 
 	SIVBSettings S4Config;
 

@@ -1501,13 +1501,6 @@ protected:
 	///
 	double NextMissionEventTime;
 
-	///
-	/// The time in seconds of the previous automated event that occur in the mission. This 
-	/// is a generic value used by the autopilot and staging code.
-	/// \brief Time of last event.
-	///
-	double LastMissionEventTime;
-
 
 	///
 	/// The time in seconds of the next check for destroying old stages. We destroy them when
@@ -3529,8 +3522,6 @@ protected:
 	///
 	double S4Offset;
 
-	double actualFUEL;
-
 	bool KEY1;
 	bool KEY2;
 	bool KEY3;
@@ -3558,7 +3549,6 @@ protected:
 	int CurrentTimestep;
 	int LongestTimestep;
 	double LongestTimestepLength;
-	VECTOR3 normal;
 
 	PanelSwitches MainPanel;
 	PanelSwitchesVC MainPanelVC;
@@ -4048,7 +4038,6 @@ protected:
 	OBJHANDLE hintstg;
 	OBJHANDLE hesc1;
 	OBJHANDLE hPROBE;
-	OBJHANDLE hs4bM;
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
 	OBJHANDLE hs4b3;
@@ -4064,7 +4053,6 @@ protected:
 	OBJHANDLE hDrogueChute;
 	OBJHANDLE hMainChute;
 	OBJHANDLE hOpticsCover;
-	OBJHANDLE hNosecapVessel;
 	OBJHANDLE hLC34;
 	OBJHANDLE hLC37;
 	OBJHANDLE hLCC;
@@ -4244,7 +4232,6 @@ protected:
 	void GenericTimestepStage(double simt, double simdt);
 	void SetGenericStageState();
 	void DestroyStages(double simt);
-	void LookForSIVb();
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
