@@ -432,8 +432,6 @@ void SaturnV::DoFirstTimestep(double simt)
 	strcpy (VName, ApolloName); strcat (VName, "-SM");
 	hSMJet = oapiGetVesselByName(VName);
 
-	LookForLEM();
-
 	strcpy (VName, ApolloName); strcat (VName, "-DCKPRB");
 	hPROBE = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-EVA");

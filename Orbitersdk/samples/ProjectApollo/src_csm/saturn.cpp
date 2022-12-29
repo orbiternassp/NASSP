@@ -694,7 +694,6 @@ void Saturn::initSaturn()
 	hs4b4 = 0;
 	habort = 0;
 	hSMJet = 0;
-	hLMV = 0;
 	hVAB = 0;
 	hML = 0;
 	hCrawler = 0;
@@ -1311,17 +1310,6 @@ void Saturn::LookForSIVb()
 
 		strcpy (VName, ApolloName); strcat (VName, "-S4BSTG");
 		hs4bM = oapiGetVesselByName(VName);
-	}
-}
-
-void Saturn::LookForLEM()
-
-{
-	if (!hLMV)
-	{
-		char VName[256];
-		GetPayloadName(VName);
-		hLMV = oapiGetVesselByName(VName);
 	}
 }
 
@@ -3180,21 +3168,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 
 	RCSSoundTimestep();
-
-	//
-	// IMFD5 communication support
-	//
-
-	IMFDVariableConfiguration vc;
-	// Set GET
-	if (MissionTime >= 0) {
-		vc.GET = MissionTime;
-	} else {
-		vc.GET = -1;
-	}
-	vc.DataTimeStamp = simt;
-	IMFD_Client.SetVariableConfiguration(vc);
-	IMFD_Client.TimeStep(); 
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)

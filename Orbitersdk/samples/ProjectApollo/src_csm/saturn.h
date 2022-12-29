@@ -71,12 +71,6 @@
 #include "dinput.h"
 #include "vesim.h"
 
-//
-// IMFD5 communication support
-//
-
-#include "IMFD/IMFD_Client.h"
-
 class IU;
 class SICSystems;
 
@@ -1319,11 +1313,6 @@ public:
 	void CutLESLegs();
 
 	///
-	/// \brief Returns the IMFD communication client for ProjectApolloMFD
-	///
-	virtual IMFD_Client *GetIMFDClient() { return &IMFD_Client; }; 
-
-	///
 	/// \brief TLI event management
 	///
 	void TLI_Begun();
@@ -1400,8 +1389,6 @@ protected:
 	void JettisonDockingProbe();
 
 	void JettisonOpticsCover();
-
-	void JettisonNosecap();
 
 	void JettisonSIMBayPanel();
 
@@ -4056,7 +4043,6 @@ protected:
 	// Vessel handles.
 	//
 
-	OBJHANDLE hLMV;
 	OBJHANDLE hstg1;
 	OBJHANDLE hstg2;
 	OBJHANDLE hintstg;
@@ -4259,7 +4245,6 @@ protected:
 	void SetGenericStageState();
 	void DestroyStages(double simt);
 	void LookForSIVb();
-	void LookForLEM();
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
@@ -4555,11 +4540,6 @@ protected:
 #define SISYSTEMS_END_STRING		"SISYSTEMS_END"
 
 	//
-	// IMFD5 communication support
-	//
-	IMFD_Client IMFD_Client; 
-
-	//
 	// Friend Class List for systems objects 
 	//
 
@@ -4641,7 +4621,6 @@ extern void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR
 
 const double STG2O = 8;
 const double SMVO = 0.0;
-const double CREWO = 0.0;
 
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;
