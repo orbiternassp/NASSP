@@ -71,12 +71,6 @@
 #include "dinput.h"
 #include "vesim.h"
 
-//
-// IMFD5 communication support
-//
-
-#include "IMFD/IMFD_Client.h"
-
 class IU;
 class SICSystems;
 
@@ -1319,11 +1313,6 @@ public:
 	void CutLESLegs();
 
 	///
-	/// \brief Returns the IMFD communication client for ProjectApolloMFD
-	///
-	virtual IMFD_Client *GetIMFDClient() { return &IMFD_Client; }; 
-
-	///
 	/// \brief TLI event management
 	///
 	void TLI_Begun();
@@ -1400,8 +1389,6 @@ protected:
 	void JettisonDockingProbe();
 
 	void JettisonOpticsCover();
-
-	void JettisonNosecap();
 
 	void JettisonSIMBayPanel();
 
@@ -1513,13 +1500,6 @@ protected:
 	/// \brief Time of next event.
 	///
 	double NextMissionEventTime;
-
-	///
-	/// The time in seconds of the previous automated event that occur in the mission. This 
-	/// is a generic value used by the autopilot and staging code.
-	/// \brief Time of last event.
-	///
-	double LastMissionEventTime;
 
 
 	///
@@ -3542,8 +3522,6 @@ protected:
 	///
 	double S4Offset;
 
-	double actualFUEL;
-
 	bool KEY1;
 	bool KEY2;
 	bool KEY3;
@@ -3571,7 +3549,6 @@ protected:
 	int CurrentTimestep;
 	int LongestTimestep;
 	double LongestTimestepLength;
-	VECTOR3 normal;
 
 	PanelSwitches MainPanel;
 	PanelSwitchesVC MainPanelVC;
@@ -4056,13 +4033,11 @@ protected:
 	// Vessel handles.
 	//
 
-	OBJHANDLE hLMV;
 	OBJHANDLE hstg1;
 	OBJHANDLE hstg2;
 	OBJHANDLE hintstg;
 	OBJHANDLE hesc1;
 	OBJHANDLE hPROBE;
-	OBJHANDLE hs4bM;
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
 	OBJHANDLE hs4b3;
@@ -4078,7 +4053,6 @@ protected:
 	OBJHANDLE hDrogueChute;
 	OBJHANDLE hMainChute;
 	OBJHANDLE hOpticsCover;
-	OBJHANDLE hNosecapVessel;
 	OBJHANDLE hLC34;
 	OBJHANDLE hLC37;
 	OBJHANDLE hLCC;
@@ -4258,8 +4232,6 @@ protected:
 	void GenericTimestepStage(double simt, double simdt);
 	void SetGenericStageState();
 	void DestroyStages(double simt);
-	void LookForSIVb();
-	void LookForLEM();
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
@@ -4555,11 +4527,6 @@ protected:
 #define SISYSTEMS_END_STRING		"SISYSTEMS_END"
 
 	//
-	// IMFD5 communication support
-	//
-	IMFD_Client IMFD_Client; 
-
-	//
 	// Friend Class List for systems objects 
 	//
 
@@ -4641,7 +4608,6 @@ extern void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR
 
 const double STG2O = 8;
 const double SMVO = 0.0;
-const double CREWO = 0.0;
 
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;

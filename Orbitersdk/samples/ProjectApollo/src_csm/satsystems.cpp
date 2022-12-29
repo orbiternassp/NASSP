@@ -678,7 +678,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		//
 		if (stage < CSM_LEM_STAGE)
 		{
-			iu->Timestep(MissionTime, simt, simdt, mjd);
+			iu->Timestep(simt, simdt, mjd);
 		}
 		if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 		{
