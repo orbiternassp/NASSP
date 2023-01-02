@@ -35,6 +35,7 @@
 #include "soundlib.h"
 #include "tracer.h"
 #include "nasspdefs.h"
+#include "XRSound.h"
 
 SoundData::SoundData()
 

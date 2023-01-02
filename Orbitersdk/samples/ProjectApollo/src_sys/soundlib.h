@@ -25,7 +25,7 @@
 #ifndef SOUNDLIB_H
 #define SOUNDLIB_H
 
-#include "XRSound.h"
+class XRSound;
 
 /** ORBITERSOUND CODE DUMP  **/
 ////////////////////////////////////////////
