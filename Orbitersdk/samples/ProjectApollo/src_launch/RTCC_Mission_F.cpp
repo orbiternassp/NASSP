@@ -109,7 +109,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Config and mass update
 		med_m55.Table = RTCC_MPT_CSM;
-		MPTMassUpdate(calcParams.src, med_m50, med_m55);
+		MPTMassUpdate(calcParams.src, med_m50, med_m55, med_m49);
 		PMMWTC(55);
 		med_m50.Table = RTCC_MPT_CSM;
 		med_m50.WeightGET = GETfromGMT(RTCCPresentTimeGMT());
@@ -1819,7 +1819,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.CSMWeight = 0.0;
 		in.LMWeight = sv_DOI.mass;
 		in.VehicleArea = 0.0;
-		in.VehicleWeight = in.CSMWeight + in.LMWeight;
 		in.IterationFlag = false;
 		in.IgnitionTimeOption = false;
 		in.Thruster = RTCC_ENGINETYPE_LMDPS;

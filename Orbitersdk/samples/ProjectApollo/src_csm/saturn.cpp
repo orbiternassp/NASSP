@@ -687,14 +687,12 @@ void Saturn::initSaturn()
 	hintstg = 0;
 	hesc1 = 0;
 	hPROBE = 0;
-	hs4bM = 0;
 	hs4b1 = 0;
 	hs4b2 = 0;
 	hs4b3 = 0;
 	hs4b4 = 0;
 	habort = 0;
 	hSMJet = 0;
-	hLMV = 0;
 	hVAB = 0;
 	hML = 0;
 	hCrawler = 0;
@@ -734,7 +732,6 @@ void Saturn::initSaturn()
 
 	MissionTime = (-3600);
 	NextMissionEventTime = 0;
-	LastMissionEventTime = 0;
 
 	//
 	// No point trying to destroy things if we haven't launched.
@@ -1078,8 +1075,6 @@ void Saturn::initSaturn()
 	KEY7=false;
 	KEY8=false;
 	KEY9=false;
-
-	actualFUEL = 0;
 
 	viewpos = SATVIEW_LEFTSEAT;
 
@@ -1471,32 +1466,6 @@ void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
 	}
 }
 
-void Saturn::LookForSIVb()
-
-{
-	if (!hs4bM)
-	{
-		char VName[256];
-		char ApolloName[64];
-
-		GetApolloName(ApolloName);
-
-		strcpy (VName, ApolloName); strcat (VName, "-S4BSTG");
-		hs4bM = oapiGetVesselByName(VName);
-	}
-}
-
-void Saturn::LookForLEM()
-
-{
-	if (!hLMV)
-	{
-		char VName[256];
-		GetPayloadName(VName);
-		hLMV = oapiGetVesselByName(VName);
-	}
-}
-
 void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 
 {
@@ -1595,12 +1564,12 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 }
 
-void Saturn::clbkPostStep (double simt, double simdt, double mjd)
+void Saturn::clbkPostStep(double simt, double simdt, double mjd)
 
 {
 	char buffer[100];
 	TRACESETUP("Saturn::clbkPostStep");
-	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %lld", MissionTime, simt, simdt, time(0)); 
+	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %lld", MissionTime, simt, simdt, time(0));
 	TRACE(buffer);
 
 	if (debugConnected == false)
@@ -1617,7 +1586,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		// The SPS engine must be in post time step 
 		// to inhibit Orbiter's thrust control
 		//
-		
+
 		SPSEngine.Timestep(MissionTime, simdt);
 
 		// Better acceleration measurement stability
@@ -1634,12 +1603,17 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 	}
 	// Order is important, otherwise delayed springloaded switches are reset immediately
 	MainPanel.timestep(MissionTime);
-	checkControl.timestep(MissionTime,eventControl);
+	checkControl.timestep(MissionTime, eventControl);
 
 	// Update VC animations
 	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
 	{
 		MainPanelVC.OnPostStep(simt, simdt, mjd);
+	}
+
+	// Do this last to override previous debug strings
+	if (nasspver != NASSP_VERSION) {
+		sprintf(oapiDebugString(), "The scenario you are using is too old (Scenario: %d, NASSP: %d). Please go here for more info: https://nassp.space/index.php/Scenario_File_Updates", nasspver, NASSP_VERSION);
 	}
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 
@@ -1665,7 +1639,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	int i = 1;
 	char str[256];
 
-	oapiWriteScenario_int (scn, "NASSPVER", NASSP_VERSION);
+	oapiWriteScenario_int (scn, "NASSPVER", nasspver);
 	oapiWriteScenario_int (scn, "STAGE", stage);
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
@@ -1675,7 +1649,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "TCP", TCPO);
 	papiWriteScenario_double (scn, "MISSNTIME", MissionTime);
 	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
-	papiWriteScenario_double (scn, "LMISSNTIME", LastMissionEventTime);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
@@ -1761,6 +1734,15 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	if (AutoSlow) {
 		oapiWriteScenario_int (scn, "AUTOSLOW", 1);
+	}
+	if (LandFail.word) {
+		oapiWriteScenario_int(scn, "LANDFAIL", LandFail.word);
+	}
+	if (LaunchFail.word) {
+		oapiWriteScenario_int(scn, "LAUNCHFAIL", LaunchFail.word);
+	}
+	if (SwitchFail.word) {
+		oapiWriteScenario_int(scn, "SWITCHFAIL", SwitchFail.word);
 	}
 	if (ApolloNo == 1301) {
 		oapiWriteScenario_int (scn, "A13STATE", GetA13State());
@@ -2107,7 +2089,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 {
 	float ftcp;
 	int SwitchState = 0;
-	int nasspver = 0, status = 0;
+	int status = 0;
 	int DummyLoad, i;
 	bool found;
 
@@ -2267,10 +2249,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         sscanf (line + 10, "%f", &ftcp);
 		NextMissionEventTime = ftcp;
 	}
-	else if (!strnicmp(line, "LMISSNTIME", 10)) {
-        sscanf (line + 10, "%f", &ftcp);
-		LastMissionEventTime = ftcp;
-	}
 	else if (!strnicmp(line, "SIFUELMASS", 10)) {
         sscanf (line + 10, "%f", &ftcp);
 		SI_FuelMass = ftcp;
@@ -2379,6 +2357,15 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "CMMASS", 6)) {
 		sscanf(line + 6, "%f", &ftcp);
 		CM_EmptyMass = ftcp;
+	}
+	else if (!strnicmp(line, "LANDFAIL", 8)) {
+		sscanf(line + 8, "%d", &LandFail.word);
+	}
+	else if (!strnicmp(line, "LAUNCHFAIL", 10)) {
+		sscanf(line + 10, "%d", &LaunchFail.word);
+	}
+	else if (!strnicmp(line, "SWITCHCHFAIL", 10)) {
+		sscanf(line + 10, "%d", &SwitchFail.word);
 	}
 	else if (!strnicmp(line, "LANG", 4)) {
 		strncpy (AudioLanguage, line + 5, 64);
@@ -3261,9 +3248,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 	VESSELSTATUS status;
 	GetStatus(status);
-	
-	double aSpeed = length(status.rvel);
-	actualFUEL = ((GetFuelMass() * 100.0) / GetMaxFuelMass());
 
 	SystemsTimestep(simt, simdt, mjd);
 
@@ -3326,21 +3310,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 
 	RCSSoundTimestep();
-
-	//
-	// IMFD5 communication support
-	//
-
-	IMFDVariableConfiguration vc;
-	// Set GET
-	if (MissionTime >= 0) {
-		vc.GET = MissionTime;
-	} else {
-		vc.GET = -1;
-	}
-	vc.DataTimeStamp = simt;
-	IMFD_Client.SetVariableConfiguration(vc);
-	IMFD_Client.TimeStep(); 
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)

@@ -125,13 +125,17 @@
 // MISSION G is a manned CSM and LM launched to lunar orbit for landing. Apollo 11.
 #define MTP_G				7
 // MISSION H is a manned CSM and LM launched to lunar orbit for landing and up to 2-day stay. Apollo 12-14.
-#define MTP_H				8
+#define MTP_H1				8
+#define MTP_H2				9
+#define MTP_H3				10
 // MISSION J is a manned CSM and modified LM launched to lunar orbit for landing, LRV operations, and extended stay. Apollo 15-17.
-#define MTP_J				9
+#define MTP_J1				11
+#define MTP_J2				12
+#define MTP_J3				13
 // SKYLAB is a manned CSM launched with a Saturn 1B to earth orbit to dock with the SKYLAB space station.
-#define MTP_SKYLAB			10
+#define MTP_SKYLAB			14
 // ASTP is a manned CSM launched with a Saturn 1B to earth orbit to dock with Soyuz 19.
-#define MTP_ASTP			11
+#define MTP_ASTP			15
 
 //UPDATE TYPES
 #define UTP_PADONLY				0
@@ -173,6 +177,10 @@
 #define PT_LIFTOFFTIMES		29
 #define PT_LMACTDATA		30
 #define PT_RETROORIENTATION	31
+#define PT_AP12PDIABORTPAD  32
+#define PT_AP12LUNSURFPAD	33
+#define PT_LMP22ACQPAD      34
+#define PT_AP12LMASCPAD     35
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -275,6 +283,7 @@ public:
 	void MissionSequence_D();
 	void MissionSequence_F();
 	void MissionSequence_G();
+	void MissionSequence_H1();
 
 	RTCC *rtcc;												// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
@@ -290,6 +299,8 @@ public:
 
 	// GROUND TRACKING NETWORK
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
+	int TransmittingGroundStation;
+	VECTOR3 TransmittingGroundStationVector;
 	double LastAOSUpdate;									// Last update to AOS data
 	double CM_Position[3];                                  // CM's position and altitude
 	double CM_Prev_Position[3];                             // CM's previous position and altitude

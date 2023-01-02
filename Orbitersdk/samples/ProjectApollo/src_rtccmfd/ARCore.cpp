@@ -334,7 +334,7 @@ void AR_GCore::MPTMassUpdate()
 	//Mass Update
 	if (pMPTVessel == NULL) return;
 
-	rtcc->MPTMassUpdate(pMPTVessel, rtcc->med_m50, rtcc->med_m55);
+	rtcc->MPTMassUpdate(pMPTVessel, rtcc->med_m50, rtcc->med_m55, rtcc->med_m49);
 }
 
 ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
@@ -359,6 +359,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	REFSMMATcur = 4;
 	manpadopt = 0;
 	lemdescentstage = true;
+	mptinitmode = 3;
 
 	vesseltype = -1;
 
@@ -1065,6 +1066,11 @@ void ARCore::SkylabSaturnIBLaunchUplink()
 	startSubthread(55);
 }
 
+void ARCore::PerigeeAdjustCalc()
+{
+	startSubthread(56);
+}
+
 void ARCore::GetAGSKFactor()
 {
 	startSubthread(35);
@@ -1182,35 +1188,41 @@ void ARCore::VectorCompareDisplayCalc()
 	startSubthread(25);
 }
 
-void ARCore::UpdateGRRTime()
+void ARCore::UpdateGRRTime(VESSEL *v)
 {
-	if (svtarget == NULL) return;
+	if (v == NULL) return;
 
 	bool isSaturnV;
 	double T_L, Azi;
 	LVDC *lvdc;
 
-	if (utils::IsVessel(svtarget,utils::SaturnV))
+	if (utils::IsVessel(v,utils::SaturnV))
 	{
-		Saturn *iuv = (Saturn *)svtarget;
+		Saturn *iuv = (Saturn *)v;
+
+		if (iuv->GetStage() >= CSM_LEM_STAGE) return;
+
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = true;
 	}
-	else if (utils::IsVessel(svtarget, utils::SaturnIB))
+	else if (utils::IsVessel(v, utils::SaturnIB))
 	{
-		Saturn *iuv = (Saturn *)svtarget;
+		Saturn *iuv = (Saturn *)v;
+
+		if (iuv->GetStage() >= CSM_LEM_STAGE) return;
+
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = false;
 	}
-	else if (utils::IsVessel(svtarget, utils::SaturnV_SIVB))
+	else if (utils::IsVessel(v, utils::SaturnV_SIVB))
 	{
-		SIVB *iuv = (SIVB *)svtarget;
+		SIVB *iuv = (SIVB *)v;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = true;
 	}
-	if (utils::IsVessel(svtarget, utils::SaturnIB_SIVB))
+	else if (utils::IsVessel(v, utils::SaturnIB_SIVB))
 	{
-		SIVB *iuv = (SIVB *)svtarget;
+		SIVB *iuv = (SIVB *)v;
 		lvdc = iuv->GetIU()->GetLVDC();
 		isSaturnV = false;
 	}
@@ -1698,15 +1710,16 @@ void ARCore::StateVectorCalc(int type)
 void ARCore::AGSStateVectorCalc()
 {
 	AGSSVOpt opt;
-	SV sv;
+	EphemerisData sv;
 
-	sv = GC->rtcc->StateVectorCalc(svtarget);
+	sv = GC->rtcc->StateVectorCalcEphem(svtarget);
 
 	opt.csm = SVSlot;
 	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 	opt.sv = sv;
+	opt.landed = svtarget->GroundContact();
 
-	GC->rtcc->AGSStateVectorPAD(&opt, agssvpad);
+	GC->rtcc->AGSStateVectorPAD(opt, agssvpad);
 }
 
 void ARCore::StateVectorUplink(int type)
@@ -2394,13 +2407,13 @@ void ARCore::VecPointCalc()
 	}
 	else if (VECoption == 1)
 	{
-		VECangles = GC->rtcc->HatchOpenThermalControl(vessel, GC->rtcc->EZJGMTX1.data[0].REFSMMAT);
+		VECangles = GC->rtcc->HatchOpenThermalControl(GC->rtcc->RTCCPresentTimeGMT(), GC->rtcc->EZJGMTX1.data[0].REFSMMAT);
 	}
 	else
 	{
-		SV sv;
+		//SV sv;
 
-		GC->rtcc->PointAOTWithCSM(GC->rtcc->EZJGMTX1.data[0].REFSMMAT, sv, 2, 1, 0.0);
+		//GC->rtcc->PointAOTWithCSM(GC->rtcc->EZJGMTX1.data[0].REFSMMAT, sv, 2, 1, 0.0);
 	}
 }
 
@@ -2826,7 +2839,21 @@ int ARCore::subThread()
 			opt.REFSMMATTime = REFSMMATTime;
 		}
 
-		opt.vessel = vessel;
+		//For LS REFSMMAT use target vessel, if we are not in the CSM
+		if (GC->MissionPlanningActive == false && vesseltype != 0 && REFSMMATopt == 5)
+		{
+			if (target == NULL)
+			{
+				Result = 0;
+				break;
+			}
+
+			opt.vessel = target;
+		}
+		else
+		{
+			opt.vessel = vessel;
+		}
 
 		if (vesseltype == 0)
 		{
@@ -2994,8 +3021,9 @@ int ARCore::subThread()
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.TIG = P30TIG;
-		opt.sv_A = GC->rtcc->StateVectorCalc(vessel);
-		opt.sv_P = GC->rtcc->StateVectorCalc(target);
+		opt.sv_A = GC->rtcc->StateVectorCalcEphem(vessel);
+		opt.sv_P = GC->rtcc->StateVectorCalcEphem(target);
+		opt.mass = vessel->GetMass();
 
 		GC->rtcc->AP7TPIPAD(opt, pad);
 
@@ -3021,8 +3049,9 @@ int ARCore::subThread()
 		{
 			MED_M50 med1;
 			MED_M55 med2;
+			MED_M49 med3;
 			//This doesn't work in debug mode (with only RTCC MFD and MCC modules build), so below are some fake masses
-			GC->rtcc->MPTMassUpdate(vessel, med1, med2);
+			GC->rtcc->MPTMassUpdate(vessel, med1, med2, med3);
 
 			GC->rtcc->VEHDATABUF.csmmass = med1.CSMWT;//vessel->GetMass();//
 			GC->rtcc->VEHDATABUF.lmascmass = med1.LMASCWT;//0.0;10000.0*0.453;//
@@ -4312,7 +4341,7 @@ int ARCore::subThread()
 			intab.ManCutoffIndicator = false;
 			intab.VehicleCode = RTCC_MPT_CSM;
 
-			GC->rtcc->NewEMSMISS(&intab);
+			GC->rtcc->EMSMISS(&intab);
 			tab.Header.TUP = 1;
 		}
 		tab2 = &tab;
@@ -4370,7 +4399,6 @@ int ARCore::subThread()
 			}
 
 			in.VehicleArea = 0.0;
-			in.VehicleWeight = in.CSMWeight + in.LMWeight;
 			in.IterationFlag = GC->rtcc->med_m72.Iteration;
 			in.IgnitionTimeOption = GC->rtcc->med_m72.TimeFlag;
 			in.Thruster = GC->rtcc->med_m72.Thruster;
@@ -4448,7 +4476,6 @@ int ARCore::subThread()
 			}
 
 			in.VehicleArea = 0.0;
-			in.VehicleWeight = in.CSMWeight + in.LMWeight;
 			in.IterationFlag = GC->rtcc->med_m70.Iteration;
 			in.IgnitionTimeOption = GC->rtcc->med_m70.TimeFlag;
 			in.Thruster = GC->rtcc->med_m70.Thruster;
@@ -4899,6 +4926,38 @@ int ARCore::subThread()
 		{
 			iuUplinkResult = 3;
 		}
+
+		Result = 0;
+	}
+	break;
+	case 56: //Perigee Adjust
+	{
+		EphemerisData sv0;
+		double mass, THT, dt, H_P, DPSScaleFactor;
+		int Thruster;
+
+		if (GC->MissionPlanningActive)
+		{
+			//TBD
+			Result = 0;
+			break;
+		}
+		else
+		{
+			sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
+			mass = vessel->GetMass();
+		}
+
+		THT = GC->rtcc->GMTfromGET(GC->rtcc->med_k28.ThresholdTime);
+		dt = GC->rtcc->med_k28.TimeIncrement;
+		H_P = GC->rtcc->med_k28.H_P*1852.0;
+		Thruster = GC->rtcc->med_k28.Thruster;
+		DPSScaleFactor = GC->rtcc->med_k28.DPSScaleFactor;
+
+		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0, 0.0, 1.0, 1.0); //TBD
+
+		GC->rtcc->PMMPAD(sv1, mass, THT, dt, H_P, Thruster, DPSScaleFactor);
+		GC->rtcc->PMDPAD();
 
 		Result = 0;
 	}
@@ -5552,8 +5611,9 @@ int ARCore::GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSM
 
 	MED_M50 m50;
 	MED_M55 m55;
+	MED_M49 m49;
 
-	GC->rtcc->MPTMassUpdate(vessel, m50, m55, vesselisdocked);
+	GC->rtcc->MPTMassUpdate(vessel, m50, m55, m49, vesselisdocked);
 
 	std::bitset<4> cfg;
 	GC->rtcc->MPTGetConfigFromString(m55.ConfigCode, cfg);

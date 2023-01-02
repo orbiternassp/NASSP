@@ -148,6 +148,18 @@ struct MED_K16
 	int Vehicle = RTCC_MPT_CSM; //1 = CSM, 3 = LEM (Instead of Vector ID)
 };
 
+//Fuel Remaining
+struct MED_M49
+{
+	int Table = 1;
+	double SPSFuelRemaining = -1;
+	double CSMRCSFuelRemaining = -1;
+	double SIVBFuelRemaining = -1;
+	double LMAPSFuelRemaining = -1;
+	double LMRCSFuelRemaining = -1;
+	double LMDPSFuelRemaining = -1;
+};
+
 //Change Vehicle Weight
 struct MED_M50
 {
@@ -163,11 +175,11 @@ struct MED_M50
 struct MED_M51
 {
 	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
-	double CSMArea = 0.0;
-	double SIVBArea = 0.0;
-	double LMAscentArea = 0.0;
-	double LMDescentArea = 0.0;
-	double KFactor = 0.0;
+	double CSMArea = 129.4*0.3048*0.3048;
+	double SIVBArea = 365.0*0.3048*0.3048;
+	double LMAscentArea = 200.57*0.3048*0.3048;
+	double LMDescentArea = 200.57*0.3048*0.3048;
+	double KFactor = 1.0;
 };
 
 //Input initial configuration for Mission Plan Table
@@ -175,8 +187,8 @@ struct MED_M55
 {
 	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
 	std::string ConfigCode;
-	double VentingGET = 0.0;
-	double DeltaDockingAngle = 0.0;
+	double VentingGET = -1.0;
+	double DeltaDockingAngle = -720.0;
 };
 
 //TLI Direct Input
@@ -220,8 +232,8 @@ struct MED_M72
 struct TwoImpulseOpt
 {
 	int mode;		//1 = Corrective Combination (NCC), 2 = Multiple Solution/Two-Impulse Computation (TPI), 3 = Single Solution, 4 = Transfer Plan, 5 = DKI/SPQ
-	double T1;	//GET of the maneuver
-	double T2;	// GET of the arrival
+	double T1;	//GMT of the maneuver
+	double T2;	// GMT of the arrival
 	EphemerisData sv_A;		//Chaser state vector
 	EphemerisData sv_P;		//Target state vector
 	int ChaserVehicle = 1;	//1 = CSM, 3 = LEM
@@ -262,6 +274,7 @@ struct TwoImpulseOpt
 	double DH = 0.0;
 	double PhaseAngle = 0.0;
 	double WT = 0.0;
+	double Elev = 0.0;
 };
 
 struct LambertMan //Data for Lambert targeting
@@ -288,8 +301,6 @@ struct LambertMan //Data for Lambert targeting
 
 struct AP7ManPADOpt
 {
-	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
@@ -297,11 +308,13 @@ struct AP7ManPADOpt
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime; //time delay for the sextant star check (in case no star is available during the maneuver)
 	double navcheckGET; //Time for the navcheck. 0 = no nav check
-	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
 	bool UllageThrusterOpt = true; // false = 2 thrusters, true = 4 thrusters
 	double UllageDT = 0.0;
+
+	EphemerisData sv0;		//State vector as input
+	double CSMMass = 0.0;
+	double LMMass = 0.0;
+	double Area = 129.4*0.3048*0.3048; //Valid for CSM and LM
 };
 
 struct AP11ManPADOpt
@@ -355,16 +368,16 @@ struct AP7TPIPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	SV sv_A;
-	SV sv_P;
+	EphemerisData sv_A;
+	EphemerisData sv_P;
+	double mass;
 };
 
 struct AP9LMTPIPADOpt
 {
-	SV sv_A; //Chaser state vector
-	SV sv_P; //Target state vector
-	double GETbase; //usually MJD at launch
-	double TIG; //Time of Ignition
+	EphemerisData sv_A; //Chaser state vector
+	EphemerisData sv_P; //Target state vector
+	double GMT_TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	MATRIX3 REFSMMAT;	//REFSMMAT
 };
@@ -422,27 +435,6 @@ struct EntryResults
 	SV sv_preburn;
 	SV sv_postburn;
 	bool solutionfound = false;
-};
-
-
-struct TLMCCResults
-{
-	VECTOR3 DV;
-	double TIG;
-	double SplashdownLat, SplashdownLng;
-	double PericynthionGET;
-	double EntryInterfaceGET;
-	double NodeLat;
-	double NodeLng;
-	double NodeAlt;
-	double NodeGET;
-	double EMPLatitude;
-	double FRInclination;
-	double t_Rev2Meridian;
-	VECTOR3 dV_LVLH_MCC;
-	VECTOR3 dV_LVLH_LOI;
-	VECTOR3 dV_LVLH_DOI;
-	double h_peri_postDOI, h_apo_postDOI;
 };
 
 struct TwoImpulseResuls
@@ -585,7 +577,7 @@ struct EarthEntryPADOpt
 	SV sv0;
 	int Thruster = RTCC_ENGINETYPE_CSMSPS;
 	double InitialBank = 0.0;
-	double GLevel = 0.05;
+	double GLevel = 0.2;
 };
 
 struct LunarEntryPADOpt
@@ -641,9 +633,10 @@ struct P27Opt
 
 struct AGSSVOpt
 {
-	SV sv;
+	EphemerisData sv;
 	MATRIX3 REFSMMAT;
 	bool csm;
+	bool landed = false;
 };
 
 struct SkyRendOpt
@@ -981,7 +974,7 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int I_Theta = 0;
 	//0 = CDH not scheduled, 1 = CDH scheduled
 	bool CDH = true;
-	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (AEG)
+	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (Keplerian)
 	int I_CDH = 3;
 	//Number of apsis since CSI (for CDH at next apsis options)
 	int N_CDH = 1;
@@ -2543,7 +2536,7 @@ public:
 	void RotateSVToSOI(EphemerisData &sv);
 	EphemerisData RotateSVToSOI(EphemerisData2 sv);
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
-	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
+	void AGSStateVectorPAD(const AGSSVOpt &opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad);
@@ -2605,11 +2598,12 @@ public:
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt);
+	EphemerisData coast(EphemerisData sv1, double dt, int veh);
 	EphemerisData coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor = 1.0);
-	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
-	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
+	VECTOR3 HatchOpenThermalControl(double GMT, MATRIX3 REFSMMAT);
+	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, EphemerisData sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
-	AEGBlock SVToAEG(EphemerisData sv);
+	AEGBlock SVToAEG(EphemerisData sv, double Area, double Weight, double KFactor);
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
 	bool PMMAPD(SV sv0, SV &sv_a, SV &sv_p);
@@ -2749,6 +2743,10 @@ public:
 	void PMMIEV(double T_L);
 	//SLV Targeting Load Module
 	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
+	//Perigee Adjust
+	void PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor);
+	//Perigee Adjust Display
+	void PMDPAD();
 	//Mission Planning Print Load Module
 	void PMXSPT(std::string source, int n);
 	void PMXSPT(std::string source, std::vector<std::string> message);
@@ -2763,7 +2761,7 @@ public:
 	//Ephemeris Storage and Control Module
 	StateVectorTableEntry EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, double PresentGMT);
 	//Miscellaneous Numerical Integration Control Module
-	void NewEMSMISS(EMSMISSInputTable *in);
+	void EMSMISS(EMSMISSInputTable *in);
 	//Lunar Surface Ephemeris Generator
 	void EMSLSF(EMSLSFInputTable &in);
 	//Encke Integrator
@@ -3256,6 +3254,18 @@ public:
 		double ThresholdTime = 0.0;
 	} med_k20;
 
+	//Perifocus Adjust Computation
+	struct MED_K28
+	{
+		int VEH = RTCC_MPT_CSM;
+		double VectorTime = 0.0;
+		double ThresholdTime = 0.0;
+		double TimeIncrement = 0.0;
+		double H_P = 0.0;
+		int Thruster = RTCC_ENGINETYPE_CSMSPS;
+		double DPSScaleFactor = 0.0;
+	} med_k28;
+
 	//Two Impulse Computation
 	struct MED_K30
 	{
@@ -3354,17 +3364,7 @@ public:
 
 	MED_K16 med_k16;
 
-	struct MED_M49
-	{
-		int Table = 1;
-		double SPSFuelRemaining = -1;
-		double CSMRCSFuelRemaining = -1;
-		double SIVBFuelRemaining = -1;
-		double LMAPSFuelRemaining = -1;
-		double LMRCSFuelRemaining = -1;
-		double LMDPSFuelRemaining = -1;
-	} med_m49;
-
+	MED_M49 med_m49;
 	MED_M50 med_m50;
 	MED_M51 med_m51;
 	MED_M55 med_m55;
@@ -3395,6 +3395,30 @@ public:
 	BurnParameterTable PZBURN;
 	LWPInputTable PZSLVCON;
 	SLVTargetingParametersTable PZSLVTAR;
+
+	struct PerigeeAdjustTableEntry
+	{
+		double Pitch = 0.0;
+		double TIG = 0.0;
+		double DV = 0.0;
+		double DT = 0.0;
+		double TA = 0.0;
+		double H = 0.0;
+		double H_A = 0.0;
+	};
+
+	struct PerigeeAdjustTable
+	{
+		int Sol = 0;
+		double T_elem = 0.0;
+		double T_thresh = 0.0;
+		double TimeStep = 0.0;
+		double H_A = 0.0;
+		double H_P = 0.0;
+		PerigeeAdjustTableEntry Man[6];
+	} PZPADDIS;
+
+	std::vector<std::string> MSK0050Buffer; //Perigee Adjust Display
 
 	std::vector<VECTOR3> EZJGSTAR;
 
@@ -4752,6 +4776,7 @@ private:
 	bool CalculationMTP_D(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_F(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_H1(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
 	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
@@ -4798,8 +4823,9 @@ public:
 	//Trajectory Update On-line Print
 	void EMGPRINT(std::string source, int i);
 	void EMGPRINT(std::string source, std::vector<std::string> message);
-	void MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, bool docked = true);
+	void MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &med3, bool docked = true);
 	void MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg);
+	void MPTGetStringFromConfig(const std::bitset<4> &cfg, char *str);
 	MissionPlanTable *GetMPTPointer(int L);
 protected:
 

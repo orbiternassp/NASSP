@@ -77,6 +77,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	}
 
 	marker = 0;
+	markermax = 0;
 }
 
 // Destructor
@@ -750,6 +751,8 @@ void ApolloRTCCMFD::menuSetSPQPage()
 
 void ApolloRTCCMFD::menuSetOrbAdjPage()
 {
+	marker = 0;
+	markermax = 8;
 	SelectPage(4);
 }
 
@@ -1021,6 +1024,8 @@ void ApolloRTCCMFD::menuSetMPTInitPage()
 	SelectPage(59);
 
 	GC->mptInitError = 0;
+	marker = 0;
+	markermax = 7;
 }
 
 void ApolloRTCCMFD::menuSetDescPlanTablePage()
@@ -1283,6 +1288,53 @@ void ApolloRTCCMFD::menuSetLWPDisplayPage()
 void ApolloRTCCMFD::menuSetRendezvousPlanningDisplayPage()
 {
 	SelectPage(123);
+}
+
+void ApolloRTCCMFD::menuSetPerigeeAdjustInputPage()
+{
+	SelectPage(124);
+}
+
+void ApolloRTCCMFD::menuSetPerigeeAdjustDisplayPage()
+{
+	SelectPage(125);
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustCalc()
+{
+	G->PerigeeAdjustCalc();
+}
+
+void ApolloRTCCMFD::CyclePerigeeAdjustVehicle()
+{
+	if (GC->rtcc->med_k28.VEH == RTCC_MPT_CSM)
+	{
+		GC->rtcc->med_k28.VEH = RTCC_MPT_LM;
+	}
+	else
+	{
+		GC->rtcc->med_k28.VEH = RTCC_MPT_CSM;
+	}
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustVectorTime()
+{
+	GenericGETInput(&GC->rtcc->med_k28.VectorTime, "Enter desired vector GET (Format: HH:MM:SS)");
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustThresholdTime()
+{
+	GenericGETInput(&GC->rtcc->med_k28.ThresholdTime, "Enter desired threshold GET (Format: HH:MM:SS)");
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustTimeIncrement()
+{
+	GenericDoubleInput(&GC->rtcc->med_k28.TimeIncrement, "Time increment in seconds:", 1.0);
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustHeight()
+{
+	GenericDoubleInput(&GC->rtcc->med_k28.H_P, "Perigee height in nautical miles:", 1.0);
 }
 
 void ApolloRTCCMFD::menuLWPLiftoffTimeOption()
@@ -2468,9 +2520,9 @@ void ApolloRTCCMFD::menuCycleGMPManeuverType()
 	G->DetermineGMPCode();
 }
 
-void ApolloRTCCMFD::menuCycleGMPMarkerUp()
+void ApolloRTCCMFD::menuCycleMarkerUp()
 {
-	if (marker >= 8)
+	if (marker >= markermax)
 	{
 		marker = 0;
 	}
@@ -2480,11 +2532,11 @@ void ApolloRTCCMFD::menuCycleGMPMarkerUp()
 	}
 }
 
-void ApolloRTCCMFD::menuCycleGMPMarkerDown()
+void ApolloRTCCMFD::menuCycleMarkerDown()
 {
 	if (marker <= 0)
 	{
-		marker = 8;
+		marker = markermax;
 	}
 	else
 	{
@@ -3749,132 +3801,122 @@ void ApolloRTCCMFD::menuTransferPoweredDescentToMPT()
 	G->TransferPoweredDescentToMPT();
 }
 
-void ApolloRTCCMFD::menuMPTMEDM49()
+void ApolloRTCCMFD::menuSetMPTInitInput()
 {
-	bool menuMPTMEDM49Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Change fuel remaining. Format: M49,MPT code (CSM or LEM),SPS fuel, CSM RCS fuel, S4B fuel, LM APS fuel,LM RCS fuel,LM DPS fuel; (Negative will be ignored)", menuMPTMEDM49Input, "M49,CSM,-1,-1,-1,-1,-1,-1;", 50, (void*)this);
-}
-
-bool menuMPTMEDM49Input(void* id, char *str, void *data)
-{
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
-	return true;
-}
-
-void ApolloRTCCMFD::menuMPTInitM50M55Table()
-{
-	if (GC->rtcc->med_m50.Table == RTCC_MPT_CSM)
+	switch (marker)
 	{
-		GC->rtcc->med_m50.Table = RTCC_MPT_LM;
-		GC->rtcc->med_m55.Table = RTCC_MPT_LM;
+	case 0:
+		//MED
+		if (G->mptinitmode < 3)
+		{
+			G->mptinitmode++;
+		}
+		else
+		{
+			G->mptinitmode = 0;
+		}
+		break;
+	case 1: //MPT
+		if (GC->rtcc->med_m49.Table == RTCC_MPT_CSM)
+		{
+			GC->rtcc->med_m49.Table = GC->rtcc->med_m50.Table = GC->rtcc->med_m51.Table = GC->rtcc->med_m55.Table = RTCC_MPT_LM;
+		}
+		else
+		{
+			GC->rtcc->med_m49.Table = GC->rtcc->med_m50.Table = GC->rtcc->med_m51.Table = GC->rtcc->med_m55.Table = RTCC_MPT_CSM;
+		}
+		break;
+	case 2: //Second option on MED
+		switch (G->mptinitmode)
+		{
+		case 0: //M49: SPS Fuel Remaining
+			GenericDoubleInput(&GC->rtcc->med_m49.SPSFuelRemaining, "Input SPS fuel in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 1: //M50: CSM Weight
+			GenericDoubleInput(&GC->rtcc->med_m50.CSMWT, "Input CSM mass in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 2: //M51: CSM Area
+			GenericDoubleInput(&GC->rtcc->med_m51.CSMArea, "Input CSM area in square feet (negative number for no update):", 0.3048*0.3048);
+			break;
+		case 3: //M55: Config
+		{
+			bool MPTInitM55ConfigInput(void* id, char *str, void *data);
+			oapiOpenInputBox("Any combination of C (CSM), S (SIVB), L (Ascent+Descent), A (Ascent Only), D (Descent Only)", MPTInitM55ConfigInput, 0, 20, (void*)this);
+		}
+		break;
+		}
+		break;
+	case 3: //Third option on MED
+		switch (G->mptinitmode)
+		{
+		case 0: //M49: CSM RCS Fuel Remaining
+			GenericDoubleInput(&GC->rtcc->med_m49.CSMRCSFuelRemaining, "Input CSM RCS fuel in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 1: //M50: S-IVB Weight
+			GenericDoubleInput(&GC->rtcc->med_m50.SIVBWT, "Input S-IVB stage mass in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 2: //M51: S-IVB Area
+			GenericDoubleInput(&GC->rtcc->med_m51.SIVBArea, "Input S-IVB area in square feet (negative number for no update):", 0.3048*0.3048);
+			break;
+		case 3: //M55: GET to start venting/initial weights
+			GenericGETInput(&GC->rtcc->med_m55.VentingGET, "Time of initial weights/start of S-IVB venting (negative number for no update):");
+			break;
+		}
+		break;
+	case 4: //Fourth option on MED
+		switch (G->mptinitmode)
+		{
+		case 0: //M49: S-IVB Fuel Remaining
+			GenericDoubleInput(&GC->rtcc->med_m49.SIVBFuelRemaining, "Input S-IVB fuel in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 1: //M50: LM Total Weight
+			GenericDoubleInput(&GC->rtcc->med_m50.LMWT, "Input LM total mass in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 2: //M51: LM Ascent Area
+			GenericDoubleInput(&GC->rtcc->med_m51.LMAscentArea, "Input LM ascent stage area in square feet (negative number for no update):", 0.3048*0.3048);
+			break;
+		case 3: //M55: Delta Docking Angle
+			GenericDoubleInput(&GC->rtcc->med_m55.DeltaDockingAngle, "Delta docking angle (negative number for no update):", RAD);
+			break;
+		}
+		break;
+	case 5: //Fifth option on MED
+		switch (G->mptinitmode)
+		{
+		case 0: //M49: LM APS Fuel Remaining
+			GenericDoubleInput(&GC->rtcc->med_m49.LMAPSFuelRemaining, "Input LM APS fuel in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 1: //M50: LM Ascent Weight
+			GenericDoubleInput(&GC->rtcc->med_m50.LMASCWT, "Input LM ascent stage mass in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 2: //M51: LM Descent Area
+			GenericDoubleInput(&GC->rtcc->med_m51.LMDescentArea, "Input LM descent stage area in square feet (negative number for no update):", 0.3048*0.3048);
+			break;
+		}
+		break;
+	case 6: //Sixth option on MED
+		switch (G->mptinitmode)
+		{
+		case 0: //M49: LM RCS Fuel Remaining
+			GenericDoubleInput(&GC->rtcc->med_m49.LMRCSFuelRemaining, "Input LM RCS fuel in lbs (negative number for no update):", 0.45359237);
+			break;
+		case 1: //M50: Time of weights
+			GenericGETInput(&GC->rtcc->med_m50.WeightGET, "GET when weights are valid:");
+			break;
+		case 2: //M51: K-Factor
+			GenericDoubleInput(&GC->rtcc->med_m51.KFactor, "Input K-Factor feet (-30 to +30):", 1.0);
+			break;
+		}
+		break;
+	case 7: //Seventh option on MED
+		switch (G->mptinitmode)
+		{
+		case 0: //M49: LM DPS Fuel Remaining
+			GenericDoubleInput(&GC->rtcc->med_m49.LMDPSFuelRemaining, "Input DPS fuel in lbs (negative number for no update):", 0.45359237);
+			break;
+		}
+		break;
 	}
-	else
-	{
-		GC->rtcc->med_m50.Table = RTCC_MPT_CSM;
-		GC->rtcc->med_m55.Table = RTCC_MPT_CSM;
-	}
-}
-
-void ApolloRTCCMFD::menuMPTInitM50CSMWT()
-{
-	bool MPTInitM50CSMWTInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Input CSM mass in lbs (negative number for no update):", MPTInitM50CSMWTInput, 0, 20, (void*)this);
-}
-
-bool MPTInitM50CSMWTInput(void* id, char *str, void *data)
-{
-	double mass;
-
-	if (sscanf(str, "%lf", &mass) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_MPTInitM50CSMWT(mass);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MPTInitM50CSMWT(double mass)
-{
-	GC->rtcc->med_m50.CSMWT = mass * 0.45359237;
-}
-
-void ApolloRTCCMFD::menuMPTInitM50LMWT()
-{
-	bool MPTInitM50LMWTInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Input LM total mass in lbs (negative number for no update):", MPTInitM50LMWTInput, 0, 20, (void*)this);
-}
-
-bool MPTInitM50LMWTInput(void* id, char *str, void *data)
-{
-	double mass;
-
-	if (sscanf(str, "%lf", &mass) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_MPTInitM50LMWT(mass);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MPTInitM50LMWT(double mass)
-{
-	GC->rtcc->med_m50.LMWT = mass * 0.45359237;
-}
-
-void ApolloRTCCMFD::menuMPTInitM50LMAscentWT()
-{
-	bool MPTInitM50LMAscentWTInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Input LM ascent stage mass in lbs (negative number for no update):", MPTInitM50LMAscentWTInput, 0, 20, (void*)this);
-}
-
-bool MPTInitM50LMAscentWTInput(void* id, char *str, void *data)
-{
-	double mass;
-
-	if (sscanf(str, "%lf", &mass) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_MPTInitM50LMAscentWT(mass);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MPTInitM50LMAscentWT(double mass)
-{
-	GC->rtcc->med_m50.LMASCWT = mass * 0.45359237;
-}
-
-void ApolloRTCCMFD::menuMPTInitM50SIVBWT()
-{
-	bool MPTInitM50SIVBWTInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Input S-IVB stage mass in lbs (negative number for no update):", MPTInitM50SIVBWTInput, 0, 20, (void*)this);
-}
-
-bool MPTInitM50SIVBWTInput(void* id, char *str, void *data)
-{
-	double mass;
-
-	if (sscanf(str, "%lf", &mass) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_MPTInitM50SIVBWT(mass);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MPTInitM50SIVBWT(double mass)
-{
-	GC->rtcc->med_m50.SIVBWT = mass * 0.45359237;
-}
-
-void ApolloRTCCMFD::menuMPTInitM55Config()
-{
-	bool MPTInitM55ConfigInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Any combination of C (CSM), S (SIVB), L (Ascent+Descent), A (Ascent Only), D (Descent Only)", MPTInitM55ConfigInput, 0, 20, (void*)this);
 }
 
 bool MPTInitM55ConfigInput(void* id, char *str, void *data)
@@ -3888,28 +3930,35 @@ void ApolloRTCCMFD::set_MPTInitM55Config(char *cfg)
 	GC->rtcc->med_m55.ConfigCode.assign(cfg);
 }
 
-void ApolloRTCCMFD::menuMPTM50Update()
+void ApolloRTCCMFD::menuMPTUpdate()
 {
-	GC->rtcc->med_m50.WeightGET = GC->rtcc->GETfromGMT(GC->rtcc->RTCCPresentTimeGMT());
-	if (GC->rtcc->PMMWTC(50))
+	int med;
+
+	switch (G->mptinitmode)
+	{
+	case 0:
+		med = 49;
+		break;
+	case 1:
+		med = 50;
+		break;
+	case 2:
+		med = 51;
+		break;
+	case 3:
+		med = 55;
+		break;
+	default:
+		return;
+	}
+
+	if (GC->rtcc->PMMWTC(med))
 	{
 		GC->mptInitError = 2;
 	}
 	else
 	{
 		GC->mptInitError = 1;
-	}
-}
-
-void ApolloRTCCMFD::menuMPTM55Update()
-{
-	if (GC->rtcc->PMMWTC(55))
-	{
-		GC->mptInitError = 4;
-	}
-	else
-	{
-		GC->mptInitError = 3;
 	}
 }
 
@@ -4224,7 +4273,10 @@ void ApolloRTCCMFD::VectorControlPBI(int code)
 
 void ApolloRTCCMFD::menuMPTInitAutoUpdate()
 {
-	GC->MPTMassUpdate();
+	if (G->mptinitmode != 2)
+	{
+		GC->MPTMassUpdate();
+	}
 }
 
 void ApolloRTCCMFD::menuMPTInitM50M55Vehicle()
@@ -4656,7 +4708,7 @@ void ApolloRTCCMFD::set_SVtime(double SVtime)
 
 void ApolloRTCCMFD::menuUpdateGRRTime()
 {
-	G->UpdateGRRTime();
+	G->UpdateGRRTime(G->svtarget);
 }
 
 void ApolloRTCCMFD::menuSetAGSKFactor()
@@ -5663,6 +5715,9 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	//Update GMT of zeroing LGC clock
 	sprintf_s(Buff, "P15,LGC,%d:%d:%.2lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
+
+	//Also update IU, if possible
+	G->UpdateGRRTime(G->vessel);
 }
 
 void ApolloRTCCMFD::cycleREFSMMATHeadsUp()

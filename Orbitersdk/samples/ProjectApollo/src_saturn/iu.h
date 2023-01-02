@@ -259,7 +259,7 @@ public:
 	/// \param simt The current Mission Elapsed Time in seconds from launch.
 	/// \param simdt The time in seconds since the last timestep call.
 	///
-	virtual void Timestep(double misst, double simt, double simdt, double mjd);
+	virtual void Timestep(double simt, double simdt, double mjd);
 	void LVDCTimestep(double simt, double simdt);
 	virtual void SwitchSelector(int item) = 0;
 	void PostStep(double simt, double simdt, double mjd);
@@ -335,10 +335,7 @@ protected:
 	bool Crewed;
 	bool SCControlPoweredFlight;
 
-	///
-	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.
-	///
-	double MissionTime;
+	//Time keeping for LVDC
 	double LastCycled;
 
 	///
@@ -375,7 +372,7 @@ class IU1B :public IU
 public:
 	IU1B();
 	~IU1B();
-	void Timestep(double misst, double simt, double simdt, double mjd);
+	void Timestep(double simt, double simdt, double mjd);
 	bool SIBLowLevelSensorsDry();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
@@ -404,7 +401,7 @@ class IUSV :public IU
 public:
 	IUSV();
 	~IUSV();
-	void Timestep(double misst, double simt, double simdt, double mjd);
+	void Timestep(double simt, double simdt, double mjd);
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEnginesOut();
 	bool GetSIIInboardEngineOut();

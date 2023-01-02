@@ -909,7 +909,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	//
 
 	sivbsys->Timestep(simdt);
-	iu->Timestep(MissionTime, simt, simdt, mjd);
+	iu->Timestep(simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
 

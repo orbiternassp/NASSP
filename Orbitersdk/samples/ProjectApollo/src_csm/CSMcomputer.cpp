@@ -87,7 +87,6 @@ void CSMcomputer::SetMissionInfo(std::string AGCVersion, char *OtherVessel)
 void CSMcomputer::agcTimestep(double simt, double simdt)
 {
 	// Do single timesteps to maintain sync with telemetry engine
-	SingleTimestepPrep(simt, simdt);        // Setup
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt); 
 		sat->pcm.last_update = LastCycled;
@@ -195,7 +194,11 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// Reset last cycling time
 			LastCycled = 0;
 
-			// We should issue telemetry though.
+			// We should issue telemetry though. Careful with the first timestep
+			if (sat->pcm.last_update == 0)
+			{
+				sat->pcm.last_update = simt - simdt;
+			}
 			sat->pcm.TimeStep(simt);
 			return;
 		}
