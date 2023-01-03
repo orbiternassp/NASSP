@@ -105,8 +105,6 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	meshidxPanel = 0;
 	meshidxPanelReverse = 0;
 
-	soundlib.InitSoundLib(oapiGetVesselInterface(hObj), SOUND_DIRECTORY);
-
 	panelMeshoffset = _V(0,0,0);
     panelMeshidx = 0;
 }

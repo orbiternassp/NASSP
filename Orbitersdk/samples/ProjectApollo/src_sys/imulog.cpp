@@ -111,7 +111,6 @@ void IMU::LogTimeStep(long simt)
 			radToDeg(Gimbal.Z));
 
 	fflush(logFile);
-	*/
 #endif
 }
 

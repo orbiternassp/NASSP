@@ -656,7 +656,6 @@ void LRV::DoFirstTimestep()
 
 	if (StateSet) {
 		// Probably a better way but I'm not familiar with the API
-		soundlib.InitSoundLib(oapiGetVesselInterface(GetHandle()), SOUND_DIRECTORY);
 		SetMissionPath();
 
 		//
@@ -884,6 +883,11 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	
 	// touchdown point test
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
+}
+
+void LRV::clbkPostCreation()
+{
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void LRV::DoAnimations ()

@@ -514,11 +514,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	InitMissionManagementMemory();
 	pMission = paGetDefaultMission();
 
-	//
-	// VESSELSOUND initialisation
-	// 
-	soundlib.InitSoundLib(oapiGetVesselInterface(hObj), SOUND_DIRECTORY);
-
 	cws.MonitorVessel(this);
 	dockingprobe.RegisterVessel(this);
 
@@ -3306,10 +3301,10 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	}
 
 	//
-	// Play RCS sound in case of Orbiter's attitude control is disabled
+	// Play engines sound in case of Orbiter's attitude control is disabled
 	//
 
-	RCSSoundTimestep();
+	EnginesSoundTimestep();
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
@@ -4545,6 +4540,7 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
+	soundlib.LoadDefaultSound(EngineS, MAIN_ENGINES_SOUND, INTERNAL_ONLY);
 
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }

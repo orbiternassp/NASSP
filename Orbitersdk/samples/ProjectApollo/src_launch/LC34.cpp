@@ -123,8 +123,6 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	}
 	liftoffStreamLevel = 0;
 
-	soundlib.InitSoundLib(oapiGetVesselInterface(hObj), SOUND_DIRECTORY);
-
 	//meshoffsetMSS = _V(0,0,0);
 
 	IuUmb = new IUUmbilical(this);

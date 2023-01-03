@@ -250,6 +250,7 @@ public:
 	void LoadSound(Sound &s, char *soundname, EXTENDEDPLAY extended = DEFAULT);
 	void LoadMissionSound(Sound &s, char *soundname, char *genericname = NULL, EXTENDEDPLAY extended = DEFAULT);
 	void LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended = DEFAULT);
+	void LoadDefaultSound(Sound &s, char *soundname, EXTENDEDPLAY extended = DEFAULT);
 
 	///
 	/// The sound library can use a mission-specific path to find files in preference to the base path.
