@@ -28,10 +28,10 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <stdio.h>
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
-#include "matrix.h"
+#include "Orbitersdk.h"
+#include "Matrix.h"
 
 class Panel;
 

@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-#include "thermal.h"
+#include "Thermal.h"
 #include <math.h>
 #include <stdio.h>
 

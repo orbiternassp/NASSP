@@ -26,7 +26,7 @@
 #define _PA_POWERSOURCE_H
 
 #include "PanelSDK/PanelSDK.h"
-#include "PanelSDK/Internals/ESystems.h"
+#include "PanelSDK/Internals/Esystems.h"
 
 class PowerSource : public e_object {
 

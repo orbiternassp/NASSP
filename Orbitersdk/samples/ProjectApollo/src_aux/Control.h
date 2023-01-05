@@ -25,7 +25,7 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 #include <math.h>
-#include "Orbitermath.h"
+#include "OrbiterMath.h"
 
 // The deadband for attitude adjustments.  These are just the "standard" deadband limits - a user
 // can pass any deadband value to SetAttitude().  For example, a 5 degree deadband:

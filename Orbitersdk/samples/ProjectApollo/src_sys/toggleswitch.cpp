@@ -25,7 +25,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 
 #include "toggleswitch.h"
@@ -35,7 +35,7 @@
 #include "apolloguidance.h"
 #include "ioChannels.h"
 #include "powersource.h"
-#include "fdai.h"
+#include "FDAI.h"
 #include "scs.h"
 #include "connector.h"
 #include "checklistController.h"

@@ -26,10 +26,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "instruments.h"
-#include "vsmgmt.h"
+#include "VSMGMT.H"
 #include "Internals/Hsystems.h"
 #include "Internals/Esystems.h"
-#include "oapichar.cpp"
+#include "OAPICHAR.CPP"
 
 int Line_Number;
 char I_line[275];

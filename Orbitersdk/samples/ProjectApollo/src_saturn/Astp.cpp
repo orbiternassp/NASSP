@@ -22,13 +22,13 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 
 #pragma include_alias( <fstream.h>, <fstream> )
 
 #define ORBITER_MODULE
 
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include "stdio.h"
 
 #include "PanelSDK/PanelSDK.h"
@@ -37,7 +37,7 @@
 #include "connector.h"
 #include "sivbsystems.h"
 #include "sivb.h"
-#include "astp.h"
+#include "ASTP.h"
 
 HINSTANCE g_hDLL;
 

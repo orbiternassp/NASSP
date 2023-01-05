@@ -25,7 +25,7 @@
 #ifndef MFDButtonPage_H
 #define MFDButtonPage_H
 
-#include <OrbiterSDK.h>
+#include <Orbitersdk.h>
 #include <map>
 #include <vector>
 
