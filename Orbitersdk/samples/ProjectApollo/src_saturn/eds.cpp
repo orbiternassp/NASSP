@@ -33,7 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "papi.h"
 
-#include "EDS.h"
+#include "eds.h"
 
 EDS::EDS(IU *iu)
 {

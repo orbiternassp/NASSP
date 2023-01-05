@@ -26,9 +26,9 @@
 #ifndef __ApolloSaturn_H
 #define __ApolloSaturn_H
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 
 
 const double FHATCH_OPERATING_SPEED = 0.1;

@@ -22,8 +22,8 @@
 
   **************************************************************************/
 
-#include "Connector.h"
-#include "MFDConnector.h"
+#include "connector.h"
+#include "MFDconnector.h"
 
 class ProjectApolloChecklistMFD: public MFD {
 public:

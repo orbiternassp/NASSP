@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-#include "vsmgmt.h"
+#include "VSMGMT.H"
 #include <stdio.h>
 #include "BUILD.H"
 
