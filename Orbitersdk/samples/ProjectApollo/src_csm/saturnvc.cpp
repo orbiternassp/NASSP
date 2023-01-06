@@ -1710,7 +1710,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		oapiReleaseDC(srf[SRF_VC_EMS_SCROLL_LEO], hDC);
 
 		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_LEO], 5*TexMul, 4*TexMul, ems.GetScrollOffset()*TexMul, 0, 132*TexMul, 143*TexMul);
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BUG], 42*TexMul, ems.GetGScribe()*TexMul + 2*TexMul, 0, 0, 5*TexMul, 5*TexMul, SURF_PREDEF_CK);
+		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BUG], 42*TexMul, (ems.GetGScribe() + 2)*TexMul, 0, 0, 5*TexMul, 5*TexMul, SURF_PREDEF_CK);
 		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142*TexMul, 150*TexMul, SURF_PREDEF_CK);
 		return true;
 	}
