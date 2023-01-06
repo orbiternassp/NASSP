@@ -3857,7 +3857,7 @@ RoundMeter::~RoundMeter()
 		delete pswitchrot;
 }
 
-void RoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row)
+void RoundMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row)
 
 {
 	MeterSwitch::Init(row);
@@ -3932,7 +3932,7 @@ void ElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
 	FrameSurface = srf;
 }
 
-void ElectricMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch)
+void ElectricMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, e_object *dcindicatorswitch)
 
 {
 	RoundMeter::Init(p0, p1, row);

@@ -223,10 +223,10 @@
 ///
 typedef struct {
 	HINSTANCE hDLL;		///< DLL handle.
-	HFONT font[3];		///< GDI fonts.
+	oapi::Font  *font[3];		///< GDI fonts.
 	DWORD col[6];		///< GDI colors.
-	HBRUSH brush[4];	///< GDI brushes.
-	HPEN pen[7];		///< GDI pens.
+	oapi::Brush *brush[4];	///< GDI brushes.
+	oapi::Pen   *pen[7];		///< GDI pens.
 } GDIParams;
 
 //
