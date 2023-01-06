@@ -26,7 +26,7 @@
 #include "Internals/Thermal.h"
 #include "Internals/Hsystems.h"
 #include "Internals/Esystems.h"
-#include "vsmgmt.h"
+#include "VSMGMT.H"
 
 PanelSDK::PanelSDK() {
 

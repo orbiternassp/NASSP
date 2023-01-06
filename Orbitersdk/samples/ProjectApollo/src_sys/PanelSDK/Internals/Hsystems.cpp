@@ -22,8 +22,8 @@
 
   **************************************************************************/
 
-#include "hsystems.h"
-#include "orbitersdk.h"
+#include "Hsystems.h"
+#include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
 #include "nasspdefs.h"

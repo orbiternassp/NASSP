@@ -2,7 +2,7 @@
 
 #include "soundlib.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "IMU.h"
 #include "saturn.h"
 #include "saturnv.h"

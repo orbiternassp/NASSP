@@ -437,27 +437,6 @@ struct EntryResults
 	bool solutionfound = false;
 };
 
-
-struct TLMCCResults
-{
-	VECTOR3 DV;
-	double TIG;
-	double SplashdownLat, SplashdownLng;
-	double PericynthionGET;
-	double EntryInterfaceGET;
-	double NodeLat;
-	double NodeLng;
-	double NodeAlt;
-	double NodeGET;
-	double EMPLatitude;
-	double FRInclination;
-	double t_Rev2Meridian;
-	VECTOR3 dV_LVLH_MCC;
-	VECTOR3 dV_LVLH_LOI;
-	VECTOR3 dV_LVLH_DOI;
-	double h_peri_postDOI, h_apo_postDOI;
-};
-
 struct TwoImpulseResuls
 {
 	EphemerisData sv_tig;

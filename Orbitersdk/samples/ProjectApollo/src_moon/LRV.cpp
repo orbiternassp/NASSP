@@ -24,9 +24,9 @@
 
 #define ORBITER_MODULE
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
 
@@ -37,7 +37,7 @@
 #include "toggleswitch.h"
 #include "LEM.h"
 
-#include "lrv.h"
+#include "LRV.h"
 #include "lrv_console.h"
 #include "tracer.h"
 

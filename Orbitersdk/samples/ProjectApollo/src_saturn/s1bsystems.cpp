@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "papi.h"
 
@@ -345,6 +345,15 @@ void SIBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
 	papiWriteScenario_bool(scn, "SIBSIVBSEPARATIONCMDLATCH", SIB_SIVB_SeparationCmdLatch);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 24);
+	for (int i = 0;i < 8;i++)
+	{
+		if (EarlySICutoff[i])
+		{
+			papiWriteScenario_boolarr(scn, "EarlySICutoff", EarlySICutoff, 8);
+			papiWriteScenario_doublearr(scn, "FirstStageFailureTime", FirstStageFailureTime, 8);
+			break;
+		}
+	}
 
 	h1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	h1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -395,6 +404,8 @@ void SIBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
 		papiReadScenario_bool(line, "SIBSIVBSEPARATIONCMDLATCH", SIB_SIVB_SeparationCmdLatch);
 		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 24);
+		papiReadScenario_boolarr(line, "EarlySICutoff", EarlySICutoff, 8);
+		papiReadScenario_doublearr(line, "FirstStageFailureTime", FirstStageFailureTime, 8);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			h1engine1.LoadState(scn, "ENGINE_END");

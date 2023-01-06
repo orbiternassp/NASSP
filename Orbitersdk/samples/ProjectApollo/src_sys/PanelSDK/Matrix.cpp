@@ -22,8 +22,8 @@
 
   **************************************************************************/
 
-#include "matrix.h"
-#include "vectors.h"
+#include "Matrix.h"
+#include "Vectors.h"
 #include <math.h>
 
 matrix matrix::operator * (matrix &m)

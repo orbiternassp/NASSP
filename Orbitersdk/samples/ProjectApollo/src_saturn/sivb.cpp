@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbiterSDK.h"
+#include "Orbitersdk.h"
 
 #include "nasspdefs.h"
 #include "soundlib.h"
@@ -36,16 +36,16 @@
 #include "powersource.h"
 #include "connector.h"
 #include "iu.h"
-#include "SIVBSystems.h"
+#include "sivbsystems.h"
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "lemcomputer.h"
+#include "LEMcomputer.h"
 
 #include "payload.h"
 #include "sivb.h"
-#include "astp.h"
-#include "lem.h"
+#include "ASTP.h"
+#include "LEM.h"
 #include "LVDC.h"
 
 #include <stdio.h>
@@ -909,7 +909,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	//
 
 	sivbsys->Timestep(simdt);
-	iu->Timestep(MissionTime, simt, simdt, mjd);
+	iu->Timestep(simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
 

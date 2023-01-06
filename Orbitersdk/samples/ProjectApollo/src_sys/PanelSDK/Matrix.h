@@ -25,7 +25,7 @@
 #ifndef _MATRIX_
 #define _MATRIX_
 
-#include "vectors.h"
+#include "Vectors.h"
 #include <string.h>
 enum {_XX=0,_XY,_XZ,_XF,_YX,_YY,_YZ,_YF,_ZX,_ZY,_ZZ,_ZF,_FX,_FY,_FZ,_FF};
 class vector3;
