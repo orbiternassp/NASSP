@@ -787,8 +787,8 @@ bool ProjectApolloChecklistMFD::Update (oapi::Sketchpad* skp)
 	oapi::Brush *hBr;
 
 	SURFHANDLE s = skp->GetSurface();
-	RECT src{0, 0, 256, 256};
-	RECT dst{1, 1, width - 2, height - 2 };
+	RECT src{ 0, 0, 256, 256 };
+	RECT dst{ 1, 1, (LONG)width - 2, (LONG)height - 2 };
 	oapiBlt(s, hLogo, &dst, &src);
 
 	// Retrieve Checklists
