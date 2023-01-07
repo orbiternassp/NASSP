@@ -3914,16 +3914,13 @@ void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double a
 	// Needle function by Rob Conley from Mercury code
 	
 	double dx = rad * cos(angle), dy = rad * sin(angle);
-	HGDIOBJ oldObj;
 
-	HDC hDC = oapiGetDC (surf);
-	oldObj = SelectObject (hDC, Pen1);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
-	SelectObject (hDC, oldObj);
-	oldObj = SelectObject (hDC, Pen0);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
-	SelectObject (hDC, oldObj);
-	oapiReleaseDC (surf, hDC);
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(Pen1);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(0.85 * dx + 0.5), y - (int)(0.85 * dy + 0.5));
+	skp->SetPen(Pen0);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(dx + 0.5), y - (int)(dy + 0.5));
+	oapiReleaseSketchpad(skp);
 }
 
 ElectricMeter::ElectricMeter(double minVal, double maxVal, double vMin, double vMax)
