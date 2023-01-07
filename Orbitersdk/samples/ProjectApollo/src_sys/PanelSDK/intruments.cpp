@@ -57,28 +57,28 @@ idx=index;
 
 void CText::PaintMe()
 {
-  HDC hDC=oapiGetDC(parent->surf);
-  SetBkMode(hDC,TRANSPARENT);
+	oapi::Sketchpad *skp = oapiGetSketchpad(parent->surf);
+	skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
 
-  if (parent->text_logic) {SetTextColor(hDC,RGB(color[0],color[1],color[2]));
-						   SelectObject(hDC,parent->GDI_res->hPEN[ColPenIndex]);
-							}
-  else					   {SetTextColor(hDC,RGB(nocol[0],nocol[1],nocol[2]));
-							 SelectObject(hDC,parent->GDI_res->hPEN[NoColPenIndex]);
-							};
-  SetTextAlign(hDC,TA_CENTER);
-  SetBkMode(hDC,TRANSPARENT);
-  SelectObject(hDC,parent->GDI_res->hFNT_Panel[FontIndex]);
-  if (direction){
-  MoveToEx(hDC,length-1, direction*7+5,NULL);
-  LineTo(hDC,length-1,5);
-  LineTo(hDC,length/2+slen/2,5);
-  MoveToEx(hDC,length/2-slen/2, 5,NULL);
-  LineTo(hDC,0,5);
-  LineTo(hDC,0,direction*7+5);};
-  TextOut(hDC,length/2,0,text, sizeof(char)*strlen(text));
+	if (parent->text_logic) {skp->SetTextColor(oapiGetColour(color[0],color[1],color[2]));
+							skp->SetPen(parent->skp_res->hPEN[ColPenIndex]);
+								}
+	else					   {skp->SetTextColor(oapiGetColour(nocol[0],nocol[1],nocol[2]));
+								skp->SetPen(parent->skp_res->hPEN[NoColPenIndex]);
+								};
+	skp->SetTextAlign(oapi::Sketchpad::CENTER);
+	skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
+	skp->SetFont(parent->skp_res->hFNT_Panel[FontIndex]);
+	if (direction){
+	skp->MoveTo(length-1, direction*7+5);
+	skp->LineTo(length-1,5);
+	skp->LineTo(length/2+slen/2,5);
+	skp->MoveTo(length/2-slen/2, 5);
+	skp->LineTo(0,5);
+	skp->LineTo(0,direction*7+5);};
+	skp->Text(length/2,0,text, sizeof(char)*strlen(text));
 
- oapiReleaseDC(parent->surf,hDC);
+	oapiReleaseSketchpad(skp);
 };
 void CText::SetLight()
 {
@@ -102,9 +102,9 @@ void Switch::RegisterMe(int index)
 void Switch::PaintMe()
 { if (SRF_index){
 	if (parent->panel_logic)
-	oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,size_x-pos*size_x,size_y,size_x,size_y,0xFFFFFF);
+	oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,size_x-pos*size_x,size_y,size_x,size_y,0xFFFFFF);
 	else
-	oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,size_x-pos*size_x,0,size_x,size_y,0xFFFFFF);
+	oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,size_x-pos*size_x,0,size_x,size_y,0xFFFFFF);
 }
 };
 
@@ -193,14 +193,14 @@ void Rotational::RegisterMe(int index)
 void Rotational::PaintMe()
 {
 if (parent->panel_logic)
- oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,0,size_y,size_x,size_y);
+ oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,0,size_y,size_x,size_y);
 else
- oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,0,0,size_x,size_y);
+ oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,0,0,size_x,size_y);
 
-HDC hDC=oapiGetDC(local_blt);
-SelectObject(hDC,parent->GDI_res->hBRUSH_TotalWhite);
-SelectObject(hDC,parent->GDI_res->hPEN_NULL);
-Rectangle(hDC,0,0,2*board_size+1,2*board_size+1);
+oapi::Sketchpad* skp = oapiGetSketchpad(local_blt);
+skp->SetBrush(parent->skp_res->hBRUSH_TotalWhite);
+skp->SetPen(parent->skp_res->hPEN_NULL);
+skp->Rectangle(0, 0, 2 * board_size + 1, 2 * board_size + 1);
 
 double ang;
 if (G)
@@ -213,18 +213,18 @@ if (last_paint<ang) {if (ang-last_paint<0.01) last_paint=ang;
 					};
 
 ang=last_paint;
-POINT S[3];
+oapi::IVECTOR2 S[3];
 
 for (int i=0;i<3;i++) // rotate the pointer by 'ang'
 {
    S[i].x = (long)(board_size+ TR[i].x*cos(ang)-TR[i].y*sin(ang));
    S[i].y = (long)(board_size+ TR[i].x*sin(ang)+TR[i].y*cos(ang));
 }
-SelectObject(hDC,parent->GDI_res->hBRUSH_TotalBlack);
-SelectObject(hDC,parent->GDI_res->hPEN_NULL);
+skp->SetBrush(parent->skp_res->hBRUSH_TotalBlack);
+skp->SetPen(parent->skp_res->hPEN_NULL);
 
-Polygon(hDC,S,3);// then the pointer
-oapiReleaseDC(local_blt,hDC);
+skp->Polygon(S, 3);// then the pointer
+oapiReleaseSketchpad(skp);
 //we need to find the blit point aswell
 //double blt_x=33 - cos(ang)*20; //40-5-sin(angle)*radiu
 //double blt_y=30 - sin(ang)*20;
@@ -258,12 +258,12 @@ sprintf(format_string,"%%%i.0f",size);
 sprintf(bit_blf,format_string,last_value);
 for (int i=0;i<size;i++)
 {	if (bit_blf[i]==32)//space
-			oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],i*size_x,0,0,0,size_x,size_y);	//put a 0 there
+			oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],i*size_x,0,0,0,size_x,size_y);	//put a 0 there
 	else if (bit_blf[i]=='.')
-			oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],i*size_x,0,0,0,size_x,size_y);	//put a 0 there;//comma
+			oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],i*size_x,0,0,0,size_x,size_y);	//put a 0 there;//comma
 
 	else
-	oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],i*size_x,0,(bit_blf[i]-48)*size_x,0,size_x,size_y);
+	oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],i*size_x,0,(bit_blf[i]-48)*size_x,0,size_x,size_y);
 
 }
 
@@ -304,25 +304,25 @@ void Linear::SetAngle(double ang)
 void Linear::DoNeedle()
 {
 local_blt=oapiCreateSurface(needle_h+3,needle_h+3);
-POINT TR[3];
+oapi::IVECTOR2 TR[3];
 TR[0].x = (long)(-needle_h/2.0); TR[0].y = (long)(-needle_w/2.0);
 TR[1].x = (long)(-needle_h/2.0); TR[1].y = (long)(needle_w/2.0);
 TR[2].x = (long)(needle_h/2.0);  TR[2].y=0;
-POINT S[3];
+oapi::IVECTOR2 S[3];
 for (int i=0;i<3;i++) // rotate the pointer by 'ang'
 {
    S[i].x = (long)(1+needle_h/2.0+ TR[i].x*cos(angle)-TR[i].y*sin(angle));
    S[i].y = (long)(1+needle_h/2.0+ TR[i].x*sin(angle)+TR[i].y*cos(angle));
 }
-HDC hDC=oapiGetDC(local_blt);
- //SelectObject(hDC,parent->GDI_res->hBRUSH_TotalWhite);
- //SelectObject(hDC,parent->GDI_res->hPEN_NULL);
- Rectangle(hDC,0,0,needle_h+2,needle_h+2);
+oapi::Sketchpad* skp = oapiGetSketchpad(local_blt);
+ //skp->SetBrush(parent->skp_res->hBRUSH_TotalWhite);
+ //skp->SetPen(parent->skp_res->hPEN_NULL);
+skp->Rectangle(0, 0, needle_h + 2, needle_h + 2);
 
- SelectObject(hDC,parent->GDI_res->hBRUSH_TotalBlack);
- SelectObject(hDC,parent->GDI_res->hPEN_NULL);
- Polygon(hDC,S,3);// draw the pointer
-oapiReleaseDC(local_blt,hDC);
+skp->SetBrush(parent->skp_res->hBRUSH_TotalBlack);
+skp->SetPen(parent->skp_res->hPEN_NULL);
+skp->Polygon(S, 3);// draw the pointer
+oapiReleaseSketchpad(skp);
 }
 void Linear::SetNeedleSize(int w, int h)
 {needle_h=h;
@@ -358,9 +358,9 @@ void Linear::PrintBackground()
 {
 //first, copy the appropriate background,
  if (parent->panel_logic)
-	oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,size_x,0,size_x,size_y);
+	oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,size_x,0,size_x,size_y);
  else
-    oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,0,0,size_x,size_y);
+    oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,0,0,size_x,size_y);
  bkg_printed=1;
 };
 void Linear::PaintMe()
@@ -371,10 +371,10 @@ PrintBackground();
 
 GetPixel1();
 if (parent->panel_logic)
-oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],last_x,last_y,size_x+last_x,last_y,needle_h,needle_h);
+oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],last_x,last_y,size_x+last_x,last_y,needle_h,needle_h);
 
 else
-oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],last_x,last_y,last_x,last_y,needle_h,needle_h);
+oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],last_x,last_y,last_x,last_y,needle_h,needle_h);
 
 //oapiBlt(parent->surf,local_blt,6,last1,1,0,9,9,0xFFFFFF);
 oapiBlt(parent->surf,local_blt,point_x,point_y,1,1,needle_h,needle_h,0xFFFFFF);
@@ -419,19 +419,19 @@ void TB::PaintMe()
 if ((IsOn())){
 if (blink){
 if (paint_on==1)
-	oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,size_x,0,size_x,size_y);
+	oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,size_x,0,size_x,size_y);
 else
-    oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,2*size_x,0,size_x,size_y);
+    oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,2*size_x,0,size_x,size_y);
 
 }else {
 
-	oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,size_x,0,size_x,size_y);
+	oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,size_x,0,size_x,size_y);
 	paint_on=1;
 	}
 
 }
 else{
-    oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,0,0,size_x,size_y);
+    oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,0,0,size_x,size_y);
 	paint_on=0;blink_on=0;timer=0;
 };
 
@@ -488,7 +488,7 @@ oapiRegisterPanelArea(index,_R(ScrX,ScrY,ScrX+size_x,ScrY+size_y),PANEL_REDRAW_M
 
 void Rot::PaintMe()
 {
-oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,(c_pos-min)*size_x,0,size_x,size_y,0xFFFFFF);
+oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,(c_pos-min)*size_x,0,size_x,size_y,0xFFFFFF);
 }
 void Rot::RefreshMe()
 {PaintMe();}
@@ -554,7 +554,6 @@ int offs=120;
 if ((armed)&(parent->panel_logic)) offs=0;
 if (armed)
 {
-//HDC hDC=oapiGetDC(parent->GDI_res->hReentrySRF);
 double x,y;
 //get the position of the marker:
 
@@ -573,13 +572,13 @@ if (y>pointer_y) pointer_y+=0.2;
 if (y<pointer_y) pointer_y-=0.2;
 pointer_x=(int)x;
 if (trace) //if we trace, then we blit directly to the surf
-oapiBlt(parent->GDI_res->h_Surface[SRF_index],
-		parent->GDI_res->h_Surface[SRF_bug_index],pointer_x,(int)pointer_y,0,0,bug_x,bug_y,0xFFFFFF);
+oapiBlt(parent->skp_res->h_Surface[SRF_index],
+		parent->skp_res->h_Surface[SRF_bug_index],pointer_x,(int)pointer_y,0,0,bug_x,bug_y,0xFFFFFF);
 
 
 }
-oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_index],0,0,strip_offset,0,size_x,size_y);
-oapiBlt(parent->surf,parent->GDI_res->h_Surface[SRF_mask_index],0,0,0,0,size_x,size_y,0x00);
+oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_index],0,0,strip_offset,0,size_x,size_y);
+oapiBlt(parent->surf,parent->skp_res->h_Surface[SRF_mask_index],0,0,0,0,size_x,size_y,0x00);
 }
 void Plot::RefreshMe()
 {
@@ -628,24 +627,24 @@ oapiRegisterMFD(mfd_type,mfdspecs);
 void inst_MFD::PaintMe()
 {
 
-HDC hDC=oapiGetDC(parent->surf);
+	oapi::Sketchpad* skp = oapiGetSketchpad(parent->surf);
 
-SelectObject(hDC, parent->GDI_res->hFNT_Panel[FontIndex]);
-SetTextColor (hDC, RGB(red,green,blue));
-SetTextAlign (hDC, TA_CENTER);
-SetBkMode (hDC, TRANSPARENT);
+	skp->SetFont(parent->skp_res->hFNT_Panel[FontIndex]);
+	skp->SetTextColor(RGB(red, green, blue));
+	skp->SetTextAlign(oapi::Sketchpad::CENTER);
+	skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
 
-const char *label;
+	const char *label;
 	for (int bt = 0; bt < mfdspecs.nbt_left+mfdspecs.nbt_right; bt++) {
-		if (label = oapiMFDButtonLabel (mfd_type, bt))
-			{if (bt<mfdspecs.nbt_left)
-					TextOut (hDC, (int)(button_w/2.0), mfdspecs.bt_yofs+
-					mfdspecs.bt_ydist*bt, label, strlen(label));
-			else TextOut (hDC, (int)(width+button_w*1.5), mfdspecs.bt_yofs+
-					mfdspecs.bt_ydist*(bt-6), label, strlen(label));}
+		if (label = oapiMFDButtonLabel (mfd_type, bt)) {
+			if (bt<mfdspecs.nbt_left)
+				skp->Text((int)(button_w / 2.0), mfdspecs.bt_yofs +
+					mfdspecs.bt_ydist * bt, label, strlen(label));
+			else skp->Text((int)(width + button_w * 1.5), mfdspecs.bt_yofs +
+				mfdspecs.bt_ydist * (bt - 6), label, strlen(label));
+		}
 	}
-oapiReleaseDC(parent->surf,hDC);
-
+	oapiReleaseSketchpad(skp);
 };
 
 

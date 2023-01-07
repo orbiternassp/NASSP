@@ -35,7 +35,7 @@ PanelSDK::PanelSDK() {
 	NumPanels = 0;
 	InstDescriptor = NULL;
 	CustomVarList = NULL;
-	GDI_res = NULL;
+	skp_res = NULL;
 
     ELECTRIC = new E_system;
 	HYDRAULIC = new H_system;
@@ -53,7 +53,7 @@ PanelSDK::PanelSDK() {
 
 PanelSDK::~PanelSDK()
 {
-	if (GDI_res) delete GDI_res;
+	if (skp_res) delete skp_res;
 	if (InstDescriptor)	{
 		InstrumentDescriptor *runner;
 		runner = InstDescriptor;
@@ -97,32 +97,31 @@ InstDescriptor=new_desc;
 
 int PanelSDK::AddBitmapResource(char* BitmapName)
 {
-if (!GDI_res) GDI_res=new GDI_resources;
-GDI_res->num_surfaces++;
+if (!skp_res) skp_res=new Sketchpad_resources;
+skp_res->num_surfaces++;
 HBITMAP new_b=(HBITMAP)LoadImage(NULL,BitmapName,IMAGE_BITMAP,0,0,LR_LOADFROMFILE);
-GDI_res->h_Surface[GDI_res->num_surfaces]=oapiCreateSurface (new_b);
+skp_res->h_Surface[skp_res->num_surfaces]=oapiCreateSurface (new_b);
 if (new_b)
-return GDI_res->num_surfaces;
+return skp_res->num_surfaces;
 else
 return 0;
 }
 int PanelSDK::AddFontResource(char *FontName,int size)
 {
-if (!GDI_res) GDI_res=new GDI_resources;
-GDI_res->num_fonts++;
-GDI_res->hFNT_Panel[GDI_res->num_fonts]=CreateFont(size,0,0,0,FW_NORMAL,0,0,0,ANSI_CHARSET,OUT_RASTER_PRECIS,
-			 CLIP_DEFAULT_PRECIS,PROOF_QUALITY,DEFAULT_PITCH,FontName);
-if (GDI_res->hFNT_Panel[GDI_res->num_fonts])
-return GDI_res->num_fonts;
+if (!skp_res) skp_res=new Sketchpad_resources;
+skp_res->num_fonts++;
+skp_res->hFNT_Panel[skp_res->num_fonts]= oapiCreateFont(size, true, FontName);
+if (skp_res->hFNT_Panel[skp_res->num_fonts])
+return skp_res->num_fonts;
 else
 return 0;
 }
 int PanelSDK::AddBrushResource(int red,int green,int blue)
 {
-if (!GDI_res) GDI_res=new GDI_resources;
-GDI_res->num_brush++;
-GDI_res->hPEN[GDI_res->num_brush]=CreatePen(PS_SOLID,1,RGB(red,green,blue));
-return GDI_res->num_brush;
+if (!skp_res) skp_res=new Sketchpad_resources;
+skp_res->num_brush++;
+skp_res->hPEN[skp_res->num_brush]=oapiCreatePen(1,1,RGB(red,green,blue));
+return skp_res->num_brush;
 }
 bool  PanelSDK::LoadPanel(int id)
 {
