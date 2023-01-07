@@ -787,7 +787,7 @@ bool ProjectApolloChecklistMFD::Update (oapi::Sketchpad* skp)
 	oapi::Brush *hBr;
 
 	SURFHANDLE s = skp->GetSurface();
-	RECT src{ 0, 0, 256, 256 };
+	RECT src{ 0, 0, 255, 255 };
 	RECT dst{ 1, 1, (LONG)width - 2, (LONG)height - 2 };
 	oapiBlt(s, hLogo, &dst, &src);
 
@@ -815,7 +815,7 @@ bool ProjectApolloChecklistMFD::Update (oapi::Sketchpad* skp)
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		skp->SetPen(GetDefaultPen(1));
+		skp->SetPen(GetDefaultPen(0));
 		skp->MoveTo((int)(width * 0.02), (int)(height * 0.94));
 		skp->LineTo((int)(width * 0.98), (int)(height * 0.94));
 
@@ -983,7 +983,7 @@ bool ProjectApolloChecklistMFD::Update (oapi::Sketchpad* skp)
 			skp->Text((int)(width * .5), (int)(height * 0.05), line.c_str(), line.size());
 		}
 
-		skp->SetPen(GetDefaultPen(1));
+		skp->SetPen(GetDefaultPen(0));
 		skp->MoveTo((int)(width * 0.02), (int)(height * 0.94));
 		skp->LineTo((int)(width * 0.98), (int)(height * 0.94));
 
@@ -1188,7 +1188,7 @@ bool ProjectApolloChecklistMFD::Update (oapi::Sketchpad* skp)
 			skp->SetBrush(oldBrush);
 			skp->SetPen(oldPen);
 			oapiReleaseBrush(hBr);
-			skp->SetPen(GetDefaultPen(1));
+			skp->SetPen(GetDefaultPen(0));
 			skp->MoveTo((int)(width * 0.02), (int)(height * 0.94));
 			skp->LineTo((int)(width * 0.98), (int)(height * 0.94));
 			skp->SetFont(GetDefaultFont(0));

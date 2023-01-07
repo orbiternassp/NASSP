@@ -734,7 +734,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	char buffer[100];
 
 	SURFHANDLE s = skp->GetSurface();
-	RECT src{ 0, 0, 256, 256 };
+	RECT src{ 0, 0, 255, 255 };
 	RECT dst{ 1, 1, (LONG)width - 2, (LONG)height - 2 };
 	oapiBlt(s, hLogo, &dst, &src);
 
@@ -775,7 +775,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	if (!saturn && !lem)
 		return true;
 
-	skp->SetPen(GetDefaultPen(1));
+	skp->SetPen(GetDefaultPen(0));
 	skp->MoveTo((int)(width * 0.05), (int)(height * 0.25));
 	skp->LineTo((int)(width * 0.95), (int)(height * 0.25));
 
