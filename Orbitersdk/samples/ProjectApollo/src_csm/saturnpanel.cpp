@@ -4971,6 +4971,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		skp->SetBrush(whiteBrush);
 		skp->Ellipse(14, 14, 71, 68);
 		skp->SetBrush(g_Param.brush[3]);
+		skp->SetPen(g_Param.pen[2]);
 		skp->Polygon(ems.RSITriangle, 3);
 		oapiReleaseBrush(whiteBrush);
 		oapiReleaseSketchpad(skp);
