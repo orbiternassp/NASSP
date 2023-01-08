@@ -46,12 +46,6 @@
 #include "LVDC.h"
 #include "iu.h"
 
-// This is a threadenwerfer. It werfs threaden.
-static DWORD WINAPI MCC_Trampoline(LPVOID ptr){	
-	MCC *mcc = (MCC *)ptr;
-	return(mcc->subThread());
-}
-
 // SCENARIO FILE MACROLOGY
 #define SAVE_BOOL(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
 #define SAVE_INT(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
@@ -1300,9 +1294,8 @@ int MCC::startSubthread(int fcn, int type){
 		subThreadMode = fcn;
 		subThreadType = type;
 		subThreadStatus = 1; // Busy
-		DWORD id = 0;
-		HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
-		if(h != NULL){ CloseHandle(h); }
+		std::thread t(&MCC::subThread, this);
+		t.detach();
 		addMessage("Thread Started");
 	}else{
 		addMessage("Thread Busy");

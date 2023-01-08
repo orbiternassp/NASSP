@@ -160,9 +160,8 @@ public:
 	void GenerateAGCCorrectionVectors();
 
 	// SUBTHREAD MANAGEMENT
-	HANDLE hThread;
 	int subThreadMode;										// What should the subthread do?
-	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
+	std::atomic<int> subThreadStatus;						// 0 = done/not busy, 1 = busy, negative = done with error
 
 	ApolloRTCCMFDData g_Data;
 

@@ -23,22 +23,3 @@
   **************************************************************************/
 
 #include "thread.h"
-
-void Runnable::Kill ()
-{
-    thread.WaitForDeath ();
-}
-
-Runnable::Runnable ():
-#pragma warning(disable: 4355) // 'this' used before initialized
-  thread (ThreadEntry, this)
-#pragma warning(default: 4355)
-{
-}
-
-DWORD WINAPI Runnable::ThreadEntry (void* arg)
-{
-    Runnable * pRunnable = (Runnable *) arg;
-    pRunnable->Run();
-    return 0;
-}

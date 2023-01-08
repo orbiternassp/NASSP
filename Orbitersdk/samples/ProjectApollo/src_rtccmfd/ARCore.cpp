@@ -26,11 +26,6 @@ static char debugString[100];
 static char debugStringBuffer[100];
 static char debugWinsock[100];
 
-static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
-	ARCore *core = (ARCore *)ptr;
-	return(core->subThread());
-}
-
 AR_GCore::AR_GCore(VESSEL* v)
 {
 	MissionPlanningActive = false;
@@ -2513,17 +2508,11 @@ int ARCore::startSubthread(int fcn) {
 		// Punt thread
 		subThreadMode = fcn;
 		subThreadStatus = 1; // Busy
-		DWORD id = 0;
-		hThread = CreateThread(NULL, 0, RTCCMFD_Trampoline, this, 0, &id);
+		std::thread t(&ARCore::subThread, this);
+		t.detach();
 	}
 	else {
-		//Kill thread
-		DWORD exitcode = 0;
-		if (TerminateThread(hThread, exitcode))
-		{
-			subThreadStatus = 0;
-			if (hThread != NULL) { CloseHandle(hThread); }
-		}
+		sprintf(oapiDebugString(), "ARCore::startSubthread: current subthread not done, cannot start a new one");
 		return(-1);
 	}
 	return(0);
@@ -4965,7 +4954,6 @@ int ARCore::subThread()
 	}
 
 	subThreadStatus = Result;
-	if (hThread != NULL) { CloseHandle(hThread); }
 
 	return(0);
 }

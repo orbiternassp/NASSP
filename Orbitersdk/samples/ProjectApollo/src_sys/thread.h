@@ -23,68 +23,56 @@
   **************************************************************************/
 #if !defined(_THREAD_H)
 #define _THREAD_H
-#include <windows.h>
 
-
-
-class Thread
-{
-public:
-    Thread ( DWORD (WINAPI * callback) (void* arg), void* arg)
-    {
-        handle = CreateThread (0,0,callback,arg,CREATE_SUSPENDED,&threadId);
-    }
-    ~Thread ()           { CloseHandle (handle); }
-    void Resume ()       { ResumeThread (handle); }
-    void WaitForDeath () { WaitForSingleObject (handle, INFINITE); }
-private:
-    HANDLE handle;
-    DWORD  threadId;
-};
-
-class Mutex
-{
-public:
-    Mutex () { InitializeCriticalSection (& critSection); }
-    ~Mutex () { DeleteCriticalSection (& critSection); }
-    inline void Acquire () { EnterCriticalSection (& critSection); }
-    inline void Release () { LeaveCriticalSection (& critSection); }
-private:
-    CRITICAL_SECTION critSection;
-};
-
-class Lock
-{
-public:
-    Lock ( Mutex & mutex ): _mutex(mutex) { _mutex.Acquire(); }
-    ~Lock () { _mutex.Release(); }
-private:
-    Mutex & _mutex;
-};
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
 
 class Event
 {
 public:
-    Event ()  { handle = CreateEvent (0, FALSE, FALSE, 0); }
-    ~Event () { CloseHandle (handle); }
-
-    void Raise ()  { SetEvent (handle); }
-    void Wait ()   { WaitForSingleObject (handle, INFINITE); }
+    Event() { m_counter = 0; }
+    ~Event() = default;
+    void Raise() {
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_counter++;
+            if (m_counter <= 0) {
+                return;
+            }
+        }
+        m_cv.notify_all();
+    }
+    void Wait() {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_cv.wait(lock, [&]() { return m_counter > 0; });
+        m_counter--;
+    }
 private:
-    HANDLE handle;
+    int m_counter;
+    std::condition_variable m_cv;
+    std::mutex m_mutex;
 };
-
 
 class Runnable
 {
 public:
-    Runnable ();
-    virtual ~Runnable () {}
-    void Kill ();
+    Runnable() { m_stop.store(false); }
+    virtual ~Runnable() {}
+    void Kill() {
+        m_stop.store(true);
+        timeStepEvent.Raise();
+    }
 protected:
-    virtual void Run () = 0;
-    static DWORD WINAPI ThreadEntry (void *pArg);
-    Thread     thread;
+    virtual void Run() = 0;
+    void Start() {
+        m_thread = std::thread(&Runnable::Run, this);
+        m_thread.detach();
+    }
+    std::thread m_thread;
+    std::atomic<bool> m_stop;
+    Event timeStepEvent;
 };
 
 #endif
