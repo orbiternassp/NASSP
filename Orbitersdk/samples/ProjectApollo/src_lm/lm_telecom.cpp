@@ -2858,7 +2858,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
 	RecvdLEM_SteerableAntPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * LEM_SteerableAntGain * pow((LEM_SteerableAntWavelength /(4 * PI*EarthSignalDist)), 2); //maximum recieved power to the HGA on axis in watts
-	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
+	RecvdLEM_SteerableAntPower_dBm = RFCALC_W2dBm(RecvdLEM_SteerableAntPower);
 
 	double SignalStrengthScaleFactor = LEM_SteerableAnt::dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
 
@@ -3063,7 +3063,7 @@ void LM_OMNI::Timestep()
 	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
 	RecvdOMNIPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
-	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	RecvdOMNIPower_dBm = RFCALC_W2dBm(RecvdOMNIPower);
 	SignalStrengthScaleFactor = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
 	if (relang < 160 * RAD) //this is a litteral copy of the CSM OMNI but should be fairly close
