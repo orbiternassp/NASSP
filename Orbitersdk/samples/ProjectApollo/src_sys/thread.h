@@ -28,6 +28,7 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <functional>
 
 class Event
 {
@@ -75,4 +76,16 @@ protected:
     Event timeStepEvent;
 };
 
+class KillableWorker
+{
+public:
+    ~KillableWorker();
+    // Start a threaded task on this worker, will kill the previous thread
+    // if the last task is not already finished
+    void Start(std::function<void()>f);
+    void Kill();
+private:
+    std::thread m_thread;
+    std::atomic<bool> m_running = false;
+};
 #endif

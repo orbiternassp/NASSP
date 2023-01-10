@@ -2508,11 +2508,11 @@ int ARCore::startSubthread(int fcn) {
 		// Punt thread
 		subThreadMode = fcn;
 		subThreadStatus = 1; // Busy
-		std::thread t(&ARCore::subThread, this);
-		t.detach();
+		subThreadWorker.Start([this] { subThread(); });
 	}
 	else {
-		sprintf(oapiDebugString(), "ARCore::startSubthread: current subthread not done, cannot start a new one");
+		subThreadWorker.Kill();
+		subThreadStatus = 0;
 		return(-1);
 	}
 	return(0);

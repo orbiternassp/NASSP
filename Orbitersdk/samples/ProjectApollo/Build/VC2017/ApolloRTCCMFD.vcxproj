@@ -65,6 +65,7 @@
     <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
+    <ClCompile Include="..\..\src_sys\thread.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3F97A697-44DB-4A22-A5F3-7168A990B3C0}</ProjectGuid>

@@ -26,6 +26,7 @@
 
 #include "MCCPADForms.h"
 #include <fstream>
+#include <atomic>
 
 // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
