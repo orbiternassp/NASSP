@@ -5459,7 +5459,8 @@ bool EMS::WriteScrollToFile() {
 
 	// Draw Commands
 	SetBkMode(hMemDC, TRANSPARENT);
-	HGDIOBJ oldObj = SelectObject(hMemDC, g_Param.pen[5]);
+	HPEN redPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+	HGDIOBJ oldObj = SelectObject(hMemDC, redPen);
 	POINT *points = new POINT[ScribePntCnt];
 	for (int i = 0; i < ScribePntCnt; i++) {
 		points[i].x = ScribePntArray[i].x;
@@ -5472,6 +5473,7 @@ bool EMS::WriteScrollToFile() {
 
 	SelectObject(hMemDC, oldObj);
 	SelectObject(hMemDC, hOld);
+	DeleteObject(redPen);
 
 	PBITMAPINFO bitmapInfo = CreateBitmapInfoStruct(hBitmap);
 
