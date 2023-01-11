@@ -1074,7 +1074,7 @@ void HGA::TimeStep(double simt, double simdt)
 	}
 
 	RecvdHGAPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain *gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
-	RecvdHGAPower_dBm = 10*log10(1000*RecvdHGAPower);
+	RecvdHGAPower_dBm = RFCALC_W2dBm(RecvdHGAPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdHGAPower_dBm);
 
 	//sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
@@ -1336,7 +1336,7 @@ void OMNI::TimeStep()
 	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
 	RecvdOMNIPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
-	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	RecvdOMNIPower_dBm = RFCALC_W2dBm(RecvdOMNIPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
 	if (relang < 160*RAD)
@@ -5686,7 +5686,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		if (RadarDist > 80.0*0.3048)
 		{
 			RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2); //watts
-			RCVDPowerdB = 10.0 * log10(1000.0 * RCVDPowerdB); //convert to dBm
+			RCVDPowerdB = RFCALC_W2dBm(RCVDPowerdB); //convert to dBm
 		}
 		else
 		{

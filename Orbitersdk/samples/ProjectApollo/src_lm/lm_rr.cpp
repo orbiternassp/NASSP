@@ -403,7 +403,7 @@ void LEM_RR::Timestep(double simdt) {
 			RCVDgain = pow(10.0, (RCVDgain / 10.0)); //convert to ratio from dB
 
 			RecvdRRPower = RCVDpow*AntennaGain*RCVDgain*pow((C0 / (RCVDfreq * 1000000)) / (4.0 * PI*length(R)), 2.0);
-			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
+			RecvdRRPower_dBm = RFCALC_W2dBm(RecvdRRPower);
 			//sprintf(oapiDebugString(), "RecvdRRPower_dBm = %lf dBm", RecvdRRPower_dBm);
 			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
 
