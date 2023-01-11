@@ -421,7 +421,6 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 // Texture Size (1 = Old ProjectApollo 2K Textures, 2 = New 4K Textures)
 //
 
-#define TexMul 2
-//int TexMul = 2;
+const int TexMul = 2;
 
 #endif
