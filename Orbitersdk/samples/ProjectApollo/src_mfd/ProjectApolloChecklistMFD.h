@@ -25,7 +25,7 @@
 #include "connector.h"
 #include "MFDconnector.h"
 
-class ProjectApolloChecklistMFD: public MFD {
+class ProjectApolloChecklistMFD: public MFD2 {
 public:
 	ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel);
 	~ProjectApolloChecklistMFD ();
@@ -33,7 +33,7 @@ public:
 	int ButtonMenu (const MFDBUTTONMENU **menu) const;
 	bool ConsumeButton (int bt, int event);
 	bool ConsumeKeyBuffered (DWORD key);
-	void Update (HDC hDC);
+	bool Update (oapi::Sketchpad* skp);
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;
@@ -67,7 +67,7 @@ protected:
 	int CurrentStep;
 	int HiLghtdLine;
 	bool HiLghtdLineDown;
-	HBITMAP hBmpLogo;
+	SURFHANDLE hLogo;
 
 	std::string DisplayChecklistMissionTime (ChecklistItem *item);
 	bool bDisplayMET; // Coussini 

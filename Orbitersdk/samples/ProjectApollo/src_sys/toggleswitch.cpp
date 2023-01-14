@@ -2851,20 +2851,25 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 		char label[100];
 		sprintf(label, "%d", value);
 
-		HDC hDC = oapiGetDC(drawSurface);
-		HFONT font = CreateFont(22, 0, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
-		SelectObject(hDC, font);
-		SetTextColor(hDC, RGB(255, 255, 255));
-		SetTextAlign(hDC, TA_CENTER);
-		SetBkMode(hDC, OPAQUE);
-		SetBkColor(hDC, RGB(146, 146, 146));
+		oapi::Sketchpad* skp = oapiGetSketchpad(drawSurface);
+		oapi::Font* font = oapiCreateFont(22, true, "Arial", FONT_BOLD);
+		oapi::Brush* brush = oapiCreateBrush(RGB(146, 146, 146));
+		oapi::Pen* pen = oapiCreatePen(1, 1, RGB(146, 146, 146));
+		skp->SetBrush(brush);
+		skp->SetPen(pen);
+		skp->SetFont(font);
+		skp->SetTextColor(RGB(255, 255, 255));
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->SetBackgroundMode(oapi::Sketchpad::BK_OPAQUE);
+		skp->SetBackgroundColor(RGB(146, 146, 146));
 
 		if (GetState() == 0) {
 			rt.left = 29 + x;
 			rt.top = 24 + y;
 			rt.right = 60 + x;
 			rt.bottom = 55 + y;
-			ExtTextOut(hDC, 44 + x, 28 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(44 + x, 28 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 1) {
@@ -2872,7 +2877,8 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			rt.top = 30 + y;
 			rt.right = 59 + x;
 			rt.bottom = 52 + y;
-			ExtTextOut(hDC, 49 + x, 31 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(49 + x, 31 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 2) {
@@ -2880,11 +2886,17 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			rt.top = 29 + y;
 			rt.right = 60 + x;
 			rt.bottom = 59 + y;
-			ExtTextOut(hDC, 44 + x, 34 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(44 + x, 34 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 3) {
-			TextOut(hDC, 42 + x, 36 + y, label, strlen(label));
+			rt.left = 29 + x;
+			rt.top = 35 + y;
+			rt.right = 57 + x;
+			rt.bottom = 59 + y;
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(42 + x, 36 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 4) {
@@ -2892,11 +2904,12 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			rt.top = 30 + y;
 			rt.right = 54 + x;
 			rt.bottom = 60 + y;
-			ExtTextOut(hDC, 37 + x, 34 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(37 + x, 34 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 5) {
-			TextOut(hDC, 32 + x, 31 + y, label, strlen(label));
+			skp->Text(32 + x, 31 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 6) {
@@ -2904,11 +2917,14 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			rt.top = 24 + y;
 			rt.right = 55 + x;
 			rt.bottom = 54 + y;
-			ExtTextOut(hDC, 39 + x, 28 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(39 + x, 28 + y, label, strlen(label));
 		}
 
-		DeleteObject(font);
-		oapiReleaseDC(drawSurface, hDC);
+		oapiReleaseFont(font);
+		oapiReleaseBrush(brush);
+		oapiReleasePen(pen);
+		oapiReleaseSketchpad(skp);
 	}
 }
 
@@ -3857,7 +3873,7 @@ RoundMeter::~RoundMeter()
 		delete pswitchrot;
 }
 
-void RoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row)
+void RoundMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row)
 
 {
 	MeterSwitch::Init(row);
@@ -3898,16 +3914,13 @@ void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double a
 	// Needle function by Rob Conley from Mercury code
 	
 	double dx = rad * cos(angle), dy = rad * sin(angle);
-	HGDIOBJ oldObj;
 
-	HDC hDC = oapiGetDC (surf);
-	oldObj = SelectObject (hDC, Pen1);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
-	SelectObject (hDC, oldObj);
-	oldObj = SelectObject (hDC, Pen0);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
-	SelectObject (hDC, oldObj);
-	oapiReleaseDC (surf, hDC);
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(Pen1);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(0.85 * dx + 0.5), y - (int)(0.85 * dy + 0.5));
+	skp->SetPen(Pen0);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(dx + 0.5), y - (int)(dy + 0.5));
+	oapiReleaseSketchpad(skp);
 }
 
 ElectricMeter::ElectricMeter(double minVal, double maxVal, double vMin, double vMax)
@@ -3932,7 +3945,7 @@ void ElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
 	FrameSurface = srf;
 }
 
-void ElectricMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch)
+void ElectricMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, e_object *dcindicatorswitch)
 
 {
 	RoundMeter::Init(p0, p1, row);
