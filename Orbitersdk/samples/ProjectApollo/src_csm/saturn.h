@@ -57,7 +57,7 @@
 #include "MechanicalAccelerometer.h"
 #include "checklistController.h"
 #include "payload.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "qball.h"
 #include "canard.h"
 #include "siisystems.h"
@@ -3999,7 +3999,7 @@ protected:
 	int ReticleLineCnt[2], ReticleLineMaxLen;
 	int *ReticleLineLen[2]; //[SCT=0 | SXT=1]
 	double *ReticleLine[2][2]; //[SCT=0 | SXT=1][X=0 | Y=1]
-	POINT *ReticlePoint;
+	oapi::IVECTOR2 *ReticlePoint;
 
 	double PanelPixelHeight;
 

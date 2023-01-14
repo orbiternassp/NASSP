@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 
 #include "math.h"
 #include "windows.h"
@@ -34,8 +34,8 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
-#include "lemcomputer.h"
+#include "CSMcomputer.h"
+#include "LEMcomputer.h"
 #include "saturn.h"
 #include "LEM.h"
 #include "Crawler.h"
@@ -95,7 +95,7 @@ void ProjectApolloChecklistMFDopcDLLExit (HINSTANCE hDLL)
 void ProjectApolloChecklistMFDopcTimestep (double simt, double simdt, double mjd)
 {
 }
-ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w,h,vessel)
+ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,h,vessel)
 {
 	saturn = NULL;
 	crawler = NULL;
@@ -129,7 +129,8 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 			lem = (LEM *)vessel;
 	}
 
-	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
+	HBITMAP hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
+	hLogo = oapiCreateSurface(hBmpLogo);
 }
 
 ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
@@ -780,17 +781,15 @@ void ProjectApolloChecklistMFD::substituteVariables(char *buffer,int buflen) {
 	}
 }
 
-void ProjectApolloChecklistMFD::Update (HDC hDC)
+bool ProjectApolloChecklistMFD::Update (oapi::Sketchpad* skp)
 {
-	static RECT ShadedBox;
 	ChecklistItem *item;
-	HBRUSH hBr;
+	oapi::Brush *hBr;
 
-	HDC hDCTemp = CreateCompatibleDC(hDC);
-	HBITMAP hBmpTemp = (HBITMAP) SelectObject(hDCTemp, hBmpLogo);
-	StretchBlt(hDC, 1, 1, width - 2, height - 2, hDCTemp, 0, 0, 256, 256, SRCCOPY);
-	DeleteObject(hBmpTemp);
-	DeleteDC(hDCTemp);
+	SURFHANDLE s = skp->GetSurface();
+	RECT src{ 0, 0, 255, 255 };
+	RECT dst{ 1, 1, (LONG)width - 2, (LONG)height - 2 };
+	oapiBlt(s, hLogo, &dst, &src);
 
 	// Retrieve Checklists
 	vector<ChecklistGroup> *temp = conn.GetChecklistList();
@@ -801,36 +800,36 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 
 	if (screen == PROG_CHKLST)
 	{
-		SelectDefaultFont(hDC, 0);
+		skp->SetFont(GetDefaultFont(0));
 		char *cn = conn.checklistName();
 		if (cn)
-			Title(hDC, cn);
+			Title(skp, cn);
 		
 		// Display the MET after the header
 		if (bDisplayMET)
 		{
-			SetTextColor (hDC, RGB(225, 225, 255)); // blue 
-			SetTextAlign (hDC, TA_CENTER);
+			skp->SetTextColor(RGB(225, 225, 255)); // blue 
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			line = DisplayMissionElapsedTime();
-			TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
+			skp->Text((int)(width * .5), (int)(height * 0.05), line.c_str(), line.size());
 		}
 
-		SetTextAlign (hDC, TA_LEFT);
-		SelectDefaultPen(hDC, 1);
-		MoveToEx (hDC, (int) (width * 0.02), (int) (height * 0.94), 0);
-		LineTo (hDC, (int) (width * 0.98), (int) (height * 0.94));
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->SetPen(GetDefaultPen(0));
+		skp->MoveTo((int)(width * 0.02), (int)(height * 0.94));
+		skp->LineTo((int)(width * 0.98), (int)(height * 0.94));
 
 		// Display bottom flag row
 		bool autocomplete = conn.ChecklistAutocomplete();
 		bool autoexec = conn.GetAutoExecute();
 		bool flash = conn.GetChecklistFlashing();
-		SetTextColor(hDC, RGB(0, 255, 0));
-		SetTextAlign(hDC, TA_LEFT);
-		TextOut(hDC, (int)(width * 0.05), (int)(height * .95), autocomplete ? "AUTO: ON " : "AUTO: OFF", strlen("AUTO: OFF"));
-		SetTextAlign(hDC, TA_CENTER);
-		TextOut(hDC, width / 2, (int)(height * .95), autoexec ? "EXEC: ON " : "EXEC: OFF", strlen("EXEC: OFF"));
-		SetTextAlign(hDC, TA_RIGHT);
-		TextOut(hDC, width - (int)(width * 0.05), (int)(height * .95), flash ? "FLASH: ON " : "FLASH: OFF", strlen("FLASH: OFF"));
+		skp->SetTextColor(RGB(0, 255, 0));
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text((int)(width * 0.05), (int)(height * .95), autocomplete ? "AUTO: ON " : "AUTO: OFF", strlen("AUTO: OFF"));
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(width / 2, (int)(height * .95), autoexec ? "EXEC: ON " : "EXEC: OFF", strlen("EXEC: OFF"));
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		skp->Text(width - (int)(width * 0.05), (int)(height * .95), flash ? "FLASH: ON " : "FLASH: OFF", strlen("FLASH: OFF"));
 
 		//Retrieve 15 visible checklist steps  (all are displayed on two lines)
 		//Lines 1,2,3,4,5,6,7,8,9 (index 0/1,2/3,4/5,6/7,8/9,10/11,12/13,14/15,16/17)
@@ -846,9 +845,9 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					if (StepCnt != 0)
 						cnt++; //go to next line
 					if (cnt >= 20) break;
-					SetTextColor(hDC,RGB(225, 225, 255)); 
-					SetTextAlign (hDC, TA_CENTER);
-					TextOut(hDC, (int) (width * .5), (int) (height * (LINE0+cnt*HLINE)), item->heading1, strlen(item->heading1));
+					skp->SetTextColor(RGB(225, 225, 255));
+					skp->SetTextAlign(oapi::Sketchpad::CENTER);
+					skp->Text((int)(width * .5), (int)(height * (LINE0 + cnt * HLINE)), item->heading1, strlen(item->heading1));
 					cnt++;
 					cnt++; //go to next line to write information
 				}
@@ -859,11 +858,11 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					if (strlen(item->heading1) == 0 && StepCnt != 0 && !linebreakpanel)
 						cnt++; //go to next line
 					if (cnt >= 20) break;
-					SetTextColor(hDC,RGB(225, 225, 255)); 
-					SetTextAlign (hDC, TA_LEFT);
+					skp->SetTextColor(RGB(225, 225, 255));
+					skp->SetTextAlign(oapi::Sketchpad::LEFT);
 					//display Current Checklist Mission Time
 					line = DisplayChecklistMissionTime(item);
-					TextOut(hDC, (int) (width * .01), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+					skp->Text((int)(width * .01), (int)(height * (LINE0 + cnt * HLINE)), line.c_str(), line.size());
 					cnt++; //go to next line to write information
 				}
 				if (cnt >= 20) break;
@@ -873,9 +872,9 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					if (strlen(item->heading1) == 0 && (item->relativeEvent == NO_TIME_DEF || item->relativeEvent == HIDDEN_DELAY) && StepCnt != 0 && !linebreakpanel)
 						cnt++; //go to next line
 					if (cnt >= 20) break;
-					SetTextColor(hDC,RGB(225, 225, 255)); 
-					SetTextAlign (hDC, TA_LEFT);
-					TextOut(hDC, (int) (width * .03), (int) (height * (LINE0+cnt*HLINE)), item->heading2, strlen(item->heading2));
+					skp->SetTextColor(RGB(225, 225, 255));
+					skp->SetTextAlign(oapi::Sketchpad::LEFT);
+					skp->Text((int)(width * .03), (int)(height * (LINE0 + cnt * HLINE)), item->heading2, strlen(item->heading2));
 					cnt++; //go to next line to write information
 				}
 				if (cnt >= 20) break;
@@ -888,26 +887,29 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 				//Display Highlighted box
 				if (StepCnt == 0 || StepCnt == -CurrentStep) {
 					if (StepCnt == -CurrentStep) {
-						hBr = CreateSolidBrush( RGB(0, 100, 0));
+						hBr = oapiCreateBrush(RGB(0, 100, 0));
 					} else {
-						hBr = CreateSolidBrush( RGB(0, 50, 0));
+						hBr = oapiCreateBrush(RGB(0, 50, 0));
 					}
-					SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0+cnt*HLINE+.008)),(int) (width * .99), (int) (height * (LINE1+cnt*HLINE+.01)));
-					FillRect(hDC, &ShadedBox, hBr);
-					DeleteObject(hBr);
+					oapi::Brush *oldBrush = skp->SetBrush(hBr);
+					oapi::Pen* oldPen = skp->SetPen(nullptr);
+					skp->Rectangle((int)(width * .01), (int)(height * (LINE0 + cnt * HLINE + .008)), (int)(width * .99), (int)(height * (LINE1 + cnt * HLINE + .01)));
+					skp->SetBrush(oldBrush);
+					skp->SetPen(oldPen);
+					oapiReleaseBrush(hBr);
 				}
 
 				//Print Step
 				if (item->callGroup == -1) {
 					if (item->automatic) {
-						SetTextColor (hDC, RGB(0, 255, 0));
+						skp->SetTextColor(RGB(0, 255, 0));
 					} else {
-						SetTextColor (hDC, RGB(255, 255, 0));
+						skp->SetTextColor(RGB(255, 255, 0));
 					}
 				} else {
-					SetTextColor (hDC, RGB(0, 255, 255));
+					skp->SetTextColor(RGB(0, 255, 255));
 				}
-				SetTextAlign (hDC, TA_LEFT);
+				skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 				// Line break
 				char buffer[1000];
@@ -924,7 +926,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 						}
 						if (breakpos == 0) breakpos = 30;
 
-						TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), buffer, breakpos);
+						skp->Text((int)(width * .05), (int)(height * (LINE0 + cnt * HLINE)), buffer, breakpos);
 						cnt++; //go to next line
 						if (cnt >= 20) break;
 
@@ -935,10 +937,10 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 						strcpy(buffer, tmp);
 					}
 					if (cnt >= 20) break;
-					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), buffer, strlen(buffer));
+					skp->Text((int)(width * .05), (int)(height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
 
 				} else {
-					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), buffer, strlen(buffer));
+					skp->Text((int)(width * .05), (int)(height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
 				}
 
 				//Print panel
@@ -949,8 +951,8 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 						if (cnt >= 20) break;
 						linebreakpanel = true;
 					}
-					SetTextAlign (hDC, TA_RIGHT);
-					TextOut(hDC, (int) (width * .98), (int) (height * (LINE0+cnt*HLINE)), item->panel, strlen(item->panel));
+					skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+					skp->Text((int)(width * .98), (int)(height* (LINE0 + cnt * HLINE)), item->panel, strlen(item->panel));
 				}
 			} else {
 				if (StepCnt == 0 && CurrentStep != 0) {
@@ -962,53 +964,59 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			StepCnt++;
 		}
 		if (noChecklist) {
-			SetTextColor (hDC, RGB(0, 255, 0));
-			SetTextAlign (hDC, TA_CENTER);
-			TextOut(hDC, (int) (width * .5), (int) (height * .4), "(No active checklist)", 21);
+			skp->SetTextColor(RGB(0, 255, 0));
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * .5), (int)(height * .4), "(No active checklist)", 21);
 		}
 	}
 	else if (screen == PROG_CHKLSTNAV)
 	{
-		SelectDefaultFont(hDC, 0);				
-		Title(hDC, "Checklist Navigation");
-		
+		skp->SetFont(GetDefaultFont(0));
+		Title(skp, "Checklist Navigation");
+
 		// Display the MET after the header
 		if (bDisplayMET)
 		{
-			SetTextColor (hDC, RGB(225, 225, 255)); // blue 
-			SetTextAlign (hDC, TA_CENTER);
+			skp->SetTextColor(RGB(225, 225, 255)); // blue 
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			line = DisplayMissionElapsedTime();
-			TextOut(hDC, (int) (width * .5), (int) (height * 0.05), line.c_str(), line.size());
+			skp->Text((int)(width * .5), (int)(height * 0.05), line.c_str(), line.size());
 		}
 
-		SelectDefaultPen(hDC, 1);
-		MoveToEx (hDC, (int) (width * 0.02), (int) (height * 0.94), 0);
-		LineTo (hDC, (int) (width * 0.98), (int) (height * 0.94));
+		skp->SetPen(GetDefaultPen(0));
+		skp->MoveTo((int)(width * 0.02), (int)(height * 0.94));
+		skp->LineTo((int)(width * 0.98), (int)(height * 0.94));
 
 		//display AutoToggle selection box.
-		hBr = CreateSolidBrush( RGB(0, 150, 0));
+		hBr = oapiCreateBrush(RGB(0, 150, 0));
+		oapi::Brush* oldBrush = skp->SetBrush(hBr);
+		oapi::Pen* oldPen = skp->SetPen(nullptr);
 		if (!conn.ChecklistAutocomplete()) {
-			SetRect(&ShadedBox,(int) (width * 0.34),(int) (height * 0.955),(int) (width * 0.47), (int) (height - .999));
+			skp->Rectangle((int)(width * 0.34), (int)(height * 0.955), (int)(width * 0.47), (int)(height - .999));
 		} else {
-			SetRect(&ShadedBox,(int) (width * 0.24),(int) (height * 0.955),(int) (width * 0.34), (int) (height - .999));
+			skp->Rectangle((int)(width * 0.24), (int)(height * 0.955), (int)(width * 0.34), (int)(height - .999));
 		}
-		FillRect(hDC, &ShadedBox, hBr);
-		SetTextColor (hDC, RGB(0, 255, 0));
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * .05), (int) (height * .95), " AUTO:  ON  OFF", 15);
+		skp->SetBrush(oldBrush);
+		skp->SetPen(oldPen);
+		skp->SetTextColor(RGB(0, 255, 0));
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text((int)(width * .05), (int)(height * .95), " AUTO:  ON  OFF", 15);
 
 		//display flashing selection box.
+		oldBrush = skp->SetBrush(hBr);
+		oldPen = skp->SetPen(nullptr);
 		if (!conn.GetChecklistFlashing()) {
-			SetRect(&ShadedBox,(int) (width * 0.82),(int) (height * 0.955),(int) (width * 0.95), (int) (height - .999));
+			skp->Rectangle((int) (width * 0.82),(int) (height * 0.955),(int) (width * 0.95), (int) (height - .999));
 		} else {
-			SetRect(&ShadedBox,(int) (width * 0.72),(int) (height * 0.955),(int) (width * 0.82), (int) (height - .999));
+			skp->Rectangle((int) (width * 0.72),(int) (height * 0.955),(int) (width * 0.82), (int) (height - .999));
 		}
-		FillRect(hDC, &ShadedBox, hBr);
-		DeleteObject(hBr);
-		SetTextColor (hDC, RGB(0, 255, 0));
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * .5), (int) (height * .95), " FLASH:  ON  OFF", 16);
-		
+		skp->SetBrush(oldBrush);
+		skp->SetPen(oldPen);
+		oapiReleaseBrush(hBr);
+		skp->SetTextColor(RGB(0, 255, 0));
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text((int)(width * .5), (int)(height * .95), " FLASH:  ON  OFF", 16);
+
 		//TODO: Handle Writing Text
 		/*
 		sprintf(buffer, "%d", groups.size());
@@ -1020,7 +1028,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		//sprintf(oapiDebugString(), "TopStep: %d  CurrentStep: %d  HighLightedStep: %d", TopStep,CurrentStep,HiLghtdLine);
 
 		//Set up Type for checklist display
-		SetTextAlign (hDC, TA_LEFT);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		int cnt, grpcnt = 0;
 
 		// Make sure that the HiLghtdLine is shown actually
@@ -1069,9 +1077,9 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 				if (grpcnt != 0)
 					cnt++; //go to next line
 				if (cnt >= NLINES) break;
-				SetTextColor(hDC, RGB(225, 225, 255)); 
-				SetTextAlign(hDC, TA_CENTER);
-				TextOut(hDC, (int) (width * .5), (int) (height * (LINE0 + cnt * HLINE)), grp->heading, strlen(grp->heading));
+				skp->SetTextColor(RGB(225, 225, 255));
+				skp->SetTextAlign(oapi::Sketchpad::CENTER);
+				skp->Text((int)(width * .5), (int)(height * (LINE0 + cnt * HLINE)), grp->heading, strlen(grp->heading));
 				cnt++;
 				cnt++; //go to next line to write information
 			}
@@ -1079,18 +1087,21 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 
 			//display Highlighted box
 			if (grpcnt == HiLghtdLine) {
-				hBr = CreateSolidBrush( RGB(0, 100, 0));
-				SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + cnt * HLINE + .01)),(int) (width * .99), (int) (height * (LINE1 + cnt * HLINE + .01)));
-				FillRect(hDC, &ShadedBox, hBr);
-				DeleteObject(hBr);
+				hBr = oapiCreateBrush(RGB(0, 100, 0));
+				oapi::Brush* oldBrush = skp->SetBrush(hBr);
+				oapi::Pen* oldPen = skp->SetPen(nullptr);
+				skp->Rectangle((int)(width * .01), (int)(height * (LINE0 + cnt * HLINE + .01)), (int)(width * .99), (int)(height * (LINE1 + cnt * HLINE + .01)));
+				skp->SetBrush(oldBrush);
+				skp->SetPen(oldPen);
+				oapiReleaseBrush(hBr);
 				HiLghtdLineDown = true;
 			} else {
 				HiLghtdLineDown = false;
 			}
 
-			SetTextColor (hDC, RGB(0, 255, 0));
-			SetTextAlign (hDC, TA_LEFT);
-			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (cnt * HLINE))), grp->name, strlen(grp->name));
+			skp->SetTextColor(RGB(0, 255, 0));
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * .05), (int)(height* (LINE0 + (cnt * HLINE))), grp->name, strlen(grp->name));
 
 			grpcnt++;
 		}
@@ -1151,35 +1162,38 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 	{
 		item = conn.GetChecklistItem(-1, CurrentStep);
 		if (item) {
-			SelectDefaultFont(hDC, 0);
-			Title(hDC, "Checklist Information");
+			skp->SetFont(GetDefaultFont(0));
+			Title(skp, "Checklist Information");
 			// Display the MET after the header
 			if (bDisplayMET) {
-				SetTextColor(hDC, RGB(225, 225, 255)); // blue 
-				SetTextAlign(hDC, TA_CENTER);
+				skp->SetTextColor(RGB(225, 225, 255)); // blue 
+				skp->SetTextAlign(oapi::Sketchpad::CENTER);
 				line = DisplayMissionElapsedTime();
-				TextOut(hDC, (int)(width * .5), (int)(height * 0.05), line.c_str(), line.size());
+				skp->Text((int)(width * .5), (int)(height * 0.05), line.c_str(), line.size());
 			}
 			cnt = 1;
-			SetTextColor(hDC, RGB(225, 225, 255));
-			SetTextAlign(hDC, TA_LEFT);
+			skp->SetTextColor(RGB(225, 225, 255));
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 			//display Current Checklist Mission Time
 			if (item->relativeEvent != NO_TIME_DEF && item->relativeEvent != HIDDEN_DELAY) {
 				line = DisplayChecklistMissionTime(item);
-				TextOut(hDC, (int)(width * .02), (int)(height * (LINE0 + cnt * HLINE)), line.c_str(), line.size());
+				skp->Text((int)(width * .02), (int)(height* (LINE0 + cnt * HLINE)), line.c_str(), line.size());
 				cnt = cnt + 2;
 			}
 			//display Highlighted box
-			hBr = CreateSolidBrush(RGB(0, 100, 0));
-			SetRect(&ShadedBox, (int)(width * .01), (int)(height * (LINE0 + cnt * HLINE + .01)), (int)(width * .99), (int)(height * (LINE0 + (cnt + 1) * HLINE + .01)));
-			FillRect(hDC, &ShadedBox, hBr);
-			DeleteObject(hBr);
-			SelectDefaultPen(hDC, 1);
-			MoveToEx(hDC, (int)(width * 0.02), (int)(height * 0.94), 0);
-			LineTo(hDC, (int)(width * 0.98), (int)(height * 0.94));
-			SelectDefaultFont(hDC, 0);
-			SetTextColor(hDC, RGB(0, 255, 0));
-			SetTextAlign(hDC, TA_LEFT);
+			hBr = oapiCreateBrush(RGB(0, 100, 0));
+			oapi::Brush* oldBrush = skp->SetBrush(hBr);
+			oapi::Pen* oldPen = skp->SetPen(nullptr);
+			skp->Rectangle((int)(width * .01), (int)(height* (LINE0 + cnt * HLINE + .01)), (int)(width * .99), (int)(height* (LINE0 + (cnt + 1) * HLINE + .01)));
+			skp->SetBrush(oldBrush);
+			skp->SetPen(oldPen);
+			oapiReleaseBrush(hBr);
+			skp->SetPen(GetDefaultPen(0));
+			skp->MoveTo((int)(width * 0.02), (int)(height * 0.94));
+			skp->LineTo((int)(width * 0.98), (int)(height * 0.94));
+			skp->SetFont(GetDefaultFont(0));
+			skp->SetTextColor(RGB(0, 255, 0));
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 			// Item
 			char buffer[1000];
@@ -1196,7 +1210,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					}
 					if (breakpos == 0) breakpos = 30;
 
-					TextOut(hDC, (int)(width * .05), (int)(height * (LINE0 + cnt * HLINE)), buffer, breakpos);
+					skp->Text((int)(width * .05), (int)(height* (LINE0 + cnt * HLINE)), buffer, breakpos);
 					cnt++; //go to next line
 
 					char tmp[1000];
@@ -1205,16 +1219,16 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					strcat(tmp, buffer + breakpos + 1);
 					strcpy(buffer, tmp);
 				}
-				TextOut(hDC, (int)(width * .05), (int)(height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
+				skp->Text((int)(width * .05), (int)(height* (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
 			} else {
-				TextOut(hDC, (int)(width * .05), (int)(height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
+				skp->Text((int)(width * .05), (int)(height* (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
 			}
 			// Line break
 			cnt = cnt + 2;
 
 			// Info
-			SetTextColor(hDC, RGB(0, 225, 0));
-			SetTextAlign(hDC, TA_LEFT);
+			skp->SetTextColor(RGB(0, 225, 0));
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 			strcpy(buffer, item->info);
 			// Variable substitution comes first, so we can include the variable expansion in line length calculations
 			this->substituteVariables(buffer,1000);
@@ -1239,7 +1253,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					}
 					if (breakpos == 0) breakpos = 30;
 
-					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + cnt * HLINE)), buffer, breakpos);
+					skp->Text((int)(width * .05), (int)(height* (LINE0 + cnt * HLINE)), buffer, breakpos);
 					cnt++; //go to next line
 
 					char tmp[1000];
@@ -1247,10 +1261,10 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 					strcpy(buffer, tmp);
 					nlp = strchr(buffer, '\n');
 				}
-				TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
+				skp->Text((int)(width * .05), (int)(height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
 
 			} else {
-				TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
+				skp->Text((int)(width * .05), (int)(height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
 			}
 
 			// Line break
@@ -1260,13 +1274,14 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			if (strlen(item->panel) > 0) {
 				sprintf(buffer, "Panel: %s", item->panel);
 
-				SetTextColor(hDC, RGB(0, 225, 0)); 
-				SetTextAlign (hDC, TA_RIGHT);
-				TextOut(hDC, (int) (width * .98), (int) (height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
+				skp->SetTextColor(RGB(0, 225, 0));
+				skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+				skp->Text((int)(width * .98), (int)(height * (LINE0 + cnt * HLINE)), buffer, strlen(buffer));
 				cnt = cnt + 2;
 			}
 		}
 	}
+	return true;
 }
 std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime(ChecklistItem *item)
 {

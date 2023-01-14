@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -41,7 +41,7 @@
 #include "tracer.h"
 #include "sm.h"
 #include "sivb.h"
-#include "lemcomputer.h"
+#include "LEMcomputer.h"
 #include "LEM.h"
 #include "papi.h"
 #include "mcc.h"

@@ -25,10 +25,10 @@
 #ifndef __THERMAL_H_
 #define __THERMAL_H_
 
-#include "../matrix.h"
-// To force orbitersdk.h to use <fstream> in any compiler version
+#include "../Matrix.h"
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 
 class therm_obj			//thermal object.an object that can receive thermal energy
 { public:

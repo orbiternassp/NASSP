@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -52,19 +52,19 @@ void InitGParam(HINSTANCE hModule)
 	g_Param.hDLL = hModule;
 
 	// allocate GDI resources
-	g_Param.font[0]  = CreateFont (-13, 0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
-	g_Param.font[1]  = CreateFont (-10, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
+	g_Param.font[0]  = oapiCreateFont(-13, true, "Arial");
+	g_Param.font[1]  = oapiCreateFont(-10, true, "Arial");
 
-	g_Param.brush[0] = CreateSolidBrush (RGB(0,255,0));    // green
-	g_Param.brush[1] = CreateSolidBrush (RGB(255,0,0));    // red
-	g_Param.brush[2] = CreateSolidBrush (RGB(154,154,154));  // Grey
-	g_Param.brush[3] = CreateSolidBrush (RGB(3,3,3));  // Black
+	g_Param.brush[0] = oapiCreateBrush(RGB(0,255,0));    // green
+	g_Param.brush[1] = oapiCreateBrush(RGB(255,0,0));    // red
+	g_Param.brush[2] = oapiCreateBrush(RGB(154,154,154));  // Grey
+	g_Param.brush[3] = oapiCreateBrush(RGB(3,3,3));  // Black
 
-	g_Param.pen[0] = CreatePen (PS_SOLID, 1, RGB(224,224,224));
-	g_Param.pen[1] = CreatePen (PS_SOLID, 3, RGB(164,164,164));
-	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB(255,0,0));
-	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB(255,0,0));
-	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(0,0,0));
+	g_Param.pen[0] = oapiCreatePen(1, 1, RGB(224,224,224));
+	g_Param.pen[1] = oapiCreatePen(1, 3, RGB(164,164,164));
+	g_Param.pen[2] = oapiCreatePen(1, 1, RGB(255,0,0));
+	g_Param.pen[3] = oapiCreatePen(1, 3, RGB(255,0,0));
+	g_Param.pen[4] = oapiCreatePen(1, 3, RGB(0,0,0));
 
 	g_Param.col[2] = oapiGetColour(154,154,154);
 	g_Param.col[3] = oapiGetColour(3,3,3);
@@ -75,10 +75,10 @@ void FreeGParam()
 
 {
 	int i;
-	// deallocate GDI resources
-	for (i = 0; i < 2; i++) DeleteObject (g_Param.font[i]);
-	for (i = 0; i < 4; i++) DeleteObject (g_Param.brush[i]);
-	for (i = 0; i < 4; i++) DeleteObject (g_Param.pen[i]);
+	// deallocate sketchpad resources
+	for (i = 0; i < 2; i++) oapiReleaseFont(g_Param.font[i]);
+	for (i = 0; i < 4; i++) oapiReleaseBrush(g_Param.brush[i]);
+	for (i = 0; i < 4; i++) oapiReleasePen(g_Param.pen[i]);
 }
 
 #define RETICLE_X_CENTER 525
@@ -87,66 +87,64 @@ void FreeGParam()
 #define RETICLE_SPLIT_ANGLE 0.05 // about 2.25 degrees
 #define RETICLE_SCREW_NPTS 360
 
-void DrawReticle (HDC hDC, double angle, int dimmer)
+void DrawReticle(oapi::Sketchpad * skp, double angle, int dimmer)
 {
-	HGDIOBJ oldObj;
-	int xend,yend;
+	int xend, yend;
 	// Set up Dimmer Pen
-	HPEN pen = CreatePen(PS_SOLID,1,RGB(dimmer,64,64));
-	oldObj = SelectObject (hDC, pen);
+	oapi::Pen* pen = oapiCreatePen(1, 1, RGB(dimmer, 64, 64));
+	oapi::Pen* oldObj = skp->SetPen(pen);
 	// Draw crosshair vertical member
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle));
 	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
-	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle+PI));
-	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle+PI));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle + PI));
+	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle + PI));
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
 	// Draw crosshair horizontal member
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * cos(angle));
 	yend = RETICLE_Y_CENTER + (int)(RETICLE_RADIUS * sin(angle));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
-	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * cos(angle+PI));
-	yend = RETICLE_Y_CENTER + (int)(RETICLE_RADIUS * sin(angle+PI));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * cos(angle + PI));
+	yend = RETICLE_Y_CENTER + (int)(RETICLE_RADIUS * sin(angle + PI));
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
 	// Draw radial line #1
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle + RETICLE_SPLIT_ANGLE));
 	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle + RETICLE_SPLIT_ANGLE));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
 	// Draw radial line #2
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle - RETICLE_SPLIT_ANGLE));
 	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle - RETICLE_SPLIT_ANGLE));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
 	int i;
-	double theta,b, r;
-	b = -RETICLE_RADIUS / tan(PI2*30.0 / 360.0);
-	POINT ScrewPt[RETICLE_SCREW_NPTS];
+	double theta, b, r;
+	b = -RETICLE_RADIUS / tan(PI2 * 30.0 / 360.0);
+	oapi::IVECTOR2 ScrewPt[RETICLE_SCREW_NPTS];
 	// Draw Archemedes screw #1
-	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
-		theta = 2*PI / RETICLE_SCREW_NPTS * i;
-		r = b * tan(theta*30.0 / 360.0);
-		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle+RETICLE_SPLIT_ANGLE+PI));
-		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle+RETICLE_SPLIT_ANGLE+PI));
+	for (i = 0; i < RETICLE_SCREW_NPTS; i++) {
+		theta = 2 * PI / RETICLE_SCREW_NPTS * i;
+		r = b * tan(theta * 30.0 / 360.0);
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r * sin(theta + angle + RETICLE_SPLIT_ANGLE + PI));
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r * cos(theta + angle + RETICLE_SPLIT_ANGLE + PI));
 	}
-	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
+	skp->Polyline(ScrewPt, RETICLE_SCREW_NPTS);
 	// Draw Archemedes screw #2
-	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
-		theta = 2*PI / RETICLE_SCREW_NPTS * i;
-		r = b * tan(theta*30.0 / 360.0);
-		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle-RETICLE_SPLIT_ANGLE+PI));
-		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle-RETICLE_SPLIT_ANGLE+PI));
+	for (i = 0; i < RETICLE_SCREW_NPTS; i++) {
+		theta = 2 * PI / RETICLE_SCREW_NPTS * i;
+		r = b * tan(theta * 30.0 / 360.0);
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r * sin(theta + angle - RETICLE_SPLIT_ANGLE + PI));
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r * cos(theta + angle - RETICLE_SPLIT_ANGLE + PI));
 	}
-	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
+	skp->Polyline(ScrewPt, RETICLE_SCREW_NPTS);
 
-	SelectObject(hDC, oldObj);
-	DeleteObject(pen);
+	skp->SetPen(oldObj);
+	oapiReleasePen(pen);
 }
 
 void LEM::RedrawPanel_AOTReticle(SURFHANDLE surf)
 {
-	HDC hDC = oapiGetDC (surf);
-	DrawReticle (hDC, optics.OpticsReticle, optics.RetDimmer);
-	oapiReleaseDC (surf,hDC);
-
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	DrawReticle(skp, optics.OpticsReticle, optics.RetDimmer);
+	oapiReleaseSketchpad(skp);
 }
 
 
@@ -1006,7 +1004,7 @@ void LEM::InitSwitches() {
 
 void LEM::RedrawPanel_Horizon (SURFHANDLE surf)
 {
-POINT pt[4];
+	oapi::IVECTOR2 pt[4];
 	static double prange = RAD*30.0;
 	static int size = 48, size2 = size*2;
 	static int extent = (int)(size*prange);
@@ -1092,24 +1090,24 @@ POINT pt[4];
 	}
 	if (!n) bblue = (pitch < 0.0);
 	oapiClearSurface (surf, bblue ? g_Param.col[3]:g_Param.col[2]);
-	HDC hDC = oapiGetDC (surf);
-	SelectObject (hDC, GetStockObject (BLACK_PEN));
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(g_Param.pen[4]); //pen 4 is black
 	if (n >= 3) {
-		SelectObject (hDC, g_Param.brush[bblue ? 2:3]);
-		Polygon (hDC, pt, n);
-		SelectObject (hDC, g_Param.pen[0]);
-		MoveToEx (hDC, pt[0].x, pt[0].y, NULL); LineTo (hDC, pt[1].x, pt[1].y);
+		skp->SetBrush(g_Param.brush[bblue ? 2 : 3]);
+		skp->Polygon(pt, n);
+		skp->SetPen(g_Param.pen[0]);
+		skp->MoveTo(pt[0].x, pt[0].y); skp->LineTo(pt[1].x, pt[1].y);
 	}
 	// bank indicator
-	SelectObject (hDC, g_Param.pen[0]);
-	SelectObject (hDC, GetStockObject (NULL_BRUSH));
+	skp->SetPen(g_Param.pen[0]);
+	//SelectObject (hDC, GetStockObject (NULL_BRUSH)); //FIXME
 	static double r1 = 40, r2 = 35;
-	double sinb1 = sin(bank-0.1), cosb1 = cos(bank-0.1);
-	double sinb2 = sin(bank+0.1), cosb2 = cos(bank+0.1);
-	pt[0].x = (int)(r2*sinb1+0.5)+size; pt[0].y = -(int)(r2*cosb1+0.5)+size;
-	pt[1].x = (int)(r1*sinb+0.5)+size;  pt[1].y = -(int)(r1*cosb+0.5)+size;
-	pt[2].x = (int)(r2*sinb2+0.5)+size; pt[2].y = -(int)(r2*cosb2+0.5)+size;
-	Polygon (hDC, pt, 3);
+	double sinb1 = sin(bank - 0.1), cosb1 = cos(bank - 0.1);
+	double sinb2 = sin(bank + 0.1), cosb2 = cos(bank + 0.1);
+	pt[0].x = (int)(r2 * sinb1 + 0.5) + size; pt[0].y = -(int)(r2 * cosb1 + 0.5) + size;
+	pt[1].x = (int)(r1 * sinb + 0.5) + size;  pt[1].y = -(int)(r1 * cosb + 0.5) + size;
+	pt[2].x = (int)(r2 * sinb2 + 0.5) + size; pt[2].y = -(int)(r2 * cosb2 + 0.5) + size;
+	skp->Polygon(pt, 3);
 
 	// pitch ladder
 	static double d = size*(10.0*RAD)/prange;
@@ -1123,13 +1121,13 @@ POINT pt[4];
 	ylr = lwsina+d1*cosb, yll = -lwsina+d1*cosb;
 	for (iphi = (int)phi0+4, i = 0; i < 8; i++, iphi--) {
 		if (iphi) {
-			MoveToEx (hDC, size+(int)xll, size+(int)yll, NULL);
-			LineTo   (hDC, size+(int)xlr, size+(int)ylr);
+			skp->MoveTo(size + (int)xll, size + (int)yll);
+			skp->LineTo(size + (int)xlr, size + (int)ylr);
 		}
 		xlr -= dsinb, ylr += dcosb;
 		xll -= dsinb, yll += dcosb;
 	}
-	oapiReleaseDC (surf, hDC);
+	oapiReleaseSketchpad(skp);
 	// labels
 	lwcosa *= 1.6, lwsina *= 1.6;
 	xlr = lwcosa-d1*sinb, xll = -lwcosa-d1*sinb;
@@ -1149,59 +1147,54 @@ POINT pt[4];
 	// oapiBlt (surf, srf[5], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
 }
 
-void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPEN pen1)
+void DrawNeedle(oapi::Sketchpad* skp, int x, int y, double rad, double angle, oapi::Pen* pen0, oapi::Pen* pen1)
 
 {
 	double dx = rad * cos(angle), dy = rad * sin(angle);
-	HGDIOBJ oldObj;
-	oldObj = SelectObject (hDC, pen1);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
-	SelectObject (hDC, oldObj);
-	oldObj = SelectObject (hDC, pen0);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
-	SelectObject (hDC, oldObj);
+	oapi::Pen* oldPen = skp->SetPen(pen1);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(0.85 * dx + 0.5), y - (int)(0.85 * dy + 0.5));
+	skp->SetPen(pen0);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(dx + 0.5), y - (int)(dy + 0.5));
+	skp->SetPen(oldPen);
 }
 
-void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
+void LEM::RedrawPanel_XPointer(CrossPointer* cp, SURFHANDLE surf) {
 
 	int ix, iy;
 	double vx, vy;
-	HDC hDC;
 
 	//draw the crosspointers
 	cp->GetVelocities(vx, vy);
 
 	ix = (int)(-3.0 * vx);
-	if(ix < -60) ix = -60;
-	if(ix > 60) ix = 60;
+	if (ix < -60) ix = -60;
+	if (ix > 60) ix = 60;
 	iy = (int)(3.0 * vy);
-	if(iy < -60) iy = -60;
-	if(iy > 60 ) iy = 60;
-	hDC = oapiGetDC(surf);
-	HPEN pen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
-	SelectObject(hDC, pen);
-	MoveToEx(hDC, 0, 65 + ix, NULL);
-	LineTo(hDC, 134, 65 + ix);
-	MoveToEx(hDC, 67 + iy, 0, NULL);
-	LineTo(hDC, 67 + iy, 131);
-	DeleteObject(pen);
-	oapiReleaseDC(surf, hDC);
+	if (iy < -60) iy = -60;
+	if (iy > 60) iy = 60;
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(g_Param.pen[4]);
+	skp->MoveTo(0, 65 + ix);
+	skp->LineTo(134, 65 + ix);
+	skp->MoveTo(67 + iy, 0);
+	skp->LineTo(67 + iy, 131);
+	oapiReleaseSketchpad(skp);
 }
 
 void LEM::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
 
-	HDC hDC = oapiGetDC (surf);
-	SelectObject (hDC, g_Param.font[1]);
-	SetTextColor (hDC, RGB(255, 255, 255));
-	SetTextAlign (hDC, TA_CENTER);
-	SetBkMode (hDC, TRANSPARENT);
-	const char *label;
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetFont(g_Param.font[1]);
+	skp->SetTextColor(oapiGetColour(255, 255, 255));
+	skp->SetTextAlign(oapi::Sketchpad::CENTER);
+	skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
+	const char* label;
 	for (int bt = 0; bt < 6; bt++) {
-		if (label = oapiMFDButtonLabel (mfd, bt+side*6))
-			TextOut (hDC, xoffset, 44 * bt + yoffset, label, strlen(label));
+		if (label = oapiMFDButtonLabel(mfd, bt + side * 6))
+			skp->Text(xoffset, 44 * bt + yoffset, label, strlen(label));
 		else break;
 	}
-	oapiReleaseDC (surf, hDC);
+	oapiReleaseSketchpad(skp);
 }
 
 void LEM::clbkMFDMode (int mfd, int mode) {

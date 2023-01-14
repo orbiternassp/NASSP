@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "LVIMU.h"
 #include "LVDC.h"
 #include "iu.h"

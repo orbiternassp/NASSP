@@ -834,8 +834,8 @@ public:
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
 	double GetdVRangeCounter() { return dVRangeCounter; };
-	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
-	POINT RSITriangle[3];
+	oapi::IVECTOR2 ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
+	oapi::IVECTOR2 RSITriangle[3];
 	void SetRSIDeltaRotation(double dangle);
 	int ScribePntCnt;
 	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
