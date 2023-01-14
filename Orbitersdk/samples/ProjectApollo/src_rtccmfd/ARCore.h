@@ -14,6 +14,7 @@
 #include "mcc.h"
 #include "rtcc.h"
 #include "LunarTargetingProgram.h"
+#include "thread.h"
 #include <queue>
 
 struct ApolloRTCCMFDData {  // global data storage
@@ -162,7 +163,7 @@ public:
 	// SUBTHREAD MANAGEMENT
 	KillableWorker subThreadWorker;
 	int subThreadMode;										// What should the subthread do?
-	std::atomic<int> subThreadStatus;						// 0 = done/not busy, 1 = busy, negative = done with error
+	std::atomic<ThreadStatus> subThreadStatus;
 
 	ApolloRTCCMFDData g_Data;
 

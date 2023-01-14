@@ -30,6 +30,30 @@
 #include <condition_variable>
 #include <functional>
 
+// negative = done with error
+typedef enum {
+    DONE      = 0,  // Computation done
+    SCHEDULED = 1,  // Thread scheduled to start
+    RUNNING   = 2,  // Thread running
+    // A negative value will indicate that the thread stopped with an error
+} ThreadStatus;
+
+inline bool IsErr(ThreadStatus status) {
+    return status < 0;
+}
+
+inline bool IsReady(ThreadStatus status) {
+    return status < 1;
+}
+
+inline bool IsBusy(ThreadStatus status) {
+    return status > 0;
+}
+
+inline ThreadStatus ThreadError(int errcode) {
+    return (ThreadStatus)errcode;
+}
+
 class Event
 {
 public:

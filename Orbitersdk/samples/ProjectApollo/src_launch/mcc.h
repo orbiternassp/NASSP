@@ -27,6 +27,7 @@
 #include "MCCPADForms.h"
 #include <fstream>
 #include <atomic>
+#include "thread.h"
 
 // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
@@ -296,7 +297,7 @@ public:
 	// SUBTHREAD MANAGEMENT
 	int subThreadMode;										// What should the subthread do?
 	int subThreadType;										// What type of subthread?
-	std::atomic<int> subThreadStatus;						// 0 = done/not busy, 1 = busy, negative = done with error
+	std::atomic<ThreadStatus> subThreadStatus;
 
 	// GROUND TRACKING NETWORK
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
