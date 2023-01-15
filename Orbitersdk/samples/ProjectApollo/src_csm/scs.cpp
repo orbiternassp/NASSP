@@ -5452,18 +5452,28 @@ bool EMS::WriteScrollToFile() {
 	/////////////////////////////////////////////////////////
     // Get the drawing surface, apply the scribe line and create a corresponding 
     // bitmap with the same dimensions
-
+	
 	HDC hMemDC = CreateCompatibleDC(0);
 	HBITMAP hBitmap = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_EMS_SCROLL_LEO));
 	HGDIOBJ hOld = SelectObject(hMemDC, hBitmap);
 
 	// Draw Commands
 	SetBkMode(hMemDC, TRANSPARENT);
-	HGDIOBJ oldObj = SelectObject(hMemDC, g_Param.pen[5]);
-	Polyline(hMemDC, ScribePntArray, ScribePntCnt);
+	HPEN redPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+	HGDIOBJ oldObj = SelectObject(hMemDC, redPen);
+	POINT *points = new POINT[ScribePntCnt];
+	for (int i = 0; i < ScribePntCnt; i++) {
+		points[i].x = ScribePntArray[i].x;
+		points[i].y = ScribePntArray[i].y;
+	}
+
+	Polyline(hMemDC, points, ScribePntCnt);
+
+	delete[] points;
 
 	SelectObject(hMemDC, oldObj);
 	SelectObject(hMemDC, hOld);
+	DeleteObject(redPen);
 
 	PBITMAPINFO bitmapInfo = CreateBitmapInfoStruct(hBitmap);
 

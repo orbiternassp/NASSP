@@ -215,16 +215,15 @@ void Saturn::InitReticle() {
 		ReticleLine[1][1][i] = std::get<1>(line[i]);
 	}
 
-	ReticlePoint = new POINT[ReticleLineMaxLen];
+	ReticlePoint = new oapi::IVECTOR2[ReticleLineMaxLen];
 	//printf("RetMaxlen:%d\n", ReticleLineMaxLen);
 }
 
-void drawReticle(SURFHANDLE surf, double shaft, double panelPixelHeight, int reticleLineCnt, int reticleLineLen[], double **reticleLine, POINT ptbuf[]) {
-	HGDIOBJ oldObj;
-	HDC hDC = oapiGetDC(surf);
-	HPEN pen = CreatePen(PS_SOLID, 1, RGB(211, 171, 23));
-	oldObj = SelectObject(hDC, pen);
-	double reticleMul = 0.5*panelPixelHeight / tan(oapiCameraAperture());
+void drawReticle(SURFHANDLE surf, double shaft, double panelPixelHeight, int reticleLineCnt, int reticleLineLen[], double **reticleLine, oapi::IVECTOR2 ptbuf[]) {
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	oapi::Pen* pen = oapiCreatePen(1, 1, RGB(211, 171, 23));
+	skp->SetPen(pen);
+	double reticleMul = 0.5 * panelPixelHeight / tan(oapiCameraAperture());
 	double cosShaft = cos(shaft), sinShaft = sin(shaft);
 	int idx = 0;
 	for (int i = 0; i < reticleLineCnt; i++) {
@@ -234,11 +233,10 @@ void drawReticle(SURFHANDLE surf, double shaft, double panelPixelHeight, int ret
 			ptbuf[k].y = 268L - (LONG (reticleMul*(-sinShaft*xorig + cosShaft*yorig)));
 			idx++;
 		}
-		Polyline(hDC, ptbuf, reticleLineLen[i]);
+		skp->Polyline(ptbuf, reticleLineLen[i]);
 	}
-	SelectObject(hDC, oldObj);
-	DeleteObject(pen);
-	oapiReleaseDC(surf, hDC);
+	oapiReleasePen(pen);
+	oapiReleaseSketchpad(skp);
 }
 
 void setCameraLOS(double shaft, double trunnion) {
@@ -254,18 +252,18 @@ void setCameraLOS(double shaft, double trunnion) {
 
 void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist) {
 
-	HDC hDC = oapiGetDC (surf);
-	SelectObject (hDC, g_Param.font[2]);
-	SetTextColor (hDC, RGB(196, 196, 196));
-	SetTextAlign (hDC, TA_CENTER);
-	SetBkMode (hDC, TRANSPARENT);
+	oapi::Sketchpad *skp = oapiGetSketchpad(surf);
+	skp->SetFont(g_Param.font[2]);
+	skp->SetTextColor (RGB(196, 196, 196));
+	skp->SetTextAlign(oapi::Sketchpad::CENTER);
+	skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
 	const char *label;
 	for (int bt = 0; bt < 6; bt++) {
 		if (label = oapiMFDButtonLabel (mfd, bt+side*6))
-			TextOut (hDC, 10 + xoffset, 3 + ydist * bt + yoffset, label, strlen(label));
+			skp->Text (10 + xoffset, 3 + ydist * bt + yoffset, label, strlen(label));
 		else break;
 	}
-	oapiReleaseDC (surf, hDC);
+	oapiReleaseSketchpad (skp);
 }
 
 
@@ -3570,20 +3568,20 @@ void SetupgParam(HINSTANCE hModule) {
 	// allocate GDI resources
 	//
 
-	g_Param.font[0]  = CreateFont (-13, 0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
-	g_Param.font[1]  = CreateFont (-10, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
-	g_Param.font[2]  = CreateFont (-8, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
-	g_Param.brush[0] = CreateSolidBrush (RGB(0,255,0));    // green
-	g_Param.brush[1] = CreateSolidBrush (RGB(255,0,0));    // red
-	g_Param.brush[2] = CreateSolidBrush (RGB(154,154,154));  // Grey
-	g_Param.brush[3] = CreateSolidBrush (RGB(3,3,3));  // Black
-	g_Param.pen[0] = CreatePen (PS_SOLID, 3, RGB(224, 224, 224));
-	g_Param.pen[1] = CreatePen (PS_SOLID, 4, RGB(  0,   0,   0));
-	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB(  0,   0,   0));
-	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB( 77,  77,  77));
-	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(  0,   0,   0));
-	g_Param.pen[5] = CreatePen (PS_SOLID, 1, RGB(255,   0,   0));
-	g_Param.pen[6] = CreatePen (PS_SOLID, 3, RGB(255, 255, 255));
+	g_Param.font[0] = oapiCreateFont(-13, true, "Arial", FONT_BOLD);
+	g_Param.font[1] = oapiCreateFont(-10, true, "Arial");
+	g_Param.font[2] = oapiCreateFont(-8, true, "Arial");
+	g_Param.brush[0] = oapiCreateBrush (RGB(0,255,0));    // green
+	g_Param.brush[1] = oapiCreateBrush (RGB(255,0,0));    // red
+	g_Param.brush[2] = oapiCreateBrush (RGB(154,154,154));  // Grey
+	g_Param.brush[3] = oapiCreateBrush (RGB(3,3,3));  // Black
+	g_Param.pen[0] = oapiCreatePen (1, 3, RGB(224, 224, 224));
+	g_Param.pen[1] = oapiCreatePen (1, 4, RGB(  0,   0,   0));
+	g_Param.pen[2] = oapiCreatePen (1, 1, RGB(  0,   0,   0));
+	g_Param.pen[3] = oapiCreatePen (1, 3, RGB( 77,  77,  77));
+	g_Param.pen[4] = oapiCreatePen (1, 3, RGB(  0,   0,   0));
+	g_Param.pen[5] = oapiCreatePen (1, 1, RGB(255,   0,   0));
+	g_Param.pen[6] = oapiCreatePen (1, 3, RGB(255, 255, 255));
 }
 
 void DeletegParam() {
@@ -3591,12 +3589,12 @@ void DeletegParam() {
 	int i;
 
 	//
-	// deallocate GDI resources
+	// deallocate sketchpad resources
 	//
 
-	for (i = 0; i < 3; i++) DeleteObject (g_Param.font[i]);
-	for (i = 0; i < 4; i++) DeleteObject (g_Param.brush[i]);
-	for (i = 0; i < 6; i++) DeleteObject (g_Param.pen[i]);
+	for (i = 0; i < 3; i++) oapiReleaseFont(g_Param.font[i]);
+	for (i = 0; i < 4; i++) oapiReleaseBrush(g_Param.brush[i]);
+	for (i = 0; i < 6; i++) oapiReleasePen(g_Param.pen[i]);
 }
 
 bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
@@ -4938,18 +4936,14 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_EMS_SCROLL_LEO:
 	{
+		oapi::Sketchpad* skp = oapiGetSketchpad(srf[SRF_EMS_SCROLL_LEO]);
 
-		HDC hDC;
+		skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
+		skp->SetPen(g_Param.pen[2]);
 
-		hDC = oapiGetDC(srf[SRF_EMS_SCROLL_LEO]);
+		skp->Polyline(ems.ScribePntArray, ems.ScribePntCnt);
 
-		SetBkMode(hDC, TRANSPARENT);
-		HGDIOBJ oldObj = SelectObject(hDC, g_Param.pen[2]);
-
-		Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);
-	
-		SelectObject(hDC, oldObj);
-		oapiReleaseDC(srf[SRF_EMS_SCROLL_LEO], hDC);
+		oapiReleaseSketchpad(skp);
 
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BUG], 42, ems.GetGScribe() + 2, 0, 0, 5, 5, SURF_PREDEF_CK);
@@ -4958,10 +4952,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	}
 	case AID_EMS_RSI_BKGRND:
 	{
-		HDC hDC;
-		HGDIOBJ brush = NULL;
-		HGDIOBJ pen = NULL;
-
 		oapiBlt(surf, srf[SRF_EMS_RSI_BKGRND], 0, 0, 0, 0, 86, 84);
 		switch (ems.LiftVectLight()) {
 		case 1:
@@ -4976,15 +4966,17 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			break;
 		}
 
-		hDC = oapiGetDC(srf[SRF_EMS_RSI_BKGRND]);
-		SetBkMode(hDC, TRANSPARENT);
-		pen = SelectObject(hDC, GetStockObject(WHITE_PEN));
-		Ellipse(hDC, 14, 14, 71, 68);
-		brush = SelectObject(hDC, GetStockObject(BLACK_BRUSH));
-		Polygon(hDC, ems.RSITriangle, 3);
-		SelectObject(hDC, pen);
-		SelectObject(hDC, brush);
-		oapiReleaseDC(srf[SRF_EMS_RSI_BKGRND], hDC);
+		oapi::Sketchpad* skp = oapiGetSketchpad(srf[SRF_EMS_RSI_BKGRND]);
+		skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
+		oapi::Brush* whiteBrush = oapiCreateBrush(0xffffff);
+		skp->SetPen(g_Param.pen[6]);
+		skp->SetBrush(whiteBrush);
+		skp->Ellipse(14, 14, 71, 69);
+		skp->SetBrush(g_Param.brush[3]);
+		skp->SetPen(g_Param.pen[2]);
+		skp->Polygon(ems.RSITriangle, 3);
+		oapiReleaseBrush(whiteBrush);
+		oapiReleaseSketchpad(skp);
 		return true;
 	}
 	case AID_EMSDVSETSWITCH:		

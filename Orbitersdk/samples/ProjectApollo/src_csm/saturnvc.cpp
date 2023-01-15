@@ -555,7 +555,17 @@ void Saturn::InitVC()
 	srf[SRF_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/cw_lights.dds");
 	srf[SRF_VC_LVENGLIGHTS] = oapiLoadTexture("ProjectApollo/VC/lv_eng.dds");
 	srf[SRF_VC_EVENT_TIMER_DIGITS] = oapiLoadTexture("ProjectApollo/VC/event_timer.dds");
-	srf[SRF_VC_EMS_SCROLL_LEO] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_LEO.dds");
+#if 0
+	srf[SRF_VC_EMS_SCROLL_LEO] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_LEO.dds", true);
+#else
+	// As a workaround for the dynamic flag of oapiLoadTexture being lost on the way,
+	// we create a texture with oapiCreateTextureSurface which will have the correct flags
+	// and then blit the original texture onto it
+	SURFHANDLE tmp = oapiLoadTexture("ProjectApollo/VC/EMSscroll_LEO.dds");
+	srf[SRF_VC_EMS_SCROLL_LEO] = oapiCreateTextureSurface(4096, 256);
+	oapiBlt(srf[SRF_VC_EMS_SCROLL_LEO], tmp, 0, 0, 0, 0, 4096, 256);
+	oapiReleaseTexture(tmp);
+#endif
 	srf[SRF_VC_EMS_SCROLL_BORDER] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_border.dds");
 	srf[SRF_VC_EMS_SCROLL_BUG] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_bug.dds");
 	srf[SRF_VC_EMS_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/ems_lights.dds");
@@ -1696,18 +1706,14 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_EMS_SCROLL_LEO:
 	{
+		oapi::Sketchpad* skp = oapiGetSketchpad(srf[SRF_VC_EMS_SCROLL_LEO]);
 
-		HDC hDC;
+		skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
+		skp->SetPen(g_Param.pen[2]);
 
-		hDC = oapiGetDC(srf[SRF_VC_EMS_SCROLL_LEO]);
+		skp->Polyline(ems.ScribePntArray, ems.ScribePntCnt);
 
-		SetBkMode(hDC, TRANSPARENT);
-		HGDIOBJ oldObj = SelectObject(hDC, g_Param.pen[2]);
-
-		Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);
-
-		SelectObject(hDC, oldObj);
-		oapiReleaseDC(srf[SRF_VC_EMS_SCROLL_LEO], hDC);
+		oapiReleaseSketchpad(skp);
 
 		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_LEO], 5*TexMul, 4*TexMul, ems.GetScrollOffset()*TexMul, 0, 132*TexMul, 143*TexMul);
 		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BUG], 42*TexMul, (ems.GetGScribe() + 2)*TexMul, 0, 0, 5*TexMul, 5*TexMul, SURF_PREDEF_CK);

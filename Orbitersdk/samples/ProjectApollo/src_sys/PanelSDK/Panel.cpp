@@ -25,7 +25,7 @@
 #include "instruments.h"
 #include <stdio.h>
 
-GDI_resources::~GDI_resources()
+Sketchpad_resources::~Sketchpad_resources()
 {
 
 if (Panel_Resources_Loaded){
@@ -49,7 +49,7 @@ for (i=1;i<num_brush;i++)
 
 Panel::Panel()
 {instruments=NULL;//no instruments
-GDI_res=NULL;
+skp_res=NULL;
 panel_logic=0;    //no lights.
 text_logic=0;
 pl_handle=-1;
@@ -188,25 +188,26 @@ return NULL;//problem, yes
 
 }
 
-void Panel::GDI_Init_Resources()
+void Panel::Sketchpad_Init_Resources()
 {
-  if (GDI_res==NULL) return; //nothing to load
- if (GDI_res->Panel_Resources_Loaded) return; //already loaded
+  if (skp_res==NULL) return; //nothing to load
+ if (skp_res->Panel_Resources_Loaded) return; //already loaded
  //load the default resources first
   //GDI_res->hFNT_MFD=CreateFont(12,0,0,0,FW_NORMAL,0,0,0,ANSI_CHARSET,OUT_RASTER_PRECIS,
 	//		 CLIP_DEFAULT_PRECIS,PROOF_QUALITY,DEFAULT_PITCH,"Arial");
-  GDI_res->hPEN_NULL=CreatePen(PS_NULL,1,RGB(0,0,0));
-  GDI_res->hPEN_Cyan=CreatePen(PS_SOLID,1,RGB(0,95,235));
-  GDI_res->hPEN_Green=CreatePen(PS_SOLID,1,RGB(0,255,0));
-  GDI_res->hBRUSH_TotalBlack=CreateSolidBrush(RGB(0,0,0));
-  GDI_res->hBRUSH_TotalWhite=CreateSolidBrush(RGB(255,255,255));
-  GDI_res->hBRUSH_Gray=CreateSolidBrush(RGB(200,200,200));
-  GDI_res->hPEN_Brown=CreatePen(PS_SOLID,1,RGB(90,90,90));
+ skp_res->hPEN_NULL= oapiCreatePen(0,1,RGB(0,0,0));
+ skp_res->hPEN_Cyan= oapiCreatePen(1,1,RGB(0,95,235));
+ skp_res->hPEN_Green= oapiCreatePen(1,1,RGB(0,255,0));
+ skp_res->hBRUSH_TotalBlack= oapiCreateBrush(RGB(0,0,0));
+ skp_res->hBRUSH_TotalWhite= oapiCreateBrush(RGB(255,255,255));
+ skp_res->hBRUSH_Gray= oapiCreateBrush(RGB(200,200,200));
+ skp_res->hPEN_Brown= oapiCreatePen(1,1,RGB(90,90,90));
 
-  GDI_res->Panel_Resources_Loaded=1;
+ skp_res->Panel_Resources_Loaded=1;
  }
 
 
-void Panel::SetGDI(GDI_resources *GDI)
-{GDI_res=GDI;};
-
+void Panel::SetResources(Sketchpad_resources *sr)
+{
+	skp_res=sr;
+}
