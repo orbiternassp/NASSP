@@ -320,7 +320,6 @@ private:
 	void finalstatevector(VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE);
 	void newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo);
 
-	OBJHANDLE hEarth;
 	//Maximum allowable major axis of return trajectories with a negative radial component
 	double MA1;
 	//Polynomial coefficients used to determine the maximum allowable major axis of return trajectories with a positive radial component based on the radius magnitude
