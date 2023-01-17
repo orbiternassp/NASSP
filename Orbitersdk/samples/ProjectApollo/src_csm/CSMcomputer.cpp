@@ -57,7 +57,7 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CD
 	LastOut6 = 0;
 	LastOut11 = 0;
 
-	thread.Resume ();
+	Start();
 }
 
 CSMcomputer::~CSMcomputer()
