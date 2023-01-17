@@ -107,6 +107,12 @@ public:
     // Start a threaded task on this worker, will kill the previous thread
     // if the last task is not already finished
     void Start(std::function<void()>f);
+    // WARNING: killing a thread should only be used as a last resort :
+    // - the thread won't have a chance to unwind its stack
+    // - if the thread is owning heap memory, it won't be freed
+    // - if the thread has acquired a synchonisation primitive, it won't be released
+    // - according to MSDN, on XP, the thread stack will even be leaked
+    // You have been warned
     void Kill();
 private:
     std::thread m_thread;
