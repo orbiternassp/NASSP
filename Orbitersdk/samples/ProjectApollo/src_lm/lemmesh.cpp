@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -185,11 +185,10 @@ void LEM::SetLmVesselDockStage()
 
 	AddDust();
 
-	SetCameraOffset(_V(-0.58, 1.60, 1.40) - currentCoG); // Has to be the same as LPD view
-
-	AddRCS_LMH(-5.4616); //254 inches minus the 0.99m offset from mesh_asc = 5.4616 m
 	status = 0;
 	stage = 0;
+	SetView();
+	AddRCS_LMH(-5.4616); //254 inches minus the 0.99m offset from mesh_asc = 5.4616 m
 
 	InitNavRadios (4);
 
@@ -251,9 +250,9 @@ void LEM::SetLmVesselHoverStage()
 
 	AddDust();
 
-	SetCameraOffset(_V(-0.58, 1.60, 1.40) - currentCoG); // Has to be the same as LPD view
 	status = 1;
 	stage = 1;
+	SetView();
 	AddRCS_LMH(-5.4616); //254 inches minus the 0.99m offset from mesh_asc = 5.4616 m
 
 	InitNavRadios (4);
@@ -327,9 +326,9 @@ void LEM::SetLmAscentHoverStage()
 
 	AddExhaust(es_hover);
 	
-	SetCameraOffset(_V(-0.58, -0.15, 1.40)); // Has to be the same as LPD view
 	status = 2;
 	stage = 2;
+	SetView();
 	AddRCS_LMH(-7.2116);  //254 inches minus the 0.99m offset from mesh_asc and plus 1.75 m from the ShiftCG = 7.2116 m
 
 	if(ph_Dsc){

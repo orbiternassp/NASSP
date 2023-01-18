@@ -289,6 +289,7 @@
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\inertial.cpp" />
     <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -446,7 +447,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_aux\animations.h" />
@@ -489,6 +489,7 @@
     <ClInclude Include="..\..\src_sys\dsky.h" />
     <ClInclude Include="..\..\src_sys\FDAI.h" />
     <ClInclude Include="..\..\src_sys\IMU.h" />
+    <ClInclude Include="..\..\src_sys\inertial.h" />
     <ClInclude Include="..\..\src_sys\ioChannels.h" />
     <ClInclude Include="..\..\src_saturn\iu.h" />
     <ClInclude Include="..\..\src_mfd\MFDconnector.h" />
@@ -516,8 +517,6 @@
     <ClInclude Include="..\..\src_aux\tracer.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h" />
-    <ClInclude Include="..\..\src_aux\IMFD\IMFD_Client.h" />
-    <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\abort.bmp" />

@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "papi.h"
 #include "TSMUmbilical.h"
@@ -312,6 +312,15 @@ void SICSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 15);
+	for (int i = 0;i < 5;i++)
+	{
+		if (EarlySICutoff[i])
+		{
+			papiWriteScenario_boolarr(scn, "EarlySICutoff", EarlySICutoff, 5);
+			papiWriteScenario_doublearr(scn, "FirstStageFailureTime", FirstStageFailureTime, 5);
+			break;
+		}
+	}
 
 	f1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	f1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -334,6 +343,8 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
 		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 15);
+		papiReadScenario_boolarr(line, "EarlySICutoff", EarlySICutoff, 5);
+		papiReadScenario_doublearr(line, "FirstStageFailureTime", FirstStageFailureTime, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			f1engine1.LoadState(scn, "ENGINE_END");

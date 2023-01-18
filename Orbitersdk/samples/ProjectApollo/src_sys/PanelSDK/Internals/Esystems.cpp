@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-#include "esystems.h"
+#include "Esystems.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -1668,15 +1668,15 @@ Diode::Diode(char* i_name, e_object* i_src, double NominalTemperature, double sa
 	max_stage = 99;
 	SRC = i_src;
 
+	Is = saturationCurrent;
+	kT_q = (1.38064852E-23*NominalTemperature) / 1.60217662E-19;
+
 	if (SRC && SRC->IsEnabled())
 	{
 		Volts = SRC->Voltage() - (kT_q*log((Amperes / Is) + 1));
 	}
 	Amperes = 0.0;
 	power_load = 0.0;
-
-	Is = saturationCurrent;
-	kT_q = (1.38064852E-23*NominalTemperature) / 1.60217662E-19;
 }
 
 double Diode::Current()
@@ -1684,7 +1684,7 @@ double Diode::Current()
 	if (SRC && SRC->IsEnabled() && power_load > 0.0)
 	{
 		Amperes = power_load / Volts;
-			return Amperes;
+		return Amperes;
 	}
 
 	return 0.0;

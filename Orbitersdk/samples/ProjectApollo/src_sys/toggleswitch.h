@@ -1632,14 +1632,14 @@ class RoundMeter : public MeterSwitch {
 public:
 	RoundMeter();
 	virtual ~RoundMeter();
-	void Init(HPEN p0, HPEN p1, SwitchRow &row);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row);
 	void DefineVCAnimations(UINT vc_idx);
 	void SetRotationRange(const double range);
 	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
 	
 protected:
-	HPEN Pen0;
-	HPEN Pen1;
+	oapi::Pen *Pen0;
+	oapi::Pen *Pen1;
 
 	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
 
@@ -1670,7 +1670,7 @@ public:
 	///
 	/// \brief Initialise the meter.
 	///
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, e_object *dcindicatorswitch);
 
 	///
 	/// \brief Actually draw the switch.

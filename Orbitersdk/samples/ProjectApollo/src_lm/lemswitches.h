@@ -78,7 +78,7 @@ class LEMVoltCB: public CircuitBrakerSwitch {
 // Meters
 class LEMRoundMeter : public RoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s);
 
 protected:
 	LEM *lem;
@@ -86,7 +86,7 @@ protected:
 
 class LEMDCVoltMeter: public LEMRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void DoDrawSwitchVC(UINT anim);
@@ -99,7 +99,7 @@ protected:
 
 class LEMDCAmMeter: public LEMRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void DoDrawSwitchVC(UINT anim);
@@ -484,7 +484,7 @@ protected:
 
 class LEMSteerableAntennaPitchMeter : public LEMRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void DoDrawSwitchVC(UINT anim);
@@ -494,7 +494,7 @@ protected:
 
 class LEMSteerableAntennaYawMeter : public LEMRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void DoDrawSwitchVC(UINT anim);
@@ -504,7 +504,7 @@ protected:
 
 class LEMSBandAntennaStrengthMeter : public LEMRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void DoDrawSwitchVC(UINT anim);
@@ -658,4 +658,20 @@ class CDRCOASPowerSwitch : public LEMThreePosSwitch
 {
 public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
+};
+
+class LEM_CWEA;
+
+class LEMMasterAlarmSwitch : public PushSwitch {
+
+public:
+	LEMMasterAlarmSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM_CWEA *c);
+	void InitVC(SURFHANDLE surf);
+	void DoDrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	bool SwitchTo(int newState, bool dontspring = false);
+protected:
+	LEM_CWEA *cwea;
+	SURFHANDLE switchsurfacevc;
 };

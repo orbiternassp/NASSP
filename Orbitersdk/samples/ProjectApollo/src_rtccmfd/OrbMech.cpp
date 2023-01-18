@@ -1447,175 +1447,6 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 	return V1_star;
 }
 
-void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHANDLE gravout, double t, VECTOR3 &R1, VECTOR3 &V1)
-{
-	VECTOR3 RP_M, VP_M, R_EM, V_EM, RP_E, VP_E;
-	double dt, MJD, phi4;
-	double MoonPos[12];
-	CELBODY *cMoon;
-	cMoon = oapiGetCelbodyInterface(hMoon);
-
-	if (t > 0.0)
-	{
-		phi4 = 1.0;
-	}
-	else
-	{
-		phi4 = -1.0;
-	}
-
-	dt = time_radius(R0, V0*phi4, 64373760.0, -phi4, mu_Moon);
-	dt = phi4*dt;
-
-	if (abs(dt) > abs(t))
-	{
-		if (gravout == hMoon)
-		{
-			rv_from_r0v0(R0, V0, t, R1, V1, mu_Moon);
-
-			return;
-		}
-		else
-		{
-			rv_from_r0v0(R0, V0, t, RP_M, VP_M, mu_Moon);
-			MJD = mjd0 + t / 86400.0;
-		}
-	}
-	else
-	{
-		rv_from_r0v0(R0, V0, dt, RP_M, VP_M, mu_Moon);
-		MJD = mjd0 + dt / 86400.0;
-	}
-
-	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
-
-	R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
-	V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
-
-	RP_E = R_EM + RP_M;
-	VP_E = V_EM + VP_M;
-
-	if (abs(t) > abs(dt))
-	{
-		double mu_E;
-
-		mu_E = GGRAV*oapiGetMass(gravout);
-
-		//continue coasting
-		rv_from_r0v0(RP_E, VP_E, t - dt, R1, V1, mu_E);
-	}
-	else
-	{
-		//just patch
-		R1 = RP_E;
-		V1 = VP_E;
-	}
-}
-
-void ThirdBodyConic(VECTOR3 R1, OBJHANDLE grav1, VECTOR3 R2, OBJHANDLE grav2, double mjd0, double dt, VECTOR3 V_guess, VECTOR3 &V1_apo, VECTOR3 &V2_apo, double tol)
-{
-	//INPUT:
-	//R1: Pericynthion position vector
-	//R2: MCC/TLI position vector
-	//mjd0: MJD at pericynthion
-	//dt: time between two position vectors (R1 to R2)
-	//grav1: minor body, for position vector 1
-	//grav2: minor or major body, for position vector 2
-	//V_guess: initial guess for velocity vector at pericynthion
-
-	//OUTPUT:
-	//V1_apo: Pericynthion velocity vector
-	//V2_apo: MCC/TLI velocity vector
-
-	double mu1;
-	VECTOR3 Vt1;
-	
-	mu1 = GGRAV*oapiGetMass(grav1);
-
-
-	//if grav1 = grav2, simply use Lambert solution
-	if (grav1 == grav2)
-	{
-		VECTOR3 R2_apo;
-
-		if (dt > 0)
-		{
-			Vt1 = elegant_lambert(R1, V_guess, R2, dt, 0, false, mu1);
-		}
-		else
-		{
-			Vt1 = elegant_lambert(R1, -V_guess, R2, -dt, 0, true, mu1);
-		}
-
-		V1_apo =  Vt1*sign(dt);
-
-		rv_from_r0v0(R1, V1_apo, dt, R2_apo, V2_apo, mu1);
-
-		return;
-	}
-
-	//Three bodies
-
-	VECTOR3 V1_star, R2_star, V2_star, dr2;
-	VECTOR3 v_l[3][4];
-	VECTOR3 R2l[3][4];
-	VECTOR3 V2l[3][4];
-	VECTOR3 T[3];
-	MATRIX3 T2;
-	double h, rho, max_dr;
-	int n, nMax;
-
-	V1_star = V_guess;
-
-	h = 10e-3;
-	rho = 0.5;
-	n = 0;
-	nMax = 100;
-
-	double hvec[4] = { h / 2.0, -h / 2.0, rho*h / 2.0, -rho*h / 2.0 };
-
-	rv_from_r0v0_tb(R1, V1_star, mjd0, grav1, grav2, dt, R2_star, V2_star);
-	dr2 = R2 - R2_star;
-	max_dr = 0.5*length(R2_star);
-	if (length(dr2) > max_dr)
-	{
-		dr2 = unit(dr2)*max_dr;
-	}
-
-	while (length(dr2) > tol && nMax >= n)
-	{
-		n += 1;
-		for (int i = 0; i < 4; i++)
-		{
-			v_l[0][i] = V1_star + _V(1, 0, 0)*hvec[i];
-			v_l[1][i] = V1_star + _V(0, 1, 0)*hvec[i];
-			v_l[2][i] = V1_star + _V(0, 0, 1)*hvec[i];
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			for (int j = 0; j < 4; j++)
-			{
-				rv_from_r0v0_tb(R1, v_l[i][j], mjd0, grav1, grav2, dt, R2l[i][j], V2l[i][j]);
-			}
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			T[i] = (R2l[i][2] - R2l[i][3] - (R2l[i][0] - R2l[i][1])*OrbMech::power(rho, 3.0)) * 1.0 / (rho*h*(1.0 - OrbMech::power(rho, 2.0)));
-		}
-		T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
-		V1_star = V1_star + mul(inverse(T2), dr2);
-		rv_from_r0v0_tb(R1, V1_star, mjd0, grav1, grav2, dt, R2_star, V2_star);
-		dr2 = R2 - R2_star;
-		max_dr = 0.5*length(R2_star);
-		if (length(dr2) > max_dr)
-		{
-			dr2 = unit(dr2)*max_dr;
-		}
-	}
-	V1_apo = V1_star;
-	V2_apo = V2_star;
-}
-
 void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2)
 {
 	double c1, c2;
@@ -4838,12 +4669,6 @@ void impulsive2(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T,
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
-double DVFromBurnTime(double bt, double thrust, double isp, double mass)
-{
-	double mf = mass - thrust / isp * bt;
-	return isp * log(mass / mf);
-}
-
 double GETfromMJD(double MJD, double GETBase)
 {
 	return (MJD - GETBase)*24.0*3600.0;
@@ -5265,6 +5090,32 @@ VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20, MATRIX3 LM_REFSMMAT, MAT
 	expmat = mul(summat, tmat(mul(CSM_REFSMMAT, tmat(LM_REFSMMAT))));
 
 	return OrbMech::CALCGTA(mul(OrbMech::tmat(expmat), lmmat));
+}
+
+VECTOR3 GimbalAngleConversion(MATRIX3 REFSMMAT1, VECTOR3 GimbalAngles, MATRIX3 REFSMMAT2, bool isCSM)
+{
+	//INPUT:
+	//REFSMMAT1: Current REFSMMAT
+	//GimbalAngles: IMU angles with REFSMMAT2
+	//REFSMMAT2: Preferred REFSMMAT
+	//isCSM: CSM or LM
+
+	//OUTPUT:
+	//IMU or FDAI angles
+
+	//Compute rotation matrix for inertial 
+	MATRIX3 M_SM_NB, M_BRCS_NB;
+	VECTOR3 GimbalAngles2;
+	
+	M_SM_NB = CALCSMSC(GimbalAngles);
+	M_BRCS_NB = mul(M_SM_NB, REFSMMAT2);
+	GimbalAngles2 = CALCGAR(REFSMMAT1, M_BRCS_NB);
+
+	if (isCSM == false)
+	{
+		//TBD
+	}
+	return GimbalAngles2;
 }
 
 VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs)

@@ -33,7 +33,7 @@
 #include "dinput.h"
 #include "vesim.h"
 #include "dsky.h"
-#include "imu.h"
+#include "IMU.h"
 #include "cdu.h"
 #include "lmscs.h"
 #include "lm_ags.h"
@@ -54,6 +54,7 @@
 #include "LEMcomputer.h"
 #include "lm_rr.h"
 #include "lm_aeaa.h"
+#include "inertial.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -803,6 +804,9 @@ protected:
 	ModeSelectSwitch ModeSelSwitch;
 	ToggleSwitch AltRngMonSwitch;
 
+	SwitchRow LeftMasterAlarmSwitchRow;
+	LEMMasterAlarmSwitch LeftMasterAlarmSwitch;
+
 	SwitchRow LeftMonitorSwitchRow;
 	ToggleSwitch RateErrorMonSwitch;
 	ToggleSwitch AttitudeMonSwitch;
@@ -865,6 +869,9 @@ protected:
 	LMGlycolPressMeter LMGlycolPressMeter;
 	LMOxygenQtyMeter LMOxygenQtyMeter;
 	LMWaterQtyMeter LMWaterQtyMeter;
+
+	SwitchRow RightMasterAlarmSwitchRow;
+	LEMMasterAlarmSwitch RightMasterAlarmSwitch;
 
 	SwitchRow RightMonitorSwitchRow;
 	ToggleSwitch RightRateErrorMonSwitch;
@@ -1871,6 +1878,7 @@ protected:
 	LEM_INV INV_2;
 
 	// GNC
+	InertialData inertialData;
 	ATCA atca;
 	DECA deca;
 	LEM_LR LR;

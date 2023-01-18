@@ -26,10 +26,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "instruments.h"
-#include "vsmgmt.h"
+#include "VSMGMT.H"
 #include "Internals/Hsystems.h"
 #include "Internals/Esystems.h"
-#include "oapichar.cpp"
+#include "OAPICHAR.CPP"
 
 int Line_Number;
 char I_line[275];
@@ -279,7 +279,7 @@ fclose(config_file);
 fclose(debug);
 #endif
 
-if (NumPanels) panels[0]->GDI_Init_Resources();
+if (NumPanels) panels[0]->Sketchpad_Init_Resources();
 THERMAL->InitThermal();
 THERMAL->v=v;
 }
@@ -287,7 +287,7 @@ THERMAL->v=v;
 void PanelSDK::DoPanel(char *name)
 {
 panels[NumPanels]=new Panel;
-panels[NumPanels]->GDI_res=GDI_res; //same as before
+panels[NumPanels]->skp_res=skp_res; //same as before
 panels[NumPanels]->idx=NumPanels;
 panels[NumPanels]->v=v;
 panels[NumPanels]->parent=this;

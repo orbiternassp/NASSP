@@ -22,14 +22,14 @@
 
   **************************************************************************/
 
-#include "hsystems.h"
-#include "esystems.h"
-// To force orbitersdk.h to use <fstream> in any compiler version
+#include "Hsystems.h"
+#include "Esystems.h"
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "../build.h"
+#include "../BUILD.H"
 
 void* ship_system::GetPointerByString(char *query)
 {

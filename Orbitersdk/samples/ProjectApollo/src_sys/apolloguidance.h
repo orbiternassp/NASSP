@@ -37,7 +37,7 @@ class PanelSDK;
 #include <bitset>
 #include "powersource.h"
 
-#include "control.h"
+#include "Control.h"
 #include "yaAGC/agc_engine.h"
 #include "thread.h"
 #include <thread>
@@ -362,9 +362,8 @@ public:
 	// Odds and ends.
 	//
 
-	bool SingleTimestepPrep(double simt, double simdt);
 	bool SingleTimestep();
-	bool GenericTimestep(double simt, double simdt);
+	virtual void agcTimestep(double simt, double simdt) = 0;
 	bool GenericReadMemory(unsigned int loc, int &val);
 	void GenericWriteMemory(unsigned int loc, int val);
 
@@ -394,9 +393,7 @@ public:
 	///
 	std::string ProgramName;
 
-	double LastTimestep;
 	double LastCycled;
-	double CurrentTimestep;
 
 	bool isFirstTimestep;
 

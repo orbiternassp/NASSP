@@ -39,6 +39,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_D_DAY2STATE4	23
 #define MST_D_DAY2STATE5	24
 #define MST_D_DAY2STATE6	25
+#define MST_D_DAY2STATE7	26
+#define MST_D_DAY2STATE8	27
+#define MST_D_DAY2STATE9	28
 #define MST_D_DAY3STATE1	30
 #define MST_D_DAY3STATE2	31
 #define MST_D_DAY3STATE3	32
@@ -52,6 +55,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_D_DAY3STATE11	40
 #define MST_D_DAY3STATE12	41
 #define MST_D_DAY3STATE13	42
+#define MST_D_DAY3STATE14	43
 #define MST_D_DAY4STATE1	50
 #define MST_D_DAY4STATE2	51
 #define MST_D_DAY4STATE3	52
@@ -74,6 +78,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_D_DAY5STATE16	75
 #define MST_D_DAY5STATE17	76
 #define MST_D_DAY5STATE18	77
+#define MST_D_DAY5STATE19	78
 #define MST_D_DAY6STATE1	90
 #define MST_D_DAY6STATE2	91
 #define MST_D_DAY6STATE3	92

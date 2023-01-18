@@ -24,6 +24,7 @@
 #pragma once
 
 #include "Orbitersdk.h"
+#include "RF_calc.h"
 
 class MCC;
 class RTCC;
@@ -34,6 +35,7 @@ public:
 	~MCCVessel();
 
 	void clbkPreStep(double simt, double simdt, double mjd);
+	int clbkGeneric(int msgid, int prm, void * context);
 	void clbkPostCreation();
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);

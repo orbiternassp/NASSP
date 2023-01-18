@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -1289,6 +1289,9 @@ void LEM::RegisterActiveAreas()
 	//
 	InitPanelVC();
 
+	LeftMasterAlarmSwitch.InitVC(srf[SRF_LEM_MASTERALARMVC]);
+	RightMasterAlarmSwitch.InitVC(srf[SRF_LEM_MASTERALARMVC]);
+
 	ASCHeReg1TB.InitVC(srf[SRF_INDICATORVC]);
 	DESHeReg1TB.InitVC(srf[SRF_INDICATORVC]);
 	ASCHeReg2TB.InitVC(srf[SRF_INDICATORVC]);
@@ -1338,10 +1341,6 @@ void LEM::RegisterActiveAreas()
 bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 {
 	switch (id) {
-		case AID_VC_LEM_MA_LEFT:
-		case AID_VC_LEM_MA_RIGHT:
-			return CWEA.CheckMasterAlarmMouseClick(event);
-
 		case AID_VC_OVERHEADHATCH:
 			OverheadHatch.Toggle();
 			return true;
@@ -1748,11 +1747,6 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_VC_LEM_MA_LEFT:
-	case AID_VC_LEM_MA_RIGHT:
-		CWEA.RenderMasterAlarm(surf, srf[SRF_LEM_MASTERALARMVC], NULL);
-		return true;
-
 	case AID_VC_RETICLEDISP:
 		optics.PaintReticleAngle(surf, srf[SRF_AOTFONT_VC]);
 		return true;
@@ -1936,6 +1930,8 @@ void LEM::DefineVCAnimations()
 
 	crossPointerRight.SetDirection(xvector, yvector);
 	crossPointerRight.DefineMeshGroup(VC_GRP_XpointerX_lmp, VC_GRP_XpointerY_lmp);
+
+	MainPanelVC.AddSwitch(&LeftMasterAlarmSwitch, AID_VC_LEM_MA_LEFT);
 
 	//Panel 2
 
@@ -2127,6 +2123,8 @@ void LEM::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&RCSMainSovATB, AID_VC_MAIN_SOV_TALKBACKS);
 	MainPanelVC.AddSwitch(&RCSMainSovBTB, AID_VC_MAIN_SOV_TALKBACKS);
+
+	MainPanelVC.AddSwitch(&RightMasterAlarmSwitch, AID_VC_LEM_MA_RIGHT);
 
 	//Panel 3
 

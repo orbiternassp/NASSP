@@ -50,7 +50,7 @@
 class Panel;
 class InstrumentDescriptor;
 class CustomVariable;
-class GDI_resources;
+class Sketchpad_resources;
 class VESSEL;
 class E_system;
 class H_system;
@@ -125,7 +125,7 @@ private:
 	int AddBrushResource(int red,int green, int blue);
 	int NumPanels;
 	int Current_Panel;
-	GDI_resources *GDI_res;	//panel SDK holds the resources
+	Sketchpad_resources *skp_res;	//panel SDK holds the resources
 };
 
 #endif

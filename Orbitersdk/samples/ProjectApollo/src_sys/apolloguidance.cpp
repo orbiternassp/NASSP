@@ -23,7 +23,7 @@
   **************************************************************************/
 
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "inttypes.h"
@@ -51,8 +51,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 
 {
 	Reset = false;
-	CurrentTimestep = 0;
-	LastTimestep = 0;
 	LastCycled = 0;
 	AGCHeat = NULL;
 
@@ -177,14 +175,6 @@ bool ApolloGuidance::OutOfReset()
 	return true;
 }
 
-
-// Do a single timestep - Used by CM to maintain sync between telemetry and vAGC.
-bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
-	LastTimestep = CurrentTimestep;
-	CurrentTimestep = simt;
-	return TRUE;
-}
-
 bool ApolloGuidance::SingleTimestep() {
 
 	agc_engine(&vagc);
@@ -194,25 +184,6 @@ bool ApolloGuidance::SingleTimestep() {
 void ApolloGuidance::VirtualAGCCoreDump(char *fileName) {
 
 	MakeCoreDump(&vagc, fileName); 
-}
-
-bool ApolloGuidance::GenericTimestep(double simt, double simdt)
-{
-//	TRACESETUP("COMPUTER TIMESTEP");
-	int i;
-
-	LastTimestep = CurrentTimestep;
-	CurrentTimestep = simt;
-
-	// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
-	// This resulted in a machine cycle of just over 11.7 microseconds.
-	int cycles = (long) ((simdt) * 1024000 / 12);
-
-	for (i = 0; i < cycles; i++) {
-		agc_engine(&vagc);
-	}
-
-	return true;
 }
 
 void ApolloGuidance::SystemTimestep(double simdt) 

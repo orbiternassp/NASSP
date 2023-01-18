@@ -61,6 +61,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	STOPVAM = in.MoonRelStopParam;
 	HMULT = in.IsForwardIntegration;
 	DRAG = in.DensityMultiplier;
+	VENT = in.VentPerturbationFactor;
 	CSA = -0.5*in.Area*pRTCC->SystemParameters.MCADRG;
 	if (in.Weight == 0.0)
 	{
@@ -88,6 +89,8 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	MinEphemDT = in.MinEphemDT;
 
 	a_drag = _V(0, 0, 0);
+	a_vent = _V(0, 0, 0);
+	MDOT_vent = 0.0;
 	delta = _V(0, 0, 0);
 	nu = _V(0, 0, 0);
 	HD2 = H2D2 = H2D8 = HD6 = HP = 0.0;
@@ -113,7 +116,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 		//1 meter tolerance for radius and height
 		DEV = 1.0;
 	}
-	else if (ISTOPS == 4)
+	else if (ISTOPS == 4 || ISTOPS == 6)
 	{
 		//0.0001° tolerance
 		DEV = 0.0001*RAD;
@@ -247,6 +250,21 @@ EMMENI_Edit_3B:
 			{
 				RCALC = FUNCT - STOPVAM;
 			}
+		}
+		else if (ISTOPS == 6)
+		{
+			VECTOR3 NVEC, H_ECT;
+			EphemerisData2 sv_temp, sv_ECT;
+
+			sv_temp.R = R;
+			sv_temp.V = V;
+			sv_temp.GMT = CurrentTime();
+
+			pRTCC->ELVCNV(sv_temp, 0, 1, sv_ECT);
+
+			H_ECT = unit(crossp(sv_ECT.R, sv_ECT.V));
+			NVEC = unit(crossp(_V(0, 0, 1), H_ECT));
+			RCALC = OrbMech::PHSANG(sv_ECT.R, sv_ECT.V, NVEC);
 		}
 	}
 
@@ -433,6 +451,11 @@ void EnckeFreeFlightIntegrator::Step()
 	nu = beta + (F1 + (F2 + F3)*2.0 + YPP) *HD6;
 	//Final acceleration
 	adfunc();
+
+	if (VENT > 0.0)
+	{
+		WT = WT - MDOT_vent * dt;
+	}
 }
 
 double EnckeFreeFlightIntegrator::fq(double q)
@@ -521,6 +544,20 @@ void EnckeFreeFlightIntegrator::adfunc()
 				a_d += a_drag;
 			}
 		}
+		if (VENT > 0.0)
+		{
+			VECTOR3 VENTDIR = unit(crossp(unit(crossp(R, V)), R));
+			double TV = CurrentTime() - pRTCC->GetGMTLO()*3600.0 - pRTCC->SystemParameters.MCGVEN;
+
+			int i;
+			for (i = 0; i < 8 && pRTCC->SystemParameters.MDTVTV[1][i + 1] < TV; i++);
+			double f = (TV - pRTCC->SystemParameters.MDTVTV[1][i]) / (pRTCC->SystemParameters.MDTVTV[1][i + 1] - pRTCC->SystemParameters.MDTVTV[1][i]);
+			double F_vent = pRTCC->SystemParameters.MCTVEN*(pRTCC->SystemParameters.MDTVTV[0][i] + (pRTCC->SystemParameters.MDTVTV[0][i + 1] - pRTCC->SystemParameters.MDTVTV[0][i]) * f);
+			MDOT_vent = F_vent / pRTCC->SystemParameters.MCTVSP;
+
+			a_vent = VENTDIR * F_vent / WT*0.0; //TBD: Remove 0.0 when propulsive venting is implemented
+			a_d += a_vent;
+		}
 	}
 	else
 	{
@@ -587,6 +624,7 @@ void EnckeFreeFlightIntegrator::StoreVariables()
 	SDELT = tau;
 	STRECT = TRECT;
 	RES1 = RCALC;
+	SWT = WT;
 }
 
 void EnckeFreeFlightIntegrator::RestoreVariables()
@@ -597,6 +635,7 @@ void EnckeFreeFlightIntegrator::RestoreVariables()
 	nu = SYP;
 	tau = SDELT;
 	TRECT = STRECT;
+	WT = SWT;
 	if (P != P_S)
 	{
 		SetBodyParameters(P_S);
@@ -751,7 +790,7 @@ void EnckeFreeFlightIntegrator::ACCEL_GRAV()
 			{
 				F1 = F1 + (double)N1*MAT_A[N1 - 1][0] * (C[L - 1] * ZETA_REAL[N1 - 1] + S[L - 1] * ZETA_IMAG[N1 - 1]);
 				F2 = F2 + (double)N1*MAT_A[N1 - 1][0] * (S[L - 1] * ZETA_REAL[N1 - 1] - C[L - 1] * ZETA_IMAG[N1 - 1]);
-				DNM = C[L - 1] = ZETA_REAL[N1] + S[L - 1] * ZETA_IMAG[N1];
+				DNM = C[L - 1] * ZETA_REAL[N1] + S[L - 1] * ZETA_IMAG[N1];
 				F3 = F3 + DNM * MAT_A[N1][0];
 				F4 = F4 + DNM * MAT_A[N1][1];
 				L++;

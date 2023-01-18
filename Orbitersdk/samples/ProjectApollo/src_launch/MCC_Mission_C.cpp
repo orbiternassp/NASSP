@@ -194,29 +194,41 @@ void MCC::MissionSequence_C()
 	case MST_C_DAY4STATE4: // Block Data 13 to SPS-4
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(117 * 60 * 60 + 30 * 60), 22, MST_C_DAY4STATE5);
 		break;
-	case MST_C_DAY4STATE5: // SPS-4 to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(121 * 60 * 60 + 36 * 60), 23, MST_C_DAY5STATE1);
+	case MST_C_DAY4STATE5: // SPS-4 to landmark tracking update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(121 * 60 * 60 + 6 * 60), 23, MST_C_DAY5STATE1);
 		break;
-	case MST_C_DAY5STATE1: // SV Update to SV Update
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(123 * 60 * 60 + 40 * 60), 54, MST_C_DAY5STATE2);
+	case MST_C_DAY5STATE1: // Landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, rtcc->GETEval2(121 * 60 * 60 + 36 * 60), 55, MST_C_DAY5STATE2);
 		break;
-	case MST_C_DAY5STATE2: // SV Update to Block Data 14
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(125 * 60 * 60 + 12 * 60), 52, MST_C_DAY5STATE3);
+	case MST_C_DAY5STATE2: // SV Update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(123 * 60 * 60 + 40 * 60), 54, MST_C_DAY5STATE3);
 		break;
-	case MST_C_DAY5STATE3: // Block Data 14 to Block Data 15
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(134 * 60 * 60 + 48 * 60), 24, MST_C_DAY5STATE4);
+	case MST_C_DAY5STATE3: // SV Update to Block Data 14
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(125 * 60 * 60 + 12 * 60), 52, MST_C_DAY5STATE4);
 		break;
-	case MST_C_DAY5STATE4: // Block Data 15 to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(139 * 60 * 60 + 40 * 60), 25, MST_C_DAY5STATE5);
+	case MST_C_DAY5STATE4: // Block Data 14 to Block Data 15
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(134 * 60 * 60 + 48 * 60), 24, MST_C_DAY5STATE5);
 		break;
-	case MST_C_DAY5STATE5: // SV Update to SV Update
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(143 * 60 * 60 + 20 * 60), 54, MST_C_DAY5STATE6);
+	case MST_C_DAY5STATE5: // Block Data 15 to rev 90 landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(139 * 60 * 60 + 40 * 60), 25, MST_C_DAY5STATE6);
 		break;
-	case MST_C_DAY5STATE6: // SV Update to Block Data 16
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(144 * 60 * 60 + 11 * 60), 52, MST_C_DAY6STATE1);
+	case MST_C_DAY5STATE6: // Rev 90 landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 56, MST_C_DAY5STATE7);
 		break;
-	case MST_C_DAY6STATE1: // Block Data 16 to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(147 * 60 * 60 + 10 * 60), 26, MST_C_DAY6STATE2);
+	case MST_C_DAY5STATE7: // SV Update to rev 91 landmark tracking
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(143 * 60 * 60), 54, MST_C_DAY5STATE8);
+		break;
+	case MST_C_DAY5STATE8: // Rev 91 landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, rtcc->GETEval2(143 * 60 * 60 + 20 * 60), 57, MST_C_DAY5STATE9);
+		break;
+	case MST_C_DAY5STATE9: // SV Update to Block Data 16
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(144 * 60 * 60 + 11 * 60), 52, MST_C_DAY5STATE10);
+		break;
+	case MST_C_DAY5STATE10: // Block Data 16 to rev 92 landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(145 * 60 * 60 + 30 * 60), 26, MST_C_DAY6STATE1);
+		break;
+	case MST_C_DAY6STATE1: // Rev 92 landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, rtcc->GETEval2(147 * 60 * 60 + 10 * 60), 58, MST_C_DAY6STATE2);
 		break;
 	case MST_C_DAY6STATE2: // SV Update to Block Data 17
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(153 * 60 * 60 + 47 * 60), 52, MST_C_DAY6STATE3);
@@ -248,17 +260,23 @@ void MCC::MissionSequence_C()
 	case MST_C_DAY8STATE3: // SPS-6 to Block Data 23
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(210 * 60 * 60 + 11 * 60), 34, MST_C_DAY8STATE4);
 		break;
-	case MST_C_DAY8STATE4: // Block Data 23 to SV PAD
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(213 * 60 * 60), 35, MST_C_DAY8STATE5);
+	case MST_C_DAY8STATE4: // Block Data 23 to rev 135 landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, rtcc->GETEval2(212 * 60 * 60 + 40 * 60), 35, MST_C_DAY8STATE5);
 		break;
-	case MST_C_DAY8STATE5: // SV PAD to P27 PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(214 * 60 * 60 + 10 * 60), 52, MST_C_DAY8STATE6);
+	case MST_C_DAY8STATE5: // Rev 135 landmark tracking update to SV PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, rtcc->GETEval2(213 * 60 * 60), 59, MST_C_DAY8STATE6);
 		break;
-	case MST_C_DAY8STATE6: //P27 PAD to SV PAD
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(216 * 60 * 60), 36, MST_C_DAY9STATE1);
+	case MST_C_DAY8STATE6: // SV PAD to P27 PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(214 * 60 * 60 + 10 * 60), 61, MST_C_DAY8STATE7);
+		break;
+	case MST_C_DAY8STATE7: //P27 PAD to rev 136 landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, rtcc->GETEval2(215 * 60 * 60), 36, MST_C_DAY8STATE8);
+		break;
+	case MST_C_DAY8STATE8: // Rev 136 landmark tracking update to SV PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, rtcc->GETEval2(216 * 60 * 60), 60, MST_C_DAY9STATE1);
 		break;
 	case MST_C_DAY9STATE1: //SV PAD to SV PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(217 * 60 * 60), 52, MST_C_DAY9STATE2);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(217 * 60 * 60 + 30 * 60), 52, MST_C_DAY9STATE2);
 		break;
 	case MST_C_DAY9STATE2: //SV PAD to Block Data 24
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, rtcc->GETEval2(220 * 60 * 60 + 43 * 60), 52, MST_C_DAY9STATE3);
@@ -324,9 +342,31 @@ void MCC::MissionSequence_C()
 	{
 		if (AbortMode == 5) //Earth Orbit Abort
 		{
-			if (cm->GetStage() == CM_ENTRY_STAGE_SEVEN)
+			switch (SubState)
 			{
-				setState(MST_LANDING);
+			case 0:
+				//Are we past the calculated TIG?
+				if (cm->GetStage() >= CM_STAGE || rtcc->GETEval2(rtcc->TimeofIgnition))
+				{
+					setSubState(1); //No deorbit maneuver upcoming, just wait for CM/SM sep
+				}
+				else
+				{
+					setSubState(2);
+				}
+				break;
+			case 1:
+				if (cm->GetStage() >= CM_ENTRY_STAGE_SEVEN)
+				{
+					setState(MST_LANDING); //Deorbit maneuver upcoming, wait for Entry PAD
+				}
+				break;
+			case 2:
+				if (rtcc->GETEval2(rtcc->TimeofIgnition - 1.5*3600.0))
+				{
+					setState(MST_C_DAY10STATE6);
+				}
+				break;
 			}
 		}
 	}

@@ -9,11 +9,12 @@
 #include "soundlib.h"
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "mcc.h"
 #include "rtcc.h"
 #include "LunarTargetingProgram.h"
+#include "thread.h"
 #include <queue>
 
 struct ApolloRTCCMFDData {  // global data storage
@@ -103,7 +104,8 @@ public:
 	void TransferRTEToMPT();
 	void SLVNavigationUpdateCalc();
 	void SLVNavigationUpdateUplink();
-	void UpdateGRRTime();
+	void UpdateGRRTime(VESSEL *v);
+	void PerigeeAdjustCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -159,9 +161,9 @@ public:
 	void GenerateAGCCorrectionVectors();
 
 	// SUBTHREAD MANAGEMENT
-	HANDLE hThread;
+	KillableWorker subThreadWorker;
 	int subThreadMode;										// What should the subthread do?
-	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
+	std::atomic<ThreadStatus> subThreadStatus;
 
 	ApolloRTCCMFDData g_Data;
 
@@ -180,6 +182,7 @@ public:
 	bool PADSolGood;
 	int manpadenginetype;
 	double t_TPI;				// Generally used TPI time
+	int mptinitmode;			//0 = MED M49, 1 = MED M50, 2 = MED M51, 3 = MED M55
 
 	//DOCKING INITIATION
 	int TPI_Mode;

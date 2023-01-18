@@ -1851,7 +1851,8 @@ gtupdate:	// Target of jump from further down
 			ATEMP1 = GravitationSubroutine(RTEMP1, false) + DragSubroutine(RTEMP1, VTEMP1, CurrentAttitude);
 			RPT = PosS + DotS * 8.0 + ATEMP1 * 32.0;
 			VPT = VTEMP1 + ATEMP1 * 8.0;
-			APT = GravitationSubroutine(RPT, false) + DragSubroutine(RPT, VPT, CurrentAttitude); //TBD: Not CurrentAttitude
+			MidPointAttitude = CurrentAttitude + DChi_apo * MLR*4.0;
+			APT = GravitationSubroutine(RPT, false) + DragSubroutine(RPT, VPT, MidPointAttitude);
 			DRT = DotS * 8.0 + (ddotS + ATEMP1*2.0)*32.0 / 3.0;
 			PosS = PosS + DRT;
 			DVT = (ddotS + ATEMP1 * 4.0 + APT)*4.0 / 3.0;
@@ -3560,10 +3561,16 @@ void LVDCSV::Init(){
 	Drag_Area[3] = -0.28074902;
 	Drag_Area[4] = -5.8764139;
 
+	//Apollo 14 vent accelerations
 	VTIM[0] = 1800.0;
 	VTIM[1] = 4300.0;
-	VTIM[2] = 99999999.9;
-	VTIM[3] = 99999999.9;
+	VTIM[2] = 7300.0;
+	VTIM[3] = 12800.0;
+	VENTA[0] = 0.001342;
+	VENTA[1] = 0.0006478;
+	VENTA[2] = 0.0004472;
+	VENTA[3] = 0.0003724;
+	VENTA[4] = 0.0002858;
 
 	// PITCH POLYNOMIAL (Apollo 11)
 	Fx[1][0] = 0.104707442e1;
@@ -4664,6 +4671,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_VATRR", VATRR);
 	papiWriteScenario_double(scn, "LVDC_VCCYA", VCCYA);
 	papiWriteScenario_double(scn, "LVDC_VCCZA", VCCZA);
+	papiWriteScenario_doublearr(scn, "LVDC_VENTA", VENTA, 5);
 	papiWriteScenario_double(scn, "LVDC_VOLD", VOLD);
 	papiWriteScenario_double(scn, "LVDC_V_S2T", V_S2T);
 	papiWriteScenario_double(scn, "LVDC_VSC12", VSC12);
@@ -4672,6 +4680,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_VSSW", VSSW);
 	papiWriteScenario_double(scn, "LVDC_V_T", V_T);
 	papiWriteScenario_double(scn, "LVDC_V_TC", V_TC);
+	papiWriteScenario_doublearr(scn, "LVDC_VTIM", VTIM, 4);
 	papiWriteScenario_double(scn, "LVDC_VTOLD", VTOLD);
 	papiWriteScenario_double(scn, "LVDC_xi_T", xi_T);
 	papiWriteScenario_vec(scn, "LVDC_AttitudeError", AttitudeError);
@@ -5426,6 +5435,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_VATRR", VATRR);
 		papiReadScenario_double(line, "LVDC_VCCYA", VCCYA);
 		papiReadScenario_double(line, "LVDC_VCCZA", VCCZA);
+		papiReadScenario_doublearr(line, "LVDC_VENTA", VENTA, 5);
 		papiReadScenario_double(line, "LVDC_VGBIA", VGBIA);
 		papiReadScenario_double(line, "LVDC_VOLD", VOLD);
 		papiReadScenario_double(line, "LVDC_V_S2T", V_S2T);
@@ -5435,6 +5445,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_VSSW", VSSW);
 		papiReadScenario_double(line, "LVDC_V_T", V_T);
 		papiReadScenario_double(line, "LVDC_V_TC", V_TC);
+		papiReadScenario_doublearr(line, "LVDC_VTIM", VTIM, 4);
 		papiReadScenario_double(line, "LVDC_VTOLD", VTOLD);
 		papiReadScenario_double(line, "LVDC_xi_T", xi_T);
 
@@ -6920,25 +6931,25 @@ void LVDCSV::TimeTiltGuidance()
 
 void LVDCSV::IterativeGuidanceMode()
 {
-	fprintf(lvlog, "ITERATIVE GUIDANCE MODE\r\n");
+	//fprintf(lvlog, "ITERATIVE GUIDANCE MODE\r\n");
 	if (HSL == false) {
 		// We are not in the high-speed loop
-		fprintf(lvlog, "HSL False\r\n");
+		//fprintf(lvlog, "HSL False\r\n");
 		// IGM STAGE LOGIC
 		if (S4B_REIGN)
 		{
-			fprintf(lvlog, "S-IVB 2nd BURN\n");
+			//fprintf(lvlog, "S-IVB 2nd BURN\n");
 			if (MRS)
 			{
-				fprintf(lvlog, "MRS\r\n");
+				//fprintf(lvlog, "MRS\r\n");
 				Tt_3 += T_2 * (dotM_2 / dotM_3);
-				fprintf(lvlog, "Tt_3 = %f\r\n", Tt_3);
+				//fprintf(lvlog, "Tt_3 = %f\r\n", Tt_3);
 				if (t_B2 <= t_B4)
 				{
 					goto relightentry1;
 				}
 				t_B4 += dt_c;
-				fprintf(lvlog, "t_B4 = %f\r\n", t_B4);
+				//fprintf(lvlog, "t_B4 = %f\r\n", t_B4);
 			}
 			else
 			{
@@ -6949,7 +6960,7 @@ void LVDCSV::IterativeGuidanceMode()
 					{
 						MRS = true;
 						t_B2 = 0;
-						fprintf(lvlog, "MRS\r\n");
+						//fprintf(lvlog, "MRS\r\n");
 					}
 				}
 				else
@@ -6969,28 +6980,28 @@ void LVDCSV::IterativeGuidanceMode()
 				tau2 = tau2N + (V_ex2 * MFS - dt_c / 2.0 - tau2N)*pow(Ct / Ct_o, 4);
 				tau2N -= dt_c;
 				Ct += dt_c;
-				fprintf(lvlog, "Art. Tau Mode 2: tau2 = %f, tau2N = %f, Ct = %f, Diff = %f\r\n", tau2, tau2N, Ct, tau2 - V_ex2 * MFS);
+				//fprintf(lvlog, "Art. Tau Mode 2: tau2 = %f, tau2N = %f, Ct = %f, Diff = %f\r\n", tau2, tau2N, Ct, tau2 - V_ex2 * MFS);
 				goto relightentry3;
 			}
 		}
 		if (S4B_IGN == true) {
-			fprintf(lvlog, "S-IVB 1st BURN\n");
+			//fprintf(lvlog, "S-IVB 1st BURN\n");
 			if (Ct >= Ct_o) {
 			relightentry1:
 				tau3 = V_ex3 * MFS;
-				fprintf(lvlog, "Normal Tau: tau3 = %f\r\n", tau3);
+				//fprintf(lvlog, "Normal Tau: tau3 = %f\r\n", tau3);
 			}
 			else {
 				tau3 = tau3N + (V_ex3 *MFS - dt_c / 2 - tau3N)*pow((Ct / Ct_o), 4);
 				tau3N = tau3N - dt_c;
 				Ct = Ct + dt_c;
-				fprintf(lvlog, "Art. Tau Mode 3: tau3 = %f, tau3N = %f, Ct = %f, Diff = %f\r\n", tau3, tau3N, Ct, tau3 - V_ex3 * MFS);
+				//fprintf(lvlog, "Art. Tau Mode 3: tau3 = %f, tau3N = %f, Ct = %f, Diff = %f\r\n", tau3, tau3N, Ct, tau3 - V_ex3 * MFS);
 			}
 			GATE = false; //end chi freeze
 			T_c = 0;
 			T_2 = 0;
 			T_1 = 0;
-			fprintf(lvlog, "GATE = false, T_c = 0, T_1 = 0, T_2 = 0\r\n");
+			//fprintf(lvlog, "GATE = false, T_c = 0, T_1 = 0, T_2 = 0\r\n");
 			goto chitilde;
 		}
 		if (S2_BURNOUT == true) {
@@ -7000,7 +7011,7 @@ void LVDCSV::IterativeGuidanceMode()
 				T_c = 0;
 				T_2 = 0;
 				T_1 = 0;
-				fprintf(lvlog, "T_c = 0, T_1 = 0, T_2 = 0\r\n");
+				//fprintf(lvlog, "T_c = 0, T_1 = 0, T_2 = 0\r\n");
 				goto chitilde;
 			}
 			else {
@@ -7008,61 +7019,61 @@ void LVDCSV::IterativeGuidanceMode()
 				GATE = true;
 				T_2 = 0;
 				T_1 = 0;
-				fprintf(lvlog, "GATE = true, T_1 = 0, T_2 = 0\r\n");
+				//fprintf(lvlog, "GATE = true, T_1 = 0, T_2 = 0\r\n");
 				goto chitilde;
 			}
 		}
 		if (MRS == true) {
-			fprintf(lvlog, "Post-MRS\n");
+			//fprintf(lvlog, "Post-MRS\n");
 			if (t_B1 <= t_B3) {
 			relightentry2:
 				tau2 = V_ex2 * MFS;
-				fprintf(lvlog, "Normal Tau: tau2 = %f, F/m = %f\r\n", tau2, 1.0 / MFS);
+				//fprintf(lvlog, "Normal Tau: tau2 = %f, F/m = %f\r\n", tau2, 1.0 / MFS);
 			}
 			else {
 				// This is the "ARTIFICIAL TAU" code.
 				t_B3 += dt_c;
 				tau2 = tau2 + (T_1*(dotM_1 / dotM_2));
-				fprintf(lvlog, "Art. Tau: tau2 = %f, T_1 = %f, dotM_1 = %f dotM_2 = %f \r\n", tau2, T_1, dotM_1, dotM_2);
-				fprintf(lvlog, "Diff: %f \r\n", (tau2 - V_ex2 * MFS));
+				//fprintf(lvlog, "Art. Tau: tau2 = %f, T_1 = %f, dotM_1 = %f dotM_2 = %f \r\n", tau2, T_1, dotM_1, dotM_2);
+				//fprintf(lvlog, "Diff: %f \r\n", (tau2 - V_ex2 * MFS));
 			}
 			// This T_2 test is also tested after T_1 < 0 etc etc
 		relightentry3:
 			if (T_2 > 0) {
 				T_2 = T_2 + T_1 * (dotM_1 / dotM_2);
 				T_1 = 0;
-				fprintf(lvlog, "T_1 = 0\r\nT_2 = %f, dotM_1 = %f, dotM_2 = %f \r\n", T_2, dotM_1, dotM_2);
+				//fprintf(lvlog, "T_1 = 0\r\nT_2 = %f, dotM_1 = %f, dotM_2 = %f \r\n", T_2, dotM_1, dotM_2);
 				// Go to CHI-TILDE LOGIC
 			}
 			else {
 				T_2 = 0;
 				T_1 = 0;
-				fprintf(lvlog, "T_1 = 0, T_2 = 0\r\n");
+				//fprintf(lvlog, "T_1 = 0, T_2 = 0\r\n");
 				// Go to CHI-TILDE LOGIC
 			}
 			if (!S4B_REIGN && T_2 <= ART) { GATE = true; }//pre SIVB-staging chi-freeze
 		}
 		else {
-			fprintf(lvlog, "Pre-MRS\n");
+			//fprintf(lvlog, "Pre-MRS\n");
 			if (T_1 < 0) {
 				// If we're out of first-stage IGM time
 				// Artificial Tau
 				tau2 = tau2 + (T_1*(dotM_1 / dotM_2));
-				fprintf(lvlog, "Art. Tau: tau2 = %f, T_1 = %f, dotM_1 = %f, dotM_2 = %f \r\n", tau2, T_1, dotM_1, dotM_2);
+				//fprintf(lvlog, "Art. Tau: tau2 = %f, T_1 = %f, dotM_1 = %f, dotM_2 = %f \r\n", tau2, T_1, dotM_1, dotM_2);
 				if (T_2 > 0) {
 					T_2 = T_2 + T_1 * (dotM_1 / dotM_2);
 					T_1 = 0;
-					fprintf(lvlog, "T_2 = %f, T_1 = %f, dotM_1 = %f, dotM_2 = %f \r\n", T_2, T_1, dotM_1, dotM_2);
+					//fprintf(lvlog, "T_2 = %f, T_1 = %f, dotM_1 = %f, dotM_2 = %f \r\n", T_2, T_1, dotM_1, dotM_2);
 				}
 				else {
 					T_2 = 0;
 					T_1 = 0;
-					fprintf(lvlog, "T_2 = 0\r\n");
+					//fprintf(lvlog, "T_2 = 0\r\n");
 				}
 			}
 			else {
 				tau1 = V_ex1 * MFS;
-				fprintf(lvlog, "Normal Tau: tau1 = %f, F/m = %f\r\n", tau1, 1.0 / MFS);
+				//fprintf(lvlog, "Normal Tau: tau1 = %f, F/m = %f\r\n", tau1, 1.0 / MFS);
 			}
 		}
 
@@ -7083,7 +7094,7 @@ void LVDCSV::IterativeGuidanceMode()
 				Tt_3 = Tt_3 - dt_c;
 			}
 
-			fprintf(lvlog, "FIXED ATT BURN: T_2 = %f, Tt_3 = %f \r\n", T_2, Tt_3);
+			//fprintf(lvlog, "FIXED ATT BURN: T_2 = %f, Tt_3 = %f \r\n", T_2, Tt_3);
 
 			if (Tt_3 <= 0 && S4B_REIGN == true) {
 				//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second		
@@ -7095,17 +7106,17 @@ void LVDCSV::IterativeGuidanceMode()
 			return;
 		}
 
-		fprintf(lvlog, "--- STAGE INTEGRAL LOGIC ---\r\n");
+		//fprintf(lvlog, "--- STAGE INTEGRAL LOGIC ---\r\n");
 		Pos4 = mul(MX_G, PosS);
-		fprintf(lvlog, "Pos4 = %f, %f, %f\r\n", Pos4.x, Pos4.y, Pos4.z);
-		fprintf(lvlog, "T_1 = %f,T_2 = %f\r\n", T_1, T_2);
+		//fprintf(lvlog, "Pos4 = %f, %f, %f\r\n", Pos4.x, Pos4.y, Pos4.z);
+		//fprintf(lvlog, "T_1 = %f,T_2 = %f\r\n", T_1, T_2);
 		L_1 = V_ex1 * log(tau1 / (tau1 - T_1));
 		J_1 = (L_1 * tau1) - (V_ex1 * T_1);
 		S_1 = (L_1 * T_1) - J_1;
 		Q_1 = (S_1 * tau1) - ((V_ex1 * pow(T_1, 2)) / 2);
 		P_1 = (J_1 * tau1) - ((V_ex1 * pow(T_1, 2)) / 2);
 		U_1 = (Q_1 * tau1) - ((V_ex1 * pow(T_1, 3)) / 6);
-		fprintf(lvlog, "L_1 = %f, J_1 = %f, S_1 = %f, Q_1 = %f, P_1 = %f, U_1 = %f\r\n", L_1, J_1, S_1, Q_1, P_1, U_1);
+		//fprintf(lvlog, "L_1 = %f, J_1 = %f, S_1 = %f, Q_1 = %f, P_1 = %f, U_1 = %f\r\n", L_1, J_1, S_1, Q_1, P_1, U_1);
 
 		L_2 = V_ex2 * log(tau2 / (tau2 - T_2));
 		J_2 = (L_2 * tau2) - (V_ex2 * T_2);
@@ -7113,7 +7124,7 @@ void LVDCSV::IterativeGuidanceMode()
 		Q_2 = (S_2 * tau2) - ((V_ex2 * pow(T_2, 2)) / 2);
 		P_2 = (J_2 * tau2) - ((V_ex2 * pow(T_2, 2)) / 2);
 		U_2 = (Q_2 * tau2) - ((V_ex2 * pow(T_2, 3)) / 6);
-		fprintf(lvlog, "L_2 = %f, J_2 = %f, S_2 = %f, Q_2 = %f, P_2 = %f, U_2 = %f\r\n", L_2, J_2, S_2, Q_2, P_2, U_2);
+		//fprintf(lvlog, "L_2 = %f, J_2 = %f, S_2 = %f, Q_2 = %f, P_2 = %f, U_2 = %f\r\n", L_2, J_2, S_2, Q_2, P_2, U_2);
 
 		L_12 = L_1 + L_2;
 		J_12 = J_1 + J_2 + (L_2 * T_1);
@@ -7121,23 +7132,23 @@ void LVDCSV::IterativeGuidanceMode()
 		Q_12 = Q_1 + Q_2 + (S_2 * T_1) + (J_1 * T_2);
 		P_12 = P_1 + P_2 + (T_1 * ((2 * J_2) + (L_2 * T_1)));
 		U_12 = U_1 + U_2 + (T_1 * ((2 * Q_2) + (S_2 * T_1))) + (T_2 * P_1);
-		fprintf(lvlog, "L_12 = %f, J_12 = %f, S_12 = %f, Q_12 = %f, P_12 = %f, U_12 = %f\r\n", L_12, J_12, S_12, Q_12, P_12, U_12);
+		//fprintf(lvlog, "L_12 = %f, J_12 = %f, S_12 = %f, Q_12 = %f, P_12 = %f, U_12 = %f\r\n", L_12, J_12, S_12, Q_12, P_12, U_12);
 
 		Lt_3 = V_ex3 * log(tau3 / (tau3 - Tt_3));
-		fprintf(lvlog, "Lt_3 = %f, tau3 = %f, Tt_3 = %f\r\n", Lt_3, tau3, Tt_3);
+		//fprintf(lvlog, "Lt_3 = %f, tau3 = %f, Tt_3 = %f\r\n", Lt_3, tau3, Tt_3);
 
 		Jt_3 = (Lt_3 * tau3) - (V_ex3 * Tt_3);
-		fprintf(lvlog, "Jt_3 = %f", Jt_3);
+		//fprintf(lvlog, "Jt_3 = %f", Jt_3);
 		Lt_Y = (L_12 + Lt_3);
-		fprintf(lvlog, ", Lt_Y = %f\r\n", Lt_Y);
+		//fprintf(lvlog, ", Lt_Y = %f\r\n", Lt_Y);
 
 		// SELECT RANGE OPTION				
 	gtupdate:	// Target of jump from further down
-		fprintf(lvlog, "--- GT UPDATE ---\r\n");
+		//fprintf(lvlog, "--- GT UPDATE ---\r\n");
 
 		if (Tt_T <= eps_1) {
 			// RANGE ANGLE 2 (out-of orbit)
-			fprintf(lvlog, "RANGE ANGLE 2\r\n");
+			//fprintf(lvlog, "RANGE ANGLE 2\r\n");
 			//sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1);
 			// LVDC_GP_PC = 30; // STOP
 			sin_gam = ((PosS.x*DotS.x) + (PosS.y*DotS.y) + (PosS.z*DotS.z)) / (R*V);
@@ -7145,33 +7156,33 @@ void LVDCSV::IterativeGuidanceMode()
 			dot_phi_1 = (V*cos_gam) / R;
 			dot_phi_T = (V_T*cos(gamma_T)) / R_T;
 			phi_T = atan2(Pos4.z, Pos4.x) + (((dot_phi_1 + dot_phi_T) / 2.0)*Tt_T);
-			fprintf(lvlog, "V = %f, dot_phi_1 = %f, dot_phi_T = %f, phi_T = %f\r\n", V, dot_phi_1, dot_phi_T, phi_T);
+			//fprintf(lvlog, "V = %f, dot_phi_1 = %f, dot_phi_T = %f, phi_T = %f\r\n", V, dot_phi_1, dot_phi_T, phi_T);
 		}
 		else {
 			// RANGE ANGLE 1 (into orbit)
-			fprintf(lvlog, "RANGE ANGLE 1\r\n");
+			//fprintf(lvlog, "RANGE ANGLE 1\r\n");
 			d2 = (V * Tt_T) - Jt_3 + (Lt_Y * Tt_3) - (ROV / V_ex3) *
 				((tau1 - T_1) * L_1 + (tau2 - T_2) * L_2 + (tau3 - Tt_3) * Lt_3) *
 				(Lt_Y + V - V_T);
 			phi_T = atan2(Pos4.z, Pos4.x) + (1.0 / R_T)*(S_12 + d2)*cos(gamma_T);
-			fprintf(lvlog, "V = %f, d2 = %f, phi_T = %f\r\n", V, d2, phi_T);
+			//fprintf(lvlog, "V = %f, d2 = %f, phi_T = %f\r\n", V, d2, phi_T);
 		}
 		// FREEZE TERMINAL CONDITIONS TEST
 		if (!(Tt_T <= eps_3)) {
 			// UPDATE TERMINAL CONDITIONS
-			fprintf(lvlog, "UPDATE TERMINAL CONDITIONS\r\n");
+			//fprintf(lvlog, "UPDATE TERMINAL CONDITIONS\r\n");
 			f = phi_T + alpha_D;
 			R_T = p / (1 + ((e*(cos(f)))));
-			fprintf(lvlog, "f = %f, R_T = %f, phi_T = %f, alpha_D = %f\r\n", f, R_T, phi_T, alpha_D);
+			//fprintf(lvlog, "f = %f, R_T = %f, phi_T = %f, alpha_D = %f\r\n", f, R_T, phi_T, alpha_D);
 			V_T = K_5 * pow(1 + ((2 * e)*(cos(f))) + pow(e, 2), 0.5);
 			gamma_T = atan2((e*(sin(f))), (1 + (e*(cos(f)))));
 			G_T = -mu / pow(R_T, 2);
-			fprintf(lvlog, "V_T = %f, gamma_T = %f, G_T = %f\r\n", V_T, gamma_T, G_T);
+			//fprintf(lvlog, "V_T = %f, gamma_T = %f, G_T = %f\r\n", V_T, gamma_T, G_T);
 		}
 		// ROT TEST
 		if (ROT) {
 			// ROTATED TERMINAL CONDITIONS (out-of-orbit)
-			fprintf(lvlog, "ROTATED TERMINAL CONDITIONS\r\n");
+			//fprintf(lvlog, "ROTATED TERMINAL CONDITIONS\r\n");
 			//sprintf(oapiDebugString(),"LVDC: ROTATED TERMINAL CNDS");
 			xi_T = R_T * cos(gamma_T);
 			dot_zeta_T = V_T;
@@ -7179,64 +7190,64 @@ void LVDCSV::IterativeGuidanceMode()
 			ddot_zeta_GT = G_T * sin(gamma_T);
 			ddot_xi_GT = G_T * cos(gamma_T);
 			phi_T = phi_T - gamma_T;
-			fprintf(lvlog, "xi_T = %f, dot_zeta_T = %f, dot_xi_T = %f\r\n", xi_T, dot_zeta_T, dot_xi_T);
-			fprintf(lvlog, "ddot_zeta_GT = %f, ddot_xi_GT = %f\r\n", ddot_zeta_GT, ddot_xi_GT);
+			//fprintf(lvlog, "xi_T = %f, dot_zeta_T = %f, dot_xi_T = %f\r\n", xi_T, dot_zeta_T, dot_xi_T);
+			//fprintf(lvlog, "ddot_zeta_GT = %f, ddot_xi_GT = %f\r\n", ddot_zeta_GT, ddot_xi_GT);
 
 			// LVDC_GP_PC = 30; // STOP
 		}
 		else {
 			// UNROTATED TERMINAL CONDITIONS (into-orbit)
-			fprintf(lvlog, "UNROTATED TERMINAL CONDITIONS\r\n");
+			//fprintf(lvlog, "UNROTATED TERMINAL CONDITIONS\r\n");
 			xi_T = R_T;
 			dot_zeta_T = V_T * (cos(gamma_T));
 			dot_xi_T = V_T * (sin(gamma_T));
 			ddot_zeta_GT = 0;
 			ddot_xi_GT = G_T;
-			fprintf(lvlog, "xi_T = %f, dot_zeta_T = %f, dot_xi_T = %f\r\n", xi_T, dot_zeta_T, dot_xi_T);
-			fprintf(lvlog, "ddot_zeta_GT = %f, ddot_xi_GT = %f\r\n", ddot_zeta_GT, ddot_xi_GT);
+			//fprintf(lvlog, "xi_T = %f, dot_zeta_T = %f, dot_xi_T = %f\r\n", xi_T, dot_zeta_T, dot_xi_T);
+			//fprintf(lvlog, "ddot_zeta_GT = %f, ddot_xi_GT = %f\r\n", ddot_zeta_GT, ddot_xi_GT);
 		}
 		// ROTATION TO TERMINAL COORDINATES
-		fprintf(lvlog, "--- ROTATION TO TERMINAL COORDINATES ---\r\n");
+		//fprintf(lvlog, "--- ROTATION TO TERMINAL COORDINATES ---\r\n");
 		// This is the last time PosS is referred to.
 		MX_phi_T.m11 = (cos(phi_T));    MX_phi_T.m12 = 0; MX_phi_T.m13 = ((sin(phi_T)));
 		MX_phi_T.m21 = 0;               MX_phi_T.m22 = 1; MX_phi_T.m23 = 0;
 		MX_phi_T.m31 = (-sin(phi_T)); MX_phi_T.m32 = 0; MX_phi_T.m33 = (cos(phi_T));
-		fprintf(lvlog, "MX_phi_T R1 = %f %f %f\r\n", MX_phi_T.m11, MX_phi_T.m12, MX_phi_T.m13);
-		fprintf(lvlog, "MX_phi_T R2 = %f %f %f\r\n", MX_phi_T.m21, MX_phi_T.m22, MX_phi_T.m23);
-		fprintf(lvlog, "MX_phi_T R3 = %f %f %f\r\n", MX_phi_T.m31, MX_phi_T.m32, MX_phi_T.m33);
+		//fprintf(lvlog, "MX_phi_T R1 = %f %f %f\r\n", MX_phi_T.m11, MX_phi_T.m12, MX_phi_T.m13);
+		//fprintf(lvlog, "MX_phi_T R2 = %f %f %f\r\n", MX_phi_T.m21, MX_phi_T.m22, MX_phi_T.m23);
+		//fprintf(lvlog, "MX_phi_T R3 = %f %f %f\r\n", MX_phi_T.m31, MX_phi_T.m32, MX_phi_T.m33);
 
 		MX_K = mul(MX_phi_T, MX_G);
-		fprintf(lvlog, "MX_K R1 = %f %f %f\r\n", MX_K.m11, MX_K.m12, MX_K.m13);
-		fprintf(lvlog, "MX_K R2 = %f %f %f\r\n", MX_K.m21, MX_K.m22, MX_K.m23);
-		fprintf(lvlog, "MX_K R3 = %f %f %f\r\n", MX_K.m31, MX_K.m32, MX_K.m33);
+		//fprintf(lvlog, "MX_K R1 = %f %f %f\r\n", MX_K.m11, MX_K.m12, MX_K.m13);
+		//fprintf(lvlog, "MX_K R2 = %f %f %f\r\n", MX_K.m21, MX_K.m22, MX_K.m23);
+		//fprintf(lvlog, "MX_K R3 = %f %f %f\r\n", MX_K.m31, MX_K.m32, MX_K.m33);
 
 		PosXEZ = mul(MX_K, PosS);
 		DotXEZ = mul(MX_K, DotS);
-		fprintf(lvlog, "PosXEZ = %f %f %f\r\n", PosXEZ.x, PosXEZ.y, PosXEZ.z);
-		fprintf(lvlog, "DotXEZ = %f %f %f\r\n", DotXEZ.x, DotXEZ.y, DotXEZ.z);
+		//fprintf(lvlog, "PosXEZ = %f %f %f\r\n", PosXEZ.x, PosXEZ.y, PosXEZ.z);
+		//fprintf(lvlog, "DotXEZ = %f %f %f\r\n", DotXEZ.x, DotXEZ.y, DotXEZ.z);
 
 		VECTOR3 RTT_T1, RTT_T2;
 		RTT_T1.x = ddot_xi_GT; RTT_T1.y = 0;        RTT_T1.z = ddot_zeta_GT;
 		RTT_T2 = ddotG_act;
-		fprintf(lvlog, "RTT_T1 = %f %f %f\r\n", RTT_T1.x, RTT_T1.y, RTT_T1.z);
-		fprintf(lvlog, "RTT_T2 = %f %f %f\r\n", RTT_T2.x, RTT_T2.y, RTT_T2.z);
+		//fprintf(lvlog, "RTT_T1 = %f %f %f\r\n", RTT_T1.x, RTT_T1.y, RTT_T1.z);
+		//fprintf(lvlog, "RTT_T2 = %f %f %f\r\n", RTT_T2.x, RTT_T2.y, RTT_T2.z);
 
 		RTT_T2 = mul(MX_K, RTT_T2);
-		fprintf(lvlog, "RTT_T2 (mul) = %f %f %f\r\n", RTT_T2.x, RTT_T2.y, RTT_T2.z);
+		//fprintf(lvlog, "RTT_T2 (mul) = %f %f %f\r\n", RTT_T2.x, RTT_T2.y, RTT_T2.z);
 
 		RTT_T1 = RTT_T1 + RTT_T2;
-		fprintf(lvlog, "RTT_T1 (add) = %f %f %f\r\n", RTT_T1.x, RTT_T1.y, RTT_T1.z);
+		//fprintf(lvlog, "RTT_T1 (add) = %f %f %f\r\n", RTT_T1.x, RTT_T1.y, RTT_T1.z);
 
 		DDotXEZ_G = _V(0.5*RTT_T1.x, 0.5*RTT_T1.y, 0.5*RTT_T1.z);
-		fprintf(lvlog, "ddot_XEZ_G = %f %f %f\r\n", DDotXEZ_G.x, DDotXEZ_G.y, DDotXEZ_G.z);
+		//fprintf(lvlog, "ddot_XEZ_G = %f %f %f\r\n", DDotXEZ_G.x, DDotXEZ_G.y, DDotXEZ_G.z);
 
 		// ESTIMATED TIME-TO-GO
-		fprintf(lvlog, "--- ESTIMATED TIME-TO-GO ---\r\n");
+		//fprintf(lvlog, "--- ESTIMATED TIME-TO-GO ---\r\n");
 
 		dot_dxit = dot_xi_T - DotXEZ.x - (DDotXEZ_G.x*Tt_T);
 		dot_detat = -DotXEZ.y - (DDotXEZ_G.y * Tt_T);
 		dot_dzetat = dot_zeta_T - DotXEZ.z - (DDotXEZ_G.z * Tt_T);
-		fprintf(lvlog, "dot_XEZt = %f %f %f\r\n", dot_dxit, dot_detat, dot_dzetat);
+		//fprintf(lvlog, "dot_XEZt = %f %f %f\r\n", dot_dxit, dot_detat, dot_dzetat);
 		dV = pow((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)), 0.5);
 		dL_3 = (((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)) / Lt_Y) - Lt_Y) / 2;
 		// if(dL_3 < 0){ sprintf(oapiDebugString(),"Est TTG: dL_3 %f (X/E/Z %f %f %f) @ Cycle %d (TB%d+%f)",dL_3,dot_dxit,dot_detat,dot_dzetat,IGMCycle,LVDC_Timebase,LVDC_TB_ETime);
@@ -7245,30 +7256,30 @@ void LVDCSV::IterativeGuidanceMode()
 		dT_3 = (dL_3*(tau3 - Tt_3)) / V_ex3;
 		T_3 = Tt_3 + dT_3;
 		T_T = Tt_T + dT_3;
-		fprintf(lvlog, "dV = %f, dL_3 = %f, dT_3 = %f, T_3 = %f, T_T = %f\r\n", dV, dL_3, dT_3, T_3, T_T);
+		//fprintf(lvlog, "dV = %f, dL_3 = %f, dT_3 = %f, T_3 = %f, T_T = %f\r\n", dV, dL_3, dT_3, T_3, T_T);
 
 		// TARGET PARAMETER UPDATE
 		if (!(UP > 0)) {
-			fprintf(lvlog, "--- TARGET PARAMETER UPDATE ---\r\n");
+			//fprintf(lvlog, "--- TARGET PARAMETER UPDATE ---\r\n");
 			UP = 1;
 			Tt_3 = T_3;
 			Tt_T = T_T;
-			fprintf(lvlog, "UP = 1, Tt_3 = %f, Tt_T = %f\r\n", Tt_3, Tt_T);
+			//fprintf(lvlog, "UP = 1, Tt_3 = %f, Tt_T = %f\r\n", Tt_3, Tt_T);
 			Lt_3 = Lt_3 + dL_3;
 			Lt_Y = Lt_Y + dL_3;
 			Jt_3 = Jt_3 + (dL_3*T_3);
-			fprintf(lvlog, "Lt_3 = %f, Lt_Y = %f, Jt_3 = %f\r\n", Lt_3, Lt_Y, Jt_3);
+			//fprintf(lvlog, "Lt_3 = %f, Lt_Y = %f, Jt_3 = %f\r\n", Lt_3, Lt_Y, Jt_3);
 
 			// NOTE: This is perfectly valid. Just because Dijkstra and Wirth think otherwise
 			// does not mean it's gospel. I shouldn't have to defend my choice of instructions
 			// because a bunch of people read the title of the paper with no context and take
 			// it as a direct revelation from God with no further study into the issue.
-			fprintf(lvlog, "RECYCLE\r\n");
+			//fprintf(lvlog, "RECYCLE\r\n");
 			goto gtupdate; // Recycle. 
 		}
 
 		// tchi_y AND tchi_p CALCULATIONS
-		fprintf(lvlog, "--- tchi_y/p CALCULATION ---\r\n");
+		//fprintf(lvlog, "--- tchi_y/p CALCULATION ---\r\n");
 
 		L_3 = Lt_3 + dL_3;
 		J_3 = Jt_3 + (dL_3*T_3);
@@ -7276,14 +7287,14 @@ void LVDCSV::IterativeGuidanceMode()
 		Q_3 = (S_3*tau3) - ((V_ex3*pow(T_3, 2)) / 2);
 		P_3 = (J_3*(tau3 + (2 * T_1c))) - ((V_ex3*pow(T_3, 2)) / 2);
 		U_3 = (Q_3*(tau3 + (2 * T_1c))) - ((V_ex3*pow(T_3, 3)) / 6);
-		fprintf(lvlog, "L_3 = %f, J_3 = %f, S_3 = %f, Q_3 = %f, P_3 = %f, U_3 = %f\r\n", L_3, J_3, S_3, Q_3, P_3, U_3);
+		//fprintf(lvlog, "L_3 = %f, J_3 = %f, S_3 = %f, Q_3 = %f, P_3 = %f, U_3 = %f\r\n", L_3, J_3, S_3, Q_3, P_3, U_3);
 
 		// This is where velocity-to-be-gained is generated.
 
 		dot_dxi = dot_dxit - (DDotXEZ_G.x   * dT_3);
 		dot_deta = dot_detat - (DDotXEZ_G.y  * dT_3);
 		dot_dzeta = dot_dzetat - (DDotXEZ_G.z * dT_3);
-		fprintf(lvlog, "dot_dXEZ = %f %f %f\r\n", dot_dxi, dot_deta, dot_dzeta);
+		//fprintf(lvlog, "dot_dXEZ = %f %f %f\r\n", dot_dxi, dot_deta, dot_dzeta);
 
 		//sprintf(oapiDebugString(),".dxi = %f | .deta %f | .dzeta %f | dT3 %f",
 		//	dot_dxi,dot_deta,dot_dzeta,dT_3);
@@ -7294,7 +7305,7 @@ void LVDCSV::IterativeGuidanceMode()
 		tchi_y = atan2(dot_deta, pow(pow(dot_dxi, 2) + pow(dot_dzeta, 2), 0.5));
 		tchi_p = atan2(dot_dxi, dot_dzeta);
 		UP = -1;
-		fprintf(lvlog, "L_Y = %f, tchi_y = %f, tchi_p = %f, UP = -1\r\n", L_Y, tchi_y, tchi_p);
+		//fprintf(lvlog, "L_Y = %f, tchi_y = %f, tchi_p = %f, UP = -1\r\n", L_Y, tchi_y, tchi_p);
 
 		if (CHIBARSTEER == false && Tt_T <= eps_2)
 		{
@@ -7329,59 +7340,59 @@ void LVDCSV::IterativeGuidanceMode()
 		else {
 			// No.
 			// YAW STEERING PARAMETERS
-			fprintf(lvlog, "--- YAW STEERING PARAMETERS ---\r\n");
+			//fprintf(lvlog, "--- YAW STEERING PARAMETERS ---\r\n");
 
 			J_Y = J_12 + J_3 + (L_3*T_1c);
 			S_Y = S_12 - J_3 + (L_Y*T_3);
 			Q_Y = Q_12 + Q_3 + (S_3*T_1c) + ((T_c + T_3)*J_12);
 			K_Y = L_Y / J_Y;
 			D_Y = S_Y - (K_Y*Q_Y);
-			fprintf(lvlog, "J_Y = %f, S_Y = %f, Q_Y = %f, K_Y = %f, D_Y = %f\r\n", J_Y, S_Y, Q_Y, K_Y, D_Y);
+			//fprintf(lvlog, "J_Y = %f, S_Y = %f, Q_Y = %f, K_Y = %f, D_Y = %f\r\n", J_Y, S_Y, Q_Y, K_Y, D_Y);
 
 			deta = PosXEZ.y + (DotXEZ.y*T_T) + ((DDotXEZ_G.y*pow(T_T, 2)) / 2) + (S_Y*(sin(tchi_y)));
 			K_3 = deta / (D_Y*(cos(tchi_y)));
 			K_4 = K_Y * K_3;
-			fprintf(lvlog, "deta = %f, K_3 = %f, K_4 = %f\r\n", deta, K_3, K_4);
+			//fprintf(lvlog, "deta = %f, K_3 = %f, K_4 = %f\r\n", deta, K_3, K_4);
 
 			// PITCH STEERING PARAMETERS
-			fprintf(lvlog, "--- PITCH STEERING PARAMETERS ---\r\n");
+			//fprintf(lvlog, "--- PITCH STEERING PARAMETERS ---\r\n");
 
 			L_P = L_Y * cos(tchi_y);
 			C_2 = cos(tchi_y) + (K_3*sin(tchi_y));
 			C_4 = K_4 * sin(tchi_y);
 			J_P = (J_Y*C_2) - (C_4*(P_12 + P_3 + (pow(T_1c, 2)*L_3)));
-			fprintf(lvlog, "L_P = %f, C_2 = %f, C_4 = %f, J_P = %f\r\n", L_P, C_2, C_4, J_P);
+			//fprintf(lvlog, "L_P = %f, C_2 = %f, C_4 = %f, J_P = %f\r\n", L_P, C_2, C_4, J_P);
 
 			S_P = (S_Y*C_2) - (C_4*Q_Y);
 			Q_P = (Q_Y*C_2) - (C_4*(U_12 + U_3 + (pow(T_1c, 2)*S_3) + ((T_3 + T_c)*P_12)));
 			K_P = L_P / J_P;
 			D_P = S_P - (K_P*Q_P);
-			fprintf(lvlog, "S_P = %f, Q_P = %f, K_P = %f, D_P = %f\r\n", S_P, Q_P, K_P, D_P);
+			//fprintf(lvlog, "S_P = %f, Q_P = %f, K_P = %f, D_P = %f\r\n", S_P, Q_P, K_P, D_P);
 
 			dxi = PosXEZ.x - xi_T + (DotXEZ.x*T_T) + ((DDotXEZ_G.x*pow(T_T, 2)) / 2) + (S_P*(sin(tchi_p)));
 			K_1 = dxi / (D_P*cos(tchi_p));
 			K_2 = K_P * K_1;
-			fprintf(lvlog, "dxi = %f, K_1 = %f, K_2 = %f, cos(tchi_p) = %f\r\n", dxi, K_1, K_2, cos(tchi_p));
+			//fprintf(lvlog, "dxi = %f, K_1 = %f, K_2 = %f, cos(tchi_p) = %f\r\n", dxi, K_1, K_2, cos(tchi_p));
 		}
 	}
 	else {
 	hsl:		// HIGH-SPEED LOOP ENTRY				
 				// CUTOFF VELOCITY EQUATIONS
-		fprintf(lvlog, "--- CUTOFF VELOCITY EQUATIONS ---\r\n");
+		//fprintf(lvlog, "--- CUTOFF VELOCITY EQUATIONS ---\r\n");
 		V_0 = V_1;
 		V_1 = V_2;
 		//V_2 = 0.5 * (V+(pow(V_1,2)/V));
 		V_2 = V;
 		dtt_1 = dtt_2;
 		dtt_2 = dt_c;
-		fprintf(lvlog, "V = %f, Tt_t = %f\r\n", V, Tt_T);
-		fprintf(lvlog, "V = %f, V_0 = %f, V_1 = %f, V_2 = %f, dtt_1 = %f, dtt_2 = %f\r\n", V, V_0, V_1, V_2, dtt_1, dtt_2);
+		//fprintf(lvlog, "V = %f, Tt_t = %f\r\n", V, Tt_T);
+		//fprintf(lvlog, "V = %f, V_0 = %f, V_1 = %f, V_2 = %f, dtt_1 = %f, dtt_2 = %f\r\n", V, V_0, V_1, V_2, dtt_1, dtt_2);
 		if (Tt_T <= eps_4 && V + V_TC >= V_T) {
-			fprintf(lvlog, "--- HI SPEED LOOP ---\r\n");
+			//fprintf(lvlog, "--- HI SPEED LOOP ---\r\n");
 			// TGO CALCULATION
-			fprintf(lvlog, "--- TGO CALCULATION ---\r\n");
+			//fprintf(lvlog, "--- TGO CALCULATION ---\r\n");
 			if (GATE5 == false && ModeCode26[MC26_Guidance_Reference_Failure] == false) {
-				fprintf(lvlog, "CHI FREEZE\r\n");
+				//fprintf(lvlog, "CHI FREEZE\r\n");
 				// CHI FREEZE
 				tchi_y = tchi_y_last;
 				tchi_p = tchi_p_last;
@@ -7390,7 +7401,7 @@ void LVDCSV::IterativeGuidanceMode()
 				GATE5 = true;
 				T_GO = T_3;
 				DT_N = 0.7; //HSL takes about 0.7 seconds to run
-				fprintf(lvlog, "HSL = true, GATE5 = true, T_GO = %f\r\n", T_GO);
+				//fprintf(lvlog, "HSL = true, GATE5 = true, T_GO = %f\r\n", T_GO);
 				//Set up engine pump purge control valve enable on sequence on first S-IVB burn
 				if (BOOST)
 				{
@@ -7399,7 +7410,7 @@ void LVDCSV::IterativeGuidanceMode()
 				}
 			}
 			if (BOOST == true) {
-				fprintf(lvlog, "BOOST-TO-ORBIT ACTIVE\r\n");
+				//fprintf(lvlog, "BOOST-TO-ORBIT ACTIVE\r\n");
 				// dT_4 CALCULATION
 				if (LVDC_Timebase == 40)
 				{
@@ -7411,35 +7422,35 @@ void LVDCSV::IterativeGuidanceMode()
 				}
 				dT_4 = TAS - t_3i - T_4N;
 				//dT_4 = t_3i - T_4N;
-				fprintf(lvlog, "t_3i = %f, dT_4 = %f\r\n", t_3i, dT_4);
+				//fprintf(lvlog, "t_3i = %f, dT_4 = %f\r\n", t_3i, dT_4);
 				if (fabs(dT_4) <= dT_LIM) {
 					dTt_4 = dT_4;
 				}
 				else {
-					fprintf(lvlog, "dTt_4 CLAMPED\r\n");
+					//fprintf(lvlog, "dTt_4 CLAMPED\r\n");
 					dTt_4 = dT_LIM;
 				}
-				fprintf(lvlog, "dTt_4 = %f\r\n", dTt_4);
+				//fprintf(lvlog, "dTt_4 = %f\r\n", dTt_4);
 			}
 			else {
 				// TRANSLUNAR INJECTION VELOCITY
-				fprintf(lvlog, "TRANSLUNAR INJECTION\r\n");
+				//fprintf(lvlog, "TRANSLUNAR INJECTION\r\n");
 				double dotR = dotp(PosS, DotS) / R;
 				R_T = R + dotR * (T_GO - dt_c);
 				V_T = sqrt(C_3 + 2.0*mu / R_T);
 				dV_B = dV_BR;
 				//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
-				fprintf(lvlog, "TLI VELOCITY: R %f dotR %f T_GO %f dt_c %f R_T %f V_T: %f\r\n", R, dotR, T_GO, dt_c, R_T, V_T);
+				//fprintf(lvlog, "TLI VELOCITY: R %f dotR %f T_GO %f dt_c %f R_T %f V_T: %f\r\n", R, dotR, T_GO, dt_c, R_T, V_T);
 				// LVDC_GP_PC = 30; // STOP
 			}
 			// TGO DETERMINATION
-			fprintf(lvlog, "--- TGO DETERMINATION ---\r\n");
+			//fprintf(lvlog, "--- TGO DETERMINATION ---\r\n");
 
 			a_2 = (((V_2 - V_1)*dtt_1) - ((V_1 - V_0)*dtt_2)) / (dtt_2*dtt_1*(dtt_2 + dtt_1));
 			a_1 = ((V_2 - V_1) / dtt_2) + (a_2*dtt_2);
 			T_GO = ((V_T - dV_B) - V_2) / (a_1 + a_2 * T_GO);
 			T_CO = TAS + T_GO;
-			fprintf(lvlog, "a_2 = %f, a_1 = %f, T_GO = %f, T_CO = %f, V_T = %f\r\n", a_2, a_1, T_GO, T_CO, V_T);
+			//fprintf(lvlog, "a_2 = %f, a_1 = %f, T_GO = %f, T_CO = %f, V_T = %f\r\n", a_2, a_1, T_GO, T_CO, V_T);
 
 			//sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
 			return;
@@ -7447,7 +7458,7 @@ void LVDCSV::IterativeGuidanceMode()
 		// End of high-speed loop
 	}
 	// GUIDANCE TIME UPDATE
-	fprintf(lvlog, "--- GUIDANCE TIME UPDATE ---\r\n");
+	//fprintf(lvlog, "--- GUIDANCE TIME UPDATE ---\r\n");
 	if (BOOST) {
 		if (S4B_IGN) {
 			T_3 = T_3 - dt_c;
@@ -7466,17 +7477,17 @@ void LVDCSV::IterativeGuidanceMode()
 					}
 					else {
 						// Here if t_B1 is bigger.
-						fprintf(lvlog, "t_B1 = %f, t_B3 = %f\r\n", t_B1, t_B3);
+						//fprintf(lvlog, "t_B1 = %f, t_B3 = %f\r\n", t_B1, t_B3);
 						T_1 = (((dotM_1*(t_B3 - t_B1)) - (dotM_2*t_B3))*DT_N) / (dotM_1*t_B1);
 					}
 				}
 			}
 		}
-		fprintf(lvlog, "T_1 = %f, T_2 = %f, T_3 = %f, T_c = %f dt_c = %f\r\n", T_1, T_2, T_3, T_c, dt_c);
+		//fprintf(lvlog, "T_1 = %f, T_2 = %f, T_3 = %f, T_c = %f dt_c = %f\r\n", T_1, T_2, T_3, T_c, dt_c);
 	}
 	else {
 		// MRS TEST
-		fprintf(lvlog, "MRS TEST\r\n");
+		//fprintf(lvlog, "MRS TEST\r\n");
 		//sprintf(oapiDebugString(),"LVDC: MRS TEST");
 		if (MRS)
 		{
@@ -7493,27 +7504,27 @@ void LVDCSV::IterativeGuidanceMode()
 		{
 			T_2 = T_2 - dt_c;
 		}
-		fprintf(lvlog, "T_2 = %f, T_3 = %f, dt_c = %f\r\n", T_2, T_3, dt_c);
+		//fprintf(lvlog, "T_2 = %f, T_3 = %f, dt_c = %f\r\n", T_2, T_3, dt_c);
 		// LVDC_GP_PC = 30; // STOP
 	}
 	Tt_3 = T_3;
 	T_1c = T_1 + T_2 + T_c;
 	Tt_T = T_1c + Tt_3;
-	fprintf(lvlog, "Tt_3 = %f, T_1c = %f, Tt_T = %f\r\n", Tt_3, T_1c, Tt_T);
+	//fprintf(lvlog, "Tt_3 = %f, T_1c = %f, Tt_T = %f\r\n", Tt_3, T_1c, Tt_T);
 	if (GATE) {
 		// FREEZE CHI
-		fprintf(lvlog, "Thru GATE; CHI FREEZE\r\n");
+		//fprintf(lvlog, "Thru GATE; CHI FREEZE\r\n");
 		//sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
 		return;
 	}
 	else {
 		// IGM STEERING ANGLES
-		fprintf(lvlog, "--- IGM STEERING ANGLES ---\r\n");
+		//fprintf(lvlog, "--- IGM STEERING ANGLES ---\r\n");
 
 		//sprintf(oapiDebugString(),"IGM: K_1 %f K_2 %f K_3 %f K_4 %f",K_1,K_2,K_3,K_4);
 		Xtt_y = ((tchi_y)-K_3 + (K_4 * DT_N));
 		Xtt_p = ((tchi_p)-K_1 + (K_2 * DT_N)) - phi_T - PI05;
-		fprintf(lvlog, "Xtt_y = %f, Xtt_p = %f\r\n", Xtt_y, Xtt_p);
+		//fprintf(lvlog, "Xtt_y = %f, Xtt_p = %f\r\n", Xtt_y, Xtt_p);
 		sin_chi_Yit = sin(Xtt_p);
 		cos_chi_Yit = cos(Xtt_p);
 		sin_chi_Zit = sin(Xtt_y);
@@ -8647,7 +8658,7 @@ void LVDCSV::MinorLoopSupport()
 			DChi.data[i] += PI2;
 		}
 	}
-	fprintf(lvlog, "DChi = %f %f %f\r\n", DChi.x*DEG, DChi.y*DEG, DChi.z*DEG);
+	//fprintf(lvlog, "DChi = %f %f %f\r\n", DChi.x*DEG, DChi.y*DEG, DChi.z*DEG);
 
 	DChi_apo.x = (DChi.x) / (MLR*DT_N);
 	DChi_apo.y = (DChi.y) / (MLR*DT_N);
@@ -9014,7 +9025,8 @@ void LVDCSV::OrbitNavigation()
 	ATEMP1 =  OrbitalNavigationAcceleration(RTEMP1, VTEMP1, CurrentAttitude);
 	RPT = PosS + DotS * 8.0 + ATEMP1 * 32.0;
 	VPT = VTEMP1 + ATEMP1 * 8.0;
-	APT = OrbitalNavigationAcceleration(RPT, VPT, CurrentAttitude); //TBD: Not CurrentAttitude
+	MidPointAttitude = CurrentAttitude + DChi_apo * MLR*4.0;
+	APT = OrbitalNavigationAcceleration(RPT, VPT, MidPointAttitude);
 	DRT = DotS * 8.0 + (ddotS + ATEMP1 * 2.0)*32.0 / 3.0;
 	PosS = PosS + DRT;
 	DVT = (ddotS + ATEMP1 * 4.0 + APT)*4.0 / 3.0;
@@ -9033,8 +9045,8 @@ void LVDCSV::OrbitNavigation()
 	fprintf(lvlog, "Gravity Acceleration: %f \r\n", CG);
 	fprintf(lvlog, "Total Velocity: %f \r\n", V);
 	fprintf(lvlog, "Dist. from Earth's Center: %f \r\n", R);
-	fprintf(lvlog, "S: %f \r\n", S);
-	fprintf(lvlog, "P: %f \r\n", P);
+	//fprintf(lvlog, "S: %f \r\n", S);
+	//fprintf(lvlog, "P: %f \r\n", P);
 	VECTOR3 drtest = SVCompare();
 	fprintf(lvlog, "SV Accuracy: %f %f %f\r\n", drtest.x, drtest.y, drtest.z);
 }
@@ -9126,8 +9138,8 @@ void LVDCSV::ChiComputations(int entry)
 		X_Yi += PI2;
 	}
 
-	fprintf(lvlog, "*** COMMAND ISSUED ***\r\n");
-	fprintf(lvlog, "PITCH = %f, YAW = %f\r\n", X_Yi*DEG, X_Zi*DEG);
+	//fprintf(lvlog, "*** COMMAND ISSUED ***\r\n");
+	//fprintf(lvlog, "PITCH = %f, YAW = %f\r\n", X_Yi*DEG, X_Zi*DEG);
 	// IGM is supposed to generate attitude directly.
 	CommandedAttitude.y = X_Yi; // PITCH
 	CommandedAttitude.z = X_Zi; // YAW;	
@@ -9146,7 +9158,7 @@ void LVDCSV::ChiComputations(int entry)
 
 void LVDCSV::OrbitGuidance()
 {
-	fprintf(lvlog, "ORBITAL GUIDANCE\r\n");
+	//fprintf(lvlog, "ORBITAL GUIDANCE\r\n");
 
 	//R_OG only gets calculated in phases II and IV
 	if (DVP == 1 || DVP == 3)
@@ -9261,7 +9273,7 @@ void LVDCSV::OrbitGuidance()
 	{
 		if (ModeCode27[MC27_TrackLocalHoriz] || ModeCode27[MC27_AttHoldWrtLocalContRetFromSC])
 		{
-			fprintf(lvlog, "Maintain orbrate\r\n");
+			//fprintf(lvlog, "Maintain orbrate\r\n");
 			Pos4 = mul(MX_G, R_OG); //here we compute the steering angles...
 			R4 = sqrt(Pos4.x*Pos4.x + Pos4.z*Pos4.z);
 			sin_chi_Yit = (Pos4.x * cos(alpha_1) + Pos4.z * sin(alpha_1)) / (-R4);
@@ -9272,7 +9284,7 @@ void LVDCSV::OrbitGuidance()
 			return;
 		}
 	}
-	fprintf(lvlog, "Inertial attitude hold or SC takeover\r\n");
+	//fprintf(lvlog, "Inertial attitude hold or SC takeover\r\n");
 }
 
 void LVDCSV::TimeToGoToRestartAndBetaTest()
@@ -9877,8 +9889,8 @@ VECTOR3 LVDCSV::VentSubroutine(VECTOR3 Att)
 	{
 		if (LVDC_TB_ETime < VTIM[i]) break;
 	}
-	VECTOR3 A_V = _V(cos(Att.y)*cos(Att.z), sin(Att.z), -sin(Att.y)*cos(Att.z))*VENTA[i];
-	//fprintf(lvlog, "Segment = %d Vent Acceleration = %f %f %f\r\n", i, A_V.x, A_V.y, A_V.z);
+	VECTOR3 A_V = _V(cos(Att.y)*cos(Att.z), sin(Att.z), -sin(Att.y)*cos(Att.z))*VENTA[i]*0.0; //Remove 0 when venting is implemented
+	//fprintf(lvlog, "Segment = %d Vent Acceleration = %lf Vector = %f %f %f\r\n", i, VENTA[i], A_V.x, A_V.y, A_V.z);
 	return A_V;
 }
 

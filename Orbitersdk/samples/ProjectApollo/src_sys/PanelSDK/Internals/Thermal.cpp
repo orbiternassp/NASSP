@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-#include "thermal.h"
+#include "Thermal.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -220,7 +220,7 @@ void Thermal_engine::Radiative(double dt) {
 		Q3 = (float) (q * pow(runner->Temp - 2.7, 4));
 		Q -= Q3;
 
-		Q4 = (float)(100 * runner->Area * (runner->Temp - v->GetAtmTemperature()))*(v->GetAtmDensity()/1.225);
+		Q4 = (float)(100. * runner->Area * (runner->Temp - v->GetAtmTemperature())*v->GetAtmDensity() / 1.225);
 		Q -= Q4;
 		
 

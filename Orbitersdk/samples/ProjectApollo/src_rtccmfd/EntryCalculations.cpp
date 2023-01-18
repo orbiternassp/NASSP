@@ -1659,6 +1659,7 @@ bool RetrofirePlanning::RMSDBMP(EphemerisData sv, double GETI, double lat_T, dou
 	}
 
 	MAINITER = 0;
+	HASCONVERGED = false;
 
 	do
 	{
@@ -2063,6 +2064,10 @@ void RetrofirePlanning::RMMDBM()
 	else if (BurnMode == 2)
 	{
 		DVBURN = F / mdot * log(CSMmass / (CSMmass - mdot * pRTCC->RZJCTTC.R31_dt));
+	}
+	else
+	{
+		DVBURN = 0.0;
 	}
 
 	iter = 0;
@@ -4079,7 +4084,7 @@ bool EarthEntry::EntryIter()
 	}
 	else
 	{
-		if (precision && entrynominal)
+		if (precision == 1 && entrynominal)
 		{
 			if (abs(x - xlim) < OrbMech::power(2.0, -20.0) || abs(x + xlim) < OrbMech::power(2.0, -20.0) || ii == 60)
 				//if (ii == 40)
@@ -4150,14 +4155,22 @@ RTEEarth::RTEEarth(RTCC *r, EphemerisData sv0, double GMTbase, double EntryTIG, 
 	this->GMTbase = GMTbase;
 	this->critical = critical;
 
-	hEarth = oapiGetObjectByName("Earth");
 	RCON = OrbMech::R_Earth + 400000.0 * 0.3048;
 	RD = RCON;
 	mu = OrbMech::mu_Earth;
 
 	ii = 0;
 
+	//Propagate state vector to TIG
 	pRTCC->PMMCEN(sv0, 0.0, 0.0, 1, EntryTIG - sv0.GMT, 1.0, sv_ig, ITS);
+
+	//State vector at TIG needs to be in Earth SOI
+	if (sv_ig.RBI != BODY_EARTH)
+	{
+		errorstate = 3;
+		return;
+	}
+
 	sv_ig_apo = sv_ig;
 
 	EMSAlt = 297431.0*0.3048;

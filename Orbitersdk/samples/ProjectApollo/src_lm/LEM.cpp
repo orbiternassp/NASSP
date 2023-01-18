@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -427,12 +427,14 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
-	imu(agc, Panelsdk),
+	inertialData(this),
+	imu(agc, Panelsdk, inertialData),
 	scdu(agc, RegOPTX, 0140, 1),
 	tcdu(agc, RegOPTY, 0141, 1),
 	aea(Panelsdk, deda),
 	deda(this,soundlib, aea),
-	CWEA(soundlib, Bclick),
+	mechanicalAccelerometer(inertialData),
+	CWEA(soundlib),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
 	APSPropellant(ph_Asc, Panelsdk),
@@ -1290,6 +1292,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 	}
 
+	inertialData.Timestep(simdt);
+
 	// Update VC animations
 	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
 	{
@@ -1636,6 +1640,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "COASRETICLEVISIBLE", 18)) {
 			sscanf(line + 18, "%i", &COASreticlevisible);
 		}
+		else if (!strnicmp(line, INERTIAL_DATA_START_STRING, sizeof(INERTIAL_DATA_START_STRING))) {
+			inertialData.LoadState(scn);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1819,9 +1826,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
-		}
-		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
-			mechanicalAccelerometer.LoadState(scn);
 		}
 		else if (!strnicmp(line, ATCA_START_STRING, sizeof(ATCA_START_STRING))) {
 			atca.LoadState(scn);
@@ -2113,6 +2117,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
+	inertialData.SaveState(scn);
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
@@ -2210,7 +2215,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	tca3B.SaveState(scn, "RCSTCA_3B_BEGIN", "RCSTCA_END");
 	tca4B.SaveState(scn, "RCSTCA_4B_BEGIN", "RCSTCA_END");
 	ordeal.SaveState(scn);
-	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);
 	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
 	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);

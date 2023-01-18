@@ -160,7 +160,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Config and mass update
 		med_m55.Table = RTCC_MPT_CSM;
-		MPTMassUpdate(calcParams.src, med_m50, med_m55);
+		MPTMassUpdate(calcParams.src, med_m50, med_m55, med_m49);
 		PMMWTC(55);
 		med_m50.Table = RTCC_MPT_CSM;
 		med_m50.WeightGET = GETfromGMT(RTCCPresentTimeGMT());
@@ -1158,7 +1158,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//MED K16
 		med_k16.Mode = 4;
 		med_k16.Sequence = 1;
-		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(101, 0, 0);
+		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LOI + 25.0*3600.0;
 
 		LunarDescentPlanningProcessor(sv);
 
@@ -1185,7 +1185,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		landmarkopt.alt[0] = -1.46*1852.0;
 		landmarkopt.GETbase = CalcGETBase();
 		landmarkopt.lat[0] = 1.243*RAD;
-		landmarkopt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
+		landmarkopt.LmkTime[0] = calcParams.LOI + 22.5*3600.0;
 		landmarkopt.lng[0] = 23.688*RAD;
 		landmarkopt.sv0 = sv;
 		landmarkopt.entries = 1;
@@ -1345,7 +1345,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//MED K16
 		med_k16.Mode = 4;
 		med_k16.Sequence = 1;
-		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(101, 0, 0);
+		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LOI + 25.0*3600.0;
 
 		LunarDescentPlanningProcessor(sv);
 
@@ -1574,7 +1574,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->LmkID[0], "A-1");
 			opt.alt[0] = 0;
 			opt.lat[0] = 2.0*RAD;
-			opt.LmkTime[0] = OrbMech::HHMMSSToSS(82, 40, 0);
+			opt.LmkTime[0] = calcParams.LOI + 6.5*3600.0;
 			opt.lng[0] = 65.5*RAD;
 			opt.entries = 1;
 		}
@@ -1588,11 +1588,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.lat[0] = BZLAND.lat[RTCC_LMPOS_BEST];
 			if (fcn == 63)
 			{
-				opt.LmkTime[0] = OrbMech::HHMMSSToSS(104, 30, 0);
+				opt.LmkTime[0] = calcParams.LOI + 28.5*3600.0;
 			}
 			else
 			{
-				opt.LmkTime[0] = OrbMech::HHMMSSToSS(114, 20, 0);
+				opt.LmkTime[0] = calcParams.LOI + 38.5*3600.0;
 			}
 			opt.lng[0] = BZLAND.lng[RTCC_LMPOS_BEST];
 			opt.entries = 1;
@@ -1618,7 +1618,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//MED K16
 		med_k16.Mode = 4;
 		med_k16.Sequence = 1;
-		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(101, 0, 0);
+		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LOI + 25.0*3600.0;
 
 		LunarDescentPlanningProcessor(sv);
 
@@ -2170,7 +2170,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		//Initial guess for liftoff time
-		calcParams.LunarLiftoff = OrbMech::HHMMSSToSS(124, 23, 26);
+		calcParams.LunarLiftoff = calcParams.LOI + 48.5*3600.0;
 		TIG_nom = calcParams.LunarLiftoff;
 		MJD_TIG_nom = OrbMech::MJDfromGET(TIG_nom, GETbase);
 		sv_Liftoff = coast(sv_CSM, (MJD_TIG_nom - sv_CSM.MJD)*24.0*3600.0);
@@ -2193,8 +2193,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv = StateVectorCalc(calcParams.src);
 
-		med_k16.GETTH1 = OrbMech::HHMMSSToSS(106, 30, 0);
-		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(124, 0, 0);
+		med_k16.GETTH1 = calcParams.LOI + 30.5*3600.0;
+		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LOI + 48.0*3600.0;
 		med_k16.Mode = 7;
 		med_k16.Sequence = 1;
 		med_k16.Vehicle = RTCC_MPT_CSM;
@@ -2540,7 +2540,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else
 		{
 			entopt.type = 1;
-			entopt.t_Z = OrbMech::HHMMSSToSS(195.0, 0.0, 0.0);
+			entopt.t_Z = calcParams.TEI + 60.0*3600.0;
 		}
 
 		GETbase = CalcGETBase();

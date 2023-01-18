@@ -29,6 +29,18 @@
 
 #define RF_ZERO_POWER_DBM -1000.0; //safe "0" for power, nothing should ever get this low
 
+/// \brief Safe conversion from W to dBm
+/// \param W The power in watts RMS
+/// \return The power in dBm
+static inline double RFCALC_W2dBm(double W) {
+	if (W > 0.0) {
+		return 10.0 * log10(W) + 30.0;
+	}
+	else {
+		return RF_ZERO_POWER_DBM;
+	}
+}
+
 /// \brief Calcluate Received Power
 ///
 /// This function is a simple inplimentation of Friis transmission equation.
@@ -50,12 +62,24 @@ static inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, doubl
 	wavelength = C0 / (frequency);
 
 	rcvdPower = xmitrPower * xmitrGain * rcvrGain * pow((wavelength / (4 * PI * distance)), 2); //watts
-	rcvdPower = 10.0 * log10(1000.0 * rcvdPower); //convert to dBm
-
-	if (fpclassify(rcvdPower) != FP_NORMAL)
-	{
-		return RF_ZERO_POWER_DBM;
-	}
+	rcvdPower = RFCALC_W2dBm(rcvdPower); //convert to dBm
 
 	return rcvdPower;
 }
+
+class RFCALC_RFProperties {
+public:
+	double Power;
+	double Gain;
+	double Frequency;
+	double Phase;
+	VECTOR3 GlobalPosition;
+
+	RFCALC_RFProperties() {
+		Power = 0;
+		Gain = 0;
+		Frequency = 0;
+		Phase = 0;
+		GlobalPosition = _V(0, 0, 0);
+	}
+};

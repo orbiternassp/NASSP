@@ -24,7 +24,7 @@
 
 // This is an abbreviated ST-124 IMU for the launch vehicle's use.
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "papi.h"
@@ -62,26 +62,9 @@ void LVIMU::Init()
 	Gimbal.Y = 0;
 	Gimbal.Z = 0;
 
-	Orbiter.Attitude.X = 0;
-	Orbiter.Attitude.Y = 0;
-	Orbiter.Attitude.Z = 0;
-
-	Orbiter.LastAttitude.X = 0;
-	Orbiter.LastAttitude.Y = 0;
-	Orbiter.LastAttitude.Z = 0;
-
-	Orbiter.AttitudeReference.m11 = 0;
-	Orbiter.AttitudeReference.m12 = 0;
-	Orbiter.AttitudeReference.m13 = 0;
-	Orbiter.AttitudeReference.m21 = 0;
-	Orbiter.AttitudeReference.m22 = 0;
-	Orbiter.AttitudeReference.m23 = 0;
-	Orbiter.AttitudeReference.m31 = 0;
-	Orbiter.AttitudeReference.m32 = 0;
-	Orbiter.AttitudeReference.m33 = 0;
-
-	LastWeightAcceleration = _V(0, 0, 0);
-	LastGlobalVel = _V(0, 0, 0);
+	Orbiter.Attitude_v2g = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	Orbiter.Attitude_g2v = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	Orbiter.AttitudeReference = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 
 	OurVessel = 0;
 
@@ -181,71 +164,24 @@ void LVIMU::Timestep(double mjd)
 	}
 	
 	// fill OrbiterData
-	VECTOR3 arot;
-	OurVessel->GetLVCommandConnector()->GetGlobalOrientation(arot);
-
-	Orbiter.Attitude.X = arot.x;
-	Orbiter.Attitude.Y = arot.y;
-	Orbiter.Attitude.Z = arot.z;
-
-	// Vessel to Orbiter global transformation
-	MATRIX3	tinv = getRotationMatrixZ(-arot.z);
-	tinv = mul(getRotationMatrixY(-arot.y), tinv);
-	tinv = mul(getRotationMatrixX(-arot.x), tinv);
+	OurVessel->GetLVCommandConnector()->GetRotationMatrix(Orbiter.Attitude_v2g);
+	Orbiter.Attitude_g2v.m11 = Orbiter.Attitude_v2g.m11;
+	Orbiter.Attitude_g2v.m12 = Orbiter.Attitude_v2g.m21;
+	Orbiter.Attitude_g2v.m13 = Orbiter.Attitude_v2g.m31;
+	Orbiter.Attitude_g2v.m21 = Orbiter.Attitude_v2g.m12;
+	Orbiter.Attitude_g2v.m22 = Orbiter.Attitude_v2g.m22;
+	Orbiter.Attitude_g2v.m23 = Orbiter.Attitude_v2g.m32;
+	Orbiter.Attitude_g2v.m31 = Orbiter.Attitude_v2g.m13;
+	Orbiter.Attitude_g2v.m32 = Orbiter.Attitude_v2g.m23;
+	Orbiter.Attitude_g2v.m33 = Orbiter.Attitude_v2g.m33;
 
 	if (!Initialized) {
 		SetOrbiterAttitudeReference();
-
-		// Get current weight vector in vessel coordinates
-		VECTOR3 w;
-		OurVessel->GetLVCommandConnector()->GetWeightVector(w);
-		// Transform to Orbiter global and calculate weight acceleration
-		w = mul(tinv, w) / OurVessel->GetLVCommandConnector()->GetMass();
-
-		//Orbiter 2016 hack
-		if (length(w) == 0.0)
-		{
-			w = GetGravityVector();
-		}
-
-		LastWeightAcceleration = w;
-
-		OurVessel->GetLVCommandConnector()->GetGlobalVel(LastGlobalVel);
-
 		LastTime = mjd;
 		Initialized = true;
 	} 
 	else {
 		deltaTime = (mjd - LastTime)*86400.0;
-
-		// Calculate accelerations
-		VECTOR3 w, vel;
-		OurVessel->GetLVCommandConnector()->GetWeightVector(w);
-		// Transform to Orbiter global and calculate accelerations
-		w = mul(tinv, w) / OurVessel->GetLVCommandConnector()->GetMass();
-
-		//Orbiter 2016 hack
-		if (length(w) == 0.0)
-		{
-			w = GetGravityVector();
-		}
-
-		OurVessel->GetLVCommandConnector()->GetGlobalVel(vel);
-		VECTOR3 dvel = (vel - LastGlobalVel) / deltaTime;
-
-		// Measurements with the 2006-P1 version showed that the average of the weight 
-		// vector of this and the last step match the force vector while in free fall
-		// The force vector matches the global velocity change of the last timestep exactly,
-		// but isn't used because GetForceVector isn't working while docked
-		VECTOR3 dw1 = w - dvel;
-		VECTOR3 dw2 = LastWeightAcceleration - dvel;	
-		VECTOR3 accel = -(dw1 + dw2) / 2.0;
-		LastWeightAcceleration = w;
-		LastGlobalVel = vel;
-
-		// orbiter earth rotation
-		// imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);		
-		// sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f DT %f", accel.x, accel.y, accel.z, deltaTime);								
 
 		// Process channel bits				
 		if (ZeroIMUCDUFlag) {
@@ -260,12 +196,9 @@ void LVIMU::Timestep(double mjd)
 		else {
 			// Gimbals
 			MATRIX3 t = Orbiter.AttitudeReference;
-	  		t = mul(getRotationMatrixX(Orbiter.Attitude.X), t);
-	  		t = mul(getRotationMatrixY(Orbiter.Attitude.Y), t);
-	  		t = mul(getRotationMatrixZ(Orbiter.Attitude.Z), t);
-	  		
-	  		t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
-	  		
+			t = mul(Orbiter.Attitude_g2v, t);
+			t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
+
 			// calculate the new gimbal angles
 			VECTOR3 newAngles = getRotationAnglesXZY(t);
 
@@ -282,21 +215,10 @@ void LVIMU::Timestep(double mjd)
 			}*/
 
 			// PIPAs
+			VECTOR3 accel;
+			OurVessel->GetLVCommandConnector()->GetInertialAccel(accel);
+			accel = mul(Orbiter.Attitude_v2g, -accel);
 			accel = tmul(Orbiter.AttitudeReference, accel);
-			// sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f DT %f", accel.x, accel.y, accel.z, deltaTime);								
-
-			// pulse PIPAs			
-			//pulses = RemainingPIPA.X + (accel.x * deltaTime / 0.0585);
-			//PulsePIPA(LVRegPIPAX, (int) pulses);
-			//RemainingPIPA.X = pulses - (int) pulses;
-			
-			//pulses = RemainingPIPA.Y + (accel.y * deltaTime / 0.0585);
-			//PulsePIPA(LVRegPIPAY, (int) pulses);
-			//RemainingPIPA.Y = pulses - (int) pulses;
-
-			//pulses = RemainingPIPA.Z + (accel.z * deltaTime / 0.0585);
-			//PulsePIPA(LVRegPIPAZ, (int) pulses);
-			//RemainingPIPA.Z = pulses - (int) pulses;			
 
 			pulses = (accel.x * deltaTime);
 			PulsePIPA(LVRegPIPAX, pulses);
@@ -417,89 +339,15 @@ void LVIMU::SetOrbiterAttitudeReference()
 	MATRIX3 t = getRotationMatrixY(-Gimbal.Y);
 	t = mul(getRotationMatrixZ(-Gimbal.Z), t);
 	t = mul(getRotationMatrixX(-Gimbal.X), t);
-	
+
 	// tranform to orbiter local coordinates
 	t = mul(getNavigationBaseToOrbiterLocalTransformation(), t);
-	
+
 	// tranform to orbiter global coordinates
-	t = mul(getRotationMatrixZ(-Orbiter.Attitude.Z), t);
-	t = mul(getRotationMatrixY(-Orbiter.Attitude.Y), t);
-	t = mul(getRotationMatrixX(-Orbiter.Attitude.X), t);
+	t = mul(Orbiter.Attitude_v2g, t);
 
 	// "Orbiter's REFSMMAT"
 	Orbiter.AttitudeReference = t;
-}
-
-VECTOR3 LVIMU::GetGravityVector()
-{
-	OBJHANDLE gravref = OurVessel->GetLVCommandConnector()->GetGravityRef();
-	OBJHANDLE hSun = oapiGetObjectByName("Sun");
-	VECTOR3 R, U_R;
-	OurVessel->GetLVCommandConnector()->GetRelativePos(gravref, R);
-	U_R = unit(R);
-	double r = length(R);
-	VECTOR3 R_S, U_R_S;
-	OurVessel->GetLVCommandConnector()->GetRelativePos(hSun, R_S);
-	U_R_S = unit(R_S);
-	double r_S = length(R_S);
-	double mu = GGRAV * oapiGetMass(gravref);
-	double mu_S = GGRAV * oapiGetMass(hSun);
-	int jcount = oapiGetPlanetJCoeffCount(gravref);
-	double JCoeff[5];
-	for (int i = 0; i < jcount; i++)
-	{
-		JCoeff[i] = oapiGetPlanetJCoeff(gravref, i);
-	}
-	double R_E = oapiGetSize(gravref);
-
-	VECTOR3 a_dP;
-
-	a_dP = -U_R;
-
-	if (jcount > 0)
-	{
-		MATRIX3 mat;
-		VECTOR3 U_Z;
-		double costheta, P2, P3;
-
-		oapiGetPlanetObliquityMatrix(gravref, &mat);
-		U_Z = mul(mat, _V(0, 1, 0));
-
-		costheta = dotp(U_R, U_Z);
-
-		P2 = 3.0 * costheta;
-		P3 = 0.5*(15.0*costheta*costheta - 3.0);
-		a_dP += (U_R*P3 - U_Z * P2)*JCoeff[0] * pow(R_E / r, 2.0);
-		if (jcount > 1)
-		{
-			double P4;
-			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-			a_dP += (U_R*P4 - U_Z * P3)*JCoeff[1] * pow(R_E / r, 3.0);
-			if (jcount > 2)
-			{
-				double P5;
-				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-				a_dP += (U_R*P5 - U_Z * P4)*JCoeff[2] * pow(R_E / r, 4.0);
-			}
-		}
-	}
-	a_dP *= mu / pow(r, 2.0);
-	a_dP -= U_R_S * mu_S / pow(r_S, 2.0);
-
-	if (gravref == oapiGetObjectByName("Moon"))
-	{
-		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-
-		VECTOR3 R_Ea, U_R_E;
-		OurVessel->GetLVCommandConnector()->GetRelativePos(hEarth, R_Ea);
-		U_R_E = unit(R_Ea);
-		double r_E = length(R_Ea);
-		double mu_E = GGRAV * oapiGetMass(hEarth);
-
-		a_dP -= U_R_E * mu_E / pow(r_E, 2.0);
-	}
-
-	return a_dP;
 }
 
 void LVIMU::ZeroIMUCDUs() 
@@ -568,54 +416,6 @@ void LVIMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 3, "%lf", &flt);
 			Gimbal.Z = flt;
 		}
-		else if (!strnicmp (line, "OAX", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Orbiter.Attitude.X = flt;
-		}
-		else if (!strnicmp (line, "OAY", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Orbiter.Attitude.Y = flt;
-		}
-		else if (!strnicmp (line, "OAZ", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Orbiter.Attitude.Z = flt;
-		}
-		else if (!strnicmp (line, "LAX", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Orbiter.LastAttitude.X = flt;
-		}
-		else if (!strnicmp (line, "LAY", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Orbiter.LastAttitude.Y = flt;
-		}
-		else if (!strnicmp (line, "LAZ", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Orbiter.LastAttitude.Z = flt;
-		}
-		else if (!strnicmp(line, "WLX", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			LastWeightAcceleration.x = flt;
-		}
-		else if (!strnicmp(line, "WLY", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			LastWeightAcceleration.y = flt;
-		}
-		else if (!strnicmp(line, "WLZ", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			LastWeightAcceleration.z = flt;
-		}
-		else if (!strnicmp (line, "VLX", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			LastGlobalVel.x = flt;
-		}
-		else if (!strnicmp (line, "VLY", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			LastGlobalVel.y = flt;
-		}
-		else if (!strnicmp (line, "VLZ", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			LastGlobalVel.z = flt;
-		}
 		else if (!strnicmp (line, "M11", 3)) {
 			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m11 = flt;
@@ -680,18 +480,6 @@ void LVIMU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "GMX", Gimbal.X);
 	papiWriteScenario_double(scn, "GMY", Gimbal.Y);
 	papiWriteScenario_double(scn, "GMZ", Gimbal.Z);
-	papiWriteScenario_double(scn, "OAX", Orbiter.Attitude.X);
-	papiWriteScenario_double(scn, "OAY", Orbiter.Attitude.Y);
-	papiWriteScenario_double(scn, "OAZ", Orbiter.Attitude.Z);
-	papiWriteScenario_double(scn, "LAX", Orbiter.LastAttitude.X);
-	papiWriteScenario_double(scn, "LAY", Orbiter.LastAttitude.Y);
-	papiWriteScenario_double(scn, "LAZ", Orbiter.LastAttitude.Z);
-	papiWriteScenario_double(scn, "WLX", LastWeightAcceleration.x);
-	papiWriteScenario_double(scn, "WLY", LastWeightAcceleration.y);
-	papiWriteScenario_double(scn, "WLZ", LastWeightAcceleration.z);
-	papiWriteScenario_double(scn, "VLX", LastGlobalVel.x);
-	papiWriteScenario_double(scn, "VLY", LastGlobalVel.y);
-	papiWriteScenario_double(scn, "VLZ", LastGlobalVel.z);
 	papiWriteScenario_double(scn, "M11", Orbiter.AttitudeReference.m11);
 	papiWriteScenario_double(scn, "M12", Orbiter.AttitudeReference.m12);
 	papiWriteScenario_double(scn, "M13", Orbiter.AttitudeReference.m13);

@@ -262,6 +262,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp" />
+    <ClCompile Include="..\..\src_sys\inertial.cpp" />
     <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -398,11 +399,9 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_aux\animations.h" />
-    <ClInclude Include="..\..\src_aux\IMFD\IMFD_Client.h" />
     <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_aux\vesim.h" />
     <ClInclude Include="..\..\src_csm\CM_VC_Resource.h" />
@@ -426,6 +425,7 @@
     <ClInclude Include="..\..\src_saturn\s1csystems.h" />
     <ClInclude Include="..\..\src_saturn\siisystems.h" />
     <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
+    <ClInclude Include="..\..\src_sys\inertial.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_aux\BasicExcelVC6.hpp" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />
@@ -475,7 +475,6 @@
     <ClInclude Include="..\..\src_aux\tracer.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h" />
-    <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Abort.bmp" />

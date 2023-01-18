@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -1149,7 +1149,7 @@ bool LGCThrusterPairSwitch::SwitchTo(int newState, bool dontspring)
 }
 
 // Meters
-void LEMRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s)
+void LEMRoundMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s)
 
 {
 	RoundMeter::Init(p0, p1, row);
@@ -1158,7 +1158,7 @@ void LEMRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s)
 
 // DC Voltmeter
 
-void LEMDCVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMDCVoltMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1222,7 +1222,7 @@ void LEMDCVoltMeter::DoDrawSwitchVC(UINT anim) {
 
 // DC Ammeter
 
-void LEMDCAmMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMDCAmMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1693,7 +1693,7 @@ double RadarSignalStrengthAttenuator::GetValue()
 	return val;
 }
 
-void LEMSteerableAntennaPitchMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMSteerableAntennaPitchMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1714,7 +1714,7 @@ void LEMSteerableAntennaPitchMeter::DoDrawSwitchVC(UINT anim) {
 	lem->SetAnimation(anim, v);
 }
 
-void LEMSteerableAntennaYawMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMSteerableAntennaYawMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1735,7 +1735,7 @@ void LEMSteerableAntennaYawMeter::DoDrawSwitchVC(UINT anim) {
 	lem->SetAnimation(anim, (v + 0.56) * 0.47);
 }
 
-void LEMSBandAntennaStrengthMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMSBandAntennaStrengthMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -2226,4 +2226,43 @@ bool CDRCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
 		return true;
 	}
 	return false;
+}
+
+LEMMasterAlarmSwitch::LEMMasterAlarmSwitch()
+{
+	cwea = NULL;
+}
+
+void LEMMasterAlarmSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM_CWEA *c) {
+	PushSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	cwea = c;
+}
+
+bool LEMMasterAlarmSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (TwoPositionSwitch::SwitchTo(newState, dontspring))
+	{
+		if (state == 1)
+		{
+			cwea->PushMasterAlarm();
+		}
+
+		return true;
+	}
+	return false;
+}
+
+void LEMMasterAlarmSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
+{
+	cwea->RenderMasterAlarm(DrawSurface, SwitchSurface);
+}
+
+void LEMMasterAlarmSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	cwea->RenderMasterAlarm(surf, switchsurfacevc);
+}
+
+void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
+{
+	switchsurfacevc = surf;
 }

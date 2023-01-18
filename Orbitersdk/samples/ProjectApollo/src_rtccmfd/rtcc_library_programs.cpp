@@ -861,7 +861,7 @@ void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, Ephemeris
 		TS_stored = EPH.Header.TL;
 		TE_stored = EPH.Header.TR;
 		unsigned NV = 1;
-		while (TE != EPH.table[NV - 1].GMT)
+		while (abs (TE - EPH.table[NV - 1].GMT) > 0.000001) //To avoid floating point issues
 		{
 			if (TE < EPH.table[NV - 1].GMT)
 			{

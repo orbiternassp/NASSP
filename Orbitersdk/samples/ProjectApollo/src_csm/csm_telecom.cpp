@@ -21,7 +21,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -33,13 +33,12 @@
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "LEM.h"
 #include "ioChannels.h"
 #include "tracer.h"
 #include "Mission.h"
-#include "RF_calc.h"
 #include "papi.h"
 
 // DS20060326 TELECOM OBJECTS
@@ -633,15 +632,13 @@ void HGA::Init(Saturn *vessel){
 	SignalStrength = 0;
 	scanlimit = false;
 	scanlimitwarn = false;
-	ModeSwitchTimer = 0;
+	ModeSwitchTimer = 0.0;
 	AutoTrackingMode = false;
 	RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 
 	HGAFrequency = 2119; //MHz. Should this get set somewhere else?
 	HGAWavelength = C0 / (HGAFrequency * 1000000); //meters
-	Gain85ft = pow(10,(50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
-	Power85ft = 20000; //watts
 }
 
 bool HGA::IsPowered()
@@ -1010,23 +1007,35 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_Earth, U_Moon, U_CSM;
+	VECTOR3 U_RP, pos, R_M, U_R, U_Earth, U_Moon, U_CSM;
 	MATRIX3 Rot;
 	double relang, beamwidth, Moonrelang, EarthSignalDist, CSMrelang;
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
 
-	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	//Global position of the spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
-	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
+	
+	//Get the gain, power and global position of the transmitter
+	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
+	if (MCCV) {
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+	}
+
+	/*sprintf(oapiDebugString(), "%lf %lf <%lf %lf %lf>", GroundTransmitterRFProperties.Gain, GroundTransmitterRFProperties.Power, GroundTransmitterRFProperties.GlobalPosition.x,
+		GroundTransmitterRFProperties.GlobalPosition.y,
+		GroundTransmitterRFProperties.GlobalPosition.z);*/
 	
 	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
 	
-	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition); //distance from the transmitting station in meters
+
+	//sprintf(oapiDebugString(), "<%lf %lf %lf> <%lf %lf %lf>", pos.x, pos.y, pos.z, R_E.x, R_E.y, R_E.z);
 	
 	int RcvBeamWidthMode = 1;
 
@@ -1064,8 +1073,8 @@ void HGA::TimeStep(double simt, double simdt)
 		gain = pow(10, (23.0 / 10)); //dB to ratio
 	}
 
-	RecvdHGAPower = Power85ft*Gain85ft*gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
-	RecvdHGAPower_dBm = 10*log10(1000*RecvdHGAPower);
+	RecvdHGAPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain *gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
+	RecvdHGAPower_dBm = RFCALC_W2dBm(RecvdHGAPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdHGAPower_dBm);
 
 	//sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
@@ -1073,7 +1082,7 @@ void HGA::TimeStep(double simt, double simdt)
 	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
 
 	//Unit vector pointing from CSM to Earth, global frame
-	U_Earth = unit(R_E - pos);
+	U_Earth = unit(GroundTransmitterRFProperties.GlobalPosition - pos);
 	//Unit vector pointing from CSM to Moon, global frame
 	U_Moon = unit(R_M - pos);
 	//Cosine of angle between Moon and Earth as viewed from the CSM
@@ -1260,14 +1269,14 @@ void HGA::clbkPostCreation()
 
 // Load
 void HGA::LoadState(char *line) {
-	sscanf(line + 15, "%lf %lf %lf %lf %lf %lf", &Alpha, &Beta, &Gamma, &AAxisCmd, &BAxisCmd, &CAxisCmd);
+	sscanf(line + 15, "%lf %lf %lf %lf %lf %lf %lf", &Alpha, &Beta, &Gamma, &AAxisCmd, &BAxisCmd, &CAxisCmd, &SignalStrength);
 }
 
 // Save
 void HGA::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf %lf %lf %lf", Alpha, Beta, Gamma, AAxisCmd, BAxisCmd, CAxisCmd);
+	sprintf(buffer, "%lf %lf %lf %lf %lf %lf %lf", Alpha, Beta, Gamma, AAxisCmd, BAxisCmd, CAxisCmd, SignalStrength);
 
 	oapiWriteScenario_string(scn, "HIGHGAINANTENNA", buffer);
 }
@@ -1294,38 +1303,40 @@ void OMNI::Init(Saturn *vessel) {
 	hEarth = oapiGetObjectByName("Earth");
 
 	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
-	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
-	Gain30ft = pow(10, (43 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
-	Power30ft = 20000; //watts
-
-	
+	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters	
 }
 
 void OMNI::TimeStep()
 {
-	VECTOR3 pos, R_E, R_M, U_R;
+	VECTOR3 pos, R_M, U_R;
 	MATRIX3 Rot;
 	double relang, Moonrelang;
 	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
 
 	double EarthSignalDist;
 
-
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
+
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
+	//Get the gain, power and global position of the transmitter
+	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
+	if (MCCV) {
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+	}
 
 	//Calculate antenna pointing vector in global frame
 	U_R = mul(Rot, direction);
 	//relative angle between antenna pointing vector and direction of Earth
-	relang = acos(dotp(U_R, unit(R_E - pos)));
+	relang = acos(dotp(U_R, unit(GroundTransmitterRFProperties.GlobalPosition - pos)));
 
-	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	RecvdOMNIPower = Power30ft * Gain30ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
-	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	RecvdOMNIPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower_dBm = RFCALC_W2dBm(RecvdOMNIPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
 	if (relang < 160*RAD)
@@ -1340,7 +1351,7 @@ void OMNI::TimeStep()
 	}
 
 	//Moon in the way
-	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+	Moonrelang = dotp(unit(R_M - pos), unit(GroundTransmitterRFProperties.GlobalPosition - pos));
 
 	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
@@ -2197,9 +2208,9 @@ unsigned char PCM::scale_data(double data, double low, double high)
 	if(data <= low){  return 0; }
 	
 	// Now figure step value
-	double step = ( ( high - low ) / 256.0);
+	double step = ( ( high - low ) / 253.0);
 	// and return result
-	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
+	return static_cast<unsigned char>( ( ( data - low ) / step ) + 1.5 );
 }
 
 // Fetch a telemetry data item from its channel code
@@ -5675,7 +5686,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		if (RadarDist > 80.0*0.3048)
 		{
 			RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2); //watts
-			RCVDPowerdB = 10.0 * log10(1000.0 * RCVDPowerdB); //convert to dBm
+			RCVDPowerdB = RFCALC_W2dBm(RCVDPowerdB); //convert to dBm
 		}
 		else
 		{
