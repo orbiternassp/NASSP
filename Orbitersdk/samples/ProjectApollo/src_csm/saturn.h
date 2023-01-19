@@ -66,6 +66,7 @@
 #include "csmsensors.h"
 #include "rhc.h"
 #include "inertial.h"
+#include "CueCardManager.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -808,16 +809,6 @@ public:
 		unsigned long word;
 
 		MainState() { word = 0; };
-	};
-
-	union CueCardState
-	{
-		struct {
-			unsigned DAPMonitorCard : 1;
-		};
-		unsigned long word;
-
-		CueCardState() { word = 0; }
 	};
 
 	//
@@ -3504,7 +3495,7 @@ protected:
 	bool LVGuidLight;
 	bool LVRateLight;
 
-	CueCardState cueCardState;
+	CueCardManager CueCards;
 
 	//
 	// And state that doesn't need to be saved.
@@ -3939,7 +3930,6 @@ protected:
 	int seatsunfoldedidx;
 	int coascdridx;
 	int coascdrreticleidx;
-	int cuecardidx[2];
 
 	bool ASTPMission;
 
@@ -4240,9 +4230,6 @@ protected:
 	void LoadVC();
 	void UpdateVC(VECTOR3 meshdir);
 	void DefineCMAttachments();
-	void CycleCueCard(int card);
-	void LoadCueCard(int card);
-	void ManageCueCard(int &meshidx, int status, MESHHANDLE mesh);
 	void ResetDynamicMeshIndizes();
 
 	//

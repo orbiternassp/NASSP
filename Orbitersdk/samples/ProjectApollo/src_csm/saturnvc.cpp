@@ -1386,8 +1386,14 @@ void Saturn::RegisterActiveAreas() {
 
 	//Cue Cards
 
-	oapiVCRegisterArea(AID_VC_CUE_CARD_DAP_MONITOR_CARD, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_DAP_MONITOR_CARD, _V(-0.329979, 0.682787, 0.352857) + ofs, _V(-0.257461, 0.682787, 0.352857) + ofs, _V(-0.329979, 0.673671, 0.349805) + ofs, _V(-0.257461, 0.673671, 0.349805) + ofs);
+	// Above the DSKY for the DAP Monitor Card
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_1, _V(-0.329979, 0.682787, 0.352857) + ofs, _V(-0.257461, 0.682787, 0.352857) + ofs, _V(-0.329979, 0.673671, 0.349805) + ofs, _V(-0.257461, 0.673671, 0.349805) + ofs);
+
+	// Left of the DSKY, Boost and TLI Cards
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_2, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_2, _V(-0.345, 0.6657, 0.3439) + ofs, _V(-0.332, 0.6657, 0.3439) + ofs, _V(-0.345, 0.5775, 0.3141) + ofs, _V(-0.332, 0.5775, 0.3141) + ofs);
+
 }
 
 // --------------------------------------------------------------
@@ -1475,8 +1481,11 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		SetCOASMesh();
 		return true;
 
-	case AID_VC_CUE_CARD_DAP_MONITOR_CARD:
-		CycleCueCard(0);
+	case AID_VC_CUE_CARD_LOCATION_1:
+		CueCards.CycleCueCard(0);
+		return true;
+	case AID_VC_CUE_CARD_LOCATION_2:
+		CueCards.CycleCueCard(1);
 		return true;
 	}
 

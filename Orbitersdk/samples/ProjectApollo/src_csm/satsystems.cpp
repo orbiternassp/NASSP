@@ -2617,6 +2617,11 @@ void Saturn::CreateMissionSpecificSystems()
 			secs.SMJCB = new SMJC_MOD1();
 		}
 	}
+
+	//Create cue cards. TBD: Load mission specific meshes
+	CueCards.CreateCueCard(0, "ProjectApollo/CueCard_DAP");
+	CueCards.CreateCueCard(1, "ProjectApollo/SaturnBoost_CueCard");
+	CueCards.CreateCueCard(1, "ProjectApollo/NominalSIVBTLI_1_CueCard");
 }
 
 bool Saturn::CabinFansActive()

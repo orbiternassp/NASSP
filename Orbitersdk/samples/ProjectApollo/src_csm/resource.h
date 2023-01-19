@@ -1653,7 +1653,8 @@
 #define AID_VC_ROT_P12_01          6420
 
 // Cue Cards
-#define AID_VC_CUE_CARD_DAP_MONITOR_CARD	7000
+#define AID_VC_CUE_CARD_LOCATION_1	7000
+#define AID_VC_CUE_CARD_LOCATION_2	7001
 
 
 // Next default values for new objects

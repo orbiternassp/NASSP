@@ -91,7 +91,6 @@ MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
 MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
-MESHHANDLE hcmDAPMonitorCard;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -663,7 +662,6 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
 	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
-	LOAD_MESH(hcmDAPMonitorCard, "ProjectApollo/CueCard_DAP");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -2263,65 +2261,7 @@ void Saturn::DefineCMAttachments()
 
 void Saturn::ResetDynamicMeshIndizes()
 {
-	cuecardidx[0] = -1;
-	cuecardidx[1] = -1;
-}
-
-void Saturn::CycleCueCard(int card)
-{
-	switch (card)
-	{
-	case 0:
-		if (!cueCardState.DAPMonitorCard)
-		{
-			cueCardState.DAPMonitorCard = 1;
-		}
-		else
-		{
-			cueCardState.DAPMonitorCard = 0;
-		}
-		break;
-	}
-	LoadCueCard(card);
-}
-
-void Saturn::ManageCueCard(int &meshidx, int status, MESHHANDLE mesh)
-{
-	//If VC mesh not loaded, don't try to do anything
-	if (vcidx == -1) return;
-
-	//Should mesh be loaded?
-	if (status)
-	{
-		//Yes, load mesh if it isn't already
-		if (meshidx == -1)
-		{
-			VECTOR3 ofs;
-			GetMeshOffset(vcidx, ofs);
-
-			meshidx = AddMesh(mesh, &ofs);
-			SetMeshVisibilityMode(meshidx, MESHVIS_VC);
-		}
-	}
-	else
-	{
-		//No, delete mesh if it's loaded
-		if (meshidx != -1)
-		{
-			DelMesh(meshidx);
-			meshidx = -1;
-		}
-	}
-}
-
-void Saturn::LoadCueCard(int card)
-{
-	switch (card)
-	{
-	case 0:
-		ManageCueCard(cuecardidx[0], cueCardState.DAPMonitorCard, hcmDAPMonitorCard);
-		break;
-	}
+	CueCards.ResetMeshIndizes();
 }
 
 void Saturn::AddCMMeshes(const VECTOR3 &mesh_dir)
@@ -2330,5 +2270,5 @@ void Saturn::AddCMMeshes(const VECTOR3 &mesh_dir)
 	opticscoveridx = AddMesh(hopticscover, &mesh_dir);
 	SetOpticsCoverMesh();
 
-	LoadCueCard(0);
+	CueCards.ResetCueCards();
 }

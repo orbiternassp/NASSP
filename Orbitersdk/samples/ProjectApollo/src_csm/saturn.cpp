@@ -503,7 +503,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	PriRadInTempSensor("Pri-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadInTempSensor("Sec-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0),
-	vesim(&cbCSMVesim, this)
+	vesim(&cbCSMVesim, this),
+	CueCards(vcidx, this, 2)
 #pragma warning ( pop ) // disable:4355
 
 {	
@@ -1094,7 +1095,6 @@ void Saturn::initSaturn()
 	seatsunfoldedidx = -1;
 	coascdridx = -1;
 	coascdrreticleidx = -1;
-	cuecardidx[0] = -1;
 
 	Scorrec = false;
 
@@ -1714,6 +1714,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	dataRecorder.SaveState(scn);
 	RRTsystem.SaveState(scn);
 	udl.SaveState(scn);
+
+	CueCards.SaveState(scn);
 
 	Panelsdk.Save(scn);	
 
@@ -2425,6 +2427,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (!strnicmp(line, UDL_START_STRING, sizeof(UDL_START_STRING))) {
 			udl.LoadState(scn);
+		}
+		else if (!strnicmp(line, CUECARDS_START_STRING, sizeof(CUECARDS_START_STRING))) {
+			CueCards.LoadState(scn);
 		}
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
