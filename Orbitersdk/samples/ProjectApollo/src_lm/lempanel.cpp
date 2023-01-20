@@ -2068,17 +2068,16 @@ void LEM::SetSwitches(int panel) {
 
 	// 354,  918,  463, 1124
 	MPSRegControlLeftSwitchRow.Init(AID_MPS_REG_CONTROLS_LEFT, MainPanel);
-	ASCHeReg1TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow, scera1.GetSwitch(12, 6), true);
-	DESHeReg1TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow, DPSPropellant.GetHeliumValve1(), true);
+	ASCHeReg1TB.Init(6*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow, scera1.GetSwitch(12, 6), true);
+	DESHeReg1TB.Init(7*TexMul, 134*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], MPSRegControlLeftSwitchRow, DPSPropellant.GetHeliumValve1(), true);
 	ASCHeReg1Switch.Init(0, 43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
 	ASCHeReg1Switch.SetDelayTime(1);
 	DESHeReg1Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlLeftSwitchRow);
 	DESHeReg1Switch.SetDelayTime(1);
 
 	MPSRegControlRightSwitchRow.Init(AID_MPS_REG_CONTROLS_RIGHT, MainPanel);
-	ASCHeReg2TB.Init(6, 0, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, scera1.GetSwitch(12, 7), true);
-	DESHeReg2TB.Init(7, 134, 23, 23, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, DPSPropellant.GetHeliumValve2(), false);
-	ASCHeReg2Switch.Init(0, 43, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
+	DESHeReg2TB.Init(7*TexMul, 134*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, DPSPropellant.GetHeliumValve2(), false);
+	ASCHeReg2Switch.Init(0, 43*TexMul, 34*TexMul, 29*TexMul, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
 	ASCHeReg2Switch.SetDelayTime(1);
 	DESHeReg2Switch.Init(0, 177, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
 	DESHeReg2Switch.SetDelayTime(1);
@@ -2117,10 +2116,10 @@ void LEM::SetSwitches(int panel) {
 
 	// DS20090901 STILL AT IT...
 	RCSAscFeedTBSwitchRow.Init(AID_RCS_ASC_FEED_TALKBACKS, MainPanel);
-	RCSAscFeed1ATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow, scera1.GetSwitch(13, 10), false);
-	RCSAscFeed2ATB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow, scera1.GetSwitch(12, 3), false);
-	RCSAscFeed1BTB.Init(144, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow, scera1.GetSwitch(13, 11), false);
-	RCSAscFeed2BTB.Init(214, 0, 23, 23, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow, scera1.GetSwitch(12, 4), false);
+	RCSAscFeed1ATB.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow, scera1.GetSwitch(13, 10), false);
+	RCSAscFeed2ATB.Init(70*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow, scera1.GetSwitch(12, 3), false);
+	RCSAscFeed1BTB.Init(144*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow, scera1.GetSwitch(13, 11), false);
+	RCSAscFeed2BTB.Init(214*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], RCSAscFeedTBSwitchRow, scera1.GetSwitch(12, 4), false);
 
 	RCSAscFeedSwitchRow.Init(AID_RCS_ASC_FEED_SWITCHES, MainPanel);
 	RCSAscFeed1ASwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSAscFeedSwitchRow);
@@ -2133,10 +2132,10 @@ void LEM::SetSwitches(int panel) {
 	RCSAscFeed2BSwitch.SetDelayTime(1);
 
 	RCSQuad14TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_TALKBACKS, MainPanel);
-	RCSQuad1ACmdEnableTB.Init(0, 0, 23, 23, srf[SRF_RED_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 7), tca1A.GetTCAFailureFlipFlop());
-	RCSQuad4ACmdEnableTB.Init(70, 0, 23, 23, srf[SRF_RED_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 1), tca4A.GetTCAFailureFlipFlop());
-	RCSQuad1BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_RED_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 8), tca1B.GetTCAFailureFlipFlop());
-	RCSQuad4BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_RED_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 2), tca4B.GetTCAFailureFlipFlop());
+	RCSQuad1ACmdEnableTB.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_RED_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 7), tca1A.GetTCAFailureFlipFlop());
+	RCSQuad4ACmdEnableTB.Init(70*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_RED_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 1), tca4A.GetTCAFailureFlipFlop());
+	RCSQuad1BCmdEnableTB.Init(144*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_RED_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 8), tca1B.GetTCAFailureFlipFlop());
+	RCSQuad4BCmdEnableTB.Init(214*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_RED_INDICATOR], RCSQuad14TBSwitchRow, scera1.GetSwitch(13, 2), tca4B.GetTCAFailureFlipFlop());
 
 	RCSQuad14SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_14_SWITCHES, MainPanel);
 	RCSQuad1ACmdEnableSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad14SwitchRow, this, 5);
@@ -2149,10 +2148,10 @@ void LEM::SetSwitches(int panel) {
 	RCSQuad4BCmdEnableSwitch.SetDelayTime(1);
 
 	RCSQuad23TBSwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_TALKBACKS, MainPanel);
-	RCSQuad2ACmdEnableTB.Init(0, 0, 23, 23, srf[SRF_RED_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 5), tca2A.GetTCAFailureFlipFlop());
-	RCSQuad3ACmdEnableTB.Init(70, 0, 23, 23, srf[SRF_RED_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 3), tca3A.GetTCAFailureFlipFlop());
-	RCSQuad2BCmdEnableTB.Init(144, 0, 23, 23, srf[SRF_RED_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 6), tca2B.GetTCAFailureFlipFlop());
-	RCSQuad3BCmdEnableTB.Init(214, 0, 23, 23, srf[SRF_RED_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 4), tca3B.GetTCAFailureFlipFlop());
+	RCSQuad2ACmdEnableTB.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_RED_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 5), tca2A.GetTCAFailureFlipFlop());
+	RCSQuad3ACmdEnableTB.Init(70*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_RED_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 3), tca3A.GetTCAFailureFlipFlop());
+	RCSQuad2BCmdEnableTB.Init(144*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_RED_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 6), tca2B.GetTCAFailureFlipFlop());
+	RCSQuad3BCmdEnableTB.Init(214*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_RED_INDICATOR], RCSQuad23TBSwitchRow, scera1.GetSwitch(13, 4), tca3B.GetTCAFailureFlipFlop());
 
 	RCSQuad23SwitchRow.Init(AID_RCS_LGC_CMD_ENABLE_23_SWITCHES, MainPanel);
 	RCSQuad2ACmdEnableSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSQuad23SwitchRow, this, 7);
@@ -2165,15 +2164,15 @@ void LEM::SetSwitches(int panel) {
 	RCSQuad3BCmdEnableSwitch.SetDelayTime(1);
 
 	RCSXfeedTBSwitchRow.Init(AID_RCS_XFEED_TALKBACK, MainPanel);
-	RCSXFeedTB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSXfeedTBSwitchRow, scera1.GetSwitch(13, 12), false);
+	RCSXFeedTB.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], RCSXfeedTBSwitchRow, scera1.GetSwitch(13, 12), false);
 
 	RCSXfeedSwitchRow.Init(AID_RCS_XFEED_SWITCH, MainPanel);
 	RCSXFeedSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSXfeedSwitchRow);
 	RCSXFeedSwitch.SetDelayTime(1);
 
 	RCSMainSOVTBRow.Init(AID_MAIN_SOV_TALKBACKS, MainPanel);
-	RCSMainSovATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 8), true);
-	RCSMainSovBTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 10), true);
+	RCSMainSovATB.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 8), true);
+	RCSMainSovBTB.Init(70*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 10), true);
 
 	RCSMainSOVSwitchRow.Init(AID_MAIN_SOV_SWITCHES, MainPanel);
 	RCSMainSovASwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow);
@@ -2441,17 +2440,17 @@ void LEM::SetSwitches(int panel) {
 	DSCCDRBat4LVSwitch.SetDelayTime(1);
 
 	DSCBatteryTBSwitchRow.Init(AID_DSC_BATTERY_TALKBACKS, MainPanel);
-	DSCBattery1TB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 1), scera2.GetSwitch(4, 2));
-	DSCBattery2TB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 3), scera2.GetSwitch(4, 4));
-	DSCBattery3TB.Init(152, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 5), scera2.GetSwitch(4, 6));
-	DSCBattery4TB.Init(222, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 7), scera2.GetSwitch(4, 8));
-	DSCBattFeedTB.Init(292, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
+	DSCBattery1TB.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 1), scera2.GetSwitch(4, 2));
+	DSCBattery2TB.Init(70*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 3), scera2.GetSwitch(4, 4));
+	DSCBattery3TB.Init(152*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 5), scera2.GetSwitch(4, 6));
+	DSCBattery4TB.Init(222*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 7), scera2.GetSwitch(4, 8));
+	DSCBattFeedTB.Init(292*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
 
 	ASCBatteryTBSwitchRow.Init(AID_ASC_BATTERY_TALKBACKS, MainPanel);
-	ASCBattery5ATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 11), false);
-	ASCBattery5BTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 9), false);
-	ASCBattery6ATB.Init(138, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 10), false);
-	ASCBattery6BTB.Init(221, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 12), false);
+	ASCBattery5ATB.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 11), false);
+	ASCBattery5BTB.Init(70*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 9), false);
+	ASCBattery6ATB.Init(138*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 10), false);
+	ASCBattery6BTB.Init(221*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 12), false);
 
 	ASCBatterySwitchRow.Init(AID_ASC_BATTERY_SWITCHES, MainPanel);
 	ASCBat5SESwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow);
@@ -2502,7 +2501,7 @@ void LEM::SetSwitches(int panel) {
 	Panel12CommSwitchRow3.Init(AID_LM_P12_COMM_SWITCHES_ROW3, MainPanel);
 	VHFASquelch.Init(0, 4, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel12CommSwitchRow3);
 	VHFBSquelch.Init(136, 4, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel12CommSwitchRow3);
-	TapeRecorderTB.Init(841 - 636, 1214 - 1189, 23, 23, srf[SRF_INDICATOR], Panel12CommSwitchRow3);
+	TapeRecorderTB.Init(841*TexMul - 636*TexMul, 1214*TexMul - 1189*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], Panel12CommSwitchRow3);
 	TapeRecorderSwitch.Init(892 - 636, 1212 - 1189, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel12CommSwitchRow3);
 
 	ComPitchMeterRow.Init(AID_LMPITCHDEGS, MainPanel, &COMM_DISP_CB);
@@ -2671,9 +2670,9 @@ void LEM::SetSwitches(int panel) {
 	EDStageRelay.Init(1002 - 431, 1182 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 	EDDesFuelVent.Init(36, 100, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
 	EDDesOxidVent.Init(109, 100, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
-	EDLGTB.Init(790 - 431, 1033 - 916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow, scera1.GetSwitch(13, 9));
-	EDDesFuelVentTB.Init(472 - 431, 960 - 916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow, DPSPropellant.GetFuelVentValve2(), false);
-	EDDesOxidVentTB.Init(545 - 431, 960 - 916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow, DPSPropellant.GetOxidVentValve2(), false);
+	EDLGTB.Init(790*TexMul - 431*TexMul, 1033*TexMul - 916*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], Panel8SwitchRow, scera1.GetSwitch(13, 9));
+	EDDesFuelVentTB.Init(472*TexMul - 431*TexMul, 960*TexMul - 916*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], Panel8SwitchRow, DPSPropellant.GetFuelVentValve2(), false);
+	EDDesOxidVentTB.Init(545*TexMul - 431*TexMul, 960*TexMul - 916*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], Panel8SwitchRow, DPSPropellant.GetOxidVentValve2(), false);
 	// Audio stuff
 	CDRAudSBandSwitch.Init(1189 - 431, 949 - 916, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
 	CDRAudICSSwitch.Init(1288 - 431, 949 - 916, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);

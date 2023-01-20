@@ -1990,8 +1990,8 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSProp2CTalkback.Init(171*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadCRCS.GetSecPropellantValve(), false);
 	SMRCSProp2DTalkback.Init(213*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, SMQuadDRCS.GetSecPropellantValve(), false);
 	
-	CMRCSProp1Talkback.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CMRCS1.GetPropellantValve(), true);
-	CMRCSProp2Talkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CMRCS2.GetPropellantValve(), true);
+	CMRCSProp1Talkback.Init( 0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CMRCS1.GetPropellantValve(), true);
+	CMRCSProp2Talkback.Init(42*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CMRCS2.GetPropellantValve(), true);
 
 	//
 	// Attitude control, etc.
@@ -2177,13 +2177,13 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	FuelCellPhRadTempIndicatorsRow.Init(AID_FUELCELLPHRADTEMPINDICATORS, MainPanel);
-	FuelCellPhIndicator.Init     (  0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
-	FuelCellRadTempIndicator.Init(174, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
+	FuelCellPhIndicator.Init     (  0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
+	FuelCellRadTempIndicator.Init(174*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
 
 	FuelCellRadiatorsIndicatorsRow.Init(AID_FUELCELLRADIATORSINDICATORS, MainPanel);
-	FuelCellRadiators1Indicator.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
-	FuelCellRadiators2Indicator.Init(43, 0, 23, 23, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
-	FuelCellRadiators3Indicator.Init(86, 0, 23, 23, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
+	FuelCellRadiators1Indicator.Init( 0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
+	FuelCellRadiators2Indicator.Init(43*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
+	FuelCellRadiators3Indicator.Init(86*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
 
 	FuelCellRadiatorsSwitchesRow.Init(AID_FUELCELLRADIATORSSWITCHES, MainPanel);
 	FuelCellRadiators1Switch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellRadiatorsSwitchesRow);
@@ -2204,9 +2204,9 @@ void Saturn::SetSwitches(int panel) {
 	FuelCellPurge3Switch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellPurgeSwitchesRow);
 
 	FuelCellReactantsIndicatorsRow.Init(AID_FUELCELLREACTANTSINDICATORS, MainPanel);
-	FuelCellReactants1Indicator.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
-	FuelCellReactants2Indicator.Init(43, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
-	FuelCellReactants3Indicator.Init(86, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+	FuelCellReactants1Indicator.Init( 0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+	FuelCellReactants2Indicator.Init(43*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+	FuelCellReactants3Indicator.Init(86*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
 
 	FuelCellReactantsSwitchesRow.Init(AID_FUELCELLREACTANTSSWITCHES, MainPanel);
 	FuelCellReactants1Switch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellReactantsSwitchesRow);
@@ -2231,8 +2231,8 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	TelecomTBRow.Init(AID_TELECOMTB, MainPanel);
-	PwrAmplTB.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], TelecomTBRow);
-	DseTapeTB.Init( 0,50, 23, 23, srf[SRF_INDICATOR], TelecomTBRow, &dataRecorder);
+	PwrAmplTB.Init( 0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], TelecomTBRow);
+	DseTapeTB.Init( 0,50*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], TelecomTBRow, &dataRecorder);
 
 	SBandAuxSwitchesRow.Init(AID_SBANDAUXSWITCHES, MainPanel);
 	SBandAuxSwitch1.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandAuxSwitchesRow);
@@ -2288,17 +2288,17 @@ void Saturn::SetSwitches(int panel) {
 	MainBusASwitch3.Init(230, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellPurgeSwitchesRow);
 	MainBusAResetSwitch.Init(273, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellPurgeSwitchesRow, &EPSSensorUnitDcBusACircuitBraker, &EPSSensorUnitDcBusACircuitBraker, 0);
 	MainBusAIndicatorsRow.Init(ADI_MAINBUSAINDICATORS, MainPanel);
-	MainBusAIndicator1.Init(0, 0, 23, 23, srf[SRF_INDICATOR], MainBusAIndicatorsRow, &MainBusAController, 1);
-	MainBusAIndicator2.Init(43, 0, 23, 23, srf[SRF_INDICATOR], MainBusAIndicatorsRow, &MainBusAController, 2);
-	MainBusAIndicator3.Init(86, 0, 23, 23, srf[SRF_INDICATOR], MainBusAIndicatorsRow, &MainBusAController, 3);
+	MainBusAIndicator1.Init(0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], MainBusAIndicatorsRow, &MainBusAController, 1);
+	MainBusAIndicator2.Init(43*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], MainBusAIndicatorsRow, &MainBusAController, 2);
+	MainBusAIndicator3.Init(86*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], MainBusAIndicatorsRow, &MainBusAController, 3);
 
 	MainBusBSwitch1.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellReactantsSwitchesRow); 
 	MainBusBSwitch2.Init(185, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellReactantsSwitchesRow);
 	MainBusBSwitch3.Init(241, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellReactantsSwitchesRow);
 	MainBusBResetSwitch.Init(297, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FuelCellReactantsSwitchesRow, &EPSSensorUnitDcBusBCircuitBraker, &EPSSensorUnitDcBusBCircuitBraker, 0);
-	MainBusBIndicator1.Init(129, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow, &MainBusBController, 1);
-	MainBusBIndicator2.Init(172, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow, &MainBusBController, 2);
-	MainBusBIndicator3.Init(215, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow, &MainBusBController, 3);
+	MainBusBIndicator1.Init(129*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow, &MainBusBController, 1);
+	MainBusBIndicator2.Init(172*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow, &MainBusBController, 2);
+	MainBusBIndicator3.Init(215*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow, &MainBusBController, 3);
 
 	SBandNormalSwitchesRow.Init(AID_SBAND_NORMAL_SWITCHES, MainPanel);
 	SBandNormalXPDRSwitch.Init    (	  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandNormalSwitchesRow);
@@ -2381,7 +2381,7 @@ void Saturn::SetSwitches(int panel) {
 	H2oQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this, &H2oQtyIndSwitch, &ECSWastePotTransducerFeeder);
 
 	EcsRadiatorIndicatorRow.Init(AID_ECSRADIATORINDICATOR, MainPanel, &GaugePower);
-	EcsRadiatorIndicator.Init( 0, 0, 23, 23, srf[SRF_ECSINDICATOR], EcsRadiatorIndicatorRow);
+	EcsRadiatorIndicator.Init( 0, 0, 23*TexMul, 23*TexMul, srf[SRF_ECSINDICATOR], EcsRadiatorIndicatorRow);
 
 	EcsRadiatorSwitchesRow.Init(AID_ECSRADIATORSWITCHES, MainPanel);
 	EcsRadiatorsFlowContAutoSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EcsRadiatorSwitchesRow);
@@ -2432,17 +2432,17 @@ void Saturn::SetSwitches(int panel) {
 	//
 	
 	SPSInjectorValveIndicatorsRow.Init(AID_SPS_INJ_VLV, MainPanel);
-	SPSInjectorValve1Indicator.Init(  0, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve2Indicator.Init( 48, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve3Indicator.Init( 96, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve4Indicator.Init(144, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
+	SPSInjectorValve1Indicator.Init(  0, 0, 34*TexMul, 34*TexMul, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
+	SPSInjectorValve2Indicator.Init( 48*TexMul, 0, 34*TexMul, 34*TexMul, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
+	SPSInjectorValve3Indicator.Init( 96*TexMul, 0, 34*TexMul, 34*TexMul, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
+	SPSInjectorValve4Indicator.Init(144*TexMul, 0, 34*TexMul, 34*TexMul, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
 
 	SPSTestSwitchRow.Init(AID_SPSTESTSWITCH, MainPanel);
 	SPSTestSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SPSTestSwitchRow);
 
 	SPSOxidFlowValveIndicatorsRow.Init(AID_SPSOXIDFLOWVALVEINDICATOR, MainPanel);
-	SPSOxidFlowValveMaxIndicator.Init(0,  0, 22, 12, srf[SRF_SPSMAXINDICATOR], SPSOxidFlowValveIndicatorsRow);
-	SPSOxidFlowValveMinIndicator.Init(0, 30, 22, 12, srf[SRF_SPSMININDICATOR], SPSOxidFlowValveIndicatorsRow);
+	SPSOxidFlowValveMaxIndicator.Init(0,  0, 22*TexMul, 12*TexMul, srf[SRF_SPSMAXINDICATOR], SPSOxidFlowValveIndicatorsRow);
+	SPSOxidFlowValveMinIndicator.Init(0, 30*TexMul, 22*TexMul, 12*TexMul, srf[SRF_SPSMININDICATOR], SPSOxidFlowValveIndicatorsRow);
 
 	SPSOxidFlowValveSwitchesRow.Init(AID_SPSOXIDFLOWVALVESWITCHES, MainPanel);
 	SPSOxidFlowValveSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SPSOxidFlowValveSwitchesRow);
@@ -2452,8 +2452,8 @@ void Saturn::SetSwitches(int panel) {
 	SPSPugModeSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SPSPugModeSwitchRow);
 	
 	SPSHeliumValveIndicatorsRow.Init(AID_SPSHELIUMVALVEINDICATORS, MainPanel);
-	SPSHeliumValveAIndicator.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], SPSHeliumValveIndicatorsRow);
-	SPSHeliumValveBIndicator.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SPSHeliumValveIndicatorsRow);
+	SPSHeliumValveAIndicator.Init( 0, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SPSHeliumValveIndicatorsRow);
+	SPSHeliumValveBIndicator.Init(43*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], SPSHeliumValveIndicatorsRow);
 
 	SPSSwitchesRow.Init(AID_SPSSWITCHES, MainPanel);
 	SPSHeliumValveASwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SPSSwitchesRow);
@@ -2512,8 +2512,8 @@ void Saturn::SetSwitches(int panel) {
 	DockingProbeRetractSecSwitch.Init(87, 23, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], DockingProbeSwitchesRow);
 
 	DockingProbeIndicatorsRow.Init(AID_DOCKINGPROBEINDICATORS, MainPanel);
-	DockingProbeAIndicator.Init(  0,  0, 23, 23, srf[SRF_INDICATOR], DockingProbeIndicatorsRow);
-	DockingProbeBIndicator.Init(  0, 27, 23, 23, srf[SRF_INDICATOR], DockingProbeIndicatorsRow);
+	DockingProbeAIndicator.Init(  0,  0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], DockingProbeIndicatorsRow);
+	DockingProbeBIndicator.Init(  0, 27*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], DockingProbeIndicatorsRow);
 
 	//
 	// EMS switches
