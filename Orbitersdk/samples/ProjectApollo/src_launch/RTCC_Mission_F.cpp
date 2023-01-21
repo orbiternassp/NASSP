@@ -1951,7 +1951,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		//Without descent stage
-		sv_LM.mass -= 2224.0 + 8000.0;
+		LEM *lem = (LEM *)calcParams.tgt;
+		sv_LM.mass = lem->GetAscentStageMass();
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
 		lamopt.GETbase = GETbase;
