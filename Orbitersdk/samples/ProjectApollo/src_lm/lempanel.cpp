@@ -2076,6 +2076,7 @@ void LEM::SetSwitches(int panel) {
 	DESHeReg1Switch.SetDelayTime(1);
 
 	MPSRegControlRightSwitchRow.Init(AID_MPS_REG_CONTROLS_RIGHT, MainPanel);
+	ASCHeReg2TB.Init(6*TexMul, 0, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, scera1.GetSwitch(12, 7), true);
 	DESHeReg2TB.Init(7*TexMul, 134*TexMul, 23*TexMul, 23*TexMul, srf[SRF_INDICATOR], MPSRegControlRightSwitchRow, DPSPropellant.GetHeliumValve2(), false);
 	ASCHeReg2Switch.Init(0, 43*TexMul, 34*TexMul, 29*TexMul, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], MPSRegControlRightSwitchRow);
 	ASCHeReg2Switch.SetDelayTime(1);
