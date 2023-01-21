@@ -2619,9 +2619,13 @@ void Saturn::CreateMissionSpecificSystems()
 	}
 
 	//Create cue cards. TBD: Load mission specific meshes
-	CueCards.CreateCueCard(0, "ProjectApollo/CueCard_DAP");
-	CueCards.CreateCueCard(1, "ProjectApollo/SaturnBoost_CueCard");
-	CueCards.CreateCueCard(1, "ProjectApollo/NominalSIVBTLI_1_CueCard");
+	unsigned loc, counter = 0;
+	std::string meshname;
+	VECTOR3 ofs;
+	while (pMission->GetCSMCueCards(counter, loc, meshname, ofs) == false)
+	{
+		CueCards.CreateCueCard(loc, meshname, ofs);
+	}
 }
 
 bool Saturn::CabinFansActive()

@@ -27,8 +27,17 @@
 #include <OrbiterAPI.h>
 #include <string>
 
+#define CSM_CUE_CARD_NUM 10
+
 namespace mission
 {
+	struct CueCardConfig
+	{
+		unsigned loc = 0;
+		std::string meshname;
+		VECTOR3 ofs = _V(0, 0, 0);
+	};
+
 	class Mission
 	{
 	public:
@@ -78,7 +87,11 @@ namespace mission
 		VECTOR3 GetCGOfEmptySM() const;
 		//false = Optics mode switch is not bypassed for CMC to optics commands, true = optics mode switch is bypassed for CMC to optics commands (ECP 792)
 		bool HasRateAidedOptics() const;
+		//Get cue cards
+		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
 	protected:
+		bool GetCueCards(CueCardConfig *cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
+
 		std::string strFileName;
 		std::string strMissionName;
 		std::string strCMCVersion;
@@ -102,6 +115,7 @@ namespace mission
 		int iCMtoLMPowerConnectionVersion;
 		VECTOR3 EmptySMCG;
 		bool bHasRateAidedOptics;
+		CueCardConfig CSMCueCards[CSM_CUE_CARD_NUM];
 
 		void SetDefaultValues();
 	};

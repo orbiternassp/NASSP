@@ -1655,6 +1655,7 @@
 // Cue Cards
 #define AID_VC_CUE_CARD_LOCATION_1	7000
 #define AID_VC_CUE_CARD_LOCATION_2	7001
+#define AID_VC_CUE_CARD_LOCATION_3	7002
 
 
 // Next default values for new objects

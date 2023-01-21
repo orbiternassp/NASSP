@@ -109,6 +109,15 @@ namespace mission {
 		iCMtoLMPowerConnectionVersion = 0;
 		EmptySMCG = _V(914.5916, -6.6712, 12.2940); //Includes: empty SM and SLA ring, but no SM RCS
 		bHasRateAidedOptics = false;
+
+		CSMCueCards[0].loc = 0;
+		CSMCueCards[0].meshname = "ProjectApollo/CueCards/CueCard_DAP";
+		CSMCueCards[1].loc = 1;
+		CSMCueCards[1].meshname = "ProjectApollo/CueCards/SaturnVBoost_CueCard_A14";
+		CSMCueCards[2].loc = 1;
+		CSMCueCards[2].meshname = "ProjectApollo/CueCards/NominalSIVBTLI_1_CueCard";
+		CSMCueCards[3].loc = 2;
+		CSMCueCards[3].meshname = "ProjectApollo/CueCards/SPS_Burn_CueCard";
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -183,6 +192,20 @@ namespace mission {
 			EmptySMCG = vtemp;
 		}
 		oapiReadItem_bool(hFile, "HasRateAidedOptics", bHasRateAidedOptics);
+		if (oapiReadItem_string(hFile, "CSMCueCard", buffer))
+		{
+			CueCardConfig cue;
+			unsigned val;
+			char buffer2[128];
+
+			sscanf(buffer, "%u %u %s %lf %lf %lf", &val, &cue.loc, buffer2, &cue.ofs.x, &cue.ofs.y, &cue.ofs.z);
+			cue.meshname = buffer2;
+
+			if (val < CSM_CUE_CARD_NUM)
+			{
+				CSMCueCards[val] = cue;
+			}
+		}
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
 	}
@@ -285,5 +308,28 @@ namespace mission {
 	bool Mission::HasRateAidedOptics() const
 	{
 		return bHasRateAidedOptics;
+	}
+
+	bool Mission::GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
+	{
+		return GetCueCards(CSMCueCards, counter, loc, meshname, ofs);
+	}
+
+	bool Mission::GetCueCards(CueCardConfig *cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
+	{
+		while (counter < CSM_CUE_CARD_NUM)
+		{
+			if (cue[counter].meshname != "" && cue[counter].meshname != "None")
+			{
+				loc = cue[counter].loc;
+				meshname = cue[counter].meshname;
+				ofs = cue[counter].ofs;
+				counter++;
+				return false;
+			}
+
+			counter++;
+		}
+		return true;
 	}
 }

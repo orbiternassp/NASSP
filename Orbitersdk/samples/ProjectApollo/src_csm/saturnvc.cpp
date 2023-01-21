@@ -1394,6 +1394,9 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_2, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_2, _V(-0.345, 0.6657, 0.3439) + ofs, _V(-0.332, 0.6657, 0.3439) + ofs, _V(-0.345, 0.5775, 0.3141) + ofs, _V(-0.332, 0.5775, 0.3141) + ofs);
 
+	// Around the event timer, SPS burn card and others
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_3, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_3, _V(-0.561500, 0.607183, 0.327275) + ofs, _V(-0.511500, 0.607183, 0.327275) + ofs, _V(-0.561500, 0.588217, 0.320925) + ofs, _V(-0.511500, 0.588217, 0.320925) + ofs);
 }
 
 // --------------------------------------------------------------
@@ -1486,6 +1489,9 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		return true;
 	case AID_VC_CUE_CARD_LOCATION_2:
 		CueCards.CycleCueCard(1);
+		return true;
+	case AID_VC_CUE_CARD_LOCATION_3:
+		CueCards.CycleCueCard(2);
 		return true;
 	}
 

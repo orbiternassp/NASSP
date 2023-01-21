@@ -504,7 +504,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SecRadInTempSensor("Sec-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0),
 	vesim(&cbCSMVesim, this),
-	CueCards(vcidx, this, 2)
+	CueCards(vcidx, this, 3)
 #pragma warning ( pop ) // disable:4355
 
 {	

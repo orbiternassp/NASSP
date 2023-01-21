@@ -32,13 +32,13 @@ CueCardManager::CueCardManager(int &vcidx, VESSEL *v, unsigned num) : vc(vcidx)
 
 void CueCardManager::CreateCueCard(unsigned location, std::string name, VECTOR3 offs)
 {
-	if (location >= CueCardLocations.size()) return;
+	if (CueCardLocations.size() <= location) return;
 	CueCardLocations[location].CreateCueCard(name, offs);
 }
 
 void CueCardManager::CycleCueCard(unsigned location)
 {
-	if (location + 1 > CueCardLocations.size()) return;
+	if (CueCardLocations.size() <= location) return;
 	CueCardLocations[location].CycleCueCard();
 }
 
