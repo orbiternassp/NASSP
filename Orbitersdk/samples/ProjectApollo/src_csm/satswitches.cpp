@@ -1100,9 +1100,9 @@ void SaturnSPSPercentMeter::DrawSwitchVC(int id, int event, SURFHANDLE drawSurfa
 	int digit2 = percent / 10;
 	int digit3 = percent - (digit2 * 10);
 
-	oapiBlt(drawSurface, BlackFontSurfacevc, 0, 0, 10 * digit1, 0, 10, 12);
-	oapiBlt(drawSurface, BlackFontSurfacevc, 13, 0, 10 * digit2, 0, 10, 12);
-	oapiBlt(drawSurface, WhiteFontSurfacevc, 26, 0, 11 * digit3, 0, 11, 12);
+	oapiBlt(drawSurface, BlackFontSurfacevc, 0, 0, 10 * digit1*TexMul, 0, 10*TexMul, 12*TexMul);
+	oapiBlt(drawSurface, BlackFontSurfacevc, 13*TexMul, 0, 10 * digit2*TexMul, 0, 10*TexMul, 12*TexMul);
+	oapiBlt(drawSurface, WhiteFontSurfacevc, 26*TexMul, 0, 11 * digit3*TexMul, 0, 11*TexMul, 12*TexMul);
 }
 
 double SaturnSPSOxidPercentMeter::QueryValue()

@@ -422,8 +422,8 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	// Digits are 16x19.
 	//
 
-	const int DigitWidth = 19;
-	const int DigitHeight = 21;
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int Curdigit, Curdigit2;
 
 	// Minute display on two digit
@@ -433,18 +433,18 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 
 	Curdigit = minutes;
 	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits, 20, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
+	oapiBlt(surf, digits, 20*TexMul, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
 
 	//oapiBlt(surf, digits, 37, 0, DigitWidth2, 0, 4, DigitWidth);
 
 	// second display on two digit
 	Curdigit = seconds / 10;
 	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits, 43, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
+	oapiBlt(surf, digits, 43*TexMul, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
 
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
-	oapiBlt(surf, digits, 62, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
+	oapiBlt(surf, digits, 62*TexMul, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
 }
 
 EventTimer::EventTimer(PanelSDK &p) : MissionTimer(p)
