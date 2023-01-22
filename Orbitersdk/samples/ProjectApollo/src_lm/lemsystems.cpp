@@ -406,7 +406,7 @@ void LEM::SystemsInit()
 	//IMU
 	imu.WireToBuses(&IMU_OPR_CB, NULL, NULL);
 	imu.WireHeaterToBuses(imuheater, &IMU_SBY_CB, NULL);
-	imu.InitThermals((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), imucase, (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:PTAHEAT"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:PSAHEAT"));
+	imu.InitThermals((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:IMUHEAT"), imucase, (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:PTAHEAT"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:PSAHEAT"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:CDUHEAT"));
 
 	// Main Propulsion
 	PROP_DISP_ENG_OVRD_LOGIC_CB.MaxAmps = 2.0;
@@ -1681,7 +1681,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-	
+	/*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -2074,13 +2074,14 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* edbatBtemp = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B:TEMP");
 	double* edbatBheat = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B:HEAT");
 	double* edbatBHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATBHX:POWER");
+	*/
 
 	//sprintf(oapiDebugString(), "CFM T: %lf HX: %lf Out: %lf", KelvinToFahrenheit(*CabinFanManifoldTemp), *CabinFanManifoldHX, *CabinFanManifoldOutFlow* LBH);
 
 	//sprintf(oapiDebugString(), "B1T %.3f B2T %.3f B3T %.3f B4T %.3f DGT %.3f B5T %.3f B6T %.3f B5PT %.3f B6PT %.3f AGT %.3f EDA %.3f EDB %.3f", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp), KelvinToFahrenheit(*desbatglycoltemp), KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatAtemp), KelvinToFahrenheit(*edbatBtemp));
 	//sprintf(oapiDebugString(), "B5T %.3f B6T %.3f B5PT %.3f B6PT %.3f AGT %.3f EDB %.3f", KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatBtemp));
 
-	sprintf(oapiDebugString(), "Primary Glycol Heat 1 %lf Primary Glycol Heat 2 %lf Cabin Heat %lf Battery Heat %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat, (*bat1heat+*bat2heat+*bat3heat+*bat4heat+*bat5heat+*bat6heat+*edbatAheat+*edbatBheat));
+	//sprintf(oapiDebugString(), "Primary Glycol Heat 1 %lf Primary Glycol Heat 2 %lf Cabin Heat %lf Battery Heat %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat, (*bat1heat+*bat2heat+*bat3heat+*bat4heat+*bat5heat+*bat6heat+*edbatAheat+*edbatBheat));
 
 	//sprintf(oapiDebugString(), "SCT %lf SCF %lf CT %lf SGDF %lf SGDT %lf GRVF %lf CO2MT %lf GlyCT %lf HXCT %lf HXCPwr %lf GlyHT %lf HXHT %lf HXHPwr %lf", KelvinToFahrenheit(*SuitCircuitTemp), *SuitCircuitOutFlow*LBH, KelvinToFahrenheit(*CabinTemp), *suitGasDiverterCabinFlow*LBH, KelvinToFahrenheit(*SGDTemp), *cabinGasReturnFlow*LBH, KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower);
 	//sprintf(oapiDebugString(), "SGDP %lf SGDV %d SGDF %lf CabP %lf GRV %d GRVF %lf CO2MP %lf", *SGDPress* PSI, *suitGasDiverterCabinVLV, *suitGasDiverterCabinFlow*LBH, *CabinPress* PSI, *gasreturnvlv, *cabinGasReturnFlow*LBH, *CO2ManifoldPress* PSI);

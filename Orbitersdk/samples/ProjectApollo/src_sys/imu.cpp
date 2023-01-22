@@ -85,6 +85,7 @@ void IMU::Init()
 	IMUCase = 0;
 	PTAHeat = 0;
 	PSAHeat = 0;
+	CDUHeat = 0;
 	PowerSwitch = 0;
 
 	DoZeroIMUGimbals();
@@ -296,12 +297,13 @@ void IMU::WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b)
 		IMUHeater->WireTo(&DCHeaterPower);
 }
 
-void IMU::InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad* ptaht, h_HeatLoad* psaht)
+void IMU::InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad* ptaht, h_HeatLoad* psaht, h_HeatLoad* cduht)
 {
 	IMUHeat = imuht;
 	IMUCase = cas;
 	PTAHeat = ptaht;
 	PSAHeat = psaht;
+	CDUHeat - cduht;
 }
 
 void IMU::Timestep(double simdt) 
@@ -451,6 +453,8 @@ void IMU::SystemTimestep(double simdt)
 				PTAHeat->GenerateHeat(8.9); //Need to check these values, no source
 			if (PSAHeat)
 				PSAHeat->GenerateHeat(8.9); //Need to check these values, no source
+			if (CDUHeat)
+				CDUHeat->GenerateHeat(8.9); //Need to check these values, no source
 		}
 		else
 		{
@@ -462,6 +466,8 @@ void IMU::SystemTimestep(double simdt)
 				PTAHeat->GenerateHeat(24.0); //guess using CSM databook
 			if (PSAHeat)
 				PSAHeat->GenerateHeat(26.0); //guess using CSM databook
+			if (CDUHeat)
+				CDUHeat->GenerateHeat(28.6); //guess using CSM databook
 		}
 	}
 }
