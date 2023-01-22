@@ -341,6 +341,34 @@ double h_substance::VAPENTH() const
 
 }
 
+double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double temperature) const
+{
+	double density;
+	//see https://gist.github.com/n7275/8676c064fef5f48680b5ba815f24e2bf
+	switch (SUBSTANCE_TYPE) {
+		case SUBSTANCE_O2:
+			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
+				density = 1213.484769963341585027 + 26080.93457328567 / (temperature - 186.3966881148979);
+
+			}
+			else {
+				density = 37.43199285231371 + 6585.8734706896175 / (temperature - 136.05498694800465);
+			}
+		case SUBSTANCE_H2:
+			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
+				density = 117.4608391071125226897 + 1699.5866235104872 / (temperature - 67.46034096292647);
+
+			}
+			else {
+				density = -2.599829096221642 + 1541.3460769523313 / (temperature - 11.322250308436296);
+			}
+		default:
+			density = L_DENSITY[SUBSTANCE_TYPE];
+		
+	}
+	return density;
+}
+
 double h_substance::Condense(double dt) {
 
 	double vapenth_temporary = VAPENTH();
@@ -512,17 +540,8 @@ void h_volume::ThermalComps(double dt) {
 		m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];	//Units of mol
 
 		// temperature dependency of the density is assumed 1 to 2 g/l
-		double density = L_DENSITY[composition[i].subst_type];
-		if (composition[i].subst_type == SUBSTANCE_O2) {
-			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
-			// Correction term is 0 at O2 initial tank temperature (75K), the other factors are "empirical"
-			density += 0.56 * Temp * Temp - 134.0 * Temp + 6900.0;
+		double density = composition->GET_LIQUID_DENSITY(i, Temp);
 
-		} else if (composition[i].subst_type == SUBSTANCE_H2) {
-			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
-			// Correction term is 0 at H2 boiling point (20K), the other factors are "empirical"
-			density += 0.03333 * Temp * Temp - 4.3333 * Temp + 73.3333;
-		}
 		tNV = (composition[i].mass - composition[i].vapor_mass) / density;	//Units of L
 		NV += tNV;	//Units of L
 
