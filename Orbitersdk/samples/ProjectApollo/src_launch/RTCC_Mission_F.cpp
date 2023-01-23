@@ -2055,11 +2055,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 
+		sv = StateVectorCalc(calcParams.tgt);
 		GETbase = CalcGETBase();
+		EZJGMTX1.data[0].REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		EZJGMTX3.data[0].REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
+
 		t_Depletion_guess = OrbMech::HHMMSSToSS(108, 0, 0);
 		dv = 4600.0*0.3048;
 
-		sv = StateVectorCalc(calcParams.tgt);
 		sv1 = coast(sv, t_Depletion_guess - OrbMech::GETfromMJD(sv.MJD, GETbase));
 
 		MJD_depletion = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, 0.0);
@@ -2090,6 +2093,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManeuverPAD(&opt, *form);
 
 		AGCStateVectorUpdate(buffer1, sv, false, GETbase);
+
+		DockAlignOpt dockopt;
+
+		dockopt.LM_REFSMMAT = EZJGMTX3.data[0].REFSMMAT;
+		dockopt.CSM_REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
+		dockopt.LMAngles = form->IMUAtt;
+		dockopt.type = 3;
+
+		DockingAlignmentProcessor(dockopt);
+		sprintf(form->remarks, "CSM IMU angles. Roll %.0f, pitch %.0f, yaw %.0f", dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
+		sprintf(form->purpose, "APS Depletion");
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
