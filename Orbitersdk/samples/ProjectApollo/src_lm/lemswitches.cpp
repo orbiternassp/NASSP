@@ -1998,8 +1998,8 @@ void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE s
 
 	double v = GetDisplayValue();
 
-	const int DigitWidth = 19;
-	const int DigitHeight = 21;
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int Curdigit4 = (int)v;
 	int Curdigit3 = (int)v / 10;
 	int Curdigit2 = (int)v / 100;

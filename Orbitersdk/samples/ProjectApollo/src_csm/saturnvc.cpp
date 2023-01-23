@@ -1526,12 +1526,12 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_DSKY_DISPLAY:
 	case AID_VC_DSKY_DISPLAY2:
-		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP]);
+		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP], 0, 0, TexMul);
 		return true;
 
 	case AID_VC_DSKY_LIGHTS:
 	case AID_VC_DSKY_LIGHTS2:
-		dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS]);
+		dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, false, TexMul);
 		return true;
 
 	/*case AID_ABORT_BUTTON:
@@ -1650,11 +1650,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	return true;
 
 	case AID_VC_MISSION_CLOCK:
-		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], true);
+		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], true, TexMul);
 		return true;
 
 	case AID_VC_MISSION_CLOCK306:
-		MissionTimer306Display.Render90(surf, srf[SRF_VC_DIGITAL90], true);
+		MissionTimer306Display.Render90(surf, srf[SRF_VC_DIGITAL90], true, TexMul);
 		return true;
 
 	case AID_VC_EVENT_TIMER306:
@@ -1666,11 +1666,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_CWS_LIGHTS_LEFT:
-		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], true);
+		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], true, TexMul);
 		return true;
 
 	case AID_VC_CWS_LIGHTS_RIGHT:
-		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], false);
+		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], false, TexMul);
 		return true;
 
 	case AID_VC_CWS_GNLIGHTS:

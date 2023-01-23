@@ -279,7 +279,7 @@ void MissionTimer::SetTime(double t)
 	seconds = secs - (60 * minutes);
 }
 
-void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
+void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm, int TexMul)
 {
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
@@ -320,7 +320,7 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	oapiBlt(surf, digits, 0+123*TexMul, 0, DigitWidth*(Curdigit- (Curdigit2 * 10)), 0, DigitWidth,DigitHeight);
 }
 
-void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
+void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm, int TexMul)
 {
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
@@ -412,7 +412,7 @@ LEMEventTimer::~LEMEventTimer()
 	//
 }
 
-void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
+void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits, int TexMul)
 {
 	// Don't do this if not powered.
 	if (!IsPowered() || !IsDisplayPowered())

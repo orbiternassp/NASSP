@@ -1394,29 +1394,29 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_MISSION_CLOCK:
-		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2]);
+		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], false, TexMul);
 		return true;
 
 	case AID_VC_EVENT_TIMER:
-		EventTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2]);
+		EventTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], TexMul);
 		return true;
 
 	case AID_VC_DSKY_DISPLAY:
-		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP]);
+		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP], 0, 0, TexMul);
 		return true;
 
 	case AID_VC_DSKY_LIGHTS:
 		if (pMission->GetLMDSKYVersion() == 3)
 		{
-			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, true);
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, true, TexMul);
 		}
 		else if (pMission->GetLMDSKYVersion() == 2)
 		{
-			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS]);
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, false, TexMul );
 		}
 		else
 		{
-			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, false);
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, false, false, TexMul);
 		}
 		return true;
 

@@ -626,7 +626,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	}
 }
 
-void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel)
+void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel, int TexMul)
 
 {
 	if (leftpanel) {

@@ -97,7 +97,7 @@ public:
 	/// \param lightsurf Surface for the light bitmaps.
 	/// \param leftpanel Is this the left or right panel?
 	///
-	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
+	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel, int xTexMul = 1);
 
 	void RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf);
 
