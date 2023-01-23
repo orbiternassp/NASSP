@@ -33,7 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "papi.h"
 
-#include "EDS.h"
+#include "eds.h"
 
 EDS::EDS(IU *iu)
 {
@@ -601,6 +601,13 @@ void EDS::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	papiWriteScenario_bool(scn, "ABORTLIGHTSIGNAL", AbortLightSignal);
 	papiWriteScenario_bool(scn, "LIFTOFFRELAY", LiftoffRelay);
+	if (PlatformFailure)
+	{
+		papiWriteScenario_bool(scn, "PlatformFailure", PlatformFailure);
+		papiWriteScenario_double(scn, "PlatformFailureTime", PlatformFailureTime);
+	}
+	if (LiftoffCircuitAFailure) papiWriteScenario_bool(scn, "LiftoffCircuitAFailure", LiftoffCircuitAFailure);
+	if (LiftoffCircuitBFailure) papiWriteScenario_bool(scn, "LiftoffCircuitBFailure", LiftoffCircuitBFailure);
 }
 
 void EDS::LoadState(char *line)
@@ -626,6 +633,10 @@ void EDS::LoadState(char *line)
 	papiReadScenario_bool(line, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	papiReadScenario_bool(line, "ABORTLIGHTSIGNAL", AbortLightSignal);
 	papiReadScenario_bool(line, "LIFTOFFRELAY", LiftoffRelay);
+	papiReadScenario_bool(line, "PlatformFailure", PlatformFailure);
+	papiReadScenario_double(line, "PlatformFailureTime", PlatformFailureTime);
+	papiReadScenario_bool(line, "LiftoffCircuitAFailure", LiftoffCircuitAFailure);
+	papiReadScenario_bool(line, "LiftoffCircuitBFailure", LiftoffCircuitBFailure);
 }
 
 EDS1B::EDS1B(IU *iu) : EDS(iu)

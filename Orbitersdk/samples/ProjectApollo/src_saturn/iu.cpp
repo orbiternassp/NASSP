@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -47,7 +47,6 @@ lvimu(this),
 ControlSignalProcessor(this)
 {
 	State = 0;
-	MissionTime = 0.0;
 	LastCycled = 0.0;
 
 	Crewed = true;
@@ -72,13 +71,8 @@ void IU::SetMissionInfo(bool crewed, bool sccontpowered)
 	SCControlPoweredFlight = sccontpowered;
 }
 
-void IU::Timestep(double misst, double simt, double simdt, double mjd)
+void IU::Timestep(double simt, double simdt, double mjd)
 {
-	//
-	// Update mission time.
-	//
-	MissionTime = misst;
-
 	AuxiliaryPowerDistributor1.Timestep(simdt);
 	AuxiliaryPowerDistributor2.Timestep(simdt);
 
@@ -1414,9 +1408,9 @@ IU1B::~IU1B()
 
 }
 
-void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
+void IU1B::Timestep(double simt, double simdt, double mjd)
 {
-	IU::Timestep(misst, simt, simdt, mjd);
+	IU::Timestep(simt, simdt, mjd);
 
 	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
@@ -1557,9 +1551,9 @@ IUSV::~IUSV()
 
 }
 
-void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
+void IUSV::Timestep(double simt, double simdt, double mjd)
 {
-	IU::Timestep(misst, simt, simdt, mjd);
+	IU::Timestep(simt, simdt, mjd);
 
 	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);

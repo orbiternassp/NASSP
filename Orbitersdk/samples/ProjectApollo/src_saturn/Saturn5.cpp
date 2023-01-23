@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -38,7 +38,7 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "ioChannels.h"
 
 #include "s1csystems.h"
@@ -419,8 +419,6 @@ void SaturnV::DoFirstTimestep(double simt)
 	strcpy (VName, ApolloName); strcat (VName, "-STG1");
 	hstg1= oapiGetVesselByName(VName);
 
-	LookForSIVb();
-
 	strcpy (VName, ApolloName); strcat (VName, "-S4B1");
 	hs4b1 = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-S4B2");
@@ -431,8 +429,6 @@ void SaturnV::DoFirstTimestep(double simt)
 	hs4b4 = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-SM");
 	hSMJet = oapiGetVesselByName(VName);
-
-	LookForLEM();
 
 	strcpy (VName, ApolloName); strcat (VName, "-DCKPRB");
 	hPROBE = oapiGetVesselByName(VName);

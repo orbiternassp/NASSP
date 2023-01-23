@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "papi.h"
 
@@ -87,6 +87,15 @@ void SIISystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
+	for (int i = 0;i < 5;i++)
+	{
+		if (EarlySIICutoff[i])
+		{
+			papiWriteScenario_boolarr(scn, "EarlySIICutoff", EarlySIICutoff, 5);
+			papiWriteScenario_doublearr(scn, "SecondStageFailureTime", SecondStageFailureTime, 5);
+			break;
+		}
+	}
 
 	j2engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	j2engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -112,6 +121,8 @@ void SIISystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
+		papiReadScenario_boolarr(line, "EarlySIICutoff", EarlySIICutoff, 5);
+		papiReadScenario_doublearr(line, "SecondStageFailureTime", SecondStageFailureTime, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			j2engine1.LoadState(scn, "ENGINE_END");

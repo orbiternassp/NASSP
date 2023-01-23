@@ -23,7 +23,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -35,7 +35,7 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "iu.h"
 #include "saturn.h"
 #include "ioChannels.h"
@@ -678,7 +678,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		//
 		if (stage < CSM_LEM_STAGE)
 		{
-			iu->Timestep(MissionTime, simt, simdt, mjd);
+			iu->Timestep(simt, simdt, mjd);
 		}
 		if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 		{

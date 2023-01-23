@@ -35,6 +35,9 @@ public:
 	virtual void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
 	bool GetPlatformFail() { return PlatformFailure; }
 	double GetPlatformFailTime() { return PlatformFailureTime; }
+
+	bool GetLiftoffCircuitAFailure() { return LiftoffCircuitAFailure; }
+	bool GetLiftoffCircuitBFailure() { return LiftoffCircuitBFailure; }
 	virtual void SetLiftoffCircuitAFailure(bool fail) { LiftoffCircuitAFailure = fail; }
 	virtual void SetLiftoffCircuitBFailure(bool fail) { LiftoffCircuitBFailure = fail; }
 

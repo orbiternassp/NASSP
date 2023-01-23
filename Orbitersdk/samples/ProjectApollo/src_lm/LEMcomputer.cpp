@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -35,7 +35,7 @@
 #include <thread>
 #include <mutex>
 #include "dsky.h"
-#include "lemcomputer.h"
+#include "LEMcomputer.h"
 #include "papi.h"
 #include "saturn.h"
 #include "LEM.h"
@@ -55,7 +55,7 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, 
 	/* FIXME REMOVE THIS LATER, THIS IS TEMPORARY FOR TESTING ONLY AND SHOULD BE IN THE SCENARIO LATER */
 	/* LM PAD LOAD FOR LUMINARY 099 AND APOLLO 11  - OFFICIAL VERSION */
 
-	thread.Resume();
+	Start();
 }
 
 LEMcomputer::~LEMcomputer()

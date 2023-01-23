@@ -24,9 +24,9 @@
 
 #pragma warning(disable : 4996 ) 
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 
 #include "stdio.h"
 #include "eva.h"

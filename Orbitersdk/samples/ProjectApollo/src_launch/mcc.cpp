@@ -21,12 +21,12 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "soundlib.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "LEMcomputer.h"
 #include "papi.h"
 #include "saturn.h"
@@ -45,12 +45,6 @@
 #include "rtcc.h"
 #include "LVDC.h"
 #include "iu.h"
-
-// This is a threadenwerfer. It werfs threaden.
-static DWORD WINAPI MCC_Trampoline(LPVOID ptr){	
-	MCC *mcc = (MCC *)ptr;
-	return(mcc->subThread());
-}
 
 // SCENARIO FILE MACROLOGY
 #define SAVE_BOOL(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
@@ -139,7 +133,7 @@ MCC::MCC(RTCC *rtc)
 	upDescr[0] = 0;
 	upMessage[0] = 0;
 	upType = 0;
-	subThreadStatus = 0;
+	subThreadStatus = DONE;
 
 	// Ground Systems Init
 	Init();
@@ -1244,18 +1238,18 @@ int MCC::LM_uplink_buffer() {
 
 // Subthread Entry Point
 int MCC::subThread(){
-	int Result = 0;
-	subThreadStatus = 2; // Running
+	ThreadStatus Result = DONE;
+	subThreadStatus = RUNNING;
 	
 	if (subThreadMode == 0)
 	{
 		Sleep(5000); // Waste 5 seconds
-		Result = 0;  // Success (negative = error)
+		Result = DONE;  // Success (negative = error)
 	}
 	else if (MissionType == MTP_B)
 	{
 		subThreadMacro(subThreadType, subThreadMode);
-		Result = 0;
+		Result = DONE;
 	}
 	else if (MissionType == MTP_D || MissionType == MTP_F || MissionType == MTP_G || MissionType == MTP_H1)
 	{
@@ -1270,12 +1264,12 @@ int MCC::subThread(){
 		}
 
 		subThreadMacro(subThreadType, subThreadMode);
-		Result = 0;
+		Result = DONE;
 	}
 	else if (MissionType == MTP_C_PRIME)
 	{
 		subThreadMacro(subThreadType, subThreadMode);
-		Result = 0;
+		Result = DONE;
 	}
 	else if (MissionType == MTP_C)
 	{
@@ -1285,7 +1279,7 @@ int MCC::subThread(){
 			rtcc->calcParams.tgt = oapiGetVesselInterface(ves); // Should be user-programmable later
 		}
 		subThreadMacro(subThreadType, subThreadMode);
-		Result = 0; // Done
+		Result = DONE; // Done
 	}
 	subThreadStatus = Result;
 	// Printing messages from the subthread is not safe, but this is just for testing.
@@ -1295,14 +1289,13 @@ int MCC::subThread(){
 
 // Subthread initiation
 int MCC::startSubthread(int fcn, int type){
-	if(subThreadStatus < 1){
+	if(IsReady(subThreadStatus)){
 		// Punt thread
 		subThreadMode = fcn;
 		subThreadType = type;
-		subThreadStatus = 1; // Busy
-		DWORD id = 0;
-		HANDLE h = CreateThread(NULL, 0, MCC_Trampoline, this, 0, &id);
-		if(h != NULL){ CloseHandle(h); }
+		subThreadStatus = SCHEDULED;
+		std::thread t(&MCC::subThread, this);
+		t.detach();
 		addMessage("Thread Started");
 	}else{
 		addMessage("Thread Busy");
@@ -3793,7 +3786,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && subThreadStatus == 0) {
+			if (SubStateTime > 1 && subThreadStatus == DONE) {
 				if (scrubbed)
 				{
 					if (upMessage[0] != 0)
@@ -3837,7 +3830,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 		case 3: // Negative response / not ready for uplink
 			break;
 		case 4: // Ready for uplink
-			if (SubStateTime > 1 && subThreadStatus == 0) {
+			if (SubStateTime > 1 && subThreadStatus == DONE) {
 				// The uplink should also be ready, so flush the uplink buffer to the CMC
 				this->CM_uplink_buffer();
 				// uplink_size = 0; // Reset
@@ -3888,7 +3881,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && subThreadStatus == 0) {
+			if (SubStateTime > 1 && subThreadStatus == DONE) {
 				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
 				addMessage("CSM: Ready for uplink?");
 				sprintf(PCOption_Text, "Ready for uplink");
@@ -3963,7 +3956,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && subThreadStatus == 0) {
+			if (SubStateTime > 1 && subThreadStatus == DONE) {
 				if (scrubbed)
 				{
 					if (upMessage[0] != 0)
@@ -4007,7 +4000,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 		case 3: // Negative response / not ready for uplink
 			break;
 		case 4: // Ready for uplink
-			if (SubStateTime > 1 && subThreadStatus == 0) {
+			if (SubStateTime > 1 && subThreadStatus == DONE) {
 				// The uplink should also be ready, so flush the uplink buffer to the CMC
 				this->LM_uplink_buffer();
 				// uplink_size = 0; // Reset
@@ -4058,7 +4051,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && subThreadStatus == 0) {
+			if (SubStateTime > 1 && subThreadStatus == DONE) {
 				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
 				addMessage("LM: Ready for uplink?");
 				sprintf(PCOption_Text, "Ready for uplink");
@@ -4165,7 +4158,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && subThreadStatus == 0) {
+			if (SubStateTime > 1 && subThreadStatus == DONE) {
 				if (upMessage[0] != 0)
 				{
 					addMessage(upMessage);

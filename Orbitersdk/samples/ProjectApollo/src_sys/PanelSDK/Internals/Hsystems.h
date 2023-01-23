@@ -56,10 +56,10 @@ const double ACENTRIC		[MAX_SUB]=  {0.022,		-0.216,		0.345,		0.040,		0.288,		0.4
 
 const double FaradaysConstant = 96485.3321233100184; //Coulombs/mol
 
-#include "thermal.h"
-// To force orbitersdk.h to use <fstream> in any compiler version
+#include "Thermal.h"
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 
 //base class for hydraulic objects
 class h_substance

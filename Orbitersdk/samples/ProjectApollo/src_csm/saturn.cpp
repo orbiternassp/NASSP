@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -41,7 +41,7 @@
 #include "tracer.h"
 #include "sm.h"
 #include "sivb.h"
-#include "lemcomputer.h"
+#include "LEMcomputer.h"
 #include "LEM.h"
 #include "papi.h"
 #include "mcc.h"
@@ -687,14 +687,12 @@ void Saturn::initSaturn()
 	hintstg = 0;
 	hesc1 = 0;
 	hPROBE = 0;
-	hs4bM = 0;
 	hs4b1 = 0;
 	hs4b2 = 0;
 	hs4b3 = 0;
 	hs4b4 = 0;
 	habort = 0;
 	hSMJet = 0;
-	hLMV = 0;
 	hVAB = 0;
 	hML = 0;
 	hCrawler = 0;
@@ -734,7 +732,6 @@ void Saturn::initSaturn()
 
 	MissionTime = (-3600);
 	NextMissionEventTime = 0;
-	LastMissionEventTime = 0;
 
 	//
 	// No point trying to destroy things if we haven't launched.
@@ -1079,8 +1076,6 @@ void Saturn::initSaturn()
 	KEY8=false;
 	KEY9=false;
 
-	actualFUEL = 0;
-
 	viewpos = SATVIEW_LEFTSEAT;
 
 	dockringidx = -1;
@@ -1299,32 +1294,6 @@ void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
 	}
 }
 
-void Saturn::LookForSIVb()
-
-{
-	if (!hs4bM)
-	{
-		char VName[256];
-		char ApolloName[64];
-
-		GetApolloName(ApolloName);
-
-		strcpy (VName, ApolloName); strcat (VName, "-S4BSTG");
-		hs4bM = oapiGetVesselByName(VName);
-	}
-}
-
-void Saturn::LookForLEM()
-
-{
-	if (!hLMV)
-	{
-		char VName[256];
-		GetPayloadName(VName);
-		hLMV = oapiGetVesselByName(VName);
-	}
-}
-
 void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 
 {
@@ -1508,7 +1477,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "TCP", TCPO);
 	papiWriteScenario_double (scn, "MISSNTIME", MissionTime);
 	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
-	papiWriteScenario_double (scn, "LMISSNTIME", LastMissionEventTime);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
@@ -1594,6 +1562,15 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	if (AutoSlow) {
 		oapiWriteScenario_int (scn, "AUTOSLOW", 1);
+	}
+	if (LandFail.word) {
+		oapiWriteScenario_int(scn, "LANDFAIL", LandFail.word);
+	}
+	if (LaunchFail.word) {
+		oapiWriteScenario_int(scn, "LAUNCHFAIL", LaunchFail.word);
+	}
+	if (SwitchFail.word) {
+		oapiWriteScenario_int(scn, "SWITCHFAIL", SwitchFail.word);
 	}
 	if (ApolloNo == 1301) {
 		oapiWriteScenario_int (scn, "A13STATE", GetA13State());
@@ -2100,10 +2077,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         sscanf (line + 10, "%f", &ftcp);
 		NextMissionEventTime = ftcp;
 	}
-	else if (!strnicmp(line, "LMISSNTIME", 10)) {
-        sscanf (line + 10, "%f", &ftcp);
-		LastMissionEventTime = ftcp;
-	}
 	else if (!strnicmp(line, "SIFUELMASS", 10)) {
         sscanf (line + 10, "%f", &ftcp);
 		SI_FuelMass = ftcp;
@@ -2212,6 +2185,15 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "CMMASS", 6)) {
 		sscanf(line + 6, "%f", &ftcp);
 		CM_EmptyMass = ftcp;
+	}
+	else if (!strnicmp(line, "LANDFAIL", 8)) {
+		sscanf(line + 8, "%d", &LandFail.word);
+	}
+	else if (!strnicmp(line, "LAUNCHFAIL", 10)) {
+		sscanf(line + 10, "%d", &LaunchFail.word);
+	}
+	else if (!strnicmp(line, "SWITCHCHFAIL", 10)) {
+		sscanf(line + 10, "%d", &SwitchFail.word);
 	}
 	else if (!strnicmp(line, "LANG", 4)) {
 		strncpy (AudioLanguage, line + 5, 64);
@@ -3097,9 +3079,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 	VESSELSTATUS status;
 	GetStatus(status);
-	
-	double aSpeed = length(status.rvel);
-	actualFUEL = ((GetFuelMass() * 100.0) / GetMaxFuelMass());
 
 	SystemsTimestep(simt, simdt, mjd);
 
@@ -3162,21 +3141,6 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 
 	RCSSoundTimestep();
-
-	//
-	// IMFD5 communication support
-	//
-
-	IMFDVariableConfiguration vc;
-	// Set GET
-	if (MissionTime >= 0) {
-		vc.GET = MissionTime;
-	} else {
-		vc.GET = -1;
-	}
-	vc.DataTimeStamp = simt;
-	IMFD_Client.SetVariableConfiguration(vc);
-	IMFD_Client.TimeStep(); 
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)

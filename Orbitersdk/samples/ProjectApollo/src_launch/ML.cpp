@@ -24,9 +24,9 @@
 
 #define ORBITER_MODULE
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include "nasspsound.h"
 #include "soundlib.h"
 #include "tracer.h"

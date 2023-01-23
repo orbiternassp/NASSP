@@ -9,11 +9,12 @@
 #include "soundlib.h"
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "mcc.h"
 #include "rtcc.h"
 #include "LunarTargetingProgram.h"
+#include "thread.h"
 #include <queue>
 
 struct ApolloRTCCMFDData {  // global data storage
@@ -160,9 +161,9 @@ public:
 	void GenerateAGCCorrectionVectors();
 
 	// SUBTHREAD MANAGEMENT
-	HANDLE hThread;
+	KillableWorker subThreadWorker;
 	int subThreadMode;										// What should the subthread do?
-	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
+	std::atomic<ThreadStatus> subThreadStatus;
 
 	ApolloRTCCMFDData g_Data;
 

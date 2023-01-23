@@ -394,7 +394,7 @@ void LEM_RR::Timestep(double simdt) {
 			RCVDgain = pow(10.0, (RCVDgain / 10.0)); //convert to ratio from dB
 
 			RecvdRRPower = RCVDpow*AntennaGain*RCVDgain*pow((C0 / (RCVDfreq * 1000000)) / (4.0 * PI*length(R)), 2.0);
-			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
+			RecvdRRPower_dBm = RFCALC_W2dBm(RecvdRRPower);
 			//sprintf(oapiDebugString(), "RecvdRRPower_dBm = %lf dBm", RecvdRRPower_dBm);
 			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
 
@@ -495,10 +495,10 @@ void LEM_RR::Timestep(double simdt) {
 		ShaftErrorSignal = (SignalStrengthQuadrant[0] - SignalStrengthQuadrant[1])*0.25;
 		TrunnionErrorSignal = (SignalStrengthQuadrant[2] - SignalStrengthQuadrant[3])*0.25;
 
-		shaftAngle += ShaftErrorSignal*simdt;
+		shaftAngle += (ShaftErrorSignal - GyroRates.x)*simdt;
 		shaftVel = ShaftErrorSignal;
 
-		trunnionAngle += TrunnionErrorSignal*simdt;
+		trunnionAngle += (TrunnionErrorSignal - GyroRates.y)*simdt;
 		trunnionVel = TrunnionErrorSignal;
 
 		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, ShaftErrorSignal %f TrunnionErrorSignal %f", shaftAngle*DEG, trunnionAngle*DEG, ShaftErrorSignal, TrunnionErrorSignal);

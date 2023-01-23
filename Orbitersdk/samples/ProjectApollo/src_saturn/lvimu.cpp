@@ -24,7 +24,7 @@
 
 // This is an abbreviated ST-124 IMU for the launch vehicle's use.
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "papi.h"
