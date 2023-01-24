@@ -425,14 +425,9 @@ void DSKY::ProcessChannel13(ChannelValue val)
 	//Handled by Channel 163 now
 }
 
-void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset)
+void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset, int TexMul)
 
 {
-	dstx *= TexMul;
-	dsty *= TexMul;
-	xOffset *= TexMul;
-	yOffset *= TexMul;
-
 	if (lit) {
 		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 101*TexMul, dsty + 0, 49*TexMul, 23*TexMul);
 	}
@@ -444,19 +439,16 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel, bool hasDAPPrioDisp, int TexMul)
 
 {
-	xOffset *= TexMul;
-	yOffset *= TexMul;
-
 	if (!IsPowered())
 	{
 		if (hasAltVel) {
-			DSKYLightBlt(surf, lights, 52, 121, false, xOffset, yOffset);
-			DSKYLightBlt(surf, lights, 52, 144, false, xOffset, yOffset);
+			DSKYLightBlt(surf, lights, 52*TexMul, 121*TexMul, false, xOffset, yOffset, TexMul);
+			DSKYLightBlt(surf, lights, 52*TexMul, 144*TexMul, false, xOffset, yOffset, TexMul);
 		}
 
 		if (hasDAPPrioDisp) {
-			DSKYLightBlt(surf, lights, 0, 121, false, xOffset, yOffset);
-			DSKYLightBlt(surf, lights, 0, 144, false, xOffset, yOffset);
+			DSKYLightBlt(surf, lights, 0, 121*TexMul, false, xOffset, yOffset, TexMul);
+			DSKYLightBlt(surf, lights, 0, 144*TexMul, false, xOffset, yOffset, TexMul);
 		}
 
 		return;
@@ -466,26 +458,26 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 	// Check the lights.
 	//
 
-	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 25, NoAttLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 49, StbyLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 73, KbRelLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 97, OprErrLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 0, 25*TexMul, NoAttLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 0, 49*TexMul, StbyLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 0, 73*TexMul, KbRelLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 0, 97*TexMul, OprErrLit(), xOffset, yOffset, TexMul);
 
-	DSKYLightBlt(surf, lights, 52, 0,  TempLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 52, 25, GimbalLockLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 52, 49, ProgLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 52, 73, RestartLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 52, 97, TrackerLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 52*TexMul, 0,  TempLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 25*TexMul, GimbalLockLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 49, ProgLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 73*TexMul, RestartLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 97*TexMul, TrackerLit(), xOffset, yOffset, TexMul);
 
 	if (hasAltVel) {
-		DSKYLightBlt(surf, lights, 52, 121, AltLit(), xOffset, yOffset);
-		DSKYLightBlt(surf, lights, 52, 144, VelLit(), xOffset, yOffset);
+		DSKYLightBlt(surf, lights, 52*TexMul, 121*TexMul, AltLit(), xOffset, yOffset, TexMul);
+		DSKYLightBlt(surf, lights, 52*TexMul, 144*TexMul, VelLit(), xOffset, yOffset, TexMul);
 	}
 
 	if (hasDAPPrioDisp) {
-		DSKYLightBlt(surf, lights, 0, 121, PrioDispLit(), xOffset, yOffset);
-		DSKYLightBlt(surf, lights, 0, 144, NoDAPLit(), xOffset, yOffset);
+		DSKYLightBlt(surf, lights, 0, 121*TexMul, PrioDispLit(), xOffset, yOffset, TexMul);
+		DSKYLightBlt(surf, lights, 0, 144*TexMul, NoDAPLit(), xOffset, yOffset, TexMul);
 	}
 }
 

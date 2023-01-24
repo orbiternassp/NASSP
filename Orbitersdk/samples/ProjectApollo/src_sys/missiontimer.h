@@ -106,8 +106,8 @@ class EventTimer: public MissionTimer {
 public:
 	EventTimer(PanelSDK &p);
 	virtual ~EventTimer();
-	void Render(SURFHANDLE surf, SURFHANDLE digits);
-	void Render90(SURFHANDLE surf, SURFHANDLE digits);
+	void Render(SURFHANDLE surf, SURFHANDLE digits, int TexMul = 1);
+	void Render90(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);
 	void SystemTimestep(double simdt);
 
 protected:

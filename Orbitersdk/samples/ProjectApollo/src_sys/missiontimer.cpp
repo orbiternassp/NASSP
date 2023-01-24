@@ -459,7 +459,7 @@ EventTimer::~EventTimer()
 	//
 }
 
-void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
+void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits, int TexMul)
 {
 	//
 	// Digits are 13x18.
@@ -486,7 +486,7 @@ void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	oapiBlt(surf, digits, 58*TexMul, 0, 13*TexMul * (Curdigit-(Curdigit2*10)), 0, 13*TexMul, 18*TexMul);
 }
 
-void EventTimer::Render90(SURFHANDLE surf, SURFHANDLE digits)
+void EventTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, int TexMul)
 {
 	//
 	// Digits are 13x18.

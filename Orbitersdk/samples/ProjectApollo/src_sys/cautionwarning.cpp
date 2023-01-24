@@ -193,7 +193,7 @@ void CautionWarningSystem::SetMasterAlarm(bool alarm)
 // Render the lit master alarm light if required.
 //
 
-void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border, CWSMasterAlarmPosition position)
+void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border, CWSMasterAlarmPosition position, int TexMul)
 
 {
 	// In Boost-Mode only the left master alarm button is not illuminated (Apollo Operations Handbook 2.10.3)
@@ -287,7 +287,7 @@ void CautionWarningSystem::SetLight(int lightnum, bool state)
 	LightStates[lightnum] = state;
 }
 
-void CautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel)
+void CautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel, int TexMul)
 
 {
 	//

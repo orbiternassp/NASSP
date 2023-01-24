@@ -630,14 +630,14 @@ void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf
 
 {
 	if (leftpanel) {
-		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6, 122, 0);
+		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6*TexMul, 122*TexMul, 0, TexMul);
 	}
 	else {
-		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261, 122, CWS_LIGHTS_PER_PANEL);
+		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261*TexMul, 122*TexMul, CWS_LIGHTS_PER_PANEL, TexMul);
 	}
 }
 
-void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf)
+void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf, int TexMul)
 
 {
 	if (!LightsPowered() || GNLampState == 0)
@@ -702,14 +702,11 @@ bool CSMCautionWarningSystem::LightPowered(int i)
 	return true;
 }
 
-void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base)
+void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base, int TexMul)
 
 {
 	int i = 0;
 	int row, column;
-
-	sdx *= 2;
-	sdy *= 2;
 
 	if (!LightsPowered())
 		return;

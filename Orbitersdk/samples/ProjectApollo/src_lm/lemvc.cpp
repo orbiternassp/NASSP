@@ -1386,11 +1386,11 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	switch (id) {
 
 	case AID_VC_LM_CWS_LEFT:
-		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS]);
+		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
 		return true;
 
 	case AID_VC_LM_CWS_RIGHT:
-		CWEA.RedrawRight(surf, srf[SFR_VC_CW_LIGHTS]);
+		CWEA.RedrawRight(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
 		return true;
 
 	case AID_VC_MISSION_CLOCK:

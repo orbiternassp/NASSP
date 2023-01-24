@@ -1544,15 +1544,15 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;*/
 		
 	case AID_VC_MASTER_ALARM:
-		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_LEFT);
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_LEFT, TexMul);
 		return true;
 
 	case AID_VC_MASTER_ALARM2:
-		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_RIGHT);
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_RIGHT, TexMul);
 		return true;
 
 	case AID_VC_MASTER_ALARM3:
-		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_NONE);
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_NONE, TexMul);
 		return true;
 
 	case AID_VC_LVENG_LIGHTS:
@@ -1658,11 +1658,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_EVENT_TIMER306:
-		EventTimer306Display.Render90(surf, srf[SRF_VC_EVENT_TIMER_DIGITS90]);
+		EventTimer306Display.Render90(surf, srf[SRF_VC_EVENT_TIMER_DIGITS90], TexMul);
 		return true;
 
 	case AID_VC_EVENT_TIMER:
-		EventTimerDisplay.Render(surf, srf[SRF_VC_EVENT_TIMER_DIGITS]);
+		EventTimerDisplay.Render(surf, srf[SRF_VC_EVENT_TIMER_DIGITS], TexMul);
 		return true;
 
 	case AID_VC_CWS_LIGHTS_LEFT:
@@ -1674,11 +1674,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_CWS_GNLIGHTS:
-		cws.RenderGNLights(surf, srf[SRF_VC_CWS_GNLIGHTS]);
+		cws.RenderGNLights(surf, srf[SRF_VC_CWS_GNLIGHTS], TexMul);
 		return true;
 
 	case AID_VC_SEQUENCERSWITCHES:
-		LiftoffNoAutoAbortSwitch.RepaintSwitchVC(surf, srf[SRF_VC_SEQUENCERSWITCHES]);
+		LiftoffNoAutoAbortSwitch.RepaintSwitchVC(surf, srf[SRF_VC_SEQUENCERSWITCHES], TexMul);
 		return true;
 
 	case AID_VC_SPS_LIGHT:
