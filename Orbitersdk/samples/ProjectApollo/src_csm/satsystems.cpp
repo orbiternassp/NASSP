@@ -452,6 +452,10 @@ void Saturn::SystemsInit() {
 	H2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
 	O2Tank1TempSensor.Init(&CryogenicQTYAmpl1CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"));
 	O2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"));
+	H2Tank1PressSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1"));
+	H2Tank2PressSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
+	O2Tank1PressSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"));
+	O2Tank2PressSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"));
 
 	CabinPressSensor.Init(&ECSPressGroups2Feeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 	CabinTempSensor.Init(&ECSTempTransducerFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
@@ -2559,6 +2563,10 @@ void Saturn::CheckSMSystemsState()
 		H2Tank2TempSensor.WireTo(NULL);
 		O2Tank1TempSensor.WireTo(NULL);
 		O2Tank2TempSensor.WireTo(NULL);
+		H2Tank1PressSensor.WireTo(NULL);
+		H2Tank2PressSensor.WireTo(NULL);
+		O2Tank1PressSensor.WireTo(NULL);
+		O2Tank2PressSensor.WireTo(NULL);
 		PriRadInTempSensor.WireTo(NULL);
 		SecRadInTempSensor.WireTo(NULL);
 		SecRadOutTempSensor.WireTo(NULL);
@@ -2809,15 +2817,10 @@ void Saturn::ClearPanelSDKPointers()
 	pCabinRepressFlow = 0;
 	pEmergencyCabinRegulatorFlow = 0;
 	pO2FlowXducer = 0;
-	pO2Tank1Press = 0;
-	pO2Tank2Press = 0;
-	pH2Tank1Press = 0;
-	pH2Tank2Press = 0;
 	pO2Tank1Quantity = 0;
 	pO2Tank2Quantity = 0;
 	pH2Tank1Quantity = 0;
 	pH2Tank2Quantity = 0;
-	pO2SurgeTankPress = 0;
 	for (i = 0; i <= 3; i++) {
 		pFCH2Flow[i] = 0;
 		pFCO2Flow[i] = 0;
@@ -3127,81 +3130,6 @@ void Saturn::GetPyroStatus( PyroStatus &ps )
 	ps.BusAVoltage = PyroBusA.Voltage();
 	ps.BusBVoltage = PyroBusB.Voltage();
 }
-
-//
-// Get H2/O2 tank pressures.
-//
-
-void Saturn::GetTankPressures(TankPressures &press)
-
-{
-	//
-	// Clear to defaults.
-	//
-
-	press.H2Tank1PressurePSI = 0.0;
-	press.H2Tank2PressurePSI = 0.0;
-	press.O2Tank1PressurePSI = 0.0;
-	press.O2Tank2PressurePSI = 0.0;
-	press.O2SurgeTankPressurePSI = 0.0;
-
-	//
-	// Oxygen surge tank.
-	//
-
-	if (!pO2SurgeTankPress) {
-		pO2SurgeTankPress = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
-	}
-	if (pO2SurgeTankPress) {
-		press.O2SurgeTankPressurePSI = (*pO2SurgeTankPress) * PSI;
-	}
-
-
-	//
-	// No tanks if we've seperated from the SM
-	//
-
-	if (stage >= CM_STAGE) {
-		return;
-	}
-
-	//
-	// Hydrogen tanks.
-	//
-
-	if (!pH2Tank1Press) {
-		pH2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:PRESS");
-	}
-	if (pH2Tank1Press) {
-		press.H2Tank1PressurePSI = (*pH2Tank1Press) * PSI;
-	}
-
-	if (!pH2Tank2Press) {
-		pH2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:PRESS");
-	}
-	if (pH2Tank2Press) {
-		press.H2Tank2PressurePSI = (*pH2Tank2Press) * PSI;
-	}
-
-	//
-	// Oxygen tanks.
-	//
-
-	if (!pO2Tank1Press) {
-		pO2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS");
-	}
-	if (pO2Tank1Press) {
-		press.O2Tank1PressurePSI = (*pO2Tank1Press) * PSI;
-	}
-
-	if (!pO2Tank2Press) {
-		pO2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:PRESS");
-	}
-	if (pO2Tank2Press) {
-		press.O2Tank2PressurePSI = (*pO2Tank2Press) * PSI;
-	}
-}
-
 
 //
 // Get H2/O2 tank quantities.
