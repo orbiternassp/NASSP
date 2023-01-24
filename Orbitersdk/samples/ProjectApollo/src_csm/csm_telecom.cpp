@@ -2216,7 +2216,6 @@ unsigned char PCM::scale_data(double data, double low, double high)
 // Fetch a telemetry data item from its channel code
 unsigned char PCM::measure(int channel, int type, int ccode){
 	// Status structures.
-	TankPressures smTankPress;
 	TankQuantities tankQuantities;
 	SPSStatus spsStatus;
 	FuelCellStatus fcStatus;
@@ -2312,15 +2311,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 35:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 36:		// H2 TK 1 PRESS
-							sat->GetTankPressures( smTankPress );
-							return(scale_data(smTankPress.H2Tank1PressurePSI, 0, 350));
+							return(scale_data(sat->H2Tank1PressSensor.Voltage(), 0, 5));
 						case 37:		// SPS VLV BODY TEMP
 							return(scale_data(0,0,200));
 						case 38:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 39:		// H2 TK 2 PRESS
-							sat->GetTankPressures( smTankPress );
-							return(scale_data(smTankPress.H2Tank2PressurePSI, 0, 350));
+							return(scale_data(sat->H2Tank2PressSensor.Voltage(), 0, 5));
 						case 40:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 41:		// UNKNOWN - HBR ONLY
@@ -2375,8 +2372,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 65:		// SIDE HS BOND LOC 1 TEMP
 							return(scale_data(0,-260,600));
 						case 66:		// O2 TK 2 PRESS
-							sat->GetTankPressures( smTankPress );
-							return(scale_data(smTankPress.O2Tank2PressurePSI, 50, 1050));
+							return(scale_data(sat->O2Tank2PressSensor.Voltage(), 0, 5));
 						case 67:		// FC 3 RAD IN TEMP
 							sat->GetFuelCellStatus(3, fcStatus);
 							return(scale_data(fcStatus.RadiatorTempInF, -50, 300));
@@ -2556,8 +2552,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 149:		// DOSIMETER RATE
 							return(scale_data(0,0,5));
 						case 150:		// O2 TK 1 PRESS
-							sat->GetTankPressures( smTankPress );
-							return(scale_data(smTankPress.O2Tank1PressurePSI, 50, 1050));
+							return(scale_data(sat->O2Tank1PressSensor.Voltage(), 0, 5));
 						default:
 							sprintf(sat->debugString(),"MEASURE: UNKNOWN 10-A-%d",ccode);
 							break;
