@@ -170,5 +170,8 @@
     <ClCompile Include="..\..\src_rtccmfd\GeneralPurposeManeuver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

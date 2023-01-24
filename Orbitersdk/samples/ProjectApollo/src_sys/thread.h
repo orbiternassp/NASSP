@@ -23,68 +23,99 @@
   **************************************************************************/
 #if !defined(_THREAD_H)
 #define _THREAD_H
-#include <windows.h>
 
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 
+// negative = done with error
+typedef enum {
+    DONE      = 0,  // Computation done
+    SCHEDULED = 1,  // Thread scheduled to start
+    RUNNING   = 2,  // Thread running
+    // A negative value will indicate that the thread stopped with an error
+} ThreadStatus;
 
-class Thread
-{
-public:
-    Thread ( DWORD (WINAPI * callback) (void* arg), void* arg)
-    {
-        handle = CreateThread (0,0,callback,arg,CREATE_SUSPENDED,&threadId);
-    }
-    ~Thread ()           { CloseHandle (handle); }
-    void Resume ()       { ResumeThread (handle); }
-    void WaitForDeath () { WaitForSingleObject (handle, INFINITE); }
-private:
-    HANDLE handle;
-    DWORD  threadId;
-};
+inline bool IsErr(ThreadStatus status) {
+    return status < 0;
+}
 
-class Mutex
-{
-public:
-    Mutex () { InitializeCriticalSection (& critSection); }
-    ~Mutex () { DeleteCriticalSection (& critSection); }
-    inline void Acquire () { EnterCriticalSection (& critSection); }
-    inline void Release () { LeaveCriticalSection (& critSection); }
-private:
-    CRITICAL_SECTION critSection;
-};
+inline bool IsReady(ThreadStatus status) {
+    return status < 1;
+}
 
-class Lock
-{
-public:
-    Lock ( Mutex & mutex ): _mutex(mutex) { _mutex.Acquire(); }
-    ~Lock () { _mutex.Release(); }
-private:
-    Mutex & _mutex;
-};
+inline bool IsBusy(ThreadStatus status) {
+    return status > 0;
+}
+
+inline ThreadStatus ThreadError(int errcode) {
+    return (ThreadStatus)errcode;
+}
 
 class Event
 {
 public:
-    Event ()  { handle = CreateEvent (0, FALSE, FALSE, 0); }
-    ~Event () { CloseHandle (handle); }
-
-    void Raise ()  { SetEvent (handle); }
-    void Wait ()   { WaitForSingleObject (handle, INFINITE); }
+    Event() { m_counter = 0; }
+    ~Event() = default;
+    void Raise() {
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_counter++;
+            if (m_counter <= 0) {
+                return;
+            }
+        }
+        m_cv.notify_all();
+    }
+    void Wait() {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_cv.wait(lock, [&]() { return m_counter > 0; });
+        m_counter--;
+    }
 private:
-    HANDLE handle;
+    int m_counter;
+    std::condition_variable m_cv;
+    std::mutex m_mutex;
 };
-
 
 class Runnable
 {
 public:
-    Runnable ();
-    virtual ~Runnable () {}
-    void Kill ();
+    Runnable() { m_stop.store(false); }
+    virtual ~Runnable() {}
+    void Kill() {
+        m_stop.store(true);
+        timeStepEvent.Raise();
+    }
 protected:
-    virtual void Run () = 0;
-    static DWORD WINAPI ThreadEntry (void *pArg);
-    Thread     thread;
+    virtual void Run() = 0;
+    void Start() {
+        m_thread = std::thread(&Runnable::Run, this);
+        m_thread.detach();
+    }
+    std::thread m_thread;
+    std::atomic<bool> m_stop;
+    Event timeStepEvent;
 };
 
+class KillableWorker
+{
+public:
+    ~KillableWorker();
+    // Start a threaded task on this worker, will kill the previous thread
+    // if the last task is not already finished
+    void Start(std::function<void()>f);
+    // WARNING: killing a thread should only be used as a last resort :
+    // - the thread won't have a chance to unwind its stack
+    // - if the thread is owning heap memory, it won't be freed
+    // - if the thread has acquired a synchonisation primitive, it won't be released
+    // - according to MSDN, on XP, the thread stack will even be leaked
+    // You have been warned
+    void Kill();
+private:
+    std::thread m_thread;
+    std::atomic<bool> m_running = false;
+};
 #endif
