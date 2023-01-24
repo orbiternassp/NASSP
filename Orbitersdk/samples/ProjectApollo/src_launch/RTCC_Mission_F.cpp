@@ -1158,6 +1158,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.useSV = true;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
+		opt.sxtstardtime = -15.0*60.0; //15 minutes before TIG
 
 		AP11ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, manname);
