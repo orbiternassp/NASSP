@@ -866,13 +866,13 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf, int TexMul) {
 	}
 }
 
-void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit) {
+void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, int TexMul) {
 
 	//
 	// Draw the master alarm lit bitmap.
 	//
 	if (MasterAlarm)
-		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 47, 43);
+		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 47*TexMul, 43*TexMul);
 }
 
 void LEM_CWEA::PushMasterAlarm()

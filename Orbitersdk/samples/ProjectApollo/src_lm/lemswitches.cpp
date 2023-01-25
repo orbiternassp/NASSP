@@ -2254,12 +2254,12 @@ bool LEMMasterAlarmSwitch::SwitchTo(int newState, bool dontspring)
 
 void LEMMasterAlarmSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 {
-	cwea->RenderMasterAlarm(DrawSurface, SwitchSurface);
+	cwea->RenderMasterAlarm(DrawSurface, SwitchSurface, TexMul);
 }
 
 void LEMMasterAlarmSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	cwea->RenderMasterAlarm(surf, switchsurfacevc);
+	cwea->RenderMasterAlarm(surf, switchsurfacevc, TexMul);
 }
 
 void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
