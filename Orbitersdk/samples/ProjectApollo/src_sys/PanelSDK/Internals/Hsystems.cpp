@@ -354,6 +354,7 @@ double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double te
 			else {
 				density = 37.43199285231371 + 6585.8734706896175 / (temperature - 136.05498694800465);
 			}
+			break;
 		case SUBSTANCE_H2:
 			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
 				density = 117.4608391071125226897 + 1699.5866235104872 / (temperature - 67.46034096292647);
@@ -362,9 +363,9 @@ double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double te
 			else {
 				density = -2.599829096221642 + 1541.3460769523313 / (temperature - 11.322250308436296);
 			}
+			break;
 		default:
-			density = L_DENSITY[SUBSTANCE_TYPE];
-		
+			density = L_DENSITY[SUBSTANCE_TYPE];	
 	}
 	return density;
 }
@@ -544,8 +545,9 @@ void h_volume::ThermalComps(double dt) {
 
 		tNV = (composition[i].mass - composition[i].vapor_mass) / density;	//Units of L
 		NV += tNV;	//Units of L
+		NV += VDW_B[i] * composition[i].vapor_mass;
 
-		PNV += tNV / BULK_MOD[composition[i].subst_type];;	//Units of L/Pa
+		PNV += tNV / BULK_MOD[composition[i].subst_type];	//Units of L/Pa
 	}
 
 	m_i = -m_i * R_CONST * Temp;	//Units of L*Pa
