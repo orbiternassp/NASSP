@@ -5595,8 +5595,8 @@ void Saturn::InitSwitches() {
 
 	H2Pressure1Meter.Register(PSH, "H2Pressure1Meter", 0, 400, 10);
 	H2Pressure2Meter.Register(PSH, "H2Pressure2Meter", 0, 400, 10);
-	O2Pressure1Meter.Register(PSH, "O2Pressure1Meter", 100, 1050, 10);
-	O2Pressure2Meter.Register(PSH, "O2Pressure2Meter", 100, 1050, 10);
+	O2Pressure1Meter.Register(PSH, "O2Pressure1Meter", 0, 1000, 10); //Scaled for consistent display in 2D and VC
+	O2Pressure2Meter.Register(PSH, "O2Pressure2Meter", 0, 1000, 10);
 	H2Quantity1Meter.Register(PSH, "H2Quantity1Meter", 0, 1, 10);
 	H2Quantity2Meter.Register(PSH, "H2Quantity2Meter", 0, 1, 10);
 	O2Quantity1Meter.Register(PSH, "O2Quantity1Meter", 0, 1, 10);

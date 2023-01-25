@@ -1214,10 +1214,9 @@ void LEMDCVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
 }
 
-void LEMDCVoltMeter::DoDrawSwitchVC(UINT anim) {
-
+void LEMDCVoltMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 	double v = (GetDisplayValue() - 19) / 22;
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // DC Ammeter
@@ -1279,12 +1278,6 @@ void LEMDCAmMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
 	v = 220-(v*2.25);
 	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
-}
-
-void LEMDCAmMeter::DoDrawSwitchVC(UINT anim) {
-
-	double v = GetDisplayValue() / maxValue;
-	lem->SetAnimation(anim, v);
 }
 
 // LEM Voltmeter-feeding CB hack
@@ -1709,9 +1702,9 @@ void LEMSteerableAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
-void LEMSteerableAntennaPitchMeter::DoDrawSwitchVC(UINT anim) {
+void LEMSteerableAntennaPitchMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 	double v = (GetDisplayValue() + 75) / 330;
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 void LEMSteerableAntennaYawMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
@@ -1730,9 +1723,9 @@ void LEMSteerableAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
-void LEMSteerableAntennaYawMeter::DoDrawSwitchVC(UINT anim) {
+void LEMSteerableAntennaYawMeter::OnPostStep(double SimT, double DeltaT, double MJD){
 	double v = (GetDisplayValue() + 75) / 150;
-	lem->SetAnimation(anim, (v + 0.56) * 0.47);
+	lem->SetAnimation(anim_switch, (v + 0.56) * 0.47);
 }
 
 void LEMSBandAntennaStrengthMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
@@ -1749,11 +1742,6 @@ void LEMSBandAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface
 	v = 220.0 - 2.7*v;
 	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
-}
-
-void LEMSBandAntennaStrengthMeter::DoDrawSwitchVC(UINT anim) {
-	double v = GetDisplayValue();
-	lem->SetAnimation(anim, v / 100);
 }
 
 LEMDPSValveTalkback::LEMDPSValveTalkback()
