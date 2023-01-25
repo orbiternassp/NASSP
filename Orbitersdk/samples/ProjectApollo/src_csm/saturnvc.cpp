@@ -1747,15 +1747,15 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// ASCP
 	case AID_VC_ASCPDISPLAYROLL:
-		ascp.PaintRollDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		ascp.PaintRollDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_ASCPDISPLAYPITCH:
-		ascp.PaintPitchDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		ascp.PaintPitchDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_ASCPDISPLAYYAW:
-		ascp.PaintYawDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		ascp.PaintYawDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_OPT_SHAFTDISPLAY:

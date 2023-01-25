@@ -1421,23 +1421,23 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_LM_DEDA_LIGHTS:
-		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTSVC]);
+		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTSVC], TexMul);
 		return true;
 
 	case AID_VC_LM_DEDA_DISP:
-		deda.RenderData(surf, srf[SRF_VC_DIGITALDISP2]);
+		deda.RenderData(surf, srf[SRF_VC_DIGITALDISP2], 0, 0, TexMul);
 		return true;
 
 	case AID_VC_LM_DEDA_ADR:
-		deda.RenderAdr(surf, srf[SRF_VC_DIGITALDISP2]);
+		deda.RenderAdr(surf, srf[SRF_VC_DIGITALDISP2], 0, 0, TexMul);
 		return true;
 
 	case AID_VC_RANGE_TAPE:
-		RadarTape.RenderRangeVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB], srf[SRF_VC_RADAR_TAPE2]);
+		RadarTape.RenderRangeVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB], srf[SRF_VC_RADAR_TAPE2], TexMul);
 		return true;
 
 	case AID_VC_RATE_TAPE:
-		RadarTape.RenderRateVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB]);
+		RadarTape.RenderRateVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB], TexMul);
 		return true;
 
 	case AID_VC_XPOINTERCDR:
@@ -1752,7 +1752,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_START_BUTTON_RED:
-		ManualEngineStart.DoDrawSwitchVC(surf, srf[SRF_ENGSTARTSTOP_VC]);
+		ManualEngineStart.DoDrawSwitchVC(surf, srf[SRF_ENGSTARTSTOP_VC], TexMul);
 		return true;
 
 	/*case AID_VC_RECORDER_TALKBACK:
