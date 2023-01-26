@@ -804,7 +804,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%d:%02d:%05.2f GET", hh, mm, secs);
 		skp->Text((int)(0.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->subThreadStatus > 0)
+		if (IsBusy(G->subThreadStatus))
 		{
 			skp->Text(1 * W / 16, 12 * H / 14, "Calculating...", 14);
 		}
@@ -3362,7 +3362,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Descent Abort", 13);
 
-		if (G->subThreadStatus > 0)
+		if (IsBusy(G->subThreadStatus))
 		{
 			skp->Text(5 * W / 8, 3 * H / 14, "Calculating...", 14);
 		}
