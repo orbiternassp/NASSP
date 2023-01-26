@@ -303,7 +303,7 @@ void IMU::InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad* ptaht, h_
 	IMUCase = cas;
 	PTAHeat = ptaht;
 	PSAHeat = psaht;
-	CDUHeat - cduht;
+	CDUHeat = cduht;
 }
 
 void IMU::Timestep(double simdt) 
