@@ -37,6 +37,7 @@
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h" />
+    <ClInclude Include="..\..\src_sys\socket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_launch\rtcc.cpp" />
@@ -65,6 +66,7 @@
     <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
+    <ClCompile Include="..\..\src_sys\socket.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

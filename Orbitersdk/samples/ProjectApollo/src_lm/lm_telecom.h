@@ -24,6 +24,7 @@
 
 #include "RF_calc.h"
 #include "paCBGmessageID.h"
+#include "socket.h"
 
 /* PCM DOWN-TELEMETRY
 
@@ -251,11 +252,9 @@ protected:
 	LEM *lem;					   // Ship we're installed in
 	h_HeatLoad *PCMHeat;			//PCM Heat Load
 
-	// Winsock2
-	WSADATA wsaData;				// Winsock subsystem data
-	SOCKET m_socket;				// TCP socket
-	sockaddr_in service;			// SOCKADDR_IN
-	SOCKET AcceptSocket;			// Accept Socket
+	// Network
+	TcpService m_tcpserver;
+	TcpConnection m_connection;
 	int conn_state;                 // Connection State
 	int uplink_state;               // Uplink State
 	void perform_io(double simt);   // Get data from here to there

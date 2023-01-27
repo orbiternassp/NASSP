@@ -157,6 +157,7 @@
     <ClInclude Include="..\..\src_mfd\ProjectApolloChecklistMFD.h" />
     <ClInclude Include="..\..\src_mfd\ProjectApolloMFD.h" />
     <ClInclude Include="..\..\src_mfd\ProjectApolloPlugin.h" />
+    <ClInclude Include="..\..\src_sys\socket.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_mfd\MFDResources.rc">
@@ -179,6 +180,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src_mfd\ProjectApolloPlugin.cpp" />
+    <ClCompile Include="..\..\src_sys\socket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

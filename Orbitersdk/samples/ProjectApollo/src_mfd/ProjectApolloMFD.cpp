@@ -49,6 +49,7 @@
 
 #include "MFDResource.h"
 #include "ProjectApolloMFD.h"
+#include "socket.h"
 
 #include <queue>
 
@@ -101,10 +102,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	int killrot;
 } g_Data;
 
-static WSADATA wsaData;
-static SOCKET m_socket;				
-static sockaddr_in clientService;
-static SOCKET close_Socket = INVALID_SOCKET;
+static TcpConnection m_socket;				
 static char debugString[100];
 static char debugStringBuffer[100];
 static char debugWinsock[100];
@@ -136,12 +134,11 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	//Init Emem
 	for(int i = 0; i < 24; i++)
 		g_Data.emem[i] = 0;
-	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
-	if ( iResult != NO_ERROR ) {
-		sprintf(debugWinsock,"ERROR AT WSAStartup()");
+	if (!NetStartup()) {
+		sprintf(debugWinsock, "ERROR AT NetStartup()");
 	}
 	else {
-		sprintf(debugWinsock,"DISCONNECTED");
+		sprintf(debugWinsock, "DISCONNECTED");
 	}
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.V42angles = _V(0, 0, 0);
@@ -351,24 +348,15 @@ void uplink_aeaa_cmd(bool arm, bool set)
 void UplinkLMRTC(bool arm, bool set)
 {
 	if (g_Data.connStatus == 0) {
-		int bytesRecv = SOCKET_ERROR;
-		char addr[256];
-		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (m_socket == INVALID_SOCKET) {
-			g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
-			closesocket(m_socket);
-			return;
+		if (g_Data.uplinkLEM > 0) {
+			m_socket = TcpConnection("127.0.0.1", 14243);
 		}
-		sprintf(addr, "127.0.0.1");
-		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr(addr);
-		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
-		else { clientService.sin_port = htons(14242); }
-		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+		else {
+			m_socket = TcpConnection("127.0.0.1", 14242);
+		}
+		if (m_socket.Status() != TcpConnection::CONNECTED) {
 			g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
-			closesocket(m_socket);
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", m_socket.ErrorCode());
 			return;
 		}
 		sprintf(debugWinsock, "CONNECTED");
@@ -381,24 +369,16 @@ void UplinkLMRTC(bool arm, bool set)
 void UplinkData()
 {
 	if (g_Data.connStatus == 0) {
-		int bytesRecv = SOCKET_ERROR;
-		char addr[256];
 		char buffer[8];
-		m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );	
-		if ( m_socket == INVALID_SOCKET ) {
-			g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock,"ERROR AT SOCKET(): %ld", WSAGetLastError());
-			closesocket(m_socket);
-			return;
+		if(g_Data.uplinkLEM > 0) {
+			m_socket = TcpConnection("127.0.0.1", 14243);
 		}
-		sprintf(addr, "127.0.0.1");
-		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr(addr);
-		if(g_Data.uplinkLEM > 0){	clientService.sin_port = htons( 14243 ); }else{ clientService.sin_port = htons( 14242 ); }
-		if (connect( m_socket, (SOCKADDR*) &clientService, sizeof(clientService)) == SOCKET_ERROR) {
+		else {
+			m_socket = TcpConnection("127.0.0.1", 14242);
+		}
+		if (m_socket.Status() != TcpConnection::CONNECTED) {
 			g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock,"FAILED TO CONNECT, ERROR %ld",WSAGetLastError());
-			closesocket(m_socket);
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", m_socket.ErrorCode());
 			return;
 		}
 		sprintf(debugWinsock, "CONNECTED");
@@ -429,27 +409,19 @@ void UpdateClock()
 {		
 	if (g_Data.connStatus == 0)
 	{
-		int bytesRecv = SOCKET_ERROR;
-		char addr[256];
 		char buffer[8];
-		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (m_socket == INVALID_SOCKET) {
+		if (g_Data.uplinkLEM > 0) {
+			m_socket = TcpConnection("127.0.0.1", 14243);
+		}
+		else {
+			m_socket = TcpConnection("127.0.0.1", 14242);
+		}
+		if (m_socket.Status() != TcpConnection::CONNECTED) {
 			g_Data.updateClockReady = 0;
-			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
-			closesocket(m_socket);
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", m_socket.ErrorCode());
 			return;
 		}
-		sprintf(addr, "127.0.0.1");
-		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr(addr);
-		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
-		else { clientService.sin_port = htons(14242); }
-		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
-			g_Data.updateClockReady = 0;
-			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
-			closesocket(m_socket);
-			return;
-		}
+		
 		sprintf(debugWinsock, "CONNECTED");
 		g_Data.uplinkState = 0;
 		send_agc_key('V');
@@ -530,24 +502,15 @@ void UplinkSunburstSuborbitalAbort()
 
 	if (g_Data.connStatus == 0)
 	{
-		int bytesRecv = SOCKET_ERROR;
-		char addr[256];
-		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (m_socket == INVALID_SOCKET) {
-			g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
-			closesocket(m_socket);
-			return;
+		if (g_Data.uplinkLEM > 0) {
+			m_socket = TcpConnection("127.0.0.1", 14243);
 		}
-		sprintf(addr, "127.0.0.1");
-		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr(addr);
-		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
-		else { clientService.sin_port = htons(14242); }
-		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+		else {
+			m_socket = TcpConnection("127.0.0.1", 14242);
+		}
+		if (m_socket.Status() != TcpConnection::CONNECTED) {
 			g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
-			closesocket(m_socket);
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", m_socket.ErrorCode());
 			return;
 		}
 		sprintf(debugWinsock, "CONNECTED");
@@ -565,24 +528,15 @@ void UplinkSunburstCOI()
 
 	if (g_Data.connStatus == 0)
 	{
-		int bytesRecv = SOCKET_ERROR;
-		char addr[256];
-		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (m_socket == INVALID_SOCKET) {
-			g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
-			closesocket(m_socket);
-			return;
+		if (g_Data.uplinkLEM > 0) {
+			m_socket = TcpConnection("127.0.0.1", 14243);
 		}
-		sprintf(addr, "127.0.0.1");
-		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr(addr);
-		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
-		else { clientService.sin_port = htons(14242); }
-		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+		else {
+			m_socket = TcpConnection("127.0.0.1", 14242);
+		}
+		if (m_socket.Status() != TcpConnection::CONNECTED) {
 			g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
-			closesocket(m_socket);
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", m_socket.ErrorCode());
 			return;
 		}
 		sprintf(debugWinsock, "CONNECTED");
@@ -599,7 +553,7 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
 		if (simt > g_Data.uplinkBufferSimt + 0.1) {
 			unsigned char data = g_Data.uplinkBuffer.front();
-			send(m_socket, (char *) &data, 1, 0);
+			m_socket.Send((char *) &data, 1);
 			g_Data.uplinkBuffer.pop();
 			g_Data.uplinkBufferSimt = simt;
 		}
@@ -609,7 +563,7 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 			g_Data.uplinkDataReady = 0;				
 			g_Data.updateClockReady = 0;
 			g_Data.connStatus = 0;
-			closesocket(m_socket);
+			m_socket.Close();
 		} else if (g_Data.connStatus == 2 && g_Data.updateClockReady == 2) {
 			UpdateClock();
 		}
