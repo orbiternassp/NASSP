@@ -5133,6 +5133,8 @@ void EMS::SystemTimestep(double simdt) {
 
 	if (IsDisplayPowered() && !IsOff()) {
 		DrawPower(0.022);
+
+		//sprintf(oapiDebugString(), "vinert %f", vinert);
 	}
 }
 
