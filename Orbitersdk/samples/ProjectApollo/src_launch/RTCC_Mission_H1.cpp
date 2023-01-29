@@ -3097,7 +3097,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 		else if (fcn == 211 || fcn == 212)
 		{
-			MCCtime = calcParams.EI - 23.0*3600.0;
+			MCCtime = calcParams.EI - 22.0*3600.0;
 			sprintf(manname, "MCC-6");
 		}
 		else if (fcn == 213 || fcn == 214)
