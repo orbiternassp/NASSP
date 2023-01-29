@@ -358,13 +358,13 @@ double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double te
 			break;
 		case SUBSTANCE_H2:
 			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
-				density = 117.4608391071125226897 + 1699.5866235104872 / (temperature - 67.46034096292647);
+				density = 180.0651776623926 + 4277.859531375896 / (temperature - 67.46034096292647);
 
 			}
 			else {
-				density = -2.599829096221642 + 1541.3460769523313 / (temperature - 11.322250308436296);
+				density = -3.907928755993971 + 1293.189358563006 / (temperature - 11.322250308436296);
 			}
-			density *= 0.829;
+			density *= 0.741;
 			break;
 		default:
 			density = L_DENSITY[SUBSTANCE_TYPE];	
@@ -758,6 +758,11 @@ void h_Tank::refresh(double dt) {
 		for (int i = 0; i < MAX_SUB; i++)
 			fprintf(PanelsdkLogFile, "\t%i Q %f\n", i, space.composition[i].Q);
 	}*/
+
+	if (!strcmp(name, "H2TANK1"))
+	{
+		sprintf(oapiDebugString(), "%lf", this->space.Temp);
+	}
 
 	space.ThermalComps(dt);	
 	Temp = space.Temp;
