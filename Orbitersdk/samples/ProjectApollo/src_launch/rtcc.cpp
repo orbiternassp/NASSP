@@ -43,6 +43,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/ReentryNumericalIntegrator.h"
 #include "mcc.h"
 #include "rtcc.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 // SCENARIO FILE MACROLOGY
 #define SAVE_BOOL(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
@@ -4381,8 +4384,7 @@ void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked, bool asc)
 
 	if (asc)
 	{
-		if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
-			!stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
+		if (utils::IsVessel(v, utils::LEM)) {
 			LEM *lem = (LEM *)v;
 			LMmass = lem->GetAscentStageMass();
 		}
@@ -8106,8 +8108,7 @@ double RTCC::GetDockedVesselMass(VESSEL *vessel)
 		lm = oapiGetVesselInterface(hLM);
 
 		//Special case: S-IVB, but we want the LM mass
-		if (!stricmp(lm->GetClassName(), "ProjectApollo\\sat5stg3") ||
-			!stricmp(lm->GetClassName(), "ProjectApollo/sat5stg3"))
+		if (utils::IsVessel(lm, utils::SaturnV_SIVB))
 		{
 			SIVB *sivb = (SIVB *)lm;
 			LMmass = sivb->GetPayloadMass();
@@ -12409,26 +12410,15 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &
 
 	if (vessel == NULL) return;
 
-	char Buffer[100];
-
-	sprintf_s(Buffer, vessel->GetClassNameA());
-
-	if (!stricmp(Buffer, "ProjectApollo\\Saturn5") ||
-		!stricmp(Buffer, "ProjectApollo/Saturn5") ||
-		!stricmp(Buffer, "ProjectApollo\\Saturn1b") ||
-		!stricmp(Buffer, "ProjectApollo/Saturn1b"))
+	if (utils::IsVessel(vessel, utils::Saturn))
 	{
 		vesseltype = 0;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM"))
+	else if (utils::IsVessel(vessel, utils::LEM))
 	{
 		vesseltype = 1;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/sat5stg3") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/nsat1stg2"))
+	else if (utils::IsVessel(vessel, utils::SIVB))
 	{
 		vesseltype = 2;
 	}

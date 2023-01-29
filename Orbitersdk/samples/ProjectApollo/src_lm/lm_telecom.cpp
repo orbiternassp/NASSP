@@ -32,6 +32,7 @@
 
 #include "nasspdefs.h"
 #include "nasspsound.h"
+#include "nassputils.h"
 
 #include "soundlib.h"
 #include "toggleswitch.h"
@@ -47,6 +48,8 @@
 #include "connector.h"
 #include "lm_channels.h"
 #include "LM_AscentStageResource.h"
+
+using namespace nassp;
 
 //VHF Antenna
 
@@ -255,7 +258,7 @@ void LM_VHF::Timestep(double simt)
 	{
 		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\Saturn5", 21)) //some day: if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\CSM", 17))
+		if (utils::IsVessel(pVessel, utils::SaturnV)) //some day: if (utils::IsVessel(pVessel, utils::CSM))
 		{
 			isCSM = true;
 		}

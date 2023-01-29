@@ -33,6 +33,7 @@
 #include "resource.h"
 #include "nasspdefs.h"
 #include "nasspsound.h"
+#include "nassputils.h"
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -66,6 +67,8 @@ extern "C" {
 	void srandom (unsigned int x);
 	long int random ();
 }
+
+using namespace nassp;
 
 //extern FILE *PanelsdkLogFile;
 
@@ -1208,7 +1211,7 @@ void Saturn::clbkPostCreation()
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17))
+			if (utils::IsVessel(pVessel, utils::MCC))
 			{
 				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
 				if (pMCCVessel->mcc)

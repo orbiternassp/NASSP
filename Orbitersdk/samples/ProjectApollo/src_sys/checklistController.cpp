@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "nasspdefs.h"
+#include "nassputils.h"
 #include "checklistController.h"
 #include "saturn.h"
 #include "LEM.h"
@@ -37,6 +38,7 @@
 #pragma warning ( push )
 #pragma warning ( disable:4018 )
 
+using namespace nassp;
 using namespace std;
 
 // Stuff for the connector
@@ -128,14 +130,10 @@ bool ChecklistDataInterface::ReceiveMessage(Connector *from, ConnectorMessage &m
 		return false; // Go away
 	}
 
-	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+	if (utils::IsVessel(vessel, utils::Saturn)) {
 		vessel_type = 1;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+	else if (utils::IsVessel(vessel, utils::LEM)) {
 		vessel_type = 2;
 	}
 

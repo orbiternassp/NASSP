@@ -31,6 +31,7 @@
 #include "resource.h"
 #include "nasspdefs.h"
 #include "nasspsound.h"
+#include "nassputils.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "CSMcomputer.h"
@@ -40,6 +41,8 @@
 #include "tracer.h"
 #include "Mission.h"
 #include "papi.h"
+
+using namespace nassp;
 
 // DS20060326 TELECOM OBJECTS
 
@@ -1456,7 +1459,7 @@ void VHFAMTransceiver::Timestep()
 	{
 		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		if (utils::IsVessel(pVessel, utils::LEM))
 		{
 			isLem = true;
 		}
@@ -1714,7 +1717,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 	{
 		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		if (utils::IsVessel(pVessel, utils::LEM))
 		{
 			isLem = true;
 		}
@@ -5572,7 +5575,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 	{
 		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		if (utils::IsVessel(pVessel, utils::LEM))
 		{
 			isLem = true;
 		}

@@ -38,10 +38,14 @@ namespace nassp
 			MCC,
 			SaturnIB_SIVB,
 			SaturnV_SIVB,
-			SIVB
+			SIVB,
+			ML,
+			Crawler,
+			MainChute,
+			DrogueChute
 		};
 
-		bool IsVessel(VESSEL *v, ClassNames name)
+		constexpr bool IsVessel(VESSEL *v, ClassNames name)
 		{
 			switch (name)
 			{
@@ -62,6 +66,18 @@ namespace nassp
 				return false;
 			case SaturnV_SIVB:
 				if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") || !stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) return true;
+				return false;
+			case ML:
+				if (!stricmp(v->GetClassName(), "ProjectApollo\\ML") || !stricmp(v->GetClassName(), "ProjectApollo/ML")) return true;
+				return false;
+			case Crawler:
+				if (!stricmp(v->GetClassName(), "ProjectApollo\\Crawler") || !stricmp(v->GetClassName(), "ProjectApollo/Crawler")) return true;
+				return false;
+			case MainChute:
+				if (!stricmp(v->GetClassName(), "ProjectApollo\\MainChute") || !stricmp(v->GetClassName(), "ProjectApollo/MainChute")) return true;
+				return false;
+			case DrogueChute:
+				if (!stricmp(v->GetClassName(), "ProjectApollo\\DrogueChute") || !stricmp(v->GetClassName(), "ProjectApollo/DrogueChute")) return true;
 				return false;
 			case Saturn:
 				return (IsVessel(v, SaturnIB) || IsVessel(v, SaturnV));

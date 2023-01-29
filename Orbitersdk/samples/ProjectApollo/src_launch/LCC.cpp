@@ -28,6 +28,9 @@
 #include "ML.h"
 #include "LC34.h"
 #include "LC37.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 #define ORBITER_MODULE
 
@@ -62,9 +65,8 @@ void LCC::clbkPostCreation()
 		VESSEL* pVessel = oapiGetVesselInterface(hPad);
 		if (pVessel != NULL)
 		{
-			if (!_stricmp(pVessel->GetClassName(), "ProjectApollo\\ML")) pPad = static_cast<ML*>(pVessel);
-			else if (!_stricmp(pVessel->GetClassName(), "ProjectApollo/ML")) pPad = static_cast<ML*>(pVessel);
-			//else if (!_strnicmp(pVessel->GetClassName(), "LC34", 8)) pPad = static_cast<LC34*>(pVessel);
+			if (utils::IsVessel(pVessel, utils::ML)) pPad = static_cast<ML*>(pVessel);
+			//else if (utils::IsVessel(pVessel, utils::LC34)) pPad = static_cast<LC34*>(pVessel);
 
 			if (pPad)
 			{
