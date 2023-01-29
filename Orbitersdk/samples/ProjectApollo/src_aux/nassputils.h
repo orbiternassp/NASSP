@@ -45,39 +45,40 @@ namespace nassp
 			DrogueChute
 		};
 
-		constexpr bool IsVessel(VESSEL *v, ClassNames name)
+		static inline bool IsVessel(VESSEL *v, ClassNames name)
 		{
+			const char *classname = v->GetClassName();
 			switch (name)
 			{
 			case SaturnIB:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") || !stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\Saturn1b") || !_stricmp(classname, "ProjectApollo/Saturn1b")) return true;
 				return false;
 			case SaturnV:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") || !stricmp(v->GetClassName(), "ProjectApollo/Saturn5")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\Saturn5") || !_stricmp(classname, "ProjectApollo/Saturn5")) return true;
 				return false;
 			case LEM:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") || !stricmp(v->GetClassName(), "ProjectApollo/LEM")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\LEM") || !_stricmp(classname, "ProjectApollo/LEM")) return true;
 				return false;
 			case MCC:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\MCC") || !stricmp(v->GetClassName(), "ProjectApollo/MCC")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\MCC") || !_stricmp(classname, "ProjectApollo/MCC")) return true;
 				return false;
 			case SaturnIB_SIVB:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") || !stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\nsat1stg2") || !_stricmp(classname, "ProjectApollo/nsat1stg2")) return true;
 				return false;
 			case SaturnV_SIVB:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") || !stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\sat5stg3") || !_stricmp(classname, "ProjectApollo/sat5stg3")) return true;
 				return false;
 			case ML:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\ML") || !stricmp(v->GetClassName(), "ProjectApollo/ML")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\ML") || !_stricmp(classname, "ProjectApollo/ML")) return true;
 				return false;
 			case Crawler:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\Crawler") || !stricmp(v->GetClassName(), "ProjectApollo/Crawler")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\Crawler") || !_stricmp(classname, "ProjectApollo/Crawler")) return true;
 				return false;
 			case MainChute:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\MainChute") || !stricmp(v->GetClassName(), "ProjectApollo/MainChute")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\MainChute") || !_stricmp(classname, "ProjectApollo/MainChute")) return true;
 				return false;
 			case DrogueChute:
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\DrogueChute") || !stricmp(v->GetClassName(), "ProjectApollo/DrogueChute")) return true;
+				if (!_stricmp(classname, "ProjectApollo\\DrogueChute") || !_stricmp(classname, "ProjectApollo/DrogueChute")) return true;
 				return false;
 			case Saturn:
 				return (IsVessel(v, SaturnIB) || IsVessel(v, SaturnV));
