@@ -574,7 +574,8 @@ void h_volume::ThermalComps(double dt) {
 			vap_press = exp(ANTIONE_A[composition[i].subst_type] - (ANTIONE_B[composition[i].subst_type] / Temp))*1E5; //this is vapor pressure of current substance
 		}
 		//need to boil material if vapor pressure > pressure, otherwise condense
-		if (vap_press > Press)	
+		//supercritical fluids are treaded as liquids with variable density
+		if (vap_press > Press && Press < CRITICAL_P[i])
 			Q += composition[i].Boil(dt);
 		else
 			Q += composition[i].Condense(dt);
@@ -759,10 +760,10 @@ void h_Tank::refresh(double dt) {
 			fprintf(PanelsdkLogFile, "\t%i Q %f\n", i, space.composition[i].Q);
 	}*/
 
-	if (!strcmp(name, "H2TANK1"))
+	/*if (!strcmp(name, "O2TANK1"))
 	{
-		sprintf(oapiDebugString(), "%lf", this->space.Temp);
-	}
+		sprintf(oapiDebugString(), "%lf", this->space.Press);
+	}*/
 
 	space.ThermalComps(dt);	
 	Temp = space.Temp;
