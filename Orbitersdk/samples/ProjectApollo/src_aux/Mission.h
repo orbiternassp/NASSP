@@ -27,8 +27,6 @@
 #include <OrbiterAPI.h>
 #include <string>
 
-#define CSM_CUE_CARD_NUM 10
-
 namespace mission
 {
 	struct CueCardConfig
@@ -90,7 +88,9 @@ namespace mission
 		//Get cue cards
 		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
 	protected:
-		bool GetCueCards(CueCardConfig *cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
+		bool GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
+
+		void AddCSMCueCard(unsigned location, std::string meshname, VECTOR3 ofs = _V(0,0,0));
 
 		std::string strFileName;
 		std::string strMissionName;
@@ -115,7 +115,7 @@ namespace mission
 		int iCMtoLMPowerConnectionVersion;
 		VECTOR3 EmptySMCG;
 		bool bHasRateAidedOptics;
-		CueCardConfig CSMCueCards[CSM_CUE_CARD_NUM];
+		std::vector<CueCardConfig> CSMCueCards;
 
 		void SetDefaultValues();
 	};

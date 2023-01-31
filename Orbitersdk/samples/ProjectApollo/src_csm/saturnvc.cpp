@@ -1397,6 +1397,38 @@ void Saturn::RegisterActiveAreas() {
 	// Around the event timer, SPS burn card and others
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_3, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_3, _V(-0.561500, 0.607183, 0.327275) + ofs, _V(-0.511500, 0.607183, 0.327275) + ofs, _V(-0.561500, 0.588217, 0.320925) + ofs, _V(-0.511500, 0.588217, 0.320925) + ofs);
+
+	// Left of FDAI 2 and DSKY
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_4, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_4, _V(-0.454700, 0.785408, 0.378859) + ofs, _V(-0.434700, 0.785408, 0.378859) + ofs, _V(-0.454700, 0.515132, 0.288438) + ofs, _V(-0.434700, 0.515132, 0.288438) + ofs);
+
+	// Above EMS
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_5, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_5, _V(-0.601200, 0.804300, 0.367064) + ofs, _V(-0.561200, 0.804300, 0.367064) + ofs, _V(-0.601200, 0.775850, 0.357546) + ofs, _V(-0.561200, 0.775850, 0.357546) + ofs);
+
+	// Above fuel cell meters
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_6, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_6, _V(0.564600, 0.881316, 0.416091) + ofs, _V(0.614600, 0.881316, 0.416091) + ofs, _V(0.564600, 0.852866, 0.406573) + ofs, _V(0.614600, 0.852866, 0.406573) + ofs);
+
+	// Landing
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_7, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_7, _V(0.692700, 0.821967, 0.386709) + ofs, _V(0.712700, 0.821967, 0.386709) + ofs, _V(0.692700, 0.765066, 0.367673) + ofs, _V(0.712700, 0.765066, 0.367673) + ofs);
+
+	// Right of DC meters
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_8, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_8, _V(0.891400, 0.596067, 0.320209) + ofs, _V(0.911400, 0.596067, 0.320209) + ofs, _V(0.891400, 0.577100, 0.313864) + ofs, _V(0.911400, 0.577100, 0.313864) + ofs);
+
+	// Right of ECS meters
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_9, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_9, _V(0.469300, 0.678658, 0.347814) + ofs, _V(0.489300, 0.678658, 0.347814) + ofs, _V(0.469300, 0.607533, 0.324019) + ofs, _V(0.489300, 0.607533, 0.324019) + ofs);
+
+	// Below ECS meters
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_10, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_10, _V(0.419100, 0.584558, 0.312614) + ofs, _V(0.439100, 0.584558, 0.312614) + ofs, _V(0.419100, 0.494466, 0.282473) + ofs, _V(0.439100, 0.494466, 0.282473) + ofs);
+
+	// Antenna locations
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_11, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_11, _V(0.344100, 0.560850, 0.304682) + ofs, _V(0.364100, 0.560850, 0.304682) + ofs, _V(0.344100, 0.541883, 0.298337) + ofs, _V(0.364100, 0.541883, 0.298337) + ofs);
 }
 
 // --------------------------------------------------------------
@@ -1485,13 +1517,17 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		return true;
 
 	case AID_VC_CUE_CARD_LOCATION_1:
-		CueCards.CycleCueCard(0);
-		return true;
 	case AID_VC_CUE_CARD_LOCATION_2:
-		CueCards.CycleCueCard(1);
-		return true;
 	case AID_VC_CUE_CARD_LOCATION_3:
-		CueCards.CycleCueCard(2);
+	case AID_VC_CUE_CARD_LOCATION_4:
+	case AID_VC_CUE_CARD_LOCATION_5:
+	case AID_VC_CUE_CARD_LOCATION_6:
+	case AID_VC_CUE_CARD_LOCATION_7:
+	case AID_VC_CUE_CARD_LOCATION_8:
+	case AID_VC_CUE_CARD_LOCATION_9:
+	case AID_VC_CUE_CARD_LOCATION_10:
+	case AID_VC_CUE_CARD_LOCATION_11:
+		CueCards.CycleCueCard(id - AID_VC_CUE_CARD_LOCATION_1);
 		return true;
 	}
 
