@@ -50,7 +50,7 @@ const double CRITICAL_T		[MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,		256
 const double ANTIONE_A		[MAX_SUB]=	{9.3199656,	6.59723,	12.490095,	9.0020008,	12.0892,	8.32957,		13.7222,		14.47645,		4.41952 };			//Antione Equation A constant gives results in bar, must be converter to Pa	[1]
 const double ANTIONE_B		[MAX_SUB]=	{838.91339,	133.793,	4658.1375,	694.78356,	2353.762,	3158.1575,		5309.7973,		4256.07694,		18.65037 };			//Antione Equation B constant gives results in bar, must be converter to Pa	[2]
 const double ACENTRIC		[MAX_SUB]=  {0.022,		-0.216,		0.345,		0.040,		0.288,		0.416,			0.316,			0.0141345,			-0.390};		//[3] Acentric factor
-const double VDW_B			[MAX_SUB] = {9.957E-4,	0.015805,	0,			0,			0,			0,				0,				0,				0, };				// Van der Waals equation 'b' coefficient in l/g
+//const double VDW_B		[MAX_SUB] = {9.957E-4,	0.015805,	0,			0,			0,			0,				0,				0,				0, };				// Van der Waals equation 'b' coefficient in l/g
 //source for [1-3] are https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781118135341.app1 or where they differ from the source they were adjusted by M. Hume to better fit a wide range of temperatures.
 // [3] https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nbsir86-3054.pdf
 
