@@ -369,6 +369,7 @@ double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double te
 			else {
 				density = 17.85307222754917 + 4418.262547908501 / (temperature - 107.28230096889227);
 			}
+			break;
 		default:
 			density = L_DENSITY[SUBSTANCE_TYPE];	
 	}
@@ -550,6 +551,7 @@ void h_volume::ThermalComps(double dt) {
 
 		tNV = (composition[i].mass - composition[i].vapor_mass) / density;	//Units of L
 		NV += tNV;	//Units of L
+		NV += VDW_B[i] * composition[i].vapor_mass;
 
 		PNV += tNV / BULK_MOD[composition[i].subst_type];	//Units of L/Pa
 	}
