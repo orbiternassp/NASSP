@@ -1023,14 +1023,23 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	}
 
 
-	h_Tank* pO2Chamber1 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER");
-	h_Tank* pO2Mainfold1 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD");
-	h_Tank* pO2Chamber2 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2CHAMBER");
-	h_Tank* pO2Mainfold2 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD");
-	h_Tank* pO2Chamber3 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER");
-	h_Tank* pO2Mainfold3 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD");
-	h_Pipe* pO2Feed1 = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLO2FEEDERLINE1");
-	sprintf(oapiDebugString(), "1C: %lf 1M: %lf 2C: %lf 2M: %lf 3C: %lf 3M: %lf ... F1 %lf", pO2Chamber1->space.Press*PSI, pO2Mainfold1->space.Press* PSI, pO2Chamber2->space.Press* PSI, pO2Mainfold2->space.Press* PSI, pO2Chamber3->space.Press* PSI, pO2Mainfold3->space.Press* PSI, pO2Feed1->flow*LBH);
+	//h_Tank* pO2Chamber1 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER");
+	//h_Tank* pO2Mainfold1 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD");
+	//h_Tank* pO2Chamber2 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2CHAMBER");
+	//h_Tank* pO2Mainfold2 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD");
+	//h_Tank* pO2Chamber3 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1CHAMBER");
+	//h_Tank* pO2Mainfold3 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD");
+	//h_Pipe* pO2Feed1 = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLO2FEEDERLINE1");
+	//sprintf(oapiDebugString(), "1C: %lf 1M: %lf 2C: %lf 2M: %lf 3C: %lf 3M: %lf ... F1 %lf", pO2Chamber1->space.Press*PSI, pO2Mainfold1->space.Press* PSI, pO2Chamber2->space.Press* PSI, pO2Mainfold2->space.Press* PSI, pO2Chamber3->space.Press* PSI, pO2Mainfold3->space.Press* PSI, pO2Feed1->flow*LBH);
+
+	/*h_Tank* pH2Chamber1 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER");
+	h_Tank* pH2Mainfold1 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD");
+	h_Tank* pH2Chamber2 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2CHAMBER");
+	h_Tank* pH2Mainfold2 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD");
+	h_Tank* pH2Chamber3 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1CHAMBER");
+	h_Tank* pH2Mainfold3 = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD");
+	h_Pipe* pH2Feed1 = (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLH2FEEDERLINE1");
+	sprintf(oapiDebugString(), "1C: %lf 1M: %lf 2C: %lf 2M: %lf 3C: %lf 3M: %lf ... F1 %lf", pH2Chamber1->space.Press* PSI, pH2Mainfold1->space.Press* PSI, pH2Chamber2->space.Press* PSI, pH2Mainfold2->space.Press* PSI, pH2Chamber3->space.Press* PSI, pH2Mainfold3->space.Press* PSI, pH2Feed1->flow* LBH);*/
 
 
 
