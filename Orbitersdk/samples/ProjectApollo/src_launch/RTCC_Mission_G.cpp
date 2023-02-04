@@ -2532,17 +2532,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(manname, "MCC-7");
 		}
 
-		//Only corridor control after EI-24h
-		if (MCCtime > calcParams.EI - 24.0*3600.0)
-		{
-			entopt.type = 3;
-		}
-		else
-		{
-			entopt.type = 1;
-			entopt.t_Z = calcParams.TEI + 60.0*3600.0;
-		}
-
 		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -2553,8 +2542,19 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
+		entopt.type = 3;
 
+		//Calculate corridor control burn
 		EntryTargeting(&entopt, &res);
+
+		//If time to EI is more than 24 hours and the splashdown longitude is not within 2° of desired, then perform a longitude control burn
+		if (MCCtime < calcParams.EI - 24.0*3600.0 && abs(res.longitude - entopt.lng) > 2.0*RAD)
+		{
+			entopt.type = 1;
+			entopt.t_Z = res.GET400K;
+
+			EntryTargeting(&entopt, &res);
+		}
 
 		//Apollo 11 Mission Rules
 		if (MCCtime > calcParams.EI - 50.0*3600.0)
