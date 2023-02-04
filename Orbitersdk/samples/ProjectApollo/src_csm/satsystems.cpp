@@ -3220,7 +3220,6 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	fc.RadiatorTempOutF = 0.0;
 	fc.Voltage = 0.0;
 	fc.Current = 0.0;
-	fc.PowerOutput = 0.0;
 
 	//
 	// No fuel cells if we've seperated from the SM.
@@ -3261,7 +3260,6 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 
 	fc.Voltage = FuelCells[index - 1]->Voltage();
 	fc.Current = FuelCells[index - 1]->Current();
-	fc.PowerOutput = FuelCells[index - 1]->PowerLoad();
 
 	// For now.
 	fc.RadiatorTempInF = fc.CoolingTempF;

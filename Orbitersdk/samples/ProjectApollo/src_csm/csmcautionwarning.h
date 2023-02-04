@@ -46,7 +46,6 @@ typedef struct {
 	double RadiatorTempOutF;	///< Radiator output temperature in fahrenheit.
 	double Voltage;				///< Output voltage.
 	double Current;				///< Output current.
-	double PowerOutput;			///< Output power.
 } FuelCellStatus;
 
 ///
