@@ -21,10 +21,15 @@
   **************************************************************************/
 #pragma once
 #include <cstdint>
+#include <cstddef>
 
 #ifdef _WIN32
 #include <winsock.h>
 using NativeSocket = SOCKET;
+#elif __unix
+using NativeSocket = int;
+#else
+#error Platform not supported
 #endif
 
 // Initialize the network subsystem
@@ -95,6 +100,8 @@ public:
 private:
 	// Used by TcpService
 	TcpConnection(NativeSocket s);
+
+	CommandStatus HandleError() noexcept;
 
 	ConnectionStatus m_status;
 	NativeSocket m_socket;

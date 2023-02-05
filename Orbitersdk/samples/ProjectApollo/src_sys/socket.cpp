@@ -21,13 +21,36 @@
   **************************************************************************/
 
 #include "socket.h"
-#include <assert.h>
+
+#ifdef __unix
+#include <cerrno>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#define INVALID_SOCKET -1
+#define SOCKET_ERROR -1
+#define SOCKADDR sockaddr
+#define closesocket close
+#define ioctlsocket ioctl
+#endif
+
+static int NativeError() {
+#ifdef _WIN32
+	return WSAGetLastError();
+#elif __unix
+	return errno;
+#endif
+}
 
 bool NetStartup() {
 #ifdef _WIN32
 	WSADATA wsaData;
 	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	return (iResult == NO_ERROR);
+#else
+	return true;
 #endif
 }
 void NetCleanup() {
@@ -46,7 +69,7 @@ TcpConnection::TcpConnection(const char *dst, uint16_t tcpport) {
 	m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (m_socket == INVALID_SOCKET) {
 		m_status = ConnectionStatus::UNINITIALIZED;
-		m_error = WSAGetLastError();
+		m_error = NativeError();
 		return;
 	}
 
@@ -57,7 +80,7 @@ TcpConnection::TcpConnection(const char *dst, uint16_t tcpport) {
 
 	if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
 		m_status = ConnectionStatus::UNINITIALIZED;
-		m_error = WSAGetLastError();
+		m_error = NativeError();
 		Close();
 		return;
 	}
@@ -86,54 +109,57 @@ TcpConnection::~TcpConnection() {
 	Close();
 }
 
+TcpConnection::CommandStatus TcpConnection::HandleError() noexcept {
+	m_error = NativeError();
+	switch (m_error) {
+#ifdef _WIN32
+	// KNOWN CODES that we can ignore
+	case 10035: // Operation Would Block
+		// We can ignore this entirely. It's not an error.
+		m_error = 0;
+		return CommandStatus::RETRY;
+
+	case 10038: // Socket isn't a socket
+	case 10053: // Software caused connection abort
+	case 10054: // Connection reset by peer
+		Close();
+		return CommandStatus::CONNECTION_ERROR;
+#elif __unix
+	case EAGAIN:
+#if EAGAIN != EWOULDBLOCK
+	case EWOULDBLOCK:
+#endif
+	case EINTR:
+		m_error = 0;
+		return CommandStatus::RETRY;
+	case EBADF:
+	case ECONNRESET:
+	case ENOTCONN:
+	case ENOTSOCK:
+	case EPIPE:
+		return CommandStatus::CONNECTION_ERROR;
+#else
+#error Platform not supported
+#endif
+	default:    // If unknown
+		Close();
+		return CommandStatus::UNEXPECTED_ERROR;
+	}
+}
+
 TcpConnection::CommandStatus TcpConnection::Send(const char* buf, size_t len) noexcept {
 	m_error = 0;
 	int bytesSent = send(m_socket, buf, len, 0);
 	if (bytesSent == SOCKET_ERROR) {
-		m_error = WSAGetLastError();
-		switch (m_error) {
-			// KNOWN CODES that we can ignore
-		case 10035: // Operation Would Block
-			// We can ignore this entirely. It's not an error.
-			return CommandStatus::RETRY;
-
-		case 10038: // Socket isn't a socket
-		case 10053: // Software caused connection abort
-		case 10054: // Connection reset by peer
-			Close();
-			return CommandStatus::CONNECTION_ERROR;
-
-		default:    // If unknown
-			Close();
-			return CommandStatus::UNEXPECTED_ERROR;
-			break;
-		}
+		return HandleError();
 	}
 	return OK;
 }
 
 TcpConnection::CommandStatus TcpConnection::RecvChar(char* buf) noexcept {
 	int bytesRecv = recv(m_socket, buf, 1, 0);
-	assert(bytesRecv != 0);
 	if (bytesRecv == SOCKET_ERROR) {
-		m_error = WSAGetLastError();
-		switch (m_error) {
-			// KNOWN CODES that we can ignore
-		case 10035: // Operation Would Block
-			// We can ignore this entirely. It's not an error.
-			m_error = 0;
-			return RETRY;
-
-		case 10053: // Software caused connection abort
-		case 10038: // Socket isn't a socket
-		case 10054: // Connection reset by peer
-			Close();
-			return CommandStatus::CONNECTION_ERROR;
-
-		default:    // If unknown
-			Close();
-			return CommandStatus::UNEXPECTED_ERROR;
-		}
+		return HandleError();
 	}
 	m_error = 0;
 	return OK;
@@ -153,6 +179,7 @@ TcpConnection::TcpConnection(NativeSocket s) {
 	m_socket = s;
 	m_status = ConnectionStatus::CONNECTED;
 }
+
 
 TcpService::TcpService() {
 	m_status = ServiceStatus::DISABLED;
@@ -187,14 +214,14 @@ TcpService::TcpService(uint16_t tcpport) {
 	sockaddr_in service;
 	m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (m_socket == INVALID_SOCKET) {
-		m_error = WSAGetLastError();
+		m_error = NativeError();
 		NetCleanup();
 		return;
 	}
 	// Be nonblocking
 	int iMode = 1; // 0 = BLOCKING, 1 = NONBLOCKING
-	if (ioctlsocket(m_socket, FIONBIO, (u_long FAR*) & iMode) != 0) {
-		m_error = WSAGetLastError();
+	if (ioctlsocket(m_socket, FIONBIO, (u_long *) & iMode) != 0) {
+		m_error = NativeError();
 		closesocket(m_socket);
 		NetCleanup();
 		return;
@@ -205,14 +232,14 @@ TcpService::TcpService(uint16_t tcpport) {
 	service.sin_addr.s_addr = htonl(INADDR_ANY);
 	service.sin_port = htons(tcpport);
 
-	if (::bind(m_socket, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR) {
-		m_error = WSAGetLastError();
+	if (bind(m_socket, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR) {
+		m_error = NativeError();
 		closesocket(m_socket);
 		NetCleanup();
 		return;
 	}
 	if (listen(m_socket, 1) == SOCKET_ERROR) {
-		m_error = WSAGetLastError();
+		m_error = NativeError();
 		closesocket(m_socket);
 		NetCleanup();
 		return;
@@ -225,7 +252,7 @@ TcpService::TcpService(uint16_t tcpport) {
 TcpConnection TcpService::Accept() noexcept {
 	NativeSocket s = accept(m_socket, NULL, NULL);
 	if (s == INVALID_SOCKET) {
-		m_error = WSAGetLastError();
+		m_error = NativeError();
 		return TcpConnection();
 	}
 	else {
