@@ -137,6 +137,7 @@ TcpConnection::CommandStatus TcpConnection::HandleError() noexcept {
 	case ENOTCONN:
 	case ENOTSOCK:
 	case EPIPE:
+		Close();
 		return CommandStatus::CONNECTION_ERROR;
 #else
 #error Platform not supported
