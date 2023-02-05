@@ -2701,23 +2701,17 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 66:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 67:		// FC 1 O2 PRESS
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor1.Voltage(), 0.0, 5.0);
 						case 68:		// FC 2 O2 PRESS
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor2.Voltage(), 0.0, 5.0);
 						case 69:		// FC 3 O2 PRESS
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor3.Voltage(), 0.0, 5.0);
 						case 70:		// FC 1 H2 PRESS
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor1.Voltage(), 0.0, 5.0);
 						case 71:		// FC 2 H2 PRESS
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor2.Voltage(), 0.0, 5.0);
 						case 72:		// FC 3 H2 PRESS
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor3.Voltage(), 0.0, 5.0);
 						case 73:		// BAT CHARGER AMPS
 							return scale_data(sat->sce.GetVoltage(1, 0), 0.0, 5.0);
 						case 74:		// BAT A CUR

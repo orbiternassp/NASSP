@@ -3642,6 +3642,12 @@ public:
 	CSMTankTempTransducer PriRadInTempSensor;
 	CSMTankTempTransducer SecRadInTempSensor;
 	CSMTankTempTransducer SecRadOutTempSensor;
+	CSMTankPressTransducer FCO2PressureSensor1;
+	CSMTankPressTransducer FCO2PressureSensor2;
+	CSMTankPressTransducer FCO2PressureSensor3;
+	CSMTankPressTransducer FCH2PressureSensor1;
+	CSMTankPressTransducer FCH2PressureSensor2;
+	CSMTankPressTransducer FCH2PressureSensor3;
 protected:
 
 	// CM Optics

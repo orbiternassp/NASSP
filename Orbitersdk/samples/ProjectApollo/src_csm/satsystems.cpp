@@ -456,6 +456,12 @@ void Saturn::SystemsInit() {
 	H2Tank2PressSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
 	O2Tank1PressSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"));
 	O2Tank2PressSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"));
+	FCO2PressureSensor1.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD"));
+	FCO2PressureSensor2.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD"));
+	FCO2PressureSensor3.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD"));
+	FCH2PressureSensor1.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD"));
+	FCH2PressureSensor2.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD"));
+	FCH2PressureSensor3.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD"));
 
 	CabinPressSensor.Init(&ECSPressGroups2Feeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 	CabinTempSensor.Init(&ECSTempTransducerFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
@@ -483,6 +489,7 @@ void Saturn::SystemsInit() {
 	PriRadInTempSensor.Init(&CONTHTRSMnBCircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET"));
 	SecRadInTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATORINLET"));
 	SecRadOutTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATOROUTLET"));
+	
 
 	// Optics initialization
 	optics.Init(this);
@@ -3209,9 +3216,7 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	// Set defaults.
 	//
 
-	fc.H2PressurePSI = 0.0;
 	fc.H2FlowLBH  = 0.0;
-	fc.O2PressurePSI = 0.0;
 	fc.O2FlowLBH = 0.0;
 	fc.TempF = 0.0;
 	fc.CondenserTempF = 0.0;
@@ -3238,15 +3243,9 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	char buffer[1000];
 
 	fc.H2FlowLBH = f->H2_flowPerSecond * LBH;
-	if ( f->H2_SRC )
-	{
-		fc.H2PressurePSI = f->H2_SRC->GetPress() * PSI;
-	}
+
 	fc.O2FlowLBH = f->O2_flowPerSecond * LBH;
-	if ( f->O2_SRC )
-	{
-		fc.O2PressurePSI = f->O2_SRC->GetPress() * PSI;
-	}
+
 	fc.TempF = KelvinToFahrenheit(f->Temp);
 	fc.CondenserTempF = KelvinToFahrenheit(f->condenserTemp);
 
