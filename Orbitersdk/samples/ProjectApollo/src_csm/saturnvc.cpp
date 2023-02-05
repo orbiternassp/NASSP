@@ -1416,7 +1416,7 @@ void Saturn::RegisterActiveAreas() {
 
 	// Right of DC meters
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_8, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_8, _V(0.891400, 0.596067, 0.320209) + ofs, _V(0.911400, 0.596067, 0.320209) + ofs, _V(0.891400, 0.577100, 0.313864) + ofs, _V(0.911400, 0.577100, 0.313864) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_8, _V(0.886400, 0.596067, 0.320209) + ofs, _V(0.906400, 0.596067, 0.320209) + ofs, _V(0.886400, 0.577100, 0.313864) + ofs, _V(0.906400, 0.577100,	0.313864) + ofs);
 
 	// Right of ECS meters
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_9, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
