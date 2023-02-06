@@ -5607,7 +5607,7 @@ void Saturn::InitSwitches() {
 
 	FuelCellH2FlowMeter.Register(PSH, "FuelCellH2FlowMeter", 0, 0.2, 2);
 	FuelCellO2FlowMeter.Register(PSH, "FuelCellO2FlowMeter", 0, 1.6, 2);
-	FuelCellTempMeter.Register(PSH, "FuelCellTempMeter", 100, 550, 2);
+	FuelCellTempMeter.Register(PSH, "FuelCellTempMeter", 0, 5, 2);
 	FuelCellCondenserTempMeter.Register(PSH, "FuelCellCondenserTempMeter", 150, 250, 2);
 
 	SuitTempMeter.Register(PSH, "SuitTempMeter", 20, 95, 2);

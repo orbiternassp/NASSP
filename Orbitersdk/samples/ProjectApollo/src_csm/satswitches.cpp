@@ -473,7 +473,22 @@ void SaturnFuelCellO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnFuelCellTempMeter::QueryValue()
 {
-	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 6)*94.0 + 80.0);
+	double inputFromSCE = (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 6)); // 0-5V range
+	double gaugeOutput = 0.0;
+
+	if (inputFromSCE < 3.404) {
+		gaugeOutput = inputFromSCE * 0.779;
+	}
+	else if (inputFromSCE < 4.468) {
+		gaugeOutput = (inputFromSCE-3.404) * 1.733 + 2.653;
+	}
+	else {
+		gaugeOutput = (inputFromSCE-4.468) * 0.945 + 4.497;
+	}
+
+	
+	sprintf(oapiDebugString(), "%lf %lf", inputFromSCE, gaugeOutput);
+	return gaugeOutput;
 }
 
 void SaturnFuelCellTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)

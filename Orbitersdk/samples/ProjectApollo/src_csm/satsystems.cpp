@@ -3218,8 +3218,6 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 
 	fc.H2FlowLBH  = 0.0;
 	fc.O2FlowLBH = 0.0;
-	fc.TempF = 0.0;
-	fc.CondenserTempF = 0.0;
 	fc.CoolingTempF = 0.0;
 	fc.RadiatorTempInF = 0.0;
 	fc.RadiatorTempOutF = 0.0;
@@ -3245,9 +3243,6 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	fc.H2FlowLBH = f->H2_flowPerSecond * LBH;
 
 	fc.O2FlowLBH = f->O2_flowPerSecond * LBH;
-
-	fc.TempF = KelvinToFahrenheit(f->Temp);
-	fc.CondenserTempF = KelvinToFahrenheit(f->condenserTemp);
 
 	if (!pFCCoolingTemp[index]) {
 		sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:TEMP", index);

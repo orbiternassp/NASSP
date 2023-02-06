@@ -37,8 +37,6 @@
 typedef struct {
 	double H2FlowLBH;			///< H2 flow in pounds per hour.
 	double O2FlowLBH;			///< O2 flow in pounds per hour.
-	double TempF;				///< Temperature in fahrenheit.
-	double CondenserTempF;		///< Condensor temperature in fahrenheit.
 	double CoolingTempF;		///< Cooling temperature in fahrenheit.
 	double RadiatorTempInF;		///< Radiator input temperature in fahrenheit.
 	double RadiatorTempOutF;	///< Radiator output temperature in fahrenheit.
