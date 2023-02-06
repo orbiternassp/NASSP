@@ -487,7 +487,7 @@ double SaturnFuelCellTempMeter::QueryValue()
 	}
 
 	
-	sprintf(oapiDebugString(), "%lf %lf", inputFromSCE, gaugeOutput);
+	//sprintf(oapiDebugString(), "%lf %lf", inputFromSCE, gaugeOutput);
 	return gaugeOutput;
 }
 
