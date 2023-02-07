@@ -261,3 +261,27 @@ TcpConnection TcpService::Accept() noexcept {
 		return TcpConnection(s);
 	}
 }
+
+#if 0
+// TcpService::Accept can be modified to investigate performance impact with time acceleration
+#include <chrono>
+TcpConnection TcpService::Accept() noexcept {
+	static std::chrono::time_point<std::chrono::steady_clock> time_prev = std::chrono::steady_clock::now();
+	std::chrono::time_point<std::chrono::steady_clock> time_now = std::chrono::steady_clock::now();
+
+	// Limit accept call to 10Hz real-time
+	if (time_now - time_prev > std::chrono::microseconds(100000)) {
+		NativeSocket s = accept(m_socket, NULL, NULL);
+		time_prev = time_now;
+		if (s == INVALID_SOCKET) {
+			m_error = NativeError();
+			return TcpConnection();
+		}
+		else {
+			m_error = 0;
+			return TcpConnection(s);
+		}
+	}
+	return TcpConnection();
+}
+#endif
