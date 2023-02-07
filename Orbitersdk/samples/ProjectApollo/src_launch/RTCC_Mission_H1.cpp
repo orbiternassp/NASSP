@@ -521,7 +521,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATopt = 6;
-		refsopt.REFSMMATTime = OrbMech::HHMMSSToSS(183, 0, 30);
+		refsopt.REFSMMATTime = 40547.30729122223; //183:00:30 GET of nominal mission
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
 		AGCDesiredREFSMMATUpdate(buffer, REFSMMAT);

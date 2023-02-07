@@ -237,7 +237,8 @@ public:
 	int GMPManeuverType;
 
 	//REFSMMAT PAGE
-	double REFSMMATTime;
+	double REFSMMAT_LVLH_Time;
+	double REFSMMAT_PTC_MJD;
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;

@@ -349,7 +349,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	//screen = 0;
 	targetnumber = -1;
 	AGCEphemTEphemZero = 40038.0;
-	REFSMMATTime = 0.0;
+	REFSMMAT_LVLH_Time = 0.0;
+	REFSMMAT_PTC_MJD = 0.0;
 	REFSMMATopt = 4;
 	REFSMMATcur = 4;
 	manpadopt = 0;
@@ -629,10 +630,17 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PDAP_Theta_LIM = 0.0;
 	PDAP_R_amin = 0.0;
 
-	if (GC->mission == 12)
+	if (GC->mission == 10)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(183, 0, 30);
+		REFSMMAT_PTC_MJD = 40365.25560140741; //133:19:04 GET of nominal mission
+	}
+	else if (GC->mission == 11)
+	{
+		REFSMMAT_PTC_MJD = 40426.71589131481; //195:38:53 GET of nominal mission
+	}
+	else if (GC->mission == 12)
+	{
+		REFSMMAT_PTC_MJD = 40547.30729122223; //183:00:30 GET of nominal mission
 
 		PDAP_J1 = 6.0325675e6*0.3048;
 		PDAP_K1 = -6.2726125e5*0.3048;
@@ -643,28 +651,27 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (GC->mission == 13)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(178, 30, 0);
+		REFSMMAT_PTC_MJD = 40695.238194; //178:30:00 GET of nominal mission
 	}
 	else if (GC->mission == 14)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(166, 10, 30);
+		REFSMMAT_PTC_MJD = 40989.77326433333; //166:10:30 GET of nominal mission
 	}
 	else if (GC->mission == 15)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(230, 9, 0);
+		REFSMMAT_PTC_MJD = 41168.15486133334; //230:09:00 GET of nominal mission
 	}
 	else if (GC->mission == 16)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(166, 2, 50);
+		REFSMMAT_PTC_MJD = 41430.66446425925;  //166:02:50 GET of nominal mission
 	}
 	else if (GC->mission == 17)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(241, 29, 30);
+		REFSMMAT_PTC_MJD = 41668.18229177778;  //241:29:30 GET of nominal mission
+	}
+	else
+	{
+		REFSMMAT_PTC_MJD = oapiGetSimMJD(); //Near current time usually gives a good PTC REFSMMAT, too
 	}
 
 	Skylabmaneuver = 0;
@@ -2819,13 +2826,17 @@ int ARCore::subThread()
 		{
 			opt.REFSMMATTime = P30TIG;
 		}
+		else if (REFSMMATopt == 2)
+		{
+			opt.REFSMMATTime = REFSMMAT_LVLH_Time;
+		}
 		else if (REFSMMATopt == 5 || REFSMMATopt == 8)
 		{
 			opt.REFSMMATTime = GC->rtcc->CZTDTGTU.GETTD;
 		}
 		else
 		{
-			opt.REFSMMATTime = REFSMMATTime;
+			opt.REFSMMATTime = REFSMMAT_PTC_MJD;
 		}
 
 		//For LS REFSMMAT use target vessel, if we are not in the CSM
