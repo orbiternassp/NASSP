@@ -1635,8 +1635,6 @@ protected:
 	int fdaiDisabled;
 	int fdaiSmooth;
 
-	HBITMAP hBmpFDAIRollIndicator;
-
 	//Panels
 
 	PanelGroup pgPanels100;

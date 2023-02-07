@@ -56,7 +56,6 @@ IDB_SWITCHGUARDS                            BITMAP  "..\\Bitmaps\\SwitchGuards.b
 IDB_SUITCABINDELTAPMETER                    BITMAP  "..\\Bitmaps\\SuitCabinDeltaPMeter.bmp"
 IDB_THREEPOSSWITCH305                       BITMAP  "..\\Bitmaps\\threeposswitch305.bmp"
 IDB_DSKY_DISP                               BITMAP  "..\\Bitmaps\\dsky_disp.bmp"
-IDB_FDAI_ROLLINDICATOR                      BITMAP  "..\\Bitmaps\\FDAIRollindicator.bmp"
 IDB_FDAI                                    BITMAP  "..\\Bitmaps\\FDAI.bmp"
 IDB_FDAI_ROLL                               BITMAP  "..\\Bitmaps\\FDAIRoll.bmp"
 IDB_CWS_LIGHTS                              BITMAP  "..\\Bitmaps\\cw_lights.bmp"

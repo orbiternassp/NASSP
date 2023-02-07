@@ -1555,7 +1555,6 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_SPSGIMBALYAWTHUMBWHEEL,						_R( 739, 1067,  775, 1084), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	// FDAI
 	fdaiLeft.RegisterMe(AID_FDAI_LEFT, 533, 612);
-	if (!hBmpFDAIRollIndicator)	hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 	// ORDEAL
 	oapiRegisterPanelArea (AID_ORDEALSWITCHES,								_R( 359,   28,  836,  230), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 }
@@ -1589,7 +1588,6 @@ void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
 
 	// FDAI
 	fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1090 + offset, 284);
-	if (!hBmpFDAIRollIndicator)	hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
 	// MFDs
 	MFDSPEC mfds_mainleft = {{1405 + offset, 1019, 1715 + offset, 1328}, 6, 6, 55, 44 };
@@ -4635,7 +4633,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);			
 		}
 		return true;
 
@@ -4651,7 +4649,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiRight.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
 		}
 		return true;
 

@@ -1165,7 +1165,6 @@ void Saturn::initSaturn()
 		// Initialize the panel
 		fdaiDisabled = false;
 		fdaiSmooth = false;
-		hBmpFDAIRollIndicator = 0;
 
 		PanelId = SATPANEL_MAIN; 		// default panel
 		MainPanelSplit = false;
