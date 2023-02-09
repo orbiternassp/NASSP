@@ -4699,11 +4699,12 @@ void Saturn::StageSix(double simt){
 		}
 
 		if (ApolloExploded && ph_o2_vent) {
+			
+			double O2Tank1Mass = O2Tanks[0]->mass/1E3;
 
+			SetThrusterLevel(th_o2_vent, O2Tank1Mass/145149.5584);
 
-			//SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);
-
-			//SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
+			SetPropellantMass(ph_o2_vent, O2Tank1Mass);
 		}
 	}
 }

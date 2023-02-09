@@ -1123,9 +1123,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 
 		ph_o2_vent = CreatePropellantResource(tank_mass, tank_mass); //"Thruster" created by O2 venting
 
-
-
-		//SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
+		SetPropellantMass(ph_o2_vent, O2Tanks[0]->mass / 1E3);
 
 	}
 	
