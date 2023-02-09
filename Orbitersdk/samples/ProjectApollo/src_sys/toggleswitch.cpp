@@ -3741,6 +3741,7 @@ double MeterSwitch::GetDisplayValue() {
 		displayValue = value;
 	} else {
 		double dt = oapiGetSysTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
+		dt *= oapiGetTimeAcceleration();
 		if (dt > 0) {
 			if (fabs(value - displayValue) / dt > (maxValue - minValue) / minMaxTime) {
 				displayValue += ((value - displayValue) / fabs(value - displayValue)) * (maxValue - minValue) / minMaxTime * dt;
