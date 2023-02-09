@@ -456,6 +456,10 @@ void Saturn::SystemsInit() {
 	H2Tank2PressSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
 	O2Tank1PressSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"));
 	O2Tank2PressSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"));
+	H2Tank1QuantitySensor.Init(&CryogenicQTYAmpl1CB, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1")); //J Missions: CryogenicFanMotorsAC1CCB
+	H2Tank2QuantitySensor.Init(&CryogenicQTYAmpl2CB, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2")); //J Missions: CryogenicFanMotorsAC2CCB
+	O2Tank1QuantitySensor.Init(&CryogenicQTYAmpl1CB, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1")); //J Missions: CryogenicFanMotorsAC1CCB
+	O2Tank2QuantitySensor.Init(&CryogenicQTYAmpl2CB, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2")); //J Missions: CryogenicFanMotorsAC2CCB
 	FCO2PressureSensor1.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD"));
 	FCO2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD"));
 	FCO2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD"));
@@ -3136,72 +3140,6 @@ void Saturn::GetPyroStatus( PyroStatus &ps )
 {
 	ps.BusAVoltage = PyroBusA.Voltage();
 	ps.BusBVoltage = PyroBusB.Voltage();
-}
-
-//
-// Get H2/O2 tank quantities.
-//
-
-void Saturn::GetTankQuantities(TankQuantities &q)
-
-{
-	//
-	// Clear to defaults.
-	//
-
-	q.H2Tank1Quantity = 0.0;
-	q.H2Tank2Quantity = 0.0;
-	q.O2Tank1QuantityKg = 0.0;
-	q.O2Tank2QuantityKg = 0.0;
-	q.O2Tank1Quantity = 0.0;
-	q.O2Tank2Quantity = 0.0;
-
-	//
-	// No tanks if we've seperated from the SM
-	//
-
-	if (stage >= CM_STAGE) {
-		return;
-	}
-
-	//
-	// Hydrogen tanks.
-	//
-
-	if (!pH2Tank1Quantity) {
-		pH2Tank1Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:MASS");
-	}
-	if (pH2Tank1Quantity) {
-		q.H2Tank1Quantity = (*pH2Tank1Quantity) / CSM_H2TANK_CAPACITY;
-	}
-
-	if (!pH2Tank2Quantity) {
-		pH2Tank2Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:MASS");
-	}
-	if (pH2Tank2Quantity) {
-		q.H2Tank2Quantity = (*pH2Tank2Quantity) / CSM_H2TANK_CAPACITY;
-	}
-
-	//
-	// Oxygen tanks.
-	//
-
-	if (!pO2Tank1Quantity) {
-		pO2Tank1Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:MASS");
-	}
-
-	if (pO2Tank1Quantity) {
-		q.O2Tank1Quantity = (*pO2Tank1Quantity) / CSM_O2TANK_CAPACITY;
-		q.O2Tank1QuantityKg = (*pO2Tank1Quantity) / 1000.0;
-	}
-
-	if (!pO2Tank2Quantity) {
-		pO2Tank2Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:MASS");
-	}
-	if (pO2Tank2Quantity) {
-		q.O2Tank2Quantity = (*pO2Tank2Quantity) / CSM_O2TANK_CAPACITY;
-		q.O2Tank2QuantityKg = (*pO2Tank2Quantity) / 1000.0;
-	}
 }
 
 

@@ -474,6 +474,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	H2Tank2PressSensor("H2Tank2-Press-Sensor", 0.0, 350.0),
 	O2Tank1PressSensor("O2Tank1-Press-Sensor", 50.0, 1050.0),
 	O2Tank2PressSensor("O2Tank2-Press-Sensor", 50.0, 1050.0),
+	H2Tank1QuantitySensor("H2Tank1-Quantity-Sensor", 0.0, 1.0, 12701.0),
+	H2Tank2QuantitySensor("H2Tank2-Quantity-Sensor", 0.0, 1.0, 12701.0),
+	O2Tank1QuantitySensor("O2Tank1-Quantity-Sensor", 0.0, 1.0, 145150.0),
+	O2Tank2QuantitySensor("O2Tank2-Quantity-Sensor", 0.0, 1.0, 145150.0),
 	FCO2PressureSensor1("FuelCell1-O2-Press-Sensor", 0.0, 75.0),
 	FCO2PressureSensor2("FuelCell2-O2-Press-Sensor", 0.0, 75.0),
 	FCO2PressureSensor3("FuelCell3-O2-Press-Sensor", 0.0, 75.0),
@@ -4559,9 +4563,7 @@ void Saturn::LoadDefaultSounds()
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
 
-void Saturn::StageSix(double simt)
-
-{
+void Saturn::StageSix(double simt){
 	UpdateMassAndCoG();
 
 	if (ApolloNo == 1301) {
@@ -4698,16 +4700,11 @@ void Saturn::StageSix(double simt)
 
 		if (ApolloExploded && ph_o2_vent) {
 
-			TankQuantities t;
-			GetTankQuantities(t);
 
-			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);
+			//SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);
 
-			SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
-
-
+			//SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
 		}
-
 	}
 }
 

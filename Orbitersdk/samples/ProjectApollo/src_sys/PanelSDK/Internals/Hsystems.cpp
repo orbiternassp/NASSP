@@ -737,7 +737,7 @@ void h_Tank::refresh(double dt) {
 	}*/
 
 	space.ThermalComps(dt);	
-
+	mass = space.GetMass();
 	Temp = space.Temp;
 	energy = space.Q;
 
