@@ -3729,7 +3729,7 @@ double MeterSwitch::GetDisplayValue() {
 		return displayValue;
 
 	if (lastDrawTime == -1) {
-		lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
+		lastDrawTime = oapiGetSimTime(); // oapiGetSimTime();
 		return displayValue;
 	}
 
@@ -3740,8 +3740,7 @@ double MeterSwitch::GetDisplayValue() {
 	if (minMaxTime == 0) {
 		displayValue = value;
 	} else {
-		double dt = oapiGetSysTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
-		dt *= oapiGetTimeAcceleration();
+		double dt = oapiGetSimTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
 		if (dt > 0) {
 			if (fabs(value - displayValue) / dt > (maxValue - minValue) / minMaxTime) {
 				displayValue += ((value - displayValue) / fabs(value - displayValue)) * (maxValue - minValue) / minMaxTime * dt;
@@ -3750,7 +3749,7 @@ double MeterSwitch::GetDisplayValue() {
 			}
 		}
 	}
-	lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
+	lastDrawTime = oapiGetSimTime(); // oapiGetSimTime();
 	return displayValue;
 }
 
