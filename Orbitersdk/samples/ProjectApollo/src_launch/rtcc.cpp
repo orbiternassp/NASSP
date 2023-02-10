@@ -4995,7 +4995,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		double PTCMJD;
 		VECTOR3 R_ME;
 
-		PTCMJD = opt->REFSMMATTime / 24.0 / 3600.0 + opt->GETbase;
+		PTCMJD = opt->REFSMMATTime;
 
 		CELBODY *cMoon = oapiGetCelbodyInterface(hMoon);
 

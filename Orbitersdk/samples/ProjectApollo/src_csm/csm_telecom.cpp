@@ -2215,8 +2215,6 @@ unsigned char PCM::scale_data(double data, double low, double high)
 
 // Fetch a telemetry data item from its channel code
 unsigned char PCM::measure(int channel, int type, int ccode){
-	// Status structures.
-	TankQuantities tankQuantities;
 	SPSStatus spsStatus;
 	FuelCellStatus fcStatus;
 	PyroStatus pyroStatus;
@@ -2311,20 +2309,19 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 35:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 36:		// H2 TK 1 PRESS
-							return(scale_data(sat->H2Tank1PressSensor.Voltage(), 0, 5));
+							return(scale_data(sat->H2Tank1PressSensor.Voltage(), 0.0, 5.0));
 						case 37:		// SPS VLV BODY TEMP
 							return(scale_data(0,0,200));
 						case 38:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 39:		// H2 TK 2 PRESS
-							return(scale_data(sat->H2Tank2PressSensor.Voltage(), 0, 5));
+							return(scale_data(sat->H2Tank2PressSensor.Voltage(), 0.0, 5.0));
 						case 40:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 41:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 42:		// O2 TK 2 QTY
-							sat->GetTankQuantities( tankQuantities );
-							return(scale_data(tankQuantities.O2Tank2Quantity * 100.0, 0, 100));
+							return(scale_data(sat->O2Tank2QuantitySensor.Voltage(), 0.0, 5.0));
 						case 43:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 44:		// OX LINE 1 TEMP
@@ -2531,22 +2528,19 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 140:		// BAY 6 FU TK SURFACE TEMP
 							return(scale_data(0,-100,200));
 						case 141:		// H2 TK 1 QTY
-							sat->GetTankQuantities(tankQuantities);
-							return(scale_data(tankQuantities.H2Tank1Quantity * 100.0, 0, 100));
+							return(scale_data(sat->H2Tank1QuantitySensor.Voltage(), 0.0, 5.0));
 						case 142:		// BAY 2 OX TK SURFACE TEMP
 							return(scale_data(0,-100,200));
 						case 143:		// OX LINE ENTRY SUMP TK TEMP
 							return(scale_data(0,-100,200));
 						case 144:		// H2 TK 2 QTY
-							sat->GetTankQuantities( tankQuantities );
-							return(scale_data(tankQuantities.H2Tank2Quantity * 100.0, 0, 100));
+							return(scale_data(sat->H2Tank2QuantitySensor.Voltage(), 0.0, 5.0));
 						case 145:		// FU LINE ENTRY SUMP TK TEMP
 							return(scale_data(0,-100,200));
 						case 146:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 147:		// O2 TK 1 QTY
-							sat->GetTankQuantities( tankQuantities );
-							return(scale_data(tankQuantities.O2Tank1Quantity * 100.0, 0, 100));
+							return(scale_data(sat->O2Tank1QuantitySensor.Voltage(), 0.0, 5.0));
 						case 148:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 149:		// DOSIMETER RATE
@@ -2701,23 +2695,17 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 66:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 67:		// FC 1 O2 PRESS
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor1.Voltage(), 0.0, 5.0);
 						case 68:		// FC 2 O2 PRESS
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor2.Voltage(), 0.0, 5.0);
 						case 69:		// FC 3 O2 PRESS
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor3.Voltage(), 0.0, 5.0);
 						case 70:		// FC 1 H2 PRESS
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor1.Voltage(), 0.0, 5.0);
 						case 71:		// FC 2 H2 PRESS
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor2.Voltage(), 0.0, 5.0);
 						case 72:		// FC 3 H2 PRESS
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor3.Voltage(), 0.0, 5.0);
 						case 73:		// BAT CHARGER AMPS
 							return scale_data(sat->sce.GetVoltage(1, 0), 0.0, 5.0);
 						case 74:		// BAT A CUR

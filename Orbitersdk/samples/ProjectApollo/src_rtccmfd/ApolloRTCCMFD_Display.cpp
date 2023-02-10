@@ -648,7 +648,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->Text(5 * W / 8, 2 * H / 14, "LVLH", 4);
 
-			GET_Display(Buffer, G->REFSMMATTime);
+			GET_Display(Buffer, G->REFSMMAT_LVLH_Time);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (G->REFSMMATopt == 3)
@@ -711,7 +711,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 2 * H / 14, "PTC", 3);
 
 			skp->Text(1 * W / 16, 2 * H / 14, "Average time of TEI:", 20);
-			GET_Display(Buffer, G->REFSMMATTime);
+			sprintf(Buffer, "MJD %lf", G->REFSMMAT_PTC_MJD);
 			skp->Text(1 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (G->REFSMMATopt == 7)

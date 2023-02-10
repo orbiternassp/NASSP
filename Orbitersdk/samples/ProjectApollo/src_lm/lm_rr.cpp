@@ -772,28 +772,30 @@ void LEM_RR::Timestep(double simdt) {
 void LEM_RR::SystemTimestep(double simdt) {
 	if (IsDCPowered())
 	{
-		dc_source->DrawPower(117); //Total power draw 150W, 33W guessed for RR antenna section
+		dc_source->DrawPower(150);
 		RREHeat->GenerateHeat(117);
 	}
-
+	/*
 	if (IsACPowered())
 	{
 		ac_source->DrawPower(13.8);
-		RREHeat->GenerateHeat(13.8);
+		rrheat->GenerateHeat(13.8);
 	}
+	*/
 
+	
 	if (abs(shaftVel) > 0.01*RAD)
 	{
-		dc_source->DrawPower(16.5);
-		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
+		ac_source->DrawPower(13.8);
+		rrheat->GenerateHeat(13.8); 
 	}
 
 	if (abs(trunnionVel) > 0.01*RAD)
 	{
-		dc_source->DrawPower(16.5);
-		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
+		ac_source->DrawPower(13.8);
+		rrheat->GenerateHeat(13.8);
 	}
-
+	
 }
 
 void LEM_RR::DefineAnimations(UINT idx) {

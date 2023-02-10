@@ -185,9 +185,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 		{ "Option", 0, 'O' },
 		{ "Calculate", 0, 'C' },
-		{ "Upload", 0, 'U' },
 		{ "Move REFSMMAT", 0, 'U' },
-		{ "Choose engine", 0, 'T' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
 	};
 
