@@ -3633,6 +3633,9 @@ public:
 	TemperatureTransducer CMRCSEngine21TempSensor;
 	TemperatureTransducer CMRCSEngine24TempSensor;
 	TemperatureTransducer CMRCSEngine25TempSensor;
+	CSMTankPressTransducer FCN2PressureSensor1;
+	CSMTankPressTransducer FCN2PressureSensor2;
+	CSMTankPressTransducer FCN2PressureSensor3;
 protected:
 
 	// CM Optics
