@@ -88,18 +88,6 @@ namespace mission
 #define RCS_CM_RING_1		4
 #define RCS_CM_RING_2		5
 
-///
-/// \brief O2/H2 tank quantities.
-/// \ingroup InternalInterface
-///
-typedef struct {
-	double O2Tank1Quantity;
-	double O2Tank1QuantityKg;
-	double O2Tank2Quantity;
-	double O2Tank2QuantityKg;
-	double H2Tank1Quantity;
-	double H2Tank2Quantity;
-} TankQuantities;
 
 ///
 /// \brief Cabin atmosphere status.
@@ -1121,7 +1109,6 @@ public:
 	///
 	void GetAtmosStatus(AtmosStatus &atm);
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
-	void GetTankQuantities(TankQuantities &q);
 
 	///
 	/// Get information on the status of a fuel cell in the CSM.
@@ -3611,6 +3598,10 @@ public:
 	CSMTankPressTransducer H2Tank2PressSensor;
 	CSMTankPressTransducer O2Tank1PressSensor;
 	CSMTankPressTransducer O2Tank2PressSensor;
+	CSMTankQuantityTransducer H2Tank1QuantitySensor;
+	CSMTankQuantityTransducer H2Tank2QuantitySensor;
+	CSMTankQuantityTransducer O2Tank1QuantitySensor;
+	CSMTankQuantityTransducer O2Tank2QuantitySensor;
 	CSMTankPressTransducer CabinPressSensor;
 	CSMTankTempTransducer CabinTempSensor;
 	CSMDeltaPressINH2OTransducer SuitCabinDeltaPressSensor;
