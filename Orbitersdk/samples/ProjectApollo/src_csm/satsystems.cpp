@@ -2578,9 +2578,21 @@ void Saturn::CheckSMSystemsState()
 		H2Tank2PressSensor.WireTo(NULL);
 		O2Tank1PressSensor.WireTo(NULL);
 		O2Tank2PressSensor.WireTo(NULL);
+		H2Tank1QuantitySensor.WireTo(NULL);
+		H2Tank2QuantitySensor.WireTo(NULL);
+		O2Tank1QuantitySensor.WireTo(NULL);
+		O2Tank2QuantitySensor.WireTo(NULL);
 		PriRadInTempSensor.WireTo(NULL);
 		SecRadInTempSensor.WireTo(NULL);
 		SecRadOutTempSensor.WireTo(NULL);
+
+		// Fuel Cell Sensors
+		FCH2PressureSensor1.WireTo(NULL);
+		FCH2PressureSensor2.WireTo(NULL);
+		FCH2PressureSensor3.WireTo(NULL);
+		FCO2PressureSensor1.WireTo(NULL);
+		FCO2PressureSensor2.WireTo(NULL);
+		FCO2PressureSensor3.WireTo(NULL);
 
 		if (secs.SMJCA)
 		{
