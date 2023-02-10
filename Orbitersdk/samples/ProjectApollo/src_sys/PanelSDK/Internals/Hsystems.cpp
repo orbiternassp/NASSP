@@ -341,6 +341,41 @@ double h_substance::VAPENTH() const
 
 }
 
+double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double temperature) const
+{
+	double density;
+	//see https://gist.github.com/n7275/8676c064fef5f48680b5ba815f24e2bf
+	switch (SUBSTANCE_TYPE) {
+		case SUBSTANCE_O2:
+			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
+				density = 1434.338998096669 + 30827.66466562366 / (temperature - 186.3966881148979);
+			}
+			else {
+				density = 44.24461555143480 + 7784.502442355128 / (temperature - 136.05498694800465);
+			}
+			break;
+		case SUBSTANCE_H2:
+			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
+				density = 136.4894046680936 + 3242.617524782929 / (temperature - 67.46034096292647);
+			}
+			else {
+				density = 0.741833633973125 + 642.4040759445162 / (temperature - 17.5701803944558);
+			}
+			break;
+		case SUBSTANCE_N2:
+			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
+				density = 734.3287921946625 + 9878.83146453045 / (temperature - 146.65628914669438);
+			}
+			else {
+				density = 17.85307222754917 + 4418.262547908501 / (temperature - 107.28230096889227);
+			}
+			break;
+		default:
+			density = L_DENSITY[SUBSTANCE_TYPE];	
+	}
+	return density;
+}
+
 double h_substance::Condense(double dt) {
 
 	double vapenth_temporary = VAPENTH();
@@ -512,21 +547,13 @@ void h_volume::ThermalComps(double dt) {
 		m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];	//Units of mol
 
 		// temperature dependency of the density is assumed 1 to 2 g/l
-		double density = L_DENSITY[composition[i].subst_type];
-		if (composition[i].subst_type == SUBSTANCE_O2) {
-			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
-			// Correction term is 0 at O2 initial tank temperature (75K), the other factors are "empirical"
-			density += 0.56 * Temp * Temp - 134.0 * Temp + 6900.0;
+		double density = composition->GET_LIQUID_DENSITY(i, Temp);
 
-		} else if (composition[i].subst_type == SUBSTANCE_H2) {
-			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
-			// Correction term is 0 at H2 boiling point (20K), the other factors are "empirical"
-			density += 0.03333 * Temp * Temp - 4.3333 * Temp + 73.3333;
-		}
 		tNV = (composition[i].mass - composition[i].vapor_mass) / density;	//Units of L
 		NV += tNV;	//Units of L
+		NV += VDW_B[i] * composition[i].vapor_mass;
 
-		PNV += tNV / BULK_MOD[composition[i].subst_type];;	//Units of L/Pa
+		PNV += tNV / BULK_MOD[composition[i].subst_type];	//Units of L/Pa
 	}
 
 	m_i = -m_i * R_CONST * Temp;	//Units of L*Pa
@@ -551,7 +578,8 @@ void h_volume::ThermalComps(double dt) {
 			vap_press = exp(ANTIONE_A[composition[i].subst_type] - (ANTIONE_B[composition[i].subst_type] / Temp))*1E5; //this is vapor pressure of current substance
 		}
 		//need to boil material if vapor pressure > pressure, otherwise condense
-		if (vap_press > Press)	
+		//supercritical fluids are treaded as liquids with variable density
+		if (vap_press > Press && Press < CRITICAL_P[i])
 			Q += composition[i].Boil(dt);
 		else
 			Q += composition[i].Condense(dt);
@@ -734,6 +762,11 @@ void h_Tank::refresh(double dt) {
 		fprintf(PanelsdkLogFile, "%s.refresh1 Q %f Temp %f Mass %f\n", name, space.Q, space.Temp, space.total_mass);
 		for (int i = 0; i < MAX_SUB; i++)
 			fprintf(PanelsdkLogFile, "\t%i Q %f\n", i, space.composition[i].Q);
+	}*/
+
+	/*if (!strcmp(name, "O2TANK1"))
+	{
+		sprintf(oapiDebugString(), "%lf", this->space.Press);
 	}*/
 
 	space.ThermalComps(dt);	

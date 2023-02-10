@@ -246,7 +246,7 @@ for (int i=0;i<3;i++)
 };
 //----------------------------------- FUEL CELL --------------------------------------
 
-FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts) 
+FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts, h_Tank *N2)
 {
 	strcpy(name, i_name);
 	max_stage = 99;
@@ -259,6 +259,8 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	O2_SRC = o2;
 	H2_SRC = h2;
 	H20_waste = waste;
+
+	N2_Blanket = N2;
 
 	outputImpedance = 0.0346667; //ohms
 

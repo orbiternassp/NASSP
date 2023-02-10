@@ -3637,6 +3637,9 @@ public:
 	CSMTankPressTransducer FCH2PressureSensor1;
 	CSMTankPressTransducer FCH2PressureSensor2;
 	CSMTankPressTransducer FCH2PressureSensor3;
+	CSMTankPressTransducer FCN2PressureSensor1;
+	CSMTankPressTransducer FCN2PressureSensor2;
+	CSMTankPressTransducer FCN2PressureSensor3;
 protected:
 
 	// CM Optics
@@ -3648,6 +3651,8 @@ protected:
 	Cooling *FuelCellCooling[3];
 	h_Tank *FuelCellO2Manifold[3];
 	h_Tank *FuelCellH2Manifold[3];
+	h_Tank *FuelCellN2Blanket[3];
+
 	
 	// Electric Lights
 	ElectricLight* SpotLight;

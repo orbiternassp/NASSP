@@ -134,6 +134,10 @@ void Saturn::SystemsInit() {
 	FuelCellH2Manifold[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD");
 	FuelCellH2Manifold[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD");
 
+	FuelCellN2Blanket[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET");
+	FuelCellN2Blanket[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET");
+	FuelCellN2Blanket[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET");
+
 	//
 	// Electric Lights
 	//
@@ -466,6 +470,9 @@ void Saturn::SystemsInit() {
 	FCH2PressureSensor1.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD"));
 	FCH2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD"));
 	FCH2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD"));
+	FCN2PressureSensor1.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET"));
+	FCN2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET"));
+	FCN2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET"));
 
 	CabinPressSensor.Init(&ECSPressGroups2Feeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 	CabinTempSensor.Init(&ECSTempTransducerFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
@@ -1016,6 +1023,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		}
 	}
 
+
+//sprintf(oapiDebugString(), "Header Press = %lf, Blanket Press = %lf PSI %lf", (*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1HEADERTANK:PRESS"))*PSI, (*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET:PRESS"))*PSI, FCN2PressureSensor1.Voltage());
 
 //------------------------------------------------------------------------------------
 // Various debug prints
@@ -2593,6 +2602,9 @@ void Saturn::CheckSMSystemsState()
 		FCO2PressureSensor1.WireTo(NULL);
 		FCO2PressureSensor2.WireTo(NULL);
 		FCO2PressureSensor3.WireTo(NULL);
+		FCN2PressureSensor1.WireTo(NULL);
+		FCN2PressureSensor2.WireTo(NULL);
+		FCN2PressureSensor3.WireTo(NULL);
 
 		if (secs.SMJCA)
 		{
