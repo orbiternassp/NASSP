@@ -521,7 +521,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATopt = 6;
-		refsopt.REFSMMATTime = OrbMech::HHMMSSToSS(183, 0, 30);
+		refsopt.REFSMMATTime = 40547.30729122223; //183:00:30 GET of nominal mission
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
 		AGCDesiredREFSMMATUpdate(buffer, REFSMMAT);
@@ -3097,7 +3097,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 		else if (fcn == 211 || fcn == 212)
 		{
-			MCCtime = calcParams.EI - 23.0*3600.0;
+			MCCtime = calcParams.EI - 22.0*3600.0;
 			sprintf(manname, "MCC-6");
 		}
 		else if (fcn == 213 || fcn == 214)

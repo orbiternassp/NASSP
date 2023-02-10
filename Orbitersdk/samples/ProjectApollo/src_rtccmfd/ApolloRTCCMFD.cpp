@@ -127,7 +127,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "SXTSTARDTIME", G->sxtstardtime);
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
-	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
+	papiWriteScenario_double(scn, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 	papiWriteScenario_double(scn, "T1", GC->rtcc->med_k30.StartTime);
 	papiWriteScenario_double(scn, "T2", GC->rtcc->med_k30.EndTime);
@@ -214,7 +214,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "SXTSTARDTIME", G->sxtstardtime);
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
-		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
+		papiReadScenario_double(line, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 		papiReadScenario_double(line, "T1", GC->rtcc->med_k30.StartTime);
 		papiReadScenario_double(line, "T2", GC->rtcc->med_k30.EndTime);
@@ -3036,10 +3036,14 @@ void ApolloRTCCMFD::set_sextantstartime(double time)
 
 void ApolloRTCCMFD::REFSMMATTimeDialogue()
 {
-	if (G->REFSMMATopt == 2 || G->REFSMMATopt == 6)
+	if (G->REFSMMATopt == 2)
 	{
 		bool REFSMMATGETInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", REFSMMATGETInput, 0, 20, (void*)this);
+	}
+	else if (G->REFSMMATopt == 6)
+	{
+		GenericDoubleInput(&G->REFSMMAT_PTC_MJD, "Enter MJD of average time of TEI:");
 	}
 	else if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 	{
@@ -3057,7 +3061,7 @@ void ApolloRTCCMFD::UploadREFSMMAT()
 
 void ApolloRTCCMFD::set_REFSMMATTime(double time)
 {
-	this->G->REFSMMATTime = time;
+	G->REFSMMAT_LVLH_Time = time;
 }
 
 void ApolloRTCCMFD::menuREFSMMATLockerMovement()

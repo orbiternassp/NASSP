@@ -774,8 +774,6 @@ protected:
 
 	CrossPointer crossPointerLeft;
 
-	HBITMAP hBmpFDAIRollIndicator;
-
 	SwitchRow LeftXPointerSwitchRow;
 	ToggleSwitch LeftXPointerSwitch;
 

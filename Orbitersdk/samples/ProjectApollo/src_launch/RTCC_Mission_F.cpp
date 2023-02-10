@@ -353,11 +353,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 10: //PTC REFSMMAT
 	{
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
 		char buffer1[1000];
 
-		MATRIX3 REFSMMAT = _M(-0.5, -0.8660254, 0.0, -0.79453912, 0.45872741, 0.39784005, -0.34453959, 0.19892003, -0.91745479);
+		refsopt.REFSMMATopt = 6;
+		refsopt.REFSMMATTime = 40365.25560140741; //133:19:04 GET of nominal mission
 
-		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, true, true);
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, true);
 		sprintf(uplinkdata, "%s", buffer1);
 
 		if (upString != NULL) {
@@ -2152,19 +2157,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else if (fcn == 93 || fcn == 94)
 		{
-			MCCtime = calcParams.EI - 2.0*3600.0;
+			MCCtime = calcParams.EI - 3.0*3600.0;
 			sprintf(manname, "MCC-7");
-		}
-
-		//Only corridor control after EI-24h
-		if (MCCtime > calcParams.EI - 24.0*3600.0)
-		{
-			entopt.type = 3;
-		}
-		else
-		{
-			entopt.type = 1;
-			entopt.t_Z = OrbMech::HHMMSSToSS(192.0, 0.0, 0.0);
 		}
 
 		GETbase = CalcGETBase();
@@ -2177,10 +2171,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
+		entopt.type = 3;
 
-		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
+		//Calculate corridor control burn
+		EntryTargeting(&entopt, &res);
 
-									  //Apollo 10 Mission Rules
+		//If time to EI is more than 24 hours and the splashdown longitude is not within 2° of desired, then perform a longitude control burn
+		if (MCCtime < calcParams.EI - 24.0*3600.0 && abs(res.longitude - entopt.lng) > 2.0*RAD)
+		{
+			entopt.type = 1;
+			entopt.t_Z = res.GET400K;
+
+			EntryTargeting(&entopt, &res);
+		}
+
+		//Apollo 10 Mission Rules
 		if (MCCtime > calcParams.EI - 50.0*3600.0)
 		{
 			if (length(res.dV_LVLH) < 1.0*0.3048)

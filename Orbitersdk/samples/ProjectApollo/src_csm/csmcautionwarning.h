@@ -36,17 +36,12 @@
 ///
 typedef struct {
 	double H2FlowLBH;			///< H2 flow in pounds per hour.
-	double H2PressurePSI;		///< H2 pressure in PSI
 	double O2FlowLBH;			///< O2 flow in pounds per hour.
-	double O2PressurePSI;		///< O2 pressure in PSI.
-	double TempF;				///< Temperature in fahrenheit.
-	double CondenserTempF;		///< Condensor temperature in fahrenheit.
 	double CoolingTempF;		///< Cooling temperature in fahrenheit.
 	double RadiatorTempInF;		///< Radiator input temperature in fahrenheit.
 	double RadiatorTempOutF;	///< Radiator output temperature in fahrenheit.
 	double Voltage;				///< Output voltage.
 	double Current;				///< Output current.
-	double PowerOutput;			///< Output power.
 } FuelCellStatus;
 
 ///

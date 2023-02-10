@@ -404,11 +404,16 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 19: //PTC REFSMMAT
 	{
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
 		char buffer1[1000];
 
-		MATRIX3 REFSMMAT = _M(0.866025404, -0.45872739, -0.19892002, -0.5, -0.79453916, -0.34453958, 0.0, 0.39784004, -0.91745480);
+		refsopt.REFSMMATopt = 6;
+		refsopt.REFSMMATTime = 40426.71589131481; //195:38:53 GET of nominal mission
 
-		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, true, true);
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, true);
 		sprintf(uplinkdata, "%s", buffer1);
 
 		if (upString != NULL) {
@@ -2532,17 +2537,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(manname, "MCC-7");
 		}
 
-		//Only corridor control after EI-24h
-		if (MCCtime > calcParams.EI - 24.0*3600.0)
-		{
-			entopt.type = 3;
-		}
-		else
-		{
-			entopt.type = 1;
-			entopt.t_Z = calcParams.TEI + 60.0*3600.0;
-		}
-
 		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -2553,8 +2547,19 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
+		entopt.type = 3;
 
+		//Calculate corridor control burn
 		EntryTargeting(&entopt, &res);
+
+		//If time to EI is more than 24 hours and the splashdown longitude is not within 2° of desired, then perform a longitude control burn
+		if (MCCtime < calcParams.EI - 24.0*3600.0 && abs(res.longitude - entopt.lng) > 2.0*RAD)
+		{
+			entopt.type = 1;
+			entopt.t_Z = res.GET400K;
+
+			EntryTargeting(&entopt, &res);
+		}
 
 		//Apollo 11 Mission Rules
 		if (MCCtime > calcParams.EI - 50.0*3600.0)
