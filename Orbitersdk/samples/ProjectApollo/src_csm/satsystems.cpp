@@ -1019,11 +1019,20 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	}
 
 
-//sprintf(oapiDebugString(), "Header Press = %lf, Blanket Press = %lf PSI %lf", (*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1HEADERTANK:PRESS"))*PSI, (*(double*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET:PRESS"))*PSI, FCN2PressureSensor1.Voltage());
+
 
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
+
+//	FC Nitrogen system.
+	//h_Tank* pHeader = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1HEADERTANK");
+	//h_Tank* pBlanket = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1BLANKET");
+
+
+	//sprintf(oapiDebugString(), "H: %lf PSI, B: %lf PSI %lfV H: %lfK B: %lfK H: %lfg, B: %lfg", pHeader->space.Press* PSI, pBlanket->space.Press* PSI, FCN2PressureSensor1.Voltage(), KelvinToFahrenheit(pHeader->space.Temp), KelvinToFahrenheit(pBlanket->space.Temp),
+	//	pHeader->mass, pBlanket->mass);
+
 
 //GSE Cooling Debug Lines
 	/*
