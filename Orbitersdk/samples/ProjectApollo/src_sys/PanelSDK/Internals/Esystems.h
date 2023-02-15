@@ -568,8 +568,12 @@ public:
 	double valueMin, valueMax;
 	int handleMin, handleMax;
 
-	double boiler_power;
+	double max_boiler_power;
+	double boiler_output_power;
 	double boiler_electrical_power;
+
+	bool ramp;
+	double rampRate;
 
 	virtual void refresh(double dt);
 	virtual void Load(char *line);
