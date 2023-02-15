@@ -29,11 +29,14 @@
 void E_system::Create_Boiler(char *line) {
 
 	char name[100], source[100], targetName[100], typeName[100];
-	int pump, type;
-	double watts, ewatts, valueMin, valueMax;
+	int pump, type, ramp;
+	double watts, ewatts, valueMin, valueMax, rampRate;
 
-	sscanf(line + 8,"%s %i %s %lf %lf %s %lf %lf %s",
-		name, &pump, source, &watts, &ewatts, typeName, &valueMin, &valueMax, targetName);
+	ramp = 0;
+	rampRate = 0.0;
+
+	sscanf(line + 8,"%s %i %s %lf %lf %s %lf %lf %s %i %lf",
+		name, &pump, source, &watts, &ewatts, typeName, &valueMin, &valueMax, targetName, &ramp, &rampRate);
 
 	ship_object* so = (ship_object*) GetPointerByString(targetName) ;
 	therm_obj *t = so->GetThermalInterface();
@@ -45,7 +48,7 @@ void E_system::Create_Boiler(char *line) {
 	else if (Compare(typeName, "CHILLER"))
 		type = 2;
 
-	AddSystem(new Boiler(name, pump, src, watts, ewatts, type, valueMin, valueMax, t));
+	AddSystem(new Boiler(name, pump, src, watts, ewatts, type, valueMin, valueMax, t, (bool)ramp, rampRate));
 }
 
 void E_system::Create_AtmRegen(char *line) {

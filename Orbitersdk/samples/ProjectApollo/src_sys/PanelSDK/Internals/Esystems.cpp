@@ -1437,8 +1437,8 @@ void AtmRegen::Save(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "    <ATMREGEN> ", cbuf);
 }
 
-Boiler::Boiler(char* i_name, int i_pump, e_object* i_src, double heat_watts, double electric_watts,
-	int i_type, double i_valueMin, double i_valueMax, therm_obj* i_target) {
+Boiler::Boiler(char *i_name, int i_pump, e_object *i_src, double heat_watts, double electric_watts,
+		   int i_type, double i_valueMin, double i_valueMax, therm_obj *i_target, bool isramp, double boilerRampRate) {
 
 	strcpy(name, i_name);
 	max_stage = 99;
@@ -1462,8 +1462,8 @@ Boiler::Boiler(char* i_name, int i_pump, e_object* i_src, double heat_watts, dou
 	handleMin = 0;
 	handleMax = 0;
 
-	ramp = false;
-	rampRate = 10.0;
+	ramp = isramp;
+	rampRate = boilerRampRate;
 	boiler_output_power = 0.0;
 }
 
