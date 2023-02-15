@@ -555,7 +555,7 @@ class Boiler : public e_object {
 
 public:
     Boiler(char *i_name, int i_pump, e_object *i_src, double heat_watts, double electric_watts,
-		   int i_type, double i_valueMin, double i_valueMax, therm_obj *i_target);
+		   int i_type, double i_valueMin, double i_valueMax, therm_obj *i_target, bool isramp, double boilerRampRate);
 
 	int h_pump;
 	double pumping;
@@ -565,8 +565,12 @@ public:
 	double valueMin, valueMax;
 	int handleMin, handleMax;
 
-	double boiler_power;
+	double max_boiler_power;
+	double boiler_output_power;
 	double boiler_electrical_power;
+
+	bool ramp;
+	double rampRate;
 
 	virtual void refresh(double dt);
 	virtual void Load(char *line);
