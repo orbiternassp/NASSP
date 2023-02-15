@@ -1012,6 +1012,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	}
 
 
+
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
@@ -3336,22 +3337,22 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 	// Primary coolant loop
 	ecs.PrimECSHeating = - PrimCabinHeatExchanger->power - PrimSuitHeatExchanger->power - PrimSuitCircuitHeatExchanger->power;
 	if (imu.GetHeater()->pumping) 
-		ecs.PrimECSHeating += imu.GetHeater()->boiler_power;
+		ecs.PrimECSHeating += imu.GetHeater()->max_boiler_power;
 	if (bmag1.GetHeater()->pumping)
-		ecs.PrimECSHeating += bmag1.GetHeater()->boiler_power;
+		ecs.PrimECSHeating += bmag1.GetHeater()->max_boiler_power;
 	if (bmag2.GetHeater()->pumping)
-		ecs.PrimECSHeating += bmag2.GetHeater()->boiler_power;
+		ecs.PrimECSHeating += bmag2.GetHeater()->max_boiler_power;
 
 	ecs.PrimECSTestHeating = 0;
 	if (PrimECSTestHeater->pumping)
-		ecs.PrimECSTestHeating += PrimECSTestHeater->boiler_power;
+		ecs.PrimECSTestHeating += PrimECSTestHeater->max_boiler_power;
 
 	// Secondary coolant loop
 	ecs.SecECSHeating = - SecCabinHeatExchanger->power - SecSuitHeatExchanger->power - SecSuitCircuitHeatExchanger->power;
 
 	ecs.SecECSTestHeating = 0;
 	if (SecECSTestHeater->pumping)
-		ecs.SecECSTestHeating += SecECSTestHeater->boiler_power;
+		ecs.SecECSTestHeating += SecECSTestHeater->max_boiler_power;
 
 	ecs.CSMO2HoseConnected = GetCSMO2Hose()->out != NULL;
 }
@@ -3364,12 +3365,12 @@ void Saturn::SetCrewNumber(int number) {
 
 void Saturn::SetPrimECSTestHeaterPowerW(double power) {
 
-	PrimECSTestHeater->boiler_power = power;
+	PrimECSTestHeater->max_boiler_power = power;
 }
 
 void Saturn::SetSecECSTestHeaterPowerW(double power) {
 
-	SecECSTestHeater->boiler_power = power;
+	SecECSTestHeater->max_boiler_power = power;
 }
 
 //
