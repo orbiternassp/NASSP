@@ -3638,6 +3638,12 @@ public:
 	CSMTankPressTransducer FCN2PressureSensor1;
 	CSMTankPressTransducer FCN2PressureSensor2;
 	CSMTankPressTransducer FCN2PressureSensor3;
+	CSMPipeFlowTransducer FCO2FlowSensor1;
+	CSMPipeFlowTransducer FCO2FlowSensor2;
+	CSMPipeFlowTransducer FCO2FlowSensor3;
+	CSMPipeFlowTransducer FCH2FlowSensor1;
+	CSMPipeFlowTransducer FCH2FlowSensor2;
+	CSMPipeFlowTransducer FCH2FlowSensor3;
 protected:
 
 	// CM Optics

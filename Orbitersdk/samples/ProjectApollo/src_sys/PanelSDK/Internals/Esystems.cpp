@@ -366,6 +366,9 @@ void FCell::Reaction(double dt)
 	O2_flowPerSecond = O2_flow / dt;
 	reaction = (H2_flow + O2_flow) / reactant; // % of reaction
 
+	O2_SRC->parent->BoilAllAndSetTemp(Temp);
+	H2_SRC->parent->BoilAllAndSetTemp(Temp);
+	
 	// flow from sources
 	if (H2_SRC->parent->space.composition[SUBSTANCE_H2].mass > 0.0)
 	{
@@ -393,6 +396,8 @@ void FCell::Reaction(double dt)
 	//take reactants from source
 	H2_SRC->parent->space.composition[SUBSTANCE_H2].mass -= H2_flow;
 	O2_SRC->parent->space.composition[SUBSTANCE_O2].mass -= O2_flow;
+
+	
 
 	// flow to output
 	h2o_volume.Void();

@@ -82,8 +82,8 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus &fc, int index)
 	// Various conditions, see Apollo Operations Handbook 2.10.4.2
 	//
 
-	if (fc.H2FlowLBH > 0.161) bad = true;
-	if (fc.O2FlowLBH > 1.276) bad = true;
+	/*if (fc.H2FlowLBH > 0.161) bad = true;
+	if (fc.O2FlowLBH > 1.276) bad = true;*/
 
 	// pH > 9 not simulated at the moment
 

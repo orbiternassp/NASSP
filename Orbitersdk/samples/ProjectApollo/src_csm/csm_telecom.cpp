@@ -2676,23 +2676,17 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 76:		// FC 1 CUR
 							return scale_data(sat->sce.GetVoltage(1, 4), 0.0, 5.0);
 						case 77:		// FC 1 H2 FLOW
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor1.Voltage(), 0, 5.0);
 						case 78:		// FC 2 H2 FLOW
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor2.Voltage(), 0, 5.0);
 						case 79:		// FC 3 H2 FLOW
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor3.Voltage(), 0, 5.0);
 						case 80:		// FC 1 O2 FLOW
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor1.Voltage(), 0, 1.6);
 						case 81:		// FC 2 O2 FLOW
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor2.Voltage(), 0, 1.6);
 						case 82:		// FC 3 O2 FLOW
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor3.Voltage(), 0, 1.6);
 						case 83:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 84:		// FC 2 CUR
