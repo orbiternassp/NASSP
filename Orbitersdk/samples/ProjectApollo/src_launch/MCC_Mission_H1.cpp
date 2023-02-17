@@ -182,10 +182,10 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval2(rtcc->calcParams.TLI + 7.0*3600.0 + 15.0*60.0), 16, MST_H1_TRANSLUNAR8);
 		break;
 	case MST_H1_TRANSLUNAR8: //MCC-1 update to MCC-2 Evaluation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TLI + 11.0*3600.0), 21, MST_H1_TRANSLUNAR9);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TLI + 11.0*3600.0 + 5.0*60.0), 21, MST_H1_TRANSLUNAR9);
 		break;
 	case MST_H1_TRANSLUNAR9: //MCC-2 Evaluation to Block Data 2
-		UpdateMacro(UTP_NONE, PT_NONE, SubStateTime > 5.0*60.0, 20, MST_H1_TRANSLUNAR10);
+		UpdateMacro(UTP_NONE, PT_NONE, true, 20, MST_H1_TRANSLUNAR10);
 		break;
 	case MST_H1_TRANSLUNAR10: //Block Data 2 to MCC-2 update
 		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval2(rtcc->calcParams.TLI + 26.0*3600.0 + 27.0*60.0), 17, MST_H1_TRANSLUNAR11);
