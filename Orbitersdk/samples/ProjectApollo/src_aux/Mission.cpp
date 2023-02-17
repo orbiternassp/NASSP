@@ -109,6 +109,9 @@ namespace mission {
 		iCMtoLMPowerConnectionVersion = 0;
 		EmptySMCG = _V(914.5916, -6.6712, 12.2940); //Includes: empty SM and SLA ring, but no SM RCS
 		bHasRateAidedOptics = false;
+		strCDRName = "CDR";
+		strCMPName = "CMP";
+		strLMPName = "LMP";
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -183,6 +186,17 @@ namespace mission {
 			EmptySMCG = vtemp;
 		}
 		oapiReadItem_bool(hFile, "HasRateAidedOptics", bHasRateAidedOptics);
+		if (oapiReadItem_string(hFile, "CDR", buffer)) {
+			strCDRName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "CMP", buffer))
+		{
+			strCMPName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "LMP", buffer))
+		{
+			strLMPName = buffer;
+		}
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
 	}
@@ -285,5 +299,20 @@ namespace mission {
 	bool Mission::HasRateAidedOptics() const
 	{
 		return bHasRateAidedOptics;
+	}
+
+	const std::string& Mission::GetCDRName() const
+	{
+		return strCDRName;
+	}
+
+	const std::string& Mission::GetCMPName() const
+	{
+		return strCMPName;
+	}
+
+	const std::string& Mission::GetLMPName() const
+	{
+		return strLMPName;
 	}
 }

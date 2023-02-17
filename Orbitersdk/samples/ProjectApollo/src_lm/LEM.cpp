@@ -730,10 +730,19 @@ void LEM::DoFirstTimestep()
 
 	char VName10[256] = "";
 
-	strcpy(VName10, GetName()); strcat(VName10, "-LEVA-CDR");
+	strcpy(VName10, pMission->GetCDRName().c_str());
 	hLEVA[0] = oapiGetVesselByName(VName10);
-	strcpy(VName10, GetName()); strcat(VName10, "-LEVA-LMP");
+	if (hLEVA[0] == NULL) { //This might be a legacy scenario
+		strcpy(VName10, GetName()); strcat(VName10, "-LEVA-CDR");
+		hLEVA[0] = oapiGetVesselByName(VName10);
+	}
+
+	strcpy(VName10, pMission->GetLMPName().c_str());
 	hLEVA[1] = oapiGetVesselByName(VName10);
+	if (hLEVA[1] == NULL) { //This might be a legacy scenario
+		strcpy(VName10, GetName()); strcat(VName10, "-LEVA-LMP");
+		hLEVA[1] = oapiGetVesselByName(VName10);
+	}
 }
 
 void LEM::LoadDefaultSounds()

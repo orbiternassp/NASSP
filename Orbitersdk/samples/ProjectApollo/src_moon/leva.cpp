@@ -101,9 +101,7 @@ void LEVA::init()
 	Astro=true;		
 	isCDR = false;
 	MotherShip=false;
-	EVAName[0]=0;
 	LEMName[0]=0;
-	MSName[0]=0;
 	KEY1 = false;
 	KEY2 = false;
 	KEY3 = false;
@@ -210,24 +208,38 @@ void LEVA::ScanMotherShip()
 	VessCount=oapiGetVesselCount();
 	for ( i = 0 ; i< VessCount ; i++ ) 
 	{
+		char vesselName[256] = "";
 		hMaster=oapiGetVesselByIndex(i);
-		strcpy(EVAName,GetName());
-		oapiGetObjectName(hMaster,LEMName,256);
-		strcpy(MSName,LEMName);
-		if (isCDR)
+		oapiGetObjectName(hMaster, vesselName, 256);
+		if (strcmp(LEMName, vesselName) == 0) {
+			MotherShip = true;
+			i = int(VessCount);
+		}
+	}
+
+	if (MotherShip == false) { //This is probably a legacy scenario
+		char EVAName[256];
+		for (i = 0; i < VessCount; i++)
 		{
-			strcat(LEMName, "-LEVA-CDR");
-		}
-		else
-		{
-			strcat(LEMName, "-LEVA-LMP");
-		}
-		if (strcmp(LEMName, EVAName)==0){
-			MotherShip=true;
-			i=int(VessCount);
-		}
-		else{
-			strcpy(LEMName,"");
+			hMaster = oapiGetVesselByIndex(i);
+			strcpy(EVAName, GetName());
+			oapiGetObjectName(hMaster, LEMName, 256);
+			if (isCDR)
+			{
+				strcat(LEMName, "-LEVA-CDR");
+			}
+			else
+			{
+				strcat(LEMName, "-LEVA-LMP");
+			}
+			if (strcmp(LEMName, EVAName) == 0) {
+				MotherShip = true;
+				i = int(VessCount);
+				oapiGetObjectName(hMaster, LEMName, 256);
+			}
+			else {
+				strcpy(LEMName, "");
+			}
 		}
 	}
 }
@@ -527,6 +539,7 @@ void LEVA::SetEVAStats(LEVASettings &evas)
 {
 	ApolloNo = evas.MissionNo;
 	isCDR = evas.isCDR;
+	strcpy(LEMName, evas.LEMName);
 	StateSet = true;
 }
 
@@ -594,8 +607,9 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 		SLEVAPlayed = true;
 	}
 
-	if (!MotherShip)
+	if (MotherShip == false) {
 		ScanMotherShip();
+	}
 	
 	GetStatus(evaV);
 	oapiGetHeading(GetHandle(),&heading);
@@ -651,22 +665,25 @@ void LEVA::clbkLoadStateEx(FILEHANDLE scn, void *vs)
     char *line;
 	
 	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "STATE", 5)) {
+		if (!strnicmp(line, "LEMNAME", 7)) {
+			sscanf(line + 7, "%s", &LEMName);
+		}
+		else if (!strnicmp(line, "STATE", 5)) {
 			int	s;
 			sscanf(line + 5, "%d", &s);
 			SetMainState(s);
 
 			if (!Astro) {
 				Astro = true;
-				SetEngineLevel(ENGINE_HOVER,1);
+				SetEngineLevel(ENGINE_HOVER, 1);
 			}
 		}
-		else if (!strnicmp (line, "MISSIONNO", 9)) {
+		else if (!strnicmp(line, "MISSIONNO", 9)) {
 			sscanf(line + 9, "%d", &ApolloNo);
 		}
 		else {
 			ParseScenarioLineEx(line, vs);
-        }
+		}
     }
 }
 
@@ -724,13 +741,15 @@ void LEVA::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL2::clbkSaveState(scn);
 
+	oapiWriteScenario_string(scn, "LEMNAME", LEMName);
+
 	int s = GetMainState();
 	if (s) {
 		oapiWriteScenario_int (scn, "STATE", s);
 	}
 
 	if (ApolloNo != 0) {
-		oapiWriteScenario_int (scn, "MISSIONNO", ApolloNo);
+		oapiWriteScenario_int(scn, "MISSIONNO", ApolloNo);
 	}
 }
 

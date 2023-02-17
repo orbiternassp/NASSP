@@ -30,6 +30,7 @@ typedef struct {
 
 	int MissionNo;			///< Apollo mission number.
 	bool isCDR;				///< Flag for CDR vs. LMP.
+	char LEMName[256];		///< LM Name
 
 } LEVASettings;
 
@@ -120,9 +121,7 @@ protected:
 	bool Astro;						
 	bool MotherShip;
 	bool isCDR;
-	char EVAName[256];
 	char LEMName[256];
-	char MSName[256];
 	bool KEY1;
 	bool KEY2;
 	bool KEY3;

@@ -93,15 +93,14 @@ void LEM::ToggleEVA(bool isCDR)
 		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
 
 		char VName[256]="";
-		strcpy (VName, GetName());
 		if (isCDR)
 		{
-			strcat(VName, "-LEVA-CDR");
+			strcpy(VName, pMission->GetCDRName().c_str());
 			SwitchFocusToLeva = 10;
 		}
 		else
 		{
-			strcat(VName, "-LEVA-LMP");
+			strcpy(VName, pMission->GetLMPName().c_str());
 			SwitchFocusToLeva = -10;
 		}
 		hLEVA[i] = oapiCreateVessel(VName,"ProjectApollo/LEVA",vs1);
@@ -112,6 +111,7 @@ void LEM::ToggleEVA(bool isCDR)
 
 			evas.MissionNo = ApolloNo;
 			evas.isCDR = isCDR;
+			strcpy(evas.LEMName, GetName());
 			leva->SetEVAStats(evas);
 		}
 	}
