@@ -1757,11 +1757,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_OPT_SHAFTDISPLAY:
-		optics.PaintShaftDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		optics.PaintShaftDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_OPT_TRUNDISPLAY:
-		optics.PaintTrunnionDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		optics.PaintTrunnionDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_ALTIMETER:

@@ -4118,7 +4118,7 @@ protected:
 	void FirePitchControlMotor();
 	void MoveTHC(bool dir);
 
-	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs, int TexMul = 1);
+	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs, int xTexMul = 1);
 
 	void ClearPropellants();
 	void ClearThrusters();

@@ -270,9 +270,9 @@ public:
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
 	void ResetKeyDown();
-	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights, int TexMul = 1);
-	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0, int TexMul = 1);
-	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0, int TexMul = 1);
+	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights, int xTexMul = 1);
+	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0, int xTexMul = 1);
+	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0, int xTexMul = 1);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 
 	void KeyClick();

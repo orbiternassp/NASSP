@@ -466,7 +466,7 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 
 	DSKYLightBlt(surf, lights, 52*TexMul, 0,  TempLit(), xOffset, yOffset, TexMul);
 	DSKYLightBlt(surf, lights, 52*TexMul, 25*TexMul, GimbalLockLit(), xOffset, yOffset, TexMul);
-	DSKYLightBlt(surf, lights, 52*TexMul, 49, ProgLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 49*TexMul, ProgLit(), xOffset, yOffset, TexMul);
 	DSKYLightBlt(surf, lights, 52*TexMul, 73*TexMul, RestartLit(), xOffset, yOffset, TexMul);
 	DSKYLightBlt(surf, lights, 52*TexMul, 97*TexMul, TrackerLit(), xOffset, yOffset, TexMul);
 
