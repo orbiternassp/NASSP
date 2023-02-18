@@ -193,19 +193,16 @@ void SaturnCryoQuantityMeter::Init(char *sub, int i, SURFHANDLE surf, SwitchRow 
 
 double SaturnCryoQuantityMeter::QueryValue()
 {
-	TankQuantities q;
-	Sat->GetTankQuantities(q);
-
 	if (!strcmp("H2", Substance)) {
-		if (Index == 1) 
-			return q.H2Tank1Quantity;
+		if (Index == 1)
+			return Sat->H2Tank1QuantitySensor.Voltage();
 		else
-			return q.H2Tank2Quantity;
+			return Sat->H2Tank2QuantitySensor.Voltage();
 	} else {
-		if (Index == 1) 
-			return q.O2Tank1Quantity;
+		if (Index == 1)
+			return Sat->O2Tank1QuantitySensor.Voltage();
 		else
-			return q.O2Tank2Quantity;
+			return Sat->O2Tank2QuantitySensor.Voltage();
 	}
 }
 
@@ -213,12 +210,12 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (!strcmp("H2", Substance)) {
 		if (Index == 1) 
-			oapiBlt(drawSurface, NeedleSurface,  172, (130 - (int)(v * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface,  172, (130 - (int)(v * 20.8)), 0, 0, 10, 10, SURF_PREDEF_CK);
 		else
-			oapiBlt(drawSurface, NeedleSurface,  225, (130 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface,  225, (130 - (int)(v * 20.8)), 10, 0, 10, 10, SURF_PREDEF_CK);
 	} else {
 		if (Index == 1) 
-			oapiBlt(drawSurface, NeedleSurface,  258, (130 - (int)(v * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface,  258, (130 - (int)(v * 20.8)), 0, 0, 10, 10, SURF_PREDEF_CK);
 		else {
 			//
 			// Apollo 13 O2 tank 2 quantity display failed offscale high around 46:45.
@@ -234,7 +231,7 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 					v += (1.05 - value) * ((Sat->GetMissionTime() - O2FAILURETIME) / 5.0);
 				}
 			}
-			oapiBlt(drawSurface, NeedleSurface,  311, (130 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface,  311, (130 - (int)(v * 20.8)), 10, 0, 10, 10, SURF_PREDEF_CK);
 		}
 	}
 }

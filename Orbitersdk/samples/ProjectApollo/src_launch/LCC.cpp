@@ -94,7 +94,8 @@ void LCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!_strnicmp(line, "PAD_NAME", 8)) {
-			sscanf_s(line + 8, "%s", PadName, sizeof(PadName));
+			static_assert(sizeof(PadName) == 256, "PadName size changed, update sscanf format accordingly");
+			sscanf(line + 8, "%255s", PadName);
 		}
 		else ParseScenarioLineEx(line, status);
 	}
