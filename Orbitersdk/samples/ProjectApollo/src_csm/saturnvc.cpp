@@ -1709,7 +1709,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
 		skp->SetPen(g_Param.pen[2]);
 
-		skp->Polyline(ems.ScribePntArray, ems.ScribePntCnt);
+		skp->Polyline(ems.ScribePntArrayVC, ems.ScribePntCnt);
 
 		oapiReleaseSketchpad(skp);
 
