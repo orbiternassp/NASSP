@@ -2682,11 +2682,11 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 79:		// FC 3 H2 FLOW
 							return scale_data(sat->FCH2FlowSensor3.Voltage(), 0, 5.0);
 						case 80:		// FC 1 O2 FLOW
-							return scale_data(sat->FCO2FlowSensor1.Voltage(), 0, 1.6);
+							return scale_data(sat->FCO2FlowSensor1.Voltage(), 0, 5.0);
 						case 81:		// FC 2 O2 FLOW
-							return scale_data(sat->FCO2FlowSensor2.Voltage(), 0, 1.6);
+							return scale_data(sat->FCO2FlowSensor2.Voltage(), 0, 5.0);
 						case 82:		// FC 3 O2 FLOW
-							return scale_data(sat->FCO2FlowSensor3.Voltage(), 0, 1.6);
+							return scale_data(sat->FCO2FlowSensor3.Voltage(), 0, 5.0);
 						case 83:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 84:		// FC 2 CUR
