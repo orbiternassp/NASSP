@@ -4324,7 +4324,7 @@ void Saturn::StopMasterAlarm()
 	cws.SetMasterAlarm(false);
 }
 
-void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs)
+void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs, int TexMul)
 
 {
 	xoffs *= TexMul;
