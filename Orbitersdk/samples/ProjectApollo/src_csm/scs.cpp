@@ -4847,6 +4847,8 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ScribePntCnt = 1;
 	ScribePntArray[0].x = 40;
 	ScribePntArray[0].y = 1;
+	ScribePntArrayVC[0].x = 40*TexMul;
+	ScribePntArrayVC[0].y = 1*TexMul;
 
 	//Initial position of RSI Triangle
 	RSITriangle[0].x = EMS_RSI_CENTER_X + (int)(cos(RSIRotation)*28);
@@ -5117,6 +5119,8 @@ void EMS::TimeStep(double simdt) {
 		}
 		ScribePntArray[ScribePntCnt-1].y = GScribe;
 		ScribePntArray[ScribePntCnt-1].x = SlewScribe;
+		ScribePntArrayVC[ScribePntCnt-1].y = GScribe*TexMul;
+		ScribePntArrayVC[ScribePntCnt-1].x = SlewScribe*TexMul;
 
 		//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 		//sprintf(oapiDebugString(), "ScrollPosition %f", ScrollPosition);
@@ -5438,6 +5442,8 @@ void EMS::LoadState(FILEHANDLE scn) {
 			sscanf(line + 14, "%i %li %li", &i, &j, &k);
 			ScribePntArray[i].x = j;
 			ScribePntArray[i].y = k;
+			ScribePntArrayVC[i].x = j*TexMul;
+			ScribePntArrayVC[i].y = k*TexMul;
 		}
 	}
 }

@@ -835,6 +835,7 @@ public:
 
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	oapi::IVECTOR2 ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
+	oapi::IVECTOR2 ScribePntArrayVC[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
 	oapi::IVECTOR2 RSITriangle[3];
 	void SetRSIDeltaRotation(double dangle);
 	int ScribePntCnt;
