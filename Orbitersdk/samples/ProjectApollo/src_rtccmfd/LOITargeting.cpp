@@ -248,7 +248,7 @@ namespace rtcc
 		eta_MX = OrbMech::sign(dotp(crossp(U_PC, NU_MX), U_H))*acos(dotp(U_PC, NU_MX));
 		eta_MN = OrbMech::sign(dotp(crossp(U_PC, NU_MN), U_H))*acos(dotp(U_PC, NU_MN));
 		eta_DS = out.data[7].display.eta_N;
-		if (opt.psi_DS = opt.psi_mn && opt.psi_DS == opt.psi_mx)
+		if (opt.psi_DS == opt.psi_mn && opt.psi_DS == opt.psi_mx)
 		{
 			eta_MX = eta_MN = eta_DS;
 		}
