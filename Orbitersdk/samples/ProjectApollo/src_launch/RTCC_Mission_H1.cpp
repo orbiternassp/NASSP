@@ -515,11 +515,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		char buffer[1000];
 		REFSMMATOpt refsopt;
 		MATRIX3 REFSMMAT;
-		double GETbase;
 
-		GETbase = CalcGETBase();
-
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATopt = 6;
 		refsopt.REFSMMATTime = 40547.30729122223; //183:00:30 GET of nominal mission
 
@@ -768,7 +764,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		VECTOR3 dV_LVLH, dv;
 		EphemerisData sv;
 		double GETbase, P30TIG, tig, CSMmass, LMmass;
-		int engine, loisol;
+		int engine;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -789,46 +785,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		tig = GETfromGMT(PZMCCXFR.sv_man_bef[0].GMT);
 		dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
 
-		//DV smaller than 3 ft/s?
+		//DV smaller than 3 ft/s? This is a simplified logic. The 3 ft/s check should be for MCC-4 and even if it is larger than that MCC-3 might not have been done
 		if (length(dv) < 3.0*0.3048)
 		{
-			double ApsidRot, h_peri, h_node;
-
-			PMMLRBTI(sv);
-
-			//Choose solution with the lowest LOI-1 DV
-			if (PZLRBTI.sol[6].DVLOI1 > PZLRBTI.sol[7].DVLOI1)
-			{
-				loisol = 7;
-			}
-			else
-			{
-				loisol = 6;
-			}
-
-			h_peri = PZLRBTI.h_pc;
-			h_node = PZLRBTI.sol[loisol].H_ND;
-			ApsidRot = PZLRBTI.sol[loisol].f_ND_E - PZLRBTI.sol[loisol].f_ND_H;
-			while (ApsidRot > 180.0)
-			{
-				ApsidRot -= 360.0;
-			}
-			while (ApsidRot < -180.0)
-			{
-				ApsidRot += 360.0;
-			}
-
-			//Maneuver execution criteria
-			if (h_peri > 50.0 && h_peri < 70.0)
-			{
-				if (h_node > 50.0 && h_node < 75.0)
-				{
-					if (abs(ApsidRot) < 45.0)
-					{
-						scrubbed = true;
-					}
-				}
-			}
+			scrubbed = true;
 		}
 
 		if (scrubbed)
