@@ -257,7 +257,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 31, MST_H1_LUNAR_ORBIT_LOI_DAY_3);
 		break;
 	case MST_H1_LUNAR_ORBIT_LOI_DAY_3: //TEI-5 update to H-1 landmark tracking update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 3 && MoonRevTime > 50.0*60.0, 42, MST_H1_LUNAR_ORBIT_LOI_DAY_4);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 3 && MoonRevTime > 45.0*60.0, 42, MST_H1_LUNAR_ORBIT_LOI_DAY_4);
 		break;
 	case MST_H1_LUNAR_ORBIT_LOI_DAY_4: //H-1 landmark tracking update to TEI-11 update
 		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, MoonRev >= 4 && MoonRevTime > 1.0*3600.0 + 20.0*60.0, 61, MST_H1_LUNAR_ORBIT_LOI_DAY_5);
