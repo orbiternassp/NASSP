@@ -51,7 +51,7 @@ public:
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
 	void WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b);
-	void InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad *ptaht, h_HeatLoad *psaht);
+	void InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad *ptaht, h_HeatLoad *psaht, h_HeatLoad *cduht);
 
 	bool IsCaged();
 	bool IsPowered();
@@ -145,6 +145,7 @@ protected:
 	h_HeatLoad *IMUHeat;
 	h_HeatLoad *PTAHeat;
 	h_HeatLoad *PSAHeat;
+	h_HeatLoad* CDUHeat;
 
 	GuardedToggleSwitch *PowerSwitch;
 
