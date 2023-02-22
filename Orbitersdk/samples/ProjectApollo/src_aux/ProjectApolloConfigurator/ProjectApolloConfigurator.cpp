@@ -700,24 +700,3 @@ DLLCLBK void opcDLLExit (HINSTANCE hDLL)
 	oapiUnregisterLaunchpadItem (gParams.item);
 	delete gParams.item;
 }
-
-// 0 = 4:3
-// 1 = 16:10
-// 2 = 16:9
-static int renderViewportIsWideScreen = 0;
-
-DLLCLBK void opcOpenRenderViewport(HWND renderWnd, DWORD width, DWORD height, BOOL fullscreen)
-
-{
-	if (((double) width) / ((double) height) < 1.47) 
-		renderViewportIsWideScreen = 0;
-	else if (((double) width) / ((double) height) < 1.69) 
-		renderViewportIsWideScreen = 1;
-	else
-		renderViewportIsWideScreen = 2;
-}
-
-DLLCLBK int pacRenderViewportIsWideScreen() 
-{
-	return renderViewportIsWideScreen;
-}
