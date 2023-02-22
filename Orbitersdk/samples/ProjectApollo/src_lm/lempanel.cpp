@@ -46,7 +46,7 @@
 
 static GDIParams g_Param;
 
-void InitGParam(HINSTANCE hModule)
+DLLCLBK void InitModule(HINSTANCE hModule)
 
 {
 	g_Param.hDLL = hModule;
@@ -71,7 +71,7 @@ void InitGParam(HINSTANCE hModule)
 	g_Param.col[4] = oapiGetColour(255,0,255);
 }
 
-void FreeGParam()
+DLLCLBK void ExitModule()
 
 {
 	int i;
