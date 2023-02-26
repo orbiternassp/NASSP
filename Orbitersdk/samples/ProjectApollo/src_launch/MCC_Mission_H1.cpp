@@ -280,13 +280,13 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11LMARKTRKPAD, MoonRev >= 12 && MoonRevTime > 25.0*60.0, 62, MST_H1_LUNAR_ORBIT_PDI_DAY_4);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_4: //CSM SV Update to LM Activation Data
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 5, MST_H1_LUNAR_ORBIT_PDI_DAY_7);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 5, MST_H1_LUNAR_ORBIT_PDI_DAY_7);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_7: //LM Activation Data to LGC activation update
 		UpdateMacro(UTP_PADONLY, PT_LMACTDATA, true, 9, MST_H1_LUNAR_ORBIT_PDI_DAY_9);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to AGS activation update
-		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 35, MST_H1_LUNAR_ORBIT_PDI_DAY_10);
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 35, MST_H1_LUNAR_ORBIT_PDI_DAY_10);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_10: //AGS activation update to Separation maneuver update
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11AGSACT, SubStateTime > 3.0*60.0, 36, MST_H1_LUNAR_ORBIT_PDI_DAY_11);
