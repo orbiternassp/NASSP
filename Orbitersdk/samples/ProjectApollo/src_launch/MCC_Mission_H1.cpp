@@ -283,7 +283,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 5, MST_H1_LUNAR_ORBIT_PDI_DAY_7);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_7: //LM Activation Data to LGC activation update
-		UpdateMacro(UTP_PADONLY, PT_LMACTDATA, SubStateTime > 5.0*60.0, 9, MST_H1_LUNAR_ORBIT_PDI_DAY_9);
+		UpdateMacro(UTP_PADONLY, PT_LMACTDATA, true, 9, MST_H1_LUNAR_ORBIT_PDI_DAY_9);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to AGS activation update
 		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 35, MST_H1_LUNAR_ORBIT_PDI_DAY_10);
