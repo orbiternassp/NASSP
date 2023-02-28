@@ -850,74 +850,90 @@ void h_Pipe::refresh(double dt) {
 
 	//volume flow bases on press difference
 	flow = 0;
-	if ((!in) || (!out)) return;
 
-	if (out->open && in->open) {
+	//Check for null pointers
+	if (!in || !out) {
+		return;
+	}
 
-		double in_p = in->GetPress();
-		double out_p = out->GetPress();
+	//check for closed valves
+	if (!out->open || !in->open) {
+		return;
+	}
 
-		if (type == 1) {	  //PREG
-			in_p = (in_p > P_max ? P_max : in_p);
+	//get inlet and out pressurtes
+	double in_p = in->GetPress();
+	double out_p = out->GetPress();
 
-		} else if (type == 2) { //BURST
-			if (in_p - out_p > P_max) open = 1;
-			if (in_p - out_p < P_min) open = 0;
-			if (open == 0) return;
-
-		} else if (type == 3) {	//PVALVE
-			if (in_p - P_max > out_p) { //one way flow;
-				double vol = (in_p - P_max - out_p) * dt * in->size / 1000.0;		//size= Liters/Pa/second
-				if (out->parent->space.Volume > vol) {
-					out->parent->space.Volume -= vol;
-					in->parent->space.Volume += vol;
-				}
-			}
-			if ((two_ways) && (out_p - P_max > in_p) &&
-				(out->parent->space.Volume > out->parent->Original_volume)) {
-				double vol = (out_p - P_max - in_p) * dt * in->size / 1000.0;		//size= Liters/Pa/second
-				if (in->parent->space.Volume > vol) {
-					out->parent->space.Volume += vol;
-					in->parent->space.Volume -= vol;
-				}
-			}
+	switch (type) {
+	case 1:
+		//PREG
+		in_p = (in_p > P_max ? P_max : in_p);
+		break;
+	case 2:
+		//BURST
+		if (in_p - out_p > P_max) {
+			open = 1;
+		}
+		if (in_p - out_p < P_min) {
+			open = 0;
 			return;
 		}
-		if (in_p > out_p) {
-			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
-			flow = v.GetMass() / dt; 
-			out->Flow(v);
+	case 3:
+		//PVALVE
+		if (in_p - P_max > out_p) { //one way flow;
+			double vol = (in_p - P_max - out_p) * dt * in->size / 1000.0;		//size= Liters/Pa/second
+			if (out->parent->space.Volume > vol) {
+				out->parent->space.Volume -= vol;
+				in->parent->space.Volume += vol;
+			}
 		}
-
-		if ((two_ways) && (out_p > in->GetPress())) {
-			h_volume v = out->GetFlow(dt * (out_p - in_p), flowMax * dt);
-			flow -= v.GetMass() / dt; 
-			in->Flow(v);
+		if ((two_ways) && (out_p - P_max > in_p) &&
+			(out->parent->space.Volume > out->parent->Original_volume)) {
+			double vol = (out_p - P_max - in_p) * dt * in->size / 1000.0;		//size= Liters/Pa/second
+			if (in->parent->space.Volume > vol) {
+				out->parent->space.Volume += vol;
+				in->parent->space.Volume -= vol;
+			}
 		}
-
-		//heat transfer is directly prop with deltaT.
-		//all other conductive heat props are ignored.. ie. time for actual
-		//"heating" is not accurate
-
-		double in_t = in->GetTemp();
-		double out_t = out->GetTemp();
-		double trQ = (in_t - out_t) * dt;
-
-		// conductive heat transfer should depend on valve-size
-		// as a "quick hack" it's proportional to the minimum size,
-		// but this has to be improved
-
-		double minSize = __min(in->size, out->size);
-		trQ = trQ * minSize;
-
-		if (in->parent->space.Q < trQ)
-			trQ = in->parent->space.Q / 10.0;
-		if (out->parent->space.Q < -trQ)
-			trQ = -out->parent->space.Q / 10.0;
-
-		in->thermic(-trQ);
-		out->thermic(trQ);
+		return;
 	}
+
+	if (in_p > out_p) {
+		h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
+		flow = v.GetMass() / dt;
+		out->Flow(v);
+	}
+
+	if ((two_ways) && (out_p > in->GetPress())) {
+		h_volume v = out->GetFlow(dt * (out_p - in_p), flowMax * dt);
+		flow -= v.GetMass() / dt;
+		in->Flow(v);
+	}
+
+	//heat transfer is directly prop with deltaT.
+	//all other conductive heat props are ignored.. ie. time for actual
+	//"heating" is not accurate
+
+	double in_t = in->GetTemp();
+	double out_t = out->GetTemp();
+	double trQ = (in_t - out_t) * dt;
+
+	// conductive heat transfer should depend on valve-size
+	// as a "quick hack" it's proportional to the minimum size,
+	// but this has to be improved
+
+	double minSize = __min(in->size, out->size);
+	trQ = trQ * minSize;
+
+	if (in->parent->space.Q < trQ)
+		trQ = in->parent->space.Q / 10.0;
+	if (out->parent->space.Q < -trQ)
+		trQ = -out->parent->space.Q / 10.0;
+
+	in->thermic(-trQ);
+	out->thermic(trQ);
+
 }
 
 void h_Pipe::Save(FILEHANDLE scn) {
