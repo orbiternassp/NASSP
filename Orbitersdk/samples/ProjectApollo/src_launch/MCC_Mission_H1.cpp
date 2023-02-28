@@ -293,19 +293,19 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11AGSACT, SubStateTime > 5.0*60.0, 36, MST_H1_LUNAR_ORBIT_PDI_DAY_11);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_11: //Separation maneuver update to DOI update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.SEP - 25.0*60.0), 37, MST_H1_LUNAR_ORBIT_PDI_DAY_12);
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(rtcc->calcParams.SEP - 25.0*60.0), 37, MST_H1_LUNAR_ORBIT_PDI_DAY_12);
 		break;
-	case MST_H1_LUNAR_ORBIT_PDI_DAY_12: //DOI update to PDI PAD
+	case MST_H1_LUNAR_ORBIT_PDI_DAY_12: //DOI update to No PDI+12 PAD
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 38, MST_H1_LUNAR_ORBIT_PDI_DAY_13);
 		break;
-	case MST_H1_LUNAR_ORBIT_PDI_DAY_13: //PDI PAD to PDI Abort PAD
-		UpdateMacro(UTP_PADONLY, PT_AP11PDIPAD, SubStateTime > 3.0*60.0, 70, MST_H1_LUNAR_ORBIT_PDI_DAY_14);
+	case MST_H1_LUNAR_ORBIT_PDI_DAY_13: //No PDI+12 PAD to PDI PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 72, MST_H1_LUNAR_ORBIT_PDI_DAY_14);
 		break;
-	case MST_H1_LUNAR_ORBIT_PDI_DAY_14: //PDI Abort PAD to No PDI+12 PAD
-		UpdateMacro(UTP_PADONLY, PT_AP12PDIABORTPAD, SubStateTime > 3.0*60.0, 71, MST_H1_LUNAR_ORBIT_PDI_DAY_15);
+	case MST_H1_LUNAR_ORBIT_PDI_DAY_14: //PDI PAD to PDI Abort PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11PDIPAD, SubStateTime > 3.0*60.0, 70, MST_H1_LUNAR_ORBIT_PDI_DAY_15);
 		break;
-	case MST_H1_LUNAR_ORBIT_PDI_DAY_15: //No PDI+12 PAD to Lunar Surface PAD
-		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 72, MST_H1_LUNAR_ORBIT_PRE_DOI_1);
+	case MST_H1_LUNAR_ORBIT_PDI_DAY_15: //PDI Abort PAD to Lunar Surface PAD
+		UpdateMacro(UTP_PADONLY, PT_AP12PDIABORTPAD, SubStateTime > 3.0*60.0, 71, MST_H1_LUNAR_ORBIT_PRE_DOI_1);
 		break;
 	case MST_H1_LUNAR_ORBIT_PRE_DOI_1: //Lunar Surface PAD to P22 Acquistion time
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP12LUNSURFPAD, SubStateTime > 3.0*60.0, 73, MST_H1_LUNAR_ORBIT_PRE_DOI_2);
@@ -328,7 +328,7 @@ void MCC::MissionSequence_H1()
 	case MST_H1_LUNAR_ORBIT_PRE_LANDING_1: //PDI Evaluation to landing confirmation or PDI Recycle
 		UpdateMacro(UTP_NONE, PT_NONE, rtcc->calcParams.tgt->GroundContact(), 78, MST_H1_LUNAR_ORBIT_POST_LANDING_1, scrubbed, SubStateTime > 3.0*60.0, MST_H1_LUNAR_ORBIT_NO_PDI);
 		break;
-	case MST_H1_LUNAR_ORBIT_NO_PDI: //PDI Recycle to PDI PAD
+	case MST_H1_LUNAR_ORBIT_NO_PDI: //PDI Recycle to No PDI+12 PAD
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11AGSACT, SubStateTime > 3.0*60.0, 170, MST_H1_LUNAR_ORBIT_PDI_DAY_13);
 		break;
 	case MST_H1_LUNAR_ORBIT_POST_LANDING_1: //Landing confirmation to T1
