@@ -640,8 +640,8 @@ int h_Valve::Flow(h_volume block) { //valves are simply sockets, forward this to
 double h_Valve::RK4FlowSolver(const double dP, const double size, const double dt)
 {
 	RK4IntegrationScratch[0] = size * dP * dt;
-	RK4IntegrationScratch[1] = size * (dP - RK4IntegrationScratch[0] / size / 2) * dt / 2;
-	RK4IntegrationScratch[2] = size * (dP - RK4IntegrationScratch[1] / size / 2) * dt / 2;
+	RK4IntegrationScratch[1] = size * (dP - RK4IntegrationScratch[0] / size / 2) * dt;
+	RK4IntegrationScratch[2] = size * (dP - RK4IntegrationScratch[1] / size / 2) * dt;
 	RK4IntegrationScratch[3] = size * (dP - RK4IntegrationScratch[2] / size) * dt;
 
 	return (RK4IntegrationScratch[0] + 2 * RK4IntegrationScratch[1] + 2 * RK4IntegrationScratch[2] + RK4IntegrationScratch[3]) / 6;
@@ -1021,7 +1021,7 @@ h_Radiator::~h_Radiator() {
 
 void h_Radiator::refresh(double dt) 
 {
-	Qr = rad * size * 5.67e-8 * dt * pow(Temp - 2.7, 4); //Stefan–Boltzmann law
+	Qr = rad * size * 5.67e-8 * dt * pow(Temp - 2.7, 4); //StefanÂ–Boltzmann law
 	Qc = rad * (100 * size * (Temp - parent->Vessel->GetAtmTemperature()))*(parent->Vessel->GetAtmDensity() / 1.225)*dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
 	
 	//if (!strcmp(name, "ECSRADIATOR1"))
