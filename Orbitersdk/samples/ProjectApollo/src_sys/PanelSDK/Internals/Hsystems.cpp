@@ -36,13 +36,11 @@
 
 
 h_object::h_object()
-
 {
 	next=NULL;
 }
 
 void ship_object::refresh(double dt)
-
 {
 }
 
@@ -594,6 +592,10 @@ h_Valve::h_Valve(char *i_name, int i_open,int i_ct,float i_size,h_Tank *i_parent
 	size = i_size;
 	h_open = 0;
 	pz = 0;
+	RK4IntegrationScratch[0] = 0;
+	RK4IntegrationScratch[1] = 0;
+	RK4IntegrationScratch[2] = 0;
+	RK4IntegrationScratch[3] = 0;
 }
 
 void h_Valve::Set(int i_open,int i_ct,float i_size,h_Tank *i_parent) {
@@ -635,10 +637,20 @@ int h_Valve::Flow(h_volume block) { //valves are simply sockets, forward this to
 		return 0;//unable to put block
 }
 
-h_volume h_Valve::GetFlow(double dPdT, double maxMass) {
+double h_Valve::RK4FlowSolver(const double dP, const double size, const double dt)
+{
+	RK4IntegrationScratch[0] = size * dP * dt;
+	RK4IntegrationScratch[1] = size * (dP - RK4IntegrationScratch[0] / size / 2) * dt / 2;
+	RK4IntegrationScratch[2] = size * (dP - RK4IntegrationScratch[1] / size / 2) * dt / 2;
+	RK4IntegrationScratch[3] = size * (dP - RK4IntegrationScratch[2] / size) * dt;
 
-	double vol = dPdT * size / 1000.0;		//size= Liters/Pa/second
+	return (RK4IntegrationScratch[0] + 2 * RK4IntegrationScratch[1] + 2 * RK4IntegrationScratch[2] + RK4IntegrationScratch[3]) / 6;
+}
 
+h_volume h_Valve::GetFlow(double dP, double dT, double maxMass) {
+
+	double vol = RK4FlowSolver(dP, this->size/1000, dT);
+	
 	if (!open) vol = 0; //no flow obviously
 	return parent->GetFlow(vol, maxMass);
 }
@@ -900,13 +912,13 @@ void h_Pipe::refresh(double dt) {
 	}
 
 	if (in_p > out_p) {
-		h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
+		h_volume v = in->GetFlow(in_p - out_p, dt, flowMax * dt);
 		flow = v.GetMass() / dt;
 		out->Flow(v);
 	}
 
 	if ((two_ways) && (out_p > in->GetPress())) {
-		h_volume v = out->GetFlow(dt * (out_p - in_p), flowMax * dt);
+		h_volume v = out->GetFlow(out_p - in_p, dt, flowMax * dt);
 		flow -= v.GetMass() / dt;
 		in->Flow(v);
 	}
@@ -1235,12 +1247,12 @@ void h_MixingPipe::refresh(double dt) {
 		double out_p = out->GetPress();
 
 		if (in1_p > out_p) {
-			h_volume v = in1->GetFlow(ratio * dt * (in1_p - out_p));
+			h_volume v = in1->GetFlow((in1_p - out_p) * ratio,  dt);
 			out->Flow(v);
 		}
 
 		if (in2_p > out_p) {
-			h_volume v = in2->GetFlow((1.0 - ratio) * dt * (in2_p - out_p));
+			h_volume v = in2->GetFlow((in2_p - out_p) * (1.0 - ratio),  dt);
 			out->Flow(v);
 		}
 	}

@@ -1449,7 +1449,7 @@ void AtmRegen::refresh(double dt) {
 	if (delta_p < 0)
 		delta_p = 0;
 
-	h_volume fanned = in->GetFlow(dt * delta_p);
+	h_volume fanned = in->GetFlow(delta_p, dt);
 	co2removalrate = fanned.composition[SUBSTANCE_CO2].mass / dt;
 
 	if (co2removalrate <= 0.0356) {
@@ -1641,7 +1641,7 @@ void Pump::refresh(double dt)
 	if (delta_p < 0)
 		delta_p = 0;
 
-	h_volume fanned = in->GetFlow(dt * delta_p);
+	h_volume fanned = in->GetFlow(delta_p, dt);
 	flow = fanned.GetMass() / dt;
 	out->Flow(fanned);
 }

@@ -166,10 +166,14 @@ public:
 	double GetTemp();
 	void thermic(double _en);
 	int Flow(h_volume block);//block of substance flowing INTO  the valve
-	h_volume GetFlow(double dPdT, double maxMass = 0);//deltaP * deltaT gives us flow rate OUTOF(in volume)
+	h_volume GetFlow(double dP, double dT, double maxMass = 0);//deltaP * deltaT gives us flow rate OUTOF(in volume)
 	virtual void refresh(double dt);	//for open/close updating
 	virtual void Save(FILEHANDLE scn);
 	virtual void* GetComponent(char *component_name);
+protected:
+	double RK4FlowSolver(const double dP, const double size, const double dt);
+private:
+	double RK4IntegrationScratch[4];
 };
 
 class h_Tank : public h_object, public therm_obj {	//tanks is just a basic receptacle of liquid or gas..
