@@ -183,6 +183,7 @@
 #define PT_AP12LUNSURFPAD	33
 #define PT_LMP22ACQPAD      34
 #define PT_AP12LMASCPAD     35
+#define PT_AP12SEPPAD		36
 #define PT_NONE				99
 #define PT_GENERIC			100
 

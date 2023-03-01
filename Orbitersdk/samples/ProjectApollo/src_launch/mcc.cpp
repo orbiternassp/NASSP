@@ -1881,6 +1881,14 @@ void MCC::SaveState(FILEHANDLE scn) {
 		SAVE_DOUBLE("MCC_AP12LMASCPAD_LM_WT", form->LMWeight);
 		SAVE_DOUBLE("MCC_AP12LMASCPAD_CSM_WT", form->CSMWeight);
 		}
+		else if (padNumber == PT_AP12SEPPAD)
+		{
+			AP12SEPPAD *form = (AP12SEPPAD*)padForm;
+
+			SAVE_DOUBLE("MCC_AP12SEPPAD_t_Undock", form->t_Undock);
+			SAVE_V3("MCC_AP12SEPPAD_Att_Undock", form->Att_Undock);
+			SAVE_DOUBLE("MCC_AP12SEPPAD_t_Separation", form->t_Separation);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2459,6 +2467,14 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("MCC_AP12LMASCPAD_DEDA231", form->DEDA465);
 		LOAD_DOUBLE("MCC_AP12LMASCPAD_LM_WT", form->LMWeight);
 		LOAD_DOUBLE("MCC_AP12LMASCPAD_CSM_WT", form->CSMWeight);
+		}
+		else if (padNumber == PT_AP12SEPPAD)
+		{
+			AP12SEPPAD *form = (AP12SEPPAD*)padForm;
+
+			LOAD_DOUBLE("MCC_AP12SEPPAD_t_Undock", form->t_Undock);
+			LOAD_V3("MCC_AP12SEPPAD_Att_Undock", form->Att_Undock);
+			LOAD_DOUBLE("MCC_AP12SEPPAD_t_Separation", form->t_Separation);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -3332,6 +3348,21 @@ void MCC::drawPad(bool writetofile){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP12SEPPAD:
+	{
+		AP12SEPPAD *form = (AP12SEPPAD*)padForm;
+
+		int hh[2], mm[2];
+		double ss[2];
+
+		OrbMech::SStoHHMMSS(form->t_Undock, hh[0], mm[0], ss[0]);
+		OrbMech::SStoHHMMSS(form->t_Separation, hh[1], mm[1], ss[1]);
+
+		sprintf(buffer, "Undocking: %d:%d:%.0lf\nAttitude: %03.0f %03.0f %03.0f\nSeparation: %d:%d:%.0lf", hh[0], mm[0], ss[0], form->Att_Undock.x, form->Att_Undock.y, form->Att_Undock.z, hh[1], mm[1], ss[1]);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3482,6 +3513,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP12LMASCPAD: // AP12LMASCPAD
 		padForm = calloc(1, sizeof(AP12LMASCPAD));
+		break;
+	case PT_AP12SEPPAD: // AP12SEPPAD
+		padForm = calloc(1, sizeof(AP12SEPPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

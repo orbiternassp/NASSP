@@ -529,6 +529,14 @@ struct AP12LMASCPAD
 	char remarks[128];
 };
 
+//APOLLO 12 SEPARATION PAD
+struct AP12SEPPAD
+{
+	double t_Undock;
+	VECTOR3 Att_Undock;
+	double t_Separation;
+};
+
 //GENERIC STRING
 
 struct GENERICPAD
