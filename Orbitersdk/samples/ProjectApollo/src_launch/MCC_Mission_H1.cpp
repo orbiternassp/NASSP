@@ -293,7 +293,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11AGSACT, SubStateTime > 5.0*60.0, 36, MST_H1_LUNAR_ORBIT_PDI_DAY_11);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_11: //Separation maneuver update to DOI update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(rtcc->calcParams.SEP - 25.0*60.0), 37, MST_H1_LUNAR_ORBIT_PDI_DAY_12);
+		UpdateMacro(UTP_PADONLY, PT_AP12SEPPAD, rtcc->GETEval2(rtcc->calcParams.SEP - 25.0*60.0), 37, MST_H1_LUNAR_ORBIT_PDI_DAY_12);
 		break;
 	case MST_H1_LUNAR_ORBIT_PDI_DAY_12: //DOI update to No PDI+12 PAD
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 38, MST_H1_LUNAR_ORBIT_PDI_DAY_13);
