@@ -307,13 +307,13 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_AP12PDIABORTPAD, SubStateTime > 3.0*60.0, 71, MST_H1_LUNAR_ORBIT_PRE_DOI_1);
 		break;
 	case MST_H1_LUNAR_ORBIT_PRE_DOI_1: //Lunar Surface PAD to P22 Acquistion time
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP12LUNSURFPAD, SubStateTime > 3.0*60.0, 73, MST_H1_LUNAR_ORBIT_PRE_DOI_2);
+		UpdateMacro(UTP_PADONLY, PT_AP12LUNSURFPAD, SubStateTime > 3.0*60.0, 73, MST_H1_LUNAR_ORBIT_PRE_DOI_2);
 		break;
 	case MST_H1_LUNAR_ORBIT_PRE_DOI_2: //P22 Acquistion time to LM SV update
 		UpdateMacro(UTP_PADONLY, PT_LMP22ACQPAD, rtcc->GETEval2(rtcc->calcParams.SEP + 5.0*60.0), 58, MST_H1_LUNAR_ORBIT_PRE_DOI_3);
 		break;
 	case MST_H1_LUNAR_ORBIT_PRE_DOI_3: //LM SV update to CSM P76 PADs
-		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 3, MST_H1_LUNAR_ORBIT_PRE_DOI_4);
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 400, MST_H1_LUNAR_ORBIT_PRE_DOI_4);
 		break;
 	case MST_H1_LUNAR_ORBIT_PRE_DOI_4: //CSM P76 PADs to DOI Evaluation
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11P76PAD, rtcc->GETEval2(rtcc->calcParams.PDI - 21.0*60.0), 76, MST_H1_LUNAR_ORBIT_PRE_PDI_1);
@@ -391,7 +391,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 1, MST_H1_LUNAR_ORBIT_EVA_DAY_9);
 		break;
 	case MST_H1_LUNAR_ORBIT_EVA_DAY_9: //LM SV uplink to Lmk 193 Landmark Tracking PAD
-		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 3, MST_H1_LUNAR_ORBIT_EVA_DAY_10);
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 401, MST_H1_LUNAR_ORBIT_EVA_DAY_10);
 		break;
 	case MST_H1_LUNAR_ORBIT_EVA_DAY_10: //Lmk 193 Landmark Tracking PAD to Nominal Insertion targeting + CMC SV update
 		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, MoonRev >= 29 && MoonRevTime > 75.0*60.00, 63, MST_H1_LUNAR_ORBIT_ASCENT_DAY_1);
