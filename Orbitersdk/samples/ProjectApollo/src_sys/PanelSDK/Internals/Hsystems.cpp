@@ -639,11 +639,16 @@ int h_Valve::Flow(h_volume block) { //valves are simply sockets, forward this to
 
 double h_Valve::RK4FlowSolver(const double dP, const double size, const double dt)
 {
+	//Flow Rate based on Euler
 	RK4IntegrationScratch[0] = size * dP * dt;
-	RK4IntegrationScratch[1] = size * (dP - RK4IntegrationScratch[0] / size / 2) * dt;
-	RK4IntegrationScratch[2] = size * (dP - RK4IntegrationScratch[1] / size / 2) * dt;
-	RK4IntegrationScratch[3] = size * (dP - RK4IntegrationScratch[2] / size) * dt;
+	//Midpoint estimation, size*dP factored out
+	RK4IntegrationScratch[1] = RK4IntegrationScratch[0] * exp(-dt / 2);
+	//midpoint estimation 2
+	RK4IntegrationScratch[2] = RK4IntegrationScratch[1] * exp(-dt / 2);
+	//end point estimation
+	RK4IntegrationScratch[3] = RK4IntegrationScratch[2] * exp(-dt);
 
+	//Weighted average
 	return (RK4IntegrationScratch[0] + 2 * RK4IntegrationScratch[1] + 2 * RK4IntegrationScratch[2] + RK4IntegrationScratch[3]) / 6;
 }
 
