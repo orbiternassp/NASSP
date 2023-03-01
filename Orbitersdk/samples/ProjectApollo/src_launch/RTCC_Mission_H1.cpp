@@ -1187,6 +1187,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP11ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "LOI-2");
+		sprintf(form->remarks, "Two-jet ullage for 19 seconds");
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -1391,10 +1392,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		VECTOR3 dV_LVLH;
 		double GETbase, t_P, t_Sep;
 
-		int hh, mm;
-		double ss;
-
-		AP11MNV * form = (AP11MNV *)pad;
+		AP12SEPPAD * form = (AP12SEPPAD *)pad;
+		AP11MNV manpad;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 		GETbase = CalcGETBase();
@@ -1414,11 +1413,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
 
-		AP11ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, "SEP");
-		OrbMech::SStoHHMMSS(form->GETI - 30.0*60.0, hh, mm, ss);
-		sprintf(form->remarks, "Undock time is %d:%d:%.2lf.", hh, mm, ss);
-		form->type = 2;
+		AP11ManeuverPAD(&opt, manpad);
+
+		form->t_Undock = t_Sep - 30.0*60.0;
+		form->t_Separation = t_Sep;
+		form->Att_Undock = manpad.Att;
 	}
 	break;
 	case 38: //DESCENT ORBIT INSERTION
