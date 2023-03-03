@@ -354,11 +354,11 @@ void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm, int Te
 	// second display on two digit
 	Curdigit = seconds / 10;
 	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits, 0, 0 + 104*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)*TexMul), 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, digits, 0, 0 + 104*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 
 	Curdigit = seconds;
 	Curdigit2 = seconds / 10;
-	oapiBlt(surf, digits, 0, 0 + 123*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)*TexMul), 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, digits, 0, 0 + 123*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
 }
 
 void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent)
