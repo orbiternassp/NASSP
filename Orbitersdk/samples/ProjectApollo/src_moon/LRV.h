@@ -33,6 +33,9 @@ typedef struct
 
 } LRVSettings;
 
+static const DWORD ntdvtx = 3;
+static TOUCHDOWNVTX tdvtx[ntdvtx];
+
 ///
 /// \ingroup Astronauts
 /// \brief Lunar Rover.
@@ -106,6 +109,8 @@ private:
 
 	void ScanMotherShip();
 	void MoveLRV(double SimDT, VESSELSTATUS *eva, double heading);
+	void LRVAttitude(VESSELSTATUS2* eva);
+	MATRIX3 RotationMatrix(VECTOR3 angles, bool xyz);
 	void SetMissionPath();
 	void DoFirstTimestep();
 	void SetMainState(int s);
@@ -163,6 +168,7 @@ protected:
 	bool KEYADD;
 	bool KEYSUBTRACT;
 	bool KEYCTRL;
+	double Height_From_Ground;
 
 	bool FirstTimestep;
 	bool SLEVAPlayed;

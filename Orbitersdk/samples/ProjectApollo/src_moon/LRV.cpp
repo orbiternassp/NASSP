@@ -345,8 +345,28 @@ void LRV::SetRoverStage ()
 	mgtRotGauges.ngrp = GEOM_NEEDLE_A;  // dummy value
 	mgtRotGauges.transform = MESHGROUP_TRANSFORM::ROTATE;
 
-	double tdph = -0.9;
-	SetTouchdownPoints(_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
+	double x_target = -0.1;
+	double stiffness = (-1) * (250 * G) / (3 * x_target);
+	double damping = 0.9 * (2 * sqrt(250 * stiffness));
+	Height_From_Ground = 0.9;
+	for (int i = 0; i < ntdvtx; i++)
+	{
+		tdvtx[i].damping = damping;
+		tdvtx[i].mu = 3;
+		tdvtx[i].mu_lng = 3;
+		tdvtx[i].stiffness = stiffness;
+	}
+	tdvtx[0].pos.x = cos(30 * RAD) * 1.55;
+	tdvtx[0].pos.y = -Height_From_Ground;
+	tdvtx[0].pos.z = -sin(30 * RAD) * 1.55;
+	tdvtx[1].pos.x = 0;
+	tdvtx[1].pos.y = -Height_From_Ground;
+	tdvtx[1].pos.z = 1.55;
+	tdvtx[2].pos.x = -cos(30 * RAD) * 1.55;
+	tdvtx[2].pos.y = -Height_From_Ground;
+	tdvtx[2].pos.z = -sin(30 * RAD) * 1.55;
+
+	SetTouchdownPoints(tdvtx, ntdvtx);
 
 }
 
@@ -456,7 +476,6 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 			eva->vdata[0].z = eva->vdata[0].z + 2*PI;
 		else if (eva->vdata[0].z >=2*PI)
 			eva->vdata[0].z = eva->vdata[0].z - 2*PI;
-
 	}
 
 	if (KEYSUBTRACT)  // decelerate
@@ -521,6 +540,68 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 	lastLat = lat;
 	lastLong = lon;
 	lastLatLongSet = true;
+}
+
+void LRV::LRVAttitude(VESSELSTATUS2* eva)
+{
+	double rt = oapiGetSize(GetSurfaceRef());
+	double moon_circ = rt * 2 * PI;
+	double each_deg = moon_circ / 360;
+
+	double lng, lat, hdg;
+	lng = eva->surf_lng;
+	lat = eva->surf_lat;
+	hdg = eva->surf_hdg;
+
+	VECTOR3 ant_dx_pos = _V(0.95, 0, 1.55);
+	double ant_dx_dlat = ((ant_dx_pos.z * cos(hdg) - ant_dx_pos.x * sin(hdg)) / each_deg) * RAD;
+	double ant_dx_dlng = ((ant_dx_pos.z * sin(hdg) + ant_dx_pos.x * cos(hdg)) / each_deg) * RAD;
+	double elev_ant_dx = oapiSurfaceElevation(GetSurfaceRef(), lng + ant_dx_dlng, lat + ant_dx_dlat);
+
+	VECTOR3 ant_sx_pos = _V(-0.95, 0, 1.55);
+	double ant_sx_dlat = ((ant_sx_pos.z * cos(hdg) - ant_sx_pos.x * sin(hdg)) / each_deg) * RAD;
+	double ant_sx_dlng = ((ant_sx_pos.z * sin(hdg) + ant_sx_pos.x * cos(hdg)) / each_deg) * RAD;
+	double elev_ant_sx = oapiSurfaceElevation(GetSurfaceRef(), lng + ant_sx_dlng, lat + ant_sx_dlat);
+
+	VECTOR3 post_pos = _V(0, 0, -1.55);
+	double post_dlat = ((+post_pos.z * cos(hdg)) / each_deg) * RAD;
+	double post_dlng = ((+post_pos.z * sin(hdg)) / each_deg) * RAD;
+	double elev_post = oapiSurfaceElevation(GetSurfaceRef(), lng + post_dlng, lat + post_dlat);
+
+	double roll_angle;
+	double pitch_angle;
+	roll_angle = atan2(elev_ant_dx - elev_ant_sx, ant_dx_pos.x - ant_sx_pos.x);
+	pitch_angle = atan2(-elev_post + ((elev_ant_dx + elev_ant_sx) * 0.5), ant_dx_pos.z - post_pos.z);
+
+	MATRIX3 rot1 = RotationMatrix(_V(0 * RAD, (90 * RAD - lng), 0 * RAD), TRUE);
+	MATRIX3 rot2 = RotationMatrix(_V(-lat + 0 * RAD, 0, 0 * RAD), TRUE);
+	MATRIX3 rot3 = RotationMatrix(_V(0, 0, 180 * RAD + hdg), TRUE);
+
+	MATRIX3 rot4 = RotationMatrix(_V(90 * RAD - pitch_angle, 0, roll_angle), TRUE);
+	MATRIX3 RotMatrix_Def = mul(rot1, mul(rot2, mul(rot3, rot4)));
+
+	eva->arot.x = atan2(RotMatrix_Def.m23, RotMatrix_Def.m33);
+	eva->arot.y = -asin(RotMatrix_Def.m13);
+	eva->arot.z = atan2(RotMatrix_Def.m12, RotMatrix_Def.m11);
+	eva->vrot.x = Height_From_Ground;
+	DefSetStateEx(eva);
+}
+
+//From GeneralVehicle by fred18
+MATRIX3 LRV::RotationMatrix(VECTOR3 angles, bool xyz = FALSE)
+{
+	MATRIX3 m;
+	MATRIX3 RM_X, RM_Y, RM_Z;
+	RM_X = _M(1, 0, 0, 0, cos(angles.x), -sin(angles.x), 0, sin(angles.x), cos(angles.x));
+	RM_Y = _M(cos(angles.y), 0, sin(angles.y), 0, 1, 0, -sin(angles.y), 0, cos(angles.y));
+	RM_Z = _M(cos(angles.z), -sin(angles.z), 0, sin(angles.z), cos(angles.z), 0, 0, 0, 1);
+	if (!xyz) {
+		m = mul(RM_Z, mul(RM_Y, RM_X));
+	}
+	else {
+		m = mul(RM_X, mul(RM_Y, RM_Z));
+	}
+	return m;
 }
 
 // ==============================================================
@@ -700,6 +781,7 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 {
 //	VESSELSTATUS csmV;
 	VESSELSTATUS evaV;
+	VESSELSTATUS2 evaV2;
 	VECTOR3 rdist = {0,0,0};
 	VECTOR3 posr  = {0,0,0};
 	VECTOR3 rvel  = {0,0,0};
@@ -874,8 +956,12 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 		}
 	}
 
-
 	MoveLRV(SimDT, &evaV, heading);
+
+	memset(&evaV2, 0, sizeof(evaV2));
+	evaV2.version = 2;
+	GetStatusEx(&evaV2);
+	LRVAttitude(&evaV2);
 
 	UpdateAnimations(SimDT);
 
