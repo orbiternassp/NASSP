@@ -92,6 +92,12 @@ void LEM::ToggleEVA(bool isCDR)
 		vs1.vdata[0].x += 4.5 * sin(vs1.vdata[0].z) / radius;
 		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
 
+		// LEVA starts facing ladder
+		vs1.vdata[0].z += PI;
+		if (vs1.vdata[0].z > PI2) {
+			vs1.vdata[0].z -= PI2;
+		}
+
 		char VName[256]="";
 		if (isCDR)
 		{

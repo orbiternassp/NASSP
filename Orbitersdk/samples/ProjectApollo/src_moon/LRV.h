@@ -107,7 +107,6 @@ public:
 
 private:
 
-	void ScanMotherShip();
 	void MoveLRV(double SimDT, VESSELSTATUS *eva, double heading);
 	void LRVAttitude(VESSELSTATUS2* eva);
 	MATRIX3 RotationMatrix(VECTOR3 angles, bool xyz);

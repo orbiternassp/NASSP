@@ -370,30 +370,6 @@ void LRV::SetRoverStage ()
 
 }
 
-void LRV::ScanMotherShip()
-
-{
-	double VessCount;
-	int i=0;
-
-	VessCount=oapiGetVesselCount();
-	for ( i = 0 ; i< VessCount ; i++ ) 
-	{
-		hMaster=oapiGetVesselByIndex(i);
-		strcpy(EVAName,GetName());
-		oapiGetObjectName(hMaster,CSMName,256);
-		strcpy(MSName,CSMName);
-		strcat(CSMName,"-LRV");
-		if (strcmp(CSMName, EVAName)==0){
-			MotherShip=true;
-			i=int(VessCount);
-		}
-		else{
-			strcpy(CSMName,"");
-		}
-	}
-}
-
 void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 {
 	//TRACESETUP("MoveLRV");

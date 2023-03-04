@@ -185,9 +185,7 @@ void LEVA::ToggleLRV()
 		vs1.vdata[0].x += 4.5 * sin(vs1.vdata[0].z) / radius;
 		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
 
-		char VName[256]="";
-		strcpy (VName, GetName()); strcat (VName, "-LRV");
-		hLRV = oapiCreateVessel(VName,"ProjectApollo/LRV",vs1);
+		hLRV = oapiCreateVessel("LRV","ProjectApollo/LRV",vs1);
 		
 		LRV *lrv = (LRV *) oapiGetVesselInterface(hLRV);
 		if (lrv) {
@@ -502,20 +500,18 @@ void LEVA::SetFlag()
 	// Create the flag. For NEP support we load per-mission config if it exists.
 	//
 	
-	char VName[256]="";
 	char FName[256];
 
 	sprintf(FName, "ProjectApollo/Apollo%d/sat5flag.cfg", ApolloNo);
-	strcpy (VName, GetName()); strcat (VName, "-FLAG");
 
 	FILE *fp = fopen(FName, "rt");
 	if (fp) {
 		fclose(fp);
 		sprintf(FName, "ProjectApollo/Apollo%d/sat5flag", ApolloNo);
-		oapiCreateVessel(VName, FName, vs1);
+		oapiCreateVessel("Flag", FName, vs1);
 	}
 	else {
-		oapiCreateVessel(VName,"ProjectApollo/sat5flag",vs1);
+		oapiCreateVessel("Flag","ProjectApollo/sat5flag",vs1);
 	}
 
 	FlagPlanted = true;
