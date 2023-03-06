@@ -69,6 +69,7 @@ public:
 	void clbkSetClassCaps (FILEHANDLE cfg);
 	void clbkVisualCreated (VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
+	void clbkPostCreation();
 
 	void SetAstroStage();
 
@@ -103,6 +104,9 @@ private:
 	void ScanMotherShip();
 	void MoveEVA(double SimDT, VESSELSTATUS *eva, double heading);
 	void SetFlag();
+	OBJHANDLE GetLRVHandle();
+	void BoardLRV(OBJHANDLE lrvHandle);
+	void DeboardLRV(OBJHANDLE lrvHandle);
 	void SetMissionPath();
 	void DoFirstTimestep();
 	void SetMainState(int s);
@@ -116,7 +120,6 @@ protected:
 	OBJHANDLE hMaster;
 	bool GoDock1;
 	bool starthover;
-	bool LRVDeployed;
 	void ToggleLRV();
 	bool Astro;						
 	bool MotherShip;
@@ -135,6 +138,8 @@ protected:
 	bool KEYSUBTRACT;
 	bool GoFlag;		 
 	bool FlagPlanted;
+
+	ATTACHMENTHANDLE lrvSeat;
 
 	bool FirstTimestep;
 	bool SLEVAPlayed;

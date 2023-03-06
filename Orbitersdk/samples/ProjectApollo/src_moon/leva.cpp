@@ -72,6 +72,9 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 
 static 	int refcount = 0;
 static MESHHANDLE hCDREVA;
+static MESHHANDLE hLMPEVA;
+static MESHHANDLE hCDRLRV;
+static MESHHANDLE hLMPLRV;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
 
@@ -95,7 +98,6 @@ void LEVA::init()
 
 {
 	hMaster = NULL;
-	LRVDeployed=false;
 	GoDock1=false;
 	starthover=false;
 	Astro=true;		
@@ -156,38 +158,56 @@ void LEVA::SetAstroStage ()
 	ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	VECTOR3 mesh_dir=_V(0,0,0);
-    AddMesh (hCDREVA, &mesh_dir);
 	SetCameraOffset(_V(0,0.8,0));
 	
+	double ypos = -0.25;
+	double zpos = 0.05;
+	lrvSeat = CreateAttachment(true, _V(0, ypos, zpos), _V(0, -1, 0), _V(0, 0, 1), "SEAT", false);
+
 	double tdph = -0.8;
 	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
 	Astro = true;
 }
 
+void LEVA::clbkPostCreation()
+{
+	VECTOR3 mesh_dir = _V(0, 0, 0);
+	if (isCDR == true) {
+		AddMesh(hCDREVA, &mesh_dir);
+		AddMesh(hCDRLRV, &mesh_dir);
+	}
+	else {
+		AddMesh(hLMPEVA, &mesh_dir);
+		AddMesh(hLMPLRV, &mesh_dir);
+	}
+	if (GetAttachmentStatus(lrvSeat) == NULL) {
+		SetMeshVisibilityMode(0, MESHVIS_EXTERNAL);
+		SetMeshVisibilityMode(1, MESHVIS_NEVER);
+	}
+	else {
+		SetMeshVisibilityMode(0, MESHVIS_NEVER);
+		SetMeshVisibilityMode(1, MESHVIS_EXTERNAL);
+	}
+}
+
 void LEVA::ToggleLRV()
 
 {
-	if (LRVDeployed) {
-		// Nothing for now, only one LRV per mission.
-	}
-	else {
+	if (GetLRVHandle() == NULL) {
 		VESSELSTATUS vs1;
 		GetStatus(vs1);
 
 		// The LM must be in landed state
 		if (vs1.status != 1) return;
 
-		LRVDeployed = true;
-
 		OBJHANDLE hbody = GetGravityRef();
 		double radius = oapiGetSize(hbody);
-		vs1.vdata[0].x += 4.5 * sin(vs1.vdata[0].z) / radius;
-		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
+		vs1.vdata[0].x += 2.5 * sin(vs1.vdata[0].z) / radius;
+		vs1.vdata[0].y += 2.5 * cos(vs1.vdata[0].z) / radius;
 
-		hLRV = oapiCreateVessel("LRV","ProjectApollo/LRV",vs1);
-		
-		LRV *lrv = (LRV *) oapiGetVesselInterface(hLRV);
+		hLRV = oapiCreateVessel("LRV", "ProjectApollo/LRV", vs1);
+
+		LRV* lrv = (LRV*)oapiGetVesselInterface(hLRV);
 		if (lrv) {
 			LRVSettings lrvs;
 
@@ -195,6 +215,95 @@ void LEVA::ToggleLRV()
 			lrv->SetLRVStats(lrvs);
 		}
 	}
+	else {
+		// Nothing for now, only one LRV per mission.
+	}
+}
+
+OBJHANDLE LEVA::GetLRVHandle()
+{
+	double VessCount;
+	int i = 0;
+	OBJHANDLE lrvHandle = NULL;
+
+	VessCount = oapiGetVesselCount();
+	for (i = 0; i < VessCount; i++)
+	{
+		char vesselName[256] = "";
+		oapiGetObjectName(oapiGetVesselByIndex(i), vesselName, 256);
+		if (strcmp("LRV", vesselName) == 0) {
+			lrvHandle = oapiGetVesselByIndex(i);
+		}
+	}
+	return lrvHandle;
+}
+
+void LEVA::BoardLRV(OBJHANDLE lrvHandle)
+{
+	VECTOR3 rpos = _V(0, 0, 0);
+	GetRelativePos(lrvHandle, rpos);
+	rpos.y = 0;
+	if (length(rpos) <= 1.75) {
+		LRV* lrvvessel = (LRV*)oapiGetVesselInterface(lrvHandle);
+		if (isCDR == true) {
+			lrvvessel->AttachChild(GetHandle(), lrvvessel->GetAttachmentHandle(false, 0), lrvSeat);
+		}
+		else {
+			lrvvessel->AttachChild(GetHandle(), lrvvessel->GetAttachmentHandle(false, 1), lrvSeat);
+		}
+		oapiSetFocusObject(lrvHandle);
+
+		SetMeshVisibilityMode(0, MESHVIS_NEVER);
+		SetMeshVisibilityMode(1, MESHVIS_EXTERNAL);
+	}
+}
+
+void LEVA::DeboardLRV(OBJHANDLE lrvHandle)
+{
+	double rt = oapiGetSize(GetSurfaceRef());
+	double moon_circ = rt * 2 * PI;
+	double each_deg = moon_circ / 360;
+	VESSELSTATUS2 vs2;
+	memset(&vs2, 0, sizeof(vs2));
+	vs2.version = 2;
+	vs2.status = 1;
+
+	LRV* lrvvessel = (LRV*)oapiGetVesselInterface(lrvHandle);
+	if (isCDR == true) {
+		lrvvessel->DetachChild(lrvvessel->GetAttachmentHandle(false, 0), 0);
+	}
+	else {
+		lrvvessel->DetachChild(lrvvessel->GetAttachmentHandle(false, 1), 0);
+	}
+	lrvvessel->GetStatusEx(&vs2);
+
+	double zpos = -0.25;
+	double xpos = -1.25;
+	double d_heading = PI / 2;
+	if (isCDR == false) {
+		xpos *= -1;
+		d_heading -= PI;
+	}
+
+	double d_lat1 = (zpos * cos(vs2.surf_hdg)) / each_deg;
+	double d_lng1 = (zpos * sin(vs2.surf_hdg)) / each_deg;
+	double d_lat2 = (xpos * -sin(vs2.surf_hdg)) / each_deg;
+	double d_lng2 = (xpos * cos(vs2.surf_hdg)) / each_deg;
+	vs2.surf_lat += ((d_lat1 + d_lat2) * RAD);
+	vs2.surf_lng += ((d_lng1 + d_lng2) * RAD);
+
+	vs2.surf_hdg += d_heading;
+	if (vs2.surf_hdg > PI2) {
+		vs2.surf_hdg -= PI2;
+	}
+	else if (vs2.surf_hdg < 0) {
+		vs2.surf_hdg += PI2;
+	}
+
+	DefSetStateEx(&vs2);
+
+	SetMeshVisibilityMode(0, MESHVIS_EXTERNAL);
+	SetMeshVisibilityMode(1, MESHVIS_NEVER);
 }
 
 void LEVA::ScanMotherShip()
@@ -461,6 +570,20 @@ int LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	if (key == OAPI_KEY_F && down == true) {				
 		if (Astro && isCDR && !FlagPlanted )
 			GoFlag = true;	
+		return 1;
+	}
+
+	if (key == OAPI_KEY_B && down == true) {
+		OBJHANDLE lrvHandle = GetLRVHandle();
+		if (lrvHandle == NULL) {}
+		else {
+			if (GetAttachmentStatus(lrvSeat) == NULL) {
+				BoardLRV(lrvHandle);
+			}
+			else {
+				DeboardLRV(lrvHandle);
+			}
+		}
 		return 1;
 	}
 
@@ -752,7 +875,10 @@ void LEVA::clbkSaveState(FILEHANDLE scn)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hCDREVA = oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
+		hCDREVA = oapiLoadMeshGlobal("ProjectApollo/sat5AstroS_CDR");
+		hLMPEVA = oapiLoadMeshGlobal("ProjectApollo/sat5AstroS_LMP");
+		hCDRLRV = oapiLoadMeshGlobal("ProjectApollo/LRV_Astro_CDR");
+		hLMPLRV = oapiLoadMeshGlobal("ProjectApollo/LRV_Astro_LMP");
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 	}

@@ -312,6 +312,12 @@ void LRV::SetRoverStage ()
 	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
 	SetCameraOffset(_V(0.36, 0.54, -0.55));  // roughly at the driver's head
 
+	double xpos = -0.365;
+	double ypos = -0.05;
+	double zpos = -0.5;
+	cdrSeat = CreateAttachment(false, _V(xpos, ypos, zpos), _V(0, 1, 0), _V(0, 0, 1), "CDR", false);
+	cdrSeat = CreateAttachment(false, _V(-xpos, ypos, zpos), _V(0, 1, 0), _V(0, 0, 1), "LMP", false);
+
 	//////////////////////////////////////////////////////////////////////////
 	// With vccMeshIdx, we now have all data to initialize the LRV console
 	// transformation matrices:
@@ -368,6 +374,12 @@ void LRV::SetRoverStage ()
 
 	SetTouchdownPoints(tdvtx, ntdvtx);
 
+	dust_tex = oapiRegisterParticleTexture("ProjectApollo/dust");
+	dust = { 0, 0.1, 15, 0.25, 5 * RAD, 2, 0.25, 4, PARTICLESTREAMSPEC::DIFFUSE, PARTICLESTREAMSPEC::LVL_LIN, 0, 1, PARTICLESTREAMSPEC::ATM_FLAT, 1, 1, dust_tex };
+	wheel_dust[0] = AddParticleStream(&dust, _V(-0.956, -0.8, 0.918), _V(0, 0, -1), &dust_level);
+	wheel_dust[1] = AddParticleStream(&dust, _V(0.956, -0.8, 0.918), _V(0, 0, -1), &dust_level);
+	wheel_dust[2] = AddParticleStream(&dust, _V(-0.956, -0.8, -1.388), _V(0, 0, -1), &dust_level);
+	wheel_dust[3] = AddParticleStream(&dust, _V(0.956, -0.8, -1.388), _V(0, 0, -1), &dust_level);
 }
 
 void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
@@ -578,6 +590,20 @@ MATRIX3 LRV::RotationMatrix(VECTOR3 angles, bool xyz = FALSE)
 		m = mul(RM_X, mul(RM_Y, RM_Z));
 	}
 	return m;
+}
+
+void LRV::WheelDust()
+{
+	double timeAccel = oapiGetTimeAcceleration();
+	if ((speed > 0) & (timeAccel <= 10)) {
+		dust_level = speed / ROVER_SPEED_M_S;
+	}
+	else if ((speed < 0) & (timeAccel <= 10)) {
+		dust_level = abs(speed) / ROVER_SPEED_M_S;
+	}
+	else {
+		dust_level = 0;
+	}
 }
 
 // ==============================================================
@@ -938,6 +964,8 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	evaV2.version = 2;
 	GetStatusEx(&evaV2);
 	LRVAttitude(&evaV2);
+
+	WheelDust();
 
 	UpdateAnimations(SimDT);
 

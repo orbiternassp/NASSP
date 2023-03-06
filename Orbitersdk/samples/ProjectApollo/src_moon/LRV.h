@@ -110,6 +110,7 @@ private:
 	void MoveLRV(double SimDT, VESSELSTATUS *eva, double heading);
 	void LRVAttitude(VESSELSTATUS2* eva);
 	MATRIX3 RotationMatrix(VECTOR3 angles, bool xyz);
+	void WheelDust();
 	void SetMissionPath();
 	void DoFirstTimestep();
 	void SetMainState(int s);
@@ -169,6 +170,9 @@ protected:
 	bool KEYCTRL;
 	double Height_From_Ground;
 
+	ATTACHMENTHANDLE cdrSeat;
+	ATTACHMENTHANDLE lmpSeat;
+
 	bool FirstTimestep;
 	bool SLEVAPlayed;
 	bool StateSet;
@@ -218,4 +222,9 @@ protected:
 	MESHGROUP_TRANSFORM mgtRotSpeed;
 	MESHGROUP_TRANSFORM mgtRotDrums;  // Bearing, distance or range "drum"
 	MESHGROUP_TRANSFORM mgtRotGauges;  // rotation of the 8 needles of the four power/temp gauges
+
+	SURFHANDLE dust_tex;
+	PSTREAM_HANDLE wheel_dust[4];
+	PARTICLESTREAMSPEC dust;
+	double dust_level = 0;
 };
