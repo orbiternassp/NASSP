@@ -158,13 +158,13 @@ void LEVA::SetAstroStage ()
 	ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	SetCameraOffset(_V(0,0.8,0));
+	SetCameraOffset(_V(0,0.632,0.216));
 	
-	double ypos = -0.25;
-	double zpos = 0.05;
+	double ypos = -0.161;
+	double zpos = 0.357;
 	lrvSeat = CreateAttachment(true, _V(0, ypos, zpos), _V(0, -1, 0), _V(0, 0, 1), "SEAT", false);
 
-	double tdph = -0.8;
+	double tdph = -1.06;
 	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
 	Astro = true;
 }
@@ -187,6 +187,13 @@ void LEVA::clbkPostCreation()
 	else {
 		SetMeshVisibilityMode(0, MESHVIS_NEVER);
 		SetMeshVisibilityMode(1, MESHVIS_EXTERNAL);
+	}
+
+	if (oapiGetVesselByName("Flag") == NULL) {
+		FlagPlanted = false;
+	}
+	else {
+		FlagPlanted = true;
 	}
 }
 

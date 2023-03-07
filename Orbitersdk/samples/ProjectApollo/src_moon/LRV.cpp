@@ -292,7 +292,7 @@ void LRV::DefineAnimations ()
 void LRV::SetRoverStage ()
 {
 	SetEmptyMass(250);
-	SetSize(10);
+	SetSize(4);
 	SetPMI(_V(15,15,15));
 
 	SetSurfaceFrictionCoeff(0.005, 0.5);
@@ -310,11 +310,11 @@ void LRV::SetRoverStage ()
 	AddMesh(hLRV, &mesh_adjust);
 	SetMeshVisibilityMode(LRVMeshIndex, MESHVIS_ALWAYS); 
 	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
-	SetCameraOffset(_V(0.36, 0.54, -0.55));  // roughly at the driver's head
+	SetCameraOffset(_V(-0.365, 0.932, -0.676));  // roughly at the driver's head
 
 	double xpos = -0.365;
-	double ypos = -0.05;
-	double zpos = -0.5;
+	double ypos = 0.113;
+	double zpos = -0.514;
 	cdrSeat = CreateAttachment(false, _V(xpos, ypos, zpos), _V(0, 1, 0), _V(0, 0, 1), "CDR", false);
 	cdrSeat = CreateAttachment(false, _V(-xpos, ypos, zpos), _V(0, 1, 0), _V(0, 0, 1), "LMP", false);
 
