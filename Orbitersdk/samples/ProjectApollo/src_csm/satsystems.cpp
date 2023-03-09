@@ -452,6 +452,20 @@ void Saturn::SystemsInit() {
 	H2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
 	O2Tank1TempSensor.Init(&CryogenicQTYAmpl1CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"));
 	O2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"));
+	H2Tank1PressSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1"));
+	H2Tank2PressSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
+	O2Tank1PressSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"));
+	O2Tank2PressSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"));
+	H2Tank1QuantitySensor.Init(&CryogenicQTYAmpl1CB, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1")); //J Missions: CryogenicFanMotorsAC1CCB
+	H2Tank2QuantitySensor.Init(&CryogenicQTYAmpl2CB, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2")); //J Missions: CryogenicFanMotorsAC2CCB
+	O2Tank1QuantitySensor.Init(&CryogenicQTYAmpl1CB, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1")); //J Missions: CryogenicFanMotorsAC1CCB
+	O2Tank2QuantitySensor.Init(&CryogenicQTYAmpl2CB, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2")); //J Missions: CryogenicFanMotorsAC2CCB
+	FCO2PressureSensor1.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD"));
+	FCO2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD"));
+	FCO2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD"));
+	FCH2PressureSensor1.Init(&Panel276CB4, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD"));
+	FCH2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD"));
+	FCH2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD"));
 
 	CabinPressSensor.Init(&ECSPressGroups2Feeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 	CabinTempSensor.Init(&ECSTempTransducerFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
@@ -479,6 +493,7 @@ void Saturn::SystemsInit() {
 	PriRadInTempSensor.Init(&CONTHTRSMnBCircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET"));
 	SecRadInTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATORINLET"));
 	SecRadOutTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATOROUTLET"));
+	
 
 	// Optics initialization
 	optics.Init(this);
@@ -2559,9 +2574,25 @@ void Saturn::CheckSMSystemsState()
 		H2Tank2TempSensor.WireTo(NULL);
 		O2Tank1TempSensor.WireTo(NULL);
 		O2Tank2TempSensor.WireTo(NULL);
+		H2Tank1PressSensor.WireTo(NULL);
+		H2Tank2PressSensor.WireTo(NULL);
+		O2Tank1PressSensor.WireTo(NULL);
+		O2Tank2PressSensor.WireTo(NULL);
+		H2Tank1QuantitySensor.WireTo(NULL);
+		H2Tank2QuantitySensor.WireTo(NULL);
+		O2Tank1QuantitySensor.WireTo(NULL);
+		O2Tank2QuantitySensor.WireTo(NULL);
 		PriRadInTempSensor.WireTo(NULL);
 		SecRadInTempSensor.WireTo(NULL);
 		SecRadOutTempSensor.WireTo(NULL);
+
+		// Fuel Cell Sensors
+		FCH2PressureSensor1.WireTo(NULL);
+		FCH2PressureSensor2.WireTo(NULL);
+		FCH2PressureSensor3.WireTo(NULL);
+		FCO2PressureSensor1.WireTo(NULL);
+		FCO2PressureSensor2.WireTo(NULL);
+		FCO2PressureSensor3.WireTo(NULL);
 
 		if (secs.SMJCA)
 		{
@@ -2818,15 +2849,10 @@ void Saturn::ClearPanelSDKPointers()
 	pCabinRepressFlow = 0;
 	pEmergencyCabinRegulatorFlow = 0;
 	pO2FlowXducer = 0;
-	pO2Tank1Press = 0;
-	pO2Tank2Press = 0;
-	pH2Tank1Press = 0;
-	pH2Tank2Press = 0;
 	pO2Tank1Quantity = 0;
 	pO2Tank2Quantity = 0;
 	pH2Tank1Quantity = 0;
 	pH2Tank2Quantity = 0;
-	pO2SurgeTankPress = 0;
 	for (i = 0; i <= 3; i++) {
 		pFCH2Flow[i] = 0;
 		pFCO2Flow[i] = 0;
@@ -3137,147 +3163,6 @@ void Saturn::GetPyroStatus( PyroStatus &ps )
 	ps.BusBVoltage = PyroBusB.Voltage();
 }
 
-//
-// Get H2/O2 tank pressures.
-//
-
-void Saturn::GetTankPressures(TankPressures &press)
-
-{
-	//
-	// Clear to defaults.
-	//
-
-	press.H2Tank1PressurePSI = 0.0;
-	press.H2Tank2PressurePSI = 0.0;
-	press.O2Tank1PressurePSI = 0.0;
-	press.O2Tank2PressurePSI = 0.0;
-	press.O2SurgeTankPressurePSI = 0.0;
-
-	//
-	// Oxygen surge tank.
-	//
-
-	if (!pO2SurgeTankPress) {
-		pO2SurgeTankPress = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
-	}
-	if (pO2SurgeTankPress) {
-		press.O2SurgeTankPressurePSI = (*pO2SurgeTankPress) * PSI;
-	}
-
-
-	//
-	// No tanks if we've seperated from the SM
-	//
-
-	if (stage >= CM_STAGE) {
-		return;
-	}
-
-	//
-	// Hydrogen tanks.
-	//
-
-	if (!pH2Tank1Press) {
-		pH2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:PRESS");
-	}
-	if (pH2Tank1Press) {
-		press.H2Tank1PressurePSI = (*pH2Tank1Press) * PSI;
-	}
-
-	if (!pH2Tank2Press) {
-		pH2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:PRESS");
-	}
-	if (pH2Tank2Press) {
-		press.H2Tank2PressurePSI = (*pH2Tank2Press) * PSI;
-	}
-
-	//
-	// Oxygen tanks.
-	//
-
-	if (!pO2Tank1Press) {
-		pO2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS");
-	}
-	if (pO2Tank1Press) {
-		press.O2Tank1PressurePSI = (*pO2Tank1Press) * PSI;
-	}
-
-	if (!pO2Tank2Press) {
-		pO2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:PRESS");
-	}
-	if (pO2Tank2Press) {
-		press.O2Tank2PressurePSI = (*pO2Tank2Press) * PSI;
-	}
-}
-
-
-//
-// Get H2/O2 tank quantities.
-//
-
-void Saturn::GetTankQuantities(TankQuantities &q)
-
-{
-	//
-	// Clear to defaults.
-	//
-
-	q.H2Tank1Quantity = 0.0;
-	q.H2Tank2Quantity = 0.0;
-	q.O2Tank1QuantityKg = 0.0;
-	q.O2Tank2QuantityKg = 0.0;
-	q.O2Tank1Quantity = 0.0;
-	q.O2Tank2Quantity = 0.0;
-
-	//
-	// No tanks if we've seperated from the SM
-	//
-
-	if (stage >= CM_STAGE) {
-		return;
-	}
-
-	//
-	// Hydrogen tanks.
-	//
-
-	if (!pH2Tank1Quantity) {
-		pH2Tank1Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:MASS");
-	}
-	if (pH2Tank1Quantity) {
-		q.H2Tank1Quantity = (*pH2Tank1Quantity) / CSM_H2TANK_CAPACITY;
-	}
-
-	if (!pH2Tank2Quantity) {
-		pH2Tank2Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:MASS");
-	}
-	if (pH2Tank2Quantity) {
-		q.H2Tank2Quantity = (*pH2Tank2Quantity) / CSM_H2TANK_CAPACITY;
-	}
-
-	//
-	// Oxygen tanks.
-	//
-
-	if (!pO2Tank1Quantity) {
-		pO2Tank1Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:MASS");
-	}
-
-	if (pO2Tank1Quantity) {
-		q.O2Tank1Quantity = (*pO2Tank1Quantity) / CSM_O2TANK_CAPACITY;
-		q.O2Tank1QuantityKg = (*pO2Tank1Quantity) / 1000.0;
-	}
-
-	if (!pO2Tank2Quantity) {
-		pO2Tank2Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:MASS");
-	}
-	if (pO2Tank2Quantity) {
-		q.O2Tank2Quantity = (*pO2Tank2Quantity) / CSM_O2TANK_CAPACITY;
-		q.O2Tank2QuantityKg = (*pO2Tank2Quantity) / 1000.0;
-	}
-}
-
 
 //
 // Get fuel cell status. 
@@ -3290,18 +3175,13 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	// Set defaults.
 	//
 
-	fc.H2PressurePSI = 0.0;
 	fc.H2FlowLBH  = 0.0;
-	fc.O2PressurePSI = 0.0;
 	fc.O2FlowLBH = 0.0;
-	fc.TempF = 0.0;
-	fc.CondenserTempF = 0.0;
 	fc.CoolingTempF = 0.0;
 	fc.RadiatorTempInF = 0.0;
 	fc.RadiatorTempOutF = 0.0;
 	fc.Voltage = 0.0;
 	fc.Current = 0.0;
-	fc.PowerOutput = 0.0;
 
 	//
 	// No fuel cells if we've seperated from the SM.
@@ -3320,17 +3200,8 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	char buffer[1000];
 
 	fc.H2FlowLBH = f->H2_flowPerSecond * LBH;
-	if ( f->H2_SRC )
-	{
-		fc.H2PressurePSI = f->H2_SRC->GetPress() * PSI;
-	}
+
 	fc.O2FlowLBH = f->O2_flowPerSecond * LBH;
-	if ( f->O2_SRC )
-	{
-		fc.O2PressurePSI = f->O2_SRC->GetPress() * PSI;
-	}
-	fc.TempF = KelvinToFahrenheit(f->Temp);
-	fc.CondenserTempF = KelvinToFahrenheit(f->condenserTemp);
 
 	if (!pFCCoolingTemp[index]) {
 		sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:TEMP", index);
@@ -3342,7 +3213,6 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 
 	fc.Voltage = FuelCells[index - 1]->Voltage();
 	fc.Current = FuelCells[index - 1]->Current();
-	fc.PowerOutput = FuelCells[index - 1]->PowerLoad();
 
 	// For now.
 	fc.RadiatorTempInF = fc.CoolingTempF;

@@ -127,7 +127,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "SXTSTARDTIME", G->sxtstardtime);
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
-	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
+	papiWriteScenario_double(scn, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 	papiWriteScenario_double(scn, "T1", GC->rtcc->med_k30.StartTime);
 	papiWriteScenario_double(scn, "T2", GC->rtcc->med_k30.EndTime);
@@ -174,19 +174,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_vec(scn, "R_TLI", G->R_TLI);
 	papiWriteScenario_vec(scn, "V_TLI", G->V_TLI);
 
-	papiWriteScenario_bool(scn, "SKYLABNPCOPTION", G->Skylab_NPCOption);
-	papiWriteScenario_bool(scn, "SKYLABPCMANEUVER", G->Skylab_PCManeuver);
-	oapiWriteScenario_int(scn, "SKYLABMANEUVER", G->Skylabmaneuver);
-	papiWriteScenario_double(scn, "SKYLAB_N_C", G->Skylab_n_C);
-	papiWriteScenario_double(scn, "SKYLAB_NC1", G->Skylab_t_NC1);
-	papiWriteScenario_double(scn, "SKYLAB_NC2", G->Skylab_t_NC2);
-	papiWriteScenario_double(scn, "SKYLAB_NCC", G->Skylab_t_NCC);
-	papiWriteScenario_double(scn, "SKYLAB_NSR", G->Skylab_t_NSR);
 	papiWriteScenario_double(scn, "t_TPI", G->t_TPI);
-	papiWriteScenario_double(scn, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
-	papiWriteScenario_double(scn, "SKYLAB_E_L", G->Skylab_E_L);
-	papiWriteScenario_double(scn, "SKYLAB_DH1", G->SkylabDH1);
-	papiWriteScenario_double(scn, "SKYLAB_DH2", G->SkylabDH2);
 
 	papiWriteScenario_double(scn, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 	papiWriteScenario_double(scn, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
@@ -214,7 +202,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "SXTSTARDTIME", G->sxtstardtime);
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
-		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
+		papiReadScenario_double(line, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 		papiReadScenario_double(line, "T1", GC->rtcc->med_k30.StartTime);
 		papiReadScenario_double(line, "T2", GC->rtcc->med_k30.EndTime);
@@ -269,19 +257,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_vec(line, "R_TLI", G->R_TLI);
 		papiReadScenario_vec(line, "V_TLI", G->V_TLI);
 
-		papiReadScenario_bool(line, "SKYLABNPCOPTION", G->Skylab_NPCOption);
-		papiReadScenario_bool(line, "SKYLABPCMANEUVER", G->Skylab_PCManeuver);
-		papiReadScenario_int(line, "SKYLABMANEUVER", G->Skylabmaneuver);
-		papiReadScenario_double(line, "SKYLAB_N_C", G->Skylab_n_C);
-		papiReadScenario_double(line, "SKYLAB_NC1", G->Skylab_t_NC1);
-		papiReadScenario_double(line, "SKYLAB_NC2", G->Skylab_t_NC2);
-		papiReadScenario_double(line, "SKYLAB_NCC", G->Skylab_t_NCC);
-		papiReadScenario_double(line, "SKYLAB_NSR", G->Skylab_t_NSR);
 		papiReadScenario_double(line, "t_TPI", G->t_TPI);
-		papiReadScenario_double(line, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
-		papiReadScenario_double(line, "SKYLAB_E_L", G->Skylab_E_L);
-		papiReadScenario_double(line, "SKYLAB_DH1", G->SkylabDH1);
-		papiReadScenario_double(line, "SKYLAB_DH2", G->SkylabDH2);
 
 		papiReadScenario_double(line, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 		papiReadScenario_double(line, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
@@ -814,11 +790,6 @@ void ApolloRTCCMFD::menuSetVECPOINTPage()
 void ApolloRTCCMFD::menuSetDescPlanCalcPage()
 {
 	SelectPage(16);
-}
-
-void ApolloRTCCMFD::menuSetSkylabPage()
-{
-	SelectPage(17);
 }
 
 void ApolloRTCCMFD::menuSetDescPlanInitPage()
@@ -3036,10 +3007,14 @@ void ApolloRTCCMFD::set_sextantstartime(double time)
 
 void ApolloRTCCMFD::REFSMMATTimeDialogue()
 {
-	if (G->REFSMMATopt == 2 || G->REFSMMATopt == 6)
+	if (G->REFSMMATopt == 2)
 	{
 		bool REFSMMATGETInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", REFSMMATGETInput, 0, 20, (void*)this);
+	}
+	else if (G->REFSMMATopt == 6)
+	{
+		GenericDoubleInput(&G->REFSMMAT_PTC_MJD, "Enter MJD of average time of TEI:");
 	}
 	else if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 	{
@@ -3057,7 +3032,7 @@ void ApolloRTCCMFD::UploadREFSMMAT()
 
 void ApolloRTCCMFD::set_REFSMMATTime(double time)
 {
-	this->G->REFSMMATTime = time;
+	G->REFSMMAT_LVLH_Time = time;
 }
 
 void ApolloRTCCMFD::menuREFSMMATLockerMovement()
@@ -6404,189 +6379,9 @@ void ApolloRTCCMFD::menuLDPPCalc()
 	menuSetDescPlanTablePage();
 }
 
-void ApolloRTCCMFD::menuSwitchSkylabManeuver()
-{
-	if (G->Skylabmaneuver < 7)
-	{
-		G->Skylabmaneuver++;
-	}
-	else
-	{
-		G->Skylabmaneuver = 0;
-	}
-}
-
-void ApolloRTCCMFD::menuCyclePlaneChange()
-{
-	if (G->Skylabmaneuver == 1 || G->Skylabmaneuver == 2)
-	{
-		G->Skylab_NPCOption = !G->Skylab_NPCOption;
-	}
-}
-
-void ApolloRTCCMFD::menuCyclePCManeuver()
-{
-	if (G->Skylabmaneuver == 7)
-	{
-		G->Skylab_PCManeuver = !G->Skylab_PCManeuver;
-	}
-}
-
-void ApolloRTCCMFD::menuSetSkylabGET()
-{
-	if (G->Skylabmaneuver == 5)
-	{
-		if (G->target == NULL)
-		{
-			return;
-		}
-
-		double mu, SVMJD, dt1;
-		VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb, RA0, VA0, RP0, VP0;
-		OBJHANDLE gravref = GC->rtcc->AGCGravityRef(G->vessel);
-
-		mu = GGRAV*oapiGetMass(gravref);
-
-		G->vessel->GetRelativePos(gravref, RA0_orb);
-		G->vessel->GetRelativeVel(gravref, VA0_orb);
-		G->target->GetRelativePos(gravref, RP0_orb);
-		G->target->GetRelativeVel(gravref, VP0_orb);
-		SVMJD = oapiGetSimMJD();
-
-		RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//The following equations use another coordinate system than Orbiter
-		VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
-		RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
-		VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
-
-		dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, SVMJD, G->Skylab_E_L, gravref);
-		G->t_TPI = dt1 + (SVMJD - GC->rtcc->CalcGETBase()) * 24.0 * 60.0 * 60.0;
-	}
-	else if (G->Skylabmaneuver == 6)
-	{
-		bool SkylabDTTPMInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the relative time to TPI for the maneuver", SkylabDTTPMInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		bool SkylabGETInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", SkylabGETInput, 0, 20, (void*)this);
-	}
-}
-
-bool SkylabGETInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, t1time;
-	if (sscanf(str, "TPI=%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		t1time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_t_TPI(t1time);
-		return true;
-	}
-	else if (strcmp(str, "PeT") == 0)
-	{
-		double pet;
-		pet = ((ApolloRTCCMFD*)data)->timetoperi();
-		((ApolloRTCCMFD*)data)->set_SkylabGET(pet);
-		return true;
-	}
-	else if (strcmp(str, "ApT") == 0)
-	{
-		double pet;
-		pet = ((ApolloRTCCMFD*)data)->timetoapo();
-		((ApolloRTCCMFD*)data)->set_SkylabGET(pet);
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		t1time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_SkylabGET(t1time);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_SkylabGET(double time)
-{
-	if (G->Skylabmaneuver == 0)
-	{
-		G->SkylabTPIGuess = time;
-	}
-	else if (G->Skylabmaneuver == 1)
-	{
-		G->Skylab_t_NC1 = time;
-	}
-	else if (G->Skylabmaneuver == 2)
-	{
-		G->Skylab_t_NC2 = time;
-	}
-	else if (G->Skylabmaneuver == 3)
-	{
-		G->Skylab_t_NCC = time;
-	}
-	else if (G->Skylabmaneuver == 4)
-	{
-		G->Skylab_t_NSR = time;
-	}
-}
-
-bool SkylabDTTPMInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_SkylabDTTPM(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_SkylabDTTPM(double dt)
-{
-	this->G->Skylab_dt_TPM = dt*60.0;
-}
-
 void ApolloRTCCMFD::set_t_TPI(double time)
 {
 	G->t_TPI = time;
-}
-
-void ApolloRTCCMFD::menuSkylabCalc()
-{
-	if (G->target != NULL)
-	{
-		G->SkylabCalc();
-	}
-}
-
-void ApolloRTCCMFD::menuSetSkylabNC()
-{
-	if (G->Skylabmaneuver == 1)
-	{
-		GenericDoubleInput(&G->Skylab_n_C, "Choose the number of revolutions:", 1.0);
-	}
-}
-
-void ApolloRTCCMFD::menuSetSkylabDH1()
-{
-	if (G->Skylabmaneuver == 1)
-	{
-		GenericDoubleInput(&G->SkylabDH1, "Choose the Delta Height at NCC:", 1852.0);
-	}
-}
-
-void ApolloRTCCMFD::menuSetSkylabDH2()
-{
-	if (G->Skylabmaneuver == 1 || G->Skylabmaneuver == 2 || G->Skylabmaneuver == 3)
-	{
-		GenericDoubleInput(&G->SkylabDH2, "Choose the Delta Height at NSR:", 1852.0);
-	}
-}
-
-void ApolloRTCCMFD::menuSetSkylabEL()
-{
-	if (G->Skylabmaneuver > 0 && G->Skylabmaneuver <= 5)
-	{
-		GenericDoubleInput(&G->Skylab_E_L, "Choose the elevation angle at TPI:", RAD);
-	}
 }
 
 void ApolloRTCCMFD::menuSetTPIguess()
@@ -8127,7 +7922,7 @@ bool GOSTBoresightSCTCalcInput(void* id, char *str, void *data)
 	int hh, mm, star;
 	char ref[16];
 
-	if (sscanf_s(str, "%d:%d:%lf %d %s", &hh, &mm, &ss, &star, &ref, _countof(ref)) == 5)
+	if (sscanf(str, "%d:%d:%lf %d %15s", &hh, &mm, &ss, &star, ref) == 5)
 	{
 		std::string med, med2;
 		med2.assign(ref);
@@ -8153,7 +7948,7 @@ bool GOSTSXTCalcInput(void* id, char *str, void *data)
 	int hh, mm, star;
 	char ref[16];
 
-	if (sscanf_s(str, "%d:%d:%lf %d %s", &hh, &mm, &ss, &star, &ref, _countof(ref)) == 5)
+	if (sscanf(str, "%d:%d:%lf %d %15s", &hh, &mm, &ss, &star, &ref) == 5)
 	{
 		std::string med, med2;
 		med2.assign(ref);
@@ -8270,7 +8065,7 @@ bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data)
 	int hh, mm;
 	double ss, lat = 0.0, lng = 0.0, height = 0.0;
 	char buff[16], body;
-	if (sscanf_s(str, "%s %d:%d:%lf %c %lf %lf %lf", buff, (unsigned)_countof(buff), &hh, &mm, &ss, &body, 1, &lat, &lng, &height) >= 3)
+	if (sscanf(str, "%15s %d:%d:%lf %c %lf %lf %lf", buff, &hh, &mm, &ss, &body, &lat, &lng, &height) >= 3)
 	{
 		std::string med, med2;
 		med2.assign(buff);

@@ -353,11 +353,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 10: //PTC REFSMMAT
 	{
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
 		char buffer1[1000];
 
-		MATRIX3 REFSMMAT = _M(-0.5, -0.8660254, 0.0, -0.79453912, 0.45872741, 0.39784005, -0.34453959, 0.19892003, -0.91745479);
+		refsopt.REFSMMATopt = 6;
+		refsopt.REFSMMATTime = 40365.25560140741; //133:19:04 GET of nominal mission
 
-		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, true, true);
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, true);
 		sprintf(uplinkdata, "%s", buffer1);
 
 		if (upString != NULL) {
@@ -1158,6 +1163,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.useSV = true;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
+		opt.sxtstardtime = -15.0*60.0; //15 minutes before TIG
 
 		AP11ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, manname);
@@ -1951,7 +1957,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		//Without descent stage
-		sv_LM.mass -= 2224.0 + 8000.0;
+		LEM *lem = (LEM *)calcParams.tgt;
+		sv_LM.mass = lem->GetAscentStageMass();
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
 		lamopt.GETbase = GETbase;
@@ -2054,11 +2061,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 
+		sv = StateVectorCalc(calcParams.tgt);
 		GETbase = CalcGETBase();
+		EZJGMTX1.data[0].REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		EZJGMTX3.data[0].REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
+
 		t_Depletion_guess = OrbMech::HHMMSSToSS(108, 0, 0);
 		dv = 4600.0*0.3048;
 
-		sv = StateVectorCalc(calcParams.tgt);
 		sv1 = coast(sv, t_Depletion_guess - OrbMech::GETfromMJD(sv.MJD, GETbase));
 
 		MJD_depletion = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, 0.0);
@@ -2089,6 +2099,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManeuverPAD(&opt, *form);
 
 		AGCStateVectorUpdate(buffer1, sv, false, GETbase);
+
+		DockAlignOpt dockopt;
+
+		dockopt.LM_REFSMMAT = EZJGMTX3.data[0].REFSMMAT;
+		dockopt.CSM_REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
+		dockopt.LMAngles = form->IMUAtt;
+		dockopt.type = 3;
+
+		DockingAlignmentProcessor(dockopt);
+		sprintf(form->remarks, "CSM IMU angles. Roll %.0f, pitch %.0f, yaw %.0f", dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
+		sprintf(form->purpose, "APS Depletion");
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -2136,19 +2157,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else if (fcn == 93 || fcn == 94)
 		{
-			MCCtime = calcParams.EI - 2.0*3600.0;
+			MCCtime = calcParams.EI - 3.0*3600.0;
 			sprintf(manname, "MCC-7");
-		}
-
-		//Only corridor control after EI-24h
-		if (MCCtime > calcParams.EI - 24.0*3600.0)
-		{
-			entopt.type = 3;
-		}
-		else
-		{
-			entopt.type = 1;
-			entopt.t_Z = OrbMech::HHMMSSToSS(192.0, 0.0, 0.0);
 		}
 
 		GETbase = CalcGETBase();
@@ -2161,10 +2171,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
+		entopt.type = 3;
 
-		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
+		//Calculate corridor control burn
+		EntryTargeting(&entopt, &res);
 
-									  //Apollo 10 Mission Rules
+		//If time to EI is more than 24 hours and the splashdown longitude is not within 2° of desired, then perform a longitude control burn
+		if (MCCtime < calcParams.EI - 24.0*3600.0 && abs(res.longitude - entopt.lng) > 2.0*RAD)
+		{
+			entopt.type = 1;
+			entopt.t_Z = res.GET400K;
+
+			EntryTargeting(&entopt, &res);
+		}
+
+		//Apollo 10 Mission Rules
 		if (MCCtime > calcParams.EI - 50.0*3600.0)
 		{
 			if (length(res.dV_LVLH) < 1.0*0.3048)
@@ -2472,8 +2493,7 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 	LambertMan lamopt, lamopt2;
 	TwoImpulseResuls lamres;
 	double t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
-	VECTOR3 dV_Phasing, dV_Insertion, dV_CDH, DVX;
-	MATRIX3 Q_Xx;
+	VECTOR3 dV_Phasing, dV_Insertion, R_P_CDH1, V_P_CDH1;
 	SV sv_P0, sv_P_CSI, sv_Phasing, sv_Phasing_apo, sv_Insertion, sv_Insertion_apo, sv_CSI, sv_CSI_apo, sv_CDH, sv_CDH_apo, sv_P_CDH;
 
 	t_Phasing = t_TIG;
@@ -2551,13 +2571,11 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 		//CDH Targeting
 		T_P = OrbMech::period(sv_CSI_apo.R, sv_CSI_apo.V, OrbMech::mu_Moon);
 		t_CDH = t_CSI + T_P / 2.0;
-		NSRProgram(sv_CSI_apo, sv_P_CSI, GETbase, 0.0, t_CDH, 0.0, dV_CDH);
 		sv_CDH = coast(sv_CSI_apo, t_CDH - t_CSI);
-		Q_Xx = OrbMech::LVLH_Matrix(sv_CDH.R, sv_CDH.V);
-		DVX = tmul(Q_Xx, dV_CDH);
 		sv_CDH_apo = sv_CDH;
-		sv_CDH_apo.V += DVX;
 		sv_P_CDH = coast(sv_P_CSI, t_CDH - t_CSI);
+		OrbMech::RADUP(sv_P_CDH.R, sv_P_CDH.V, sv_CDH.R, OrbMech::mu_Moon, R_P_CDH1, V_P_CDH1);
+		sv_CDH_apo.V = OrbMech::CoellipticDV(sv_CDH.R, R_P_CDH1, V_P_CDH1, OrbMech::mu_Moon);
 
 		//Find TPI time and recycle
 		dt_TPI = OrbMech::findelev(sv_CDH_apo.R, sv_CDH_apo.V, sv_P_CDH.R, sv_P_CDH.V, sv_CDH_apo.MJD, 26.6*RAD, sv_CDH_apo.gravref);

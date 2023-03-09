@@ -195,17 +195,17 @@ void SCE::Timestep()
 	//INVERTER 3 TEMP (CC0177T)
 	DBA[2] = scale_data(0.0, 32.0, 248.0);
 	//FC 1 COND EXH TEMP (SC2081T)
-	DBA[3] = scale_data(fcStatus1.CondenserTempF, 145, 250);
+	DBA[3] = scale_data(sat->FuelCells[0]->condenserTemp, 335.928, 394.261); //this should probably point to a "thermocouple" object like the other transducers
 	//FC 2 COND EXH TEMP (SC2082T)
-	DBA[4] = scale_data(fcStatus2.CondenserTempF, 145, 250);
+	DBA[4] = scale_data(sat->FuelCells[1]->condenserTemp, 335.928, 394.261);
 	//FC 3 COND EXH TEMP (SC2083T)
-	DBA[5] = scale_data(fcStatus3.CondenserTempF, 145, 250);
+	DBA[5] = scale_data(sat->FuelCells[2]->condenserTemp, 335.928, 394.261);
 	//FC 1 SKIN TEMP (SC2084T)
-	DBA[6] = scale_data(fcStatus1.TempF, 80, 550);
+	DBA[6] = scale_data(sat->FuelCells[0]->Temp, 299.817, 560.928);
 	//FC 2 SKIN TEMP (SC2085T)
-	DBA[7] = scale_data(fcStatus2.TempF, 80, 550);
+	DBA[7] = scale_data(sat->FuelCells[1]->Temp, 299.817, 560.928);
 	//FC 3 SKIN TEMP (SC2086T)
-	DBA[8] = scale_data(fcStatus3.TempF, 80, 550);
+	DBA[8] = scale_data(sat->FuelCells[2]->Temp, 299.817, 560.928);
 	//ENG INJECTOR FLANGE TEMP 1 (SP0061T)
 	DBA[9] = scale_data(0, 0.0, 600.0);
 	//ENG INJECTOR FLANGE TEMP 2 (SP0062T)

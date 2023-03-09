@@ -89,7 +89,7 @@ public:
 	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 	SURFHANDLE FrameSurface;
 
@@ -102,7 +102,6 @@ public:
 	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 	SURFHANDLE FrameSurface;
 
@@ -487,7 +486,7 @@ public:
 	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 protected:
 	SURFHANDLE FrameSurface;
 };
@@ -497,7 +496,7 @@ public:
 	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 protected:
 	SURFHANDLE FrameSurface;
 };
@@ -507,7 +506,6 @@ public:
 	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 protected:
 	SURFHANDLE FrameSurface;
 };

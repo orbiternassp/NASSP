@@ -470,6 +470,20 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	H2Tank2TempSensor("H2Tank2-Temp-Sensor", -425.0, -200.0),
 	O2Tank1TempSensor("O2Tank1-Temp-Sensor", -325.0, 80.0),
 	O2Tank2TempSensor("O2Tank2-Temp-Sensor", -325.0, 80.0),
+	H2Tank1PressSensor("H2Tank1-Press-Sensor", 0.0, 350.0),
+	H2Tank2PressSensor("H2Tank2-Press-Sensor", 0.0, 350.0),
+	O2Tank1PressSensor("O2Tank1-Press-Sensor", 50.0, 1050.0),
+	O2Tank2PressSensor("O2Tank2-Press-Sensor", 50.0, 1050.0),
+	H2Tank1QuantitySensor("H2Tank1-Quantity-Sensor", 0.0, 1.0, 12701.0),
+	H2Tank2QuantitySensor("H2Tank2-Quantity-Sensor", 0.0, 1.0, 12701.0),
+	O2Tank1QuantitySensor("O2Tank1-Quantity-Sensor", 0.0, 1.0, 145150.0),
+	O2Tank2QuantitySensor("O2Tank2-Quantity-Sensor", 0.0, 1.0, 145150.0),
+	FCO2PressureSensor1("FuelCell1-O2-Press-Sensor", 0.0, 75.0),
+	FCO2PressureSensor2("FuelCell2-O2-Press-Sensor", 0.0, 75.0),
+	FCO2PressureSensor3("FuelCell3-O2-Press-Sensor", 0.0, 75.0),
+	FCH2PressureSensor1("FuelCell1-H2-Press-Sensor", 0.0, 75.0),
+	FCH2PressureSensor2("FuelCell2-H2-Press-Sensor", 0.0, 75.0),
+	FCH2PressureSensor3("FuelCell3-H2-Press-Sensor", 0.0, 75.0),
 	CabinPressSensor("Cabin-Press-Sensor", 0.0, 17.0),
 	ECSPressGroups1Feeder("ECS-Press-Groups1-Feeder", Panelsdk),
 	ECSPressGroups2Feeder("ECS-Press-Groups2-Feeder", Panelsdk),
@@ -1160,7 +1174,6 @@ void Saturn::initSaturn()
 		// Initialize the panel
 		fdaiDisabled = false;
 		fdaiSmooth = false;
-		hBmpFDAIRollIndicator = 0;
 
 		PanelId = SATPANEL_MAIN; 		// default panel
 		MainPanelSplit = false;
@@ -4551,9 +4564,7 @@ void Saturn::LoadDefaultSounds()
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
 
-void Saturn::StageSix(double simt)
-
-{
+void Saturn::StageSix(double simt){
 	UpdateMassAndCoG();
 
 	if (ApolloNo == 1301) {
@@ -4689,17 +4700,13 @@ void Saturn::StageSix(double simt)
 		}
 
 		if (ApolloExploded && ph_o2_vent) {
+			
+			double O2Tank1Mass = O2Tanks[0]->mass/1E3;
 
-			TankQuantities t;
-			GetTankQuantities(t);
+			SetThrusterLevel(th_o2_vent, O2Tank1Mass/145149.5584);
 
-			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity);
-
-			SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
-
-
+			SetPropellantMass(ph_o2_vent, O2Tank1Mass);
 		}
-
 	}
 }
 

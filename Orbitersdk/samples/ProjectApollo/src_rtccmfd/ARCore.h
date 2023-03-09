@@ -54,7 +54,6 @@ public:
 	void SPQcalc();
 	void GPMPCalc();
 	void REFSMMATCalc();
-	void SkylabCalc();
 	void LunarLaunchTargetingCalc();
 	void LDPPalc();
 	void LunarLiftoffCalc();
@@ -237,7 +236,8 @@ public:
 	int GMPManeuverType;
 
 	//REFSMMAT PAGE
-	double REFSMMATTime;
+	double REFSMMAT_LVLH_Time;
+	double REFSMMAT_PTC_MJD;
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;
@@ -314,20 +314,6 @@ public:
 
 	//DOI Page
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
-
-	//Skylab Page
-	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
-	bool Skylab_NPCOption;				//0 = NC1 or NC2 with out-of-plane component, setting up a NPC maneuver 90° later
-	bool Skylab_PCManeuver;				//0 = NC1 is setting up NPC, 1 = NC2 is setting up NPC
-	double SkylabTPIGuess;
-	double Skylab_n_C;
-	double SkylabDH1;					//Delta Height at NCC
-	double SkylabDH2;					//Delta Height at NSR
-	double Skylab_E_L;
-	bool SkylabSolGood;
-	VECTOR3 Skylab_dV_NSR, Skylab_dV_NCC;//, Skylab_dV_NPC;
-	double Skylab_dH_NC2, Skylab_dv_NC2, Skylab_dv_NCC;
-	double Skylab_t_NC1, Skylab_t_NC2, Skylab_t_NCC, Skylab_t_NSR, Skylab_dt_TPM; //Skylab_t_NPC
 
 	//Terrain Model
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;

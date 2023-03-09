@@ -89,30 +89,6 @@ namespace mission
 #define RCS_CM_RING_1		4
 #define RCS_CM_RING_2		5
 
-///
-/// \brief O2/H2 tank status.
-/// \ingroup InternalInterface
-///
-typedef struct {
-	double O2Tank1PressurePSI;
-	double O2Tank2PressurePSI;
-	double H2Tank1PressurePSI;
-	double H2Tank2PressurePSI;
-	double O2SurgeTankPressurePSI;
-} TankPressures;
-
-///
-/// \brief O2/H2 tank quantities.
-/// \ingroup InternalInterface
-///
-typedef struct {
-	double O2Tank1Quantity;
-	double O2Tank1QuantityKg;
-	double O2Tank2Quantity;
-	double O2Tank2QuantityKg;
-	double H2Tank1Quantity;
-	double H2Tank2Quantity;
-} TankQuantities;
 
 ///
 /// \brief Cabin atmosphere status.
@@ -1134,8 +1110,6 @@ public:
 	///
 	void GetAtmosStatus(AtmosStatus &atm);
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
-	void GetTankPressures(TankPressures &press);
-	void GetTankQuantities(TankQuantities &q);
 
 	///
 	/// Get information on the status of a fuel cell in the CSM.
@@ -1639,8 +1613,6 @@ protected:
 	FDAI fdaiLeft;
 	int fdaiDisabled;
 	int fdaiSmooth;
-
-	HBITMAP hBmpFDAIRollIndicator;
 
 	//Panels
 
@@ -3616,6 +3588,14 @@ public:
 	CSMTankTempTransducer H2Tank2TempSensor;
 	CSMTankTempTransducer O2Tank1TempSensor;
 	CSMTankTempTransducer O2Tank2TempSensor;
+	CSMTankPressTransducer H2Tank1PressSensor;
+	CSMTankPressTransducer H2Tank2PressSensor;
+	CSMTankPressTransducer O2Tank1PressSensor;
+	CSMTankPressTransducer O2Tank2PressSensor;
+	CSMTankQuantityTransducer H2Tank1QuantitySensor;
+	CSMTankQuantityTransducer H2Tank2QuantitySensor;
+	CSMTankQuantityTransducer O2Tank1QuantitySensor;
+	CSMTankQuantityTransducer O2Tank2QuantitySensor;
 	CSMTankPressTransducer CabinPressSensor;
 	CSMTankTempTransducer CabinTempSensor;
 	CSMDeltaPressINH2OTransducer SuitCabinDeltaPressSensor;
@@ -3645,6 +3625,12 @@ public:
 	CSMTankTempTransducer PriRadInTempSensor;
 	CSMTankTempTransducer SecRadInTempSensor;
 	CSMTankTempTransducer SecRadOutTempSensor;
+	CSMTankPressTransducer FCO2PressureSensor1;
+	CSMTankPressTransducer FCO2PressureSensor2;
+	CSMTankPressTransducer FCO2PressureSensor3;
+	CSMTankPressTransducer FCH2PressureSensor1;
+	CSMTankPressTransducer FCH2PressureSensor2;
+	CSMTankPressTransducer FCH2PressureSensor3;
 protected:
 
 	// CM Optics
@@ -4478,11 +4464,6 @@ protected:
 	double *pCabinRepressFlow;
 	double *pEmergencyCabinRegulatorFlow;
 	double *pO2FlowXducer;
-	double *pO2Tank1Press;
-	double *pO2Tank2Press;
-	double *pH2Tank1Press;
-	double *pH2Tank2Press;
-	double *pO2SurgeTankPress;
 	double *pO2Tank1Quantity;
 	double *pO2Tank2Quantity;
 	double *pH2Tank1Quantity;

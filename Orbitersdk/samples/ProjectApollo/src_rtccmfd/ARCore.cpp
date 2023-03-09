@@ -349,7 +349,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	//screen = 0;
 	targetnumber = -1;
 	AGCEphemTEphemZero = 40038.0;
-	REFSMMATTime = 0.0;
+	REFSMMAT_LVLH_Time = 0.0;
+	REFSMMAT_PTC_MJD = 0.0;
 	REFSMMATopt = 4;
 	REFSMMATcur = 4;
 	manpadopt = 0;
@@ -629,10 +630,17 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PDAP_Theta_LIM = 0.0;
 	PDAP_R_amin = 0.0;
 
-	if (GC->mission == 12)
+	if (GC->mission == 10)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(183, 0, 30);
+		REFSMMAT_PTC_MJD = 40365.25560140741; //133:19:04 GET of nominal mission
+	}
+	else if (GC->mission == 11)
+	{
+		REFSMMAT_PTC_MJD = 40426.71589131481; //195:38:53 GET of nominal mission
+	}
+	else if (GC->mission == 12)
+	{
+		REFSMMAT_PTC_MJD = 40547.30729122223; //183:00:30 GET of nominal mission
 
 		PDAP_J1 = 6.0325675e6*0.3048;
 		PDAP_K1 = -6.2726125e5*0.3048;
@@ -643,40 +651,28 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (GC->mission == 13)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(178, 30, 0);
+		REFSMMAT_PTC_MJD = 40695.238194; //178:30:00 GET of nominal mission
 	}
 	else if (GC->mission == 14)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(166, 10, 30);
+		REFSMMAT_PTC_MJD = 40989.77326433333; //166:10:30 GET of nominal mission
 	}
 	else if (GC->mission == 15)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(230, 9, 0);
+		REFSMMAT_PTC_MJD = 41168.15486133334; //230:09:00 GET of nominal mission
 	}
 	else if (GC->mission == 16)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(166, 2, 50);
+		REFSMMAT_PTC_MJD = 41430.66446425925;  //166:02:50 GET of nominal mission
 	}
 	else if (GC->mission == 17)
 	{
-		//For PTC REFSMMAT
-		REFSMMATTime = OrbMech::HHMMSSToSS(241, 29, 30);
+		REFSMMAT_PTC_MJD = 41668.18229177778;  //241:29:30 GET of nominal mission
 	}
-
-	Skylabmaneuver = 0;
-	SkylabTPIGuess = 0.0;
-	Skylab_n_C = 1.5;
-	SkylabDH1 = 20.0*1852.0;
-	SkylabDH2 = 10.0*1852.0;
-	Skylab_E_L = 27.0*RAD;
-	SkylabSolGood = true;
-	Skylab_dV_NSR = Skylab_dV_NCC = _V(0, 0, 0);
-	Skylab_dH_NC2 = Skylab_dv_NC2 = Skylab_t_NC1 = Skylab_t_NC2 = Skylab_dv_NCC = Skylab_t_NCC = Skylab_t_NSR = Skylab_dt_TPM = 0.0;
-	Skylab_NPCOption = Skylab_PCManeuver = false;
+	else
+	{
+		REFSMMAT_PTC_MJD = oapiGetSimMJD(); //Near current time usually gives a good PTC REFSMMAT, too
+	}
 
 	TMLat = 0.0;
 	TMLng = 0.0;
@@ -854,11 +850,6 @@ void ARCore::LOICalc()
 void ARCore::LDPPalc()
 {
 	startSubthread(10);
-}
-
-void ARCore::SkylabCalc()
-{
-	startSubthread(12);
 }
 
 void ARCore::LunarLaunchTargetingCalc()
@@ -2819,13 +2810,17 @@ int ARCore::subThread()
 		{
 			opt.REFSMMATTime = P30TIG;
 		}
+		else if (REFSMMATopt == 2)
+		{
+			opt.REFSMMATTime = REFSMMAT_LVLH_Time;
+		}
 		else if (REFSMMATopt == 5 || REFSMMATopt == 8)
 		{
 			opt.REFSMMATTime = GC->rtcc->CZTDTGTU.GETTD;
 		}
 		else
 		{
-			opt.REFSMMATTime = REFSMMATTime;
+			opt.REFSMMATTime = REFSMMAT_PTC_MJD;
 		}
 
 		//For LS REFSMMAT use target vessel, if we are not in the CSM
@@ -3233,133 +3228,8 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
-	case 12: //Skylab Rendezvous Targeting
+	case 12: //Spare
 	{
-		SkyRendOpt opt;
-		SkylabRendezvousResults res;
-
-		opt.E_L = Skylab_E_L;
-		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.man = Skylabmaneuver;
-		opt.DH1 = SkylabDH1;
-		opt.DH2 = SkylabDH2;
-		opt.n_C = Skylab_n_C;
-		opt.t_TPI = t_TPI;
-		opt.PCManeuver = Skylab_PCManeuver;
-		opt.NPCOption = Skylab_NPCOption;
-
-		if (Skylabmaneuver == 0)
-		{
-			opt.TPIGuess = SkylabTPIGuess;
-		}
-		else if (Skylabmaneuver == 1)
-		{
-			opt.t_C = Skylab_t_NC1;
-		}
-		else if (Skylabmaneuver == 2)
-		{
-			opt.t_C = Skylab_t_NC2;
-		}
-		else if (Skylabmaneuver == 3)
-		{
-			opt.t_C = Skylab_t_NCC;
-		}
-		else if (Skylabmaneuver == 4)
-		{
-			opt.t_C = Skylab_t_NSR;
-		}
-		else if (Skylabmaneuver == 5)
-		{
-			opt.t_C = t_TPI;
-		}
-		else if (Skylabmaneuver == 6)
-		{
-			opt.t_C = t_TPI + Skylab_dt_TPM;
-		}
-		else if (Skylabmaneuver == 7)
-		{
-			if (Skylab_PCManeuver == 0)
-			{
-				opt.t_NC = Skylab_t_NC1;
-			}
-			else
-			{
-				opt.t_NC = Skylab_t_NC2;
-			}
-		}
-
-		if (GC->MissionPlanningActive)
-		{
-			double gmt = GC->rtcc->GMTfromGET(opt.t_C);
-
-			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_CSM, EPHEM))
-			{
-				Result = DONE;
-				break;
-			}
-
-			opt.sv_C.R = EPHEM.R;
-			opt.sv_C.V = EPHEM.V;
-			opt.sv_C.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			opt.sv_C.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-
-			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_LM, EPHEM))
-			{
-				Result = DONE;
-				break;
-			}
-
-			opt.sv_T.R = EPHEM.R;
-			opt.sv_T.V = EPHEM.V;
-			opt.sv_T.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			opt.sv_T.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-		}
-		else
-		{
-			opt.sv_C = GC->rtcc->StateVectorCalc(vessel);
-			opt.sv_T = GC->rtcc->StateVectorCalc(target);
-		}
-		opt.DMMass = GC->rtcc->GetDockedVesselMass(vessel);
-
-		SkylabSolGood = GC->rtcc->SkylabRendezvous(&opt, &res);
-
-		if (SkylabSolGood)
-		{
-			if (Skylabmaneuver == 0)
-			{
-				t_TPI = res.t_TPI;
-			}
-			else
-			{
-				dV_LVLH = res.dV_LVLH;
-				P30TIG = res.P30TIG;
-			}
-			
-			if (Skylabmaneuver == 1)
-			{
-				Skylab_dH_NC2 = res.dH_NC2;
-				Skylab_dv_NC2 = res.dv_NC2;
-				Skylab_dv_NCC = res.dv_NCC;
-				Skylab_dV_NSR = res.dV_NSR;
-				Skylab_t_NC2 = res.t_NC2;
-				Skylab_t_NCC = res.t_NCC;
-				Skylab_t_NSR = res.t_NSR;
-			}
-			else if (Skylabmaneuver == 2)
-			{
-				Skylab_dv_NCC = res.dv_NCC;
-				Skylab_dV_NSR = res.dV_NSR;
-				Skylab_t_NCC = res.t_NCC;
-				Skylab_t_NSR = res.t_NSR;
-			}
-			else if (Skylabmaneuver == 3)
-			{
-				Skylab_dV_NSR = res.dV_NSR;
-				Skylab_t_NSR = res.t_NSR;
-			}
-		}
-
 		Result = DONE;
 	}
 	break;
