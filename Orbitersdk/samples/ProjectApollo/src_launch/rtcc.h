@@ -118,20 +118,6 @@ class Saturn;
 #define RTCC_LMPOS_AGS 2
 #define RTCC_LMPOS_MED 3
 
-const double LaunchMJD[11] = {//Launch MJD of Apollo missions
-	40140.62691,
-	40211.535417,
-	40283.666667,
-	40359.700694,
-	40418.563889,
-	40539.68194,
-	40687.80069,
-	40982.849306,
-	41158.5652869,
-	41423.74583,
-	41658.120139
-};
-
 //MANUAL ENTRY DEVICES
 
 //Computation for Lunar Descent Planning
@@ -535,19 +521,6 @@ struct REFSMMATOpt
 	SV RV_MCC;				//State vector as input
 };
 
-struct CDHOpt
-{
-	VESSEL* vessel; //Vessel executing the burn
-	VESSEL* target; //Target vessel
-	double GETbase; //usually MJD at launch
-	double DH; //Delta Height
-	int CDHtimemode; //0 = Fixed Time, 1 = Find GETI
-	double TIG; // (Estimated) Time of Ignition
-	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
-	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
-};
-
 struct AP7BLKOpt
 {
 	int n; //number of PAD entries
@@ -591,29 +564,6 @@ struct LunarEntryPADOpt
 	SV sv0;
 };
 
-struct TLIManNode
-{
-	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
-	double TLI_TIG; //Initial guess for TLI TIG
-	double lat; //selenographic latitude
-	double lng; //selenographic longitude
-	double PeriGET; //time of pericynthion, initial guess
-	double h_peri;	//flyby altitude
-	SV RV_MCC;		//State vector as input
-};
-
-struct TLIManFR
-{
-	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
-	double TLI_TIG; //Initial guess for TLI TIG
-	double lat; //Earth-Moon-Plane
-	double PeriGET; //time of pericynthion, initial guess
-	double h_peri;	//flyby altitude
-	SV RV_MCC;		//State vector as input
-};
-
 struct TLIPADOpt
 {
 	EphemerisData sv0; //vessel state vector
@@ -637,44 +587,6 @@ struct AGSSVOpt
 	MATRIX3 REFSMMAT;
 	bool csm;
 	bool landed = false;
-};
-
-struct SkyRendOpt
-{
-	double GETbase;		//usually MJD at launch
-	int man;			//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
-	bool PCManeuver;	//0 = NC1 is setting up NPC, 1 = NC2 is setting up NPC
-	bool NPCOption;		//0 = NC1 or NC2 with out-of-plane component, setting up a NPC maneuver 90° later
-	double TPIGuess;	//Estimate for the TPI time
-	double t_TPI;		//Time of TPI
-	double E_L;			//Elevation angle at TPI
-	double t_C;			//Time of Ignition
-	double DH1;			//Delta Height at NCC
-	double DH2;			//Delta Height at NSR
-	double n_C;
-	double t_NC;		//Reference time for the NPC maneuver
-	bool useSV = false;		//true if state vector is to be used
-	SV sv_C;		//Chaser state vector
-	SV sv_T;		//Target state vector
-	double DMMass; //Docking module mass
-};
-
-struct SkylabRendezvousResults
-{
-	double P30TIG;
-	VECTOR3 dV_LVLH;
-
-	double t_NC2;
-	double t_NCC;
-	double t_NSR;
-	double t_TPI;
-
-	double dv_NC2;
-	double dv_NCC;
-
-	double dH_NC2;
-
-	VECTOR3 dV_NSR;
 };
 
 struct LunarLiftoffTimeOpt
@@ -2705,13 +2617,6 @@ public:
 	double GetIUClockZero() { return SystemParameters.MCGRIC * 3600.0; }
 	double GetAGSClockZero() { return SystemParameters.MCGZSS * 3600.0; }
 	double GetIULaunchAzimuth() { return SystemParameters.MCLABN; }
-
-	//Skylark
-	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
-	bool NC1NC2Program(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh_F, double n_H1, int s, double dh, double n_C, VECTOR3 &dV_NC1_LVLH, double &dh_NC2, double &dv_NC2, double &t_NC2, VECTOR3 &dV_NC2_LVLH, double &dv_NCC, double &t_NCC, double &t_NSR, VECTOR3 &dV_NSR, bool NPC = false);
-	void NCCProgram(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh, VECTOR3 &dV_NCC_LVLH, double &t_NSR, VECTOR3 &dV_NSR_LVLH);
-	void NSRProgram(SV sv_C, SV sv_W, double GETbase, double E_L, double t2, double t3, VECTOR3 &dV_NSR_LVLH);
-	void NPCProgram(SV sv_C, SV sv_W, double GETbase, double t, double &t_NPC, VECTOR3 &dV_NPC_LVLH);
 
 	//Mission Planning
 
@@ -4880,7 +4785,6 @@ protected:
 	double TimeofIgnition;
 	double SplashLatitude, SplashLongitude;
 	VECTOR3 DeltaV_LVLH;
-	int REFSMMATType;
 	OBJHANDLE hEarth, hMoon;
 	std::ofstream rtccdebug;
 
