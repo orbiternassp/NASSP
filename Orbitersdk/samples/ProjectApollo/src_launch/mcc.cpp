@@ -1859,9 +1859,10 @@ void MCC::SaveState(FILEHANDLE scn) {
 		}
 		else if (padNumber == PT_LMP22ACQPAD)
 		{
-		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+			LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
 
-		SAVE_DOUBLE("MCC_AP12P22ACQ", form->P22_ACQ);
+			SAVE_DOUBLE("MCC_AP12P22ACQ_GET", form->P22_ACQ_GET);
+			papiWriteScenario_intarr(scn, "MCC_AP12P22ACQ_Octals", form->Octals, 2);
 		}
 		else if (padNumber == PT_AP12LMASCPAD)
 		{
@@ -2446,9 +2447,10 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == PT_LMP22ACQPAD)
 		{
-		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+			LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
 
-		LOAD_DOUBLE("MCC_AP12P22ACQ", form->P22_ACQ);
+			LOAD_DOUBLE("MCC_AP12P22ACQ_GET", form->P22_ACQ_GET);
+			papiReadScenario_intarr(line, "MCC_AP12P22ACQ_Octals", form->Octals, 2);
 		}
 		else if (padNumber == PT_AP12LMASCPAD)
 		{
@@ -3323,9 +3325,15 @@ void MCC::drawPad(bool writetofile){
 		int hh, mm;
 		double ss;
 
-		SStoHHMMSS(form->P22_ACQ, hh, mm, ss);
+		SStoHHMMSS(form->P22_ACQ_GET, hh, mm, ss);
 
 		sprintf(buffer, "P22 ACQUISITION\n%+06d HRS\n%+06d MIN\n%+07.2f SEC", hh, mm, ss);
+
+		//Optional
+		if (form->Octals[0] || form->Octals[1])
+		{
+			sprintf(buffer, "%s\nOctals: %05d %05d", buffer, form->Octals[0], form->Octals[1]);
+		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
