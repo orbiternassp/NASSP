@@ -5506,11 +5506,11 @@ void Saturn::InitSwitches() {
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 0, 0);
 
 	RCSIndicatorsSwitch.AddPosition(0, 280);
-	RCSIndicatorsSwitch.AddPosition(1, 320);
+	RCSIndicatorsSwitch.AddPosition(1, 310);
 	RCSIndicatorsSwitch.AddPosition(2, 340);
 	RCSIndicatorsSwitch.AddPosition(3, 20);
-	RCSIndicatorsSwitch.AddPosition(4, 40);
-	RCSIndicatorsSwitch.AddPosition(5, 70);
+	RCSIndicatorsSwitch.AddPosition(4, 50);
+	RCSIndicatorsSwitch.AddPosition(5, 80);
 	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 1);
 
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", TOGGLESWITCH_UP, false);
@@ -5807,12 +5807,12 @@ void Saturn::InitSwitches() {
 	DCIndicatorsRotary.SetSource(9, &PyroBusAFeeder);
 	DCIndicatorsRotary.SetSource(10, &PyroBusBFeeder);
 
-	ACIndicatorRotary.AddPosition(0, 290);
-	ACIndicatorRotary.AddPosition(1, 315);
+	ACIndicatorRotary.AddPosition(0, 280);
+	ACIndicatorRotary.AddPosition(1, 310);
 	ACIndicatorRotary.AddPosition(2, 340);
 	ACIndicatorRotary.AddPosition(3, 20);
-	ACIndicatorRotary.AddPosition(4, 45);
-	ACIndicatorRotary.AddPosition(5, 70);
+	ACIndicatorRotary.AddPosition(4, 50);
+	ACIndicatorRotary.AddPosition(5, 80);
 	ACIndicatorRotary.Register(PSH, "ACIndicatorRotary", 5);
 
 	ACIndicatorRotary.SetSource(0, &ACBus1PhaseA);
