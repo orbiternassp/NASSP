@@ -509,7 +509,8 @@ struct AP12LunarSurfaceDataCard
 
 struct LMP22ACQPAD
 {
-	double P22_ACQ;
+	double P22_ACQ_GET;
+	int Octals[2];
 };
 
 struct AP12LMASCPAD
