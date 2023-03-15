@@ -71,7 +71,7 @@ DLLCLBK void InitModule(HINSTANCE hModule)
 	g_Param.col[4] = oapiGetColour(255,0,255);
 }
 
-DLLCLBK void ExitModule()
+DLLCLBK void ExitModule(HINSTANCE hDll)
 
 {
 	int i;

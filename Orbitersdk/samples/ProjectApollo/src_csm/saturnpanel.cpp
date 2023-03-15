@@ -3582,7 +3582,7 @@ DLLCLBK void InitModule(HINSTANCE hModule) {
 	g_Param.pen[6] = oapiCreatePen (1, 3, RGB(255, 255, 255));
 }
 
-DLLCLBK void ExitModule() {
+DLLCLBK void ExitModule(HINSTANCE hDll) {
 
 	int i;
 
