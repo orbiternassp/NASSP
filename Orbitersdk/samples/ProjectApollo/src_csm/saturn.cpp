@@ -21,6 +21,7 @@
   See http://nassp.sourceforge.net/license/ for more details.
 
   **************************************************************************/
+#define ORBITER_MODULE
 
 // To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
@@ -3824,26 +3825,6 @@ void Saturn::FireSeperationThrusters(THRUSTER_HANDLE *pth)
 		if (pth[i])
 			SetThrusterLevel(pth[i], 1.0);
 	}
-}
-
-// ==============================================================
-// DLL entry point
-// ==============================================================
-
-BOOL WINAPI DllMain (HINSTANCE hModule,
-					 DWORD ul_reason_for_call,
-					 LPVOID lpReserved)
-{
-	switch (ul_reason_for_call) {
-	case DLL_PROCESS_ATTACH:
-		SetupgParam(hModule);
-		break;
-
-	case DLL_PROCESS_DETACH:
-		DeletegParam();
-		break;
-	}
-	return TRUE;
 }
 
 void Saturn::GenericTimestepStage(double simt, double simdt)
