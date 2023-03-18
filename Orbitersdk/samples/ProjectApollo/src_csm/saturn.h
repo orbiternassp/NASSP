@@ -4612,7 +4612,4 @@ extern MESHHANDLE hcmseatsunfolded;
 extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
 
-extern void SetupgParam(HINSTANCE hModule);
-extern void DeletegParam();
-
 #endif // _PA_SATURN_H

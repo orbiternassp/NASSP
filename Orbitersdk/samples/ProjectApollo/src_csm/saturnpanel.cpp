@@ -3562,7 +3562,7 @@ void Saturn::SetSwitches(int panel) {
 	Altimeter.Init(srf[SRF_ALTIMETER], srf[SRF_ALTIMETER2], this);
 }
 
-void SetupgParam(HINSTANCE hModule) {
+DLLCLBK void InitModule(HINSTANCE hModule) {
 
 	g_Param.hDLL = hModule;
 
@@ -3586,7 +3586,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.pen[6] = oapiCreatePen (1, 3, RGB(255, 255, 255));
 }
 
-void DeletegParam() {
+DLLCLBK void ExitModule(HINSTANCE hDll) {
 
 	int i;
 
