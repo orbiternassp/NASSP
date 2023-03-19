@@ -2493,8 +2493,7 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 	LambertMan lamopt, lamopt2;
 	TwoImpulseResuls lamres;
 	double t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
-	VECTOR3 dV_Phasing, dV_Insertion, dV_CDH, DVX;
-	MATRIX3 Q_Xx;
+	VECTOR3 dV_Phasing, dV_Insertion, R_P_CDH1, V_P_CDH1;
 	SV sv_P0, sv_P_CSI, sv_Phasing, sv_Phasing_apo, sv_Insertion, sv_Insertion_apo, sv_CSI, sv_CSI_apo, sv_CDH, sv_CDH_apo, sv_P_CDH;
 
 	t_Phasing = t_TIG;
@@ -2572,13 +2571,11 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 		//CDH Targeting
 		T_P = OrbMech::period(sv_CSI_apo.R, sv_CSI_apo.V, OrbMech::mu_Moon);
 		t_CDH = t_CSI + T_P / 2.0;
-		NSRProgram(sv_CSI_apo, sv_P_CSI, GETbase, 0.0, t_CDH, 0.0, dV_CDH);
 		sv_CDH = coast(sv_CSI_apo, t_CDH - t_CSI);
-		Q_Xx = OrbMech::LVLH_Matrix(sv_CDH.R, sv_CDH.V);
-		DVX = tmul(Q_Xx, dV_CDH);
 		sv_CDH_apo = sv_CDH;
-		sv_CDH_apo.V += DVX;
 		sv_P_CDH = coast(sv_P_CSI, t_CDH - t_CSI);
+		OrbMech::RADUP(sv_P_CDH.R, sv_P_CDH.V, sv_CDH.R, OrbMech::mu_Moon, R_P_CDH1, V_P_CDH1);
+		sv_CDH_apo.V = OrbMech::CoellipticDV(sv_CDH.R, R_P_CDH1, V_P_CDH1, OrbMech::mu_Moon);
 
 		//Find TPI time and recycle
 		dt_TPI = OrbMech::findelev(sv_CDH_apo.R, sv_CDH_apo.V, sv_P_CDH.R, sv_P_CDH.V, sv_CDH_apo.MJD, 26.6*RAD, sv_CDH_apo.gravref);
