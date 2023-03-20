@@ -21,6 +21,7 @@
   See http://nassp.sourceforge.net/license/ for more details.
 
   **************************************************************************/
+#define ORBITER_MODULE
 
 // To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
@@ -82,23 +83,6 @@ static GDIParams g_Param;
 // ==============================================================
 // API interface
 // ==============================================================
-
-BOOL WINAPI DllMain (HINSTANCE hModule,
-					 DWORD ul_reason_for_call,
-					 LPVOID lpReserved)
-{
-	switch (ul_reason_for_call) {
-	case DLL_PROCESS_ATTACH:
-		InitGParam(hModule);
-		g_Param.hDLL = hModule; // DS20060413 Save for later
-		break;
-
-	case DLL_PROCESS_DETACH:
-		FreeGParam();
-		break;
-	}
-	return TRUE;
-}
 
 DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 
