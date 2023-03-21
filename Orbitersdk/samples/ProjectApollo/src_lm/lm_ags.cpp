@@ -116,7 +116,8 @@ void LEM_ASA::Timestep(double simdt){
 
 	if (IsHeaterPowered())
 	{
-		if (fastheater->pumping)
+		if (hsink->GetTemp() <= 319.817)
+		//if (fastheater->pumping)
 		{
 			fineheater->SetPumpOff();
 		}
@@ -137,7 +138,7 @@ void LEM_ASA::Timestep(double simdt){
 		return;
 	}
 
-	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes to reset this in that case
+	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes sense to reset this in that case
 	if (!lem->aea.IsPowered())
 	{
 		EulerAngles = _V(0.0, 0.0, 0.0);
