@@ -385,10 +385,10 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, SubStateTime > 2.0*60.0, 88, MST_H1_LUNAR_ORBIT_EVA_DAY_7);
 		break;
 	case MST_H1_LUNAR_ORBIT_EVA_DAY_7: //P22 Acquistion time to CSM SV uplink
-		UpdateMacro(UTP_PADONLY, PT_LMP22ACQPAD, MoonRev >= 29 && MoonRevTime > 20.0*60.00, 59, MST_H1_LUNAR_ORBIT_EVA_DAY_8);
+		UpdateMacro(UTP_PADONLY, PT_LMP22ACQPAD, MoonRev >= 29 && MoonRevTime > 22.0*60.00, 59, MST_H1_LUNAR_ORBIT_EVA_DAY_8);
 		break;
 	case MST_H1_LUNAR_ORBIT_EVA_DAY_8: //CSM SV uplink to LM SV uplink
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 1, MST_H1_LUNAR_ORBIT_EVA_DAY_9);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 1, MST_H1_LUNAR_ORBIT_EVA_DAY_9);
 		break;
 	case MST_H1_LUNAR_ORBIT_EVA_DAY_9: //LM SV uplink to Lmk 193 Landmark Tracking PAD
 		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 401, MST_H1_LUNAR_ORBIT_EVA_DAY_10);
