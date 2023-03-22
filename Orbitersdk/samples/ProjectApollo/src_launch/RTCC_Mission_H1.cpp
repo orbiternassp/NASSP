@@ -1850,7 +1850,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 		else
 		{
-			opt.LmkTime[0] = GET_SV + 45.0*60.0;
+			opt.LmkTime[0] = GET_SV + 15.0*60.0;
 		}
 		opt.lng[0] = -23.228*RAD;
 		opt.entries = 1;
@@ -1900,7 +1900,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sprintf(form->LmkID[0], "Lunar Module");
 			opt.alt[0] = BZLAND.rad[RTCC_LMPOS_BEST] - OrbMech::R_Moon;
 			opt.lat[0] = BZLAND.lat[RTCC_LMPOS_BEST];
-			opt.LmkTime[0] = GET_SV + 45.0*60.0;
+			opt.LmkTime[0] = GET_SV + 15.0*60.0;
 			opt.lng[0] = BZLAND.lng[RTCC_LMPOS_BEST];
 			opt.entries = 1;
 		}
