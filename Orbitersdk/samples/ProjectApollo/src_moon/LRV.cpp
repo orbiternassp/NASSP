@@ -1036,7 +1036,7 @@ void LRV::UpdateAnimations (double SimDT)
 	double inner_angle_rad, outer_angle_rad, turn_radius_center_cm, turn_radius_inner_cm, turn_radius_outer_cm;
 	d_tires = WHEEL_SPIN_FUDGE_FACTOR * (speed * SimDT) / (2.0 * PI * WHEEL_RADIUS_M);
     // calculate inner and outer circle distance and vary speed accordingly
-	if (fabs(steering) < 0.0001)
+	if (fabs(steering) < 0.0001 || fabs(outer_steering) < 0.0001)
 	{
 		// avoid inner_angle_rad = 0.0, at which point get_turn_radius_for_center() is undefined
 		
@@ -1066,23 +1066,17 @@ void LRV::UpdateAnimations (double SimDT)
 	}
 
 	// check to see if animations hit limits and adjust accordingly
-	if (proc_tires_left > 1){
-		do {
-			proc_tires_left -= 1;
-		} while (proc_tires_left > 1);
-	} else if (proc_tires_left < 0) {
-		do {
-			proc_tires_left += 1;
-		} while (proc_tires_left < 0);
+	if (proc_tires_left > 1) {
+		proc_tires_left = proc_tires_left - 1;
 	}
-	if (proc_tires_right > 1){
-		do {
-			proc_tires_right -= 1;
-		} while (proc_tires_right > 1);
-	} else if (proc_tires_right < 0) {
-		do {
-			proc_tires_right += 1;
-		} while (proc_tires_right < 0);
+	else if (proc_tires_left < 0) {
+		proc_tires_left = proc_tires_left + 1;
+	}
+	if (proc_tires_right > 1) {
+		proc_tires_right = proc_tires_right - 1;
+	}
+	else if (proc_tires_right < 0) {
+		proc_tires_right = proc_tires_right + 1;
 	}
 
 	//sprintf(oapiDebugString(), "proc_tire %f", proc_tires);
