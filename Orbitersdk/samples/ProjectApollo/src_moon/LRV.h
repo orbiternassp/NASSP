@@ -227,4 +227,5 @@ protected:
 	PSTREAM_HANDLE wheel_dust[4];
 	PARTICLESTREAMSPEC dust;
 	double dust_level = 0;
+	VECTOR4 arot_save = _V(0, 0, 0, 0);
 };

@@ -568,10 +568,10 @@ void LRV::LRVAttitude(VESSELSTATUS2* eva)
 	MATRIX3 rot4 = RotationMatrix(_V(90 * RAD - pitch_angle, 0, roll_angle), TRUE);
 	MATRIX3 RotMatrix_Def = mul(rot1, mul(rot2, mul(rot3, rot4)));
 
-	eva->arot.x = atan2(RotMatrix_Def.m23, RotMatrix_Def.m33);
-	eva->arot.y = -asin(RotMatrix_Def.m13);
-	eva->arot.z = atan2(RotMatrix_Def.m12, RotMatrix_Def.m11);
-	eva->vrot.x = Height_From_Ground;
+	eva->arot.x = arot_save.x = atan2(RotMatrix_Def.m23, RotMatrix_Def.m33);
+	eva->arot.y = arot_save.y = -asin(RotMatrix_Def.m13);
+	eva->arot.z = arot_save.z = atan2(RotMatrix_Def.m12, RotMatrix_Def.m11);
+	eva->vrot.x = arot_save.w = Height_From_Ground;
 	DefSetStateEx(eva);
 }
 
@@ -758,6 +758,12 @@ void LRV::DoFirstTimestep()
 		soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 		soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
+
+		VESSELSTATUS2 evaV2;
+		memset(&evaV2, 0, sizeof(evaV2));
+		evaV2.version = 2;
+		GetStatusEx(&evaV2);
+		LRVAttitude(&evaV2);
 
 		FirstTimestep = false;
 	}
@@ -963,7 +969,16 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	memset(&evaV2, 0, sizeof(evaV2));
 	evaV2.version = 2;
 	GetStatusEx(&evaV2);
-	LRVAttitude(&evaV2);
+	if (abs(speed) > 0) { //Moving, so calculate a new attitude
+		LRVAttitude(&evaV2);
+	}
+	else {  //Stopped, so set attitude to that last calculated value
+		evaV2.arot.x = arot_save.x;
+		evaV2.arot.y = arot_save.y;
+		evaV2.arot.z = arot_save.z;
+		evaV2.vrot.x = arot_save.w;
+		DefSetStateEx(&evaV2);
+	}
 
 	WheelDust();
 
@@ -1052,14 +1067,22 @@ void LRV::UpdateAnimations (double SimDT)
 
 	// check to see if animations hit limits and adjust accordingly
 	if (proc_tires_left > 1){
-		proc_tires_left = proc_tires_left - 1;
+		do {
+			proc_tires_left -= 1;
+		} while (proc_tires_left > 1);
 	} else if (proc_tires_left < 0) {
-		proc_tires_left = proc_tires_left + 1;
+		do {
+			proc_tires_left += 1;
+		} while (proc_tires_left < 0);
 	}
 	if (proc_tires_right > 1){
-		proc_tires_right = proc_tires_right - 1;
+		do {
+			proc_tires_right -= 1;
+		} while (proc_tires_right > 1);
 	} else if (proc_tires_right < 0) {
-		proc_tires_right = proc_tires_right + 1;
+		do {
+			proc_tires_right += 1;
+		} while (proc_tires_right < 0);
 	}
 
 	//sprintf(oapiDebugString(), "proc_tire %f", proc_tires);
