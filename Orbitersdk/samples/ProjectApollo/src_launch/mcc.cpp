@@ -580,148 +580,11 @@ void MCC::setSubState(int newState){
 
 void MCC::TimeStep(double simdt){
 	int x=0,y=0,z=0;				// Scratch
-	char buf[MAX_MSGSIZE];			// More Scratch
 
 	/* AOS DETERMINATION */
-	
-	
 	LastAOSUpdate += simdt;
 	if (LastAOSUpdate > 1) {
-		double Moonrelang;
-		double LOSRange;
-		VECTOR3 CMGlobalPos = _V(0, 0, 0);
-		VECTOR3 MoonGlobalPos = _V(0, 0, 0);
-		VECTOR3 CM_Vector = _V(0, 0, 0);
-		VECTOR3 GSGlobalVector = _V(0, 0, 0);
-		VECTOR3 GSVector = _V(0, 0, 0);
-		double R_E, R_M;
-		bool MoonInTheWay;
-
-		LastAOSUpdate = 0;
-		// Bail out if we failed to find either major body
-		if (Earth == NULL) { addMessage("Can't find Earth"); GT_Enabled = false; return; }
-		if (Moon == NULL) { addMessage("Can't find Moon"); GT_Enabled = false; return; }
-		//Or the CSM
-		if (cm == NULL) { return; }
-
-		R_E = oapiGetSize(Earth);
-		R_M = oapiGetSize(Moon);
-
-		// Update previous position data
-		CM_Prev_Position[0] = CM_Position[0];
-		CM_Prev_Position[1] = CM_Position[1];
-		CM_Prev_Position[2] = CM_Position[2];
-		CM_Prev_MoonPosition[0] = CM_MoonPosition[0];
-		CM_Prev_MoonPosition[1] = CM_MoonPosition[1];
-		CM_Prev_MoonPosition[2] = CM_MoonPosition[2];
-		// Obtain global positions
-		cm->GetGlobalPos(CMGlobalPos);
-		oapiGetGlobalPos(Moon, &MoonGlobalPos);
-
-		// Convert to Earth equatorial
-		oapiGlobalToEqu(Earth, CMGlobalPos, &CM_Position[1], &CM_Position[0], &CM_Position[2]);
-		// Convert to Earth equatorial
-		oapiGlobalToLocal(Earth, &CMGlobalPos, &CM_Vector);
-		// Convert to Moon equatorial
-		oapiGlobalToEqu(Moon, CMGlobalPos, &CM_MoonPosition[1], &CM_MoonPosition[0], &CM_MoonPosition[2]);
-		// Convert from radians
-		CM_Position[0] *= DEG;
-		CM_Position[1] *= DEG;
-		// Convert from radial distance
-		CM_Position[2] -= 6373338; // Launch pad radius should be good enough
-
-		//Within Lunar SOI
-		if (length(MoonGlobalPos - CMGlobalPos) < 0.0661e9)
-		{
-			// If we just crossed the rev line, count it (from -180 it jumps to 180)
-			if (CM_Prev_MoonPosition[1] < 0 && CM_MoonPosition[1] >= 0 && cm->stage >= STAGE_ORBIT_SIVB) {
-				MoonRev++;
-				MoonRevTime = 0.0;
-				if (GT_Enabled == true) {
-					sprintf(buf, "Rev %d", MoonRev);
-					addMessage(buf);
-				}
-			}
-		}
-		//Within Earth SOI
-		else
-		{
-			// If we just crossed the rev line, count it
-			if (CM_Prev_Position[1] < -80 && CM_Position[1] >= -80 && cm->stage >= STAGE_ORBIT_SIVB) {
-				EarthRev++;
-				if (GT_Enabled == true) {
-					sprintf(buf, "Rev %d", EarthRev);
-					addMessage(buf);
-				}
-			}
-		}
-
-		y = 0;
-
-		while (x < MAX_GROUND_STATION) {
-			if (GroundStations[x].Active == true) {
-				GSVector = _V(cos(GroundStations[x].Position[1] * RAD) * cos(GroundStations[x].Position[0] * RAD), sin(GroundStations[x].Position[0] * RAD), sin(GroundStations[x].Position[1] * RAD) * cos(GroundStations[x].Position[0] * RAD)) * R_E;
-				oapiLocalToGlobal(Earth, &GSVector, &GSGlobalVector);
-				MoonInTheWay = false;
-				if (GroundStations[x].StationPurpose & GSPT_LUNAR)
-				{
-					LOSRange = 5e8;
-				}
-				else
-				{
-					LOSRange = 2e7;
-				}
-				//Moon in the way
-				Moonrelang = dotp(unit(MoonGlobalPos - CMGlobalPos), unit(GSGlobalVector - CMGlobalPos));
-				if (Moonrelang > cos(asin(R_M / length(MoonGlobalPos - CMGlobalPos))))
-				{
-					MoonInTheWay = true;
-				}
-				if (OrbMech::sight(CM_Vector, GSVector, R_E) && GroundStations[x].AOS == 0 && ((GroundStations[x].USBCaps & GSSC_VOICE) || (GroundStations[x].CommCaps & GSGC_VHFAG_VOICE))) {
-					if (length(CM_Vector - GSVector) < LOSRange && !MoonInTheWay)
-					{
-						//Dont switch to a new station if we're transmitting an uplink;
-						bool uplinking = false;
-						if (cm) {
-							if (cm->pcm.mcc_size != 0) {
-								uplinking = true;
-							}
-						}
-						if (lm) {
-							if (lm->PCM.mcc_size != 0) { 
-								uplinking = true;
-							}
-						}
-
-						if (!uplinking) {
-							GroundStations[x].AOS = 1;
-							if (GT_Enabled == true) {
-								sprintf(buf, "AOS %s", GroundStations[x].Name);
-								addMessage(buf);
-							}
-
-							if (GroundStations[x].USBCaps) {
-								TransmittingGroundStation = x; //only interested in picking a station to tx USB carrier
-							}
-						}
-
-					}
-				}
-				if ((!OrbMech::sight(CM_Vector, GSVector, R_E) || length(CM_Vector - GSVector) > LOSRange || MoonInTheWay) && GroundStations[x].AOS == 1) {
-					GroundStations[x].AOS = 0;
-
-					if (GT_Enabled == true) {
-						sprintf(buf, "LOS %s", GroundStations[x].Name);
-						addMessage(buf);
-					}
-				}
-				if (GroundStations[x].AOS) { y++; }
-			}
-			x++;
-		}
-		if (y == 0) {
-			TransmittingGroundStation = 0;
-		}
+		AutoUpdateXmitGroundStation();
 	}
 
 	if (TransmittingGroundStation) {
@@ -821,6 +684,7 @@ void MCC::TimeStep(double simdt){
 				}
 			}
 			if(MissionType == 0){
+				char buf[MAX_MSGSIZE];
 				sprintf(buf,"Unsupported Mission %d",cm->ApolloNo);
 				addMessage(buf);
 				MT_Enabled = false;
@@ -1035,6 +899,150 @@ void MCC::TimeStep(double simdt){
 	}
 	if(z == 1){								// If we set the updation flag
 		oapiAnnotationSetText(NHmessages,msgOutputBuf);	// update the annotation
+	}
+}
+
+void MCC::AutoUpdateXmitGroundStation()
+{
+	int StationIndex = 0;
+	double Moonrelang;
+	double LOSRange;
+	VECTOR3 CMGlobalPos = _V(0, 0, 0);
+	VECTOR3 MoonGlobalPos = _V(0, 0, 0);
+	VECTOR3 CM_Vector = _V(0, 0, 0);
+	VECTOR3 GSGlobalVector = _V(0, 0, 0);
+	VECTOR3 GSVector = _V(0, 0, 0);
+	double R_E, R_M;
+	bool MoonInTheWay;
+
+	LastAOSUpdate = 0;
+	// Bail out if we failed to find either major body
+	if (Earth == NULL) { addMessage("Can't find Earth"); GT_Enabled = false; return; }
+	if (Moon == NULL) { addMessage("Can't find Moon"); GT_Enabled = false; return; }
+	//Or the CSM
+	if (cm == NULL) { return; }
+
+	R_E = oapiGetSize(Earth);
+	R_M = oapiGetSize(Moon);
+
+	// Update previous position data
+	CM_Prev_Position[0] = CM_Position[0];
+	CM_Prev_Position[1] = CM_Position[1];
+	CM_Prev_Position[2] = CM_Position[2];
+	CM_Prev_MoonPosition[0] = CM_MoonPosition[0];
+	CM_Prev_MoonPosition[1] = CM_MoonPosition[1];
+	CM_Prev_MoonPosition[2] = CM_MoonPosition[2];
+	// Obtain global positions
+	cm->GetGlobalPos(CMGlobalPos);
+	oapiGetGlobalPos(Moon, &MoonGlobalPos);
+
+	// Convert to Earth equatorial
+	oapiGlobalToEqu(Earth, CMGlobalPos, &CM_Position[1], &CM_Position[0], &CM_Position[2]);
+	// Convert to Earth equatorial
+	oapiGlobalToLocal(Earth, &CMGlobalPos, &CM_Vector);
+	// Convert to Moon equatorial
+	oapiGlobalToEqu(Moon, CMGlobalPos, &CM_MoonPosition[1], &CM_MoonPosition[0], &CM_MoonPosition[2]);
+	// Convert from radians
+	CM_Position[0] *= DEG;
+	CM_Position[1] *= DEG;
+	// Convert from radial distance
+	CM_Position[2] -= 6373338; // Launch pad radius should be good enough
+
+	//Within Lunar SOI
+	if (length(MoonGlobalPos - CMGlobalPos) < 0.0661e9)
+	{
+		// If we just crossed the rev line, count it (from -180 it jumps to 180)
+		if (CM_Prev_MoonPosition[1] < 0 && CM_MoonPosition[1] >= 0 && cm->stage >= STAGE_ORBIT_SIVB) {
+			MoonRev++;
+			MoonRevTime = 0.0;
+			if (GT_Enabled == true) {
+				char buf[MAX_MSGSIZE];
+				sprintf(buf, "Rev %d", MoonRev);
+				addMessage(buf);
+			}
+		}
+	}
+	//Within Earth SOI
+	else
+	{
+		// If we just crossed the rev line, count it
+		if (CM_Prev_Position[1] < -80 && CM_Position[1] >= -80 && cm->stage >= STAGE_ORBIT_SIVB) {
+			EarthRev++;
+			if (GT_Enabled == true) {
+				char buf[MAX_MSGSIZE];
+				sprintf(buf, "Rev %d", EarthRev);
+				addMessage(buf);
+			}
+		}
+	}
+
+	int AOSCount = 0;
+	
+	for(StationIndex = 0; StationIndex < MAX_GROUND_STATION; StationIndex++){
+		if (GroundStations[StationIndex].Active == true) {
+			GSVector = _V(cos(GroundStations[StationIndex].Position[1] * RAD) * cos(GroundStations[StationIndex].Position[0] * RAD), sin(GroundStations[StationIndex].Position[0] * RAD), 
+				sin(GroundStations[StationIndex].Position[1] * RAD) * cos(GroundStations[StationIndex].Position[0] * RAD)) * R_E;
+			oapiLocalToGlobal(Earth, &GSVector, &GSGlobalVector);
+			MoonInTheWay = false;
+			if (GroundStations[StationIndex].StationPurpose & GSPT_LUNAR)
+			{
+				LOSRange = 5e8;
+			}
+			else
+			{
+				LOSRange = 2e7;
+			}
+			//Moon in the way
+			Moonrelang = dotp(unit(MoonGlobalPos - CMGlobalPos), unit(GSGlobalVector - CMGlobalPos));
+			if (Moonrelang > cos(asin(R_M / length(MoonGlobalPos - CMGlobalPos))))
+			{
+				MoonInTheWay = true;
+			}
+			if (OrbMech::sight(CM_Vector, GSVector, R_E) && GroundStations[StationIndex].AOS == 0 && ((GroundStations[StationIndex].USBCaps & GSSC_VOICE) || (GroundStations[StationIndex].CommCaps & GSGC_VHFAG_VOICE))) {
+				if (length(CM_Vector - GSVector) < LOSRange && !MoonInTheWay)
+				{
+					//Dont switch to a new station if we're transmitting an uplink;
+					bool uplinking = false;
+					if (cm) {
+						if (cm->pcm.mcc_size != 0) {
+							uplinking = true;
+						}
+					}
+					if (lm) {
+						if (lm->PCM.mcc_size != 0) {
+							uplinking = true;
+						}
+					}
+
+					if (!uplinking) {
+						GroundStations[StationIndex].AOS = 1;
+						if (GT_Enabled == true) {
+							char buf[MAX_MSGSIZE];
+							sprintf(buf, "AOS %s", GroundStations[StationIndex].Name);
+							addMessage(buf);
+						}
+
+						if (GroundStations[StationIndex].USBCaps) {
+							TransmittingGroundStation = StationIndex; //only interested in picking a station to tx USB carrier
+						}
+					}
+
+				}
+			}
+			if ((!OrbMech::sight(CM_Vector, GSVector, R_E) || length(CM_Vector - GSVector) > LOSRange || MoonInTheWay) && GroundStations[StationIndex].AOS == 1) {
+				GroundStations[StationIndex].AOS = 0;
+
+				if (GT_Enabled == true) {
+					char buf[MAX_MSGSIZE];
+					sprintf(buf, "LOS %s", GroundStations[StationIndex].Name);
+					addMessage(buf);
+				}
+			}
+			if (GroundStations[StationIndex].AOS) { AOSCount++; }
+		}
+	}
+	if (AOSCount == 0) {
+		TransmittingGroundStation = 0;
 	}
 }
 

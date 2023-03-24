@@ -249,6 +249,7 @@ public:
 	
 	void Init();											// Initialization
 	void TimeStep(double simdt);					        // Timestep
+	void AutoUpdateXmitGroundStation();						// Automaticially Update the Transmitting Ground Station
 	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
@@ -301,8 +302,10 @@ public:
 
 	// GROUND TRACKING NETWORK
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
-	int TransmittingGroundStation;
+	int TransmittingGroundStation;							//Ground Station Transmitting to the CM
+	int TransmittingGroundStationLM;						//Ground Station Transmitting to the LM or SIVb
 	VECTOR3 TransmittingGroundStationVector;
+	VECTOR3 TransmittingGroundStationVectorLM;
 	double LastAOSUpdate;									// Last update to AOS data
 	double CM_Position[3];                                  // CM's position and altitude
 	double CM_Prev_Position[3];                             // CM's previous position and altitude
