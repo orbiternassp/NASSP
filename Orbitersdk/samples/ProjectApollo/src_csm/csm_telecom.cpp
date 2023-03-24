@@ -1023,7 +1023,7 @@ void HGA::TimeStep(double simt, double simdt)
 	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
 	if (MCCV) {
 		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
-		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetCM, &GroundTransmitterRFProperties);
 	}
 
 	/*sprintf(oapiDebugString(), "%lf %lf <%lf %lf %lf>", GroundTransmitterRFProperties.Gain, GroundTransmitterRFProperties.Power, GroundTransmitterRFProperties.GlobalPosition.x,
@@ -1325,7 +1325,7 @@ void OMNI::TimeStep()
 	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
 	if (MCCV) {
 		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
-		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::Get, &GroundTransmitterRFProperties);
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetCM, &GroundTransmitterRFProperties);
 	}
 
 	//Calculate antenna pointing vector in global frame

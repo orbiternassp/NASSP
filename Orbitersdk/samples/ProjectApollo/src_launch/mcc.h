@@ -246,10 +246,14 @@ public:
 	char CSMName[64];
 	char LEMName[64];
 	char LVName[64];
+
+	enum TrackingVesselType { TypeCM, TypeLM, TypeSIVb };
+	enum TrackingSlot { SlotCM, SlotLM };
 	
 	void Init();											// Initialization
 	void TimeStep(double simdt);					        // Timestep
-	void AutoUpdateXmitGroundStation();						// Automaticially Update the Transmitting Ground Station
+	void AutoUpdateXmitGroundStation(const Vessel* Ves, const TrackingVesselType Type, const TrackingSlot Slot);	// Automaticially Update the Transmitting Ground Station
+	void UpdateRevCounters(const TrackingSlot Slot);
 	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
@@ -294,6 +298,9 @@ public:
 	SIVB *sivb;												// Pointer to SIVB
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
+	VECTOR3 MoonGlobalPos;
+	VECTOR3 VesselGlobalPos[2];
+	VECTOR3 Vessel_Vector[2];
 
 	// SUBTHREAD MANAGEMENT
 	int subThreadMode;										// What should the subthread do?
@@ -302,10 +309,8 @@ public:
 
 	// GROUND TRACKING NETWORK
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
-	int TransmittingGroundStation;							//Ground Station Transmitting to the CM
-	int TransmittingGroundStationLM;						//Ground Station Transmitting to the LM or SIVb
-	VECTOR3 TransmittingGroundStationVector;
-	VECTOR3 TransmittingGroundStationVectorLM;
+	int TransmittingGroundStation[2];						//Ground Station Transmitting to the CM
+	VECTOR3 TransmittingGroundStationVector[2];
 	double LastAOSUpdate;									// Last update to AOS data
 	double CM_Position[3];                                  // CM's position and altitude
 	double CM_Prev_Position[3];                             // CM's previous position and altitude
