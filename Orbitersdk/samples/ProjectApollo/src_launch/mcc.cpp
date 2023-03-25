@@ -593,11 +593,10 @@ void MCC::TimeStep(double simdt){
 	LastAOSUpdate += simdt;
 	if (LastAOSUpdate > 1.0) {
 		LastAOSUpdate = 0.0;
-
 		oapiGetGlobalPos(Moon, &MoonGlobalPos);
+		if (cm) { AutoUpdateXmitGroundStation(reinterpret_cast<Vessel*>(cm), TrackingVesselType::TypeCM, TrackingSlot::SlotCM); }
+		if (lm) { AutoUpdateXmitGroundStation(reinterpret_cast<Vessel*>(lm), TrackingVesselType::TypeLM, TrackingSlot::SlotLM); }
 
-		AutoUpdateXmitGroundStation(reinterpret_cast<Vessel*>(cm), TrackingVesselType::TypeCM, TrackingSlot::SlotCM);
-		AutoUpdateXmitGroundStation(reinterpret_cast<Vessel*>(lm), TrackingVesselType::TypeLM, TrackingSlot::SlotLM);
 		UpdateRevCounters(TrackingSlot::SlotCM); //Will almost always be CM, unless Apollo 5 gets MCC support, then you'll need logic for that.
 	}
 
@@ -609,6 +608,16 @@ void MCC::TimeStep(double simdt){
 	}
 	else {
 		TransmittingGroundStationVector[TrackingSlot::SlotCM] = _V(0, 0, 0);
+	}
+
+	if (TransmittingGroundStation[TrackingSlot::SlotLM]) {
+		VECTOR3 XmitGSVector = _V(cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[1] * RAD) * cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[0] * RAD),
+			sin(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[0] * RAD),
+			sin(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[1] * RAD) * cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[0] * RAD)) * oapiGetSize(Earth);
+		oapiLocalToGlobal(Earth, &XmitGSVector, &TransmittingGroundStationVector[TrackingSlot::SlotLM]);
+	}
+	else {
+		TransmittingGroundStationVector[TrackingSlot::SlotLM] = _V(0, 0, 0);
 	}
 
 	//debugging
@@ -929,8 +938,6 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 	// Bail out if we failed to find either major body
 	if (Earth == NULL) { addMessage("Can't find Earth"); GT_Enabled = false; return; }
 	if (Moon == NULL) { addMessage("Can't find Moon"); GT_Enabled = false; return; }
-	//Or the CSM
-	if (cm == NULL) { return; }
 
 	R_E = oapiGetSize(Earth);
 	R_M = oapiGetSize(Moon);
@@ -962,16 +969,16 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 				{
 					//Dont switch to a new station if we're transmitting an uplink;
 					bool uplinking = false;
-					if (cm) {
-						if (cm->pcm.mcc_size != 0) {
-							uplinking = true;
-						}
+					
+					switch (Type) {
+						case TrackingVesselType::TypeCM:
+							if (((Saturn*)Ves)->pcm.mcc_size != 0) { uplinking = true; }
+							break;
+						case TrackingVesselType::TypeLM:
+							if (((LEM*)Ves)->PCM.mcc_size != 0) { uplinking = true; }
+							break;
 					}
-					if (lm) {
-						if (lm->PCM.mcc_size != 0) {
-							uplinking = true;
-						}
-					}
+
 
 					if (!uplinking) {
 						GroundStations[StationIndex].AOS = 1;
@@ -1007,6 +1014,11 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 
 void MCC::UpdateRevCounters(TrackingSlot Slot)
 {
+	// TEMPORARY FIX, need to make this work for LM only missions at some point
+	// probably by asking the RTCC very nicely for rev count info from its MPTs
+	if (!cm) { return; }
+	//-------------------------------------------------------------------------
+
 	// Update previous position data
 	CM_Prev_Position[0] = CM_Position[0];
 	CM_Prev_Position[1] = CM_Position[1];
