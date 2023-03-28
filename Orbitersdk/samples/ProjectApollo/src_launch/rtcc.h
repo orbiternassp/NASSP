@@ -2474,7 +2474,8 @@ public:
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	EphemerisData StateVectorCalcEphem(VESSEL *vessel);
-	EphemerisData ExecuteManeuver(EphemerisData sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
+	SV2 StateVectorCalc2(VESSEL *vessel);
+	SV2 ExecuteManeuver(SV2 sv, double P30TIG, VECTOR3 dV_LVLH, int Thruster);
 	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
 	bool TLIFlyby(SV sv_TLI, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
@@ -4755,7 +4756,7 @@ protected:
 	void QMMBLD(int year, int month, int day);
 
 	EphemerisData ConvertSVtoEphemData(SV sv);
-	SV ConvertEphemDatatoSV(EphemerisData sv);
+	SV ConvertEphemDatatoSV(EphemerisData sv, double mass = 0.0);
 
 	//RTACF Routines
 
