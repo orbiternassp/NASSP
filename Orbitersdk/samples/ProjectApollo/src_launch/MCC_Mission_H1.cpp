@@ -407,7 +407,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->GETEval2(rtcc->calcParams.LunarLiftoff - 45.0*60.0), 106, MST_H1_LUNAR_ORBIT_ASCENT_DAY_4);
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_4: //LM Tracking PAD to CMC SV uplinks
-		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 66, MST_H1_LUNAR_ORBIT_ASCENT_DAY_5);
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, true, 66, MST_H1_LUNAR_ORBIT_ASCENT_DAY_5);
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_5: //CMC SV uplinks to LGC SV + RLS uplinks
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 5.0*60.0, 101, MST_H1_LUNAR_ORBIT_ASCENT_DAY_6);
