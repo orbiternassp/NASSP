@@ -935,19 +935,19 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 60: //Map Update Rev 1/2
 	{
-		EphemerisData sv0, sv1, sv2, sv3;
+		SV2 sv0, sv1, sv2, sv3;
 		AP10MAPUPDATE upd_hyper, upd_ellip, upd_ellip2;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		LunarOrbitMapUpdate(sv0, upd_hyper);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_hyper);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
-		sv2 = coast(sv1, -30.0*60.0);
-		LunarOrbitMapUpdate(sv2, upd_ellip);
-		sv3 = coast(sv2, 2.0*3600.0);
-		LunarOrbitMapUpdate(sv3, upd_ellip2);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		sv2.sv = coast(sv1.sv, -30.0*60.0);
+		LunarOrbitMapUpdate(sv2.sv, upd_ellip);
+		sv3.sv = coast(sv2.sv, 2.0*3600.0);
+		LunarOrbitMapUpdate(sv3.sv, upd_ellip2);
 
 		form->type = 3;
 		form->Rev = 1;
@@ -964,16 +964,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 61: //Map Update Rev 2/3
 	{
-		EphemerisData sv0, sv1;
+		SV2 sv0, sv1;
 		AP10MAPUPDATE upd_ellip, upd_ellip2;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		LunarOrbitMapUpdate(sv0, upd_ellip);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_ellip);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
-		LunarOrbitMapUpdate(sv1, upd_ellip2);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		LunarOrbitMapUpdate(sv1.sv, upd_ellip2);
 
 		form->type = 1;
 		form->Rev = 2;
@@ -1047,16 +1047,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 69: //Map Update TEI
 	{
-		EphemerisData sv0, sv1;
+		SV2 sv0, sv1;
 		AP10MAPUPDATE upd_ellip, upd_hyper;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		LunarOrbitMapUpdate(sv0, upd_ellip);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_ellip);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
-		LunarOrbitMapUpdate(sv1, upd_hyper);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		LunarOrbitMapUpdate(sv1.sv, upd_hyper);
 
 		form->type = 1;
 		form->Rev = 10;

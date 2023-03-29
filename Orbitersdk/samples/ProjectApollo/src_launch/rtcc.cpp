@@ -4861,6 +4861,17 @@ EphemerisData RTCC::StateVectorCalcEphem(VESSEL *vessel)
 	return sv;
 }
 
+SV2 RTCC::StateVectorCalc2(VESSEL *vessel)
+{
+	SV2 sv;
+
+	sv.sv = StateVectorCalcEphem(vessel);
+	sv.Mass = vessel->GetMass();
+	sv.AttachedMass = GetDockedVesselMass(vessel);
+
+	return sv;
+}
+
 OBJHANDLE RTCC::AGCGravityRef(VESSEL *vessel)
 {
 	OBJHANDLE gravref;
@@ -6906,9 +6917,18 @@ int RTCC::SPSRCSDecision(double a, VECTOR3 dV_LVLH)
 	}
 }
 
-EphemerisData RTCC::ExecuteManeuver(EphemerisData sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster)
+SV2 RTCC::ExecuteManeuver(SV2 sv, double P30TIG, VECTOR3 dV_LVLH, int Thruster)
 {
-	return ConvertSVtoEphemData(ExecuteManeuver(ConvertEphemDatatoSV(sv), CalcGETBase(), P30TIG, dV_LVLH, attachedMass, Thruster));
+	SV sv0 = ConvertEphemDatatoSV(sv.sv, sv.Mass);
+	SV sv1 = ExecuteManeuver(sv0, CalcGETBase(), P30TIG, dV_LVLH, sv.AttachedMass, Thruster);
+
+	SV2 sv2;
+
+	sv2.sv = ConvertSVtoEphemData(sv1);
+	sv2.Mass = sv1.mass;
+	sv2.AttachedMass = sv.AttachedMass;
+
+	return sv2;
 }
 
 SV RTCC::ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster)
@@ -30536,7 +30556,7 @@ EphemerisData RTCC::ConvertSVtoEphemData(SV sv)
 	return svnew;
 }
 
-SV RTCC::ConvertEphemDatatoSV(EphemerisData sv)
+SV RTCC::ConvertEphemDatatoSV(EphemerisData sv, double mass)
 {
 	SV svnew;
 
@@ -30551,6 +30571,7 @@ SV RTCC::ConvertEphemDatatoSV(EphemerisData sv)
 	{
 		svnew.gravref = hMoon;
 	}
+	svnew.mass = mass;
 
 	return svnew;
 }
