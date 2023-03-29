@@ -1791,17 +1791,17 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	break;
 	case 60: //REV 1 MAP UPDATE
 	{
-		EphemerisData sv0, sv1, sv2;
+		SV2 sv0, sv1, sv2;
 		AP10MAPUPDATE upd_hyper, upd_ellip;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		LunarOrbitMapUpdate(sv0, upd_hyper);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_hyper);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
-		sv2 = coast(sv1, -30.0*60.0);
-		LunarOrbitMapUpdate(sv2, upd_ellip);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		sv2.sv = coast(sv1.sv, -30.0*60.0);
+		LunarOrbitMapUpdate(sv2.sv, upd_ellip);
 
 		form->Rev = 1;
 		form->type = 2;

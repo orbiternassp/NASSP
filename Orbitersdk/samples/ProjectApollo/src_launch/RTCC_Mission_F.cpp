@@ -1204,17 +1204,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 40: //REV 1 MAP UPDATE
 	{
-		EphemerisData sv0, sv1, sv2;
+		SV2 sv0, sv1, sv2;
 		AP10MAPUPDATE upd_hyper, upd_ellip;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		LunarOrbitMapUpdate(sv0, upd_hyper);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_hyper);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
-		sv2 = coast(sv1, -30.0*60.0);
-		LunarOrbitMapUpdate(sv2, upd_ellip);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		sv2.sv = coast(sv1.sv, -30.0*60.0);
+		LunarOrbitMapUpdate(sv2.sv, upd_ellip);
 
 		form->Rev = 1;
 		form->AOSGET = upd_ellip.AOSGET;
@@ -1292,16 +1292,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 42: //REV 3 MAP UPDATE
 	{
-		EphemerisData sv0, sv1;
+		SV2 sv0, sv1;
 		AP10MAPUPDATE upd_preloi, upd_postloi;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		LunarOrbitMapUpdate(sv0, upd_preloi);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_preloi);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
-		LunarOrbitMapUpdate(sv0, upd_postloi);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		LunarOrbitMapUpdate(sv0.sv, upd_postloi);
 
 		form->Rev = 3;
 		form->AOSGET = upd_postloi.AOSGET;
@@ -1311,16 +1311,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 144: //TEI MAP UPDATE
 	{
-		EphemerisData sv0, sv1;
+		SV2 sv0, sv1;
 		AP10MAPUPDATE upd_pretei, upd_posttei;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		LunarOrbitMapUpdate(sv0, upd_pretei);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_pretei);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
-		LunarOrbitMapUpdate(sv1, upd_posttei);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		LunarOrbitMapUpdate(sv1.sv, upd_posttei);
 
 		form->Rev = 32;
 		form->AOSGET = upd_posttei.AOSGET;
