@@ -44,7 +44,7 @@
  
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
-static GDIParams g_Param;
+extern GDIParams g_Param;
 
 DLLCLBK void InitModule(HINSTANCE hModule)
 
