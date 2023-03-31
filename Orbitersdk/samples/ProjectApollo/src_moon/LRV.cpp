@@ -292,7 +292,7 @@ void LRV::DefineAnimations ()
 void LRV::SetRoverStage ()
 {
 	SetEmptyMass(250);
-	SetSize(10);
+	SetSize(4);
 	SetPMI(_V(15,15,15));
 
 	SetSurfaceFrictionCoeff(0.005, 0.5);
@@ -310,7 +310,13 @@ void LRV::SetRoverStage ()
 	AddMesh(hLRV, &mesh_adjust);
 	SetMeshVisibilityMode(LRVMeshIndex, MESHVIS_ALWAYS); 
 	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
-	SetCameraOffset(_V(0.36, 0.54, -0.55));  // roughly at the driver's head
+	SetCameraOffset(_V(-0.365, 0.932, -0.676));  // roughly at the driver's head
+
+	double xpos = -0.365;
+	double ypos = 0.113;
+	double zpos = -0.514;
+	cdrSeat = CreateAttachment(false, _V(xpos, ypos, zpos), _V(0, 1, 0), _V(0, 0, 1), "CDR", false);
+	cdrSeat = CreateAttachment(false, _V(-xpos, ypos, zpos), _V(0, 1, 0), _V(0, 0, 1), "LMP", false);
 
 	//////////////////////////////////////////////////////////////////////////
 	// With vccMeshIdx, we now have all data to initialize the LRV console
@@ -345,33 +351,35 @@ void LRV::SetRoverStage ()
 	mgtRotGauges.ngrp = GEOM_NEEDLE_A;  // dummy value
 	mgtRotGauges.transform = MESHGROUP_TRANSFORM::ROTATE;
 
-	double tdph = -0.9;
-	SetTouchdownPoints(_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
-
-}
-
-void LRV::ScanMotherShip()
-
-{
-	double VessCount;
-	int i=0;
-
-	VessCount=oapiGetVesselCount();
-	for ( i = 0 ; i< VessCount ; i++ ) 
+	double x_target = -0.1;
+	double stiffness = (-1) * (250 * G) / (3 * x_target);
+	double damping = 0.9 * (2 * sqrt(250 * stiffness));
+	Height_From_Ground = 0.9;
+	for (int i = 0; i < ntdvtx; i++)
 	{
-		hMaster=oapiGetVesselByIndex(i);
-		strcpy(EVAName,GetName());
-		oapiGetObjectName(hMaster,CSMName,256);
-		strcpy(MSName,CSMName);
-		strcat(CSMName,"-LRV");
-		if (strcmp(CSMName, EVAName)==0){
-			MotherShip=true;
-			i=int(VessCount);
-		}
-		else{
-			strcpy(CSMName,"");
-		}
+		tdvtx[i].damping = damping;
+		tdvtx[i].mu = 3;
+		tdvtx[i].mu_lng = 3;
+		tdvtx[i].stiffness = stiffness;
 	}
+	tdvtx[0].pos.x = cos(30 * RAD) * 1.55;
+	tdvtx[0].pos.y = -Height_From_Ground;
+	tdvtx[0].pos.z = -sin(30 * RAD) * 1.55;
+	tdvtx[1].pos.x = 0;
+	tdvtx[1].pos.y = -Height_From_Ground;
+	tdvtx[1].pos.z = 1.55;
+	tdvtx[2].pos.x = -cos(30 * RAD) * 1.55;
+	tdvtx[2].pos.y = -Height_From_Ground;
+	tdvtx[2].pos.z = -sin(30 * RAD) * 1.55;
+
+	SetTouchdownPoints(tdvtx, ntdvtx);
+
+	dust_tex = oapiRegisterParticleTexture("ProjectApollo/dust");
+	dust = { 0, 0.1, 15, 0.25, 5 * RAD, 2, 0.25, 4, PARTICLESTREAMSPEC::DIFFUSE, PARTICLESTREAMSPEC::LVL_LIN, 0, 1, PARTICLESTREAMSPEC::ATM_FLAT, 1, 1, dust_tex };
+	wheel_dust[0] = AddParticleStream(&dust, _V(-0.956, -0.8, 0.918), _V(0, 0, -1), &dust_level);
+	wheel_dust[1] = AddParticleStream(&dust, _V(0.956, -0.8, 0.918), _V(0, 0, -1), &dust_level);
+	wheel_dust[2] = AddParticleStream(&dust, _V(-0.956, -0.8, -1.388), _V(0, 0, -1), &dust_level);
+	wheel_dust[3] = AddParticleStream(&dust, _V(0.956, -0.8, -1.388), _V(0, 0, -1), &dust_level);
 }
 
 void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
@@ -456,7 +464,6 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 			eva->vdata[0].z = eva->vdata[0].z + 2*PI;
 		else if (eva->vdata[0].z >=2*PI)
 			eva->vdata[0].z = eva->vdata[0].z - 2*PI;
-
 	}
 
 	if (KEYSUBTRACT)  // decelerate
@@ -521,6 +528,82 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 	lastLat = lat;
 	lastLong = lon;
 	lastLatLongSet = true;
+}
+
+void LRV::LRVAttitude(VESSELSTATUS2* eva)
+{
+	double rt = oapiGetSize(GetSurfaceRef());
+	double moon_circ = rt * 2 * PI;
+	double each_deg = moon_circ / 360;
+
+	double lng, lat, hdg;
+	lng = eva->surf_lng;
+	lat = eva->surf_lat;
+	hdg = eva->surf_hdg;
+
+	VECTOR3 ant_dx_pos = _V(0.95, 0, 1.55);
+	double ant_dx_dlat = ((ant_dx_pos.z * cos(hdg) - ant_dx_pos.x * sin(hdg)) / each_deg) * RAD;
+	double ant_dx_dlng = ((ant_dx_pos.z * sin(hdg) + ant_dx_pos.x * cos(hdg)) / each_deg) * RAD;
+	double elev_ant_dx = oapiSurfaceElevation(GetSurfaceRef(), lng + ant_dx_dlng, lat + ant_dx_dlat);
+
+	VECTOR3 ant_sx_pos = _V(-0.95, 0, 1.55);
+	double ant_sx_dlat = ((ant_sx_pos.z * cos(hdg) - ant_sx_pos.x * sin(hdg)) / each_deg) * RAD;
+	double ant_sx_dlng = ((ant_sx_pos.z * sin(hdg) + ant_sx_pos.x * cos(hdg)) / each_deg) * RAD;
+	double elev_ant_sx = oapiSurfaceElevation(GetSurfaceRef(), lng + ant_sx_dlng, lat + ant_sx_dlat);
+
+	VECTOR3 post_pos = _V(0, 0, -1.55);
+	double post_dlat = ((+post_pos.z * cos(hdg)) / each_deg) * RAD;
+	double post_dlng = ((+post_pos.z * sin(hdg)) / each_deg) * RAD;
+	double elev_post = oapiSurfaceElevation(GetSurfaceRef(), lng + post_dlng, lat + post_dlat);
+
+	double roll_angle;
+	double pitch_angle;
+	roll_angle = atan2(elev_ant_dx - elev_ant_sx, ant_dx_pos.x - ant_sx_pos.x);
+	pitch_angle = atan2(-elev_post + ((elev_ant_dx + elev_ant_sx) * 0.5), ant_dx_pos.z - post_pos.z);
+
+	MATRIX3 rot1 = RotationMatrix(_V(0 * RAD, (90 * RAD - lng), 0 * RAD), TRUE);
+	MATRIX3 rot2 = RotationMatrix(_V(-lat + 0 * RAD, 0, 0 * RAD), TRUE);
+	MATRIX3 rot3 = RotationMatrix(_V(0, 0, 180 * RAD + hdg), TRUE);
+
+	MATRIX3 rot4 = RotationMatrix(_V(90 * RAD - pitch_angle, 0, roll_angle), TRUE);
+	MATRIX3 RotMatrix_Def = mul(rot1, mul(rot2, mul(rot3, rot4)));
+
+	eva->arot.x = arot_save.x = atan2(RotMatrix_Def.m23, RotMatrix_Def.m33);
+	eva->arot.y = arot_save.y = -asin(RotMatrix_Def.m13);
+	eva->arot.z = arot_save.z = atan2(RotMatrix_Def.m12, RotMatrix_Def.m11);
+	eva->vrot.x = arot_save.w = Height_From_Ground;
+	DefSetStateEx(eva);
+}
+
+//From GeneralVehicle by fred18
+MATRIX3 LRV::RotationMatrix(VECTOR3 angles, bool xyz = FALSE)
+{
+	MATRIX3 m;
+	MATRIX3 RM_X, RM_Y, RM_Z;
+	RM_X = _M(1, 0, 0, 0, cos(angles.x), -sin(angles.x), 0, sin(angles.x), cos(angles.x));
+	RM_Y = _M(cos(angles.y), 0, sin(angles.y), 0, 1, 0, -sin(angles.y), 0, cos(angles.y));
+	RM_Z = _M(cos(angles.z), -sin(angles.z), 0, sin(angles.z), cos(angles.z), 0, 0, 0, 1);
+	if (!xyz) {
+		m = mul(RM_Z, mul(RM_Y, RM_X));
+	}
+	else {
+		m = mul(RM_X, mul(RM_Y, RM_Z));
+	}
+	return m;
+}
+
+void LRV::WheelDust()
+{
+	double timeAccel = oapiGetTimeAcceleration();
+	if ((speed > 0) & (timeAccel <= 10)) {
+		dust_level = speed / ROVER_SPEED_M_S;
+	}
+	else if ((speed < 0) & (timeAccel <= 10)) {
+		dust_level = abs(speed) / ROVER_SPEED_M_S;
+	}
+	else {
+		dust_level = 0;
+	}
 }
 
 // ==============================================================
@@ -676,6 +759,12 @@ void LRV::DoFirstTimestep()
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 		soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
+		VESSELSTATUS2 evaV2;
+		memset(&evaV2, 0, sizeof(evaV2));
+		evaV2.version = 2;
+		GetStatusEx(&evaV2);
+		LRVAttitude(&evaV2);
+
 		FirstTimestep = false;
 	}
 }
@@ -700,6 +789,7 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 {
 //	VESSELSTATUS csmV;
 	VESSELSTATUS evaV;
+	VESSELSTATUS2 evaV2;
 	VECTOR3 rdist = {0,0,0};
 	VECTOR3 posr  = {0,0,0};
 	VECTOR3 rvel  = {0,0,0};
@@ -874,8 +964,23 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 		}
 	}
 
-
 	MoveLRV(SimDT, &evaV, heading);
+
+	memset(&evaV2, 0, sizeof(evaV2));
+	evaV2.version = 2;
+	GetStatusEx(&evaV2);
+	if (abs(speed) > 0) { //Moving, so calculate a new attitude
+		LRVAttitude(&evaV2);
+	}
+	else {  //Stopped, so set attitude to that last calculated value
+		evaV2.arot.x = arot_save.x;
+		evaV2.arot.y = arot_save.y;
+		evaV2.arot.z = arot_save.z;
+		evaV2.vrot.x = arot_save.w;
+		DefSetStateEx(&evaV2);
+	}
+
+	WheelDust();
 
 	UpdateAnimations(SimDT);
 
@@ -931,7 +1036,7 @@ void LRV::UpdateAnimations (double SimDT)
 	double inner_angle_rad, outer_angle_rad, turn_radius_center_cm, turn_radius_inner_cm, turn_radius_outer_cm;
 	d_tires = WHEEL_SPIN_FUDGE_FACTOR * (speed * SimDT) / (2.0 * PI * WHEEL_RADIUS_M);
     // calculate inner and outer circle distance and vary speed accordingly
-	if (fabs(steering) < 0.0001)
+	if (fabs(steering) < 0.0001 || fabs(outer_steering) < 0.0001)
 	{
 		// avoid inner_angle_rad = 0.0, at which point get_turn_radius_for_center() is undefined
 		
@@ -961,14 +1066,16 @@ void LRV::UpdateAnimations (double SimDT)
 	}
 
 	// check to see if animations hit limits and adjust accordingly
-	if (proc_tires_left > 1){
+	if (proc_tires_left > 1) {
 		proc_tires_left = proc_tires_left - 1;
-	} else if (proc_tires_left < 0) {
+	}
+	else if (proc_tires_left < 0) {
 		proc_tires_left = proc_tires_left + 1;
 	}
-	if (proc_tires_right > 1){
+	if (proc_tires_right > 1) {
 		proc_tires_right = proc_tires_right - 1;
-	} else if (proc_tires_right < 0) {
+	}
+	else if (proc_tires_right < 0) {
 		proc_tires_right = proc_tires_right + 1;
 	}
 
