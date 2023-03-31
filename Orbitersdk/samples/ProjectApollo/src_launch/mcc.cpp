@@ -596,7 +596,6 @@ void MCC::TimeStep(double simdt){
 		oapiGetGlobalPos(Moon, &MoonGlobalPos);
 		if (cm) { AutoUpdateXmitGroundStation(reinterpret_cast<Vessel*>(cm), TrackingVesselType::TypeCM, TrackingSlot::SlotCM); }
 		if (lm) { AutoUpdateXmitGroundStation(reinterpret_cast<Vessel*>(lm), TrackingVesselType::TypeLM, TrackingSlot::SlotLM); }
-
 		UpdateRevCounters(TrackingSlot::SlotCM); //Will almost always be CM, unless Apollo 5 gets MCC support, then you'll need logic for that.
 	}
 
@@ -621,12 +620,7 @@ void MCC::TimeStep(double simdt){
 	}
 
 	//debugging
-	/*if (TransmittingGroundStation) {
-		sprintf(oapiDebugString(), TransmittingGroundStation->Name);
-	}
-	else {
-		sprintf(oapiDebugString(), "none");
-	}*/
+	//sprintf(oapiDebugString(), "%d %d", TransmittingGroundStation[TrackingSlot::SlotCM], TransmittingGroundStation[TrackingSlot::SlotLM]);
 
 	// MISSION STATE EVALUATOR
 	if(MT_Enabled == true){
@@ -927,13 +921,13 @@ void MCC::TimeStep(double simdt){
 
 void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type, TrackingSlot Slot)
 {
-	int StationIndex = 0;
 	double Moonrelang;
 	double LOSRange;
 	VECTOR3 GSGlobalVector = _V(0, 0, 0);
 	VECTOR3 GSVector = _V(0, 0, 0);
 	double R_E, R_M;
 	bool MoonInTheWay;
+	char VesName[4];
 
 	// Bail out if we failed to find either major body
 	if (Earth == NULL) { addMessage("Can't find Earth"); GT_Enabled = false; return; }
@@ -944,10 +938,13 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 
 	int AOSCount = 0;
 	
-	for(StationIndex = 0; StationIndex < MAX_GROUND_STATION; StationIndex++){
+	for(int StationIndex = 0; StationIndex < MAX_GROUND_STATION; StationIndex++){
 		if (GroundStations[StationIndex].Active == true) {
-			GSVector = _V(cos(GroundStations[StationIndex].Position[1] * RAD) * cos(GroundStations[StationIndex].Position[0] * RAD), sin(GroundStations[StationIndex].Position[0] * RAD), 
+
+			GSVector = _V(cos(GroundStations[StationIndex].Position[1] * RAD) * cos(GroundStations[StationIndex].Position[0] * RAD),
+				sin(GroundStations[StationIndex].Position[0] * RAD), 
 				sin(GroundStations[StationIndex].Position[1] * RAD) * cos(GroundStations[StationIndex].Position[0] * RAD)) * R_E;
+			
 			oapiLocalToGlobal(Earth, &GSVector, &GSGlobalVector);
 			MoonInTheWay = false;
 			if (GroundStations[StationIndex].StationPurpose & GSPT_LUNAR)
@@ -972,24 +969,26 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 					
 					switch (Type) {
 						case TrackingVesselType::TypeCM:
+							sprintf(VesName, "CSM\0");
 							if (((Saturn*)Ves)->pcm.mcc_size != 0) { uplinking = true; }
 							break;
 						case TrackingVesselType::TypeLM:
+							sprintf(VesName, "LEM\0");
 							if (((LEM*)Ves)->PCM.mcc_size != 0) { uplinking = true; }
 							break;
 					}
-
+					
 
 					if (!uplinking) {
 						GroundStations[StationIndex].AOS = 1;
 						if (GT_Enabled == true) {
 							char buf[MAX_MSGSIZE];
-							sprintf(buf, "AOS %s", GroundStations[StationIndex].Name);
+							sprintf(buf, "%s AOS %s", VesName, GroundStations[StationIndex].Name);
 							addMessage(buf);
 						}
 
 						if (GroundStations[StationIndex].USBCaps) {
-							TransmittingGroundStation[Slot - 1] = StationIndex; //only interested in picking a station to tx USB carrier
+							TransmittingGroundStation[Slot] = StationIndex; //only interested in picking a station to tx USB carrier
 						}
 					}
 
@@ -1000,7 +999,7 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 
 				if (GT_Enabled == true) {
 					char buf[MAX_MSGSIZE];
-					sprintf(buf, "LOS %s", GroundStations[StationIndex].Name);
+					sprintf(buf, "%s LOS %s", VesName, GroundStations[StationIndex].Name);
 					addMessage(buf);
 				}
 			}
@@ -1008,7 +1007,7 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 		}
 	}
 	if (AOSCount == 0) {
-		TransmittingGroundStation[Slot - 1] = 0;
+		TransmittingGroundStation[Slot] = 0;
 	}
 }
 
