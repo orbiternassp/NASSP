@@ -2288,7 +2288,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	p = aa * (1.0 - coe.e*coe.e);
 
 	//Is shadow function vanishing for elliptical orbit?
-	if (coe.e < 1 && beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
+	/*if (coe.e < 1 && beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
 	{
 		v1 = 0;
 		return;
@@ -2298,7 +2298,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	{
 		v1 = 0;
 		return;
-	}
+	}*/
 
 	beta2 = dotp(unit(sun), Q);
 	p = coe.h*coe.h / mu;
@@ -2924,12 +2924,15 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	CELBODY *cPlan = oapiGetCelbodyInterface(planet);
 
 	OELEMENTS coe;
-	double h, e, theta0, a, dt, dt_alt;
+	double h, e, theta0, a, dt, dt_old;
+	int i, imax;
 
 	dt = 0;
-	dt_alt = 1;
+	dt_old = 1;
+	i = 0;
+	imax = 20;
 
-	while (abs(dt_alt-dt)>0.5)
+	while (abs(dt_old - dt) > 0.5 && i < imax)
 	{
 		if (planet == hMoon && planet2 == hSun)
 		{
@@ -2994,7 +2997,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 			e = coe.e;
 			theta0 = coe.TA;
 
-			dt_alt = dt;
+			dt_old = dt;
 			ddt = time_theta(R1, V1, calculateDifferenceBetweenAngles(theta0, v1), mu);
 			dt += ddt;
 		}
@@ -3005,7 +3008,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 			a = h * h / mu * 1.0 / (1.0 - e * e);
 			T = PI2 / sqrt(mu)*OrbMech::power(a, 3.0 / 2.0);
 
-			dt_alt = dt;
+			dt_old = dt;
 			dt = time_theta(R, V, calculateDifferenceBetweenAngles(theta0, v1), mu);
 
 			if (dt < 0 && future)
@@ -3013,6 +3016,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 				dt += T;
 			}
 		}
+		i++;
 	}
 
 	return dt;
