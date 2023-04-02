@@ -78,7 +78,7 @@ static SoundEvent sevent        ;
 static double NextEventTime = 0.0;
 #endif
 
-static GDIParams g_Param;
+GDIParams g_Param;
 
 // ==============================================================
 // API interface
