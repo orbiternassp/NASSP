@@ -230,7 +230,7 @@ struct GroundStation {
 	char UpTlmCaps;      // Command Capabilities
 	char StationType;    // Station Type
 	int  StationPurpose; // Station Purpose
-	int	 AOS;            // AOS flag
+	int	 AOS[2];            // AOS flag
 };
 
 class LEM;
@@ -252,7 +252,7 @@ public:
 	
 	void Init();											// Initialization
 	void TimeStep(double simdt);					        // Timestep
-	void AutoUpdateXmitGroundStation(const Vessel* Ves, const TrackingVesselType Type, const TrackingSlot Slot);	// Automaticially Update the Transmitting Ground Station
+	void AutoUpdateXmitGroundStation(VESSEL* Ves, const TrackingVesselType Type, const TrackingSlot Slot);	// Automaticially Update the Transmitting Ground Station
 	void UpdateRevCounters(const TrackingSlot Slot);
 	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer

@@ -107,7 +107,8 @@ MCC::MCC(RTCC *rtc)
 		GroundStations[x].UpTlmCaps = 0;
 		GroundStations[x].USBCaps = 0;
 		GroundStations[x].StationPurpose = 0;
-		GroundStations[x].AOS = 0;
+		GroundStations[x].AOS[0] = 0;
+		GroundStations[x].AOS[1] = 0;
 		sprintf(GroundStations[x].Name,"INVALID");
 		sprintf(GroundStations[x].Code,"XXX");
 		x++;
@@ -594,8 +595,8 @@ void MCC::TimeStep(double simdt){
 	if (LastAOSUpdate > 1.0) {
 		LastAOSUpdate = 0.0;
 		oapiGetGlobalPos(Moon, &MoonGlobalPos);
-		if (cm) { AutoUpdateXmitGroundStation(reinterpret_cast<Vessel*>(cm), TrackingVesselType::TypeCM, TrackingSlot::SlotCM); }
-		if (lm) { AutoUpdateXmitGroundStation(reinterpret_cast<Vessel*>(lm), TrackingVesselType::TypeLM, TrackingSlot::SlotLM); }
+		if (cm) { AutoUpdateXmitGroundStation(static_cast<VESSEL*>(cm), TrackingVesselType::TypeCM, TrackingSlot::SlotCM); }
+		if (lm) { AutoUpdateXmitGroundStation(static_cast<VESSEL*>(lm), TrackingVesselType::TypeLM, TrackingSlot::SlotLM); }
 		UpdateRevCounters(TrackingSlot::SlotCM); //Will almost always be CM, unless Apollo 5 gets MCC support, then you'll need logic for that.
 	}
 
@@ -620,7 +621,7 @@ void MCC::TimeStep(double simdt){
 	}
 
 	//debugging
-	//sprintf(oapiDebugString(), "%d %d", TransmittingGroundStation[TrackingSlot::SlotCM], TransmittingGroundStation[TrackingSlot::SlotLM]);
+	sprintf(oapiDebugString(), "%d %d", TransmittingGroundStation[TrackingSlot::SlotCM], TransmittingGroundStation[TrackingSlot::SlotLM]);
 
 	// MISSION STATE EVALUATOR
 	if(MT_Enabled == true){
@@ -919,7 +920,7 @@ void MCC::TimeStep(double simdt){
 	}
 }
 
-void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type, TrackingSlot Slot)
+void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, TrackingSlot Slot)
 {
 	double Moonrelang;
 	double LOSRange;
@@ -932,13 +933,17 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 	// Bail out if we failed to find either major body
 	if (Earth == NULL) { addMessage("Can't find Earth"); GT_Enabled = false; return; }
 	if (Moon == NULL) { addMessage("Can't find Moon"); GT_Enabled = false; return; }
-
+	
 	R_E = oapiGetSize(Earth);
 	R_M = oapiGetSize(Moon);
 
-	int AOSCount = 0;
-	
-	for(int StationIndex = 0; StationIndex < MAX_GROUND_STATION; StationIndex++){
+	int AOSCount[2] = {0, 0};
+
+	VECTOR3 VesGlobalPos = _V(0, 0, 0);
+	Ves->GetGlobalPos(VesGlobalPos);
+	oapiGlobalToLocal(Earth, &VesGlobalPos, &(Vessel_Vector[Slot]));
+
+	for(int StationIndex = 1; StationIndex < MAX_GROUND_STATION; StationIndex++){
 		if (GroundStations[StationIndex].Active == true) {
 
 			GSVector = _V(cos(GroundStations[StationIndex].Position[1] * RAD) * cos(GroundStations[StationIndex].Position[0] * RAD),
@@ -961,7 +966,7 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 			{
 				MoonInTheWay = true;
 			}
-			if (OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E) && GroundStations[StationIndex].AOS == 0 && ((GroundStations[StationIndex].USBCaps & GSSC_VOICE) || (GroundStations[StationIndex].CommCaps & GSGC_VHFAG_VOICE))) {
+			if (OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E) && GroundStations[StationIndex].AOS[Slot] == 0 && ((GroundStations[StationIndex].USBCaps & GSSC_VOICE) || (GroundStations[StationIndex].CommCaps & GSGC_VHFAG_VOICE))) {
 				if (length(Vessel_Vector[Slot] - GSVector) < LOSRange && !MoonInTheWay)
 				{
 					//Dont switch to a new station if we're transmitting an uplink;
@@ -980,7 +985,7 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 					
 
 					if (!uplinking) {
-						GroundStations[StationIndex].AOS = 1;
+						GroundStations[StationIndex].AOS[Slot] = 1;
 						if (GT_Enabled == true) {
 							char buf[MAX_MSGSIZE];
 							sprintf(buf, "%s AOS %s", VesName, GroundStations[StationIndex].Name);
@@ -994,8 +999,8 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 
 				}
 			}
-			if ((!OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E) || length(Vessel_Vector[Slot] - GSVector) > LOSRange || MoonInTheWay) && GroundStations[StationIndex].AOS == 1) {
-				GroundStations[StationIndex].AOS = 0;
+			if ((!OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E) || length(Vessel_Vector[Slot] - GSVector) > LOSRange || MoonInTheWay) && GroundStations[StationIndex].AOS[Slot] == 1) {
+				GroundStations[StationIndex].AOS[Slot] = 0;
 
 				if (GT_Enabled == true) {
 					char buf[MAX_MSGSIZE];
@@ -1003,10 +1008,10 @@ void MCC::AutoUpdateXmitGroundStation(const Vessel* Ves, TrackingVesselType Type
 					addMessage(buf);
 				}
 			}
-			if (GroundStations[StationIndex].AOS) { AOSCount++; }
+			if (GroundStations[StationIndex].AOS[Slot]) { AOSCount[Slot]++; }
 		}
 	}
-	if (AOSCount == 0) {
+	if (AOSCount[Slot] == 0) {
 		TransmittingGroundStation[Slot] = 0;
 	}
 }
@@ -1355,10 +1360,15 @@ void MCC::SaveState(FILEHANDLE scn) {
 	SAVE_INT("MCC_AbortMode", AbortMode);
 	for (int i = 0; i < MAX_GROUND_STATION; i++)
 	{
-		if (GroundStations[i].AOS)
+		if (GroundStations[i].AOS[TrackingSlot::SlotCM])
 		{
-			int Itemp[2] = { i, GroundStations[i].AOS };
-			papiWriteScenario_intarr(scn, "MCC_GroundStationAOS", Itemp, 2);
+			int Itemp[2] = { i, GroundStations[i].AOS[TrackingSlot::SlotCM]};
+			papiWriteScenario_intarr(scn, "MCC_GroundStationAOS_CM", Itemp, 2);
+		}
+		if (GroundStations[i].AOS[0])
+		{
+			int Itemp[2] = { i, GroundStations[i].AOS[TrackingSlot::SlotLM] };
+			papiWriteScenario_intarr(scn, "MCC_GroundStationAOS_LM", Itemp, 2);
 		}
 	}
 	if (TransmittingGroundStation[TrackingSlot::SlotCM]) { SAVE_INT("MCC_TransmittingGroundstation", TransmittingGroundStation[TrackingSlot::SlotCM]); }
@@ -1957,9 +1967,14 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_INT("MCC_padNumber", padNumber);
 		//LOAD_INT("MCC_padState", padState);
 
-		if (papiReadScenario_intarr(line, "MCC_GroundStationAOS", iTemp, 2))
+		if (papiReadScenario_intarr(line, "MCC_GroundStationAOS_CM", iTemp, 2))
 		{
-			GroundStations[iTemp[0]].AOS = iTemp[1];
+			GroundStations[iTemp[0]].AOS[TrackingSlot::SlotCM] = iTemp[1];
+		}
+
+		if (papiReadScenario_intarr(line, "MCC_GroundStationAOS_LM", iTemp, 2))
+		{
+			GroundStations[iTemp[0]].AOS[TrackingSlot::SlotLM] = iTemp[1];
 		}
 
 		if (padNumber > 0)
