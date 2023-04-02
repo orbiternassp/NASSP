@@ -621,7 +621,7 @@ void MCC::TimeStep(double simdt){
 	}
 
 	//debugging
-	sprintf(oapiDebugString(), "%d %d", TransmittingGroundStation[TrackingSlot::SlotCM], TransmittingGroundStation[TrackingSlot::SlotLM]);
+	//sprintf(oapiDebugString(), "%d %d", TransmittingGroundStation[TrackingSlot::SlotCM], TransmittingGroundStation[TrackingSlot::SlotLM]);
 
 	// MISSION STATE EVALUATOR
 	if(MT_Enabled == true){
@@ -937,6 +937,14 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 	R_E = oapiGetSize(Earth);
 	R_M = oapiGetSize(Moon);
 
+	switch (Type) {
+	case TrackingVesselType::TypeCM:
+		sprintf(VesName, "CSM\0");
+		break;
+	case TrackingVesselType::TypeLM:
+		sprintf(VesName, "CSM\0");
+		break;
+	}
 	int AOSCount[2] = {0, 0};
 
 	VECTOR3 VesGlobalPos = _V(0, 0, 0);
@@ -974,11 +982,9 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 					
 					switch (Type) {
 						case TrackingVesselType::TypeCM:
-							sprintf(VesName, "CSM\0");
 							if (((Saturn*)Ves)->pcm.mcc_size != 0) { uplinking = true; }
 							break;
 						case TrackingVesselType::TypeLM:
-							sprintf(VesName, "LEM\0");
 							if (((LEM*)Ves)->PCM.mcc_size != 0) { uplinking = true; }
 							break;
 					}
