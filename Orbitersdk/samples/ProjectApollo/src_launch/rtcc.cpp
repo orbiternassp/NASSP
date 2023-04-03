@@ -32538,9 +32538,13 @@ bool RTCC::RTEManeuverCodeLogic(char *code, double lmascmass, double lmdscmass, 
 			{
 				thruster = RTCC_ENGINETYPE_CSMRCSMINUS4;
 			}
-			else
+			else if (UllageNum == -2)
 			{
 				thruster = RTCC_ENGINETYPE_CSMRCSMINUS2;
+			}
+			else
+			{
+				return true;
 			}
 		}
 		else
@@ -32597,9 +32601,13 @@ bool RTCC::RTEManeuverCodeLogic(char *code, double lmascmass, double lmdscmass, 
 			{
 				thruster = RTCC_ENGINETYPE_LMRCSMINUS4;
 			}
-			else
+			else if (UllageNum == -2)
 			{
 				thruster = RTCC_ENGINETYPE_LMRCSMINUS2;
+			}
+			else
+			{
+				return true;
 			}
 			if (code[2] == 'D')
 			{

@@ -2505,7 +2505,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%s", GC->rtcc->med_f80.ManeuverCode.c_str());
 		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%d quads %.1lf seconds", GC->rtcc->med_f80.NumQuads, GC->rtcc->med_f80.UllageDT);
+		if (GC->rtcc->med_f80.ManeuverCode.size() > 2 && GC->rtcc->med_f80.ManeuverCode[1] == 'R')
+		{
+			sprintf(Buffer, "RCS Burn: %+d quads", GC->rtcc->med_f80.NumQuads);
+		}
+		else
+		{
+			sprintf(Buffer, "%+d quads %.1lf seconds", GC->rtcc->med_f80.NumQuads, GC->rtcc->med_f80.UllageDT);
+		}
 		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
 		if (GC->rtcc->med_f80.TrimAngleInd == -1)
