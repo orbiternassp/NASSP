@@ -424,7 +424,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 110, MST_H1_LUNAR_ORBIT_ASCENT_DAY_10);
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_10: //DAP data to Impact burn PAD
-		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, SubStateTime > 5.0*60.0, 7, MST_H1_LUNAR_ORBIT_ASCENT_DAY_11);
+		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, SubStateTime > 5.0*60.0, 7, MST_H1_LUNAR_ORBIT_ASCENT_DAY_11); //This DAP data should come after P76 with the Map Rev 34 update
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_11: //Impact burn PAD to CSM P76 PAD
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, rtcc->GETEval2(rtcc->calcParams.SEP - 50.0*60.0), 111, MST_H1_LUNAR_ORBIT_ASCENT_DAY_12);
