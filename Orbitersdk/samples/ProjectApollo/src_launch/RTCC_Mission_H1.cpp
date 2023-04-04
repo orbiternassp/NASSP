@@ -3031,6 +3031,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sprintf(upDesc, updesc);
 		}
 	}
+	break;
 	case 130: //PHOTOGRAPHY REFSMMAT CACLULATION
 	case 131: //PHOTOGRAPHY REFSMMAT UPLINK
 	{
