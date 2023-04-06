@@ -1101,14 +1101,6 @@ void HGA::TimeStep(double simt, double simdt)
 			HornSignalStrength[i] = 0.0;
 		}
 	}
-	else if (CSMrelang < 45.0*RAD) //CSM body shadowing the antenna
-	{
-		SignalStrength = 0.0;
-		for (int i = 0; i < 4; i++)
-		{
-			HornSignalStrength[i] = 0.0;
-		}
-	}
 	else
 	{
 		for (int i = 0;i < 4;i++)
@@ -1130,6 +1122,15 @@ void HGA::TimeStep(double simt, double simdt)
 			else
 			{
 				HornSignalStrength[i] = 0.0;
+			}
+		}
+
+		//CSM body shadowing the antenna
+		if (CSMrelang < 45.0*RAD)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				HornSignalStrength[i] *= CSMrelang / (45.0*RAD); //Signal strength goes down linearly from the edge of the skin reflection zone
 			}
 		}
 
