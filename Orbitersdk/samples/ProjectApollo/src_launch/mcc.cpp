@@ -1970,7 +1970,8 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("MCC_MoonRevTime", MoonRevTime);
 		LOAD_STRING("MCC_PCOption_Text", PCOption_Text, 32);
 		LOAD_STRING("MCC_NCOption_Text", NCOption_Text, 32);
-		LOAD_INT("MCC_TransmittingGroundstation", TransmittingGroundStation);
+		LOAD_INT("MCC_TransmittingGroundstation", TransmittingGroundStation[TrackingSlot::SlotCM]);
+		LOAD_INT("MCC_TransmittingGroundstationLM", TransmittingGroundStation[TrackingSlot::SlotLM]);
 		LOAD_INT("MCC_padNumber", padNumber);
 		//LOAD_INT("MCC_padState", padState);
 
