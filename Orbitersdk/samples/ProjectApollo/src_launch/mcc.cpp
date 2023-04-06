@@ -942,10 +942,11 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 		sprintf(VesName, "CSM\0");
 		break;
 	case TrackingVesselType::TypeLM:
-		sprintf(VesName, "CSM\0");
+		sprintf(VesName, "LM\0");
 		break;
 	}
-	int AOSCount[2] = {0, 0};
+
+	int AOSCount = 0;
 
 	VECTOR3 VesGlobalPos = _V(0, 0, 0);
 	Ves->GetGlobalPos(VesGlobalPos);
@@ -1014,10 +1015,10 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 					addMessage(buf);
 				}
 			}
-			if (GroundStations[StationIndex].AOS[Slot]) { AOSCount[Slot]++; }
+			if (GroundStations[StationIndex].AOS[Slot]) { AOSCount++; }
 		}
 	}
-	if (AOSCount[Slot] == 0) {
+	if (AOSCount == 0) {
 		TransmittingGroundStation[Slot] = 0;
 	}
 }
