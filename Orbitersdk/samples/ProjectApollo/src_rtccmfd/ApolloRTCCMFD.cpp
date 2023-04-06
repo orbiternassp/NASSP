@@ -2800,17 +2800,20 @@ void ApolloRTCCMFD::set_RTED_REFSMMAT(char *str)
 void ApolloRTCCMFD::menuSetRTEDUllage()
 {
 	bool SetRTEDUllageInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Set number of thrusters and duration of ullage (Format: Num Time):", SetRTEDUllageInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Set number of thrusters (All) and duration of ullage (SPS, DPS only). Format: Num Time", SetRTEDUllageInput, 0, 20, (void*)this);
 }
 
 bool SetRTEDUllageInput(void *id, char *str, void *data)
 {
-	double duration;
+	double duration = 0.0;
 	int num;
-	if (sscanf(str, "%d %lf", &num, &duration) == 2)
+	if (sscanf(str, "%d %lf", &num, &duration) >= 1)
 	{
-		((ApolloRTCCMFD*)data)->set_RTEDUllage(num, duration);
-		return true;
+		if (abs(num) == 2 || abs(num) == 4)
+		{
+			((ApolloRTCCMFD*)data)->set_RTEDUllage(num, duration);
+			return true;
+		}
 	}
 	return false;
 }
