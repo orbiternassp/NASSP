@@ -464,7 +464,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 41 && MoonRevTime > 70.0*60.0, 47, MST_H1_LUNAR_ORBIT_PC2_DAY_6);
 		break;
 	case MST_H1_LUNAR_ORBIT_PC2_DAY_6: //Landmark tracking PAD to CSM SV update
-		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 65, MST_H1_LUNAR_ORBIT_PC2_DAY_7);
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, true, 65, MST_H1_LUNAR_ORBIT_PC2_DAY_7);
 		break;
 	case MST_H1_LUNAR_ORBIT_PC2_DAY_7: //CSM SV update to TEI-45 PAD (block data)
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 42 && MoonRevTime > 30.0*60.0, 5, MST_H1_LUNAR_ORBIT_PC2_DAY_8);
@@ -473,7 +473,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 42 && MoonRevTime > 75.0*60.0, 48, MST_H1_LUNAR_ORBIT_PC2_DAY_9);
 		break;
 	case MST_H1_LUNAR_ORBIT_PC2_DAY_9: //Landmark tracking PAD to CSM SV update
-		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 15.0*60.0, 65, MST_H1_LUNAR_ORBIT_PC2_DAY_10);
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 10.0*60.0, 65, MST_H1_LUNAR_ORBIT_PC2_DAY_10);
 		break;
 	case MST_H1_LUNAR_ORBIT_PC2_DAY_10: //CSM SV update to TEI-45 PAD (preliminary)
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 44 && MoonRevTime > 40.0*60.0, 5, MST_H1_LUNAR_ORBIT_PC2_DAY_11);
