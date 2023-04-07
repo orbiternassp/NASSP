@@ -481,7 +481,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 44 && MoonRevTime > 85.0*60.0, 49, MST_H1_LUNAR_ORBIT_PC2_DAY_12);
 		break;
 	case MST_H1_LUNAR_ORBIT_PC2_DAY_12: //TEI REFSMMAT Uplink to TEI-45 PAD (final)
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 45 && MoonRevTime > 55.0*60.0, 132, MST_H1_LUNAR_ORBIT_PC2_DAY_13);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 45 && MoonRevTime > 50.0*60.0, 132, MST_H1_LUNAR_ORBIT_PC2_DAY_13);
 		break;
 	case MST_H1_LUNAR_ORBIT_PC2_DAY_13: //TEI-45 PAD (final) to TEI-46 PAD
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 50, MST_H1_LUNAR_ORBIT_PC2_DAY_14);
