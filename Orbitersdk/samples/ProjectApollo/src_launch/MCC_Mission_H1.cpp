@@ -510,10 +510,10 @@ void MCC::MissionSequence_H1()
 		}
 		break;
 	case MST_H1_TRANSEARTH_2: //PTC REFSMMAT to MCC-5 update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TEI + 13.0*3600.0 + 25.0*60.0), 18, MST_H1_TRANSEARTH_3);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TEI + 12.0*3600.0), 18, MST_H1_TRANSEARTH_3);
 		break;
 	case MST_H1_TRANSEARTH_3: //MCC-5 update to preliminary MCC-6 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TEI + 24.0*3600.0 + 25.0*60.0), 210, MST_H1_TRANSEARTH_4);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TEI + 24.0*3600.0 + 25.0*60.0), 210, MST_H1_TRANSEARTH_4); //There was no prelim MCC-6 update on 12
 		break;
 	case MST_H1_TRANSEARTH_4: //Preliminary MCC-6 update to Entry PAD update
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 211, MST_H1_TRANSEARTH_5);
