@@ -411,7 +411,7 @@ void MCC::Init(){
 	// 28 = MSFNOC (? THE OPERATIONS CENTER ?)
 
 	// 29 = HSK WING
-	sprintf(GroundStations[29].Name,"HONEYSUCKLE"); sprintf(GroundStations[29].Code,"HSKX");
+	sprintf(GroundStations[29].Name,"HONEYSUCKLE WING"); sprintf(GroundStations[29].Code,"HSKX");
 	GroundStations[29].Position[0] = -35.40282; GroundStations[29].Position[1] = 148.98144;
 	GroundStations[29].SBandAntenna = GSSA_26METER;
 	GroundStations[29].StationPurpose = GSPT_LUNAR;
@@ -421,7 +421,7 @@ void MCC::Init(){
 	GroundStations[29].Active = true;
 
 	// 30 = GDS WING
-	sprintf(GroundStations[30].Name,"GOLDSTONE"); sprintf(GroundStations[30].Code,"GDSX");
+	sprintf(GroundStations[30].Name,"GOLDSTONE WING"); sprintf(GroundStations[30].Code,"GDSX");
 	GroundStations[30].Position[0] = 35.33820; GroundStations[30].Position[1] = -116.87421;
 	GroundStations[30].SBandAntenna = GSSA_26METER;
 	GroundStations[30].StationPurpose = GSPT_LUNAR;
@@ -431,7 +431,7 @@ void MCC::Init(){
 	GroundStations[30].Active = true;
 
 	// 31 = MAD WING
-	sprintf(GroundStations[31].Name,"MADRID"); sprintf(GroundStations[31].Code,"MADX");
+	sprintf(GroundStations[31].Name,"MADRID WING"); sprintf(GroundStations[31].Code,"MADX");
 	GroundStations[31].Position[0] = 40.45443; GroundStations[31].Position[1] = -4.16990;
 	GroundStations[31].SBandAntenna = GSSA_26METER;
 	GroundStations[31].StationPurpose = GSPT_LUNAR;
