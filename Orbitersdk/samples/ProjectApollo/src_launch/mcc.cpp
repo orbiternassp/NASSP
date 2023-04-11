@@ -934,20 +934,10 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 	VECTOR3 GSGlobalVector = _V(0, 0, 0);
 	VECTOR3 GSVector = _V(0, 0, 0);
 	bool MoonInTheWay, Sight;
-	char VesName[4];
 
 	// Bail out if we failed to find either major body
 	if (Earth == NULL) { addMessage("Can't find Earth"); GT_Enabled = false; return; }
 	if (Moon == NULL) { addMessage("Can't find Moon"); GT_Enabled = false; return; }
-
-	switch (Type) {
-	case TrackingVesselType::TypeCM:
-		sprintf(VesName, "CSM\0");
-		break;
-	case TrackingVesselType::TypeLM:
-		sprintf(VesName, "LM\0");
-		break;
-	}
 
 	int AOSCount = 0;
 
@@ -998,9 +988,9 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 
 					if (!uplinking) {
 						GroundStations[StationIndex].AOS[Slot] = 1;
-						if (GT_Enabled == true) {
+						if (Type == TrackingVesselType::TypeCM && GT_Enabled == true) {
 							char buf[MAX_MSGSIZE];
-							sprintf(buf, "%s AOS %s", VesName, GroundStations[StationIndex].Name);
+							sprintf(buf, "AOS %s", GroundStations[StationIndex].Name);
 							addMessage(buf);
 						}
 
@@ -1014,9 +1004,9 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 			if ((!Sight || length(Vessel_Vector[Slot] - GSVector) > LOSRange || MoonInTheWay) && GroundStations[StationIndex].AOS[Slot] == 1) {
 				GroundStations[StationIndex].AOS[Slot] = 0;
 
-				if (GT_Enabled == true) {
+				if (Type == TrackingVesselType::TypeCM && GT_Enabled == true) {
 					char buf[MAX_MSGSIZE];
-					sprintf(buf, "%s LOS %s", VesName, GroundStations[StationIndex].Name);
+					sprintf(buf, "LOS %s", GroundStations[StationIndex].Name);
 					addMessage(buf);
 				}
 			}
