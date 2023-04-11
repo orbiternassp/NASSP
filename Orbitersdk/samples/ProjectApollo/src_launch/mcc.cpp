@@ -90,6 +90,8 @@ MCC::MCC(RTCC *rtc)
 	CM_Prev_MoonPosition[0] = 0;
 	CM_Prev_MoonPosition[1] = 0;
 	CM_Prev_MoonPosition[2] = 0;
+	R_E = 0;
+	R_M = 0;
 	// Reset ground stations
 	int x=0;
 	while(x<MAX_GROUND_STATION){
@@ -149,6 +151,10 @@ void MCC::Init(){
 	// Obtain Earth and Moon pointers
 	Earth = oapiGetGbodyByName("Earth");
 	Moon = oapiGetGbodyByName("Moon");
+
+	//Obtain radii for both
+	R_E = oapiGetSize(Earth);
+	R_M = oapiGetSize(Moon);
 	
 	// GROUND TRACKING INITIALIZATION
 	LastAOSUpdate = 2.0;
@@ -168,6 +174,7 @@ void MCC::Init(){
 
 	// This particular ground station list is the stations that were on-net for Apollo 8.
 	// The index numbers represent status as of 1968.	
+	// Leave GroundStations[0] empty as an invalid station with no capabilities for the AOS/LOS logic
 	sprintf(GroundStations[1].Name,"ANTIGUA"); sprintf(GroundStations[1].Code,"ANG");
 	// GroundStations[1].Position[0] = 28.40433; GroundStations[1].Position[1] = -80.60192; // This is the Cape?
 	GroundStations[1].Position[0] = 17.137222; GroundStations[1].Position[1] = -61.775833;
@@ -404,7 +411,7 @@ void MCC::Init(){
 	// 28 = MSFNOC (? THE OPERATIONS CENTER ?)
 
 	// 29 = HSK WING
-	sprintf(GroundStations[29].Name,"HONEYSUCKLE"); sprintf(GroundStations[29].Code,"HSKX");
+	sprintf(GroundStations[29].Name,"HONEYSUCKLE WING"); sprintf(GroundStations[29].Code,"HSKX");
 	GroundStations[29].Position[0] = -35.40282; GroundStations[29].Position[1] = 148.98144;
 	GroundStations[29].SBandAntenna = GSSA_26METER;
 	GroundStations[29].StationPurpose = GSPT_LUNAR;
@@ -414,7 +421,7 @@ void MCC::Init(){
 	GroundStations[29].Active = true;
 
 	// 30 = GDS WING
-	sprintf(GroundStations[30].Name,"GOLDSTONE"); sprintf(GroundStations[30].Code,"GDSX");
+	sprintf(GroundStations[30].Name,"GOLDSTONE WING"); sprintf(GroundStations[30].Code,"GDSX");
 	GroundStations[30].Position[0] = 35.33820; GroundStations[30].Position[1] = -116.87421;
 	GroundStations[30].SBandAntenna = GSSA_26METER;
 	GroundStations[30].StationPurpose = GSPT_LUNAR;
@@ -424,7 +431,7 @@ void MCC::Init(){
 	GroundStations[30].Active = true;
 
 	// 31 = MAD WING
-	sprintf(GroundStations[31].Name,"MADRID"); sprintf(GroundStations[31].Code,"MADX");
+	sprintf(GroundStations[31].Name,"MADRID WING"); sprintf(GroundStations[31].Code,"MADX");
 	GroundStations[31].Position[0] = 40.45443; GroundStations[31].Position[1] = -4.16990;
 	GroundStations[31].SBandAntenna = GSSA_26METER;
 	GroundStations[31].StationPurpose = GSPT_LUNAR;
@@ -926,31 +933,17 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 	double LOSRange;
 	VECTOR3 GSGlobalVector = _V(0, 0, 0);
 	VECTOR3 GSVector = _V(0, 0, 0);
-	double R_E, R_M;
-	bool MoonInTheWay;
-	char VesName[4];
+	bool MoonInTheWay, Sight;
 
 	// Bail out if we failed to find either major body
 	if (Earth == NULL) { addMessage("Can't find Earth"); GT_Enabled = false; return; }
 	if (Moon == NULL) { addMessage("Can't find Moon"); GT_Enabled = false; return; }
-	
-	R_E = oapiGetSize(Earth);
-	R_M = oapiGetSize(Moon);
-
-	switch (Type) {
-	case TrackingVesselType::TypeCM:
-		sprintf(VesName, "CSM\0");
-		break;
-	case TrackingVesselType::TypeLM:
-		sprintf(VesName, "LM\0");
-		break;
-	}
 
 	int AOSCount = 0;
 
-	VECTOR3 VesGlobalPos = _V(0, 0, 0);
-	Ves->GetGlobalPos(VesGlobalPos);
-	oapiGlobalToLocal(Earth, &VesGlobalPos, &(Vessel_Vector[Slot]));
+	//Get vessel position in local and global coordinates
+	Ves->GetGlobalPos(VesselGlobalPos[Slot]);
+	oapiGlobalToLocal(Earth, &VesselGlobalPos[Slot], &(Vessel_Vector[Slot]));
 
 	for(int StationIndex = 1; StationIndex < MAX_GROUND_STATION; StationIndex++){
 		if (GroundStations[StationIndex].Active == true) {
@@ -969,13 +962,15 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 			{
 				LOSRange = 2e7;
 			}
+			//Check if there is line-of-sight between vessel and station
+			Sight = OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E);
 			//Moon in the way
 			Moonrelang = dotp(unit(MoonGlobalPos - VesselGlobalPos[Slot]), unit(GSGlobalVector - VesselGlobalPos[Slot]));
 			if (Moonrelang > cos(asin(R_M / length(MoonGlobalPos - VesselGlobalPos[Slot]))))
 			{
 				MoonInTheWay = true;
 			}
-			if (OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E) && GroundStations[StationIndex].AOS[Slot] == 0 && ((GroundStations[StationIndex].USBCaps & GSSC_VOICE) || (GroundStations[StationIndex].CommCaps & GSGC_VHFAG_VOICE))) {
+			if (Sight && GroundStations[StationIndex].AOS[Slot] == 0 && ((GroundStations[StationIndex].USBCaps & GSSC_VOICE) || (GroundStations[StationIndex].CommCaps & GSGC_VHFAG_VOICE))) {
 				if (length(Vessel_Vector[Slot] - GSVector) < LOSRange && !MoonInTheWay)
 				{
 					//Dont switch to a new station if we're transmitting an uplink;
@@ -993,9 +988,9 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 
 					if (!uplinking) {
 						GroundStations[StationIndex].AOS[Slot] = 1;
-						if (GT_Enabled == true) {
+						if (Type == TrackingVesselType::TypeCM && GT_Enabled == true) {
 							char buf[MAX_MSGSIZE];
-							sprintf(buf, "%s AOS %s", VesName, GroundStations[StationIndex].Name);
+							sprintf(buf, "AOS %s", GroundStations[StationIndex].Name);
 							addMessage(buf);
 						}
 
@@ -1006,12 +1001,12 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 
 				}
 			}
-			if ((!OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E) || length(Vessel_Vector[Slot] - GSVector) > LOSRange || MoonInTheWay) && GroundStations[StationIndex].AOS[Slot] == 1) {
+			if ((!Sight || length(Vessel_Vector[Slot] - GSVector) > LOSRange || MoonInTheWay) && GroundStations[StationIndex].AOS[Slot] == 1) {
 				GroundStations[StationIndex].AOS[Slot] = 0;
 
-				if (GT_Enabled == true) {
+				if (Type == TrackingVesselType::TypeCM && GT_Enabled == true) {
 					char buf[MAX_MSGSIZE];
-					sprintf(buf, "%s LOS %s", VesName, GroundStations[StationIndex].Name);
+					sprintf(buf, "LOS %s", GroundStations[StationIndex].Name);
 					addMessage(buf);
 				}
 			}
@@ -1030,6 +1025,8 @@ void MCC::UpdateRevCounters(TrackingSlot Slot)
 	if (!cm) { return; }
 	//-------------------------------------------------------------------------
 
+	//This function requires that VesselGlobalPos, MoonGlobalPos and Vessel_Vector were calculated in AutoUpdateXmitGroundStation
+
 	// Update previous position data
 	CM_Prev_Position[0] = CM_Position[0];
 	CM_Prev_Position[1] = CM_Position[1];
@@ -1037,8 +1034,6 @@ void MCC::UpdateRevCounters(TrackingSlot Slot)
 	CM_Prev_MoonPosition[0] = CM_MoonPosition[0];
 	CM_Prev_MoonPosition[1] = CM_MoonPosition[1];
 	CM_Prev_MoonPosition[2] = CM_MoonPosition[2];
-	// Obtain global positions
-	cm->GetGlobalPos(VesselGlobalPos[Slot]);
 
 	// Convert to Earth equatorial
 	oapiGlobalToEqu(Earth, VesselGlobalPos[Slot], &CM_Position[1], &CM_Position[0], &CM_Position[2]);

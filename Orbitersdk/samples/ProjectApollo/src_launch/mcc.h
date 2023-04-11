@@ -298,9 +298,10 @@ public:
 	SIVB *sivb;												// Pointer to SIVB
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
-	VECTOR3 MoonGlobalPos;
-	VECTOR3 VesselGlobalPos[2];
-	VECTOR3 Vessel_Vector[2];
+	double R_E, R_M;										// Radius of Earth and Moon
+	VECTOR3 MoonGlobalPos;									// Position of the Moon, global coordinates
+	VECTOR3 VesselGlobalPos[2];								// Position of CM/LM, global coordinates
+	VECTOR3 Vessel_Vector[2];								// Position of CM/LM, local coordinates
 
 	// SUBTHREAD MANAGEMENT
 	int subThreadMode;										// What should the subthread do?

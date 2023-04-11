@@ -91,24 +91,32 @@ int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
 
 	if (msgid == paCBGmessageID::messageID::RF_PROPERTIES) {
 
-		if(mcc->TransmittingGroundStation == 0) { return 0; }
 		RFCALC_RFProperties *RFtemp = (RFCALC_RFProperties*)context;
 
-		if (prm == paCBGmessageID::parameterID::GetCM) {
+		if (prm == paCBGmessageID::parameterID::GetCM || prm == paCBGmessageID::parameterID::GetLM)
+		{
+			int slot;
 
-			//sprintf(oapiDebugString(), "hi");
+			if (prm == paCBGmessageID::parameterID::GetCM)
+			{
+				slot = MCC::TrackingSlot::SlotCM;
+			}
+			else
+			{
+				slot = MCC::TrackingSlot::SlotLM;
+			}
 
-			RFtemp->GlobalPosition = (mcc->TransmittingGroundStationVector[MCC::TrackingSlot::SlotCM]);
+			RFtemp->GlobalPosition = (mcc->TransmittingGroundStationVector[slot]);
 
-			if (mcc->GroundStations[mcc->TransmittingGroundStation[MCC::TrackingSlot::SlotCM]].SBandAntenna & GSSA_26METER) {
+			if (mcc->GroundStations[mcc->TransmittingGroundStation[slot]].SBandAntenna & GSSA_26METER) {
 				RFtemp->Gain = pow(10.0, (50.0 / 10.0));
 				RFtemp->Power = 20.0E3;
 			}
-			else if (mcc->GroundStations[mcc->TransmittingGroundStation[MCC::TrackingSlot::SlotCM]].SBandAntenna & GSSA_9METER) {
+			else if (mcc->GroundStations[mcc->TransmittingGroundStation[slot]].SBandAntenna & GSSA_9METER) {
 				RFtemp->Gain = pow(10.0, (43.0 / 10.0));
 				RFtemp->Power = 10E3;
 			}
-			else if (mcc->GroundStations[mcc->TransmittingGroundStation[MCC::TrackingSlot::SlotCM]].SBandAntenna & GSSA_3PT7METER) {
+			else if (mcc->GroundStations[mcc->TransmittingGroundStation[slot]].SBandAntenna & GSSA_3PT7METER) {
 				RFtemp->Gain = pow(10.0, (37.0 / 10.0));
 				RFtemp->Power = 22.9;
 			}
@@ -116,30 +124,7 @@ int MCCVessel::clbkGeneric(int msgid, int prm, void* context)
 				RFtemp->Gain = 1.0;
 				RFtemp->Power = 0.0;
 			}
-			return 1;
-		}
-		else if (prm == paCBGmessageID::parameterID::GetLM) {
 
-			//sprintf(oapiDebugString(), "hi");
-
-			RFtemp->GlobalPosition = (mcc->TransmittingGroundStationVector[MCC::TrackingSlot::SlotLM]);
-
-			if (mcc->GroundStations[mcc->TransmittingGroundStation[MCC::TrackingSlot::SlotLM]].SBandAntenna & GSSA_26METER) {
-				RFtemp->Gain = pow(10.0, (50.0 / 10.0));
-				RFtemp->Power = 20.0E3;
-			}
-			else if (mcc->GroundStations[mcc->TransmittingGroundStation[MCC::TrackingSlot::SlotLM]].SBandAntenna & GSSA_9METER) {
-				RFtemp->Gain = pow(10.0, (43.0 / 10.0));
-				RFtemp->Power = 10E3;
-			}
-			else if (mcc->GroundStations[mcc->TransmittingGroundStation[MCC::TrackingSlot::SlotLM]].SBandAntenna & GSSA_3PT7METER) {
-				RFtemp->Gain = pow(10.0, (37.0 / 10.0));
-				RFtemp->Power = 22.9;
-			}
-			else {
-				RFtemp->Gain = 1.0;
-				RFtemp->Power = 0.0;
-			}
 			return 1;
 		}
 	}
