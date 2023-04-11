@@ -512,18 +512,11 @@ void MCC::MissionSequence_H1()
 	case MST_H1_TRANSEARTH_2: //PTC REFSMMAT to MCC-5 update
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.TEI + 12.0*3600.0), 18, MST_H1_TRANSEARTH_3);
 		break;
-	case MST_H1_TRANSEARTH_3: //MCC-5 update to preliminary MCC-6 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.TEI + 24.0*3600.0 + 25.0*60.0), 210, MST_H1_TRANSEARTH_4); //There was no prelim MCC-6 update on 12
+	case MST_H1_TRANSEARTH_3: //MCC-5 update to CSM SV update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval2(rtcc->calcParams.EI - 26.0 * 3600.0), 210, MST_H1_TRANSEARTH_4);
 		break;
-	case MST_H1_TRANSEARTH_4: //Preliminary MCC-6 update to Entry PAD update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 211, MST_H1_TRANSEARTH_5); //There was no prelim MCC-6 update on 12 and thus no entry pad here
-		break;
-
-	//Missing CSM SV Update, V66 here EI -26h
-
-
-	case MST_H1_TRANSEARTH_5: //Entry PAD update to MCC-6 update
-		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval2(rtcc->calcParams.EI - 23.0*3600.0 - 20.0*60.0), 216, MST_H1_TRANSEARTH_6);
+	case MST_H1_TRANSEARTH_4: //CSM SV update to MCC-6 update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(rtcc->calcParams.EI - 23.0 * 3600.0 - 20.0 * 60.0), 5, MST_H1_TRANSEARTH_6);
 		break;
 	case MST_H1_TRANSEARTH_6: //MCC-6 update to Entry PAD update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 212, MST_H1_TRANSEARTH_7);

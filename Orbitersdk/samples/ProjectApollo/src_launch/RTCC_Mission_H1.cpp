@@ -3099,7 +3099,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	break;
 	case 205: //EI Evaluation
 	case 210: //MCC-5 UPDATE
-	case 211: //PRELIMINARY MCC-6 UPDATE
 	case 212: //MCC-6 UPDATE
 	case 213: //MCC-7 DECISION
 	case 214: //MCC-7 UPDATE
