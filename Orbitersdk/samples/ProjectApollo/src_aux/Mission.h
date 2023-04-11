@@ -84,6 +84,12 @@ namespace mission
 		virtual const std::string& GetCMPName() const;
 		//Name of LMP
 		virtual const std::string& GetLMPName() const;
+		//Name of CDR to print on suit
+		virtual const std::string& GetCDRSuitName() const;
+		//Name of CMP to print on suit
+		virtual const std::string& GetCMPSuitName() const;
+		//Name of LMP to print on suit
+		virtual const std::string& GetLMPSuitName() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
@@ -94,6 +100,9 @@ namespace mission
 		std::string strCDRName;
 		std::string strCMPName;
 		std::string strLMPName;
+		std::string strCDRSuitName;
+		std::string strCMPSuitName;
+		std::string strLMPSuitName;
 
 		int iSMJCVersion;
 		bool bJMission;

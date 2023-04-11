@@ -31,6 +31,7 @@ typedef struct {
 	int MissionNo;			///< Apollo mission number.
 	bool isCDR;				///< Flag for CDR vs. LMP.
 	char LEMName[256];		///< LM Name
+	char SuitName[256];		///< Name to print on suit
 
 } LEVASettings;
 
@@ -107,6 +108,7 @@ private:
 	OBJHANDLE GetLRVHandle();
 	void BoardLRV(OBJHANDLE lrvHandle);
 	void DeboardLRV(OBJHANDLE lrvHandle);
+	void DrawName();
 	void SetMissionPath();
 	void DoFirstTimestep();
 	void SetMainState(int s);
@@ -125,6 +127,7 @@ protected:
 	bool MotherShip;
 	bool isCDR;
 	char LEMName[256];
+	char SuitName[256];
 	bool KEY1;
 	bool KEY2;
 	bool KEY3;
