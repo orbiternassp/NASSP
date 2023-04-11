@@ -112,6 +112,9 @@ namespace mission {
 		strCDRName = "CDR";
 		strCMPName = "CMP";
 		strLMPName = "LMP";
+		strCDRSuitName = "CDR";
+		strCMPSuitName = "CMP";
+		strLMPSuitName = "LMP";
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -186,16 +189,29 @@ namespace mission {
 			EmptySMCG = vtemp;
 		}
 		oapiReadItem_bool(hFile, "HasRateAidedOptics", bHasRateAidedOptics);
-		if (oapiReadItem_string(hFile, "CDR", buffer)) {
+		if (oapiReadItem_string(hFile, "CDRVesselName", buffer))
+		{
 			strCDRName = buffer;
 		}
-		if (oapiReadItem_string(hFile, "CMP", buffer))
+		if (oapiReadItem_string(hFile, "CMPVesselName", buffer))
 		{
 			strCMPName = buffer;
 		}
-		if (oapiReadItem_string(hFile, "LMP", buffer))
+		if (oapiReadItem_string(hFile, "LMPVesselName", buffer))
 		{
 			strLMPName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "CDRSuitName", buffer))
+		{
+			strCDRSuitName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "CMPSuitName", buffer))
+		{
+			strCMPSuitName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "LMPSuitName", buffer))
+		{
+			strLMPSuitName = buffer;
 		}
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
@@ -314,5 +330,20 @@ namespace mission {
 	const std::string& Mission::GetLMPName() const
 	{
 		return strLMPName;
+	}
+
+	const std::string& Mission::GetCDRSuitName() const
+	{
+		return strCDRSuitName;
+	}
+
+	const std::string& Mission::GetCMPSuitName() const
+	{
+		return strCMPSuitName;
+	}
+
+	const std::string& Mission::GetLMPSuitName() const
+	{
+		return strLMPSuitName;
 	}
 }
