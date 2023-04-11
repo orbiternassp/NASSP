@@ -1285,8 +1285,6 @@ OMNI::OMNI(VECTOR3 dir)
 {
 	direction = unit(dir);
 	hpbw_factor = 0.0;
-	hMoon = NULL;
-	hEarth = NULL;
 }
 
 void OMNI::Init(Saturn *vessel) {
@@ -1299,25 +1297,21 @@ void OMNI::Init(Saturn *vessel) {
 
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
 
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
-
 	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
 	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters	
 }
 
 void OMNI::TimeStep()
 {
-	VECTOR3 pos, R_M, U_R;
+	VECTOR3 pos, U_R;
 	MATRIX3 Rot;
-	double relang, Moonrelang;
+	double relang;
 	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
 
 	double EarthSignalDist;
 
-	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	//Global position of Earth and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
 
 	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
@@ -1333,7 +1327,7 @@ void OMNI::TimeStep()
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(GroundTransmitterRFProperties.GlobalPosition - pos)));
 
-	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition) - oapiGetSize(hEarth); //distance from earth's surface in meters
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition); //distance from earth's surface in meters
 
 	RecvdOMNIPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
 	RecvdOMNIPower_dBm = RFCALC_W2dBm(RecvdOMNIPower);
@@ -1346,14 +1340,6 @@ void OMNI::TimeStep()
 		SignalStrength = sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*SignalStrengthScaleFactor;
 	}
 	else
-	{
-		SignalStrength = 0.0;
-	}
-
-	//Moon in the way
-	Moonrelang = dotp(unit(R_M - pos), unit(GroundTransmitterRFProperties.GlobalPosition - pos));
-
-	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
 		SignalStrength = 0.0;
 	}
