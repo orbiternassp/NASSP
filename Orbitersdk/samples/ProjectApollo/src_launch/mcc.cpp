@@ -45,6 +45,9 @@
 #include "rtcc.h"
 #include "LVDC.h"
 #include "iu.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 // SCENARIO FILE MACROLOGY
 #define SAVE_BOOL(KEY,VALUE) oapiWriteScenario_int(scn, KEY, VALUE)
@@ -4399,10 +4402,7 @@ void MCC::SetCSM(char *csmname)
 	{
 		v = oapiGetVesselInterface(hVessel);
 
-		if (!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
-			!_stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!_stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
+		if (utils::IsVessel(v, utils::Saturn)) {
 			cm = (Saturn *)v;
 			rtcc->calcParams.src = cm;
 		}
@@ -4420,8 +4420,7 @@ void MCC::SetLM(char *lemname)
 	{
 		v = oapiGetVesselInterface(hVessel);
 
-		if (!_stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
-			!_stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
+		if (utils::IsVessel(v, utils::LEM)) {
 			lm = (LEM *)v;
 			rtcc->calcParams.tgt = v;
 		}
@@ -4440,10 +4439,7 @@ void MCC::SetLV(char *lvname)
 	{
 		v = oapiGetVesselInterface(hVessel);
 
-		if (!_stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
-			!_stricmp(v->GetClassName(), "ProjectApollo/sat5stg3") ||
-			!_stricmp(v->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-			!_stricmp(v->GetClassName(), "ProjectApollo/nsat1stg2")) {
+		if (utils::IsVessel(v, utils::SIVB)) {
 			sivb = (SIVB *)v;
 		}
 	}
