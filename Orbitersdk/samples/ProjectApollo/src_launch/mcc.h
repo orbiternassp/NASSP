@@ -231,7 +231,7 @@ struct GroundStation {
 	char UpTlmCaps;      // Command Capabilities
 	char StationType;    // Station Type
 	int  StationPurpose; // Station Purpose
-	int	 AOS;            // AOS flag
+	int	 AOS[2];            // AOS flag
 };
 
 class LEM;
@@ -247,9 +247,14 @@ public:
 	char CSMName[64];
 	char LEMName[64];
 	char LVName[64];
+
+	enum TrackingVesselType { TypeCM, TypeLM, TypeSIVb };
+	enum TrackingSlot { SlotCM, SlotLM };
 	
 	void Init();											// Initialization
 	void TimeStep(double simdt);					        // Timestep
+	void AutoUpdateXmitGroundStation(VESSEL* Ves, const TrackingVesselType Type, const TrackingSlot Slot);	// Automaticially Update the Transmitting Ground Station
+	void UpdateRevCounters(const TrackingSlot Slot);
 	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
@@ -294,6 +299,10 @@ public:
 	SIVB *sivb;												// Pointer to SIVB
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
+	double R_E, R_M;										// Radius of Earth and Moon
+	VECTOR3 MoonGlobalPos;									// Position of the Moon, global coordinates
+	VECTOR3 VesselGlobalPos[2];								// Position of CM/LM, global coordinates
+	VECTOR3 Vessel_Vector[2];								// Position of CM/LM, local coordinates
 
 	// SUBTHREAD MANAGEMENT
 	int subThreadMode;										// What should the subthread do?
@@ -302,8 +311,8 @@ public:
 
 	// GROUND TRACKING NETWORK
 	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
-	int TransmittingGroundStation;
-	VECTOR3 TransmittingGroundStationVector;
+	int TransmittingGroundStation[2];						//Ground Station Transmitting to the CM
+	VECTOR3 TransmittingGroundStationVector[2];
 	double LastAOSUpdate;									// Last update to AOS data
 	double CM_Position[3];                                  // CM's position and altitude
 	double CM_Prev_Position[3];                             // CM's previous position and altitude
