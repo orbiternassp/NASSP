@@ -78,12 +78,31 @@ namespace mission
 		VECTOR3 GetCGOfEmptySM() const;
 		//false = Optics mode switch is not bypassed for CMC to optics commands, true = optics mode switch is bypassed for CMC to optics commands (ECP 792)
 		bool HasRateAidedOptics() const;
+		//Name of CDR
+		virtual const std::string& GetCDRName() const;
+		//Name of CMP
+		virtual const std::string& GetCMPName() const;
+		//Name of LMP
+		virtual const std::string& GetLMPName() const;
+		//Name of CDR to print on suit
+		virtual const std::string& GetCDRSuitName() const;
+		//Name of CMP to print on suit
+		virtual const std::string& GetCMPSuitName() const;
+		//Name of LMP to print on suit
+		virtual const std::string& GetLMPSuitName() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
 		std::string strCMCVersion;
 		std::string strLGCVersion;
 		std::string strAEAVersion;
+
+		std::string strCDRName;
+		std::string strCMPName;
+		std::string strLMPName;
+		std::string strCDRSuitName;
+		std::string strCMPSuitName;
+		std::string strLMPSuitName;
 
 		int iSMJCVersion;
 		bool bJMission;

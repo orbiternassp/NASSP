@@ -5,7 +5,7 @@ END_DESC
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
   Date MJD 40363.9760298448
-  Help CurrentState_img
+  Help NASSP/505
 END_ENVIRONMENT
 
 BEGIN_FOCUS

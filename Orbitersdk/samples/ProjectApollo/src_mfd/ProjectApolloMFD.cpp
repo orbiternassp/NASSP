@@ -666,8 +666,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 			isSaturnV = true;
 		}
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler"))  {
+	else if (utils::IsVessel(vessel, utils::Crawler))  {
 			crawler = (Crawler *)vessel;
 			g_Data.planet = crawler->GetGravityRef();
 	}

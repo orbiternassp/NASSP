@@ -31,7 +31,8 @@ namespace paCBGmessageID {
 	};
 
 	enum parameterID {
-		Get,
+		GetCM,
+		GetLM,
 		Set,
 	};
 }

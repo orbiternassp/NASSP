@@ -34,6 +34,7 @@
 #include "resource.h"
 #include "nasspdefs.h"
 #include "nasspsound.h"
+#include "nassputils.h"
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -67,6 +68,8 @@ extern "C" {
 	void srandom (unsigned int x);
 	long int random ();
 }
+
+using namespace nassp;
 
 //extern FILE *PanelsdkLogFile;
 
@@ -475,10 +478,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	H2Tank2PressSensor("H2Tank2-Press-Sensor", 0.0, 350.0),
 	O2Tank1PressSensor("O2Tank1-Press-Sensor", 50.0, 1050.0),
 	O2Tank2PressSensor("O2Tank2-Press-Sensor", 50.0, 1050.0),
-	H2Tank1QuantitySensor("H2Tank1-Quantity-Sensor", 0.0, 1.0, 12701.0),
-	H2Tank2QuantitySensor("H2Tank2-Quantity-Sensor", 0.0, 1.0, 12701.0),
-	O2Tank1QuantitySensor("O2Tank1-Quantity-Sensor", 0.0, 1.0, 145150.0),
-	O2Tank2QuantitySensor("O2Tank2-Quantity-Sensor", 0.0, 1.0, 145150.0),
+	H2Tank1QuantitySensor("H2Tank1-Quantity-Sensor", 0.0, 1.0, CSM_H2TANK_CAPACITY),
+	H2Tank2QuantitySensor("H2Tank2-Quantity-Sensor", 0.0, 1.0, CSM_H2TANK_CAPACITY),
+	O2Tank1QuantitySensor("O2Tank1-Quantity-Sensor", 0.0, 1.0, CSM_O2TANK_CAPACITY),
+	O2Tank2QuantitySensor("O2Tank2-Quantity-Sensor", 0.0, 1.0, CSM_O2TANK_CAPACITY),
 	FCO2PressureSensor1("FuelCell1-O2-Press-Sensor", 0.0, 75.0),
 	FCO2PressureSensor2("FuelCell2-O2-Press-Sensor", 0.0, 75.0),
 	FCO2PressureSensor3("FuelCell3-O2-Press-Sensor", 0.0, 75.0),
@@ -1221,7 +1224,7 @@ void Saturn::clbkPostCreation()
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17))
+			if (utils::IsVessel(pVessel, utils::MCC))
 			{
 				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
 				if (pMCCVessel->mcc)

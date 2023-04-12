@@ -46,6 +46,9 @@
 #include "Mission.h"
 
 #include "connector.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 char trace_file[] = "ProjectApollo LM.log";
 
@@ -78,7 +81,7 @@ static SoundEvent sevent        ;
 static double NextEventTime = 0.0;
 #endif
 
-static GDIParams g_Param;
+GDIParams g_Param;
 
 // ==============================================================
 // API interface
@@ -714,10 +717,19 @@ void LEM::DoFirstTimestep()
 
 	char VName10[256] = "";
 
-	strcpy(VName10, GetName()); strcat(VName10, "-LEVA-CDR");
+	strcpy(VName10, pMission->GetCDRName().c_str());
 	hLEVA[0] = oapiGetVesselByName(VName10);
-	strcpy(VName10, GetName()); strcat(VName10, "-LEVA-LMP");
+	if (hLEVA[0] == NULL) { //This might be a legacy scenario
+		strcpy(VName10, GetName()); strcat(VName10, "-LEVA-CDR");
+		hLEVA[0] = oapiGetVesselByName(VName10);
+	}
+
+	strcpy(VName10, pMission->GetLMPName().c_str());
 	hLEVA[1] = oapiGetVesselByName(VName10);
+	if (hLEVA[1] == NULL) { //This might be a legacy scenario
+		strcpy(VName10, GetName()); strcat(VName10, "-LEVA-LMP");
+		hLEVA[1] = oapiGetVesselByName(VName10);
+	}
 }
 
 void LEM::LoadDefaultSounds()
@@ -1861,7 +1873,7 @@ void LEM::clbkPostCreation()
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17))
+			if (utils::IsVessel(pVessel, utils::MCC))
 			{
 				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
 				if (pMCCVessel->mcc)
