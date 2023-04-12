@@ -5,6 +5,7 @@ END_DESC
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
   Date MJD 40539.515277778
+  Help NASSP/507
 END_ENVIRONMENT
 
 BEGIN_FOCUS
@@ -317,6 +318,9 @@ Yankee-Clipper:ProjectApollo\Saturn5
   AEAPAD 454 2140
   AEAPAD 465 470
   AEAPAD 473 406000
+  AEAPAD 514 724161
+  AEAPAD 515 607560
+  AEAPAD 516 0
   AEAPAD 561 12173
   AEAPAD 566 6547
   AEAPAD 602 0
@@ -328,7 +332,7 @@ Yankee-Clipper:ProjectApollo\Saturn5
   AEAPAD 657 33
   AEAPAD 662 257014
   AUTOSLOW 1
-  LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
+  LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 12 LM Checklists.xls
   ASCP_BEGIN
     OPX 152.000
   ASCP_END
@@ -775,7 +779,7 @@ Yankee-Clipper:ProjectApollo\Saturn5
   CMPAD3575 30025
   CMPAD3576 1537
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+    FILE Doc\Project Apollo - NASSP\Checklists\Apollo 12 Checklists.xls
   </Checklist>
 END
 Crawler-Transporter:ProjectApollo\Crawler
