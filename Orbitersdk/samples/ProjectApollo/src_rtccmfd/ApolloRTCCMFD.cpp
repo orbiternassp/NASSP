@@ -20,6 +20,9 @@
 #include "iu.h"
 #include "ARoapiModule.h"
 #include "TLMCC.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 // ==============================================================
 // Global variables
@@ -6956,8 +6959,7 @@ void ApolloRTCCMFD::menuDAPPADCalc()
 
 void ApolloRTCCMFD::menuLaunchAzimuthCalc()
 {
-	if (!stricmp(G->vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(G->vessel->GetClassName(), "ProjectApollo/Saturn5")) {
+	if (utils::IsVessel(G->vessel, utils::SaturnV)) {
 
 		SaturnV *SatV = (SaturnV*)G->vessel;
 		if (SatV->iu)

@@ -503,8 +503,6 @@ protected:
 	Saturn *sat;				// Ship we're installed in
 	VECTOR3 direction;
 	double hpbw_factor;			//Beamwidth factor
-	OBJHANDLE hMoon;
-	OBJHANDLE hEarth;
 };
 
 class VHFAntenna
