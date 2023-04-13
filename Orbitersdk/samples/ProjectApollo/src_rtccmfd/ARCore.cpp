@@ -535,19 +535,17 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	manpadenginetype = RTCC_ENGINETYPE_CSMSPS;
-	TPIPAD_AZ = 0.0;
-	TPIPAD_dH = 0.0;
-	TPIPAD_dV_LOS = _V(0.0, 0.0, 0.0);
-	TPIPAD_ELmin5 = 0.0;
-	TPIPAD_R = 0.0;
-	TPIPAD_Rdot = 0.0;
-	TPIPAD_ddH = 0.0;
-	TPIPAD_BT = _V(0.0, 0.0, 0.0);
+	TPI_PAD.AZ = 0.0;
+	TPI_PAD.dH_TPI = 0.0;
+	TPI_PAD.Backup_dV = _V(0.0, 0.0, 0.0);
+	TPI_PAD.EL = 0.0;
+	TPI_PAD.R = 0.0;
+	TPI_PAD.Rdot = 0.0;
+	TPI_PAD.dH_Max = 0.0;
+	TPI_PAD.Backup_bT = _V(0.0, 0.0, 0.0);
 	sxtstardtime = 0.0;
 	manpad_ullage_dt = 0.0;
 	manpad_ullage_opt = true;
-	EntryRRT = 0.0;
-	EntryRET05G = 0.0;
 
 	mapupdate.LOSGET = 0.0;
 	mapupdate.AOSGET = 0.0;
@@ -3000,7 +2998,6 @@ int ARCore::subThread()
 	case 6: //TPI PAD
 	{
 		AP7TPIPADOpt opt;
-		AP7TPI pad;
 
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = GC->rtcc->CalcGETBase();
@@ -3009,16 +3006,7 @@ int ARCore::subThread()
 		opt.sv_P = GC->rtcc->StateVectorCalcEphem(target);
 		opt.mass = vessel->GetMass();
 
-		GC->rtcc->AP7TPIPAD(opt, pad);
-
-		TPIPAD_AZ = pad.AZ;
-		TPIPAD_BT = pad.Backup_bT;
-		TPIPAD_ddH = pad.dH_Max;
-		TPIPAD_dH = pad.dH_TPI;
-		TPIPAD_dV_LOS = pad.Backup_dV;
-		TPIPAD_ELmin5 = pad.EL;
-		TPIPAD_R = pad.R;
-		TPIPAD_Rdot = pad.Rdot;
+		GC->rtcc->AP7TPIPAD(opt, TPI_PAD);
 
 		Result = DONE;
 	}
