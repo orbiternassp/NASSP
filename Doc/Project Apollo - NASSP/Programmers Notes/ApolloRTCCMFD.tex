@@ -764,6 +764,7 @@ The launch window processor (LWP) can be used to calculate the optimal liftoff t
 \textbf{RINS:} Radius of insertion in meters.\\
 \textbf{VINS:} Velocity of insertion in meters per second.\\
 \textbf{GINS:} Flight-path angle of insertion in degrees.\\
+\textbf{PHA:} Expected phase angle at insertion. The default option is 90-270$^{\circ}$, which should work for most of the 0-360$^{\circ}$ range. Near 360$^{\circ}$ some difficulty to converge could arise, so if a calculation fails then switching this option to 270-540$^{\circ}$ can help. Other than that there should be no need to change the default value.\\
 
 \textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
 \textbf{NOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\

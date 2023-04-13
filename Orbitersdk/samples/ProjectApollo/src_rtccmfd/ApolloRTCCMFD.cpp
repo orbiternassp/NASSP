@@ -1355,6 +1355,35 @@ void ApolloRTCCMFD::menuLWP_DELNO()
 	GenericDoubleInput(&GC->rtcc->PZSLVCON.DELNO, "Differential nodal regression in degrees:", RAD);
 }
 
+void ApolloRTCCMFD::menuLWP_PhaseFlags()
+{
+	if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 0)
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 0;
+		GC->rtcc->PZSLVCON.WRAP = 0;
+	}
+	else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 0)
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 2;
+		GC->rtcc->PZSLVCON.WRAP = 1;
+	}
+	else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 1)
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 0;
+		GC->rtcc->PZSLVCON.WRAP = 1;
+	}
+	else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 1)
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 2;
+		GC->rtcc->PZSLVCON.WRAP = 2;
+	}
+	else
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 2;
+		GC->rtcc->PZSLVCON.WRAP = 0;
+	}
+}
+
 void ApolloRTCCMFD::LUNTAR_BTInput()
 {
 	GenericDoubleInput(&G->LUNTAR_bt_guess, "Enter burn time in seconds:", 1.0);

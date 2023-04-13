@@ -755,6 +755,7 @@ public:
 	void menuLWP_RINS();
 	void menuLWP_VINS();
 	void menuLWP_GAMINS();
+	void menuLWP_PhaseFlags();
 	void menuLWPCycleDELNOF();
 	void menuLWP_DELNO();
 	void menuSetLWPDisplayPage();

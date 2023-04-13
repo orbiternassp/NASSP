@@ -248,8 +248,6 @@ public:
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
 	double entryrange;
-	double EntryRET05G; //Time of 0.05g
-	double EntryRRT; //Time of entry interface (400k feet altitude)
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double RTEReentryTime; //Desired landing time
@@ -271,10 +269,8 @@ public:
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
 	AP11LMMNV lmmanpad;
-	char GDCset[64];
 	bool HeadsUp;
-	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
-	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
+	AP7TPI TPI_PAD;
 	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
 	double sxtstardtime;
 	double manpad_ullage_dt;
