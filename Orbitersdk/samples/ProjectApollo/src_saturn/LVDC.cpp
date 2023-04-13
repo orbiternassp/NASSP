@@ -2902,7 +2902,7 @@ bool LVDC1B::LaunchTargetingUpdate(double v_t, double r_t, double theta_t, doubl
 		Inclination = inc;
 		Lambda_0 = dsc;
 		lambda_dot = dsc_dot;
-		fprintf(lvlog, "Navigation update received! R_T %f V_T %f gamma_T %f T_GRR0 %f\r\n", R_T, V_T, gamma_T, T_GRR0);
+		fprintf(lvlog, "Targeting update received! R_T %f V_T %f gamma_T %f T_GRR0 %f\r\n", R_T, V_T, gamma_T, T_GRR0);
 		fprintf(lvlog, "Inclination %f Lambda_0 %f lambda_dot %f\r\n", Inclination, Lambda_0, lambda_dot);
 
 		return true;
