@@ -121,7 +121,6 @@ namespace mission {
 		AddCSMCueCard(2, "T_AND_D");
 		AddCSMCueCard(2, "T_AND_D_CONTINUED");
 		AddCSMCueCard(2, "ENTRY");
-		AddCSMCueCard(2, "PRE-ENTRY_ATTITUDE_TIMELINE");
 		AddCSMCueCard(2, "CM_EVA");
 		AddCSMCueCard(2, "CM_EVA_CONTD");
 		AddCSMCueCard(2, "CONTINGENCY_EVA");
