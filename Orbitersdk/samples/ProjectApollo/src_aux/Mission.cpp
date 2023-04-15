@@ -109,7 +109,12 @@ namespace mission {
 		iCMtoLMPowerConnectionVersion = 0;
 		EmptySMCG = _V(914.5916, -6.6712, 12.2940); //Includes: empty SM and SLA ring, but no SM RCS
 		bHasRateAidedOptics = false;
-
+		strCDRName = "CDR";
+		strCMPName = "CMP";
+		strLMPName = "LMP";
+		strCDRSuitName = "CDR";
+		strCMPSuitName = "CMP";
+		strLMPSuitName = "LMP";
 		AddCSMCueCard(0, "CUECARD_DAP");
 		AddCSMCueCard(2, "SPS_BURN");
 		AddCSMCueCard(2, "SPS_BURN_CONTINUED");
@@ -212,19 +217,43 @@ namespace mission {
 			EmptySMCG = vtemp;
 		}
 		oapiReadItem_bool(hFile, "HasRateAidedOptics", bHasRateAidedOptics);
-		for (int i = 0; i < 16; i++) //TBD: this is limiting how many cue cards you can load from the mission file
+		if (oapiReadItem_string(hFile, "CDRVesselName", buffer))
 		{
-			sprintf_s(buffer2, "CSMCueCard%d", i + 1);
-			if (oapiReadItem_string(hFile, buffer2, buffer))
+			strCDRName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "CMPVesselName", buffer))
+		{
+			strCMPName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "LMPVesselName", buffer))
+		{
+			strLMPName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "CDRSuitName", buffer))
+		{
+			strCDRSuitName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "CMPSuitName", buffer))
+		{
+			strCMPSuitName = buffer;
+		}
+		if (oapiReadItem_string(hFile, "LMPSuitName", buffer))
+		{
+			strLMPSuitName = buffer;
+			for (int i = 0; i < 16; i++) //TBD: this is limiting how many cue cards you can load from the mission file
 			{
-				unsigned loc = 0;
-				std::string meshname;
-				VECTOR3 ofs = _V(0, 0, 0);
+				sprintf_s(buffer2, "CSMCueCard%d", i + 1);
+				if (oapiReadItem_string(hFile, buffer2, buffer))
+				{
+					unsigned loc = 0;
+					std::string meshname;
+					VECTOR3 ofs = _V(0, 0, 0);
 
-				sscanf(buffer, "%u %s %lf %lf %lf", &loc, buffer2, &ofs.x, &ofs.y, &ofs.z);
-				meshname = buffer2;
+					sscanf(buffer, "%u %s %lf %lf %lf", &loc, buffer2, &ofs.x, &ofs.y, &ofs.z);
+					meshname = buffer2;
 
-				AddCSMCueCard(loc, meshname, ofs);
+					AddCSMCueCard(loc, meshname, ofs);
+				}
 			}
 		}
 		oapiCloseFile(hFile, FILE_IN);
@@ -363,5 +392,35 @@ namespace mission {
 		cfg.ofs = ofs;
 
 		CSMCueCards.push_back(cfg);
+	}
+
+	const std::string& Mission::GetCDRName() const
+	{
+		return strCDRName;
+	}
+
+	const std::string& Mission::GetCMPName() const
+	{
+		return strCMPName;
+	}
+
+	const std::string& Mission::GetLMPName() const
+	{
+		return strLMPName;
+	}
+
+	const std::string& Mission::GetCDRSuitName() const
+	{
+		return strCDRSuitName;
+	}
+
+	const std::string& Mission::GetCMPSuitName() const
+	{
+		return strCMPSuitName;
+	}
+
+	const std::string& Mission::GetLMPSuitName() const
+	{
+		return strLMPSuitName;
 	}
 }

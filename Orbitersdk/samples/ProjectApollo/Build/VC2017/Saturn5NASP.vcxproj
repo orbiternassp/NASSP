@@ -409,6 +409,7 @@
     <ClInclude Include="..\..\src_aux\CueCardLocation.h" />
     <ClInclude Include="..\..\src_aux\CueCardManager.h" />
     <ClInclude Include="..\..\src_aux\Mission.h" />
+    <ClInclude Include="..\..\src_aux\nassputils.h" />
     <ClInclude Include="..\..\src_aux\vesim.h" />
     <ClInclude Include="..\..\src_csm\CM_VC_Resource.h" />
     <ClInclude Include="..\..\src_aux\RF_calc.h" />

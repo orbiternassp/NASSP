@@ -4472,13 +4472,13 @@ void Saturn::DefineVCAnimations()
 	SuitHeatExchangerSecondaryGlycolRotary.SetReference(LEB_L_ROT_POS[7], rot_leb_l_vector);
 	SuitHeatExchangerSecondaryGlycolRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_08);
 
-	MainPanelVC.AddSwitch(&EvapWaterControlPrimaryRotary, AID_VC_ROT_LEB_L_09);
-	EvapWaterControlPrimaryRotary.SetReference(LEB_L_ROT_POS[8], rot_leb_l_vector);
-	EvapWaterControlPrimaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_09);
+	MainPanelVC.AddSwitch(&EvapWaterControlSecondaryRotary, AID_VC_ROT_LEB_L_09);
+	EvapWaterControlSecondaryRotary.SetReference(LEB_L_ROT_POS[8], rot_leb_l_vector);
+	EvapWaterControlSecondaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_09);
 
-	MainPanelVC.AddSwitch(&EvapWaterControlSecondaryRotary, AID_VC_ROT_LEB_L_10);
-	EvapWaterControlSecondaryRotary.SetReference(LEB_L_ROT_POS[9], rot_leb_l_vector);
-	EvapWaterControlSecondaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_10);
+	MainPanelVC.AddSwitch(&EvapWaterControlPrimaryRotary, AID_VC_ROT_LEB_L_10);
+	EvapWaterControlPrimaryRotary.SetReference(LEB_L_ROT_POS[9], rot_leb_l_vector);
+	EvapWaterControlPrimaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_10);
 
 	MainPanelVC.AddSwitch(&WaterAccumulator1Rotary, AID_VC_ROT_LEB_L_11);
 	WaterAccumulator1Rotary.SetReference(LEB_L_ROT_POS[10], rot_leb_l_vector);

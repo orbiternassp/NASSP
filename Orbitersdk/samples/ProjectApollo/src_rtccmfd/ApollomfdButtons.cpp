@@ -4122,7 +4122,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Radius of insertion", 0, 'R' },
 		{ "Velocity of insertion", 0, 'V' },
 		{ "Gamma of insertion", 0, 'G' },
-		{ "", 0, ' ' },
+		{ "Expected phase angle", 0, 'Q' },
 
 		{ "Set Target", 0, 'T' },
 		{ "Diff nod regr flag", 0, 'N' },
@@ -4139,7 +4139,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("RINS", OAPI_KEY_R, &ApolloRTCCMFD::menuLWP_RINS);
 	RegisterFunction("VINS", OAPI_KEY_V, &ApolloRTCCMFD::menuLWP_VINS);
 	RegisterFunction("GINS", OAPI_KEY_G, &ApolloRTCCMFD::menuLWP_GAMINS);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("PHA", OAPI_KEY_Q, &ApolloRTCCMFD::menuLWP_PhaseFlags);
 
 	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_target);
 	RegisterFunction("NOF", OAPI_KEY_N, &ApolloRTCCMFD::menuLWPCycleDELNOF);

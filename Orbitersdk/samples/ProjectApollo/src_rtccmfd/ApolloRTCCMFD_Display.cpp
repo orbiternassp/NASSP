@@ -1002,26 +1002,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				skp->Text((int)(0.5 * W / 8), 18 * H / 23, "Set Stars:", 10);
 				skp->Text((int)(0.5 * W / 8), 19 * H / 23, G->manpad.SetStars, strlen(G->manpad.SetStars));
 
-				/*if (length(G->manpad.GDCangles) == 0.0)
-				{
-					skp->Text((int)(0.5 * W / 8), 19 * H / 23, "N/A", 3);
-				}
-				else
-				{
-					if (G->GDCset == 0)
-					{
-						skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Vega, Deneb", 11);
-					}
-					else if (G->GDCset == 1)
-					{
-						skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Navi, Polaris", 13);
-					}
-					else
-					{
-						skp->Text((int)(0.5 * W / 8), 19 * H / 23, "Acrux, Atria", 12);
-					}
-				}*/
-
 				sprintf(Buffer, "R %03.0f", OrbMech::round(G->manpad.GDCangles.x));
 				skp->Text((int)(0.5 * W / 8), 20 * H / 23, Buffer, strlen(Buffer));
 				sprintf(Buffer, "P %03.0f", OrbMech::round(G->manpad.GDCangles.y));
@@ -1247,43 +1227,43 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+07.1f DVZ", G->dV_LVLH.z / 0.3048);
 			skp->Text(3 * W / 8, 8 * H / 20, Buffer, strlen(Buffer));
 
-			if (G->TPIPAD_dV_LOS.x > 0)
+			if (G->TPI_PAD.Backup_dV.x > 0)
 			{
-				sprintf(Buffer, "F%04.1f/%02.0f DVX LOS/BT", abs(G->TPIPAD_dV_LOS.x), G->TPIPAD_BT.x);
+				sprintf(Buffer, "F%04.1f/%02.0f DVX LOS/BT", abs(G->TPI_PAD.Backup_dV.x), G->TPI_PAD.Backup_bT.x);
 			}
 			else
 			{
-				sprintf(Buffer, "A%04.1f/%02.0f DVX LOS/BT", abs(G->TPIPAD_dV_LOS.x), G->TPIPAD_BT.x);
+				sprintf(Buffer, "A%04.1f/%02.0f DVX LOS/BT", abs(G->TPI_PAD.Backup_dV.x), G->TPI_PAD.Backup_bT.x);
 			}
 			skp->Text(3 * W / 8, 9 * H / 20, Buffer, strlen(Buffer));
-			if (G->TPIPAD_dV_LOS.y > 0)
+			if (G->TPI_PAD.Backup_dV.y > 0)
 			{
-				sprintf(Buffer, "R%04.1f/%02.0f DVY LOS/BT", abs(G->TPIPAD_dV_LOS.y), G->TPIPAD_BT.y);
+				sprintf(Buffer, "R%04.1f/%02.0f DVY LOS/BT", abs(G->TPI_PAD.Backup_dV.y), G->TPI_PAD.Backup_bT.y);
 			}
 			else
 			{
-				sprintf(Buffer, "L%04.1f/%02.0f DVY LOS/BT", abs(G->TPIPAD_dV_LOS.y), G->TPIPAD_BT.y);
+				sprintf(Buffer, "L%04.1f/%02.0f DVY LOS/BT", abs(G->TPI_PAD.Backup_dV.y), G->TPI_PAD.Backup_bT.y);
 			}
 			skp->Text(3 * W / 8, 10 * H / 20, Buffer, strlen(Buffer));
-			if (G->TPIPAD_dV_LOS.z > 0)
+			if (G->TPI_PAD.Backup_dV.z > 0)
 			{
-				sprintf(Buffer, "D%04.1f/%02.0f DVZ LOS/BT", abs(G->TPIPAD_dV_LOS.z), G->TPIPAD_BT.z);
+				sprintf(Buffer, "D%04.1f/%02.0f DVZ LOS/BT", abs(G->TPI_PAD.Backup_dV.z), G->TPI_PAD.Backup_bT.z);
 			}
 			else
 			{
-				sprintf(Buffer, "U%04.1f/%02.0f DVZ LOS/BT", abs(G->TPIPAD_dV_LOS.z), G->TPIPAD_BT.z);
+				sprintf(Buffer, "U%04.1f/%02.0f DVZ LOS/BT", abs(G->TPI_PAD.Backup_dV.z), G->TPI_PAD.Backup_bT.z);
 			}
 			skp->Text(3 * W / 8, 11 * H / 20, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "X%04.1f/%02.1f dH TPI/ddH", G->TPIPAD_dH, G->TPIPAD_ddH);
+			sprintf(Buffer, "X%04.1f/%02.1f dH TPI/ddH", G->TPI_PAD.dH_TPI, G->TPI_PAD.dH_Max);
 			skp->Text(3 * W / 8, 12 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "X%06.2f R", G->TPIPAD_R);
+			sprintf(Buffer, "X%06.2f R", G->TPI_PAD.R);
 			skp->Text(3 * W / 8, 13 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f RDOT at TPI", G->TPIPAD_Rdot);
+			sprintf(Buffer, "%+07.1f RDOT at TPI", G->TPI_PAD.Rdot);
 			skp->Text(3 * W / 8, 14 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "X%06.2f EL minus 5 min", G->TPIPAD_ELmin5);
+			sprintf(Buffer, "X%06.2f EL minus 5 min", G->TPI_PAD.EL);
 			skp->Text(3 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
-			sprintf(Buffer, "X%06.2f AZ", G->TPIPAD_AZ);
+			sprintf(Buffer, "X%06.2f AZ", G->TPI_PAD.AZ);
 			skp->Text(3 * W / 8, 16 * H / 20, Buffer, strlen(Buffer));
 
 		}
@@ -2505,7 +2485,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%s", GC->rtcc->med_f80.ManeuverCode.c_str());
 		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%d quads %.1lf seconds", GC->rtcc->med_f80.NumQuads, GC->rtcc->med_f80.UllageDT);
+		if (GC->rtcc->med_f80.ManeuverCode.size() > 2 && GC->rtcc->med_f80.ManeuverCode[1] == 'R')
+		{
+			sprintf(Buffer, "RCS Burn: %+d quads", GC->rtcc->med_f80.NumQuads);
+		}
+		else
+		{
+			sprintf(Buffer, "%+d quads %.1lf seconds", GC->rtcc->med_f80.NumQuads, GC->rtcc->med_f80.UllageDT);
+		}
 		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
 		if (GC->rtcc->med_f80.TrimAngleInd == -1)
@@ -9809,6 +9796,32 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+.3lf°", GC->rtcc->PZSLVCON.GAMINS*DEG);
 		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
+		if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 0)
+		{
+			sprintf(Buffer, "-90 to 90°");
+		}
+		else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 0)
+		{
+			sprintf(Buffer, "90 to 270°");
+		}
+		else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 1)
+		{
+			sprintf(Buffer, "270 to 450°");
+		}
+		else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 1)
+		{
+			sprintf(Buffer, "450 to 630°");
+		}
+		else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 2)
+		{
+			sprintf(Buffer, "630 to 720°");
+		}
+		else
+		{
+			sprintf(Buffer, "Invalid phase flags!");
+		}
+		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
 		if (G->target != NULL)
 		{
 			sprintf(Buffer, G->target->GetName());
@@ -9833,6 +9846,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(10 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 		
+		if (GC->rtcc->PZSLVCON.NS == 0)
+		{
+			sprintf(Buffer, "North");
+		}
+		else
+		{
+			sprintf(Buffer, "South");
+		}
+		skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 122)
 	{

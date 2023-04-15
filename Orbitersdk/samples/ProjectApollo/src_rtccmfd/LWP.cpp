@@ -48,6 +48,8 @@ LWPInputTable::LWPInputTable()
 	DELNOF = true;
 	TRANS = 0.0;
 	DTGRR = 17.0;
+	BIAS = 0.0;
+	GMTLOR = 0.0;
 }
 
 LaunchWindowProcessor::LaunchWindowProcessor()
@@ -336,22 +338,7 @@ double LaunchWindowProcessor::PHANG()
 	{
 		phase = -phase;
 	}
-	if (inp.NEGTIV == 0)
-	{
-		while (phase >= PI2) phase -= PI2;
-		while (phase < 0) phase += PI2;
-	}
-	else if (inp.NEGTIV == 1)
-	{
-		while (phase >= 0) phase -= PI2;
-		while (phase < -PI2) phase += PI2;
-	}
-	else
-	{
-		while (phase >= PI) phase -= PI2;
-		while (phase < -PI) phase += PI2;
-	}
-	phase += PI2 * (double)inp.WRAP;
+
 	return phase;
 }
 
@@ -582,6 +569,11 @@ void LaunchWindowProcessor::TARGT()
 	{
 		TIGM += PI2;
 	}
+	else if (TIGM > PI2)
+	{
+		TIGM -= PI2;
+	}
+
 	TDIGM = sv_T.h_dot - GLOCON.w_E + DELNOD;
 
 	//Compute AZL
@@ -608,6 +600,24 @@ void LaunchWindowProcessor::NSERT(VECTOR3 RB, VECTOR3 VB, double GMTB, double &U
 	TINS = TP;
 
 	PA = PHANG();
+
+	if (inp.NEGTIV == 0)
+	{
+		while (PA >= PI2) PA -= PI2;
+		while (PA < 0) PA += PI2;
+	}
+	else if (inp.NEGTIV == 1)
+	{
+		while (PA >= 0) PA -= PI2;
+		while (PA < -PI2) PA += PI2;
+	}
+	else
+	{
+		while (PA >= PI) PA -= PI2;
+		while (PA < -PI) PA += PI2;
+	}
+	PA += PI2 * (double)inp.WRAP;
+
 	DH = length(RT) - length(RP); //TBD
 	//TBD: Calculate UINS
 	UINS = 0.0;

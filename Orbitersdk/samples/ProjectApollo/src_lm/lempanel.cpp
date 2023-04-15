@@ -44,9 +44,9 @@
  
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
-static GDIParams g_Param;
+extern GDIParams g_Param;
 
-void InitGParam(HINSTANCE hModule)
+DLLCLBK void InitModule(HINSTANCE hModule)
 
 {
 	g_Param.hDLL = hModule;
@@ -71,7 +71,7 @@ void InitGParam(HINSTANCE hModule)
 	g_Param.col[4] = oapiGetColour(255,0,255);
 }
 
-void FreeGParam()
+DLLCLBK void ExitModule(HINSTANCE hDll)
 
 {
 	int i;

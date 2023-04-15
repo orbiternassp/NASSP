@@ -20,6 +20,9 @@
 #include "iu.h"
 #include "ARoapiModule.h"
 #include "TLMCC.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 // ==============================================================
 // Global variables
@@ -1353,6 +1356,35 @@ void ApolloRTCCMFD::menuLWPCycleDELNOF()
 void ApolloRTCCMFD::menuLWP_DELNO()
 {
 	GenericDoubleInput(&GC->rtcc->PZSLVCON.DELNO, "Differential nodal regression in degrees:", RAD);
+}
+
+void ApolloRTCCMFD::menuLWP_PhaseFlags()
+{
+	if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 0)
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 0;
+		GC->rtcc->PZSLVCON.WRAP = 0;
+	}
+	else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 0)
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 2;
+		GC->rtcc->PZSLVCON.WRAP = 1;
+	}
+	else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 1)
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 0;
+		GC->rtcc->PZSLVCON.WRAP = 1;
+	}
+	else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 1)
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 2;
+		GC->rtcc->PZSLVCON.WRAP = 2;
+	}
+	else
+	{
+		GC->rtcc->PZSLVCON.NEGTIV = 2;
+		GC->rtcc->PZSLVCON.WRAP = 0;
+	}
 }
 
 void ApolloRTCCMFD::LUNTAR_BTInput()
@@ -2800,17 +2832,20 @@ void ApolloRTCCMFD::set_RTED_REFSMMAT(char *str)
 void ApolloRTCCMFD::menuSetRTEDUllage()
 {
 	bool SetRTEDUllageInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Set number of thrusters and duration of ullage (Format: Num Time):", SetRTEDUllageInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Set number of thrusters (All) and duration of ullage (SPS, DPS only). Format: Num Time", SetRTEDUllageInput, 0, 20, (void*)this);
 }
 
 bool SetRTEDUllageInput(void *id, char *str, void *data)
 {
-	double duration;
+	double duration = 0.0;
 	int num;
-	if (sscanf(str, "%d %lf", &num, &duration) == 2)
+	if (sscanf(str, "%d %lf", &num, &duration) >= 1)
 	{
-		((ApolloRTCCMFD*)data)->set_RTEDUllage(num, duration);
-		return true;
+		if (abs(num) == 2 || abs(num) == 4)
+		{
+			((ApolloRTCCMFD*)data)->set_RTEDUllage(num, duration);
+			return true;
+		}
 	}
 	return false;
 }
@@ -6953,8 +6988,7 @@ void ApolloRTCCMFD::menuDAPPADCalc()
 
 void ApolloRTCCMFD::menuLaunchAzimuthCalc()
 {
-	if (!stricmp(G->vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(G->vessel->GetClassName(), "ProjectApollo/Saturn5")) {
+	if (utils::IsVessel(G->vessel, utils::SaturnV)) {
 
 		SaturnV *SatV = (SaturnV*)G->vessel;
 		if (SatV->iu)

@@ -87,6 +87,18 @@ namespace mission
 		bool HasRateAidedOptics() const;
 		//Get cue cards
 		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
+		//Name of CDR
+		virtual const std::string& GetCDRName() const;
+		//Name of CMP
+		virtual const std::string& GetCMPName() const;
+		//Name of LMP
+		virtual const std::string& GetLMPName() const;
+		//Name of CDR to print on suit
+		virtual const std::string& GetCDRSuitName() const;
+		//Name of CMP to print on suit
+		virtual const std::string& GetCMPSuitName() const;
+		//Name of LMP to print on suit
+		virtual const std::string& GetLMPSuitName() const;
 	protected:
 		bool GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
 
@@ -97,6 +109,13 @@ namespace mission
 		std::string strCMCVersion;
 		std::string strLGCVersion;
 		std::string strAEAVersion;
+
+		std::string strCDRName;
+		std::string strCMPName;
+		std::string strLMPName;
+		std::string strCDRSuitName;
+		std::string strCMPSuitName;
+		std::string strLMPSuitName;
 
 		int iSMJCVersion;
 		bool bJMission;
