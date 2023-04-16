@@ -2720,7 +2720,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		sv_LM_upl = coast(sv_Ins, PZLRPT.data[1].T_INS + 18.0*60.0 - OrbMech::GETfromMJD(sv_Ins.MJD, GETbase));
 
-		sprintf(buffer1, "%sV45E", buffer1);
+		sprintf(buffer1, "V45E");
 		AGCStateVectorUpdate(buffer2, sv_LM_upl, false, GETbase);
 
 		//Calculate T19
