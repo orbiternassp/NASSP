@@ -6721,7 +6721,14 @@ void ApolloRTCCMFD::menuSetLAPLiftoffTime()
 
 void ApolloRTCCMFD::menuDKINSRLine()
 {
-	GenericDoubleInput(&GC->rtcc->med_k00.NSR, "Enter NSR maneuver line point:");
+	if (GC->rtcc->med_k00.I4)
+	{
+		GenericDoubleInput(&GC->rtcc->med_k00.NCC, "Enter NCC maneuver line point:");
+	}
+	else
+	{
+		GenericDoubleInput(&GC->rtcc->med_k00.NSR, "Enter NSR maneuver line point:");
+	}
 }
 
 void ApolloRTCCMFD::menuDKIMILine()
