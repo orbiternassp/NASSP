@@ -2648,6 +2648,15 @@ void Saturn::CreateMissionSpecificSystems()
 			secs.SMJCB = new SMJC_MOD1();
 		}
 	}
+
+	//Create cue cards. TBD: Load mission specific meshes
+	unsigned loc, counter = 0;
+	std::string meshname;
+	VECTOR3 ofs;
+	while (pMission->GetCSMCueCards(counter, loc, meshname, ofs) == false)
+	{
+		CueCards.CreateCueCard(loc, meshname, ofs);
+	}
 }
 
 bool Saturn::CabinFansActive()

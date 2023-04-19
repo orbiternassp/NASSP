@@ -66,11 +66,9 @@ static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
-static MESHHANDLE hNosecap;
 static MESHHANDLE hastp;
 static MESHHANDLE hastp2;
 static MESHHANDLE hCOAStarget;
-static MESHHANDLE hlm_1;
 
 static SURFHANDLE exhaust_tex;
 
@@ -432,8 +430,6 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	sidehatchidx = -1;
 	sidehatchopenidx = -1;
 	opticscoveridx = -1;
-	nosecapidx = -1;
-	meshLM_1 = -1;
 	seatsfoldedidx = -1;
 	seatsunfoldedidx = -1;
 
@@ -506,21 +502,8 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		fwdhatchidx = AddMesh(hFHF, &mesh_dir);
 		SetFwdHatchMesh();
 
-		// Optics Cover
-		opticscoveridx = AddMesh (hopticscover, &mesh_dir);
-		SetOpticsCoverMesh();
+		AddCMMeshes(mesh_dir);
 
-	} else if (NosecapAttached) {
-		//
-		// Add nosecap.
-		//
-		mesh_dir=_V(0,0,15.8 + offset);
-		nosecapidx = AddMesh (hNosecap, &mesh_dir);
-		SetNosecapMesh();
-
-		//TODO: Only Apollo 5 with nosecape, but this should still be optional
-		mesh_dir = _V(0, 0, 9.8 + offset);
-		meshLM_1 = AddMesh(hlm_1, &mesh_dir);
 	}
 
 	// Dummy docking port so the auto burn feature of IMFD 4.2 is working
@@ -962,8 +945,6 @@ void Saturn1bLoadMeshes()
 	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
 	hastp2 = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
-	hNosecap = oapiLoadMeshGlobal ("ProjectApollo/nsat1aerocap");
-	hlm_1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
 
 	exhaust_tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
 	solid_exhaust.tex = oapiRegisterParticleTexture("Contrail3");
