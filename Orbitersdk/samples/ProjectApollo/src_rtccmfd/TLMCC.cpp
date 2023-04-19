@@ -36,6 +36,10 @@ TLMCCProcessor::TLMCCProcessor(RTCC *r) : RTCCModule(r)
 	Reentry_dt = 500.0;
 	isp_SPS = 3080.0;
 	isp_DPS = 3107.0;
+	F_I_SIVB = 800000.0;
+	F_SIVB = 900000.0;
+	WDOT_SIVB = 211.393;
+	T_MRS_SIVB = 50.0;
 }
 
 void TLMCCProcessor::Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst)
@@ -2740,19 +2744,41 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 	double dv_mcc, dgamma_mcc, dpsi_mcc, mfm0, R_nd, lat_nd, lng_nd, inc_pg, dt_node;
 	INT ITS;
 
-	//Store in array
-	vars->dv_mcc = var[0];
-	vars->dgamma_mcc = var[1];
-	vars->dpsi_mcc = var[2];
+	if (vars->TLIIndicator)
+	{
+		//Store in array
+		vars->C3_TLI = var[0] * pow(R_E / 3600.0, 2);
+		vars->dt_EPO = var[1] * 3600.0;
+		vars->delta_TLI = var[2];
 
-	dv_mcc = var[0] * R_E / 3600.0;
-	dgamma_mcc = var[1];
-	dpsi_mcc = var[2];
-	dt_node = var[3] * 3600.0;
-	sv0 = sv0_apo = vars->sv0;
+		dt_node = 0.0; //TBD
 
-	BURN(sv0.R, sv0.V, dv_mcc, dgamma_mcc, dpsi_mcc, isp_SPS, mfm0, sv0_apo.R, sv0_apo.V);
-	outarray.M_mcc = outarray.M_i*mfm0;
+		SV2 sv_TLI1, sv_TLI2;
+
+		sv0 = vars->sv0;
+
+		pRTCC->PMMCEN(sv0, 0.0, 0.0, 1, vars->dt_EPO, 1.0, sv_TLI1.sv, ITS);
+		sv_TLI1.Mass = outarray.M_i;
+
+		TLIBRN(sv_TLI1, vars->C3_TLI, 6.0*RAD, vars->delta_TLI, F_I_SIVB, F_SIVB, WDOT_SIVB, T_MRS_SIVB);
+	}
+	else
+	{
+		//Store in array
+		vars->dv_mcc = var[0];
+		vars->dgamma_mcc = var[1];
+		vars->dpsi_mcc = var[2];
+
+		dv_mcc = var[0] * R_E / 3600.0;
+		dgamma_mcc = var[1];
+		dpsi_mcc = var[2];
+		dt_node = var[3] * 3600.0;
+		sv0 = sv0_apo = vars->sv0;
+
+		BURN(sv0.R, sv0.V, dv_mcc, dgamma_mcc, dpsi_mcc, isp_SPS, mfm0, sv0_apo.R, sv0_apo.V);
+		outarray.M_mcc = outarray.M_i*mfm0;
+	}
+
 	if (vars->NodeStopIndicator)
 	{
 		VECTOR3 R_node_emp, V_node_emp, R_pl, V_pl;
@@ -4199,40 +4225,84 @@ TLMCC_PPC_I:
 	return SLLS;
 }
 
-EphemerisData TLMCCProcessor::TLIBRN(EphemerisData sv, double C3, double sigma, double delta, double FW, double W_I, double F_I, double F, double W_dot, double T_MRS)
+void TLINominalMissionPolynomial(double C3, double sigma, double delta, double FW, double R_I, double mu, double& DV, double& alpha, double& beta, double& eta_alpha, double& R_P)
 {
-	EphemerisData out;
-	double DV_I, DT_B1, V_I, R_I, phi_dot_I, dphi_B1, DT_B2, dphi_B2, delta0, ddelta, W;
+	//INPUT:
+	//C3 - twice vis-viva energy desired at cutoff, (e.r./hr)^2
+	//sigma - radians
+	//delta - radians
+	//FW - lbf/lbm
+	//R_I - e.r.
 
-	static const double mu = OrbMech::mu_Earth*pow(3600.0, 2) / pow(6378.165*1000.0, 3);
+	static const double TLI_POLY[5][26] = { { 0.61967804e-1, 0.86219648e-2, -0.24371820e2, 0.41004848e4, -0.99229657e6, 0.14267564e9, -0.54688962e0, -0.78766288e0, 0.10261969e2, 0.52445599e1, -0.15527983e5,
+		0.51931839e7, 0.18005069e0, 0.97069489e-1, 0.61442230e1, -0.87765197e3, -0.16502383e0,  0.63224468e0, 0.81844028e3,  -0.33505204e0, -0.92426341e-1, -0.18131458e4, -0.39193696e4},
+	{ 0.51541772e0, -0.15528032e0, 0.27185659e2, 0.18763984e3, -0.92712145e6, 0.21114994e9, -0.56424215e0, 0.95105384e1, -0.15294910e2, 0.33896643e2, -0.26903240e5, 0.12131396e8, 0.25371175e0,
+		0.22036833e0,  -0.22601576e2, 0.14378586e4, 0.31264540e0, -0.64046690e1,-0.39254760e4, -0.57987931e0, -0.22905910e0, 0.12621438e4, 0.70516077e4, -0.76940409e-4, 0.64393915e-4, 0.48483478e-4 },
+	{ 0.48329414e0, 0.18759385e-2, 0.14031932e1, -0.13933485e3, 0.40515931e5, -0.48676865e7, -0.10155877e1, 0.83266987e-1, -0.28021958e1, 0.21207686, 0.98814614e3, -0.17699125e6,
+		0.30964851, 0.13152495, 0.92808415, -0.32524984e2, 0.44675108e-2, -0.59053312e-3, -0.10061669e3, -0.60405621, 0.96317404e-2, 0.18026336e3, 0.81684373e2 },
+	{ 0.46986962e-2, -0.44724715e-2, -0.17477015e1, 0.16880382e2, 0.14554490e5, -0.27167564e7, 0.25758493e-1, -0.77608981e-1, 0.57075666e0, 0.36716041e1, -0.96377142e3, -0.56658473e5,
+		0.61201761e-2, 0.72885987e-2, 0.55059398e0, 0.44179572e1, -0.10348462e-1, 0.49107017e-1,0.44830843e3, 0.98814646e0, -0.73420686e-2, -0.27739134e2, 0.29172916e3},
+	{ 0.18679213e1, 0.98320266e0, 0.25028715e2, -0.17104963e4, 0.37348295e6, -0.51521225e8, -0.21640574e0, 0.41744541e0,-0.65859807e1, -0.57578939e1, 0.99505664e4, -0.20041678e7,
+		 -0.76178399e-2, -0.14737246e-2, -0.43988981e1, 0.20554193e3, 0.74293949e-1, -0.29415058e0, -0.16188456e4, -0.30007513e-1, 0.28463657e-1, 0.79392771e3, 0.12182700e4 } };
 
-	R_I = length(sv.R) / 6378.165;
-	V_I = length(sv.V)*3600.0 / 6378.165;
+	double DV_M, DI, X1, X2, X3, X4, X5;
+
+	DV_M = sqrt(C3 + 2.0 * mu / R_I) - sqrt(mu / R_I);
+	DI = asin(sin(abs(delta)) / sin(sigma + 0.314));
+	X1 = DV_M - 1.75;
+	X2 = DI * DI - 0.0027;
+	X3 = sigma - 0.148;
+	X4 = 1.0 / FW;
+	X5 = R_I;
+
+	double Y[5];
+
+	for (int i = 0; i < 5; i++)
+	{
+		Y[i] = TLI_POLY[i][0] + TLI_POLY[i][1] * X1 + TLI_POLY[i][2] * X2 + TLI_POLY[i][3] * pow(X2, 2) + TLI_POLY[i][4] * pow(X2, 3) + TLI_POLY[i][5] * pow(X2, 4) +
+			TLI_POLY[i][6] * X3 + TLI_POLY[i][7] * pow(X3, 2) + TLI_POLY[i][8] * X1 * X2 + TLI_POLY[i][9] * X2 * X3 + TLI_POLY[i][10] * pow(X2, 2) * X3 +
+			TLI_POLY[i][11] * pow(X2, 3) * X3 + TLI_POLY[i][12] * X4 + TLI_POLY[i][13] * X1 * X4 + TLI_POLY[i][14] * X2 * X4 + TLI_POLY[i][15] * X2 * X2 * X4 +
+			TLI_POLY[i][16] * X3 * X4 + TLI_POLY[i][17] * X3 * X3 * X4 + TLI_POLY[i][18] * X2 * X2 * X3 * X4 + TLI_POLY[i][19] * X5 + TLI_POLY[i][20] * X1 * X3 +
+			TLI_POLY[i][21] * X1 * X2 * X2 + TLI_POLY[i][22] * X1 * X2 * X2 * X3;
+	}
+
+	alpha = Y[0];
+	beta = Y[1] + (X4 * X4 * (TLI_POLY[1][23] + TLI_POLY[1][24] * X1 + TLI_POLY[1][25] * X4 * X4)) / (pow(X3 + 0.148, 2) + 4.0 * pow(X2 + 0.0027, 2));
+	eta_alpha = Y[2];
+	R_P = Y[3];
+	DV = Y[4];
+}
+
+SV2 TLMCCProcessor::TLIBRN(SV2 state, double C3, double sigma, double delta, double F_I, double F, double WDOT, double T_MRS)
+{
+	SV2 out;
+	double W_I, DV_I, DT_B1, V_I, R_I, phi_dot_I, dphi_B1, DT_B2, dphi_B2, delta0, ddelta, W;
+
+	static const double mu = 19.90941651408238;
+
+	R_I = length(state.sv.R);
+	V_I = length(state.sv.V);
+	W_I = state.Mass;
+
 	DV_I = sqrt(mu / R_I) - V_I;
 	DT_B1 = DV_I / (F / W_I);
+
 	phi_dot_I = V_I / R_I;
 	dphi_B1 = phi_dot_I * DT_B1;
-	DT_B2 = (1.0 - F_I / F)*T_MRS;
-	dphi_B2 = phi_dot_I * DT_B2;
-	W = W_I - W_dot * DT_B1;
 
-	if (C3 < -45.0)
+	DT_B2 = (1.0 - F_I / F) * T_MRS;
+	dphi_B2 = phi_dot_I * DT_B2;
+	W = W_I - WDOT * DT_B1;
+
+	if (delta > 2.0 * RAD)
 	{
-		C3 = -45.0;
+		delta0 = 2.0 * RAD;
+		ddelta = delta - 2.0 * RAD;
 	}
-	else if (C3 > -0.5)
+	else if (delta < -2.0 * RAD)
 	{
-		C3 = -0.5;
-	}
-	if (delta > 2.0*RAD)
-	{
-		delta0 = 2.0*RAD;
-		ddelta = delta - 2.0*RAD;
-	}
-	else if (delta < -2.0*RAD)
-	{
-		delta0 = -2.0*RAD;
-		ddelta = -2.0*RAD - delta;
+		delta0 = -2.0 * RAD;
+		ddelta = -2.0 * RAD - delta;
 	}
 	else
 	{
@@ -4240,150 +4310,44 @@ EphemerisData TLMCCProcessor::TLIBRN(EphemerisData sv, double C3, double sigma, 
 		ddelta = 0.0;
 	}
 
-	double alpha0, beta0, etaalpha0, R_p0, DV0;
+	double DV0, alpha0, beta0, eta_alpha0, R_P0;
 
-	if (C3 > -5.0)
-	{
-		//Nominal mission polynomial
-		double a[5][26];
-		
-		a[0][0] = 0.61967804e-1;
-		a[0][1] = 0.86219648e-2;
-		a[0][2] = -0.2437182e2;
-		a[0][3] = 0.41004848e4;
-		a[0][4] = -0.99229657e6;
-		a[0][5] = 0.14267564e9;
-		a[0][6] = -0.54688962;
-		a[0][7] = -0.78766288;
-		a[0][8] = 0.10261969e2;
-		a[0][9] = 0.52445599e1;
-		a[0][10] = -0.15527983e5;
-		a[0][11] = 0.51931839e7;
-		a[0][12] = 0.18005069;
-		a[0][13] = 0.97069489e-1;
-		a[0][14] = 0.61442230e1;
-		a[0][15] = -0.87765197e3;
-		a[0][16] = -0.16502383;
-		a[0][17] = 0.63224468;
-		a[0][18] = 0.81844028e3;
-		a[0][19] = -0.33505204;
-		a[0][20] = -0.92426341e-1;
-		a[0][21] = -0.18131458e4;
-		a[0][22] = -0.39193696e4;
-
-		a[1][0] = 0.51541772;
-		a[1][1] = -0.15528032;
-		a[1][2] = 0.27185659e2;
-		a[1][3] = 0.18763984e3;
-		a[1][4] = -0.92712145e6;
-		a[1][5] = 0.21114994e9;
-		a[1][6] = -0.56424215;
-		a[1][7] = 0.95105384e1;
-		a[1][8] = -0.15294910e2;
-		a[1][9] = 0.33896643e2;
-		a[1][10] = -0.26903240e5;
-		a[1][11] = 0.12131396e8;
-		a[1][12] = 0.25371175;
-		a[1][13] = 0.22036833;
-		a[1][14] = -0.22601576e2;
-		a[1][15] = 0.14378586e4;
-		a[1][16] = 0.31264540;
-		a[1][17] = -0.64046690e1;
-		a[1][18] = -0.39254760e4;
-		a[1][19] = -0.57987931;
-		a[1][20] = -0.2290591;
-		a[1][21] = 0.12621438e4;
-		a[1][22] = 0.70516077e4;
-		a[1][23] = -0.76940409e-4;
-		a[1][24] = 0.64393915e-4;
-		a[1][25] = 0.48483478e-4;
-
-		a[2][0] = 0.48329414;
-		a[2][1] = 0.18759385e-2;
-		a[2][2] = 0.14031932e1;
-		a[2][3] = -0.13933485e3;
-		a[2][4] = 0.40515931e5;
-		a[2][5] = -0.48676865e7;
-		a[2][6] = -0.10155877e1;
-		a[2][7] = 0.83266987e-1;
-		a[2][8] = -0.28021958e1;
-		a[2][9] = 0.21207686;
-		a[2][10] = 0.98814614e3;
-		a[2][11] = -0.17699125e6;
-		a[2][12] = 0.30964851;
-		a[2][13] = 0.13152495;
-		a[2][14] = 0.92808415;
-		a[2][15] = -0.32524984e2;
-		a[2][16] = 0.44675108e-2;
-		a[2][17] = -0.59053312e-3;
-		a[2][18] = -0.10061669e3;
-		a[2][19] = -0.60405621;
-		a[2][20] = 0.96317404e-2;
-		a[2][21] = 0.18026336e3;
-		a[2][22] = 0.81684373e2;
-
-		double DV_M, DI, X1, X2, X3, X4, X5;
-
-		DV_M = sqrt(C3 + 2.0*mu / R_I) - sqrt(mu / R_I);
-		DI = asin(sin(abs(delta0)) / sin(sigma + 0.314));
-		X1 = DV_M* - 1.75;
-		X2 = DI * DI - 0.0027;
-		X3 = sigma - 0.148;
-		X4 = 1.0 / (F / W);
-		X5 = R_I;
-
-		double Y[5];
-
-		for (int i = 0;i < 5;i++)
-		{
-			Y[i] = a[i][0] + a[i][1] * X1 + a[i][2] * X2 + a[i][3] * X2*X2 + a[i][4] * pow(X2, 3) + a[i][5] * pow(X2, 4) + a[i][6] * X3 + a[i][7] * pow(X3, 2) + a[i][8] * X1*X2 +
-				a[i][9] * X2*X3 + a[i][10] * pow(X2, 2)*X3 + a[i][11] * pow(X2, 3)*X3 + a[i][12] * X4*a[i][13] * X1*X4 + a[i][14] * X2*X4 +
-				a[i][15] * X2*X2*X4 + a[i][16] * X3*X4 + a[i][17] * X3*X3*X4 + a[i][18] * X2*X2*X3*X4 + a[i][19] * X5 + a[i][20] * X1*X3 +
-				a[i][21] * X1*X2*X2 + a[i][22] * X1*X2*X2*X3;
-		}
-
-		alpha0 = Y[0];
-		beta0 = Y[1] + (X4*X4*(a[1][23] + a[1][24] * X1 + a[1][25] * X4*X4)) / (pow(X3 + 0.148, 2) + 4.0*pow(X2 + 0.0027, 2));
-		etaalpha0 = Y[2];
-		R_p0 = Y[3];
-		DV0 = Y[4];
-	}
-	else
-	{
-		//Alternate mission polynomial
-	}
+	TLINominalMissionPolynomial(C3, sigma, delta, F / W, R_I, mu, DV0, alpha0, beta0, eta_alpha0, R_P0);
 
 	VECTOR3 R_I_u, N_I_u, S, T, N_c;
-	double alpha, beta, etaalpha, R_p, DV, eta, T_B, C1, p, e, R_c, V_c, gamma_c;
+	double alpha, beta, eta_alpha, R_P, DV, eta, T_B, C1, p, e, R_c, V_c, gamma_c;
 
-	alpha = alpha0 + 4.66*ddelta;
-	beta = beta0 - 2.15*ddelta;
-	etaalpha = etaalpha0 + 0.923*ddelta;
-	R_p = R_p0 - 0.442*ddelta;
-	DV = DV0 + 6.33*ddelta;
+	//Account for possible out-of-plane
+	alpha = alpha0 + 4.66 * ddelta;
+	beta = beta0 - 2.15 * ddelta;
+	eta_alpha = eta_alpha0 + 0.923 * ddelta;
+	R_P = R_P0 - 0.442 * ddelta;
+	DV = DV0 + 6.33 * ddelta;
 
+	//Account for mixture ratio shift
 	alpha += dphi_B1 + dphi_B2;
-	beta += 3.0 / 4.0*dphi_B1 + dphi_B2;
-	eta = etaalpha - alpha;
-	DV += DV + DV_I;
+	beta += 3.0 / 4.0 * dphi_B1 + dphi_B2;
+	eta = eta_alpha - alpha;
+	DV += DV_I;
 
-	T_B = W_I / W_dot * (1.0 - exp(-(DV*W_dot / F))) + DT_B2;
+	T_B = W_I / WDOT * (1.0 - exp(-(DV*WDOT / F))) + DT_B2;
 
-	R_I_u = unit(sv.R);
-	N_I_u = unit(crossp(sv.R, sv.V));
+	R_I_u = unit(state.sv.R);
+	N_I_u = unit(crossp(state.sv.R, state.sv.V));
 	T = R_I_u * cos(delta)*cos(alpha) + crossp(N_I_u, R_I_u)*cos(delta)*sin(alpha) + N_I_u * sin(delta);
 	S = R_I_u * cos(beta) + crossp(N_I_u, R_I_u)*sin(beta);
 	N_c = unit(crossp(T, S));
-	C1 = R_p * sqrt(2.0*mu / R_p + C3);
+	C1 = R_P * sqrt(2.0*mu / R_P + C3);
 	p = C1 * C1 / mu;
 	e = sqrt(1.0 + C3 / mu * p);
 	R_c = p / (1.0 + e * cos(eta));
 	V_c = mu / C1 * sqrt(1.0 + 2.0*e*cos(eta) + e * e);
 	gamma_c = atan2(e*sin(eta), 1.0 + e * cos(eta));
-	out.R = (T*cos(sigma + eta) + crossp(N_c, T)*sin(sigma + eta))*R_c;
-	out.V = (-T * sin(sigma + eta - gamma_c) + crossp(N_c, T)*cos(sigma + eta - gamma_c))*V_c;
-	out.GMT = sv.GMT + T_B;
-	out.RBI = sv.RBI;
+	out.sv.R = (T*cos(sigma + eta) + crossp(N_c, T)*sin(sigma + eta))*R_c;
+	out.sv.V = (-T * sin(sigma + eta - gamma_c) + crossp(N_c, T)*cos(sigma + eta - gamma_c))*V_c;
+	out.sv.GMT = state.sv.GMT + T_B;
+	out.sv.RBI = state.sv.RBI;
+	out.Mass = W - WDOT * (T_B - DT_B2);
 
 	return out;
 }

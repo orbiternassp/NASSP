@@ -283,6 +283,11 @@ struct TLMCCGeneralizedIteratorArray
 	double gamma1;
 	double V2;
 	double V_L;
+
+	//TLI only
+	double C3_TLI;
+	double dt_EPO;
+	double delta_TLI;
 };
 
 class TLMCCProcessor : public RTCCModule
@@ -352,14 +357,12 @@ protected:
 	double DDELTATIME(double a, double dt_apo, double xm, double betam, double dt);
 	void SCALE(VECTOR3 R0, VECTOR3 V0, double h, VECTOR3 &RF, VECTOR3 &VF);
 	EphemerisData PPC(EphemerisData SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS);
-	EphemerisData TLIBRN(EphemerisData sv, double C3, double sigma, double delta, double FW, double W_I, double F_I, double F, double W_dot, double T_MRS);
+	SV2 TLIBRN(SV2 state, double C3, double sigma, double delta, double F_I, double F, double WDOT, double T_MRS);
 	double DELTAT(double a, double e, double eta, double deta);
-
-	double R_E, R_M, mu_E, mu_M;
 
 	EphemerisData sv_MCC; //In TLMCC coordinate system
 	EphemerisData sv_MCC_SOI; //In the "correct" coordinate system
-	double isp_SPS, isp_DPS, isp_MCC, Wdot;
+	
 	int KREF_MCC;
 	VECTOR3 DV_MCC;
 
@@ -372,4 +375,12 @@ protected:
 
 	TLMCCGeneralizedIteratorArray outarray;
 	TLMCCDataTable outtab;
+
+	//Constants
+	double R_E, R_M, mu_E, mu_M;
+	double isp_SPS, isp_DPS, isp_MCC, Wdot;
+	double F_I_SIVB; //S-IVB thrust magnitude from ignition to MRS
+	double F_SIVB; //S-IVB thrust magnitude from MRS to cutoff
+	double WDOT_SIVB; //Mass flow rate of S-IVB
+	double T_MRS_SIVB; //TEstimated time of MRS, measured from ignition
 };
