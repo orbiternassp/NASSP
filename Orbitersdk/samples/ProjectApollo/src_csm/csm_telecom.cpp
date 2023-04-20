@@ -1010,7 +1010,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
 
-	VECTOR3 U_RP, pos, R_M, U_R, U_Earth, U_CSM;
+	VECTOR3 U_RP, pos, U_R, U_Earth, U_CSM;
 	MATRIX3 Rot;
 	double relang, beamwidth, EarthSignalDist, CSMrelang;
 
