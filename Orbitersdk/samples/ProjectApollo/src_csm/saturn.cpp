@@ -521,7 +521,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	PriRadInTempSensor("Pri-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadInTempSensor("Sec-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0),
-	vesim(&cbCSMVesim, this)
+	vesim(&cbCSMVesim, this),
+	CueCards(vcidx, this, 11)
 #pragma warning ( pop ) // disable:4355
 
 {	
@@ -640,8 +641,6 @@ void Saturn::initSaturn()
 	ChutesAttached = true;
 	CSMAttached = true;
 	SIMBayPanelJett = false;
-
-	NosecapAttached = false;
 
 	TLICapableBooster = false;
 	TLISoundsLoaded = false;
@@ -1733,6 +1732,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	RRTsystem.SaveState(scn);
 	udl.SaveState(scn);
 
+	CueCards.SaveState(scn);
+
 	Panelsdk.Save(scn);	
 
 	// save the state of the switches
@@ -1837,7 +1838,6 @@ int Saturn::GetAttachState()
 	AttachState state;
 
 	state.CSMAttached = CSMAttached;
-	state.NosecapAttached = NosecapAttached;
 	state.InterstageAttached = InterstageAttached;
 	state.LESAttached = LESAttached;
 	state.HasProbe = HasProbe;
@@ -1857,7 +1857,6 @@ void Saturn::SetAttachState(int s)
 	state.word = s;
 
 	CSMAttached = (state.CSMAttached != 0);
-	NosecapAttached = (state.NosecapAttached != 0);
 	LESAttached = (state.LESAttached != 0);
 	InterstageAttached = (state.InterstageAttached != 0);
 	HasProbe = (state.HasProbe != 0);
@@ -2445,6 +2444,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (!strnicmp(line, UDL_START_STRING, sizeof(UDL_START_STRING))) {
 			udl.LoadState(scn);
+		}
+		else if (!strnicmp(line, CUECARDS_START_STRING, sizeof(CUECARDS_START_STRING))) {
+			CueCards.LoadState(scn);
 		}
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);

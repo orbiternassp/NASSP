@@ -115,6 +115,33 @@ namespace mission {
 		strCDRSuitName = "CDR";
 		strCMPSuitName = "CMP";
 		strLMPSuitName = "LMP";
+		AddCSMCueCard(0, "CUECARD_DAP");
+		AddCSMCueCard(2, "SPS_BURN");
+		AddCSMCueCard(2, "SPS_BURN_CONTINUED");
+		AddCSMCueCard(2, "T_AND_D");
+		AddCSMCueCard(2, "T_AND_D_CONTINUED");
+		AddCSMCueCard(2, "ENTRY");
+		AddCSMCueCard(2, "PRE-ENTRY_ATTITUDE_TIMELINE");
+		AddCSMCueCard(2, "CM_EVA");
+		AddCSMCueCard(2, "CM_EVA_CONTD");
+		AddCSMCueCard(2, "CONTINGENCY_EVA");
+		AddCSMCueCard(2, "CONTINGENCY_EVA_CONTINUED");
+		AddCSMCueCard(3, "CDR_BOOST-ABORTS");
+		AddCSMCueCard(3, "TLI");
+		AddCSMCueCard(4, "POWER_LOSS");
+		AddCSMCueCard(4, "UNDOCK_SEP");
+		AddCSMCueCard(4, "EMER_CAB_REPRESS");
+		AddCSMCueCard(4, "TPF");
+		AddCSMCueCard(4, "TPF_CONTINUED");
+		AddCSMCueCard(4, "VAC_XFER_TO_ECS");
+		AddCSMCueCard(5, "EPS-ECS_ABORTS");
+		AddCSMCueCard(5, "SPS_BURN_RULES");
+		AddCSMCueCard(6, "LANDING");
+		AddCSMCueCard(7, "AC_PWR");
+		AddCSMCueCard(7, "LOSS_OF_COMM");
+		AddCSMCueCard(8, "LMP_BOOST-ABORTS");
+		AddCSMCueCard(9, "LOI_LIMITS");
+		AddCSMCueCard(10, "CSM_ANTENNA_LOCATIONS");
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -125,6 +152,7 @@ namespace mission {
 	bool Mission::LoadMission(const std::string& strMission)
 	{
 		char buffer[256];
+		char buffer2[128];
 		std::string filename;
 		filename = "Missions\\ProjectApollo\\" + strMission + ".cfg";
 		strFileName = strMission;
@@ -212,6 +240,21 @@ namespace mission {
 		if (oapiReadItem_string(hFile, "LMPSuitName", buffer))
 		{
 			strLMPSuitName = buffer;
+			for (int i = 0; i < 16; i++) //TBD: this is limiting how many cue cards you can load from the mission file
+			{
+				sprintf_s(buffer2, "CSMCueCard%d", i + 1);
+				if (oapiReadItem_string(hFile, buffer2, buffer))
+				{
+					unsigned loc = 0;
+					std::string meshname;
+					VECTOR3 ofs = _V(0, 0, 0);
+
+					sscanf(buffer, "%u %s %lf %lf %lf", &loc, buffer2, &ofs.x, &ofs.y, &ofs.z);
+					meshname = buffer2;
+
+					AddCSMCueCard(loc, meshname, ofs);
+				}
+			}
 		}
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
@@ -315,6 +358,40 @@ namespace mission {
 	bool Mission::HasRateAidedOptics() const
 	{
 		return bHasRateAidedOptics;
+	}
+
+	bool Mission::GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
+	{
+		return GetCueCards(CSMCueCards, counter, loc, meshname, ofs);
+	}
+
+	bool Mission::GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
+	{
+		while (counter < CSMCueCards.size())
+		{
+			if (cue[counter].meshname != "" && cue[counter].meshname != "None")
+			{
+				loc = cue[counter].loc;
+				meshname = cue[counter].meshname;
+				ofs = cue[counter].ofs;
+				counter++;
+				return false;
+			}
+
+			counter++;
+		}
+		return true;
+	}
+
+	void Mission::AddCSMCueCard(unsigned location, std::string meshname, VECTOR3 ofs)
+	{
+		CueCardConfig cfg;
+
+		cfg.loc = location;
+		cfg.meshname = "ProjectApollo/CueCards/" + meshname;
+		cfg.ofs = ofs;
+
+		CSMCueCards.push_back(cfg);
 	}
 
 	const std::string& Mission::GetCDRName() const
