@@ -192,7 +192,7 @@ namespace mission {
 				sscanf(line + 14, "%d", &iLMDSKYVersion);
 			}
 			else if (!_strnicmp(line, "HasLMProgramer=", 15)) {
-				strncpy(buffer, line + 16, 255);
+				strncpy(buffer, line + 15, 255);
 				bHasLMProgramer = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "HasAEA=", 7)) {
