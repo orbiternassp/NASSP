@@ -46,6 +46,9 @@
 #include "Mission.h"
 
 #include "connector.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 char trace_file[] = "ProjectApollo LM.log";
 
@@ -1870,7 +1873,7 @@ void LEM::clbkPostCreation()
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17))
+			if (utils::IsVessel(pVessel, utils::MCC))
 			{
 				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
 				if (pMCCVessel->mcc)

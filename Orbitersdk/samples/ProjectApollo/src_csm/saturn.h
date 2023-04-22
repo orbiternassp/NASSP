@@ -66,6 +66,7 @@
 #include "csmsensors.h"
 #include "rhc.h"
 #include "inertial.h"
+#include "CueCardManager.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -728,7 +729,7 @@ public:
 			unsigned ApexCoverAttached:1;	///< Is the apex cover attached?
 			unsigned ChutesAttached:1;		///< Are the chutes attached?
 			unsigned CSMAttached:1;			///< Is there a CSM?
-			unsigned NosecapAttached:1;		///< Is there an Apollo 5-style nosecap?
+			unsigned Spare1:1;				///< Spare
 			unsigned LESLegsCut:1;			///< Are the LES legs attached?
 			unsigned SIMBayPanelJett:1;		///< Has the SIM bay panel been jettisoned?
 		};
@@ -1264,11 +1265,6 @@ public:
 	void SetCMdocktgtMesh();
 
 	///
-	/// \brief Set nosecap mesh
-	///
-	void SetNosecapMesh();
-
-	///
 	/// \brief Set VC seats mesh
 	///
 	void SetVCSeatsMesh();
@@ -1276,6 +1272,8 @@ public:
 	void SetCOASMesh();
 
 	void SetSIMBayPanelMesh();
+
+	void AddCMMeshes(const VECTOR3 &mesh_dir);
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -1425,12 +1423,6 @@ protected:
 	/// \brief Nosecap attached flag.
 	///
 	bool CSMAttached;
-
-	///
-	/// True if there is an Apollo 5-style nosecap in place of a CSM.
-	/// \brief Nosecap attached flag.
-	///
-	bool NosecapAttached;
 
 	///
 	/// Gives the angle to which the SLA panels will rotate; some of the Skylab missions
@@ -3475,6 +3467,8 @@ protected:
 	bool LVGuidLight;
 	bool LVRateLight;
 
+	CueCardManager CueCards;
+
 	//
 	// And state that doesn't need to be saved.
 	//
@@ -3916,8 +3910,6 @@ protected:
 	int fwdhatchidx;
 	int opticscoveridx;
 	int cmdocktgtidx;
-	int nosecapidx;
-	int meshLM_1;
 	int simbaypanelidx;
 	int vcidx;
 	int seatsfoldedidx;
@@ -4224,6 +4216,7 @@ protected:
 	void LoadVC();
 	void UpdateVC(VECTOR3 meshdir);
 	void DefineCMAttachments();
+	void ResetDynamicMeshIndizes();
 
 	//
 	// Sounds

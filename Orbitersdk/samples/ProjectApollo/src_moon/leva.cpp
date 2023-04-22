@@ -171,24 +171,6 @@ void LEVA::SetAstroStage ()
 
 void LEVA::clbkPostCreation()
 {
-	VECTOR3 mesh_dir = _V(0, 0, 0);
-	if (isCDR == true) {
-		AddMesh(hCDREVA, &mesh_dir);
-		AddMesh(hCDRLRV, &mesh_dir);
-	}
-	else {
-		AddMesh(hLMPEVA, &mesh_dir);
-		AddMesh(hLMPLRV, &mesh_dir);
-	}
-	if (GetAttachmentStatus(lrvSeat) == NULL) {
-		SetMeshVisibilityMode(0, MESHVIS_EXTERNAL);
-		SetMeshVisibilityMode(1, MESHVIS_NEVER);
-	}
-	else {
-		SetMeshVisibilityMode(0, MESHVIS_NEVER);
-		SetMeshVisibilityMode(1, MESHVIS_EXTERNAL);
-	}
-
 	if (oapiGetVesselByName("Flag") == NULL) {
 		FlagPlanted = false;
 	}
@@ -311,6 +293,63 @@ void LEVA::DeboardLRV(OBJHANDLE lrvHandle)
 
 	SetMeshVisibilityMode(0, MESHVIS_EXTERNAL);
 	SetMeshVisibilityMode(1, MESHVIS_NEVER);
+}
+
+void LEVA::DrawName()
+{
+	SURFHANDLE hTex[2];
+	if (isCDR == true) {
+		hTex[0] = oapiGetTextureHandle(hCDREVA, 4);
+		hTex[1] = oapiGetTextureHandle(hCDREVA, 5);
+	}
+	else {
+		hTex[0] = oapiGetTextureHandle(hLMPEVA, 4);
+		hTex[1] = oapiGetTextureHandle(hLMPEVA, 5);
+	}
+
+	SURFHANDLE plss_tex = oapiCreateTextureSurface(424, 64);
+	SURFHANDLE rcu_tex = oapiCreateTextureSurface(48, 376);
+
+	oapiSetSurfaceColourKey(plss_tex, 0xFF0000);
+	oapiSetSurfaceColourKey(rcu_tex, 0xFF0000);
+
+	RECT plss_src = { 150,640,362,704 };
+	RECT plss_tgt = { 0,0,424,64 };
+	RECT rcu_src = { 415,8,463,196 };
+	RECT rcu_tgt = { 0,0,48,376 };
+
+	if (hTex[0]) oapiBlt(plss_tex, hTex[0], &plss_tgt, &plss_src);
+	if (hTex[1]) oapiBlt(rcu_tex, hTex[1], &rcu_tgt, &rcu_src);
+
+	oapi::Font* plss_font = oapiCreateFont(58, true, "Sans", FONT_BOLD, 1800);
+	oapi::Sketchpad* plss_skp = oapiGetSketchpad(plss_tex);
+	if (plss_skp) {
+		plss_skp->SetFont(plss_font);
+		plss_skp->SetTextColor(0x000000);
+		plss_skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		plss_skp->Text(212, 58, SuitName, strlen(SuitName));
+		oapiReleaseSketchpad(plss_skp);
+	}
+	oapiReleaseFont(plss_font);
+
+	oapi::Font* rcu_font = oapiCreateFont(52, true, "Sans", FONT_BOLD, 2700);
+	oapi::Sketchpad* rcu_skp = oapiGetSketchpad(rcu_tex);
+	if (rcu_skp) {
+		rcu_skp->SetFont(rcu_font);
+		rcu_skp->SetTextColor(0x000000);
+		rcu_skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		rcu_skp->Text(52, 188, SuitName, strlen(SuitName));
+		oapiReleaseSketchpad(rcu_skp);
+	}
+	oapiReleaseFont(rcu_font);
+
+	if (hTex[0]) oapiBlt(hTex[0], plss_tex, &plss_src, &plss_tgt);
+	if (hTex[1]) oapiBlt(hTex[1], rcu_tex, &rcu_src, &rcu_tgt);
+
+	oapiDestroySurface(hTex[0]);
+	oapiDestroySurface(hTex[1]);
+	oapiDestroySurface(plss_tex);
+	oapiDestroySurface(rcu_tex);
 }
 
 void LEVA::ScanMotherShip()
@@ -666,6 +705,7 @@ void LEVA::SetEVAStats(LEVASettings &evas)
 	ApolloNo = evas.MissionNo;
 	isCDR = evas.isCDR;
 	strcpy(LEMName, evas.LEMName);
+	strcpy(SuitName, evas.SuitName);
 	StateSet = true;
 }
 
@@ -699,6 +739,25 @@ void LEVA::DoFirstTimestep()
 		soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 		soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
+
+		VECTOR3 mesh_dir = _V(0, 0, 0);
+		if (isCDR == true) {
+			AddMesh(hCDREVA, &mesh_dir);
+			AddMesh(hCDRLRV, &mesh_dir);
+		}
+		else {
+			AddMesh(hLMPEVA, &mesh_dir);
+			AddMesh(hLMPLRV, &mesh_dir);
+		}
+		if (GetAttachmentStatus(lrvSeat) == NULL) {
+			SetMeshVisibilityMode(0, MESHVIS_EXTERNAL);
+			SetMeshVisibilityMode(1, MESHVIS_NEVER);
+		}
+		else {
+			SetMeshVisibilityMode(0, MESHVIS_NEVER);
+			SetMeshVisibilityMode(1, MESHVIS_EXTERNAL);
+		}
+		DrawName();
 
 		FirstTimestep = false;
 	}
@@ -794,6 +853,9 @@ void LEVA::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 		if (!strnicmp(line, "LEMNAME", 7)) {
 			sscanf(line + 7, "%s", &LEMName);
 		}
+		else if (!strnicmp(line, "SUITNAME", 8)) {
+			strcpy(SuitName, line + 9);
+		}
 		else if (!strnicmp(line, "STATE", 5)) {
 			int	s;
 			sscanf(line + 5, "%d", &s);
@@ -868,6 +930,8 @@ void LEVA::clbkSaveState(FILEHANDLE scn)
 	VESSEL2::clbkSaveState(scn);
 
 	oapiWriteScenario_string(scn, "LEMNAME", LEMName);
+
+	oapiWriteScenario_string(scn, "SUITNAME", SuitName);
 
 	int s = GetMainState();
 	if (s) {

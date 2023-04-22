@@ -32,6 +32,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "rtcc.h"
 #include "MCC_Mission_D.h"
 #include "iu.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 void MCC::MissionSequence_D()
 {
@@ -64,9 +67,8 @@ void MCC::MissionSequence_D()
 					if (hLV != NULL)
 					{
 						v = oapiGetVesselInterface(hLV);
-
-						if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
-							!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) {
+						
+						if (utils::IsVessel(v, utils::SaturnV_SIVB)) {
 							sivb = (SIVB *)v;
 						}
 					}
