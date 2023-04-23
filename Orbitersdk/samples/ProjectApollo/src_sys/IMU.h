@@ -49,6 +49,9 @@ public:
 	void DriveGimbals(double x, double y, double z);
 	void SetVessel(VESSEL *v, bool LEMFlag);
 	void SetVesselFlag(bool LEMFlag);
+	void SetDriftRates(const MATRIX3 DriftRateMatrix);
+	VECTOR3 GetNBDriftRates();
+	VECTOR3 GetTotalAttitude();
 	virtual VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
@@ -69,7 +72,7 @@ public:
 		double NBD_X;
 		double NBD_Y;
 		double NBD_Z;
-		double ADSRA;
+		double ADSRA_X;
 		double ADSRA_Y;
 		double ADSRA_Z;
 		double ADIA_X;

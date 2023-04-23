@@ -129,6 +129,26 @@ void IMU::SetVesselFlag(bool LEMFlag)
 	LEM = LEMFlag;
 }
 
+void IMU::SetDriftRates(const MATRIX3 DriftRateMatrix)
+{
+	imuDriftRates.NBD_X = DriftRateMatrix.m11 * MERU;
+	imuDriftRates.NBD_Y = DriftRateMatrix.m12 * MERU;
+	imuDriftRates.NBD_Z = DriftRateMatrix.m13 * MERU;
+
+	imuDriftRates.ADSRA_X = DriftRateMatrix.m21;
+	imuDriftRates.ADSRA_Y = DriftRateMatrix.m22;
+	imuDriftRates.ADSRA_Z = DriftRateMatrix.m23;
+
+	imuDriftRates.ADIA_X = DriftRateMatrix.m31;
+	imuDriftRates.ADIA_Y = DriftRateMatrix.m32;
+	imuDriftRates.ADIA_Z = DriftRateMatrix.m33;
+}
+
+VECTOR3 IMU::GetNBDriftRates()
+{
+	return _V(imuDriftRates.NBD_X, imuDriftRates.NBD_Y, imuDriftRates.NBD_Z);
+}
+
 bool IMU::IsCaged()
 
 {
@@ -407,7 +427,7 @@ void IMU::Timestep(double simdt)
 
 	// orbiter earth rotation
 	//imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);
-
+	
 	// Process channel bits
 	val12 = agc.GetOutputChannel(012);
 	if (val12[ZeroIMUCDUs]) {
@@ -462,10 +482,10 @@ void IMU::Timestep(double simdt)
 		RemainingPIPA.Z = pulses - (int) pulses;
 
 		//IMU Drift calculation
-		Gimbal.X -= (imuDriftRates.NBD_X - (imuDriftRates.ADSRA_X * accel.y / 9.80665) + (imuDriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
-		Gimbal.Y -= (imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
-		Gimbal.Z -= (imuDriftRates.NBD_Z + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
-
+		DriveGimbalX((imuDriftRates.NBD_X - (imuDriftRates.ADSRA_X * accel.y / 9.80665) + (imuDriftRates.ADIA_X * accel.x / 9.80665)) * simdt);
+		DriveGimbalY((imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt);
+		DriveGimbalZ((imuDriftRates.NBD_Z + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt);
+		SetOrbiterAttitudeReference();
 	}
 	LastSimDT = simdt;
 }
