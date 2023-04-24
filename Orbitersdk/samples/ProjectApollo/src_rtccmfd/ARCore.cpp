@@ -535,19 +535,17 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	manpadenginetype = RTCC_ENGINETYPE_CSMSPS;
-	TPIPAD_AZ = 0.0;
-	TPIPAD_dH = 0.0;
-	TPIPAD_dV_LOS = _V(0.0, 0.0, 0.0);
-	TPIPAD_ELmin5 = 0.0;
-	TPIPAD_R = 0.0;
-	TPIPAD_Rdot = 0.0;
-	TPIPAD_ddH = 0.0;
-	TPIPAD_BT = _V(0.0, 0.0, 0.0);
+	TPI_PAD.AZ = 0.0;
+	TPI_PAD.dH_TPI = 0.0;
+	TPI_PAD.Backup_dV = _V(0.0, 0.0, 0.0);
+	TPI_PAD.EL = 0.0;
+	TPI_PAD.R = 0.0;
+	TPI_PAD.Rdot = 0.0;
+	TPI_PAD.dH_Max = 0.0;
+	TPI_PAD.Backup_bT = _V(0.0, 0.0, 0.0);
 	sxtstardtime = 0.0;
 	manpad_ullage_dt = 0.0;
 	manpad_ullage_opt = true;
-	EntryRRT = 0.0;
-	EntryRET05G = 0.0;
 
 	mapupdate.LOSGET = 0.0;
 	mapupdate.AOSGET = 0.0;
@@ -673,17 +671,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		REFSMMAT_PTC_MJD = oapiGetSimMJD(); //Near current time usually gives a good PTC REFSMMAT, too
 	}
-
-	Skylabmaneuver = 0;
-	SkylabTPIGuess = 0.0;
-	Skylab_n_C = 1.5;
-	SkylabDH1 = 20.0*1852.0;
-	SkylabDH2 = 10.0*1852.0;
-	Skylab_E_L = 27.0*RAD;
-	SkylabSolGood = true;
-	Skylab_dV_NSR = Skylab_dV_NCC = _V(0, 0, 0);
-	Skylab_dH_NC2 = Skylab_dv_NC2 = Skylab_t_NC1 = Skylab_t_NC2 = Skylab_dv_NCC = Skylab_t_NCC = Skylab_t_NSR = Skylab_dt_TPM = 0.0;
-	Skylab_NPCOption = Skylab_PCManeuver = false;
 
 	TMLat = 0.0;
 	TMLng = 0.0;
@@ -861,11 +848,6 @@ void ARCore::LOICalc()
 void ARCore::LDPPalc()
 {
 	startSubthread(10);
-}
-
-void ARCore::SkylabCalc()
-{
-	startSubthread(12);
 }
 
 void ARCore::LunarLaunchTargetingCalc()
@@ -3016,7 +2998,6 @@ int ARCore::subThread()
 	case 6: //TPI PAD
 	{
 		AP7TPIPADOpt opt;
-		AP7TPI pad;
 
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = GC->rtcc->CalcGETBase();
@@ -3025,16 +3006,7 @@ int ARCore::subThread()
 		opt.sv_P = GC->rtcc->StateVectorCalcEphem(target);
 		opt.mass = vessel->GetMass();
 
-		GC->rtcc->AP7TPIPAD(opt, pad);
-
-		TPIPAD_AZ = pad.AZ;
-		TPIPAD_BT = pad.Backup_bT;
-		TPIPAD_ddH = pad.dH_Max;
-		TPIPAD_dH = pad.dH_TPI;
-		TPIPAD_dV_LOS = pad.Backup_dV;
-		TPIPAD_ELmin5 = pad.EL;
-		TPIPAD_R = pad.R;
-		TPIPAD_Rdot = pad.Rdot;
+		GC->rtcc->AP7TPIPAD(opt, TPI_PAD);
 
 		Result = DONE;
 	}
@@ -3244,133 +3216,8 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
-	case 12: //Skylab Rendezvous Targeting
+	case 12: //Spare
 	{
-		SkyRendOpt opt;
-		SkylabRendezvousResults res;
-
-		opt.E_L = Skylab_E_L;
-		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.man = Skylabmaneuver;
-		opt.DH1 = SkylabDH1;
-		opt.DH2 = SkylabDH2;
-		opt.n_C = Skylab_n_C;
-		opt.t_TPI = t_TPI;
-		opt.PCManeuver = Skylab_PCManeuver;
-		opt.NPCOption = Skylab_NPCOption;
-
-		if (Skylabmaneuver == 0)
-		{
-			opt.TPIGuess = SkylabTPIGuess;
-		}
-		else if (Skylabmaneuver == 1)
-		{
-			opt.t_C = Skylab_t_NC1;
-		}
-		else if (Skylabmaneuver == 2)
-		{
-			opt.t_C = Skylab_t_NC2;
-		}
-		else if (Skylabmaneuver == 3)
-		{
-			opt.t_C = Skylab_t_NCC;
-		}
-		else if (Skylabmaneuver == 4)
-		{
-			opt.t_C = Skylab_t_NSR;
-		}
-		else if (Skylabmaneuver == 5)
-		{
-			opt.t_C = t_TPI;
-		}
-		else if (Skylabmaneuver == 6)
-		{
-			opt.t_C = t_TPI + Skylab_dt_TPM;
-		}
-		else if (Skylabmaneuver == 7)
-		{
-			if (Skylab_PCManeuver == 0)
-			{
-				opt.t_NC = Skylab_t_NC1;
-			}
-			else
-			{
-				opt.t_NC = Skylab_t_NC2;
-			}
-		}
-
-		if (GC->MissionPlanningActive)
-		{
-			double gmt = GC->rtcc->GMTfromGET(opt.t_C);
-
-			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_CSM, EPHEM))
-			{
-				Result = DONE;
-				break;
-			}
-
-			opt.sv_C.R = EPHEM.R;
-			opt.sv_C.V = EPHEM.V;
-			opt.sv_C.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			opt.sv_C.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-
-			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_LM, EPHEM))
-			{
-				Result = DONE;
-				break;
-			}
-
-			opt.sv_T.R = EPHEM.R;
-			opt.sv_T.V = EPHEM.V;
-			opt.sv_T.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			opt.sv_T.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-		}
-		else
-		{
-			opt.sv_C = GC->rtcc->StateVectorCalc(vessel);
-			opt.sv_T = GC->rtcc->StateVectorCalc(target);
-		}
-		opt.DMMass = GC->rtcc->GetDockedVesselMass(vessel);
-
-		SkylabSolGood = GC->rtcc->SkylabRendezvous(&opt, &res);
-
-		if (SkylabSolGood)
-		{
-			if (Skylabmaneuver == 0)
-			{
-				t_TPI = res.t_TPI;
-			}
-			else
-			{
-				dV_LVLH = res.dV_LVLH;
-				P30TIG = res.P30TIG;
-			}
-			
-			if (Skylabmaneuver == 1)
-			{
-				Skylab_dH_NC2 = res.dH_NC2;
-				Skylab_dv_NC2 = res.dv_NC2;
-				Skylab_dv_NCC = res.dv_NCC;
-				Skylab_dV_NSR = res.dV_NSR;
-				Skylab_t_NC2 = res.t_NC2;
-				Skylab_t_NCC = res.t_NCC;
-				Skylab_t_NSR = res.t_NSR;
-			}
-			else if (Skylabmaneuver == 2)
-			{
-				Skylab_dv_NCC = res.dv_NCC;
-				Skylab_dV_NSR = res.dV_NSR;
-				Skylab_t_NCC = res.t_NCC;
-				Skylab_t_NSR = res.t_NSR;
-			}
-			else if (Skylabmaneuver == 3)
-			{
-				Skylab_dV_NSR = res.dV_NSR;
-				Skylab_t_NSR = res.t_NSR;
-			}
-		}
-
 		Result = DONE;
 	}
 	break;
@@ -4165,53 +4012,56 @@ int ARCore::subThread()
 	break;
 	case 32: //Map Update
 	{
-		SV sv0;
+		EphemerisData sv0;
 
 		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(RTCC_MPT_CSM))
 		{
+			double gmt;
+
 			if (mapUpdateGET <= 0.0)
 			{
-				GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, sv0);
+				gmt = GC->rtcc->RTCCPresentTimeGMT();
 			}
 			else
 			{
-				EphemerisData sv;
-				if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(mapUpdateGET), RTCC_MPT_CSM, sv))
-				{
-					Result = DONE;
-					break;
-				}
-				sv0.R = sv.R;
-				sv0.V = sv.V;
-				sv0.MJD = OrbMech::MJDfromGET(sv.GMT, GC->rtcc->GetGMTBase());
-				sv0.gravref = GC->rtcc->GetGravref(sv.RBI);
+				gmt = GC->rtcc->GMTfromGET(mapUpdateGET);
+			}
+
+			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_CSM, sv0))
+			{
+				Result = DONE;
+				break;
 			}
 		}
 		else
 		{
-			sv0 = GC->rtcc->StateVectorCalc(vessel);
+			sv0 = GC->rtcc->StateVectorCalcEphem(vessel);
 			if (mapUpdateGET > 0)
 			{
-				sv0 = GC->rtcc->coast(sv0, mapUpdateGET - OrbMech::GETfromMJD(sv0.MJD, GC->rtcc->CalcGETBase()));
+				sv0 = GC->rtcc->coast(sv0, GC->rtcc->GMTfromGET(mapUpdateGET) - sv0.GMT);
 			}
 		}
 
 		if (mappage == 0)
 		{
 			int gstat;
-			double ttoGSAOS, ttoGSLOS;
+			double ttoGSAOS, ttoGSLOS, MJD;
+			OBJHANDLE gravref;
 
-			gstat = OrbMech::findNextAOS(sv0.R, sv0.V, sv0.MJD, sv0.gravref);
+			MJD = OrbMech::MJDfromGET(sv0.GMT, GC->rtcc->GetGMTBase());
+			gravref = GC->rtcc->GetGravref(sv0.RBI);
 
-			OrbMech::groundstation(sv0.R, sv0.V, sv0.MJD, sv0.gravref, groundstations[gstat][0], groundstations[gstat][1], 1, ttoGSAOS);
-			OrbMech::groundstation(sv0.R, sv0.V, sv0.MJD, sv0.gravref, groundstations[gstat][0], groundstations[gstat][1], 0, ttoGSLOS);
-			GSAOSGET = (sv0.MJD - GC->rtcc->CalcGETBase())*24.0*3600.0 + ttoGSAOS;
-			GSLOSGET = (sv0.MJD - GC->rtcc->CalcGETBase())*24.0*3600.0 + ttoGSLOS;
+			gstat = OrbMech::findNextAOS(sv0.R, sv0.V, MJD, gravref);
+
+			OrbMech::groundstation(sv0.R, sv0.V, MJD, gravref, groundstations[gstat][0], groundstations[gstat][1], 1, ttoGSAOS);
+			OrbMech::groundstation(sv0.R, sv0.V, MJD, gravref, groundstations[gstat][0], groundstations[gstat][1], 0, ttoGSLOS);
+			GSAOSGET = (MJD - GC->rtcc->CalcGETBase())*24.0*3600.0 + ttoGSAOS;
+			GSLOSGET = (MJD - GC->rtcc->CalcGETBase())*24.0*3600.0 + ttoGSLOS;
 			mapgs = gstat;
 		}
 		else
 		{
-			GC->rtcc->LunarOrbitMapUpdate(sv0, GC->rtcc->CalcGETBase(), mapupdate);
+			GC->rtcc->LunarOrbitMapUpdate(sv0, mapupdate);
 		}
 
 		Result = DONE;

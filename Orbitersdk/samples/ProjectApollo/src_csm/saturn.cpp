@@ -21,6 +21,7 @@
   See http://nassp.sourceforge.net/license/ for more details.
 
   **************************************************************************/
+#define ORBITER_MODULE
 
 // To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
@@ -33,6 +34,7 @@
 #include "resource.h"
 #include "nasspdefs.h"
 #include "nasspsound.h"
+#include "nassputils.h"
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -66,6 +68,8 @@ extern "C" {
 	void srandom (unsigned int x);
 	long int random ();
 }
+
+using namespace nassp;
 
 //extern FILE *PanelsdkLogFile;
 
@@ -474,10 +478,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	H2Tank2PressSensor("H2Tank2-Press-Sensor", 0.0, 350.0),
 	O2Tank1PressSensor("O2Tank1-Press-Sensor", 50.0, 1050.0),
 	O2Tank2PressSensor("O2Tank2-Press-Sensor", 50.0, 1050.0),
-	H2Tank1QuantitySensor("H2Tank1-Quantity-Sensor", 0.0, 1.0, 12701.0),
-	H2Tank2QuantitySensor("H2Tank2-Quantity-Sensor", 0.0, 1.0, 12701.0),
-	O2Tank1QuantitySensor("O2Tank1-Quantity-Sensor", 0.0, 1.0, 145150.0),
-	O2Tank2QuantitySensor("O2Tank2-Quantity-Sensor", 0.0, 1.0, 145150.0),
+	H2Tank1QuantitySensor("H2Tank1-Quantity-Sensor", 0.0, 1.0, CSM_H2TANK_CAPACITY),
+	H2Tank2QuantitySensor("H2Tank2-Quantity-Sensor", 0.0, 1.0, CSM_H2TANK_CAPACITY),
+	O2Tank1QuantitySensor("O2Tank1-Quantity-Sensor", 0.0, 1.0, CSM_O2TANK_CAPACITY),
+	O2Tank2QuantitySensor("O2Tank2-Quantity-Sensor", 0.0, 1.0, CSM_O2TANK_CAPACITY),
 	FCO2PressureSensor1("FuelCell1-O2-Press-Sensor", 0.0, 75.0),
 	FCO2PressureSensor2("FuelCell2-O2-Press-Sensor", 0.0, 75.0),
 	FCO2PressureSensor3("FuelCell3-O2-Press-Sensor", 0.0, 75.0),
@@ -517,7 +521,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	PriRadInTempSensor("Pri-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadInTempSensor("Sec-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0),
-	vesim(&cbCSMVesim, this)
+	vesim(&cbCSMVesim, this),
+	CueCards(vcidx, this, 11)
 #pragma warning ( pop ) // disable:4355
 
 {	
@@ -631,8 +636,6 @@ void Saturn::initSaturn()
 	ChutesAttached = true;
 	CSMAttached = true;
 	SIMBayPanelJett = false;
-
-	NosecapAttached = false;
 
 	TLICapableBooster = false;
 	TLISoundsLoaded = false;
@@ -1212,7 +1215,7 @@ void Saturn::clbkPostCreation()
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17))
+			if (utils::IsVessel(pVessel, utils::MCC))
 			{
 				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
 				if (pMCCVessel->mcc)
@@ -1896,6 +1899,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	RRTsystem.SaveState(scn);
 	udl.SaveState(scn);
 
+	CueCards.SaveState(scn);
+
 	Panelsdk.Save(scn);	
 
 	// save the state of the switches
@@ -2000,7 +2005,6 @@ int Saturn::GetAttachState()
 	AttachState state;
 
 	state.CSMAttached = CSMAttached;
-	state.NosecapAttached = NosecapAttached;
 	state.InterstageAttached = InterstageAttached;
 	state.LESAttached = LESAttached;
 	state.HasProbe = HasProbe;
@@ -2020,7 +2024,6 @@ void Saturn::SetAttachState(int s)
 	state.word = s;
 
 	CSMAttached = (state.CSMAttached != 0);
-	NosecapAttached = (state.NosecapAttached != 0);
 	LESAttached = (state.LESAttached != 0);
 	InterstageAttached = (state.InterstageAttached != 0);
 	HasProbe = (state.HasProbe != 0);
@@ -2608,6 +2611,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (!strnicmp(line, UDL_START_STRING, sizeof(UDL_START_STRING))) {
 			udl.LoadState(scn);
+		}
+		else if (!strnicmp(line, CUECARDS_START_STRING, sizeof(CUECARDS_START_STRING))) {
+			CueCards.LoadState(scn);
 		}
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
@@ -3985,26 +3991,6 @@ void Saturn::FireSeperationThrusters(THRUSTER_HANDLE *pth)
 		if (pth[i])
 			SetThrusterLevel(pth[i], 1.0);
 	}
-}
-
-// ==============================================================
-// DLL entry point
-// ==============================================================
-
-BOOL WINAPI DllMain (HINSTANCE hModule,
-					 DWORD ul_reason_for_call,
-					 LPVOID lpReserved)
-{
-	switch (ul_reason_for_call) {
-	case DLL_PROCESS_ATTACH:
-		SetupgParam(hModule);
-		break;
-
-	case DLL_PROCESS_DETACH:
-		DeletegParam();
-		break;
-	}
-	return TRUE;
 }
 
 void Saturn::GenericTimestepStage(double simt, double simdt)

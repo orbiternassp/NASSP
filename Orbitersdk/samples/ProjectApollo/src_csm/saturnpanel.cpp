@@ -672,17 +672,21 @@ void Saturn::InitPanel (int panel)
 	SetSwitches(panel);
 }
 
-int Saturn::GetRenderViewportIsWideScreen() {
+// GetRenderViewportIsWideScreen
+// Return value :
+// 0 = 4:3
+// 1 = 16:10
+// 2 = 16:9
 
-	HMODULE hpac = GetModuleHandle("Modules\\Startup\\ProjectApolloConfigurator.dll");
-	if (hpac) {
-		int (*pacRenderViewportIsWideScreen)();
-		pacRenderViewportIsWideScreen = (int (*)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
-		if (pacRenderViewportIsWideScreen) {
-			return pacRenderViewportIsWideScreen();
-		}
-	}
-	return 0;
+int Saturn::GetRenderViewportIsWideScreen() {
+	unsigned long w, h;
+	oapiGetViewportSize(&w, &h);
+	if (((double)w) / ((double)h) < 1.47)
+		return 0;
+	else if (((double)w) / ((double)h) < 1.69)
+		return 1;
+	else
+		return 2;
 }
 
 bool Saturn::clbkLoadPanel (int id) {
@@ -3558,7 +3562,7 @@ void Saturn::SetSwitches(int panel) {
 	Altimeter.Init(srf[SRF_ALTIMETER], srf[SRF_ALTIMETER2], this);
 }
 
-void SetupgParam(HINSTANCE hModule) {
+DLLCLBK void InitModule(HINSTANCE hModule) {
 
 	g_Param.hDLL = hModule;
 
@@ -3582,7 +3586,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.pen[6] = oapiCreatePen (1, 3, RGB(255, 255, 255));
 }
 
-void DeletegParam() {
+DLLCLBK void ExitModule(HINSTANCE hDll) {
 
 	int i;
 
@@ -5502,11 +5506,11 @@ void Saturn::InitSwitches() {
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 0, 0);
 
 	RCSIndicatorsSwitch.AddPosition(0, 280);
-	RCSIndicatorsSwitch.AddPosition(1, 320);
+	RCSIndicatorsSwitch.AddPosition(1, 310);
 	RCSIndicatorsSwitch.AddPosition(2, 340);
 	RCSIndicatorsSwitch.AddPosition(3, 20);
-	RCSIndicatorsSwitch.AddPosition(4, 40);
-	RCSIndicatorsSwitch.AddPosition(5, 70);
+	RCSIndicatorsSwitch.AddPosition(4, 50);
+	RCSIndicatorsSwitch.AddPosition(5, 80);
 	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 1);
 
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", TOGGLESWITCH_UP, false);
@@ -5803,12 +5807,12 @@ void Saturn::InitSwitches() {
 	DCIndicatorsRotary.SetSource(9, &PyroBusAFeeder);
 	DCIndicatorsRotary.SetSource(10, &PyroBusBFeeder);
 
-	ACIndicatorRotary.AddPosition(0, 290);
-	ACIndicatorRotary.AddPosition(1, 315);
+	ACIndicatorRotary.AddPosition(0, 280);
+	ACIndicatorRotary.AddPosition(1, 310);
 	ACIndicatorRotary.AddPosition(2, 340);
 	ACIndicatorRotary.AddPosition(3, 20);
-	ACIndicatorRotary.AddPosition(4, 45);
-	ACIndicatorRotary.AddPosition(5, 70);
+	ACIndicatorRotary.AddPosition(4, 50);
+	ACIndicatorRotary.AddPosition(5, 80);
 	ACIndicatorRotary.Register(PSH, "ACIndicatorRotary", 5);
 
 	ACIndicatorRotary.SetSource(0, &ACBus1PhaseA);

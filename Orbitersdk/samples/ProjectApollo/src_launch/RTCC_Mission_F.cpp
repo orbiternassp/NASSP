@@ -1204,17 +1204,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 40: //REV 1 MAP UPDATE
 	{
-		SV sv0, sv1, sv2;
+		SV2 sv0, sv1, sv2;
 		AP10MAPUPDATE upd_hyper, upd_ellip;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
-		LunarOrbitMapUpdate(sv0, CalcGETBase(), upd_hyper);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_hyper);
 
-		sv1 = ExecuteManeuver(sv0, CalcGETBase(), TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
-		sv2 = coast(sv1, -30.0*60.0);
-		LunarOrbitMapUpdate(sv2, CalcGETBase(), upd_ellip);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		sv2.sv = coast(sv1.sv, -30.0*60.0);
+		LunarOrbitMapUpdate(sv2.sv, upd_ellip);
 
 		form->Rev = 1;
 		form->AOSGET = upd_ellip.AOSGET;
@@ -1235,11 +1235,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 142: //REV 30 MAP UPDATE
 	case 143: //REV 31 MAP UPDATE
 	{
-		SV sv0, sv1;
+		EphemerisData sv0, sv1;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
+		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		if (fcn == 45)
 		{
@@ -1254,7 +1254,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = sv0;
 		}
 
-		LunarOrbitMapUpdate(sv1, CalcGETBase(), *form);
+		LunarOrbitMapUpdate(sv1, *form);
 
 		if (fcn == 41)
 		{
@@ -1292,16 +1292,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 42: //REV 3 MAP UPDATE
 	{
-		SV sv0, sv1;
+		SV2 sv0, sv1;
 		AP10MAPUPDATE upd_preloi, upd_postloi;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
-		LunarOrbitMapUpdate(sv0, CalcGETBase(), upd_preloi);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_preloi);
 
-		sv1 = ExecuteManeuver(sv0, CalcGETBase(), TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
-		LunarOrbitMapUpdate(sv0, CalcGETBase(), upd_postloi);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		LunarOrbitMapUpdate(sv0.sv, upd_postloi);
 
 		form->Rev = 3;
 		form->AOSGET = upd_postloi.AOSGET;
@@ -1311,16 +1311,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 144: //TEI MAP UPDATE
 	{
-		SV sv0, sv1;
+		SV2 sv0, sv1;
 		AP10MAPUPDATE upd_pretei, upd_posttei;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
-		LunarOrbitMapUpdate(sv0, CalcGETBase(), upd_pretei);
+		sv0 = StateVectorCalc2(calcParams.src);
+		LunarOrbitMapUpdate(sv0.sv, upd_pretei);
 
-		sv1 = ExecuteManeuver(sv0, CalcGETBase(), TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_CSMSPS);
-		LunarOrbitMapUpdate(sv1, CalcGETBase(), upd_posttei);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
+		LunarOrbitMapUpdate(sv1.sv, upd_posttei);
 
 		form->Rev = 32;
 		form->AOSGET = upd_posttei.AOSGET;
@@ -2493,8 +2493,7 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 	LambertMan lamopt, lamopt2;
 	TwoImpulseResuls lamres;
 	double t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
-	VECTOR3 dV_Phasing, dV_Insertion, dV_CDH, DVX;
-	MATRIX3 Q_Xx;
+	VECTOR3 dV_Phasing, dV_Insertion, R_P_CDH1, V_P_CDH1;
 	SV sv_P0, sv_P_CSI, sv_Phasing, sv_Phasing_apo, sv_Insertion, sv_Insertion_apo, sv_CSI, sv_CSI_apo, sv_CDH, sv_CDH_apo, sv_P_CDH;
 
 	t_Phasing = t_TIG;
@@ -2572,13 +2571,11 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 		//CDH Targeting
 		T_P = OrbMech::period(sv_CSI_apo.R, sv_CSI_apo.V, OrbMech::mu_Moon);
 		t_CDH = t_CSI + T_P / 2.0;
-		NSRProgram(sv_CSI_apo, sv_P_CSI, GETbase, 0.0, t_CDH, 0.0, dV_CDH);
 		sv_CDH = coast(sv_CSI_apo, t_CDH - t_CSI);
-		Q_Xx = OrbMech::LVLH_Matrix(sv_CDH.R, sv_CDH.V);
-		DVX = tmul(Q_Xx, dV_CDH);
 		sv_CDH_apo = sv_CDH;
-		sv_CDH_apo.V += DVX;
 		sv_P_CDH = coast(sv_P_CSI, t_CDH - t_CSI);
+		OrbMech::RADUP(sv_P_CDH.R, sv_P_CDH.V, sv_CDH.R, OrbMech::mu_Moon, R_P_CDH1, V_P_CDH1);
+		sv_CDH_apo.V = OrbMech::CoellipticDV(sv_CDH.R, R_P_CDH1, V_P_CDH1, OrbMech::mu_Moon);
 
 		//Find TPI time and recycle
 		dt_TPI = OrbMech::findelev(sv_CDH_apo.R, sv_CDH_apo.V, sv_P_CDH.R, sv_P_CDH.V, sv_CDH_apo.MJD, 26.6*RAD, sv_CDH_apo.gravref);

@@ -96,7 +96,7 @@
       <AssemblerListingLocation>.\Release\LCC/</AssemblerListingLocation>
       <ObjectFileName>.\Release\LCC/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\LCC/</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>../../src_rtccmfd;../../src_sys;../../../../include;../../../../XRSound</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_aux;../../src_rtccmfd;../../src_sys;../../../../include;../../../../XRSound</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -127,7 +127,7 @@
       <AssemblerListingLocation>.\Debug\LCC/</AssemblerListingLocation>
       <ObjectFileName>.\Debug\LCC/</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\LCC/</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>../../src_rtccmfd;../../src_sys;../../../../include;../../../../XRSound</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_aux;../../src_rtccmfd;../../src_sys;../../../../include;../../../../XRSound</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;_DEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -164,6 +164,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_aux\nassputils.h" />
     <ClInclude Include="..\..\src_launch\LCC.h" />
     <ClInclude Include="..\..\src_launch\LCCMFDButtons.h" />
     <ClInclude Include="..\..\src_launch\LCC_MFD.h" />
