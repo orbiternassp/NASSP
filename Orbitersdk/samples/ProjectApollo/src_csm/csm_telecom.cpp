@@ -2888,11 +2888,11 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 				case 12: // S12A
 					switch(ccode){
 						case 1:			// MGA SERVO ERR IN PHASE
-							return(scale_data(0,-2.5,2.5));
+							return(scale_data(sat->imu.getResolverPhaseError().x,-2.5,2.5));
 						case 2:			// IGA SERVO ERR IN PHASE
-							return(scale_data(0,-2.5,2.5));
+							return(scale_data(sat->imu.getResolverPhaseError().y,-2.5,2.5));
 						case 3:			// OGA SERVO ERR IN PHASE
-							return(scale_data(0,-2.5,2.5));
+							return(scale_data(sat->imu.getResolverPhaseError().z,-2.5,2.5));
 						case 4:			// ROLL ATT ERR
 							return(scale_data(sat->eda.GetConditionedRollAttErr(), 0.0, 5.0));
 						case 5:			// SCS PITCH BODY RATE

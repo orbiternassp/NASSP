@@ -452,6 +452,8 @@ void IMU::Timestep(double simdt)
 		// calculate the new gimbal angles
 		VECTOR3 newAngles = getRotationAnglesXZY(t);
 
+		calculatePhase(newAngles);
+
 		// drive gimbals to new angles
 		// CAUTION: gimbal angles are left-handed
 		DriveGimbalX(-newAngles.x - Gimbal.X);
@@ -658,6 +660,39 @@ void IMU::DoZeroIMUGimbals()
 	Gimbal.Y = 0;
 	Gimbal.Z = 0;
 	SetOrbiterAttitudeReference();
+}
+
+void IMU::calculatePhase(const VECTOR3 NewAngles)
+{
+	SineGimbal.x = Gimbal.X - degToRad(50.0);
+	clampTo2pi(SineGimbal.x);
+
+	SineGimbal.y = Gimbal.Y - degToRad(50.0);
+	clampTo2pi(SineGimbal.y);
+
+	SineGimbal.z = Gimbal.Z - degToRad(50.0);
+	clampTo2pi(SineGimbal.z);
+
+	CosineGimbal.x = Gimbal.X + degToRad(130.0);
+	clampTo2pi(CosineGimbal.x);
+
+	CosineGimbal.y = Gimbal.Y + degToRad(130.0);
+	clampTo2pi(CosineGimbal.y);
+
+	CosineGimbal.z = Gimbal.Z + degToRad(130.0);
+	clampTo2pi(CosineGimbal.z);
+
+	ResolverPhaseError.x = (-NewAngles.x - Gimbal.X);
+	ResolverPhaseError.y = (-NewAngles.y - Gimbal.Y);
+	ResolverPhaseError.z = (-NewAngles.z - Gimbal.Z);
+
+	if (ResolverPhaseError.x < -PI) { ResolverPhaseError.x = - (TWO_PI + ResolverPhaseError.x); }
+	if (ResolverPhaseError.y < -PI) { ResolverPhaseError.y = - (TWO_PI + ResolverPhaseError.y); }
+	if (ResolverPhaseError.z < -PI) { ResolverPhaseError.z = - (TWO_PI + ResolverPhaseError.z); }
+
+	ResolverPhaseError.x *= 1000.0;
+	ResolverPhaseError.y *= 1000.0;
+	ResolverPhaseError.z *= 1000.0;
 }
 
 VECTOR3 IMU::GetTotalAttitude() 

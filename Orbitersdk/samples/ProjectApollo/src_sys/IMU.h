@@ -35,7 +35,7 @@
 class IMU {
 
 public:
-	IMU(ApolloGuidance &comp, PanelSDK &p, InertialData &inertialData);
+	IMU(ApolloGuidance& comp, PanelSDK& p, InertialData& inertialData);
 	~IMU();
 
 	const double MERU = 7.292115E-8; //rad/sec
@@ -43,15 +43,16 @@ public:
 	void Init();
 	void ChannelOutput(int address, ChannelValue value);
 	void Timestep(double simdt);
-	void SystemTimestep(double simdt); 
+	void SystemTimestep(double simdt);
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
-	void SetVessel(VESSEL *v, bool LEMFlag);
+	void SetVessel(VESSEL* v, bool LEMFlag);
 	void SetVesselFlag(bool LEMFlag);
 	void SetDriftRates(const MATRIX3 DriftRateMatrix);
 	VECTOR3 GetNBDriftRates();
 	VECTOR3 GetTotalAttitude();
+	inline VECTOR3 getResolverPhaseError() { return ResolverPhaseError; };
 	virtual VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
@@ -103,6 +104,7 @@ protected:
 	void SetOrbiterAttitudeReference();
 	void DoZeroIMUCDUs();
 	void DoZeroIMUGimbals();
+	void calculatePhase(const VECTOR3 NewAngles);
 
 	//
 	// Logging.
@@ -128,6 +130,7 @@ protected:
 	double radToDeg(double angle);
 	double gyroPulsesToRad(int pulses);
 	int radToGyroPulses(double angle);
+	void clampTo2pi(double angle);
 
 	MATRIX3 getNavigationBaseToOrbiterLocalTransformation();
 	MATRIX3 getOrbiterLocalToNavigationBaseTransformation();
@@ -150,6 +153,10 @@ protected:
 		} Gimbal;
 		double Gimbals[3];
 	};
+
+	VECTOR3 SineGimbal;
+	VECTOR3 CosineGimbal;
+	VECTOR3 ResolverPhaseError;
 
 	struct {
 		double X;
