@@ -81,7 +81,6 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GET, SVMJD;
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
-		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(1.0, 0.0, -1.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
@@ -171,7 +170,6 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GET, SVMJD;
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
-		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(0.0, 1.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
@@ -227,7 +225,6 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GET, SVMJD;
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
-		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(1.0, 0.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
