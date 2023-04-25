@@ -3311,7 +3311,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		}
 		else
 		{
-			T1 = TPISearch(lambert->sv_A, lambert->sv_P, lambert->GETbase, lambert->ElevationAngle);
+			T1 = TPISearch(lambert->sv_A, lambert->sv_P, lambert->ElevationAngle);
 		}
 	}
 	else
@@ -5239,12 +5239,13 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	}
 }
 
-double RTCC::FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH)
+double RTCC::FindDH(SV sv_A, SV sv_P, double TIGguess, double DH)
 {
 	SV sv_A1, sv_P1;
-	double dt, dt2, t_A, t_P, SVMJD, c1, c2, dt2_apo, CDHtime_cor;
+	double GETbase, dt, dt2, t_A, t_P, SVMJD, c1, c2, dt2_apo, CDHtime_cor;
 	int n = 0;
 
+	GETbase = CalcGETBase();
 	t_A = OrbMech::GETfromMJD(sv_A.MJD, GETbase);
 	t_P = OrbMech::GETfromMJD(sv_P.MJD, GETbase);
 	sv_A1 = coast(sv_A, TIGguess - t_A);
@@ -5270,7 +5271,7 @@ double RTCC::FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH
 	return CDHtime_cor;
 }
 
-double RTCC::TPISearch(SV sv_A, SV sv_P, double GETbase, double elev)
+double RTCC::TPISearch(SV sv_A, SV sv_P, double elev)
 {
 	SV sv_P1;
 	double dt;
@@ -5278,7 +5279,7 @@ double RTCC::TPISearch(SV sv_A, SV sv_P, double GETbase, double elev)
 	sv_P1 = coast(sv_P, (sv_A.MJD - sv_P.MJD)*24.0*3600.0);
 	dt = OrbMech::findelev(sv_A.R, sv_A.V, sv_P1.R, sv_P1.V, sv_A.MJD, elev, sv_A.gravref);
 
-	return OrbMech::GETfromMJD(sv_A.MJD + dt / 24.0 / 3600.0, GETbase);
+	return OrbMech::GETfromMJD(sv_A.MJD + dt / 24.0 / 3600.0, CalcGETBase());
 }
 
 int RTCC::LunarDescentPlanningProcessor(SV sv)
@@ -6395,11 +6396,13 @@ void RTCC::AGSStateVectorPAD(const AGSSVOpt &opt, AP11AGSSVPAD &pad)
 	}
 }
 
-void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET)
+void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GET)
 {
-	double lat, lng, alt, navcheckdt;
+	double GETbase, lat, lng, alt, navcheckdt;
 	VECTOR3 R1, V1;
 	OBJHANDLE outgrav = NULL;
+
+	GETbase = CalcGETBase();
 	
 	if (GET == 0.0)
 	{
@@ -6429,7 +6432,7 @@ void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
 	bool csm = true;
 	SV sv, sv1;
 
-	SVMJD = opt->GETbase + opt->SVGET / 24.0 / 3600.0;
+	SVMJD = CalcGETBase() + opt->SVGET / 24.0 / 3600.0;
 
 	sv = StateVectorCalc(opt->vessel, SVMJD);
 	sv1 = coast(sv, opt->navcheckGET - opt->SVGET);
@@ -10460,11 +10463,13 @@ PMMDKI_2_1:
 
 void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 {
-	double t_CSI0, e_TPI, t_CSI, eps_TPI, c_TPI, e_TPIo, t_CSIo, p_TPI;
+	double GETbase, t_CSI0, e_TPI, t_CSI, eps_TPI, c_TPI, e_TPIo, t_CSIo, p_TPI;
 	int s_TPI;
 
 	PZDKIT.UpdatingIndicator = true;
 	res.err = 0;
+
+	GETbase = CalcGETBase();
 
 	p_TPI = c_TPI = 0.0;
 	eps_TPI = 1.0;
@@ -10554,20 +10559,20 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 
 		//Calculate TPI and TPF maneuvers
 		double t_TPI, t_TPF;
-		res.err = PCTETR(res.sv_C_apo[1], res.sv_T[1], opt.GETbase, opt.WT, opt.E, t_TPI, t_TPF);
+		res.err = PCTETR(res.sv_C_apo[1], res.sv_T[1], GETbase, opt.WT, opt.E, t_TPI, t_TPF);
 
 		if (res.err == 0)
 		{
 			//Coast to TPI
-			res.sv_C[2] = coast(res.sv_C_apo[1], t_TPI - OrbMech::GETfromMJD(res.sv_C_apo[1].MJD, opt.GETbase));
-			res.sv_T[2] = coast(res.sv_T[1], t_TPI - OrbMech::GETfromMJD(res.sv_T[1].MJD, opt.GETbase));
+			res.sv_C[2] = coast(res.sv_C_apo[1], t_TPI - OrbMech::GETfromMJD(res.sv_C_apo[1].MJD, GETbase));
+			res.sv_T[2] = coast(res.sv_T[1], t_TPI - OrbMech::GETfromMJD(res.sv_T[1].MJD, GETbase));
 
 			//Call two-impulse processor
 			LambertMan lam;
 			TwoImpulseResuls lamres;
 
 			lam.mode = 2;
-			lam.GETbase = opt.GETbase;
+			lam.GETbase = GETbase;
 			lam.T1 = t_TPI;
 			lam.T2 = -1;
 			lam.N = 0;
@@ -10591,8 +10596,8 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 			PZDKIT.Block[0].NumMan++;
 
 			//Coast to TPF
-			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.T2 - OrbMech::GETfromMJD(res.sv_C_apo[2].MJD, opt.GETbase));
-			res.sv_T[3] = coast(res.sv_T[2], lamres.T2 - OrbMech::GETfromMJD(res.sv_T[2].MJD, opt.GETbase));
+			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.T2 - OrbMech::GETfromMJD(res.sv_C_apo[2].MJD, GETbase));
+			res.sv_T[3] = coast(res.sv_T[2], lamres.T2 - OrbMech::GETfromMJD(res.sv_T[2].MJD, GETbase));
 
 			//Save post TPF state vector
 			res.sv_C_apo[3] = res.sv_C[3];
@@ -11052,10 +11057,12 @@ int RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	CELEMENTS elem;
 	MATRIX3 Q_Xx;
 	VECTOR3 R_equ, V_equ, R_TJ, V_TJ, R_AF, R_AFD;
-	double dv_CSI, mu, t_CDH, t_TPI, DH, p_C, c_C, e_C, e_Co, dv_CSIo, V_Cb, V_CRb, gamma_C, V_CHb, a_T, a_C, r_T_dot, r_C_dot, T_TPF;
+	double GETbase, dv_CSI, mu, t_CDH, t_TPI, DH, p_C, c_C, e_C, e_Co, dv_CSIo, V_Cb, V_CRb, gamma_C, V_CHb, a_T, a_C, r_T_dot, r_C_dot, T_TPF;
 	double V_C_apo, gamma_C_apo, V_CHa, DV_H, DV_R, Pitch, Yaw;
 	int s_C, PCMVMR_IND;
 	bool err;
+
+	GETbase = CalcGETBase();
 
 	//Set up variables for the CSI iteration
 	p_C = c_C = 0.0;
@@ -11091,8 +11098,8 @@ int RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	//CSI scheduled?
 	if (opt.t_CSI > 0)
 	{
-		sv_C_CSI = coast(opt.sv_A, opt.t_CSI - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
-		sv_T_CSI = coast(opt.sv_P, opt.t_CSI - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
+		sv_C_CSI = coast(opt.sv_A, opt.t_CSI - OrbMech::GETfromMJD(opt.sv_A.MJD, GETbase));
+		sv_T_CSI = coast(opt.sv_P, opt.t_CSI - OrbMech::GETfromMJD(opt.sv_P.MJD, GETbase));
 
 		//Initial guess for CSI DV from GSOP
 		VECTOR3 H1 = unit(crossp(crossp(sv_C_CSI.R, sv_C_CSI.V), sv_C_CSI.R));
@@ -11101,13 +11108,13 @@ int RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 		//Propagate target to TPI
 		if (opt.K_CDH == 0)
 		{
-			sv_T_TPI = coast(sv_T_CSI, t_TPI - OrbMech::GETfromMJD(sv_T_CSI.MJD, opt.GETbase));
+			sv_T_TPI = coast(sv_T_CSI, t_TPI - OrbMech::GETfromMJD(sv_T_CSI.MJD, GETbase));
 		}
 	}
 	else
 	{
-		sv_C_CDH = coast(opt.sv_A, opt.t_CDH - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
-		sv_T_CDH = coast(opt.sv_P, opt.t_CDH - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
+		sv_C_CDH = coast(opt.sv_A, opt.t_CDH - OrbMech::GETfromMJD(opt.sv_A.MJD, GETbase));
+		sv_T_CDH = coast(opt.sv_P, opt.t_CDH - OrbMech::GETfromMJD(opt.sv_P.MJD, GETbase));
 	}
 
 	//Here we return to the beginning of the loop
@@ -11186,7 +11193,7 @@ RTCC_PMMSPQ_A:
 						break;
 					}
 				} while (opt.N_CDH >= N_CK);
-				t_CDH = OrbMech::GETfromMJD(sv_C_CDH.MJD, opt.GETbase);
+				t_CDH = OrbMech::GETfromMJD(sv_C_CDH.MJD, GETbase);
 			}
 			else
 			{
@@ -11227,14 +11234,14 @@ RTCC_PMMSPQ_A:
 
 				//Propagate to CDH
 				sv_C_CDH = OrbMech::PMMAEGS(sv_C_CSI_apo, 2, u_CDH, err, DN);
-				t_CDH = OrbMech::GETfromMJD(sv_C_CDH.MJD, opt.GETbase);
+				t_CDH = OrbMech::GETfromMJD(sv_C_CDH.MJD, GETbase);
 			}
 		}
 		//CDH on time
 		else if (opt.I_CDH == 2)
 		{
 			t_CDH = opt.t_CDH;
-			sv_C_CDH = coast(sv_C_CSI_apo, t_CDH - OrbMech::GETfromMJD(sv_C_CSI_apo.MJD, opt.GETbase));
+			sv_C_CDH = coast(sv_C_CSI_apo, t_CDH - OrbMech::GETfromMJD(sv_C_CSI_apo.MJD, GETbase));
 		}
 		//CDH at next apsis (Keplerian)
 		else
@@ -11242,7 +11249,7 @@ RTCC_PMMSPQ_A:
 			OELEMENTS coe;
 			double V_R, t_P, t_CSI;
 			
-			t_CSI = OrbMech::GETfromMJD(sv_C_CSI_apo.MJD, opt.GETbase);
+			t_CSI = OrbMech::GETfromMJD(sv_C_CSI_apo.MJD, GETbase);
 			coe = OrbMech::coe_from_sv(sv_C_CSI_apo.R, sv_C_CSI_apo.V, mu);
 			t_P = OrbMech::period(sv_C_CSI_apo.R, sv_C_CSI_apo.V, mu);
 			V_R = dotp(sv_C_CSI_apo.R, sv_C_CSI_apo.V);
@@ -11268,7 +11275,7 @@ RTCC_PMMSPQ_A:
 			}
 			sv_C_CDH = coast(sv_C_CSI_apo, t_CDH - t_CSI);
 		}
-		sv_T_CDH = coast(sv_T_CSI, t_CDH - OrbMech::GETfromMJD(sv_T_CSI.MJD, opt.GETbase));
+		sv_T_CDH = coast(sv_T_CSI, t_CDH - OrbMech::GETfromMJD(sv_T_CSI.MJD, GETbase));
 	}
 
 	//Target to position (phase) match
@@ -11342,7 +11349,7 @@ RTCC_PMMSPQ_A:
 	else
 	{
 		//If iteration on DH was used, get TPI time now
-		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, opt.GETbase, opt.WT, opt.E, t_TPI, T_TPF))
+		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, GETbase, opt.WT, opt.E, t_TPI, T_TPF))
 		{
 			return 94;
 		}
@@ -12484,7 +12491,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	SV sv_I_guess, sv_IG, sv_D, sv_CSM_Ins, sv_LM_Ins, sv_Abort, sv_CAN, sv_CAN_apo, sv_CSM_Abort;
 	MATRIX3 Rot, Q_Xx, REFSMMAT;
 	VECTOR3 U_FDP, WM, WI, W, R_LSP, U_FDP_abort;
-	double t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, t_Ins, TS, theta, r_Ins, A_Ins, H_a, t_CSI, DH_D;
+	double GETbase, t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, t_Ins, TS, theta, r_Ins, A_Ins, H_a, t_CSI, DH_D;
 	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, t_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort;
 	int K_loop;
 	bool K_stage;
@@ -12499,6 +12506,8 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	std::vector<double> A_ins_Table;
 	int i = 0;
 
+	GETbase = CalcGETBase();
+
 	K3 = false;
 	w_M = 2.66169948e-6;
 	t_UL = 7.9;
@@ -12509,21 +12518,20 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	dt_CSI = opt.dt_CSI;
 	dt_CAN = opt.dt_CAN;
 	conopt.E = 26.6*RAD;
-	conopt.GETbase = opt.GETbase;
 	conopt.K_CDH = 0;
 	conopt.t_TPI = opt.t_TPI;
 
 	res.R_amin = length(opt.R_LS) + opt.h_amin;
 
 	dt_abort = opt.dt_step;
-	sv_I_guess = coast(opt.sv_A, opt.TLAND - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
-	if (!PDIIgnitionAlgorithm(sv_I_guess, opt.GETbase, opt.R_LS, opt.TLAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
+	sv_I_guess = coast(opt.sv_A, opt.TLAND - OrbMech::GETfromMJD(opt.sv_A.MJD, GETbase));
+	if (!PDIIgnitionAlgorithm(sv_I_guess, GETbase, opt.R_LS, opt.TLAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
 	{
 		return false;
 	}
 	t_go = -t_go;
 	t_go_abort = t_go;
-	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, opt.GETbase);
+	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, GETbase);
 	t_D = t_PDI - t_UL;
 	sv_Abort = coast(sv_IG, -t_UL);
 	t_stage = t_PDI + opt.dt_stage;
@@ -12575,7 +12583,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 		U_FDP_abort = U_FDP;
 		t_go_abort = t_go;
 
-		sv_CSM_Abort = coast(opt.sv_P, t_D - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
+		sv_CSM_Abort = coast(opt.sv_P, t_D - OrbMech::GETfromMJD(opt.sv_P.MJD, GETbase));
 		WM = unit(crossp(sv_CSM_Abort.V, sv_CSM_Abort.R));
 		TS = dotp(crossp(unit(sv_CSM_Abort.R), unit(sv_Abort.R)), WM);
 		theta_D = OrbMech::sign(TS)*acos(dotp(unit(sv_CSM_Abort.R), unit(sv_Abort.R)));
@@ -12619,13 +12627,13 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			t_Ins = t;
 			sv_LM_Ins = sv_D;
 			sv_LM_Ins.mass = W_TA;
-			sv_LM_Ins.MJD = OrbMech::MJDfromGET(t_Ins, opt.GETbase);
+			sv_LM_Ins.MJD = OrbMech::MJDfromGET(t_Ins, GETbase);
 
 			//Overwrite actual insertion velocity with desired one; gives more consistent results
 			Q_Xx = OrbMech::LVLH_Matrix(sv_LM_Ins.R, sv_LM_Ins.V);
 			sv_LM_Ins.V = tmul(Q_Xx, _V(Z_D_dot, 0, -R_D_dot));
 
-			sv_CSM_Ins = coast(opt.sv_P, t_Ins - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
+			sv_CSM_Ins = coast(opt.sv_P, t_Ins - OrbMech::GETfromMJD(opt.sv_P.MJD, GETbase));
 			WM = unit(crossp(sv_CSM_Ins.V, sv_CSM_Ins.R));
 			TS = dotp(crossp(unit(sv_CSM_Ins.R), unit(sv_LM_Ins.R)), WM);
 			theta = OrbMech::sign(TS)*acos(dotp(unit(sv_CSM_Ins.R), unit(sv_LM_Ins.R)));

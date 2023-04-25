@@ -888,14 +888,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		MATRIX3 REFSMMAT;
 		EphemerisData sv0, sv_uplink;
-		double GETbase;
 
 		AP7NAV * form = (AP7NAV *)pad;
 
 		sv0 = StateVectorCalcEphem(calcParams.src);
 		med_m50.CSMWT = calcParams.src->GetMass();
 		med_m50.LMWT = calcParams.tgt->GetMass();
-		GETbase = CalcGETBase();
 		REFSMMAT = EZJGMTX3.data[0].REFSMMAT;
 
 		//Generate state vector for uplink
@@ -909,7 +907,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AGCStateVectorUpdate(buffer2, 2, RTCC_MPT_LM, sv_uplink);
 		AGCREFSMMATUpdate(buffer3, REFSMMAT, false);
 
-		NavCheckPAD(ConvertEphemDatatoSV(sv_uplink), *form, GETbase, 92.0*3600.0);
+		NavCheckPAD(ConvertEphemDatatoSV(sv_uplink), *form, 92.0*3600.0);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 		if (upString != NULL) {
@@ -1072,7 +1070,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		TIG = calcParams.Insertion;
 
-		opt.GETbase = GETbase;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.t_CSI = -1;
@@ -1110,7 +1107,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_P = StateVectorCalc(calcParams.src);
 
 		opt.E = 27.5*RAD;
-		opt.GETbase = GETbase;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.K_CDH = 0;
@@ -1160,7 +1156,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			calcParams.CDH = T_CDH;
 		}
 
-		opt.GETbase = GETbase;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.t_CSI = -1;

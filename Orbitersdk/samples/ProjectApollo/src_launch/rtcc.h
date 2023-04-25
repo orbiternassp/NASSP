@@ -349,7 +349,6 @@ struct AP10CSIPADOpt
 
 struct AP7TPIPADOpt
 {
-	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	EphemerisData sv_A;
@@ -573,7 +572,6 @@ struct TLIPADOpt
 struct P27Opt
 {
 	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
 	double SVGET; //GET of the state vector
 	double navcheckGET; //GET of the Nav Check
 };
@@ -862,7 +860,6 @@ struct SPQOpt //Coelliptic Sequence Processor
 {
 	SV sv_A;
 	SV sv_P;
-	double GETbase;
 	//Time of CSI maneuver (<= 0 if not scheduled)
 	double t_CSI;
 	//Time of CDH maneuver
@@ -900,7 +897,6 @@ struct PDAPOpt //Powered Descent Abort Program
 {
 	SV sv_A;
 	SV sv_P;
-	double GETbase;
 	double TLAND;
 	MATRIX3 REFSMMAT;
 	VECTOR3 R_LS;
@@ -2432,8 +2428,8 @@ public:
 	//Two-Impulse Single Solution
 	void PMMTISS();
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
-	double TPISearch(SV sv_A, SV sv_P, double GETbase, double elev);
-	double FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH);
+	double TPISearch(SV sv_A, SV sv_P, double elev);
+	double FindDH(SV sv_A, SV sv_P, double TIGguess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
@@ -2444,7 +2440,7 @@ public:
 	int DetermineSVBody(EphemerisData2 sv);
 	void RotateSVToSOI(EphemerisData &sv);
 	EphemerisData RotateSVToSOI(EphemerisData2 sv);
-	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
+	void NavCheckPAD(SV sv, AP7NAV &pad, double GET = 0.0);
 	void AGSStateVectorPAD(const AGSSVOpt &opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);

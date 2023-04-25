@@ -1519,7 +1519,7 @@ void ARCore::NavCheckPAD()
 
 	sv = GC->rtcc->StateVectorCalc(vessel);
 
-	GC->rtcc->NavCheckPAD(sv, navcheckpad, GC->rtcc->CalcGETBase(), navcheckpad.NavChk[0]);
+	GC->rtcc->NavCheckPAD(sv, navcheckpad, navcheckpad.NavChk[0]);
 }
 
 void ARCore::UpdateTLITargetTable()
@@ -2675,7 +2675,6 @@ int ARCore::subThread()
 
 		opt.DH = GC->rtcc->GZGENCSN.SPQDeltaH;
 		opt.E = GC->rtcc->GZGENCSN.SPQElevationAngle;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.WT = GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle;
@@ -2718,7 +2717,7 @@ int ARCore::subThread()
 			}
 			else
 			{
-				opt.t_CDH = GC->rtcc->FindDH(sv_A, sv_P, GC->rtcc->CalcGETBase(), CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
+				opt.t_CDH = GC->rtcc->FindDH(sv_A, sv_P, CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
 			}
 		}
 		opt.t_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue;
@@ -2999,7 +2998,6 @@ int ARCore::subThread()
 		AP7TPIPADOpt opt;
 
 		opt.dV_LVLH = dV_LVLH;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.TIG = P30TIG;
 		opt.sv_A = GC->rtcc->StateVectorCalcEphem(vessel);
 		opt.sv_P = GC->rtcc->StateVectorCalcEphem(target);
@@ -3748,7 +3746,6 @@ int ARCore::subThread()
 
 		}
 
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.IsTwoSegment = GC->mission > 11;
 		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);

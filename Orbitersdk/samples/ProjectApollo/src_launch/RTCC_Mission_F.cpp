@@ -1893,7 +1893,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		coeopt.DH = -15.0*1852.0;
 		coeopt.E = 208.3*RAD;
-		coeopt.GETbase = GETbase;
 		coeopt.sv_A = sv_Ins;
 		coeopt.sv_P = sv_LM;
 		coeopt.K_CDH = 1;
@@ -2006,7 +2005,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.DH = 15.0*1852.0;
 		opt.E = 26.6*RAD;
-		opt.GETbase = GETbase;
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
 		opt.K_CDH = 0;
