@@ -1159,7 +1159,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dV_LVLH = res.dV_CDH;
 
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.GETbase = GETbase;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		manopt.sv_A = sv_A;
 		manopt.TIG = calcParams.CDH;
@@ -1776,7 +1775,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv0 = StateVectorCalc(calcParams.src);
 
-		opt.GETbase = CalcGETBase();
 		opt.sv0 = sv0;
 
 		if (fcn == 51)

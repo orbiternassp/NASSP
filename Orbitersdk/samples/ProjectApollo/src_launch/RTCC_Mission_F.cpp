@@ -183,7 +183,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv1.V = PZMPTCSM.mantable[1].V_BO;
 
 		entopt.entrylongmanual = true;
-		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.TIGguess = TIG;
 		entopt.t_Z = OrbMech::HHMMSSToSS(13.0, 0.0, 0.0);
@@ -1329,7 +1328,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv0 = StateVectorCalc(calcParams.src);
 
-		opt.GETbase = CalcGETBase();
 		opt.sv0 = sv0;
 
 		if (fcn == 50)
@@ -2135,7 +2133,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		entopt.entrylongmanual = true;
-		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -165.0*RAD;
 		entopt.RV_MCC = sv;
@@ -2189,7 +2186,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (scrubbed)
 		{
 			//Entry prediction without maneuver
-			EntryUpdateCalc(sv, entopt.GETbase, 1285.0, true, &res);
+			EntryUpdateCalc(sv, 1285.0, true, &res);
 
 			res.dV_LVLH = _V(0, 0, 0);
 			res.P30TIG = entopt.TIGguess;

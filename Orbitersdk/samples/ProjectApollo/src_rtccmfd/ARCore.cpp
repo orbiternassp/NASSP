@@ -866,7 +866,7 @@ void ARCore::EntryUpdateCalc()
 	EntryResults res;
 
 	sv0 = GC->rtcc->StateVectorCalc(vessel);
-	GC->rtcc->EntryUpdateCalc(sv0, GC->rtcc->CalcGETBase(), entryrange, true, &res);
+	GC->rtcc->EntryUpdateCalc(sv0, entryrange, true, &res);
 
 	EntryLatcor = res.latitude;
 	EntryLngcor = res.longitude;
@@ -3419,7 +3419,6 @@ int ARCore::subThread()
 		}
 
 		opt.direct = true;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.HeadsUp = HeadsUp;
 		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
@@ -3683,7 +3682,6 @@ int ARCore::subThread()
 		vessel->GetRotationMatrix(Rot);
 		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
 
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_CSM = sv_CSM;
@@ -4091,7 +4089,6 @@ int ARCore::subThread()
 			sv0 = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.lat[0] = LmkLat;
 		opt.LmkTime[0] = LmkTime;
 		opt.lng[0] = LmkLng;

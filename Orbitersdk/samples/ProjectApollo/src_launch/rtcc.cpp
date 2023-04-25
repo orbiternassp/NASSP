@@ -1987,7 +1987,6 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 	v_e = SystemParameters.MCTST1 / SystemParameters.MCTSW1;
 
 	entopt.vessel = calcParams.src;
-	entopt.GETbase = CalcGETBase();
 	entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 	entopt.nominal = true;
 	entopt.ReA = 0;
@@ -2025,7 +2024,6 @@ void RTCC::AP11BlockData(AP11BLKOpt *opt, P37PAD &pad)
 	EntryResults res;
 
 	entopt.entrylongmanual = true;
-	entopt.GETbase = CalcGETBase();
 	entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 	entopt.type = 1;
 	entopt.vessel = calcParams.src;
@@ -2057,10 +2055,11 @@ void RTCC::AP11BlockData(AP11BLKOpt *opt, P37PAD &pad)
 void RTCC::BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res)
 {
 	EarthEntry* entry;
-	double GET;
+	double GETbase, GET;
 	bool stop;
 	SV sv;
 
+	GETbase = CalcGETBase();
 	stop = false;
 
 	if (opt->useSV)
@@ -2071,9 +2070,9 @@ void RTCC::BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res)
 	{
 		sv = StateVectorCalc(opt->vessel);
 	}
-	GET = (sv.MJD - opt->GETbase)*24.0*3600.0;
+	GET = (sv.MJD - GETbase)*24.0*3600.0;
 
-	entry = new EarthEntry(sv.R, sv.V, sv.MJD, sv.gravref, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->nominal, opt->entrylongmanual);
+	entry = new EarthEntry(sv.R, sv.V, sv.MJD, sv.gravref, GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->nominal, opt->entrylongmanual);
 
 	while (!stop)
 	{
@@ -2115,7 +2114,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	stop = false;
 
 	sv = opt->RV_MCC;
-	GET = (sv.MJD - opt->GETbase)*24.0*3600.0;
+	GET = (sv.MJD - CalcGETBase())*24.0*3600.0;
 
 	if (opt->entrylongmanual)
 	{
@@ -4312,7 +4311,7 @@ void RTCC::AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad)
 	MATRIX3 Rot1, M;
 	VECTOR3 IMUangles, FDAIangles, V_G;
 
-	sv_A1 = coast(opt->sv_A, opt->TIG - OrbMech::GETfromMJD(opt->sv_A.MJD, opt->GETbase));
+	sv_A1 = coast(opt->sv_A, opt->TIG - OrbMech::GETfromMJD(opt->sv_A.MJD, CalcGETBase()));
 	Rot1 = OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V);
 	V_G = tmul(Rot1, opt->dV_LVLH);
 
@@ -5698,7 +5697,9 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 	SV sv1, sv2, sv_I;
 	MATRIX3 REFSMMAT;
 	VECTOR3 U_FDP;
-	double C_R, TTT, t_IG;
+	double GETbase, C_R, TTT, t_IG;
+
+	GETbase = CalcGETBase();
 
 	if (opt->direct)
 	{
@@ -5706,15 +5707,15 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 	}
 	else
 	{
-		sv2 = ExecuteManeuver(opt->sv0, opt->GETbase, opt->P30TIG, opt->dV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
+		sv2 = ExecuteManeuver(opt->sv0, GETbase, opt->P30TIG, opt->dV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
 	}
 
-	if (!PDIIgnitionAlgorithm(sv2, opt->GETbase, opt->R_LS, opt->t_land, sv_I, TTT, C_R, U_FDP, REFSMMAT))
+	if (!PDIIgnitionAlgorithm(sv2, GETbase, opt->R_LS, opt->t_land, sv_I, TTT, C_R, U_FDP, REFSMMAT))
 	{
 		return false;
 	}
 
-	t_IG = OrbMech::GETfromMJD(sv_I.MJD, opt->GETbase);
+	t_IG = OrbMech::GETfromMJD(sv_I.MJD, GETbase);
 
 	VECTOR3 X_B, UX, UY, UZ, IMUangles, FDAIangles;
 	MATRIX3 M, M_R;
@@ -5783,10 +5784,11 @@ void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 	SV sv_Ins, sv_CSM_TIG;
 	MATRIX3 Rot_LG, Rot_VG;
 	VECTOR3 R_LSP, Q, U_R, Z_B, X_AGS, Y_AGS, Z_AGS;
-	double CR, MJD_TIG, SMa, R_D, delta_L, sin_DL, cos_DL;
+	double GETbase, CR, MJD_TIG, SMa, R_D, delta_L, sin_DL, cos_DL;
 
-	MJD_TIG = OrbMech::MJDfromGET(opt.TIG, opt.GETbase);
-	sv_CSM_TIG = coast(opt.sv_CSM, opt.TIG - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
+	GETbase = CalcGETBase();
+	MJD_TIG = OrbMech::MJDfromGET(opt.TIG, GETbase);
+	sv_CSM_TIG = coast(opt.sv_CSM, opt.TIG - OrbMech::GETfromMJD(opt.sv_CSM.MJD, GETbase));
 
 	ELVCNV(opt.R_LS, GMTfromGET(opt.TIG), 1, 3, 2, R_LSP);
 
@@ -7193,15 +7195,13 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 {
 	SV sv1;
 	VECTOR3 R_P, u;
-	double dt1, dt2, MJDguess, sinl, gamma, r_0, LmkRange;
-	OBJHANDLE hEarth, hMoon;
+	double GETbase, dt1, dt2, MJDguess, sinl, gamma, r_0, LmkRange;
 
-	hEarth = oapiGetObjectByName("Earth");
-	hMoon = oapiGetObjectByName("Moon");
+	GETbase = CalcGETBase();
 
 	for (int i = 0;i < opt->entries;i++)
 	{
-		MJDguess = opt->GETbase + opt->LmkTime[i] / 24.0 / 3600.0;
+		MJDguess = GETbase + opt->LmkTime[i] / 24.0 / 3600.0;
 		sv1 = coast(opt->sv0, (MJDguess - opt->sv0.MJD)*24.0*3600.0);
 
 		R_P = unit(_V(cos(opt->lng[i])*cos(opt->lat[i]), sin(opt->lng[i])*cos(opt->lat[i]), sin(opt->lat[i])))*(oapiGetSize(sv1.gravref) + opt->alt[i]);
@@ -7209,8 +7209,8 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 		dt1 = OrbMech::findelev_gs(sv1.R, sv1.V, R_P, MJDguess, 180.0*RAD, sv1.gravref, LmkRange);
 		dt2 = OrbMech::findelev_gs(sv1.R, sv1.V, R_P, MJDguess, 145.0*RAD, sv1.gravref, LmkRange);
 
-		pad.T1[i] = dt1 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
-		pad.T2[i] = dt2 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
+		pad.T1[i] = dt1 + (MJDguess - GETbase) * 24.0 * 60.0 * 60.0;
+		pad.T2[i] = dt2 + (MJDguess - GETbase) * 24.0 * 60.0 * 60.0;
 
 		u = unit(R_P);
 		sinl = u.z;
@@ -9283,7 +9283,7 @@ RTCC_PMMLLWP_22_19:
 	}
 }
 
-void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res)
+void RTCC::EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res)
 {
 	OBJHANDLE hEarth;
 	VECTOR3 REI, VEI, UREI, R3, V3, R05G, V05G;
@@ -9304,7 +9304,7 @@ void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highs
 
 	dt2 = OrbMech::time_radius_integ(sv0.R, sv0.V, sv0.MJD, RCON, -1, sv0.gravref, hEarth, REI, VEI);
 	MJD_EI = sv0.MJD + dt2 / 24.0 / 3600.0;
-	t2 = (sv0.MJD - GETbase) * 24.0 * 3600.0 + dt2;	//EI time in seconds from launch
+	t2 = (sv0.MJD - CalcGETBase()) * 24.0 * 3600.0 + dt2;	//EI time in seconds from launch
 
 	UREI = unit(REI);
 	vEI = length(VEI);

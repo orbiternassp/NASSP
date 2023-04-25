@@ -188,7 +188,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv2 = coast(sv1, TLIplus);
 
 		entopt.entrylongmanual = true;
-		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.TIGguess = calcParams.TLI + TLIplus;//(TIGMJD - GETbase)*24.0*3600.0 + TLIplus;
 		entopt.type = 1;
@@ -328,7 +327,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv0 = StateVectorCalc(calcParams.src);
 
 		entopt.entrylongmanual = true;
-		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -165.0*RAD;
 		entopt.RV_MCC = sv0;
@@ -1355,7 +1353,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		entopt.entrylongmanual = true;
-		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -165.0*RAD;
 		entopt.RV_MCC = sv;
@@ -1397,7 +1394,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(upMessage, "%s has been scrubbed.", manname);
 
 			//Entry prediction without maneuver
-			EntryUpdateCalc(sv, entopt.GETbase, 1350.0, true, &res);
+			EntryUpdateCalc(sv, 1350.0, true, &res);
 
 			res.dV_LVLH = _V(0, 0, 0);
 			res.P30TIG = entopt.TIGguess;

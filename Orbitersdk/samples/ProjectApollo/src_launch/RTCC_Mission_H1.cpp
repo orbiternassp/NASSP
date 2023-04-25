@@ -321,7 +321,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		sv1.V = PZMPTCSM.mantable[1].V_BO;
 
 		entopt.entrylongmanual = false;
-		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.TIGguess = TIG;
 		entopt.t_Z = OrbMech::HHMMSSToSS(16.0, 46.0, 0.0);
@@ -378,7 +377,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		entopt.entrylongmanual = false;
 		entopt.ATPLine = 0; //MPL
-		entopt.GETbase = CalcGETBase();
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.type = 1;
 		entopt.vessel = calcParams.src;
@@ -457,7 +455,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		entopt.entrylongmanual = false;
 		entopt.ATPLine = 0; //MPL
-		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.type = 1;
 		entopt.vessel = calcParams.src;
@@ -1776,7 +1773,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		sv0 = StateVectorCalc(calcParams.src);
 
-		opt.GETbase = CalcGETBase();
 		opt.sv0 = sv0;
 
 		GET_SV = OrbMech::GETfromMJD(sv0.MJD, CalcGETBase());
@@ -1952,10 +1948,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		PDIPADOpt opt;
 		SV sv;
-		double GETbase;
 
 		sv = StateVectorCalc(calcParams.tgt);
-		GETbase = CalcGETBase();
 
 		if (mcc->MoonRev >= 14)
 		{
@@ -1967,7 +1961,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			opt.dV_LVLH = DeltaV_LVLH;
 			opt.P30TIG = TimeofIgnition;
 		}
-		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
@@ -3053,7 +3046,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		entopt.entrylongmanual = false;
 		entopt.ATPLine = 0; //MPL
-		entopt.GETbase = GETbase;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
@@ -3123,7 +3115,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 				if (scrubbed)
 				{
 					//Entry prediction without maneuver
-					EntryUpdateCalc(sv, entopt.GETbase, 1250.0, true, &res);
+					EntryUpdateCalc(sv, 1250.0, true, &res);
 
 					res.dV_LVLH = _V(0, 0, 0);
 					res.P30TIG = entopt.TIGguess;

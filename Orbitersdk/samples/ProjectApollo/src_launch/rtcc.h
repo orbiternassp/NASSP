@@ -366,7 +366,6 @@ struct AP9LMTPIPADOpt
 struct AP9LMCDHPADOpt
 {
 	SV sv_A; //Chaser state vector
-	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	MATRIX3 REFSMMAT;	//REFSMMAT
@@ -375,7 +374,6 @@ struct AP9LMCDHPADOpt
 struct EarthEntryOpt
 {
 	VESSEL* vessel; //Reentry vessel
-	double GETbase; //usually MJD at launch
 	double TIGguess; //Initial estimate for the TIG
 	double ReA = 0; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
 	double lng; //Longitude of the desired splashdown coordinates
@@ -390,7 +388,6 @@ struct EarthEntryOpt
 struct EntryOpt
 {
 	VESSEL* vessel; //Reentry vessel
-	double GETbase; //usually MJD at launch
 	double TIGguess; //Initial estimate for the TIG or baseline TIG for abort and MCC maneuvers
 	int type; //Type of reentry maneuver (1 = ATP, 2 = TCUA, 3 = FCUA)
 	double lng; //Longitude of the desired splashdown coordinates
@@ -693,7 +690,6 @@ struct LunarLaunchTargetingTable
 struct PDIPADOpt
 {
 	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
 	double P30TIG; //Time of Ignition (MCC)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
 	MATRIX3 REFSMMAT;
@@ -706,7 +702,6 @@ struct PDIPADOpt
 
 struct ASCPADOpt
 {
-	double GETbase;
 	VECTOR3 R_LS;
 	double TIG;
 	double v_LH;
@@ -718,7 +713,6 @@ struct ASCPADOpt
 struct LMARKTRKPADOpt
 {
 	SV sv0; //Input state vector
-	double GETbase; //usually MJD at launch
 	double LmkTime[4]; //initial guess for time over landmark
 	double lat[4];		//landmark latitude
 	double lng[4];		//landmark longitude
@@ -1011,7 +1005,6 @@ struct FIDOOrbitDigitals
 struct FIDOOrbitDigitalsOpt
 {
 	SV sv_A;
-	double GETbase;
 	double MJD;		//MJD to update the state vector to (only used in continuous update)
 };
 
@@ -1094,7 +1087,6 @@ struct SpaceDigitals
 struct SpaceDigitalsOpt
 {
 	SV sv_A;
-	double GETbase;
 	double LSLat;
 	double LSLng;
 	double LSAzi;
@@ -2476,7 +2468,7 @@ public:
 	bool LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargetingTable &res);
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv);
-	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
+	void EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	//Velocity maneuver performer
 	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
