@@ -696,7 +696,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		PMMMPTInput in;
 		SPQResults res;
-		double P30TIG, GETbase;
+		double P30TIG;
 		VECTOR3 dV_LVLH;
 		SV sv_A, sv_P;
 		char buffer1[1000];
@@ -706,7 +706,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
 		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
-		GETbase = CalcGETBase();
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -752,8 +751,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "NSR");
 		sprintf(form->remarks, "heads down, retrograde");
 
-		AGCStateVectorUpdate(buffer1, sv_A, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv_P, false, GETbase);
+		AGCStateVectorUpdate(buffer1, sv_A, true);
+		AGCStateVectorUpdate(buffer2, sv_P, false);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -1139,14 +1138,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
-		double t_burn, F, m, dv, GETbase, P30TIG;
+		double t_burn, F, m, dv, P30TIG;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = CalcGETBase();
 		F = SystemParameters.MCTST1;
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
@@ -1204,7 +1202,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		sprintf(form->remarks, "20 seconds, 2-jet ullage, quads B/D");
 
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, true);
 		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -1864,13 +1862,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 50: //GENERIC CSM STATE VECTOR UPDATE
 	{
 		SV sv;
-		double GETbase;
 		char buffer1[1000];
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		GETbase = CalcGETBase();
 
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1883,16 +1879,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 51: //GENERIC CSM AND TARGET STATE VECTOR UPDATE
 	{
 		SV sv_A, sv_P;
-		double GETbase;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
-		GETbase = CalcGETBase();
 
-		AGCStateVectorUpdate(buffer1, sv_A, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv_P, false, GETbase);
+		AGCStateVectorUpdate(buffer1, sv_A, true);
+		AGCStateVectorUpdate(buffer2, sv_P, false);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -1907,14 +1901,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv;
-		double GETbase;
 		char buffer1[1000];
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		NavCheckPAD(sv, *form, GETbase);
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		NavCheckPAD(sv, *form);
+		AGCStateVectorUpdate(buffer1, sv, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1929,18 +1921,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv_A, sv_P;
-		double GETbase;
 		char buffer1[1000];
 		char buffer2[1000];
-
-		GETbase = CalcGETBase();
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
 
-		NavCheckPAD(sv_A, *form, GETbase);
-		AGCStateVectorUpdate(buffer1, sv_A, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv_P, false, GETbase);
+		NavCheckPAD(sv_A, *form);
+		AGCStateVectorUpdate(buffer1, sv_A, true);
+		AGCStateVectorUpdate(buffer2, sv_P, false);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -1967,15 +1956,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv;
-		double GETbase;
 		char buffer1[1000], buffer2[1000];
 		int emem[5];
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		NavCheckPAD(sv, *form, GETbase);
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		NavCheckPAD(sv, *form);
+		AGCStateVectorUpdate(buffer1, sv, true);
 
 		//W-Matrix update
 		emem[0] = 5;	//Size

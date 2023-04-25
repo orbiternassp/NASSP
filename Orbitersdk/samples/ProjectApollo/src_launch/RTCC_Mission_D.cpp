@@ -62,14 +62,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv;
-		double GETbase;
 		char buffer1[1000];
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		NavCheckPAD(sv, *form, GETbase);
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		NavCheckPAD(sv, *form);
+		AGCStateVectorUpdate(buffer1, sv, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -82,16 +80,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 3: //GENERIC CSM AND LM STATE VECTOR UPDATE
 	{
 		SV sv_CSM, sv_LM;
-		double GETbase;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
-		GETbase = CalcGETBase();
 
-		AGCStateVectorUpdate(buffer1, sv_CSM, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv_LM, false, GETbase);
+		AGCStateVectorUpdate(buffer1, sv_CSM, true);
+		AGCStateVectorUpdate(buffer2, sv_LM, false);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -104,13 +100,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 4: //GENERIC LM STATE VECTOR UPDATE
 	{
 		SV sv;
-		double GETbase;
 		char buffer1[1000];
 
 		sv = StateVectorCalc(calcParams.tgt); //State vector for uplink
-		GETbase = CalcGETBase();
 
-		AGCStateVectorUpdate(buffer1, sv, false, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, false);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1094,9 +1088,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv_A, sv_P, sv_CSI;
 		MATRIX3 Q_Xx;
 		VECTOR3 dV_LVLH;
-		double GETbase;
 
-		GETbase = CalcGETBase();
 		sv_A = StateVectorCalc(calcParams.tgt);
 		sv_P = StateVectorCalc(calcParams.src);
 
@@ -1108,7 +1100,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_TPI = calcParams.TPI;
 
 		ConcentricRendezvousProcessor(opt, res);
-		sv_CSI = coast(sv_A, opt.t_CSI - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
+		sv_CSI = coast(sv_A, opt.t_CSI - OrbMech::GETfromMJD(sv_A.MJD, CalcGETBase()));
 		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
 		dV_LVLH = res.dV_CSI;
 
@@ -1131,9 +1123,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SPQResults res;
 		SV sv_A, sv_P, sv_CDH;
 		VECTOR3 dV_LVLH;
-		double GETbase, T_CDH;
+		double T_CDH;
 
-		GETbase = CalcGETBase();
 		sv_A = StateVectorCalc(calcParams.tgt);
 		sv_P = StateVectorCalc(calcParams.src);
 
@@ -1155,7 +1146,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_CDH = calcParams.CDH;
 
 		ConcentricRendezvousProcessor(opt, res);
-		sv_CDH = coast(sv_A, opt.t_CDH - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
+		sv_CDH = coast(sv_A, opt.t_CDH - OrbMech::GETfromMJD(sv_A.MJD, CalcGETBase()));
 		dV_LVLH = res.dV_CDH;
 
 		manopt.dV_LVLH = dV_LVLH;
@@ -1236,10 +1227,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMPOpt gmpopt;
 		SV sv0;
 		VECTOR3 dV_LVLH, dV_imp;
-		double GETbase, P30TIG, TIG_imp;
+		double P30TIG, TIG_imp;
 		char buffer1[1000];
 
-		GETbase = CalcGETBase();
 		sv0 = StateVectorCalc(calcParams.tgt);
 
 		gmpopt.dV = 7427.5*0.3048;
@@ -1268,7 +1258,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "APS Depletion");
 		sprintf(form->remarks, "LM weight is %.0f", dappad.ThisVehicleWeight);
 
-		AGCStateVectorUpdate(buffer1, sv0, false, GETbase);
+		AGCStateVectorUpdate(buffer1, sv0, false);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1753,7 +1743,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(buff, t_align);
 		sprintf(form->paddata, "T Align is %s GET", buff);
 
-		AGCStateVectorUpdate(buffer1, sv0, true, GETbase, true);
+		AGCStateVectorUpdate(buffer1, sv0, true, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1969,12 +1959,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		SV sv0, sv1;
 		char buff[64];
-		double t_align, dt, GETbase, GET_AOS, GET_LOS;
+		double t_align, dt, GET_AOS, GET_LOS;
 		char buffer1[1000];
 
 		sv0 = StateVectorCalc(calcParams.src);
-		GETbase = CalcGETBase();
-		dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+		dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase());
 		sv1 = coast(sv0, dt);
 
 		//Northern Mexico
@@ -1984,7 +1973,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(buff, t_align);
 		sprintf(form->paddata, "T Align is %s GET", buff);
 
-		AGCStateVectorUpdate(buffer1, sv0, true, GETbase, true);
+		AGCStateVectorUpdate(buffer1, sv0, true, true);
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
 			// give to mcc
@@ -2037,11 +2026,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		SV sv0, sv1;
 		char buff[64];
-		double t_align, t_guess, GETbase;
+		double t_align, t_guess;
 		char buffer1[1000];
 
 		sv0 = StateVectorCalc(calcParams.src);
-		GETbase = CalcGETBase();
 		t_guess = OrbMech::HHMMSSToSS(214, 21, 0);
 
 		t_align = FindOrbitalSunrise(sv0, t_guess);
@@ -2049,7 +2037,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(buff, t_align);
 		sprintf(form->paddata, "T Align is %s GET", buff);
 
-		AGCStateVectorUpdate(buffer1, sv0, true, GETbase, true);
+		AGCStateVectorUpdate(buffer1, sv0, true, true);
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
 			// give to mcc
@@ -2257,12 +2245,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		MATRIX3 REFSMMAT;
 		SV sv0, sv1;
-		double GETbase, dt, GET_AOS, GET_LOS, GET_AOS_HAW, GET_LOS_HAW;
+		double dt, GET_AOS, GET_LOS, GET_AOS_HAW, GET_LOS_HAW;
 
 		sv0 = StateVectorCalc(calcParams.src);
-		GETbase = CalcGETBase();
 
-		dt = OrbMech::HHMMSSToSS(193, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+		dt = OrbMech::HHMMSSToSS(193, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase());
 		sv1 = coast(sv0, dt);
 
 		//Carnarvon
@@ -2304,9 +2291,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 void RTCC::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
 {
 	SV sv2;
-	double GETbase;
-
-	GETbase = CalcGETBase();
 
 	//Step 1: Find TPI0 time (25 minutes before sunrise)
 	double TPI0_guess, TPI0_sunrise_guess, TPI0_sunrise, dt_sunrise;
@@ -2327,7 +2311,7 @@ void RTCC::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
 	lat_TAN = groundstations[13][0];
 	lng_TAN = groundstations[13][1];
 	CSI_guess = calcParams.Insertion + 40.0*60.0;
-	sv2 = coast(sv_A0, CSI_guess - OrbMech::GETfromMJD(sv_A0.MJD, GETbase));
+	sv2 = coast(sv_A0, CSI_guess - OrbMech::GETfromMJD(sv_A0.MJD, CalcGETBase()));
 	FindRadarAOSLOS(sv2, lat_TAN, lng_TAN, AOS_TAN, LOS_TAN);
 	calcParams.CSI = (floor(AOS_TAN / 60.0) + 2.0)*60.0;
 
