@@ -423,7 +423,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = DeltaV_LVLH;
-		refsopt.GETbase = CalcGETBase();
 		refsopt.REFSMMATTime = TimeofIgnition;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -614,7 +613,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.vessel = calcParams.tgt;
 		refsopt.vesseltype = 3;
 		refsopt.csmlmdocked = true;
-		refsopt.GETbase = GETbase;
 		refsopt.HeadsUp = false;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
@@ -687,7 +685,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.csmlmdocked = true;
 		manopt.dV_LVLH = DeltaV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMDPS;
-		manopt.GETbase = GETbase;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = EZJGMTX3.data[0].REFSMMAT;
 		manopt.TIG = TimeofIgnition;
@@ -856,7 +853,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		DMissionRendezvousPlan(ConvertEphemDatatoSV(sv1), GETbase, t_TPI0);
 
 		//Calculate LM REFSMMAT
-		opt.GETbase = GETbase;
 		opt.REFSMMATopt = 2;
 		opt.REFSMMATTime = calcParams.TPI;
 		opt.vessel = calcParams.tgt;
@@ -1009,7 +1005,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMDPS;
-		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.TIG = P30TIG;
@@ -1088,7 +1083,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMDPS;
-		manopt.GETbase = GETbase;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		manopt.TIG = P30TIG;
@@ -1277,7 +1271,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMAPS;
-		opt.GETbase = GETbase;
 		opt.REFSMMAT= GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.TIG = P30TIG;
 		opt.vessel = calcParams.tgt;
@@ -1304,13 +1297,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11LMMNV manpad;
 		AP11LMManPADOpt opt;
-		double GETbase;
-
-		GETbase = CalcGETBase();
 
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMAPS;
-		opt.GETbase = GETbase;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.TIG = TimeofIgnition;
 		opt.vessel = calcParams.tgt;
@@ -1483,7 +1472,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P30TIG = GETfromGMT(GMT_TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = CalcGETBase();
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -2239,7 +2227,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MATRIX3 REFSMMAT;
 
 		refsopt.vessel = calcParams.src;
-		refsopt.GETbase = CalcGETBase();
 		refsopt.dV_LVLH = DeltaV_LVLH;
 		refsopt.REFSMMATTime = TimeofIgnition;
 		refsopt.REFSMMATopt = 1;
@@ -2299,7 +2286,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		refsopt.csmlmdocked = false;
 		refsopt.dV_LVLH = _V(0, -1.0, 0.0); //Pointing north
-		refsopt.GETbase = CalcGETBase();
 		refsopt.REFSMMATTime = GET_AOS;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;

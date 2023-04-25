@@ -576,7 +576,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			REFSMMATOpt refsopt;
 
-			refsopt.GETbase = GETBase;
 			refsopt.REFSMMATopt = 2;
 			refsopt.REFSMMATTime = 23 * 60 * 60 + 24 * 60 + 8;
 			refsopt.vessel = calcParams.src;
@@ -1022,7 +1021,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P30TIG = GETfromGMT(GMT_TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1176,7 +1174,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1489,7 +1486,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P30TIG = GETfromGMT(GMT_TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1756,7 +1752,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1834,7 +1829,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MATRIX3 REFSMMAT;
 
 		refsopt.vessel = calcParams.src;
-		refsopt.GETbase = CalcGETBase();
 		refsopt.dV_LVLH = DeltaV_LVLH;
 		refsopt.REFSMMATTime = TimeofIgnition;
 		refsopt.REFSMMATopt = 1;

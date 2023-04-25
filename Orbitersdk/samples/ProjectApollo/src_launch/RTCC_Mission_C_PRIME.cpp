@@ -568,7 +568,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			P30TIG_LOI2 = PZLDPDIS.GETIG[0];
 
 			//Step 3: Calculate LVLH REFSMMAT at LOI-2 TIG taking into account the trajectory leading up to that point
-			refsopt.GETbase = GETBase;
 			refsopt.REFSMMATopt = 2;
 			refsopt.REFSMMATTime = P30TIG_LOI2;
 			refsopt.vessel = calcParams.src;
@@ -737,7 +736,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			MATRIX3 REFSMMAT;
 
 			refsopt.dV_LVLH = res.dV_LVLH;
-			refsopt.GETbase = GETbase;
 			refsopt.REFSMMATTime = res.P30TIG;
 			refsopt.REFSMMATopt = 0;
 			refsopt.vessel = calcParams.src;
@@ -835,7 +833,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			MATRIX3 REFSMMAT;
 
 			refsopt.dV_LVLH = res.dV_LVLH;
-			refsopt.GETbase = GETbase;
 			refsopt.REFSMMATTime = res.P30TIG;
 			refsopt.REFSMMATopt = 0;
 			refsopt.vessel = calcParams.src;
@@ -1275,7 +1272,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			//Calculate nominal entry REFSMMAT
 			REFSMMATOpt refsopt;
 
-			refsopt.GETbase = GETbase;
 			refsopt.REFSMMATopt = 3;
 			refsopt.vessel = calcParams.src;
 			refsopt.useSV = true;
@@ -1435,7 +1431,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			if (fcn == 203 || fcn == 206)
 			{
 				REFSMMATOpt refsopt;
-				refsopt.GETbase = GETbase;
 				refsopt.REFSMMATopt = 3;
 				refsopt.vessel = calcParams.src;
 				refsopt.useSV = true;

@@ -323,7 +323,6 @@ struct AP11ManPADOpt
 struct AP11LMManPADOpt
 {
 	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int enginetype = RTCC_ENGINETYPE_LMDPS; //Engine type used for the maneuver
@@ -504,7 +503,6 @@ struct TradeoffDataDisplayBuffer
 struct REFSMMATOpt
 {
 	VESSEL* vessel; //vessel
-	double GETbase; //usually MJD at launch
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	double REFSMMATTime; //Time for the REFSMMAT calculation

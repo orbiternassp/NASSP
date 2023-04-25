@@ -3644,9 +3644,11 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 {
 	MATRIX3 M_R, M, Q_Xx;
 	VECTOR3 V_G, X_B, UX, UY, UZ, IMUangles, FDAIangles;
-	double dt, mu, CSMmass, ManPADBurnTime, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E, headsswitch;
+	double dt, mu, CSMmass, ManPADBurnTime, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E, headsswitch, GETbase;
 	int ManCOASstaroct;
 	SV sv, sv1, sv2;
+
+	GETbase = CalcGETBase();
 
 	//State vector from PAD options or get a new one
 	if (opt->useSV)
@@ -3659,7 +3661,7 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	}
 
 	//Coast until TIG
-	dt = opt->TIG - (sv.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+	dt = opt->TIG - (sv.MJD - GETbase) * 24.0 * 60.0 * 60.0;
 	sv1 = coast(sv, dt);
 
 	//Docked mass
@@ -3673,7 +3675,7 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	}
 
 	//Execute maneuver, output state vector at cutoff
-	sv2 = ExecuteManeuver(sv1, opt->GETbase, opt->TIG, opt->dV_LVLH, CSMmass, opt->enginetype, Q_Xx, V_G);
+	sv2 = ExecuteManeuver(sv1, GETbase, opt->TIG, opt->dV_LVLH, CSMmass, opt->enginetype, Q_Xx, V_G);
 	ManPADBurnTime = (sv2.MJD - sv1.MJD)*24.0*3600.0;
 
 	//Only use landing site radius for the Moon
@@ -4999,7 +5001,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	else if (opt->REFSMMATopt == 4)
 	{
 		//For now a default LC-39A, 72° launch
-		return OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, opt->GETbase, 72 * RAD);
+		return OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, CalcGETBase(), 72 * RAD);
 	}
 	else if (opt->REFSMMATopt == 6)
 	{
@@ -5030,7 +5032,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		double LSMJD;
 
 		R_P = unit(_V(cos(opt->LSLng)*cos(opt->LSLat), sin(opt->LSLat), sin(opt->LSLng)*cos(opt->LSLat)));
-		LSMJD = opt->REFSMMATTime / 24.0 / 3600.0 + opt->GETbase;
+		LSMJD = opt->REFSMMATTime / 24.0 / 3600.0 + CalcGETBase();
 		Rot2 = OrbMech::GetRotationMatrix(BODY_MOON, LSMJD);
 
 		R_LS = mul(Rot2, R_P);
@@ -5080,7 +5082,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		MATRIX3 Rot2;
 		SV sv3;
 
-		LSMJD = opt->REFSMMATTime / 24.0 / 3600.0 + opt->GETbase;
+		LSMJD = opt->REFSMMATTime / 24.0 / 3600.0 + CalcGETBase();
 
 		R_P = unit(_V(cos(opt->LSLng)*cos(opt->LSLat), sin(opt->LSLat), sin(opt->LSLng)*cos(opt->LSLat)));
 
@@ -5106,7 +5108,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 
 		if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1 || opt->REFSMMATopt == 2)
 		{
-			dt = opt->REFSMMATTime - (sv2.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+			dt = opt->REFSMMATTime - (sv2.MJD - CalcGETBase()) * 24.0 * 60.0 * 60.0;
 			sv4 = coast(sv2, dt);
 		}
 		else

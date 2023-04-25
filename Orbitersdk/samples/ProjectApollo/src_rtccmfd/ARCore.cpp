@@ -2798,7 +2798,6 @@ int ARCore::subThread()
 		REFSMMATOpt opt;
 
 		opt.dV_LVLH = dV_LVLH;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.LSAzi = GC->rtcc->med_k18.psi_DS*RAD;
 		opt.LSLat = GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST];
 		opt.LSLng = GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST];
@@ -3145,7 +3144,6 @@ int ARCore::subThread()
 
 			opt.dV_LVLH = dV_LVLH;
 			opt.enginetype = manpadenginetype;
-			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 			opt.sxtstardtime = sxtstardtime;
