@@ -4647,10 +4647,10 @@ private:
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	double PericynthionTime(VESSEL* vessel);
 	SV FindPericynthion(SV sv0);
-	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
-	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
-	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
-	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
+	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
+	double FindOrbitalSunrise(SV sv, double t_sunrise_guess);
+	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
+	void FindRadarMidPass(SV sv, double lat, double lng, double &GET_Mid);
 	double GetSemiMajorAxis(SV sv);
 	void papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in);
 	bool papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out);

@@ -1536,7 +1536,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			dt = OrbMech::HHMMSSToSS(124, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
 
-			FindRadarAOSLOS(sv1, GETbase, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
 			form->GETStart[0] = GET_AOS - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
@@ -1546,7 +1546,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 25;
 
-			FindRadarAOSLOS(sv1, GETbase, 29.6667*RAD, -95.1667*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 29.6667*RAD, -95.1667*RAD, GET_AOS, GET_LOS);
 			sprintf(form->Area[2], "Houston");
 			form->GETStart[2] = GET_AOS;
 			form->ExposureInterval[2] = 6.0;
@@ -1557,7 +1557,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			dt = OrbMech::HHMMSSToSS(125, 40, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
 
-			FindRadarAOSLOS(sv1, GETbase, 19.3*RAD, -99.6667*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 19.3*RAD, -99.6667*RAD, GET_AOS, GET_LOS);
 			form->GETStart[0] = GET_AOS - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
@@ -1572,7 +1572,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			dt = OrbMech::HHMMSSToSS(171, 10, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
 
-			FindRadarAOSLOS(sv1, GETbase, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
 			form->GETStart[0] = GET_AOS - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
@@ -1587,7 +1587,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			dt = OrbMech::HHMMSSToSS(172, 45, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
 
-			FindRadarAOSLOS(sv1, GETbase, 19.3*RAD, -99.666*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 19.3*RAD, -99.666*RAD, GET_AOS, GET_LOS);
 			form->GETStart[0] = GET_AOS - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
@@ -1597,7 +1597,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 25;
 
-			FindRadarAOSLOS(sv1, GETbase, -19.81666*RAD, -43.3666*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, -19.81666*RAD, -43.3666*RAD, GET_AOS, GET_LOS);
 			sprintf(form->Area[2], "Brazil");
 			form->GETStart[2] = GET_AOS;
 			form->ExposureInterval[2] = 6.0;
@@ -1608,7 +1608,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
 
-			FindRadarAOSLOS(sv1, GETbase, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
 			form->GETStart[0] = GET_AOS - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
@@ -1618,13 +1618,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 6;
 
-			FindRadarAOSLOS(sv1, GETbase, 29.1667*RAD, -89.333*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 29.1667*RAD, -89.333*RAD, GET_AOS, GET_LOS);
 			sprintf(form->Area[2], "Southeast US");
 			form->GETStart[2] = GET_AOS;
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 6;
 
-			FindRadarAOSLOS(sv1, GETbase, 17.0*RAD, -15.61667*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 17.0*RAD, -15.61667*RAD, GET_AOS, GET_LOS);
 			sprintf(form->Area[3], "Africa");
 			form->GETStart[3] = GET_AOS;
 			form->ExposureInterval[3] = 12.0;
@@ -1635,7 +1635,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			dt = OrbMech::HHMMSSToSS(192, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
 
-			FindRadarAOSLOS(sv1, GETbase, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
 			form->GETStart[0] = GET_AOS - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
@@ -1651,7 +1651,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = coast(sv0, dt);
 
 			//Wilmington, North Carolina
-			FindRadarAOSLOS(sv1, GETbase, 34.22333*RAD, -77.91222*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 34.22333*RAD, -77.91222*RAD, GET_AOS, GET_LOS);
 			form->GETStart[0] = GET_AOS - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
@@ -1661,7 +1661,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->ExposureInterval[1] = 20;
 			form->ExposureNum[1] = 3;
 
-			FindRadarAOSLOS(sv1, GETbase, -17.3667*RAD, 37.95*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, -17.3667*RAD, 37.95*RAD, GET_AOS, GET_LOS);
 			sprintf(form->Area[2], "Mozambique");
 			form->GETStart[2] = GET_AOS;
 			form->ExposureInterval[2] = 12.0;
@@ -1672,7 +1672,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			dt = OrbMech::HHMMSSToSS(215, 55, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
 
-			FindRadarAOSLOS(sv1, GETbase, 32.333*RAD, -107.667*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, 32.333*RAD, -107.667*RAD, GET_AOS, GET_LOS);
 			form->GETStart[0] = GET_AOS - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
@@ -1978,7 +1978,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv1 = coast(sv0, dt);
 
 		//Northern Mexico
-		FindRadarAOSLOS(sv1, GETbase, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
+		FindRadarAOSLOS(sv1, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
 		t_align = GET_AOS - 5.0*60.0;
 
 		OrbMech::format_time_HHMMSS(buff, t_align);
@@ -2044,7 +2044,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 		t_guess = OrbMech::HHMMSSToSS(214, 21, 0);
 
-		t_align = FindOrbitalSunrise(sv0, GETbase, t_guess);
+		t_align = FindOrbitalSunrise(sv0, t_guess);
 
 		OrbMech::format_time_HHMMSS(buff, t_align);
 		sprintf(form->paddata, "T Align is %s GET", buff);
@@ -2266,9 +2266,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv1 = coast(sv0, dt);
 
 		//Carnarvon
-		FindRadarAOSLOS(sv1, GETbase, -24.90619*RAD, 113.72595*RAD, GET_AOS, GET_LOS);
+		FindRadarAOSLOS(sv1, -24.90619*RAD, 113.72595*RAD, GET_AOS, GET_LOS);
 		//Hawaii
-		FindRadarAOSLOS(sv1, GETbase, 21.44719*RAD, -157.76307*RAD, GET_AOS_HAW, GET_LOS_HAW);
+		FindRadarAOSLOS(sv1, 21.44719*RAD, -157.76307*RAD, GET_AOS_HAW, GET_LOS_HAW);
 
 		refsopt.csmlmdocked = false;
 		refsopt.dV_LVLH = _V(0, -1.0, 0.0); //Pointing north
@@ -2313,7 +2313,7 @@ void RTCC::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
 	dt_sunrise = 25.0*60.0;
 	TPI0_guess = OrbMech::HHMMSSToSS(95, 0, 0);
 	TPI0_sunrise_guess = TPI0_guess + dt_sunrise;
-	TPI0_sunrise = FindOrbitalSunrise(sv_A0, GETbase, TPI0_sunrise_guess);
+	TPI0_sunrise = FindOrbitalSunrise(sv_A0, TPI0_sunrise_guess);
 	t_TPI0 = TPI0_sunrise - dt_sunrise;
 
 	//Step 2: Phasing is 70 minutes before TPI0
@@ -2328,7 +2328,7 @@ void RTCC::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
 	lng_TAN = groundstations[13][1];
 	CSI_guess = calcParams.Insertion + 40.0*60.0;
 	sv2 = coast(sv_A0, CSI_guess - OrbMech::GETfromMJD(sv_A0.MJD, GETbase));
-	FindRadarAOSLOS(sv2, GETbase, lat_TAN, lng_TAN, AOS_TAN, LOS_TAN);
+	FindRadarAOSLOS(sv2, lat_TAN, lng_TAN, AOS_TAN, LOS_TAN);
 	calcParams.CSI = (floor(AOS_TAN / 60.0) + 2.0)*60.0;
 
 	//Step 5: CDH is placed 44.4 minutes after CSI
@@ -2338,6 +2338,6 @@ void RTCC::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
 	double TPI_guess, TPI_sunrise_guess, TPI_sunrise;
 	TPI_guess = OrbMech::HHMMSSToSS(98, 0, 0);
 	TPI_sunrise_guess = TPI_guess + dt_sunrise;
-	TPI_sunrise = FindOrbitalSunrise(sv_A0, GETbase, TPI_sunrise_guess);
+	TPI_sunrise = FindOrbitalSunrise(sv_A0, TPI_sunrise_guess);
 	calcParams.TPI = TPI_sunrise - dt_sunrise;
 }

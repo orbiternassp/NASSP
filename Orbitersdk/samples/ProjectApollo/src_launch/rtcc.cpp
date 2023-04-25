@@ -8167,14 +8167,14 @@ SV RTCC::FindPericynthion(SV sv0)
 	return coast(sv0, dt);
 }
 
-double RTCC::FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess)
+double RTCC::FindOrbitalMidnight(SV sv, double t_TPI_guess)
 {
 	SV sv1;
 	double GET_SV, dt, ttoMidnight;
 
 	OBJHANDLE hSun = oapiGetObjectByName("Sun");
 
-	GET_SV = OrbMech::GETfromMJD(sv.MJD, GETbase);
+	GET_SV = OrbMech::GETfromMJD(sv.MJD, CalcGETBase());
 	dt = t_TPI_guess - GET_SV;
 
 	sv1 = coast(sv, dt);
@@ -8183,7 +8183,7 @@ double RTCC::FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess)
 	return t_TPI_guess + ttoMidnight;
 }
 
-void RTCC::FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS)
+void RTCC::FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS)
 {
 	VECTOR3 R_P;
 	double LmkRange, dt1, dt2;
@@ -8193,11 +8193,11 @@ void RTCC::FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double
 	dt1 = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 175.0*RAD, sv.gravref, LmkRange);
 	dt2 = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 5.0*RAD, sv.gravref, LmkRange);
 
-	GET_AOS = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt1;
-	GET_LOS = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt2;
+	GET_AOS = OrbMech::GETfromMJD(sv.MJD, CalcGETBase()) + dt1;
+	GET_LOS = OrbMech::GETfromMJD(sv.MJD, CalcGETBase()) + dt2;
 }
 
-void RTCC::FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid)
+void RTCC::FindRadarMidPass(SV sv, double lat, double lng, double &GET_Mid)
 {
 	VECTOR3 R_P;
 	double LmkRange, dt;
@@ -8206,17 +8206,17 @@ void RTCC::FindRadarMidPass(SV sv, double GETbase, double lat, double lng, doubl
 
 	dt = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 90.0*RAD, sv.gravref, LmkRange);
 
-	GET_Mid = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt;
+	GET_Mid = OrbMech::GETfromMJD(sv.MJD, CalcGETBase()) + dt;
 }
 
-double RTCC::FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess)
+double RTCC::FindOrbitalSunrise(SV sv, double t_sunrise_guess)
 {
 	SV sv1;
 	double GET_SV, dt, ttoSunrise;
 
 	OBJHANDLE hSun = oapiGetObjectByName("Sun");
 
-	GET_SV = OrbMech::GETfromMJD(sv.MJD, GETbase);
+	GET_SV = OrbMech::GETfromMJD(sv.MJD, CalcGETBase());
 	dt = t_sunrise_guess - GET_SV;
 
 	sv1 = coast(sv, dt);

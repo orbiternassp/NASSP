@@ -1666,7 +1666,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.Phasing = (MJD_Phasing - GETbase)*24.0*3600.0;
 
 		t_TPI_guess = OrbMech::HHMMSSToSS(105, 9, 0);
-		calcParams.TPI = FindOrbitalMidnight(sv_CSM, GETbase, t_TPI_guess);
+		calcParams.TPI = FindOrbitalMidnight(sv_CSM, t_TPI_guess);
 
 		FMissionRendezvousPlan(calcParams.tgt, calcParams.src, sv_DOI, calcParams.Phasing, calcParams.TPI, calcParams.Insertion, calcParams.CSI);
 
@@ -1774,7 +1774,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_Abort = (sv_DOI.MJD - GETbase)*24.0*3600.0 + dt_peri;
 
 		t_TPI_guess = OrbMech::HHMMSSToSS(103, 9, 0);
-		t_TPI_Abort = FindOrbitalMidnight(sv_CSM, GETbase, t_TPI_guess);
+		t_TPI_Abort = FindOrbitalMidnight(sv_CSM, t_TPI_guess);
 
 		dkiopt.DHSR = 15.0*1852.0;
 		dkiopt.Elev = 26.6*RAD;
