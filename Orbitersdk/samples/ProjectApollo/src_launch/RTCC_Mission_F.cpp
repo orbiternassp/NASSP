@@ -533,7 +533,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		entopt.EntryLng = -165.0*RAD;
-		entopt.GETbase = GETbase;
 		entopt.returnspeed = 0;
 		entopt.SMODE = 14;
 		entopt.RV_MCC = sv;
@@ -842,7 +841,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.returnspeed = 2;
-		entopt.GETbase = GETbase;
 		entopt.SMODE = 14;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
@@ -1128,7 +1126,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		entopt.EntryLng = -165.0*RAD;
-		entopt.GETbase = GETbase;
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.vessel = calcParams.src;
@@ -1721,7 +1718,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
-		lamopt.GETbase = GETbase;
 		lamopt.mode = 0;
 		lamopt.N = 0;
 		lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);
@@ -1860,7 +1856,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = CalcGETBase();
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
-		lamopt.GETbase = GETbase;
 		lamopt.mode = 0;
 		lamopt.N = 0;
 		lamopt.Offset = -_V(-110.0*1852.0, 0.0, 14.7*1852.0);
@@ -1941,7 +1936,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_LM.mass = lem->GetAscentStageMass();
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
-		lamopt.GETbase = GETbase;
 		lamopt.mode = 0;
 		lamopt.N = 0;
 		lamopt.Offset = _V(-147.0*1852.0, 0.0, 14.7*1852.0);
@@ -2019,7 +2013,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMAPS;
-		manopt.GETbase = GETbase;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		manopt.sv0 = sv_LM;
 		manopt.t_CSI = calcParams.CSI;
@@ -2480,7 +2473,6 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 
 	sv_P0 = StateVectorCalc(target);
 
-	lamopt.GETbase = GETbase;
 	lamopt.mode = 0;
 	lamopt.N = 0;
 	lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);

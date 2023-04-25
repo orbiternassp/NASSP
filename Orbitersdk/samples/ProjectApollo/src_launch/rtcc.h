@@ -266,7 +266,6 @@ struct TwoImpulseOpt
 struct LambertMan //Data for Lambert targeting
 {
 	int mode;		//0 = General, 1 = Corrective Combination (NCC), 2 = Two-Impulse Computation (TPI)
-	double GETbase; //usually MJD at launch
 	double T1;	//GET of the maneuver
 	double T2;	// GET of the arrival
 	int N;		//number of revolutions
@@ -338,7 +337,6 @@ struct AP11LMManPADOpt
 struct AP10CSIPADOpt
 {
 	SV sv0;
-	double GETbase;
 	double t_CSI;
 	double t_TPI;
 	VECTOR3 dV_LVLH;
@@ -450,7 +448,6 @@ struct SPQResults
 struct RTEMoonOpt
 {
 	VESSEL* vessel;			//Reentry vessel
-	double GETbase;			//usually MJD at launch
 	double TIGguess = 0.0;	//Initial estimate for the TIG
 	double EntryLng;		//Entry longitude
 	int returnspeed = -1;	//0 = slow return, 1 = normal return, 2 = fast return

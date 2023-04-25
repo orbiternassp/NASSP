@@ -3281,12 +3281,13 @@ RTCC_PMSTICN_24_3:
 void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 {
 	SV sv_A1, sv_A1_apo, sv_A2, sv_P1, sv_P2;
-	double dt1, dt1_apo, dt2, mu, T1, T2;
+	double GETbase, dt1, dt1_apo, dt2, mu, T1, T2;
 	int N;
 	OBJHANDLE gravref;
 	int body;
 	bool prograde;
 
+	GETbase = CalcGETBase();
 	gravref = lambert->sv_A.gravref;
 	N = lambert->N;
 
@@ -3319,8 +3320,8 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		T1 = lambert->T1;
 	}
 
-	dt1 = T1 - (lambert->sv_A.MJD - lambert->GETbase) * 24.0 * 60.0 * 60.0;
-	dt1_apo = T1 - (lambert->sv_P.MJD - lambert->GETbase) * 24.0 * 60.0 * 60.0;
+	dt1 = T1 - (lambert->sv_A.MJD - GETbase) * 24.0 * 60.0 * 60.0;
+	dt1_apo = T1 - (lambert->sv_P.MJD - GETbase) * 24.0 * 60.0 * 60.0;
 
 	if (lambert->Perturbation == 1)
 	{
@@ -3459,7 +3460,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		sv_A2_apo.V += DV;
 
 		dt_TPI = OrbMech::findelev(sv_A2_apo.R, sv_A2_apo.V, sv_P2.R, sv_P2.V, sv_P2.MJD, lambert->ElevationAngle, gravref);
-		res.t_TPI = OrbMech::GETfromMJD(sv_P2.MJD, lambert->GETbase) + dt_TPI;
+		res.t_TPI = OrbMech::GETfromMJD(sv_P2.MJD, GETbase) + dt_TPI;
 	}
 
 	if (lambert->storesolns == false) return;
@@ -3582,7 +3583,7 @@ void RTCC::AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad)
 	VECTOR3 V_G, UX, UY, UZ, IMUangles, FDAIangles, dV_AGS;
 	double dt, TIG_AGS;
 
-	dt = opt->t_CSI - (opt->sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+	dt = opt->t_CSI - (opt->sv0.MJD - CalcGETBase()) * 24.0 * 60.0 * 60.0;
 	sv1 = coast(opt->sv0, dt);
 
 	PoweredFlightProcessor(sv1, opt->t_CSI, opt->enginetype, 0.0, opt->dV_LVLH, true, TIG_AGS, dV_AGS, false);
@@ -7016,11 +7017,12 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	RTEMoon* teicalc;
 	SV sv0, sv1, sv2;
 	bool endi = false;
-	double EMSAlt, dt22, MJDguess, LMmass, TZMINI;
+	double GETbase, EMSAlt, dt22, MJDguess, LMmass, TZMINI;
 	VECTOR3 R05G, V05G;
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 
+	GETbase = CalcGETBase();
 	EMSAlt = 297431.0*0.3048;
 
 	sv0 = opt->RV_MCC;
@@ -7040,7 +7042,7 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	}
 	else
 	{
-		MJDguess = opt->GETbase + opt->TIGguess / 24.0 / 3600.0;
+		MJDguess = GETbase + opt->TIGguess / 24.0 / 3600.0;
 	}
 
 	sv1 = coast(sv0, (MJDguess - sv0.MJD)*24.0*3600.0);
@@ -7070,7 +7072,7 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 			DT_TEI_EI -= 24.0*3600.0;
 		}
 
-		double t0 = OrbMech::GETfromMJD(sv2.MJD, opt->GETbase);
+		double t0 = OrbMech::GETfromMJD(sv2.MJD, GETbase);
 		TZMINI = t0 + DT_TEI_EI;
 	}
 	else
@@ -7128,7 +7130,7 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	res->ReA = teicalc->EntryAng;
 	res->GET400K = GETfromGMT(teicalc->t_R);
 	res->GET05G = res->GET400K + dt22;
-	res->RTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(res->GET05G, opt->GETbase), res->latitude, res->longitude);
+	res->RTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(res->GET05G, GETbase), res->latitude, res->longitude);
 	res->VIO = length(V05G);
 	res->precision = teicalc->precision;
 	res->Incl = teicalc->ReturnInclination;
@@ -10574,7 +10576,6 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 			TwoImpulseResuls lamres;
 
 			lam.mode = 2;
-			lam.GETbase = GETbase;
 			lam.T1 = t_TPI;
 			lam.T2 = -1;
 			lam.N = 0;
