@@ -3646,7 +3646,7 @@ int ARCore::subThread()
 
 		R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 
-		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GC->rtcc->CalcGETBase(), t_LunarLiftoff, GC->rtcc->PZLTRT.InsertionHorizontalVelocity, GC->rtcc->PZLTRT.InsertionRadialVelocity, theta, dt, dv, sv_IG, sv_Ins);
+		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, t_LunarLiftoff, GC->rtcc->PZLTRT.InsertionHorizontalVelocity, GC->rtcc->PZLTRT.InsertionRadialVelocity, theta, dt, dv, sv_IG, sv_Ins);
 
 		GC->rtcc->PZLTRT.PoweredFlightArc = theta;
 		GC->rtcc->PZLTRT.PoweredFlightTime = dt;

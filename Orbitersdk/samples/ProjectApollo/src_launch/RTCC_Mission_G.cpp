@@ -1752,7 +1752,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		T2 = calcParams.PDI + 21.0*60.0 + 24.0;
 		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, T2, v_LH, v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, T2, v_LH, v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
 		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, OrbMech::mu_Moon);
 		OrbMech::rv_from_r0v0(sv_Ins.R, sv_Ins.V, dt1, R_C1, V_C1, OrbMech::mu_Moon);
 		t_C1 = T2 + dt_asc + dt1;
@@ -1817,7 +1817,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LunarLaunchWindowProcessor(opt);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through
@@ -1985,7 +1985,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LunarLaunchWindowProcessor(opt);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through
@@ -2025,9 +2025,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10CSI * form = (AP10CSI*)pad;
 
 		AP10CSIPADOpt opt;
-		double GETbase;
-
-		GETbase = CalcGETBase();
 
 		opt.dV_LVLH = calcParams.DVSTORE1;
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
@@ -2119,7 +2116,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LunarLaunchWindowProcessor(opt);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 
@@ -2320,7 +2317,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LunarLaunchWindowProcessor(opt);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through

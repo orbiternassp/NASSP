@@ -2464,15 +2464,15 @@ public:
 	void LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp, int M, int P, int I_CDH, double DH, double &dv_CSI, double &dv_CDH, double &t_CDH);
 	void LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt);
 	bool LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargetingTable &res);
-	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
-	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv);
+	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
+	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	//Velocity maneuver performer
 	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
 	void PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DELVX, double DELVY, double DELVZ, int I, VECTOR3 &V_C_apo, double &Pitch, double &Yaw);
 	//Elevation angle search subroutine
-	int PCTETR(SV sv_C, SV sv_T, double GETBase, double WT, double ESP, double &TESP, double &TR);
+	int PCTETR(SV sv_C, SV sv_T, double WT, double ESP, double &TESP, double &TR);
 	//Apogee, perigee, and offset determination
 	void PCPICK(AEGHeader header, AEGDataBlock sv_C, AEGDataBlock sv_T, double &DH, double &Phase, double &HA, double &HP);
 	void PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, double &HP);
@@ -2489,7 +2489,7 @@ public:
 	int ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	double CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
-	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
+	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt, int veh);
@@ -2503,7 +2503,7 @@ public:
 	bool PMMAPD(SV sv0, SV &sv_a, SV &sv_p);
 	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval2(double get);
-	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
+	bool PDIIgnitionAlgorithm(SV sv, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, bool cmc);
 	bool CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor);

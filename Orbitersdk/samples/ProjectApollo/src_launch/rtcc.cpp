@@ -5710,7 +5710,7 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 		sv2 = ExecuteManeuver(opt->sv0, opt->P30TIG, opt->dV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
 	}
 
-	if (!PDIIgnitionAlgorithm(sv2, GETbase, opt->R_LS, opt->t_land, sv_I, TTT, C_R, U_FDP, REFSMMAT))
+	if (!PDIIgnitionAlgorithm(sv2, opt->R_LS, opt->t_land, sv_I, TTT, C_R, U_FDP, REFSMMAT))
 	{
 		return false;
 	}
@@ -10543,7 +10543,7 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 
 		//Calculate TPI and TPF maneuvers
 		double t_TPI, t_TPF;
-		res.err = PCTETR(res.sv_C_apo[1], res.sv_T[1], GETbase, opt.WT, opt.E, t_TPI, t_TPF);
+		res.err = PCTETR(res.sv_C_apo[1], res.sv_T[1], opt.WT, opt.E, t_TPI, t_TPF);
 
 		if (res.err == 0)
 		{
@@ -10968,7 +10968,7 @@ void RTCC::PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DEL
 	V_C_apo = V_C + K2 * DV_H - J2 * DV_R + H2 * DV_Z;
 }
 
-int RTCC::PCTETR(SV sv_C, SV sv_T, double GETBase, double WT, double ESP, double &TESP, double &TR)
+int RTCC::PCTETR(SV sv_C, SV sv_T, double WT, double ESP, double &TESP, double &TR)
 {
 	SV sv_C1, sv_T1;
 	double QL, DU, mu, C1, C2, C3, C4, r_T, r_C, QLI, DT, eps_dt, L_C_dot, L_T_dot;
@@ -11023,7 +11023,7 @@ int RTCC::PCTETR(SV sv_C, SV sv_T, double GETBase, double WT, double ESP, double
 		DT = (QL - QLI) / DU;
 		if (abs(DT) < eps_dt)
 		{
-			TESP = OrbMech::GETfromMJD(sv_C1.MJD, GETBase);
+			TESP = OrbMech::GETfromMJD(sv_C1.MJD, CalcGETBase());
 			TR = TESP + WT / L_T_dot;
 			return 0;
 		}
@@ -11332,7 +11332,7 @@ RTCC_PMMSPQ_A:
 	else
 	{
 		//If iteration on DH was used, get TPI time now
-		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, GETbase, opt.WT, opt.E, t_TPI, T_TPF))
+		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, opt.WT, opt.E, t_TPI, T_TPF))
 		{
 			return 94;
 		}
@@ -12176,7 +12176,7 @@ void RTCC::AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw,
 	OrbMech::CALCSXA(CBNB, U_S, TA, SA);
 }
 
-VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T)
+VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T)
 {
 	SV sv_tig;
 	MATRIX3 M_EMP, M_R, M, M_RTM;
@@ -12185,7 +12185,7 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 
 	headsswitch = -1.0;
 
-	dt = LOI_TIG - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+	dt = LOI_TIG - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase());
 	sv_tig = coast(sv0, dt);
 	M_EMP = OrbMech::EMPMatrix(sv_tig.MJD);
 	X_B = tmul(M_EMP, _V(-sin(p_EMP), cos(p_EMP), 0));
@@ -12202,22 +12202,24 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 	return IMUangles;
 }
 
-bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv)
+bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv)
 {
 	MATRIX3 Rot, REFSMMAT;
 	DescentGuidance descguid;
 	AscDescIntegrator integ;
 	SV sv_IG, sv_D;
 	VECTOR3 U_FDP, WI, W, R_LSP, U_FDP_abort, U_M;
-	double t_go, CR, t_PDI, t_UL, t_D, W_TD, T_DPS, isp, t_D_old;
+	double GETbase, t_go, CR, t_PDI, t_UL, t_D, W_TD, T_DPS, isp, t_D_old;
 	bool stop;
 
 	bool LandFlag = false;
 	t_UL = 7.9;
 	dv = 0.0;
 
+	GETbase = CalcGETBase();
+
 	//Just for t_go and U_FDP, call to this function should be removed
-	if (!PDIIgnitionAlgorithm(sv, GETbase, R_LS, TLAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
+	if (!PDIIgnitionAlgorithm(sv, R_LS, TLAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
 	{
 		return false;
 	}
@@ -12262,7 +12264,7 @@ bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GET
 	return true;
 }
 
-void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins)
+void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins)
 {
 	//Test
 	AscentGuidance asc;
@@ -12275,7 +12277,7 @@ void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETba
 
 	dv = 0.0;
 	t_total = 0.0;
-	dt = t_liftoff - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase);
+	dt = t_liftoff - OrbMech::GETfromMJD(sv_CSM.MJD, CalcGETBase());
 	sv_CSM_TIG = coast(sv_CSM, dt);
 
 	asc.Init(sv_CSM_TIG.R, sv_CSM_TIG.V, m0, length(R_LS), v_LH, v_LV);
@@ -12318,17 +12320,19 @@ void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETba
 	sv_Ins = sv_ins;
 }
 
-bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT)
+bool RTCC::PDIIgnitionAlgorithm(SV sv, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT)
 {
 	SV sv_I;
 	MATRIX3 C_GP, Rot;
 	VECTOR3 U_FDP, dV_TrP, R_TG, V_TG, A_TG, R_LSI, R_LSP, W_I, W_P, R_P, G_P, V_P, R_G, V_SURFP, V_G, A_G, A_FDP;
 	VECTOR3 C_XGP, C_YGP, C_ZGP, U_XSM, U_YSM, U_ZSM;
-	double GUIDDURN, AF_TRIM, DELTTRIM, TTT, t_pip, dt_I, FRAC;
+	double GETbase, GUIDDURN, AF_TRIM, DELTTRIM, TTT, t_pip, dt_I, FRAC;
 	double v_IGG, r_IGXG, r_IGZG, K_X, K_Y, K_V;
 	double J_TZG, A_TZG, V_TZG, R_TZG;
 	double LEADTIME, w_M, t_2, t_I, PIPTIME, t_pipold, eps, dTTT, TTT_P, TEM, q;
 	int n1, n2, COUNT_TTT;
+
+	GETbase = CalcGETBase();
 
 	GUIDDURN = 664.4;
 	AF_TRIM = 0.350133;
@@ -12508,7 +12512,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 
 	dt_abort = opt.dt_step;
 	sv_I_guess = coast(opt.sv_A, opt.TLAND - OrbMech::GETfromMJD(opt.sv_A.MJD, GETbase));
-	if (!PDIIgnitionAlgorithm(sv_I_guess, GETbase, opt.R_LS, opt.TLAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
+	if (!PDIIgnitionAlgorithm(sv_I_guess, opt.R_LS, opt.TLAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
 	{
 		return false;
 	}
@@ -16388,7 +16392,7 @@ int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 
 	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 	double theta, dt_asc, dv;
 	SV sv_IG, sv_Ins;
-	LunarAscentProcessor(R_LS, in.m0, in.sv_CSM,SystemParameters.GMTBASE, in.t_liftoff, in.v_LH, in.v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
+	LunarAscentProcessor(R_LS, in.m0, in.sv_CSM, GETfromGMT(in.t_liftoff), in.v_LH, in.v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
 
 	if (E)
 	{
@@ -16467,7 +16471,7 @@ int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 
 	double dv;
 	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
-	PoweredDescentProcessor(R_LS, in.TLAND, in.sv, CalcGETBase(), aux, E, sv_PDI, sv_land, dv);
+	PoweredDescentProcessor(R_LS, in.TLAND, in.sv, aux, E, sv_PDI, sv_land, dv);
 
 	if (E)
 	{
@@ -16548,7 +16552,7 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 
 	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
-	if (!PDIIgnitionAlgorithm(in.sv, CalcGETBase(), R_LS, in.TLAND, sv_IG, t_go, CR, U_IG, REFSMMAT))
+	if (!PDIIgnitionAlgorithm(in.sv, R_LS, in.TLAND, sv_IG, t_go, CR, U_IG, REFSMMAT))
 	{
 		return 1;
 	}
