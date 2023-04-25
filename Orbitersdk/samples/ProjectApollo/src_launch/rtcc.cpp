@@ -4753,9 +4753,22 @@ double RTCC::GetClockTimeFromAGC(agc_t *agc)
 
 double RTCC::GetTEPHEMFromAGC(agc_t *agc)
 {
-	return agc->Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-		agc->Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-		agc->Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+	int tephem_int[3];
+
+	tephem_int[0] = agc->Erasable[AGC_BANK(01706)][AGC_ADDR(01706)];
+	tephem_int[1] = agc->Erasable[AGC_BANK(01707)][AGC_ADDR(01707)];
+	tephem_int[2] = agc->Erasable[AGC_BANK(01710)][AGC_ADDR(01710)];
+
+	//Make negative numbers actually negative
+	for (int i = 0; i < 3; i++)
+	{
+		OrbMech::AGCSignedValue(tephem_int[i]);
+	}
+
+	//Calculate TEPHEM in centiseconds
+	double tephem = tephem_int[2] + tephem_int[1] * pow((double) 2., (double) 14.) + tephem_int[0] * pow((double) 2., (double) 28.);
+
+	return tephem;
 }
 
 void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt)
