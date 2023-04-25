@@ -568,9 +568,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MATRIX3 REFSMMAT;
 		EphemerisData sv0;
 		VECTOR3 dV_imp;
-		double GETbase, TIG_imp;
+		double TIG_imp;
 
-		GETbase = CalcGETBase();
 		sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
 		med_m50.CSMWT = calcParams.src->GetMass();
 		med_m50.LMWT = calcParams.tgt->GetMass();
@@ -675,11 +674,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10DAPDATA dappad;
 		AP11LMManPADOpt manopt;
 		EphemerisData sv0;
-		double GETbase;
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = CalcGETBase();
 		sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
 
 		manopt.csmlmdocked = true;
@@ -837,9 +834,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt opt;
 		MATRIX3 REFSMMAT, A;
 		EphemerisData sv0, sv1;
-		double GETbase, t_TPI0;
+		double t_TPI0;
 		sv0 = StateVectorCalcEphem(calcParams.src);
-		GETbase = CalcGETBase();
 
 		//Coast to predicted Sep-12 min
 		med_m50.CSMWT = calcParams.src->GetMass();
@@ -850,7 +846,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Coast to uplink state vector time with total weight and LM area
 		sv1 = coast(sv0, GMTfromGET(92.0*3600.0) - sv0.GMT, med_m50.CSMWT + med_m50.LMWT, PZMPTLEM.ConfigurationArea);
 
-		DMissionRendezvousPlan(ConvertEphemDatatoSV(sv1), GETbase, t_TPI0);
+		DMissionRendezvousPlan(ConvertEphemDatatoSV(sv1), t_TPI0);
 
 		//Calculate LM REFSMMAT
 		opt.REFSMMATopt = 2;
@@ -948,16 +944,15 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EphemerisData sv, sv1;
 		MATRIX3 Q_Xx;
 		VECTOR3 dV_LVLH, DV;
-		double eps, a, n0, n1, n2, dt1, dt2, dh1, dh2, dphase, dv, dphase_bias, t_TPI0, GETbase, P30TIG, t_Sep;
+		double eps, a, n0, n1, n2, dt1, dt2, dh1, dh2, dphase, dv, dphase_bias, t_TPI0, P30TIG, t_Sep;
 
 		//about 10NM less phasing in the coelliptic orbit above
 		dphase_bias = 0.0027987178;
 
 		sv = StateVectorCalcEphem(calcParams.src);
 		med_m50.LMWT = calcParams.tgt->GetMass();
-		GETbase = CalcGETBase();
 
-		DMissionRendezvousPlan(ConvertEphemDatatoSV(sv), GETbase, t_TPI0);
+		DMissionRendezvousPlan(ConvertEphemDatatoSV(sv), t_TPI0);
 		//Store the TPI0 time here, the nominal TPI time is already stored in calcParams.TPI
 		TimeofIgnition = t_TPI0;
 
@@ -1062,11 +1057,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManPADOpt manopt;
 		SV sv_A, sv_P;
 		VECTOR3 dV_LVLH;
-		double TIG, GETbase, P30TIG;
+		double TIG, P30TIG;
 
 		sv_A = StateVectorCalc(calcParams.tgt);
 		sv_P = StateVectorCalc(calcParams.src);
-		GETbase = CalcGETBase();
 
 		TIG = calcParams.Insertion;
 
@@ -1076,7 +1070,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_CDH = TIG;
 
 		ConcentricRendezvousProcessor(opt, res);
-		PoweredFlightProcessor(sv_A, GETbase, TIG, RTCC_ENGINETYPE_LMDPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_A, TIG, RTCC_ENGINETYPE_LMDPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMDPS;
@@ -1259,7 +1253,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.Yaw = -45.0*RAD;
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_ENGINETYPE_LMAPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv0, TIG_imp, RTCC_ENGINETYPE_LMAPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -2310,9 +2304,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	return scrubbed;
 }
 
-void RTCC::DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0)
+void RTCC::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
 {
 	SV sv2;
+	double GETbase;
+
+	GETbase = CalcGETBase();
 
 	//Step 1: Find TPI0 time (25 minutes before sunrise)
 	double TPI0_guess, TPI0_sunrise_guess, TPI0_sunrise, dt_sunrise;

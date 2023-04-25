@@ -434,7 +434,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
 
 			engine = SPSRCSDecision(SPS_THRUST / sv.mass, dv);
-			PoweredFlightProcessor(sv, GETBase, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH);
+			PoweredFlightProcessor(sv, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH);
 		}
 		else //Nodal Targeting
 		{
@@ -445,7 +445,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
 
 			engine = SPSRCSDecision(SPS_THRUST / sv.mass, dv);
-			PoweredFlightProcessor(sv, GETBase, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH, sv_ig1, sv_cut1);
+			PoweredFlightProcessor(sv, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH, sv_ig1, sv_cut1);
 		}
 
 		if (length(dV_LVLH) < dv_thres)
@@ -658,7 +658,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		tig = GETfromGMT(PZLRBELM.sv_man_bef[6].GMT);
 		dv = PZLRBELM.V_man_after[6] - PZLRBELM.sv_man_bef[6].V;
 
-		PoweredFlightProcessor(sv, GETbase, tig, RTCC_ENGINETYPE_CSMSPS, 0.0, dv, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, tig, RTCC_ENGINETYPE_CSMSPS, 0.0, dv, false, P30TIG, dV_LVLH);
 
 		manopt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
 		manopt.dV_LVLH = dV_LVLH;
@@ -1079,7 +1079,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		LunarDescentPlanningProcessor(sv);
 
-		PoweredFlightProcessor(sv, GETbase, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
