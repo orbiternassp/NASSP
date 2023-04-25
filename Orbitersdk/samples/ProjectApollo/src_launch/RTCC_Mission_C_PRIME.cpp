@@ -861,16 +861,14 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		RTEMoonOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
-		double GETbase;
 		SV sv0, sv1;
 		char manname[8];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = CalcGETBase();
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		sv1 = ExecuteManeuver(sv0, GETbase, TimeofIgnition, DeltaV_LVLH, 0, RTCC_ENGINETYPE_CSMSPS);
+		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, 0, RTCC_ENGINETYPE_CSMSPS);
 
 		if (fcn == 50)
 		{
@@ -1547,9 +1545,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		LunarEntryPADOpt entopt;
 		SV sv;
-		double GETbase;
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src);
 
 		if (length(DeltaV_LVLH) != 0.0)
