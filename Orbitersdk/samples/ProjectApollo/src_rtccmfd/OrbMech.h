@@ -488,6 +488,7 @@ namespace OrbMech {
 	MATRIX3 tmat(MATRIX3 a);
 	template <typename T> int sign(T val);
 	int DoubleToBuffer(double x, double q, int m);
+	void AGCSignedValue(int &val);
 	int DoubleToDEDA(double x, double q);
 	double cot(double a);
 	double sec(double a);

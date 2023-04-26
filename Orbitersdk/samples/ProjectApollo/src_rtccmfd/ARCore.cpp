@@ -866,7 +866,7 @@ void ARCore::EntryUpdateCalc()
 	EntryResults res;
 
 	sv0 = GC->rtcc->StateVectorCalc(vessel);
-	GC->rtcc->EntryUpdateCalc(sv0, GC->rtcc->CalcGETBase(), entryrange, true, &res);
+	GC->rtcc->EntryUpdateCalc(sv0, entryrange, true, &res);
 
 	EntryLatcor = res.latitude;
 	EntryLngcor = res.longitude;
@@ -1519,7 +1519,7 @@ void ARCore::NavCheckPAD()
 
 	sv = GC->rtcc->StateVectorCalc(vessel);
 
-	GC->rtcc->NavCheckPAD(sv, navcheckpad, GC->rtcc->CalcGETBase(), navcheckpad.NavChk[0]);
+	GC->rtcc->NavCheckPAD(sv, navcheckpad, navcheckpad.NavChk[0]);
 }
 
 void ARCore::UpdateTLITargetTable()
@@ -2675,7 +2675,6 @@ int ARCore::subThread()
 
 		opt.DH = GC->rtcc->GZGENCSN.SPQDeltaH;
 		opt.E = GC->rtcc->GZGENCSN.SPQElevationAngle;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.WT = GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle;
@@ -2718,7 +2717,7 @@ int ARCore::subThread()
 			}
 			else
 			{
-				opt.t_CDH = GC->rtcc->FindDH(sv_A, sv_P, GC->rtcc->CalcGETBase(), CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
+				opt.t_CDH = GC->rtcc->FindDH(sv_A, sv_P, CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
 			}
 		}
 		opt.t_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue;
@@ -2798,7 +2797,6 @@ int ARCore::subThread()
 		REFSMMATOpt opt;
 
 		opt.dV_LVLH = dV_LVLH;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.LSAzi = GC->rtcc->med_k18.psi_DS*RAD;
 		opt.LSLat = GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST];
 		opt.LSLng = GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST];
@@ -3000,7 +2998,6 @@ int ARCore::subThread()
 		AP7TPIPADOpt opt;
 
 		opt.dV_LVLH = dV_LVLH;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.TIG = P30TIG;
 		opt.sv_A = GC->rtcc->StateVectorCalcEphem(vessel);
 		opt.sv_P = GC->rtcc->StateVectorCalcEphem(target);
@@ -3118,7 +3115,6 @@ int ARCore::subThread()
 
 			opt.dV_LVLH = dV_LVLH;
 			opt.enginetype = manpadenginetype;
-			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.sxtstardtime = sxtstardtime;
@@ -3146,7 +3142,6 @@ int ARCore::subThread()
 
 			opt.dV_LVLH = dV_LVLH;
 			opt.enginetype = manpadenginetype;
-			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 			opt.sxtstardtime = sxtstardtime;
@@ -3424,7 +3419,6 @@ int ARCore::subThread()
 		}
 
 		opt.direct = true;
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.HeadsUp = HeadsUp;
 		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
@@ -3652,7 +3646,7 @@ int ARCore::subThread()
 
 		R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 
-		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GC->rtcc->CalcGETBase(), t_LunarLiftoff, GC->rtcc->PZLTRT.InsertionHorizontalVelocity, GC->rtcc->PZLTRT.InsertionRadialVelocity, theta, dt, dv, sv_IG, sv_Ins);
+		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, t_LunarLiftoff, GC->rtcc->PZLTRT.InsertionHorizontalVelocity, GC->rtcc->PZLTRT.InsertionRadialVelocity, theta, dt, dv, sv_IG, sv_Ins);
 
 		GC->rtcc->PZLTRT.PoweredFlightArc = theta;
 		GC->rtcc->PZLTRT.PoweredFlightTime = dt;
@@ -3688,7 +3682,6 @@ int ARCore::subThread()
 		vessel->GetRotationMatrix(Rot);
 		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
 
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_CSM = sv_CSM;
@@ -3751,7 +3744,6 @@ int ARCore::subThread()
 
 		}
 
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.IsTwoSegment = GC->mission > 11;
 		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
@@ -4097,7 +4089,6 @@ int ARCore::subThread()
 			sv0 = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.lat[0] = LmkLat;
 		opt.LmkTime[0] = LmkTime;
 		opt.lng[0] = LmkLng;
@@ -4300,7 +4291,7 @@ int ARCore::subThread()
 			{
 				attachedMass = 0.0;
 			}
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), SPQTIG, GC->rtcc->med_m70.Thruster, 0.0, SPQDeltaV, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			GC->rtcc->PoweredFlightProcessor(sv_tig, SPQTIG, GC->rtcc->med_m70.Thruster, 0.0, SPQDeltaV, true, P30TIG, dV_LVLH, sv_pre, sv_post);
 		}
 
 		Result = DONE;
@@ -4390,7 +4381,7 @@ int ARCore::subThread()
 				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
 
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), GC->rtcc->PZLDPDIS.GETIG[0], GC->rtcc->med_m70.Thruster, attachedMass, GC->rtcc->PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->PZLDPDIS.GETIG[0], GC->rtcc->med_m70.Thruster, attachedMass, GC->rtcc->PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH, sv_pre, sv_post);
 		}
 
 		Result = DONE;
@@ -4452,7 +4443,7 @@ int ARCore::subThread()
 				attachedMass = 0.0;
 			}
 			VECTOR3 DV = GC->rtcc->PZGPMELM.V_after - GC->rtcc->PZGPMELM.SV_before.V;
-			GC->rtcc->PoweredFlightProcessor(sv_tig, mass, GC->rtcc->GetGMTBase(), GC->rtcc->PZGPMELM.SV_before.GMT, GC->rtcc->med_m65.Thruster, attachedMass, DV, false, P30TIG, dV_LVLH);
+			GC->rtcc->PoweredFlightProcessor(sv_tig, mass, GC->rtcc->GETfromGMT(GC->rtcc->PZGPMELM.SV_before.GMT), GC->rtcc->med_m65.Thruster, attachedMass, DV, false, P30TIG, dV_LVLH);
 			P30TIG = GC->rtcc->GETfromGMT(P30TIG);
 		}
 
@@ -4588,7 +4579,7 @@ int ARCore::subThread()
 			{
 				attachedMass = 0.0;
 			}
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), tig, GC->rtcc->med_m78.Thruster, attachedMass, dv, false, P30TIG, dV_LVLH, sv_pre, sv_post);
+			GC->rtcc->PoweredFlightProcessor(sv_tig, tig, GC->rtcc->med_m78.Thruster, attachedMass, dv, false, P30TIG, dV_LVLH, sv_pre, sv_post);
 		}
 
 		Result = DONE;
