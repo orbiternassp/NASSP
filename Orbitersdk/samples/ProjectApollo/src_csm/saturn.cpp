@@ -72,6 +72,7 @@ extern "C" {
 using namespace nassp;
 
 //extern FILE *PanelsdkLogFile;
+extern FILE* IMUDriftLogger;
 
 #define CSM_AXIS_INPUT_CNT  53
 VesimInputDefinition vesim_csm_inputs[CSM_AXIS_INPUT_CNT] = {
@@ -1436,7 +1437,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		ATTITUDEFORTESTING.x, ATTITUDEFORTESTING.y, ATTITUDEFORTESTING.z, 
 		DRIFTRATEFORTESTING.x, DRIFTRATEFORTESTING.y, DRIFTRATEFORTESTING.z,
 		IMURESOLVERPHASEERROR.x, IMURESOLVERPHASEERROR.y, IMURESOLVERPHASEERROR.z);
-
+	fprintf(IMUDriftLogger, "%0.10f, %0.10f, %0.10f, %0.10f\n", simt, ATTITUDEFORTESTING.x, ATTITUDEFORTESTING.y, ATTITUDEFORTESTING.z);
+	fflush(IMUDriftLogger);
 	Timestep(simt, simdt, mjd);
 	
 
