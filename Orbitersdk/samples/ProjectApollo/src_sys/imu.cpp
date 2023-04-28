@@ -462,7 +462,7 @@ void IMU::Timestep(double simdt)
 		
 		// Gimbals
 		MATRIX3 vesselTransform = mul(Orbiter.Attitude_g2v, Orbiter.AttitudeReference);
-		MATRIX3 DriftTransform = mul(DriftXRot,mul(DriftYRot, DriftZRot));
+		MATRIX3 DriftTransform = mul(DriftXRot,mul(DriftZRot, DriftYRot));
 		MATRIX3 StableMemberTransform = mul(getOrbiterLocalToNavigationBaseTransformation(), mul(vesselTransform, DriftTransform));
 		// calculate the new gimbal angles
 		VECTOR3 newAngles = getRotationAnglesXZY(StableMemberTransform);
