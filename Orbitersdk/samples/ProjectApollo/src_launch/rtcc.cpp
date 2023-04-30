@@ -5369,6 +5369,31 @@ int RTCC::LunarDescentPlanningProcessor(SV sv)
 	return 0;
 }
 
+void RTCC::TranslunarInjectionProcessor(SV2 state)
+{
+	TLIMEDQuantities medquant;
+	TLMCCMissionConstants mccconst;
+	TLIOutputData out;
+
+	medquant.Mode = PZTLIPLN.Mode;
+	medquant.state = state;
+	medquant.h_ap = PZTLIPLN.h_ap*1852.0;
+	medquant.GMT_TIG = GMTfromGET(PZTLIPLN.GET_TLI);
+
+	mccconst.Reentry_range = PZMCCPLN.Reentry_range;
+
+	TLIProcessor tli(this);
+	tli.Init(medquant, mccconst, GetGMTBase());
+	tli.Main(out);
+
+	if (out.ErrorIndicator) return;
+
+	PZTLIPLN.DataIndicator = 1;
+	PZTLIPLN.param7 = out.uplink_data;
+	PZTLIPLN.GET_TIG = GETfromGMT(out.uplink_data.GMT_TIG);
+	PZTLIPLN.GET_RP = PZTLIPLN.GET_TIG - SystemParameters.MDVSTP.DTIG;
+}
+
 void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass)
 {
 	TLMCCDataTable datatab;
@@ -5381,8 +5406,6 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMm
 	medquant.Mode = PZMCCPLN.Mode;
 	medquant.Config = PZMCCPLN.Config;
 	medquant.T_MCC = GMTfromGET(PZMCCPLN.MidcourseGET);
-	medquant.GMTBase = GetGMTBase();
-	medquant.GETBase = CalcGETBase();
 	medquant.sv0 = sv0;
 	medquant.CSMMass = CSMmass;
 	medquant.LMMass = LMmass;
@@ -5427,7 +5450,7 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMm
 	mccconst.Reentry_range = PZMCCPLN.Reentry_range;
 
 	TLMCCProcessor tlmcc(this);
-	tlmcc.Init(datatab, medquant, mccconst);
+	tlmcc.Init(datatab, medquant, mccconst, GetGMTBase());
 	tlmcc.Main(out);
 
 	//Update display data
@@ -7337,40 +7360,6 @@ bool RTCC::REFSMMATDecision(VECTOR3 Att)
 	}
 
 	return false;
-}
-
-SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG)
-{
-	//Inputs:
-	//
-	//R_TLI: TLI cutoff position vector, right-handed, ECI coordinate system
-	//V_TLI: TLI cutoff velocity vector, right-handed, ECI coordinate system
-
-	double T_RP, tb5start;
-	SevenParameterUpdate param;
-	OELEMENTS coe;
-
-	tb5start = TB5 - 17.0;
-	T_RP = P30TIG - tb5start - T_RG;
-
-	EphemerisData2 sv, sv_out;
-	sv.R = R_TLI;
-	sv.V = V_TLI;
-	sv.GMT = GMTfromGET(P30TIG);
-
-	ELVCNV(sv, 0, 1, sv_out);
-
-	coe = OrbMech::coe_from_PACSS4(sv_out.R, sv_out.V, mu);
-
-	param.alpha_D = coe.w;
-	param.C3 = coe.h;
-	param.e = coe.e;
-	param.f = coe.TA;
-	param.Inclination = coe.i;
-	param.theta_N = coe.RA;
-	param.T_RP = T_RP;
-
-	return param;
 }
 
 int RTCC::PMMSPT(PMMSPTInput &in)

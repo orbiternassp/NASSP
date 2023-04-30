@@ -2096,6 +2096,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 6 * H / 14, "AGC Ephemeris", 13);
 		skp->Text(5 * W / 8, 8 * H / 14, "Lunar Impact", 12);
+		skp->Text(5 * W / 8, 10 * H / 14, "TLI Planning", 12);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 22)
@@ -6995,18 +6996,73 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 79)
 	{
-		if (G->TLImaneuver == 0)
+		skp->Text(2 * W / 8, 1 * H / 14, "TLI PLANNING DISPLAY (MSK 0080)", 31);
+
+		if (GC->rtcc->PZTLIPLN.Mode == 1)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "TLI (nodal)", 11);
+			skp->Text(1 * W / 16, 2 * H / 14, "Ellipse", 7);
 		}
-		else if (G->TLImaneuver == 1)
+		else
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "TLI (free return)", 17);
+			skp->Text(1 * W / 16, 2 * H / 14, "TBD", 3);
+		}
+		
+		GET_Display(Buffer, GC->rtcc->PZTLIPLN.GET_TLI, false);
+		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.0lf NM", GC->rtcc->PZTLIPLN.h_ap);
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(9 * W / 16, 4 * H / 14, "GET RP", 6);
+		skp->Text(9 * W / 16, 5 * H / 14, "GET TIG", 7);
+		skp->Text(9 * W / 16, 6 * H / 14, "INCL", 4);
+		skp->Text(9 * W / 16, 7 * H / 14, "DESC", 4);
+		skp->Text(9 * W / 16, 8 * H / 14, "ECC", 3);
+		skp->Text(9 * W / 16, 9 * H / 14, "C3", 2);
+		skp->Text(9 * W / 16, 10 * H / 14, "ALPHA", 5);
+		skp->Text(9 * W / 16, 11 * H / 14, "TA", 2);
+
+		if (GC->rtcc->PZTLIPLN.DataIndicator == 1)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+			GET_Display(Buffer, GC->rtcc->PZTLIPLN.GET_RP, false);
+			skp->Text(15 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+			GET_Display(Buffer, GC->rtcc->PZTLIPLN.GET_TIG, false);
+			skp->Text(15 * W / 16, 5 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTLIPLN.param7.Inclination*DEG);
+			skp->Text(15 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTLIPLN.param7.theta_N*DEG);
+			skp->Text(15 * W / 16, 7 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.5lf", GC->rtcc->PZTLIPLN.param7.e);
+			skp->Text(15 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3lf", GC->rtcc->PZTLIPLN.param7.C3 / pow(1852.0, 2));
+			skp->Text(15 * W / 16, 9 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTLIPLN.param7.alpha_D*DEG);
+			skp->Text(15 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTLIPLN.param7.f*DEG);
+			skp->Text(15 * W / 16, 11 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(4 * W / 8, 1 * H / 14, "TLI PLANNING DISPLAY (MSK 0080)", 31);
-
-		skp->Text(4 * W / 8, 6 * H / 14, "Under construction!", 19);
+		switch (G->iuUplinkResult)
+		{
+		case 1:
+			sprintf(Buffer, "Uplink accepted!");
+			break;
+		case 2:
+			sprintf(Buffer, "No vessel or IU!");
+			break;
+		case 3:
+			sprintf(Buffer, "Uplink rejected!");
+			break;
+		case 4:
+			sprintf(Buffer, "No TLI data!");
+			break;
+		default:
+			sprintf(Buffer, "No Uplink");
+			break;
+		}
+		skp->Text(13 * W / 32, 30 * H / 32, Buffer, strlen(Buffer));
 	}
 	else if (screen == 80)
 	{

@@ -1,0 +1,213 @@
+/****************************************************************************
+This file is part of Project Apollo - NASSP
+
+RTCC Translunar Injection Processor
+
+Project Apollo is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Project Apollo is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Project Apollo; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+See http://nassp.sourceforge.net/license/ for more details.
+
+**************************************************************************/
+
+#include "GeneralizedIterator.h"
+#include "rtcc.h"
+#include "TLIProcessor.h"
+
+TLIProcessor::TLIProcessor(RTCC *r) : TLTrajectoryComputers(r)
+{
+
+}
+
+void TLIProcessor::Init(TLIMEDQuantities med, TLMCCMissionConstants constants, double GMTBase)
+{
+	TLTrajectoryComputers::Init(constants, GMTBase);
+
+	MEDQuantities = med;
+}
+
+void TLIProcessor::Main(TLIOutputData &out)
+{
+	ErrorIndicator = 0;
+
+	if (MEDQuantities.Mode == 1)
+	{
+		Option1();
+	}
+
+	out.ErrorIndicator = ErrorIndicator;
+	if (out.ErrorIndicator) return;
+
+	//Convert to LVDC parameters
+	if (MEDQuantities.Mode == 1)
+	{
+		//7 parameters
+
+
+		//Convert to ECT at GRR
+
+		EphemerisData2 sv, sv_ECT;
+
+		sv.R = outarray.sv_tli_cut.R;
+		sv.V = outarray.sv_tli_cut.V;
+		sv.GMT = pRTCC->SystemParameters.MCGRIC*3600.0;
+		pRTCC->ELVCNV(sv, 0, 1, sv_ECT);
+
+		OELEMENTS coe = OrbMech::coe_from_PACSS4(sv_ECT.R, sv_ECT.V, mu_E);
+
+		out.uplink_data.Inclination = coe.i;
+		out.uplink_data.theta_N = coe.RA;
+		out.uplink_data.e = coe.e;
+		out.uplink_data.C3 = coe.h;
+		out.uplink_data.alpha_D = coe.w;
+		out.uplink_data.f = coe.TA;
+		out.uplink_data.GMT_TIG = outarray.sv_tli_ign.GMT;
+	}
+	else
+	{
+		//10 parameters
+	}
+}
+
+void TLIProcessor::Option1()
+{
+	//Propagate state to TIG
+	EMSMISSInputTable in;
+	PLAWDTOutput tab;
+
+	tab.CC[RTCC_CONFIG_S] = true;
+	tab.ConfigArea = 0.0; //TBD
+	tab.ConfigWeight = MEDQuantities.state.Mass;
+	tab.CSMArea = tab.CSMWeight = tab.LMAscArea = tab.LMAscWeight = tab.LMDscArea = tab.LMDscWeight = 0.0;
+	tab.SIVBArea = 0.0; //TBD
+	tab.SIVBWeight = MEDQuantities.state.Mass;
+	tab.KFactor = 1.0;
+
+	in.AnchorVector = MEDQuantities.state.sv;
+	in.MaxIntegTime = MEDQuantities.GMT_TIG - MEDQuantities.state.sv.GMT;
+	if (in.MaxIntegTime < 0)
+	{
+		in.MaxIntegTime = abs(in.MaxIntegTime);
+		in.IsForwardIntegration = false;
+	}
+	in.VehicleCode = RTCC_MPT_CSM;
+	in.useInputWeights = true;
+	in.WeightsTable = &tab;
+
+	pRTCC->EMSMISS(&in);
+
+	if (in.NIAuxOutputTable.ErrorCode)
+	{
+		ErrorIndicator = 1;
+		return;
+	}
+
+	outarray.sv0 = in.NIAuxOutputTable.sv_cutoff;
+	outarray.M_i = in.NIAuxOutputTable.CutoffWeight;
+
+	//Calculate initial guess for C3
+	double R_C, a_C, V_C, C3_guess;
+
+	R_C = length(outarray.sv0.R);
+	a_C = (R_C + R_E + MEDQuantities.h_ap) / 2.0;
+	V_C = sqrt(mu_E*(2.0 / R_C - 1.0 / a_C));
+	C3_guess = V_C * V_C - 2.0*mu_E / R_C;
+
+	bool err = ConicTLIIEllipse(C3_guess, MEDQuantities.h_ap);
+	if (err)
+	{
+		ErrorIndicator = 2;
+		return;
+	}
+	err = IntegratedTLIIEllipse(outarray.C3_TLI, outarray.sigma_TLI, MEDQuantities.h_ap);
+	if (err)
+	{
+		ErrorIndicator = 2;
+		return;
+	}
+}
+
+bool TLIProcessor::ConicTLIIEllipse(double C3_guess, double h_ap)
+{
+	void *constPtr;
+	outarray.MidcourseCorrectionIndicator = false;
+	outarray.TLIIndicator = true;
+	constPtr = &outarray;
+
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
+
+	GenIterator::GeneralizedIteratorBlock block;
+
+	block.IndVarSwitch[10] = true;
+	block.IndVarSwitch[12] = true;
+
+	block.IndVarGuess[10] = C3_guess / pow(R_E / 3600.0, 2);
+	block.IndVarGuess[11] = 0.0; //delta
+	block.IndVarGuess[12] = 3.0*RAD; //sigma
+
+	block.IndVarStep[10] = pow(2, -19);
+	block.IndVarStep[12] = pow(2, -19);
+
+	block.IndVarWeight[10] = 512.0;
+	block.IndVarWeight[12] = 64.0;
+
+	block.DepVarSwitch[21] = true;
+	block.DepVarSwitch[22] = true;
+
+	block.DepVarLowerLimit[21] = (h_ap - 1.0*1852.0) / R_E;
+	block.DepVarLowerLimit[22] = outarray.M_i;
+
+	block.DepVarUpperLimit[21] = (h_ap + 1.0*1852.0) / R_E;
+	block.DepVarUpperLimit[22] = outarray.M_i;
+
+	block.DepVarClass[21] = 1;
+	block.DepVarClass[22] = 3;
+
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	return GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+}
+
+bool TLIProcessor::IntegratedTLIIEllipse(double C3_guess_ER, double sigma, double h_ap)
+{
+	void *constPtr;
+	outarray.TLIIndicator = true;
+	outarray.EllipticalCaseIndicator = true;
+	outarray.sigma_TLI = sigma;
+	constPtr = &outarray;
+
+	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &IntegratedTrajectoryComputerPointer;
+
+	GenIterator::GeneralizedIteratorBlock block;
+
+	block.IndVarSwitch[4] = true;
+
+	block.IndVarGuess[4] = C3_guess_ER;
+	block.IndVarGuess[5] = 0.0; //dt_EPO
+	block.IndVarGuess[6] = 0.0; //delta
+
+	block.IndVarStep[4] = pow(2, -19);
+	block.IndVarWeight[4] = 512.0;
+
+	block.DepVarSwitch[8] = true;
+	block.DepVarLowerLimit[8] = (h_ap - 1.0*1852.0) / R_E;
+	block.DepVarUpperLimit[8] = (h_ap + 1.0*1852.0) / R_E;
+	block.DepVarClass[8] = 1;
+
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	return GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+}

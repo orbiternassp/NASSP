@@ -34,6 +34,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/EntryCalculations.h"
 #include "../src_rtccmfd/RTCCTables.h"
 #include "../src_rtccmfd/TLMCC.h"
+#include "../src_rtccmfd/TLIProcessor.h"
 #include "../src_rtccmfd/LOITargeting.h"
 #include "../src_rtccmfd/LMGuidanceSim.h"
 #include "../src_rtccmfd/CoastNumericalIntegrator.h"
@@ -2096,18 +2097,6 @@ struct calculationParameters {
 	SV SVSTORE1;			//Temporary state vector storage
 };
 
-//For LVDC
-struct SevenParameterUpdate
-{
-	double T_RP;	//Time of Restart Preparation (TB6)
-	double C3;
-	double Inclination;
-	double e;
-	double alpha_D;
-	double f;
-	double theta_N;
-};
-
 struct ASTInput
 {
 	double dgamma;
@@ -2422,6 +2411,7 @@ public:
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
+	void TranslunarInjectionProcessor(SV2 state);
 	void TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass);
 	int LunarDescentPlanningProcessor(SV sv);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
@@ -2439,7 +2429,6 @@ public:
 	void RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(EphemerisData sv0, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
-	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
 	//S-IVB TLI IGM Pre-Thrust Targeting Module
 	int PMMSPT(PMMSPTInput &in);
 	int PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC);
@@ -3624,6 +3613,23 @@ public:
 		MATRIX3 G = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	} PZMATCSM, PZMATLEM;
 
+	struct TLIPlanningTable
+	{
+		//INPUT
+		//1 = Ellipse
+		int Mode = 1;
+		//TLI ignition for mode 1
+		double GET_TLI = 0.0;
+		//Apogee height for mode 1, nautical miles
+		double h_ap = 5000.0;
+
+		//OUTPUT
+		double GET_TIG = 0.0;
+		double GET_RP = 0.0;
+		int DataIndicator = 0; //0 = None, 1 = 7 parameters, 2 = 10 parameters
+		SevenParameterUpdate param7;
+	} PZTLIPLN;
+
 	struct TLIPlanningOutputTable
 	{
 		//Target vector
@@ -4286,7 +4292,7 @@ public:
 		TLMCCDataTable blocks[6];
 	} PZMCCSFP;
 
-	struct TTLMCCPlanningDisplay
+	struct TLMCCPlanningDisplay
 	{
 		TLMCCDisplayData data[6];
 	} PZMCCDIS;

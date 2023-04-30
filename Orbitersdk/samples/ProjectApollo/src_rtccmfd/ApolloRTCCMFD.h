@@ -126,7 +126,7 @@ public:
 	double timetoapo();
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
-	void menuIUUplink();
+	void menuSLVTLITargetingUplink();
 	void menuP30Uplink();
 	void menuP30UplinkCalc();
 	void menuRetrofireEXDVUplink();
@@ -348,6 +348,9 @@ public:
 	void menuTerrainModelCalc();
 	void set_TLand(double time);
 	void menuTLCCCalc();
+	void menuTLIProcessorCalc();
+	void menuTLIProcessorMode();
+	void menuTLIProcessorGET();
 	void menuNavCheckPADCalc();
 	void menuSetNavCheckGET();
 	void menuLAPCalc();

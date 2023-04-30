@@ -565,8 +565,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	landingzone = 0;
 	entryprecision = -1;
-
-	TLImaneuver = 0;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -575,8 +573,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	tlipad.SepATT = _V(0.0, 0.0, 0.0);
 	tlipad.IgnATT = _V(0.0, 0.0, 0.0);
 	tlipad.ExtATT = _V(0.0, 0.0, 0.0);
-	R_TLI = _V(0, 0, 0);
-	V_TLI = _V(0, 0, 0);
 
 	pdipad.Att = _V(0, 0, 0);
 	pdipad.CR = 0.0;
@@ -996,6 +992,16 @@ void ARCore::SpaceDigitalsMSKRequest()
 void ARCore::GenerateSpaceDigitalsNoMPT()
 {
 	startSubthread(11);
+}
+
+void ARCore::TLIProcessorCalc()
+{
+	startSubthread(12);
+}
+
+void ARCore::SaturnVTLITargetUplink()
+{
+	startSubthread(57);
 }
 
 void ARCore::LUNTARCalc()
@@ -3211,8 +3217,14 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
-	case 12: //Spare
+	case 12: //TLI Processor
 	{
+		SV2 state;
+
+		state = GC->rtcc->StateVectorCalc2(vessel);
+
+		GC->rtcc->TranslunarInjectionProcessor(state);
+
 		Result = DONE;
 	}
 	break;
@@ -4799,6 +4811,66 @@ int ARCore::subThread()
 
 		GC->rtcc->PMMPAD(sv1, mass, THT, dt, H_P, Thruster, DPSScaleFactor);
 		GC->rtcc->PMDPAD();
+
+		Result = DONE;
+	}
+	break;
+	case 57: //Saturn V TLI Targeting Update
+	{
+		iuUplinkResult = DONE;
+
+		if (GC->rtcc->PZTLIPLN.DataIndicator == 0)
+		{
+			iuUplinkResult = 4;
+			Result = DONE;
+			break;
+		}
+
+		IU *iu;
+
+		if (utils::IsVessel(vessel, utils::SaturnV))
+		{
+			Saturn *iuv = (Saturn *)vessel;
+			iu = iuv->GetIU();
+		}
+		else
+		{
+			iuUplinkResult = 2;
+			Result = DONE;
+			break;
+		}
+
+		void *uplink = NULL;
+		DCSSLVTLITARGET upl;
+
+		LVDCSV *lvdc = (LVDCSV*)iu->GetLVDC();
+
+		SevenParameterUpdate coe = GC->rtcc->PZTLIPLN.param7;
+
+		//Calculate time of restart preparation in TB5
+		double GMT_TB5 = GC->rtcc->SystemParameters.MCGRIC*3600.0 + lvdc->TB5;
+		double TIG_TB5 = coe.GMT_TIG - GMT_TB5;
+		double T_RP_TB5 = TIG_TB5 - GC->rtcc->SystemParameters.MDVSTP.DTIG;
+
+		upl.T_RP = T_RP_TB5;
+		upl.alpha_D = coe.alpha_D;
+		upl.C_3 = coe.C3;
+		upl.e = coe.e;
+		upl.f = coe.f;
+		upl.Inclination = coe.Inclination;
+		upl.theta_N = coe.theta_N;
+
+		uplink = &upl;
+		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SLV_TLI_TARGETING_UPDATE, uplink);
+
+		if (uplinkaccepted)
+		{
+			iuUplinkResult = 1;
+		}
+		else
+		{
+			iuUplinkResult = 3;
+		}
 
 		Result = DONE;
 	}
