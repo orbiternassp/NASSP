@@ -147,6 +147,7 @@ struct TLMCCGeneralizedIteratorArray
 	double V_L;
 
 	//TLI only
+	double dv_TLI;
 	double C3_TLI;
 	double dt_EPO;
 	double delta_TLI;
@@ -155,6 +156,7 @@ struct TLMCCGeneralizedIteratorArray
 
 struct TLMCCMissionConstants
 {
+	double delta, sigma;
 	int n, m;
 	double lambda_IP;
 	double V_pcynlo;
@@ -202,7 +204,7 @@ protected:
 	void RNTSIM(VECTOR3 R, VECTOR3 V, double GMT, double lng_L, double &lat, double &lng, double &dlng);
 	void RVIO(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &theta, double &phi, double &gamma, double& psi);
 	void SCALE(VECTOR3 R0, VECTOR3 V0, double rad, double h, VECTOR3 &RF, VECTOR3 &VF);
-	SV2 TLIBRN(SV2 state, double C3, double sigma, double delta, double F_I, double F, double WDOT, double T_MRS, bool nominal);
+	SV2 TLIBRN(SV2 state, double C3, double sigma, double delta, double F_I, double F, double WDOT, double T_MRS, bool nominal, double &DV);
 	void XBETA(VECTOR3 R0, VECTOR3 V0, double GMT0, double beta, int K, VECTOR3 &RF, VECTOR3 &VF, double &GMTF);
 	double GetMU(int k);
 

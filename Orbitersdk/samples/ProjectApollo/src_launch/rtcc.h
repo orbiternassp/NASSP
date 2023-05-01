@@ -3616,22 +3616,23 @@ public:
 	struct TLIPlanningTable
 	{
 		//INPUT
-		//1 = Ellipse
-		int Mode = 1;
-		//TLI ignition for mode 1
+		//4 = E-type mission ellipse
+		int Mode = 4;
+		//TLI ignition for mode 4
 		double GET_TLI = 0.0;
-		//Apogee height for mode 1, nautical miles
+		//Apogee height for mode 4, nautical miles
 		double h_ap = 5000.0;
 
-		//OUTPUT
-		double GET_TIG = 0.0;
-		double GET_RP = 0.0;
-		int DataIndicator = 0; //0 = None, 1 = 7 parameters, 2 = 10 parameters
-		SevenParameterUpdate param7;
+		//CONSTANTS - THESE SHOULD BE SYSTEM PARAMETERS
+		double DELTA = 0.0;
+		double SIGMA = 7.5*RAD;
+		
 	} PZTLIPLN;
 
 	struct TLIPlanningOutputTable
 	{
+		int DataIndicator = 0; //0 = None, 1 = 7 parameters, 2 = 10 parameters
+
 		//Target vector
 		VECTOR3 T;
 		//Unit nodal vector which defines node of desired cutoff plane and parking orbit plane at time of restart preparation
@@ -3646,6 +3647,14 @@ public:
 		double theta_N;
 		double sigma;
 		double C3;
+
+		//Uplink
+		SevenParameterUpdate param7;
+
+		//Display
+		double GET_TIG = 0.0;
+		double GET_TB6 = 0.0;
+		double dv_TLI = 0.0;
 	} PZTTLIPL;
 
 	struct LOIElementsTable

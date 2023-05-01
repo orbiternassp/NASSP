@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 struct TLIMEDQuantities
 {
+	//1 = S-IVB hypersurface solution, 2 = integrated free-return, 3 = hybrid ellipse, 4 = E-type mission ellipse
 	int Mode;
 	SV2 state;
 
@@ -52,6 +53,7 @@ struct TLIOutputData
 	bool IsSevenParameters = true;
 	EphemerisData sv_TLI_ign, sv_TLI_cut;
 	SevenParameterUpdate uplink_data;
+	double dv_TLI;
 };
 
 class TLIProcessor : public TLTrajectoryComputers
@@ -66,7 +68,7 @@ protected:
 	void Option1();
 
 	bool ConicTLIIEllipse(double C3_guess, double h_ap);
-	bool IntegratedTLIIEllipse(double C3_guess_ER, double sigma, double h_ap);
+	bool IntegratedTLIIEllipse(double C3_guess_ER, double h_ap);
 
 	TLIMEDQuantities MEDQuantities;
 	int ErrorIndicator;

@@ -6998,7 +6998,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(2 * W / 8, 1 * H / 14, "TLI PLANNING DISPLAY (MSK 0080)", 31);
 
-		if (GC->rtcc->PZTLIPLN.Mode == 1)
+		if (GC->rtcc->PZTLIPLN.Mode == 4)
 		{
 			skp->Text(1 * W / 16, 2 * H / 14, "Ellipse", 7);
 		}
@@ -7021,27 +7021,30 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(9 * W / 16, 9 * H / 14, "C3", 2);
 		skp->Text(9 * W / 16, 10 * H / 14, "ALPHA", 5);
 		skp->Text(9 * W / 16, 11 * H / 14, "TA", 2);
+		skp->Text(9 * W / 16, 12 * H / 14, "DV", 2);
 
-		if (GC->rtcc->PZTLIPLN.DataIndicator == 1)
+		if (GC->rtcc->PZTTLIPL.DataIndicator == 1)
 		{
 			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
-			GET_Display(Buffer, GC->rtcc->PZTLIPLN.GET_RP, false);
+			GET_Display(Buffer, GC->rtcc->PZTTLIPL.GET_TB6, false);
 			skp->Text(15 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-			GET_Display(Buffer, GC->rtcc->PZTLIPLN.GET_TIG, false);
+			GET_Display(Buffer, GC->rtcc->PZTTLIPL.GET_TIG, false);
 			skp->Text(15 * W / 16, 5 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTLIPLN.param7.Inclination*DEG);
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.param7.Inclination*DEG);
 			skp->Text(15 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTLIPLN.param7.theta_N*DEG);
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.param7.theta_N*DEG);
 			skp->Text(15 * W / 16, 7 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.5lf", GC->rtcc->PZTLIPLN.param7.e);
+			sprintf(Buffer, "%.5lf", GC->rtcc->PZTTLIPL.param7.e);
 			skp->Text(15 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf", GC->rtcc->PZTLIPLN.param7.C3 / pow(1852.0, 2));
+			sprintf(Buffer, "%.3lf", GC->rtcc->PZTTLIPL.param7.C3 / pow(1852.0, 2));
 			skp->Text(15 * W / 16, 9 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTLIPLN.param7.alpha_D*DEG);
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.param7.alpha_D*DEG);
 			skp->Text(15 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTLIPLN.param7.f*DEG);
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.param7.f*DEG);
 			skp->Text(15 * W / 16, 11 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.1lf", GC->rtcc->PZTTLIPL.dv_TLI / 0.3048);
+			skp->Text(15 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		switch (G->iuUplinkResult)

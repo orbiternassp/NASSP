@@ -4819,7 +4819,7 @@ int ARCore::subThread()
 	{
 		iuUplinkResult = DONE;
 
-		if (GC->rtcc->PZTLIPLN.DataIndicator == 0)
+		if (GC->rtcc->PZTTLIPL.DataIndicator == 0)
 		{
 			iuUplinkResult = 4;
 			Result = DONE;
@@ -4845,7 +4845,7 @@ int ARCore::subThread()
 
 		LVDCSV *lvdc = (LVDCSV*)iu->GetLVDC();
 
-		SevenParameterUpdate coe = GC->rtcc->PZTLIPLN.param7;
+		SevenParameterUpdate coe = GC->rtcc->PZTTLIPL.param7;
 
 		//Calculate time of restart preparation in TB5
 		double GMT_TB5 = GC->rtcc->SystemParameters.MCGRIC*3600.0 + lvdc->TB5;

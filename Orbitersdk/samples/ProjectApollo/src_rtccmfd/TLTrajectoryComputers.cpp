@@ -249,8 +249,12 @@ bool TLTrajectoryComputers::ConicMissionComputer(std::vector<double> &var, void 
 			vars->delta_TLI = var[11];
 			vars->sigma_TLI = var[12];
 
-			state_TLI2 = TLIBRN(state_TLI1, vars->C3_TLI, vars->sigma_TLI, vars->delta_TLI, F_I_SIVB, F_SIVB, WDOT_SIVB, T_MRS_SIVB, false);
+			state_TLI2 = TLIBRN(state_TLI1, vars->C3_TLI, vars->sigma_TLI, vars->delta_TLI, F_I_SIVB, F_SIVB, WDOT_SIVB, T_MRS_SIVB, false, vars->dv_TLI);
+
+			//Convert back to SI
 			vars->M_tli = state_TLI2.Mass*0.45359237;
+			vars->dv_TLI *= R_E / 3600.0;
+
 			ELEMT(state_TLI2.sv.R*R_E, state_TLI2.sv.V*R_E / 3600.0, mu_E, H, a, e, i, n, P, eta);
 			arr[21] = (a * (1.0 + e) - R_E) / R_E; //Calculated apogee height
 			arr[22] = vars->M_tli;
@@ -588,12 +592,13 @@ bool TLTrajectoryComputers::IntegratedTrajectoryComputer(std::vector<double> &va
 		state_TLI1.Mass = outarray.M_i / 0.45359237;
 
 		//Simulate TLI burn
-		state_TLI2 = TLIBRN(state_TLI1, vars->C3_TLI, vars->sigma_TLI, vars->delta_TLI, F_I_SIVB, F_SIVB, WDOT_SIVB, T_MRS_SIVB, true);
+		state_TLI2 = TLIBRN(state_TLI1, vars->C3_TLI, vars->sigma_TLI, vars->delta_TLI, F_I_SIVB, F_SIVB, WDOT_SIVB, T_MRS_SIVB, true, vars->dv_TLI);
 
 		//Convert back
 		state_TLI2.sv.R *= R_E;
 		state_TLI2.sv.V *= R_E / 3600.0;
 		state_TLI2.sv.GMT *= 3600.0;
+		vars->dv_TLI *= R_E / 3600.0;
 
 		vars->sv_tli_cut = state_TLI2.sv;
 
@@ -1677,7 +1682,7 @@ void TLINominalMissionPolynomial(double C3, double sigma, double delta, double F
 	DV = Y[4];
 }
 
-SV2 TLTrajectoryComputers::TLIBRN(SV2 state, double C3, double sigma, double delta, double F_I, double F, double WDOT, double T_MRS, bool nominal)
+SV2 TLTrajectoryComputers::TLIBRN(SV2 state, double C3, double sigma, double delta, double F_I, double F, double WDOT, double T_MRS, bool nominal, double &DV)
 {
 	//This function uses entirely units of Er, hours and pounds
 
@@ -1728,7 +1733,7 @@ SV2 TLTrajectoryComputers::TLIBRN(SV2 state, double C3, double sigma, double del
 	}
 
 	VECTOR3 R_I_u, N_I_u, S, T, N_c;
-	double alpha, beta, eta_alpha, R_P, DV, eta, T_B, C1, p, e, R_c, V_c, gamma_c;
+	double alpha, beta, eta_alpha, R_P, eta, T_B, C1, p, e, R_c, V_c, gamma_c;
 
 	//Account for possible out-of-plane
 	alpha = alpha0 + 4.66 * ddelta;

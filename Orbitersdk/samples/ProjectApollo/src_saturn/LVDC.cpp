@@ -8314,10 +8314,7 @@ EP00:
 		DPM[DIN4_SpacecraftSeparation] = true;
 		break;
 	case 73: //Restart Calculations (TB6+578.6)
-		if (!TU || TU10)
-		{
-			NISTAT[6] = true;
-		}
+		NISTAT[6] = true;
 		break;
 	case 74: //TB6+580.3
 		NISTAT[3] = true;

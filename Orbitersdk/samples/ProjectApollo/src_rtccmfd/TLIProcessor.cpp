@@ -41,7 +41,7 @@ void TLIProcessor::Main(TLIOutputData &out)
 {
 	ErrorIndicator = 0;
 
-	if (MEDQuantities.Mode == 1)
+	if (MEDQuantities.Mode == 4)
 	{
 		Option1();
 	}
@@ -50,7 +50,7 @@ void TLIProcessor::Main(TLIOutputData &out)
 	if (out.ErrorIndicator) return;
 
 	//Convert to LVDC parameters
-	if (MEDQuantities.Mode == 1)
+	if (MEDQuantities.Mode == 4)
 	{
 		//7 parameters
 
@@ -64,7 +64,7 @@ void TLIProcessor::Main(TLIOutputData &out)
 		sv.GMT = pRTCC->SystemParameters.MCGRIC*3600.0;
 		pRTCC->ELVCNV(sv, 0, 1, sv_ECT);
 
-		OELEMENTS coe = OrbMech::coe_from_PACSS4(sv_ECT.R, sv_ECT.V, mu_E);
+		OELEMENTS coe = OrbMech::coe_from_PACSS4(sv_ECT.R, sv_ECT.V, mu_E, pRTCC->SystemParameters.MCLGRA);
 
 		out.uplink_data.Inclination = coe.i;
 		out.uplink_data.theta_N = coe.RA;
@@ -78,6 +78,8 @@ void TLIProcessor::Main(TLIOutputData &out)
 	{
 		//10 parameters
 	}
+
+	out.dv_TLI = outarray.dv_TLI;
 }
 
 void TLIProcessor::Option1()
@@ -130,7 +132,7 @@ void TLIProcessor::Option1()
 		ErrorIndicator = 2;
 		return;
 	}
-	err = IntegratedTLIIEllipse(outarray.C3_TLI, outarray.sigma_TLI, MEDQuantities.h_ap);
+	err = IntegratedTLIIEllipse(outarray.C3_TLI, MEDQuantities.h_ap);
 	if (err)
 	{
 		ErrorIndicator = 2;
@@ -151,41 +153,34 @@ bool TLIProcessor::ConicTLIIEllipse(double C3_guess, double h_ap)
 	GenIterator::GeneralizedIteratorBlock block;
 
 	block.IndVarSwitch[10] = true;
-	block.IndVarSwitch[12] = true;
 
 	block.IndVarGuess[10] = C3_guess / pow(R_E / 3600.0, 2);
-	block.IndVarGuess[11] = 0.0; //delta
-	block.IndVarGuess[12] = 3.0*RAD; //sigma
+	block.IndVarGuess[11] = MissionConstants.delta;
+	block.IndVarGuess[12] = MissionConstants.sigma;
 
-	block.IndVarStep[10] = pow(2, -19);
-	block.IndVarStep[12] = pow(2, -19);
+	block.IndVarStep[10] = pow(2, -23);
 
-	block.IndVarWeight[10] = 512.0;
-	block.IndVarWeight[12] = 64.0;
+	block.IndVarWeight[10] = 4.0;
 
 	block.DepVarSwitch[21] = true;
-	block.DepVarSwitch[22] = true;
 
 	block.DepVarLowerLimit[21] = (h_ap - 1.0*1852.0) / R_E;
-	block.DepVarLowerLimit[22] = outarray.M_i;
 
 	block.DepVarUpperLimit[21] = (h_ap + 1.0*1852.0) / R_E;
-	block.DepVarUpperLimit[22] = outarray.M_i;
 
 	block.DepVarClass[21] = 1;
-	block.DepVarClass[22] = 3;
 
 	std::vector<double> result;
 	std::vector<double> y_vals;
 	return GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-bool TLIProcessor::IntegratedTLIIEllipse(double C3_guess_ER, double sigma, double h_ap)
+bool TLIProcessor::IntegratedTLIIEllipse(double C3_guess_ER, double h_ap)
 {
 	void *constPtr;
 	outarray.TLIIndicator = true;
 	outarray.EllipticalCaseIndicator = true;
-	outarray.sigma_TLI = sigma;
+	outarray.sigma_TLI = MissionConstants.sigma;
 	constPtr = &outarray;
 
 	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
@@ -197,10 +192,10 @@ bool TLIProcessor::IntegratedTLIIEllipse(double C3_guess_ER, double sigma, doubl
 
 	block.IndVarGuess[4] = C3_guess_ER;
 	block.IndVarGuess[5] = 0.0; //dt_EPO
-	block.IndVarGuess[6] = 0.0; //delta
+	block.IndVarGuess[6] = MissionConstants.delta;
 
-	block.IndVarStep[4] = pow(2, -19);
-	block.IndVarWeight[4] = 512.0;
+	block.IndVarStep[4] = pow(2, -23);
+	block.IndVarWeight[4] = 4.0;
 
 	block.DepVarSwitch[8] = true;
 	block.DepVarLowerLimit[8] = (h_ap - 1.0*1852.0) / R_E;

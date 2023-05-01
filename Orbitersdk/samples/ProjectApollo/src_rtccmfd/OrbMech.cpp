@@ -748,9 +748,32 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 	return coe;
 }
 
-OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu)
+OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu, double lng_PAD)
 {
-	double r, v, C3, e, inc, alpha_D, f, theta_N;
+	OELEMENTS coe1, coe2;
+	double theta_e, r, v;
+
+	coe1 = coe_from_sv(R, V, mu);
+
+	theta_e = lng_PAD;
+	r = length(R);
+	v = length(V);
+
+	coe2.RA = coe1.RA + PI - theta_e; //descending node angle
+	if (coe2.RA >= PI2) coe2.RA -= PI2;
+	if (coe2.RA < 0) coe2.RA += PI2;
+
+	coe2.i = coe1.i;
+	coe2.e = coe1.e;
+	coe2.h = v * v - 2.0*mu / r; //C3
+
+	coe2.w = PI - coe1.w; //alpha
+	if (coe2.w < 0) coe2.w += PI2;
+
+	coe2.TA = coe1.TA;
+	return coe2;
+
+	/*double r, v, C3, e, inc, alpha_D, f, theta_N;
 	VECTOR3 HH, E, K, N;
 	OELEMENTS coe;
 
@@ -776,7 +799,7 @@ OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu)
 	{
 		theta_N = PI2 - theta_N;
 	}
-	theta_N = theta_N - -80.6041140*RAD;
+	theta_N = theta_N - lng_PAD;
 	if (theta_N > PI2)
 	{
 		theta_N = theta_N - PI2;
@@ -789,7 +812,7 @@ OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu)
 	coe.TA = f;
 	coe.w = alpha_D;
 		//coe = [C3 inc theta_N e alpha_D f];
-	return coe;
+	return coe;*/
 }
 
 void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V)
