@@ -3380,6 +3380,12 @@ template <typename T> int sign(T val) {
 	return (T(0) < val) - (val < T(0));
 }
 
+void AGCSignedValue(int &val)
+{
+	if (val > 037777)
+		val = -(077777 - val);
+}
+
 int DoubleToBuffer(double x, double q, int m)
 {
 	int c = 0, out = 0, f = 1;
