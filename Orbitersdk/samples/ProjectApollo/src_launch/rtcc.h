@@ -4657,6 +4657,7 @@ private:
 	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
 	void IncrementAGCTime(char *list, int veh, double dt);
+	void IncrementAGCLiftoffTime(char *list, int veh, double dt);
 	void TLANDUpdate(char *list, double t_land);
 	void V7XUpdate(int verb, char *list, int* emem, int n);
 	void SunburstAttitudeManeuver(char *list, VECTOR3 imuangles);
