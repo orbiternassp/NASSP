@@ -22081,6 +22081,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset
 	{
 		if (CCMI[RTCC_CONFIG_S] && (Thruster == RTCC_ENGINETYPE_LMAPS || Thruster == RTCC_ENGINETYPE_LMDPS || Thruster == RTCC_ENGINETYPE_CSMSPS))
 		{
+			PMXSPT("PMMXFR", 6);
 			return 6;
 		}
 		if (TVC > 2)
