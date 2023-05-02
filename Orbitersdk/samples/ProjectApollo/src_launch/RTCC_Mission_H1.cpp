@@ -1174,9 +1174,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	break;
 	case 32: //STATE VECTOR and LS REFSMMAT UPLINK
 	{
-		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
-
-		LMARKTRKPADOpt landmarkopt;
 		MATRIX3 REFSMMAT;
 		SV sv;
 		REFSMMATOpt opt;
@@ -2054,11 +2051,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		AP12LunarSurfaceDataCard * form = (AP12LunarSurfaceDataCard*)pad;
 
-		SV sv_CSM, sv_Ins, sv_IG;
-		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
-		double T2, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, dt1, dt2, t_CSI1, t_sunrise, t_TPI, dv;
+		SV sv0, sv_CSM, sv_Ins, sv_IG;
+		VECTOR3 R_LS;
+		double T2, m0, v_LH, v_LV, t_sunrise, t_TPI, dv;
 
-		GETbase = CalcGETBase();
 		sv_CSM = StateVectorCalc(calcParams.src);
 		
 		LEM *l = (LEM*)calcParams.tgt;
@@ -2079,15 +2075,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			T2 = calcParams.PDI + 21.0*60.0 + 22.0;
 			t_sunrise = calcParams.PDI + 7.0*3600.0;
 		}
-
-		LunarAscentProcessor(R_LS, m0, sv_CSM, T2, v_LH, v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
-		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, OrbMech::mu_Moon);
-		OrbMech::rv_from_r0v0(sv_Ins.R, sv_Ins.V, dt1, R_C1, V_C1, OrbMech::mu_Moon);
-		t_C1 = T2 + dt_asc + dt1;
-		u = unit(crossp(R_C1, V_C1));
-		V_C1F = V_C1 + unit(crossp(u, V_C1))*10.0*0.3048;
-		OrbMech::REVUP(R_C1, V_C1F, 1.5, OrbMech::mu_Moon, R_CSI1, V_CSI1, dt2);
-		t_CSI1 = t_C1 + dt2;
 
 		t_TPI = FindOrbitalSunrise(sv_CSM, t_sunrise) - 23.0*60.0;
 		//Round to next 30 seconds
@@ -2151,7 +2138,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		t_CSI = PZLRPT.data[1].T_CSI;
 		t_TPI = PZLRPT.data[1].T_TPI;
 
-		sv_CSM2 = coast(sv_CSM, calcParams.PDI - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
+		sv_CSM2 = coast(sv_CSM, calcParams.PDI - OrbMech::GETfromMJD(sv_CSM.MJD, CalcGETBase()));
 		MJD_over = OrbMech::P29TimeOfLongitude(sv_CSM2.R, sv_CSM2.V, sv_CSM2.MJD, sv_CSM2.gravref, BZLAND.lng[RTCC_LMPOS_BEST]);
 		sv_CSM_over = coast(sv_CSM2, (MJD_over - sv_CSM2.MJD)*24.0*3600.0);
 
