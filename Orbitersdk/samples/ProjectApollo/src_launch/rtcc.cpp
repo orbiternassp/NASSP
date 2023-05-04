@@ -6171,6 +6171,21 @@ void RTCC::IncrementAGCTime(char *list, int veh, double dt)
 	V7XUpdate(73, list, octals, 3);
 }
 
+void RTCC::IncrementAGCLiftoffTime(char *list, int veh, double dt)
+{
+	CMMLIFTF(veh, dt / 3600.0);
+	int *octals;
+	if (veh == RTCC_MPT_CSM)
+	{
+		octals = CZLIFTFF.Blocks[0].Octals;
+	}
+	else
+	{
+		octals = CZLIFTFF.Blocks[1].Octals;
+	}
+	V7XUpdate(70, list, octals, 3);
+}
+
 void RTCC::V7XUpdate(int verb, char *list, int* emem, int n)
 {
 	sprintf(list, "V%dE%dE", verb, emem[0]);
@@ -22066,6 +22081,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset
 	{
 		if (CCMI[RTCC_CONFIG_S] && (Thruster == RTCC_ENGINETYPE_LMAPS || Thruster == RTCC_ENGINETYPE_LMDPS || Thruster == RTCC_ENGINETYPE_CSMSPS))
 		{
+			PMXSPT("PMMXFR", 6);
 			return 6;
 		}
 		if (TVC > 2)
