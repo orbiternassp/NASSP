@@ -2007,8 +2007,7 @@ protected:
 	SaturnDCAmpMeter DCAmpMeter;
 
 	SwitchRow SystemTestMeterRow;
-	DCVoltMeter SystemTestVoltMeter;
-	SaturnSystemTestAttenuator  SystemTestAttenuator;
+	SaturnSystemTestMeter SystemTestVoltMeter;
 
 	//
 	// FDAI control switches.
@@ -4556,7 +4555,7 @@ protected:
 	friend class SaturnHighGainAntennaPitchMeter;
 	friend class SaturnHighGainAntennaYawMeter;
 	friend class SaturnHighGainAntennaStrengthMeter;
-	friend class SaturnSystemTestAttenuator;
+	friend class SaturnSystemTestMeter;
 	friend class SaturnLVSPSPcMeter;
 	friend class SaturnSPSHeliumNitrogenPressMeter;
 	friend class SaturnLMDPGauge;
