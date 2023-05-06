@@ -520,6 +520,12 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	PriRadInTempSensor("Pri-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadInTempSensor("Sec-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0),
+	CMRCSEngine12TempSensor("CM-RCS-Engine-12-Sensor", -50.0, 50.0),
+	CMRCSEngine14TempSensor("CM-RCS-Engine-14-Sensor", -50.0, 50.0),
+	CMRCSEngine16TempSensor("CM-RCS-Engine-16-Sensor", -50.0, 50.0),
+	CMRCSEngine21TempSensor("CM-RCS-Engine-21-Sensor", -50.0, 50.0),
+	CMRCSEngine24TempSensor("CM-RCS-Engine-24-Sensor", -50.0, 50.0),
+	CMRCSEngine25TempSensor("CM-RCS-Engine-25-Sensor", -50.0, 50.0),
 	vesim(&cbCSMVesim, this),
 	CueCards(vcidx, this, 11)
 #pragma warning ( pop ) // disable:4355

@@ -1619,7 +1619,6 @@ void Saturn::StageSeven(double simt)
 		case 0:
 			if (GetAltitude() < 350000) {
 				SlowIfDesired();
-				ActivateCMRCS();
 				ActivateNavmode(NAVMODE_RETROGRADE);
 				StageState++;
 			}
@@ -1664,7 +1663,6 @@ void Saturn::StageEight(double simt)
 			if (GetAltitude() < 50000) {
 				SlowIfDesired();
 				DeactivateNavmode(NAVMODE_RETROGRADE);
-				DeactivateCMRCS();
 				StageState++;
 			}
 			break;
