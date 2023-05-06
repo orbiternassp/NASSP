@@ -517,15 +517,13 @@ void FCell::UpdateFlow(double dt)
 			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
 			Amperes = Volts / loadResistance;
 			++NumSteps;
-			if ((abs(Volts - voltsLastTimestep) < 0.00001) && (abs(Amperes - ampsLastTimestep) < 0.00001))
-			{
-				break;
-			}
+
 			voltsLastTimestep = Volts;
 			ampsLastTimestep = Amperes;
 		}
 		
 		power_load = Amperes * Volts; //recalculate power_load
+
 
 		/*if (!strcmp(name, "FUELCELL1"))
 		{
@@ -550,10 +548,10 @@ void FCell::UpdateFlow(double dt)
 
 		*/
 
-		/*if (!strcmp(name, "FUELCELL1"))
+		if (!strcmp(name, "FUELCELL2"))
 		{
-		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfA, Power %lfW, Clogg Potential Reduction %lfV", Amperes, Volts, power_load, -cloggVoltageDrop);
-		}*/
+		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfV, Power %lfW, Clogg Potential Reduction %lfV", Amperes, Volts, power_load, -cloggVoltageDrop);
+		}
 
 
 		Reaction(dt);
