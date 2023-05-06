@@ -553,10 +553,10 @@ void FCell::UpdateFlow(double dt)
 
 		*/
 
-		if (!strcmp(name, "FUELCELL2"))
-		{
-		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfV, Power %lfW, Clogg Potential Reduction %lfV", Amperes, Volts, power_load, -cloggVoltageDrop);
-		}
+		//if (!strcmp(name, "FUELCELL2"))
+		//{
+		//sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfV, Power %lfW, Clogg Potential Reduction %lfV", Amperes, Volts, power_load, -cloggVoltageDrop);
+		//}
 
 
 		Reaction(dt);
