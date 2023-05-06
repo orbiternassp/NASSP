@@ -515,6 +515,11 @@ void FCell::UpdateFlow(double dt)
 		while(NumSteps < 10) //10 is an absolute maximum to prevent hangs, and really should never get much higher than ~6-7 during extream transients
 		{
 			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
+			
+			if (Volts > 36.58) {
+				Volts = 36.58;		//prevent unrealistic temperature runaway voltages ---> I will fix this by making voltage depend on H2 and O2 Pressure in the future...
+			}
+
 			Amperes = Volts / loadResistance;
 			++NumSteps;
 
