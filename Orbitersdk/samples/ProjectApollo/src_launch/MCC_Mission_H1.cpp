@@ -308,7 +308,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 72, MST_H1_LUNAR_ORBIT_PRE_DOI_1);
 		break;
 	case MST_H1_LUNAR_ORBIT_PRE_DOI_1: //Lunar Surface PAD to P22 Acquistion time
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP12LUNSURFPAD, SubStateTime > 3.0*60.0, 73, MST_H1_LUNAR_ORBIT_PRE_DOI_2);
+		UpdateMacro(UTP_PADONLY, PT_AP12LUNSURFPAD, SubStateTime > 3.0*60.0, 73, MST_H1_LUNAR_ORBIT_PRE_DOI_2);
 		break;
 	case MST_H1_LUNAR_ORBIT_PRE_DOI_2: //P22 Acquistion time to LM SV update
 		UpdateMacro(UTP_PADONLY, PT_LMP22ACQPAD, rtcc->GETEval2(rtcc->calcParams.SEP + 5.0*60.0), 58, MST_H1_LUNAR_ORBIT_PRE_DOI_3);
