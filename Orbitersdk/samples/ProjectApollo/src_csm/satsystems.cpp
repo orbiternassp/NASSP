@@ -249,6 +249,8 @@ void Saturn::SystemsInit() {
 	FlightBus.WireTo(&FlightBusFeeder);
 	Panelsdk.AddElectrical(&FlightBus, false);
 
+	CMCDCBusFeeder.WireToBuses(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
+
 
 	// Feeder for LM umbilical
 	LMUmbilicalFeeder.WireToBuses(&MnbLMPWR1CircuitBraker,&MnbLMPWR2CircuitBraker);

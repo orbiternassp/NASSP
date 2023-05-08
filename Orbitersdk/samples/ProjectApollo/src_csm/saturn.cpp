@@ -362,7 +362,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	inertialData(this),
 	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
 	dsky(soundlib, agc, 015),
-	dsky2(soundlib, agc, 016), 
+	dsky2(soundlib, agc, 016),
+	CMCDCBusFeeder("CMC-DCBus-Feeder", Panelsdk),
 	imu(agc, Panelsdk, inertialData),
 	scdu(agc, RegOPTX, 0140, 2),
 	tcdu(agc, RegOPTY, 0141, 2),
@@ -782,8 +783,8 @@ void Saturn::initSaturn()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this, false);
-	dsky.Init(&LightingNumIntLMDCCB, &NumericRotarySwitch);
-	dsky2.Init(&LightingNumIntLEBCB, &Panel100NumericRotarySwitch);
+	dsky.Init(&LightingNumIntLMDCCB, &CMCDCBusFeeder, &NumericRotarySwitch);
+	dsky2.Init(&LightingNumIntLEBCB, &CMCDCBusFeeder, &Panel100NumericRotarySwitch);
 
 	//
 	// Configure SECS.

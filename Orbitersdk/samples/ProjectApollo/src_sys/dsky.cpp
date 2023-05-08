@@ -204,17 +204,29 @@ DSKY::~DSKY()
 	//
 }
 
-void DSKY::Init(e_object *powered, RotationalSwitch *dimmer)
+void DSKY::Init(e_object *statuslightpower, e_object *segmentlightpower, RotationalSwitch *dimmer)
 
 {
-	WireTo(powered);
+	StatusPower = statuslightpower;
+	SegmentPower = segmentlightpower;
 	DimmerRotationalSwitch = dimmer;
 	Reset();
 	FirstTimeStep = true;
 }
 
-bool DSKY::IsPowered() {
-	if (Voltage() < SP_MIN_DCVOLTAGE){ return false; }
+bool DSKY::IsStatusPowered() {
+	if (StatusPower->Voltage() < 2){ return false; } //Used 2V for now as input voltage can be 0-5V AC or DC here
+
+	if (DimmerRotationalSwitch != NULL) {
+		if (DimmerRotationalSwitch->GetState() == 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool DSKY::IsSegmentPowered() {
+	if (SegmentPower->Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 
 	if (DimmerRotationalSwitch != NULL) {
 		if (DimmerRotationalSwitch->GetState() == 0) {
@@ -237,7 +249,7 @@ void DSKY::Timestep(double simt)
 void DSKY::SystemTimestep(double simdt)
 
 {
-	if (!IsPowered()){ return; }
+	if (!IsStatusPowered() || !IsSegmentPowered()){ return; }
 	//
 	// The DSKY power consumption is a little bit hard to figure out. According 
 	// to the Systems Handbook the complete interior lightning draws about 30W, so
@@ -246,40 +258,49 @@ void DSKY::SystemTimestep(double simdt)
 	// code causes wrong power loads
 	//
 
-	//
-	// Check the lights.
-	//
+	if (IsStatusPowered())
+	{
+		//
+		// Check the lights.
+		//
 
-	LightsLit = 0;
-	if (UplinkLit()) LightsLit++;
-	if (NoAttLit()) LightsLit++;
-	if (StbyLit()) LightsLit++;
-	if (KbRelLit()) LightsLit++;
-	if (OprErrLit()) LightsLit++;
-	if (TempLit()) LightsLit++;
-	if (GimbalLockLit()) LightsLit++;
-	if (ProgLit()) LightsLit++;
-	if (RestartLit()) LightsLit++;
-	if (TrackerLit()) LightsLit++;
+		LightsLit = 0;
+		if (UplinkLit()) LightsLit++;
+		if (NoAttLit()) LightsLit++;
+		if (StbyLit()) LightsLit++;
+		if (KbRelLit()) LightsLit++;
+		if (OprErrLit()) LightsLit++;
+		if (TempLit()) LightsLit++;
+		if (GimbalLockLit()) LightsLit++;
+		if (ProgLit()) LightsLit++;
+		if (RestartLit()) LightsLit++;
+		if (TrackerLit()) LightsLit++;
 
-	//
-	// Check the segments
-	//
+		// 10 lights with together max. 6W, 
+		StatusPower->DrawPower(LightsLit * 0.6);
+	}
 
-	SegmentsLit = 6;
-	if (CompActy) 
-		SegmentsLit += 4;
+	if (IsSegmentPowered())
+	{
+		//
+		// Check the segments
+		//
 
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, false, ELOff);
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing, ELOff);
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing, ELOff);
+		SegmentsLit = 6;
+		if (CompActy)
+			SegmentsLit += 4;
 
-	SegmentsLit += SixDigitDisplaySegmentsLit(R1, ELOff);
-	SegmentsLit += SixDigitDisplaySegmentsLit(R2, ELOff);
-	SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
+		SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, false, ELOff);
+		SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing, ELOff);
+		SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing, ELOff);
 
-	// 10 lights with together max. 6W, 184 segments with together max. 4W  
-	DrawPower((LightsLit * 0.6) + (SegmentsLit * 0.022));
+		SegmentsLit += SixDigitDisplaySegmentsLit(R1, ELOff);
+		SegmentsLit += SixDigitDisplaySegmentsLit(R2, ELOff);
+		SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
+
+		// 184 segments with together max. 4W  
+		SegmentPower->DrawPower(SegmentsLit * 0.022);
+	}
 
 	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
 }
@@ -439,7 +460,7 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel, bool hasDAPPrioDisp)
 
 {
-	if (!IsPowered())
+	if (!IsStatusPowered())
 	{
 		if (hasAltVel) {
 			DSKYLightBlt(surf, lights, 52, 121, false, xOffset, yOffset);
@@ -727,7 +748,7 @@ int DSKY::SixDigitDisplaySegmentsLit(char *Str, bool Off)
 void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xOffset, int yOffset)
 
 {
-	if (!IsPowered() || ELOff)
+	if (!IsSegmentPowered() || ELOff)
 		return;
 
 	oapiBlt(surf, disp, 66 + xOffset,   3 + yOffset, 35,  0, 35, 10, SURF_PREDEF_CK);
