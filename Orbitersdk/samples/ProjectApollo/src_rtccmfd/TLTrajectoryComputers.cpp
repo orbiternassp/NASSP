@@ -592,7 +592,7 @@ bool TLTrajectoryComputers::IntegratedTrajectoryComputer(std::vector<double> &va
 		state_TLI1.Mass = outarray.M_i / 0.45359237;
 
 		//Simulate TLI burn
-		state_TLI2 = TLIBRN(state_TLI1, vars->C3_TLI, vars->sigma_TLI, vars->delta_TLI, F_I_SIVB, F_SIVB, WDOT_SIVB, T_MRS_SIVB, true, vars->dv_TLI);
+		state_TLI2 = TLIBRN(state_TLI1, vars->C3_TLI, vars->sigma_TLI, vars->delta_TLI, F_I_SIVB, F_SIVB, WDOT_SIVB, T_MRS_SIVB, vars->EllipticalCaseIndicator == false, vars->dv_TLI);
 
 		//Convert back
 		state_TLI2.sv.R *= R_E;

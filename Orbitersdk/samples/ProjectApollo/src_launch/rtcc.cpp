@@ -5391,10 +5391,12 @@ void RTCC::TranslunarInjectionProcessor(SV2 state)
 	if (out.ErrorIndicator) return;
 
 	PZTTLIPL.DataIndicator = 1;
-	PZTTLIPL.param7 = out.uplink_data;
-	PZTTLIPL.GET_TIG = GETfromGMT(out.uplink_data.GMT_TIG);
-	PZTTLIPL.GET_TB6 = PZTTLIPL.GET_TIG - SystemParameters.MDVSTP.DTIG;
-	PZTTLIPL.dv_TLI = out.dv_TLI;
+	PZTTLIPL.elem = out.uplink_data;
+
+	//Display data
+	PZTPDDIS.GET_TIG = GETfromGMT(out.uplink_data.GMT_TIG);
+	PZTPDDIS.GET_TB6 = PZTPDDIS.GET_TIG - SystemParameters.MDVSTP.DTIG;
+	PZTPDDIS.dv_TLI = out.dv_TLI / 0.3048;
 }
 
 void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass)

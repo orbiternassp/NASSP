@@ -3629,6 +3629,17 @@ public:
 		
 	} PZTLIPLN;
 
+	struct TLIPlanningDisplayDataTable
+	{
+		double GET_TIG = 0.0;
+		double GET_TB6 = 0.0;
+		double T_b = 0.0;
+		double dv_TLI = 0.0;
+		double H_a = 0.0;
+		double lat_ign = 0.0;
+		double lng_ign = 0.0;
+	} PZTPDDIS;
+
 	struct TLIPlanningOutputTable
 	{
 		int DataIndicator = 0; //0 = None, 1 = 7 parameters, 2 = 10 parameters
@@ -3643,18 +3654,14 @@ public:
 		VECTOR3 V;
 		double TB6;
 		double TIG;
+
 		double i;
 		double theta_N;
 		double sigma;
 		double C3;
 
-		//Uplink
-		SevenParameterUpdate param7;
+		SevenParameterUpdate elem;
 
-		//Display
-		double GET_TIG = 0.0;
-		double GET_TB6 = 0.0;
-		double dv_TLI = 0.0;
 	} PZTTLIPL;
 
 	struct LOIElementsTable

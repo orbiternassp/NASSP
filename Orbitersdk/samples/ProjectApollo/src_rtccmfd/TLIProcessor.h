@@ -70,6 +70,8 @@ protected:
 	bool ConicTLIIEllipse(double C3_guess, double h_ap);
 	bool IntegratedTLIIEllipse(double C3_guess_ER, double h_ap);
 
+	OELEMENTS LVTAR(OELEMENTS coe, double lng_PAD, double RAGL) const;
+
 	TLIMEDQuantities MEDQuantities;
 	int ErrorIndicator;
 };

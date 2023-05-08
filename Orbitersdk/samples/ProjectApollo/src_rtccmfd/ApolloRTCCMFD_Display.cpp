@@ -7027,23 +7027,23 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
-			GET_Display(Buffer, GC->rtcc->PZTTLIPL.GET_TB6, false);
+			GET_Display(Buffer, GC->rtcc->PZTPDDIS.GET_TB6, false);
 			skp->Text(15 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-			GET_Display(Buffer, GC->rtcc->PZTTLIPL.GET_TIG, false);
+			GET_Display(Buffer, GC->rtcc->PZTPDDIS.GET_TIG, false);
 			skp->Text(15 * W / 16, 5 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.param7.Inclination*DEG);
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.elem.Inclination*DEG);
 			skp->Text(15 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.param7.theta_N*DEG);
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.elem.theta_N*DEG);
 			skp->Text(15 * W / 16, 7 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.5lf", GC->rtcc->PZTTLIPL.param7.e);
+			sprintf(Buffer, "%.5lf", GC->rtcc->PZTTLIPL.elem.e);
 			skp->Text(15 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf", GC->rtcc->PZTTLIPL.param7.C3 / pow(1852.0, 2));
+			sprintf(Buffer, "%.3lf", GC->rtcc->PZTTLIPL.elem.C3 / pow(1852.0, 2));
 			skp->Text(15 * W / 16, 9 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.param7.alpha_D*DEG);
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.elem.alpha_D*DEG);
 			skp->Text(15 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.param7.f*DEG);
+			sprintf(Buffer, "%.3lf°", GC->rtcc->PZTTLIPL.elem.f*DEG);
 			skp->Text(15 * W / 16, 11 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.1lf", GC->rtcc->PZTTLIPL.dv_TLI / 0.3048);
+			sprintf(Buffer, "%.1lf", GC->rtcc->PZTPDDIS.dv_TLI);
 			skp->Text(15 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 		}
 

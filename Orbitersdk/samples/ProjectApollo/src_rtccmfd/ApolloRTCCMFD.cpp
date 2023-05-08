@@ -6516,6 +6516,11 @@ void ApolloRTCCMFD::menuTLIProcessorGET()
 	GenericGETInput(&GC->rtcc->PZTLIPLN.GET_TLI, "Input time of ignition or threshold time. Format HH:MM:SS:");
 }
 
+void ApolloRTCCMFD::menuTLIEllipseApogee()
+{
+	GenericDoubleInput(&GC->rtcc->PZTLIPLN.h_ap, "Input height of apogee (2700 to 7000 NM):");
+}
+
 void ApolloRTCCMFD::menuLunarLiftoffCalc()
 {
 	if (GC->MissionPlanningActive ||(G->target != NULL && G->vesseltype == 1))

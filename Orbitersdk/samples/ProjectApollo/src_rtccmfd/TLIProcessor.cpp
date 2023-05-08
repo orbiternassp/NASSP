@@ -64,14 +64,17 @@ void TLIProcessor::Main(TLIOutputData &out)
 		sv.GMT = pRTCC->SystemParameters.MCGRIC*3600.0;
 		pRTCC->ELVCNV(sv, 0, 1, sv_ECT);
 
-		OELEMENTS coe = OrbMech::coe_from_PACSS4(sv_ECT.R, sv_ECT.V, mu_E, pRTCC->SystemParameters.MCLGRA);
+		OELEMENTS coe = OrbMech::coe_from_sv(sv_ECT.R, sv_ECT.V, mu_E);
+		coe.h = dotp(sv_ECT.V, sv_ECT.V) - 2.0*mu_E / length(sv_ECT.R);
 
-		out.uplink_data.Inclination = coe.i;
-		out.uplink_data.theta_N = coe.RA;
-		out.uplink_data.e = coe.e;
-		out.uplink_data.C3 = coe.h;
-		out.uplink_data.alpha_D = coe.w;
-		out.uplink_data.f = coe.TA;
+		OELEMENTS coe2 = LVTAR(coe, pRTCC->SystemParameters.MCLGRA, 0.0);
+
+		out.uplink_data.Inclination = coe2.i;
+		out.uplink_data.theta_N = coe2.RA;
+		out.uplink_data.e = coe2.e;
+		out.uplink_data.C3 = coe2.h;
+		out.uplink_data.alpha_D = coe2.w;
+		out.uplink_data.f = coe2.TA;
 		out.uplink_data.GMT_TIG = outarray.sv_tli_ign.GMT;
 	}
 	else
@@ -205,4 +208,30 @@ bool TLIProcessor::IntegratedTLIIEllipse(double C3_guess_ER, double h_ap)
 	std::vector<double> result;
 	std::vector<double> y_vals;
 	return GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+}
+
+OELEMENTS TLIProcessor::LVTAR(OELEMENTS coe, double lng_PAD, double RAGL) const
+{
+	//lng_PAD: longitude of the launch pad
+	//RAGL: Greenwich hour angle at GRR
+
+	OELEMENTS coe2;
+	double theta_e;
+
+	theta_e = RAGL + lng_PAD;
+	coe2.RA = coe.RA + PI - theta_e;
+
+	if (coe2.RA >= PI2) coe2.RA -= PI2;
+	if (coe2.RA < 0) coe2.RA += PI2;
+
+	coe2.i = coe.i;
+	coe2.e = coe.e;
+	coe2.h = coe.h; //C3
+
+	coe2.w = PI - coe.w; //alpha
+	if (coe2.w < 0) coe2.w += PI2;
+
+	coe2.TA = coe.TA;
+
+	return coe2;
 }

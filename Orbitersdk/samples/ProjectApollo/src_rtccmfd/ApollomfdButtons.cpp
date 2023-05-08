@@ -2692,8 +2692,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu79[] =
 	{
 		{ "Mode", 0, 'G' },
-		{ "TIG", 0, 'Q' },
-		{ "", 0, ' ' },
+		{ "Time of ignition", 0, 'Q' },
+		{ "Apogee height", 0, 'V' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -2710,7 +2710,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("MOD", OAPI_KEY_G, &ApolloRTCCMFD::menuTLIProcessorMode);
 	RegisterFunction("TIG", OAPI_KEY_Q, &ApolloRTCCMFD::menuTLIProcessorGET);
-	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("APO", OAPI_KEY_V, &ApolloRTCCMFD::menuTLIEllipseApogee);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);

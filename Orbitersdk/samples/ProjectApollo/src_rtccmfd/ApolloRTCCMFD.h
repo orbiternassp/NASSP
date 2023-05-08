@@ -351,6 +351,7 @@ public:
 	void menuTLIProcessorCalc();
 	void menuTLIProcessorMode();
 	void menuTLIProcessorGET();
+	void menuTLIEllipseApogee();
 	void menuNavCheckPADCalc();
 	void menuSetNavCheckGET();
 	void menuLAPCalc();

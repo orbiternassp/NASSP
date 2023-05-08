@@ -9855,6 +9855,7 @@ bool LVDCSV::TLITargetingUpdate(double T_RP, double C_3, double Inclination, dou
 		this->T_RP = T_RP;
 		this->C_3 = C_3;
 		this->Inclination = Inclination;
+		this->theta_N = theta_N;
 		this->e = e;
 		this->alpha_D = alpha_D;
 		this->f = f;

@@ -4845,7 +4845,7 @@ int ARCore::subThread()
 
 		LVDCSV *lvdc = (LVDCSV*)iu->GetLVDC();
 
-		SevenParameterUpdate coe = GC->rtcc->PZTTLIPL.param7;
+		SevenParameterUpdate coe = GC->rtcc->PZTTLIPL.elem;
 
 		//Calculate time of restart preparation in TB5
 		double GMT_TB5 = GC->rtcc->SystemParameters.MCGRIC*3600.0 + lvdc->TB5;
