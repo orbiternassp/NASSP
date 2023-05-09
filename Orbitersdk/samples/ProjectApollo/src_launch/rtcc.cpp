@@ -12058,9 +12058,12 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &
 				cfg = "C";
 			}
 
-			spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
-			csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) + 
-				sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
+			if (sat->GetStage() < CM_STAGE)
+			{
+				spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
+				csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) +
+					sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
+			}
 		}
 	}
 	else if (vesseltype == 1)
@@ -12109,9 +12112,12 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &
 
 			Saturn *sat = (Saturn *)csm;
 
-			spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
-			csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) +
-				sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
+			if (sat->GetStage() < CM_STAGE)
+			{
+				spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
+				csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) +
+					sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
+			}
 		}
 	}
 	else
