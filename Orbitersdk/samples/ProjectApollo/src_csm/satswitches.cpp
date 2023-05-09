@@ -1248,21 +1248,22 @@ void SaturnLVSPSPcMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
 }
 
-SaturnSystemTestAttenuator::SaturnSystemTestAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut):
-	VoltageAttenuator(i_name, minIn, maxIn, minOut, maxOut)
+SaturnSystemTestMeter::SaturnSystemTestMeter(double minVal, double maxVal, double vMin, double vMax) : DCVoltMeter(minVal, maxVal, vMin, vMax)
 {
+	Sat = NULL;
+	LeftSystemTestRotarySwitch = NULL;
+	RightSystemTestRotarySwitch = NULL;
 }
 
-void SaturnSystemTestAttenuator::Init(Saturn* s, RotationalSwitch *leftsystemtestrotaryswitch, RotationalSwitch *rightsystemtestrotaryswitch, e_object *Instrum)
+void SaturnSystemTestMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn* s, RotationalSwitch *leftsystemtestrotaryswitch, RotationalSwitch *rightsystemtestrotaryswitch)
 {
+	DCVoltMeter::Init(p0, p1, row, NULL);
 	Sat = s;
 	LeftSystemTestRotarySwitch = leftsystemtestrotaryswitch;
 	RightSystemTestRotarySwitch = rightsystemtestrotaryswitch;
-
-	WireTo(Instrum);
 }
 
-double SaturnSystemTestAttenuator::GetValue()
+double SaturnSystemTestMeter::QueryValue()
 {
 	unsigned char val = NULL;
 	int left = LeftSystemTestRotarySwitch->GetState(); //0 = Off, 1 = 1 and so on
@@ -1325,9 +1326,9 @@ double SaturnSystemTestAttenuator::GetValue()
 		switch (right)
 		{
 		case 1:	//BAT RLY BUS VOLT
-			return Sat->sce.GetVoltage(0, 4)*256.0 / 5.0;	//Temporary scaling
+			return Sat->sce.GetVoltage(0, 4);
 		case 3:	//CSM TO LM CURRENT
-			return Sat->sce.GetVoltage(1, 7)*256.0 / 5.0;	//Temporary scaling
+			return Sat->sce.GetVoltage(1, 7);
 		}
 		break;
 	case 5:
@@ -1337,28 +1338,22 @@ double SaturnSystemTestAttenuator::GetValue()
 			val = Sat->pcm.measure(10, TLM_A, 120);
 			break;
 		case 2:	//TEMP JET 24 -P ENG INJECTOR SYS 2
-			val = Sat->pcm.scale_data(Sat->CMRCS2.GetInjectorTempF(0), -50, 50);	//Scaled -50F = 0V & 50F = 5V
-			break;
+			return Sat->CMRCSEngine24TempSensor.Voltage();
 		case 3:	//TEMP JET 25 +Y ENG INJECTOR SYS 2
-			val = Sat->pcm.scale_data(Sat->CMRCS2.GetInjectorTempF(1), -50, 50);	//Scaled -50F = 0V & 50F = 5V
-			break;
+			return Sat->CMRCSEngine25TempSensor.Voltage();
 		}
 		break;
 	case 6:
 		switch (right)
 		{
 		case 0:	//TEMP JET 12 CCW ENG INJECTOR SYS 1
-			val = Sat->pcm.scale_data(Sat->CMRCS1.GetInjectorTempF(2), -50, 50);	//Scaled -50F = 0V & 50F = 5V
-			break;
+			return Sat->CMRCSEngine12TempSensor.Voltage();
 		case 1:	//TEMP JET 14 -P ENG INJECTOR SYS 1
-			val = Sat->pcm.scale_data(Sat->CMRCS1.GetInjectorTempF(0), -50, 50);	//Scaled -50F = 0V & 50F = 5V
-			break;
+			return Sat->CMRCSEngine14TempSensor.Voltage();
 		case 2:	//TEMP JET 16 -Y ENG INJECTOR SYS 1
-			val = Sat->pcm.scale_data(Sat->CMRCS1.GetInjectorTempF(1), -50, 50);	//Scaled -50F = 0V & 50F = 5V
-			break;
+			return Sat->CMRCSEngine16TempSensor.Voltage();
 		case 3:	//TEMP JET 21 CW ENG INJECTOR SYS 2
-			val = Sat->pcm.scale_data(Sat->CMRCS2.GetInjectorTempF(2), -50, 50);	//Scaled -50F = 0V & 50F = 5V
-			break;
+			return Sat->CMRCSEngine21TempSensor.Voltage();
 		}
 		break;
 	case 8:
@@ -1376,7 +1371,7 @@ double SaturnSystemTestAttenuator::GetValue()
 		}
 	}
 
-	return (double)val;
+	return 5.0 / 256.0*(double)val; //Temporary scaling
 }
 
 void SaturnGPFPIMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, int sys, int xoffset)
