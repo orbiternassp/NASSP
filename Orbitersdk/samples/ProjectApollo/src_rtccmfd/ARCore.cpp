@@ -491,7 +491,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	EntryLngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	RTEReentryTime = 0.0;
-	entryrange = 0.0;
+	entryrange = GC->rtcc->PZREAP.RRBIAS;
 	RTECalcMode = 1;
 	RTETradeoffMode = 0;
 	RTEASTType = 76;
