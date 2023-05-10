@@ -452,11 +452,13 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	lm_vhf_to_csm_csm_connector(this, &VHF),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk),
+	NumDockCompLTGFeeder("Num-Dock-Comp-LTG-Feeder", Panelsdk),
 	DescentECAMainFeeder("Descent-ECA-Main-Feeder", Panelsdk),
 	DescentECAContFeeder("Descent-ECA-Cont-Feeder", Panelsdk),
 	AscentECAMainFeeder("Ascent-ECA-Main-Feeder", Panelsdk),
 	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk),
 	vesim(&cbLMVesim, this)
+
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
