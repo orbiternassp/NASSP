@@ -767,6 +767,11 @@ void ApolloRTCCMFD::menuSetDescPlanCalcPage()
 	SelectPage(16);
 }
 
+void ApolloRTCCMFD::menuTranslunarPage()
+{
+	SelectPage(17);
+}
+
 void ApolloRTCCMFD::menuSetDescPlanInitPage()
 {
 	SelectPage(18);

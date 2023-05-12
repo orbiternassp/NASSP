@@ -309,6 +309,7 @@ public:
 	void menuSetLDPPPoweredDescTime();
 	void menuLDPPCalc();
 	void menuSetDescPlanCalcPage();
+	void menuTranslunarPage();
 	void menuSetLDPPMode();
 	void menuSetLDPPSequence();
 	void menuTLANDUplinkCalc();

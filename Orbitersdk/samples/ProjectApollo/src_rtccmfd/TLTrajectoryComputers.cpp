@@ -317,7 +317,7 @@ bool TLTrajectoryComputers::ConicMissionComputer(std::vector<double> &var, void 
 		XBETA(R_patch2, V_patch2, GMT_patch2, beta, 1, R_pg, V_pg, GMT_pg);
 		DGAMMA(length(R_pg), ainv, gamma_reentry, H, E, beta, e);
 		XBETA(R_pg, V_pg, GMT_pg, beta, 1, R_reentry, V_reentry, GMT_reentry);
-		vars->h_fr = length(R_reentry) - R_E;
+		vars->h_fr = length(R_reentry) - OrbMech::R_Earth;
 		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + GMT_reentry / 24.0 / 3600.0);
 		R_equ = rhtmul(Rot, R_reentry);
 		V_equ = rhtmul(Rot, V_reentry);
@@ -496,7 +496,7 @@ TLMCC_Conic_F5:
 	//TBD: If T_reentry < T_patch, adjust T_reentry
 	DGAMMA(length(R_pg), ainv, gamma_reentry, HH, E, beta, e);
 	XBETA(R_pg, V_pg, GMT_pg, beta, 1, R_reentry, V_reentry, GMT_reentry);
-	vars->h_pr = length(R_reentry) - R_E;
+	vars->h_pr = length(R_reentry) - OrbMech::R_Earth;
 	Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + GMT_reentry / 24.0 / 3600.0);
 	R_equ = rhtmul(Rot, R_reentry);
 	V_equ = rhtmul(Rot, V_reentry);
@@ -686,7 +686,7 @@ bool TLTrajectoryComputers::IntegratedTrajectoryComputer(std::vector<double> &va
 		//Propagate state vector to reentry
 		pRTCC->PMMCEN(sv_pl, 0.0, 100.0*3600.0, 2, sin(gamma_reentry), 1.0, sv_r, ITS);
 
-		vars->h_fr = length(sv_r.R) - R_E;
+		vars->h_fr = length(sv_r.R) - OrbMech::R_Earth;
 		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + sv_r.GMT / 24.0 / 3600.0);
 		R_temp = rhtmul(Rot, sv_r.R);
 		V_temp = rhtmul(Rot, sv_r.V);

@@ -1784,7 +1784,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(1 * W / 16, 2 * H / 14, "Rendezvous", 10);
 		skp->Text(1 * W / 16, 4 * H / 14, "General Purpose Maneuver", 24);
-		skp->Text(1 * W / 16, 6 * H / 14, "Midcourse", 9);
+		skp->Text(1 * W / 16, 6 * H / 14, "Translunar", 10);
 		skp->Text(1 * W / 16, 8 * H / 14, "Lunar Insertion", 15);
 		skp->Text(1 * W / 16, 10 * H / 14, "Return to Earth", 15);
 		skp->Text(1 * W / 16, 12 * H / 14, "Deorbit", 7);
@@ -1983,7 +1983,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 17)
 	{
-		//Spare
+		skp->Text(4 * W / 8, 1 * H / 28, "Translunar Options", 18);
+
+		skp->Text(1 * W / 8, 2 * H / 14, "TLI Processor", 13);
+		skp->Text(1 * W / 8, 4 * H / 14, "Midcourse Processor", 19);
+		skp->Text(1 * W / 8, 6 * H / 14, "Midcourse Constraints", 21);
+		skp->Text(1 * W / 8, 8 * H / 14, "Skeleton Flight Plan Table", 26);
 	}
 	else if (screen == 18)
 	{
@@ -2096,7 +2101,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 6 * H / 14, "AGC Ephemeris", 13);
 		skp->Text(5 * W / 8, 8 * H / 14, "Lunar Impact", 12);
-		skp->Text(5 * W / 8, 10 * H / 14, "TLI Planning", 12);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 22)
@@ -2201,8 +2205,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
-
-		skp->Text(5 * W / 8, 10 * H / 14, "Constraints", 11);
 	}
 	else if (screen == 23)
 	{
