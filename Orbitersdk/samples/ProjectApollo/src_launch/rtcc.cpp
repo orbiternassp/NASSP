@@ -4755,9 +4755,22 @@ double RTCC::GetClockTimeFromAGC(agc_t *agc)
 
 double RTCC::GetTEPHEMFromAGC(agc_t *agc)
 {
-	return agc->Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-		agc->Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-		agc->Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+	int tephem_int[3];
+
+	tephem_int[0] = agc->Erasable[AGC_BANK(01706)][AGC_ADDR(01706)];
+	tephem_int[1] = agc->Erasable[AGC_BANK(01707)][AGC_ADDR(01707)];
+	tephem_int[2] = agc->Erasable[AGC_BANK(01710)][AGC_ADDR(01710)];
+
+	//Make negative numbers actually negative
+	for (int i = 0; i < 3; i++)
+	{
+		OrbMech::AGCSignedValue(tephem_int[i]);
+	}
+
+	//Calculate TEPHEM in centiseconds
+	double tephem = tephem_int[2] + tephem_int[1] * pow((double) 2., (double) 14.) + tephem_int[0] * pow((double) 2., (double) 28.);
+
+	return tephem;
 }
 
 void RTCC::navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt)
@@ -6156,6 +6169,21 @@ void RTCC::IncrementAGCTime(char *list, int veh, double dt)
 	}
 
 	V7XUpdate(73, list, octals, 3);
+}
+
+void RTCC::IncrementAGCLiftoffTime(char *list, int veh, double dt)
+{
+	CMMLIFTF(veh, dt / 3600.0);
+	int *octals;
+	if (veh == RTCC_MPT_CSM)
+	{
+		octals = CZLIFTFF.Blocks[0].Octals;
+	}
+	else
+	{
+		octals = CZLIFTFF.Blocks[1].Octals;
+	}
+	V7XUpdate(70, list, octals, 3);
 }
 
 void RTCC::V7XUpdate(int verb, char *list, int* emem, int n)
@@ -12030,9 +12058,12 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &
 				cfg = "C";
 			}
 
-			spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
-			csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) + 
-				sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
+			if (sat->GetStage() < CM_STAGE)
+			{
+				spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
+				csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) +
+					sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
+			}
 		}
 	}
 	else if (vesseltype == 1)
@@ -12081,9 +12112,12 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &
 
 			Saturn *sat = (Saturn *)csm;
 
-			spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
-			csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) +
-				sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
+			if (sat->GetStage() < CM_STAGE)
+			{
+				spsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(0));
+				csmrcsmass = sat->GetPropellantMass(sat->GetPropellantHandleByIndex(1)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(2)) +
+					sat->GetPropellantMass(sat->GetPropellantHandleByIndex(3)) + sat->GetPropellantMass(sat->GetPropellantHandleByIndex(4));
+			}
 		}
 	}
 	else
@@ -22053,6 +22087,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset
 	{
 		if (CCMI[RTCC_CONFIG_S] && (Thruster == RTCC_ENGINETYPE_LMAPS || Thruster == RTCC_ENGINETYPE_LMDPS || Thruster == RTCC_ENGINETYPE_CSMSPS))
 		{
+			PMXSPT("PMMXFR", 6);
 			return 6;
 		}
 		if (TVC > 2)

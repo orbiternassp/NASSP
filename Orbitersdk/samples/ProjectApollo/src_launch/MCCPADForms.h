@@ -509,8 +509,7 @@ struct AP12LunarSurfaceDataCard
 
 struct LMP22ACQPAD
 {
-	double P22_ACQ_GET;
-	int Octals[2];
+	double P22_ACQ;
 };
 
 struct AP12LMASCPAD
@@ -528,14 +527,6 @@ struct AP12LMASCPAD
 	double LMWeight;	// LM weight
 	double CSMWeight;	// CSM weight
 	char remarks[128];
-};
-
-//APOLLO 12 SEPARATION PAD
-struct AP12SEPPAD
-{
-	double t_Undock;
-	VECTOR3 Att_Undock;
-	double t_Separation;
 };
 
 //GENERIC STRING

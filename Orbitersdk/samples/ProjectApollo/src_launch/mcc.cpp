@@ -1906,10 +1906,9 @@ void MCC::SaveState(FILEHANDLE scn) {
 		}
 		else if (padNumber == PT_LMP22ACQPAD)
 		{
-			LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
 
-			SAVE_DOUBLE("MCC_AP12P22ACQ_GET", form->P22_ACQ_GET);
-			papiWriteScenario_intarr(scn, "MCC_AP12P22ACQ_Octals", form->Octals, 2);
+		SAVE_DOUBLE("MCC_AP12P22ACQ", form->P22_ACQ);
 		}
 		else if (padNumber == PT_AP12LMASCPAD)
 		{
@@ -1928,14 +1927,6 @@ void MCC::SaveState(FILEHANDLE scn) {
 		SAVE_DOUBLE("MCC_AP12LMASCPAD_DEDA231", form->DEDA465);
 		SAVE_DOUBLE("MCC_AP12LMASCPAD_LM_WT", form->LMWeight);
 		SAVE_DOUBLE("MCC_AP12LMASCPAD_CSM_WT", form->CSMWeight);
-		}
-		else if (padNumber == PT_AP12SEPPAD)
-		{
-			AP12SEPPAD *form = (AP12SEPPAD*)padForm;
-
-			SAVE_DOUBLE("MCC_AP12SEPPAD_t_Undock", form->t_Undock);
-			SAVE_V3("MCC_AP12SEPPAD_Att_Undock", form->Att_Undock);
-			SAVE_DOUBLE("MCC_AP12SEPPAD_t_Separation", form->t_Separation);
 		}
 	}
 	// Write uplink buffer here!
@@ -2500,10 +2491,9 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == PT_LMP22ACQPAD)
 		{
-			LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
+		LMP22ACQPAD *form = (LMP22ACQPAD*)padForm;
 
-			LOAD_DOUBLE("MCC_AP12P22ACQ_GET", form->P22_ACQ_GET);
-			papiReadScenario_intarr(line, "MCC_AP12P22ACQ_Octals", form->Octals, 2);
+		LOAD_DOUBLE("MCC_AP12P22ACQ", form->P22_ACQ);
 		}
 		else if (padNumber == PT_AP12LMASCPAD)
 		{
@@ -2522,14 +2512,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("MCC_AP12LMASCPAD_DEDA231", form->DEDA465);
 		LOAD_DOUBLE("MCC_AP12LMASCPAD_LM_WT", form->LMWeight);
 		LOAD_DOUBLE("MCC_AP12LMASCPAD_CSM_WT", form->CSMWeight);
-		}
-		else if (padNumber == PT_AP12SEPPAD)
-		{
-			AP12SEPPAD *form = (AP12SEPPAD*)padForm;
-
-			LOAD_DOUBLE("MCC_AP12SEPPAD_t_Undock", form->t_Undock);
-			LOAD_V3("MCC_AP12SEPPAD_Att_Undock", form->Att_Undock);
-			LOAD_DOUBLE("MCC_AP12SEPPAD_t_Separation", form->t_Separation);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -3378,15 +3360,9 @@ void MCC::drawPad(bool writetofile){
 		int hh, mm;
 		double ss;
 
-		SStoHHMMSS(form->P22_ACQ_GET, hh, mm, ss);
+		SStoHHMMSS(form->P22_ACQ, hh, mm, ss);
 
 		sprintf(buffer, "P22 ACQUISITION\n%+06d HRS\n%+06d MIN\n%+07.2f SEC", hh, mm, ss);
-
-		//Optional
-		if (form->Octals[0] || form->Octals[1])
-		{
-			sprintf(buffer, "%s\nOctals: %05d %05d", buffer, form->Octals[0], form->Octals[1]);
-		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3405,21 +3381,6 @@ void MCC::drawPad(bool writetofile){
 			"%+06d 047\n%+06d 053\n%+06.0f 225/226\n%+06.0f 231\n%+07.1f 465\n%+06d HRS\n%+06d MIN TIG\n%+07.2f SEC\n%+06.0f LM WT\n%+06.0f CSM WT\nRemarks: %s",
 			hh[0], mm[0], ss[0], form->V_hor, form->V_vert, form->CR, form->DEDA047, form->DEDA053, form->DEDA225_226, form->DEDA231, form->DEDA465, hh[1], mm[1], ss[1],
 			form->LMWeight, form->CSMWeight, form->remarks);
-
-		oapiAnnotationSetText(NHpad, buffer);
-	}
-	break;
-	case PT_AP12SEPPAD:
-	{
-		AP12SEPPAD *form = (AP12SEPPAD*)padForm;
-
-		int hh[2], mm[2];
-		double ss[2];
-
-		OrbMech::SStoHHMMSS(form->t_Undock, hh[0], mm[0], ss[0]);
-		OrbMech::SStoHHMMSS(form->t_Separation, hh[1], mm[1], ss[1]);
-
-		sprintf(buffer, "Undocking: %d:%d:%.0lf\nAttitude: %03.0f %03.0f %03.0f\nSeparation: %d:%d:%.0lf", hh[0], mm[0], ss[0], form->Att_Undock.x, form->Att_Undock.y, form->Att_Undock.z, hh[1], mm[1], ss[1]);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3574,9 +3535,6 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP12LMASCPAD: // AP12LMASCPAD
 		padForm = calloc(1, sizeof(AP12LMASCPAD));
-		break;
-	case PT_AP12SEPPAD: // AP12SEPPAD
-		padForm = calloc(1, sizeof(AP12SEPPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

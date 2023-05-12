@@ -218,7 +218,6 @@ public:
 	void menuChangeVesselStatus();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
-	void AGCSignedValue(int &val);
 	void set_svtarget();
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
