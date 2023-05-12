@@ -5648,6 +5648,12 @@ void ApolloRTCCMFD::menuCycleLMStage()
 	G->lemdescentstage = !G->lemdescentstage;
 }
 
+void ApolloRTCCMFD::AGCSignedValue(int &val)
+{
+	if (val > 037777)
+		val = -(077777 - val);
+}
+
 void ApolloRTCCMFD::menuUpdateLiftoffTime()
 {
 	if (G->vesseltype < 0 || G->vesseltype > 1) return;
@@ -5671,24 +5677,33 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 		TEPHEM0 = 41133.;
 	}
 
-	agc_t *agc;
+	int tephem_int[3];
 
 	if (G->vesseltype == 0)
 	{
 		saturn = (Saturn *)G->vessel;
 
-		agc = &saturn->agc.vagc;
+		tephem_int[0] = saturn->agc.vagc.Erasable[0][01706];
+		tephem_int[1] = saturn->agc.vagc.Erasable[0][01707];
+		tephem_int[2] = saturn->agc.vagc.Erasable[0][01710];
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
 
-		agc = &lem->agc.vagc;
+		tephem_int[0] = lem->agc.vagc.Erasable[0][01706];
+		tephem_int[1] = lem->agc.vagc.Erasable[0][01707];
+		tephem_int[2] = lem->agc.vagc.Erasable[0][01710];
 	}
 
-	//Get TEPHEM in centiseconds
-	double tephem = GC->rtcc->GetTEPHEMFromAGC(agc);
+	//Make negative numbers actually negative
+	for (int i = 0;i < 3;i++)
+	{
+		AGCSignedValue(tephem_int[i]);
+	}
 
+	//Calculate TEPHEM in centiseconds
+	double tephem = tephem_int[2] + tephem_int[1] * pow((double) 2., (double) 14.) + tephem_int[0] * pow((double) 2., (double) 28.);
 	//Calculate MJD of TEPHEM
 	LaunchMJD = (tephem / 8640000.) + TEPHEM0;
 
