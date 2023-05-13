@@ -29,7 +29,7 @@
 #include <atomic>
 #include "thread.h"
 
-// Save file strings
+  // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
 #define MCC_END_STRING	    "MCC_END"
 
@@ -183,6 +183,7 @@
 #define PT_AP12LUNSURFPAD	33
 #define PT_LMP22ACQPAD      34
 #define PT_AP12LMASCPAD     35
+#define PT_AP12SEPPAD		36
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -241,7 +242,7 @@ class RTCC;
 // Mission Control Center class
 class MCC {
 public:
-	MCC(RTCC *rtc);											// Cons
+	MCC(RTCC* rtc);											// Cons
 
 	char CSMName[64];
 	char LEMName[64];
@@ -249,21 +250,21 @@ public:
 
 	enum TrackingVesselType { TypeCM, TypeLM, TypeSIVb };
 	enum TrackingSlot { SlotCM, SlotLM };
-	
+
 	void Init();											// Initialization
 	void TimeStep(double simdt);					        // Timestep
 	void AutoUpdateXmitGroundStation(VESSEL* Ves, const TrackingVesselType Type, const TrackingSlot Slot);	// Automaticially Update the Transmitting Ground Station
 	void UpdateRevCounters(const TrackingSlot Slot);
 	virtual void keyDown(DWORD key);						// Notification of keypress	
-	void addMessage(char *msg);								// Add message into buffer
+	void addMessage(char* msg);								// Add message into buffer
 	void redisplayMessages();								// Cause messages in ring buffer to be redisplayed
-	void pushCMCUplinkString(const char *str);              // Send sequence to CMC
+	void pushCMCUplinkString(const char* str);              // Send sequence to CMC
 	void pushAGCUplinkKey(char key, bool cm);               // Send key to AGC
 	void pushUplinkData(unsigned char data);				// Add uplink data word to queue
-	int CM_uplink(const unsigned char *data,int len);		// Uplink string to CM
+	int CM_uplink(const unsigned char* data, int len);		// Uplink string to CM
 	int CM_uplink_buffer();									// Send uplink buffer to CM
-	void pushLGCUplinkString(const char *str);              // Send sequence to LM
-	int LM_uplink(const unsigned char *data, int len);		// Uplink string to LM
+	void pushLGCUplinkString(const char* str);              // Send sequence to LM
+	int LM_uplink(const unsigned char* data, int len);		// Uplink string to LM
 	int LM_uplink_buffer();									// Send uplink buffer to LM
 	void setState(int newState);							// Set mission state
 	void setSubState(int newState);							// Set mission substate
@@ -274,12 +275,12 @@ public:
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn, int type);					// Subthread start request
 	void subThreadMacro(int type, int updatenumber);
-	void enableMissionTracking(){ MT_Enabled = true; GT_Enabled = true; }
+	void enableMissionTracking() { MT_Enabled = true; GT_Enabled = true; }
 	void initiateAbort();
 	void SlowIfDesired();
-	void SetCSM(char *csmname);
-	void SetLM(char *lemname);
-	void SetLV(char *lvname);
+	void SetCSM(char* csmname);
+	void SetLM(char* lemname);
+	void SetLV(char* lvname);
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
 
@@ -292,10 +293,10 @@ public:
 	void MissionSequence_G();
 	void MissionSequence_H1();
 
-	RTCC *rtcc;												// Pointer to RTCC
-	Saturn *cm;												// Pointer to CM
-	LEM *lm;												// Pointer to LM
-	SIVB *sivb;												// Pointer to SIVB
+	RTCC* rtcc;												// Pointer to RTCC
+	Saturn* cm;												// Pointer to CM
+	LEM* lm;												// Pointer to LM
+	SIVB* sivb;												// Pointer to SIVB
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
 	double R_E, R_M;										// Radius of Earth and Moon
@@ -362,7 +363,7 @@ public:
 	char messages[MAX_MESSAGES][MAX_MSGSIZE];				// Message buffer
 	double msgtime[MAX_MESSAGES];							// Message timeout list
 	int currentMessage;										// Index to tail of ring buffer
-	char msgOutputBuf[MAX_MSGSIZE*MAX_MESSAGES];			// Final output string
+	char msgOutputBuf[MAX_MSGSIZE * MAX_MESSAGES];			// Final output string
 
 	// FRIEND CLASSES
 	friend class RTCC;										// RTCC can handle our data
