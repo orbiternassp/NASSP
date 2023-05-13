@@ -26,19 +26,19 @@
 
 struct RTCCMFDInputBoxData
 {
-	double *dVal;
-	int *iVal;
-	VECTOR3 *vVal;
+	double* dVal;
+	int* iVal;
+	VECTOR3* vVal;
 	double factor;
 };
 
-class ApolloRTCCMFD: public MFD2 {
+class ApolloRTCCMFD : public MFD2 {
 public:
-	ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im);
-	~ApolloRTCCMFD ();
-	char *ButtonLabel (int bt);
-	int ButtonMenu (const MFDBUTTONMENU **menu) const;
-	bool Update (oapi::Sketchpad *skp);
+	ApolloRTCCMFD(DWORD w, DWORD h, VESSEL* vessel, UINT im);
+	~ApolloRTCCMFD();
+	char* ButtonLabel(int bt);
+	int ButtonMenu(const MFDBUTTONMENU** menu) const;
+	bool Update(oapi::Sketchpad* skp);
 	bool ConsumeButton(int bt, int event);
 	bool ConsumeKeyBuffered(DWORD key);
 	void WriteStatus(FILEHANDLE scn) const;
@@ -46,7 +46,7 @@ public:
 	void StoreStatus(void) const;
 	void RecallStatus(void);
 
-	bool Text(oapi::Sketchpad *skp, int x, int y, const std::string & str);
+	bool Text(oapi::Sketchpad* skp, int x, int y, const std::string& str);
 
 	void SelectPage(int page);
 	void menuTIChaserVectorTime();
@@ -105,23 +105,23 @@ public:
 	void set_MissionNumber(int mission);
 	void SPQcalc();
 	void lambertcalc();
-	void Angle_Display(char *Buff, double angle, bool DispPlus = true);
-	void GET_Display(char * Buff, double time, bool DispGET = true);
-	void GET_Display2(char * Buff, double time);
+	void Angle_Display(char* Buff, double angle, bool DispPlus = true);
+	void GET_Display(char* Buff, double time, bool DispGET = true);
+	void GET_Display2(char* Buff, double time);
 	void GET_Display3(char* Buff, double time);
 	void GET_Display4(char* Buff, double time);
-	void GET_Display_HHMM(char *Buff, double time);
-	void AGC_Display(char * Buff, double time);
-	void FormatLatitude(char * Buff, double lat);
-	void FormatLongitude(char * Buff, double lng);
-	void FormatIMUAngle0(char *Buff, double ang); //0 digits
-	void FormatIMUAngle1(char *Buff, double ang); //0 digits
-	void FormatIMUAngle2(char *Buff, double ang); //0 digits
+	void GET_Display_HHMM(char* Buff, double time);
+	void AGC_Display(char* Buff, double time);
+	void FormatLatitude(char* Buff, double lat);
+	void FormatLongitude(char* Buff, double lng);
+	void FormatIMUAngle0(char* Buff, double ang); //0 digits
+	void FormatIMUAngle1(char* Buff, double ang); //0 digits
+	void FormatIMUAngle2(char* Buff, double ang); //0 digits
 	void REFSMMATName(char* Buff, int n);
-	void ThrusterName(char *Buff, int n);
-	bool ThrusterType(std::string name, int &id);
-	void MPTAttitudeName(char *Buff, int n);
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
+	void ThrusterName(char* Buff, int n);
+	bool ThrusterType(std::string name, int& id);
+	void MPTAttitudeName(char* Buff, int n);
+	void SStoHHMMSS(double time, int& hours, int& minutes, double& seconds);
 	double timetoperi();
 	double timetoapo();
 	void CycleREFSMMATopt();
@@ -131,12 +131,12 @@ public:
 	void menuP30UplinkCalc();
 	void menuRetrofireEXDVUplink();
 	void menuRetrofireEXDVUplinkCalc();
-	bool set_RetrofireEXDVUplinkCalc(char *str);
+	bool set_RetrofireEXDVUplinkCalc(char* str);
 	void menuEntryUplinkCalc();
 	void menuEnterSplashdownLat();
 	void menuEnterSplashdownLng();
 	void menuRTED_REFSMMAT();
-	void set_RTED_REFSMMAT(char *str);
+	void set_RTED_REFSMMAT(char* str);
 	void menuRTEDASTCodeDialogue();
 	void menuSetRTEDUllage();
 	void set_RTEDUllage(int thrusters, double duration);
@@ -151,19 +151,19 @@ public:
 	void set_RTEConstraintF87(std::string constr, std::string value);
 	void CycleRTECalcMode();
 	void menuSetRTEManeuverCode();
-	void set_RTEManeuverCode(char *code);
+	void set_RTEManeuverCode(char* code);
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();
 	void menuSaveSplashdownTarget();
-	bool set_SaveSplashdownTarget(char *str);
+	bool set_SaveSplashdownTarget(char* str);
 	void LoadSplashdownTargetToRTEDManualInput();
 	void menuDeorbitCalc();
 	void menuCycleRetrofireType();
 	void menuTransferRTEToMPT();
-	bool set_RTESolution(char *str);
+	bool set_RTESolution(char* str);
 	void menuGeneralMEDRequest();
-	void menuGeneralMEDRequest(char *message);
-	void GeneralMEDRequest(char *str);
+	void menuGeneralMEDRequest(char* message);
+	void GeneralMEDRequest(char* str);
 	void EntryRangeDialogue();
 	void menuSVCalc();
 	void menuSwitchSVSlot();
@@ -189,7 +189,7 @@ public:
 	void menuREFSMMATAtt();
 	void set_REFSMMATAtt(VECTOR3 att);
 	void menuSwitchManPADEngine();
-	void CycleThrusterOption(int &thruster);
+	void CycleThrusterOption(int& thruster);
 	void set_lambertelev(double elev);
 	void menuSwitchManPADopt();
 	void menuLSLat();
@@ -200,7 +200,7 @@ public:
 	void set_SVtime(double SVtime);
 	void menuUpdateGRRTime();
 	void menuSetAGSKFactor();
-	void set_AGSKFactor(char *str);
+	void set_AGSKFactor(char* str);
 	void menuGetAGSKFactor();
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
@@ -218,6 +218,7 @@ public:
 	void menuChangeVesselStatus();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
+	void AGCSignedValue(int& val);
 	void set_svtarget();
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
@@ -415,7 +416,7 @@ public:
 	void menuMPTCycleActive();
 	void menuMPTDeleteManeuver();
 	void menuMPTTLIDirectInput();
-	void set_MPTTLIDirectInput(char *str);
+	void set_MPTTLIDirectInput(char* str);
 	void menuMPTCopyEphemeris();
 	void menuMPTVehicleOrientationChange();
 	void menuSetMPTInitPage();
@@ -448,7 +449,7 @@ public:
 	void menuCSMLSUpload();
 	void menuLMLSUpload();
 	void menuREFSMMATUplinkCalc();
-	bool REFSMMATUplinkCalc(char *str);
+	bool REFSMMATUplinkCalc(char* str);
 	void menuSetTITransferPage();
 	void menuCycleTITable();
 	void menuSetTIPlanNumber();
@@ -527,7 +528,7 @@ public:
 	void set_MPTDirectInputReplaceCode(unsigned n);
 	void menuMPTDirectInputAttitude();
 	void menuMPTDirectInputBurnParameters();
-	bool set_MPTDirectInputM40Data(char *str);
+	bool set_MPTDirectInputM40Data(char* str);
 	void menuMPTDirectInputCoord();
 	void set_MPTDirectInputCoord(VECTOR3 Att, int mode);
 	void menuMPTDirectInputHeadsUpDown();
@@ -542,7 +543,7 @@ public:
 	void set_MPTDirectInputTIG(double tig);
 	void menuMPTDirectInputDock();
 	void menuMPTDirectInputFinalConfig();
-	void set_MPTDirectInputFinalConfig(char *cfg);
+	void set_MPTDirectInputFinalConfig(char* cfg);
 	void menuMPTDirectInputUllageDT();
 	void set_MPTDirectInputUllageDT(double dt);
 	void menuMPTDirectInputUllageThrusters();
@@ -553,13 +554,13 @@ public:
 	void menuTransferPoweredDescentToMPT();
 	void CheckoutMonitorCalc();
 	void menuSetMPTInitInput();
-	void set_MPTInitM55Config(char *cfg);
+	void set_MPTInitM55Config(char* cfg);
 	void menuMPTUpdate();
 	void menuMPTInitAutoUpdate();
 	void menuMPTInitM50M55Vehicle();
 	void menuMPTTrajectoryUpdateCSM();
 	void menuMPTTrajectoryUpdateLEM();
-	bool set_DifferentialCorrectionSolution(char *str, bool csm);
+	bool set_DifferentialCorrectionSolution(char* str, bool csm);
 	void menuMoveToEvalTableCSM();
 	void menuMoveToEvalTableLEM();
 	void menuMoveToUsableTableCSM();
@@ -591,7 +592,7 @@ public:
 	void menuSetRTETradeoffSite();
 	void menuSetRTETradeoffRemoteEarthPage();
 	void set_RTETradeoffRemoteEarthPage(int page);
-	void set_TradeoffSiteInput(const std::string &site);
+	void set_TradeoffSiteInput(const std::string& site);
 	void menuSetRTETradeoffVectorTime();
 	void set_RTETradeoffVectorTime(double tv);
 	void menuSetRTETradeoffT0MinTime();
@@ -605,9 +606,9 @@ public:
 	void menuSetSPQInitializationPage();
 	void menuSetDKIInitializationPage();
 	void menuGenerateDMT();
-	void GMPManeuverTypeName(char *buffer, int typ);
-	void GMPManeuverPointName(char *buffer, int point);
-	void GMPManeuverCodeName(char *buffer, int code);
+	void GMPManeuverTypeName(char* buffer, int typ);
+	void GMPManeuverPointName(char* buffer, int point);
+	void GMPManeuverCodeName(char* buffer, int code);
 	void menuMSKRequest();
 	void SelectMCCScreen(int num);
 	void menuUplinkDisplayRequest();
@@ -698,7 +699,7 @@ public:
 	void menuSetAbortScanTableInputPage();
 	void menuCycleASTType();
 	void menuSetASTSiteOrType();
-	void set_ASTSiteOrType(char *site);
+	void set_ASTSiteOrType(char* site);
 	void menuASTVectorTime();
 	void set_ASTVectorTime(double get);
 	void menuASTAbortTime();
@@ -707,9 +708,9 @@ public:
 	void set_ASTLandingTime(double get);
 	void menuSetAbortScanTablePage();
 	void menuASTTMAXandDVInput();
-	bool set_ASTTMaxandDV(char *str);
+	bool set_ASTTMaxandDV(char* str);
 	void menuASTEntryProfile();
-	void set_ASTEntryProfile(char *str);
+	void set_ASTEntryProfile(char* str);
 	void menuASTCalc();
 	void menuDeleteASTRow();
 	void menuSetRTEDManualManeuverInputPage();
@@ -722,7 +723,7 @@ public:
 	void set_RTEDManualDV(VECTOR3 DV);
 	void menuSetRTEDEntryProfilePage();
 	void menuAGCTimeUpdateCalc();
-	void set_AGCTimeUpdateCalc(char *dt);
+	void set_AGCTimeUpdateCalc(char* dt);
 	void menuAGCTimeUpdateComparison();
 	void menuAGCTimeUpdateUplink();
 	void menuAGCLiftoffTimeComparision();
@@ -767,21 +768,21 @@ public:
 	void menuPerigeeAdjustThresholdTime();
 	void menuPerigeeAdjustTimeIncrement();
 	void menuPerigeeAdjustHeight();
-	void GenericGETInput(double *get, char *message);
-	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
-	void GenericIntInput(int *val, char* message);
-	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0);
+	void GenericGETInput(double* get, char* message);
+	void GenericDoubleInput(double* val, char* message, double factor = 1.0);
+	void GenericIntInput(int* val, char* message);
+	void GenericVectorInput(VECTOR3* val, char* message, double factor = 1.0);
 protected:
-	oapi::Font *font;
-	oapi::Font *font2;
-	oapi::Font *font2vert;
-	oapi::Font *fonttest;
-	oapi::Font *font3;
-	oapi::Font *font4;
-	oapi::Pen *pen;
-	oapi::Pen *pen2;
-	Saturn *saturn;
-	LEM *lem;
+	oapi::Font* font;
+	oapi::Font* font2;
+	oapi::Font* font2vert;
+	oapi::Font* fonttest;
+	oapi::Font* font3;
+	oapi::Font* font4;
+	oapi::Pen* pen;
+	oapi::Pen* pen2;
+	Saturn* saturn;
+	LEM* lem;
 	int screen;
 	int marker;
 	int markermax;
