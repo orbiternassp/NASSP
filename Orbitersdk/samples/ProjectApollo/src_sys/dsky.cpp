@@ -157,6 +157,8 @@ DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), 
 
 {
 	DimmerRotationalSwitch = NULL;
+	StatusPower = NULL;
+	SegmentPower = NULL;
 	Reset();
 	ResetKeyDown();
 	KeyCodeIOChannel = IOChannel;
