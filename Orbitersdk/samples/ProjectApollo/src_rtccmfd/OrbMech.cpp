@@ -1736,7 +1736,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 		E_A = PI2 - E_A;
 	}
 
-	while ((abs(E_err) > 0.01*RAD || abs(dt)>1.0) && i < 30)
+	while ((abs(E_err) > 0.01*RAD || abs(dt)>1.0) && i < 50)
 	{
 		dE_0 = dE;
 		dE = E_A - E;
