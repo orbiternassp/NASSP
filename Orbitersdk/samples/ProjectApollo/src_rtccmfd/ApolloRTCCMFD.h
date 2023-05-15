@@ -126,7 +126,7 @@ public:
 	double timetoapo();
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
-	void menuIUUplink();
+	void menuSLVTLITargetingUplink();
 	void menuP30Uplink();
 	void menuP30UplinkCalc();
 	void menuRetrofireEXDVUplink();
@@ -309,6 +309,7 @@ public:
 	void menuSetLDPPPoweredDescTime();
 	void menuLDPPCalc();
 	void menuSetDescPlanCalcPage();
+	void menuTranslunarPage();
 	void menuSetLDPPMode();
 	void menuSetLDPPSequence();
 	void menuTLANDUplinkCalc();
@@ -348,6 +349,10 @@ public:
 	void menuTerrainModelCalc();
 	void set_TLand(double time);
 	void menuTLCCCalc();
+	void menuTLIProcessorCalc();
+	void menuTLIProcessorMode();
+	void menuTLIProcessorGET();
+	void menuTLIEllipseApogee();
 	void menuNavCheckPADCalc();
 	void menuSetNavCheckGET();
 	void menuLAPCalc();

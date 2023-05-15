@@ -69,6 +69,7 @@ public:
 	virtual bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw) { return false; }
 	virtual bool ExecuteCommManeuver() { return false; }
 	virtual bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0) { return false; }
+	virtual bool TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f) { return false; }
 	virtual bool DiscreteOutputTest(int bit, bool on) = 0;
 	virtual bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM) = 0;
 	void PrepareToLaunch();
@@ -114,6 +115,7 @@ public:
 	bool ExecuteCommManeuver();
 	bool DiscreteOutputTest(int bit, bool on);
 	bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM);
+	bool TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f);
 
 	//Public Variables
 	double T_L;									// Time of GRR in seconds since midnight
