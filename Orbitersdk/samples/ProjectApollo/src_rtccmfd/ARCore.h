@@ -200,7 +200,6 @@ public:
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
-	bool OrbAdjAltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double GMPApogeeHeight;		//Desired apoapsis height
 	double GMPPerigeeHeight;	//Desired periapsis height
 	double GMPWedgeAngle;

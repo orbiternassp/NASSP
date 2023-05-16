@@ -703,7 +703,7 @@ void ApolloRTCCMFD::menuSetSPQPage()
 void ApolloRTCCMFD::menuSetOrbAdjPage()
 {
 	marker = 0;
-	markermax = 8;
+	markermax = 7;
 	SelectPage(4);
 }
 
@@ -2544,29 +2544,20 @@ void ApolloRTCCMFD::menuSetGMPInput()
 	}
 	else if (marker == 4)
 	{
-		menuCycleOrbAdjAltRef();
+		GMPInput1Dialogue();
 	}
 	else if (marker == 5)
 	{
-		GMPInput1Dialogue();
+		GMPInput2Dialogue();
 	}
 	else if (marker == 6)
 	{
-		GMPInput2Dialogue();
+		GMPInput3Dialogue();
 	}
 	else if (marker == 7)
 	{
-		GMPInput3Dialogue();
-	}
-	else if (marker == 8)
-	{
 		GMPInput4Dialogue();
 	}
-}
-
-void ApolloRTCCMFD::menuCycleOrbAdjAltRef()
-{
-	G->OrbAdjAltRef = !G->OrbAdjAltRef;
 }
 
 void ApolloRTCCMFD::GPMPCalc()
