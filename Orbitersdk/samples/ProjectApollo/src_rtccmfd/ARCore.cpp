@@ -440,7 +440,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPManeuverCode = 0;
 	GMPManeuverPoint = 0;
 	GMPManeuverType = 0;
-	OrbAdjAltRef = true;
 	SPSGET = 0.0;
 	GMPApogeeHeight = 0;
 	GMPPerigeeHeight = 0;
@@ -2779,7 +2778,6 @@ int ARCore::subThread()
 		opt.H_P = GMPPerigeeHeight;
 		opt.dH_D = GMPHeightChange;
 		opt.TIG_GET = SPSGET;
-		opt.AltRef = OrbAdjAltRef;
 		opt.dLAN = GMPNodeShiftAngle;
 		opt.dW = GMPWedgeAngle;
 		opt.long_D = GMPManeuverLongitude;
@@ -4439,24 +4437,48 @@ int ARCore::subThread()
 				Result = DONE;
 				break;
 			}
-			EphemerisData sv_tig;
-			double mass, attachedMass = 0.0;
-			
-			mass = vessel->GetMass();
 
-			sv_tig = GC->rtcc->PZGPMELM.SV_before;
+			PMMMPTInput in;
 
-			if (vesselisdocked)
+			//Get all required data for PMMMPT and error checking
+			if (GetVesselParameters(GC->rtcc->med_m65.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
-				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
+				//Error
+				Result = DONE;
+				break;
+			}
+
+			in.VehicleArea = 129.4*pow(0.3048, 2); //TBD
+			in.IterationFlag = GC->rtcc->med_m65.Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m65.TimeFlag;
+			in.Thruster = GC->rtcc->med_m65.Thruster;
+
+			in.sv_before = GC->rtcc->PZGPMELM.SV_before;
+			in.V_aft = GC->rtcc->PZGPMELM.V_after;
+			if (GC->rtcc->med_m65.UllageDT < 0)
+			{
+				in.DETU = GC->rtcc->SystemParameters.MCTNDU;
 			}
 			else
 			{
-				attachedMass = 0.0;
+				in.DETU = GC->rtcc->med_m65.UllageDT;
 			}
-			VECTOR3 DV = GC->rtcc->PZGPMELM.V_after - GC->rtcc->PZGPMELM.SV_before.V;
-			GC->rtcc->PoweredFlightProcessor(sv_tig, mass, GC->rtcc->GETfromGMT(GC->rtcc->PZGPMELM.SV_before.GMT), GC->rtcc->med_m65.Thruster, attachedMass, DV, false, P30TIG, dV_LVLH);
-			P30TIG = GC->rtcc->GETfromGMT(P30TIG);
+			in.UT = GC->rtcc->med_m65.UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m65.TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m65.DPSThrustFactor;
+
+			double GMT_TIG;
+			VECTOR3 DV;
+			if (GC->rtcc->PoweredFlightProcessor(in, GMT_TIG, DV) == 0)
+			{
+				//Save for Maneuver PAD and uplink
+				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
+				dV_LVLH = DV;
+				manpadenginetype = GC->rtcc->med_m65.Thruster;
+				HeadsUp = true;
+				manpad_ullage_dt = GC->rtcc->med_m65.UllageDT;
+				manpad_ullage_opt = GC->rtcc->med_m65.UllageQuads;
+			}
 		}
 
 		Result = DONE;

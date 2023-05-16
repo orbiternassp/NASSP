@@ -100,7 +100,6 @@ public:
 	void menuCycleMarkerUp();
 	void menuCycleMarkerDown();
 	void menuSetGMPInput();
-	void menuCycleOrbAdjAltRef();
 	void menuMissionNumberInput();
 	void set_MissionNumber(int mission);
 	void SPQcalc();
