@@ -243,7 +243,7 @@ public:
 	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;
 
-	//ENTY PAGE	
+	//ENTRY PAGE
 	double EntryTIGcor;
 	double EntryLatcor;
 	double EntryLngcor;
@@ -279,10 +279,11 @@ public:
 	TLIPAD tlipad;
 	AP11PDIPAD pdipad;
 
-	///ENTRY PAD PAGE
+	//ENTRY PAD PAGE
 	AP11ENT lunarentrypad;
 	AP7ENT earthentrypad;
 	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
+	bool EntryPADSxtStarCheckAttOpt; //true = sextant star attitude check at entry attitude, false = sextant star check at horizon check attitude
 
 	//MAP UPDATE PAGE
 	AP10MAPUPDATE mapupdate;

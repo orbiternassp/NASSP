@@ -533,6 +533,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lmmanpad.SXP = 0.0;
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
+	EntryPADSxtStarCheckAttOpt = true;
 	manpadenginetype = RTCC_ENGINETYPE_CSMSPS;
 	TPI_PAD.AZ = 0.0;
 	TPI_PAD.dH_TPI = 0.0;
@@ -4004,6 +4005,7 @@ int ARCore::subThread()
 				opt.lat = EntryLatcor;
 				opt.lng = EntryLngcor;
 				opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
+				opt.SxtStarCheckAttitudeOpt = EntryPADSxtStarCheckAttOpt;
 
 				GC->rtcc->LunarEntryPAD(&opt, lunarentrypad);
 			}

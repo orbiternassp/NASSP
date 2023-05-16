@@ -1526,6 +1526,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 			skp->SetFont(font2);
 
+			skp->Text(1 * W / 16, 4 * H / 28, "Sxt Star Check at", 17);
+			if (G->EntryPADSxtStarCheckAttOpt)
+			{
+				skp->Text(1 * W / 16, 5 * H / 28, "Entry Attitude", 14);
+			}
+			else
+			{
+				skp->Text(1 * W / 16, 5 * H / 28, "Hor Check Attitude", 18);
+			}
+
 			if (G->entryrange != 0)
 			{
 				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Desired Range:", 14);
