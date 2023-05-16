@@ -146,6 +146,8 @@ public:
 	void UpdateTLITargetTable();
 	void GenerateSpaceDigitalsNoMPT();
 	void LUNTARCalc();
+	void TLIProcessorCalc();
+	void SaturnVTLITargetUplink();
 	int GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
 
 	int startSubthread(int fcn);
@@ -289,12 +291,7 @@ public:
 	int mappage, mapgs;
 	double mapUpdateGET;
 
-	//TLI PAGE
-	//0 = TLI (nodal), 1 = TLI (free return)
-	int TLImaneuver;
-
 	//TLCC PAGE
-	VECTOR3 R_TLI, V_TLI;
 	int TLCCSolGood;
 
 	//LANDMARK TRACKING PAGE

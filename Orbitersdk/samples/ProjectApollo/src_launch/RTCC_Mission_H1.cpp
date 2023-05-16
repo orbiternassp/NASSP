@@ -1157,6 +1157,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP11ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "LOI-2");
+		sprintf(form->remarks, "Two-jet ullage for 19 seconds");
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -1174,6 +1175,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	break;
 	case 32: //STATE VECTOR and LS REFSMMAT UPLINK
 	{
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
+
+		LMARKTRKPADOpt landmarkopt;
 		MATRIX3 REFSMMAT;
 		SV sv;
 		REFSMMATOpt opt;
@@ -1351,10 +1355,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		VECTOR3 dV_LVLH;
 		double t_P, t_Sep;
 
-		int hh, mm;
-		double ss;
-
-		AP11MNV * form = (AP11MNV *)pad;
+		AP12SEPPAD * form = (AP12SEPPAD *)pad;
+		AP11MNV manpad;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -1372,18 +1374,18 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
 
-		AP11ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, "SEP");
-		OrbMech::SStoHHMMSS(form->GETI - 30.0*60.0, hh, mm, ss);
-		sprintf(form->remarks, "Undock time is %d:%d:%.2lf.", hh, mm, ss);
-		form->type = 2;
+		AP11ManeuverPAD(&opt, manpad);
+
+		form->t_Undock = t_Sep - 30.0*60.0;
+		form->t_Separation = t_Sep;
+		form->Att_Undock = manpad.Att;
 	}
 	break;
 	case 38: //DESCENT ORBIT INSERTION
 	{
 		AP11LMManPADOpt opt;
+		SV sv, sv_upl;
 
-		SV sv;
 		char TLANDbuffer[64];
 		char buffer1[1000];
 		char buffer2[1000];
@@ -1420,7 +1422,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		AP11LMManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "DOI");
 
-		AGCStateVectorUpdate(buffer1, sv, false);
+		sv_upl = coast(sv, calcParams.DOI - 10.0*60.0 - OrbMech::GETfromMJD(sv.MJD, CalcGETBase()));
+		AGCStateVectorUpdate(buffer1, sv_upl, false);
 		LGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 		TLANDUpdate(TLANDbuffer, CZTDTGTU.GETTD);
 
@@ -1681,6 +1684,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	break;
 	case 58: //LM P22 ACQUISITION TIME PRE-PDI
 	case 59: //LM P22 ACQUISITION TIME PRE-ASCENT
+	case 74: //CSM SV AND RLS UPDATE AND P22 ACQUISTION TIME
 	{
 		LMP22ACQPAD * form = (LMP22ACQPAD*)pad;
 
@@ -1691,13 +1695,13 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		GETbase = CalcGETBase();
 		sv0 = StateVectorCalc(calcParams.src);
 
-		if (fcn == 58)
+		if (fcn == 58 || fcn == 74)
 		{
-			LmkTime = calcParams.PDI + 2 * 3600.0 + 5.0*60.0;
+			LmkTime = calcParams.PDI + 2.0 * 3600.0 + 5.0*60.0;
 		}
 		else
 		{
-			LmkTime = calcParams.LunarLiftoff - 3 * 3600.0 - 30.0*60.0;
+			LmkTime = calcParams.LunarLiftoff - 3.0 * 3600.0 - 30.0*60.0;
 		}
 		alt = BZLAND.rad[RTCC_LMPOS_BEST] - OrbMech::R_Moon;;
 		lat = BZLAND.lat[RTCC_LMPOS_BEST];
@@ -1707,7 +1711,38 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)))*(oapiGetSize(sv1.gravref) + alt);
 		dt2 = OrbMech::findelev_gs(sv1.R, sv1.V, R_P, MJDguess, 152.0*RAD, sv1.gravref, LmkRange);
 
-		form->P22_ACQ = dt2 + (MJDguess - GETbase) * 24.0 * 60.0 * 60.0;
+		form->P22_ACQ_GET = dt2 + (MJDguess - GETbase) * 24.0 * 60.0 * 60.0;
+		//Round
+		form->P22_ACQ_GET = round(form->P22_ACQ_GET);
+
+		if (fcn == 58)
+		{
+			form->Octals[0] = form->Octals[1] = 0;
+		}
+		else
+		{
+			form->Octals[0] = OrbMech::DoubleToBuffer(form->P22_ACQ_GET*100.0, 28, 1);
+			form->Octals[1] = OrbMech::DoubleToBuffer(form->P22_ACQ_GET*100.0, 28, 0);
+		}
+
+		if (fcn == 74)
+		{
+			EphemerisData sv;
+			char buffer1[1000];
+			char buffer2[100];
+
+			sv = StateVectorCalcEphem(calcParams.src);
+
+			AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_CSM, sv);
+			LandingSiteUplink(buffer2, RTCC_MPT_LM);
+
+			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, RLS");
+			}
+		}
 	}
 	break;
 	case 60: //REV 1 MAP UPDATE
@@ -1770,7 +1805,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 		else
 		{
-			opt.LmkTime[0] = GET_SV + 45.0*60.0;
+			opt.LmkTime[0] = GET_SV + 15.0*60.0;
 		}
 		opt.lng[0] = -23.228*RAD;
 		opt.entries = 1;
@@ -1820,7 +1855,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sprintf(form->LmkID[0], "Lunar Module");
 			opt.alt[0] = BZLAND.rad[RTCC_LMPOS_BEST] - OrbMech::R_Moon;
 			opt.lat[0] = BZLAND.lat[RTCC_LMPOS_BEST];
-			opt.LmkTime[0] = GET_SV + 45.0*60.0;
+			opt.LmkTime[0] = GET_SV + 15.0*60.0;
 			opt.lng[0] = BZLAND.lng[RTCC_LMPOS_BEST];
 			opt.entries = 1;
 		}
@@ -2051,10 +2086,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		AP12LunarSurfaceDataCard * form = (AP12LunarSurfaceDataCard*)pad;
 
-		SV sv0, sv_CSM, sv_Ins, sv_IG;
-		VECTOR3 R_LS;
-		double T2, m0, v_LH, v_LV, t_sunrise, t_TPI, dv;
+		SV sv_CSM, sv_Ins, sv_IG;
+		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
+		double T2, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, dt1, dt2, t_CSI1, t_sunrise, t_TPI, dv;
 
+		GETbase = CalcGETBase();
 		sv_CSM = StateVectorCalc(calcParams.src);
 		
 		LEM *l = (LEM*)calcParams.tgt;
@@ -2076,6 +2112,15 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			t_sunrise = calcParams.PDI + 7.0*3600.0;
 		}
 
+		LunarAscentProcessor(R_LS, m0, sv_CSM, T2, v_LH, v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
+		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, OrbMech::mu_Moon);
+		OrbMech::rv_from_r0v0(sv_Ins.R, sv_Ins.V, dt1, R_C1, V_C1, OrbMech::mu_Moon);
+		t_C1 = T2 + dt_asc + dt1;
+		u = unit(crossp(R_C1, V_C1));
+		V_C1F = V_C1 + unit(crossp(u, V_C1))*10.0*0.3048;
+		OrbMech::REVUP(R_C1, V_C1F, 1.5, OrbMech::mu_Moon, R_CSI1, V_CSI1, dt2);
+		t_CSI1 = t_C1 + dt2;
+
 		t_TPI = FindOrbitalSunrise(sv_CSM, t_sunrise) - 23.0*60.0;
 		//Round to next 30 seconds
 		t_TPI = round(t_TPI / 30.0)*30.0;
@@ -2086,7 +2131,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		//T3
 		LunarLiftoffTimeOpt opt;
 		SV sv_CSM2, sv_CSM_over;
-		double MJD_over, theta_1, dt_1, t_L, t_CSI;
+		double theta_1, dt_1, t_L;
 
 		//Calculate TPI time for T3
 		t_sunrise = calcParams.PDI + 5.0*3600.0;
@@ -2134,35 +2179,20 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.dt_1 = dt_1;
 		//Final pass through
 		LunarLaunchWindowProcessor(opt);
+
 		t_L = PZLRPT.data[1].GETLO;
-		t_CSI = PZLRPT.data[1].T_CSI;
-		t_TPI = PZLRPT.data[1].T_TPI;
-
-		sv_CSM2 = coast(sv_CSM, calcParams.PDI - OrbMech::GETfromMJD(sv_CSM.MJD, CalcGETBase()));
-		MJD_over = OrbMech::P29TimeOfLongitude(sv_CSM2.R, sv_CSM2.V, sv_CSM2.MJD, sv_CSM2.gravref, BZLAND.lng[RTCC_LMPOS_BEST]);
-		sv_CSM_over = coast(sv_CSM2, (MJD_over - sv_CSM2.MJD)*24.0*3600.0);
-
 		form->T3_TIG = round(t_L);
 	}
 	break;
-	case 74: //CSM SV AND RLS UPDATE
     case 75: //LM SV AND RLS UPDATE
 	{
-		SV sv;
+		EphemerisData sv;
 		char buffer1[1000];
 		char buffer2[100];
 
-		if (fcn == 74)
-		{
-			sv = StateVectorCalc(calcParams.src);
-			AGCStateVectorUpdate(buffer1, sv, true);
-		}
-		else
-		{
-			sv = StateVectorCalc(calcParams.tgt);
-			AGCStateVectorUpdate(buffer1, sv, false);
-		}
+		sv = StateVectorCalcEphem(calcParams.tgt);
 
+		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_LM, sv);
 		LandingSiteUplink(buffer2, RTCC_MPT_LM);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -2173,17 +2203,71 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 	}
 	break;
+	case 400: //LGC CSM STATE VECTOR UPDATE WITH TIME TAG DOI-10 MINUTES
+	case 401: //LGC CSM STATE VECTOR UPDATE WITH TIME TAG AT LIFTOFF
+	{
+		EphemerisData sv, sv_upl;
+		char buffer1[1000];
+		double t_Tag;
+
+		sv = StateVectorCalcEphem(calcParams.src); //State vector for uplink
+
+		if (fcn == 400)
+		{
+			t_Tag = calcParams.DOI - 10.0*60.0;
+		}
+		else
+		{
+			t_Tag = calcParams.LunarLiftoff;
+		}
+
+		//Make sure no SV in the past is uplinked
+		if (t_Tag < GETfromGMT(RTCCPresentTimeGMT()))
+		{
+			sv_upl = sv;
+		}
+		else
+		{
+			sv_upl = coast(sv, t_Tag - GETfromGMT(sv.GMT));
+		}
+
+		AGCStateVectorUpdate(buffer1, RTCC_MPT_LM, RTCC_MPT_CSM, sv_upl);
+
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
+	}
+	break;
 	case 76: //P76 PAD for DOI AND NO PDI+12
 	{
 		AP11P76PAD * form = (AP11P76PAD*)pad;
 
-		SV sv_CSM, sv_LM;
+		SV sv_CSM, sv_LM, sv_CSM_upl, sv_LM_upl;
+		double GETbase;
+
 		char buffer1[1000];
 		char buffer2[1000];
+
+		GETbase = CalcGETBase();
 
 		//State vectors
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
+
+		//Coast to DOI-10min
+		if (mcc->MoonRev >= 14)
+		{
+			sv_CSM_upl = sv_CSM;
+			sv_LM_upl = sv_LM;
+		}
+		else
+		{
+			sv_CSM_upl = coast(sv_CSM, calcParams.DOI - 10.0*60.0 - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
+			sv_LM_upl = coast(sv_LM, calcParams.DOI - 10.0*60.0 - OrbMech::GETfromMJD(sv_LM.MJD, GETbase));
+		}
 
 		form->entries = 2;
 		sprintf(form->purpose[0], "DOI");
@@ -2193,8 +2277,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->TIG[1] = calcParams.TIGSTORE1;
 		form->DV[1] = calcParams.DVSTORE1 / 0.3048;
 
-		AGCStateVectorUpdate(buffer1, sv_CSM, true);
-		AGCStateVectorUpdate(buffer2, sv_LM, false);
+		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true);
+		AGCStateVectorUpdate(buffer2, sv_LM_upl, false);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -2577,7 +2661,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		sv_LM_upl = coast(sv_Ins, PZLRPT.data[1].T_INS + 18.0*60.0 - OrbMech::GETfromMJD(sv_Ins.MJD, GETbase));
 
-		sprintf(buffer1, "%sV45E", buffer1);
+		sprintf(buffer1, "V45E");
 		AGCStateVectorUpdate(buffer2, sv_LM_upl, false);
 
 		//Calculate T19
@@ -2878,6 +2962,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			sprintf(upDesc, updesc);
 		}
 	}
+	break;
 	case 130: //PHOTOGRAPHY REFSMMAT CACLULATION
 	case 131: //PHOTOGRAPHY REFSMMAT UPLINK
 	{
@@ -2945,7 +3030,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	break;
 	case 205: //EI Evaluation
 	case 210: //MCC-5 UPDATE
-	case 211: //PRELIMINARY MCC-6 UPDATE
 	case 212: //MCC-6 UPDATE
 	case 213: //MCC-7 DECISION
 	case 214: //MCC-7 UPDATE
