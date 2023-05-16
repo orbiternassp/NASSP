@@ -4139,7 +4139,7 @@ LVDC_BEGIN
   LVDC_ModeCode24 0
   LVDC_ModeCode25 64759310
   LVDC_ModeCode26 0
-  LVDC_ModeCode27 20480
+  LVDC_ModeCode27 20528
   LVDC_LVDC_Stop 0
   LVDC_LVDC_Timebase 5
   LVDC_OGStatusWord 7

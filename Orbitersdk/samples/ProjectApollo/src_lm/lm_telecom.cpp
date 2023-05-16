@@ -1611,11 +1611,11 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 					return(scale_scea(lem->scera2.GetVoltage(17, 1))); // BAT 5 VOLT 
 				case 10:
 					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
-					return(scale_data(0.0, -21.5, 21.5)); // RR SHFT COS
+					return(scale_data(lem->RR.GetShaftCos(), -1.0, 1.0)); // RR SHFT COS
 				case 11: 
 					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95)); } // DPS OX 1 QTY
 					if(channel == 1){ return (scale_scea(lem->scera2.GetVoltage(9, 2))); } // ROLL GDA POS
-					return(scale_data(0.0, -21.5, 21.5)); // RR TRUN SIN
+					return(scale_data(lem->RR.GetTrunnionSin(), -1.0, 1.0)); // RR TRUN SIN
 				case 12: 
 					if(channel == 10){ return(scale_data(0.0, -20.25, 20.25)); } // MG RSVR OUT COS
 					return (scale_scea(lem->scera1.GetVoltage(7, 1))); // ASC 1 O2 PRESS
@@ -1644,7 +1644,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // OG SVO ERR IN O
 					return(scale_data(lem->ecs.GetSelectedGlycolPressure(), 0.0, 60.0)); // GLY PUMP PRESS
 				case 20: 
-					if(channel == 10){ return(scale_data(0.0, -21.5, 21.5)); } // RR TRUN COS
+					if(channel == 10){ return(scale_data(lem->RR.GetTrunnionCos(), -1.0, 1.0)); } // RR TRUN COS
 					return(scale_scea(lem->scera1.GetVoltage(8, 1))); // ASC 1 H20 QTY
 				case 21: 
 					if (channel == 1) { return(scale_data(lem->RCSA.GetRCSOxidManifoldPressPSI(), 0.0, 350.0)); } // A OX MFLD PRESS
@@ -1681,7 +1681,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 					if(channel == 1){ return(scale_scea(lem->scera1.GetVoltage(21, 4))); } // RR ANT TEMP
 					return (scale_scea(lem->scera2.GetVoltage(9, 2))); // ROLL GDA POS
 				case 32: // RR SHFT SIN
-					return(scale_data(0.0, -21.5, 21.5));
+					return(scale_data(lem->RR.GetShaftSin(), -1.0, 1.0));
 				case 33: 
 					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 4))); } // PITCH ERR CMD
 					return(scale_data(lem->ecs.DescentWaterTankPressure(), 0.0, 60.0)); // DES H20 PRESS 

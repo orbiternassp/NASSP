@@ -174,9 +174,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "GMPManeuverCode", G->GMPManeuverCode);
 	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
 
-	papiWriteScenario_vec(scn, "R_TLI", G->R_TLI);
-	papiWriteScenario_vec(scn, "V_TLI", G->V_TLI);
-
 	papiWriteScenario_double(scn, "t_TPI", G->t_TPI);
 
 	papiWriteScenario_double(scn, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
@@ -257,9 +254,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "GMPManeuverCode", G->GMPManeuverCode);
 		papiReadScenario_double(line, "SPSGET", G->SPSGET);
 
-		papiReadScenario_vec(line, "R_TLI", G->R_TLI);
-		papiReadScenario_vec(line, "V_TLI", G->V_TLI);
-
 		papiReadScenario_double(line, "t_TPI", G->t_TPI);
 
 		papiReadScenario_double(line, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
@@ -287,28 +281,6 @@ void ApolloRTCCMFD::menuEntryUpdateUpload()
 	{
 		G->EntryUpdateUplink();
 	}
-}
-
-void ApolloRTCCMFD::menuIUUplink()
-{
-	SevenParameterUpdate coe;
-	SaturnV* testves;
-
-	testves = (SaturnV*)G->vessel;
-	LVDCSV *lvdc = (LVDCSV*)testves->iu->GetLVDC();
-
-	coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, G->P30TIG, lvdc->TB5, lvdc->mu, 578.6);
-
-	lvdc->TU = true;
-	lvdc->TU10 = false;
-
-	lvdc->T_RP = coe.T_RP;
-	lvdc->C_3 = coe.C3;
-	lvdc->Inclination = coe.Inclination;
-	lvdc->e = coe.e;
-	lvdc->alpha_D = coe.alpha_D;
-	lvdc->f = coe.f;
-	lvdc->theta_N = coe.theta_N;
 }
 
 void ApolloRTCCMFD::menuP30UplinkCalc()
@@ -793,6 +765,11 @@ void ApolloRTCCMFD::menuSetVECPOINTPage()
 void ApolloRTCCMFD::menuSetDescPlanCalcPage()
 {
 	SelectPage(16);
+}
+
+void ApolloRTCCMFD::menuTranslunarPage()
+{
+	SelectPage(17);
 }
 
 void ApolloRTCCMFD::menuSetDescPlanInitPage()
@@ -4771,7 +4748,7 @@ void ApolloRTCCMFD::menuCycleK30Vehicle()
 
 void ApolloRTCCMFD::menuSLVLaunchTargeting()
 {
-	if (GC->mission < 8 || GC->mission > 17)
+	if (utils::IsVessel(G->vessel, utils::SaturnIB))
 	{
 		G->SkylabSaturnIBLaunchCalc();
 	}
@@ -4779,10 +4756,15 @@ void ApolloRTCCMFD::menuSLVLaunchTargeting()
 
 void ApolloRTCCMFD::menuSLVLaunchUplink()
 {
-	if (GC->mission < 8 || GC->mission > 17)
+	if (utils::IsVessel(G->vessel, utils::SaturnIB))
 	{
 		G->SkylabSaturnIBLaunchUplink();
 	}
+}
+
+void ApolloRTCCMFD::menuSLVTLITargetingUplink()
+{
+	G->SaturnVTLITargetUplink();
 }
 
 void ApolloRTCCMFD::set_target()
@@ -6521,6 +6503,27 @@ void ApolloRTCCMFD::menuTLCCCalc()
 {
 	G->TLCCSolGood = true;
 	G->TLCCCalc();
+}
+
+void ApolloRTCCMFD::menuTLIProcessorCalc()
+{
+	G->TLCCSolGood = true;
+	G->TLIProcessorCalc();
+}
+
+void ApolloRTCCMFD::menuTLIProcessorMode()
+{
+
+}
+
+void ApolloRTCCMFD::menuTLIProcessorGET()
+{
+	GenericGETInput(&GC->rtcc->PZTLIPLN.GET_TLI, "Input time of ignition or threshold time. Format HH:MM:SS:");
+}
+
+void ApolloRTCCMFD::menuTLIEllipseApogee()
+{
+	GenericDoubleInput(&GC->rtcc->PZTLIPLN.h_ap, "Input height of apogee (2700 to 7000 NM):");
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffCalc()

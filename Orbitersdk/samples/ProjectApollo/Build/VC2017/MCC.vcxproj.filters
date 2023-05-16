@@ -54,7 +54,7 @@
     <ClCompile Include="..\..\src_launch\MCC_Mission_G.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-	<ClCompile Include="..\..\src_launch\RTCC_Mission_H1.cpp">
+    <ClCompile Include="..\..\src_launch\RTCC_Mission_H1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_launch\MCC_Mission_H1.cpp">
@@ -132,6 +132,12 @@
     <ClCompile Include="..\..\src_rtccmfd\LWP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\TLIProcessor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\TLTrajectoryComputers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -149,7 +155,7 @@
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-	<ClInclude Include="..\..\src_launch\MCC_Mission_H1.h">
+    <ClInclude Include="..\..\src_launch\MCC_Mission_H1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_launch\MCC_Mission_G.h">
@@ -219,6 +225,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_aux\paCBGmessageID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\TLTrajectoryComputers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\TLIProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

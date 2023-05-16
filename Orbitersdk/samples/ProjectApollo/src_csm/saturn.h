@@ -1161,9 +1161,6 @@ public:
 	///
 	void SlowIfDesired();
 
-	void ActivateS4RCS();
-	void DeactivateS4RCS();
-
 	virtual void ActivatePrelaunchVenting() = 0;
 	virtual void DeactivatePrelaunchVenting() = 0;
 
@@ -2007,8 +2004,7 @@ protected:
 	SaturnDCAmpMeter DCAmpMeter;
 
 	SwitchRow SystemTestMeterRow;
-	DCVoltMeter SystemTestVoltMeter;
-	SaturnSystemTestAttenuator  SystemTestAttenuator;
+	SaturnSystemTestMeter SystemTestVoltMeter;
 
 	//
 	// FDAI control switches.
@@ -3584,10 +3580,10 @@ protected:
 	PowerMerge InstrumentationPowerFeeder;
 	PowerMerge ECSSecTransducersFeeder;
 public:
-	CSMTankTempTransducer H2Tank1TempSensor;
-	CSMTankTempTransducer H2Tank2TempSensor;
-	CSMTankTempTransducer O2Tank1TempSensor;
-	CSMTankTempTransducer O2Tank2TempSensor;
+	TemperatureTransducer H2Tank1TempSensor;
+	TemperatureTransducer H2Tank2TempSensor;
+	TemperatureTransducer O2Tank1TempSensor;
+	TemperatureTransducer O2Tank2TempSensor;
 	CSMTankPressTransducer H2Tank1PressSensor;
 	CSMTankPressTransducer H2Tank2PressSensor;
 	CSMTankPressTransducer O2Tank1PressSensor;
@@ -3597,40 +3593,46 @@ public:
 	CSMTankQuantityTransducer O2Tank1QuantitySensor;
 	CSMTankQuantityTransducer O2Tank2QuantitySensor;
 	CSMTankPressTransducer CabinPressSensor;
-	CSMTankTempTransducer CabinTempSensor;
+	TemperatureTransducer CabinTempSensor;
 	CSMDeltaPressINH2OTransducer SuitCabinDeltaPressSensor;
 	CSMCO2PressTransducer CO2PartPressSensor;
 	CSMTankPressTransducer O2SurgeTankPressSensor;
-	CSMTankTempTransducer SuitTempSensor;
+	TemperatureTransducer SuitTempSensor;
 	CSMTankQuantityTransducer WasteH2OQtySensor;
 	CSMTankQuantityTransducer PotH2OQtySensor;
 	CSMTankPressTransducer SuitPressSensor;
 	CSMDeltaPressPSITransducer SuitCompressorDeltaPSensor;
 	CSMTankPressTransducer GlycolPumpOutPressSensor;
-	CSMTankTempTransducer GlyEvapOutSteamTempSensor;
-	CSMTankTempTransducer GlyEvapOutTempSensor;
+	TemperatureTransducer GlyEvapOutSteamTempSensor;
+	TemperatureTransducer GlyEvapOutTempSensor;
 	CSMTankQuantityTransducer GlycolAccumQtySensor;
-	CSMTankTempTransducer ECSRadOutTempSensor;
+	TemperatureTransducer ECSRadOutTempSensor;
 	CSMEvaporatorPressTransducer GlyEvapBackPressSensor;
 	CSMPipeFlowTransducer ECSO2FlowO2SupplyManifoldSensor;
 	CSMTankPressTransducer O2SupplyManifPressSensor;
 	CSMTankPressTransducer SecGlyPumpOutPressSensor;
-	CSMTankTempTransducer SecEvapOutLiqTempSensor;
+	TemperatureTransducer SecEvapOutLiqTempSensor;
 	CSMTankQuantityTransducer SecGlycolAccumQtySensor;
 	CSMEvaporatorPressTransducer SecEvapOutSteamPressSensor;
 	//CSMTankPressTransducer H2OGlyResPressSensor;
 	//Primary glycol flow rate needs a pipe implemented with name
 	//CSMPipeFlowTransducer PriGlycolFlowRateSensor;
-	CSMTankTempTransducer PriEvapInletTempSensor;
-	CSMTankTempTransducer PriRadInTempSensor;
-	CSMTankTempTransducer SecRadInTempSensor;
-	CSMTankTempTransducer SecRadOutTempSensor;
+	TemperatureTransducer PriEvapInletTempSensor;
+	TemperatureTransducer PriRadInTempSensor;
+	TemperatureTransducer SecRadInTempSensor;
+	TemperatureTransducer SecRadOutTempSensor;
 	CSMTankPressTransducer FCO2PressureSensor1;
 	CSMTankPressTransducer FCO2PressureSensor2;
 	CSMTankPressTransducer FCO2PressureSensor3;
 	CSMTankPressTransducer FCH2PressureSensor1;
 	CSMTankPressTransducer FCH2PressureSensor2;
 	CSMTankPressTransducer FCH2PressureSensor3;
+	TemperatureTransducer CMRCSEngine12TempSensor;
+	TemperatureTransducer CMRCSEngine14TempSensor;
+	TemperatureTransducer CMRCSEngine16TempSensor;
+	TemperatureTransducer CMRCSEngine21TempSensor;
+	TemperatureTransducer CMRCSEngine24TempSensor;
+	TemperatureTransducer CMRCSEngine25TempSensor;
 protected:
 
 	// CM Optics
@@ -4137,10 +4139,6 @@ protected:
 	bool CabinFansActive();
 	bool CabinFan1Active();
 	bool CabinFan2Active();
-	void ActivateCSMRCS();
-	void DeactivateCSMRCS();
-	void ActivateCMRCS();
-	void DeactivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
 	void SetPipeMaxFlow(char *pipe, double flow);
@@ -4369,7 +4367,6 @@ protected:
 	Boiler *SPSPropellantLineHeaterA;
 	Boiler *SPSPropellantLineHeaterB;
 	h_HeatLoad *CMRCSHeat[12];
-	h_Radiator* CMRCSTemp[12];
 
 	//
 	// LEM data.
@@ -4556,7 +4553,7 @@ protected:
 	friend class SaturnHighGainAntennaPitchMeter;
 	friend class SaturnHighGainAntennaYawMeter;
 	friend class SaturnHighGainAntennaStrengthMeter;
-	friend class SaturnSystemTestAttenuator;
+	friend class SaturnSystemTestMeter;
 	friend class SaturnLVSPSPcMeter;
 	friend class SaturnSPSHeliumNitrogenPressMeter;
 	friend class SaturnLMDPGauge;
