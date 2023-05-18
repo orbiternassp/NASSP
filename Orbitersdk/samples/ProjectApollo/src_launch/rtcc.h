@@ -43,6 +43,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/RTCCSystemParameters.h"
 #include "../src_rtccmfd/GeneralPurposeManeuver.h"
 #include "../src_rtccmfd/LWP.h"
+#include "../src_rtccmfd/AnalyticEphemerisGenerator.h"
 #include "MCCPADForms.h"
 
 class Saturn;

@@ -1366,7 +1366,8 @@ RTCC::RendezvousPlanningDisplayData::RendezvousPlanningDisplayData()
 	M = 0;
 }
 
-RTCC::RTCC()
+RTCC::RTCC() :
+pmmlaeg(this)
 {
 	mcc = NULL;
 	MissionFileName[0] = 0;
@@ -17978,20 +17979,7 @@ PMSVEC_2_2:
 		mu = OrbMech::mu_Moon;
 	}
 
-	VECTOR3 R, V;
-	if (sv.RBI == BODY_EARTH)
-	{
-		MATRIX3 Rot = OrbMech::GetRotationMatrix(sv.RBI,SystemParameters.GMTBASE);
-		R = rhtmul(Rot, sv.R);
-		V = rhtmul(Rot, sv.V);
-	}
-	else
-	{
-		R = sv.R;
-		V = sv.V;
-	}
-
-	elem = OrbMech::GIMIKC(R, V, mu);
+	elem = OrbMech::GIMIKC(sv.R, sv.V, mu);
 	KFactor = mpt->KFactor;
 	StaID = mpt->StationID;
 
@@ -22547,7 +22535,9 @@ void RTCC::PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentP
 		table.MVR[0] = "PPC";
 	}
 
-	SV sv_ig, sv_a, sv_p;
+	SV sv_ig;
+	double r_apo, r_peri;
+
 	sv_ig = opt.sv0;
 
 	for (int i = 0;i < res.i;i++)
@@ -22556,9 +22546,11 @@ void RTCC::PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentP
 		OrbMech::latlong_from_J2000(sv_ig.R, sv_ig.MJD, sv_ig.gravref, lat, lng);
 		table.LIG[i] = lng * DEG;
 		sv_ig.V += tmul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), res.DeltaV_LVLH[i]);
-		PMMAPD(sv_ig, sv_a, sv_p);
-		table.AC[i] = (length(sv_a.R) - opt.R_LS) / 1852.0;
-		table.HPC[i] = (length(sv_p.R) - opt.R_LS) / 1852.0;
+
+		OrbMech::periapo(sv_ig.R, sv_ig.V, OrbMech::mu_Moon, r_apo, r_peri); //TBD
+
+		table.AC[i] = (r_apo - opt.R_LS) / 1852.0;
+		table.HPC[i] = (r_peri - opt.R_LS) / 1852.0;
 	}
 
 	table.PD_GETTH = opt.T_PD;
@@ -32772,6 +32764,17 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mptman->e_BO = aeg.Data.coe_osc.e;
 	mptman->i_BO = aeg.Data.coe_osc.i;
 	mptman->g_BO = aeg.Data.coe_osc.g;
+
+	//Set up AEG input
+	aeg.Data.TS = sv_BO_true.GMT;
+
+	AEGDataBlock sv_A, sv_P;
+	double INFO[10];
+
+	if (PMMAPD(aeg.Header, aeg.Data, 0, -1, INFO, &sv_A, &sv_P))
+	{
+		PMXSPT("PMMDMT", 108);
+	}
 
 	if (aeg.coe_osc.e < 0.85)
 	{

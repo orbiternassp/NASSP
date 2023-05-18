@@ -138,6 +138,9 @@
     <ClCompile Include="..\..\src_rtccmfd\TLTrajectoryComputers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -231,6 +234,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\TLIProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
