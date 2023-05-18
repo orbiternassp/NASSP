@@ -28,8 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 TLMCCProcessor::TLMCCProcessor(RTCC *r) : TLTrajectoryComputers(r)
 {
-	isp_SPS = 3080.0;
-	isp_DPS = 3107.0;
+
 }
 
 void TLMCCProcessor::Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst, double GMTBase)
@@ -65,6 +64,8 @@ void TLMCCProcessor::Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMiss
 
 void TLMCCProcessor::Main(TLMCCOutputData &out)
 {
+	double Wdot;
+
 	//Propagate state vector to time of ignition
 	int ITS;
 	pRTCC->PMMCEN(MEDQuantities.sv0, 0.0, 10.0*24.0*3600.0, 1, MEDQuantities.T_MCC - MEDQuantities.sv0.GMT, 1.0, sv_MCC, ITS);
