@@ -105,7 +105,6 @@ public:
 	void SLVNavigationUpdateUplink();
 	void UpdateGRRTime(VESSEL *v);
 	void PerigeeAdjustCalc();
-	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
 	void UplinkData(bool isCSM);
@@ -179,7 +178,6 @@ public:
 	int vesseltype;				// 0 = CSM, 1 = LM, 2 = MCC
 	bool vesselisdocked;		// false = undocked, true = docked
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
-	bool inhibUplLOS;
 	bool PADSolGood;
 	int manpadenginetype;
 	double t_TPI;				// Generally used TPI time

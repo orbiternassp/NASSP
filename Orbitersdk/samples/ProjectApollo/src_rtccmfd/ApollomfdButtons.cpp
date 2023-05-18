@@ -281,7 +281,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "LM stage", 0, 'T' },
 		{ "", 0, ' ' },
 		{ "Sextant Star Time", 0, 'S' },
-		{ "Uplinks in LOS", 0, 'U' },
+		{ "", 0, ' ' },
 
 		{ "Set launch day", 0, 'M' },
 		{ "Set launch time", 0, 'K' },
@@ -298,7 +298,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("STA", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleLMStage);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("SXT", OAPI_KEY_S, &ApolloRTCCMFD::menusextantstartime);
-	RegisterFunction("UPL", OAPI_KEY_A, &ApolloRTCCMFD::menuSwitchUplinkInhibit);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("DAT", OAPI_KEY_M, &ApolloRTCCMFD::menuSetLaunchDate);
 	RegisterFunction("TIM", OAPI_KEY_K, &ApolloRTCCMFD::menuSetLaunchTime);

@@ -318,6 +318,7 @@ namespace OrbMech {
 	//Constants
 	const double mu_Earth = 0.3986032e15;
 	const double R_Earth = 6.373338e6;//6378165.0; We use LC-39 launchpad radius, because Orbiter Earth is spherical
+	const double R_Earth_equ = 6378165.0;
 	const double w_Earth = 7.29211514667e-5;
 	const double mu_Moon = 0.4902778e13;
 	const double R_Moon = 1738090.0;

@@ -923,20 +923,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 10 * H / 14, "Sxt/Star Check:", 15);
 		sprintf(Buffer, "%.0f min", -G->sxtstardtime / 60.0);
 		skp->Text(4 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-
-		skp->Text(1 * W / 8, 12 * H / 14, "Uplink in LOS:", 14);
-
-		if (G->inhibUplLOS)
-		{
-			skp->Text(4 * W / 8, 12 * H / 14, "Inhibit", 7);
-		}
-		else
-		{
-			skp->Text(4 * W / 8, 12 * H / 14, "Enabled", 7);
-		}
-
-		//skp->Text(1 * W / 8, 12 * H / 14, "DV Format:", 9);
-		//skp->Text(5 * W / 8, 12 * H / 14, "AGC DSKY", 8);
 	}
 	else if (screen == 9)
 	{

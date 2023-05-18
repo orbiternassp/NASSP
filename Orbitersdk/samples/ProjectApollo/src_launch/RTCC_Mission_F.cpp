@@ -538,9 +538,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		RTEMoonTargeting(&entopt, &res);
 
-		SV sv_peri = FindPericynthion(res.sv_postburn);
-		double h_peri = length(sv_peri.R) - OrbMech::R_Moon;
-
 		opt.R_LLS = BZLAND.rad[0];
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
@@ -553,7 +550,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManeuverPAD(&opt, *form);
 
 		sprintf(form->purpose, "Flyby");
-		sprintf(form->remarks, "Height of pericynthion is %.0f NM", h_peri / 1852.0);
+		sprintf(form->remarks, "Height of pericynthion is %.0f NM", res.FlybyAlt / 1852.0);
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;

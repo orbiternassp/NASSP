@@ -156,7 +156,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
 
 	oapiWriteScenario_int(scn, "MAPPAGE", G->mappage);
-	papiWriteScenario_bool(scn, "INHIBITUPLINK", G->inhibUplLOS);
 	papiWriteScenario_double(scn, "GMPApogeeHeight", G->GMPApogeeHeight);
 	papiWriteScenario_double(scn, "GMPPerigeeHeight", G->GMPPerigeeHeight);
 	papiWriteScenario_double(scn, "GMPWedgeAngle", G->GMPWedgeAngle);
@@ -236,7 +235,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
 
 		papiReadScenario_int(line, "MAPPAGE", G->mappage);
-		papiReadScenario_bool(line, "INHIBITUPLINK", G->inhibUplLOS);
 		papiReadScenario_double(line, "GMPApogeeHeight", G->GMPApogeeHeight);
 		papiReadScenario_double(line, "GMPPerigeeHeight", G->GMPPerigeeHeight);
 		papiReadScenario_double(line, "GMPWedgeAngle", G->GMPWedgeAngle);
@@ -277,10 +275,7 @@ bool ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, const std::string &
 
 void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
-	if (!G->inhibUplLOS || !G->vesselinLOS())
-	{
-		G->EntryUpdateUplink();
-	}
+	G->EntryUpdateUplink();
 }
 
 void ApolloRTCCMFD::menuP30UplinkCalc()
@@ -297,10 +292,7 @@ void ApolloRTCCMFD::menuP30UplinkCalc()
 
 void ApolloRTCCMFD::menuP30Uplink()
 {
-	if (!G->inhibUplLOS || !G->vesselinLOS())
-	{
-		G->P30Uplink(screen == 51);
-	}
+	G->P30Uplink(screen == 51);
 }
 
 void ApolloRTCCMFD::menuRetrofireEXDVUplink()
@@ -2746,20 +2738,6 @@ bool SPQGETInput(void *id, char *str, void *data)
 
 		return true;
 	}
-	else if (strcmp(str, "PeT") == 0)
-	{
-		double pet;
-		pet = ((ApolloRTCCMFD*)data)->timetoperi();
-		((ApolloRTCCMFD*)data)->set_SPQtime(pet);
-		return true;
-	}
-	else if (strcmp(str, "ApT") == 0)
-	{
-		double pet;
-		pet = ((ApolloRTCCMFD*)data)->timetoapo();
-		((ApolloRTCCMFD*)data)->set_SPQtime(pet);
-		return true;
-	}
 	return false;
 }
 
@@ -3027,10 +3005,7 @@ void ApolloRTCCMFD::REFSMMATTimeDialogue()
 
 void ApolloRTCCMFD::UploadREFSMMAT()
 {
-	if (!G->inhibUplLOS || !G->vesselinLOS())
-	{
-		G->REFSMMATUplink(screen == 53);
-	}
+	G->REFSMMATUplink(screen == 53);
 }
 
 void ApolloRTCCMFD::set_REFSMMATTime(double time)
@@ -4287,45 +4262,10 @@ bool CheckoutMonitorCalcInput(void *id, char *str, void *data)
 	return true;
 }
 
-double ApolloRTCCMFD::timetoperi()
-{
-	VECTOR3 R, V;
-	double mu,pet, mjd;
-	OBJHANDLE gravref = GC->rtcc->AGCGravityRef(G->vessel);
-
-	G->vessel->GetRelativePos(gravref, R);
-	G->vessel->GetRelativeVel(gravref, V);
-	mu = GGRAV*oapiGetMass(gravref);
-	pet = OrbMech::timetoperi(R, V, mu);
-	mjd = oapiTime2MJD(oapiGetSimTime() + pet);
-	return (mjd - GC->rtcc->CalcGETBase())*24.0*3600.0;
-}
-
-double ApolloRTCCMFD::timetoapo()
-{
-	VECTOR3 R, V;
-	double mu, pet, mjd;
-	OBJHANDLE gravref = GC->rtcc->AGCGravityRef(G->vessel);
-
-	G->vessel->GetRelativePos(gravref, R);
-	G->vessel->GetRelativeVel(gravref, V);
-	mu = GGRAV*oapiGetMass(gravref);
-	pet = OrbMech::timetoapo(R, V, mu);
-	mjd = oapiTime2MJD(oapiGetSimTime() + pet);
-	return (mjd - GC->rtcc->CalcGETBase())*24.0*3600.0;
-}
-
 bool REFSMMATGETInput(void *id, char *str, void *data)
 {
 	int hh, mm, ss, t1time;
-	if (strcmp(str, "PeT") == 0)
-	{
-		double pet;
-		pet = ((ApolloRTCCMFD*)data)->timetoperi();
-		((ApolloRTCCMFD*)data)->set_REFSMMATTime(pet);
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		t1time = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_REFSMMATTime(t1time);
@@ -5266,28 +5206,25 @@ void ApolloRTCCMFD::menuSwitchSVSlot()
 
 void ApolloRTCCMFD::menuSVUpload()
 {
-	if (!G->inhibUplLOS || !G->vesselinLOS())
+	int type;
+	switch (screen)
 	{
-		int type;
-		switch (screen)
-		{
-		case 48:
-			type = 0;
-			break;
-		case 99:
-			type = 9;
-			break;
-		case 100:
-			type = 21;
-			break;
-		case 101:
-			type = 20;
-			break;
-		default:
-			return;
-		}
-		G->StateVectorUplink(type);
+	case 48:
+		type = 0;
+		break;
+	case 99:
+		type = 9;
+		break;
+	case 100:
+		type = 21;
+		break;
+	case 101:
+		type = 20;
+		break;
+	default:
+		return;
 	}
+	G->StateVectorUplink(type);
 }
 
 void ApolloRTCCMFD::menuCSMLSUplinkCalc()
@@ -5302,18 +5239,12 @@ void ApolloRTCCMFD::menuLMLSUplinkCalc()
 
 void ApolloRTCCMFD::menuCSMLSUpload()
 {
-	if (!G->inhibUplLOS || !G->vesselinLOS())
-	{
-		G->CSMLandingSiteUplink();
-	}
+	G->CSMLandingSiteUplink();
 }
 
 void ApolloRTCCMFD::menuLMLSUpload()
 {
-	if (!G->inhibUplLOS || !G->vesselinLOS())
-	{
-		G->LMLandingSiteUplink();
-	}
+	G->LMLandingSiteUplink();
 }
 
 void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
@@ -5491,11 +5422,6 @@ void ApolloRTCCMFD::menuSwitchMapUpdate()
 void ApolloRTCCMFD::menuSetMapUpdateGET()
 {
 	GenericGETInput(&G->mapUpdateGET, "Choose the GET for the anchor vector (Format: hhh:mm:ss)");
-}
-
-void ApolloRTCCMFD::menuSwitchUplinkInhibit()
-{
-	G->inhibUplLOS = !G->inhibUplLOS;
 }
 
 void ApolloRTCCMFD::menuCycleSPQMode()

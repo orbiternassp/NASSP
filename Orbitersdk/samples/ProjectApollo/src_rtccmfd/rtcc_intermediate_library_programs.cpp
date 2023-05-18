@@ -275,7 +275,7 @@ int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &
 	K = 1;
 RTCC_PIATSU_1A:
 	//Rotate from selenocentric to selenographic
-	PLEFEM(1, AEGOUT.TS / 3600.0, 0, Rot);
+	PLEFEM(5, AEGOUT.TS / 3600.0, 0, NULL, NULL, NULL, &Rot);
 	OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
 	P_apo = tmul(Rot, P);
 	W_apo = tmul(Rot, W);

@@ -691,7 +691,6 @@ struct LunarLaunchTargetingTable
 
 struct PDIPADOpt
 {
-	VESSEL* vessel; //vessel
 	double P30TIG; //Time of Ignition (MCC)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
 	MATRIX3 REFSMMAT;
@@ -2489,8 +2488,6 @@ public:
 	AEGBlock SVToAEG(EphemerisData sv, double Area, double Weight, double KFactor);
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
-	bool PMMAPD(SV sv0, SV &sv_a, SV &sv_p);
-	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval2(double get);
 	bool PDIIgnitionAlgorithm(SV sv, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
@@ -2773,11 +2770,12 @@ public:
 	//Variable Order Interpolation
 	int ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData2 &sv_out, unsigned &ORER_out);
 	//Generalized Coordinate System Conversion Subroutine
-	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
-	int ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out);
-	int ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out);
-	int ELVCNV(std::vector<VECTOR3> vec, double GMT, int type, int in, int out, std::vector<VECTOR3> &vec_out);
+	int ELVCNV(EphemerisData sv, int out, EphemerisData &sv_out);
+	int ELVCNV(EphemerisData2 sv, int in, int out, EphemerisData2 &sv_out);
 	int ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &vec_out);
+	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
+	int ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int out, std::vector<VECTOR3> &OUTPUT);
+
 	//Extended Interpolation Routine
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out);
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, EphemerisDataTable2 &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY = NULL);
@@ -2830,7 +2828,6 @@ public:
 	//Weight Determination at a Time
 	void PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out);
 	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, VECTOR3 *R_ES, MATRIX3 *PNL);
-	bool PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB);
 
 	// REENTRY COMPUTATIONS (R)
 	//Coefficients of lift and drag interpolation subroutine
@@ -3567,8 +3564,6 @@ public:
 	struct NutationPrecessionMatrices
 	{
 		MATRIX3 Mat[141];
-		//MJD of first matrix
-		double mjd0 = 0.0;
 	} EZNPMATX;
 
 	struct TLITargetingParametersTable
@@ -4668,13 +4663,10 @@ private:
 	void P27PADCalc(P27Opt *opt, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
-	double PericynthionTime(VESSEL* vessel);
-	SV FindPericynthion(SV sv0);
 	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
 	double FindOrbitalSunrise(SV sv, double t_sunrise_guess);
 	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	void FindRadarMidPass(SV sv, double lat, double lng, double &GET_Mid);
-	double GetSemiMajorAxis(SV sv);
 	void papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in);
 	bool papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out);
 	void DMissionRendezvousPlan(SV sv_A0, double &t_TPI0);

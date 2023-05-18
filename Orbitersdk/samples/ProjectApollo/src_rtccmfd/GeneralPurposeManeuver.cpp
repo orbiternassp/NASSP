@@ -634,7 +634,7 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenographicElements(const AEGData
 	MATRIX3 L;
 	VECTOR3 P, W, P_apo, W_apo;
 	OrbMech::PIVECT(sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h, P, W);
-	if (pRTCC->PLEFEM(1, sv.TS / 3600.0, 0, L))
+	if (pRTCC->PLEFEM(5, sv.TS / 3600.0, 0, NULL, NULL, NULL, &L))
 	{
 		ErrorIndicator = 5;
 		return;
@@ -654,7 +654,7 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenocentricElements(double i, dou
 	MATRIX3 L;
 	VECTOR3 P, W, P_apo, W_apo;
 	OrbMech::PIVECT(i, g, h, P, W);
-	if (pRTCC->PLEFEM(1, sv.TS / 3600.0, 0, L))
+	if (pRTCC->PLEFEM(5, sv.TS / 3600.0, 0, NULL, NULL, NULL, &L))
 	{
 		ErrorIndicator = 5;
 		return;

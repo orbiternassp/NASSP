@@ -557,7 +557,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	mapUpdateGET = 0.0;
 	GSAOSGET = 0.0;
 	GSLOSGET = 0.0;
-	inhibUplLOS = false;
 	PADSolGood = true;
 	svtarget = NULL;
 	svtargetnumber = -1;
@@ -2326,18 +2325,6 @@ void ARCore::uplink_word(char *data, bool isCSM)
 	send_agc_key('E', isCSM);
 }
 
-bool ARCore::vesselinLOS()
-{
-	VECTOR3 R, V;
-	double MJD;
-	OBJHANDLE gravref = GC->rtcc->AGCGravityRef(vessel);
-	vessel->GetRelativePos(gravref, R);
-	vessel->GetRelativeVel(gravref, V);
-	MJD = oapiGetSimMJD();
-
-	return OrbMech::vesselinLOS(R, V, MJD);
-}
-
 void ARCore::VecPointCalc()
 {
 	if (VECoption == 0)
@@ -2384,7 +2371,7 @@ void ARCore::VecPointCalc()
 
 		relvec = unit(pPos - vPos);
 		relvec = _V(relvec.x, relvec.z, relvec.y);
-		loc = _V(loc.x, loc.z, loc.y);
+		loc = mul(GC->rtcc->SystemParameters.MAT_J2000_BRCS, _V(loc.x, loc.z, loc.y));
 
 		UX = relvec;
 		UY = unit(crossp(UX, -loc));
@@ -3434,7 +3421,6 @@ int ARCore::subThread()
 		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.t_land = GC->rtcc->CZTDTGTU.GETTD;
-		opt.vessel = vessel;
 
 		PADSolGood = GC->rtcc->PDI_PAD(&opt, temppdipad);
 

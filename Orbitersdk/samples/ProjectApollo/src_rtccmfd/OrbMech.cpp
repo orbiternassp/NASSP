@@ -3526,15 +3526,6 @@ double sec(double a)
 void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda)
 {
 	double l, m, n;
-	//OBJHANDLE gravref;
-	//VESSEL* vessel;
-	//VECTOR3 Recl;
-
-	//gravref = oapiGetObjectByName("Earth");
-	//vessel = oapiGetFocusInterface();
-	//vessel->GetRelativePos(gravref, Recl);
-
-	//oapiLocalToEqu(gravref, _V(R.x,R.z,R.y), &lambda, &phi, &r);
 
 	r = length(R);
 	l = R.x / r;
