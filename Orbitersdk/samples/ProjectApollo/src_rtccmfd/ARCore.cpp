@@ -3301,7 +3301,7 @@ int ARCore::subThread()
 
 			CSMmass = vessel->GetMass();
 			//Assume pre CSM separation from the S-IVB
-			if (CSMmass > 30000.0)
+			if (CSMmass > 40000.0)
 			{
 				CSMmass = 28860.0;
 			}
