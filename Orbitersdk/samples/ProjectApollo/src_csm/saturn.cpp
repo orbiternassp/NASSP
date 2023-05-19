@@ -964,6 +964,17 @@ void Saturn::initSaturn()
 	NoiseOffsety = 0;
 	NoiseOffsetz = 0;
 
+	//
+	// VC Free Cam
+	//
+
+	vcFreeCamx = 0;
+	vcFreeCamy = 0;
+	vcFreeCamz = 0;
+	vcFreeCamSpeed = 0.2;
+	vcFreeCamMaxOffset = 0.5;
+
+
 	InVC = false;
 	InPanel = false;
 	CheckPanelIdInTimestep = false;
@@ -3188,9 +3199,9 @@ void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
 int Saturn::clbkConsumeDirectKey(char *kstate)
 
 {
-	if (KEYMOD_SHIFT(kstate) || KEYMOD_ALT(kstate)) {
-		return 0; 
-	}
+	//if (KEYMOD_SHIFT(kstate) || KEYMOD_ALT(kstate)) {
+	//	return 0; 
+	//}
 
 	// position test
 	/*
@@ -3242,6 +3253,48 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 	sprintf(oapiDebugString(), "GetCOG_elev %f", GetCOG_elev());
 	*/
 	
+	bool camSlow = false;
+	VECTOR3 camDir = _V(0, 0, 0);
+	bool setFreeCam = false;
+
+	if (KEYMOD_SHIFT(kstate)) {
+		camSlow = true;
+	}
+
+	if (KEYDOWN(kstate, OAPI_KEY_LEFT)) {
+		camDir.x = -1;
+		setFreeCam = true;
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_RIGHT)) {
+		camDir.x = 1;
+		setFreeCam = true;
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+		camDir.y = 1;
+		setFreeCam = true;
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+		camDir.y = -1;
+		setFreeCam = true;
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_INSERT)) {
+		camDir.z = 1;
+		setFreeCam = true;
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_DELETE)) {
+		camDir.z = -1;
+		setFreeCam = true;
+	}
+
+	if (!KEYMOD_CONTROL(kstate)) {
+		if ((oapiCockpitMode() == COCKPIT_VIRTUAL) & (oapiCameraMode() == CAM_COCKPIT)) {
+			if (setFreeCam == true) {
+				VCFreeCam(camDir, camSlow);
+			}
+			return 1;
+		}
+	}
+
 	return 0;
 }
 
