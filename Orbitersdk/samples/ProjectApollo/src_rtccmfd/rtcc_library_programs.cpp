@@ -457,6 +457,23 @@ int RTCC::ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &ve
 	return err;
 }
 
+int RTCC::ELVCNV(double GMT, int in, int out, MATRIX3 &Rot)
+{
+	//Rotation matrix from "in" coordinate system to "out" coordinate system
+
+	std::vector<VECTOR3> vec_in, vec_out;
+
+	vec_in.push_back(_V(1, 0, 0));
+	vec_in.push_back(_V(0, 1, 0));
+	vec_in.push_back(_V(0, 0, 1));
+
+	int err = ELVCNV(vec_in, GMT, 0, in, out, vec_out);
+
+	Rot = _M(vec_out[0].x, vec_out[1].x, vec_out[2].x, vec_out[0].y, vec_out[1].y, vec_out[2].y, vec_out[0].z, vec_out[1].z, vec_out[2].z);
+
+	return err;
+}
+
 int RTCC::ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out)
 {
 	int err = 0;
@@ -658,7 +675,7 @@ int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int
 
 			if (conv[i] == 2 || conv[i] == 3)
 			{
-				//Lunar libration matrix (MCT to MCI)
+				//Lunar libration matrix (MCI to MCT)
 				if (PLEFEM(5, GMT / 3600.0, 0, NULL, NULL, NULL, &Rot))
 				{
 					return 1;
@@ -693,7 +710,7 @@ int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int
 				Rot = _M(X_EMP.x, X_EMP.y, X_EMP.z, Y_EMP.x, Y_EMP.y, Y_EMP.z, Z_EMP.x, Z_EMP.y, Z_EMP.z);
 			}
 
-			if (conv[i] == 3 || conv[i] == 4 || conv[i] == 6)
+			if (conv[i] == 2 || conv[i] == 4 || conv[i] == 6)
 			{
 				right = true;
 			}
@@ -1085,34 +1102,42 @@ double RTCC::GLQATN(double S, double C) const
 }
 
 //Subsatellite position
-int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
+int RTCC::GLSSAT(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt)
 {
-	EphemerisData sv_out;
-	VECTOR3 u;
-	int out;
-	if (sv.RBI == BODY_EARTH)
+	VECTOR3 R_out, u;
+	double K;
+	int in, out;
+	if (RBI == BODY_EARTH)
 	{
+		in = 0;
 		out = 1;
+		K = 1.0;
 	}
 	else
 	{
+		in = 2;
 		out = 3;
+		K = 0.0;
 	}
 
-	if (ELVCNV(sv, out, sv_out))
+	if (ELVCNV(R, GMT, 1, in, out, R_out))
 	{
 		return 1;
 	}
-	u = unit(sv_out.R);
+	u = unit(R);
 	lat = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
-	lng = atan2(u.y, u.x);
-	if (sv.RBI == BODY_EARTH)
+	lng = atan2(u.y, u.x) - OrbMech::w_Earth*K*GMT;
+	while (lng < -PI)
 	{
-		alt = length(sv.R) - OrbMech::R_Earth;
+		lng += PI2;
+	}
+	if (RBI == BODY_EARTH)
+	{
+		alt = length(R) - OrbMech::R_Earth;
 	}
 	else
 	{
-		alt = length(sv.R) - BZLAND.rad[RTCC_LMPOS_BEST];
+		alt = length(R) - BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 	return 0;
 }

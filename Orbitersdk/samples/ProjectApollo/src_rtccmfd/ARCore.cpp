@@ -1440,7 +1440,6 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 
 	MoonFlag = (vagc->Erasable[0][0104] & (1 << MoonBit));
 
-	MATRIX3 Rot;
 	VECTOR3 R, V;
 	double GET;
 
@@ -1471,11 +1470,9 @@ void ARCore::GetStateVectorFromAGC(bool csm)
 		V.z *= pow(2, 7);
 	}
 
-	Rot = GC->rtcc->SystemParameters.MAT_J2000_BRCS;
-
 	EphemerisData sv;
-	sv.R = tmul(Rot, R);
-	sv.V = tmul(Rot, V);
+	sv.R = R;
+	sv.V = V;
 	if (vesseltype == 0)
 	{
 		sv.GMT = GET + GC->rtcc->GetCMCClockZero();

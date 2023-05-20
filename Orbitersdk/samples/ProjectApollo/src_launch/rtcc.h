@@ -2773,6 +2773,7 @@ public:
 	//Generalized Coordinate System Conversion Subroutine
 	int ELVCNV(EphemerisData sv, int out, EphemerisData &sv_out);
 	int ELVCNV(EphemerisData2 sv, int in, int out, EphemerisData2 &sv_out);
+	int ELVCNV(double GMT, int in, int out, MATRIX3 &Rot);
 	int ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &vec_out);
 	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
 	int ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int out, std::vector<VECTOR3> &OUTPUT);
@@ -2786,7 +2787,7 @@ public:
 	//Floating Point Hourse To Fixed Point Centiseconds
 	double GLHTCS(double FLTHRS);
 	//Subsatellite Position
-	int GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt);
+	int GLSSAT(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt);
 	//Density
 	void GLFDEN(double ALT, double &DENS, double &SPOS);
 
@@ -3564,7 +3565,7 @@ public:
 
 	struct NutationPrecessionMatrices
 	{
-		MATRIX3 Mat[141];
+		MATRIX3 Mat[141]; //ECI to ECT
 	} EZNPMATX;
 
 	struct TLITargetingParametersTable
@@ -4597,7 +4598,7 @@ public:
 		//MJD of first entry
 		double MJD;
 		//71 sets of data, 12 hours apart, covering 35 days, starting 5 days before midnight of launch day
-		//0-2: Sun position vector (Er), 3-5: Moon position vector (Er), 6-8: Moon velocity vector (Er/hr), 9-17: Moon libration vector
+		//0-2: Sun position vector (Er), 3-5: Moon position vector (Er), 6-8: Moon velocity vector (Er/hr), 9-17: Moon libration vector (MCI to MCT)
 		double data[71][18];
 	} MDGSUN;
 
@@ -4642,7 +4643,7 @@ public:
 
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
+	void navcheck(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt);
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
@@ -4650,8 +4651,8 @@ private:
 	void LandingSiteUplink(char *str, int veh);
 	void AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, bool v66 = false);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, bool v66 = false);
-	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc = true, bool AGCCoordSystem = false);
-	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoordSystem = false);
+	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc = true);
+	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc);
 	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
 	void IncrementAGCTime(char *list, int veh, double dt);

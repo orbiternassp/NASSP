@@ -257,7 +257,7 @@ double RTCC::PIAIES(double hour)
 
 int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg)
 {
-	PMMLAEG aeg;
+	PMMLAEG aeg(this);
 	AEGHeader header;
 	MATRIX3 Rot;
 	VECTOR3 P, W, P_apo, W_apo;

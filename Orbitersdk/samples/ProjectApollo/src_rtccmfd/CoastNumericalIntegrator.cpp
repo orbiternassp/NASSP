@@ -368,7 +368,7 @@ void CoastIntegrator2::Rectification()
 	nu = _V(0, 0, 0);
 	x = 0;
 	tau = 0;
-	//Re-initialize U_Z vector
+	//Re-initialize Rot matrix
 	INITF = false;
 }
 
@@ -434,14 +434,11 @@ VECTOR3 CoastIntegrator2::adfunc(VECTOR3 R)
 		if (INITF == false)
 		{
 			INITF = true;
-			//Maybe something will be here again at some point...
+			pRTCC->ELVCNV(CurrentTime(), P == BODY_EARTH ? 1 : 3, P == BODY_EARTH ? 0 : 2, Rot);
 		}
 
-		Rot = OrbMech::GetRotationMatrix(P, pRTCC->GetGMTBase() + CurrentTime() / 24.0 / 3600.0);
-		U_Z = rhmul(Rot, _V(0, 0, 1));
-
 		TS = tau;
-		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
+		pRTCC->PLEFEM(P == BODY_EARTH ? 1 : 2, CurrentTime() / 3600.0, 0, &R_EM, &V_EM, &R_ES, &Rot);
 	}
 
 	r = length(R);
@@ -552,7 +549,7 @@ void CoastIntegrator2::ACCEL_GRAV()
 	//Null gravitation acceleration vector
 	G_VEC = _V(0, 0, 0);
 	//Transform position vector to planet fixed coordinates
-	R_EF = rhtmul(Rot, R);
+	R_EF = tmul(Rot, R);
 	//Components of the planet fixed position unit vector
 	R_INV = 1.0 / length(R);
 	UR = R_EF * R_INV;
@@ -611,5 +608,5 @@ void CoastIntegrator2::ACCEL_GRAV()
 	}
 	//Lastly, the planet fixed acceleration vector shall be obtained and rotated to ecliptic coordinates
 	G_VEC = G_VEC - UR * AUXILIARY;
-	G_VEC = rhmul(Rot, G_VEC);
+	G_VEC = mul(Rot, G_VEC);
 }

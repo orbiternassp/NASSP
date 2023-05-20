@@ -91,14 +91,6 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 	//VECTOR3 DR = R_A - R_B;
 	//sprintf_s(oapiDebugString(), 128, "%lf %lf %lf", DR.x, DR.y, DR.z);
 
-	if (aeg.Header.AEGInd == BODY_EARTH)
-	{
-		//For now, back to ecliptic
-		R_B = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, R_B);
-		V_B = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, V_B);
-		V_A = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, V_A);
-	}
-
 	//Special HAS logic: show apogee/perigee data in N revs, and not the next one
 	if (opt->ManeuverCode == RTCC_GMP_HAS)
 	{

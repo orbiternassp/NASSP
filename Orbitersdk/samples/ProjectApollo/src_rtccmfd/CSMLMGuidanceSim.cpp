@@ -565,9 +565,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	//This only because ECI coordinate system is wrong
 	if (TArr.sv0.RBI == BODY_EARTH)
 	{
-		MATRIX3 obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, pRTCC->GetGMTBase() + TArr.sv0.GMT / 24.0 / 3600.0);
-		U_Z = mul(obli_E, _V(0, 1, 0));
-		U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+		U_Z = _V(0, 0, 1);
 		W_ES = U_Z * OrbMech::w_Earth;
 	}
 

@@ -171,7 +171,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 
 	if (LiftMode == 3)
 	{
-		GNData.URTO = OrbMech::r_from_latlong(in.lat_T, in.lng_T);
+		GNData.URTO = OrbMech::r_from_latlong(in.lat_T, in.lng_T + OrbMech::w_Earth*GMT0);
 	}
 
 	//Calculate initial acceleration
@@ -278,7 +278,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		//Output
 		double lat, lng;
 		OrbMech::latlong_from_r(R_cur, lat, lng);
-		lng -= OrbMech::w_Earth*T;
+		lng -= OrbMech::w_Earth*(GMT0 + T);
 		while (lng < -PI)
 		{
 			lng += PI2;

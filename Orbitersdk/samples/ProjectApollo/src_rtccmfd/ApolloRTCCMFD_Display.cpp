@@ -734,7 +734,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(7 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
 
 		MATRIX3 ref;
-		ref = mul(refsdata->REFSMMAT, OrbMech::tmat(GC->rtcc->SystemParameters.MAT_J2000_BRCS));
+		ref = refsdata->REFSMMAT;
 
 		for (int i = 0; i < 9; i++)
 		{

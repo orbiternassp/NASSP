@@ -6774,7 +6774,7 @@ bool RTEMoon::MASTER()
 	x2 = cosg / sing;
 	EntryAng = atan(x2);
 
-	H_EI_equ = rhtmul(OrbMech::GetRotationMatrix(BODY_EARTH, EIMJD), unit(N));
+	H_EI_equ = unit(N);
 	ReturnInclination = -acos(H_EI_equ.z)*INTER;
 
 	OrbMech::timetoperi_integ(sv0.R, Vig_apo, TIG, hMoon, hMoon, R_peri, V_peri);
@@ -7575,7 +7575,6 @@ double RTEMoon::SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, 
 
 bool RTEMoon::FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo)
 {
-	MATRIX3 Rot;
 	VECTOR3 X_x_equ_u, R_1, u_x_equ, U_x_equ, U_x;
 	double x_x, E, e, a, eta_r, eta_x, eta_xr, T_r, T_x, P, beta_x, alpha_x, delta_x, sin_delta_r, cos_delta_r, theta, alpha_r, eta_x1, t_z, T_xr;
 	bool NIR;
@@ -7584,8 +7583,7 @@ bool RTEMoon::FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r
 	NIR = false;
 
 	x_x = length(R0);
-	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD0);
-	X_x_equ_u = unit(rhtmul(Rot, R0));
+	X_x_equ_u = unit(R0);
 	OrbMech::ra_and_dec_from_r(X_x_equ_u, alpha_x, delta_x);
 
 	E = u_r * u_r / mu - 2.0 / r_r;
@@ -7651,7 +7649,7 @@ bool RTEMoon::FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r
 	eta_x1 = eta_xr;
 	u_x_equ = EntryCalculations::TVECT(X_x_equ_u, R_1, eta_x1, beta_x);
 	U_x_equ = u_x_equ * sqrt(u_r*u_r - 2.0*mu*(1.0 / r_r - 1.0 / x_x));
-	U_x = rhmul(Rot, U_x_equ);
+	U_x = U_x_equ;
 	OrbMech::rv_from_r0v0(R0, U_x, T_xr, R_EI, V_EI, mu);
 	DV = U_x - V0;
 

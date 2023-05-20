@@ -2970,8 +2970,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			//TBD: Calculate this dynamically. It may have been a landing site orientation at one of the photo sites, more research required.
 			REFSMMAT = _M(-0.99920070, -0.00131239, -0.03995296, -0.03280089, -0.54435646, 0.83821248, -0.02284871, 0.83885300, 0.54387832);
 
-			REFSMMAT = mul(REFSMMAT, SystemParameters.MAT_J2000_BRCS);
-
 			//Store as LM LCV matrix
 			EMGSTSTM(RTCC_MPT_CSM, REFSMMAT, RTCC_REFSMMAT_TYPE_LCV, RTCCPresentTimeGMT());
 		}
