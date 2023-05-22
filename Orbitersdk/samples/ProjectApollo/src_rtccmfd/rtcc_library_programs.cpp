@@ -493,7 +493,7 @@ int RTCC::ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vecto
 		if (err) return err;
 
 		svtab_out[i].R = vec2[0];
-		svtab_out[i].R = vec2[1];
+		svtab_out[i].V = vec2[1];
 	}
 
 	return 0;

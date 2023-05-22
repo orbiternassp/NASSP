@@ -2443,24 +2443,25 @@ void ARCore::TerrainModelCalc()
 
 void ARCore::NodeConvCalc()
 {
-	VECTOR3 R_EMP, R_selen, R;
+	MATRIX3 Rot;
+	VECTOR3 R_EMP, R_selen;
 
-	double MJD = GC->rtcc->CalcGETBase() + NodeConvGET / 24.0 / 3600.0;
-	MATRIX3 M_EMP = OrbMech::EMPMatrix(MJD);
-	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
+
+	//Get rotation matrix from MCT to EMP
+	int err = GC->rtcc->ELVCNV(GC->rtcc->GMTfromGET(NodeConvGET), 3, 4, Rot);
+
+	if (err) return;
 
 	if (NodeConvOpt)
 	{
 		R_selen = OrbMech::r_from_latlong(NodeConvLat, NodeConvLng);
-		R = rhmul(Rot, R_selen);
-		R_EMP = mul(M_EMP, R);
+		R_EMP = mul(Rot, R_selen);
 		OrbMech::latlong_from_r(R_EMP, NodeConvResLat, NodeConvResLng);
 	}
 	else
 	{
 		R_EMP = OrbMech::r_from_latlong(NodeConvLat, NodeConvLng);
-		R = tmul(M_EMP, R_EMP);
-		R_selen = rhtmul(Rot, R);
+		R_selen = tmul(Rot, R_EMP);
 		OrbMech::latlong_from_r(R_selen, NodeConvResLat, NodeConvResLng);
 	}
 	if (NodeConvResLng < 0)
@@ -4708,33 +4709,19 @@ int ARCore::subThread()
 	break;
 	case 54: //Skylab Saturn IB Launch Targeting
 	{
-		if (target == NULL)
+		if (target == NULL || GC->rtcc->GetGMTBase() == 0.0)
 		{
 			Result = DONE;
 			break;
 		}
 		
-		MATRIX3 Rot;
-		VECTOR3 RT, VT;
-		SV sv;
-		double TT, GMTBASE;
+		EphemerisData sv, sv_ECT;
 
-		sv = GC->rtcc->StateVectorCalc(target);
+		sv = GC->rtcc->StateVectorCalcEphem(target);
 
-		if (GC->rtcc->GetGMTBase() == 0.0)
-		{
-			GMTBASE = floor(sv.MJD);
-		}
-		else
-		{
-			GMTBASE = GC->rtcc->GetGMTBase();
-		}
-		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, GMTBASE);
-		RT = rhtmul(Rot, sv.R);
-		VT = rhtmul(Rot, sv.V);
-		TT = (sv.MJD - GMTBASE)*24.0*3600.0;
+		GC->rtcc->ELVCNV(sv, 1, sv_ECT);
 
-		GC->rtcc->PMMPAR(RT, VT, TT);
+		GC->rtcc->PMMPAR(sv_ECT.R, sv_ECT.V, sv_ECT.GMT);
 
 		Result = DONE;
 	}

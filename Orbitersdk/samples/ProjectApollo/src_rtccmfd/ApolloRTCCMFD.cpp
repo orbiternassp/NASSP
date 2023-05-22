@@ -5528,6 +5528,8 @@ void ApolloRTCCMFD::set_AGCEpoch(int epoch)
 {
 	this->GC->rtcc->SystemParameters.AGCEpoch = epoch;
 	GC->rtcc->SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(epoch);
+
+	GC->rtcc->QMEPHEM(epoch, GC->rtcc->GZGENCSN.Year, GC->rtcc->GZGENCSN.MonthofLiftoff, GC->rtcc->GZGENCSN.DayofLiftoff, 0.0);
 	GC->rtcc->EMSGSUPP(0, 0);
 }
 

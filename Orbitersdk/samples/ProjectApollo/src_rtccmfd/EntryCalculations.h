@@ -63,12 +63,12 @@ namespace EntryCalculations
 	//Actual RTE processor routines
 	void REENTRYNew(double LD, int ICRNGG, double v_i, double i_r, double A_Z, double mu, double r_rbias, double &eta_rz1, double &theta_cr, double &T);
 	VECTOR3 TVECT(VECTOR3 a, VECTOR3 b, double alpha, double gamma);
-	void EGTR(VECTOR3 R_geoc, VECTOR3 V_geoc, double MJD, VECTOR3 &R_geogr, VECTOR3 &V_geogr);
+	void EGTR(VECTOR3 R_geoc, VECTOR3 V_geoc, double GMT, double alpha_SID0, VECTOR3 &R_geogr, VECTOR3 &V_geogr);
 	double INTER(const double *X, const double *Y, int IMAX, double x);
 	double URF(double T, double x);
 	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
 	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN);
-	double LNDING(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &MJD_L);
+	double LNDING(VECTOR3 REI, VECTOR3 VEI, double GMT_EI, double alpha_SIDO0, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &GMT_L);
 	void SIDCOM(double JD0, double DT, double N, double &alpha_go, double &T);
 
 	double MPL(double lat);
@@ -279,7 +279,7 @@ private:
 class RTEEarth : public RTCCModule
 {
 public:
-	RTEEarth(RTCC *r, EphemerisData sv0, double GMTbase, double EntryTIG, double t_Z, int critical);
+	RTEEarth(RTCC *r, EphemerisData sv0, double GMTbase, double alpha_SID0, double EntryTIG, double t_Z, int critical);
 	void READ(double RRBI, double DVMAXI, int EPI, double URMAX);
 	void ATP(double *line);
 	bool EntryIter();
@@ -374,6 +374,8 @@ private:
 	double C_FPA;
 	//Coast integrator status
 	int ITS;
+	//Right ascension at GMT zero
+	double alpha_SID0;
 };
 
 struct TradeoffData
@@ -561,7 +563,7 @@ protected:
 class RTEMoon : public RTCCModule
 {
 public:
-	RTEMoon(RTCC *r, EphemerisData2 sv0, double GMTBASE);
+	RTEMoon(RTCC *r, EphemerisData2 sv0, double GMTBASE, double alpha_SID0);
 	void ATP(double *line);
 	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
 	bool MASTER();
@@ -638,6 +640,8 @@ private:
 	double t_zmin, t_zmax;
 	double mu_z, mu_z1;
 	double lambda_z, lambda_z1;
+	//Right ascension at GMT zero
+	double alpha_SID0;
 	
 	//Alternate target line (lat, lng, lat, lng etc.)
 	double LINE[10];

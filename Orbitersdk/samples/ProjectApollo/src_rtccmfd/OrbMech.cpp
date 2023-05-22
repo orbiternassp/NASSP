@@ -2028,39 +2028,6 @@ void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE
 	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
 }
 
-void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri)
-{
-	//INPUT:
-	//R and V in Moon relative coordinates, e>1
-
-
-	VECTOR3 RP_M, VP_M, R_EM, V_EM, RP_E, VP_E;
-	double r_SPH, dt, MJD_patch, dt2;
-	double MoonPos[12];
-	CELBODY *cMoon;
-	cMoon = oapiGetCelbodyInterface(hMoon);
-
-	r_SPH = 64373760.0;
-
-	dt = time_radius(R, V, r_SPH, 1.0, mu_Moon);
-	rv_from_r0v0(R, V, dt, RP_M, VP_M, mu_Moon);
-
-	MJD_patch = mjd0 + dt / 24.0 / 3600.0;
-
-	cMoon->clbkEphemeris(MJD_patch, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
-
-	R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
-	V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
-
-	RP_E = R_EM + RP_M;
-	VP_E = V_EM + VP_M;
-
-	dt2 = timetoperi(RP_E, VP_E, mu_Earth);
-	rv_from_r0v0(RP_E, VP_E, dt2, R_peri, V_peri, mu_Earth);
-
-	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
-}
-
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout)
 {
 	VECTOR3 RPRE, VPRE;
@@ -2841,6 +2808,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	//midnight = 0-> rise=0:sunset, rise=1:sunrise
 	//midnight = 1-> rise=0:midday, rise=1:midnight
 	double PlanPos[12];
+	MATRIX3 Rot;
 	VECTOR3 PlanVec, R_EM, R_SE;
 	OBJHANDLE hEarth, hMoon, hSun;
 	double mu, v1;
@@ -2862,6 +2830,9 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	dt_old = 1;
 	i = 0;
 	imax = 20;
+
+	//Get approximate coordinate system
+	Rot = J2000EclToBRCSMJD(MJD);
 
 	while (abs(dt_old - dt) > 0.5 && i < imax)
 	{
@@ -2901,6 +2872,9 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 				PlanVec = -_V(PlanPos[0], PlanPos[2], PlanPos[1]);
 			}
 		}
+
+		//Convert from ecliptic to Besselian
+		PlanVec = mul(Rot, PlanVec);
 
 		if (midnight)
 		{
@@ -2977,7 +2951,7 @@ VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL)
 	return U_LOS;
 }
 
-int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
+int FindNearestStar(const std::vector<VECTOR3> navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 {
 	VECTOR3 ustar;
 	double dotpr, last;
@@ -2998,7 +2972,7 @@ int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 	return star;
 }
 
-VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
+VECTOR3 backupgdcalignment(const std::vector<VECTOR3> navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 {
 	int starset[3][2];
 	double a, SA, TA1, dTA, TA2;
@@ -4802,7 +4776,7 @@ double FindNextEquatorialCrossing(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gr
 	return dt;
 }
 
-void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
+void checkstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
 {
 	MATRIX3 SMNB, Q1, Q2, Q3;
 	double OGA, IGA, MGA, TA, SA;
@@ -4820,7 +4794,7 @@ void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &star
 	SMNB = mul(Q3, mul(Q2, Q1));
 
 	U_LOS = ULOS(REFSMMAT, SMNB, 0.0, 0.0);
-	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E, 50.0*RAD);
+	star = OrbMech::FindNearestStar(navstars, U_LOS, R_C, R_E, 50.0*RAD);
 
 	if (star == -1)
 	{
@@ -4846,7 +4820,7 @@ void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &star
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
 }
 
-void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp)
+void coascheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp)
 {
 	MATRIX3 SMNB, Q1, Q2, Q3;
 	double OGA, IGA, MGA;
@@ -4864,7 +4838,7 @@ void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &
 	SMNB = mul(Q3, mul(Q2, Q1));
 
 	U_LOS = ULOS(REFSMMAT, SMNB, 57.47*RAD, 0.0);
-	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E, 10.0*RAD);//31.5*RAD);
+	star = OrbMech::FindNearestStar(navstars, U_LOS, R_C, R_E, 10.0*RAD);//31.5*RAD);
 
 	if (star == -1)
 	{
@@ -4888,7 +4862,7 @@ void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
 }
 
-void AOTcheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct)
+void AOTcheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct)
 {
 	MATRIX3 SMNB, Q1, Q2, Q3;
 	double OGA, IGA, MGA;
@@ -4906,7 +4880,7 @@ void AOTcheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &s
 	SMNB = mul(Q3, mul(Q2, Q1));
 
 	U_LOS = AOTULOS(REFSMMAT, SMNB, 0.0, 0.0);
-	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E, 50.0*RAD);
+	star = OrbMech::FindNearestStar(navstars, U_LOS, R_C, R_E, 50.0*RAD);
 
 	if (star == -1)
 	{
@@ -5092,68 +5066,6 @@ MATRIX3 CSMBodyToLMBody(double da)
 	RY = OrbMech::_MRy(180.0*RAD);
 
 	return mul(RY, RX);
-}
-
-MATRIX3 EMPMatrix(double MJD)
-{
-	VECTOR3 R_EM, V_EM, X, Y, Z;
-	double MoonPos[12];
-	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
-	CELBODY *cMoon;
-
-	cMoon = oapiGetCelbodyInterface(hMoon);
-
-	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
-
-	R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
-	V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
-
-	X = unit(-R_EM);
-	Z = unit(crossp(unit(R_EM), unit(V_EM)));
-	Y = unit(crossp(Z, X));
-
-	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
-}
-
-void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &radius)
-{
-	MATRIX3 Rot;
-	VECTOR3 R_EM, R_EM2;
-	double MoonPos[12];
-	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
-	CELBODY *cMoon;
-
-	cMoon = oapiGetCelbodyInterface(hMoon);
-	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
-	Rot = GetObliquityMatrix(BODY_EARTH, MJD);
-	R_EM = tmul(Rot, _V(MoonPos[0], MoonPos[1], MoonPos[2]));
-	R_EM2 = _V(R_EM.x, R_EM.z, R_EM.y);
-	radius = length(R_EM);
-	ra_and_dec_from_r(R_EM2, ra, dec);
-}
-
-void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl)
-{
-	MATRIX3 M_EMP;
-
-	//EMP Matrix
-	M_EMP = OrbMech::EMPMatrix(MJD);
-
-	//Convert EMP position to ecliptic
-	R_Ecl = tmul(M_EMP, R_EMP);
-	V_Ecl = tmul(M_EMP, V_EMP);
-}
-
-void EclToEMP(VECTOR3 R_Ecl, VECTOR3 V_Ecl, double MJD, VECTOR3 &R_EMP, VECTOR3 &V_EMP)
-{
-	MATRIX3 M_EMP;
-
-	//EMP Matrix
-	M_EMP = OrbMech::EMPMatrix(MJD);
-
-	//Convert ecliptic position to EMP
-	R_EMP = mul(M_EMP, R_Ecl);
-	V_EMP = mul(M_EMP, V_Ecl);
 }
 
 double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep)
@@ -6657,13 +6569,12 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 		P = BODY_MOON;
 	}
 
-	MATRIX3 obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, mjd0);
-	U_Z_E = mul(obli_E, _V(0, 1, 0));
-	U_Z_E = _V(U_Z_E.x, U_Z_E.z, U_Z_E.y);
+	Rot = OrbMech::J2000EclToBRCSMJD(mjd0);
+	MATRIX3 Rot_M = OrbMech::GetRotationMatrix(BODY_MOON, mjd0);
+	U_Z_M = rhmul(Rot_M, _V(0, 0, 1));
 
-	MATRIX3 obli_M = OrbMech::GetObliquityMatrix(BODY_MOON, mjd0);
-	U_Z_M = mul(obli_M, _V(0, 1, 0));
-	U_Z_M = _V(U_Z_M.x, U_Z_M.z, U_Z_M.y);
+	U_Z_E = _V(0, 0, 1);
+	U_Z_M = mul(Rot, U_Z_M);
 
 	cMoon = oapiGetCelbodyInterface(oapiGetObjectByName("Moon"));
 	cEarth = oapiGetCelbodyInterface(oapiGetObjectByName("Earth"));
@@ -6739,7 +6650,7 @@ bool CoastIntegrator::iteration(bool allow_stop)
 
 				if (B == 1)
 				{
-					R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
+					R_EM = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
 					R_PQ = -R_EM;
 				}
 				V_PQ = -_V(MoonPos[3], MoonPos[5], MoonPos[4]);
@@ -6776,13 +6687,13 @@ bool CoastIntegrator::iteration(bool allow_stop)
 
 			if (B == 1)
 			{
-				R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
+				R_EM = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
 				R_PQ = R_EM;
 				R_QC = R - R_PQ;
 			}
 			if (length(R_QC) < r_SPH)
 			{
-				V_PQ = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
+				V_PQ = mul(Rot, _V(MoonPos[3], MoonPos[5], MoonPos[4]));
 				R_CON = R_CON - R_PQ;
 				V_CON = V_CON - V_PQ;
 
@@ -6862,8 +6773,8 @@ bool CoastIntegrator::iteration(bool allow_stop)
 			MJD = mjd0 + t / 86400.0;
 			cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
 
-			R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
-			V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
+			R_EM = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
+			V_EM = mul(Rot, _V(MoonPos[3], MoonPos[5], MoonPos[4]));
 
 			if (P == BODY_EARTH)
 			{
@@ -6896,8 +6807,8 @@ void CoastIntegrator::SolarEphemeris(double t, VECTOR3 &R_ES, VECTOR3 &V_ES)
 
 		EarthVec = OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]);
 		EarthVecVel = OrbMech::Polar2CartesianVel(EarthPos[2] * AU, EarthPos[1], EarthPos[0], EarthPos[5] * AU, EarthPos[4], EarthPos[3]);
-		R_ES0 = -EarthVec;
-		V_ES0 = -EarthVecVel;
+		R_ES0 = -mul(Rot, EarthVec);
+		V_ES0 = -mul(Rot, EarthVecVel);
 		W_ES = length(crossp(R_ES0, V_ES0) / OrbMech::power(length(R_ES0), 2.0));
 		SunEphemerisInit = true;
 	}
@@ -6969,7 +6880,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 
 		cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
 		SolarEphemeris(t - t_F/2.0, R_ES, V_ES);
-		R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
+		R_EM = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
 
 		if (P == BODY_EARTH)
 		{
