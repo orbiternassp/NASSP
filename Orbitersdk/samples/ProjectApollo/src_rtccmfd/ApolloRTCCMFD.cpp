@@ -703,7 +703,7 @@ void ApolloRTCCMFD::menuSetSPQPage()
 void ApolloRTCCMFD::menuSetOrbAdjPage()
 {
 	marker = 0;
-	markermax = 8;
+	markermax = 7;
 	SelectPage(4);
 }
 
@@ -2544,29 +2544,20 @@ void ApolloRTCCMFD::menuSetGMPInput()
 	}
 	else if (marker == 4)
 	{
-		menuCycleOrbAdjAltRef();
+		GMPInput1Dialogue();
 	}
 	else if (marker == 5)
 	{
-		GMPInput1Dialogue();
+		GMPInput2Dialogue();
 	}
 	else if (marker == 6)
 	{
-		GMPInput2Dialogue();
+		GMPInput3Dialogue();
 	}
 	else if (marker == 7)
 	{
-		GMPInput3Dialogue();
-	}
-	else if (marker == 8)
-	{
 		GMPInput4Dialogue();
 	}
-}
-
-void ApolloRTCCMFD::menuCycleOrbAdjAltRef()
-{
-	G->OrbAdjAltRef = !G->OrbAdjAltRef;
 }
 
 void ApolloRTCCMFD::GPMPCalc()
@@ -5814,6 +5805,14 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 	G->REFSMMATcur = G->REFSMMATopt;
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
+}
+
+void ApolloRTCCMFD::menuCycleLunarEntryPADSxtOption()
+{
+	if (G->entrypadopt == 1)
+	{
+		G->EntryPADSxtStarCheckAttOpt = !G->EntryPADSxtStarCheckAttOpt;
+	}
 }
 
 void ApolloRTCCMFD::GetEntryTargetfromAGC()

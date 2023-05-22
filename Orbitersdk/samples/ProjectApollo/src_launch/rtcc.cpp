@@ -4640,11 +4640,6 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 
 	EntryPADHorChkGET = EIGET - 17.0*60.0;
 
-	double Entrytrunnion, Entryshaft, EntryBSSpitch, EntryBSSXPos;
-	int Entrystaroct, EntryCOASstaroct;
-	OrbMech::checkstar(opt->REFSMMAT, _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD), svSxtCheck.R, OrbMech::R_Earth, Entrystaroct, Entrytrunnion, Entryshaft);
-	OrbMech::coascheckstar(opt->REFSMMAT, _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD), svSxtCheck.R, OrbMech::R_Earth, EntryCOASstaroct, EntryBSSpitch, EntryBSSXPos);
-
 	double horang, coastang, IGA, cosIGA, sinIGA;
 	VECTOR3 X_NB, Y_NB, Z_NB, X_SM, Y_SM, Z_SM, A_MG;
 
@@ -4664,6 +4659,23 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	IGA = atan2(sinIGA, cosIGA);
 
 	EntryPADHorChkPit = PI2 - (horang + coastang + 31.7*RAD) + IGA;
+
+	VECTOR3 SextantStarCheckAtt;
+	double Entrytrunnion, Entryshaft, EntryBSSpitch, EntryBSSXPos;
+	int Entrystaroct, EntryCOASstaroct;
+
+	//Sextant star check either at entry attitude or at horizon check attitude
+	if (opt->SxtStarCheckAttitudeOpt)
+	{
+		SextantStarCheckAtt = _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD);
+	}
+	else
+	{
+		SextantStarCheckAtt = _V(0, OrbMech::round(EntryPADHorChkPit*DEG)*RAD, 0);
+	}
+
+	OrbMech::checkstar(opt->REFSMMAT, SextantStarCheckAtt, svSxtCheck.R, OrbMech::R_Earth, Entrystaroct, Entrytrunnion, Entryshaft);
+	OrbMech::coascheckstar(opt->REFSMMAT, SextantStarCheckAtt, svSxtCheck.R, OrbMech::R_Earth, EntryCOASstaroct, EntryBSSpitch, EntryBSSXPos);
 
 	pad.Att05[0] = _V(OrbMech::imulimit(EIangles.x*DEG), OrbMech::imulimit(EIangles.y*DEG), OrbMech::imulimit(EIangles.z*DEG));
 	pad.BSS[0] = EntryCOASstaroct;
