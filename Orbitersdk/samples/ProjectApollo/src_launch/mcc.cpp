@@ -1301,6 +1301,7 @@ int MCC::subThread(){
 			if (ves != NULL)
 			{
 				rtcc->calcParams.tgt = oapiGetVesselInterface(ves);
+				lm = (LEM*)rtcc->calcParams.tgt;
 			}
 		}
 
