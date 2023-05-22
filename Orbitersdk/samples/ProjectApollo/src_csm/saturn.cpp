@@ -3261,32 +3261,44 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 		camSlow = true;
 	}
 
-	if (KEYDOWN(kstate, OAPI_KEY_LEFT)) {
-		camDir.x = -1;
-		setFreeCam = true;
+	if (!KEYDOWN(kstate, OAPI_KEY_GRAVE)) {
+		if (KEYDOWN(kstate, OAPI_KEY_LEFT)) {
+			camDir.x = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_RIGHT)) {
+			camDir.x = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.y = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.y = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_INSERT)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DELETE)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
 	}
-	if (KEYDOWN(kstate, OAPI_KEY_RIGHT)) {
-		camDir.x = 1;
-		setFreeCam = true;
-	}
-	if (KEYDOWN(kstate, OAPI_KEY_UP)) {
-		camDir.y = 1;
-		setFreeCam = true;
-	}
-	if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
-		camDir.y = -1;
-		setFreeCam = true;
-	}
-	if (KEYDOWN(kstate, OAPI_KEY_INSERT)) {
-		camDir.z = 1;
-		setFreeCam = true;
-	}
-	if (KEYDOWN(kstate, OAPI_KEY_DELETE)) {
-		camDir.z = -1;
-		setFreeCam = true;
+	else {
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
 	}
 
-	if (!KEYMOD_CONTROL(kstate)) {
+	if ((!KEYMOD_CONTROL(kstate)) & (!KEYMOD_ALT(kstate))) {
 		if ((oapiCockpitMode() == COCKPIT_VIRTUAL) & (oapiCameraMode() == CAM_COCKPIT)) {
 			if (setFreeCam == true) {
 				VCFreeCam(camDir, camSlow);
