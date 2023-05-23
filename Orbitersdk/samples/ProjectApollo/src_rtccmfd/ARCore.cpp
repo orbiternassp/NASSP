@@ -367,7 +367,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		vesseltype = 1;
 	}
-	else if (utils::IsVessel(v, utils::MCC))
+	else if (utils::IsVessel(v, utils::MCC) || utils::IsVessel(v, utils::SaturnIB_SIVB) || utils::IsVessel(v, utils::SaturnV_SIVB))
 	{
 		vesseltype = 2;
 	}
@@ -4772,6 +4772,11 @@ int ARCore::subThread()
 		if (utils::IsVessel(vessel, utils::SaturnIB))
 		{
 			Saturn *iuv = (Saturn *)vessel;
+			iu = iuv->GetIU();
+		}
+		else if (utils::IsVessel(vessel, utils::SaturnIB_SIVB))
+		{
+			SIVB *iuv = (SIVB *)vessel;
 			iu = iuv->GetIU();
 		}
 		else
