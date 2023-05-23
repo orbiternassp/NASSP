@@ -4975,8 +4975,6 @@ void ConicRTEEarthNew::MAIN()
 	{
 		sv = XArray[J];
 
-		OrbMech::EclipticToECI(sv.R, sv.V, OrbMech::MJDfromGET(sv.GMT, GMTbase), sv.R, sv.V);
-
 		X0 = sv.R / KMPER / 1000.0;
 		U0 = sv.V*SCPHR / KMPER / 1000.0;
 		T0 = sv.GMT / SCPHR;
@@ -5104,10 +5102,9 @@ void ConicRTEEarthNew::StoreSolution(VECTOR3 dv, double lat, double t0, double t
 		//Discrete
 		SolData.delta_z = lat * DEG;
 		SolData.T_r = (T0 + T_ar_stored) * SCPHR;
-		double MJD_r = GMTbase + SolData.T_r / 24.0 / 3600.0;
-		SolData.RR = OrbMech::ECIToEcliptic(RR_vec * KMPER * 1000.0, MJD_r);
-		SolData.U_r = OrbMech::ECIToEcliptic(VV_vec /SCPHR * KMPER * 1000.0, MJD_r);
-		SolData.DV = OrbMech::ECIToEcliptic(dv / SCPHR * KMPER * 1000.0, MJD_r);
+		SolData.RR = RR_vec * KMPER * 1000.0;
+		SolData.U_r = VV_vec /SCPHR * KMPER * 1000.0;
+		SolData.DV = dv / SCPHR * KMPER * 1000.0;
 		SolData.NOSOLN = NOSOLN;
 		END = true;
 		NOSOLN = 1;
@@ -6403,7 +6400,6 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 
 	pRTCC->PLEFEM(1, T0, 0, &R_EM, &V_EM, &R_ES, NULL);
 	R_Moon = R_EM / (KMPER*1000.0);
-	R_Moon = OrbMech::EclipticToECI(R_Moon, GMTbase + T0 / 24.0);
 
 	r_a = length(R_a);
 	v_a = length(V_a);
@@ -6440,7 +6436,6 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 		TJ = T0 + TAA;
 		pRTCC->PLEFEM(1, TJ, 0, &R_EM, &V_EM, &R_ES, NULL);
 		RMAP = R_EM / (KMPER*1000.0);
-		RMAP = OrbMech::EclipticToECI(RMAP, GMTbase + T0 / 24.0);
 		theta = PI - eta - beta_a;
 		RAPOG = (V_a*cos(theta) / v_a + (V_a*cos(beta_a) / v_a - R_a / r_a)*sin(theta) / sin(beta_a))*R_p;
 		R_apo = RMAP - RAPOG;

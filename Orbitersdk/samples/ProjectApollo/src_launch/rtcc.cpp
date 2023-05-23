@@ -8443,12 +8443,65 @@ RTCC_LLWP_HMALIT_8_1:
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
 }
 
+void RTCC::PMMENS(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double GMT_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &GMT_BO)
+{
+	VECTOR3 H, K, J, U_RLS;
+	double gamma_BO, psi, delta, Gamma, xi, phi, dv_pc, v_BO;
+
+	v_BO = sqrt(V_H*V_H + V_R * V_R);
+	gamma_BO = asin(V_R / V_H);
+
+	ELVCNV(R_LS, GMT_LO, 1, 2, 3, R_LS);
+
+	U_RLS = unit(R_LS);
+	H = unit(crossp(R, V));
+	K = unit(crossp(H, U_RLS));
+	J = unit(crossp(K, H));
+
+	psi = asin(dotp(H, U_RLS));
+	delta = asin(sin(psi) / cos(theta_PF));
+	Gamma = asin(sin(theta_PF) / cos(psi));
+	xi = abs(delta) - y_s;
+
+	if (y_s <= 0)
+	{
+		dv_pc = 2.0*v_BO*sin(delta / 2.0);
+	}
+	else if (xi <= 0)
+	{
+		dv_pc = 0.0;
+		Gamma = acos(cos(theta_PF) / cos(psi));
+	}
+	else
+	{
+		double acos_term = acos(cos(theta_PF) / cos(y_s));
+		delta = abs(asin(sin(psi) / cos(acos_term))) - y_s;
+		Gamma = acos(abs(sqrt(1.0 - pow(sin(acos_term) / cos(psi), 2))));
+		dv_pc = 2.0*v_BO*sin(delta / 2.0);
+	}
+
+	phi = psi / abs(psi)*delta;
+
+	MATRIX3 JKH1, JKH2;
+
+	JKH1 = mul(_M(J.x, K.x, H.x, J.y, K.y, H.y, J.z, K.z, H.z), _M(cos(Gamma), -sin(Gamma), 0, sin(Gamma), cos(Gamma), 0, 0, 0, 1));
+	if (xi > 0)
+	{
+		JKH1 = mul(JKH1, OrbMech::_MRy(phi));
+	}
+
+	JKH2 = mul(JKH1, OrbMech::_MRz(gamma_BO));
+	R_BO = _V(JKH1.m11, JKH1.m21, JKH1.m31)*(length(R_LS) + h_bo);
+	V_BO = _V(JKH2.m12, JKH2.m22, JKH2.m32)*v_BO;
+	GMT_BO = GMT_LO + dt_pf;
+}
+
 //Lunar Launch Targeting from 68-FM-67
 void RTCC::PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP)
 {
 	AEGDataBlock sv_temp, sv_L;
 	VECTOR3 R_LS_sg, R_LSV, R_C, V_C, H_C, r_C, v_C, h_C, r_LSV, Q, c, R_LSP, r_LSP, R_BO, V_BO;
-	double YSS, MJD_BO, DH, CXX, CYY, TRS, TS, phi_star, theta, DN, h_CA, h_CA_dot;
+	double YSS, GMT_BO, DH, CXX, CYY, TRS, TS, phi_star, theta, DN, h_CA, h_CA_dot;
 	int N, M;
 
 	N = 1;
@@ -8492,10 +8545,9 @@ RTCC_PMMLTR_3:
 	//Work on this
 	h_CA = sv_temp.coe_mean.h;
 	h_CA_dot = 0.0;
-	OrbMech::ENSERT(R_C, V_C, t_PF, Y_S, P_FA, h_BO, V_H, V_R,SystemParameters.GMTBASE + T_LO / 24 / 3600.0, R_LS_sg, R_BO, V_BO, MJD_BO);
+	PMMENS(R_C, V_C, t_PF, Y_S, P_FA, h_BO, V_H, V_R, T_LO, R_LS_sg, R_BO, V_BO, GMT_BO);
 	sv_L.coe_osc = OrbMech::GIMIKC(R_BO, V_BO, OrbMech::mu_Moon);
-	sv_L.Item7 =SystemParameters.GMTBASE;
-	sv_L.TS = sv_L.TE = OrbMech::GETfromMJD(MJD_BO,SystemParameters.GMTBASE);
+	sv_L.TS = sv_L.TE = GMT_BO;
 	pmmlaeg.CALL(sv_CSM.Header, sv_L, sv_temp);
 	if (N <= 0)
 	{
@@ -8540,7 +8592,7 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
 	AEGHeader Header;
 	AEGDataBlock sv[2], sv_temp[2], sv_xx, elem_TPI;
 	VECTOR3 R_LS, R_LS_sg, r_LS, R1, V1, r1, Q, h1, H1, v1, C, R_P, r_P, H_D, h_D, R_BO, V_BO, R_TPI, V_TPI, R_XX, V_XX, R_TI_C, V_TI_C, R_TI_T, V_TI_T;
-	double mu, T_TPI, T_hole, t_ca, theta_CA, theta, dt, S1, S2, t_xx, MJD_BO, T_INS, dt_B, t_CSI, t_D, U_R, t_R, r_apo, r_peri, H_S_apo, DH_MIN, DH_CRIT;
+	double mu, T_TPI, T_hole, t_ca, theta_CA, theta, dt, S1, S2, t_xx, T_INS, dt_B, t_CSI, t_D, U_R, t_R, r_apo, r_peri, H_S_apo, DH_MIN, DH_CRIT;
 	double C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, P_mm, DH_u, theta_w, t_LOR, t_H, dv_CSI, dv_CDH, dv_TPI, dv_TPF, t_CDH, theta_TPI, dt_NSR, P_O, P_Q;
 	double dt_max, B1, B2, B3, B4, DP, P_mm_apo, r_TPM, theta_s, f_TPI, C_R[3], C_V[3], DH_MAX, ddH_c, DH[10], DH_apo[10];
 	int K, m, p, I_SRCH, L_DH, I, J, K_T, i, I_STOP2, M_stop, IPHAS;
@@ -8633,11 +8685,9 @@ RTCC_PMMLWP_2:
 	}
 	//sv[0].TE = t_xx;
 	//pmmlaeg.CALL(Header, sv[0], sv_temp);
-	OrbMech::ENSERT(R_XX, V_XX, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV, OrbMech::MJDfromGET(t_xx,SystemParameters.GMTBASE), R_LS_sg, R_BO, V_BO, MJD_BO);
-	T_INS = OrbMech::GETfromMJD(MJD_BO,SystemParameters.GMTBASE);
+	PMMENS(R_XX, V_XX, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV, t_xx, R_LS_sg, R_BO, V_BO, T_INS);
 	
 	sv[1].coe_osc = OrbMech::GIMIKC(R_BO, V_BO, mu);
-	sv[1].Item7 =SystemParameters.GMTBASE;
 	sv[1].TE = sv[1].TS = T_INS;
 	//Initialize
 	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
@@ -8827,8 +8877,7 @@ RTCC_PMMLLWP_8_8:
 	sv[0].TIMA = 0;
 	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
 	OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R1, V1);
-	OrbMech::ENSERT(R1, V1, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV,SystemParameters.GMTBASE + t_LOR / 24.0 / 3600.0, R_LS_sg, R_BO, V_BO, MJD_BO);
-	T_INS = OrbMech::GETfromMJD(MJD_BO,SystemParameters.GMTBASE);
+	PMMENS(R1, V1, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV, t_LOR, R_LS_sg, R_BO, V_BO, T_INS);
 
 	sv[1].coe_osc = OrbMech::GIMIKC(R_BO, V_BO, mu);
 	sv[1].TE = sv[1].TS = T_INS;
@@ -10575,7 +10624,8 @@ void RTCC::PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, doubl
 		R[i] = length(sv_CC[i].R);
 		if (sv_C.gravref == hEarth)
 		{
-			OrbMech::EclipticToECI(sv_CC[i].R, sv_CC[i].V, sv_CC[i].MJD, R_equ, V_equ);
+			R_equ = sv_CC[i].R;
+			V_equ = sv_CC[i].V;
 		}
 		else
 		{
@@ -11067,7 +11117,8 @@ RTCC_PMMSPQ_A:
 				//Calculate argument of latitude at CSI
 				if (opt.sv_A.gravref == hEarth)
 				{
-					OrbMech::EclipticToECI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+					R_equ = sv_C_CSI_apo.R;
+					V_equ = sv_C_CSI_apo.V;
 				}
 				else
 				{
@@ -12459,16 +12510,32 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 	TwoImpulseResuls lamres;
 	EphemerisData sv_TH, sv_LS, sv_INS, sv_TPI, sv_TPF;
 	VECTOR3 R_BO, V_BO, R_LS;
-	double T_LO, T_LO_0, MJD_L, MJD_BO, S, DV_Z0, DV_Z, MJD_LS, T_TPI, T_INS, V_H;
-	int i, k, I_max;
+	double lng_LO, T_LO, T_LO_0, S, DV_Z0, DV_Z, T_TPI, T_INS, V_H;
+	int i, k, I_max, AEGERR;
 
 	lamman.mode = 5;
 	sv_INS.RBI = sv_LS.RBI = BODY_MOON;
 
+	//Advance CSM to threshold time
 	sv_TH = coast(opt.sv_CSM, opt.T_TH - opt.sv_CSM.GMT);
-	MJD_LS = OrbMech::P29TimeOfLongitude(sv_TH.R, sv_TH.V,SystemParameters.GMTBASE + sv_TH.GMT / 24.0 / 3600.0, hMoon, opt.lng_LS);
+
+	//Compute first guess of CSM longitude at liftoff time
+	AEGBlock aeg;
+
+	aeg = SVToAEG(sv_TH, 0.0, 1.0, 1.0);
+	//PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
+
+	lng_LO = opt.lng_LS; //TBD
+
+	//Find longitude
+	PMMTLC(aeg.Header, aeg.Data, aeg.Data, lng_LO, AEGERR, 0);
+	if (AEGERR)
+	{
+		return false;
+	}
+
 	//Bias by 1 minute from CSM over LS
-	T_LO = OrbMech::GETfromMJD(MJD_LS,SystemParameters.GMTBASE) - 60.0;
+	T_LO = aeg.Data.TE - 60.0;
 	sv_LS = coast(sv_TH, T_LO - sv_TH.GMT);
 
 	i = 0;
@@ -12481,9 +12548,7 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 
 	do
 	{
-		MJD_L =SystemParameters.GMTBASE + T_LO / 24.0 / 3600.0;
-		OrbMech::ENSERT(sv_LS.R, sv_LS.V, opt.dt_PF, opt.Y_S, opt.alpha_PF, opt.h_INS, V_H, opt.V_Z_NOM, MJD_L, R_LS, R_BO, V_BO, MJD_BO);
-		T_INS = T_LO + opt.dt_PF;
+		PMMENS(sv_LS.R, sv_LS.V, opt.dt_PF, opt.Y_S, opt.alpha_PF, opt.h_INS, V_H, opt.V_Z_NOM, T_LO, R_LS, R_BO, V_BO, T_INS);
 		sv_INS.R = R_BO;
 		sv_INS.V = V_BO;
 		sv_INS.GMT = T_INS;
@@ -19615,6 +19680,11 @@ void RTCC::PMMAEGS(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 void RTCC::PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC)
 {
+	//DESLAM: Desired longitude in radians
+	//INDVEC: For Earth only. <0 for ECT, >= 0 for ECI
+
+	//K: -1 = Unrecoverable AEG error, >0 = failure to converge, 0 = no error
+
 	MATRIX3 Rot;
 	double i_CB, g_CB, h_CB, u_CB, g_dot, h_dot, Z, DELTA, lambda_V, lambda_apo, w_CB, dlambda, DELTADOT, dt, u_CB_dot, mu_CB;
 
@@ -20280,13 +20350,13 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	}
 	else
 	{
-		CONVFACR = 6.371e6;
-		CONVFACV = 6.371e6 / 3600.0;
+		CONVFACR = SystemParameters.MCCMCU;
+		CONVFACV = SystemParameters.MCCMCU / 3600.0;
 	}
 
 	if (ref < 2)
 	{
-		R_E = OrbMech::R_Earth;
+		R_E = SystemParameters.MCECAP;
 		mu = OrbMech::mu_Earth;
 	}
 	else
@@ -20365,8 +20435,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 		AEGDataBlock sv_a, sv_p;
 		double INFO[10];
 
-		PIMCKC(sv_inert.R, sv_inert.V, sv_inert.RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h, aeg.Data.coe_osc.l);
-		aeg.Header.AEGInd = sv_inert.RBI;
+		aeg = SVToAEG(sv_inert, 0.0, 1.0, 1.0); //TBD
 
 		PMMAPD(aeg.Header, aeg.Data, 0, 0, INFO, &sv_a, &sv_p);
 
@@ -20394,8 +20463,24 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 
 	double lat, lng;
 	OrbMech::latlong_from_r(sv_conv.R, lat, lng);
-	EZCHECKDIS.phi_c = EZCHECKDIS.phi_D = lat * DEG;
-	EZCHECKDIS.lambda = EZCHECKDIS.lambda_D = lng * DEG;
+	EZCHECKDIS.phi_c = EZCHECKDIS.phi_D = lat;
+	EZCHECKDIS.lambda = EZCHECKDIS.lambda_D = lng;
+
+	if (ref == 0)
+	{
+		EZCHECKDIS.lambda_D -= SystemParameters.MCLAMD + sv_out.GMT*OrbMech::w_Earth;
+	}
+	else if (ref == 1)
+	{
+		EZCHECKDIS.lambda_D -= sv_out.GMT*OrbMech::w_Earth;
+	}
+	OrbMech::normalizeAngle(EZCHECKDIS.lambda);
+	OrbMech::normalizeAngle(EZCHECKDIS.lambda_D);
+
+	EZCHECKDIS.phi_c *= DEG;
+	EZCHECKDIS.phi_D *= DEG;
+	EZCHECKDIS.lambda *= DEG;
+	EZCHECKDIS.lambda_D *= DEG;
 
 	VECTOR3 R_EM;
 	double LunarDeclination;
@@ -34868,14 +34953,14 @@ bool RTCC::QMGEPH(int epoch, double gmtbase, double HOURS)
 
 		//Moon Ephemeris
 		cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
-		R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]) / OrbMech::R_Earth_equ;
-		V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]) / OrbMech::R_Earth_equ*3600.0;
+		R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]) / SystemParameters.MCCMCU;
+		V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]) / SystemParameters.MCCMCU*3600.0;
 		R_EM = mul(Rot_J_B, R_EM);
 		V_EM = mul(Rot_J_B, V_EM);
 
 		//Sun Ephemeris
 		cEarth->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
-		R_ES = -OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]) / OrbMech::R_Earth_equ;
+		R_ES = -OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]) / SystemParameters.MCCMCU;
 		R_ES = mul(Rot_J_B, R_ES);
 
 		//Libration matrix

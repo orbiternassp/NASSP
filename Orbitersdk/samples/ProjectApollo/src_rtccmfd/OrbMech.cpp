@@ -4940,14 +4940,9 @@ double trunc(double d)
 
 void normalizeAngle(double & a)
 {
-	while (a >= PI2)
-	{
-		a -= PI2;
-	}
-	while (a < 0)
-	{
+	a = fmod(a, PI2);
+	if (a < 0)
 		a += PI2;
-	}
 }
 
 double quadratic(double *T, double *DV)
@@ -5160,158 +5155,11 @@ bool SolveSeries(double *x, double *y, int ndata, double *out, int m)
 	return bRet;
 }
 
-void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double MJD_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &MJD_BO)
-{
-	VECTOR3 H, K, J, U_RLS;
-	double gamma_BO, psi, delta, Gamma, xi, phi, dv_pc, v_BO;
-
-	v_BO = sqrt(V_H*V_H + V_R * V_R);
-	gamma_BO = asin(V_R / V_H);
-
-	R_LS = rhmul(GetRotationMatrix(BODY_MOON, MJD_LO), R_LS);
-	U_RLS = unit(R_LS);
-	H = unit(crossp(R, V));
-	K = unit(crossp(H, U_RLS));
-	J = unit(crossp(K, H));
-
-	psi = asin(dotp(H, U_RLS));
-	delta = asin(sin(psi) / cos(theta_PF));
-	Gamma = asin(sin(theta_PF) / cos(psi));
-	xi = abs(delta) - y_s;
-
-	if (y_s <= 0)
-	{
-		dv_pc = 2.0*v_BO*sin(delta / 2.0);
-	}
-	else if (xi <= 0)
-	{
-		dv_pc = 0.0;
-		Gamma = acos(cos(theta_PF) / cos(psi));
-	}
-	else
-	{
-		double acos_term = acos(cos(theta_PF) / cos(y_s));
-		delta = abs(asin(sin(psi) / cos(acos_term))) - y_s;
-		Gamma = acos(abs(sqrt(1.0 - pow(sin(acos_term) / cos(psi), 2))));
-		dv_pc = 2.0*v_BO*sin(delta / 2.0);
-	}
-
-	phi = psi / abs(psi)*delta;
-
-	MATRIX3 JKH1, JKH2;
-
-	JKH1 = mul(_M(J.x, K.x, H.x, J.y, K.y, H.y, J.z, K.z, H.z), _M(cos(Gamma), -sin(Gamma), 0, sin(Gamma), cos(Gamma), 0, 0, 0, 1));
-	if (xi > 0)
-	{
-		JKH1 = mul(JKH1, _MRy(phi));
-	}
-
-	JKH2 = mul(JKH1, _MRz(gamma_BO));
-	R_BO = _V(JKH1.m11, JKH1.m21, JKH1.m31)*(length(R_LS) + h_bo);
-	V_BO = _V(JKH2.m12, JKH2.m22, JKH2.m32)*v_BO;
-	MJD_BO = MJD_LO + dt_pf / 24.0 / 3600.0;
-}
-
-double REVTIM(VECTOR3 R, VECTOR3 V, double MJD, int body, bool S_pert)
-{
-	MATRIX3 Rot;
-	double r_e, J2, J3, J4, ainv, mu, n;
-	if (body == BODY_EARTH)
-	{
-		r_e = R_Earth;
-		J2 = J2_Earth;
-		J3 = J3_Earth;
-		J4 = J4_Earth;
-		mu = mu_Earth;
-	}
-	else
-	{
-		r_e = R_Moon;
-		J2 = J2_Moon;
-		J3 = J3_Moon;
-		J4 = 0.0;
-		mu = mu_Moon;
-	}
-
-	if (S_pert)
-	{
-		VECTOR3 R_T, V_T;
-		double r_T, sin_lat;
-		//Convert to true coordinates
-		Rot = GetRotationMatrix(body, MJD);
-		R_T = rhtmul(Rot, R);
-		V_T = rhtmul(Rot, V);
-		r_T = length(R_T);
-		ainv = 2.0 / r_T - pow(length(V_T), 2) / mu;
-		sin_lat = R_T.z / r_T;
-		ainv = ainv + J2 * pow(r_e, 2) / pow(r_T, 3)*(1.0 - 3.0*pow(sin_lat, 2)) + J3 * pow(r_e, 3) / pow(r_T, 4)*(3.0*sin_lat - 5.0*pow(sin_lat, 3)) +
-			J4 / 4.0 * pow(r_e, 4) / pow(r_T, 5)*(3.0 - 30.0*pow(sin_lat, 2) + 35.0*pow(sin_lat, 4));
-	}
-	else
-	{
-		ainv = 2.0 / length(R) - pow(length(V), 2) / mu;
-	}
-	n = sqrt(mu*pow(ainv, 3));
-	return PI2 / n;
-}
-
 void EclipticToMCI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_MCI, VECTOR3 &V_MCI)
 {
 	MATRIX3 Rot = GetObliquityMatrix(BODY_MOON, MJD);
 	R_MCI = rhtmul(Rot, R);
 	V_MCI = rhtmul(Rot, V);
-}
-
-VECTOR3 EclipticToECI(VECTOR3 v, double MJD)
-{
-	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
-	return rhtmul(Rot, v);
-}
-
-void EclipticToECI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECI, VECTOR3 &V_ECI)
-{
-	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
-	R_ECI = rhtmul(Rot, R);
-	V_ECI = rhtmul(Rot, V);
-}
-
-VECTOR3 ECIToEcliptic(VECTOR3 v, double MJD)
-{
-	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
-	return rhmul(Rot, v);
-}
-
-void ECIToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl)
-{
-	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
-	R_ecl = rhmul(Rot, R);
-	V_ecl = rhmul(Rot, V);
-}
-
-VECTOR3 EclipticToECEF(VECTOR3 v, double MJD)
-{
-	MATRIX3 Rot = GetRotationMatrix(BODY_EARTH, MJD);
-	return rhtmul(Rot, v);
-}
-
-void EclipticToECEF(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECEF, VECTOR3 &V_ECEF)
-{
-	MATRIX3 Rot = GetRotationMatrix(BODY_EARTH, MJD);
-	R_ECEF = rhtmul(Rot, R);
-	V_ECEF = rhtmul(Rot, V);
-}
-
-VECTOR3 ECEFToEcliptic(VECTOR3 v, double MJD)
-{
-	MATRIX3 Rot = GetRotationMatrix(BODY_EARTH, MJD);
-	return rhmul(Rot, v);
-}
-
-void ECEFToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl)
-{
-	MATRIX3 Rot = GetRotationMatrix(BODY_EARTH, MJD);
-	R_ecl = rhmul(Rot, R);
-	V_ecl = rhmul(Rot, V);
 }
 
 double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu)
@@ -5880,7 +5728,6 @@ SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 	{
 		SV sv1;
 		CELEMENTS osc0, osc1;
-		VECTOR3 R_equ, V_equ;
 		double DX_L, X_L, X_L_dot, dt, ddt, L_D, ll_dot, n0, g_dot, J20;
 		int LINE, COUNT;
 		bool DH;
@@ -5888,8 +5735,7 @@ SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 		J20 = 1082.6269e-6;
 
 		sv1 = sv0;
-		OrbMech::EclipticToECI(sv0.R, sv0.V, sv0.MJD, R_equ, V_equ);
-		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Earth);
+		osc0 = OrbMech::GIMIKC(sv0.R, sv0.V, mu_Earth);
 
 		if (osc0.e > 0.85)
 		{
@@ -5993,8 +5839,7 @@ SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 
 			dt += ddt;
 			sv1 = coast(sv1, ddt);
-			OrbMech::EclipticToECI(sv1.R, sv1.V, sv1.MJD, R_equ, V_equ);
-			osc1 = OrbMech::GIMIKC(R_equ, V_equ, mu_Earth);
+			osc1 = OrbMech::GIMIKC(sv1.R, sv1.V, mu_Earth);
 
 			COUNT--;
 

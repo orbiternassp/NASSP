@@ -1127,10 +1127,7 @@ int RTCC::GLSSAT(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, doubl
 	u = unit(R);
 	lat = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
 	lng = atan2(u.y, u.x) - OrbMech::w_Earth*K*GMT;
-	while (lng < -PI)
-	{
-		lng += PI2;
-	}
+	OrbMech::normalizeAngle(lng);
 	if (RBI == BODY_EARTH)
 	{
 		alt = length(R) - OrbMech::R_Earth;
@@ -2092,15 +2089,15 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, 
 	}
 	if (des[0] && R_ES)
 	{
-		*R_ES = _V(x[0], x[1], x[2])*OrbMech::R_Earth_equ;
+		*R_ES = _V(x[0], x[1], x[2])*SystemParameters.MCCMCU;
 	}
 	if (des[1] && R_EM)
 	{
-		*R_EM = _V(x[3], x[4], x[5])*OrbMech::R_Earth_equ;
+		*R_EM = _V(x[3], x[4], x[5])*SystemParameters.MCCMCU;
 	}
 	if (des[2] && V_EM)
 	{
-		*V_EM = _V(x[6], x[7], x[8])*OrbMech::R_Earth_equ / 3600.0;
+		*V_EM = _V(x[6], x[7], x[8])*SystemParameters.MCCMCU / 3600.0;
 	}
 	if (des[3] && PNL)
 	{

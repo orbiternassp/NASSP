@@ -211,7 +211,6 @@ namespace OrbMech {
 	//Constants
 	const double mu_Earth = 0.3986032e15;
 	const double R_Earth = 6.373338e6;//6378165.0; We use LC-39 launchpad radius, because Orbiter Earth is spherical
-	const double R_Earth_equ = 6378165.0;
 	const double w_Earth = 7.29211514667e-5;
 	const double mu_Moon = 0.4902778e13;
 	const double R_Moon = 1738090.0;
@@ -354,19 +353,6 @@ namespace OrbMech {
 	double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep);
 	bool SolveSystem(int n, double *A, double *b, double *x, double *det);
 	bool SolveSeries(double *x, double *y, int ndata, double *out, int m);
-	void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double MJD_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &MJD_BO);
-	double REVTIM(VECTOR3 R, VECTOR3 V, double MJD, int body, bool S_pert);
-	//private:
-		//VESSEL* vessel;
-		//double mu;
-		//int JCoeffCount;
-		//double* JCoeff;
-		//CoastIntegrator* coast;
-		//OBJHANDLE gravref;
-		//double R_b;
-
-
-	//typedef void (OrbMech::*adfuncptr)(double* dfdt, double t, double* f);
 
 	MATRIX3 inverse(MATRIX3 a);
 	double determinant(MATRIX3 a);
@@ -431,14 +417,6 @@ namespace OrbMech {
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);
 	MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG);
 	MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG);
-	VECTOR3 EclipticToECI(VECTOR3 v, double MJD);
-	void EclipticToECI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECI, VECTOR3 &V_ECI);
-	VECTOR3 ECIToEcliptic(VECTOR3 v, double MJD);
-	void ECIToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl);
-	VECTOR3 EclipticToECEF(VECTOR3 v, double MJD);
-	void EclipticToECEF(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECEF, VECTOR3 &V_ECEF);
-	VECTOR3 ECEFToEcliptic(VECTOR3 v, double MJD);
-	void ECEFToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl);
 	void EclipticToMCI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_MCI, VECTOR3 &V_MCI);
 	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
