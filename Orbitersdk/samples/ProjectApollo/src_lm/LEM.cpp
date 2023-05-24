@@ -837,7 +837,7 @@ int LEM::clbkConsumeDirectKey(char* kstate)
 			if (setFreeCam == true) {
 				VCFreeCam(camDir, camSlow);
 			}
-			return 1;
+			//return 1;
 		}
 	}
 
