@@ -3298,8 +3298,8 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 		}
 	}
 
-	if ((!KEYMOD_CONTROL(kstate)) & (!KEYMOD_ALT(kstate))) {
-		if ((oapiCockpitMode() == COCKPIT_VIRTUAL) & (oapiCameraMode() == CAM_COCKPIT)) {
+	if ((!KEYMOD_CONTROL(kstate)) && (!KEYMOD_ALT(kstate))) {
+		if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
 			if (setFreeCam == true) {
 				VCFreeCam(camDir, camSlow);
 			}
