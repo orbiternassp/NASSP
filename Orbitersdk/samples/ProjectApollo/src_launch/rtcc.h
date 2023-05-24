@@ -2902,6 +2902,9 @@ public:
 	void PITFPC(double MUE, int K, double AORP, double ECC, double rad, double &TIME, double &P, bool erunits = true);
 	//Determine time of arrival at specific height in orbit
 	int PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &out);
+	//Generate orbit normal and ascending node vectors from elements, and vice versa
+	void PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h);
+	void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W);
 
 	// ** MISCELLANEOUS UTILITY PROGRAMS**
 	//Sun/Moon ephemeris table from tape

@@ -10616,22 +10616,14 @@ void RTCC::PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, doubl
 	sv_CC[0] = sv_C;
 	sv_CC[1] = coast(sv_CC[0], DT);
 	sv_CC[2] = coast(sv_CC[1], DT);
-	VECTOR3 R_equ, V_equ;
+
 	CELEMENTS elem;
 	double R[3], U[3];
+
 	for (int i = 0;i < 3;i++)
 	{
 		R[i] = length(sv_CC[i].R);
-		if (sv_C.gravref == hEarth)
-		{
-			R_equ = sv_CC[i].R;
-			V_equ = sv_CC[i].V;
-		}
-		else
-		{
-			OrbMech::EclipticToMCI(sv_CC[i].R, sv_CC[i].V, sv_CC[i].MJD, R_equ, V_equ);
-		}
-		elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
+		elem = OrbMech::GIMIKC(sv_CC[i].R, sv_CC[i].V, mu);
 		U[i] = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
 		U[i] = fmod(U[i], PI2);
 		if (U[i] < 0)
@@ -10961,7 +10953,7 @@ int RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	SV sv_C_CSI, sv_T_CSI, sv_C_CDH, sv_C_TPI, sv_T_CDH, sv_C_CSI_apo, sv_T_TPI, sv_C_CDH_apo, sv_PC;
 	CELEMENTS elem;
 	MATRIX3 Q_Xx;
-	VECTOR3 R_equ, V_equ, R_TJ, V_TJ, R_AF, R_AFD;
+	VECTOR3 R_TJ, V_TJ, R_AF, R_AFD;
 	double GETbase, dv_CSI, mu, t_CDH, t_TPI, DH, p_C, c_C, e_C, e_Co, dv_CSIo, V_Cb, V_CRb, gamma_C, V_CHb, a_T, a_C, r_T_dot, r_C_dot, T_TPF;
 	double V_C_apo, gamma_C_apo, V_CHa, DV_H, DV_R, Pitch, Yaw;
 	int s_C, PCMVMR_IND;
@@ -11115,16 +11107,7 @@ RTCC_PMMSPQ_A:
 				double u_CSI, u_CDH, DN = 0;
 
 				//Calculate argument of latitude at CSI
-				if (opt.sv_A.gravref == hEarth)
-				{
-					R_equ = sv_C_CSI_apo.R;
-					V_equ = sv_C_CSI_apo.V;
-				}
-				else
-				{
-					OrbMech::EclipticToMCI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
-				}
-				elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
+				elem = OrbMech::GIMIKC(sv_C_CSI_apo.R, sv_C_CSI_apo.V, mu);
 				u_CSI = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
 				u_CSI = fmod(u_CSI, PI2);
 				if (u_CSI < 0)
@@ -11609,11 +11592,11 @@ RTCC_PMMAPD_1_2:
 		{
 			MATRIX3 L;
 			VECTOR3 P, W, P_apo, W_apo;
-			OrbMech::PIVECT(Z_A.coe_osc.i, Z_A.coe_osc.g, Z_A.coe_osc.h, P, W);
+			PIVECT(Z_A.coe_osc.i, Z_A.coe_osc.g, Z_A.coe_osc.h, P, W);
 			PLEFEM(5, Z_A.TS / 3600.0, 0, NULL, NULL, NULL, &L);
 			P_apo = tmul(L, P);
 			W_apo = tmul(L, W);
-			OrbMech::PIVECT(P_apo, W_apo, i_temp, g_temp, h_temp);
+			PIVECT(P_apo, W_apo, i_temp, g_temp, h_temp);
 			u_temp = g_temp + Z_A.f;
 			if (u_temp > PI2)
 			{
@@ -11656,11 +11639,11 @@ RTCC_PMMAPD_1_2:
 		{
 			MATRIX3 L;
 			VECTOR3 P, W, P_apo, W_apo;
-			OrbMech::PIVECT(Z_P.coe_osc.i, Z_P.coe_osc.g, Z_P.coe_osc.h, P, W);
+			PIVECT(Z_P.coe_osc.i, Z_P.coe_osc.g, Z_P.coe_osc.h, P, W);
 			PLEFEM(5, Z_P.TS / 3600.0, 0, NULL, NULL, NULL, &L);
 			P_apo = tmul(L, P);
 			W_apo = tmul(L, W);
-			OrbMech::PIVECT(P_apo, W_apo, i_temp, g_temp, h_temp);
+			PIVECT(P_apo, W_apo, i_temp, g_temp, h_temp);
 			u_temp = g_temp + Z_P.f;
 			if (u_temp > PI2)
 			{
@@ -19731,10 +19714,10 @@ void RTCC::PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, do
 			double i_SG, g_SG, h_SG;
 
 			PLEFEM(5, AEGOUT.TS / 3600.0, 0, NULL, NULL, NULL, &Rot);
-			OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
+			PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
 			P_apo = tmul(Rot, P);
 			W_apo = tmul(Rot, W);
-			OrbMech::PIVECT(P_apo, W_apo, i_SG, g_SG, h_SG);
+			PIVECT(P_apo, W_apo, i_SG, g_SG, h_SG);
 			i_CB = i_SG;
 			g_CB = g_SG;
 			h_CB = h_SG;

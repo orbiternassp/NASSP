@@ -249,7 +249,7 @@ namespace OrbMech {
 	const MATRIX3 R_ref_Moon = mul(_M(cos(L_ref_Moon), 0, -sin(L_ref_Moon), 0, 1, 0, sin(L_ref_Moon), 0, cos(L_ref_Moon)), _M(1, 0, 0, 0, cos(e_ref_Moon), -sin(e_ref_Moon), 0, sin(e_ref_Moon), cos(e_ref_Moon)));
 	const MATRIX3 R_obl_Moon = _M(1, 0, 0, 0, cos(e_rel_Moon), -sin(e_rel_Moon), 0, sin(e_rel_Moon), cos(e_rel_Moon));
 
-	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, double J2, double mu, double R_E, int P, VECTOR3 &R2, VECTOR3 &V2);
+	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2);
 	double kepler_E(double e, double M, double error2 = 1.e-8);
 	double kepler_H(double e, double M);
 	double power(double b, double e);
@@ -321,8 +321,6 @@ namespace OrbMech {
 	void latlong_from_r(VECTOR3 R, double &lat, double &lng);
 	VECTOR3 r_from_latlong(double lat, double lng);
 	VECTOR3 r_from_latlong(double lat, double lng, double r);
-	double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat);
-	double FindNextEquatorialCrossing(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref);
 	double GETfromMJD(double MJD, double GETBase);
 	double MJDfromGET(double GET, double GETBase);
 	void format_time_HHMMSS(char *buf, double time);
@@ -330,7 +328,6 @@ namespace OrbMech {
 	bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
 	bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
-	bool vesselinLOS(VECTOR3 R, VECTOR3 V, double MJD);
 	MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z);
 	void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff);
 	void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &m_cutoff, double &t_go);
@@ -417,7 +414,6 @@ namespace OrbMech {
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);
 	MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG);
 	MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG);
-	void EclipticToMCI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_MCI, VECTOR3 &V_MCI);
 	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
 	double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng);
@@ -425,9 +421,6 @@ namespace OrbMech {
 	void EMXINGElev(VECTOR3 R, VECTOR3 R_S, VECTOR3 &N, VECTOR3 &rho, double &sinang);
 	//RTCC EMXING support routine, calculates elevation slope function
 	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S, int body);
-	//Generate orbit normal and ascending node vectors from elements, and vice versa
-	void PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h);
-	void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W);
 
 	//AEG
 	CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body);

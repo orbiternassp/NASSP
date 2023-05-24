@@ -625,7 +625,7 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenographicElements(const AEGData
 {
 	MATRIX3 L;
 	VECTOR3 P, W, P_apo, W_apo;
-	OrbMech::PIVECT(sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h, P, W);
+	pRTCC->PIVECT(sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h, P, W);
 	if (pRTCC->PLEFEM(5, sv.TS / 3600.0, 0, NULL, NULL, NULL, &L))
 	{
 		ErrorIndicator = 5;
@@ -633,7 +633,7 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenographicElements(const AEGData
 	}
 	P_apo = tmul(L, P);
 	W_apo = tmul(L, W);
-	OrbMech::PIVECT(P_apo, W_apo, i, g, h);
+	pRTCC->PIVECT(P_apo, W_apo, i, g, h);
 	u = g + sv.f;
 	if (u > PI2)
 	{
@@ -645,7 +645,7 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenocentricElements(double i, dou
 {
 	MATRIX3 L;
 	VECTOR3 P, W, P_apo, W_apo;
-	OrbMech::PIVECT(i, g, h, P, W);
+	pRTCC->PIVECT(i, g, h, P, W);
 	if (pRTCC->PLEFEM(5, sv.TS / 3600.0, 0, NULL, NULL, NULL, &L))
 	{
 		ErrorIndicator = 5;
@@ -653,7 +653,7 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenocentricElements(double i, dou
 	}
 	P_apo = mul(L, P);
 	W_apo = mul(L, W);
-	OrbMech::PIVECT(P_apo, W_apo, sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h);
+	pRTCC->PIVECT(P_apo, W_apo, sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h);
 	sv.U = sv.coe_osc.g + sv.f;
 	if (sv.U >= PI2)
 	{

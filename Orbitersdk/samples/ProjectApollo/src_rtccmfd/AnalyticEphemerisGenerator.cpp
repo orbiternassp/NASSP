@@ -360,10 +360,10 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	{
 		//Selenocentric to selenographic
 		coe_osc0 = in.coe_osc;
-		OrbMech::PIVECT(in.coe_osc.i, in.coe_osc.g, in.coe_osc.h, P, W);
+		pRTCC->PIVECT(in.coe_osc.i, in.coe_osc.g, in.coe_osc.h, P, W);
 		P = tmul(Rot, P);
 		W = tmul(Rot, W);
-		OrbMech::PIVECT(P, W, coe_osc0.i, coe_osc0.g, coe_osc0.h);
+		pRTCC->PIVECT(P, W, coe_osc0.i, coe_osc0.g, coe_osc0.h);
 
 		//Osculating to mean
 		in.coe_mean = OrbMech::LyddaneOsculatingToMean(coe_osc0, BODY_MOON);
@@ -417,10 +417,10 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 		coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
 
 		//Selenographic to selenocentric
-		OrbMech::PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
+		pRTCC->PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
 		P = mul(Rot, P);
 		W = mul(Rot, W);
-		OrbMech::PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
+		pRTCC->PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
 	}
 	else
 	{
@@ -525,10 +525,10 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 			coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
 
 			//Selenographic to selenocentric
-			OrbMech::PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
+			pRTCC->PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
 			P = mul(Rot, P);
 			W = mul(Rot, W);
-			OrbMech::PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
+			pRTCC->PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
 
 			COUNT--;
 
