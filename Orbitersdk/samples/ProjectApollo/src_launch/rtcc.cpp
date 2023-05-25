@@ -5839,7 +5839,7 @@ void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 	Rot_LG = OrbMech::GetRotationMatrix(BODY_MOON, MJD_TIG);
 	Rot_VG = OrbMech::GetVesselToGlobalRotMatrix(opt.Rot_VL, Rot_LG);
 	Z_B = mul(Rot_VG, _V(0, 0, 1));
-	Z_B = unit(_V(Z_B.x, Z_B.z, Z_B.y));
+	Z_B = mul(SystemParameters.MAT_J2000_BRCS, unit(_V(Z_B.x, Z_B.z, Z_B.y)));
 	X_AGS = U_R;
 	Z_AGS = unit(crossp(-Q, X_AGS));
 	Y_AGS = unit(crossp(Z_AGS, X_AGS));
@@ -34612,15 +34612,6 @@ void RTCC::EMDGSUPP(int err)
 
 void RTCC::CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
 {
-	/*double lambda = SystemParameters.MCLGRA + SystemParameters.MCGRIC *3600.0*OrbMech::w_Earth;
-	//Converts from equatorial coordinates (with launchpad longitude as 0) to RTCC ecliptic
-	MATRIX3 RMAT = mul(MatrixRH_LH(OrbMech::GetRotationMatrix(BODY_EARTH,SystemParameters.GMTBASE)), _M(cos(lambda), -sin(lambda), 0, sin(lambda), cos(lambda), 0, 0, 0, 1));
-	//Converts from RTCC ecliptic to S-IVB ephemeral
-	MATRIX3 MRG = mul(_M(1, 0, 0, 0, 0, -1, 0, 1, 0), OrbMech::tmat(RMAT));
-	double phi_L = MDVSTP.PHIL;
-	MATRIX3 MSG = _M(cos(phi_L), sin(phi_L)*SystemParameters.MCLSBN, -sin(phi_L)*SystemParameters.MCLCBN, -sin(phi_L), cos(phi_L)*SystemParameters.MCLSBN, -cos(phi_L)*SystemParameters.MCLCBN, 0, SystemParameters.MCLCBN, SystemParameters.MCLSBN);
-	MATRIX3 MRS = mul(OrbMech::tmat(MSG), MRG);*/
-
 	CZNAVSLV.PosS = mul(GZLTRA.IU1_REFSMMAT, R_ecl);
 	CZNAVSLV.DotS = mul(GZLTRA.IU1_REFSMMAT, V_ecl);
 	CZNAVSLV.NUPTIM = GMT - SystemParameters.MCGRIC * 3600.0;
