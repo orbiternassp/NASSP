@@ -1609,7 +1609,7 @@ double findelev_conic(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, do
 	return t;
 }
 
-double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range)
+double findelev_gs(MATRIX3 Rot_J_B, VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range)
 {
 	double w_A, w_P, r_A, v_A, r_P, alpha, t, dt, E_err, E_A, dE, dE_0, dt_0, dt_max, t_S, theta_0;
 	VECTOR3 R_A, V_A, R_P, U_L, U_P, U_N, U_LL, R_proj;
@@ -1640,7 +1640,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	r_P = length(R_gs);
 
 	Rot2 = OrbMech::GetRotationMatrix(body, mjd0);
-	R_P = rhmul(Rot2, R_gs);
+	R_P = mul(Rot_J_B, rhmul(Rot2, R_gs));
 
 	U_N = unit(crossp(R_A, V_A));
 	U_LL = unit(crossp(U_N, R_P));
@@ -1699,7 +1699,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 		}
 		oneclickcoast(R_A, V_A, mjd0 + t_S / 24.0 / 3600.0, t - t_S, R_A, V_A, gravref, gravref);
 		Rot2 = OrbMech::GetRotationMatrix(body, mjd0 + t / 24.0 / 3600.0);
-		R_P = rhmul(Rot2, R_gs);
+		R_P = mul(Rot_J_B, rhmul(Rot2, R_gs));
 
 		U_N = unit(crossp(R_A, V_A));
 		U_LL = unit(crossp(U_N, R_P));
@@ -2436,7 +2436,7 @@ VECTOR3 RotateVelocityVector(VECTOR3 R, VECTOR3 V, double ang)
 	return V_apo - V;
 }
 
-double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d)
+double P29TimeOfLongitude(MATRIX3 Rot_J_B, VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d)
 {
 	MATRIX3 Rot2;
 	VECTOR3 mu_N, mu_S, mu_Z, U_Z, mu_E, mu_C, R, V, mu_D, mu_E_apo;
@@ -2462,10 +2462,9 @@ double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref,
 		F = 327.8 / 328.8;
 	}
 
-	U_Z = _V(0.0, 1.0, 0.0);
+	U_Z = _V(0.0, 0.0, 1.0);
 	Rot2 = OrbMech::GetRotationMatrix(body, MJD);
-	mu_Z = mul(Rot2, U_Z);
-	mu_Z = _V(mu_Z.x, mu_Z.z, mu_Z.y);
+	mu_Z = mul(Rot_J_B, rhmul(Rot2, U_Z));
 
 	mu_N = unit(crossp(R0, V0));
 	mu_S = unit(crossp(mu_N, R0));
@@ -2480,7 +2479,7 @@ double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref,
 
 	while (absphidminphi > eps_phi && absphidminphi < PI2 - eps_phi)
 	{
-		latlong_from_J2000(R, t, gravref, lambda, phi);
+		latlong_from_BRCS(Rot_J_B, R, t, gravref, lambda, phi);
 
 		absphidminphi = abs(phi_d - phi);
 		phidminphi = phi_d - phi;
@@ -2553,17 +2552,15 @@ double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref,
 	return t;
 }
 
-void latlong_from_J2000(VECTOR3 R, double MJD, int RefBody, double &lat, double &lng)
+void latlong_from_BRCS(MATRIX3 Rot_J_B, VECTOR3 R, double MJD, int RefBody, double &lat, double &lng)
 {
 	MATRIX3 Rot = OrbMech::GetRotationMatrix(RefBody, MJD);
-	VECTOR3 R_equ = rhtmul(Rot, R);
+	VECTOR3 R_equ = rhtmul(Rot, tmul(Rot_J_B, R));
 	latlong_from_r(R_equ, lat, lng);
 }
 
-void latlong_from_J2000(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng)
+void latlong_from_BRCS(MATRIX3 Rot_J_B, VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng)
 {
-	MATRIX3 Rot2;
-	VECTOR3 R_ecl, R_equ;
 	int body;
 
 	if (gravref == oapiGetObjectByName("Earth"))
@@ -2575,12 +2572,7 @@ void latlong_from_J2000(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, d
 		body = BODY_MOON;
 	}
 
-	Rot2 = OrbMech::GetRotationMatrix(body, MJD);
-
-	R_ecl = _V(R.x, R.z, R.y);
-	R_equ = tmul(Rot2, R_ecl);
-
-	latlong_from_r(_V(R_equ.x, R_equ.z, R_equ.y), lat, lng);
+	latlong_from_BRCS(Rot_J_B, R, MJD, body, lat, lng);
 }
 
 void latlong_from_r(VECTOR3 R, double &lat, double &lng)
@@ -2602,7 +2594,7 @@ VECTOR3 r_from_latlong(double lat, double lng, double r)
 	return r_from_latlong(lat, lng)*r;
 }
 
-bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt)
+bool groundstation(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt)
 {
 	double v1, dt_old,h, e, theta0,a,T,n, E_0, t_0, E_1, t_f, R_E, dt_max, rev, T_p, mu;
 	VECTOR3 R_GS, gndst;
@@ -2636,9 +2628,8 @@ bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double la
 	{
 
 		Rot = GetRotationMatrix(body, MJD+dt/24.0/3600.0);
-		R_GS = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*R_E;
-		gndst = mul(Rot, R_GS);
-		gndst = _V(gndst.x, gndst.z, gndst.y);
+		R_GS = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)))*R_E;
+		gndst = mul(Rot_J_B, rhmul(Rot, R_GS));
 		los = gslineofsight(R, V, gndst, planet, rise, v1);
 		if (!los)
 		{
@@ -2748,7 +2739,7 @@ bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool ris
 	return true;
 }
 
-int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet)
+int findNextAOS(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet)
 {
 	double lat, lng, dt, dtmin;
 	int gsmin;
@@ -2760,7 +2751,7 @@ int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet)
 	{
 		lat = groundstations[i][0];
 		lng = groundstations[i][1];
-		los = groundstation(R, V, MJD, planet, lat, lng, 1, dt);
+		los = groundstation(Rot_J_B, R, V, MJD, planet, lat, lng, 1, dt);
 		if (los && dt < dtmin)
 		{
 			gsmin = i;
@@ -2770,12 +2761,11 @@ int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet)
 	return gsmin;
 }
 
-double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future)
+double sunrise(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future)
 {
 	//midnight = 0-> rise=0:sunset, rise=1:sunrise
 	//midnight = 1-> rise=0:midday, rise=1:midnight
 	double PlanPos[12];
-	MATRIX3 Rot;
 	VECTOR3 PlanVec, R_EM, R_SE;
 	OBJHANDLE hEarth, hMoon, hSun;
 	double mu, v1;
@@ -2797,9 +2787,6 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	dt_old = 1;
 	i = 0;
 	imax = 20;
-
-	//Get approximate coordinate system
-	Rot = J2000EclToBRCSMJD(MJD);
 
 	while (abs(dt_old - dt) > 0.5 && i < imax)
 	{
@@ -2841,7 +2828,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 		}
 
 		//Convert from ecliptic to Besselian
-		PlanVec = mul(Rot, PlanVec);
+		PlanVec = mul(Rot_J_B, PlanVec);
 
 		if (midnight)
 		{
@@ -4970,7 +4957,7 @@ double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu)
 	return sqrt(mu / pow(GetSemiMajorAxis(R, V, mu), 3));
 }
 
-double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
+double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat, double lng)
 {
 	//INPUT:
 	// R05G: position vector at 0.05G in BRCS coordinates
@@ -4984,7 +4971,7 @@ double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
 
 	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
 	Rot2 = GetRotationMatrix(BODY_EARTH, MJD05G);
-	R_LS = rhmul(Rot2, R_P);
+	R_LS = mul(Rot_J_B, rhmul(Rot2, R_P));
 	URT0 = R_LS;
 	WIE = 72.9211505e-6;
 	KTETA = 1000.0;

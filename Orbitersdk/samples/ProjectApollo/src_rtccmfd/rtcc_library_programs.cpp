@@ -504,7 +504,7 @@ int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int
 	//VECTORS: table of input vector(s)
 	//GMT: GMT of vector(s)
 	//type: -1 = state vector, 0 = unit vector, 1 = position vector, 2 = velocity vector
-	//in and out: 0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP
+	//in and out: 0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP, 5 = MCTVR
 	//OUTPUT: Table of output vector(s), may be the same as VECTORS
 
 	OUTPUT = VECTORS;
@@ -512,6 +512,26 @@ int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int
 	if (in == out)
 	{
 		return 0;
+	}
+
+	bool IsMCTVR = false;
+
+	if (in == 5 || out == 5)
+	{
+		if (type != -1)
+		{
+			return 1;
+		}
+
+		if (in == 5)
+		{
+			in = 3;
+		}
+		else
+		{
+			out = 3;
+		}
+		IsMCTVR = true;
 	}
 
 	//Set up options
@@ -719,19 +739,31 @@ int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int
 				right = false;
 			}
 
-			if (right)
+			//MCTVR desired and conversion is MCT to MCI. Add rotational velocity.
+			if (IsMCTVR && conv[i] == 3)
 			{
-				for (unsigned j = 0; j < OUTPUT.size(); j++)
-				{
-					OUTPUT[j] = mul(Rot, OUTPUT[j]);
-				}
+				OUTPUT[1] += crossp(_V(0, 0, 1)*OrbMech::w_Moon, OUTPUT[0]);
 			}
+
+			if (right)
+				{
+					for (unsigned j = 0; j < OUTPUT.size(); j++)
+					{
+						OUTPUT[j] = mul(Rot, OUTPUT[j]);
+					}
+				}
 			else
 			{
 				for (unsigned j = 0; j < OUTPUT.size(); j++)
 				{
 					OUTPUT[j] = tmul(Rot, OUTPUT[j]);
 				}
+			}
+
+			//MCTVR desired and conversion is MCI to MCT. Subtract rotational velocity.
+			if (IsMCTVR && conv[i] == 2)
+			{
+				OUTPUT[1] -= crossp(_V(0, 0, 1)*OrbMech::w_Moon, OUTPUT[0]);
 			}
 		}
 	}

@@ -37,7 +37,7 @@ namespace rtcc
 
 	bool LOITargeting::MAIN()
 	{
-		MATRIX3 Rot;
+		EphemerisData2 sv_LLS_sg, sv_LLS;
 		double psi_XTRA;
 
 		RA_LPO = opt.HA_LPO + opt.R_LLS;
@@ -79,17 +79,23 @@ namespace rtcc
 			cos_gamma = cos_gamma / abs(cos_gamma);
 		}
 		gamma = -OrbMech::sign(opt.DW)*acos(cos_gamma);
-		VECTOR3 R_LLS_sg, V_LLS_sg, R_LLS, V_LLS, R_LOI, V_LOI, R_LOI2, V_LOI2, U_DS, U_XTRA, NU, U_MN, U_MX, U, R_N, V_N, U_S, U_PL, U_L;
+		VECTOR3 R_LOI, V_LOI, R_LOI2, V_LOI2, U_DS, U_XTRA, NU, U_MN, U_MX, U, R_N, V_N, U_S, U_PL, U_L;
 		double DA, eta2, theta_cop, r_N, R_P, dt, cos_dpsi_N, theta, dv_p, dv_m, dt3, dh_a, dh_p, dw_p, a_L, e_L;
 
-		T_LLS = TIME(a_LLS, e_LLS, opt.lng_LLS, opt.lat_LLS, DA, eta2, dt3);
-		OrbMech::adbar_from_rv(R, V, opt.lng_LLS, opt.lat_LLS, PI05 - gamma, opt.psi_DS, R_LLS_sg, V_LLS_sg);
+		if (TIME(a_LLS, e_LLS, opt.lng_LLS, opt.lat_LLS, DA, eta2, dt3, T_LLS))
+		{
+			return true;
+		}
+		OrbMech::adbar_from_rv(R, V, opt.lng_LLS, opt.lat_LLS, PI05 - gamma, opt.psi_DS, sv_LLS_sg.R, sv_LLS_sg.V);
 		bool firstpass = true;
 	LOI_MAIN_BACKUP:
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, OrbMech::MJDfromGET(T_LLS, opt.GMTBASE));
-		R_LLS = rhmul(Rot, R_LLS_sg);
-		V_LLS = rhmul(Rot, V_LLS_sg);
-		BACKUP(R_LLS, V_LLS, a_LLS, T_LLS, DA, eta2, dt3, dh_a, dh_p, dw_p, a_L, e_L, U_PL, R_LOI, V_LOI);
+		sv_LLS_sg.GMT = T_LLS;
+		if (pRTCC->ELVCNV(sv_LLS_sg, 3, 2, sv_LLS))
+		{
+			return true;
+		}
+
+		BACKUP(sv_LLS.R, sv_LLS.V, a_LLS, T_LLS, DA, eta2, dt3, dh_a, dh_p, dw_p, a_L, e_L, U_PL, R_LOI, V_LOI);
 		if (firstpass)
 		{
 			firstpass = false;
@@ -108,11 +114,15 @@ namespace rtcc
 		DWPSAV = dw_p;
 		U_DS = unit(crossp(R_LOI, V_LOI));
 
-		OrbMech::adbar_from_rv(R, V, opt.lng_LLS, opt.lat_LLS, PI05 - gamma, psi_XTRA, R_LLS_sg, V_LLS_sg);
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, OrbMech::MJDfromGET(T_LLS, opt.GMTBASE));
-		R_LLS = rhmul(Rot, R_LLS_sg);
-		V_LLS = rhmul(Rot, V_LLS_sg);
-		BACKUP(R_LLS, V_LLS, a_LLS, T_LLS, DA, eta2, dt3, dh_a, dh_p, dw_p, a_L, e_L, U_PL, R_LOI2, V_LOI2);
+		OrbMech::adbar_from_rv(R, V, opt.lng_LLS, opt.lat_LLS, PI05 - gamma, psi_XTRA, sv_LLS_sg.R, sv_LLS_sg.V);
+		sv_LLS_sg.GMT = T_LLS;
+
+		if (pRTCC->ELVCNV(sv_LLS_sg, 3, 2, sv_LLS))
+		{
+			return true;
+		}
+
+		BACKUP(sv_LLS.R, sv_LLS.V, a_LLS, T_LLS, DA, eta2, dt3, dh_a, dh_p, dw_p, a_L, e_L, U_PL, R_LOI2, V_LOI2);
 		U_XTRA = unit(crossp(R_LOI2, V_LOI2));
 		U_N = unit(crossp(U_DS, U_XTRA));
 		NU = unit(crossp(U_N, U_DS));
@@ -327,11 +337,11 @@ namespace rtcc
 		return false;
 	}
 
-	double LOITargeting::TIME(double a_LLS, double e_LLS, double lng_LLS, double lat_LLS, double &DA, double &eta2, double &dt3)
+	bool LOITargeting::TIME(double a_LLS, double e_LLS, double lng_LLS, double lat_LLS, double &DA, double &eta2, double &dt3, double &T_LLS)
 	{
 		bool recycle = false;
 		VECTOR3 U_LLS_sg, U_LLS;
-		double R1, DR1, R2, dt1, dt2, T_LLS, a1, e1, da;
+		double R1, DR1, R2, dt1, dt2, a1, e1, da;
 
 		DR1 = modf(opt.REVS1, &R1)*PI2;
 		R2 = (double)opt.REVS2;
@@ -353,7 +363,10 @@ namespace rtcc
 		U_LLS_sg = OrbMech::r_from_latlong(opt.lat_LLS, opt.lng_LLS);
 
 	LOI_TIME_A:
-		U_LLS = rhmul(OrbMech::GetRotationMatrix(BODY_MOON, opt.GMTBASE + T_LLS / 24.0 / 3600.0), U_LLS_sg);
+		if (pRTCC->ELVCNV(U_LLS_sg, T_LLS, 0, 3, 2, U_LLS))
+		{
+			return true;
+		}
 		da = acos(dotp(U_LLS, U_PC));
 		if (dotp(crossp(U_LLS, U_PC), U_H) > 0)
 		{
@@ -374,7 +387,7 @@ namespace rtcc
 			recycle = true;
 			goto LOI_TIME_A;
 		}
-		return T_LLS;
+		return false;
 	}
 
 	void LOITargeting::BACKUP(VECTOR3 R_LLS, VECTOR3 V_LLS, double a_LLS, double T_LLS, double DA, double eta2, double dt3, double &dh_a, double &dh_p, double &dw_p, double &a_L, double &e_L, VECTOR3 &U_PL, VECTOR3 &R_LOI, VECTOR3 &V_LOI)

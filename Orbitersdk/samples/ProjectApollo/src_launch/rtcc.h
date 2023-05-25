@@ -3889,6 +3889,8 @@ public:
 	{
 		//Block 1-9
 		MATRIX3 IU1_REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
+		//Block 11-19
+		MATRIX3 IU2_REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 		//Block 56-62
 		double GMT_T;
 		VECTOR3 R_T;

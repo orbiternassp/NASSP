@@ -21,6 +21,7 @@
 #include "Orbitersdk.h"
 #include "OrbMech.h"
 #include "LMGuidanceSim.h"
+#include "rtcc.h"
 #include "LDPP.h"
 
 LDPPOptions::LDPPOptions()
@@ -65,7 +66,7 @@ LDPPResults::LDPPResults()
 const double LDPP::zeta_theta = 0.00613*RAD; //0.1NM crossrange
 const double LDPP::zeta_t = 0.01;
 
-LDPP::LDPP()
+LDPP::LDPP(RTCC *r) : RTCCModule(r)
 {
 	mu = OrbMech::mu_Moon;
 	I_PC = 0;
@@ -149,7 +150,7 @@ int LDPP::LDPPMain(LDPPResults &out)
 	
 	do
 	{
-		MJD = OrbMech::P29TimeOfLongitude(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, hMoon, opt.Lng_LS);
+		MJD = OrbMech::P29TimeOfLongitude(pRTCC->SystemParameters.MAT_J2000_BRCS, sv_CSM.R, sv_CSM.V, sv_CSM.MJD, hMoon, opt.Lng_LS);
 		t_LS = OrbMech::GETfromMJD(MJD, opt.GETbase);
 		sv_CSM = OrbMech::coast(sv_CSM, (MJD - sv_CSM.MJD)*24.0*3600.0);
 		U_CSM = ArgLat(sv_CSM.R, sv_CSM.V);
@@ -597,7 +598,7 @@ LDPP_30_1:
 	dt = opt.TH[i - 1] - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
 
-	MJD = OrbMech::P29TimeOfLongitude(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, hMoon, opt.Lng_LS);
+	MJD = OrbMech::P29TimeOfLongitude(pRTCC->SystemParameters.MAT_J2000_BRCS, sv_CSM.R, sv_CSM.V, sv_CSM.MJD, hMoon, opt.Lng_LS);
 	dt = (MJD - sv_CSM.MJD)*24.0*3600.0;
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
 
@@ -915,7 +916,7 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 	dt1 = opt.TH[3] - OrbMech::GETfromMJD(sv_L.MJD, opt.GETbase);
 	OrbMech::oneclickcoast(sv_L.R, sv_L.V, sv_L.MJD, dt1, R_TH, V_TH, hMoon, hMoon);
 	MJD_TH = sv_L.MJD + dt1 / 24.0 / 3600.0;
-	MJD_LS = OrbMech::P29TimeOfLongitude(R_TH, V_TH, MJD_TH, hMoon, opt.Lng_LS);
+	MJD_LS = OrbMech::P29TimeOfLongitude(pRTCC->SystemParameters.MAT_J2000_BRCS, R_TH, V_TH, MJD_TH, hMoon, opt.Lng_LS);
 	dt2 = (MJD_LS - MJD_TH)*24.0*3600.0;
 	OrbMech::oneclickcoast(R_TH, V_TH, MJD_TH, dt2, R_L, V_L, hMoon, hMoon);
 	n_L = PI2 / OrbMech::period(R_L, V_L, mu);

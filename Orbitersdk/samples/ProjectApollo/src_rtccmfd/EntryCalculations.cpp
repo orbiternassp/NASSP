@@ -100,7 +100,7 @@ namespace EntryCalculations
 		}
 	}
 
-	void landingsite(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double &lambda, double &phi)
+	void landingsite(MATRIX3 Rot_J_B, VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double &lambda, double &phi)
 	{
 		double t32, v3, S_FPA, gammaE, phie, te, Sphie, Cphie, tLSMJD, l, m, n;
 		VECTOR3 R3, V3, UR3, U_H3, U_LS, LSEF;
@@ -119,12 +119,14 @@ namespace EntryCalculations
 		Cphie = cos(0.00029088821*phie);
 		U_H3 = unit(crossp(crossp(R3, V3), R3));
 		U_LS = UR3*Cphie + U_H3*Sphie;
-		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
+
 		R = OrbMech::GetRotationMatrix(BODY_EARTH, tLSMJD);
-		LSEF = tmul(R, U_LS);
+		LSEF = rhtmul(R, tmul(Rot_J_B, U_LS));
+
 		l = LSEF.x;
-		m = LSEF.z;
-		n = LSEF.y;
+		m = LSEF.y;
+		n = LSEF.z;
+
 		phi = asin(n);
 		if (m > 0)
 		{
@@ -137,19 +139,15 @@ namespace EntryCalculations
 		if (lambda > PI) { lambda -= PI2; }
 	}
 
-	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET)
+	void Reentry(MATRIX3 Rot_J_B, VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET)
 	{
-		double t32, v3, S_FPA, gammaE, phie, te, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface, RCON, mu, EMSAlt;
+		double t32, v3, S_FPA, gammaE, phie, te, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface, RCON, EMSAlt;
 		VECTOR3 R3, V3, UR3, U_H3, U_LS, LSEF;
 		MATRIX3 R;
-		OBJHANDLE hEarth;
 
 		EntryInterface = 400000.0 * 0.3048;
 
-		hEarth = oapiGetObjectByName("Earth");
-
-		RCON = oapiGetSize(hEarth) + EntryInterface;
-		mu = GGRAV*oapiGetMass(hEarth);
+		RCON = OrbMech::R_Earth + EntryInterface;
 
 		if (highspeed)
 		{
@@ -160,8 +158,8 @@ namespace EntryCalculations
 			EMSAlt = 284643.0*0.3048;
 		}
 
-		t32 = OrbMech::time_radius(REI, VEI, RCON - 30480.0, -1, mu);
-		OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, mu);
+		t32 = OrbMech::time_radius(REI, VEI, RCON - 30480.0, -1, OrbMech::mu_Earth);
+		OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, OrbMech::mu_Earth);
 		UR3 = unit(R3);
 		v3 = length(V3);
 		S_FPA = dotp(UR3, V3) / v3;
@@ -175,13 +173,14 @@ namespace EntryCalculations
 		U_LS = UR3*Cphie + U_H3*Sphie;
 
 		tLSMJD = mjd0 + t_LS / 24.0 / 3600.0;
-		//U_LS = tmul(Rot, U_LS);
-		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
+
 		R = OrbMech::GetRotationMatrix(BODY_EARTH, tLSMJD);
-		LSEF = tmul(R, U_LS);
+		LSEF = rhtmul(R, tmul(Rot_J_B, U_LS));
+
 		l = LSEF.x;
-		m = LSEF.z;
-		n = LSEF.y;
+		m = LSEF.y;
+		n = LSEF.z;
+
 		phi = asin(n);
 		if (m > 0)
 		{
@@ -197,8 +196,8 @@ namespace EntryCalculations
 		EntryLngPred = lambda2;
 
 		VECTOR3 R05G, V05G;
-		double dt22 = OrbMech::time_radius(R3, V3, length(R3) - (300000.0 * 0.3048 - EMSAlt), -1, mu);
-		OrbMech::rv_from_r0v0(R3, V3, dt22, R05G, V05G, mu);
+		double dt22 = OrbMech::time_radius(R3, V3, length(R3) - (300000.0 * 0.3048 - EMSAlt), -1, OrbMech::mu_Earth);
+		OrbMech::rv_from_r0v0(R3, V3, dt22, R05G, V05G, OrbMech::mu_Earth);
 
 		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
 		EntryVIO = length(V05G);
@@ -753,9 +752,8 @@ namespace EntryCalculations
 	bool Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, double INTER, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &Incl_apo)
 	{
 		bool NIR;
-		double k4, x2, v2, x2_apo, x2_err, ra, dec, Omega, MJD_EI;
-		VECTOR3 V2, R0_equ, U_H;
-		MATRIX3 Rot;
+		double k4, x2, v2, x2_apo, x2_err, ra, dec, Omega;
+		VECTOR3 V2, U_H;
 
 		k4 = -0.10453;
 		NIR = false;
@@ -763,10 +761,7 @@ namespace EntryCalculations
 		x2 = k4;
 		x2_err = 1.0;
 
-		MJD_EI = MJD0 + dt / 24.0 / 3600.0;
-		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_EI);
-		R0_equ = rhtmul(Rot, R0);
-		OrbMech::ra_and_dec_from_r(R0_equ, ra, dec);
+		OrbMech::ra_and_dec_from_r(R0, ra, dec);
 		//Make sure the inclination is larger than the declination
 		if (Incl <= abs(dec))
 		{
@@ -787,7 +782,6 @@ namespace EntryCalculations
 			Omega = ra - asin(tan(dec) / tan(Incl_apo));
 		}
 		U_H = unit(_V(sin(Omega)*sin(Incl_apo), -cos(Omega)*sin(Incl_apo), cos(Incl_apo)));
-		U_H = rhmul(Rot, U_H);
 
 		while (abs(x2_err) > 0.00001)
 		{
@@ -2211,7 +2205,7 @@ void RetrofirePlanning::RMMDBM()
 		}
 
 		//Calculate landing point
-		EntryCalculations::landingsite(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, lng_IP, lat_IP);
+		EntryCalculations::landingsite(pRTCC->SystemParameters.MAT_J2000_BRCS, sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, lng_IP, lat_IP);
 		//EntryCalculations::LNDING(sv_EI.R, sv_EI.V, pRTCC->GetGMTBase() + sv_EI.GMT / 24.0 / 3600.0, 0.3, 1, 0.0, lng_IP, lat_IP, MJD_L);
 		
 		dlng = lng_T - lng_IP;
@@ -3354,7 +3348,8 @@ void RetrofirePlanning::RMGTTF(std::string source, int i)
 	pRTCC->OnlinePrint(source, message);
 }
 
-EarthEntry::EarthEntry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, bool entrynominal, bool entrylongmanual)
+EarthEntry::EarthEntry(RTCC *r, VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, bool entrynominal, bool entrylongmanual)
+	: RTCCModule(r)
 {
 	MA1 = -6.986643e7;//8e8;
 	C0 = 1.81000432e8;
@@ -3624,7 +3619,7 @@ void EarthEntry::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_lo
 	}
 	t2 = t1 + t21;
 	OrbMech::rv_from_r0v0(R1B, V2, t21, REI, VEI, mu);
-	EntryCalculations::landingsite(REI, VEI, GETbase + t2 / 24.0 / 3600.0, theta_long, theta_lat);
+	EntryCalculations::landingsite(pRTCC->SystemParameters.MAT_J2000_BRCS, REI, VEI, GETbase + t2 / 24.0 / 3600.0, theta_long, theta_lat);
 }
 
 void EarthEntry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
@@ -3699,7 +3694,7 @@ void EarthEntry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21,
 		n2++;
 	}
 	t2 = t1 + t21;
-	EntryCalculations::landingsite(RPRE, VPRE, GETbase + t2 / 24.0 / 3600.0, theta_long, theta_lat);
+	EntryCalculations::landingsite(pRTCC->SystemParameters.MAT_J2000_BRCS, RPRE, VPRE, GETbase + t2 / 24.0 / 3600.0, theta_long, theta_lat);
 	if (n1 == 21)
 	{
 		errorstate = 1;
@@ -3747,7 +3742,7 @@ void EarthEntry::precisionperi(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21,
 	cosg = dotp(unit(RPRE), unit(VPRE));
 	x2 = cosg / sing;
 	t2 = t1 + t21;
-	EntryCalculations::landingsite(RPRE, VPRE, GETbase + t2 / 24.0 / 3600.0, theta_long, theta_lat);
+	EntryCalculations::landingsite(pRTCC->SystemParameters.MAT_J2000_BRCS, RPRE, VPRE, GETbase + t2 / 24.0 / 3600.0, theta_long, theta_lat);
 }
 
 void EarthEntry::newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo)
@@ -4127,7 +4122,7 @@ bool EarthEntry::EntryIter()
 
 		Entry_DV = mul(Q_Xx, DV);
 
-		EntryRTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(t2 + t32 + dt22, GETbase), theta_lat, theta_long);
+		EntryRTGO = OrbMech::CMCEMSRangeToGo(pRTCC->SystemParameters.MAT_J2000_BRCS, R05G, OrbMech::MJDfromGET(t2 + t32 + dt22, GETbase), theta_lat, theta_long);
 		EntryVIO = length(V05G);
 		EntryRET = t2 + t32 + dt22;
 		EntryAng = atan(x2);//asin(dotp(unit(REI), VEI) / length(VEI));
@@ -4897,7 +4892,7 @@ bool RTEEarth::EntryIter()
 
 		Entry_DV = mul(Q_Xx, DV);
 
-		EntryRTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(t2 + t32 + dt22, GMTbase), theta_lat, theta_long);
+		EntryRTGO = OrbMech::CMCEMSRangeToGo(pRTCC->SystemParameters.MAT_J2000_BRCS, R05G, OrbMech::MJDfromGET(t2 + t32 + dt22, GMTbase), theta_lat, theta_long);
 		EntryVIO = length(V05G);
 		EntryRET = t2 + t32 + dt22;
 		EntryAng = atan(x2);//asin(dotp(unit(REI), VEI) / length(VEI));
