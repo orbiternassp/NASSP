@@ -12581,17 +12581,35 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			R_a = 2.0*A_Ins - r_Ins;
 			t_CSI = t_Ins + dt_CSI;
 
-			if (K3 == false || dt_CAN <= 0.0 || opt.dv_CAN <= 0.0)
+			if (opt.LongProfileFirst)
 			{
-				conopt.sv_A = sv_LM_Ins;
+				if (K3 == false)
+				{
+					t_CAN = t_Ins + dt_CAN;
+					sv_CAN = coast(sv_LM_Ins, t_CAN - t_Ins);
+					sv_CAN_apo = sv_CAN;
+					sv_CAN_apo.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.R, sv_CAN.V), _V(opt.dv_CAN, 0.0, 0.0));
+					conopt.sv_A = sv_CAN_apo;
+				}
+				else
+				{
+					conopt.sv_A = sv_LM_Ins;
+				}
 			}
 			else
 			{
-				t_CAN = t_Ins + dt_CAN;
-				sv_CAN = coast(sv_LM_Ins, t_CAN - t_Ins);
-				sv_CAN_apo = sv_CAN;
-				sv_CAN_apo.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.R, sv_CAN.V), _V(opt.dv_CAN, 0.0, 0.0));
-				conopt.sv_A = sv_CAN_apo;
+				if (K3 == false || dt_CAN <= 0.0 || opt.dv_CAN <= 0.0)
+				{
+					conopt.sv_A = sv_LM_Ins;
+				}
+				else
+				{
+					t_CAN = t_Ins + dt_CAN;
+					sv_CAN = coast(sv_LM_Ins, t_CAN - t_Ins);
+					sv_CAN_apo = sv_CAN;
+					sv_CAN_apo.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.R, sv_CAN.V), _V(opt.dv_CAN, 0.0, 0.0));
+					conopt.sv_A = sv_CAN_apo;
+				}
 			}
 
 			conopt.sv_P = sv_CSM_Ins;
@@ -12610,14 +12628,15 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 
 		} while (abs(dV_Inc) > 0.1*0.3048 && K_loop < 10);
 
-		if (opt.IsTwoSegment && R_a < res.R_amin)
+		if (opt.IsTwoSegment && dt_abort > opt.dt_switch)
 		{
 			if (K3 == false)
 			{
 				K_loop = 0;
 				dt_CSI += opt.dt_2CSI;
 				conopt.t_TPI += opt.dt_2TPI;
-				res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo)*(res.R_amin - R_a_apo);
+				opt.dt_switch += opt.dt_2switch;
+				res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo);
 				if (dt_CAN >= dt_CSI)
 				{
 					dt_CAN = 0.0;

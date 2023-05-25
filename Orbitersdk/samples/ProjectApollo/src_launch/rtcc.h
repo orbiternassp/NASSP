@@ -914,8 +914,14 @@ struct PDAPOpt //Powered Descent Abort Program
 	double dt_CAN = 50.0*60.0;
 	//DV of the canned maneuver
 	double dv_CAN = 10.0*0.3048;
-	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
+	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius;
 	double h_amin = 30.0*1852.0;
+	//Time from PDI to switchover
+	double dt_switch = 10.0*60.0;
+	//Time added to dt_switch for generation of the second set of targeting coefficients
+	double dt_2switch = 7.0*60.0;
+	//Flag to use the long profile in the first set of targeting coefficients
+	bool LongProfileFirst = false;
 };
 
 struct PDAPResults
@@ -4687,6 +4693,7 @@ private:
 	bool CalculationMTP_F(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_H1(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_J3(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
 	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
