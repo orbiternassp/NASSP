@@ -100,7 +100,6 @@ public:
 	void menuCycleMarkerUp();
 	void menuCycleMarkerDown();
 	void menuSetGMPInput();
-	void menuCycleOrbAdjAltRef();
 	void menuMissionNumberInput();
 	void set_MissionNumber(int mission);
 	void SPQcalc();
@@ -221,6 +220,7 @@ public:
 	void set_svtarget();
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
+	void menuCycleLunarEntryPADSxtOption();
 	void GetEntryTargetfromAGC();
 	void menuSetRTEReentryTime();
 	void set_RTEReentryTime(double t);

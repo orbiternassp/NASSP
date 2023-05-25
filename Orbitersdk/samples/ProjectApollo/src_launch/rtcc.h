@@ -553,6 +553,7 @@ struct LunarEntryPADOpt
 	double lat; //splashdown latitude
 	double lng; //splashdown longitude
 	SV sv0;
+	bool SxtStarCheckAttitudeOpt = true; //true = sextant star attitude check at entry attitude, false = sextant star check at horizon check attitude
 };
 
 struct TLIPADOpt

@@ -282,6 +282,7 @@ struct RTCCSystemParameters
 		MCCNMC = 3443.93359;
 		MCSMLR = 1738090.0;
 		MCCRPD = 0.01745329251; // PI/180
+		MCECAP = 6373368.0; //0.999247902 in er
 		MCEBAS = 1.0;
 		MCEASQ = 4.0619437e13;
 		MCEBSQ = 4.0619437e13;
@@ -695,6 +696,8 @@ struct RTCCSystemParameters
 	double MCSMLR;
 	//Radians per degree
 	double MCCRPD;
+	//Radius of earth at Cape
+	double MCECAP;
 	//Geodetic Earth constant B²/A²
 	double MCEBAS;
 	//Geodetic Earth constant A²

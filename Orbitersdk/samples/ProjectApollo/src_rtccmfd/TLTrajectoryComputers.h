@@ -214,7 +214,7 @@ protected:
 
 	//Constants
 	double R_E, R_M, mu_E, mu_M;
-	double isp_SPS, isp_DPS, isp_MCC, Wdot;
+	double isp_SPS, isp_DPS, isp_MCC;
 	double F_I_SIVB; //S-IVB thrust magnitude from ignition to MRS
 	double F_SIVB; //S-IVB thrust magnitude from MRS to cutoff
 	double WDOT_SIVB; //Mass flow rate of S-IVB

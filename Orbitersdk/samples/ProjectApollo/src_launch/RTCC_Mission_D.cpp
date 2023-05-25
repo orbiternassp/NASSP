@@ -392,7 +392,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.ManeuverCode = RTCC_GMP_CPH;
 			gmpopt.dW = 0.8*RAD;	//To give more than 40 seconds burn time
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(54, 10, 0); //Using 54:00:00 was finding the wrong solution
-			gmpopt.AltRef = true;
 
 			in.DETU = 18.0;
 		}
@@ -1404,7 +1403,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (fcn == 45)
 		{
-			gmpopt.AltRef = 1;
 			gmpopt.H_A = 130.0*1852.0;
 			gmpopt.H_P = 97.0*1852.0;	//Should be 95, but ensures that even with residuals and drag the perigee won't fall below 95 at SPS-7, which makes the calculation much more reliable
 			gmpopt.long_D = 122.3*RAD;
@@ -1416,7 +1414,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else
 		{
-			gmpopt.AltRef = 1;
 			gmpopt.H_A = 210.0*1852.0;
 			gmpopt.H_P = 95.0*1852.0;	//Should be 97, but, see above
 			gmpopt.long_D = -45.0*RAD;
