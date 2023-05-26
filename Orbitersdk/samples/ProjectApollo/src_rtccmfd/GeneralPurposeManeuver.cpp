@@ -65,28 +65,12 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 
 	if (sv1.RBI == BODY_EARTH)
 	{
-		if (opt->AltRef == 0)
-		{
-			R_E = 6371.0e3;
-		}
-		else
-		{
-			R_E = OrbMech::R_Earth;
-		}
-
+		R_E = pRTCC->SystemParameters.MCECAP;
 		mu = OrbMech::mu_Earth;
 	}
 	else
 	{
-		if (opt->AltRef == 0)
-		{
-			R_E = OrbMech::R_Moon;
-		}
-		else
-		{
-			R_E = pRTCC->BZLAND.rad[RTCC_LMPOS_BEST];
-		}
-
+		R_E = pRTCC->BZLAND.rad[RTCC_LMPOS_BEST];
 		mu = OrbMech::mu_Moon;
 	}
 
@@ -784,6 +768,7 @@ void RTCCGeneralPurposeManeuverProcessor::HeightManeuver(bool circ)
 		pRTCC->PMMAEGS(aeg.Header, sv_a, sv_temp);
 		if (aeg.Header.ErrorInd)
 		{
+			ErrorIndicator = 3;
 			return;
 		}
 		if (I == 0)

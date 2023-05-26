@@ -221,7 +221,4 @@ protected:
 	TLMCCMEDQuantities MEDQuantities;
 
 	TLMCCDataTable outtab;
-
-	//Constants
-	double isp_SPS, isp_DPS, isp_MCC, Wdot;
 };
