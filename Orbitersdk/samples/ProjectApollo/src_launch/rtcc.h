@@ -120,6 +120,12 @@ class Saturn;
 #define RTCC_LMPOS_AGS 2
 #define RTCC_LMPOS_MED 3
 
+#define RTCC_COORDINATES_ECI 0
+#define RTCC_COORDINATES_ECT 1
+#define RTCC_COORDINATES_MCI 2
+#define RTCC_COORDINATES_MCT 3
+#define RTCC_COORDINATES_EMP 4
+
 //MANUAL ENTRY DEVICES
 
 //Computation for Lunar Descent Planning
@@ -708,8 +714,8 @@ struct ASCPADOpt
 	double TIG;
 	double v_LH;
 	double v_LV;
-	SV sv_CSM;
-	MATRIX3 Rot_VL;	//Rotation Matrix, vessel to local, left-handed
+	EphemerisData sv_CSM;
+	MATRIX3 Rot_VL;	//Rotation Matrix, vessel to local, right-handed
 };
 
 struct LMARKTRKPADOpt
@@ -2479,7 +2485,7 @@ public:
 	int ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	double CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
-	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
+	VECTOR3 LOICrewChartUpdateProcessor(EphemerisData sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt, int veh);

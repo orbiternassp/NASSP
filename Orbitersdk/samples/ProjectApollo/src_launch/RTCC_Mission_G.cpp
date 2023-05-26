@@ -1887,7 +1887,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		ASCPADOpt ascopt;
 		LunarLiftoffTimeOpt opt;
 		SV sv_CSM, sv_Ins, sv_IG;
-		MATRIX3 Rot, Rot2;
 		VECTOR3 R_LS;
 		char buffer1[100], buffer2[1000];
 		double m0, theta_1, dt_1, dv;
@@ -1896,8 +1895,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
-		calcParams.tgt->GetRotationMatrix(Rot);
-		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
 
 		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
@@ -1957,11 +1954,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.TPI = PZLRPT.data[1].T_TPI;
 
 		ascopt.R_LS = R_LS;
-		ascopt.sv_CSM = sv_CSM;
+		ascopt.sv_CSM = ConvertSVtoEphemData(sv_CSM);
 		ascopt.TIG = calcParams.LunarLiftoff;
 		ascopt.v_LH = opt.v_LH;
 		ascopt.v_LV = opt.v_LV;
-		ascopt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
+		ascopt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(calcParams.tgt);
 
 		LunarAscentPAD(ascopt, *form);
 
@@ -2347,26 +2344,23 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMASCPAD * form = (AP11LMASCPAD*)pad;
 
 		ASCPADOpt ascopt;
-		SV sv_CSM;
-		MATRIX3 Rot, Rot2;
+		EphemerisData sv_CSM;
 		VECTOR3 R_LS;
 		double m0;
 		char buffer1[128];
 
-		sv_CSM = StateVectorCalc(calcParams.src);
+		sv_CSM = StateVectorCalcEphem(calcParams.src);
 		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
-		calcParams.tgt->GetRotationMatrix(Rot);
-		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
 
 		ascopt.R_LS = R_LS;
 		ascopt.sv_CSM = sv_CSM;
 		ascopt.TIG = calcParams.LunarLiftoff;
 		ascopt.v_LH = DeltaV_LVLH.x;
 		ascopt.v_LV = DeltaV_LVLH.y;
-		ascopt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
+		ascopt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(calcParams.tgt);
 
 		LunarAscentPAD(ascopt, *form);
 

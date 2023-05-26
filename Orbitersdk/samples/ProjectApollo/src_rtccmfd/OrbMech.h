@@ -328,7 +328,6 @@ namespace OrbMech {
 	bool groundstation(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
 	bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	int findNextAOS(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
-	MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z);
 	void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff);
 	void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &m_cutoff, double &t_go);
 	//void poweredflight2(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
@@ -396,7 +395,7 @@ namespace OrbMech {
 	double DecToDouble(int dec1, int dec2);
 	double round(double number);
 	double trunc(double d);
-	void normalizeAngle(double & a);
+	void normalizeAngle(double &a, bool positive = true);
 	double quadratic(double *T, double *DV);
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
@@ -412,8 +411,7 @@ namespace OrbMech {
 	VECTOR3 GimbalAngleConversion(MATRIX3 REFSMMAT1, VECTOR3 GimbalAngles, MATRIX3 REFSMMAT2, bool isCSM);
 	//Rotation matrix from inertial to LVLH
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);
-	MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG);
-	MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG);
+	MATRIX3 GetVesselToLocalRotMatrix(VESSEL *v);
 	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
 	double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat, double lng);

@@ -4028,28 +4028,6 @@ void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
 	}
 }
 
-MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z)
-{
-	VECTOR3 R_P, g_p, REFS0, REFS3, REFS6, E, S, U_Z;
-	MATRIX3 Rot1;
-
-	Rot1 = GetRotationMatrix(BODY_EARTH, mjd);
-	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
-	g_p = -unit(R_P);
-	U_Z = _V(0.0, 0.0, 1.0);
-	REFS6 = unit(g_p);
-	E = unit(crossp(REFS6, U_Z));
-	S = unit(crossp(E, REFS6));
-	REFS0 = E*sin(A_Z) + S*cos(A_Z);
-	REFS3 = unit(crossp(REFS6, REFS0));
-
-	REFS0 = rhmul(Rot1, REFS0);
-	REFS3 = rhmul(Rot1, REFS3);
-	REFS6 = rhmul(Rot1, REFS6);
-
-	return _M(REFS0.x, REFS0.y, REFS0.z, REFS3.x, REFS3.y, REFS3.z, REFS6.x, REFS6.y, REFS6.z);
-}
-
 void REVUP(VECTOR3 R, VECTOR3 V, double n, double mu, VECTOR3 &R1, VECTOR3 &V1, double &t)
 {
 	double a;
@@ -4223,14 +4201,16 @@ MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V)
 	return _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
 }
 
-MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG)
+MATRIX3 GetVesselToLocalRotMatrix(VESSEL *v)
 {
-	return mul(tmat(Rot_LG), Rot_VG);
-}
+	MATRIX3 Rot_VG, Rot_LG;
 
-MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG)
-{
-	return mul(Rot_LG, Rot_VL);
+	//Vessel to global
+	v->GetRotationMatrix(Rot_VG);
+	//Local to global
+	oapiGetRotationMatrix(v->GetGravityRef(), &Rot_LG);
+	//Vessel to local
+	return MatrixRH_LH(mul(tmat(Rot_LG), Rot_VG));
 }
 
 void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff)
@@ -4729,11 +4709,18 @@ double trunc(double d)
 	return (d > 0) ? floor(d) : ceil(d);
 }
 
-void normalizeAngle(double & a)
+void normalizeAngle(double & a, bool positive)
 {
 	a = fmod(a, PI2);
 	if (a < 0)
 		a += PI2;
+	if (!positive)
+	{
+		if (a > PI)
+		{
+			a -= PI2;
+		}
+	}
 }
 
 double quadratic(double *T, double *DV)

@@ -3670,14 +3670,11 @@ int ARCore::subThread()
 		}
 
 		ASCPADOpt opt;
-		SV sv_CSM;
-		MATRIX3 Rot, Rot2;
+		EphemerisData sv_CSM;
 
-		sv_CSM = GC->rtcc->StateVectorCalc(target);
-		vessel->GetRotationMatrix(Rot);
-		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
+		sv_CSM = GC->rtcc->StateVectorCalcEphem(target);
 
-		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
+		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(vessel);
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_CSM = sv_CSM;
 		opt.TIG = t_LunarLiftoff;

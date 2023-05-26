@@ -2718,34 +2718,25 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		AP12LMASCPAD * form = (AP12LMASCPAD*)pad;
 
-		SV sv_CSM;
-		MATRIX3 Rot, Rot2, Rot_VL;
-		VECTOR3 R_LS;
-		double GETbase, m0, m1, TIG, v_LH, v_LV;
+		ASCPADOpt opt;
+		double m0, m1;
 
 		//Definitions
-		TIG = calcParams.LunarLiftoff;
-		v_LH = DeltaV_LVLH.x;
-		v_LV = DeltaV_LVLH.y;
+		opt.TIG = calcParams.LunarLiftoff;
+		opt.v_LH = DeltaV_LVLH.x;
+		opt.v_LV = DeltaV_LVLH.y;
 
-		GETbase = CalcGETBase();
-		sv_CSM = StateVectorCalc(calcParams.src);
-		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
+		opt.sv_CSM = StateVectorCalcEphem(calcParams.src);
+		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
 		m1 = calcParams.src->GetMass();
 
-		calcParams.tgt->GetRotationMatrix(Rot);
-		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
-
-		Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
+		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(calcParams.tgt);
 
 		// Calculate ascent PAD
-		SV sv_Ins, sv_CSM_TIG;
-		MATRIX3 Rot_LG, Rot_VG;
-		VECTOR3 R_LSP, Q, U_R, Z_B, X_AGS, Y_AGS, Z_AGS;
-		double CR, MJD_TIG, SMa, R_D, delta_L, sin_DL, cos_DL, KFactor;
+		double KFactor;
 
 		int hh, mm;
 		double ss;
@@ -2758,42 +2749,18 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		OrbMech::SStoHHMMSS(GETfromGMT(GetAGSClockZero()), hh, mm, ss);
 
-		MJD_TIG = OrbMech::MJDfromGET(TIG, GETbase);
-		sv_CSM_TIG = coast(sv_CSM, TIG - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
+		AP11LMASCPAD pad2;
 
-		ELVCNV(R_LS, GMTfromGET(TIG), 1, 3, 2, R_LSP);
+		LunarAscentPAD(opt, pad2);
 
-		Q = unit(crossp(sv_CSM_TIG.V, sv_CSM_TIG.R));
-		U_R = unit(R_LSP);
-		R_D = length(R_LSP) + 60000.0*0.3048;
-		CR = -R_D * asin(dotp(U_R, Q));
-
-		sv_Ins.R = _V(R_D, 0, 0);
-		sv_Ins.V = _V(v_LV, v_LH, 0);
-		sv_Ins.gravref = sv_CSM_TIG.gravref;
-		SMa = OrbMech::GetSemiMajorAxis(sv_Ins.R, sv_Ins.V, OrbMech::mu_Moon);
-
-		Rot_LG = OrbMech::GetRotationMatrix(BODY_MOON, MJD_TIG);
-		Rot_VG = OrbMech::GetVesselToGlobalRotMatrix(Rot_VL, Rot_LG);
-		Z_B = mul(Rot_VG, _V(0, 0, 1));
-		Z_B = unit(_V(Z_B.x, Z_B.z, Z_B.y));
-		X_AGS = U_R;
-		Z_AGS = unit(crossp(-Q, X_AGS));
-		Y_AGS = unit(crossp(Z_AGS, X_AGS));
-
-		delta_L = atan2(dotp(Z_B, Z_AGS), dotp(Z_B, Y_AGS));
-		sin_DL = sin(delta_L);
-		cos_DL = cos(delta_L);
-
-		form->CR = CR / 1852.0;
-		form->TIG = TIG;
-		form->V_hor = v_LH / 0.3048;
-		form->V_vert = v_LV / 0.3048;
-		form->DEDA047 = OrbMech::DoubleToDEDA(sin_DL, 14);
-		form->DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 14);
-		form->DEDA225_226 = SMa / 0.3048 / 100.0;
-		form->DEDA231 = length(R_LS) / 0.3048 / 100.0;
-		form->DEDA465 = v_LV / 0.3048;
+		form->CR = pad2.CR;
+		form->TIG = pad2.TIG;
+		form->V_hor = pad2.V_hor;
+		form->V_vert = form->DEDA465 = pad2.V_vert;
+		form->DEDA047 = pad2.DEDA047;
+		form->DEDA053 = pad2.DEDA053;
+		form->DEDA225_226 = pad2.DEDA225_226;
+		form->DEDA231 = pad2.DEDA231;
 		form->TIG_2 = TimeofIgnition;
 		form->LMWeight = m0 / 0.45359237;
 		form->CSMWeight = m1 / 0.45359237;

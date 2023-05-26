@@ -525,11 +525,11 @@ int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int
 
 		if (in == 5)
 		{
-			in = 3;
+			in = RTCC_COORDINATES_MCT;
 		}
 		else
 		{
-			out = 3;
+			out = RTCC_COORDINATES_MCT;
 		}
 		IsMCTVR = true;
 	}
@@ -537,102 +537,102 @@ int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int
 	//Set up options
 	int num_conv = 0;
 	int conv[3]; //0 = ECI to MCI, 1 = MCI to ECI, 2 = MCI to MCT, 3 = MCT to MCI, 4 = ECI to ECT, 5 = ECT to ECI, 6 = MCI to EMP, 7 = EMP to MCI 
-	if (in == 0 && out == 1) //ECI to ECT
+	if (in == RTCC_COORDINATES_ECI && out == RTCC_COORDINATES_ECT) //ECI to ECT
 	{
 		conv[0] = 4;
 		num_conv = 1;
 	}
-	else if (in == 0 && out == 2) //ECI to MCI
+	else if (in == RTCC_COORDINATES_ECI && out == RTCC_COORDINATES_MCI) //ECI to MCI
 	{
 		conv[0] = 0;
 		num_conv = 1;
 	}
-	else if (in == 0 && out == 3) //ECI to MCT
+	else if (in == RTCC_COORDINATES_ECI && out == RTCC_COORDINATES_MCT) //ECI to MCT
 	{
 		conv[0] = 0; conv[1] = 2;
 		num_conv = 2;
 	}
-	else if (in == 0 && out == 4) //ECI to EMP
+	else if (in == RTCC_COORDINATES_ECI && out == RTCC_COORDINATES_EMP) //ECI to EMP
 	{
 		conv[0] = 0; conv[1] = 6;
 		num_conv = 2;
 	}
-	else if (in == 1 && out == 0) //ECT to ECI
+	else if (in == RTCC_COORDINATES_ECT && out == RTCC_COORDINATES_ECI) //ECT to ECI
 	{
 		conv[0] = 5;
 		num_conv = 1;
 	}
-	else if (in == 1 && out == 2) //ECT to MCI
+	else if (in == RTCC_COORDINATES_ECT && out == RTCC_COORDINATES_MCI) //ECT to MCI
 	{
 		conv[0] = 5; conv[1] = 0;
 		num_conv = 2;
 	}
-	else if (in == 1 && out == 3) //ECT to MCT
+	else if (in == RTCC_COORDINATES_ECT && out == RTCC_COORDINATES_MCT) //ECT to MCT
 	{
 		conv[0] = 5; conv[1] = 0; conv[2] = 2;
 		num_conv = 3;
 	}
-	else if (in == 1 && out == 4) //ECT to EMP
+	else if (in == RTCC_COORDINATES_ECT && out == RTCC_COORDINATES_EMP) //ECT to EMP
 	{
 		conv[0] = 5; conv[1] = 0; conv[2] = 6;
 		num_conv = 3;
 	}
-	else if (in == 2 && out == 0) //MCI to ECI
+	else if (in == RTCC_COORDINATES_MCI && out == RTCC_COORDINATES_ECI) //MCI to ECI
 	{
 		conv[0] = 1;
 		num_conv = 1;
 	}
-	else if (in == 2 && out == 1) //MCI to ECT
+	else if (in == RTCC_COORDINATES_MCI && out == RTCC_COORDINATES_ECT) //MCI to ECT
 	{
 		conv[0] = 1; conv[1] = 4;
 		num_conv = 2;
 	}
-	else if (in == 2 && out == 3) //MCI to MCT
+	else if (in == RTCC_COORDINATES_MCI && out == RTCC_COORDINATES_MCT) //MCI to MCT
 	{
 		conv[0] = 2;
 		num_conv = 1;
 	}
-	else if (in == 2 && out == 4) //MCI to EMP
+	else if (in == RTCC_COORDINATES_MCI && out == RTCC_COORDINATES_EMP) //MCI to EMP
 	{
 		conv[0] = 6;
 		num_conv = 1;
 	}
-	else if (in == 3 && out == 0) //MCT to ECI
+	else if (in == RTCC_COORDINATES_MCT && out == RTCC_COORDINATES_ECI) //MCT to ECI
 	{
 		conv[0] = 3; conv[1] = 1;
 		num_conv = 2;
 	}
-	else if (in == 3 && out == 1) //MCT to ECT
+	else if (in == RTCC_COORDINATES_MCT && out == RTCC_COORDINATES_ECT) //MCT to ECT
 	{
 		conv[0] = 3; conv[1] = 1; conv[2] = 4;
 		num_conv = 3;
 	}
-	else if (in == 3 && out == 2) //MCT to MCI
+	else if (in == RTCC_COORDINATES_MCT && out == RTCC_COORDINATES_MCI) //MCT to MCI
 	{
 		conv[0] = 3;
 		num_conv = 1;
 	}
-	else if (in == 3 && out == 4) //MCT to EMP
+	else if (in == RTCC_COORDINATES_MCT && out == RTCC_COORDINATES_EMP) //MCT to EMP
 	{
 		conv[0] = 3; conv[1] = 6;
 		num_conv = 2;
 	}
-	else if (in == 4 && out == 0) //EMP to ECI
+	else if (in == RTCC_COORDINATES_EMP && out == RTCC_COORDINATES_ECI) //EMP to ECI
 	{
 		conv[0] = 7; conv[1] = 1;
 		num_conv = 2;
 	}
-	else if (in == 4 && out == 1) //EMP to ECT
+	else if (in == RTCC_COORDINATES_EMP && out == RTCC_COORDINATES_ECT) //EMP to ECT
 	{
 		conv[0] = 7; conv[1] = 1; conv[1] = 4;
 		num_conv = 3;
 	}
-	else if (in == 4 && out == 2) //EMP to MCI
+	else if (in == RTCC_COORDINATES_EMP && out == RTCC_COORDINATES_MCI) //EMP to MCI
 	{
 		conv[0] = 7;
 		num_conv = 1;
 	}
-	else if (in == 4 && out == 3) //EMP to MCT
+	else if (in == RTCC_COORDINATES_EMP && out == RTCC_COORDINATES_MCT) //EMP to MCT
 	{
 		conv[0] = 7; conv[1] = 2;
 		num_conv = 2;
