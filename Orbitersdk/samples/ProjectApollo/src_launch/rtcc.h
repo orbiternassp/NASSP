@@ -915,9 +915,8 @@ struct PDAPOpt //Powered Descent Abort Program
 	//DV of the canned maneuver
 	double dv_CAN = 10.0*0.3048;
 	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
-	double h_amin = 30.0*1852.0;
-	//Time from PDI to switchover
-	double dt_switch = 10.0*60.0; //Apollo 12
+	double h_amin = 30.0*1852.0; //First segment
+	double h_2amin = 30.0*1852.0; //Second segment
 	//Flag to use the long profile in the first set of targeting coefficients
 	bool LongProfileFirst = false;
 };

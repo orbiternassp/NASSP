@@ -12628,28 +12628,32 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 
 		} while (abs(dV_Inc) > 0.1*0.3048 && K_loop < 10);
 
-		if (opt.IsTwoSegment && K3 == false && dt_abort > opt.dt_switch)
+		if (opt.IsTwoSegment && R_a < res.R_amin)
 		{
-			K_loop = 0;
-			dt_CSI += opt.dt_2CSI;
-			conopt.t_TPI += opt.dt_2TPI;
-			res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo);
-			if (dt_CAN >= dt_CSI)
+			if (K3 == false)
 			{
-				dt_CAN = 0.0;
-			}
+				K_loop = 0;
+				dt_CSI += opt.dt_2CSI;
+				conopt.t_TPI += opt.dt_2TPI;
+				res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo)*(res.R_amin - R_a_apo);
+				res.R_amin = length(opt.R_LS) + opt.h_2amin;
+				if (dt_CAN >= dt_CSI)
+				{
+					dt_CAN = 0.0;
+				}
 
-			OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K1, res.J1);
-			res.DEDA227 = res.K1;
-			res.DEDA224 = res.J1;
-			Phase_Table.clear();
-			A_ins_Table.clear();
-			K3 = true;
-		}
-		else if (opt.IsTwoSegment && K3 == true && R_a < res.R_amin)
-		{
-			OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K2, res.J2);
-			stop = true;
+				OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K1, res.J1);
+				res.DEDA227 = res.K1;
+				res.DEDA224 = res.J1;
+				Phase_Table.clear();
+				A_ins_Table.clear();
+				K3 = true;
+			}
+			else
+			{
+				OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K2, res.J2);
+				stop = true;
+			}
 		}
 		else
 		{
