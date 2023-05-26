@@ -2224,7 +2224,7 @@ double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, do
 
 	ELVCTRInputTable interin;
 	ELVCTROutputTable2 interout;
-	double T1, lat, lng, dlng1, T2, dlng2, Tx, dlngx;
+	double T1, dlng1, T2, dlng2, Tx, dlngx, w_E;
 	unsigned i = 0;
 
 	if (GMT_min > EPHEM.Header.TL)
@@ -2253,11 +2253,18 @@ double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, do
 		return -1.0;
 	}
 
+	if (EPHEM.Header.CSI == RTCC_COORDINATES_ECT)
+	{
+		w_E = OrbMech::w_Earth;
+	}
+	else
+	{
+		w_E = 0.0;
+	}
+
 	sv_cur = interout.SV;
-	OrbMech::latlong_from_r(sv_cur.R, lat, lng);
-	dlng1 = lng - long_des;
-	if (dlng1 > PI) { dlng1 -= PI2; }
-	else if (dlng1 < -PI) { dlng1 += PI2; }
+	dlng1 = atan2(sv_cur.R.y, sv_cur.R.x) - w_E * sv_cur.GMT - long_des;
+	OrbMech::normalizeAngle(dlng1, false);
 
 	if (abs(dlng1) < 0.0001)
 	{
@@ -2276,10 +2283,8 @@ double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, do
 		sv_cur = EPHEM.table[i];
 		T2 = sv_cur.GMT;
 
-		OrbMech::latlong_from_r(sv_cur.R, lat, lng);
-		dlng2 = lng - long_des;
-		if (dlng2 > PI) { dlng2 -= PI2; }
-		else if (dlng2 < -PI) { dlng2 += PI2; }
+		dlng2 = atan2(sv_cur.R.y, sv_cur.R.x) - w_E * sv_cur.GMT - long_des;
+		OrbMech::normalizeAngle(dlng2, false);
 
 		if (abs(dlng2) < 0.0001)
 		{
@@ -2314,10 +2319,9 @@ double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, do
 		}
 
 		sv_cur = interout.SV;
-		OrbMech::latlong_from_r(sv_cur.R, lat, lng);
-		dlngx = lng - long_des;
-		if (dlngx > PI) { dlngx -= PI2; }
-		else if (dlngx < -PI) { dlngx += PI2; }
+
+		dlngx = atan2(sv_cur.R.y, sv_cur.R.x) - w_E * sv_cur.GMT - long_des;
+		OrbMech::normalizeAngle(dlngx, false);
 
 		if (abs(dlngx) < 0.0001)
 		{

@@ -22890,6 +22890,12 @@ int RTCC::RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, dou
 	double lat;
 	OrbMech::latlong_from_r(sv_true.R, lat, lng_asc);
 
+	if (EPHEM.Header.CSI == 1)
+	{
+		lng_asc -= OrbMech::w_Earth*sv_true.GMT;
+		OrbMech::normalizeAngle(lng_asc, false);
+	}
+
 	return 0;
 }
 
@@ -22900,7 +22906,6 @@ int RTCC::EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, d
 	ELVCTROutputTable2 interout;
 	SunriseSunsetData data;
 	EphemerisData2 sv_cur;
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 	VECTOR3 R_EM, V_EM, R_ES, R_MS, s;
 	double R_E, cos_theta, cos_theta_old, GMT_old, GMT;
 	unsigned iter = 0, iter_start;
@@ -24431,7 +24436,8 @@ void RTCC::PMMREDIG(bool mpt)
 		AST.lat_tgt = astin.lat_SPL;
 		AST.lng_tgt = astin.lng_SPL;
 		AST.lat_r = lat_r;
-		AST.lng_r = lng_r;
+		AST.lng_r = lng_r - OrbMech::w_Earth*sv_EI_ECT.GMT;
+		OrbMech::normalizeAngle(AST.lng_r, false);
 		AST.sv_TIG = astin.sv_IG;
 		AST.sv_r = astin.sv_EI;
 
@@ -25165,7 +25171,8 @@ void RTCC::PMMPAB(const RTEDMEDData &MED, const RTEDASTData &AST, const RTEDSPMD
 	RID.v_EI = v_r;
 	RID.gamma_EI = gamma_r;
 	RID.lat_EI = lat_r;
-	RID.lng_EI = lng_r;
+	RID.lng_EI = lng_r - OrbMech::w_Earth*sv_r_ECT.GMT;
+	OrbMech::normalizeAngle(RID.lng_EI, false);
 	RID.R_Y = outarray.R_Y;
 	RID.R_Z = outarray.R_Z;
 	VECTOR3 h = crossp(outarray.R_r, outarray.V_r);
@@ -31347,9 +31354,13 @@ PCMATC_3A:
 	VECTOR3 R_r_equ = tmul(Rot, sv_r.R);
 	VECTOR3 V_r_equ = tmul(Rot, sv_r.V);
 	double h_r = length(sv_r.R) - OrbMech::R_Earth;
-	double r_r, v_r, lat_r, lng_r, gamma_r, azi_r;
-	PICSSC(true, R_r_equ, V_r_equ, r_r, v_r, lat_r, lng_r, gamma_r, azi_r);
+	double r_r, v_r, lat_r, ra_r, gamma_r, azi_r, lng_r, lambda_G;
+	PICSSC(true, R_r_equ, V_r_equ, r_r, v_r, lat_r, ra_r, gamma_r, azi_r);
 	double T_ar = sv_r.GMT - t_a;
+
+	lambda_G = PIBSHA(sv_r.GMT / 3600.0);
+	lng_r = ra_r - lambda_G;
+	OrbMech::normalizeAngle(lng_r);
 
 	arr[0] = h_r / OrbMech::R_Earth;
 	arr[1] = lat_r;
@@ -34455,7 +34466,7 @@ void RTCC::EMMGSTMP()
 					in = 1;
 					out = 0;
 				}
-				R_BL_equ = OrbMech::r_from_latlong(EZGSTMED.G14_lat, EZGSTMED.G14_lng, r);
+				R_BL_equ = OrbMech::r_from_latlong(EZGSTMED.G14_lat, EZGSTMED.G14_lng + OrbMech::w_Earth*EZGSTMED.G14_GMT, r);
 				if (ELVCNV(R_BL_equ, EZGSTMED.G14_GMT, 1, in, out, R_BL))
 				{
 					err = 2;
@@ -35022,12 +35033,9 @@ void RTCC::RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng_des
 {
 	if (tab.Header.CSI != BODY_EARTH) return;
 
-	ELVCTRInputTable intab;
-	ELVCTROutputTable2 outtab;
 	ManeuverTimesTable MANTIMES;
-	TimeConstraintsTable tctab;
 	EphemerisData2 sv_ECT;
-	double GMT_cross, out, lng, GMT_guess;
+	double GMT_cross, out, lng, GMT_guess, r_i, v_i, lat_i, lng_i, gamma_i, azi_i;
 	int i;
 
 	RZDRTSD.ErrorMessage = "";
@@ -35059,12 +35067,6 @@ void RTCC::RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng_des
 			//No convergence
 			break;
 		}
-		intab.GMT = GMT_cross;
-		ELVCTR(intab, outtab, tab, MANTIMES);
-		if (outtab.ErrorCode > 2)
-		{
-			break;
-		}
 		RZDRTSD.table[i].DataIndicator = false;
 		if (out == 0)
 		{
@@ -35076,19 +35078,16 @@ void RTCC::RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng_des
 			//Not converged
 			RZDRTSD.table[i].AlternateLongitudeIndicator = true;
 		}
-		ELVCNV(outtab.SV, 0, 1, sv_ECT);
-		EphemerisData sv_ECT2;
-		sv_ECT2.R = sv_ECT.R;
-		sv_ECT2.V = sv_ECT.V;
-		sv_ECT2.GMT = sv_ECT.GMT;
-		sv_ECT2.RBI = 0;
 
-		EMMDYNEL(sv_ECT2, tctab);
-		RZDRTSD.table[i].Azimuth = tctab.azi*DEG;
+		PICSSC(true, sv_inter.R, sv_inter.V, r_i, v_i, lat_i, lng_i, gamma_i, azi_i);
+		lng_i -= OrbMech::w_Earth*sv_inter.GMT;
+		OrbMech::normalizeAngle(lng_i, false);
+
+		RZDRTSD.table[i].Azimuth = azi_i*DEG;
 		RZDRTSD.table[i].GET = GETfromGMT(GMT_cross);
 		RZDRTSD.table[i].GMT = GMT_cross;
-		RZDRTSD.table[i].Latitude = tctab.lat*DEG;
-		RZDRTSD.table[i].Longitude = tctab.lng*DEG;
+		RZDRTSD.table[i].Latitude = lat_i*DEG;
+		RZDRTSD.table[i].Longitude = lng_i*DEG;
 		RZDRTSD.table[i].Rev = CapeCrossingRev(RTCC_MPT_CSM, GMT_cross);
 
 		GMT_guess = GMT_cross;
