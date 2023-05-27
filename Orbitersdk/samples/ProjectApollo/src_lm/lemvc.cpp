@@ -164,7 +164,7 @@ const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
 
 // Panel 1 rotaries
 const VECTOR3 P1_ROT_POS[P1_ROTCOUNT] = {
-	{-0.072168, 0.359422, 1.67335}
+	{-0.0721, 0.3602, 1.6730}
 };
 
 // Panel 2 switches
@@ -177,7 +177,7 @@ const VECTOR3 P2_TOGGLE_POS[P2_SWITCHCOUNT] = {
 
 // Panel 2 rotaries
 const VECTOR3 P2_ROT_POS[P2_ROTCOUNT] = {
-	{0.052147, 0.353926, 1.67237}, {0.243652, 0.400778, 1.67901}, {0.243665, 0.327141, 1.6687}, {0.356315, 0.364088, 1.67391}
+	{0.0520, 0.3542, 1.6720}, {0.2438, 0.4007, 1.6786}, {0.2439, 0.3275, 1.6683}, {0.3568, 0.3643, 1.6735}
 };
 
 // Panel 3 switches
@@ -192,7 +192,7 @@ const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
 
 // Panel 3 rotaries
 const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
-	{-0.34068, 0.15311, 1.56197}, {-0.19343, 0.163151, 1.57026}, {0.063658, 0.163679, 1.57046}, {0.27805, 0.151635, 1.56925}, {0.31772, 0.220734, 1.61811}
+	{-0.3410, 0.1495, 1.5669},{-0.1935, 0.1602, 1.5751},{0.0633, 0.1604, 1.5751},{0.2777, 0.1519, 1.5688},{0.3172, 0.2211, 1.6177}
 };
 
 // Panel 4 switches
@@ -216,7 +216,7 @@ const VECTOR3 P5_TOGGLE_POS[P5_SWITCHCOUNT] = {
 
 // Panel 5 rotaries
 const VECTOR3 P5_ROT_POS[P5_ROTCOUNT] = {
-{-0.5854, -0.0136, 1.4165}, {-0.4982, -0.0136, 1.4164}, {-0.4304, -0.0136, 1.4164}
+{-0.5856, -0.0153, 1.4168},{-0.4983, -0.0153, 1.4167},{-0.4306, -0.0153, 1.4168}
 };
 
 // Panel 6 switches
@@ -292,7 +292,7 @@ const VECTOR3 P12_TOGGLE_POS[P12_SWITCHCOUNT] = {
 
 // Panel 12 rotaries
 const VECTOR3 P12_ROT_POS[P12_ROTCOUNT] = {
-{0.9876, 0.0424, 1.0606}, {0.9828, 0.0409, 0.9785}, {0.9941, 0.0442, 0.9123}, {1.0780, 0.0693, 0.9122}
+{0.9879, 0.0405, 1.0609},{0.9839, 0.0393, 0.9784},{0.9948, 0.0425, 0.9124},{1.0787, 0.0675, 0.9130}
 };
 
 // Panel 12 needles
@@ -315,7 +315,7 @@ const VECTOR3 P14_TOGGLE_POS[P14_SWITCHCOUNT] = {
 
 // Panel 14 rotaries
 const VECTOR3 P14_ROT_POS[P14_ROTCOUNT] = {
-{1.0065, 0.3466, 1.2119}
+{1.0075, 0.3452, 1.2120}
 };
 
 // Panel 14 needles
@@ -366,15 +366,15 @@ const VECTOR3 ORDEAL_RotLocation = { -1.0319, 0.2112, 0.8968 };
 const VECTOR3 H20SepHandleLocation = { 0.3153, 0.2264, -0.2932 };
 const VECTOR3 PB_Vent1Location = { 0.3382, 0.1455, 0.2815 };
 const VECTOR3 PB_Vent2Location = { 0.3382, 0.2936, -0.2550 };
-const VECTOR3 Rot_AscO2_1Location = { 0.5702, 0.2829, 0.5882 };
-const VECTOR3 Rot_AscO2_2Location = { 0.4990, 0.2870, 0.5793 };
-const VECTOR3 Rot_CabinGasReturnLocation = { 0.3524, 0.5219, 0.0804 };
-const VECTOR3 Rot_CabinRepressLocation = { 0.6019, 0.3548, 0.5910 };
-const VECTOR3 Rot_DesO2Location = { 0.6449, 0.2777, 0.5981 };
-const VECTOR3 Rot_PlssFillLocation = { 0.5011, 0.3593, 0.5795 };
-const VECTOR3 Rot_PressRegALocation = { 0.4241, 0.3470, 0.5689 };
-const VECTOR3 Rot_PressRegBLocation = { 0.4215, 0.2573, 0.5693 };
-const VECTOR3 Rot_SuitCircuitReliefLocation = { 0.3524, 0.5006, 0.2689 };
+const VECTOR3 Rot_AscO2_1Location = {0.5708, 0.2834, 0.5777};
+const VECTOR3 Rot_AscO2_2Location = {0.5004, 0.2868, 0.5682};
+const VECTOR3 Rot_CabinGasReturnLocation = {0.3689, 0.5241, 0.0807};
+const VECTOR3 Rot_CabinRepressLocation = {0.6029, 0.3542, 0.5816};
+const VECTOR3 Rot_DesO2Location = {0.6461, 0.2772, 0.5873};
+const VECTOR3 Rot_PlssFillLocation = {0.5022, 0.3589, 0.5686};
+const VECTOR3 Rot_PressRegALocation = {0.4255, 0.3470, 0.5588};
+const VECTOR3 Rot_PressRegBLocation = {0.4226, 0.2565, 0.5585};
+const VECTOR3 Rot_SuitCircuitReliefLocation = {0.3686, 0.5016, 0.2690};
 const VECTOR3 SuitGasDiverterHandleLocation = { 0.4473, 0.6010, 0.5533 };
 const VECTOR3 Sw_CanisterSelLocation = { 0.3544, 0.3645, 0.1312 };
 const VECTOR3 Rot_SuitIsolCdrLocation = { 0.3457, 0.1616, 0.6088 };
@@ -383,14 +383,14 @@ const VECTOR3 Sw_ActOvrdCdrLocation = { 0.3653, 0.1552, 0.5451 };
 const VECTOR3 Sw_ActOvrdLmpLocation = { 0.5787, 0.1753, 0.5402 };
 const VECTOR3 Rot_Canister1Location = { 0.3077, 0.1679, 0.1246 };
 const VECTOR3 Rot_Canister2Location = { 0.3105, 0.2269, -0.1261 };
-const VECTOR3 Rot_DesH2OLocation = { 0.4426, -0.1245, 0.6489 };
-const VECTOR3 Rot_LGCLocation = { 0.2574, -0.2249, 0.6260 };
-const VECTOR3 Rot_PriEvapFlow1Location = { 0.4581, -0.2074, 0.6538 };
-const VECTOR3 Rot_PriEvapFlow2Location = { 0.4646, -0.0502, 0.6359 };
-const VECTOR3 Rot_SecEvapFlowLocation = { 0.5511, -0.0439, 0.6348 };
-const VECTOR3 Rot_SuitTempLocation = { 0.4532, -0.4007, 0.6942 };
+const VECTOR3 Rot_DesH2OLocation = {0.4417, -0.1269, 0.6370};
+const VECTOR3 Rot_LGCLocation = {0.2611, -0.2251, 0.6134};
+const VECTOR3 Rot_PriEvapFlow1Location = {0.4584, -0.2097, 0.6406};
+const VECTOR3 Rot_PriEvapFlow2Location = {0.4652, -0.0533, 0.6232};
+const VECTOR3 Rot_SecEvapFlowLocation = {0.5511, -0.0462, 0.6229};
+const VECTOR3 Rot_SuitTempLocation = {0.4533, -0.4028, 0.6826};
 const VECTOR3 Rot_WaterTankSelectorLocation = { 0.5189, -0.2687, 0.6631 };
-const VECTOR3 Rot_AscH2OLocation = { 0.3745, -0.0204, 0.5146 };
+const VECTOR3 Rot_AscH2OLocation = {0.3876, -0.0204, 0.5144};
 
 // Hatches
 const VECTOR3 UpperHatchLocation = { -0.0013, 0.9817, 0.0000 };
