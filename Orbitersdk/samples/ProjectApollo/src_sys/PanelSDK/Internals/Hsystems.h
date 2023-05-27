@@ -166,7 +166,7 @@ public:
 	double GetTemp();
 	void thermic(double _en);
 	int Flow(h_volume block);//block of substance flowing INTO  the valve
-	h_volume GetFlow(double dPdT, double maxMass = 0);//deltaP * deltaT gives us flow rate OUTOF(in volume)
+	h_volume GetFlow(double dPdT, double maxMass = 0, double effectiveSize = 0);//deltaP * deltaT gives us flow rate OUTOF(in volume)
 	virtual void refresh(double dt);	//for open/close updating
 	virtual void Save(FILEHANDLE scn);
 	virtual void* GetComponent(char *component_name);

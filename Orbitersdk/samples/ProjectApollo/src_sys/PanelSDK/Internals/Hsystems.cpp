@@ -635,9 +635,18 @@ int h_Valve::Flow(h_volume block) { //valves are simply sockets, forward this to
 		return 0;//unable to put block
 }
 
-h_volume h_Valve::GetFlow(double dPdT, double maxMass) {
+h_volume h_Valve::GetFlow(double dPdT, double maxMass, double effectiveSize) {
 
-	double vol = dPdT * size / 1000.0;		//size= Liters/Pa/second
+	//effectiveSize is non-zero in the case of pipes which have to override 
+	//the valve size for the GetFlow all, so that flowrate depends on the in and out valves on either end of the pipe
+
+	double vol;
+	if (effectiveSize) {						
+		vol = dPdT * effectiveSize / 1000.0;	//size= Liters/Pa/second
+	}
+	else {
+		vol = dPdT * size / 1000.0;		//size= Liters/Pa/second
+	}
 
 	if (!open) vol = 0; //no flow obviously
 	return parent->GetFlow(vol, maxMass);
@@ -833,6 +842,17 @@ h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double m
 	open = 0;
 	flow = 0;
 	flowMax = 0;
+
+	/* This writes to the orbiter log on load.It is very helpful for seeing a list of pipe effective sizes
+	   (as they appear in the config file)
+	   This should definitely be changed to write to an SPSDK log file and not the Orbiter log.
+	*/
+
+	//if (i_IN && i_OUT) {
+	//	char logstring[255];
+	//	sprintf(logstring, "%s %f %f %f\n", i_name, i_IN->size, i_OUT->size, sqrt(i_IN->size * i_OUT->size));
+	//	oapiWriteLog(logstring);
+	//}
 }
 
 void h_Pipe::BroadcastDemision(ship_object * gonner) {
@@ -857,40 +877,45 @@ void h_Pipe::refresh(double dt) {
 		double in_p = in->GetPress();
 		double out_p = out->GetPress();
 
-		if (type == 1) {	  //PREG
-			in_p = (in_p > P_max ? P_max : in_p);
+		double PipeSize = sqrt(in->size * out->size);
 
-		} else if (type == 2) { //BURST
-			if (in_p - out_p > P_max) open = 1;
-			if (in_p - out_p < P_min) open = 0;
-			if (open == 0) return;
+		switch (type) {
+			case 1:  //PREG
+				in_p = (in_p > P_max ? P_max : in_p);
+				break;
+			case 2: //BURST
+				if (in_p - out_p > P_max) open = 1;
+				if (in_p - out_p < P_min) open = 0;
+				if (open == 0) return;
+				break;
+			case 3: //PVALVE
+				if (in_p - P_max > out_p) { //one way flow;
+					double vol = (in_p - P_max - out_p) * dt * PipeSize / 1000.0;		//size= Liters/Pa/second
+					if (out->parent->space.Volume > vol) {
+						out->parent->space.Volume -= vol;
+						in->parent->space.Volume += vol;
+					}
+				}
+				if ((two_ways) && (out_p - P_max > in_p) &&
+					(out->parent->space.Volume > out->parent->Original_volume)) {
+					double vol = (out_p - P_max - in_p) * dt * PipeSize / 1000.0;		//size= Liters/Pa/second
+					if (in->parent->space.Volume > vol) {
+						out->parent->space.Volume += vol;
+						in->parent->space.Volume -= vol;
+					}
+				}
+				return;
 
-		} else if (type == 3) {	//PVALVE
-			if (in_p - P_max > out_p) { //one way flow;
-				double vol = (in_p - P_max - out_p) * dt * in->size / 1000.0;		//size= Liters/Pa/second
-				if (out->parent->space.Volume > vol) {
-					out->parent->space.Volume -= vol;
-					in->parent->space.Volume += vol;
-				}
-			}
-			if ((two_ways) && (out_p - P_max > in_p) &&
-				(out->parent->space.Volume > out->parent->Original_volume)) {
-				double vol = (out_p - P_max - in_p) * dt * in->size / 1000.0;		//size= Liters/Pa/second
-				if (in->parent->space.Volume > vol) {
-					out->parent->space.Volume += vol;
-					in->parent->space.Volume -= vol;
-				}
-			}
-			return;
 		}
+
 		if (in_p > out_p) {
-			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt);
+			h_volume v = in->GetFlow(dt * (in_p - out_p), flowMax * dt, PipeSize);
 			flow = v.GetMass() / dt; 
 			out->Flow(v);
 		}
 
 		if ((two_ways) && (out_p > in->GetPress())) {
-			h_volume v = out->GetFlow(dt * (out_p - in_p), flowMax * dt);
+			h_volume v = out->GetFlow(dt * (out_p - in_p), flowMax * dt, PipeSize);
 			flow -= v.GetMass() / dt; 
 			in->Flow(v);
 		}
@@ -1219,12 +1244,12 @@ void h_MixingPipe::refresh(double dt) {
 		double out_p = out->GetPress();
 
 		if (in1_p > out_p) {
-			h_volume v = in1->GetFlow(ratio * dt * (in1_p - out_p));
+			h_volume v = in1->GetFlow(ratio * dt * (in1_p - out_p), 0.0, sqrt(in1->size * out->size));
 			out->Flow(v);
 		}
 
 		if (in2_p > out_p) {
-			h_volume v = in2->GetFlow((1.0 - ratio) * dt * (in2_p - out_p));
+			h_volume v = in2->GetFlow((1.0 - ratio) * dt * (in2_p - out_p), 0.0, sqrt(in2->size * out->size));
 			out->Flow(v);
 		}
 	}

@@ -332,13 +332,13 @@ void CabinPressureReliefValve::SystemTimestep(double simdt) {
 	if (sideHatch->IsOpen() && saturn->GetSystemsState() >= SATSYSTEMS_READYTOLAUNCH) { // Hatch disabled during GSE support
 		if (cabinPress > saturn->GetAtmPressure()) {
 			pipe->in->Open();
-			pipe->in->size = (float) 100.;	// no pressure in a few seconds
+			pipe->in->size = (float) 1.0E7;	// no pressure in a few seconds
 			pipe->flowMax = 2000. / LBH; 
 			
 			inlet->in->Close();
 		} else {
 			inlet->in->Open();		
-			inlet->in->size = (float) 10.0;  // full pressure in a few seconds
+			inlet->in->size = (float) 1.0E5;  // full pressure in a few seconds
 			inlet->P_max = saturn->GetAtmPressure();
 			inlet->flowMax = 0; // no max. flow
 
@@ -351,13 +351,13 @@ void CabinPressureReliefValve::SystemTimestep(double simdt) {
 		f = (4. - f) / 4.;
 		if (cabinPress > saturn->GetAtmPressure()) {
 			pipe->in->Open();
-			pipe->in->size = (float) (20. * f);
+			pipe->in->size = (float) (4.0E5 * f);
 			pipe->flowMax = 250. / LBH * f;	// about 1 min from 5 psi to 0.1 psi
 			
 			inlet->in->Close();
 		} else {
 			inlet->in->Open();		
-			inlet->in->size = (float) (1.0 * f);  // guessed in order to have reasonable reaction times in pressure
+			inlet->in->size = (float) (1.0E3 * f);  // guessed in order to have reasonable reaction times in pressure
 			inlet->P_max = saturn->GetAtmPressure();
 			inlet->flowMax = 0; // no max. flow
 
@@ -373,19 +373,19 @@ void CabinPressureReliefValve::SystemTimestep(double simdt) {
 			if (cabinPress > saturn->GetAtmPressure()) {
 				pipe->in->Open();
 				if (postLandingVent->IsUp()) {		// hi to lo is 1:1.5, rest is guessed in order to have reasonable reaction times in pressure
-					pipe->in->size = (float) 20.;
+					pipe->in->size = (float) 4.0E5;
 					pipe->flowMax =  400./ LBH;
 				} else {
-					pipe->in->size = (float) 12.;
+					pipe->in->size = (float) 1.44E5;
 					pipe->flowMax =  260./ LBH;
 				}
 				inlet->in->Close();
 			} else {
 				inlet->in->Open();
 				if (postLandingVent->IsUp()) {		// hi to lo is 1:1.5, rest is guessed in order to have reasonable reaction times in pressure
-					inlet->in->size = (float) 20.0;
+					inlet->in->size = (float) 4.0E5;
 				} else {
-					inlet->in->size = (float) 12.0;
+					inlet->in->size = (float) 1.44E5;
 				}
 				inlet->P_max = saturn->GetAtmPressure();
 				inlet->flowMax = 0; // no max. flow
@@ -413,14 +413,14 @@ void CabinPressureReliefValve::SystemTimestep(double simdt) {
 	} else if (lever->GetState() == 1 || lever->GetState() == 2) {
 		if (cabinPress > 14.7 / PSI + 1.0 / INH2O) {
 			pipe->in->Open();
-			pipe->in->size = (float) 0.01;
+			pipe->in->size = (float) 0.1;
 			pipe->flowMax = 0; // No max. flow
 			inlet->in->Close();
 			closed = false;
 
 		} else if (cabinPress - saturn->GetAtmPressure() > reliefPressure) {
 			pipe->in->Open();
-			pipe->in->size = (float) 6.0;
+			pipe->in->size = (float) 3.6E4;
 			// Normal
 			if (lever->GetState() == 1) {
 				pipe->flowMax = 30./ LBH; // Value is guessed
@@ -433,7 +433,7 @@ void CabinPressureReliefValve::SystemTimestep(double simdt) {
 
 		} else if (saturn->GetAtmPressure() - cabinPress > 25. / INH2O) {	// Systems handbook
 			inlet->in->Open();
-			inlet->in->size = (float) 15.0;
+			inlet->in->size = (float) 2.25E5;
 			inlet->P_max = saturn->GetAtmPressure() - 25. / INH2O;
 			// Normal
 			if (lever->GetState() == 1) {
@@ -451,13 +451,13 @@ void CabinPressureReliefValve::SystemTimestep(double simdt) {
 	} else if (lever->GetState() == 3) {
 		if (cabinPress > saturn->GetAtmPressure()) {
 			pipe->in->Open();
-			pipe->in->size = (float) 6.0;
+			pipe->in->size = (float) 3.6E4;
 			pipe->flowMax = 70./ LBH; // about 6 min from 3 psi to (almost) zero
 			inlet->in->Close();
 			closed = false;
 		} else {
 			inlet->in->Open();
-			inlet->in->size = (float) 15.0;
+			inlet->in->size = (float)2.25E5;
 			inlet->P_max = saturn->GetAtmPressure();
 			inlet->flowMax = 150./ LBH; 
 		}
@@ -1500,7 +1500,7 @@ void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
 		//FORWARD HATCH
 
 		PressureEqualizationValve->in->Open();
-		PressureEqualizationValve->in->size = (float) 1000.0;
+		PressureEqualizationValve->in->size = (float) 1.0E6;
 		PressureEqualizationValve->flowMax = 2000.0 / LBH;
 	}
 	else
@@ -1518,7 +1518,7 @@ void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
 
 			PressureEqualizationValve->in->Open();
 			//PressureEqualizationValve->in->size = (float)(0.15*f); //position * 0.15 need to increase for faster LM Press
-			PressureEqualizationValve->in->size = (float)(0.20 * f);
+			PressureEqualizationValve->in->size = (float)(4E-2 * f);
 			PressureEqualizationValve->flowMax = 220.0 / LBH * f;
 		}
 	}

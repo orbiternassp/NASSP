@@ -878,7 +878,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					CabinPressureRegulator.Reset(); 
 
 					// Cabin leak
-					CabinPressureReliefValve1.SetLeakSize(0.0002);
+					CabinPressureReliefValve1.SetLeakSize(4E-5);
 
 					// Next state
 					systemsState = SATSYSTEMS_CABINCLOSEOUT;
