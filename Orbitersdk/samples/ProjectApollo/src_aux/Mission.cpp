@@ -133,6 +133,7 @@ namespace mission {
 		AddCSMCueCard(4, "TPF");
 		AddCSMCueCard(4, "TPF_CONTINUED");
 		AddCSMCueCard(4, "VAC_XFER_TO_ECS");
+		AddCSMCueCard(4, "CDR_ABORTS_III_&_IV");
 		AddCSMCueCard(5, "EPS-ECS_ABORTS");
 		AddCSMCueCard(5, "SPS_BURN_RULES");
 		AddCSMCueCard(6, "LANDING");

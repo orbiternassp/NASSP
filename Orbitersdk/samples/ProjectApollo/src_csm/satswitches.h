@@ -480,11 +480,12 @@ protected:
 	PowerStateRotationalSwitch *DCIndicatorSwitch;
 };
 
-class SaturnSystemTestAttenuator : public VoltageAttenuator {
+class SaturnSystemTestMeter : public DCVoltMeter
+{
 public:
-	SaturnSystemTestAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut);
-	void Init(Saturn* S, RotationalSwitch *leftsystemtestrotaryswitch, RotationalSwitch *rightsystemtestrotaryswitch, e_object *Instrum);
-	double GetValue();
+	SaturnSystemTestMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn* s, RotationalSwitch *leftsystemtestrotaryswitch, RotationalSwitch *rightsystemtestrotaryswitch);
+	double QueryValue();
 protected:
 	Saturn *Sat;
 	RotationalSwitch *LeftSystemTestRotarySwitch;

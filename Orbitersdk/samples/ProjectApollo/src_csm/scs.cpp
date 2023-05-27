@@ -3182,28 +3182,6 @@ void RJEC::TimeStep(double simdt){
 		td[8] = ThrusterDemand[8];
 	}
 
-	// Ensure AC logic power, see Systems Handbook 8.2 
-	if (!sat->SIGCondDriverBiasPower1Switch.IsPowered()) {
-		td[1] = false;
-		td[2] = false;
-		td[4] = false;
-		td[6] = false;
-		td[8] = false;
-		td[9] = false;
-		td[12] = false;
-		td[14] = false;
-	}
-	if (!sat->SIGCondDriverBiasPower2Switch.IsPowered()) {
-		td[3] = false;
-		td[5] = false;
-		td[7] = false;
-		td[10] = false;
-		td[11] = false;
-		td[13] = false;
-		td[15] = false;
-		td[16] = false;
-	}
-
 	//
 	// TRANSLATION HANDLING
 	//
@@ -3332,8 +3310,8 @@ void RJEC::TimeStep(double simdt){
 	cmcengineon = !scsmode && cmcsignal;
 	logicA = scsengineonA2 || cmcengineon;
 	logicB = scsengineonB2 || cmcengineon;
-	SPSEnableA = logicA && S26 && sat->SIGCondDriverBiasPower1Switch.IsPowered();
-	SPSEnableB = logicB && S59 && sat->SIGCondDriverBiasPower2Switch.IsPowered();
+	SPSEnableA = logicA && S26;
+	SPSEnableB = logicB && S59;
 	
 	//sprintf(oapiDebugString(), "%d %d %f %d %d", IGN1, IGN2, engineOffDelay.GetTime(), engineOffDelay.IsRunning(), engineOffDelay.ContactClosed());
 }
