@@ -794,7 +794,13 @@ double LDPP::ArgLat(VECTOR3 R, VECTOR3 V)
 
 VECTOR3 LDPP::LATLON(double MJD)
 {
-	return rhmul(OrbMech::GetRotationMatrix(BODY_MOON, MJD), OrbMech::r_from_latlong(opt.Lat_LS, opt.Lng_LS, opt.R_LS));
+	VECTOR3 R_LS;
+	double GMT;
+
+	GMT = OrbMech::GETfromMJD(MJD, pRTCC->GetGMTBase());
+	pRTCC->ELVCNV(OrbMech::r_from_latlong(opt.Lat_LS, opt.Lng_LS, opt.R_LS), GMT, 1, RTCC_COORDINATES_MCT, RTCC_COORDINATES_MCI, R_LS);
+
+	return R_LS;
 }
 
 void LDPP::LLTPR(double T_H, SV sv_L, double &t_DOI, double &t_IGN, double &t_TD)
@@ -924,7 +930,7 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 
 	do
 	{
-		RR_LS = rhmul(OrbMech::GetRotationMatrix(BODY_MOON, MJD_LS), R_LS_equ);
+		RR_LS = LATLON(MJD_LS);
 		rr_LS = unit(RR_LS);
 
 		rr_L = unit(R_L);
@@ -956,9 +962,10 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 		goto LDPP_CHAPLA_9_1;
 	}
 	
-	Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD_LS);
-	R_L = rhtmul(Rot, R_L);
-	V_L = rhtmul(Rot, V_L);
+	pRTCC->ELVCNV(OrbMech::GETfromMJD(MJD_LS, pRTCC->GetGMTBase()), RTCC_COORDINATES_MCT, RTCC_COORDINATES_MCI, Rot);
+
+	R_L = tmul(Rot, R_L);
+	V_L = tmul(Rot, V_L);
 
 	VECTOR3 R_J, V_J;
 	double rmag, vmag, rtasc, decl, fpav, az;//, u_w;
@@ -986,8 +993,8 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 
 	OrbMech::sv_from_coe(coe_a, mu, R_J, V_J);*/
 	//U_J = unit(R_J);
-	R_J = rhmul(Rot, R_J);
-	V_J = rhmul(Rot, V_J);
+	R_J = mul(Rot, R_J);
+	V_J = mul(Rot, V_J);
 
 	sv_P.MJD = MJD_LS;
 	sv_P.R = R_J;
