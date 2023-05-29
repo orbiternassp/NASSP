@@ -361,8 +361,8 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 		//Selenocentric to selenographic
 		coe_osc0 = in.coe_osc;
 		pRTCC->PIVECT(in.coe_osc.i, in.coe_osc.g, in.coe_osc.h, P, W);
-		P = tmul(Rot, P);
-		W = tmul(Rot, W);
+		P = mul(Rot, P);
+		W = mul(Rot, W);
 		pRTCC->PIVECT(P, W, coe_osc0.i, coe_osc0.g, coe_osc0.h);
 
 		//Osculating to mean
@@ -418,8 +418,8 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 		//Selenographic to selenocentric
 		pRTCC->PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
-		P = mul(Rot, P);
-		W = mul(Rot, W);
+		P = tmul(Rot, P);
+		W = tmul(Rot, W);
 		pRTCC->PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
 	}
 	else
@@ -526,8 +526,8 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 			//Selenographic to selenocentric
 			pRTCC->PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
-			P = mul(Rot, P);
-			W = mul(Rot, W);
+			P = tmul(Rot, P);
+			W = tmul(Rot, W);
 			pRTCC->PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
 
 			COUNT--;

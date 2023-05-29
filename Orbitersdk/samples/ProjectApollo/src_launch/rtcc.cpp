@@ -11590,8 +11590,8 @@ RTCC_PMMAPD_1_2:
 			VECTOR3 P, W, P_apo, W_apo;
 			PIVECT(Z_A.coe_osc.i, Z_A.coe_osc.g, Z_A.coe_osc.h, P, W);
 			PLEFEM(5, Z_A.TS / 3600.0, 0, NULL, NULL, NULL, &L);
-			P_apo = tmul(L, P);
-			W_apo = tmul(L, W);
+			P_apo = mul(L, P);
+			W_apo = mul(L, W);
 			PIVECT(P_apo, W_apo, i_temp, g_temp, h_temp);
 			u_temp = g_temp + Z_A.f;
 			if (u_temp > PI2)
@@ -12502,7 +12502,7 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 	AEGBlock aeg;
 
 	aeg = SVToAEG(sv_TH, 0.0, 1.0, 1.0);
-	//PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
+	PMMAEGS(aeg.Header, aeg.Data, aeg.Data); //Initialize
 
 	lng_LO = opt.lng_LS; //TBD
 
@@ -19711,8 +19711,8 @@ void RTCC::PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, do
 
 			PLEFEM(5, AEGOUT.TS / 3600.0, 0, NULL, NULL, NULL, &Rot);
 			PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
-			P_apo = tmul(Rot, P);
-			W_apo = tmul(Rot, W);
+			P_apo = mul(Rot, P);
+			W_apo = mul(Rot, W);
 			PIVECT(P_apo, W_apo, i_SG, g_SG, h_SG);
 			i_CB = i_SG;
 			g_CB = g_SG;

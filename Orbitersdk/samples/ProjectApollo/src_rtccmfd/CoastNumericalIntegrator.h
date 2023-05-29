@@ -114,7 +114,7 @@ private:
 	double TS;
 
 	//ACCEL
-	//Rotation matrix from local to global coordinates
+	//Rotation matrix from global to local coordinates
 	MATRIX3 Rot;
 	//Planet fixed position vector
 	VECTOR3 R_EF;

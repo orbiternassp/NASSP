@@ -281,8 +281,8 @@ RTCC_PIATSU_1A:
 	//Rotate from selenocentric to selenographic
 	PLEFEM(5, AEGOUT.TS / 3600.0, 0, NULL, NULL, NULL, &Rot);
 	PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
-	P_apo = tmul(Rot, P);
-	W_apo = tmul(Rot, W);
+	P_apo = mul(Rot, P);
+	W_apo = mul(Rot, W);
 	PIVECT(P_apo, W_apo, isg, gsg, hsg);
 	if (isg < eps_i || isg > PI - eps_i)
 	{

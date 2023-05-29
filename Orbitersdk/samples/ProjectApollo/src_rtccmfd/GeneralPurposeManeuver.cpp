@@ -631,8 +631,8 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenographicElements(const AEGData
 		ErrorIndicator = 5;
 		return;
 	}
-	P_apo = tmul(L, P);
-	W_apo = tmul(L, W);
+	P_apo = mul(L, P);
+	W_apo = mul(L, W);
 	pRTCC->PIVECT(P_apo, W_apo, i, g, h);
 	u = g + sv.f;
 	if (u > PI2)
@@ -651,8 +651,8 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenocentricElements(double i, dou
 		ErrorIndicator = 5;
 		return;
 	}
-	P_apo = mul(L, P);
-	W_apo = mul(L, W);
+	P_apo = tmul(L, P);
+	W_apo = tmul(L, W);
 	pRTCC->PIVECT(P_apo, W_apo, sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h);
 	sv.U = sv.coe_osc.g + sv.f;
 	if (sv.U >= PI2)
