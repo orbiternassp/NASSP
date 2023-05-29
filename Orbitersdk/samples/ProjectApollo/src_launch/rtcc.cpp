@@ -13147,6 +13147,8 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 	if (sv.RBI == BODY_EARTH)
 	{
 		R_E = OrbMech::R_Earth;
+		lng -= OrbMech::w_Earth*sv.GMT;
+		OrbMech::normalizeAngle(lng, false);
 	}
 	else
 	{
