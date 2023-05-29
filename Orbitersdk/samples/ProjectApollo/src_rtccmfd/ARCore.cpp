@@ -2367,7 +2367,7 @@ void ARCore::VecPointCalc()
 		vessel->GetRelativePos(gravref, loc);
 
 		relvec = unit(pPos - vPos);
-		relvec = _V(relvec.x, relvec.z, relvec.y);
+		relvec = mul(GC->rtcc->SystemParameters.MAT_J2000_BRCS, _V(relvec.x, relvec.z, relvec.y));
 		loc = mul(GC->rtcc->SystemParameters.MAT_J2000_BRCS, _V(loc.x, loc.z, loc.y));
 
 		UX = relvec;
