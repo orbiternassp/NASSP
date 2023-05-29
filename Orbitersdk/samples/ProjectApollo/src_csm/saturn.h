@@ -4132,6 +4132,8 @@ protected:
 
 	void InitFDAI(UINT mesh);
 
+	void VCFreeCam(VECTOR3 dir, bool slow);
+
 	//
 	// Systems functions.
 	//
@@ -4384,6 +4386,16 @@ protected:
 	double ViewOffsetx, NoiseOffsetx;
 	double ViewOffsety, NoiseOffsety;
 	double ViewOffsetz, NoiseOffsetz;
+
+	//
+	// VC Free Cam
+	//
+
+	double vcFreeCamx;
+	double vcFreeCamy;
+	double vcFreeCamz;
+	double vcFreeCamSpeed;
+	double vcFreeCamMaxOffset;
 
 	//
 	// Save the last view offset.
