@@ -72,36 +72,8 @@ const double groundstations[NUMBEROFGROUNDSTATIONS][2] = {
 	{ 40.45443*RAD, -4.16990*RAD }
 };
 
-const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
-	false,
-	false,
-	false,
-	true,
-	false,
-	false,
-	false,
-	false,
-	false,
-	false,
-	false,
-	false,
-	false,
-	false,
-	false,
-	false,
-	false,
-	true,
-	true
-};
-
 #define BODY_EARTH 0
 #define BODY_MOON 1
-
-#define CSI_ECI 0
-#define CSI_ECT 1
-#define CSI_MCI 2
-#define CSI_MCT 3
-#define CSI_EMP 4
 
 struct SV
 {

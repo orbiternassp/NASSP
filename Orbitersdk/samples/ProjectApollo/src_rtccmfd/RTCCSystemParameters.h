@@ -780,6 +780,8 @@ struct RTCCSystemParameters
 	int MCLTTD = 2400;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
 	int MGRTAG = 1;
+	//Maximum station characteristic blocks
+	int MKRBKS;
 	//Gravitational constant of the Moon (Er^3/hr^2)
 	double MCGMUM;
 	//Gravitational constant of the Earth (Er^3/hr^2)

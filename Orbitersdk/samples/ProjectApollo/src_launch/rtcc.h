@@ -2008,18 +2008,48 @@ struct CapeCrossingTable
 	double GMTCross[30];
 };
 
-struct Station
+struct StationData
 {
-	double lat = 0.0;
-	double lng = 0.0;
-	double alt = 0.0;
-	double rad = 0.0;
 	std::string code;
+	//Geodetic longitude
+	double lng;
+	//Geodetic latitude
+	double lat_geod;
+	//Geocentric latitude
+	double lat_geoc;
+	//sin((lng))
+	double sin_lng;
+	//cos((lng))
+	double cos_lng;
+	//sin((lat_geod))
+	double sin_lat_geod;
+	//cos((lat_geod))
+	double cos_lat_geod;
+	//sin((lat_geoc))
+	double sin_lat_geoc;
+	//cos((lat_geoc))
+	double cos_lat_geoc;
+	//R_E*sin((lat_geod)-(lat_geoc))
+	double R_sin_dlat;
+	//R_E*cos((lat_geod)-(lat_geoc))
+	double R_cos_dlat;
+	//Inertial longitude at reference time
+	double lng_iner;
+	//Altitude above ellipsoid (H)
+	double H;
+	//Station radius R(S)
+	double R_S;
+	//Ellipsoid radius R(E)
+	double R_E;
+	//R(E)*cos((lat_geoc)) + H*cos(lat_geod))
+	double R_E_cos_lat;
+	//R(E)*sin((lat_geoc)) + H*sin(lat_geod))
+	double R_E_sin_lat;
 };
 
 struct StationTable
 {
-	std::vector<Station> table;
+	std::vector<StationData> table;
 };
 
 struct LunarDescentPlanningTable
@@ -2747,7 +2777,7 @@ public:
 	//Predicted Site Acquisition Display
 	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
 	//Ground Range and Altitude Subprogram
-	void ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt);
+	void ECMEXP(EphemerisData sv, StationData *stat, int statbody, double &range, double &alt);
 	//Landmark Acquisition Display
 	void EMDLANDM(int L, double gmt, double dt, int ref);
 	//Display Updates
@@ -3556,14 +3586,14 @@ public:
 	{
 		//-1 when empty, 0 = Earth, 1 = Moon
 		int REF = -1;
-		Station Data[12];
+		StationData Data[12];
 	} EZEXSITE;
 
 	struct LandmarkSitesTable
 	{
 		//-1 when empty, 0 = Earth, 1 = Moon
 		int REF = -1;
-		Station Data[12];
+		StationData Data[12];
 	} EZLASITE;
 
 	struct OrbitEphemerisTable
@@ -3747,6 +3777,44 @@ public:
 	} EZANCHR1, EZANCHR3;
 
 	TimeConstraintsTable EZTSCNS1, EZTSCNS3;
+
+	struct StationCharacteristicsBlock
+	{
+		StationData data;
+
+		int RadarMount; //1 = AZ/EL, 2 = X/Y 30, 3 = POLAR, 4 = X/Y 85
+		//Word 2 - Indicators
+		//Site Types (8 = USB, 13 = Voice)
+		char SiteType;
+		//Word 3 - Teletype routing indicator and name
+		//Word 18 - Local vertical deflection (longitude)
+		double def_lng;
+		//Word 19 - Local vertical deflection (latitude)
+		double def_lat;
+		//Word 20 - Azimuth deviation from true north
+		double dev_azi;
+		//Word 21 - Refraction modulus
+		double mod_refr;
+		//Word 22 - Comm processor LAPFL (?)
+		//Word 23 - Range granularity
+		double gran_range;
+		//Word 24 - Angular granularity
+		double gran_ang;
+		//Word 25 - K-factor for refraction
+		double KFactor;
+		//Word 26-29 - Sigma coefficient
+		double SigmaCoef[4];
+		//Word 32 - USB transmitter frequency #1
+		double Freq1;
+		//Word 36 - USB Transmitter frequency #2
+		double Freq2;
+		//Word 37 - Maximum slant range
+		double MaxSlantRange;
+		//Word 38 - Range bias
+		double RangeBias;
+	};
+
+	StationCharacteristicsBlock GZSTCH[28];
 
 	struct GeneralConstraintsTable
 	{
@@ -4697,7 +4765,7 @@ private:
 	//Generalized Contact Generator
 	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
 	//Horizon Crossing Subprogram
-	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
+	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationData & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
 	bool EMXINGLunarOccultation(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, double gmt, VECTOR3 R_S_equ, double &g_func, LunarStayTimesTable *LUNSTAY);
 	int CapeCrossingRev(int L, double GMT);
 	double CapeCrossingGMT(int L, int rev);
@@ -4727,7 +4795,7 @@ private:
 	//Relative Motion Digital Display
 	void EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis, int ref_body, int mode, VECTOR3 Att = _V(0, 0, 0), double PYRGET = 0.0);
 	//Ground Point Characteristics Block Routine
-	void EMGGPCHR(double lat, double lng, double alt, int body, Station *stat);
+	void EMGGPCHR(double lat, double lng, double alt, int body, double GHA, StationData *stat);
 
 	//MPT utility functions
 	bool MPTConfigSubset(const std::bitset<4> &CfgOld, const std::bitset<4> &CfgNew);
