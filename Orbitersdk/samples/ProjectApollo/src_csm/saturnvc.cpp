@@ -757,6 +757,11 @@ bool Saturn::clbkLoadVC (int id)
 	//if ((viewpos >= SATVIEW_ENG1) && (viewpos <= SATVIEW_ENG6))
 	//	return true;
 
+	//Reset VC free camera to default
+	vcFreeCamx = 0;
+	vcFreeCamy = 0;
+	vcFreeCamz = 0;
+
 	switch (id) {
 
 	case SATVIEW_LEFTSEAT:
@@ -1874,6 +1879,37 @@ void Saturn::JostleViewpoint(double noiselat, double noiselon, double noisefreq,
 	SetView();
 }
 
+void Saturn::VCFreeCam(VECTOR3 dir, bool slow)
+{
+	//dir is always in Orbiter's vessel XYZ reference frame
+	//in SetView() the shift is adjusted to local viewpoint reference frame to make is seem 'natural' from the observer's viewpoint
+
+	double simdt = oapiGetSimStep();
+
+	if (slow == false) {
+		vcFreeCamx += dir.x * vcFreeCamSpeed * simdt;
+		vcFreeCamy += dir.y * vcFreeCamSpeed * simdt;
+		vcFreeCamz += dir.z * vcFreeCamSpeed * simdt;
+	}
+	else {
+		vcFreeCamx += dir.x * vcFreeCamSpeed * simdt * 0.25;
+		vcFreeCamy += dir.y * vcFreeCamSpeed * simdt * 0.25;
+		vcFreeCamz += dir.z * vcFreeCamSpeed * simdt * 0.25;
+	}
+
+	//Make sure the camera isn't offset to far
+	if (vcFreeCamx > vcFreeCamMaxOffset) { vcFreeCamx = vcFreeCamMaxOffset; }
+	else if (vcFreeCamx < -vcFreeCamMaxOffset) { vcFreeCamx = -vcFreeCamMaxOffset; }
+	
+	if (vcFreeCamy > vcFreeCamMaxOffset) { vcFreeCamy = vcFreeCamMaxOffset; }
+	else if (vcFreeCamy < -vcFreeCamMaxOffset) { vcFreeCamy = -vcFreeCamMaxOffset; }
+
+	if (vcFreeCamz > vcFreeCamMaxOffset) { vcFreeCamz = vcFreeCamMaxOffset; }
+	else if (vcFreeCamz < -vcFreeCamMaxOffset) { vcFreeCamz = -vcFreeCamMaxOffset; }
+
+	SetView();
+}
+
 void Saturn::SetView()
 
 {
@@ -2050,46 +2086,79 @@ void Saturn::SetView(double offset, bool update_direction)
 		switch (viewpos) {
 			case SATVIEW_LEFTSEAT:
 				v = _V(-0.6, 0.85, ofs_vc.z + 0.1);
+				v.x += vcFreeCamx;
+				v.y += (cos(P1_3_TILT) * vcFreeCamy) + (-sin(P1_3_TILT) * vcFreeCamz);
+				v.z += (sin(P1_3_TILT) * vcFreeCamy) + (cos(P1_3_TILT) * vcFreeCamz);
 				break;
 
 			case SATVIEW_CENTERSEAT:
 				v = _V(0, 0.85, ofs_vc.z + 0.1);
+				v.x += vcFreeCamx;
+				v.y += (cos(P1_3_TILT) * vcFreeCamy) + (-sin(P1_3_TILT) * vcFreeCamz);
+				v.z += (sin(P1_3_TILT) * vcFreeCamy) + (cos(P1_3_TILT) * vcFreeCamz);
 				break;
 
 			case SATVIEW_RIGHTSEAT:
 				v = _V(0.6, 0.85, ofs_vc.z + 0.1);
+				v.x += vcFreeCamx;
+				v.y += (cos(P1_3_TILT) * vcFreeCamy) + (-sin(P1_3_TILT) * vcFreeCamz);
+				v.z += (sin(P1_3_TILT) * vcFreeCamy) + (cos(P1_3_TILT) * vcFreeCamz);
 				break;
 
 			case SATVIEW_LEFTDOCK:
 				v = _V(-0.6, 1.05, 0.1 + ofs_vc.z); // Adjusted to line up with LM docking target
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamy;
+				//v.z += vcFreeCamz;
 				break;
 			
 			case SATVIEW_RIGHTDOCK:
 				v = _V(0.6, 1.05, 0.1 + ofs_vc.z);
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamy;
+				//v.z += vcFreeCamz;
 				break;
 
 			case SATVIEW_GNPANEL:
 				v = _V(-0.05, -0.15, 0.3 + ofs_vc.z);
+				v.x += vcFreeCamx;
+				v.y += -vcFreeCamz;
+				v.z += vcFreeCamy;
 				break;
 
 			case SATVIEW_LEBLEFT:
-				v = _V(-0.8, - 0.5, ofs_vc.z - 0.4);
+				v = _V(-0.8, -0.5, ofs_vc.z - 0.4);
+				v.x += -vcFreeCamz;
+				v.y += vcFreeCamy;
+				v.z += vcFreeCamx;
 				break;
 
 			case SATVIEW_LEBRIGHT:
 				v = _V(0.8, -0.4, ofs_vc.z + 0.1);
+				v.x += vcFreeCamz;
+				v.y += vcFreeCamy;
+				v.z += -vcFreeCamx;
 				break;
 
 			case SATVIEW_LOWER_CENTER:
 				v = _V(0.0, 0.1, 0.65 + ofs_vc.z);
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamz;
+				//v.z += vcFreeCamy;
 				break;
 
 			case SATVIEW_UPPER_CENTER:
 				v = _V(0, 1.35, ofs_vc.z - 0.0);
+				v.x += -vcFreeCamx;
+				v.y += vcFreeCamy;
+				v.z += -vcFreeCamz;
 				break;
 
 			case SATVIEW_TUNNEL:
 				v = _V(0.0, 0.0, 0.8 + ofs_vc.z - 0.1);
+				v.x += vcFreeCamx;
+				v.y += vcFreeCamy;
+				v.z += vcFreeCamz;
 				break;
 		}
 

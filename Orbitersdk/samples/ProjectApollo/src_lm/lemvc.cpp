@@ -442,6 +442,37 @@ void LEM::JostleViewpoint(double amount)
 	SetView();
 }
 
+void LEM::VCFreeCam(VECTOR3 dir, bool slow)
+{
+	//dir is always in Orbiter's vessel XYZ reference frame
+	//in SetView() the shift is adjusted to local viewpoint reference frame to make is seem 'natural' from the observer's viewpoint
+
+	double simdt = oapiGetSimStep();
+
+	if (slow == false) {
+		vcFreeCamx += dir.x * vcFreeCamSpeed * simdt;
+		vcFreeCamy += dir.y * vcFreeCamSpeed * simdt;
+		vcFreeCamz += dir.z * vcFreeCamSpeed * simdt;
+	}
+	else {
+		vcFreeCamx += dir.x * vcFreeCamSpeed * simdt * 0.25;
+		vcFreeCamy += dir.y * vcFreeCamSpeed * simdt * 0.25;
+		vcFreeCamz += dir.z * vcFreeCamSpeed * simdt * 0.25;
+	}
+
+	//Make sure the camera isn't offset to far
+	if (vcFreeCamx > vcFreeCamMaxOffset) { vcFreeCamx = vcFreeCamMaxOffset; }
+	else if (vcFreeCamx < -vcFreeCamMaxOffset) { vcFreeCamx = -vcFreeCamMaxOffset; }
+
+	if (vcFreeCamy > vcFreeCamMaxOffset) { vcFreeCamy = vcFreeCamMaxOffset; }
+	else if (vcFreeCamy < -vcFreeCamMaxOffset) { vcFreeCamy = -vcFreeCamMaxOffset; }
+
+	if (vcFreeCamz > vcFreeCamMaxOffset) { vcFreeCamz = vcFreeCamMaxOffset; }
+	else if (vcFreeCamz < -vcFreeCamMaxOffset) { vcFreeCamz = -vcFreeCamMaxOffset; }
+
+	SetView();
+}
+
 void LEM::SetView() {
 
 	VECTOR3 v;
@@ -461,61 +492,97 @@ void LEM::SetView() {
 		case LMVIEW_CDR:
 			v = _V(-0.45, -0.07, 1.25) + ofs;
 			SetCameraDefaultDirection(_V(0.00, -sin(P1_TILT), cos(P1_TILT)));
+			v.x += vcFreeCamx;
+			v.y += (cos(P1_TILT) * vcFreeCamy) + (-sin(P1_TILT) * vcFreeCamz);
+			v.z += (sin(P1_TILT) * vcFreeCamy) + (cos(P1_TILT) * vcFreeCamz);
 			break;
 
 		case LMVIEW_LMP:
 			v = _V(0.45, -0.07, 1.25) + ofs;
 			SetCameraDefaultDirection(_V(0.00, -sin(P2_TILT), cos(P2_TILT)));
+			v.x += vcFreeCamx;
+			v.y += (cos(P2_TILT) * vcFreeCamy) + (-sin(P2_TILT) * vcFreeCamz);
+			v.z += (sin(P2_TILT) * vcFreeCamy) + (cos(P2_TILT) * vcFreeCamz);
 			break;
 
 		case LMVIEW_LPD:
 			v = _V(-0.58, -0.15, 1.40) + ofs;
 			SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE * RAD), cos(VIEWANGLE * RAD)));
+			//v.x += vcFreeCamx;
+			//v.y += (cos(VIEWANGLE * RAD) * vcFreeCamy) + (-sin(VIEWANGLE * RAD) * vcFreeCamz);
+			//v.z += (sin(VIEWANGLE * RAD) * vcFreeCamy) + (cos(VIEWANGLE * RAD) * vcFreeCamz);
 			break;
 
 		case LMVIEW_DSKY:
 			v = _V(0.0, -0.4, 1.2) + ofs;
 			SetCameraDefaultDirection(_V(0.00, -sin(P3_TILT), cos(P3_TILT)));
+			v.x += vcFreeCamx;
+			v.y += (cos(P3_TILT) * vcFreeCamy) + (-sin(P3_TILT) * vcFreeCamz);
+			v.z += (sin(P3_TILT) * vcFreeCamy) + (cos(P3_TILT) * vcFreeCamz);
 			break;
 
 		case LMVIEW_CBLEFT:
 			v = _V(-0.55, -0.22, 1.05) + ofs;
 			SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+			v.x += -vcFreeCamz;
+			v.y += vcFreeCamy;
+			v.z += vcFreeCamx;
 			break;
 
 		case LMVIEW_CBRIGHT:
 			v = _V(0.55, -0.22, 1.05) + ofs;
 			SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+			v.x += vcFreeCamz;
+			v.y += vcFreeCamy;
+			v.z += -vcFreeCamx;
 			break;
 
 		case LMVIEW_AOT:
 			v = _V(0.0, 0.05, 1.12) + ofs;
 			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			v.x += vcFreeCamx;
+			v.y += vcFreeCamy;
+			v.z += vcFreeCamz;
 			break;
 
 		case LMVIEW_ECS:
 			v = _V(-0.15, -0.42, 0.10) + ofs;
 			SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+			v.x += vcFreeCamz;
+			v.y += vcFreeCamy;
+			v.z += -vcFreeCamx;
 			break;
 
 		case LMVIEW_ECS2:
 			v = _V(0.45, -0.35, 1.0) + ofs;
 			SetCameraDefaultDirection(_V(0.0, 0.0, -1.0));
+			v.x += -vcFreeCamx;
+			v.y += vcFreeCamy;
+			v.z += -vcFreeCamz;
 			break;
 
 		case LMVIEW_FWDHATCH:
 			v = _V(0.0, -1.3, 1.1) + ofs;
 			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			v.x += vcFreeCamx;
+			v.y += vcFreeCamy;
+			v.z += vcFreeCamz;
 			break;
 
 		case LMVIEW_OVHDHATCH:
 			v = _V(0.0, -0.3, 0.1) + ofs;
 			SetCameraDefaultDirection(_V(0.0, 1.0, 0.0), 180 * RAD);
+			v.x += -vcFreeCamx;
+			v.y += vcFreeCamz;
+			v.z += vcFreeCamy;
 			break;
 
 		case LMVIEW_RDVZWIN:
 			v = _V(-0.58, -0.05, 1.004) + ofs;
 			SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
+			v.x += vcFreeCamx;
+			v.y += vcFreeCamz;
+			v.z += -vcFreeCamy;
 			break;
 
 		}
@@ -631,6 +698,11 @@ bool LEM::clbkLoadVC (int id)
 
 	//Reset Clip Radius settings
 	SetClipRadius(0.0);
+
+	//Reset VC free camera to default
+	vcFreeCamx = 0;
+	vcFreeCamy = 0;
+	vcFreeCamz = 0;
 
 	switch (id) {
 	case LMVIEW_CDR:
