@@ -4679,18 +4679,12 @@ void ApolloRTCCMFD::menuCycleK30Vehicle()
 
 void ApolloRTCCMFD::menuSLVLaunchTargeting()
 {
-	if (utils::IsVessel(G->vessel, utils::SaturnIB))
-	{
-		G->SkylabSaturnIBLaunchCalc();
-	}
+	G->SkylabSaturnIBLaunchCalc();
 }
 
 void ApolloRTCCMFD::menuSLVLaunchUplink()
 {
-	if (utils::IsVessel(G->vessel, utils::SaturnIB))
-	{
-		G->SkylabSaturnIBLaunchUplink();
-	}
+	G->SkylabSaturnIBLaunchUplink();
 }
 
 void ApolloRTCCMFD::menuSLVTLITargetingUplink()
