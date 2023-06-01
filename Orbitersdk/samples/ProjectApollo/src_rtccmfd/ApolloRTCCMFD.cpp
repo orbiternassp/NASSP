@@ -853,11 +853,11 @@ void ApolloRTCCMFD::menuSetLVDCPage()
 {
 	if (GC->mission >= 8 && GC->mission <= 17)
 	{
-		SelectPage(36);
+		SelectPage(36); //Saturn V launch azimuth
 	}
 	else
 	{
-		SelectPage(121);
+		SelectPage(121); //Saturn IB LWP
 	}
 }
 
@@ -5503,34 +5503,6 @@ void ApolloRTCCMFD::set_LaunchTime(int hours, int minutes, double seconds)
 	char Buff[128];
 	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hours, minutes, seconds);
 	GC->rtcc->GMGMED(Buff);
-}
-
-void ApolloRTCCMFD::menuSetAGCEpoch()
-{
-	if (GC->mission == 0)
-	{
-		bool AGCEpochInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the AGC Epoch:", AGCEpochInput, 0, 20, (void*)this);
-	}
-}
-
-bool AGCEpochInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_AGCEpoch(atoi(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_AGCEpoch(int epoch)
-{
-	this->GC->rtcc->SystemParameters.AGCEpoch = epoch;
-	GC->rtcc->SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(epoch);
-
-	GC->rtcc->QMEPHEM(epoch, GC->rtcc->GZGENCSN.Year, GC->rtcc->GZGENCSN.MonthofLiftoff, GC->rtcc->GZGENCSN.DayofLiftoff, 0.0);
-	GC->rtcc->EMSGSUPP(0, 0);
 }
 
 void ApolloRTCCMFD::menuChangeVesselStatus()

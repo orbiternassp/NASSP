@@ -705,7 +705,7 @@ int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int
 			{
 				//Get closest RNP matrix to input time (ECI to ECT)
 				//Time in days between first matrix and input time
-				double dt = 5.0 + GMT / 24.0 / 3600.0;
+				double dt = GetGMTBase() - EZNPMATX.mjd0 + GMT / 24.0 / 3600.0;
 				int ii = (int)(floor(dt * 4.0 + 0.5));
 				if (ii < 0 || ii > 140)
 				{

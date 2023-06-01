@@ -285,7 +285,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 		{ "Set launch day", 0, 'M' },
 		{ "Set launch time", 0, 'K' },
-		{ "Set AGC Epoch", 0, 'E' },
+		{ "", 0, ' ' },
 		{ "Update liftoff time", 0, 'T' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
@@ -302,7 +302,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("DAT", OAPI_KEY_M, &ApolloRTCCMFD::menuSetLaunchDate);
 	RegisterFunction("TIM", OAPI_KEY_K, &ApolloRTCCMFD::menuSetLaunchTime);
-	RegisterFunction("EPO", OAPI_KEY_E, &ApolloRTCCMFD::menuSetAGCEpoch);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPD", OAPI_KEY_U, &ApolloRTCCMFD::menuUpdateLiftoffTime);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);

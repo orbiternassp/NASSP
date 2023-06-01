@@ -3606,6 +3606,8 @@ public:
 	struct NutationPrecessionMatrices
 	{
 		MATRIX3 Mat[141]; //ECI to ECT
+		//MJD of first matrix
+		double mjd0 = 0.0;
 	} EZNPMATX;
 
 	struct TLITargetingParametersTable

@@ -1438,11 +1438,8 @@ RTCC::RTCC() :
 
 	PZMPTCSM.CommonBlock.ConfigCode = PZMPTLEM.CommonBlock.ConfigCode = 15; //CSM + LM + S-IVB
 
-	//Calculate conversion matrix
-	SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
-
-	//Load star table
-	EMSGSUPP(0, 0);
+	//Load Apollo 11 mission constants file by default
+	LoadMissionConstantsFile("Apollo 11 Constants");
 
 	//Load station characteristics table
 	GZSTCH[0].data.code = "BDA";
@@ -1950,11 +1947,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 		{
 			sprintf_s(Buff, line.c_str());
 
-			if (papiReadScenario_int(Buff, "AGCEpoch", SystemParameters.AGCEpoch))
-			{
-				SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
-				EMSGSUPP(0, 0); //Convert star table
-			}
+			papiReadScenario_int(Buff, "AGCEpoch", SystemParameters.AGCEpoch);
 			papiReadScenario_int(Buff, "MCCLEX", SystemParameters.MCCLEX);
 			papiReadScenario_int(Buff, "MCCLRF", SystemParameters.MCCLRF);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
@@ -2056,6 +2049,10 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
 		}
 	}
+
+	//Anything that is mission, but not launch day specific
+	SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+	EMSGSUPP(0, 0); //Convert star table
 }
 
 void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
@@ -5100,14 +5097,11 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	else if (opt->REFSMMATopt == 6)
 	{
 		double MoonPos[12];
-		double PTCMJD;
 		VECTOR3 R_ME;
-
-		PTCMJD = opt->REFSMMATTime;
 
 		CELBODY *cMoon = oapiGetCelbodyInterface(hMoon);
 
-		cMoon->clbkEphemeris(PTCMJD, EPHEM_TRUEPOS, MoonPos);
+		cMoon->clbkEphemeris(opt->REFSMMATTime, EPHEM_TRUEPOS, MoonPos);
 
 		R_ME = -_V(MoonPos[0], MoonPos[1], MoonPos[2]);
 
@@ -5117,7 +5111,8 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 
 		UZ = _V(0.0, 0.0, -1.0);
 		UY = crossp(UZ, UX);
-		return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+
+		return mul(_M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z), OrbMech::tmat(SystemParameters.MAT_J2000_BRCS));
 	}
 	else if (opt->REFSMMATopt == 8)
 	{
@@ -34983,6 +34978,7 @@ void RTCC::QMPNREAD(double gmtbase)
 
 	//Table starts 5 days prior to launch
 	double mjd = gmtbase - 5.0;
+	EZNPMATX.mjd0 = mjd;
 	for (int i = 0;i < 141;i++)
 	{
 		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, mjd);
