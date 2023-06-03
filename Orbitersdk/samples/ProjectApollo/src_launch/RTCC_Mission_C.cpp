@@ -504,7 +504,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		PMMMPTInput in;
 		VECTOR3 dV_LVLH;
-		double GET_TIG_imp, GMT_TIG_imp, P30TIG, GETBase;
+		double GET_TIG_imp, GMT_TIG_imp, P30TIG;
 		EphemerisData sv_A, sv_P;//, sv_A1, sv_P1;
 		char buffer1[1000];
 		char buffer2[1000];
@@ -520,8 +520,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_m50.Table = RTCC_MPT_LM;
 		med_m50.SIVBWT = calcParams.tgt->GetMass();
 		PMMWTC(50);
-
-		GETBase = CalcGETBase();
 
 		GET_TIG_imp = OrbMech::HHMMSSToSS(26, 25, 0);
 		GMT_TIG_imp = GMTfromGET(GET_TIG_imp);
@@ -576,7 +574,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			REFSMMATOpt refsopt;
 
-			refsopt.GETbase = GETBase;
 			refsopt.REFSMMATopt = 2;
 			refsopt.REFSMMATTime = 23 * 60 * 60 + 24 * 60 + 8;
 			refsopt.vessel = calcParams.src;
@@ -612,7 +609,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
 		EphemerisData sv_A, sv_P;
-		double GETBase, GET_TIG_imp, P30TIG;
+		double GET_TIG_imp, P30TIG;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -620,7 +617,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_P = StateVectorCalcEphem(calcParams.tgt);
 		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
 
-		GETBase = CalcGETBase();
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 
 		lambert.mode = 5;
@@ -700,7 +696,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		PMMMPTInput in;
 		SPQResults res;
-		double P30TIG, GETbase;
+		double P30TIG;
 		VECTOR3 dV_LVLH;
 		SV sv_A, sv_P;
 		char buffer1[1000];
@@ -710,16 +706,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
 		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
-		GETbase = CalcGETBase();
 
 		AP7MNV * form = (AP7MNV *)pad;
 
 		spqopt.E = 27.45*RAD;
-		spqopt.GETbase = GETbase;
 		spqopt.sv_A = sv_A;
 		spqopt.sv_P = sv_P;
 		spqopt.t_CSI = -1;
-		spqopt.t_CDH = FindDH(sv_A, sv_P, GETbase, 28.0*3600.0 + 1.0*60.0, 8.0*1852.0);
+		spqopt.t_CDH = FindDH(sv_A, sv_P, 28.0*3600.0 + 1.0*60.0, 8.0*1852.0);
 
 		ConcentricRendezvousProcessor(spqopt, res);
 
@@ -757,8 +751,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "NSR");
 		sprintf(form->remarks, "heads down, retrograde");
 
-		AGCStateVectorUpdate(buffer1, sv_A, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv_P, false, GETbase);
+		AGCStateVectorUpdate(buffer1, sv_A, true);
+		AGCStateVectorUpdate(buffer2, sv_P, false);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -775,13 +769,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		TwoImpulseResuls res;
 		AP7TPIPADOpt opt;
 		EphemerisData sv_A, sv_P;
-		double GETbase;
 
 		AP7TPI * form = (AP7TPI *)pad;
 
 		sv_A = StateVectorCalcEphem(calcParams.src);
 		sv_P = StateVectorCalcEphem(calcParams.tgt);
-		GETbase = CalcGETBase();
 
 		lambert.mode = 5;
 		lambert.T1 = -1.0;
@@ -795,7 +787,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PMSTICN(lambert, res);
 
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.GETbase = GETbase;
 		opt.TIG = res.T1;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
@@ -929,7 +920,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, GETbase, TIG_imp, LOA, GET_TH;
+		double P30TIG, TIG_imp, LOA, GET_TH;
 		MATRIX3 REFSMMAT;
 		EphemerisData sv, sv1;
 		AEGBlock aeg;
@@ -939,7 +930,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalcEphem(calcParams.src);
 		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
 
@@ -970,7 +960,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		//Iterate on TIG to find solution that gives us the desired apsidal shift
-		orbopt.AltRef = 1;
 		orbopt.ManeuverCode = RTCC_GMP_HBT;
 		orbopt.sv_in = sv;
 		orbopt.H_A = H_A;
@@ -1022,7 +1011,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P30TIG = GETfromGMT(GMT_TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1149,18 +1137,17 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
-		double t_burn, F, m, dv, GETbase, P30TIG;
+		double t_burn, F, dv, P30TIG;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = CalcGETBase();
 		F = SystemParameters.MCTST1;
 		t_burn = 0.5;
-		m = calcParams.src->GetMass();
-		dv = F / m * t_burn + SystemParameters.MCTCT1 / m * 20.0;
+		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		dv = F / PZMPTCSM.CommonBlock.CSMMass * t_burn + SystemParameters.MCTCT1 / PZMPTCSM.CommonBlock.CSMMass * 20.0;
 
 		sv = StateVectorCalc(calcParams.src);
 
@@ -1176,7 +1163,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1215,7 +1201,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		sprintf(form->remarks, "20 seconds, 2-jet ullage, quads B/D");
 
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, true);
 		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -1240,7 +1226,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv0 = StateVectorCalc(calcParams.src);
 
-		opt.GETbase = CalcGETBase();
 		opt.sv0 = sv0;
 
 		if (fcn == 55)
@@ -1448,17 +1433,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, GETbase, TIG_imp;
+		double P30TIG, TIG_imp;
 		MATRIX3 REFSMMAT;
 		EphemerisData sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalcEphem(calcParams.src);
 		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
 
-		orbopt.AltRef = 1;
 		orbopt.H_A = 240.0*1852.0;
 		orbopt.H_P = 90.0*1852.0;
 		//Eastern Test Range
@@ -1489,7 +1472,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P30TIG = GETfromGMT(GMT_TIG);
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1638,7 +1620,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P27PAD * form = (P27PAD *)pad;
 		P27Opt opt;
 
-		opt.GETbase = CalcGETBase();
 		opt.navcheckGET = OrbMech::HHMMSSToSS(215, 44, 0);
 		opt.SVGET = OrbMech::HHMMSSToSS(216, 14, 0);
 		opt.vessel = calcParams.src;
@@ -1691,7 +1672,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, GETbase, TIG_imp;
+		double P30TIG, TIG_imp;
 		MATRIX3 REFSMMAT;
 		EphemerisData sv, sv0, sv1;
 		char buffer1[1000];
@@ -1701,7 +1682,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double INFO[10];
 		int KAOP, KE;
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalcEphem(calcParams.src);
 		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
 
@@ -1756,7 +1736,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		refsopt.dV_LVLH = dV_LVLH;
-		refsopt.GETbase = GETbase;
 		refsopt.REFSMMATTime = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1834,7 +1813,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MATRIX3 REFSMMAT;
 
 		refsopt.vessel = calcParams.src;
-		refsopt.GETbase = CalcGETBase();
 		refsopt.dV_LVLH = DeltaV_LVLH;
 		refsopt.REFSMMATTime = TimeofIgnition;
 		refsopt.REFSMMATopt = 1;
@@ -1882,13 +1860,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 50: //GENERIC CSM STATE VECTOR UPDATE
 	{
 		SV sv;
-		double GETbase;
 		char buffer1[1000];
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		GETbase = CalcGETBase();
 
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1901,16 +1877,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 51: //GENERIC CSM AND TARGET STATE VECTOR UPDATE
 	{
 		SV sv_A, sv_P;
-		double GETbase;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
-		GETbase = CalcGETBase();
 
-		AGCStateVectorUpdate(buffer1, sv_A, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv_P, false, GETbase);
+		AGCStateVectorUpdate(buffer1, sv_A, true);
+		AGCStateVectorUpdate(buffer2, sv_P, false);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -1925,14 +1899,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv;
-		double GETbase;
 		char buffer1[1000];
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		NavCheckPAD(sv, *form, GETbase);
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		NavCheckPAD(sv, *form);
+		AGCStateVectorUpdate(buffer1, sv, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1947,18 +1919,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv_A, sv_P;
-		double GETbase;
 		char buffer1[1000];
 		char buffer2[1000];
-
-		GETbase = CalcGETBase();
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
 
-		NavCheckPAD(sv_A, *form, GETbase);
-		AGCStateVectorUpdate(buffer1, sv_A, true, GETbase);
-		AGCStateVectorUpdate(buffer2, sv_P, false, GETbase);
+		NavCheckPAD(sv_A, *form);
+		AGCStateVectorUpdate(buffer1, sv_A, true);
+		AGCStateVectorUpdate(buffer2, sv_P, false);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -1973,8 +1942,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P27PAD * form = (P27PAD *)pad;
 		P27Opt opt;
 
-		opt.GETbase = CalcGETBase();
-		opt.SVGET = (oapiGetSimMJD() - opt.GETbase)*24.0*3600.0;
+		opt.SVGET = GETfromGMT(RTCCPresentTimeGMT());
 		opt.navcheckGET = opt.SVGET + 30 * 60;
 		opt.vessel = calcParams.src;
 
@@ -1986,15 +1954,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		SV sv;
-		double GETbase;
 		char buffer1[1000], buffer2[1000];
 		int emem[5];
 
-		GETbase = CalcGETBase();
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		NavCheckPAD(sv, *form, GETbase);
-		AGCStateVectorUpdate(buffer1, sv, true, GETbase);
+		NavCheckPAD(sv, *form);
+		AGCStateVectorUpdate(buffer1, sv, true);
 
 		//W-Matrix update
 		emem[0] = 5;	//Size

@@ -515,17 +515,20 @@ void FCell::UpdateFlow(double dt)
 		while(NumSteps < 10) //10 is an absolute maximum to prevent hangs, and really should never get much higher than ~6-7 during extream transients
 		{
 			Volts = A + B * Amperes + C * Amperes*Amperes + D * Amperes*Amperes*Amperes + E * Amperes*Amperes*Amperes*Amperes + F * Amperes*Amperes*Amperes*Amperes*Amperes;
+			
+			if (Volts > 36.58) {
+				Volts = 36.58;		//prevent unrealistic temperature runaway voltages ---> I will fix this by making voltage depend on H2 and O2 Pressure in the future...
+			}
+
 			Amperes = Volts / loadResistance;
 			++NumSteps;
-			if ((abs(Volts - voltsLastTimestep) < 0.00001) && (abs(Amperes - ampsLastTimestep) < 0.00001))
-			{
-				break;
-			}
+
 			voltsLastTimestep = Volts;
 			ampsLastTimestep = Amperes;
 		}
 		
 		power_load = Amperes * Volts; //recalculate power_load
+
 
 		/*if (!strcmp(name, "FUELCELL1"))
 		{
@@ -550,10 +553,10 @@ void FCell::UpdateFlow(double dt)
 
 		*/
 
-		/*if (!strcmp(name, "FUELCELL1"))
-		{
-		sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfA, Power %lfW, Clogg Potential Reduction %lfV", Amperes, Volts, power_load, -cloggVoltageDrop);
-		}*/
+		//if (!strcmp(name, "FUELCELL2"))
+		//{
+		//sprintf(oapiDebugString(), "Current: %lfA, Potential: %lfV, Power %lfW, Clogg Potential Reduction %lfV", Amperes, Volts, power_load, -cloggVoltageDrop);
+		//}
 
 
 		Reaction(dt);

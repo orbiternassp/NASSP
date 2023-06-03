@@ -111,3 +111,5 @@ XRSound/
 
 # Ignore EMS scroll
 /*.bmp
+# Ignore Matlab log analyzers
+/*.m

@@ -358,8 +358,6 @@ protected:
 	double hpbw_factor;
 
 	const MATRIX3 NBSA = _M(cos(45.0*RAD), -sin(45.0*RAD), 0.0, sin(45.0*RAD), cos(45.0*RAD), 0.0, 0.0, 0.0, 1.0);
-	const OBJHANDLE hMoon = oapiGetObjectByName("Moon");
-	const OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 };
 
 //S-Band Omnidirectional Antenna system
@@ -378,8 +376,6 @@ protected:
 	LEM *lem;					// Ship we're installed in
 	VECTOR3 direction;
 	double hpbw_factor;			//Beamwidth factor
-	OBJHANDLE hMoon;
-	OBJHANDLE hEarth;
 };
 
 ///

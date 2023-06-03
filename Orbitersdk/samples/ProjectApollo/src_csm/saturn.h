@@ -66,6 +66,7 @@
 #include "csmsensors.h"
 #include "rhc.h"
 #include "inertial.h"
+#include "CueCardManager.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -728,7 +729,7 @@ public:
 			unsigned ApexCoverAttached:1;	///< Is the apex cover attached?
 			unsigned ChutesAttached:1;		///< Are the chutes attached?
 			unsigned CSMAttached:1;			///< Is there a CSM?
-			unsigned NosecapAttached:1;		///< Is there an Apollo 5-style nosecap?
+			unsigned Spare1:1;				///< Spare
 			unsigned LESLegsCut:1;			///< Are the LES legs attached?
 			unsigned SIMBayPanelJett:1;		///< Has the SIM bay panel been jettisoned?
 		};
@@ -1160,9 +1161,6 @@ public:
 	///
 	void SlowIfDesired();
 
-	void ActivateS4RCS();
-	void DeactivateS4RCS();
-
 	virtual void ActivatePrelaunchVenting() = 0;
 	virtual void DeactivatePrelaunchVenting() = 0;
 
@@ -1264,11 +1262,6 @@ public:
 	void SetCMdocktgtMesh();
 
 	///
-	/// \brief Set nosecap mesh
-	///
-	void SetNosecapMesh();
-
-	///
 	/// \brief Set VC seats mesh
 	///
 	void SetVCSeatsMesh();
@@ -1276,6 +1269,8 @@ public:
 	void SetCOASMesh();
 
 	void SetSIMBayPanelMesh();
+
+	void AddCMMeshes(const VECTOR3 &mesh_dir);
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -1425,12 +1420,6 @@ protected:
 	/// \brief Nosecap attached flag.
 	///
 	bool CSMAttached;
-
-	///
-	/// True if there is an Apollo 5-style nosecap in place of a CSM.
-	/// \brief Nosecap attached flag.
-	///
-	bool NosecapAttached;
 
 	///
 	/// Gives the angle to which the SLA panels will rotate; some of the Skylab missions
@@ -2015,8 +2004,7 @@ protected:
 	SaturnDCAmpMeter DCAmpMeter;
 
 	SwitchRow SystemTestMeterRow;
-	DCVoltMeter SystemTestVoltMeter;
-	SaturnSystemTestAttenuator  SystemTestAttenuator;
+	SaturnSystemTestMeter SystemTestVoltMeter;
 
 	//
 	// FDAI control switches.
@@ -3475,6 +3463,8 @@ protected:
 	bool LVGuidLight;
 	bool LVRateLight;
 
+	CueCardManager CueCards;
+
 	//
 	// And state that doesn't need to be saved.
 	//
@@ -3590,10 +3580,10 @@ protected:
 	PowerMerge InstrumentationPowerFeeder;
 	PowerMerge ECSSecTransducersFeeder;
 public:
-	CSMTankTempTransducer H2Tank1TempSensor;
-	CSMTankTempTransducer H2Tank2TempSensor;
-	CSMTankTempTransducer O2Tank1TempSensor;
-	CSMTankTempTransducer O2Tank2TempSensor;
+	TemperatureTransducer H2Tank1TempSensor;
+	TemperatureTransducer H2Tank2TempSensor;
+	TemperatureTransducer O2Tank1TempSensor;
+	TemperatureTransducer O2Tank2TempSensor;
 	CSMTankPressTransducer H2Tank1PressSensor;
 	CSMTankPressTransducer H2Tank2PressSensor;
 	CSMTankPressTransducer O2Tank1PressSensor;
@@ -3603,40 +3593,46 @@ public:
 	CSMTankQuantityTransducer O2Tank1QuantitySensor;
 	CSMTankQuantityTransducer O2Tank2QuantitySensor;
 	CSMTankPressTransducer CabinPressSensor;
-	CSMTankTempTransducer CabinTempSensor;
+	TemperatureTransducer CabinTempSensor;
 	CSMDeltaPressINH2OTransducer SuitCabinDeltaPressSensor;
 	CSMCO2PressTransducer CO2PartPressSensor;
 	CSMTankPressTransducer O2SurgeTankPressSensor;
-	CSMTankTempTransducer SuitTempSensor;
+	TemperatureTransducer SuitTempSensor;
 	CSMTankQuantityTransducer WasteH2OQtySensor;
 	CSMTankQuantityTransducer PotH2OQtySensor;
 	CSMTankPressTransducer SuitPressSensor;
 	CSMDeltaPressPSITransducer SuitCompressorDeltaPSensor;
 	CSMTankPressTransducer GlycolPumpOutPressSensor;
-	CSMTankTempTransducer GlyEvapOutSteamTempSensor;
-	CSMTankTempTransducer GlyEvapOutTempSensor;
+	TemperatureTransducer GlyEvapOutSteamTempSensor;
+	TemperatureTransducer GlyEvapOutTempSensor;
 	CSMTankQuantityTransducer GlycolAccumQtySensor;
-	CSMTankTempTransducer ECSRadOutTempSensor;
+	TemperatureTransducer ECSRadOutTempSensor;
 	CSMEvaporatorPressTransducer GlyEvapBackPressSensor;
 	CSMPipeFlowTransducer ECSO2FlowO2SupplyManifoldSensor;
 	CSMTankPressTransducer O2SupplyManifPressSensor;
 	CSMTankPressTransducer SecGlyPumpOutPressSensor;
-	CSMTankTempTransducer SecEvapOutLiqTempSensor;
+	TemperatureTransducer SecEvapOutLiqTempSensor;
 	CSMTankQuantityTransducer SecGlycolAccumQtySensor;
 	CSMEvaporatorPressTransducer SecEvapOutSteamPressSensor;
 	//CSMTankPressTransducer H2OGlyResPressSensor;
 	//Primary glycol flow rate needs a pipe implemented with name
 	//CSMPipeFlowTransducer PriGlycolFlowRateSensor;
-	CSMTankTempTransducer PriEvapInletTempSensor;
-	CSMTankTempTransducer PriRadInTempSensor;
-	CSMTankTempTransducer SecRadInTempSensor;
-	CSMTankTempTransducer SecRadOutTempSensor;
+	TemperatureTransducer PriEvapInletTempSensor;
+	TemperatureTransducer PriRadInTempSensor;
+	TemperatureTransducer SecRadInTempSensor;
+	TemperatureTransducer SecRadOutTempSensor;
 	CSMTankPressTransducer FCO2PressureSensor1;
 	CSMTankPressTransducer FCO2PressureSensor2;
 	CSMTankPressTransducer FCO2PressureSensor3;
 	CSMTankPressTransducer FCH2PressureSensor1;
 	CSMTankPressTransducer FCH2PressureSensor2;
 	CSMTankPressTransducer FCH2PressureSensor3;
+	TemperatureTransducer CMRCSEngine12TempSensor;
+	TemperatureTransducer CMRCSEngine14TempSensor;
+	TemperatureTransducer CMRCSEngine16TempSensor;
+	TemperatureTransducer CMRCSEngine21TempSensor;
+	TemperatureTransducer CMRCSEngine24TempSensor;
+	TemperatureTransducer CMRCSEngine25TempSensor;
 protected:
 
 	// CM Optics
@@ -3916,8 +3912,6 @@ protected:
 	int fwdhatchidx;
 	int opticscoveridx;
 	int cmdocktgtidx;
-	int nosecapidx;
-	int meshLM_1;
 	int simbaypanelidx;
 	int vcidx;
 	int seatsfoldedidx;
@@ -4138,6 +4132,8 @@ protected:
 
 	void InitFDAI(UINT mesh);
 
+	void VCFreeCam(VECTOR3 dir, bool slow);
+
 	//
 	// Systems functions.
 	//
@@ -4145,10 +4141,6 @@ protected:
 	bool CabinFansActive();
 	bool CabinFan1Active();
 	bool CabinFan2Active();
-	void ActivateCSMRCS();
-	void DeactivateCSMRCS();
-	void ActivateCMRCS();
-	void DeactivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
 	void SetPipeMaxFlow(char *pipe, double flow);
@@ -4224,6 +4216,7 @@ protected:
 	void LoadVC();
 	void UpdateVC(VECTOR3 meshdir);
 	void DefineCMAttachments();
+	void ResetDynamicMeshIndizes();
 
 	//
 	// Sounds
@@ -4376,7 +4369,6 @@ protected:
 	Boiler *SPSPropellantLineHeaterA;
 	Boiler *SPSPropellantLineHeaterB;
 	h_HeatLoad *CMRCSHeat[12];
-	h_Radiator* CMRCSTemp[12];
 
 	//
 	// LEM data.
@@ -4394,6 +4386,16 @@ protected:
 	double ViewOffsetx, NoiseOffsetx;
 	double ViewOffsety, NoiseOffsety;
 	double ViewOffsetz, NoiseOffsetz;
+
+	//
+	// VC Free Cam
+	//
+
+	double vcFreeCamx;
+	double vcFreeCamy;
+	double vcFreeCamz;
+	double vcFreeCamSpeed;
+	double vcFreeCamMaxOffset;
 
 	//
 	// Save the last view offset.
@@ -4563,7 +4565,7 @@ protected:
 	friend class SaturnHighGainAntennaPitchMeter;
 	friend class SaturnHighGainAntennaYawMeter;
 	friend class SaturnHighGainAntennaStrengthMeter;
-	friend class SaturnSystemTestAttenuator;
+	friend class SaturnSystemTestMeter;
 	friend class SaturnLVSPSPcMeter;
 	friend class SaturnSPSHeliumNitrogenPressMeter;
 	friend class SaturnLMDPGauge;

@@ -146,6 +146,8 @@ public:
 	void UpdateTLITargetTable();
 	void GenerateSpaceDigitalsNoMPT();
 	void LUNTARCalc();
+	void TLIProcessorCalc();
+	void SaturnVTLITargetUplink();
 	int GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
 
 	int startSubthread(int fcn);
@@ -198,7 +200,6 @@ public:
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
-	bool OrbAdjAltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double GMPApogeeHeight;		//Desired apoapsis height
 	double GMPPerigeeHeight;	//Desired periapsis height
 	double GMPWedgeAngle;
@@ -242,14 +243,12 @@ public:
 	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;
 
-	//ENTY PAGE	
+	//ENTRY PAGE
 	double EntryTIGcor;
 	double EntryLatcor;
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
 	double entryrange;
-	double EntryRET05G; //Time of 0.05g
-	double EntryRRT; //Time of entry interface (400k feet altitude)
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double RTEReentryTime; //Desired landing time
@@ -271,10 +270,8 @@ public:
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
 	AP11LMMNV lmmanpad;
-	char GDCset[64];
 	bool HeadsUp;
-	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
-	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
+	AP7TPI TPI_PAD;
 	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
 	double sxtstardtime;
 	double manpad_ullage_dt;
@@ -282,10 +279,11 @@ public:
 	TLIPAD tlipad;
 	AP11PDIPAD pdipad;
 
-	///ENTRY PAD PAGE
+	//ENTRY PAD PAGE
 	AP11ENT lunarentrypad;
 	AP7ENT earthentrypad;
 	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
+	bool EntryPADSxtStarCheckAttOpt; //true = sextant star attitude check at entry attitude, false = sextant star check at horizon check attitude
 
 	//MAP UPDATE PAGE
 	AP10MAPUPDATE mapupdate;
@@ -293,12 +291,7 @@ public:
 	int mappage, mapgs;
 	double mapUpdateGET;
 
-	//TLI PAGE
-	//0 = TLI (nodal), 1 = TLI (free return)
-	int TLImaneuver;
-
 	//TLCC PAGE
-	VECTOR3 R_TLI, V_TLI;
 	int TLCCSolGood;
 
 	//LANDMARK TRACKING PAGE

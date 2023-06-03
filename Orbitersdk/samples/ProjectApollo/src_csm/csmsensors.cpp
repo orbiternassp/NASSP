@@ -28,6 +28,25 @@
 #include "saturn.h"
 #include "csmsensors.h"
 
+TemperatureTransducer::TemperatureTransducer(char *i_name, double minIn, double maxIn) :
+	Transducer(i_name, minIn, maxIn, 0.0, 5.0)
+{
+
+}
+
+void TemperatureTransducer::Init(e_object *e, therm_obj *t)
+{
+	therm = t;
+	WireTo(e);
+}
+
+double TemperatureTransducer::GetValue()
+{
+	if (therm) return KelvinToFahrenheit(therm->GetTemp());
+
+	return 0.0;
+}
+
 CSMTankTransducer::CSMTankTransducer(char *i_name, double minIn, double maxIn) :
 	Transducer(i_name, minIn, maxIn, 0.0, 5.0)
 {
@@ -38,19 +57,6 @@ void CSMTankTransducer::Init(e_object *e, h_Tank *t)
 {
 	tank = t;
 	WireTo(e);
-}
-
-CSMTankTempTransducer::CSMTankTempTransducer(char *i_name, double minIn, double maxIn) :
-	CSMTankTransducer(i_name, minIn, maxIn)
-{
-
-}
-
-double CSMTankTempTransducer::GetValue()
-{
-	if (tank) return KelvinToFahrenheit(tank->GetTemp());
-
-	return 0.0;
 }
 
 CSMTankPressTransducer::CSMTankPressTransducer(char *i_name, double minIn, double maxIn) :
