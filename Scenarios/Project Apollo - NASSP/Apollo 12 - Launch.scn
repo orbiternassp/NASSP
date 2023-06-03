@@ -5,6 +5,7 @@ END_DESC
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
   Date MJD 40539.515277778
+  Help NASSP/507
 END_ENVIRONMENT
 
 BEGIN_FOCUS
@@ -50,10 +51,10 @@ Yankee-Clipper:ProjectApollo\Saturn5
   CMFUELLOAD 94.528649908
   LANG English
   LEMN Intrepid
-  LMDSCFUEL 8359.25379
-  LMASCFUEL 2375.00965
-  LMDSCEMPTY 2107.61695
-  LMASCEMPTY 2103.30782
+  LMDSCFUEL 8359.253787
+  LMASCFUEL 2375.009649
+  LMDSCEMPTY 2163.680964
+  LMASCEMPTY 2335.592472
   LMPADCNT 253
   LMPAD 0077 12000
   LMPAD 0104 06000
@@ -318,6 +319,9 @@ Yankee-Clipper:ProjectApollo\Saturn5
   AEAPAD 454 2140
   AEAPAD 465 470
   AEAPAD 473 406000
+  AEAPAD 514 724161
+  AEAPAD 515 607560
+  AEAPAD 516 0
   AEAPAD 561 12173
   AEAPAD 566 6547
   AEAPAD 602 0
@@ -329,10 +333,7 @@ Yankee-Clipper:ProjectApollo\Saturn5
   AEAPAD 657 33
   AEAPAD 662 257014
   AUTOSLOW 1
-  LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
-  ASCP_BEGIN
-    OPX 152.000
-  ASCP_END
+  LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 12 LM Checklists.xls
   LVDC_BEGIN
     LVDC_FSPFileName Config\ProjectApollo\AS-507 Flight Sequence Program.txt
     LVDC_SIICenterEngineCutoff 1
@@ -495,6 +496,8 @@ Yankee-Clipper:ProjectApollo\Saturn5
 	LVDC_RNA 6.569733e6
 	LVDC_RNB 6.573009e6
 	LVDC_TETEO 0.0
+	LVDC_T_1 283.5
+	LVDC_T_2 64.2
 	LVDC_T2IR 97.89
 	LVDC_T2IRB 1.0
 	LVDC_T3PRA 247.6742
@@ -776,7 +779,7 @@ Yankee-Clipper:ProjectApollo\Saturn5
   CMPAD3575 30025
   CMPAD3576 1537
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
+    FILE Doc\Project Apollo - NASSP\Checklists\Apollo 12 Checklists.xls
   </Checklist>
 END
 Crawler-Transporter:ProjectApollo\Crawler
