@@ -104,6 +104,12 @@ bool DCS::Uplink(int type, void *upl)
 
 			return iu->GetLVDA()->NavigationUpdate(targeting->PosS, targeting->DotS, targeting->NUPTIM);
 		}
+		else if (type == DCSUPLINK_SLV_TLI_TARGETING_UPDATE)
+		{
+			DCSSLVTLITARGET *targeting = static_cast<DCSSLVTLITARGET*>(upl);
+
+			return iu->GetLVDA()->TLITargetingUpdate(targeting->T_RP, targeting->C_3, targeting->Inclination, targeting->theta_N, targeting->e, targeting->alpha_D, targeting->f);
+		}
 	}
 
 	return false;

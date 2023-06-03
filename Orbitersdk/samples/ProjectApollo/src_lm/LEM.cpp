@@ -581,6 +581,13 @@ void LEM::Init()
 	ViewOffsety = 0;
 	ViewOffsetz = 0;
 
+	// VC Free Cam
+	vcFreeCamx = 0;
+	vcFreeCamy = 0;
+	vcFreeCamz = 0;
+	vcFreeCamSpeed = 0.2;
+	vcFreeCamMaxOffset = 0.5;
+
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
 	RCSA.SetVessel(this);
@@ -776,6 +783,65 @@ void LEM::LoadDefaultSounds()
     sevent.InitDirectSound(soundlib);
 #endif
 	SoundsLoaded = true;
+}
+
+int LEM::clbkConsumeDirectKey(char* kstate)
+{
+	bool camSlow = false;
+	VECTOR3 camDir = _V(0, 0, 0);
+	bool setFreeCam = false;
+
+	if (KEYMOD_SHIFT(kstate)) {
+		camSlow = true;
+	}
+
+	if (!KEYDOWN(kstate, OAPI_KEY_GRAVE)) {
+		if (KEYDOWN(kstate, OAPI_KEY_LEFT)) {
+			camDir.x = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_RIGHT)) {
+			camDir.x = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.y = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.y = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_INSERT)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DELETE)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
+	}
+	else {
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
+	}
+
+	if ((!KEYMOD_CONTROL(kstate)) && (!KEYMOD_ALT(kstate))) {
+		if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
+			if (setFreeCam == true) {
+				VCFreeCam(camDir, camSlow);
+			}
+			//return 1;
+		}
+	}
+
+	return 0;
 }
 
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {

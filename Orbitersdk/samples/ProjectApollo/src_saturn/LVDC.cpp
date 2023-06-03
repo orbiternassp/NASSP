@@ -8314,10 +8314,7 @@ EP00:
 		DPM[DIN4_SpacecraftSeparation] = true;
 		break;
 	case 73: //Restart Calculations (TB6+578.6)
-		if (!TU || TU10)
-		{
-			NISTAT[6] = true;
-		}
+		NISTAT[6] = true;
 		break;
 	case 74: //TB6+580.3
 		NISTAT[3] = true;
@@ -9464,8 +9461,6 @@ restartprep:
 			f			True anomaly of transfer ellipse
 			*/
 
-			fprintf(lvlog, "7-parameter update: T_RP: %f, C_3: %f, Inc: %f°, e: %f, alpha_D: %f°, f: %f°, theta_N: %f° \r\n", T_RP, C_3, Inclination*DEG, e, alpha_D*DEG, f*DEG, theta_N*DEG);
-
 			alpha_D_op = 0;
 			first_op = false;
 
@@ -9845,6 +9840,28 @@ bool LVDCSV::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM
 		DLTTL[4] = NUPTIM;
 		Timer2Interrupt(true);
 		fprintf(lvlog, "Navigation update received! R %f %f %f V %f %f %f T %f \r\n", DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSNUPTIM);
+		return true;
+	}
+	return false;
+}
+
+bool LVDCSV::TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f)
+{
+	if (LVDC_Timebase == 5 && T_RP > LVDC_TB_ETime + 10.0)
+	{
+		TU = true;
+		TU10 = false;
+
+		this->T_RP = T_RP;
+		this->C_3 = C_3;
+		this->Inclination = Inclination;
+		this->theta_N = theta_N;
+		this->e = e;
+		this->alpha_D = alpha_D;
+		this->f = f;
+
+		fprintf(lvlog, "TLI targeting update received! T_RP: %f, C_3: %f, Inc: %f°, e: %f, alpha_D: %f°, f: %f°, theta_N: %f°\r\n", T_RP, C_3, Inclination*DEG, e, alpha_D*DEG, f*DEG, theta_N*DEG);
+
 		return true;
 	}
 	return false;

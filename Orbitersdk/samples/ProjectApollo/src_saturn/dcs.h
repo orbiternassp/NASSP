@@ -36,6 +36,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define DCSUPLINK_REMOVE_INHIBIT_MANEUVER4	9
 #define DCSUPLINK_SATURNIB_LAUNCH_TARGETING	10
 #define DCSUPLINK_SLV_NAVIGATION_UPDATE 	11
+#define DCSUPLINK_SLV_TLI_TARGETING_UPDATE	12
 
 #define DCS_START_STRING	"DCS_BEGIN"
 #define DCS_END_STRING		"DCS_END"
@@ -80,6 +81,18 @@ struct DCSSLVNAVUPDATE
 	double NUPTIM = 0.0;
 	VECTOR3 PosS = _V(0, 0, 0);
 	VECTOR3 DotS = _V(0, 0, 0);
+};
+
+//SLV TLI Target Update
+struct DCSSLVTLITARGET
+{
+	double T_RP = 0.0;
+	double C_3 = 0.0;
+	double Inclination = 0.0;
+	double e = 0.0;
+	double alpha_D = 0.0;
+	double f = 0.0;
+	double theta_N = 0.0;
 };
 
 class IU;

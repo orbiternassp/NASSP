@@ -960,7 +960,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		//Iterate on TIG to find solution that gives us the desired apsidal shift
-		orbopt.AltRef = 1;
 		orbopt.ManeuverCode = RTCC_GMP_HBT;
 		orbopt.sv_in = sv;
 		orbopt.H_A = H_A;
@@ -1138,7 +1137,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
-		double t_burn, F, m, dv, P30TIG;
+		double t_burn, F, dv, P30TIG;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
 		SV sv;
@@ -1147,8 +1146,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		F = SystemParameters.MCTST1;
 		t_burn = 0.5;
-		m = calcParams.src->GetMass();
-		dv = F / m * t_burn + SystemParameters.MCTCT1 / m * 20.0;
+		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		dv = F / PZMPTCSM.CommonBlock.CSMMass * t_burn + SystemParameters.MCTCT1 / PZMPTCSM.CommonBlock.CSMMass * 20.0;
 
 		sv = StateVectorCalc(calcParams.src);
 
@@ -1443,7 +1442,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalcEphem(calcParams.src);
 		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
 
-		orbopt.AltRef = 1;
 		orbopt.H_A = 240.0*1852.0;
 		orbopt.H_P = 90.0*1852.0;
 		//Eastern Test Range

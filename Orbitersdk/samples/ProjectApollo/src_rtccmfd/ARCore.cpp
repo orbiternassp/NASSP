@@ -367,7 +367,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		vesseltype = 1;
 	}
-	else if (utils::IsVessel(v, utils::MCC))
+	else if (utils::IsVessel(v, utils::MCC) || utils::IsVessel(v, utils::SaturnIB_SIVB) || utils::IsVessel(v, utils::SaturnV_SIVB))
 	{
 		vesseltype = 2;
 	}
@@ -440,7 +440,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPManeuverCode = 0;
 	GMPManeuverPoint = 0;
 	GMPManeuverType = 0;
-	OrbAdjAltRef = true;
 	SPSGET = 0.0;
 	GMPApogeeHeight = 0;
 	GMPPerigeeHeight = 0;
@@ -534,6 +533,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lmmanpad.SXP = 0.0;
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
+	EntryPADSxtStarCheckAttOpt = true;
 	manpadenginetype = RTCC_ENGINETYPE_CSMSPS;
 	TPI_PAD.AZ = 0.0;
 	TPI_PAD.dH_TPI = 0.0;
@@ -565,8 +565,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	landingzone = 0;
 	entryprecision = -1;
-
-	TLImaneuver = 0;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -575,8 +573,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	tlipad.SepATT = _V(0.0, 0.0, 0.0);
 	tlipad.IgnATT = _V(0.0, 0.0, 0.0);
 	tlipad.ExtATT = _V(0.0, 0.0, 0.0);
-	R_TLI = _V(0, 0, 0);
-	V_TLI = _V(0, 0, 0);
 
 	pdipad.Att = _V(0, 0, 0);
 	pdipad.CR = 0.0;
@@ -996,6 +992,16 @@ void ARCore::SpaceDigitalsMSKRequest()
 void ARCore::GenerateSpaceDigitalsNoMPT()
 {
 	startSubthread(11);
+}
+
+void ARCore::TLIProcessorCalc()
+{
+	startSubthread(12);
+}
+
+void ARCore::SaturnVTLITargetUplink()
+{
+	startSubthread(57);
 }
 
 void ARCore::LUNTARCalc()
@@ -2773,7 +2779,6 @@ int ARCore::subThread()
 		opt.H_P = GMPPerigeeHeight;
 		opt.dH_D = GMPHeightChange;
 		opt.TIG_GET = SPSGET;
-		opt.AltRef = OrbAdjAltRef;
 		opt.dLAN = GMPNodeShiftAngle;
 		opt.dW = GMPWedgeAngle;
 		opt.long_D = GMPManeuverLongitude;
@@ -3211,8 +3216,14 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
-	case 12: //Spare
+	case 12: //TLI Processor
 	{
+		SV2 state;
+
+		state = GC->rtcc->StateVectorCalc2(vessel);
+
+		GC->rtcc->TranslunarInjectionProcessor(state);
+
 		Result = DONE;
 	}
 	break;
@@ -3290,7 +3301,7 @@ int ARCore::subThread()
 
 			CSMmass = vessel->GetMass();
 			//Assume pre CSM separation from the S-IVB
-			if (CSMmass > 30000.0)
+			if (CSMmass > 40000.0)
 			{
 				CSMmass = 28860.0;
 			}
@@ -3994,6 +4005,7 @@ int ARCore::subThread()
 				opt.lat = EntryLatcor;
 				opt.lng = EntryLngcor;
 				opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
+				opt.SxtStarCheckAttitudeOpt = EntryPADSxtStarCheckAttOpt;
 
 				GC->rtcc->LunarEntryPAD(&opt, lunarentrypad);
 			}
@@ -4427,24 +4439,48 @@ int ARCore::subThread()
 				Result = DONE;
 				break;
 			}
-			EphemerisData sv_tig;
-			double mass, attachedMass = 0.0;
-			
-			mass = vessel->GetMass();
 
-			sv_tig = GC->rtcc->PZGPMELM.SV_before;
+			PMMMPTInput in;
 
-			if (vesselisdocked)
+			//Get all required data for PMMMPT and error checking
+			if (GetVesselParameters(GC->rtcc->med_m65.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
-				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
+				//Error
+				Result = DONE;
+				break;
+			}
+
+			in.VehicleArea = 129.4*pow(0.3048, 2); //TBD
+			in.IterationFlag = GC->rtcc->med_m65.Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m65.TimeFlag;
+			in.Thruster = GC->rtcc->med_m65.Thruster;
+
+			in.sv_before = GC->rtcc->PZGPMELM.SV_before;
+			in.V_aft = GC->rtcc->PZGPMELM.V_after;
+			if (GC->rtcc->med_m65.UllageDT < 0)
+			{
+				in.DETU = GC->rtcc->SystemParameters.MCTNDU;
 			}
 			else
 			{
-				attachedMass = 0.0;
+				in.DETU = GC->rtcc->med_m65.UllageDT;
 			}
-			VECTOR3 DV = GC->rtcc->PZGPMELM.V_after - GC->rtcc->PZGPMELM.SV_before.V;
-			GC->rtcc->PoweredFlightProcessor(sv_tig, mass, GC->rtcc->GETfromGMT(GC->rtcc->PZGPMELM.SV_before.GMT), GC->rtcc->med_m65.Thruster, attachedMass, DV, false, P30TIG, dV_LVLH);
-			P30TIG = GC->rtcc->GETfromGMT(P30TIG);
+			in.UT = GC->rtcc->med_m65.UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m65.TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m65.DPSThrustFactor;
+
+			double GMT_TIG;
+			VECTOR3 DV;
+			if (GC->rtcc->PoweredFlightProcessor(in, GMT_TIG, DV) == 0)
+			{
+				//Save for Maneuver PAD and uplink
+				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
+				dV_LVLH = DV;
+				manpadenginetype = GC->rtcc->med_m65.Thruster;
+				HeadsUp = true;
+				manpad_ullage_dt = GC->rtcc->med_m65.UllageDT;
+				manpad_ullage_opt = GC->rtcc->med_m65.UllageQuads;
+			}
 		}
 
 		Result = DONE;
@@ -4738,6 +4774,11 @@ int ARCore::subThread()
 			Saturn *iuv = (Saturn *)vessel;
 			iu = iuv->GetIU();
 		}
+		else if (utils::IsVessel(vessel, utils::SaturnIB_SIVB))
+		{
+			SIVB *iuv = (SIVB *)vessel;
+			iu = iuv->GetIU();
+		}
 		else
 		{
 			iuUplinkResult = 2;
@@ -4799,6 +4840,66 @@ int ARCore::subThread()
 
 		GC->rtcc->PMMPAD(sv1, mass, THT, dt, H_P, Thruster, DPSScaleFactor);
 		GC->rtcc->PMDPAD();
+
+		Result = DONE;
+	}
+	break;
+	case 57: //Saturn V TLI Targeting Update
+	{
+		iuUplinkResult = DONE;
+
+		if (GC->rtcc->PZTTLIPL.DataIndicator == 0)
+		{
+			iuUplinkResult = 4;
+			Result = DONE;
+			break;
+		}
+
+		IU *iu;
+
+		if (utils::IsVessel(vessel, utils::SaturnV))
+		{
+			Saturn *iuv = (Saturn *)vessel;
+			iu = iuv->GetIU();
+		}
+		else
+		{
+			iuUplinkResult = 2;
+			Result = DONE;
+			break;
+		}
+
+		void *uplink = NULL;
+		DCSSLVTLITARGET upl;
+
+		LVDCSV *lvdc = (LVDCSV*)iu->GetLVDC();
+
+		SevenParameterUpdate coe = GC->rtcc->PZTTLIPL.elem;
+
+		//Calculate time of restart preparation in TB5
+		double GMT_TB5 = GC->rtcc->SystemParameters.MCGRIC*3600.0 + lvdc->TB5;
+		double TIG_TB5 = coe.GMT_TIG - GMT_TB5;
+		double T_RP_TB5 = TIG_TB5 - GC->rtcc->SystemParameters.MDVSTP.DTIG;
+
+		upl.T_RP = T_RP_TB5;
+		upl.alpha_D = coe.alpha_D;
+		upl.C_3 = coe.C3;
+		upl.e = coe.e;
+		upl.f = coe.f;
+		upl.Inclination = coe.Inclination;
+		upl.theta_N = coe.theta_N;
+
+		uplink = &upl;
+		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SLV_TLI_TARGETING_UPDATE, uplink);
+
+		if (uplinkaccepted)
+		{
+			iuUplinkResult = 1;
+		}
+		else
+		{
+			iuUplinkResult = 3;
+		}
 
 		Result = DONE;
 	}

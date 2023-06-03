@@ -4640,11 +4640,6 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 
 	EntryPADHorChkGET = EIGET - 17.0*60.0;
 
-	double Entrytrunnion, Entryshaft, EntryBSSpitch, EntryBSSXPos;
-	int Entrystaroct, EntryCOASstaroct;
-	OrbMech::checkstar(opt->REFSMMAT, _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD), svSxtCheck.R, OrbMech::R_Earth, Entrystaroct, Entrytrunnion, Entryshaft);
-	OrbMech::coascheckstar(opt->REFSMMAT, _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD), svSxtCheck.R, OrbMech::R_Earth, EntryCOASstaroct, EntryBSSpitch, EntryBSSXPos);
-
 	double horang, coastang, IGA, cosIGA, sinIGA;
 	VECTOR3 X_NB, Y_NB, Z_NB, X_SM, Y_SM, Z_SM, A_MG;
 
@@ -4664,6 +4659,23 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	IGA = atan2(sinIGA, cosIGA);
 
 	EntryPADHorChkPit = PI2 - (horang + coastang + 31.7*RAD) + IGA;
+
+	VECTOR3 SextantStarCheckAtt;
+	double Entrytrunnion, Entryshaft, EntryBSSpitch, EntryBSSXPos;
+	int Entrystaroct, EntryCOASstaroct;
+
+	//Sextant star check either at entry attitude or at horizon check attitude
+	if (opt->SxtStarCheckAttitudeOpt)
+	{
+		SextantStarCheckAtt = _V(OrbMech::round(EIangles.x*DEG)*RAD, OrbMech::round(EIangles.y*DEG)*RAD, OrbMech::round(EIangles.z*DEG)*RAD);
+	}
+	else
+	{
+		SextantStarCheckAtt = _V(0, OrbMech::round(EntryPADHorChkPit*DEG)*RAD, 0);
+	}
+
+	OrbMech::checkstar(opt->REFSMMAT, SextantStarCheckAtt, svSxtCheck.R, OrbMech::R_Earth, Entrystaroct, Entrytrunnion, Entryshaft);
+	OrbMech::coascheckstar(opt->REFSMMAT, SextantStarCheckAtt, svSxtCheck.R, OrbMech::R_Earth, EntryCOASstaroct, EntryBSSpitch, EntryBSSXPos);
 
 	pad.Att05[0] = _V(OrbMech::imulimit(EIangles.x*DEG), OrbMech::imulimit(EIangles.y*DEG), OrbMech::imulimit(EIangles.z*DEG));
 	pad.BSS[0] = EntryCOASstaroct;
@@ -5369,6 +5381,36 @@ int RTCC::LunarDescentPlanningProcessor(SV sv)
 	return 0;
 }
 
+void RTCC::TranslunarInjectionProcessor(SV2 state)
+{
+	TLIMEDQuantities medquant;
+	TLMCCMissionConstants mccconst;
+	TLIOutputData out;
+
+	medquant.Mode = PZTLIPLN.Mode;
+	medquant.state = state;
+	medquant.h_ap = PZTLIPLN.h_ap*1852.0;
+	medquant.GMT_TIG = GMTfromGET(PZTLIPLN.GET_TLI);
+
+	mccconst.delta = PZTLIPLN.DELTA;
+	mccconst.sigma = PZTLIPLN.SIGMA;
+	mccconst.Reentry_range = PZMCCPLN.Reentry_range;
+
+	TLIProcessor tli(this);
+	tli.Init(medquant, mccconst, GetGMTBase());
+	tli.Main(out);
+
+	if (out.ErrorIndicator) return;
+
+	PZTTLIPL.DataIndicator = 1;
+	PZTTLIPL.elem = out.uplink_data;
+
+	//Display data
+	PZTPDDIS.GET_TIG = GETfromGMT(out.uplink_data.GMT_TIG);
+	PZTPDDIS.GET_TB6 = PZTPDDIS.GET_TIG - SystemParameters.MDVSTP.DTIG;
+	PZTPDDIS.dv_TLI = out.dv_TLI / 0.3048;
+}
+
 void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass)
 {
 	TLMCCDataTable datatab;
@@ -5381,8 +5423,6 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMm
 	medquant.Mode = PZMCCPLN.Mode;
 	medquant.Config = PZMCCPLN.Config;
 	medquant.T_MCC = GMTfromGET(PZMCCPLN.MidcourseGET);
-	medquant.GMTBase = GetGMTBase();
-	medquant.GETBase = CalcGETBase();
 	medquant.sv0 = sv0;
 	medquant.CSMMass = CSMmass;
 	medquant.LMMass = LMmass;
@@ -5427,7 +5467,7 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMm
 	mccconst.Reentry_range = PZMCCPLN.Reentry_range;
 
 	TLMCCProcessor tlmcc(this);
-	tlmcc.Init(datatab, medquant, mccconst);
+	tlmcc.Init(datatab, medquant, mccconst, GetGMTBase());
 	tlmcc.Main(out);
 
 	//Update display data
@@ -7354,40 +7394,6 @@ bool RTCC::REFSMMATDecision(VECTOR3 Att)
 	return false;
 }
 
-SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG)
-{
-	//Inputs:
-	//
-	//R_TLI: TLI cutoff position vector, right-handed, ECI coordinate system
-	//V_TLI: TLI cutoff velocity vector, right-handed, ECI coordinate system
-
-	double T_RP, tb5start;
-	SevenParameterUpdate param;
-	OELEMENTS coe;
-
-	tb5start = TB5 - 17.0;
-	T_RP = P30TIG - tb5start - T_RG;
-
-	EphemerisData2 sv, sv_out;
-	sv.R = R_TLI;
-	sv.V = V_TLI;
-	sv.GMT = GMTfromGET(P30TIG);
-
-	ELVCNV(sv, 0, 1, sv_out);
-
-	coe = OrbMech::coe_from_PACSS4(sv_out.R, sv_out.V, mu);
-
-	param.alpha_D = coe.w;
-	param.C3 = coe.h;
-	param.e = coe.e;
-	param.f = coe.TA;
-	param.Inclination = coe.i;
-	param.theta_N = coe.RA;
-	param.T_RP = T_RP;
-
-	return param;
-}
-
 int RTCC::PMMSPT(PMMSPTInput &in)
 {
 	//S-IVB TLI IGM Pre-Thrust Targeting Module
@@ -8281,96 +8287,6 @@ VECTOR3 RTCC::PointAOTWithCSM(MATRIX3 REFSMMAT, EphemerisData sv, int AOTdetent,
 	GA = OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), OrbMech::tmat(C_MSM));
 
 	return GA;
-}
-
-bool RTCC::TLIFlyby(SV sv_TLI, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry)
-{
-	SV sv_TLI_apo, sv_p, sv_r;
-	MATRIX3 M_EMP;
-	VECTOR3 R_EMP, V_EMP;
-	double dt, ddt, VacPeri, R_E, e_H, e_Ho, c_I, p_H, eps2, dto, r_peri, lngtest, lattest, fpatest, rtest, v_peri, lng_EMP, azi_peri;
-	int s_F;
-	OBJHANDLE hMoon, hEarth;
-	OELEMENTS coe;
-
-	c_I = p_H = dto = 0.0;
-	eps2 = 0.1;
-	s_F = 0;
-
-	hEarth = oapiGetObjectByName("Earth");
-	hMoon = oapiGetObjectByName("Moon");
-	R_E = OrbMech::R_Earth;
-
-	sv_p.gravref = hMoon;
-	sv_r.gravref = hEarth;
-
-	r_peri = OrbMech::R_Moon + h_peri;
-	dt = (sv_peri_guess.MJD - sv_TLI.MJD)*24.0*3600.0;
-
-	M_EMP = OrbMech::EMPMatrix(sv_peri_guess.MJD);
-	R_EMP = mul(M_EMP, sv_peri_guess.R);
-	V_EMP = mul(M_EMP, sv_peri_guess.V);
-	OrbMech::rv_from_adbar(R_EMP, V_EMP, rtest, v_peri, lng_EMP, lattest, fpatest, azi_peri);
-
-	do
-	{
-		sv_p.MJD = sv_TLI.MJD + dt / 24.0 / 3600.0;
-
-		do
-		{
-			//Position vector in EMP Coordinates
-			OrbMech::adbar_from_rv(r_peri, v_peri, lng_EMP, lat_EMP, PI05, azi_peri, R_EMP, V_EMP);
-
-			//EMP Matrix
-			M_EMP = OrbMech::EMPMatrix(sv_p.MJD);
-
-			//Convert EMP position to ecliptic
-			sv_p.R = tmul(M_EMP, R_EMP);
-			sv_p.V = tmul(M_EMP, V_EMP);
-
-			//Calculate pericynthion velocity
-			sv_p.V = OrbMech::Vinti(sv_p.R, _V(0.0, 0.0, 0.0), sv_TLI.R, sv_p.MJD, -dt, 0, false, BODY_MOON, BODY_MOON, BODY_EARTH, sv_p.V);
-
-			//save azi and vmag as new initial guess
-			V_EMP = mul(M_EMP, sv_p.V);
-			OrbMech::rv_from_adbar(R_EMP, V_EMP, rtest, v_peri, lngtest, lattest, fpatest, azi_peri);
-
-			coe = OrbMech::coe_from_sv(sv_p.R, sv_p.V, OrbMech::mu_Moon);
-			ddt = OrbMech::timetoperi(sv_p.R, sv_p.V, OrbMech::mu_Moon);
-
-			if (coe.TA > PI)
-			{
-				lng_EMP += coe.TA - PI2;
-			}
-			else
-			{
-				lng_EMP += coe.TA;
-			}
-		} while (abs(ddt) > 0.01);
-
-		OrbMech::ReturnPerigee(sv_p.R, sv_p.V, sv_p.MJD, hMoon, hEarth, 1.0, sv_r.MJD, sv_r.R, sv_r.V);
-		VacPeri = length(sv_r.R);
-
-		//20NM vacuum perigee
-		e_H = VacPeri - R_E - 20.0*1852.0;
-
-		if (p_H == 0 || abs(dt - dto) >= eps2)
-		{
-			OrbMech::ITER(c_I, s_F, e_H, p_H, dt, e_Ho, dto);
-			if (s_F == 1)
-			{
-				return false;
-			}
-		}
-	} while (abs(dt - dto) >= eps2);
-
-	sv_TLI_apo = coast(sv_p, -dt);
-
-	DV = sv_TLI_apo.V - sv_TLI.V;
-	sv_peri = sv_p;
-	sv_reentry = sv_r;
-
-	return true;
 }
 
 double LLWP_CURVE(double DV1, double DV2, double DV3, double DH1, double DH2, double DH3, double DVMAX)
@@ -12665,17 +12581,35 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			R_a = 2.0*A_Ins - r_Ins;
 			t_CSI = t_Ins + dt_CSI;
 
-			if (K3 == false || dt_CAN <= 0.0 || opt.dv_CAN <= 0.0)
+			if (opt.LongProfileFirst)
 			{
-				conopt.sv_A = sv_LM_Ins;
+				if (K3 == false)
+				{
+					t_CAN = t_Ins + dt_CAN;
+					sv_CAN = coast(sv_LM_Ins, t_CAN - t_Ins);
+					sv_CAN_apo = sv_CAN;
+					sv_CAN_apo.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.R, sv_CAN.V), _V(opt.dv_CAN, 0.0, 0.0));
+					conopt.sv_A = sv_CAN_apo;
+				}
+				else
+				{
+					conopt.sv_A = sv_LM_Ins;
+				}
 			}
 			else
 			{
-				t_CAN = t_Ins + dt_CAN;
-				sv_CAN = coast(sv_LM_Ins, t_CAN - t_Ins);
-				sv_CAN_apo = sv_CAN;
-				sv_CAN_apo.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.R, sv_CAN.V), _V(opt.dv_CAN, 0.0, 0.0));
-				conopt.sv_A = sv_CAN_apo;
+				if (K3 == false || dt_CAN <= 0.0 || opt.dv_CAN <= 0.0)
+				{
+					conopt.sv_A = sv_LM_Ins;
+				}
+				else
+				{
+					t_CAN = t_Ins + dt_CAN;
+					sv_CAN = coast(sv_LM_Ins, t_CAN - t_Ins);
+					sv_CAN_apo = sv_CAN;
+					sv_CAN_apo.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.R, sv_CAN.V), _V(opt.dv_CAN, 0.0, 0.0));
+					conopt.sv_A = sv_CAN_apo;
+				}
 			}
 
 			conopt.sv_P = sv_CSM_Ins;
@@ -12702,6 +12636,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 				dt_CSI += opt.dt_2CSI;
 				conopt.t_TPI += opt.dt_2TPI;
 				res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo)*(res.R_amin - R_a_apo);
+				res.R_amin = length(opt.R_LS) + opt.h_2amin;
 				if (dt_CAN >= dt_CSI)
 				{
 					dt_CAN = 0.0;
@@ -18933,7 +18868,7 @@ void RTCC::PMMIEV(double T_L)
 
 	VECTOR3 R, V;
 	double GMT_EOI = T_L + dt_EOI;
-	if (EMMXTR(GMT_EOI, rad_EOI, vel_EOI, lng_EOI, lat_EOI, fpa_EOI, azi_EOI, R, V))
+	if (EMMXTR(GMT_EOI, rad_EOI, vel_EOI, lng_EOI, lat_EOI, fpa_EOI + PI05, azi_EOI, R, V))
 	{
 		PMXSPT("PMMIEV", 120);
 		return;

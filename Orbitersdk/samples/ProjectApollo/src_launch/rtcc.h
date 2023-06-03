@@ -34,6 +34,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/EntryCalculations.h"
 #include "../src_rtccmfd/RTCCTables.h"
 #include "../src_rtccmfd/TLMCC.h"
+#include "../src_rtccmfd/TLIProcessor.h"
 #include "../src_rtccmfd/LOITargeting.h"
 #include "../src_rtccmfd/LMGuidanceSim.h"
 #include "../src_rtccmfd/CoastNumericalIntegrator.h"
@@ -552,6 +553,7 @@ struct LunarEntryPADOpt
 	double lat; //splashdown latitude
 	double lng; //splashdown longitude
 	SV sv0;
+	bool SxtStarCheckAttitudeOpt = true; //true = sextant star attitude check at entry attitude, false = sextant star check at horizon check attitude
 };
 
 struct TLIPADOpt
@@ -913,7 +915,10 @@ struct PDAPOpt //Powered Descent Abort Program
 	//DV of the canned maneuver
 	double dv_CAN = 10.0*0.3048;
 	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
-	double h_amin = 30.0*1852.0;
+	double h_amin = 30.0*1852.0; //First segment
+	double h_2amin = 30.0*1852.0; //Second segment
+	//Flag to use the long profile in the first set of targeting coefficients
+	bool LongProfileFirst = false;
 };
 
 struct PDAPResults
@@ -2096,18 +2101,6 @@ struct calculationParameters {
 	SV SVSTORE1;			//Temporary state vector storage
 };
 
-//For LVDC
-struct SevenParameterUpdate
-{
-	double T_RP;	//Time of Restart Preparation (TB6)
-	double C3;
-	double Inclination;
-	double e;
-	double alpha_D;
-	double f;
-	double theta_N;
-};
-
 struct ASTInput
 {
 	double dgamma;
@@ -2422,6 +2415,7 @@ public:
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
+	void TranslunarInjectionProcessor(SV2 state);
 	void TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass);
 	int LunarDescentPlanningProcessor(SV sv);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
@@ -2439,7 +2433,6 @@ public:
 	void RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(EphemerisData sv0, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
-	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double P30TIG, double TB5, double mu, double T_RG);
 	//S-IVB TLI IGM Pre-Thrust Targeting Module
 	int PMMSPT(PMMSPTInput &in);
 	int PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC);
@@ -2458,7 +2451,6 @@ public:
 	SV2 ExecuteManeuver(SV2 sv, double P30TIG, VECTOR3 dV_LVLH, int Thruster);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
-	bool TLIFlyby(SV sv_TLI, double lat_EMP, double h_peri, SV sv_peri_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_reentry);
 	void PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP);
 	void LLWP_PERHAP(AEGHeader Header, AEGDataBlock sv, double &RAP, double &RPE);
 	void LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp, int M, int P, int I_CDH, double DH, double &dv_CSI, double &dv_CDH, double &t_CDH);
@@ -3625,8 +3617,37 @@ public:
 		MATRIX3 G = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	} PZMATCSM, PZMATLEM;
 
+	struct TLIPlanningTable
+	{
+		//INPUT
+		//4 = E-type mission ellipse
+		int Mode = 4;
+		//TLI ignition for mode 4
+		double GET_TLI = 0.0;
+		//Apogee height for mode 4, nautical miles
+		double h_ap = 5000.0;
+
+		//CONSTANTS - THESE SHOULD BE SYSTEM PARAMETERS
+		double DELTA = 0.0;
+		double SIGMA = 7.5*RAD;
+		
+	} PZTLIPLN;
+
+	struct TLIPlanningDisplayDataTable
+	{
+		double GET_TIG = 0.0;
+		double GET_TB6 = 0.0;
+		double T_b = 0.0;
+		double dv_TLI = 0.0;
+		double H_a = 0.0;
+		double lat_ign = 0.0;
+		double lng_ign = 0.0;
+	} PZTPDDIS;
+
 	struct TLIPlanningOutputTable
 	{
+		int DataIndicator = 0; //0 = None, 1 = 7 parameters, 2 = 10 parameters
+
 		//Target vector
 		VECTOR3 T;
 		//Unit nodal vector which defines node of desired cutoff plane and parking orbit plane at time of restart preparation
@@ -3637,10 +3658,14 @@ public:
 		VECTOR3 V;
 		double TB6;
 		double TIG;
+
 		double i;
 		double theta_N;
 		double sigma;
 		double C3;
+
+		SevenParameterUpdate elem;
+
 	} PZTTLIPL;
 
 	struct LOIElementsTable
@@ -4287,7 +4312,7 @@ public:
 		TLMCCDataTable blocks[6];
 	} PZMCCSFP;
 
-	struct TTLMCCPlanningDisplay
+	struct TLMCCPlanningDisplay
 	{
 		TLMCCDisplayData data[6];
 	} PZMCCDIS;
