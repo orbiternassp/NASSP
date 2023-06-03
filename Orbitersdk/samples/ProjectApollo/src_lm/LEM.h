@@ -515,6 +515,7 @@ public:
 	bool clbkVCMouseEvent(int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent(int id, int event, SURFHANDLE surf);
 
+	int clbkConsumeDirectKey(char* keystate);
 	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
@@ -718,6 +719,7 @@ protected:
 	void RCSSoundTimestep();
 	// void GetDockStatus();
 	void JostleViewpoint(double amount);
+	void VCFreeCam(VECTOR3 dir, bool slow);
 	void AddDust();
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
@@ -1733,6 +1735,16 @@ protected:
 	double ViewOffsetx;
 	double ViewOffsety;
 	double ViewOffsetz;
+
+	//
+	// VC Free Cam
+	//
+
+	double vcFreeCamx;
+	double vcFreeCamy;
+	double vcFreeCamz;
+	double vcFreeCamSpeed;
+	double vcFreeCamMaxOffset;
 
 	//
 	// Ground Systems

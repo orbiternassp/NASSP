@@ -1119,7 +1119,7 @@ void h_Evaporator::refresh(double dt) {  //Need to look at these values (-0.11, 
 	if (!h_pump) throttle_temp = 0;
 
 	// The evaporators don't work inside the atmosphere, they stop working shortly before apex cover jettison
-	if (parent->Vessel->GetAtmPressure() > 30000.0) {
+	if (parent->Vessel->GetAtmPressure() > 1758.16311) {
 		throttle_temp = 0;
 		steamUnderPressure = -0.11;
 	}

@@ -494,6 +494,12 @@ void Saturn::SystemsInit() {
 	SecRadInTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATORINLET"));
 	SecRadOutTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATOROUTLET"));
 	
+	CMRCSEngine12TempSensor.Init(&Panel276CB1, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12"));
+	CMRCSEngine14TempSensor.Init(&Panel276CB2, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14"));
+	CMRCSEngine16TempSensor.Init(&Panel276CB1, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16"));
+	CMRCSEngine21TempSensor.Init(&Panel276CB2, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21"));
+	CMRCSEngine24TempSensor.Init(&Panel276CB2, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24"));
+	CMRCSEngine25TempSensor.Init(&Panel276CB2, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25"));
 
 	// Optics initialization
 	optics.Init(this);
@@ -563,15 +569,8 @@ void Saturn::SystemsInit() {
 	SMRCSHeaterDSwitch.WireTo(&SMHeatersDMnACircuitBraker);
 
 	// CM RCS initialization
-	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"),
-		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14"),
-		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16"),
-		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
-
-	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"),
-		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24"),
-		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25"),
-		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21"), NULL, &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
+	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
+	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL, &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
 
 	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBraker);
 	CMRCSProp2Switch.WireTo(&PrplntIsolMnBCircuitBraker);
@@ -591,14 +590,6 @@ void Saturn::SystemsInit() {
 	CMRCSHeat[9] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL21COIL");
 	CMRCSHeat[10] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL22COIL");
 	CMRCSHeat[11] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL12COIL");
-
-	//CM RCS Transducer Locations
-	CMRCSTemp[0] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12");
-	CMRCSTemp[1] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14");
-	CMRCSTemp[2] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET16");
-	CMRCSTemp[3] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET21");
-	CMRCSTemp[4] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24");
-	CMRCSTemp[5] = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25");
 
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
 	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
@@ -950,8 +941,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				if (MissionTime >= -135) {	// 2min 15sec before launch
 					// Disable GSE devices
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
-					*(int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
+					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
+					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
+					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:PUMP") = SP_PUMP_OFF;
 
 					// Next state
 					systemsState = SATSYSTEMS_READYTOLAUNCH;
@@ -1022,16 +1015,17 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 
 //GSE Cooling Debug Lines
-	//double* primaccumTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
-	//double* primradinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET:TEMP");
-	//double* primradoutTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATOROUTLET:TEMP");
-	//double* primevapinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATORINLET:TEMP");
-	//double* primevapoutTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOROUTLET:TEMP");
-
-	//double* gseprimhxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGSEHEATEXCHANGER:POWER");
-	//double* gsesechxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:POWER");
-	//double* gseradTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:GSERADIATOR:TEMP");
-	//double* isonGSEchiller = (double*)Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:ISON");
+	/*
+	double* primaccumTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
+	double* primradinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET:TEMP");
+	double* primradoutTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATOROUTLET:TEMP");
+	double* primevapinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATORINLET:TEMP");
+	double* primevapoutTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOROUTLET:TEMP");
+	double* gseprimhxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGSEHEATEXCHANGER:POWER");
+	double* gsesechxPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:POWER");
+	double* gseradTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:GSERADIATOR:TEMP");
+	double* isonGSEchiller = (double*)Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:ISON");
+	*/
 
 
 //sprintf(oapiDebugString(), "Prim: %.3f Sec: %.3f RadT: %.3f", *gseprimhxPower, *gsesechxPower, KelvinToFahrenheit(*gseradTemp));
@@ -2405,12 +2399,6 @@ void Saturn::JoystickTimestep()
 			CMRCSHeat[i]->GenerateHeat(52.5);
 		}
 	}
-
-	//Code for returning CM RCS temperatures. Is this the best place for this?
-	for (int i = 0; i < 6; i++)
-	{
-		CMRCSTemp[i]->GetTemp();
-	}
 }
 
 void Saturn::CabinFansSystemTimestep()
@@ -2688,57 +2676,6 @@ bool Saturn::CabinFan2Active()
 	bool PowerFan2 = (ECSCabinFanAC2ACircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC2BCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC2CCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE);
 
 	return (CabinFan2Switch.IsUp() && PowerFan2);
-}
-
-//
-// Forcibly activate the SIVB RCS for unmanned control.
-//
-
-void Saturn::ActivateS4RCS()
-
-{
-}
-
-void Saturn::DeactivateS4RCS()
-
-{
-}
-
-//
-// And CSM
-//
-
-void Saturn::ActivateCSMRCS()
-
-{
-	/// \todo This is now handled by automatic checklists and - as in reality - activated throughout the stage. 
-	/// To restore the old functionality, a special flag would need to be introduced in SMRCSPropellantSource.
-
-}
-
-void Saturn::DeactivateCSMRCS()
-
-{
-	/// \todo This is now handled by automatic checklists and - as in reality - activated throughout the stage. 
-	/// To restore the old functionality, a special flag would need to be introduced in SMRCSPropellantSource.
-}
-
-//
-// And CM
-//
-
-void Saturn::ActivateCMRCS()
-
-{
-	/// \todo This is now handled by automatic checklists and - as in reality - activated throughout the stage. 
-	/// To restore the old functionality, a special flag would need to be introduced in CMRCSPropellantSource.
-}
-
-void Saturn::DeactivateCMRCS()	
-
-{
-	/// \todo This is now handled by automatic checklists and - as in reality - activated throughout the stage. 
-	/// To restore the old functionality, a special flag would need to be introduced in CMRCSPropellantSource.
 }
 
 void Saturn::SetEngineIndicators()
