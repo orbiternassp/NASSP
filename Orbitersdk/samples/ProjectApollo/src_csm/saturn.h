@@ -3792,6 +3792,7 @@ protected:
 	// both.
 	DSKY dsky;
 	DSKY dsky2;
+	PowerMerge CMCDCBusFeeder;
 	CSMcomputer agc;	
 	IMU imu;
 	CDU tcdu;
