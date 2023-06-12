@@ -128,7 +128,6 @@ namespace rtcc
 		double DELV2(VECTOR3 R_N, VECTOR3 U_S, double R_a, double R_p, double W_P);
 
 		LOIOptions opt;
-		OBJHANDLE hMoon;
 		//Unit position vector to hyperbolic perilune
 		VECTOR3 U_PC;
 		//Unit angular momentum vector to SPH

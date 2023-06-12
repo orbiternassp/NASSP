@@ -1413,7 +1413,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 47)
 		{
 			sprintf(manname, "TEI-%d", mcc->MoonRev + 1);
-			sv2 = coast(sv1, 1.5*2.0*3600.0);
+			sv2 = coast(sv1, 1.0*2.0*3600.0);
 		}
 
 		entopt.Inclination = -40.0*RAD;
