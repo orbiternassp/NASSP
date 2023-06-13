@@ -560,8 +560,14 @@ void Saturn::InitVC()
 	// we create a texture with oapiCreateTextureSurface which will have the correct flags
 	// and then blit the original texture onto it
 	SURFHANDLE tmp = oapiLoadTexture("ProjectApollo/VC/EMSscroll_LEO.dds");
-	srf[SRF_VC_EMS_SCROLL_LEO] = oapiCreateTextureSurface(4096*TexMul, 256*TexMul);
-	oapiBlt(srf[SRF_VC_EMS_SCROLL_LEO], tmp, 0, 0, 0, 0, 4096*TexMul, 256*TexMul);
+	// Another Workaround to enable 8K Textures
+	if (TexMul == TEXTURES_8K){
+		srf[SRF_VC_EMS_SCROLL_LEO] = oapiCreateTextureSurface(4096 * TexMul/2, 256 * TexMul);
+		oapiBlt(srf[SRF_VC_EMS_SCROLL_LEO], tmp, 0, 0, 0, 0, 4096 * TexMul/2, 256 * TexMul);
+	}else{
+		srf[SRF_VC_EMS_SCROLL_LEO] = oapiCreateTextureSurface(4096 * TexMul, 256 * TexMul);
+		oapiBlt(srf[SRF_VC_EMS_SCROLL_LEO], tmp, 0, 0, 0, 0, 4096 * TexMul, 256 * TexMul);
+	}
 	oapiReleaseTexture(tmp);
 #endif
 	srf[SRF_VC_EMS_SCROLL_BORDER] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_border.dds");

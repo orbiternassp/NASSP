@@ -216,7 +216,7 @@ const VECTOR3 P5_TOGGLE_POS[P5_SWITCHCOUNT] = {
 
 // Panel 5 rotaries
 const VECTOR3 P5_ROT_POS[P5_ROTCOUNT] = {
-{-0.5856, -0.0153, 1.4168},{-0.4983, -0.0153, 1.4167},{-0.4306, -0.0153, 1.4168}
+	{-0.5856, -0.0153, 1.4168}, {-0.4983, -0.0153, 1.4167}, {-0.4306, -0.0153, 1.4168}
 };
 
 // Panel 6 switches
@@ -292,7 +292,7 @@ const VECTOR3 P12_TOGGLE_POS[P12_SWITCHCOUNT] = {
 
 // Panel 12 rotaries
 const VECTOR3 P12_ROT_POS[P12_ROTCOUNT] = {
-{0.9879, 0.0405, 1.0609},{0.9839, 0.0393, 0.9784},{0.9948, 0.0425, 0.9124},{1.0787, 0.0675, 0.9130}
+{0.9879, 0.0405, 1.0601}, {0.9839, 0.0393, 0.9782}, {0.9948, 0.0425, 0.9119}, {1.0787, 0.0675, 0.9119}
 };
 
 // Panel 12 needles
@@ -315,7 +315,7 @@ const VECTOR3 P14_TOGGLE_POS[P14_SWITCHCOUNT] = {
 
 // Panel 14 rotaries
 const VECTOR3 P14_ROT_POS[P14_ROTCOUNT] = {
-{1.0075, 0.3452, 1.2120}
+{1.0075, 0.3452, 1.2114}
 };
 
 // Panel 14 needles
