@@ -1874,7 +1874,6 @@ void RTCC::LoadMissionConstantsFile(char *file)
 				SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
 			}
 			papiReadScenario_int(Buff, "MCCLEX", SystemParameters.MCCLEX);
-			papiReadScenario_int(Buff, "MCCLRF", SystemParameters.MCCLRF);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
