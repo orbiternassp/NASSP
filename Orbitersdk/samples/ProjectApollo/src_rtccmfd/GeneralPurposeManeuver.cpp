@@ -890,7 +890,7 @@ void RTCCGeneralPurposeManeuverProcessor::NodeShift()
 	{
 		sin_u_a = -sin_u_a;
 	}
-	sv_a.U = atan2(sin_u_a , cos_u_a);
+	sv_a.U = pRTCC->GLQATN(sin_u_a , cos_u_a);
 	cos_dw = (cos(opt->dLAN) - cos(u_temp)*cos(sv_a.U)) / (sin(u_temp)*sin(sv_a.U));
 	sin_dw = sin(opt->dLAN)*sin(i_temp) / sin_u_a;
 	DW = atan2(sin_dw, cos_dw);

@@ -1949,7 +1949,6 @@ void RTCC::LoadMissionConstantsFile(char *file)
 
 			papiReadScenario_int(Buff, "AGCEpoch", SystemParameters.AGCEpoch);
 			papiReadScenario_int(Buff, "MCCLEX", SystemParameters.MCCLEX);
-			papiReadScenario_int(Buff, "MCCLRF", SystemParameters.MCCLRF);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
@@ -18596,6 +18595,7 @@ void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)
 	PZSLVTAR.TYAW = lwp.rlott.TYAW;
 	
 	PZSLVTAR.TGRR = lwp.lwsum.GMTLO - in.DTGRR;
+	PZSLVTAR.TGRR = PZSLVTAR.TGRR - trunc(PZSLVTAR.TGRR / 86400.0)*86400.0;
 	PZSLVTAR.AZL = lwp.lwsum.AZL*DEG;
 	PZSLVTAR.VIGM = lwp.lwsum.VIGM;
 	PZSLVTAR.H = (lwp.lwsum.RIGM - OrbMech::R_Earth) / 1852.0;

@@ -1282,7 +1282,7 @@ void LEM_LCA::UpdateFlow(double dt)
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
-
+	//LCA Heating to be added
 }
 
 double LEM_LCA::GetCompDockVoltage()
