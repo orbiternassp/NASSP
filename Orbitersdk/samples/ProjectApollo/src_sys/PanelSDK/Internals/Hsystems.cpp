@@ -181,7 +181,7 @@ void H_system::Load(FILEHANDLE scn) {
 	oapiReadScenario_nextline (scn, line);
 	while (strnicmp(line, "</HYDRAULIC>", 12)) {
 		if (!strnicmp(line, "<TANK>", 6)) {
-			sscanf(line + 6, "%s %lf %i %i %i %i %f %f %f %f",
+			sscanf(line + 6, "%s %lf %i %i %i %i %e %e %e %e",
 				string1, &volume,
 				&one, &two, &three, &four,
 				&size1, &size2, &size3, &size4);
@@ -767,6 +767,8 @@ void h_Tank::Load(FILEHANDLE scn) {
 	char *line;
 	h_substance loaded_sub;
 
+	//This gets called by H_system::Load(FILEHANDLE scn)
+
 	space.Void(); //empty the space
 	oapiReadScenario_nextline (scn, line);
 	while (strnicmp(line,"</TANK>",7)) {
@@ -787,14 +789,14 @@ void h_Tank::Load(FILEHANDLE scn) {
 
 void h_Tank::Save(FILEHANDLE scn) {
 
-	char text[100];
+	char text[255];
 
 	/*int Compare(char* ln, char* trg);
 	if (Compare(name, "TESTPIPE")) {	// TSCH Test
 		int test = 0;
 	}*/
 
-	sprintf(text," %s %lf %i %i %i %i %.8f %.8f %.8f %.8f", 
+	sprintf(text," %s %lf %i %i %i %i %.8e %.8e %.8e %.8e", 
 		    name, space.Volume, 
 		    IN_valve.open, OUT_valve.open, OUT2_valve.open, LEAK_valve.open, 
 			IN_valve.size, OUT_valve.size, OUT2_valve.size, LEAK_valve.size);
