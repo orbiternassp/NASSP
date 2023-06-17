@@ -4,13 +4,13 @@
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 598
+#define VC_NGRP 600
 
 // Number of materials:
-#define VC_NMAT 70
+#define VC_NMAT 60
 
 // Number of textures:
-#define VC_NTEX 25
+#define VC_NTEX 29
 
 // Named mesh groups:
 #define VC_GRP_AOT 0
