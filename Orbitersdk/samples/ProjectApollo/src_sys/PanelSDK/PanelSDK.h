@@ -26,6 +26,8 @@
 #define __PANELSDK_H_
 
 #include <stdio.h>
+#include "Orbitersdk.h"
+
 
 #define PANELSDK_VERSION	 "1.9.10"
 
@@ -47,10 +49,6 @@
 #define SP_MIN_DCVOLTAGE	20.0
 #define SP_MIN_ACVOLTAGE	100.0
 
-class Panel;
-class InstrumentDescriptor;
-class CustomVariable;
-class Sketchpad_resources;
 class VESSEL;
 class E_system;
 class H_system;
@@ -71,37 +69,23 @@ public:
 	PanelSDK();
 	~PanelSDK();
 	void RegisterVessel(VESSEL *vessel);
-	void RegisterPanel(int PanelID,char *name);
-	void RegisterCustomPointer(char *PointerName,void* point);
-	void RegisterCustomInstrument(char *ClassName,void* NewInst(char*,Panel*));
-	void RegisterSwitchCodeFunction(void* CodeFunc(int));
     void *GetPointerByString(char *query);
 
 	void InitFromFile(char *FileName);
 
-	bool LoadPanel(int id);
-	void PanelEvent(int id,int event,SURFHANDLE surf);
-	void MouseEvent(int id,int event,int mx,int my);
-	int  KeybEvent(DWORD key,char *kstate);
-	void MFDEvent(int mfd);
 	void Timestep(double time);
 	void SimpleTimestep(double simdt);
-	void SetStage(int stage,int load);
+
 	void AddElectrical(e_object *e, bool can_delete);
 	void AddHydraulic(h_object *h);
 	void AddThermal(therm_obj *t);
 
 	void Load(FILEHANDLE scn);
 	void Save(FILEHANDLE scn);
-	void ShutDown();
 
-	int CurentStage;
 
 private:
-	Panel *panels[10];	//up to 10 panels can be defined
 	VESSEL* v;
-	InstrumentDescriptor *InstDescriptor;
-	CustomVariable *CustomVarList;
 
 	E_system *ELECTRIC;
 	H_system *HYDRAULIC;
@@ -110,22 +94,6 @@ private:
 
 	double lastTime;
 	bool firstTimestepDone;
-
-	//loads up the PRD file
-	void PanelResources(char *FileName);
-	//creates a panel from the cfg file
-	void DoPanel(char *PanelName);
-
-	 //adds up a instrument "type"
-	void AddDescriptor(InstrumentDescriptor *new_desc);
-	InstrumentDescriptor* GetInstrumentDescriptor(char *line);
-
-	int AddBitmapResource(char *BitmapName);
-	int AddFontResource(char *FontName,int size);
-	int AddBrushResource(int red,int green, int blue);
-	int NumPanels;
-	int Current_Panel;
-	Sketchpad_resources *skp_res;	//panel SDK holds the resources
 };
 
 #endif
