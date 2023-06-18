@@ -127,12 +127,12 @@ namespace mission {
 		AddCSMCueCard(2, "CONTINGENCY_EVA_CONTINUED");
 		AddCSMCueCard(3, "CDR_BOOST-ABORTS");
 		AddCSMCueCard(3, "TLI");
+		AddCSMCueCard(3, "VAC_XFER_TO_ECS");
 		AddCSMCueCard(4, "POWER_LOSS");
 		AddCSMCueCard(4, "UNDOCK_SEP");
 		AddCSMCueCard(4, "EMER_CAB_REPRESS");
 		AddCSMCueCard(4, "TPF");
 		AddCSMCueCard(4, "TPF_CONTINUED");
-		AddCSMCueCard(4, "VAC_XFER_TO_ECS");
 		AddCSMCueCard(4, "CDR_ABORTS_III_&_IV");
 		AddCSMCueCard(5, "EPS-ECS_ABORTS");
 		AddCSMCueCard(5, "SPS_BURN_RULES");
