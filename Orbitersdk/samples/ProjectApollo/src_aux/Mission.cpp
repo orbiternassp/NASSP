@@ -264,7 +264,7 @@ namespace mission {
 			}
 			else if (!_strnicmp(line, "LMPVesselName=", 14)) {
 				strncpy(buffer, line + 14, 255);
-				strCMPName.assign(buffer);
+				strLMPName.assign(buffer);
 			}
 			else if (!_strnicmp(line, "CDRSuitName=", 12)) {
 				strncpy(buffer, line + 12, 255);
