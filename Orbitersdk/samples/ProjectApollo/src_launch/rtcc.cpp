@@ -32924,6 +32924,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 			PIMCKC(aux->R_BO, aux->V_BO, aux->RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.l, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h);
 		}
 		aeg.Data.TS = sv_BO_true.GMT;
+		aeg.Header.AEGInd = aux->RBI;
 
 		AEGDataBlock sv_A, sv_P;
 		double INFO[10];
