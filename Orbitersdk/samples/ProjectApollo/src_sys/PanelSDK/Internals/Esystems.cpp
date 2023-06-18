@@ -263,6 +263,7 @@ FCell::FCell(char* i_name, int i_status, vector3 i_pos, h_Valve* o2, h_Valve* h2
 	mass = 4000;
 	c = 0.5;
 	isolation = 0.0;
+	tooCold = false;
 
 	O2_SRC = o2;
 	H2_SRC = h2;
@@ -427,15 +428,15 @@ void FCell::UpdateFlow(double dt)
 	if (Temp < 422.0) {
 		tempTooLowCount++;
 		if (tempTooLowCount > 100) {
-			Disable();
+			tooCold = true;
 			tempTooLowCount = 0;
 		}
 	}
 	else {
-		//Enable(); //You can uncomment me when the Saturn class is made with docked stages and I don't have do be disabled at SM sep --MWH 6/16/2023
+		tooCold = false;
 	}
 
-	if (!IsEnabled()) {
+	if (!IsEnabled() || tooCold) {
 		H2_flow = O2_flow = 0.0;
 		H2_flowPerSecond = O2_flowPerSecond = 0.0;
 		Temp = 0.0;

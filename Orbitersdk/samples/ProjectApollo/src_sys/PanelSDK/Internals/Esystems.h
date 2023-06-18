@@ -247,7 +247,8 @@ public:
 	int start_handle;	//start, stop
 	int purge_handle;	// -1-no purging 1-H2 purge 2-O2 purge
 	double condenserTemp;	// condenser exhaust temp, only for display
-	int tempTooLowCount; 
+	int tempTooLowCount;
+	bool tooCold;
 	double outputImpedance;
 	double voltsLastTimestep;
 	double ampsLastTimestep;
