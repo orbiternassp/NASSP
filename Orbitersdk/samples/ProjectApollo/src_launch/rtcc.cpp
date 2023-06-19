@@ -1928,14 +1928,14 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 	}
 }
 
-void RTCC::LoadMissionConstantsFile(char *file)
+bool RTCC::LoadMissionConstantsFile(char *file)
 {
 	//This function loads mission specific constants that will rarely be changed or saved/loaded
 	char Buff[128];
 	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s.txt", file);
 
-	ifstream startable(Buff);
-	if (startable.is_open())
+	ifstream missionfile(Buff);
+	if (missionfile.is_open())
 	{
 		std::string line, strtemp;
 		double dtemp;
@@ -1943,7 +1943,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 		int itemp;
 		double darrtemp[10];
 
-		while (getline(startable, line))
+		while (getline(missionfile, line))
 		{
 			sprintf_s(Buff, line.c_str());
 
@@ -1953,6 +1953,7 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
 			papiReadScenario_int(Buff, "MCLTTD", SystemParameters.MCLTTD);
+			papiReadScenario_int(Buff, "MCLABT", SystemParameters.MCLABT);
 			papiReadScenario_double(Buff, "MCTVEN", SystemParameters.MCTVEN);
 			if (papiReadScenario_double(Buff, "RRBIAS", dtemp))
 			{
@@ -2047,11 +2048,22 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG);
 			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
 		}
-	}
 
-	//Anything that is mission, but not launch day specific
-	SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
-	EMSGSUPP(0, 0); //Convert star table
+		//Anything that is mission, but not launch day specific
+
+		//J2000 ecliptic to BRCS matrix
+		SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
+		//Calculate TEPHEM0, the zero time for AGC time keeping. Except for 1950 coordinate system (Skylark), which has to be loaded from the mission file
+		if (SystemParameters.AGCEpoch != 1950)
+		{
+			SystemParameters.TEPHEM0 = OrbMech::TJUDAT(SystemParameters.AGCEpoch - 1, 7, 1) - 2400000.5;
+		}
+		//Convert star table to BRCS
+		EMSGSUPP(0, 0);
+
+		return true;
+	}
+	return false;
 }
 
 void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)

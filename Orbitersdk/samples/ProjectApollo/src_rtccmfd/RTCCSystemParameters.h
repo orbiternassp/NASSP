@@ -242,6 +242,7 @@ struct RTCCSystemParameters
 
 		//Epoch of NBY 1969
 		AGCEpoch = 1969;
+		TEPHEM0 = 40038.0;
 		MAT_J2000_BRCS = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 		MCGMUM = 0.244883757275606;
@@ -778,6 +779,8 @@ struct RTCCSystemParameters
 	int MCLRLS = 2022;
 	//LGC address for time of landing
 	int MCLTTD = 2400;
+	//LGC address for descent abort constants
+	int MCLABT = 2545;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
 	int MGRTAG = 1;
 	//Maximum station characteristic blocks
@@ -1109,6 +1112,8 @@ struct RTCCSystemParameters
 
 	//Matrix to convert from J2000 to NBY coordinates
 	MATRIX3 MAT_J2000_BRCS;
+	//MJD of midnight July 1st before launch
+	double TEPHEM0;
 
 	//Reentry
 

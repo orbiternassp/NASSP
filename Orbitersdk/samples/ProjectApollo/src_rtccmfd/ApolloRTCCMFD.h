@@ -100,8 +100,8 @@ public:
 	void menuCycleMarkerUp();
 	void menuCycleMarkerDown();
 	void menuSetGMPInput();
-	void menuMissionNumberInput();
-	void set_MissionNumber(int mission);
+	void menuMissionFile();
+	void LoadMissionConstantsFile(char *str);
 	void SPQcalc();
 	void lambertcalc();
 	void Angle_Display(char *Buff, double angle, bool DispPlus = true);
@@ -399,6 +399,7 @@ public:
 	void menuAscentPADCalc();
 	void menuSetPDAPPage();
 	void menuPDAPCalc();
+	void menuCyclePDAPSegments();
 	void menuCyclePDAPEngine();
 	void menuAP11AbortCoefUplink();
 	void menuSetFIDOOrbitDigitalsCSMPage();
