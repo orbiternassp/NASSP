@@ -11711,8 +11711,8 @@ RTCC_PMMAPD_1_2:
 			VECTOR3 P, W, P_apo, W_apo;
 			PIVECT(Z_P.coe_osc.i, Z_P.coe_osc.g, Z_P.coe_osc.h, P, W);
 			PLEFEM(5, Z_P.TS / 3600.0, 0, NULL, NULL, NULL, &L);
-			P_apo = tmul(L, P);
-			W_apo = tmul(L, W);
+			P_apo = mul(L, P);
+			W_apo = mul(L, W);
 			PIVECT(P_apo, W_apo, i_temp, g_temp, h_temp);
 			u_temp = g_temp + Z_P.f;
 			if (u_temp > PI2)
