@@ -2236,10 +2236,6 @@ void ApolloRTCCMFD::LoadMissionConstantsFile(char *str)
 	{
 		strcpy(GC->rtcc->MissionFileName, str);
 	}
-	else
-	{
-		GC->rtcc->MissionFileName[0] = 0;
-	}
 }
 
 void ApolloRTCCMFD::menuMPTDirectInputMPTCode()

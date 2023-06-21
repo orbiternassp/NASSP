@@ -843,7 +843,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (GC->rtcc->MissionFileName[0] == 0)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Not loaded!", 8);
+			skp->Text(1 * W / 8, 2 * H / 14, "Not loaded!", 11);
 		}
 		else
 		{
