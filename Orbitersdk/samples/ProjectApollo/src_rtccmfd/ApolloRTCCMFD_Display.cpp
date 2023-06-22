@@ -3105,6 +3105,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "LM Ascent PAD", 13);
 
+		if (G->AscentPADVersion == 1)
+		{
+			sprintf(Buffer, "Apollo 14-17");
+		}
+		else
+		{
+			sprintf(Buffer, "Apollo 11-13");
+		}
+		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+
 		if (G->target != NULL)
 		{
 			sprintf(Buffer, G->target->GetName());
@@ -3136,14 +3146,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(2 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%+06d DEDA 053", G->lmascentpad.DEDA053);
 		skp->Text(2 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
-		//if (GC->mission >= 14)
-		//{
-		//	sprintf(Buffer, "%+06.0f DEDA 224/226", G->lmascentpad.DEDA225_226);
-		//}
-		//else
-		//{
+		if (G->AscentPADVersion == 1)
+		{
+			sprintf(Buffer, "%+06.0f DEDA 224/226", G->lmascentpad.DEDA225_226);
+		}
+		else
+		{
 			sprintf(Buffer, "%+06.0f DEDA 225/226", G->lmascentpad.DEDA225_226);
-		//}
+		}
 		skp->Text(2 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%+06.0f DEDA 231", G->lmascentpad.DEDA231);
 		skp->Text(2 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));

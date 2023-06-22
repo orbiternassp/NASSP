@@ -615,6 +615,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	TMAlt = 0.0;
 
 	t_LunarLiftoff = 0.0;
+	AscentPADVersion = 0;
 	t_TPIguess = 0.0;
 
 	EMPUplinkType = 0;

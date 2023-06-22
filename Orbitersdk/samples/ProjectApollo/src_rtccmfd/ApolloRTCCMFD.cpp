@@ -6953,6 +6953,18 @@ void ApolloRTCCMFD::menuAscentPADCalc()
 	}
 }
 
+void ApolloRTCCMFD::menuCycleAscentPADVersion()
+{
+	if (G->AscentPADVersion < 1)
+	{
+		G->AscentPADVersion++;
+	}
+	else
+	{
+		G->AscentPADVersion = 0;
+	}
+}
+
 void ApolloRTCCMFD::menuPDAPCalc()
 {
 	if (G->vesseltype == 1 && G->target != NULL)

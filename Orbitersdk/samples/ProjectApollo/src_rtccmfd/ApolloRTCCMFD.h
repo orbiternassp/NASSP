@@ -397,6 +397,7 @@ public:
 	void cycleVECPOINTOpt();
 	void menuSetLMAscentPADPage();
 	void menuAscentPADCalc();
+	void menuCycleAscentPADVersion();
 	void menuSetPDAPPage();
 	void menuPDAPCalc();
 	void menuCyclePDAPSegments();
