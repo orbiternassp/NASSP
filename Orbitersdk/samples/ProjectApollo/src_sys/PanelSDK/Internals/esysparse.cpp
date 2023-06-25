@@ -81,53 +81,53 @@ void E_system::Create_Pump(char *line) {
 	AddSystem(new Pump(name, pump, SRC, size, power, in, out));
 }
 
-void E_system::Create_Cooling(char *line)
+void E_system::Create_Cooling(char* line)
 {
-char name[100];
-char source[100];
-double lngt;
-//int num;
-int pump;
-double term,max,min;
-therm_obj *TR1;
-e_object *P_SRC;
-ship_object* NON_t;
-sscanf(line+9,"%s %i %s %lf %lf %lf",name,&pump,source,&term,&min,&max);
-P_SRC=(e_object*)GetPointerByString(source);
-Cooling *new_c=(Cooling*)AddSystem(new Cooling(name,pump,P_SRC,term,min,max));
-line=ReadConfigLine();
-while (!Compare(line,"</COOLING>")){
-		sscanf(line,"%s %lf",source,&lngt);
-		NON_t=(ship_object*)GetPointerByString(source);
-		if (NON_t) TR1=NON_t->GetThermalInterface();
+	char name[100];
+	char source[100];
+	double lngt;
+	//int num;
+	int pump;
+	double term, max, min;
+	therm_obj* TR1;
+	e_object* P_SRC;
+	ship_object* NON_t;
+	sscanf(line + 9, "%s %i %s %lf %lf %lf", name, &pump, source, &term, &min, &max);
+	P_SRC = (e_object*)GetPointerByString(source);
+	Cooling* new_c = (Cooling*)AddSystem(new Cooling(name, pump, P_SRC, term, min, max));
+	line = ReadConfigLine();
+	while (!Compare(line, "</COOLING>")) {
+		sscanf(line, "%s %lf", source, &lngt);
+		NON_t = (ship_object*)GetPointerByString(source);
+		if (NON_t) TR1 = NON_t->GetThermalInterface();
 		if (TR1)
-			new_c->AddObject(TR1,lngt);
-		line=ReadConfigLine();
-		}
+			new_c->AddObject(TR1, lngt);
+		line = ReadConfigLine();
+	}
 
 }
-void E_system::Create_Socket(char *line)
+void E_system::Create_Socket(char* line)
 {
-char name[100];
-char source[100];
-int ip;
-char tr1[100],tr2[100],tr3[100];
+	char name[100];
+	char source[100];
+	int ip;
+	char tr1[100], tr2[100], tr3[100];
 
-sscanf(line+8,"%s %i %s %s %s %s",name,&ip,source,tr1,tr2,tr3);
-e_object *SRC=(e_object*)GetPointerByString(source);
-e_object *TR1=(e_object*)GetPointerByString(tr1);
-e_object *TR2=(e_object*)GetPointerByString(tr2);
-e_object *TR3=(e_object*)GetPointerByString(tr3);
-AddSystem(new Socket(name,SRC,ip,TR1,TR2,TR3));
-
+	sscanf(line + 8, "%s %i %s %s %s %s", name, &ip, source, tr1, tr2, tr3);
+	e_object* SRC = (e_object*)GetPointerByString(source);
+	e_object* TR1 = (e_object*)GetPointerByString(tr1);
+	e_object* TR2 = (e_object*)GetPointerByString(tr2);
+	e_object* TR3 = (e_object*)GetPointerByString(tr3);
+	AddSystem(new Socket(name, SRC, ip, TR1, TR2, TR3));
 }
-void E_system::Create_DCbus(char *line)
+
+void E_system::Create_DCbus(char* line)
 {
-char name[100];
-char source[100];
-sscanf(line+7,"%s %s",name,source);
-e_object *SRC=(e_object*)GetPointerByString(source);
-DCbus *new_dc=(DCbus*)AddSystem(new DCbus(name,SRC));
+	char name[100];
+	char source[100];
+	sscanf(line + 7, "%s %s", name, source);
+	e_object* SRC = (e_object*)GetPointerByString(source);
+	DCbus* new_dc = (DCbus*)AddSystem(new DCbus(name, SRC));
 };
 
 void E_system::Create_ACbus(char *line)
@@ -362,8 +362,6 @@ void* FCell::GetComponent(char *component_name) {
 		return (void*)&start_handle;
 	if (Compare(component_name,"PURGE"))
 		return (void*)&purge_handle;
-	if (Compare(component_name,"RUNNING"))
-		return (void*)&running;
 	if (Compare(component_name,"DPH"))
 		return (void*)&cloggVoltageDrop;
 	if (Compare(component_name,"H2FLOW"))
