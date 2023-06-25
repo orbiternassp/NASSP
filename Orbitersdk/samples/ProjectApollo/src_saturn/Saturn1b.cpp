@@ -83,8 +83,6 @@ Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
 Saturn1b::~Saturn1b()
 
 {
-	ReleaseSurfaces();
-
 	if (iu)
 	{
 		delete iu;

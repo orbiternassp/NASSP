@@ -2090,7 +2090,6 @@ protected:
 extern MESHHANDLE hLMDescent;
 extern MESHHANDLE hLMDescentNoLeg;
 extern MESHHANDLE hLMAscent;
-extern MESHHANDLE hAstro1;
 extern MESHHANDLE hLMVC;
 
 extern void LEMLoadMeshes();
