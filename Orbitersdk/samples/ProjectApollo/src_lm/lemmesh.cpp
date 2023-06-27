@@ -49,7 +49,6 @@
 MESHHANDLE hLMDescent;
 MESHHANDLE hLMDescentNoLeg;
 MESHHANDLE hLMAscent;
-MESHHANDLE hAstro1;
 MESHHANDLE hLMVC;
 
 static PARTICLESTREAMSPEC lunar_dust = {
@@ -832,7 +831,6 @@ void LEMLoadMeshes()
 	hLMDescent = oapiLoadMeshGlobal ("ProjectApollo/LM_DescentStage");
 	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
-	hAstro1= oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
 	hLMVC = oapiLoadMeshGlobal("ProjectApollo/LM_VC");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }
