@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-#include "instruments.h"
+#include "PanelSDK.h"
 #include "Internals/Thermal.h"
 #include "Internals/Hsystems.h"
 #include "Internals/Esystems.h"
@@ -30,42 +30,20 @@
 
 PanelSDK::PanelSDK() {
 
-	for (int i = 0; i < 10; i++) 
-		panels[i]=NULL;
-	NumPanels = 0;
-	InstDescriptor = NULL;
-	CustomVarList = NULL;
-	skp_res = NULL;
-
-    ELECTRIC = new E_system;
+	ELECTRIC = new E_system;
 	HYDRAULIC = new H_system;
-    THERMAL = new Thermal_engine;
+	THERMAL = new Thermal_engine;
 	VESSELMGMT = new VesselMgmt;
 	HYDRAULIC->P_thermal = THERMAL;
 	HYDRAULIC->P_electric = ELECTRIC;
 	ELECTRIC->P_thermal = THERMAL;
 	ELECTRIC->P_hydraulics = HYDRAULIC;
 
-	CurentStage = 1;
 	lastTime = 0;
 	firstTimestepDone = false;
 }
 
-PanelSDK::~PanelSDK()
-{
-	if (skp_res) delete skp_res;
-	if (InstDescriptor)	{
-		InstrumentDescriptor *runner;
-		runner = InstDescriptor;
-		while (runner) {
-			InstDescriptor=runner;
-			runner = runner->next;
-			delete InstDescriptor;
-		}
-	}
-	if (NumPanels)
-		for (int i=0; i < NumPanels; i++)
-			delete panels[i];
+PanelSDK::~PanelSDK(){
 	
 	delete ELECTRIC;
 	delete HYDRAULIC;
@@ -73,173 +51,59 @@ PanelSDK::~PanelSDK()
 	delete VESSELMGMT;
 }
 
-void PanelSDK::RegisterVessel(VESSEL *vessel)
-{
+void PanelSDK::RegisterVessel(VESSEL* vessel){
+	
 	v = vessel;
 	VESSELMGMT->vs = vessel;
 	ELECTRIC->Vessel = vessel;
 	HYDRAULIC->Vessel = vessel;
 }
 
-void PanelSDK::RegisterCustomPointer(char *PointerName, void *point)
-{
-CustomVariable *runner= new CustomVariable();
-runner->next=CustomVarList;
-runner->item=point;
-strcpy(runner->name,PointerName);
-CustomVarList=runner;
-}
-void PanelSDK::AddDescriptor(InstrumentDescriptor *new_desc)
-{
-new_desc->next=InstDescriptor;
-InstDescriptor=new_desc;
-};
+void PanelSDK::Load(FILEHANDLE scn){
 
-int PanelSDK::AddBitmapResource(char* BitmapName)
-{
-if (!skp_res) skp_res=new Sketchpad_resources;
-skp_res->num_surfaces++;
-HBITMAP new_b=(HBITMAP)LoadImage(NULL,BitmapName,IMAGE_BITMAP,0,0,LR_LOADFROMFILE);
-skp_res->h_Surface[skp_res->num_surfaces]=oapiCreateSurface (new_b);
-if (new_b)
-return skp_res->num_surfaces;
-else
-return 0;
-}
-int PanelSDK::AddFontResource(char *FontName,int size)
-{
-if (!skp_res) skp_res=new Sketchpad_resources;
-skp_res->num_fonts++;
-skp_res->hFNT_Panel[skp_res->num_fonts]= oapiCreateFont(size, true, FontName);
-if (skp_res->hFNT_Panel[skp_res->num_fonts])
-return skp_res->num_fonts;
-else
-return 0;
-}
-int PanelSDK::AddBrushResource(int red,int green,int blue)
-{
-if (!skp_res) skp_res=new Sketchpad_resources;
-skp_res->num_brush++;
-skp_res->hPEN[skp_res->num_brush]=oapiCreatePen(1,1,RGB(red,green,blue));
-return skp_res->num_brush;
-}
-bool  PanelSDK::LoadPanel(int id)
-{
-if (id<NumPanels) {
-Current_Panel=id;
-oapiRegisterPanelBackground (panels[id]->MakeYourBackground(), PANEL_ATTACH_BOTTOM|PANEL_MOVEOUT_BOTTOM, (unsigned int)panels[id]->transparent_color);
-oapiSetPanelNeighbours (panels[id]->neighbours[0],
-						panels[id]->neighbours[1],
-						panels[id]->neighbours[2],
-						panels[id]->neighbours[3]);
-panels[id]->RegisterYourInstruments();
-return TRUE;
-}
-return FALSE;
-};
-
-void PanelSDK::PanelEvent(int id,int event,SURFHANDLE surf)
-{
-
-panels[Current_Panel]->surf=surf;	//get the surface handle, since intruments will be using this
-switch (event) {
-	case PANEL_REDRAW_INIT:
-		panels[Current_Panel]->Paint(id);
-		break;
-	case PANEL_REDRAW_ALWAYS:
-		panels[Current_Panel]->Refresh(id);
-		break;
-	case PANEL_REDRAW_USER:
-		panels[Current_Panel]->Paint(id);
-		break;
-	case PANEL_REDRAW_MOUSE:
-		panels[Current_Panel]->Paint(id);
-		break;
-
-}
-};
-
-void PanelSDK::MouseEvent(int id,int event,int mx,int my)
-{
-	switch (event)
-	{
-	  case PANEL_MOUSE_LBDOWN:
-		panels[Current_Panel]->LBD(id,mx,my);
-		break;
-	  case PANEL_MOUSE_RBDOWN:
-			panels[Current_Panel]->RBD(id,mx,my);
-		break;
-	  case PANEL_MOUSE_LBUP:
-	  case PANEL_MOUSE_RBUP:
-			panels[Current_Panel]->BU(id);
-		break;
-	}
-}
-
-
-
-InstrumentDescriptor* PanelSDK::GetInstrumentDescriptor(char *line)
-{
-InstrumentDescriptor* runner=InstDescriptor;
-if (!line) return NULL;
-while ((runner)&&(strnicmp(runner->name,line,strlen(runner->name))))
-	   runner=runner->next;
-return runner;
-};
-
-
-void PanelSDK::Load(FILEHANDLE scn) {
-	
-	int id;
-	char *line, buffer[100];
+	char* line, buffer[100];
 	bool dontLoad;
 
 	// check version 
 	dontLoad = true;
-	oapiReadScenario_nextline (scn, line);
-    if (!strnicmp (line, "<VERSION>", 9)) {
+	oapiReadScenario_nextline(scn, line);
+	if (!strnicmp(line, "<VERSION>", 9)) {
 		sscanf(line + 9, "%s", buffer);
-	    if (!strnicmp (buffer, PANELSDK_VERSION, strlen(PANELSDK_VERSION))) 
+		if (!strnicmp(buffer, PANELSDK_VERSION, strlen(PANELSDK_VERSION)))
 			dontLoad = false;
 	}
 
-	oapiReadScenario_nextline (scn, line);
+	oapiReadScenario_nextline(scn, line);
 	if (dontLoad) {
-		while (strnicmp(line,"</INTERNALS>",12)) {
-			oapiReadScenario_nextline (scn, line);
+		while (strnicmp(line, "</INTERNALS>", 12)) {
+			oapiReadScenario_nextline(scn, line);
 		}
 		return;
 	}
 
-	while (strnicmp(line,"</INTERNALS>",12)) {
-        if (!strnicmp (line, "<HYDRAULIC>", 11))
+	while (strnicmp(line, "</INTERNALS>", 12)) {
+		if (!strnicmp(line, "<HYDRAULIC>", 11))
 			HYDRAULIC->Load(scn);
-        else if (!strnicmp (line, "<ELECTRIC>", 10))
+		else if (!strnicmp(line, "<ELECTRIC>", 10))
 			ELECTRIC->Load(scn);
-        else if (!strnicmp (line, "<PANEL>", 7)) {
-			sscanf(line + 7, "%i", &id);
-			panels[id]->Load(scn);
-		}
-		oapiReadScenario_nextline (scn, line);
+
+		oapiReadScenario_nextline(scn, line);
 	}
 }
 
 void PanelSDK::Save(FILEHANDLE scn) {
 
-	oapiWriteScenario_string(scn, "<INTERNALS>","");
+	oapiWriteScenario_string(scn, "<INTERNALS>", "");
 	oapiWriteScenario_string(scn, "<VERSION>", PANELSDK_VERSION);
-	
+
 	HYDRAULIC->Save(scn);
 	ELECTRIC->Save(scn);
-	for (int i=0;i<NumPanels;i++)
-		panels[i]->Save(scn);
-	
-	oapiWriteScenario_string (scn, "</INTERNALS>","");
+
+	oapiWriteScenario_string(scn, "</INTERNALS>", "");
 }
 
-void PanelSDK::Timestep(double time) 
-
-{
+void PanelSDK::Timestep(double time){
+	
 	if (!firstTimestepDone) {
 		lastTime = time;
 		firstTimestepDone = true;
@@ -261,65 +125,22 @@ void PanelSDK::Timestep(double time)
 	}
 }
 
-void PanelSDK::SimpleTimestep(double simdt) 
-
-{
+void PanelSDK::SimpleTimestep(double simdt){
 	THERMAL->Radiative(simdt);
 	HYDRAULIC->Refresh(simdt);
 	ELECTRIC->Refresh(simdt);
 }
 
-void PanelSDK::SetStage(int stage,int load)
-{
-if ((!load)&&(stage-1!=CurentStage)) return; //only process succesive separations
-if (!load) //then we are staging
-		VESSELMGMT->Separation(stage); //do the staging stuff
-VESSELMGMT->SetConfig(stage,load);
-PROPELLANT_HANDLE ph_vent=v->CreatePropellantResource(0);
-HYDRAULIC->ConfigStage(stage);
-ELECTRIC->ConfigStage(stage);
-HYDRAULIC->ProcessShip(v,ph_vent);
-CurentStage=stage;
 
-}
-
-void PanelSDK::MFDEvent(int mfd)
-{
-	if (Current_Panel<0) Current_Panel=0;
-	if (Current_Panel>NumPanels) Current_Panel=NumPanels;
-oapiTriggerPanelRedrawArea(Current_Panel,
-						   panels[Current_Panel]->mfd_idx[mfd]);
-};
-
-int PanelSDK::KeybEvent(DWORD key,char *kstate)
-{
-	KeyPress *runner;
-	runner=VESSELMGMT->DefinedKeys;
-
-	while ((runner)&&(runner->key!=key))
-			runner=runner->next;
-	if (runner)
-			if (runner->trigger_type==1)
-					SetStage(runner->index,0); //separate
-
-	return 0;
-}
-
-void PanelSDK::AddElectrical(e_object *e, bool can_delete)
-
-{
+void PanelSDK::AddElectrical(e_object* e, bool can_delete){
 	ELECTRIC->AddSystem(e);
 	e->deletable = can_delete;
 }
 
-void PanelSDK::AddHydraulic(h_object *h)
-
-{
+void PanelSDK::AddHydraulic(h_object* h){
 	HYDRAULIC->AddSystem(h);
 }
 
-void PanelSDK::AddThermal(therm_obj *t)
-
-{
-	THERMAL->AddThermalObject(t,false);
+void PanelSDK::AddThermal(therm_obj* t){
+	THERMAL->AddThermalObject(t, false);
 }
