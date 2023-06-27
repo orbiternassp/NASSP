@@ -149,6 +149,7 @@ ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 		item.index = i;
 	}
 	*/
+	oapiDestroySurface(hLogo);
 }
 char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {
