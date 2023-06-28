@@ -686,6 +686,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 ProjectApolloMFD::~ProjectApolloMFD ()
 {
 	// Add MFD cleanup code here
+	oapiDestroySurface(hLogo);
 }
 
 // Return button labels
