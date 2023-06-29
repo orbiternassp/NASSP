@@ -610,6 +610,7 @@ void LEM::Init()
 
 	drogue = NULL;
 	probes = NULL;
+	deflectors = NULL;
 	cdrmesh = NULL;
 	lmpmesh = NULL;
 	vcmesh = NULL;
@@ -1973,7 +1974,9 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 
 	if (dscidx != -1 && pMission->LMHasLegs()) {
 		probes = GetDevMesh(vis, dscidx);
+		deflectors = GetDevMesh(vis, dscidx);
 		HideProbes();
+		HideDeflectors();
 	}
 
 	if (vcidx != -1) {
