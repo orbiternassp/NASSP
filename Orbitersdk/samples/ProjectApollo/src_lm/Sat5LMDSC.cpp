@@ -28,6 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "stdio.h"
 #include "Sat5LMDSC.h"
 #include "LM_DescentStageResource.h"
+#include "Mission.h"
 
 static int refcount = 0;
 static MESHHANDLE LM_Descent;
@@ -56,6 +57,10 @@ Sat5LMDSC::Sat5LMDSC(OBJHANDLE hObj, int fmodel)
 	: VESSEL3(hObj, fmodel)
 
 {
+	//Mission File
+	InitMissionManagementMemory();
+	pMission = paGetDefaultMission();
+
 	init();
 }
 
@@ -81,6 +86,8 @@ void Sat5LMDSC::init()
 	ro1 = 3;
 	ro2 = 1;
 
+	ApolloNo = 0;
+
 	for (int i = 0; i < 4; i++) {
 		mgt_Leg[i] = NULL;
 		mgt_Strut[i] = NULL;
@@ -93,7 +100,7 @@ void Sat5LMDSC::init()
 	}
 
 	anim_Gear = -1;
-	probes = NULL;
+	desstg_devmesh = NULL;
 	dscidx = -1;
 }
 
@@ -138,6 +145,10 @@ void Sat5LMDSC::Setup()
 
 	SetThrusterGroupLevel(thg_sep, 1);
 
+	if (!pMission->LMHasLegs()) {
+		InsertMesh(LM_DescentNoLeg, dscidx);
+	}
+
 	if (state > 0)
 	{
 		if (state < 2)
@@ -150,10 +161,7 @@ void Sat5LMDSC::Setup()
 			ro2 = 4;
 			if (state > 2) HideProbes();
 		}
-	}
-	else
-	{
-		InsertMesh(LM_DescentNoLeg, dscidx);
+		HideDeflectors();
 	}
 
 	double tdph = -2.38;
@@ -248,19 +256,20 @@ void Sat5LMDSC::DefineAnimations(UINT idx) {
 void Sat5LMDSC::clbkVisualCreated(VISHANDLE vis, int refcount)
 {
 	if (dscidx != -1) {
-		probes = GetDevMesh(vis, dscidx);
+		desstg_devmesh = GetDevMesh(vis, dscidx);
 		HideProbes();
+		HideDeflectors();
 	}
 }
 
 void Sat5LMDSC::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 {
-	probes = NULL;
+	desstg_devmesh = NULL;
 }
 
 void Sat5LMDSC::HideProbes() {
 
-	if (!probes)
+	if (!desstg_devmesh)
 		return;
 
 	if (state > 2) {
@@ -271,14 +280,34 @@ void Sat5LMDSC::HideProbes() {
 		ges.UsrFlag = 3;
 
 		for (int i = 0; i < 6; i++) {
-			oapiEditMeshGroup(probes, meshgroup_Probes[i], &ges);
+			oapiEditMeshGroup(desstg_devmesh, meshgroup_Probes[i], &ges);
 		}
 	}
 }
 
-void Sat5LMDSC::SetState(int stage)
+void Sat5LMDSC::HideDeflectors()
+{
+	if (!desstg_devmesh)
+		return;
+
+	if (!pMission->LMHasDeflectors()) {
+		static UINT meshgroup_deflectors[2] = { DS_GRP_DeflectorStrut, DS_GRP_RCSdeflector };
+
+		GROUPEDITSPEC ges;
+		ges.flags = (GRPEDIT_ADDUSERFLAG);
+		ges.UsrFlag = 3;
+
+		for (int i = 0; i < 2; i++) {
+			oapiEditMeshGroup(desstg_devmesh, meshgroup_deflectors[i], &ges);
+		}
+	}
+}
+
+void Sat5LMDSC::SetState(int stage, int mission)
 {
 	state = stage;
+	ApolloNo = mission;
+	pMission->LoadMission(ApolloNo);
 	Setup();
 }
 
@@ -288,6 +317,7 @@ void Sat5LMDSC::clbkSaveState(FILEHANDLE scn)
 	VESSEL2::clbkSaveState(scn);
 
 	oapiWriteScenario_int(scn, "STATE", state);
+	oapiWriteScenario_int(scn, "APOLLONO", ApolloNo);
 }
 
 void Sat5LMDSC::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
@@ -300,6 +330,20 @@ void Sat5LMDSC::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 		if (!_strnicmp(line, "STATE", 5))
 		{
 			sscanf(line + 5, "%d", &state);
+		}
+		else if (!strnicmp(line, "APOLLONO", 8)) {
+			sscanf(line + 8, "%d", &ApolloNo);
+
+			if (sscanf(line + 8, "%d", &ApolloNo) == 1)
+			{
+				pMission->LoadMission(ApolloNo);
+			}
+			else
+			{
+				char tempBuffer[64];
+				strncpy(tempBuffer, line + 9, 63);
+				pMission->LoadMission(tempBuffer);
+			}
 		}
 		else
 		{
