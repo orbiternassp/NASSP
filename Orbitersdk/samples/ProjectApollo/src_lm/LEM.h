@@ -495,6 +495,7 @@ public:
 	void SetCrewMesh();
 	void DrogueVis();
 	void HideProbes();
+	void HideDeflectors();
 	void SetTrackLight();
 	void SetDockingLights();
 	void SetCOAS();
@@ -1675,6 +1676,7 @@ protected:
 	UINT vcidx;
 
 	DEVMESHHANDLE probes;
+	DEVMESHHANDLE deflectors;
 	DEVMESHHANDLE drogue;
 	DEVMESHHANDLE cdrmesh;
 	DEVMESHHANDLE lmpmesh;

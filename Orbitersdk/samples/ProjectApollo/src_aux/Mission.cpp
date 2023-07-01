@@ -97,6 +97,7 @@ namespace mission {
 		bHasAEA = true;
 		bLMHasAscEngArmAssy = false;
 		bLMHasLegs = true;
+		bLMHasDeflectors = true;
 		bCSMHasHGA = true;
 		bCSMHasVHFRanging = true;
 		strCMCVersion = "Artemis072";
@@ -207,6 +208,10 @@ namespace mission {
 			else if (!_strnicmp(line, "LMHasLegs=", 10)) {
 				strncpy(buffer, line + 10, 255);
 				bLMHasLegs = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "LMHasDeflectors=", 16)) {
+				strncpy(buffer, line + 16, 255);
+				bLMHasDeflectors = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "CSMHasHGA=", 10)) {
 				strncpy(buffer, line + 10, 255);
@@ -333,6 +338,11 @@ namespace mission {
 	bool Mission::LMHasLegs() const
 	{
 		return bLMHasLegs;
+	}
+
+	bool Mission::LMHasDeflectors() const
+	{
+		return bLMHasDeflectors;
 	}
 
 	bool Mission::CSMHasHGA() const
