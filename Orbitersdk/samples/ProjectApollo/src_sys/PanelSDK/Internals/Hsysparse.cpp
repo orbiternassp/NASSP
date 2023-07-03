@@ -294,6 +294,7 @@ void H_system::Create_h_Pipe(char *line) {
 	char type[100];
 	double max=0;
 	double min=0;
+	double maxFlowrate = 0;
 	char is_two[100];
 
 	if (sscanf(line + 6, " %s", name) <= 0)
@@ -301,7 +302,7 @@ void H_system::Create_h_Pipe(char *line) {
 
 	line = ReadConfigLine();
 	while (!Compare(line,"</PIPE>")) {type[0]=0;is_two[0]=0;
-		sscanf (line, "%s %s %s %lf %lf %s",in_valve,out_valve,type,&max,&min,is_two);
+		sscanf (line, "%s %s %s %lf %lf %s %lf",in_valve,out_valve,type,&max,&min,is_two,&maxFlowrate);
 
 		int two_way=1;
 		if (Compare(type,"ONEWAY")) two_way=0;
@@ -311,13 +312,13 @@ void H_system::Create_h_Pipe(char *line) {
 		out=(h_Valve*)GetPointerByString(out_valve);
 
 		if (Compare(type,"PREG"))
-			AddSystem(new h_Pipe(name,in,out,1,max,min,two_way));
+			AddSystem(new h_Pipe(name,in,out,1,max,min,two_way, maxFlowrate));
 		else if (Compare(type,"BURST"))
-			AddSystem(new h_Pipe(name,in,out,2,max,min,two_way));
+			AddSystem(new h_Pipe(name,in,out,2,max,min,two_way, maxFlowrate));
 		else if (Compare(type,"PVALVE"))
-			AddSystem(new h_Pipe(name,in,out,3,max,min,two_way));
+			AddSystem(new h_Pipe(name,in,out,3,max,min,two_way, maxFlowrate));
 		else
-			AddSystem(new h_Pipe(name,in,out,0,0,0,two_way));
+			AddSystem(new h_Pipe(name,in,out,0,0,0,two_way, maxFlowrate));
 		
 		line=ReadConfigLine();
 	}

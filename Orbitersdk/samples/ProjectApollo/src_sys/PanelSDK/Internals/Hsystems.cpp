@@ -851,7 +851,7 @@ void h_Tank::BoilAllAndSetTemp(double _t) {
 
 //------------------------------- PIPE CLASS ------------------------------------
 
-h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two) { 
+h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two, double maxFlow) { 
 
 	strcpy(name, i_name);
 	max_stage = 99;
@@ -863,7 +863,7 @@ h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double m
 	out = i_OUT;
 	open = 0;
 	flow = 0;
-	flowMax = 0;
+	flowMax = maxFlow;
 }
 
 void h_Pipe::BroadcastDemision(ship_object * gonner) {

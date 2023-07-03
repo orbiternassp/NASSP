@@ -215,7 +215,7 @@ public:
 	double flow;	// in g/s
 	double flowMax;
 
-	h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two);
+	h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two, double maxFlow);
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual void* GetComponent(char *component_name);
 	void BroadcastDemision(ship_object * gonner);
