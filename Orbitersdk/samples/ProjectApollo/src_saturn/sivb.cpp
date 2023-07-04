@@ -127,7 +127,7 @@ void SIVbLoadMeshes()
 	hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
 	hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
 	hSat1stg2cross = oapiLoadMeshGlobal("ProjectApollo/nsat1stg2cross");
-	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
+	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
 
 	//
@@ -584,7 +584,7 @@ void SIVB::SetS4b()
 		SetMeshVisibilityMode(meshASTP_A, MESHVIS_EXTERNAL);
 		SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_EXTERNAL);
 		dockpos = _V(0.0, 0.0, 9.1);
-		dockrot = _V(-1.0, 0.0, 0);
+		//dockrot = _V(-1.0, 0.0, 0);
 		SetDockParams(dockpos, dockdir, dockrot);
 		hDock = GetDockHandle(0);
 		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
@@ -1506,14 +1506,14 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	meshApollo8LTA = AddMesh(hapollo8lta, &mesh_dir);
 
 	// ShiftMesh in SetS4b wasn't working...
-	mesh_dir = _V(0, -0.15, 7.8);
+	mesh_dir = _V(0, 0.15, 7.05);
 	meshASTP_A = AddMesh(hastp, &mesh_dir);
 
 	mesh_dir = _V(0, 0, 8.6);
 	meshASTP_B = AddMesh(hastp, &mesh_dir);
 
 	// ShiftMesh in SetS4b wasn't working...
-	mesh_dir = _V(-1.04, 1.04, 9.1);
+	mesh_dir = _V(-1.155, 0.015, 8.5); // Position adjusted to make the COAS to line up
 	meshCOASTarget_A = AddMesh(hCOAStarget, &mesh_dir);
 
 	mesh_dir = _V(-1.3, 0, 9.6);
