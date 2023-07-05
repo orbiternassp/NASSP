@@ -49,7 +49,6 @@
 MESHHANDLE hLMDescent;
 MESHHANDLE hLMDescentNoLeg;
 MESHHANDLE hLMAscent;
-MESHHANDLE hAstro1;
 MESHHANDLE hLMVC;
 
 static PARTICLESTREAMSPEC lunar_dust = {
@@ -92,16 +91,24 @@ void LEM::ToggleEVA(bool isCDR)
 		vs1.vdata[0].x += 4.5 * sin(vs1.vdata[0].z) / radius;
 		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
 
-		char VName[256]="";
-		strcpy (VName, GetName());
+		// LEVA starts facing ladder
+		vs1.vdata[0].z += PI;
+		if (vs1.vdata[0].z > PI2) {
+			vs1.vdata[0].z -= PI2;
+		}
+
+		char VName[256] = "";
+		char VSuitName[256] = "";
 		if (isCDR)
 		{
-			strcat(VName, "-LEVA-CDR");
+			strcpy(VName, pMission->GetCDRName().c_str());
+			strcpy(VSuitName, pMission->GetCDRSuitName().c_str());
 			SwitchFocusToLeva = 10;
 		}
 		else
 		{
-			strcat(VName, "-LEVA-LMP");
+			strcpy(VName, pMission->GetLMPName().c_str());
+			strcpy(VSuitName, pMission->GetLMPSuitName().c_str());
 			SwitchFocusToLeva = -10;
 		}
 		hLEVA[i] = oapiCreateVessel(VName,"ProjectApollo/LEVA",vs1);
@@ -112,6 +119,8 @@ void LEM::ToggleEVA(bool isCDR)
 
 			evas.MissionNo = ApolloNo;
 			evas.isCDR = isCDR;
+			strcpy(evas.LEMName, GetName());
+			strcpy(evas.SuitName, VSuitName);
 			leva->SetEVAStats(evas);
 		}
 	}
@@ -372,11 +381,11 @@ void LEM::SeparateStage (UINT stage)
 		Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
 		if (!pMission->LMHasLegs())
 		{
-			dscstage->SetState(0);
+			dscstage->SetState(0, ApolloNo);
 		}
 		else
 		{
-			dscstage->SetState(1);
+			dscstage->SetState(1, ApolloNo);
 		}
 
 		SetLmAscentHoverStage();
@@ -394,15 +403,15 @@ void LEM::SeparateStage (UINT stage)
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
 			if (!pMission->LMHasLegs())
 			{
-				dscstage->SetState(0);
+				dscstage->SetState(0, ApolloNo);
 			}
 			else if (Landed)
 			{
-				dscstage->SetState(3);
+				dscstage->SetState(3, ApolloNo);
 			}
 			else
 			{
-				dscstage->SetState(2);
+				dscstage->SetState(2, ApolloNo);
 			}
 			
 			vs2.vrot.x = 5.32;
@@ -420,15 +429,15 @@ void LEM::SeparateStage (UINT stage)
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
 			if (!pMission->LMHasLegs())
 			{
-				dscstage->SetState(0);
+				dscstage->SetState(0, ApolloNo);
 			}
 			else if (Landed)
 			{
-				dscstage->SetState(3);
+				dscstage->SetState(3, ApolloNo);
 			}
 			else
 			{
-				dscstage->SetState(2);
+				dscstage->SetState(2, ApolloNo);
 			}
 
 			SetLmAscentHoverStage();
@@ -491,6 +500,10 @@ void LEM::SetLMMeshVisDsc() {
 	else
 	{
 		SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	}
+
+	if (pMission->LMHasLegs()) {
+		HideDeflectors();
 	}
 }
 
@@ -560,6 +573,24 @@ void LEM::HideProbes() {
 			ges.UsrFlag = 3;
 			oapiEditMeshGroup(probes, meshgroup_Probes1[i], &ges);
 			oapiEditMeshGroup(probes, meshgroup_Probes2[i], &ges);
+		}
+	}
+}
+
+void LEM::HideDeflectors()
+{
+	if (!deflectors)
+		return;
+
+	if (!pMission->LMHasDeflectors()) {
+		static UINT meshgroup_deflectors[2] = { DS_GRP_DeflectorStrut, DS_GRP_RCSdeflector };
+
+		GROUPEDITSPEC ges;
+		ges.flags = (GRPEDIT_ADDUSERFLAG);
+		ges.UsrFlag = 3;
+
+		for (int i = 0; i < 2; i++) {
+			oapiEditMeshGroup(deflectors, meshgroup_deflectors[i], &ges);
 		}
 	}
 }
@@ -822,7 +853,6 @@ void LEMLoadMeshes()
 	hLMDescent = oapiLoadMeshGlobal ("ProjectApollo/LM_DescentStage");
 	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
-	hAstro1= oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
 	hLMVC = oapiLoadMeshGlobal("ProjectApollo/LM_VC");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }

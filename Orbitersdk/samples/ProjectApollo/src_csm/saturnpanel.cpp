@@ -672,17 +672,21 @@ void Saturn::InitPanel (int panel)
 	SetSwitches(panel);
 }
 
-int Saturn::GetRenderViewportIsWideScreen() {
+// GetRenderViewportIsWideScreen
+// Return value :
+// 0 = 4:3
+// 1 = 16:10
+// 2 = 16:9
 
-	HMODULE hpac = GetModuleHandle("Modules\\Startup\\ProjectApolloConfigurator.dll");
-	if (hpac) {
-		int (*pacRenderViewportIsWideScreen)();
-		pacRenderViewportIsWideScreen = (int (*)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
-		if (pacRenderViewportIsWideScreen) {
-			return pacRenderViewportIsWideScreen();
-		}
-	}
-	return 0;
+int Saturn::GetRenderViewportIsWideScreen() {
+	unsigned long w, h;
+	oapiGetViewportSize(&w, &h);
+	if (((double)w) / ((double)h) < 1.47)
+		return 0;
+	else if (((double)w) / ((double)h) < 1.69)
+		return 1;
+	else
+		return 2;
 }
 
 bool Saturn::clbkLoadPanel (int id) {
@@ -1555,7 +1559,6 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_SPSGIMBALYAWTHUMBWHEEL,						_R( 739, 1067,  775, 1084), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	// FDAI
 	fdaiLeft.RegisterMe(AID_FDAI_LEFT, 533, 612);
-	if (!hBmpFDAIRollIndicator)	hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 	// ORDEAL
 	oapiRegisterPanelArea (AID_ORDEALSWITCHES,								_R( 359,   28,  836,  230), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_LBPRESSED|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 }
@@ -1589,7 +1592,6 @@ void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
 
 	// FDAI
 	fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1090 + offset, 284);
-	if (!hBmpFDAIRollIndicator)	hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
 	// MFDs
 	MFDSPEC mfds_mainleft = {{1405 + offset, 1019, 1715 + offset, 1328}, 6, 6, 55, 44 };
@@ -2760,14 +2762,12 @@ void Saturn::SetSwitches(int panel) {
 	RightIntegralRotarySwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], RightInteriorLightRotariesRow);
 	RightFloodRotarySwitch.Init( 133,  0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], RightInteriorLightRotariesRow);
 
-	SystemTestAttenuator.Init(this, &LeftSystemTestRotarySwitch, &RightSystemTestRotarySwitch, &FlightBus);
-
 	SystemTestRotariesRow.Init(AID_SYSTEMTESTROTARIES, MainPanel);
 	LeftSystemTestRotarySwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], SystemTestRotariesRow);
 	RightSystemTestRotarySwitch.Init(120, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], SystemTestRotariesRow);
 
 	SystemTestMeterRow.Init(AID_DCVOLTS_PANEL101, MainPanel);
-	SystemTestVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], SystemTestMeterRow, &SystemTestAttenuator);
+	SystemTestVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], SystemTestMeterRow, this, &LeftSystemTestRotarySwitch, &RightSystemTestRotarySwitch);
 
 	SystemTestVoltMeter.SetSurface(srf[SRF_DCVOLTS_PANEL101], 110, 110);
 
@@ -3560,7 +3560,7 @@ void Saturn::SetSwitches(int panel) {
 	Altimeter.Init(srf[SRF_ALTIMETER], srf[SRF_ALTIMETER2], this);
 }
 
-void SetupgParam(HINSTANCE hModule) {
+DLLCLBK void InitModule(HINSTANCE hModule) {
 
 	g_Param.hDLL = hModule;
 
@@ -3584,7 +3584,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.pen[6] = oapiCreatePen (1, 3, RGB(255, 255, 255));
 }
 
-void DeletegParam() {
+DLLCLBK void ExitModule(HINSTANCE hDll) {
 
 	int i;
 
@@ -4635,7 +4635,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);			
 		}
 		return true;
 
@@ -4651,7 +4651,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiRight.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
 		}
 		return true;
 
@@ -5504,11 +5504,11 @@ void Saturn::InitSwitches() {
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 0, 0);
 
 	RCSIndicatorsSwitch.AddPosition(0, 280);
-	RCSIndicatorsSwitch.AddPosition(1, 320);
+	RCSIndicatorsSwitch.AddPosition(1, 310);
 	RCSIndicatorsSwitch.AddPosition(2, 340);
 	RCSIndicatorsSwitch.AddPosition(3, 20);
-	RCSIndicatorsSwitch.AddPosition(4, 40);
-	RCSIndicatorsSwitch.AddPosition(5, 70);
+	RCSIndicatorsSwitch.AddPosition(4, 50);
+	RCSIndicatorsSwitch.AddPosition(5, 80);
 	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 1);
 
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", TOGGLESWITCH_UP, false);
@@ -5595,10 +5595,10 @@ void Saturn::InitSwitches() {
 	H2Pressure2Meter.Register(PSH, "H2Pressure2Meter", 0, 400, 10);
 	O2Pressure1Meter.Register(PSH, "O2Pressure1Meter", 0, 1000, 10); //Scaled for consistent display in 2D and VC
 	O2Pressure2Meter.Register(PSH, "O2Pressure2Meter", 0, 1000, 10);
-	H2Quantity1Meter.Register(PSH, "H2Quantity1Meter", 0, 1, 10);
-	H2Quantity2Meter.Register(PSH, "H2Quantity2Meter", 0, 1, 10);
-	O2Quantity1Meter.Register(PSH, "O2Quantity1Meter", 0, 1, 10);
-	O2Quantity2Meter.Register(PSH, "O2Quantity2Meter", 0, 1, 10);
+	H2Quantity1Meter.Register(PSH, "H2Quantity1Meter", 0, 5.0, 10);
+	H2Quantity2Meter.Register(PSH, "H2Quantity2Meter", 0, 5.0, 10);
+	O2Quantity1Meter.Register(PSH, "O2Quantity1Meter", 0, 5.0, 10);
+	O2Quantity2Meter.Register(PSH, "O2Quantity2Meter", 0, 5.0, 10);
 
 	CSMACVoltMeter.Register(PSH, "ACVoltMeter", 85, 145, 3);
 	CSMDCVoltMeter.Register(PSH, "DCVoltMeter", 17.5, 47.5, 3);
@@ -5607,7 +5607,7 @@ void Saturn::InitSwitches() {
 
 	FuelCellH2FlowMeter.Register(PSH, "FuelCellH2FlowMeter", 0, 0.2, 2);
 	FuelCellO2FlowMeter.Register(PSH, "FuelCellO2FlowMeter", 0, 1.6, 2);
-	FuelCellTempMeter.Register(PSH, "FuelCellTempMeter", 100, 550, 2);
+	FuelCellTempMeter.Register(PSH, "FuelCellTempMeter", 0, 5, 2);
 	FuelCellCondenserTempMeter.Register(PSH, "FuelCellCondenserTempMeter", 150, 250, 2);
 
 	SuitTempMeter.Register(PSH, "SuitTempMeter", 20, 95, 2);
@@ -5805,12 +5805,12 @@ void Saturn::InitSwitches() {
 	DCIndicatorsRotary.SetSource(9, &PyroBusAFeeder);
 	DCIndicatorsRotary.SetSource(10, &PyroBusBFeeder);
 
-	ACIndicatorRotary.AddPosition(0, 290);
-	ACIndicatorRotary.AddPosition(1, 315);
+	ACIndicatorRotary.AddPosition(0, 280);
+	ACIndicatorRotary.AddPosition(1, 310);
 	ACIndicatorRotary.AddPosition(2, 340);
 	ACIndicatorRotary.AddPosition(3, 20);
-	ACIndicatorRotary.AddPosition(4, 45);
-	ACIndicatorRotary.AddPosition(5, 70);
+	ACIndicatorRotary.AddPosition(4, 50);
+	ACIndicatorRotary.AddPosition(5, 80);
 	ACIndicatorRotary.Register(PSH, "ACIndicatorRotary", 5);
 
 	ACIndicatorRotary.SetSource(0, &ACBus1PhaseA);

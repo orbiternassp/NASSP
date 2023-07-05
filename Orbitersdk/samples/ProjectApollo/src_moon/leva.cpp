@@ -72,6 +72,9 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 
 static 	int refcount = 0;
 static MESHHANDLE hCDREVA;
+static MESHHANDLE hLMPEVA;
+static MESHHANDLE hCDRLRV;
+static MESHHANDLE hLMPLRV;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
 
@@ -95,15 +98,12 @@ void LEVA::init()
 
 {
 	hMaster = NULL;
-	LRVDeployed=false;
 	GoDock1=false;
 	starthover=false;
 	Astro=true;		
 	isCDR = false;
 	MotherShip=false;
-	EVAName[0]=0;
 	LEMName[0]=0;
-	MSName[0]=0;
 	KEY1 = false;
 	KEY2 = false;
 	KEY3 = false;
@@ -158,40 +158,45 @@ void LEVA::SetAstroStage ()
 	ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	VECTOR3 mesh_dir=_V(0,0,0);
-    AddMesh (hCDREVA, &mesh_dir);
-	SetCameraOffset(_V(0,0.8,0));
+	SetCameraOffset(_V(0,0.632,0.216));
 	
-	double tdph = -0.8;
+	double ypos = -0.161;
+	double zpos = 0.357;
+	lrvSeat = CreateAttachment(true, _V(0, ypos, zpos), _V(0, -1, 0), _V(0, 0, 1), "SEAT", false);
+
+	double tdph = -1.06;
 	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
 	Astro = true;
+}
+
+void LEVA::clbkPostCreation()
+{
+	if (oapiGetVesselByName("Flag") == NULL) {
+		FlagPlanted = false;
+	}
+	else {
+		FlagPlanted = true;
+	}
 }
 
 void LEVA::ToggleLRV()
 
 {
-	if (LRVDeployed) {
-		// Nothing for now, only one LRV per mission.
-	}
-	else {
+	if (GetLRVHandle() == NULL) {
 		VESSELSTATUS vs1;
 		GetStatus(vs1);
 
 		// The LM must be in landed state
 		if (vs1.status != 1) return;
 
-		LRVDeployed = true;
-
 		OBJHANDLE hbody = GetGravityRef();
 		double radius = oapiGetSize(hbody);
-		vs1.vdata[0].x += 4.5 * sin(vs1.vdata[0].z) / radius;
-		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
+		vs1.vdata[0].x += 2.5 * sin(vs1.vdata[0].z) / radius;
+		vs1.vdata[0].y += 2.5 * cos(vs1.vdata[0].z) / radius;
 
-		char VName[256]="";
-		strcpy (VName, GetName()); strcat (VName, "-LRV");
-		hLRV = oapiCreateVessel(VName,"ProjectApollo/LRV",vs1);
-		
-		LRV *lrv = (LRV *) oapiGetVesselInterface(hLRV);
+		hLRV = oapiCreateVessel("LRV", "ProjectApollo/LRV", vs1);
+
+		LRV* lrv = (LRV*)oapiGetVesselInterface(hLRV);
 		if (lrv) {
 			LRVSettings lrvs;
 
@@ -199,6 +204,152 @@ void LEVA::ToggleLRV()
 			lrv->SetLRVStats(lrvs);
 		}
 	}
+	else {
+		// Nothing for now, only one LRV per mission.
+	}
+}
+
+OBJHANDLE LEVA::GetLRVHandle()
+{
+	double VessCount;
+	int i = 0;
+	OBJHANDLE lrvHandle = NULL;
+
+	VessCount = oapiGetVesselCount();
+	for (i = 0; i < VessCount; i++)
+	{
+		char vesselName[256] = "";
+		oapiGetObjectName(oapiGetVesselByIndex(i), vesselName, 256);
+		if (strcmp("LRV", vesselName) == 0) {
+			lrvHandle = oapiGetVesselByIndex(i);
+		}
+	}
+	return lrvHandle;
+}
+
+void LEVA::BoardLRV(OBJHANDLE lrvHandle)
+{
+	VECTOR3 rpos = _V(0, 0, 0);
+	GetRelativePos(lrvHandle, rpos);
+	rpos.y = 0;
+	if (length(rpos) <= 1.75) {
+		LRV* lrvvessel = (LRV*)oapiGetVesselInterface(lrvHandle);
+		if (isCDR == true) {
+			lrvvessel->AttachChild(GetHandle(), lrvvessel->GetAttachmentHandle(false, 0), lrvSeat);
+		}
+		else {
+			lrvvessel->AttachChild(GetHandle(), lrvvessel->GetAttachmentHandle(false, 1), lrvSeat);
+		}
+		oapiSetFocusObject(lrvHandle);
+
+		SetMeshVisibilityMode(0, MESHVIS_NEVER);
+		SetMeshVisibilityMode(1, MESHVIS_EXTERNAL);
+	}
+}
+
+void LEVA::DeboardLRV(OBJHANDLE lrvHandle)
+{
+	double rt = oapiGetSize(GetSurfaceRef());
+	double moon_circ = rt * 2 * PI;
+	double each_deg = moon_circ / 360;
+	VESSELSTATUS2 vs2;
+	memset(&vs2, 0, sizeof(vs2));
+	vs2.version = 2;
+	vs2.status = 1;
+
+	LRV* lrvvessel = (LRV*)oapiGetVesselInterface(lrvHandle);
+	if (isCDR == true) {
+		lrvvessel->DetachChild(lrvvessel->GetAttachmentHandle(false, 0), 0);
+	}
+	else {
+		lrvvessel->DetachChild(lrvvessel->GetAttachmentHandle(false, 1), 0);
+	}
+	lrvvessel->GetStatusEx(&vs2);
+
+	double zpos = -0.25;
+	double xpos = -1.25;
+	double d_heading = PI / 2;
+	if (isCDR == false) {
+		xpos *= -1;
+		d_heading -= PI;
+	}
+
+	double d_lat1 = (zpos * cos(vs2.surf_hdg)) / each_deg;
+	double d_lng1 = (zpos * sin(vs2.surf_hdg)) / each_deg;
+	double d_lat2 = (xpos * -sin(vs2.surf_hdg)) / each_deg;
+	double d_lng2 = (xpos * cos(vs2.surf_hdg)) / each_deg;
+	vs2.surf_lat += ((d_lat1 + d_lat2) * RAD);
+	vs2.surf_lng += ((d_lng1 + d_lng2) * RAD);
+
+	vs2.surf_hdg += d_heading;
+	if (vs2.surf_hdg > PI2) {
+		vs2.surf_hdg -= PI2;
+	}
+	else if (vs2.surf_hdg < 0) {
+		vs2.surf_hdg += PI2;
+	}
+
+	DefSetStateEx(&vs2);
+
+	SetMeshVisibilityMode(0, MESHVIS_EXTERNAL);
+	SetMeshVisibilityMode(1, MESHVIS_NEVER);
+}
+
+void LEVA::DrawName()
+{
+	SURFHANDLE hTex[2];
+	if (isCDR == true) {
+		hTex[0] = oapiGetTextureHandle(hCDREVA, 4);
+		hTex[1] = oapiGetTextureHandle(hCDREVA, 5);
+	}
+	else {
+		hTex[0] = oapiGetTextureHandle(hLMPEVA, 4);
+		hTex[1] = oapiGetTextureHandle(hLMPEVA, 5);
+	}
+
+	SURFHANDLE plss_tex = oapiCreateTextureSurface(424, 64);
+	SURFHANDLE rcu_tex = oapiCreateTextureSurface(48, 376);
+
+	oapiSetSurfaceColourKey(plss_tex, 0xFF0000);
+	oapiSetSurfaceColourKey(rcu_tex, 0xFF0000);
+
+	RECT plss_src = { 150,640,362,704 };
+	RECT plss_tgt = { 0,0,424,64 };
+	RECT rcu_src = { 415,8,463,196 };
+	RECT rcu_tgt = { 0,0,48,376 };
+
+	if (hTex[0]) oapiBlt(plss_tex, hTex[0], &plss_tgt, &plss_src);
+	if (hTex[1]) oapiBlt(rcu_tex, hTex[1], &rcu_tgt, &rcu_src);
+
+	oapi::Font* plss_font = oapiCreateFont(58, true, "Sans", FONT_BOLD, 1800);
+	oapi::Sketchpad* plss_skp = oapiGetSketchpad(plss_tex);
+	if (plss_skp) {
+		plss_skp->SetFont(plss_font);
+		plss_skp->SetTextColor(0x000000);
+		plss_skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		plss_skp->Text(212, 58, SuitName, strlen(SuitName));
+		oapiReleaseSketchpad(plss_skp);
+	}
+	oapiReleaseFont(plss_font);
+
+	oapi::Font* rcu_font = oapiCreateFont(52, true, "Sans", FONT_BOLD, 2700);
+	oapi::Sketchpad* rcu_skp = oapiGetSketchpad(rcu_tex);
+	if (rcu_skp) {
+		rcu_skp->SetFont(rcu_font);
+		rcu_skp->SetTextColor(0x000000);
+		rcu_skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		rcu_skp->Text(52, 188, SuitName, strlen(SuitName));
+		oapiReleaseSketchpad(rcu_skp);
+	}
+	oapiReleaseFont(rcu_font);
+
+	if (hTex[0]) oapiBlt(hTex[0], plss_tex, &plss_src, &plss_tgt);
+	if (hTex[1]) oapiBlt(hTex[1], rcu_tex, &rcu_src, &rcu_tgt);
+
+	oapiDestroySurface(hTex[0]);
+	oapiDestroySurface(hTex[1]);
+	oapiDestroySurface(plss_tex);
+	oapiDestroySurface(rcu_tex);
 }
 
 void LEVA::ScanMotherShip()
@@ -210,24 +361,38 @@ void LEVA::ScanMotherShip()
 	VessCount=oapiGetVesselCount();
 	for ( i = 0 ; i< VessCount ; i++ ) 
 	{
+		char vesselName[256] = "";
 		hMaster=oapiGetVesselByIndex(i);
-		strcpy(EVAName,GetName());
-		oapiGetObjectName(hMaster,LEMName,256);
-		strcpy(MSName,LEMName);
-		if (isCDR)
+		oapiGetObjectName(hMaster, vesselName, 256);
+		if (strcmp(LEMName, vesselName) == 0) {
+			MotherShip = true;
+			i = int(VessCount);
+		}
+	}
+
+	if (MotherShip == false) { //This is probably a legacy scenario
+		char EVAName[256];
+		for (i = 0; i < VessCount; i++)
 		{
-			strcat(LEMName, "-LEVA-CDR");
-		}
-		else
-		{
-			strcat(LEMName, "-LEVA-LMP");
-		}
-		if (strcmp(LEMName, EVAName)==0){
-			MotherShip=true;
-			i=int(VessCount);
-		}
-		else{
-			strcpy(LEMName,"");
+			hMaster = oapiGetVesselByIndex(i);
+			strcpy(EVAName, GetName());
+			oapiGetObjectName(hMaster, LEMName, 256);
+			if (isCDR)
+			{
+				strcat(LEMName, "-LEVA-CDR");
+			}
+			else
+			{
+				strcat(LEMName, "-LEVA-LMP");
+			}
+			if (strcmp(LEMName, EVAName) == 0) {
+				MotherShip = true;
+				i = int(VessCount);
+				oapiGetObjectName(hMaster, LEMName, 256);
+			}
+			else {
+				strcpy(LEMName, "");
+			}
 		}
 	}
 }
@@ -454,6 +619,20 @@ int LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 1;
 	}
 
+	if (key == OAPI_KEY_B && down == true) {
+		OBJHANDLE lrvHandle = GetLRVHandle();
+		if (lrvHandle == NULL) {}
+		else {
+			if (GetAttachmentStatus(lrvSeat) == NULL) {
+				BoardLRV(lrvHandle);
+			}
+			else {
+				DeboardLRV(lrvHandle);
+			}
+		}
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -490,20 +669,18 @@ void LEVA::SetFlag()
 	// Create the flag. For NEP support we load per-mission config if it exists.
 	//
 	
-	char VName[256]="";
 	char FName[256];
 
 	sprintf(FName, "ProjectApollo/Apollo%d/sat5flag.cfg", ApolloNo);
-	strcpy (VName, GetName()); strcat (VName, "-FLAG");
 
 	FILE *fp = fopen(FName, "rt");
 	if (fp) {
 		fclose(fp);
 		sprintf(FName, "ProjectApollo/Apollo%d/sat5flag", ApolloNo);
-		oapiCreateVessel(VName, FName, vs1);
+		oapiCreateVessel("Flag", FName, vs1);
 	}
 	else {
-		oapiCreateVessel(VName,"ProjectApollo/sat5flag",vs1);
+		oapiCreateVessel("Flag","ProjectApollo/sat5flag",vs1);
 	}
 
 	FlagPlanted = true;
@@ -527,6 +704,8 @@ void LEVA::SetEVAStats(LEVASettings &evas)
 {
 	ApolloNo = evas.MissionNo;
 	isCDR = evas.isCDR;
+	strcpy(LEMName, evas.LEMName);
+	strcpy(SuitName, evas.SuitName);
 	StateSet = true;
 }
 
@@ -561,6 +740,25 @@ void LEVA::DoFirstTimestep()
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 		soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
+		VECTOR3 mesh_dir = _V(0, 0, 0);
+		if (isCDR == true) {
+			AddMesh(hCDREVA, &mesh_dir);
+			AddMesh(hCDRLRV, &mesh_dir);
+		}
+		else {
+			AddMesh(hLMPEVA, &mesh_dir);
+			AddMesh(hLMPLRV, &mesh_dir);
+		}
+		if (GetAttachmentStatus(lrvSeat) == NULL) {
+			SetMeshVisibilityMode(0, MESHVIS_EXTERNAL);
+			SetMeshVisibilityMode(1, MESHVIS_NEVER);
+		}
+		else {
+			SetMeshVisibilityMode(0, MESHVIS_NEVER);
+			SetMeshVisibilityMode(1, MESHVIS_EXTERNAL);
+		}
+		DrawName();
+
 		FirstTimestep = false;
 	}
 }
@@ -594,8 +792,9 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 		SLEVAPlayed = true;
 	}
 
-	if (!MotherShip)
+	if (MotherShip == false) {
 		ScanMotherShip();
+	}
 	
 	GetStatus(evaV);
 	oapiGetHeading(GetHandle(),&heading);
@@ -651,22 +850,28 @@ void LEVA::clbkLoadStateEx(FILEHANDLE scn, void *vs)
     char *line;
 	
 	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "STATE", 5)) {
+		if (!strnicmp(line, "LEMNAME", 7)) {
+			sscanf(line + 7, "%s", &LEMName);
+		}
+		else if (!strnicmp(line, "SUITNAME", 8)) {
+			strcpy(SuitName, line + 9);
+		}
+		else if (!strnicmp(line, "STATE", 5)) {
 			int	s;
 			sscanf(line + 5, "%d", &s);
 			SetMainState(s);
 
 			if (!Astro) {
 				Astro = true;
-				SetEngineLevel(ENGINE_HOVER,1);
+				SetEngineLevel(ENGINE_HOVER, 1);
 			}
 		}
-		else if (!strnicmp (line, "MISSIONNO", 9)) {
+		else if (!strnicmp(line, "MISSIONNO", 9)) {
 			sscanf(line + 9, "%d", &ApolloNo);
 		}
 		else {
 			ParseScenarioLineEx(line, vs);
-        }
+		}
     }
 }
 
@@ -724,20 +929,27 @@ void LEVA::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL2::clbkSaveState(scn);
 
+	oapiWriteScenario_string(scn, "LEMNAME", LEMName);
+
+	oapiWriteScenario_string(scn, "SUITNAME", SuitName);
+
 	int s = GetMainState();
 	if (s) {
 		oapiWriteScenario_int (scn, "STATE", s);
 	}
 
 	if (ApolloNo != 0) {
-		oapiWriteScenario_int (scn, "MISSIONNO", ApolloNo);
+		oapiWriteScenario_int(scn, "MISSIONNO", ApolloNo);
 	}
 }
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hCDREVA = oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
+		hCDREVA = oapiLoadMeshGlobal("ProjectApollo/sat5AstroS_CDR");
+		hLMPEVA = oapiLoadMeshGlobal("ProjectApollo/sat5AstroS_LMP");
+		hCDRLRV = oapiLoadMeshGlobal("ProjectApollo/LRV_Astro_CDR");
+		hLMPLRV = oapiLoadMeshGlobal("ProjectApollo/LRV_Astro_LMP");
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 	}

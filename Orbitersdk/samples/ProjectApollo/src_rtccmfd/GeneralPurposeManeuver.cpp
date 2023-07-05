@@ -65,28 +65,12 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 
 	if (sv1.RBI == BODY_EARTH)
 	{
-		if (opt->AltRef == 0)
-		{
-			R_E = 6371.0e3;
-		}
-		else
-		{
-			R_E = OrbMech::R_Earth;
-		}
-
+		R_E = pRTCC->SystemParameters.MCECAP;
 		mu = OrbMech::mu_Earth;
 	}
 	else
 	{
-		if (opt->AltRef == 0)
-		{
-			R_E = OrbMech::R_Moon;
-		}
-		else
-		{
-			R_E = pRTCC->BZLAND.rad[RTCC_LMPOS_BEST];
-		}
-
+		R_E = pRTCC->BZLAND.rad[RTCC_LMPOS_BEST];
 		mu = OrbMech::mu_Moon;
 	}
 
@@ -784,6 +768,7 @@ void RTCCGeneralPurposeManeuverProcessor::HeightManeuver(bool circ)
 		pRTCC->PMMAEGS(aeg.Header, sv_a, sv_temp);
 		if (aeg.Header.ErrorInd)
 		{
+			ErrorIndicator = 3;
 			return;
 		}
 		if (I == 0)
@@ -913,7 +898,7 @@ void RTCCGeneralPurposeManeuverProcessor::NodeShift()
 	{
 		sin_u_a = -sin_u_a;
 	}
-	sv_a.U = atan2(sin_u_a , cos_u_a);
+	sv_a.U = pRTCC->GLQATN(sin_u_a , cos_u_a);
 	cos_dw = (cos(opt->dLAN) - cos(u_temp)*cos(sv_a.U)) / (sin(u_temp)*sin(sv_a.U));
 	sin_dw = sin(opt->dLAN)*sin(i_temp) / sin_u_a;
 	DW = atan2(sin_dw, cos_dw);

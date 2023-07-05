@@ -43,6 +43,13 @@ struct EphemerisData2
 	VECTOR3 V = _V(0, 0, 0);
 };
 
+struct SV2
+{
+	EphemerisData sv;
+	double Mass = 0.0;
+	double AttachedMass = 0.0;
+};
+
 struct EphemerisHeader
 {
 	//Update number

@@ -20,12 +20,6 @@
     <ClCompile Include="..\..\src_sys\PanelSDK\BUILD.CPP">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_sys\PanelSDK\intruments.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_sys\PanelSDK\Panel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_sys\PanelSDK\PanelSDK.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -62,9 +56,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_sys\PanelSDK\Internals\Hsystems.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_sys\PanelSDK\instruments.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_sys\PanelSDK\Matrix.h">

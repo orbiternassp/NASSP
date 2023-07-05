@@ -748,75 +748,6 @@ OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu)
 	return coe;
 }
 
-OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu)
-{
-	double r, v, C3, e, inc, alpha_D, f, theta_N;
-	VECTOR3 HH, E, K, N;
-	OELEMENTS coe;
-
-	r = length(R);
-	v = length(V);
-	C3 = v*v - 2.0*mu / r;
-	HH = crossp(R, V);
-	E = crossp(V, HH) / mu - unit(R);
-	e = length(E);
-	K = _V(0.0, 0.0, 1.0);
-	N = crossp(HH, K);	//Nonstandard, vector pointing to DESCENDING node
-	inc = acos(HH.z / length(HH));
-	alpha_D = acos(dotp(N, E) / e / length(N));
-
-	if (E.z < 0)
-	{
-		alpha_D = PI2 - alpha_D;
-	}
-	f = acos(dotp(E, R) / length(R) / length(E));
-	theta_N = acos(N.x / length(N));
-
-	if (N.y < 0)
-	{
-		theta_N = PI2 - theta_N;
-	}
-	theta_N = theta_N - -80.6041140*RAD;
-	if (theta_N > PI2)
-	{
-		theta_N = theta_N - PI2;
-	}
-
-	coe.e = e;
-	coe.h = C3;
-	coe.i = inc;
-	coe.RA = theta_N;
-	coe.TA = f;
-	coe.w = alpha_D;
-		//coe = [C3 inc theta_N e alpha_D f];
-	return coe;
-}
-
-void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V)
-{
-	double lng, C3, inc, theta_N, e, f, a, h, alpha_D;
-	OELEMENTS coe2;
-
-	lng = -80.604133*RAD;
-	C3 = coe.h;
-	inc = coe.i;
-	theta_N = coe.RA;
-	e = coe.e;
-	alpha_D = coe.w;
-	f = coe.TA;
-	a = -mu / C3;
-	h = sqrt(mu*a*(1.0 - e*e));
-	//coe2 = [h e pi - theta_N - lng inc pi - alpha_D f];
-	coe2.e = e;
-	coe2.h = h;
-	coe2.i = inc;
-	coe2.RA = PI - theta_N - lng;
-	coe2.TA = f;
-	coe2.w = PI - alpha_D;
-
-	sv_from_coe(coe2, mu, R, V);
-}
-
 void PACSS13_from_coe(OELEMENTS coe, double lat, double A_Z, double mu, VECTOR3 &R_S, VECTOR3 &V_S)
 {
 	MATRIX3 MSG, MEG;
@@ -1736,7 +1667,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 		E_A = PI2 - E_A;
 	}
 
-	while ((abs(E_err) > 0.01*RAD || abs(dt)>1.0) && i < 30)
+	while ((abs(E_err) > 0.01*RAD || abs(dt)>1.0) && i < 50)
 	{
 		dE_0 = dE;
 		dE = E_A - E;
@@ -2288,7 +2219,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	p = aa * (1.0 - coe.e*coe.e);
 
 	//Is shadow function vanishing for elliptical orbit?
-	if (coe.e < 1 && beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
+	/*if (coe.e < 1 && beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
 	{
 		v1 = 0;
 		return;
@@ -2298,7 +2229,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	{
 		v1 = 0;
 		return;
-	}
+	}*/
 
 	beta2 = dotp(unit(sun), Q);
 	p = coe.h*coe.h / mu;
@@ -2924,12 +2855,15 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	CELBODY *cPlan = oapiGetCelbodyInterface(planet);
 
 	OELEMENTS coe;
-	double h, e, theta0, a, dt, dt_alt;
+	double h, e, theta0, a, dt, dt_old;
+	int i, imax;
 
 	dt = 0;
-	dt_alt = 1;
+	dt_old = 1;
+	i = 0;
+	imax = 20;
 
-	while (abs(dt_alt-dt)>0.5)
+	while (abs(dt_old - dt) > 0.5 && i < imax)
 	{
 		if (planet == hMoon && planet2 == hSun)
 		{
@@ -2994,7 +2928,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 			e = coe.e;
 			theta0 = coe.TA;
 
-			dt_alt = dt;
+			dt_old = dt;
 			ddt = time_theta(R1, V1, calculateDifferenceBetweenAngles(theta0, v1), mu);
 			dt += ddt;
 		}
@@ -3005,7 +2939,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 			a = h * h / mu * 1.0 / (1.0 - e * e);
 			T = PI2 / sqrt(mu)*OrbMech::power(a, 3.0 / 2.0);
 
-			dt_alt = dt;
+			dt_old = dt;
 			dt = time_theta(R, V, calculateDifferenceBetweenAngles(theta0, v1), mu);
 
 			if (dt < 0 && future)
@@ -3013,6 +2947,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 				dt += T;
 			}
 		}
+		i++;
 	}
 
 	return dt;
@@ -3374,6 +3309,12 @@ double QuadSum(double *x, int N)
 
 template <typename T> int sign(T val) {
 	return (T(0) < val) - (val < T(0));
+}
+
+void AGCSignedValue(int &val)
+{
+	if (val > 037777)
+		val = -(077777 - val);
 }
 
 int DoubleToBuffer(double x, double q, int m)

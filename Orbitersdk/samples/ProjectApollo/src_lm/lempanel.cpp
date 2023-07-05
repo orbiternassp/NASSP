@@ -44,9 +44,9 @@
  
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
-static GDIParams g_Param;
+extern GDIParams g_Param;
 
-void InitGParam(HINSTANCE hModule)
+DLLCLBK void InitModule(HINSTANCE hModule)
 
 {
 	g_Param.hDLL = hModule;
@@ -71,7 +71,7 @@ void InitGParam(HINSTANCE hModule)
 	g_Param.col[4] = oapiGetColour(255,0,255);
 }
 
-void FreeGParam()
+DLLCLBK void ExitModule(HINSTANCE hDll)
 
 {
 	int i;
@@ -1584,7 +1584,6 @@ bool LEM::clbkLoadPanel (int id) {
 		fdaiLeft.SetLMmode();
 		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1714, 625);
 		fdaiRight.SetLMmode();
-		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea (AID_MFDLEFT,                          _R(635, 1564, 1060, 1918),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDRIGHT,                         _R(1640, 1564, 2065, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
@@ -1705,7 +1704,6 @@ bool LEM::clbkLoadPanel (int id) {
 
 		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 36, 445);
 		fdaiRight.SetLMmode();
-		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea(AID_XPOINTERLMP,						_R( 237,  246,  374,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEM_MA_RIGHT, _R(328, 440, 375, 483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1738,7 +1736,6 @@ bool LEM::clbkLoadPanel (int id) {
 
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 1517, 445); // Was 135,625
 		fdaiLeft.SetLMmode();
-		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea(AID_LEM_COAS2,						_R( 675,    0, 1215,  540), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_MISSION_CLOCK,					_R(1455,  106, 1597,  130), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
@@ -1772,7 +1769,6 @@ bool LEM::clbkLoadPanel (int id) {
 
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 1320, 243); // Was 135,625
 		fdaiLeft.SetLMmode();
-		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea(AID_MAIN_PROP_AND_ENGINE_IND,         _R(1622, 46, 1871, 171),    PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_THRUST_WEIGHT_INDICATOR,          _R(1776, 250, 1807, 430),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
@@ -3497,7 +3493,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiLeft.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiLeft.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
 		}
 		return true;
 
@@ -3565,7 +3561,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiRight.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
 		}
 		return true;
 

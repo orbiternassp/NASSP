@@ -30,6 +30,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "rtcc.h"
 #include "MCC_Mission_G.h"
 #include "iu.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 void MCC::MissionSequence_G()
 {
@@ -105,8 +108,7 @@ void MCC::MissionSequence_G()
 				{
 					v = oapiGetVesselInterface(hLV);
 
-					if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
-						!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) {
+					if (utils::IsVessel(v, utils::SaturnV_SIVB)) {
 						sivb = (SIVB *)v;
 					}
 				}
@@ -215,10 +217,10 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PDI_DAY_7: //LM Activation Data to LGC activation update
 		UpdateMacro(UTP_PADONLY, PT_LMACTDATA, MoonRev >= 12 && MoonRevTime > 65.0*60.0, 34, MST_G_LUNAR_ORBIT_PDI_DAY_9);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to AGC activation update
+	case MST_G_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to AGS activation update
 		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 35, MST_G_LUNAR_ORBIT_PDI_DAY_10);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_10: //AGC activation update to Separation maneuver update
+	case MST_G_LUNAR_ORBIT_PDI_DAY_10: //AGS activation update to Separation maneuver update
 		UpdateMacro(UTP_PADONLY, PT_AP11AGSACT, SubStateTime > 3.0*60.0, 36, MST_G_LUNAR_ORBIT_PDI_DAY_11);
 		break;
 	case MST_G_LUNAR_ORBIT_PDI_DAY_11: //Separation maneuver update to DOI update

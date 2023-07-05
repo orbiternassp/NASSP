@@ -28,6 +28,9 @@
 #include "ML.h"
 #include "LC34.h"
 #include "LC37.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 #define ORBITER_MODULE
 
@@ -62,9 +65,8 @@ void LCC::clbkPostCreation()
 		VESSEL* pVessel = oapiGetVesselInterface(hPad);
 		if (pVessel != NULL)
 		{
-			if (!_stricmp(pVessel->GetClassName(), "ProjectApollo\\ML")) pPad = static_cast<ML*>(pVessel);
-			else if (!_stricmp(pVessel->GetClassName(), "ProjectApollo/ML")) pPad = static_cast<ML*>(pVessel);
-			//else if (!_strnicmp(pVessel->GetClassName(), "LC34", 8)) pPad = static_cast<LC34*>(pVessel);
+			if (utils::IsVessel(pVessel, utils::ML)) pPad = static_cast<ML*>(pVessel);
+			//else if (utils::IsVessel(pVessel, utils::LC34)) pPad = static_cast<LC34*>(pVessel);
 
 			if (pPad)
 			{
@@ -94,7 +96,8 @@ void LCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!_strnicmp(line, "PAD_NAME", 8)) {
-			sscanf_s(line + 8, "%s", PadName, sizeof(PadName));
+			static_assert(sizeof(PadName) == 256, "PadName size changed, update sscanf format accordingly");
+			sscanf(line + 8, "%255s", PadName);
 		}
 		else ParseScenarioLineEx(line, status);
 	}

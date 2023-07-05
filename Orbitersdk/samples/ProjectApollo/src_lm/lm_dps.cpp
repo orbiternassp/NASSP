@@ -685,6 +685,9 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 
 		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f engPreValvesArm %d engArm %d thrustOn: %d", lem->ManualEngineStart.GetState(), lem->CDRManualEngineStop.GetState(), lem->ttca_throttle_pos_dig, thrustcommand, engPreValvesArm, engArm, thrustOn);
 		//sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetCmdPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetCmdPosition(), pitchGimbalActuator.GetPosition());
+		//char Buffer[128];
+		//sprintf(Buffer, "%lf;%lf", rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetPosition());
+		//oapiWriteLog(Buffer);
 		//sprintf(oapiDebugString(), "lvl: %f Max Thr: %f Isp: %f Erosion %f", lem->GetThrusterLevel(dpsThruster[0]), lem->GetThrusterMax0(dpsThruster[0]), lem->GetThrusterIsp(dpsThruster[0]), Erosion);
 	}
 }

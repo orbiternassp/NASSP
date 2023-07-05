@@ -97,6 +97,7 @@ namespace mission {
 		bHasAEA = true;
 		bLMHasAscEngArmAssy = false;
 		bLMHasLegs = true;
+		bLMHasDeflectors = true;
 		bCSMHasHGA = true;
 		bCSMHasVHFRanging = true;
 		strCMCVersion = "Artemis072";
@@ -109,6 +110,39 @@ namespace mission {
 		iCMtoLMPowerConnectionVersion = 0;
 		EmptySMCG = _V(914.5916, -6.6712, 12.2940); //Includes: empty SM and SLA ring, but no SM RCS
 		bHasRateAidedOptics = false;
+		strCDRName = "CDR";
+		strCMPName = "CMP";
+		strLMPName = "LMP";
+		strCDRSuitName = "CDR";
+		strCMPSuitName = "CMP";
+		strLMPSuitName = "LMP";
+		AddCSMCueCard(0, "CUECARD_DAP");
+		AddCSMCueCard(2, "SPS_BURN");
+		AddCSMCueCard(2, "SPS_BURN_CONTINUED");
+		AddCSMCueCard(2, "T_AND_D");
+		AddCSMCueCard(2, "T_AND_D_CONTINUED");
+		AddCSMCueCard(2, "ENTRY");
+		AddCSMCueCard(2, "CM_EVA");
+		AddCSMCueCard(2, "CM_EVA_CONTD");
+		AddCSMCueCard(2, "CONTINGENCY_EVA");
+		AddCSMCueCard(2, "CONTINGENCY_EVA_CONTINUED");
+		AddCSMCueCard(3, "CDR_BOOST-ABORTS");
+		AddCSMCueCard(3, "TLI");
+		AddCSMCueCard(3, "VAC_XFER_TO_ECS");
+		AddCSMCueCard(4, "POWER_LOSS");
+		AddCSMCueCard(4, "UNDOCK_SEP");
+		AddCSMCueCard(4, "EMER_CAB_REPRESS");
+		AddCSMCueCard(4, "TPF");
+		AddCSMCueCard(4, "TPF_CONTINUED");
+		AddCSMCueCard(4, "CDR_ABORTS_III_&_IV");
+		AddCSMCueCard(5, "EPS-ECS_ABORTS");
+		AddCSMCueCard(5, "SPS_BURN_RULES");
+		AddCSMCueCard(6, "LANDING");
+		AddCSMCueCard(7, "AC_PWR");
+		AddCSMCueCard(7, "LOSS_OF_COMM");
+		AddCSMCueCard(8, "LMP_BOOST-ABORTS");
+		AddCSMCueCard(9, "LOI_LIMITS");
+		AddCSMCueCard(10, "CSM_ANTENNA_LOCATIONS");
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -126,64 +160,138 @@ namespace mission {
 		sprintf_s(buffer, 255, "(Mission) Loading mission %s from file %s",
 			strMission.c_str(), filename.c_str());
 		oapiWriteLog(buffer);
-		FILEHANDLE hFile = oapiOpenFile(filename.c_str(), FILE_IN);
 
-		if (hFile == NULL)
+		std::ifstream hFile(filename.c_str());
+
+		if (!hFile.is_open())
 		{
 			oapiWriteLog("(Mission) ERROR: Can't open file.");
 			return false;
 		}
 
-		VECTOR3 vtemp;
+		char line[256];
 
-		if (oapiReadItem_string(hFile, "Name", buffer))
+		while (hFile.getline(line, sizeof line))
 		{
-			strMissionName = buffer;
+			if (!_strnicmp(line, "Name=", 5)) {
+				strncpy(buffer, line + 5, 255);
+				strMissionName.assign(buffer);
+			}
+			else if (!_strnicmp(line, "SMJCVersion=", 12)) {
+				sscanf(line + 12, "%d", &iSMJCVersion);
+			}
+			else if (!_strnicmp(line, "JMission=", 9)) {
+				strncpy(buffer, line + 9, 255);
+				bJMission = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "Panel277Version=", 16)) {
+				sscanf(line + 16, "%d", &iPanel277Version);
+			}
+			else if (!_strnicmp(line, "Panel278Version=", 16)) {
+				sscanf(line + 16, "%d", &iPanel278Version);
+			}
+			else if (!_strnicmp(line, "LMDSKYVersion=", 14)) {
+				sscanf(line + 14, "%d", &iLMDSKYVersion);
+			}
+			else if (!_strnicmp(line, "HasLMProgramer=", 15)) {
+				strncpy(buffer, line + 15, 255);
+				bHasLMProgramer = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "HasAEA=", 7)) {
+				strncpy(buffer, line + 7, 255);
+				bHasAEA = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "LMHasAscEngArmAssy=", 19)) {
+				strncpy(buffer, line + 19, 255);
+				bLMHasAscEngArmAssy = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "LMHasLegs=", 10)) {
+				strncpy(buffer, line + 10, 255);
+				bLMHasLegs = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "LMHasDeflectors=", 16)) {
+				strncpy(buffer, line + 16, 255);
+				bLMHasDeflectors = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "CSMHasHGA=", 10)) {
+				strncpy(buffer, line + 10, 255);
+				bCSMHasHGA = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "CSMHasVHFRanging=", 17)) {
+				strncpy(buffer, line + 17, 255);
+				bCSMHasVHFRanging = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "CMCVersion=", 11)) {
+				strncpy(buffer, line + 11, 255);
+				strCMCVersion.assign(buffer);
+			}
+			else if (!_strnicmp(line, "LGCVersion=", 11)) {
+				strncpy(buffer, line + 11, 255);
+				strLGCVersion.assign(buffer);
+			}
+			else if (!_strnicmp(line, "AEAVersion=", 11)) {
+				strncpy(buffer, line + 11, 255);
+				strAEAVersion.assign(buffer);
+			}
+			else if (!_strnicmp(line, "InvertLMStageBit=", 17)) {
+				strncpy(buffer, line + 17, 255);
+				bInvertLMStageBit = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "ATCA_PRM_Factor=", 16)) {
+				sscanf(line + 16, "%lf", &dATCA_PRM_Factor);
+			}
+			else if (!_strnicmp(line, "LM_CGX_Coefficients=", 20)) {
+				sscanf(line + 20, "%lf %lf %lf", &LM_CG_Coefficients.m11, &LM_CG_Coefficients.m12, &LM_CG_Coefficients.m13);
+			}
+			else if (!_strnicmp(line, "LM_CGY_Coefficients=", 20)) {
+				sscanf(line + 20, "%lf %lf %lf", &LM_CG_Coefficients.m21, &LM_CG_Coefficients.m22, &LM_CG_Coefficients.m23);
+			}
+			else if (!_strnicmp(line, "LM_CGZ_Coefficients=", 20)) {
+				sscanf(line + 20, "%lf %lf %lf", &LM_CG_Coefficients.m31, &LM_CG_Coefficients.m32, &LM_CG_Coefficients.m33);
+			}
+			else if (!_strnicmp(line, "CMtoLMPowerConnectionVersion=", 29)) {
+				sscanf(line + 29, "%d", &iCMtoLMPowerConnectionVersion);
+			}
+			else if (!_strnicmp(line, "EmptySMCG=", 10)) {
+				sscanf(line + 10, "%lf %lf %lf", &EmptySMCG.x, &EmptySMCG.y, &EmptySMCG.z);
+			}
+			else if (!_strnicmp(line, "HasRateAidedOptics=", 19)) {
+				strncpy(buffer, line + 19, 255);
+				bHasRateAidedOptics = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "CDRVesselName=", 14)) {
+				strncpy(buffer, line + 14, 255);
+				strCDRName.assign(buffer);
+			}
+			else if (!_strnicmp(line, "CMPVesselName=", 14)) {
+				strncpy(buffer, line + 14, 255);
+				strCMPName.assign(buffer);
+			}
+			else if (!_strnicmp(line, "LMPVesselName=", 14)) {
+				strncpy(buffer, line + 14, 255);
+				strLMPName.assign(buffer);
+			}
+			else if (!_strnicmp(line, "CDRSuitName=", 12)) {
+				strncpy(buffer, line + 12, 255);
+				strCDRSuitName.assign(buffer);
+			}
+			else if (!_strnicmp(line, "CMPSuitName=", 12)) {
+				strncpy(buffer, line + 12, 255);
+				strCMPSuitName.assign(buffer);
+			}
+			else if (!_strnicmp(line, "LMPSuitName=", 12)) {
+				strncpy(buffer, line + 12, 255);
+				strLMPSuitName.assign(buffer);
+			}
+			else if (!_strnicmp(line, "CSMCueCard=", 11)) {
+				ReadCueCardLine(line + 11, 0);
+			}
+			else if (!_strnicmp(line, "LMCueCard=", 10)) {
+				ReadCueCardLine(line + 10, 1);
+			}
 		}
-		oapiReadItem_int(hFile, "SMJCVersion", iSMJCVersion);
-		oapiReadItem_bool(hFile, "JMission", bJMission);
-		oapiReadItem_int(hFile, "Panel277Version", iPanel277Version);
-		oapiReadItem_int(hFile, "Panel278Version", iPanel278Version);
-		oapiReadItem_int(hFile, "LMDSKYVersion", iLMDSKYVersion);
-		oapiReadItem_bool(hFile, "HasLMProgramer", bHasLMProgramer);
-		oapiReadItem_bool(hFile, "HasAEA", bHasAEA);
-		oapiReadItem_bool(hFile, "LMHasAscEngArmAssy", bLMHasAscEngArmAssy);
-		oapiReadItem_bool(hFile, "LMHasLegs", bLMHasLegs);
-		oapiReadItem_bool(hFile, "CSMHasHGA", bCSMHasHGA);
-		oapiReadItem_bool(hFile, "CSMHasVHFRanging", bCSMHasVHFRanging);
-		if (oapiReadItem_string(hFile, "CMCVersion", buffer))
-		{
-			strCMCVersion = buffer;
-		}
-		if (oapiReadItem_string(hFile, "LGCVersion", buffer))
-		{
-			strLGCVersion = buffer;
-		}
-		if (oapiReadItem_string(hFile, "AEAVersion", buffer))
-		{
-			strAEAVersion = buffer;
-		}
-		oapiReadItem_bool(hFile, "InvertLMStageBit", bInvertLMStageBit);
-		oapiReadItem_float(hFile, "ATCA_PRM_Factor", dATCA_PRM_Factor);
-		if (oapiReadItem_vec(hFile, "LM_CGX_Coefficients", vtemp))
-		{
-			LM_CG_Coefficients.m11 = vtemp.x; LM_CG_Coefficients.m12 = vtemp.y; LM_CG_Coefficients.m13 = vtemp.z;
-		}
-		if (oapiReadItem_vec(hFile, "LM_CGY_Coefficients", vtemp))
-		{
-			LM_CG_Coefficients.m21 = vtemp.x; LM_CG_Coefficients.m22 = vtemp.y; LM_CG_Coefficients.m23 = vtemp.z;
-		}
-		if (oapiReadItem_vec(hFile, "LM_CGZ_Coefficients", vtemp))
-		{
-			LM_CG_Coefficients.m31 = vtemp.x; LM_CG_Coefficients.m32 = vtemp.y; LM_CG_Coefficients.m33 = vtemp.z;
-		}
-		oapiReadItem_int(hFile, "CMtoLMPowerConnectionVersion", iCMtoLMPowerConnectionVersion);
-		if (oapiReadItem_vec(hFile, "EmptySMCG", vtemp))
-		{
-			EmptySMCG = vtemp;
-		}
-		oapiReadItem_bool(hFile, "HasRateAidedOptics", bHasRateAidedOptics);
-		oapiCloseFile(hFile, FILE_IN);
+		hFile.close();
+
 		return true;
 	}
 
@@ -230,6 +338,11 @@ namespace mission {
 	bool Mission::LMHasLegs() const
 	{
 		return bLMHasLegs;
+	}
+
+	bool Mission::LMHasDeflectors() const
+	{
+		return bLMHasDeflectors;
 	}
 
 	bool Mission::CSMHasHGA() const
@@ -285,5 +398,100 @@ namespace mission {
 	bool Mission::HasRateAidedOptics() const
 	{
 		return bHasRateAidedOptics;
+	}
+
+	void Mission::ReadCueCardLine(char *line, int vehicle)
+	{
+		char buffer[128];
+		unsigned loc = 0;
+		std::string meshname;
+		VECTOR3 ofs = _V(0, 0, 0);
+
+		if (sscanf(line, "%u %s %lf %lf %lf", &loc, buffer, &ofs.x, &ofs.y, &ofs.z) >= 2)
+		{
+			meshname = buffer;
+			AddCueCard(vehicle, loc, meshname, ofs);
+		}
+	}
+
+	bool Mission::GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
+	{
+		return GetCueCards(CSMCueCards, counter, loc, meshname, ofs);
+	}
+
+	bool Mission::GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
+	{
+		while (counter < CSMCueCards.size())
+		{
+			if (cue[counter].meshname != "" && cue[counter].meshname != "None")
+			{
+				loc = cue[counter].loc;
+				meshname = cue[counter].meshname;
+				ofs = cue[counter].ofs;
+				counter++;
+				return false;
+			}
+
+			counter++;
+		}
+		return true;
+	}
+
+	void Mission::AddCueCard(int vehicle, unsigned location, std::string meshname, VECTOR3 ofs)
+	{
+		CueCardConfig cfg;
+
+		cfg.loc = location;
+		cfg.meshname = "ProjectApollo/CueCards/" + meshname;
+		cfg.ofs = ofs;
+
+		if (vehicle == 0)
+		{
+			CSMCueCards.push_back(cfg);
+		}
+		else
+		{
+			LMCueCards.push_back(cfg);
+		}
+	}
+
+	void Mission::AddCSMCueCard(unsigned location, std::string meshname, VECTOR3 ofs)
+	{
+		AddCueCard(0, location, meshname, ofs);
+	}
+
+	void Mission::AddLMCueCard(unsigned location, std::string meshname, VECTOR3 ofs)
+	{
+		AddCueCard(1, location, meshname, ofs);
+	}
+
+	const std::string& Mission::GetCDRName() const
+	{
+		return strCDRName;
+	}
+
+	const std::string& Mission::GetCMPName() const
+	{
+		return strCMPName;
+	}
+
+	const std::string& Mission::GetLMPName() const
+	{
+		return strLMPName;
+	}
+
+	const std::string& Mission::GetCDRSuitName() const
+	{
+		return strCDRSuitName;
+	}
+
+	const std::string& Mission::GetCMPSuitName() const
+	{
+		return strCMPSuitName;
+	}
+
+	const std::string& Mission::GetLMPSuitName() const
+	{
+		return strLMPSuitName;
 	}
 }

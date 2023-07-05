@@ -27,7 +27,15 @@
 #include "PanelSDK/Internals/Esystems.h"
 #include "PanelSDK/Internals/Hsystems.h"
 
-class Saturn;
+class TemperatureTransducer : public Transducer
+{
+public:
+	TemperatureTransducer(char *i_name, double minIn, double maxIn);
+	void Init(e_object *e, therm_obj *t);
+	double GetValue();
+protected:
+	therm_obj *therm;
+};
 
 class CSMTankTransducer : public Transducer
 {
@@ -36,13 +44,6 @@ public:
 	void Init(e_object *e, h_Tank *t);
 protected:
 	h_Tank *tank;
-};
-
-class CSMTankTempTransducer : public CSMTankTransducer
-{
-public:
-	CSMTankTempTransducer(char *i_name, double minIn, double maxIn);
-	double GetValue();
 };
 
 class CSMTankPressTransducer : public CSMTankTransducer

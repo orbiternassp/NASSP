@@ -32,6 +32,7 @@
 #include "soundlib.h"
 #include "tracer.h"
 #include "nasspdefs.h"
+#include "nassputils.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "CSMcomputer.h"
@@ -45,6 +46,8 @@
 
 #include "MFDResource.h"
 #include "ProjectApolloChecklistMFD.h"
+
+using namespace nassp;
 
 #define PROG_CHKLST			0
 #define PROG_CHKLSTNAV		1
@@ -114,18 +117,13 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
-	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+	if (utils::IsVessel(vessel, utils::Saturn)) {
 		saturn = (Saturn *)vessel;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler"))  {
+	else if (utils::IsVessel(vessel, utils::Crawler))  {
 			crawler = (Crawler *)vessel;
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+	else if (utils::IsVessel(vessel, utils::LEM)) {
 			lem = (LEM *)vessel;
 	}
 
@@ -151,6 +149,7 @@ ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 		item.index = i;
 	}
 	*/
+	oapiDestroySurface(hLogo);
 }
 char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {

@@ -302,7 +302,6 @@
 #define AID_MISSION_TIMER_SWITCHES      528
 #define IDB_DSKY_DISP                   529
 #define AID_FDAI_RIGHT                  530
-#define IDB_FDAI_ROLLINDICATOR          531
 #define IDB_FDAI_ROLL                   532
 #define IDB_CWS_LIGHTS                  533
 #define IDB_EVENT_TIMER                 534

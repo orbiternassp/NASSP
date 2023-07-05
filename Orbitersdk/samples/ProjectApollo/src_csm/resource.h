@@ -296,7 +296,6 @@
 #define AID_MISSION_TIMER_SWITCHES                          528
 #define IDB_DSKY_DISP                                       529
 #define AID_FDAI_RIGHT                                      530
-#define IDB_FDAI_ROLLINDICATOR                              531
 #define IDB_FDAI_ROLL                                       532
 #define IDB_CWS_LIGHTS                                      533
 #define IDB_EVENT_TIMER                                     534
@@ -1651,6 +1650,19 @@
 #define AID_VC_TW_P10_06         6417
 
 #define AID_VC_ROT_P12_01          6420
+
+// Cue Cards
+#define AID_VC_CUE_CARD_LOCATION_1	7000
+#define AID_VC_CUE_CARD_LOCATION_2	7001
+#define AID_VC_CUE_CARD_LOCATION_3	7002
+#define AID_VC_CUE_CARD_LOCATION_4	7003
+#define AID_VC_CUE_CARD_LOCATION_5	7004
+#define AID_VC_CUE_CARD_LOCATION_6	7005
+#define AID_VC_CUE_CARD_LOCATION_7	7006
+#define AID_VC_CUE_CARD_LOCATION_8	7007
+#define AID_VC_CUE_CARD_LOCATION_9	7008
+#define AID_VC_CUE_CARD_LOCATION_10	7009
+#define AID_VC_CUE_CARD_LOCATION_11	7010
 
 
 // Next default values for new objects

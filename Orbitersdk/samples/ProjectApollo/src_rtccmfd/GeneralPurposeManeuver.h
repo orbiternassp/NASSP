@@ -100,8 +100,6 @@ struct GMPOpt
 	double Weight = 1.0;
 	double KFactor = 1.0;
 
-	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
-
 	//maneuver parameters
 
 	double TIG_GET;	//Threshold time or time of ignition

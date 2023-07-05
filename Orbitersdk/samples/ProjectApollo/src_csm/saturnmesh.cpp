@@ -1088,9 +1088,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 		probeextidx = -1;
 	}
 
-	// Optics Cover
-	opticscoveridx = AddMesh (hopticscover, &mesh_dir);
-	SetOpticsCoverMesh();
+	AddCMMeshes(mesh_dir);
 
 	// Docking port
 	VECTOR3 dockpos = {0,0,35.90-CGOffset};
@@ -1123,11 +1121,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 
 		ph_o2_vent = CreatePropellantResource(tank_mass, tank_mass); //"Thruster" created by O2 venting
 
-		TankQuantities t;
-
-		GetTankQuantities(t);
-
-		SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg);
+		SetPropellantMass(ph_o2_vent, O2Tanks[0]->mass / 1E3);
 
 	}
 	
@@ -1335,19 +1329,6 @@ void Saturn::SetCMdocktgtMesh() {
 	}
 	else {
 		SetMeshVisibilityMode(cmdocktgtidx, MESHVIS_NEVER);
-	}
-}
-
-void Saturn::SetNosecapMesh() {
-
-	if (nosecapidx == -1)
-		return;
-
-	if (NosecapAttached) {
-		SetMeshVisibilityMode(nosecapidx, MESHVIS_EXTERNAL);
-	}
-	else {
-		SetMeshVisibilityMode(nosecapidx, MESHVIS_NEVER);
 	}
 }
 
@@ -1638,7 +1619,6 @@ void Saturn::StageSeven(double simt)
 		case 0:
 			if (GetAltitude() < 350000) {
 				SlowIfDesired();
-				ActivateCMRCS();
 				ActivateNavmode(NAVMODE_RETROGRADE);
 				StageState++;
 			}
@@ -1683,7 +1663,6 @@ void Saturn::StageEight(double simt)
 			if (GetAltitude() < 50000) {
 				SlowIfDesired();
 				DeactivateNavmode(NAVMODE_RETROGRADE);
-				DeactivateCMRCS();
 				StageState++;
 			}
 			break;
@@ -2261,6 +2240,8 @@ void Saturn::ClearMeshes() {
 			DelMesh(i);
 		}
 	}
+
+	ResetDynamicMeshIndizes();
 }
 
 void Saturn::DefineCMAttachments()
@@ -2270,4 +2251,18 @@ void Saturn::DefineCMAttachments()
 	SetAttachmentParams(ah, _V(0, 0, 0), _V(0, 0, 1), _V(1, 0, 0)); //FloatBag
 	ah = GetAttachmentHandle(false, 1);
 	SetAttachmentParams(ah, _V(0, 0, 0), _V(0, 0, 1), _V(1, 0, 0)); //Chute
+}
+
+void Saturn::ResetDynamicMeshIndizes()
+{
+	CueCards.ResetMeshIndizes();
+}
+
+void Saturn::AddCMMeshes(const VECTOR3 &mesh_dir)
+{
+	// Optics Cover
+	opticscoveridx = AddMesh(hopticscover, &mesh_dir);
+	SetOpticsCoverMesh();
+
+	CueCards.ResetCueCards();
 }

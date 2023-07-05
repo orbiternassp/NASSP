@@ -2902,7 +2902,7 @@ bool LVDC1B::LaunchTargetingUpdate(double v_t, double r_t, double theta_t, doubl
 		Inclination = inc;
 		Lambda_0 = dsc;
 		lambda_dot = dsc_dot;
-		fprintf(lvlog, "Navigation update received! R_T %f V_T %f gamma_T %f T_GRR0 %f\r\n", R_T, V_T, gamma_T, T_GRR0);
+		fprintf(lvlog, "Targeting update received! R_T %f V_T %f gamma_T %f T_GRR0 %f\r\n", R_T, V_T, gamma_T, T_GRR0);
 		fprintf(lvlog, "Inclination %f Lambda_0 %f lambda_dot %f\r\n", Inclination, Lambda_0, lambda_dot);
 
 		return true;
@@ -4135,8 +4135,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_ALFTSB", TABLE15[1].alphaS_TS);
 	papiWriteScenario_double(scn, "LVDC_ART", ART);
 	papiWriteScenario_double(scn, "LVDC_Azimuth", Azimuth);
-	papiWriteScenario_double(scn, "LVDC_Azo", Azo);
-	papiWriteScenario_double(scn, "LVDC_Azs", Azs);
+	papiWriteScenario_double(scn, "LVDC_AZO", Azo);
+	papiWriteScenario_double(scn, "LVDC_AZS", Azs);
 	papiWriteScenario_double(scn, "LVDC_B_11", B_11);
 	papiWriteScenario_double(scn, "LVDC_B_21", B_21);
 	papiWriteScenario_double(scn, "LVDC_B_12", B_12);
@@ -4177,36 +4177,36 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_C3B12", TABLE15[1].target[12].C_3);
 	papiWriteScenario_double(scn, "LVDC_C3B13", TABLE15[1].target[13].C_3);
 	papiWriteScenario_double(scn, "LVDC_C3B14", TABLE15[1].target[14].C_3);
-	papiWriteScenario_double(scn, "LVDC_CCSA0", TABLE15[0].target[0].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA1", TABLE15[0].target[1].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA2", TABLE15[0].target[2].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA3", TABLE15[0].target[3].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA4", TABLE15[0].target[4].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA5", TABLE15[0].target[5].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA6", TABLE15[0].target[6].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA7", TABLE15[0].target[7].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA8", TABLE15[0].target[8].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA9", TABLE15[0].target[9].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA10", TABLE15[0].target[10].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA11", TABLE15[0].target[11].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA12", TABLE15[0].target[12].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA13", TABLE15[0].target[13].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSA14", TABLE15[0].target[14].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB0", TABLE15[1].target[0].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB1", TABLE15[1].target[1].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB2", TABLE15[1].target[2].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB3", TABLE15[1].target[3].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB4", TABLE15[1].target[4].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB5", TABLE15[1].target[5].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB6", TABLE15[1].target[6].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB7", TABLE15[1].target[7].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB8", TABLE15[1].target[8].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB9", TABLE15[1].target[9].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB10", TABLE15[1].target[10].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB11", TABLE15[1].target[11].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB12", TABLE15[1].target[12].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB13", TABLE15[1].target[13].cos_sigma);
-	papiWriteScenario_double(scn, "LVDC_CCSB14", TABLE15[1].target[14].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA0", TABLE15[0].target[0].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA1", TABLE15[0].target[1].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA2", TABLE15[0].target[2].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA3", TABLE15[0].target[3].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA4", TABLE15[0].target[4].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA5", TABLE15[0].target[5].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA6", TABLE15[0].target[6].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA7", TABLE15[0].target[7].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA8", TABLE15[0].target[8].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA9", TABLE15[0].target[9].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA10", TABLE15[0].target[10].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA11", TABLE15[0].target[11].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA12", TABLE15[0].target[12].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA13", TABLE15[0].target[13].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSA14", TABLE15[0].target[14].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB0", TABLE15[1].target[0].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB1", TABLE15[1].target[1].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB2", TABLE15[1].target[2].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB3", TABLE15[1].target[3].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB4", TABLE15[1].target[4].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB5", TABLE15[1].target[5].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB6", TABLE15[1].target[6].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB7", TABLE15[1].target[7].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB8", TABLE15[1].target[8].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB9", TABLE15[1].target[9].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB10", TABLE15[1].target[10].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB11", TABLE15[1].target[11].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB12", TABLE15[1].target[12].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB13", TABLE15[1].target[13].cos_sigma);
+	papiWriteScenario_double(scn, "LVDC_COSB14", TABLE15[1].target[14].cos_sigma);
 	papiWriteScenario_double(scn, "LVDC_Cf", Cf);
 	papiWriteScenario_double(scn, "LVDC_CG", CG);
 	papiWriteScenario_double(scn, "LVDC_cos_chi_Yit", cos_chi_Yit);
@@ -4590,7 +4590,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_t_DS3", t_DS3);
 	papiWriteScenario_double(scn, "LVDC_T_EO1", T_EO1);
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
-	papiWriteScenario_double(scn, "LVDC_TETEO", theta_EO);
+	papiWriteScenario_double(scn, "LVDC_THTEO", theta_EO);
 	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
 	papiWriteScenario_double(scn, "LVDC_TI", TI);
 	papiWriteScenario_double(scn, "LVDC_T_ImpactBurn", T_ImpactBurn);
@@ -4894,8 +4894,8 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_ALFTSB", TABLE15[1].alphaS_TS);
 		papiReadScenario_double(line, "LVDC_ART", ART);
 		papiReadScenario_double(line, "LVDC_Azimuth", Azimuth);
-		papiReadScenario_double(line, "LVDC_Azo", Azo);
-		papiReadScenario_double(line, "LVDC_Azs", Azs);
+		papiReadScenario_double(line, "LVDC_AZO", Azo);
+		papiReadScenario_double(line, "LVDC_AZS", Azs);
 		papiReadScenario_double(line, "LVDC_B_11", B_11);
 		papiReadScenario_double(line, "LVDC_B_12", B_12);
 		papiReadScenario_double(line, "LVDC_B_21", B_21);
@@ -4937,6 +4937,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_C3B12", TABLE15[1].target[12].C_3);
 		papiReadScenario_double(line, "LVDC_C3B13", TABLE15[1].target[13].C_3);
 		papiReadScenario_double(line, "LVDC_C3B14", TABLE15[1].target[14].C_3);
+		//Remove these below at some point
 		papiReadScenario_double(line, "LVDC_CCSA0", TABLE15[0].target[0].cos_sigma);
 		papiReadScenario_double(line, "LVDC_CCSA1", TABLE15[0].target[1].cos_sigma);
 		papiReadScenario_double(line, "LVDC_CCSA2", TABLE15[0].target[2].cos_sigma);
@@ -4967,6 +4968,38 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_CCSB12", TABLE15[1].target[12].cos_sigma);
 		papiReadScenario_double(line, "LVDC_CCSB13", TABLE15[1].target[13].cos_sigma);
 		papiReadScenario_double(line, "LVDC_CCSB14", TABLE15[1].target[14].cos_sigma);
+		//Below are the correct names
+		papiReadScenario_double(line, "LVDC_COSA0", TABLE15[0].target[0].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA1", TABLE15[0].target[1].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA2", TABLE15[0].target[2].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA3", TABLE15[0].target[3].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA4", TABLE15[0].target[4].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA5", TABLE15[0].target[5].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA6", TABLE15[0].target[6].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA7", TABLE15[0].target[7].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA8", TABLE15[0].target[8].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA9", TABLE15[0].target[9].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA10", TABLE15[0].target[10].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA11", TABLE15[0].target[11].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA12", TABLE15[0].target[12].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA13", TABLE15[0].target[13].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSA14", TABLE15[0].target[14].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB0", TABLE15[1].target[0].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB1", TABLE15[1].target[1].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB2", TABLE15[1].target[2].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB3", TABLE15[1].target[3].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB4", TABLE15[1].target[4].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB5", TABLE15[1].target[5].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB6", TABLE15[1].target[6].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB7", TABLE15[1].target[7].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB8", TABLE15[1].target[8].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB9", TABLE15[1].target[9].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB10", TABLE15[1].target[10].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB11", TABLE15[1].target[11].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB12", TABLE15[1].target[12].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB13", TABLE15[1].target[13].cos_sigma);
+		papiReadScenario_double(line, "LVDC_COSB14", TABLE15[1].target[14].cos_sigma);
+
 		papiReadScenario_double(line, "LVDC_Cf", Cf);
 		papiReadScenario_double(line, "LVDC_CG", CG);
 		papiReadScenario_double(line, "LVDC_cos_chi_Yit", cos_chi_Yit);
@@ -5354,7 +5387,8 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_t_DS3", t_DS3);
 		papiReadScenario_double(line, "LVDC_T_EO1", T_EO1);
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
-		papiReadScenario_double(line, "LVDC_TETEO", theta_EO);
+		papiReadScenario_double(line, "LVDC_TETEO", theta_EO); //Remove this at some point, TETEO was a typo. THTEO is correct.
+		papiReadScenario_double(line, "LVDC_THTEO", theta_EO);
 		papiReadScenario_double(line, "LVDC_theta_N", theta_N);
 		papiReadScenario_double(line, "LVDC_TI", TI);
 		papiReadScenario_double(line, "LVDC_TI5F2", EPTTIM[57]); //Events Processor: TB5, event 3
@@ -8280,10 +8314,7 @@ EP00:
 		DPM[DIN4_SpacecraftSeparation] = true;
 		break;
 	case 73: //Restart Calculations (TB6+578.6)
-		if (!TU || TU10)
-		{
-			NISTAT[6] = true;
-		}
+		NISTAT[6] = true;
 		break;
 	case 74: //TB6+580.3
 		NISTAT[3] = true;
@@ -9430,8 +9461,6 @@ restartprep:
 			f			True anomaly of transfer ellipse
 			*/
 
-			fprintf(lvlog, "7-parameter update: T_RP: %f, C_3: %f, Inc: %f°, e: %f, alpha_D: %f°, f: %f°, theta_N: %f° \r\n", T_RP, C_3, Inclination*DEG, e, alpha_D*DEG, f*DEG, theta_N*DEG);
-
 			alpha_D_op = 0;
 			first_op = false;
 
@@ -9811,6 +9840,28 @@ bool LVDCSV::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM
 		DLTTL[4] = NUPTIM;
 		Timer2Interrupt(true);
 		fprintf(lvlog, "Navigation update received! R %f %f %f V %f %f %f T %f \r\n", DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSNUPTIM);
+		return true;
+	}
+	return false;
+}
+
+bool LVDCSV::TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f)
+{
+	if (LVDC_Timebase == 5 && T_RP > LVDC_TB_ETime + 10.0)
+	{
+		TU = true;
+		TU10 = false;
+
+		this->T_RP = T_RP;
+		this->C_3 = C_3;
+		this->Inclination = Inclination;
+		this->theta_N = theta_N;
+		this->e = e;
+		this->alpha_D = alpha_D;
+		this->f = f;
+
+		fprintf(lvlog, "TLI targeting update received! T_RP: %f, C_3: %f, Inc: %f°, e: %f, alpha_D: %f°, f: %f°, theta_N: %f°\r\n", T_RP, C_3, Inclination*DEG, e, alpha_D*DEG, f*DEG, theta_N*DEG);
+
 		return true;
 	}
 	return false;

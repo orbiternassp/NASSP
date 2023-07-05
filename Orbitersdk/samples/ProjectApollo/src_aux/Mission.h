@@ -29,6 +29,13 @@
 
 namespace mission
 {
+	struct CueCardConfig
+	{
+		unsigned loc = 0;
+		std::string meshname;
+		VECTOR3 ofs = _V(0, 0, 0);
+	};
+
 	class Mission
 	{
 	public:
@@ -56,6 +63,8 @@ namespace mission
 		virtual bool LMHasAscEngArmAssy() const;
 		//false = LM has no legs, true = LM has legs
 		virtual bool LMHasLegs() const;
+		//false = LM has no deflectors, true = LM has deflectors
+		virtual bool LMHasDeflectors() const;
 		//false = CSM has no HGA, true = CSM has a HGA
 		virtual bool CSMHasHGA() const;
 		//false = CSM has no VHF Ranging System, true = CSM has VHF Ranging System
@@ -78,12 +87,43 @@ namespace mission
 		VECTOR3 GetCGOfEmptySM() const;
 		//false = Optics mode switch is not bypassed for CMC to optics commands, true = optics mode switch is bypassed for CMC to optics commands (ECP 792)
 		bool HasRateAidedOptics() const;
+		//Get cue cards
+		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
+		//Name of CDR
+		virtual const std::string& GetCDRName() const;
+		//Name of CMP
+		virtual const std::string& GetCMPName() const;
+		//Name of LMP
+		virtual const std::string& GetLMPName() const;
+		//Name of CDR to print on suit
+		virtual const std::string& GetCDRSuitName() const;
+		//Name of CMP to print on suit
+		virtual const std::string& GetCMPSuitName() const;
+		//Name of LMP to print on suit
+		virtual const std::string& GetLMPSuitName() const;
 	protected:
+		bool GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
+
+		void AddCueCard(int vehicle, unsigned location, std::string meshname, VECTOR3 ofs);
+
+		void AddCSMCueCard(unsigned location, std::string meshname, VECTOR3 ofs = _V(0, 0, 0));
+		void AddLMCueCard(unsigned location, std::string meshname, VECTOR3 ofs = _V(0, 0, 0));
+
+		void ReadCueCardLine(char *line, int vehicle);
+
+
 		std::string strFileName;
 		std::string strMissionName;
 		std::string strCMCVersion;
 		std::string strLGCVersion;
 		std::string strAEAVersion;
+
+		std::string strCDRName;
+		std::string strCMPName;
+		std::string strLMPName;
+		std::string strCDRSuitName;
+		std::string strCMPSuitName;
+		std::string strLMPSuitName;
 
 		int iSMJCVersion;
 		bool bJMission;
@@ -94,6 +134,7 @@ namespace mission
 		bool bHasAEA;
 		bool bLMHasAscEngArmAssy;
 		bool bLMHasLegs;
+		bool bLMHasDeflectors;
 		bool bCSMHasHGA;
 		bool bCSMHasVHFRanging;
 		bool bInvertLMStageBit;
@@ -102,6 +143,8 @@ namespace mission
 		int iCMtoLMPowerConnectionVersion;
 		VECTOR3 EmptySMCG;
 		bool bHasRateAidedOptics;
+		std::vector<CueCardConfig> CSMCueCards;
+		std::vector<CueCardConfig> LMCueCards;
 
 		void SetDefaultValues();
 	};

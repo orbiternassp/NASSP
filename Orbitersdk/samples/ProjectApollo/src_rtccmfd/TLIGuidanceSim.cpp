@@ -645,7 +645,7 @@ void TLIGuidanceSim::PCMGN()
 	double TEMP1, TEMP2, TEMP4, RMAG, VMAG, FOM, DDLT, CPP, SPP, T3P, TTOTP, XL3P, XJ3P, XLYP, PHIT, SGAMT, CGAMT, DELL2;
 	double SGAM, CGAM, XIT, XITD, ZETATD, ZETATG, PHIDI, PHIDT, XITG, DXIDP, DETADP, DZETDP, DELL3, DELT3, XL3, XJ3, U3, P3, S3, Q3;
 	double DXID, DETAD, DZETD, XLY, XBRY, XBRP, XJY, SY, QY, XKY, DY, DETA, XLP, C2, C4, XJP, QP, XKP, DP, DXI, XPRY, XPRP;
-	double ZCP, ZSP, ZCY, ZSY, TTOT, SP;
+	double ZCP, ZSP, ZCY, ZSY, TTOT, SP, DPIT;
 	int IFLOP;
 
 	if (T == TLAST)
@@ -978,15 +978,18 @@ PMMSIU_PCMGN_300:
 PMMSIU_PCMGN_330:
 	PITN = atan2(-UTA.z, UTA.x);
 	YAWN = asin(UTA.y);
+	//Limit yaw angle to 45°
 	if (abs(YAWN) > CHILIM)
 	{
 		YAWN = CHILIM *(YAWN / abs(YAWN));
 	}
+	//On first timestep set old angles to the initial values
 	if (T == TABLIN.GMTI)
 	{
 		PITO = PITN;
 		YAWO = YAWN;
 	}
+	//Yaw rate limiting
 	if (DDLT == 0.0 || abs(YAWN - YAWO) / DDLT > YDLIM)
 	{
 		if (YAWN > YAWO)
@@ -998,15 +1001,25 @@ PMMSIU_PCMGN_330:
 			YAWN = YAWO - YDLIM *DDLT;
 		}
 	}
-	if (DDLT == 0.0 || abs(PITN - PITO) / DDLT > PDLIM)
+	//Pitch rate limiting
+	DPIT = PITN - PITO;
+	if (DPIT > PI)
 	{
-		if (PITN > PITO)
+		DPIT -= PI2;
+	}
+	else if (DPIT < -PI)
+	{
+		DPIT += PI2;
+	}
+	if (DDLT == 0.0 || abs(DPIT) / DDLT > PDLIM)
+	{
+		if (DPIT > 0)
 		{
-			PITN = PITO + PDLIM *DDLT;
+			PITN = PITO + PDLIM * DDLT;
 		}
 		else
 		{
-			PITN = PITO - PDLIM *DDLT;
+			PITN = PITO - PDLIM * DDLT;
 		}
 	}
 	ZCP = cos(PITN);
