@@ -3914,15 +3914,15 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 		//Fuel cell reaactant valve switches now control the reactant valves themselves and not fuel cell operation directly
 	} else if (s == &FuelCellReactants1Switch) {
 		FuelCellReactantsSwitchToggled(s, &FuelCell1ReacsCB, &FuelCell1BusContCB,
-			(int*) Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:IN:OPEN"), (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:IN:OPEN"));
+			(int*) Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL1MANIFOLD:OUT:OPEN"), (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL1MANIFOLD:OUT:OPEN"));
 
 	} else if (s == &FuelCellReactants2Switch) {
 		FuelCellReactantsSwitchToggled(s, &FuelCell2ReacsCB, &FuelCell2BusContCB,
-			(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:IN:OPEN"), (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:IN:OPEN"));
+			(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL2MANIFOLD:OUT:OPEN"), (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL2MANIFOLD:OUT:OPEN"));
 
 	} else if (s == &FuelCellReactants3Switch) {
 		FuelCellReactantsSwitchToggled(s, &FuelCell3ReacsCB, &FuelCell3BusContCB,
-			(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:IN:OPEN"), (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:IN:OPEN"));
+			(int*)Panelsdk.GetPointerByString("HYDRAULIC:H2FUELCELL3MANIFOLD:OUT:OPEN"), (int*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELL3MANIFOLD:OUT:OPEN"));
 
 
 	} else if (s == &MainBusTieBatAcSwitch) {
@@ -4056,22 +4056,22 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 	}
 	//Reaction valves for Apollo 13 and before were wired in series with the indicators so both valves had to close before the talkback would barberpole
 	else if (s == &FuelCellReactants1Indicator) {
-		if ((FuelCellH2Manifold[0]->IN_valve.open == 0) &&
-			(FuelCellO2Manifold[0]->IN_valve.open == 0) &&
+		if ((FuelCellH2Manifold[0]->OUT_valve.open == 0) &&
+			(FuelCellO2Manifold[0]->OUT_valve.open == 0) &&
 			FuelCell1BusContCB.IsPowered()) FuelCellReactants1Indicator.SetState(0);
 		else FuelCellReactants1Indicator.SetState(1);
 
 	}
 	else if (s == &FuelCellReactants2Indicator) {
-		if ((FuelCellH2Manifold[1]->IN_valve.open == 0) &&
-			(FuelCellO2Manifold[1]->IN_valve.open == 0) &&
+		if ((FuelCellH2Manifold[1]->OUT_valve.open == 0) &&
+			(FuelCellO2Manifold[1]->OUT_valve.open == 0) &&
 			FuelCell2BusContCB.IsPowered()) FuelCellReactants2Indicator.SetState(0);
 		else FuelCellReactants2Indicator.SetState(1);
 
 	}
 	else if (s == &FuelCellReactants3Indicator) {
-		if ((FuelCellH2Manifold[2]->IN_valve.open == 0) &&
-			(FuelCellO2Manifold[2]->IN_valve.open == 0) &&
+		if ((FuelCellH2Manifold[2]->OUT_valve.open == 0) &&
+			(FuelCellO2Manifold[2]->OUT_valve.open == 0) &&
 			FuelCell3BusContCB.IsPowered()) FuelCellReactants3Indicator.SetState(0);
 		else FuelCellReactants3Indicator.SetState(1);
 

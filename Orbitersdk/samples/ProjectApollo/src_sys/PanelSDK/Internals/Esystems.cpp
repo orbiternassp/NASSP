@@ -470,11 +470,21 @@ void FCell::UpdateFlow(double dt)
 
 	double loadResistance = 784.0 / (power_load); //<R_F>, 784 = (28.0V)^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
 
+	double O2Press = O2_SRC->parent->space.Press * 0.000145038 + 5.0;
+	double H2Press = H2_SRC->parent->space.Press * 0.000145038;
+
+	double pressureFactor = 0.0;
+	
+	if (O2Press > H2Press) {
+		pressureFactor = log(H2Press + 1.0) / (4.077537443905720) * (1.0 - exp((-0.111111111111111) * ((H2Press - O2Press) * (H2Press - O2Press))));
+	}
+
 	//use an iterative procedure to solve for voltage and current. Should converge in ~2-3 steps, see https://gist.github.com/n7275/46a399d648721367a2bead3a6c2ae9ff
 	int NumSteps = 0;
 	while (NumSteps < 10) //10 is an absolute maximum to prevent hangs, and really should never get much higher than ~6-7 during extream transients
 	{
 		Volts = A + B * Amperes + C * Amperes * Amperes + D * Amperes * Amperes * Amperes + E * Amperes * Amperes * Amperes * Amperes + F * Amperes * Amperes * Amperes * Amperes * Amperes;
+		Volts *= pressureFactor;
 
 		if (Volts > 36.58) {
 			Volts = 36.58;		//prevent unrealistic temperature runaway voltages ---> I will fix this by making voltage depend on H2 and O2 Pressure in the future...
@@ -490,10 +500,10 @@ void FCell::UpdateFlow(double dt)
 	power_load = Amperes * Volts; //recalculate power_load
 
 
-	/*if (!strcmp(name, "FUELCELL1"))
-	{
-	sprintf(oapiDebugString(), "Steps to Converge: %d", NumSteps);
-	}*/
+	//if (!strcmp(name, "FUELCELL1"))
+	//{
+	//	sprintf(oapiDebugString(), "Pressure Factor: %lf", pressureFactor);
+	//}
 
 	/*	voltage divider schematic
 
