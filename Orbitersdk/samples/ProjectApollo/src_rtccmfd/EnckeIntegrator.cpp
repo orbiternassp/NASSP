@@ -475,15 +475,18 @@ void EnckeFreeFlightIntegrator::adfunc()
 		if (INITF == false)
 		{
 			INITF = true;
-			//Maybe something will be here again at some point...
-		}
 
-		Rot = OrbMech::GetRotationMatrix(P, pRTCC->GetGMTBase() + CurrentTime() / 24.0 / 3600.0);
-		U_Z = rhmul(Rot, _V(0, 0, 1));
+			//Get Earth rotation matrix only during initialization. For the Moon the libration matrix is updated by the PLEFEM call below
+			if (P == BODY_EARTH)
+			{
+				pRTCC->ELVCNV(CurrentTime(), RTCC_COORDINATES_ECT, RTCC_COORDINATES_ECI, Rot);
+				U_Z = tmul(Rot, _V(0, 0, 1));
+			}
+		}
 
 		TS = tau;
 		OrbMech::rv_from_r0v0(R0, V0, tau, R_CON, V_CON, mu);
-		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
+		pRTCC->PLEFEM(P == BODY_EARTH ? 1 : 2, CurrentTime() / 3600.0, 0, &R_EM, &V_EM, &R_ES, &Rot); //Get Sun and Moon ephemerides and libration matrix (MCI only)
 	}
 
 	//Calculate actual state
@@ -747,7 +750,7 @@ void EnckeFreeFlightIntegrator::ACCEL_GRAV()
 	//Null gravitation acceleration vector
 	G_VEC = _V(0, 0, 0);
 	//Transform position vector to planet fixed coordinates
-	R_EF = rhtmul(Rot, R);
+	R_EF = mul(Rot, R);
 	//Components of the planet fixed position unit vector
 	R_INV = 1.0 / length(R);
 	UR = R_EF * R_INV;
@@ -804,7 +807,7 @@ void EnckeFreeFlightIntegrator::ACCEL_GRAV()
 		G_VEC.z = G_VEC.z + R0_N * F3;
 		AUXILIARY = AUXILIARY + R0_N * F4;
 	}
-	//Lastly, the planet fixed acceleration vector shall be obtained and rotated to ecliptic coordinates
+	//Lastly, the planet fixed acceleration vector shall be obtained and rotated to inertial coordinates
 	G_VEC = G_VEC - UR * AUXILIARY;
-	G_VEC = rhmul(Rot, G_VEC);
+	G_VEC = tmul(Rot, G_VEC);
 }

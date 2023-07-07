@@ -180,7 +180,7 @@ bool LunarTargetingProgram::TrajectoryComputer(std::vector<double> &var, void *v
 		return true;
 	}
 	vars->gmt_imp = sv_imp.GMT;
-	pRTCC->GLSSAT(sv_imp, vars->lat, vars->lng, alt);
+	pRTCC->GLSSAT(sv_imp.R, sv_imp.GMT, sv_imp.RBI, vars->lat, vars->lng, alt);
 
 	arr[0] = vars->lat;
 	arr[1] = vars->lng;

@@ -43,6 +43,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/RTCCSystemParameters.h"
 #include "../src_rtccmfd/GeneralPurposeManeuver.h"
 #include "../src_rtccmfd/LWP.h"
+#include "../src_rtccmfd/AnalyticEphemerisGenerator.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -118,6 +119,12 @@ class Saturn;
 #define RTCC_LMPOS_PGNCS 1
 #define RTCC_LMPOS_AGS 2
 #define RTCC_LMPOS_MED 3
+
+#define RTCC_COORDINATES_ECI 0
+#define RTCC_COORDINATES_ECT 1
+#define RTCC_COORDINATES_MCI 2
+#define RTCC_COORDINATES_MCT 3
+#define RTCC_COORDINATES_EMP 4
 
 //MANUAL ENTRY DEVICES
 
@@ -691,7 +698,6 @@ struct LunarLaunchTargetingTable
 
 struct PDIPADOpt
 {
-	VESSEL* vessel; //vessel
 	double P30TIG; //Time of Ignition (MCC)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
 	MATRIX3 REFSMMAT;
@@ -708,8 +714,8 @@ struct ASCPADOpt
 	double TIG;
 	double v_LH;
 	double v_LV;
-	SV sv_CSM;
-	MATRIX3 Rot_VL;	//Rotation Matrix, vessel to local, left-handed
+	EphemerisData sv_CSM;
+	MATRIX3 Rot_VL;	//Rotation Matrix, vessel to local, right-handed
 };
 
 struct LMARKTRKPADOpt
@@ -2005,18 +2011,48 @@ struct CapeCrossingTable
 	double GMTCross[30];
 };
 
-struct Station
+struct StationData
 {
-	double lat = 0.0;
-	double lng = 0.0;
-	double alt = 0.0;
-	double rad = 0.0;
 	std::string code;
+	//Geodetic longitude
+	double lng;
+	//Geodetic latitude
+	double lat_geod;
+	//Geocentric latitude
+	double lat_geoc;
+	//sin((lng))
+	double sin_lng;
+	//cos((lng))
+	double cos_lng;
+	//sin((lat_geod))
+	double sin_lat_geod;
+	//cos((lat_geod))
+	double cos_lat_geod;
+	//sin((lat_geoc))
+	double sin_lat_geoc;
+	//cos((lat_geoc))
+	double cos_lat_geoc;
+	//R_E*sin((lat_geod)-(lat_geoc))
+	double R_sin_dlat;
+	//R_E*cos((lat_geod)-(lat_geoc))
+	double R_cos_dlat;
+	//Inertial longitude at reference time
+	double lng_iner;
+	//Altitude above ellipsoid (H)
+	double H;
+	//Station radius R(S)
+	double R_S;
+	//Ellipsoid radius R(E)
+	double R_E;
+	//R(E)*cos((lat_geoc)) + H*cos(lat_geod))
+	double R_E_cos_lat;
+	//R(E)*sin((lat_geoc)) + H*sin(lat_geod))
+	double R_E_sin_lat;
 };
 
 struct StationTable
 {
-	std::vector<Station> table;
+	std::vector<StationData> table;
 };
 
 struct LunarDescentPlanningTable
@@ -2451,6 +2487,7 @@ public:
 	SV2 ExecuteManeuver(SV2 sv, double P30TIG, VECTOR3 dV_LVLH, int Thruster);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
+	void PMMENS(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double GMT_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &GMT_BO);
 	void PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP);
 	void LLWP_PERHAP(AEGHeader Header, AEGDataBlock sv, double &RAP, double &RPE);
 	void LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp, int M, int P, int I_CDH, double DH, double &dv_CSI, double &dv_CDH, double &t_CDH);
@@ -2481,7 +2518,7 @@ public:
 	int ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	double CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
-	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
+	VECTOR3 LOICrewChartUpdateProcessor(EphemerisData sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt, int veh);
@@ -2492,8 +2529,6 @@ public:
 	AEGBlock SVToAEG(EphemerisData sv, double Area, double Weight, double KFactor);
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
-	bool PMMAPD(SV sv0, SV &sv_a, SV &sv_p);
-	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval2(double get);
 	bool PDIIgnitionAlgorithm(SV sv, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
@@ -2745,7 +2780,7 @@ public:
 	//Predicted Site Acquisition Display
 	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
 	//Ground Range and Altitude Subprogram
-	void ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt);
+	void ECMEXP(EphemerisData sv, StationData *stat, int statbody, double &range, double &alt);
 	//Landmark Acquisition Display
 	void EMDLANDM(int L, double gmt, double dt, int ref);
 	//Display Updates
@@ -2776,11 +2811,13 @@ public:
 	//Variable Order Interpolation
 	int ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData2 &sv_out, unsigned &ORER_out);
 	//Generalized Coordinate System Conversion Subroutine
-	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
-	int ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out);
-	int ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out);
-	int ELVCNV(std::vector<VECTOR3> vec, double GMT, int type, int in, int out, std::vector<VECTOR3> &vec_out);
+	int ELVCNV(EphemerisData sv, int out, EphemerisData &sv_out);
+	int ELVCNV(EphemerisData2 sv, int in, int out, EphemerisData2 &sv_out);
+	int ELVCNV(double GMT, int in, int out, MATRIX3 &Rot);
 	int ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &vec_out);
+	int ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out);
+	int ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int out, std::vector<VECTOR3> &OUTPUT);
+
 	//Extended Interpolation Routine
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out);
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, EphemerisDataTable2 &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY = NULL);
@@ -2790,7 +2827,7 @@ public:
 	//Floating Point Hourse To Fixed Point Centiseconds
 	double GLHTCS(double FLTHRS);
 	//Subsatellite Position
-	int GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt);
+	int GLSSAT(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt);
 	//Density
 	void GLFDEN(double ALT, double &DENS, double &SPOS);
 
@@ -2833,7 +2870,6 @@ public:
 	//Weight Determination at a Time
 	void PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out);
 	bool PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, VECTOR3 *R_ES, MATRIX3 *PNL);
-	bool PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB);
 
 	// REENTRY COMPUTATIONS (R)
 	//Coefficients of lift and drag interpolation subroutine
@@ -2905,6 +2941,9 @@ public:
 	void PITFPC(double MUE, int K, double AORP, double ECC, double rad, double &TIME, double &P, bool erunits = true);
 	//Determine time of arrival at specific height in orbit
 	int PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &out);
+	//Generate orbit normal and ascending node vectors from elements, and vice versa
+	void PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h);
+	void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W);
 
 	// ** MISCELLANEOUS UTILITY PROGRAMS**
 	//Sun/Moon ephemeris table from tape
@@ -3550,14 +3589,14 @@ public:
 	{
 		//-1 when empty, 0 = Earth, 1 = Moon
 		int REF = -1;
-		Station Data[12];
+		StationData Data[12];
 	} EZEXSITE;
 
 	struct LandmarkSitesTable
 	{
 		//-1 when empty, 0 = Earth, 1 = Moon
 		int REF = -1;
-		Station Data[12];
+		StationData Data[12];
 	} EZLASITE;
 
 	struct OrbitEphemerisTable
@@ -3569,7 +3608,7 @@ public:
 
 	struct NutationPrecessionMatrices
 	{
-		MATRIX3 Mat[141];
+		MATRIX3 Mat[141]; //ECI to ECT
 		//MJD of first matrix
 		double mjd0 = 0.0;
 	} EZNPMATX;
@@ -3744,6 +3783,44 @@ public:
 
 	TimeConstraintsTable EZTSCNS1, EZTSCNS3;
 
+	struct StationCharacteristicsBlock
+	{
+		StationData data;
+
+		int RadarMount; //1 = AZ/EL, 2 = X/Y 30, 3 = POLAR, 4 = X/Y 85
+		//Word 2 - Indicators
+		//Site Types (8 = USB, 13 = Voice)
+		char SiteType;
+		//Word 3 - Teletype routing indicator and name
+		//Word 18 - Local vertical deflection (longitude)
+		double def_lng;
+		//Word 19 - Local vertical deflection (latitude)
+		double def_lat;
+		//Word 20 - Azimuth deviation from true north
+		double dev_azi;
+		//Word 21 - Refraction modulus
+		double mod_refr;
+		//Word 22 - Comm processor LAPFL (?)
+		//Word 23 - Range granularity
+		double gran_range;
+		//Word 24 - Angular granularity
+		double gran_ang;
+		//Word 25 - K-factor for refraction
+		double KFactor;
+		//Word 26-29 - Sigma coefficient
+		double SigmaCoef[4];
+		//Word 32 - USB transmitter frequency #1
+		double Freq1;
+		//Word 36 - USB Transmitter frequency #2
+		double Freq2;
+		//Word 37 - Maximum slant range
+		double MaxSlantRange;
+		//Word 38 - Range bias
+		double RangeBias;
+	};
+
+	StationCharacteristicsBlock GZSTCH[28];
+
 	struct GeneralConstraintsTable
 	{
 		//Block 1
@@ -3891,6 +3968,8 @@ public:
 	{
 		//Block 1-9
 		MATRIX3 IU1_REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
+		//Block 11-19
+		MATRIX3 IU2_REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 		//Block 56-62
 		double GMT_T;
 		VECTOR3 R_T;
@@ -4604,7 +4683,7 @@ public:
 		//MJD of first entry
 		double MJD;
 		//71 sets of data, 12 hours apart, covering 35 days, starting 5 days before midnight of launch day
-		//0-2: Sun position vector (Er), 3-5: Moon position vector (Er), 6-8: Moon velocity vector (Er/hr), 9-17: Moon libration vector
+		//0-2: Sun position vector (Er), 3-5: Moon position vector (Er), 6-8: Moon velocity vector (Er/hr), 9-17: Moon libration vector (MCI to MCT)
 		double data[71][18];
 	} MDGSUN;
 
@@ -4649,7 +4728,7 @@ public:
 
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
+	void navcheck(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt);
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
@@ -4657,8 +4736,8 @@ private:
 	void LandingSiteUplink(char *str, int veh);
 	void AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, bool v66 = false);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, bool v66 = false);
-	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc = true, bool AGCCoordSystem = false);
-	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc, bool AGCCoordSystem = false);
+	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc = true);
+	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, bool cmc);
 	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
 	void IncrementAGCTime(char *list, int veh, double dt);
@@ -4671,13 +4750,10 @@ private:
 	void P27PADCalc(P27Opt *opt, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
-	double PericynthionTime(VESSEL* vessel);
-	SV FindPericynthion(SV sv0);
 	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
 	double FindOrbitalSunrise(SV sv, double t_sunrise_guess);
 	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	void FindRadarMidPass(SV sv, double lat, double lng, double &GET_Mid);
-	double GetSemiMajorAxis(SV sv);
 	void papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in);
 	bool papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out);
 	void DMissionRendezvousPlan(SV sv_A0, double &t_TPI0);
@@ -4694,7 +4770,7 @@ private:
 	//Generalized Contact Generator
 	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
 	//Horizon Crossing Subprogram
-	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
+	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationData & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
 	bool EMXINGLunarOccultation(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, double gmt, VECTOR3 R_S_equ, double &g_func, LunarStayTimesTable *LUNSTAY);
 	int CapeCrossingRev(int L, double GMT);
 	double CapeCrossingGMT(int L, int rev);
@@ -4724,7 +4800,7 @@ private:
 	//Relative Motion Digital Display
 	void EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis, int ref_body, int mode, VECTOR3 Att = _V(0, 0, 0), double PYRGET = 0.0);
 	//Ground Point Characteristics Block Routine
-	void EMGGPCHR(double lat, double lng, double alt, int body, Station *stat);
+	void EMGGPCHR(double lat, double lng, double alt, int body, double GHA, StationData *stat);
 
 	//MPT utility functions
 	bool MPTConfigSubset(const std::bitset<4> &CfgOld, const std::bitset<4> &CfgNew);

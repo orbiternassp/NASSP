@@ -108,7 +108,7 @@ namespace rtcc
 
 		LOIOutputData out;
 	protected:
-		double TIME(double a_LLS, double e_LLS, double lng_LLS, double lat_LLS, double &DA, double &eta2, double &dt3);
+		bool TIME(double a_LLS, double e_LLS, double lng_LLS, double lat_LLS, double &DA, double &eta2, double &dt3, double &T_LLS);
 		void BACKUP(VECTOR3 R_LLS, VECTOR3 V_LLS, double a_LLS, double T_LLS, double DA, double eta2, double dt3, double &dh_a, double &dh_p, double &dw_p, double &a_L, double &e_L, VECTOR3 &U_PL, VECTOR3 &R_LOI, VECTOR3 &V_LOI);
 		//To compute a conic DT to go from an input true anomaly in an ellipse through a delta true anomaly
 		double DELTAT(double a, double e, double eta, double deta);
@@ -128,7 +128,6 @@ namespace rtcc
 		double DELV2(VECTOR3 R_N, VECTOR3 U_S, double R_a, double R_p, double W_P);
 
 		LOIOptions opt;
-		OBJHANDLE hMoon;
 		//Unit position vector to hyperbolic perilune
 		VECTOR3 U_PC;
 		//Unit angular momentum vector to SPH

@@ -733,12 +733,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GC->rtcc->FormatREFSMMATCode(RTCC_REFSMMAT_TYPE_CUR, refsdata->ID, Buffer);
 		skp->Text(7 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
 
-		MATRIX3 ref;
-		ref = mul(refsdata->REFSMMAT, OrbMech::tmat(GC->rtcc->SystemParameters.MAT_J2000_BRCS));
-
 		for (int i = 0; i < 9; i++)
 		{
-			sprintf(Buffer, "%f", ref.data[i]);
+			sprintf(Buffer, "%f", refsdata->REFSMMAT.data[i]);
 			skp->Text(7 * W / 16, (4 + i) * H / 14, Buffer, strlen(Buffer));
 		}
 	}
@@ -923,20 +920,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 10 * H / 14, "Sxt/Star Check:", 15);
 		sprintf(Buffer, "%.0f min", -G->sxtstardtime / 60.0);
 		skp->Text(4 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-
-		skp->Text(1 * W / 8, 12 * H / 14, "Uplink in LOS:", 14);
-
-		if (G->inhibUplLOS)
-		{
-			skp->Text(4 * W / 8, 12 * H / 14, "Inhibit", 7);
-		}
-		else
-		{
-			skp->Text(4 * W / 8, 12 * H / 14, "Enabled", 7);
-		}
-
-		//skp->Text(1 * W / 8, 12 * H / 14, "DV Format:", 9);
-		//skp->Text(5 * W / 8, 12 * H / 14, "AGC DSKY", 8);
 	}
 	else if (screen == 9)
 	{
@@ -5158,10 +5141,24 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+07.3f", GC->rtcc->EZCHECKDIS.psi);
 		skp->Text(17 * W / 32, 11 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(13 * W / 32, 13 * H / 28, "LATC", 4);
-		sprintf(Buffer, "%+07.4f", GC->rtcc->EZCHECKDIS.phi_c);
+		if (GC->rtcc->EZCHECKDIS.phi_c > 0)
+		{
+			sprintf(Buffer, "%07.4fN", GC->rtcc->EZCHECKDIS.phi_c);
+		}
+		else
+		{
+			sprintf(Buffer, "%07.4fS", abs(GC->rtcc->EZCHECKDIS.phi_c));
+		}
 		skp->Text(17 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(13 * W / 32, 15 * H / 28, "LONC", 4);
-		sprintf(Buffer, "%+07.3f", GC->rtcc->EZCHECKDIS.lambda);
+		if (GC->rtcc->EZCHECKDIS.lambda < 180.0)
+		{
+			sprintf(Buffer, "%07.3fE", GC->rtcc->EZCHECKDIS.lambda);
+		}
+		else
+		{
+			sprintf(Buffer, "%07.3fW", 360.0 - GC->rtcc->EZCHECKDIS.lambda);
+		}
 		skp->Text(17 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(12 * W / 32, 17 * H / 28, "HS", 2);
 		sprintf(Buffer, "%07.2f", GC->rtcc->EZCHECKDIS.h_s);
@@ -5249,7 +5246,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%07.2f", GC->rtcc->EZCHECKDIS.h_a);
 		skp->Text(15 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(11 * W / 32, 20 * H / 28, "HP", 2);
-		sprintf(Buffer, "%07.2f", GC->rtcc->EZCHECKDIS.h_p);
+		sprintf(Buffer, "%+07.2f", GC->rtcc->EZCHECKDIS.h_p);
 		skp->Text(15 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(11 * W / 32, 21 * H / 28, "HO", 2);
 		skp->Text(11 * W / 32, 22 * H / 28, "HO", 2);
@@ -5259,13 +5256,27 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(15 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%07.0f", GC->rtcc->EZCHECKDIS.h_o_ft);
 			skp->Text(15 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(11 * W / 32, 23 * H / 28, "LATD", 4);
+			if (GC->rtcc->EZCHECKDIS.phi_D > 0)
+			{
+				sprintf(Buffer, "%07.3fN", GC->rtcc->EZCHECKDIS.phi_D);
+			}
+			else
+			{
+				sprintf(Buffer, "%07.3fS", abs(GC->rtcc->EZCHECKDIS.phi_D));
+			}
+			skp->Text(15 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(11 * W / 32, 24 * H / 28, "LOND", 4);
+			if (GC->rtcc->EZCHECKDIS.lambda_D < 180.0)
+			{
+				sprintf(Buffer, "%07.3fE", GC->rtcc->EZCHECKDIS.lambda_D);
+			}
+			else
+			{
+				sprintf(Buffer, "%07.3fW", 360.0 - GC->rtcc->EZCHECKDIS.lambda_D);
+			}
+			skp->Text(15 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
 		}
-		skp->Text(11 * W / 32, 23 * H / 28, "LATD", 4);
-		sprintf(Buffer, "%+07.3f", GC->rtcc->EZCHECKDIS.phi_D);
-		skp->Text(15 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
-		skp->Text(11 * W / 32, 24 * H / 28, "LOND", 4);
-		sprintf(Buffer, "%07.3f", GC->rtcc->EZCHECKDIS.lambda_D);
-		skp->Text(15 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(11 * W / 32, 25 * H / 28, "R", 1);
 		sprintf(Buffer, "%+09.2f", GC->rtcc->EZCHECKDIS.R);
 		skp->Text(15 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));

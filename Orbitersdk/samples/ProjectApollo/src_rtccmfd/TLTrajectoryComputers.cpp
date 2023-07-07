@@ -304,8 +304,7 @@ bool TLTrajectoryComputers::ConicMissionComputer(std::vector<double> &var, void 
 
 	if (vars->FreeReturnIndicator)
 	{
-		MATRIX3 Rot;
-		VECTOR3 R_patch2, V_patch2, R_pg, V_pg, R_reentry, V_reentry, R_equ, V_equ, H_equ;
+		VECTOR3 R_patch2, V_patch2, R_pg, V_pg, R_reentry, V_reentry, H_reentry;
 		double GMT_patch2, GMT_pg, H, E, beta, e, GMT_reentry;
 
 		R_patch2 = R_pl;
@@ -321,11 +320,8 @@ bool TLTrajectoryComputers::ConicMissionComputer(std::vector<double> &var, void 
 		DGAMMA(length(R_pg), ainv, gamma_reentry, H, E, beta, e);
 		XBETA(R_pg, V_pg, GMT_pg, beta, 1, R_reentry, V_reentry, GMT_reentry);
 		vars->h_fr = length(R_reentry) - OrbMech::R_Earth;
-		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + GMT_reentry / 24.0 / 3600.0);
-		R_equ = rhtmul(Rot, R_reentry);
-		V_equ = rhtmul(Rot, V_reentry);
-		H_equ = crossp(R_equ, V_equ);
-		vars->incl_fr = acos(H_equ.z / length(H_equ));
+		H_reentry = crossp(R_reentry, V_reentry);
+		vars->incl_fr = acos(H_reentry.z / length(H_reentry));
 
 		if (vars->FreeReturnOnlyIndicator)
 		{
@@ -480,8 +476,7 @@ TLMCC_Conic_C4:
 
 TLMCC_Conic_F5:
 
-	MATRIX3 Rot;
-	VECTOR3 R_TEI, V_TEI, R_TEC, V_TEC, R_pg, V_pg, R_reentry, V_reentry, R_equ, V_equ, H_equ;
+	VECTOR3 R_TEI, V_TEI, R_TEC, V_TEC, R_pg, V_pg, R_reentry, V_reentry, H_reentry;
 	double GMT_TEC, GMT_pg, HH, E, GMT_reentry, dlng;
 
 	vars->GMT_tei = vars->GMT_nd + vars->T_lo;
@@ -500,11 +495,8 @@ TLMCC_Conic_F5:
 	DGAMMA(length(R_pg), ainv, gamma_reentry, HH, E, beta, e);
 	XBETA(R_pg, V_pg, GMT_pg, beta, 1, R_reentry, V_reentry, GMT_reentry);
 	vars->h_pr = length(R_reentry) - OrbMech::R_Earth;
-	Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + GMT_reentry / 24.0 / 3600.0);
-	R_equ = rhtmul(Rot, R_reentry);
-	V_equ = rhtmul(Rot, V_reentry);
-	H_equ = crossp(R_equ, V_equ);
-	vars->incl_pr = acos(H_equ.z / length(H_equ));
+	H_reentry = crossp(R_reentry, V_reentry);
+	vars->incl_pr = acos(H_reentry.z / length(H_reentry));
 	RNTSIM(R_reentry, V_reentry, GMT_reentry, MissionConstants.lambda_IP, vars->lat_ip_pr, vars->lng_ip_pr, dlng);
 	vars->T_te = GMT_reentry - vars->GMT_tei;
 	vars->GMT_ip_pr = GMT_reentry + Reentry_dt;
@@ -666,8 +658,7 @@ bool TLTrajectoryComputers::IntegratedTrajectoryComputer(std::vector<double> &va
 	else
 	{
 		EphemerisData sv_pl, sv_r;
-		MATRIX3 Rot;
-		VECTOR3 R_temp, V_temp, HH_pl, H_equ;
+		VECTOR3 R_temp, V_temp, HH_pl, H_reentry;
 		int ITS;
 
 		//Propagate state vector to perilune
@@ -690,11 +681,8 @@ bool TLTrajectoryComputers::IntegratedTrajectoryComputer(std::vector<double> &va
 		pRTCC->PMMCEN(sv_pl, 0.0, 100.0*3600.0, 2, sin(gamma_reentry), 1.0, sv_r, ITS);
 
 		vars->h_fr = length(sv_r.R) - OrbMech::R_Earth;
-		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + sv_r.GMT / 24.0 / 3600.0);
-		R_temp = rhtmul(Rot, sv_r.R);
-		V_temp = rhtmul(Rot, sv_r.V);
-		H_equ = crossp(R_temp, V_temp);
-		vars->incl_fr = acos(H_equ.z / length(H_equ));
+		H_reentry = crossp(sv_r.R, sv_r.V);
+		vars->incl_fr = acos(H_reentry.z / length(H_reentry));
 		vars->v_EI = length(sv_r.V);
 
 		if (vars->LunarFlybyIndicator)
@@ -1050,66 +1038,45 @@ bool TLTrajectoryComputers::LIBRAT(VECTOR3 &R, VECTOR3 &V, double GMT, int K)
 	//5: Selenocentric to selenographic
 	//6: Selenographic to selenocentric
 
-	if (K < 5)
+	int in, out;
+
+	switch (K)
 	{
-		MATRIX3 A;
-		VECTOR3 R_ME, V_ME, R_ES, i, j, k;
-
-		if (EPHEM(GMT, R_ME, V_ME, R_ES))
-		{
-			return true;
-		}
-		i = -unit(R_ME);
-		k = unit(crossp(R_ME, V_ME));
-		j = crossp(k, i);
-		A = _M(i.x, j.x, k.x, i.y, j.y, k.y, i.z, j.z, k.z);
-
-		if (K == 1 || K == 3)
-		{
-			R = mul(A, R);
-			V = mul(A, V);
-		}
-		else
-		{
-			R = tmul(A, R);
-			V = tmul(A, V);
-		}
-
-		if (K == 1 || K == 2)
-		{
-			MATRIX3 Rot;
-
-			Rot = OrbMech::GetRotationMatrix(BODY_MOON, GMTBASE + GMT / 24.0 / 3600.0);
-
-			if (K == 1)
-			{
-				R = rhtmul(Rot, R);
-				V = rhtmul(Rot, V);
-			}
-			else
-			{
-				R = rhmul(Rot, R);
-				V = rhmul(Rot, V);
-			}
-		}
+	case 1:
+		in = 4; out = 3;
+		break;
+	case 2:
+		in = 3; out = 4;
+		break;
+	case 3:
+		in = 4; out = 2;
+		break;
+	case 4:
+		in = 2; out = 4;
+		break;
+	case 5:
+		in = 2; out = 3;
+		break;
+	case 6:
+		in = 3; out = 2;
+		break;
+	default:
+		return true;
 	}
-	else
+
+	EphemerisData2 sv;
+
+	sv.R = R;
+	sv.V = V;
+	sv.GMT = GMT;
+
+	if (pRTCC->ELVCNV(sv, in, out, sv))
 	{
-		MATRIX3 Rot;
-
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, GMTBASE + GMT / 24.0 / 3600.0);
-
-		if (K == 5)
-		{
-			R = rhtmul(Rot, R);
-			V = rhtmul(Rot, V);
-		}
-		else
-		{
-			R = rhmul(Rot, R);
-			V = rhmul(Rot, V);
-		}
+		return true;
 	}
+
+	R = sv.R;
+	V = sv.V;
 
 	return false;
 }
@@ -1518,9 +1485,8 @@ bool TLTrajectoryComputers::RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, doubl
 
 void TLTrajectoryComputers::RNTSIM(VECTOR3 R, VECTOR3 V, double GMT, double lng_L, double &lat, double &lng, double &dlng)
 {
-	MATRIX3 Rot;
-	VECTOR3 P, S, S_equ;
-	double r, v, theta;
+	VECTOR3 P, S;
+	double r, v, theta, alpha_L, alpha_G;
 
 	r = length(R);
 	v = length(V);
@@ -1528,14 +1494,16 @@ void TLTrajectoryComputers::RNTSIM(VECTOR3 R, VECTOR3 V, double GMT, double lng_
 	P = V / v / cos(gamma_reentry) - R / r * tan(gamma_reentry);
 	theta = MissionConstants.Reentry_range / 3443.933585;
 	S = R / r * cos(theta) + P * sin(theta);
-	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, GMTBASE + (GMT + Reentry_dt) / 24.0 / 3600.0);
-	S_equ = rhtmul(Rot, S);
-	OrbMech::latlong_from_r(S_equ, lat, lng);
-	if (lng < 0)
-	{
-		lng += PI2;
-	}
-	dlng = lng - lng_L;
+
+	lat = atan2(S.z, sqrt(S.x*S.x + S.y*S.y));
+	alpha_L = atan2(S.y, S.x);
+	alpha_G = pRTCC->PIAIES((GMT + Reentry_dt) / 3600.0);
+
+	dlng = alpha_L - alpha_G - lng_L;
+	OrbMech::normalizeAngle(dlng);
+	lng = alpha_L - alpha_G;
+	OrbMech::normalizeAngle(lng);
+
 	if (dlng > PI)
 	{
 		dlng -= PI2;
