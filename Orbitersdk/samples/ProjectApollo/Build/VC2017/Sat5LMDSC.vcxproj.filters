@@ -18,9 +18,15 @@
     <ClCompile Include="..\..\src_lm\Sat5LMDSC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\Mission.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_lm\Sat5LMDSC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\Mission.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
