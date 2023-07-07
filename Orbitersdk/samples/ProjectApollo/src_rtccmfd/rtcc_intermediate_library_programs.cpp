@@ -252,12 +252,16 @@ VECTOR3 RTCC::PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, boo
 //Right Ascension of Greenwich at Time T
 double RTCC::PIAIES(double hour)
 {
-	return 0.0;
+	double HA;
+
+	HA = SystemParameters.MCLAMD + SystemParameters.MCERTS*hour;
+	OrbMech::normalizeAngle(HA);
+	return HA;
 }
 
 int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg)
 {
-	PMMLAEG aeg;
+	PMMLAEG aeg(this);
 	AEGHeader header;
 	MATRIX3 Rot;
 	VECTOR3 P, W, P_apo, W_apo;
@@ -275,11 +279,11 @@ int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &
 	K = 1;
 RTCC_PIATSU_1A:
 	//Rotate from selenocentric to selenographic
-	PLEFEM(1, AEGOUT.TS / 3600.0, 0, Rot);
-	OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
-	P_apo = tmul(Rot, P);
-	W_apo = tmul(Rot, W);
-	OrbMech::PIVECT(P_apo, W_apo, isg, gsg, hsg);
+	PLEFEM(5, AEGOUT.TS / 3600.0, 0, NULL, NULL, NULL, &Rot);
+	PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
+	P_apo = mul(Rot, P);
+	W_apo = mul(Rot, W);
+	PIVECT(P_apo, W_apo, isg, gsg, hsg);
 	if (isg < eps_i || isg > PI - eps_i)
 	{
 		KE = 2;
@@ -881,4 +885,28 @@ int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &
 	}
 
 	return 0;
+}
+
+void RTCC::PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h)
+{
+	VECTOR3 n;
+
+	i = acos(W.z / length(W));
+	n = crossp(_V(0, 0, 1), W);
+	h = acos(n.x / length(n));
+	if (n.y < 0)
+	{
+		h = PI2 - h;
+	}
+	g = acos(dotp(unit(n), unit(P)));
+	if (P.z < 0)
+	{
+		g = PI2 - g;
+	}
+}
+
+void RTCC::PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W)
+{
+	P = _V(-sin(h)*cos(i)*sin(g) + cos(h)*cos(g), cos(h)*cos(i)*sin(g) + sin(h)*cos(g), sin(i)*sin(g));
+	W = _V(sin(h)*sin(i), -cos(h)*sin(i), cos(i));
 }

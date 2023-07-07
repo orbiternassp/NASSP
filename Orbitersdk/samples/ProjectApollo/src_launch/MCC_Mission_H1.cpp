@@ -727,7 +727,10 @@ void MCC::MissionSequence_H1()
 				//Wait until LOI + 2.5 hours, then calculate Pericynthion time and EI conditions for return trajectory
 				if (rtcc->GETEval2(rtcc->calcParams.LOI + 2.5*3600.0))
 				{
-					rtcc->calcParams.LOI = rtcc->PericynthionTime(cm);
+					EphemerisData sv = rtcc->StateVectorCalcEphem(rtcc->calcParams.src);
+					double dt = OrbMech::timetoperi(sv.R, sv.V, OrbMech::mu_Moon);
+					rtcc->calcParams.LOI = rtcc->GETfromGMT(sv.GMT + dt);
+
 					startSubthread(205, UTP_NONE);
 					setSubState(14);
 				}
@@ -762,16 +765,18 @@ void MCC::MissionSequence_H1()
 			break;
 			case 1:
 			{
-				SV sv;
+				EphemerisData sv;
 				OELEMENTS coe;
 
-				sv = rtcc->StateVectorCalc(rtcc->calcParams.src);
+				sv = rtcc->StateVectorCalcEphem(rtcc->calcParams.src);
 
 				coe = OrbMech::coe_from_sv(sv.R, sv.V, OrbMech::mu_Moon);
 
 				if (coe.e > 0.7)
 				{
-					rtcc->calcParams.TEI = rtcc->PericynthionTime(cm);
+					double dt = OrbMech::timetoperi(sv.R, sv.V, OrbMech::mu_Moon);
+					rtcc->calcParams.TEI = rtcc->GETfromGMT(sv.GMT + dt);
+
 					setState(MST_H1_TRANSEARTH_1);
 				}
 				else

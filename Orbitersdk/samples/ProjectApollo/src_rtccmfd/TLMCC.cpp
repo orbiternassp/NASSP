@@ -1247,7 +1247,6 @@ void TLMCCProcessor::Option8()
 	double incl_pg, lat_split, GMT_pc;
 	GMT_pc = DataTable.GMT_pc1;
 	EPHEM(GMT_pc, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + GMT_pc / 24.0 / 3600.0), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
 	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
 	lat_split = outarray.lat_pl;
@@ -1358,7 +1357,6 @@ void TLMCCProcessor::Option9A()
 
 	GMT_pc = DataTable.GMT_pc1;
 	EPHEM(GMT_pc, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + GMT_pc / 24.0 / 3600.0), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
 	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
 	lat_split = outarray.lat_pl;
@@ -1477,7 +1475,6 @@ void TLMCCProcessor::Option9B()
 
 	GMT_pc = DataTable.GMT_pc1;
 	EPHEM(GMT_pc, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, GMTBASE + GMT_pc / 24.0 / 3600.0), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
 	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
 	lat_split = outarray.lat_pl;

@@ -244,11 +244,10 @@ struct RTCCSystemParameters
 		AGCEpoch = 1969;
 		MAT_J2000_BRCS = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-		//These are calculated with R_E = 6.373338e6
-		MCGMUM = 2.454405845045305e-01;
-		MCEMUU = 19.95468740240253;
-		MCSRMU = 4.954196044814240e-01;
-		MCERMU = 4.467066979842873;
+		MCGMUM = 0.244883757275606;
+		MCEMUU = 19.90941651408238;
+		MCSRMU = 0.494857310015327;
+		MCERMU = 4.461996919999204;
 
 		//Time from launch to EOI, seconds
 		MDLIEV[0] = 0.76673814e3;
@@ -279,6 +278,7 @@ struct RTCCSystemParameters
 
 		MCVLMC = 0.0;
 		MCVCMC = 0.5;
+		MCCMCU = 6378165.0;
 		MCCNMC = 3443.93359;
 		MCSMLR = 1738090.0;
 		MCCRPD = 0.01745329251; // PI/180
@@ -688,6 +688,8 @@ struct RTCCSystemParameters
 
 	//DEFINITIONS
 
+	//Meters per Earth radii
+	double MCCMCU;
 	//Nautical miles per Earth radii
 	double MCCNMC;
 	//Year of epoch
@@ -778,6 +780,8 @@ struct RTCCSystemParameters
 	int MCLTTD = 2400;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
 	int MGRTAG = 1;
+	//Maximum station characteristic blocks
+	int MKRBKS;
 	//Gravitational constant of the Moon (Er^3/hr^2)
 	double MCGMUM;
 	//Gravitational constant of the Earth (Er^3/hr^2)

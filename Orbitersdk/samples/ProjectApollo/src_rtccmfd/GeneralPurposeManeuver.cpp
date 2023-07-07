@@ -91,14 +91,6 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 	//VECTOR3 DR = R_A - R_B;
 	//sprintf_s(oapiDebugString(), 128, "%lf %lf %lf", DR.x, DR.y, DR.z);
 
-	if (aeg.Header.AEGInd == BODY_EARTH)
-	{
-		//For now, back to ecliptic
-		R_B = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, R_B);
-		V_B = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, V_B);
-		V_A = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, V_A);
-	}
-
 	//Special HAS logic: show apogee/perigee data in N revs, and not the next one
 	if (opt->ManeuverCode == RTCC_GMP_HAS)
 	{
@@ -633,15 +625,15 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenographicElements(const AEGData
 {
 	MATRIX3 L;
 	VECTOR3 P, W, P_apo, W_apo;
-	OrbMech::PIVECT(sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h, P, W);
-	if (pRTCC->PLEFEM(1, sv.TS / 3600.0, 0, L))
+	pRTCC->PIVECT(sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h, P, W);
+	if (pRTCC->PLEFEM(5, sv.TS / 3600.0, 0, NULL, NULL, NULL, &L))
 	{
 		ErrorIndicator = 5;
 		return;
 	}
-	P_apo = tmul(L, P);
-	W_apo = tmul(L, W);
-	OrbMech::PIVECT(P_apo, W_apo, i, g, h);
+	P_apo = mul(L, P);
+	W_apo = mul(L, W);
+	pRTCC->PIVECT(P_apo, W_apo, i, g, h);
 	u = g + sv.f;
 	if (u > PI2)
 	{
@@ -653,15 +645,15 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenocentricElements(double i, dou
 {
 	MATRIX3 L;
 	VECTOR3 P, W, P_apo, W_apo;
-	OrbMech::PIVECT(i, g, h, P, W);
-	if (pRTCC->PLEFEM(1, sv.TS / 3600.0, 0, L))
+	pRTCC->PIVECT(i, g, h, P, W);
+	if (pRTCC->PLEFEM(5, sv.TS / 3600.0, 0, NULL, NULL, NULL, &L))
 	{
 		ErrorIndicator = 5;
 		return;
 	}
-	P_apo = mul(L, P);
-	W_apo = mul(L, W);
-	OrbMech::PIVECT(P_apo, W_apo, sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h);
+	P_apo = tmul(L, P);
+	W_apo = tmul(L, W);
+	pRTCC->PIVECT(P_apo, W_apo, sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h);
 	sv.U = sv.coe_osc.g + sv.f;
 	if (sv.U >= PI2)
 	{
