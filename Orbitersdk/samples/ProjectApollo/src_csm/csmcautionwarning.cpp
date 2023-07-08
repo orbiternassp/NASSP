@@ -72,18 +72,31 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 // Check status of a fuel cell.
 //
 
-bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus &fc, int index)
+bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus& fc, int index)
 {
-	Saturn *sat = (Saturn *)OurVessel;
+	Saturn* sat = (Saturn*)OurVessel;
 
 	bool bad = false;
-	
+
 	//
 	// Various conditions, see Apollo Operations Handbook 2.10.4.2
 	//
 
-	/*if (fc.H2FlowLBH > 0.161) bad = true;
-	if (fc.O2FlowLBH > 1.276) bad = true;*/
+	//please refactor me...and the rest of the CWS to be more voltage-based
+	switch (index) {
+		// 4.025 V = 0.161 lb/r H2
+		// 3.9875 V = 1.276 lb/r O2
+
+	case 1:
+		if (sat->FCH2FlowSensor1.Voltage() > 4.025 || sat->FCO2FlowSensor1.Voltage() > 3.9875) { bad = true; }
+		break;
+	case 2:
+		if (sat->FCH2FlowSensor2.Voltage() > 4.025 || sat->FCO2FlowSensor2.Voltage() > 3.9875) { bad = true; }
+		break;
+	case 3:
+		if (sat->FCH2FlowSensor3.Voltage() > 4.025 || sat->FCO2FlowSensor3.Voltage() > 3.9875) { bad = true; }
+		break;
+	}
 
 	// pH > 9 not simulated at the moment
 
