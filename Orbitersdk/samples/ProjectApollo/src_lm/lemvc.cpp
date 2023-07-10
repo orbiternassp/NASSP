@@ -164,7 +164,7 @@ const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
 
 // Panel 1 rotaries
 const VECTOR3 P1_ROT_POS[P1_ROTCOUNT] = {
-	{-0.072168, 0.359422, 1.67335}
+	{-0.0721, 0.3602, 1.6730}
 };
 
 // Panel 2 switches
@@ -177,7 +177,7 @@ const VECTOR3 P2_TOGGLE_POS[P2_SWITCHCOUNT] = {
 
 // Panel 2 rotaries
 const VECTOR3 P2_ROT_POS[P2_ROTCOUNT] = {
-	{0.052147, 0.353926, 1.67237}, {0.243652, 0.400778, 1.67901}, {0.243665, 0.327141, 1.6687}, {0.356315, 0.364088, 1.67391}
+	{0.0520, 0.3542, 1.6720}, {0.2438, 0.4007, 1.6786}, {0.2439, 0.3275, 1.6683}, {0.3568, 0.3643, 1.6735}
 };
 
 // Panel 3 switches
@@ -192,7 +192,7 @@ const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
 
 // Panel 3 rotaries
 const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
-	{-0.34068, 0.15311, 1.56197}, {-0.19343, 0.163151, 1.57026}, {0.063658, 0.163679, 1.57046}, {0.27805, 0.151635, 1.56925}, {0.31772, 0.220734, 1.61811}
+	{-0.3410, 0.1495, 1.5669},{-0.1935, 0.1602, 1.5751},{0.0633, 0.1604, 1.5751},{0.2777, 0.1519, 1.5688},{0.3172, 0.2211, 1.6177}
 };
 
 // Panel 4 switches
@@ -216,7 +216,7 @@ const VECTOR3 P5_TOGGLE_POS[P5_SWITCHCOUNT] = {
 
 // Panel 5 rotaries
 const VECTOR3 P5_ROT_POS[P5_ROTCOUNT] = {
-{-0.5854, -0.0136, 1.4165}, {-0.4982, -0.0136, 1.4164}, {-0.4304, -0.0136, 1.4164}
+	{-0.5856, -0.0153, 1.4168}, {-0.4983, -0.0153, 1.4167}, {-0.4306, -0.0153, 1.4168}
 };
 
 // Panel 6 switches
@@ -292,7 +292,7 @@ const VECTOR3 P12_TOGGLE_POS[P12_SWITCHCOUNT] = {
 
 // Panel 12 rotaries
 const VECTOR3 P12_ROT_POS[P12_ROTCOUNT] = {
-{0.9876, 0.0424, 1.0606}, {0.9828, 0.0409, 0.9785}, {0.9941, 0.0442, 0.9123}, {1.0780, 0.0693, 0.9122}
+{0.9879, 0.0405, 1.0601}, {0.9839, 0.0393, 0.9782}, {0.9948, 0.0425, 0.9119}, {1.0787, 0.0675, 0.9119}
 };
 
 // Panel 12 needles
@@ -315,7 +315,7 @@ const VECTOR3 P14_TOGGLE_POS[P14_SWITCHCOUNT] = {
 
 // Panel 14 rotaries
 const VECTOR3 P14_ROT_POS[P14_ROTCOUNT] = {
-{1.0065, 0.3466, 1.2119}
+{1.0075, 0.3452, 1.2114}
 };
 
 // Panel 14 needles
@@ -366,15 +366,15 @@ const VECTOR3 ORDEAL_RotLocation = { -1.0319, 0.2112, 0.8968 };
 const VECTOR3 H20SepHandleLocation = { 0.3153, 0.2264, -0.2932 };
 const VECTOR3 PB_Vent1Location = { 0.3382, 0.1455, 0.2815 };
 const VECTOR3 PB_Vent2Location = { 0.3382, 0.2936, -0.2550 };
-const VECTOR3 Rot_AscO2_1Location = { 0.5702, 0.2829, 0.5882 };
-const VECTOR3 Rot_AscO2_2Location = { 0.4990, 0.2870, 0.5793 };
-const VECTOR3 Rot_CabinGasReturnLocation = { 0.3524, 0.5219, 0.0804 };
-const VECTOR3 Rot_CabinRepressLocation = { 0.6019, 0.3548, 0.5910 };
-const VECTOR3 Rot_DesO2Location = { 0.6449, 0.2777, 0.5981 };
-const VECTOR3 Rot_PlssFillLocation = { 0.5011, 0.3593, 0.5795 };
-const VECTOR3 Rot_PressRegALocation = { 0.4241, 0.3470, 0.5689 };
-const VECTOR3 Rot_PressRegBLocation = { 0.4215, 0.2573, 0.5693 };
-const VECTOR3 Rot_SuitCircuitReliefLocation = { 0.3524, 0.5006, 0.2689 };
+const VECTOR3 Rot_AscO2_1Location = {0.5708, 0.2834, 0.5777};
+const VECTOR3 Rot_AscO2_2Location = {0.5004, 0.2868, 0.5682};
+const VECTOR3 Rot_CabinGasReturnLocation = {0.3689, 0.5241, 0.0807};
+const VECTOR3 Rot_CabinRepressLocation = {0.6029, 0.3542, 0.5816};
+const VECTOR3 Rot_DesO2Location = {0.6461, 0.2772, 0.5873};
+const VECTOR3 Rot_PlssFillLocation = {0.5022, 0.3589, 0.5686};
+const VECTOR3 Rot_PressRegALocation = {0.4255, 0.3470, 0.5588};
+const VECTOR3 Rot_PressRegBLocation = {0.4226, 0.2565, 0.5585};
+const VECTOR3 Rot_SuitCircuitReliefLocation = {0.3686, 0.5016, 0.2690};
 const VECTOR3 SuitGasDiverterHandleLocation = { 0.4473, 0.6010, 0.5533 };
 const VECTOR3 Sw_CanisterSelLocation = { 0.3544, 0.3645, 0.1312 };
 const VECTOR3 Rot_SuitIsolCdrLocation = { 0.3457, 0.1616, 0.6088 };
@@ -383,14 +383,14 @@ const VECTOR3 Sw_ActOvrdCdrLocation = { 0.3653, 0.1552, 0.5451 };
 const VECTOR3 Sw_ActOvrdLmpLocation = { 0.5787, 0.1753, 0.5402 };
 const VECTOR3 Rot_Canister1Location = { 0.3077, 0.1679, 0.1246 };
 const VECTOR3 Rot_Canister2Location = { 0.3105, 0.2269, -0.1261 };
-const VECTOR3 Rot_DesH2OLocation = { 0.4426, -0.1245, 0.6489 };
-const VECTOR3 Rot_LGCLocation = { 0.2574, -0.2249, 0.6260 };
-const VECTOR3 Rot_PriEvapFlow1Location = { 0.4581, -0.2074, 0.6538 };
-const VECTOR3 Rot_PriEvapFlow2Location = { 0.4646, -0.0502, 0.6359 };
-const VECTOR3 Rot_SecEvapFlowLocation = { 0.5511, -0.0439, 0.6348 };
-const VECTOR3 Rot_SuitTempLocation = { 0.4532, -0.4007, 0.6942 };
+const VECTOR3 Rot_DesH2OLocation = {0.4417, -0.1269, 0.6370};
+const VECTOR3 Rot_LGCLocation = {0.2611, -0.2251, 0.6134};
+const VECTOR3 Rot_PriEvapFlow1Location = {0.4584, -0.2097, 0.6406};
+const VECTOR3 Rot_PriEvapFlow2Location = {0.4652, -0.0533, 0.6232};
+const VECTOR3 Rot_SecEvapFlowLocation = {0.5511, -0.0462, 0.6229};
+const VECTOR3 Rot_SuitTempLocation = {0.4533, -0.4028, 0.6826};
 const VECTOR3 Rot_WaterTankSelectorLocation = { 0.5189, -0.2687, 0.6631 };
-const VECTOR3 Rot_AscH2OLocation = { 0.3745, -0.0204, 0.5146 };
+const VECTOR3 Rot_AscH2OLocation = {0.3876, -0.0204, 0.5144};
 
 // Hatches
 const VECTOR3 UpperHatchLocation = { -0.0013, 0.9817, 0.0000 };
@@ -410,7 +410,7 @@ const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
 // Subtracted from total material count to find L01 location.
-const int mat_L01 = 54;
+const int mat_L01 = 44;
 
 void LEM::JostleViewpoint(double amount)
 
@@ -964,18 +964,18 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS[i] + ofs, 0.02);
 	}
 
-	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238, 27, 559, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60, 259, 202, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(276, 259, 357, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_RANGE_TAPE, _R(431, 633, 475, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_RATE_TAPE, _R(482, 633, 517, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_LEM_MA_LEFT, _R(30, 593, 77, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238*TexMul, 27*TexMul, 559*TexMul, 153*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60*TexMul, 259*TexMul, 202*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(276*TexMul, 259*TexMul, 357*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RANGE_TAPE, _R(431*TexMul, 633*TexMul, 475*TexMul, 796*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RATE_TAPE, _R(482*TexMul, 633*TexMul, 517*TexMul, 796*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LEM_MA_LEFT, _R(30*TexMul, 593*TexMul, 77*TexMul, 636*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_LEFT, _V(-0.415919, 0.599307, 1.70252) + ofs, 0.008);
-	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_LEFT, _R(341, 891, 377, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_RIGHT, _R(415, 891, 451, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MPS_OXID_QUANTITY_INDICATOR, _R(445, 218, 484, 239), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MPS_FUEL_QUANTITY_INDICATOR, _R(445, 270, 484, 292), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MPS_HELIUM_PRESS_INDICATOR, _R(577, 259, 658, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_LEFT, _R(341*TexMul, 891*TexMul, 377*TexMul, 1098*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_RIGHT, _R(415*TexMul, 891*TexMul, 451*TexMul, 1098*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_OXID_QUANTITY_INDICATOR, _R(445*TexMul, 218*TexMul, 484*TexMul, 239*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_FUEL_QUANTITY_INDICATOR, _R(445*TexMul, 270*TexMul, 484*TexMul, 292*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_HELIUM_PRESS_INDICATOR, _R(577*TexMul, 259*TexMul, 658*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	
 	oapiVCRegisterArea(AID_VC_XPOINTERCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -1000,13 +1000,13 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + ofs, 0.02);
 	}
 
-	oapiVCRegisterArea(AID_VC_LM_CWS_RIGHT, _R(1075, 27, 1375, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_RCS_ASC_FEED_TALKBACKS, _R(794, 413, 1031, 436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_14_TALKBACKS, _R(794, 562, 1031, 585), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_23_TALKBACKS, _R(794, 688, 1031, 711), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_RCS_XFEED_TALKBACK, _R(795, 844, 818, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MAIN_SOV_TALKBACKS, _R(934, 844, 1027, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_LEM_MA_RIGHT, _R(1384, 593, 1431, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_CWS_RIGHT, _R(1075*TexMul, 27*TexMul, 1375*TexMul, 153*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_ASC_FEED_TALKBACKS, _R(794*TexMul, 413*TexMul, 1031*TexMul, 436*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_14_TALKBACKS, _R(794*TexMul, 562*TexMul, 1031*TexMul, 585*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_23_TALKBACKS, _R(794*TexMul, 688*TexMul, 1031*TexMul, 711*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_XFEED_TALKBACK, _R(795*TexMul, 844*TexMul, 818*TexMul, 867*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MAIN_SOV_TALKBACKS, _R(934*TexMul, 844*TexMul, 1027*TexMul, 867*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LEM_MA_RIGHT, _R(1384*TexMul, 593*TexMul, 1431*TexMul, 636*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_RIGHT, _V(0.414751, 0.59891, 1.70247) + ofs, 0.008);
 
 	oapiVCRegisterArea(AID_VC_PANEL2_COMPLIGHTS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -1044,8 +1044,8 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P4_01 + i, P4_TOGGLE_POS[i] + P4_CLICK + ofs, 0.006);
 	}
 
-	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(309, 1520, 414, 1696), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS,  _R(165, 1525, 267, 1694), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(309*TexMul, 1520*TexMul, 414*TexMul, 1696*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS,  _R(165*TexMul, 1525*TexMul, 267*TexMul, 1694*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Panel 5
 
@@ -1068,7 +1068,7 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_PLUSX_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_PLUSX_BUTTON, _V(-0.65603, -0.017321, 1.41484) + ofs, 0.01);
 
-	oapiVCRegisterArea(AID_VC_START_BUTTON_RED, _R(894, 1958, 962, 2027), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_START_BUTTON_RED, _R(894*TexMul, 1958*TexMul, 962*TexMul, 2027*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Panel 6
 
@@ -1087,9 +1087,9 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_STOP_BUTTON_LMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_STOP_BUTTON_LMP, _V(0.421597, 0.077646, 1.50924) + ofs, 0.01);
 
-	oapiVCRegisterArea(AID_VC_LM_DEDA_DISP, _R(1803, 98, 1937, 120), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_LM_DEDA_ADR, _R(1827, 53, 1885, 75), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_LM_DEDA_LIGHTS, _R(1740, 96, 1787, 122), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_DEDA_DISP, _R(1803*TexMul, 98*TexMul, 1937*TexMul, 120*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_DEDA_ADR, _R(1827*TexMul, 53*TexMul, 1885*TexMul, 75*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_DEDA_LIGHTS, _R(1740*TexMul, 96*TexMul, 1787*TexMul, 122*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Panel 8
 
@@ -1106,7 +1106,7 @@ void LEM::RegisterActiveAreas()
 	}
 
 	oapiVCRegisterArea(AID_VC_SEQ_LIGHTS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_PANEL8_TALKBACKS, _R(1389, 8, 1772, 149), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_PANEL8_TALKBACKS, _R(1389*TexMul, 8*TexMul, 1772*TexMul, 149*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	oapiVCRegisterArea(AID_VC_STAGE_SWITCH, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_STAGE_SWITCH, _V(-0.981771, 0.039868, 1.14749) + (P8_CLICK * 2) + ofs, 0.01);
@@ -1180,8 +1180,8 @@ void LEM::RegisterActiveAreas()
 	}
 
 	oapiVCRegisterArea(AID_VC_PANEL14_COMPLIGHTS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_DSC_BATTERY_TALKBACKS, _R(550, 1002, 865, 1025), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_ASC_BATTERY_TALKBACKS, _R(932, 1027, 1176, 1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_DSC_BATTERY_TALKBACKS, _R(550*TexMul, 1002*TexMul, 865*TexMul, 1025*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_ASC_BATTERY_TALKBACKS, _R(932*TexMul, 1027*TexMul, 1176*TexMul, 1050*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// Panel 16
 	// Row 1
@@ -1344,7 +1344,7 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_SW_RRGYRO, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_SW_RRGYRO, Sw_RRGyroLocation + ofs, 0.008);
 
-	oapiVCRegisterArea(AID_VC_RETICLEDISP, _R(1068, 1891, 1188, 1927), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_RETICLEDISP, _R(1068*TexMul, 1891*TexMul, 1188*TexMul, 1927*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// COAS FWD
 	const VECTOR3 COAS2Location = { -0.5612, 0.7323, 1.6805 };
@@ -1458,58 +1458,58 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	switch (id) {
 
 	case AID_VC_LM_CWS_LEFT:
-		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS]);
+		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
 		return true;
 
 	case AID_VC_LM_CWS_RIGHT:
-		CWEA.RedrawRight(surf, srf[SFR_VC_CW_LIGHTS]);
+		CWEA.RedrawRight(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
 		return true;
 
 	case AID_VC_MISSION_CLOCK:
-		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2]);
+		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], false, TexMul);
 		return true;
 
 	case AID_VC_EVENT_TIMER:
-		EventTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2]);
+		EventTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], TexMul);
 		return true;
 
 	case AID_VC_DSKY_DISPLAY:
-		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP]);
+		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP], 0, 0, TexMul);
 		return true;
 
 	case AID_VC_DSKY_LIGHTS:
 		if (pMission->GetLMDSKYVersion() == 3)
 		{
-			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, true);
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, true, TexMul);
 		}
 		else if (pMission->GetLMDSKYVersion() == 2)
 		{
-			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS]);
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, false, TexMul );
 		}
 		else
 		{
-			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, false);
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, false, false, TexMul);
 		}
 		return true;
 
 	case AID_VC_LM_DEDA_LIGHTS:
-		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTSVC]);
+		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTSVC], TexMul);
 		return true;
 
 	case AID_VC_LM_DEDA_DISP:
-		deda.RenderData(surf, srf[SRF_VC_DIGITALDISP2]);
+		deda.RenderData(surf, srf[SRF_VC_DIGITALDISP2], 0, 0, TexMul);
 		return true;
 
 	case AID_VC_LM_DEDA_ADR:
-		deda.RenderAdr(surf, srf[SRF_VC_DIGITALDISP2]);
+		deda.RenderAdr(surf, srf[SRF_VC_DIGITALDISP2], 0, 0, TexMul);
 		return true;
 
 	case AID_VC_RANGE_TAPE:
-		RadarTape.RenderRangeVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB], srf[SRF_VC_RADAR_TAPE2]);
+		RadarTape.RenderRangeVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB], srf[SRF_VC_RADAR_TAPE2], TexMul);
 		return true;
 
 	case AID_VC_RATE_TAPE:
-		RadarTape.RenderRateVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB]);
+		RadarTape.RenderRateVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB], TexMul);
 		return true;
 
 	case AID_VC_XPOINTERCDR:
@@ -1824,7 +1824,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_START_BUTTON_RED:
-		ManualEngineStart.DoDrawSwitchVC(surf, srf[SRF_ENGSTARTSTOP_VC]);
+		ManualEngineStart.DoDrawSwitchVC(surf, srf[SRF_ENGSTARTSTOP_VC], TexMul);
 		return true;
 
 	/*case AID_VC_RECORDER_TALKBACK:

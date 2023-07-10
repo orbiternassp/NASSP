@@ -165,7 +165,8 @@ const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
 
 // Panel 1 rotaries
 const VECTOR3 P1_ROT_POS[P1_ROTCOUNT] = {
-	{-0.6834, 0.8195, 0.3925}
+//	{-0.6834, 0.8195, 0.3925}
+	{-0.6835, 0.8185, 0.3952}
 };
 
 // Panel 1 push-buttons
@@ -212,7 +213,8 @@ const VECTOR3 P2_PUSHB_POS[P2_PUSHBCOUNT] = {
 
 // Panel 2 rotaries
 const VECTOR3 P2_ROT_POS[P2_ROTCOUNT] = {
-	{0.0297, 0.7256, 0.3614}, { 0.0297, 0.6477, 0.3354 }, { 0.3195, 0.4008, 0.2527 }, { 0.3974, 0.4010, 0.2527 }
+//	{0.0297, 0.7256, 0.3614}, { 0.0297, 0.6477, 0.3354 }, { 0.3195, 0.4008, 0.2527 }, { 0.3974, 0.4010, 0.2527 }
+	{0.0297, 0.7245, 0.3640}, { 0.0297, 0.6467, 0.3379 }, { 0.3195, 0.3998, 0.2553 }, { 0.3974, 0.4000, 0.2553 }
 };
 
 // Panel 2 thumbwheels
@@ -239,7 +241,8 @@ const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
 
 // Panel 3 rotaries
 const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
-	{0.5139, 0.8741, 0.4111}, {0.7741, 0.6223, 0.3268}, {0.8658, 0.4693, 0.2756}, {0.9596, 0.4691, 0.2755}, {0.9894, 0.2936, 0.2169}
+//	{0.5139, 0.8741, 0.4111}, {0.7741, 0.6223, 0.3268}, {0.8658, 0.4693, 0.2756}, {0.9596, 0.4691, 0.2755}, {0.9894, 0.2936, 0.2169}
+	{0.5140, 0.8731, 0.4137}, {0.7741, 0.6212, 0.3294},	{0.8659, 0.4682, 0.2783}, {0.9596, 0.4681, 0.2782},	{0.9895, 0.2925, 0.2195}
 };
 
 // Panel 3 thumbwheels
@@ -254,7 +257,8 @@ const VECTOR3 P4_TOGGLE_POS[P4_SWITCHCOUNT] = {
 
 // Panel 4 rotaries
 const VECTOR3 P4_ROT_POS[P4_ROTCOUNT] = {
-	{1.1305, 0.1670, -0.1088}
+//	{1.1305, 0.1670, -0.1088}
+	{1.1316, 0.1646, -0.1081}
 };
 
 // Panel 4 circuit breakers
@@ -272,7 +276,8 @@ const VECTOR3 P5_TOGGLE_POS[P5_SWITCHCOUNT] = {
 
 // Panel 5 rotaries
 const VECTOR3 P5_ROT_POS[P5_ROTCOUNT] = {
-	{1.0745, 0.4076, 0.1899}, {1.1143, 0.4244, 0.1267}
+//	{1.0745, 0.4076, 0.1899}, {1.1143, 0.4244, 0.1267}
+	{1.0769, 0.4076, 0.1914}, {1.1168, 0.4243, 0.1282}
 };
 
 // Panel 5 circuit breakers
@@ -313,7 +318,8 @@ const VECTOR3 P7_TOGGLE_POS[P7_SWITCHCOUNT] = {
 
 // Panel 7 rotaries
 const VECTOR3 P7_ROT_POS[P7_ROTCOUNT] = {
-	{-1.1892, 0.2079, -0.0612}, {-1.2288, 0.2103, -0.1199}, {-1.2709, 0.2117, -0.1857}, {-1.2104, 0.1801, -0.1858}, {-1.1565, 0.1613, -0.1646}
+//	{-1.1892, 0.2079, -0.0612}, {-1.2288, 0.2103, -0.1199}, {-1.2709, 0.2117, -0.1857}, {-1.2104, 0.1801, -0.1858}, {-1.1565, 0.1613, -0.1646}
+	{-1.1904, 0.2054, -0.0606},	{-1.2300, 0.2078, -0.1191},	{-1.2721, 0.2092, -0.1850},	{-1.2116, 0.1776, -0.1852}, {-1.1565, 0.1613, -0.1646}
 };
 
 // Panel 8 switches
@@ -327,7 +333,8 @@ const VECTOR3 P8_TOGGLE_POS[P8_SWITCHCOUNT] = {
 
 // Panel 8 rotaries
 const VECTOR3 P8_ROT_POS[P8_ROTCOUNT] = {
-	{-1.1575, 0.4264, 0.0725}, {-1.1217, 0.4119, 0.1292}, {-1.0860, 0.3979, 0.1855}
+//	{-1.1575, 0.4264, 0.0725}, {-1.1217, 0.4119, 0.1292}, {-1.0860, 0.3979, 0.1855}
+	{-1.1599, 0.4263, 0.0741}, {-1.1241, 0.4118, 0.1307}, {-1.0884, 0.3978, 0.1870}
 };
 
 // Panel 8 circuit breakers
@@ -401,7 +408,8 @@ const VECTOR3 P100_TOGGLE_POS[P100_SWITCHCOUNT] = {
 
 // Panel 100 rotaries
 const VECTOR3 P100_ROT_POS[P100_ROTCOUNT] = {
-{-0.7232, -0.6952, 0.1361}, {-0.6414, -0.6952, 0.1361}, {-0.5711, -0.6952, 0.1361}
+//{-0.7232, -0.6952, 0.1361}, {-0.6414, -0.6952, 0.1361}, {-0.5711, -0.6952, 0.1361}
+{-0.7232, -0.6982, 0.1359}, {-0.6413, -0.6982, 0.1360}, {-0.5711, -0.6982, 0.1359}
 };
 
 // Panel 101 switches
@@ -411,7 +419,8 @@ const VECTOR3 P101_TOGGLE_POS[P101_SWITCHCOUNT] = {
 
 // Panel 101 rotaries
 const VECTOR3 P101_ROT_POS[P101_ROTCOUNT] = {
-{-0.4692, -0.6228, 0.4710}, {-0.3974, -0.6228, 0.4710}
+//{-0.4692, -0.6228, 0.4710}, {-0.3974, -0.6228, 0.4710}
+{-0.4692, -0.6256, 0.4719}, {-0.3974, -0.6256, 0.4719}
 };
 
 // Panel 122 switches
@@ -551,8 +560,14 @@ void Saturn::InitVC()
 	// we create a texture with oapiCreateTextureSurface which will have the correct flags
 	// and then blit the original texture onto it
 	SURFHANDLE tmp = oapiLoadTexture("ProjectApollo/VC/EMSscroll_LEO.dds");
-	srf[SRF_VC_EMS_SCROLL_LEO] = oapiCreateTextureSurface(4096, 256);
-	oapiBlt(srf[SRF_VC_EMS_SCROLL_LEO], tmp, 0, 0, 0, 0, 4096, 256);
+	// Another Workaround to enable 8K Textures
+	if (TexMul == TEXTURES_8K){
+		srf[SRF_VC_EMS_SCROLL_LEO] = oapiCreateTextureSurface(4096 * TexMul/2, 256 * TexMul);
+		oapiBlt(srf[SRF_VC_EMS_SCROLL_LEO], tmp, 0, 0, 0, 0, 4096 * TexMul/2, 256 * TexMul);
+	}else{
+		srf[SRF_VC_EMS_SCROLL_LEO] = oapiCreateTextureSurface(4096 * TexMul, 256 * TexMul);
+		oapiBlt(srf[SRF_VC_EMS_SCROLL_LEO], tmp, 0, 0, 0, 0, 4096 * TexMul, 256 * TexMul);
+	}
 	oapiReleaseTexture(tmp);
 #endif
 	srf[SRF_VC_EMS_SCROLL_BORDER] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_border.dds");
@@ -606,58 +621,58 @@ void Saturn::InitVC()
 
 	// Panel 1
 
-	oapiVCRegisterArea(AID_VC_MASTER_ALARM, _R(1489, 1183, 1534, 1219), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_LVENG_LIGHTS, _R(1868, 1421, 1969, 1565), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(1891, 1356, 1962, 1374), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_EMS_SCROLL_LEO, _R(1756, 982, 1900, 1134), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_SPS_LIGHT, _R(1840, 1142, 1881, 1158), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_PT05G_LIGHT, _R(1774, 1142, 1815, 1158), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_EMSDVDISPLAY, _R(1768, 1204, 1925, 1225), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_EMS_RSI_BKGRND, _R(1627, 1149, 1715, 1236), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_SEQUENCERSWITCHES, _R(1847, 1606, 1886, 1644), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_MASTER_ALARM, _R(1489*TexMul, 1183*TexMul, 1534*TexMul, 1219*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_LVENG_LIGHTS, _R(1868*TexMul, 1421*TexMul, 1969*TexMul, 1565*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(1891*TexMul, 1356*TexMul, 1962*TexMul, 1374*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EMS_SCROLL_LEO, _R(1756*TexMul, 982*TexMul, 1900*TexMul, 1134*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPS_LIGHT, _R(1840*TexMul, 1142*TexMul, 1881*TexMul, 1158*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_PT05G_LIGHT, _R(1774*TexMul, 1142*TexMul, 1815*TexMul, 1158*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EMSDVDISPLAY, _R(1768*TexMul, 1204*TexMul, 1925*TexMul, 1225*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EMS_RSI_BKGRND, _R(1627*TexMul, 1149*TexMul, 1715*TexMul, 1236*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SEQUENCERSWITCHES, _R(1847*TexMul, 1606*TexMul, 1886*TexMul, 1644*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
-	oapiVCRegisterArea(AID_VC_ASCPDISPLAYROLL, _R(1224, 1830, 1254, 1842), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_ASCPDISPLAYPITCH, _R(1224, 1892, 1254, 1904), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_ASCPDISPLAYYAW, _R(1224, 1954, 1254, 1966), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_ASCPDISPLAYROLL, _R(1224*TexMul, 1830*TexMul, 1254*TexMul, 1842*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_ASCPDISPLAYPITCH, _R(1224*TexMul, 1892*TexMul, 1254*TexMul, 1904*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_ASCPDISPLAYYAW, _R(1224*TexMul, 1954*TexMul, 1254*TexMul, 1966*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// Panel 2
-	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254, 1235, 359, 1411), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS, _R(110, 1240, 212, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(849, 949, 992, 972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_LEFT, _R(555, 743, 767, 1851), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_RIGHT, _R(810, 743, 1023, 851), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254*TexMul, 1235*TexMul, 359*TexMul, 1411*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS, _R(110*TexMul, 1240*TexMul, 212*TexMul, 1360*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(849*TexMul, 949*TexMul, 992*TexMul, 972*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_LEFT, _R(555*TexMul, 743*TexMul, 767*TexMul, 1851*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_RIGHT, _R(810*TexMul, 743*TexMul, 1023*TexMul, 851*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
-	oapiVCRegisterArea(AID_VC_RCS_HELIUM1_TB, _R(606, 1014, 756, 1037), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_RCS_HELIUM2_TB, _R(606, 1172, 756, 1195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_RCS_PROP1_TB, _R(606, 1305, 756, 1328), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_RCS_PROP2_TB, _R(518, 1438, 754, 1461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_ECSRADIATORIND, _R(814, 1329, 837, 1352), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_DOCKINGPROBEIND, _R(411, 825, 434, 875), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_HELIUM1_TB, _R(606*TexMul, 1014*TexMul, 756*TexMul, 1037*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_HELIUM2_TB, _R(606*TexMul, 1172*TexMul, 756*TexMul, 1195*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_PROP1_TB, _R(606*TexMul, 1305*TexMul, 756*TexMul, 1328*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_PROP2_TB, _R(518*TexMul, 1438*TexMul, 754*TexMul, 1461*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_ECSRADIATORIND, _R(814*TexMul, 1329*TexMul, 837*TexMul, 1352*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_DOCKINGPROBEIND, _R(411*TexMul, 825*TexMul, 434*TexMul, 875*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Panel 3
-	oapiVCRegisterArea(AID_VC_MASTER_ALARM2, _R(433, 1339, 478, 1375), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_MASTER_ALARM2, _R(433*TexMul, 1339*TexMul, 478*TexMul, 1375*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
-	oapiVCRegisterArea(AID_VC_FCPHRADTEMPIND, _R(295, 1177, 492, 1200), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_FCRADIATORSIND, _R(295, 1226, 404, 1249), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(ADI_VC_MAINBUSAIND, _R(426, 1445, 535, 1468), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_SPSHEVALVEIND, _R(71, 1583, 137, 1606), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_FCREACTANTSIND, _R(296, 1580, 534, 1604), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_TELECOMTB, _R(592, 1729, 615, 1802), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_SPS_OXID_PCT, _R(137, 1315, 175, 1328), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_SPS_FUEL_PCT, _R(137, 1344, 175, 1357), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_SPSOXIDFLOWIND, _R(78, 1479, 100, 1521), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_SPS_INJ_VLV, _R(69, 1210, 247, 1244), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_FCPHRADTEMPIND, _R(295*TexMul, 1177*TexMul, 492*TexMul, 1200*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_FCRADIATORSIND, _R(295*TexMul, 1226*TexMul, 404*TexMul, 1249*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(ADI_VC_MAINBUSAIND, _R(426*TexMul, 1445*TexMul, 535*TexMul, 1468*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPSHEVALVEIND, _R(71*TexMul, 1583*TexMul, 137*TexMul, 1606*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_FCREACTANTSIND, _R(296*TexMul, 1580*TexMul, 534*TexMul, 1604*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_TELECOMTB, _R(592*TexMul, 1729*TexMul, 615*TexMul, 1802*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPS_OXID_PCT, _R(137*TexMul, 1315*TexMul, 175*TexMul, 1328*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPS_FUEL_PCT, _R(137*TexMul, 1344*TexMul, 175*TexMul, 1357*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPSOXIDFLOWIND, _R(78*TexMul, 1479*TexMul, 100*TexMul, 1521*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPS_INJ_VLV, _R(69*TexMul, 1210*TexMul, 247*TexMul, 1244*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// Lower Equipment Bay
-	oapiVCRegisterArea(AID_VC_MASTER_ALARM3, _R(1752, 167, 1797, 203), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_MASTER_ALARM3, _R(1752*TexMul, 167*TexMul, 1797*TexMul, 203*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
-	oapiVCRegisterArea(AID_VC_CWS_GNLIGHTS, _R(1750, 56, 1803, 132), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_OPT_SHAFTDISPLAY, _R(520, 144, 571, 156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_OPT_TRUNDISPLAY, _R(648, 94, 699, 106), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY2, _R(1050, 1076, 1155, 1252), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS2, _R(906, 1081, 1008, 1201), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_EVENT_TIMER306, _R(220, 149, 238, 220), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337, 129, 360, 272), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_CWS_GNLIGHTS, _R(1750*TexMul, 56*TexMul, 1803*TexMul, 132*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_OPT_SHAFTDISPLAY, _R(520*TexMul, 144*TexMul, 571*TexMul, 156*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_OPT_TRUNDISPLAY, _R(648*TexMul, 94*TexMul, 699*TexMul, 106*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY2, _R(1050*TexMul, 1076*TexMul, 1155*TexMul, 1252*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS2, _R(906*TexMul, 1081*TexMul, 1008*TexMul, 1201*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EVENT_TIMER306, _R(220*TexMul, 149*TexMul, 238*TexMul, 220*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 129*TexMul, 360*TexMul, 272*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Initialize surfaces
 
@@ -1580,12 +1595,12 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_DSKY_DISPLAY:
 	case AID_VC_DSKY_DISPLAY2:
-		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP]);
+		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP], 0, 0, TexMul);
 		return true;
 
 	case AID_VC_DSKY_LIGHTS:
 	case AID_VC_DSKY_LIGHTS2:
-		dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS]);
+		dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, false, TexMul);
 		return true;
 
 	/*case AID_ABORT_BUTTON:
@@ -1598,83 +1613,83 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;*/
 		
 	case AID_VC_MASTER_ALARM:
-		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_LEFT);
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_LEFT, TexMul);
 		return true;
 
 	case AID_VC_MASTER_ALARM2:
-		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_RIGHT);
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_RIGHT, TexMul);
 		return true;
 
 	case AID_VC_MASTER_ALARM3:
-		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_NONE);
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_NONE, TexMul);
 		return true;
 
 	case AID_VC_LVENG_LIGHTS:
 	{
 		if (SI_EngineNum > 5)
 		{
-			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 42);
-			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 98);
-			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 8, 98);
-			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 7, 43);
-			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 41);
-			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 51, 69);
-			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 98);
-			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 22, 69);
+			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 42, TexMul);
+			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 98, TexMul);
+			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 8, 98, TexMul);
+			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 7, 43, TexMul);
+			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 41, TexMul);
+			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 51, 69, TexMul);
+			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 98, TexMul);
+			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 22, 69, TexMul);
 		}
 		else
 		{
 			if (ENGIND[0])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55, 44, 55, 44, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 44*TexMul, 55*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55, 44, 157, 44, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 44*TexMul, 157*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
 			}
 
 			if (ENGIND[1])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55, 98, 55, 98, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 98*TexMul, 55*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55, 98, 157, 98, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 98*TexMul, 157*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[2])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20, 98, 20, 98, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 98*TexMul, 20*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20, 98, 122, 98, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 98*TexMul, 122*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[3])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20, 44, 20, 44, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 44*TexMul, 20*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20, 44, 122, 44, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 44*TexMul, 122*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[4])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37, 71, 37, 71, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 71*TexMul, 37*TexMul, 71*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37, 71, 140, 71, 27, 27);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 71*TexMul, 140*TexMul, 71*TexMul, 27*TexMul, 27*TexMul);
 			}
 		}
 	}
 
 	if (LVRateLight)
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6, 4, 6, 4, 27, 27);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 4*TexMul, 6*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
 	}
 	else
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6, 4, 108, 4, 27, 27);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 4*TexMul, 108*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
 	}
 
 	//
@@ -1685,71 +1700,71 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		if (SIISepState)
 		{
-			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37, 4, 37, 4, 27, 27);
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 4*TexMul, 37*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
 		}
 		else
 		{
-			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37, 4, 139, 4, 27, 27);
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 4*TexMul, 139*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
 		}
 	}
 
 	if (LVGuidLight)
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69, 4, 69, 4, 27, 27);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69*TexMul, 4*TexMul, 69*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
 	}
 	else
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69, 4, 171, 4, 27, 27);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69*TexMul, 4*TexMul, 171*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
 	}
 	return true;
 
 	case AID_VC_MISSION_CLOCK:
-		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], true);
+		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], true, TexMul);
 		return true;
 
 	case AID_VC_MISSION_CLOCK306:
-		MissionTimer306Display.Render90(surf, srf[SRF_VC_DIGITAL90], true);
+		MissionTimer306Display.Render90(surf, srf[SRF_VC_DIGITAL90], true, TexMul);
 		return true;
 
 	case AID_VC_EVENT_TIMER306:
-		EventTimer306Display.Render90(surf, srf[SRF_VC_EVENT_TIMER_DIGITS90]);
+		EventTimer306Display.Render90(surf, srf[SRF_VC_EVENT_TIMER_DIGITS90], TexMul);
 		return true;
 
 	case AID_VC_EVENT_TIMER:
-		EventTimerDisplay.Render(surf, srf[SRF_VC_EVENT_TIMER_DIGITS]);
+		EventTimerDisplay.Render(surf, srf[SRF_VC_EVENT_TIMER_DIGITS], TexMul);
 		return true;
 
 	case AID_VC_CWS_LIGHTS_LEFT:
-		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], true);
+		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], true, TexMul);
 		return true;
 
 	case AID_VC_CWS_LIGHTS_RIGHT:
-		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], false);
+		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], false, TexMul);
 		return true;
 
 	case AID_VC_CWS_GNLIGHTS:
-		cws.RenderGNLights(surf, srf[SRF_VC_CWS_GNLIGHTS]);
+		cws.RenderGNLights(surf, srf[SRF_VC_CWS_GNLIGHTS], TexMul);
 		return true;
 
 	case AID_VC_SEQUENCERSWITCHES:
-		LiftoffNoAutoAbortSwitch.RepaintSwitchVC(surf, srf[SRF_VC_SEQUENCERSWITCHES]);
+		LiftoffNoAutoAbortSwitch.RepaintSwitchVC(surf, srf[SRF_VC_SEQUENCERSWITCHES], TexMul);
 		return true;
 
 	case AID_VC_SPS_LIGHT:
 		if (ems.SPSThrustLight()) {
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 41, 16, 41, 16);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 41*TexMul, 16*TexMul, 41*TexMul, 16*TexMul);
 		}
 		else {
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 0, 16, 41, 16);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 0, 16*TexMul, 41*TexMul, 16*TexMul);
 		}
 		return true;
 
 	case AID_VC_PT05G_LIGHT:
 		if (ems.pt05GLight()) {
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 41, 0, 41, 16);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 41*TexMul, 0, 41*TexMul, 16*TexMul);
 		}
 		else {
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 0, 0, 41, 16);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 0, 0, 41*TexMul, 16*TexMul);
 		}
 		return true;
 
@@ -1765,13 +1780,13 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
 		skp->SetPen(g_Param.pen[2]);
 
-		skp->Polyline(ems.ScribePntArray, ems.ScribePntCnt);
+		skp->Polyline(ems.ScribePntArrayVC, ems.ScribePntCnt);
 
 		oapiReleaseSketchpad(skp);
 
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BUG], 42, ems.GetGScribe() + 2, 0, 0, 5, 5, SURF_PREDEF_CK);
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
+		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_LEO], 5*TexMul, 4*TexMul, ems.GetScrollOffset()*TexMul, 0, 132*TexMul, 143*TexMul);
+		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BUG], 42*TexMul, (ems.GetGScribe() + 2)*TexMul, 0, 0, 5*TexMul, 5*TexMul, SURF_PREDEF_CK);
+		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142*TexMul, 150*TexMul, SURF_PREDEF_CK);
 		return true;
 	}
 
@@ -1779,14 +1794,14 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		switch (ems.LiftVectLight()) {
 		case 1:
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33, 8, 82, 6, 20, 6);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33*TexMul, 8*TexMul, 82*TexMul, 6*TexMul, 20*TexMul, 6*TexMul);
 			break;
 		case -1:
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32, 69, 82, 22, 22, 10);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32*TexMul, 69*TexMul, 82*TexMul, 22*TexMul, 22*TexMul, 10*TexMul);
 			break;
 		case 0:
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33, 8, 82, 0, 20, 6);
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32, 69, 82, 12, 22, 10);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33*TexMul, 8*TexMul, 82*TexMul, 0, 20*TexMul, 6*TexMul);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32*TexMul, 69*TexMul, 82*TexMul, 12*TexMul, 22*TexMul, 10*TexMul);
 			break;
 		}
 	}
@@ -1801,23 +1816,23 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// ASCP
 	case AID_VC_ASCPDISPLAYROLL:
-		ascp.PaintRollDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		ascp.PaintRollDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_ASCPDISPLAYPITCH:
-		ascp.PaintPitchDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		ascp.PaintPitchDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_ASCPDISPLAYYAW:
-		ascp.PaintYawDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		ascp.PaintYawDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_OPT_SHAFTDISPLAY:
-		optics.PaintShaftDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		optics.PaintShaftDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_OPT_TRUNDISPLAY:
-		optics.PaintTrunnionDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV]);
+		optics.PaintTrunnionDisplay(surf, srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], TexMul);
 		return true;
 
 	case AID_VC_ALTIMETER:
@@ -4686,8 +4701,8 @@ void Saturn::InitFDAI(UINT mesh)
 	const VECTOR3 fdaiyawvaxis = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
 	const VECTOR3 needlexvector = { 0.00, 0.05*cos(P1_3_TILT), 0.05*sin(P1_3_TILT) };
 	const VECTOR3 needleyvector = { 0.05, 0, 0 };
-	const VECTOR3 ratexvector = { 0.00, 0.078*cos(P1_3_TILT), 0.078*sin(P1_3_TILT) };
-	const VECTOR3 rateyvector = { 0.078, 0, 0 };
+	const VECTOR3 ratexvector = { 0.00, 0.064*cos(P1_3_TILT), 0.064*sin(P1_3_TILT) };
+	const VECTOR3 rateyvector = { 0.064, 0, 0 };
 	const VECTOR3 FDAI_PIVOT_L = { -0.673236, 0.563893, 0.385934 }; // L FDAI Pivot Point
 	const VECTOR3 FDAI_PIVOT_R = { -0.340246, 0.750031, 0.44815 }; // R FDAI Pivot Point
 
