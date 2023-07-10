@@ -1734,7 +1734,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv1 = coast(sv0, OrbMech::HHMMSSToSS(142, 50, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase));
 		hSun = oapiGetObjectByName("Sun");
 
-		dt = OrbMech::sunrise(sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false);
+		dt = OrbMech::sunrise(SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false);
 		t_align = OrbMech::GETfromMJD(sv1.MJD, GETbase) + dt;
 
 		OrbMech::format_time_HHMMSS(buff, t_align);

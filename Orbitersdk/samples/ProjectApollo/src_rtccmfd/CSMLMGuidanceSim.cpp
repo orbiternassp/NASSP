@@ -562,12 +562,10 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	X_B = Y_B = Z_B = _V(0, 0, 0);
 	Kg = 0;
 
-	//This only because ECI coordinate system is wrong
+	//This only for Earth
 	if (TArr.sv0.RBI == BODY_EARTH)
 	{
-		MATRIX3 obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, pRTCC->GetGMTBase() + TArr.sv0.GMT / 24.0 / 3600.0);
-		U_Z = mul(obli_E, _V(0, 1, 0));
-		U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+		U_Z = _V(0, 0, 1);
 		W_ES = U_Z * OrbMech::w_Earth;
 	}
 
@@ -985,7 +983,6 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 		{
 			r_p_ddot = -U_R * OrbMech::mu_Moon / RSQD;
 		}
-		//r_p_ddot = OrbMech::gravityroutine(RP, pRTCC->GetGravref(TArr.sv0.RBI), pRTCC->GetGMTBase() + (TArr.sv0.GMT + T) / 24.0 / 3600.0);
 
 		if (TArr.sv0.RBI == BODY_EARTH)
 		{

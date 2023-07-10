@@ -121,8 +121,6 @@ public:
 	bool ThrusterType(std::string name, int &id);
 	void MPTAttitudeName(char *Buff, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
-	double timetoperi();
-	double timetoapo();
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
 	void menuSLVTLITargetingUplink();
@@ -204,7 +202,6 @@ public:
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSetMapUpdateGET();
-	void menuSwitchUplinkInhibit();
 	void menuCycleSPQMode();
 	void set_CDHtimemode();
 	void menuCycleSPQChaser();
@@ -212,8 +209,6 @@ public:
 	void set_launchdate(int year, int month, int day);
 	void menuSetLaunchTime();
 	void set_LaunchTime(int hours, int minutes, double seconds);
-	void menuSetAGCEpoch();
-	void set_AGCEpoch(int epoch);
 	void menuChangeVesselStatus();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();

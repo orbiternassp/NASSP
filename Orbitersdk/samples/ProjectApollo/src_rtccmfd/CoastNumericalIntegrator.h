@@ -70,8 +70,6 @@ private:
 	double r_dP;
 	double mu_Q;
 	double rect1, rect2;
-	//Rotation axis of the primary body
-	VECTOR3 U_Z;
 	//Primary Body, 0 = Earth, 1 = Moon
 	int P;
 	//Current step length
@@ -116,7 +114,7 @@ private:
 	double TS;
 
 	//ACCEL
-	//Rotation matrix from local to global coordinates, left handed
+	//Rotation matrix from global to local coordinates
 	MATRIX3 Rot;
 	//Planet fixed position vector
 	VECTOR3 R_EF;

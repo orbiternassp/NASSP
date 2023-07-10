@@ -21,6 +21,7 @@
 #pragma once
 
 #include "OrbMech.h"
+#include "RTCCModule.h"
 
 struct LDPPOptions
 {
@@ -86,10 +87,10 @@ struct LDPPResults
 	VECTOR3 V_after[4];
 };
 
-class LDPP
+class LDPP : public RTCCModule
 {
 public:
-	LDPP();
+	LDPP(RTCC *r);
 	void Init(const LDPPOptions &in);
 	int LDPPMain(LDPPResults &out);
 protected:

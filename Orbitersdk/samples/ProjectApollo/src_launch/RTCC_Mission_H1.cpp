@@ -711,9 +711,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		RTEMoonTargeting(&entopt, &res);
 
-		SV sv_peri = FindPericynthion(res.sv_postburn);
-		double h_peri = length(sv_peri.R) - OrbMech::R_Moon;
-
 		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = SPSRCSDecision(SPS_THRUST / (calcParams.src->GetMass() + calcParams.tgt->GetMass()), res.dV_LVLH);
@@ -726,7 +723,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		AP11ManeuverPAD(&opt, *form);
 
 		sprintf(form->purpose, "Flyby");
-		sprintf(form->remarks, "Height of pericynthion is %.0f NM", h_peri / 1852.0);
+		sprintf(form->remarks, "Height of pericynthion is %.0f NM", res.FlybyAlt / 1852.0);
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;
@@ -1709,7 +1706,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		MJDguess = GETbase + LmkTime / 24.0 / 3600.0;
 		sv1 = coast(sv0, (MJDguess - sv0.MJD)*24.0*3600.0);
 		R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)))*(oapiGetSize(sv1.gravref) + alt);
-		dt2 = OrbMech::findelev_gs(sv1.R, sv1.V, R_P, MJDguess, 152.0*RAD, sv1.gravref, LmkRange);
+		dt2 = OrbMech::findelev_gs(SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, R_P, MJDguess, 152.0*RAD, sv1.gravref, LmkRange);
 
 		form->P22_ACQ_GET = dt2 + (MJDguess - GETbase) * 24.0 * 60.0 * 60.0;
 		//Round
@@ -1974,7 +1971,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv0 = sv;
 		opt.t_land = CZTDTGTU.GETTD;
-		opt.vessel = calcParams.tgt;
 
 		PDI_PAD(&opt, *form);
 	}
@@ -2448,7 +2444,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
-		dt1 = OrbMech::findelev_gs(sv_Liftoff.R, sv_Liftoff.V, R_LS, MJD_TIG_nom, 180.0*RAD, sv_Liftoff.gravref, LmkRange);
+		dt1 = OrbMech::findelev_gs(SystemParameters.MAT_J2000_BRCS, sv_Liftoff.R, sv_Liftoff.V, R_LS, MJD_TIG_nom, 180.0*RAD, sv_Liftoff.gravref, LmkRange);
 
 		if (abs(LmkRange) < 8.0*1852.0)
 		{
@@ -2722,34 +2718,25 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		AP12LMASCPAD * form = (AP12LMASCPAD*)pad;
 
-		SV sv_CSM;
-		MATRIX3 Rot, Rot2, Rot_VL;
-		VECTOR3 R_LS;
-		double GETbase, m0, m1, TIG, v_LH, v_LV;
+		ASCPADOpt opt;
+		double m0, m1;
 
 		//Definitions
-		TIG = calcParams.LunarLiftoff;
-		v_LH = DeltaV_LVLH.x;
-		v_LV = DeltaV_LVLH.y;
+		opt.TIG = calcParams.LunarLiftoff;
+		opt.v_LH = DeltaV_LVLH.x;
+		opt.v_LV = DeltaV_LVLH.y;
 
-		GETbase = CalcGETBase();
-		sv_CSM = StateVectorCalc(calcParams.src);
-		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
+		opt.sv_CSM = StateVectorCalcEphem(calcParams.src);
+		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
 		m1 = calcParams.src->GetMass();
 
-		calcParams.tgt->GetRotationMatrix(Rot);
-		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
-
-		Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
+		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(calcParams.tgt);
 
 		// Calculate ascent PAD
-		SV sv_Ins, sv_CSM_TIG;
-		MATRIX3 Rot_LG, Rot_VG;
-		VECTOR3 R_LSP, Q, U_R, Z_B, X_AGS, Y_AGS, Z_AGS;
-		double CR, MJD_TIG, SMa, R_D, delta_L, sin_DL, cos_DL, KFactor;
+		double KFactor;
 
 		int hh, mm;
 		double ss;
@@ -2762,42 +2749,18 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		OrbMech::SStoHHMMSS(GETfromGMT(GetAGSClockZero()), hh, mm, ss);
 
-		MJD_TIG = OrbMech::MJDfromGET(TIG, GETbase);
-		sv_CSM_TIG = coast(sv_CSM, TIG - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
+		AP11LMASCPAD pad2;
 
-		ELVCNV(R_LS, GMTfromGET(TIG), 1, 3, 2, R_LSP);
+		LunarAscentPAD(opt, pad2);
 
-		Q = unit(crossp(sv_CSM_TIG.V, sv_CSM_TIG.R));
-		U_R = unit(R_LSP);
-		R_D = length(R_LSP) + 60000.0*0.3048;
-		CR = -R_D * asin(dotp(U_R, Q));
-
-		sv_Ins.R = _V(R_D, 0, 0);
-		sv_Ins.V = _V(v_LV, v_LH, 0);
-		sv_Ins.gravref = sv_CSM_TIG.gravref;
-		SMa = GetSemiMajorAxis(sv_Ins);
-
-		Rot_LG = OrbMech::GetRotationMatrix(BODY_MOON, MJD_TIG);
-		Rot_VG = OrbMech::GetVesselToGlobalRotMatrix(Rot_VL, Rot_LG);
-		Z_B = mul(Rot_VG, _V(0, 0, 1));
-		Z_B = unit(_V(Z_B.x, Z_B.z, Z_B.y));
-		X_AGS = U_R;
-		Z_AGS = unit(crossp(-Q, X_AGS));
-		Y_AGS = unit(crossp(Z_AGS, X_AGS));
-
-		delta_L = atan2(dotp(Z_B, Z_AGS), dotp(Z_B, Y_AGS));
-		sin_DL = sin(delta_L);
-		cos_DL = cos(delta_L);
-
-		form->CR = CR / 1852.0;
-		form->TIG = TIG;
-		form->V_hor = v_LH / 0.3048;
-		form->V_vert = v_LV / 0.3048;
-		form->DEDA047 = OrbMech::DoubleToDEDA(sin_DL, 14);
-		form->DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 14);
-		form->DEDA225_226 = SMa / 0.3048 / 100.0;
-		form->DEDA231 = length(R_LS) / 0.3048 / 100.0;
-		form->DEDA465 = v_LV / 0.3048;
+		form->CR = pad2.CR;
+		form->TIG = pad2.TIG;
+		form->V_hor = pad2.V_hor;
+		form->V_vert = form->DEDA465 = pad2.V_vert;
+		form->DEDA047 = pad2.DEDA047;
+		form->DEDA053 = pad2.DEDA053;
+		form->DEDA225_226 = pad2.DEDA225_226;
+		form->DEDA231 = pad2.DEDA231;
 		form->TIG_2 = TimeofIgnition;
 		form->LMWeight = m0 / 0.45359237;
 		form->CSMWeight = m1 / 0.45359237;
@@ -2973,8 +2936,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			//Hard-coded from page 59 of "Final operational spacecraft attitude sequence for Apollo 12" (69-FM-304)
 			//TBD: Calculate this dynamically. It may have been a landing site orientation at one of the photo sites, more research required.
 			REFSMMAT = _M(-0.99920070, -0.00131239, -0.03995296, -0.03280089, -0.54435646, 0.83821248, -0.02284871, 0.83885300, 0.54387832);
-
-			REFSMMAT = mul(REFSMMAT, SystemParameters.MAT_J2000_BRCS);
 
 			//Store as LM LCV matrix
 			EMGSTSTM(RTCC_MPT_CSM, REFSMMAT, RTCC_REFSMMAT_TYPE_LCV, RTCCPresentTimeGMT());

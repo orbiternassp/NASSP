@@ -22,6 +22,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
+namespace mission
+{
+	class Mission;
+};
+
 class Sat5LMDSC : public VESSEL3 {
 
 public:
@@ -31,24 +36,27 @@ public:
 	void init();
 	void Setup();
 	void DefineAnimations(UINT idx);
-	virtual void SetState(int stage);
+	virtual void SetState(int stage, int mission);
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void HideProbes();
+	void HideDeflectors();
 	void clbkVisualCreated(VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 protected:
 
 	int state; // 0 = no legs, 1 = gear retracted, 2 = gear extended w/probes, 3 = gear extended no probes
+	int ApolloNo;
 	THGROUP_HANDLE thg_sep;
 	double ro1; // Distance from center of middle touchdown points
 	double ro2; // Distance from center of lower (footpad) touchdown points
 	UINT dscidx;
-	DEVMESHHANDLE probes;
+	DEVMESHHANDLE desstg_devmesh;
 
 	UINT anim_Gear;
 	MGROUP_TRANSFORM	*mgt_Leg[4], *mgt_Strut[4], *mgt_Downlock[4], *mgt_Probes1[3], *mgt_Probes2[3];
 
+	mission::Mission* pMission;
 };

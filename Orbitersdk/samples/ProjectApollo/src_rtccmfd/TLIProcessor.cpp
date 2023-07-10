@@ -67,7 +67,7 @@ void TLIProcessor::Main(TLIOutputData &out)
 		OELEMENTS coe = OrbMech::coe_from_sv(sv_ECT.R, sv_ECT.V, mu_E);
 		coe.h = dotp(sv_ECT.V, sv_ECT.V) - 2.0*mu_E / length(sv_ECT.R);
 
-		OELEMENTS coe2 = LVTAR(coe, pRTCC->SystemParameters.MCLGRA, 0.0);
+		OELEMENTS coe2 = LVTAR(coe, pRTCC->SystemParameters.MCLGRA, pRTCC->SystemParameters.MCERTS*pRTCC->SystemParameters.MCGRIC);
 
 		out.uplink_data.Inclination = coe2.i;
 		out.uplink_data.theta_N = coe2.RA;
