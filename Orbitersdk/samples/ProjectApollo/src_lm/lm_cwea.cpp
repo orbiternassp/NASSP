@@ -786,32 +786,32 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 	}
 }
 
-void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf) {
+void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf, int TexMul) {
 	int row = 0, col = 0, dx = 0, dy = 0;
 	while (col < 4) {
 		switch (col) {
 		case 0:
 			dx = 0; break;
 		case 1:
-			dx = 71; break;
+			dx = 71*TexMul; break;
 		case 2:
-			dx = 167; break;
+			dx = 167*TexMul; break;
 		case 3:
-			dx = 238; break;
+			dx = 238*TexMul; break;
 		}
 		while (row < 5) {
 			if (LightStatus[row][col] == 1 && IsLTGPowered()) {
-				dy = 134;
+				dy = 134*TexMul;
 			}
 			else {
-				dy = 7;
+				dy = 7*TexMul;
 			}
 			if (LightStatus[row][col] == 2) {
 				// Special Hack: This Lamp Doesn't Exist
-				oapiBlt(sf, ssf, 8 + dx, 7 + (row * 23), 8, 7, 67, 19);
+				oapiBlt(sf, ssf, 8*TexMul + dx, 7*TexMul + (row * 23*TexMul), 8*TexMul, 7*TexMul, 67*TexMul, 19*TexMul);
 			}
 			else {
-				oapiBlt(sf, ssf, 8 + dx, 7 + (row * 23), 8 + dx, dy + (row * 23), 67, 19);
+				oapiBlt(sf, ssf, 8*TexMul + dx, 7*TexMul + (row * 23*TexMul), 8*TexMul + dx, dy + (row * 23*TexMul), 67*TexMul, 19*TexMul);
 			}
 			row++;
 		}
@@ -819,46 +819,46 @@ void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf) {
 	}
 }
 
-void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
+void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf, int TexMul) {
 	int row = 0, col = 0, dx = 0, dy = 0;
 	while (col < 4) {
 		switch (col) {
 		case 0:
 			dx = 0; break;
 		case 1:
-			dx = 71; break;
+			dx = 71*TexMul; break;
 		case 2:
-			dx = 146; break;
+			dx = 146*TexMul; break;
 		case 3:
-			dx = 217; break;
+			dx = 217*TexMul; break;
 		}
 		while (row < 5) {
 			if (row == 3 && col == 2)
 			{
 				//Condition for C/W PWR light
 				if (LightStatus[row][col + 4] == 1 && IsCWPWRLTGPowered()) {
-					dy = 134;
+					dy = 134*TexMul;
 				}
 				else {
-					dy = 7;
+					dy = 7*TexMul;
 				}
 			}
 			else
 			{
 				//All others
 				if (LightStatus[row][col + 4] == 1 && IsLTGPowered()) {
-					dy = 134;
+					dy = 134*TexMul;
 				}
 				else {
-					dy = 7;
+					dy = 7*TexMul;
 				}
 			}
 			if (LightStatus[row][col + 4] == 2) {
 				// Special Hack: This Lamp Doesn't Exist
-				oapiBlt(sf, ssf, 8 + dx, 7 + (row * 23), 8, 7, 67, 19);
+				oapiBlt(sf, ssf, 8*TexMul + dx, 7*TexMul + (row * 23*TexMul), 8*TexMul, 7*TexMul, 67*TexMul, 19*TexMul);
 			}
 			else {
-				oapiBlt(sf, ssf, 8 + dx, 7 + (row * 23), 330 + dx, dy + (row * 23), 67, 19);
+				oapiBlt(sf, ssf, 8*TexMul + dx, 7*TexMul + (row * 23*TexMul), 330*TexMul + dx, dy + (row * 23*TexMul), 67*TexMul, 19*TexMul);
 			}
 			row++;
 		}
@@ -866,13 +866,13 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
 	}
 }
 
-void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit) {
+void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, int TexMul) {
 
 	//
 	// Draw the master alarm lit bitmap.
 	//
 	if (MasterAlarm)
-		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 47, 43);
+		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 47*TexMul, 43*TexMul);
 }
 
 void LEM_CWEA::PushMasterAlarm()

@@ -1233,11 +1233,11 @@ int LEM_DEDA::ThreeDigitDisplaySegmentsLit(char *Str)
 	return s;
 }
 
-void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int TexMul)
 
 {
-	const int DigitWidth = 19;
-	const int DigitHeight = 21;
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int Curdigit;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -1247,12 +1247,12 @@ void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int d
 
 	if (Str[1] >= '0' && Str[1] <= '9') {
 		Curdigit = Str[1] - '0';
-		oapiBlt(surf, digits, dstx + 20, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		oapiBlt(surf, digits, dstx + 20*TexMul, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 
 	if (Str[2] >= '0' && Str[2] <= '9') {
 		Curdigit = Str[2] - '0';
-		oapiBlt(surf, digits, dstx + 39, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		oapiBlt(surf, digits, dstx + 39*TexMul, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 }
 
@@ -1275,19 +1275,19 @@ int LEM_DEDA::SixDigitDisplaySegmentsLit(char *Str)
 	return s;
 }
 
-void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int TexMul)
 
 {
-	const int DigitWidth = 19;
-	const int DigitHeight = 21;
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int	Curdigit;
 	int i;
 
 	if (Str[0] == '-') {
-		oapiBlt(surf, digits, dstx + 4, dsty, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
+		oapiBlt(surf, digits, dstx + 4*TexMul, dsty, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 	else if (Str[0] == '+') {
-		oapiBlt(surf, digits, dstx + 4, dsty, 11 * DigitWidth, 0, DigitWidth, DigitHeight);
+		oapiBlt(surf, digits, dstx + 4*TexMul, dsty, 11 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 
 	for (i = 1; i < 6; i++) {
@@ -1302,16 +1302,16 @@ void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dst
 }
 
 
-void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
+void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset, int TexMul)
 
 {
 	if (!IsPowered() || !HasNumPower())
 		return;
 
-	RenderThreeDigitDisplay(surf, digits, xOffset, yOffset, Adr);
+	RenderThreeDigitDisplay(surf, digits, xOffset, yOffset, Adr, TexMul);
 }
 
-void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
+void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset, int TexMul)
 
 {
 	if (!IsPowered() || !HasNumPower())
@@ -1321,7 +1321,7 @@ void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int y
 	// Register contents.
 	//
 
-	RenderSixDigitDisplay(surf, digits, xOffset, yOffset, Data);
+	RenderSixDigitDisplay(surf, digits, xOffset, yOffset, Data, TexMul);
 }
 
 void LEM_DEDA::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)
@@ -1362,7 +1362,7 @@ void LEM_DEDA::DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, 
 }
 
 
-void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
+void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights, int TexMul)
 
 {
 	if (!HasAnnunPower())
@@ -1373,10 +1373,10 @@ void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
 	//
 
 	if (OprErrLit()) {
-		oapiBlt(surf, lights, 0, 0, 46, 0, 45, 25);
+		oapiBlt(surf, lights, 0, 0, 46*TexMul, 0, 45*TexMul, 25*TexMul);
 	}
 	else {
-		oapiBlt(surf, lights, 0, 0, 0, 0, 45, 25);
+		oapiBlt(surf, lights, 0, 0, 0, 0, 45*TexMul, 25*TexMul);
 	}
 
 }

@@ -1,16 +1,16 @@
 // ========================================================
 // Mesh resource file for CM-VC.msh
-// Generated with meshc on Sun Mar 28 01:43:11 2021
+// Generated with meshc on Tue Jul  4 18:38:10 2023
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 955
+#define VC_NGRP 959
 
 // Number of materials:
-#define VC_NMAT 49
+#define VC_NMAT 42
 
 // Number of textures:
-#define VC_NTEX 23
+#define VC_NTEX 28
 
 // Named mesh groups:
 #define VC_GRP_CB_LEB_Right1_01 0
@@ -968,3 +968,7 @@
 #define VC_GRP_TW_P9_04 952
 #define VC_GRP_TW_P9_05 953
 #define VC_GRP_TW_P9_06 954
+#define VC_GRP_xxxSCS_Rates_Card 955
+#define VC_GRP_xxxScrew02 956
+#define VC_GRP_zzzAditionalParts 957
+#define VC_GRP_zzzAditionalParts2 958
