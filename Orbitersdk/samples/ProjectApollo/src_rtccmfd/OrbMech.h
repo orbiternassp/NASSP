@@ -228,8 +228,6 @@ namespace OrbMech {
 	void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V);
 	OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu);
 	VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu);
-	VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot, double tol = 1000.0);
-	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, bool direct, double mu, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2);
 	void SolveQuartic(double *A, double *R, int &N);
 	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, int gravref, int gravin, int gravout, VECTOR3 V_guess, double tol = 0.1);
 	double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref);
