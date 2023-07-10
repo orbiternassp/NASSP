@@ -56,8 +56,6 @@ namespace EntryCalculations
 	void Reentry(MATRIX3 Rot_J_B, VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET);
 	double XDOTX2(VECTOR3 a, VECTOR3 b, double DIFG);
 	void RA2XYZ4(VECTOR3 R, VECTOR3 V, double &beta, double &A_Z);
-	bool Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, double INTER, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &Incl_apo);
-	void time_reentry_plane(VECTOR3 R0, VECTOR3 eta, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	double landingzonelong(int zone, double lat);
 
 	//Actual RTE processor routines
@@ -593,7 +591,7 @@ public:
 	EphemerisData2 sv0;
 private:
 
-	VECTOR3 ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_EI, bool q_m, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl, bool asc);
+	VECTOR3 ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_EI, bool q_m, double Incl, double INTER, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	VECTOR3 MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p, bool &q_d);
 	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
 	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double T0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, double &Incl_apo) const;
