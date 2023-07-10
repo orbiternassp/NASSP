@@ -1114,9 +1114,9 @@ void SaturnSPSPercentMeter::DrawSwitchVC(int id, int event, SURFHANDLE drawSurfa
 	int digit2 = percent / 10;
 	int digit3 = percent - (digit2 * 10);
 
-	oapiBlt(drawSurface, BlackFontSurfacevc, 0, 0, 10 * digit1, 0, 10, 12);
-	oapiBlt(drawSurface, BlackFontSurfacevc, 13, 0, 10 * digit2, 0, 10, 12);
-	oapiBlt(drawSurface, WhiteFontSurfacevc, 26, 0, 11 * digit3, 0, 11, 12);
+	oapiBlt(drawSurface, BlackFontSurfacevc, 0, 0, 10 * digit1*TexMul, 0, 10*TexMul, 12*TexMul);
+	oapiBlt(drawSurface, BlackFontSurfacevc, 13*TexMul, 0, 10 * digit2*TexMul, 0, 10*TexMul, 12*TexMul);
+	oapiBlt(drawSurface, WhiteFontSurfacevc, 26*TexMul, 0, 11 * digit3*TexMul, 0, 11*TexMul, 12*TexMul);
 }
 
 double SaturnSPSOxidPercentMeter::QueryValue()
@@ -1779,8 +1779,8 @@ void SaturnEMSDvDisplay::DoDrawSwitchVC(SURFHANDLE surf, double v, SURFHANDLE dr
 {
 	if (Voltage() < SP_MIN_DCVOLTAGE || Sat->ems.IsOff() || !Sat->ems.IsDisplayPowered()) return;
 
-	const int DigitWidth = 17;
-	const int DigitHeight = 19;
+	const int DigitWidth = 17*TexMul;
+	const int DigitHeight = 19*TexMul;
 
 	if (v < 0) {	// Draw minus sign
 		oapiBlt(surf, drawSurface, 0, 0, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
@@ -1797,7 +1797,7 @@ void SaturnEMSDvDisplay::DoDrawSwitchVC(SURFHANDLE surf, double v, SURFHANDLE dr
 		else if (buffer[i] == '.') {
 			if (!Sat->ems.IsDecimalPointBlanked())
 			{
-				oapiBlt(surf, drawSurface, 8 + DigitWidth * i, 0, 12 * DigitWidth, 0, 4, DigitHeight);	// Draw decimal point
+				oapiBlt(surf, drawSurface, 8 + DigitWidth * i, 0, 12 * DigitWidth, 0, 4*TexMul, DigitHeight);	// Draw decimal point
 			}
 		}
 	}
@@ -2434,17 +2434,17 @@ void SaturnLiftoffNoAutoAbortSwitch::DoDrawSwitch(SURFHANDLE drawSurface)
 	GuardedPushSwitch::DoDrawSwitch(drawSurface);
 }
 
-void SaturnLiftoffNoAutoAbortSwitch::RepaintSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc)
+void SaturnLiftoffNoAutoAbortSwitch::RepaintSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc, int TexMul)
 {
 	int ofs = 4;
 	if (secs->LiftoffLightPower()) {
 		if (!secs->NoAutoAbortLightPower())
-			oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 117 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 117*TexMul + ofs, 1 + ofs, width*TexMul - ofs, height*TexMul - ofs, SURF_PREDEF_CK);
 		else
-			oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 273 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 273*TexMul + ofs, 1 + ofs, width*TexMul - ofs, height*TexMul - ofs, SURF_PREDEF_CK);
 	}
 	else {
-		oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 39 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 39*TexMul + ofs, 1 + ofs, width*TexMul - ofs, height*TexMul - ofs, SURF_PREDEF_CK);
 	}
 }
 

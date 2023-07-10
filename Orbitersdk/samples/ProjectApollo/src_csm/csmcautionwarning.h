@@ -92,9 +92,9 @@ public:
 	/// \param lightsurf Surface for the light bitmaps.
 	/// \param leftpanel Is this the left or right panel?
 	///
-	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
+	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel, int xTexMul = 1);
 
-	void RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf);
+	void RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf, int xTexMul = 1);
 
 	void GNLampSwitchToggled(PanelSwitchItem *s);
 
@@ -160,7 +160,7 @@ protected:
 	/// \param sdy Y offset for light bitmaps in the panel image surface.
 	/// \param base Light number base for this panel.
 	///
-	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base);
+	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base, int xTexMul = 1);
 
 	///
 	/// Check the fuel cell status to determine whether it's in a 'bad' state that we

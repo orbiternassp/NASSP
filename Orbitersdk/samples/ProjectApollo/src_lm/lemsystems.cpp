@@ -3085,29 +3085,29 @@ void LEM_RadarTape::RenderRate(SURFHANDLE surf)
     oapiBlt(surf,tape1,0,0,42, (int)(dispRate) ,35,163, SURF_PREDEF_CK);
 }
 
-void LEM_RadarTape::RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2) {
+void LEM_RadarTape::RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2, int TexMul) {
 	if (dispRange > 6321.0)
 	{
-		oapiBlt(surf, surf2, 0, 0, 0, (int)(dispRange)-6317, 43, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, surf2, 0, 0, 0, (int)(dispRange)*TexMul-6317*TexMul, 43*TexMul, 163*TexMul, SURF_PREDEF_CK);
 	}
 	else if (dispRange > 3181.0)
 	{
-		oapiBlt(surf, surf1b, 0, 0, 0, (int)(dispRange)-3026, 43, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1b, 0, 0, 0, (int)(dispRange)*TexMul-3026*TexMul, 43*TexMul, 163*TexMul, SURF_PREDEF_CK);
 	}
 	else
 	{
-		oapiBlt(surf, surf1a, 0, 0, 0, (int)(dispRange), 43, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1a, 0, 0, 0, (int)(dispRange)*TexMul, 43*TexMul, 163*TexMul, SURF_PREDEF_CK);
 	}
 }
 
-void LEM_RadarTape::RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b)
+void LEM_RadarTape::RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, int TexMul)
 {
 	if (dispRate > 3181.0) {
 
-		oapiBlt(surf, surf1b, 0, 0, 42, (int)(dispRate) - 3026, 35, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1b, 0, 0, 42*TexMul, (int)(dispRate)*TexMul - 3026*TexMul, 35*TexMul, 163*TexMul, SURF_PREDEF_CK);
 	}
 	else {
-		oapiBlt(surf, surf1a, 0, 0, 42, (int)(dispRate), 35, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1a, 0, 0, 42*TexMul, (int)(dispRate)*TexMul, 35*TexMul, 163*TexMul, SURF_PREDEF_CK);
 	}
 }
 

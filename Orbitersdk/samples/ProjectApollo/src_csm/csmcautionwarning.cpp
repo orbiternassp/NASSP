@@ -624,18 +624,18 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	}
 }
 
-void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel)
+void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel, int TexMul)
 
 {
 	if (leftpanel) {
-		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6, 122, 0);
+		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6*TexMul, 122*TexMul, 0, TexMul);
 	}
 	else {
-		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261, 122, CWS_LIGHTS_PER_PANEL);
+		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261*TexMul, 122*TexMul, CWS_LIGHTS_PER_PANEL, TexMul);
 	}
 }
 
-void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf)
+void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf, int TexMul)
 
 {
 	if (!LightsPowered() || GNLampState == 0)
@@ -643,15 +643,15 @@ void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsu
 
 	// PGNS
 	if (GNLampState == 2 || GNPGNSAlarm) {
-		oapiBlt(surf, lightsurf, 0, 0, 54, 2, 49, 21);
+		oapiBlt(surf, lightsurf, 0, 0, 54*TexMul, 2*TexMul, 49*TexMul, 21*TexMul);
 	}
 	// CMC
 	if (GNLampState == 2 || RightLights[CSM_CWS_CMC_LIGHT - CWS_LIGHTS_PER_PANEL]) {
-		oapiBlt(surf, lightsurf, 0, 25, 54, 27, 49, 21);
+		oapiBlt(surf, lightsurf, 0, 25*TexMul, 54*TexMul, 27*TexMul, 49*TexMul, 21*TexMul);
 	}
 	// ISS
 	if (GNLampState == 2 || RightLights[CSM_CWS_ISS_LIGHT - CWS_LIGHTS_PER_PANEL]) {
-		oapiBlt(surf, lightsurf, 0, 50, 54, 52, 49, 21);
+		oapiBlt(surf, lightsurf, 0, 50*TexMul, 54*TexMul, 52*TexMul, 49*TexMul, 21*TexMul);
 	}
 }
 
@@ -700,7 +700,7 @@ bool CSMCautionWarningSystem::LightPowered(int i)
 	return true;
 }
 
-void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base)
+void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base, int TexMul)
 
 {
 	int i = 0;
@@ -713,7 +713,7 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 		for (column = 0; column < 4; column++) {
 			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK || MasterAlarmPressed))) {
 				if (!IsFailed(i + base) && LightPowered(i + base)) {
-					oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
+					oapiBlt(surf, lightsurf, column * 53*TexMul, row * 18*TexMul, column * 53*TexMul + sdx, row * 18*TexMul + sdy, 50*TexMul, 16*TexMul);
 				}
 			}
 			i++;
