@@ -554,7 +554,7 @@ O2SMSupply::~O2SMSupply() {
 void O2SMSupply::Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_Tank *o2rpo, h_Pipe *o2rpop,
 					  RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv,
 					  CircuitBrakerSwitch *mra, CircuitBrakerSwitch *mrb, PanelSwitchItem *eo2v,
-					  PanelSwitchItem *ro2v) {
+					  PanelSwitchItem *ro2v, RotationalSwitch *strv) {
 
 	o2SMSupply = o2sm;	
 	o2MainRegulator = o2mr;
@@ -569,6 +569,7 @@ void O2SMSupply::Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_
 	mainRegulatorBSwitch = mrb;
 	emergencyO2Valve = eo2v;
 	repressO2Valve = ro2v;
+	surgeTankReliefValve = strv;
 }
 
 void O2SMSupply::SystemTimestep(double simdt) {
@@ -592,17 +593,17 @@ void O2SMSupply::SystemTimestep(double simdt) {
 	o2SurgeTank->BoilAllAndSetTemp(285);	//Needs to be done later by a heat exchanger
 
 	if (surgeTankValve->GetState() == 0) {
-		o2SurgeTank->OUT_valve.Close();
 		o2SurgeTank->IN_valve.Close();
 	} else {
-		// SM supply open? 
-		if (o2SMSupply->IN_valve.open) {
 			o2SurgeTank->IN_valve.Open();
-		} else {
-			o2SurgeTank->IN_valve.Close();
 		}
+
+	//Surge tank relief
+	if (surgeTankReliefValve->GetState() == 0) {
+		o2SurgeTank->OUT_valve.Close();
+	}
+	else {
 		o2SurgeTank->OUT_valve.Open();
-		allClosed = false;
 	}
 
 	// Repress package
@@ -643,7 +644,8 @@ void O2SMSupply::SystemTimestep(double simdt) {
 			o2SMSupplyVoid = false;
 		}
 		o2SMSupply->BoilAllAndSetTemp(285);	//Needs to be done later by a heat exchanger
-		// O2 main regulator
+	
+	// O2 main regulator
 		if (mainRegulatorASwitch->GetState() && mainRegulatorBSwitch->GetState()) {
 			o2MainRegulator->IN_valve.Close();
 			mainregvoid = true;
