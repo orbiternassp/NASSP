@@ -2428,6 +2428,7 @@ public:
 	bool LoadMissionConstantsFile(char *file);
 private:
 	void LoadMissionInitParameters(int year, int month, int day);
+	void InitializeCoordinateSystem();
 public:
 
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
