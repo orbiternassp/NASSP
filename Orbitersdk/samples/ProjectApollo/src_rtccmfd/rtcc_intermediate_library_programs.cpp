@@ -703,7 +703,7 @@ void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double 
 	}
 	else
 	{
-		eps = 31.390;
+		eps = 63.78165;
 	}
 
 	//Parabolic case
@@ -721,7 +721,7 @@ void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double 
 			//Calculate time
 			TIME = abs(AORP) / 2.0*sqrt(abs(AORP) / MU)*(TEMP1 + 1.0 / 3.0*pow(TEMP1, 3.0));
 
-			if (K == false)
+			if (K != 0)
 			{
 				TIME = -TIME;
 			}
@@ -752,7 +752,7 @@ void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double 
 		TIME = AORP * sqrt(abs(AORP) / MU)*(E - ECC * (exp(E) - exp(-E)) / 2.0);
 	}
 
-	if (K == false)
+	if (K != 0)
 	{
 		TIME = -TIME;
 	}

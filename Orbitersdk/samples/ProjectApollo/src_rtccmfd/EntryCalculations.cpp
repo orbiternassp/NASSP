@@ -5181,9 +5181,9 @@ bool ConicRTEEarthNew::RUBR(int QA, int QE, double R_a, double U_0, double U_r, 
 	//Change in velocity
 	DV = sqrt(U_0*U_0 + V_a * V_a - 2.0*U_0*V_a*cos(beta_a - beta_0));
 	//Time from abort to perigee
-	pRTCC->PITFPC(mu, 1 - QA, A, e, R_a, T_ap, Period);
+	pRTCC->PITFPC(mu, QA, A, e, R_a, T_ap, Period);
 	//Time from reentry to perigee
-	pRTCC->PITFPC(mu, 1 - QA, A, e, RR, T_rp, Period);
+	pRTCC->PITFPC(mu, QA, A, e, RR, T_rp, Period);
 	//Time from abort to reentry
 	T = T_ap - T_rp;
 	if (T < 0)
@@ -6141,11 +6141,11 @@ void ConicRTEEarthNew::VACOMP(double VR_a, double VT_a, double beta_r, double th
 
 	if (beta_a > PI05)
 	{
-		k = 1;
+		k = 0;
 	}
 	else
 	{
-		k = 0;
+		k = 1;
 	}
 
 	pRTCC->PITFPC(mu, k, A, e, r0, T_ap, Period);
@@ -6356,11 +6356,11 @@ double ConicRTEEarthNew::TripTime(double v_a, double beta_a)
 
 	if (beta_a > PI05)
 	{
-		k = 1;
+		k = 0;
 	}
 	else
 	{
-		k = 0;
+		k = 1;
 	}
 
 	pRTCC->PITFPC(mu, k, A, e, r0, T_ap, Period);
@@ -6375,26 +6375,23 @@ double ConicRTEEarthNew::TripTime(double v_a, double beta_a)
 
 RTEMoon::RTEMoon(RTCC *r, EphemerisData2 sv0, double GMTBASE, double alpha_SID0) : RTCCModule(r)
 {
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
-
-	this->mjd0 = mjd0;
 	this->GMTBASE = GMTBASE;
 	this->alpha_SID0 = alpha_SID0;
 	this->sv0 = sv0;
 
-	mu_E = GGRAV*oapiGetMass(hEarth);
-	mu_M = GGRAV*oapiGetMass(hMoon);
-	w_E = PI2 / oapiGetPlanetPeriod(hEarth);
-	R_E = oapiGetSize(hEarth);
-	R_M = oapiGetSize(hMoon);
+	hMoon = BODY_MOON;
+	mu_E = OrbMech::mu_Earth;
+	mu_M = OrbMech::mu_Moon;
+	w_E = OrbMech::w_Earth;
+	R_E = OrbMech::R_Earth;
+	R_M = OrbMech::R_Moon;
 	r_r = R_E + 400000.0*0.3048;
 
-	cMoon = oapiGetCelbodyInterface(hMoon);
 	dTIG = 30.0;
 	precision = 1;
 	ReturnInclination = 0.0;
 	EntryLng = 0.0;
+	t_Landing = 0.0;
 }
 
 void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI)
@@ -6457,7 +6454,7 @@ void RTEMoon::ATP(double *line)
 bool RTEMoon::MASTER()
 {
 	VECTOR3 DVARR, TIGARR, x_m0, u_m0;
-	double i_r, theta_long, theta_lat, dlng, dt, INTER, dv;
+	double i_r, theta_long, theta_lat, dlng, dt, INTER, dv, t_z;
 	double r_0, v_0, delta_0, alpha_0, beta_0, A_0, z_0, e_0;
 	int IPART, ii;
 	bool ISOL, IOUT, q_0;
@@ -6521,11 +6518,11 @@ bool RTEMoon::MASTER()
 
 		if (CRIT == 4)
 		{
-			ISOL = CLL(i_r, INTER, q_m, dv);
+			ISOL = CLL(i_r, INTER, q_m, t_z, dv);
 		}
 		else
 		{
-			ISOL = MCUA(i_r, INTER, q_m, dv);
+			ISOL = MCUA(i_r, INTER, q_m, t_z, dv);
 		}
 
 		if (ISOL == false) return false;
@@ -6543,13 +6540,12 @@ bool RTEMoon::MASTER()
 	}
 
 	//Precision Solution
-	double TIG = OrbMech::MJDfromGET(sv0.GMT, GMTBASE);
 	t_R = t_z;
 	do
 	{
 		Vig_apo = ThreeBodyAbort(sv0.R, sv0.V, sv0.GMT, t_R, q_m, i_r, INTER, R_EI, V_EI);
 
-		EntryCalculations::LNDING(R_EI, V_EI, t_R, alpha_SID0, LD, ICRNGG, r_rbias, theta_long, theta_lat, t_z);
+		EntryCalculations::LNDING(R_EI, V_EI, t_R, alpha_SID0, LD, ICRNGG, r_rbias, theta_long, theta_lat, t_Landing);
 		if (CRIT == 6) break;
 
 		 EntryCalculations::TBLOOK(LINE, theta_lat, EntryLng);
@@ -6588,8 +6584,8 @@ bool RTEMoon::MASTER()
 	H_EI_equ = unit(N);
 	ReturnInclination = -acos(H_EI_equ.z)*INTER;
 
-	OrbMech::timetoperi_integ(sv0.R, Vig_apo, TIG, hMoon, hMoon, R_peri, V_peri);
-	FlybyPeriAlt = length(R_peri) - oapiGetSize(hMoon);
+	OrbMech::timetoperi_integ(sv0.R, Vig_apo, OrbMech::MJDfromGET(sv0.GMT, GMTBASE), pRTCC->GetGravref(hMoon), pRTCC->GetGravref(hMoon), R_peri, V_peri);
+	FlybyPeriAlt = length(R_peri) - R_M;
 
 	return true;
 }
@@ -6635,7 +6631,7 @@ void RTEMoon::MCSSLM(bool &REP, double t_z_apo)
 		DV_maxs = DV_max;
 		h_mins = h_min;
 		SRFLG = 0;
-		h_min = -0.3*oapiGetSize(hEarth);
+		h_min = -0.3*R_E;
 		DV_max = 100.0*20925738.2 / 3600.0;
 		STAYFL = 0;
 		t_zmin_apo = t_zmin;
@@ -6670,8 +6666,7 @@ void RTEMoon::MCSSLM(bool &REP, double t_z_apo)
 		{
 			indvar = u_r;
 		}
-		Vig_apo = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, false, i_r, INTER, KIP, t_zmin, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d); //TBD
-		REP = 1;
+		REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, false, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d); //TBD
 		EntryCalculations::LNDING(R_EI, V_EI, t_z, alpha_SID0, LD, ICRNGG, r_rbias, lambda_z1, mu_z1, GMT_L);
 
 		//A
@@ -6704,8 +6699,7 @@ void RTEMoon::MCSSLM(bool &REP, double t_z_apo)
 			{
 				indvar = u_r;
 			}
-			Vig_apo = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, false, i_r, INTER, KIP, t_zmin, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d); //TBD
-			REP = 1;
+			REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, false, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d); //TBD
 			EntryCalculations::LNDING(R_EI, V_EI, t_z, alpha_SID0, LD, ICRNGG, r_rbias, lambda_z1, mu_z1, GMT_L);
 
 			UZTAB1.y = mu_z1;
@@ -6716,12 +6710,12 @@ void RTEMoon::MCSSLM(bool &REP, double t_z_apo)
 	}
 }
 
-bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &dv)
+bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv)
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB, Vig_apo;
 	double theta_long, theta_lat, dlng, dt, i_r_apo, TOL, i_rmin, DV_min, delta_S, i_rc, h_p, r_p, D1, D2, DVSS, i_rs, INS, u_r;
 	double t_z1, t_z_apo, indvar, eps, GMT_L, h_mins;
-	int ISUB, KOUNT, ICNT, jj, ICONVG, ii, ITCNT, LOPCNT;
+	int ISUB, KOUNT, ICNT, jj, ICONVG, ii, ITCNT, LOPCNT, REP;
 	bool NIR, IOPT, NIRS, KIP, KFLG, q_d;
 
 	q_m = false;
@@ -6768,7 +6762,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &dv)
 	{
 		indvar = u_r;
 	}
-	Vig_apo = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
+	REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
 	h_p = r_p - R_M;
 	EntryCalculations::LNDING(R_EI, V_EI, t_z, alpha_SID0, LD, ICRNGG, r_rbias, theta_long, theta_lat, GMT_L);
 
@@ -6818,7 +6812,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &dv)
 		{
 			indvar = u_r;
 		}
-		Vig_apo = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
+		REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
 		dv = length(Vig_apo - sv0.V);
 		EntryCalculations::LNDING(R_EI, V_EI, t_z, alpha_SID0, LD, ICRNGG, r_rbias, theta_long, theta_lat, GMT_L);
 		LOPCNT = 0;
@@ -6848,7 +6842,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &dv)
 		ii = 0;
 		do
 		{
-			Vig_apo = MCDRIV(sv0.R, sv0.V, sv0.GMT, t_z_apo, q_m, i_r, INTER, true, t_zmin, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
+			REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, t_z_apo, q_m, i_r, INTER, true, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
 			EntryCalculations::LNDING(R_EI, V_EI, t_z, alpha_SID0, LD, ICRNGG, r_rbias, theta_long, theta_lat, GMT_L);
 			EntryCalculations::TBLOOK(LINE, theta_lat, EntryLng);
 
@@ -6971,7 +6965,7 @@ RTEMoon_CLL_17_B:
 	{
 		if (dv < solution.dv)
 		{
-			STORE(1, dv, i_r, INTER, q_m);
+			STORE(1, dv, i_r, INTER, t_z, q_m);
 		}
 		goto RTEMoon_CLL_1_AA;
 	}
@@ -6979,32 +6973,42 @@ RTEMoon_CLL_17_B:
 	{
 		if (solution.dv < dv)
 		{
-			STORE(2, dv, i_r, INTER, q_m);
+			STORE(2, dv, i_r, INTER, t_z, q_m);
 		}
 	}
 
 	return true;
 }
 
-bool RTEMoon::MCUA(double &i_r, double &INTER, bool &q_m, double &dv)
+bool RTEMoon::MCUA(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv)
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB, DVTAB1, IRTAB1, TZTAB1, Vig_apo;
 	double u_r, r_p, di_r, i_rmin, Di_r, Dt_z, TOL, zc, DV_est1, DV_est2, D1, D2, indvar, i_rmax_apo, SDV, Si_r, SSDV, SSi_r, t_z_apo, eps_ir;
 	double SSt_z, DVSSS, i_rest, i_rmins, i_rmaxs, Xi_r, t_zmin_apo;
-	int LOOP, LOCATE, ISUB, LOOPTZ, ISUBP, MM;
+	int LOOP, LOCATE, ISUB, LOOPTZ, ISUBP, MM, REP;
 	bool NIR, KIP, IOPT, IEND, IOPT1, IRFLAG, IRSCAN, ISOL, q_d;
 
-	SDV = SSDV = pow(10, 10);
+	zc = 0.0;
+
+	solution.dv = pow(10, 10);
 	i_rmax_apo = i_rmax;
 	t_zmin_apo = t_zmin;
-
-	zc = 0.0;
+	if (CIRCUM < 2)
+	{
+		q_m = false;
+	}
+	else
+	{
+		q_m = true;
+	}
+RTEMoon_MCUA_1_A:
 	i_r = 0.0;
 	LOOP = LOOPTZ = 0;
 	di_r = 0.0;
 	u_r = u_rmax;
 	eps_ir = 0.01;
 	DV_est1 = DV_est2 = pow(10, 10);
+	SDV = SSDV = pow(10, 10);
 	KIP = false;
 	LOCATE = 5;
 	IRSCAN = 0;
@@ -7031,8 +7035,15 @@ bool RTEMoon::MCUA(double &i_r, double &INTER, bool &q_m, double &dv)
 			{
 				indvar = u_r;
 			}
-			Vig_apo = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, R_EI, V_EI, t_z, NIR, Xi_r, r_p, q_d);
-			dv = length(Vig_apo - sv0.V);
+			REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, Xi_r, r_p, q_d);
+			if (REP == 0)
+			{
+				dv = pow(10, 10);
+			}
+			else
+			{
+				dv = length(Vig_apo - sv0.V);
+			}
 			i_r = (i_r - di_r)*INTER;
 
 			if (dv <= SDV)
@@ -7221,16 +7232,31 @@ bool RTEMoon::MCUA(double &i_r, double &INTER, bool &q_m, double &dv)
 			INTER = 1.0;
 		}
 		i_r = abs(i_r) + di_r;
-		Vig_apo = MCDRIV(sv0.R, sv0.V, sv0.GMT, t_z_apo, q_m, i_r, INTER, KIP, t_zmin, R_EI, V_EI, t_z, NIR, Xi_r, r_p, q_d);
+		REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, t_z_apo, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, Xi_r, r_p, q_d);
 		dv = length(Vig_apo - sv0.V);
 		LOOP++;
+
+		//Store solution
+		if (dv < solution.dv)
+		{
+			STORE(1, dv, i_r, INTER, t_z, q_m);
+		}
 	}
 
 	i_rmax = i_rmax_apo;
 	t_zmin = t_zmin_apo;
 	ISOL = false;
-	if (SDV <= pow(10, 9))
+
+	if (CIRCUM == 0 && q_m == false)
 	{
+		q_m = true;
+		goto RTEMoon_MCUA_1_A;
+	}
+
+	if (solution.dv <= pow(10, 9))
+	{
+		//Restore optimum solution
+		STORE(2, dv, i_r, INTER, t_z, q_m);
 		ISOL = true;
 	}
 
@@ -7246,7 +7272,7 @@ VECTOR3 RTEMoon::ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E
 	EphemerisData sv1, sv2;
 	VECTOR3 R_I_star, delta_I_star, delta_I_star_dot, R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I_apo;
 	VECTOR3 dV_I_sstar, R_m, V_m, R_s;
-	double t_S, tol, dt_S, Incl_apo, r_s, a, e, u_r, beta_r, beta_r_apo;
+	double t_S, tol, dt_S, Incl_apo, r_s, a, e, u_r, beta_r, beta_r_apo, t_z;
 	int ITS, INFO;
 	bool q_m_out, q_d, q_a, NIR;
 
@@ -7318,64 +7344,100 @@ VECTOR3 RTEMoon::ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E
 	return V_I_apo;
 }
 
-VECTOR3 RTEMoon::MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p, bool &q_d)
+int RTEMoon::MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &V_a, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p, bool &q_d)
 {
 	//INPUT:
 	//KIP: 0 = reentry velocity is the independent variable, 1 = landing time is the independent variable
+	//OUTPUT:
+	//REP: 0 = no MCDRIV solution has been found, >0 = a solution has been found in MCDRIV 
 
 	OELEMENTS coe;
-	VECTOR3 R_I_star, R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, V_I_apo;
+	//Selenocentric PTS exit velocity
+	VECTOR3 V_x;
+	//Previous value of elenocentric PTS exit velocity
+	VECTOR3 V_x_apo;
+	VECTOR3 R_I_star, R_I_sstar, V_I_sstar, R_S, R_I_star_apo;
 	VECTOR3 dV_I_sstar, R_m, V_m, R_s;
-	double t_S, tol, dt_S, p_h, beta_r, u_r, a, e, beta_r_apo;
-	int INFO, KOUNT;
+	double t_S, tol, dt_S, p_h, beta_r, u_r, a, e, beta_r_apo, dy_x, dy_x_apo, v_m, T_EI_apo;
+	int INFO, KOUNT, k_x;
 	bool q_m_out, q_a;
 
-	tol = 20.0;
+	tol = 63.78165;
 	q_a = false;
+
+	pRTCC->PLEFEM(1, t_I / 3600.0, 0, &R_m, &V_m, &R_s, NULL);
 
 	if (KIP)
 	{
-		T_EI = var;
-		beta_r = 96.48*RAD;
+		T_EI_apo = var;
+		u_r = EntryCalculations::URF((T_EI_apo - t_I) / 3600.0, length(R_m) / 6378165.0)*6378165.0 / 3600.0;
 	}
 	else
 	{
 		u_r = var;
-		beta_r = EntryCalculations::ReentryTargetLine(u_r, ICRNGG == 1);
 	}
 
-	pRTCC->PLEFEM(1, t_I / 3600.0, 0, &R_m, &V_m, &R_s, NULL);
+	beta_r = EntryCalculations::ReentryTargetLine(u_r, ICRNGG == 1);
 
 RTEMoon_MCDRIV_1_X:
-
+	k_x = 1;
 	R_I_star = _V(0.0, 0.0, 0.0);
-	V_I_star = V_I;
+	V_x = V_I;
 	KOUNT = 0;
 
 RTEMoon_MCDRIV_5_S:
 	R_I_sstar = R_m + R_I_star;
-	V_I_sstar = V_m + V_I_star;
+	V_I_sstar = V_m + V_x;
 
 	if (KIP)
 	{
-		EntryCalculations::AESR(r_r, length(R_I_sstar), PI - beta_r, T_EI - t_I, R_E, mu_E, 0.001, a, e, q_a, INFO, u_r);
+		EntryCalculations::AESR(r_r, length(R_I_sstar), PI - beta_r, T_EI_apo - t_I, R_E, mu_E, 0.001, a, e, q_a, INFO, u_r);
 	}
 
 	NIR = FINDUX(R_I_sstar, V_I_sstar, t_I, r_r, u_r, beta_r, Incl, INTER, q_a, mu_E, dV_I_sstar, R_EI, V_EI, T_EI, Incl_apo);
 
 	V_I_sstar = V_I_sstar + dV_I_sstar;
-	V_I_star = V_I_sstar - V_m;
-	INRFV(R_I, V_I_star, r_s, mu_M, q_m, V_I_apo, R_S, dt_S, q_m_out, q_d);
+	V_x_apo = V_x;
+	V_x = V_I_sstar - V_m;
+	INRFV(R_I, V_x, r_s, mu_M, q_m, V_a, R_S, dt_S, q_m_out, q_d);
 	t_S = t_I + dt_S;
 	R_I_star_apo = R_I_star;
-	R_I_star = R_S + V_I_star * (t_I - t_S);
+	R_I_star = R_S + V_x * (t_I - t_S);
+	dy_x = length(R_I_star - R_I_star_apo);
 
-	if (length(R_I_star - R_I_star_apo) > tol) goto RTEMoon_MCDRIV_5_S;
+	if (dy_x > tol)
+	{
+		k_x++;
+		if (k_x < k_max)
+		{
+			if (k_x % 3 == 0)
+			{
+				//Are conics diverging?
+				if (dy_x_apo < 1.15*dy_x && dy_x >= tol)
+				{
+					//Average exit velocity vector
+					v_m = (length(V_x) + length(V_x_apo)) / 2.0;
+					dy_x_apo = 200.0*6378165.0;
+					V_x = (V_x + V_x_apo) / 2.0;
+					V_x = unit(V_x)*v_m;
+				}
+			}
+
+			dy_x_apo = dy_x;
+		}
+		else
+		{
+			//Error return
+			return 0;
+		}
+
+		goto RTEMoon_MCDRIV_5_S;
+	}
 
 	if (KIP == 0 && T_EI < t_zmin)
 	{
 		KIP = 1;
-		T_EI = t_zmin;
+		T_EI_apo = t_zmin;
 		goto RTEMoon_MCDRIV_1_X;
 	}
 
@@ -7384,11 +7446,11 @@ RTEMoon_MCDRIV_5_S:
 	KOUNT++;
 	if (abs(beta_r - beta_r_apo) >= 0.0002) goto RTEMoon_MCDRIV_5_S;
 
-	coe = OrbMech::coe_from_sv(R_I, V_I_apo, mu_M);
+	coe = OrbMech::coe_from_sv(R_I, V_a, mu_M);
 	p_h = coe.h*coe.h / mu_M;
 	r_p = p_h / (1.0 + coe.e);
 
-	return V_I_apo;
+	return 1;
 }
 
 double RTEMoon::SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT)
@@ -7433,21 +7495,35 @@ double RTEMoon::SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, 
 	}
 }
 
-bool RTEMoon::FINDUX(VECTOR3 R0, VECTOR3 V0, double T0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, double &Incl_apo) const
+bool RTEMoon::FINDUX(VECTOR3 X_x, VECTOR3 V0, double t_x, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, double &Incl_apo) const
 {
-	VECTOR3 X_x_equ_u, R_1, u_x_equ, U_x_equ, U_x;
-	double x_x, E, e, a, eta_r, eta_x, eta_xr, T_r, T_x, P, beta_x, alpha_x, delta_x, sin_delta_r, cos_delta_r, theta, alpha_r, eta_x1, t_z, T_xr;
+	//INPUTS:
+	//X_x: Earth-centered position vector at exit from moon's sphere of action (MSA)
+	//t_x: Time of MSA exit from base time
+	//r_r: Reentry radius
+	//beta_r: Reentry flight path angle
+	//i_r: Return inclination
+	//INTER: Indicator for which of the two possible orbital planes for a given i_r is specified
+	//q_a: Apogee passage flag
+
+	//OUTPUT:
+	//U_x: Velocity vector at MSA exit
+	//t_z: Time of landing from base time
+
+	VECTOR3 X_x_u, R_1, u_x_equ, U_x_equ, U_x;
+	double x_x, E, e, a, eta_r, eta_x, eta_xr, T_r, T_x, P, beta_x, alpha_x, delta_x, sin_delta_r, cos_delta_r, theta, alpha_r, eta_x1, t_z, T_xr, T_rz;
 	bool NIR;
 
 	Incl_apo = i_r;
 	NIR = false;
+	T_rz = 0.0; //TBD: for now...
 
-	x_x = length(R0);
-	X_x_equ_u = unit(R0);
-	OrbMech::ra_and_dec_from_r(X_x_equ_u, alpha_x, delta_x);
+	x_x = length(X_x);
+	X_x_u = unit(X_x);
+	OrbMech::ra_and_dec_from_r(X_x_u, alpha_x, delta_x);
 
 	E = u_r * u_r / mu - 2.0 / r_r;
-	if (abs(E) < pow(10, -10))
+	if (abs(E) < 1e-3 / 6378165.0)
 	{
 		e = 1.0;
 	}
@@ -7456,10 +7532,10 @@ bool RTEMoon::FINDUX(VECTOR3 R0, VECTOR3 V0, double T0, double r_r, double u_r, 
 		a = -1.0 / E;
 		e = sqrt(1.0 - r_r * r_r*u_r*u_r*sin(beta_r)*sin(beta_r) / (mu*a));
 	}
-	if (abs(e - 1.0) < pow(10, -5))
+	if (abs(e - 1.0) < 1e-5)
 	{
-		a = r_r * u_r*u_r*sin(beta_r)*sin(beta_r) / mu;
-		eta_r = PI2 * acos(a / r_r - 1.0);
+		a = pow(r_r, 2) * pow(u_r, 2)*pow(sin(beta_r), 2) / mu;
+		eta_r = PI2 - acos(a / r_r - 1.0);
 		eta_x = acos(a / x_x - 1.0);
 	}
 	else
@@ -7476,14 +7552,14 @@ bool RTEMoon::FINDUX(VECTOR3 R0, VECTOR3 V0, double T0, double r_r, double u_r, 
 	pRTCC->PITFPC(mu, 0, a, e, x_x, T_x, P, false);
 	if (q_a == 0 || (q_a == 1 && E >= 0))
 	{
-		t_z = T_x - T_r;
+		t_z = t_x + T_x - T_r + T_rz;
 	}
 	else
 	{
-		t_z = P - T_x - T_r;
+		t_z = t_x + P - T_x - T_r + T_rz;
 	}
-	T_xr = -t_z;
-	T_EI = T0 + T_xr;
+	T_xr = t_z - t_x - T_rz;
+	T_EI = t_x + T_xr;
 
 	beta_x = atan2(1.0 + e * cos(eta_x), e*sin(eta_x));
 	if (Incl_apo <= abs(delta_x))
@@ -7507,10 +7583,10 @@ bool RTEMoon::FINDUX(VECTOR3 R0, VECTOR3 V0, double T0, double r_r, double u_r, 
 	alpha_r = alpha_x + theta;
 	R_1 = _V(cos(alpha_r)*cos_delta_r, sin(alpha_r)*cos_delta_r, sin_delta_r);
 	eta_x1 = eta_xr;
-	u_x_equ = EntryCalculations::TVECT(X_x_equ_u, R_1, eta_x1, beta_x);
+	u_x_equ = EntryCalculations::TVECT(X_x_u, R_1, eta_x1, beta_x);
 	U_x_equ = u_x_equ * sqrt(u_r*u_r - 2.0*mu*(1.0 / r_r - 1.0 / x_x));
 	U_x = U_x_equ;
-	OrbMech::rv_from_r0v0(R0, U_x, T_xr, R_EI, V_EI, mu);
+	OrbMech::rv_from_r0v0(X_x, U_x, T_xr, R_EI, V_EI, mu);
 	DV = U_x - V0;
 
 	return NIR;
@@ -7639,7 +7715,7 @@ void RTEMoon::INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, VE
 	}
 }
 
-void RTEMoon::STORE(int opt, double &dv, double &i_r, double &INTER, bool &q_m)
+void RTEMoon::STORE(int opt, double &dv, double &i_r, double &INTER, double &t_z, bool &q_m)
 {
 	//1 = store, 2 = restore
 	if (opt == 1)
@@ -7648,6 +7724,7 @@ void RTEMoon::STORE(int opt, double &dv, double &i_r, double &INTER, bool &q_m)
 		solution.i_r = i_r;
 		solution.INTER = INTER;
 		solution.q_m = q_m;
+		solution.t_z = t_z;
 	}
 	else
 	{
@@ -7655,5 +7732,98 @@ void RTEMoon::STORE(int opt, double &dv, double &i_r, double &INTER, bool &q_m)
 		i_r = solution.i_r;
 		INTER = solution.INTER;
 		q_m = solution.q_m;
+		t_z = solution.t_z;
 	}
 }
+
+/*void RTEMoon::PSTATE(int k_x, double a_H, double e_H, double p_H, double T_x, VECTOR3 Y_0, VECTOR3 Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat) const
+{
+	//INPUTS:
+	//k_x: pseudostate iteration counter
+	//a_h: semimajor axis of selenocentric conic
+	//e_H: eccentricity of selenocentric conic
+	//p_H: semilatus rectum of selenocentric conic
+	//T_x: flight time from pericynthion to PTS exit
+	//Y_0: Selenocentric preabort position vector
+	//Y_a_apo: Fictitious abort position vector used in last call to INRFV
+	//V_x: Selenocentric PTS exit velocity vector
+	//theta: transfer angle from Y_a_apo to Y_x_apo
+	//beta_a: postabort flight-path angle
+	//beta_x: PTS exit flight-path angle of selenocentric conic
+	//T_a: flight time from pericynthion to the maneuver position
+	//V_a: Selenocentric postabort velocity vector
+	//Y_x_apo: Selenocentric PTS exit position vector
+	//OUTPUTS:
+	//V_a: Corrected postabort velocity vector
+	//t_x_aaapo: Postpericynthion pseudostate transformation time for next iteration
+	//Y_x_apo: Selenocentric PTS exit position vector for next iteration
+	//Dy_0: Magnitude of the abort position mismatch
+
+	if ((k_x >= 23 && q_b <= 0.0) || (k_x < 23 && T_a < -3600.0))
+	{
+		q_b = -r_s;
+		t_x_aaapo = sv0.GMT - T_a;
+		deltat = T_x;
+
+		bool IERR = pRTCC->PLEFEM(4, t_x_aaapo / 3600.0, 0, &X_mx, &U_mx, NULL, NULL);
+		if (IERR)
+		{
+			//Error
+			return;
+		}
+
+		VECTOR3 Y_u, V_u, Y_n_u, V_n_u, Y_n, V_n, U_p_n, X_p_n, X_a_n, U_a_n, Y, V, Y_a, DY_0;
+		double t_n, f_a, f_x, gamma_p, gamma_v, A, B, C, Deltat;
+
+		t_n = t_x_aaapo - T_x;
+		f_a = T_a / abs(T_a)*acos((p_H / length(Y_a_apo) - 1.0) / e_H); //Error in RTCC document
+		f_x = theta + f_a;
+		Y_u = unit(Y_a_apo);
+		V_u = unit(V_a);
+
+		gamma_p = beta_a + f_x + f_a;
+		gamma_v = gamma_p + beta_x - PI;
+
+		Y_n_u = EntryCalculations::TVECT(V_u, Y_u, beta_a, gamma_p);
+		V_n_u = EntryCalculations::TVECT(V_u, Y_u, beta_a, gamma_v);
+
+		Y_n = Y_n_u * r_s;
+		V_n = V_n_u * length(V_x);
+		U_p_n = V_n + U_mx;
+		X_p_n = Y_n + V_n * T_x + X_mx;
+		Deltat = t_x_aaapo - sv0.GMT;
+
+		OrbMech::rv_from_r0v0(X_p_n, -U_p_n, Deltat, X_a_n, U_a_n, mu_E);
+		U_a_n = -U_a_n;
+
+		Y = X_a_n - x_m0;
+		V = U_a_n - u_m0;
+
+		A = dotp(V, V);
+		B = dotp(V, Y);
+		C = r_s * r_s - dotp(Y, Y);
+
+		Deltat = (-B - sqrt(B*B + A * C)) / A;
+		t_n = sv0.GMT + Deltat;
+		V_n = V;
+		Y_n = Y + V * Deltat;
+
+		OrbMech::rv_from_r0v0(Y_n, V_n, -Deltat, Y_a, V_a, mu_M);
+
+		DY_0 = Y_0 - Y_a;
+		Y_a_apo = Y_a_apo + DY_0;
+		Dy_0 = length(DY_0);
+	}
+	else
+	{
+		q_b = r_s;
+		Dy_0 = 0.0;
+		t_x_aaapo = sv0.GMT;
+		deltat = T_x - T_a;
+		U_mx = u_m0;
+		X_mx = x_m0;
+		Y_a_apo = Y_0;
+	}
+
+	Y_x_apo = Y_x_apo - V_x * deltat;
+}*/
