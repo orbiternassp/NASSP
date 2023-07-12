@@ -31,17 +31,18 @@ public:
 	AR_GCore(VESSEL* v);
 	~AR_GCore();
 
-	void SetMissionSpecificParameters();
+	void SetMissionSpecificParameters(int mission);
 	void MPTMassUpdate();
 	int MPTTrajectoryUpdate(VESSEL *ves, bool csm);
 
 	bool MissionPlanningActive;
-	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 
 	VESSEL *pMPTVessel;
 	int MPTVesselNumber;
 
 	int mptInitError;
+
+	double REFSMMAT_PTC_MJD;
 
 	RTCC* rtcc;
 };
@@ -236,7 +237,6 @@ public:
 
 	//REFSMMAT PAGE
 	double REFSMMAT_LVLH_Time;
-	double REFSMMAT_PTC_MJD;
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;
@@ -312,6 +312,7 @@ public:
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
 	double t_LunarLiftoff;
+	int AscentPADVersion; //0 = Apollo 11-13, 1 = Apollo 14-17
 
 	//Powered Descent Abort Program
 	int PDAPEngine;	//0 = DPS/APS, 1 = APS

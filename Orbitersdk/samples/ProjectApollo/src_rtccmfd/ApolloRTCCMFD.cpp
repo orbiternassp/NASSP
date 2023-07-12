@@ -144,7 +144,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 		oapiWriteScenario_string(scn, "TARGET", Buffer2);
 	}
 	oapiWriteScenario_int(scn, "TARGETNUMBER", G->targetnumber);
-	oapiWriteScenario_int(scn, "MISSION", GC->mission);
 	papiWriteScenario_double(scn, "P30TIG", G->P30TIG);
 	papiWriteScenario_vec(scn, "DV_LVLH", G->dV_LVLH);
 	papiWriteScenario_double(scn, "ENTRYTIGCOR", G->EntryTIGcor);
@@ -223,7 +222,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		}
 
 		papiReadScenario_int(line, "TARGETNUMBER", G->targetnumber);
-		papiReadScenario_int(line, "MISSION", GC->mission);
 		papiReadScenario_double(line, "P30TIG", G->P30TIG);
 		papiReadScenario_vec(line, "DV_LVLH", G->dV_LVLH);
 		papiReadScenario_double(line, "ENTRYTIGCOR", G->EntryTIGcor);
@@ -851,11 +849,11 @@ void ApolloRTCCMFD::menuSetDAPPADPage()
 
 void ApolloRTCCMFD::menuSetLVDCPage()
 {
-	if (GC->mission >= 8 && GC->mission <= 17)
+	if (utils::IsVessel(G->vessel, utils::SaturnV) || utils::IsVessel(G->vessel, utils::SaturnV_SIVB))
 	{
 		SelectPage(36); //Saturn V launch azimuth
 	}
-	else
+	else if (utils::IsVessel(G->vessel, utils::SaturnIB) || utils::IsVessel(G->vessel, utils::SaturnIB_SIVB))
 	{
 		SelectPage(121); //Saturn IB LWP
 	}
@@ -2219,29 +2217,25 @@ void ApolloRTCCMFD::menuTransferGPMToMPT()
 	G->TransferGPMToMPT();
 }
 
-void ApolloRTCCMFD::menuMissionNumberInput()
+void ApolloRTCCMFD::menuMissionFile()
 {
-	bool MissionNumberInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the mission number (7 to 17, 0 for custom mission):", MissionNumberInput, 0, 20, (void*)this);
+	bool MissionFile(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the mission constants file:", MissionFile, 0, 20, (void*)this);
 }
 
-bool MissionNumberInput(void *id, char *str, void *data)
+bool MissionFile(void *id, char *str, void *data)
 {
-	int Num;
-	if (sscanf(str, "%d", &Num) == 1)
+	((ApolloRTCCMFD*)data)->LoadMissionConstantsFile(str);
+
+	return true;
+}
+
+void ApolloRTCCMFD::LoadMissionConstantsFile(char *str)
+{
+	if (GC->rtcc->LoadMissionConstantsFile(str))
 	{
-		((ApolloRTCCMFD*)data)->set_MissionNumber(Num);
-
-		return true;
-
+		strcpy(GC->rtcc->MissionFileName, str);
 	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MissionNumber(int mission)
-{
-	GC->mission = mission;
-	GC->SetMissionSpecificParameters();
 }
 
 void ApolloRTCCMFD::menuMPTDirectInputMPTCode()
@@ -2995,7 +2989,7 @@ void ApolloRTCCMFD::REFSMMATTimeDialogue()
 	}
 	else if (G->REFSMMATopt == 6)
 	{
-		GenericDoubleInput(&G->REFSMMAT_PTC_MJD, "Enter MJD of average time of TEI:");
+		GenericDoubleInput(&GC->REFSMMAT_PTC_MJD, "Enter MJD of average time of TEI:");
 	}
 	else if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 	{
@@ -5520,24 +5514,7 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 {
 	if (G->vesseltype < 0 || G->vesseltype > 1) return;
 
-	double TEPHEM0, LaunchMJD;
-
-	if (GC->mission < 11)		//NBY 1968/1969
-	{
-		TEPHEM0 = 40038.;
-	}
-	else if (GC->mission < 14)	//NBY 1969/1970
-	{
-		TEPHEM0 = 40403.;
-	}
-	else if (GC->mission < 15)	//NBY 1970/1971
-	{
-		TEPHEM0 = 40768.;
-	}
-	else						//NBY 1971/1972
-	{
-		TEPHEM0 = 41133.;
-	}
+	double LaunchMJD;
 
 	agc_t *agc;
 
@@ -5558,7 +5535,7 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	double tephem = GC->rtcc->GetTEPHEMFromAGC(agc);
 
 	//Calculate MJD of TEPHEM
-	LaunchMJD = (tephem / 8640000.) + TEPHEM0;
+	LaunchMJD = (tephem / 8640000.) + GC->rtcc->SystemParameters.TEPHEM0;
 
 	//Calculate MJD at midnight of launch day
 	double GMTBase = floor(LaunchMJD);
@@ -6976,12 +6953,29 @@ void ApolloRTCCMFD::menuAscentPADCalc()
 	}
 }
 
+void ApolloRTCCMFD::menuCycleAscentPADVersion()
+{
+	if (G->AscentPADVersion < 1)
+	{
+		G->AscentPADVersion++;
+	}
+	else
+	{
+		G->AscentPADVersion = 0;
+	}
+}
+
 void ApolloRTCCMFD::menuPDAPCalc()
 {
 	if (G->vesseltype == 1 && G->target != NULL)
 	{
 		G->PDAPCalc();
 	}
+}
+
+void ApolloRTCCMFD::menuCyclePDAPSegments()
+{
+	G->PDAPTwoSegment = !G->PDAPTwoSegment;
 }
 
 void ApolloRTCCMFD::menuCyclePDAPEngine()
@@ -7000,11 +6994,11 @@ void ApolloRTCCMFD::menuAP11AbortCoefUplink()
 {
 	if (G->vesseltype == 1)
 	{
-		if (GC->mission == 11)
+		if (G->PDAPTwoSegment == false)
 		{
 			G->AP11AbortCoefUplink();
 		}
-		else if(GC->mission >= 12)
+		else
 		{
 			G->AP12AbortCoefUplink();
 		}

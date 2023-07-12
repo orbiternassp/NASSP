@@ -2425,9 +2425,10 @@ public:
 	void SetManeuverData(double TIG, VECTOR3 DV);
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
 	void LoadLaunchDaySpecificParameters(int year, int month, int day);
-	void LoadMissionConstantsFile(char *file);
+	bool LoadMissionConstantsFile(char *file);
 private:
 	void LoadMissionInitParameters(int year, int month, int day);
+	void InitializeCoordinateSystem();
 public:
 
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);

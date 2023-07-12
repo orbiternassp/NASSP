@@ -647,16 +647,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		else if (G->REFSMMATopt == 4)
 		{
 			skp->Text(5 * W / 8, 2 * H / 14, "Launch", 6);
-
-			if (GC->mission == 0)
-			{
-				skp->Text((int)(0.5 * W / 8), 2 * H / 14, "Manual", 6);
-			}
-			else if (GC->mission >= 7)
-			{
-				sprintf(Buffer, "Apollo %i", GC->mission);
-				skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
-			}
 		}
 		else if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 		{
@@ -700,7 +690,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 2 * H / 14, "PTC", 3);
 
 			skp->Text(1 * W / 16, 2 * H / 14, "Average time of TEI:", 20);
-			sprintf(Buffer, "MJD %lf", G->REFSMMAT_PTC_MJD);
+			sprintf(Buffer, "MJD %lf", GC->REFSMMAT_PTC_MJD);
 			skp->Text(1 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (G->REFSMMATopt == 7)
@@ -851,13 +841,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Config", 6);
 
-		if (GC->mission == 0)
+		if (GC->rtcc->MissionFileName[0] == 0)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Manual", 8);
+			skp->Text(1 * W / 8, 2 * H / 14, "Not loaded!", 11);
 		}
-		else if (GC->mission >= 7)
+		else
 		{
-			sprintf(Buffer, "Apollo %i", GC->mission);
+			sprintf(Buffer, "%s", GC->rtcc->MissionFileName);
 			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 
@@ -3115,6 +3105,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "LM Ascent PAD", 13);
 
+		if (G->AscentPADVersion == 1)
+		{
+			sprintf(Buffer, "Apollo 14-17");
+		}
+		else
+		{
+			sprintf(Buffer, "Apollo 11-13");
+		}
+		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+
 		if (G->target != NULL)
 		{
 			sprintf(Buffer, G->target->GetName());
@@ -3146,7 +3146,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(2 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%+06d DEDA 053", G->lmascentpad.DEDA053);
 		skp->Text(2 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
-		if (GC->mission >= 14)
+		if (G->AscentPADVersion == 1)
 		{
 			sprintf(Buffer, "%+06.0f DEDA 224/226", G->lmascentpad.DEDA225_226);
 		}
@@ -3172,13 +3172,22 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 3 * H / 14, "Calculation failed!", 19);
 		}
 
-		if (G->PDAPEngine == 0)
+		if (G->PDAPTwoSegment)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "DPS/APS", 7);
+			skp->Text(1 * W / 8, 2 * H / 14, "Apollo 11", 9);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "APS", 7);
+			skp->Text(1 * W / 8, 2 * H / 14, "Apollo 12+", 10);
+		}
+
+		if (G->PDAPEngine == 0)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "DPS/APS", 7);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "APS", 7);
 		}
 
 		skp->Text(4 * W / 8, 3 * H / 21, "TPI:", 4);
@@ -3186,7 +3195,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 3 * H / 21, Buffer, strlen(Buffer));
 
 		skp->Text(1 * W / 8, 5 * H / 21, "PGNS Coefficients:", 18);
-		if (GC->mission <= 11)
+		if (G->PDAPTwoSegment == false)
 		{
 			sprintf(Buffer, "%e", G->PDAPABTCOF[0] / 0.3048);
 			skp->Text(1 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
@@ -3244,8 +3253,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		if (G->target != NULL)
 		{
 			sprintf(Buffer, G->target->GetName());
-			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 		}
+		else
+		{
+			sprintf(Buffer, "No Target!");
+		}
+		skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 15 * H / 21, "Landing Site:", 13);
 		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);

@@ -1438,9 +1438,6 @@ RTCC::RTCC() :
 
 	PZMPTCSM.CommonBlock.ConfigCode = PZMPTLEM.CommonBlock.ConfigCode = 15; //CSM + LM + S-IVB
 
-	//Load Apollo 11 mission constants file by default
-	LoadMissionConstantsFile("Apollo 11 Constants");
-
 	//Load station characteristics table
 	GZSTCH[0].data.code = "BDA";
 	GZSTCH[0].RadarMount = 2;
@@ -1520,6 +1517,9 @@ RTCC::RTCC() :
 	EMGGPCHR(40.45443*RAD, -4.16990*RAD, 0.0, BODY_EARTH, 0.0, &GZSTCH[18].data);
 
 	SystemParameters.MKRBKS = 19;
+
+	//Set up the yearly coordinate system (default AGCEpoch = 1969)
+	InitializeCoordinateSystem();
 }
 
 RTCC::~RTCC()
@@ -1928,14 +1928,14 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 	}
 }
 
-void RTCC::LoadMissionConstantsFile(char *file)
+bool RTCC::LoadMissionConstantsFile(char *file)
 {
 	//This function loads mission specific constants that will rarely be changed or saved/loaded
 	char Buff[128];
 	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s.txt", file);
 
-	ifstream startable(Buff);
-	if (startable.is_open())
+	ifstream missionfile(Buff);
+	if (missionfile.is_open())
 	{
 		std::string line, strtemp;
 		double dtemp;
@@ -1943,16 +1943,18 @@ void RTCC::LoadMissionConstantsFile(char *file)
 		int itemp;
 		double darrtemp[10];
 
-		while (getline(startable, line))
+		while (getline(missionfile, line))
 		{
 			sprintf_s(Buff, line.c_str());
 
 			papiReadScenario_int(Buff, "AGCEpoch", SystemParameters.AGCEpoch);
+			papiReadScenario_double(Buff, "TEPHEM0", SystemParameters.TEPHEM0); //Only load for Skylark
 			papiReadScenario_int(Buff, "MCCLEX", SystemParameters.MCCLEX);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
 			papiReadScenario_int(Buff, "MCLTTD", SystemParameters.MCLTTD);
+			papiReadScenario_int(Buff, "MCLABT", SystemParameters.MCLABT);
 			papiReadScenario_double(Buff, "MCTVEN", SystemParameters.MCTVEN);
 			if (papiReadScenario_double(Buff, "RRBIAS", dtemp))
 			{
@@ -2047,11 +2049,26 @@ void RTCC::LoadMissionConstantsFile(char *file)
 			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG);
 			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
 		}
-	}
 
-	//Anything that is mission, but not launch day specific
+		//Anything that is mission, but not launch day specific
+		InitializeCoordinateSystem();
+
+		return true;
+	}
+	return false;
+}
+
+void RTCC::InitializeCoordinateSystem()
+{
+	//J2000 ecliptic to BRCS matrix
 	SystemParameters.MAT_J2000_BRCS = OrbMech::J2000EclToBRCS(SystemParameters.AGCEpoch);
-	EMSGSUPP(0, 0); //Convert star table
+	//Calculate TEPHEM0, the zero time for AGC time keeping. Except for 1950 coordinate system (Skylark), which has to be loaded from the mission file
+	if (SystemParameters.AGCEpoch != 1950)
+	{
+		SystemParameters.TEPHEM0 = OrbMech::TJUDAT(SystemParameters.AGCEpoch - 1, 7, 1) - 2400000.5;
+	}
+	//Convert star table to BRCS
+	EMSGSUPP(0, 0);
 }
 
 void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
