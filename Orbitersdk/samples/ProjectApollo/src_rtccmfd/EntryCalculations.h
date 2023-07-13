@@ -594,12 +594,12 @@ private:
 	bool MCUA(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv);
 
 	VECTOR3 ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_EI, bool q_m, double Incl, double INTER, VECTOR3 &R_EI, VECTOR3 &V_EI);
-	int MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &V_a, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p, bool &q_d);
+	int MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_I, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &V_a, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p, bool &q_d);
 	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
-	bool FINDUX(VECTOR3 X_x, VECTOR3 V0, double t_x, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, double &Incl_apo) const;
-	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2, bool &q_m, bool &k_1) const;
+	bool FINDUX(VECTOR3 X_x, double t_x, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &U_x, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, double &Incl_apo) const;
+	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, double &a, double &e, double &p, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2, bool &q_m, bool &k_1) const;
 	void STORE(int opt, double &dv, double &i_r, double &INTER, double &t_z, bool &q_m);
-	//void PSTATE(int k_x, double a_H, double e_H, double p_H, double T_x, VECTOR3 Y_0, VECTOR3 Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat) const;
+	void PSTATE(double a_H, double e_H, double p_H, double T_x, VECTOR3 Y_0, VECTOR3 Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const;
 
 	int hMoon;
 	double mu_E, mu_M, w_E, R_E, R_M;
@@ -657,6 +657,8 @@ private:
 	double r_r;
 	//Radius of the pseudostate transformation sphere
 	double r_s;
+	//Position and velocity vector of the Moon at abort time
+	VECTOR3 X_m0, U_m0;
 	
 	//Alternate target line (lat, lng, lat, lng etc.)
 	double LINE[10];
