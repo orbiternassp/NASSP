@@ -1116,9 +1116,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *massO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:MASS");
 	double *tempO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:TEMP");
 	double *pressO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
+
+	double* massO2SMSupply = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLY:MASS");
+	double* tempO2SMSupply = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLY:TEMP");
+	double* pressO2SMSupply = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLY:PRESS");
+
 	
-	sprintf(oapiDebugString(), "O2ST-m %.1f T %.1f p %.1f",
-		*massO2SurgeTank, *tempO2SurgeTank, *pressO2SurgeTank * 0.000145038);
+	sprintf(oapiDebugString(), "O2ST-m %.1f T %.1f p %.1f O2SMS-m %.1f T %.1f p %.1f",
+		*massO2SurgeTank, *tempO2SurgeTank, *pressO2SurgeTank * 0.000145038, *massO2SMSupply, *tempO2SMSupply, *pressO2SMSupply * 0.000145038);
 
 #ifdef _DEBUG
 
