@@ -7273,7 +7273,7 @@ VECTOR3 RTEMoon::ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E
 	EphemerisData sv1, sv2;
 	VECTOR3 R_I_star, delta_I_star, delta_I_star_dot, R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I_apo;
 	VECTOR3 R_m, V_m;
-	double t_S, tol, dt_S, Incl_apo, r_s, a, e, u_r, beta_r, beta_r_apo, t_z, a_H, e_H, p_H;
+	double t_S, tol, dt_S, Incl_apo, r_s, a, e, u_r, beta_r, beta_r_apo, t_z, a_H, e_H, p_H, theta, beta_a, beta_x;
 	int ITS, INFO;
 	bool q_m_out, q_d, q_a, NIR;
 
@@ -7319,7 +7319,7 @@ VECTOR3 RTEMoon::ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E
 
 			V_I_star = V_I_sstar - V_m - delta_I_star_dot;
 
-			INRFV(R_I, V_I_star, r_s, mu_M, q_m, a_H, e_H, p_H, V_I_apo, R_S, dt_S, q_m_out, q_d);
+			INRFV(R_I, V_I_star, r_s, mu_M, q_m, a_H, e_H, p_H, theta, V_I_apo, R_S, dt_S, q_m_out, q_d, beta_a, beta_x);
 			t_S = t_I + dt_S;
 			R_I_star_apo = R_I_star;
 			R_I_star = R_S + V_I_star * (t_I - t_S);
@@ -7344,16 +7344,22 @@ VECTOR3 RTEMoon::ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E
 	return V_I_apo;
 }
 
-int RTEMoon::MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_I, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &V_a, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p, bool &q_d)
+int RTEMoon::MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_0, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &V_a, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &y_p, bool &q_d)
 {
 	//INPUT:
 	//Y_0: Selenocentric preabort position vector
 	//V_0: Selenocentric preabort velocity vector
+	//t_0: Preabort time
+	//var: either reentry velocity (KIP=false) or landing time (KIP=true)
+	//q_m: 0 = noncircumlunar motion postabort, 1 = circumlunar motion postabort
+	//Incl: Return inclination
+	//INTER: -1 = A_zr < reentry azimuth for i_r = delta_x, +1 = A_zr > reentry azimuth for i_r = delta_x
 	//KIP: 0 = reentry velocity is the independent variable, 1 = landing time is the independent variable
+	//t_zmin: minimum landing time allowed
 	//OUTPUT:
-	//REP: 0 = no MCDRIV solution has been found, >0 = a solution has been found in MCDRIV 
+	//REP: 0 = no MCDRIV solution has been found, >0 = a solution has been found in MCDRIV
+	//V_a: Postabort velocity vector
 
-	OELEMENTS coe;
 	//Geocentric transearth pseudostate position vector
 	VECTOR3 X_x;
 	//Geocentric transearth pseudostate velocity vector
@@ -7366,11 +7372,18 @@ int RTEMoon::MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_I, double var, bool q_m, 
 	VECTOR3 V_x;
 	//Previous value of selenocentric PTS exit velocity
 	VECTOR3 V_x_apo;
+	//Geocentric position vector of the moon at the postpericynthion pseudostate transformation time
+	VECTOR3 X_mx;
+	//Geocentric velocity vector of the moon at the postpericynthion pseudostate transformation time
+	VECTOR3 U_mx;
+	//Fictitious abort position vector
+	VECTOR3 Y_a_apo;
+	//Selenocentric orbital parameters
+	double a_h, e_h, p_h;
 
-	VECTOR3 R_S;
-	double t_S, tol, dt_S, p_h, beta_r, u_r, a, e, beta_r_apo, dy_x, dy_x_apo, v_m, T_EI_apo, a_H, e_H, p_H, T_a, P, y_p, T_x;
+	double tol, beta_r, u_r, a, e, beta_r_apo, dy_x, dy_x_apo, v_m, T_EI_apo, T_a, P, T_x, t_x, theta, dt_S, beta_a, beta_x, delta_t, Dy_0, t_x_apo;
 	int INFO, KOUNT, k_x;
-	bool q_m_out, q_a;
+	bool q_m_out, q_a, dy_xf;
 
 	tol = 63.78165;
 	q_a = false;
@@ -7378,7 +7391,7 @@ int RTEMoon::MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_I, double var, bool q_m, 
 	if (KIP)
 	{
 		T_EI_apo = var;
-		u_r = EntryCalculations::URF((T_EI_apo - t_I) / 3600.0, length(X_m0) / 6378165.0)*6378165.0 / 3600.0;
+		u_r = EntryCalculations::URF((T_EI_apo - t_0) / 3600.0, length(X_m0) / 6378165.0)*6378165.0 / 3600.0;
 	}
 	else
 	{
@@ -7392,98 +7405,117 @@ RTEMoon_MCDRIV_1_X:
 	k_x = 1;
 	KOUNT = 0;
 	//Initial guess for pseudostate. Position at the center of the Moon, velocity using preabort value
-	Y_x = _V(0.0, 0.0, 0.0);
-	V_x = V_0;
+	t_x = t_0;
+	X_mx = X_m0;
+	U_mx = U_m0;
+	Y_a_apo = Y_0;
+	X_x = X_mx;
+	Y_x = X_x - X_mx;
+	V_x = V_0; //TBD, not necessary
 RTEMoon_MCDRIV_5_S:
 	//Main loop
-	//Convert psuedostate to geocentric
-	X_x = X_m0 + Y_x;
-	U_x = U_m0 + V_x;
-
 	if (KIP)
 	{
 		//Compute velocity at reentry, if it is not input
-		EntryCalculations::AESR(r_r, length(X_x), PI - beta_r, T_EI_apo - t_I, R_E, mu_E, 0.001, a, e, q_a, INFO, u_r);
+		EntryCalculations::AESR(r_r, length(X_x), PI - beta_r, T_EI_apo - t_x, R_E, mu_E, 0.001, a, e, q_a, INFO, u_r);
 	}
 
 	//Compute the geocentric conic (velocity vector) from the geocentric pseudostate
-	NIR = FINDUX(X_x, t_I, r_r, u_r, beta_r, Incl, INTER, q_a, mu_E, U_x, R_EI, V_EI, T_EI, Incl_apo);
+	NIR = FINDUX(X_x, t_x, r_r, u_r, beta_r, Incl, INTER, q_a, mu_E, U_x, R_EI, V_EI, T_EI, Incl_apo);
+	//Save current value of beta_r
+	beta_r_apo = beta_r;
+	//Reset convergence flag
+	dy_xf = false;
 	//Save previous value of V_x
 	V_x_apo = V_x;
 	//Transform the abort velocity vector to selenocentric reference
-	V_x = U_x - U_m0;
-	//Given initial position Y_0 and velocity at PTS Y_x, calculate initial velocity V_a and position at PTS 
-	INRFV(Y_0, V_x, r_s, mu_M, q_m, a_H, e_H, p_H, V_a, R_S, dt_S, q_m_out, q_d);
+	V_x = U_x - U_mx;
+RTEMoon_MCDRIV_7_R:
+	//Given initial position Y_a_apo and velocity at PTS Y_x, calculate initial velocity V_a and position at PTS Y_x_apo 
+	INRFV(Y_a_apo, V_x, r_s, mu_M, q_m, a_h, e_h, p_h, theta, V_a, Y_x_apo, dt_S, q_m_out, q_d, beta_a, beta_x);
 
 	//Near parabolic orbit?
-	if (abs(e_H - 1.0) < 1e-5)
+	if (abs(e_h - 1.0) < 1e-5)
 	{
-		a_H = p_H;
+		a_h = p_h;
 	}
-	pRTCC->PITFPC(mu_M, 0, a_H, e_H, r_s, T_x, P, false);
+	//Calculate time from pericynthion to PTS
+	pRTCC->PITFPC(mu_M, 0, a_h, e_h, r_s, T_x, P, false);
 	//Calculate pericynthion radius
-	y_p = p_H / (1.0 + e_H);
+	y_p = p_h / (1.0 + e_h);
 	//Near pericynthion
-	if (length(Y_0) < y_p + 1e-6*R_E)
+	if (length(Y_a_apo) < y_p + 1e-6*R_E)
 	{
 		//Assume time to pericynthion is zero
 		T_a = 0.0;
 	}
 	else
 	{
-		//Calculate time to pericynthion
-		pRTCC->PITFPC(mu_M, q_d, a_H, e_H, length(Y_0), T_a, P, false);
+		//Calculate time from pericynthion to abort
+		pRTCC->PITFPC(mu_M, q_d, a_h, e_h, length(Y_a_apo), T_a, P, false);
 	}
-	//TBD: PSTATE
-	t_S = t_I + dt_S;
-	Y_x_apo = Y_x;
-	Y_x = R_S + V_x * (t_I - t_S);
+
+	//Update pseudstate
+	PSTATE(a_h, e_h, p_h, t_0, T_x, Y_0, Y_a_apo, V_x, theta, beta_a, beta_x, T_a, V_a, t_x_apo, Y_x_apo, Dy_0, delta_t, X_mx, U_mx);
+	//
 	dy_x = length(Y_x - Y_x_apo);
 
-	if (dy_x > tol)
+	if (dy_xf == false)
 	{
-		k_x++;
-		if (k_x < k_max)
+		//Has converged?
+		if (dy_x <= tol && Dy_0 / length(Y_0) <= tol / 10.0 && abs(t_x_apo - t_x) < 0.1)
 		{
-			if (k_x % 3 == 0)
+			//Does solution violate minimum landing time constraint?
+			if (KIP == 0 && T_EI < t_zmin)
 			{
-				//Are conics diverging?
-				if (dy_x_apo < 1.15*dy_x && dy_x >= tol)
-				{
-					//Average exit velocity vector
-					v_m = (length(V_x) + length(V_x_apo)) / 2.0;
-					dy_x_apo = 200.0*6378165.0;
-					V_x = (V_x + V_x_apo) / 2.0;
-					V_x = unit(V_x)*v_m;
-				}
+				KIP = 1;
+				T_EI_apo = t_zmin;
+				goto RTEMoon_MCDRIV_1_X;
 			}
-
-			dy_x_apo = dy_x;
+			//Solution has converged
+			goto RTEMoon_MCDRIV_11_W;
 		}
-		else
-		{
-			//Error return
-			return 0;
-		}
+	}
+	k_x++;
+	if (k_x >= k_max)
+	{
+		//Error return
+		return 0;
+	}
 
+	//Are conics diverging?
+	if (k_x % 3 == 0 && (dy_x_apo < 1.15*dy_x && dy_x >= tol))
+	{
+		//Average exit velocity vector
+		v_m = (length(V_x) + length(V_x_apo)) / 2.0;
+		dy_x_apo = 200.0*6378165.0;
+		dy_xf = true;
+		V_x = (V_x + V_x_apo) / 2.0;
+		V_x = unit(V_x)*v_m;
+		goto RTEMoon_MCDRIV_7_R;
+	}
+	else
+	{
+		t_x = t_x_apo;
+		Y_x = Y_x_apo;
+		X_x = Y_x + X_mx;
+		dy_x_apo = dy_x;
 		goto RTEMoon_MCDRIV_5_S;
 	}
 
-	if (KIP == 0 && T_EI < t_zmin)
+RTEMoon_MCDRIV_11_W:
+	//Solution has converged, check if reentry flight-path angle needs to be adjusted
+	if (KOUNT <= 4)
 	{
-		KIP = 1;
-		T_EI_apo = t_zmin;
-		goto RTEMoon_MCDRIV_1_X;
+		beta_r = EntryCalculations::ReentryTargetLine(u_r, ICRNGG == 1);
+		KOUNT++;
+		if (abs(beta_r - beta_r_apo) >= 0.0002)
+		{
+			KOUNT++;
+			k_x = 1;
+			goto RTEMoon_MCDRIV_5_S;
+		}
 	}
-
-	beta_r_apo = beta_r;
-	beta_r = EntryCalculations::ReentryTargetLine(u_r, ICRNGG == 1);
-	KOUNT++;
-	if (abs(beta_r - beta_r_apo) >= 0.0002) goto RTEMoon_MCDRIV_5_S;
-
-	coe = OrbMech::coe_from_sv(Y_0, V_a, mu_M);
-	p_h = coe.h*coe.h / mu_M;
-	r_p = p_h / (1.0 + coe.e);
 
 	return 1;
 }
@@ -7629,7 +7661,7 @@ bool RTEMoon::FINDUX(VECTOR3 X_x, double t_x, double r_r, double u_r, double bet
 	return NIR;
 }
 
-void RTEMoon::INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, double &a, double &e, double &p, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2, bool &q_m, bool &k_1) const
+void RTEMoon::INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, double &a, double &e, double &p, double &theta, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2, bool &q_m, bool &k_1, double &beta_1, double &beta_2) const
 {
 	//INPUTS:
 	//R_1: Initial positon vector
@@ -7645,7 +7677,7 @@ void RTEMoon::INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, do
 	//k_1: 0 = no pericenter passage, 1 = pericenter passage
 
 	VECTOR3 r_1_cf, v_2_cf, c;
-	double psi, cos_psi, sin_psi, A, B, C, r_1, v_2, theta, sin_beta_2, v_1, f, g, DIFG, beta_1;
+	double psi, cos_psi, sin_psi, A, B, C, r_1, v_2, sin_beta_2, v_1, f, g, DIFG;
 	double AA[5], RR[4];
 	int N;
 
@@ -7713,8 +7745,9 @@ void RTEMoon::INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, do
 		sin_beta_2 = RR[N - 1];
 	}
 
+	beta_2 = asin(sin_beta_2);
 	c = unit(crossp(r_1_cf, v_2_cf) / sin_psi);
-	theta = atan2(sin_psi, cos_psi) - sin_beta_2;
+	theta = psi - sin_beta_2;
 	R_2 = (r_1_cf*cos(theta) + crossp(c, r_1_cf)*sin(theta))*r_2;
 	v_1 = sqrt(v_2 - 2.0*mu / r_2 + 2.0*mu / r_1);
 	p = r_2 * r_2*v_2*v_2*sin_beta_2*sin_beta_2 / mu;
@@ -7773,12 +7806,13 @@ void RTEMoon::STORE(int opt, double &dv, double &i_r, double &INTER, double &t_z
 	}
 }
 
-void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double T_x, VECTOR3 Y_0, VECTOR3 Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const
+void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double t_0, double T_x, VECTOR3 Y_0, VECTOR3 Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const
 {
 	//INPUTS:
 	//a_h: semimajor axis of selenocentric conic
 	//e_H: eccentricity of selenocentric conic
 	//p_H: semilatus rectum of selenocentric conic
+	//t_0: time of abort
 	//T_x: flight time from pericynthion to PTS exit
 	//Y_0: Selenocentric preabort position vector
 	//Y_a_apo: Fictitious abort position vector used in last call to INRFV
@@ -7797,7 +7831,7 @@ void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double T_x, VECTOR3 Y_0
 
 	if (T_a < -3600.0)
 	{
-		t_x_aaapo = sv0.GMT - T_a;
+		t_x_aaapo = t_0 - T_a;
 		deltat = T_x;
 
 		bool IERR = pRTCC->PLEFEM(4, t_x_aaapo / 3600.0, 0, &X_mx, &U_mx, NULL, NULL);
@@ -7826,7 +7860,7 @@ void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double T_x, VECTOR3 Y_0
 		V_n = V_n_u * length(V_x);
 		U_p_n = V_n + U_mx;
 		X_p_n = Y_n + V_n * T_x + X_mx;
-		Deltat = t_x_aaapo - sv0.GMT;
+		Deltat = t_x_aaapo - t_0;
 
 		OrbMech::rv_from_r0v0(X_p_n, -U_p_n, Deltat, X_a_n, U_a_n, mu_E);
 		U_a_n = -U_a_n;
@@ -7839,7 +7873,7 @@ void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double T_x, VECTOR3 Y_0
 		C = r_s * r_s - dotp(Y, Y);
 
 		Deltat = (-B - sqrt(B*B + A * C)) / A;
-		t_n = sv0.GMT + Deltat;
+		t_n = t_0 + Deltat;
 		V_n = V;
 		Y_n = Y + V * Deltat;
 
@@ -7852,7 +7886,7 @@ void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double T_x, VECTOR3 Y_0
 	else
 	{
 		Dy_0 = 0.0;
-		t_x_aaapo = sv0.GMT;
+		t_x_aaapo = t_0;
 		deltat = T_x - T_a;
 		U_mx = U_m0;
 		X_mx = X_m0;
