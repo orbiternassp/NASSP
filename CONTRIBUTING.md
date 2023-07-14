@@ -11,7 +11,7 @@ These are all the requirements for a working development environment
 * [Orbiter Beta](http://orbit.medphys.ucl.ac.uk/betainstall.html)
 * [D3D9 Client for orbiter](https://www.orbiter-forum.com/showthread.php?t=18431)
 * NASSP Orbiter2016 (or derivative) branch checked out inside the Orbiter installation
-* Visual Studio (2017 or 2022)
+* Visual Studio (2017, 2019, or 2022)
 
 ## Submitting changes
 To get your work included in the project we ask you to make a pull request with a brief summary of the changes you did followed by details of your implementation.
