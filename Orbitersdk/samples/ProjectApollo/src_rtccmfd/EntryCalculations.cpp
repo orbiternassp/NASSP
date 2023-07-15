@@ -6885,7 +6885,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 			{
 				INTER = 1.0;
 				i_r = 0.0;
-				DV_min = pow(10, 10);
+				DV_min = 1e-8;
 				ICONVG = 0;
 			}
 			else if (jj == 1)
@@ -6908,7 +6908,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 
 		if (i_rk == 0)
 		{
-			if (abs(dv - DV_min) <= 0.1*0.3048)
+			if (abs(dv - DV_min) <= 0.1772) //0.0001 er/hr
 			{
 				ICONVG++;
 				if (ICONVG != 1)
@@ -6985,8 +6985,8 @@ bool RTEMoon::MCUA(double &i_r, double &INTER, bool &q_m, double &t_z, double &d
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB, DVTAB1, IRTAB1, TZTAB1, Vig_apo;
 	double u_r, r_p, di_r, i_rmin, Di_r, Dt_z, TOL, zc, DV_est1, DV_est2, D1, D2, indvar, i_rmax_apo, SDV, Si_r, SSDV, SSi_r, t_z_apo, eps_ir;
-	double SSt_z, DVSSS, i_rest, i_rmins, i_rmaxs, Xi_r, t_zmin_apo;
-	int LOOP, LOCATE, ISUB, LOOPTZ, ISUBP, MM, REP;
+	double SSt_z, DVSSS, i_rest, i_rmins, i_rmaxs, Xi_r, t_zmin_apo, eps_dv;
+	int LOOP, LOCATE, ISUB, LOOPTZ, ISUBP, REP;
 	bool NIR, KIP, IOPT, IEND, IOPT1, IRFLAG, IRSCAN, ISOL, q_d;
 
 	zc = 0.0;
@@ -6994,6 +6994,7 @@ bool RTEMoon::MCUA(double &i_r, double &INTER, bool &q_m, double &t_z, double &d
 	solution.dv = pow(10, 10);
 	i_rmax_apo = i_rmax;
 	t_zmin_apo = t_zmin;
+	eps_dv = 0.1772; //0.0001 er/hr
 	if (CIRCUM < 2)
 	{
 		q_m = false;
@@ -7103,7 +7104,7 @@ RTEMoon_MCUA_1_A:
 					}
 				}
 				TOL = min(0.017, 0.5*Di_r);
-				if (LOOP > 20 || abs(i_r) < 0.001 || abs(dv - DV_est1) < 0.1*0.3048 || (ISUB != 0 && dv > DVTAB.data[ISUB - 1]))
+				if (LOOP > 20 || abs(i_r) < 0.001 || abs(dv - DV_est1) < eps_dv || (ISUB != 0 && dv > DVTAB.data[ISUB - 1]))
 				{
 					break;
 				}
@@ -7162,7 +7163,7 @@ RTEMoon_MCUA_1_A:
 		}
 		dv = SDV;
 		i_r = Si_r;
-		if (LOOPTZ > 20 || (ISUBP != 0 && SDV > DVTAB1.data[ISUBP - 1]) || abs(dv - DV_est2) < 0.1*0.3048)
+		if (LOOPTZ > 20 || (ISUBP != 0 && SDV > DVTAB1.data[ISUBP - 1]) || abs(dv - DV_est2) < eps_dv)
 		{
 			i_r = SSi_r;
 			t_z_apo = SSt_z;
@@ -7189,7 +7190,6 @@ RTEMoon_MCUA_1_A:
 		{
 			D1 = 5.0*TZTAB1.y - 4.0*TZTAB1.x;
 			D2 = 5.0*TZTAB1.y - 4.0*TZTAB1.z;
-			MM = 1;
 			if (D1 < TZTAB1.z)
 			{
 				t_z_apo = (TZTAB1.y + TZTAB1.z) / 2.0;
@@ -7204,7 +7204,7 @@ RTEMoon_MCUA_1_A:
 			i_rmins = i_rmin;
 			i_rmaxs = i_rmax;
 			Di_r = 0.25*i_rmax;
-			if (Di_r > 0.017453293)
+			if (Di_r > 0.17453293)
 			{
 				IRSCAN = 1;
 				i_rmin = max(i_rmins, SSi_r);
