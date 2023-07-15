@@ -54,6 +54,7 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 	SPSPressCheckCount = 0;
 	CryoPressCheckCount = 0;
 	GlycolTempCheckCount = 0;
+	SuitCompDPHighCheckCount = 0;
 	for (int i = 0; i < 4; i++)
 		FuelCellCheckCount[i] = 0;
 
@@ -615,8 +616,15 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// of the SuitComprDeltaPMeter to pervent alarms because of the fluctuations during 
 		// high time acceleration. 
 		//
+
+		if (datm.DisplayedSuitComprDeltaPressurePSI < 0.22) {
+			SuitCompDPHighCheckCount++;
+		}
+		else {
+			SuitCompDPHighCheckCount = 0;
+		}
 		
-		SetLight(CSM_CWS_SUIT_COMPRESSOR, (datm.DisplayedSuitComprDeltaPressurePSI < 0.22));
+		SetLight(CSM_CWS_SUIT_COMPRESSOR, SuitCompDPHighCheckCount > 5);
 
 		//
 		// CM RCS warning lights if pressure is below 260psi or above 330psi (AOH RCS 2.5-46),

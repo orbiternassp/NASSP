@@ -135,6 +135,7 @@ protected:
 	int SPSPressCheckCount;
 	int CryoPressCheckCount;
 	int GlycolTempCheckCount;
+	int SuitCompDPHighCheckCount;
 	int FuelCellCheckCount[4];
 	bool ACBus1Alarm, ACBus2Alarm;
 	bool ACBus1Reset, ACBus2Reset;
