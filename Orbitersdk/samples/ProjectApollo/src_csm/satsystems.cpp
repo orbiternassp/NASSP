@@ -154,7 +154,9 @@ void Saturn::SystemsInit() {
 	O2Tanks[1] = (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2");
 
 	O2TanksHeaters[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:O2TANK1HEATER");
+	O2TanksHeaters[0]->WireTo(&CryogenicO2HTR1CB);
 	O2TanksHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:O2TANK2HEATER");
+	O2TanksHeaters[1]->WireTo(&CryogenicO2HTR2CB);
 	O2TanksFans[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:O2TANK1FAN");
 	O2TanksFans[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:O2TANK2FAN");
 
@@ -166,7 +168,9 @@ void Saturn::SystemsInit() {
 	H2Tanks[1] = (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2");
 
 	H2TanksHeaters[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:H2TANK1HEATER");
+	H2TanksHeaters[0]->WireTo(&CryogenicH2HTR1CB);
 	H2TanksHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:H2TANK2HEATER");
+	H2TanksHeaters[1]->WireTo(&CryogenicH2HTR2CB);
 	H2TanksFans[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:H2TANK1FAN");
 	H2TanksFans[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:H2TANK2FAN");
 
