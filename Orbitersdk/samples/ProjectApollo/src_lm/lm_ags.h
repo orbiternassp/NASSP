@@ -270,9 +270,9 @@ public:
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
 	void ResetKeyDown();
-	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights);
-	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
-	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
+	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights, int xTexMul = 1);
+	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0, int xTexMul = 1);
+	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0, int xTexMul = 1);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 
 	void KeyClick();
@@ -369,8 +369,8 @@ protected:
 	void SendKeyCode(int val);
 
 	void DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 
-	void RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
-	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
+	void RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int xTexMul = 1);
+	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int xTexMul = 1);
 	int ThreeDigitDisplaySegmentsLit(char *Str);
 	int SixDigitDisplaySegmentsLit(char *Str);
 	LEM *lem;					// Pointer at LEM

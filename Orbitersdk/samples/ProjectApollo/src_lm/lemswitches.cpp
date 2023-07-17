@@ -1365,26 +1365,26 @@ void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
-void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface) {
+void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface, int TexMul) {
 
 	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
 		if (IsUp())
 		{
-			oapiBlt(surf, DrawSurface, 0, 0, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul, yOffset*TexMul + height*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
 		}
 		else
 		{
-			oapiBlt(surf, DrawSurface, 0, 0, xOffset + width, yOffset + height, width, height, SURF_PREDEF_CK);
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul + width*TexMul, yOffset*TexMul + height*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
 		}
 	}
 	else {
 		if (IsUp())
 		{
-			oapiBlt(surf, DrawSurface, 0, 0, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul, yOffset*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
 		}
 		else
 		{
-			oapiBlt(surf, DrawSurface, 0, 0, xOffset + width, yOffset, width, height, SURF_PREDEF_CK);
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul + width*TexMul, yOffset*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
 		}
 	}
 }
@@ -1893,8 +1893,8 @@ void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 
 	double percent = GetDisplayValue() * 100.0;
 
-	const int DigitWidth = 19;
-	const int DigitHeight = 21;
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int Curdigit2 = (int)percent;
 	int Curdigit = (int)percent / 10;
 
@@ -1986,8 +1986,8 @@ void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE s
 
 	double v = GetDisplayValue();
 
-	const int DigitWidth = 19;
-	const int DigitHeight = 21;
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int Curdigit4 = (int)v;
 	int Curdigit3 = (int)v / 10;
 	int Curdigit2 = (int)v / 100;
@@ -2247,7 +2247,7 @@ void LEMMasterAlarmSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
 void LEMMasterAlarmSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	cwea->RenderMasterAlarm(surf, switchsurfacevc);
+	cwea->RenderMasterAlarm(surf, switchsurfacevc, TexMul);
 }
 
 void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
