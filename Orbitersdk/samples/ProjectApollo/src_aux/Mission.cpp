@@ -327,8 +327,22 @@ namespace mission {
 		return true;
 	}
 
-	void Mission::LoadIMU_AndPIPA_RatesAndBiases(FILEHANDLE hFile) {
-		oapiReadItem_float(hFile, "CMNBDX", CM_IMUDriftRates.m11);
+	void Mission::LoadIMU_AndPIPA_RatesAndBiases(std::ifstream &hFile) {
+		char line[256];
+
+		while (hFile.getline(line, sizeof line)) {
+			if (!_strnicmp(line, "CMNBDX", 6)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m11);
+			}
+			if (!_strnicmp(line, "CMNBDY", 6)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m12);
+			}
+			if (!_strnicmp(line, "CMNBDZ", 6)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m13);
+			}
+		}
+
+		/*oapiReadItem_float(hFile, "CMNBDX", CM_IMUDriftRates.m11);
 		oapiReadItem_float(hFile, "CMNBDY", CM_IMUDriftRates.m12);
 		oapiReadItem_float(hFile, "CMNBDZ", CM_IMUDriftRates.m13);
 		oapiReadItem_float(hFile, "CMADSRAX", CM_IMUDriftRates.m21);
@@ -362,7 +376,7 @@ namespace mission {
 
 		oapiReadItem_float(hFile, "LMPIPASCALEX", LM_PIPAScale.x);
 		oapiReadItem_float(hFile, "LMPIPASCALEY", LM_PIPAScale.y);
-		oapiReadItem_float(hFile, "LMPIPASCALEZ", LM_PIPAScale.z);
+		oapiReadItem_float(hFile, "LMPIPASCALEZ", LM_PIPAScale.z);*/
 	}
 
 	MATRIX3 Mission::GetCM_IMU_Drift() const {
