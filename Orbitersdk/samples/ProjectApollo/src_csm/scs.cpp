@@ -1601,25 +1601,25 @@ bool ASCP::YawDnClick(int Event)
 	return changed;
 }
 
-void ASCP::PaintRoll(SURFHANDLE surf, SURFHANDLE wheel)
+void ASCP::PaintRoll(SURFHANDLE surf, SURFHANDLE wheel, int TexMul )
 
 {
-	oapiBlt(surf, wheel, 0, 0, (int) rolldisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) rolldisplay * 17*TexMul, 0, 17*TexMul, 36*TexMul, SURF_PREDEF_CK);
 }
 
-void ASCP::PaintPitch(SURFHANDLE surf, SURFHANDLE wheel)
+void ASCP::PaintPitch(SURFHANDLE surf, SURFHANDLE wheel, int TexMul)
 
 {
-	oapiBlt(surf, wheel, 0, 0, (int) pitchdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) pitchdisplay * 17*TexMul, 0, 17*TexMul, 36*TexMul, SURF_PREDEF_CK);
 }
 
-void ASCP::PaintYaw(SURFHANDLE surf, SURFHANDLE wheel)
+void ASCP::PaintYaw(SURFHANDLE surf, SURFHANDLE wheel, int TexMul)
 
 {
-	oapiBlt(surf, wheel, 0, 0, (int) yawdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) yawdisplay * 17*TexMul, 0, 17*TexMul, 36*TexMul, SURF_PREDEF_CK);
 }
 
-bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value) {
+bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value, int TexMul) {
 	int srx, sry, beta, digit, digit0, digit1;
 	int x=(int)fabs(value*10);
 	beta = x%10;
@@ -1630,48 +1630,48 @@ bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value) {
 
 	srx = 8 + (digit0 * 25);	 
 	if (!(beta != 0 && digit == 9 && (digit1 == 9 || (digit1 == 5 && digit0 == 3)))) {
-		oapiBlt(surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 0, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	} else {
-		oapiBlt(surf, digits, 0, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+		oapiBlt(surf, digits, 0, sry*TexMul, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul - sry*TexMul, SURF_PREDEF_CK);			
 		if (digit0 == 3) digit0 = 0; else digit0++;
 		srx = 8 + (digit0 * 25);			
-		oapiBlt(surf, digits, 0, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 0, 0, srx*TexMul, 45*TexMul - sry*TexMul, 9*TexMul, sry*TexMul, SURF_PREDEF_CK);
 	}
 
 	srx = 8 + (digit1 * 25);
 	if (digit != 9 || beta == 0) {
-		oapiBlt(surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 10*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	} else {
-		oapiBlt(surf, digits, 10, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+		oapiBlt(surf, digits, 10*TexMul, sry*TexMul, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul - sry*TexMul, SURF_PREDEF_CK);			
 
 		if (digit1 == 9) digit1 = 0; else digit1++;
 		if (digit1 == 6 && digit0 == 3) digit1 = 0;
 		srx = 8 + (digit1 * 25);			
-		oapiBlt(surf, digits, 10, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 10*TexMul, 0, srx*TexMul, 45*TexMul - sry*TexMul, 9*TexMul, sry*TexMul, SURF_PREDEF_CK);
 	}
 
 	srx = 8 + (digit * 25);
 	if (beta == 0) {		
-		oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 20*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	} else {
-		oapiBlt(surf, digits, 20, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+		oapiBlt(surf, digits, 20*TexMul, sry*TexMul, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul - sry*TexMul, SURF_PREDEF_CK);			
 		if (digit == 9) digit = 0; else digit++;
 		srx = 8 + (digit * 25);			
-		oapiBlt(surf, digits, 20, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 20*TexMul, 0, srx*TexMul, 45*TexMul - sry*TexMul, 9*TexMul, sry*TexMul, SURF_PREDEF_CK);
 	}
 	return true;
 }
 
-bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits) {
-	return PaintDisplay(surf, digits, output.x);
+bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul) {
+	return PaintDisplay(surf, digits, output.x, TexMul);
 }
 
-bool ASCP::PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits) {
-	return PaintDisplay(surf, digits, output.y);
+bool ASCP::PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul) {
+	return PaintDisplay(surf, digits, output.y, TexMul);
 }
 
-bool ASCP::PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	return PaintDisplay(surf, digits, output.z);
+bool ASCP::PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul){
+	return PaintDisplay(surf, digits, output.z, TexMul);
 }
 
 void ASCP::SaveState(FILEHANDLE scn){
@@ -4825,6 +4825,8 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ScribePntCnt = 1;
 	ScribePntArray[0].x = 40;
 	ScribePntArray[0].y = 1;
+	ScribePntArrayVC[0].x = 40*TexMul;
+	ScribePntArrayVC[0].y = 1*TexMul;
 
 	//Initial position of RSI Triangle
 	RSITriangle[0].x = EMS_RSI_CENTER_X + (int)(cos(RSIRotation)*28);
@@ -5095,6 +5097,8 @@ void EMS::TimeStep(double simdt) {
 		}
 		ScribePntArray[ScribePntCnt-1].y = GScribe;
 		ScribePntArray[ScribePntCnt-1].x = SlewScribe;
+		ScribePntArrayVC[ScribePntCnt-1].y = GScribe*TexMul;
+		ScribePntArrayVC[ScribePntCnt-1].x = SlewScribe*TexMul;
 
 		//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 		//sprintf(oapiDebugString(), "ScrollPosition %f", ScrollPosition);
@@ -5416,6 +5420,8 @@ void EMS::LoadState(FILEHANDLE scn) {
 			sscanf(line + 14, "%i %li %li", &i, &j, &k);
 			ScribePntArray[i].x = j;
 			ScribePntArray[i].y = k;
+			ScribePntArrayVC[i].x = j*TexMul;
+			ScribePntArrayVC[i].y = k*TexMul;
 		}
 	}
 }

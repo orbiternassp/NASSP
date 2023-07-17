@@ -918,7 +918,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, SECS *s,
 		int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
 	void DoDrawSwitch(SURFHANDLE drawSurface);
-	void RepaintSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc);
+	void RepaintSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc, int xTexMul = 1);
 protected:
 	SECS * secs;
 };

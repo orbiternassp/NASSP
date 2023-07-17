@@ -1,16 +1,16 @@
 // ========================================================
 // Mesh resource file for LM_VC.msh
-// Generated with meshc on Sun Jan 16 00:20:12 2022
+// Generated with meshc on Tue Jul  4 18:38:29 2023
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 598
+#define VC_NGRP 601
 
 // Number of materials:
-#define VC_NMAT 70
+#define VC_NMAT 62
 
 // Number of textures:
-#define VC_NTEX 25
+#define VC_NTEX 31
 
 // Named mesh groups:
 #define VC_GRP_AOT 0
@@ -578,36 +578,39 @@
 #define VC_GRP_zzbSuitLiquidCoolingAssembly_Pipe 562
 #define VC_GRP_zzbWaterControlModule_new2 563
 #define VC_GRP_zzzAOTNet 564
-#define VC_GRP_zzzBackObjects 565
-#define VC_GRP_zzzBags 566
-#define VC_GRP_zzzBags_001 567
-#define VC_GRP_zzzBags_002 568
-#define VC_GRP_zzzCOAS_Glass 569
-#define VC_GRP_zzzCOAS_Glassovhd 570
-#define VC_GRP_zzzECSConnections 571
-#define VC_GRP_zzzEngineCover 572
-#define VC_GRP_zzzHolderRahmen_P14 573
-#define VC_GRP_zzzLMVC_SideBagsLeft 574
-#define VC_GRP_zzzLMVC_SideBagsRight 575
-#define VC_GRP_zzzMainCube 576
-#define VC_GRP_zzzScrews_ORDEAL 577
-#define VC_GRP_zzzScrews_P1 578
-#define VC_GRP_zzzScrews_P12 579
-#define VC_GRP_zzzScrews_P14 580
-#define VC_GRP_zzzScrews_P2 581
-#define VC_GRP_zzzScrews_P3 582
-#define VC_GRP_zzzScrews_P4 583
-#define VC_GRP_zzzScrews_P5 584
-#define VC_GRP_zzzScrews_P6 585
-#define VC_GRP_zzzScrews_P8 586
-#define VC_GRP_zzzSwitchHolder_P1 587
-#define VC_GRP_zzzSwitchHolder_P11 588
-#define VC_GRP_zzzSwitchHolder_P12 589
-#define VC_GRP_zzzSwitchHolder_P14 590
-#define VC_GRP_zzzSwitchHolder_P16 591
-#define VC_GRP_zzzSwitchHolder_P2 592
-#define VC_GRP_zzzSwitchHolder_P3 593
-#define VC_GRP_zzzSwitchHolder_P4 594
-#define VC_GRP_zzzSwitchHolder_P5 595
-#define VC_GRP_zzzSwitchHolder_P6 596
-#define VC_GRP_zzzSwitchHolder_P8 597
+#define VC_GRP_zzzAditionalParts2 565
+#define VC_GRP_zzzBackObjects 566
+#define VC_GRP_zzzBags 567
+#define VC_GRP_zzzBags_001 568
+#define VC_GRP_zzzBags_002 569
+#define VC_GRP_zzzCOAS_Glass 570
+#define VC_GRP_zzzCOAS_Glassovhd 571
+#define VC_GRP_zzzECSConnections 572
+#define VC_GRP_zzzEngineCover 573
+#define VC_GRP_zzzHolderRahmen_P14 574
+#define VC_GRP_zzzLMVC_SideBagsLeft 575
+#define VC_GRP_zzzLMVC_SideBagsRight 576
+#define VC_GRP_zzzMainCube 577
+#define VC_GRP_zzzScrews_ORDEAL 578
+#define VC_GRP_zzzScrews_P1 579
+#define VC_GRP_zzzScrews_P12 580
+#define VC_GRP_zzzScrews_P14 581
+#define VC_GRP_zzzScrews_P2 582
+#define VC_GRP_zzzScrews_P3 583
+#define VC_GRP_zzzScrews_P4 584
+#define VC_GRP_zzzScrews_P5 585
+#define VC_GRP_zzzScrews_P6 586
+#define VC_GRP_zzzScrews_P8 587
+#define VC_GRP_zzzSwitchHolder_P1 588
+#define VC_GRP_zzzSwitchHolder_P11 589
+#define VC_GRP_zzzSwitchHolder_P12 590
+#define VC_GRP_zzzSwitchHolder_P14 591
+#define VC_GRP_zzzSwitchHolder_P16 592
+#define VC_GRP_zzzSwitchHolder_P2 593
+#define VC_GRP_zzzSwitchHolder_P3 594
+#define VC_GRP_zzzSwitchHolder_P4 595
+#define VC_GRP_zzzSwitchHolder_P5 596
+#define VC_GRP_zzzSwitchHolder_P6 597
+#define VC_GRP_zzzSwitchHolder_P8 598
+#define VC_GRP_zzzdArmRest_CDR 599
+#define VC_GRP_zzzdArmRest_LMP 600

@@ -417,4 +417,13 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 //#define LM_DES_H2O_CAPACITY 229590.3			//Pad fill 76% for J-Mission Conversion
 #define LM_ASC_H2O_CAPACITY 14651.03355			//Pad fill 76%
 
+//
+// Texture Size (1 = Old ProjectApollo 2K Textures, 2 = New 4K Textures, 4 = New 8K Textures)
+//
+#define TEXTURES_2K 1
+#define TEXTURES_4K 2
+#define TEXTURES_8K 4
+
+const int TexMul = TEXTURES_4K;
+
 #endif
