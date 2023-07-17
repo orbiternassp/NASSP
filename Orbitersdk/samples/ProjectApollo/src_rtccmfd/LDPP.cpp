@@ -21,6 +21,7 @@
 #include "Orbitersdk.h"
 #include "OrbMech.h"
 #include "LMGuidanceSim.h"
+#include "rtcc.h"
 #include "LDPP.h"
 
 LDPPOptions::LDPPOptions()
@@ -65,7 +66,7 @@ LDPPResults::LDPPResults()
 const double LDPP::zeta_theta = 0.00613*RAD; //0.1NM crossrange
 const double LDPP::zeta_t = 0.01;
 
-LDPP::LDPP()
+LDPP::LDPP(RTCC *r) : RTCCModule(r)
 {
 	mu = OrbMech::mu_Moon;
 	I_PC = 0;
@@ -107,7 +108,7 @@ void LDPP::Init(const LDPPOptions &in)
 int LDPP::LDPPMain(LDPPResults &out)
 {
 	double dt, t_DOI, t_IGN, U_H_DOI, U_OC, MJD, DU_1, DU_2, t_LS, U_LS, t_D, xi, t_PC, t_H_DOI, U_DOI, P_L, DU, T_GO, U_A, DR, U_CSM, t_L;
-	VECTOR3 DV, R_temp, V_temp, RR_LS, RR_CSM, VV_CSM, c, HH_CSM, rr_LS, R_P, DV_apo, RR_LM, VV_LM, HH_LM, DV_aapo;
+	VECTOR3 DV, RR_LS, RR_CSM, VV_CSM, c, HH_CSM, rr_LS, R_P, DV_apo, RR_LM, VV_LM, HH_LM, DV_aapo;
 	bool error;
 
 	U_CSM = U_LS = t_L = t_IGN = 0.0;
@@ -135,8 +136,7 @@ int LDPP::LDPPMain(LDPPResults &out)
 	}
 	//Page 2
 	sv_CSM = OrbMech::PMMLAEG(sv_CSM, 0, OrbMech::MJDfromGET(t_H_DOI, opt.GETbase), error);
-	OrbMech::EclipticToMCI(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, R_temp, V_temp);
-	U_H_DOI = ArgLat(R_temp, V_temp);
+	U_H_DOI = ArgLat(sv_CSM.R, sv_CSM.V);
 	U_OC = U_H_DOI + PI2 * (double)opt.M;
 
 	if (opt.M > 0)
@@ -150,11 +150,10 @@ int LDPP::LDPPMain(LDPPResults &out)
 	
 	do
 	{
-		MJD = OrbMech::P29TimeOfLongitude(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, hMoon, opt.Lng_LS);
+		MJD = OrbMech::P29TimeOfLongitude(pRTCC->SystemParameters.MAT_J2000_BRCS, sv_CSM.R, sv_CSM.V, sv_CSM.MJD, hMoon, opt.Lng_LS);
 		t_LS = OrbMech::GETfromMJD(MJD, opt.GETbase);
 		sv_CSM = OrbMech::coast(sv_CSM, (MJD - sv_CSM.MJD)*24.0*3600.0);
-		OrbMech::EclipticToMCI(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, R_temp, V_temp);
-		U_CSM = ArgLat(R_temp, V_temp);
+		U_CSM = ArgLat(sv_CSM.R, sv_CSM.V);
 		if (U_CSM < U_OC)
 		{
 			U_CSM += PI2;
@@ -390,8 +389,7 @@ LDPP_15_2:
 	{
 		return 1;
 	}
-	OrbMech::EclipticToMCI(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, R_temp, V_temp);
-	U_A = ArgLat(R_temp, V_temp);
+	U_A = ArgLat(sv_CSM.R, sv_CSM.V);
 	DU = U_A - U_DOI;
 	if (abs(DU) <= zeta_theta)
 	{
@@ -600,7 +598,7 @@ LDPP_30_1:
 	dt = opt.TH[i - 1] - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
 
-	MJD = OrbMech::P29TimeOfLongitude(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, hMoon, opt.Lng_LS);
+	MJD = OrbMech::P29TimeOfLongitude(pRTCC->SystemParameters.MAT_J2000_BRCS, sv_CSM.R, sv_CSM.V, sv_CSM.MJD, hMoon, opt.Lng_LS);
 	dt = (MJD - sv_CSM.MJD)*24.0*3600.0;
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
 
@@ -681,8 +679,7 @@ LDPP_34_1:
 	IRUT = 1;
 	dt = t_M[i - 1] - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
-	OrbMech::EclipticToMCI(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, R_temp, V_temp);
-	u_man = ArgLat(R_temp, V_temp);
+	u_man = ArgLat(sv_CSM.R, sv_CSM.V);
 	LDPP_SV_E[i - 1][0] = sv_CSM;
 	DV = SAC(1, 0, 1, sv_CSM);
 	DV_aapo = DV;
@@ -710,18 +707,15 @@ LDPP_35_1:
 VECTOR3 LDPP::SAC(int L, double h_W, int J, SV sv_L)
 {
 	SV sv_L2;
-	MATRIX3 Rot, Q_Xx;
-	VECTOR3 R, V, DV;
+	MATRIX3 Q_Xx;
+	VECTOR3 DV;
 	double u_b, u_d, R_A, R_A_apo, r, a, v, n, DN, dt, u_c, dr;
 	int nn;
 
-	Rot = OrbMech::GetObliquityMatrix(BODY_MOON, sv_L.MJD);
 	Q_Xx = OrbMech::LVLH_Matrix(sv_L.R, sv_L.V);
 
 	r = length(sv_L.R);
-	R = rhtmul(Rot, sv_L.R);
-	V = rhtmul(Rot, sv_L.V);
-	u_b = ArgLat(R, V);
+	u_b = ArgLat(sv_L.R, sv_L.V);
 	u_d = u_b + PI;
 	if (u_d >= PI2)
 	{
@@ -738,7 +732,7 @@ VECTOR3 LDPP::SAC(int L, double h_W, int J, SV sv_L)
 	}
 	else
 	{
-		R_A = length(R);
+		R_A = length(sv_L.R);
 	}
 	R_A_apo = R_A;
 	do
@@ -765,9 +759,7 @@ VECTOR3 LDPP::SAC(int L, double h_W, int J, SV sv_L)
 			}
 			
 			sv_L2 = OrbMech::coast(sv_L2, dt);
-			R = rhtmul(Rot, sv_L2.R);
-			V = rhtmul(Rot, sv_L2.V);
-			u_c = ArgLat(R, V);
+			u_c = ArgLat(sv_L2.R, sv_L2.V);
 			nn++;
 		} while (abs(dt) > zeta_t);
 
@@ -802,7 +794,13 @@ double LDPP::ArgLat(VECTOR3 R, VECTOR3 V)
 
 VECTOR3 LDPP::LATLON(double MJD)
 {
-	return rhmul(OrbMech::GetRotationMatrix(BODY_MOON, MJD), OrbMech::r_from_latlong(opt.Lat_LS, opt.Lng_LS, opt.R_LS));
+	VECTOR3 R_LS;
+	double GMT;
+
+	GMT = OrbMech::GETfromMJD(MJD, pRTCC->GetGMTBase());
+	pRTCC->ELVCNV(OrbMech::r_from_latlong(opt.Lat_LS, opt.Lng_LS, opt.R_LS), GMT, 1, RTCC_COORDINATES_MCT, RTCC_COORDINATES_MCI, R_LS);
+
+	return R_LS;
 }
 
 void LDPP::LLTPR(double T_H, SV sv_L, double &t_DOI, double &t_IGN, double &t_TD)
@@ -924,7 +922,7 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 	dt1 = opt.TH[3] - OrbMech::GETfromMJD(sv_L.MJD, opt.GETbase);
 	OrbMech::oneclickcoast(sv_L.R, sv_L.V, sv_L.MJD, dt1, R_TH, V_TH, hMoon, hMoon);
 	MJD_TH = sv_L.MJD + dt1 / 24.0 / 3600.0;
-	MJD_LS = OrbMech::P29TimeOfLongitude(R_TH, V_TH, MJD_TH, hMoon, opt.Lng_LS);
+	MJD_LS = OrbMech::P29TimeOfLongitude(pRTCC->SystemParameters.MAT_J2000_BRCS, R_TH, V_TH, MJD_TH, hMoon, opt.Lng_LS);
 	dt2 = (MJD_LS - MJD_TH)*24.0*3600.0;
 	OrbMech::oneclickcoast(R_TH, V_TH, MJD_TH, dt2, R_L, V_L, hMoon, hMoon);
 	n_L = PI2 / OrbMech::period(R_L, V_L, mu);
@@ -932,7 +930,7 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 
 	do
 	{
-		RR_LS = rhmul(OrbMech::GetRotationMatrix(BODY_MOON, MJD_LS), R_LS_equ);
+		RR_LS = LATLON(MJD_LS);
 		rr_LS = unit(RR_LS);
 
 		rr_L = unit(R_L);
@@ -964,9 +962,10 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 		goto LDPP_CHAPLA_9_1;
 	}
 	
-	Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD_LS);
-	R_L = rhtmul(Rot, R_L);
-	V_L = rhtmul(Rot, V_L);
+	pRTCC->ELVCNV(OrbMech::GETfromMJD(MJD_LS, pRTCC->GetGMTBase()), RTCC_COORDINATES_MCT, RTCC_COORDINATES_MCI, Rot);
+
+	R_L = tmul(Rot, R_L);
+	V_L = tmul(Rot, V_L);
 
 	VECTOR3 R_J, V_J;
 	double rmag, vmag, rtasc, decl, fpav, az;//, u_w;
@@ -994,8 +993,8 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 
 	OrbMech::sv_from_coe(coe_a, mu, R_J, V_J);*/
 	//U_J = unit(R_J);
-	R_J = rhmul(Rot, R_J);
-	V_J = rhmul(Rot, V_J);
+	R_J = mul(Rot, R_J);
+	V_J = mul(Rot, V_J);
 
 	sv_P.MJD = MJD_LS;
 	sv_P.R = R_J;
@@ -1052,9 +1051,7 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 
 LDPP_CHAPLA_9_1:
 
-	VECTOR3 R_temp, V_temp;
-	OrbMech::EclipticToMCI(R_L, V_L, MJD_LS, R_temp, V_temp);
-	double u_ca = ArgLat(R_temp, V_temp);
+	double u_ca = ArgLat(R_L, V_L);
 	double nu = acos(dotp(rr_LS, rr_p));
 	double delta_nu = acos(dotp(rr_LS, h_L));
 	deltaw = sin(nu) / (cos(nu)*cos(u_ca - u_man));
@@ -1244,7 +1241,6 @@ SV LDPP::TIMA(SV sv0, double u, bool &error)
 void LDPP::CNODE(SV sv_A, SV sv_P, double &t_m, VECTOR3 &dV_LVLH)
 {
 	CELEMENTS coe_M, coe_T;
-	VECTOR3 RM_equ, VM_equ, RT_equ, VT_equ;
 	double MJD_CN, U_L, U_U, i_T, i_M, h_T, h_M, cos_dw, DEN, U_CN;
 	int ICT = 0;
 
@@ -1252,18 +1248,16 @@ void LDPP::CNODE(SV sv_A, SV sv_P, double &t_m, VECTOR3 &dV_LVLH)
 
 	do
 	{
-		OrbMech::EclipticToMCI(sv_A.R, sv_A.V, MJD_CN, RM_equ, VM_equ);
-		OrbMech::EclipticToMCI(sv_P.R, sv_P.V, MJD_CN, RT_equ, VT_equ);
 
 		if (ICT == 0)
 		{
-			U_L = ArgLat(RM_equ, VM_equ);
+			U_L = ArgLat(sv_A.R, sv_A.V);
 			U_U = U_L + PI;
 			if (U_U > PI2) U_U -= PI2;
 		}
 
-		coe_M = OrbMech::GIMIKC(RM_equ, VM_equ, mu);
-		coe_T = OrbMech::GIMIKC(RT_equ, VT_equ, mu);
+		coe_M = OrbMech::GIMIKC(sv_A.R, sv_A.V, mu);
+		coe_T = OrbMech::GIMIKC(sv_P.R, sv_P.V, mu);
 		i_T = coe_T.i;
 		i_M = coe_M.i;
 		h_T = coe_T.h;

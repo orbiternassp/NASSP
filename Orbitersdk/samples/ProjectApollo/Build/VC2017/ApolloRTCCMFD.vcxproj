@@ -14,6 +14,7 @@
     <ClInclude Include="..\..\src_aux\nassputils.h" />
     <ClInclude Include="..\..\src_launch\MCCPADForms.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
+    <ClInclude Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApollomfdButtons.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
@@ -35,11 +36,14 @@
     <ClInclude Include="..\..\src_rtccmfd\RTCCSystemParameters.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCC_EMSMISS.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLIProcessor.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLTrajectoryComputers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_launch\rtcc.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD_Display.cpp" />
@@ -64,7 +68,9 @@
     <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLIProcessor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLTrajectoryComputers.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

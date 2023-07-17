@@ -198,8 +198,6 @@ SaturnV::~SaturnV()
 {
 	TRACESETUP("~SaturnV");
 
-	ReleaseSurfaces();
-
 	if (iu)
 	{
 		delete iu;

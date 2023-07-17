@@ -19,6 +19,7 @@
   **************************************************************************/
 
 #include "Orbitersdk.h"
+#include "AnalyticEphemerisGenerator.h"
 #include "LWP.h"
 
 LWPInputTable::LWPInputTable()

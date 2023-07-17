@@ -395,91 +395,7 @@ int RTCC::ELVARY(EphemerisDataTable2 &EPH, unsigned ORER, double GMT, bool EXTRA
 }
 
 //Generalized Coordinate Conversion Routine
-int RTCC::ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &vec_out)
-{
-	std::vector<VECTOR3> inv, outv;
-
-	inv.push_back(vec);
-
-	int err = ELVCNV(inv, GMT, type, in, out, outv);
-	if (err) return err;
-
-	vec_out = outv[0];
-	return 0;
-}
-
-int RTCC::ELVCNV(std::vector<VECTOR3> vec, double GMT, int type, int in, int out, std::vector<VECTOR3> &vec_out)
-{
-	EphemerisData2 eph, sv_out;
-	VECTOR3 vec2;
-	int err = 0;
-
-	eph.GMT = GMT;
-
-	for (unsigned i = 0;i < vec.size();i++)
-	{
-		if (type == 0 || type == 1)
-		{
-			//Unit vector or position vector
-			eph.R = vec[i];
-			eph.V = _V(1, 0, 0);
-		}
-		else
-		{
-			eph.R = _V(1, 0, 0);
-			eph.V = vec[i];
-		}
-
-		err = ELVCNV(eph, in, out, sv_out);
-		if (err)
-		{
-			return err;
-		}
-		if (type == 0 || type == 1)
-		{
-			vec2 = sv_out.R;
-		}
-		else
-		{
-			vec2 = sv_out.V;
-		}
-		if (vec_out.size() > i)
-		{
-			vec_out[i] = vec2;
-		}
-		else
-		{
-			vec_out.push_back(vec2);
-		}
-	}
-	return err;
-}
-
-int RTCC::ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out)
-{
-	EphemerisData2 sv, sv_out;
-	int err = 0;
-	for (unsigned i = 0;i < svtab.size();i++)
-	{
-		sv = svtab[i];
-		err = ELVCNV(sv, in, out, sv_out);
-		if (err)
-		{
-			break;
-		}
-		if (svtab_out.size() > i)
-		{
-			svtab_out[i] = sv_out;
-		}
-		else
-		{
-			svtab_out.push_back(sv_out);
-		}
-	}
-	return err;
-}
-
-int RTCC::ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out)
+int RTCC::ELVCNV(EphemerisData sv, int out, EphemerisData &sv_out)
 {
 	EphemerisData2 sv1, sv_out2;
 	int in;
@@ -517,206 +433,339 @@ int RTCC::ELVCNV(EphemerisData &sv, int out, EphemerisData &sv_out)
 	return 0;
 }
 
-int RTCC::ELVCNV(EphemerisData2 &sv, int in, int out, EphemerisData2 &sv_out)
+int RTCC::ELVCNV(EphemerisData2 sv, int in, int out, EphemerisData2 &sv_out)
 {
+	std::vector<EphemerisData2> inv;
+
+	inv.push_back(sv);
+
+	int err = ELVCNV(inv, in, out, inv);
+	sv_out = inv[0];
+
+	return err;
+}
+
+int RTCC::ELVCNV(VECTOR3 vec, double GMT, int type, int in, int out, VECTOR3 &vec_out)
+{
+	std::vector<VECTOR3> inv;
+
+	inv.push_back(vec);
+
+	int err = ELVCNV(inv, GMT, type, in, out, inv);
+	vec_out = inv[0];
+
+	return err;
+}
+
+int RTCC::ELVCNV(double GMT, int in, int out, MATRIX3 &Rot)
+{
+	//Rotation matrix from "in" coordinate system to "out" coordinate system
+
+	std::vector<VECTOR3> vec_in, vec_out;
+
+	vec_in.push_back(_V(1, 0, 0));
+	vec_in.push_back(_V(0, 1, 0));
+	vec_in.push_back(_V(0, 0, 1));
+
+	int err = ELVCNV(vec_in, GMT, 0, in, out, vec_out);
+
+	Rot = _M(vec_out[0].x, vec_out[1].x, vec_out[2].x, vec_out[0].y, vec_out[1].y, vec_out[2].y, vec_out[0].z, vec_out[1].z, vec_out[2].z);
+
+	return err;
+}
+
+int RTCC::ELVCNV(std::vector<EphemerisData2> &svtab, int in, int out, std::vector<EphemerisData2> &svtab_out)
+{
+	int err = 0;
+
+	svtab_out = svtab;
+
+	std::vector<VECTOR3> vec2;
+
+	vec2.resize(2);
+
+	for (unsigned i = 0; i < svtab.size(); i++)
+	{
+		vec2[0] = svtab[i].R;
+		vec2[1] = svtab[i].V;
+
+		err = ELVCNV(vec2, svtab[i].GMT, -1, in, out, vec2);
+		if (err) return err;
+
+		svtab_out[i].R = vec2[0];
+		svtab_out[i].V = vec2[1];
+	}
+
+	return 0;
+}
+
+int RTCC::ELVCNV(std::vector<VECTOR3> VECTORS, double GMT, int type, int in, int out, std::vector<VECTOR3> &OUTPUT)
+{
+	//VECTORS: table of input vector(s)
+	//GMT: GMT of vector(s)
+	//type: -1 = state vector, 0 = unit vector, 1 = position vector, 2 = velocity vector
+	//in and out: 0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP, 5 = MCTVR
+	//OUTPUT: Table of output vector(s), may be the same as VECTORS
+
+	OUTPUT = VECTORS;
+
 	if (in == out)
 	{
-		sv_out = sv;
 		return 0;
 	}
 
-	EphemerisData2 sv1;
-	int err;
+	bool IsMCTVR = false;
 
-	sv_out = sv;
-
-	//0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP
-
-	//ECI to/from ECT
-	if ((in == 0 && out == 1) || (in == 1 && out == 0))
+	if (in == 5 || out == 5)
 	{
-		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, OrbMech::MJDfromGET(sv.GMT, SystemParameters.GMTBASE));
-
-		//Get closest RNP matrix to input time
-		//Time in days between first matrix and input time
-		/*double dt = GetGMTBase() - EZNPMATX.mjd0 + sv.GMT / 24.0 / 3600.0;
-		int ii = (int)(floor(dt * 4.0 + 0.5));
-		if (ii < 0 || ii > 140)
-		{
-			//Not available
-			return;
-		}
-		MATRIX3 Rot1 = EZNPMATX.Mat[ii];
-		//Remove this when ECT is a pseudo inertial coordinate system
-		//double a = OrbMech::w_Earth*sv.GMT;
-		//MATRIX3 Rot2 = OrbMech::_MRz(a);
-		//Rot = mul(Rot2, Rot1);
-		if (in == 0)
-		{
-			sv_out.R = mul(Rot, sv.R);
-			sv_out.V = mul(Rot, sv.V);
-		}
-		else
-		{
-			sv_out.R = tmul(Rot, sv.R);
-			sv_out.V = tmul(Rot, sv.V);
-		}*/
-
-		if (in == 0)
-		{
-			sv_out.R = rhtmul(Rot, sv.R);
-			sv_out.V = rhtmul(Rot, sv.V);
-		}
-		else
-		{
-			sv_out.R = rhmul(Rot, sv.R);
-			sv_out.V = rhmul(Rot, sv.V);
-		}
-	}
-	//ECI to/from MCI
-	else if ((in == 0 && out == 2) || (in == 2 && out == 0))
-	{
-		VECTOR3 R_EM, V_EM, R_ES;
-
-		if (PLEFEM(1, sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
+		if (type != -1)
 		{
 			return 1;
 		}
 
-		if (in == 0)
+		if (in == 5)
 		{
-			sv_out.R = sv.R - R_EM;
-			sv_out.V = sv.V - V_EM;
+			in = RTCC_COORDINATES_MCT;
 		}
 		else
 		{
-			sv_out.R = sv.R + R_EM;
-			sv_out.V = sv.V + V_EM;
+			out = RTCC_COORDINATES_MCT;
 		}
+		IsMCTVR = true;
 	}
-	//MCI to/from MCT
-	else if ((in == 2 && out == 3) || (in == 3 && out == 2))
+
+	//Set up options
+	int num_conv = 0;
+	int conv[3]; //0 = ECI to MCI, 1 = MCI to ECI, 2 = MCI to MCT, 3 = MCT to MCI, 4 = ECI to ECT, 5 = ECT to ECI, 6 = MCI to EMP, 7 = EMP to MCI 
+	if (in == RTCC_COORDINATES_ECI && out == RTCC_COORDINATES_ECT) //ECI to ECT
 	{
-		MATRIX3 Rot;
-		PLEFEM(1, sv.GMT / 3600.0, 0, Rot);
-
-		//Soon to be used
-		//PLEFEM(5, sv.GMT / 3600.0, 0, NULL, NULL, NULL, &Rot);
-
-		if (in == 2)
+		conv[0] = 4;
+		num_conv = 1;
+	}
+	else if (in == RTCC_COORDINATES_ECI && out == RTCC_COORDINATES_MCI) //ECI to MCI
+	{
+		conv[0] = 0;
+		num_conv = 1;
+	}
+	else if (in == RTCC_COORDINATES_ECI && out == RTCC_COORDINATES_MCT) //ECI to MCT
+	{
+		conv[0] = 0; conv[1] = 2;
+		num_conv = 2;
+	}
+	else if (in == RTCC_COORDINATES_ECI && out == RTCC_COORDINATES_EMP) //ECI to EMP
+	{
+		conv[0] = 0; conv[1] = 6;
+		num_conv = 2;
+	}
+	else if (in == RTCC_COORDINATES_ECT && out == RTCC_COORDINATES_ECI) //ECT to ECI
+	{
+		conv[0] = 5;
+		num_conv = 1;
+	}
+	else if (in == RTCC_COORDINATES_ECT && out == RTCC_COORDINATES_MCI) //ECT to MCI
+	{
+		conv[0] = 5; conv[1] = 0;
+		num_conv = 2;
+	}
+	else if (in == RTCC_COORDINATES_ECT && out == RTCC_COORDINATES_MCT) //ECT to MCT
+	{
+		conv[0] = 5; conv[1] = 0; conv[2] = 2;
+		num_conv = 3;
+	}
+	else if (in == RTCC_COORDINATES_ECT && out == RTCC_COORDINATES_EMP) //ECT to EMP
+	{
+		conv[0] = 5; conv[1] = 0; conv[2] = 6;
+		num_conv = 3;
+	}
+	else if (in == RTCC_COORDINATES_MCI && out == RTCC_COORDINATES_ECI) //MCI to ECI
+	{
+		conv[0] = 1;
+		num_conv = 1;
+	}
+	else if (in == RTCC_COORDINATES_MCI && out == RTCC_COORDINATES_ECT) //MCI to ECT
+	{
+		conv[0] = 1; conv[1] = 4;
+		num_conv = 2;
+	}
+	else if (in == RTCC_COORDINATES_MCI && out == RTCC_COORDINATES_MCT) //MCI to MCT
+	{
+		conv[0] = 2;
+		num_conv = 1;
+	}
+	else if (in == RTCC_COORDINATES_MCI && out == RTCC_COORDINATES_EMP) //MCI to EMP
+	{
+		conv[0] = 6;
+		num_conv = 1;
+	}
+	else if (in == RTCC_COORDINATES_MCT && out == RTCC_COORDINATES_ECI) //MCT to ECI
+	{
+		conv[0] = 3; conv[1] = 1;
+		num_conv = 2;
+	}
+	else if (in == RTCC_COORDINATES_MCT && out == RTCC_COORDINATES_ECT) //MCT to ECT
+	{
+		conv[0] = 3; conv[1] = 1; conv[2] = 4;
+		num_conv = 3;
+	}
+	else if (in == RTCC_COORDINATES_MCT && out == RTCC_COORDINATES_MCI) //MCT to MCI
+	{
+		conv[0] = 3;
+		num_conv = 1;
+	}
+	else if (in == RTCC_COORDINATES_MCT && out == RTCC_COORDINATES_EMP) //MCT to EMP
+	{
+		conv[0] = 3; conv[1] = 6;
+		num_conv = 2;
+	}
+	else if (in == RTCC_COORDINATES_EMP && out == RTCC_COORDINATES_ECI) //EMP to ECI
+	{
+		conv[0] = 7; conv[1] = 1;
+		num_conv = 2;
+	}
+	else if (in == RTCC_COORDINATES_EMP && out == RTCC_COORDINATES_ECT) //EMP to ECT
+	{
+		conv[0] = 7; conv[1] = 1; conv[1] = 4;
+		num_conv = 3;
+	}
+	else if (in == RTCC_COORDINATES_EMP && out == RTCC_COORDINATES_MCI) //EMP to MCI
+	{
+		conv[0] = 7;
+		num_conv = 1;
+	}
+	else if (in == RTCC_COORDINATES_EMP && out == RTCC_COORDINATES_MCT) //EMP to MCT
+	{
+		conv[0] = 7; conv[1] = 2;
+		num_conv = 2;
+	}
+	
+	for (int i = 0; i < num_conv; i++)
+	{
+		if (conv[i] == 0 || conv[i] == 1)
 		{
-			//MCI to MCT
-			sv_out.R = tmul(Rot, sv.R);
-			sv_out.V = tmul(Rot, sv.V);
+			if (type == 0)
+			{
+				//Nothing to do
+			}
+			else
+			{
+				VECTOR3 R_EM, V_EM, R_ES;
+				if (PLEFEM(1, GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
+				{
+					return 1;
+				}
+
+				double sign;
+
+				if (conv[i] == 0)
+				{
+					sign = -1.0;
+				}
+				else
+				{
+					sign = 1.0;
+				}
+
+				if (type == 1)
+				{
+					for (unsigned j = 0; j < OUTPUT.size(); j++)
+					{
+						OUTPUT[j] = OUTPUT[j] + R_EM * sign;
+					}
+				}
+				else if (type == 2)
+				{
+					for (unsigned j = 0; j < OUTPUT.size(); j++)
+					{
+						OUTPUT[j] = OUTPUT[j] + V_EM * sign;
+					}
+				}
+				else
+				{
+					if (OUTPUT.size() != 2) return 2;
+
+					OUTPUT[0] = OUTPUT[0] + R_EM * sign;
+					OUTPUT[1] = OUTPUT[1] + V_EM * sign;
+				}
+			}
 		}
 		else
 		{
-			//MCT to MCI
-			sv_out.R = mul(Rot, sv.R);
-			sv_out.V = mul(Rot, sv.V);
+			MATRIX3 Rot;
+			bool right;
+
+			if (conv[i] == 2 || conv[i] == 3)
+			{
+				//Lunar libration matrix (MCI to MCT)
+				if (PLEFEM(5, GMT / 3600.0, 0, NULL, NULL, NULL, &Rot))
+				{
+					return 1;
+				}
+			}
+			else if (conv[i] == 4 || conv[i] == 5)
+			{
+				//Get closest RNP matrix to input time (ECI to ECT)
+				//Time in days between first matrix and input time
+				double dt = GetGMTBase() - EZNPMATX.mjd0 + GMT / 24.0 / 3600.0;
+				int ii = (int)(floor(dt * 4.0 + 0.5));
+				if (ii < 0 || ii > 140)
+				{
+					//Not available
+					return 1;
+				}
+				Rot = EZNPMATX.Mat[ii];
+			}
+			else
+			{
+				VECTOR3 R_EM, V_EM, R_ES;
+				VECTOR3 X_EMP, Y_EMP, Z_EMP;
+
+				if (PLEFEM(1, GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
+				{
+					return 1;
+				}
+
+				X_EMP = -unit(R_EM);
+				Z_EMP = unit(crossp(R_EM, V_EM));
+				Y_EMP = crossp(Z_EMP, X_EMP);
+				Rot = _M(X_EMP.x, X_EMP.y, X_EMP.z, Y_EMP.x, Y_EMP.y, Y_EMP.z, Z_EMP.x, Z_EMP.y, Z_EMP.z);
+			}
+
+			if (conv[i] == 2 || conv[i] == 4 || conv[i] == 6)
+			{
+				right = true;
+			}
+			else
+			{
+				right = false;
+			}
+
+			//MCTVR desired and conversion is MCT to MCI. Add rotational velocity.
+			if (IsMCTVR && conv[i] == 3)
+			{
+				OUTPUT[1] += crossp(_V(0, 0, 1)*OrbMech::w_Moon, OUTPUT[0]);
+			}
+
+			if (right)
+				{
+					for (unsigned j = 0; j < OUTPUT.size(); j++)
+					{
+						OUTPUT[j] = mul(Rot, OUTPUT[j]);
+					}
+				}
+			else
+			{
+				for (unsigned j = 0; j < OUTPUT.size(); j++)
+				{
+					OUTPUT[j] = tmul(Rot, OUTPUT[j]);
+				}
+			}
+
+			//MCTVR desired and conversion is MCI to MCT. Subtract rotational velocity.
+			if (IsMCTVR && conv[i] == 2)
+			{
+				OUTPUT[1] -= crossp(_V(0, 0, 1)*OrbMech::w_Moon, OUTPUT[0]);
+			}
 		}
-	}
-	//MCI to/from EMP
-	else if ((in == 2 && out == 4) || (in == 4 && out == 2))
-	{
-		MATRIX3 Rot;
-		VECTOR3 R_EM, V_EM, R_ES;
-		VECTOR3 X_EMP, Y_EMP, Z_EMP;
-
-		if (PLEFEM(1, sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
-		{
-			return 1;
-		}
-
-		X_EMP = -unit(R_EM);
-		Z_EMP = unit(crossp(R_EM, V_EM));
-		Y_EMP = crossp(Z_EMP, X_EMP);
-		Rot = _M(X_EMP.x, X_EMP.y, X_EMP.z, Y_EMP.x, Y_EMP.y, Y_EMP.z, Z_EMP.x, Z_EMP.y, Z_EMP.z);
-
-		if (in == 2)
-		{
-			sv_out.R = rhmul(Rot, sv.R);
-			sv_out.V = rhmul(Rot, sv.V);
-		}
-		else
-		{
-			sv_out.R = rhtmul(Rot, sv.R);
-			sv_out.V = rhtmul(Rot, sv.V);
-		}
-	}
-	//ECI to MCT
-	else if (in == 0 && out == 3)
-	{
-		
-
-		err = ELVCNV(sv, 0, 2, sv1);
-		if (err) return err;
-		err = ELVCNV(sv1, 2, 3, sv_out);
-		if (err) return err;
-	}
-	//MCT to ECI
-	else if (in == 3 && out == 0)
-	{
-		err = ELVCNV(sv, 3, 2, sv1);
-		if (err) return err;
-		err = ELVCNV(sv1, 2, 0, sv_out);
-		if (err) return err;
-	}
-	//ECI to EMP
-	else if (in == 0 && out == 4)
-	{
-		err = ELVCNV(sv, 0, 2, sv1);
-		if (err) return err;
-		err = ELVCNV(sv1, 2, 4, sv_out);
-		if (err) return err;
-	}
-	//EMP to ECI
-	else if (in == 4 && out == 0)
-	{
-		err = ELVCNV(sv, 4, 2, sv1);
-		if (err) return err;
-		err = ELVCNV(sv1, 2, 0, sv_out);
-		if (err) return err;
-	}
-	//ECT to EMP
-	else if (in == 1 && out == 4)
-	{
-		EphemerisData2 sv2;
-
-		err = ELVCNV(sv, 1, 0, sv1);
-		if (err) return err;
-		err = ELVCNV(sv1, 0, 2, sv2);
-		if (err) return err;
-		err = ELVCNV(sv2, 2, 4, sv_out);
-		if (err) return err;
-	}
-	//EMP to ECT
-	else if (in == 4 && out == 1)
-	{
-		EphemerisData2 sv2;
-
-		err = ELVCNV(sv, 4, 2, sv1);
-		if (err) return err;
-		err = ELVCNV(sv1, 2, 0, sv2);
-		if (err) return err;
-		err = ELVCNV(sv2, 0, 1, sv_out);
-		if (err) return err;
-	}
-	//MCT to EMP
-	else if (in == 3 && out == 4)
-	{
-		err = ELVCNV(sv, 3, 2, sv1);
-		if (err) return err;
-		err = ELVCNV(sv1, 2, 4, sv_out);
-		if (err) return err;
-	}
-	//EMP to MCT
-	else if (in == 4 && out == 3)
-	{
-		err = ELVCNV(sv, 4, 2, sv1);
-		if (err) return err;
-		err = ELVCNV(sv1, 2, 3, sv_out);
-		if (err) return err;
 	}
 
 	return 0;
@@ -1085,34 +1134,39 @@ double RTCC::GLQATN(double S, double C) const
 }
 
 //Subsatellite position
-int RTCC::GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt)
+int RTCC::GLSSAT(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt)
 {
-	EphemerisData sv_out;
-	VECTOR3 u;
-	int out;
-	if (sv.RBI == BODY_EARTH)
+	VECTOR3 R_out, u;
+	double K;
+	int in, out;
+	if (RBI == BODY_EARTH)
 	{
+		in = 0;
 		out = 1;
+		K = 1.0;
 	}
 	else
 	{
+		in = 2;
 		out = 3;
+		K = 0.0;
 	}
 
-	if (ELVCNV(sv, out, sv_out))
+	if (ELVCNV(R, GMT, 1, in, out, R_out))
 	{
 		return 1;
 	}
-	u = unit(sv_out.R);
+	u = unit(R);
 	lat = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
-	lng = atan2(u.y, u.x);
-	if (sv.RBI == BODY_EARTH)
+	lng = atan2(u.y, u.x) - OrbMech::w_Earth*K*GMT;
+	OrbMech::normalizeAngle(lng, false);
+	if (RBI == BODY_EARTH)
 	{
-		alt = length(sv.R) - OrbMech::R_Earth;
+		alt = length(R) - OrbMech::R_Earth;
 	}
 	else
 	{
-		alt = length(sv.R) - BZLAND.rad[RTCC_LMPOS_BEST];
+		alt = length(R) - BZLAND.rad[RTCC_LMPOS_BEST];
 	}
 	return 0;
 }
@@ -2067,15 +2121,15 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, 
 	}
 	if (des[0] && R_ES)
 	{
-		*R_ES = _V(x[0], x[1], x[2])*OrbMech::R_Earth;
+		*R_ES = _V(x[0], x[1], x[2])*SystemParameters.MCCMCU;
 	}
 	if (des[1] && R_EM)
 	{
-		*R_EM = _V(x[3], x[4], x[5])*OrbMech::R_Earth;
+		*R_EM = _V(x[3], x[4], x[5])*SystemParameters.MCCMCU;
 	}
 	if (des[2] && V_EM)
 	{
-		*V_EM = _V(x[6], x[7], x[8])*OrbMech::R_Earth / 3600.0;
+		*V_EM = _V(x[6], x[7], x[8])*SystemParameters.MCCMCU / 3600.0;
 	}
 	if (des[3] && PNL)
 	{
@@ -2086,20 +2140,6 @@ bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, VECTOR3 *R_EM, VECTOR3 *V_EM, 
 RTCC_PLEFEM_A:
 	//Error return
 	return true;
-}
-
-bool RTCC::PLEFEM(int IND, double HOUR, int YEAR, MATRIX3 &M_LIB)
-{
-	//Calculate MJD from GMT
-	double MJD = SystemParameters.GMTBASE + HOUR / 24.0;
-	//Moon Libration Matrix
-	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
-	//For now this
-	M_LIB = MatrixRH_LH(Rot);
-	//TBD: Use this instead
-	//MATRIX3 M_ecl = MatrixRH_LH(Rot);
-	//M_LIB = mul(SystemParameters.MAT_J2000_BRCS, M_ecl);
-	return false;
 }
 
 //Coefficients of lift and drag interpolation subroutine
@@ -2184,7 +2224,7 @@ double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, do
 
 	ELVCTRInputTable interin;
 	ELVCTROutputTable2 interout;
-	double T1, lat, lng, dlng1, T2, dlng2, Tx, dlngx;
+	double T1, dlng1, T2, dlng2, Tx, dlngx, w_E;
 	unsigned i = 0;
 
 	if (GMT_min > EPHEM.Header.TL)
@@ -2213,11 +2253,18 @@ double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, do
 		return -1.0;
 	}
 
+	if (EPHEM.Header.CSI == RTCC_COORDINATES_ECT)
+	{
+		w_E = OrbMech::w_Earth;
+	}
+	else
+	{
+		w_E = 0.0;
+	}
+
 	sv_cur = interout.SV;
-	OrbMech::latlong_from_r(sv_cur.R, lat, lng);
-	dlng1 = lng - long_des;
-	if (dlng1 > PI) { dlng1 -= PI2; }
-	else if (dlng1 < -PI) { dlng1 += PI2; }
+	dlng1 = atan2(sv_cur.R.y, sv_cur.R.x) - w_E * sv_cur.GMT - long_des;
+	OrbMech::normalizeAngle(dlng1, false);
 
 	if (abs(dlng1) < 0.0001)
 	{
@@ -2236,10 +2283,8 @@ double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, do
 		sv_cur = EPHEM.table[i];
 		T2 = sv_cur.GMT;
 
-		OrbMech::latlong_from_r(sv_cur.R, lat, lng);
-		dlng2 = lng - long_des;
-		if (dlng2 > PI) { dlng2 -= PI2; }
-		else if (dlng2 < -PI) { dlng2 += PI2; }
+		dlng2 = atan2(sv_cur.R.y, sv_cur.R.x) - w_E * sv_cur.GMT - long_des;
+		OrbMech::normalizeAngle(dlng2, false);
 
 		if (abs(dlng2) < 0.0001)
 		{
@@ -2274,10 +2319,9 @@ double RTCC::RLMTLC(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, do
 		}
 
 		sv_cur = interout.SV;
-		OrbMech::latlong_from_r(sv_cur.R, lat, lng);
-		dlngx = lng - long_des;
-		if (dlngx > PI) { dlngx -= PI2; }
-		else if (dlngx < -PI) { dlngx += PI2; }
+
+		dlngx = atan2(sv_cur.R.y, sv_cur.R.x) - w_E * sv_cur.GMT - long_des;
+		OrbMech::normalizeAngle(dlngx, false);
 
 		if (abs(dlngx) < 0.0001)
 		{

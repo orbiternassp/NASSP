@@ -166,6 +166,7 @@
     <ClCompile Include="..\..\src_launch\RTCC_Mission_F.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_G.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_H1.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
@@ -185,7 +186,9 @@
     <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\rtcc_library_programs.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLIProcessor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLTrajectoryComputers.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
     <ClCompile Include="..\..\src_launch\mccvc.cpp" />
   </ItemGroup>
@@ -200,6 +203,7 @@
     <ClInclude Include="..\..\src_launch\MCC_Mission_G.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_H1.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
+    <ClInclude Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.h" />
     <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
@@ -217,7 +221,9 @@
     <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCC_EMSMISS.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLIProcessor.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLTrajectoryComputers.h" />
     <ClInclude Include="..\..\src_sys\thread.h" />
   </ItemGroup>
   <ItemGroup>

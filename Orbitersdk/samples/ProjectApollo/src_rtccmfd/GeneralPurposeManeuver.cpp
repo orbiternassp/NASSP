@@ -65,28 +65,12 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 
 	if (sv1.RBI == BODY_EARTH)
 	{
-		if (opt->AltRef == 0)
-		{
-			R_E = 6371.0e3;
-		}
-		else
-		{
-			R_E = OrbMech::R_Earth;
-		}
-
+		R_E = pRTCC->SystemParameters.MCECAP;
 		mu = OrbMech::mu_Earth;
 	}
 	else
 	{
-		if (opt->AltRef == 0)
-		{
-			R_E = OrbMech::R_Moon;
-		}
-		else
-		{
-			R_E = pRTCC->BZLAND.rad[RTCC_LMPOS_BEST];
-		}
-
+		R_E = pRTCC->BZLAND.rad[RTCC_LMPOS_BEST];
 		mu = OrbMech::mu_Moon;
 	}
 
@@ -106,14 +90,6 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 	//Debug
 	//VECTOR3 DR = R_A - R_B;
 	//sprintf_s(oapiDebugString(), 128, "%lf %lf %lf", DR.x, DR.y, DR.z);
-
-	if (aeg.Header.AEGInd == BODY_EARTH)
-	{
-		//For now, back to ecliptic
-		R_B = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, R_B);
-		V_B = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, V_B);
-		V_A = tmul(pRTCC->SystemParameters.MAT_J2000_BRCS, V_A);
-	}
 
 	//Special HAS logic: show apogee/perigee data in N revs, and not the next one
 	if (opt->ManeuverCode == RTCC_GMP_HAS)
@@ -649,15 +625,15 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenographicElements(const AEGData
 {
 	MATRIX3 L;
 	VECTOR3 P, W, P_apo, W_apo;
-	OrbMech::PIVECT(sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h, P, W);
-	if (pRTCC->PLEFEM(1, sv.TS / 3600.0, 0, L))
+	pRTCC->PIVECT(sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h, P, W);
+	if (pRTCC->PLEFEM(5, sv.TS / 3600.0, 0, NULL, NULL, NULL, &L))
 	{
 		ErrorIndicator = 5;
 		return;
 	}
-	P_apo = tmul(L, P);
-	W_apo = tmul(L, W);
-	OrbMech::PIVECT(P_apo, W_apo, i, g, h);
+	P_apo = mul(L, P);
+	W_apo = mul(L, W);
+	pRTCC->PIVECT(P_apo, W_apo, i, g, h);
 	u = g + sv.f;
 	if (u > PI2)
 	{
@@ -669,15 +645,15 @@ void RTCCGeneralPurposeManeuverProcessor::GetSelenocentricElements(double i, dou
 {
 	MATRIX3 L;
 	VECTOR3 P, W, P_apo, W_apo;
-	OrbMech::PIVECT(i, g, h, P, W);
-	if (pRTCC->PLEFEM(1, sv.TS / 3600.0, 0, L))
+	pRTCC->PIVECT(i, g, h, P, W);
+	if (pRTCC->PLEFEM(5, sv.TS / 3600.0, 0, NULL, NULL, NULL, &L))
 	{
 		ErrorIndicator = 5;
 		return;
 	}
-	P_apo = mul(L, P);
-	W_apo = mul(L, W);
-	OrbMech::PIVECT(P_apo, W_apo, sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h);
+	P_apo = tmul(L, P);
+	W_apo = tmul(L, W);
+	pRTCC->PIVECT(P_apo, W_apo, sv.coe_osc.i, sv.coe_osc.g, sv.coe_osc.h);
 	sv.U = sv.coe_osc.g + sv.f;
 	if (sv.U >= PI2)
 	{
@@ -784,6 +760,7 @@ void RTCCGeneralPurposeManeuverProcessor::HeightManeuver(bool circ)
 		pRTCC->PMMAEGS(aeg.Header, sv_a, sv_temp);
 		if (aeg.Header.ErrorInd)
 		{
+			ErrorIndicator = 3;
 			return;
 		}
 		if (I == 0)
@@ -913,7 +890,7 @@ void RTCCGeneralPurposeManeuverProcessor::NodeShift()
 	{
 		sin_u_a = -sin_u_a;
 	}
-	sv_a.U = atan2(sin_u_a , cos_u_a);
+	sv_a.U = pRTCC->GLQATN(sin_u_a , cos_u_a);
 	cos_dw = (cos(opt->dLAN) - cos(u_temp)*cos(sv_a.U)) / (sin(u_temp)*sin(sv_a.U));
 	sin_dw = sin(opt->dLAN)*sin(i_temp) / sin_u_a;
 	DW = atan2(sin_dw, cos_dw);

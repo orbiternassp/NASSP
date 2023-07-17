@@ -339,6 +339,14 @@ bool LVDA::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM)
 	return false;
 }
 
+bool LVDA::TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->TLITargetingUpdate(T_RP, C_3, Inclination, theta_N, e, alpha_D, f);
+
+	return false;
+}
+
 void LVDA::PrepareToLaunch()
 {
 	if (iu->GetLVDC()) iu->GetLVDC()->PrepareToLaunch();

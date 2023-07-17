@@ -111,8 +111,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_sys\PanelSDK\BUILD.CPP" />
-    <ClCompile Include="..\..\src_sys\PanelSDK\intruments.cpp" />
-    <ClCompile Include="..\..\src_sys\PanelSDK\Panel.cpp" />
     <ClCompile Include="..\..\src_sys\PanelSDK\PanelSDK.cpp" />
     <ClCompile Include="..\..\src_sys\PanelSDK\VSMGMT.CPP" />
     <ClCompile Include="..\..\src_sys\PanelSDK\Matrix.cpp" />
@@ -152,7 +150,6 @@
     <ClInclude Include="..\..\src_sys\PanelSDK\BUILD.H" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Internals\Esystems.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Internals\Hsystems.h" />
-    <ClInclude Include="..\..\src_sys\PanelSDK\instruments.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Matrix.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\PanelSDK.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Internals\Thermal.h" />

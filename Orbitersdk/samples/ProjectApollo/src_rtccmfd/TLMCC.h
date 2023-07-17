@@ -23,7 +23,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-#include "RTCCModule.h"
+#include "TLTrajectoryComputers.h"
 
 struct TLMCCDataTable
 {
@@ -88,8 +88,6 @@ struct TLMCCMEDQuantities
 {
 	int Mode;
 	double T_MCC;
-	double GMTBase;
-	double GETBase;
 	EphemerisData sv0;
 	double CSMMass;
 	double LMMass;
@@ -119,20 +117,6 @@ struct TLMCCMEDQuantities
 	double T_max_sea;
 	double dh_bias = 0.0;
 	double H_pl_mode5;
-};
-
-struct TLMCCMissionConstants
-{
-	int n, m;
-	double lambda_IP;
-	double V_pcynlo;
-	//Time bias for LPO1 in hours
-	double dt_bias;
-	double T_t1_min_dps;
-	double T_t1_max_dps;
-	double H_LPO;
-	double INCL_PR_MAX;
-	double Reentry_range;
 };
 
 struct TLMCCDisplayData
@@ -185,117 +169,13 @@ struct TLMCCOutputData
 	VECTOR3 V_MCC_apo;
 };
 
-struct TLMCCGeneralizedIteratorArray
-{
-	//Input
-	EphemerisData sv0;
-	VECTOR3 LOIOffset = _V(0, 0, 0);
-	//For first guess logic
-	bool TLMCIntegrating;
-	//For integrating trajectory computer
-	bool NodeStopIndicator;
-	//For conic trajectory computer
-	bool FreeReturnIndicator;
-	bool FreeReturnOnlyIndicator;
-	bool TLIIndicator = false;
-	bool FixedOrbitIndicator;
-	bool FirstSelect;
-	bool FirstOptimize;
-	//For conic and integrated
-	bool LunarFlybyIndicator;
-	bool MidcourseCorrectionIndicator = true;
-	bool LLSStopIndicator;
-
-	//Output
-	double dv_mcc;
-	double dgamma_mcc;
-	double dpsi_mcc;
-	VECTOR3 V_MCC;
-	double t_tl;
-	//All EMP
-	double lat_nd;
-	double lng_nd;
-	double h_nd;
-	double gamma_nd;
-	double GMT_nd;
-	double h_pl;
-	double v_pl;
-	double gamma_pl;
-	double psi_pl;
-	double lat_pl;
-	double lng_pl;
-	double GMT_pl;
-	double incl_pl;
-	double dpsi_loi;
-	EphemerisData sv_loi;
-	double dt_lls;
-	double AZ_act;
-	EphemerisData sv_lls1;
-	EphemerisData sv_lls2;
-	double T_lo;
-	VECTOR3 DV_LOPC;
-	double GMT_tei;
-	double dv_tei;
-	double dgamma_tei;
-	double dpsi_tei;
-	VECTOR3 DV_TEI;
-	double v_EI;
-	double h_fr;
-	double v_EI_pr;
-	double h_pr;
-	//Inclination of free return
-	double incl_fr;
-	//Inclination of powered return
-	double incl_pr;
-	double T_te;
-	double lat_ip;
-	double lng_ip;
-	double GMT_ip;
-	double lat_ip_pr;
-	double lng_ip_pr;
-	double GMT_ip_pr;
-	double theta;
-	double DH_Node;
-	//Time bias in hours
-	double dt_bias_conic_prec = 0.0;
-
-	//Masses
-	//Initial mass
-	double M_i;
-	//After MCC
-	double M_mcc;
-	//After LOI
-	double M_loi;
-	//After LOI-2 or DOI
-	double M_cir;
-	//After LOPC
-	double M_lopc;
-	//After TEI
-	double M_tei;
-
-	//PRCOMP data
-	EphemerisData SGSLOI;
-	double RA_LPO1;
-	//New Version
-	double gamma_L;
-	double A1;
-	double E1;
-	double gamma1;
-	double V2;
-	double V_L;
-};
-
-class TLMCCProcessor : public RTCCModule
+class TLMCCProcessor : public TLTrajectoryComputers
 {
 public:
 	TLMCCProcessor(RTCC *r);
-	void Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst);
-	void Main(TLMCCOutputData &out);
+	void Init(TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst, double GMTBase);
 
-	//The trajectory computers
-	bool FirstGuessTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
-	bool ConicMissionComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
-	bool IntegratedTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	void Main(TLMCCOutputData &out);
 
 protected:
 
@@ -328,48 +208,17 @@ protected:
 	void ConicTransEarthInjection(double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, bool lngiter);
 	VECTOR3 CalcLOIDV(EphemerisData sv_MCC_apo, double gamma_nd);
 
-	//Subroutines
-	bool PATCH(VECTOR3 &R, VECTOR3 &V, double &GMT, int Q, int KREF);
-	bool LIBRAT(VECTOR3 &R, double GMT, int K);
-	bool LIBRAT(VECTOR3 &R, VECTOR3 &V, double GMT, int K);
-	double EBETA(VECTOR3 R, VECTOR3 V, double mu, double &ainv);
-	bool RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, double &beta);
-	void XBETA(VECTOR3 R0, VECTOR3 V0, double GMT0, double beta, int K, VECTOR3 &RF, VECTOR3 &VF, double &GMTF);
-	double GetMU(int k);
-	void FCOMP(double a, double &F1, double &F2, double &F3, double &F4);
-	bool EPHEM(double GMT, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
-	bool CTBODY(VECTOR3 R0, VECTOR3 V0, double GMT0, double GMTF, int K, double mu, VECTOR3 &RF, VECTOR3 &VF);
-	bool CTBODY(VECTOR3 R0, VECTOR3 V0, double GMT0, double GMTF, int K, double mu, double &alpha, double &F1, double &F2, double &F3, double &F4, VECTOR3 &RF, VECTOR3 &VF);
-	bool DGAMMA(double r0, double ainv, double gamma, double &H, double &E, double &beta, double &e);
-	void BURN(VECTOR3 R, VECTOR3 V, double dv, double dgamma, double dpsi, double isp, double &mfm0, VECTOR3 &RF, VECTOR3 &VF);
-	void BURN(VECTOR3 R, VECTOR3 V, int opt, double gamma0, double v_pl, double dv, double dgamma, double dpsi, double isp, double mu, double &v_c, double &dv_R, double &mfm0, VECTOR3 &RF, VECTOR3 &VF);
-	void RVIO(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &theta, double &phi, double &gamma, double& psi);
-	double MCOMP(double dv, bool docked, bool useSPS, double m0);
-	void RNTSIM(VECTOR3 R, VECTOR3 V, double GMT, double lng_L, double &lat, double &lng, double &dlng);
-	void LOPC(VECTOR3 R0, VECTOR3 V0, double GMT0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &GMT3, double &mfm0, double &dpsi, VECTOR3 &DV);
-	void ELEMT(VECTOR3 R, VECTOR3 V, double mu, VECTOR3 &H, double &a, double &e, double &i, double &n, double &P, double &eta);
-	void PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double GMT_nd, double &RA_LPO1, double &A1, double &E1, double &gamma1, double &V_L, double &gamma_L, double &V2, double &DT_1st_pass);
+	//Subroutines	
 	double DDELTATIME(double a, double dt_apo, double xm, double betam, double dt);
-	void SCALE(VECTOR3 R0, VECTOR3 V0, double h, VECTOR3 &RF, VECTOR3 &VF);
 	EphemerisData PPC(EphemerisData SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS);
-	EphemerisData TLIBRN(EphemerisData sv, double C3, double sigma, double delta, double FW, double W_I, double F_I, double F, double W_dot, double T_MRS);
-	double DELTAT(double a, double e, double eta, double deta);
-
-	double R_E, R_M, mu_E, mu_M;
-
+	
 	EphemerisData sv_MCC; //In TLMCC coordinate system
 	EphemerisData sv_MCC_SOI; //In the "correct" coordinate system
-	double isp_SPS, isp_DPS, isp_MCC, Wdot;
-	int KREF_MCC;
+	
 	VECTOR3 DV_MCC;
-
-	double gamma_reentry;
-	double Reentry_dt;
 
 	TLMCCDataTable DataTable;
 	TLMCCMEDQuantities MEDQuantities;
-	TLMCCMissionConstants Constants;
 
-	TLMCCGeneralizedIteratorArray outarray;
 	TLMCCDataTable outtab;
 };

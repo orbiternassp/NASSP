@@ -495,6 +495,7 @@ public:
 	void SetCrewMesh();
 	void DrogueVis();
 	void HideProbes();
+	void HideDeflectors();
 	void SetTrackLight();
 	void SetDockingLights();
 	void SetCOAS();
@@ -515,6 +516,7 @@ public:
 	bool clbkVCMouseEvent(int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent(int id, int event, SURFHANDLE surf);
 
+	int clbkConsumeDirectKey(char* keystate);
 	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
@@ -718,6 +720,7 @@ protected:
 	void EngineSoundTimestep();
 	// void GetDockStatus();
 	void JostleViewpoint(double amount);
+	void VCFreeCam(VECTOR3 dir, bool slow);
 	void AddDust();
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
@@ -1554,6 +1557,7 @@ protected:
 
 	LEMPanelOrdeal PanelOrdeal;		// Dummy switch/display for checklist controller
 	PowerMerge AOTLampFeeder;
+	PowerMerge NumDockCompLTGFeeder;
 
 	int ordealEnabled;
 
@@ -1670,6 +1674,7 @@ protected:
 	UINT vcidx;
 
 	DEVMESHHANDLE probes;
+	DEVMESHHANDLE deflectors;
 	DEVMESHHANDLE drogue;
 	DEVMESHHANDLE cdrmesh;
 	DEVMESHHANDLE lmpmesh;
@@ -1731,6 +1736,16 @@ protected:
 	double ViewOffsetx;
 	double ViewOffsety;
 	double ViewOffsetz;
+
+	//
+	// VC Free Cam
+	//
+
+	double vcFreeCamx;
+	double vcFreeCamy;
+	double vcFreeCamz;
+	double vcFreeCamSpeed;
+	double vcFreeCamMaxOffset;
 
 	//
 	// Ground Systems
@@ -2076,7 +2091,6 @@ protected:
 extern MESHHANDLE hLMDescent;
 extern MESHHANDLE hLMDescentNoLeg;
 extern MESHHANDLE hLMAscent;
-extern MESHHANDLE hAstro1;
 extern MESHHANDLE hLMVC;
 
 extern void LEMLoadMeshes();

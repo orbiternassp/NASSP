@@ -452,11 +452,13 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	lm_vhf_to_csm_csm_connector(this, &VHF),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk),
+	NumDockCompLTGFeeder("Num-Dock-Comp-LTG-Feeder", Panelsdk),
 	DescentECAMainFeeder("Descent-ECA-Main-Feeder", Panelsdk),
 	DescentECAContFeeder("Descent-ECA-Cont-Feeder", Panelsdk),
 	AscentECAMainFeeder("Ascent-ECA-Main-Feeder", Panelsdk),
 	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk),
 	vesim(&cbLMVesim, this)
+
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -578,6 +580,13 @@ void LEM::Init()
 	ViewOffsety = 0;
 	ViewOffsetz = 0;
 
+	// VC Free Cam
+	vcFreeCamx = 0;
+	vcFreeCamy = 0;
+	vcFreeCamz = 0;
+	vcFreeCamSpeed = 0.2;
+	vcFreeCamMaxOffset = 0.5;
+
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
 	RCSA.SetVessel(this);
@@ -598,6 +607,7 @@ void LEM::Init()
 
 	drogue = NULL;
 	probes = NULL;
+	deflectors = NULL;
 	cdrmesh = NULL;
 	lmpmesh = NULL;
 	vcmesh = NULL;
@@ -753,6 +763,65 @@ void LEM::LoadDefaultSounds()
     sevent.LoadMissionLandingSoundArray(soundlib,"sound.csv");
     sevent.InitDirectSound();
 #endif
+}
+
+int LEM::clbkConsumeDirectKey(char* kstate)
+{
+	bool camSlow = false;
+	VECTOR3 camDir = _V(0, 0, 0);
+	bool setFreeCam = false;
+
+	if (KEYMOD_SHIFT(kstate)) {
+		camSlow = true;
+	}
+
+	if (!KEYDOWN(kstate, OAPI_KEY_GRAVE)) {
+		if (KEYDOWN(kstate, OAPI_KEY_LEFT)) {
+			camDir.x = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_RIGHT)) {
+			camDir.x = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.y = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.y = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_INSERT)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DELETE)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
+	}
+	else {
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
+	}
+
+	if ((!KEYMOD_CONTROL(kstate)) && (!KEYMOD_ALT(kstate))) {
+		if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
+			if (setFreeCam == true) {
+				VCFreeCam(camDir, camSlow);
+			}
+			//return 1;
+		}
+	}
+
+	return 0;
 }
 
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
@@ -1895,7 +1964,9 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 
 	if (dscidx != -1 && pMission->LMHasLegs()) {
 		probes = GetDevMesh(vis, dscidx);
+		deflectors = GetDevMesh(vis, dscidx);
 		HideProbes();
+		HideDeflectors();
 	}
 
 	if (vcidx != -1) {

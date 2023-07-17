@@ -854,7 +854,7 @@ void LEVA::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 			sscanf(line + 7, "%s", &LEMName);
 		}
 		else if (!strnicmp(line, "SUITNAME", 8)) {
-			sscanf(line + 8, "%s", &SuitName);
+			strcpy(SuitName, line + 9);
 		}
 		else if (!strnicmp(line, "STATE", 5)) {
 			int	s;

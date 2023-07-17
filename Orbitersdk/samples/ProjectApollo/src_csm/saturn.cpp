@@ -362,7 +362,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	inertialData(this),
 	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
 	dsky(soundlib, agc, 015),
-	dsky2(soundlib, agc, 016), 
+	dsky2(soundlib, agc, 016),
+	CMCDCBusFeeder("CMC-DCBus-Feeder", Panelsdk),
 	imu(agc, Panelsdk, inertialData),
 	scdu(agc, RegOPTX, 0140, 2),
 	tcdu(agc, RegOPTY, 0141, 2),
@@ -458,7 +459,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CSMDCVoltMeter(20.0, 45.0),
 	CSMACVoltMeter(90.0, 140.0),
 	DCAmpMeter(0.0, 100.0),
-	SystemTestAttenuator("SystemTestAttenuator", 0.0, 256.0, 0.0, 5.0),
 	SystemTestVoltMeter(0.0, 5.0),
 	EMSDvSetSwitch(Sclick),
 	SideHatch(HatchOpenSound, HatchCloseSound),	// SDockingCapture
@@ -521,6 +521,12 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	PriRadInTempSensor("Pri-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadInTempSensor("Sec-Rad-In-Temp-Sensor", 55.0, 120.0),
 	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0),
+	CMRCSEngine12TempSensor("CM-RCS-Engine-12-Sensor", -50.0, 50.0),
+	CMRCSEngine14TempSensor("CM-RCS-Engine-14-Sensor", -50.0, 50.0),
+	CMRCSEngine16TempSensor("CM-RCS-Engine-16-Sensor", -50.0, 50.0),
+	CMRCSEngine21TempSensor("CM-RCS-Engine-21-Sensor", -50.0, 50.0),
+	CMRCSEngine24TempSensor("CM-RCS-Engine-24-Sensor", -50.0, 50.0),
+	CMRCSEngine25TempSensor("CM-RCS-Engine-25-Sensor", -50.0, 50.0),
 	vesim(&cbCSMVesim, this),
 	CueCards(vcidx, this, 11)
 #pragma warning ( pop ) // disable:4355
@@ -571,6 +577,9 @@ Saturn::~Saturn()
 
 {
 	TRACESETUP("~Saturn");
+
+	ReleaseSurfaces();
+	ReleaseSurfacesVC();
 
 	if (sivb)
 	{
@@ -772,8 +781,8 @@ void Saturn::initSaturn()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this, false);
-	dsky.Init(&LightingNumIntLMDCCB, &NumericRotarySwitch);
-	dsky2.Init(&LightingNumIntLEBCB, &Panel100NumericRotarySwitch);
+	dsky.Init(&LightingNumIntLMDCCB, &CMCDCBusFeeder, &NumericRotarySwitch);
+	dsky2.Init(&LightingNumIntLEBCB, &CMCDCBusFeeder, &Panel100NumericRotarySwitch);
 
 	//
 	// Configure SECS.
@@ -953,6 +962,17 @@ void Saturn::initSaturn()
 	NoiseOffsetx = 0;
 	NoiseOffsety = 0;
 	NoiseOffsetz = 0;
+
+	//
+	// VC Free Cam
+	//
+
+	vcFreeCamx = 0;
+	vcFreeCamy = 0;
+	vcFreeCamz = 0;
+	vcFreeCamSpeed = 0.2;
+	vcFreeCamMaxOffset = 0.5;
+
 
 	InVC = false;
 	InPanel = false;
@@ -3347,9 +3367,9 @@ void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
 int Saturn::clbkConsumeDirectKey(char *kstate)
 
 {
-	if (KEYMOD_SHIFT(kstate) || KEYMOD_ALT(kstate)) {
-		return 0; 
-	}
+	//if (KEYMOD_SHIFT(kstate) || KEYMOD_ALT(kstate)) {
+	//	return 0; 
+	//}
 
 	// position test
 	/*
@@ -3401,6 +3421,60 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 	sprintf(oapiDebugString(), "GetCOG_elev %f", GetCOG_elev());
 	*/
 	
+	bool camSlow = false;
+	VECTOR3 camDir = _V(0, 0, 0);
+	bool setFreeCam = false;
+
+	if (KEYMOD_SHIFT(kstate)) {
+		camSlow = true;
+	}
+
+	if (!KEYDOWN(kstate, OAPI_KEY_GRAVE)) {
+		if (KEYDOWN(kstate, OAPI_KEY_LEFT)) {
+			camDir.x = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_RIGHT)) {
+			camDir.x = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.y = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.y = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_INSERT)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DELETE)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
+	}
+	else {
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
+	}
+
+	if ((!KEYMOD_CONTROL(kstate)) && (!KEYMOD_ALT(kstate))) {
+		if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
+			if (setFreeCam == true) {
+				VCFreeCam(camDir, camSlow);
+			}
+			//return 1;
+		}
+	}
+
 	return 0;
 }
 

@@ -188,7 +188,7 @@ private:
 	double MinEphemDT;
 
 	//ACCEL
-	//Rotation matrix from local to global coordinates, left handed
+	//Rotation matrix from global to local coordinates
 	MATRIX3 Rot;
 	//Planet fixed position vector
 	VECTOR3 R_EF;

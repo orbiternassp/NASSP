@@ -24,6 +24,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 #include "Orbitersdk.h"
+#include "AnalyticEphemerisGenerator.h"
 #include "RTCCModule.h"
 #include "RTCCTables.h"
 
@@ -99,8 +100,6 @@ struct GMPOpt
 	double Area = 0.0;
 	double Weight = 1.0;
 	double KFactor = 1.0;
-
-	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
 
 	//maneuver parameters
 

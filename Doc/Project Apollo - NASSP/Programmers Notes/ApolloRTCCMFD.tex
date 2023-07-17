@@ -2014,7 +2014,9 @@ For each Apollo mission a file with mission constants (e.g. "Apollo 8 Constants.
 \hline
 \textbf{Name} & \textbf{Description} & \textbf{Default Value} & \textbf{Unit}\\
 \hline
-AGCEpoch & The epoch of the coordinate system used by the Apollo Guidance Computer (and in the future the RTCC). Used to convert state vectors to the uplink coordinate system. & 40221.525 (Apollo 7-10) & Days (MJD)\\
+AGCEpoch & The epoch of the coordinate system used by the Apollo Guidance Computer and the RTCC& 1969 (Apollo 7-10) & Years\\
+\hline
+TEPHEM0 & Starting date of AGC time keeping. Always midnight July 1st of the year preceeding the epoch year. Only needs to be loaded for Skylark and the fixed 1950 coordinate system & 40038 & Days (MJD)\\
 \hline
 MCCLEX & Octal LGC address for external DV uplink & 3433 & None\\
 \hline
@@ -2028,7 +2030,11 @@ MCCCRF & Octal CMC address for REFSMMAT uplink (and downlink) & 1735 & None\\
 \hline
 MCCLRF & Octal LGC address for REFSMMAT uplink (and downlink) & 1733 & None\\
 \hline
-MCLRLS & LGC address for landing site vector uplink (and downlink) & 2022 & None\\
+MCLRLS & Octal LGC address for landing site vector uplink (and downlink) & 2022 & None\\
+\hline
+MCLTTD & Octal LGC address for the time of lunar landing & 2400 & None\\
+\hline
+MCLABT & Octal LGC address for descent abort constants & 2545 & None\\
 \hline
 PZREAP\_RRBIAS & Relative range override for the Return-to-Earth processor & 1285.0 & Nautical Miles\\
 \hline
@@ -2039,6 +2045,8 @@ MCLADA & Geodetic latitude of the launch pad used for launch REFSMMAT calculatio
 MDVSTP\_PHIL & Geodetic latitude of the launch pad used for TLI simulation and LVDC state vector uplink calculation & 28.608202 (LC-39A) & Degrees\\
 \hline
 MCLGRA & Longitude of the launch pad & -80.604133 (LC-39A) & Degrees\\
+\hline
+MCTVEN & S-IVB LH2 venting scale factor & 1.0 & None\\
 \hline
 \end{tabular}
 
