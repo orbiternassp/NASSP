@@ -320,8 +320,17 @@ namespace mission {
 			else if (!_strnicmp(line, "LMCueCard=", 10)) {
 				ReadCueCardLine(line + 10, 1);
 			}
+			else if (!_strnicmp(line, "CMNBDX=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m11);
+			}
+			else if (!_strnicmp(line, "CMNBDY=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m12);
+			}
+			else if (!_strnicmp(line, "CMNBDZ=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m13);
+			}
 		}
-		LoadIMU_AndPIPA_RatesAndBiases(hFile);
+		//LoadIMU_AndPIPA_RatesAndBiases(hFile);
 		hFile.close();
 
 		return true;
@@ -330,17 +339,29 @@ namespace mission {
 	void Mission::LoadIMU_AndPIPA_RatesAndBiases(std::ifstream &hFile) {
 		char line[256];
 
-		while (hFile.getline(line, sizeof line)) {
-			if (!_strnicmp(line, "CMNBDX", 6)) {
-				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m11);
-			}
-			if (!_strnicmp(line, "CMNBDY", 6)) {
-				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m12);
-			}
-			if (!_strnicmp(line, "CMNBDZ", 6)) {
-				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m13);
-			}
-		}
+		//for (std::string line; std::getline(hFile, line);) {
+		//	if (!line.compare(0,7,"CMNBDX=")) {
+		//		CM_IMUDriftRates.m11 = std::stod(line.substr(7));
+		//	}
+		//	else if (!line.compare(0, 7, "CMNBDY=")) {
+		//		CM_IMUDriftRates.m12 = std::stod(line.substr(7));
+		//	}
+		//	else if (!line.compare(0, 7, "CMNBDZ=")) {
+		//		CM_IMUDriftRates.m13 = std::stod(line.substr(7));
+		//	}
+		//}
+
+		//while (hFile.getline(line, sizeof line)) {
+		//	if (!_strnicmp(line, "CMNBDX=", 7)) {
+		//		sscanf(line + 7, "%lf", &CM_IMUDriftRates.m11);
+		//	}
+		//	else if (!_strnicmp(line, "CMNBDY=", 7)) {
+		//		sscanf(line + 7, "%lf", &CM_IMUDriftRates.m12);
+		//	}
+		//	else if (!_strnicmp(line, "CMNBDZ=", 7)) {
+		//		sscanf(line + 7, "%lf", &CM_IMUDriftRates.m13);
+		//	}
+		//}
 
 		/*oapiReadItem_float(hFile, "CMNBDX", CM_IMUDriftRates.m11);
 		oapiReadItem_float(hFile, "CMNBDY", CM_IMUDriftRates.m12);
