@@ -320,14 +320,14 @@ namespace mission {
 			else if (!_strnicmp(line, "LMCueCard=", 10)) {
 				ReadCueCardLine(line + 10, 1);
 			}
-			else if (!_strnicmp(line, "CMNBDX=", 8)) {
-				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m11);
+			else if (!_strnicmp(line, "CMNBDX=", 7)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m11);
 			}
-			else if (!_strnicmp(line, "CMNBDY=", 8)) {
-				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m12);
+			else if (!_strnicmp(line, "CMNBDY=", 7)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m12);
 			}
-			else if (!_strnicmp(line, "CMNBDZ=", 8)) {
-				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m13);
+			else if (!_strnicmp(line, "CMNBDZ=", 7)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m13);
 			}
 		}
 		//LoadIMU_AndPIPA_RatesAndBiases(hFile);

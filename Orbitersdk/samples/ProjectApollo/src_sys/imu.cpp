@@ -455,27 +455,21 @@ void IMU::Timestep(double simdt)
 		double DriftY = (imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
 		double DriftZ = (imuDriftRates.NBD_Z + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
 
-		MATRIX3 DriftXRot, DriftYRot, DriftZRot;
-		GetRotMatrixX(-DriftX, DriftXRot);
-		GetRotMatrixY(-DriftY, DriftYRot);
-		GetRotMatrixZ(DriftZ, DriftZRot);
 		
 		// Gimbals
-		MATRIX3 vesselTransform = mul(Orbiter.Attitude_g2v, Orbiter.AttitudeReference);
-		MATRIX3 DriftTransform = mul(DriftXRot,mul(DriftZRot, DriftYRot));
-		MATRIX3 StableMemberTransform = mul(getOrbiterLocalToNavigationBaseTransformation(), mul(vesselTransform, DriftTransform));
-		// calculate the new gimbal angles
-		VECTOR3 newAngles = getRotationAnglesXZY(StableMemberTransform);
-		VECTOR3 DriftAngles = getRotationAnglesXZY(DriftTransform);
+		MATRIX3 t = Orbiter.AttitudeReference;
+		t = mul(Orbiter.Attitude_g2v, t);
+		t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
+		VECTOR3 newAngles = getRotationAnglesXZY(t);
 		
 		//Calculate resolver outputs before the gimbals get moved to their new position
 		calculatePhase(newAngles);
 
 		// drive gimbals to new angles
 		// CAUTION: gimbal angles are left-handed
-		DriveGimbalX(-newAngles.x - Gimbal.X);
-		DriveGimbalY(-newAngles.y - Gimbal.Y);
-		DriveGimbalZ(-newAngles.z - Gimbal.Z);
+		DriveGimbalX(-newAngles.x - Gimbal.X - DriftX);
+		DriveGimbalY(-newAngles.y - Gimbal.Y - DriftZ);
+		DriveGimbalZ(-newAngles.z - Gimbal.Z + DriftY);
 		SetOrbiterAttitudeReference();
 
 		accel.x += pipaBiasScale.PIPA_BiasX + accel.x * pipaBiasScale.PIPA_ScalePPM_X;
