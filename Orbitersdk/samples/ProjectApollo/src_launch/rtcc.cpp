@@ -24148,7 +24148,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		sv_r.RBI = BODY_EARTH;
 		AST.lat_SPL = rte.EntryLatcor;
 		AST.lng_SPL = rte.EntryLngcor;
-		AST.SplashdownGMT = rte.t_z;
+		AST.SplashdownGMT = rte.t_Landing;
 		AST.DV = rte.DV;
 		AST.h_PC = rte.FlybyPeriAlt;
 	}

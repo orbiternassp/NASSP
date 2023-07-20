@@ -54,10 +54,8 @@ namespace EntryCalculations
 	void augekugel(double ve, double gammae, double &phie, double &Te);
 	void landingsite(MATRIX3 Rot_J_B, VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double &lambda, double &phi);
 	void Reentry(MATRIX3 Rot_J_B, VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET);
-	void Abort(VECTOR3 R0, VECTOR3 V0, double RCON, double dt, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI);
-	bool Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, double INTER, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &Incl_apo);
-	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
-	void time_reentry_plane(VECTOR3 R0, VECTOR3 eta, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	double XDOTX2(VECTOR3 a, VECTOR3 b, double DIFG);
+	void RA2XYZ4(VECTOR3 R, VECTOR3 V, double &beta, double &A_Z);
 	double landingzonelong(int zone, double lat);
 
 	//Actual RTE processor routines
@@ -66,7 +64,7 @@ namespace EntryCalculations
 	void EGTR(VECTOR3 R_geoc, VECTOR3 V_geoc, double GMT, double alpha_SID0, VECTOR3 &R_geogr, VECTOR3 &V_geogr);
 	double INTER(const double *X, const double *Y, int IMAX, double x);
 	double URF(double T, double x);
-	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
+	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, bool &k2, int &info, double &V1);
 	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN);
 	double LNDING(VECTOR3 REI, VECTOR3 VEI, double GMT_EI, double alpha_SIDO0, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &GMT_L);
 	void SIDCOM(double JD0, double DT, double N, double &alpha_go, double &T);
@@ -419,7 +417,7 @@ protected:
 	void FCUA(int FLAG, VECTOR3 R_a, double &beta_r, double &DV, double &U_r, double &V_a, double &beta_a);
 	void MSDS(double VR_a, double VT_a, double beta_r, double theta, double &delta, double &phi, double &phi_z, double &lambda, double &theta_z);
 	bool RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a);
-	void VELCOM(double T, double R_a, double &beta_r, double &dt, double &p, int &QA, int &sw6, double &U_r, double &VR_a, double &VT_a, double &beta_a, double &eta_ar, double &DV);
+	void VELCOM(double T, double R_a, double &beta_r, double &dt, double &p, bool &QA, int &sw6, double &U_r, double &VR_a, double &VT_a, double &beta_a, double &eta_ar, double &DV);
 	void VARMIN();
 	void TCOMP(double dv, double delta, double &T, double &TP);
 	void TMIN(double &dv, int &FLAG, double &T, double &U_r, double &VT_a, double &VR_a, double &beta_r);
@@ -560,6 +558,15 @@ protected:
 	VECTOR3 RR_vec, VV_vec;
 };
 
+struct RTEMoonStoredSolution
+{
+	double dv;
+	double i_r;
+	double INTER;
+	bool q_m;
+	double t_z;
+};
+
 class RTEMoon : public RTCCModule
 {
 public:
@@ -567,9 +574,6 @@ public:
 	void ATP(double *line);
 	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
 	bool MASTER();
-	void MCSS();
-	bool CLL(double &i_r, double &INTER, double &dv);
-	bool MCUA(double &i_r, double &INTER, double &dv);
 	
 	void MCSSLM(bool &REP, double t_z_apo);
 
@@ -581,23 +585,28 @@ public:
 	VECTOR3 Vig_apo;
 	double ReturnInclination;
 	double FlybyPeriAlt;
-	double t_R, t_z;
+	double t_R, t_Landing;
 	EphemerisData2 sv0;
 private:
 
-	VECTOR3 ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_EI, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl = 0, bool asc = true);
-	VECTOR3 MCDRIV(VECTOR3 R_I, VECTOR3 V_I, double t_I, double var, bool INRFVsign, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &r_p);
-	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
-	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo);
+	void MCSS();
+	bool CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv);
+	bool MCUA(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv);
 
-	OBJHANDLE hMoon, hEarth;
+	VECTOR3 ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_EI, bool q_m, double Incl, double INTER, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	int MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_0, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &V_a, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &y_p, bool &q_d);
+	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
+	bool FINDUX(VECTOR3 X_x, double t_x, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &U_x, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, double &Incl_apo) const;
+	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, double &a, double &e, double &p, double &theta, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2, bool &q_m, bool &k_1, double &beta_1, double &beta_2) const;
+	void STORE(int opt, double &dv, double &i_r, double &INTER, double &t_z, bool &q_m);
+	void PSTATE(double a_H, double e_H, double p_H, double t_0, double T_x, VECTOR3 Y_0, VECTOR3 &Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const;
+
+	int hMoon;
 	double mu_E, mu_M, w_E, R_E, R_M;
 	//double r_s; //Pseudostate sphere
-	CELBODY *cMoon;
 	double EntryLng;
 	double dlngapo, dtapo;
-	bool INRFVsign;
-	double dTIG, mjd0, GMTBASE;
+	double dTIG, GMTBASE;
 	double i_rmax, u_rmax;
 	//12 = PTP discrete, 14 = ATP discrete, 16 = UA discrete
 	//22 = PTP tradeoff, 24 = ATP tradeoff
@@ -642,7 +651,20 @@ private:
 	double lambda_z, lambda_z1;
 	//Right ascension at GMT zero
 	double alpha_SID0;
+	//0 = use circumlunar or noncircumlunar, 1 = use retrograde motion
+	bool QDFLG;
+	//Reentry radius
+	double r_r;
+	//Radius of the pseudostate transformation sphere
+	double r_s;
+	//Position and velocity vector of the Moon at abort time
+	VECTOR3 X_m0, U_m0;
 	
 	//Alternate target line (lat, lng, lat, lng etc.)
 	double LINE[10];
+
+	RTEMoonStoredSolution solution;
+
+	//Maximum number of iterations for MCDRIV
+	const int k_max = 50;
 };
