@@ -7368,7 +7368,7 @@ int RTEMoon::MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_0, double var, bool q_m, 
 	VECTOR3 Y_x;
 	//Previous value of selenocentric PTS exit position
 	VECTOR3 Y_x_apo;
-	//Selenocentric velocity vecotr at PTS exit
+	//Selenocentric velocity vector at PTS exit
 	VECTOR3 V_x;
 	//Previous value of selenocentric PTS exit velocity
 	VECTOR3 V_x_apo;
@@ -7431,7 +7431,7 @@ RTEMoon_MCDRIV_5_S:
 	//Transform the abort velocity vector to selenocentric reference
 	V_x = U_x - U_mx;
 RTEMoon_MCDRIV_7_R:
-	//Given initial position Y_a_apo and velocity at PTS Y_x, calculate initial velocity V_a and position at PTS Y_x_apo 
+	//Given initial position Y_a_apo and velocity at PTS V_x, calculate initial velocity V_a and position at PTS Y_x_apo
 	INRFV(Y_a_apo, V_x, r_s, mu_M, q_m, a_h, e_h, p_h, theta, V_a, Y_x_apo, dt_S, q_m_out, q_d, beta_a, beta_x);
 
 	//Near parabolic orbit?
@@ -7463,7 +7463,7 @@ RTEMoon_MCDRIV_7_R:
 	if (dy_xf == false)
 	{
 		//Has converged?
-		if (dy_x <= tol && Dy_0 / length(Y_0) <= tol / 10.0 && abs(t_x_apo - t_x) < 0.1)
+		if (dy_x <= tol && Dy_0 / length(Y_0) <= tol / 63781650.0 && abs(t_x_apo - t_x) < 0.1)
 		{
 			//Does solution violate minimum landing time constraint?
 			if (KIP == 0 && T_EI < t_zmin)
@@ -7516,6 +7516,66 @@ RTEMoon_MCDRIV_11_W:
 			goto RTEMoon_MCDRIV_5_S;
 		}
 	}
+
+	//Verification
+	/*char Buffer[128];
+	VECTOR3 rr_S, v_S, v_I_star, r_I_star, R_I_star, V_I_star, R_EI2, V_EI2;
+	double dt;
+
+	if (T_a < -3600.0)
+	{
+		double t_I, t_N;
+
+		//Conic propagation to sphere entry point
+		dt = OrbMech::time_radius(Y_0, -V_a, r_s, 1.0, mu_M);
+		dt = -dt;
+		t_N = t_0 + dt;
+		OrbMech::rv_from_r0v0(Y_0, V_a, dt, rr_S, v_S, mu_M);
+		//Linear propagation to original time
+		v_I_star = v_S;
+		r_I_star = rr_S + v_S * (t_0 - t_N);
+		//Convert to geocentric pseudostate
+		R_I_star = X_m0 + r_I_star;
+		V_I_star = U_m0 + v_I_star;
+		//Estimate perilune time
+		dt = OrbMech::timetoperi(Y_0, V_a, mu_M);
+		t_I = t_0 + dt;
+		//Propagate geocentric pseudostate to perilune time
+		OrbMech::rv_from_r0v0(R_I_star, V_I_star, dt, R_I_star, V_I_star, mu_E);
+		//Get Moon state vector at new time
+		pRTCC->PLEFEM(4, t_I / 3600.0, 0, &X_mx, &U_mx, NULL, NULL);
+		//Convert to selenocentric pseudostate
+		r_I_star = R_I_star - X_mx;
+		v_I_star = V_I_star - U_mx;
+		//Linear propagation to sphere entrance
+		dt = (-dotp(r_I_star, v_I_star) - sqrt(pow(dotp(r_I_star, v_I_star), 2) + dotp(v_I_star, v_I_star) * (pow(r_s, 2) - dotp(r_I_star, r_I_star)))) / dotp(v_I_star, v_I_star);
+		t_N = t_I + dt;
+		rr_S = r_I_star + v_I_star * dt;
+		v_S = v_I_star;
+		//Conic propagation to specified time. Real perilune state
+		OrbMech::rv_from_r0v0(rr_S, v_S, t_I - t_N, rr_S, v_S, mu_M);
+
+		//Then same as post-pericynthion
+		dt = OrbMech::time_radius(rr_S, v_S, r_s, 1.0, mu_M);
+		OrbMech::rv_from_r0v0(rr_S, v_S, dt, rr_S, v_S, mu_M);
+		v_I_star = v_S;
+		r_I_star = rr_S - v_S * dt;
+		R_I_star = X_mx + r_I_star;
+		V_I_star = U_mx + v_I_star;
+		OrbMech::rv_from_r0v0(R_I_star, V_I_star, T_EI - t_I, R_EI2, V_EI2, mu_E);
+	}
+	else
+	{
+		dt = OrbMech::time_radius(Y_0, V_a, r_s, 1.0, mu_M);
+		OrbMech::rv_from_r0v0(Y_0, V_a, dt, rr_S, v_S, mu_M);
+		v_I_star = v_S;
+		r_I_star = rr_S - v_S * dt;
+		R_I_star = X_m0 + r_I_star;
+		V_I_star = U_m0 + v_I_star;
+		OrbMech::rv_from_r0v0(R_I_star, V_I_star, T_EI - t_0, R_EI2, V_EI2, mu_E);
+	}
+	sprintf(Buffer, "MCDRIV Debug: Error %lf T_a %lf", length(R_EI - R_EI2), T_a);
+	oapiWriteLog(Buffer);*/
 
 	return 1;
 }
@@ -7747,7 +7807,7 @@ void RTEMoon::INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, do
 
 	beta_2 = asin(sin_beta_2);
 	c = unit(crossp(r_1_cf, v_2_cf) / sin_psi);
-	theta = psi - sin_beta_2;
+	theta = psi - beta_2;
 	R_2 = (r_1_cf*cos(theta) + crossp(c, r_1_cf)*sin(theta))*r_2;
 	v_1 = sqrt(v_2 - 2.0*mu / r_2 + 2.0*mu / r_1);
 	p = r_2 * r_2*v_2*v_2*sin_beta_2*sin_beta_2 / mu;
@@ -7755,7 +7815,7 @@ void RTEMoon::INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, do
 	g = r_2 * r_1*sin(theta) / sqrt(mu*p);
 	V_1 = (R_2 - R_1 * f) / g;
 	a = 1.0 / (2.0 / r_2 - v_2 * v_2 / mu);
-	e = sqrt(1 - p / a);
+	e = sqrt(1.0 - p / a);
 
 	dt_2 = OrbMech::time_theta(R_1, V_1, theta, mu);
 	//VECTOR3 R2_apo, V2_apo;
@@ -7806,7 +7866,7 @@ void RTEMoon::STORE(int opt, double &dv, double &i_r, double &INTER, double &t_z
 	}
 }
 
-void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double t_0, double T_x, VECTOR3 Y_0, VECTOR3 Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const
+void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double t_0, double T_x, VECTOR3 Y_0, VECTOR3 &Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const
 {
 	//INPUTS:
 	//a_h: semimajor axis of selenocentric conic
@@ -7856,27 +7916,36 @@ void RTEMoon::PSTATE(double a_H, double e_H, double p_H, double t_0, double T_x,
 		Y_n_u = EntryCalculations::TVECT(V_u, Y_u, beta_a, gamma_p);
 		V_n_u = EntryCalculations::TVECT(V_u, Y_u, beta_a, gamma_v);
 
+		//Pseudostate vector at PTS entry
 		Y_n = Y_n_u * r_s;
 		V_n = V_n_u * length(V_x);
+
+		//Linear projection to pericynthion, then convert to geocentric pseudostate
 		U_p_n = V_n + U_mx;
 		X_p_n = Y_n + V_n * T_x + X_mx;
-		Deltat = t_x_aaapo - t_0;
 
+		//Propagate geocentric pseudostate from t_x_aaapo to t_0. X_a_n and U_a_n are geocentric pseudostate at time t_0
+		Deltat = t_x_aaapo - t_0;
 		OrbMech::rv_from_r0v0(X_p_n, -U_p_n, Deltat, X_a_n, U_a_n, mu_E);
 		U_a_n = -U_a_n;
 
+		//Convert to selenocentric pseudostate at time t_0
 		Y = X_a_n - X_m0;
 		V = U_a_n - U_m0;
 
+		//Calculate linear from time from t_0 to PTS entry point
 		A = dotp(V, V);
 		B = dotp(V, Y);
 		C = r_s * r_s - dotp(Y, Y);
 
 		Deltat = (-B - sqrt(B*B + A * C)) / A;
+
+		//Calculate sphere entrance state vector
 		t_n = t_0 + Deltat;
 		V_n = V;
 		Y_n = Y + V * Deltat;
 
+		//Propagate to t_0. New postabort state vector
 		OrbMech::rv_from_r0v0(Y_n, V_n, -Deltat, Y_a, V_a, mu_M);
 
 		DY_0 = Y_0 - Y_a;

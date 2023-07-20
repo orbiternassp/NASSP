@@ -599,7 +599,7 @@ private:
 	bool FINDUX(VECTOR3 X_x, double t_x, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &U_x, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, double &Incl_apo) const;
 	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, double &a, double &e, double &p, double &theta, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2, bool &q_m, bool &k_1, double &beta_1, double &beta_2) const;
 	void STORE(int opt, double &dv, double &i_r, double &INTER, double &t_z, bool &q_m);
-	void PSTATE(double a_H, double e_H, double p_H, double t_0, double T_x, VECTOR3 Y_0, VECTOR3 Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const;
+	void PSTATE(double a_H, double e_H, double p_H, double t_0, double T_x, VECTOR3 Y_0, VECTOR3 &Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const;
 
 	int hMoon;
 	double mu_E, mu_M, w_E, R_E, R_M;
