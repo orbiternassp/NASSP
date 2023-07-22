@@ -455,6 +455,21 @@ void IMU::Timestep(double simdt)
 		double DriftY = (imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
 		double DriftZ = (imuDriftRates.NBD_Z + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
 
+		// gyro drift about is done in stable member coordinates
+		MATRIX3 DriftXRot = getRotationMatrixX(-DriftX);
+		MATRIX3 DriftYRot = getRotationMatrixY(-DriftY);
+		MATRIX3 DriftZRot = getRotationMatrixZ(-DriftZ);
+
+		MATRIX3 DriftXYZRot = mul(DriftYRot, mul(DriftZRot, DriftXRot));
+
+		// transformation to navigation base coordinates
+		// CAUTION: gimbal angles are left-handed
+		DriftXYZRot = mul(getRotationMatrixY(-Gimbal.Y), DriftXYZRot);
+		DriftXYZRot = mul(getRotationMatrixZ(-Gimbal.Z), DriftXYZRot);
+		DriftXYZRot = mul(getRotationMatrixX(-Gimbal.X), DriftXYZRot);
+
+		// calculate the new gimbal angles
+		VECTOR3 DriftAngles = getRotationAnglesXZY(DriftXYZRot);
 		
 		// Gimbals
 		MATRIX3 t = Orbiter.AttitudeReference;
@@ -463,14 +478,16 @@ void IMU::Timestep(double simdt)
 		VECTOR3 newAngles = getRotationAnglesXZY(t);
 		
 		//Calculate resolver outputs before the gimbals get moved to their new position
-		calculatePhase(newAngles);
+		VECTOR3 GimbalPositionforPhase = _V(Gimbal.X, Gimbal.Y, Gimbal.Z);
+		//calculatePhase(newAngles + (DriftAngles - _V(Gimbal.X, Gimbal.Y, Gimbal.Z)));
 
 		// drive gimbals to new angles
 		// CAUTION: gimbal angles are left-handed
-		DriveGimbalX(-newAngles.x - Gimbal.X - DriftX);
-		DriveGimbalY(-newAngles.y - Gimbal.Y - DriftZ);
-		DriveGimbalZ(-newAngles.z - Gimbal.Z + DriftY);
+		DriveGimbalX((-newAngles.x - Gimbal.X) - (-DriftAngles.x - Gimbal.X));
+		DriveGimbalY((-newAngles.y - Gimbal.Y) - (-DriftAngles.y - Gimbal.Y));
+		DriveGimbalZ((-newAngles.z - Gimbal.Z) - (-DriftAngles.z - Gimbal.Z));
 		SetOrbiterAttitudeReference();
+		calculatePhase(-GimbalPositionforPhase);
 
 		accel.x += pipaBiasScale.PIPA_BiasX + accel.x * pipaBiasScale.PIPA_ScalePPM_X;
 		accel.y += pipaBiasScale.PIPA_BiasY + accel.y * pipaBiasScale.PIPA_ScalePPM_Y;
