@@ -53,6 +53,8 @@ public:
 	VECTOR3 GetNBDriftRates();
 	VECTOR3 GetTotalAttitude();
 	inline VECTOR3 getResolverPhaseError() { return ResolverPhaseError; };
+	inline VECTOR3 getResolverSineGimbal() { return SineGimbal; };
+	inline VECTOR3 getResolverCosineGimbal() { return CosineGimbal; };
 	virtual VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
