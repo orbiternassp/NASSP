@@ -455,7 +455,7 @@ void IMU::Timestep(double simdt)
 		double DriftY = (imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
 		double DriftZ = (imuDriftRates.NBD_Z + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
 
-		// gyro drift about is done in stable member coordinates
+		// convert drift rates to rotation matrices
 		MATRIX3 DriftXRot = getRotationMatrixX(-DriftX);
 		MATRIX3 DriftYRot = getRotationMatrixY(-DriftY);
 		MATRIX3 DriftZRot = getRotationMatrixZ(-DriftZ);
