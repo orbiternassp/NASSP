@@ -279,7 +279,7 @@ NewPMMAEG_V2000:
 		CurrentBlock.Item8 = CurrentBlock.R - tempblock.R;
 		CurrentBlock.Item9 = CurrentBlock.TE - tempblock.TE;
 		dt += -theta_R / (CurrentBlock.l_dot + CurrentBlock.g_dot);
-		if (abs(theta_R) > 0.0001)
+		if (abs(theta_R) > 0.00005)
 		{
 			goto NewPMMAEG_V1000;
 		}
@@ -581,7 +581,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 		CurrentBlock.Item8 = CurrentBlock.R - tempblock.R;
 		CurrentBlock.Item9 = CurrentBlock.TE - tempblock.TE;
 		dt += -theta_R / (CurrentBlock.l_dot + CurrentBlock.g_dot);
-		if (abs(theta_R) > 0.0001)
+		if (abs(theta_R) > 0.00005)
 		{
 			goto NewPMMLAEG_V1000;
 		}
