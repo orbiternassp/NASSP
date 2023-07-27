@@ -2834,12 +2834,12 @@ bool EntryDesiredInclinationInput(void *id, char *str, void *data)
 		{
 			if (strcmp(dir, "A") == 0)
 			{
-				((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(-inc);
+				((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(inc);
 				return true;
 			}
 			else if (strcmp(dir, "D") == 0)
 			{
-				((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(inc);
+				((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(-inc);
 				return true;
 			}
 		}

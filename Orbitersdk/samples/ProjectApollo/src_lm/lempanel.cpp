@@ -299,57 +299,57 @@ void LEM::InitSwitches() {
 	EventTimerMinuteSwitch.Register(PSH,"EventTimerMinuteSwitch",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 	EventTimerSecondSwitch.Register(PSH,"EventTimerSecondSwitch",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 
-	HeliumMonRotary.AddPosition(0, 290);
+	HeliumMonRotary.AddPosition(0, 285);
 	HeliumMonRotary.AddPosition(1, 315);
-	HeliumMonRotary.AddPosition(2, 340);
-	HeliumMonRotary.AddPosition(3,  20);
+	HeliumMonRotary.AddPosition(2, 344);
+	HeliumMonRotary.AddPosition(3,  16);
 	HeliumMonRotary.AddPosition(4,  45);
-	HeliumMonRotary.AddPosition(5,  70);
-	HeliumMonRotary.AddPosition(6, 110);
+	HeliumMonRotary.AddPosition(5,  75);
+	HeliumMonRotary.AddPosition(6, 106);
 	HeliumMonRotary.Register(PSH, "HeliumMonRotary", 0);
 
-	TempPressMonRotary.AddPosition(0, 340);
-	TempPressMonRotary.AddPosition(1,  20);
+	TempPressMonRotary.AddPosition(0, 345);
+	TempPressMonRotary.AddPosition(1,  17);
 	TempPressMonRotary.AddPosition(2,  45);
-	TempPressMonRotary.AddPosition(3,  70);
+	TempPressMonRotary.AddPosition(3,  74);
 	TempPressMonRotary.Register(PSH, "TempPressMonRotary", 0);
 
-	GlycolRotary.AddPosition(0,  45);
-	GlycolRotary.AddPosition(1,  70);
-	GlycolRotary.AddPosition(2, 110);
+	GlycolRotary.AddPosition(0,  46);
+	GlycolRotary.AddPosition(1,  75);
+	GlycolRotary.AddPosition(2, 107);
 	GlycolRotary.Register(PSH, "GlycolRotary", 2);
 	
 	SuitFanRotary.AddPosition(0,  45);
-	SuitFanRotary.AddPosition(1,  70);
-	SuitFanRotary.AddPosition(2, 110);
+	SuitFanRotary.AddPosition(1,  74);
+	SuitFanRotary.AddPosition(2, 106);
 	SuitFanRotary.Register(PSH, "SuitFanRotary", 1);
 
-	QtyMonRotary.AddPosition(0, 340);
-	QtyMonRotary.AddPosition(1,  20);
+	QtyMonRotary.AddPosition(0, 343);
+	QtyMonRotary.AddPosition(1,  16);
 	QtyMonRotary.AddPosition(2,  45);
-	QtyMonRotary.AddPosition(3,  70);
+	QtyMonRotary.AddPosition(3,  75);
 	QtyMonRotary.Register(PSH, "QtyMonRotary", 3);
 
-	TestMonitorRotary.AddPosition(0, 315);
-	TestMonitorRotary.AddPosition(1, 340);
-	TestMonitorRotary.AddPosition(2,  20);
-	TestMonitorRotary.AddPosition(3,  45);
-	TestMonitorRotary.AddPosition(4,  70);
-	TestMonitorRotary.AddPosition(5, 110);
+	TestMonitorRotary.AddPosition(0, 317);
+	TestMonitorRotary.AddPosition(1, 345);
+	TestMonitorRotary.AddPosition(2,  15);
+	TestMonitorRotary.AddPosition(3,  43);
+	TestMonitorRotary.AddPosition(4,  72);
+	TestMonitorRotary.AddPosition(5, 105);
 	TestMonitorRotary.Register(PSH, "TestMonitorRotary", 0);
 
-	RendezvousRadarRotary.AddPosition(0, 330);
+	RendezvousRadarRotary.AddPosition(0, 333);
 	RendezvousRadarRotary.AddPosition(1,   0);
-	RendezvousRadarRotary.AddPosition(2,  30);
+	RendezvousRadarRotary.AddPosition(2,  27);
 	RendezvousRadarRotary.Register(PSH, "RendezvousRadarRotary", 1);
 
-	TempMonitorRotary.AddPosition(0, 315);
-	TempMonitorRotary.AddPosition(1, 340);
-	TempMonitorRotary.AddPosition(2,  20);
-	TempMonitorRotary.AddPosition(3,  45);
-	TempMonitorRotary.AddPosition(4,  70);
-	TempMonitorRotary.AddPosition(5, 110);
-	TempMonitorRotary.AddPosition(6, 135);
+	TempMonitorRotary.AddPosition(0, 317);
+	TempMonitorRotary.AddPosition(1, 345);
+	TempMonitorRotary.AddPosition(2,  16);
+	TempMonitorRotary.AddPosition(3,  44);
+	TempMonitorRotary.AddPosition(4,  73);
+	TempMonitorRotary.AddPosition(5, 105);
+	TempMonitorRotary.AddPosition(6, 134);
 	TempMonitorRotary.Register(PSH, "TempMonitorRotary", 1);
 
 	FloodRotary.AddPosition(0, 240);
@@ -363,14 +363,14 @@ void LEM::InitSwitches() {
 	FloodRotary.AddPosition(8, 120);
 	FloodRotary.Register(PSH, "FloodRotary", 8);
 
-	LampToneTestRotary.AddPosition(0, 250);
-	LampToneTestRotary.AddPosition(1, 290);
+	LampToneTestRotary.AddPosition(0, 255);
+	LampToneTestRotary.AddPosition(1, 287);
 	LampToneTestRotary.AddPosition(2, 315);
-	LampToneTestRotary.AddPosition(3, 340);
-	LampToneTestRotary.AddPosition(4,  20);
-	LampToneTestRotary.AddPosition(5,  45);
-	LampToneTestRotary.AddPosition(6,  70);
-	LampToneTestRotary.AddPosition(7, 110);
+	LampToneTestRotary.AddPosition(3, 344);
+	LampToneTestRotary.AddPosition(4,  15);
+	LampToneTestRotary.AddPosition(5,  43);
+	LampToneTestRotary.AddPosition(6,  73);
+	LampToneTestRotary.AddPosition(7, 105);
 	LampToneTestRotary.Register(PSH, "LampToneTestRotary", 0);
 
 	EPSMonitorSelectRotary.AddPosition(0,210);
