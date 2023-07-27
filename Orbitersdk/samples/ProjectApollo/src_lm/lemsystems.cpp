@@ -3194,7 +3194,7 @@ void CrossPointer::Timestep(double simdt)
 				vy = lem->LR.rate[1] * 0.3048;
 
 				//Apollo 15 and later had this inversed
-				if (lem->ApolloNo >= 15)
+				if (lem->pMission->GetCrossPointerReversePolarity())
 				{
 					vy *= -1.0;
 				}
@@ -3214,7 +3214,7 @@ void CrossPointer::Timestep(double simdt)
 			vy = lgc_lateral*0.3048;
 
 			//Apollo 15 and later had this inversed
-			if (lem->ApolloNo >= 15)
+			if (lem->pMission->GetCrossPointerReversePolarity())
 			{
 				vy *= -1.0;
 			}
