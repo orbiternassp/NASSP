@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEMcomputer.h"
 #include "LEM.h"
 #include "papi.h"
+#include "Mission.h"
 #include "lm_cwea.h"
 
 // CWEA 
@@ -134,7 +135,7 @@ void LEM_CWEA::Timestep(double simdt) {
 			lightlogic = true;
 		}
 		// Fuel and oxidizer pressure < 119.8 psia prior to staging, cut and capped from the CWEA on LM-8 and subsequent
-		if (((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->stage < 2) && (lem->APSPropellant.GetFuelTrimOrificeOutletPressurePSI() < 119.8 || lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI() < 119.8)) {
+		if ((lem->pMission->GetLMCWEAVersion() == 0 && lem->stage < 2) && (lem->APSPropellant.GetFuelTrimOrificeOutletPressurePSI() < 119.8 || lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI() < 119.8)) {
 			lightlogic = true;
 		}
 
@@ -410,19 +411,19 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		// RCS Quads < 118.8F  or > 190.5F, cut and capped on LM-8 and subsequent
 		//Quad 1
-		QD1HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 4) < 2.79 || lem->scera1.GetVoltage(20, 4) > 4.725));
+		QD1HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 4) < 2.79 || lem->scera1.GetVoltage(20, 4) > 4.725));
 		QD1HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 2);
 
 		//Quad 2
-		QD2HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 3) < 2.79 || lem->scera1.GetVoltage(20, 3) > 4.725));
+		QD2HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 3) < 2.79 || lem->scera1.GetVoltage(20, 3) > 4.725));
 		QD2HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 3);
 
 		//Quad 3
-		QD3HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 2) < 2.79 || lem->scera1.GetVoltage(20, 2) > 4.725));
+		QD3HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 2) < 2.79 || lem->scera1.GetVoltage(20, 2) > 4.725));
 		QD3HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 4);
 
 		//Quad 4
-		QD4HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 1) < 2.79 || lem->scera1.GetVoltage(20, 1) > 4.725));
+		QD4HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 1) < 2.79 || lem->scera1.GetVoltage(20, 1) > 4.725));
 		QD4HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 5);
 
 		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
