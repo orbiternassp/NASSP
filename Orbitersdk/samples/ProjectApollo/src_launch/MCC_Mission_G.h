@@ -108,6 +108,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_G_LUNAR_ORBIT_ASCENT_DAY_10 169
 #define MST_G_LUNAR_ORBIT_ASCENT_DAY_11 170
 #define MST_G_LUNAR_ORBIT_ASCENT_DAY_12 171
+#define MST_G_LUNAR_ORBIT_ASCENT_DAY_13 172
 #define MST_G_TRANSEARTH_1 200
 #define MST_G_TRANSEARTH_2 201
 #define MST_G_TRANSEARTH_3 202

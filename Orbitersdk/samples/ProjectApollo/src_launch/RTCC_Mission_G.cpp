@@ -1175,11 +1175,18 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 33: //CSM DAP DATA
+	case 33: //CSM DAP DATA (Undocked)
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)pad;
 
 		CSMDAPUpdate(calcParams.src, *form, false);
+	}
+	break;
+	case 39: //CSM DAP DATA (Docked)
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		CSMDAPUpdate(calcParams.src, *form, true);
 	}
 	break;
 	case 34: //LM DAP DATA
