@@ -3726,6 +3726,11 @@ int ARCore::subThread()
 	break;
 	case 23: //Calculate TPI times
 	{
+		if (target == NULL)
+		{
+			Result = DONE;
+			break;
+		}
 		SV sv0 = GC->rtcc->StateVectorCalc(target);
 		t_TPI = GC->rtcc->CalculateTPITimes(sv0, TPI_Mode, t_TPIguess, dt_TPI_sunrise);
 
