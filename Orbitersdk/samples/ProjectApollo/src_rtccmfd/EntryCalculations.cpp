@@ -557,9 +557,9 @@ namespace EntryCalculations
 			V1 = sqrt(mu*(2.0 / r1 - 1.0 / a));
 			esinE_1 = r1 * V1*cos(beta1) / sqrt(abs(a)*mu);
 			ecosE_1 = 1.0 - r1 / a;
-			e = sqrt(esinE_1*esinE_1 + ecosE_1 * ecosE_1);
 			if (a > 0.0)
 			{
+				e = sqrt(ecosE_1 * ecosE_1 + esinE_1 * esinE_1); //Pythagorean identity for ellipses
 				E_1 = atan2(esinE_1, ecosE_1);
 				if (E_1 < 0)
 				{
@@ -575,6 +575,7 @@ namespace EntryCalculations
 			}
 			else
 			{
+				e = sqrt(ecosE_1 * ecosE_1 - esinE_1 * esinE_1); //Pythagorean identity for hyperbolas
 				E_1 = atanh(esinE_1 / ecosE_1);
 				E_2 = acosh(1.0 / e * (1.0 - r2 / a));
 				esinE_2 = e * sinh(E_2);
