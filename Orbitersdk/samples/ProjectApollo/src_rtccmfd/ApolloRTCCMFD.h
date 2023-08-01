@@ -554,6 +554,8 @@ public:
 	void menuTransferPoweredAscentToMPT();
 	void menuTransferPoweredDescentToMPT();
 	void CheckoutMonitorCalc();
+	void menuCycleMPTTable();
+	void menuCycleMPTMED();
 	void menuSetMPTInitInput();
 	void set_MPTInitM55Config(char *cfg);
 	void menuMPTUpdate();
