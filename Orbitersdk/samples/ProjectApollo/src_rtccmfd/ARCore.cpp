@@ -4613,7 +4613,7 @@ int ARCore::subThread()
 	}
 	break;
 
-	case 51: //Moonrise/Moonset Display
+	case 51: //Spare
 	{
 		Result = DONE;
 	}

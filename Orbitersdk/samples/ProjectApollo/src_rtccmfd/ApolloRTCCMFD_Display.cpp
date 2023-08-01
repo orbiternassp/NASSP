@@ -10233,5 +10233,35 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			j++;
 		}
 	}
+	else if (screen == 126)
+	{
+		skp->SetFont(font3);
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 3 * H / 26, "LM OPTICAL SUPPORT TABLE", 24);
+		sprintf_s(Buffer, "%s", GC->rtcc->LOSTDisplayBuffer.err.c_str());
+		skp->Text(1 * W / 2, 25 * H / 26, Buffer, strlen(Buffer));
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text(38 * W / 43, 3 * H / 26, "0239", 4);
+
+		skp->Text(1 * W / 43, 4 * H / 26, "VEH", 3);
+		skp->Text(11 * W / 43, 4 * H / 26, "MODE", 4);
+		skp->Text(20 * W / 43, 4 * H / 26, "LM P", 4);
+		skp->Text(20 * W / 43, 5 * H / 26, "LM Y", 4);
+		skp->Text(20 * W / 43, 6 * H / 26, "LM R", 4);
+		skp->Text(32 * W / 43, 4 * H / 26, "CSM P", 5);
+		skp->Text(32 * W / 43, 5 * H / 26, "CSM Y", 5);
+		skp->Text(32 * W / 43, 6 * H / 26, "CSM R", 5);
+
+		skp->Text(2 * W / 43, 21 * H / 26, "MATRIX 1", 8);
+		skp->Text(3 * W / 43, 22 * H / 26, "X/XE", 4);
+		skp->Text(3 * W / 43, 23 * H / 26, "Y/XE", 4);
+		skp->Text(3 * W / 43, 24 * H / 26, "Z/XE", 4);
+		skp->Text(18 * W / 43, 22 * H / 26, "X/YE", 4);
+		skp->Text(18 * W / 43, 23 * H / 26, "Y/YE", 4);
+		skp->Text(18 * W / 43, 24 * H / 26, "Z/YE", 4);
+		skp->Text(33 * W / 43, 22 * H / 26, "X/ZE", 4);
+		skp->Text(33 * W / 43, 23 * H / 26, "Y/ZE", 4);
+		skp->Text(33 * W / 43, 24 * H / 26, "Z/ZE", 4);
+	}
 	return true;
 }
