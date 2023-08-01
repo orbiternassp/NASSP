@@ -966,7 +966,7 @@ void ApolloRTCCMFD::menuSetMPTInitPage()
 
 	GC->mptInitError = 0;
 	marker = 0;
-	markermax = 6;
+	markermax = 5;
 }
 
 void ApolloRTCCMFD::menuSetDescPlanTablePage()
@@ -3760,22 +3760,23 @@ void ApolloRTCCMFD::menuCycleMPTTable()
 	}
 }
 
+void ApolloRTCCMFD::menuCycleMPTMED()
+{
+	if (G->mptinitmode < 3)
+	{
+		G->mptinitmode++;
+	}
+	else
+	{
+		G->mptinitmode = 0;
+	}
+}
+
 void ApolloRTCCMFD::menuSetMPTInitInput()
 {
 	switch (marker)
 	{
-	case 0:
-		//MED
-		if (G->mptinitmode < 3)
-		{
-			G->mptinitmode++;
-		}
-		else
-		{
-			G->mptinitmode = 0;
-		}
-		break;
-	case 1: //Second option on MED
+	case 0: //Second option on MED
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: SPS Fuel Remaining
@@ -3795,7 +3796,7 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 		break;
 		}
 		break;
-	case 2: //Third option on MED
+	case 1: //Third option on MED
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: CSM RCS Fuel Remaining
@@ -3812,7 +3813,7 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 			break;
 		}
 		break;
-	case 3: //Fourth option on MED
+	case 2: //Fourth option on MED
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: S-IVB Fuel Remaining
@@ -3829,7 +3830,7 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 			break;
 		}
 		break;
-	case 4: //Fifth option on MED
+	case 3: //Fifth option on MED
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: LM APS Fuel Remaining
@@ -3843,7 +3844,7 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 			break;
 		}
 		break;
-	case 5: //Sixth option on MED
+	case 4: //Sixth option on MED
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: LM RCS Fuel Remaining
@@ -3857,7 +3858,7 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 			break;
 		}
 		break;
-	case 6: //Seventh option on MED
+	case 5: //Seventh option on MED
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: LM DPS Fuel Remaining

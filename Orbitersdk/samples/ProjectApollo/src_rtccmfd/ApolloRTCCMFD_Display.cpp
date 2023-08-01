@@ -5317,13 +5317,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		skp->Text(1 * W / 16, (marker + 5) * H / 16, "*", 1);
+		skp->Text(1 * W / 16, (marker + 6) * H / 16, "*", 1);
 
 		skp->Text(10 * W / 16, 5 * H / 16, "MPT:", 4);
 
 		if (G->mptinitmode == 0)
 		{
-			skp->Text(2 * W / 16, 5 * H / 16, "MED M49: Fuel Remaining", 23);
+			skp->Text(2 * W / 16, 4 * H / 14, "MED M49: Fuel Remaining", 23);
 
 			if (GC->rtcc->med_m49.Table == RTCC_MPT_LM)
 			{
@@ -5411,7 +5411,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else if (G->mptinitmode == 1)
 		{
-			skp->Text(2 * W / 16, 5 * H / 16, "MED M50: Weights", 16);
+			skp->Text(2 * W / 16, 4 * H / 14, "MED M50: Weights", 16);
 
 			if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
 			{
@@ -5481,7 +5481,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else if (G->mptinitmode == 2)
 		{
-			skp->Text(2 * W / 16, 5 * H / 16, "MED M51: Areas", 14);
+			skp->Text(2 * W / 16, 4 * H / 14, "MED M51: Areas", 14);
 
 			if (GC->rtcc->med_m51.Table == RTCC_MPT_LM)
 			{
@@ -5521,7 +5521,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else
 		{
-			skp->Text(2 * W / 16, 5 * H / 16, "MED M55: Configuration", 22);
+			skp->Text(2 * W / 16, 4 * H / 14, "MED M55: Configuration", 22);
 
 			if (GC->rtcc->med_m55.Table == RTCC_MPT_LM)
 			{
