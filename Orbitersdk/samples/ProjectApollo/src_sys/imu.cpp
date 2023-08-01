@@ -449,43 +449,35 @@ void IMU::Timestep(double simdt)
 		inertialData.getAcceleration(accel);
 		accel = mul(Orbiter.Attitude_v2g, -accel);
 		accel = tmul(Orbiter.AttitudeReference, accel);
-
+		
 		//IMU Drift calculation
-		double DriftX = (imuDriftRates.NBD_X - (imuDriftRates.ADSRA_X * accel.y / 9.80665) + (imuDriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
-		double DriftY = (imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
-		double DriftZ = (imuDriftRates.NBD_Z + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
+		double DriftX = (imuDriftRates.NBD_X) * simdt;// - (imuDriftRates.ADSRA_X * accel.y / 9.80665) + (imuDriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
+		double DriftY = (imuDriftRates.NBD_Y) * simdt;// - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
+		double DriftZ = (imuDriftRates.NBD_Z) * simdt;// + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
 
 		// convert drift rates to rotation matrices
-		MATRIX3 DriftXRot = getRotationMatrixX(-DriftX);
-		MATRIX3 DriftYRot = getRotationMatrixY(-DriftY);
-		MATRIX3 DriftZRot = getRotationMatrixZ(-DriftZ);
+		MATRIX3 DriftXRot = getRotationMatrixX(DriftX);
+		MATRIX3 DriftYRot = getRotationMatrixY(DriftY);
+		MATRIX3 DriftZRot = getRotationMatrixZ(DriftZ);
 
-		MATRIX3 DriftXYZRot = mul(DriftYRot, mul(DriftZRot, DriftXRot));
-
-		// transformation to navigation base coordinates
-		// CAUTION: gimbal angles are left-handed
-		DriftXYZRot = mul(getRotationMatrixY(-Gimbal.Y), DriftXYZRot);
-		DriftXYZRot = mul(getRotationMatrixZ(-Gimbal.Z), DriftXYZRot);
-		DriftXYZRot = mul(getRotationMatrixX(-Gimbal.X), DriftXYZRot);
-
-		// calculate the new gimbal angles
-		VECTOR3 DriftAngles = getRotationAnglesXZY(DriftXYZRot);
+		MATRIX3 DriftXYZRot =  mul(DriftZRot, mul(DriftYRot, DriftXRot));
 		
 		// Gimbals
 		MATRIX3 t = Orbiter.AttitudeReference;
 		t = mul(Orbiter.Attitude_g2v, t);
 		t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
+		t = mul(DriftXYZRot,t);
 		VECTOR3 newAngles = getRotationAnglesXZY(t);
 		
 		//Calculate resolver outputs before the gimbals get moved to their new position
 		VECTOR3 GimbalPositionforPhase = _V(Gimbal.X, Gimbal.Y, Gimbal.Z);
-		//calculatePhase(newAngles + (DriftAngles - _V(Gimbal.X, Gimbal.Y, Gimbal.Z)));
 
 		// drive gimbals to new angles
 		// CAUTION: gimbal angles are left-handed
-		DriveGimbalX((-newAngles.x - Gimbal.X) - (-DriftAngles.x - Gimbal.X));
-		DriveGimbalY((-newAngles.y - Gimbal.Y) - (-DriftAngles.y - Gimbal.Y));
-		DriveGimbalZ((-newAngles.z - Gimbal.Z) - (-DriftAngles.z - Gimbal.Z));
+
+		DriveGimbalX(-newAngles.x - Gimbal.X);
+		DriveGimbalY(-newAngles.y - Gimbal.Y);
+		DriveGimbalZ(-newAngles.z - Gimbal.Z);
 		SetOrbiterAttitudeReference();
 		calculatePhase(-GimbalPositionforPhase);
 
