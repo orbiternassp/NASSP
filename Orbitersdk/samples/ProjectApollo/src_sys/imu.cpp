@@ -458,7 +458,7 @@ void IMU::Timestep(double simdt)
 		// convert drift rates to rotation matrices
 		MATRIX3 DriftXRot = getRotationMatrixX(DriftX);
 		MATRIX3 DriftYRot = getRotationMatrixY(DriftY);
-		MATRIX3 DriftZRot = getRotationMatrixZ(DriftZ);
+		MATRIX3 DriftZRot = getRotationMatrixZ(-DriftZ);
 
 		MATRIX3 DriftXYZRot =  mul(DriftZRot, mul(DriftYRot, DriftXRot));
 		
@@ -466,7 +466,7 @@ void IMU::Timestep(double simdt)
 		MATRIX3 t = Orbiter.AttitudeReference;
 		t = mul(Orbiter.Attitude_g2v, t);
 		t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
-		t = mul(DriftXYZRot,t);
+		t = mul(t,DriftXYZRot);
 		VECTOR3 newAngles = getRotationAnglesXZY(t);
 		
 		//Calculate resolver outputs before the gimbals get moved to their new position
