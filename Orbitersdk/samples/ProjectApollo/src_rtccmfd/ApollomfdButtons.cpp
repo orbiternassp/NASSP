@@ -2011,16 +2011,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu59[] =
 	{
-		{ "Set input", 0, 'S' },
+		{ "Choose Table", 0, 'T' },
+		{ "Choose MED", 0, 'E' },
+		{ "Update MPT", 0, 'M' },
 		{ "Previous Item", 0, 'P' },
 		{ "Next Item", 0, 'N' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Set input", 0, 'S' },
 
 		{ "Select vehicle", 0, 'D' },
 		{ "Auto update of parameters", 0, 'U' },
-		{ "Update MPT", 0, 'M' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Vector Panel Summary", 0, 'P' },
 		{ "Back to menu", 0, 'B' },
@@ -2028,16 +2028,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu59, sizeof(mnu59) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("SET", OAPI_KEY_S, &ApolloRTCCMFD::menuSetMPTInitInput);
+	RegisterFunction("TAB", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleMPTTable);
+	RegisterFunction("MED", OAPI_KEY_E, &ApolloRTCCMFD::menuCycleMPTMED);
+	RegisterFunction("UPD", OAPI_KEY_M, &ApolloRTCCMFD::menuMPTUpdate);
 	RegisterFunction("<<", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleMarkerDown);
 	RegisterFunction(">>", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleMarkerUp);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("SET", OAPI_KEY_S, &ApolloRTCCMFD::menuSetMPTInitInput);
 
 	RegisterFunction("TGT", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTInitM50M55Vehicle);
 	RegisterFunction("AUT", OAPI_KEY_U, &ApolloRTCCMFD::menuMPTInitAutoUpdate);
-	RegisterFunction("UPD", OAPI_KEY_M, &ApolloRTCCMFD::menuMPTUpdate);
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("VPS", OAPI_KEY_P, &ApolloRTCCMFD::menuVectorPanelSummaryPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMPTPage);
