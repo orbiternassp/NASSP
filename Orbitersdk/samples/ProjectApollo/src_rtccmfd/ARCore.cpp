@@ -514,6 +514,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lmmanpad.LMWeight = 0.0;
 	lmmanpad.SPA = 0.0;
 	lmmanpad.SXP = 0.0;
+	lmmanpad.IMUAtt = _V(0, 0, 0);
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	EntryPADSxtStarCheckAttOpt = true;

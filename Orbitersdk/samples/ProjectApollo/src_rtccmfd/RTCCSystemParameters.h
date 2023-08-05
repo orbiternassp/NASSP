@@ -685,6 +685,19 @@ struct RTCCSystemParameters
 
 		MCVCMA = 129.4*0.3048*0.3048;
 		MCVCMW = 5541.0; //Default CM empty + full CM RCS
+
+		MDGTCD[0] = -60.0*RAD;
+		MDGTCD[1] = 0.0*RAD;
+		MDGTCD[2] = 60.0*RAD;
+		MDGTCD[3] = 120.0*RAD;
+		MDGTCD[4] = 180.0*RAD;
+		MDGTCD[5] = 240.0*RAD;
+		MDGETA[0] = 45.0*RAD;
+		MDGETA[1] = 45.0*RAD;
+		MDGETA[2] = 45.0*RAD;
+		MDGETA[3] = 45.0*RAD;
+		MDGETA[4] = 45.0*RAD;
+		MDGETA[5] = 45.0*RAD;
 	}
 
 	//DEFINITIONS
@@ -1124,4 +1137,11 @@ struct RTCCSystemParameters
 	double MCVCMA;
 	//CM weight
 	double MCVCMW;
+
+	//Guidance
+
+	//AOT azimuth table
+	double MDGTCD[6];
+	//AOT elevation table
+	double MDGETA[6];
 };

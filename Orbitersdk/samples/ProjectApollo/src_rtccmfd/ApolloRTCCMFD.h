@@ -24,12 +24,17 @@
 #include "saturnv.h"
 #include "LEM.h"
 
+class ApolloRTCCMFD;
+
 struct RTCCMFDInputBoxData
 {
 	double *dVal;
-	int *iVal;
+	int *iVal, *iVal2;
+	int min1, max1, min2, max2;
 	VECTOR3 *vVal;
 	double factor;
+	ApolloRTCCMFD *ptr = NULL;
+	void (ApolloRTCCMFD::*func)(void) = NULL;
 };
 
 class ApolloRTCCMFD: public MFD2 {
@@ -660,6 +665,23 @@ public:
 	void menuGOSTSXTCalc();
 	void menuGOSTShowStarVector();
 	void menuGOSTShowLandmarkVector();
+	void menuSetLMOpticsSupportTablePage();
+	void menuLOSTMode();
+	void set_LOSTMode(int mode);
+	void menuLOSTAttitude1();
+	void menuLOSTAttitude2();
+	void menuLOST_REFSMMAT1();
+	bool set_LOST_REFSMMAT1(char *str);
+	void menuLOST_REFSMMAT2();
+	bool set_LOST_REFSMMAT2(char *str);
+	void menuLOST_CSM_REFSMMAT();
+	bool set_LOST_CSM_REFSMMAT(char *str);
+	void menuLOSTOptics1();
+	void menuLOSTOptics2();
+	bool set_LOST_AGS_Star2(int star, char *pos, double ang);
+	void menuLOSTRealign();
+	void menuCalcLOST();
+	void UpdateLOSTDisplay();
 	void menuSLVNavigationUpdateCalc();
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();
@@ -772,7 +794,9 @@ public:
 	void GenericGETInput(double *get, char *message);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericIntInput(int *val, char* message);
-	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0);
+	void GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;

@@ -2818,7 +2818,7 @@ int FindNearestStar(const std::vector<VECTOR3> navstars, VECTOR3 U_LOS, VECTOR3 
 	return star;
 }
 
-VECTOR3 backupgdcalignment(const std::vector<VECTOR3> navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
+VECTOR3 backupgdcalignment(const std::vector<VECTOR3> &navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 {
 	int starset[3][2];
 	double a, SA, TA1, dTA, TA2;
@@ -2870,6 +2870,69 @@ VECTOR3 backupgdcalignment(const std::vector<VECTOR3> navstars, MATRIX3 REFS, VE
 		}
 	}
 	return _V(0, 0, 0);
+}
+
+MATRIX3 AGSStarAlignment(const std::vector<VECTOR3> &navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter)
+{
+	//Matrix that converts from stable member to navigation base coordinates
+	MATRIX3 SMNB1, SMNB2;
+	//Unit star vectors in reference coordinates
+	VECTOR3 s_REFA, s_REFB;
+	//Unit star vectors in stable member coordinates
+	VECTOR3 s_SMA, s_SMB;
+	VECTOR3 u_OAN, u_XPN, u_YPN, u_XPN_apo, u_YPN_apo, u_XP, u_YP, u_YPN_aapo, s_NB;
+	double SEP, EL, AZ, RN, YROT;
+
+	//Get star unit vectors in BRCS coordinates
+	s_REFA = navstars[star1 - 1];
+	s_REFB = navstars[star2 - 1];
+
+	//SM to NB matrix
+	SMNB1 = CALCSMSC(Att1);
+	SMNB2 = CALCSMSC(Att2);
+
+	//Calculate angle between the two stars
+	SEP = acos(dotp(s_REFA, s_REFB));
+
+	EL = 45.0*RAD;
+	AZ = (-60.0 + 60.0*(double)(detent - 1))*RAD;
+
+	//Calculations for star 1
+	u_OAN = _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+	u_YPN_apo = _V(0.0, cos(AZ), -sin(AZ));
+	u_XPN_apo = crossp(u_YPN_apo, u_OAN);
+	RN = 0.0 - AZ;
+	u_XPN = u_XPN_apo * cos(RN) + u_YPN_apo * sin(RN);
+	u_YPN = -u_XPN_apo * sin(RN) + u_YPN_apo * cos(RN);
+
+	u_XP = tmul(SMNB1, u_XPN);
+	u_YP = tmul(SMNB1, u_YPN);
+	s_SMA = unit(crossp(u_XP, u_YP));
+
+	//Calculations for star 2
+	//axis: 0 = +X, 1 = -X, 2 = +Y, 3 = -Y
+	switch (axis)
+	{
+	case 1:
+		YROT = AOTCounter + 90.0*RAD;
+		break;
+	case 2:
+		YROT = AOTCounter;
+		break;
+	case 3:
+		YROT = AOTCounter + 180.0*RAD;
+		break;
+	default:
+		YROT = AOTCounter + 270.0*RAD;
+		break;
+	}
+
+	u_YPN_aapo = -u_XPN * sin(YROT) + u_YPN * cos(YROT);
+	s_NB = u_OAN * cos(SEP) + crossp(u_YPN_aapo, u_OAN)*sin(SEP);
+	s_SMB = tmul(SMNB2, s_NB);
+
+	//REFSMMAT
+	return AXISGEN(s_SMA, s_SMB, s_REFA, s_REFB);
 }
 
 bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E, double dist)
@@ -4557,6 +4620,110 @@ void AOTcheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
 }
 
+bool LMCOASCheckStar(VECTOR3 SI, MATRIX3 RMAT, VECTOR3 IMU, int Axis, double &EL, double &SPX)
+{
+	//SI - star position vector (ECI)
+	//RMAT - REFSMMAT
+	//IMU - Gimbal angles
+	//Axis: 1 = PX, 2 = PZ
+
+	MATRIX3 GA;
+	VECTOR3 SN; //Star position vector - Navbase
+	double EPS, GAM, ALP, SCV, R;
+
+	GA = CALCSMSC(IMU);
+	SN = mul(GA, mul(RMAT, SI));
+
+	//Check if star is within 5 degrees of the x-z plane
+	if (abs(SN.y) > cos(5.0*RAD))
+	{
+		return false;
+	}
+
+	if (Axis == 1)
+	{
+		//Limited to -35° to -5°
+		if (SN.z < 0)
+		{
+			if (acos(SN.x) > 5.0*RAD) return false;
+		}
+		else
+		{
+			if (acos(SN.x) > 35.0*RAD) return false;
+		}
+
+		double ARG1, ARG2, ARG3;
+
+		EPS = acos(SN.x);
+		GAM = acos(SN.z);
+		ALP = atan(SN.y / SN.x);
+		ARG1 = asin(sin(GAM)*sin(ALP) / sin(EPS));
+		SCV = PI05 - abs(asin(ARG1));
+		ARG2 = sin(SCV)*sin(EPS);
+		R = SN.z*abs(asin(ARG2) / SN.z);
+		ARG3 = cos(EPS) / cos(R);
+		SPX = SN.y*abs(acos(ARG3) / SN.y);
+		if (SN.y < 0)
+		{
+			SPX = -abs(SPX);
+		}
+		else
+		{
+			SPX = abs(SPX);
+		}
+		EL = R;
+		if (SN.z < 0)
+		{
+			EL = abs(EL);
+		}
+		else
+		{
+			EL = -abs(EL);
+		}
+	}
+	else
+	{
+		//Check if star is within 5 degrees of Y-Z plane
+		if (abs(SN.x) > cos(85.0*RAD)) return false;
+		if (SN.y < 0)
+		{
+			if (acos(SN.z) >= 70.0*RAD) return false;
+		}
+		else
+		{
+			if (acos(SN.z) >= 10.0*RAD) return false;
+		}
+
+		double HYP;
+
+		EPS = acos(SN.z);
+		GAM = acos(SN.x);
+		HYP = sqrt(SN.x*SN.x + SN.y*SN.y);
+		ALP = atan(HYP / SN.z);
+		SCV = PI05 - abs(asin(sin(GAM)*sin(ALP) / sin(EPS)));
+		R = SN.x*abs(asin(sin(SCV)*sin(EPS)) / SN.x);
+		if (SN.x < 0)
+		{
+			SPX = -abs(R);
+		}
+		else
+		{
+			SPX = abs(R);
+		}
+		EL = SN.y*abs(acos(cos(EPS) / cos(SPX)) / SN.y);
+		if (SN.y < 0.0)
+		{
+			EL = abs(EL);
+		}
+		else
+		{
+			EL = -abs(EL);
+		}
+		EL -= 30.0*RAD;
+	}
+	return true;
+}
+
 VECTOR3 imulimit(VECTOR3 a)
 {
 	return _V(imulimit(a.x), imulimit(a.y), imulimit(a.z));
@@ -4677,7 +4844,7 @@ VECTOR3 GimbalAngleConversion(MATRIX3 REFSMMAT1, VECTOR3 GimbalAngles, MATRIX3 R
 	//Compute rotation matrix for inertial 
 	MATRIX3 M_SM_NB, M_BRCS_NB;
 	VECTOR3 GimbalAngles2;
-	
+
 	M_SM_NB = CALCSMSC(GimbalAngles);
 	M_BRCS_NB = mul(M_SM_NB, REFSMMAT2);
 	GimbalAngles2 = CALCGAR(REFSMMAT1, M_BRCS_NB);
