@@ -55,6 +55,7 @@ public:
 	inline VECTOR3 getResolverPhaseError() { return ResolverPhaseError; };
 	inline VECTOR3 getResolverSineGimbal() { return SineGimbal; };
 	inline VECTOR3 getResolverCosineGimbal() { return CosineGimbal; };
+	VECTOR3 getPlatformEulerAnglesZYX();
 	virtual VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);

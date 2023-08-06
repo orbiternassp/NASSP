@@ -59,7 +59,6 @@ IMU::~IMU()
 }
 
 void IMU::Init() 
-
 {
 	Operate = false;
 	TurnedOn = false;
@@ -135,13 +134,13 @@ void IMU::SetDriftRates(const MATRIX3 DriftRateMatrix)
 	imuDriftRates.NBD_Y = DriftRateMatrix.m12 * MERU;
 	imuDriftRates.NBD_Z = DriftRateMatrix.m13 * MERU;
 
-	imuDriftRates.ADSRA_X = DriftRateMatrix.m21;
-	imuDriftRates.ADSRA_Y = DriftRateMatrix.m22;
-	imuDriftRates.ADSRA_Z = DriftRateMatrix.m23;
+	imuDriftRates.ADSRA_X = DriftRateMatrix.m21 * MERU;
+	imuDriftRates.ADSRA_Y = DriftRateMatrix.m22 * MERU;
+	imuDriftRates.ADSRA_Z = DriftRateMatrix.m23 * MERU;
 
-	imuDriftRates.ADIA_X = DriftRateMatrix.m31;
-	imuDriftRates.ADIA_Y = DriftRateMatrix.m32;
-	imuDriftRates.ADIA_Z = DriftRateMatrix.m33;
+	imuDriftRates.ADIA_X = DriftRateMatrix.m31 * MERU;
+	imuDriftRates.ADIA_Y = DriftRateMatrix.m32 * MERU;
+	imuDriftRates.ADIA_Z = DriftRateMatrix.m33 * MERU;
 }
 
 VECTOR3 IMU::GetNBDriftRates()
@@ -319,7 +318,13 @@ bool IMU::IsPowered()
 	return true;
 }
 
-void IMU::WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s) 
+VECTOR3 IMU::getPlatformEulerAnglesZYX()
+{
+	VECTOR3 RotationDeviation = getRotationAnglesZYX(Orbiter.AttitudeReference);
+	return(_V(RotationDeviation.x, RotationDeviation.z, RotationDeviation.y));
+}
+
+void IMU::WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s)
 
 { 
 	DCPower.WireToBuses(a, b); 
@@ -451,9 +456,9 @@ void IMU::Timestep(double simdt)
 		accel = tmul(Orbiter.AttitudeReference, accel);
 		
 		//IMU Drift calculation
-		double DriftX = (imuDriftRates.NBD_X) * simdt;// - (imuDriftRates.ADSRA_X * accel.y / 9.80665) + (imuDriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
-		double DriftY = (imuDriftRates.NBD_Y) * simdt;// - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
-		double DriftZ = (imuDriftRates.NBD_Z) * simdt;// + (imuDriftRates.ADSRA_Z * accel.y / 9.80665) + (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
+		double DriftX = (imuDriftRates.NBD_X - (imuDriftRates.ADSRA_X * accel.y / 9.80665) + (imuDriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
+		double DriftY = (imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
+		double DriftZ = (imuDriftRates.NBD_Z - (imuDriftRates.ADSRA_Z * accel.y / 9.80665) - (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
 
 		// convert drift rates to rotation matrices
 		MATRIX3 DriftXRot = getRotationMatrixX(DriftX);

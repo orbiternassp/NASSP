@@ -329,6 +329,24 @@ namespace mission {
 			else if (!_strnicmp(line, "CMNBDZ=", 7)) {
 				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m13);
 			}
+			else if (!_strnicmp(line, "CMADSRAX=", 9)) {
+				sscanf(line + 9, "%lf", &CM_IMUDriftRates.m21);
+			}
+			else if (!_strnicmp(line, "CMADSRAY=", 9)) {
+				sscanf(line + 9, "%lf", &CM_IMUDriftRates.m22);
+			}
+			else if (!_strnicmp(line, "CMADSRAZ=", 9)) {
+				sscanf(line + 9, "%lf", &CM_IMUDriftRates.m23);
+			}
+			else if (!_strnicmp(line, "CMADIAX=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m31);
+			}
+			else if (!_strnicmp(line, "CMADIAY=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m32);
+			}
+			else if (!_strnicmp(line, "CMADIAZ=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m33);
+			}
 		}
 		//LoadIMU_AndPIPA_RatesAndBiases(hFile);
 		hFile.close();
@@ -337,7 +355,7 @@ namespace mission {
 	}
 
 	void Mission::LoadIMU_AndPIPA_RatesAndBiases(std::ifstream &hFile) {
-		char line[256];
+		//char line[256];
 
 		//for (std::string line; std::getline(hFile, line);) {
 		//	if (!line.compare(0,7,"CMNBDX=")) {

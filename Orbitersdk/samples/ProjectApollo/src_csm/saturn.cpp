@@ -1430,7 +1430,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	//
 	// Subclass specific handling
 	//
-	VECTOR3 ATTITUDEFORTESTING = imu.GetTotalAttitude();
+	//VECTOR3 ATTITUDEFORTESTING = imu.GetTotalAttitude();
+	VECTOR3 ATTITUDEFORTESTING = imu.getPlatformEulerAnglesZYX();
 	VECTOR3 DRIFTRATEFORTESTING = imu.GetNBDriftRates();
 	VECTOR3 IMURESOLVERPHASEERROR = imu.getResolverPhaseError();
 	sprintf(oapiDebugString(), "<%0.10f, %0.10f, %0.10f>, <%0.10f, %0.10f, %0.10f>, <%0.10f, %0.10f, %0.10f>", 
