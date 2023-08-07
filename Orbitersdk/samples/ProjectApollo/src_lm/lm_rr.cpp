@@ -220,7 +220,30 @@ double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
 	return SignalStrengthRCVD;
 }
 
+void LEM_RR::GetRadarRangeLGC()
+{
+	if (!IsPowered()) return;
 
+	if (range > 93700) {
+		// HI SCALE
+		// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
+		lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 22.8722);
+	}
+	else {
+		// LO SCALE
+		// Should be 9.38 feet/bit
+		lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 2.85902);
+	}
+}
+
+void LEM_RR::GetRadarRateLGC()
+{
+	if (!IsPowered()) return;
+
+	// Our center point is at 17000 counts.
+	// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
+	lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0 - (rate / 0.191361));
+}
 
 void LEM_RR::Timestep(double simdt) {
 
@@ -235,12 +258,10 @@ void LEM_RR::Timestep(double simdt) {
 	rr_proc_last[1] = rr_proc[1];
 
 	ChannelValue val12;
-	ChannelValue val13;
 	ChannelValue val14;
 	ChannelValue val30;
 	ChannelValue val33;
 	val12 = lem->agc.GetInputChannel(012);
-	val13 = lem->agc.GetInputChannel(013);
 	val14 = lem->agc.GetInputChannel(014);
 	val30 = lem->agc.GetInputChannel(030);
 	val33 = lem->agc.GetInputChannel(033);
@@ -279,19 +300,6 @@ void LEM_RR::Timestep(double simdt) {
 		range = 0.0;
 		rate = 0.0;
 		sin_shaft = cos_shaft = sin_trunnion = cos_trunnion = 0.0;
-		if (val13[RadarActivity] == 1) {
-			int radarBits = 0;
-			if (val13[RadarA] == 1) { radarBits |= 1; }
-			if (val13[RadarB] == 1) { radarBits |= 2; }
-			if (val13[RadarC] == 1) { radarBits |= 4; }
-			switch (radarBits) {
-			case 2:
-			case 4:
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-				break;
-			}
-		}
 		lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, 0.0, AntennaGain*AntennaPolarValue, AntennaPhase);
 		return;
 	}
@@ -695,68 +703,6 @@ void LEM_RR::Timestep(double simdt) {
 		if(val14.Bits.TrunnionAngleCDUDrive != 0){ sprintf(debugmsg,"%s DriveT(%f)",debugmsg,trunnionAngle*DEG); }
 		sprintf(oapiDebugString(),debugmsg);
 		*/
-
-		// The computer wants something from the radar.
-		if (val13[RadarActivity] == 1) {
-			int radarBits = 0;
-			if (val13[RadarA] == 1) { radarBits |= 1; }
-			if (val13[RadarB] == 1) { radarBits |= 2; }
-			if (val13[RadarC] == 1) { radarBits |= 4; }
-			switch (radarBits) {
-			case 1:
-				// LR (LR VEL X)
-				// Not our problem
-				break;
-			case 2:
-				// RR RANGE RATE
-				// Our center point is at 17000 counts.
-				// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0 - (rate / 0.191361));
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-				ruptSent = 2;
-
-				break;
-			case 3:
-				// LR (LR VEL Z)
-				// Not our problem
-				break;
-			case 4:
-				// RR RANGE
-				// We use high scale above 50.6nm, and low scale below that.
-				if (range > 93700) {
-					// HI SCALE
-					// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
-					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 22.8722);
-				}
-				else {
-					// LO SCALE
-					// Should be 9.38 feet/bit
-					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 2.85902);
-				}
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-				ruptSent = 4;
-
-				break;
-			case 5:
-				// LR (LR VEL Y)
-				// Not our problem
-				break;
-			case 7:
-				// LR (LR RANGE)
-				// Not our problem
-				break;
-				/*
-				default:
-				sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
-				*/
-			}
-
-		}
-		else {
-			ruptSent = 0;
-		}
 	}
 
 	//sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);

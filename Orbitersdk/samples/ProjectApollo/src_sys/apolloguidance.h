@@ -262,6 +262,9 @@ public:
 
 	virtual void ProcessIMUCDUReadCount(int channel, int val);
 
+	/// Resets the radar activity bit, reads radar data and causes the RADARUPT. Should be called after the radar timesteps
+	void RadarRead();
+
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///
@@ -355,6 +358,9 @@ protected:
 	virtual void ProcessChannel143(ChannelValue val);
 	virtual void ProcessChannel163(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
+
+	/// Vehicle specific function
+	virtual void GetRadarData(int radarBits) = 0;
 
 public:
 

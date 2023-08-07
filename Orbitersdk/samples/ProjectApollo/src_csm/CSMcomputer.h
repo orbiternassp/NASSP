@@ -142,6 +142,7 @@ protected:
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	void ProcessIMUCDUReadCount(int channel, int val);
+	void GetRadarData(int radarBits);
 
 	FILE *Dfile;
 	int count;
