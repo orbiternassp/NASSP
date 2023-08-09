@@ -10344,11 +10344,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, GC->rtcc->LOSTDisplayBuffer[9], 13, 8, 55, 30); //MAT USED
 		Text(skp, GC->rtcc->LOSTDisplayBuffer[10], 31, 8, 55, 30); //GETHORIZ
 		Text(skp, GC->rtcc->LOSTDisplayBuffer[11], 49, 8, 55, 30); //OGA
-		Text(skp, GC->rtcc->LOSTDisplayBuffer[12], 3, 10, 55, 30); //Star 1
-		Text(skp, GC->rtcc->LOSTDisplayBuffer[13], 3, 11, 55, 30); //Star 2
-		Text(skp, GC->rtcc->LOSTDisplayBuffer[14], 7, 10, 55, 30); //RA star 1
-		Text(skp, GC->rtcc->LOSTDisplayBuffer[15], 7, 10, 55, 30); //DEC star 1
-		Text(skp, GC->rtcc->LOSTDisplayBuffer[16], 13, 11, 55, 30); //RA star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[12], 2, 10, 55, 30); //Star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[13], 2, 11, 55, 30); //Star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[14], 6, 10, 55, 30); //RA star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[15], 13, 10, 55, 30); //DEC star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[16], 6, 11, 55, 30); //RA star 2
 		Text(skp, GC->rtcc->LOSTDisplayBuffer[17], 13, 11, 55, 30); //DEC star 2
 		Text(skp, GC->rtcc->LOSTDisplayBuffer[18], 21, 10, 55, 30); //Roll star 1
 		Text(skp, GC->rtcc->LOSTDisplayBuffer[19], 27, 10, 55, 30); //Pitch star 1

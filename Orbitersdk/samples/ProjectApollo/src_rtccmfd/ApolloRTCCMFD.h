@@ -681,7 +681,9 @@ public:
 	bool set_LOST_AGS_Star2(int star, char *pos, double ang);
 	void menuLOSTRealign();
 	void menuCalcLOST();
+	void set_LOSTCheckMode(double get,int Detent, int COASAxis);
 	void UpdateLOSTDisplay();
+	void CalculateLOSTDOKOption();
 	void menuSLVNavigationUpdateCalc();
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();
@@ -793,7 +795,7 @@ public:
 	void menuPerigeeAdjustHeight();
 	void GenericGETInput(double *get, char *message);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
-	void GenericIntInput(int *val, char* message);
+	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);

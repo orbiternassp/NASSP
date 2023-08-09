@@ -3397,7 +3397,6 @@ public:
 		VECTOR3 LM_ATT = _V(0, 0, 0);
 		VECTOR3 CSM_ATT = _V(0, 0, 0);
 		double DKAN = 0.0;
-		int CSM_REF = 0;
 		double GETHORIZ = 0.0;
 		double OGA = 0.0;
 
@@ -3409,7 +3408,7 @@ public:
 		int L1 = 0; //Reticle line (0 = +X, 1 = -X, 2 = +Y, 3 = -Y)
 		double A1_1 = 0.0; //AOT counter for cursor
 		double A2_1 = 0.0; //AOT counter for spirale
-		int D1 = 0;
+		int D1 = 2;
 
 		//Star 2
 		int star2 = 0;
@@ -3419,16 +3418,19 @@ public:
 		int L2 = 0; //Reticle line (0 = +X, 1 = -X, 2 = +Y, 3 = -Y)
 		double A1_2 = 0.0; //AOT counter for cursor
 		double A2_2 = 0.0; //AOT counter for spirale
-		int D2 = 0;
+		int D2 = 2;
 
 		//COAS
-		int COAS_star1 = 0;
+		unsigned COAS_star1 = 0;
 		double COAS_EL1 = 0.0;
 		double COAS_SXP1 = 0.0;
-		int COAS_star2 = 0;
+		unsigned COAS_star2 = 0;
 		double COAS_EL2 = 0.0;
 		double COAS_SXP2 = 0.0;
-		bool COAS_AXIS = false;
+		int COAS_AXIS = 1; //1 = PX, 2 = PZ
+
+		VECTOR3 StoredAttTLM = _V(0, 0, 0);
+		VECTOR3 StoredAttMED = _V(0, 0, 0);
 
 		bool showRealign = false;
 		VECTOR3 GIMB_ANG = _V(0, 0, 0);
@@ -3436,6 +3438,7 @@ public:
 
 		int REF1 = 0;
 		int REF2 = 0;
+		int REFSUSED = 0;
 
 		bool REFSMMATValid = false;
 		MATRIX3 StoredREFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -4528,6 +4531,12 @@ public:
 		int G14_RB = 0;
 		double G14_lat = 0.0, G14_lng = 0.0, G14_height = 0.0;
 		double G14_GMT = 0.0;
+
+		double G20_HORIZGET = 0.0;
+		int G20_COAS_Axis = 1;
+		int G20_AOT_Detent = 2;
+
+		int G23_Option = 1;
 	} EZGSTMED;
 
 	struct ExternalDVMakeupBuffer

@@ -1502,11 +1502,13 @@ bool GenericDoubleInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericIntInput(int *val, char *message)
+void ApolloRTCCMFD::GenericIntInput(int *val, char *message, void (ApolloRTCCMFD::*func)(void))
 {
 	void *data2;
 
 	tempData.iVal = val;
+	tempData.ptr = this;
+	tempData.func = func;
 	data2 = &tempData;
 
 	bool GenericIntInputBox(void *id, char *str, void *data);
@@ -1521,6 +1523,14 @@ bool GenericIntInputBox(void *id, char *str, void *data)
 	if (sscanf(str, "%d", &val) == 1)
 	{
 		*arr->iVal = val;
+
+		if (arr->func)
+		{
+			ApolloRTCCMFD *ptr = arr->ptr;
+			void (ApolloRTCCMFD::*func)(void) = arr->func;
+
+			(ptr->*func)();
+		}
 		return true;
 	}
 	return false;
@@ -8098,7 +8108,7 @@ void ApolloRTCCMFD::menuLOSTAttitude1()
 	}
 	else if (GC->rtcc->EZJGSTBL.MODE == 7)
 	{
-		//TBD: Presently stored att MED
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.StoredAttMED, "Enter attitude for star check:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
 	}
 }
 
@@ -8152,8 +8162,11 @@ bool ApolloRTCCMFD::set_LOST_REFSMMAT2(char *str)
 
 void ApolloRTCCMFD::menuLOST_CSM_REFSMMAT()
 {
-	bool LOST_CSM_REFSMMAT_Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Enter CSM REFSMMAT type (CUR, PCR, TLM, OST, MED, DMT, DOD, LCV):", LOST_CSM_REFSMMAT_Input, "CUR", 10, (void*)this);
+	if (GC->rtcc->EZJGSTBL.MODE == 2)
+	{
+		bool LOST_CSM_REFSMMAT_Input(void* id, char *str, void *data);
+		oapiOpenInputBox("Enter CSM REFSMMAT type (CUR, PCR, TLM, OST, MED, DMT, DOD, LCV):", LOST_CSM_REFSMMAT_Input, "CUR", 10, (void*)this);
+	}
 }
 
 bool LOST_CSM_REFSMMAT_Input(void* id, char *str, void *data)
@@ -8163,7 +8176,7 @@ bool LOST_CSM_REFSMMAT_Input(void* id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_LOST_CSM_REFSMMAT(char *str)
 {
-	GC->rtcc->EZJGSTBL.CSM_REF = GC->rtcc->EMGSTGENCode(str);
+	GC->rtcc->EZJGSTBL.REFSUSED = GC->rtcc->EMGSTGENCode(str);
 	GC->rtcc->EMDGLMST();
 	return true;
 }
@@ -8237,12 +8250,59 @@ void ApolloRTCCMFD::menuCalcLOST()
 {
 	if (GC->rtcc->EZJGSTBL.MODE == 2)
 	{
-		menuGeneralMEDRequest("Docking Alignment. Format: G23,Option; Option: 1 = Calculate LM REFSMMAT, 2 = LM gimbal angles, 3 = CSM gimbal angles");
+		GenericIntInput(&GC->rtcc->EZGSTMED.G23_Option, "Docking Alignment. Option: 1 = Calculate LM REFSMMAT, 2 = LM gimbal angles, 3 = CSM gimbal angles", &ApolloRTCCMFD::CalculateLOSTDOKOption);
 	}
 	else if (GC->rtcc->EZJGSTBL.MODE == 4)
 	{
 		GeneralMEDRequest("G20;");
 	}
+	else if (GC->rtcc->EZJGSTBL.MODE == 7)
+	{
+		bool LOSTCheckModeInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Alignment check. Format: GET (HH:MM:SS) Detent (1-6) COAS axis (PX or PZ)", LOSTCheckModeInput, 0, 30, (void*)this);
+	}
+}
+
+bool LOSTCheckModeInput(void* id, char *str, void *data)
+{
+	double hh, mm, ss, get;
+	int Detent, COASAxis;
+	char Buff[16];
+
+	if (sscanf(str, "%lf:%lf:%lf %d %s", &hh, &mm, &ss, &Detent, Buff) == 5)
+	{
+		get = hh * 3600.0 + mm * 60.0 + ss;
+
+		if (Detent < 1 || Detent > 6) return false;
+		if (strcmp(Buff, "PX") == 0)
+		{
+			COASAxis = 1;
+		}
+		else if (strcmp(Buff, "PZ") == 0)
+		{
+			COASAxis = 2;
+		}
+		else return false;
+
+		((ApolloRTCCMFD*)data)->set_LOSTCheckMode(get, Detent, COASAxis);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LOSTCheckMode(double get, int Detent, int COASAxis)
+{
+	GC->rtcc->EZGSTMED.G20_HORIZGET = get;
+	GC->rtcc->EZGSTMED.G20_AOT_Detent = Detent;
+	GC->rtcc->EZGSTMED.G20_COAS_Axis = COASAxis;
+
+	GeneralMEDRequest("G20;");
+}
+
+void ApolloRTCCMFD::CalculateLOSTDOKOption()
+{
+	GeneralMEDRequest("G23;");
 }
 
 void ApolloRTCCMFD::UpdateLOSTDisplay()

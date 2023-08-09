@@ -26589,22 +26589,12 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 		//Calculate DOK REFSMMAT
 		else if (med == "23")
 		{
-			if (data.size() != 1)
-			{
-				return 1;
-			}
-
-			int mode;
-			if (sscanf(data[0].c_str(), "%d", &mode) != 1)
-			{
-				return 2;
-			}
-			if (mode <= 0 || mode >= 4)
+			if (EZGSTMED.G23_Option < 1 || EZGSTMED.G23_Option>3)
 			{
 				return 2;
 			}
 
-			EMSLSUPP(3, mode);
+			EMSLSUPP(3, EZGSTMED.G23_Option);
 		}
 	}
 	
@@ -34310,7 +34300,6 @@ void RTCC::EMSLSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 	//Calculate DOK REFSMMAT
 	else if (QUEID == 3)
 	{
-
 		if (EZJGSTBL.REF1 <= 0)
 		{
 			return;
@@ -34320,11 +34309,11 @@ void RTCC::EMSLSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 		REFSMMATData refdata;
 
 		//Get CSM REFSMMAT data
-		if (EZJGSTBL.CSM_REF <= 0)
+		if (EZJGSTBL.REFSUSED <= 0)
 		{
 			return;
 		}
-		refdata = EZJGMTX1.data[EZJGSTBL.CSM_REF - 1];
+		refdata = EZJGMTX1.data[EZJGSTBL.REFSUSED - 1];
 		if (refdata.ID == 0)
 		{
 			//ERROR: REFSMMAT NOT AVAILABLE
@@ -34377,6 +34366,8 @@ void RTCC::EMSLSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 
 bool RTCC::EMMGSTCK(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES)
 {
+	//Function returns true, if star is occulted
+
 	//Vectors from bodies to spacecraft
 	VECTOR3 R_EV, R_MV, R_SV;
 	if (body == BODY_EARTH)
@@ -34881,6 +34872,8 @@ void RTCC::EMDGSUPP(int err)
 
 void RTCC::EMMGLMST(int mode)
 {
+	EZJGSTBL.showRealign = false;
+
 	if (mode == 1)
 	{
 		//Realign angles
@@ -34894,9 +34887,17 @@ void RTCC::EMMGLMST(int mode)
 			{
 				REFSMMAT1 = refs.REFSMMAT;
 			}
-			else return;
+			else
+			{
+				EMDGLMST();
+				return;
+			}
 		}
-		else return;
+		else
+		{
+			EMDGLMST();
+			return;
+		}
 
 		if (EZJGSTBL.REF2 > 0)
 		{
@@ -34905,9 +34906,17 @@ void RTCC::EMMGLMST(int mode)
 			{
 				REFSMMAT2 = refs.REFSMMAT;
 			}
-			else return;
+			else
+			{
+				EMDGLMST();
+				return;
+			}
 		}
-		else return;
+		else
+		{
+			EMDGLMST();
+			return;
+		}
 
 		VECTOR3 X_P, Y_P, Z_P, X_B, Y_B, Z_B;
 
@@ -34940,12 +34949,20 @@ void RTCC::EMMGLMST(int mode)
 		GMGMED("G21,LEM,OST-M;");
 		//Show as MAT1
 		EZJGSTBL.REF1 = RTCC_REFSMMAT_TYPE_OST;
+		EZJGSTBL.REFSUSED = EZJGSTBL.REF1;
 	}
 	else if (mode == 7)
 	{
 		//CHK
+		MATRIX3 REFSMMAT;
 		double GMT;
 
+		//Reset some data on the display
+		EZJGSTBL.star1 = EZJGSTBL.star2 = 0;
+		EZJGSTBL.A1_1 = EZJGSTBL.A1_2 = EZJGSTBL.A2_1 = EZJGSTBL.A2_2 = 0.0;
+
+		//Get GMT of alignment
+		EZJGSTBL.GETHORIZ = EZGSTMED.G20_HORIZGET;
 		GMT = GMTfromGET(EZJGSTBL.GETHORIZ);
 
 		ELVCTRInputTable in;
@@ -34959,12 +34976,159 @@ void RTCC::EMMGLMST(int mode)
 
 		if (out.ErrorCode > 2)
 		{
-			//TBD: Set error indicator
+			EZJGSTBL.GETHORIZ = -1.0;
+			EMDGLMST();
 			return;
 		}
 
 		EphemerisData2 sv = out.SV;
 		EphemerisData sv2 = RotateSVToSOI(sv);
+
+		if (EZJGSTBL.REF1 > 0)
+		{
+			REFSMMATData refs = EZJGMTX3.data[EZJGSTBL.REF1 - 1];
+			if (refs.ID > 0)
+			{
+				REFSMMAT = refs.REFSMMAT;
+			}
+			else
+			{
+				EMDGLMST();
+				return;
+			}
+		}
+		else
+		{
+			EMDGLMST();
+			return;
+		}
+
+		EZJGSTBL.REFSUSED = EZJGSTBL.REF1;
+
+		VECTOR3 R_ES, R_EM, V_EM;
+
+		if (PLEFEM(1, sv2.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL))
+		{
+			//Error
+			EMDGLMST();
+			return;
+		}
+
+		unsigned num = 0;
+		bool found;
+
+		//AOT
+		double AOT_AZ, AOT_EL;
+
+		//Get azimuth and elevation angles of AOT detent
+		AOT_AZ = SystemParameters.MDGTCD[EZGSTMED.G20_AOT_Detent - 1];
+		AOT_EL = SystemParameters.MDGETA[EZGSTMED.G20_AOT_Detent - 1];
+
+		for (int i = 0; i < 2; i++)
+		{
+			found = false;
+
+			while (num < EZJGSTAR.size())
+			{
+				//Occultation check
+				if (EMMGSTCK(EZJGSTAR[num], sv2.R, sv2.RBI, R_EM, R_ES))
+				{
+					num++;
+					continue;
+				}
+				found = OrbMech::AOTcheckstar(EZJGSTAR[num], REFSMMAT, EZJGSTBL.StoredAttMED, AOT_AZ, AOT_EL);
+				if (found) break;
+				num++;
+			}
+
+			if (found)
+			{
+				if (i == 0)
+				{
+					EZJGSTBL.star1 = num + 1;
+					OrbMech::AOTStarAcquisition(EZJGSTAR[num], REFSMMAT, EZJGSTBL.StoredAttMED, AOT_AZ, AOT_EL, EZJGSTBL.A1_1, EZJGSTBL.A2_1);
+					num++;
+				}
+				else
+				{
+					EZJGSTBL.star2 = num + 1;
+					OrbMech::AOTStarAcquisition(EZJGSTAR[num], REFSMMAT, EZJGSTBL.StoredAttMED, AOT_AZ, AOT_EL, EZJGSTBL.A1_2, EZJGSTBL.A2_2);
+				}
+			}
+			else
+			{
+				if (i == 0)
+				{
+					EZJGSTBL.star1 = 0;
+				}
+				else
+				{
+					EZJGSTBL.star2 = 0;
+				}
+				break;
+			}
+		}
+
+		//Set displayed detents and attitudes for star sightings to input
+		EZJGSTBL.D1 = EZJGSTBL.D2 = EZGSTMED.G20_AOT_Detent;
+		//And use +Y
+		EZJGSTBL.L1 = EZJGSTBL.L2 = 2;
+		EZJGSTBL.Att1 = EZJGSTBL.Att2 = EZJGSTBL.StoredAttMED;
+
+		//COAS
+		double EL, SXP;
+		num = 0;
+		found = false;
+
+		for (int i = 0; i < 2; i++)
+		{
+			found = false;
+
+			while (num < EZJGSTAR.size())
+			{
+				//Occultation check
+				if (EMMGSTCK(EZJGSTAR[num], sv2.R, sv2.RBI, R_EM, R_ES))
+				{
+					num++;
+					continue;
+				}
+				found = OrbMech::LMCOASCheckStar(EZJGSTAR[num], REFSMMAT, EZJGSTBL.StoredAttMED, EZGSTMED.G20_COAS_Axis, EL, SXP);
+				if (found) break;
+				num++;
+			}
+
+			if (found)
+			{
+				if (i == 0)
+				{
+					EZJGSTBL.COAS_star1 = num;
+					EZJGSTBL.COAS_EL1 = EL;
+					EZJGSTBL.COAS_SXP1 = SXP;
+					num++;
+				}
+				else
+				{
+					EZJGSTBL.COAS_star2 = num;
+					EZJGSTBL.COAS_EL2 = EL;
+					EZJGSTBL.COAS_SXP2 = SXP;
+				}
+			}
+			else
+			{
+				if (i == 0)
+				{
+					EZJGSTBL.COAS_star1 = 0;
+				}
+				else
+				{
+					EZJGSTBL.COAS_star2 = 0;
+				}
+			}
+		}
+
+		EZJGSTBL.COAS_AXIS = EZGSTMED.G20_COAS_Axis;
+
+		//TBD: Horizon
 	}
 
 	EMDGLMST();
@@ -35037,14 +35201,24 @@ void RTCC::EMDGLMST()
 	}
 
 	//Item 10: Matrix used
-	if (EZJGSTBL.MODE == 2)
+	if (EZJGSTBL.MODE == 2 || EZJGSTBL.MODE == 4 || EZJGSTBL.MODE == 7)
 	{
-		if (EZJGSTBL.CSM_REF > 0)
+		if (EZJGSTBL.REFSUSED > 0)
 		{
-			REFSMMATData refs = EZJGMTX1.data[EZJGSTBL.CSM_REF - 1];
+			REFSMMATData refs;
+			
+			if (EZJGSTBL.MODE == 2)
+			{
+				refs = EZJGMTX1.data[EZJGSTBL.REFSUSED - 1];
+			}
+			else
+			{
+				refs = EZJGMTX3.data[EZJGSTBL.REFSUSED - 1];
+			}
+
 			if (refs.ID > 0)
 			{
-				FormatREFSMMATCode(EZJGSTBL.CSM_REF, refs.ID, Buffer);
+				FormatREFSMMATCode(EZJGSTBL.REFSUSED, refs.ID, Buffer);
 				LOSTDisplayBuffer[9].assign(Buffer);
 			}
 			else
@@ -35065,8 +35239,15 @@ void RTCC::EMDGLMST()
 	//Item 11: GETHORIZ
 	if (EZJGSTBL.MODE == 7)
 	{
-		OrbMech::format_time_HHMMSS(Buffer, EZJGSTBL.GETHORIZ);
-		LOSTDisplayBuffer[10].assign(Buffer);
+		if (EZJGSTBL.GETHORIZ < 0.0)
+		{
+			LOSTDisplayBuffer[10] = "N/A";
+		}
+		else
+		{
+			OrbMech::format_time_HHMMSS(Buffer, EZJGSTBL.GETHORIZ);
+			LOSTDisplayBuffer[10].assign(Buffer);
+		}
 	}
 	else
 	{
@@ -35087,10 +35268,24 @@ void RTCC::EMDGLMST()
 	//Item 13-14: Stars 1-2
 	if (EZJGSTBL.MODE == 3 || EZJGSTBL.MODE == 4 || EZJGSTBL.MODE == 5 || EZJGSTBL.MODE == 7)
 	{
-		sprintf_s(Buffer, "%03d", EZJGSTBL.star1);
-		LOSTDisplayBuffer[12].assign(Buffer);
-		sprintf_s(Buffer, "%03d", EZJGSTBL.star2);
-		LOSTDisplayBuffer[13].assign(Buffer);
+		if (EZJGSTBL.star1 > 0)
+		{
+			sprintf_s(Buffer, "%03d", EZJGSTBL.star1);
+			LOSTDisplayBuffer[12].assign(Buffer);
+		}
+		else
+		{
+			LOSTDisplayBuffer[12] = "N/A";
+		}
+		if (EZJGSTBL.star2 > 0)
+		{
+			sprintf_s(Buffer, "%03d", EZJGSTBL.star2);
+			LOSTDisplayBuffer[13].assign(Buffer);
+		}
+		else
+		{
+			LOSTDisplayBuffer[13] = "N/A";
+		}
 	}
 	else
 	{
@@ -35099,13 +35294,32 @@ void RTCC::EMDGLMST()
 	}
 
 	//Item 15-18: RA and DEC
-	if (EZJGSTBL.MODE == 7)
+	if (EZJGSTBL.MODE == 7 && EZJGSTBL.star1 > 0)
 	{
-		LOSTDisplayBuffer[14] = LOSTDisplayBuffer[15] = LOSTDisplayBuffer[16] = LOSTDisplayBuffer[17] = ""; //TBD
+		double dec, ra;
+		OrbMech::latlong_from_r(EZJGSTAR[EZJGSTBL.star1 - 1], dec, ra);
+		sprintf_s(Buffer, "%06.2lf", ra*DEG);
+		LOSTDisplayBuffer[14].assign(Buffer);
+		sprintf_s(Buffer, "%+06.2lf", dec*DEG);
+		LOSTDisplayBuffer[15].assign(Buffer);
 	}
 	else
 	{
-		LOSTDisplayBuffer[14] = LOSTDisplayBuffer[15] = LOSTDisplayBuffer[16] = LOSTDisplayBuffer[17] = "";
+		LOSTDisplayBuffer[14] = LOSTDisplayBuffer[15] = "";
+	}
+
+	if (EZJGSTBL.MODE == 7 && EZJGSTBL.star2 > 0)
+	{
+		double dec, ra;
+		OrbMech::latlong_from_r(EZJGSTAR[EZJGSTBL.star2 - 1], dec, ra);
+		sprintf_s(Buffer, "%06.2lf", ra*DEG);
+		LOSTDisplayBuffer[16].assign(Buffer);
+		sprintf_s(Buffer, "%+06.2lf", dec*DEG);
+		LOSTDisplayBuffer[17].assign(Buffer);
+	}
+	else
+	{
+		LOSTDisplayBuffer[16] = LOSTDisplayBuffer[17] = "";
 	}
 
 	//Item 19-24: Att 1 and 2
@@ -35205,6 +35419,54 @@ void RTCC::EMDGLMST()
 	//Item 35-36: COAS elevation
 	//Item 37-38: COAS SXP
 	//Item 39: COAS axis
+	if (EZJGSTBL.MODE == 7)
+	{
+		if (EZJGSTBL.COAS_star1 != 0)
+		{
+			sprintf(Buffer, "%03d", EZJGSTBL.COAS_star1);
+			LOSTDisplayBuffer[32].assign(Buffer);
+			sprintf(Buffer, "%02.0lf", EZJGSTBL.COAS_EL1*DEG);
+			LOSTDisplayBuffer[34].assign(Buffer);
+			sprintf(Buffer, "%01.0lf", EZJGSTBL.COAS_SXP1*DEG);
+			LOSTDisplayBuffer[36].assign(Buffer);
+		}
+		else
+		{
+			LOSTDisplayBuffer[32] = LOSTDisplayBuffer[34] = LOSTDisplayBuffer[36] = "";
+		}
+
+		if (EZJGSTBL.COAS_star2 != 0)
+		{
+			sprintf(Buffer, "%03d", EZJGSTBL.COAS_star2);
+			LOSTDisplayBuffer[33].assign(Buffer);
+			sprintf(Buffer, "%02.0lf", EZJGSTBL.COAS_EL2*DEG);
+			LOSTDisplayBuffer[35].assign(Buffer);
+			sprintf(Buffer, "%01.0lf", EZJGSTBL.COAS_SXP2*DEG);
+			LOSTDisplayBuffer[37].assign(Buffer);
+		}
+		else
+		{
+			LOSTDisplayBuffer[33] = LOSTDisplayBuffer[35] = LOSTDisplayBuffer[37] = "";
+		}
+
+		if (EZJGSTBL.COAS_star1 == 0 && EZJGSTBL.COAS_star2 == 0)
+		{
+			LOSTDisplayBuffer[33] = "NO STARS AVAILABLE";
+		}
+
+		if (EZJGSTBL.COAS_AXIS == 1)
+		{
+			LOSTDisplayBuffer[38] = "X";
+		}
+		else
+		{
+			LOSTDisplayBuffer[38] = "Z";
+		}
+	}
+	else
+	{
+		LOSTDisplayBuffer[32] = LOSTDisplayBuffer[33] = LOSTDisplayBuffer[34] = LOSTDisplayBuffer[35] = LOSTDisplayBuffer[36] = LOSTDisplayBuffer[37] = LOSTDisplayBuffer[38] = "";
+	}
 	//Item 40-41: Telemetry stars
 	//Item 42-44: Telemetry unit vector 1
 	//Item 45-47: Telemetry unit vector 2
@@ -35233,7 +35495,19 @@ void RTCC::EMDGLMST()
 	}
 	//Item 54-56: Presently stored attitude (TLM)
 	//Item 57-59: Presently stored attitude (MED)
-
+	if (EZJGSTBL.MODE == 7)
+	{
+		sprintf_s(Buffer, "%05.1lf", EZJGSTBL.StoredAttMED.x*DEG);
+		LOSTDisplayBuffer[56].assign(Buffer);
+		sprintf_s(Buffer, "%05.1lf", EZJGSTBL.StoredAttMED.y*DEG);
+		LOSTDisplayBuffer[57].assign(Buffer);
+		sprintf_s(Buffer, "%05.1lf", EZJGSTBL.StoredAttMED.z*DEG);
+		LOSTDisplayBuffer[58].assign(Buffer);
+	}
+	else
+	{
+		LOSTDisplayBuffer[56] = LOSTDisplayBuffer[57] = LOSTDisplayBuffer[58] = "";
+	}
 	//Item 60: Matrix 1
 	//Item 61: Matrix 1 GET
 	//Item 62-70: Matrix 1
@@ -35266,9 +35540,11 @@ void RTCC::EMDGLMST()
 	}
 	else
 	{
-		for (unsigned i = 0; i < 11; i++)
+		LOSTDisplayBuffer[59] = "N/A";
+
+		for (unsigned i = 0; i < 10; i++)
 		{
-			LOSTDisplayBuffer[i + 59] = "";
+			LOSTDisplayBuffer[i + 60] = "";
 		}
 	}
 
@@ -35304,9 +35580,10 @@ void RTCC::EMDGLMST()
 	}
 	else
 	{
-		for (unsigned i = 0; i < 11; i++)
+		LOSTDisplayBuffer[70] = "N/A";
+		for (unsigned i = 0; i < 10; i++)
 		{
-			LOSTDisplayBuffer[i + 70] = "";
+			LOSTDisplayBuffer[i + 71] = "";
 		}
 	}
 }

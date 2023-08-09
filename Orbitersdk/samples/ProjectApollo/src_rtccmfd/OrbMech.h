@@ -307,8 +307,9 @@ namespace OrbMech {
 	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
 	void impulsive2(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
 	void checkstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
-	void coascheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
-	void AOTcheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct);
+	void coascheckstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
+	bool AOTcheckstar(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double AZ, double EL);
+	void AOTStarAcquisition(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double AZ, double EL, double &YROT, double &SROT);
 	bool LMCOASCheckStar(VECTOR3 SI, MATRIX3 RMAT, VECTOR3 IMU, int Axis, double &EL, double &SPX);
 	void REVUP(VECTOR3 R, VECTOR3 V, double n, double mu, VECTOR3 &R1, VECTOR3 &V1, double &t);
 	void RADUP(VECTOR3 R_W, VECTOR3 V_W, VECTOR3 R_C, double mu, VECTOR3 &R_W1, VECTOR3 &V_W1);

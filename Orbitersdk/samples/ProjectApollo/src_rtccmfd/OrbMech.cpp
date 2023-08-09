@@ -4546,7 +4546,7 @@ void checkstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IM
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
 }
 
-void coascheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp)
+void coascheckstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp)
 {
 	MATRIX3 SMNB, Q1, Q2, Q3;
 	double OGA, IGA, MGA;
@@ -4588,12 +4588,13 @@ void coascheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
 }
 
-void AOTcheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct)
+bool AOTcheckstar(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double AZ, double EL)
 {
+	//Returns true if a star is visible in the AOT
+
 	MATRIX3 SMNB, Q1, Q2, Q3;
 	double OGA, IGA, MGA;
 	VECTOR3 U_LOS;
-	int star;
 
 	OGA = IMU.x;
 	IGA = IMU.y;
@@ -4605,19 +4606,47 @@ void AOTcheckstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3
 
 	SMNB = mul(Q3, mul(Q2, Q1));
 
-	U_LOS = AOTULOS(REFSMMAT, SMNB, 0.0, 0.0);
-	star = OrbMech::FindNearestStar(navstars, U_LOS, R_C, R_E, 50.0*RAD);
+	U_LOS = AOTULOS(REFSMMAT, SMNB, AZ, EL);
 
-	if (star == -1)
-	{
-		staroct = 0;
-	}
-	else
-	{
-		staroct = decimal_octal(star + 1);
-	}
+	//Is visible?
+	if (acos(dotp(U_LOS, navstar)) < 30.0*RAD) return true;
+	return false;
+}
 
-	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
+void AOTStarAcquisition(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double AZ, double EL, double &YROT, double &SROT)
+{
+	//Calculates reticle and spirale angles for a given star
+
+	MATRIX3 SMNB;
+	VECTOR3 SN; //Star in navigation base coordinates
+	VECTOR3 u_OAN, UNITX, TS2, TS4;
+	double theta, C1, C2;
+
+	SMNB = CALCSMSC(IMU);
+	SN = mul(SMNB, mul(REFSMMAT, navstar));
+
+	u_OAN = _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+	C1 = dotp(u_OAN, SN);
+
+	UNITX = _V(1, 0, 0);
+	TS2 = unit(crossp(u_OAN, UNITX));
+	TS4 = unit(crossp(u_OAN, SN));
+	theta = acos(dotp(TS4, TS2));
+	C2 = dotp(TS4, unit(crossp(u_OAN, TS2)));
+	if (C2 < 0.0)
+	{
+		theta = PI2 - theta;
+	}
+	YROT = PI2 + theta + AZ;
+	if (YROT >= PI2)
+	{
+		YROT -= PI2;
+	}
+	SROT = YROT + 12.0*acos(C1);
+	if (SROT >= PI2)
+	{
+		SROT -= PI2;
+	}
 }
 
 bool LMCOASCheckStar(VECTOR3 SI, MATRIX3 RMAT, VECTOR3 IMU, int Axis, double &EL, double &SPX)
@@ -4633,12 +4662,6 @@ bool LMCOASCheckStar(VECTOR3 SI, MATRIX3 RMAT, VECTOR3 IMU, int Axis, double &EL
 
 	GA = CALCSMSC(IMU);
 	SN = mul(GA, mul(RMAT, SI));
-
-	//Check if star is within 5 degrees of the x-z plane
-	if (abs(SN.y) > cos(5.0*RAD))
-	{
-		return false;
-	}
 
 	if (Axis == 1)
 	{
@@ -4657,7 +4680,7 @@ bool LMCOASCheckStar(VECTOR3 SI, MATRIX3 RMAT, VECTOR3 IMU, int Axis, double &EL
 		EPS = acos(SN.x);
 		GAM = acos(SN.z);
 		ALP = atan(SN.y / SN.x);
-		ARG1 = asin(sin(GAM)*sin(ALP) / sin(EPS));
+		ARG1 = sin(GAM)*sin(ALP) / sin(EPS);
 		SCV = PI05 - abs(asin(ARG1));
 		ARG2 = sin(SCV)*sin(EPS);
 		R = SN.z*abs(asin(ARG2) / SN.z);

@@ -1907,6 +1907,52 @@ LN & Geographic longitude of the earth return ascending node & deg & (3)\\
 \end{center}
 
 \newpage
+\subsection{CSM Optics Support Table (MSK 0229)}
+
+TBD
+
+\newpage
+\subsection{LM Optics Support Table (MSK 0239)}
+
+The LM Optics Support Table is used to evaluate orbital IMU alignments and provide ground support for alignment checks, docked alignments and backup AGS alignments. Several modes are available. In all modes a realignment attitude (IMU and FDAI) is calculated. This attitude is referenced to matrix 1 and gives the body alignment (i.e. gimbal angles all zero) with matrix 2. The star codes are in decimal, unlike the AGC stars which are in octal. The RTCC star catalog is given later, which can be used to convert between the two systems.\\
+
+\subsubsection{DOK}
+
+In the docking alignment mode either a REFSMMAT, CSM or LM attitude are calculated. There are three options: option 1 computes the LM REFSMMAT, option 2 computes the LM attitude and option 3 computes the CSM attitude. A CSM REFSMMAT needs to be specified as well as the two other data sets (attitudes or LM REFSMMAT) that are not being calculated.\\
+
+\subsubsection{AGS}
+
+The AGS backup alignment requires the AOT to be placed on a star in any dentent and the cursor being placed on a second star in the same detent. Attitudes can be entered, but should be set to zero due to the AGS body alignment mode. For star 1 the star number and detent have to be specified. For the second star the number, reticle angle and the cursor used have to be entered. The result is an optics (OST) REFSMMAT being calculated as matrix 1. If then the desired REFSMMAT is entered as matrix 2 the realignment attitude is calculated relative to matrix 1, that will give the desired alignment relative to matrix 2.\\
+
+\subsubsection{CHK}
+
+The alignment check mode can only be used with the MPT being initialized. An attitude can be input, for example a burn attitude. The display then calculates two check stars for the AOT and two stars for the COAS, if available.\\
+
+\subsubsection{MAT}
+
+The matrix mode is only used to view any REFSMMAT in the LM locker.\\
+
+\subsubsection{LUN}
+
+Not implemented yet.\\
+
+\subsubsection{FLT}
+
+Not implemented yet.\\
+
+\subsubsection{Buttons}
+\subsubsection{Display Parameters}
+
+\newpage
+\begin{landscape}
+\begin{figure}[hbtp]
+	\centering
+		\includegraphics[width=1.3\textwidth]{./ApolloRTCCMFDFiles/Apollo RTCC STARS.jpg}
+	\caption{Apollo RTCC Star Catalog}
+	\label{fig:RTCCStars}
+\end{figure}
+\end{landscape}
+\newpage
 \subsection{Vector Comparison Display (MSK 1591)}
 
 \subsubsection{Function}
