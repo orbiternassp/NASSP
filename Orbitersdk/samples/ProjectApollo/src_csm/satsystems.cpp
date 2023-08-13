@@ -1114,7 +1114,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		KelvinToFahrenheit(*YAWJET16), (KelvinToFahrenheit(*YAWJET16) + 50.0) / 20.0,
 		KelvinToFahrenheit(*ROLLJET21), (KelvinToFahrenheit(*ROLLJET21) + 50.0) / 20.0);
 */
-
+/*
 	double *massO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:MASS");
 	double *tempO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:TEMP");
 	double *pressO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
@@ -1126,7 +1126,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	
 	sprintf(oapiDebugString(), "O2ST-m %.1f T %.1f p %.1f O2SMS-m %.1f T %.1f p %.1f",
 		*massO2SurgeTank, *tempO2SurgeTank, *pressO2SurgeTank * 0.000145038, *massO2SMSupply, *tempO2SMSupply, *pressO2SMSupply * 0.000145038);
-
+*/
 #ifdef _DEBUG
 
 		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",
