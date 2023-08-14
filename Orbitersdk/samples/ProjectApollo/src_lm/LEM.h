@@ -120,6 +120,10 @@ public:
 	bool IsVelocityDataGood() { return velocityGood == 1; };
 	double GetAltitude() { return range*0.3048; };
 	double GetAltitudeRate() { return rate[0]*0.3048; };
+	void GetRangeLGC();
+	void GetVelocityXLGC();
+	void GetVelocityYLGC();
+	void GetVelocityZLGC();
 	double GetAltTransmitterPower();
 	double GetVelTransmitterPower();
 
@@ -133,7 +137,6 @@ public:
 	double range;				// Range in feet
 	double rate[3];				// Velocity X/Y/Z in feet/second
 	double antennaAngle;		// Antenna angle
-	int ruptSent;				// Rupt sent
 	int rangeGood;				// RDG flag
 	int velocityGood;			// VDG flag
 };

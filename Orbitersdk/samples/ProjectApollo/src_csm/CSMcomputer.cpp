@@ -590,6 +590,14 @@ VESSEL *CSMcomputer::GetLM()
 	return NULL;
 }
 
+void CSMcomputer::GetRadarData(int radarBits)
+{
+	if (radarBits == 4)
+	{
+		sat->vhfranging.GetRangeCMC();
+	}
+}
+
 
 //
 // CM Optics class code
