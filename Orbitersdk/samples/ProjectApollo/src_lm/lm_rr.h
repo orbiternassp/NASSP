@@ -53,6 +53,8 @@ public:
 	double GetTrunnionCos() { return cos_trunnion; }
 	double dBm2SignalStrength(double RecvdRRPower_dBm);
 	void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
+	void GetRadarRangeLGC();
+	void GetRadarRateLGC();
 
 	bool IsPowered();
 	bool IsDCPowered();
@@ -83,7 +85,6 @@ private:
 	double rate;
 	double internalrange;
 	double internalrangerate;
-	int ruptSent;				// Rupt sent
 	int scratch[2];             // Scratch data
 	int mode;					//Mode I = false, Mode II = true
 	double hpbw_factor;			//Beamwidth factor

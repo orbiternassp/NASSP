@@ -783,6 +783,23 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	}
 }
 
+void ApolloGuidance::RadarRead()
+{
+	ChannelValue val13 = GetInputChannel(013);
+
+	if (val13[RangeUnitActivity] == 1) {
+		int radarBits = 0;
+		if (val13[RangeUnitSelectA] == 1) { radarBits |= 1; }
+		if (val13[RangeUnitSelectB] == 1) { radarBits |= 2; }
+		if (val13[RangeUnitSelectC] == 1) { radarBits |= 4; }
+
+		GetRadarData(radarBits);
+
+		SetInputChannelBit(013, RangeUnitActivity, 0);
+		RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
+	}
+}
+
 //
 // By default, do nothing for the RCS channels.
 //

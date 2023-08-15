@@ -208,10 +208,6 @@ void LEM::SetLmVesselDockStage()
 
 void LEM::SetLmVesselHoverStage()
 {
-	ClearThrusterDefinitions();
-
-	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
-
 	SetSize (7);
 	SetVisibilityLimit(1e-3, 5.4135e-4);
 	SetPMI(_V(2.5428, 2.2871, 2.7566));
@@ -221,54 +217,11 @@ void LEM::SetLmVesselHoverStage()
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
-	ClearBeacons();
-	ClearExhaustRefs();
-	ClearAttExhaustRefs();
 
 	DefineTouchdownPoints(1);
 
-	if (!ph_Dsc){  
-		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
-	}
-	else
-	{
-		SetPropellantMaxMass(ph_Dsc, DescentFuelMassKg);
-	}
-
-	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
-
-	if (!ph_RCSA){
-		ph_RCSA = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
-	}
-	if (!ph_RCSB){
-		ph_RCSB = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
-	}
-	
-	// orbiter main thrusters
-	//Ascent stage mesh has RCS plane as reference, but it's shifted by 0.99 m up for center of full LM mesh
-	//RCS plane is at 254 inches in LM coordinates. DPS gimbal plane is at 154 inches in LM coordinates
-	//Therefore: 3.9116 m - (6.4516 m - 0.99 m) = -1.55 m for the DPS reference position
-	th_hover[0] = CreateThruster(_V(0.0, -1.55, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
-	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_USER);
-
-	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[0], NULL, NULL, NULL, 10.0, 1.5, 1.16, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
-	};
-
-	AddExhaust(es_hover);
-
-	AddDust();
-
 	status = 1;
 	stage = 1;
-	SetView();
-	AddRCS_LMH(-5.4616); //254 inches minus the 0.99m offset from mesh_asc = 5.4616 m
-
-	InitNavRadios (4);
-
-	// Exterior lights
-	SetTrackLight();
-	SetDockingLights();
 }
 
 void LEM::SetLmAscentHoverStage()

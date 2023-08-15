@@ -601,6 +601,7 @@ public:
 
 	double GetRange() { return range / 185.20; }
 	void RangingReturnSignal(); // ################# DELETE ME #######################
+	void GetRangeCMC();
 protected:
 
 	bool RangingOffLogic();
