@@ -9516,23 +9516,37 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 2, 3 * H / 32, "LUNAR TARGETING PROGRAM", 33);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		GET_Display(Buffer, G->LUNTAR_TIG, false);
-		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+		if (G->LUNTAR_TIG)
+		{
+			GET_Display(Buffer, G->LUNTAR_TIG, false);
+			skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.1lf s", G->LUNTAR_bt_guess);
-		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lat*DEG);
+			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_pitch_guess*DEG);
-		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lng*DEG);
+			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_yaw_guess*DEG);
-		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+			if (G->LUNTAR_bt_guess)
+			{
+				sprintf_s(Buffer, "%.1lf s", G->LUNTAR_bt_guess);
+				skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lat*DEG);
-		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+				sprintf_s(Buffer, "%.2lf°", G->LUNTAR_pitch_guess*DEG);
+				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lng*DEG);
-		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+				sprintf_s(Buffer, "%.2lf°", G->LUNTAR_yaw_guess*DEG);
+				skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				skp->Text(1 * W / 16, 4 * H / 14, "No initial guess", 16);
+			}
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "Trajectory Evaluation", 21);
+		}
 
 		if (G->target != NULL)
 		{
@@ -9566,17 +9580,17 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			if (G->LUNTAR_Output.err == 1)
 			{
-				sprintf_s(Buffer, "INITIAL GUESS DID NOT IMPACT");
+				sprintf_s(Buffer, "Initial guess did not impact. PC Alt: %.0lf NM", G->LUNTAR_Output.FlybyAlt);
 			}
 			else if (G->LUNTAR_Output.err == 2)
 			{
-				sprintf_s(Buffer, "SOLUTION DID NOT CONVERGE");
+				sprintf_s(Buffer, "Solution did not converge");
 			}
 			else if (G->LUNTAR_Output.err == 3)
 			{
-				sprintf_s(Buffer, "TIMEBASE 8 NOT STARTED");
+				sprintf_s(Buffer, "Timebase 8 not started");
 			}
-			skp->Text(4 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 116)
