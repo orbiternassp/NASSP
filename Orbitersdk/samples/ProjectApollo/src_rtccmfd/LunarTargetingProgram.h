@@ -34,7 +34,7 @@ struct LunarTargetingProgramInput
 	double pitch_guess;
 	double yaw_guess;
 	double bt_guess;
-	double tig_guess;
+	double tig_guess; //In GET
 
 	double lat_tgt;
 	double lng_tgt;
@@ -53,19 +53,21 @@ struct LunarTargetingProgramOutput
 	double get_imp = 0.0;
 
 	int err = 0;
+	double FlybyAlt = 0.0; //Nautical miles, only in case of no impact
 };
 
 struct LUNTARGeneralizedIteratorArray
 {
-	double pitch;
-	double yaw;
-	double dv;
+	//Stored inputs
+	double dv, dgamma, dpsi;
+
+	//Outputs
 	EphemerisData sv_tig_apo;
-	double bt;
 	double mass_f;
 	double lat;
 	double lng;
 	double gmt_imp;
+	double dv_R;
 };
 
 class LunarTargetingProgram : public RTCCModule
@@ -73,15 +75,21 @@ class LunarTargetingProgram : public RTCCModule
 public:
 	LunarTargetingProgram(RTCC *r);
 	void Call(const LunarTargetingProgramInput &in, LunarTargetingProgramOutput &out);
+	bool TrajectoryComputerSTR(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 	bool TrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 
 	LUNTARGeneralizedIteratorArray outarray;
 protected:
-	bool ConvergeOnImpact(double pitch, double yaw, double dv, double lat, double lng);
+	bool ConvergeOnImpactSTR(double dv, double dgamma, double dpsi, double lat, double lng);
+	bool ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng);
 	EphemerisData SimulateBurn(double pitch, double yaw, double dv, double &mass_f, double &bt);
 	VECTOR3 BurnAttitude(double pitch, double yaw);
 
+	void RVIO(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &theta, double &phi, double &gamma, double&psi);
+	void BURN(VECTOR3 R, VECTOR3 V, double dv, double dgamma, double dpsi, double &dv_R, double &mfm0, VECTOR3 &RF, VECTOR3 &VF);
+
 	EphemerisData sv_tig;
+	VECTOR3 RLS;
 	double mass;
 	double F, isp;
 };
