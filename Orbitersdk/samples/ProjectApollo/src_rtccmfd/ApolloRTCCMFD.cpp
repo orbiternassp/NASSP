@@ -1302,7 +1302,7 @@ void ApolloRTCCMFD::menuLWPLiftoffTime()
 
 void ApolloRTCCMFD::LUNTAR_TIGInput()
 {
-	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS)");
+	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS). Enter zero for trajectory evaluation (no maneuver):");
 }
 
 void ApolloRTCCMFD::menuLWP_RINS()

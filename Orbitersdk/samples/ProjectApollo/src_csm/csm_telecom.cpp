@@ -1665,11 +1665,18 @@ void VHFRangingSystem::RangingReturnSignal()
 	hasLock = 3;
 }
 
+void VHFRangingSystem::GetRangeCMC()
+{
+	if (IsPowered())
+	{
+		sat->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)fmod(range / 18.52, 32768.0);
+	}
+}
+
 void VHFRangingSystem::TimeStep(double simdt)
 {
-	ChannelValue val13, val33;
+	ChannelValue val33;
 
-	val13 = sat->agc.GetInputChannel(013);
 	val33 = sat->agc.GetInputChannel(033);
 
 	dataGood = false;
@@ -1679,21 +1686,6 @@ void VHFRangingSystem::TimeStep(double simdt)
 	{
 		val33[RangeUnitDataGood] = 0;
 		sat->agc.SetInputChannel(033, val33);
-
-		if (val13[RangeUnitActivity] == 1) {
-			int radarBits = 0;
-			if (val13[RangeUnitSelectA] == 1) { radarBits |= 1; }
-			if (val13[RangeUnitSelectB] == 1) { radarBits |= 2; }
-			if (val13[RangeUnitSelectC] == 1) { radarBits |= 4; }
-
-			switch (radarBits) {
-			case 4:
-				sat->agc.SetInputChannelBit(013, RangeUnitActivity, 0);
-				sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-				break;
-			}
-		}
-
 		hasLock = 0;
 		isRanging = false;
 		return;
@@ -1776,24 +1768,6 @@ void VHFRangingSystem::TimeStep(double simdt)
 
 	if (dataGood == 1 && val33[RangeUnitDataGood] == 0) { val33[RangeUnitDataGood] = 1; sat->agc.SetInputChannel(033, val33); }
 	if (dataGood == 0 && val33[RangeUnitDataGood] == 1) { val33[RangeUnitDataGood] = 0; sat->agc.SetInputChannel(033, val33); }
-
-	if (val13[RangeUnitActivity] == 1) {
-		int radarBits = 0;
-		if (val13[RangeUnitSelectA] == 1) { radarBits |= 1; }
-		if (val13[RangeUnitSelectB] == 1) { radarBits |= 2; }
-		if (val13[RangeUnitSelectC] == 1) { radarBits |= 4; }
-
-		switch (radarBits) {
-		case 4:
-			// Docs says this should be 0.01 NM/bit, or 18.52 meters/bit
-			sat->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)fmod(range / 18.52, 32768.0);
-			sat->agc.SetInputChannelBit(013, RangeUnitActivity, 0);
-			sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-			break;
-		default:
-			break;
-		}
-	}
 
 	//sprintf(oapiDebugString(), "%d %d %d %f %f %o", isRanging, hasLock, dataGood, range, phaseLockTimer, sat->agc.vagc.Erasable[0][RegRNRAD]);
 

@@ -743,7 +743,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	LUNTAR_lat = 0.0;
 	LUNTAR_lng = 0.0;
-	LUNTAR_bt_guess = 10.0;
+	LUNTAR_bt_guess = 0.0;
 	LUNTAR_pitch_guess = 0.0;
 	LUNTAR_yaw_guess = 0.0;
 	LUNTAR_TIG = 0.0;
@@ -4604,7 +4604,7 @@ int ARCore::subThread()
 		in.bt_guess = LUNTAR_bt_guess;
 		in.pitch_guess = LUNTAR_pitch_guess;
 		in.yaw_guess = LUNTAR_yaw_guess;
-		in.tig_guess = GC->rtcc->GMTfromGET(LUNTAR_TIG);
+		in.tig_guess = LUNTAR_TIG;
 		in.TB8 = lvdc->TB8;
 
 		LunarTargetingProgram luntar(GC->rtcc);
