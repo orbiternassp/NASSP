@@ -1907,6 +1907,106 @@ LN & Geographic longitude of the earth return ascending node & deg & (3)\\
 \end{center}
 
 \newpage
+\subsection{CSM Optics Support Table (MSK 0229)}
+
+TBD
+
+\newpage
+\subsection{LM Optics Support Table (MSK 0239)}
+
+The LM Optics Support Table is used to evaluate orbital IMU alignments and provide ground support for alignment checks, docked alignments and backup AGS alignments. Several modes are available. In all modes a realignment attitude (IMU and FDAI) is calculated. This attitude is referenced to matrix 1 and gives the body alignment (i.e. gimbal angles all zero) with matrix 2. The star codes are in decimal, unlike the AGC stars which are in octal. The RTCC star catalog is given later, which can be used to convert between the two systems.\\
+
+\subsubsection{DOK}
+
+In the docking alignment mode either a REFSMMAT, CSM or LM attitude are calculated. There are three options: option 1 computes the LM REFSMMAT, option 2 computes the LM attitude and option 3 computes the CSM attitude. A CSM REFSMMAT needs to be specified as well as the two other data sets (attitudes or LM REFSMMAT) that are not being calculated.\\
+
+\subsubsection{AGS}
+
+The AGS backup alignment requires the AOT to be placed on a star in any dentent and the cursor being placed on a second star in the same detent. Attitudes can be entered, but should be set to zero due to the AGS body alignment mode. For star 1 the star number and detent have to be specified. For the second star the number, reticle angle and the cursor used have to be entered. The result is an optics (OST) REFSMMAT being calculated as matrix 1. If then the desired REFSMMAT is entered as matrix 2 the realignment attitude is calculated relative to matrix 1, that will give the desired alignment relative to matrix 2.\\
+
+\subsubsection{CHK}
+
+The alignment check mode can only be used with the MPT being initialized. An attitude can be input, for example a burn attitude. The display then calculates two check stars for the AOT and two stars for the COAS, if available.\\
+
+\subsubsection{MAT}
+
+The matrix mode is only used to view any REFSMMAT in the LM locker.\\
+
+\subsubsection{LUN}
+
+Not implemented yet.\\
+
+\subsubsection{FLT}
+
+Not implemented yet.\\
+
+\subsubsection{Buttons}
+
+\textbf{MOD:} Choose the mode of the display. This should be done first. Valid options right now are DOK, AGS, MAT (no special processing, only to show REFSMMATs) and CHK (only works with initialized MPT). LUN and FLT modes not implemented yet.\\
+\textbf{AT1:} Enter the first set of attitudes. For the DOK mode this is the LM attitude, for the AGS mode it is the initial attitude (should always be set to zero though) and for the CHK mode it is the attitude at which the star checks are calculated, for example a burn attitude.\\
+\textbf{AT2:} Enter the second set of attitudes. For the DOK mode this is the CSM attitude, for the AGS mode the attitude at which the second star data was taken (should always be set to zero though).\\
+\textbf{CRF:} Choose the type of CSM REFSMMAT used in the DOK mode.\\
+\textbf{MA1:} Choose the LM REFSMMAT that is displayed as matrix 1 of the display. In the DOK mode this is the REFSMMAT used in the calculation of the CSM or LM attitude. With the realignment option this is the current REFSMMAT after an AGS body alignment was done using the AGS alignment technique.\\ 
+\textbf{MA2:} Choose the LM REFSMMAT that is displayed as matrix 2 of the display. For the realignment option this REFSMMAT is the one that is desired after the second AGS body alignment, at the calculated attitude referened to matrix 1.\\
+
+\textbf{CLC:} Calculate the display parameters according to the chosen mode.\\
+\textbf{OP1:} Enter optics data for the first star. In the AGS mode this is the star at the center of the AOT and the star ID and detent have to be given.\\
+\textbf{OP2:} Enter optics data for the second star. In the AGS mode this is the star on the cursor and the star ID, detent position (which axis is used as the cursor) and the cursor angle have to be given.\\
+\textbf{REA:} Calculate the realignment attitudes (IMU and FDAI). The realignment attitudes will give angles in the coordinate system, described by MAT 1, to align the spacecraft body axes to the coordinate system, described my MAT 2.\\
+\textbf{BCK:} Go back to previous display.\\
+\newpage
+\subsubsection{Display Parameters}
+
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+VEH &Vehicle type. Allows multiple LM-type vehicle capability.&\\
+MODE&Indicates type of computations for which the display is being used&\\
+DKAN&The docking angle obtained from the interface of the LM and CSM docking hatches, indicating the relative rotation of one vehicle form the other about the spacecrafts' X axes&DEG\\
+LM YPR&LM attitude used in the DOK mode&DEG\\
+CSM RPY&CSM attitude used in the DOK mode&DEG\\
+MATRIX USED&The CSM REFSMMAT used in docked alignment computations if display is in docked mode;the LM REFSMMAT used in optics computations for an alignment check if display is in check mode; or the REFSMMAT indicating the desired alignment for the AGS if the display is in the AGS mode&\\
+GETHORIZ&Ground elapsed time of alignment check by star sightings and/or horizon sighting&HH:MM:SS\\
+OGA&The outer gimbal angle required to put the spacecraft plus Z axis line-of-sight tangent to the horizon at GETHORIZ&DEG\\
+S1 and S2&AOT stars used or to be used in optical sightings&\\
+RA&Right ascension of star&DEG\\
+DEC&Declination of star&DEG\\
+YPR&Yaw, pitch and roll LM gimbal angles or AGS angles used in alignment checks. The attitudes will be those related to star-sighting data in CHK, LUN and AGS modes&DEG\\
+L&AOT reticle line to be superimposed with star S1 or S2&Plus or minus X- or Y-axis\\
+A1&The AOT reticle angle counter position to superimpose target star and Line L&DEG\\
+A2&The AOT reticle angle counter position to superimpose target star and spirale&DEG\\
+D&AOT detent position, 1 through 6&\\
+\end{tabular}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+S1 and S2&COAS stars used or to be used in optical sightings&\\
+EL&The COAS elevation angle ranging between plus and minus 40 degrees to place star on horizontal X-line. A positive angle displaces the COAS LOS counter-clockwise about the LM +Y axis&DEG\\
+SXP&The Star-X-Position coordinate ranging between plus and minus 5 degrees. The right side of the reticle is plus giving a star on the +Y side of the LM X-Z plane a positive SXP&DEG\\
+REALIGN ATTITUDES&The attitudes in the coordinate system described by MAT 1 to align the spacecraft body axis to the coordinate system described by MAT 2. Attitudes will be given as gimbal angles and FDAI angles&DEG\\
+GIMB ANG&Realign attitudes specified in gimbal angles&DEG\\
+FDAI ANG&Realign attitudes specified in FDAI angles&DEG\\
+STORED AT&Telemetry and MED attitudes stored by the LOST program&DEG\\
+MATRIX1 and 2&Any two matrices stored in the LM REFSMMAT locker, and their code identifications, which are to be displayed in positions 1 and 2 on the LOST display&\\
+MAT GET&An associated GET of any matrix display, such as time computed, time made current or time saved (the most meaningful time will be used in each case)&HH:MM:SS\\
+\end{tabular}
+\end{center}
+
+\newpage
+
+\begin{landscape}
+\begin{figure}[hbtp]
+	\centering
+		\includegraphics[width=1.3\textwidth]{./ApolloRTCCMFDFiles/Apollo RTCC STARS.jpg}
+	\caption{Apollo RTCC Star Catalog}
+	\label{fig:RTCCStars}
+\end{figure}
+\end{landscape}
+\newpage
 \subsection{Vector Comparison Display (MSK 1591)}
 
 \subsubsection{Function}

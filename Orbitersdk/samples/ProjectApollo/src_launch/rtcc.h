@@ -2769,6 +2769,10 @@ public:
 	void EMMGSTMP();
 	//Guidance Optics Display
 	void EMDGSUPP(int err);
+	//LEM Guidance Optics MSK Math
+	void EMMGLMST(int mode);
+	//LEM Optics Support Table Display
+	void EMDGLMST();
 	//FDO Orbit Digitals
 	void EMMDYNMC(int L, int queid, int ind = 0, double param = 0.0);
 	//FDO Space Digitals
@@ -3389,16 +3393,58 @@ public:
 
 	struct LunarOpticsSupportTable
 	{
-		std::string MAT;
-		MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+		int MODE = 0; //1 = ???, 2 = DOK, 3 = FLT, 4 = AGS, 5 = LUN, 6 = MAT, 7 = CHK
+		VECTOR3 LM_ATT = _V(0, 0, 0);
+		VECTOR3 CSM_ATT = _V(0, 0, 0);
+		double DKAN = 0.0;
+		double GETHORIZ = 0.0;
+		double OGA = 0.0;
+
+		//Star 1
+		int star1 = 0;
+		double RA1 = 0.0;
+		double DEC1 = 0.0;
+		VECTOR3 Att1 = _V(0, 0, 0);
+		int L1 = 0; //Reticle line (0 = +X, 1 = -X, 2 = +Y, 3 = -Y)
+		double A1_1 = 0.0; //AOT counter for cursor
+		double A2_1 = 0.0; //AOT counter for spirale
+		int D1 = 2;
+
+		//Star 2
+		int star2 = 0;
+		double RA2 = 0.0;
+		double DEC2 = 0.0;
+		VECTOR3 Att2 = _V(0, 0, 0);
+		int L2 = 0; //Reticle line (0 = +X, 1 = -X, 2 = +Y, 3 = -Y)
+		double A1_2 = 0.0; //AOT counter for cursor
+		double A2_2 = 0.0; //AOT counter for spirale
+		int D2 = 2;
+
+		//COAS
+		unsigned COAS_star1 = 0;
+		double COAS_EL1 = 0.0;
+		double COAS_SXP1 = 0.0;
+		unsigned COAS_star2 = 0;
+		double COAS_EL2 = 0.0;
+		double COAS_SXP2 = 0.0;
+		int COAS_AXIS = 1; //1 = PX, 2 = PZ
+
+		VECTOR3 StoredAttTLM = _V(0, 0, 0);
+		VECTOR3 StoredAttMED = _V(0, 0, 0);
+
+		bool showRealign = false;
+		VECTOR3 GIMB_ANG = _V(0, 0, 0);
+		VECTOR3 FDAI_ANG = _V(0, 0, 0);
+
+		int REF1 = 0;
+		int REF2 = 0;
+		int REFSUSED = 0;
+
+		bool REFSMMATValid = false;
+		MATRIX3 StoredREFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	} EZJGSTBL;
 
-	struct LOSTDisplay
-	{
-		std::string MAT;
-		MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
-		std::string err;
-	} LOSTDisplayBuffer;
+	std::vector<std::string> LOSTDisplayBuffer;
 
 	REFSMMATLocker EZJGMTX1, EZJGMTX3;
 	FIDOOrbitDigitals EZSAVCSM, EZSAVLEM;
@@ -4485,6 +4531,12 @@ public:
 		int G14_RB = 0;
 		double G14_lat = 0.0, G14_lng = 0.0, G14_height = 0.0;
 		double G14_GMT = 0.0;
+
+		double G20_HORIZGET = 0.0;
+		int G20_COAS_Axis = 1;
+		int G20_AOT_Detent = 2;
+
+		int G23_Option = 1;
 	} EZGSTMED;
 
 	struct ExternalDVMakeupBuffer
