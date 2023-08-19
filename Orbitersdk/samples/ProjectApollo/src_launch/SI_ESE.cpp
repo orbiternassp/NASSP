@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2019
 
-S-IB Short Cable Mast Umbilical Interface (Header)
+Base Class for Electrical Support Equipment for the S-IB and S-IC Stages
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,10 +22,17 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
-#pragma once
+#include "SI_ESE.h"
+#include "TailUmbilical.h"
+#include "LCCPadInterface.h"
 
-class SCMUmbilicalInterface
+SI_ESE::SI_ESE(TailUmbilical *TailUmb, LCCPadInterface *p)
 {
-public:
-	virtual bool ESEGetSIBThrustOKSimulate(int eng, int n) = 0;
-};
+	Umbilical = TailUmb;
+	Pad = p;
+}
+
+SI_ESE::~SI_ESE()
+{
+
+}

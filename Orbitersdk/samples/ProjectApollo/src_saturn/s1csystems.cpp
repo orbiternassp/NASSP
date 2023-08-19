@@ -662,5 +662,5 @@ bool SICSystems::ESEGetSICThrustOKSimulate(int eng, int n)
 {
 	if (!IsUmbilicalConnected()) return false;
 
-	return TSMUmb->ESEGetSICThrustOKSimulate(eng, n);
+	return TSMUmb->ESEGetSIThrustOKSimulate(eng, n);
 }

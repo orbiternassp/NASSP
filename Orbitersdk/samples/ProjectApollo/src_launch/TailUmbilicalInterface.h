@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2019
 
-S-IC Tail Service Mast Umbilical
+S-IB or S-IC Tail Umbilical Interface (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,55 +22,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
-#include "Orbitersdk.h"
-#include "s1csystems.h"
-#include "TailUmbilicalInterface.h"
-#include "TSMUmbilical.h"
+#pragma once
 
-TSMUmbilical::TSMUmbilical(TailUmbilicalInterface *ml) : TailUmbilical(ml)
+class TailUmbilicalInterface
 {
-	sic = NULL;
-}
-
-TSMUmbilical::~TSMUmbilical()
-{
-}
-
-void TSMUmbilical::Connect(SICSystems *sic)
-{
-	if (sic)
-	{
-		this->sic = sic;
-		sic->ConnectUmbilical(this);
-		UmbilicalConnected = true;
-	}
-}
-
-void TSMUmbilical::Disconnect()
-{
-	if (!UmbilicalConnected) return;
-
-	sic->DisconnectUmbilical();
-	UmbilicalConnected = false;
-}
-
-bool TSMUmbilical::SIStageLogicCutoff()
-{
-	if (!UmbilicalConnected) return false;
-
-	return sic->GetEngineStop();
-}
-
-void TSMUmbilical::SetEngineStart(int eng)
-{
-	if (!UmbilicalConnected) return;
-
-	sic->SetEngineStart(eng);
-}
-
-void TSMUmbilical::SIGSECutoff(bool cut)
-{
-	if (!UmbilicalConnected) return;
-
-	sic->GSEEnginesCutoff(cut);
-}
+public:
+	virtual bool ESEGetSIThrustOKSimulate(int eng, int n) = 0;
+};
