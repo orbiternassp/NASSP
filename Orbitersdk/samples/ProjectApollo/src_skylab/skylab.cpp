@@ -56,11 +56,11 @@ void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
 }
 
 void Skylab::clbkSaveState(FILEHANDLE scn) {
-	return;
+	VESSEL4::clbkSaveState(scn);
 }
 
 void Skylab::clbkLoadState(FILEHANDLE scn) {
-
+	VESSEL4::clbkSaveState(scn);
 }
 
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
