@@ -17,8 +17,53 @@
   along with Project Apollo; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-  See https://github.com/orbiternassp/NASSP/blob/Orbiter2016/NASSP-LICENSE.txt for more details.
+  See https://github.com/orbiternassp/NASSP/blob/Orbiter2016/NASSP-LICENSE.txt
+  for more details.
 
   **************************************************************************/
-
 #define ORBITER_MODULE
+#include "skylab.h"
+
+
+Skylab::Skylab(OBJHANDLE hObj, int fmodel): VESSEL4(hObj, fmodel)
+{
+
+}
+
+Skylab::~Skylab() {
+
+}
+
+void Skylab::InitSkylab() {
+	return;
+}
+
+void Skylab::clbkPreStep(double simt, double simdt, double mjd)
+{
+}
+
+void Skylab::clbkSaveState(FILEHANDLE scn) {
+	return;
+}
+
+void Skylab::clbkLoadState(FILEHANDLE scn) {
+
+}
+
+DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
+{
+	Skylab* skylab;
+	skylab = new Skylab(hvessel, flightmodel);
+
+	return static_cast<VESSEL*> (skylab);
+}
+
+
+DLLCLBK void ovcExit(VESSEL* vessel)
+{
+	if (vessel) {
+		delete (Skylab*)vessel;
+	}
+}
+
+

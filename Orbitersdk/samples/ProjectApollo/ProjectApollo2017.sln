@@ -74,7 +74,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sat5Abort3", "Build\VC2017\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCC", "Build\VC2017\LCC.vcxproj", "{828862FD-26AA-46FB-9F5B-92C6F522FE4F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Skylab", "Build\Skylab\Skylab.vcxproj", "{123BD935-CDF4-440C-B113-DB3448B08DE8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Skylab", "Build\VC2017\Skylab.vcxproj", "{123BD935-CDF4-440C-B113-DB3448B08DE8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

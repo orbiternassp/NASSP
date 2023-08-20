@@ -23,16 +23,19 @@
 **************************************************************************/
 
 #if !defined(_PA_SKYLAB_H)
-#define _PA_SKYLAB_H;
+#define _PA_SKYLAB_H
 
 #include "Orbitersdk.h"
-#include "connector.h"
-#include "toggleswitch.h"
 
-class Skylab : public ProjectApolloConnectorVessel, public PanelSwitchListener {
+
+class Skylab: public VESSEL4{
 public:
 	Skylab(OBJHANDLE hObj, int fmodel);
 	~Skylab();
+	void InitSkylab();
+	void clbkPreStep(double simt, double simdt, double mjd);
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadState(FILEHANDLE scn);
 };
 
 
