@@ -33,9 +33,13 @@ public:
 	Skylab(OBJHANDLE hObj, int fmodel);
 	~Skylab();
 	void InitSkylab();
+	void clbkPostCreation();
+	void clbkSetClassCaps(FILEHANDLE cfg);
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadState(FILEHANDLE scn);
+private:
+	MESHHANDLE SkylabMesh;
 };
 
 

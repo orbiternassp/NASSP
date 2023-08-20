@@ -27,7 +27,7 @@
 
 Skylab::Skylab(OBJHANDLE hObj, int fmodel): VESSEL4(hObj, fmodel)
 {
-
+	
 }
 
 Skylab::~Skylab() {
@@ -35,11 +35,24 @@ Skylab::~Skylab() {
 }
 
 void Skylab::InitSkylab() {
-	return;
+	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/sat5skylab");
+	UINT meshidx;
+	VECTOR3 mesh_dir = _V(0, 0, 0);
+	meshidx = AddMesh(SkylabMesh, &mesh_dir);
+	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+}
+
+void Skylab::clbkPostCreation() {
+	Skylab::InitSkylab();
 }
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 {
+}
+
+void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
+{
+	VESSEL4::clbkSetClassCaps(cfg);
 }
 
 void Skylab::clbkSaveState(FILEHANDLE scn) {
