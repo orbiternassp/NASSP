@@ -25,7 +25,7 @@
 #include "skylab.h"
 
 
-Skylab::Skylab(OBJHANDLE hObj, int fmodel): VESSEL4(hObj, fmodel)
+Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel)
 {
 	
 }
@@ -65,10 +65,10 @@ void Skylab::clbkLoadState(FILEHANDLE scn) {
 
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
 {
-	Skylab* skylab;
+	VESSEL* skylab;
 	skylab = new Skylab(hvessel, flightmodel);
 
-	return static_cast<VESSEL*> (skylab);
+	return skylab;
 }
 
 

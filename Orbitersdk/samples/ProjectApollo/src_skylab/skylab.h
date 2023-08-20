@@ -26,12 +26,18 @@
 #define _PA_SKYLAB_H
 
 #include "Orbitersdk.h"
+#include "PanelSDK/PanelSDK.h"
+#include "powersource.h"
+#include "soundlib.h"
+#include "connector.h"
+#include "nasspdefs.h"
 
 
-class Skylab: public VESSEL4{
+
+class Skylab: public ProjectApolloConnectorVessel{
 public:
 	Skylab(OBJHANDLE hObj, int fmodel);
-	~Skylab();
+	virtual ~Skylab();
 	void InitSkylab();
 	void clbkPostCreation();
 	void clbkSetClassCaps(FILEHANDLE cfg);
