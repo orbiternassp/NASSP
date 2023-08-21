@@ -20,7 +20,7 @@
   See https://github.com/orbiternassp/NASSP/blob/Orbiter2016/NASSP-LICENSE.txt
   for more details.
 
-  **************************************************************************/
+ **************************************************************************/
 #define ORBITER_MODULE
 #include "skylab.h"
 
@@ -37,7 +37,7 @@ Skylab::~Skylab() {
 void Skylab::InitSkylab() {
 	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/sat5skylab");
 	UINT meshidx;
-	VECTOR3 mesh_dir = _V(0, 0, 0);
+	VECTOR3 mesh_dir = _V(0, 0, 6.0);
 	meshidx = AddMesh(SkylabMesh, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
 }
@@ -53,6 +53,25 @@ void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
 {
 	VESSEL4::clbkSetClassCaps(cfg);
+	ClearExhaustRefs();
+	ClearAttExhaustRefs();
+	ClearThrusterDefinitions();
+
+	SetSize(15);
+	//Mass
+	double mass = 88474; //https://ntrs.nasa.gov/api/citations/19730025115/downloads/19730025115.pdf#page=189
+	SetEmptyMass(mass);
+	//Principal Moment of Inertia
+	//https://ntrs.nasa.gov/api/citations/19770014164/downloads/19770014164.pdf
+	double PMI_X = 7.93321E5 / mass;
+	double PMI_Y = 3.767828E6 / mass;
+	double PMI_Z = 3.694680E6 / mass;
+	SetPMI(_V(PMI_Y, PMI_Z, PMI_X));
+	
+	//Rough Drag Properties
+	SetCrossSections(_V(159.33, 398.325, 75.0)); //estimate
+	SetCW(2.9,2.9,2.4,5.0); //rough estimate
+	SetRotDrag(_V(0.7, 0.7, 1.2)); //complete fabrication...
 }
 
 void Skylab::clbkSaveState(FILEHANDLE scn) {
