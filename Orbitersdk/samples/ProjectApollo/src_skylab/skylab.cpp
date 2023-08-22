@@ -37,13 +37,14 @@ Skylab::~Skylab() {
 void Skylab::InitSkylab() {
 	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/sat5skylab");
 	UINT meshidx;
-	VECTOR3 mesh_dir = _V(0, 0, 6.0);
+	VECTOR3 mesh_dir = _V(0, 0, .93); //fix mesh scaling and geometry
 	meshidx = AddMesh(SkylabMesh, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
 }
 
 void Skylab::clbkPostCreation() {
-	Skylab::InitSkylab();
+	InitSkylab();
+	ShiftCG(_V(0.066,-0.6198,-6.1392)); //Initial CoM Relative to Vessel Coordinate System
 }
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
@@ -69,8 +70,8 @@ void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
 	SetPMI(_V(PMI_Y, PMI_Z, PMI_X));
 	
 	//Rough Drag Properties
-	SetCrossSections(_V(159.33, 398.325, 75.0)); //estimate
-	SetCW(2.9,2.9,2.4,5.0); //rough estimate
+	SetCrossSections(_V(79.46, 79.46, 79.46)); //From Skylab Operational Databook
+	SetCW(2.401,2.590,4.384,9.330); //From Skylab Operational Databook, oversimplification
 	SetRotDrag(_V(0.7, 0.7, 1.2)); //complete fabrication...
 }
 
