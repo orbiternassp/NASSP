@@ -44,7 +44,7 @@ void Skylab::InitSkylab() {
 
 void Skylab::clbkPostCreation() {
 	InitSkylab();
-	ShiftCG(_V(0.066,-0.6198,-6.1392)); //Initial CoM Relative to Vessel Coordinate System
+	ShiftCG(_V(0.066,0.6198,-6.1392)); //Initial CoM Relative to Vessel Coordinate System (Y,Z,X) in skylab coordinates
 }
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
@@ -71,7 +71,7 @@ void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
 	
 	//Rough Drag Properties
 	SetCrossSections(_V(79.46, 79.46, 79.46)); //From Skylab Operational Databook
-	SetCW(2.401,2.590,4.384,9.330); //From Skylab Operational Databook, oversimplification
+	SetCW(2.401*2,2.590*2,4.384*2,9.330*2); //From Skylab Operational Databook, oversimplification
 	SetRotDrag(_V(0.7, 0.7, 1.2)); //complete fabrication...
 }
 
