@@ -45,7 +45,7 @@ namespace mission
 		virtual bool LoadMission(const int iMission);
 		virtual bool LoadMission(const std::string& strMission);
 
-		//1 = Block I and pre Apollo 12, 2 = Apollo 12 and later
+		//1 = Block I and pre Apollo 13, 2 = Apollo 13 and later
 		virtual int GetSMJCVersion() const;
 		//false = any other CSM, true = J-type mission CSM (for all systems and panels common to CSM-112 to 114)
 		virtual bool IsJMission() const;
@@ -81,7 +81,7 @@ namespace mission
 		double GetATCA_PRM_Factor() const;
 		//Get matrix with coefficients for calculating the LM center of gravity as a quadratic function of mass
 		MATRIX3 GetLMCGCoefficients() const;
-		//CM to LM power connection version. 0 = connection doesn't work with LM staged, 1 = LM has a CB to bypass circuit to descent stage, 2 = circuit bypassed automatically at stating
+		//CM to LM power connection version. 0 = connection doesn't work with LM staged, 1 = LM has a CB to bypass circuit to descent stage, 2 = circuit bypassed automatically at staging
 		int GetCMtoLMPowerConnectionVersion() const;
 		//Get CG of the empty SM (but including SM RCS) in inches
 		VECTOR3 GetCGOfEmptySM() const;

@@ -18728,12 +18728,28 @@ void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES
 	std::vector<StationContact> acquisitions;
 	StationContact current;
 	StationContact empty;
+	int err;
 
 	if (stationlist.table.size() == 0) return;
 
 	for (unsigned i = 0;i < stationlist.table.size();i++)
 	{
-		EMXING(ephemeris, MANTIMES, stationlist.table[i], body, acquisitions, LUNSTAY);
+		err = EMXING(ephemeris, MANTIMES, stationlist.table[i], body, acquisitions, LUNSTAY);
+
+		if (err)
+		{
+			RTCCONLINEMON.IntBuffer[0] = err;
+			if (ephemeris.Header.VEH == RTCC_MPT_CSM)
+			{
+				RTCCONLINEMON.TextBuffer[0] = "CSM";
+			}
+			else
+			{
+				RTCCONLINEMON.TextBuffer[0] = "LEM";
+			}
+			RTCCONLINEMON.TextBuffer[1] = stationlist.table[i].code;
+			EMGPRINT("EMGENGEN", 44);
+		}
 	}
 
 	//Sort
@@ -18771,14 +18787,14 @@ bool RTCC::EMXINGLunarOccultation(EphemerisDataTable2 &ephemeris, ManeuverTimesT
 		return false;
 	}
 
-	VECTOR3 N, rho, R_ES, r_M, rho1, rho_apo1;
+	VECTOR3 N, rho, r_M, rho1, rho_apo1;
 	double sinang;
 	EphemerisData2 sv_E, sv_ET;
 
 	//Calculate elevation
 	OrbMech::EMXINGElev(interout.SV.R, R_S_equ, N, rho, sinang);
 	//Get moon state vector at interpolation time
-	if (PLEFEM(1, interin.GMT / 3600.0, 0, &sv_E.R, &sv_E.V, &R_ES, NULL))
+	if (PLEFEM(4, interin.GMT / 3600.0, 0, &sv_E.R, &sv_E.V, NULL, NULL))
 	{
 		return true;
 	}
@@ -18810,12 +18826,14 @@ VECTOR3 EMXING_Station_ECT(double GMT, double R_E_sin_lat, double R_E_cos_lat, d
 	return _V(R_E_cos_lat*cos(lng), R_E_cos_lat*sin(lng), R_E_sin_lat);
 }
 
-bool RTCC::EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationData &station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY)
+int RTCC::EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationData &station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY)
 {
+	//Return codes: 0 = no error, 1 = mismatch between station and ephemeris type, 2 = interpolation error,  3 = convergence error
+
 	if (ephemeris.table.size() == 0) return false;
 	//Has to be ECT or MCT
-	if (body == BODY_EARTH && ephemeris.Header.CSI != 1) return false;
-	if (body == BODY_MOON && ephemeris.Header.CSI != 3) return false;
+	if (body == BODY_EARTH && ephemeris.Header.CSI != 1) return 1;
+	if (body == BODY_MOON && ephemeris.Header.CSI != 3) return 1;
 
 	ELVCTRInputTable interin;
 	ELVCTROutputTable2 interout;
@@ -18870,7 +18888,7 @@ EMXING_LOOP:
 			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 			if (interout.ErrorCode)
 			{
-				return false;
+				return 2;
 			}
 			svtemp = interout.SV;
 
@@ -18888,8 +18906,8 @@ EMXING_LOOP:
 
 	if (iter == ephemeris.table.size())
 	{
-		//Out of ephemeris
-		return false;
+		//Out of ephemeris, no error
+		return 0;
 	}
 
 	//Already in AOS
@@ -18906,7 +18924,7 @@ EMXING_LOOP:
 		ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 		if (interout.ErrorCode)
 		{
-			return false;
+			return 2;
 		}
 		svtemp = interout.SV;
 
@@ -18926,7 +18944,7 @@ EMXING_LOOP:
 			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 			if (interout.ErrorCode)
 			{
-				return false;
+				return 2;
 			}
 			svtemp = interout.SV;
 
@@ -18966,7 +18984,7 @@ EMXING_LOOP:
 			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 			if (interout.ErrorCode)
 			{
-				return false;
+				return 2;
 			}
 			svtemp = interout.SV;
 
@@ -19007,7 +19025,7 @@ EMXING_LOOP:
 				ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 				if (interout.ErrorCode)
 				{
-					return false;
+					return 2;
 				}
 				svtemp = interout.SV;
 
@@ -19055,7 +19073,7 @@ EMXING_LOOP:
 		ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 		if (interout.ErrorCode)
 		{
-			return false;
+			return 2;
 		}
 		svtemp = interout.SV;
 
@@ -19075,7 +19093,7 @@ EMXING_LOOP:
 			ELVCTR(interin, interout, ephemeris, MANTIMES, LUNSTAY);
 			if (interout.ErrorCode)
 			{
-				return false;
+				return 2;
 			}
 			svtemp = interout.SV;
 
@@ -19097,7 +19115,6 @@ EMXING_LOOP:
 		current.BestAvailableLOS = BestAvailableLOS;
 		current.BestAvailableEMAX = BestAvailableEMAX;
 
-		//TBD: Implement this
 		double g_func, GMT_iter2, g_func_last, LastGMT_lunar, GMT_new;
 		unsigned int iter2 = 0;
 
@@ -19112,6 +19129,12 @@ EMXING_LOOP:
 		//Look if already in AOS at horizon crossing
 		if (body == BODY_EARTH) R_S_equ = EMXING_Station_ECT(GMT_iter2, station.R_E_sin_lat, station.R_E_cos_lat, station.lng);
 		EMXINGLunarOccultation(ephemeris, MANTIMES, GMT_iter2, R_S_equ, g_func, LUNSTAY);
+
+		//Store so that we have any data
+		LastGMT_lunar = GMT_iter2;
+		g_func_last = g_func;
+
+		//If we are in sight, go to logic for finding LOS
 		if (g_func >= 0)
 		{
 			goto RTCC_EMXING_LUNAR_LOS1;
@@ -19142,6 +19165,7 @@ EMXING_LOOP:
 		}
 
 		//Bracket AOS
+		n = 0;
 		GMT_iter2 = OrbMech::LinearInterpolation(g_func, GMT_iter2, g_func_last, LastGMT_lunar, 0.0);
 		do
 		{
@@ -19149,7 +19173,10 @@ EMXING_LOOP:
 			EMXINGLunarOccultation(ephemeris, MANTIMES, GMT_iter2, R_S_equ, g_func, LUNSTAY);
 			GMT_new = GMT_iter2;
 			GMT_iter2 = OrbMech::LinearInterpolation(g_func, GMT_iter2, g_func_last, LastGMT_lunar, 0.0);
-		} while (abs(GMT_new - GMT_iter2) > 3.0);
+			n++;
+		} while (abs(GMT_new - GMT_iter2) > 3.0 && n < nmax);
+
+		if (n >= nmax) return 3; //Didn't converge
 
 		current.GMTAOS = GMT_iter2;
 		current.BestAvailableAOS = true;
@@ -19183,6 +19210,7 @@ EMXING_LOOP:
 		}
 
 		//Bracket LOS
+		n = 0;
 		GMT_iter2 = OrbMech::LinearInterpolation(g_func, GMT_iter2, g_func_last, LastGMT_lunar, 0.0);
 		do
 		{
@@ -19190,8 +19218,12 @@ EMXING_LOOP:
 			EMXINGLunarOccultation(ephemeris, MANTIMES, GMT_iter2, R_S_equ, g_func, LUNSTAY);
 			GMT_new = GMT_iter2;
 			GMT_iter2 = OrbMech::LinearInterpolation(g_func, GMT_iter2, g_func_last, LastGMT_lunar, 0.0);
-		} while (abs(GMT_new - GMT_iter2) > 3.0);
+			n++;
+		} while (abs(GMT_new - GMT_iter2) > 3.0 && n < nmax);
 
+		if (n >= nmax) return 3; //Didn't converge
+
+		//If time of LOS (lunar occulation) is after actual LOS (station in sight)
 		if (GMT_iter2 >= GMT_LOS)
 		{
 			GMT_iter2 = GMT_LOS;
@@ -19272,7 +19304,7 @@ RTCC_EMXING_END:
 		goto EMXING_LOOP;
 	}
 
-	return true;
+	return 0;
 }
 
 void RTCC::EMDSTAC()
@@ -30850,6 +30882,11 @@ void RTCC::EMGPRINT(std::string source, int i)
 	case 42:
 		message.push_back("ANCHOR VECTOR IS LUNAR SURFACE");
 		message.push_back("NO ELEMENTS CALCULATED");
+		break;
+	case 44:
+		sprintf_s(Buffer, "ERROR %d FROM EMXING", RTCCONLINEMON.IntBuffer[0]);
+		message.push_back(Buffer);
+		message.push_back("FOR " + RTCCONLINEMON.TextBuffer[0] + ", "  +RTCCONLINEMON.TextBuffer[1]);
 		break;
 	default:
 		return;
