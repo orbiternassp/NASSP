@@ -4823,7 +4823,7 @@ private:
 	//Generalized Contact Generator
 	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
 	//Horizon Crossing Subprogram
-	bool EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationData & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
+	int EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationData & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
 	bool EMXINGLunarOccultation(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, double gmt, VECTOR3 R_S_equ, double &g_func, LunarStayTimesTable *LUNSTAY);
 	int CapeCrossingRev(int L, double GMT);
 	double CapeCrossingGMT(int L, int rev);
