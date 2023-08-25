@@ -4857,13 +4857,13 @@ double RTCC::GetClockTimeFromAGC(agc_t *agc)
 	return agc->Erasable[AGC_BANK(025)][AGC_ADDR(025)] + agc->Erasable[AGC_BANK(024)][AGC_ADDR(024)] * pow((double) 2., (double) 14.);
 }
 
-double RTCC::GetTEPHEMFromAGC(agc_t *agc)
+double RTCC::GetTEPHEMFromAGC(agc_t *agc, int address)
 {
 	int tephem_int[3];
 
-	tephem_int[0] = agc->Erasable[AGC_BANK(01706)][AGC_ADDR(01706)];
-	tephem_int[1] = agc->Erasable[AGC_BANK(01707)][AGC_ADDR(01707)];
-	tephem_int[2] = agc->Erasable[AGC_BANK(01710)][AGC_ADDR(01710)];
+	tephem_int[0] = agc->Erasable[AGC_BANK(address)][AGC_ADDR(address)];
+	tephem_int[1] = agc->Erasable[AGC_BANK(address + 1)][AGC_ADDR(address + 1)];
+	tephem_int[2] = agc->Erasable[AGC_BANK(address + 2)][AGC_ADDR(address + 2)];
 
 	//Make negative numbers actually negative
 	for (int i = 0; i < 3; i++)
@@ -28545,7 +28545,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		{
 			return 2;
 		}
-		if (Azi<70.0 || Azi>110.0)
+		if (Azi < 35.0 || Azi > 120.0)
 		{
 			return 2;
 		}
