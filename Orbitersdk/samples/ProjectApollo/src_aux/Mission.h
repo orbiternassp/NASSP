@@ -91,6 +91,8 @@ namespace mission
 		int GetLMCWEAVersion() const;
 		//false = Normal polarity (Apollo 14 and earlier), Lateral axis for PGNS and LR input has switched polarity (Apollo 15 and later)
 		bool GetCrossPointerReversePolarity() const;
+		//Get time reference of AGC for CMC clock initialization. The value is usually the MJD of midnight July 1st that preceeds the launch
+		double GetTEPHEM0() const;
 		//Get cue cards
 		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
 		//Name of CDR
@@ -115,6 +117,7 @@ namespace mission
 
 		void ReadCueCardLine(char *line, int vehicle);
 
+		void UpdateTEPHEM0();
 
 		std::string strFileName;
 		std::string strMissionName;
@@ -151,6 +154,7 @@ namespace mission
 		bool bCrossPointerReversePolarity;
 		std::vector<CueCardConfig> CSMCueCards;
 		std::vector<CueCardConfig> LMCueCards;
+		double dTEPHEM0;
 
 		void SetDefaultValues();
 	};

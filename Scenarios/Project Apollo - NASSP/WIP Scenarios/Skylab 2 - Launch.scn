@@ -1,5 +1,5 @@
 BEGIN_DESC
-Launch of Skylab 2 at 13:00 GMT on May 25th, 1973. Requires the Skylab1973 addon: https://www.orbiter-forum.com/resources/skylab1973-v2-1.3621/
+Launch of Skylab 2 at 13:00 GMT on May 25th, 1973.
 
 Known issues:
 -LC-39B with milkstool has no animations
@@ -324,32 +324,12 @@ MCC:ProjectApollo\MCC
     RTCC_MISSIONFILE Skylab 2 Constants
   RTCC_END
 END
-Skylab-I:Skylab1973\Skylab-I
+Skylab-I:ProjectApollo\Skylab
   STATUS Orbiting Earth
   RPOS -5.9200e+06 -3.0407e+06 -1.4591e+06
   RVEL 2673.4 -1887.4 -6913.3
   AROT 41.95 -38.85 -29.45
   VROT 0.00 0.06 0.00
-  PRPLEVEL 0:0.750
-  NAVFREQ 0 0
-  XPDR 62
-  RCS 1
-  CTRL_SURFACE 1
-  CONFIGURATION 1
-  CURRENT_PAYLOAD 0
-  SEQ 0 2 0.999500
-  SEQ 1 -2 0.000000
-  SEQ 2 -2 0.000000
-  SEQ 3 -2 0.000000
-  SEQ 4 -2 0.000000
-  SEQ 5 -2 0.000000
-  SEQ 6 -2 0.000000
-  SEQ 7 -2 0.000000
-  SEQ 8 -2 0.000000
-  SEQ 9 -2 0.000000
-  SEQ 10 -2 0.000000
-  SEQ 11 -2 0.000000
-  SEQ 12 -2 0.000000
 END
 END_SHIPS
  
