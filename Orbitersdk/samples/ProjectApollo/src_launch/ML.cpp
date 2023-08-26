@@ -214,7 +214,7 @@ void ML::clbkPostCreation()
 			oapiGetObjectName(h, buffer, 256);
 			if (!strcmp(LVName, buffer)) {
 				hLV = h;
-				Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+				sat = (Saturn *)oapiGetVesselInterface(hLV);
 				if (sat->GetStage() < LAUNCH_STAGE_ONE)
 				{
 					IuUmb->Connect(sat->GetIU());
@@ -425,8 +425,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if ((GetDistanceTo(PAD_LONA, PAD_LATA) > 15.0) && (GetDistanceTo(PAD_LONB, PAD_LATB) > 15.0)) break;
 
 		// T-3h or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 		if (sat->GetMissionTime() > -3 * 3600) {
 			
 			if (oapiGetTimeAcceleration() > 1) {
@@ -470,8 +469,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		// T-43min or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -490,8 +488,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		// T-5min or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -510,8 +507,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		// T-30s or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -531,8 +527,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 	case STATE_TERMINAL_COUNT:
 		
-		if (!hLV) break;
-		sat = (Saturn *)oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 		
@@ -552,9 +547,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 	case STATE_SICINTERTANKARM:
 
-		
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -586,8 +579,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 	case STATE_SICFORWARDARM:
 
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -609,20 +601,19 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		else break;
 		//Fall into
 	case STATE_IGNITION_SEQUENCE:
+		if (!sat) break;
 
 		if (IsSaturnV) SaturnVIgnitionSequence(sat->GetMissionTime());
 		else SaturnIBIgnitionSequence(sat->GetMissionTime());
 
+		LiftoffStream(sat->GetMissionTime());
+
 		break;
 
 	case STATE_LIFTOFFSTREAM:
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
-		if (sat->GetMissionTime() < -2.0)
-			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() + 4.9) / 2.9;
-		else
-			liftoffStreamLevel = sat->GetSIThrustLevel();
+		LiftoffStream(sat->GetMissionTime());
 
 		// T-1s or later?
 		if (CutoffInterlock())
@@ -644,11 +635,9 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 	
 	case STATE_LIFTOFF:
+		if (!sat) break;
 
-		if (!hLV) break;
-		sat = (Saturn *)oapiGetVesselInterface(hLV);
-
-		liftoffStreamLevel = sat->GetSIThrustLevel();
+		LiftoffStream(sat->GetMissionTime());
 
 		//Cutoff
 		if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
@@ -711,15 +700,12 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 
 	case STATE_POSTLIFTOFF:
+		if (!sat) break;
 
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() < 13.0)
-			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() - 13.0) / -5.0;
-		else
+		LiftoffStream(sat->GetMissionTime());
+
+		if (sat->GetMissionTime() >= 13.0)
 		{
-			liftoffStreamLevel = 0;
-
 			//
 			// Once the stream is finished, forget about the vessel since we won't be
 			// using it again. This prevents a crash if we later delete the vessel.
@@ -1240,6 +1226,40 @@ void ML::HoldDownForce(double MissionTime)
 	}
 }
 
+void ML::LiftoffStream(double MissionTime)
+{
+	if (!sat) return;
+
+	double lvl = sat->GetSIThrustLevel();
+
+	if (IsSaturnV)
+	{
+		if (MissionTime < -4.9)
+			liftoffStreamLevel = 0.0;
+		else if (MissionTime < -2.0)
+			liftoffStreamLevel = lvl * (MissionTime + 4.9) / 2.9;
+		else if (MissionTime < 8.0)
+			liftoffStreamLevel = lvl;
+		else if (MissionTime < 13.0)
+			liftoffStreamLevel = lvl * (MissionTime - 13.0) / -5.0;
+		else
+			liftoffStreamLevel = 0.0;
+	}
+	else
+	{
+		if (MissionTime < -2.0)
+			liftoffStreamLevel = 0.0;
+		else if (MissionTime < -1.0)
+			liftoffStreamLevel = lvl * (MissionTime + 2.0);
+		else if (MissionTime < 4.0)
+			liftoffStreamLevel = lvl;
+		else if (MissionTime < 10.0)
+			liftoffStreamLevel = lvl * (MissionTime - 10.0) / -6.0;
+		else
+			liftoffStreamLevel = 0.0;
+	}
+}
+
 void ML::SaturnIBIgnitionSequence(double MissionTime)
 {
 	if (CutoffInterlock())
@@ -1271,8 +1291,8 @@ void ML::SaturnIBIgnitionSequence(double MissionTime)
 		}
 
 		// T-1s or later?
-		if (MissionTime > -1) {
-			state = STATE_LIFTOFF;
+		if (MissionTime > -2) {
+			state = STATE_LIFTOFFSTREAM;
 		}
 	}
 }
@@ -1286,23 +1306,23 @@ void ML::SaturnVIgnitionSequence(double MissionTime)
 	}
 	else if (Hold == false)
 	{
-		if (sat->GetMissionTime() > -8.9)
+		if (MissionTime > -8.9)
 		{
 			TailUmb->SetEngineStart(5);
 		}
-		if (sat->GetMissionTime() > -8.62)
+		if (MissionTime > -8.62)
 		{
 			TailUmb->SetEngineStart(1);
 			TailUmb->SetEngineStart(3);
 		}
-		if (sat->GetMissionTime() > -8.2)
+		if (MissionTime > -8.2)
 		{
 			TailUmb->SetEngineStart(2);
 			TailUmb->SetEngineStart(4);
 		}
 
 		// T-4.9s or later?
-		if (sat->GetMissionTime() > -4.9) {
+		if (MissionTime > -4.9) {
 			state = STATE_LIFTOFFSTREAM;
 		}
 	}
