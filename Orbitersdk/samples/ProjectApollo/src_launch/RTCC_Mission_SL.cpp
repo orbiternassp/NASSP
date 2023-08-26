@@ -35,6 +35,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 {
 	char uplinkdata[1024 * 3];
 	char Buff[128];
+	bool preliminary = true;
 	bool scrubbed = false;
 
 	switch (fcn)
@@ -56,8 +57,8 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
 		GMGMED(Buff);
 
-		//P12: Predicted CSM GRR and Azimuth
-		sprintf_s(Buff, "P12,CSM,%d:%d:%.2lf,44.4;", hh, mm, ss);
+		//P15: CMC, clock zero
+		sprintf_s(Buff, "P15,AGC,%d:%d:%.2lf;", hh, mm, ss);
 		GMGMED(Buff);
 	}
 	break;
@@ -141,20 +142,29 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.dt_NCC_NSR = 37.0*60.0;
 		opt.NPC = -1.0;
 		opt.IPUTNA = 2; //Maneuver line at apogee
+		opt.PUTNA = 1.0;
 		opt.WT = 130.0*RAD;
 		opt.Elev = 27.0*RAD;
 		opt.K46 = 4; //TPI at X minutes into light
-		opt.TIMLIT = -20.0*60.0;
+		opt.TIMLIT = -23.0;
 
 		DockingInitiationProcessor(opt);
 
 		calcParams.Phasing = PZREDT.GET[0]; //NC1 time
-		calcParams.CSI = PZREDT.GET[1]; //NC2 time
+		calcParams.Insertion = PZREDT.GET[1]; //NC2 time
+		calcParams.CSI = PZREDT.GET[2]; //NCC time
 		calcParams.CDH = PZREDT.GET[3]; //NSR time
 		calcParams.TPI = PZRPDT.data[0].GETTPI; //TPI time
+
+		char Buff1[64], Buff2[64];
+		OrbMech::format_time_HHMMSS(Buff1, calcParams.Phasing);
+		OrbMech::format_time_HHMMSS(Buff2, calcParams.TPI);
+
+		sprintf(upMessage, "NC1: %s, TPI: %s", Buff1, Buff2);
 	}
 	break;
 	case 12: //NC1 preliminary update
+		preliminary = true;
 	case 13: //NC1 final update
 	{
 		AP7MNV * form = (AP7MNV *)pad;
@@ -179,36 +189,37 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.PUTTNA = GMTfromGET(calcParams.Phasing);
 		opt.WT = 130.0*RAD;
 		opt.Elev = 27.0*RAD;
-		opt.K46 = 4; //TPI at X minutes into light
-		opt.TIMLIT = -20.0*60.0;
+		opt.K46 = 1; //Input TPI time
+		opt.TTPI = GMTfromGET(calcParams.TPI);
 
 		DockingInitiationProcessor(opt);
 
-		calcParams.CSI = PZREDT.GET[1]; //NC2 time
+		calcParams.Insertion = PZREDT.GET[1]; //NC2 time
+		calcParams.CSI = PZREDT.GET[2]; //NCC time
 		calcParams.CDH = PZREDT.GET[3]; //NSR time
-		calcParams.TPI = PZRPDT.data[0].GETTPI; //TPI time
 
-		manopt.TIG = opt.PUTTNA;
+		manopt.TIG = calcParams.Phasing;
 		manopt.dV_LVLH = PZREDT.DVVector[0] * 0.3048;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		manopt.HeadsUp = true;
+		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		manopt.navcheckGET = 0.0;
-		manopt.sxtstardtime = -25.0*60.0;
-		manopt.UllageDT = 15.0;
-		manopt.UllageThrusterOpt = true;
+		manopt.sxtstardtime = 0.0;
+		manopt.UllageDT = 20.0;
+		manopt.UllageThrusterOpt = false;
 		manopt.sv0 = opt.sv_CSM;
 		manopt.CSMMass = calcParams.src->GetMass();
 
 		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "NC1");
 
-		if (fcn == 13)
+		if (preliminary == false)
 		{
 			char buffer1[1000];
 			char buffer2[1000];
 
 			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, opt.sv_CSM);
-			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_LM, opt.sv_LM);
+			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, opt.sv_LM);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -220,11 +231,16 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 	}
 	break;
 	case 14: //NC2 preliminary update
+		preliminary = true;
 	case 15: //NC2 final update
 	{
+		AP7MNV * form = (AP7MNV *)pad;
+		AP7ManPADOpt manopt;
 		DKIOpt opt;
+		double CSMMass;
 
 		opt.sv_CSM = StateVectorCalcEphem(calcParams.src);
+		CSMMass = calcParams.src->GetMass();
 		opt.sv_LM = StateVectorCalcEphem(calcParams.tgt);
 		opt.MV = 1; //CSM maneuvers
 
@@ -232,16 +248,157 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.MI = 5.0; //M = 5 rendezvous
 		opt.NC1 = opt.MI - 1.5; //NC2 maneuver becomes NC1
 		opt.NH = opt.NC1 + 0.5; //NCC maneuver becomes NH
+		opt.NSR = opt.NH + 0.4029;
 		opt.NPC = -1.0;
 		opt.IPUTNA = 1; //Maneuver line at input time
 		opt.PUTNA = opt.NC1; //NC2
-		opt.PUTTNA = GMTfromGET(calcParams.CSI);
+		opt.PUTTNA = GMTfromGET(calcParams.Insertion);
 		opt.WT = 130.0*RAD;
 		opt.Elev = 27.0*RAD;
-		opt.K46 = 4; //TPI at X minutes into light
-		opt.TIMLIT = -20.0*60.0;
+		opt.K46 = 1; //Input TPI time
+		opt.TTPI = GMTfromGET(calcParams.TPI);
 
 		DockingInitiationProcessor(opt);
+
+		calcParams.CSI = PZREDT.GET[1]; //NCC time
+		calcParams.CDH = calcParams.CSI + 37.0*60.0; //NSR time
+		calcParams.LunarLiftoff = PZREDT.PHASE[2] * RAD; //Phase angle at NSR
+		calcParams.SVSTORE1 = ConvertEphemDatatoSV(PZDKIELM.Block[0].SV_before[1], CSMMass); //State vector before NCC
+
+		manopt.TIG = calcParams.Insertion;
+		manopt.dV_LVLH = PZREDT.DVVector[0] * 0.3048;
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		manopt.navcheckGET = 0.0;
+		manopt.sxtstardtime = 0.0;
+		manopt.UllageDT = 20.0;
+		manopt.UllageThrusterOpt = false;
+		manopt.sv0 = opt.sv_CSM;
+		manopt.CSMMass = CSMMass;
+
+		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "NC2");
+	}
+	break;
+	case 16: //NCC preliminary update
+		preliminary = true;
+	case 17: //NCC final update
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+		AP7ManPADOpt manopt;
+		TwoImpulseOpt opt;
+		TwoImpulseResuls res;
+		double CSMMass;
+
+		opt.mode = 5; 
+		opt.T1 = GMTfromGET(calcParams.CSI);
+		opt.T2 = GMTfromGET(calcParams.CDH);
+
+		if (preliminary)
+		{
+			opt.sv_A = ConvertSVtoEphemData(calcParams.SVSTORE1);
+			CSMMass = calcParams.SVSTORE1.mass;
+		}
+		else
+		{
+			opt.sv_A = StateVectorCalcEphem(calcParams.src);
+			CSMMass = calcParams.src->GetMass();
+		}
+
+		opt.sv_P = StateVectorCalcEphem(calcParams.tgt);
+		opt.DH = 10.0*1852.0;
+		opt.PhaseAngle = calcParams.LunarLiftoff; //Angle was stored here
+
+		PMSTICN(opt, res);
+
+		//Store for NSR PAD
+		calcParams.DVSTORE1 = res.dV_LVLH2;
+
+		if (preliminary == false)
+		{
+			//State vector after NCC
+			EphemerisData sv_NCC = res.sv_tig;
+			sv_NCC.V = res.sv_tig.V + res.dV;
+
+			calcParams.SVSTORE1 = ConvertEphemDatatoSV(sv_NCC, CSMMass);
+		}
+
+		manopt.TIG = calcParams.CSI;
+		manopt.dV_LVLH = res.dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		manopt.navcheckGET = 0.0;
+		manopt.sxtstardtime = 0.0;
+		manopt.UllageDT = 20.0;
+		manopt.UllageThrusterOpt = false;
+		manopt.sv0 = opt.sv_A;
+		manopt.CSMMass = CSMMass;
+
+		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "NCC");
+	}
+	break;
+	case 18: //NSR preliminary update
+		preliminary = true;
+	case 19: //NSR final update
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+		AP7ManPADOpt manopt;
+
+		manopt.TIG = calcParams.CDH;
+		manopt.dV_LVLH = calcParams.DVSTORE1; //Was calculated for NCC PAD
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		manopt.navcheckGET = 0.0;
+		manopt.sxtstardtime = 0.0;
+		manopt.UllageDT = 20.0;
+		manopt.UllageThrusterOpt = false;
+		manopt.sv0 = ConvertSVtoEphemData(calcParams.SVSTORE1);
+		manopt.CSMMass = calcParams.SVSTORE1.mass;
+
+		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "NSR");
+	}
+	break;
+	case 20: //TPI preliminary update
+		preliminary = true;
+	case 21: //TPI final update
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+		AP7ManPADOpt manopt;
+		TwoImpulseOpt opt;
+		TwoImpulseResuls res;
+		double CSMMass;
+
+		opt.mode = 5;
+		opt.T1 = -1.0;
+		opt.T2 = -1.0;
+		opt.sv_A = StateVectorCalcEphem(calcParams.src);
+		CSMMass = calcParams.src->GetMass();
+		opt.sv_P = StateVectorCalcEphem(calcParams.tgt);
+		opt.DH = opt.PhaseAngle = 0.0;
+		opt.Elev = 27.0*RAD;
+		opt.WT = 130.0*RAD;
+
+		PMSTICN(opt, res);
+
+		manopt.TIG = res.T1;
+		manopt.dV_LVLH = res.dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		manopt.navcheckGET = 0.0;
+		manopt.sxtstardtime = 0.0;
+		manopt.UllageDT = 15.0;
+		manopt.UllageThrusterOpt = true;
+		manopt.sv0 = opt.sv_A;
+		manopt.CSMMass = CSMMass;
+
+		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "TPI");
 	}
 	break;
 	}

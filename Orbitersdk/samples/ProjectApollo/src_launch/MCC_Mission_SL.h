@@ -33,5 +33,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_SL_FINAL_NC1 23
 #define MST_SL_PRELIM_NC2 24
 #define MST_SL_FINAL_NC2 25
-#define MST_SL_FINAL_NCC 26
-#define MST_SL_FINAL_NSR 27
+#define MST_SL_PRELIM_NCC 26
+#define MST_SL_PRELIM_NSR 27
+#define MST_SL_FINAL_NCC 28
+#define MST_SL_FINAL_NSR 29
+#define MST_SL_PRELIM_TPI 30
+#define MST_SL_FINAL_TPI 31

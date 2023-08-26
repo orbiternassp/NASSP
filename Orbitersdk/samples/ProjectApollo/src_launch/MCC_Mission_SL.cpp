@@ -42,19 +42,34 @@ void MCC::MissionSequence_SL()
 		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(1.0*3600.0 + 35.0*60.0), 11, MST_SL_PRELIM_NC1);
 		break;
 	case MST_SL_PRELIM_NC1: //NC1 preliminary update to NC1 final update
-		UpdateMacro(UTP_NONE, PT_AP7MNV, rtcc->GETEval2(1.0 * 3600.0 + 55.0*60.0), 12, MST_SL_FINAL_NC1);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(1.0 * 3600.0 + 55.0*60.0), 12, MST_SL_FINAL_NC1);
 		break;
 	case MST_SL_FINAL_NC1: //NC1 final update to NC2 preliminary update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(3.0 * 3600.0 + 5.0*60.0), 13, MST_SL_PRELIM_NC2);
 		break;
 	case MST_SL_PRELIM_NC2: //NC2 preliminary update to NC2 final update
-		UpdateMacro(UTP_NONE, PT_AP7MNV, rtcc->GETEval2(4.0 * 3600.0 + 15.0*60.0), 14, MST_SL_FINAL_NC2);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(4.0 * 3600.0 + 12.0*60.0), 14, MST_SL_FINAL_NC2);
 		break;
-	case MST_SL_FINAL_NC2: //NC final update to NCC final update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(5.0 * 3600.0 + 5.0*60.0), 15, MST_SL_FINAL_NCC);
+	case MST_SL_FINAL_NC2: //NC2 final update to NCC preliminary update
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 15, MST_SL_PRELIM_NCC);
 		break;
-	case MST_SL_FINAL_NCC: //NC final update to NCC final update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 2.0*60.0, 16, MST_SL_FINAL_NSR);
+	case MST_SL_PRELIM_NCC: //NCC preliminary update to NSR preliminary update
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 16, MST_SL_PRELIM_NSR);
+		break;
+	case MST_SL_PRELIM_NSR: //NSR preliminary update to NCC final update
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.CSI - 24.0*60.0), 18, MST_SL_FINAL_NCC);
+		break;
+	case MST_SL_FINAL_NCC: //NCC final update to NSR final update
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 17, MST_SL_FINAL_NSR);
+		break;
+	case MST_SL_FINAL_NSR: //NSR final update to TPI preliminary update
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.TPI - 32.0*60.0), 19, MST_SL_PRELIM_TPI);
+		break;
+	case MST_SL_PRELIM_TPI: //TPI preliminary update to TPI final update
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.TPI - 24.0*60.0), 20, MST_SL_FINAL_TPI);
+		break;
+	case MST_SL_FINAL_TPI: //TPI final update to
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, false, 21, MST_ENTRY);
 		break;
 	}
 }
