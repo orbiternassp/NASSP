@@ -163,6 +163,7 @@ protected:
 	void SaturnIBIgnitionSequence(double MissionTime);
 	void SaturnVIgnitionSequence(double MissionTime);
 	void HoldDownForce(double MissionTime);
+	void LiftoffStream(double MissionTime);
 
 	void MobileLauncherComputer(int mdo, bool on = true);
 
