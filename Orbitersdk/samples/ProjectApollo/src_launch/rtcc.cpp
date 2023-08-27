@@ -1963,18 +1963,26 @@ bool RTCC::LoadMissionConstantsFile(char *file)
 			papiReadScenario_double(Buff, "PZREAP_IRMAX", PZREAP.IRMAX);
 			papiReadScenario_double(Buff, "PDI_K_X", RTCCPDIIgnitionTargets.K_X);
 			papiReadScenario_double(Buff, "PDI_K_V", RTCCPDIIgnitionTargets.K_V);
-			if (papiReadScenario_double(Buff, "MCLADA", dtemp))
+			if (papiReadScenario_double(Buff, "CSMPadLatitude", dtemp))
 			{
-				SystemParameters.MCLSDA = sin(dtemp*RAD);
-				SystemParameters.MCLCDA = cos(dtemp*RAD);
+				SystemParameters.MCLLTP[0] = SystemParameters.MCLLTP[1] = dtemp*RAD;
+				SystemParameters.MCLSDA = sin(SystemParameters.MCLLTP[0]);
+				SystemParameters.MCLCDA = cos(SystemParameters.MCLLTP[0]);
+				SystemParameters.MDVSTP.PHIL = SystemParameters.MCLLTP[0]; //This assumes the TLI is done with the vehicle from the CSM launchpad
 			}
-			else if (papiReadScenario_double(Buff, "MDVSTP_PHIL", dtemp))
-			{
-				SystemParameters.MDVSTP.PHIL = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "MCLGRA", dtemp))
+			else if (papiReadScenario_double(Buff, "CSMPadLongitude", dtemp))
 			{
 				SystemParameters.MCLGRA = dtemp * RAD;
+			}
+			else if (papiReadScenario_double(Buff, "LMPadLatitude", dtemp))
+			{
+				SystemParameters.MCLLLP[0] = SystemParameters.MCLLLP[1] = dtemp * RAD;
+				SystemParameters.MCLSLL = sin(SystemParameters.MCLLLP[0]);
+				SystemParameters.MCLCLL = cos(SystemParameters.MCLLLP[0]);
+			}
+			else if (papiReadScenario_double(Buff, "LMPadLongitude", dtemp))
+			{
+				SystemParameters.MCLLPL = dtemp * RAD;
 			}
 			else if (papiReadScenario_int(Buff, "MCCCRF", SystemParameters.MCCCRF))
 			{
@@ -5105,7 +5113,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	{
 		double phi, DLNG;
 
-		phi = atan2(SystemParameters.MCLSDA, SystemParameters.MCLCDA);
+		phi = SystemParameters.MCLLTP[0];
 		DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * SystemParameters.MCGMTL / 3600.0;
 
 		return GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - phi, 2, SystemParameters.MCLABN, 1);
@@ -18584,8 +18592,10 @@ void RTCC::PMDPAD()
 	}
 }
 
-void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)
+void RTCC::PMMPAR(bool IsCSMLaunch, VECTOR3 RT, VECTOR3 VT, double TT)
 {
+	//IsCSMLaunch: true = LM launched first and launch targeting is for CSM
+
 	LWPInputTable in;
 	LWPGlobalConstants gl;
 	LaunchWindowProcessor lwp;
@@ -18593,6 +18603,17 @@ void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)
 	gl.mu = OrbMech::mu_Earth;
 	gl.RREF = OrbMech::R_Earth;
 	gl.w_E = OrbMech::w_Earth;
+
+	if (IsCSMLaunch)
+	{
+		PZSLVCON.LATLS = SystemParameters.MCLLTP[0];
+		PZSLVCON.LONGLS = SystemParameters.MCLGRA;
+	}
+	else
+	{
+		PZSLVCON.LATLS = SystemParameters.MCLLLP[0];
+		PZSLVCON.LONGLS = SystemParameters.MCLLPL;
+	}
 
 	in = PZSLVCON;
 	in.RT = RT;
@@ -34063,15 +34084,27 @@ void RTCC::BMGPRIME(std::string source, std::vector<std::string> message)
 void RTCC::LMMGRP(int veh, double gmt)
 {
 	MATRIX3 REFS;
-	double phi, DLNG;
+	double lat, lng, DLNG;
 
-	phi = atan2(SystemParameters.MCLSDA, SystemParameters.MCLCDA);
-	DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * gmt / 3600.0;
+	if (veh == 2)
+	{
+		//IU2 (LM)
+		lat = SystemParameters.MCLLLP[0];
+		lng = SystemParameters.MCLLPL;
+	}
+	else
+	{
+		//CSM, IU1 (CSM)
+		lat = SystemParameters.MCLLTP[0];
+		lng = SystemParameters.MCLGRA;
+	}
+
+	DLNG = lng + SystemParameters.MCLAMD + SystemParameters.MCERTS * gmt / 3600.0;
 
 	//CSM
 	if (veh == 0)
 	{
-		REFS = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - phi, 2, SystemParameters.MCLABN, 1);
+		REFS = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - lat, 2, SystemParameters.MCLABN, 1);
 
 		EZJGMTX1.data[0].ID = 0;
 		EMGSTSTM(1, REFS, RTCC_REFSMMAT_TYPE_CUR, gmt);
@@ -34079,7 +34112,7 @@ void RTCC::LMMGRP(int veh, double gmt)
 	//IU
 	else
 	{
-		REFS = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -phi, 2, -SystemParameters.MCLABN, 1);
+		REFS = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -lat, 2, -SystemParameters.MCLABN, 1);
 
 		if (veh == 1)
 		{
