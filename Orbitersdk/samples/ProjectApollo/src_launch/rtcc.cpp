@@ -18592,28 +18592,17 @@ void RTCC::PMDPAD()
 	}
 }
 
-void RTCC::PMMPAR(bool IsCSMLaunch, VECTOR3 RT, VECTOR3 VT, double TT)
+void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)
 {
 	//IsCSMLaunch: true = LM launched first and launch targeting is for CSM
 
 	LWPInputTable in;
 	LWPGlobalConstants gl;
-	LaunchWindowProcessor lwp;
+	LaunchWindowProcessor lwp(this);
 
 	gl.mu = OrbMech::mu_Earth;
 	gl.RREF = OrbMech::R_Earth;
 	gl.w_E = OrbMech::w_Earth;
-
-	if (IsCSMLaunch)
-	{
-		PZSLVCON.LATLS = SystemParameters.MCLLTP[0];
-		PZSLVCON.LONGLS = SystemParameters.MCLGRA;
-	}
-	else
-	{
-		PZSLVCON.LATLS = SystemParameters.MCLLLP[0];
-		PZSLVCON.LONGLS = SystemParameters.MCLLPL;
-	}
 
 	in = PZSLVCON;
 	in.RT = RT;
@@ -18647,6 +18636,8 @@ void RTCC::PMMPAR(bool IsCSMLaunch, VECTOR3 RT, VECTOR3 VT, double TT)
 	PZSLVTAR.DELNOD = lwp.rlott.DELNOD*DEG;
 	PZSLVTAR.PA = lwp.lwsum.PA*DEG;
 	PZSLVTAR.BIAS = PZSLVCON.BIAS;
+	PZSLVTAR.LATLS = lwp.lwsum.LATLS*DEG;
+	PZSLVTAR.LONGLS = lwp.lwsum.LONGLS*DEG;
 
 	AEGHeader header;
 	AEGDataBlock sv_apo, sv_peri;

@@ -2657,7 +2657,7 @@ public:
 	//Earth Orbit Insertion Processor
 	void PMMIEV(double T_L);
 	//SLV Targeting Load Module
-	void PMMPAR(bool IsCSMLaunch, VECTOR3 RT, VECTOR3 VT, double TT);
+	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
 	//Perigee Adjust
 	void PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor);
 	//Perigee Adjust Display

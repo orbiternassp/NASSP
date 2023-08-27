@@ -4658,7 +4658,7 @@ int ARCore::subThread()
 
 		GC->rtcc->ELVCNV(sv, 1, sv_ECT);
 
-		GC->rtcc->PMMPAR(true, sv_ECT.R, sv_ECT.V, sv_ECT.GMT);
+		GC->rtcc->PMMPAR(sv_ECT.R, sv_ECT.V, sv_ECT.GMT);
 
 		Result = DONE;
 	}

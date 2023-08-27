@@ -4744,6 +4744,18 @@ void ApolloRTCCMFD::menuCycleK30Vehicle()
 	}
 }
 
+void ApolloRTCCMFD::menuSLVLaunchTargetingPad()
+{
+	if (GC->rtcc->PZSLVCON.Pad == 1)
+	{
+		GC->rtcc->PZSLVCON.Pad = 2;
+	}
+	else
+	{
+		GC->rtcc->PZSLVCON.Pad = 1;
+	}
+}
+
 void ApolloRTCCMFD::menuSLVLaunchTargeting()
 {
 	G->SkylabSaturnIBLaunchCalc();
