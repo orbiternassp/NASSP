@@ -1247,6 +1247,7 @@ void ML::LiftoffStream(double MissionTime)
 	}
 	else
 	{
+		lvl *= 0.05; //Less sideways plume due to sitting on the milkstool
 		if (MissionTime < -2.0)
 			liftoffStreamLevel = 0.0;
 		else if (MissionTime < -1.0)
