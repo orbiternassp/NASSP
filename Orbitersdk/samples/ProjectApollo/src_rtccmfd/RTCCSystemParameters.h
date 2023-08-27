@@ -698,6 +698,20 @@ struct RTCCSystemParameters
 		MDGETA[3] = 45.0*RAD;
 		MDGETA[4] = 45.0*RAD;
 		MDGETA[5] = 45.0*RAD;
+
+		//Launchpads
+
+		//CSM: LC-39A as default
+		MCLLTP[0] = MCLLTP[1] = 28.608202*RAD;
+		MCLSDA = sin(MCLLTP[0]);
+		MCLCDA = cos(MCLLTP[0]);
+		MCLGRA = -80.604133*RAD;
+
+		//LM: LC-37B as default
+		MCLLLP[0] = MCLLLP[1] = 28.531445*RAD;
+		MCLSLL = sin(MCLLLP[0]);
+		MCLCLL = cos(MCLLLP[0]);
+		MCLLPL = -80.565077*RAD;
 	}
 
 	//DEFINITIONS
@@ -766,12 +780,22 @@ struct RTCCSystemParameters
 	double GMTBASE = 0.0;
 	//Number of hours from January 0 to midnight before launch
 	double MCCBES = 0.0;
-	//Sine of the geodetic latitude of the launch pad
-	double MCLSDA = sin(28.608202*RAD); //LC-39A
-	//Cosine of the geodetic latitude of the launch pad
-	double MCLCDA = cos(28.608202*RAD); //LC-39A
-	//Longitude of launch pad
-	double MCLGRA = -80.604133*RAD;	//LC-39A
+	//Geodetic and geocentric latitude CSM pad (radians)
+	double MCLLTP[2];
+	//Sine of the geodetic latitude of the CSM pad
+	double MCLSDA;
+	//Cosine of the geodetic latitude of the CSM pad
+	double MCLCDA;
+	//Longitude of CSM pad (radians)
+	double MCLGRA;
+	//Geodetic and geocentric latitude LM pad (radians)
+	double MCLLLP[2];
+	//Sine of the geodetic latitude of the LM pad
+	double MCLSLL;
+	//Cosine of the geodetic latitude of the LM pad
+	double MCLCLL;
+	//Longitude of LM pad (radians)
+	double MCLLPL;
 	//CMC address for external DV uplink
 	int MCCCEX = 3404;
 	//LGC address for external DV uplink

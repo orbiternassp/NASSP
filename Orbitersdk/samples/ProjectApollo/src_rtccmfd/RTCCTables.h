@@ -676,4 +676,6 @@ struct SLVTargetingParametersTable
 	double I_T = 0.0;
 	double DN_T = 0.0;
 	double BIAS = 0.0;
+	double LATLS = 0.0;
+	double LONGLS = 0.0;
 };

@@ -20,6 +20,7 @@
 
 #include "Orbitersdk.h"
 #include "AnalyticEphemerisGenerator.h"
+#include "rtcc.h"
 #include "LWP.h"
 
 LWPInputTable::LWPInputTable()
@@ -34,8 +35,6 @@ LWPInputTable::LWPInputTable()
 	WRAP = 0;
 	NEGTIV = 0;
 	GAMINS = 0.0;
-	LATLS = 28.5217969*RAD;
-	LONGLS = -80.5612464*RAD;
 	PFT = 10.0*60.0 + 15.0;
 	PFA = 18.8*RAD;
 	RINS = 6528178.0; //EDD
@@ -51,9 +50,10 @@ LWPInputTable::LWPInputTable()
 	DTGRR = 17.0;
 	BIAS = 0.0;
 	GMTLOR = 0.0;
+	Pad = 1;
 }
 
-LaunchWindowProcessor::LaunchWindowProcessor()
+LaunchWindowProcessor::LaunchWindowProcessor(RTCC *r) : RTCCModule(r)
 {
 	TPLANE = 0.0;
 	TYAW = 0.0;
@@ -86,6 +86,17 @@ void LaunchWindowProcessor::SetGlobalConstants(const LWPGlobalConstants &gl)
 void LaunchWindowProcessor::LWP(const LWPInputTable &in)
 {
 	inp = in;
+
+	if (inp.Pad == 1)
+	{
+		LATLS = pRTCC->SystemParameters.MCLLTP[0];
+		LONGLS = pRTCC->SystemParameters.MCLGRA;
+	}
+	else
+	{
+		LATLS = pRTCC->SystemParameters.MCLLLP[0];
+		LONGLS = pRTCC->SystemParameters.MCLLPL;
+	}
 
 	RT = inp.RT;
 	VT = inp.VT;
@@ -148,8 +159,8 @@ void LaunchWindowProcessor::LENSR(double GMTLO)
 	TP = GMTLO + inp.PFT;
 	UPDAT(RT, VT, TT, TP);
 
-	LONG = inp.LONGLS + GLOCON.w_E*GMTLO;
-	URLS = _V(cos(inp.LATLS)*cos(LONG), cos(inp.LATLS)*sin(LONG), sin(inp.LATLS));
+	LONG = LONGLS + GLOCON.w_E*GMTLO;
+	URLS = _V(cos(LATLS)*cos(LONG), cos(LATLS)*sin(LONG), sin(LATLS));
 
 	H = unit(crossp(RT, VT));
 	K = unit(crossp(H, URLS));
@@ -203,13 +214,13 @@ void LaunchWindowProcessor::NPLAN()
 	{
 		UPDAT(RT, VT, TT, TIP);
 
-		UT = asin2(sin(inp.LATLS) / sin(aegdata.coe_mean.i));
+		UT = asin2(sin(LATLS) / sin(aegdata.coe_mean.i));
 		if (inp.NS == 1)
 		{
 			UT = PI - UT;
 		}
 
-		ETA = acos(cos(UT) / cos(inp.LATLS));
+		ETA = acos(cos(UT) / cos(LATLS));
 		if (aegdata.coe_mean.i > PI05)
 		{
 			ETA = -ETA;
@@ -222,7 +233,7 @@ void LaunchWindowProcessor::NPLAN()
 		{
 			LONG += PI2;
 		}
-		DLON = LONG - inp.LONGLS;
+		DLON = LONG - LONGLS;
 		while (DLON > PI) DLON -= PI2;
 		while (DLON <= -PI) DLON += PI2;
 		if (DLON < 0 && ITER == 1)
@@ -286,7 +297,7 @@ LWT1:
 	}
 	if (inp.NS == 2)
 	{
-		if (aegdata.coe_osc.i > inp.LATLS)
+		if (aegdata.coe_osc.i > LATLS)
 		{
 			inp.NS = 1;
 			goto LWT1;
@@ -565,7 +576,7 @@ void LaunchWindowProcessor::TARGT()
 	//Compute IIGM
 	IIGM = sv_T.coe_mean.i + 1.5*OrbMech::J2_Earth*pow(OrbMech::R_Earth, 2) / (4.0*pow(aegdata.coe_osc.a, 2)*pow(1.0 - pow(aegdata.coe_osc.e, 2), 2))*sin(2.0*sv_T.coe_mean.i)*cos(2.0*aegdata.U);
 	
-	TIGM = DN - inp.LONGLS + inp.DELNO;// +GLOCON.w_E*(inp.PFT + inp.DTGRR);
+	TIGM = DN - LONGLS + inp.DELNO;// +GLOCON.w_E*(inp.PFT + inp.DTGRR);
 	if (TIGM < 0)
 	{
 		TIGM += PI2;
@@ -586,8 +597,8 @@ void LaunchWindowProcessor::TARGT()
 	//Compute GPAZ
 	TRS = DN / (GLOCON.w_E + sv_T.h_dot) + TINS;
 	TS = GMTLO - TRS;
-	lat_star = inp.LONGLS - GLOCON.w_E*TS;
-	GPAZ = atan2(-cos(IIGM)*cos(inp.LATLS) + sin(IIGM)*sin(lat_star)*sin(inp.LATLS), sin(IIGM)*cos(lat_star));
+	lat_star = LONGLS - GLOCON.w_E*TS;
+	GPAZ = atan2(-cos(IIGM)*cos(LATLS) + sin(IIGM)*sin(lat_star)*sin(LATLS), sin(IIGM)*cos(lat_star));
 }
 
 void LaunchWindowProcessor::NSERT(VECTOR3 RB, VECTOR3 VB, double GMTB, double &UINS)
@@ -672,8 +683,8 @@ void LaunchWindowProcessor::LWDSP()
 	OrbMech::periapo(RT, VT, GLOCON.mu, RA, RP);
 	lwtt.HA = (RA - GLOCON.RREF) / 1852.0;
 	lwtt.HP = (RP - GLOCON.RREF) / 1852.0;
-	lwtt.LATLS = inp.LATLS*DEG;
-	lwtt.LONGLS = inp.LONGLS*DEG;
+	lwtt.LATLS = LATLS*DEG;
+	lwtt.LONGLS = LONGLS*DEG;
 
 	if (inp.STABLE == 1)
 	{
@@ -712,8 +723,8 @@ void LaunchWindowProcessor::LWPOT()
 	lwsum.DELNO = inp.DELNO;
 	lwsum.PA = PA;
 	lwsum.TPLANE = TPLANE;
-	lwsum.LATLS = inp.LATLS;
-	lwsum.LONGLS = inp.LONGLS;
+	lwsum.LATLS = LATLS;
+	lwsum.LONGLS = LONGLS;
 
 	UPDAT(RT, VT, TT, TINS);
 	svtab.sv_T1 = aegdata;
