@@ -73,6 +73,7 @@
 #include "vesim.h"
 
 class IU;
+class SIBSystems;
 class SICSystems;
 
 namespace mission
@@ -1324,6 +1325,7 @@ public:
 	SCE *GetSCE() { return &sce; }
 	EDA *GetEDA() { return &eda; }
 	IU *GetIU() { return iu; };
+	virtual SIBSystems *GetSIB() { return NULL; }
 	virtual SICSystems *GetSIC() { return NULL; }
 	SECS *GetSECS() { return &secs; }
 
@@ -3858,7 +3860,6 @@ protected:
 	// Misc. settings
 	//
 
-	bool TLICapableBooster;
 	bool IUSCContPermanentEnabled;
 	bool TLISoundsLoaded;
 	bool SkylabSM;

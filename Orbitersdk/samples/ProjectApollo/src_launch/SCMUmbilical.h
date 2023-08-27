@@ -24,32 +24,26 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class SIBSystems;
-class SCMUmbilicalInterface;
+#include "TailUmbilical.h"
 
-class SCMUmbilical
+class SIBSystems;
+
+class SCMUmbilical : public TailUmbilical
 {
 public:
-	SCMUmbilical(SCMUmbilicalInterface *ml);
+	SCMUmbilical(TailUmbilicalInterface *ml);
 	~SCMUmbilical();
 
 	bool IsUmbilicalConnected() { return UmbilicalConnected; }
 
 	void Connect(SIBSystems* sic);
 	void Disconnect();
-	//Called by IU during a pad abort. Technically doesn't disconnect IU umbilical
-	virtual void AbortDisconnect();
 
 	//From ML to SLV
 	bool SIStageLogicCutoff();
 	void SetEngineStart(int eng);
 	void SIGSECutoff(bool cut);
 
-	//From SLV to ML
-	virtual bool ESEGetSIBThrustOKSimulate(int eng, int n);
 protected:
 	SIBSystems* sib;
-	SCMUmbilicalInterface* SCMUmb;
-
-	bool UmbilicalConnected;
 };

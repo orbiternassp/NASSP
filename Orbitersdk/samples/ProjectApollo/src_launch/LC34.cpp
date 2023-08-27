@@ -883,9 +883,9 @@ bool LC34::ESEGetQBallSimulateCmd()
 	return IuESE->GetQBallSimulateCmd();
 }
 
-bool LC34::ESEGetSIBThrustOKSimulate(int eng, int n)
+bool LC34::ESEGetSIThrustOKSimulate(int eng, int n)
 {
-	return SIBESE->GetSIBThrustOKSimulate(eng, n);
+	return SIBESE->GetSIThrustOKSimulate(eng, n);
 }
 
 void LC34::SLCCCheckDiscreteInput(RCA110A *c)

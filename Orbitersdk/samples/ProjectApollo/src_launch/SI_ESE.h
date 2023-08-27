@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2019
 
-S-IC Tail Service Mast Umbilical
+Base Class for Electrical Support Equipment for the S-IB and S-IC Stages (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,55 +22,25 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
+#pragma once
+
+class TailUmbilical;
+class LCCPadInterface;
+
 #include "Orbitersdk.h"
-#include "s1csystems.h"
-#include "TailUmbilicalInterface.h"
-#include "TSMUmbilical.h"
 
-TSMUmbilical::TSMUmbilical(TailUmbilicalInterface *ml) : TailUmbilical(ml)
+class SI_ESE
 {
-	sic = NULL;
-}
+public:
+	SI_ESE(TailUmbilical *TailUmb, LCCPadInterface *p);
+	virtual ~SI_ESE();
 
-TSMUmbilical::~TSMUmbilical()
-{
-}
+	virtual bool GetSIThrustOKSimulate(int eng, int n) = 0;
 
-void TSMUmbilical::Connect(SICSystems *sic)
-{
-	if (sic)
-	{
-		this->sic = sic;
-		sic->ConnectUmbilical(this);
-		UmbilicalConnected = true;
-	}
-}
-
-void TSMUmbilical::Disconnect()
-{
-	if (!UmbilicalConnected) return;
-
-	sic->DisconnectUmbilical();
-	UmbilicalConnected = false;
-}
-
-bool TSMUmbilical::SIStageLogicCutoff()
-{
-	if (!UmbilicalConnected) return false;
-
-	return sic->GetEngineStop();
-}
-
-void TSMUmbilical::SetEngineStart(int eng)
-{
-	if (!UmbilicalConnected) return;
-
-	sic->SetEngineStart(eng);
-}
-
-void TSMUmbilical::SIGSECutoff(bool cut)
-{
-	if (!UmbilicalConnected) return;
-
-	sic->GSEEnginesCutoff(cut);
-}
+	virtual void Timestep() = 0;
+	virtual void SaveState(FILEHANDLE scn) = 0;
+	virtual void LoadState(FILEHANDLE scn) = 0;
+protected:
+	TailUmbilical *Umbilical;
+	LCCPadInterface *Pad;
+};
