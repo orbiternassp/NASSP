@@ -9971,13 +9971,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 32, 14 * H / 32, "TPLANE", 6);
 
 		skp->Text(1 * W / 32, 16 * H / 32, "AZL", 3);
-		skp->Text(1 * W / 32, 17 * H / 32, "LATLS", 5);
-		skp->Text(1 * W / 32, 18 * H / 32, "LONGLS", 6);
-		skp->Text(1 * W / 32, 19 * H / 32, "GPAZ", 4);
-		skp->Text(1 * W / 32, 20 * H / 32, "YP", 2);
+		skp->Text(1 * W / 32, 17 * H / 32, "PAD", 3);
+		skp->Text(1 * W / 32, 18 * H / 32, "LATLS", 5);
+		skp->Text(1 * W / 32, 19 * H / 32, "LONGLS", 6);
+		skp->Text(1 * W / 32, 20 * H / 32, "GPAZ", 4);
+		skp->Text(1 * W / 32, 21 * H / 32, "YP", 2);
 
-		skp->Text(1 * W / 32, 22 * H / 32, "DELNO", 5);
-		skp->Text(1 * W / 32, 23 * H / 32, "DELNOD", 6);
+		skp->Text(1 * W / 32, 23 * H / 32, "DELNO", 5);
+		skp->Text(1 * W / 32, 24 * H / 32, "DELNOD", 6);
 
 		skp->Text(21 * W / 32, 5 * H / 32, "TGRR", 4);
 		skp->Text(21 * W / 32, 6 * H / 32, "VIGM", 4);
@@ -10046,15 +10047,25 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%.3lf", GC->rtcc->PZSLVTAR.AZL);
 		skp->Text(15 * W / 32, 16 * H / 32, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVCON.LATLS*DEG);
-		skp->Text(15 * W / 32, 17 * H / 32, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVCON.LONGLS*DEG);
+
+		if (GC->rtcc->PZSLVCON.Pad == 1)
+		{
+			skp->Text(15 * W / 32, 17 * H / 32, "CSM", 3);
+		}
+		else
+		{
+			skp->Text(15 * W / 32, 17 * H / 32, "LEM", 3);
+		}
+
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVTAR.LATLS);
 		skp->Text(15 * W / 32, 18 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVTAR.LONGLS);
+		skp->Text(15 * W / 32, 19 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.DELNO);
-		skp->Text(15 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.DELNOD);
 		skp->Text(15 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.DELNOD);
+		skp->Text(15 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
 
 		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.TGRR);
 		skp->Text(31 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
