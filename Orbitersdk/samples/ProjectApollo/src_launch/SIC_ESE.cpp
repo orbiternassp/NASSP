@@ -23,15 +23,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #include "Orbitersdk.h"
-#include "TSMUmbilical.h"
+#include "TailUmbilical.h"
 #include "LCCPadInterface.h"
 #include "SIC_ESE.h"
 
-SIC_ESE::SIC_ESE(TSMUmbilical *TSMUmb, LCCPadInterface *p)
+SIC_ESE::SIC_ESE(TailUmbilical *TSMUmb, LCCPadInterface *p) : SI_ESE(TSMUmb, p)
 {
-	Umbilical = TSMUmb;
-	Pad = p;
-
 	for (int i = 0;i < 5;i++)
 	{
 		for (int j = 0;j < 3;j++)

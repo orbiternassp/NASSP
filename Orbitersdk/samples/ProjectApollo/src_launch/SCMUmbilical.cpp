@@ -24,14 +24,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "s1bsystems.h"
-#include "SCMUmbilicalInterface.h"
+#include "TailUmbilicalInterface.h"
 #include "SCMUmbilical.h"
 
-SCMUmbilical::SCMUmbilical(SCMUmbilicalInterface *ml)
+SCMUmbilical::SCMUmbilical(TailUmbilicalInterface *ml) : TailUmbilical(ml)
 {
-	SCMUmb = ml;
 	sib = NULL;
-	UmbilicalConnected = false;
 }
 
 SCMUmbilical::~SCMUmbilical()
@@ -54,16 +52,6 @@ void SCMUmbilical::Disconnect()
 
 	sib->DisconnectUmbilical();
 	UmbilicalConnected = false;
-}
-
-void SCMUmbilical::AbortDisconnect()
-{
-	UmbilicalConnected = false;
-}
-
-bool SCMUmbilical::ESEGetSIBThrustOKSimulate(int eng, int n)
-{
-	return SCMUmb->ESEGetSIBThrustOKSimulate(eng, n);
 }
 
 bool SCMUmbilical::SIStageLogicCutoff()

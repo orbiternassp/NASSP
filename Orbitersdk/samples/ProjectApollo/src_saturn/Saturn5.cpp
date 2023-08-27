@@ -155,7 +155,6 @@ void SaturnV::initSaturnV()
 	// State variables.
 	//
 
-	TLICapableBooster = true;
 	GoHover = false;
 	Burned = false;
 
