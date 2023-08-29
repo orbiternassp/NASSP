@@ -27,19 +27,24 @@
 
 Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel)
 {
-	
+	skylab_vhf2csm_vhf_connector = new Skylab_VHFtoCSM_VHF_Connector(nullptr);
 }
 
 Skylab::~Skylab() {
-
+	delete skylab_vhf2csm_vhf_connector;
 }
 
 void Skylab::InitSkylab() {
+
+	//load meshes (turn me into a function soon 8/28/2023)
 	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/sat5skylab");
 	UINT meshidx;
 	VECTOR3 mesh_dir = _V(0, 0, .93); //fix mesh scaling and geometry
 	meshidx = AddMesh(SkylabMesh, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+	//*****************************************************
+
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, skylab_vhf2csm_vhf_connector);
 }
 
 void Skylab::clbkPostCreation() {

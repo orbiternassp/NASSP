@@ -29,9 +29,8 @@
 #include "PanelSDK/PanelSDK.h"
 #include "powersource.h"
 #include "soundlib.h"
-#include "connector.h"
+#include "SkylabConnector.h"
 #include "nasspdefs.h"
-
 
 
 class Skylab: public ProjectApolloConnectorVessel{
@@ -45,6 +44,7 @@ public:
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadState(FILEHANDLE scn);
 private:
+	Skylab_VHFtoCSM_VHF_Connector *skylab_vhf2csm_vhf_connector;
 	MESHHANDLE SkylabMesh;
 };
 
