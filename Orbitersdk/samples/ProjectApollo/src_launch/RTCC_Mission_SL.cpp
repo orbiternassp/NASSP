@@ -35,7 +35,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 {
 	char uplinkdata[1024 * 3];
 	char Buff[128];
-	bool preliminary = true;
+	bool preliminary = false;
 	bool scrubbed = false;
 
 	switch (fcn)
@@ -385,10 +385,12 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		PMSTICN(opt, res);
 
+		calcParams.TPI = res.T1; //Update TPI time
+
 		manopt.TIG = res.T1;
 		manopt.dV_LVLH = res.dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		manopt.HeadsUp = false;
+		manopt.HeadsUp = true;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		manopt.navcheckGET = 0.0;
 		manopt.sxtstardtime = 0.0;
@@ -399,6 +401,17 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "TPI");
+	}
+	break;
+	case 22: //Docking Attitude PAD
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		VECTOR3 Att;
+
+		Att = _V(0, 0, 0); //TBD
+
+		sprintf(form->paddata, "Docking attitude: R %.0f, P %.0f, Y %.0f", Att.x*DEG, Att.y*DEG, Att.z*DEG);
 	}
 	break;
 	}

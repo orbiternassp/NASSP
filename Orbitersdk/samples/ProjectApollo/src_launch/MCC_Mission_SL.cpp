@@ -65,8 +65,11 @@ void MCC::MissionSequence_SL()
 	case MST_SL_FINAL_NSR: //NSR final update to TPI preliminary update
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.TPI - 32.0*60.0), 19, MST_SL_PRELIM_TPI);
 		break;
-	case MST_SL_PRELIM_TPI: //TPI preliminary update to TPI final update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.TPI - 24.0*60.0), 20, MST_SL_FINAL_TPI);
+	case MST_SL_PRELIM_TPI: //TPI preliminary update to docking attitude PAD
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 20, MST_DOCKING_ATTITUDE_PAD);
+		break;
+	case MST_DOCKING_ATTITUDE_PAD: //Docking attitude PAD to TPI final update
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(rtcc->calcParams.TPI - 24.0*60.0), 22, MST_SL_FINAL_TPI);
 		break;
 	case MST_SL_FINAL_TPI: //TPI final update to
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, false, 21, MST_ENTRY);
