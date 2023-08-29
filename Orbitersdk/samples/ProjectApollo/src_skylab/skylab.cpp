@@ -54,6 +54,7 @@ void Skylab::clbkPostCreation() {
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 {
+	skylab_vhf2csm_vhf_connector->SendRF(296.8E6, 5, 1000, 0, true);
 }
 
 void Skylab::clbkSetClassCaps(FILEHANDLE cfg)

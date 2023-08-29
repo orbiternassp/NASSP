@@ -1416,7 +1416,7 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 	if (!lem) {
 		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
 		if (lm) {
-			lem = (static_cast<LEM*>(lm));
+			lem = lm;
 			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 		}
 	}
