@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_skylab\ATMDC.h" />
     <ClInclude Include="..\..\src_skylab\skylab.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
@@ -26,6 +27,7 @@
     <ClInclude Include="..\..\src_sys\soundlib.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_skylab\ATMDC.cpp" />
     <ClCompile Include="..\..\src_skylab\skylab.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp" />
@@ -42,7 +44,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
