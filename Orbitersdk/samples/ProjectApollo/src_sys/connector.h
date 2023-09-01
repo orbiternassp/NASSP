@@ -45,6 +45,7 @@ enum ConnectorType
 	SII_SIC_COMMAND,			///< Docking connector between S-II and S-IC
 	RADAR_RF_SIGNAL,			///< Radar connector betwen LM rendezvous radar amd CSM rendezvous radar transponder
 	VHF_RNG,
+	VHF_RNG_RTTA
 };
 
 #define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.
@@ -100,6 +101,11 @@ struct ConnectorMessage
 	/// \brief Message value 4.
 	///
 	ConnectorMessageValue val4;
+
+	///
+	/// \brief Message value 5.
+	///
+	ConnectorMessageValue val5;
 };
 
 ///

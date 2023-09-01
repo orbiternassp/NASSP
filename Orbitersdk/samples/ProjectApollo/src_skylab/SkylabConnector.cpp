@@ -48,7 +48,7 @@ Skylab_VHFtoCSM_VHF_Connector::~Skylab_VHFtoCSM_VHF_Connector()
 
 }
 
-void Skylab_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone)
+void Skylab_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone, VECTOR3 Position)
 {
 	ConnectorMessage cm;
 
@@ -60,42 +60,13 @@ void Skylab_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double X
 	cm.val3.dValue = XMITgain; //dBi
 	cm.val4.dValue = XMITphase;
 	cm.val1.bValue = RangeTone;
+	cm.val5.vValue = Position;
 
 	SendMessage(cm);
 }
 
 bool Skylab_VHFtoCSM_VHF_Connector::ReceiveMessage(Connector* from, ConnectorMessage& m)
 {
-	if (!pSkylab_VHFs) //No more segfaults
-	{
-		return false;
-	}
 
-	//this checks that the incoming frequencies from the csm connector are within 1% of the tuned frequencies of the receivers
-	//in actuality it should be something more like a resonance responce centered around the tuned receiver frequency, but this waaay more simple
-	//and easy to compute every timestep
-
-	//if (m.val1.dValue > pSkylab_VHFs->freqXCVR_A * 0.99f && m.val1.dValue < pSkylab_VHFs->freqXCVR_A * 1.01f)
-	//{
-	//	//sprintf(oapiDebugString(), "A");
-	//	pLM_VHFs->RCVDfreqRCVR_A = m.val1.dValue;
-	//	pLM_VHFs->RCVDpowRCVR_A = m.val2.dValue;
-	//	pLM_VHFs->RCVDgainRCVR_A = m.val3.dValue;
-	//	pLM_VHFs->RCVDPhaseRCVR_A = m.val4.dValue;
-	//	return true;
-	//}
-	//else if (m.val1.dValue > pLM_VHFs->freqXCVR_B * 0.99f && m.val1.dValue < pLM_VHFs->freqXCVR_B * 1.01f)
-	//{
-	//	//sprintf(oapiDebugString(), "B");
-	//	pLM_VHFs->RCVDfreqRCVR_B = m.val1.dValue;
-	//	pLM_VHFs->RCVDpowRCVR_B = m.val2.dValue;
-	//	pLM_VHFs->RCVDgainRCVR_B = m.val3.dValue;
-	//	pLM_VHFs->RCVDPhaseRCVR_B = m.val4.dValue;
-	//	pLM_VHFs->RCVDRangeTone = m.val1.bValue;
-	//	return true;
-	//}
-	//else
-	//{
-	//	return false;
-	//}
+	return true;
 }

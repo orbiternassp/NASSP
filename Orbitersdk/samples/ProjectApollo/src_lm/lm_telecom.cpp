@@ -316,22 +316,24 @@ void LM_VHF::Timestep(double simt)
 
 	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
 	{
+		VECTOR3 LEMGlobalPosition;
+		lem->GetGlobalPos(LEMGlobalPosition);
 		if (transmitA)
 		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)));
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)), LEMGlobalPosition);
 		}
 		else
 		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, false);
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, false, LEMGlobalPosition);
 		}
 
 		if (transmitB)
 		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false);
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false, LEMGlobalPosition);
 		}
 		else
 		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false, LEMGlobalPosition);
 		}
 
 		//sprintf(oapiDebugString(), "VHF ANTENNA GAIN = %lf", activeAntenna->getPolarGain(U_R_LOCAL));

@@ -49,7 +49,7 @@ public:
 	Skylab_VHFtoCSM_VHF_Connector(Skylab* s);
 	~Skylab_VHFtoCSM_VHF_Connector();
 
-	void SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone);
+	void SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone, VECTOR3 Position);
 	bool ReceiveMessage(Connector* from, ConnectorMessage& m);
 protected:
 	Skylab* pSkylab_VHFs;

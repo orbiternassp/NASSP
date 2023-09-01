@@ -133,7 +133,7 @@ public:
 	CSM_VHFto_LM_VHFConnector(Saturn *s, VHFAMTransceiver *VHFxcvr, VHFRangingSystem *vhf_system);
 	~CSM_VHFto_LM_VHFConnector();
 
-	void SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone);
+	void SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone, VECTOR3 Position);
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 protected:
 	VHFRangingSystem *pVHFRngSys;

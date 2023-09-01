@@ -1583,22 +1583,24 @@ void VHFAMTransceiver::Timestep()
 	//send RF properties to the connector
 	if (lem && activeAntenna)
 	{
+		VECTOR3 CSMGlobalPosition;
+		lem->GetGlobalPos(CSMGlobalPosition);
 		if (transmitA)
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false); //XCVR A
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false, CSMGlobalPosition); //XCVR A
 		}
 		else
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false, CSMGlobalPosition);
 		}
 
 		if (transmitB)
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, XMITRangeTone); //XCVR B
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, XMITRangeTone, CSMGlobalPosition); //XCVR B
 		}
 		else
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false);
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, false, CSMGlobalPosition);
 		}
 
 		//sprintf(oapiDebugString(), "VHF ANTENNA GAIN = %lf dBi", activeAntenna->getPolarGain(U_R_LOCAL));
@@ -1718,6 +1720,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 	if (resetswitch->IsUp())
 	{
 		isRanging = true;
+		phaseLockTimer = 0.0;
 	}
 
 	if (isRanging && transceiver->IsVHFRangingConfig())

@@ -226,12 +226,14 @@ public:
 	double RCVDpowRCVR_A; //power radiated at rcvr A MEASURED AT THE TRANSMITTER
 	double RCVDgainRCVR_A; //gain of the transmitter senting to rcvr A
 	double RCVDPhaseRCVR_A; //phase of the signal sending to rcvr A
+	VECTOR3 RCVDGlobalPosition_A; //global position of the signal sending ti rcvr A
 	//
 	double RCVDfreqRCVR_B; //Frequency received by rcvr B
 	double RCVDpowRCVR_B; //Power radiated at B MEASURED AT THE TRANSMITTER
 	double RCVDgainRCVR_B; //Gain of the transmitter senting to rcvr B
 	double RCVDPhaseRCVR_B; //Phase of the signal sending to rcvr B
 	bool RCVDRangeTone; // Receiving a ranging tone from the CSM?
+	VECTOR3 RCVDGlobalPosition_B; //global position of the signal sending ti rcvr B
 
 	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
 	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm

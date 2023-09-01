@@ -295,7 +295,7 @@ LM_VHFtoCSM_VHF_Connector::~LM_VHFtoCSM_VHF_Connector()
 
 }
 
-void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone)
+void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone, VECTOR3 Position)
 {
 	ConnectorMessage cm;
 
