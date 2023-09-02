@@ -22,8 +22,10 @@
 
   **************************************************************************/
 
+
 #if !defined(_PA_CONNECTOR_H)
 #define _PA_CONNECTOR_H
+
 
 ///
 /// \ingroup Connectors
@@ -137,6 +139,11 @@ public:
 	void SetType(ConnectorType t) { type = t; };
 
 	///
+	/// \brief Return the first instance in the global connector list of another connector that is not this connector.
+	/// \param t Connector type.
+	///
+	Connector* GetConnectorFromList(ConnectorType t);
+
 	/// \brief Connect to another connector.
 	/// \param other Other end of the connection.
 	/// \return True if the connector is the correct type and we connected.
@@ -188,6 +195,17 @@ protected:
 	/// \brief Type of connection.
 	///
 	ConnectorType type;
+
+	///
+	/// \brief A vector of all connectors.
+	///
+
+	static std::vector<Connector*> AllConnectorList;
+
+	///
+	/// \brief The ID of this connector.
+	///
+	unsigned int Connector_ID;
 };
 
 ///

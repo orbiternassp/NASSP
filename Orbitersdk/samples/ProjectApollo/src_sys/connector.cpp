@@ -36,26 +36,35 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <vector>
+
+std::vector<Connector*> Connector::AllConnectorList;
 
 Connector::Connector()
-
 {
 	type = NO_CONNECTION;
-	connectedTo = 0;
+	connectedTo = nullptr;
+
+	// give the connector an ID and push a pointer onto the static list of connector pointers
+	AllConnectorList.push_back(this);
+	Connector_ID = AllConnectorList.size() - 1;
 }
 
 Connector::~Connector()
-
 {
 	//
 	// We have to be sure to disconnect before deletion so the other end doesn't try to send
 	// us any more data.
 	//
 	Disconnect();
+
+	// delete us from the list of all connectors
+	// note that this doesn't change the size of the list.
+	// When connectors are deleted they will just fail: if(AllConnectorList(ID that was deleted))
+	AllConnectorList[Connector_ID] = nullptr;
 }
 
 void Connector::Disconnect()
-
 {
 	if (connectedTo)
 	{
@@ -70,6 +79,16 @@ void Connector::Disconnected()
 	//
 	// Do nothing by default.
 	//
+}
+
+Connector* Connector::GetConnectorFromList(ConnectorType t)
+{
+	for (auto connectorIter : AllConnectorList) {
+		if (connectorIter->type == t && connectorIter->Connector_ID != this->Connector_ID) {
+			return connectorIter;
+		}
+	}
+	return nullptr;
 }
 
 bool Connector::ConnectTo(Connector *other)
