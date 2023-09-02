@@ -37,14 +37,14 @@ Skylab::~Skylab() {
 void Skylab::InitSkylab() {
 	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/Skylab1973/Skylab I");
 	UINT meshidx;
-	VECTOR3 mesh_dir = _V(0, 0, .93); //fix mesh scaling and geometry
+	VECTOR3 mesh_dir = _V(0, 0, -7.925); //fix mesh scaling and geometry
 	meshidx = AddMesh(SkylabMesh, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
 }
 
 void Skylab::clbkPostCreation() {
 	InitSkylab();
-	//ShiftCG(_V(0.066,0.6198,-6.1392)); //Initial CoM Relative to Vessel Coordinate System (Y,Z,X) in skylab coordinates
+	ShiftCG(_V(0.066,0.6198,-6.1392)); //Initial CoM Relative to Vessel Coordinate System (Y,Z,X) in skylab coordinates
 }
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
