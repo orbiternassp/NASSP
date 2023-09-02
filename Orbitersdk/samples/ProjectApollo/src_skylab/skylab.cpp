@@ -40,9 +40,9 @@ Skylab::~Skylab() {
 }
 
 void Skylab::InitSkylab() {
-	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/sat5skylab");
+	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/Skylab1973/Skylab I");
 	UINT meshidx;
-	VECTOR3 mesh_dir = _V(0, 0, .93); //fix mesh scaling and geometry
+	VECTOR3 mesh_dir = _V(0, 0, -7.925); //fix mesh scaling and geometry
 	meshidx = AddMesh(SkylabMesh, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
 }
