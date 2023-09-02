@@ -3,7 +3,7 @@
 *.c	eol=crlf
 *.cpp	eol=crlf
 *.rc	eol=crlf
-*.vcproj eol=crlf
+*.vcxproj eol=crlf
 *.bat	eol=crlf
 *.sln	eol=crlf
 # Let's try this for scenario files too
