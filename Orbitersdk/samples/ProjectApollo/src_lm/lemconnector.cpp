@@ -306,7 +306,8 @@ void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double XMITg
 	cm.val2.dValue = XMITpow; //W
 	cm.val3.dValue = XMITgain; //dBi
 	cm.val4.dValue = XMITphase;
-	cm.val1.bValue = RangeTone; 
+	cm.val1.bValue = RangeTone;
+	cm.val5.vValue = Position;
 
 	SendMessage(cm);
 }

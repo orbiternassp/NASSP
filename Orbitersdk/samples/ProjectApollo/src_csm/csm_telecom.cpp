@@ -1380,10 +1380,6 @@ VHFAMTransceiver::VHFAMTransceiver()
 	leftAntenna = NULL;
 	rightAntenna = NULL;
 	activeAntenna = NULL;
-
-
-
-	lem = NULL;
 }
 
 void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt)
@@ -1410,51 +1406,20 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 	RCVDinputPowRCVR_A = 0.0;
 	RCVDinputPowRCVR_B = 0.0;
 
+	RCVDGlobalPosition_A = _V(0.0, 0.0, 0.0);
+	RCVDGlobalPosition_B = _V(0.0, 0.0, 0.0);
+
 	RCVDRangeTone = false;
 	XMITRangeTone = false;
 
-	if (!lem) {
-		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
-		if (lm) {
-			lem = lm;
-			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
-		}
-	}
+	sat->csm_vhfto_lm_vhfconnector.ConnectTo(sat->csm_vhfto_lm_vhfconnector.GetConnectorFromList(VHF_RNG));
 }
 
 void VHFAMTransceiver::Timestep()
 {
-	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
-	bool isLem = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo)
 	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (utils::IsVessel(pVessel, utils::LEM))
-		{
-			isLem = true;
-		}
-	}
-
-	if (!isLem)
-	{
-		lem = NULL;
-		sat->csm_vhfto_lm_vhfconnector.Disconnect();
-	}
-	//
-
-	if (!lem)
-	{
-		VESSEL *lm = sat->agc.GetLM(); 
-		if (lm) {
-			lem = (static_cast<LEM*>(lm)); 
-		}
-	}
-
-	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo && lem)
-	{
-		sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+		sat->csm_vhfto_lm_vhfconnector.ConnectTo(sat->csm_vhfto_lm_vhfconnector.GetConnectorFromList(VHF_RNG));
 	}
 
 	if (antSelectorSw->GetState() == 0)
@@ -1541,27 +1506,38 @@ void VHFAMTransceiver::Timestep()
 		receiveB = false;
 	}
 
-	VECTOR3 R; //vector from the LEM to the CSM
-	VECTOR3 U_R; //unit vector from the LEM to the CSM
-	MATRIX3 Rot; //rotational matrix for transforming from local to global coordinate systems
-	VECTOR3 U_R_LOCAL; //unit vector in the local coordinate system, pointing to the other vessel
+	VECTOR3 RA; //vector from the LEM to the CSM
+	VECTOR3 U_RA; //unit vector from the LEM to the CSM
+	MATRIX3 RotA; //rotational matrix for transforming from local to global coordinate systems
+	VECTOR3 U_R_LOCALA; //unit vector in the local coordinate system, pointing to the other vessel
+	sat->GetGlobalPos(RA);
+	RA = RCVDGlobalPosition_A - RA;
+	U_RA = unit(RA); //normalize it
+	sat->GetRotationMatrix(RotA);
+	U_R_LOCALA = tmul(RotA, U_RA); // rotate U_R into the global coordinate system
 
-	if (lem)
-	{
-		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
-		U_R = unit(R); //normalize it
-		sat->GetRotationMatrix(Rot);
-		U_R_LOCAL = tmul(Rot, U_R); // rotate U_R into the global coordinate system
-	}
 
-	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
+	VECTOR3 RB; //vector from the LEM to the CSM
+	VECTOR3 U_RB; //unit vector from the LEM to the CSM
+	MATRIX3 RotB; //rotational matrix for transforming from local to global coordinate systems
+	VECTOR3 U_R_LOCALB; //unit vector in the local coordinate system, pointing to the other vessel
+	sat->GetGlobalPos(RB);
+	RB = RCVDGlobalPosition_B - RB;
+	U_RB = unit(RB); //normalize it
+	sat->GetRotationMatrix(RotB);
+	U_R_LOCALB = tmul(RotB, U_RB); // rotate U_R into the global coordinate system
+
+
+
+	//sprintf(oapiDebugString(), "Distance from CSM to LM: VHFA %lf m, VHFB %lf m", length(RA),length(RA));
 
 	//if we're connected, have a pointer to the LEM, and have a non NULL antenna selected, receive RF power.
-	if ((sat->csm_vhfto_lm_vhfconnector.connectedTo) && lem && activeAntenna)
+	if ((sat->csm_vhfto_lm_vhfconnector.connectedTo) && activeAntenna)
 	{
 		if (receiveA)
 		{
-			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_A, length(R));
+
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(U_R_LOCALA), RCVDfreqRCVR_A, length(RA));
 		}
 		else
 		{
@@ -1570,7 +1546,7 @@ void VHFAMTransceiver::Timestep()
 
 		if (receiveB)
 		{
-			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(U_R_LOCAL), RCVDfreqRCVR_B, length(R));
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(U_R_LOCALB), RCVDfreqRCVR_B, length(RB));
 		}
 		else
 		{
@@ -1581,13 +1557,13 @@ void VHFAMTransceiver::Timestep()
 	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	//send RF properties to the connector
-	if (lem && activeAntenna)
+	if (activeAntenna)
 	{
 		VECTOR3 CSMGlobalPosition;
-		lem->GetGlobalPos(CSMGlobalPosition);
+		sat->GetGlobalPos(CSMGlobalPosition);
 		if (transmitA)
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, false, CSMGlobalPosition); //XCVR A
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCALA), 0.0, false, CSMGlobalPosition); //XCVR A
 		}
 		else
 		{
@@ -1596,7 +1572,7 @@ void VHFAMTransceiver::Timestep()
 
 		if (transmitB)
 		{
-			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, XMITRangeTone, CSMGlobalPosition); //XCVR B
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R_LOCALB), 0.0, XMITRangeTone, CSMGlobalPosition); //XCVR B
 		}
 		else
 		{
@@ -1645,11 +1621,10 @@ VHFRangingSystem::VHFRangingSystem()
 	resetswitch = NULL;
 	dataGood = false;
 	range = 0.0;
+	internalrange = 0.0;
 	isRanging = false;
-	lem = NULL;
 	phaseLockTimer = 0.0;
 	hasLock = 0;
-
 	rangeTone = false;
 }
 
@@ -1675,6 +1650,13 @@ void VHFRangingSystem::GetRangeCMC()
 	}
 }
 
+void VHFRangingSystem::SetCSMPosForRanging()
+{
+	if (sat) { 
+		sat->GetGlobalPos(CSMGlobalPosForRanging); 
+	};
+}
+
 void VHFRangingSystem::TimeStep(double simdt)
 {
 	ChannelValue val33;
@@ -1693,30 +1675,6 @@ void VHFRangingSystem::TimeStep(double simdt)
 		return;
 	}
 
-	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
-	bool isLem = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
-	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (utils::IsVessel(pVessel, utils::LEM))
-		{
-			isLem = true;
-		}
-	}
-
-	if (!isLem)
-	{
-		lem = NULL;
-	}
-	//
-
-	if (!lem)
-	{
-		lem = sat->agc.GetLM(); //############################ FIXME ################################
-	}
-
 	if (resetswitch->IsUp())
 	{
 		isRanging = true;
@@ -1725,15 +1683,11 @@ void VHFRangingSystem::TimeStep(double simdt)
 
 	if (isRanging && transceiver->IsVHFRangingConfig())
 	{
-		if (lem)
+		if (true)
 		{
 			transceiver->sendRanging(); //turn transcever range tone on
 
-			VECTOR3 R;
-			double newrange;
-
-			oapiGetRelativePos(sat->GetHandle(), lem->GetHandle(), &R);
-			newrange = length(R);
+			newrange = length(CSMGlobalPosForRanging - transceiver->RCVDGlobalPosition_A);
 
 			if (abs(internalrange - newrange) < 1800.0*0.3048*simdt)
 			{
@@ -1772,7 +1726,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 	if (dataGood == 1 && val33[RangeUnitDataGood] == 0) { val33[RangeUnitDataGood] = 1; sat->agc.SetInputChannel(033, val33); }
 	if (dataGood == 0 && val33[RangeUnitDataGood] == 1) { val33[RangeUnitDataGood] = 0; sat->agc.SetInputChannel(033, val33); }
 
-	//sprintf(oapiDebugString(), "%d %d %d %f %f %o", isRanging, hasLock, dataGood, range, phaseLockTimer, sat->agc.vagc.Erasable[0][RegRNRAD]);
+	//sprintf(oapiDebugString(), "Ranging: %d Return Tone: %d RCVD Pow: %0.2f dBm hasLock %d dataGood %d range %f phaseLockTimer %f agc %o", isRanging, transceiver->RCVDRangeTone, transceiver->RCVDinputPowRCVR_A, hasLock, dataGood, range, phaseLockTimer, sat->agc.vagc.Erasable[0][RegRNRAD]);
 
 	//Reset after the timestep
 	if (hasLock) hasLock--;

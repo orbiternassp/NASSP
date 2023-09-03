@@ -318,6 +318,7 @@ void LM_VHF::Timestep(double simt)
 	{
 		VECTOR3 LEMGlobalPosition;
 		lem->GetGlobalPos(LEMGlobalPosition);
+		//sprintf(oapiDebugString(), "%lf %lf %lf", LEMGlobalPosition.x, LEMGlobalPosition.y, LEMGlobalPosition.z);
 		if (transmitA)
 		{
 			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R_LOCAL), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B > minimumRCVDPower)), LEMGlobalPosition);

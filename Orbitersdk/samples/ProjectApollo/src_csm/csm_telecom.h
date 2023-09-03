@@ -586,7 +586,6 @@ protected:
 	VHFAntenna *rightAntenna;
 	VHFAntenna *activeAntenna;
 	Saturn *sat;
-	VESSEL *lem;
 };
 
 
@@ -604,6 +603,7 @@ public:
 	double GetRange() { return range / 185.20; }
 	void RangingReturnSignal(); // ################# DELETE ME #######################
 	void GetRangeCMC();
+	void SetCSMPosForRanging();
 protected:
 
 	bool RangingOffLogic();
@@ -611,14 +611,15 @@ protected:
 	bool dataGood;
 	double internalrange;
 	double range;
+	double newrange;
 	bool isRanging;
 	double phaseLockTimer;
 	int hasLock;
 
 	bool rangeTone;
+	VECTOR3 CSMGlobalPosForRanging;
 
 	Saturn *sat;
-	VESSEL *lem;
 	VHFAMTransceiver *transceiver;
 	CircuitBrakerSwitch *powercb;
 	ToggleSwitch *powerswitch;

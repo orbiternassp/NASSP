@@ -957,27 +957,46 @@ bool CSM_VHFto_LM_VHFConnector::ReceiveMessage(Connector * from, ConnectorMessag
 	//in actuality it should be something more like a resonance responce centered around the tuned receiver frequency, but this waaay more simple
 	//and easy to compute every timestep
 
-	if (m.val1.dValue > pVHFxcvr->freqXCVR_A*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_A*1.01f)
+
+	if (m.val1.dValue > pVHFxcvr->freqXCVR_A*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_A*1.01f && m.messageType == VHF_RNG_SIGNAL_LM)
 	{
 		//sprintf(oapiDebugString(), "A");
 		pVHFxcvr->RCVDfreqRCVR_A = m.val1.dValue;
 		pVHFxcvr->RCVDpowRCVR_A = m.val2.dValue;
 		pVHFxcvr->RCVDgainRCVR_A = m.val3.dValue;
 		pVHFxcvr->RCVDPhaseRCVR_A = m.val4.dValue;
+		pVHFxcvr->RCVDGlobalPosition_A = m.val5.vValue;
 		pVHFxcvr->RCVDRangeTone = m.val1.bValue;
+		pVHFRngSys->SetCSMPosForRanging();
 		return true;
 	}
-	else if (m.val1.dValue > pVHFxcvr->freqXCVR_B*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_B*1.01f)
+	else if (m.val1.dValue > pVHFxcvr->freqXCVR_B*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_B*1.01f && m.messageType == VHF_RNG_SIGNAL_LM)
 	{
-		//sprintf(oapiDebugString(), "B");
 		pVHFxcvr->RCVDfreqRCVR_B = m.val1.dValue;
 		pVHFxcvr->RCVDpowRCVR_B = m.val2.dValue;
 		pVHFxcvr->RCVDgainRCVR_B = m.val3.dValue;
 		pVHFxcvr->RCVDPhaseRCVR_B = m.val4.dValue;
+		pVHFxcvr->RCVDGlobalPosition_B = m.val5.vValue;
 		return true;
 	}
 	else
 	{
+		//Zero Inputs
+		pVHFxcvr->RCVDfreqRCVR_A = 0.0;
+		pVHFxcvr->RCVDpowRCVR_A = 0.0;
+		pVHFxcvr->RCVDgainRCVR_A = 0.0;
+		pVHFxcvr->RCVDPhaseRCVR_A = 0.0;
+
+		pVHFxcvr->RCVDfreqRCVR_B = 0.0;
+		pVHFxcvr->RCVDpowRCVR_B = 0.0;
+		pVHFxcvr->RCVDgainRCVR_B = 0.0;
+		pVHFxcvr->RCVDPhaseRCVR_B = 0.0;
+
+		pVHFxcvr->RCVDinputPowRCVR_A = 0.0;
+		pVHFxcvr->RCVDinputPowRCVR_B = 0.0;
+
+		pVHFxcvr->RCVDGlobalPosition_A = _V(0.0, 0.0, 0.0);
+		pVHFxcvr->RCVDGlobalPosition_B = _V(0.0, 0.0, 0.0);
 		return false;
 	}
 }
