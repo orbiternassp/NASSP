@@ -862,7 +862,7 @@ bool SIBSystems::ESEGetSIBThrustOKSimulate(int eng, int n)
 {
 	if (!IsUmbilicalConnected()) return false;
 
-	return SCMUmb->ESEGetSIBThrustOKSimulate(eng, n);
+	return SCMUmb->ESEGetSIThrustOKSimulate(eng, n);
 }
 
 void SIBSystems::GetThrustOK(bool *ok)

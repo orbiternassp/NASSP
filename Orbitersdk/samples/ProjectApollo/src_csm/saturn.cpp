@@ -646,7 +646,6 @@ void Saturn::initSaturn()
 	CSMAttached = true;
 	SIMBayPanelJett = false;
 
-	TLICapableBooster = false;
 	TLISoundsLoaded = false;
 	IUSCContPermanentEnabled = true;
 

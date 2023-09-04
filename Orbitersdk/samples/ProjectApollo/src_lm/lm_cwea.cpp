@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEMcomputer.h"
 #include "LEM.h"
 #include "papi.h"
+#include "Mission.h"
 #include "lm_cwea.h"
 
 // CWEA 
@@ -136,7 +137,7 @@ void LEM_CWEA::Timestep(double simdt) {
 			lightlogic = true;
 		}
 		// Fuel and oxidizer pressure < 119.8 psia prior to staging, cut and capped from the CWEA on LM-8 and subsequent
-		if (((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->stage < 2) && (lem->APSPropellant.GetFuelTrimOrificeOutletPressurePSI() < 119.8 || lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI() < 119.8)) {
+		if ((lem->pMission->GetLMCWEAVersion() == 0 && lem->stage < 2) && (lem->APSPropellant.GetFuelTrimOrificeOutletPressurePSI() < 119.8 || lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI() < 119.8)) {
 			lightlogic = true;
 		}
 
@@ -412,19 +413,19 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		// RCS Quads < 118.8F  or > 190.5F, cut and capped on LM-8 and subsequent
 		//Quad 1
-		QD1HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 4) < 2.79 || lem->scera1.GetVoltage(20, 4) > 4.725));
+		QD1HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 4) < 2.79 || lem->scera1.GetVoltage(20, 4) > 4.725));
 		QD1HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 2);
 
 		//Quad 2
-		QD2HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 3) < 2.79 || lem->scera1.GetVoltage(20, 3) > 4.725));
+		QD2HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 3) < 2.79 || lem->scera1.GetVoltage(20, 3) > 4.725));
 		QD2HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 3);
 
 		//Quad 3
-		QD3HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 2) < 2.79 || lem->scera1.GetVoltage(20, 2) > 4.725));
+		QD3HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 2) < 2.79 || lem->scera1.GetVoltage(20, 2) > 4.725));
 		QD3HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 4);
 
 		//Quad 4
-		QD4HeaterCautFF.Set((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && (lem->scera1.GetVoltage(20, 1) < 2.79 || lem->scera1.GetVoltage(20, 1) > 4.725));
+		QD4HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 1) < 2.79 || lem->scera1.GetVoltage(20, 1) > 4.725));
 		QD4HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 5);
 
 		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
@@ -788,32 +789,32 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 	}
 }
 
-void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf) {
+void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf, int TexMul) {
 	int row = 0, col = 0, dx = 0, dy = 0;
 	while (col < 4) {
 		switch (col) {
 		case 0:
 			dx = 0; break;
 		case 1:
-			dx = 71; break;
+			dx = 71*TexMul; break;
 		case 2:
-			dx = 167; break;
+			dx = 167*TexMul; break;
 		case 3:
-			dx = 238; break;
+			dx = 238*TexMul; break;
 		}
 		while (row < 5) {
 			if (LightStatus[row][col] == 1 && IsLTGPowered()) {
-				dy = 134;
+				dy = 134*TexMul;
 			}
 			else {
-				dy = 7;
+				dy = 7*TexMul;
 			}
 			if (LightStatus[row][col] == 2) {
 				// Special Hack: This Lamp Doesn't Exist
-				oapiBlt(sf, ssf, 8 + dx, 7 + (row * 23), 8, 7, 67, 19);
+				oapiBlt(sf, ssf, 8*TexMul + dx, 7*TexMul + (row * 23*TexMul), 8*TexMul, 7*TexMul, 67*TexMul, 19*TexMul);
 			}
 			else {
-				oapiBlt(sf, ssf, 8 + dx, 7 + (row * 23), 8 + dx, dy + (row * 23), 67, 19);
+				oapiBlt(sf, ssf, 8*TexMul + dx, 7*TexMul + (row * 23*TexMul), 8*TexMul + dx, dy + (row * 23*TexMul), 67*TexMul, 19*TexMul);
 			}
 			row++;
 		}
@@ -821,46 +822,46 @@ void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf) {
 	}
 }
 
-void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
+void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf, int TexMul) {
 	int row = 0, col = 0, dx = 0, dy = 0;
 	while (col < 4) {
 		switch (col) {
 		case 0:
 			dx = 0; break;
 		case 1:
-			dx = 71; break;
+			dx = 71*TexMul; break;
 		case 2:
-			dx = 146; break;
+			dx = 146*TexMul; break;
 		case 3:
-			dx = 217; break;
+			dx = 217*TexMul; break;
 		}
 		while (row < 5) {
 			if (row == 3 && col == 2)
 			{
 				//Condition for C/W PWR light
 				if (LightStatus[row][col + 4] == 1 && IsCWPWRLTGPowered()) {
-					dy = 134;
+					dy = 134*TexMul;
 				}
 				else {
-					dy = 7;
+					dy = 7*TexMul;
 				}
 			}
 			else
 			{
 				//All others
 				if (LightStatus[row][col + 4] == 1 && IsLTGPowered()) {
-					dy = 134;
+					dy = 134*TexMul;
 				}
 				else {
-					dy = 7;
+					dy = 7*TexMul;
 				}
 			}
 			if (LightStatus[row][col + 4] == 2) {
 				// Special Hack: This Lamp Doesn't Exist
-				oapiBlt(sf, ssf, 8 + dx, 7 + (row * 23), 8, 7, 67, 19);
+				oapiBlt(sf, ssf, 8*TexMul + dx, 7*TexMul + (row * 23*TexMul), 8*TexMul, 7*TexMul, 67*TexMul, 19*TexMul);
 			}
 			else {
-				oapiBlt(sf, ssf, 8 + dx, 7 + (row * 23), 330 + dx, dy + (row * 23), 67, 19);
+				oapiBlt(sf, ssf, 8*TexMul + dx, 7*TexMul + (row * 23*TexMul), 330*TexMul + dx, dy + (row * 23*TexMul), 67*TexMul, 19*TexMul);
 			}
 			row++;
 		}
@@ -868,13 +869,13 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
 	}
 }
 
-void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit) {
+void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, int TexMul) {
 
 	//
 	// Draw the master alarm lit bitmap.
 	//
 	if (MasterAlarm)
-		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 47, 43);
+		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 47*TexMul, 43*TexMul);
 }
 
 void LEM_CWEA::PushMasterAlarm()

@@ -70,8 +70,8 @@ public:
 	int GetMinutes(){ return minutes; }
 	int GetSeconds(){ return seconds; }
 
-	virtual void Render(SURFHANDLE surf, SURFHANDLE digits, bool csm = false);
-	virtual void Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm = false);
+	virtual void Render(SURFHANDLE surf, SURFHANDLE digits, bool csm = false, int xTexMul = 1);
+	virtual void Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm = false, int xTexMul =1);
 
 protected:
 	//
@@ -106,8 +106,8 @@ class EventTimer: public MissionTimer {
 public:
 	EventTimer(PanelSDK &p);
 	virtual ~EventTimer();
-	void Render(SURFHANDLE surf, SURFHANDLE digits);
-	void Render90(SURFHANDLE surf, SURFHANDLE digits);
+	void Render(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);
+	void Render90(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);
 	void SystemTimestep(double simdt);
 
 protected:
@@ -121,7 +121,7 @@ class LEMEventTimer: public EventTimer {
 public:
 	LEMEventTimer(PanelSDK &p);
 	virtual ~LEMEventTimer();
-	void Render(SURFHANDLE surf, SURFHANDLE digits);
+	void Render(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);
 	void SystemTimestep(double simdt);
 
 protected:

@@ -390,6 +390,31 @@ VESSEL * LEMcomputer::GetCSM()
 	return NULL;
 }
 
+void LEMcomputer::GetRadarData(int radarBits)
+{
+	switch (radarBits)
+	{
+	case 1: // LR (LR VEL X)
+		lem->LR.GetVelocityXLGC();
+		break;
+	case 2:	// RR RANGE RATE
+		lem->RR.GetRadarRateLGC();
+		break;
+	case 3:	// LR (LR VEL Z)
+		lem->LR.GetVelocityZLGC();
+		break;
+	case 4:	// RR RANGE
+		lem->RR.GetRadarRangeLGC();
+		break;
+	case 5: // LR (LR VEL Y)
+		lem->LR.GetVelocityYLGC();
+		break;
+	case 7: // LR (LR RANGE)
+		lem->LR.GetRangeLGC();
+		break;
+	}
+}
+
 //
 // LM Optics class code
 //

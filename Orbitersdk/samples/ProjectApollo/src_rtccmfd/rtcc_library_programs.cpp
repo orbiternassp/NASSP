@@ -1156,7 +1156,7 @@ int RTCC::GLSSAT(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, doubl
 	{
 		return 1;
 	}
-	u = unit(R);
+	u = unit(R_out);
 	lat = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
 	lng = atan2(u.y, u.x) - OrbMech::w_Earth*K*GMT;
 	OrbMech::normalizeAngle(lng, false);

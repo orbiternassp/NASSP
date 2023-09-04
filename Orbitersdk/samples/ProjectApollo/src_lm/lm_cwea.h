@@ -60,9 +60,9 @@ public:
 	bool GetBatteryCaution() { return LightStatus[1][5] == 1; }
 	bool GetCWPowerFail() { return LightStatus[3][6] == 1; }
 
-	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit);
-	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf);
-	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
+	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, int xTexMul = 1);
+	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf, int xTexMul = 1);
+	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf, int xTexMul = 1);
 
 protected:
 	void SetLight(int row, int column, int state, bool TriggerMA = true);

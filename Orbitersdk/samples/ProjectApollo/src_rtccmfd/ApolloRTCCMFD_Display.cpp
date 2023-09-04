@@ -1161,7 +1161,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 					skp->Text((int)(3.5 * W / 8), 22 * H / 26, Buffer, strlen(Buffer));
 				}
 
-				skp->Text((int)(0.5 * W / 8), 24 * H / 26, G->lmmanpad.remarks, strlen(G->lmmanpad.remarks));
+				sprintf(Buffer, "IMU Attitude: %06.2lf %06.2lf %06.2lf", G->lmmanpad.IMUAtt.x*DEG, G->lmmanpad.IMUAtt.y*DEG, G->lmmanpad.IMUAtt.z*DEG);
+				skp->Text(1 * W / 16, 24 * H / 26, Buffer, strlen(Buffer));
 			}
 		}
 		else if (G->manpadopt == 1)
@@ -3554,6 +3555,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 16, 17 * H / 28, "0087 CSM PSAT 2", 15);
 		skp->Text(1 * W / 16, 18 * H / 28, "0088 LM PSAT 2", 14);
 		skp->Text(1 * W / 16, 19 * H / 28, "0229 GOST", 9);
+		skp->Text(1 * W / 16, 20 * H / 28, "0239 LOST", 9);
 
 		skp->Text(8 * W / 16, 4 * H / 28, "1501 Moonrise/Moonset Times", 27);
 		skp->Text(8 * W / 16, 5 * H / 28, "1502 Sunrise/Sunset Times", 25);
@@ -5317,21 +5319,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		skp->Text(1 * W / 16, (marker + 4) * H / 16, "*", 1);
+		skp->Text(1 * W / 16, (marker + 6) * H / 16, "*", 1);
 
 		skp->Text(10 * W / 16, 5 * H / 16, "MPT:", 4);
 
 		if (G->mptinitmode == 0)
 		{
-			skp->Text(2 * W / 16, 4 * H / 16, "MED M49: Fuel Remaining", 23);
+			skp->Text(2 * W / 16, 4 * H / 14, "MED M49: Fuel Remaining", 23);
 
 			if (GC->rtcc->med_m49.Table == RTCC_MPT_LM)
 			{
-				skp->Text(2 * W / 16, 5 * H / 16, "Table: LM", 9);
+				skp->Text(2 * W / 16, 2 * H / 14, "Table: LM", 9);
 			}
 			else
 			{
-				skp->Text(2 * W / 16, 5 * H / 16, "Table: CSM", 10);
+				skp->Text(2 * W / 16, 2 * H / 14, "Table: CSM", 10);
 			}
 
 			if (GC->rtcc->med_m49.SPSFuelRemaining >= 0)
@@ -5411,15 +5413,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else if (G->mptinitmode == 1)
 		{
-			skp->Text(2 * W / 16, 4 * H / 16, "MED M50: Weights", 16);
+			skp->Text(2 * W / 16, 4 * H / 14, "MED M50: Weights", 16);
 
 			if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
 			{
-				skp->Text(2 * W / 16, 5 * H / 16, "Table: LM", 9);
+				skp->Text(2 * W / 16, 2 * H / 14, "Table: LM", 9);
 			}
 			else
 			{
-				skp->Text(2 * W / 16, 5 * H / 16, "Table: CSM", 10);
+				skp->Text(2 * W / 16, 2 * H / 14, "Table: CSM", 10);
 			}
 
 			if (GC->rtcc->med_m50.CSMWT >= 0)
@@ -5481,15 +5483,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else if (G->mptinitmode == 2)
 		{
-			skp->Text(2 * W / 16, 4 * H / 16, "MED M51: Areas", 14);
+			skp->Text(2 * W / 16, 4 * H / 14, "MED M51: Areas", 14);
 
 			if (GC->rtcc->med_m51.Table == RTCC_MPT_LM)
 			{
-				skp->Text(2 * W / 16, 5 * H / 16, "Table: LM", 9);
+				skp->Text(2 * W / 16, 2 * H / 14, "Table: LM", 9);
 			}
 			else
 			{
-				skp->Text(2 * W / 16, 5 * H / 16, "Table: CSM", 10);
+				skp->Text(2 * W / 16, 2 * H / 14, "Table: CSM", 10);
 			}
 
 			sprintf(Buffer, "CSM %.2f sq ft", GC->rtcc->med_m51.CSMArea / 0.3048 / 0.3048);
@@ -5521,15 +5523,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		else
 		{
-			skp->Text(2 * W / 16, 4 * H / 16, "MED M55: Configuration", 22);
+			skp->Text(2 * W / 16, 4 * H / 14, "MED M55: Configuration", 22);
 
 			if (GC->rtcc->med_m55.Table == RTCC_MPT_LM)
 			{
-				skp->Text(2 * W / 16, 5 * H / 16, "Table: LM", 9);
+				skp->Text(2 * W / 16, 2 * H / 14, "Table: LM", 9);
 			}
 			else
 			{
-				skp->Text(2 * W / 16, 5 * H / 16, "Table: CSM", 10);
+				skp->Text(2 * W / 16, 2 * H / 14, "Table: CSM", 10);
 			}
 
 			if (GC->rtcc->med_m55.ConfigCode == "")
@@ -9516,23 +9518,37 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 2, 3 * H / 32, "LUNAR TARGETING PROGRAM", 33);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		GET_Display(Buffer, G->LUNTAR_TIG, false);
-		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+		if (G->LUNTAR_TIG)
+		{
+			GET_Display(Buffer, G->LUNTAR_TIG, false);
+			skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.1lf s", G->LUNTAR_bt_guess);
-		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lat*DEG);
+			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_pitch_guess*DEG);
-		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lng*DEG);
+			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_yaw_guess*DEG);
-		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+			if (G->LUNTAR_bt_guess)
+			{
+				sprintf_s(Buffer, "%.1lf s", G->LUNTAR_bt_guess);
+				skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lat*DEG);
-		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+				sprintf_s(Buffer, "%.2lf°", G->LUNTAR_pitch_guess*DEG);
+				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.2lf°", G->LUNTAR_lng*DEG);
-		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+				sprintf_s(Buffer, "%.2lf°", G->LUNTAR_yaw_guess*DEG);
+				skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				skp->Text(1 * W / 16, 4 * H / 14, "No initial guess", 16);
+			}
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "Trajectory Evaluation", 21);
+		}
 
 		if (G->target != NULL)
 		{
@@ -9566,17 +9582,17 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			if (G->LUNTAR_Output.err == 1)
 			{
-				sprintf_s(Buffer, "INITIAL GUESS DID NOT IMPACT");
+				sprintf_s(Buffer, "Initial guess did not impact. PC Alt: %.0lf NM", G->LUNTAR_Output.FlybyAlt);
 			}
 			else if (G->LUNTAR_Output.err == 2)
 			{
-				sprintf_s(Buffer, "SOLUTION DID NOT CONVERGE");
+				sprintf_s(Buffer, "Solution did not converge");
 			}
 			else if (G->LUNTAR_Output.err == 3)
 			{
-				sprintf_s(Buffer, "TIMEBASE 8 NOT STARTED");
+				sprintf_s(Buffer, "Timebase 8 not started");
 			}
-			skp->Text(4 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 116)
@@ -9955,13 +9971,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 32, 14 * H / 32, "TPLANE", 6);
 
 		skp->Text(1 * W / 32, 16 * H / 32, "AZL", 3);
-		skp->Text(1 * W / 32, 17 * H / 32, "LATLS", 5);
-		skp->Text(1 * W / 32, 18 * H / 32, "LONGLS", 6);
-		skp->Text(1 * W / 32, 19 * H / 32, "GPAZ", 4);
-		skp->Text(1 * W / 32, 20 * H / 32, "YP", 2);
+		skp->Text(1 * W / 32, 17 * H / 32, "PAD", 3);
+		skp->Text(1 * W / 32, 18 * H / 32, "LATLS", 5);
+		skp->Text(1 * W / 32, 19 * H / 32, "LONGLS", 6);
+		skp->Text(1 * W / 32, 20 * H / 32, "GPAZ", 4);
+		skp->Text(1 * W / 32, 21 * H / 32, "YP", 2);
 
-		skp->Text(1 * W / 32, 22 * H / 32, "DELNO", 5);
-		skp->Text(1 * W / 32, 23 * H / 32, "DELNOD", 6);
+		skp->Text(1 * W / 32, 23 * H / 32, "DELNO", 5);
+		skp->Text(1 * W / 32, 24 * H / 32, "DELNOD", 6);
 
 		skp->Text(21 * W / 32, 5 * H / 32, "TGRR", 4);
 		skp->Text(21 * W / 32, 6 * H / 32, "VIGM", 4);
@@ -10030,15 +10047,25 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%.3lf", GC->rtcc->PZSLVTAR.AZL);
 		skp->Text(15 * W / 32, 16 * H / 32, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVCON.LATLS*DEG);
-		skp->Text(15 * W / 32, 17 * H / 32, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVCON.LONGLS*DEG);
+
+		if (GC->rtcc->PZSLVCON.Pad == 1)
+		{
+			skp->Text(15 * W / 32, 17 * H / 32, "CSM", 3);
+		}
+		else
+		{
+			skp->Text(15 * W / 32, 17 * H / 32, "LEM", 3);
+		}
+
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVTAR.LATLS);
 		skp->Text(15 * W / 32, 18 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.3lf", GC->rtcc->PZSLVTAR.LONGLS);
+		skp->Text(15 * W / 32, 19 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.DELNO);
-		skp->Text(15 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.DELNOD);
 		skp->Text(15 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.8lf", GC->rtcc->PZSLVTAR.DELNOD);
+		skp->Text(15 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
 
 		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.TGRR);
 		skp->Text(31 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
@@ -10232,6 +10259,186 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(27 * W / 32, (5 + i) * H / 16, Buffer, strlen(Buffer));
 			j++;
 		}
+	}
+	else if (screen == 126)
+	{
+		skp->SetFont(fonttest);
+		skp->SetPen(pen2);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT, oapi::Sketchpad::BASELINE);
+
+		skp->Text(17 * W / 55, 3 * H / 30, "LM OPTICAL SUPPORT TABLE", 24);
+		
+		skp->Text(48 * W / 55, 3 * H / 30, "0239", 4);
+
+		skp->Text(1 * W / 55, 4 * H / 30, "VEH", 3);
+		skp->Text(11 * W / 55, 4 * H / 30, "MODE", 4);
+		skp->Text(9 * W / 55, 5 * H / 30, "DKAN", 4);
+		skp->Text(21 * W / 55, 4 * H / 30, "LM YO", 5);
+		skp->Text(21 * W / 55, 5 * H / 30, "LM PI", 5);
+		skp->Text(21 * W / 55, 6 * H / 30, "LM RM", 5);
+		skp->Text(35 * W / 55, 4 * H / 30, "CSM RO", 6);
+		skp->Text(35 * W / 55, 5 * H / 30, "CSM PI", 6);
+		skp->Text(35 * W / 55, 6 * H / 30, "CSM YM", 6);
+
+		skp->Text(1 * W / 55, 8 * H / 30, "MATRIX USED", 11);
+		skp->Text(22 * W / 55, 8 * H / 30, "GETHORIZ", 8);
+		skp->Text(45 * W / 55, 8 * H / 30, "OGA", 3);
+
+		skp->Text(1 * W / 55, 9 * H / 30, "STAR", 4);
+		skp->Text(8 * W / 55, 9 * H / 30, "RA", 2);
+		skp->Text(14 * W / 55, 9 * H / 30, "DEC", 3);
+		skp->Text(23 * W / 55, 9 * H / 30, "Y", 1);
+		skp->Text(29 * W / 55, 9 * H / 30, "P", 1);
+		skp->Text(35 * W / 55, 9 * H / 30, "R", 1);
+		skp->Text(79 * W / 110, 9 * H / 30, "L", 1);
+		skp->Text(43 * W / 55, 9 * H / 30, "A1", 2);
+		skp->Text(49 * W / 55, 9 * H / 30, "A2", 2);
+		skp->Text(54 * W / 55, 9 * H / 30, "D", 1);
+		skp->Text(1 * W / 55, 10 * H / 30, "1", 1);
+		skp->Text(1 * W / 55, 11 * H / 30, "2", 1);
+
+		skp->Text(41 * W / 55, 12 * H / 30, "COAS ANGLES", 11);
+		skp->Text(39 * W / 55, 13 * H / 30, "STAR", 4);
+		skp->Text(44 * W / 55, 13 * H / 30, "EL", 2);
+		skp->Text(47 * W / 55, 13 * H / 30, "SXP", 3);
+		skp->Text(51 * W / 55, 13 * H / 30, "AXIS", 4);
+
+		skp->Text(4 * W / 55, 13 * H / 30, "STAR", 4);
+		skp->Text(12 * W / 55, 13 * H / 30, "IX", 2);
+		skp->Text(22 * W / 55, 13 * H / 30, "IY", 2);
+		skp->Text(32 * W / 55, 13 * H / 30, "IZ", 2);
+		skp->Text(4 * W / 55, 14 * H / 30, "1", 1);
+		skp->Text(4 * W / 55, 15 * H / 30, "2", 1);
+
+		skp->Text(7 * W / 55, 17 * H / 30, "REALIGN ATTITUDES", 17);
+		skp->Text(1 * W / 55, 18 * H / 30, "GIMB ANG", 8);
+		skp->Text(19 * W / 110, 18 * H / 30, "Y", 1);
+		skp->Text(33 * W / 110, 18 * H / 30, "P", 1);
+		skp->Text(47 * W / 110, 18 * H / 30, "R", 1);
+		skp->Text(1 * W / 55, 19 * H / 30, "FDAI ANG", 8);
+		skp->Text(19 * W / 110, 19 * H / 30, "R", 1);
+		skp->Text(33 * W / 110, 19 * H / 30, "P", 1);
+		skp->Text(47 * W / 110, 19 * H / 30, "Y", 1);
+
+		skp->Text(33 * W / 55, 17 * H / 30, "PRESENTLY STORED ATT", 20);
+		skp->Text(31 * W / 55, 18 * H / 30, "TLM", 3);
+		skp->Text(31 * W / 55, 19 * H / 30, "MED", 3);
+
+		skp->Text(2 * W / 55, 21 * H / 30, "MATRIX 1", 8);
+		skp->Text(29 * W / 55, 21 * H / 30, "MATGET", 6);
+		skp->Text(3 * W / 55, 22 * H / 30, "X/XE", 4);
+		skp->Text(3 * W / 55, 23 * H / 30, "Y/XE", 4);
+		skp->Text(3 * W / 55, 24 * H / 30, "Z/XE", 4);
+		skp->Text(21 * W / 55, 22 * H / 30, "X/YE", 4);
+		skp->Text(21 * W / 55, 23 * H / 30, "Y/YE", 4);
+		skp->Text(21 * W / 55, 24 * H / 30, "Z/YE", 4);
+		skp->Text(39 * W / 55, 22 * H / 30, "X/ZE", 4);
+		skp->Text(39 * W / 55, 23 * H / 30, "Y/ZE", 4);
+		skp->Text(39 * W / 55, 24 * H / 30, "Z/ZE", 4);
+
+		skp->Text(2 * W / 55, 26 * H / 30, "MATRIX 2", 8);
+		skp->Text(29 * W / 55, 26 * H / 30, "MATGET", 6);
+		skp->Text(3 * W / 55, 27 * H / 30, "X/XE", 4);
+		skp->Text(3 * W / 55, 28 * H / 30, "Y/XE", 4);
+		skp->Text(3 * W / 55, 29 * H / 30, "Z/XE", 4);
+		skp->Text(21 * W / 55, 27 * H / 30, "X/YE", 4);
+		skp->Text(21 * W / 55, 28 * H / 30, "Y/YE", 4);
+		skp->Text(21 * W / 55, 29 * H / 30, "Z/YE", 4);
+		skp->Text(39 * W / 55, 27 * H / 30, "X/ZE", 4);
+		skp->Text(39 * W / 55, 28 * H / 30, "Y/ZE", 4);
+		skp->Text(39 * W / 55, 29 * H / 30, "Z/ZE", 4);
+
+		skp->Line(1 * W / 55, 7 * H / 30, 54 * W / 55, 7 * H / 30);
+		skp->Line(1 * W / 55, 12 * H / 30, 38 * W / 55, 12 * H / 30);
+		skp->Line(38 * W / 55, 12 * H / 30, 38 * W / 55, 16 * H / 30);
+		skp->Line(1 * W / 55, 16 * H / 30, 54 * W / 55, 16 * H / 30);
+		skp->Line(30 * W / 55, 16 * H / 30, 30 * W / 55, 20 * H / 30);
+		skp->Line(1 * W / 55, 20 * H / 30, 54 * W / 55, 20 * H / 30);
+
+		if (GC->rtcc->LOSTDisplayBuffer.size() < 81) return true;
+
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[0], 5, 4, 55, 30); //VEH
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[1], 16, 4, 55, 30); //MODE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[2], 14, 5, 55, 30); //DKAN
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[3], 26, 4, 55, 30); //LM ATT X
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[4], 26, 5, 55, 30); //LM ATT Y
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[5], 26, 6, 55, 30); //LM ATT Z
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[6], 41, 4, 55, 30); //CSM ATT X
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[7], 41, 5, 55, 30); //CSM ATT Y
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[8], 41, 6, 55, 30); //CSM ATT Z
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[9], 13, 8, 55, 30); //MAT USED
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[10], 31, 8, 55, 30); //GETHORIZ
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[11], 49, 8, 55, 30); //OGA
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[12], 2, 10, 55, 30); //Star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[13], 2, 11, 55, 30); //Star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[14], 6, 10, 55, 30); //RA star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[15], 13, 10, 55, 30); //DEC star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[16], 6, 11, 55, 30); //RA star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[17], 13, 11, 55, 30); //DEC star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[18], 21, 10, 55, 30); //Roll star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[19], 27, 10, 55, 30); //Pitch star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[20], 33, 10, 55, 30); //Yaw star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[21], 21, 11, 55, 30); //Roll star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[22], 27, 11, 55, 30); //Pitch star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[23], 33, 11, 55, 30); //Yaw star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[24], 39, 10, 55, 30); //L1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[25], 39, 11, 55, 30); //L2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[26], 42, 10, 55, 30); //A1 star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[27], 42, 11, 55, 30); //A1 star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[28], 48, 10, 55, 30); //A2 star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[29], 48, 11, 55, 30); //A2 star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[30], 54, 10, 55, 30); //Detent star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[31], 54, 11, 55, 30); //Detent star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[32], 40, 14, 55, 30); //COAS star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[33], 40, 15, 55, 30); //COAS star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[34], 44, 14, 55, 30); //COAS EL 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[35], 44, 15, 55, 30); //COAS EL 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[36], 48, 14, 55, 30); //COAS SXP 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[37], 48, 15, 55, 30); //COAS SXP 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[38], 53, 14, 55, 30); //COAS axis
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[39], 6, 14, 55, 30); //Telemetry star 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[40], 6, 15, 55, 30); //Telemetry star 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[41], 9, 14, 55, 30); //Telemetry star unit vector 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[42], 19, 14, 55, 30); //Telemetry star unit vector 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[43], 29, 14, 55, 30); //Telemetry star unit vector 1
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[44], 9, 15, 55, 30); //Telemetry star unit vector 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[45], 19, 15, 55, 30); //Telemetry star unit vector 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[46], 29, 15, 55, 30); //Telemetry star unit vector 2
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[47], 11, 18, 55, 30); //Realign Attitude IMU
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[48], 18, 18, 55, 30); //Realign Attitude IMU
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[49], 25, 18, 55, 30); //Realign Attitude IMU
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[50], 11, 19, 55, 30); //Realign Attitude FDAI
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[51], 18, 19, 55, 30); //Realign Attitude FDAI
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[52], 25, 19, 55, 30); //Realign Attitude FDAI
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[53], 36, 18, 55, 30); //Presently Stored Attitude TLM
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[54], 43, 18, 55, 30); //Presently Stored Attitude TLM
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[55], 50, 18, 55, 30); //Presently Stored Attitude TLM
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[56], 36, 19, 55, 30); //Presently Stored Attitude MED
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[57], 43, 19, 55, 30); //Presently Stored Attitude MED
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[58], 50, 19, 55, 30); //Presently Stored Attitude MED
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[59], 12, 21, 55, 30); //MATRIX 1 ID
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[60], 36, 21, 55, 30); //MATRIX 1 GET
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[61], 8, 22, 55, 30); //MATRIX 1 X/XE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[62], 26, 22, 55, 30); //MATRIX 1 X/YE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[63], 44, 22, 55, 30); //MATRIX 1 X/ZE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[64], 8, 23, 55, 30); //MATRIX 1 Y/XE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[65], 26, 23, 55, 30); //MATRIX 1 Y/YE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[66], 44, 23, 55, 30); //MATRIX 1 Y/ZE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[67], 8, 24, 55, 30); //MATRIX 1 Z/XE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[68], 26, 24, 55, 30); //MATRIX 1 Z/YE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[69], 44, 24, 55, 30); //MATRIX 1 Z/ZE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[70], 12, 26, 55, 30); //MATRIX 2 ID
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[71], 36, 26, 55, 30); //MATRIX 2 GET
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[72], 8, 27, 55, 30); //MATRIX 2 X/XE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[73], 26, 27, 55, 30); //MATRIX 2 X/YE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[74], 44, 27, 55, 30); //MATRIX 2 X/ZE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[75], 8, 28, 55, 30); //MATRIX 2 Y/XE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[76], 26, 28, 55, 30); //MATRIX 2 Y/YE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[77], 44, 28, 55, 30); //MATRIX 2 Y/ZE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[78], 8, 29, 55, 30); //MATRIX 2 Z/XE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[79], 26, 29, 55, 30); //MATRIX 2 Z/YE
+		Text(skp, GC->rtcc->LOSTDisplayBuffer[80], 44, 29, 55, 30); //MATRIX 2 Z/ZE
+
 	}
 	return true;
 }

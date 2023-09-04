@@ -120,6 +120,10 @@ public:
 	bool IsVelocityDataGood() { return velocityGood == 1; };
 	double GetAltitude() { return range*0.3048; };
 	double GetAltitudeRate() { return rate[0]*0.3048; };
+	void GetRangeLGC();
+	void GetVelocityXLGC();
+	void GetVelocityYLGC();
+	void GetVelocityZLGC();
 	double GetAltTransmitterPower();
 	double GetVelTransmitterPower();
 
@@ -133,7 +137,6 @@ public:
 	double range;				// Range in feet
 	double rate[3];				// Velocity X/Y/Z in feet/second
 	double antennaAngle;		// Antenna angle
-	int ruptSent;				// Rupt sent
 	int rangeGood;				// RDG flag
 	int velocityGood;			// VDG flag
 };
@@ -150,8 +153,8 @@ public:
 	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf);
 	void RenderRate(SURFHANDLE surf);
-	void RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2);
-	void RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b);
+	void RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2, int xTexMul = 1);
+	void RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, int xTexMul = 1);
 	void SetLGCAltitude(int val);
 	void SetLGCAltitudeRate(int val);
 
@@ -456,7 +459,7 @@ public:
 		// used.
 		//
 
-		// VC Sutfaces
+		// VC Surfaces
 		SRF_VC_DSKYDISP,
 		SRF_VC_DSKY_LIGHTS,
 		SRF_VC_DIGITALDISP,

@@ -208,77 +208,24 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if(!PadLoaded) {
 
-			double latitude, longitude, radius, heading, TEPHEM0;
-
-			// init pad load
-			OurVessel->GetEquPos(longitude, latitude, radius);
-			oapiGetHeading(OurVessel->GetHandle(), &heading);
-
-			// set launch pad latitude
-			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
-			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
-
-			if (ProgramName == "Colossus237" || ProgramName == "Colossus249" || ProgramName == "Manche45R2")
-			{
-				// set launch pad longitude
-				if (longitude < 0) { longitude += TWO_PI; }
-				vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0272] = 0;
-				vagc.Erasable[2][0273] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				TEPHEM0 = 40038.;
-			}
-			else if (ProgramName == "Comanche055")	// Comanche 055
-			{
-				// set launch pad longitude
-				if (longitude < 0) { longitude += TWO_PI; }
-				vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0272] = 0;
-				vagc.Erasable[2][0273] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				TEPHEM0 = 40403.;
-			}
-			else if (ProgramName == "Artemis072NBY71")	//Artemis 072 for Apollo 14
-			{
-				// set launch pad longitude
-				if (longitude < 0) longitude += TWO_PI;
-				vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0136] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0133] = 0;
-				vagc.Erasable[2][0134] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				TEPHEM0 = 40768.;
-			}
-			else	//Artemis 072
-			{
-				// set launch pad longitude
-				if (longitude < 0) longitude += TWO_PI;
-				vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0136] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0133] = 0;
-				vagc.Erasable[2][0134] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				TEPHEM0 = 41133.;
-			}
+			//Get time reference for TEPHEM
+			double TEPHEM0 = sat->pMission->GetTEPHEM0();
 
 			// Synchronize clock with launch time (TEPHEM)
-			double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-				vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-				vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+			double tephem;
+			if (ProgramName == "Skylark048") //Only Skylark has a different address
+			{
+				tephem = vagc.Erasable[AGC_BANK(01702)][AGC_ADDR(01702)] +
+					vagc.Erasable[AGC_BANK(01701)][AGC_ADDR(01701)] * pow((double) 2., (double) 14.) +
+					vagc.Erasable[AGC_BANK(01700)][AGC_ADDR(01700)] * pow((double) 2., (double) 28.);
+			}
+			else
+			{
+				tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
+					vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
+					vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+			}
+
 			tephem = (tephem / 8640000.) + TEPHEM0;
 			double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
 			vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
@@ -590,6 +537,14 @@ VESSEL *CSMcomputer::GetLM()
 	return NULL;
 }
 
+void CSMcomputer::GetRadarData(int radarBits)
+{
+	if (radarBits == 4)
+	{
+		sat->vhfranging.GetRangeCMC();
+	}
+}
+
 
 //
 // CM Optics class code
@@ -653,19 +608,19 @@ void CMOptics::SystemTimestep(double simdt) {
 // Paint counters. The documentation is not clear if the displayed number is supposed to be decimal degrees or CDU counts.
 // The counters are mechanically connected to the telescope, so it is assumed to be decimal degrees.
 
-bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits){
+bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul){
 	int value = (int)(TeleShaft*100.0*DEG);
 	if (value < 0) { value += 36000; }
-	return PaintDisplay(surf, digits, value);
+	return PaintDisplay(surf, digits, value, TexMul);
 }
 
-bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits){
+bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul){
 	int value = (int)(TeleTrunion*100.0*DEG);
 	if (value < 0) { value += 36000; }
-	return PaintDisplay(surf, digits, value);
+	return PaintDisplay(surf, digits, value, TexMul);
 }
 
-bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
+bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value, int TexMul){
 	int srx, sry, digit[5];
 	int x=value;
 	digit[0] = (x%10);
@@ -679,24 +634,24 @@ bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
 		sry = 33;
 	else
 		sry = 22;
-	oapiBlt(surf, digits, 0, 0, srx, sry, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 0, 0, srx*TexMul, sry*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 
 	srx = 8 + (digit[3] * 25);
 	if (digit[4] || digit[3])
 		sry = 33;
 	else
 		sry = 22;
-	oapiBlt(surf, digits, 10, 0, srx, sry, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 10*TexMul, 0, srx*TexMul, sry*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 
 	srx = 8 + (digit[2] * 25);
-	oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 20*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	srx = 8 + (digit[1] * 25);
-	oapiBlt(surf, digits, 30, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 30*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	srx = 8 + (digit[0] * 25);
 	sry = (int)(digit[0] * 1.2);
-	oapiBlt(surf, digits, 40, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 40*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 
-	oapiColourFill(surf, oapiGetColour(255, 255, 255), 29, 5, 1, 2);
+	oapiColourFill(surf, oapiGetColour(255, 255, 255), 29*TexMul, 5*TexMul, 1*TexMul, 2*TexMul);
 	return true;
 }
 

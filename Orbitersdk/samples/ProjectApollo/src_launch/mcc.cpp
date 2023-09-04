@@ -42,6 +42,7 @@
 #include "MCC_Mission_F.h"
 #include "MCC_Mission_G.h"
 #include "MCC_Mission_H1.h"
+#include "MCC_Mission_SL.h"
 #include "rtcc.h"
 #include "LVDC.h"
 #include "iu.h"
@@ -690,6 +691,10 @@ void MCC::TimeStep(double simdt){
 				case 17:
 					MissionType = MTP_J3;
 					break;
+				case 18: //For now
+					MissionType = MTP_SKYLAB;
+					setState(MST_SL_PRELAUNCH);
+					break;
 				default:
 					// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
 					if (cm->SaturnType == SAT_SATURNV) {
@@ -801,11 +806,14 @@ void MCC::TimeStep(double simdt){
 			{
 				// Await insertion
 				if (cm->stage >= STAGE_ORBIT_SIVB) {
+					addMessage("INSERTION");
+					MissionPhase = MMST_EARTH_ORBIT;
 					switch (MissionType) {
 					case MTP_C:
-						addMessage("INSERTION");
-						MissionPhase = MMST_EARTH_ORBIT;
 						setState(MST_C_INSERTION);
+						break;
+					case MTP_SKYLAB:
+						setState(MST_SL_INSERTION);
 						break;
 					}
 				}
@@ -898,6 +906,12 @@ void MCC::TimeStep(double simdt){
 			* MISSION H1: APOLLO 12 *
 			********************** */
 			MissionSequence_H1();
+			break;
+		case MTP_SKYLAB:
+			/* *********************
+			* MISSION SL: SKYLAB   *
+			********************** */
+			MissionSequence_SL();
 			break;
 		}
 	}
@@ -1313,7 +1327,7 @@ int MCC::subThread(){
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = DONE;
 	}
-	else if (MissionType == MTP_C)
+	else if (MissionType == MTP_C || MissionType == MTP_SKYLAB)
 	{
 		OBJHANDLE ves = oapiGetVesselByName(LVName);
 		if (ves != NULL)

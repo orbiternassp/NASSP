@@ -202,14 +202,14 @@ public:
 	/// \param alarmLit Surface for lit alarm bitmap.
 	/// \param position Which Master Alarm light we're rendering.
 	///
-	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border, CWSMasterAlarmPosition position);
+	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border, CWSMasterAlarmPosition position, int xTexMul = 1);
 
 	///
 	/// \brief Render the lights.
 	/// \param surf Surface to render to.
 	/// \param lightsurf Surface with lit lights.
 	/// \param leftpanel True when rendering left panel, false when rendering right panel.
-	virtual void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
+	virtual void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel, int xTexMul = 1);
 
 	///
 	/// \brief Process a mouse click on the Master Alarm.

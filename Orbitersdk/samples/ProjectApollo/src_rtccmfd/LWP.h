@@ -21,6 +21,9 @@
 #pragma once
 
 #include "OrbMech.h"
+#include "RTCCModule.h"
+
+class RTCC;
 
 struct LWPGlobalConstants
 {
@@ -131,10 +134,6 @@ struct LWPInputTable
 	int NEGTIV;
 	//Flightpath angle at insertion
 	double GAMINS;
-	//Geocentric latitude of launch site
-	double LATLS;
-	//Geocentric longitude of launch site
-	double LONGLS;
 	//Powered flight time
 	double PFT;
 	//Powered flight arc
@@ -193,12 +192,14 @@ struct LWPInputTable
 	double DTGRR;
 	//Nominal semimajor axis at insertion
 	double ANOM;
+	//Launchpad (1 = CSM, 2 = LM)
+	int Pad;
 };
 
-class LaunchWindowProcessor
+class LaunchWindowProcessor : public RTCCModule
 {
 public:
-	LaunchWindowProcessor();
+	LaunchWindowProcessor(RTCC *r);
 	void SetGlobalConstants(const LWPGlobalConstants &gl);
 	void LWP(const LWPInputTable &in);
 
@@ -297,6 +298,11 @@ protected:
 	double GSTAR;
 	//Delta height at insertion
 	double DH;
+
+	//Geocentric latitude of launch site
+	double LATLS;
+	//Geocentric longitude of launch site
+	double LONGLS;
 
 	int error;
 

@@ -331,7 +331,7 @@ void Sat5LMDSC::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 		{
 			sscanf(line + 5, "%d", &state);
 		}
-		else if (!strnicmp(line, "APOLLONO", 8)) {
+		else if (!_strnicmp(line, "APOLLONO", 8)) {
 			sscanf(line + 8, "%d", &ApolloNo);
 
 			if (sscanf(line + 8, "%d", &ApolloNo) == 1)

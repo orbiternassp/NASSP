@@ -157,7 +157,11 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src_launch\RCA110A.cpp" />
+    <ClCompile Include="..\..\src_launch\SCMUmbilical.cpp" />
+    <ClCompile Include="..\..\src_launch\SIB_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\SIC_ESE.cpp" />
+    <ClCompile Include="..\..\src_launch\SI_ESE.cpp" />
+    <ClCompile Include="..\..\src_launch\TailUmbilical.cpp" />
     <ClCompile Include="..\..\src_launch\TSMUmbilical.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -178,9 +182,13 @@
     <ClInclude Include="..\..\src_launch\IU_ESE.h" />
     <ClInclude Include="..\..\src_launch\LCCPadInterface.h" />
     <ClInclude Include="..\..\src_launch\RCA110A.h" />
+    <ClInclude Include="..\..\src_launch\SCMUmbilical.h" />
+    <ClInclude Include="..\..\src_launch\SIB_ESE.h" />
     <ClInclude Include="..\..\src_launch\SIC_ESE.h" />
+    <ClInclude Include="..\..\src_launch\SI_ESE.h" />
+    <ClInclude Include="..\..\src_launch\TailUmbilical.h" />
     <ClInclude Include="..\..\src_launch\TSMUmbilical.h" />
-    <ClInclude Include="..\..\src_launch\TSMUmbilicalInterface.h" />
+    <ClInclude Include="..\..\src_launch\TailUmbilicalInterface.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />

@@ -631,9 +631,9 @@ bool LC37::ESEGetQBallSimulateCmd()
 	return IuESE->GetQBallSimulateCmd();
 }
 
-bool LC37::ESEGetSIBThrustOKSimulate(int eng, int n)
+bool LC37::ESEGetSIThrustOKSimulate(int eng, int n)
 {
-	return SIBESE->GetSIBThrustOKSimulate(eng, n);
+	return SIBESE->GetSIThrustOKSimulate(eng, n);
 }
 
 void LC37::SLCCCheckDiscreteInput(RCA110A *c)

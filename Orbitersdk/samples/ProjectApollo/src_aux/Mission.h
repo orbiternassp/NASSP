@@ -45,7 +45,7 @@ namespace mission
 		virtual bool LoadMission(const int iMission);
 		virtual bool LoadMission(const std::string& strMission);
 
-		//1 = Block I and pre Apollo 12, 2 = Apollo 12 and later
+		//1 = Block I and pre Apollo 13, 2 = Apollo 13 and later
 		virtual int GetSMJCVersion() const;
 		//false = any other CSM, true = J-type mission CSM (for all systems and panels common to CSM-112 to 114)
 		virtual bool IsJMission() const;
@@ -81,12 +81,18 @@ namespace mission
 		double GetATCA_PRM_Factor() const;
 		//Get matrix with coefficients for calculating the LM center of gravity as a quadratic function of mass
 		MATRIX3 GetLMCGCoefficients() const;
-		//CM to LM power connection version. 0 = connection doesn't work with LM staged, 1 = LM has a CB to bypass circuit to descent stage, 2 = circuit bypassed automatically at stating
+		//CM to LM power connection version. 0 = connection doesn't work with LM staged, 1 = LM has a CB to bypass circuit to descent stage, 2 = circuit bypassed automatically at staging
 		int GetCMtoLMPowerConnectionVersion() const;
 		//Get CG of the empty SM (but including SM RCS) in inches
 		VECTOR3 GetCGOfEmptySM() const;
 		//false = Optics mode switch is not bypassed for CMC to optics commands, true = optics mode switch is bypassed for CMC to optics commands (ECP 792)
 		bool HasRateAidedOptics() const;
+		//0 = LM-7 and before (ASC PRESS LOW before staging, RCS for HEATER FAILURE CAUTION), 1 = LM-8 and after (both cut and capped)
+		int GetLMCWEAVersion() const;
+		//false = Normal polarity (Apollo 14 and earlier), Lateral axis for PGNS and LR input has switched polarity (Apollo 15 and later)
+		bool GetCrossPointerReversePolarity() const;
+		//Get time reference of AGC for CMC clock initialization. The value is usually the MJD of midnight July 1st that preceeds the launch
+		double GetTEPHEM0() const;
 		//Get cue cards
 		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
 		//Name of CDR
@@ -111,6 +117,7 @@ namespace mission
 
 		void ReadCueCardLine(char *line, int vehicle);
 
+		void UpdateTEPHEM0();
 
 		std::string strFileName;
 		std::string strMissionName;
@@ -143,8 +150,11 @@ namespace mission
 		int iCMtoLMPowerConnectionVersion;
 		VECTOR3 EmptySMCG;
 		bool bHasRateAidedOptics;
+		int iLMCWEAVersion;
+		bool bCrossPointerReversePolarity;
 		std::vector<CueCardConfig> CSMCueCards;
 		std::vector<CueCardConfig> LMCueCards;
+		double dTEPHEM0;
 
 		void SetDefaultValues();
 	};
