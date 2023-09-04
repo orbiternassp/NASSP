@@ -822,7 +822,7 @@ struct DKICommon
 	double NPC;
 	//M-line of maneuver line number at which rendezvous is to take place
 	double MI;
-	//Delta time of lighting condition for TPI
+	//Delta time of lighting condition for TPI, in minutes!
 	double TLIT;
 	//Control flag for TPI time computation. 1 = Input TPI time, 2 = input TPF time, 3 = TPI at "TLIT" minutes into night, 
 	//4 = TPI at "TLIT" minutes into day, 5: TPF at "TLIT" minutes into night, 6 = TPF at "TLIT" minutes into day
@@ -4777,7 +4777,7 @@ public:
 	} VEHDATABUF;
 
 	double GetClockTimeFromAGC(agc_t *agc);
-	double GetTEPHEMFromAGC(agc_t *agc);
+	double GetTEPHEMFromAGC(agc_t *agc, int address = 01706);
 
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
@@ -4819,6 +4819,7 @@ private:
 	bool CalculationMTP_F(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_H1(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_SL(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
 	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
