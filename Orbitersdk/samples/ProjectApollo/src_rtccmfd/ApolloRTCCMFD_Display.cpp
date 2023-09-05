@@ -5798,6 +5798,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(61 * W / 64, 5 * H / 28, "YAW", 3);
 		skp->Text(61 * W / 64, 6 * H / 28, "DEG", 3);
 
+		skp->Text(W / 2, 27 * H / 28, GC->rtcc->EZSSTAB.errormessage.c_str(), GC->rtcc->EZSSTAB.errormessage.length());
+
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		for (int i = 0;i < 8;i++)
@@ -5865,6 +5867,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(61 * W / 64, 5 * H / 28, "YAW", 3);
 		skp->Text(61 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->Text(W / 2, 27 * H / 28, GC->rtcc->EZMMTAB.errormessage.c_str(), GC->rtcc->EZMMTAB.errormessage.length());
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 

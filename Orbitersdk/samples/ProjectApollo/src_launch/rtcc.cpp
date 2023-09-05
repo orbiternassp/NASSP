@@ -23278,6 +23278,20 @@ int RTCC::EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, d
 
 void RTCC::EMDSSEMD(int ind, double param)
 {
+	EZSSTAB.errormessage = "";
+
+	if (PZMPTCSM.CommonBlock.TUP < 0)
+	{
+		EZSSTAB.errormessage = "TABLE BEING UPDATED";
+		return;
+	}
+
+	if (PZMPTCSM.CommonBlock.TUP != EZCCSM.TUP)
+	{
+		EZSSTAB.errormessage = "INCONSISTENT TABLES";
+		return;
+	}
+
 	double GMT_begin, get, Pitch, Yaw;
 
 	if (ind == 1)
@@ -23342,6 +23356,10 @@ void RTCC::EMDSSEMD(int ind, double param)
 	}
 
 	if (EZSSTAB.num == 0) return;
+	if (EZSSTAB.num < 8)
+	{
+		EZSSTAB.errormessage = "END OF AVAILABLE DATA";
+	}
 
 	for (int i = 0;i < EZSSTAB.num;i++)
 	{
@@ -23366,6 +23384,20 @@ void RTCC::EMDSSEMD(int ind, double param)
 
 void RTCC::EMDSSMMD(int ind, double param)
 {
+	EZMMTAB.errormessage = "";
+
+	if (PZMPTCSM.CommonBlock.TUP < 0)
+	{
+		EZMMTAB.errormessage = "TABLE BEING UPDATED";
+		return;
+	}
+
+	if (PZMPTCSM.CommonBlock.TUP != EZCCSM.TUP)
+	{
+		EZMMTAB.errormessage = "INCONSISTENT TABLES";
+		return;
+	}
+
 	double GMT_begin, get, Pitch, Yaw;
 
 	if (ind == 1)
@@ -23416,6 +23448,10 @@ void RTCC::EMDSSMMD(int ind, double param)
 	}
 
 	if (EZMMTAB.num == 0) return;
+	if (EZMMTAB.num < 8)
+	{
+		EZMMTAB.errormessage = "END OF AVAILABLE DATA";
+	}
 
 	for (int i = 0;i < EZMMTAB.num;i++)
 	{
