@@ -628,9 +628,6 @@ Sound::Sound(Sound &s)
 Sound::~Sound()
 
 {
-	if (sd && valid && sd->isValid()) {
-		sd->done();
-	}
 }
 
 Sound &Sound::operator=(const Sound &s)
