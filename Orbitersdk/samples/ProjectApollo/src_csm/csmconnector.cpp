@@ -957,6 +957,7 @@ bool CSM_VHFto_LM_VHFConnector::ReceiveMessage(Connector * from, ConnectorMessag
 	//in actuality it should be something more like a resonance responce centered around the tuned receiver frequency, but this waaay more simple
 	//and easy to compute every timestep
 
+	//sprintf(oapiDebugString(), "%lf %lf %lf", m.val5.vValue.x, m.val5.vValue.y, m.val5.vValue.z);
 
 	if (m.val1.dValue > pVHFxcvr->freqXCVR_A*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_A*1.01f && m.messageType == VHF_RNG_SIGNAL_LM)
 	{

@@ -48,6 +48,9 @@ Connector::Connector()
 	// give the connector an ID and push a pointer onto the static list of connector pointers
 	AllConnectorList.push_back(this);
 	Connector_ID = AllConnectorList.size() - 1;
+	char buff[255];
+	sprintf(buff, "Connector Created %d %d\n", Connector_ID, type);
+	oapiWriteLog(buff);
 }
 
 Connector::~Connector()

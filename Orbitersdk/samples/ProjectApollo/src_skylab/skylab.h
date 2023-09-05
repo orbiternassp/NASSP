@@ -44,7 +44,7 @@ public:
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadState(FILEHANDLE scn);
 private:
-	Skylab_VHFtoCSM_VHF_Connector *skylab_vhf2csm_vhf_connector;
+	Skylab_VHFtoCSM_VHF_Connector skylab_vhf2csm_vhf_connector;
 	MESHHANDLE SkylabMesh;
 };
 

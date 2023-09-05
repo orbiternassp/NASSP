@@ -27,14 +27,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "SkylabConnector.h"
 
 SkylabConnector::SkylabConnector(Skylab* s)
-
 {
 	OurVessel = s;
 }
 
 SkylabConnector::~SkylabConnector()
-
 {
+
 }
 
 
@@ -67,6 +66,6 @@ void Skylab_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double X
 
 bool Skylab_VHFtoCSM_VHF_Connector::ReceiveMessage(Connector* from, ConnectorMessage& m)
 {
-
+	//sprintf(oapiDebugString(), "%lf %lf %lf", m.val5.vValue.x, m.val5.vValue.y, m.val5.vValue.z);
 	return true;
 }

@@ -25,14 +25,13 @@
 #include "skylab.h"
 
 
-Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel)
+Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel),
+skylab_vhf2csm_vhf_connector(this)
 {
-	skylab_vhf2csm_vhf_connector = new Skylab_VHFtoCSM_VHF_Connector(nullptr);
-	skylab_vhf2csm_vhf_connector->ConnectTo(nullptr);
+	skylab_vhf2csm_vhf_connector.ConnectTo(nullptr);
 }
 
 Skylab::~Skylab() {
-	delete skylab_vhf2csm_vhf_connector;
 }
 
 void Skylab::InitSkylab() {
@@ -45,7 +44,7 @@ void Skylab::InitSkylab() {
 	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
 	//*****************************************************
 
-	RegisterConnector(VIRTUAL_CONNECTOR_PORT, skylab_vhf2csm_vhf_connector);
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &skylab_vhf2csm_vhf_connector);
 }
 
 void Skylab::clbkPostCreation() {
@@ -55,40 +54,18 @@ void Skylab::clbkPostCreation() {
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 {
-	if (skylab_vhf2csm_vhf_connector->connectedTo) {
+	if (skylab_vhf2csm_vhf_connector.connectedTo) {
 
 		VECTOR3 OurGlobalPosition;
 		this->GetGlobalPos(OurGlobalPosition);
 
-		skylab_vhf2csm_vhf_connector->SendRF(296.8E6, 5, 10, 0, true, OurGlobalPosition);
-		/*sprintf(oapiDebugString(), "%lf", oapiGetSimMJD());*/
+		skylab_vhf2csm_vhf_connector.SendRF(296.8E6, 5, 10, 0, true, OurGlobalPosition);
+		sprintf(oapiDebugString(), "%lf", oapiGetSimMJD());
 
-		
 	}
 	else
 	{
-		OBJHANDLE objToConnect = oapiGetVesselByName("AS-206");
-		VESSEL* vesselToConnect = oapiGetVesselInterface(objToConnect);
-
-		skylab_vhf2csm_vhf_connector->ConnectTo(GetVesselConnector(vesselToConnect, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
-
-		/*int vesselsCount = oapiGetVesselCount();
-		for (int ii = 0; ii < vesselsCount; ++ii) {
-			OBJHANDLE objToConnect = oapiGetVesselByIndex(ii);
-			VESSEL* vesselToConnect = oapiGetVesselInterface(objToConnect);
-
-			ProjectApolloConnectorVessel* pv = nullptr;
-
-			if (vesselToConnect->Version() > 2) {
-				pv = dynamic_cast<ProjectApolloConnectorVessel*>((VESSEL4*)vesselToConnect);
-			}
-			sprintf(oapiDebugString(), "%d", ii);
-
-			if (pv) {
-				if (skylab_vhf2csm_vhf_connector->ConnectTo(GetVesselConnector(vesselToConnect, VIRTUAL_CONNECTOR_PORT, VHF_RNG))) { break; };
-			}
-
-		}*/
+		skylab_vhf2csm_vhf_connector.ConnectTo(skylab_vhf2csm_vhf_connector.GetConnectorFromList(VHF_RNG));
 	}
 }
 
