@@ -3,7 +3,7 @@
 *.c	eol=crlf
 *.cpp	eol=crlf
 *.rc	eol=crlf
-*.vcxproj eol=crlf
+#*.vcxproj eol=crlf For some reason this causes issues!
 *.bat	eol=crlf
 *.sln	eol=crlf
 # Let's try this for scenario files too
