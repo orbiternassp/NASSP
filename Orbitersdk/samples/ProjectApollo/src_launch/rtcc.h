@@ -2110,7 +2110,7 @@ struct SunriseSunsetTable
 {
 	int num = 0;
 	SunriseSunsetData data[8];
-	std::string errormessage;
+	std::string errormessage = "MED OUTDATED";
 };
 
 // Parameter block for Calculation(). Expand as needed.
