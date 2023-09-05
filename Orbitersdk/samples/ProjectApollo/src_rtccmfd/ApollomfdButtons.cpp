@@ -4151,7 +4151,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu122[] =
 	{
-		{ "", 0, ' ' },
+		{ "CSM or LM pad", 0, 'P' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -4168,7 +4168,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu122, sizeof(mnu122) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("PAD", OAPI_KEY_P, &ApolloRTCCMFD::menuSLVLaunchTargetingPad);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
@@ -4283,6 +4283,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetPerigeeAdjustInputPage);
+
+
+	static const MFDBUTTONMENU mnu126[] =
+	{
+		{ "Choose mode", 0, 'M' },
+		{ "Enter first attitude", 0, 'Q' },
+		{ "Enter second attitude", 0, 'P' },
+		{ "CSM REFS for DOK", 0, 'H' },
+		{ "REFSMMAT 1", 0, 'L' },
+		{ "REFSMMAT 2", 0, 'V' },
+
+		{ "Docking alignment", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Realign option", 0, 'R' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu126, sizeof(mnu126) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuLOSTMode);
+	RegisterFunction("AT1", OAPI_KEY_Q, &ApolloRTCCMFD::menuLOSTAttitude1);
+	RegisterFunction("AT2", OAPI_KEY_P, &ApolloRTCCMFD::menuLOSTAttitude2);
+	RegisterFunction("CRF", OAPI_KEY_H, &ApolloRTCCMFD::menuLOST_CSM_REFSMMAT);
+	RegisterFunction("MA1", OAPI_KEY_L, &ApolloRTCCMFD::menuLOST_REFSMMAT1);
+	RegisterFunction("MA2", OAPI_KEY_V, &ApolloRTCCMFD::menuLOST_REFSMMAT2);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuCalcLOST);
+	RegisterFunction("OP1", OAPI_KEY_E, &ApolloRTCCMFD::menuLOSTOptics1);
+	RegisterFunction("OP2", OAPI_KEY_Q, &ApolloRTCCMFD::menuLOSTOptics2);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("REA", OAPI_KEY_R, &ApolloRTCCMFD::menuLOSTRealign);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

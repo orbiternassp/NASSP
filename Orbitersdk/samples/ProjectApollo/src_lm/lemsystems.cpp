@@ -1534,6 +1534,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	optics.Timestep(simdt);
 	LR.Timestep(simdt);
 	RR.Timestep(simdt);
+	agc.RadarRead();
 	RadarTape.Timestep(simdt);
 	crossPointerLeft.Timestep(simdt);
 	crossPointerRight.Timestep(simdt);
@@ -2461,6 +2462,50 @@ bool LEM_LR::IsPowered()
 	return true;
 }
 
+void LEM_LR::GetRangeLGC()
+{
+	if (!IsPowered()) return;
+
+	// High range is 5.395 feet per count
+	// Low range is 1.079 feet per count
+	if (range >= 2500.0) {
+		// Hi Range
+		lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 5.395);
+	}
+	else {
+		// Lo Range
+		lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 1.079);
+	}
+}
+
+void LEM_LR::GetVelocityXLGC()
+{
+	if (!IsPowered()) return;
+
+	// 12288 COUNTS = -000000 F/S
+	// SIGN REVERSED
+	// 0.643966 F/S PER COUNT
+	lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 - (rate[0] / 0.643966));
+}
+
+void LEM_LR::GetVelocityYLGC()
+{
+	if (!IsPowered()) return;
+
+	// 12288 COUNTS = +000000 F/S
+	// 1.211975 F/S PER COUNT
+	lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[1] / 1.211975));
+}
+
+void LEM_LR::GetVelocityZLGC()
+{
+	if (!IsPowered()) return;
+
+	// 12288 COUNTS = +00000 F/S
+	// 0.866807 F/S PER COUNT
+	lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[2] / 0.866807));
+}
+
 double LEM_LR::GetAltTransmitterPower()
 {
 	if (!IsPowered())
@@ -2485,10 +2530,8 @@ void LEM_LR::Timestep(double simdt){
 	if(lem == NULL){ return; }
 	// char debugmsg[256];
 	ChannelValue val12;
-	ChannelValue val13;
 	ChannelValue val33;
 	val12 = lem->agc.GetInputChannel(012);
-	val13 = lem->agc.GetInputChannel(013);
 	val33 = lem->agc.GetInputChannel(033);
 
 	if (IsPowered())
@@ -2512,21 +2555,6 @@ void LEM_LR::Timestep(double simdt){
 		if(clobber == TRUE){ lem->agc.SetInputChannel(033, val33); }
 		rangeGood = 0;
 		velocityGood = 0;
-		if (val13[RadarActivity] == 1) {
-			int radarBits = 0;
-			if (val13[RadarA] == 1) { radarBits |= 1; }
-			if (val13[RadarB] == 1) { radarBits |= 2; }
-			if (val13[RadarC] == 1) { radarBits |= 4; }
-			switch (radarBits) {
-			case 1:
-			case 3:
-			case 5:
-			case 7:
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-				break;
-			}
-		}
 		return;
 	}	
 
@@ -2735,80 +2763,6 @@ void LEM_LR::Timestep(double simdt){
 	if(velocityGood == 1 && val33[LRVelocityDataGood] == 0){ val33[LRVelocityDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
 	if(velocityGood == 0 && val33[LRVelocityDataGood] == 1){ val33[LRVelocityDataGood] = 0; lem->agc.SetInputChannel(033, val33);	}
 
-	// The computer wants something from the radar.
-	if(val13[RadarActivity] == 1){
-		int radarBits = 0;
-		if(val13[RadarA] == 1){ radarBits |= 1; }
-		if(val13[RadarB] == 1){ radarBits |= 2; }
-		if(val13[RadarC] == 1){ radarBits |= 4; }
-		switch(radarBits){
-		case 1: 
-			// LR (LR VEL X)
-			// 12288 COUNTS = -000000 F/S
-			// SIGN REVERSED				
-			// 0.643966 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 - (rate[0] / 0.643966));
-			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-			lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-			ruptSent = 1;
-
-			break;
-		case 2:
-			// RR RANGE RATE
-			// Not our problem
-			break;
-		case 3:
-			// LR (LR VEL Z)
-			// 12288 COUNTS = +00000 F/S
-			// 0.866807 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[2] / 0.866807));
-			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-			lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-			ruptSent = 3;
-
-			break;
-		case 4:
-			// RR RANGE
-			// Not our problem
-			break;
-		case 5:
-			// LR (LR VEL Y)
-			// 12288 COUNTS = +000000 F/S
-			// 1.211975 F/S PER COUNT
-			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[1] / 1.211975));
-			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-			lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-			ruptSent = 5;
-
-			break;
-		case 7: 
-			// LR (LR RANGE)
-			// High range is 5.395 feet per count
-			// Low range is 1.079 feet per count
-			if (val33[LRRangeLowScale] == 0) {
-				// Hi Range
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 5.395);
-			}
-			else {
-				// Lo Range
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 1.079);
-			}
-			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-			lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::RADARUPT);
-			ruptSent = 7;
-
-			break;
-			/*
-		default:
-			sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
-			*/
-		}
-
-	}else{
-		ruptSent = 0;
-	}
-
-
 	//sprintf(oapiDebugString(), "rangeGood: %d velocityGood: %d ruptSent: %d  RadarActivity: %d Position %f° Range: %f", rangeGood, velocityGood, ruptSent, val13[RadarActivity] == 1, antennaAngle, range);
 }
 
@@ -2824,7 +2778,6 @@ void LEM_LR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
 	papiWriteScenario_double(scn, "RANGE", range);
 	papiWriteScenario_double(scn, "ANTENNAANGLE", antennaAngle);
-	oapiWriteScenario_int(scn, "RUPTSEND", ruptSent);
 	oapiWriteScenario_int(scn, "RANGEGOOD", rangeGood);
 	oapiWriteScenario_int(scn, "VELOCITYGOOD", velocityGood);
 	papiWriteScenario_vec(scn, "RATE", _V(rate[0], rate[1], rate[2]));
@@ -2846,9 +2799,6 @@ void LEM_LR::LoadState(FILEHANDLE scn,char *end_str){
 		if (!strnicmp(line, "ANTENNAANGLE", 12)) {
 			sscanf(line + 12, "%lf", &dec);
 			antennaAngle = dec;
-		}
-		if (!strnicmp(line, "RUPTSEND", 8)) {
-			sscanf(line + 8, "%d", &ruptSent);
 		}
 		if (!strnicmp(line, "RANGEGOOD", 9)) {
 			sscanf(line + 9, "%d", &rangeGood);

@@ -514,6 +514,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lmmanpad.LMWeight = 0.0;
 	lmmanpad.SPA = 0.0;
 	lmmanpad.SXP = 0.0;
+	lmmanpad.IMUAtt = _V(0, 0, 0);
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	EntryPADSxtStarCheckAttOpt = true;
@@ -609,7 +610,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	TMLat = 0.0;
 	TMLng = 0.0;
-	TMAzi = 0.0;
+	TMAzi = -90.0*RAD;
 	TMDistance = 600000.0*0.3048;
 	TMStepSize = 100.0*0.3048;
 	TMAlt = 0.0;
@@ -742,7 +743,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	LUNTAR_lat = 0.0;
 	LUNTAR_lng = 0.0;
-	LUNTAR_bt_guess = 10.0;
+	LUNTAR_bt_guess = 0.0;
 	LUNTAR_pitch_guess = 0.0;
 	LUNTAR_yaw_guess = 0.0;
 	LUNTAR_TIG = 0.0;
@@ -2354,6 +2355,9 @@ void ARCore::TerrainModelCalc()
 
 	FILE *file = fopen("TerrainModel.txt", "w");
 
+	fprintf(file, "Lunar Terrain Model\n");
+	fprintf(file, "Lat: %.4lf deg;Lng: %.4lf deg;Elev: %.0lf m;Azimuth: %.2lf deg\n", TMLat*DEG, TMLng*DEG, TMAlt, TMAzi*DEG);
+	fprintf(file, "Distance in meters;Elevation in meters\n");
 	fprintf(file, "%f;%f\n", -dist, 0.0);
 
 	while (dist < TMDistance)
@@ -4603,7 +4607,7 @@ int ARCore::subThread()
 		in.bt_guess = LUNTAR_bt_guess;
 		in.pitch_guess = LUNTAR_pitch_guess;
 		in.yaw_guess = LUNTAR_yaw_guess;
-		in.tig_guess = GC->rtcc->GMTfromGET(LUNTAR_TIG);
+		in.tig_guess = LUNTAR_TIG;
 		in.TB8 = lvdc->TB8;
 
 		LunarTargetingProgram luntar(GC->rtcc);
@@ -4613,7 +4617,7 @@ int ARCore::subThread()
 	}
 	break;
 
-	case 51: //Moonrise/Moonset Display
+	case 51: //Spare
 	{
 		Result = DONE;
 	}

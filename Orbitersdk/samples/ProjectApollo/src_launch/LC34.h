@@ -25,7 +25,7 @@
 #pragma once
 
 #include "IUUmbilicalInterface.h"
-#include "SCMUmbilicalInterface.h"
+#include "TailUmbilicalInterface.h"
 #include "LCCPadInterface.h"
 
 class S1B;
@@ -40,7 +40,7 @@ class RCA110AM;
 ///
 /// \ingroup Ground
 ///
-class LC34: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface, public LCCPadInterface {
+class LC34: public VESSEL2, public IUUmbilicalInterface, public TailUmbilicalInterface, public LCCPadInterface {
 
 public:
 	LC34(OBJHANDLE hObj, int fmodel);
@@ -74,7 +74,7 @@ public:
 	bool ESEGetEDSLVCutoffSimulate(int n);
 
 	//ML/S-IC Interface
-	bool ESEGetSIBThrustOKSimulate(int eng, int n);
+	bool ESEGetSIThrustOKSimulate(int eng, int n);
 
 	// LCC/ML Interface
 	void SLCCCheckDiscreteInput(RCA110A *c);

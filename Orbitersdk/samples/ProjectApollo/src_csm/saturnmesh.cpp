@@ -1076,18 +1076,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	meshidx = AddMesh(hCMInt, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
 
-	// Docking probe
-	if (HasProbe) {
-		dockringidx = AddMesh(hdockring, &mesh_dir);
-		probeidx = AddMesh(hprobe, &mesh_dir);
-		probeextidx = AddMesh(hprobeext, &mesh_dir);
-		SetDockingProbeMesh();
-	} else {
-		dockringidx = -1;
-		probeidx = -1;
-		probeextidx = -1;
-	}
-
+	//Add CM meshes. More to be added here...
 	AddCMMeshes(mesh_dir);
 
 	// Docking port
@@ -1592,22 +1581,8 @@ void Saturn::SetReentryMeshes() {
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
 
-	//
-	// Docking probe
-	//
-
-	if (HasProbe)
-	{
-		dockringidx = AddMesh(hdockring, &mesh_dir);
-		probeidx = AddMesh(hprobe, &mesh_dir);
-		probeextidx = AddMesh(hprobeext, &mesh_dir);
-		SetDockingProbeMesh();
-	} else
-	{
-		dockringidx = -1;
-		probeidx = -1;
-		probeextidx = -1;
-	}
+	//Add CM meshes. More to be added here...
+	AddCMMeshes(mesh_dir);
 }
 
 void Saturn::StageSeven(double simt)
@@ -2260,9 +2235,23 @@ void Saturn::ResetDynamicMeshIndizes()
 
 void Saturn::AddCMMeshes(const VECTOR3 &mesh_dir)
 {
+	// Docking probe
+	if (HasProbe) {
+		dockringidx = AddMesh(hdockring, &mesh_dir);
+		probeidx = AddMesh(hprobe, &mesh_dir);
+		probeextidx = AddMesh(hprobeext, &mesh_dir);
+		SetDockingProbeMesh();
+	}
+	else {
+		dockringidx = -1;
+		probeidx = -1;
+		probeextidx = -1;
+	}
+
 	// Optics Cover
 	opticscoveridx = AddMesh(hopticscover, &mesh_dir);
 	SetOpticsCoverMesh();
 
+	//Reload cue cards, if required
 	CueCards.ResetCueCards();
 }

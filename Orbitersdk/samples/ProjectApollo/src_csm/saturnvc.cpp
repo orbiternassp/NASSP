@@ -1416,9 +1416,15 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_3, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_3, _V(-0.561500, 0.607183, 0.327275) + ofs, _V(-0.511500, 0.607183, 0.327275) + ofs, _V(-0.561500, 0.588217, 0.320925) + ofs, _V(-0.511500, 0.588217, 0.320925) + ofs);
 
-	// Left of FDAI 2 and DSKY
-	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_4, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_4, _V(-0.454700, 0.785408, 0.378859) + ofs, _V(-0.434700, 0.785408, 0.378859) + ofs, _V(-0.454700, 0.515132, 0.288438) + ofs, _V(-0.434700, 0.515132, 0.288438) + ofs);
+	// Left of FDAI 2 and DSKY (Velcro patch 1)
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_4A, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_4A, _V(-0.454700, 0.785408, 0.378859) + ofs, _V(-0.434700, 0.785408, 0.378859) + ofs,
+		_V(-0.454700, 0.766441, 0.372514) + ofs, _V(-0.434700, 0.766441, 0.372514) + ofs);
+
+	// Left of FDAI 2 and DSKY (Velcro patch 2)
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_4B, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_4B, _V(-0.454700, 0.652641, 0.334441) + ofs, _V(-0.434700, 0.652641, 0.334441) + ofs,
+		_V(-0.454700, 0.515132, 0.288437) + ofs, _V(-0.434700, 0.515132, 0.288437) + ofs);
 
 	// Above EMS
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_5, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
@@ -1534,10 +1540,13 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		SetCOASMesh();
 		return true;
 
+	case AID_VC_CUE_CARD_LOCATION_4A:
+	case AID_VC_CUE_CARD_LOCATION_4B:
+		CueCards.CycleCueCard(3);
+		return true;
 	case AID_VC_CUE_CARD_LOCATION_1:
 	case AID_VC_CUE_CARD_LOCATION_2:
 	case AID_VC_CUE_CARD_LOCATION_3:
-	case AID_VC_CUE_CARD_LOCATION_4:
 	case AID_VC_CUE_CARD_LOCATION_5:
 	case AID_VC_CUE_CARD_LOCATION_6:
 	case AID_VC_CUE_CARD_LOCATION_7:

@@ -42,6 +42,18 @@
     <ClCompile Include="..\..\src_launch\RCA110A.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_launch\SCMUmbilical.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\TailUmbilical.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\SIB_ESE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\SI_ESE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h">
@@ -110,9 +122,6 @@
     <ClInclude Include="..\..\src_launch\TSMUmbilical.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_launch\TSMUmbilicalInterface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src_launch\SIC_ESE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -120,6 +129,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_launch\RCA110A.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\TailUmbilicalInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\SCMUmbilical.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\TailUmbilical.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\SIB_ESE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\SI_ESE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

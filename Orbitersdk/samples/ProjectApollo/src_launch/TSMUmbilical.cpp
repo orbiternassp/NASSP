@@ -24,14 +24,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "s1csystems.h"
-#include "TSMUmbilicalInterface.h"
+#include "TailUmbilicalInterface.h"
 #include "TSMUmbilical.h"
 
-TSMUmbilical::TSMUmbilical(TSMUmbilicalInterface *ml)
+TSMUmbilical::TSMUmbilical(TailUmbilicalInterface *ml) : TailUmbilical(ml)
 {
-	TSMUmb = ml;
 	sic = NULL;
-	UmbilicalConnected = false;
 }
 
 TSMUmbilical::~TSMUmbilical()
@@ -56,16 +54,6 @@ void TSMUmbilical::Disconnect()
 	UmbilicalConnected = false;
 }
 
-void TSMUmbilical::AbortDisconnect()
-{
-	UmbilicalConnected = false;
-}
-
-bool TSMUmbilical::ESEGetSICThrustOKSimulate(int eng, int n)
-{
-	return TSMUmb->ESEGetSICThrustOKSimulate(eng, n);
-}
-
 bool TSMUmbilical::SIStageLogicCutoff()
 {
 	if (!UmbilicalConnected) return false;
@@ -77,12 +65,12 @@ void TSMUmbilical::SetEngineStart(int eng)
 {
 	if (!UmbilicalConnected) return;
 
-	return sic->SetEngineStart(eng);
+	sic->SetEngineStart(eng);
 }
 
 void TSMUmbilical::SIGSECutoff(bool cut)
 {
 	if (!UmbilicalConnected) return;
 
-	return sic->GSEEnginesCutoff(cut);
+	sic->GSEEnginesCutoff(cut);
 }

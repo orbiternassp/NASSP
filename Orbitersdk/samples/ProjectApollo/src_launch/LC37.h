@@ -26,7 +26,7 @@
 
 #include "soundlib.h"
 #include "IUUmbilicalInterface.h"
-#include "SCMUmbilicalInterface.h"
+#include "TailUmbilicalInterface.h"
 #include "LCCPadInterface.h"
 
 class S1B;
@@ -40,7 +40,7 @@ class RCA110AM;
 ///
 /// \ingroup Ground
 ///
-class LC37: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface, public LCCPadInterface {
+class LC37: public VESSEL2, public IUUmbilicalInterface, public TailUmbilicalInterface, public LCCPadInterface {
 
 public:
 	LC37(OBJHANDLE hObj, int fmodel);
@@ -74,7 +74,7 @@ public:
 	bool ESEGetQBallSimulateCmd();
 
 	//ML/S-IC Interface
-	bool ESEGetSIBThrustOKSimulate(int eng, int n);
+	bool ESEGetSIThrustOKSimulate(int eng, int n);
 
 	// LCC/LC-37 Interface
 	void SLCCCheckDiscreteInput(RCA110A *c);

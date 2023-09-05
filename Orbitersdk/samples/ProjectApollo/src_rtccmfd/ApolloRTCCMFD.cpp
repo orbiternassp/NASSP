@@ -1241,6 +1241,11 @@ void ApolloRTCCMFD::menuSetPerigeeAdjustDisplayPage()
 	SelectPage(125);
 }
 
+void ApolloRTCCMFD::menuSetLMOpticsSupportTablePage()
+{
+	SelectPage(126);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -1297,7 +1302,7 @@ void ApolloRTCCMFD::menuLWPLiftoffTime()
 
 void ApolloRTCCMFD::LUNTAR_TIGInput()
 {
-	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS)");
+	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS). Enter zero for trajectory evaluation (no maneuver):");
 }
 
 void ApolloRTCCMFD::menuLWP_RINS()
@@ -1497,11 +1502,13 @@ bool GenericDoubleInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericIntInput(int *val, char *message)
+void ApolloRTCCMFD::GenericIntInput(int *val, char *message, void (ApolloRTCCMFD::*func)(void))
 {
 	void *data2;
 
 	tempData.iVal = val;
+	tempData.ptr = this;
+	tempData.func = func;
 	data2 = &tempData;
 
 	bool GenericIntInputBox(void *id, char *str, void *data);
@@ -1516,17 +1523,72 @@ bool GenericIntInputBox(void *id, char *str, void *data)
 	if (sscanf(str, "%d", &val) == 1)
 	{
 		*arr->iVal = val;
+
+		if (arr->func)
+		{
+			ApolloRTCCMFD *ptr = arr->ptr;
+			void (ApolloRTCCMFD::*func)(void) = arr->func;
+
+			(ptr->*func)();
+		}
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::GenericVectorInput(VECTOR3 *val, char* message, double factor)
+void ApolloRTCCMFD::GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void))
+{
+	void *data2;
+
+	tempData.iVal = val1;
+	tempData.iVal2 = val2;
+	tempData.min1 = min1;
+	tempData.max1 = max1;
+	tempData.min2 = min2;
+	tempData.max2 = max2;
+	tempData.ptr = this;
+	tempData.func = func;
+	data2 = &tempData;
+
+	bool GenericInt2InputBox(void *id, char *str, void *data);
+	oapiOpenInputBox(message, GenericInt2InputBox, 0, 25, data2);
+}
+
+bool GenericInt2InputBox(void *id, char *str, void *data)
+{
+	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
+	int val1, val2;
+
+	if (sscanf(str, "%d %d", &val1, &val2) == 2)
+	{
+		if (val1 < arr->min1) return false;
+		if (val1 > arr->max1) return false;
+		if (val2 < arr->min2) return false;
+		if (val2 > arr->max2) return false;
+
+		*arr->iVal = val1;
+		*arr->iVal2 = val2;
+
+		if (arr->func)
+		{
+			ApolloRTCCMFD *ptr = arr->ptr;
+			void (ApolloRTCCMFD::*func)(void) = arr->func;
+
+			(ptr->*func)();
+		}
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::GenericVectorInput(VECTOR3 *val, char* message, double factor, void(ApolloRTCCMFD::*func)(void))
 {
 	void *data2;
 
 	tempData.vVal = val;
 	tempData.factor = factor;
+	tempData.ptr = this;
+	tempData.func = func;
 	data2 = &tempData;
 
 	bool GenericVectorInputBox(void *id, char *str, void *data);
@@ -1543,6 +1605,14 @@ bool GenericVectorInputBox(void *id, char *str, void *data)
 		arr->vVal->x = val1 * arr->factor;
 		arr->vVal->y = val2 * arr->factor;
 		arr->vVal->z = val3 * arr->factor;
+
+		if (arr->func)
+		{
+			ApolloRTCCMFD *ptr = arr->ptr;
+			void (ApolloRTCCMFD::*func)(void) = arr->func;
+
+			(ptr->*func)();
+		}
 		return true;
 	}
 	return false;
@@ -4671,6 +4741,18 @@ void ApolloRTCCMFD::menuCycleK30Vehicle()
 	else
 	{
 		set_target();
+	}
+}
+
+void ApolloRTCCMFD::menuSLVLaunchTargetingPad()
+{
+	if (GC->rtcc->PZSLVCON.Pad == 1)
+	{
+		GC->rtcc->PZSLVCON.Pad = 2;
+	}
+	else
+	{
+		GC->rtcc->PZSLVCON.Pad = 1;
 	}
 }
 
@@ -8000,6 +8082,249 @@ bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data)
 	return false;
 }
 
+void ApolloRTCCMFD::menuLOSTMode()
+{
+	bool LOSTModeInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Choose mode: DOK, FLT, AGS, LUN, MAT or CHK", LOSTModeInput, 0, 10, (void*)this);
+}
+
+bool LOSTModeInput(void* id, char *str, void *data)
+{
+	std::string Mode(str);
+	int num;
+
+	if (Mode == "DOK"){ num = 2;}
+	else if (Mode == "FLT"){num = 3;}
+	else if (Mode == "AGS"){num = 4;}
+	else if (Mode == "LUN"){num = 5;}
+	else if (Mode == "MAT"){num = 6;}
+	else if (Mode == "CHK"){num = 7;}
+	else return false;
+
+	((ApolloRTCCMFD*)data)->set_LOSTMode(num);
+	return true;
+}
+
+void ApolloRTCCMFD::set_LOSTMode(int mode)
+{
+	GC->rtcc->EZJGSTBL.MODE = mode;
+	GC->rtcc->EMDGLMST();
+}
+
+void ApolloRTCCMFD::menuLOSTAttitude1()
+{
+	if (GC->rtcc->EZJGSTBL.MODE == 2)
+	{
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.LM_ATT, "Enter LM attitude:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+	}
+	else if (GC->rtcc->EZJGSTBL.MODE == 4)
+	{
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.Att1, "Enter attitude for alignment:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+	}
+	else if (GC->rtcc->EZJGSTBL.MODE == 7)
+	{
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.StoredAttMED, "Enter attitude for star check:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+	}
+}
+
+void ApolloRTCCMFD::menuLOSTAttitude2()
+{
+	if (GC->rtcc->EZJGSTBL.MODE == 2)
+	{
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.CSM_ATT, "Enter CSM attitude:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+	}
+	else if (GC->rtcc->EZJGSTBL.MODE == 4)
+	{
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.Att2, "Enter attitude for alignment:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+	}
+}
+
+void ApolloRTCCMFD::menuLOST_REFSMMAT1()
+{
+	bool LOST_REFSMMAT_Input1(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter LM REFSMMAT type (CUR, PCR, TLM, OST, MED, DMT, DOD, LCV, AGS, DOK, LLA, LLD):", LOST_REFSMMAT_Input1, "CUR", 10, (void*)this);
+}
+
+bool LOST_REFSMMAT_Input1(void* id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_LOST_REFSMMAT1(str);
+}
+
+bool ApolloRTCCMFD::set_LOST_REFSMMAT1(char *str)
+{
+	GC->rtcc->EZJGSTBL.REF1 = GC->rtcc->EMGSTGENCode(str);
+	GC->rtcc->EMDGLMST();
+	return true;
+}
+
+void ApolloRTCCMFD::menuLOST_REFSMMAT2()
+{
+	bool LOST_REFSMMAT_Input2(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter LM REFSMMAT type (CUR, PCR, TLM, OST, MED, DMT, DOD, LCV, AGS, DOK, LLA, LLD):", LOST_REFSMMAT_Input2, "CUR", 10, (void*)this);
+}
+
+bool LOST_REFSMMAT_Input2(void* id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_LOST_REFSMMAT2(str);
+}
+
+bool ApolloRTCCMFD::set_LOST_REFSMMAT2(char *str)
+{
+	GC->rtcc->EZJGSTBL.REF2 = GC->rtcc->EMGSTGENCode(str);
+	GC->rtcc->EMDGLMST();
+	return true;
+}
+
+void ApolloRTCCMFD::menuLOST_CSM_REFSMMAT()
+{
+	if (GC->rtcc->EZJGSTBL.MODE == 2)
+	{
+		bool LOST_CSM_REFSMMAT_Input(void* id, char *str, void *data);
+		oapiOpenInputBox("Enter CSM REFSMMAT type (CUR, PCR, TLM, OST, MED, DMT, DOD, LCV):", LOST_CSM_REFSMMAT_Input, "CUR", 10, (void*)this);
+	}
+}
+
+bool LOST_CSM_REFSMMAT_Input(void* id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_LOST_CSM_REFSMMAT(str);
+}
+
+bool ApolloRTCCMFD::set_LOST_CSM_REFSMMAT(char *str)
+{
+	GC->rtcc->EZJGSTBL.REFSUSED = GC->rtcc->EMGSTGENCode(str);
+	GC->rtcc->EMDGLMST();
+	return true;
+}
+
+void ApolloRTCCMFD::menuLOSTOptics1()
+{
+	if (GC->rtcc->EZJGSTBL.MODE == 4)
+	{
+		GenericInt2Input(&GC->rtcc->EZJGSTBL.star1, &GC->rtcc->EZJGSTBL.D1, "Enter star and detent. Format: Star Detent. Limits. Star: 1-400, Detent: 1-6", 1, 400, 1, 6, &ApolloRTCCMFD::UpdateLOSTDisplay);
+	}
+	else if (GC->rtcc->EZJGSTBL.MODE == 5)
+	{
+		//Star, detent, cursor angle, spirale angle
+	}
+}
+
+void ApolloRTCCMFD::menuLOSTOptics2()
+{
+	if (GC->rtcc->EZJGSTBL.MODE == 4)
+	{
+		//Star, detent position, cursor angle
+		bool LOST_AGS_Star2_Input(void* id, char *str, void *data);
+		oapiOpenInputBox("Enter star, detent position and cursor angle. Format: Star Detent-Position Cursor-Angle. Limits. Star: 1-400. Detent position: PX, NX, PY, NY, Angle: 0-360", LOST_AGS_Star2_Input, 0, 30, (void*)this);
+	}
+	else if (GC->rtcc->EZJGSTBL.MODE == 5)
+	{
+		//Star, detent, cursor angle, spirale angle
+	}
+}
+
+bool LOST_AGS_Star2_Input(void* id, char *str, void *data)
+{
+	double Angle;
+	char Buff[3];
+	int star;
+
+	if (sscanf(str, "%d %2s %lf", &star, Buff, &Angle) == 3)
+	{
+		((ApolloRTCCMFD*)data)->set_LOST_AGS_Star2(star, Buff, Angle);
+		return true;
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_LOST_AGS_Star2(int star, char *pos, double ang)
+{
+	int det;
+
+	if (strcmp(pos, "PX") == 0) det = 0;
+	else if (strcmp(pos, "NX") == 0) det = 1;
+	else if (strcmp(pos, "PY") == 0) det = 2;
+	else if (strcmp(pos, "NY") == 0) det = 3;
+	else return false;
+
+	if (star < 1 || star > 400) return false;
+	if (ang < 0.0 || ang > 360.0) return false;
+
+	GC->rtcc->EZJGSTBL.star2 = star;
+	GC->rtcc->EZJGSTBL.L2 = det;
+	GC->rtcc->EZJGSTBL.A1_2 = ang * RAD;
+	GC->rtcc->EMDGLMST();
+	return true;
+}
+
+void ApolloRTCCMFD::menuLOSTRealign()
+{
+	GC->rtcc->EMMGLMST(1);
+}
+
+void ApolloRTCCMFD::menuCalcLOST()
+{
+	if (GC->rtcc->EZJGSTBL.MODE == 2)
+	{
+		GenericIntInput(&GC->rtcc->EZGSTMED.G23_Option, "Docking Alignment. Option: 1 = Calculate LM REFSMMAT, 2 = LM gimbal angles, 3 = CSM gimbal angles", &ApolloRTCCMFD::CalculateLOSTDOKOption);
+	}
+	else if (GC->rtcc->EZJGSTBL.MODE == 4)
+	{
+		GeneralMEDRequest("G20;");
+	}
+	else if (GC->rtcc->EZJGSTBL.MODE == 7)
+	{
+		bool LOSTCheckModeInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Alignment check. Format: GET (HH:MM:SS) Detent (1-6) COAS axis (PX or PZ)", LOSTCheckModeInput, 0, 30, (void*)this);
+	}
+}
+
+bool LOSTCheckModeInput(void* id, char *str, void *data)
+{
+	double hh, mm, ss, get;
+	int Detent, COASAxis;
+	char Buff[16];
+
+	if (sscanf(str, "%lf:%lf:%lf %d %s", &hh, &mm, &ss, &Detent, Buff) == 5)
+	{
+		get = hh * 3600.0 + mm * 60.0 + ss;
+
+		if (Detent < 1 || Detent > 6) return false;
+		if (strcmp(Buff, "PX") == 0)
+		{
+			COASAxis = 1;
+		}
+		else if (strcmp(Buff, "PZ") == 0)
+		{
+			COASAxis = 2;
+		}
+		else return false;
+
+		((ApolloRTCCMFD*)data)->set_LOSTCheckMode(get, Detent, COASAxis);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LOSTCheckMode(double get, int Detent, int COASAxis)
+{
+	GC->rtcc->EZGSTMED.G20_HORIZGET = get;
+	GC->rtcc->EZGSTMED.G20_AOT_Detent = Detent;
+	GC->rtcc->EZGSTMED.G20_COAS_Axis = COASAxis;
+
+	GeneralMEDRequest("G20;");
+}
+
+void ApolloRTCCMFD::CalculateLOSTDOKOption()
+{
+	GeneralMEDRequest("G23;");
+}
+
+void ApolloRTCCMFD::UpdateLOSTDisplay()
+{
+	GC->rtcc->EMDGLMST();
+}
+
 void ApolloRTCCMFD::menuSLVNavigationUpdateCalc()
 {
 	G->SLVNavigationUpdateCalc();
@@ -8332,6 +8657,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 	case 229:
 		menuSetGuidanceOpticsSupportTablePage();
 		break;
+	case 239:
+		menuSetLMOpticsSupportTablePage();
+		break;
 	case 1501:
 		menuSetMoonriseMoonsetTablePage();
 		break;
@@ -8630,4 +8958,9 @@ void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &se
 	mins = fmod(time / 60.0, 60.0);
 	minutes = (int)trunc(mins);
 	seconds = (mins - minutes) * 60.0;
+}
+
+void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax, int ymax)
+{
+	skp->Text(x * W / xmax, y * H / ymax, message.c_str(), message.size());
 }
