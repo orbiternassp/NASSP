@@ -1,7 +1,8 @@
 /**************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2023 Matthew Hume
+  Copyright 2023
 
+  Apollo Telescope Mount Digital Computer (Header)
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,42 +23,42 @@
 
 **************************************************************************/
 
-#if !defined(_PA_SKYLAB_H)
-#define _PA_SKYLAB_H
+#pragma once
 
 #include "Orbitersdk.h"
-#include "PanelSDK/PanelSDK.h"
-#include "powersource.h"
-#include "soundlib.h"
-#include "connector.h"
-#include "nasspdefs.h"
-#include "ATMDC.h"
 
-
-class Skylab: public ProjectApolloConnectorVessel{
+class ATMDC
+{
 public:
-	Skylab(OBJHANDLE hObj, int fmodel);
-	virtual ~Skylab();
-	void InitSkylab();
-	void clbkPostCreation();
-	void clbkSetClassCaps(FILEHANDLE cfg);
-	void clbkPreStep(double simt, double simdt, double mjd);
-	void clbkSaveState(FILEHANDLE scn);
-	void clbkLoadStateEx(FILEHANDLE scn, void *vstatus);
-	bool clbkDrawHUD(int mode, const HUDPAINTSPEC *hps, oapi::Sketchpad *skp);
-	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+	ATMDC(VESSEL *v);
+
+	void Timestep();
+	bool GetThrusterDemand(int i);
+
+	void SetAttitudeControlMode(int mode);
+	int GetAttitudeControlMode() { return AttitudeControlMode; }
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 private:
-	void AddTACS();
 
-	MESHHANDLE SkylabMesh;
+	MATRIX3 GetAttitudeMatrix(); //Ecliptic to body (right handed)
 
-	//Thruster Attitude Control System (TACS)
-	PROPELLANT_HANDLE ph_tacs;
-	THRUSTER_HANDLE th_tacs[6];
+	//Internal variables
+	int AttitudeControlMode; //0 = free, 1 = attitude hold, 2 = solar inertial, 3 = ZLV (+X to VV), 4 = ZLV (-X to VV), 5 = manual
 
-	//Systems
-	ATMDC atmdc;
+	MATRIX3 M_AttHold; //Attitude matrix reference for attitude hold (global to body)
+
+	//Constants
+	double a_0p, a_0y, a_0r, a_1p, a_1y, a_1r;	//Attitude control gains
+	double MaxErr;								//Maximum attitude error to limit the attitude rate
+
+	bool ThrusterDemand[6];
+
+	//Orbiter stuff
+	VESSEL *vessel;
+	OBJHANDLE hEarth, hSun;
 };
 
-
-#endif
+#define ATMDC_START_STRING	"ATMDC_BEGIN"
+#define ATMDC_END_STRING	"ATMDC_END"
