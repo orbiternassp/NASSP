@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_skylab\ATMDC.h" />
     <ClInclude Include="..\..\src_skylab\skylab.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
@@ -26,6 +27,7 @@
     <ClInclude Include="..\..\src_sys\soundlib.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_skylab\ATMDC.cpp" />
     <ClCompile Include="..\..\src_skylab\skylab.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp" />
