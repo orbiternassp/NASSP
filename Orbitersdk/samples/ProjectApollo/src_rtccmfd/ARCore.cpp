@@ -610,7 +610,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	TMLat = 0.0;
 	TMLng = 0.0;
-	TMAzi = 0.0;
+	TMAzi = -90.0*RAD;
 	TMDistance = 600000.0*0.3048;
 	TMStepSize = 100.0*0.3048;
 	TMAlt = 0.0;
@@ -2355,6 +2355,9 @@ void ARCore::TerrainModelCalc()
 
 	FILE *file = fopen("TerrainModel.txt", "w");
 
+	fprintf(file, "Lunar Terrain Model\n");
+	fprintf(file, "Lat: %.4lf deg;Lng: %.4lf deg;Elev: %.0lf m;Azimuth: %.2lf deg\n", TMLat*DEG, TMLng*DEG, TMAlt, TMAzi*DEG);
+	fprintf(file, "Distance in meters;Elevation in meters\n");
 	fprintf(file, "%f;%f\n", -dist, 0.0);
 
 	while (dist < TMDistance)

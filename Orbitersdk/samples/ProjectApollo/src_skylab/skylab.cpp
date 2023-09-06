@@ -24,8 +24,13 @@
 #define ORBITER_MODULE
 #include "skylab.h"
 
+const double TACS_PROPELLANT_MASS = 646.8227; //1426 lbm
+const double TACS_MAX_THRUST = 100.0*4.4482216152605; //100 lbf
+const double TACS_SPECIFIC_IMPULSE = 790.86; //In m/s. Calculated from 115,000 lbf-sec maximum total impulse, other source says 66 (cold) to 78 (hot) seconds of specific impulse
 
-Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel)
+
+Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel),
+atmdc(this)
 {
 	
 }
@@ -49,6 +54,15 @@ void Skylab::clbkPostCreation() {
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 {
+	atmdc.Timestep();
+
+
+	//Thrusters
+	double max_thr = GetPropellantMass(ph_tacs) / GetPropellantMaxMass(ph_tacs); //Thrust is nearly a linear function of propellant pressure
+	for (int i = 0; i < 6; i++)
+	{
+		SetThrusterLevel(th_tacs[i], atmdc.GetThrusterDemand(i) ? max_thr : 0.0);
+	}
 }
 
 void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
@@ -73,14 +87,154 @@ void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
 	SetCrossSections(_V(79.46, 79.46, 79.46)); //From Skylab Operational Databook
 	SetCW(2.401*2,2.590*2,4.384*2,9.330*2); //From Skylab Operational Databook, oversimplification
 	SetRotDrag(_V(0.7, 0.7, 1.2)); //complete fabrication...
+
+	//Propellant and thrusters
+	AddTACS();
 }
 
-void Skylab::clbkSaveState(FILEHANDLE scn) {
+void Skylab::clbkSaveState(FILEHANDLE scn)
+{
 	VESSEL4::clbkSaveState(scn);
+
+	atmdc.SaveState(scn);
 }
 
-void Skylab::clbkLoadState(FILEHANDLE scn) {
-	VESSEL4::clbkSaveState(scn);
+void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line))
+	{
+		if (!strnicmp(line, ATMDC_START_STRING, sizeof(ATMDC_START_STRING)))
+		{
+			atmdc.LoadState(scn);
+		}
+		else
+		{
+			ParseScenarioLineEx(line, vstatus);
+		}
+	}
+}
+
+bool Skylab::clbkDrawHUD(int mode, const HUDPAINTSPEC *hps, oapi::Sketchpad *skp)
+{
+	//Display scaling code by BrianJ
+	int s = hps->H;
+	double d = (s*0.00130208);
+
+	int sw = ((hps->W));
+	int lw = (int)(16 * sw / 1024);
+	int lwoffset = sw - (18 * lw);
+	int hlw = (int)(lw / 2);
+
+	int roxl = 0;
+	int royl = 0;
+
+	double ds = s;
+	double dsw = sw;
+	double sc_ratio = ds / dsw;
+
+	if (sc_ratio < 0.7284)
+	{
+		roxl = (lw * 10);
+		royl = (int)(-88 * d);
+	}
+
+	int w0 = (int)(184 * d);
+	int w1 = (int)(200 * d);
+
+	skp->SetTextColor(0x0066FF66);
+
+	skp->Text((10 + roxl), (w0 + royl), "Attitude Control Mode:", 22);
+
+	char abuf[256];
+
+	switch (atmdc.GetAttitudeControlMode())
+	{
+	case 0:
+		sprintf(abuf, "Free Drift");
+		break;
+	case 1:
+		sprintf(abuf, "Attitude Hold");
+		break;
+	case 2:
+		sprintf(abuf, "Solar Inertial");
+		break;
+	case 3:
+		sprintf(abuf, "Local Vertical (+VV)");
+		break;
+	case 4:
+		sprintf(abuf, "Local Vertical (-VV)");
+		break;
+	case 5:
+		sprintf(abuf, "Manual");
+		break;
+	default:
+		sprintf(abuf, "None");
+		break;
+	}
+	
+	skp->Text((10 + roxl), (w1 + royl), abuf, strlen(abuf));
+
+	return true;
+}
+
+int Skylab::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate)
+{
+	if (!down) return 0; //Only process keydown events
+
+	if (KEYMOD_SHIFT(kstate))
+	{
+
+	}
+	else if (KEYMOD_ALT(kstate))
+	{
+
+	}
+	else if (KEYMOD_CONTROL(kstate))
+	{
+
+	}
+	else { //unmodified keys
+		switch (key)
+		{
+		case OAPI_KEY_A: //Attitude control mode
+			{
+				int state = atmdc.GetAttitudeControlMode();
+	
+				if (state < 5)
+				{
+				state++;
+				}
+				else
+				{
+					state = 0;
+				}
+				atmdc.SetAttitudeControlMode(state);
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+void Skylab::AddTACS()
+{
+	ph_tacs = CreatePropellantResource(TACS_PROPELLANT_MASS);
+
+	th_tacs[0] = CreateThruster(_V(0.028429, 3.257629, -19.582054), _V(-0.008727, -0.999962, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
+	th_tacs[1] = CreateThruster(_V(0.172895, 3.374154, -19.975754), _V(-0.998690, 0.051174, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
+	th_tacs[2] = CreateThruster(_V(-0.113982, 3.376658, -20.007504), _V(0.999431, -0.033737, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
+	th_tacs[3] = CreateThruster(_V(-0.028429, -3.257629, -19.582054), _V(0.008727, 0.999962, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
+	th_tacs[4] = CreateThruster(_V(0.113982, -3.376658, -19.975754), _V(-0.999431, 0.033737, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
+	th_tacs[5] = CreateThruster(_V(-0.172895, -3.374154, -20.007504), _V(0.998690, -0.051174, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
+
+	SURFHANDLE TACSTex = oapiRegisterExhaustTexture("ProjectApollo/exhaust_atrcs");
+
+	for (int i = 0; i < 6; i++)
+	{
+		AddExhaust(th_tacs[i], 0.6, 0.078, TACSTex);
+	}
 }
 
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
