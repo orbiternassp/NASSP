@@ -1603,13 +1603,19 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	}
 
 	case AID_VC_DSKY_DISPLAY:
-	case AID_VC_DSKY_DISPLAY2:
 		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP], 0, 0, TexMul);
 		return true;
 
+	case AID_VC_DSKY_DISPLAY2:
+		dsky2.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP], 0, 0, TexMul);
+		return true;
+
 	case AID_VC_DSKY_LIGHTS:
-	case AID_VC_DSKY_LIGHTS2:
 		dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, false, TexMul);
+		return true;
+
+	case AID_VC_DSKY_LIGHTS2:
+		dsky2.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, false, TexMul);
 		return true;
 
 	/*case AID_ABORT_BUTTON:
