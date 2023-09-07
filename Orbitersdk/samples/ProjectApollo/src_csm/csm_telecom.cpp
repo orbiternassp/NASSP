@@ -1414,9 +1414,8 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 	XMITRangeTone = false;
 
 	if (!lem) {
-		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
-		if (lm) {
-			lem = (static_cast<LEM*>(lm));
+		VESSEL *lem = sat->agc.GetLM(); // Replace me with multi-lem code
+		if (lem) {
 			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 		}
 	}
@@ -1424,32 +1423,30 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 
 void VHFAMTransceiver::Timestep()
 {
-	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
-	bool isLem = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	if (lem)
 	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (utils::IsVessel(pVessel, utils::LEM))
+		//this block of code checks to see if the LEM has somehow been deleted mid scenerio, and sets the lem pointer to null
+		bool isLem = false;
+
+		for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
 		{
-			isLem = true;
+			OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+			if (lem == pVessel)
+			{
+				isLem = true;
+			}
+		}
+
+		if (!isLem)
+		{
+			lem = NULL;
+			sat->csm_vhfto_lm_vhfconnector.Disconnect();
 		}
 	}
-
-	if (!isLem)
+	else
 	{
-		lem = NULL;
-		sat->csm_vhfto_lm_vhfconnector.Disconnect();
-	}
-	//
-
-	if (!lem)
-	{
-		VESSEL *lm = sat->agc.GetLM(); 
-		if (lm) {
-			lem = (static_cast<LEM*>(lm)); 
-		}
+		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
 
 	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo && lem)
@@ -1691,26 +1688,27 @@ void VHFRangingSystem::TimeStep(double simdt)
 		return;
 	}
 
-	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
-	bool isLem = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	if (lem)
 	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (utils::IsVessel(pVessel, utils::LEM))
+		//this block of code checks to see if the LEM has somehow been deleted mid scenerio, and sets the lem pointer to null
+		bool isLem = false;
+
+		for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
 		{
-			isLem = true;
+			OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+			if (lem == pVessel)
+			{
+				isLem = true;
+			}
+		}
+
+		if (!isLem)
+		{
+			lem = NULL;
 		}
 	}
-
-	if (!isLem)
-	{
-		lem = NULL;
-	}
-	//
-
-	if (!lem)
+	else
 	{
 		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
