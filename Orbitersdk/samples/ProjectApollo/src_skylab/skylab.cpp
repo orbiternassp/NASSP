@@ -30,9 +30,11 @@ const double TACS_SPECIFIC_IMPULSE = 790.86; //In m/s. Calculated from 115,000 l
 
 
 Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel),
-atmdc(this)
+atmdc(this),
+skylabanimations(this)
 {
 	csm = NULL;
+	MeshOffset = _V(0, 0, -7.925);
 }
 
 Skylab::~Skylab() {
@@ -45,6 +47,7 @@ void Skylab::InitSkylab() {
 	VECTOR3 mesh_dir = _V(0, 0, -7.925); //fix mesh scaling and geometry
 	meshidx = AddMesh(SkylabMesh, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+	skylabanimations.DefineAnimations();
 
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &skylab_vhf2csm_vhf_connector);
 }

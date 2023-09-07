@@ -49,7 +49,6 @@ public:
 private:
 	void AddTACS();
 
-	MESHHANDLE SkylabMesh;
 	Skylab_VHFtoCSM_VHF_Connector skylab_vhf2csm_vhf_connector;
 	VESSEL *csm; //Pointer to CSM for various purposes
 
@@ -59,6 +58,23 @@ private:
 
 	//Systems
 	ATMDC atmdc;
+
+private:
+	class SkylabAnimations {
+	public:
+		SkylabAnimations(Skylab* s);
+		~SkylabAnimations();
+		//void CreateAnimations();
+		void DefineAnimations();
+		void DeployATM(double state);
+	private:
+		Skylab* pSkylab;
+		UINT anim_ATM;
+	};
+	VECTOR3 MeshOffset;
+	SkylabAnimations skylabanimations;
+	UINT skylabmeshID;
+	MESHHANDLE skylabmesh;
 };
 
 

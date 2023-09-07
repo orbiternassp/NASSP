@@ -30,6 +30,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src_skylab\ATMDC.cpp" />
     <ClCompile Include="..\..\src_skylab\skylab.cpp" />
+    <ClCompile Include="..\..\src_skylab\SkylabMesh.cpp" />
     <ClCompile Include="..\..\src_skylab\SkylabConnector.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp" />
