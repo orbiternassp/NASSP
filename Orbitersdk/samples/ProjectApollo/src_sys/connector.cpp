@@ -260,6 +260,19 @@ ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int f
 	ValidationValue = PACV_N_VALIDATION;
 }
 
+ProjectApolloConnectorVessel::~ProjectApolloConnectorVessel()
+{
+	//Disconnect all connectors
+	int i;
+	for (i = 0; i < PACV_N_CONNECTORS; i++)
+	{
+		if (ConnectorList[i].c)
+		{
+			ConnectorList[i].c->Disconnect();
+		}
+	}
+}
+
 bool ProjectApolloConnectorVessel::ValidateVessel()
 
 {

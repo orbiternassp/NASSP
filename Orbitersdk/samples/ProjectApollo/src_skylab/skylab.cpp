@@ -32,7 +32,7 @@ const double TACS_SPECIFIC_IMPULSE = 790.86; //In m/s. Calculated from 115,000 l
 Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel),
 atmdc(this)
 {
-	
+	csm = NULL;
 }
 
 Skylab::~Skylab() {
@@ -45,6 +45,8 @@ void Skylab::InitSkylab() {
 	VECTOR3 mesh_dir = _V(0, 0, -7.925); //fix mesh scaling and geometry
 	meshidx = AddMesh(SkylabMesh, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &skylab_vhf2csm_vhf_connector);
 }
 
 void Skylab::clbkPostCreation() {
@@ -62,6 +64,17 @@ void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 	for (int i = 0; i < 6; i++)
 	{
 		SetThrusterLevel(th_tacs[i], atmdc.GetThrusterDemand(i) ? max_thr : 0.0);
+	}
+
+	//Communications
+
+	if (skylab_vhf2csm_vhf_connector.connectedTo)
+	{
+		skylab_vhf2csm_vhf_connector.SendRF(296.8E6, 5, 10, 0, true);
+	}
+	else
+	{
+		skylab_vhf2csm_vhf_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
 }
 
@@ -96,6 +109,8 @@ void Skylab::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL4::clbkSaveState(scn);
 
+	if (csm) oapiWriteScenario_string(scn, "ONAME", csm->GetName());
+
 	atmdc.SaveState(scn);
 }
 
@@ -105,7 +120,15 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 
 	while (oapiReadScenario_nextline(scn, line))
 	{
-		if (!strnicmp(line, ATMDC_START_STRING, sizeof(ATMDC_START_STRING)))
+		if (!strnicmp(line, "ONAME", 5))
+		{
+			char temp[64];
+			strncpy(temp, line + 6, 64);
+
+			OBJHANDLE hVessel = oapiGetObjectByName(temp);
+			if (hVessel != NULL) csm = oapiGetVesselInterface(hVessel);
+		}
+		else if (!strnicmp(line, ATMDC_START_STRING, sizeof(ATMDC_START_STRING)))
 		{
 			atmdc.LoadState(scn);
 		}
