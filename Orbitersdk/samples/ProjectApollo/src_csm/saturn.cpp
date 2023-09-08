@@ -2711,7 +2711,7 @@ void Saturn::UpdatePayloadMass()
 		S4PL_Mass = 13381;
 		break;
 
-	case PAYLOAD_LTA6:
+	case PAYLOAD_LTA2R:
 		S4PL_Mass = 11794;
 		break;
 
