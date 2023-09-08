@@ -199,7 +199,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
-		opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR].REFSMMAT;
+		opt.REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
 		opt.TIG = res.P30TIG;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
@@ -338,7 +338,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
-		opt.REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR].REFSMMAT;
+		opt.REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
 		opt.TIG = res.P30TIG;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
@@ -378,7 +378,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			MCCGET = calcParams.TLI + 6.0*3600.0;
 			sprintf(manname, "MCC1");
-			REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR].REFSMMAT;
+			REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
 			PZMCCPLN.SFPBlockNum = 1;
 			dv_thres = 5.0*0.3048;
 		}
@@ -386,7 +386,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			MCCGET = calcParams.TLI + 25.0*3600.0;
 			sprintf(manname, "MCC2");
-			REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR].REFSMMAT;
+			REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
 			PZMCCPLN.SFPBlockNum = 2;
 			dv_thres = 5.0*0.3048;
 		}
@@ -394,7 +394,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			MCCGET = calcParams.LOI - 22.0*3600.0;
 			sprintf(manname, "MCC3");
-			REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR].REFSMMAT;
+			REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
 			PZMCCPLN.SFPBlockNum = 2;
 			dv_thres = 1.0*0.3048;
 		}
