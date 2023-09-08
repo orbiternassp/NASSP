@@ -562,7 +562,7 @@ void SIVB::SetS4b()
 		i++;
 		break;
 
-	case PAYLOAD_LTA:
+	case PAYLOAD_LTA10R:
 	case PAYLOAD_LTA2R:
 		SetMeshVisibilityMode(meshLTA_2r, MESHVIS_EXTERNAL);
 		ClearDockDefinitions();
