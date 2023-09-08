@@ -569,7 +569,7 @@ void SIVB::SetS4b()
 		mass += PayloadMass;
 		break;
 
-	case PAYLOAD_LTA8:
+	case PAYLOAD_LTAB:
 		SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_EXTERNAL);
 		ClearDockDefinitions();
 		mass += PayloadMass;

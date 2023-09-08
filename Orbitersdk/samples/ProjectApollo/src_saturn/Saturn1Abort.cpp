@@ -195,7 +195,7 @@ void Sat1Abort1::Setup()
 			AddMesh(hlta_2r, &mesh_dir);
 			break;
 
-		case PAYLOAD_LTA8:
+		case PAYLOAD_LTAB:
 			mesh_dir = _V(0.0, 0, 8.8 + PLOFS);
 			AddMesh(hapollo8lta, &mesh_dir);
 			break;

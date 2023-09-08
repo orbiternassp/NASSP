@@ -386,7 +386,7 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 #define PAYLOAD_ASTP				1	///< Payload is an ASTP docking adapter.
 #define PAYLOAD_LTA					2	///< Payload is an LTA.
 #define PAYLOAD_LM1					3	///< Payload is LM1.
-#define PAYLOAD_LTA8				4	///< Payload is LTA8.
+#define PAYLOAD_LTAB				4	///< Payload is LTAB.
 #define PAYLOAD_TARGET				5	///< Payload is a docking target (e.g. Apollo 7).
 #define PAYLOAD_LTA6				6	///< Payload is LTA6.
 #define PAYLOAD_EMPTY				7	///< Payload is empty (i.e. no payload).
