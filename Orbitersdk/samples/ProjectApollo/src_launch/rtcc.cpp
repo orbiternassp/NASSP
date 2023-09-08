@@ -5114,9 +5114,9 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		double phi, DLNG;
 
 		phi = SystemParameters.MCLLTP[0];
-		DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * SystemParameters.MCGMTL / 3600.0;
+		DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * SystemParameters.MCGMTL;
 
-		return GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - phi, 2, SystemParameters.MCLABN, 1);
+		return GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - phi, 2, SystemParameters.MCLABN, 3);
 	}
 	else if (opt->REFSMMATopt == 6)
 	{
@@ -34131,7 +34131,7 @@ void RTCC::LMMGRP(int veh, double gmt)
 	//CSM
 	if (veh == 0)
 	{
-		REFS = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - lat, 2, SystemParameters.MCLABN, 1);
+		REFS = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - lat, 2, SystemParameters.MCLABN, 3);
 
 		EZJGMTX1.data[0].ID = 0;
 		EMGSTSTM(1, REFS, RTCC_REFSMMAT_TYPE_CUR, gmt);

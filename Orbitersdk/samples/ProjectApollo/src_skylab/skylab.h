@@ -29,7 +29,7 @@
 #include "PanelSDK/PanelSDK.h"
 #include "powersource.h"
 #include "soundlib.h"
-#include "connector.h"
+#include "SkylabConnector.h"
 #include "nasspdefs.h"
 #include "ATMDC.h"
 
@@ -50,6 +50,8 @@ private:
 	void AddTACS();
 
 	MESHHANDLE SkylabMesh;
+	Skylab_VHFtoCSM_VHF_Connector skylab_vhf2csm_vhf_connector;
+	VESSEL *csm; //Pointer to CSM for various purposes
 
 	//Thruster Attitude Control System (TACS)
 	PROPELLANT_HANDLE ph_tacs;
