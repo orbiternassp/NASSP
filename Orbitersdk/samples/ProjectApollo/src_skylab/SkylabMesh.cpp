@@ -37,6 +37,8 @@ Skylab::SkylabAnimations::SkylabAnimations(Skylab* s)
 		anim_ATMArray3[ii] = pSkylab->CreateAnimation(0.0);
 		anim_ATMArray4[ii] = pSkylab->CreateAnimation(0.0);
 	}
+
+	for (int ii = 0; ii < 4; ii++) { anim_ClothesLineBoom[ii] = pSkylab->CreateAnimation(0.0); }
 }
 
 Skylab::SkylabAnimations::~SkylabAnimations()
@@ -261,6 +263,30 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4AArms = pSkylab->AddAnimationComponent(anim_ATMArray4[9], 0.0f, 1.0f, &rotateATMArray4AArms, hComp_ATMArray4BArms);
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray40Arms = pSkylab->AddAnimationComponent(anim_ATMArray4[10], 0.0f, 1.0f, &rotateATMArray40Arms, hComp_ATMArray4AArms);
 
+	//Define Clothes Line Boom ----------------------------------------------------------------------------------------------------------------------
+
+	static UINT MGroupClothesLineBoomAUp[1] = { 45 };
+	static UINT MGroupClothesLineBoomBUp[1] = { 46 };
+	static UINT MGroupClothesLineBoomAOut[1] = { 45 };
+	static UINT MGroupClothesLineBoomBOut[1] = { 46 };
+
+	static VECTOR3 ClothesLineBoomAUpRotationPoint = _V(-0.4191, 1.6383, 15.3162);
+	static VECTOR3 ClothesLineBoomBUpRotationPoint = _V(0.4572, 1.6383, 15.3162);
+	static VECTOR3 ClothesLineBoomAOutRotationPoint = _V(-0.4191, 8.1312, 6.2606);
+	static VECTOR3 ClothesLineBoomBOutRotationPoint = _V(0.3398, 8.5694, 6.2617);
+
+	static VECTOR3 ClothesLineBoomRotationAxis = _V(0.0, 1.0, 0.0); //Same Rotation Axis for all parts
+
+	static MGROUP_ROTATE rotateClothesLineBoomAUp(pSkylab->skylabmeshID, MGroupClothesLineBoomAUp, 1, ClothesLineBoomAUpRotationPoint, ClothesLineBoomRotationAxis, (float)(RAD * -30));
+	static MGROUP_ROTATE rotateClothesLineBoomBUp(pSkylab->skylabmeshID, MGroupClothesLineBoomBUp, 1, ClothesLineBoomBUpRotationPoint, ClothesLineBoomRotationAxis, (float)(RAD * 30));
+	static MGROUP_ROTATE rotateClothesLineBoomAOut(pSkylab->skylabmeshID, MGroupClothesLineBoomAOut, 1, ClothesLineBoomAOutRotationPoint, ClothesLineBoomRotationAxis, (float)(RAD * 75));
+	static MGROUP_ROTATE rotateClothesLineBoomBOut(pSkylab->skylabmeshID, MGroupClothesLineBoomBOut, 1, ClothesLineBoomBOutRotationPoint, ClothesLineBoomRotationAxis, (float)(RAD * -180));
+
+	ANIMATIONCOMPONENT_HANDLE hComp_ClothesLineBoomAUp = pSkylab->AddAnimationComponent(anim_ClothesLineBoom[0], 0.0f, 0.5f, &rotateClothesLineBoomAUp, hComp_animATM);
+	ANIMATIONCOMPONENT_HANDLE hComp_ClothesLineBoomBUp = pSkylab->AddAnimationComponent(anim_ClothesLineBoom[1], 0.0f, 0.5f, &rotateClothesLineBoomBUp, hComp_ClothesLineBoomAUp);
+	ANIMATIONCOMPONENT_HANDLE hComp_ClothesLineBoomAOut = pSkylab->AddAnimationComponent(anim_ClothesLineBoom[2], 0.5f, 1.0f, &rotateClothesLineBoomAOut);
+	ANIMATIONCOMPONENT_HANDLE hComp_ClothesLineBoomBOut = pSkylab->AddAnimationComponent(anim_ClothesLineBoom[3], 0.5f, 1.0f, &rotateClothesLineBoomBOut, hComp_ClothesLineBoomAOut);
+
 }
 
 void Skylab::SkylabAnimations::DeployATM(double state) {
@@ -284,5 +310,9 @@ void Skylab::SkylabAnimations::DeployATM(double state) {
 
 	for (auto i : anim_ATMArray4) {
 		pSkylab->SetAnimation(i, deploy - 1);
+	}
+
+	for (auto i : anim_ClothesLineBoom) {
+		pSkylab->SetAnimation(i, deploy - 3);
 	}
 }

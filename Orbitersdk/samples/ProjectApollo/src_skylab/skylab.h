@@ -74,6 +74,7 @@ private:
 		UINT anim_ATMArray2[11];
 		UINT anim_ATMArray3[11];
 		UINT anim_ATMArray4[11];
+		UINT anim_ClothesLineBoom[4];
 	};
 	VECTOR3 MeshOffset;
 	SkylabAnimations skylabanimations;
