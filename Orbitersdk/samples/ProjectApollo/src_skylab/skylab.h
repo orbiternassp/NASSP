@@ -66,7 +66,9 @@ private:
 		~SkylabAnimations();
 		//void CreateAnimations();
 		void DefineAnimations();
-		void DeployATM(double state);
+		void SetATMAnimationState(double state);
+		void SetATMArrayAnimationState(int ATMSAS, double state); //ATMSAS = 1-4 for array, 0 for clothesline boom.
+
 	private:
 		Skylab* pSkylab;
 		UINT anim_ATM;
@@ -76,7 +78,8 @@ private:
 		UINT anim_ATMArray4[11];
 		UINT anim_ClothesLineBoom[4];
 	};
-	VECTOR3 MeshOffset;
+
+	const VECTOR3 MeshOffset = _V(0, 0, -7.925);
 	SkylabAnimations skylabanimations;
 	UINT skylabmeshID;
 	MESHHANDLE skylabmesh;

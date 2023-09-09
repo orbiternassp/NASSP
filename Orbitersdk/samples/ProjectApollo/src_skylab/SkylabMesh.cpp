@@ -72,6 +72,8 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static UINT MGroupATMArray1AArms[1] = { 6 };
 	static UINT MGroupATMArray10Arms[1] = { 5 };
 
+	static VECTOR3 ATMArray1RotationAxis = _V(1.0, -1.0, 0.0); //Same Rotation Axis for all pannels
+
 	static VECTOR3 ATMArray1ARotationPoint = _V(-1.1175, -1.1175, 14.1977);
 	static VECTOR3 ATMArray1BRotationPoint = _V(-1.6016, -1.6016, 11.6987);
 	static VECTOR3 ATMArray1CRotationPoint = _V(-1.1697, -1.1697, 14.2168);
@@ -83,8 +85,6 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static VECTOR3 ATMArray1BRotationPointArms = _V(-1.6277, -1.6277, 11.7082);
 	static VECTOR3 ATMArray1ARotationPointArms = _V(-1.1436, -1.1436, 14.2072);
 	static VECTOR3 ATMArray10RotationPointArms = _V(-1.5755, -1.5755, 11.6892);
-
-	static VECTOR3 ATMArray1RotationAxis = _V(1.0, -1.0, 0.0); //Same Rotation Axis for all pannels
 
 	static MGROUP_ROTATE rotateATMArray1A(pSkylab->skylabmeshID, MGroupATMArray1A, 3, ATMArray1ARotationPoint, ATMArray1RotationAxis, (float)(RAD * -71));
 	static MGROUP_ROTATE rotateATMArray1B(pSkylab->skylabmeshID, MGroupATMArray1B, 3, ATMArray1BRotationPoint, ATMArray1RotationAxis, (float)(RAD * 170));
@@ -123,6 +123,8 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static UINT MGroupATMArray2AArms[1] = { 24 };
 	static UINT MGroupATMArray20Arms[1] = { 23 };
 
+	static VECTOR3 ATMArray2RotationAxis = _V(1.0, 1.0, 0.0); //Same Rotation Axis for all pannels
+
 	static VECTOR3 ATMArray2ARotationPoint = _V(1.1175, -1.1175, 14.1977);
 	static VECTOR3 ATMArray2BRotationPoint = _V(1.6016, -1.6016, 11.6987);
 	static VECTOR3 ATMArray2CRotationPoint = _V(1.1697, -1.1697, 14.2168);
@@ -134,8 +136,6 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static VECTOR3 ATMArray2BRotationPointArms = _V(1.6277, -1.6277, 11.7082);
 	static VECTOR3 ATMArray2ARotationPointArms = _V(1.1436, -1.1436, 14.2072);
 	static VECTOR3 ATMArray20RotationPointArms = _V(1.5755, -1.5755, 11.6892);
-
-	static VECTOR3 ATMArray2RotationAxis = _V(1.0, 1.0, 0.0); //Same Rotation Axis for all pannels
 
 	static MGROUP_ROTATE rotateATMArray2A(pSkylab->skylabmeshID, MGroupATMArray2A, 3, ATMArray2ARotationPoint, ATMArray2RotationAxis, (float)(RAD * -71));
 	static MGROUP_ROTATE rotateATMArray2B(pSkylab->skylabmeshID, MGroupATMArray2B, 3, ATMArray2BRotationPoint, ATMArray2RotationAxis, (float)(RAD * 170));
@@ -174,6 +174,8 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static UINT MGroupATMArray3AArms[1] = { 18 };
 	static UINT MGroupATMArray30Arms[1] = { 17 };
 
+	static VECTOR3 ATMArray3RotationAxis = _V(-1.0, 1.0, 0.0); //Same Rotation Axis for all pannels
+
 	static VECTOR3 ATMArray3ARotationPoint = _V(1.1175, 1.1175, 14.1977);
 	static VECTOR3 ATMArray3BRotationPoint = _V(1.6016, 1.6016, 11.6987);
 	static VECTOR3 ATMArray3CRotationPoint = _V(1.1697, 1.1697, 14.2168);
@@ -185,8 +187,6 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static VECTOR3 ATMArray3BRotationPointArms = _V(1.6277, 1.6277, 11.7082);
 	static VECTOR3 ATMArray3ARotationPointArms = _V(1.1436, 1.1436, 14.2072);
 	static VECTOR3 ATMArray30RotationPointArms = _V(1.5755, 1.5755, 11.6892);
-
-	static VECTOR3 ATMArray3RotationAxis = _V(-1.0, 1.0, 0.0); //Same Rotation Axis for all pannels
 
 	static MGROUP_ROTATE rotateATMArray3A(pSkylab->skylabmeshID, MGroupATMArray3A, 3, ATMArray3ARotationPoint, ATMArray3RotationAxis, (float)(RAD * -71));
 	static MGROUP_ROTATE rotateATMArray3B(pSkylab->skylabmeshID, MGroupATMArray3B, 3, ATMArray3BRotationPoint, ATMArray3RotationAxis, (float)(RAD * 170));
@@ -225,6 +225,8 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static UINT MGroupATMArray4AArms[1] = { 12 };
 	static UINT MGroupATMArray40Arms[1] = { 11 };
 
+	static VECTOR3 ATMArray4RotationAxis = _V(-1.0, -1.0, 0.0); //Same Rotation Axis for all pannels
+
 	static VECTOR3 ATMArray4ARotationPoint = _V(-1.1175, 1.1175, 14.1977);
 	static VECTOR3 ATMArray4BRotationPoint = _V(-1.6016, 1.6016, 11.6987);
 	static VECTOR3 ATMArray4CRotationPoint = _V(-1.1697, 1.1697, 14.2168);
@@ -236,8 +238,6 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static VECTOR3 ATMArray4BRotationPointArms = _V(-1.6277, 1.6277, 11.7082);
 	static VECTOR3 ATMArray4ARotationPointArms = _V(-1.1436, 1.1436, 14.2072);
 	static VECTOR3 ATMArray40RotationPointArms = _V(-1.5755, 1.5755, 11.6892);
-
-	static VECTOR3 ATMArray4RotationAxis = _V(-1.0, -1.0, 0.0); //Same Rotation Axis for all pannels
 
 	static MGROUP_ROTATE rotateATMArray4A(pSkylab->skylabmeshID, MGroupATMArray4A, 3, ATMArray4ARotationPoint, ATMArray4RotationAxis, (float)(RAD * -71));
 	static MGROUP_ROTATE rotateATMArray4B(pSkylab->skylabmeshID, MGroupATMArray4B, 3, ATMArray4BRotationPoint, ATMArray4RotationAxis, (float)(RAD * 170));
@@ -270,12 +270,12 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static UINT MGroupClothesLineBoomAOut[1] = { 45 };
 	static UINT MGroupClothesLineBoomBOut[1] = { 46 };
 
+	static VECTOR3 ClothesLineBoomRotationAxis = _V(0.0, 1.0, 0.0); //Same Rotation Axis for all parts
+
 	static VECTOR3 ClothesLineBoomAUpRotationPoint = _V(-0.4191, 1.6383, 15.3162);
 	static VECTOR3 ClothesLineBoomBUpRotationPoint = _V(0.4572, 1.6383, 15.3162);
 	static VECTOR3 ClothesLineBoomAOutRotationPoint = _V(-0.4191, 8.1312, 6.2606);
 	static VECTOR3 ClothesLineBoomBOutRotationPoint = _V(0.3398, 8.5694, 6.2617);
-
-	static VECTOR3 ClothesLineBoomRotationAxis = _V(0.0, 1.0, 0.0); //Same Rotation Axis for all parts
 
 	static MGROUP_ROTATE rotateClothesLineBoomAUp(pSkylab->skylabmeshID, MGroupClothesLineBoomAUp, 1, ClothesLineBoomAUpRotationPoint, ClothesLineBoomRotationAxis, (float)(RAD * -30));
 	static MGROUP_ROTATE rotateClothesLineBoomBUp(pSkylab->skylabmeshID, MGroupClothesLineBoomBUp, 1, ClothesLineBoomBUpRotationPoint, ClothesLineBoomRotationAxis, (float)(RAD * 30));
@@ -289,30 +289,46 @@ void Skylab::SkylabAnimations::DefineAnimations()
 
 }
 
-void Skylab::SkylabAnimations::DeployATM(double state) {
-	//demo code, delete before merge.
-	double deploy = state / DEG;
-	pSkylab->SetAnimation(anim_ATM, deploy);
+void Skylab::SkylabAnimations::SetATMAnimationState(double state) {
+	pSkylab->SetAnimation(anim_ATM, state);
+}
 
-	if (deploy < 1) { return; }
+void Skylab::SkylabAnimations::SetATMArrayAnimationState(int ATMSAS, double state) {
+	
+	double ATM_DeployAngle = -pSkylab->GetAnimation(anim_ATM) * PI05; //left handed rotation about X.
 
-	for (auto i : anim_ATMArray1) {
-		pSkylab->SetAnimation(i, deploy - 2);
-	}
+	MATRIX3 ATM_RotationMatrix = _M(1.0, 0.0, 0.0,
+		0.0, cos(ATM_DeployAngle), -sin(ATM_DeployAngle),
+		0.0, sin(ATM_DeployAngle), cos(ATM_DeployAngle));
 
-	for (auto i : anim_ATMArray2) {
-		pSkylab->SetAnimation(i, deploy - 1);
-	}
-
-	for (auto i : anim_ATMArray3) {
-		pSkylab->SetAnimation(i, deploy - 2);
-	}
-
-	for (auto i : anim_ATMArray4) {
-		pSkylab->SetAnimation(i, deploy - 1);
-	}
-
-	for (auto i : anim_ClothesLineBoom) {
-		pSkylab->SetAnimation(i, deploy - 3);
+	switch (ATMSAS) {
+	case 0:
+		for (auto i : anim_ClothesLineBoom) {
+			pSkylab->SetAnimation(i, state);
+		}
+		break;
+	case 1:
+		for (auto i : anim_ATMArray1) {
+			pSkylab->SetAnimation(i, state);
+		}
+		break;
+	case 2:
+		for (auto i : anim_ATMArray2) {
+			pSkylab->SetAnimation(i, state);
+		}
+		break;
+	case 3:
+		for (auto i : anim_ATMArray3) {
+			pSkylab->SetAnimation(i, state);
+		}
+		break;
+	case 4:
+		for (auto i : anim_ATMArray4) {
+			pSkylab->SetAnimation(i, state);
+		}
+		break;
+	default:
+		//nope
+		return;
 	}
 }

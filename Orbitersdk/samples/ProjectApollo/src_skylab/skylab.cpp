@@ -55,12 +55,17 @@ void Skylab::InitSkylab() {
 void Skylab::clbkPostCreation() {
 	InitSkylab();
 	ShiftCG(_V(0.066,0.6198,-6.1392)); //Initial CoM Relative to Vessel Coordinate System (Y,Z,X) in skylab coordinates
+	skylabanimations.SetATMAnimationState(1.0);
+	skylabanimations.SetATMArrayAnimationState(0, 1.0);
+	skylabanimations.SetATMArrayAnimationState(1, 1.0);
+	skylabanimations.SetATMArrayAnimationState(2, 1.0);
+	skylabanimations.SetATMArrayAnimationState(3, 1.0);
+	skylabanimations.SetATMArrayAnimationState(4, 1.0);
 }
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 {
 	atmdc.Timestep();
-
 
 	//Thrusters
 	double max_thr = GetPropellantMass(ph_tacs) / GetPropellantMaxMass(ph_tacs); //Thrust is nearly a linear function of propellant pressure
