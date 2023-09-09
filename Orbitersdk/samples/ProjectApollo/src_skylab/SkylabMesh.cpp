@@ -25,21 +25,23 @@
 
 Skylab::SkylabAnimations::SkylabAnimations(Skylab* s)
 {
+	//Set Pointer to Skylab Vessel
 	pSkylab = s;
+
+	//Create Animation objects for later definition and use.
 	anim_ATM = pSkylab->CreateAnimation(0.0);
 
 	for (int ii = 0; ii < 11; ii++) {
 		anim_ATMArray1[ii] = pSkylab->CreateAnimation(0.0);
 		anim_ATMArray2[ii] = pSkylab->CreateAnimation(0.0);
 		anim_ATMArray3[ii] = pSkylab->CreateAnimation(0.0);
+		anim_ATMArray4[ii] = pSkylab->CreateAnimation(0.0);
 	}
-
-
 }
 
 Skylab::SkylabAnimations::~SkylabAnimations()
 {
-
+	//Nothing to delete yet...
 }
 
 void Skylab::SkylabAnimations::DefineAnimations()
@@ -208,6 +210,57 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray3AArms = pSkylab->AddAnimationComponent(anim_ATMArray3[9], 0.0f, 1.0f, &rotateATMArray3AArms, hComp_ATMArray3BArms);
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray30Arms = pSkylab->AddAnimationComponent(anim_ATMArray3[10], 0.0f, 1.0f, &rotateATMArray30Arms, hComp_ATMArray3AArms);
 
+	//Define ATM Solar Array 4 -------------------------------------------------------------------------------------------------------------------------
+	static UINT MGroupATMArray4A[3] = { 88, 113, 133 };
+	static UINT MGroupATMArray4B[3] = { 87, 112, 132 };
+	static UINT MGroupATMArray4C[3] = { 90, 115, 135 };
+	static UINT MGroupATMArray4D[3] = { 89, 114, 134 };
+	static UINT MGroupATMArray4E[4] = { 52, 102, 127, 147 };
+	static UINT MGroupATMArray4EArms[1] = { 16 };
+	static UINT MGroupATMArray4DArms[1] = { 15 };
+	static UINT MGroupATMArray4CArms[1] = { 14 };
+	static UINT MGroupATMArray4BArms[1] = { 13 };
+	static UINT MGroupATMArray4AArms[1] = { 12 };
+	static UINT MGroupATMArray40Arms[1] = { 11 };
+
+	static VECTOR3 ATMArray4ARotationPoint = _V(-1.1175, 1.1175, 14.1977);
+	static VECTOR3 ATMArray4BRotationPoint = _V(-1.6016, 1.6016, 11.6987);
+	static VECTOR3 ATMArray4CRotationPoint = _V(-1.1697, 1.1697, 14.2168);
+	static VECTOR3 ATMArray4DRotationPoint = _V(-1.6538, 1.6538, 11.7178);
+	static VECTOR3 ATMArray4ERotationPoint = _V(-1.2219, 1.2219, 14.2358);
+	static VECTOR3 ATMArray4ERotationPointArms = _V(-1.4639, 1.4639, 12.9863);
+	static VECTOR3 ATMArray4DRotationPointArms = _V(-1.6799, 1.6799, 11.7273);
+	static VECTOR3 ATMArray4CRotationPointArms = _V(-1.1958, 1.1958, 14.2263);
+	static VECTOR3 ATMArray4BRotationPointArms = _V(-1.6277, 1.6277, 11.7082);
+	static VECTOR3 ATMArray4ARotationPointArms = _V(-1.1436, 1.1436, 14.2072);
+	static VECTOR3 ATMArray40RotationPointArms = _V(-1.5755, 1.5755, 11.6892);
+
+	static VECTOR3 ATMArray4RotationAxis = _V(-1.0, -1.0, 0.0); //Same Rotation Axis for all pannels
+
+	static MGROUP_ROTATE rotateATMArray4A(pSkylab->skylabmeshID, MGroupATMArray4A, 3, ATMArray4ARotationPoint, ATMArray4RotationAxis, (float)(RAD * -71));
+	static MGROUP_ROTATE rotateATMArray4B(pSkylab->skylabmeshID, MGroupATMArray4B, 3, ATMArray4BRotationPoint, ATMArray4RotationAxis, (float)(RAD * 170));
+	static MGROUP_ROTATE rotateATMArray4C(pSkylab->skylabmeshID, MGroupATMArray4C, 3, ATMArray4CRotationPoint, ATMArray4RotationAxis, (float)(RAD * -170));
+	static MGROUP_ROTATE rotateATMArray4D(pSkylab->skylabmeshID, MGroupATMArray4D, 3, ATMArray4DRotationPoint, ATMArray4RotationAxis, (float)(RAD * 170));
+	static MGROUP_ROTATE rotateATMArray4E(pSkylab->skylabmeshID, MGroupATMArray4E, 4, ATMArray4ERotationPoint, ATMArray4RotationAxis, (float)(RAD * -170));
+	static MGROUP_ROTATE rotateATMArray4EArms(pSkylab->skylabmeshID, MGroupATMArray4EArms, 1, ATMArray4ERotationPointArms, ATMArray4RotationAxis, (float)(RAD * 170));
+	static MGROUP_ROTATE rotateATMArray4DArms(pSkylab->skylabmeshID, MGroupATMArray4DArms, 1, ATMArray4DRotationPointArms, ATMArray4RotationAxis, (float)(RAD * -170));
+	static MGROUP_ROTATE rotateATMArray4CArms(pSkylab->skylabmeshID, MGroupATMArray4CArms, 1, ATMArray4CRotationPointArms, ATMArray4RotationAxis, (float)(RAD * 170));
+	static MGROUP_ROTATE rotateATMArray4BArms(pSkylab->skylabmeshID, MGroupATMArray4BArms, 1, ATMArray4BRotationPointArms, ATMArray4RotationAxis, (float)(RAD * -170));
+	static MGROUP_ROTATE rotateATMArray4AArms(pSkylab->skylabmeshID, MGroupATMArray4AArms, 1, ATMArray4ARotationPointArms, ATMArray4RotationAxis, (float)(RAD * 170));
+	static MGROUP_ROTATE rotateATMArray40Arms(pSkylab->skylabmeshID, MGroupATMArray40Arms, 1, ATMArray4ARotationPointArms, ATMArray4RotationAxis, (float)(RAD * -170));
+
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4A = pSkylab->AddAnimationComponent(anim_ATMArray4[0], 0.0f, 1.0f, &rotateATMArray4A, hComp_animATM);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4B = pSkylab->AddAnimationComponent(anim_ATMArray4[1], 0.0f, 1.0f, &rotateATMArray4B, hComp_ATMArray4A);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4C = pSkylab->AddAnimationComponent(anim_ATMArray4[2], 0.0f, 1.0f, &rotateATMArray4C, hComp_ATMArray4B);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4D = pSkylab->AddAnimationComponent(anim_ATMArray4[3], 0.0f, 1.0f, &rotateATMArray4D, hComp_ATMArray4C);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4E = pSkylab->AddAnimationComponent(anim_ATMArray4[4], 0.0f, 1.0f, &rotateATMArray4E, hComp_ATMArray4D);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4EArms = pSkylab->AddAnimationComponent(anim_ATMArray4[5], 0.0f, 1.0f, &rotateATMArray4EArms, hComp_ATMArray4E);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4DArms = pSkylab->AddAnimationComponent(anim_ATMArray4[6], 0.0f, 1.0f, &rotateATMArray4DArms, hComp_ATMArray4EArms);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4CArms = pSkylab->AddAnimationComponent(anim_ATMArray4[7], 0.0f, 1.0f, &rotateATMArray4CArms, hComp_ATMArray4DArms);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4BArms = pSkylab->AddAnimationComponent(anim_ATMArray4[8], 0.0f, 1.0f, &rotateATMArray4BArms, hComp_ATMArray4CArms);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray4AArms = pSkylab->AddAnimationComponent(anim_ATMArray4[9], 0.0f, 1.0f, &rotateATMArray4AArms, hComp_ATMArray4BArms);
+	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray40Arms = pSkylab->AddAnimationComponent(anim_ATMArray4[10], 0.0f, 1.0f, &rotateATMArray40Arms, hComp_ATMArray4AArms);
+
 }
 
 void Skylab::SkylabAnimations::DeployATM(double state) {
@@ -218,7 +271,7 @@ void Skylab::SkylabAnimations::DeployATM(double state) {
 	if (deploy < 1) { return; }
 
 	for (auto i : anim_ATMArray1) {
-		pSkylab->SetAnimation(i, deploy - 1);
+		pSkylab->SetAnimation(i, deploy - 2);
 	}
 
 	for (auto i : anim_ATMArray2) {
@@ -226,6 +279,10 @@ void Skylab::SkylabAnimations::DeployATM(double state) {
 	}
 
 	for (auto i : anim_ATMArray3) {
+		pSkylab->SetAnimation(i, deploy - 2);
+	}
+
+	for (auto i : anim_ATMArray4) {
 		pSkylab->SetAnimation(i, deploy - 1);
 	}
 }
