@@ -26,6 +26,22 @@
 Skylab::SkylabAnimations::SkylabAnimations(Skylab* s)
 {
 	pSkylab = s;
+	anim_ATM = pSkylab->CreateAnimation(0.0);
+
+	anim_ATMArray1[0] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[1] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[2] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[3] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[4] = pSkylab->CreateAnimation(0.0);
+
+	anim_ATMArray1[5] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[6] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[7] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[8] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[9] = pSkylab->CreateAnimation(0.0);
+	anim_ATMArray1[10] = pSkylab->CreateAnimation(0.0);
+
+
 }
 
 Skylab::SkylabAnimations::~SkylabAnimations()
@@ -42,7 +58,7 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static VECTOR3 ATMRotationPoint = _V(0, 0.3556, 7.5438);
 	static VECTOR3 ATMRotationAxis = _V(1.0, 0.0, 0.0);
 	static MGROUP_ROTATE rotateATM(pSkylab->skylabmeshID, MGroupATM, 18, ATMRotationPoint, ATMRotationAxis, (float)(RAD * -90));
-	anim_ATM = pSkylab->CreateAnimation(0.0);
+	
 	ANIMATIONCOMPONENT_HANDLE hComp_animATM = pSkylab->AddAnimationComponent(anim_ATM, 0.0f, 1.0f, &rotateATM);
 	
 
@@ -85,25 +101,11 @@ void Skylab::SkylabAnimations::DefineAnimations()
 	static MGROUP_ROTATE rotateATMArray1AArms(pSkylab->skylabmeshID, MGroupATMArray1AArms, 1, ATMArray1ARotationPointArms, ATMArray1RotationAxis, (float)(RAD * 170));
 	static MGROUP_ROTATE rotateATMArray10Arms(pSkylab->skylabmeshID, MGroupATMArray10Arms, 1, ATMArray1ARotationPointArms, ATMArray1RotationAxis, (float)(RAD * -170));
 
-	anim_ATMArray1[0] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[1] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[2] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[3] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[4] = pSkylab->CreateAnimation(0.0);
-
-	anim_ATMArray1[5] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[6] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[7] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[8] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[9] = pSkylab->CreateAnimation(0.0);
-	anim_ATMArray1[10] = pSkylab->CreateAnimation(0.0);
-
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray1A = pSkylab->AddAnimationComponent(anim_ATMArray1[0], 0.0f, 1.0f, &rotateATMArray1A, hComp_animATM);
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray1B = pSkylab->AddAnimationComponent(anim_ATMArray1[1], 0.0f, 1.0f, &rotateATMArray1B, hComp_ATMArray1A);
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray1C = pSkylab->AddAnimationComponent(anim_ATMArray1[2], 0.0f, 1.0f, &rotateATMArray1C, hComp_ATMArray1B);
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray1D = pSkylab->AddAnimationComponent(anim_ATMArray1[3], 0.0f, 1.0f, &rotateATMArray1D, hComp_ATMArray1C);
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray1E = pSkylab->AddAnimationComponent(anim_ATMArray1[4], 0.0f, 1.0f, &rotateATMArray1E, hComp_ATMArray1D);
-
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray1EArms = pSkylab->AddAnimationComponent(anim_ATMArray1[5], 0.0f, 1.0f, &rotateATMArray1EArms, hComp_ATMArray1E);
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray1DArms = pSkylab->AddAnimationComponent(anim_ATMArray1[6], 0.0f, 1.0f, &rotateATMArray1DArms, hComp_ATMArray1EArms);
 	ANIMATIONCOMPONENT_HANDLE hComp_ATMArray1CArms = pSkylab->AddAnimationComponent(anim_ATMArray1[7], 0.0f, 1.0f, &rotateATMArray1CArms, hComp_ATMArray1DArms);
@@ -118,9 +120,9 @@ void Skylab::SkylabAnimations::DeployATM(double state) {
 	double deploy = state / DEG;
 	pSkylab->SetAnimation(anim_ATM, deploy);
 
-	if (deploy < PI05) { return; }
+	if (deploy < 1) { return; }
 
 	for (auto i : anim_ATMArray1) {
-		pSkylab->SetAnimation(i, deploy - PI05);
+		pSkylab->SetAnimation(i, deploy - 1);
 	}
 }

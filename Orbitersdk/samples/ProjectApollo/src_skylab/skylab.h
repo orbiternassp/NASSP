@@ -71,6 +71,9 @@ private:
 		Skylab* pSkylab;
 		UINT anim_ATM;
 		UINT anim_ATMArray1[11];
+		//UINT anim_ATMArray2[11];
+		//UINT anim_ATMArray3[11];
+		//UINT anim_ATMArray4[11];
 	};
 	VECTOR3 MeshOffset;
 	SkylabAnimations skylabanimations;
