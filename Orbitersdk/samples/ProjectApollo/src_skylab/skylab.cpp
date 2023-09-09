@@ -34,7 +34,6 @@ atmdc(this),
 skylabanimations(this)
 {
 	csm = NULL;
-	MeshOffset = _V(0, 0, -7.925);
 }
 
 Skylab::~Skylab() {
@@ -145,125 +144,6 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 	}
 }
 
-bool Skylab::clbkDrawHUD(int mode, const HUDPAINTSPEC *hps, oapi::Sketchpad *skp)
-{
-	//Display scaling code by BrianJ
-	int s = hps->H;
-	double d = (s*0.00130208);
-
-	int sw = ((hps->W));
-	int lw = (int)(16 * sw / 1024);
-	int lwoffset = sw - (18 * lw);
-	int hlw = (int)(lw / 2);
-
-	int roxl = 0;
-	int royl = 0;
-
-	double ds = s;
-	double dsw = sw;
-	double sc_ratio = ds / dsw;
-
-	if (sc_ratio < 0.7284)
-	{
-		roxl = (lw * 10);
-		royl = (int)(-88 * d);
-	}
-
-	int w0 = (int)(184 * d);
-	int w1 = (int)(200 * d);
-
-	skp->SetTextColor(0x0066FF66);
-
-	skp->Text((10 + roxl), (w0 + royl), "Attitude Control Mode:", 22);
-
-	char abuf[256];
-
-	switch (atmdc.GetAttitudeControlMode())
-	{
-	case 0:
-		sprintf(abuf, "Free Drift");
-		break;
-	case 1:
-		sprintf(abuf, "Attitude Hold");
-		break;
-	case 2:
-		sprintf(abuf, "Solar Inertial");
-		break;
-	case 3:
-		sprintf(abuf, "Local Vertical (+VV)");
-		break;
-	case 4:
-		sprintf(abuf, "Local Vertical (-VV)");
-		break;
-	case 5:
-		sprintf(abuf, "Manual");
-		break;
-	default:
-		sprintf(abuf, "None");
-		break;
-	}
-	
-	skp->Text((10 + roxl), (w1 + royl), abuf, strlen(abuf));
-
-	return true;
-}
-
-int Skylab::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate)
-{
-	if (!down) return 0; //Only process keydown events
-
-	if (KEYMOD_SHIFT(kstate))
-	{
-
-	}
-	else if (KEYMOD_ALT(kstate))
-	{
-
-	}
-	else if (KEYMOD_CONTROL(kstate))
-	{
-
-	}
-	else { //unmodified keys
-		switch (key)
-		{
-		case OAPI_KEY_A: //Attitude control mode
-			{
-				int state = atmdc.GetAttitudeControlMode();
-	
-				if (state < 5)
-				{
-				state++;
-				}
-				else
-				{
-					state = 0;
-				}
-				atmdc.SetAttitudeControlMode(state);
-				return 1;
-			}
-		}
-	}
-	return 0;
-}
-
-void Skylab::AddTACS()
-{
-	ph_tacs = CreatePropellantResource(TACS_PROPELLANT_MASS);
-
-	th_tacs[0] = CreateThruster(_V(0.028429, 3.257629, -19.582054), _V(-0.008727, -0.999962, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
-	th_tacs[1] = CreateThruster(_V(0.172895, 3.374154, -19.975754), _V(-0.998690, 0.051174, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
-	th_tacs[2] = CreateThruster(_V(-0.113982, 3.376658, -20.007504), _V(0.999431, -0.033737, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
-	th_tacs[3] = CreateThruster(_V(-0.028429, -3.257629, -19.582054), _V(0.008727, 0.999962, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
-	th_tacs[4] = CreateThruster(_V(0.113982, -3.376658, -19.975754), _V(-0.999431, 0.033737, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
-	th_tacs[5] = CreateThruster(_V(-0.172895, -3.374154, -20.007504), _V(0.998690, -0.051174, -0.000000), TACS_MAX_THRUST, ph_tacs, TACS_SPECIFIC_IMPULSE);
-
-	SURFHANDLE TACSTex = oapiRegisterExhaustTexture("ProjectApollo/exhaust_atrcs");
-
-	for (int i = 0; i < 6; i++)
-	{
-		AddExhaust(th_tacs[i], 0.6, 0.078, TACSTex);
-	}
 bool Skylab::clbkDrawHUD(int mode, const HUDPAINTSPEC *hps, oapi::Sketchpad *skp)
 {
 	//Display scaling code by BrianJ
