@@ -42,11 +42,9 @@ Skylab::~Skylab() {
 }
 
 void Skylab::InitSkylab() {
-	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/Skylab1973/Skylab I");
-	UINT meshidx;
-	VECTOR3 mesh_dir = _V(0, 0, -7.925); //fix mesh scaling and geometry
-	meshidx = AddMesh(SkylabMesh, &mesh_dir);
-	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+	skylabmesh = oapiLoadMeshGlobal("ProjectApollo/Skylab1973/Skylab I");
+	skylabmeshID = AddMesh(skylabmesh, &MeshOffset);
+	SetMeshVisibilityMode(skylabmeshID, MESHVIS_ALWAYS);
 	skylabanimations.DefineAnimations();
 
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &skylab_vhf2csm_vhf_connector);
