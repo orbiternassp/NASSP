@@ -70,6 +70,7 @@ private:
 	private:
 		Skylab* pSkylab;
 		UINT anim_ATM;
+		UINT anim_ATMArray1[11];
 	};
 	VECTOR3 MeshOffset;
 	SkylabAnimations skylabanimations;
