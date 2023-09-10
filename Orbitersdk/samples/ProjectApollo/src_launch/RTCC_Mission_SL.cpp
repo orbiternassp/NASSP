@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LVDC.h"
 #include "mcc.h"
 #include "rtcc.h"
+#include "../src_skylab/skylab.h"
 
 bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
 {
@@ -407,11 +408,30 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		GENERICPAD * form = (GENERICPAD *)pad;
 
+		EphemerisData sv, sv2;
+		MATRIX3 REFSMMAT;
 		VECTOR3 Att;
+		double dt;
 
-		Att = _V(0, 0, 0); //TBD
+		sv = StateVectorCalcEphem(calcParams.tgt);
 
-		sprintf(form->paddata, "Docking attitude: R %.0f, P %.0f, Y %.0f", Att.x*DEG, Att.y*DEG, Att.z*DEG);
+		//Docking attitude valid at roughly an hour after TPI
+		dt = GMTfromGET(calcParams.TPI + 3600.0) - sv.GMT;
+		sv2 = coast(sv, dt);
+
+		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		Att = SkylabDockingAttitude(sv2, REFSMMAT);
+
+		sprintf(form->paddata, "Docking attitude: R %03.0f, P %03.0f, Y %03.0f", Att.x*DEG, Att.y*DEG, Att.z*DEG);
+	}
+	break;
+	case 23: //Command Skylab to Solar Inertial attitude
+	{
+		Skylab* sl = (Skylab*)calcParams.tgt;
+
+		sl->GetATMDC()->CommandSystem(052016, 050002);
+
+		sprintf(upMessage, "Skylab to Solar Inertial attitude");
 	}
 	break;
 	}

@@ -71,8 +71,11 @@ void MCC::MissionSequence_SL()
 	case MST_DOCKING_ATTITUDE_PAD: //Docking attitude PAD to TPI final update
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(rtcc->calcParams.TPI - 24.0*60.0), 22, MST_SL_FINAL_TPI);
 		break;
-	case MST_SL_FINAL_TPI: //TPI final update to
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, false, 21, MST_ENTRY);
+	case MST_SL_FINAL_TPI: //TPI final update to Skylab Solar Inertial Command
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.TPI + 3.0*60.0), 21, MST_SL_SOLAR_INERTIAL);
+		break;
+	case MST_SL_SOLAR_INERTIAL: //Skylab Solar Inertial Command to
+		UpdateMacro(UTP_NONE, PT_NONE, false, 23, MST_ENTRY);
 		break;
 	}
 }

@@ -46,6 +46,8 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *vstatus);
 	bool clbkDrawHUD(int mode, const HUDPAINTSPEC *hps, oapi::Sketchpad *skp);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+
+	ATMDC *GetATMDC() { return &atmdc; }
 private:
 	void AddTACS();
 
