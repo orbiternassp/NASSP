@@ -56,5 +56,8 @@
     <ClCompile Include="..\..\src_skylab\SkylabConnector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_skylab\SkylabMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

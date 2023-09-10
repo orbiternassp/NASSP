@@ -30,7 +30,8 @@ const double TACS_SPECIFIC_IMPULSE = 790.86; //In m/s. Calculated from 115,000 l
 
 
 Skylab::Skylab(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel),
-atmdc(this)
+atmdc(this),
+skylabanimations(this)
 {
 	csm = NULL;
 }
@@ -40,11 +41,10 @@ Skylab::~Skylab() {
 }
 
 void Skylab::InitSkylab() {
-	SkylabMesh = oapiLoadMeshGlobal("ProjectApollo/Skylab1973/Skylab I");
-	UINT meshidx;
-	VECTOR3 mesh_dir = _V(0, 0, -7.925); //fix mesh scaling and geometry
-	meshidx = AddMesh(SkylabMesh, &mesh_dir);
-	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+	skylabmesh = oapiLoadMeshGlobal("ProjectApollo/Skylab1973/Skylab I");
+	skylabmeshID = AddMesh(skylabmesh, &MeshOffset);
+	SetMeshVisibilityMode(skylabmeshID, MESHVIS_ALWAYS);
+	skylabanimations.DefineAnimations();
 
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &skylab_vhf2csm_vhf_connector);
 }
@@ -52,12 +52,17 @@ void Skylab::InitSkylab() {
 void Skylab::clbkPostCreation() {
 	InitSkylab();
 	ShiftCG(_V(0.066,0.6198,-6.1392)); //Initial CoM Relative to Vessel Coordinate System (Y,Z,X) in skylab coordinates
+	skylabanimations.SetATMAnimationState(1.0);
+	skylabanimations.SetATMArrayAnimationState(0, 1.0);
+	skylabanimations.SetATMArrayAnimationState(1, 1.0);
+	skylabanimations.SetATMArrayAnimationState(2, 1.0);
+	skylabanimations.SetATMArrayAnimationState(3, 1.0);
+	skylabanimations.SetATMArrayAnimationState(4, 1.0);
 }
 
 void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 {
 	atmdc.Timestep();
-
 
 	//Thrusters
 	double max_thr = GetPropellantMass(ph_tacs) / GetPropellantMaxMass(ph_tacs); //Thrust is nearly a linear function of propellant pressure
