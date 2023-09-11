@@ -40,3 +40,4 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_SL_PRELIM_TPI 30
 #define MST_DOCKING_ATTITUDE_PAD 31
 #define MST_SL_FINAL_TPI 32
+#define MST_SL_SOLAR_INERTIAL 33
