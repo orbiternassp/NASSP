@@ -280,6 +280,11 @@ public:
 	ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel);
 
 	///
+	/// \brief Destructor.
+	///
+	virtual ~ProjectApolloConnectorVessel();
+
+	///
 	/// Other vessels can call this function to get a connector to talk to when they
 	/// are docked. They need to specify the docking port number so we can have multiple
 	/// connectors of the same time on vessels with multiple ports; for example a space

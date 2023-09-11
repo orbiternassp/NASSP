@@ -5114,9 +5114,9 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		double phi, DLNG;
 
 		phi = SystemParameters.MCLLTP[0];
-		DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * SystemParameters.MCGMTL / 3600.0;
+		DLNG = SystemParameters.MCLGRA + SystemParameters.MCLAMD + SystemParameters.MCERTS * SystemParameters.MCGMTL;
 
-		return GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - phi, 2, SystemParameters.MCLABN, 1);
+		return GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - phi, 2, SystemParameters.MCLABN, 3);
 	}
 	else if (opt->REFSMMATopt == 6)
 	{
@@ -11440,6 +11440,27 @@ void RTCC::DockingAlignmentProcessor(DockAlignOpt &opt)
 
 		opt.CSMAngles = OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), M_SMCSM_NBCSM);
 	}
+}
+
+VECTOR3 RTCC::SkylabDockingAttitude(EphemerisData sv, MATRIX3 REFSMMAT, double DDA)
+{
+	MATRIX3 M_BRCS_SLB, M_BCSM_BSL, M_SMCSM_BCSM;
+	VECTOR3 R_ES, h_ows, x_axis, y_axis, z_axis;
+
+	//Get sun direction at state vector time
+	PLEFEM(1, sv.GMT / 3600.0, 0, NULL, NULL, &R_ES, NULL);
+
+	h_ows = unit(crossp(sv.R, sv.V));
+
+	z_axis = unit(R_ES);
+	x_axis = -unit(crossp(z_axis, h_ows));
+	y_axis = crossp(z_axis, x_axis);
+
+	M_BRCS_SLB = _M(x_axis.x, x_axis.y, x_axis.z, y_axis.x, y_axis.y, y_axis.z, z_axis.x, z_axis.y, z_axis.z); //BRCS to Skylab body
+	M_BCSM_BSL = mul(OrbMech::_MRy(180.0*RAD), OrbMech::_MRx(-(35.0*RAD - DDA))); //CSM to Skylab body
+	M_SMCSM_BCSM = mul(OrbMech::tmat(M_BCSM_BSL), mul(M_BRCS_SLB, OrbMech::tmat(REFSMMAT))); //SM CSM to BRCS, BRCS to Skylab body, Skylab body to CSM body
+
+	return OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), M_SMCSM_BCSM);
 }
 
 AEGBlock RTCC::SVToAEG(EphemerisData sv, double Area, double Weight, double KFactor)
@@ -34131,7 +34152,7 @@ void RTCC::LMMGRP(int veh, double gmt)
 	//CSM
 	if (veh == 0)
 	{
-		REFS = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - lat, 2, SystemParameters.MCLABN, 1);
+		REFS = GLMRTM(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), DLNG, 3, -PI05 - lat, 2, SystemParameters.MCLABN, 3);
 
 		EZJGMTX1.data[0].ID = 0;
 		EMGSTSTM(1, REFS, RTCC_REFSMMAT_TYPE_CUR, gmt);

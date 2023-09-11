@@ -1,7 +1,8 @@
-/****************************************************************************
+/***************************************************************************
 This file is part of Project Apollo - NASSP
+Copyright 2023
 
-MCC for Skylab Missions (Header)
+Skylab connector classes (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,21 +24,18 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-//MISSION STATES: SKYLAB
+#include "Orbitersdk.h"
+#include "connector.h"
 
-#define MST_SL_PRELAUNCH 10
-#define MST_SL_PRELAUNCH_TARGETING 11
-#define MST_SL_INSERTION 20
-#define MST_SL_RENDEZVOUS_PLAN 21
-#define MST_SL_PRELIM_NC1 22
-#define MST_SL_FINAL_NC1 23
-#define MST_SL_PRELIM_NC2 24
-#define MST_SL_FINAL_NC2 25
-#define MST_SL_PRELIM_NCC 26
-#define MST_SL_PRELIM_NSR 27
-#define MST_SL_FINAL_NCC 28
-#define MST_SL_FINAL_NSR 29
-#define MST_SL_PRELIM_TPI 30
-#define MST_DOCKING_ATTITUDE_PAD 31
-#define MST_SL_FINAL_TPI 32
-#define MST_SL_SOLAR_INERTIAL 33
+
+class Skylab_VHFtoCSM_VHF_Connector : public Connector
+{
+public:
+	Skylab_VHFtoCSM_VHF_Connector();
+	~Skylab_VHFtoCSM_VHF_Connector();
+
+	void SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone);
+	bool ReceiveMessage(Connector* from, ConnectorMessage& m);
+protected:
+
+};
