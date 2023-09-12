@@ -46,10 +46,11 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *vstatus);
 	bool clbkDrawHUD(int mode, const HUDPAINTSPEC *hps, oapi::Sketchpad *skp);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+
+	ATMDC *GetATMDC() { return &atmdc; }
 private:
 	void AddTACS();
 
-	MESHHANDLE SkylabMesh;
 	Skylab_VHFtoCSM_VHF_Connector skylab_vhf2csm_vhf_connector;
 	VESSEL *csm; //Pointer to CSM for various purposes
 
@@ -59,6 +60,31 @@ private:
 
 	//Systems
 	ATMDC atmdc;
+
+private:
+	class SkylabAnimations {
+	public:
+		SkylabAnimations(Skylab* s);
+		~SkylabAnimations();
+		//void CreateAnimations();
+		void DefineAnimations();
+		void SetATMAnimationState(double state);
+		void SetATMArrayAnimationState(int ATMSAS, double state); //ATMSAS = 1-4 for array, 0 for clothesline boom.
+
+	private:
+		Skylab* pSkylab;
+		UINT anim_ATM;
+		UINT anim_ATMArray1[11];
+		UINT anim_ATMArray2[11];
+		UINT anim_ATMArray3[11];
+		UINT anim_ATMArray4[11];
+		UINT anim_ClothesLineBoom[4];
+	};
+
+	const VECTOR3 MeshOffset = _V(0, 0, -7.925);
+	SkylabAnimations skylabanimations;
+	UINT skylabmeshID;
+	MESHHANDLE skylabmesh;
 };
 
 

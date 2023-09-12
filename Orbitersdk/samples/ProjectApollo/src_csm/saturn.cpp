@@ -2707,11 +2707,11 @@ void Saturn::UpdatePayloadMass()
 		S4PL_Mass = 2012;
 		break;
 
-	case PAYLOAD_LTA:
+	case PAYLOAD_LTA10R:
 		S4PL_Mass = 13381;
 		break;
 
-	case PAYLOAD_LTA6:
+	case PAYLOAD_LTA2R:
 		S4PL_Mass = 11794;
 		break;
 
@@ -2719,7 +2719,7 @@ void Saturn::UpdatePayloadMass()
 		S4PL_Mass = 14360;
 		break;
 
-	case PAYLOAD_LTA8:
+	case PAYLOAD_LTAB:
 		S4PL_Mass = 9026;
 		break;
 

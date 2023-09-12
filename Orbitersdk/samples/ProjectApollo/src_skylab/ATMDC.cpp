@@ -323,6 +323,30 @@ void ATMDC::SetAttitudeControlMode(int mode)
 	}
 }
 
+void ATMDC::CommandSystem(int Function, int Command)
+{
+	switch (Function)
+	{
+	case 052016: //SEL APCS MODE
+		switch (Command)
+		{
+		case 050000: //STANDBY
+			SetAttitudeControlMode(0);
+			break;
+		case 050002: //SOLAR INERTIAL
+			SetAttitudeControlMode(2);
+			break;
+		case 050003: //ZLV
+			SetAttitudeControlMode(3);
+			break;
+		case 050005: //ATT HOLD TACS
+			SetAttitudeControlMode(1);
+			break;
+		}
+		break;
+	}
+}
+
 void ATMDC::SaveState(FILEHANDLE scn)
 {
 	oapiWriteLine(scn, ATMDC_START_STRING);

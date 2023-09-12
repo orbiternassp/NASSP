@@ -40,6 +40,8 @@ public:
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+
+	virtual void CommandSystem(int Function, int Command);
 private:
 
 	MATRIX3 GetAttitudeMatrix(); //Ecliptic to body (right handed)
