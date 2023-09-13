@@ -2797,7 +2797,7 @@ VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL)
 	return U_LOS;
 }
 
-int FindNearestStar(const std::vector<VECTOR3> navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
+int FindNearestStar(const std::vector<VECTOR3> &navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 {
 	VECTOR3 ustar;
 	double dotpr, last;
@@ -2809,7 +2809,7 @@ int FindNearestStar(const std::vector<VECTOR3> navstars, VECTOR3 U_LOS, VECTOR3 
 	{
 		ustar = navstars[i];
 		dotpr = dotp(ustar, U_LOS);
-		if (dotpr>last && isnotocculted(U_LOS,R_C,R_E) && dotpr>cos(ang_max))
+		if (dotpr > last && isnotocculted(ustar, R_C, R_E) && dotpr > cos(ang_max))
 		{
 			star = i;
 			last = dotpr;
@@ -2937,6 +2937,14 @@ MATRIX3 AGSStarAlignment(const std::vector<VECTOR3> &navstars, VECTOR3 Att1, VEC
 
 bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E, double dist)
 {
+	//Inputs:
+	//S_SM: star unit vector in reference coordinates
+	//R_C: Position vector of the spacecraft in reference coordinates
+	//R_E: Radius of the primary body
+	//dist: radius of occultation cone
+
+	//Output: true = not occulted, false = star is occulted
+
 	double c,dote;
 
 	c = cos(dist + asin(R_E / length(R_C)));
@@ -4502,7 +4510,7 @@ void format_time_MMSS(char *buf, double time) {
 	sprintf(buf, "%d:%02d", minutes, seconds);
 }
 
-void checkstar(const std::vector<VECTOR3> navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
+void checkstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
 {
 	MATRIX3 SMNB, Q1, Q2, Q3;
 	double OGA, IGA, MGA, TA, SA;
