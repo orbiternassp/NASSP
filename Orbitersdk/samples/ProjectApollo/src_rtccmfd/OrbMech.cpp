@@ -6322,7 +6322,7 @@ bool CoastIntegrator::iteration(bool allow_stop)
 					R_EM = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
 					R_PQ = -R_EM;
 				}
-				V_PQ = -_V(MoonPos[3], MoonPos[5], MoonPos[4]);
+				V_PQ = mul(Rot, -_V(MoonPos[3], MoonPos[5], MoonPos[4]));
 				R_CON = R_CON - R_PQ;
 				V_CON = V_CON - V_PQ;
 
