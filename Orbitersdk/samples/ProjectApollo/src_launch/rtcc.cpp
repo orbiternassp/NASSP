@@ -13946,6 +13946,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				PIMCKC(tcontab->sv_present.R, tcontab->sv_present.V, tcontab->sv_present.RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h, aeg.Data.coe_osc.l);
 
 				aeg.Header.AEGInd = tcontab->sv_present.RBI;
+				aeg.Data.TS = aeg.Data.TE = tcontab->sv_present.GMT;
 
 				PMMAPD(aeg.Header, aeg.Data, 1, 0, INFO, &sv_a, NULL);
 
@@ -13974,6 +13975,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				PIMCKC(tcontab->sv_present.R, tcontab->sv_present.V, tcontab->sv_present.RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h, aeg.Data.coe_osc.l);
 
 				aeg.Header.AEGInd = tcontab->sv_present.RBI;
+				aeg.Data.TS = aeg.Data.TE = tcontab->sv_present.GMT;
 
 				PMMAPD(aeg.Header, aeg.Data, -1, 0, INFO, NULL, &sv_p);
 
@@ -16960,8 +16962,6 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 		InTable.ManTimesIndicator = NULL;
 	}
 
-	//Number of the last maneuver that was processed by EMSMISS
-	unsigned int LastManeuver = 0;
 	//EI or kickout altitude for Earth and Moon
 	bool IsKickout[2] = { false,false };
 	//Has the ephemeris been completely generated?
@@ -17009,7 +17009,6 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 		if (InTable.NIAuxOutputTable.TerminationCode == 7)
 		{
 			//NI ended with maneuver
-			LastManeuver = InTable.NIAuxOutputTable.ManeuverNumber;
 
 			//Call DMT processor
 			PMMDMT(L, InTable.NIAuxOutputTable.ManeuverNumber, InTable.AuxTableIndicator);
@@ -17023,7 +17022,13 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 				if (EphemerisFull)
 				{
 					//No more ephemeris to be written
-					InTable.NIAuxOutputTable.TerminationCode = 1; //Set to termination on time
+
+					//Any more maneuvers to simulate?
+					if (InTable.NIAuxOutputTable.ManeuverNumber == mpt->ManeuverNum)
+					{
+						//No
+						InTable.NIAuxOutputTable.TerminationCode = 1; //Set to termination on time
+					}
 				}
 				else
 				{
@@ -17120,13 +17125,31 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 					//Enough ephemeris was written
 					EphemerisFull = true;
 
-					//Are there more maneuvers to simulate?
-					if (LastManeuver < mpt->ManeuverNum)
+					//More maneuvers to simulate
+					bool MoreManeuvers;
+
+					if (mpt->ManeuverNum > 0)
+					{
+						//Current time before begin time of last maneuver in MPT?
+						if (InTable.AnchorVector.GMT < mpt->TimeToBeginManeuver[mpt->ManeuverNum - 1])
+						{
+							MoreManeuvers = true;
+						}
+						else
+						{
+							MoreManeuvers = false;
+						}
+					}
+					else
+					{
+						MoreManeuvers = false;
+					}
+
+					if (MoreManeuvers)
 					{
 						//Yes
 						InTable.EphemerisBuildIndicator = false;
-						InTable.NIAuxOutputTable.TerminationCode = 7;
-						InTable.MaxIntegTime = 10.0*24.0*3600.0;
+						InTable.NIAuxOutputTable.TerminationCode = 7; //Continue processing
 					}
 				}
 			}
