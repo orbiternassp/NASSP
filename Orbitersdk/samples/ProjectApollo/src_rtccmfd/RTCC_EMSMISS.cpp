@@ -100,6 +100,8 @@ void RTCC_EMSMISS::Call(EMSMISSInputTable *in)
 		i = mpt->ManeuverNum;
 	}
 
+	LastManeuver = 0;
+
 	//Determine if there is a TLI
 	bool tli = false;
 	unsigned tlinum;
@@ -282,7 +284,7 @@ void RTCC_EMSMISS::WriteNIAuxOutputTable()
 	intab->NIAuxOutputTable.CutoffWeight = state.WeightsTable.ConfigWeight;
 	intab->NIAuxOutputTable.ErrorCode = ErrorCode;
 	intab->NIAuxOutputTable.TerminationCode = TerminationCode;
-	intab->NIAuxOutputTable.ManeuverNumber = i + 1;
+	intab->NIAuxOutputTable.ManeuverNumber = LastManeuver;
 	intab->NIAuxOutputTable.LunarStayBeginGMT = LunarStayBeginGMT;
 	intab->NIAuxOutputTable.LunarStayEndGMT = LunarStayEndGMT;
 }
@@ -667,6 +669,9 @@ void RTCC_EMSMISS::CallManeuverIntegrator()
 		CallAscentIntegrator();
 		state.isLanded = false;
 	}
+
+	LastManeuver = i + 1;
+
 	if (nierror)
 	{
 		pRTCC->RTCCONLINEMON.IntBuffer[0] = nierror;

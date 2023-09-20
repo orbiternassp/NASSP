@@ -13201,6 +13201,13 @@ void RTCC::GMSPRINT(std::string source, int n)
 	case 32:
 		message.push_back("P32 E/M CONFLICT, RELEASE TABLE AND RE-ENTER MED");
 		break;
+	case 40:
+		message.push_back("GMGPMED: P80 HAS INVALID DATE");
+		break;
+	case 46:
+		message.push_back("P10, ..., TRAJ $ ALLOWED ONLY IN");
+		message.push_back("NO PHASE, PRELCH, PRELCH2 (L.S.)");
+		break;
 	case 51:
 		message.push_back("MED " + RTCCONLINEMON.TextBuffer[0]);
 		break;
@@ -13939,6 +13946,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				PIMCKC(tcontab->sv_present.R, tcontab->sv_present.V, tcontab->sv_present.RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h, aeg.Data.coe_osc.l);
 
 				aeg.Header.AEGInd = tcontab->sv_present.RBI;
+				aeg.Data.TS = aeg.Data.TE = tcontab->sv_present.GMT;
 
 				PMMAPD(aeg.Header, aeg.Data, 1, 0, INFO, &sv_a, NULL);
 
@@ -13967,6 +13975,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				PIMCKC(tcontab->sv_present.R, tcontab->sv_present.V, tcontab->sv_present.RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h, aeg.Data.coe_osc.l);
 
 				aeg.Header.AEGInd = tcontab->sv_present.RBI;
+				aeg.Data.TS = aeg.Data.TE = tcontab->sv_present.GMT;
 
 				PMMAPD(aeg.Header, aeg.Data, -1, 0, INFO, NULL, &sv_p);
 
@@ -16219,16 +16228,6 @@ RTCC_PMMMPT_20_B:
 
 	delete[] A;
 	delete[] XP;
-
-	/*double MJD = OrbMech::MJDfromGET(in.sv_before.GMT,SystemParameters.GMTBASE);
-	OBJHANDLE gravref = GetGravref(in.sv_before.RBI);
-	VECTOR3 R_cut, V_cut;
-	double m_cut, MJD_cut, t_slip;
-
-	OrbMech::impulsive2(in.sv_before.R, in.sv_before.V, MJD, gravref, GetOnboardComputerThrust(in.Thruster), TH[NPHASE - 1], TH[NPHASE - 1] / WDI[NPHASE - 1], in.VehicleWeight, in.sv_before.R, in.V_aft, DV, t_slip, R_cut, V_cut, MJD_cut, m_cut);
-	GMTI = TIMP + t_slip;
-	GMTBB = GMTI - DT;
-	goto RTCC_PMMMPT_10_A;*/
 }
 
 int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E)
@@ -16868,8 +16867,8 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 	}
 
 	InTable.AnchorVector = sv0.Vector;
-	InTable.EarthRelStopParam = 400000.0*0.3048;
-	InTable.MoonRelStopParam = 0.0;
+	InTable.EarthRelStopParam = 400000.0*0.3048; //400k feet EI altitude
+	InTable.MoonRelStopParam = 5.0*1852.0;		 //5NM feet EI altitude
 	InTable.CutoffIndicator = 3;
 	InTable.ManCutoffIndicator = 1;
 	InTable.VehicleCode = L;
@@ -16963,6 +16962,11 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 		InTable.ManTimesIndicator = NULL;
 	}
 
+	//EI or kickout altitude for Earth and Moon
+	bool IsKickout[2] = { false,false };
+	//Has the ephemeris been completely generated?
+	bool EphemerisFull = false;
+
 	do
 	{
 		EMSMISS(&InTable);
@@ -16997,11 +17001,14 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 			}
 		}
 
+		//Set up the next call
+		InTable.AnchorVector = InTable.NIAuxOutputTable.sv_cutoff;
+		InTable.landed = InTable.NIAuxOutputTable.landed;
+		InTable.IgnoreManueverNumber = InTable.NIAuxOutputTable.ManeuverNumber;
+
 		if (InTable.NIAuxOutputTable.TerminationCode == 7)
 		{
-			//NI ended with maneuver, set up the next call
-			InTable.AnchorVector = InTable.NIAuxOutputTable.sv_cutoff;
-			InTable.landed = InTable.NIAuxOutputTable.landed;
+			//NI ended with maneuver
 
 			//Call DMT processor
 			PMMDMT(L, InTable.NIAuxOutputTable.ManeuverNumber, InTable.AuxTableIndicator);
@@ -17012,7 +17019,22 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 				table->MANTIMES.Table.push_back(tempmantable.Table[0]);
 				tempmantable.Table.clear();
 
-				InTable.EphemerisLeftLimitGMT = InTable.AnchorVector.GMT;
+				if (EphemerisFull)
+				{
+					//No more ephemeris to be written
+
+					//Any more maneuvers to simulate?
+					if (InTable.NIAuxOutputTable.ManeuverNumber == mpt->ManeuverNum)
+					{
+						//No
+						InTable.NIAuxOutputTable.TerminationCode = 1; //Set to termination on time
+					}
+				}
+				else
+				{
+					//Write more ephemeris, starting at current time
+					InTable.EphemerisLeftLimitGMT = InTable.AnchorVector.GMT;
+				}
 			}
 			else
 			{
@@ -17027,7 +17049,6 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 					InTable.IsForwardIntegration = -1.0;
 				}
 			}
-			InTable.IgnoreManueverNumber = InTable.NIAuxOutputTable.ManeuverNumber;
 		}
 		else
 		{
@@ -17043,9 +17064,14 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 				}
 			}
 
+			//Terminated on altitude
 			if (InTable.NIAuxOutputTable.TerminationCode == 3)
 			{
 				//NI ended on altitude
+				int num;
+
+				num = InTable.NIAuxOutputTable.sv_cutoff.RBI;
+
 				if (L == RTCC_MPT_CSM)
 				{
 					RTCCONLINEMON.TextBuffer[0] = "CSM";
@@ -17054,7 +17080,14 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 				{
 					RTCCONLINEMON.TextBuffer[0] = "LEM";
 				}
-				RTCCONLINEMON.TextBuffer[1] = "EI";
+				if (IsKickout[num] == true)
+				{
+					RTCCONLINEMON.TextBuffer[1] = "KO";
+				}
+				else
+				{
+					RTCCONLINEMON.TextBuffer[1] = "EI";
+				}
 
 				double get = GETfromGMT(InTable.NIAuxOutputTable.sv_cutoff.GMT);
 				char Buff[64];
@@ -17067,6 +17100,58 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 				RTCCONLINEMON.DoubleBuffer[1] = lng * DEG;
 
 				EMGPRINT("EMSEPH", 11);
+
+				//Continue processing?
+				if (IsKickout[num] == false)
+				{
+					InTable.NIAuxOutputTable.TerminationCode = 7; //To make it continue processing
+					if (num == BODY_EARTH)
+					{
+						InTable.EarthRelStopParam = 50000.0*0.3048;
+					}
+					else
+					{
+						InTable.MoonRelStopParam = 0.0;
+					}
+
+					IsKickout[num] = true;
+				}
+			}
+			else
+			{
+				//NI ended on time
+				if (QUEID == 2)
+				{
+					//Enough ephemeris was written
+					EphemerisFull = true;
+
+					//More maneuvers to simulate
+					bool MoreManeuvers;
+
+					if (mpt->ManeuverNum > 0)
+					{
+						//Current time before begin time of last maneuver in MPT?
+						if (InTable.AnchorVector.GMT < mpt->TimeToBeginManeuver[mpt->ManeuverNum - 1])
+						{
+							MoreManeuvers = true;
+						}
+						else
+						{
+							MoreManeuvers = false;
+						}
+					}
+					else
+					{
+						MoreManeuvers = false;
+					}
+
+					if (MoreManeuvers)
+					{
+						//Yes
+						InTable.EphemerisBuildIndicator = false;
+						InTable.NIAuxOutputTable.TerminationCode = 7; //Continue processing
+					}
+				}
 			}
 		}
 	} while (InTable.NIAuxOutputTable.TerminationCode == 7 && InTable.NIAuxOutputTable.ErrorCode == 0);
@@ -17231,6 +17316,99 @@ int RTCC::EMGVECSTOutput(int L, EphemerisData &sv)
 	sv = tab->AnchorVectors[9].Vector;
 
 	return 0;
+}
+
+int RTCC::EMSFFV(double gmt, int L, EphemerisData &sv)
+{
+	MissionPlanTable *mpt = GetMPTPointer(L);
+
+	//Is there any maneuver on the MPT?
+	if (mpt->ManeuverNum > 0)
+	{
+		//Yes
+		unsigned num = 1;
+		bool stop = false;
+		OrbitEphemerisTable *eph;
+
+		if (L == RTCC_MPT_CSM)
+		{
+			eph = &EZEPH1;
+		}
+		else
+		{
+			eph = &EZEPH2;
+		}
+
+		//Find the maneuver before the input time
+		do
+		{
+			if (gmt < mpt->TimeToBeginManeuver[num - 1])
+			{
+				//gmt is before this maneuver
+				num--;
+				stop = true;
+			}
+			else
+			{
+				if (mpt->ManeuverNum > num)
+				{
+					//Increment maneuver counter
+					num++;
+				}
+				else
+				{
+					//gmt is after last maneuver
+					stop = true;
+				}
+			}
+		} while (stop == false);
+
+		//Is gmt before first maneuver?
+		if (num == 0)
+		{
+			//Normal fetch logic
+			return ELFECH(gmt, L, sv);
+		}
+		else
+		{
+			bool UseBurnoutVec;
+
+			//Within 3 minutes of maneuver time?
+			if (gmt < mpt->TimeToEndManeuver[num - 1] + 3.0*60.0)
+			{
+				UseBurnoutVec = true;
+			}
+			//Previous maneuver is beyond ephemeris limit?
+			else if (mpt->TimeToBeginManeuver[num - 1] > eph->EPHEM.Header.TR)
+			{
+				UseBurnoutVec = true;
+			}
+			else
+			{
+				UseBurnoutVec = false;
+			}
+
+			if (UseBurnoutVec)
+			{
+				//Use burnout vector
+				sv.R = mpt->mantable[num - 1].R_BO;
+				sv.V = mpt->mantable[num - 1].V_BO;
+				sv.GMT = mpt->mantable[num - 1].GMT_BO;
+				sv.RBI = mpt->mantable[num - 1].RefBodyInd;
+				return 0;
+			}
+			else
+			{
+				//Normal fetch logic
+				return ELFECH(gmt, L, sv);
+			}
+		}
+	}
+	else
+	{
+		//No, just try to fetch a state vector from the ephemeris
+		return ELFECH(gmt, L, sv);
+	}
 }
 
 void RTCC::EMMENI(EMMENIInputTable &in)
@@ -18112,7 +18290,7 @@ int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Ar
 		}
 	}
 
-	if (ELFECH(GMT, L, sv))
+	if (EMSFFV(GMT, L, sv))
 	{
 		PMXSPT("PMSVEC", 49);
 		return 1;
@@ -18678,7 +18856,7 @@ void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)
 	PZSLVTAR.DH = lwp.rlott.DH / 1852.0;
 }
 
-void RTCC::PMMIEV(double T_L)
+void RTCC::PMMIEV(int L, double T_L)
 {
 	double T_D, A_Z, dt_EOI, lat_EOI, lng_EOI, azi_EOI, vel_EOI, fpa_EOI, rad_EOI;
 	int day;
@@ -18753,7 +18931,18 @@ void RTCC::PMMIEV(double T_L)
 	GZLTRA.GMT_T = GMT_EOI;
 	GZLTRA.R_T = R;
 	GZLTRA.V_T = V;
-	//TBD: ETMSCTRL for trajectory update
+
+	//ETMSCTRL for trajectory update
+	StateVectorTableEntry sv0;
+
+	sv0.VectorCode = "NOMINS";
+	sv0.LandingSiteIndicator = false;
+	sv0.Vector.R = R;
+	sv0.Vector.V = V;
+	sv0.Vector.GMT = GMT_EOI;
+	sv0.Vector.RBI = BODY_EARTH;
+
+	PMSVCT(0, L, &sv0);
 }
 
 void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY)
@@ -21469,7 +21658,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Is attitude mode an AGS?
 		if (inp->Attitude[working_man - 1] == 5)
 		{
-			if (ELFECH(GMTI, 4 - plan, in.sv_other))
+			if (EMSFFV(GMTI, 4 - plan, in.sv_other))
 			{
 				//TBD: Error message?
 				return 1;
@@ -23763,7 +23952,7 @@ void RTCC::PMMREAP(int med)
 	{
 		EphemerisData sv0, sv1;
 
-		if (ELFECH(GMTfromGET(PZREAP.RTEVectorTime*3600.0), RTCC_MPT_CSM, sv0))
+		if (EMSFFV(GMTfromGET(PZREAP.RTEVectorTime*3600.0), RTCC_MPT_CSM, sv0))
 		{
 			return;
 		}
@@ -23999,7 +24188,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	}
 	else
 	{
-		if (ELFECH(PZREAP.RTEVectorTime*3600.0, RTCC_MPT_CSM, sv0))
+		if (EMSFFV(PZREAP.RTEVectorTime*3600.0, RTCC_MPT_CSM, sv0))
 		{
 			return;
 		}
@@ -24576,7 +24765,7 @@ void RTCC::PMMREDIG(bool mpt)
 		//Manual
 		if (mpt)
 		{
-			int err = ELFECH(gmt, RTCC_MPT_CSM, sv_fetch);
+			int err = EMSFFV(gmt, RTCC_MPT_CSM, sv_fetch);
 			if (err) return;
 		}
 		else
@@ -28595,9 +28784,15 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 			}
 			else if (data[2] == "TRAJ")
 			{
-				if (Veh == 1)
+				//Allowed mission phases: NPHASE, PRELCH, PRELCH2 L.S.
+				if (SystemParameters.MGGPHS <= 1 || SystemParameters.MGGPHS == 11)
 				{
-					PMMIEV(hours*3600.0);
+					PMMIEV(Veh, hours*3600.0);
+				}
+				else
+				{
+					GMSPRINT("GMGPMED", 46);
+					return 2;
 				}
 			}
 			else
@@ -29511,7 +29706,8 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		}
 		else
 		{
-			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
+			//Invalid date
+			GMSPRINT("GMGPMED", 40);
 			return 2;
 		}
 		if (1 <= Month && Month <= 12)
@@ -29520,7 +29716,8 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		}
 		else
 		{
-			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
+			//Invalid date
+			GMSPRINT("GMGPMED", 40);
 			return 2;
 		}
 		if (1 <= Day && Day <= 31)
@@ -29529,7 +29726,8 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		}
 		else
 		{
-			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
+			//Invalid date
+			GMSPRINT("GMGPMED", 40);
 			return 2;
 		}
 
@@ -33097,7 +33295,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		{
 			PIMCKC(aux->R_BO, aux->V_BO, aux->RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.l, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h);
 		}
-		aeg.Data.TS = sv_BO_true.GMT;
+		aeg.Data.TS = aeg.Data.TE = sv_BO_true.GMT;
 		aeg.Header.AEGInd = aux->RBI;
 
 		AEGDataBlock sv_A, sv_P;
