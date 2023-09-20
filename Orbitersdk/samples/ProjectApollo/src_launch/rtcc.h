@@ -2689,6 +2689,8 @@ public:
 	//Anchor Vector Maintenance Module
 	void EMGVECSTInput(int L, StateVectorTableEntry sv);
 	int EMGVECSTOutput(int L, EphemerisData &sv);
+	//Fetch nearest free flight vector
+	int EMSFFV(double gmt, int L, EphemerisData &sv);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
 

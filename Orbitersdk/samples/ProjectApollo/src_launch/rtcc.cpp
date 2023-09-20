@@ -17318,6 +17318,99 @@ int RTCC::EMGVECSTOutput(int L, EphemerisData &sv)
 	return 0;
 }
 
+int RTCC::EMSFFV(double gmt, int L, EphemerisData &sv)
+{
+	MissionPlanTable *mpt = GetMPTPointer(L);
+
+	//Is there any maneuver on the MPT?
+	if (mpt->ManeuverNum > 0)
+	{
+		//Yes
+		unsigned num = 1;
+		bool stop = false;
+		OrbitEphemerisTable *eph;
+
+		if (L == RTCC_MPT_CSM)
+		{
+			eph = &EZEPH1;
+		}
+		else
+		{
+			eph = &EZEPH2;
+		}
+
+		//Find the maneuver before the input time
+		do
+		{
+			if (gmt < mpt->TimeToBeginManeuver[num - 1])
+			{
+				//gmt is before this maneuver
+				num--;
+				stop = true;
+			}
+			else
+			{
+				if (mpt->ManeuverNum > num)
+				{
+					//Increment maneuver counter
+					num++;
+				}
+				else
+				{
+					//gmt is after last maneuver
+					stop = true;
+				}
+			}
+		} while (stop == false);
+
+		//Is gmt before first maneuver?
+		if (num == 0)
+		{
+			//Normal fetch logic
+			return ELFECH(gmt, L, sv);
+		}
+		else
+		{
+			bool UseBurnoutVec;
+
+			//Within 3 minutes of maneuver time?
+			if (gmt < mpt->TimeToEndManeuver[num - 1] + 3.0*60.0)
+			{
+				UseBurnoutVec = true;
+			}
+			//Previous maneuver is beyond ephemeris limit?
+			else if (mpt->TimeToBeginManeuver[num - 1] > eph->EPHEM.Header.TR)
+			{
+				UseBurnoutVec = true;
+			}
+			else
+			{
+				UseBurnoutVec = false;
+			}
+
+			if (UseBurnoutVec)
+			{
+				//Use burnout vector
+				sv.R = mpt->mantable[num - 1].R_BO;
+				sv.V = mpt->mantable[num - 1].V_BO;
+				sv.GMT = mpt->mantable[num - 1].GMT_BO;
+				sv.RBI = mpt->mantable[num - 1].RefBodyInd;
+				return 0;
+			}
+			else
+			{
+				//Normal fetch logic
+				return ELFECH(gmt, L, sv);
+			}
+		}
+	}
+	else
+	{
+		//No, just try to fetch a state vector from the ephemeris
+		return ELFECH(gmt, L, sv);
+	}
+}
+
 void RTCC::EMMENI(EMMENIInputTable &in)
 {
 	EnckeFreeFlightIntegrator integ(this);
@@ -18197,7 +18290,7 @@ int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Ar
 		}
 	}
 
-	if (ELFECH(GMT, L, sv))
+	if (EMSFFV(GMT, L, sv))
 	{
 		PMXSPT("PMSVEC", 49);
 		return 1;
@@ -21565,7 +21658,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Is attitude mode an AGS?
 		if (inp->Attitude[working_man - 1] == 5)
 		{
-			if (ELFECH(GMTI, 4 - plan, in.sv_other))
+			if (EMSFFV(GMTI, 4 - plan, in.sv_other))
 			{
 				//TBD: Error message?
 				return 1;
@@ -23859,7 +23952,7 @@ void RTCC::PMMREAP(int med)
 	{
 		EphemerisData sv0, sv1;
 
-		if (ELFECH(GMTfromGET(PZREAP.RTEVectorTime*3600.0), RTCC_MPT_CSM, sv0))
+		if (EMSFFV(GMTfromGET(PZREAP.RTEVectorTime*3600.0), RTCC_MPT_CSM, sv0))
 		{
 			return;
 		}
@@ -24095,7 +24188,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	}
 	else
 	{
-		if (ELFECH(PZREAP.RTEVectorTime*3600.0, RTCC_MPT_CSM, sv0))
+		if (EMSFFV(PZREAP.RTEVectorTime*3600.0, RTCC_MPT_CSM, sv0))
 		{
 			return;
 		}
@@ -24672,7 +24765,7 @@ void RTCC::PMMREDIG(bool mpt)
 		//Manual
 		if (mpt)
 		{
-			int err = ELFECH(gmt, RTCC_MPT_CSM, sv_fetch);
+			int err = EMSFFV(gmt, RTCC_MPT_CSM, sv_fetch);
 			if (err) return;
 		}
 		else
