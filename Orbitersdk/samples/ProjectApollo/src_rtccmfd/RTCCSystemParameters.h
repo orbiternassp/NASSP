@@ -841,6 +841,7 @@ struct RTCCSystemParameters
 	//Phase indicator system parameter
 	// 0 = No Phase, 1 = Prelaunch
 	// 2, 3 = Condition for Launch and Condition for Launch Sim?
+	// 11 = Prelaunch 2 L.S.
 	// 13 = Orbit (likely, but what about lunar orbit)
 	// 17 = Lunar Descent (?)
 	// 18 = Translunar (likely)

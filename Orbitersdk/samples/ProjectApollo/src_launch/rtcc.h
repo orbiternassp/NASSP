@@ -2656,7 +2656,7 @@ public:
 	//Maneuver Execution Program
 	void PMSEXE(int L, double gmt);
 	//Earth Orbit Insertion Processor
-	void PMMIEV(double T_L);
+	void PMMIEV(int L, double T_L);
 	//SLV Targeting Load Module
 	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
 	//Perigee Adjust
@@ -2689,6 +2689,8 @@ public:
 	//Anchor Vector Maintenance Module
 	void EMGVECSTInput(int L, StateVectorTableEntry sv);
 	int EMGVECSTOutput(int L, EphemerisData &sv);
+	//Fetch nearest free flight vector
+	int EMSFFV(double gmt, int L, EphemerisData &sv);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
 
