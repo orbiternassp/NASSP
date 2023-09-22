@@ -528,13 +528,16 @@ void h_volume::ThermalComps(double dt) {
 			AvgC += ((composition[i].vapor_mass * SPECIFICC_GAS[composition[i].subst_type]) + ((composition[i].mass - composition[i].vapor_mass) * SPECIFICC_LIQ[composition[i].subst_type]));
 	}
 
-	if (GetMass()) {
+	if (GetMass() > 0.0) {
 		AvgC = AvgC / total_mass;	//weighted average heat capacity.. gives us averaged temp (ideal case)
 		Temp = Q / AvgC / total_mass; //average Temp of substances
 		for (i = 0; i < MAX_SUB; i++)
 			composition[i].SetTemp(Temp);	//redistribute the temps,re-computing the Qs... mathwise we are OK
-	} else
+	}
+	else {
 		Temp = 0;
+	}
+		
 
 	//2. Compute average Press
 	double m_i = 0;
@@ -560,11 +563,13 @@ void h_volume::ThermalComps(double dt) {
 	NV = Volume - NV;	//Units of L
 
 	double delta = (NV * NV) - (4.0 * m_i * PNV); //delta of quadric eq. P^2*PNV+ P*NV + m_i = 0
-	if (PNV)
+	if (PNV > 0.0 && delta > 0.0) {
 		Press = (-NV + sqrt(delta)) / (2.0 * PNV);	//Units of Pa **only first solution is always valid. why is there a second?
-	else
+	}	
+	else {
 		Press = 0;
-
+	}
+		
 	NV = Volume - NV;
 	double air_volume = Volume - NV + Press * PNV;
 
