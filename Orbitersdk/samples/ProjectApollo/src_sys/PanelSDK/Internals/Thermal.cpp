@@ -276,6 +276,10 @@ void Thermal_engine::Radiative(double dt){
 
 		VECTOR3 SystemPosition = _V(runner->pos.x, runner->pos.y, runner->pos.z); // therm_obj::pos should eventually get converted over to a VECTOR3 and this line will not be necessary
 
+		// SunIncidence and PlanetIncidence are scaled in the code below
+		// because objects with a larger [than a flat plate] radiative coverage,
+		// have an larger surface area comparted with the projected area of their shadow.
+
 		if (runner->polar == therm_obj::directional) {
 			SunIncidence = dotp(SystemPosition,SunRelPosNorm);
 			PlanetIncidence = dotp(SystemPosition, PlanetRelPosNorm);
