@@ -2478,7 +2478,7 @@ int ARCore::subThread()
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
 
-			if (GC->rtcc->ELFECH(GMT, GC->rtcc->med_k30.Vehicle, EPHEM))
+			if (GC->rtcc->EMSFFV(GMT, GC->rtcc->med_k30.Vehicle, EPHEM))
 			{
 				Result = DONE;
 				break;
@@ -2495,7 +2495,7 @@ int ARCore::subThread()
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
 
-			if (GC->rtcc->ELFECH(GMT, 4 - GC->rtcc->med_k30.Vehicle, EPHEM))
+			if (GC->rtcc->EMSFFV(GMT, 4 - GC->rtcc->med_k30.Vehicle, EPHEM))
 			{
 				Result = DONE;
 				break;
@@ -2568,7 +2568,7 @@ int ARCore::subThread()
 			}
 
 			EphemerisData EPHEM;
-			err = GC->rtcc->ELFECH(GMT_C, GC->rtcc->med_k01.ChaserVehicle, EPHEM);
+			err = GC->rtcc->EMSFFV(GMT_C, GC->rtcc->med_k01.ChaserVehicle, EPHEM);
 			if (err)
 			{
 				Result = DONE;
@@ -2579,7 +2579,7 @@ int ARCore::subThread()
 			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			err = GC->rtcc->ELFECH(GMT_T, 4 - GC->rtcc->med_k01.ChaserVehicle, EPHEM);
+			err = GC->rtcc->EMSFFV(GMT_T, 4 - GC->rtcc->med_k01.ChaserVehicle, EPHEM);
 			if (err)
 			{
 				Result = DONE;
@@ -2686,7 +2686,7 @@ int ARCore::subThread()
 		if (GC->MissionPlanningActive)
 		{
 			double GMT = GC->rtcc->GMTfromGET(SPSGET);
-			if (GC->rtcc->ELFECH(GMT, GC->rtcc->med_k20.Vehicle, sv0))
+			if (GC->rtcc->EMSFFV(GMT, GC->rtcc->med_k20.Vehicle, sv0))
 			{
 				Result = DONE;
 				break;
@@ -2808,7 +2808,7 @@ int ARCore::subThread()
 				//SV at specified time
 				double GMT = GC->rtcc->GMTfromGET(opt.REFSMMATTime);
 				EphemerisData EPHEM;
-				if (GC->rtcc->ELFECH(GMT, mptveh, EPHEM))
+				if (GC->rtcc->EMSFFV(GMT, mptveh, EPHEM))
 				{
 					Result = DONE;
 					break;
@@ -2894,7 +2894,7 @@ int ARCore::subThread()
 				GC->rtcc->med_k18.VectorTime = GC->rtcc->GETfromGMT(gmt);
 			}
 
-			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_CSM, sv0))
+			if (GC->rtcc->EMSFFV(gmt, RTCC_MPT_CSM, sv0))
 			{
 				Result = DONE;
 				break;
@@ -3007,7 +3007,7 @@ int ARCore::subThread()
 		{
 			double GMT = GC->rtcc->GMTfromGET(P30TIG);
 			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(GMT, mptveh, EPHEM))
+			if (GC->rtcc->EMSFFV(GMT, mptveh, EPHEM))
 			{
 				Result = DONE;
 				break;
@@ -3104,7 +3104,7 @@ int ARCore::subThread()
 			}
 
 			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(gmt, GC->rtcc->med_k16.Vehicle, EPHEM))
+			if (GC->rtcc->EMSFFV(gmt, GC->rtcc->med_k16.Vehicle, EPHEM))
 			{
 				Result = DONE;
 				break;
@@ -3157,7 +3157,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(GC->rtcc->med_k50.GETV), RTCC_MPT_CSM, sv_CSM))
+			if (GC->rtcc->EMSFFV(GC->rtcc->GMTfromGET(GC->rtcc->med_k50.GETV), RTCC_MPT_CSM, sv_CSM))
 			{
 				Result = DONE;
 				break;
@@ -3201,7 +3201,7 @@ int ARCore::subThread()
 		{
 			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZMCCPLN.VectorGET);
 			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM))
+			if (GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM))
 			{
 				Result = DONE;
 				break;
@@ -3252,7 +3252,7 @@ int ARCore::subThread()
 		{
 			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k15.CSMVectorTime);
 			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM))
+			if (GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM))
 			{
 				Result = DONE;
 				break;
@@ -3376,7 +3376,7 @@ int ARCore::subThread()
 		if (GC->MissionPlanningActive)
 		{
 			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->RZJCTTC.R32_GETI);
-			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, sv);
+			int err = GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, sv);
 			if (err)
 			{
 				Result = DONE;
@@ -3436,7 +3436,7 @@ int ARCore::subThread()
 		{
 			EphemerisData EPHEM;
 
-			int err = GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM);
+			int err = GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM);
 			if (err)
 			{
 				Result = DONE;
@@ -3444,7 +3444,7 @@ int ARCore::subThread()
 			}
 			opt.sv_CSM = EPHEM;
 
-			err = GC->rtcc->ELFECH(GMT, RTCC_MPT_LM, EPHEM);
+			err = GC->rtcc->EMSFFV(GMT, RTCC_MPT_LM, EPHEM);
 			if (err)
 			{
 				Result = DONE;
@@ -3546,7 +3546,7 @@ int ARCore::subThread()
 		{
 			double GMT = GC->rtcc->GMTfromGET(t_LunarLiftoff);
 			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM))
+			if (GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM))
 			{
 				Result = DONE;
 				break;
@@ -3955,7 +3955,7 @@ int ARCore::subThread()
 				gmt = GC->rtcc->GMTfromGET(mapUpdateGET);
 			}
 
-			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_CSM, sv0))
+			if (GC->rtcc->EMSFFV(gmt, RTCC_MPT_CSM, sv0))
 			{
 				Result = DONE;
 				break;
@@ -4009,7 +4009,7 @@ int ARCore::subThread()
 			else
 			{
 				EphemerisData sv;
-				if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(LmkTime), RTCC_MPT_CSM, sv))
+				if (GC->rtcc->EMSFFV(GC->rtcc->GMTfromGET(LmkTime), RTCC_MPT_CSM, sv))
 				{
 					Result = DONE;
 					break;
