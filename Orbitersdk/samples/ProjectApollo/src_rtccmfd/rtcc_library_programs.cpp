@@ -134,6 +134,7 @@ int RTCC::ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, Ephemeri
 
 	MANTIMES = maintable->MANTIMES;
 	EPHEM.Header.TUP = maintable->EPHEM.Header.TUP;
+	EPHEM.Header.VEH = L;
 	EPHEM.Header.NumVec = EPHEM.table.size();
 	EPHEM.Header.Offset = 0;
 	EPHEM.Header.CSI = 0;
