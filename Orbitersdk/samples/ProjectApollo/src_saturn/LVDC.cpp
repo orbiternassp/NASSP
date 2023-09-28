@@ -9940,7 +9940,7 @@ VECTOR3 LVDCSV::VentSubroutine(VECTOR3 Att)
 	{
 		if (LVDC_TB_ETime < VTIM[i]) break;
 	}
-	VECTOR3 A_V = _V(cos(Att.y)*cos(Att.z), sin(Att.z), -sin(Att.y)*cos(Att.z))*VENTA[i]*0.0; //Remove 0 when venting is implemented
+	VECTOR3 A_V = _V(cos(Att.y)*cos(Att.z), sin(Att.z), -sin(Att.y)*cos(Att.z))*VENTA[i];
 	//fprintf(lvlog, "Segment = %d Vent Acceleration = %lf Vector = %f %f %f\r\n", i, VENTA[i], A_V.x, A_V.y, A_V.z);
 	return A_V;
 }

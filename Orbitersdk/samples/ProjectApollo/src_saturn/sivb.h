@@ -84,6 +84,7 @@ struct SIVBSettings
 	double ApsFuel1Kg;				///< APS fuel no. 1 in kg.
 	double ApsFuel2Kg;				///< APS fuel no. 2 in kg.
 	double MainFuelKg;				///< Remaining fuel in kg.
+	double MainFuelMaxKg;			///< Maximum fuel in kg.
 
 	bool PanelsHinged;				///< Are SLA panels hinged?
 	double PanelProcess;			///< SLA Panels opening progress
@@ -118,6 +119,7 @@ struct SIVBSettings
 	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0;};
 
 	IU *iu_pointer;
+	SIVBSystems *sivb_pointer;
 };
 
 class SIVB;
@@ -412,6 +414,7 @@ protected:
 	double EmptyMass;				///< Empty mass in kg.
 	double PayloadMass;				///< Payload mass in kg.
 	double MainFuel;				///< Main fuel mass in kg.
+	double MainFuelMax;				///< Maximum main fuel mass in kg.
 	double ApsFuel1Kg;				///< APS fuel no. 1 in kg.
 	double ApsFuel2Kg;				///< APS fuel no. 2 in kg.
 
@@ -497,7 +500,6 @@ protected:
 	Battery *MainBattery;
 
 	THRUSTER_HANDLE th_aps_rot[6], th_main[1], th_aps_ull[2];                 // handles for APS engines
-	THRUSTER_HANDLE th_lox_vent;
 	THGROUP_HANDLE thg_main, thg_sep, thg_sepPanel, thg_ver;
 	PROPELLANT_HANDLE ph_aps1, ph_aps2, ph_main;
 

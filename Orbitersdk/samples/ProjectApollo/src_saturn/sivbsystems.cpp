@@ -33,18 +33,160 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "sivbsystems.h"
 
-SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver) :
-	j2engine(j2), loxvent(lox), vernier(ver), main_propellant(j2prop), apsThrusters(aps), ullage(ull),
+static PARTICLESTREAMSPEC lh2_npv_venting_spec = {
+	0,		// flag
+	0.08,	// size
+	30,		// rate
+	2,	    // velocity
+	0.5,    // velocity distribution
+	20,		// lifetime
+	0.15,	// growthrate
+	0.5,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.6, 0.6,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
+static PARTICLESTREAMSPEC lox_dump_venting_spec = {
+	0,		// flag
+	0.8,	// size
+	30,		// rate
+	2,	    // velocity
+	0.5,    // velocity distribution
+	20,		// lifetime
+	0.15,	// growthrate
+	0.5,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.6, 0.6,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
+//Constants
+const double J2_NORM_OXIDIZER_FLOW = (5.0 / (1.0 + 5.0));
+const double BTU = 1055.06;										// BTU to Jouls
+const double R = 8314.4621;										// (L*Pa) / (mol*K)
+
+//LH2
+const double LH2_TANK_VOLUME = 294.27*1000.0;					// Liters
+const double M_H2 = 2.01588;									// g/mol
+const double LH2_ENTHALPY_VAPORIZATION = 0.44936*1000.0 / M_H2; // J/g
+const double GH2_TEMP = 28.0;									// K
+const double CVS_VALVE_SIZE = 0.009;
+const double CVS_BYPASS_VALVE_SIZE = 0.001;
+const double LH2_NPV_VALVE_SIZE = 0.0226; //TBD: 0.09 works best for post TLI, might be a temperature issue
+const double LH2_CVS_ISP = 750.0;
+const double LH2_AMBIENT_HELIUM_MASS_FLOW = 0.4; //kg/s, simulating LH2 pressure increase caused by ambient temperature helium. TBD: Value
+const double LH2_CRYO_HELIUM_MASS_FLOW = 0.836357548841475; //kg/s, simulating LH2 pressure increase caused by helium heater
+
+//LOX
+const double LO2_TANK_VOLUME = 80.137*1000.0;					// Liters
+const double M_O2 = 31.9988;									// g/mol
+const double GO2_TEMP = 100.0;									// K
+const double LOX_NPV_VALVE_SIZE = 0.13;// 0.009;
+const double LOX_VENT_VALVE_SIZE = 0.5;
+const double LOX_AMBIENT_HELIUM_MASS_FLOW = 0.1; //kg/s, simulating LOX pressure increase caused by ambient temperature helium. TBD: Value
+const double LOX_CRYO_HELIUM_MASS_FLOW = 0.2; //kg/s, simulating LOX pressure increase caused by helium heater
+const double LOX_DUMP_ISP = 148.12; // m/s, value from Apollo 8 flight evaluation report
+const double GOX_DUMP_ISP = 238.0; // m/s
+
+BaseSIVBSystems::BaseSIVBSystems() :
 	HeliumControlDeenergizedTimer(1.0),
 	StartTankDischargeDelayTimer(1.0),
 	IgnitionPhaseTimer(0.45),
 	SparksDeenergizedTimer(3.3)
 {
 
+}
+
+BaseSIVBSystems::~BaseSIVBSystems()
+{
+
+}
+
+void BaseSIVBSystems::CopyData(BaseSIVBSystems *other)
+{
+	*other = *this;
+}
+
+SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THGROUP_HANDLE &ver, double PropLoadMR) :
+	j2engine(j2), vernier(ver), main_propellant(j2prop), apsThrusters(aps), ullage(ull),PropellantLoadMixtureRatio(PropLoadMR)
+{
+
 	vessel = v;
 
-	FirstBurnRelay = false;
+	VehicleNo = 600;
+
+	PUInverterAndDCPowerOn = false;
+
+	//PROPULSION
+	LOXTankVentValveOpen = false;
+	LOXTankVentAndNPVValvesBoostCloseOn = false;
+	LH2TankVentValveOpen = false;
+	LH2TankVentAndLatchingReliefValveBoostCloseOn = false;
+	LH2TankContinuousVentOrificeSOVOpenOn = false;
+	LH2TankContinuousVentValveCloseOn = false;
+	LOXTankRepressControlValveOpenOn = false;
 	SecondBurnRelay = false;
+	FirstBurnRelay = false;
+	LH2TankRepressurizationControlValveOpenOn = false;
+	LOXTankFlightPressureSystemOn = false;
+	LH2TankLatchingReliefValveLatchOn = false;
+	LOXTankNPVValveOpenOn = false;
+	LOXTankNPVValveLatchOpenOn = false;
+	LOXHeatExchangerBypassValveControlEnable = false;
+	BurnerExcitersOn = false;
+
+	ChargeUllageIgnitionOn = false;
+	ChargeUllageJettisonOn = false;
+	FireUllageIgnitionOn = false;
+	FireUllageJettisonOn = false;
+
+	LOXTankPressurizationShutoffValvesClose = false;
+	RepressSystemModeSelectOn = false;
+	BurnerAutoCutoffSystemArm = false;
+	StartTankRechargeValveOpen = false;
+	PrevalvesCloseOn = false;
+	EnginePumpPurgeControlValveEnableOn = false;
+	ChilldownShutoffValveCloseOn = false;
+	LH2TankLatchingReliefValveOpenOn = false;
+	InflightCalibrateModeOn = false;
+	FuelInjTempOKBypass = false;
+	LH2TankContinuousVentReliefOverrideSOVOpenOn = false;
+	BurnerLOXShutdownValveOpenOn = false;
+	BurnerLOXShutdownValveCloseOn = false;
+	BurnerLH2PropellantValveOpenOn = false;
+	BurnerLH2PropellantValveCloseOn = false;
+	PassivationRelay = false;
+	EngineIgnitionPhaseControlValveOpenOn = false;
+	StartTankVentControlValveOpenOn = false;
+	EngineHeliumControlValveOpen = false;
+	EngineMainstageControlValveOpen = false;
+	AmbientHeliumSupplyShutoffValveClosedOn = false;
+	StartTankRechargeValveArm = false;
+
+	LH2CVSOrificeShutoffValve = false;
+	LH2CVSReliefOverrideShutoffValve = false;
+	LH2LatchingReliefValve = false;
+	LH2LatchingReliefValveLatch = false;
+	LH2FuelVentAndReliefValve = false;
+	HeliumHeaterLH2PropellantValve = false;
+	HeliumHeaterLOXShutdownValve = false;
+	LOXVentAndReliefValve = false;
+	LOXNPVVentAndReliefValve = false;
+	LOXNPVValveLatch = false;
+
+	LH2PressureSwitch = false;
+	LOXPressureSwitch = false;
+
+	O2H2BurnerOn = false;
+	BurnerMalfunctionSignal = false;
+	LH2AmbientRepressurizationOn = LH2CryoRepressurizationOn = false;
+	LOXAmbientRepressurizationOn = LOXCryoRepressurizationOn = false;
+
+	LOXChilldownPumpOn = false;
+	FuelChillDownPumpOn = false;
+
+	//ENGINE
 	EngineStart = false;
 	LVDCEngineStopRelay = false;
 	EDSEngineStop = false;
@@ -54,16 +196,13 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	PropellantDepletionSensors = false;
 	RSSEngineStop = false;
 	ThrustOKRelay = false;
-	LOXVentValveOpen = false;
-	FireUllageIgnition = false;
 	PointLevelSensorArmed = false;
-	LH2ContinuousVentValveOpen = false;
-	PrevalvesCloseOn = false;
+	LH2ReliefValveOpen = false;
 	//Gets switched on at about T-8 minutes
 	AuxHydPumpFlightMode = true;
-	FuelInjTempOKBypass = false;
-	PassivationRelay = false;
-	EngineMainstageControlValveOpen = false;
+	//Switched on at T-TBD minutes
+	EngineControlBusMotorSwitch = true;
+	EDSCutoffNo2DisableInhibit = false;
 
 	for (int i = 0;i < 2;i++)
 	{
@@ -76,8 +215,11 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
 	BoiloffTime = 0.0;
-	LH2TankUllagePressurePSI = 50.0;
-	LOXTankUllagePressurePSI = 50.0;
+	O2H2BurnerTime = 0.0;
+	GH2_Mass = -1;
+	GO2_Mass = -1;
+	LH2TankUllagePressurePSI = 31.0;
+	LOXTankUllagePressurePSI = 41.0;
 
 	CutoffSignalA = CutoffSignalX = false;
 	HeliumControlOn = false;
@@ -91,25 +233,49 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	IgnitionDetector = CC1Signal1 = IgnitionDetectionLockup = false;
 	CC2Signal1 = CC2Signal2 = CC2Signal3 = CutoffLockup = false;
 	EngineState = 0;
+
+	LH2_NPV_Stream1 = NULL;
+	LH2_NPV_Stream2 = NULL;
+	LOX_Dump_Stream = NULL;
+
+	LH2_NPV_Stream_Lvl = 0.0;
+	LOX_Dump_Stream_Lvl = 0.0;
+
+	propellantInitialized = false;
+	lastPropellantMass = 0;
+	MixtureRatio = 5.0;
+	oxidMass = -1;
+	fuelMass = 0.0;
+
+	DebugTimer = 0.0;
+	F_CVS = 0.0;
 }
 
 SIVBSystems::~SIVBSystems()
-{}
+{
+	if (LH2_NPV_Stream1)
+	{
+		vessel->DelExhaustStream(LH2_NPV_Stream1);
+		LH2_NPV_Stream1 = NULL;
+	}
+	if (LH2_NPV_Stream2)
+	{
+		vessel->DelExhaustStream(LH2_NPV_Stream2);
+		LH2_NPV_Stream2 = NULL;
+	}
+	if (LOX_Dump_Stream)
+	{
+		vessel->DelExhaustStream(LOX_Dump_Stream);
+		LOX_Dump_Stream = NULL;
+	}
+}
 
 void SIVBSystems::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, SIVBSYSTEMS_START_STRING);
 
-	papiWriteScenario_bool(scn, "FIRSTBURNRELAY", FirstBurnRelay);
-	papiWriteScenario_bool(scn, "SECONDBURNRELAY", SecondBurnRelay);
-	papiWriteScenario_bool(scn, "ENGINESTART", EngineStart);
 	papiWriteScenario_bool(scn, "LVDCENGINESTOPRELAY", LVDCEngineStopRelay);
 	papiWriteScenario_bool(scn, "EDSENGINESTOP", EDSEngineStop);
 	papiWriteScenario_bool(scn, "RSSENGINESTOP", RSSEngineStop);
-	papiWriteScenario_bool(scn, "LOXVENTVALVEOPEN", LOXVentValveOpen);
-	papiWriteScenario_bool(scn, "FIREULLAGEIGNITION", FireUllageIgnition);
-	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
-	papiWriteScenario_bool(scn, "LH2CONTINUOUSVENTVALVEOPEN", LH2ContinuousVentValveOpen);
-	papiWriteScenario_bool(scn, "FUELINJTEMPOKBYPASS", FuelInjTempOKBypass);
 	papiWriteScenario_bool(scn, "HeliumControlOn", HeliumControlOn);
 	papiWriteScenario_bool(scn, "StartTankDischargeControlOn", StartTankDischargeControlOn);
 	papiWriteScenario_bool(scn, "EngineStartLockUp", EngineStartLockUp);
@@ -121,8 +287,6 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "IgnitionPhaseControlOn", IgnitionPhaseControlOn);
 	papiWriteScenario_bool(scn, "IgnitionDetectionLockup", IgnitionDetectionLockup);
 	papiWriteScenario_bool(scn, "CutoffLockup", CutoffLockup);
-	papiWriteScenario_bool(scn, "PassivationRelay", PassivationRelay);
-	papiWriteScenario_bool(scn, "EngineMainstageControlValveOpen", EngineMainstageControlValveOpen);
 	papiWriteScenario_boolarr(scn, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	oapiWriteScenario_int(scn, "EngineState", EngineState);
@@ -130,6 +294,33 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "THRUSTLEVEL", ThrustLevel);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
+	papiWriteScenario_double(scn, "OXIDMASS", oxidMass);
+	papiWriteScenario_double(scn, "GH2_MASS", GH2_Mass);
+	papiWriteScenario_double(scn, "GO2_MASS", GO2_Mass);
+	papiWriteScenario_bool(scn, "O2H2BURNERON", O2H2BurnerOn);
+	papiWriteScenario_double(scn, "O2H2BURNERTIME", O2H2BurnerTime);
+
+	bool arr1[50] = { LOXTankVentValveOpen, LOXTankVentAndNPVValvesBoostCloseOn, LH2TankVentValveOpen, LH2TankVentAndLatchingReliefValveBoostCloseOn,LH2TankContinuousVentOrificeSOVOpenOn,
+		LH2TankContinuousVentValveCloseOn, LOXTankRepressControlValveOpenOn, SecondBurnRelay, FirstBurnRelay, LH2TankRepressurizationControlValveOpenOn, LOXTankFlightPressureSystemOn,
+		LH2TankLatchingReliefValveLatchOn, LOXTankNPVValveOpenOn, LOXTankNPVValveLatchOpenOn, LOXHeatExchangerBypassValveControlEnable, BurnerExcitersOn, false, false, false, false,
+		ChargeUllageIgnitionOn, ChargeUllageJettisonOn, FireUllageIgnitionOn, FireUllageJettisonOn, false, false, false, false, false, false, false, false, false, LOXTankPressurizationShutoffValvesClose,
+		RepressSystemModeSelectOn, BurnerAutoCutoffSystemArm, false, false, false, false, false, false, false, false, StartTankRechargeValveOpen, PrevalvesCloseOn, EnginePumpPurgeControlValveEnableOn,
+		ChilldownShutoffValveCloseOn, false, false };
+	papiWriteScenario_boolarr(scn, "SEQUENCERASSEMBLYRELAYS1", arr1, 50);
+	
+	bool arr2[47] = { false, false, LH2TankLatchingReliefValveOpenOn, InflightCalibrateModeOn, FuelInjTempOKBypass, LH2TankContinuousVentReliefOverrideSOVOpenOn, false, false, false, false,
+		LVDCEngineStopRelay, PointLevelSensorArmed, EngineStart, false, false, TelemetryCalibrateOn, false, false, false, false, false, false, false, false, false, false, false, false, 
+		BurnerLOXShutdownValveOpenOn, BurnerLOXShutdownValveCloseOn, BurnerLH2PropellantValveOpenOn, BurnerLH2PropellantValveCloseOn, false, false, false, false, false, false, false, false,
+		PassivationRelay, EngineIgnitionPhaseControlValveOpenOn, StartTankVentControlValveOpenOn, EngineHeliumControlValveOpen, EngineMainstageControlValveOpen, AmbientHeliumSupplyShutoffValveClosedOn, 
+		StartTankRechargeValveArm };
+	papiWriteScenario_boolarr(scn, "SEQUENCERASSEMBLYRELAYS2", arr2, 47);
+
+	bool arr3[10] = { LH2CVSOrificeShutoffValve, LH2CVSReliefOverrideShutoffValve, LH2LatchingReliefValve, LH2LatchingReliefValveLatch, LH2FuelVentAndReliefValve, HeliumHeaterLH2PropellantValve,
+		HeliumHeaterLOXShutdownValve, LOXVentAndReliefValve, LOXNPVVentAndReliefValve, LOXNPVValveLatch };
+	papiWriteScenario_boolarr(scn, "VALVESTATES", arr3, 10);
+
+	bool arr4[3] = { LH2PressureSwitch, LOXPressureSwitch, EngineControlBusMotorSwitch };
+	papiWriteScenario_boolarr(scn, "PRESSURESWITCHES", arr4, 3);
 
 	HeliumControlDeenergizedTimer.SaveState(scn, "HeliumControlDeenergizedTimer_BEGIN", "TD_END");
 	StartTankDischargeDelayTimer.SaveState(scn, "StartTankDischargeDelayTimer_BEGIN", "TD_END");
@@ -141,22 +332,15 @@ void SIVBSystems::SaveState(FILEHANDLE scn) {
 
 void SIVBSystems::LoadState(FILEHANDLE scn) {
 	char *line;
+	bool arr[64];
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, SIVBSYSTEMS_END_STRING, sizeof(SIVBSYSTEMS_END_STRING)))
 			return;
 
-		papiReadScenario_bool(line, "FIRSTBURNRELAY", FirstBurnRelay);
-		papiReadScenario_bool(line, "SECONDBURNRELAY", SecondBurnRelay);
-		papiReadScenario_bool(line, "ENGINESTART", EngineStart);
 		papiReadScenario_bool(line, "LVDCENGINESTOPRELAY", LVDCEngineStopRelay);
 		papiReadScenario_bool(line, "EDSENGINESTOP", EDSEngineStop);
 		papiReadScenario_bool(line, "RSSENGINESTOP", RSSEngineStop);
-		papiReadScenario_bool(line, "LOXVENTVALVEOPEN", LOXVentValveOpen);
-		papiReadScenario_bool(line, "FIREULLAGEIGNITION", FireUllageIgnition);
-		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
-		papiReadScenario_bool(line, "LH2CONTINUOUSVENTVALVEOPEN", LH2ContinuousVentValveOpen);
-		papiReadScenario_bool(line, "FUELINJTEMPOKBYPASS", FuelInjTempOKBypass);
 		papiReadScenario_bool(line, "HeliumControlOn", HeliumControlOn);
 		papiReadScenario_bool(line, "StartTankDischargeControlOn", StartTankDischargeControlOn);
 		papiReadScenario_bool(line, "EngineStartLockUp", EngineStartLockUp);
@@ -168,8 +352,6 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "IgnitionPhaseControlOn", IgnitionPhaseControlOn);
 		papiReadScenario_bool(line, "IgnitionDetectionLockup", IgnitionDetectionLockup);
 		papiReadScenario_bool(line, "CutoffLockup", CutoffLockup);
-		papiReadScenario_bool(line, "PassivationRelay", PassivationRelay);
-		papiReadScenario_bool(line, "EngineMainstageControlValveOpen", EngineMainstageControlValveOpen);
 		papiReadScenario_boolarr(line, "APSULLAGEONRELAY", APSUllageOnRelay, 2);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
 		papiReadScenario_int(line, "EngineState", EngineState);
@@ -177,8 +359,84 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "THRUSTLEVEL", ThrustLevel);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
+		papiReadScenario_double(line, "OXIDMASS", oxidMass);
+		papiReadScenario_double(line, "GH2_MASS", GH2_Mass);
+		papiReadScenario_double(line, "GO2_MASS", GO2_Mass);
+		papiReadScenario_bool(line, "O2H2BURNERON", O2H2BurnerOn);
+		papiReadScenario_double(line, "O2H2BURNERTIME", O2H2BurnerTime);
 
-		if (!strnicmp(line, "HeliumControlDeenergizedTimer_BEGIN", sizeof("HeliumControlDeenergizedTimer_BEGIN"))) {
+		if (papiReadScenario_boolarr(line, "SEQUENCERASSEMBLYRELAYS1", arr, 50))
+		{
+			LOXTankVentValveOpen = arr[0];
+			LOXTankVentAndNPVValvesBoostCloseOn = arr[1];
+			LH2TankVentValveOpen = arr[2];
+			LH2TankVentAndLatchingReliefValveBoostCloseOn = arr[3];
+			LH2TankContinuousVentOrificeSOVOpenOn = arr[4];
+			LH2TankContinuousVentValveCloseOn = arr[5];
+			LOXTankRepressControlValveOpenOn = arr[6];
+			SecondBurnRelay = arr[7];
+			FirstBurnRelay = arr[8];
+			LH2TankRepressurizationControlValveOpenOn = arr[9];
+			LOXTankFlightPressureSystemOn = arr[10];
+			LH2TankLatchingReliefValveLatchOn = arr[11];
+			LOXTankNPVValveOpenOn = arr[12];
+			LOXTankNPVValveLatchOpenOn = arr[13];
+			LOXHeatExchangerBypassValveControlEnable = arr[14];
+			BurnerExcitersOn = arr[15];
+			ChargeUllageIgnitionOn = arr[20];
+			ChargeUllageJettisonOn = arr[21];
+			FireUllageIgnitionOn = arr[22];
+			FireUllageJettisonOn = arr[23];
+			LOXTankPressurizationShutoffValvesClose = arr[33];
+			RepressSystemModeSelectOn = arr[34];
+			BurnerAutoCutoffSystemArm = arr[35];
+			StartTankRechargeValveOpen = arr[44];
+			PrevalvesCloseOn = arr[45];
+			EnginePumpPurgeControlValveEnableOn = arr[46];
+			ChilldownShutoffValveCloseOn = arr[47];
+		}
+		if (papiReadScenario_boolarr(line, "SEQUENCERASSEMBLYRELAYS2", arr, 47))
+		{
+			LH2TankLatchingReliefValveOpenOn = arr[2];
+			InflightCalibrateModeOn = arr[3];
+			FuelInjTempOKBypass = arr[4];
+			LH2TankContinuousVentReliefOverrideSOVOpenOn = arr[5];
+			LVDCEngineStopRelay = arr[10];
+			PointLevelSensorArmed = arr[11];
+			EngineStart = arr[12];
+			TelemetryCalibrateOn = arr[15];
+			BurnerLOXShutdownValveOpenOn = arr[28];
+			BurnerLOXShutdownValveCloseOn = arr[29];
+			BurnerLH2PropellantValveOpenOn = arr[30];
+			BurnerLH2PropellantValveCloseOn = arr[31];
+			PassivationRelay = arr[40];
+			EngineIgnitionPhaseControlValveOpenOn = arr[41];
+			StartTankVentControlValveOpenOn = arr[42];
+			EngineHeliumControlValveOpen = arr[43];
+			EngineMainstageControlValveOpen = arr[44];
+			AmbientHeliumSupplyShutoffValveClosedOn = arr[45];
+			StartTankRechargeValveArm = arr[46];
+		}
+		else if (papiReadScenario_boolarr(line, "VALVESTATES", arr, 10))
+		{
+			LH2CVSOrificeShutoffValve = arr[0];
+			LH2CVSReliefOverrideShutoffValve = arr[1];
+			LH2LatchingReliefValve = arr[2];
+			LH2LatchingReliefValveLatch = arr[3];
+			LH2FuelVentAndReliefValve = arr[4];
+			HeliumHeaterLH2PropellantValve = arr[5];
+			HeliumHeaterLOXShutdownValve = arr[6];
+			LOXVentAndReliefValve = arr[7];
+			LOXNPVVentAndReliefValve = arr[8];
+			LOXNPVValveLatch = arr[9];
+		}
+		else if (papiReadScenario_boolarr(line, "PRESSURESWITCHES", arr, 3))
+		{
+			LH2PressureSwitch = arr[0];
+			LOXPressureSwitch = arr[1];
+			EngineControlBusMotorSwitch = arr[2];
+		}
+		else if (!strnicmp(line, "HeliumControlDeenergizedTimer_BEGIN", sizeof("HeliumControlDeenergizedTimer_BEGIN"))) {
 			HeliumControlDeenergizedTimer.LoadState(scn, "TD_END");
 		}
 		else if (!strnicmp(line, "StartTankDischargeDelayTimer_BEGIN", sizeof("StartTankDischargeDelayTimer_BEGIN"))) {
@@ -193,6 +451,32 @@ void SIVBSystems::LoadState(FILEHANDLE scn) {
 	}
 }
 
+void SIVBSystems::CreateParticleEffects(double TRANZ)
+{
+	//TRANZ is CG location on z-axis (Orbiter)
+
+	//Approximately at STA 1600.0 (Saturn IB)
+	if (LH2_NPV_Stream1) vessel->DelExhaustStream(LH2_NPV_Stream1);
+	LH2_NPV_Stream1 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(0.0, 3.61, 1600.0*0.0254 - TRANZ), _V(0.0, 1.0, 0.0), &LH2_NPV_Stream_Lvl);
+	
+	if (LH2_NPV_Stream2) vessel->DelExhaustStream(LH2_NPV_Stream2);
+	LH2_NPV_Stream2 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(0.0, -3.61, 1600.0*0.0254 - TRANZ), _V(0.0, -1.0, 0.0), &LH2_NPV_Stream_Lvl);
+
+	//Approximately at STA 962.304 (Saturn IB)
+	if (LOX_Dump_Stream) vessel->DelExhaustStream(LOX_Dump_Stream);
+	LOX_Dump_Stream = vessel->AddParticleStream(&lox_dump_venting_spec, _V(0, 0, 962.304*0.0254 - TRANZ), _V(0.0, 0.0, -1.0), &LOX_Dump_Stream_Lvl);
+}
+
+bool SIVBSystems::BurnerRelaysReset()
+{
+	return (!BurnerLH2PropellantValveCloseOn && !BurnerLH2PropellantValveOpenOn && !BurnerLOXShutdownValveCloseOn && !BurnerLOXShutdownValveOpenOn && !BurnerExcitersOn);
+}
+
+bool SIVBSystems::RepressRelaysReset()
+{
+	return (!LOXTankRepressControlValveOpenOn && !LH2TankRepressurizationControlValveOpenOn && !RepressSystemModeSelectOn && !BurnerAutoCutoffSystemArm);
+}
+
 void SIVBSystems::Timestep(double simdt)
 {
 	if (j2engine == NULL) return;
@@ -204,8 +488,6 @@ void SIVBSystems::Timestep(double simdt)
 
 	//Thrust OK switch
 	bool ThrustOK = vessel->GetThrusterLevel(j2engine) > 0.65;
-
-	bool PowerH = (PassivationRelay == false);
 
 	//Engine Control Power Switch (EDS no. 1, range safety no. 1)
 	if (EDSEngineStop || RSSEngineStop)
@@ -239,13 +521,56 @@ void SIVBSystems::Timestep(double simdt)
 	//Propellant Systems
 	if (main_propellant)
 	{
-		LOXTankUllagePressurePSI = vessel->GetPropellantMass(main_propellant) / vessel->GetPropellantMaxMass(main_propellant)*50.0;
-		LH2TankUllagePressurePSI = LOXTankUllagePressurePSI * 0.9362 + 3.19;
+		UpdatePropellants();
+		LH2PropellantCalculations(simdt);
+		LOXPropellantCalculations(simdt);
+		O2H2Burner(simdt);
+		ChilldownSystem();
+
+		//Set new propellant mass
+		lastPropellantMass = oxidMass + fuelMass;
+		vessel->SetPropellantMass(main_propellant, lastPropellantMass);
+		//Inhibit thruster
+		if (oxidMass == 0.0 || fuelMass == 0.0)
+		{
+			vessel->SetThrusterResource(j2engine, NULL);
+		}
 	}
 
-	bool K101 = true; //TBD: Power
+	bool B4D11 = true; //Aft Bus No. 1
+	bool B4D31 = true;
+
+	bool K22;
+
+	if ((B4D31 && RSSEngineStop) || (EDSEngineStop && !EDSCutoffDisabled))
+	{
+		K22 = true;
+	}
+	else
+	{
+		K22 = false;
+	}
+
+	if (EngineControlBusMotorSwitch == false && !K22 && (ESECommandEngineControlBusPowerOn() || (B4D11 && EDSCutoffDisabled)))
+	{
+		EngineControlBusMotorSwitch = true;
+	}
+	else if (EngineControlBusMotorSwitch == true && ((B4D11 && K22) || (!K22 && ESECommandEngineControlBusPowerOff())))
+	{
+		EngineControlBusMotorSwitch = false;
+	}
+
+	bool K101 = (B4D11 && EngineControlBusMotorSwitch);
 	//Engine ignition bus
 	bool K103 = true;
+
+	//Passivation
+	EDSCutoffNo2DisableInhibit = K101;
+
+	J2SignalH = (B4D11 && EngineControlBusMotorSwitch && PassivationRelay);
+	J2SignalF = (J2SignalH && EngineHeliumControlValveOpen);
+	J2SignalD = (J2SignalH && EngineMainstageControlValveOpen);
+	J2SignalE = (J2SignalH && EngineIgnitionPhaseControlValveOpenOn);
 
 	//Propellant Depletion
 	if (PropellantLowLevel())
@@ -282,7 +607,7 @@ void SIVBSystems::Timestep(double simdt)
 	EngineStartLockUp = (EngineStart || SparkSystemOn); //TBD: Require S-II/S-IVB staging
 	SparkSystemOn = (EngineStartLockUp && K101 && !EngineStart4);
 	EngineStart3 = HeliumControlOn || SparkSystemOn;
-	HeliumControlOn = EngineStart3 && K101 && !HeliumControlDeenergizedTimer.ContactClosed();
+	HeliumControlOn = (EngineStart3 && K101 && !HeliumControlDeenergizedTimer.ContactClosed()) || J2SignalF;
 
 	//sprintf(oapiDebugString(), "ENGINE START BOARD: EngineStart %d EngineStartLockUp %d SparkSystemOn %d EngineStart3 %d EngineStart4 %d HeliumControlOn %d Timer %lf", EngineStart, EngineStartLockUp, SparkSystemOn, EngineStart3, EngineStart4, HeliumControlOn, HeliumControlDeenergizedTimer.GetTime());
 
@@ -313,8 +638,8 @@ void SIVBSystems::Timestep(double simdt)
 	VCBSignal3 = VCBSignal2 && K101 && !EngineStop;
 	MainstageSignal = K101 && VCBSignal3 && (MainstageSignal || PBSignal4) && !EngineStop;
 
-	IgnitionPhaseControlOn = VCBSignal3; //TBD: Some switch selector signal
-	MainstageOn = MainstageSignal || (EngineMainstageControlValveOpen && PowerH);
+	IgnitionPhaseControlOn = (VCBSignal3 || J2SignalE);
+	MainstageOn = (MainstageSignal || J2SignalD);
 
 	//sprintf(oapiDebugString(), "He %d STDV: %d Ign: %d Main: %d", HeliumControlOn, StartTankDischargeControlOn, IgnitionPhaseControlOn, MainstageOn);
 
@@ -403,50 +728,640 @@ void SIVBSystems::Timestep(double simdt)
 
 	//Venting
 
-	if (loxvent)
-	{
-		if (vessel->GetThrusterLevel(loxvent) < 1.0 && LOXVentValveOpen)
-		{
-			vessel->SetThrusterLevel(loxvent, 1.0);
-		}
-		else if (vessel->GetThrusterLevel(loxvent) > 0.0 && !LOXVentValveOpen)
-		{
-			vessel->SetThrusterLevel(loxvent, 0.0);
-		}
-
-	}
-
-	if (LH2ContinuousVentValveOpen)
-	{
-		BoiloffTime += simdt;
-
-		if (BoiloffTime > 10.0) {
-			SIVBBoiloff();
-			BoiloffTime -= 10.0;
-		}
-	}
-
 	if (vernier)
 	{
-		if (vessel->GetThrusterGroupLevel(vernier) < 1.0 && FireUllageIgnition)
+		if (vessel->GetThrusterGroupLevel(vernier) < 1.0 && FireUllageIgnitionOn)
 		{
 			vessel->SetThrusterGroupLevel(vernier, 1.0);
-			FireUllageIgnition = false;
 		}
 	}
 
 	//sprintf(oapiDebugString(), "Ready %d Start %d FuelInjTempOKBypass %d Stop %d Cut Inhibit %d Level %f Timer %f", EngineReady, EngineStart, FuelInjTempOKBypass, EngineStop, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
+
+	if (DebugTimer < oapiGetSimTime())
+	{
+		char Buffer[128];
+
+		sprintf(Buffer, "Time %lf LH2 M %lf LH2 P %lf LOX M %lf LOX P %lf CVS F %lf", BoiloffTime + 540.0, fuelMass, LH2TankUllagePressurePSI, oxidMass, LOXTankUllagePressurePSI, F_CVS);
+		oapiWriteLog(Buffer);
+		DebugTimer = oapiGetSimTime() + 10.0;
+	}
+
 }
 
 bool SIVBSystems::EngineOnLogic()
 {
-	return HeliumControlOn && (StartTankDischargeControlOn || MainstageOn);
+	return HeliumControlOn && IgnitionPhaseControlOn && (StartTankDischargeControlOn || MainstageOn);
 }
 
-void SIVBSystems::SIVBBoiloff()
+void SIVBSystems::UpdatePropellants()
 {
-	double FuelMass = vessel->GetPropellantMass(main_propellant) * 0.99998193;
-	vessel->SetPropellantMass(main_propellant, FuelMass);
+	double p;
+
+	p = vessel->GetPropellantMass(main_propellant);
+
+	if (!propellantInitialized)
+	{
+		if (oxidMass == -1) {
+			oxidMass = p * PropellantLoadMixtureRatio / (1.0 + PropellantLoadMixtureRatio);
+		}
+		propellantInitialized = true;
+	}
+	else
+	{
+		if (lastPropellantMass != p)
+		{
+			double of = (MixtureRatio / (1.0 + MixtureRatio));
+			oxidMass -= (lastPropellantMass - p) * of;
+			oxidMass = max(oxidMass, 0);
+
+		}
+	}
+	fuelMass = p - oxidMass;
+	//lastPropellantMass gets updated after LH2 and LOX calculations
+
+	//sprintf(oapiDebugString(), "Prop %lf MR %lf Prop ratio %lf Ox %lf Fuel %lf", p, MixtureRatio, oxidMass / fuelMass, oxidMass, fuelMass);
+}
+
+void SIVBSystems::UpdateLH2ValveStates()
+{
+	//TBD: ESE for nearly everything
+
+	//CVS Orifice Shutoff Valve
+	if (LH2TankContinuousVentOrificeSOVOpenOn && !LH2TankContinuousVentValveCloseOn)
+	{
+		LH2CVSOrificeShutoffValve = true;
+	}
+	else if (!LH2TankContinuousVentOrificeSOVOpenOn && LH2TankContinuousVentValveCloseOn)
+	{
+		LH2CVSOrificeShutoffValve = false;
+	}
+
+	//CVS Relief Override Shutoff Valve
+	if (LH2TankContinuousVentReliefOverrideSOVOpenOn && !LH2TankContinuousVentValveCloseOn)
+	{
+		LH2CVSReliefOverrideShutoffValve = true;
+	}
+	else if (!LH2TankContinuousVentReliefOverrideSOVOpenOn && LH2TankContinuousVentValveCloseOn)
+	{
+		LH2CVSReliefOverrideShutoffValve = false;
+	}
+
+	//Latching Relief Valve Latch
+	if (LH2TankLatchingReliefValveLatchOn && LH2LatchingReliefValve)
+	{
+		LH2LatchingReliefValveLatch = true;
+	}
+
+	//Latching Relief Valve
+	if (LH2TankLatchingReliefValveOpenOn && !LH2TankVentAndLatchingReliefValveBoostCloseOn)
+	{
+		LH2LatchingReliefValve = true;
+	}
+	else if (!LH2TankLatchingReliefValveOpenOn && LH2TankVentAndLatchingReliefValveBoostCloseOn)
+	{
+		LH2LatchingReliefValve = false;
+		LH2LatchingReliefValveLatch = false;
+	}
+	else
+	{
+		//Based on pressure
+		if (!LH2LatchingReliefValve && LH2TankUllagePressurePSI > 34.0)
+		{
+			LH2LatchingReliefValve = true;
+		}
+		else if (!LH2LatchingReliefValveLatch && LH2LatchingReliefValve && LH2TankUllagePressurePSI < 31.0)
+		{
+			LH2LatchingReliefValve = false;
+		}
+	}
+
+	//Fuel Vent and Relief Valve
+	if (LH2TankVentValveOpen && !LH2TankVentAndLatchingReliefValveBoostCloseOn)
+	{
+		LH2FuelVentAndReliefValve = true;
+	}
+	else if (!LH2TankVentValveOpen && LH2TankVentAndLatchingReliefValveBoostCloseOn)
+	{
+		LH2FuelVentAndReliefValve = false;
+	}
+	else
+	{
+		//Based on pressure
+		if (!LH2FuelVentAndReliefValve && LH2TankUllagePressurePSI > 34.0)
+		{
+			LH2FuelVentAndReliefValve = true;
+		}
+		else if (LH2FuelVentAndReliefValve && LH2TankUllagePressurePSI < 31.0)
+		{
+			LH2FuelVentAndReliefValve = false;
+		}
+	}
+}
+
+void SIVBSystems::UpdateO2H2BurnerValveStates()
+{
+	if (BurnerLH2PropellantValveOpenOn && !BurnerLH2PropellantValveCloseOn)
+	{
+		HeliumHeaterLH2PropellantValve = true;
+	}
+	else if (!BurnerLH2PropellantValveOpenOn && BurnerLH2PropellantValveCloseOn)
+	{
+		HeliumHeaterLH2PropellantValve = false;
+	}
+
+	if (BurnerLOXShutdownValveOpenOn && !BurnerLOXShutdownValveCloseOn)
+	{
+		HeliumHeaterLOXShutdownValve = true;
+	}
+	else if (!BurnerLOXShutdownValveOpenOn && BurnerLOXShutdownValveCloseOn)
+	{
+		HeliumHeaterLOXShutdownValve = false;
+	}
+}
+
+void SIVBSystems::LH2PropellantCalculations(double simdt)
+{
+	//Only run this from S-II/S-IVB staging on!
+
+	//Timer for heat flow
+	BoiloffTime += simdt;
+
+	//To make sure the valve states are right
+	UpdateLH2ValveStates();
+
+	//LH2TankUllagePressurePSI = LOXTankUllagePressurePSI * 0.9362 + 3.19;
+
+	double FuelPercentage, UllageVolume, heatflow, mdot_boil, m_boil, P, CVSRegulator, CVSBypass, mdot_gas_CVS, mdot_gas_NPV, mdot_gas;
+
+	FuelPercentage = fuelMass / (vessel->GetPropellantMaxMass(main_propellant) * 1.0 / (PropellantLoadMixtureRatio + 1.0));
+	UllageVolume = LH2_TANK_VOLUME * (1.0 - FuelPercentage);
+
+	if (UllageVolume < 1000.0)
+	{
+		//Tank full, bypass
+		LH2TankUllagePressurePSI = 31.0;
+		//sprintf(oapiDebugString(), "Tank Full! UllageVolume %lf", UllageVolume);
+		return;
+	}
+	if (vessel->GetThrusterLevel(j2engine) > 0.01)
+	{
+		//Cheaty mass during thrust
+		LH2TankUllagePressurePSI = 31.0;
+		double InitPress = LH2TankUllagePressurePSI / PSI;
+		GH2_Mass = InitPress * UllageVolume / R / GH2_TEMP * M_H2 / 1000.0;
+		//sprintf(oapiDebugString(), "Burn active! UllageVolume %lf GH2_Mass %lf", UllageVolume, GH2_Mass);
+		return;
+	}
+
+	if (GH2_Mass == -1)
+	{
+		LH2TankUllagePressurePSI = 31.0;
+		double InitPress = LH2TankUllagePressurePSI / PSI;
+		GH2_Mass = InitPress * UllageVolume / R / GH2_TEMP * M_H2 / 1000.0;
+	}
+
+	//Calculate heat flow, J/g
+	if (BoiloffTime < 10.0)
+	{
+		heatflow = 0.0;
+	}
+	else
+	{
+		heatflow = 100000.0 / 1.5 * BTU / 3600.0 * (3.0 * exp(-BoiloffTime / (2363.0 + 500.0)) + 0.9)*(FuelPercentage); //Empirical
+	}
+	//Calculate mass rate that gets vaporized
+	mdot_boil = heatflow / LH2_ENTHALPY_VAPORIZATION / 1000.0; //kg
+	//Calculate mass that goes from LH2 to GH2
+	m_boil = mdot_boil * simdt;
+	//Calculate new fuel mass
+	if (fuelMass - m_boil < 0.0)
+	{
+		m_boil = fuelMass;
+		fuelMass = 0.0;
+	}
+	else
+	{
+		fuelMass = fuelMass - m_boil;
+	}
+	
+	//Add mass to total GH2 mass
+	GH2_Mass = GH2_Mass + m_boil;
+
+	//Repressurization
+	if (LH2AmbientRepressurizationOn)
+	{
+		GH2_Mass += LH2_AMBIENT_HELIUM_MASS_FLOW * simdt;
+	}
+	if (LH2CryoRepressurizationOn)
+	{
+		GH2_Mass += LH2_CRYO_HELIUM_MASS_FLOW * simdt;
+	}
+
+	//Calculate pressure
+	P = R * GH2_TEMP*GH2_Mass*1000.0 / M_H2 / UllageVolume;
+	//Calculate pressure in PSI
+	LH2TankUllagePressurePSI = P * PSI;
+
+	//Pressure switch
+	if (LH2PressureSwitch == false && LH2TankUllagePressurePSI > 31.0)
+	{
+		LH2PressureSwitch = true;
+	}
+	else if (LH2PressureSwitch == true && LH2TankUllagePressurePSI < 28.0)
+	{
+		LH2PressureSwitch = false;
+	}
+
+	//Continuous Vent System
+	if (LH2CVSReliefOverrideShutoffValve)
+	{
+		if (LH2TankUllagePressurePSI > 21.0)
+		{
+			CVSRegulator = 1.0;
+		}
+		else if (LH2TankUllagePressurePSI < 19.5)
+		{
+			CVSRegulator = 0.0;
+		}
+		else
+		{
+			CVSRegulator = (LH2TankUllagePressurePSI - 19.5) / 1.5;
+		}
+	}
+	else
+	{
+		CVSRegulator = 0.0;
+	}
+
+	if (LH2CVSOrificeShutoffValve)
+	{
+		CVSBypass = 1.0;
+	}
+	else
+	{
+		CVSBypass = 0.0;
+	}
+	//Gas flow rate of the CVS
+	mdot_gas_CVS = LH2TankUllagePressurePSI * (CVSRegulator*CVS_VALVE_SIZE + CVSBypass * CVS_BYPASS_VALVE_SIZE);
+	//Thrust
+	F_CVS = mdot_gas_CVS * LH2_CVS_ISP;
+
+	//Non-propulsive vent
+	mdot_gas_NPV = 0.0;
+	if (LH2LatchingReliefValve) mdot_gas_NPV += LH2_NPV_VALVE_SIZE * LH2TankUllagePressurePSI;
+	if (LH2FuelVentAndReliefValve) mdot_gas_NPV += LH2_NPV_VALVE_SIZE * LH2TankUllagePressurePSI;
+
+	//Calculate total venting flowrate
+	mdot_gas = mdot_gas_CVS + mdot_gas_NPV;
+	//Calculate updated GH2 mass
+	GH2_Mass = max(0.0, GH2_Mass - mdot_gas * simdt);
+
+	//sprintf(oapiDebugString(), "Fuel %lf Ullage %lf BoiloffTime %lf heatflow %lf, mdot_boil %lf m_boil %lf GH2_Mass %lf Press %lf", FuelPercentage, UllageVolume, BoiloffTime, heatflow, mdot_boil, m_boil, GH2_Mass, LH2TankUllagePressurePSI);
+	sprintf(oapiDebugString(), "CVS %d Press %lf, Regulator %lf Bypass %lf mdot %lf F %lf NPV %d mdot_gas_NPV %lf", LH2CVSReliefOverrideShutoffValve, LH2TankUllagePressurePSI, CVSRegulator, CVSBypass, mdot_gas_CVS, F_CVS, LH2LatchingReliefValve || LH2FuelVentAndReliefValve, mdot_gas_NPV);
+
+	//Orbiter stuff below here
+	//Apply thrust
+	if (F_CVS > 0.0)
+	{
+		vessel->AddForce(_V(0.0, 0.0, F_CVS), _V(0, 0, 0));
+	}
+	//Particle effect for NPV
+	LH2_NPV_Stream_Lvl = min(1.0, mdot_gas_NPV);
+}
+
+void SIVBSystems::UpdateLOXValveStates()
+{
+	//NPV Vent and Relief Valve Latch
+	if (LOXTankNPVValveLatchOpenOn && LOXNPVVentAndReliefValve)
+	{
+		LOXNPVValveLatch = true;
+	}
+
+	//LOX NPV Vent and Relief Valve
+	if (LOXTankNPVValveOpenOn && !LOXTankVentAndNPVValvesBoostCloseOn)
+	{
+		LOXNPVVentAndReliefValve = true;
+	}
+	else if (!LOXTankNPVValveOpenOn && LOXTankVentAndNPVValvesBoostCloseOn)
+	{
+		LOXNPVVentAndReliefValve = false;
+		LOXNPVValveLatch = false;
+	}
+	else
+	{
+		if (LOXNPVVentAndReliefValve == false && LOXTankUllagePressurePSI > 45.5)
+		{
+			LOXNPVVentAndReliefValve = true;
+		}
+		else if (!LOXNPVValveLatch && LOXNPVVentAndReliefValve == true && LOXTankUllagePressurePSI < 42.5)
+		{
+			LOXNPVVentAndReliefValve = false;
+		}
+	}
+
+	//LOX Vent and Relief Valve
+	if (LOXTankVentValveOpen && !LOXTankVentAndNPVValvesBoostCloseOn)
+	{
+		LOXVentAndReliefValve = true;
+	}
+	else if (!LOXTankVentValveOpen && LOXTankVentAndNPVValvesBoostCloseOn)
+	{
+		LOXVentAndReliefValve = false;
+	}
+	else
+	{
+		if (LOXVentAndReliefValve == false && LOXTankUllagePressurePSI > 45.5)
+		{
+			LOXVentAndReliefValve = true;
+		}
+		else if (LOXVentAndReliefValve == true && LOXTankUllagePressurePSI < 42.5)
+		{
+			LOXVentAndReliefValve = false;
+		}
+	}
+}
+
+void SIVBSystems::LOXPropellantCalculations(double simdt)
+{
+	double OxidPercentage, UllageVolume, P, mdot_gas_NPV, mdot_gas_leak;
+	bool LOXSignalA, LOXSignalD, K74;
+
+	UpdateLOXValveStates();
+
+	OxidPercentage = oxidMass / (vessel->GetPropellantMaxMass(main_propellant) * PropellantLoadMixtureRatio*(1.0 + PropellantLoadMixtureRatio));
+	UllageVolume = LO2_TANK_VOLUME * (1.0 - OxidPercentage);
+
+	if (UllageVolume < 1000.0)
+	{
+		//Tank full, bypass
+		LOXTankUllagePressurePSI = 41.0;
+		//sprintf(oapiDebugString(), "Tank Full! UllageVolume %lf OxidPercentage %lf", UllageVolume, OxidPercentage);
+		return;
+	}
+	if (vessel->GetThrusterLevel(j2engine) > 0.01)
+	{
+		//Cheaty mass during thrust
+		LOXTankUllagePressurePSI = 41.0;
+		double InitPress = LOXTankUllagePressurePSI / PSI;
+		GO2_Mass = InitPress * UllageVolume / R / GO2_TEMP * M_O2 / 1000.0;
+		//sprintf(oapiDebugString(), "Burn active! UllageVolume %lf GH2_Mass %lf", UllageVolume, GH2_Mass);
+		return;
+	}
+
+	//Pressure switch
+	if (LOXPressureSwitch == false && LOXTankUllagePressurePSI > 41.0)
+	{
+		LOXPressureSwitch = true;
+	}
+	else if (LOXPressureSwitch == true && LOXTankUllagePressurePSI < 38.0)
+	{
+		LOXPressureSwitch = false;
+	}
+
+	//Flight pressurization
+	LOXSignalA = LOXPressureSwitch;
+	LOXSignalD = !LOXPressureSwitch;
+	K74 = LOXSignalA;
+
+	bool LOXFlightPressurizationOff;
+	if (LOXTankPressurizationShutoffValvesClose || (K74 && !LOXTankFlightPressureSystemOn))
+	{
+		LOXFlightPressurizationOff = true;
+	}
+	else
+	{
+		LOXFlightPressurizationOff = false;
+	}
+
+	if (GO2_Mass == -1)
+	{
+		LOXTankUllagePressurePSI = 41.0;
+		double InitPress = LOXTankUllagePressurePSI / PSI;
+		GO2_Mass = InitPress * UllageVolume / R / GO2_TEMP * M_O2 / 1000.0;
+	}
+
+	//Repressurization
+	if (LOXAmbientRepressurizationOn)
+	{
+		GO2_Mass += LOX_AMBIENT_HELIUM_MASS_FLOW * simdt;
+	}
+	if (LOXCryoRepressurizationOn)
+	{
+		GO2_Mass += LOX_CRYO_HELIUM_MASS_FLOW * simdt;
+	}
+
+	//Calculate pressure
+	P = R * GO2_TEMP*GO2_Mass*1000.0 / M_O2 / UllageVolume;
+	//Calculate pressure in PSI
+	LOXTankUllagePressurePSI = P * PSI;
+
+	//Non-propulsive vent
+	mdot_gas_NPV = 0.0;
+	if (LOXNPVVentAndReliefValve) mdot_gas_NPV += LOX_NPV_VALVE_SIZE * LOXTankUllagePressurePSI;
+	if (LOXVentAndReliefValve) mdot_gas_NPV += LOX_VENT_VALVE_SIZE * LOXTankUllagePressurePSI;
+
+	//Calculate updated GOX mass
+	GO2_Mass = max(0.0, GO2_Mass - mdot_gas_NPV * simdt);
+
+	//Pressure loss in EPO, simulated as a simple leak, but likely a temperature decrease and other factors
+	mdot_gas_leak = 2.039614202645544e-04*LOXTankUllagePressurePSI;
+
+	//Calculate updated GOX mass
+	GO2_Mass = max(0.0, GO2_Mass - mdot_gas_leak * simdt);
+
+	//LOX dump
+	double F_LOX_Dump = 0.0;
+	double mdot_GOX_dump = 0.0;
+
+	if (oxidMass > 0.0 && MainstageOn && HeliumControlOn && !EngineOnLogic())
+	{
+		//LOX dump mass flow
+		double mdot_lox_dump = min(20.0, 0.06*oxidMass);
+		if (oxidMass < mdot_lox_dump*simdt)
+		{
+			mdot_lox_dump = 0.0;
+			oxidMass = 0.0;
+		}
+		else
+		{
+			oxidMass -= mdot_lox_dump * simdt;
+		}
+
+		//Gas ingestion
+		if (oxidMass < 248.569) //Value from AS-205 S-IVB Flight Evaluation Report
+		{
+			mdot_GOX_dump = (1.0 - oxidMass / 248.569) / 40.0*LOXTankUllagePressurePSI;
+
+			if (GO2_Mass < mdot_GOX_dump*simdt)
+			{
+				mdot_GOX_dump = 0.0;
+				GO2_Mass = 0.0;
+			}
+			else
+			{
+				GO2_Mass = GO2_Mass - mdot_GOX_dump * simdt;
+			}
+		}
+
+		F_LOX_Dump = mdot_lox_dump * LOX_DUMP_ISP + mdot_GOX_dump * GOX_DUMP_ISP;
+		vessel->AddForce(_V(0, 0, F_LOX_Dump), _V(0, 0, 0));
+
+		LOX_Dump_Stream_Lvl = min(1.0, F_LOX_Dump / 2500.0);
+	}
+	else
+	{
+		LOX_Dump_Stream_Lvl = 0.0;
+	}
+
+	//sprintf(oapiDebugString(), "LOX %lf GOX %lf mdot_gas_NPV %lf mdot_gas_leak %lf F_LOX_Dump %lf", oxidMass, GO2_Mass, mdot_gas_NPV, mdot_gas_leak, F_LOX_Dump);
+	//sprintf(oapiDebugString(), "Passivation %d EngineControlBus %d HeliumControl %d Mainstage %d HeliumControlOn %d MainstageOn %d oxidMass %lf F_LOX_Dump %lf GO2_Mass %lf mdot_GOX_dump %lf", PassivationRelay, EngineControlBusMotorSwitch, EngineHeliumControlValveOpen, EngineMainstageControlValveOpen, HeliumControlOn, MainstageOn, oxidMass, F_LOX_Dump, GO2_Mass, mdot_GOX_dump);
+}
+
+void SIVBSystems::O2H2Burner(double simdt)
+{
+	double TempBurnerChamberDomeF;
+	bool BurnerMalfunction;
+	bool LOXSignalA, LOXSignalB, LOXSignalC, LOXSignalD, LOXSignalV;
+	bool K52; //LH2 tank repress backup pressure switch disable
+	bool K75; //LOX repressurization disabled if energized
+	bool K76; //LH2 repressurization disabled if energized
+	bool K87; //Ambient repress mode if energized, otherwise cryo
+
+	TempBurnerChamberDomeF = -408.72; //TBD: Simulate
+
+	//Malfunction
+	if (TempBurnerChamberDomeF > -408.57 || TempBurnerChamberDomeF  < -408.87)
+	{
+		BurnerMalfunction = true;
+	}
+	else
+	{
+		BurnerMalfunction = false;
+	}
+
+	if (BurnerAutoCutoffSystemArm && BurnerMalfunction)
+	{
+		BurnerMalfunctionSignal = true;
+	}
+	else
+	{
+		BurnerMalfunctionSignal = false;
+	}
+
+	if (BurnerMalfunctionSignal)
+	{
+		BurnerShutdown();
+	}
+
+	//Is burner operating?
+	if (O2H2BurnerOn == false && BurnerExcitersOn && BurnerLogic())
+	{
+		O2H2BurnerOn = true;
+	}
+	else if (O2H2BurnerOn && !BurnerLogic())
+	{
+		O2H2BurnerOn = false;
+	}
+
+	//LH2
+	if (RepressSystemModeSelectOn)
+	{
+		K52 = K87 = true;
+	}
+	else
+	{
+		K52 = K87 = false;
+	}
+
+	if (LH2PressureSwitch) //TBD: Backup
+	{
+		K76 = true;
+	}
+	else
+	{
+		K76 = false;
+	}
+
+	LH2AmbientRepressurizationOn = (LH2TankRepressurizationControlValveOpenOn && !K76 && K87);
+	LH2CryoRepressurizationOn = (O2H2BurnerOn && LH2TankRepressurizationControlValveOpenOn && !K76 && !K87);
+	
+	//LOX
+	bool LOXColdHeliumPressureSwitch = false; //TBD
+
+	LOXSignalA = LOXPressureSwitch;
+	LOXSignalD = !LOXPressureSwitch;
+	LOXSignalC = LOXSignalD && !LOXColdHeliumPressureSwitch;
+
+	K75 = (LOXSignalC && LOXTankRepressControlValveOpenOn); //TBD: K83
+	LOXSignalB = (K87 && K75); //Ambient mode
+	LOXSignalV = (!K87 && K75); //Cryo mode
+
+	LOXAmbientRepressurizationOn = LOXSignalB;
+	LOXCryoRepressurizationOn = (O2H2BurnerOn && LOXSignalV);
+
+	//Thrust and effects
+	double Force = 0.0;
+	if (O2H2BurnerOn)
+	{
+		O2H2BurnerTime += simdt;
+
+		//TBD: Take fuel and oxidizer mass
+
+		if (O2H2BurnerTime < 200.0)
+		{
+			Force = 50.0 + O2H2BurnerTime / 200.0*70.0;
+		}
+		else
+		{
+			Force = 120.0;
+		}
+		vessel->AddForce(_V(0.0, 0.0, Force), _V(0.0, 0.0, 0.0));
+	}
+	else
+	{
+		O2H2BurnerTime = 0.0;
+	}
+
+	sprintf(oapiDebugString(), "BURNER: LH2 In %d LOX In %d Exciter %d Burner On %d Force %lf LH2 Repress Amb %d Cryo %d LOX Repress Amb %d Cryo %d", HeliumHeaterLH2PropellantValve,
+		HeliumHeaterLOXShutdownValve, BurnerExcitersOn, O2H2BurnerOn, Force, LH2AmbientRepressurizationOn, LH2CryoRepressurizationOn, LOXAmbientRepressurizationOn, LOXCryoRepressurizationOn);
+}
+
+bool SIVBSystems::BurnerLogic() const
+{
+	//For continuous operation
+	return (HeliumHeaterLH2PropellantValve && HeliumHeaterLOXShutdownValve && fuelMass > 0.0 && oxidMass > 0.0);
+}
+
+void SIVBSystems::BurnerShutdown()
+{
+	//Signal J in Saturn Systems Handbook
+	LOXTankRepressControlValveOpenOn = false;
+	LH2TankRepressurizationControlValveOpenOn = false;
+	BurnerExcitersOn = false;
+	RepressSystemModeSelectOn = true;
+	BurnerLOXShutdownValveOpenOn = false;
+	BurnerLOXShutdownValveCloseOn = true;
+	BurnerLH2PropellantValveOpenOn = false;
+	BurnerLH2PropellantValveCloseOn = true;
+}
+
+void SIVBSystems::ChilldownSystem()
+{
+	bool SignalA, SignalB, K3;
+
+	K3 = ThrustOKRelay;
+
+	if (PrevalvesCloseOn && (!K3 || LVDCEngineStopRelay))
+	{
+		SignalA = true;
+	}
+	else
+	{
+		SignalA = false;
+	}
+
+	SignalB = ChilldownShutoffValveCloseOn;
 }
 
 void SIVBSystems::SetThrusterDir(double beta_y, double beta_p)
@@ -590,15 +1505,13 @@ void SIVBSystems::GetJ2ISP(double ratio, double &isp, double &ThrustAdjust)
 	}
 }
 
-SIVB200Systems::SIVB200Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver)
-	: SIVBSystems(v, j2, j2prop, aps, ull, lox, ver)
+SIVB200Systems::SIVB200Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THGROUP_HANDLE &ver)
+	: SIVBSystems(v, j2, j2prop, aps, ull, ver, 4.9)
 {
 }
 
 void SIVB200Systems::RecalculateEngineParameters()
 {
-	double MixtureRatio;
-
 	if (PUValveState == PUVALVE_CLOSED)
 	{
 		MixtureRatio = 5.5;
@@ -648,8 +1561,14 @@ void SIVB200Systems::SwitchSelector(int channel)
 {
 	switch (channel)
 	{
+	case 7: //P.U. Inverter and DC Power On
+		PUInverterAndDCPowerOn = true;
+		break;
+	case 8: //P.U. Inverter and DC Power Off
+		PUInverterAndDCPowerOn = false;
+		break;
 	case 9: //Engine Ignition Sequence Start
-		EngineStartOn();
+		EngineStart = true;
 		break;
 	case 10: //Engine Ready Bypass On
 		SetEngineReadyBypass();
@@ -658,26 +1577,40 @@ void SIVB200Systems::SwitchSelector(int channel)
 		FuelInjTempOKBypass = true;
 		break;
 	case 12: //S-IVB Engine Cutoff No. 1 On
-		LVDCEngineCutoff();
+		LVDCEngineStopRelay = true;
 		break;
 	case 13: //S-IVB Engine Cutoff No. 1 Off
-		LVDCEngineCutoffOff();
+		LVDCEngineStopRelay = false;
 		break;
 	case 16: //Fuel Injection Temperature Ok Bypass Reset
 		FuelInjTempOKBypass = false;
 		break;
-	case 19: //Engine Ready Bypass On
+	case 19: //Engine Ready Bypass On (AS-205) or LH2 Tank Latching Relief Valve Latch Off (AS-206)
 		SetEngineReadyBypass();
 		break;
 	case 22: //LOX Chilldown Pump On
+		LOXChilldownPumpOn = true;
 		break;
 	case 23: //LOX Chilldown Pump Off
+		LOXChilldownPumpOn = false;
+		break;
+	case 24: //Engine Pump Purge Control Valve Enable On
+		EnginePumpPurgeControlValveEnableOn = true;
+		break;
+	case 25: //Engine Pump Purge Control Valve Enable Off
+		EnginePumpPurgeControlValveEnableOn = false;
+		break;
+	case 27: //Engine Ignition Sequence Start Relay Reset
+		EngineStart = false;
 		break;
 	case 28: //Aux Hydraulic Pump Flight Mode On
 		AuxHydPumpFlightModeOn();
 		break;
 	case 29: //Aux Hydraulic Pump Flight Mode Off
 		AuxHydPumpFlightModeOff();
+		break;
+	case 30: //Mainstage Control Valve Open On
+		EngineMainstageControlValveOpen = true;
 		break;
 	case 32: //P.U. Mixture Ratio 4.5 On
 		SetPUValve(PUVALVE_OPEN);
@@ -693,28 +1626,80 @@ void SIVB200Systems::SwitchSelector(int channel)
 	case 35: //P.U. Mixture Ratio 5.5 Off
 		SetPUValve(PUVALVE_NULL);
 		break;
+	case 37: //LOX Tank NPV Valve Open Off
+		LOXTankNPVValveOpenOn = false;
+		UpdateLOXValveStates();
+		break;
+	case 38: //LH2 Tank Vent Valve Open
+		LH2TankVentValveOpen = true;
+		UpdateLH2ValveStates();
+		break;
+	case 42: //LOX Tank NPV Valve Open On
+		LOXTankNPVValveOpenOn = true;
+		UpdateLOXValveStates();
+		break;
 	case 43: //S-IVB Engine Cutoff No. 2 On
-		LVDCEngineCutoff();
+		LVDCEngineStopRelay = true;
 		break;
 	case 49: //S-IVB Engine Cutoff No. 2 Off
-		LVDCEngineCutoffOff();
+		LVDCEngineStopRelay = false;
+		break;
+	case 52: //LH2 Tank Latching Relief Valve Latch On
+		LH2TankLatchingReliefValveLatchOn = true;
+		UpdateLH2ValveStates();
 		break;
 	case 54: //Charge Ullage Ignition On
+		ChargeUllageIgnitionOn = true;
 		break;
 	case 55: //Charge Ullage Jettison On
+		ChargeUllageJettisonOn = true;
 		break;
 	case 56: //Fire Ullage Ignition On
-		FireUllageIgnitionOn();
+		FireUllageIgnitionOn = true;
+		break;
+	case 57: //Fire Ullage Jettison On
+		FireUllageJettisonOn = true;
 		break;
 	case 58: //Fuel Chilldown Pump On
+		FuelChillDownPumpOn = true;
 		break;
 	case 59: //Fuel Chilldown Pump Off
+		FuelChillDownPumpOn = false;
+		break;
+	case 62: //TM Calibrate On
+		TelemetryCalibrateOn = true;
+		break;
+	case 63: //TM Calibrate Off
+		TelemetryCalibrateOn = false;
+		break;
+	case 64: //Engine Ignition Phase Control Valve Open On
+		EngineIgnitionPhaseControlValveOpenOn = true;
+		break;
+	case 65: //Engine Mainstage and Ignition Phase Control Valves Open Off
+		EngineMainstageControlValveOpen = false;
+		EngineIgnitionPhaseControlValveOpenOn = false;
+		break;
+	case 73: //Ullage Firing Reset
+		FireUllageIgnitionOn = false;
+		FireUllageJettisonOn = false;
+		break;
+	case 76: //LH2 Tank Vent Valve Close
+		LH2TankVentValveOpen = false;
+		UpdateLH2ValveStates();
+		break;
+	case 77: //LH2 Tank Vent and Latching Relief Valves Boost Close On
+		LH2TankVentAndLatchingReliefValveBoostCloseOn = true;
+		UpdateLH2ValveStates();
+		break;
+	case 78: //LH2 Tank Vent and Latching Relief Valves Boost Close Off
+		LH2TankVentAndLatchingReliefValveBoostCloseOn = false;
+		UpdateLH2ValveStates();
 		break;
 	case 79: //LOX Tank Flight Pressurization Shutoff Valves Close On
-		EndLOXVenting();
+		LOXTankPressurizationShutoffValvesClose = true;
 		break;
 	case 80: //LOX Tank Flight Pressurization Shutoff Valves Close Off
-		StartLOXVenting();
+		LOXTankPressurizationShutoffValvesClose = false;
 		break;
 	case 82: //Prevalves Close On
 		PrevalvesCloseOn = true;
@@ -723,6 +1708,36 @@ void SIVB200Systems::SwitchSelector(int channel)
 		PrevalvesCloseOn = false;
 		break;
 	case 85: //Passivation Enable
+		PassivationRelay = true; //TBD: require K57 (S-IB/S-IVB separation interlock)
+		break;
+	case 86: //Passivation Disable
+		PassivationRelay = false;
+		break;
+	case 88: //Ullage Charging Reset
+		ChargeUllageIgnitionOn = false;
+		ChargeUllageJettisonOn = false;
+		break;
+	case 91: //Chilldown Shutoff Valves Close On
+		ChilldownShutoffValveCloseOn = true;
+		break;
+	case 92: //Chilldown Shutoff Valves Close Off
+		ChilldownShutoffValveCloseOn = false;
+		break;
+	case 93: //LOX Vent Open Command On
+		LOXTankVentValveOpen = true;
+		UpdateLOXValveStates();
+		break;
+	case 94: //LOX Vent Open Command Off
+		LOXTankVentValveOpen = false;
+		UpdateLOXValveStates();
+		break;
+	case 95: //LOX Tank Vent and NPV Valves Boost Close On
+		LOXTankVentAndNPVValvesBoostCloseOn = true;
+		UpdateLOXValveStates();
+		break;
+	case 96: //LOX Tank Vent and NPV Valves Boost Close Off
+		LOXTankVentAndNPVValvesBoostCloseOn = false;
+		UpdateLOXValveStates();
 		break;
 	case 97: //Point Level Sensor Arming
 		PointLevelSensorArming();
@@ -730,20 +1745,45 @@ void SIVB200Systems::SwitchSelector(int channel)
 	case 98: //Point Level Sensor Disarming
 		PointLevelSensorDisarming();
 		break;
+	case 99: //LH2 Tank Latching Relief Valve Open On
+		LH2TankLatchingReliefValveOpenOn = true;
+		UpdateLH2ValveStates();
+		break;
+	case 100: //LH2 Tank Latching Relief Valve Open Off
+		LH2TankLatchingReliefValveOpenOn = false;
+		UpdateLH2ValveStates();
+		break;
+	case 101: //LOX Tank NPV Valve Latch Open On
+		LOXTankNPVValveLatchOpenOn = true;
+		break;
+	case 102: //LOX Tank NPV Valve Latch Open Off
+		LOXTankNPVValveLatchOpenOn = false;
+		break;
+	case 103: //LOX Tank Flight Pressurization System On
+		LOXTankFlightPressureSystemOn = true;
+		break;
+	case 104: //LOX Tank Flight Pressurization System Off
+		LOXTankFlightPressureSystemOn = false;
+		break;
+	case 109: //Engine Helium Control Valve Open On
+		EngineHeliumControlValveOpen = true;
+		break;
+	case 110: //Engine Helium Control Valve Open Off
+		EngineHeliumControlValveOpen = false;
+		break;
 	default:
 		break;
 	}
 }
 
-SIVB500Systems::SIVB500Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver)
-	: SIVBSystems(v, j2, j2prop, aps, ull, lox, ver)
+SIVB500Systems::SIVB500Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THGROUP_HANDLE &ver)
+	: SIVBSystems(v, j2, j2prop, aps, ull, ver, 4.45)
 {
+	
 }
 
 void SIVB500Systems::RecalculateEngineParameters()
 {
-	double MixtureRatio;
-
 	if (PUValveState == PUVALVE_CLOSED)
 	{
 		MixtureRatio = 5.5;
@@ -761,7 +1801,6 @@ void SIVB500Systems::RecalculateEngineParameters()
 }
 
 void SIVB500Systems::SetSIVBMixtureRatio(double ratio)
-
 {
 	double isp, thrust, ThrustAdjust;
 
@@ -781,26 +1820,32 @@ void SIVB500Systems::SwitchSelector(int channel)
 {
 	switch (channel)
 	{
-	case 1: //Passivation Enable
-		PassivationRelay = true;
+	case 1: //Passivation Enable (AS-503) or Start Tank Vent Control Valve Open On (later)
+		if (VehicleNo <= 504) PassivationRelay = true; //TBD: require K57 (S-IC/S-II separation interlock)
+		else StartTankVentControlValveOpenOn = true;
 		break;
-	case 2: //Passivation Disable
-		PassivationRelay = false;
+	case 2: //Passivation Disable (AS-503) or Start Tank Vent Control Valve Open Off (later)
+		if (VehicleNo <= 504) PassivationRelay = false;
+		else StartTankVentControlValveOpenOn = false;
 		break;
 	case 3: //LOX Tank Repressurization Control Valve Open On
+		LOXTankRepressControlValveOpenOn = true;
 		break;
 	case 4: //LOX Tank Repressurization Control Valve Open Off
+		LOXTankRepressControlValveOpenOn = false;
 		break;
 	case 5: //PU Activate On
 		break;
 	case 6: //PU Activate Off
 		break;
 	case 7: //PU Inverter and DC Power On
+		PUInverterAndDCPowerOn = true;
 		break;
 	case 8: //PU Inverter and DC Power Off
+		PUInverterAndDCPowerOn = false;
 		break;
 	case 9: //S-IVB Engine Start On
-		EngineStartOn();
+		EngineStart = true;
 		break;
 	case 10: //Engine Ready Bypass
 		SetEngineReadyBypass();
@@ -809,16 +1854,31 @@ void SIVB500Systems::SwitchSelector(int channel)
 		FuelInjTempOKBypass = true;
 		break;
 	case 12: //S-IVB Engine Cutoff
-		LVDCEngineCutoff();
+		LVDCEngineStopRelay = true;
 		break;
 	case 13: //S-IVB Engine Cutoff Off
-		LVDCEngineCutoffOff();
+		LVDCEngineStopRelay = false;
 		break;
-	case 14: //Engine Mainstage Control Valve Open On
-		StartLOXVenting();
+	case 14: //Engine Mainstage Control Valve Open On (AS-506 and earlier) or Start Tank Recharge Valve Open (AS-508 and later)
+		if (VehicleNo <= 506)
+		{
+			EngineMainstageControlValveOpen = true;
+		}
+		else
+		{
+			StartTankRechargeValveOpen = true;
+		}
 		break;
-	case 15: //Engine Mainstage Control Valve Open Off
-		EndLOXVenting();
+	case 15: //Engine Mainstage Control Valve Open Off (AS-506 and earlier) or Single Sideband System Disable (later)
+		if (VehicleNo <= 506)
+		{
+			EngineMainstageControlValveOpen = false;
+			EngineIgnitionPhaseControlValveOpenOn = false;
+		}
+		else
+		{
+
+		}
 		break;
 	case 16: //Fuel Injector Temperature OK Bypass Reset
 		FuelInjTempOKBypass = false;
@@ -829,25 +1889,55 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 18: //PU Valve Hardover Position Off
 		SetPUValve(PUVALVE_NULL);
 		break;
-	case 19: //S-IVB Engine EDS Cutoff No. 2 Disable
-		EDSCutoffDisable();
+	case 19: //S-IVB Engine EDS Cutoff No. 2 Disable (AS-503) or LH2 Tank Latching Relief Valve Latch Off (AS-507+ at least)
+		if (VehicleNo <= 506)
+		{
+			if (!EDSCutoffNo2DisableInhibit) EDSCutoffDisabled = true;
+		}
+		else
+		{
+			LH2TankLatchingReliefValveLatchOn = false;
+			UpdateLH2ValveStates();
+		}
 		break;
-	case 20: //LOX Chilldown Pump Purge Control Valve Enable On
+	case 20: //LOX Chilldown Pump Purge Control Valve Enable On (AS-503) or Ambient Helium Supply Shutoff Valve Closed On (later)
+		if (VehicleNo <= 504)
+		{
+
+		}
+		else
+		{
+			AmbientHeliumSupplyShutoffValveClosedOn = true;
+		}
 		break;
-	case 21: //LOX Chilldown Pump Purge Control Valve Enable Off
+	case 21: //LOX Chilldown Pump Purge Control Valve Enable Off (AS-503) or Ambient Helium Supply Shutoff Valve Closed Off (later)
+		if (VehicleNo <= 504)
+		{
+
+		}
+		else
+		{
+			AmbientHeliumSupplyShutoffValveClosedOn = false;
+		}
 		break;
 	case 22: //LOX Chilldown Pump On
+		LOXChilldownPumpOn = true;
 		break;
 	case 23: //LOX Chilldown Pump Off
+		LOXChilldownPumpOn = false;
 		break;
 	case 24: //Engine Pump Purge Control Valve Enable On
+		EnginePumpPurgeControlValveEnableOn = true;
 		break;
 	case 25: //Engine Pump Purge Control Valve Enable Off
+		EnginePumpPurgeControlValveEnableOn = false;
 		break;
 	case 26: //Burner LH2 Propellant Valve Open On
+		BurnerLH2PropellantValveOpenOn = true;
+		UpdateO2H2BurnerValveStates();
 		break;
 	case 27: //S-IVB Engine Start Off
-		EngineStartOff();
+		EngineStart = false;
 		break;
 	case 28: //Aux Hydraulic Pump Flight Mode On
 		AuxHydPumpFlightModeOn();
@@ -855,33 +1945,70 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 29: //Aux Hydraulic Pump Flight Mode Off
 		AuxHydPumpFlightModeOff();
 		break;
-	case 30: //Start Bottle Vent Control Valve Open On
-		//EngineMainstageControlValveOpen = true;
+	case 30: //Start Bottle Vent Control Valve Open On (AS-506 and earlier), Mainstage Control Valve Open On (later)
+		if (VehicleNo <= 506)
+		{
+
+		}
+		else
+		{
+			EngineMainstageControlValveOpen = true;
+		}
 		break;
-	case 31: //Start Bottle Vent Control Valve Open Off
-		//EngineMainstageControlValveOpen = false;
+	case 31: //Engine Mainstage Control Valve Open Off (AS-507 and earlier) or Start Tank Recharge Valve Close & Disarm (later)
+		if (VehicleNo <= 507)
+		{
+			EngineMainstageControlValveOpen = false;
+		}
+		else
+		{
+			StartTankRechargeValveOpen = false;
+			StartTankRechargeValveArm = false;
+		}
 		break;
 	case 32: //Second Burn Relay On
-		SecondBurnRelayOn();
+		SecondBurnRelay = true;
 		break;
 	case 33: //Second Burn Relay Off
-		SecondBurnRelayOff();
+		SecondBurnRelay = false;
 		break;
 	case 34: //PU Fuel Boil Off Bias Command On
 		break;
 	case 35: //PU Fuel Boil Off Bias Command Off
 		break;
 	case 36: //Repressurization System Mode Select On (Amb)
+		RepressSystemModeSelectOn = true;
 		break;
-	case 37: //Repressurization System Mode Select Off (Amb)
+	case 37: //Repressurization System Mode Select Off (Cryo)
+		RepressSystemModeSelectOn = false;
 		break;
 	case 38: //LH2 Tank Vent Open Command On
+		LH2TankVentValveOpen = true;
+		UpdateLH2ValveStates();
 		break;
 	case 39: //LH2 Tank Repressurization Control Valve Open On
+		LH2TankRepressurizationControlValveOpenOn = true;
+		UpdateLH2ValveStates();
 		break;
-	case 40: //PCM Group System On
+	case 40: //PCM Group System On (AS-503) or Passivation Enable (later)
+		if (VehicleNo <= 504)
+		{
+
+		}
+		else
+		{
+			PassivationRelay = true;
+		}
 		break;
-	case 41: //PCM Group System Off
+	case 41: //PCM Group System Off (AS-503) or Passivation Disable (later)
+		if (VehicleNo <= 504)
+		{
+
+		}
+		else
+		{
+			PassivationRelay = false;
+		}
 		break;
 	case 42: //S-IVB Ullage Engine No. 1 On
 		APSUllageEngineOn(1);
@@ -890,83 +2017,164 @@ void SIVB500Systems::SwitchSelector(int channel)
 		APSUllageEngineOff(1);
 		break;
 	case 44: //LOX Tank NPV Valve Latch Open On
+		LOXTankNPVValveLatchOpenOn = true;
 		break;
 	case 45: //LOX Tank NPV Valve Latch Open Off
+		LOXTankNPVValveLatchOpenOn = false;
 		break;
-	case 46: //Single Sideband FM Transmitter On
+	case 46: //Single Sideband FM Transmitter On (AS-506 and earlier) or Regular Calibrate Relays On (later)
 		break;
-	case 47: //Single Sideband FM Transmitter Off
+	case 47: //Single Sideband FM Transmitter Off (AS-506 and earlier)
 		break;
 	case 48: //Inflight Calibration Mode On
+		InflightCalibrateModeOn = true;
 		break;
 	case 49: //Inflight Calibration Mode Off
+		InflightCalibrateModeOn = false;
 		break;
-	case 50: //Heat-Exchanger Bypass Valve Control Enable On
+	case 50: //Heat-Exchanger Bypass Valve Control Enable
+		LOXHeatExchangerBypassValveControlEnable = true;
 		break;
-	case 51: //Heat-Exchanger Bypass Valve Control Enable Off
+	case 51: //Heat-Exchanger Bypass Valve Control Disable
+		LOXHeatExchangerBypassValveControlEnable = false;
 		break;
-	case 52: //Measurement Transfer Mode Position "B"
+	case 52: //Measurement Transfer Mode Position "B" (AS-503) or LH2 Tank Latching Relief Valve Latch On (later)
+		if (VehicleNo <= 506)
+		{
+
+		}
+		else
+		{
+			LH2TankLatchingReliefValveLatchOn = true;
+		}
 		break;
-	case 53: //Spare
+	case 53: //Spare (AS-506 and earlier) or S-IVB Engine EDS Cutoff No. 2 Disable (later)
+		if (VehicleNo <= 506)
+		{
+
+		}
+		else
+		{
+			if (!EDSCutoffNo2DisableInhibit) EDSCutoffDisabled = true;
+		}
 		break;
 	case 54: //Charge Ullage Ignition On
+		ChargeUllageIgnitionOn = true;
 		break;
 	case 55: //Charge Ullage Jettison On
+		ChargeUllageJettisonOn = true;
 		break;
 	case 56: //Fire Ullage Ignition On
-		FireUllageIgnitionOn();
+		FireUllageIgnitionOn = true;
 		break;
 	case 57: //Fire Ullage Jettison On
+		FireUllageJettisonOn = true;
 		break;
 	case 58: //Fuel Chilldown Pump On
+		FuelChillDownPumpOn = true;
 		break;
 	case 59: //Fuel Chilldown Pump Off
+		FuelChillDownPumpOn = false;
 		break;
 	case 60: //Burner LH2 Propellant Valve Close On
+		BurnerLH2PropellantValveCloseOn = true;
+		UpdateO2H2BurnerValveStates();
 		break;
 	case 61: //Burner LH2 Propellant Valve Close Off
+		BurnerLH2PropellantValveCloseOn = false;
+		UpdateO2H2BurnerValveStates();
 		break;
 	case 62: //TM Calibrate On
+		TelemetryCalibrateOn = true;
 		break;
 	case 63: //TM Calibrate Off
+		TelemetryCalibrateOn = false;
 		break;
-	case 64: //LH2 Tank Latching Relief Valve Latch On
+	case 64: //LH2 Tank Latching Relief Valve Latch On (AS-506 and earlier) or Engine Ignition Phase Control Valve Open On (later)
+		if (VehicleNo <= 506)
+		{
+			LH2TankLatchingReliefValveLatchOn = true;
+			UpdateLH2ValveStates();
+		}
+		else
+		{
+			EngineIgnitionPhaseControlValveOpenOn = true;
+		}
 		break;
-	case 65: //LH2 Tank Latching Relief Valve Latch Off
+	case 65: //LH2 Tank Latching Relief Valve Latch Off (AS-506 and earlier) or Spare? (AS-507) Engine Mainstage and Ignition Phase Control Valves Open Off (later)
+		if (VehicleNo <= 506)
+		{
+			LH2TankLatchingReliefValveLatchOn = false;
+			UpdateLH2ValveStates();
+		}
+		else if (VehicleNo >= 508)
+		{
+
+			EngineMainstageControlValveOpen = false;
+			EngineIgnitionPhaseControlValveOpenOn = false;
+		}
 		break;
 	case 66: //RF Assembly Power Command On
 		break;
-	case 67: //RF Assembly Power Command Off
+	case 67: //RF Assembly Power Command Off (AS-503) or EDS Cutoff No. 2 Enable (later)
+		if (VehicleNo <= 504)
+		{
+
+		}
+		else
+		{
+			EDSCutoffDisabled = false;
+		}
 		break;
 	case 68: //First Burn Relay On
-		FirstBurnRelayOn();
+		FirstBurnRelay = true;
 		break;
 	case 69: //First Burn Relay Off
-		FirstBurnRelayOff();
+		FirstBurnRelay = false;
 		break;
 	case 70: //Burner Exciters On
+		BurnerExcitersOn = true;
 		break;
 	case 71: //Burner Exciters Off
+		BurnerExcitersOn = false;
 		break;
 	case 72: //Burner LH2 Propellant Valve Open Off
+		BurnerLH2PropellantValveOpenOn = false;
+		UpdateO2H2BurnerValveStates();
 		break;
 	case 73: //Ullage Firing Reset
+		FireUllageIgnitionOn = false;
+		FireUllageJettisonOn = false;
 		break;
 	case 74: //Burner LOX Shutdown Valve Close On
+		BurnerLOXShutdownValveCloseOn = true;
+		UpdateO2H2BurnerValveStates();
 		break;
 	case 75: //Burner LOX Shutdown Valve Close Off
+		BurnerLOXShutdownValveCloseOn = false;
+		UpdateO2H2BurnerValveStates();
 		break;
 	case 76: //LH2 Tank Vent Open Command Off
+		LH2TankVentValveOpen = false;
+		UpdateLH2ValveStates();
 		break;
 	case 77: //LH2 Tank Vent and Latching Relief Valve Boost Close On
+		LH2TankVentAndLatchingReliefValveBoostCloseOn = true;
+		UpdateLH2ValveStates();
 		break;
 	case 78: //LH2 Tank Vent and Latching Relief Valve Boost Close Off
+		LH2TankVentAndLatchingReliefValveBoostCloseOn = false;
+		UpdateLH2ValveStates();
 		break;
 	case 79: //LOX Tank Pressurization Shutoff Valves Close
+		LOXTankPressurizationShutoffValvesClose = true;
 		break;
 	case 80: //LOX Tank Pressurization Shutoff Valves Open
+		LOXTankPressurizationShutoffValvesClose = false;
 		break;
 	case 81: //LH2 Tank Repressurization Control Valve Open Off
+		LH2TankRepressurizationControlValveOpenOn = false;
+		UpdateLH2ValveStates();
 		break;
 	case 82: //Prevalves Close On
 		PrevalvesCloseOn = true;
@@ -975,41 +2183,67 @@ void SIVB500Systems::SwitchSelector(int channel)
 		PrevalvesCloseOn = false;
 		break;
 	case 84: //LH2 Tank Continuous Vent Valve Close On
-		LH2ContinuousVentValveCloseOn();
+		LH2TankContinuousVentValveCloseOn = true;
+		UpdateLH2ValveStates();
 		break;
 	case 85: //Burner Automatic Cutoff System Arm
+		BurnerAutoCutoffSystemArm = true;
 		break;
 	case 86: //Burner Automatic Cutoff System Disarm
+		BurnerAutoCutoffSystemArm = false;
 		break;
 	case 87: //LH2 Tank Continuous Vent Valve Close Off
+		LH2TankContinuousVentValveCloseOn = false;
+		UpdateLH2ValveStates();
 		break;
 	case 88: //Ullage Charging Reset
+		ChargeUllageIgnitionOn = false;
+		ChargeUllageJettisonOn = false;
 		break;
 	case 89: //Burner LOX Shutdown Valve Open On
+		BurnerLOXShutdownValveOpenOn = true;
+		UpdateO2H2BurnerValveStates();
 		break;
 	case 90: //Burner LOX Shutdown Valve Open Off
+		BurnerLOXShutdownValveOpenOn = false;
+		UpdateO2H2BurnerValveStates();
 		break;
 	case 91: //Chilldown Shut-Off Pilot On
+		ChilldownShutoffValveCloseOn = true;
 		break;
 	case 92: //Chilldown Shut-Off Pilot Off
+		ChilldownShutoffValveCloseOn = false;
 		break;
 	case 93: //LOX Vent Open Command On
+		LOXTankVentValveOpen = true;
+		UpdateLOXValveStates();
 		break;
 	case 94: //LOX Vent Open Command Off
+		LOXTankVentValveOpen = false;
+		UpdateLOXValveStates();
 		break;
-	case 95: //LOX Tank Vent and NPV Valv Boost Close On
+	case 95: //LOX Tank Vent and NPV Valves Boost Close On
+		LOXTankVentAndNPVValvesBoostCloseOn = true;
+		UpdateLOXValveStates();
 		break;
-	case 96: //LOX Tank Vent and NPV Valv Boost Close Off
+	case 96: //LOX Tank Vent and NPV Valves Boost Close Off
+		LOXTankVentAndNPVValvesBoostCloseOn = false;
+		UpdateLOXValveStates();
 		break;
 	case 97: //Point Level Sensor Arming
 		PointLevelSensorArming();
 		break;
-	case 98: //Point Level Sensor Disarming
-		PointLevelSensorDisarming();
+	case 98: //Point Level Sensor Disarming (AS-503) or Start Tank Recharge Valve Arm (later)
+		if (VehicleNo <= 507) PointLevelSensorDisarming();
+		else StartTankRechargeValveArm = true;
 		break;
 	case 99: //LH2 Tank Latching Relief Valve Open On
+		LH2TankLatchingReliefValveOpenOn = true;
+		UpdateLH2ValveStates();
 		break;
 	case 100: //LH2 Tank Latching Relief Valve Open Off
+		LH2TankLatchingReliefValveOpenOn = false;
+		UpdateLH2ValveStates();
 		break;
 	case 101: //S-IVB Ullage Engine No. 2 On
 		APSUllageEngineOn(2);
@@ -1018,25 +2252,40 @@ void SIVB500Systems::SwitchSelector(int channel)
 		APSUllageEngineOff(2);
 		break;
 	case 103: //LOX Tank Flight Pressure System On
+		LOXTankFlightPressureSystemOn = true;
 		break;
 	case 104: //LOX Tank Flight Pressure System Off
+		LOXTankFlightPressureSystemOn = false;
 		break;
 	case 105: //LOX Tank NPV Valve Open On
+		LOXTankNPVValveOpenOn = true;
+		UpdateLOXValveStates();
 		break;
 	case 106: //LOX Tank NPV Valve Open Off
+		LOXTankNPVValveOpenOn = false;
+		UpdateLOXValveStates();
 		break;
 	case 107: //LH2 Tank Continous Vent Relief Override Shutoff Valve Open On
+		LH2TankContinuousVentReliefOverrideSOVOpenOn = true;
+		UpdateLH2ValveStates();
 		break;
 	case 108: //LH2 Tank Continous Vent Relief Override Shutoff Valve Open Off
+		LH2TankContinuousVentReliefOverrideSOVOpenOn = false;
+		UpdateLH2ValveStates();
 		break;
 	case 109: //Engine He Control Valve Open On
+		EngineHeliumControlValveOpen = true;
 		break;
 	case 110: //Engine He Control Valve Open Off
+		EngineHeliumControlValveOpen = false;
 		break;
 	case 111: //LH2 Tank Continuous Vent Orifice Shutoff Valve Open On
-		LH2ContinuousVentValveOpenOn();
+		LH2TankContinuousVentOrificeSOVOpenOn = true;
+		UpdateLH2ValveStates();
 		break;
 	case 112: //LH2 Tank Continuous Vent Orifice Shutoff Valve Open Off
+		LH2TankContinuousVentOrificeSOVOpenOn = false;
+		UpdateLH2ValveStates();
 		break;
 	default:
 		break;

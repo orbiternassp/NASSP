@@ -558,7 +558,7 @@ void EnckeFreeFlightIntegrator::adfunc()
 			double F_vent = pRTCC->SystemParameters.MCTVEN*(pRTCC->SystemParameters.MDTVTV[0][i] + (pRTCC->SystemParameters.MDTVTV[0][i + 1] - pRTCC->SystemParameters.MDTVTV[0][i]) * f);
 			MDOT_vent = F_vent / pRTCC->SystemParameters.MCTVSP;
 
-			a_vent = VENTDIR * F_vent / WT*0.0; //TBD: Remove 0.0 when propulsive venting is implemented
+			a_vent = VENTDIR * F_vent / WT;
 			a_d += a_vent;
 		}
 	}

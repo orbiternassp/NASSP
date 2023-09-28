@@ -1019,8 +1019,6 @@ void Saturn::initSaturn()
 	}
 
 	th_3rd[0] = 0;
-	th_3rd_lox = 0;
-	th_3rd_lh2 = 0;
 	th_sps[0] = 0;
 
 	/*for (i = 0; i < 2; i++)
@@ -1985,6 +1983,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line+6, "%d", &numb);
 		VehicleNo = numb;
 		SetVehicleStats();
+		if (sivb) sivb->SetVehicleNumber(VehicleNo);
 	}
 	else if (papiReadScenario_double(line, "TCP", TCPO));
 	else if (!strnicmp (line, "DLS", 3)) {

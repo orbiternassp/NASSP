@@ -4337,7 +4337,6 @@ protected:
 	THGROUP_HANDLE thg_retro1, thg_retro2;
 
 	THRUSTER_HANDLE th_1st[8], th_2nd[5], th_3rd[1], th_sps[1];
-	THRUSTER_HANDLE th_3rd_lox, th_3rd_lh2;
 	THRUSTER_HANDLE th_ull[8], th_ver[3];                       // handles for orbiter main engines
 	THRUSTER_HANDLE th_lem[4], th_tjm[2], th_pcm;
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];
