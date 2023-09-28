@@ -2068,6 +2068,9 @@ void ProjectApolloMFD::GetCSM()
 
 void ProjectApolloMFD::CalculateV42Angles()
 {
+	//Only do this in the LM
+	if (lem == NULL) return;
+
 	GetCSM();
 	
 	if (saturn && lem)
@@ -2099,6 +2102,9 @@ void ProjectApolloMFD::menuPressEnterOnDSKYDEDA()
 
 void ProjectApolloMFD::menuPressEnterOnCMCLGC()
 {
+	//Only do this in the LM
+	if (lem == NULL) return;
+
 	GetCSM();
 
 	if (lem && saturn)
