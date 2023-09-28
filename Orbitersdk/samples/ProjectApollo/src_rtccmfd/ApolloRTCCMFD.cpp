@@ -213,7 +213,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		if (istarget)
 		{
 			OBJHANDLE obj;
-			obj = oapiGetObjectByName(Buffer2);
+			obj = oapiGetVesselByName(Buffer2);
 			if (obj)
 			{
 				G->target = oapiGetVesselInterface(obj);

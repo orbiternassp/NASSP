@@ -130,7 +130,7 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 			char temp[64];
 			strncpy(temp, line + 6, 64);
 
-			OBJHANDLE hVessel = oapiGetObjectByName(temp);
+			OBJHANDLE hVessel = oapiGetVesselByName(temp);
 			if (hVessel != NULL) csm = oapiGetVesselInterface(hVessel);
 		}
 		else if (!strnicmp(line, ATMDC_START_STRING, sizeof(ATMDC_START_STRING)))

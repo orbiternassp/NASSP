@@ -100,7 +100,7 @@ void MCC::MissionSequence_H1()
 			{
 				VESSEL *v;
 				OBJHANDLE hLV;
-				hLV = oapiGetObjectByName(LVName);
+				hLV = oapiGetVesselByName(LVName);
 				if (hLV != NULL)
 				{
 					v = oapiGetVesselInterface(hLV);
@@ -148,7 +148,7 @@ void MCC::MissionSequence_H1()
 			{
 				VESSEL *v;
 				OBJHANDLE hLV;
-				hLV = oapiGetObjectByName(LVName);
+				hLV = oapiGetVesselByName(LVName);
 				if (hLV != NULL)
 				{
 					v = oapiGetVesselInterface(hLV);
