@@ -1643,68 +1643,68 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		if (SI_EngineNum > 5)
 		{
-			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 42, TexMul);
-			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 8, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 7, 43, TexMul);
-			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 41, TexMul);
-			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 51, 69, TexMul);
-			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 22, 69, TexMul);
+			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 4, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 4, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 34, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 50, 84, TexMul);
+			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 34, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 19, 84, TexMul);
 		}
 		else
 		{
 			if (ENGIND[0])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 44*TexMul, 55*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 47*TexMul, 53*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 44*TexMul, 157*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 47*TexMul, 155*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 
 			if (ENGIND[1])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 98*TexMul, 55*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 103*TexMul, 53*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 98*TexMul, 157*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 103*TexMul, 155*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[2])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 98*TexMul, 20*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 103*TexMul, 22*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 98*TexMul, 122*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 103*TexMul, 124*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[3])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 44*TexMul, 20*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 47*TexMul, 22*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 44*TexMul, 122*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 47*TexMul, 124*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[4])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 71*TexMul, 37*TexMul, 71*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 75*TexMul, 37*TexMul, 75*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 71*TexMul, 140*TexMul, 71*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 75*TexMul, 139*TexMul, 75*TexMul, 27*TexMul, 27*TexMul);
 			}
 		}
 	}
 
 	if (LVRateLight)
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 4*TexMul, 6*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 5*TexMul, 6*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	else
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 4*TexMul, 108*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 5*TexMul, 108*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 
 	//
@@ -1715,21 +1715,21 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		if (SIISepState)
 		{
-			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 4*TexMul, 37*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 5*TexMul, 37*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 		}
 		else
 		{
-			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 4*TexMul, 139*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 5*TexMul, 139*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 		}
 	}
 
 	if (LVGuidLight)
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69*TexMul, 4*TexMul, 69*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 68*TexMul, 5*TexMul, 68*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	else
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69*TexMul, 4*TexMul, 171*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 68*TexMul, 5*TexMul, 170*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	return true;
 
