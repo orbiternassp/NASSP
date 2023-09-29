@@ -1274,95 +1274,58 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	}
 	// Draw LGC Setup screen
 	else if (screen == m_buttonPages.page.LGC) {
-		OBJHANDLE object;
-		VESSEL *vessel;
 		skp->Text(width / 2, (int)(height * 0.3), "LGC Docked Init Data", 20);
 		// What's our status?
 		if(saturn == NULL){
 			// skp->Text(width / 2, (int) (height * 0.4), "We are in the LM", 16);
+
 			// We need to find the CM.
-			// In all of the scenarios in which the LM is present and selectable, the CM is already separated from the S4B.
-			object = oapiGetVesselByName("Gumdrop"); // A9
-			if (object == NULL) {
-				object = oapiGetVesselByName("AS-504"); // A9
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Charlie-Brown"); // A10
-			}
-			if (object == NULL) {
-				object = oapiGetVesselByName("AS-505"); // A10
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Columbia"); // A11
-			}
-			if (object == NULL) {
-				object = oapiGetVesselByName("AS-506"); // A11
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Yankee-Clipper"); // A12
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Odyssey"); // A13
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Kitty-Hawk"); // A14
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Endeavour"); // A15
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Casper"); // A16
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("America"); // A17
-			}
-			if(object != NULL){
-				vessel = oapiGetVesselInterface(object);
-				// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
-				if (utils::IsVessel(vessel, utils::Saturn)) {
-						saturn = (Saturn *)vessel;
+			GetCSM();
 
-						VECTOR3 CMattitude,LMattitude;
-						unsigned short tephem[3];
-						// Obtain CM attitude.
-						// It would be better to call GetTotalAttitude() but for some reason VC++ refuses to link it properly. Sigh.
-						CMattitude.x = saturn->imu.Gimbal.X; // OUTER
-						CMattitude.y = saturn->imu.Gimbal.Y; // INNER
-						CMattitude.z = saturn->imu.Gimbal.Z; // MIDDLE
-						// Docking tunnel angle is assumed to be zero.
-						LMattitude = OrbMech::LMDockedCoarseAlignment(CMattitude, g_Data.lmAlignType);
-						// We should obtain and print CSM time, but...
-						// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
-						// Just initialize from the mission timer.
-						// Obtain TEPHEM
-						tephem[0] = saturn->agc.vagc.Erasable[0][01706];
-						tephem[1] = saturn->agc.vagc.Erasable[0][01707];
-						tephem[2] = saturn->agc.vagc.Erasable[0][01710];
-						sprintf(buffer,"TEPHEM: %05o %05o %05o",tephem[0],tephem[1],tephem[2]);
-						skp->Text(width / 2, (int)(height * 0.4), buffer, strlen(buffer));
-						// Format gimbal angles and print them
-						sprintf(buffer, "CSM O/I/M: %+07.2f %+07.2f %+07.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
-						skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
-						sprintf(buffer, "LM O/I/M: %+07.2f %+07.2f %+07.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
-						skp->Text(width / 2, (int)(height * 0.5), buffer, strlen(buffer));
+			if (saturn) {
+				VECTOR3 CMattitude, LMattitude;
+				unsigned short tephem[3];
+				// Obtain CM attitude.
+				// It would be better to call GetTotalAttitude() but for some reason VC++ refuses to link it properly. Sigh.
+				CMattitude.x = saturn->imu.Gimbal.X; // OUTER
+				CMattitude.y = saturn->imu.Gimbal.Y; // INNER
+				CMattitude.z = saturn->imu.Gimbal.Z; // MIDDLE
+				// Docking tunnel angle is assumed to be zero.
+				LMattitude = OrbMech::LMDockedCoarseAlignment(CMattitude, g_Data.lmAlignType);
+				// We should obtain and print CSM time, but...
+				// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
+				// Just initialize from the mission timer.
+				// Obtain TEPHEM
+				tephem[0] = saturn->agc.vagc.Erasable[0][01706];
+				tephem[1] = saturn->agc.vagc.Erasable[0][01707];
+				tephem[2] = saturn->agc.vagc.Erasable[0][01710];
+				sprintf(buffer, "TEPHEM: %05o %05o %05o", tephem[0], tephem[1], tephem[2]);
+				skp->Text(width / 2, (int)(height * 0.4), buffer, strlen(buffer));
+				// Format gimbal angles and print them
+				sprintf(buffer, "CSM O/I/M: %+07.2f %+07.2f %+07.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
+				skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
+				sprintf(buffer, "LM O/I/M: %+07.2f %+07.2f %+07.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
+				skp->Text(width / 2, (int)(height * 0.5), buffer, strlen(buffer));
 
-						//Docked IMU Fine Alignment
-						skp->Text(width / 2, (int)(height * 0.6), "Docked IMU Fine Alignment", 25);
+				//Docked IMU Fine Alignment
+				skp->Text(width / 2, (int)(height * 0.6), "Docked IMU Fine Alignment", 25);
 
-						sprintf(buffer, "V42: %+07.3f %+07.3f %+07.3f", g_Data.V42angles.x*DEG, g_Data.V42angles.y*DEG, g_Data.V42angles.z*DEG);
-						skp->Text(width / 2, (int)(height * 0.7), buffer, strlen(buffer));
+				sprintf(buffer, "V42: %+07.3f %+07.3f %+07.3f", g_Data.V42angles.x*DEG, g_Data.V42angles.y*DEG, g_Data.V42angles.z*DEG);
+				skp->Text(width / 2, (int)(height * 0.7), buffer, strlen(buffer));
 
-						if (g_Data.lmAlignType)
-						{
-							skp->Text(width / 2, (int)(height * 0.85), "Alignment: Identical", 20);
-						}
-						else
-						{
-							skp->Text(width / 2, (int)(height * 0.85), "Alignment: LVLH", 15);
-						}
-
-						saturn = NULL; // Clobber
+				if (g_Data.lmAlignType)
+				{
+					skp->Text(width / 2, (int)(height * 0.85), "Alignment: Identical", 20);
 				}
+				else
+				{
+					skp->Text(width / 2, (int)(height * 0.85), "Alignment: LVLH", 15);
+				}
+
+				saturn = NULL; // Clobber
+			}
+			else {
+				skp->Text(width / 2, (int)(height * 0.4), "CSM is not docked", 17);
 			}
 		}else{
 			skp->Text(width / 2, (int)(height * 0.4), "Do this from the LM", 19);
@@ -2080,43 +2043,19 @@ void ProjectApolloMFD::SetAEAACommands(int arm, int set)
 
 void ProjectApolloMFD::GetCSM()
 {
-	OBJHANDLE object;
-	VESSEL *vessel;
+	//Get pointer to CSM vessel while in LM
 
-	object = oapiGetVesselByName("Gumdrop"); // A9
-	if (object == NULL) {
-		object = oapiGetVesselByName("AS-504"); // A9
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Charlie-Brown"); // A10
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("AS-505"); // A10
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Columbia"); // A11
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("AS-506"); // A11
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Yankee-Clipper"); // A12
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Odyssey"); // A13
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Kitty-Hawk"); // A14
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Endeavour"); // A15
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Casper"); // A16
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("America"); // A17
-	}
+	//Only do this in the LM
+	if (lem == NULL) return;
+
+	//Get dock handle
+	DOCKHANDLE dock = lem->GetDockHandle(0);
+	if (dock == NULL) return;
+
+	//Get object handle
+	OBJHANDLE object = lem->GetDockStatus(dock);
+
+	VESSEL *vessel;
 
 	if (object != NULL) {
 		vessel = oapiGetVesselInterface(object);
