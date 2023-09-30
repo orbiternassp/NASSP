@@ -132,6 +132,13 @@ public:
 	bool completeChecklistItem(ChecklistItem* in);
 
 	///
+	/// Skip to an item in a checklist.
+	/// 
+	/// \param in ChecklistItem that is skipped to.
+	/// \return true if checklist successfully skipped.  False otherwise.
+	bool skipToChecklistItem(ChecklistItem* in);
+
+	///
 	/// Get the autoComplete status.
 	///
 	/// \return autoComplete status.

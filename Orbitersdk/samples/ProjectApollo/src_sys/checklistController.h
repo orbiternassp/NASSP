@@ -519,6 +519,11 @@ public:
 /// -------------------------------------------------------------
 	bool completeChecklistItem(ChecklistItem*);
 /// -------------------------------------------------------------
+/// Skip ahead in the checklist to the provided item.  All items
+/// between the current and provided item will be marked as complete.
+/// -------------------------------------------------------------
+	bool skipToChecklistItem(ChecklistItem*);
+/// -------------------------------------------------------------
 /// This allows setting of the autoComplete function which 
 /// automatically detects if a step is already complete and marks
 /// it as such, hiding it if it's already at the top of the list.

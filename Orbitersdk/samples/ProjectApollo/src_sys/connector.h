@@ -243,7 +243,8 @@ public:
 		MFD_PANEL_CHECKLIST_FLASHING_QUERY,		///< Checklist item flashing.
 		MFD_PANEL_GET_ITEM_FLASHING,			///< Get the item's current flashing.
 		MFD_PANEL_GET_CHECKLIST_AUTOEXECUTE,	///< Get automatic checklist execution.
-		MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE		///< Set automatic checklist execution.
+		MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE,    ///< Set automatic checklist execution.
+		MFD_PANEL_SKIP_TO_CHECKLIST_ITEM        ///< Skip to checklist item
 	};
 
 	PanelConnector(PanelSwitches &p, ChecklistController &c);

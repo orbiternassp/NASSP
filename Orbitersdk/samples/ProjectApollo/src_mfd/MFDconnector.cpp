@@ -299,6 +299,20 @@ bool MFDConnector::completeChecklistItem(ChecklistItem* in)
 
 	return false;
 }
+bool MFDConnector::skipToChecklistItem(ChecklistItem* in) {
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_SKIP_TO_CHECKLIST_ITEM;
+	cm.val1.pValue = in;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.bValue;
+	}
+
+	return false;
+}
 char *MFDConnector::checklistName()
 {
 	ConnectorMessage cm;

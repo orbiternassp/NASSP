@@ -263,6 +263,28 @@ bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 	return true;
 }
 // Todo: Verify
+bool ChecklistController::skipToChecklistItem(ChecklistItem* input)
+{
+	if (input->index >= active.set.size())
+		return false;
+
+	ChecklistItem* currentItem = getChecklistItem(-1, 0);
+	if (!currentItem)
+		return false;
+
+	for (int i = currentItem->index; i < input->index; i++) {
+		active.set[i].status = COMPLETE;
+		active.set[i].setFlashing(&conn, false);
+		lastItemTime = lastMissionTime;
+		iterate();
+
+		if (active.set[i].callGroup != -1) {
+			return spawnCheck(active.set[i].callGroup, false);
+		}
+	}
+	return true;
+}
+// Todo: Verify
 bool ChecklistController::autoComplete(bool input)
 {
 	bool temp = complete;
