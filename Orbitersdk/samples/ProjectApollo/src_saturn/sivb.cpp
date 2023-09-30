@@ -1549,7 +1549,7 @@ void SIVB::clbkPostCreation()
 
 	if (sivbsys)
 	{
-		sivbsys->CreateParticleEffects(1200.0*0.0254); //CG location
+		sivbsys->CreateParticleEffects(1400.0*0.0254); //CG location
 	}
 }
 

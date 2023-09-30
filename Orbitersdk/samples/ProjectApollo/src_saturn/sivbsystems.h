@@ -171,9 +171,9 @@ protected:
 
 	int VehicleNo;
 
-	PSTREAM_HANDLE LH2_NPV_Stream1, LH2_NPV_Stream2;
+	//Particle stream levels
 	double LH2_NPV_Stream_Lvl;
-	PSTREAM_HANDLE LOX_Dump_Stream;
+	double LOX_NPV_Stream_Lvl;
 	double LOX_Dump_Stream_Lvl;
 
 	//Logic
@@ -196,7 +196,7 @@ protected:
 	DelayTimer IgnitionPhaseTimer;
 	DelayTimer SparksDeenergizedTimer;
 
-	double DebugTimer;
+	//double DebugTimer;
 	double F_CVS;
 };
 
@@ -232,8 +232,8 @@ public:
 	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
 
 	//From ESE
-	bool ESECommandEngineControlBusPowerOn() { return false; }
-	bool ESECommandEngineControlBusPowerOff() { return false; }
+	bool ESECommandEngineControlBusPowerOn() { return false; } //TBD
+	bool ESECommandEngineControlBusPowerOff() { return false; } //TBD
 	//To ESE
 	bool BurnerRelaysReset();
 	bool RepressRelaysReset();
@@ -268,6 +268,10 @@ protected:
 	THGROUP_HANDLE &vernier;
 
 	PROPELLANT_HANDLE &main_propellant;
+
+	PSTREAM_HANDLE LH2_NPV_Stream1, LH2_NPV_Stream2;
+	PSTREAM_HANDLE LOX_NPV_Stream1, LOX_NPV_Stream2;
+	PSTREAM_HANDLE LOX_Dump_Stream;
 
 	//Mixture ratio of propellant load
 	const double PropellantLoadMixtureRatio;

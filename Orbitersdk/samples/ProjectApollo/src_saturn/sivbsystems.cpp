@@ -35,15 +35,29 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 static PARTICLESTREAMSPEC lh2_npv_venting_spec = {
 	0,		// flag
-	0.08,	// size
-	30,		// rate
-	2,	    // velocity
-	0.5,    // velocity distribution
-	20,		// lifetime
-	0.15,	// growthrate
-	0.5,    // atmslowdown 
+	0.003,	// size
+	200,	// rate
+	10.0,	// velocity
+	0.1,    // velocity distribution
+	1.0,	// lifetime
+	6,		// growthrate
+	0.5,      // atmslowdown 
 	PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_FLAT, 0.6, 0.6,
+	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
+static PARTICLESTREAMSPEC lox_npv_venting_spec = {
+	0,		// flag
+	0.003,	// size
+	200,	// rate
+	10.0,	// velocity
+	0.1,    // velocity distribution
+	1.0,	// lifetime
+	6,		// growthrate
+	0.5,      // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
@@ -62,7 +76,6 @@ static PARTICLESTREAMSPEC lox_dump_venting_spec = {
 };
 
 //Constants
-const double J2_NORM_OXIDIZER_FLOW = (5.0 / (1.0 + 5.0));
 const double BTU = 1055.06;										// BTU to Jouls
 const double R = 8314.4621;										// (L*Pa) / (mol*K)
 
@@ -70,9 +83,9 @@ const double R = 8314.4621;										// (L*Pa) / (mol*K)
 const double LH2_TANK_VOLUME = 294.27*1000.0;					// Liters
 const double M_H2 = 2.01588;									// g/mol
 const double LH2_ENTHALPY_VAPORIZATION = 0.44936*1000.0 / M_H2; // J/g
-const double GH2_TEMP = 28.0;									// K
+const double GH2_TEMP = 83.3;									// K, value is 150°R
 const double CVS_VALVE_SIZE = 0.009;
-const double CVS_BYPASS_VALVE_SIZE = 0.001;
+const double CVS_BYPASS_VALVE_SIZE = 0.002;
 const double LH2_NPV_VALVE_SIZE = 0.0226; //TBD: 0.09 works best for post TLI, might be a temperature issue
 const double LH2_CVS_ISP = 750.0;
 const double LH2_AMBIENT_HELIUM_MASS_FLOW = 0.4; //kg/s, simulating LH2 pressure increase caused by ambient temperature helium. TBD: Value
@@ -88,6 +101,7 @@ const double LOX_AMBIENT_HELIUM_MASS_FLOW = 0.1; //kg/s, simulating LOX pressure
 const double LOX_CRYO_HELIUM_MASS_FLOW = 0.2; //kg/s, simulating LOX pressure increase caused by helium heater
 const double LOX_DUMP_ISP = 148.12; // m/s, value from Apollo 8 flight evaluation report
 const double GOX_DUMP_ISP = 238.0; // m/s
+const double GOX_VENT_ISP = 86.0; // m/s, seems low but gives the right DV. Vent direction might be through the CG and not 100% forwards
 
 BaseSIVBSystems::BaseSIVBSystems() :
 	HeliumControlDeenergizedTimer(1.0),
@@ -95,25 +109,6 @@ BaseSIVBSystems::BaseSIVBSystems() :
 	IgnitionPhaseTimer(0.45),
 	SparksDeenergizedTimer(3.3)
 {
-
-}
-
-BaseSIVBSystems::~BaseSIVBSystems()
-{
-
-}
-
-void BaseSIVBSystems::CopyData(BaseSIVBSystems *other)
-{
-	*other = *this;
-}
-
-SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THGROUP_HANDLE &ver, double PropLoadMR) :
-	j2engine(j2), vernier(ver), main_propellant(j2prop), apsThrusters(aps), ullage(ull),PropellantLoadMixtureRatio(PropLoadMR)
-{
-
-	vessel = v;
-
 	VehicleNo = 600;
 
 	PUInverterAndDCPowerOn = false;
@@ -204,7 +199,7 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	EngineControlBusMotorSwitch = true;
 	EDSCutoffNo2DisableInhibit = false;
 
-	for (int i = 0;i < 2;i++)
+	for (int i = 0; i < 2; i++)
 	{
 		APSUllageOnRelay[i] = false;
 	}
@@ -229,16 +224,13 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	SparksDeenergized = false;
 	PBSignal1 = StartTurbines = PBSignal4 = false;
 	MainstageSignal = MainstageOn = IgnitionPhaseControlOn = false;
-	VCBSignal1 = VCBSignal2= VCBSignal3 = false;
+	VCBSignal1 = VCBSignal2 = VCBSignal3 = false;
 	IgnitionDetector = CC1Signal1 = IgnitionDetectionLockup = false;
 	CC2Signal1 = CC2Signal2 = CC2Signal3 = CutoffLockup = false;
 	EngineState = 0;
 
-	LH2_NPV_Stream1 = NULL;
-	LH2_NPV_Stream2 = NULL;
-	LOX_Dump_Stream = NULL;
-
 	LH2_NPV_Stream_Lvl = 0.0;
+	LOX_NPV_Stream_Lvl = 0.0;
 	LOX_Dump_Stream_Lvl = 0.0;
 
 	propellantInitialized = false;
@@ -247,8 +239,31 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	oxidMass = -1;
 	fuelMass = 0.0;
 
-	DebugTimer = 0.0;
+	//DebugTimer = 0.0;
 	F_CVS = 0.0;
+}
+
+BaseSIVBSystems::~BaseSIVBSystems()
+{
+
+}
+
+void BaseSIVBSystems::CopyData(BaseSIVBSystems *other)
+{
+	*other = *this;
+}
+
+SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THGROUP_HANDLE &ver, double PropLoadMR) :
+	j2engine(j2), vernier(ver), main_propellant(j2prop), apsThrusters(aps), ullage(ull),PropellantLoadMixtureRatio(PropLoadMR)
+{
+
+	vessel = v;	
+
+	LH2_NPV_Stream1 = NULL;
+	LH2_NPV_Stream2 = NULL;
+	LOX_NPV_Stream1 = NULL;
+	LOX_NPV_Stream2 = NULL;
+	LOX_Dump_Stream = NULL;
 }
 
 SIVBSystems::~SIVBSystems()
@@ -262,6 +277,16 @@ SIVBSystems::~SIVBSystems()
 	{
 		vessel->DelExhaustStream(LH2_NPV_Stream2);
 		LH2_NPV_Stream2 = NULL;
+	}
+	if (LOX_NPV_Stream1)
+	{
+		vessel->DelExhaustStream(LOX_NPV_Stream1);
+		LOX_NPV_Stream1 = NULL;
+	}
+	if (LOX_NPV_Stream2)
+	{
+		vessel->DelExhaustStream(LOX_NPV_Stream2);
+		LOX_NPV_Stream2 = NULL;
 	}
 	if (LOX_Dump_Stream)
 	{
@@ -455,14 +480,21 @@ void SIVBSystems::CreateParticleEffects(double TRANZ)
 {
 	//TRANZ is CG location on z-axis (Orbiter)
 
-	//Approximately at STA 1600.0 (Saturn IB)
+	//LH2 NPV: approximately at STA 1600.0 (Saturn IB). Vent 1 is near position I, rotated 25° to position IV
 	if (LH2_NPV_Stream1) vessel->DelExhaustStream(LH2_NPV_Stream1);
-	LH2_NPV_Stream1 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(0.0, 3.61, 1600.0*0.0254 - TRANZ), _V(0.0, 1.0, 0.0), &LH2_NPV_Stream_Lvl);
+	LH2_NPV_Stream1 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(-1.395485500267790, 2.992628312795018, 1600.0*0.0254 - TRANZ), _V(-0.422618261740699, 0.906307787036650, 0.0), &LH2_NPV_Stream_Lvl);
 	
 	if (LH2_NPV_Stream2) vessel->DelExhaustStream(LH2_NPV_Stream2);
-	LH2_NPV_Stream2 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(0.0, -3.61, 1600.0*0.0254 - TRANZ), _V(0.0, -1.0, 0.0), &LH2_NPV_Stream_Lvl);
+	LH2_NPV_Stream2 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(1.395485500267790, -2.992628312795018, 1600.0*0.0254 - TRANZ), _V(0.422618261740699, -0.906307787036650, 0.0), &LH2_NPV_Stream_Lvl);
 
-	//Approximately at STA 962.304 (Saturn IB)
+	//LOX NPV: at STA 1199.304 (Saturn IB). Vent I is near position IV, rotated 14°27' to position III
+	if (LOX_NPV_Stream1) vessel->DelExhaustStream(LOX_NPV_Stream1);
+	LOX_NPV_Stream1 = vessel->AddParticleStream(&lox_npv_venting_spec, _V(-3.197543770821965, -0.823964704145541, 1199.304*0.0254 - TRANZ), _V(-0.968365769479699, -0.249535040625542, 0.0), &LOX_NPV_Stream_Lvl);
+
+	if (LOX_NPV_Stream2) vessel->DelExhaustStream(LOX_NPV_Stream2);
+	LOX_NPV_Stream2 = vessel->AddParticleStream(&lox_npv_venting_spec, _V(3.197543770821965, 0.823964704145541, 1199.304*0.0254 - TRANZ), _V(0.968365769479699, 0.249535040625542, 0.0), &LOX_NPV_Stream_Lvl);
+
+	//LOX dump: approximately at STA 962.304 (Saturn IB)
 	if (LOX_Dump_Stream) vessel->DelExhaustStream(LOX_Dump_Stream);
 	LOX_Dump_Stream = vessel->AddParticleStream(&lox_dump_venting_spec, _V(0, 0, 962.304*0.0254 - TRANZ), _V(0.0, 0.0, -1.0), &LOX_Dump_Stream_Lvl);
 }
@@ -738,15 +770,14 @@ void SIVBSystems::Timestep(double simdt)
 
 	//sprintf(oapiDebugString(), "Ready %d Start %d FuelInjTempOKBypass %d Stop %d Cut Inhibit %d Level %f Timer %f", EngineReady, EngineStart, FuelInjTempOKBypass, EngineStop, ThrustOKCutoffInhibit, ThrustLevel, ThrustTimer);
 
-	if (DebugTimer < oapiGetSimTime())
+	/*if (DebugTimer < oapiGetSimTime())
 	{
 		char Buffer[128];
 
 		sprintf(Buffer, "Time %lf LH2 M %lf LH2 P %lf LOX M %lf LOX P %lf CVS F %lf", BoiloffTime + 540.0, fuelMass, LH2TankUllagePressurePSI, oxidMass, LOXTankUllagePressurePSI, F_CVS);
 		oapiWriteLog(Buffer);
 		DebugTimer = oapiGetSimTime() + 10.0;
-	}
-
+	}*/
 }
 
 bool SIVBSystems::EngineOnLogic()
@@ -1018,7 +1049,7 @@ void SIVBSystems::LH2PropellantCalculations(double simdt)
 	GH2_Mass = max(0.0, GH2_Mass - mdot_gas * simdt);
 
 	//sprintf(oapiDebugString(), "Fuel %lf Ullage %lf BoiloffTime %lf heatflow %lf, mdot_boil %lf m_boil %lf GH2_Mass %lf Press %lf", FuelPercentage, UllageVolume, BoiloffTime, heatflow, mdot_boil, m_boil, GH2_Mass, LH2TankUllagePressurePSI);
-	sprintf(oapiDebugString(), "CVS %d Press %lf, Regulator %lf Bypass %lf mdot %lf F %lf NPV %d mdot_gas_NPV %lf", LH2CVSReliefOverrideShutoffValve, LH2TankUllagePressurePSI, CVSRegulator, CVSBypass, mdot_gas_CVS, F_CVS, LH2LatchingReliefValve || LH2FuelVentAndReliefValve, mdot_gas_NPV);
+	//sprintf(oapiDebugString(), "CVS %d Press %lf, Regulator %lf Bypass %lf mdot %lf F %lf NPV %d mdot_gas_NPV %lf", LH2CVSReliefOverrideShutoffValve, LH2TankUllagePressurePSI, CVSRegulator, CVSBypass, mdot_gas_CVS, F_CVS, LH2LatchingReliefValve || LH2FuelVentAndReliefValve, mdot_gas_NPV);
 
 	//Orbiter stuff below here
 	//Apply thrust
@@ -1084,7 +1115,7 @@ void SIVBSystems::UpdateLOXValveStates()
 
 void SIVBSystems::LOXPropellantCalculations(double simdt)
 {
-	double OxidPercentage, UllageVolume, P, mdot_gas_NPV, mdot_gas_leak;
+	double OxidPercentage, UllageVolume, P, mdot_gas_NPV, mdot_gas_vent, mdot_gas_leak;
 	bool LOXSignalA, LOXSignalD, K74;
 
 	UpdateLOXValveStates();
@@ -1158,11 +1189,40 @@ void SIVBSystems::LOXPropellantCalculations(double simdt)
 
 	//Non-propulsive vent
 	mdot_gas_NPV = 0.0;
-	if (LOXNPVVentAndReliefValve) mdot_gas_NPV += LOX_NPV_VALVE_SIZE * LOXTankUllagePressurePSI;
-	if (LOXVentAndReliefValve) mdot_gas_NPV += LOX_VENT_VALVE_SIZE * LOXTankUllagePressurePSI;
+	if (LOXNPVVentAndReliefValve)
+	{
+		mdot_gas_NPV = LOX_NPV_VALVE_SIZE * LOXTankUllagePressurePSI;
 
-	//Calculate updated GOX mass
-	GO2_Mass = max(0.0, GO2_Mass - mdot_gas_NPV * simdt);
+		if (GO2_Mass < mdot_gas_NPV*simdt)
+		{
+			GO2_Mass = mdot_gas_NPV = 0.0;
+		}
+		else
+		{
+			GO2_Mass = GO2_Mass - mdot_gas_NPV * simdt;
+		}
+	}
+	LOX_NPV_Stream_Lvl = min(1.0, mdot_gas_NPV / 4.0);
+
+	//Propulsive vent
+	mdot_gas_vent = 0.0;
+	if (LOXVentAndReliefValve)
+	{
+		mdot_gas_vent = LOX_VENT_VALVE_SIZE * LOXTankUllagePressurePSI;
+
+		if (GO2_Mass < mdot_gas_vent*simdt)
+		{
+			GO2_Mass = mdot_gas_vent = 0.0;
+		}
+		else
+		{
+			GO2_Mass = GO2_Mass - mdot_gas_vent * simdt;
+
+			//Vent thrust
+			vessel->AddForce(_V(0, 0, mdot_gas_vent*GOX_VENT_ISP), _V(0, 0, 0));
+			//sprintf(oapiDebugString(), "%lf", mdot_gas_vent*GOX_VENT_ISP);
+		}
+	}
 
 	//Pressure loss in EPO, simulated as a simple leak, but likely a temperature decrease and other factors
 	mdot_gas_leak = 2.039614202645544e-04*LOXTankUllagePressurePSI;
@@ -1323,8 +1383,8 @@ void SIVBSystems::O2H2Burner(double simdt)
 		O2H2BurnerTime = 0.0;
 	}
 
-	sprintf(oapiDebugString(), "BURNER: LH2 In %d LOX In %d Exciter %d Burner On %d Force %lf LH2 Repress Amb %d Cryo %d LOX Repress Amb %d Cryo %d", HeliumHeaterLH2PropellantValve,
-		HeliumHeaterLOXShutdownValve, BurnerExcitersOn, O2H2BurnerOn, Force, LH2AmbientRepressurizationOn, LH2CryoRepressurizationOn, LOXAmbientRepressurizationOn, LOXCryoRepressurizationOn);
+	//sprintf(oapiDebugString(), "BURNER: LH2 In %d LOX In %d Exciter %d Burner On %d Force %lf LH2 Repress Amb %d Cryo %d LOX Repress Amb %d Cryo %d", HeliumHeaterLH2PropellantValve,
+	//	HeliumHeaterLOXShutdownValve, BurnerExcitersOn, O2H2BurnerOn, Force, LH2AmbientRepressurizationOn, LH2CryoRepressurizationOn, LOXAmbientRepressurizationOn, LOXCryoRepressurizationOn);
 }
 
 bool SIVBSystems::BurnerLogic() const
@@ -1362,6 +1422,8 @@ void SIVBSystems::ChilldownSystem()
 	}
 
 	SignalB = ChilldownShutoffValveCloseOn;
+
+	//TBD: Prevalves and chilldown valves
 }
 
 void SIVBSystems::SetThrusterDir(double beta_y, double beta_p)
@@ -1561,6 +1623,10 @@ void SIVB200Systems::SwitchSelector(int channel)
 {
 	switch (channel)
 	{
+	case 5: //PU Activate On
+		break;
+	case 6: //PU Activate Off
+		break;
 	case 7: //P.U. Inverter and DC Power On
 		PUInverterAndDCPowerOn = true;
 		break;
