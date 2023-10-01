@@ -354,55 +354,12 @@ bool TwoPositionSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool TwoPositionSwitch::DoCheckMouseClickVC(int event, VECTOR3 &p)
 {
-	int OldState = state;
+	int mx, my;
 
-	///
-	/// \todo Get CTRL state properly if and when Orbiter supports it.
-	///
-	SHORT ctrlState = GetKeyState(VK_SHIFT);
+	mx = x + int(p.x * width);
+	my = y + int(p.y * height);
 
-	if (IsSpringLoaded())
-		SetHeld((ctrlState & 0x8000) != 0);
-
-	//
-	// Yes, so now we just need to check whether it's an on or
-	// off click.
-	//
-
-	if (event & PANEL_MOUSE_LBDOWN) {
-		if (Sideways == 0 || Sideways == 2) {
-			if (state != TOGGLESWITCH_UP) {
-				SwitchTo(TOGGLESWITCH_UP, true);
-				Sclick.play();
-			}
-		}
-		else {
-			if (state != TOGGLESWITCH_DOWN) {
-				SwitchTo(TOGGLESWITCH_DOWN, true);
-				Sclick.play();
-			}
-		}
-	}
-	else if (event & PANEL_MOUSE_RBDOWN) {
-		if (Sideways == 1) {
-			if (state != TOGGLESWITCH_UP) {
-				SwitchTo(TOGGLESWITCH_UP, true);
-				Sclick.play();
-			}
-		}
-		else {
-			if (state != TOGGLESWITCH_DOWN) {
-				SwitchTo(TOGGLESWITCH_DOWN, true);
-				Sclick.play();
-			}
-		}
-	}
-
-	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
-		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
-		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
-	}
-	return true;
+	return CheckMouseClick(event, mx, my);
 }
 
 bool TwoPositionSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
@@ -618,58 +575,12 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool ThreePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 {
-	int OldState = state;
+	int mx, my;
 
-	///
-	/// \todo Get CTRL state properly if and when Orbiter supports it.
-	///
-	SHORT ctrlState = GetKeyState(VK_SHIFT);
+	mx = x + int(p.x * width);
+	my = y + int(p.y * height);
 
-	if (IsSpringLoaded())
-		SetHeld((ctrlState & 0x8000) != 0);
-
-	//
-	// Yes, so now we just need to check whether it's an on or
-	// off click.
-	//
-	if (event & PANEL_MOUSE_LBDOWN) {
-		if (Sideways == 0 || Sideways == 2 ) {
-			if (state < 2) {
-				SwitchTo(state + 1, true);
-				Sclick.play();
-			}
-		} else {
-			if (state > 0) {
-				SwitchTo(state - 1, true);
-				Sclick.play();
-			}
-		}
-	} else if (event & PANEL_MOUSE_RBDOWN) {
-		if (Sideways == 1) {
-			if (state < 2) {
-				SwitchTo(state + 1, true);
-				Sclick.play();
-			}
-		} else {
-			if (state > 0) {
-				SwitchTo(state - 1, true);
-				Sclick.play();
-			}
-		}
-	}
-
-	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
-		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN, true);
-		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER, true);
-		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP, true);
-
-		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)
-			SwitchTo(THREEPOSSWITCH_CENTER, true);
-
-		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)
-			SwitchTo(THREEPOSSWITCH_CENTER);
-	}
-	return true;
+	return CheckMouseClick(event, mx, my);
 }
 
 void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
@@ -1929,24 +1840,12 @@ void GuardedToggleSwitch::DefineVCAnimations(UINT vc_idx)
 
 bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (event & PANEL_MOUSE_RBDOWN && p.x > 0.004) {
+	int mx, my;
 
-		if (guardState) {
-			Guard();
-		}
-		else {
-			guardState = 1;
-		}
-		guardClick.play();
-		return true;
+	mx = x + int(p.x * width);
+	my = y + int(p.y * height);
 
-	}
-	else if (event & (PANEL_MOUSE_DOWN | PANEL_MOUSE_UP)) {
-		if (guardState) {
-			return ToggleSwitch::CheckMouseClickVC(event, p);
-		}
-	}
-	return false;
+	return CheckMouseClick(event, mx, my);
 }
 
 void GuardedToggleSwitch::VesimSwitchTo(int newState) {
@@ -2352,24 +2251,12 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool GuardedThreePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (event & PANEL_MOUSE_RBDOWN && p.x > 0.004) {
+	int mx, my;
 
-		if (guardState) {
-			Guard();
-		}
-		else {
-			guardState = 1;
-		}
-		guardClick.play();
-		return true;
+	mx = x + int(p.x * width);
+	my = y + int(p.y * height);
 
-	}
-	else if (event & (PANEL_MOUSE_DOWN | PANEL_MOUSE_UP)) {
-		if (guardState) {
-			return ThreePosSwitch::CheckMouseClickVC(event, p);
-		}
-	}
-	return false;
+	return CheckMouseClick(event, mx, my);
 }
 
 void GuardedThreePosSwitch::SaveState(FILEHANDLE scn) {
