@@ -154,8 +154,8 @@ ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {
 	// 2nd was "MET", disabled for now, MET is shown by default
-	static char *labelCHKLST[12] = {"NAV","","INFO","EXEC","FLSH","AUTO","PgUP","UP","","","DN","PgDN"};
-	static char *labelCHKLSTActiveItem[12] = {"NAV","","INFO","EXEC","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
+	static char *labelCHKLST[12] = {"NAV","","INFO","EXEC","FLSH","AUTO","PgUP","UP","BCK","GOTO","DN","PgDN"};
+	static char *labelCHKLSTActiveItem[12] = {"NAV","UNDO","INFO","EXEC","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
 	static char *labelCHKLSTNAV[12] = {"BCK","","INFO","EXEC","FLSH","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
 	static char *labelCHKLSTREV[12] = {"NAV","","INFO","","","AUTO","PgUP","UP","","","DN","PgDN"};
 	static char *labelCHKLSTINFO[12] = {"BCK","","","","","","","","","","",""};
@@ -191,15 +191,15 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Toggle AutoComplete",0,'A'},
 		{"Scroll Up","One Page",'<'},
 		{"Scroll Up","One Line",'U'},
-		{0,0,0},
-		{0,0,0},
+		{"Back To", "Active Item", 'B'},
+		{"Go To","Highlighted Step",'R'},
 		{"Scroll Down","One Line",'D'},
 		{"Scroll Down","One Page",'>'}
 	};
 	static const MFDBUTTONMENU mnuCHKLSTActiveItem[12] = {
 		{"Go to","Checklist Navigation",'N'},
 		// {"Toggle Display","Mission Elapsed Time",'M'},
-		{0,0,0},
+		{"Undo","Last Step",'B'},
 		{"More Information","About This Step",'N'},
 		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
@@ -285,15 +285,21 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
-	
-	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
+
+	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_B,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT };
+	static const DWORD btkeyCHKLSTActiveItem[12] = { OAPI_KEY_C,OAPI_KEY_B,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,0,0,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTINFO[12] = { OAPI_KEY_B,OAPI_KEY_M,0,0,0,0,0,0,0,0,0,0};
 
 	if (screen == PROG_CHKLST)
 	{
-		if (bt < 12) return ConsumeKeyBuffered (btkeyCHKLST[bt]);
+		if (CurrentStep == 0) {
+			if (bt < 12) return ConsumeKeyBuffered(btkeyCHKLSTActiveItem[bt]);
+		}
+		else {
+			if (bt < 12) return ConsumeKeyBuffered(btkeyCHKLST[bt]);
+		}
 	}
 	else if (screen == PROG_CHKLSTNAV)
 	{
@@ -395,6 +401,37 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
+		if (key == OAPI_KEY_R) {
+			item = conn.GetChecklistItem(-1, CurrentStep);
+			if (item) {
+				conn.gotoChecklistItem(item);
+				CurrentStep = 0;
+			}
+
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		}
+		if (key == OAPI_KEY_B && CurrentStep == 0) {
+			// Ensure we have a current item
+			if (conn.GetChecklistItem(-1, 0)) {
+				conn.undoChecklistItem();
+				// Let's reset our cursor, just so the user knows we actually did something.
+				CurrentStep = 0;
+			}
+			
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		}
+		if (key == OAPI_KEY_B && CurrentStep != 0) {
+			CurrentStep = 0;
+
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		}
+		
 		if (key == OAPI_KEY_D)
 		{
 			CurrentStep++;
