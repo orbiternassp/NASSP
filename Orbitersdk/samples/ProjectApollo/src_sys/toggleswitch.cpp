@@ -5381,6 +5381,12 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	case MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE:
 		checklist.autoExecute(m.val1.bValue);
 		return true;
+	case MFD_PANEL_GOTO_CHECKLIST_ITEM:
+		m.val2.bValue = checklist.gotoChecklistItem(static_cast<ChecklistItem*>(m.val1.pValue));
+		return true;
+	case MFD_PANEL_UNDO_CHECKLIST_ITEM:
+		m.val1.bValue = checklist.undoChecklistItem();
+		return true;
 	}
 
 	return false;

@@ -132,6 +132,19 @@ public:
 	bool completeChecklistItem(ChecklistItem* in);
 
 	///
+	/// Go to an item in a checklist.
+	/// 
+	/// \param in ChecklistItem that is skipped to.
+	/// \return true if checklist successfully skipped. False otherwise.
+	bool gotoChecklistItem(ChecklistItem* in);
+
+	///
+	/// Undo the last completed item in a checklist.
+	/// 
+	/// \return true if item was successfully undone. False otherwise.
+	bool undoChecklistItem();
+
+	///
 	/// Get the autoComplete status.
 	///
 	/// \return autoComplete status.
