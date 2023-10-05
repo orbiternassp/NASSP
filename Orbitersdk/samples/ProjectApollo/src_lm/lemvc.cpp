@@ -139,8 +139,9 @@ const VECTOR3	P6_CLICK = { 0, 0.0030, -0.0004 };
 const VECTOR3	P8_CLICK = { 0.0005, 0.0015, 0 };
 const VECTOR3	P12_CLICK = { -0.0005, 0.0016, 0 };
 const VECTOR3	P14_CLICK = { -0.001, 0.0013, 0 };
-const VECTOR3	CANISTERSEL_CLICK = { 0.0, 0.08, 0.0 };
 const VECTOR3	ORDEAL_CLICK = { 0, 0, 0 };
+const VECTOR3   RRGYRO_CLICK = { 0.0003, -0.004, -0.0023 };
+const VECTOR3   UTIL_LTS_CLICK = { 0.0, -0.0088, 0.0 };
 
 // Number of circuit breakers
 const int P11R1_CBCOUNT = 19;
@@ -1344,7 +1345,7 @@ void LEM::RegisterActiveAreas()
 	oapiVCSetAreaClickmode_Spherical(AID_VC_H2OSEP, H20SepHandleLocation + ofs, 0.02);
 
 	oapiVCRegisterArea(AID_VC_CANISTERSEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_CANISTERSEL, Sw_CanisterSelLocation + CANISTERSEL_CLICK + ofs, 0.03);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CANISTERSEL, _V(0.3571, 0.4668, 0.1878) + ofs, _V(0.3572, 0.4670, 0.0753) + ofs, _V(0.3570, 0.3545, 0.1876) + ofs, _V(0.3569, 0.3546, 0.0753) + ofs);
 
 	oapiVCRegisterArea(AID_VC_VENT1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_VENT1, PB_Vent1Location + ofs, 0.02);
@@ -1363,34 +1364,34 @@ void LEM::RegisterActiveAreas()
 	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCH, UpperHatchLocation + ofs, 0.1);
 
 	oapiVCRegisterArea(AID_VC_OVERHEADHATCHHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHHANDLE, _V(0.0118, 0.9904, 0.2825) + ofs, 0.05);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_OVERHEADHATCHHANDLE, _V(0.1029, 0.9761, 0.3830) + ofs, _V(-0.03721, 0.9762, 0.3831) + ofs, _V(0.1028, 0.9760, 0.2427) + ofs, _V(-0.0370, 0.9763, 0.2429) + ofs);
 
 	oapiVCRegisterArea(AID_VC_OVERHEADHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCHRELIEFVALVE, _V(0.1786, 0.9834, 0.1652) + ofs, 0.03);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_OVERHEADHATCHRELIEFVALVE, _V(0.2085, 1.0112, 0.1652) + ofs, _V(0.1385, 1.0111, 0.1653) + ofs, _V(0.2084, 0.9411, 0.1651) + ofs, _V(0.1383, 0.9409, 0.1654) + ofs);
 
 	if (viewpos == LMVIEW_FWDHATCH) { // To avoid that my DSKY clicks plays with the forward dump valve as well
 		oapiVCRegisterArea(AID_VC_FORWARDHATCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCH, FwdHatchInnerLocation + ofs, 0.1);
 
 		oapiVCRegisterArea(AID_VC_FORWARDHATCHHANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCHHANDLE, _V(-0.2875, -0.5710, 1.5833) + ofs, 0.05);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_FORWARDHATCHHANDLE, _V(-0.3796, -0.6482, 1.5752) + ofs, _V(-0.2240, -0.6481, 1.5751) + ofs, _V(-0.3797, -0.4924, 1.5752) + ofs, _V(-0.2238, -0.4926, 1.5750) + ofs);
 
 		oapiVCRegisterArea(AID_VC_FORWARDHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCHRELIEFVALVE, _V(0.2087, -0.4964, 1.5786) + ofs, 0.03);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_FORWARDHATCHRELIEFVALVE, _V(0.2532, -0.4597, 1.5752) + ofs, _V(0.1735, -0.4598, 1.5751) + ofs, _V(0.2531, -0.5396, 1.5751) + ofs, _V(0.1734, -0.5395, 1.5750) + ofs);
 	}
 
 	// Utility Lights
 
-	UL = _V(0.7072, 0.0054, -0.7069);
-	UR = _V(0.7065, -0.0053, 0.7071);
-	DL = _V(-0.7075, 0.0055, -0.7066);
-	DR = _V(-0.7068, -0.0052, 0.7073);
+	UL = _V(-0.7071, 0.0052, -0.7068);
+	UR = _V(0.7072, 0.0053, -0.7072);
+	DL = _V(-0.7069, -0.0054, 0.7071);
+	DR = _V(0.7068, -0.0055, 0.7070);
 
 	oapiVCRegisterArea(AID_VC_UTILITYLIGHTCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_UTILITYLIGHTCDR, UtilityLights_CDRLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + ofs, UtilityLights_CDRLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + ofs, UtilityLights_CDRLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + ofs, UtilityLights_CDRLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_UTILITYLIGHTCDR, UtilityLights_CDRLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_CDRLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_CDRLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_CDRLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + UTIL_LTS_CLICK + ofs);
 
 	oapiVCRegisterArea(AID_VC_UTILITYLIGHTLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_UTILITYLIGHTLMP, UtilityLights_LMPLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + ofs, UtilityLights_LMPLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + ofs, UtilityLights_LMPLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + ofs, UtilityLights_LMPLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_UTILITYLIGHTLMP, UtilityLights_LMPLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_LMPLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_LMPLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_LMPLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + UTIL_LTS_CLICK + ofs);
 
 	// AOT
 
@@ -1400,7 +1401,7 @@ void LEM::RegisterActiveAreas()
 	DR = _V(-0.7392, -0.3894, 0.5494);
 
 	oapiVCRegisterArea(AID_VC_SW_RRGYRO, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SW_RRGYRO, Sw_RRGyroLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + ofs, Sw_RRGyroLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + ofs, Sw_RRGyroLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + ofs, Sw_RRGyroLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SW_RRGYRO, Sw_RRGyroLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + RRGYRO_CLICK + ofs);
 
 	oapiVCRegisterArea(AID_VC_RETICLEDISP, _R(1068*TexMul, 1891*TexMul, 1188*TexMul, 1927*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
