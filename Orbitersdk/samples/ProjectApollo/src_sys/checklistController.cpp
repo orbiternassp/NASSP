@@ -263,6 +263,73 @@ bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 	return true;
 }
 // Todo: Verify
+bool ChecklistController::gotoChecklistItem(ChecklistItem* input)
+{
+	if (input->index >= active.set.size())
+		return false;
+
+	ChecklistItem* currentItem = getChecklistItem(-1, 0);
+	if (!currentItem)
+		return false;
+
+	if (currentItem->index > input->index) {
+		for (int i = currentItem->index; i > input->index; i--) {
+			active.set[i].status = PENDING;
+			active.set[i].setFlashing(&conn, false);
+			active.sequence--;
+		}
+
+		autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+	}
+	else {
+		for (int i = currentItem->index; i < input->index; i++) {
+			active.set[i].status = COMPLETE;
+			active.set[i].setFlashing(&conn, false);
+			iterate();
+			// We don't want to perform a spawn check; that will perform call groups.
+		}
+	}
+
+	lastItemTime = lastMissionTime;
+	return true;
+}
+bool ChecklistController::undoChecklistItem() {
+	ChecklistItem* lastItem = getChecklistItem(-1, -1);
+
+	// No last item, i.e. this checklist has just begun.
+	if (!lastItem) {
+		// Special case: this is the "root" checklist. Here be dragons, leave now!
+		if (action.empty()) {
+			active = ChecklistContainer();
+			return true;
+		}
+		// Exit it and "pop" it from the stack.
+		active = action[0];
+		action.pop_front();
+		
+		// Make sure we return to where we were last
+		if (active.sequence->index > 0) {
+			active.sequence--;
+			// Unmark the current item (that called the group we were just in) as completed
+			ChecklistItem* curItem = getChecklistItem(-1, 0);
+			// N.B. We (probably) don't need to guard on curItem here as,
+			// excepting odd race conditions, we should have a current item.
+			active.set[curItem->index].status = PENDING;
+		}
+	}
+	else {
+		// Unmark the last item as completed and decrement iterator.
+		active.set[lastItem->index].status = PENDING;
+		active.set[lastItem->index].setFlashing(&conn, true);
+		// N.B. we have a last item, so no index check is necessary
+		active.sequence--;
+	}
+
+	lastItemTime = lastMissionTime;
+	autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+	return true;
+}
+// Todo: Verify
 bool ChecklistController::autoComplete(bool input)
 {
 	bool temp = complete;
