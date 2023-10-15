@@ -1420,6 +1420,7 @@ RTCC::RTCC() :
 	PZMPTCSM.CommonBlock.LMAscentArea = PZMPTLEM.CommonBlock.LMAscentArea = 200.6*0.3048*0.3048;
 	PZMPTCSM.CommonBlock.LMDescentArea = PZMPTLEM.CommonBlock.LMDescentArea = 200.6*0.3048*0.3048;
 	PZMPTCSM.CommonBlock.SIVBArea = PZMPTLEM.CommonBlock.SIVBArea = 368.7*0.3048*0.3048;
+	PZMPTCSM.ConfigurationArea = PZMPTLEM.ConfigurationArea = PZMPTCSM.CommonBlock.SIVBArea;
 	PZMPTCSM.KFactor = PZMPTLEM.KFactor = 1.0;
 
 	//Initialize MPT usable propellant
@@ -1435,6 +1436,7 @@ RTCC::RTCC() :
 	PZMPTCSM.CommonBlock.LMAscentMass = PZMPTLEM.CommonBlock.LMAscentMass = 4944.0;
 	PZMPTCSM.CommonBlock.LMDescentMass = PZMPTLEM.CommonBlock.LMDescentMass = 10375.0;
 	PZMPTCSM.CommonBlock.SIVBMass = PZMPTLEM.CommonBlock.SIVBMass = 90851.2;
+	PZMPTCSM.TotalInitMass = PZMPTLEM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass + PZMPTCSM.CommonBlock.LMAscentMass + PZMPTCSM.CommonBlock.LMDescentMass + PZMPTCSM.CommonBlock.SIVBMass;
 
 	PZMPTCSM.CommonBlock.ConfigCode = PZMPTLEM.CommonBlock.ConfigCode = 15; //CSM + LM + S-IVB
 
@@ -4125,7 +4127,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		dt = GMT_TIG - opt->sv0.GMT;
 		integin.DTU = 0.0;
 	}
-	sv1 = coast(opt->sv0, dt, TotalMass, opt->Area);
+	sv1 = coast(opt->sv0, dt, TotalMass, opt->Area, 1.0, false);
 
 	//Settings for burn simulation
 	integin.sv0 = sv1;
@@ -4212,7 +4214,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 	IMUangles = _V(OG, IG, MG);
 	EphemerisData sv_sxt;
 
-	sv_sxt = coast(sv1, opt->sxtstardtime, TotalMass, opt->Area);
+	sv_sxt = coast(sv1, opt->sxtstardtime, TotalMass, opt->Area, 1.0, false);
 
 	OrbMech::checkstar(EZJGSTAR, opt->REFSMMAT, _V(round(IMUangles.x*DEG)*RAD, round(IMUangles.y*DEG)*RAD, round(IMUangles.z*DEG)*RAD), sv_sxt.R, R_E, pad.Star, pad.Trun, pad.Shaft);
 
@@ -4221,7 +4223,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		EphemerisData sv_nav;
 		double alt, lat, lng;
 
-		sv_nav = coast(sv1, GMTfromGET(opt->navcheckGET) - sv1.GMT, TotalMass, opt->Area);
+		sv_nav = coast(sv1, GMTfromGET(opt->navcheckGET) - sv1.GMT, TotalMass, opt->Area, 1.0, false);
 
 		navcheck(sv_nav.R, sv_nav.GMT, sv1.RBI, lat, lng, alt);
 
@@ -7393,7 +7395,7 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt)
 	return sv2;
 }
 
-EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor)
+EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor, bool Venting)
 {
 	EMMENIInputTable in;
 
@@ -7411,6 +7413,7 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Ar
 	}
 	in.MaxIntegTime = abs(dt);
 	in.Weight = Weight;
+	in.VentPerturbationFactor = Venting ? 1.0 : 0.0;
 	EMMENI(in);
 	return in.sv_cutoff;
 }
@@ -7419,7 +7422,9 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt, int veh)
 {
 	MissionPlanTable *mpt = GetMPTPointer(veh);
 
-	return coast(sv1, dt, mpt->TotalInitMass, mpt->ConfigurationArea, mpt->KFactor);
+	bool venting = (mpt->CommonBlock.ConfigCode[RTCC_CONFIG_S] == true);
+
+	return coast(sv1, dt, mpt->TotalInitMass, mpt->ConfigurationArea, mpt->KFactor, venting);
 }
 
 void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD)

@@ -173,6 +173,7 @@ protected:
 
 	//Particle stream levels
 	double LH2_NPV_Stream_Lvl;
+	double LH2_CVS_Stream_Lvl;
 	double LOX_NPV_Stream_Lvl;
 	double LOX_Dump_Stream_Lvl;
 
@@ -270,6 +271,7 @@ protected:
 	PROPELLANT_HANDLE &main_propellant;
 
 	PSTREAM_HANDLE LH2_NPV_Stream1, LH2_NPV_Stream2;
+	PSTREAM_HANDLE LH2_CVS_Stream1, LH2_CVS_Stream2;
 	PSTREAM_HANDLE LOX_NPV_Stream1, LOX_NPV_Stream2;
 	PSTREAM_HANDLE LOX_Dump_Stream;
 

@@ -36,12 +36,26 @@ See http://nassp.sourceforge.net/license/ for more details.
 static PARTICLESTREAMSPEC lh2_npv_venting_spec = {
 	0,		// flag
 	0.003,	// size
-	200,	// rate
-	10.0,	// velocity
+	20.0,	// rate
+	5.0,	// velocity
 	0.1,    // velocity distribution
 	1.0,	// lifetime
-	6,		// growthrate
-	0.5,      // atmslowdown 
+	1.0,	// growthrate
+	0.5,    // atmslowdown
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
+static PARTICLESTREAMSPEC lh2_cvs_venting_spec = {
+	0,		// flag
+	0.005,	// size
+	20.0,	// rate
+	3.0,	// velocity
+	0.01,   // velocity distribution
+	0.5,	// lifetime
+	1.0,	// growthrate
+	0.5,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
@@ -50,12 +64,12 @@ static PARTICLESTREAMSPEC lh2_npv_venting_spec = {
 static PARTICLESTREAMSPEC lox_npv_venting_spec = {
 	0,		// flag
 	0.003,	// size
-	200,	// rate
-	10.0,	// velocity
+	20.0,	// rate
+	5.0,	// velocity
 	0.1,    // velocity distribution
 	1.0,	// lifetime
-	6,		// growthrate
-	0.5,      // atmslowdown 
+	1.0,	// growthrate
+	0.5,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
@@ -88,8 +102,8 @@ const double CVS_VALVE_SIZE = 0.009;
 const double CVS_BYPASS_VALVE_SIZE = 0.002;
 const double LH2_NPV_VALVE_SIZE = 0.0226; //TBD: 0.09 works best for post TLI, might be a temperature issue
 const double LH2_CVS_ISP = 750.0;
-const double LH2_AMBIENT_HELIUM_MASS_FLOW = 0.4; //kg/s, simulating LH2 pressure increase caused by ambient temperature helium. TBD: Value
-const double LH2_CRYO_HELIUM_MASS_FLOW = 0.836357548841475; //kg/s, simulating LH2 pressure increase caused by helium heater
+const double LH2_AMBIENT_HELIUM_MASS_FLOW = 0.1; //kg/s, simulating LH2 pressure increase caused by ambient temperature helium. TBD: Value
+const double LH2_CRYO_HELIUM_MASS_FLOW = 0.2; //kg/s, simulating LH2 pressure increase caused by helium heater. TBD: Value
 
 //LOX
 const double LO2_TANK_VOLUME = 80.137*1000.0;					// Liters
@@ -98,7 +112,7 @@ const double GO2_TEMP = 100.0;									// K
 const double LOX_NPV_VALVE_SIZE = 0.13;// 0.009;
 const double LOX_VENT_VALVE_SIZE = 0.5;
 const double LOX_AMBIENT_HELIUM_MASS_FLOW = 0.1; //kg/s, simulating LOX pressure increase caused by ambient temperature helium. TBD: Value
-const double LOX_CRYO_HELIUM_MASS_FLOW = 0.2; //kg/s, simulating LOX pressure increase caused by helium heater
+const double LOX_CRYO_HELIUM_MASS_FLOW = 0.2; //kg/s, simulating LOX pressure increase caused by helium heater. TBD: Value
 const double LOX_DUMP_ISP = 148.12; // m/s, value from Apollo 8 flight evaluation report
 const double GOX_DUMP_ISP = 238.0; // m/s
 const double GOX_VENT_ISP = 86.0; // m/s, seems low but gives the right DV. Vent direction might be through the CG and not 100% forwards
@@ -230,6 +244,7 @@ BaseSIVBSystems::BaseSIVBSystems() :
 	EngineState = 0;
 
 	LH2_NPV_Stream_Lvl = 0.0;
+	LH2_CVS_Stream_Lvl = 0.0;
 	LOX_NPV_Stream_Lvl = 0.0;
 	LOX_Dump_Stream_Lvl = 0.0;
 
@@ -264,6 +279,8 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	LOX_NPV_Stream1 = NULL;
 	LOX_NPV_Stream2 = NULL;
 	LOX_Dump_Stream = NULL;
+	LH2_CVS_Stream1 = NULL;
+	LH2_CVS_Stream2 = NULL;
 }
 
 SIVBSystems::~SIVBSystems()
@@ -277,6 +294,16 @@ SIVBSystems::~SIVBSystems()
 	{
 		vessel->DelExhaustStream(LH2_NPV_Stream2);
 		LH2_NPV_Stream2 = NULL;
+	}
+	if (LH2_CVS_Stream1)
+	{
+		vessel->DelExhaustStream(LH2_CVS_Stream1);
+		LH2_CVS_Stream1 = NULL;
+	}
+	if (LH2_CVS_Stream2)
+	{
+		vessel->DelExhaustStream(LH2_CVS_Stream2);
+		LH2_CVS_Stream2 = NULL;
 	}
 	if (LOX_NPV_Stream1)
 	{
@@ -486,6 +513,13 @@ void SIVBSystems::CreateParticleEffects(double TRANZ)
 	
 	if (LH2_NPV_Stream2) vessel->DelExhaustStream(LH2_NPV_Stream2);
 	LH2_NPV_Stream2 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(1.395485500267790, -2.992628312795018, 1600.0*0.0254 - TRANZ), _V(0.422618261740699, -0.906307787036650, 0.0), &LH2_NPV_Stream_Lvl);
+
+	//LH2 CVS
+	if (LH2_CVS_Stream1) vessel->DelExhaustStream(LH2_CVS_Stream1);
+	LH2_CVS_Stream1 = vessel->AddParticleStream(&lh2_cvs_venting_spec, _V(-2.352827103720118, 2.352827103720118, 1600.0*0.0254 - TRANZ), _V(0.0, 0.0, -1.0), &LH2_CVS_Stream_Lvl);
+
+	if (LH2_CVS_Stream2) vessel->DelExhaustStream(LH2_CVS_Stream2);
+	LH2_CVS_Stream2 = vessel->AddParticleStream(&lh2_cvs_venting_spec, _V(2.352827103720118, -2.352827103720118, 1600.0*0.0254 - TRANZ), _V(0.0, 0.0, -1.0), &LH2_CVS_Stream_Lvl);
 
 	//LOX NPV: at STA 1199.304 (Saturn IB). Vent I is near position IV, rotated 14°27' to position III
 	if (LOX_NPV_Stream1) vessel->DelExhaustStream(LOX_NPV_Stream1);
@@ -1057,6 +1091,9 @@ void SIVBSystems::LH2PropellantCalculations(double simdt)
 	{
 		vessel->AddForce(_V(0.0, 0.0, F_CVS), _V(0, 0, 0));
 	}
+
+	//Particle effect for CVS
+	LH2_CVS_Stream_Lvl = min(1.0, mdot_gas_CVS);
 	//Particle effect for NPV
 	LH2_NPV_Stream_Lvl = min(1.0, mdot_gas_NPV);
 }

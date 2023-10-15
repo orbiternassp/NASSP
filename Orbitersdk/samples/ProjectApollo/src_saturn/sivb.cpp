@@ -235,7 +235,6 @@ void SIVB::InitS4b()
 	PayloadType = PAYLOAD_EMPTY;
 	PanelsHinged = false;
 	PanelsOpened = false;
-	State = SIVB_STATE_SETUP;
 	LowRes = false;
 	IUSCContPermanentEnabled = true;
 	PayloadCreated = false;
@@ -265,8 +264,6 @@ void SIVB::InitS4b()
 
 	FirstTimestep = false;
 	MissionTime = MINUS_INFINITY;
-	NextMissionEventTime = MINUS_INFINITY;
-	LastMissionEventTime = MINUS_INFINITY;
 
 	for (i = 0; i < 6; i++)
 		th_aps_rot[i] = 0;
@@ -352,22 +349,6 @@ void SIVB::InitS4b()
 	}
 
 	MainBattery = static_cast<Battery *> (Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY"));
-}
-
-void SIVB::Boiloff()
-
-{
-	//
-	// The SIVB stage boils off a small amount of fuel while in orbit.
-	//
-	// For the time being we'll ignore any thrust created by the venting
-	// of this fuel.
-	//
-
-	if (ph_main) {
-		double NewFuelMass = GetPropellantMass(ph_main) * 0.99998193;
-		SetPropellantMass(ph_main, NewFuelMass);
-	}
 }
 
 bool SIVB::GetDockingPortFromHandle(OBJHANDLE port, UINT &num)
@@ -871,24 +852,6 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	}
 
 	//
-	// Now update whatever needs updating.
-	//
-
-	switch (State) {
-	case SIVB_STATE_WAITING:
-
-		//
-		// If we still have fuel left, boil some off.
-		//
-
-		if (MissionTime >= NextMissionEventTime) {
-			Boiloff();
-			NextMissionEventTime = MissionTime + 10.0;
-		}
-		break;
-	}
-
-	//
 	// For a Saturn V SIVB, at some point it will dump all remaining fuel out the engine nozzle to
 	// thrust it out of the way of the CSM.
 	//
@@ -919,7 +882,6 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "S4PL", PayloadType);
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
-	oapiWriteScenario_int (scn, "STATE", State);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "PMASS", PayloadMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
@@ -930,8 +892,6 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "I3V", ISP_THIRD_VAC);
 	oapiWriteScenario_int(scn, "MISSIONNO", payloadSettings.MissionNo);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
-	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
-	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
 	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 	oapiWriteScenario_float (scn, "PANELPROC", panelProc);
 	oapiWriteScenario_float (scn, "PANELPROCPLUSX", panelProcPlusX);
@@ -1288,16 +1248,6 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
             sscanf (line+9, "%f", &flt);
 			MissionTime = flt;
 		}
-		else if (!strnicmp(line, "NMISSNTIME", 10))
-		{
-            sscanf (line + 10, "%f", &flt);
-			NextMissionEventTime = flt;
-		}
-		else if (!strnicmp(line, "LMISSNTIME", 10))
-		{
-            sscanf (line + 10, "%f", &flt);
-			LastMissionEventTime = flt;
-		}
 		else if (!strnicmp(line, "CTR", 3))
 		{
             sscanf (line + 3, "%f", &flt);
@@ -1322,12 +1272,6 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		{
 			sscanf(line + 20, "%f", &flt);
 			PayloadEjectionForce = flt;
-		}
-		else if (!strnicmp (line, "STATE", 5))
-		{
-			int i;
-			sscanf (line+5, "%d", &i);
-			State = (SIVbState) i;
 		}
 		else if (!strnicmp(line, "LEMCHECK", 8)) {
 			strcpy(payloadSettings.checklistFile, line + 9);
@@ -1669,7 +1613,6 @@ void SIVB::SetState(SIVBSettings &state)
 		ISP_THIRD_VAC = state.ISP_VAC;
 	}
 
-	State = SIVB_STATE_WAITING;
 	//Set these pyros as blown, otherwise the S-IVB wouldn't have been created by the Saturn class anyway
 	CSMLVSeparationInitiator.SetBlown(true);
 	SLAPanelDeployInitiator.SetBlown(true);

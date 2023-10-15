@@ -149,6 +149,7 @@ public:
 	void TLIProcessorCalc();
 	void SaturnVTLITargetUplink();
 	int GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
+	void MPTWeightsAutoUpdate();
 
 	int startSubthread(int fcn);
 	int subThread();

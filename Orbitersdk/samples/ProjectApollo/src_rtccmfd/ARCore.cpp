@@ -1621,6 +1621,8 @@ void ARCore::StateVectorCalc(int type)
 	}
 	else
 	{
+		MPTWeightsAutoUpdate();
+
 		EphemerisData sv0, sv1;
 		sv0 = GC->rtcc->StateVectorCalcEphem(svtarget);
 		if (SVDesiredGET < 0)
@@ -1629,7 +1631,7 @@ void ARCore::StateVectorCalc(int type)
 		}
 		else
 		{
-			sv1 = GC->rtcc->coast(sv0, SVDesiredGET - GC->rtcc->GETfromGMT(sv0.GMT));
+			sv1 = GC->rtcc->coast(sv0, SVDesiredGET - GC->rtcc->GETfromGMT(sv0.GMT), mptveh);
 		}
 		GC->rtcc->CMMCMNAV(uplveh, mptveh, sv1);
 	}
@@ -2449,6 +2451,12 @@ int ARCore::subThread()
 	else
 	{
 		mptveh = RTCC_MPT_LM;
+	}
+
+	//If MPT is not in use, update weights automatically
+	if (GC->MissionPlanningActive == false)
+	{
+		MPTWeightsAutoUpdate();
 	}
 
 	subThreadStatus = RUNNING;
@@ -5474,4 +5482,19 @@ int ARCore::GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSM
 	LMMass = m50.LMWT;
 
 	return 0;
+}
+
+void ARCore::MPTWeightsAutoUpdate()
+{
+	MED_M49 m49temp;
+	MED_M50 m50temp;
+	MED_M55 m55temp;
+
+	GC->rtcc->MPTMassUpdate(vessel, m50temp, m55temp, m49temp);
+
+	if (m50temp.WeightGET > 0.0)
+	{
+		GC->rtcc->med_m50 = m50temp;
+		GC->rtcc->PMMWTC(50);
+	}
 }

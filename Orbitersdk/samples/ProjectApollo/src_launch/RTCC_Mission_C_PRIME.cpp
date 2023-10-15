@@ -216,13 +216,19 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		if (fcn == 3)
 		{
-			SV sv = StateVectorCalc(calcParams.src); //State vector for uplink
+			EphemerisData sv, sv_uplink;
+			double GMTSV;
+
+			GMTSV = PZMPTCSM.TimeToBeginManeuver[0] - 10.0*60.0; //10 minutes before TB6
+			
+			sv = StateVectorCalcEphem(calcParams.src);
+			sv_uplink = coast(sv, GMTSV - sv.GMT, RTCC_MPT_CSM); //Coast with venting and drag taken into account
 
 			char buffer1[1000];
 			char buffer2[1000];
 
-			AGCStateVectorUpdate(buffer1, sv, true);
-			AGCStateVectorUpdate(buffer2, sv, false);
+			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_uplink);
+			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_uplink);
 
 			sprintf(form->purpose, "TLI+90");
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);

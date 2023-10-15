@@ -3431,7 +3431,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	V_2 = 0;
 	VATR4 = 0;
 	VATRR = 0;
-	for (x = 0;x < 5;x++)
+	for (x = 0;x < 7;x++)
 	{
 		VENTA[x] = 0.0;
 	}
@@ -3446,7 +3446,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	VSTGO = 0;
 	V_T = 0;
 	V_TC = 0;
-	for (x = 0;x < 4;x++)
+	for (x = 0;x < 6;x++)
 	{
 		VTIM[x] = 0.0;
 	}
@@ -3561,16 +3561,20 @@ void LVDCSV::Init(){
 	Drag_Area[3] = -0.28074902;
 	Drag_Area[4] = -5.8764139;
 
-	//Apollo 14 vent accelerations
-	VTIM[0] = 1800.0;
-	VTIM[1] = 4300.0;
-	VTIM[2] = 7300.0;
-	VTIM[3] = 12800.0;
-	VENTA[0] = 0.001342;
-	VENTA[1] = 0.0006478;
-	VENTA[2] = 0.0004472;
-	VENTA[3] = 0.0003724;
-	VENTA[4] = 0.0002858;
+	//Apollo 17 vent accelerations
+	VTIM[0] = 700.0;
+	VTIM[1] = 2300.0;
+	VTIM[2] = 3800.0;
+	VTIM[3] = 7800.0;
+	VTIM[4] = 10800.0;
+	VTIM[5] = 14300.0;
+	VENTA[0] = 0.00117;
+	VENTA[1] = 0.000778;
+	VENTA[2] = 0.000605;
+	VENTA[3] = 0.00047;
+	VENTA[4] = 0.00035;
+	VENTA[5] = 0.000361;
+	VENTA[6] = 0.000325;
 
 	// PITCH POLYNOMIAL (Apollo 11)
 	Fx[1][0] = 0.104707442e1;
@@ -4671,7 +4675,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_VATRR", VATRR);
 	papiWriteScenario_double(scn, "LVDC_VCCYA", VCCYA);
 	papiWriteScenario_double(scn, "LVDC_VCCZA", VCCZA);
-	papiWriteScenario_doublearr(scn, "LVDC_VENTA", VENTA, 5);
+	papiWriteScenario_doublearr(scn, "LVDC_VENTA", VENTA, 7);
 	papiWriteScenario_double(scn, "LVDC_VOLD", VOLD);
 	papiWriteScenario_double(scn, "LVDC_V_S2T", V_S2T);
 	papiWriteScenario_double(scn, "LVDC_VSC12", VSC12);
@@ -4680,7 +4684,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_VSSW", VSSW);
 	papiWriteScenario_double(scn, "LVDC_V_T", V_T);
 	papiWriteScenario_double(scn, "LVDC_V_TC", V_TC);
-	papiWriteScenario_doublearr(scn, "LVDC_VTIM", VTIM, 4);
+	papiWriteScenario_doublearr(scn, "LVDC_VTIM", VTIM, 6);
 	papiWriteScenario_double(scn, "LVDC_VTOLD", VTOLD);
 	papiWriteScenario_double(scn, "LVDC_xi_T", xi_T);
 	papiWriteScenario_vec(scn, "LVDC_AttitudeError", AttitudeError);
@@ -5469,7 +5473,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_VATRR", VATRR);
 		papiReadScenario_double(line, "LVDC_VCCYA", VCCYA);
 		papiReadScenario_double(line, "LVDC_VCCZA", VCCZA);
-		papiReadScenario_doublearr(line, "LVDC_VENTA", VENTA, 5);
+		papiReadScenario_doublearr(line, "LVDC_VENTA", VENTA, 7);
 		papiReadScenario_double(line, "LVDC_VGBIA", VGBIA);
 		papiReadScenario_double(line, "LVDC_VOLD", VOLD);
 		papiReadScenario_double(line, "LVDC_V_S2T", V_S2T);
@@ -5479,7 +5483,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_VSSW", VSSW);
 		papiReadScenario_double(line, "LVDC_V_T", V_T);
 		papiReadScenario_double(line, "LVDC_V_TC", V_TC);
-		papiReadScenario_doublearr(line, "LVDC_VTIM", VTIM, 4);
+		papiReadScenario_doublearr(line, "LVDC_VTIM", VTIM, 6);
 		papiReadScenario_double(line, "LVDC_VTOLD", VTOLD);
 		papiReadScenario_double(line, "LVDC_xi_T", xi_T);
 
@@ -9936,7 +9940,7 @@ VECTOR3 LVDCSV::VentSubroutine(VECTOR3 Att)
 	}
 
 	//fprintf(lvlog, "VENT SUBROUTINE\r\n");
-	for (i = 0;i < 4;i++)
+	for (i = 0;i < 6;i++)
 	{
 		if (LVDC_TB_ETime < VTIM[i]) break;
 	}

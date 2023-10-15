@@ -328,7 +328,7 @@ struct RTCCSystemParameters
 		MDTVTV[1][6] = 20000.0;
 		MDTVTV[1][7] = 20001.0; //Switches off vent model at this time
 		MDTVTV[1][8] = 9999999999.9;
-		MCTVSP = 850.0; //Find better value
+		MCTVSP = 750.0; //Find better value
 		MCTVEN = 1.0;
 
 		MCLABN = MCLCBN = MCLSBN = 0.0;
