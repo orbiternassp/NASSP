@@ -22391,7 +22391,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	res.DVREM = man->DVREM / 0.3048;
 	res.DVC = man->DVC / 0.3048;
 
-	res.DT_B = man->dt_BD - man->dt_TO;
+	res.DT_B = man->dt_BD;
 	res.DT_U = man->dt_ullage;
 	res.DT_TO = man->dt_TO;
 	res.DV_TO = man->dv_TO / 0.3048;

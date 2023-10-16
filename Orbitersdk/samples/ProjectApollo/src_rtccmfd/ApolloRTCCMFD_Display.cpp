@@ -43,11 +43,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "Maneuver Targeting", 18);
 		skp->Text(1 * W / 8, 4 * H / 14, "Pre-Advisory Data", 17);
 		skp->Text(1 * W / 8, 6 * H / 14, "Utility", 7);
-		skp->Text(1 * W / 8, 8 * H / 14, "MCC Displays", 12);
+		skp->Text(1 * W / 8, 8 * H / 14, "MPT Initialization", 18);
 		skp->Text(1 * W / 8, 10 * H / 14, "Mission Plan Table", 18);
 		skp->Text(1 * W / 8, 12 * H / 14, "Configuration", 13);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "Uplinks", 7);
+		skp->Text(5 * W / 8, 12 * H / 14, "MCC Displays", 12);
 	}
 	else if (screen == 1)
 	{

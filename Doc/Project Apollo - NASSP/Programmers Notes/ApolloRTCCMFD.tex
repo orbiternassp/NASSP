@@ -84,10 +84,11 @@ The main menu is dividing the MFD in the following categories:\\
 \textbf{TAR:} Targeting menu. Contains the various maneuver computation pages. \\
 \textbf{PAD:} Pre-Advisory Data. Shows the PADs that the Apollo crews received during a mission.\\
 \textbf{UTI:} Utility. All additional calculation pages that are not for specific maneuvers.\\
-\textbf{MCC:} MCC Displays. Shows the "TV Guide", a list of displays that were available in the MOCR.\\
+\textbf{INI:} MPT Initialization. Used to update weights, areas and vehicle configuration for the MPT. Also used for non-MPT trajectory propagation.\\ 
 \textbf{PLN:} Mission Plan Table. A central feature of the maneuver planning during a mission. Currently optional.\\
 \textbf{CFG:} Configuration. Various settings for the MFD.\\
 \textbf{UPL:} Uplink Page. All uplinks to the AGCs and LVDC can be found here.\\
+\textbf{MCC:} MCC Displays. Shows the "TV Guide", a list of displays that were available in the MOCR.\\
 
 \section{Targeting}
 
@@ -944,9 +945,30 @@ The VECPOINT page, named after a routine in the AGC, is calculating the IMU angl
 \textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
 \textbf{UPD:} Update the liftoff time automatically by downlinking that time from the CMC or LGC. This will actually update three values in the RTCC: CSM liftoff time, time of clock zeroing in the CMC, time of clock zeroing in the LGC. These times are normally all set to the actual liftoff time of the CSM to get a consistent basis to calculate Ground Elapsed Time in the RTCC.\\
 \textbf{BCK:} Go back to the main menu.\\
-
+\newpage
 \section{Mission Planning}
 
+The mission plan table (MPT) is the central planning tool in the RTCC for future maneuvers. The RTCC has two MPTs, one for the CSM and one for the LM, which are related through undocking and docking maneuvers. Each MPT consists of a table header and data blocks for each individual maneuver. The table header has the initial vehicle configuration (combinations of CSM, Saturn and LM ascent and/or descent stages) and initial weights, area (for drag calculations) and propellant. Each maneuver block has data describing the maneuver and updates weights and propellant.\\
+
+At the current stage of RTCC development for NASSP the MPT is an optional feature that can be used to plan and evaluate future maneuvers. The RTCC MFD has a MPT mode which by default is off. When it is switched on then current state vectors and weights are not updated automatically but have to be managed manually. However, the MPT header is already used in the non-MPT mode for trajectory propagation for state vector uplinks. In the future more parts of the MFD will use the data in the MPT header.\\
+
+There are four manual user entry (MED) modes to update the MPT header. The M55 MED is used to establish the initial vehicle configuration, time to start S-IVB venting and the initial CSM/LM docking angle. M51 is used to update the vehicle areas and a K-factor (multiplier) for drag calculations. In MPT mode the M50 MED is used to update vehicle weights and M49 is used to update available propellants. The detailed MED inputs and format can be found in the MED section of the manual.\\
+\subsection{MPT Initialization}
+
+On the left side of this page appear the input parameters that are automatically or manually updated. On the right side the page shows the actual data stored in the MPT.\\
+
+\subsubsection{Buttons}
+\textbf{TAB:} Choose the mission plan table (CSM or LM) to initialize.\\
+\textbf{MED:} Choose the type of initialization to do. The options are M49 for propellants, M50 for weights, M51 for vehicle areas or M55 for the initial vehicle configuration.\\
+\textbf{UPD:} To update the MPT (right side) with the data currently set as input (left side).\\
+\textbf{$<<$:} Go to previous item to manually change input data.\\
+\textbf{$>>$:} Go to next item to manually change input data.\\
+\textbf{SET:} Change the currently selected input.\\
+\textbf{TGT:} Select a vessel in the simulation to automatically populate the input data.\\
+\textbf{AUT:} Automatically update the input data with the selected vessel.\\
+\textbf{VPS:} Go to the Vector Panel Summary page for MPT state vector management.\\
+\textbf{BCK:} Go back to the main menu.\\
+\newpage
 \section{Example: Apollo 7 Rendezvous}
 
 This MFD can be used to replicate the ground solutions for the rendezvous and other SPS burns during the Apollo 7 mission. As an example the inputs for the following maneuvers will be presented:
@@ -1179,6 +1201,141 @@ The procedure to calculate a nominal deorbit maneuver is very similar to the one
 
 \begin{tabbing}
 \textbf{Notes}:
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M49\\
+\textbf{Purpose}: Change fuel remaining weights\\
+\textbf{Example}: \texttt{M49,CSM,20000;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&SPS Fuel Remaining&CSM RCS Fuel Remaining&S-IVB J-2 Remaining&APS Fuel Remaining&LM RCS Fuel Remaining\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FLP&FLP&FLP&FLP&FLP \\
+ \hline
+ \textbf{Input Units} &CSM, LEM&lbs.&lbs.&lbs.&lbs.&lbs. \\
+ \hline
+ \textbf{Checking Option}&&$\geq$0&$\geq$0&$\geq$0&$\geq$0&$\geq$0\\
+ \hline
+ \textbf{Missing Item Option}&Error&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}: A change of fuel will \underline{not} cause a trajectory update.
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M49 (cont.)\\
+\textbf{Purpose}: \\
+\textbf{Example}: \\
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &DPS Fuel Remaining&&&&&\\
+ \hline
+ \textbf{Input Format} &FLP&&&&& \\
+ \hline
+ \textbf{Input Units} &lbs.&&&&& \\
+ \hline
+ \textbf{Checking Option}&$\geq$0&&&&&\\
+ \hline
+ \textbf{Missing Item Option}&Insert neg. number&&&&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M50\\
+\textbf{Purpose}: Change vehicle weights\\
+\textbf{Example}: \texttt{M50,CSM,40000;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&CSM Weight&S-IVB Weight&LM Total Weight&LM Ascent Weight&Time of Weight\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FLP&FLP&FLP&FLP&HH:MM:SS\\
+ \hline
+ \textbf{Input Units} &CSM, LEM&lbs.&lbs.&lbs.&lbs.&lbs. \\
+ \hline
+ \textbf{Checking Option}&&$\geq$2000&$\geq$2000&$\geq$2000&$\geq$2000&$\leq$Present Time\\
+ \hline
+ \textbf{Missing Item Option}&Error&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M51\\
+\textbf{Purpose}: Change vehicle cross-sectional area or K-factor\\
+\textbf{Example}: \texttt{M51,CSM,129.4;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&CSM Area&S-IVB Area&LM Ascent Area&LM Descent Area&K-Factor\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FLP&FLP&FLP&FLP&FLP\\
+ \hline
+ \textbf{Input Units} &CSM, LEM&ft.\textsuperscript{2}&ft.\textsuperscript{2}&ft.\textsuperscript{2}&ft.\textsuperscript{2}&ft.\textsuperscript{2}\\
+ \hline
+ \textbf{Checking Option}&&$0\leq$X$\leq$2000&$0\leq$X$\leq$2000&$0\leq$X$\leq$2000&$0\leq$X$\leq$2000&$-30\leq$X$\leq$30\\
+ \hline
+ \textbf{Missing Item Option}&Error&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M55\\
+\textbf{Purpose}: Input initialization parameters\\
+\textbf{Example}: \texttt{M55,CSM,CSL;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&Configuration Code&GET to begin venting&Delta Docking Angle&&\\
+ \hline
+ \textbf{Input Format} &EBCDIC&EBCDIC&HH:MM:SS&FLP&&\\
+ \hline
+ \textbf{Input Units} &CSM, LEM&Note 1&GET&degrees&&\\
+ \hline
+ \textbf{Checking Option}&Exact&Exact&&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Insert "FF"&Insert neg. number&Insert "FF"&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}: Note 1: Any combination of C (CSM), S (SIVB), L (LEM: Ascent+Descent), A (LEM: Ascent Only), D (LEM: Descent Only)
 \end{tabbing}
 \newpage
 
