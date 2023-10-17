@@ -3684,10 +3684,26 @@ void Saturn::SetRCSState(int Quad, int Thruster, bool Active)
 		break;
 	}
 
-	double Level = Active ? 1.0 : 0.0;
+	if (th == NULL) return; // Sanity check
 
-	if (th)
-		SetThrusterLevel(th, Level);
+	double Level;
+
+	if (Active)
+	{
+		Level = GetThrusterLevel(th);
+
+		//On the first timestep when a RCS thruster is fired, cause a minimum impulse firing (0.0105 seconds worth of impulse)
+		Level += 0.0105 / oapiGetSimStep();
+		Level = min(1.0, Level);
+
+		sprintf(oapiDebugString(), "Thruster %d Level %lf", Thruster, Level);
+	}
+	else
+	{
+		Level = 0.0;
+	}
+
+	SetThrusterLevel(th, Level);
 }
 
 void Saturn::SetCMRCSState(int Thruster, bool Active)
