@@ -3783,7 +3783,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			sv2 = GC->rtcc->coast(sv, GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT);
+			sv2 = GC->rtcc->coast(sv, GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT, RTCC_MPT_CSM);
 		}
 
 		GC->rtcc->CMMSLVNAV(sv2.R, sv2.V, sv2.GMT);

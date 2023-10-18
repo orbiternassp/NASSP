@@ -577,7 +577,7 @@ void Saturn1b::SetSecondStageEngines (double offset)
 	// Set the actual stats.
 	//
 
-	sivb->CreateParticleEffects(1600.0*0.0254); //Aprox CG location
+	sivb->CreateParticleEffects(1645.1*0.0254); //Approx. CG location in Saturn IB coordinates
 	sivb->RecalculateEngineParameters(THRUST_SECOND_VAC);
 
 	//

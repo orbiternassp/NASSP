@@ -9,7 +9,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Maneuver Targeting", 0, 'T' },
 		{ "Pre-Advisory Data", 0, 'P' },
 		{ "Utility", 0, 'U' },
-		{ "MPT Init", 0, ' ' },
+		{ "MPT Init", 0, 'I' },
 		{ "Mission Planning", 0, 'B' },
 		{ "Configuration", 0, 'S' },
 

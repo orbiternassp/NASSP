@@ -1033,7 +1033,7 @@ void SaturnV::SetThirdStageEngines (double offset)
 
 	thg_ver = CreateThrusterGroup (th_ver, 2, THGROUP_USER);
 
-	sivb->CreateParticleEffects(1600.0*0.0254);
+	sivb->CreateParticleEffects(1645.1*0.0254); //Approx. CG location in Saturn IB coordinates
 	sivb->RecalculateEngineParameters(THRUST_THIRD_VAC);
 }
 

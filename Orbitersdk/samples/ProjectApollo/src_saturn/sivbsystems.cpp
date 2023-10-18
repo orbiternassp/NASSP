@@ -37,10 +37,10 @@ static PARTICLESTREAMSPEC lh2_npv_venting_spec = {
 	0,		// flag
 	0.003,	// size
 	20.0,	// rate
-	5.0,	// velocity
-	0.1,    // velocity distribution
-	1.0,	// lifetime
-	1.0,	// growthrate
+	3.0,	// velocity
+	0.001,  // velocity distribution
+	0.5,	// lifetime
+	3.0,	// growthrate
 	0.5,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
@@ -65,10 +65,10 @@ static PARTICLESTREAMSPEC lox_npv_venting_spec = {
 	0,		// flag
 	0.003,	// size
 	20.0,	// rate
-	5.0,	// velocity
-	0.1,    // velocity distribution
-	1.0,	// lifetime
-	1.0,	// growthrate
+	3.0,	// velocity
+	0.001,  // velocity distribution
+	0.5,	// lifetime
+	3.0,	// growthrate
 	0.5,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
