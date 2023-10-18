@@ -157,8 +157,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 {
 	if (mission == 7)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 7 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 7");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1968, 10, 11);
 		rtcc->GMGMED("P80,1,CSM,10,11,1968;");
 		rtcc->GMGMED("P10,CSM,15:02:45;");
@@ -169,8 +169,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 8)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 8 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 8");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1968, 12, 21);
 		rtcc->GMGMED("P80,1,CSM,12,21,1968;");
 		rtcc->GMGMED("P10,CSM,12:51:0;");
@@ -181,8 +181,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 9)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 9 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 9");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1969, 3, 3);
 		rtcc->GMGMED("P80,1,CSM,3,3,1969;");
 		rtcc->GMGMED("P10,CSM,16:00:00;");
@@ -194,8 +194,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 10)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 10 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 10");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1969, 5, 18);
 		rtcc->GMGMED("P80,1,CSM,5,18,1969;");
 		rtcc->GMGMED("P10,CSM,16:49:00;");
@@ -208,8 +208,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	else if (mission == 11) // July 16th Launch
 	{
 		//July 16 launch
-		sprintf(rtcc->MissionFileName, "Apollo 11 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 11");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1969, 7, 16);
 		rtcc->GMGMED("P80,1,CSM,7,16,1969;");
 		rtcc->GMGMED("P10,CSM,13:32:00;");
@@ -241,8 +241,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 12)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 12 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 12");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1969, 11, 14);
 		rtcc->GMGMED("P80,1,CSM,11,14,1969;");
 		rtcc->GMGMED("P10,CSM,16:22:00;");
@@ -254,8 +254,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 13)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 13 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 13");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1970, 4, 11);
 		rtcc->GMGMED("P80,1,CSM,4,11,1970;");
 		rtcc->GMGMED("P10,CSM,19:13:00;");
@@ -267,8 +267,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 14)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 14 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 14");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1971, 1, 31);
 		rtcc->GMGMED("P80,1,CSM,1,31,1971;");
 		rtcc->GMGMED("P10,CSM,20:23:00;");
@@ -280,8 +280,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 15)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 15 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 15");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1971, 7, 26);
 		rtcc->GMGMED("P80,1,CSM,7,26,1971;");
 		rtcc->GMGMED("P10,CSM,13:34:00;");
@@ -293,8 +293,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 16)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 16 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 16");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1972, 4, 16);
 		rtcc->GMGMED("P80,1,CSM,4,16,1972;");
 		rtcc->GMGMED("P10,CSM,17:54:00;");
@@ -306,8 +306,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 17)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 17 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		sprintf(rtcc->MissionFileName, "Apollo 17");
+		rtcc->LoadMissionFiles(rtcc->MissionFileName);
 		rtcc->LoadLaunchDaySpecificParameters(1972, 12, 7);
 		rtcc->GMGMED("P80,1,CSM,12,7,1972;");
 		rtcc->GMGMED("P10,CSM,02:53:00;");

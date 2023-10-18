@@ -2302,7 +2302,7 @@ bool MissionFile(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::LoadMissionConstantsFile(char *str)
 {
-	if (GC->rtcc->LoadMissionConstantsFile(str))
+	if (GC->rtcc->LoadMissionFiles(str))
 	{
 		strcpy(GC->rtcc->MissionFileName, str);
 	}

@@ -1554,130 +1554,229 @@ void RTCC::LoadLaunchDaySpecificParameters(int year, int month, int day)
 {
 	//Mission initialization parameters
 	LoadMissionInitParameters(year, month, day);
-	//Skeleton flight plan table
-	QMSEARCH(year, month, day);
+	//TLI simulation parameters
 	QMMBLD(year, month, day);
+	//Solar and lunar ephemerides
 	QMEPHEM(SystemParameters.AGCEpoch, year, month, day, 0.0);
 }
 
-void RTCC::QMSEARCH(int year, int month, int day)
+void RTCC::QMSEARCH(char *tapename)
 {
-	//This function loads the skeleton flight plan for the launch day
+	//This function loads the skeleton flight plan for the launch month
+	//The format is from 69-FM-171
+	//Each line in the file is equivalent to a punch card
+	//For each data set 8 punch cards are used
+	//There is a data set for each launch day, launch azimuth, TLI opportunity
+	//FORMAT:
+	//Card 1: Day (1 to 366), Opportunity (1 or 2), Launch Azimuth (deg), Launch Window (A or P)
+	//Card 2: Latitude of TLI pericynthion (deg), Longitude of TLI pericynthion (deg), Height of TLI pericynthion (NM), GET of TLI (hours)
+	//Card 3: Latitude of LOI pericynthion (deg), Longitude of LOI pericynthion (deg), Height of LOI pericynthion (NM), spare
+	//Card 4: dpsi of LOI (deg), gamma of LOI (deg), Time in lunar orbit (hrs), Time from LOI to landing (hrs)
+	//Card 5: Approach azimuth (deg), latitude of the landing site (deg), longitude of the landing site (deg), Radius of the landing site (NM)
+	//Card 6: dpsi of TEI (deg), DV of TEI (ft/s), time from TEI to EI (hrs), inclination of free return (deg)
+	//Card 7: GMT of TLI pericynthion (hrs), GMT of LOI pericynthion (hrs), GMT of node (hrs), spare
+	//Card 8: Latitude of node (deg), Longitude of node (deg), height of node (NM), spare
+
 	char Buff[128];
-	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%d-%02d-%02d SFP.txt", year, month, day);
+	int card, day, azimuth, opportunity, err;
 
-	ifstream startable(Buff);
-	if (startable.is_open())
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s SFP.txt", tapename);
+
+	ifstream sfptable(Buff);
+
+	if (sfptable.is_open() == false) return;
+
+	std::string line, CardID;
+	double dtemp[32];
+	int itemp[2];
+	unsigned i;
+
+	MasterFlightPlanTable NewTable;
+	
+	while (getline(sfptable, line))
 	{
-		std::string line;
-		double dtemp;
-
-		while (getline(startable, line))
+		//Cards limited to 80 columns
+		line = line.substr(0, 80);
+		if (line.size() != 80)
 		{
-			sprintf_s(Buff, line.c_str());
+			err = 1;
+			break;
+		}
+		//Identification number is the last 11 characters of the card
+		CardID = line.substr(69, 11);
 
-			if (papiReadScenario_double(Buff, "SFP_DPSI_LOI", dtemp))
+		//Get data from identification code
+		day = std::stoi(CardID.substr(2, 3));
+		opportunity = std::stoi(CardID.substr(5, 1));
+		azimuth = std::stoi(CardID.substr(6, 3));
+		card = std::stoi(CardID.substr(10, 1));
+
+		switch (card)
+		{
+		case 1:
+			itemp[0] = std::stoi(line.substr(0, 17)); //Day
+			itemp[1] = std::stoi(line.substr(17, 17)); //Opportunity
+			dtemp[0] = std::stod(line.substr(34, 17)); //Launch azimuth (deg)
+			break;
+		case 2:
+			dtemp[1] = std::stod(line.substr(0, 17)); //Latitude of TLI pericynthion (deg)
+			dtemp[2] = std::stod(line.substr(17, 17)); //Longitude of TLI pericynthion (deg)
+			dtemp[3] = std::stod(line.substr(34, 17)); //Height of TLI pericynthion (NM)
+			dtemp[4] = std::stod(line.substr(51, 17)); //GET of TLI (hrs)
+			break;
+		case 3:
+			dtemp[5] = std::stod(line.substr(0, 17)); //Latitude of LOI pericynthion (deg)
+			dtemp[6] = std::stod(line.substr(17, 17)); //Longitude of LOI pericynthion (deg)
+			dtemp[7] = std::stod(line.substr(34, 17)); //Height of LOI pericynthion (NM)
+			break;
+		case 4:
+			dtemp[8] = std::stod(line.substr(0, 17)); //dpsi of LOI (deg)
+			dtemp[9] = std::stod(line.substr(17, 17)); //gamma of LOI (deg)
+			dtemp[10] = std::stod(line.substr(34, 17)); //Time in lunar orbit (hrs)
+			dtemp[11] = std::stod(line.substr(51, 17)); //Time from LOI to landing (hrs)
+			break;
+		case 5:
+			dtemp[12] = std::stod(line.substr(0, 17)); //Approach azimuth (deg)
+			dtemp[13] = std::stod(line.substr(17, 17)); //latitude of the landing site (deg) 
+			dtemp[14] = std::stod(line.substr(34, 17)); //longitude of the landing site (deg)
+			dtemp[15] = std::stod(line.substr(51, 17)); //Radius of the landing site (NM)
+			break;
+		case 6:
+			dtemp[16] = std::stod(line.substr(0, 17)); //dpsi of TEI (deg)
+			dtemp[17] = std::stod(line.substr(17, 17)); //DV of TEI (ft/s)
+			dtemp[18] = std::stod(line.substr(34, 17)); //time from TEI to EI (hrs)
+			dtemp[19] = std::stod(line.substr(51, 17)); //inclination of free return (deg)
+			break;
+		case 7:
+			dtemp[20] = std::stod(line.substr(0, 17)); //GMT of TLI pericynthion (hrs)
+			dtemp[21] = std::stod(line.substr(17, 17)); //GMT of LOI pericynthion (hrs)
+			dtemp[22] = std::stod(line.substr(34, 17)); //GMT of node(hrs)
+			break;
+		case 8:
+			dtemp[23] = std::stod(line.substr(0, 17)); //Latitude of node (deg)
+			dtemp[24] = std::stod(line.substr(17, 17)); //Longitude of node (deg)
+			dtemp[25] = std::stod(line.substr(34, 17)); //height of node (NM)
+			break;
+		default:
+			err = 2;
+			break;
+		}
+
+		//All cards read, process data
+		if (card == 8)
+		{
+			bool found;
+
+			//Does day already exist?
+			unsigned daynum = 0U;
+			found = false;
+
+			if (NewTable.data.size() > 0)
 			{
-				PZSFPTAB.blocks[0].dpsi_loi = dtemp * RAD;
+				for (i = 0; i < NewTable.data.size(); i++)
+				{
+					if (NewTable.data[i].day == day)
+					{
+						found = true;
+						daynum = i;
+						break;
+					}
+				}
 			}
-			else if (papiReadScenario_double(Buff, "SFP_DPSI_TEI", dtemp))
+
+			if (found == false)
 			{
-				PZSFPTAB.blocks[0].dpsi_tei = dtemp * RAD;
+				NewTable.data.push_back(MasterFlightPlanTableDay());
+				NewTable.data.back().day = day;
+				daynum = NewTable.data.size() - 1U;
 			}
-			else if (papiReadScenario_double(Buff, "SFP_DT_LLS", dtemp))
+
+			MasterFlightPlanTableDay *pDay = &NewTable.data[daynum];
+
+			//Does opportunity already exist?
+			unsigned oppnum = 0U;
+			found = false;
+
+			if (pDay->data.size() > 0)
 			{
-				PZSFPTAB.blocks[0].dt_lls = dtemp * 3600.0;
+				for (i = 0; i < pDay->data.size(); i++)
+				{
+					if (pDay->data[i].Opportunity == opportunity)
+					{
+						found = true;
+						oppnum = i;
+						break;
+					}
+				}
 			}
-			else if (papiReadScenario_double(Buff, "SFP_DV_TEI", dtemp))
+
+			if (found == false)
 			{
-				PZSFPTAB.blocks[0].dv_tei = dtemp * 0.3048;
+				pDay->data.push_back(MasterFlightPlanTableOpportunity());
+				pDay->data.back().Opportunity = opportunity;
+				oppnum = pDay->data.size() - 1U;
 			}
-			else if (papiReadScenario_double(Buff, "SFP_GAMMA_LOI", dtemp))
+
+			MasterFlightPlanTableOpportunity *pOpp = &pDay->data[oppnum];
+
+			//Does azimuth already exist?
+			unsigned azimuthnum = 0U;
+			found = false;
+
+			if (pOpp->data.size() > 0)
 			{
-				PZSFPTAB.blocks[0].gamma_loi = dtemp * RAD;
+				for (i = 0; i < pOpp->data.size(); i++)
+				{
+					if (pOpp->data[i].iAzimuth == azimuth)
+					{
+						found = true;
+						azimuthnum = i;
+						break;
+					}
+				}
 			}
-			else if (papiReadScenario_double(Buff, "SFP_GET_TLI", dtemp))
+
+			if (found == false)
 			{
-				PZSFPTAB.blocks[0].GET_TLI = dtemp * 3600.0;
+				pOpp->data.push_back(MasterFlightPlanTableAzimuth());
+				pOpp->data.back().iAzimuth = azimuth;
+				pOpp->data.back().dAzimuth = dtemp[0] * RAD;
+				azimuthnum = pOpp->data.size() - 1U;
 			}
-			else if (papiReadScenario_double(Buff, "SFP_GMT_ND", dtemp))
-			{
-				PZSFPTAB.blocks[0].GMT_nd = dtemp * 3600.0;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_GMT_PC1", dtemp))
-			{
-				PZSFPTAB.blocks[0].GMT_pc1 = dtemp * 3600.0;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_GMT_PC2", dtemp))
-			{
-				PZSFPTAB.blocks[0].GMT_pc2 = dtemp * 3600.0;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_H_ND", dtemp))
-			{
-				PZSFPTAB.blocks[0].h_nd = dtemp * 1852.0;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_H_PC1", dtemp))
-			{
-				PZSFPTAB.blocks[0].h_pc1 = dtemp * 1852.0;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_H_PC2", dtemp))
-			{
-				PZSFPTAB.blocks[0].h_pc2 = dtemp * 1852.0;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_INCL_FR", dtemp))
-			{
-				PZSFPTAB.blocks[0].incl_fr = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_LAT_LLS", dtemp))
-			{
-				PZSFPTAB.blocks[0].lat_lls = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_LAT_ND", dtemp))
-			{
-				PZSFPTAB.blocks[0].lat_nd = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_LAT_PC1", dtemp))
-			{
-				PZSFPTAB.blocks[0].lat_pc1 = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_LAT_PC2", dtemp))
-			{
-				PZSFPTAB.blocks[0].lat_pc2 = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_LNG_LLS", dtemp))
-			{
-				PZSFPTAB.blocks[0].lng_lls = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_LNG_ND", dtemp))
-			{
-				PZSFPTAB.blocks[0].lng_nd = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_LNG_PC1", dtemp))
-			{
-				PZSFPTAB.blocks[0].lng_pc1 = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_LNG_PC2", dtemp))
-			{
-				PZSFPTAB.blocks[0].lng_pc2 = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_PSI_LLS", dtemp))
-			{
-				PZSFPTAB.blocks[0].psi_lls = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_RAD_LLS", dtemp))
-			{
-				PZSFPTAB.blocks[0].rad_lls = dtemp * 1852.0;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_T_LO", dtemp))
-			{
-				PZSFPTAB.blocks[0].T_lo = dtemp * 3600.0;
-			}
-			else if (papiReadScenario_double(Buff, "SFP_T_TE", dtemp))
-			{
-				PZSFPTAB.blocks[0].T_te = dtemp * 3600.0;
-			}
+
+			//Now write data
+			TLMCCDataTable *pTab = &pOpp->data[azimuthnum].data;
+
+			pTab->lat_pc1 = dtemp[1] * RAD;
+			pTab->lng_pc1 = dtemp[2] * RAD;
+			pTab->h_pc1 = dtemp[3] * 1852.0;
+			pTab->GET_TLI = dtemp[4] * 3600.0;
+			pTab->lat_pc2 = dtemp[5] * RAD;
+			pTab->lng_pc2 = dtemp[6] * RAD;
+			pTab->h_pc2 = dtemp[7] * 1852.0;
+			pTab->dpsi_loi = dtemp[8] * RAD;
+			pTab->gamma_loi = dtemp[9] * RAD;
+			pTab->T_lo = dtemp[10] * 3600.0;
+			pTab->dt_lls = dtemp[11] * 3600.0;
+			pTab->psi_lls = dtemp[12] * RAD;
+			pTab->lat_lls = dtemp[13] * RAD;
+			pTab->lng_lls = dtemp[14] * RAD;
+			pTab->rad_lls = dtemp[15] * 1852.0;
+			pTab->dpsi_tei = dtemp[16] * RAD;
+			pTab->dv_tei = dtemp[17] * 0.3048;
+			pTab->T_te = dtemp[18] * 3600.0;
+			pTab->incl_fr = dtemp[19] * RAD;
+			pTab->GMT_pc1 = dtemp[20] * 3600.0;
+			pTab->GMT_pc2 = dtemp[21] * 3600.0;
+			pTab->GMT_nd = dtemp[22] * 3600.0;
+			pTab->lat_nd = dtemp[23] * RAD;
+			pTab->lng_nd = dtemp[24] * RAD;
+			pTab->h_nd = dtemp[25] * 1852.0;
 		}
 	}
+
+	//Lastly, copy over data to master flight plan table
+	PZMFPTAB = NewTable;
 }
 
 void RTCC::QMMBLD(int year, int month, int day)
@@ -1928,11 +2027,21 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 	}
 }
 
-bool RTCC::LoadMissionConstantsFile(char *file)
+bool RTCC::LoadMissionFiles(char *missionname)
+{
+	//Load numbers that presumable would be found on a system parameters tape
+	bool found = LoadMissionConstantsFile(missionname);
+	//Load skeleton flight plan master tape
+	QMSEARCH(missionname);
+
+	return found;
+}
+
+bool RTCC::LoadMissionConstantsFile(char *missionname)
 {
 	//This function loads mission specific constants that will rarely be changed or saved/loaded
 	char Buff[128];
-	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s.txt", file);
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s Constants.txt", missionname);
 
 	ifstream missionfile(Buff);
 	if (missionfile.is_open())
@@ -6650,7 +6759,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	int i;
 
 	oapiWriteLine(scn, RTCC_START_STRING);
-	oapiWriteScenario_string(scn, "RTCC_MISSIONFILE", MissionFileName);
+	oapiWriteScenario_string(scn, "RTCC_MISSIONFILES", MissionFileName);
 	// Booleans
 	// Integers
 	SAVE_INT("RTCC_GZGENCSN_Year", GZGENCSN.Year);
@@ -6854,7 +6963,19 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		}
 		if (papiReadScenario_string(line, "RTCC_MISSIONFILE", MissionFileName))
 		{
-			LoadMissionConstantsFile(MissionFileName);
+			//For backwards compatibility. Remove the "Constants" at the end of the file
+			int len = strlen(MissionFileName);
+
+			if (len > 9)
+			{
+				MissionFileName[len - 10] = '\0';
+			}
+
+			LoadMissionFiles(MissionFileName);
+		}
+		else if (papiReadScenario_string(line, "RTCC_MISSIONFILES", MissionFileName))
+		{
+			LoadMissionFiles(MissionFileName);
 		}
 		LOAD_INT("RTCC_GZGENCSN_Year", GZGENCSN.Year);
 		LOAD_INT("RTCC_GZGENCSN_RefDayOfYear", GZGENCSN.RefDayOfYear);
@@ -27430,6 +27551,48 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 			break;
 		}
 	}
+	//Interpolation for skeleton flight plan
+	else if (med == "62")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		int day;
+		if (sscanf(data[0].c_str(), "%d", &day) != 1)
+		{
+			return 1;
+		}
+		if (day < 1 || day > 366)
+		{
+			return 2;
+		}
+		int opp;
+		if (sscanf(data[1].c_str(), "%d", &opp) != 1)
+		{
+			return 1;
+		}
+		if (opp < 1 || opp > 2)
+		{
+			return 2;
+		}
+		double azi;
+		if (sscanf(data[1].c_str(), "%lf", &azi) != 1)
+		{
+			return 1;
+		}
+		if (azi < 72.0 || azi > 108.0)
+		{
+			return 2;
+		}
+		azi *= RAD;
+
+		PZSFPTAB.Day = day;
+		PZSFPTAB.Opportunity = opp;
+		PZSFPTAB.Azimuth = azi;
+
+		PMMSFPIN();
+	}
 	//Generation of near Earth tradeoff
 	else if (med == "70")
 	{
@@ -33350,6 +33513,152 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		}
 	}
 	//TBD: Day and night
+}
+
+double PIMDIR(double X, double *XI, double *YI, unsigned N)
+{
+	unsigned N1;
+
+	N1 = N;
+
+	if (N1 < 2)
+	{
+		return YI[N1 - 1];
+	}
+	if (N1 > 2)
+	{
+		for (N1 = 2; N1 < N; N1++)
+		{
+			if (X < XI[N1 - 1]) break;
+		}
+	}
+
+	//TBD: More than just linear interpolation
+
+	return (YI[N1 - 1] - YI[N1 - 2]) / (XI[N1 - 1] - XI[N1 - 2])*(X - XI[N1 - 2]) + YI[N1 - 2];
+}
+
+void RTCC::PMMSFPIN()
+{
+	int day, opportunity;
+	double azimuth;
+
+	//Read PZSFPTAB block 6
+	day = PZSFPTAB.Day;
+	opportunity = PZSFPTAB.Opportunity;
+	azimuth = PZSFPTAB.Azimuth;
+
+	if (PZMFPTAB.data.size() == 0)
+	{
+		//Error
+		return;
+	}
+
+	//Can the day even be in the table?
+	if (day < PZMFPTAB.data.front().day || day > PZMFPTAB.data.back().day)
+	{
+		//Error
+		return;
+	}
+
+	//Find day in table
+	bool found = false;
+	unsigned i;
+
+	for (i = 0; i < PZMFPTAB.data.size(); i++)
+	{
+		if (PZMFPTAB.data[i].day == day)
+		{
+			found = true;
+			break;
+		}
+	}
+
+	if (found == false)
+	{
+		//Error
+		return;
+	}
+
+	MasterFlightPlanTableDay *pDay = &PZMFPTAB.data[i];
+
+	//Find opportunity in table
+	found = false;
+
+	for (i = 0; i < pDay->data.size(); i++)
+	{
+		if (pDay->data[i].Opportunity == opportunity)
+		{
+			found = true;
+			break;
+		}
+	}
+
+	if (found == false)
+	{
+		//Error
+		return;
+	}
+
+	TLMCCDataTable temptab;
+	MasterFlightPlanTableOpportunity *pOpp = &pDay->data[i];
+	unsigned N = pOpp->data.size();
+	double *XARRAY = new double[N];
+	double **YARRAYS = new double*[N];
+	double X = azimuth;
+	double P;
+
+	for (i = 0; i < N; i++)
+	{
+		XARRAY[i] = pOpp->data[i].dAzimuth;
+		YARRAYS[i] = new double[25] {pOpp->data[i].data.dpsi_loi, pOpp->data[i].data.dpsi_tei, pOpp->data[i].data.dt_lls, pOpp->data[i].data.dv_tei, pOpp->data[i].data.gamma_loi,
+			pOpp->data[i].data.GET_TLI, pOpp->data[i].data.GMT_nd, pOpp->data[i].data.GMT_pc1, pOpp->data[i].data.GMT_pc2, pOpp->data[i].data.h_nd, pOpp->data[i].data.h_pc1,
+			pOpp->data[i].data.h_pc2, pOpp->data[i].data.incl_fr, pOpp->data[i].data.lat_lls, pOpp->data[i].data.lat_nd, pOpp->data[i].data.lat_pc1, pOpp->data[i].data.lat_pc2, 
+			pOpp->data[i].data.lng_lls, pOpp->data[i].data.lng_nd, pOpp->data[i].data.lng_pc1, pOpp->data[i].data.lng_pc2, pOpp->data[i].data.psi_lls, pOpp->data[i].data.rad_lls, 
+			pOpp->data[i].data.T_lo, pOpp->data[i].data.T_te};
+	}
+
+	for (unsigned j = 0; j < 25; j++)
+	{
+		//Do interpolation
+		P = PIMDIR(X, XARRAY, YARRAYS[j], N);
+
+		//Write to table
+		switch (j)
+		{
+		case 0: temptab.dpsi_loi = P; break;
+		case 1: temptab.dpsi_tei = P; break;
+		case 2: temptab.dt_lls = P; break;
+		case 3: temptab.dv_tei = P; break;
+		case 4: temptab.gamma_loi = P; break;
+		case 5: temptab.GET_TLI = P; break;
+		case 6: temptab.GMT_nd = P; break;
+		case 7: temptab.GMT_pc1 = P; break;
+		case 8: temptab.GMT_pc2 = P; break;
+		case 9: temptab.h_nd = P; break;
+		case 10: temptab.h_pc1 = P; break;
+		case 11: temptab.h_pc2 = P; break;
+		case 12: temptab.incl_fr = P; break;
+		case 13: temptab.lat_lls = P; break;
+		case 14: temptab.lat_nd = P; break;
+		case 15: temptab.lat_pc1 = P; break;
+		case 16: temptab.lat_pc2 = P; break;
+		case 17: temptab.lng_lls = P; break;
+		case 18: temptab.lng_nd = P; break;
+		case 19: temptab.lng_pc1 = P; break;
+		case 20: temptab.lng_pc2 = P; break;
+		case 21: temptab.psi_lls = P; break;
+		case 22: temptab.rad_lls = P; break;
+		case 23: temptab.T_lo = P; break;
+		case 24: temptab.T_te = P; break;
+		}
+	}
+
+	//Lastly, copy to preflight table
+	PZSFPTAB.blocks[0] = temptab;
+
+	delete[] XARRAY;
+	delete[] YARRAYS;
 }
 
 //CMC External Delta-V Update Generator

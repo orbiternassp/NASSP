@@ -2425,8 +2425,9 @@ public:
 	void SetManeuverData(double TIG, VECTOR3 DV);
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
 	void LoadLaunchDaySpecificParameters(int year, int month, int day);
-	bool LoadMissionConstantsFile(char *file);
+	bool LoadMissionFiles(char *missionname);
 private:
+	bool LoadMissionConstantsFile(char *missionname);
 	void LoadMissionInitParameters(int year, int month, int day);
 	void InitializeCoordinateSystem();
 public:
@@ -2612,6 +2613,8 @@ public:
 	void GMLRESRT(int type);
 	//Detailed Maneuver Table Math Module
 	void PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux);
+	//Skeleton flight plan interpolation program
+	void PMMSFPIN();
 	//Time Queue Control Load Module
 	void EMSTIME(int L, int ID);
 	void FDOLaunchAnalog1(EphemerisData sv);
@@ -4424,6 +4427,30 @@ public:
 		LunarRendezvousPlanningDisplayData data[7];
 	} PZLRPT;
 
+	struct MasterFlightPlanTableAzimuth
+	{
+		int iAzimuth = -1; //ID
+		double dAzimuth = 0.0; //Actual value
+		TLMCCDataTable data;
+	};
+
+	struct MasterFlightPlanTableOpportunity
+	{
+		int Opportunity = -1;
+		std::vector<MasterFlightPlanTableAzimuth> data;
+	};
+
+	struct MasterFlightPlanTableDay
+	{
+		int day = -1;
+		std::vector<MasterFlightPlanTableOpportunity> data;
+	};
+
+	struct MasterFlightPlanTable
+	{
+		std::vector<MasterFlightPlanTableDay> data;
+	} PZMFPTAB;
+
 	struct SkeletonFlightPlanTable
 	{
 		//Blocks
@@ -4433,6 +4460,9 @@ public:
 		TLMCCDataTable blocks[2];
 		//Block 6
 		int DisplayBlockNum = 1;
+		int Day;
+		int Opportunity;
+		double Azimuth;
 	} PZSFPTAB;
 
 	struct UpdatedSkeletonFlightPlansTable
@@ -4890,7 +4920,7 @@ protected:
 	//Offline Programs
 
 	//Search tape and build skeleton flight plan table
-	void QMSEARCH(int year, int month, int day);
+	void QMSEARCH(char *tapename);
 	//Build TLI targeting parameters table
 	void QMMBLD(int year, int month, int day);
 
