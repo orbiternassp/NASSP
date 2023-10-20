@@ -44,6 +44,9 @@
     <ClInclude Include="..\..\src_aux\nassputils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_sys\socket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src_mfd\MFDResources.rc">
@@ -70,6 +73,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_mfd\ProjectApolloMFDButtons.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_sys\socket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

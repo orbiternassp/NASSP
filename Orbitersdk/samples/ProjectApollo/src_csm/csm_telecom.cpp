@@ -26,7 +26,6 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include <winsock.h> // TODO: Replace with winsock2 after yaAGC updates
 #include "soundlib.h"
 #include "resource.h"
 #include "nasspdefs.h"
@@ -1997,15 +1996,10 @@ PCM::PCM()
 	last_rx = 0;
 	frame_addr = 0;
 	frame_count = 0;
-	m_socket = INVALID_SOCKET;
 }
 
 PCM::~PCM()
 {
-	if (m_socket != INVALID_SOCKET) {
-		shutdown(m_socket, 2); // Shutdown both streams
-		closesocket(m_socket);
-	}
 }
 
 void PCM::Init(Saturn *vessel){
@@ -2017,46 +2011,16 @@ void PCM::Init(Saturn *vessel){
 	last_update = 0;
 	last_rx = MINUS_INFINITY;
 	word_addr = 0;
-	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
-	if ( iResult != NO_ERROR ){
-		sprintf(wsk_emsg,"TELECOM: Error at WSAStartup()");
+	if (!NetStartup()){
+		sprintf(wsk_emsg,"TELECOM: Error at NetStartup()");
 		wsk_error = 1;
-		return;
-	}
-	m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
-	if ( m_socket == INVALID_SOCKET ) {
-		sprintf(wsk_emsg,"TELECOM: Error at socket(): %ld", WSAGetLastError());
-		WSACleanup();
-		wsk_error = 1;
-		return;
-	}
-	// Be nonblocking
-	int iMode = 1; // 0 = BLOCKING, 1 = NONBLOCKING
-	if(ioctlsocket(m_socket, FIONBIO, (u_long FAR*) &iMode) != 0){
-		sprintf(wsk_emsg,"TELECOM: ioctlsocket() failed: %ld", WSAGetLastError());
-		wsk_error = 1;
-		closesocket(m_socket);
-		WSACleanup();
 		return;
 	}
 
-	// Set up incoming options
-	service.sin_family = AF_INET;
-	service.sin_addr.s_addr = htonl(INADDR_ANY);
-	service.sin_port = htons( 14242 );
-
-	if ( ::bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
-		sprintf(wsk_emsg,"Failed to start CSM telemetry. Please completely exit Orbiter and restart. Please file a bug report if this message persists.");
+	m_tcpserver = TcpService(14242); // CM on 14242, LM on 14243
+	if (m_tcpserver.Status() != TcpService::STARTED) {
+		sprintf(wsk_emsg, "TELECOM: Error starting server: %d", m_tcpserver.ErrorCode());
 		wsk_error = 1;
-		closesocket(m_socket);
-		WSACleanup();
-		return;
-	}
-	if ( listen( m_socket, 1 ) == SOCKET_ERROR ){
-		wsk_error = 1;
-		sprintf(wsk_emsg,"TELECOM: listen() failed: %ld", WSAGetLastError());
-		closesocket(m_socket);
-		WSACleanup();
 		return;
 	}
 
@@ -4968,73 +4932,52 @@ void PCM::perform_io(double simt){
 				}
 			}else{
 				// Try to accept
-				AcceptSocket = accept( m_socket, NULL, NULL );
-				if(AcceptSocket != INVALID_SOCKET){
+				m_connection = m_tcpserver.Accept();
+				if(m_connection.Status() == TcpConnection::CONNECTED){
 					conn_state = 2; // Accept this!
 					wsk_error = 0; // For now
 				}
 			}
 			// Otherwise loop and try again.
 			break;
-		case 2: // CONNECTED			
-			int bytesSent,bytesRecv;
-
-			bytesSent = send(AcceptSocket, (char *)tx_data, tx_size, 0 );
-			if(bytesSent == SOCKET_ERROR){
-				long errnumber = WSAGetLastError();
-				switch(errnumber){
-					// KNOWN CODES that we can ignore
-					case 10035: // Operation Would Block
-						// We can ignore this entirely. It's not an error.
-						break;
-
-					case 10038: // Socket isn't a socket
-					case 10053: // Software caused connection abort
-					case 10054: // Connection reset by peer
-						closesocket(AcceptSocket);
-						conn_state = 1; // Accept another
-						uplink_state = 0; rx_offset = 0;
-						break;
-
-					default:           // If unknown
-						wsk_error = 1; // do this
-						sprintf(wsk_emsg,"TELECOM: send() failed: %ld",errnumber);
-						closesocket(AcceptSocket);
-						conn_state = 1; // Accept another
-						uplink_state = 0; rx_offset = 0;
-						break;					
-				}
+		case 2: // CONNECTED
+			switch (m_connection.Send((char*)tx_data, tx_size)) {
+			case TcpConnection::CONNECTION_ERROR:
+				conn_state = 1; // Accept another
+				uplink_state = 0; rx_offset = 0;
+				break;
+			case TcpConnection::UNEXPECTED_ERROR:
+				conn_state = 1; // Accept another
+				uplink_state = 0; rx_offset = 0;
+				wsk_error = 1;
+				sprintf(wsk_emsg, "CSM-TELECOM: Send failed : %d", m_connection.ErrorCode());
+				break;
+			default:
+				break;
 			}
-			// Should we recieve?
+
+			// Should we receive?
 			if ((fabs(simt - last_rx) / 0.005) < 1 || sat->agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 				return; // No
 			}
 			last_rx = simt;
-			bytesRecv = recv( AcceptSocket, (char *)(rx_data+rx_offset), 1, 0 );
-			if(bytesRecv == SOCKET_ERROR){
-				long errnumber = WSAGetLastError();
-				switch(errnumber){
-					// KNOWN CODES that we can ignore
-					case 10035: // Operation Would Block
-						// We can ignore this entirely. It's not an error.
-						break;
-
-					case 10053: // Software caused connection abort
-					case 10038: // Socket isn't a socket
-					case 10054: // Connection reset by peer
-						closesocket(AcceptSocket);
-						conn_state = 1; // Accept another
-						uplink_state = 0; rx_offset = 0;
-						break;
-
-					default:           // If unknown
-						wsk_error = 1; // do this
-						sprintf(wsk_emsg,"TELECOM: recv() failed: %ld",errnumber);
-						closesocket(AcceptSocket);
-						conn_state = 1; // Accept another
-						uplink_state = 0; rx_offset = 0;
-						break;					
+			TcpConnection::CommandStatus status = m_connection.RecvChar((char *)(rx_data+rx_offset));
+			if(status != TcpConnection::OK){
+				switch (status) {
+				case TcpConnection::CONNECTION_ERROR:
+					conn_state = 1; // Accept another
+					uplink_state = 0; rx_offset = 0;
+					break;
+				case TcpConnection::UNEXPECTED_ERROR:
+					conn_state = 1; // Accept another
+					uplink_state = 0; rx_offset = 0;
+					wsk_error = 1;
+					sprintf(wsk_emsg, "CSM-TELECOM: Recv failed : %d", m_connection.ErrorCode());
+					break;
+				default:
+					break;
 				}
+
 				// Do we have data from MCC instead?
 				if (mcc_size > 0) {
 					// Yes. Take a byte
@@ -5051,28 +4994,12 @@ void PCM::perform_io(double simt){
 						mcc_offset = mcc_size = 0;
 					}
 				}
-			}else{
+			} else {
 				// If the telemetry data-path is disconnected
-				if(sat->UPTLMSwitch1.GetState() == TOGGLESWITCH_DOWN){
+				if(sat->UPTLMSwitch1.GetState() == TOGGLESWITCH_DOWN) {
 					return; // Discard the data
 				}
-				if(bytesRecv > 0){
-					handle_uplink();
-				} else {
-					// Do we have data from MCC instead?
-					if (mcc_size > 0) {
-						// Yes. Take a byte
-						rx_data[rx_offset] = mcc_data[mcc_offset];
-						mcc_offset++;
-						// Handle it
-						handle_uplink();
-						// Are we done?
-						if (mcc_offset >= mcc_size) {
-							// We reached the end of the MCC buffer.
-							mcc_offset = mcc_size = 0;
-						}
-					}
-				}
+				handle_uplink();
 			}
 			break;			
 	}

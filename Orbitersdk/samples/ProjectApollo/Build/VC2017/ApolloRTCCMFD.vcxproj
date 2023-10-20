@@ -39,6 +39,7 @@
     <ClInclude Include="..\..\src_rtccmfd\TLIProcessor.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h" />
+    <ClInclude Include="..\..\src_sys\socket.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLTrajectoryComputers.h" />
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +71,7 @@
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIProcessor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
+    <ClCompile Include="..\..\src_sys\socket.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLTrajectoryComputers.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
   </ItemGroup>

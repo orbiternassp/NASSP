@@ -346,6 +346,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\socket.cpp" />
     <ClCompile Include="..\..\src_sys\soundevents.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -474,6 +475,7 @@
     <ClInclude Include="..\..\src_saturn\sii.h" />
     <ClInclude Include="..\..\src_saturn\sivb.h" />
     <ClInclude Include="..\..\src_csm\sm.h" />
+    <ClInclude Include="..\..\src_sys\socket.h" />
     <ClInclude Include="..\..\src_sys\soundevents.h" />
     <ClInclude Include="..\..\src_sys\soundlib.h" />
     <ClInclude Include="..\..\src_csm\sps.h" />

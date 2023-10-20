@@ -15,13 +15,11 @@
 #include "TLMCC.h"
 #include "rtcc.h"
 #include "nassputils.h"
+#include "socket.h"
 
 using namespace nassp;
 
-static WSADATA wsaData;
-static SOCKET m_socket;
-static sockaddr_in clientService;
-static SOCKET close_Socket = INVALID_SOCKET;
+static TcpConnection m_socket;
 static char debugString[100];
 static char debugStringBuffer[100];
 static char debugWinsock[100];
@@ -458,9 +456,9 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		g_Data.emem[i] = 0;
 	}
-	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (iResult != NO_ERROR) {
-		sprintf(debugWinsock, "ERROR AT WSAStartup()");
+
+	if(!NetStartup()) {
+		sprintf(debugWinsock, "ERROR AT NetStartup()");
 	}
 	else {
 		sprintf(debugWinsock, "DISCONNECTED");
@@ -758,7 +756,7 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
 		if (SimT > g_Data.uplinkBufferSimt + 0.1) {
 			unsigned char data = g_Data.uplinkBuffer.front();
-			send(m_socket, (char *)&data, 1, 0);
+			m_socket.Send((char *)&data, 1);
 			g_Data.uplinkBuffer.pop();
 			g_Data.uplinkBufferSimt = SimT;
 		}
@@ -767,7 +765,7 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 		if (g_Data.connStatus == 1)	{
 			sprintf(debugWinsock, "DISCONNECTED");
 			g_Data.connStatus = 0;
-			closesocket(m_socket);
+			m_socket.Close();
 		}
 	}
 }
@@ -2076,31 +2074,18 @@ void ARCore::AP12AbortCoefUplink()
 void ARCore::UplinkData(bool isCSM)
 {
 	if (g_Data.connStatus == 0) {
-		int bytesRecv = SOCKET_ERROR;
-		char addr[256];
 		char buffer[8];
-		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (m_socket == INVALID_SOCKET) {
-			//g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
-			closesocket(m_socket);
-			return;
-		}
-		sprintf(addr, "127.0.0.1");
-		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr(addr);
 		if (isCSM)
 		{
-			clientService.sin_port = htons(14242);
+			m_socket = TcpConnection("127.0.0.1", 14242);
 		}
 		else
 		{
-			clientService.sin_port = htons(14243);
+			m_socket = TcpConnection("127.0.0.1", 14243);
 		}
-		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+		if (m_socket.Status() != TcpConnection::CONNECTED) {
 			//g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
-			closesocket(m_socket);
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", m_socket.ErrorCode());
 			return;
 		}
 		sprintf(debugWinsock, "CONNECTED");
@@ -2132,33 +2117,21 @@ void ARCore::UplinkData(bool isCSM)
 void ARCore::UplinkData2(bool isCSM)
 {
 	if (g_Data.connStatus == 0) {
-		int bytesRecv = SOCKET_ERROR;
-		char addr[256];
 		char buffer[8];
-		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (m_socket == INVALID_SOCKET) {
-			//g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
-			closesocket(m_socket);
-			return;
-		}
-		sprintf(addr, "127.0.0.1");
-		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr(addr);
 		if (isCSM)
 		{
-			clientService.sin_port = htons(14242);
+			m_socket = TcpConnection("127.0.0.1", 14242);
 		}
 		else
 		{
-			clientService.sin_port = htons(14243);
+			m_socket = TcpConnection("127.0.0.1", 14243);
 		}
-		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+		if (m_socket.Status() != TcpConnection::CONNECTED) {
 			//g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
-			closesocket(m_socket);
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", m_socket.ErrorCode());
 			return;
 		}
+
 		sprintf(debugWinsock, "CONNECTED");
 		g_Data.uplinkState = 0;
 		send_agc_key('V', isCSM);
@@ -2188,33 +2161,21 @@ void ARCore::UplinkData2(bool isCSM)
 void ARCore::UplinkDataV70V73(bool v70, bool isCSM)
 {
 	if (g_Data.connStatus == 0) {
-		int bytesRecv = SOCKET_ERROR;
-		char addr[256];
 		char buffer[8];
-		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (m_socket == INVALID_SOCKET) {
-			//g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
-			closesocket(m_socket);
-			return;
-		}
-		sprintf(addr, "127.0.0.1");
-		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr(addr);
 		if (isCSM)
 		{
-			clientService.sin_port = htons(14242);
+			m_socket = TcpConnection("127.0.0.1", 14242);
 		}
 		else
 		{
-			clientService.sin_port = htons(14243);
+			m_socket = TcpConnection("127.0.0.1", 14243);
 		}
-		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
+		if (m_socket.Status() != TcpConnection::CONNECTED) {
 			//g_Data.uplinkDataReady = 0;
-			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
-			closesocket(m_socket);
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", m_socket.ErrorCode());
 			return;
 		}
+
 		sprintf(debugWinsock, "CONNECTED");
 		g_Data.uplinkState = 0;
 		send_agc_key('V', isCSM);

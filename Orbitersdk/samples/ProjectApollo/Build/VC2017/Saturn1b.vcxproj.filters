@@ -237,6 +237,9 @@
     <ClCompile Include="..\..\src_sys\inertial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\socket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src_aux\CueCard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
