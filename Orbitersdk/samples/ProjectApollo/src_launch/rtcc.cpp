@@ -1420,6 +1420,7 @@ RTCC::RTCC() :
 	PZMPTCSM.CommonBlock.LMAscentArea = PZMPTLEM.CommonBlock.LMAscentArea = 200.6*0.3048*0.3048;
 	PZMPTCSM.CommonBlock.LMDescentArea = PZMPTLEM.CommonBlock.LMDescentArea = 200.6*0.3048*0.3048;
 	PZMPTCSM.CommonBlock.SIVBArea = PZMPTLEM.CommonBlock.SIVBArea = 368.7*0.3048*0.3048;
+	PZMPTCSM.ConfigurationArea = PZMPTLEM.ConfigurationArea = PZMPTCSM.CommonBlock.SIVBArea;
 	PZMPTCSM.KFactor = PZMPTLEM.KFactor = 1.0;
 
 	//Initialize MPT usable propellant
@@ -1435,6 +1436,7 @@ RTCC::RTCC() :
 	PZMPTCSM.CommonBlock.LMAscentMass = PZMPTLEM.CommonBlock.LMAscentMass = 4944.0;
 	PZMPTCSM.CommonBlock.LMDescentMass = PZMPTLEM.CommonBlock.LMDescentMass = 10375.0;
 	PZMPTCSM.CommonBlock.SIVBMass = PZMPTLEM.CommonBlock.SIVBMass = 90851.2;
+	PZMPTCSM.TotalInitMass = PZMPTLEM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass + PZMPTCSM.CommonBlock.LMAscentMass + PZMPTCSM.CommonBlock.LMDescentMass + PZMPTCSM.CommonBlock.SIVBMass;
 
 	PZMPTCSM.CommonBlock.ConfigCode = PZMPTLEM.CommonBlock.ConfigCode = 15; //CSM + LM + S-IVB
 
@@ -1554,8 +1556,6 @@ void RTCC::LoadLaunchDaySpecificParameters(int year, int month, int day)
 {
 	//Mission initialization parameters
 	LoadMissionInitParameters(year, month, day);
-	//TLI simulation parameters
-	QMMBLD(year, month, day);
 	//Solar and lunar ephemerides
 	QMEPHEM(SystemParameters.AGCEpoch, year, month, day, 0.0);
 }
@@ -1563,7 +1563,7 @@ void RTCC::LoadLaunchDaySpecificParameters(int year, int month, int day)
 void RTCC::QMSEARCH(char *tapename)
 {
 	//This function loads the skeleton flight plan for the launch month
-	//The format is from 69-FM-171
+	//The format is from 69-FM-171 (NTRS ID 19740072570)
 	//Each line in the file is equivalent to a punch card
 	//For each data set 8 punch cards are used
 	//There is a data set for each launch day, launch azimuth, TLI opportunity
@@ -1779,141 +1779,159 @@ void RTCC::QMSEARCH(char *tapename)
 	PZMFPTAB = NewTable;
 }
 
-void RTCC::QMMBLD(int year, int month, int day)
+void RTCC::QMMBLD(char *tapename)
 {
 	//This function loads the TLI targeting parameters for the launch day
-	//Loaded file has to have the punch card format from MSC memo 69-FM-171. One punch card = one line
+	//Loaded file has to have the punch card format from MSC memo 69-FM-171 (NTRS ID 19740072570). One punch card = one line
 	char Buff[128];
-	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%d-%02d-%02d TLI.txt", year, month, day);
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s TLI.txt", tapename);
+
+	const double R_Earth = 6378165.0;
+	const double ER2HR2ToM2SEC2 = pow(R_Earth / 3600.0, 2);
 
 	ifstream startable(Buff);
 
-	if (startable.is_open())
-	{
-		std::string line;
-		int i, j, day, opp, entry;
-		double dtemp1, dtemp2, dtemp3, dtemp4;
+	if (startable.is_open() == false) return;
 
-		for (i = 0;i < 2;i++)
+	std::string line;
+	int i, j, day, opp, entry, counter, numdays;
+	double dtemp1, dtemp2, dtemp3, dtemp4;
+
+	getline(startable, line);
+	sscanf(line.c_str(), "%d", &numdays);
+
+	for (counter = 0; counter < numdays; counter++)
+	{
+		for (i = 0; i < 2; i++)
 		{
 			entry = 0;
 			getline(startable, line);
 			sscanf(line.c_str(), "%d %d %lf %lf", &day, &opp, &dtemp1, &dtemp2);
+
 			if (opp < 1 || opp > 2)
 			{
 				return;
 			}
-			PZSTARGP.Day = day;
-			PZSTARGP.t_D[opp - 1][entry] = dtemp1;
-			PZSTARGP.cos_sigma[opp - 1][entry] = dtemp2;
+			PZSTARGP.data[counter].Day = day;
+			PZSTARGP.data[counter].t_D[opp - 1][entry] = dtemp1 * 3600.0;
+			PZSTARGP.data[counter].cos_sigma[opp - 1][entry] = dtemp2;
 
 			getline(startable, line);
 			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-			PZSTARGP.C_3[opp - 1][entry] = dtemp1;
-			PZSTARGP.e_N[opp - 1][entry] = dtemp2;
-			PZSTARGP.RA[opp - 1][entry] = dtemp3 * RAD;
-			PZSTARGP.DEC[opp - 1][entry] = dtemp4 * RAD;
-			for (j = 0;j < 7;j++)
+			PZSTARGP.data[counter].C_3[opp - 1][entry] = dtemp1 * ER2HR2ToM2SEC2;
+			PZSTARGP.data[counter].e_N[opp - 1][entry] = dtemp2;
+			PZSTARGP.data[counter].RA[opp - 1][entry] = dtemp3;
+			PZSTARGP.data[counter].DEC[opp - 1][entry] = dtemp4;
+			for (j = 0; j < 7; j++)
 			{
 				getline(startable, line);
 				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
 				entry++;
-				PZSTARGP.t_D[opp - 1][entry] = dtemp1;
-				PZSTARGP.cos_sigma[opp - 1][entry] = dtemp2;
-				PZSTARGP.C_3[opp - 1][entry] = dtemp3;
-				PZSTARGP.e_N[opp - 1][entry] = dtemp4;
+				PZSTARGP.data[counter].t_D[opp - 1][entry] = dtemp1*3600.0;
+				PZSTARGP.data[counter].cos_sigma[opp - 1][entry] = dtemp2;
+				PZSTARGP.data[counter].C_3[opp - 1][entry] = dtemp3* ER2HR2ToM2SEC2;
+				PZSTARGP.data[counter].e_N[opp - 1][entry] = dtemp4;
 				getline(startable, line);
 				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-				PZSTARGP.RA[opp - 1][entry] = dtemp1 * RAD;
-				PZSTARGP.DEC[opp - 1][entry] = dtemp2 * RAD;
+				PZSTARGP.data[counter].RA[opp - 1][entry] = dtemp1;
+				PZSTARGP.data[counter].DEC[opp - 1][entry] = dtemp2;
 				entry++;
-				PZSTARGP.t_D[opp - 1][entry] = dtemp3;
-				PZSTARGP.cos_sigma[opp - 1][entry] = dtemp4;
+				PZSTARGP.data[counter].t_D[opp - 1][entry] = dtemp3 * 3600.0;
+				PZSTARGP.data[counter].cos_sigma[opp - 1][entry] = dtemp4;
 				getline(startable, line);
 				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-				PZSTARGP.C_3[opp - 1][entry] = dtemp1;
-				PZSTARGP.e_N[opp - 1][entry] = dtemp2;
-				PZSTARGP.RA[opp - 1][entry] = dtemp3 * RAD;
-				PZSTARGP.DEC[opp - 1][entry] = dtemp4 * RAD;
+				PZSTARGP.data[counter].C_3[opp - 1][entry] = dtemp1 * ER2HR2ToM2SEC2;
+				PZSTARGP.data[counter].e_N[opp - 1][entry] = dtemp2;
+				PZSTARGP.data[counter].RA[opp - 1][entry] = dtemp3;
+				PZSTARGP.data[counter].DEC[opp - 1][entry] = dtemp4;
 			}
 		}
-		for (i = 0;i < 2;i++)
+	}
+
+	for (counter = 0; counter < numdays; counter++)
+	{
+		for (i = 0; i < 2; i++)
 		{
 			getline(startable, line);
 			sscanf(line.c_str(), "%d %d %lf %lf", &day, &opp, &dtemp1, &dtemp2);
+
 			if (opp < 1 || opp > 2)
 			{
 				return;
 			}
-			PZSTARGP.T_ST[opp - 1] = dtemp1;
-			PZSTARGP.beta[opp - 1] = dtemp2 * RAD;
+			PZSTARGP.data[counter].T_ST[opp - 1] = dtemp1 * 3600.0;
+			PZSTARGP.data[counter].beta[opp - 1] = dtemp2;
 			getline(startable, line);
 			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-			PZSTARGP.alpha_TS[opp - 1] = dtemp1 * RAD;
-			PZSTARGP.f[opp - 1] = dtemp2 * RAD;
-			PZSTARGP.R_N[opp - 1] = dtemp3;
-			PZSTARGP.T3_apo[opp - 1] = dtemp4;
+			PZSTARGP.data[counter].alpha_TS[opp - 1] = dtemp1;
+			PZSTARGP.data[counter].f[opp - 1] = dtemp2;
+			PZSTARGP.data[counter].R_N[opp - 1] = dtemp3 * R_Earth;
+			PZSTARGP.data[counter].T3_apo[opp - 1] = dtemp4 * 3600.0;
 			getline(startable, line);
 			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-			PZSTARGP.tau3R[opp - 1] = dtemp1;
-			PZSTARGP.T2[opp - 1] = dtemp2;
-			PZSTARGP.Vex2[opp - 1] = dtemp3;
-			PZSTARGP.Mdot2[opp - 1] = dtemp4;
+			PZSTARGP.data[counter].tau3R[opp - 1] = dtemp1 * 3600.0;
+			PZSTARGP.data[counter].T2[opp - 1] = dtemp2 * 3600.0;
+			PZSTARGP.data[counter].Vex2[opp - 1] = dtemp3 * R_Earth / 3600.0;
+			PZSTARGP.data[counter].Mdot2[opp - 1] = dtemp4 / (LBS*1000.0*3600.0);
 			getline(startable, line);
 			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-			PZSTARGP.DV_BR[opp - 1] = dtemp1;
-			PZSTARGP.tau2N[opp - 1] = dtemp2;
-			PZSTARGP.KP0[opp - 1] = dtemp3;
-			PZSTARGP.KY0[opp - 1] = dtemp4;
+			PZSTARGP.data[counter].DV_BR[opp - 1] = dtemp1 * R_Earth / 3600.0;
+			PZSTARGP.data[counter].tau2N[opp - 1] = dtemp2 * 3600.0;
+			PZSTARGP.data[counter].KP0[opp - 1] = dtemp3;
+			PZSTARGP.data[counter].KY0[opp - 1] = dtemp4;
 		}
+	}
+
+	for (counter = 0; counter < numdays; counter++)
+	{
 		getline(startable, line);
 		sscanf(line.c_str(), "%d %lf %lf %lf", &day, &dtemp1, &dtemp2, &dtemp3);
-		PZSTARGP.T_LO = dtemp1;
-		PZSTARGP.theta_EO = dtemp2;
-		PZSTARGP.omega_E = dtemp3 / 3600.0;
+		PZSTARGP.data[counter].T_LO = dtemp1 * 3600.0;
+		PZSTARGP.data[counter].theta_EO = dtemp2;
+		PZSTARGP.data[counter].omega_E = dtemp3 / 3600.0;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		PZSTARGP.K_a1 = dtemp1;
-		PZSTARGP.K_a2 = dtemp2;
-		PZSTARGP.K_T3 = dtemp3;
-		SystemParameters.MDVSTP.t_DS0 = dtemp4;
+		PZSTARGP.data[counter].K_a1 = dtemp1 / 3600.0;
+		PZSTARGP.data[counter].K_a2 = dtemp2 / pow(3600.0, 2);
+		PZSTARGP.data[counter].K_T3 = dtemp3;
+		PZSTARGP.data[counter].t_DS0 = dtemp4 * 3600.0;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		SystemParameters.MDVSTP.t_DS1 = dtemp1;
-		SystemParameters.MDVSTP.t_DS2 = dtemp2;
-		SystemParameters.MDVSTP.t_DS3 = dtemp3;
-		SystemParameters.MDVSTP.hx[0][0] = dtemp4;
+		PZSTARGP.data[counter].t_DS1 = dtemp1 * 3600.0;
+		PZSTARGP.data[counter].t_DS2 = dtemp2 * 3600.0;
+		PZSTARGP.data[counter].t_DS3 = dtemp3 * 3600.0;
+		PZSTARGP.data[counter].hx[0][0] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		SystemParameters.MDVSTP.hx[0][1] = dtemp1;
-		SystemParameters.MDVSTP.hx[0][2] = dtemp2;
-		SystemParameters.MDVSTP.hx[0][3] = dtemp3;
-		SystemParameters.MDVSTP.hx[0][4] = dtemp4;
+		PZSTARGP.data[counter].hx[0][1] = dtemp1;
+		PZSTARGP.data[counter].hx[0][2] = dtemp2;
+		PZSTARGP.data[counter].hx[0][3] = dtemp3;
+		PZSTARGP.data[counter].hx[0][4] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		SystemParameters.MDVSTP.t_D0 = 0.0;
-		SystemParameters.MDVSTP.t_D1 = dtemp1;
-		SystemParameters.MDVSTP.t_SD1 = dtemp2;
-		SystemParameters.MDVSTP.hx[1][0] = dtemp3;
-		SystemParameters.MDVSTP.hx[1][1] = dtemp4;
+		PZSTARGP.data[counter].t_D0 = 0.0;
+		PZSTARGP.data[counter].t_D1 = dtemp1 * 3600.0;
+		PZSTARGP.data[counter].t_SD1 = dtemp2 * 3600.0;
+		PZSTARGP.data[counter].hx[1][0] = dtemp3;
+		PZSTARGP.data[counter].hx[1][1] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		SystemParameters.MDVSTP.hx[1][2] = dtemp1;
-		SystemParameters.MDVSTP.hx[1][3] = dtemp2;
-		SystemParameters.MDVSTP.hx[1][4] = dtemp3;
-		SystemParameters.MDVSTP.t_D2 = dtemp4;
+		PZSTARGP.data[counter].hx[1][2] = dtemp1;
+		PZSTARGP.data[counter].hx[1][3] = dtemp2;
+		PZSTARGP.data[counter].hx[1][4] = dtemp3;
+		PZSTARGP.data[counter].t_D2 = dtemp4 * 3600.0;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		SystemParameters.MDVSTP.t_SD2 = dtemp1;
-		SystemParameters.MDVSTP.hx[2][0] = dtemp2;
-		SystemParameters.MDVSTP.hx[2][1] = dtemp3;
-		SystemParameters.MDVSTP.hx[2][2] = dtemp4;
+		PZSTARGP.data[counter].t_SD2 = dtemp1 * 3600.0;
+		PZSTARGP.data[counter].hx[2][0] = dtemp2;
+		PZSTARGP.data[counter].hx[2][1] = dtemp3;
+		PZSTARGP.data[counter].hx[2][2] = dtemp4;
 		getline(startable, line);
 		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		SystemParameters.MDVSTP.hx[2][3] = dtemp1;
-		SystemParameters.MDVSTP.hx[2][4] = dtemp2;
-		SystemParameters.MDVSTP.t_D3 = dtemp3;
-		SystemParameters.MDVSTP.t_SD3 = dtemp4;
+		PZSTARGP.data[counter].hx[2][3] = dtemp1;
+		PZSTARGP.data[counter].hx[2][4] = dtemp2;
+		PZSTARGP.data[counter].t_D3 = dtemp3 * 3600.0;
+		PZSTARGP.data[counter].t_SD3 = dtemp4 * 3600.0;
 	}
 }
 
@@ -2033,6 +2051,8 @@ bool RTCC::LoadMissionFiles(char *missionname)
 	bool found = LoadMissionConstantsFile(missionname);
 	//Load skeleton flight plan master tape
 	QMSEARCH(missionname);
+	//Load TLI simulation parameters
+	QMMBLD(missionname);
 
 	return found;
 }
@@ -2065,6 +2085,7 @@ bool RTCC::LoadMissionConstantsFile(char *missionname)
 			papiReadScenario_int(Buff, "MCLTTD", SystemParameters.MCLTTD);
 			papiReadScenario_int(Buff, "MCLABT", SystemParameters.MCLABT);
 			papiReadScenario_double(Buff, "MCTVEN", SystemParameters.MCTVEN);
+			papiReadScenario_doublearr(Buff, "MDLEIC", SystemParameters.MDLEIC, 3);
 			if (papiReadScenario_double(Buff, "RRBIAS", dtemp))
 			{
 				PZREAP.RRBIAS = PZMCCPLN.Reentry_range = dtemp;
@@ -7592,9 +7613,15 @@ int RTCC::PMMSPT(PMMSPTInput &in)
 	EphemerisDataTable2 ephtab;
 	EphemerisData2 sv_out;
 	EMSMISSInputTable emsin;
-	MATRIX3 R_true_mean;
-	double T_TH, alpha_TSS, alpha_TS, beta, T_RP, f, R_N, KP0, KY0, T3_apo, T_ST, tau3R, T2, Vex2, Mdot2, DV_BR, tau2N, lambda;
-	int J, OrigTLIInd, CurTLIInd;
+	TLITargetingParametersTable *tlitab = NULL;
+	SIVBTLIMatrixTable *ADRMAT;
+	MATRIX3 R_true_mean, RMAT, M, N, A, EPH, BB, GG, B, G;
+	VECTOR3 TargetVector, T_P, R, V, P, S, P_dot, S_dot, Hbar, H_apo, W, Sbar_1, Cbar_1, Omega_X, Omega_Y, Omega_Z;
+	double T_TH, alpha_TSS, alpha_TS, beta, T_RP, f, R_N, KP0, KY0, T3_apo, T_ST, tau3R, T2, Vex2, Mdot2, DV_BR, tau2N, lambda, dt_ig, T, dt4, dt4_apo;
+	double t_D, cos_sigma, C3, e_N, RA, DEC, theta_E, RR, SINB, COSB, COSATS, t, p, r, vv, C1, C2, p_dot, h, w, du_apo, c, theta, du, cos_psi, sin_psi;
+	double i, X1, X2, theta_N, P_N, T_M, alpha_D_apo, P_RP, Y_RP, T3, tau3, A_Z, Azo, Azs, i_P, theta_N_P;
+	int J, OrigTLIInd, CurTLIInd, LD, counter, GRP15, KX, err, n;
+	unsigned ORER_out;
 
 	if (in.QUEID == 39)
 	{
@@ -7624,7 +7651,6 @@ int RTCC::PMMSPT(PMMSPTInput &in)
 		goto RTCC_PMMSPT_19_1;
 	}
 	in.CurMan->GMTI = in.T_RP;
-	double T;
 	T = in.CurMan->GMTI;
 	if (T <= in.StartTimeLimit)
 	{
@@ -7638,7 +7664,7 @@ int RTCC::PMMSPT(PMMSPTInput &in)
 	{
 		return 79;
 	}
-	double dt_ig = in.CurMan->GMT_1 - in.CurMan->GMTMAN;
+	dt_ig = in.CurMan->GMT_1 - in.CurMan->GMTMAN;
 	if (SystemParameters.MCTJD1 > dt_ig)
 	{
 		return 79;
@@ -7673,25 +7699,35 @@ RTCC_PMMSPT_3_1:
 	CurTLIInd = OrigTLIInd;
 	J = in.InjOpp;
 RTCC_PMMSPT_4_1:
-	int LD = GZGENCSN.RefDayOfYear;
-	if (LD != PZSTARGP.Day)
+	LD = GZGENCSN.RefDayOfYear;
+
+	for (counter = 0; counter < 10; counter++)
+	{
+		if (LD == PZSTARGP.data[counter].Day)
+		{
+			tlitab = &PZSTARGP.data[counter];
+			break;
+		}
+	}
+
+	if (tlitab == NULL)
 	{
 		return 85;
 	}
-	T_ST = PZSTARGP.T_ST[J - 1];
-	alpha_TSS = PZSTARGP.alpha_TS[J - 1];
-	beta = PZSTARGP.beta[J - 1];
-	f = PZSTARGP.f[J - 1];
-	R_N = PZSTARGP.R_N[J - 1];
-	KP0 = PZSTARGP.KP0[J - 1];
-	KY0 = PZSTARGP.KY0[J - 1];
-	T3_apo = PZSTARGP.T3_apo[J - 1];
-	tau3R = PZSTARGP.tau3R[J - 1];
-	T2 = PZSTARGP.T2[J - 1];
-	Vex2 = PZSTARGP.Vex2[J - 1];
-	Mdot2 = PZSTARGP.Mdot2[J - 1];
-	DV_BR = PZSTARGP.DV_BR[J - 1];
-	tau2N = PZSTARGP.tau2N[J - 1];
+	T_ST = tlitab->T_ST[J - 1];
+	alpha_TSS = tlitab->alpha_TS[J - 1];
+	beta = tlitab->beta[J - 1];
+	f = tlitab->f[J - 1];
+	R_N = tlitab->R_N[J - 1];
+	KP0 = tlitab->KP0[J - 1];
+	KY0 = tlitab->KY0[J - 1];
+	T3_apo = tlitab->T3_apo[J - 1];
+	tau3R = tlitab->tau3R[J - 1];
+	T2 = tlitab->T2[J - 1];
+	Vex2 = tlitab->Vex2[J - 1];
+	Mdot2 = tlitab->Mdot2[J - 1];
+	DV_BR = tlitab->DV_BR[J - 1];
+	tau2N = tlitab->tau2N[J - 1];
 
 	if (OrigTLIInd > 0)
 	{
@@ -7777,10 +7813,10 @@ RTCC_PMMSPT_8_2:
 		return 84;
 	}
 
-	MATRIX3 RMAT = mul(R_true_mean, _M(cos(lambda), -sin(lambda), 0, sin(lambda), cos(lambda), 0, 0, 0, 1));
-	MATRIX3 M = mul(_M(1, 0, 0, 0, 0, -1, 0, 1, 0), OrbMech::tmat(RMAT));
-	double dt4 = (SystemParameters.MDVSTP.T4C - SystemParameters.MDVSTP.T4IG) - SystemParameters.MDVSTP.DT4N;
-	double dt4_apo;
+	RMAT = mul(R_true_mean, _M(cos(lambda), -sin(lambda), 0, sin(lambda), cos(lambda), 0, 0, 0, 1));
+	M = mul(_M(1, 0, 0, 0, 0, -1, 0, 1, 0), OrbMech::tmat(RMAT));
+	dt4 = (SystemParameters.MDVSTP.T4C - SystemParameters.MDVSTP.T4IG) - SystemParameters.MDVSTP.DT4N;
+
 	if (abs(dt4) > SystemParameters.MDVSTP.DTLIM)
 	{
 		dt4_apo = SystemParameters.MDVSTP.DTLIM*dt4 / abs(dt4);
@@ -7789,50 +7825,46 @@ RTCC_PMMSPT_8_2:
 	{
 		dt4_apo = dt4;
 	}
-	double t_D = GetGMTLO()*3600.0 - PZSTARGP.T_LO;
-	double cos_sigma, C3, e_N, RA, DEC;
-	int GRP15 = PCMSP2(J, t_D, cos_sigma, C3, e_N, RA, DEC);
+	t_D = GetGMTLO()*3600.0 - tlitab->T_LO;
+	
+	GRP15 = PCMSP2(tlitab, J, t_D, cos_sigma, C3, e_N, RA, DEC);
 	if (GRP15)
 	{
 		return GRP15;
 	}
-	VECTOR3 TargetVector = _V(cos(RA)*cos(DEC), sin(RA)*cos(DEC), sin(DEC));
-	double theta_E = PZSTARGP.theta_EO + PZSTARGP.omega_E * t_D;
-	MATRIX3 N = mul(RMAT, _M(cos(theta_E), sin(theta_E), 0, -sin(theta_E), cos(theta_E), 0, 0, 0, 1));
-	VECTOR3 T_P = mul(N, TargetVector);
-	VECTOR3 R = ephtab.table[0].R;
-	VECTOR3 V = ephtab.table[0].V;
-	double RR = dotp(R, R);
-	double COSB = cos(beta);
-	double SINB = sin(beta);
+	TargetVector = _V(cos(RA)*cos(DEC), sin(RA)*cos(DEC), sin(DEC));
+	theta_E = tlitab->theta_EO + tlitab->omega_E * t_D;
+	N = mul(RMAT, _M(cos(theta_E), sin(theta_E), 0, -sin(theta_E), cos(theta_E), 0, 0, 0, 1));
+	T_P = mul(N, TargetVector);
+	R = ephtab.table[0].R;
+	V = ephtab.table[0].V;
+	RR = dotp(R, R);
+	COSB = cos(beta);
+	SINB = sin(beta);
 	if (OrigTLIInd < 0)
 	{
 		goto RTCC_PMMSPT_13_2;
 	}
-	alpha_TS = alpha_TSS + PZSTARGP.K_a1*dt4_apo + PZSTARGP.K_a2*dt4_apo*dt4_apo;
-	double COSATS = cos(alpha_TS);
-	double t = T_TH;
-	VECTOR3 P = V * RR - R * dotp(R, V);
-	double p = length(P);
-	double r = length(R);
-	double vv = dotp(V, V);
-	double C1 = COSB / r;
-	double C2 = SINB / p;
-	VECTOR3 S = R * C1 + P * C2;
-	VECTOR3 P_dot = V * dotp(R, V) - R * vv;
-	double p_dot = length(P_dot);
+	alpha_TS = alpha_TSS + tlitab->K_a1*dt4_apo + tlitab->K_a2*dt4_apo*dt4_apo;
+	COSATS = cos(alpha_TS);
+	t = T_TH;
+	P = V * RR - R * dotp(R, V);
+	p = length(P);
+	r = length(R);
+	vv = dotp(V, V);
+	C1 = COSB / r;
 	C2 = SINB / p;
-	VECTOR3 S_dot = V * C1 + P_dot * C2;
+	S = R * C1 + P * C2;
+	P_dot = V * dotp(R, V) - R * vv;
+	p_dot = length(P_dot);
+	C2 = SINB / p;
+	S_dot = V * C1 + P_dot * C2;
 	if (dotp(S_dot, T_P) < 0 && dotp(S, T_P) <= COSATS)
 	{
 		T_RP = t;
 		goto RTCC_PMMSPT_14_1;
 	}
-	int KX = 1;
-	VECTOR3 Hbar, H_apo, W;
-	double h, w, du_apo, c, theta, du;
-	int err;
-	unsigned ORER_out;
+	KX = 1;
 RTCC_PMMSPT_12_2:
 	RR = dotp(R, R);
 	Hbar = crossp(R, V);
@@ -7871,17 +7903,17 @@ RTCC_PMMSPT_13_2:
 	C2 = SINB / p;
 	S = R * C1 + P * C2;
 RTCC_PMMSPT_14_1:
-	double cos_psi = dotp(S, T_P);
-	double sin_psi = sqrt(1.0 - cos_psi * cos_psi);
-	VECTOR3 Sbar_1 = (S*cos_psi-T_P) / sin_psi;
-	VECTOR3 Cbar_1 = crossp(Sbar_1, S);
-	VECTOR3 Omega_X = _V(M.m11, M.m12, M.m13);
-	VECTOR3 Omega_Y = _V(M.m21, M.m22, M.m23);
-	VECTOR3 Omega_Z = _V(M.m31, M.m32, M.m33);
-	double i = acos(dotp(Omega_Y, Cbar_1));
-	double X1 = dotp(Omega_Z, crossp(Cbar_1, Omega_Y));
-	double X2 = dotp(Omega_X, crossp(Cbar_1, Omega_Y));
-	double theta_N = atan2(X1, X2);
+	cos_psi = dotp(S, T_P);
+	sin_psi = sqrt(1.0 - cos_psi * cos_psi);
+	Sbar_1 = (S*cos_psi-T_P) / sin_psi;
+	Cbar_1 = crossp(Sbar_1, S);
+	Omega_X = _V(M.m11, M.m12, M.m13);
+	Omega_Y = _V(M.m21, M.m22, M.m23);
+	Omega_Z = _V(M.m31, M.m32, M.m33);
+	i = acos(dotp(Omega_Y, Cbar_1));
+	X1 = dotp(Omega_Z, crossp(Cbar_1, Omega_Y));
+	X2 = dotp(Omega_X, crossp(Cbar_1, Omega_Y));
+	theta_N = atan2(X1, X2);
 	if (theta_N < 0)
 	{
 		theta_N += PI2;
@@ -7890,9 +7922,9 @@ RTCC_PMMSPT_14_1:
 	{
 		goto RTCC_PMMSPT_21_1;
 	}
-	double P_N = (OrbMech::mu_Earth / C3)*(e_N*e_N - 1.0);
-	double T_M = P_N / (1.0 - e_N * cos_sigma);
-	double alpha_D_apo = acos(cos_psi) + atan2(dotp(Sbar_1, crossp(Cbar_1, Omega_Y)), dotp(S, crossp(Cbar_1, Omega_Y)));
+	P_N = (OrbMech::mu_Earth / C3)*(e_N*e_N - 1.0);
+	T_M = P_N / (1.0 - e_N * cos_sigma);
+	alpha_D_apo = acos(cos_psi) + atan2(dotp(Sbar_1, crossp(Cbar_1, Omega_Y)), dotp(S, crossp(Cbar_1, Omega_Y)));
 	in.CurMan->dV_inertial.x = i;
 	in.CurMan->dV_inertial.y = theta_N;
 	in.CurMan->dV_inertial.z = e_N;
@@ -7904,10 +7936,10 @@ RTCC_PMMSPT_14_1:
 	goto RTCC_PMMSPT_15_2;
 //RTCC_PMMSPT_15_1:
 RTCC_PMMSPT_15_2:
-	double P_RP = KP0 + SystemParameters.MDVSTP.KP1 * dt4_apo + SystemParameters.MDVSTP.KP2 * dt4_apo*dt4_apo;
-	double Y_RP = KP0 + SystemParameters.MDVSTP.KY1 * dt4_apo + SystemParameters.MDVSTP.KY2 * dt4_apo*dt4_apo;
-	double T3 = T3_apo - PZSTARGP.K_T3 * dt4_apo;
-	double tau3 = tau3R - dt4_apo;
+	P_RP = KP0 + SystemParameters.MDVSTP.KP1 * dt4_apo + SystemParameters.MDVSTP.KP2 * dt4_apo*dt4_apo;
+	Y_RP = KP0 + SystemParameters.MDVSTP.KY1 * dt4_apo + SystemParameters.MDVSTP.KY2 * dt4_apo*dt4_apo;
+	T3 = T3_apo - tlitab->K_T3 * dt4_apo;
+	tau3 = tau3R - dt4_apo;
 	in.CurMan->Word73 = P_RP;
 	in.CurMan->Word74 = Y_RP;
 	in.CurMan->Word76 = T3;
@@ -7920,54 +7952,53 @@ RTCC_PMMSPT_15_2:
 	in.CurMan->Word82 = DV_BR;
 	in.CurMan->Word83 = tau2N;
 
-	double A_Z = 0.0;
-	if (t_D < SystemParameters.MDVSTP.t_DS1)
+	A_Z = 0.0;
+	if (t_D < PZSTARGP.data[counter].t_DS1)
 	{
-		if (t_D < SystemParameters.MDVSTP.t_DS0)
+		if (t_D < PZSTARGP.data[counter].t_DS0)
 		{
-			//Some message
+			PMXSPT("PMMSPT", 98);
 		}
-		for (int N = 0;N < 5;N++)
+		for (n = 0;n < 5;n++)
 		{
-			A_Z += SystemParameters.MDVSTP.hx[0][N] * pow((t_D - SystemParameters.MDVSTP.t_D1) / SystemParameters.MDVSTP.t_SD1, N);
+			A_Z += PZSTARGP.data[counter].hx[0][n] * pow((t_D - PZSTARGP.data[counter].t_D1) / PZSTARGP.data[counter].t_SD1, n);
 		}
 	}
-	else if (t_D < SystemParameters.MDVSTP.t_DS2)
+	else if (t_D < PZSTARGP.data[counter].t_DS2)
 	{
-		for (int N = 0;N < 5;N++)
+		for (n = 0;n < 5;n++)
 		{
-			A_Z += SystemParameters.MDVSTP.hx[1][N] * pow((t_D - SystemParameters.MDVSTP.t_D2) / SystemParameters.MDVSTP.t_SD2, N);
+			A_Z += PZSTARGP.data[counter].hx[1][n] * pow((t_D - PZSTARGP.data[counter].t_D2) / PZSTARGP.data[counter].t_SD2, n);
 		}
 	}
 	else
 	{
-		if (t_D > SystemParameters.MDVSTP.t_DS3)
+		if (t_D > PZSTARGP.data[counter].t_DS3)
 		{
-			//Some message
+			PMXSPT("PMMSPT", 98);
 		}
-		for (int N = 0;N < 5;N++)
+		for (n = 0;n < 5;n++)
 		{
-			A_Z += SystemParameters.MDVSTP.hx[2][N] * pow((t_D - SystemParameters.MDVSTP.t_D3) / SystemParameters.MDVSTP.t_SD3, N);
+			A_Z += PZSTARGP.data[counter].hx[2][n] * pow((t_D - PZSTARGP.data[counter].t_D3) / PZSTARGP.data[counter].t_SD3, n);
 		}
 	}
-	double Azo = 72.0*RAD;
-	double Azs = 36.0*RAD;
-	double i_P = SystemParameters.MDVSTP.fx[0] + SystemParameters.MDVSTP.fx[1] * (A_Z - Azo) / Azs + SystemParameters.MDVSTP.fx[2] * pow((A_Z - Azo) / Azs, 2) + SystemParameters.MDVSTP.fx[3] * pow((A_Z - Azo) / Azs, 3)
+	Azo = 72.0*RAD;
+	Azs = 36.0*RAD;
+	i_P = SystemParameters.MDVSTP.fx[0] + SystemParameters.MDVSTP.fx[1] * (A_Z - Azo) / Azs + SystemParameters.MDVSTP.fx[2] * pow((A_Z - Azo) / Azs, 2) + SystemParameters.MDVSTP.fx[3] * pow((A_Z - Azo) / Azs, 3)
 		+ SystemParameters.MDVSTP.fx[4] * pow((A_Z - Azo) / Azs, 4) + SystemParameters.MDVSTP.fx[5] * pow((A_Z - Azo) / Azs, 5) + SystemParameters.MDVSTP.fx[6] * pow((A_Z - Azo) / Azs, 6);
-	double theta_N_P = SystemParameters.MDVSTP.gx[0] + SystemParameters.MDVSTP.gx[1] * (A_Z - Azo) / Azs + SystemParameters.MDVSTP.gx[2] * pow((A_Z - Azo) / Azs, 2) + SystemParameters.MDVSTP.gx[3] * pow((A_Z - Azo) / Azs, 3)
+	theta_N_P = SystemParameters.MDVSTP.gx[0] + SystemParameters.MDVSTP.gx[1] * (A_Z - Azo) / Azs + SystemParameters.MDVSTP.gx[2] * pow((A_Z - Azo) / Azs, 2) + SystemParameters.MDVSTP.gx[3] * pow((A_Z - Azo) / Azs, 3)
 		+ SystemParameters.MDVSTP.gx[4] * pow((A_Z - Azo) / Azs, 4) + SystemParameters.MDVSTP.gx[5] * pow((A_Z - Azo) / Azs, 5) + SystemParameters.MDVSTP.gx[6] * pow((A_Z - Azo) / Azs, 6);
 
-	MATRIX3 A = _M(cos(SystemParameters.MDVSTP.PHIL), sin(SystemParameters.MDVSTP.PHIL)*sin(A_Z), -sin(SystemParameters.MDVSTP.PHIL)*cos(A_Z), -sin(SystemParameters.MDVSTP.PHIL), cos(SystemParameters.MDVSTP.PHIL)*sin(A_Z), -cos(SystemParameters.MDVSTP.PHIL)*cos(A_Z), 0, cos(A_Z), sin(A_Z));
-	MATRIX3 EPH = mul(OrbMech::tmat(A), M);
-	MATRIX3 BB = _M(cos(theta_N_P), 0, sin(theta_N_P), sin(theta_N_P)*sin(i_P), cos(i_P), -cos(theta_N_P)*sin(i_P), -sin(theta_N_P)*cos(i_P), sin(i_P), cos(theta_N_P)*cos(i_P));
-	MATRIX3 GG = mul(BB, A);
-	MATRIX3 B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(i), cos(i), -cos(theta_N)*sin(i), -sin(theta_N)*cos(i), sin(i), cos(theta_N)*cos(i));
-	MATRIX3 G = mul(B, A);
+	A = _M(cos(SystemParameters.MDVSTP.PHIL), sin(SystemParameters.MDVSTP.PHIL)*sin(A_Z), -sin(SystemParameters.MDVSTP.PHIL)*cos(A_Z), -sin(SystemParameters.MDVSTP.PHIL), cos(SystemParameters.MDVSTP.PHIL)*sin(A_Z), -cos(SystemParameters.MDVSTP.PHIL)*cos(A_Z), 0, cos(A_Z), sin(A_Z));
+	EPH = mul(OrbMech::tmat(A), M);
+	BB = _M(cos(theta_N_P), 0, sin(theta_N_P), sin(theta_N_P)*sin(i_P), cos(i_P), -cos(theta_N_P)*sin(i_P), -sin(theta_N_P)*cos(i_P), sin(i_P), cos(theta_N_P)*cos(i_P));
+	GG = mul(BB, A);
+	B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(i), cos(i), -cos(theta_N)*sin(i), -sin(theta_N)*cos(i), sin(i), cos(theta_N)*cos(i));
+	G = mul(B, A);
 
 	in.CurMan->GMTI = T_RP + SystemParameters.MDVSTP.DTIG;
 	in.CurMan->Word84 = SystemParameters.MDVSTP.DTIG - SystemParameters.MCTJD1;
 //RTCC_PMMSPT_18_1:
-	SIVBTLIMatrixTable *ADRMAT;
 	if (in.Table == RTCC_MPT_CSM)
 	{
 		ADRMAT = &PZMATCSM;
@@ -8069,7 +8100,7 @@ RTCC_PMMSPT_21_1:
 	goto RTCC_PMMSPT_19_1;
 }
 
-int RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC)
+int RTCC::PCMSP2(TLITargetingParametersTable *tlitab, int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC)
 {
 	int k = J - 1;
 	int i = 0;
@@ -8077,7 +8108,7 @@ int RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, 
 	bool direct = true;
 	do
 	{
-		t_temp = PZSTARGP.t_D[k][i];
+		t_temp = tlitab->t_D[k][i];
 		if (t_D == t_temp)
 		{
 			break;
@@ -8102,20 +8133,20 @@ int RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, 
 
 	if (i == 0 || direct)
 	{
-		cos_sigma = PZSTARGP.cos_sigma[k][i];
-		C3 = PZSTARGP.C_3[k][i];
-		e_N = PZSTARGP.e_N[k][i];
-		RA = PZSTARGP.RA[k][i];
-		DEC = PZSTARGP.DEC[k][i];
+		cos_sigma = tlitab->cos_sigma[k][i];
+		C3 = tlitab->C_3[k][i];
+		e_N = tlitab->e_N[k][i];
+		RA = tlitab->RA[k][i];
+		DEC = tlitab->DEC[k][i];
 		return 0;
 	}
 
-	double A = (t_D - PZSTARGP.t_D[k][i - 1]) / (PZSTARGP.t_D[k][i] - PZSTARGP.t_D[k][i - 1]);
-	cos_sigma = PZSTARGP.cos_sigma[k][i - 1] + A * (PZSTARGP.cos_sigma[k][i] - PZSTARGP.cos_sigma[k][i - 1]);
-	C3 = PZSTARGP.C_3[k][i - 1] + A * (PZSTARGP.C_3[k][i] - PZSTARGP.C_3[k][i - 1]);
-	e_N = PZSTARGP.e_N[k][i - 1] + A * (PZSTARGP.e_N[k][i] - PZSTARGP.e_N[k][i - 1]);
-	RA = PZSTARGP.RA[k][i - 1] + A * (PZSTARGP.RA[k][i] - PZSTARGP.RA[k][i - 1]);
-	DEC = PZSTARGP.DEC[k][i - 1] + A * (PZSTARGP.DEC[k][i] - PZSTARGP.DEC[k][i - 1]);
+	double A = (t_D - tlitab->t_D[k][i - 1]) / (tlitab->t_D[k][i] - tlitab->t_D[k][i - 1]);
+	cos_sigma = tlitab->cos_sigma[k][i - 1] + A * (tlitab->cos_sigma[k][i] - tlitab->cos_sigma[k][i - 1]);
+	C3 = tlitab->C_3[k][i - 1] + A * (tlitab->C_3[k][i] - tlitab->C_3[k][i - 1]);
+	e_N = tlitab->e_N[k][i - 1] + A * (tlitab->e_N[k][i] - tlitab->e_N[k][i - 1]);
+	RA = tlitab->RA[k][i - 1] + A * (tlitab->RA[k][i] - tlitab->RA[k][i - 1]);
+	DEC = tlitab->DEC[k][i - 1] + A * (tlitab->DEC[k][i] - tlitab->DEC[k][i - 1]);
 	return 0;
 }
 
@@ -13131,6 +13162,31 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("ERROR FROM ENCKE N.I. UNABLE TO MOVE VECTOR TO THRESHOLD TIME");
 		message.push_back("OR TO GENERATE SEARCH EPHEMERIS - PROCESSING TERMINATED.");
 		break;
+	case 73:
+		message.push_back("MISSION PLAN TABLE IS BEING UPDATED.");
+		break;
+	case 74:
+		message.push_back("CORRECTIVE COMBINATION SOLUTION REENTERED");
+		message.push_back("FOR TRANSFER OR SINGLE SOLUTION REQUEST.");
+		break;
+	case 75:
+		message.push_back("VECTOR FETCH TIME IS PRIOR TO TIME");
+		message.push_back("OF LAST FROZEN MANEUVER.");
+		break;
+	case 76:
+		message.push_back("UNRECOVERABLE AEG ERROR.");
+		break;
+	case 77:
+		message.push_back("CALCULATED TIME OUTSIDE LIMITS OF IGNITION");
+		message.push_back("SEARCH EPHEMERIS - PROCESSING TERMINATED.");
+		break;
+	case 78:
+		message.push_back("MLD DATA TABLE HAS NOT BEEN INITIALIZED");
+		break;
+	case 79:
+		message.push_back("INVALID IGNITION TIME FOR S-IVB TLI MANEUVER");
+		message.push_back("- MPT UNCHANGED");
+		break;
 	case 81:
 		message.push_back("FAILED TO CONVERGE.");
 		break;
@@ -13155,6 +13211,10 @@ void RTCC::PMXSPT(std::string source, int n)
 	case 92:
 		message.push_back("CONSTRAINT " + RTCCONLINEMON.TextBuffer[0] + " VIOLATED IN");
 		message.push_back("COELLIPTIC SEQUENCE.");
+		break;
+	case 98:
+		message.push_back("DIFFERENCE BETWEEN ACTUAL AND NOMINAL");
+		message.push_back("LIFTOFF TIME OUTSIDE LIMITS OF LAUNCH AZIMUTH POLYNOMIAL");
 		break;
 	case 101:
 		message.push_back("SPQ PLAN FAILED TO CONVERGE ON OPTIMUM");
@@ -17542,7 +17602,7 @@ int RTCC::EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl
 {
 	EphemerisData2 sv, sv_out;
 
-	OrbMech::adbar_from_rv(rmag, vmag, rtasc, decl, fpav, az, sv.R, sv.V);
+	OrbMech::adbar_from_rv(rmag, vmag, rtasc + OrbMech::w_Earth*GMT, decl, fpav, az, sv.R, sv.V);
 	sv.GMT = GMT;
 
 	if (ELVCNV(sv, 1, 0, sv_out))
@@ -18979,43 +19039,77 @@ void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)
 
 void RTCC::PMMIEV(int L, double T_L)
 {
+	TLITargetingParametersTable *tlitab = NULL;
 	double T_D, A_Z, dt_EOI, lat_EOI, lng_EOI, azi_EOI, vel_EOI, fpa_EOI, rad_EOI;
-	int day;
+	int day, counter, i, N;
 	
 	day = GZGENCSN.RefDayOfYear;
-	if (day != PZSTARGP.Day)
+
+	for (counter = 0; counter < 10; counter++)
+	{
+		if (day == PZSTARGP.data[counter].Day)
+		{
+			tlitab = &PZSTARGP.data[counter];
+			break;
+		}
+	}
+
+	if (tlitab == NULL)
 	{
 		PMXSPT("PMMIEV", 102);
 		return;
 	}
-	T_D = T_L - PZSTARGP.T_LO;
-	if (T_D < SystemParameters.MDVSTP.t_D0 || T_D > SystemParameters.MDVSTP.t_D3)
+	T_D = T_L - tlitab->T_LO;
+
+	//Check if outside limits
+	if (T_D < tlitab->t_DS0)
 	{
 		PMXSPT("PMMIEV", 121);
 		return;
 	}
-	A_Z = 0.0;
-	if (T_D < SystemParameters.MDVSTP.t_DS1)
+	if (T_D < tlitab->t_DS1)
 	{
-		for (int N = 0;N < 5;N++)
-		{
-			A_Z += SystemParameters.MDVSTP.hx[0][N] * pow((T_D - SystemParameters.MDVSTP.t_D1) / SystemParameters.MDVSTP.t_SD1, N);
-		}
+		i = 0;
 	}
-	else if (T_D < SystemParameters.MDVSTP.t_DS2)
+	else if (T_D < tlitab->t_DS2)
 	{
-		for (int N = 0;N < 5;N++)
-		{
-			A_Z += SystemParameters.MDVSTP.hx[1][N] * pow((T_D - SystemParameters.MDVSTP.t_D2) / SystemParameters.MDVSTP.t_SD2, N);
-		}
+		i = 1;
+	}
+	else if (T_D <= tlitab->t_DS3)
+	{
+		i = 2;
 	}
 	else
 	{
-		for (int N = 0;N < 5;N++)
-		{
-			A_Z += SystemParameters.MDVSTP.hx[2][N] * pow((T_D - SystemParameters.MDVSTP.t_D3) / SystemParameters.MDVSTP.t_SD3, N);
-		}
+		PMXSPT("PMMIEV", 121);
+		return;
 	}
+
+	//Compute launch azimuth
+	A_Z = 0.0;
+
+	switch (i)
+	{
+	case 0:
+		for (N = 0; N < 5; N++)
+		{
+			A_Z += tlitab->hx[0][N] * pow((T_D - tlitab->t_D1) / tlitab->t_SD1, N);
+		}
+		break;
+	case 1:
+		for (N = 0; N < 5; N++)
+		{
+			A_Z += tlitab->hx[1][N] * pow((T_D - tlitab->t_D2) / tlitab->t_SD2, N);
+		}
+		break;
+	default:
+		for (N = 0; N < 5; N++)
+		{
+			A_Z += tlitab->hx[2][N] * pow((T_D - tlitab->t_D3) / tlitab->t_SD3, N);
+		}
+		break;
+	}
+
 	GZLTRA.Azimuth = A_Z;
 	A_Z *= DEG;
 	dt_EOI = SystemParameters.MDLIEV[0] + SystemParameters.MDLIEV[1] * A_Z + SystemParameters.MDLIEV[2] * pow(A_Z, 2) + SystemParameters.MDLIEV[3] * pow(A_Z, 3);
@@ -27559,7 +27653,11 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 			return 1;
 		}
 		int day;
-		if (sscanf(data[0].c_str(), "%d", &day) != 1)
+		if (data[0] == "")
+		{
+			day = GZGENCSN.RefDayOfYear;
+		}
+		else if (sscanf(data[0].c_str(), "%d", &day) != 1)
 		{
 			return 1;
 		}
@@ -27577,7 +27675,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 			return 2;
 		}
 		double azi;
-		if (sscanf(data[1].c_str(), "%lf", &azi) != 1)
+		if (sscanf(data[2].c_str(), "%lf", &azi) != 1)
 		{
 			return 1;
 		}
@@ -33540,6 +33638,7 @@ double PIMDIR(double X, double *XI, double *YI, unsigned N)
 
 void RTCC::PMMSFPIN()
 {
+	unsigned i, j;
 	int day, opportunity;
 	double azimuth;
 
@@ -33563,7 +33662,6 @@ void RTCC::PMMSFPIN()
 
 	//Find day in table
 	bool found = false;
-	unsigned i;
 
 	for (i = 0; i < PZMFPTAB.data.size(); i++)
 	{
@@ -33604,61 +33702,35 @@ void RTCC::PMMSFPIN()
 	MasterFlightPlanTableOpportunity *pOpp = &pDay->data[i];
 	unsigned N = pOpp->data.size();
 	double *XARRAY = new double[N];
-	double **YARRAYS = new double*[N];
+	double *YARRAY = new double[N];
 	double X = azimuth;
 	double P;
 
-	for (i = 0; i < N; i++)
+	for (j = 0; j < pOpp->data.size(); j++)
 	{
-		XARRAY[i] = pOpp->data[i].dAzimuth;
-		YARRAYS[i] = new double[25] {pOpp->data[i].data.dpsi_loi, pOpp->data[i].data.dpsi_tei, pOpp->data[i].data.dt_lls, pOpp->data[i].data.dv_tei, pOpp->data[i].data.gamma_loi,
-			pOpp->data[i].data.GET_TLI, pOpp->data[i].data.GMT_nd, pOpp->data[i].data.GMT_pc1, pOpp->data[i].data.GMT_pc2, pOpp->data[i].data.h_nd, pOpp->data[i].data.h_pc1,
-			pOpp->data[i].data.h_pc2, pOpp->data[i].data.incl_fr, pOpp->data[i].data.lat_lls, pOpp->data[i].data.lat_nd, pOpp->data[i].data.lat_pc1, pOpp->data[i].data.lat_pc2, 
-			pOpp->data[i].data.lng_lls, pOpp->data[i].data.lng_nd, pOpp->data[i].data.lng_pc1, pOpp->data[i].data.lng_pc2, pOpp->data[i].data.psi_lls, pOpp->data[i].data.rad_lls, 
-			pOpp->data[i].data.T_lo, pOpp->data[i].data.T_te};
+		XARRAY[j] = pOpp->data[j].dAzimuth;
 	}
 
-	for (unsigned j = 0; j < 25; j++)
+	for (i = 0; i < 25; i++)
 	{
-		//Do interpolation
-		P = PIMDIR(X, XARRAY, YARRAYS[j], N);
-
-		//Write to table
-		switch (j)
+		for (j = 0; j < pOpp->data.size(); j++)
 		{
-		case 0: temptab.dpsi_loi = P; break;
-		case 1: temptab.dpsi_tei = P; break;
-		case 2: temptab.dt_lls = P; break;
-		case 3: temptab.dv_tei = P; break;
-		case 4: temptab.gamma_loi = P; break;
-		case 5: temptab.GET_TLI = P; break;
-		case 6: temptab.GMT_nd = P; break;
-		case 7: temptab.GMT_pc1 = P; break;
-		case 8: temptab.GMT_pc2 = P; break;
-		case 9: temptab.h_nd = P; break;
-		case 10: temptab.h_pc1 = P; break;
-		case 11: temptab.h_pc2 = P; break;
-		case 12: temptab.incl_fr = P; break;
-		case 13: temptab.lat_lls = P; break;
-		case 14: temptab.lat_nd = P; break;
-		case 15: temptab.lat_pc1 = P; break;
-		case 16: temptab.lat_pc2 = P; break;
-		case 17: temptab.lng_lls = P; break;
-		case 18: temptab.lng_nd = P; break;
-		case 19: temptab.lng_pc1 = P; break;
-		case 20: temptab.lng_pc2 = P; break;
-		case 21: temptab.psi_lls = P; break;
-		case 22: temptab.rad_lls = P; break;
-		case 23: temptab.T_lo = P; break;
-		case 24: temptab.T_te = P; break;
+			YARRAY[j] = pOpp->data[j].data.data[i];
 		}
+		//Do interpolation
+		P = PIMDIR(X, XARRAY, YARRAY, N);
+		//Put in table
+		temptab.data[i] = P;
 	}
 
-	//Lastly, copy to preflight table
+	//Copy to preflight table and store time
+	temptab.GMTTimeFlag = RTCCPresentTimeGMT();
 	PZSFPTAB.blocks[0] = temptab;
 
+	//TBD: Store landing site coordinates?
+
 	delete[] XARRAY;
-	delete[] YARRAYS;
+	delete[] YARRAY;
 }
 
 //CMC External Delta-V Update Generator

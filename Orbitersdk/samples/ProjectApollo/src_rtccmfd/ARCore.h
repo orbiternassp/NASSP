@@ -143,7 +143,6 @@ public:
 	void GetStateVectorFromIU();
 	void GetStateVectorsFromAGS();
 	void VectorCompareDisplayCalc();
-	void UpdateTLITargetTable();
 	void GenerateSpaceDigitalsNoMPT();
 	void LUNTARCalc();
 	void TLIProcessorCalc();

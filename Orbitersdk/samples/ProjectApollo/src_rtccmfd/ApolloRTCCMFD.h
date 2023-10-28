@@ -629,6 +629,7 @@ public:
 	void menuCycleSFPDisplay();
 	void menuAlterationSFPData();
 	void menuTransferMCCPlanToSFP();
+	void menuInterpolateSFP();
 	void menuDeleteMidcourseColumn();
 	void menuSetNodalTargetConversionPage();
 	void menuCycleNodeConvOption();
