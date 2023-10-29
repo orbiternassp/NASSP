@@ -1983,7 +1983,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line+6, "%d", &numb);
 		VehicleNo = numb;
 		SetVehicleStats();
-		if (sivb) sivb->SetVehicleNumber(VehicleNo);
 	}
 	else if (papiReadScenario_double(line, "TCP", TCPO));
 	else if (!strnicmp (line, "DLS", 3)) {
@@ -2655,6 +2654,11 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	agc.SetMissionInfo(pMission->GetCMCVersion(), PayloadName);
 
 	secs.SetSaturnType(SaturnType);
+
+	//
+	// Give the vehicle number to S-IVB systems
+	//
+	if (sivb) sivb->SetVehicleNumber(VehicleNo);
 
 	//
 	// Realism Mode Settings

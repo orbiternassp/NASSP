@@ -599,6 +599,11 @@ void SIVB::SetS4b()
 
 	}
 	iu->ConnectToLV(&IUCommandConnector);
+
+	//
+	// Give the vehicle number to S-IVB systems
+	//
+	if (sivbsys) sivbsys->SetVehicleNumber(VehicleNo);
 }
 
 void SIVB::clbkPreStep(double simt, double simdt, double mjd)
@@ -1197,7 +1202,6 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "VECHNO", 6))
 		{
 			sscanf (line+6, "%d", &VehicleNo);
-			if (sivbsys) sivbsys->SetVehicleNumber(VehicleNo);
 		}
 		else if (!strnicmp (line, "EMASS", 5))
 		{
