@@ -17,8 +17,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
 		{ "MCC Displays", 0, 'M' },
+		{ "", 0, ' ' },
 	};
 
 	RegisterPage(mnu0, sizeof(mnu0) / sizeof(MFDBUTTONMENU));
@@ -34,8 +34,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("MCC", OAPI_KEY_M, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 
 
 	static const MFDBUTTONMENU mnu1[] =

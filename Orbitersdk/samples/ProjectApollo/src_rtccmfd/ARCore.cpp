@@ -2453,12 +2453,6 @@ int ARCore::subThread()
 		mptveh = RTCC_MPT_LM;
 	}
 
-	//If MPT is not in use, update weights automatically
-	if (GC->MissionPlanningActive == false)
-	{
-		MPTWeightsAutoUpdate();
-	}
-
 	subThreadStatus = RUNNING;
 	switch (subThreadMode) {
 	case 0: // Test
