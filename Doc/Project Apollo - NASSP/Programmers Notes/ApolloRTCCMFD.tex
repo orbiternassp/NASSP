@@ -304,6 +304,10 @@ Output from the MCC program are of three types: those displayed, those that are 
 
 In the RTCC MFD the MCC processor consists of three display pages: computational inputs, constraints on the solutions and the MCC tradeoff display (modelled after the real display used in Mission Control Houston). On the constraints page some of the inputs are made in the MED format (Manual Entry Device), which is the same format as was used in the real RTCC. The MEDs for the midcourse processor all have codes starting with an F, e.g. F22. The MED inputs are checked for errors and certain omissions are replaced by default values.\\
 
+\subsubsection{SFP page}
+
+The SFP page contains the skeleton flight plan table (SFP) parameters that are inputs and outputs for the midcourse processor. Usually only one operation has to be done on this page for a nominal mission. Before any midcourse maneuver can be calculated, the initial SFP (Called the preflight table) has to be interpolated from tables that are valid for the whole daily launch window. This is accomplished by using the F62 button and entering the TLI opportunity (1 or 2) and the launch azimuth (usually but not always 72 degrees). The input format is: F62,,1,72.0; The launch day is an optional parameter that could be entered after the first comma, but is usally not needed. Once the F62 MED was entered the SFP table should populate with numbers. Afterwards the MCC processor can be used for calculations.
+
 \subsubsection{Computation page}
 
 \textbf{MAN:} Maneuver option (1 to 9), see description above.\\
@@ -934,7 +938,7 @@ The VECPOINT page, named after a routine in the AGC, is calculating the IMU angl
 
 \subsection{Configuration}
 
-\textbf{MIS:} Choose the mission number or manual options. Used to load mission specific parameters that are valid for any launch day of the mission.\\
+\textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
 \textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
 \textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
 \textbf{SXT:} Change the time of the sextant star check, which is part of the procedure for a normal maneuver. During Earth orbit missions the Earth often blocks the sextant from viewing many stars, so adjusting the time of the check before the maneuver allows the MFD to find a suitable star.\\
@@ -2100,7 +2104,7 @@ To cause an ephemeris update the TUP button on each side can be pressed and then
 \newpage
 \section{Config Files}
 
-The RTCC loads various configuration files to load constants, mission and launch day specific parameters. The files are located at Config\textbackslash ProjectApollo\textbackslash RTCC.
+The RTCC loads various configuration files to load constants, mission and launch day specific parameters. The files are located at Config\textbackslash ProjectApollo\textbackslash RTCC. To load a set of files for the monthly launch window add e.g. "RTCC\_MISSIONFILES Apollo 11" to the RTCC section of a prelaunch scenario. This will load the mission constants, TLI and SFP files with the names "Apollo 11 Constants.txt", "Apollo 11 TLI.txt" and "Apollo 11 SPF.txt".\\
 
 \subsection{Star Table}
 
@@ -2242,67 +2246,31 @@ SITEROT & Angle of perilune from the lunar landing site (negative if the site is
 \newpage
 \subsection{Skeleton Flight Plan Table}
 
-The skeleton flight plan table is a table of initial guesses for the translunar midcourse correction processor. The files are launch day specific and have the format e.g. "1968-12-21 SFP.txt".\\
+The skeleton flight plan table is a table of initial guesses for the translunar midcourse correction processor. The files are specific to the monthly launch window and contain up to 10 days of data. The file names are usually something like "Apollo 11 SFP.txt". The format of the file follows the MSC card format from the MSC internal note RTCC REQUIREMENTS FOR APOLLO 11 (MISSION G) PREFLIGHT INFORMATION (69-FM-171), which can be found \href{https://web.archive.org/web/20100524010957/http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740072570_1974072570.pdf}{here}. PDF page 13 shows the general format of one data set. One line in the config file is equal to one punch card. Some adaptions have been made for the additional parameters needed on hybrid missions. The complete format for one data set is:\\
 
-\begin{tabular}{L{3.7cm} L{7cm} L{2.5cm}}
+\begin{tabular}{|L{2.9cm}|L{2.9cm}|L{2.8cm}|L{2.8cm}|L{1.4cm}|}
 \hline
-\textbf{Name} & \textbf{Description} & \textbf{Unit}\\
+Day (1 to 366)&Opportunity (1 or 2)&Launch azimuth (deg)&Launch window (A or P)&Card ID\\
 \hline
-SFP\_DPSI\_LOI & Delta Azimuth of LOI & Degrees\\
+Latitude of TLI pericynthion (deg)&Longitude of TLI pericynthion (deg)&Height of TLI pericynthion (NM)&GET of TLI (hours)&Card ID\\
 \hline
-SFP\_DPSI\_TEI & Delta Azimuth of TEI & Degrees\\
+Latitude of LOI pericynthion (deg)&Longitude of LOI pericynthion (deg)&Height of LOI pericynthion (NM)&&Card ID\\
 \hline
-SFP\_DT\_LLS & Time from LOI to the first pass (time of landing) over the landing site & Hours\\
+dpsi of LOI (deg)&gamma of LOI (deg)&Time in lunar orbit (hrs)&Time from LOI to landing (hrs)&Card ID\\
 \hline
-SFP\_DV\_TEI & Delta velocity of the TEI maneuver & Feet per second\\
+Approach azimuth (deg)&Latitude of the landing site (deg)&Longitude of the landing site (deg)&Radius of the landing site (NM)&Card ID\\
 \hline
-SFP\_GAMMA\_LOI & Flight path angle before LOI maneuver & Degrees\\
+dpsi of TEI (deg)&DV of TEI (ft/s)&time from TEI to EI (hrs)&Inclination of free return (deg)&Card ID\\
 \hline
-SFP\_GET\_TLI & Ground elapsed time of TLI ignition & Hours\\
+GMT of TLI pericynthion (hrs)&GMT of LOI pericynthion (hrs)&GMT of node (hrs)&&Card ID\\
 \hline
-SFP\_GMT\_ND & GMT at the node & Hours\\
-\hline
-SFP\_GMT\_PC1 & GMT of TLI pericynthion & Hours\\
-\hline
-SFP\_GMT\_PC2 & GMT of LOI pericynthion & Hours\\
-\hline
-SFP\_H\_ND & Height of the node & Nautical miles\\
-\hline
-SFP\_H\_PC1 & Height of TLI pericynthion & Nautical miles\\
-\hline
-SFP\_H\_PC2 & Height of LOI pericynthion & Nautical miles\\
-\hline
-SFP\_INCL\_FR & Inclination of free return & Degrees\\
-\hline
-SFP\_LAT\_LLS & Latitude of the lunar landing site & Degrees\\
-\hline
-SFP\_LAT\_ND & Latitude of the node & Degrees\\
-\hline
-SFP\_LAT\_PC1 & Latitude of TLI pericynthion & Degrees\\
-\hline
-SFP\_LAT\_PC2 & Latitude of LOI pericynthion & Degrees\\
-\hline
-SFP\_LNG\_LLS & Longitude of the lunar landing site & Degrees\\
-\hline
-SFP\_LNG\_ND & Longitude of the node & Degrees\\
-\hline
-SFP\_LNG\_PC1 & Longitude of TLI pericynthion & Degrees\\
-\hline
-SFP\_LNG\_PC2 & Longitude of LOI pericynthion & Degrees\\
-\hline
-SFP\_PSI\_LLS & Approach azimuth to the landing site & Degrees\\
-\hline
-SFP\_RAD\_LLS & Radius of the lunar landing site & Nautical miles\\
-\hline
-SFP\_T\_LO & Time in lunar orbit (LOI to TEI) & Hours\\
-\hline
-SFP\_T\_TE & Time of transearth coast (TEI to entry interface) & Hours\\
+Latitude of node (deg)&Longitude of node (deg)&Height of node (NM)&&Card ID\\
 \hline
 \end{tabular}
- 
+
 \newpage
 \subsection{TLI Targeting Parameters}
 
-The files containing the TLI targeting parameters follow the launch day specific format "`1968-12-21 TLI.txt". They contain the numbers needed to calculate the time of restart preparations and the TLI maneuver in the RTCC. The format of the file follows the MSC card format from the MSC internal note RTCC REQUIREMENTS FOR APOLLO 11 (MISSION G) PREFLIGHT INFORMATION (69-FM-171), which can be found \href{https://web.archive.org/web/20100524010957/http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740072570_1974072570.pdf}{here}. The PDF pages 32 to 40 show the format. One line in the config file is equal to one punch card. Note that only the first day of a monthly launch window is stored per file, instead of the up to ten.
+The files containing the TLI targeting parameters follow the launch day specific format "`1968-12-21 TLI.txt". They contain the numbers needed to calculate the time of restart preparations and the TLI maneuver in the RTCC. The format of the file follows the MSC card format from the MSC internal note RTCC REQUIREMENTS FOR APOLLO 11 (MISSION G) PREFLIGHT INFORMATION (69-FM-171), which can be found \href{https://web.archive.org/web/20100524010957/http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740072570_1974072570.pdf}{here}. The PDF pages 32 to 40 show the format. One line in the config file is equal to one punch card.
 
 \end{document}

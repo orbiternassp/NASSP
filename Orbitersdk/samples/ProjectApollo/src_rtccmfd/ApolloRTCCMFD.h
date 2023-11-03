@@ -106,8 +106,6 @@ public:
 	void menuCycleMarkerUp();
 	void menuCycleMarkerDown();
 	void menuSetGMPInput();
-	void menuMissionFile();
-	void LoadMissionConstantsFile(char *str);
 	void SPQcalc();
 	void lambertcalc();
 	void Angle_Display(char *Buff, double angle, bool DispPlus = true);
@@ -293,6 +291,13 @@ public:
 	void menuSetRTEDigitalsPage();
 	void menuSetRTEConstraintsPage();
 	void menuSetEntryUpdatePage();
+	void menuSetRTCCFilesPage();
+	void menuLoadSystemParametersFile();
+	void LoadSystemParametersFile(char *file);
+	void menuLoadTLIFile();
+	void LoadTLIFile(char *file);
+	void menuLoadSFPFile();
+	void LoadSFPFile(char *file);
 	void menuSetRendezvousPage();
 	void menuSetDKIPage();
 	void menuSetDKIOptionsPage();
@@ -818,6 +823,7 @@ protected:
 	int marker;
 	int markermax;
 	int RTETradeoffScreen;
+	int status; //Page dependent status, reset to 0 when new page is entered
 	static struct ScreenData {
 		int screen;
 		int RTETradeoffScreen;

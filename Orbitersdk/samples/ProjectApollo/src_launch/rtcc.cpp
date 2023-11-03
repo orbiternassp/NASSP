@@ -1370,7 +1370,6 @@ RTCC::RTCC() :
 	pmmlaeg(this)
 {
 	mcc = NULL;
-	MissionFileName[0] = 0;
 	TimeofIgnition = 0.0;
 	SplashLatitude = 0.0;
 	SplashLongitude = 0.0;
@@ -1560,7 +1559,7 @@ void RTCC::LoadLaunchDaySpecificParameters(int year, int month, int day)
 	QMEPHEM(SystemParameters.AGCEpoch, year, month, day, 0.0);
 }
 
-void RTCC::QMSEARCH(char *tapename)
+int RTCC::QMSEARCH(std::string file)
 {
 	//This function loads the skeleton flight plan for the launch month
 	//The format is from 69-FM-171 (NTRS ID 19740072570)
@@ -1580,11 +1579,11 @@ void RTCC::QMSEARCH(char *tapename)
 	char Buff[128];
 	int card, day, azimuth, opportunity, err;
 
-	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s SFP.txt", tapename);
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s.txt", file.c_str());
 
 	ifstream sfptable(Buff);
 
-	if (sfptable.is_open() == false) return;
+	if (sfptable.is_open() == false) return 1;
 
 	std::string line, CardID;
 	double dtemp[32];
@@ -1777,162 +1776,276 @@ void RTCC::QMSEARCH(char *tapename)
 
 	//Lastly, copy over data to master flight plan table
 	PZMFPTAB = NewTable;
+
+	return 0;
 }
 
-void RTCC::QMMBLD(char *tapename)
+int RTCC::QMMBLD(std::string file)
 {
 	//This function loads the TLI targeting parameters for the launch day
 	//Loaded file has to have the punch card format from MSC memo 69-FM-171 (NTRS ID 19740072570). One punch card = one line
 	char Buff[128];
-	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s TLI.txt", tapename);
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s.txt", file.c_str());
 
 	const double R_Earth = 6378165.0;
 	const double ER2HR2ToM2SEC2 = pow(R_Earth / 3600.0, 2);
 
 	ifstream startable(Buff);
 
-	if (startable.is_open() == false) return;
+	if (startable.is_open() == false) return 1;
 
-	std::string line;
-	int i, j, day, opp, entry, counter, numdays;
+	std::string line, CardID;
 	double dtemp1, dtemp2, dtemp3, dtemp4;
+	int err = 0;
+	int CardNum; //1-620
+	int day; //0-9
+	int cardinday; //0-45 or 0-7
+	int cardinopp; //0-23 or 0-4
+	int opp; //1 or 2
+	int format; //Format of line
+	int launchday; //1-366
+	int entry; //0-14
 
-	getline(startable, line);
-	sscanf(line.c_str(), "%d", &numdays);
-
-	for (counter = 0; counter < numdays; counter++)
+	while (getline(startable, line))
 	{
-		for (i = 0; i < 2; i++)
+		//Cards limited to 80 columns
+		line = line.substr(0, 80);
+		if (line.size() != 80)
 		{
-			entry = 0;
-			getline(startable, line);
-			sscanf(line.c_str(), "%d %d %lf %lf", &day, &opp, &dtemp1, &dtemp2);
+			err = 1;
+			break;
+		}
+		//Identification number is the last 9 characters of the card
+		CardID = line.substr(71, 9);
+		//Card number is the last three characters of the card ID
+		CardNum = std::stoi(CardID.substr(6, 3));
 
-			if (opp < 1 || opp > 2)
-			{
-				return;
-			}
-			PZSTARGP.data[counter].Day = day;
-			PZSTARGP.data[counter].t_D[opp - 1][entry] = dtemp1 * 3600.0;
-			PZSTARGP.data[counter].cos_sigma[opp - 1][entry] = dtemp2;
+		//Three categories of cards
+		if (CardNum <= 0)
+		{
+			err = 2;
+		}
+		else if (CardNum < 461)
+		{
+			day = (CardNum - 1) / 46;
+			cardinday = (CardNum - 1) % 46;
+			cardinopp = cardinday % 23;
+			format = cardinopp + 1;
+		}
+		else if (CardNum < 541)
+		{
+			day = (CardNum - 461) / 8;
+			cardinday = (CardNum - 461) % 8;
+			cardinopp = cardinday % 4;
+			format = cardinopp + 24;
+		}
+		else if (CardNum < 620)
+		{
+			day = (CardNum - 541) / 8;
+			cardinday = (CardNum - 541) % 8;
+			format = cardinday + 28;
+		}
+		else
+		{
+			err = 2;
+		}
 
-			getline(startable, line);
-			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-			PZSTARGP.data[counter].C_3[opp - 1][entry] = dtemp1 * ER2HR2ToM2SEC2;
-			PZSTARGP.data[counter].e_N[opp - 1][entry] = dtemp2;
-			PZSTARGP.data[counter].RA[opp - 1][entry] = dtemp3;
-			PZSTARGP.data[counter].DEC[opp - 1][entry] = dtemp4;
-			for (j = 0; j < 7; j++)
+		switch (format)
+		{
+		case 1: //Section 1, line 1 of launch day
+			if (sscanf(line.c_str(), "%d %d %lf %lf", &launchday, &opp, &dtemp1, &dtemp2) == 4)
 			{
-				getline(startable, line);
-				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-				entry++;
-				PZSTARGP.data[counter].t_D[opp - 1][entry] = dtemp1*3600.0;
-				PZSTARGP.data[counter].cos_sigma[opp - 1][entry] = dtemp2;
-				PZSTARGP.data[counter].C_3[opp - 1][entry] = dtemp3* ER2HR2ToM2SEC2;
-				PZSTARGP.data[counter].e_N[opp - 1][entry] = dtemp4;
-				getline(startable, line);
-				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-				PZSTARGP.data[counter].RA[opp - 1][entry] = dtemp1;
-				PZSTARGP.data[counter].DEC[opp - 1][entry] = dtemp2;
-				entry++;
-				PZSTARGP.data[counter].t_D[opp - 1][entry] = dtemp3 * 3600.0;
-				PZSTARGP.data[counter].cos_sigma[opp - 1][entry] = dtemp4;
-				getline(startable, line);
-				sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-				PZSTARGP.data[counter].C_3[opp - 1][entry] = dtemp1 * ER2HR2ToM2SEC2;
-				PZSTARGP.data[counter].e_N[opp - 1][entry] = dtemp2;
-				PZSTARGP.data[counter].RA[opp - 1][entry] = dtemp3;
-				PZSTARGP.data[counter].DEC[opp - 1][entry] = dtemp4;
+				if (opp < 1 || opp > 2)
+				{
+					err = 3;
+					break;
+				}
+				if (launchday < 1 || launchday > 366)
+				{
+					err = 3;
+					break;
+				}
+				PZSTARGP.data[day].Day = launchday;
+				PZSTARGP.data[day].t_D[opp - 1][0] = dtemp1 * 3600.0;
+				PZSTARGP.data[day].cos_sigma[opp - 1][0] = dtemp2;
 			}
+			break;
+		case 2: //Section 1, line 2 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].C_3[opp - 1][0] = dtemp1 * ER2HR2ToM2SEC2;
+				PZSTARGP.data[day].e_N[opp - 1][0] = dtemp2;
+				PZSTARGP.data[day].RA[opp - 1][0] = dtemp3;
+				PZSTARGP.data[day].DEC[opp - 1][0] = dtemp4;
+			}
+			break;
+		case 3: //Section 1, line 3 of launch day
+		case 6: //Section 1, line 6 of launch day
+		case 9: //Section 1, line 9 of launch day
+		case 12: //Section 1, line 12 of launch day
+		case 15: //Section 1, line 15 of launch day
+		case 18: //Section 1, line 18 of launch day
+		case 21: //Section 1, line 21 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				entry = 2 * (format / 3) - 1;
+				PZSTARGP.data[day].t_D[opp - 1][entry] = dtemp1 * 3600.0;
+				PZSTARGP.data[day].cos_sigma[opp - 1][entry] = dtemp2;
+				PZSTARGP.data[day].C_3[opp - 1][entry] = dtemp3 * ER2HR2ToM2SEC2;
+				PZSTARGP.data[day].e_N[opp - 1][entry] = dtemp4;
+			}
+			break;
+		case 4: //Section 1, line 4 of launch day
+		case 7: //Section 1, line 7 of launch day
+		case 10: //Section 1, line 10 of launch day
+		case 13: //Section 1, line 13 of launch day
+		case 16: //Section 1, line 16 of launch day
+		case 19: //Section 1, line 19 of launch day
+		case 22: //Section 1, line 22 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				entry = 2 * (format / 3) - 1;
+				PZSTARGP.data[day].RA[opp - 1][entry] = dtemp1;
+				PZSTARGP.data[day].DEC[opp - 1][entry] = dtemp2;
+				entry++;
+				PZSTARGP.data[day].t_D[opp - 1][entry] = dtemp3 * 3600.0;
+				PZSTARGP.data[day].cos_sigma[opp - 1][entry] = dtemp4;
+			}
+			break;
+		case 5: //Section 1, line 5 of launch day
+		case 8: //Section 1, line 8 of launch day
+		case 11: //Section 1, line 11 of launch day
+		case 14: //Section 1, line 14 of launch day
+		case 17: //Section 1, line 17 of launch day
+		case 20: //Section 1, line 20 of launch day
+		case 23: //Section 1, line 23 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				entry = 2 * (format / 3);
+				PZSTARGP.data[day].C_3[opp - 1][entry] = dtemp1 * ER2HR2ToM2SEC2;
+				PZSTARGP.data[day].e_N[opp - 1][entry] = dtemp2;
+				PZSTARGP.data[day].RA[opp - 1][entry] = dtemp3;
+				PZSTARGP.data[day].DEC[opp - 1][entry] = dtemp4;
+			}
+			break;
+		case 24: //Section 2, line 1 of launch day
+			if (sscanf(line.c_str(), "%d %d %lf %lf", &launchday, &opp, &dtemp1, &dtemp2) == 4)
+			{
+				if (opp < 1 || opp > 2)
+				{
+					err = 3;
+					break;
+				}
+				PZSTARGP.data[day].T_ST[opp - 1] = dtemp1 * 3600.0;
+				PZSTARGP.data[day].beta[opp - 1] = dtemp2;
+			}
+			break;
+		case 25: //Section 2, line 2 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].alpha_TS[opp - 1] = dtemp1;
+				PZSTARGP.data[day].f[opp - 1] = dtemp2;
+				PZSTARGP.data[day].R_N[opp - 1] = dtemp3 * R_Earth;
+				PZSTARGP.data[day].T3_apo[opp - 1] = dtemp4 * 3600.0;
+			}
+			break;
+		case 26: //Section 2, line 3 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].tau3R[opp - 1] = dtemp1 * 3600.0;
+				PZSTARGP.data[day].T2[opp - 1] = dtemp2 * 3600.0;
+				PZSTARGP.data[day].Vex2[opp - 1] = dtemp3 * R_Earth / 3600.0;
+				PZSTARGP.data[day].Mdot2[opp - 1] = dtemp4 / (LBS*1000.0*3600.0);
+			}
+			break;
+		case 27: //Section 2, line 4 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].DV_BR[opp - 1] = dtemp1 * R_Earth / 3600.0;
+				PZSTARGP.data[day].tau2N[opp - 1] = dtemp2 * 3600.0;
+				PZSTARGP.data[day].KP0[opp - 1] = dtemp3;
+				PZSTARGP.data[day].KY0[opp - 1] = dtemp4;
+			}
+			break;
+		case 28: //Section 3, line 1 of launch day
+			if (sscanf(line.c_str(), "%d %lf %lf %lf", &launchday, &dtemp1, &dtemp2, &dtemp3) == 4)
+			{
+				PZSTARGP.data[day].T_LO = dtemp1 * 3600.0;
+				PZSTARGP.data[day].theta_EO = dtemp2;
+				PZSTARGP.data[day].omega_E = dtemp3 / 3600.0;
+			}
+			break;
+		case 29: //Section 3, line 2 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].K_a1 = dtemp1 / 3600.0;
+				PZSTARGP.data[day].K_a2 = dtemp2 / pow(3600.0, 2);
+				PZSTARGP.data[day].K_T3 = dtemp3;
+				PZSTARGP.data[day].t_DS0 = dtemp4 * 3600.0;
+			}
+			break;
+		case 30: //Section 3, line 3 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].t_DS1 = dtemp1 * 3600.0;
+				PZSTARGP.data[day].t_DS2 = dtemp2 * 3600.0;
+				PZSTARGP.data[day].t_DS3 = dtemp3 * 3600.0;
+				PZSTARGP.data[day].hx[0][0] = dtemp4;
+			}
+			break;
+		case 31: //Section 3, line 4 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].hx[0][1] = dtemp1;
+				PZSTARGP.data[day].hx[0][2] = dtemp2;
+				PZSTARGP.data[day].hx[0][3] = dtemp3;
+				PZSTARGP.data[day].hx[0][4] = dtemp4;
+			}
+			break;
+		case 32: //Section 3, line 5 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].t_D0 = 0.0;
+				PZSTARGP.data[day].t_D1 = dtemp1 * 3600.0;
+				PZSTARGP.data[day].t_SD1 = dtemp2 * 3600.0;
+				PZSTARGP.data[day].hx[1][0] = dtemp3;
+				PZSTARGP.data[day].hx[1][1] = dtemp4;
+			}
+			break;
+		case 33: //Section 3, line 6 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].hx[1][2] = dtemp1;
+				PZSTARGP.data[day].hx[1][3] = dtemp2;
+				PZSTARGP.data[day].hx[1][4] = dtemp3;
+				PZSTARGP.data[day].t_D2 = dtemp4 * 3600.0;
+			}
+			break;
+		case 34: //Section 3, line 7 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].t_SD2 = dtemp1 * 3600.0;
+				PZSTARGP.data[day].hx[2][0] = dtemp2;
+				PZSTARGP.data[day].hx[2][1] = dtemp3;
+				PZSTARGP.data[day].hx[2][2] = dtemp4;
+			}
+			break;
+		case 35: //Section 3, line 8 of launch day
+			if (sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4) == 4)
+			{
+				PZSTARGP.data[day].hx[2][3] = dtemp1;
+				PZSTARGP.data[day].hx[2][4] = dtemp2;
+				PZSTARGP.data[day].t_D3 = dtemp3 * 3600.0;
+				PZSTARGP.data[day].t_SD3 = dtemp4 * 3600.0;
+			}
+			break;
+		default:
+			err = 3;
+			break;
 		}
 	}
 
-	for (counter = 0; counter < numdays; counter++)
-	{
-		for (i = 0; i < 2; i++)
-		{
-			getline(startable, line);
-			sscanf(line.c_str(), "%d %d %lf %lf", &day, &opp, &dtemp1, &dtemp2);
-
-			if (opp < 1 || opp > 2)
-			{
-				return;
-			}
-			PZSTARGP.data[counter].T_ST[opp - 1] = dtemp1 * 3600.0;
-			PZSTARGP.data[counter].beta[opp - 1] = dtemp2;
-			getline(startable, line);
-			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-			PZSTARGP.data[counter].alpha_TS[opp - 1] = dtemp1;
-			PZSTARGP.data[counter].f[opp - 1] = dtemp2;
-			PZSTARGP.data[counter].R_N[opp - 1] = dtemp3 * R_Earth;
-			PZSTARGP.data[counter].T3_apo[opp - 1] = dtemp4 * 3600.0;
-			getline(startable, line);
-			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-			PZSTARGP.data[counter].tau3R[opp - 1] = dtemp1 * 3600.0;
-			PZSTARGP.data[counter].T2[opp - 1] = dtemp2 * 3600.0;
-			PZSTARGP.data[counter].Vex2[opp - 1] = dtemp3 * R_Earth / 3600.0;
-			PZSTARGP.data[counter].Mdot2[opp - 1] = dtemp4 / (LBS*1000.0*3600.0);
-			getline(startable, line);
-			sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-			PZSTARGP.data[counter].DV_BR[opp - 1] = dtemp1 * R_Earth / 3600.0;
-			PZSTARGP.data[counter].tau2N[opp - 1] = dtemp2 * 3600.0;
-			PZSTARGP.data[counter].KP0[opp - 1] = dtemp3;
-			PZSTARGP.data[counter].KY0[opp - 1] = dtemp4;
-		}
-	}
-
-	for (counter = 0; counter < numdays; counter++)
-	{
-		getline(startable, line);
-		sscanf(line.c_str(), "%d %lf %lf %lf", &day, &dtemp1, &dtemp2, &dtemp3);
-		PZSTARGP.data[counter].T_LO = dtemp1 * 3600.0;
-		PZSTARGP.data[counter].theta_EO = dtemp2;
-		PZSTARGP.data[counter].omega_E = dtemp3 / 3600.0;
-		getline(startable, line);
-		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		PZSTARGP.data[counter].K_a1 = dtemp1 / 3600.0;
-		PZSTARGP.data[counter].K_a2 = dtemp2 / pow(3600.0, 2);
-		PZSTARGP.data[counter].K_T3 = dtemp3;
-		PZSTARGP.data[counter].t_DS0 = dtemp4 * 3600.0;
-		getline(startable, line);
-		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		PZSTARGP.data[counter].t_DS1 = dtemp1 * 3600.0;
-		PZSTARGP.data[counter].t_DS2 = dtemp2 * 3600.0;
-		PZSTARGP.data[counter].t_DS3 = dtemp3 * 3600.0;
-		PZSTARGP.data[counter].hx[0][0] = dtemp4;
-		getline(startable, line);
-		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		PZSTARGP.data[counter].hx[0][1] = dtemp1;
-		PZSTARGP.data[counter].hx[0][2] = dtemp2;
-		PZSTARGP.data[counter].hx[0][3] = dtemp3;
-		PZSTARGP.data[counter].hx[0][4] = dtemp4;
-		getline(startable, line);
-		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		PZSTARGP.data[counter].t_D0 = 0.0;
-		PZSTARGP.data[counter].t_D1 = dtemp1 * 3600.0;
-		PZSTARGP.data[counter].t_SD1 = dtemp2 * 3600.0;
-		PZSTARGP.data[counter].hx[1][0] = dtemp3;
-		PZSTARGP.data[counter].hx[1][1] = dtemp4;
-		getline(startable, line);
-		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		PZSTARGP.data[counter].hx[1][2] = dtemp1;
-		PZSTARGP.data[counter].hx[1][3] = dtemp2;
-		PZSTARGP.data[counter].hx[1][4] = dtemp3;
-		PZSTARGP.data[counter].t_D2 = dtemp4 * 3600.0;
-		getline(startable, line);
-		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		PZSTARGP.data[counter].t_SD2 = dtemp1 * 3600.0;
-		PZSTARGP.data[counter].hx[2][0] = dtemp2;
-		PZSTARGP.data[counter].hx[2][1] = dtemp3;
-		PZSTARGP.data[counter].hx[2][2] = dtemp4;
-		getline(startable, line);
-		sscanf(line.c_str(), "%lf %lf %lf %lf", &dtemp1, &dtemp2, &dtemp3, &dtemp4);
-		PZSTARGP.data[counter].hx[2][3] = dtemp1;
-		PZSTARGP.data[counter].hx[2][4] = dtemp2;
-		PZSTARGP.data[counter].t_D3 = dtemp3 * 3600.0;
-		PZSTARGP.data[counter].t_SD3 = dtemp4 * 3600.0;
-	}
+	return err;
 }
 
 void RTCC::LoadMissionInitParameters(int year, int month, int day)
@@ -2045,23 +2158,23 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 	}
 }
 
-bool RTCC::LoadMissionFiles(char *missionname)
+bool RTCC::LoadMissionFiles()
 {
 	//Load numbers that presumable would be found on a system parameters tape
-	bool found = LoadMissionConstantsFile(missionname);
-	//Load skeleton flight plan master tape
-	QMSEARCH(missionname);
+	bool found = LoadMissionConstantsFile(SystemParametersFile);
 	//Load TLI simulation parameters
-	QMMBLD(missionname);
+	QMMBLD(TLIFile);
+	//Load skeleton flight plan master tape
+	QMSEARCH(SFPFile);
 
 	return found;
 }
 
-bool RTCC::LoadMissionConstantsFile(char *missionname)
+bool RTCC::LoadMissionConstantsFile(std::string file)
 {
 	//This function loads mission specific constants that will rarely be changed or saved/loaded
 	char Buff[128];
-	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s Constants.txt", missionname);
+	sprintf_s(Buff, ".\\Config\\ProjectApollo\\RTCC\\%s.txt", file.c_str());
 
 	ifstream missionfile(Buff);
 	if (missionfile.is_open())
@@ -6777,10 +6890,17 @@ void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
 
 void RTCC::SaveState(FILEHANDLE scn) {
 
+	char Buffer[128];
 	int i;
 
 	oapiWriteLine(scn, RTCC_START_STRING);
-	oapiWriteScenario_string(scn, "RTCC_MISSIONFILES", MissionFileName);
+
+	snprintf(Buffer, 127, "%s", SystemParametersFile.c_str());
+	oapiWriteScenario_string(scn, "RTCC_SYSTEMPARAMETERSFILE", Buffer);
+	snprintf(Buffer, 127, "%s", TLIFile.c_str());
+	oapiWriteScenario_string(scn, "RTCC_TLIFILE", Buffer);
+	snprintf(Buffer, 127, "%s", SFPFile.c_str());
+	oapiWriteScenario_string(scn, "RTCC_SFPFILE", Buffer);
 	// Booleans
 	// Integers
 	SAVE_INT("RTCC_GZGENCSN_Year", GZGENCSN.Year);
@@ -6973,6 +7093,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 
 // Load State
 void RTCC::LoadState(FILEHANDLE scn) {
+	char Buff[128];
 	char *line;
 	int tmp = 0; // Used in boolean type loader
 	int inttemp, inttemp2;
@@ -6982,21 +7103,47 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		if (!strnicmp(line, RTCC_END_STRING, sizeof(RTCC_END_STRING))) {
 			break;
 		}
-		if (papiReadScenario_string(line, "RTCC_MISSIONFILE", MissionFileName))
+		if (papiReadScenario_string(line, "RTCC_MISSIONFILE", Buff))
 		{
 			//For backwards compatibility. Remove the "Constants" at the end of the file
-			int len = strlen(MissionFileName);
+			int len = strlen(Buff);
 
 			if (len > 9)
 			{
-				MissionFileName[len - 10] = '\0';
+				Buff[len - 10] = '\0';
 			}
 
-			LoadMissionFiles(MissionFileName);
+			SystemParametersFile.assign(Buff);
+			TLIFile = SystemParametersFile + " TLI";
+			SFPFile = SystemParametersFile + " SFP";
+			SystemParametersFile += " Constants";
+
+			LoadMissionFiles();
 		}
-		else if (papiReadScenario_string(line, "RTCC_MISSIONFILES", MissionFileName))
+		else if (papiReadScenario_string(line, "RTCC_MISSIONFILES", Buff))
 		{
-			LoadMissionFiles(MissionFileName);
+			//To make initial scenario loading easier. Afterwards scenarios save the individual file names
+			SystemParametersFile.assign(Buff);
+			TLIFile = SystemParametersFile + " TLI";
+			SFPFile = SystemParametersFile + " SFP";
+			SystemParametersFile += " Constants";
+
+			LoadMissionFiles();
+		}
+		else if (papiReadScenario_string(line, "RTCC_SYSTEMPARAMETERSFILE", Buff))
+		{
+			SystemParametersFile.assign(Buff);
+			LoadMissionConstantsFile(SystemParametersFile);
+		}
+		else if (papiReadScenario_string(line, "RTCC_TLIFILE", Buff))
+		{
+			TLIFile.assign(Buff);
+			QMMBLD(TLIFile);
+		}
+		else if (papiReadScenario_string(line, "RTCC_SFPFILE", Buff))
+		{
+			SFPFile.assign(Buff);
+			QMSEARCH(SFPFile);
 		}
 		LOAD_INT("RTCC_GZGENCSN_Year", GZGENCSN.Year);
 		LOAD_INT("RTCC_GZGENCSN_RefDayOfYear", GZGENCSN.RefDayOfYear);

@@ -2467,13 +2467,19 @@ public:
 	void SetManeuverData(double TIG, VECTOR3 DV);
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
 	void LoadLaunchDaySpecificParameters(int year, int month, int day);
-	bool LoadMissionFiles(char *missionname);
+	bool LoadMissionFiles();
+	bool LoadMissionConstantsFile(std::string file);
+
+	//Offline Programs
+
+	//Build TLI targeting parameters table
+	int QMMBLD(std::string file);
+	//Search tape and build skeleton flight plan table
+	int QMSEARCH(std::string file);
 private:
-	bool LoadMissionConstantsFile(char *missionname);
 	void LoadMissionInitParameters(int year, int month, int day);
 	void InitializeCoordinateSystem();
 public:
-
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
 	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
 	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
@@ -3017,7 +3023,11 @@ public:
 
 	MCC *mcc;
 	struct calculationParameters calcParams;
-	char MissionFileName[64];
+
+	//RTCC file names, equivalent to tapes containing the data
+	std::string SystemParametersFile;
+	std::string	TLIFile;
+	std::string SFPFile;
 
 	//MEDs
 
@@ -4930,13 +4940,6 @@ protected:
 	int PMMMCDCallEMSMISS(EphemerisData sv0, double GMTI, EphemerisData &sv1);
 	int PMSVCTAuxVectorFetch(int L, double T_F, EphemerisData &sv);
 	bool MEDTimeInputHHMMSS(std::string vec, double &hours);
-
-	//Offline Programs
-
-	//Search tape and build skeleton flight plan table
-	void QMSEARCH(char *tapename);
-	//Build TLI targeting parameters table
-	void QMMBLD(char *tapename);
 
 	EphemerisData ConvertSVtoEphemData(SV sv);
 	SV ConvertEphemDatatoSV(EphemerisData sv, double mass = 0.0);

@@ -932,7 +932,7 @@ MCC:ProjectApollo\MCC
   LVNAME AS-506-S4BSTG
   LEMNAME Eagle
   RTCC_BEGIN
-    RTCC_MISSIONFILE Apollo 11 Constants
+    RTCC_MISSIONFILES Apollo 11
     RTCC_GZGENCSN_Year 1969
     RTCC_GZGENCSN_MonthofLiftoff 7
     RTCC_GZGENCSN_DayofLiftoff 16

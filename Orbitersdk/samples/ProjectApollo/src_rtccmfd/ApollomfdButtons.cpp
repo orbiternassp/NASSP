@@ -276,7 +276,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu8[] =
 	{
-		{ "Mission File", 0, 'G' },
+		{ "RTCC files", 0, 'G' },
 		{ "Vessel status", 0, 'V' },
 		{ "LM stage", 0, 'T' },
 		{ "", 0, ' ' },
@@ -293,7 +293,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu8, sizeof(mnu8) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("MIS", OAPI_KEY_G, &ApolloRTCCMFD::menuMissionFile);
+	RegisterFunction("MIS", OAPI_KEY_G, &ApolloRTCCMFD::menuSetRTCCFilesPage);
 	RegisterFunction("TYP", OAPI_KEY_V, &ApolloRTCCMFD::menuChangeVesselStatus);
 	RegisterFunction("STA", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleLMStage);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
@@ -1058,9 +1058,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu31[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Choose sys. parameters file", 0, 'T' },
+		{ "Choose TLI file", 0, 'L' },
+		{ "Choose SFP file", 0, 'O' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -1075,9 +1075,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu31, sizeof(mnu31) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("SYS", OAPI_KEY_T, &ApolloRTCCMFD::menuLoadSystemParametersFile);
+	RegisterFunction("TLI", OAPI_KEY_L, &ApolloRTCCMFD::menuLoadTLIFile);
+	RegisterFunction("SFP", OAPI_KEY_O, &ApolloRTCCMFD::menuLoadSFPFile);
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
@@ -1087,7 +1087,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetPADMenu);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetConfigPage);
 
 
 	static const MFDBUTTONMENU mnu32[] =

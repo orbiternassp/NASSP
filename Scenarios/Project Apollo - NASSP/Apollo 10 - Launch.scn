@@ -778,7 +778,7 @@ MCC:ProjectApollo\MCC
   LVNAME AS-505-S4BSTG
   LEMNAME Snoopy
   RTCC_BEGIN
-    RTCC_MISSIONFILE Apollo 10 Constants
+    RTCC_MISSIONFILES Apollo 10
     RTCC_GZGENCSN_Year 1969
     RTCC_GZGENCSN_MonthofLiftoff 5
     RTCC_GZGENCSN_DayofLiftoff 18
