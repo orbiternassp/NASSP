@@ -7709,7 +7709,7 @@ bool TransferMCCPlanToSFPInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuInterpolateSFP()
 {
 	bool InterpolateSFPInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Interplation for skeleton flight plan. Format: F62,Days (optional),Opportunity,Azimuth;", InterpolateSFPInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Interplation for skeleton flight plan. Format: F62,Days (optional),Opportunity,Azimuth;", InterpolateSFPInput, "F62,,1,72.0;", 50, (void*)this);
 }
 
 bool InterpolateSFPInput(void* id, char *str, void *data)
