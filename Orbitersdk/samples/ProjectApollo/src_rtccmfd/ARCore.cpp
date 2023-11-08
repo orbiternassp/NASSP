@@ -157,8 +157,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 {
 	if (mission == 7)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 7 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 7 Constants";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1968, 10, 11);
 		rtcc->GMGMED("P80,1,CSM,10,11,1968;");
 		rtcc->GMGMED("P10,CSM,15:02:45;");
@@ -169,8 +169,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 8)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 8 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 8 Constants";
+		rtcc->TLIFile = "Apollo 8 TLI";
+		rtcc->SFPFile = "Apollo 8 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1968, 12, 21);
 		rtcc->GMGMED("P80,1,CSM,12,21,1968;");
 		rtcc->GMGMED("P10,CSM,12:51:0;");
@@ -181,8 +183,8 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 9)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 9 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 7 Constants";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1969, 3, 3);
 		rtcc->GMGMED("P80,1,CSM,3,3,1969;");
 		rtcc->GMGMED("P10,CSM,16:00:00;");
@@ -194,8 +196,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 10)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 10 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 10 Constants";
+		rtcc->TLIFile = "Apollo 10 TLI";
+		rtcc->SFPFile = "Apollo 10 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1969, 5, 18);
 		rtcc->GMGMED("P80,1,CSM,5,18,1969;");
 		rtcc->GMGMED("P10,CSM,16:49:00;");
@@ -207,9 +211,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 11) // July 16th Launch
 	{
-		//July 16 launch
-		sprintf(rtcc->MissionFileName, "Apollo 11 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 11 Constants";
+		rtcc->TLIFile = "Apollo 11 TLI";
+		rtcc->SFPFile = "Apollo 11 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1969, 7, 16);
 		rtcc->GMGMED("P80,1,CSM,7,16,1969;");
 		rtcc->GMGMED("P10,CSM,13:32:00;");
@@ -241,8 +246,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 12)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 12 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 12 Constants";
+		rtcc->TLIFile = "Apollo 12 TLI";
+		rtcc->SFPFile = "Apollo 12 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1969, 11, 14);
 		rtcc->GMGMED("P80,1,CSM,11,14,1969;");
 		rtcc->GMGMED("P10,CSM,16:22:00;");
@@ -254,8 +261,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 13)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 13 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 13 Constants";
+		rtcc->TLIFile = "Apollo 13 TLI";
+		rtcc->SFPFile = "Apollo 13 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1970, 4, 11);
 		rtcc->GMGMED("P80,1,CSM,4,11,1970;");
 		rtcc->GMGMED("P10,CSM,19:13:00;");
@@ -267,8 +276,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 14)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 14 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 14 Constants";
+		rtcc->TLIFile = "Apollo 14 TLI";
+		rtcc->SFPFile = "Apollo 14 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1971, 1, 31);
 		rtcc->GMGMED("P80,1,CSM,1,31,1971;");
 		rtcc->GMGMED("P10,CSM,20:23:00;");
@@ -280,8 +291,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 15)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 15 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 15 Constants";
+		rtcc->TLIFile = "Apollo 15 TLI";
+		rtcc->SFPFile = "Apollo 15 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1971, 7, 26);
 		rtcc->GMGMED("P80,1,CSM,7,26,1971;");
 		rtcc->GMGMED("P10,CSM,13:34:00;");
@@ -293,8 +306,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 16)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 16 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 16 Constants";
+		rtcc->TLIFile = "Apollo 16 TLI";
+		rtcc->SFPFile = "Apollo 16 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1972, 4, 16);
 		rtcc->GMGMED("P80,1,CSM,4,16,1972;");
 		rtcc->GMGMED("P10,CSM,17:54:00;");
@@ -306,8 +321,10 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 17)
 	{
-		sprintf(rtcc->MissionFileName, "Apollo 17 Constants");
-		rtcc->LoadMissionConstantsFile(rtcc->MissionFileName);
+		rtcc->SystemParametersFile = "Apollo 17 Constants";
+		rtcc->TLIFile = "Apollo 17 TLI";
+		rtcc->SFPFile = "Apollo 17 SFP";
+		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1972, 12, 7);
 		rtcc->GMGMED("P80,1,CSM,12,7,1972;");
 		rtcc->GMGMED("P10,CSM,02:53:00;");
@@ -1464,84 +1481,6 @@ void ARCore::NavCheckPAD()
 	sv = GC->rtcc->StateVectorCalc(vessel);
 
 	GC->rtcc->NavCheckPAD(sv, navcheckpad, navcheckpad.NavChk[0]);
-}
-
-void ARCore::UpdateTLITargetTable()
-{
-	if (!utils::IsVessel(vessel, utils::SaturnV)) return;
-
-	SaturnV *SatV = (SaturnV*)vessel;
-	LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
-
-	GC->rtcc->SystemParameters.MDVSTP.T4IG = lvdc->t_3i - 17.0;
-	GC->rtcc->SystemParameters.MDVSTP.T4C = lvdc->TB5 - 17.0;
-	GC->rtcc->SystemParameters.MDVSTP.DT4N = lvdc->T_4N;
-	GC->rtcc->SystemParameters.MDVSTP.KP1 = lvdc->K_P1;
-	GC->rtcc->SystemParameters.MDVSTP.KP2 = lvdc->K_P2;
-	GC->rtcc->SystemParameters.MDVSTP.KY1 = lvdc->K_Y1;
-	GC->rtcc->SystemParameters.MDVSTP.KY2 = lvdc->K_Y2;
-	GC->rtcc->SystemParameters.MDVSTP.PHIL = lvdc->PHI;
-	GC->rtcc->SystemParameters.MDVSTP.t_D0 = lvdc->t_D0;
-	GC->rtcc->SystemParameters.MDVSTP.t_D1 = lvdc->t_D1;
-	GC->rtcc->SystemParameters.MDVSTP.t_D2 = lvdc->t_D2;
-	GC->rtcc->SystemParameters.MDVSTP.t_D3 = lvdc->t_D3;
-	GC->rtcc->SystemParameters.MDVSTP.t_DS0 = lvdc->t_DS0;
-	GC->rtcc->SystemParameters.MDVSTP.t_DS1 = lvdc->t_DS1;
-	GC->rtcc->SystemParameters.MDVSTP.t_DS2 = lvdc->t_DS2;
-	GC->rtcc->SystemParameters.MDVSTP.t_DS3 = lvdc->t_DS3;
-	GC->rtcc->SystemParameters.MDVSTP.t_SD1 = lvdc->t_SD1;
-	GC->rtcc->SystemParameters.MDVSTP.t_SD2 = lvdc->t_SD2;
-	GC->rtcc->SystemParameters.MDVSTP.t_SD3 = lvdc->t_SD3;
-
-	int i, j;
-	for (i = 0;i < 3;i++)
-	{
-		for (j = 0;j < 5;j++)
-		{
-			GC->rtcc->SystemParameters.MDVSTP.hx[i][j] = lvdc->hx[i][j] * RAD;
-		}
-	}
-	for (i = 0;i < 7;i++)
-	{
-		GC->rtcc->SystemParameters.MDVSTP.fx[i] = lvdc->fx[i] * RAD;
-		GC->rtcc->SystemParameters.MDVSTP.gx[i] = lvdc->gx[i] * RAD;
-	}
-
-	GC->rtcc->PZSTARGP.Day = GC->rtcc->GZGENCSN.RefDayOfYear;
-	GC->rtcc->PZSTARGP.T_LO = lvdc->T_LO + 17.0; //LVDC presetting is time of GRR, RTCC apparently wants actual liftoff time
-	GC->rtcc->PZSTARGP.theta_EO = lvdc->theta_EO;
-	GC->rtcc->PZSTARGP.omega_E = lvdc->omega_E;
-	GC->rtcc->PZSTARGP.K_T3 = lvdc->K_T3;
-
-	for (i = 0;i < 2;i++)
-	{
-		GC->rtcc->PZSTARGP.T_ST[i] = lvdc->TABLE15[i].T_ST;
-		GC->rtcc->PZSTARGP.beta[i] = lvdc->TABLE15[i].beta*RAD;
-		GC->rtcc->PZSTARGP.alpha_TS[i] = lvdc->TABLE15[i].alphaS_TS*RAD;
-		GC->rtcc->PZSTARGP.f[i] = lvdc->TABLE15[i].f*RAD;
-		GC->rtcc->PZSTARGP.R_N[i] = lvdc->TABLE15[i].R_N;
-		GC->rtcc->PZSTARGP.T3_apo[i] = lvdc->TABLE15[i].T3PR;
-		GC->rtcc->PZSTARGP.tau3R[i] = lvdc->TABLE15[i].TAU3R;
-		GC->rtcc->PZSTARGP.T2[i] = lvdc->TABLE15[i].T2IR;
-		GC->rtcc->PZSTARGP.DV_BR[i] = lvdc->TABLE15[i].dV_BR;
-
-		//TBD: LVDC needs to have separate values for these for the two restart opportunities
-		GC->rtcc->PZSTARGP.Vex2[i] = lvdc->V_ex2R;
-		GC->rtcc->PZSTARGP.Mdot2[i] = lvdc->dotM_2R;
-		GC->rtcc->PZSTARGP.tau2N[i] = lvdc->tau2N;
-		GC->rtcc->PZSTARGP.KP0[i] = 0.0;
-		GC->rtcc->PZSTARGP.KY0[i] = 0.0;
-
-		for (j = 0;j < 15;j++)
-		{
-			GC->rtcc->PZSTARGP.cos_sigma[i][j] = lvdc->TABLE15[i].target[j].cos_sigma;
-			GC->rtcc->PZSTARGP.C_3[i][j] = lvdc->TABLE15[i].target[j].C_3;
-			GC->rtcc->PZSTARGP.e_N[i][j] = lvdc->TABLE15[i].target[j].e_N;
-			GC->rtcc->PZSTARGP.RA[i][j] = lvdc->TABLE15[i].target[j].RAS*RAD;
-			GC->rtcc->PZSTARGP.DEC[i][j] = lvdc->TABLE15[i].target[j].DEC*RAD;
-			GC->rtcc->PZSTARGP.t_D[i][j] = lvdc->TABLE15[i].target[j].t_D;
-		}
-	}
 }
 
 void ARCore::LandingSiteUpdate()

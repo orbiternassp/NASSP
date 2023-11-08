@@ -220,18 +220,10 @@ struct TLISystemParameters
 	double KY2 = 0.0;
 	//Geodetic latitude of launch site
 	double PHIL = 0.0;
-	//Azimuth from time polynomial (radians)
-	double hx[3][5];
 	//Inclination from azimuth polynomial (radians)
 	double fx[7];
 	//Descending Node Angle from azimuth polynomial (radians)
 	double gx[7];
-	//Times of the opening and closing of launch windows
-	double t_D0, t_D1, t_D2, t_D3;
-	//Times to segment the azimuth calculation polynomial
-	double t_DS0, t_DS1, t_DS2, t_DS3;
-	//Times used to scale the azimuth polynomial
-	double t_SD1, t_SD2, t_SD3;
 };
 
 struct RTCCSystemParameters

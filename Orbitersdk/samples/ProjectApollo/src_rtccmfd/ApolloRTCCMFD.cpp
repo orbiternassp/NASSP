@@ -668,6 +668,7 @@ void ApolloRTCCMFD::SelectPage(int page)
 {
 	screen = page;
 	coreButtons.SelectPage(this, screen);
+	status = 0;
 }
 
 void ApolloRTCCMFD::menuSetMenu()
@@ -825,6 +826,11 @@ void ApolloRTCCMFD::menuSetRTEConstraintsPage()
 void ApolloRTCCMFD::menuSetEntryUpdatePage()
 {
 	SelectPage(30);
+}
+
+void ApolloRTCCMFD::menuSetRTCCFilesPage()
+{
+	SelectPage(31);
 }
 
 void ApolloRTCCMFD::menuSetRendezvousPage()
@@ -2287,24 +2293,90 @@ void ApolloRTCCMFD::menuTransferGPMToMPT()
 	G->TransferGPMToMPT();
 }
 
-void ApolloRTCCMFD::menuMissionFile()
+void ApolloRTCCMFD::menuLoadSystemParametersFile()
 {
-	bool MissionFile(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the mission constants file:", MissionFile, 0, 20, (void*)this);
+	bool LoadSystemParametersFileInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter name of systems parameters file:", LoadSystemParametersFileInput, 0, 20, (void*)this);
 }
 
-bool MissionFile(void *id, char *str, void *data)
+bool LoadSystemParametersFileInput(void *id, char *str, void *data)
 {
-	((ApolloRTCCMFD*)data)->LoadMissionConstantsFile(str);
-
+	((ApolloRTCCMFD*)data)->LoadSystemParametersFile(str);
 	return true;
 }
 
-void ApolloRTCCMFD::LoadMissionConstantsFile(char *str)
+void ApolloRTCCMFD::LoadSystemParametersFile(char *file)
 {
-	if (GC->rtcc->LoadMissionConstantsFile(str))
+	if (GC->rtcc->LoadMissionConstantsFile(file))
 	{
-		strcpy(GC->rtcc->MissionFileName, str);
+		GC->rtcc->SystemParametersFile.assign(file);
+		status = 1;
+	}
+	else
+	{
+		status = 2;
+	}
+}
+
+void ApolloRTCCMFD::menuLoadTLIFile()
+{
+	bool LoadTLIFileInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter name of TLI file:", LoadTLIFileInput, 0, 20, (void*)this);
+}
+
+bool LoadTLIFileInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->LoadTLIFile(str);
+	return true;
+}
+
+void ApolloRTCCMFD::LoadTLIFile(char *file)
+{
+	int err = GC->rtcc->QMMBLD(file);
+
+	if (err == 0)
+	{
+		GC->rtcc->TLIFile.assign(file);
+		status = 1; //All good
+	}
+	else if (err == 1)
+	{
+		status = 2; //File not found
+	}
+	else
+	{
+		status = 3; //Other error
+	}
+}
+
+void ApolloRTCCMFD::menuLoadSFPFile()
+{
+	bool LoadSFPFileInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter name of SFP file:", LoadSFPFileInput, 0, 20, (void*)this);
+}
+
+bool LoadSFPFileInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->LoadSFPFile(str);
+	return true;
+}
+
+void ApolloRTCCMFD::LoadSFPFile(char *file)
+{
+	int err = GC->rtcc->QMSEARCH(file);
+
+	if (err == 0)
+	{
+		GC->rtcc->SFPFile.assign(file);
+		status = 1; //All good
+	}
+	else if (err == 1)
+	{
+		status = 2; //File not found
+	}
+	else
+	{
+		status = 3; //Other error
 	}
 }
 
@@ -7629,6 +7701,18 @@ void ApolloRTCCMFD::menuTransferMCCPlanToSFP()
 }
 
 bool TransferMCCPlanToSFPInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+void ApolloRTCCMFD::menuInterpolateSFP()
+{
+	bool InterpolateSFPInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Interplation for skeleton flight plan. Format: F62,Days (optional),Opportunity,Azimuth;", InterpolateSFPInput, "F62,,1,72.0;", 50, (void*)this);
+}
+
+bool InterpolateSFPInput(void* id, char *str, void *data)
 {
 	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
