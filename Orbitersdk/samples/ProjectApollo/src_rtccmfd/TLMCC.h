@@ -27,61 +27,77 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 struct TLMCCDataTable
 {
+	TLMCCDataTable::TLMCCDataTable()
+	{
+		for (int i = 0;i < 25; i++)
+		{
+			data[i] = 0.0;
+		}
+	}
+
 	//Time at which block was generated
 	double GMTTimeFlag = 0.0;
 	//TLMCC Mode that was used to generate block
 	int mode = 0;
-	//EMP latitude of TLI pericynthion
-	double lat_pc1 = 0.0;
-	//EMP latitude of LOI pericynthion
-	double lat_pc2 = 0.0;
-	//EMP longitude of TLI pericynthion
-	double lng_pc1 = 0.0;
-	//EMP longitude of LOI pericynthion
-	double lng_pc2 = 0.0;
-	//Height of TLI pericynthion
-	double h_pc1 = 0.0;
-	//Height of LOI pericynthion
-	double h_pc2 = 0.0;
-	//GET of TLI Ignition
-	double GET_TLI = 0.0;
-	//GMT of Node
-	double GMT_nd = 0.0;
-	//Latitude of Node
-	double lat_nd = 0.0;
-	//Longitude of Node
-	double lng_nd = 0.0;
-	//Height of Node
-	double h_nd = 0.0;
-	//Delta Azimuth of LOI
-	double dpsi_loi = 0.0;
-	//Flight Path Angle of LOI
-	double gamma_loi = 0.0;
-	//DT of LPO (LOI to TEI)
-	double T_lo = 0.0;
-	//DT of LLS (LOI to LLS first pass)
-	double dt_lls = 0.0;
-	//Azimuth of LLS
-	double psi_lls = 0.0;
-	//Latitude of LLS
-	double lat_lls = 0.0;
-	//Longitude of LLS
-	double lng_lls = 0.0;
-	//Radius of LLS
-	double rad_lls = 0.0;
-	//Delta azimuth of TEI
-	double dpsi_tei = 0.0;
-	//Delta V of TEI
-	double dv_tei = 0.0;
-	//DT of Transearth (TEI to EI)
-	double T_te = 0.0;
-	//Inclination of free return
-	double incl_fr = 0.0;
-	//GMT of TLI pericynthion
-	double GMT_pc1 = 0.0;
-	//GMT of LOI pericynthion
-	double GMT_pc2 = 0.0;
 	double dt_upd_nom = 0.0;//???
+
+	union
+	{
+		double data[25];
+		struct
+		{
+			//EMP latitude of TLI pericynthion
+			double lat_pc1;
+			//EMP latitude of LOI pericynthion
+			double lat_pc2;
+			//EMP longitude of TLI pericynthion
+			double lng_pc1;
+			//EMP longitude of LOI pericynthion
+			double lng_pc2;
+			//Height of TLI pericynthion
+			double h_pc1;
+			//Height of LOI pericynthion
+			double h_pc2;
+			//GET of TLI Ignition
+			double GET_TLI;
+			//GMT of Node
+			double GMT_nd;
+			//Latitude of Node
+			double lat_nd;
+			//Longitude of Node
+			double lng_nd;
+			//Height of Node
+			double h_nd;
+			//Delta Azimuth of LOI
+			double dpsi_loi;
+			//Flight Path Angle of LOI
+			double gamma_loi;
+			//DT of LPO (LOI to TEI)
+			double T_lo;
+			//DT of LLS (LOI to LLS first pass)
+			double dt_lls;
+			//Azimuth of LLS
+			double psi_lls;
+			//Latitude of LLS
+			double lat_lls;
+			//Longitude of LLS
+			double lng_lls;
+			//Radius of LLS
+			double rad_lls;
+			//Delta azimuth of TEI
+			double dpsi_tei;
+			//Delta V of TEI
+			double dv_tei;
+			//DT of Transearth (TEI to EI)
+			double T_te;
+			//Inclination of free return
+			double incl_fr;
+			//GMT of TLI pericynthion
+			double GMT_pc1;
+			//GMT of LOI pericynthion
+			double GMT_pc2;
+		};
+	};
 };
 
 struct TLMCCMEDQuantities

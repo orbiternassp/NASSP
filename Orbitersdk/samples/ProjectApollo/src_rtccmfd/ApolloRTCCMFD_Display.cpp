@@ -841,15 +841,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Config", 6);
 
-		if (GC->rtcc->MissionFileName[0] == 0)
-		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Not loaded!", 11);
-		}
-		else
-		{
-			sprintf(Buffer, "%s", GC->rtcc->MissionFileName);
-			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-		}
+		skp->Text(1 * W / 8, 2 * H / 14, "RTCC Files", 10);
 
 		sprintf(Buffer, "%02d:%02d:%04d", GC->rtcc->GZGENCSN.DayofLiftoff, GC->rtcc->GZGENCSN.MonthofLiftoff, GC->rtcc->GZGENCSN.Year);
 		skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
@@ -861,8 +853,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(4 * W / 8, 8 * H / 14, "Update Liftoff Time", 19);
-
-
 
 		if (G->vesseltype == 0)
 		{
@@ -2812,7 +2802,32 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 31)
 	{
-		//Spare
+		skp->Text(5 * W / 8, 1 * H / 28, "RTCC Files", 10);
+
+		skp->Text(1 * W / 16, 2 * H / 14, "Constants:", 10);
+		skp->Text(1 * W / 16, 4 * H / 14, "TLI:", 4);
+		skp->Text(1 * W / 16, 6 * H / 14, "SFP:", 4);
+		skp->Text(1 * W / 16, 8 * H / 14, "Init:", 5);
+
+		skp->Text(6 * W / 16, 2 * H / 14, GC->rtcc->SystemParametersFile.c_str(), GC->rtcc->SystemParametersFile.size());
+		skp->Text(6 * W / 16, 4 * H / 14, GC->rtcc->TLIFile.c_str(), GC->rtcc->TLIFile.size());
+		skp->Text(6 * W / 16, 6 * H / 14, GC->rtcc->SFPFile.c_str(), GC->rtcc->SFPFile.size());
+
+		sprintf(Buffer, "%d-%02d-%02d Init", GC->rtcc->GZGENCSN.Year, GC->rtcc->GZGENCSN.MonthofLiftoff, GC->rtcc->GZGENCSN.DayofLiftoff);
+		skp->Text(6 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		switch (status)
+		{
+		case 1:
+			skp->Text(4 * W / 16, 13 * H / 14, "File loaded!", 12);
+			break;
+		case 2:
+			skp->Text(4 * W / 16, 13 * H / 14, "File not found!", 15);
+			break;
+		case 3:
+			skp->Text(4 * W / 16, 13 * H / 14, "Error loading file!", 19);
+			break;
+		}
 	}
 	else if (screen == 32)
 	{
