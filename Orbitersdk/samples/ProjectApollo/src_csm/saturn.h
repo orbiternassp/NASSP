@@ -584,7 +584,7 @@ public:
 		// used.
 		//
 
-		// VC Sutfaces
+		// VC Surfaces
 		SRF_VC_DSKYDISP,
 		SRF_VC_DSKY_LIGHTS,
 		SRF_VC_DIGITALDISP,
@@ -610,6 +610,7 @@ public:
 		SRF_VC_CWS_GNLIGHTS,
 		SRF_VC_DIGITAL90,
 		SRF_VC_EVENT_TIMER_DIGITS90,
+		SRF_VC_ABORT,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1374,12 +1375,6 @@ protected:
 	/// \brief SII Sep light.
 	///
 	bool SIISepState;
-
-	///
-	/// Abort light. True if ABORT light is lit.
-	/// \brief Abort light.
-	///
-	bool ABORT_IND;
 
 	///
 	/// Interstage attached flag. True if interstage is attached.
@@ -4115,6 +4110,7 @@ protected:
 	void MoveTHC(bool dir);
 
 	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs, int xTexMul = 1);
+	bool AbortLightLogic();
 
 	void ClearPropellants();
 	void ClearThrusters();

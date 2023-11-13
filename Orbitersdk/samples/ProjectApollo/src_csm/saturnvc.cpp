@@ -586,6 +586,7 @@ void Saturn::InitVC()
 	srf[SRF_VC_CWS_GNLIGHTS] = oapiLoadTexture("ProjectApollo/VC/csm_lower_equip_bay_lights.dds");
 	srf[SRF_VC_DIGITAL90] = oapiLoadTexture("ProjectApollo/VC/digitaldisp90.dds");
 	srf[SRF_VC_EVENT_TIMER_DIGITS90] = oapiLoadTexture("ProjectApollo/VC/event_timer90.dds");
+	srf[SRF_VC_ABORT] = oapiLoadTexture("ProjectApollo/VC/abort.dds");
 
 	// Set Colour Key
 
@@ -611,6 +612,7 @@ void Saturn::InitVC()
 	oapiSetSurfaceColourKey(srf[SRF_VC_CWS_GNLIGHTS], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITAL90], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_EVENT_TIMER_DIGITS90], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_ABORT], ck);
 
 	//
 	// Register active areas for repainting here
@@ -634,6 +636,8 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_ASCPDISPLAYROLL, _R(1224*TexMul, 1830*TexMul, 1254*TexMul, 1842*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_ASCPDISPLAYPITCH, _R(1224*TexMul, 1892*TexMul, 1254*TexMul, 1904*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_ASCPDISPLAYYAW, _R(1224*TexMul, 1954*TexMul, 1254*TexMul, 1966*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	oapiVCRegisterArea(AID_VC_ABORT_BUTTON, _R(1887 * TexMul, 1286 * TexMul, 1949 * TexMul, 1317 * TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// Panel 2
 	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254*TexMul, 1235*TexMul, 359*TexMul, 1411*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
@@ -1724,14 +1728,14 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		dsky2.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, false, TexMul);
 		return true;
 
-	/*case AID_ABORT_BUTTON:
-		if (ABORT_IND) {
-			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
+	case AID_VC_ABORT_BUTTON:
+		if (AbortLightLogic()) {
+			oapiBlt(surf, srf[SRF_VC_ABORT], 0, 0, 62 * TexMul, 0, 62 * TexMul, 31 * TexMul);
 		}
 		else {
-			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
+			oapiBlt(surf,srf[SRF_VC_ABORT], 0, 0, 0, 0, 62 * TexMul, 31 * TexMul);
 		}
-		return true;*/
+		return true;
 		
 	case AID_VC_MASTER_ALARM:
 		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_LEFT, TexMul);
