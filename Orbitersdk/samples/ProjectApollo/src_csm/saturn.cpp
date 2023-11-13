@@ -667,7 +667,6 @@ void Saturn::initSaturn()
 	//
 	S1bPanel = false;
 
-	ABORT_IND = false;
 	LEM_DISPLAY=false;
 	ASTPMission = false;
 
@@ -1785,7 +1784,6 @@ int Saturn::GetMainState()
 	state.Scorrec = Scorrec;
 	state.Burned = Burned;
 	state.FireLEM = FireLEM;
-	state.ABORT_IND = ABORT_IND;
 	state.FireTJM = FireTJM;
 	state.viewpos = viewpos;
 	state.PayloadDataTransfer = PayloadDataTransfer;
@@ -1814,7 +1812,6 @@ void Saturn::SetMainState(int s)
 	Scorrec = state.Scorrec;
 	Burned = state.Burned;
 	FireLEM = state.FireLEM;
-	ABORT_IND = state.ABORT_IND;
 	FireTJM = state.FireTJM;
 	viewpos = state.viewpos;
 	PayloadDataTransfer = (state.PayloadDataTransfer != 0);
