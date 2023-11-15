@@ -4436,39 +4436,52 @@ int ARCore::subThread()
 	{
 		if (GC->MissionPlanningActive)
 		{
+			//With the MPT, just call the MED function
 			std::vector<std::string> data;
 			GC->rtcc->PMMMED("78", data);
 		}
 		else
 		{
+			//Without the MPT, get the TIG and DV from the MCC or LOI table
+
 			VECTOR3 dv;
-			double tig;
+			double gmt_tig;
+
+			int num = GC->rtcc->med_m78.ManeuverNumber;
 
 			if (GC->rtcc->med_m78.Type)
 			{
-				if (GC->rtcc->med_m78.ManeuverNumber < 1 || GC->rtcc->med_m78.ManeuverNumber > 8)
+				//LOI
+				if (num < 1 || num > 8)
 				{
 					Result = DONE;
 					break;
 				}
-				tig = GC->rtcc->GETfromGMT(GC->rtcc->PZLRBELM.sv_man_bef[GC->rtcc->med_m78.ManeuverNumber - 1].GMT);
-				dv = GC->rtcc->PZLRBELM.V_man_after[GC->rtcc->med_m78.ManeuverNumber - 1] - GC->rtcc->PZLRBELM.sv_man_bef[GC->rtcc->med_m78.ManeuverNumber - 1].V;
+				gmt_tig = GC->rtcc->PZLRBELM.sv_man_bef[num - 1].GMT;
+				dv = GC->rtcc->PZLRBELM.V_man_after[num - 1] - GC->rtcc->PZLRBELM.sv_man_bef[num - 1].V;
 			}
 			else
 			{
-				if (GC->rtcc->med_m78.ManeuverNumber < 1 || GC->rtcc->med_m78.ManeuverNumber > 4)
+				//MCC
+				if (num < 1 || num > 4)
 				{
 					Result = DONE;
 					break;
 				}
-				tig = GC->rtcc->GETfromGMT(GC->rtcc->PZMCCXFR.sv_man_bef[GC->rtcc->med_m78.ManeuverNumber - 1].GMT);
-				dv = GC->rtcc->PZMCCXFR.V_man_after[GC->rtcc->med_m78.ManeuverNumber - 1] - GC->rtcc->PZMCCXFR.sv_man_bef[GC->rtcc->med_m78.ManeuverNumber - 1].V;
+				gmt_tig = GC->rtcc->PZMCCXFR.sv_man_bef[num - 1].GMT;
+				dv = GC->rtcc->PZMCCXFR.V_man_after[num - 1] - GC->rtcc->PZMCCXFR.sv_man_bef[num - 1].V;
 			}
 
-			SV sv_pre, sv_post, sv_tig;
-			double attachedMass = 0.0;
-			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
-			sv_tig = GC->rtcc->coast(sv_now, tig - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
+			EphemerisData sv_now, sv_tig;
+			double mass, dt, attachedMass;
+			int ITS;
+
+			sv_now = GC->rtcc->StateVectorCalcEphem(vessel);
+			mass = vessel->GetMass();
+
+			//Propagate to TIG
+			dt = gmt_tig - sv_now.GMT;
+			GC->rtcc->PMMCEN(sv_now, 0.0, 0.0, 1, abs(dt), dt >= 0.0 ? 1.0 : -1.0, sv_tig, ITS);
 
 			if (vesselisdocked)
 			{
@@ -4478,7 +4491,7 @@ int ARCore::subThread()
 			{
 				attachedMass = 0.0;
 			}
-			GC->rtcc->PoweredFlightProcessor(sv_tig, tig, GC->rtcc->med_m78.Thruster, attachedMass, dv, false, P30TIG, dV_LVLH, sv_pre, sv_post);
+			GC->rtcc->PoweredFlightProcessor(sv_tig, mass, GC->rtcc->GETfromGMT(gmt_tig), GC->rtcc->med_m78.Thruster, attachedMass, dv, false, P30TIG, dV_LVLH);
 		}
 
 		Result = DONE;
