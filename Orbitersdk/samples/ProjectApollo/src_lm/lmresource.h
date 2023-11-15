@@ -843,6 +843,7 @@
 #define IDB_BORDER_104x106              2021
 #define IDB_BORDER_286x197              2022
 #define AID_DUMMY_PANEL_AREA			2023
+#define AID_LEM_PWRFAIL_RNGALTRATE      2024
 
 // VC Active Areas
 #define AID_VC_OVERHEADHATCH            3000

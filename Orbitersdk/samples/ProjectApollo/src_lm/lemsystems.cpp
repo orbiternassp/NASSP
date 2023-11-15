@@ -2823,13 +2823,69 @@ LEM_RadarTape::LEM_RadarTape()
 	desRate = 0.0;
 }
 
-void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src, SURFHANDLE surf1, SURFHANDLE surf2){
+void LEM_RadarTape::Init(LEM* s, e_object* dc_src, e_object* ac_src, SURFHANDLE surf1, SURFHANDLE surf2) {
 	lem = s;
 	dc_source = dc_src;
 	ac_source = ac_src;
 	tape1 = surf1;
 	tape2 = surf2;
 }
+
+// Power signal monitor - The power signal monitor provides an alarm light in the event of:
+// (a) alternating current voltage below 85 volts 
+// (b) direct current voltage below 20 volts 
+// (c) input data loss
+bool LEM_RadarTape::PowerSignalMonOn()
+{
+	if (dc_source->Voltage() > 2.0 && (PowerFailure() == true || SignalFailure() == true || TimingFailure() == true)) { //Checks if DC power (2V to light the lamp) is present and the logic for power/signal/timing present
+		return true;
+	}
+	return false;
+}
+
+bool LEM_RadarTape::PowerFailure()
+{
+	if (ac_source->Voltage() < 85.0 || dc_source->Voltage() < 20.0) { //Checks AC <85V and DC <20V
+		return true;
+	}
+	return false;
+}
+
+bool LEM_RadarTape::SignalFailure()
+{
+	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
+	{
+		if (lem->RR.GetNoTrackSignal() == true)
+		{
+			return true; //Needs to check rendezvous radar rate and range signals and return true if not present
+		}
+	}
+	else {
+		if (lem->ModeSelSwitch.IsUp()) // LR
+		{
+			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false)
+			{
+				return true; //Needs to check landing radar rate and range signals and return true if not present
+			}
+		}
+		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
+		{
+			return false; //Needs to check LGC rate and range signals and return true if not present
+		}
+		else //AGS
+		{
+			return false; //Needs to check AGS rate and range signals and return true if not present
+		}
+		return false;
+	}
+	return false;
+}
+
+bool LEM_RadarTape::TimingFailure()
+{
+	return false; //Needs to check for 512 KHz PCMTEA timing signal
+}
+
 
 void LEM_RadarTape::Timestep(double simdt) {
 	
