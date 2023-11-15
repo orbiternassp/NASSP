@@ -1754,7 +1754,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_LM = StateVectorCalc(calcParams.tgt);
 		sv_DOI = ExecuteManeuver(sv_LM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
 
-		dt_peri = OrbMech::timetoperi_integ(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, sv_DOI.gravref);
+		dt_peri = OrbMech::timetoperi_integ(SystemParameters.AGCEpoch, sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, sv_DOI.gravref);
 		t_Abort = (sv_DOI.MJD - GETbase)*24.0*3600.0 + dt_peri;
 
 		t_TPI_guess = OrbMech::HHMMSSToSS(103, 9, 0);
@@ -2515,7 +2515,7 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 		sv_CDH_apo.V = OrbMech::CoellipticDV(sv_CDH.R, R_P_CDH1, V_P_CDH1, OrbMech::mu_Moon);
 
 		//Find TPI time and recycle
-		dt_TPI = OrbMech::findelev(sv_CDH_apo.R, sv_CDH_apo.V, sv_P_CDH.R, sv_P_CDH.V, sv_CDH_apo.MJD, 26.6*RAD, sv_CDH_apo.gravref);
+		dt_TPI = OrbMech::findelev(SystemParameters.AGCEpoch, sv_CDH_apo.R, sv_CDH_apo.V, sv_P_CDH.R, sv_P_CDH.V, sv_CDH_apo.MJD, 26.6*RAD, sv_CDH_apo.gravref);
 		t_TPI_apo = t_CDH + dt_TPI;
 		ddt = t_TPI - t_TPI_apo;
 		dt += ddt;

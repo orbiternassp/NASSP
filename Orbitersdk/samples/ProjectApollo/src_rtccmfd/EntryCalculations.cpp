@@ -3203,7 +3203,7 @@ EarthEntry::EarthEntry(RTCC *r, VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE 
 
 	dt0 = EntryTIGcor - get;
 
-	OrbMech::oneclickcoast(R0B, V0B, mjd, dt0, R11B, V11B, gravref, hEarth);
+	OrbMech::oneclickcoast(pRTCC->SystemParameters.AGCEpoch, R0B, V0B, mjd, dt0, R11B, V11B, gravref, hEarth);
 
 	x2 = OrbMech::cot(PI05 - EntryAng);
 
@@ -3537,7 +3537,7 @@ void EarthEntry::precisionperi(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21,
 		x = (VR0 - dv*fac2) / (VT0 - dv*fac1);
 		i++;
 	}
-	t21 = OrbMech::time_radius_integ(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, RPRE, VPRE);
+	t21 = OrbMech::time_radius_integ(pRTCC->SystemParameters.AGCEpoch, R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, RPRE, VPRE);
 	N = crossp(unit(RPRE), unit(VPRE));
 	sing = length(N);
 	cosg = dotp(unit(RPRE), unit(VPRE));
@@ -3577,7 +3577,7 @@ void EarthEntry::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double 
 	VECTOR3 N;
 	double beta12, x2PRE, c3, alpha_N, sing, cosg, p_N, beta2, beta3, beta4, RF, phi4, dt21, beta13, dt21apo, beta14;
 
-	OrbMech::oneclickcoast(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, t21, RPRE, VPRE, hEarth, hEarth);
+	OrbMech::oneclickcoast(pRTCC->SystemParameters.AGCEpoch, R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, t21, RPRE, VPRE, hEarth, hEarth);
 
 	beta12 = 100.0;
 	x2PRE = 1000000;
@@ -3634,7 +3634,7 @@ void EarthEntry::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double 
 			dt21 = beta14*dt21apo;
 		}
 		dt21apo = dt21;
-		OrbMech::oneclickcoast(RPRE, VPRE, mjd + (dt0 + dt1 + t21) / 24.0 / 3600.0, dt21, RPRE, VPRE, hEarth, hEarth);
+		OrbMech::oneclickcoast(pRTCC->SystemParameters.AGCEpoch, RPRE, VPRE, mjd + (dt0 + dt1 + t21) / 24.0 / 3600.0, dt21, RPRE, VPRE, hEarth, hEarth);
 		t21 += dt21;
 		//}
 	}
@@ -3824,7 +3824,7 @@ bool EarthEntry::EntryIter()
 	errorstate = 0;
 
 	dt1 = EntryTIGcor - get - dt0;
-	OrbMech::oneclickcoast(R11B, V11B, mjd + dt0 / 24.0 / 3600.0, dt1, R1B, V1B, hEarth, hEarth);
+	OrbMech::oneclickcoast(pRTCC->SystemParameters.AGCEpoch, R11B, V11B, mjd + dt0 / 24.0 / 3600.0, dt1, R1B, V1B, hEarth, hEarth);
 	if (precision == 2)
 	{
 		precisionperi(R1B, V1B, EntryTIGcor, t21, x, theta_long, theta_lat, V2);
@@ -3898,7 +3898,7 @@ bool EarthEntry::EntryIter()
 		double t32, dt22, v3, S_FPA;
 
 		t2 = EntryTIGcor + t21;
-		OrbMech::time_radius_integ(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, REI, VEI);//Maneuver to Entry Interface (400k ft)
+		OrbMech::time_radius_integ(pRTCC->SystemParameters.AGCEpoch, R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, REI, VEI);//Maneuver to Entry Interface (400k ft)
 
 		t32 = OrbMech::time_radius(REI, VEI, length(REI) - 30480.0, -1, mu);
 		OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, mu); //Entry Interface to 300k ft
@@ -3912,7 +3912,7 @@ bool EarthEntry::EntryIter()
 
 		VECTOR3 Rsph, Vsph;
 
-		OrbMech::oneclickcoast(R1B, V1B, mjd + (dt0 + dt1) / 24.0 / 3600.0, 0.0, Rsph, Vsph, hEarth, hEarth);
+		OrbMech::oneclickcoast(pRTCC->SystemParameters.AGCEpoch, R1B, V1B, mjd + (dt0 + dt1) / 24.0 / 3600.0, 0.0, Rsph, Vsph, hEarth, hEarth);
 		DV = V2 - V1B;
 		VECTOR3 i, j, k;
 		MATRIX3 Q_Xx;
@@ -6532,7 +6532,7 @@ bool RTEMoon::MASTER()
 
 		if (IOUT == false)
 		{
-			OrbMech::oneclickcoast(sv0.R, sv0.V, GMTBASE + sv0.GMT / 24.0 / 3600.0, dTIG, sv0.R, sv0.V, hMoon, hMoon);
+			OrbMech::oneclickcoast(pRTCC->SystemParameters.AGCEpoch, sv0.R, sv0.V, GMTBASE + sv0.GMT / 24.0 / 3600.0, dTIG, sv0.R, sv0.V, hMoon, hMoon);
 			sv0.GMT += dTIG;
 		}
 	}
@@ -6584,7 +6584,7 @@ bool RTEMoon::MASTER()
 	H_EI_equ = unit(N);
 	ReturnInclination = -acos(H_EI_equ.z)*INTER;
 
-	OrbMech::timetoperi_integ(sv0.R, Vig_apo, OrbMech::MJDfromGET(sv0.GMT, GMTBASE), pRTCC->GetGravref(hMoon), pRTCC->GetGravref(hMoon), R_peri, V_peri);
+	OrbMech::timetoperi_integ(pRTCC->SystemParameters.AGCEpoch, sv0.R, Vig_apo, OrbMech::MJDfromGET(sv0.GMT, GMTBASE), pRTCC->GetGravref(hMoon), pRTCC->GetGravref(hMoon), R_peri, V_peri);
 	FlybyPeriAlt = length(R_peri) - R_M;
 
 	return true;
