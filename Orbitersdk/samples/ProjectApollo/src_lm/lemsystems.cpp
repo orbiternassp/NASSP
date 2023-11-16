@@ -3206,10 +3206,14 @@ void CrossPointer::DefineMeshGroup(UINT _grpX, UINT _grpY)
 	grpY = _grpY;
 }
 
-void CrossPointer::DefineVCAnimations(UINT vc_idx)
+void CrossPointer::DefineVCAnimations(UINT vc_idx, bool left)
 {
-	xtrans = new MGROUP_TRANSLATE(vc_idx, &grpX, 1, xvector);
-	ytrans = new MGROUP_TRANSLATE(vc_idx, &grpY, 1, yvector);
+	VECTOR3 rot_point = _V(0.380, 0.673, 1.819);
+	if (left == true) {
+		rot_point.x *= -1;
+	}
+	xtrans = new MGROUP_ROTATE(vc_idx, &grpX, 1, rot_point, _V(1, 0, 0), (float)(37 * RAD));
+	ytrans = new MGROUP_ROTATE(vc_idx, &grpY, 1, rot_point, _V(0, -1, 0), (float)(37 * RAD));
 	anim_xpointerx = lem->CreateAnimation(0.5);
 	anim_xpointery = lem->CreateAnimation(0.5);
 	lem->AddAnimationComponent(anim_xpointerx, 0.0f, 1.0f, xtrans);
