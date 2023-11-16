@@ -301,7 +301,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class TempMonitorInd : public LinearMeter {
+class TempMonitorInd : public CurvedMeter {
 public:
 	TempMonitorInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
