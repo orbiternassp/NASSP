@@ -3108,8 +3108,8 @@ void LEM::DefineVCAnimations()
 	RRGyroSelSwitch.DefineMeshGroup(VC_GRP_Sw_RRGyro);
 
 	MainPanelVC.DefineVCAnimations(vcidx);
-	crossPointerLeft.DefineVCAnimations(vcidx);
-	crossPointerRight.DefineVCAnimations(vcidx);
+	crossPointerLeft.DefineVCAnimations(vcidx, true);
+	crossPointerRight.DefineVCAnimations(vcidx, false);
 
 	InitFDAI(vcidx);
 }

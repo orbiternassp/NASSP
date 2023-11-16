@@ -190,7 +190,7 @@ public:
 
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	void SetDirection(const VECTOR3 &xvec, const VECTOR3 &yvec);
-	void DefineVCAnimations(UINT vc_idx);
+	void DefineVCAnimations(UINT vc_idx, bool left);
 	void DefineMeshGroup(UINT _grpX, UINT _grpY);
 
 	bool IsPowered();
@@ -207,7 +207,7 @@ protected:
 	UINT grpX, grpY;
 
 	VECTOR3 xvector, yvector;
-	MGROUP_TRANSLATE *xtrans, *ytrans;
+	MGROUP_ROTATE *xtrans, *ytrans;
 };
 
 #define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
