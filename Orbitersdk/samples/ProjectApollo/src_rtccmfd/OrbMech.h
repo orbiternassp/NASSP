@@ -134,7 +134,7 @@ struct LGCIgnitionConstants
 class CoastIntegrator
 {
 public:
-	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, int planet, int outplanet);
+	CoastIntegrator(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, int planet, int outplanet);
 	~CoastIntegrator();
 	bool iteration(bool allow_stop = true);
 
@@ -229,8 +229,8 @@ namespace OrbMech {
 	OELEMENTS coe_from_sv(VECTOR3 R, VECTOR3 V, double mu);
 	VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu);
 	void SolveQuartic(double *A, double *R, int &N);
-	VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, int gravref, int gravin, int gravout, VECTOR3 V_guess, double tol = 0.1);
-	double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref);
+	VECTOR3 Vinti(int Epoch, VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, int gravref, int gravin, int gravout, VECTOR3 V_guess, double tol = 0.1);
+	double NSRsecant(int Epoch, VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref);
 	void ra_and_dec_from_r(VECTOR3 R, double &ra, double &dec);
 	void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	double time_theta(VECTOR3 R, VECTOR3 V, double dtheta, double mu);
@@ -244,23 +244,23 @@ namespace OrbMech {
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
-	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
-	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);
+	double timetoperi_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
+	double timetoperi_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);
 	double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s = 0);
-	double timetonode_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 u_node, VECTOR3 &R2, VECTOR3 &V2);
+	double timetonode_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 u_node, VECTOR3 &R2, VECTOR3 &V2);
 	double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu);
-	double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout);
-	double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE);
-	void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double phi, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri);
+	double time_radius_integ(int Epoch, VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout);
+	double time_radius_integ(int Epoch, VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE);
+	void ReturnPerigee(int Epoch, VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double phi, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri);
 	MATRIX3 GetRotationMatrix(int plan, double t);
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
 	void PACSS13_from_coe(OELEMENTS coe, double lat, double A_Z, double mu, VECTOR3 &R_S, VECTOR3 &V_S);
 	MATRIX3 MSGMatrix(double phi_L, double A_Z);
 	MATRIX3 MEGMatrix(double theta_E);
 	double GetPlanetCurrentRotation(int plan, double t);
-	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref);
+	double findelev(int Epoch, VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref);
 	double findelev_conic(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double E, double mu);
-	double findelev_gs(MATRIX3 Rot_J_B, VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);
+	double findelev_gs(int Epoch, MATRIX3 Rot_J_B, VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);
 	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA);
 	int FindNearestStar(const std::vector<VECTOR3> &navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
 	VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL);
@@ -274,9 +274,9 @@ namespace OrbMech {
 	MATRIX3 ROTCOMP(VECTOR3 U_R, double A);
 	VECTOR3 backupgdcalignment(const std::vector<VECTOR3> &navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
 	MATRIX3 AGSStarAlignment(const std::vector<VECTOR3> &navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter);
-	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
-	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout);
-	SV coast(SV sv0, double dt);
+	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
+	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout);
+	SV coast(int Epoch, SV sv0, double dt);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future = false);
@@ -303,9 +303,9 @@ namespace OrbMech {
 	void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &m_cutoff, double &t_go);
 	//void poweredflight2(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go);
 	VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0);
-	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
-	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
-	void impulsive2(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
+	void impulsive(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
+	void impulsive(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
+	void impulsive2(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
 	void checkstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
 	void coascheckstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
 	bool AOTcheckstar(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double AZ, double EL);
@@ -315,7 +315,7 @@ namespace OrbMech {
 	void RADUP(VECTOR3 R_W, VECTOR3 V_W, VECTOR3 R_C, double mu, VECTOR3 &R_W1, VECTOR3 &V_W1);
 	void COE(VECTOR3 R, VECTOR3 V, double h, double mu, VECTOR3 &R_C, VECTOR3 &V_C);
 	void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo, double dx0 = 1.0);
-	bool QDRTPI(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J);
+	bool QDRTPI(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J);
 	bool CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH, double mu, double &dv);
 	VECTOR3 CoellipticDV(VECTOR3 R_A2, VECTOR3 R_PC, VECTOR3 V_PC, double mu);
 	VECTOR3 ApplyHorizontalDV(VECTOR3 R, VECTOR3 V, double dv);
@@ -399,14 +399,14 @@ namespace OrbMech {
 	CELEMENTS KeplerToEquinoctial(CELEMENTS kep);
 	CELEMENTS EquinoctialToKepler(CELEMENTS aeq);
 	void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double &l_dot, double &g_dot, double &h_dot);
-	SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN = 0.0);
-	SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
-	SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMAEGS(int Epoch, SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMAEG(int Epoch, SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMLAEG(int Epoch, SV sv0, int opt, double param, bool &error, double DN = 0.0);
 	//Inertial to Keplerian Conversion Subroutine
 	CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu);
 	//Keplerian to Inertial Conversion Subroutine
 	void GIMKIC(CELEMENTS elem, double mu, VECTOR3 &R, VECTOR3 &V);
-	SV PositionMatch(SV sv_A, SV sv_P, double mu);
+	SV PositionMatch(int Epoch, SV sv_A, SV sv_P, double mu);
 	//Phase angle determination
 	double THETR(double u1, double u2, double i1, double i2, double h1, double h2);
 	double PHSANG(VECTOR3 R, VECTOR3 V, VECTOR3 R_D);
