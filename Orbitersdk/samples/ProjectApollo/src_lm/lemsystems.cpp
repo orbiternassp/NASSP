@@ -2883,7 +2883,11 @@ bool LEM_RadarTape::SignalFailure()
 
 bool LEM_RadarTape::TimingFailure()
 {
-	return false; //Needs to check for 512 KHz PCMTEA timing signal
+	if (lem->PCM.TimingSignal() == false)
+	{
+		return true; //Needs to check for 512 KHz PCMTEA timing signal
+	}
+		return false;
 }
 
 
