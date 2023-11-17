@@ -178,6 +178,7 @@ private:
 	double lgc_alt, lgc_altrate;
 	SURFHANDLE tape1, tape2;
 	double desRange, desRate;
+	double 	LGCaltUpdateTime, LGCaltRateUpdateTime;
 };
 
 class CrossPointer

@@ -2821,6 +2821,8 @@ LEM_RadarTape::LEM_RadarTape()
 	lgc_altrate = 0;
 	desRange = 0.0;
 	desRate = 0.0;
+	LGCaltUpdateTime = 0.0;
+	LGCaltRateUpdateTime = 0.0;
 }
 
 void LEM_RadarTape::Init(LEM* s, e_object* dc_src, e_object* ac_src, SURFHANDLE surf1, SURFHANDLE surf2) {
@@ -2870,7 +2872,10 @@ bool LEM_RadarTape::SignalFailure()
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
-			return false; //Needs to check LGC rate and range signals and return true if not present
+			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime())
+			{
+				return true; //Needs to check LGC rate and range signals and return true if not present
+			}
 		}
 		else //AGS
 		{
@@ -3009,6 +3014,8 @@ void LEM_RadarTape::SystemTimestep(double simdt) {
 
 	if (dc_source)
 		dc_source->DrawPower(2.1);
+
+	sprintf(oapiDebugString(), "SimTime %1f Alt Time %1f Alt Rate Time %1f", oapiGetSimTime(), LGCaltUpdateTime, LGCaltRateUpdateTime);
 }
 
 bool LEM_RadarTape::IsPowered()
@@ -3033,6 +3040,8 @@ void LEM_RadarTape::SetLGCAltitude(int val) {
 	//}
 
 	lgc_alt = (2.345*0.3048*pulses);
+
+	LGCaltUpdateTime = oapiGetSimTime();
 }
 
 void LEM_RadarTape::SetLGCAltitudeRate(int val) {
@@ -3050,6 +3059,8 @@ void LEM_RadarTape::SetLGCAltitudeRate(int val) {
 	}
 
 	lgc_altrate = -(0.5*0.3048*pulses);
+
+	LGCaltRateUpdateTime = oapiGetSimTime();
 }
 
 void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
