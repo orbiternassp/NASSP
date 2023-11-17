@@ -2815,14 +2815,18 @@ LEM_RadarTape::LEM_RadarTape()
 	dc_source = NULL;
 	reqRange = 0;
 	reqRate = 0;
-	dispRange = 0.0;
-	dispRate = 0.0;
+	dispRange = 0;
+	dispRate = 0;
 	lgc_alt = 0;
 	lgc_altrate = 0;
-	desRange = 0.0;
-	desRate = 0.0;
-	LGCaltUpdateTime = 0.0;
-	LGCaltRateUpdateTime = 0.0;
+	ags_alt = 0;
+	ags_altrate = 0;
+	desRange = 0;
+	desRate = 0;
+	LGCaltUpdateTime = 0;
+	LGCaltRateUpdateTime = 0;
+	AGSaltUpdateTime = 0;
+	AGSaltRateUpdateTime = 0;
 }
 
 void LEM_RadarTape::Init(LEM* s, e_object* dc_src, e_object* ac_src, SURFHANDLE surf1, SURFHANDLE surf2) {
@@ -2879,7 +2883,10 @@ bool LEM_RadarTape::SignalFailure()
 		}
 		else //AGS
 		{
-			return false; //Needs to check AGS rate and range signals and return true if not present
+			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime())
+			{
+				return true; //Needs to check AGS rate and range signals and return true if not present
+			}
 		}
 		return false;
 	}
@@ -2933,8 +2940,8 @@ void LEM_RadarTape::Timestep(double simdt) {
 		}
 		else //AGS
 		{
-			setRange(lem->aea.GetAltitude());
-			setRate(lem->aea.GetAltitudeRate());
+			setRange(ags_alt);
+			setRate(ags_altrate);
 		}
 
 	}
@@ -3015,7 +3022,7 @@ void LEM_RadarTape::SystemTimestep(double simdt) {
 	if (dc_source)
 		dc_source->DrawPower(2.1);
 
-	sprintf(oapiDebugString(), "SimTime %1f Alt Time %1f Alt Rate Time %1f", oapiGetSimTime(), LGCaltUpdateTime, LGCaltRateUpdateTime);
+	sprintf(oapiDebugString(), "SimTime %1f LGC Alt Time %.5f LGC AltRate Time %.5f AGS Alt Time %.5f AGS AltRate Time %.5f", oapiGetSimTime(), LGCaltUpdateTime, LGCaltRateUpdateTime, AGSaltUpdateTime, AGSaltRateUpdateTime);
 }
 
 bool LEM_RadarTape::IsPowered()
@@ -3061,6 +3068,37 @@ void LEM_RadarTape::SetLGCAltitudeRate(int val) {
 	lgc_altrate = -(0.5*0.3048*pulses);
 
 	LGCaltRateUpdateTime = oapiGetSimTime();
+}
+
+void LEM_RadarTape::AGSAltitudeAltitudeRate(int Data) {
+
+	if (!IsPowered()) { return; }
+
+		int DataVal;
+
+		AGSChannelValue40 val = lem->aea.GetOutputChannel(IO_ODISCRETES);
+
+		if (val[AGSAltitude] == 0)
+		{
+			DataVal = Data & 0777777;
+
+			ags_alt = (double)DataVal * ALTSCALEFACTOR;
+		}
+		else if (val[AGSAltitudeRate] == 0)
+		{
+			if (Data & 0400000) { // Negative
+				DataVal = -((~Data) & 0777777);
+				DataVal = -0400000 - DataVal;
+			}
+			else {
+				DataVal = Data & 0777777;
+			}
+
+			ags_altrate = -(double)DataVal * ALTRATESCALEFACTOR;
+		}
+
+	AGSaltUpdateTime = oapiGetSimTime();
+	AGSaltRateUpdateTime = oapiGetSimTime();
 }
 
 void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
