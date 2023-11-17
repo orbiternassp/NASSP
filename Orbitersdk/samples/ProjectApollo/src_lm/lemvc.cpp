@@ -68,7 +68,7 @@
 #define LM_VC_PWRFAIL_LIGHT_7		6   // Glycol
 #define LM_VC_PWRFAIL_LIGHT_8		7   // ECS quantity
 #define LM_VC_PWRFAIL_LIGHT_9		8   // X-pointer right
-#define LM_VC_PWRFAIL_LIGHT_10		9   // Range Rate Tape
+#define LM_VC_PWRFAIL_LIGHT_10		20   // Range Rate Tape
 
 // Panel tilt
 const double P1_TILT = 7.95581 * RAD;
