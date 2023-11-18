@@ -2920,18 +2920,18 @@ void LEM_RadarTape::Timestep(double simdt) {
 			{
 				setRange(lem->LR.GetAltitude());
 			}
-			else
+			/*else
 			{
 				setRange(0);
-			}
+			}*/
 			if (lem->LR.IsVelocityDataGood())
 			{
 				setRate(lem->LR.GetAltitudeRate());
 			}
-			else
+			/*else
 			{
 				setRate(0);
-			}
+			}*/
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
@@ -3022,7 +3022,7 @@ void LEM_RadarTape::SystemTimestep(double simdt) {
 	if (dc_source)
 		dc_source->DrawPower(2.1);
 
-	sprintf(oapiDebugString(), "SimTime %1f LGC Alt Time %.5f LGC AltRate Time %.5f AGS Alt Time %.5f AGS AltRate Time %.5f", oapiGetSimTime(), LGCaltUpdateTime, LGCaltRateUpdateTime, AGSaltUpdateTime, AGSaltRateUpdateTime);
+	//sprintf(oapiDebugString(), "SimTime %1f LGC Alt Time %.5f LGC AltRate Time %.5f AGS Alt Time %.5f AGS AltRate Time %.5f", oapiGetSimTime(), LGCaltUpdateTime, LGCaltRateUpdateTime, AGSaltUpdateTime, AGSaltRateUpdateTime);
 }
 
 bool LEM_RadarTape::IsPowered()

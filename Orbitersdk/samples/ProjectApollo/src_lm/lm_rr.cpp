@@ -609,19 +609,19 @@ void LEM_RR::Timestep(double simdt) {
 	{
 		rate = internalrangerate;
 	}
-	else
-	{
-		rate = 0.0;
-	}
+	//else
+	//{
+	//	rate = 0.0;
+	//}
 
 	if (RangeLock)
 	{
 		range = internalrange;
 	}
-	else
-	{
-		range = 0.0;
-	}
+	//else
+	//{
+	//	range = 0.0;
+	//}
 
 	//sprintf(oapiDebugString(), "Auto %d FreqLock %d Timer %f RLock %d DataGood %d", AutoTrackEnabled, FrequencyLock, RangeLockTimer, RangeLock, radarDataGood);
 
