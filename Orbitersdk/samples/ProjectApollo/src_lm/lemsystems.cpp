@@ -2815,8 +2815,8 @@ LEM_RadarTape::LEM_RadarTape()
 	dc_source = NULL;
 	reqRange = 0;
 	reqRate = 0;
-	dispRange = 0;
-	dispRate = 0;
+	dispRange = 8321;	//Initializes range rate display to zero per LM closeout images
+	dispRate = 3759;	//Initializes range rate display to a non zero number, in this case -240, per LM closeout images
 	lgc_alt = 0;
 	lgc_altrate = 0;
 	ags_alt = 0;
