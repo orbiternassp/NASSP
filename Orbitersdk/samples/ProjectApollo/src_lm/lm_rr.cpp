@@ -297,8 +297,8 @@ void LEM_RR::Timestep(double simdt) {
 		radarDataGood = false;
 		FrequencyLock = false;
 		RangeLock = false;
-		range = 0.0;
-		rate = 0.0;
+		//range = 0.0;
+		//rate = 0.0;
 		sin_shaft = cos_shaft = sin_trunnion = cos_trunnion = 0.0;
 		lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, 0.0, AntennaGain*AntennaPolarValue, AntennaPhase);
 		return;
