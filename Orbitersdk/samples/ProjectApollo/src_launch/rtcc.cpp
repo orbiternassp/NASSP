@@ -8511,16 +8511,7 @@ double RTCC::GetDockedVesselMass(VESSEL *vessel)
 		hLM = vessel->GetDockStatus(dock);
 		lm = oapiGetVesselInterface(hLM);
 
-		//Special case: S-IVB, but we want the LM mass
-		if (utils::IsVessel(lm, utils::SaturnV_SIVB))
-		{
-			SIVB *sivb = (SIVB *)lm;
-			LMmass = sivb->GetPayloadMass();
-		}
-		else
-		{
-			LMmass = lm->GetMass();
-		}
+		LMmass = lm->GetMass();
 	}
 	else
 	{
