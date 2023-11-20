@@ -345,7 +345,12 @@ void LEM_AEA::Timestep(double simt, double simdt) {
 
 	//Determine if the AEA has power
 	powered = DeterminePowerState();
-	if (!IsPowered()) return;
+	if (!IsPowered())
+	{
+		// Reset last cycling time
+		LastCycled = 0;
+		return;
+	}
 
 	int Delta, CycleCount = 0;
 
