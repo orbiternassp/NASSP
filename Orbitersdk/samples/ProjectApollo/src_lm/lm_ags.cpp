@@ -349,6 +349,12 @@ void LEM_AEA::Timestep(double simt, double simdt) {
 	{
 		// Reset last cycling time
 		LastCycled = 0;
+		// Reset program counter to 6000 for power up
+		vags.ProgramCounter = 06000;
+		// Also reset overflow
+		vags.Overflow = 0;
+		// And inhibit engine on
+		OutputPorts[IO_ODISCRETES] |= 02000;
 		return;
 	}
 
