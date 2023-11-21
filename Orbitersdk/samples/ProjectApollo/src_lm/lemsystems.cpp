@@ -3083,7 +3083,10 @@ void LEM_RadarTape::AGSAltitudeAltitudeRate(int Data) {
 			DataVal = Data & 0777777;
 
 			ags_alt = (double)DataVal * ALTSCALEFACTOR;
+
+			AGSaltUpdateTime = oapiGetSimTime();
 		}
+
 		else if (val[AGSAltitudeRate] == 0)
 		{
 			if (Data & 0400000) { // Negative
@@ -3095,10 +3098,9 @@ void LEM_RadarTape::AGSAltitudeAltitudeRate(int Data) {
 			}
 
 			ags_altrate = -(double)DataVal * ALTRATESCALEFACTOR;
-		}
 
-	AGSaltUpdateTime = oapiGetSimTime();
-	AGSaltRateUpdateTime = oapiGetSimTime();
+			AGSaltRateUpdateTime = oapiGetSimTime();
+		}
 }
 
 void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
