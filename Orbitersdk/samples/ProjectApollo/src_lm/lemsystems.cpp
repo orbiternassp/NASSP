@@ -2861,7 +2861,7 @@ bool LEM_RadarTape::SignalFailure()
 {
 	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
 	{
-		if (lem->RR.IsRadarDataGood() == false)
+		if (lem->RR.IsRangeDataGood() == false || lem->RR.IsFrequencyDataGood() == false)
 		{
 			return true; //Needs to check rendezvous radar rate and range signals and return true if not present
 		}
