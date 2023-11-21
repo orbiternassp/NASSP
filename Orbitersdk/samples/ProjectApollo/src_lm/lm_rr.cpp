@@ -609,19 +609,19 @@ void LEM_RR::Timestep(double simdt) {
 	{
 		rate = internalrangerate;
 	}
-	//else
-	//{
-	//	rate = 0.0;
-	//}
+	/*else
+	{
+		rate = 0.0;
+	}*/
 
 	if (RangeLock)
 	{
 		range = internalrange;
 	}
-	//else
-	//{
-	//	range = 0.0;
-	//}
+	/*else
+	{
+		range = 0.0;
+	}*/
 
 	//sprintf(oapiDebugString(), "Auto %d FreqLock %d Timer %f RLock %d DataGood %d", AutoTrackEnabled, FrequencyLock, RangeLockTimer, RangeLock, radarDataGood);
 
@@ -721,15 +721,7 @@ void LEM_RR::SystemTimestep(double simdt) {
 		dc_source->DrawPower(150);
 		RREHeat->GenerateHeat(117);
 	}
-	/*
-	if (IsACPowered())
-	{
-		ac_source->DrawPower(13.8);
-		rrheat->GenerateHeat(13.8);
-	}
-	*/
 
-	
 	if (abs(shaftVel) > 0.01*RAD)
 	{
 		ac_source->DrawPower(13.8);

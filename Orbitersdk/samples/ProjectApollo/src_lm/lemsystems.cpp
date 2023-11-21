@@ -2861,7 +2861,7 @@ bool LEM_RadarTape::SignalFailure()
 {
 	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
 	{
-		if (lem->RR.GetNoTrackSignal() == true)
+		if (lem->RR.IsRadarDataGood() == false)
 		{
 			return true; //Needs to check rendezvous radar rate and range signals and return true if not present
 		}
@@ -3086,7 +3086,6 @@ void LEM_RadarTape::AGSAltitudeAltitudeRate(int Data) {
 
 			AGSaltUpdateTime = oapiGetSimTime();
 		}
-
 		else if (val[AGSAltitudeRate] == 0)
 		{
 			if (Data & 0400000) { // Negative
