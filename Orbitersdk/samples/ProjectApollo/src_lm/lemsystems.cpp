@@ -2841,9 +2841,12 @@ void LEM_RadarTape::Init(LEM* s, e_object* dc_src, e_object* ac_src, SURFHANDLE 
 // (a) alternating current voltage below 85 volts 
 // (b) direct current voltage below 20 volts 
 // (c) input data loss
+
+//FIXME: Need to investigate how the signals were interpreted, seems that near zero signal or zero signal generates the logic condition
+
 bool LEM_RadarTape::PowerSignalMonOn()
 {
-	if (dc_source->Voltage() > 2.0 && (PowerFailure() == true || SignalFailure() == true || TimingFailure() == true)) { //Checks if DC power (2V to light the lamp) is present and the logic for power/signal/timing present
+	if ((dc_source->Voltage() > 2 || ac_source->Voltage() > SP_MIN_ACVOLTAGE) && (PowerFailure() == true || SignalFailure() == true || TimingFailure() == true)) { //Checks if DC power (2V to light the lamp) is present and the logic for power/signal/timing present
 		return true;
 	}
 	return false;
@@ -2861,7 +2864,7 @@ bool LEM_RadarTape::SignalFailure()
 {
 	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
 	{
-		if (lem->RR.IsRangeDataGood() == false || lem->RR.IsFrequencyDataGood() == false)
+		if (lem->RR.IsRangeDataGood() == false || lem->RR.IsFrequencyDataGood() == false || lem->RR.GetRadarRange() < 5 || lem->RR.GetRadarRate() < 5)
 		{
 			return true; //Needs to check rendezvous radar rate and range signals and return true if not present
 		}
@@ -2869,21 +2872,21 @@ bool LEM_RadarTape::SignalFailure()
 	else {
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
-			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false)
+			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false || lem->LR.GetAltitude() < 5 || lem->LR.GetAltitudeRate() < 5)
 			{
 				return true; //Needs to check landing radar rate and range signals and return true if not present
 			}
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
-			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime())
+			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime() || lgc_alt < 5 || lgc_altrate < 5)
 			{
 				return true; //Needs to check LGC rate and range signals and return true if not present
 			}
 		}
 		else //AGS
 		{
-			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime())
+			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime() || ags_alt < 5 || ags_altrate < 5)
 			{
 				return true; //Needs to check AGS rate and range signals and return true if not present
 			}
@@ -2913,7 +2916,8 @@ void LEM_RadarTape::Timestep(double simdt) {
 	if( lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP ) {
 		setRange(lem->RR.GetRadarRange());
 		setRate(lem->RR.GetRadarRate());
-	} else {
+	} 
+	else {
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
 			if (lem->LR.IsRangeDataGood())

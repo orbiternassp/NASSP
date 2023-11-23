@@ -175,7 +175,7 @@ private:
 	double reqRange;
 	double reqRate;
 	double dispRange;
-	double  dispRate;
+	double dispRate;
 	double lgc_alt, lgc_altrate;
 	double ags_alt, ags_altrate;
 	SURFHANDLE tape1, tape2;
