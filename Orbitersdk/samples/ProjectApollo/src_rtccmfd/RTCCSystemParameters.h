@@ -1140,6 +1140,13 @@ struct RTCCSystemParameters
 		int N;
 	} MHVLCG, MHVACG, MHVCCG; //LM ascent+descent, LM ascent, CSM
 
+	//DPS engine gimbal plane
+	double MGVDGD = 154.0*0.0254;
+	//SPS engine gimbal plane
+	double MGVSGD = 833.2*0.0254;
+	//Distance between SPS and DPS gimbal planes
+	double MGVSTD = 435.55*0.0254;
+
 	//Matrix to convert from J2000 to NBY coordinates
 	MATRIX3 MAT_J2000_BRCS;
 	//MJD of midnight July 1st before launch
