@@ -2191,6 +2191,9 @@ bool RTCC::LoadMissionConstantsFile(std::string file)
 
 			papiReadScenario_int(Buff, "AGCEpoch", SystemParameters.AGCEpoch);
 			papiReadScenario_double(Buff, "TEPHEM0", SystemParameters.TEPHEM0); //Only load for Skylark
+			papiReadScenario_double(Buff, "MGVDGD", SystemParameters.MGVDGD);
+			papiReadScenario_double(Buff, "MGVSGD", SystemParameters.MGVSGD);
+			papiReadScenario_double(Buff, "MGVSTD", SystemParameters.MGVSTD);
 			papiReadScenario_int(Buff, "MCCLEX", SystemParameters.MCCLEX);
 			papiReadScenario_int(Buff, "MCCCXS", SystemParameters.MCCCXS);
 			papiReadScenario_int(Buff, "MCCLXS", SystemParameters.MCCLXS);
