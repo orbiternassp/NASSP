@@ -184,7 +184,7 @@ namespace mission {
 				sscanf(line + 12, "%d", &iSMJCVersion);
 			}
 			else if (!_strnicmp(line, "JMission=", 9)) {
-				strncpy(buffer, line + 9, 255);
+				sscanf(line + 9, "%s", buffer);
 				bJMission = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "Panel277Version=", 16)) {
@@ -197,48 +197,48 @@ namespace mission {
 				sscanf(line + 14, "%d", &iLMDSKYVersion);
 			}
 			else if (!_strnicmp(line, "HasLMProgramer=", 15)) {
-				strncpy(buffer, line + 15, 255);
+				sscanf(line + 15, "%s", buffer);
 				bHasLMProgramer = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "HasAEA=", 7)) {
-				strncpy(buffer, line + 7, 255);
+				sscanf(line + 7, "%s", buffer);
 				bHasAEA = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "LMHasAscEngArmAssy=", 19)) {
-				strncpy(buffer, line + 19, 255);
+				sscanf(line + 19, "%s", buffer);
 				bLMHasAscEngArmAssy = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "LMHasLegs=", 10)) {
-				strncpy(buffer, line + 10, 255);
+				sscanf(line + 10, "%s", buffer);
 				bLMHasLegs = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "LMHasDeflectors=", 16)) {
-				strncpy(buffer, line + 16, 255);
+				sscanf(line + 16, "%s", buffer);
 				bLMHasDeflectors = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "CSMHasHGA=", 10)) {
-				strncpy(buffer, line + 10, 255);
+				sscanf(line + 10, "%s", buffer);
 				bCSMHasHGA = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "CSMHasVHFRanging=", 17)) {
-				strncpy(buffer, line + 17, 255);
+				sscanf(line + 17, "%s", buffer);
 				bCSMHasVHFRanging = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "CMCVersion=", 11)) {
-				strncpy(buffer, line + 11, 255);
+				sscanf(line + 11, "%s", buffer);
 				strCMCVersion.assign(buffer);
 				UpdateTEPHEM0();
 			}
 			else if (!_strnicmp(line, "LGCVersion=", 11)) {
-				strncpy(buffer, line + 11, 255);
+				sscanf(line + 11, "%s", buffer);
 				strLGCVersion.assign(buffer);
 			}
 			else if (!_strnicmp(line, "AEAVersion=", 11)) {
-				strncpy(buffer, line + 11, 255);
+				sscanf(line + 11, "%s", buffer);
 				strAEAVersion.assign(buffer);
 			}
 			else if (!_strnicmp(line, "InvertLMStageBit=", 17)) {
-				strncpy(buffer, line + 17, 255);
+				sscanf(line + 17, "%s", buffer);
 				bInvertLMStageBit = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "ATCA_PRM_Factor=", 16)) {
@@ -260,14 +260,14 @@ namespace mission {
 				sscanf(line + 10, "%lf %lf %lf", &EmptySMCG.x, &EmptySMCG.y, &EmptySMCG.z);
 			}
 			else if (!_strnicmp(line, "HasRateAidedOptics=", 19)) {
-				strncpy(buffer, line + 19, 255);
+				sscanf(line + 19, "%s", buffer);
 				bHasRateAidedOptics = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "LMCWEAVersion=", 14)) {
 				sscanf(line + 14, "%d", &iLMCWEAVersion);
 			}
 			else if (!_strnicmp(line, "CrossPointerReversePolarity=", 28)) {
-				strncpy(buffer, line + 28, 255);
+				sscanf(line + 28, "%s", buffer);
 				bCrossPointerReversePolarity = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "TEPHEM0=", 8)) {
