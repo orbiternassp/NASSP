@@ -1666,6 +1666,9 @@
 #define AID_VC_CUE_CARD_LOCATION_11	7010
 #define AID_VC_CUE_CARD_LOCATION_4B	7011
 
+// Integral Lights
+#define AID_VC_INTEGRAL_LIGHT  7011
+#define AID_VC_FLOOD_LIGHT     7012
 
 // Next default values for new objects
 //

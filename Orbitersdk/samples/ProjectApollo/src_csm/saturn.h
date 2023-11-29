@@ -974,6 +974,7 @@ public:
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
+	void clbkVisualCreated (VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -3915,6 +3916,7 @@ protected:
 	int seatsunfoldedidx;
 	int coascdridx;
 	int coascdrreticleidx;
+	DEVMESHHANDLE vcmesh;
 
 	bool ASTPMission;
 
@@ -4131,6 +4133,15 @@ protected:
 	void InitFDAI(UINT mesh);
 
 	void VCFreeCam(VECTOR3 dir, bool slow);
+
+
+	//
+	// Integral Lights
+	//
+
+	void SetIntegralLight(int m, double state);
+	void SetFloodLight(int m, double state);
+
 
 	//
 	// Systems functions.

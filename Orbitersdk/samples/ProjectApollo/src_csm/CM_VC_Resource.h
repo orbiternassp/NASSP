@@ -1,13 +1,13 @@
 // ========================================================
 // Mesh resource file for CM-VC.msh
-// Generated with meshc on Tue Jul  4 18:38:10 2023
+// Generated with meshc (Jordan version) on 11-29-2023
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 959
+#define VC_NGRP 965
 
 // Number of materials:
-#define VC_NMAT 42
+#define VC_NMAT 44
 
 // Number of textures:
 #define VC_NTEX 28
@@ -970,5 +970,88 @@
 #define VC_GRP_TW_P9_06 954
 #define VC_GRP_xxxSCS_Rates_Card 955
 #define VC_GRP_xxxScrew02 956
-#define VC_GRP_zzzAditionalParts 957
-#define VC_GRP_zzzAditionalParts2 958
+#define VC_GRP_zzz00_C_AND_W_Lights 957
+#define VC_GRP_zzz01_DSKY_Frame 958
+#define VC_GRP_zzzCinematicPanel1_AND_3 959
+#define VC_GRP_zzzCinematicPanel2 960
+#define VC_GRP_zzzIlluminatingPanel01 961
+#define VC_GRP_zzzIlluminatingPanel02 962
+#define VC_GRP_zzzIlluminatingPanel03 963
+#define VC_GRP_zzzTalkbacks 964
+
+// Named Materials:
+#define VC_MAT_CB_black_t 0
+#define VC_MAT_coas_t 1
+#define VC_MAT_CMVCTex1_t 2
+#define VC_MAT_CMVCTex2_t 3
+#define VC_MAT_Alluminum 4
+#define VC_MAT_FDAI_Ball_t 5
+#define VC_MAT_FDAI_errorneedle 6
+#define VC_MAT_FDAI_Cue 7
+#define VC_MAT_Black 8
+#define VC_MAT_FDAI_Frame_t 9
+#define VC_MAT_FwdHatch_t 10
+#define VC_MAT_SideHatch_t 11
+#define VC_MAT_MAINVCTEX_t 12
+#define VC_MAT_csm_right_cb_panels_t 13
+#define VC_MAT_csm_lower_equip_bay_t 14
+#define VC_MAT_Colors_t 15
+#define VC_MAT_shutte1_t 16
+#define VC_MAT_CMVCTex3_t 17
+#define VC_MAT_CMFloor_t 18
+#define VC_MAT_CMVCDetTex3_t 19
+#define VC_MAT_CMVCDetTex1_t 20
+#define VC_MAT_csm_cabin_press_panel_t 21
+#define VC_MAT_CM_VC_Color_7 22
+#define VC_MAT_CMVCDetTex6_t 23
+#define VC_MAT_CM_VC_Color_6 24
+#define VC_MAT_CM_VC_Color_1 25
+#define VC_MAT_CM_VC_Color_4 26
+#define VC_MAT_CMVCDetTex4_t 27
+#define VC_MAT_Rotary_t 28
+#define VC_MAT_CM_VC_Color_2 29
+#define VC_MAT_DOR_t 30
+#define VC_MAT_HOPEN_t 31
+#define VC_MAT_CM_VC_Color_3 32
+#define VC_MAT_LMVC_t 33
+#define VC_MAT_SwitchCover_t 34
+#define VC_MAT_HolderRahmen_t 35
+#define VC_MAT_SCS_Rates_Card_t 36
+#define VC_MAT_AdditionalParts_t 37
+#define VC_MAT_Cinematic_Panel1_AND_3_t 38
+#define VC_MAT_Cinematic_Panel2_t 39
+#define VC_MAT_IlluminatingPartsPanel01_t 40
+#define VC_MAT_IlluminatingPartsPanel02_t 41
+#define VC_MAT_IlluminatingPartsPanel03_t 42
+#define VC_MAT_Talkbacks_t 43
+
+// Named Textures:
+#define VC_TEX_CB_black_dds 1
+#define VC_TEX_coas_dds 2
+#define VC_TEX_CMVCTex1_dds 3
+#define VC_TEX_CMVCTex2_dds 4
+#define VC_TEX_FDAI_Ball_dds 5
+#define VC_TEX_FDAIFrame_dds 6
+#define VC_TEX_FwdHatch_dds 7
+#define VC_TEX_SideHatch_dds 8
+#define VC_TEX_MAINVCTEX_dds 9
+#define VC_TEX_csm_right_cb_panels_dds 10
+#define VC_TEX_csm_lower_equip_bay_dds 11
+#define VC_TEX_Colors_dds 12
+#define VC_TEX_shutte1_dds 13
+#define VC_TEX_CMVCTex3_dds 14
+#define VC_TEX_CMFloor_dds 15
+#define VC_TEX_CMVCDetTex3_dds 16
+#define VC_TEX_CMVCDetTex1_dds 17
+#define VC_TEX_csm_cabin_press_panel_dds 18
+#define VC_TEX_CMVCDetTex6_dds 19
+#define VC_TEX_CMVCDetTex4_dds 20
+#define VC_TEX_Rotary_dds 21
+#define VC_TEX_DOR_dds 22
+#define VC_TEX_HOPEN_dds 23
+#define VC_TEX_LMVC_dds 24
+#define VC_TEX_SwitchCover_dds 25
+#define VC_TEX_HolderRahmen_dds 26
+#define VC_TEX_SCS_Rates_Card_dds 27
+#define VC_TEX_AditionalParts_dds 28
+

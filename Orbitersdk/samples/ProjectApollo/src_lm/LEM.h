@@ -729,6 +729,8 @@ protected:
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
 	void SetStageSeqRelayLight(int m, bool state);
+	void SetIntegralLight(int m, double state);
+	void SetFloodLight(int m, double state);
 	void InitFDAI(UINT mesh);
 
 	// LM touchdown points

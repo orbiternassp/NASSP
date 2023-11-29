@@ -30,6 +30,7 @@
 #include <math.h>
 #include "soundlib.h"
 #include "resource.h"
+#include <gcConst.h>
 
 #include "nasspdefs.h"
 #include "nasspsound.h"
@@ -618,8 +619,10 @@ void Saturn::InitVC()
 	// Register active areas for repainting here
 	//
 		
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 3);
-	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 4);
+//	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 3);
+//	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 4);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, VC_TEX_CMVCTex1_dds);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, VC_TEX_CMVCTex2_dds);
 
 	// Panel 1
 
@@ -677,6 +680,11 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS2, _R(906*TexMul, 1081*TexMul, 1008*TexMul, 1201*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_EVENT_TIMER306, _R(220*TexMul, 149*TexMul, 238*TexMul, 220*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 129*TexMul, 360*TexMul, 272*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+
+
+	// Inegral Lights
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Initialize surfaces
 
@@ -916,6 +924,11 @@ bool Saturn::clbkLoadVC (int id)
 
 	default:
 		return false;
+	}
+}
+void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
+	if (vcidx != -1) {
+        vcmesh = GetDevMesh(vis, vcidx);
 	}
 }
 
@@ -1685,6 +1698,16 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//case areaidentifier
 	//	Redraw Panel stuff
 	//	return true if dynamic texture modified, false if not
+
+	case AID_VC_INTEGRAL_LIGHT:
+//        SetIntegralLight(VC_MAT_LMVC_t, lca.GetIntegralVoltage() / 100.0);
+        SetIntegralLight(VC_MAT_CMVCTex1_t, (double)(IntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT:
+//        SetFloodLight(VC_MAT_LMVC_t, lca.GetIntegralVoltage() / 100.0);
+        SetFloodLight(VC_MAT_CMVCTex1_t, (double)(FloodRotarySwitch.GetState())/10.0);
+        return true;
 
 	case AID_VC_FDAI_LEFT:
 	{
@@ -4918,3 +4941,98 @@ void Saturn::InitFDAI(UINT mesh)
 	AddAnimationComponent(anim_fdaiYrate_R, 0.0f, 1.0f, &mgt_yawrate_R);
 }
 
+void Saturn::SetIntegralLight(int m, double state)
+{
+	DWORD emmisionMat[] = {
+
+		// TODO Material List
+		VC_MAT_Cinematic_Panel1_AND_3_t,
+		VC_MAT_Cinematic_Panel2_t,
+		VC_MAT_Rotary_t,
+		VC_MAT_CMVCTex1_t,
+		VC_MAT_CMVCTex2_t,
+		VC_MAT_CMVCTex3_t,
+		VC_MAT_csm_lower_equip_bay_t,
+		VC_MAT_IlluminatingPartsPanel01_t,
+		VC_MAT_IlluminatingPartsPanel02_t,
+		VC_MAT_Talkbacks_t,
+		VC_MAT_FDAI_Frame_t
+	};
+    if (!vcmesh)
+        return;
+	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
+	{
+//		MATERIAL* mat = oapiMeshMaterial(hLMVC, emmisionMat[i]);
+
+		gcCore *pCore = gcGetCoreInterface();
+		if (pCore) {
+			FVECTOR4 value;
+			value.r = (float)state;
+			value.g = (float)state;
+			value.b = (float)state;
+			value.a = 1.0;
+			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION2, &value, true);
+		}
+
+/*		mat->emissive.r = (float)state;
+		mat->emissive.g = (float)state;
+		mat->emissive.b = (float)state;
+		mat->emissive.a = 1;
+
+		oapiSetMaterial(vcmesh, emmisionMat[i], mat);
+*/
+	}
+    sprintf(oapiDebugString(), "%d %lf", m, state);
+}
+
+void Saturn::SetFloodLight(int m, double state)
+{
+	DWORD emmisionMat[] = {
+
+		// TODO Material List
+		VC_MAT_CMVCTex1_t,
+		VC_MAT_CMVCTex2_t,
+		VC_MAT_CMVCTex3_t,
+		VC_MAT_CMVCDetTex4_t,
+		VC_MAT_HolderRahmen_t,
+		VC_MAT_Rotary_t,
+		VC_MAT_AdditionalParts_t,
+		VC_MAT_LMVC_t,
+		VC_MAT_Colors_t,
+		VC_MAT_CB_black_t,
+		VC_MAT_MAINVCTEX_t,
+		VC_MAT_csm_lower_equip_bay_t,
+		VC_MAT_csm_right_cb_panels_t,
+		VC_MAT_Talkbacks_t,
+		VC_MAT_HOPEN_t,
+		VC_MAT_FDAI_Frame_t,
+		VC_MAT_SwitchCover_t,
+		VC_MAT_Cinematic_Panel1_AND_3_t
+
+	};
+    if (!vcmesh)
+        return;
+	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
+	{
+//		MATERIAL* mat = oapiMeshMaterial(hLMVC, emmisionMat[i]);
+
+		gcCore *pCore = gcGetCoreInterface();
+		if (pCore) {
+			FVECTOR4 value;
+			value.r = (float)state;
+			value.g = (float)state;
+			value.b = (float)state;
+			value.a = 1.0;
+			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
+		}
+
+/*		mat->emissive.r = (float)state;
+		mat->emissive.g = (float)state;
+		mat->emissive.b = (float)state;
+		mat->emissive.a = 1;
+
+		oapiSetMaterial(vcmesh, emmisionMat[i], mat);
+*/
+	}
+    sprintf(oapiDebugString(), "%d %lf", m, state);
+}
