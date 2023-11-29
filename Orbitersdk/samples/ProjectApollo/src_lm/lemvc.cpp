@@ -1833,7 +1833,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_3, false); // Light Off
 		}
 
-		if (RadarTape.PowerSignalMonOn() == true && lca.GetAnnunVoltage() > 2.25) {
+		if (RadarTape.PowerSignalMonOn() == true) {
 			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_10, true); // Light On
 		}
 		else {
