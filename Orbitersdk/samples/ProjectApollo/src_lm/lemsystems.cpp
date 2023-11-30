@@ -2842,7 +2842,7 @@ void LEM_RadarTape::Init(LEM* s, e_object* dc_src, e_object* ac_src, SURFHANDLE 
 // (b) direct current voltage below 20 volts 
 // (c) input data loss
 
-//FIXME: Need to investigate how the signals were interpreted, seems that near zero signal or zero signal generates the logic condition
+//FIXME: Need to investigate how the signals were interpreted, seems that near zero signal or zero signal generates the logic condition as noted by the light going on with rate <5 ft/s
 
 bool LEM_RadarTape::PowerSignalMonOn()
 {
@@ -2864,7 +2864,7 @@ bool LEM_RadarTape::SignalFailure()
 {
 	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
 	{
-		if (lem->RR.IsRangeDataGood() == false || lem->RR.IsFrequencyDataGood() == false || lem->RR.GetRadarRange() < 5 || lem->RR.GetRadarRate() < 5)
+		if (lem->RR.IsRangeDataGood() == false || lem->RR.IsFrequencyDataGood() == false || lem->RR.GetRadarRange() < 5.0 || abs(lem->RR.GetRadarRate()) < 5.0)
 		{
 			return true; //Needs to check rendezvous radar rate and range signals and return true if not present
 		}
@@ -2872,21 +2872,21 @@ bool LEM_RadarTape::SignalFailure()
 	else {
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
-			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false || lem->LR.GetAltitude() < 5 || lem->LR.GetAltitudeRate() < 5)
+			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false || lem->LR.GetAltitude() < 5.0 || abs(lem->LR.GetAltitudeRate()) < 5.0)
 			{
 				return true; //Needs to check landing radar rate and range signals and return true if not present
 			}
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
-			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime() || lgc_alt < 5 || lgc_altrate < 5)
+			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime() || lgc_alt < 5.0 || abs(lgc_altrate < 5.0))
 			{
 				return true; //Needs to check LGC rate and range signals and return true if not present
 			}
 		}
 		else //AGS
 		{
-			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime() || ags_alt < 5 || ags_altrate < 5)
+			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime() || ags_alt < 5.0 || abs(ags_altrate < 5.0))
 			{
 				return true; //Needs to check AGS rate and range signals and return true if not present
 			}
