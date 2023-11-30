@@ -2864,7 +2864,7 @@ bool LEM_RadarTape::SignalFailure()
 {
 	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
 	{
-		if (lem->RR.IsRangeDataGood() == false || lem->RR.IsFrequencyDataGood() == false || lem->RR.GetRadarRange() < 5.0 || abs(lem->RR.GetRadarRate()) < 5.0)
+		if (lem->RR.IsRangeDataGood() == false || lem->RR.IsFrequencyDataGood() == false || lem->RR.GetRadarRange() == 0.0 || abs(lem->RR.GetRadarRate()) < 1.524) //5 ft/s = 1.524 m/s
 		{
 			return true; //Needs to check rendezvous radar rate and range signals and return true if not present
 		}
@@ -2872,21 +2872,21 @@ bool LEM_RadarTape::SignalFailure()
 	else {
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
-			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false || lem->LR.GetAltitude() < 5.0 || abs(lem->LR.GetAltitudeRate()) < 5.0)
+			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false || lem->LR.GetAltitude() == 0.0 || abs(lem->LR.GetAltitudeRate()) < 1.524) //5 ft/s = 1.524 m/s
 			{
 				return true; //Needs to check landing radar rate and range signals and return true if not present
 			}
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
-			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime() || lgc_alt < 5.0 || abs(lgc_altrate) < 5.0)
+			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime() || lgc_alt == 0.0 || abs(lgc_altrate) < 1.524) //5 ft/s = 1.524 m/s
 			{
 				return true; //Needs to check LGC rate and range signals and return true if not present
 			}
 		}
 		else //AGS
 		{
-			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime() || ags_alt < 5.0 || abs(ags_altrate) < 5.0)
+			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime() || ags_alt == 0.0 || abs(ags_altrate) < 1.524) //5 ft/s = 1.524 m/s
 			{
 				return true; //Needs to check AGS rate and range signals and return true if not present
 			}
