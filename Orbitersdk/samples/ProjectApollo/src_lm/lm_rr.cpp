@@ -297,8 +297,8 @@ void LEM_RR::Timestep(double simdt) {
 		radarDataGood = false;
 		FrequencyLock = false;
 		RangeLock = false;
-		//range = 0.0;
-		//rate = 0.0;
+		range = 0.0;
+		rate = 0.0;
 		sin_shaft = cos_shaft = sin_trunnion = cos_trunnion = 0.0;
 		lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, 0.0, AntennaGain*AntennaPolarValue, AntennaPhase);
 		return;
@@ -609,19 +609,19 @@ void LEM_RR::Timestep(double simdt) {
 	{
 		rate = internalrangerate;
 	}
-	/*else
+	else
 	{
 		rate = 0.0;
-	}*/
+	}
 
 	if (RangeLock)
 	{
 		range = internalrange;
 	}
-	/*else
+	else
 	{
 		range = 0.0;
-	}*/
+	}
 
 	//sprintf(oapiDebugString(), "Auto %d FreqLock %d Timer %f RLock %d DataGood %d", AutoTrackEnabled, FrequencyLock, RangeLockTimer, RangeLock, radarDataGood);
 
