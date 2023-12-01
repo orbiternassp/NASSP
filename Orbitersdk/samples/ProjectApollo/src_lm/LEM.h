@@ -157,10 +157,15 @@ public:
 	void RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, int xTexMul = 1);
 	void SetLGCAltitude(int val);
 	void SetLGCAltitudeRate(int val);
+	void AGSAltitudeAltitudeRate(int Data);
 
 	double GetLGCAltitude() { return lgc_alt; };
 	double GetLGCAltitudeRate() { return lgc_altrate; };
 
+	bool PowerSignalMonOn();
+	bool PowerFailure();
+	bool SignalFailure();
+	bool TimingFailure();
 	bool IsPowered();
 private:
 	void TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
@@ -170,10 +175,16 @@ private:
 	double reqRange;
 	double reqRate;
 	double dispRange;
-	double  dispRate;
+	double dispRate;
 	double lgc_alt, lgc_altrate;
+	double ags_alt, ags_altrate;
 	SURFHANDLE tape1, tape2;
 	double desRange, desRate;
+	double LGCaltUpdateTime, LGCaltRateUpdateTime;
+	double AGSaltUpdateTime, AGSaltRateUpdateTime;
+
+	const double ALTSCALEFACTOR = 0.3048 * 2.345 * pow(2.0, -3.0);
+	const double ALTRATESCALEFACTOR = 0.3048 * pow(2.0, -4.0);
 };
 
 class CrossPointer
