@@ -443,6 +443,16 @@ void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh)
 	uplink_state = 0; rx_offset = 0;
 }
 
+bool LM_PCM::TimingSignal() //Currently just looking for power from the PCM/TE cb, this needs to generate a 512 KHz timing signal
+{
+	if (lem->INST_PCMTEA_CB.Voltage() > 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void LM_PCM::SystemTimestep(double simdt)
 {
 	// PMP
