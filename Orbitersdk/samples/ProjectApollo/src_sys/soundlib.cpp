@@ -3,7 +3,7 @@
   Copyright 2004-2005 Mark Grant
 
   ORBITER sound library.
-  This code caches sounds for the OrbiterSound library so that
+  This code caches sounds for the XRSound library so that
   you don't have to keep track of IDs.
 
   Project Apollo is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@
 #include "soundlib.h"
 #include "tracer.h"
 #include "nasspdefs.h"
+#include "XRSound.h"
 
 SoundData::SoundData()
 
@@ -43,7 +44,7 @@ SoundData::SoundData()
 	valid = false;
 	id = (-1);
 	filename[0] = 0;
-	SoundlibId = 0;
+	Soundlib = NULL;
 }
 
 SoundData::~SoundData()
@@ -77,7 +78,7 @@ bool SoundData::play(int flags, int libflags, int volume, int playvolume, int fr
 
 {
 	if (valid) {
-		if (!PlayVesselWave(SoundlibId, id, flags, playvolume, frequency))
+		if (!Soundlib->PlayWav(id, (bool) flags, playvolume/255.0f))
 		{
 			return false;
 		}
@@ -108,7 +109,7 @@ void SoundData::stop()
 	if (!isPlaying())
 		return;
 
-	StopVesselWave(SoundlibId, id);
+	Soundlib->StopWav(id);
 }
 
 bool SoundData::isPlaying()
@@ -117,7 +118,7 @@ bool SoundData::isPlaying()
 	if (id < 0)
 		return false;
 
-	return (IsPlaying(SoundlibId, id) != 0);
+	return (Soundlib->IsWavPlaying(id) != 0);
 }
 
 bool SoundData::matches(char *s)
@@ -148,8 +149,8 @@ SoundLib::SoundLib()
 		sounds[i].MakeInvalid();
 	}
 
-	SoundlibId = 0;
-	OrbiterSoundActive = 0;
+	Soundlib = NULL;
+	XRSoundActive = 0;
 	missionpath[0] = 0;
 	basepath[0] = 0;
 	strcpy(languagepath, "English");
@@ -161,20 +162,21 @@ SoundLib::SoundLib()
 }
 
 SoundLib::~SoundLib()
-
 {
-	//
-	// Nothing for now.
-	//
+	if (Soundlib)
+	{
+		delete Soundlib;
+		Soundlib = NULL;
+	}
 }
 
-void SoundLib::InitSoundLib(OBJHANDLE h, char *soundclass)
+void SoundLib::InitSoundLib(VESSEL *v, char *soundclass)
 
 {
 	_snprintf(basepath, 255, "Sound/%s", soundclass);
 
-	SoundlibId = ConnectToOrbiterSoundDLL(h);
-	OrbiterSoundActive = (SoundlibId >= 0);
+	Soundlib = XRSound::CreateInstance(v);
+	XRSoundActive = Soundlib->IsPresent();
 }
 
 void SoundLib::SetSoundLibMissionPath(char *mission)
@@ -220,7 +222,7 @@ int SoundLib::FindSlot()
 	int	i;
 
 	//
-	// Orbitersound doesn't seem to like reusing slots much, so we won't do that until we run out
+	// XRSound doesn't seem to like reusing slots much, so we won't do that until we run out
 	// of slots. That won't happen too often unless you try to fly an entire mission without
 	// quitting Orbiter and reloading.
 	//
@@ -249,6 +251,31 @@ SoundData *SoundLib::DoLoadSound(char *SoundPath, EXTENDEDPLAY extended)
 
 {
 	SoundData *s;
+	XRSound::PlaybackType t;
+
+	switch (extended) {
+	case INTERNAL_ONLY:
+		t = XRSound::PlaybackType::InternalOnly;
+		break;
+	case BOTHVIEW_FADED_CLOSE:
+		t = XRSound::PlaybackType::BothViewClose;
+		break;
+	case BOTHVIEW_FADED_MEDIUM:
+		t = XRSound::PlaybackType::BothViewMedium;
+		break;
+	case BOTHVIEW_FADED_FAR:
+		t = XRSound::PlaybackType::BothViewFar;
+		break;
+	case EXTERNAL_ONLY_FADED_CLOSE:
+	case EXTERNAL_ONLY_FADED_MEDIUM:
+	case EXTERNAL_ONLY_FADED_FAR:
+		// Will hope these all will work with Wind
+		t = XRSound::PlaybackType::Wind;
+		break;
+	case DEFAULT:
+	default:
+		t = XRSound::PlaybackType::Global;
+	}
 
 	//
 	// If the sound already exists, return it.
@@ -272,11 +299,11 @@ SoundData *SoundLib::DoLoadSound(char *SoundPath, EXTENDEDPLAY extended)
 	// So the file exists and we have a free slot. Try to load it.
 	//
 
-	if (RequestLoadVesselWave(SoundlibId, id, s->GetFilename(), extended) == 0)
+	if (Soundlib->LoadWav(id, s->GetFilename(), t) == 0)
 		return 0;
 
 
-	s->setSoundlibId(SoundlibId);
+	s->setSoundlib(Soundlib);
 	s->setID(id);
 	s->MakeValid();
 	s->AddRef();
@@ -294,7 +321,7 @@ void SoundLib::LoadSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 
 {
 
-	if (!OrbiterSoundActive) {
+	if (!XRSoundActive) {
 		s.SetSoundData(0);
 		return;
 	}
@@ -347,7 +374,7 @@ void SoundLib::LoadMissionSound(Sound &s, char *soundname, char *genericname, EX
 {
 	char	SoundPath[256];
 
-	if (!OrbiterSoundActive) {
+	if (!XRSoundActive) {
 		s.SetSoundData(0);
 		return;
 	}
@@ -399,7 +426,7 @@ void SoundLib::LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 {
 	char	SoundPath[256];
 
-	if (!OrbiterSoundActive) {
+	if (!XRSoundActive) {
 		s.SetSoundData(0);
 		return;
 	}
@@ -410,10 +437,75 @@ void SoundLib::LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 	s.SetSoundData(DoLoadSound(SoundPath, extended));
 }
 
+//Load a generic XR sound file
+void SoundLib::LoadDefaultSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
+{
+	char	SoundPath[256];
+
+	if (!XRSoundActive) {
+		s.SetSoundData(0);
+		return;
+	}
+
+	s.SetSoundLib(this);
+
+	_snprintf(SoundPath, 255, "XRSound/Default/%s", soundname);
+	s.SetSoundData(DoLoadSound(SoundPath, extended));
+}
+
 void SoundLib::SoundOptionOnOff(int option,BOOL status)
 
 {
-	::SoundOptionOnOff(SoundlibId, option, status);
+	// The right way to do this is to go through every vessel and modify
+	// the option to be the enum, but that would mean including XRSound.h
+	// to every vessel. I'll instead do a lookup here.
+	switch (option) {
+	case PLAYCOUNTDOWNWHENTAKEOFF:
+		Soundlib->SetDefaultSoundEnabled(XRSound::Liftoff, status);
+		break;
+	case PLAYWHENATTITUDEMODECHANGE:
+		Soundlib->SetDefaultSoundEnabled(XRSound::Rotation, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Translation, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Off, status);
+		break;
+	case PLAYDOCKINGSOUND:
+		Soundlib->SetDefaultSoundEnabled(XRSound::Docking, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::DockingCallout, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Undocking, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::UndockingCallout, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::DockingDistanceCalloutsGroup, status);
+		break;
+	case PLAYRADARBIP:
+		Soundlib->SetDefaultSoundEnabled(XRSound::DockingRadarBeep, status);
+		break;
+	case PLAYLANDINGANDGROUNDSOUND:
+		Soundlib->SetDefaultSoundEnabled(XRSound::Crash, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::MetalCrunch, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::WheelChirp, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Touchdown, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::WheelStop, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::TiresRolling, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Wheekbrakes, status);
+		break;
+	case PLAYCABINAIRCONDITIONING:
+		Soundlib->SetDefaultSoundEnabled(XRSound::AirConditioning, status);
+		break;
+	case PLAYCABINRANDOMAMBIANCE:
+		Soundlib->SetDefaultSoundEnabled(XRSound::CabinAmbienceGroup, status);
+		break;
+	case PLAYRADIOATC:
+		Soundlib->SetDefaultSoundEnabled(XRSound::RadioATCGroup, status);
+		break;
+	case DISPLAYTIMER:
+		// XRSound doesn't have this
+		break;
+	}
+
+	// Disable XRSound things while we're at it
+	Soundlib->SetDefaultSoundEnabled(XRSound::AudioGreeting, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::SubsonicCallout, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::MachCalloutsGroup, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::OneHundredKnots, false);
 }
 
 void SoundLib::SetLanguage(char *language)
@@ -536,9 +628,6 @@ Sound::Sound(Sound &s)
 Sound::~Sound()
 
 {
-	if (sd && valid && sd->isValid()) {
-		sd->done();
-	}
 }
 
 Sound &Sound::operator=(const Sound &s)
@@ -800,8 +889,8 @@ TimedSoundManager::~TimedSoundManager()
 void TimedSoundManager::Timestep(double simt, double simdt, bool autoslow)
 
 {
-	// Is OrbiterSound available?
-	if (!soundlib.IsOrbiterSoundActive()) return;
+	// Is XRSound available?
+	if (!soundlib.IsXRSoundActive()) return;
 
 	double timeaccel = oapiGetTimeAcceleration();
 	if (LaunchSoundsLoaded && simt >= TimeToPlay)
@@ -1051,12 +1140,3 @@ void TimedSoundManager::LoadFromFile(char *dataFile, double MissionTime)
 
 	fclose(fp);
 }
-
-//
-// To use OrbiterSound 3.5 with compilers older 
-// than Microsoft Visual Studio Version 2003 
-//
-
-#if defined(_MSC_VER) && (_MSC_VER < 1300) 
-void operator delete[] (void *) {}
-#endif

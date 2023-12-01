@@ -467,9 +467,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	InitMissionManagementMemory();
 	pMission = paGetDefaultMission();
 
-	// VESSELSOUND initialisation
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-
 	// Switch to compatible dock mode
 	SetDockMode(0);
 
@@ -657,23 +654,7 @@ void LEM::Init()
 	NextFlashUpdate = MINUS_INFINITY;
 	PanelFlashOn = false;
 
-	//
-	// Initial sound setup
-	//
-
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-	/// \todo Disabled for now because of the LEVA and the descent stage vessel
-	///		  Enable before CSM docking
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-
-	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
-	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
-
 	strncpy(AudioLanguage, "English", 64);
-	soundlib.SetLanguage(AudioLanguage);
-	SoundsLoaded = false;
 
 	exhaustTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_atrcs");
 
@@ -716,10 +697,6 @@ void LEM::Init()
 void LEM::DoFirstTimestep()
 {
 	checkControl.linktoVessel(this);
-	// Load sounds in case of dynamic creation, otherwise during clbkLoadStageEx
-	if (!SoundsLoaded) {
-		LoadDefaultSounds();
-	}
 
 #ifdef DIRECTSOUNDENABLED
 	NextEventTime = 0.0;
@@ -772,6 +749,7 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(CrewDeadSound, CREWDEAD_SOUND);
+	soundlib.LoadDefaultSound(EngineS, MAIN_ENGINES_SOUND, INTERNAL_ONLY);
 
 	// Configure sound options where needed
 	SuitFanSound.setFadeTime(5);
@@ -783,9 +761,8 @@ void LEM::LoadDefaultSounds()
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
     sevent.LoadMissionLandingSoundArray(soundlib,"sound.csv");
-    sevent.InitDirectSound(soundlib);
+    sevent.InitDirectSound();
 #endif
-	SoundsLoaded = true;
 }
 
 int LEM::clbkConsumeDirectKey(char* kstate)
@@ -1405,10 +1382,10 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	UpdateMassAndCoG();
 
 	//
-	// Play RCS sound in case of Orbiter's attitude control is disabled
+	// Play engine sound in case of Orbiter's attitude control is disabled
 	//
 
-	RCSSoundTimestep();
+	EngineSoundTimestep();
 
 	if (stage == 0 || pMission->LMHasLegs() == false)	{
 
@@ -1548,12 +1525,6 @@ void LEM::PostLoadSetup(bool define_anims)
 		checkControl.autoExecuteAllItemsAutomatic(false);
 
 	}
-
-	//
-	// Load sounds, this is mandatory if loading in cockpit view, 
-	// because OrbiterSound crashes when loading sounds during clbkLoadPanel
-	//
-	LoadDefaultSounds();
 
 	// Also cause the AC busses to wire up
 	switch (EPSInverterSwitch.GetState()) {
@@ -1960,6 +1931,25 @@ void LEM::clbkPostCreation()
 	}
 
 	CreateAirfoils();
+
+	// VESSELSOUND initialisation
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
+	LoadDefaultSounds();
+	this->CWEA.LoadSounds();
+
+	//
+	// Initial sound setup
+	//
+
+	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
+	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
+	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
+	/// \todo Disabled for now because of the LEVA and the descent stage vessel
+	///		  Enable before CSM docking
+	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
+
+	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
+	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
@@ -2369,7 +2359,7 @@ void LEM::SetRCSJetLevelPrimary(int jet, double level) {
 	SetThrusterLevel(th_rcs[jet], level);
 }
 
-void LEM::RCSSoundTimestep() {
+void LEM::EngineSoundTimestep() {
 
 	// In case of disabled Orbiter attitude thruster groups OrbiterSound plays no
 	// engine sound, so this needs to be done manually
@@ -2393,6 +2383,20 @@ void LEM::RCSSoundTimestep() {
 	}
 	else {
 		RCSSustainSound.stop();
+	}
+
+	//APS/DPS sound
+	if (th_hover[0])
+	{
+		double lvl;
+		if (lvl = GetThrusterLevel(th_hover[0]))
+		{
+			EngineS.play(LOOP, static_cast<int>(lvl * 255));
+		}
+		else
+		{
+			EngineS.stop();
+		}
 	}
 }
 

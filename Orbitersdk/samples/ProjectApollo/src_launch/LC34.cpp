@@ -123,8 +123,6 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	}
 	liftoffStreamLevel = 0;
 
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-
 	//meshoffsetMSS = _V(0,0,0);
 
 	IuUmb = new IUUmbilical(this);
@@ -201,6 +199,8 @@ void LC34::clbkPostCreation()
 	SetAnimation(mssAnim, mssProc);
 	SetAnimation(cmarmAnim, cmarmProc);
 	SetAnimation(swingarmAnim, swingarmState.pos);
+
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void LC34::clbkPreStep(double simt, double simdt, double mjd)

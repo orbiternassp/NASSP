@@ -113,8 +113,6 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	}
 	liftoffStreamLevel = 0;
 
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-
 	//meshoffsetMSS = _V(0,0,0);
 
 	IuUmb = new IUUmbilical(this);
@@ -166,6 +164,8 @@ void LC37::clbkPostCreation()
 			IuUmb->Connect(sivb->GetIU());
 		}
 	}
+
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void LC37::clbkPreStep(double simt, double simdt, double mjd)
