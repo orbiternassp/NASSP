@@ -611,6 +611,7 @@ void Saturn::SystemsInit() {
 					  &PressEqualValve, &ForwardHatch);
 	WasteStowageVentValve.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE"),
 		&WasteMGMTStoageVentRotary);
+	BatteryVent.Init(&WasteMGMTBatteryVentRotary, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD"));
 
 	SaturnSuitFlowValve300.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD:OUT2"),
 		&SuitCircuitFlow300Switch);
@@ -1072,6 +1073,19 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		KelvinToFahrenheit(*YAWJET16), (KelvinToFahrenheit(*YAWJET16) + 50.0) / 20.0,
 		KelvinToFahrenheit(*ROLLJET21), (KelvinToFahrenheit(*ROLLJET21) + 50.0) / 20.0);
 */
+
+//Battery Vent Debug Lines
+/*
+	double* BatCaseAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATACASE:PRESS");
+	double* BatCaseBPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATBCASE:PRESS");
+	double* BatCaseCPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATCCASE:PRESS");
+	double* BatCasePyroAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMPYROBATACASE:PRESS");
+	double* BatCasePyroBPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMPYROBATBCASE:PRESS");
+	int* BatVentValve = (int*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD:OUT:ISOPEN");
+
+	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Valve: %d", * BatCaseAPress* PSI, * BatCaseBPress* PSI, * BatCaseCPress* PSI, * BatCasePyroAPress* PSI, * BatCasePyroBPress* PSI, BatteryVent.GetManifoldPress(), * BatVentValve);
+*/
+
 #ifdef _DEBUG
 
 		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",
@@ -1566,6 +1580,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LMTunnelVent.SystemTimestep(tFactor);
 		PressureEqualizationValve.SystemTimestep(tFactor);
 		WasteStowageVentValve.SystemTimestep(tFactor);
+		BatteryVent.SystemTimestep(tFactor);
 		SaturnSuitFlowValve300.SystemTimestep(tFactor);
 		SaturnSuitFlowValve301.SystemTimestep(tFactor);
 		SaturnSuitFlowValve302.SystemTimestep(tFactor);

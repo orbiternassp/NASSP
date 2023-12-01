@@ -3776,6 +3776,7 @@ protected:
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
 	SaturnWasteStowageVentValve WasteStowageVentValve;
+	SaturnBatteryVent BatteryVent;
 	SaturnSuitFlowValves SaturnSuitFlowValve300;
 	SaturnSuitFlowValves SaturnSuitFlowValve301;
 	SaturnSuitFlowValves SaturnSuitFlowValve302;

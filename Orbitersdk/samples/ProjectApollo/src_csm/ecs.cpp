@@ -1553,6 +1553,43 @@ void SaturnWasteStowageVentValve::SystemTimestep(double simdt)
 
 }
 
+SaturnBatteryVent::SaturnBatteryVent()
+{
+	BatteryVentSwitch = NULL;
+	BatteryManifold = NULL;
+	BatteryManifoldPress = 0.0;
+}
+
+void SaturnBatteryVent::Init(RotationalSwitch* bvs, h_Tank* bmt)
+{
+	BatteryVentSwitch = bvs;
+	BatteryManifold = bmt;
+}
+
+double SaturnBatteryVent::GetManifoldPress()
+{
+	if (!BatteryManifoldPress) {
+		BatteryManifoldPress = BatteryManifold->space.Press;
+	}
+	return BatteryManifoldPress * PSI;
+}
+
+void SaturnBatteryVent::SystemTimestep(double simdt)
+{
+	if (!BatteryManifold) return;
+
+	// Valve in motion
+	if (BatteryManifold->OUT_valve.pz) return;
+
+	if (BatteryVentSwitch->GetState() == 1)
+	{
+		BatteryManifold->OUT_valve.Open();
+	}
+
+	else
+		BatteryManifold->OUT_valve.Close();
+}
+
 SaturnSuitFlowValves::SaturnSuitFlowValves()
 {
 	SuitFlowValve = NULL;
