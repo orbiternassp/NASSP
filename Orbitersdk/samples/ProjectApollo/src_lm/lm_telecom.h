@@ -246,6 +246,8 @@ public:
 	void Timestep(double simt);     // TimeStep
 	void SystemTimestep(double simdt);
 
+	bool TimingSignal();	//Geenerates 512khz timing signal
+
 	double last_update;				// simt of last update
 protected:
 	LEM *lem;					   // Ship we're installed in
