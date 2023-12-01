@@ -143,3 +143,18 @@ XRSound/
 /.ninja_deps
 # Ignore Matlab log analyzers
 /*.m
+/GravityModels
+/Extern
+/zlib.lib
+/zlib.exp
+/zlib.dll.manifest
+/zlib.dll
+/Orbiter_ng.exe.manifest
+/Orbiter.exe.manifest
+/LuaInterpreter.dll.manifest
+/LuaInline.dll.manifest
+/lua.lib
+/Lua.Interpreter.exe.manifest
+/lua.exp
+/lua.dll.manifest
+/lua.dll
