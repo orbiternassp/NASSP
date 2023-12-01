@@ -2519,17 +2519,32 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.vessel = calcParams.src;
 		manopt.vesseltype = 0;
 
+		if (fcn == 94)
+		{
+			manopt.UllageThrusterOpt = false;
+			manopt.UllageDT = 15.0;
+			manopt.sxtstardtime = -35.0*60.0;
+		}
+		else
+		{
+			manopt.UllageThrusterOpt = true;
+			manopt.UllageDT = 11.0;
+			manopt.sxtstardtime = -25.0*60.0;
+		}
+
 		AP11ManeuverPAD(&manopt, *form);
 
 		if (fcn == 94)
 		{
 			sprintf(form->purpose, "PLANE CHANGE 1");
+			sprintf(form->remarks, "Ullage: 2 jets, 15 seconds");
 			sprintf(updesc, "CSM state vector, target load, PC REFSMMAT");
 			AGCStateVectorUpdate(buffer1, sv, true);
 		}
 		else
 		{
 			sprintf(form->purpose, "PLANE CHANGE 2");
+			sprintf(form->remarks, "Ullage: 4 jets, 11 seconds");
 			sprintf(updesc, "CSM state vector and V66, target load, PC REFSMMAT");
 			AGCStateVectorUpdate(buffer1, sv, true, true);
 		}
