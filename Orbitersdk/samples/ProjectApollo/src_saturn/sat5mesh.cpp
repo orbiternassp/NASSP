@@ -803,7 +803,7 @@ void SaturnV::SetSecondStageEngines(double offset)
 			AddExhaustStream (th_ull[i], &solid_exhaust);
 		}
 
-		thg_ull = CreateThrusterGroup (th_ull, SII_UllageNum, THGROUP_USER);
+		thg_ull = CreateThrusterGroup (th_ull, SII_UllageNum, (THGROUP_TYPE)(THGROUP_USER + 1));
 	}
 
 	sii->RecalculateEngineParameters(THRUST_SECOND_VAC);
@@ -1046,7 +1046,7 @@ void SaturnV::SetThirdStageEngines (double offset)
 	for (int i = 0; i < 2; i++)
 		AddExhaust (th_ver[i], 5.0, 0.25, exhaust_tex);
 
-	thg_ver = CreateThrusterGroup (th_ver, 2, THGROUP_USER);
+	thg_ver = CreateThrusterGroup (th_ver, 2, (THGROUP_TYPE)(THGROUP_USER + 1));
 
 	sivb->RecalculateEngineParameters(THRUST_THIRD_VAC);
 
