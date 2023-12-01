@@ -1669,6 +1669,7 @@
 // Integral Lights
 #define AID_VC_INTEGRAL_LIGHT  7011
 #define AID_VC_FLOOD_LIGHT     7012
+#define AID_VC_NUMERICS_LIGHT     7013
 
 // Next default values for new objects
 //

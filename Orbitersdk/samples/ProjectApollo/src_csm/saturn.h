@@ -4141,7 +4141,7 @@ protected:
 
 	void SetIntegralLight(int m, double state);
 	void SetFloodLight(int m, double state);
-
+	void SetNumericsLight(int m, double state);
 
 	//
 	// Systems functions.

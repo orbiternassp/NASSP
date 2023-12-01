@@ -682,10 +682,11 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 129*TexMul, 360*TexMul, 272*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 
-	// Inegral Lights
+	// Integral Lights
 	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-
+	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	
 	// Initialize surfaces
 
 	SMRCSHelium1ATalkback.InitVC(srf[SRF_VC_INDICATOR]);
@@ -1707,6 +1708,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_VC_FLOOD_LIGHT:
 //        SetFloodLight(VC_MAT_LMVC_t, lca.GetIntegralVoltage() / 100.0);
         SetFloodLight(VC_MAT_CMVCTex1_t, (double)(FloodRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT:
+//        SetFloodLight(VC_MAT_LMVC_t, lca.GetIntegralVoltage() / 100.0);
+        SetNumericsLight(VC_MAT_CMVCTex1_t, (double)(NumericRotarySwitch.GetState())/10.0);
         return true;
 
 	case AID_VC_FDAI_LEFT:
@@ -5008,6 +5014,41 @@ void Saturn::SetFloodLight(int m, double state)
 		VC_MAT_FDAI_Frame_t,
 		VC_MAT_SwitchCover_t,
 		VC_MAT_Cinematic_Panel1_AND_3_t
+	};
+    if (!vcmesh)
+        return;
+	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
+	{
+//		MATERIAL* mat = oapiMeshMaterial(hLMVC, emmisionMat[i]);
+
+		gcCore *pCore = gcGetCoreInterface();
+		if (pCore) {
+			FVECTOR4 value;
+			value.r = (float)state;
+			value.g = (float)state;
+			value.b = (float)state;
+			value.a = 1.0;
+			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
+		}
+
+/*		mat->emissive.r = (float)state;
+		mat->emissive.g = (float)state;
+		mat->emissive.b = (float)state;
+		mat->emissive.a = 1;
+
+		oapiSetMaterial(vcmesh, emmisionMat[i], mat);
+*/
+	}
+    sprintf(oapiDebugString(), "%d %lf", m, state);
+}
+
+void Saturn::SetNumericsLight(int m, double state)
+{
+	DWORD emmisionMat[] = {
+
+		// TODO Material List
+		VC_MAT_IlluminatingPartsPanel01_t,
+		VC_MAT_IlluminatingPartsPanel02_t
 
 	};
     if (!vcmesh)
