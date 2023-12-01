@@ -1816,10 +1816,8 @@ void Saturn::SetSwitches(int panel) {
 	CsmLmFinalSep2Switch.InitGuard( 86,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69]);
 	CmSmSep1Switch.Init			  (131, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow);
 	CmSmSep1Switch.InitGuard      (130,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69], 72);
-	CmSmSep1Switch.SetFailed(SwitchFail.SMJett1Fail != 0);
 	CmSmSep2Switch.Init			  (175, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow);
 	CmSmSep2Switch.InitGuard      (174,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69], 72);
-	CmSmSep2Switch.SetFailed(SwitchFail.SMJett2Fail != 0);
 
 	if (!SkylabCM) {
 		SIVBPayloadSepSwitch.Init		  (219, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow);
@@ -2149,10 +2147,8 @@ void Saturn::SetSwitches(int panel) {
 	LVRateAutoSwitch.Init(110, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], AbortRow);
 	TowerJett1Switch.Init(169, 23, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], AbortRow);
 	TowerJett1Switch.InitGuard(168, 0, 36, 69, srf[SRF_SWITCHGUARDS], 180);
-	TowerJett1Switch.SetFailed(SwitchFail.TowerJett1Fail != 0);
 	TowerJett2Switch.Init(217, 23, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], AbortRow);
 	TowerJett2Switch.InitGuard(216, 0, 36, 69, srf[SRF_SWITCHGUARDS], 180);
-	TowerJett2Switch.SetFailed(SwitchFail.TowerJett2Fail != 0);
 
 	//
 	// Rotational controller power switches.

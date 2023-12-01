@@ -67,6 +67,7 @@
 #include "rhc.h"
 #include "inertial.h"
 #include "CueCardManager.h"
+#include "CSMMalfunctionSimulation.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -616,59 +617,6 @@ public:
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
 		//
 		nsurfvc	///< nsurfvc gives the count of surfaces for the array size calculation.
-	};
-
-	//
-	// Random failure flags, copied into unions and extracted as ints (or vice-versa).
-	//
-
-	///
-	/// \ingroup FailFlags
-	/// \brief Landing failure flags.
-	///
-	union LandingFailures {
-		struct {
-			unsigned CoverFail:1;	///< Apex cover will fail to deploy automatically.
-			unsigned DrogueFail:1;	///< Drogue will fail to deploy automatically.
-			unsigned MainFail:1;	///< Main chutes will fail to deploy automatically.
-		};
-		int word;					///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
-
-		LandingFailures() { word = 0; };
-	};
-
-	///
-	/// \ingroup FailFlags
-	/// \brief Launch failure flags.
-	///
-	union LaunchFailures {
-		struct {
-			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
-			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
-			unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
-			unsigned AutoAbortEnableFail:1;		///< IU fails to enable the auto abort relays.
-		};
-		int word;								///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
-
-		LaunchFailures() { word = 0; };
-	};
-
-	///
-	/// \ingroup FailFlags
-	/// \brief Flags specifying which control panel switches will fail.
-	///
-	/// \ingroup InternalInterface
-	///
-	union SwitchFailures {
-		struct {
-			unsigned TowerJett1Fail:1;		///< TWR JETT switch 1 will fail.
-			unsigned TowerJett2Fail:1;		///< TWR JETT switch 2 will fail.
-			unsigned SMJett1Fail:1;			///< SM JETT switch 1 will fail.
-			unsigned SMJett2Fail:1;			///< SM JETT switch 2 will fail
-		};
-		int word;							///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
-
-		SwitchFailures() { word = 0; };
 	};
 
 	///
@@ -1568,9 +1516,7 @@ protected:
 	// Failures.
 	//
 
-	LandingFailures LandFail;
-	LaunchFailures LaunchFail;
-	SwitchFailures SwitchFail;
+	CSMMalfunctionSimulation Failures;
 
 	//
 	// Ground Systems
@@ -4181,8 +4127,7 @@ protected:
 	virtual void LoadSI(FILEHANDLE scn) = 0;
 	virtual void SaveSII(FILEHANDLE scn) {};
 	virtual void LoadSII(FILEHANDLE scn) {};
-	virtual void SetEngineFailure(int failstage, int faileng, double failtime, bool fail) = 0;
-	virtual void GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime) = 0;
+	virtual void SetEngineFailure(int failstage, int faileng) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
@@ -4573,6 +4518,7 @@ protected:
 	friend class DockingTargetSwitch;
 	friend class LeftCOASPowerSwitch;
 	friend class SCE;
+	friend class CSMMalfunctionSimulation;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ARCore;

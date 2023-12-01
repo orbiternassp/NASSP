@@ -478,7 +478,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	// S-IC/S-II separation
 	//
 
-	if (!LaunchFail.SIIAutoSepFail && SICSIISepPyros.Blown() && stage == LAUNCH_STAGE_ONE)
+	if (!Failures.GetFailure(CSMFailures_SII_Auto_Sep_Fail) && SICSIISepPyros.Blown() && stage == LAUNCH_STAGE_ONE)
 	{
 		SeparateStage(LAUNCH_STAGE_TWO);
 		SetStage(LAUNCH_STAGE_TWO);
@@ -1024,27 +1024,17 @@ void SaturnV::LoadSII(FILEHANDLE scn)
 	sii->LoadState(scn);
 }
 
-void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime, bool fail)
+void SaturnV::SetEngineFailure(int failstage, int faileng)
 {
 	if (failstage == 1)
 	{
-		sic->SetEngineFailureParameters(faileng, failtime, fail);
+		if (sic)
+			sic->SetEngineFailed(faileng);
 	}
 	else if (failstage == 2)
 	{
-		sii->SetEngineFailureParameters(faileng, failtime, fail);
-	}
-}
-
-void SaturnV::GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime)
-{
-	if (failstage == 1 && sic)
-	{
-		sic->GetEngineFailureParameters(faileng, fail, failtime);
-	}
-	else if (failstage == 2 && sii)
-	{
-		sii->GetEngineFailureParameters(faileng, fail, failtime);
+		if (sii)
+			sii->SetEngineFailed(faileng);
 	}
 }
 

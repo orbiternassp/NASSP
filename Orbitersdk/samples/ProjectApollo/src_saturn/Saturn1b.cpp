@@ -652,18 +652,10 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 
-void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime, bool fail)
+void Saturn1b::SetEngineFailure(int failstage, int faileng)
 {
 	if (failstage == 1)
 	{
-		sib->SetEngineFailureParameters(faileng, failtime, fail);
-	}
-}
-
-void Saturn1b::GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime)
-{
-	if (failstage == 1 && sib)
-	{
-		sib->GetEngineFailureParameters(faileng, fail, failtime);
+		sib->SetEngineFailed(faileng);
 	}
 }

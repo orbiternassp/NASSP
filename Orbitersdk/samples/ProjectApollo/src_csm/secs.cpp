@@ -650,7 +650,7 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Auto Abort Logic
-	if (((!Sat->LaunchFail.AutoAbortEnableFail && EDSLiftoffCircuitPower()) || ((AutoAbortEnableRelay || Sat->LiftoffNoAutoAbortSwitch.GetState()) && LETPhysicalSeparationMonitor && SequentialLogicBus())) && Sat->EDSSwitch.GetState())
+	if (((!Sat->Failures.GetFailure(CSMFailures_Auto_Abort_Enable_Fail) && EDSLiftoffCircuitPower()) || ((AutoAbortEnableRelay || Sat->LiftoffNoAutoAbortSwitch.GetState()) && LETPhysicalSeparationMonitor && SequentialLogicBus())) && Sat->EDSSwitch.GetState())
 	{
 		AutoAbortEnableRelay = true;
 	}
@@ -783,7 +783,7 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Tower Jettison Relay
-	if ((AutoTowerJettison && !Sat->LaunchFail.LETAutoJetFail) || ((MESCLogicBus() || EDSLogicPower()) && (Sat->TowerJett1Switch.IsUp() || Sat->TowerJett2Switch.IsUp())))
+	if ((AutoTowerJettison && !Sat->Failures.GetFailure(CSMFailures_LET_AutoJet_Fail)) || ((MESCLogicBus() || EDSLogicPower()) && (Sat->TowerJett1Switch.IsUp() || Sat->TowerJett2Switch.IsUp())))
 	{
 		LETJettisonAndFrangibleNutsRelay = true;
 	}
@@ -797,7 +797,7 @@ void MESC::Timestep(double simdt)
 	{
 		Sat->CutLESLegs();
 
-		if (!Sat->LaunchFail.LESJetMotorFail)
+		if (!Sat->Failures.GetFailure(CSMFailures_LES_Jet_Motor_Fail))
 		{
 			Sat->FireTowerJettisonMotor();
 			Sat->JettisonLET();
@@ -965,7 +965,7 @@ void MESC::Timestep(double simdt)
 	{
 		ApexCoverJettison = true;
 	}
-	else if (((MESCLogicBus() && OtherMESC->ApexCoverJettison) || TD17.ContactClosed()) && !Sat->LandFail.CoverFail)
+	else if (((MESCLogicBus() && OtherMESC->ApexCoverJettison) || TD17.ContactClosed()) && !Sat->Failures.GetFailure(CSMFailures_Apex_Cover_Fail))
 	{
 		ApexCoverJettison = true;
 	}
@@ -2023,7 +2023,7 @@ void ELSC::Timestep(double simdt)
 	}
 
 	//Drogue Deploy Logic
-	if ((TD1.ContactClosed() && !Sat->LandFail.DrogueFail) || (Sat->DrogueDeploySwitch.GetState() && ELSBatteryPower()))
+	if ((TD1.ContactClosed() && !Sat->Failures.GetFailure(CSMFailures_Drogue_Chute_Fail)) || (Sat->DrogueDeploySwitch.GetState() && ELSBatteryPower()))
 	{
 		DrogueParachuteDeploy = true;
 	}
@@ -2037,7 +2037,7 @@ void ELSC::Timestep(double simdt)
 		TD3.SetRunning(true);
 	}
 
-	if ((TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed() && !Sat->LandFail.MainFail) || (ELSBatteryPower() && Sat->MainDeploySwitch.GetState()))
+	if ((TD3.ContactClosed() && Sat->els.BaroSwitch10k.IsClosed() && !Sat->Failures.GetFailure(CSMFailures_Main_Chute_Fail)) || (ELSBatteryPower() && Sat->MainDeploySwitch.GetState()))
 	{
 		PilotParachuteDeploy = true;
 	}

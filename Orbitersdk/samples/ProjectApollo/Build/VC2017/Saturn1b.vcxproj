@@ -155,6 +155,7 @@
     <ClCompile Include="..\..\src_aux\CueCardManager.cpp" />
     <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_aux\vesim.cpp" />
+    <ClCompile Include="..\..\src_csm\CSMMalfunctionSimulation.cpp" />
     <ClCompile Include="..\..\src_csm\csmsensors.cpp" />
     <ClCompile Include="..\..\src_csm\rhc.cpp" />
     <ClCompile Include="..\..\src_csm\sce.cpp" />
@@ -293,6 +294,8 @@
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="..\..\src_sys\inertial.cpp" />
+    <ClCompile Include="..\..\src_sys\Malfunction.cpp" />
+    <ClCompile Include="..\..\src_sys\MalfunctionSimulation.cpp" />
     <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -459,6 +462,7 @@
     <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_aux\RF_calc.h" />
     <ClInclude Include="..\..\src_aux\vesim.h" />
+    <ClInclude Include="..\..\src_csm\CSMMalfunctionSimulation.h" />
     <ClInclude Include="..\..\src_csm\csmsensors.h" />
     <ClInclude Include="..\..\src_csm\rhc.h" />
     <ClInclude Include="..\..\src_csm\sce.h" />
@@ -499,6 +503,8 @@
     <ClInclude Include="..\..\src_sys\ioChannels.h" />
     <ClInclude Include="..\..\src_saturn\iu.h" />
     <ClInclude Include="..\..\src_mfd\MFDconnector.h" />
+    <ClInclude Include="..\..\src_sys\Malfunction.h" />
+    <ClInclude Include="..\..\src_sys\MalfunctionSimulation.h" />
     <ClInclude Include="..\..\src_sys\MechanicalAccelerometer.h" />
     <ClInclude Include="..\..\src_sys\missiontimer.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
