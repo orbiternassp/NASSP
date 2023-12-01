@@ -503,6 +503,8 @@ void Saturn::SystemsInit() {
 	CMRCSEngine24TempSensor.Init(&Panel276CB2, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET24"));
 	CMRCSEngine25TempSensor.Init(&Panel276CB2, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25"));
 
+	BatteryManifoldPressureSensor.Init(&Panel276CB2, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD"));
+
 	// Optics initialization
 	optics.Init(this);
 
@@ -1075,16 +1077,17 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 */
 
 //Battery Vent Debug Lines
-/*
+///*
 	double* BatCaseAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATACASE:PRESS");
 	double* BatCaseBPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATBCASE:PRESS");
 	double* BatCaseCPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATCCASE:PRESS");
 	double* BatCasePyroAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMPYROBATACASE:PRESS");
 	double* BatCasePyroBPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMPYROBATBCASE:PRESS");
+	double* BatManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD:PRESS");
 	int* BatVentValve = (int*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD:OUT:ISOPEN");
 
-	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Valve: %d", * BatCaseAPress* PSI, * BatCaseBPress* PSI, * BatCaseCPress* PSI, * BatCasePyroAPress* PSI, * BatCasePyroBPress* PSI, BatteryVent.GetManifoldPress(), * BatVentValve);
-*/
+	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Valve: %d", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve);
+//*/
 
 #ifdef _DEBUG
 

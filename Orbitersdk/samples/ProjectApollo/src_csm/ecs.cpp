@@ -1557,21 +1557,12 @@ SaturnBatteryVent::SaturnBatteryVent()
 {
 	BatteryVentSwitch = NULL;
 	BatteryManifold = NULL;
-	BatteryManifoldPress = 0.0;
 }
 
 void SaturnBatteryVent::Init(RotationalSwitch* bvs, h_Tank* bmt)
 {
 	BatteryVentSwitch = bvs;
 	BatteryManifold = bmt;
-}
-
-double SaturnBatteryVent::GetManifoldPress()
-{
-	if (!BatteryManifoldPress) {
-		BatteryManifoldPress = BatteryManifold->space.Press;
-	}
-	return BatteryManifoldPress * PSI;
 }
 
 void SaturnBatteryVent::SystemTimestep(double simdt)

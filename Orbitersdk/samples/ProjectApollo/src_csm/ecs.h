@@ -404,11 +404,9 @@ public:
 	SaturnBatteryVent();
 	void Init(RotationalSwitch* bvs, h_Tank* bmt);
 	void SystemTimestep(double simdt);
-	double GetManifoldPress();
 protected:
 	RotationalSwitch* BatteryVentSwitch;
 	h_Tank* BatteryManifold;
-	double BatteryManifoldPress;
 };
 
 class SaturnSuitFlowValves
