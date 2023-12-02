@@ -78,6 +78,8 @@ public:
 	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }
 	double GetLOXTankUllagePressurePSI() { return LOXTankUllagePressurePSI; }
 
+	void SetEngineFailed();
+
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 protected:
@@ -160,6 +162,8 @@ protected:
 	DelayTimer StartTankDischargeDelayTimer;
 	DelayTimer IgnitionPhaseTimer;
 	DelayTimer SparksDeenergizedTimer;
+
+	bool EngineFailed;
 };
 
 class SIVB200Systems : public SIVBSystems

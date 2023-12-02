@@ -91,6 +91,8 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	IgnitionDetector = CC1Signal1 = IgnitionDetectionLockup = false;
 	CC2Signal1 = CC2Signal2 = CC2Signal3 = CutoffLockup = false;
 	EngineState = 0;
+
+	EngineFailed = false;
 }
 
 SIVBSystems::~SIVBSystems()
@@ -203,7 +205,7 @@ void SIVBSystems::Timestep(double simdt)
 	SparksDeenergizedTimer.Timestep(simdt);
 
 	//Thrust OK switch
-	bool ThrustOK = vessel->GetThrusterLevel(j2engine) > 0.65;
+	bool ThrustOK = vessel->GetThrusterLevel(j2engine) > 0.65 && !EngineFailed;
 
 	bool PowerH = (PassivationRelay == false);
 
@@ -588,6 +590,11 @@ void SIVBSystems::GetJ2ISP(double ratio, double &isp, double &ThrustAdjust)
 			return;
 		}
 	}
+}
+
+void SIVBSystems::SetEngineFailed()
+{
+	EngineFailed = true;
 }
 
 SIVB200Systems::SIVB200Systems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2prop, THRUSTER_HANDLE *aps, THRUSTER_HANDLE *ull, THRUSTER_HANDLE &lox, THGROUP_HANDLE &ver)

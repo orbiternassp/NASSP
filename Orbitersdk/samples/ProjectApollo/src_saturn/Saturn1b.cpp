@@ -656,6 +656,10 @@ void Saturn1b::SetEngineFailure(int failstage, int faileng)
 {
 	if (failstage == 1)
 	{
-		sib->SetEngineFailed(faileng);
+		if (sib) sib->SetEngineFailed(faileng);
+	}
+	else if (failstage == 3)
+	{
+		if (sivb) sivb->SetEngineFailed();
 	}
 }

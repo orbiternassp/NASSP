@@ -1044,7 +1044,7 @@ bool CircuitBrakerSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 
 double CircuitBrakerSwitch::Voltage()
 {
-	if ((state != 0) && SRC)
+	if ((GetState() != 0) && SRC)
 		return SRC->Voltage();
 
 	return 0.0;
@@ -1052,7 +1052,7 @@ double CircuitBrakerSwitch::Voltage()
 
 double CircuitBrakerSwitch::Current()
 {	
-	if ((state != 0) && SRC && SRC->IsEnabled()) {
+	if ((GetState() != 0) && SRC && SRC->IsEnabled()) {
 		Volts = SRC->Voltage();
 		if (Volts > 0.0)
 			Amperes = (power_load / Volts);
@@ -1067,7 +1067,7 @@ double CircuitBrakerSwitch::Current()
 
 double CircuitBrakerSwitch::Frequency()
 {
-	if ((state != 0) && SRC)
+	if ((GetState() != 0) && SRC)
 		return SRC->Frequency();
 
 	return 0.0;
@@ -1091,7 +1091,7 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 	// Do nothing if the breaker is open.
 	//
 
-	if (state == 0){
+	if (GetState() == 0){
 		return;
 	}
 

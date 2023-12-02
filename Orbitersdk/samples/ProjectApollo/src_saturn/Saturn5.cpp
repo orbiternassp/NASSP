@@ -1036,6 +1036,11 @@ void SaturnV::SetEngineFailure(int failstage, int faileng)
 		if (sii)
 			sii->SetEngineFailed(faileng);
 	}
+	else if (failstage == 3)
+	{
+		if (sivb)
+			sivb->SetEngineFailed();
+	}
 }
 
 double SaturnV::GetSIThrustLevel()
