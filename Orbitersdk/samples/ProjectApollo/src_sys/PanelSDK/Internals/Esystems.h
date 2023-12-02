@@ -280,10 +280,10 @@ public:
 /// \ingroup PanelSDK
 /// The battery simulation class.
 ///
-class Battery:public e_object,public therm_obj
+class Battery:public e_object, public therm_obj
 {  //battery is a producer / consumer
 public:
-	Battery(char *i_name,e_object *i_src, double i_power, double i_voltage, double i_resistance, h_Tank *i_case);
+	Battery(char *i_name, e_object *i_src, double i_power, double i_voltage, double i_resistance);
 	~Battery();
 
 	void UpdateFlow(double dt);
@@ -299,7 +299,6 @@ public:
 	double Capacity() { return power; };
 	virtual therm_obj* GetThermalInterface(){return (therm_obj*)this;};
 
-	h_Tank* batcase;
     double max_power; // in Watt * second
 	double power;   //in Watt * second
 	double max_voltage; // at zero current

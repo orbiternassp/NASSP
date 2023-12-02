@@ -239,13 +239,12 @@ void E_system::Create_Battery(char *line)
 {
 	char name[100];
 	double power, operating_voltage, resistance, volume, isolation, mass, temp = 0;
-	h_Tank* batcase;
 	vector3 pos;
 	char source[100];
 
-	sscanf(line + 9, "%s %lf %lf %lf %s %lf <%lf %lf %lf> %lf %lf %lf", name, &power, &operating_voltage, &resistance, source, &temp, &pos.x, &pos.y, &pos.z, &volume, &isolation, &mass, batcase);
+	sscanf(line + 9, "%s %lf %lf %lf %s %lf <%lf %lf %lf> %lf %lf %lf", name, &power, &operating_voltage, &resistance, source, &temp, &pos.x, &pos.y, &pos.z, &volume, &isolation, &mass);
 	e_object* SRC=(e_object*)GetPointerByString(source);
-	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance, batcase));
+	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance));
 
 	new_b->parent = this;
 
