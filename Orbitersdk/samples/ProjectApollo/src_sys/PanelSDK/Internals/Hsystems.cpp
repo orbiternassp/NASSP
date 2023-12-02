@@ -1495,3 +1495,35 @@ void h_Accumulator::refresh(double dt)
 
 	//sprintf(oapiDebugString(), "Volume %lf Pressure %lf Original Volume %lf", space.Volume, space.Press*PSI, Original_volume);
 }
+
+
+
+h_ExteriorEnviormnent::~h_ExteriorEnviormnent()
+{
+	h_Tank::~h_Tank();
+}
+
+void h_ExteriorEnviormnent::refresh(double dt)
+{
+	double exteriorDensity = parent->Vessel->GetAtmDensity();
+	double exteriorTemperature = parent->Vessel->GetAtmTemperature();
+	char planetName[64];
+	body externBody = body::None;
+
+	oapiGetObjectName(parent->Vessel->GetAtmRef(), planetName, 64);
+	
+	if (!strcmp(planetName, "Earth")) {
+		externBody = Earth;
+	}
+	else if (!strcmp(planetName, "Mars")) { //This is included as an example of how to expand functionality for other bodies. see the definition of compositionRatio[][]
+		externBody = Mars;
+	}
+
+	for (int n = 0; n < MAX_SUB; n++) {
+		h_Tank::space.composition[n].mass = exteriorDensity * h_Tank::space.Volume * 1000.0 * compositionRatio[externBody][n];
+	}
+
+
+	h_Tank::BoilAllAndSetTemp(exteriorTemperature);
+	h_Tank::refresh(dt);
+}

@@ -465,10 +465,27 @@ void H_system::Create_h_Accumulator(char* line) {
 	new_one->parent = this;
 }
 
+void H_system::Create_h_ExteriorEnviormnent()
+{
+	char name[] = "EXTERIOR_ENVIORNMENT";
+	char valvename[100];
+	h_ExteriorEnviormnent* new_one;
+
+	new_one = (h_ExteriorEnviormnent*)AddSystem(new h_ExteriorEnviormnent(name, vector3(0.0, 0.0, 0.0), 100000.0));
+	new_one->space.Void(); //empty the space
+
+	P_thermal->AddThermalObject(new_one);
+	new_one->parent = this;
+	
+	new_one->refresh(0.1);
+}
+
 
 void H_system::Build() {
 	
 	char *line;
+
+	Create_h_ExteriorEnviormnent();
 
 	line = ReadConfigLine();
 	while (!Compare(line,"</HYDRAULIC>")) {
