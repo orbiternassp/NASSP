@@ -4134,7 +4134,6 @@ protected:
 
 	void VCFreeCam(VECTOR3 dir, bool slow);
 
-
 	//
 	// Integral Lights
 	//

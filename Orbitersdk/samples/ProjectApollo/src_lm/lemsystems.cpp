@@ -2815,21 +2815,96 @@ LEM_RadarTape::LEM_RadarTape()
 	dc_source = NULL;
 	reqRange = 0;
 	reqRate = 0;
-	dispRange = 0.0;
-	dispRate = 0.0;
+	dispRange = 8321;	//Initializes range rate display to zero per LM closeout images
+	dispRate = 3759;	//Initializes range rate display to a non zero number, in this case -240, per LM closeout images
 	lgc_alt = 0;
 	lgc_altrate = 0;
-	desRange = 0.0;
-	desRate = 0.0;
+	ags_alt = 0;
+	ags_altrate = 0;
+	desRange = 0;
+	desRate = 0;
+	LGCaltUpdateTime = 0;
+	LGCaltRateUpdateTime = 0;
+	AGSaltUpdateTime = 0;
+	AGSaltRateUpdateTime = 0;
 }
 
-void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src, SURFHANDLE surf1, SURFHANDLE surf2){
+void LEM_RadarTape::Init(LEM* s, e_object* dc_src, e_object* ac_src, SURFHANDLE surf1, SURFHANDLE surf2) {
 	lem = s;
 	dc_source = dc_src;
 	ac_source = ac_src;
 	tape1 = surf1;
 	tape2 = surf2;
 }
+
+// Power signal monitor - The power signal monitor provides an alarm light in the event of:
+// (a) alternating current voltage below 85 volts 
+// (b) direct current voltage below 20 volts 
+// (c) input data loss
+
+//FIXME: Need to investigate how the signals were interpreted, seems that near zero signal or zero signal generates the logic condition as noted by the light going on with rate <5 ft/s
+
+bool LEM_RadarTape::PowerSignalMonOn()
+{
+	if ((dc_source->Voltage() > 2 || ac_source->Voltage() > SP_MIN_ACVOLTAGE) && (PowerFailure() == true || SignalFailure() == true || TimingFailure() == true)) { //Checks if DC power (2V to light the lamp) is present and the logic for power/signal/timing present
+		return true;
+	}
+	return false;
+}
+
+bool LEM_RadarTape::PowerFailure()
+{
+	if (ac_source->Voltage() < 85.0 || dc_source->Voltage() < 20.0) { //Checks AC <85V and DC <20V
+		return true;
+	}
+	return false;
+}
+
+bool LEM_RadarTape::SignalFailure()
+{
+	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
+	{
+		if (lem->RR.IsRangeDataGood() == false || lem->RR.IsFrequencyDataGood() == false || lem->RR.GetRadarRange() == 0.0 || abs(lem->RR.GetRadarRate()) < 1.524) //5 ft/s = 1.524 m/s
+		{
+			return true; //Needs to check rendezvous radar rate and range signals and return true if not present
+		}
+	}
+	else {
+		if (lem->ModeSelSwitch.IsUp()) // LR
+		{
+			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false || lem->LR.GetAltitude() == 0.0 || abs(lem->LR.GetAltitudeRate()) < 1.524) //5 ft/s = 1.524 m/s
+			{
+				return true; //Needs to check landing radar rate and range signals and return true if not present
+			}
+		}
+		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
+		{
+			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime() || lgc_alt == 0.0 || abs(lgc_altrate) < 1.524) //5 ft/s = 1.524 m/s
+			{
+				return true; //Needs to check LGC rate and range signals and return true if not present
+			}
+		}
+		else //AGS
+		{
+			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime() || ags_alt == 0.0 || abs(ags_altrate) < 1.524) //5 ft/s = 1.524 m/s
+			{
+				return true; //Needs to check AGS rate and range signals and return true if not present
+			}
+		}
+		return false;
+	}
+	return false;
+}
+
+bool LEM_RadarTape::TimingFailure()
+{
+	if (lem->PCM.TimingSignal() == false)
+	{
+		return true; //Needs to check for 512 KHz PCMTEA timing signal
+	}
+		return false;
+}
+
 
 void LEM_RadarTape::Timestep(double simdt) {
 	
@@ -2841,25 +2916,26 @@ void LEM_RadarTape::Timestep(double simdt) {
 	if( lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP ) {
 		setRange(lem->RR.GetRadarRange());
 		setRate(lem->RR.GetRadarRate());
-	} else {
+	} 
+	else {
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
 			if (lem->LR.IsRangeDataGood())
 			{
 				setRange(lem->LR.GetAltitude());
 			}
-			else
+			/*else
 			{
 				setRange(0);
-			}
+			}*/
 			if (lem->LR.IsVelocityDataGood())
 			{
 				setRate(lem->LR.GetAltitudeRate());
 			}
-			else
+			/*else
 			{
 				setRate(0);
-			}
+			}*/
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
@@ -2868,8 +2944,8 @@ void LEM_RadarTape::Timestep(double simdt) {
 		}
 		else //AGS
 		{
-			setRange(lem->aea.GetAltitude());
-			setRate(lem->aea.GetAltitudeRate());
+			setRange(ags_alt);
+			setRate(ags_altrate);
 		}
 
 	}
@@ -2949,6 +3025,8 @@ void LEM_RadarTape::SystemTimestep(double simdt) {
 
 	if (dc_source)
 		dc_source->DrawPower(2.1);
+
+	//sprintf(oapiDebugString(), "SimTime %1f LGC Alt Time %.5f LGC AltRate Time %.5f AGS Alt Time %.5f AGS AltRate Time %.5f", oapiGetSimTime(), LGCaltUpdateTime, LGCaltRateUpdateTime, AGSaltUpdateTime, AGSaltRateUpdateTime);
 }
 
 bool LEM_RadarTape::IsPowered()
@@ -2973,6 +3051,8 @@ void LEM_RadarTape::SetLGCAltitude(int val) {
 	//}
 
 	lgc_alt = (2.345*0.3048*pulses);
+
+	LGCaltUpdateTime = oapiGetSimTime();
 }
 
 void LEM_RadarTape::SetLGCAltitudeRate(int val) {
@@ -2990,6 +3070,40 @@ void LEM_RadarTape::SetLGCAltitudeRate(int val) {
 	}
 
 	lgc_altrate = -(0.5*0.3048*pulses);
+
+	LGCaltRateUpdateTime = oapiGetSimTime();
+}
+
+void LEM_RadarTape::AGSAltitudeAltitudeRate(int Data) {
+
+	if (!IsPowered()) { return; }
+
+		int DataVal;
+
+		AGSChannelValue40 val = lem->aea.GetOutputChannel(IO_ODISCRETES);
+
+		if (val[AGSAltitude] == 0)
+		{
+			DataVal = Data & 0777777;
+
+			ags_alt = (double)DataVal * ALTSCALEFACTOR;
+
+			AGSaltUpdateTime = oapiGetSimTime();
+		}
+		else if (val[AGSAltitudeRate] == 0)
+		{
+			if (Data & 0400000) { // Negative
+				DataVal = -((~Data) & 0777777);
+				DataVal = -0400000 - DataVal;
+			}
+			else {
+				DataVal = Data & 0777777;
+			}
+
+			ags_altrate = -(double)DataVal * ALTRATESCALEFACTOR;
+
+			AGSaltRateUpdateTime = oapiGetSimTime();
+		}
 }
 
 void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){

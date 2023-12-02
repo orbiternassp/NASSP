@@ -69,6 +69,7 @@
 #define LM_VC_PWRFAIL_LIGHT_7		6   // Glycol
 #define LM_VC_PWRFAIL_LIGHT_8		7   // ECS quantity
 #define LM_VC_PWRFAIL_LIGHT_9		8   // X-pointer right
+#define LM_VC_PWRFAIL_LIGHT_10		20   // Range Rate Tape
 
 // Panel tilt
 const double P1_TILT = 7.95581 * RAD;
@@ -1848,6 +1849,13 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		else {
 			SetPowerFailureLight(VC_MAT_L03_PwrFail_DPSpress, false); // Light Off
 		}
+
+		if (RadarTape.PowerSignalMonOn() == true) {
+			SetPowerFailureLight(VC_MAT_L21_PwrFail_RangeRate, true); // Light On
+		}
+		else {
+			SetPowerFailureLight(VC_MAT_L21_PwrFail_RangeRate, false); // Light Off
+		}
 		return true;
 
 	case AID_VC_PWRFAIL_LIGHTS_P2:
@@ -3256,8 +3264,6 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	//int lightmat = VC_NMAT - mat_L01 + 12;
-
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
 	if (state == true)
@@ -3282,8 +3288,6 @@ void LEM::SetContactLight(int m, bool state) {
 
 	if (!vcmesh)
 		return;
-
-	//int lightmat = VC_NMAT - mat_L01 + 10;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
@@ -3310,8 +3314,6 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	//int lightmat = VC_NMAT - mat_L01 + 1;
-
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
 	if (state == true)
@@ -3336,8 +3338,6 @@ void LEM::SetStageSeqRelayLight(int m, bool state) {
 
 	if (!vcmesh)
 		return;
-
-	//int lightmat = VC_NMAT - mat_L01 + 19;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
@@ -3372,8 +3372,6 @@ void LEM::SetIntegralLight(int m, double state)
         return;
 	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
 	{
-//		MATERIAL* mat = oapiMeshMaterial(hLMVC, emmisionMat[i]);
-
 		gcCore *pCore = gcGetCoreInterface();
 		if (pCore) {
 			FVECTOR4 value;
@@ -3383,14 +3381,6 @@ void LEM::SetIntegralLight(int m, double state)
 			value.a = 1.0;
 			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION2, &value, true);
 		}
-
-/*		mat->emissive.r = (float)state;
-		mat->emissive.g = (float)state;
-		mat->emissive.b = (float)state;
-		mat->emissive.a = 1;
-
-		oapiSetMaterial(vcmesh, emmisionMat[i], mat);
-*/
 	}
     sprintf(oapiDebugString(), "%d %lf", m, state);
 }
@@ -3443,8 +3433,6 @@ void LEM::SetFloodLight(int m, double state)
         return;
 	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
 	{
-//		MATERIAL* mat = oapiMeshMaterial(hLMVC, emmisionMat[i]);
-
 		gcCore *pCore = gcGetCoreInterface();
 		if (pCore) {
 			FVECTOR4 value;
@@ -3454,14 +3442,6 @@ void LEM::SetFloodLight(int m, double state)
 			value.a = 1.0;
 			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
 		}
-
-/*		mat->emissive.r = (float)state;
-		mat->emissive.g = (float)state;
-		mat->emissive.b = (float)state;
-		mat->emissive.a = 1;
-
-		oapiSetMaterial(vcmesh, emmisionMat[i], mat);
-*/
 	}
     sprintf(oapiDebugString(), "%d %lf", m, state);
 }
