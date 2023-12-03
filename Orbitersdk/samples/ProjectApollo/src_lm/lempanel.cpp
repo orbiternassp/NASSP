@@ -1694,6 +1694,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_LEM_PWRFAIL_GLYCOL,               _R(1738, 415, 1751, 427), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEM_PWRFAIL_XPTRCDR,              _R(725,  395, 738,  407), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEM_PWRFAIL_XPTRLMP,              _R(1961, 383, 1974, 395), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_PWRFAIL_RNGALTRATE,			_R(1097, 624, 1104, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -3684,6 +3685,15 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		else {
 			oapiBlt(surf, srf[SRF_PWRFAIL_LIGHT], 0, 0, 13, 0, 13, 12);
+		}
+		return true;
+
+	case AID_LEM_PWRFAIL_RNGALTRATE: //FIXME
+		if (RadarTape.PowerSignalMonOn() == true) {
+			oapiBlt(surf, srf[SRF_PWRFAIL_LIGHT], 0, 0, 3, 0, 7, 12);
+		}
+		else {
+			oapiBlt(surf, srf[SRF_PWRFAIL_LIGHT], 0, 0, 16, 0, 7, 12);
 		}
 		return true;
 	}

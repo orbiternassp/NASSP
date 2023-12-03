@@ -68,6 +68,7 @@
 #define LM_VC_PWRFAIL_LIGHT_7		6   // Glycol
 #define LM_VC_PWRFAIL_LIGHT_8		7   // ECS quantity
 #define LM_VC_PWRFAIL_LIGHT_9		8   // X-pointer right
+#define LM_VC_PWRFAIL_LIGHT_10		20   // Range Rate Tape
 
 // Panel tilt
 const double P1_TILT = 7.95581 * RAD;
@@ -414,7 +415,7 @@ const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
 // Subtracted from total material count to find L01 location.
-const int mat_L01 = 44;
+const int mat_L01 = 47;
 
 void LEM::JostleViewpoint(double amount)
 
@@ -1830,6 +1831,13 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		else {
 			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_3, false); // Light Off
+		}
+
+		if (RadarTape.PowerSignalMonOn() == true) {
+			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_10, true); // Light On
+		}
+		else {
+			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_10, false); // Light Off
 		}
 		return true;
 
