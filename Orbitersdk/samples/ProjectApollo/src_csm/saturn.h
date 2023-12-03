@@ -3781,6 +3781,11 @@ protected:
 	SaturnSuitFlowValves SaturnSuitFlowValve300;
 	SaturnSuitFlowValves SaturnSuitFlowValve301;
 	SaturnSuitFlowValves SaturnSuitFlowValve302;
+	SaturnDumpHeater WasteH2ODumpHeaterA;
+	SaturnDumpHeater WasteH2ODumpHeaterB;
+	SaturnDumpHeater UrineDumpHeaterA;
+	SaturnDumpHeater UrineDumpHeaterB;
+
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;

@@ -573,11 +573,12 @@ void FCell::Save(FILEHANDLE scn)
 //-------------------------------------- BATTERY ---------------------------------
 //
 
-Battery::Battery(char* i_name, e_object* i_src, double i_power, double i_voltage, double i_resistance)
+Battery::Battery(char* i_name, e_object* i_src, double i_power, double i_voltage, double i_resistance, h_Tank* i_tgt)
 {
 	strcpy(name, i_name);
 	max_stage = 99;
 	SRC = i_src;
+	batcase = i_tgt;
 
 	internal_resistance = i_resistance;
 	max_voltage = i_voltage;
@@ -695,11 +696,12 @@ void Battery::refresh(double dt)
 
 		thermic(chargeheat * dt); //1 joule = 1 watt * dt
 
-		//if (SRC->Current() > 0.0)
-		//{
-		//  double h2 = 0.1 * dt;
-		//	batcase->space.composition[SUBSTANCE_H2].mass += h2;
-		//}
+		double h2 = 0.2 * SRC->Current() * dt;
+		double o2 = 0.1 * SRC->Current() * dt;
+		batcase->space.composition[SUBSTANCE_H2].mass += h2;
+		batcase->space.composition[SUBSTANCE_O2].mass += o2;
+		batcase->space.composition[SUBSTANCE_H2].vapor_mass += h2;
+		batcase->space.composition[SUBSTANCE_O2].vapor_mass += o2;
 	}
 }
 

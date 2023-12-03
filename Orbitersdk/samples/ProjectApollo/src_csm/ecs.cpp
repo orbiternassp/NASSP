@@ -1079,7 +1079,7 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 		heaters = true;
 		saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.DrawPower(5.7);
 	}
-	if (saturn->WasteH2ODumpSwitch.IsDown() && saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.IsPowered()) {
+	else if (saturn->WasteH2ODumpSwitch.IsDown() && saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.IsPowered()) {
 		heaters = true;
 		saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.DrawPower(5.7);
 	}
@@ -1611,4 +1611,56 @@ void SaturnSuitFlowValves::SystemTimestep(double simdt)
 	else
 		SuitFlowValve->Open();
 
+}
+
+SaturnDumpHeater::SaturnDumpHeater()
+{
+
+}
+
+void SaturnDumpHeater::Init(Saturn* s, h_Radiator* noz, Boiler* h, Boiler* sh, CircuitBrakerSwitch* cb, ThreePosSwitch* sw)
+{
+	saturn = s;
+	nozzle = noz;
+	heater = h;
+	stripheater = sh;
+	circuitbreaker = cb;
+	powerswitch = sw;
+
+	temp = 0.0;
+}
+
+double SaturnDumpHeater::GetTemperatureF()
+{
+	return KelvinToFahrenheit(nozzle->GetTemp());
+}
+
+bool SaturnDumpHeater::IsFrozen()
+{
+	if (GetTemperatureF() < 32.0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void SaturnDumpHeater::SystemTimestep(double simdt)
+{
+	if (circuitbreaker->IsPowered())
+	{
+		stripheater->SetPumpOn();
+	}
+
+	else if (circuitbreaker->IsPowered() && powerswitch->IsUp())
+	{
+		stripheater->SetPumpOn();
+		heater->SetPumpOn();
+	}
+
+	else
+	{
+		stripheater->SetPumpOff();
+		heater->SetPumpOff();
+	}
 }

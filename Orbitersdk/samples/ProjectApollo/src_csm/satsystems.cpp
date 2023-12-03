@@ -622,6 +622,31 @@ void Saturn::SystemsInit() {
 	SaturnSuitFlowValve302.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
 		&SuitCircuitFlow302Switch);
 
+	WasteH2ODumpHeaterA.Init(this,
+							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLE"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLEHEATERA"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLESTRIPHEATERA"),
+							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
+							&WasteH2ODumpSwitch);
+	WasteH2ODumpHeaterB.Init(this,
+							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLE"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLEHEATERB"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLESTRIPHEATERB"),
+							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
+							&WasteH2ODumpSwitch);
+	UrineDumpHeaterA.Init(this,
+							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLEHEATERB"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLESTRIPHEATERB"),
+							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
+							&UrineDumpSwitch);
+	UrineDumpHeaterB.Init(this,
+							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLEHEATERB"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLESTRIPHEATERB"),
+							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
+							&UrineDumpSwitch);
+
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
 	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
@@ -1587,6 +1612,11 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		SaturnSuitFlowValve300.SystemTimestep(tFactor);
 		SaturnSuitFlowValve301.SystemTimestep(tFactor);
 		SaturnSuitFlowValve302.SystemTimestep(tFactor);
+		BatteryVent.SystemTimestep(tFactor);
+		WasteH2ODumpHeaterA.SystemTimestep(tFactor);
+		WasteH2ODumpHeaterB.SystemTimestep(tFactor);
+		UrineDumpHeaterA.SystemTimestep(tFactor);
+		UrineDumpHeaterB.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);

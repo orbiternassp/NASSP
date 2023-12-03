@@ -423,4 +423,22 @@ protected:
 	ThreePosSwitch* SuitFlowSwitch;
 };
 
+class SaturnDumpHeater
+{
+public:
+	SaturnDumpHeater();
+	void Init(Saturn* s, h_Radiator* noz, Boiler* h, Boiler* sh, CircuitBrakerSwitch* wdcb, ThreePosSwitch* wds);
+	double GetTemperatureF();
+	bool IsFrozen();
+	void SystemTimestep(double simdt);
+protected:
+	Saturn *saturn;
+	h_Radiator *nozzle;
+	Boiler *heater;
+	Boiler *stripheater;
+	CircuitBrakerSwitch *circuitbreaker;
+	ThreePosSwitch *powerswitch;
+	double temp;
+};
+
 #endif // _PA_ECS_H
