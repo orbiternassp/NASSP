@@ -287,10 +287,12 @@ public:
 	double *GetWasteWaterDumpLevelRef() { return &wasteWaterDumpLevel; }
 	double *GetUrineDumpLevelRef() { return &urineDumpLevel; }
 	void FoodPreparationWaterSwitchToggled(PanelSwitchItem *s);
+	bool *IsNozzleHeaterPowered() { return &heaters; }
 
 protected:
 	double wasteWaterDumpLevel;
 	double urineDumpLevel;
+	bool heaters;
 
 	Saturn *saturn;
 	h_Tank *potableTank;
@@ -402,9 +404,10 @@ class SaturnBatteryVent
 {
 public:
 	SaturnBatteryVent();
-	void Init(RotationalSwitch* bvs, h_Tank* bmt);
+	void Init(SaturnWaterController* wc, RotationalSwitch* bvs, h_Tank* bmt);
 	void SystemTimestep(double simdt);
 protected:
+	SaturnWaterController* watercontroller;
 	RotationalSwitch* BatteryVentSwitch;
 	h_Tank* BatteryManifold;
 };

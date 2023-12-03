@@ -1034,6 +1034,7 @@ void SaturnWaterController::Init(Saturn *s, h_Tank *pt, h_Tank *wt, h_Tank *pit,
 								 h_Pipe *wvp, h_Pipe *wivp) {
 	wasteWaterDumpLevel = 0;
 	urineDumpLevel = 0;
+	heaters = false;
 
 	saturn = s;
 	potableTank = pt;
@@ -1074,7 +1075,6 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 	}
 
 	// dump heaters
-	bool heaters = false;
 	if (saturn->WasteH2ODumpSwitch.IsUp() && saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.IsPowered()) {
 		heaters = true;
 		saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.DrawPower(5.7);
@@ -1083,6 +1083,8 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 		heaters = true;
 		saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.DrawPower(5.7);
 	}
+	else
+		heaters = false;
 
 	// Pressure relief
 	if ((saturn->PressureReliefRotary.GetState() == 0 || saturn->PressureReliefRotary.GetState() == 3) && heaters) {	// dump a/b
@@ -1559,8 +1561,9 @@ SaturnBatteryVent::SaturnBatteryVent()
 	BatteryManifold = NULL;
 }
 
-void SaturnBatteryVent::Init(RotationalSwitch* bvs, h_Tank* bmt)
+void SaturnBatteryVent::Init(SaturnWaterController* wc, RotationalSwitch* bvs, h_Tank* bmt)
 {
+	watercontroller = wc;
 	BatteryVentSwitch = bvs;
 	BatteryManifold = bmt;
 }
@@ -1572,7 +1575,7 @@ void SaturnBatteryVent::SystemTimestep(double simdt)
 	// Valve in motion
 	if (BatteryManifold->OUT_valve.pz) return;
 
-	if (BatteryVentSwitch->GetState() == 1)
+	if (BatteryVentSwitch->GetState() == 1 && watercontroller->IsNozzleHeaterPowered())
 	{
 		BatteryManifold->OUT_valve.Open();
 	}

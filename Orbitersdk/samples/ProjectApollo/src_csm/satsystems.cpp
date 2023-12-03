@@ -613,7 +613,7 @@ void Saturn::SystemsInit() {
 					  &PressEqualValve, &ForwardHatch);
 	WasteStowageVentValve.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE"),
 		&WasteMGMTStoageVentRotary);
-	BatteryVent.Init(&WasteMGMTBatteryVentRotary, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD"));
+	BatteryVent.Init(&WaterController, &WasteMGMTBatteryVentRotary, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD"));
 
 	SaturnSuitFlowValve300.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD:OUT2"),
 		&SuitCircuitFlow300Switch);
