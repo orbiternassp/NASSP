@@ -476,8 +476,6 @@ void H_system::Create_h_ExteriorEnviormnent()
 
 	P_thermal->AddThermalObject(new_one);
 	new_one->parent = this;
-	
-	new_one->refresh(0.1);
 }
 
 

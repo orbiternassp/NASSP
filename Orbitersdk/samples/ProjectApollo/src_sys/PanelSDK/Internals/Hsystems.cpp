@@ -1509,8 +1509,9 @@ void h_ExteriorEnviormnent::refresh(double dt)
 	double exteriorTemperature = parent->Vessel->GetAtmTemperature();
 	char planetName[64];
 	body externBody = body::None;
+	OBJHANDLE atmRef = parent->Vessel->GetAtmRef();
 
-	oapiGetObjectName(parent->Vessel->GetAtmRef(), planetName, 64);
+	oapiGetObjectName(atmRef, planetName, 64);
 	
 	if (!strcmp(planetName, "Earth")) {
 		externBody = Earth;
@@ -1520,7 +1521,7 @@ void h_ExteriorEnviormnent::refresh(double dt)
 	}
 
 	for (int n = 0; n < MAX_SUB; n++) {
-		h_Tank::space.composition[n].mass = exteriorDensity * h_Tank::space.Volume * 1000.0 * compositionRatio[externBody][n];
+		h_Tank::space.composition[n].mass = exteriorDensity * h_Tank::space.Volume * compositionRatio[externBody][n];
 	}
 
 

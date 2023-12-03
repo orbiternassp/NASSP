@@ -1072,6 +1072,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		KelvinToFahrenheit(*YAWJET16), (KelvinToFahrenheit(*YAWJET16) + 50.0) / 20.0,
 		KelvinToFahrenheit(*ROLLJET21), (KelvinToFahrenheit(*ROLLJET21) + 50.0) / 20.0);
 */
+	//h_ExteriorEnviormnent* ExtEnv = (h_ExteriorEnviormnent*)Panelsdk.GetPointerByString("HYDRAULIC:EXTERIOR_ENVIORNMENT");
+	//sprintf(oapiDebugString(), "Pressure. OAPI %17f, SPSDK %17f", this->GetAtmPressure(), ExtEnv->space.Press);
 #ifdef _DEBUG
 
 		/*sprintf(oapiDebugString(), "FC1 %0.1fK, FC2 %0.1fK, FC3 %0.1fK; FC1 Cool. %0.1fK, FC2 Cool. %0.1fK, FC3 Cool. %0.1fK; R1 %0.1fK, R2 %0.1fK, R3 %0.1fK, R4 %0.1fK, R5 %0.1fK, R6 %0.1fK, R7 %0.1fK, R8 %0.1fK",
