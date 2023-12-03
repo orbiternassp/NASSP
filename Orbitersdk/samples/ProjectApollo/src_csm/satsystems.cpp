@@ -1086,7 +1086,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double* BatManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD:PRESS");
 	int* BatVentValve = (int*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD:OUT:ISOPEN");
 
-	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Valve: %d", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve);
+	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Valve: %d Heat: %d", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, WaterController.IsNozzleHeaterPowered());
 //*/
 
 #ifdef _DEBUG

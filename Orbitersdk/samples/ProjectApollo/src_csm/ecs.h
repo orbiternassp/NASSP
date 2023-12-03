@@ -287,7 +287,7 @@ public:
 	double *GetWasteWaterDumpLevelRef() { return &wasteWaterDumpLevel; }
 	double *GetUrineDumpLevelRef() { return &urineDumpLevel; }
 	void FoodPreparationWaterSwitchToggled(PanelSwitchItem *s);
-	bool *IsNozzleHeaterPowered() { return &heaters; }
+	bool IsNozzleHeaterPowered() { return heaters; }
 
 protected:
 	double wasteWaterDumpLevel;
