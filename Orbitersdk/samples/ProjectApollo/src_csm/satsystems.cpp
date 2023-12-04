@@ -1124,9 +1124,13 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double* WaterStripHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERB:ISON");
 	double* UrineHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERB:ISON");
 	double* UrineStripHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERB:ISON");
+	double* SteamDuctHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:STEAMDUCTHEATERA:ISON");
+	double* SteamDuctHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:STEAMDUCTHEATERA:ISON");
 
-	//sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d WSHA: %lf H2OT: %.3f UDSTA: %lf UT: %.3f", *BatCaseAPress* PSI, *BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, *WaterStripHeaterA, WasteH2ODumpHeater.GetTemperatureF(), *UrineStripHeaterA, UrineDumpHeater.GetTemperatureF());
-	sprintf(oapiDebugString(), "WHA: %lf WSHA: %lf WHB: %lf WSHB: %lf H2OT: %.3f UDHA: %lf UDSTA: %lf UDHB: %lf UDSTB: %lf UT: %.3f SDT: %.3f", *WaterHeaterA, *WaterStripHeaterA, *WaterHeaterB, *WaterStripHeaterB, WasteH2ODumpHeater.GetTemperatureF(), *UrineHeaterA, *UrineStripHeaterA, *UrineHeaterB, *UrineStripHeaterB, UrineDumpHeater.GetTemperatureF(), KelvinToFahrenheit(*SteamDuctNozzleTemp));
+	//sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d H2OT: %.3f", *BatCaseAPress* PSI, *BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, WasteH2ODumpHeater.GetTemperatureF());
+	sprintf(oapiDebugString(), "WHA: %lf WSHA: %lf WHB: %lf WSHB: %lf H2OT: %.3f UDHA: %lf UDSTA: %lf UDHB: %lf UDSTB: %lf UT: %.3f SDHA %lf SDHB %lf SDT %.3f", *WaterHeaterA, *WaterStripHeaterA, *WaterHeaterB, *WaterStripHeaterB, WasteH2ODumpHeater.GetTemperatureF(), 
+		*UrineHeaterA, *UrineStripHeaterA, *UrineHeaterB, *UrineStripHeaterB, UrineDumpHeater.GetTemperatureF(), 
+		*SteamDuctHeaterA, *SteamDuctHeaterB, KelvinToFahrenheit(*SteamDuctNozzleTemp));
 //*/
 
 #ifdef _DEBUG
