@@ -34,6 +34,5 @@ Section "Main Section" SecMain
     File /r "..\*.*"
     ; Exclude the installer_scripts folder
     RMDIR /r "$INSTDIR\installer_scripts"
-    RMDIR /r "$INSTDIR\.git"
 
 SectionEnd
