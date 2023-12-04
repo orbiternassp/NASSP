@@ -1110,7 +1110,7 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 	// Urine dump
 	urineDumpLevel = 0;
 
-	if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3 && saturn->WasteH2ODumpHeater.IsFrozen() == false) {
+	if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3 && saturn->UrineDumpHeater.IsFrozen() == false) {
 			urineDumpLevel = 1;
 		}
 
