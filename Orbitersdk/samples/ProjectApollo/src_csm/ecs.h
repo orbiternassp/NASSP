@@ -287,12 +287,10 @@ public:
 	double *GetWasteWaterDumpLevelRef() { return &wasteWaterDumpLevel; }
 	double *GetUrineDumpLevelRef() { return &urineDumpLevel; }
 	void FoodPreparationWaterSwitchToggled(PanelSwitchItem *s);
-	bool IsNozzleHeaterPowered() { return heaters; }
 
 protected:
 	double wasteWaterDumpLevel;
 	double urineDumpLevel;
-	bool heaters;
 
 	Saturn *saturn;
 	h_Tank *potableTank;
@@ -404,10 +402,10 @@ class SaturnBatteryVent
 {
 public:
 	SaturnBatteryVent();
-	void Init(SaturnWaterController* wc, RotationalSwitch* bvs, h_Tank* bmt);
+	void Init(Saturn* s, RotationalSwitch* bvs, h_Tank* bmt);
 	void SystemTimestep(double simdt);
 protected:
-	SaturnWaterController* watercontroller;
+	Saturn* saturn;
 	RotationalSwitch* BatteryVentSwitch;
 	h_Tank* BatteryManifold;
 };
@@ -427,16 +425,19 @@ class SaturnDumpHeater
 {
 public:
 	SaturnDumpHeater();
-	void Init(Saturn* s, h_Radiator* noz, Boiler* h, Boiler* sh, CircuitBrakerSwitch* wdcb, ThreePosSwitch* wds);
+	void Init(Saturn* s, h_Radiator* noz, Boiler* ha, Boiler* sha, Boiler* hb, Boiler* shb, CircuitBrakerSwitch* cba, CircuitBrakerSwitch* cbb, ThreePosSwitch* sw);
 	double GetTemperatureF();
 	bool IsFrozen();
 	void SystemTimestep(double simdt);
 protected:
 	Saturn *saturn;
 	h_Radiator *nozzle;
-	Boiler *heater;
-	Boiler *stripheater;
-	CircuitBrakerSwitch *circuitbreaker;
+	Boiler *heaterA;
+	Boiler *stripheaterA;
+	Boiler *heaterB;
+	Boiler *stripheaterB;
+	CircuitBrakerSwitch *circuitbreakerA;
+	CircuitBrakerSwitch *circuitbreakerB;
 	ThreePosSwitch *powerswitch;
 	double temp;
 };

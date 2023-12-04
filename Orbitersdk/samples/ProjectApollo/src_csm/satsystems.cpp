@@ -613,7 +613,7 @@ void Saturn::SystemsInit() {
 					  &PressEqualValve, &ForwardHatch);
 	WasteStowageVentValve.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:WASTESTOWAGEVALVE"),
 		&WasteMGMTStoageVentRotary);
-	BatteryVent.Init(&WaterController, &WasteMGMTBatteryVentRotary, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD"));
+	BatteryVent.Init(this, &WasteMGMTBatteryVentRotary, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD"));
 
 	SaturnSuitFlowValve300.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITMANIFOLD:OUT2"),
 		&SuitCircuitFlow300Switch);
@@ -622,28 +622,22 @@ void Saturn::SystemsInit() {
 	SaturnSuitFlowValve302.Init((h_Valve*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFLOW302VALVE"),
 		&SuitCircuitFlow302Switch);
 
-	WasteH2ODumpHeaterA.Init(this,
+	WasteH2ODumpHeater.Init(this,
 							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLE"),
 							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLEHEATERA"),
 							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLESTRIPHEATERA"),
-							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
-							&WasteH2ODumpSwitch);
-	WasteH2ODumpHeaterB.Init(this,
-							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLE"),
 							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLEHEATERB"),
 							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLESTRIPHEATERB"),
+							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
 							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
 							&WasteH2ODumpSwitch);
-	UrineDumpHeaterA.Init(this,
+	UrineDumpHeater.Init(this,
 							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLEHEATERA"),
+							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLESTRIPHEATERA"),
 							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLEHEATERB"),
 							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLESTRIPHEATERB"),
 							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
-							&UrineDumpSwitch);
-	UrineDumpHeaterB.Init(this,
-							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLEHEATERB"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLESTRIPHEATERB"),
 							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
 							&UrineDumpSwitch);
 
@@ -1102,7 +1096,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 */
 
 //Battery Vent Debug Lines
-///*
+/*
 	double* BatCaseAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATACASE:PRESS");
 	double* BatCaseBPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATBCASE:PRESS");
 	double* BatCaseCPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATCCASE:PRESS");
@@ -1111,8 +1105,19 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double* BatManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD:PRESS");
 	int* BatVentValve = (int*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD:OUT:ISOPEN");
 
-	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Valve: %d Heat: %d", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, WaterController.IsNozzleHeaterPowered());
-//*/
+	double* WaterDumpNozzleTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLE:TEMP");
+	double* UrineDumpNozzleTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE:TEMP");
+	double* WaterHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLEHEATERA:ISON");
+	double* WaterStripHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERA:ISON");
+	double* UrineHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERAISON");
+	double* UrineStripHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERA:ISON");
+	double* WaterHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLEHEATERB:ISON");
+	double* WaterStripHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERB:ISON");
+	double* UrineHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERB:ISON");
+	double* UrineStripHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERB:ISON");
+
+	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d H2OT: %.3f UT: %.3f", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, WasteH2ODumpHeater.GetTemperatureF(), UrineDumpHeater.GetTemperatureF());
+*/
 
 #ifdef _DEBUG
 
@@ -1613,10 +1618,8 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		SaturnSuitFlowValve301.SystemTimestep(tFactor);
 		SaturnSuitFlowValve302.SystemTimestep(tFactor);
 		BatteryVent.SystemTimestep(tFactor);
-		WasteH2ODumpHeaterA.SystemTimestep(tFactor);
-		WasteH2ODumpHeaterB.SystemTimestep(tFactor);
-		UrineDumpHeaterA.SystemTimestep(tFactor);
-		UrineDumpHeaterB.SystemTimestep(tFactor);
+		WasteH2ODumpHeater.SystemTimestep(tFactor);
+		UrineDumpHeater.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		MissionTimer306Display.SystemTimestep(tFactor);

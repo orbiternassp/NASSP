@@ -3781,10 +3781,8 @@ protected:
 	SaturnSuitFlowValves SaturnSuitFlowValve300;
 	SaturnSuitFlowValves SaturnSuitFlowValve301;
 	SaturnSuitFlowValves SaturnSuitFlowValve302;
-	SaturnDumpHeater WasteH2ODumpHeaterA;
-	SaturnDumpHeater WasteH2ODumpHeaterB;
-	SaturnDumpHeater UrineDumpHeaterA;
-	SaturnDumpHeater UrineDumpHeaterB;
+	SaturnDumpHeater WasteH2ODumpHeater;
+	SaturnDumpHeater UrineDumpHeater;
 
 
 	// RHC/THC 
@@ -4582,6 +4580,7 @@ protected:
 	friend class SCE;
 	friend class SaturnWaterController;
 	friend class SaturnBatteryVent;
+	friend class SaturnDumpHeater;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ARCore;

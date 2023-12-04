@@ -1034,7 +1034,6 @@ void SaturnWaterController::Init(Saturn *s, h_Tank *pt, h_Tank *wt, h_Tank *pit,
 								 h_Pipe *wvp, h_Pipe *wivp) {
 	wasteWaterDumpLevel = 0;
 	urineDumpLevel = 0;
-	heaters = false;
 
 	saturn = s;
 	potableTank = pt;
@@ -1074,27 +1073,15 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 		potableTank->OUT_valve.Open();
 	}
 
-	// dump heaters
-	if (saturn->WasteH2ODumpSwitch.IsUp() && saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.IsPowered()) {
-		heaters = true;
-		saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.DrawPower(5.7);
-	}
-	else if (saturn->WasteH2ODumpSwitch.IsDown() && saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.IsPowered()) {
-		heaters = true;
-		saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.DrawPower(5.7);
-	}
-	else
-		heaters = false;
-
 	// Pressure relief
-	if ((saturn->PressureReliefRotary.GetState() == 0 || saturn->PressureReliefRotary.GetState() == 3) && heaters) {	// dump a/b
+	if ((saturn->PressureReliefRotary.GetState() == 0 || saturn->PressureReliefRotary.GetState() == 3) && saturn->WasteH2ODumpHeater.IsFrozen() == false) {	// dump a/b
 		wasteTank->OUT_valve.Open();
 		if (wasteInletTank->OUT_valve.open) {
 			wasteInletTank->OUT2_valve.Close();
 		} else {
 			wasteInletTank->OUT2_valve.Open();
 		}
-	} else if (saturn->PressureReliefRotary.GetState() == 1 && heaters) {	// "2"
+	} else if (saturn->PressureReliefRotary.GetState() == 1 && saturn->WasteH2ODumpHeater.IsFrozen() == false) {	// "2"
 		if (wasteTank->space.Press < 40.0 / PSI) {
 			wasteTank->OUT_valve.Close();
 		} else if (wasteTank->space.Press > 48.0 / PSI) {
@@ -1109,7 +1096,7 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 				wasteInletTank->OUT2_valve.Open();
 			}
 		}		
-	} else {	// off or heaters off (assuming instant freezing)
+	} else {	// off
 		wasteTank->OUT_valve.Close();
 		wasteInletTank->OUT2_valve.Close();
 	}
@@ -1122,18 +1109,10 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 
 	// Urine dump
 	urineDumpLevel = 0;
-	if (saturn->UrineDumpSwitch.IsUp() && saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.IsPowered()) {
-		saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.DrawPower(5.7);
-		if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3) {
+
+	if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3 && saturn->WasteH2ODumpHeater.IsFrozen() == false) {
 			urineDumpLevel = 1;
 		}
-	}
-	if (saturn->UrineDumpSwitch.IsDown() && saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.IsPowered()) {
-		saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.DrawPower(5.7);
-		if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3) {
-			urineDumpLevel = 1;
-		}
-	}
 
 	// potable h2o heaters
 	if (saturn->PotH2oHtrSwitch.IsUp() && saturn->ECSPOTH2OHTRMnACircuitBraker.IsPowered()) {
@@ -1561,9 +1540,9 @@ SaturnBatteryVent::SaturnBatteryVent()
 	BatteryManifold = NULL;
 }
 
-void SaturnBatteryVent::Init(SaturnWaterController* wc, RotationalSwitch* bvs, h_Tank* bmt)
+void SaturnBatteryVent::Init(Saturn* s, RotationalSwitch* bvs, h_Tank* bmt)
 {
-	watercontroller = wc;
+	saturn = s;
 	BatteryVentSwitch = bvs;
 	BatteryManifold = bmt;
 }
@@ -1575,7 +1554,7 @@ void SaturnBatteryVent::SystemTimestep(double simdt)
 	// Valve in motion
 	if (BatteryManifold->OUT_valve.pz) return;
 
-	if (BatteryVentSwitch->GetState() == 1 && watercontroller->IsNozzleHeaterPowered())
+	if (BatteryVentSwitch->GetState() == 1 && saturn->WasteH2ODumpHeater.IsFrozen() == false)
 	{
 		BatteryManifold->OUT_valve.Open();
 	}
@@ -1618,13 +1597,16 @@ SaturnDumpHeater::SaturnDumpHeater()
 
 }
 
-void SaturnDumpHeater::Init(Saturn* s, h_Radiator* noz, Boiler* h, Boiler* sh, CircuitBrakerSwitch* cb, ThreePosSwitch* sw)
+void SaturnDumpHeater::Init(Saturn* s, h_Radiator* noz, Boiler* ha, Boiler* sha, Boiler* hb, Boiler* shb, CircuitBrakerSwitch* cba, CircuitBrakerSwitch* cbb, ThreePosSwitch* sw)
 {
 	saturn = s;
 	nozzle = noz;
-	heater = h;
-	stripheater = sh;
-	circuitbreaker = cb;
+	heaterA = ha;
+	stripheaterA = sha;
+	heaterB = hb;
+	stripheaterB = shb;
+	circuitbreakerA = cba;
+	circuitbreakerB = cbb;
 	powerswitch = sw;
 
 	temp = 0.0;
@@ -1647,20 +1629,39 @@ bool SaturnDumpHeater::IsFrozen()
 
 void SaturnDumpHeater::SystemTimestep(double simdt)
 {
-	if (circuitbreaker->IsPowered())
+	//System A
+	if (circuitbreakerA->IsPowered())
 	{
-		stripheater->SetPumpOn();
+		stripheaterA->SetPumpOn();
 	}
 
-	else if (circuitbreaker->IsPowered() && powerswitch->IsUp())
+	else if (circuitbreakerA->IsPowered() && powerswitch->IsUp())
 	{
-		stripheater->SetPumpOn();
-		heater->SetPumpOn();
+		stripheaterA->SetPumpOn();
+		heaterA->SetPumpOn();
 	}
 
 	else
 	{
-		stripheater->SetPumpOff();
-		heater->SetPumpOff();
+		stripheaterA->SetPumpOff();
+		heaterA->SetPumpOff();
+	}
+
+	//System B
+	if (circuitbreakerB->IsPowered())
+	{
+		stripheaterB->SetPumpOn();
+	}
+
+	else if (circuitbreakerB->IsPowered() && powerswitch->IsDown())
+	{
+		stripheaterB->SetPumpOn();
+		heaterB->SetPumpOn();
+	}
+
+	else
+	{
+		stripheaterB->SetPumpOff();
+		heaterB->SetPumpOff();
 	}
 }
