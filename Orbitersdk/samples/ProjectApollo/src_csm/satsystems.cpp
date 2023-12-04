@@ -624,19 +624,19 @@ void Saturn::SystemsInit() {
 
 	WasteH2ODumpHeater.Init(this,
 							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLE"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLEHEATERA"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLESTRIPHEATERA"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLEHEATERB"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLESTRIPHEATERB"),
+							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLEHEATERA"),
+							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERA"),
+							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLEHEATERB"),
+							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERB"),
 							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
 							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
 							&WasteH2ODumpSwitch);
 	UrineDumpHeater.Init(this,
 							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLEHEATERA"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLESTRIPHEATERA"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLEHEATERB"),
-							(Boiler*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLESTRIPHEATERB"),
+							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERA"),
+							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERA"),
+							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERB"),
+							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERB"),
 							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
 							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
 							&UrineDumpSwitch);
@@ -1096,7 +1096,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 */
 
 //Battery Vent Debug Lines
-/*
+///*
 	double* BatCaseAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATACASE:PRESS");
 	double* BatCaseBPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATBCASE:PRESS");
 	double* BatCaseCPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATCCASE:PRESS");
@@ -1117,7 +1117,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double* UrineStripHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERB:ISON");
 
 	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d H2OT: %.3f UT: %.3f", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, WasteH2ODumpHeater.GetTemperatureF(), UrineDumpHeater.GetTemperatureF());
-*/
+//*/
 
 #ifdef _DEBUG
 
