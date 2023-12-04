@@ -1633,12 +1633,16 @@ void SaturnDumpHeater::SystemTimestep(double simdt)
 	if (circuitbreakerA->IsPowered())
 	{
 		stripheaterA->SetPumpOn();
-	}
 
-	else if (circuitbreakerA->IsPowered() && powerswitch->IsUp())
-	{
-		stripheaterA->SetPumpOn();
-		heaterA->SetPumpOn();
+		if (powerswitch->IsUp())
+		{
+			heaterA->SetPumpOn();
+		}
+
+		else
+		{
+			heaterA->SetPumpOff();
+		}
 	}
 
 	else
@@ -1651,12 +1655,16 @@ void SaturnDumpHeater::SystemTimestep(double simdt)
 	if (circuitbreakerB->IsPowered())
 	{
 		stripheaterB->SetPumpOn();
-	}
 
-	else if (circuitbreakerB->IsPowered() && powerswitch->IsDown())
-	{
-		stripheaterB->SetPumpOn();
-		heaterB->SetPumpOn();
+		if (powerswitch->IsDown())
+		{
+			heaterB->SetPumpOn();
+		}
+
+		else
+		{
+			heaterB->SetPumpOff();
+		}
 	}
 
 	else

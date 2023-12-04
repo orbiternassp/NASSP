@@ -1114,16 +1114,18 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	double* WaterDumpNozzleTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLE:TEMP");
 	double* UrineDumpNozzleTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE:TEMP");
+
 	double* WaterHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLEHEATERA:ISON");
 	double* WaterStripHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERA:ISON");
-	double* UrineHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERAISON");
+	double* UrineHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERA:ISON");
 	double* UrineStripHeaterA = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERA:ISON");
 	double* WaterHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLEHEATERB:ISON");
 	double* WaterStripHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERB:ISON");
 	double* UrineHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERB:ISON");
 	double* UrineStripHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERB:ISON");
 
-	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d WSHA: %lf H2OT: %.3f UDSTA: %lf UT: %.3f", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, *WaterStripHeaterA, WasteH2ODumpHeater.GetTemperatureF(), *UrineStripHeaterA, UrineDumpHeater.GetTemperatureF());
+	//sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d WSHA: %lf H2OT: %.3f UDSTA: %lf UT: %.3f", *BatCaseAPress* PSI, *BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, *WaterStripHeaterA, WasteH2ODumpHeater.GetTemperatureF(), *UrineStripHeaterA, UrineDumpHeater.GetTemperatureF());
+	sprintf(oapiDebugString(), "WHA: %lf WSHA: %lf WHB: %lf WSHB: %lf H2OT: %.3f UDHA: %lf UDSTA: %lf UDHB: %lf UDSTB: %lf UT: %.3f", *WaterHeaterA, *WaterStripHeaterA, *WaterHeaterB, *WaterStripHeaterB, WasteH2ODumpHeater.GetTemperatureF(), *UrineHeaterA, *UrineStripHeaterA, *UrineHeaterB, *UrineStripHeaterB, UrineDumpHeater.GetTemperatureF());
 //*/
 
 #ifdef _DEBUG
