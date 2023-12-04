@@ -601,9 +601,13 @@ void SIVB::SetS4b()
 	iu->ConnectToLV(&IUCommandConnector);
 
 	//
-	// Give the vehicle number to S-IVB systems
+	// Set up S-IVB systems
 	//
-	if (sivbsys) sivbsys->SetVehicleNumber(VehicleNo);
+	if (sivbsys)
+	{
+		sivbsys->SetVehicleNumber(VehicleNo);
+		sivbsys->CreateParticleEffects(1400.0*0.0254); //CG location
+	}
 }
 
 void SIVB::clbkPreStep(double simt, double simdt, double mjd)
@@ -1494,11 +1498,6 @@ void SIVB::clbkPostCreation()
 		}
 	}
 	CreateAirfoils();
-
-	if (sivbsys)
-	{
-		sivbsys->CreateParticleEffects(1400.0*0.0254); //CG location
-	}
 }
 
 void SIVB::SetState(SIVBSettings &state)
