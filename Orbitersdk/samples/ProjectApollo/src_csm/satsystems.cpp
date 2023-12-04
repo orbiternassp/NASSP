@@ -641,6 +641,11 @@ void Saturn::SystemsInit() {
 							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
 							&UrineDumpSwitch);
 
+	SteamDuctHeaterA = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:STEAMDUCTHEATERA");
+	SteamDuctHeaterB = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:STEAMDUCTHEATERB");
+	SteamDuctHeaterA->WireTo(&ECSWasteH2OUrineDumpHTRMnACircuitBraker);
+	SteamDuctHeaterB->WireTo(&ECSWasteH2OUrineDumpHTRMnBCircuitBraker);
+
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
 	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
@@ -1116,7 +1121,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double* UrineHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERB:ISON");
 	double* UrineStripHeaterB = (double*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERB:ISON");
 
-	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d H2OT: %.3f UT: %.3f", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, WasteH2ODumpHeater.GetTemperatureF(), UrineDumpHeater.GetTemperatureF());
+	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d WSHA: %lf H2OT: %.3f UDSTA: %lf UT: %.3f", *BatCaseAPress* PSI, * BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, *WaterStripHeaterA, WasteH2ODumpHeater.GetTemperatureF(), *UrineStripHeaterA, UrineDumpHeater.GetTemperatureF());
 //*/
 
 #ifdef _DEBUG

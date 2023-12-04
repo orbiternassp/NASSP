@@ -3783,6 +3783,8 @@ protected:
 	SaturnSuitFlowValves SaturnSuitFlowValve302;
 	SaturnDumpHeater WasteH2ODumpHeater;
 	SaturnDumpHeater UrineDumpHeater;
+	Boiler *SteamDuctHeaterA;
+	Boiler *SteamDuctHeaterB;
 
 
 	// RHC/THC 
