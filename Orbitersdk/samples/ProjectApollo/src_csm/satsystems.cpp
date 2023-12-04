@@ -504,6 +504,8 @@ void Saturn::SystemsInit() {
 	CMRCSEngine25TempSensor.Init(&Panel276CB2, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSYAWJET25"));
 
 	BatteryManifoldPressureSensor.Init(&Panel276CB2, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:BATTERYMANIFOLD"));
+	WasteH2ODumpTempSensor.Init(&Panel276CB1, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:WATERDUMPNOZZLE"));
+	UrineDumpTempSensor.Init(&Panel276CB2, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE"));
 
 	// Optics initialization
 	optics.Init(this);

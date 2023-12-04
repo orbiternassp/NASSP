@@ -3631,6 +3631,8 @@ public:
 	TemperatureTransducer CMRCSEngine24TempSensor;
 	TemperatureTransducer CMRCSEngine25TempSensor;
 	CSMTankPressTransducer BatteryManifoldPressureSensor;
+	TemperatureTransducer WasteH2ODumpTempSensor;
+	TemperatureTransducer UrineDumpTempSensor;
 protected:
 
 	// CM Optics
