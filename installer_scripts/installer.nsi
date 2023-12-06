@@ -8,6 +8,7 @@
 !define SLUG "${NAME} v${VERSION}"
 
 ; Define installer name and output
+name "${NAME}"
 OutFile "${SLUG}.exe"
 InstallDir "C:\OrbiterBeta"
 
@@ -17,6 +18,8 @@ InstallDir "C:\OrbiterBeta"
 !define MUI_UNICON "icon.ico"
 
 ; Installer pages
+!define MUI_WELCOMEFINISHPAGE_BITMAP "apolloLogo.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "apolloLogo.bmp"
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "..\NASSP-LICENSE.txt"
 !insertmacro MUI_PAGE_DIRECTORY
