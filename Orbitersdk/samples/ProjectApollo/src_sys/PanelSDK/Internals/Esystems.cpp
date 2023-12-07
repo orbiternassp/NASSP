@@ -696,8 +696,10 @@ void Battery::refresh(double dt)
 
 		thermic(chargeheat * dt); //1 joule = 1 watt * dt
 
-		double h2 = 0.2 * SRC->Current() * dt;
-		double o2 = 0.1 * SRC->Current() * dt;
+		if (!batcase) return;
+
+		double h2 = (SRC->Current() * 0.000001 * dt);
+		double o2 = (SRC->Current() * 0.000001 * dt);
 		batcase->space.composition[SUBSTANCE_H2].mass += h2;
 		batcase->space.composition[SUBSTANCE_O2].mass += o2;
 		batcase->space.composition[SUBSTANCE_H2].vapor_mass += h2;
