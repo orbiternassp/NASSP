@@ -28,8 +28,12 @@ InstallDir "C:\OrbiterBeta"
 !insertmacro MUI_PAGE_LICENSE "..\NASSP-LICENSE.txt"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
-!define MUI_FINISHPAGE_RUN "$INSTDIR\Orbiter.exe"
+
+; Finish page
+!define MUI_FINISHPAGE_RUN "$INSTDIR\Orbiter_ng.exe"
 !define MUI_FINISHPAGE_RUN_TEXT "Launch Orbiter"
+!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\Doc\Project Apollo - NASSP\configureInstructions.txt"
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "Open Configuration Instructions"
 !insertmacro MUI_PAGE_FINISH
 
 ; Language files
