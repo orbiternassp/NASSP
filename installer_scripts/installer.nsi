@@ -32,6 +32,7 @@ InstallDir "C:\OrbiterBeta"
 !insertmacro MUI_PAGE_INSTFILES
 
 ; Finish page
+!define MUI_FINISHPAGE_TEXT "Thank you for installing NASSP! Please note, in order to have sound in Orbiter, you will have to install OrbiterSound, which is a third party addon. You can find instructions on how to install it in the config."
 !define MUI_FINISHPAGE_RUN "$INSTDIR\Orbiter_ng.exe"
 !define MUI_FINISHPAGE_RUN_TEXT "Launch Orbiter"
 !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\Doc\Project Apollo - NASSP\configureInstructions.txt"
@@ -41,7 +42,7 @@ InstallDir "C:\OrbiterBeta"
 ; Language files
 !insertmacro MUI_LANGUAGE "English"
 
-Section "Main Section" SecMain
+Section "Project Apollo - NASSP" SecMain
     SetOutPath $INSTDIR
     SetOverwrite ifnewer
     File /r "..\*.*"
@@ -51,7 +52,7 @@ Section "Main Section" SecMain
 SectionEnd
 
 Section "D3D9 Client" SecD3D9
-    SetOutPath "$INSTDIR\Modules\D3D9Client"
+    SetOutPath $INSTDIR
     SetOverwrite ifnewer
     File /r "D3D9Client\*.*"
 
