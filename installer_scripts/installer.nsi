@@ -51,7 +51,7 @@ Section "Main Section" SecMain
 SectionEnd
 
 Section "D3D9 Client" SecD3D9
-    SetOutPath "$INSTDIR\Modules\D3D9Client"
+    SetOutPath $INSTDIR
     SetOverwrite ifnewer
     File /r "D3D9Client\*.*"
 
