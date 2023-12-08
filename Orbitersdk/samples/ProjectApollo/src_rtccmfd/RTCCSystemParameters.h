@@ -290,7 +290,7 @@ struct RTCCSystemParameters
 		MDVACC[1] = 0.0;
 		MDVDCC[0] = 0.0;
 		MDVDCC[1] = 0.0;
-		MCGVNT = 2.0 / 3600.0;
+		MCGVNT = -2.0 / 3600.0; //Until something better has been implemented for EMMENI, disable post-TLI venting simulation
 		MCGVEN = 0.2*3600.0;
 		for (int i = 0;i < 2;i++)
 		{
