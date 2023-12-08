@@ -26,7 +26,7 @@ InstallDir "C:\OrbiterBeta"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "apolloLogo.bmp"
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "..\..\..\NASSP-LICENSE.txt"
-!insertmacro MUI_PAGE_LICENSE "D3D9-LICENSE.txt" ; TODO - Get the D3D9 License
+!insertmacro MUI_PAGE_LICENSE "D3D9-LICENSE.txt"
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
