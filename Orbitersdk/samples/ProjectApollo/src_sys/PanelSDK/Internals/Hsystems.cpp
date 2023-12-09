@@ -1500,7 +1500,6 @@ void h_Accumulator::refresh(double dt)
 
 h_ExteriorEnviormnent::~h_ExteriorEnviormnent()
 {
-	h_Tank::~h_Tank();
 }
 
 void h_ExteriorEnviormnent::refresh(double dt)
@@ -1528,7 +1527,6 @@ void h_ExteriorEnviormnent::refresh(double dt)
 
 h_ExteriorVentPipe::~h_ExteriorVentPipe()
 {
-	h_Pipe::~h_Pipe();
 }
 
 void h_ExteriorVentPipe::AddVent(VECTOR3 i_pos, VECTOR3 i_dir, double i_size)
