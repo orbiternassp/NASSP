@@ -136,6 +136,7 @@ class H_system:public ship_system
 	void Create_h_HeatLoad(char *line);
 	void Create_h_Accumulator(char* line);
 	void Create_h_ExteriorEnviormnent();
+	void Create_h_ExteriorVentPipe(char* line);
 
 public:
 
@@ -458,6 +459,32 @@ private:
 			0.0				//He
 		}
 	};
+};
+
+
+///
+/// \ingroup PanelSDK
+/// This object is a replacement for the obsolete h_Vent class. It is used to create a fluid
+/// connection between an h_Tank, and h_ExteriorEnviormnent
+///
+class h_ExteriorVentPipe : public h_Pipe
+{
+public:
+	h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_OUT, int i_type, double max, double min, int is_two):
+		h_Pipe(i_name, i_IN, i_OUT, i_type, max, min, is_two) {};
+	virtual ~h_ExteriorVentPipe();
+	void AddVent(VECTOR3 i_pos, VECTOR3 i_dir, double i_size);
+	void ProcessShip(VESSEL* vessel, PROPELLANT_HANDLE ph);
+	virtual void* GetComponent(char* component_name);
+private:
+	virtual int Flow(h_volume block);
+	VECTOR3 pos[4];
+	VECTOR3 dir[4];
+	double size[4];
+	PROPELLANT_HANDLE ph_vent;
+	THRUSTER_HANDLE thg[4];
+	VESSEL* v;
+	int Num_Vents;
 };
 
 #endif

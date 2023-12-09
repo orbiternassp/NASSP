@@ -1507,16 +1507,13 @@ void h_ExteriorEnviormnent::refresh(double dt)
 {
 	double exteriorDensity = parent->Vessel->GetAtmDensity();
 	double exteriorTemperature = parent->Vessel->GetAtmTemperature();
-	char planetName[64];
 	body externBody = body::None;
 	OBJHANDLE atmRef = parent->Vessel->GetAtmRef();
 
-	oapiGetObjectName(atmRef, planetName, 64);
-	
-	if (!strcmp(planetName, "Earth")) {
+	if (atmRef == oapiGetGbodyByName("Earth")) {
 		externBody = Earth;
 	}
-	else if (!strcmp(planetName, "Mars")) { //This is included as an example of how to expand functionality for other bodies. see the definition of compositionRatio[][]
+	else if (atmRef == oapiGetGbodyByName("Mars")) { //This is included as an example of how to expand functionality for other bodies. see the definition of compositionRatio[][]
 		externBody = Mars;
 	}
 
@@ -1527,4 +1524,40 @@ void h_ExteriorEnviormnent::refresh(double dt)
 
 	h_Tank::BoilAllAndSetTemp(exteriorTemperature);
 	h_Tank::refresh(dt);
+}
+
+h_ExteriorVentPipe::~h_ExteriorVentPipe()
+{
+	h_Pipe::~h_Pipe();
+}
+
+void h_ExteriorVentPipe::AddVent(VECTOR3 i_pos, VECTOR3 i_dir, double i_size)
+{
+	pos[Num_Vents] = i_pos;
+	dir[Num_Vents] = i_dir;
+	size[Num_Vents] = i_size;
+	Num_Vents++;
+}
+
+void h_ExteriorVentPipe::ProcessShip(VESSEL* vessel, PROPELLANT_HANDLE ph)
+{
+	ph_vent = ph;
+	v = vessel;
+	for (int i = 0; i < Num_Vents; i++)
+	{
+		thg[i] = v->CreateThruster(pos[i], dir[i], 50, ph, 50);
+		v->AddExhaust(thg[i], size[i] * 1000, size[i] * 50);
+		v->SetThrusterLevel(thg[i], 1.0);
+	};
+}
+
+int h_ExteriorVentPipe::Flow(h_volume block)
+{
+	/*	double mass=block.GetMass()/1000.0;//this we need to flow out in kg
+	v->SetEmptyMass(v->GetEmptyMass()-mass);
+	v->SetPropellantMass(ph_vent,v->GetPropellantMass(ph_vent)+mass);
+	for (int i=0;i<Num_Vents;i++)
+		v->SetThrusterLevel(thg[i],1.0);
+*/
+	return 1;
 }

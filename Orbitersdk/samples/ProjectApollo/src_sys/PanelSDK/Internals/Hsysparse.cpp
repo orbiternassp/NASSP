@@ -468,7 +468,6 @@ void H_system::Create_h_Accumulator(char* line) {
 void H_system::Create_h_ExteriorEnviormnent()
 {
 	char name[] = "EXTERIOR_ENVIORNMENT";
-	char valvename[100];
 	h_ExteriorEnviormnent* new_one;
 
 	new_one = (h_ExteriorEnviormnent*)AddSystem(new h_ExteriorEnviormnent(name, vector3(0.0, 0.0, 0.0), 100000.0));
@@ -476,6 +475,68 @@ void H_system::Create_h_ExteriorEnviormnent()
 
 	P_thermal->AddThermalObject(new_one);
 	new_one->parent = this;
+}
+
+void H_system::Create_h_ExteriorVentPipe(char* line) {
+
+	char name[100];
+	h_ExteriorVentPipe* new_one;
+	h_Valve* in;
+	h_Valve* out;
+	char in_valve[100];
+	char out_valve[100];
+
+	if (sscanf(line + 6, " %s", name) <= 0)
+		name[0] = '\0';
+
+	out = (h_Valve*)GetPointerByString("HYDRAULIC:EXTERIOR_ENVIORNMENT:IN");
+	if (!out) {
+		//WRITE SOMETHING TO A LOG
+	}
+
+	line = ReadConfigLine();
+	char type[100];
+	double max = 0;
+	double min = 0;
+	char is_two[100];
+
+	type[0] = 0; is_two[0] = 0;
+	sscanf(line, "%s %s %lf %lf %s", in_valve, type, &max, &min, is_two);
+
+	int two_way = 1;
+	if (Compare(type, "ONEWAY")) two_way = 0;
+	if (Compare(is_two, "ONEWAY")) two_way = 0;
+
+	in = (h_Valve*)GetPointerByString(in_valve);
+	out = (h_Valve*)GetPointerByString(out_valve);
+
+	if (Compare(type, "PREG"))
+		new_one = (h_ExteriorVentPipe*)AddSystem(new h_ExteriorVentPipe(name, in, out, 1, max, min, two_way));
+	else if (Compare(type, "BURST"))
+		new_one = (h_ExteriorVentPipe*)AddSystem(new h_ExteriorVentPipe(name, in, out, 2, max, min, two_way));
+	else if (Compare(type, "PVALVE"))
+		new_one = (h_ExteriorVentPipe*)AddSystem(new h_ExteriorVentPipe(name, in, out, 3, max, min, two_way));
+	else
+		new_one = (h_ExteriorVentPipe*)AddSystem(new h_ExteriorVentPipe(name, in, out, 0, 0, 0, two_way));
+
+	line = ReadConfigLine();
+	while (strnicmp(line, "</EXTVENT>", 10)) {
+
+		if(!strnicmp(line, "DEFVENT", 8)){
+
+			VECTOR3 pos = _V(0.0, 0.0, 0.0);
+			VECTOR3 dir = _V(0.0, 0.0, 0.0);
+			double ventSize = 0.0;
+
+			sscanf(line + 8, "<%lf %lf %lf> <%lf %lf %lf> %lf",
+				&pos.x, &pos.y, &pos.z,
+				&dir.x, &dir.y, &dir.z, &ventSize);
+			new_one->AddVent(pos, dir, ventSize);
+
+			line = ReadConfigLine();
+		}
+		
+	}
 }
 
 
@@ -513,6 +574,9 @@ void H_system::Build() {
 			Create_h_HeatLoad(line);
 		else if (Compare(line, "<ACCUMULATOR>"))
 			Create_h_Accumulator(line);
+		else if (Compare(line, "<EXTVENT>"))
+			Create_h_ExteriorVentPipe(line);
+
 		do {
 			line = ReadConfigLine();
 		} while (line == NULL);
@@ -715,6 +779,21 @@ void* h_HeatLoad::GetComponent(char *component_name) {
 
 	if (Compare(component_name, "HEAT"))
 		return (void*)&heat_load;
+
+	BuildError(2);	//no such component
+	return NULL;
+}
+
+void* h_ExteriorVentPipe::GetComponent(char* component_name) {
+
+	if (!strnicmp(component_name, "FLOWMAX", 7))
+		return (void*)&flowMax;
+	if (!strnicmp(component_name, "FLOW", 4))
+		return (void*)&flow;
+	if (!strnicmp(component_name, "PRESSMAX", 8))
+		return (void*)&P_max;
+	if (!strnicmp(component_name, "PRESSMIN", 8))
+		return (void*)&P_min;
 
 	BuildError(2);	//no such component
 	return NULL;
