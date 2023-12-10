@@ -2440,6 +2440,7 @@ void LEM::CreateMissionSpecificSystems()
 
 	agc.SetMissionInfo(pMission->GetLGCVersion());
 	aea.SetMissionInfo(pMission->GetAEAVersion());
+	imu.SetDriftRates(pMission->GetLM_IMU_Drift());
 	if (pMission->LMHasAscEngArmAssy())
 	{
 		aeaa = new LEM_AEAA();
