@@ -43,6 +43,10 @@
 #include "tracer.h"
 #include "papi.h"
 #include "CM_VC_Resource.h"
+#include "CM-VC-SeatsFolded_Resource.h"
+#include "CM-VC-SeatsUnfolded_Resource.h"
+#include "EmissionListCMVC.h"
+
 
 // ==============================================================
 // VC Constants
@@ -679,11 +683,20 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_EVENT_TIMER306, _R(220*TexMul, 149*TexMul, 238*TexMul, 220*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 129*TexMul, 360*TexMul, 272*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
-	// Integral Lights
+	// Integral Lights Panel 8
 	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	
+
+	// Integral Lights Panel 5
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P5, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P5, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Integral Lights LEB
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
 	// Initialize surfaces
 
 	SMRCSHelium1ATalkback.InitVC(srf[SRF_VC_INDICATOR]);
@@ -928,7 +941,15 @@ bool Saturn::clbkLoadVC (int id)
 void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 	if (vcidx != -1) {
         vcmesh = GetDevMesh(vis, vcidx);
+		seatsunfoldedmesh = GetDevMesh(vis, seatsunfoldedidx);
+		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
 	}
+}
+
+void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
+    vcmesh = NULL;
+	seatsunfoldedmesh = NULL;
+	seatsfoldedmesh = NULL;
 }
 
 void Saturn::RegisterActiveAreas() {
@@ -1699,15 +1720,37 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//	return true if dynamic texture modified, false if not
 
 	case AID_VC_INTEGRAL_LIGHT_P8:
-        SetIntegralLight(VC_MAT_CMVCTex1_t, (double)(IntegralRotarySwitch.GetState())/10.0);
+        SetCMVCIntegralLight(vcmesh, IntegralLights_P8, MESHM_EMISSION2, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
         return true;
 
 	case AID_VC_FLOOD_LIGHT_P8:
-        SetFloodLight(VC_MAT_CMVCTex1_t, (double)(FloodRotarySwitch.GetState())/10.0);
+        SetCMVCIntegralLight(vcmesh, FloodLights_P8, MESHM_EMISSION,(double)(FloodRotarySwitch.GetState())/10.0, sizeof(FloodLights_P8)/sizeof(FloodLights_P8[0]));
+		SetCMVCIntegralLight(seatsunfoldedmesh, CMVCSeatsUnFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsUnFolded) / sizeof(CMVCSeatsUnFolded[0]));
+		SetCMVCIntegralLight(seatsfoldedmesh, CMVCSeatsFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsFolded) / sizeof(CMVCSeatsFolded[0]));
         return true;
 
 	case AID_VC_NUMERICS_LIGHT_P8:
-        SetNumericsLight(VC_MAT_CMVCTex1_t, (double)(NumericRotarySwitch.GetState())/10.0);
+        SetCMVCIntegralLight(vcmesh,NumericLights_P8, MESHM_EMISSION,(double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P5:
+ //       SetCMVCIntegralLight((DWORD *) &IntegralLights_P5, VC_MAT_CMVCTex1_t, MESHM_EMISSION2,(double)(RightIntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P5:
+ //       SetCMVCIntegralLight((DWORD *) &FloodLights_P5, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(RightFloodRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P100:
+//        SetCMVCIntegralLight((DWORD *) &IntegralLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION2,(double)(Panel100IntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P100:
+//		SetCMVCIntegralLight((DWORD *) &FloodLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100FloodRotarySwitch.GetState()) / 10.0);
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P100:
+//        SetCMVCIntegralLight((DWORD *) &NumericLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100NumericRotarySwitch.GetState())/10.0);
         return true;
 
 	case AID_VC_FDAI_LEFT:
@@ -4942,26 +4985,13 @@ void Saturn::InitFDAI(UINT mesh)
 	AddAnimationComponent(anim_fdaiYrate_R, 0.0f, 1.0f, &mgt_yawrate_R);
 }
 
-void Saturn::SetIntegralLight(int m, double state)
+void Saturn::SetCMVCIntegralLight(DEVMESHHANDLE mesh, DWORD *matList, int EmissionMode, double state, int cnt)
 {
-	DWORD emmisionMat[] = {
-
-		// TODO Material List
-		VC_MAT_Cinematic_Panel1_AND_3_t,
-		VC_MAT_Cinematic_Panel2_t,
-		VC_MAT_Rotary_t,
-		VC_MAT_CMVCTex1_t,
-		VC_MAT_CMVCTex2_t,
-		VC_MAT_CMVCTex3_t,
-		VC_MAT_csm_lower_equip_bay_t,
-		VC_MAT_IlluminatingPartsPanel01_t,
-		VC_MAT_IlluminatingPartsPanel02_t,
-		VC_MAT_Talkbacks_t,
-		VC_MAT_FDAI_Frame_t
-	};
-    if (!vcmesh)
+//    if (!vcmesh)
+    if (!mesh)
         return;
-	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
+
+	for (int i = 0; i < cnt; i++)
 	{
 		gcCore *pCore = gcGetCoreInterface();
 		if (pCore) {
@@ -4970,75 +5000,8 @@ void Saturn::SetIntegralLight(int m, double state)
 			value.g = (float)state;
 			value.b = (float)state;
 			value.a = 1.0;
-			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION2, &value, true);
+			pCore->MeshMaterial(mesh, matList[i], EmissionMode, &value, true);
 		}
 	}
-//    sprintf(oapiDebugString(), "%d %lf", m, state);
-}
-
-void Saturn::SetFloodLight(int m, double state)
-{
-	DWORD emmisionMat[] = {
-
-		// TODO Material List
-		VC_MAT_CMVCTex1_t,
-		VC_MAT_CMVCTex2_t,
-		VC_MAT_CMVCTex3_t,
-		VC_MAT_CMVCDetTex4_t,
-		VC_MAT_HolderRahmen_t,
-		VC_MAT_Rotary_t,
-		VC_MAT_AdditionalParts_t,
-		VC_MAT_LMVC_t,
-		VC_MAT_Colors_t,
-		VC_MAT_CB_black_t,
-		VC_MAT_MAINVCTEX_t,
-		VC_MAT_csm_lower_equip_bay_t,
-		VC_MAT_csm_right_cb_panels_t,
-		VC_MAT_Talkbacks_t,
-		VC_MAT_HOPEN_t,
-		VC_MAT_FDAI_Frame_t,
-		VC_MAT_SwitchCover_t,
-		VC_MAT_Cinematic_Panel1_AND_3_t
-	};
-    if (!vcmesh)
-        return;
-	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
-	{
-		gcCore *pCore = gcGetCoreInterface();
-		if (pCore) {
-			FVECTOR4 value;
-			value.r = (float)state;
-			value.g = (float)state;
-			value.b = (float)state;
-			value.a = 1.0;
-			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
-		}
-	}
-//    sprintf(oapiDebugString(), "%d %lf", m, state);
-}
-
-void Saturn::SetNumericsLight(int m, double state)
-{
-	DWORD emmisionMat[] = {
-
-		// TODO Material List
-		VC_MAT_IlluminatingPartsPanel01_t,
-		VC_MAT_IlluminatingPartsPanel02_t
-
-	};
-    if (!vcmesh)
-        return;
-	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
-	{
-		gcCore *pCore = gcGetCoreInterface();
-		if (pCore) {
-			FVECTOR4 value;
-			value.r = (float)state;
-			value.g = (float)state;
-			value.b = (float)state;
-			value.a = 1.0;
-			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
-		}
-	}
-//    sprintf(oapiDebugString(), "%d %lf", m, state);
+    //sprintf(oapiDebugString(), "%d %lf", m, state);
 }

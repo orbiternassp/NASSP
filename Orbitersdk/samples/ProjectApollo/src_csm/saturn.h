@@ -975,6 +975,7 @@ public:
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
 	void clbkVisualCreated (VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -3917,6 +3918,8 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	DEVMESHHANDLE vcmesh;
+	DEVMESHHANDLE seatsunfoldedmesh;
+	DEVMESHHANDLE seatsfoldedmesh;
 
 	bool ASTPMission;
 
@@ -4138,9 +4141,7 @@ protected:
 	// Integral Lights
 	//
 
-	void SetIntegralLight(int m, double state);
-	void SetFloodLight(int m, double state);
-	void SetNumericsLight(int m, double state);
+	void SetCMVCIntegralLight(DEVMESHHANDLE mesh, DWORD *matList, int EmissionMode, double state, int cnt);
 
 	//
 	// Systems functions.
