@@ -1530,8 +1530,6 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_FLOOD_LIGHT:
         SetFloodLight(VC_MAT_LMVC_t, FloodLights.GetCDRRotaryVoltage() / 28.0);
-//        SetFloodLight(VC_MAT_LMVC_t, FloodLights.GetOVHDFWDPowerDraw() / 50.0);
-//        SetFloodLight(VC_MAT_LMVC_t, FloodLights.GetALLPowerDraw() / 50.0);
         return true;
 
 	case AID_VC_LM_CWS_LEFT:

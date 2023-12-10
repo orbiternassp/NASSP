@@ -680,9 +680,9 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 129*TexMul, 360*TexMul, 272*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Integral Lights
-	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	
 	// Initialize surfaces
 
@@ -1698,15 +1698,15 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//	Redraw Panel stuff
 	//	return true if dynamic texture modified, false if not
 
-	case AID_VC_INTEGRAL_LIGHT:
+	case AID_VC_INTEGRAL_LIGHT_P8:
         SetIntegralLight(VC_MAT_CMVCTex1_t, (double)(IntegralRotarySwitch.GetState())/10.0);
         return true;
 
-	case AID_VC_FLOOD_LIGHT:
+	case AID_VC_FLOOD_LIGHT_P8:
         SetFloodLight(VC_MAT_CMVCTex1_t, (double)(FloodRotarySwitch.GetState())/10.0);
         return true;
 
-	case AID_VC_NUMERICS_LIGHT:
+	case AID_VC_NUMERICS_LIGHT_P8:
         SetNumericsLight(VC_MAT_CMVCTex1_t, (double)(NumericRotarySwitch.GetState())/10.0);
         return true;
 
@@ -4973,7 +4973,7 @@ void Saturn::SetIntegralLight(int m, double state)
 			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION2, &value, true);
 		}
 	}
-    sprintf(oapiDebugString(), "%d %lf", m, state);
+//    sprintf(oapiDebugString(), "%d %lf", m, state);
 }
 
 void Saturn::SetFloodLight(int m, double state)
@@ -5014,7 +5014,7 @@ void Saturn::SetFloodLight(int m, double state)
 			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
 		}
 	}
-    sprintf(oapiDebugString(), "%d %lf", m, state);
+//    sprintf(oapiDebugString(), "%d %lf", m, state);
 }
 
 void Saturn::SetNumericsLight(int m, double state)
@@ -5040,5 +5040,5 @@ void Saturn::SetNumericsLight(int m, double state)
 			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
 		}
 	}
-    sprintf(oapiDebugString(), "%d %lf", m, state);
+//    sprintf(oapiDebugString(), "%d %lf", m, state);
 }

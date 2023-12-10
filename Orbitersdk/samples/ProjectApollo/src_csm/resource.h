@@ -1666,10 +1666,19 @@
 #define AID_VC_CUE_CARD_LOCATION_11	7010
 #define AID_VC_CUE_CARD_LOCATION_4B	7011
 
-// Integral Lights
-#define AID_VC_INTEGRAL_LIGHT  7011
-#define AID_VC_FLOOD_LIGHT     7012
-#define AID_VC_NUMERICS_LIGHT  7013
+// Integral Lights Panel 8
+#define AID_VC_INTEGRAL_LIGHT_P8  7012
+#define AID_VC_FLOOD_LIGHT_P8     7013
+#define AID_VC_NUMERICS_LIGHT_P8  7014
+
+// Integral Lights Panel 5
+#define AID_VC_INTEGRAL_LIGHT_P5  7015
+#define AID_VC_FLOOD_LIGHT_P5     7016
+
+// Integral Lights LEB
+#define AID_VC_INTEGRAL_LIGHT_P100  7017
+#define AID_VC_FLOOD_LIGHT_P100     7018
+#define AID_VC_NUMERICS_LIGHT_P100  7019
 
 // Next default values for new objects
 //
