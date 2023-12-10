@@ -3918,8 +3918,8 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	DEVMESHHANDLE vcmesh;
-	DEVMESHHANDLE seatsunfoldedmesh;
-	DEVMESHHANDLE seatsfoldedmesh;
+//	DEVMESHHANDLE seatsunfoldedmesh;
+//	DEVMESHHANDLE seatsfoldedmesh;
 
 	bool ASTPMission;
 
@@ -4063,6 +4063,13 @@ protected:
 	double THRUST_VAC_PCM;
 
 	//
+	// VISHANDLE
+	//
+
+	VISHANDLE vis;
+
+
+	//
 	// Generic functions shared between SaturnV and Saturn1B
 	//
 
@@ -4141,7 +4148,7 @@ protected:
 	// Integral Lights
 	//
 
-	void SetCMVCIntegralLight(DEVMESHHANDLE mesh, DWORD *matList, int EmissionMode, double state, int cnt);
+	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
 
 	//
 	// Systems functions.

@@ -939,17 +939,19 @@ bool Saturn::clbkLoadVC (int id)
 }
 
 void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
+	this->vis = vis;
 	if (vcidx != -1) {
         vcmesh = GetDevMesh(vis, vcidx);
-		seatsunfoldedmesh = GetDevMesh(vis, seatsunfoldedidx);
-		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
+//		seatsunfoldedmesh = GetDevMesh(vis, seatsunfoldedidx);
+//		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
 	}
 }
 
 void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
+	if (this->vis == vis) this->vis = NULL;
     vcmesh = NULL;
-	seatsunfoldedmesh = NULL;
-	seatsfoldedmesh = NULL;
+//	seatsunfoldedmesh = NULL;
+//	seatsfoldedmesh = NULL;
 }
 
 void Saturn::RegisterActiveAreas() {
@@ -1720,17 +1722,17 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//	return true if dynamic texture modified, false if not
 
 	case AID_VC_INTEGRAL_LIGHT_P8:
-        SetCMVCIntegralLight(vcmesh, IntegralLights_P8, MESHM_EMISSION2, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
+        SetCMVCIntegralLight(vcidx, IntegralLights_P8, MESHM_EMISSION2, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
         return true;
 
 	case AID_VC_FLOOD_LIGHT_P8:
-        SetCMVCIntegralLight(vcmesh, FloodLights_P8, MESHM_EMISSION,(double)(FloodRotarySwitch.GetState())/10.0, sizeof(FloodLights_P8)/sizeof(FloodLights_P8[0]));
-		SetCMVCIntegralLight(seatsunfoldedmesh, CMVCSeatsUnFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsUnFolded) / sizeof(CMVCSeatsUnFolded[0]));
-		SetCMVCIntegralLight(seatsfoldedmesh, CMVCSeatsFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsFolded) / sizeof(CMVCSeatsFolded[0]));
+        SetCMVCIntegralLight(vcidx, FloodLights_P8, MESHM_EMISSION,(double)(FloodRotarySwitch.GetState())/10.0, sizeof(FloodLights_P8)/sizeof(FloodLights_P8[0]));
+		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsUnFolded) / sizeof(CMVCSeatsUnFolded[0]));
+		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsFolded) / sizeof(CMVCSeatsFolded[0]));
         return true;
 
 	case AID_VC_NUMERICS_LIGHT_P8:
-        SetCMVCIntegralLight(vcmesh,NumericLights_P8, MESHM_EMISSION,(double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+        SetCMVCIntegralLight(vcidx,NumericLights_P8, MESHM_EMISSION,(double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
         return true;
 
 	case AID_VC_INTEGRAL_LIGHT_P5:
@@ -4985,10 +4987,13 @@ void Saturn::InitFDAI(UINT mesh)
 	AddAnimationComponent(anim_fdaiYrate_R, 0.0f, 1.0f, &mgt_yawrate_R);
 }
 
-void Saturn::SetCMVCIntegralLight(DEVMESHHANDLE mesh, DWORD *matList, int EmissionMode, double state, int cnt)
+void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
 {
+	if (vis == NULL) return;
+	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
+
 //    if (!vcmesh)
-    if (!mesh)
+    if (!hMesh)
         return;
 
 	for (int i = 0; i < cnt; i++)
@@ -5000,7 +5005,7 @@ void Saturn::SetCMVCIntegralLight(DEVMESHHANDLE mesh, DWORD *matList, int Emissi
 			value.g = (float)state;
 			value.b = (float)state;
 			value.a = 1.0;
-			pCore->MeshMaterial(mesh, matList[i], EmissionMode, &value, true);
+			pCore->MeshMaterial(hMesh, matList[i], EmissionMode, &value, true);
 		}
 	}
     //sprintf(oapiDebugString(), "%d %lf", m, state);
