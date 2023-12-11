@@ -426,4 +426,6 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 
 const int TexMul = TEXTURES_4K;
 
+//#define _OPENORBITER
+
 #endif

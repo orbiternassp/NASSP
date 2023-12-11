@@ -28,9 +28,15 @@
 #include "stdio.h"
 #include "math.h"
 #include "lmresource.h"
-#include <gcConst.h>
 
 #include "nasspdefs.h"
+
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#else
+#include <gcConst.h>
+#endif
+
 #include "nasspsound.h"
 
 #include "soundlib.h"
@@ -3377,7 +3383,13 @@ void LEM::SetIntegralLight(int m, double state)
 			value.g = (float)state;
 			value.b = (float)state;
 			value.a = 1.0;
+
+#ifdef _OPENORBITER
+			pCore->SetMeshMaterial(vcmesh, emmisionMat[i], MatProp::Emission, &value);
+#else
 			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION2, &value, true);
+#endif
+			
 		}
 	}
     sprintf(oapiDebugString(), "%d %lf", m, state);
@@ -3438,7 +3450,13 @@ void LEM::SetFloodLight(int m, double state)
 			value.g = (float)state;
 			value.b = (float)state;
 			value.a = 1.0;
+
+#ifdef _OPENORBITER
+			pCore->SetMeshMaterial(vcmesh, emmisionMat[i], MatProp::Light, &value);
+#else
 			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
+#endif
+
 		}
 	}
     sprintf(oapiDebugString(), "%d %lf", m, state);

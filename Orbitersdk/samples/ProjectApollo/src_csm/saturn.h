@@ -3918,8 +3918,6 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	DEVMESHHANDLE vcmesh;
-//	DEVMESHHANDLE seatsunfoldedmesh;
-//	DEVMESHHANDLE seatsfoldedmesh;
 
 	bool ASTPMission;
 
@@ -4147,8 +4145,11 @@ protected:
 	//
 	// Integral Lights
 	//
-
+#ifdef _OPENORBITER
+	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+#else
 	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+#endif
 
 	//
 	// Systems functions.

@@ -78,10 +78,8 @@ DWORD FloodLights_P8[] = {
 		VC_MAT_CMVCTex1_t,
 		VC_MAT_CMVCTex2_t,
 		VC_MAT_Alluminum,
-		VC_MAT_FDAI_Ball_t,
 		VC_MAT_FDAI_errorneedle,
 		VC_MAT_FDAI_Cue,
-		VC_MAT_Black,
 		VC_MAT_FDAI_Frame_t,
 		VC_MAT_FwdHatch_t,
 		VC_MAT_SideHatch_t,
@@ -122,6 +120,7 @@ DWORD FloodLights_P8[] = {
 DWORD NumericLights_P8[] = {
 
 		// TODO Material List
+		VC_MAT_FDAI_Ball_t,
 		VC_MAT_IlluminatingPartsPanel01_t,
 		VC_MAT_IlluminatingPartsPanel02_t
 	};

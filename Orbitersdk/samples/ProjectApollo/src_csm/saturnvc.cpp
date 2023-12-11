@@ -30,9 +30,15 @@
 #include <math.h>
 #include "soundlib.h"
 #include "resource.h"
-#include <gcConst.h>
 
 #include "nasspdefs.h"
+
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#else
+#include <gcConst.h>
+#endif
+
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -1721,6 +1727,42 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//	Redraw Panel stuff
 	//	return true if dynamic texture modified, false if not
 
+#ifdef _OPENORBITER
+	case AID_VC_INTEGRAL_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, IntegralLights_P8, MatProp::Emission, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, FloodLights_P8, MatProp::Light,(double)(FloodRotarySwitch.GetState())/10.0, sizeof(FloodLights_P8)/sizeof(FloodLights_P8[0]));
+		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsUnFolded) / sizeof(CMVCSeatsUnFolded[0]));
+		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsFolded) / sizeof(CMVCSeatsFolded[0]));
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx,NumericLights_P8, MatProp::Light, (double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P5:
+ //       SetCMVCIntegralLight((DWORD *) &IntegralLights_P5, VC_MAT_CMVCTex1_t, MESHM_EMISSION2,(double)(RightIntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P5:
+ //       SetCMVCIntegralLight((DWORD *) &FloodLights_P5, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(RightFloodRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P100:
+//        SetCMVCIntegralLight((DWORD *) &IntegralLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION2,(double)(Panel100IntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P100:
+//		SetCMVCIntegralLight((DWORD *) &FloodLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100FloodRotarySwitch.GetState()) / 10.0);
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P100:
+//        SetCMVCIntegralLight((DWORD *) &NumericLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100NumericRotarySwitch.GetState())/10.0);
+        return true;
+
+#else
 	case AID_VC_INTEGRAL_LIGHT_P8:
         SetCMVCIntegralLight(vcidx, IntegralLights_P8, MESHM_EMISSION2, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
         return true;
@@ -1754,6 +1796,8 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_VC_NUMERICS_LIGHT_P100:
 //        SetCMVCIntegralLight((DWORD *) &NumericLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100NumericRotarySwitch.GetState())/10.0);
         return true;
+
+#endif
 
 	case AID_VC_FDAI_LEFT:
 	{
@@ -4987,7 +5031,12 @@ void Saturn::InitFDAI(UINT mesh)
 	AddAnimationComponent(anim_fdaiYrate_R, 0.0f, 1.0f, &mgt_yawrate_R);
 }
 
+#ifdef _OPENORBITER
+void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
+#else
 void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
+#endif
+
 {
 	if (vis == NULL) return;
 	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
@@ -5005,7 +5054,11 @@ void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode
 			value.g = (float)state;
 			value.b = (float)state;
 			value.a = 1.0;
+#ifdef _OPENORBITER
+			pCore->SetMeshMaterial(hMesh, matList[i], EmissionMode, &value);
+#else
 			pCore->MeshMaterial(hMesh, matList[i], EmissionMode, &value, true);
+#endif
 		}
 	}
     //sprintf(oapiDebugString(), "%d %lf", m, state);
