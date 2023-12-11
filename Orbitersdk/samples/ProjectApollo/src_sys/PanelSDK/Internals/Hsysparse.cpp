@@ -475,40 +475,41 @@ void H_system::Create_h_ExteriorEnviormnent()
 
 	P_thermal->AddThermalObject(new_one);
 	new_one->parent = this;
+	new_one->IN_valve.Open();
 }
 
 void H_system::Create_h_ExteriorVentPipe(char* line) {
 
 	char name[100];
 	h_ExteriorVentPipe* new_one;
-	h_Valve* in;
-	h_Valve* out;
+	h_Valve* in = nullptr;
+	h_Valve* out = nullptr;
 	char in_valve[100];
-	char out_valve[100];
 
 	if (sscanf(line + 6, " %s", name) <= 0)
 		name[0] = '\0';
 
-	out = (h_Valve*)GetPointerByString("HYDRAULIC:EXTERIOR_ENVIORNMENT:IN");
-	if (!out) {
-		//WRITE SOMETHING TO A LOG
-	}
 
-	line = ReadConfigLine();
 	char type[100];
 	double max = 0;
 	double min = 0;
 	char is_two[100];
 
 	type[0] = 0; is_two[0] = 0;
-	sscanf(line, "%s %s %lf %lf %s", in_valve, type, &max, &min, is_two);
+	sscanf(line + 9, "%s %s %s %lf %lf %s", name, in_valve, type, &max, &min, is_two);
+
+	out = (h_Valve*)GetPointerByString("HYDRAULIC:EXTERIOR_ENVIORNMENT:IN");
+	if (!out) {
+		char errorBuffer[255];
+		sprintf_s(errorBuffer, sizeof(errorBuffer), "Fatal Error, could not connect %s to EXTERIOR_ENVIORNMENT:IN", name);
+		oapiWriteLogError(errorBuffer);
+	}
 
 	int two_way = 1;
 	if (Compare(type, "ONEWAY")) two_way = 0;
 	if (Compare(is_two, "ONEWAY")) two_way = 0;
 
 	in = (h_Valve*)GetPointerByString(in_valve);
-	out = (h_Valve*)GetPointerByString(out_valve);
 
 	if (Compare(type, "PREG"))
 		new_one = (h_ExteriorVentPipe*)AddSystem(new h_ExteriorVentPipe(name, in, out, 1, max, min, two_way));
@@ -519,7 +520,6 @@ void H_system::Create_h_ExteriorVentPipe(char* line) {
 	else
 		new_one = (h_ExteriorVentPipe*)AddSystem(new h_ExteriorVentPipe(name, in, out, 0, 0, 0, two_way));
 
-	line = ReadConfigLine();
 	while (strnicmp(line, "</EXTVENT>", 10)) {
 
 		if(!strnicmp(line, "DEFVENT", 8)){
@@ -532,10 +532,8 @@ void H_system::Create_h_ExteriorVentPipe(char* line) {
 				&pos.x, &pos.y, &pos.z,
 				&dir.x, &dir.y, &dir.z, &ventSize);
 			new_one->AddVent(pos, dir, ventSize);
-
-			line = ReadConfigLine();
 		}
-		
+		line = ReadConfigLine();
 	}
 }
 
