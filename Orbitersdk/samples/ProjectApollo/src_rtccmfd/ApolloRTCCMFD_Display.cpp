@@ -2064,6 +2064,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 6 * H / 14, "AGC Ephemeris", 13);
 		skp->Text(5 * W / 8, 8 * H / 14, "Lunar Impact", 12);
+		skp->Text(5 * W / 8, 10 * H / 14, "Debug", 5);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 22)
@@ -10458,6 +10459,22 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, GC->rtcc->LOSTDisplayBuffer[79], 26, 29, 55, 30); //MATRIX 2 Z/YE
 		Text(skp, GC->rtcc->LOSTDisplayBuffer[80], 44, 29, 55, 30); //MATRIX 2 Z/ZE
 
+	}
+	else if (screen == 127)
+	{
+		skp->Text(3 * W / 8, 2 * H / 32, "DEBUG", 5);
+
+		skp->Text((int)(0.5 * W / 8), 9 * H / 21, "Current REFSMMAT:", 17);
+		REFSMMATName(Buffer, G->REFSMMATcur);
+		skp->Text((int)(0.5 * W / 8), 10 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(10 * W / 16, 5 * H / 14, "IMU Misalignment:", 16);
+		sprintf(Buffer, "%+.4lf°", G->DebugIMUTorquingAngles.x*DEG);
+		skp->Text(10 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.4lf°", G->DebugIMUTorquingAngles.y*DEG);
+		skp->Text(10 * W / 16, 7 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.4lf°", G->DebugIMUTorquingAngles.z*DEG);
+		skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	return true;
 }
