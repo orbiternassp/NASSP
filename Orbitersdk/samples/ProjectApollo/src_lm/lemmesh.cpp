@@ -50,6 +50,7 @@ MESHHANDLE hLMDescent;
 MESHHANDLE hLMDescentNoLeg;
 MESHHANDLE hLMAscent;
 MESHHANDLE hLMVC;
+MESHHANDLE hLMXpointerShades;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -163,6 +164,7 @@ void LEM::SetLmVesselDockStage()
 	// Configure meshes if needed
 	if (!pMission->LMHasLegs()) InsertMesh(hLMDescentNoLeg, dscidx, &mesh_dsc);
 	SetLMMeshVis();
+	if (pMission->GetCrossPointerShades()) ShowXPointerShades();
 
 	if (!ph_Dsc)
 	{
@@ -548,6 +550,16 @@ void LEM::HideDeflectors()
 	}
 }
 
+void LEM::ShowXPointerShades()
+{
+	xpointershadesidx = AddMesh(hLMXpointerShades, &mesh_asc);
+
+	if (xpointershadesidx == -1)
+		return;
+
+	SetMeshVisibilityMode(xpointershadesidx, MESHVIS_VC);
+}
+
 void LEM::SetTrackLight() {
 	
 	static VECTOR3 beaconCol = _V(1, 1, 1);
@@ -807,6 +819,7 @@ void LEMLoadMeshes()
 	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
 	hLMVC = oapiLoadMeshGlobal("ProjectApollo/LM_VC");
+	hLMXpointerShades = oapiLoadMeshGlobal("ProjectApollo/LM_Xpointer_Shades");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }
 
