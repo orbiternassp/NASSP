@@ -510,6 +510,7 @@ public:
 	void DrogueVis();
 	void HideProbes();
 	void HideDeflectors();
+	void ShowXPointerShades();
 	void SetTrackLight();
 	void SetDockingLights();
 	void SetCOAS();
@@ -1690,6 +1691,7 @@ protected:
 	UINT ascidx;
 	UINT dscidx;
 	UINT vcidx;
+	UINT xpointershadesidx;
 
 	DEVMESHHANDLE probes;
 	DEVMESHHANDLE deflectors;
