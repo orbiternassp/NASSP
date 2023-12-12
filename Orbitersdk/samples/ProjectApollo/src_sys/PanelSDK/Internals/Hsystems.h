@@ -472,8 +472,7 @@ private:
 class h_ExteriorVentPipe : public h_Pipe
 {
 public:
-	h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_OUT, int i_type, double max, double min, int is_two):
-		h_Pipe(i_name, i_IN, i_OUT, i_type, max, min, is_two) {};
+	h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_OUT, int i_type, double max, double min, int is_two);
 	virtual ~h_ExteriorVentPipe();
 	void AddVent(VECTOR3 i_pos, VECTOR3 i_dir, double i_size);
 	void ProcessShip(VESSEL* vessel, PROPELLANT_HANDLE ph);
