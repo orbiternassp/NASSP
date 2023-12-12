@@ -406,12 +406,12 @@ public:
 /// Exactly one instance of this class should get created per vessel. This is done by PanelSDK before the systems
 /// config files are parsed so that this object is avaliable to other h_Objects at the time of parsing.
 /// 
-/// Connections than be do the exterior enviornment like any other tank, by means of a pipe connecting to
+/// Connections than be do the exterior environment like any other tank, by means of a pipe connecting to
 /// EXTERIOR:IN, EXTERIOR:OUT etc. The name of this object will always be "EXTERIOR". Connections to this object are also
 /// avaliable through the "Vent" class.
 /// 
 /// Principal of Operation.
-/// The internal state of the ExteriorEnviornment is simulated exactly as in the h_Tank class (h_ExteriorEnvironment derives
+/// The internal state of the ExteriorEnvironment is simulated exactly as in the h_Tank class (h_ExteriorEnvironment derives
 /// from h_Tank). Once per systems timestep, h_ExteriorEnvironment calls GetAtmDensity() from the vessel to which the h_ExteriorEnvironment
 /// instance is attached.
 ///
