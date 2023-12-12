@@ -146,6 +146,8 @@ public:
 	void Save (FILEHANDLE scn);
 	void Build();
 	void ProcessShip(VESSEL *vessel, PROPELLANT_HANDLE ph);
+private:
+	bool ExteriorEnviormnentCreated = false;
 };
 
 class h_Tank;

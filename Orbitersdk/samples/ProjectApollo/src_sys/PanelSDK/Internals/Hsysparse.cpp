@@ -542,7 +542,10 @@ void H_system::Build() {
 	
 	char *line;
 
-	Create_h_ExteriorEnviormnent();
+	//Make sure only one of these gets created.
+	if(!ExteriorEnviormnentCreated){
+		Create_h_ExteriorEnviormnent(); 
+	}
 
 	line = ReadConfigLine();
 	while (!Compare(line,"</HYDRAULIC>")) {
