@@ -1101,6 +1101,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		KelvinToFahrenheit(*YAWJET16), (KelvinToFahrenheit(*YAWJET16) + 50.0) / 20.0,
 		KelvinToFahrenheit(*ROLLJET21), (KelvinToFahrenheit(*ROLLJET21) + 50.0) / 20.0);
 */
+	//h_ExteriorEnvironment* ExtEnv = (h_ExteriorEnvironment*)Panelsdk.GetPointerByString("HYDRAULIC:EXTERIOR_ENVIORNMENT");
+	//sprintf(oapiDebugString(), "Pressure. OAPI %17f, SPSDK %17f", this->GetAtmPressure(), ExtEnv->space.Press);
 
 //Battery Vent Debug Lines
 ///*

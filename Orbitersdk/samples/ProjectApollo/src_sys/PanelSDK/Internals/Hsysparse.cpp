@@ -467,10 +467,10 @@ void H_system::Create_h_Accumulator(char* line) {
 
 void H_system::Create_h_ExteriorEnviormnent()
 {
-	char name[] = "EXTERIOR_ENVIORNMENT";
-	h_ExteriorEnviormnent* new_one;
+	char name[] = "EXTERIOR_ENVIRONMENT";
+	h_ExteriorEnvironment* new_one;
 
-	new_one = (h_ExteriorEnviormnent*)AddSystem(new h_ExteriorEnviormnent(name, vector3(0.0, 0.0, 0.0), 100000.0));
+	new_one = (h_ExteriorEnvironment*)AddSystem(new h_ExteriorEnvironment(name, vector3(0.0, 0.0, 0.0), 100000.0));
 	new_one->space.Void(); //empty the space
 
 	P_thermal->AddThermalObject(new_one);
@@ -498,10 +498,10 @@ void H_system::Create_h_ExteriorVentPipe(char* line) {
 	type[0] = 0; is_two[0] = 0;
 	sscanf(line + 9, "%s %s %s %lf %lf %s", name, in_valve, type, &max, &min, is_two);
 
-	out = (h_Valve*)GetPointerByString("HYDRAULIC:EXTERIOR_ENVIORNMENT:IN");
+	out = (h_Valve*)GetPointerByString("HYDRAULIC:EXTERIOR_ENVIRONMENT:IN");
 	if (!out) {
 		char errorBuffer[255];
-		sprintf_s(errorBuffer, sizeof(errorBuffer), "Fatal Error, could not connect %s to EXTERIOR_ENVIORNMENT:IN", name);
+		sprintf_s(errorBuffer, sizeof(errorBuffer), "Fatal Error, could not connect %s to EXTERIOR_ENVIRONMENT:IN", name);
 		oapiWriteLogError(errorBuffer);
 	}
 
@@ -542,7 +542,11 @@ void H_system::Build() {
 	
 	char *line;
 
-	Create_h_ExteriorEnviormnent();
+	//Make sure only one of these gets created.
+	if(!ExteriorEnviormnentCreated){
+		Create_h_ExteriorEnviormnent();
+		ExteriorEnviormnentCreated = true;
+	}
 
 	line = ReadConfigLine();
 	while (!Compare(line,"</HYDRAULIC>")) {
