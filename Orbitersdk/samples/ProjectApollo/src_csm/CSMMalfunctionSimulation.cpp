@@ -75,7 +75,7 @@ double CSMMalfunctionSimulation::GetTimeReference(int i)
 	{
 		return oapiGetSimTime();
 	}
-	else if (i == 2) //2 = time since S-I staging
+	else if (i == 2) //2 = time since S-I/S-II (or S-IVB) staging
 	{
 		if (sat->eventControl.SECOND_STAGE_STAGING == MINUS_INFINITY)
 		{
@@ -83,13 +83,37 @@ double CSMMalfunctionSimulation::GetTimeReference(int i)
 		}
 		return sat->GetMissionTime() - sat->eventControl.SECOND_STAGE_STAGING;
 	}
-	else if (i == 3) //3 = time since S-IVB staging
+	else if (i == 3) //3 = time since S-II/S-IVB staging
 	{
 		if (sat->eventControl.SIVB_STAGE_STAGING == MINUS_INFINITY)
 		{
 			return MINUS_INFINITY;
 		}
 		return sat->GetMissionTime() - sat->eventControl.SIVB_STAGE_STAGING;
+	}
+	else if (i == 4) //4 = time since Earth Orbit Insertion
+	{
+		if (sat->eventControl.EARTH_ORBIT_INSERTION == MINUS_INFINITY)
+		{
+			return MINUS_INFINITY;
+		}
+		return sat->GetMissionTime() - sat->eventControl.EARTH_ORBIT_INSERTION;
+	}
+	else if (i == 5) //5 = time since Timebase 6
+	{
+		if (sat->eventControl.TLI == MINUS_INFINITY)
+		{
+			return MINUS_INFINITY;
+		}
+		return sat->GetMissionTime() - sat->eventControl.TLI;
+	}
+	else if (i == 6) //6 = time since TLI cutoff
+	{
+		if (sat->eventControl.TLI_DONE == MINUS_INFINITY)
+		{
+			return MINUS_INFINITY;
+		}
+		return sat->GetMissionTime() - sat->eventControl.TLI_DONE;
 	}
 
 	//0 = mission time
