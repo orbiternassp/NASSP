@@ -544,7 +544,8 @@ void H_system::Build() {
 
 	//Make sure only one of these gets created.
 	if(!ExteriorEnviormnentCreated){
-		Create_h_ExteriorEnviormnent(); 
+		Create_h_ExteriorEnviormnent();
+		ExteriorEnviormnentCreated = true;
 	}
 
 	line = ReadConfigLine();
