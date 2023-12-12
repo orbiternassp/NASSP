@@ -468,9 +468,9 @@ void H_system::Create_h_Accumulator(char* line) {
 void H_system::Create_h_ExteriorEnviormnent()
 {
 	char name[] = "EXTERIOR_ENVIORNMENT";
-	h_ExteriorEnviormnent* new_one;
+	h_ExteriorEnvironment* new_one;
 
-	new_one = (h_ExteriorEnviormnent*)AddSystem(new h_ExteriorEnviormnent(name, vector3(0.0, 0.0, 0.0), 100000.0));
+	new_one = (h_ExteriorEnvironment*)AddSystem(new h_ExteriorEnvironment(name, vector3(0.0, 0.0, 0.0), 100000.0));
 	new_one->space.Void(); //empty the space
 
 	P_thermal->AddThermalObject(new_one);

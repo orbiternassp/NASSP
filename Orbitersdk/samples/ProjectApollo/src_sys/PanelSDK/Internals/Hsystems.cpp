@@ -1498,11 +1498,11 @@ void h_Accumulator::refresh(double dt)
 
 
 
-h_ExteriorEnviormnent::~h_ExteriorEnviormnent()
+h_ExteriorEnvironment::~h_ExteriorEnvironment()
 {
 }
 
-void h_ExteriorEnviormnent::refresh(double dt)
+void h_ExteriorEnvironment::refresh(double dt)
 {
 	double exteriorDensity = parent->Vessel->GetAtmDensity();
 	double exteriorTemperature = parent->Vessel->GetAtmTemperature();

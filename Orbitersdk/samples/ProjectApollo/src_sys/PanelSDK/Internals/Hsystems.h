@@ -409,15 +409,15 @@ public:
 /// avaliable through the "Vent" class.
 /// 
 /// Principal of Operation.
-/// The internal state of the ExteriorEnviornment is simulated exactly as in the h_Tank class (h_ExteriorEnviormnent derives
-/// from h_Tank). Once per systems timestep, h_ExteriorEnviormnent calls GetAtmDensity() from the vessel to which the h_ExteriorEnviormnent
+/// The internal state of the ExteriorEnviornment is simulated exactly as in the h_Tank class (h_ExteriorEnvironment derives
+/// from h_Tank). Once per systems timestep, h_ExteriorEnvironment calls GetAtmDensity() from the vessel to which the h_ExteriorEnvironment
 /// instance is attached.
 ///
-class h_ExteriorEnviormnent : public h_Tank
+class h_ExteriorEnvironment : public h_Tank
 {
 public:
-	h_ExteriorEnviormnent(char* i_name, vector3 i_p, double i_vol) : h_Tank(i_name, i_p, i_vol) {};
-	virtual ~h_ExteriorEnviormnent();
+	h_ExteriorEnvironment(char* i_name, vector3 i_p, double i_vol) : h_Tank(i_name, i_p, i_vol) {};
+	virtual ~h_ExteriorEnvironment();
 	virtual void refresh(double dt);
 private:
 	enum body
@@ -465,7 +465,7 @@ private:
 ///
 /// \ingroup PanelSDK
 /// This object is a replacement for the obsolete h_Vent class. It is used to create a fluid
-/// connection between an h_Tank, and h_ExteriorEnviormnent
+/// connection between an h_Tank, and h_ExteriorEnvironment
 ///
 class h_ExteriorVentPipe : public h_Pipe
 {
