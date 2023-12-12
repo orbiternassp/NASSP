@@ -135,7 +135,7 @@ class H_system:public ship_system
 	void Create_h_WaterSeparator(char *line);
 	void Create_h_HeatLoad(char *line);
 	void Create_h_Accumulator(char* line);
-	void Create_h_ExteriorEnviormnent();
+	void Create_h_ExteriorEnvironment();
 	void Create_h_ExteriorVentPipe(char* line);
 
 public:
@@ -147,7 +147,7 @@ public:
 	void Build();
 	void ProcessShip(VESSEL *vessel, PROPELLANT_HANDLE ph);
 private:
-	bool ExteriorEnviormnentCreated = false;
+	bool ExteriorEnvironmentCreated = false;
 };
 
 class h_Tank;
@@ -401,7 +401,7 @@ public:
 
 ///
 /// \ingroup PanelSDK
-/// The purpose of this object is to simulate the exterior enviorment surrounding the vessel
+/// The purpose of this object is to simulate the exterior environment surrounding the vessel
 /// so that internal systems objects can realistically simulate fluid interactions through exterior connections.
 /// Exactly one instance of this class should get created per vessel. This is done by PanelSDK before the systems
 /// config files are parsed so that this object is avaliable to other h_Objects at the time of parsing.
