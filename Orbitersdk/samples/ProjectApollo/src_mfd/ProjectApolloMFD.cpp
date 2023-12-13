@@ -2392,6 +2392,11 @@ void ProjectApolloMFD::menuSetRandomFailures()
 	oapiOpenInputBox("Randomize failures, input multiplier (1.0 for standard failure rate):", RandomFailuresInput, 0, 20, (void*)this);
 }
 
+void ProjectApolloMFD::menuClearFailures()
+{
+	if (saturn) saturn->Failures.ClearAllFailures();
+}
+
 void ProjectApolloMFD::menuCycleFailuresSubpage()
 {
 	if (FailureSubpage < 1)

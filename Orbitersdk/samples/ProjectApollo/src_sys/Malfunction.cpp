@@ -74,6 +74,8 @@ void Malfunction::Clear()
 {
 	Activated = false;
 	Failed = false;
+	Condition = 0;
+	ConditionValue = 0.0;
 }
 
 SwitchMalfunction::SwitchMalfunction(std::string Desc, std::string switchname, int failst) : Malfunction(Desc),

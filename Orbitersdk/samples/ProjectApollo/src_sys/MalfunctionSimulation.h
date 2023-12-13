@@ -50,6 +50,7 @@ public:
 	virtual void ResetFailureArm(unsigned i);
 	virtual bool IsFailureArmed(unsigned i);
 	virtual double GetConditionValue(unsigned i);
+	virtual void ClearAllFailures();
 protected:
 
 	void Add(Malfunction *mal); //Add malfunctions, should be in the vessel specific constructor of derived classes

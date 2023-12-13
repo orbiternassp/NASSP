@@ -98,7 +98,7 @@ void MalfunctionSimulation::SaveState(FILEHANDLE scn)
 		if (malfunctions[i]->GetActivated())
 		{
 			sprintf(buffer, "%d %d %d %lf", i, malfunctions[i]->GetFailed(), malfunctions[i]->GetCondition(), malfunctions[i]->GetConditionValue());
-			oapiWriteScenario_string(scn, "DIGITALMALFUNCTION", buffer);
+			oapiWriteScenario_string(scn, "MALFUNCTION", buffer);
 		}
 	}
 
@@ -118,9 +118,9 @@ void MalfunctionSimulation::LoadState(FILEHANDLE scn)
 			break;
 		}
 
-		if (!_strnicmp(line, "DIGITALMALFUNCTION", 18))
+		if (!_strnicmp(line, "MALFUNCTION", 11))
 		{
-			sscanf(line + 18, "%d %d %d %lf", &num, &itemp[0], &itemp[1], &val);
+			sscanf(line + 11, "%d %d %d %lf", &num, &itemp[0], &itemp[1], &val);
 
 			if (num < malfunctions.size())
 			{
@@ -206,5 +206,19 @@ void MalfunctionSimulation::RandomizedFailure(unsigned i, double FailureChance)
 	else
 	{
 		ResetFailureArm(i);
+	}
+}
+
+void MalfunctionSimulation::ClearAllFailures()
+{
+	unsigned i;
+
+	for (i = 0; i < malfunctions.size(); i++)
+	{
+		malfunctions[i]->Clear();
+	}
+	for (i = 0; i < switchmalfunctions.size(); i++)
+	{
+		switchmalfunctions[i]->Clear();
 	}
 }

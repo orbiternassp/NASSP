@@ -280,7 +280,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	// CSM/LV separation
 	//
 
-	if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
+	if (!Failures.GetFailure(CSMFailures_CSM_LV_Separation_Failure) && CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
 		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 	}

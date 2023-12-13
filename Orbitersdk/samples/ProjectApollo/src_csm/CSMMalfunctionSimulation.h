@@ -59,6 +59,7 @@ class Saturn;
 #define CSMFailures_Fuel_Cell_1_Disconnect 28
 #define CSMFailures_Fuel_Cell_2_Disconnect 29
 #define CSMFailures_Fuel_Cell_3_Disconnect 30
+#define CSMFailures_CSM_LV_Separation_Failure 31
 
 class CSMMalfunctionSimulation : public MalfunctionSimulation
 {

@@ -67,6 +67,7 @@ CSMMalfunctionSimulation::CSMMalfunctionSimulation(Saturn *s) : sat(s)
 	Add(new Malfunction("Fuel Cell 1 Disconnect"));
 	Add(new Malfunction("Fuel Cell 2 Disconnect"));
 	Add(new Malfunction("Fuel Cell 3 Disconnect"));
+	Add(new Malfunction("CSM LV Separation Failure"));
 }
 
 double CSMMalfunctionSimulation::GetTimeReference(int i)

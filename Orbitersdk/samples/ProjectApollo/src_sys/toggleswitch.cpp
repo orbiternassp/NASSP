@@ -378,7 +378,7 @@ void TwoPositionSwitch::VesimSwitchTo(int newState)
 void TwoPositionSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
 {
-	if (IsUp())
+	if (state == TOGGLESWITCH_UP)
 	{
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
 	}
@@ -399,7 +399,7 @@ void TwoPositionSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
 	if (!bHasAnimations) return;
 
-	if (IsUp()) {
+	if (state == TOGGLESWITCH_UP) {
 		OurVessel->SetAnimation(anim_switch, 1.0);
 	}
 	else

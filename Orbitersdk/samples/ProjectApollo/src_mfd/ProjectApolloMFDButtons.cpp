@@ -197,7 +197,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Cycle through pages",0,'P' },
 		{ 0,0,0 },
 		{ 0,0,0 },
-		{ 0,0,0 },
+		{ "Clear all failures",0,'C' },
 		{ "Randomize failures",0,'R' },
 		{ "Back",0,'B' }
 	};
@@ -214,7 +214,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("PAG", OAPI_KEY_P, &ProjectApolloMFD::menuCycleFailuresSubpage);
 	RegisterFunction("", OAPI_KEY_J, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_C, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("CLR", OAPI_KEY_C, &ProjectApolloMFD::menuClearFailures);
 	RegisterFunction("RAN", OAPI_KEY_R, &ProjectApolloMFD::menuSetRandomFailures);
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 }
