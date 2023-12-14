@@ -179,10 +179,9 @@ void SIISystems::Timestep(double simdt)
 
 void SIISystems::SetEngineFailed(int n)
 {
-	if (n < 0 || n > 4)
-	{
-		j2engines[n]->SetFailed();
-	}
+	if (n < 0 || n > 4) return;
+
+	j2engines[n]->SetFailed();
 }
 
 #define MR_STATS 5
