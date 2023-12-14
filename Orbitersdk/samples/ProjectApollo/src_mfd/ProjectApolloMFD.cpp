@@ -1769,7 +1769,7 @@ void ProjectApolloMFD::SetSIIEngineFailure(int n, double misst)
 		}
 		else
 		{
-			saturn->Failures.ArmFailure(CSMFailures_SII_Engine_1_Failure + n - 1, 0, misst);
+			saturn->Failures.ArmFailure(CSMFailures_SII_Engine_1_Failure + n - 1, 2, misst);
 		}
 	}
 }
