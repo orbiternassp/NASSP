@@ -148,7 +148,7 @@ public:
 	void TLIProcessorCalc();
 	void SaturnVTLITargetUplink();
 	int GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
-	void MPTWeightsAutoUpdate();
+	void menuCalculateIMUComparison();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -373,6 +373,9 @@ public:
 	double LUNTAR_yaw_guess;
 	double LUNTAR_TIG;
 	LunarTargetingProgramOutput LUNTAR_Output;
+
+	//DEBUG
+	VECTOR3 DebugIMUTorquingAngles;
 
 private:
 
