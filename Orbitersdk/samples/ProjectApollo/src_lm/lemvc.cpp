@@ -44,6 +44,7 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "LM_VC_Resource.h"
+#include "EmissionListLMVC.h"
 #include "Mission.h"
 
 #include "LEM.h"
@@ -986,8 +987,8 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS[i] + ofs, 0.02);
 	}
 
-	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_LMVC_INTEGRAL_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_LMVC_FLOOD_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238*TexMul, 27*TexMul, 559*TexMul, 153*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60*TexMul, 259*TexMul, 202*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
@@ -1530,13 +1531,33 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 {
 	switch (id) {
 
-	case AID_VC_INTEGRAL_LIGHT:
-        SetIntegralLight(VC_MAT_LMVC_t, lca.GetIntegralVoltage() / 100.0);
+#ifdef _OPENORBITER
+	case AID_LMVC_INTEGRAL_LIGHT:
+        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC)/sizeof(IntegralLights_LMVC[0]));
         return true;
 
-	case AID_VC_FLOOD_LIGHT:
-        SetFloodLight(VC_MAT_LMVC_t, FloodLights.GetCDRRotaryVoltage() / 28.0);
+	case AID_LMVC_FLOOD_LIGHT:
+        SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MatProp::Light,FloodLights.GetCDRRotaryVoltage() / 28.0), sizeof(FloodLights_LMVC)/sizeof(FloodLights_LMVC[0]));
         return true;
+
+//	case AID_LMVC_NUMERICS_LIGHT:
+//        SetCMVCIntegralLight(vcidx,NumericLights_P8, MatProp::Light, (double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+//        return true;
+
+#else
+	case AID_LMVC_INTEGRAL_LIGHT:
+        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MESHM_EMISSION2, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC)/sizeof(IntegralLights_LMVC[0]));
+        return true;
+
+	case AID_LMVC_FLOOD_LIGHT:
+        SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_LMVC)/sizeof(FloodLights_LMVC[0]));
+        return true;
+
+//	case AID_LMVC_NUMERICS_LIGHT:
+//        SetLMVCIntegralLight(vcidx,NumericLights_P8, MESHM_EMISSION,(double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+//        return true;
+
+#endif
 
 	case AID_VC_LM_CWS_LEFT:
 		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
@@ -3363,18 +3384,21 @@ void LEM::SetStageSeqRelayLight(int m, bool state) {
 	oapiSetMaterial(vcmesh, m, mat);
 }
 
+#ifdef _OPENORBITER
+void LEM::SetLMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
+#else
+void LEM::SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
+#endif
 
-void LEM::SetIntegralLight(int m, double state)
 {
-	DWORD emmisionMat[] = {
-		VC_MAT_LMVC_2_t,
-		VC_MAT_LMVC_t,
-		VC_MAT_Rotary_LM_t,
-		VC_MAT_FDAI_LM_t
-	};
-    if (!vcmesh)
+	if (vis == NULL) return;
+	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
+
+//    if (!vcmesh)
+    if (!hMesh)
         return;
-	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
+
+	for (int i = 0; i < cnt; i++)
 	{
 		gcCore *pCore = gcGetCoreInterface();
 		if (pCore) {
@@ -3383,81 +3407,12 @@ void LEM::SetIntegralLight(int m, double state)
 			value.g = (float)state;
 			value.b = (float)state;
 			value.a = 1.0;
-
 #ifdef _OPENORBITER
-			pCore->SetMeshMaterial(vcmesh, emmisionMat[i], MatProp::Emission, &value);
+			pCore->SetMeshMaterial(hMesh, matList[i], EmissionMode, &value);
 #else
-			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION2, &value, true);
+			pCore->MeshMaterial(hMesh, matList[i], EmissionMode, &value, true);
 #endif
-			
 		}
 	}
-    sprintf(oapiDebugString(), "%d %lf", m, state);
-}
-
-void LEM::SetFloodLight(int m, double state)
-{
-	DWORD emmisionMat[] = {
-		VC_MAT_ACA_t,
-		VC_MAT_LM_Interior_t,
-		VC_MAT_LMVC_2_t,
-		VC_MAT_LMVC_t,
-		VC_MAT_ArmRest_t,
-		VC_MAT_Ascent_Engine_Cover_t,
-		VC_MAT_Bags_Shelf_t,
-		VC_MAT_CB_black_t,
-		VC_MAT_COAS_1_t,
-		VC_MAT_COAS_1ovhd_t,
-		VC_MAT_COAS_Holder1_t,
-		VC_MAT_COAS_Holder1ovhd_t,
-		VC_MAT_Cabin_Recirculation_Assembly_t,
-		VC_MAT_DSKY_Frame_t,
-		VC_MAT_ECS_t,
-		VC_MAT_ECS_Hoses_Slot_t,
-		VC_MAT_EVA_Ant_Handle_t,
-		VC_MAT_Alluminum,
-		VC_MAT_FDAI_LM_t,
-		VC_MAT_LM_Hull_t,
-		VC_MAT_upperhatch_vc_t,
-		VC_MAT_FwdHatch_t,
-		VC_MAT_Redfoil_t,
-		VC_MAT_LM11_t,
-		VC_MAT_RCS_t,
-		VC_MAT_TempColor,
-		VC_MAT_ECS_Rotary_t,
-		VC_MAT_Rotary_LM_t,
-		VC_MAT_Suit_Flow_Control_t,
-		VC_MAT_WaterControlModule_t,
-		VC_MAT_Colors_t,
-		VC_MAT_Suit_Flow_Hose_t,
-		VC_MAT_Switch_Guards_P14_t,
-		VC_MAT_Talkbacks_t,
-		VC_MAT_UpperHatch_t,
-		VC_MAT_Water_Dispenser_t,
-		VC_MAT_WindowsRim,
-		VC_MAT_Protective_Net_t,
-		VC_MAT_COASglass,
-		VC_MAT_COASglass2
-	};
-    if (!vcmesh)
-        return;
-	for (int i = 0; i < sizeof(emmisionMat)/sizeof(emmisionMat[0]); i++)
-	{
-		gcCore *pCore = gcGetCoreInterface();
-		if (pCore) {
-			FVECTOR4 value;
-			value.r = (float)state;
-			value.g = (float)state;
-			value.b = (float)state;
-			value.a = 1.0;
-
-#ifdef _OPENORBITER
-			pCore->SetMeshMaterial(vcmesh, emmisionMat[i], MatProp::Light, &value);
-#else
-			pCore->MeshMaterial(vcmesh, emmisionMat[i], MESHM_EMISSION, &value, true);
-#endif
-
-		}
-	}
-    sprintf(oapiDebugString(), "%d %lf", m, state);
+    //sprintf(oapiDebugString(), "%d %lf", m, state);
 }

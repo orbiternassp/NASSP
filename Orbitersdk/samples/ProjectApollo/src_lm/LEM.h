@@ -575,6 +575,12 @@ public:
 	void StartSeparationPyros();
 	void StopSeparationPyros();
 
+	//
+	// VISHANDLE
+	//
+
+	VISHANDLE vis;
+
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
 	h_Tank *AscO2Tank2;
@@ -741,8 +747,13 @@ protected:
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
 	void SetStageSeqRelayLight(int m, bool state);
-	void SetIntegralLight(int m, double state);
-	void SetFloodLight(int m, double state);
+
+#ifdef _OPENORBITER
+	void SetLMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+#else
+	void SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+#endif
+
 	void InitFDAI(UINT mesh);
 
 	// LM touchdown points

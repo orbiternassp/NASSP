@@ -1085,8 +1085,8 @@
 #define AID_VC_SEQ_LIGHTS      3829
 #define AID_VC_PANEL8_TALKBACKS 3830
 
-#define AID_VC_INTEGRAL_LIGHT  3831
-#define AID_VC_FLOOD_LIGHT     3832
+#define AID_LMVC_INTEGRAL_LIGHT  3831
+#define AID_LMVC_FLOOD_LIGHT     3832
 
 // VC Active Areas (Panel 11)
 #define AID_VC_PANEL_11			((id >= 4100) && (id <= 4199))
