@@ -1537,7 +1537,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
         return true;
 
 	case AID_LMVC_FLOOD_LIGHT:
-        SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MatProp::Light,FloodLights.GetCDRRotaryVoltage() / 28.0), sizeof(FloodLights_LMVC)/sizeof(FloodLights_LMVC[0]));
+        SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MatProp::Light, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_LMVC)/sizeof(FloodLights_LMVC[0]));
         return true;
 
 //	case AID_LMVC_NUMERICS_LIGHT:
