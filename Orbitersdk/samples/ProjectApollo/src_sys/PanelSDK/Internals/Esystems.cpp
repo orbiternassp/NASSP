@@ -699,7 +699,7 @@ void Battery::refresh(double dt)
 		if (!batcase) return;
 
 		double h2 = (SRC->Current() * 0.000001 * dt);
-		double o2 = (SRC->Current() * 0.000001 * dt);
+		double o2 = (SRC->Current() * 0.0000005 * dt);
 		batcase->space.composition[SUBSTANCE_H2].mass += h2;
 		batcase->space.composition[SUBSTANCE_O2].mass += o2;
 		batcase->space.composition[SUBSTANCE_H2].vapor_mass += h2;
