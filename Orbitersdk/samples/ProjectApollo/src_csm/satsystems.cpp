@@ -1105,7 +1105,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "Pressure. OAPI %17f, SPSDK %17f", this->GetAtmPressure(), ExtEnv->space.Press);
 
 //Battery Vent Debug Lines
-///*
+/*
 	double* BatCaseAPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATACASE:PRESS");
 	double* BatCaseBPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATBCASE:PRESS");
 	double* BatCaseCPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CMBATCCASE:PRESS");
@@ -1133,7 +1133,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "WHA: %lf WSHA: %lf WHB: %lf WSHB: %lf H2OT: %.3f UDHA: %lf UDSTA: %lf UDHB: %lf UDSTB: %lf UT: %.3f SDHA %lf SDHB %lf SDT %.3f", *WaterHeaterA, *WaterStripHeaterA, *WaterHeaterB, *WaterStripHeaterB, WasteH2ODumpHeater.GetTemperatureF(), 
 		//*UrineHeaterA, *UrineStripHeaterA, *UrineHeaterB, *UrineStripHeaterB, UrineDumpHeater.GetTemperatureF(), 
 		//*SteamDuctHtrA, *SteamDuctHtrB, KelvinToFahrenheit(*SteamDuctNozzleTemp));
-//*/
+*/
 
 #ifdef _DEBUG
 
