@@ -1525,6 +1525,13 @@ void h_ExteriorEnvironment::refresh(double dt)
 	h_Tank::refresh(dt);
 }
 
+h_ExteriorVentPipe::h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_OUT, int i_type, double max, double min, int is_two) :
+	h_Pipe(i_name, i_IN, i_OUT, i_type, max, min, is_two)
+{
+	v = NULL;
+	Num_Vents = 0;
+};
+
 h_ExteriorVentPipe::~h_ExteriorVentPipe()
 {
 }

@@ -135,7 +135,7 @@ class H_system:public ship_system
 	void Create_h_WaterSeparator(char *line);
 	void Create_h_HeatLoad(char *line);
 	void Create_h_Accumulator(char* line);
-	void Create_h_ExteriorEnviormnent();
+	void Create_h_ExteriorEnvironment();
 	void Create_h_ExteriorVentPipe(char* line);
 
 public:
@@ -147,7 +147,7 @@ public:
 	void Build();
 	void ProcessShip(VESSEL *vessel, PROPELLANT_HANDLE ph);
 private:
-	bool ExteriorEnviormnentCreated = false;
+	bool ExteriorEnvironmentCreated = false;
 };
 
 class h_Tank;
@@ -401,17 +401,17 @@ public:
 
 ///
 /// \ingroup PanelSDK
-/// The purpose of this object is to simulate the exterior enviorment surrounding the vessel
+/// The purpose of this object is to simulate the exterior environment surrounding the vessel
 /// so that internal systems objects can realistically simulate fluid interactions through exterior connections.
 /// Exactly one instance of this class should get created per vessel. This is done by PanelSDK before the systems
 /// config files are parsed so that this object is avaliable to other h_Objects at the time of parsing.
 /// 
-/// Connections than be do the exterior enviornment like any other tank, by means of a pipe connecting to
+/// Connections than be do the exterior environment like any other tank, by means of a pipe connecting to
 /// EXTERIOR:IN, EXTERIOR:OUT etc. The name of this object will always be "EXTERIOR". Connections to this object are also
 /// avaliable through the "Vent" class.
 /// 
 /// Principal of Operation.
-/// The internal state of the ExteriorEnviornment is simulated exactly as in the h_Tank class (h_ExteriorEnvironment derives
+/// The internal state of the ExteriorEnvironment is simulated exactly as in the h_Tank class (h_ExteriorEnvironment derives
 /// from h_Tank). Once per systems timestep, h_ExteriorEnvironment calls GetAtmDensity() from the vessel to which the h_ExteriorEnvironment
 /// instance is attached.
 ///
@@ -472,8 +472,7 @@ private:
 class h_ExteriorVentPipe : public h_Pipe
 {
 public:
-	h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_OUT, int i_type, double max, double min, int is_two):
-		h_Pipe(i_name, i_IN, i_OUT, i_type, max, min, is_two) {};
+	h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_OUT, int i_type, double max, double min, int is_two);
 	virtual ~h_ExteriorVentPipe();
 	void AddVent(VECTOR3 i_pos, VECTOR3 i_dir, double i_size);
 	void ProcessShip(VESSEL* vessel, PROPELLANT_HANDLE ph);

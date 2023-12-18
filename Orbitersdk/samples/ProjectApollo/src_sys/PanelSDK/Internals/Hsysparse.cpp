@@ -465,7 +465,7 @@ void H_system::Create_h_Accumulator(char* line) {
 	new_one->parent = this;
 }
 
-void H_system::Create_h_ExteriorEnviormnent()
+void H_system::Create_h_ExteriorEnvironment()
 {
 	char name[] = "EXTERIOR_ENVIRONMENT";
 	h_ExteriorEnvironment* new_one;
@@ -543,9 +543,9 @@ void H_system::Build() {
 	char *line;
 
 	//Make sure only one of these gets created.
-	if(!ExteriorEnviormnentCreated){
-		Create_h_ExteriorEnviormnent();
-		ExteriorEnviormnentCreated = true;
+	if(!ExteriorEnvironmentCreated){
+		Create_h_ExteriorEnvironment();
+		ExteriorEnvironmentCreated = true;
 	}
 
 	line = ReadConfigLine();
