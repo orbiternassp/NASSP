@@ -181,7 +181,7 @@ void H_system::Create_h_Valve(char *line) {
 	AddSystem(new h_Valve(name, i_open, i_ct, i_size, parent));
 }
 
-void H_system::Create_h_Vent(char *line) { // FIXME: This should "vent" to whatever the spacecraft is in based on atmospheric pressure
+void H_system::Create_h_Vent(char *line) {
 
 	char name[100];
 	h_Vent *new_one;
