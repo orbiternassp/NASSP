@@ -3630,6 +3630,9 @@ public:
 	TemperatureTransducer CMRCSEngine21TempSensor;
 	TemperatureTransducer CMRCSEngine24TempSensor;
 	TemperatureTransducer CMRCSEngine25TempSensor;
+	CSMTankPressTransducer BatteryManifoldPressureSensor;
+	TemperatureTransducer WasteH2ODumpTempSensor;
+	TemperatureTransducer UrineDumpTempSensor;
 protected:
 
 	// CM Optics
@@ -3776,9 +3779,15 @@ protected:
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
 	SaturnWasteStowageVentValve WasteStowageVentValve;
+	SaturnBatteryVent BatteryVent;
 	SaturnSuitFlowValves SaturnSuitFlowValve300;
 	SaturnSuitFlowValves SaturnSuitFlowValve301;
 	SaturnSuitFlowValves SaturnSuitFlowValve302;
+	SaturnDumpHeater WasteH2ODumpHeater;
+	SaturnDumpHeater UrineDumpHeater;
+	Boiler *SteamDuctHeaterA;
+	Boiler *SteamDuctHeaterB;
+
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;
@@ -4573,6 +4582,9 @@ protected:
 	friend class DockingTargetSwitch;
 	friend class LeftCOASPowerSwitch;
 	friend class SCE;
+	friend class SaturnWaterController;
+	friend class SaturnBatteryVent;
+	friend class SaturnDumpHeater;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ARCore;
