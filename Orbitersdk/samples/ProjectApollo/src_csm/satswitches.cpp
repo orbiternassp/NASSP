@@ -1325,6 +1325,8 @@ double SaturnSystemTestMeter::QueryValue()
 	case 4:
 		switch (right)
 		{
+		case 0:	//PRESS BAT COMPARTMENT (MANIF)
+			return Sat->BatteryManifoldPressureSensor.Voltage();
 		case 1:	//BAT RLY BUS VOLT
 			return Sat->sce.GetVoltage(0, 4);
 		case 3:	//CSM TO LM CURRENT
