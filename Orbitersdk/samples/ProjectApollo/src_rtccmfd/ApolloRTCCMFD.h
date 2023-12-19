@@ -693,6 +693,8 @@ public:
 	void set_LOSTCheckMode(double get,int Detent, int COASAxis);
 	void UpdateLOSTDisplay();
 	void CalculateLOSTDOKOption();
+	void menuSetDebugPage();
+	void menuCalculateIMUComparison();
 	void menuSLVNavigationUpdateCalc();
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();

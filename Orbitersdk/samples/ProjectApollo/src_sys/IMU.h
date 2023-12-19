@@ -47,7 +47,7 @@ public:
 	void DriveGimbals(double x, double y, double z);
 	void SetVessel(VESSEL *v, bool LEMFlag);
 	void SetVesselFlag(bool LEMFlag);
-	VECTOR3 GetTotalAttitude();
+	virtual VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
 	void WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b);
