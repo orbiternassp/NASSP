@@ -1021,8 +1021,6 @@ void Saturn::initSaturn()
 	}
 
 	th_3rd[0] = 0;
-	th_3rd_lox = 0;
-	th_3rd_lh2 = 0;
 	th_sps[0] = 0;
 
 	/*for (i = 0; i < 2; i++)
@@ -2656,6 +2654,11 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	agc.SetMissionInfo(pMission->GetCMCVersion(), PayloadName);
 
 	secs.SetSaturnType(SaturnType);
+
+	//
+	// Give the vehicle number to S-IVB systems
+	//
+	if (sivb) sivb->SetVehicleNumber(VehicleNo);
 
 	//
 	// Realism Mode Settings
