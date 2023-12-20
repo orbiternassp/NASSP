@@ -2427,7 +2427,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 113:		// SCI EXP #9
 							return(scale_data(0,0,100));
 						case 114:		// H2O DUMP TEMP
-							return(scale_data(0,0,100));
+							return(scale_data(sat->WasteH2ODumpTempSensor.Voltage(), 0.0, 5.0));
 						case 115:		// SCI EXP #10
 							return(scale_data(0,0,100));
 						case 116:		// SCI EXP #11
@@ -2476,7 +2476,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 134:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 135:		// URINE DUMP NOZZLE TEMP
-							return(scale_data(0,0,100));
+							return(scale_data(sat->UrineDumpTempSensor.Voltage(), 0.0, 5.0));
 						case 136:		// SM ENG PKG A TEMP
 							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));

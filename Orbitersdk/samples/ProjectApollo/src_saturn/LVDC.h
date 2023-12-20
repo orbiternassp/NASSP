@@ -527,8 +527,8 @@ private:								// Saturn LV
 	double hx[3][5];								// Azimuth from time polynomial
 	double Rho[6];									// Coasting flight air density polynomial (ref. orbital radius)
 	double Drag_Area[5];							// Coasting flight drag area polynomial (ref. flight path angle)
-	double VENTA[5];								// Orbital vent accelerations
-	double VTIM[4];									// Segment switch times for orbital vent accelerations measured from TB5
+	double VENTA[7];								// Orbital vent accelerations
+	double VTIM[6];									// Segment switch times for orbital vent accelerations measured from TB5
 
 	// LVDC software variables, NOT PAD-LOADED
 	double Azimuth;									// Azimuth
