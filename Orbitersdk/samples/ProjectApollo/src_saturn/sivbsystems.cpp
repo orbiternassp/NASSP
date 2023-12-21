@@ -966,6 +966,9 @@ void SIVBSystems::LH2PropellantCalculations(double simdt)
 	{
 		//Tank full, bypass
 		LH2TankUllagePressurePSI = 31.0;
+		//Reset particle stream levels
+		LH2_CVS_Stream_Lvl = 0.0;
+		LH2_NPV_Stream_Lvl = 0.0;
 		//sprintf(oapiDebugString(), "Tank Full! UllageVolume %lf", UllageVolume);
 		return;
 	}
@@ -975,6 +978,9 @@ void SIVBSystems::LH2PropellantCalculations(double simdt)
 		LH2TankUllagePressurePSI = 31.0;
 		double InitPress = LH2TankUllagePressurePSI / PSI;
 		GH2_Mass = InitPress * UllageVolume / R / GH2_TEMP * M_H2 / 1000.0;
+		//Reset particle stream levels
+		LH2_CVS_Stream_Lvl = 0.0;
+		LH2_NPV_Stream_Lvl = 0.0;
 		//sprintf(oapiDebugString(), "Burn active! UllageVolume %lf GH2_Mass %lf", UllageVolume, GH2_Mass);
 		return;
 	}
@@ -1164,6 +1170,9 @@ void SIVBSystems::LOXPropellantCalculations(double simdt)
 	{
 		//Tank full, bypass
 		LOXTankUllagePressurePSI = 41.0;
+		//Reset particle stream levels
+		LOX_NPV_Stream_Lvl = 0.0;
+		LOX_Dump_Stream_Lvl = 0.0;
 		//sprintf(oapiDebugString(), "Tank Full! UllageVolume %lf OxidPercentage %lf", UllageVolume, OxidPercentage);
 		return;
 	}
@@ -1173,6 +1182,9 @@ void SIVBSystems::LOXPropellantCalculations(double simdt)
 		LOXTankUllagePressurePSI = 41.0;
 		double InitPress = LOXTankUllagePressurePSI / PSI;
 		GO2_Mass = InitPress * UllageVolume / R / GO2_TEMP * M_O2 / 1000.0;
+		//Reset particle stream levels
+		LOX_NPV_Stream_Lvl = 0.0;
+		LOX_Dump_Stream_Lvl = 0.0;
 		//sprintf(oapiDebugString(), "Burn active! UllageVolume %lf GH2_Mass %lf", UllageVolume, GH2_Mass);
 		return;
 	}
