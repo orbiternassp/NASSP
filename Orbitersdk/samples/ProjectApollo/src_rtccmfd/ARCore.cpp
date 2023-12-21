@@ -1570,7 +1570,7 @@ void ARCore::StateVectorCalc(int type)
 		}
 		else
 		{
-			sv1 = GC->rtcc->coast(sv0, SVDesiredGET - GC->rtcc->GETfromGMT(sv0.GMT));
+			sv1 = GC->rtcc->coast(sv0, SVDesiredGET - GC->rtcc->GETfromGMT(sv0.GMT), mptveh);
 		}
 		GC->rtcc->CMMCMNAV(uplveh, mptveh, sv1);
 	}
@@ -3716,7 +3716,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			sv2 = GC->rtcc->coast(sv, GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT);
+			sv2 = GC->rtcc->coast(sv, GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT, RTCC_MPT_CSM);
 		}
 
 		GC->rtcc->CMMSLVNAV(sv2.R, sv2.V, sv2.GMT);
