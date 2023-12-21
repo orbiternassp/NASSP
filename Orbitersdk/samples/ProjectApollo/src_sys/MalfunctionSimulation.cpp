@@ -38,11 +38,7 @@ MalfunctionSimulation::~MalfunctionSimulation()
 	}
 	malfunctions.clear();
 
-	for (unsigned i = 0; i < switchmalfunctions.size(); i++)
-	{
-		delete switchmalfunctions[i];
-	}
-	switchmalfunctions.clear();
+	DeleteSwitchMalfunctions();
 }
 
 void MalfunctionSimulation::Timestep()
@@ -80,7 +76,7 @@ void MalfunctionSimulation::Timestep()
 
 			if (activate)
 			{
-				SetSwitchFailure(i);
+				SetSwitchFailure(i, true);
 			}
 		}
 	}
@@ -138,6 +134,12 @@ void MalfunctionSimulation::LoadState(FILEHANDLE scn)
 			mal->SetCondition(itemp[1], val);
 
 			switchmalfunctions.push_back(mal);
+
+			//Set switch failed
+			if (mal->GetFailed())
+			{
+				SetSwitchFailure(switchmalfunctions.size() - 1U, true);
+			}
 		}
 	}
 }
@@ -219,6 +221,16 @@ void MalfunctionSimulation::ClearAllFailures()
 	}
 	for (i = 0; i < switchmalfunctions.size(); i++)
 	{
-		switchmalfunctions[i]->Clear();
+		SetSwitchFailure(i, false);
 	}
+	DeleteSwitchMalfunctions();
+}
+
+void MalfunctionSimulation::DeleteSwitchMalfunctions()
+{
+	for (unsigned i = 0; i < switchmalfunctions.size(); i++)
+	{
+		delete switchmalfunctions[i];
+	}
+	switchmalfunctions.clear();
 }

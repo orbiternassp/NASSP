@@ -58,9 +58,11 @@ protected:
 	virtual double GetTimeReference(int i) = 0; // Return the current time in vessel specific reference systems, e.g. mission time
 	virtual void SetFailure(unsigned i) = 0; // For failures that need signals to some external system, send the signal in this function
 	virtual void ResetFailure(unsigned i) = 0; // Same as SetFailure, but to reset signals
-	virtual void SetSwitchFailure(unsigned i) = 0;
+	virtual void SetSwitchFailure(unsigned i, bool set) = 0;
 
 	void RandomizedFailure(unsigned i, double FailureChance); //Helper function to randomize failures
+
+	void DeleteSwitchMalfunctions();
 
 	std::vector<Malfunction*> malfunctions; //Permanently set up malfunctions for the vessel
 	std::vector<SwitchMalfunction*> switchmalfunctions; //Dynamically loaded when failures are desired

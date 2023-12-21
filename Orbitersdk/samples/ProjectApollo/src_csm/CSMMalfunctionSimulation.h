@@ -72,7 +72,7 @@ protected:
 	double GetTimeReference(int i);
 	void SetFailure(unsigned i);
 	void ResetFailure(unsigned i);
-	void SetSwitchFailure(unsigned i);
+	void SetSwitchFailure(unsigned i, bool set);
 
 	Saturn *sat;
 };
