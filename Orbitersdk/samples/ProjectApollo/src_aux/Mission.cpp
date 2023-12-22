@@ -113,6 +113,7 @@ namespace mission {
 		bHasRateAidedOptics = false;
 		iLMCWEAVersion = 0;
 		bCrossPointerReversePolarity = false;
+		bCrossPointerShades = false;
 		strCDRName = "CDR";
 		strCMPName = "CMP";
 		strLMPName = "LMP";
@@ -270,6 +271,10 @@ namespace mission {
 				strncpy(buffer, line + 28, 255);
 				bCrossPointerReversePolarity = !_strnicmp(buffer, "TRUE", 4);
 			}
+			else if (!_strnicmp(line, "CrossPointerShades=", 19)) {
+				strncpy(buffer, line + 19, 255);
+				bCrossPointerShades = !_strnicmp(buffer, "TRUE", 4);
+			}
 			else if (!_strnicmp(line, "TEPHEM0=", 8)) {
 				sscanf(line + 8, "%lf", &dTEPHEM0);
 			}
@@ -422,6 +427,11 @@ namespace mission {
 	bool Mission::GetCrossPointerReversePolarity() const
 	{
 		return bCrossPointerReversePolarity;
+	}
+
+	bool Mission::GetCrossPointerShades() const
+	{
+		return bCrossPointerShades;
 	}
 
 	double Mission::GetTEPHEM0() const

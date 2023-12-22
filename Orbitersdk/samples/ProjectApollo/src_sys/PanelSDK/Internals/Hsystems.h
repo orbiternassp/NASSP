@@ -135,6 +135,8 @@ class H_system:public ship_system
 	void Create_h_WaterSeparator(char *line);
 	void Create_h_HeatLoad(char *line);
 	void Create_h_Accumulator(char* line);
+	void Create_h_ExteriorEnvironment();
+	void Create_h_ExteriorVentPipe(char* line);
 
 public:
 
@@ -144,6 +146,8 @@ public:
 	void Save (FILEHANDLE scn);
 	void Build();
 	void ProcessShip(VESSEL *vessel, PROPELLANT_HANDLE ph);
+private:
+	bool ExteriorEnvironmentCreated = false;
 };
 
 class h_Tank;
@@ -200,6 +204,7 @@ public:
 
 	void operator +=(h_substance);
 };
+
 
 class h_Pipe : public h_object {	//pipes are the connections between valves!!
 
@@ -392,6 +397,95 @@ public:
 	h_Accumulator(char* i_name, vector3 i_p, double i_vol);
 	void refresh(double dt);
 
+};
+
+///
+/// \ingroup PanelSDK
+/// The purpose of this object is to simulate the exterior environment surrounding the vessel
+/// so that internal systems objects can realistically simulate fluid interactions through exterior connections.
+/// Exactly one instance of this class should get created per vessel. This is done by PanelSDK before the systems
+/// config files are parsed so that this object is avaliable to other h_Objects at the time of parsing.
+/// 
+/// Connections than be do the exterior environment like any other tank, by means of a pipe connecting to
+/// EXTERIOR:IN, EXTERIOR:OUT etc. The name of this object will always be "EXTERIOR". Connections to this object are also
+/// avaliable through the "Vent" class.
+/// 
+/// Principal of Operation.
+/// The internal state of the ExteriorEnvironment is simulated exactly as in the h_Tank class (h_ExteriorEnvironment derives
+/// from h_Tank). Once per systems timestep, h_ExteriorEnvironment calls GetAtmDensity() from the vessel to which the h_ExteriorEnvironment
+/// instance is attached.
+///
+class h_ExteriorEnvironment : public h_Tank
+{
+public:
+	h_ExteriorEnvironment(char* i_name, vector3 i_p, double i_vol) : h_Tank(i_name, i_p, i_vol) {};
+	virtual ~h_ExteriorEnvironment();
+	virtual void refresh(double dt);
+private:
+	enum body
+	{
+		None,
+		Earth,
+		Mars,
+		num_bodies
+	};
+
+	const double compositionRatio[num_bodies][MAX_SUB] = {
+
+		//None
+		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+
+		//Earth
+		{
+			0.20947,		//O2
+			0.0,			//H2
+			0.00934,		//H2O
+			0.78084,		//N2
+			0.00035,		//CO2
+			0.0,			//Glycol
+			0.0,			//Aerozine
+			0.0,			//N204
+			0.0				//He
+		},
+
+		//Mars
+		{
+			0.001,			//O2
+			0.0,			//H2
+			0.0,			//H2O
+			0.019,			//N2
+			0.98,			//CO2
+			0.0,			//Glycol
+			0.0,			//Aerozine
+			0.0,			//N204
+			0.0				//He
+		}
+	};
+};
+
+
+///
+/// \ingroup PanelSDK
+/// This object is a replacement for the obsolete h_Vent class. It is used to create a fluid
+/// connection between an h_Tank, and h_ExteriorEnvironment
+///
+class h_ExteriorVentPipe : public h_Pipe
+{
+public:
+	h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_OUT, int i_type, double max, double min, int is_two);
+	virtual ~h_ExteriorVentPipe();
+	void AddVent(VECTOR3 i_pos, VECTOR3 i_dir, double i_size);
+	void ProcessShip(VESSEL* vessel, PROPELLANT_HANDLE ph);
+	virtual void* GetComponent(char* component_name);
+private:
+	virtual int Flow(h_volume block);
+	VECTOR3 pos[4];
+	VECTOR3 dir[4];
+	double size[4];
+	PROPELLANT_HANDLE ph_vent;
+	THRUSTER_HANDLE thg[4];
+	VESSEL* v;
+	int Num_Vents;
 };
 
 #endif
