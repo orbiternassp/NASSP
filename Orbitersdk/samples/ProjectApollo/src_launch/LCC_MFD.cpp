@@ -38,7 +38,7 @@ LCC_MFD::~LCC_MFD(void)
 	return;
 }
 
-int LCC_MFD::MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
+OAPI_MSGTYPE LCC_MFD::MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
 	{

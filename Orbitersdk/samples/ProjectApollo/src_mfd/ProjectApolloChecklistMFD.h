@@ -40,7 +40,7 @@ public:
 	void RecallStatus (void);
 	void substituteVariables(char *buffer,int buflen);
 
-	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
+	static LRESULT MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 	MFDConnector conn;
 	vector<ChecklistGroup> groups;

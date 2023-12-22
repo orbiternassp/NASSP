@@ -32,7 +32,7 @@
 #include <commctrl.h>
 #include "resource.h"
 #include <stdio.h>
-#include "vesim.h"
+#include <WinUser.h>
 
 // ==============================================================
 // Some global parameters
@@ -88,9 +88,9 @@ public:
 	char *Description() { return "Global configuration for Project Apollo - NASSP."; }
 	bool clbkOpen (HWND hLaunchpad);
 	int clbkWriteConfig ();
-	static BOOL CALLBACK DlgProcFrame (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static BOOL CALLBACK DlgProcVisual (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static BOOL CALLBACK DlgProcControl (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK DlgProcFrame (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK DlgProcVisual (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK DlgProcControl (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 protected:
 	void WriteConfig(FILEHANDLE hFile);
@@ -221,7 +221,7 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	oapiCloseFile (hFile, FILE_OUT);
 }
 
-BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	TCITEM tabitem;
     HWND hTab;
@@ -418,7 +418,7 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 	return 0;
 }
 
-BOOL CALLBACK ProjectApolloConfigurator::DlgProcVisual (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ProjectApolloConfigurator::DlgProcVisual (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG: // display the current value
@@ -439,7 +439,7 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcVisual (HWND hWnd, UINT uMsg, WP
 	return 0;
 }
 
-BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	char buffer[100];
 
@@ -528,22 +528,24 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 			UpdateControlState(hWnd);
 
 		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG)) {
+			/*
 			std::string configdir = "Config\\ProjectApollo\\Vesim\\";
 			LPDIRECTINPUT8 dx8ppv;
-			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLong(hWnd, GWL_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
+			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLong(hWnd, GWLP_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
 			if (!FAILED(hr)) {
 				Vesim lmvm(NULL, NULL), csmvm(NULL, NULL);
 				lmvm.setupDevices("LM", dx8ppv);
 				csmvm.setupDevices("CSM", dx8ppv);
 				lmvm.createUserConfigs();
 				csmvm.createUserConfigs();
-				/*if (enableVESIM) {
-					for (int i = 0; i < LM_AXIS_INPUT_CNT; i++)
-						vesim.addInput(&vesim_lm_inputs[i]);
-					
-				}*/
+				//if (enableVESIM) {
+				//	for (int i = 0; i < LM_AXIS_INPUT_CNT; i++)
+				//		vesim.addInput(&vesim_lm_inputs[i]);
+				//	
+				//}
 				dx8ppv->Release();
 			}
+			*/
 			
 		}
 		break;

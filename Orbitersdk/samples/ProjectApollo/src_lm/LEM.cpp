@@ -121,252 +121,6 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 	if (vessel) delete static_cast<LEM *> (vessel);
 }
 
-#define LM_AXIS_INPUT_CNT  39
-VesimInputDefinition vesim_lm_inputs[LM_AXIS_INPUT_CNT] = {
-	{ LM_AXIS_INPUT_ACAR,          "ACA Roll",                                 VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ LM_AXIS_INPUT_ACAP,          "ACA Pitch",                                VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ LM_AXIS_INPUT_ACAY,          "ACA Yaw",                                  VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ LM_AXIS_INPUT_TTCAX,         "TTCA X",                                   VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ LM_AXIS_INPUT_TTCAY,         "TTCA Y",                                   VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ LM_AXIS_INPUT_TTCAZ,         "TTCA Z",                                   VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ LM_BUTTON_ROT_LIN,           "Rotation/Translation toggle",              VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_AXIS_INPUT_THROTTLE,      "TTCA Throttle",                            VESIM_INPUTTYPE_AXIS,    0, false },
-	{ LM_BUTTON_ENG_START,         "Engine Start toggle",                      VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_ENG_STOP,          "Engine Stop toggle",                       VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DES_RATE_PLUS,     "Descent Rate plus",                        VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DES_RATE_MINUS,    "Descent Rate minus",                       VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_ABORT,             "Abort toggle",                             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_ABORT_STAGE,       "Abort Stage toggle",                       VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_ABORT_STAGE_GRD,   "Abort Stage Guard toggle",                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_PRO,          "DSKY PRO",                                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_KEY_REL,      "DSKY KEY REL",                             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_VERB,         "DSKY VERB",                                VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NOUN,         "DSKY NOUN",                                VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_ENTR,         "DSKY ENTR",                                VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_CLR,          "DSKY CLR",                                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_PLUS,         "DSKY +",                                   VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_MINUS,        "DSKY -",                                   VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_RSET,         "DSKY RSET",                                VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_0,        "DSKY Number 0",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_1,        "DSKY Number 1",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_2,        "DSKY Number 2",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_3,        "DSKY Number 3",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_4,        "DSKY Number 4",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_5,        "DSKY Number 5",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_6,        "DSKY Number 6",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_7,        "DSKY Number 7",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_8,        "DSKY Number 8",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_NUM_9,        "DSKY Number 9",                            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_MDCTRL_PGNS,       "Mode Control PGNS Auto/Att Hold toggle",   VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_MDCTRL_PGNS_AUT,   "Mode Control PGNS Auto",                   VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_MDCTRL_PGNS_ATH,   "Mode Control PGNS Att Hold",               VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_MDCTRL_PGNS_OFF,   "Mode Control PGNS Off",                    VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_AXIS_THR_JET_LEVER,       "TTCA Throttle/Jets Select lever",          VESIM_INPUTTYPE_AXIS,    0, false }
-};
-
-void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
-	LEM *pLM = (LEM *)pdata;
-	int state;
-	if (eventType == VESIM_EVTTYPE_BUTTON_ON) {
-		switch (inputID) {
-		case LM_BUTTON_ROT_LIN:
-			if (pLM->GetAttitudeMode() == RCS_ROT)
-				pLM->SetAttitudeMode(RCS_LIN);
-			else
-				pLM->SetAttitudeMode(RCS_ROT);
-			break;
-		case LM_BUTTON_DES_RATE_MINUS:
-			pLM->agc.SetInputChannelBit(016, DescendMinus, 1);
-			break;
-		case LM_BUTTON_DES_RATE_PLUS:
-			pLM->agc.SetInputChannelBit(016, DescendPlus, 1);
-			break;
-		case LM_BUTTON_ENG_START:
-			//Engine Start Button
-			pLM->ManualEngineStart.Push();
-			pLM->ButtonClick();
-			break;
-		case LM_BUTTON_ENG_STOP:
-			//Engine Stop Button
-			pLM->CDRManualEngineStop.Push();
-			pLM->ButtonClick();
-			break;
-		case LM_BUTTON_ABORT:
-			state = pLM->AbortSwitch.GetState(); 
-			if (state == 0) {
-				pLM->AbortSwitch.SwitchTo(1);
-			}
-			else if (state == 1) {
-				pLM->AbortSwitch.SwitchTo(0);
-			}
-			break;
-		case LM_BUTTON_ABORT_STAGE:			
-			if (pLM->AbortStageSwitch.GetGuardState()) {
-				state = pLM->AbortStageSwitch.GetState();
-				if (state == 0) {
-					pLM->AbortStageSwitch.SwitchTo(1);
-					pLM->Sclick.play();
-				}
-				else if (state == 1) {
-					pLM->AbortStageSwitch.SwitchTo(0);
-					pLM->Sclick.play();
-				}
-			}
-			break;
-		case LM_BUTTON_ABORT_STAGE_GRD:
-			if (pLM->AbortStageSwitch.GetGuardState()) {
-				pLM->AbortStageSwitch.SetGuardState(false);
-			}
-			else {
-				pLM->AbortStageSwitch.SetGuardState(true);
-			}
-			pLM->ButtonClick(); // guardClick is inaccesible
-			break;
-		case LM_BUTTON_DSKY_PRO:
-			pLM->dsky.ProgPressed();
-			break;
-		case LM_BUTTON_DSKY_KEY_REL:
-			pLM->dsky.KeyRel();
-			break;
-		case LM_BUTTON_DSKY_VERB:
-			pLM->dsky.VerbPressed();
-			break;
-		case LM_BUTTON_DSKY_NOUN:
-			pLM->dsky.NounPressed();
-			break;
-		case LM_BUTTON_DSKY_ENTR:
-			pLM->dsky.EnterPressed();
-			break;
-		case LM_BUTTON_DSKY_CLR:
-			pLM->dsky.ClearPressed();
-			break;
-		case LM_BUTTON_DSKY_PLUS:
-			pLM->dsky.PlusPressed();
-			break;
-		case LM_BUTTON_DSKY_MINUS:
-			pLM->dsky.MinusPressed();
-			break;
-		case LM_BUTTON_DSKY_RSET:
-			pLM->dsky.ResetPressed();
-			break;
-		case LM_BUTTON_DSKY_NUM_0:
-			pLM->dsky.NumberPressed(0);
-			break;
-		case LM_BUTTON_DSKY_NUM_1:
-			pLM->dsky.NumberPressed(1);
-			break;
-		case LM_BUTTON_DSKY_NUM_2:
-			pLM->dsky.NumberPressed(2);
-			break;
-		case LM_BUTTON_DSKY_NUM_3:
-			pLM->dsky.NumberPressed(3);
-			break;
-		case LM_BUTTON_DSKY_NUM_4:
-			pLM->dsky.NumberPressed(4);
-			break;
-		case LM_BUTTON_DSKY_NUM_5:
-			pLM->dsky.NumberPressed(5);
-			break;
-		case LM_BUTTON_DSKY_NUM_6:
-			pLM->dsky.NumberPressed(6);
-			break;
-		case LM_BUTTON_DSKY_NUM_7:
-			pLM->dsky.NumberPressed(7);
-			break;
-		case LM_BUTTON_DSKY_NUM_8:
-			pLM->dsky.NumberPressed(8);
-			break;
-		case LM_BUTTON_DSKY_NUM_9:
-			pLM->dsky.NumberPressed(9);
-			break;
-		case LM_BUTTON_MDCTRL_PGNS:
-			//Mode Control PGNS - cycle between Auto & Att Hold
-			if (pLM->ModeControlPGNSSwitch.GetState() < 2) {
-				pLM->ModeControlPGNSSwitch.SetState(2);
-			}
-			else {
-				pLM->ModeControlPGNSSwitch.SetState(1);
-			}
-			break;
-		case LM_BUTTON_MDCTRL_PGNS_AUT:
-			pLM->ModeControlPGNSSwitch.SetState(2);
-			break;
-		case LM_BUTTON_MDCTRL_PGNS_ATH:
-			pLM->ModeControlPGNSSwitch.SetState(1);
-			break;
-		case LM_BUTTON_MDCTRL_PGNS_OFF:
-			pLM->ModeControlPGNSSwitch.SetState(0);
-			break;
-		}
-	}
-	else if (eventType == VESIM_EVTTYPE_BUTTON_OFF) {
-		switch (inputID) {
-		case LM_BUTTON_DES_RATE_MINUS:
-			pLM->agc.SetInputChannelBit(016, DescendMinus, 0);
-			pLM->Sclick.play();;
-			break;
-		case LM_BUTTON_DES_RATE_PLUS:
-			pLM->agc.SetInputChannelBit(016, DescendPlus, 0);
-			pLM->Sclick.play();;
-			break;
-		case LM_BUTTON_DSKY_PRO:
-			pLM->dsky.ProgReleased();
-			break;
-		}
-	}
-}
-
-
-// DS20060302 DX8 callback for enumerating joysticks
-BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pLEM)
-{
-	class LEM * lem = (LEM*)pLEM; // Pointer to us
-	HRESULT hr;
-
-	if(lem->js_enabled > 1){  // Do we already have enough joysticks?
-		return DIENUM_STOP; } // If so, stop enumerating additional devices.
-
-	// Obtain an interface to the enumerated joystick.
-    hr = lem->dx8ppv->CreateDevice(pdidInstance->guidInstance, &lem->dx8_joystick[lem->js_enabled], NULL);
-	
-	if(FAILED(hr)) {              // Did that work?
-		return DIENUM_CONTINUE; } // No, keep enumerating (if there's more)
-
-	lem->js_enabled++;      // Otherwise, Next!
-	return DIENUM_CONTINUE; // and keep enumerating
-}
-
-// DX8 callback for enumerating joystick axes
-BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pLEM )
-{
-	class LEM * lem = (LEM*)pLEM; // Pointer to us
-
-    if (pdidoi->guidType == GUID_ZAxis) {
-		if (lem->js_current == lem->rhc_id) {
-			lem->rhc_rzx_id = 1;
-		} else {
-			lem->thc_rzx_id = 1;
-		}
-	}
-
-    if (pdidoi->guidType == GUID_RzAxis) {
-		if (lem->js_current == lem->rhc_id) {
-			lem->rhc_rot_id = 2;
-		} else {
-			lem->thc_rot_id = 2;
-		}
-	}
-
-    if (pdidoi->guidType == GUID_POV) {
-		if (lem->js_current == lem->rhc_id) {
-			lem->rhc_pov_id = 0;
-		} else {
-			lem->thc_pov_id = 0;
-		}
-	}
-    return DIENUM_CONTINUE;
-}
-
 // Constructor
 LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel), 
 	
@@ -456,9 +210,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	DescentECAMainFeeder("Descent-ECA-Main-Feeder", Panelsdk),
 	DescentECAContFeeder("Descent-ECA-Cont-Feeder", Panelsdk),
 	AscentECAMainFeeder("Ascent-ECA-Main-Feeder", Panelsdk),
-	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk),
-	vesim(&cbLMVesim, this)
-
+	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -497,18 +249,6 @@ LEM::~LEM()
     sevent.Stop();
 	sevent.Done();
 #endif
-
-	// DS20060413 release DirectX stuff
-	if (enableVESIM || js_enabled > 0) {
-		// Release joysticks
-		while(js_enabled > 0){
-			js_enabled--;
-			dx8_joystick[js_enabled]->Unacquire();
-			dx8_joystick[js_enabled]->Release();
-		}
-		dx8ppv->Release();
-		dx8ppv = NULL;
-	}
 
 	if (aeaa)
 	{
@@ -827,8 +567,6 @@ int LEM::clbkConsumeDirectKey(char* kstate)
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	// rewrote to get key events rather than monitor key state - LazyD
-
-	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, keystate);
 
 	// DS20060404 Allow keys to control DSKY like in the CM
 	if (KEYMOD_SHIFT(keystate)){
@@ -1538,44 +1276,6 @@ void LEM::PostLoadSetup(bool define_anims)
 		break;
 	case THREEPOSSWITCH_DOWN:    // OFF	
 		break;                   // Handled later
-	}
-
-	HRESULT         hr;
-	// Having read the configuration file, set up DirectX...	
-	hr = DirectInput8Create(dllhandle, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
-	if (!FAILED(hr)) {
-		if (enableVESIM) {
-			for (int i = 0; i<LM_AXIS_INPUT_CNT; i++)
-				vesim.addInput(&vesim_lm_inputs[i]);
-			vesim.setupDevices("LM", dx8ppv);
-		}
-		else {
-			int x = 0;
-			// Enumerate attached joysticks until we find 2 or run out.
-			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-			if (js_enabled == 0) {   // Did we get anything?			
-				dx8ppv->Release(); // No. Close down DirectInput
-				dx8ppv = NULL;     // otherwise it won't get closed later
-				//sprintf(oapiDebugString(), "DX8JS: No joysticks found");
-			}
-			else {
-				while (x < js_enabled) {                                // For each joystick
-					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-																	  // Z-axis detection
-					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
-						js_current = x;
-						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
-					}
-					x++;                                              // Next!
-				}
-			}
-		}
-	}
-	else {
-		// We can't print an error message this early in initialization, so save this reason for later investigation.
-		dx8_failure = hr;
 	}
 }
 

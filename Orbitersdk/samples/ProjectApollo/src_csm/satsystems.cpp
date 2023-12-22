@@ -1598,7 +1598,6 @@ void Saturn::JoystickTimestep()
 	// Read joysticks and feed data to the computer
 	// Do not do this if we aren't the active vessel.
 	if (oapiGetFocusInterface() == this) {
-		if (enableVESIM) vesim.poolDevices();
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
 		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
@@ -1704,77 +1703,24 @@ void Saturn::JoystickTimestep()
 		int rhc_x_pos = 32768; 
 		int rhc_y_pos = 32768; 
 		int rhc_rot_pos = 32768; 
-		if (enableVESIM) {
-			if (GetAttitudeMode() == RCS_ROT) {
-				rhc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_R);
-				rhc_y_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_P);
-				rhc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_Y);
-			}
-			//sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_x_pos, rhc_y_pos, rhc_rot_pos, rhc_rzx_id, rhc_rot_id);
+		
+		// Roll
+		if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
+			rhc_x_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_BANKLEFT)) * 32768.);
+		} else if (GetManualControlLevel(THGROUP_ATT_BANKRIGHT) > 0) {
+			rhc_x_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 32768.);
 		}
-		else if (rhc_id != -1 && rhc_id < js_enabled) {	
-			hr = dx8_joystick[rhc_id]->Poll();
-			if (FAILED(hr)) { // Did that work?
-				// Attempt to acquire the device
-				hr = dx8_joystick[rhc_id]->Acquire();
-				if (FAILED(hr)) {
-					sprintf(oapiDebugString(),"DX8JS: Cannot aquire RHC");
-				} else {
-					hr = dx8_joystick[rhc_id]->Poll();
-				}
-			}		
-			// Read data
-			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]), &dx8_jstate[rhc_id]);
-			rhc_x_pos = dx8_jstate[rhc_id].lX;
-			rhc_y_pos = dx8_jstate[rhc_id].lY;
-
-			// Z-axis read.
-			if (rhc_rzx_id != -1 && rhc_rot_id == -1) { // Native Z-axis first unless rot is also set
-				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
-			} else if (rhc_rot_id != -1) { // Then if this is a rotator-type axis
-				switch(rhc_rot_id) {
-					case 0:
-						rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
-					case 1:
-						rhc_rot_pos = dx8_jstate[rhc_id].lRy; break;
-					case 2:
-						rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
-				}
-			} else if (rhc_sld_id != -1) { // Finally if this is a slider
-				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
-			}
-
-			// RCS mode toggle
-			if (rhc_thctoggle && thc_id == -1 && rhc_thctoggle_id != -1) {
-				if (dx8_jstate[rhc_id].rgbButtons[rhc_thctoggle_id]) {
-					if (!rhc_thctoggle_pressed) {
-						SetAttitudeMode(RCS_LIN);
-					}
-					rhc_thctoggle_pressed = true;
-				} else {
-					rhc_thctoggle_pressed = false;
-				}
-			}
-		// Use Orbiter's attitude control as RHC
-		} else {
-			// Roll
-			if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
-				rhc_x_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_BANKLEFT)) * 32768.);
-			} else if (GetManualControlLevel(THGROUP_ATT_BANKRIGHT) > 0) {
-				rhc_x_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 32768.);
-			}
-			// Pitch
-			if (GetManualControlLevel(THGROUP_ATT_PITCHDOWN) > 0) {
-				rhc_y_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_PITCHDOWN)) * 32768.);
-			} else if (GetManualControlLevel(THGROUP_ATT_PITCHUP) > 0) {
-				rhc_y_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_PITCHUP) * 32768.);
-			}
-			// Yaw
-			if (GetManualControlLevel(THGROUP_ATT_YAWLEFT) > 0) {
-				rhc_rot_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_YAWLEFT)) * 32768.);
-			} else if (GetManualControlLevel(THGROUP_ATT_YAWRIGHT) > 0) {
-				rhc_rot_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 32768.);
-			}
+		// Pitch
+		if (GetManualControlLevel(THGROUP_ATT_PITCHDOWN) > 0) {
+			rhc_y_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_PITCHDOWN)) * 32768.);
+		} else if (GetManualControlLevel(THGROUP_ATT_PITCHUP) > 0) {
+			rhc_y_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_PITCHUP) * 32768.);
+		}
+		// Yaw
+		if (GetManualControlLevel(THGROUP_ATT_YAWLEFT) > 0) {
+			rhc_rot_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_YAWLEFT)) * 32768.);
+		} else if (GetManualControlLevel(THGROUP_ATT_YAWRIGHT) > 0) {
+			rhc_rot_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 32768.);
 		}
 
 		int rhc_pos[3] = { rhc_x_pos, rhc_y_pos, rhc_rot_pos };
@@ -2149,95 +2095,23 @@ void Saturn::JoystickTimestep()
 		int thc_y_pos = 32768; 
 		int thc_rot_pos = 32768; 
 
-		
-		if (enableVESIM) {
-			if (GetAttitudeMode() == RCS_ROT) {
-				thc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_THC_Y);
-				thc_y_pos = 65535 - vesim.getInputValue(CSM_AXIS_INPUT_THC_Z);
-				thc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_THC_X);
-			}
-			else{
-				thc_x_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_R);
-				thc_y_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_P);
-				thc_rot_pos = vesim.getInputValue(CSM_AXIS_INPUT_RHC_Y);
-			}
+		// Up/down
+		if (GetManualControlLevel(THGROUP_ATT_DOWN) > 0) {
+			thc_y_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_DOWN)) * 32768.);
+		} else if (GetManualControlLevel(THGROUP_ATT_UP) > 0) {
+			thc_y_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_UP) * 32768.);
 		}
-		else if (thc_id != -1 && thc_id < js_enabled){
-			hr = dx8_joystick[thc_id]->Poll();
-			if (FAILED(hr)) { // Did that work?
-				// Attempt to acquire the device
-				hr = dx8_joystick[thc_id]->Acquire();
-				if (FAILED(hr)) {
-					sprintf(oapiDebugString(),"DX8JS: Cannot aquire THC");
-				} else {
-					hr = dx8_joystick[thc_id]->Poll();
-				}
-			}		
-			// Read data
-			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
-			thc_x_pos = dx8_jstate[thc_id].lX;
-			thc_y_pos = dx8_jstate[thc_id].lY;
-
-			// Z-axis read.
-			if (thc_rzx_id != -1 && thc_rot_id == -1) { // Native Z-axis first unless rot is also set
-				thc_rot_pos = dx8_jstate[thc_id].lZ;
-			} else if (thc_rot_id != -1){ // Then if this is a rotator-type axis
-				switch(thc_rot_id){
-					case 0:
-						thc_rot_pos = dx8_jstate[thc_id].lRx; break;
-					case 1:
-						thc_rot_pos = dx8_jstate[thc_id].lRy; break;
-					case 2:
-						thc_rot_pos = dx8_jstate[thc_id].lRz; break;
-				}
-			} else if(thc_sld_id != -1){ // Finally if this is a slider
-				thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
-			}
-
-			if (thc_pov_id != -1) {
-				DWORD dwPOV = dx8_jstate[thc_id].rgdwPOV[thc_pov_id];
-				if (LOWORD(dwPOV) != 0xFFFF) {
-					if (dwPOV > 31500 || dwPOV < 4500) {
-						thc_rot_pos = 65536;
-					} else if (dwPOV > 13500 && dwPOV < 21500) {
-						thc_rot_pos = 0;
-					}
-				}
-				//sprintf(oapiDebugString(),"THC: %d", dx8_jstate[thc_id].rgdwPOV[thc_pov_id]);
-			}
-			
-			// RCS mode toggle
-			if (rhc_thctoggle && rhc_id == -1 && rhc_thctoggle_id != -1) {
-				if (dx8_jstate[thc_id].rgbButtons[rhc_thctoggle_id]) {
-					if (!rhc_thctoggle_pressed) {
-						SetAttitudeMode(RCS_ROT);
-					}
-					rhc_thctoggle_pressed = true;
-				} else {
-					rhc_thctoggle_pressed = false;
-				}
-			}
-
-		// Use Orbiter's attitude control as THC
-		} else {
-			// Up/down
-			if (GetManualControlLevel(THGROUP_ATT_DOWN) > 0) {
-				thc_y_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_DOWN)) * 32768.);
-			} else if (GetManualControlLevel(THGROUP_ATT_UP) > 0) {
-				thc_y_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_UP) * 32768.);
-			}
-			// Left/right
-			if (GetManualControlLevel(THGROUP_ATT_LEFT) > 0) {
-				thc_x_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_LEFT)) * 32768.);
-			} else if (GetManualControlLevel(THGROUP_ATT_RIGHT) > 0) {
-				thc_x_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_RIGHT) * 32768.);
-			}
-			// Forward/Back
-			if (GetManualControlLevel(THGROUP_ATT_BACK) > 0) {
-				thc_rot_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_BACK)) * 32768.);
-			} else if (GetManualControlLevel(THGROUP_ATT_FORWARD) > 0) {
-				thc_rot_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_FORWARD) * 32768.);
-			}
+		// Left/right
+		if (GetManualControlLevel(THGROUP_ATT_LEFT) > 0) {
+			thc_x_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_LEFT)) * 32768.);
+		} else if (GetManualControlLevel(THGROUP_ATT_RIGHT) > 0) {
+			thc_x_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_RIGHT) * 32768.);
+		}
+		// Forward/Back
+		if (GetManualControlLevel(THGROUP_ATT_BACK) > 0) {
+			thc_rot_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_BACK)) * 32768.);
+		} else if (GetManualControlLevel(THGROUP_ATT_FORWARD) > 0) {
+			thc_rot_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_FORWARD) * 32768.);
 		}
 
 		if (thc_voltage > SP_MIN_DCVOLTAGE) {

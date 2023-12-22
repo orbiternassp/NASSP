@@ -70,7 +70,6 @@
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-#include "vesim.h"
 
 class IU;
 class SIBSystems;
@@ -909,7 +908,6 @@ public:
 	DIDEVCAPS			 dx8_jscaps[2];   ///< Joystick capabilities
 	DIJOYSTATE2			 dx8_jstate[2];   ///< Joystick state
 	HRESULT				 dx8_failure;     ///< DX failure reason
-	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  ///< Joystick # for the RHC
 	int rhc_rot_id;						  ///< ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       ///< ID of SLIDER axis to use for RHC Z-axis
@@ -926,7 +924,6 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
-	bool enableVESIM;                     ///< Vessel Specific Input Mgmt enabled
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag				  
 	int js_current;
 

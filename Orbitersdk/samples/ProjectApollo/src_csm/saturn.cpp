@@ -73,281 +73,6 @@ using namespace nassp;
 
 //extern FILE *PanelsdkLogFile;
 
-#define CSM_AXIS_INPUT_CNT  53
-VesimInputDefinition vesim_csm_inputs[CSM_AXIS_INPUT_CNT] = {
-	{ CSM_AXIS_INPUT_RHC_R,       "RHC Roll",                      VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_RHC_P,       "RHC Pitch",                     VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_RHC_Y,       "RHC Yaw",                       VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THC_X,       "THC X",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THC_Y,       "THC Y",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_AXIS_INPUT_THC_Z,       "THC Z",                         VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
-	{ CSM_BUTTON_INPUT_THC_CCW,   "THC Move CCW",                  VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_INPUT_THC_CW,    "THC Move CW",                   VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_ROT_LIN,         "Rotation/Translation toggle",   VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_PRO,       "Main DSKY PRO",                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_KEY_REL,   "Main DSKY KEY REL",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_VERB,      "Main DSKY VERB",                VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NOUN,      "Main DSKY NOUN",                VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_ENTR,      "Main DSKY ENTR",                VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_CLR,       "Main DSKY CLR",                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_PLUS,      "Main DSKY +",                   VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_MINUS,     "Main DSKY -",                   VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_RSET,      "Main DSKY RSET",                VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_0,     "Main DSKY Number 0",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_1,     "Main DSKY Number 1",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_2,     "Main DSKY Number 2",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_3,     "Main DSKY Number 3",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_4,     "Main DSKY Number 4",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_5,     "Main DSKY Number 5",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_6,     "Main DSKY Number 6",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_7,     "Main DSKY Number 7",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_8,     "Main DSKY Number 8",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY1_NUM_9,     "Main DSKY Number 9",            VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_PRO,       "LEB DSKY PRO",                  VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_KEY_REL,   "LEB DSKY KEY REL",              VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_VERB,      "LEB DSKY VERB",                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NOUN,      "LEB DSKY NOUN",                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_ENTR,      "LEB DSKY ENTR",                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_CLR,       "LEB DSKY CLR",                  VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_PLUS,      "LEB DSKY +",                    VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_MINUS,     "LEB DSKY -",                    VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_RSET,      "LEB DSKY RSET",                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_0,     "LEB DSKY Number 0",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_1,     "LEB DSKY Number 1",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_2,     "LEB DSKY Number 2",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_3,     "LEB DSKY Number 3",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_4,     "LEB DSKY Number 4",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_5,     "LEB DSKY Number 5",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_6,     "LEB DSKY Number 6",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_7,     "LEB DSKY Number 7",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_8,     "LEB DSKY Number 8",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DSKY2_NUM_9,     "LEB DSKY Number 9",             VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DIR_ULL,         "Direct Ullage",                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_THR_ON,          "Thrust On",                     VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DVTA_NORM,       "DV Thrust A Norm",              VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DVTA_OFF,        "DV Thrust A Off",               VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DVTB_NORM,       "DV Thrust B Norm",              VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ CSM_BUTTON_DVTB_OFF,        "DV Thrust B Off",               VESIM_INPUTTYPE_BUTTON,  0, true }
-};
-
-void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata) {
-	Saturn *pSaturn = (Saturn *)pdata;
-	if (eventType == VESIM_EVTTYPE_BUTTON_ON) {
-		switch (inputID) {
-		case CSM_BUTTON_ROT_LIN:			
-			if (pSaturn->GetAttitudeMode() == RCS_ROT)
-				pSaturn->SetAttitudeMode(RCS_LIN);
-			else
-				pSaturn->SetAttitudeMode(RCS_ROT);
-			break;
-		case CSM_BUTTON_INPUT_THC_CCW:
-			pSaturn->MoveTHC(1);
-			break;
-		case CSM_BUTTON_INPUT_THC_CW:
-			pSaturn->MoveTHC(0);
-			break;
-		case CSM_BUTTON_DSKY1_PRO:
-			pSaturn->dsky.ProgPressed();
-			break;
-		case CSM_BUTTON_DSKY1_KEY_REL:
-			pSaturn->dsky.KeyRel();
-			break;
-		case CSM_BUTTON_DSKY1_VERB:
-			pSaturn->dsky.VerbPressed();
-			break;
-		case CSM_BUTTON_DSKY1_NOUN:
-			pSaturn->dsky.NounPressed();
-			break;
-		case CSM_BUTTON_DSKY1_ENTR:
-			pSaturn->dsky.EnterPressed();
-			break;
-		case CSM_BUTTON_DSKY1_CLR:
-			pSaturn->dsky.ClearPressed();
-			break;
-		case CSM_BUTTON_DSKY1_PLUS:
-			pSaturn->dsky.PlusPressed();
-			break;
-		case CSM_BUTTON_DSKY1_MINUS:
-			pSaturn->dsky.MinusPressed();
-			break;
-		case CSM_BUTTON_DSKY1_RSET:
-			pSaturn->dsky.ResetPressed();
-			break;
-		case CSM_BUTTON_DSKY1_NUM_0:
-			pSaturn->dsky.NumberPressed(0);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_1:
-			pSaturn->dsky.NumberPressed(1);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_2:
-			pSaturn->dsky.NumberPressed(2);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_3:
-			pSaturn->dsky.NumberPressed(3);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_4:
-			pSaturn->dsky.NumberPressed(4);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_5:
-			pSaturn->dsky.NumberPressed(5);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_6:
-			pSaturn->dsky.NumberPressed(6);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_7:
-			pSaturn->dsky.NumberPressed(7);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_8:
-			pSaturn->dsky.NumberPressed(8);
-			break;
-		case CSM_BUTTON_DSKY1_NUM_9:
-			pSaturn->dsky.NumberPressed(9);
-			break;
-		case CSM_BUTTON_DSKY2_PRO:
-			pSaturn->dsky2.ProgPressed();
-			break;
-		case CSM_BUTTON_DSKY2_KEY_REL:
-			pSaturn->dsky2.KeyRel();
-			break;
-		case CSM_BUTTON_DSKY2_VERB:
-			pSaturn->dsky2.VerbPressed();
-			break;
-		case CSM_BUTTON_DSKY2_NOUN:
-			pSaturn->dsky2.NounPressed();
-			break;
-		case CSM_BUTTON_DSKY2_ENTR:
-			pSaturn->dsky2.EnterPressed();
-			break;
-		case CSM_BUTTON_DSKY2_CLR:
-			pSaturn->dsky2.ClearPressed();
-			break;
-		case CSM_BUTTON_DSKY2_PLUS:
-			pSaturn->dsky2.PlusPressed();
-			break;
-		case CSM_BUTTON_DSKY2_MINUS:
-			pSaturn->dsky2.MinusPressed();
-			break;
-		case CSM_BUTTON_DSKY2_RSET:
-			pSaturn->dsky2.ResetPressed();
-			break;
-		case CSM_BUTTON_DSKY2_NUM_0:
-			pSaturn->dsky2.NumberPressed(0);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_1:
-			pSaturn->dsky2.NumberPressed(1);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_2:
-			pSaturn->dsky2.NumberPressed(2);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_3:
-			pSaturn->dsky2.NumberPressed(3);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_4:
-			pSaturn->dsky2.NumberPressed(4);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_5:
-			pSaturn->dsky2.NumberPressed(5);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_6:
-			pSaturn->dsky2.NumberPressed(6);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_7:
-			pSaturn->dsky2.NumberPressed(7);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_8:
-			pSaturn->dsky2.NumberPressed(8);
-			break;
-		case CSM_BUTTON_DSKY2_NUM_9:
-			pSaturn->dsky2.NumberPressed(9);
-			break;
-		case CSM_BUTTON_DIR_ULL:
-			pSaturn->DirectUllageButton.VesimSwitchTo(1);
-			break;
-		case CSM_BUTTON_THR_ON:
-			pSaturn->ThrustOnButton.VesimSwitchTo(1);
-			break;
-		case CSM_BUTTON_DVTA_NORM:
-			pSaturn->dVThrust1Switch.VesimSwitchTo(TOGGLESWITCH_UP);
-			break;
-		case CSM_BUTTON_DVTA_OFF:
-			pSaturn->dVThrust1Switch.VesimSwitchTo(TOGGLESWITCH_DOWN);
-			break;
-		case CSM_BUTTON_DVTB_NORM:
-			pSaturn->dVThrust2Switch.VesimSwitchTo(TOGGLESWITCH_UP);
-			break;
-		case CSM_BUTTON_DVTB_OFF:
-			pSaturn->dVThrust2Switch.VesimSwitchTo(TOGGLESWITCH_DOWN);
-			break;
-		}
-	}
-	else if (eventType == VESIM_EVTTYPE_BUTTON_OFF) {
-		switch (inputID) {		
-		case CSM_BUTTON_DSKY1_PRO:
-			pSaturn->dsky.ProgReleased();
-			break;
-		case CSM_BUTTON_DSKY2_PRO:
-			pSaturn->dsky2.ProgReleased();
-			break;
-		case CSM_BUTTON_DIR_ULL:
-			pSaturn->DirectUllageButton.VesimSwitchTo(0);
-			break;
-		case CSM_BUTTON_THR_ON:
-			pSaturn->ThrustOnButton.VesimSwitchTo(0);
-			break;
-		}
-	}
-}
-
-// DX8 callback for enumerating joysticks
-BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pSaturn)
-{
-	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
-	HRESULT hr;
-
-	if(sat->js_enabled > 1){  // Do we already have enough joysticks?
-		return DIENUM_STOP; } // If so, stop enumerating additional devices.
-
-	// Obtain an interface to the enumerated joystick.
-    hr = sat->dx8ppv->CreateDevice(pdidInstance->guidInstance, &sat->dx8_joystick[sat->js_enabled], NULL);
-	
-	if(FAILED(hr)) {              // Did that work?
-		return DIENUM_CONTINUE; } // No, keep enumerating (if there's more)
-
-	sat->js_enabled++;      // Otherwise, Next!
-	return DIENUM_CONTINUE; // and keep enumerating
-}
-
-// DX8 callback for enumerating joystick axes
-BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSaturn )
-{
-	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
-
-    if (pdidoi->guidType == GUID_ZAxis) {
-		if (sat->js_current == sat->rhc_id) {
-			sat->rhc_rzx_id = 1;
-		} else {
-			sat->thc_rzx_id = 1;
-		}
-	}
-
-    if (pdidoi->guidType == GUID_RzAxis) {
-		if (sat->js_current == sat->rhc_id) {
-			sat->rhc_rot_id = 2;
-		} else {
-			sat->thc_rot_id = 2;
-		}
-	}
-
-    if (pdidoi->guidType == GUID_POV) {
-		if (sat->js_current == sat->rhc_id) {
-			sat->rhc_pov_id = 0;
-		} else {
-			sat->thc_pov_id = 0;
-		}
-	}
-    return DIENUM_CONTINUE;
-}
-
 //
 // CAUTION: This disables the warning, which is triggered by the use of the "this" pointer in the 
 // initializations of iuCommandConnector, sivbControlConnector and sivbCommandConnector below. 
@@ -527,7 +252,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CMRCSEngine21TempSensor("CM-RCS-Engine-21-Sensor", -50.0, 50.0),
 	CMRCSEngine24TempSensor("CM-RCS-Engine-24-Sensor", -50.0, 50.0),
 	CMRCSEngine25TempSensor("CM-RCS-Engine-25-Sensor", -50.0, 50.0),
-	vesim(&cbCSMVesim, this),
 	CueCards(vcidx, this, 11)
 #pragma warning ( pop ) // disable:4355
 
@@ -599,17 +323,6 @@ Saturn::~Saturn()
 
 	ClearMissionManagementMemory();
 
-	// Release DirectX joystick stuff
-	if(enableVESIM || js_enabled > 0){
-		// Release joysticks
-		while(js_enabled > 0){
-			js_enabled--;
-			dx8_joystick[js_enabled]->Unacquire();
-			dx8_joystick[js_enabled]->Release();
-		}
-		dx8ppv->Release();
-		dx8ppv = NULL;
-	}
 
 	for (int i = 0; i < 2; i++) {
 		delete[] ReticleLineLen[i];
@@ -2713,11 +2426,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf(line + 12, "%i", &i);
 			rhc_thctoggle = (i != 0);
 		}
-		else if (!strnicmp(line, "JOYSTICK_VESIM", 14)) {
-			int tmp;
-			sscanf(line + 14, "%i", &tmp);
-			enableVESIM = (tmp!= 0);
-		}
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
 		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg));
 		else if (papiReadScenario_double(line, "LMDSCEMPTY", LMDescentEmptyMassKg));
@@ -3477,8 +3185,6 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (FirstTimestep) return 0;
-
-	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, kstate);
 
 	if (KEYMOD_SHIFT(kstate)){
 		// Do DSKY stuff
@@ -4294,52 +4000,6 @@ void Saturn::GenericLoadStateSetup()
 	//
 
 	CheckSMSystemsState();
-
-	//
-	// Set up joysticks.
-	//
-
-	HRESULT hr;
-	// Having read the configuration file, set up DirectX...	
-	hr = DirectInput8Create(dllhandle, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
-	if (!FAILED(hr)) {
-		if (enableVESIM) {
-			for (int i=0; i<CSM_AXIS_INPUT_CNT; i++)
-				vesim.addInput(&vesim_csm_inputs[i]);
-			vesim.setupDevices("CSM", dx8ppv);		
-		}
-		else {
-			int x = 0;
-			// Enumerate attached joysticks until we find 2 or run out.
-			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-			if (js_enabled == 0) {   // Did we get anything?			
-				dx8ppv->Release(); // No. Close down DirectInput
-				dx8ppv = NULL;     // otherwise it won't get closed later
-				//sprintf(oapiDebugString(), "DX8JS: No joysticks found");
-			}
-			else {
-				while (x < js_enabled) {                                // For each joystick
-					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-					// Can't do this because we don't own a window.
-					// dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
-					// 	 DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		 // and we don't need exclusive joystick access.
-
-					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-					// Z-axis detection
-					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
-						js_current = x;
-						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
-					}
-					x++;                                              // Next!
-				}
-			}
-		}
-	}
-	else {
-		// We can't print an error message this early in initialization, so save this reason for later investigation.
-		dx8_failure = hr;
-	}
 }
 
 void Saturn::SetGenericStageState()
