@@ -1700,7 +1700,6 @@ void Saturn::JoystickTimestep()
 			sprintf(oapiDebugString(),"DX8JS: Joystick selected as RHC does not exist.");
 		}
 
-		HRESULT hr;
 		ChannelValue val31;
 		e_object *direct_power1, *direct_power2;
 		val31 = agc.GetInputChannel(031); // Get current data
