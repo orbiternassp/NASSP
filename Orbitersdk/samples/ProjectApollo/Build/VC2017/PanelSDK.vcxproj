@@ -79,6 +79,10 @@
     <OutDir>.\$(Configuration)\PanelSDK\</OutDir>
     <IntDir>.\$(Configuration)\PanelSDK\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>.\$(Configuration)\PanelSDK\</OutDir>
+    <IntDir>.\$(Configuration)\PanelSDK\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
