@@ -45,7 +45,7 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 
 	TIG_GMT = pRTCC->GMTfromGET(opt->TIG_GET);
 	dt1 = TIG_GMT - opt->sv_in.GMT;
-	sv1 = pRTCC->coast(opt->sv_in, dt1, opt->Weight, opt->Area, opt->KFactor);
+	sv1 = pRTCC->coast(opt->sv_in, dt1, opt->Weight, opt->Area, opt->KFactor, false);
 
 	//Convert to AEG
 	aeg = pRTCC->SVToAEG(sv1, opt->Area, opt->Weight, opt->KFactor);

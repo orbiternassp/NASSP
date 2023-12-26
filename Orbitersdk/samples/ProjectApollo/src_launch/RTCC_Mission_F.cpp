@@ -166,8 +166,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EntryOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
-		double GETbase, TLIBase, TIG;
-		EphemerisData sv;
+		double GETbase, TLIBase, TIG, GMTSV;
+		EphemerisData sv, sv_uplink;
 		SV sv1;
 		char buffer1[1000];
 
@@ -216,7 +216,10 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sprintf(form->purpose, "TLI+90");
 
-		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv, true);
+		GMTSV = PZMPTCSM.TimeToBeginManeuver[0] - 10.0*60.0; //10 minutes before TB6
+		sv_uplink = coast(sv, GMTSV - sv.GMT, RTCC_MPT_CSM); //Coast with venting and drag taken into account
+
+		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv_uplink, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {

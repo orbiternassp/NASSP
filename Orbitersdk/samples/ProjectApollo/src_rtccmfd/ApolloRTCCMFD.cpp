@@ -1252,6 +1252,11 @@ void ApolloRTCCMFD::menuSetLMOpticsSupportTablePage()
 	SelectPage(126);
 }
 
+void ApolloRTCCMFD::menuSetDebugPage()
+{
+	SelectPage(127);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -8407,6 +8412,11 @@ void ApolloRTCCMFD::CalculateLOSTDOKOption()
 void ApolloRTCCMFD::UpdateLOSTDisplay()
 {
 	GC->rtcc->EMDGLMST();
+}
+
+void ApolloRTCCMFD::menuCalculateIMUComparison()
+{
+	G->menuCalculateIMUComparison();
 }
 
 void ApolloRTCCMFD::menuSLVNavigationUpdateCalc()

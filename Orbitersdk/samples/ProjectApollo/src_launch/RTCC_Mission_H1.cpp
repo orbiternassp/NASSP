@@ -303,8 +303,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		EntryOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
-		double TLIBase, TIG;
-		EphemerisData sv;
+		double TLIBase, TIG, GMTSV;
+		EphemerisData sv, sv_uplink;
 		SV sv1;
 		char buffer1[1000];
 
@@ -354,7 +354,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		sprintf(form->purpose, "TLI+90");
 		sprintf(form->remarks, "No ullage, undocked");
 
-		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv, true);
+		GMTSV = PZMPTCSM.TimeToBeginManeuver[0] - 10.0*60.0; //10 minutes before TB6
+		sv_uplink = coast(sv, GMTSV - sv.GMT, RTCC_MPT_CSM); //Coast with venting and drag taken into account
+
+		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv_uplink, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -2519,17 +2522,32 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.vessel = calcParams.src;
 		manopt.vesseltype = 0;
 
+		if (fcn == 94)
+		{
+			manopt.UllageThrusterOpt = false;
+			manopt.UllageDT = 15.0;
+			manopt.sxtstardtime = -35.0*60.0;
+		}
+		else
+		{
+			manopt.UllageThrusterOpt = true;
+			manopt.UllageDT = 11.0;
+			manopt.sxtstardtime = -25.0*60.0;
+		}
+
 		AP11ManeuverPAD(&manopt, *form);
 
 		if (fcn == 94)
 		{
 			sprintf(form->purpose, "PLANE CHANGE 1");
+			sprintf(form->remarks, "Ullage: 2 jets, 15 seconds");
 			sprintf(updesc, "CSM state vector, target load, PC REFSMMAT");
 			AGCStateVectorUpdate(buffer1, sv, true);
 		}
 		else
 		{
 			sprintf(form->purpose, "PLANE CHANGE 2");
+			sprintf(form->remarks, "Ullage: 4 jets, 11 seconds");
 			sprintf(updesc, "CSM state vector and V66, target load, PC REFSMMAT");
 			AGCStateVectorUpdate(buffer1, sv, true, true);
 		}
