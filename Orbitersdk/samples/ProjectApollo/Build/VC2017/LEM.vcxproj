@@ -168,6 +168,7 @@
     <ClCompile Include="..\..\src_lm\lm_ecs.cpp" />
     <ClCompile Include="..\..\src_lm\lm_eds.cpp" />
     <ClCompile Include="..\..\src_lm\lm_eps.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_lr.cpp" />
     <ClCompile Include="..\..\src_lm\lm_programer.cpp" />
     <ClCompile Include="..\..\src_lm\lm_rcs.cpp" />
     <ClCompile Include="..\..\src_lm\lm_rr.cpp" />
@@ -383,6 +384,7 @@
     <ClInclude Include="..\..\src_lm\lm_dps.h" />
     <ClInclude Include="..\..\src_lm\lm_ecs.h" />
     <ClInclude Include="..\..\src_lm\lm_eds.h" />
+    <ClInclude Include="..\..\src_lm\lm_lr.h" />
     <ClInclude Include="..\..\src_lm\lm_programer.h" />
     <ClInclude Include="..\..\src_lm\lm_rcs.h" />
     <ClInclude Include="..\..\src_lm\lm_rr.h" />
