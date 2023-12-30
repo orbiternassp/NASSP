@@ -164,7 +164,7 @@ public:
 	void Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_Tank *o2rpo, h_Pipe *o2rpop,
 		      RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv,
 			  CircuitBrakerSwitch *mra, CircuitBrakerSwitch *mrb, PanelSwitchItem *eo2v,
-			  PanelSwitchItem *ro2v);
+			  PanelSwitchItem *ro2v, RotationalSwitch *strv);
 	void SystemTimestep(double simdt);
 	void Close();
 	void LoadState(char *line);
@@ -184,6 +184,7 @@ protected:
 	CircuitBrakerSwitch *mainRegulatorBSwitch;
 	PanelSwitchItem *emergencyO2Valve;
 	PanelSwitchItem *repressO2Valve;
+	RotationalSwitch *surgeTankReliefValve;
 
 	bool closed;
 	bool o2SMSupplyVoid;

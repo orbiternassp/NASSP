@@ -78,20 +78,35 @@ void H_system::Create_h_Radiator(char *line) {
 	vector3 pos;
 	vector3 dir;
 	double volume, isol, mass, temp;
+	char DirectionalitySpecifier = 'D';
+	therm_obj::thermalPolar Polar = therm_obj::thermalPolar::directional;
 
-	sscanf(line+10, " %s  <%lf %lf %lf> %lf ",
+	sscanf(line+10, " %s  <%lf %lf %lf> %lf %c",
 		   name,
-		   &pos.x,&pos.y,&pos.z,&temp);
+		   &pos.x,&pos.y,&pos.z,&temp, &DirectionalitySpecifier);
 
 	line = ReadConfigLine();
 	sscanf(line," %lf %lf %lf", &volume, &isol, &mass);
 	new_one = (h_Radiator*)AddSystem(new h_Radiator(name, pos, volume, isol));
 
+	if (DirectionalitySpecifier == 'D') {
+		Polar = therm_obj::thermalPolar::directional;
+	}
+	else if (DirectionalitySpecifier == 'C') {
+		Polar = therm_obj::thermalPolar::cardioid;
+	}
+	else if (DirectionalitySpecifier == 'S') {
+		Polar = therm_obj::thermalPolar::subcardioid;
+	}
+	else if (DirectionalitySpecifier == 'O') {
+		Polar = therm_obj::thermalPolar::omni;
+	}
+
 	// Debugging thermal management
 	//if (!strcmp(name, "LEM-LR-Antenna"))
 	//	P_thermal->AddThermalObject(new_one, true);
 	//else 
-	P_thermal->AddThermalObject(new_one);
+	P_thermal->AddThermalObject(new_one, false, Polar);
 
 	new_one->isolation = 1.0;
 	new_one->Area = (1.0 / 4.0 * volume);
@@ -214,6 +229,8 @@ void H_system::Create_h_Vent(char *line) {
 void H_system::Create_h_Tank(char *line) {
 
 	char name[100], valvename[100];
+	char DirectionalitySpecifier;
+	therm_obj::thermalPolar Polar = therm_obj::thermalPolar::directional;
 	h_Tank *new_one;
 	vector3 pos;
 	double volume,isol=0;
@@ -221,12 +238,25 @@ void H_system::Create_h_Tank(char *line) {
 	int open;
 	h_Valve *valve;
 
-	sscanf (line+6, " %s <%lf %lf %lf> %lf %lf",
+	sscanf (line+6, " %s <%lf %lf %lf> %lf %lf %c",
 								name,
 								&pos.x,
 								&pos.y,
 								&pos.z,
-								&volume, &isol);
+								&volume, &isol, &DirectionalitySpecifier);
+
+	if (DirectionalitySpecifier == 'D') {
+		Polar = therm_obj::thermalPolar::directional;
+	}
+	else if (DirectionalitySpecifier == 'C') {
+		Polar = therm_obj::thermalPolar::cardioid;
+	}
+	else if (DirectionalitySpecifier == 'S') {
+		Polar = therm_obj::thermalPolar::subcardioid;
+	}
+	else if (DirectionalitySpecifier == 'O') {
+		Polar = therm_obj::thermalPolar::omni;
+	}
 
 	new_one=(h_Tank*)AddSystem(new h_Tank(name,pos, volume));
 
@@ -269,15 +299,27 @@ void H_system::Create_h_Tank(char *line) {
 			line = ReadConfigLine();
 		} while (line == NULL);
 	}
+
+	bool DebugThisTank = false;
+	//if (!strcmp(name, "CABIN") && !strcmp(this->Vessel->GetName(), "Eagle")) { DebugThisTank = true; }
+
 	new_one->mass=new_one->space.GetMass();//get all the mass,etc..
 	new_one->space.GetMaxSub();//recompute sub_number;
 	new_one->energy=new_one->space.GetQ();//sum up Qs
 	new_one->Original_volume=volume;
-	P_thermal->AddThermalObject(new_one);
-	if (isol)
-		new_one->isolation=isol;
-	else
-		new_one->isolation=1.0;
+	P_thermal->AddThermalObject(new_one, DebugThisTank, Polar);
+	
+	//Default Isolation of 1.0 if none specified. Isolate completely if position vector is zero
+	if ((pos.x == 0.0 && pos.y == 0.0 && pos.z == 0.0)) {
+		new_one->isolation = 0.0;
+	}
+	else if (isol) {
+		new_one->isolation = isol;
+	}
+	else {
+		new_one->isolation = 1.0; 
+	}
+
 
 	new_one->Area=pow(3.0/(4.0*PI)*volume/1000,0.3333); //radius of tank
 	new_one->Area=PI*new_one->Area*new_one->Area;//projection circle is PI*R^2
@@ -294,6 +336,7 @@ void H_system::Create_h_Pipe(char *line) {
 	char type[100];
 	double max=0;
 	double min=0;
+	double maxFlowrate = 0;
 	char is_two[100];
 
 	if (sscanf(line + 6, " %s", name) <= 0)
@@ -301,7 +344,7 @@ void H_system::Create_h_Pipe(char *line) {
 
 	line = ReadConfigLine();
 	while (!Compare(line,"</PIPE>")) {type[0]=0;is_two[0]=0;
-		sscanf (line, "%s %s %s %lf %lf %s",in_valve,out_valve,type,&max,&min,is_two);
+		sscanf (line, "%s %s %s %lf %lf %s %lf",in_valve,out_valve,type,&max,&min,is_two,&maxFlowrate);
 
 		int two_way=1;
 		if (Compare(type,"ONEWAY")) two_way=0;
@@ -311,13 +354,13 @@ void H_system::Create_h_Pipe(char *line) {
 		out=(h_Valve*)GetPointerByString(out_valve);
 
 		if (Compare(type,"PREG"))
-			AddSystem(new h_Pipe(name,in,out,1,max,min,two_way));
+			AddSystem(new h_Pipe(name,in,out,1,max,min,two_way, maxFlowrate));
 		else if (Compare(type,"BURST"))
-			AddSystem(new h_Pipe(name,in,out,2,max,min,two_way));
+			AddSystem(new h_Pipe(name,in,out,2,max,min,two_way, maxFlowrate));
 		else if (Compare(type,"PVALVE"))
-			AddSystem(new h_Pipe(name,in,out,3,max,min,two_way));
+			AddSystem(new h_Pipe(name,in,out,3,max,min,two_way, maxFlowrate));
 		else
-			AddSystem(new h_Pipe(name,in,out,0,0,0,two_way));
+			AddSystem(new h_Pipe(name,in,out,0,0,0,two_way, maxFlowrate));
 		
 		line=ReadConfigLine();
 	}

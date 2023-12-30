@@ -8539,7 +8539,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%s", GC->rtcc->GOSTDisplayBuffer.data.IRA.c_str());
 		skp->Text(40 * W / 43, 6 * H / 26, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.SXT_STAR[0]);
+		sprintf_s(Buffer, "%03d", GC->rtcc->GOSTDisplayBuffer.data.SXT_STAR[0]);
 		skp->Text(7 * W / 43, 8 * H / 26, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_SFT_INP[0]);
 		skp->Text(16 * W / 43, 8 * H / 26, Buffer, strlen(Buffer));
@@ -8550,7 +8550,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_TRN_RTCC[0]);
 		skp->Text(40 * W / 43, 8 * H / 26, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.SXT_STAR[1]);
+		sprintf_s(Buffer, "%03d", GC->rtcc->GOSTDisplayBuffer.data.SXT_STAR[1]);
 		skp->Text(7 * W / 43, 9 * H / 26, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_SFT_INP[1]);
 		skp->Text(16 * W / 43, 9 * H / 26, Buffer, strlen(Buffer));
@@ -8561,7 +8561,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_TRN_RTCC[1]);
 		skp->Text(40 * W / 43, 9 * H / 26, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.SCT_S[0]);
+		sprintf_s(Buffer, "%03d", GC->rtcc->GOSTDisplayBuffer.data.SCT_S[0]);
 		skp->Text(5 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SCT_SF);
 		skp->Text(12 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
@@ -8574,7 +8574,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.SCT_DEC[0]);
 		skp->Text(42 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.SCT_S[1]);
+		sprintf_s(Buffer, "%03d", GC->rtcc->GOSTDisplayBuffer.data.SCT_S[1]);
 		skp->Text(5 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%04.1lf", GC->rtcc->GOSTDisplayBuffer.data.SCT_TR);
 		skp->Text(12 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
@@ -8587,7 +8587,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.SCT_DEC[1]);
 		skp->Text(42 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.BS_S[0]);
+		sprintf_s(Buffer, "%03d", GC->rtcc->GOSTDisplayBuffer.data.BS_S[0]);
 		skp->Text(7 * W / 43, 16 * H / 26, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.BS_SPA[0]);
 		skp->Text(14 * W / 43, 16 * H / 26, Buffer, strlen(Buffer));
@@ -8598,7 +8598,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.BS_DEC[0]);
 		skp->Text(41 * W / 43, 16 * H / 26, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.BS_S[1]);
+		sprintf_s(Buffer, "%03d", GC->rtcc->GOSTDisplayBuffer.data.BS_S[1]);
 		skp->Text(7 * W / 43, 17 * H / 26, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.BS_SPA[1]);
 		skp->Text(14 * W / 43, 17 * H / 26, Buffer, strlen(Buffer));

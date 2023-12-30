@@ -3401,7 +3401,7 @@ public:
 
 	std::vector<std::string> MSK0050Buffer; //Perigee Adjust Display
 
-	std::vector<VECTOR3> EZJGSTAR;
+	VECTOR3 EZJGSTAR[400];
 
 	struct LunarSurfaceAlignmentTable
 	{
