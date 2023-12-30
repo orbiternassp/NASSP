@@ -137,7 +137,7 @@ void LEM_ASA::Timestep(double simdt){
 		return;
 	}
 
-	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes to reset this in that case
+	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes sense to reset this in that case
 	if (!lem->aea.IsPowered())
 	{
 		EulerAngles = _V(0.0, 0.0, 0.0);
@@ -171,8 +171,8 @@ void LEM_ASA::SystemTimestep(double simdt)
 {
 	if (IsPowered())
 	{
-		lem->SCS_ASA_CB.DrawPower(41.1);
-		asaHeat->GenerateHeat(95.1); //Electric heat load from LM-8 Systems Handbook
+		lem->SCS_ASA_CB.DrawPower(42.0);
+		asaHeat->GenerateHeat(42.0); //Electric heat load from LM-3 Systems Handbook
 	}
 }
 
