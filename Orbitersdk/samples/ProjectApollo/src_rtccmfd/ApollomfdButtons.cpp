@@ -3236,17 +3236,17 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu95[] =
 	{
 		{ "Display REFSMMAT", 0, 'T' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Enter attitude", 0, 'D' },
+		{ "Enter sextant data", 0, 'G' },
+		{ "SCT/COAS calculation", 0, 'E' },
+		{ "SXT calculation", 0, 'V' },
+		{ "Enter star in catalog", 0, 'A' },
 
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Save OST REFSMMAT", 0, ' ' },
+		{ "Show star vector", 0, 'S' },
+		{ "Show landmark vector", 0, 'U' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -3257,11 +3257,11 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("ANG", OAPI_KEY_G, &ApolloRTCCMFD::menuGOSTEnterSXTData);
 	RegisterFunction("BST", OAPI_KEY_E, &ApolloRTCCMFD::menuGOSTBoresightSCTCalc);
 	RegisterFunction("SXT", OAPI_KEY_V, &ApolloRTCCMFD::menuGOSTSXTCalc);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("G13", OAPI_KEY_A, &ApolloRTCCMFD::menuGOSTEnterStarInCatalog);
 
-	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("G11", OAPI_KEY_C, &ApolloRTCCMFD::menuSaveOSTREFSMMAT);
 	RegisterFunction("UNI", OAPI_KEY_S, &ApolloRTCCMFD::menuGOSTShowStarVector);
 	RegisterFunction("LMK", OAPI_KEY_U, &ApolloRTCCMFD::menuGOSTShowLandmarkVector);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);

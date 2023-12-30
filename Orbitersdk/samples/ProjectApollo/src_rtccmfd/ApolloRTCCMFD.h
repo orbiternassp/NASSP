@@ -674,6 +674,8 @@ public:
 	void menuGOSTSXTCalc();
 	void menuGOSTShowStarVector();
 	void menuGOSTShowLandmarkVector();
+	void menuGOSTEnterStarInCatalog();
+	void menuSaveOSTREFSMMAT();
 	void menuSetLMOpticsSupportTablePage();
 	void menuLOSTMode();
 	void set_LOSTMode(int mode);
