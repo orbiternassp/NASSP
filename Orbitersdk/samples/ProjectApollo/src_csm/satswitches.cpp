@@ -432,10 +432,20 @@ void SaturnFuelCellMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, Rotat
 
 double SaturnFuelCellH2FlowMeter::QueryValue()
 {
-	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState() + 1, fc);
+	//please redo this with FuelCellIndicatorsSwitch chosing which FlowSensor powers the gauge or something less horrible than my if structure
+	double value = 0.0;
+	int state = FuelCellIndicatorsSwitch->GetState();
+	if (state == 0) {
+		value = Sat->FCH2FlowSensor1.Voltage();
+	}
+	else if (state == 1) {
+		value = Sat->FCH2FlowSensor2.Voltage();
+	}
+	else {
+		value = Sat->FCH2FlowSensor3.Voltage();
+	}
 
-	return fc.H2FlowLBH; 
+	return value*0.04;
 }
 
 void SaturnFuelCellH2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -451,10 +461,20 @@ void SaturnFuelCellH2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnFuelCellO2FlowMeter::QueryValue()
 {
-	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState() + 1, fc);
+	//please redo this with FuelCellIndicatorsSwitch chosing which FlowSensor powers the gauge or something less horrible than my if structure
+	double value = 0.0;
+	int state = FuelCellIndicatorsSwitch->GetState();
+	if (state == 0) {
+		value = Sat->FCO2FlowSensor1.Voltage();
+	}
+	else if (state == 1) {
+		value = Sat->FCO2FlowSensor2.Voltage();
+	}
+	else {
+		value = Sat->FCO2FlowSensor3.Voltage();
+	}
 
-	return fc.O2FlowLBH; 
+	return value/3.125;
 }
 
 void SaturnFuelCellO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)

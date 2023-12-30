@@ -1149,7 +1149,7 @@ void LEMCabinFan::SystemTimestep(double simdt)
 	}
 
 	if (cabinFan->pumping) {
-		cabinFanHeat->GenerateHeat(36.5);  //Not sure about this heat load, seems very high. Value from LM-8 Systems Handbook
+		cabinFanHeat->GenerateHeat(25.6);  //70% of 36.5 Value from LM-8 Systems Handbook
 	}
 }
 
