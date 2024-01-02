@@ -8171,6 +8171,16 @@ bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data)
 	return false;
 }
 
+void ApolloRTCCMFD::menuGOSTEnterStarInCatalog()
+{
+	menuGeneralMEDRequest("Enter target for star catalog. Input format: G13,Position (392 to 400),Right Ascension (hr:min:sec), Declination (deg:min:sec);");
+}
+
+void ApolloRTCCMFD::menuSaveOSTREFSMMAT()
+{
+	GeneralMEDRequest("G11,CSM,OST-M;");
+}
+
 void ApolloRTCCMFD::menuLOSTMode()
 {
 	bool LOSTModeInput(void* id, char *str, void *data);
