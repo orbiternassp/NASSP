@@ -1,6 +1,6 @@
 // ========================================================
 // Mesh resource file for LM_VC.msh
-// Generated with meshc (Jordan version) on 11-29-2023
+// Generated with meshc (Jordan version) on 01-02-2024
 // ========================================================
 
 // Number of mesh groups:
