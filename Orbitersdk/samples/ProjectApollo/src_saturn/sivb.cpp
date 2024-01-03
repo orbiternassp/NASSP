@@ -262,6 +262,8 @@ void SIVB::InitS4b()
 	RotationLimit = 0.25;
 	PayloadEjectionForce = 0.0;
 
+	visibilitySize = 31.1; //Tuned so the S-IVB disappears in the CSM optics at 400nm range
+
 	FirstTimestep = false;
 	MissionTime = MINUS_INFINITY;
 
@@ -426,7 +428,8 @@ void SIVB::SetS4b()
 	double mass = EmptyMass;
 
 	ClearThrusterDefinitions();
-	SetSize (15);
+	if (oapiGetFocusObject() == GetHandle()) { SetSize(15); }
+	else { SetSize(visibilitySize); }
 	SetPMI (_V(94,94,20));
 	SetCOG_elev (10);
 	SetCrossSections (_V(159.33, 159.33, 34.2534));
@@ -881,7 +884,6 @@ void SIVB::GetApolloName(char *s)
 {
 	sprintf(s, "AS-%d", VehicleNo);
 }
-
 
 void SIVB::clbkSaveState (FILEHANDLE scn)
 
@@ -1498,6 +1500,28 @@ void SIVB::clbkPostCreation()
 		}
 	}
 	CreateAirfoils();
+}
+
+void SIVB::clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel)
+{
+	OBJHANDLE hS4B = GetHandle();
+	if (hNewVessel == hS4B) { //S-IVB gains focus
+
+		bool fixCamera = false;
+		if (oapiCameraInternal() == false) {
+			fixCamera = true;
+			oapiCameraAttach(hS4B, 0);
+		}
+
+		SetSize(15);
+
+		if (fixCamera == true) {
+			oapiCameraAttach(hS4B, 1);
+		}
+	}
+	else if (hOldVessel == hS4B) { //S-IVB loses focus
+		SetSize(visibilitySize);
+	}
 }
 
 void SIVB::SetState(SIVBSettings &state)

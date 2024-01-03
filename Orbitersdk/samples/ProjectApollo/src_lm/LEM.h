@@ -510,6 +510,7 @@ public:
 	void clbkVisualCreated(VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 	void clbkDockEvent(int dock, OBJHANDLE connected);
+	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);
@@ -1725,6 +1726,8 @@ protected:
 	bool RefreshPanelIdInTimestep;
 	bool VcInfoActive;
 	bool VcInfoEnabled;
+
+	double visibilitySize;
 
 	//
 	// Random motion.
