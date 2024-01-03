@@ -26,5 +26,6 @@ that can be done about this. Orbiter and NASSP might run under WINE,
 but we haven't made ensuring this a project priority.
 
 For more information, see [our section on the Orbiter Forums](https://www.orbiter-forum.com/forums/project-apollo-nassp.40/).
+To contribute, see [the contribution guidelines](https://github.com/orbiternassp/NASSP/blob/Orbiter2016/CONTRIBUTING.md).
 Releases will be provided as ZIP files to be unzipped into an existing 
 Orbiter installation as is usual for Orbiter addons.
