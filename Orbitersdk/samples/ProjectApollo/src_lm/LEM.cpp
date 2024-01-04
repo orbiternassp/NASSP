@@ -286,6 +286,8 @@ void LEM::Init()
 	VcInfoActive = false;
 	VcInfoEnabled = false;
 
+	visibilitySize = 31.1; //Tuned so the LM disappears in the CSM optics at 400nm range
+
 	Crewed = true;
 	AutoSlow = false;
 
@@ -1699,6 +1701,36 @@ void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
 			UndockConnectors(dock);
 			CreateAirfoils();
 		}
+	}
+}
+
+void LEM::clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel)
+{
+	OBJHANDLE hLM = GetHandle();
+	if (hNewVessel == hLM) { //LM gains focus
+
+		bool fixCamera = false;
+		if (oapiCameraInternal() == false) {
+			fixCamera = true;
+			oapiCameraAttach(hLM, 0);
+		}
+		
+		if (status == 0) { //Dock Stage
+			SetSize(6);
+		}
+		else if (status == 1) { //Hover Stage
+			SetSize(7);
+		}
+		else if (status == 2) { //Ascent Hover Stage
+			SetSize(5);
+		}
+
+		if (fixCamera == true) {
+			oapiCameraAttach(hLM, 1);
+		}
+	}
+	else if (hOldVessel == hLM) { //LM loses focus
+		SetSize(visibilitySize);
 	}
 }
 
