@@ -261,6 +261,8 @@ public:
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 	void clbkPostCreation();
 
+	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
+
 	///
 	/// Pass settings from the main DLL to the jettisoned SIVb. This call must be virtual 
 	/// so it can be called from other DLLs without building in the LES code.
@@ -420,6 +422,8 @@ protected:
 	double ISP_THIRD_VAC;			///< J2 engine ISP in vacuum.
 
 	double PayloadEjectionForce;	///< Force applied at "undocking" of the payload attached at the front of the SLA (CSM, nosecone etc.)
+
+	double visibilitySize;
 
 	// Exterior light definitions
 	BEACONLIGHTSPEC dockingLights[5];             // docking lights
