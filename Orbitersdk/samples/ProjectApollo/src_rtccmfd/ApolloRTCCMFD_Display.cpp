@@ -2056,7 +2056,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(1 * W / 8, 2 * H / 14, "Landing Site", 12);
 		skp->Text(1 * W / 8, 4 * H / 14, "REFSMMAT", 8);
-		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
+		skp->Text(1 * W / 8, 6 * H / 14, "RTACF", 5);
 		skp->Text(1 * W / 8, 8 * H / 14, "EMP", 3);
 		skp->Text(1 * W / 8, 10 * H / 14, "Nodal Target Conversion", 23);
 		skp->Text(1 * W / 8, 12 * H / 14, "Descent Abort", 13);
@@ -10476,6 +10476,244 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(10 * W / 16, 7 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%+.4lf°", G->DebugIMUTorquingAngles.z*DEG);
 		skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 128)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(1 * W / 2, 2 * H / 32, "Apollo Generalized Optics Program", 33);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		if (G->AGOP_Page == 1)
+		{
+			skp->Text(20 * W / 22, 2 * H / 14, "1/2", 3);
+
+			skp->Text(1 * W / 22, (marker + 3) * H / 22, "*", 1);
+
+			switch (G->AGOP_Option)
+			{
+			case 1:
+				skp->Text(2 * W / 22, 3 * H / 22, "1: Cislunar Navigation", 22);
+
+				switch (G->AGOP_Mode)
+				{
+				case 1:
+					skp->Text(2 * W / 22, 4 * H / 22, "1: Star/Earth Horizon", 21);
+					break;
+				case 2:
+					skp->Text(2 * W / 22, 4 * H / 22, "2: Star/Moon Horizon", 20);
+					break;
+				case 3:
+					skp->Text(2 * W / 22, 4 * H / 22, "3: Star/Earth Landmark", 22);
+					break;
+				case 4:
+					skp->Text(2 * W / 22, 4 * H / 22, "4: Star/Moon Landmark", 21);
+					break;
+				}
+				break;
+			case 2:
+				skp->Text(2 * W / 22, 3 * H / 22, "2: Reference Body", 17);
+
+				switch (G->AGOP_Mode)
+				{
+				case 1:
+					skp->Text(2 * W / 22, 4 * H / 22, "1: General", 10);
+					break;
+				case 2:
+					skp->Text(2 * W / 22, 4 * H / 22, "2: Center of Earth", 18);
+					break;
+				case 3:
+					skp->Text(2 * W / 22, 4 * H / 22, "3: Center of Moon", 17);
+					break;
+				case 4:
+					skp->Text(2 * W / 22, 4 * H / 22, "4: Center of Sun", 16);
+					break;
+				case 5:
+					skp->Text(2 * W / 22, 4 * H / 22, "5: Earth Landmark", 17);
+					break;
+				case 6:
+					skp->Text(2 * W / 22, 4 * H / 22, "6: Moon Landmark", 16);
+					break;
+				}
+				break;
+			case 3:
+				skp->Text(2 * W / 22, 3 * H / 22, "3: Star Catalog", 15);
+				break;
+			case 4:
+				skp->Text(2 * W / 22, 3 * H / 22, "4: Antenna Pointing", 19);
+
+				switch (G->AGOP_Mode)
+				{
+				case 1:
+					skp->Text(2 * W / 22, 4 * H / 22, "1: S-Band Hi-Gain (Movable)", 27);
+					break;
+				case 2:
+					skp->Text(2 * W / 22, 4 * H / 22, "2: S-Band Steerable (Movable)", 29);
+					break;
+				case 3:
+					skp->Text(2 * W / 22, 4 * H / 22, "3: Rendezvous Radar (Movable)", 29);
+					break;
+				case 4:
+					skp->Text(2 * W / 22, 4 * H / 22, "4: S-Band Hi-Gain (Fixed)", 25);
+					break;
+				case 5:
+					skp->Text(2 * W / 22, 4 * H / 22, "5: S-Band Steerable (Fixed)", 27);
+					break;
+				case 6:
+					skp->Text(2 * W / 22, 4 * H / 22, "6: Rendezvous Radar (Fixed)", 27);
+					break;
+				}
+				break;
+			case 5:
+				skp->Text(2 * W / 22, 3 * H / 22, "5: Passive Thermal Control", 26);
+				break;
+			case 6:
+				skp->Text(2 * W / 22, 3 * H / 22, "6: CSM Horizon Check", 20);
+
+				if (G->AGOP_Mode == 1)
+				{
+					skp->Text(2 * W / 22, 4 * H / 22, "1: Fwd Horizon", 14);
+				}
+				else
+				{
+					skp->Text(2 * W / 22, 4 * H / 22, "2: Aft Horizon", 14);
+				}
+				break;
+			case 7:
+				skp->Text(2 * W / 22, 3 * H / 22, "7: Optical Support Table", 24);
+				break;
+			}
+
+			if (G->AGOP_Option != 3)
+			{
+				skp->Text(2 * W / 22, 5 * H / 22, "Start:", 6);
+				GET_Display(Buffer, G->AGOP_StartTime);
+				skp->Text(5 * W / 22, 5 * H / 22, Buffer, strlen(Buffer));
+
+				if (G->AGOP_Option != 2 || G->AGOP_Mode != 1)
+				{
+					skp->Text(2 * W / 22, 6 * H / 22, "Stop:", 5);
+					GET_Display(Buffer, G->AGOP_StopTime);
+					skp->Text(5 * W / 22, 6 * H / 22, Buffer, strlen(Buffer));
+
+					skp->Text(2 * W / 22, 7 * H / 22, "DT:", 3);
+					sprintf(Buffer, "%.1lf min", G->AGOP_TimeStep);
+					skp->Text(5 * W / 22, 7 * H / 22, Buffer, strlen(Buffer));
+				}
+			}
+
+			//Logic to get required REFSMMATs
+			bool GetCSMREFSMMAT = false, GetLMREFSMMAT = false;
+
+			if (G->AGOP_Option == 1 || G->AGOP_Option == 5 || G->AGOP_Option == 6) GetCSMREFSMMAT = true;
+			else if (G->AGOP_Option == 4)
+			{
+				if (G->AGOP_Mode == 1 || G->AGOP_Mode == 4) GetCSMREFSMMAT = true;
+				else if (G->AGOP_AttIsCSM) GetCSMREFSMMAT = true;
+			}
+
+			if (G->AGOP_Option == 4)
+			{
+				if (G->AGOP_Mode != 1 && G->AGOP_Mode != 4) GetLMREFSMMAT = true;
+				else if (!G->AGOP_AttIsCSM) GetLMREFSMMAT = true;
+			}
+
+			if (GetCSMREFSMMAT)
+			{
+				skp->Text(2 * W / 22, 8 * H / 22, "CSM REFSMMAT:", 13);
+				GC->rtcc->EMGSTGENName(G->AGOP_CSM_REFSMMAT, Buffer);
+				skp->Text(10 * W / 22, 8 * H / 22, Buffer, strlen(Buffer));
+			}
+
+			if (GetLMREFSMMAT)
+			{
+				skp->Text(2 * W / 22, 9 * H / 22, "LM REFSMMAT:", 12);
+				GC->rtcc->EMGSTGENName(G->AGOP_LM_REFSMMAT, Buffer);
+				skp->Text(10 * W / 22, 9 * H / 22, Buffer, strlen(Buffer));
+			}
+
+			if (G->AGOP_Option == 1 || G->AGOP_Option == 3)
+			{
+				sprintf(Buffer, "Star: %d (Octal: %o)", G->AGOP_Star, G->AGOP_Star);
+				skp->Text(2 * W / 22, 10 * H / 22, Buffer, strlen(Buffer));
+			}
+			else if (G->AGOP_Option == 6 || (G->AGOP_Option == 4 && (G->AGOP_Mode >= 4)))
+			{
+				if (G->AGOP_HeadsUp)
+				{
+					skp->Text(2 * W / 22, 10 * H / 22, "Heads Up", 8);
+				}
+				else
+				{
+					skp->Text(2 * W / 22, 10 * H / 22, "Heads Down", 10);
+				}
+			}
+
+			bool showlmk = false;
+
+			if (G->AGOP_Option == 1 && (G->AGOP_Mode == 3 || G->AGOP_Mode == 4)) showlmk = true;
+			if (G->AGOP_Option == 2 && (G->AGOP_Mode == 5 || G->AGOP_Mode == 6)) showlmk = true;
+			if (G->AGOP_Option == 4) showlmk = true;
+
+			if (showlmk)
+			{
+				sprintf(Buffer, "Lat: %.3lf°", G->AGOP_Lat*DEG);
+				skp->Text(2 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
+				sprintf(Buffer, "Lng: %.3lf°", G->AGOP_Lng*DEG);
+				skp->Text(2 * W / 22, 12 * H / 22, Buffer, strlen(Buffer));
+				sprintf(Buffer, "Alt: %.2lf NM", G->AGOP_Alt / 1852.0);
+				skp->Text(2 * W / 22, 13 * H / 22, Buffer, strlen(Buffer));
+			}
+
+			if (G->AGOP_Option == 4)
+			{
+				if (G->AGOP_AttIsCSM)
+				{
+					skp->Text(2 * W / 22, 14 * H / 22, "CSM IMU:", 8);
+				}
+				else
+				{
+					skp->Text(2 * W / 22, 14 * H / 22, "LM IMU:", 7);
+				}
+
+				if (G->AGOP_Mode <= 3)
+				{
+					for (unsigned i = 0; i < 3; i++)
+					{
+						sprintf(Buffer, "%+07.2lf", G->AGOP_Attitude.data[i] * DEG);
+						skp->Text(2 * W / 22, (15 + i) * H / 22, Buffer, strlen(Buffer));
+					}
+				}
+				else
+				{
+					sprintf(Buffer, "PCH: %+.2lf", G->AGOP_AntennaPitch * DEG);
+					skp->Text(2 * W / 22, 18 * H / 22, Buffer, strlen(Buffer));
+					sprintf(Buffer, "YAW: %+.2lf", G->AGOP_AntennaYaw * DEG);
+					skp->Text(2 * W / 22, 19 * H / 22, Buffer, strlen(Buffer));
+				}
+			}
+		}
+		else
+		{
+			skp->Text(20 * W / 22, 2 * H / 14, "2/2", 3);
+
+			skp->SetFont(font5);
+			for (unsigned i = 0; i < G->AGOP_Output.size(); i++)
+			{
+				skp->Text(1 * W / 32, (5 + i) * H / 24, G->AGOP_Output[i].c_str(), G->AGOP_Output[i].size());
+				if (i >= 18) break;
+			}
+
+			skp->Text(10 * W / 16, 13 * H / 14, G->AGOP_Error.c_str(), G->AGOP_Error.size());
+		}
+	}
+	else if (screen == 129)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(1 * W / 2, 2 * H / 32, "Auxiliary Computing Facility", 28);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(1 * W / 8, 2 * H / 14, "AGOP", 4);
+		skp->Text(1 * W / 8, 4 * H / 14, "VECPOINT", 8);
 	}
 	return true;
 }

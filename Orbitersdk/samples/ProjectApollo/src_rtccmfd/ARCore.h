@@ -298,7 +298,7 @@ public:
 	double LmkTime;
 
 	//VECPOINT PAGE
-	int VECoption;		//0 = Point SC at body, 1 = Open hatch thermal control, 2 = Point AOT with CSM
+	int VECoption;		//0 = Point SC at body, 1 = Open hatch thermal control
 	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z
 	OBJHANDLE VECbody;	//handle for the desired body
 	VECTOR3 VECangles;	//IMU angles
@@ -373,6 +373,24 @@ public:
 	double LUNTAR_yaw_guess;
 	double LUNTAR_TIG;
 	LunarTargetingProgramOutput LUNTAR_Output;
+
+	//APOLLO GENERALIZED OPTICS PROGRAM
+	int AGOP_Page;
+	int AGOP_Option;
+	int AGOP_Mode;
+	double AGOP_StartTime;
+	double AGOP_StopTime;
+	double AGOP_TimeStep; //in minutes
+	int AGOP_CSM_REFSMMAT;
+	int AGOP_LM_REFSMMAT;
+	int AGOP_Star;
+	double AGOP_Lat, AGOP_Lng, AGOP_Alt;
+	VECTOR3 AGOP_Attitude;
+	bool AGOP_AttIsCSM;
+	bool AGOP_HeadsUp;
+	double AGOP_AntennaPitch, AGOP_AntennaYaw;
+	std::vector<std::string> AGOP_Output;
+	std::string AGOP_Error;
 
 	//DEBUG
 	VECTOR3 DebugIMUTorquingAngles;

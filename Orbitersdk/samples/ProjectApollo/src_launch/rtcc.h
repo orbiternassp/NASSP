@@ -2402,6 +2402,8 @@ struct ELVCTRInputTable
 struct ELVCTROutputTable2
 {
 	EphemerisData2 SV;
+	//2 = Order of interpolation performed less than order of interpolation requested, 16 = Time for requested interpolation exceeds ephemeris end time
+	//32 = Time for requested interpolation precedes first time in ephemeris, 64 = Invalid order of interpolation requested, 128 = Fewer than two vectors available
 	int ErrorCode;
 	//Order of interpolation performed
 	unsigned ORER;
@@ -2567,7 +2569,6 @@ public:
 	bool DockingInitiationProcessor(DKIOpt opt);
 	int ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	double CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise);
-	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
 	VECTOR3 LOICrewChartUpdateProcessor(EphemerisData sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt);
