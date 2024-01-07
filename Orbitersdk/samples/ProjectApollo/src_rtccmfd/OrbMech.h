@@ -263,6 +263,7 @@ namespace OrbMech {
 	double findelev_gs(int Epoch, MATRIX3 Rot_J_B, VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);
 	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA);
 	int FindNearestStar(const VECTOR3 *navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
+	VECTOR3 AOTNavigationBase(double AZ, double EL);
 	VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL);
 	bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E, double dist = 5.0*RAD);
 	MATRIX3 SBNBMatrix();

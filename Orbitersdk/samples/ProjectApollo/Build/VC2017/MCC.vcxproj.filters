@@ -147,6 +147,9 @@
     <ClCompile Include="..\..\src_launch\RTCC_Mission_SL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -246,6 +249,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_launch\MCC_Mission_SL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -13,6 +13,7 @@
 #include "mccvessel.h"
 #include "mcc.h"
 #include "TLMCC.h"
+#include "ApolloGeneralizedOpticsProgram.h"
 #include "rtcc.h"
 #include "nassputils.h"
 
@@ -764,6 +765,24 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	LUNTAR_pitch_guess = 0.0;
 	LUNTAR_yaw_guess = 0.0;
 	LUNTAR_TIG = 0.0;
+
+	AGOP_Page = 1;
+	AGOP_Option = 1;
+	AGOP_Mode = 1;
+	AGOP_StartTime = 0.0;
+	AGOP_StopTime = 0.0;
+	AGOP_TimeStep = 0.0;
+	AGOP_CSM_REFSMMAT = RTCC_REFSMMAT_TYPE_CUR;
+	AGOP_LM_REFSMMAT = RTCC_REFSMMAT_TYPE_CUR;
+	AGOP_Star = 1;
+	AGOP_Lat = 0.0;
+	AGOP_Lng = 0.0;
+	AGOP_Alt = 0.0;
+	AGOP_Attitude = _V(0, 0, 0);
+	AGOP_AttIsCSM = true;
+	AGOP_HeadsUp = true;
+	AGOP_AntennaPitch = 0.0;
+	AGOP_AntennaYaw = 0.0;
 
 	DebugIMUTorquingAngles = _V(0, 0, 0);
 }
@@ -2258,12 +2277,6 @@ void ARCore::VecPointCalc()
 	else if (VECoption == 1)
 	{
 		VECangles = GC->rtcc->HatchOpenThermalControl(GC->rtcc->RTCCPresentTimeGMT(), GC->rtcc->EZJGMTX1.data[0].REFSMMAT);
-	}
-	else
-	{
-		//SV sv;
-
-		//GC->rtcc->PointAOTWithCSM(GC->rtcc->EZJGMTX1.data[0].REFSMMAT, sv, 2, 1, 0.0);
 	}
 }
 
@@ -4571,8 +4584,104 @@ int ARCore::subThread()
 	}
 	break;
 
-	case 51: //Spare
+	case 51: //Apollo Generalized Optics Program (RTACF)
 	{
+		AGOPInputs in;
+		AGOPOutputs out;
+		EphemerisData sv;
+
+		in.Option = AGOP_Option;
+		in.Mode = AGOP_Mode;
+
+		//Get ephemeris
+		if (AGOP_Option != 3)
+		{
+			double GMT, GMT_Stop;
+
+			GMT = GC->rtcc->GMTfromGET(AGOP_StartTime);
+			GMT_Stop = GC->rtcc->GMTfromGET(AGOP_StopTime);
+			sv = GC->rtcc->StateVectorCalcEphem(vessel);
+
+			in.sv_arr.clear();
+
+			do
+			{
+				in.sv_arr.push_back(GC->rtcc->coast(sv, GMT - sv.GMT));
+
+				GMT += AGOP_TimeStep * 60.0;
+				if (in.sv_arr.size() >= 10) break;
+
+				sv = in.sv_arr.back();
+			} while (GMT_Stop > GMT);
+		}
+
+		//Logic to get required REFSMMATs
+		bool GetCSMREFSMMAT = false, GetLMREFSMMAT = false;
+
+		if (AGOP_Option == 1 || AGOP_Option == 5 || AGOP_Option == 6) GetCSMREFSMMAT = true;
+		else if (AGOP_Option == 4)
+		{
+			if (AGOP_Mode == 1 || AGOP_Mode == 4) GetCSMREFSMMAT = true;
+			else if (AGOP_AttIsCSM) GetCSMREFSMMAT = true;
+		}
+
+		if (AGOP_Option == 4)
+		{
+			if (AGOP_Mode != 1 && AGOP_Mode != 4) GetLMREFSMMAT = true;
+			else if (!AGOP_AttIsCSM) GetLMREFSMMAT = true;
+		}
+
+		if (GetCSMREFSMMAT)
+		{
+			REFSMMATData refs = GC->rtcc->EZJGMTX1.data[AGOP_CSM_REFSMMAT - 1];
+
+			if (refs.ID == 0)
+			{
+				AGOP_Output.clear();
+				AGOP_Error = "REFSMMAT NOT AVAILABLE";
+				Result = DONE;
+				break;
+			}
+			in.CSM_REFSMMAT = refs.REFSMMAT;
+		}
+
+		if (GetLMREFSMMAT)
+		{
+			REFSMMATData refs = GC->rtcc->EZJGMTX3.data[AGOP_LM_REFSMMAT - 1];
+
+			if (refs.ID == 0)
+			{
+				AGOP_Output.clear();
+				AGOP_Error = "REFSMMAT NOT AVAILABLE";
+				Result = DONE;
+				break;
+			}
+			in.LM_REFSMMAT = refs.REFSMMAT;
+		}
+
+		in.startable = GC->rtcc->EZJGSTAR;
+		in.NumStars = 1;
+		in.StarIDs[0] = AGOP_Star;
+
+		in.AttIsCSM = AGOP_AttIsCSM;
+		in.IMUAttitude[0] = AGOP_Attitude;
+		in.HeadsUp = AGOP_HeadsUp;
+		in.AntennaPitch = AGOP_AntennaPitch;
+		in.AntennaYaw = AGOP_AntennaYaw;
+
+		//For now, always input landmark
+		in.GroundStationID = "";
+		in.lmk_lat = AGOP_Lat;
+		in.lmk_lng = AGOP_Lng;
+		in.lmk_alt = AGOP_Alt;
+
+		AGOP agop(GC->rtcc);
+
+		agop.Calc(in, out);
+
+		AGOP_Output = out.output_text;
+		AGOP_Error = out.errormessage;
+
 		Result = DONE;
 	}
 	break;
