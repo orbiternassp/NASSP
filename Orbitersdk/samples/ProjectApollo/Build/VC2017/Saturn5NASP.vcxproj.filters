@@ -482,6 +482,15 @@
     <ClInclude Include="..\..\src_aux\nassputils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_csm\CM-VC-SeatsFolded_Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\CM-VC-SeatsUnfolded_Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\EmissionListCMVC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Abort.bmp">

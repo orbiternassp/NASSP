@@ -1967,6 +1967,7 @@ void LEM::clbkPostCreation()
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 {
+	this->vis = vis;
 	if (ascidx != -1) {
 		drogue = GetDevMesh(vis, ascidx);
 		DrogueVis();
@@ -1990,6 +1991,7 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 {
+	if (this->vis == vis) this->vis = NULL;
 	drogue = NULL;
 	probes = NULL;
 	cdrmesh = NULL;

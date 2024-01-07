@@ -32,6 +32,13 @@
 #include "resource.h"
 
 #include "nasspdefs.h"
+
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#else
+#include <gcConst.h>
+#endif
+
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -42,6 +49,10 @@
 #include "tracer.h"
 #include "papi.h"
 #include "CM_VC_Resource.h"
+#include "CM-VC-SeatsFolded_Resource.h"
+#include "CM-VC-SeatsUnfolded_Resource.h"
+#include "EmissionListCMVC.h"
+
 
 // ==============================================================
 // VC Constants
@@ -618,8 +629,8 @@ void Saturn::InitVC()
 	// Register active areas for repainting here
 	//
 		
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 3);
-	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 4);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, VC_TEX_CMVCTex1_dds);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, VC_TEX_CMVCTex2_dds);
 
 	// Panel 1
 
@@ -677,6 +688,20 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS2, _R(906*TexMul, 1081*TexMul, 1008*TexMul, 1201*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_EVENT_TIMER306, _R(220*TexMul, 149*TexMul, 238*TexMul, 220*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 129*TexMul, 360*TexMul, 272*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+
+	// Integral Lights Panel 8
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Integral Lights Panel 5
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P5, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P5, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Integral Lights LEB
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Initialize surfaces
 
@@ -917,6 +942,22 @@ bool Saturn::clbkLoadVC (int id)
 	default:
 		return false;
 	}
+}
+
+void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
+	this->vis = vis;
+	if (vcidx != -1) {
+        vcmesh = GetDevMesh(vis, vcidx);
+//		seatsunfoldedmesh = GetDevMesh(vis, seatsunfoldedidx);
+//		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
+	}
+}
+
+void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
+	if (this->vis == vis) this->vis = NULL;
+    vcmesh = NULL;
+//	seatsunfoldedmesh = NULL;
+//	seatsfoldedmesh = NULL;
 }
 
 void Saturn::RegisterActiveAreas() {
@@ -1686,6 +1727,78 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//	Redraw Panel stuff
 	//	return true if dynamic texture modified, false if not
 
+#ifdef _OPENORBITER
+	case AID_VC_INTEGRAL_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, IntegralLights_P8, MatProp::Emission, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, FloodLights_P8, MatProp::Light,(double)(FloodRotarySwitch.GetState())/10.0, sizeof(FloodLights_P8)/sizeof(FloodLights_P8[0]));
+		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsUnFolded) / sizeof(CMVCSeatsUnFolded[0]));
+		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsFolded) / sizeof(CMVCSeatsFolded[0]));
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx,NumericLights_P8, MatProp::Light, (double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P5:
+ //       SetCMVCIntegralLight((DWORD *) &IntegralLights_P5, VC_MAT_CMVCTex1_t, MESHM_EMISSION2,(double)(RightIntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P5:
+ //       SetCMVCIntegralLight((DWORD *) &FloodLights_P5, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(RightFloodRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P100:
+//        SetCMVCIntegralLight((DWORD *) &IntegralLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION2,(double)(Panel100IntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P100:
+//		SetCMVCIntegralLight((DWORD *) &FloodLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100FloodRotarySwitch.GetState()) / 10.0);
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P100:
+//        SetCMVCIntegralLight((DWORD *) &NumericLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100NumericRotarySwitch.GetState())/10.0);
+        return true;
+
+#else
+	case AID_VC_INTEGRAL_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, IntegralLights_P8, MESHM_EMISSION2, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, FloodLights_P8, MESHM_EMISSION,(double)(FloodRotarySwitch.GetState())/10.0, sizeof(FloodLights_P8)/sizeof(FloodLights_P8[0]));
+		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsUnFolded) / sizeof(CMVCSeatsUnFolded[0]));
+		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, sizeof(CMVCSeatsFolded) / sizeof(CMVCSeatsFolded[0]));
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx,NumericLights_P8, MESHM_EMISSION,(double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P5:
+ //       SetCMVCIntegralLight((DWORD *) &IntegralLights_P5, VC_MAT_CMVCTex1_t, MESHM_EMISSION2,(double)(RightIntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P5:
+ //       SetCMVCIntegralLight((DWORD *) &FloodLights_P5, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(RightFloodRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P100:
+//        SetCMVCIntegralLight((DWORD *) &IntegralLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION2,(double)(Panel100IntegralRotarySwitch.GetState())/10.0);
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P100:
+//		SetCMVCIntegralLight((DWORD *) &FloodLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100FloodRotarySwitch.GetState()) / 10.0);
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P100:
+//        SetCMVCIntegralLight((DWORD *) &NumericLights_P100, VC_MAT_CMVCTex1_t, MESHM_EMISSION,(double)(Panel100NumericRotarySwitch.GetState())/10.0);
+        return true;
+
+#endif
+
 	case AID_VC_FDAI_LEFT:
 	{
 		VECTOR3 euler_rates;
@@ -1753,68 +1866,68 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		if (SI_EngineNum > 5)
 		{
-			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 42, TexMul);
-			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 8, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 7, 43, TexMul);
-			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 41, TexMul);
-			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 51, 69, TexMul);
-			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 22, 69, TexMul);
+			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 4, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 4, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 34, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 50, 84, TexMul);
+			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 34, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 19, 84, TexMul);
 		}
 		else
 		{
 			if (ENGIND[0])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 44*TexMul, 55*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 47*TexMul, 53*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 44*TexMul, 157*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 47*TexMul, 155*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 
 			if (ENGIND[1])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 98*TexMul, 55*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 103*TexMul, 53*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 98*TexMul, 157*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 103*TexMul, 155*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[2])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 98*TexMul, 20*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 103*TexMul, 22*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 98*TexMul, 122*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 103*TexMul, 124*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[3])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 44*TexMul, 20*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 47*TexMul, 22*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 44*TexMul, 122*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 47*TexMul, 124*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[4])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 71*TexMul, 37*TexMul, 71*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 75*TexMul, 37*TexMul, 75*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 71*TexMul, 140*TexMul, 71*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 75*TexMul, 139*TexMul, 75*TexMul, 27*TexMul, 27*TexMul);
 			}
 		}
 	}
 
 	if (LVRateLight)
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 4*TexMul, 6*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 5*TexMul, 6*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	else
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 4*TexMul, 108*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 5*TexMul, 108*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 
 	//
@@ -1825,21 +1938,21 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		if (SIISepState)
 		{
-			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 4*TexMul, 37*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 5*TexMul, 37*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 		}
 		else
 		{
-			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 4*TexMul, 139*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 5*TexMul, 139*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 		}
 	}
 
 	if (LVGuidLight)
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69*TexMul, 4*TexMul, 69*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 68*TexMul, 5*TexMul, 68*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	else
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69*TexMul, 4*TexMul, 171*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 68*TexMul, 5*TexMul, 170*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	return true;
 
@@ -4920,3 +5033,35 @@ void Saturn::InitFDAI(UINT mesh)
 	AddAnimationComponent(anim_fdaiYrate_R, 0.0f, 1.0f, &mgt_yawrate_R);
 }
 
+#ifdef _OPENORBITER
+void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
+#else
+void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
+#endif
+
+{
+	if (vis == NULL) return;
+	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
+
+//    if (!vcmesh)
+    if (!hMesh)
+        return;
+
+	for (int i = 0; i < cnt; i++)
+	{
+		gcCore *pCore = gcGetCoreInterface();
+		if (pCore) {
+			FVECTOR4 value;
+			value.r = (float)state;
+			value.g = (float)state;
+			value.b = (float)state;
+			value.a = 1.0;
+#ifdef _OPENORBITER
+			pCore->SetMeshMaterial(hMesh, matList[i], EmissionMode, &value);
+#else
+			pCore->MeshMaterial(hMesh, matList[i], EmissionMode, &value, true);
+#endif
+		}
+	}
+    //sprintf(oapiDebugString(), "%d %lf", m, state);
+}
