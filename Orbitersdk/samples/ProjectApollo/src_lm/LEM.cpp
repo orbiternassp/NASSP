@@ -2046,6 +2046,26 @@ void LEM::clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVe
 	}
 }
 
+void LEM::clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos)
+{
+	double size = 0;
+	if (status == 0) { //Dock Stage
+		size = 6;
+	}
+	else if (status == 1) { //Hover Stage
+		size = 7;
+	}
+	else if (status == 2) { //Ascent Hover Stage
+		size = 5;
+	}
+
+	double cs = size * size;  // simplified cross section
+	double albedo = 1.5;    // simplistic albedo (mixture of absorption, reflection)
+
+	F = mflux * (cs * albedo);
+	pos = _V(0, 0, 0);        // don't induce torque
+}
+
 void LEM::DefineAnimations()
 {
 	// Call Animation Definitions where required
