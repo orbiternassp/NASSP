@@ -72,7 +72,7 @@ void AGOP::CislunarNavigation(const AGOPInputs &in, AGOPOutputs &out)
 
 	out.output_text.push_back("                  OST CISLUNAR NAVIGATION");
 	out.output_text.push_back("   GET STAR ID HORZ OPTICS ANGLES INERTIAL ATTITUDE");
-	out.output_text.push_back("HR:MIN:SEC DEC/OCT N-F   SFT     TRN     P      Y      R");
+	out.output_text.push_back("HR:MIN:SEC DEC/OCT N-F   SFT     TRN     R      P      Y");
 	//out.output_text.push_back("XXX:XX:XX XXX/XXX XXXX +XXX.XX +XX.XXX XXX.XX XXX.XX XXX.XX");
 
 	for (unsigned i = 0; i < in.sv_arr.size(); i++)
@@ -594,7 +594,7 @@ void AGOP::AntennaPointing(const AGOPInputs &in, AGOPOutputs &out)
 	out.output_text.push_back(line);
 
 	out.output_text.push_back("          ********CSM********  *********LM********");
-	out.output_text.push_back("    GET   PCH YAW IGA MGA OGA  PCH YAW IGA MGA OGA");
+	out.output_text.push_back("    GET   PCH YAW OGA IGA MGA  PCH YAW OGA IGA MGA");
 	//out.output_text.push_back("XXX:XX:XX XXX XXX XXX XXX XXX  XXX XXX XXX XXX XXX");
 
 	CSM_PCH = CSM_YAW = LM_PCH = LM_YAW = SLANT_RANGE = AZM = ELV = 0.0;
@@ -812,7 +812,7 @@ void AGOP::PassiveThermalControl(const AGOPInputs &in, AGOPOutputs &out)
 
 	out.output_text.push_back("     PASSIVE THERMAL CONTROL     ");
 	out.output_text.push_back("   GET            ATTITUDE       ");
-	out.output_text.push_back("HR:MIN:SEC  IGA     MGA     OGA  ");
+	out.output_text.push_back("HR:MIN:SEC  OGA     IGA     MGA  ");
 	//out.output_text.push_back("XXX:XX:XX +XXX.XX +XXX.XX +XXX.XX");
 
 	for (unsigned i = 0; i < in.sv_arr.size(); i++)
@@ -869,7 +869,7 @@ void AGOP::HorizonAngles(const AGOPInputs &in, AGOPOutputs &out)
 
 	out.output_text.push_back("        HORIZON ALIGNMENT        ");
 	out.output_text.push_back("   GET            ATTITUDE       ");
-	out.output_text.push_back("HR:MIN:SEC  IGA     MGA     OGA  ");
+	out.output_text.push_back("HR:MIN:SEC  OGA     IGA     MGA  ");
 	//out.output_text.push_back("XXX:XX:XX +XXX.XX +XXX.XX +XXX.XX");
 
 	for (unsigned i = 0; i < in.sv_arr.size(); i++)
