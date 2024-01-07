@@ -924,7 +924,25 @@ The Entry PAD contains all numbers to conduct a safe reentry. There are two type
 \textbf{CLC:} Calculate the missing numbers on the Entry PAD.\\
 \textbf{OPT:} Switch between the Earth Entry PAD and the Lunar Entry PAD.\\
 \textbf{BCK:} Go back to the main menu.\\
+\newpage
+\subsection{Apollo Generalized Optics Program}
 
+The Apollo Generalized Optics Program (AGOP) contains various optics and antenna pointing calculations.\\
+
+Option 1 of the AGOP will be used for cislunar navigation. This program option defines an inertial attitude which will align the optics system to the horizon or some specified landmark on the Earth or Moon. Output consists of IMU gimbal angles and the optics shaft and trunnion angles to point the sextant at the specified star.\\
+
+Option 2 will accept a state vector and compute the right ascension and declination of the spacecraft with respect to the Earth, and the right ascension and declination of the Earth, Moon and Sun with respect to the Earth. Additionally it computes the same quantities referenced to an input landmark when mode 2 is selected. Mode 2 will compute right ascension, declination, and a unit vector from the spacecraft to the specified landmark or the center of the Earth, Moon and Sun as desired\\
+
+Option 3 will output the right ascension, declination and unit vector of all stars in the catalog.\\
+
+Option 4 will accept a state vector and IMU gimbal angles and compute the pitch and yaw angles of the onboard S-Band Hi-Gain Antenna, S-Band Steerable Antenna, and Rendezvous Radar Antenna necessary to point at a specified ground based radar. An additional option provides the capability of fixing the antenna position and computing the necessary spacecraft gimbal angles for pointing the antenna at a specified ground station.\\
+
+Option 5 computes the IMU gimbal angles required to place the spacecraft in a passive thermal control (PTC) attitude, with the +X-axis oriented 90 degrees with respect to the Sun and to the Earth for omnidirectional communication.\\
+
+Option 6 computes the attitude required to orientate the CSM to the forward or aft horizons, either in heads up or down.\
+
+Options 7-9 will be implemented in the future.\\
+\newpage
 \subsection{VECPOINT}
 
 \subsubsection{Explanation}
@@ -936,7 +954,7 @@ The VECPOINT page, named after a routine in the AGC, is calculating the IMU angl
 \textbf{BOD:} Type the name of the body e.g. Sun, Moon etc.\\
 \textbf{DIR:} Choose the direction of the spacecraft to be pointed at the celestial object.\\
 \textbf{CLC:} Calculate the IMU angles.\\
-
+\newpage
 \subsection{Configuration}
 
 \textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\

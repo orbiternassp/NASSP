@@ -806,9 +806,14 @@ public:
 	void menuPerigeeAdjustThresholdTime();
 	void menuPerigeeAdjustTimeIncrement();
 	void menuPerigeeAdjustHeight();
+	void menuSetAGOPPage();
+	void menuCycleAGOPPage();
+	void menuSetAGOPInput();
+	void menuAGOPCalc();
+	void menuSetRTACFPage();
 	void GenericGETInput(double *get, char *message);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
-	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, int min = 1, int max = 0);
 	void GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);
@@ -819,6 +824,7 @@ protected:
 	oapi::Font *fonttest;
 	oapi::Font *font3;
 	oapi::Font *font4;
+	oapi::Font *font5;
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
 	Saturn *saturn;
@@ -830,6 +836,8 @@ protected:
 	int status; //Page dependent status, reset to 0 when new page is entered
 	static struct ScreenData {
 		int screen;
+		int marker;
+		int markermax;
 		int RTETradeoffScreen;
 	} screenData;
 private:
