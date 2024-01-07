@@ -1524,6 +1524,16 @@ void SIVB::clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldV
 	}
 }
 
+void SIVB::clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos)
+{
+	double size = 15;
+	double cs = size * size;  // simplified cross section
+	double albedo = 1.5;    // simplistic albedo (mixture of absorption, reflection)
+
+	F = mflux * (cs * albedo);
+	pos = _V(0, 0, 0);        // don't induce torque
+}
+
 void SIVB::SetState(SIVBSettings &state)
 
 {
