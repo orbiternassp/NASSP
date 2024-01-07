@@ -52,12 +52,11 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 
 	//font = oapiCreateFont(w / 20, true, "Arial", FONT_NORMAL, 0);
 	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
-	font2 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
+	font2 = oapiCreateFont(w * 2 / 51, true, "Courier", FONT_NORMAL, 0);
 	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
 	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
-	font3 = oapiCreateFont(w / 22, true, "Courier", FONT_NORMAL, 0);
-	font4 = oapiCreateFont(w / 27, true, "Courier", FONT_NORMAL, 0);
-
+	font3 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
+	font4 = oapiCreateFont(w / 31, true, "Courier", FONT_NORMAL, 0);
 	font5 = oapiCreateFont(w / 32, false, "Fixed", FONT_NORMAL, 0);
 
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
