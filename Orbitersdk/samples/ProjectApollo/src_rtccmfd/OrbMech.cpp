@@ -2787,11 +2787,16 @@ VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA)
 	return U_LOS;
 }
 
+VECTOR3 AOTNavigationBase(double AZ, double EL)
+{
+	return _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+}
+
 VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL)
 {
 	VECTOR3 U_OAN, S_SM, U_LOS;
 
-	U_OAN = _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+	U_OAN = AOTNavigationBase(AZ, EL);
 	S_SM = mul(tmat(SMNB), U_OAN);
 	U_LOS = mul(tmat(REFSMMAT), S_SM);
 	return U_LOS;
