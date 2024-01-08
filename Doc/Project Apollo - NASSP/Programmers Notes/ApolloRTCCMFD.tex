@@ -2467,4 +2467,16 @@ Latitude of node (deg)&Longitude of node (deg)&Height of node (NM)&&Card ID\\
 
 The files containing the TLI targeting parameters follow the launch day specific format "`1968-12-21 TLI.txt". They contain the numbers needed to calculate the time of restart preparations and the TLI maneuver in the RTCC. The format of the file follows the MSC card format from the MSC internal note RTCC REQUIREMENTS FOR APOLLO 11 (MISSION G) PREFLIGHT INFORMATION (69-FM-171), which can be found \href{https://web.archive.org/web/20100524010957/http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740072570_1974072570.pdf}{here}. The PDF pages 32 to 40 show the format. One line in the config file is equal to one punch card.
 
+
+\newpage
+\subsection{Erasable Memory Programs}
+
+Erasable Memory Program (EMP) files are loaded in the EMPs folder, which is under Config/ProjectApollo/RTCC. They contain uplink data for the CMC and LGC. The format of the file is as follows:\\
+
+\begin{itemize}
+\item The first line contains a description of the EMP which is shown on the uplink MFD page.
+\item The second line contains the AGC rope name (e.g. Luminary 210) for which the EMP is valid.
+\item The actual uplink loads follow in the subsequent lines. Each load has two lines in the file and the number of possible loads per file is not limited. There are two types of EMP uplinks. Contiguous block update (Verb 71) updates from 1 to 18 consecutive erasable memory registers in the same erasable memory bank. The scatter update (Verb 72) provides the capability to update from 1 to 9 non-consecutive erasable memory registers in the same or different erasable memory banks. The first of the two lines in each load contains either 71 and the starting address for Verb 71 or 72 and no additional value for Verb 72. The second line then contains all the uplink data, for Verb 72 it is alternating address and value. All data is in octal.
+\end{itemize}
+
 \end{document}
