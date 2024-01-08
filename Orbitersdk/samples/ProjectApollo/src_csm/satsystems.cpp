@@ -3824,7 +3824,7 @@ void Saturn::SetRCSState(int Quad, int Thruster, bool Active)
 		Level += 0.0105 / oapiGetSimStep();
 		Level = min(1.0, Level);
 
-		sprintf(oapiDebugString(), "Thruster %d Level %lf", Thruster, Level);
+		//sprintf(oapiDebugString(), "Thruster %d Level %lf", Thruster, Level);
 	}
 	else
 	{
