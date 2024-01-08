@@ -584,7 +584,7 @@ public:
 		// used.
 		//
 
-		// VC Sutfaces
+		// VC Surfaces
 		SRF_VC_DSKYDISP,
 		SRF_VC_DSKY_LIGHTS,
 		SRF_VC_DIGITALDISP,
@@ -610,6 +610,7 @@ public:
 		SRF_VC_CWS_GNLIGHTS,
 		SRF_VC_DIGITAL90,
 		SRF_VC_EVENT_TIMER_DIGITS90,
+		SRF_VC_ABORT,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1374,12 +1375,6 @@ protected:
 	/// \brief SII Sep light.
 	///
 	bool SIISepState;
-
-	///
-	/// Abort light. True if ABORT light is lit.
-	/// \brief Abort light.
-	///
-	bool ABORT_IND;
 
 	///
 	/// Interstage attached flag. True if interstage is attached.
@@ -3635,6 +3630,18 @@ public:
 	TemperatureTransducer CMRCSEngine21TempSensor;
 	TemperatureTransducer CMRCSEngine24TempSensor;
 	TemperatureTransducer CMRCSEngine25TempSensor;
+	CSMTankPressTransducer FCN2PressureSensor1;
+	CSMTankPressTransducer FCN2PressureSensor2;
+	CSMTankPressTransducer FCN2PressureSensor3;
+	CSMPipeFlowTransducer FCO2FlowSensor1;
+	CSMPipeFlowTransducer FCO2FlowSensor2;
+	CSMPipeFlowTransducer FCO2FlowSensor3;
+	CSMPipeFlowTransducer FCH2FlowSensor1;
+	CSMPipeFlowTransducer FCH2FlowSensor2;
+	CSMPipeFlowTransducer FCH2FlowSensor3;
+	CSMTankPressTransducer BatteryManifoldPressureSensor;
+	TemperatureTransducer WasteH2ODumpTempSensor;
+	TemperatureTransducer UrineDumpTempSensor;
 protected:
 
 	// CM Optics
@@ -3646,6 +3653,8 @@ protected:
 	Cooling *FuelCellCooling[3];
 	h_Tank *FuelCellO2Manifold[3];
 	h_Tank *FuelCellH2Manifold[3];
+	h_Tank *FuelCellN2Blanket[3];
+
 	
 	// Electric Lights
 	ElectricLight* SpotLight;
@@ -3781,9 +3790,15 @@ protected:
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
 	SaturnWasteStowageVentValve WasteStowageVentValve;
+	SaturnBatteryVent BatteryVent;
 	SaturnSuitFlowValves SaturnSuitFlowValve300;
 	SaturnSuitFlowValves SaturnSuitFlowValve301;
 	SaturnSuitFlowValves SaturnSuitFlowValve302;
+	SaturnDumpHeater WasteH2ODumpHeater;
+	SaturnDumpHeater UrineDumpHeater;
+	Boiler *SteamDuctHeaterA;
+	Boiler *SteamDuctHeaterB;
+
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;
@@ -4115,6 +4130,7 @@ protected:
 	void MoveTHC(bool dir);
 
 	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs, int xTexMul = 1);
+	bool AbortLightLogic();
 
 	void ClearPropellants();
 	void ClearThrusters();
@@ -4337,7 +4353,6 @@ protected:
 	THGROUP_HANDLE thg_retro1, thg_retro2;
 
 	THRUSTER_HANDLE th_1st[8], th_2nd[5], th_3rd[1], th_sps[1];
-	THRUSTER_HANDLE th_3rd_lox, th_3rd_lh2;
 	THRUSTER_HANDLE th_ull[8], th_ver[3];                       // handles for orbiter main engines
 	THRUSTER_HANDLE th_lem[4], th_tjm[2], th_pcm;
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];
@@ -4577,6 +4592,9 @@ protected:
 	friend class DockingTargetSwitch;
 	friend class LeftCOASPowerSwitch;
 	friend class SCE;
+	friend class SaturnWaterController;
+	friend class SaturnBatteryVent;
+	friend class SaturnDumpHeater;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ARCore;

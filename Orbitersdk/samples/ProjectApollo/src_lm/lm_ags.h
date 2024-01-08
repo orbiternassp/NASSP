@@ -134,14 +134,11 @@ public:
 	void SetAGSAttitude(int Type, int Data);
 	void SetAGSAttitudeError(int Type, int Data);
 	void SetLateralVelocity(int Data);
-	void SetAltitudeAltitudeRate(int Data);
 	void SetPGNSIntegratorRegister(int channel, int val);
 	void SetDownlinkTelemetryRegister(int val);
 	void PGNCSDownlinkStopPulse();
 
 	double GetLateralVelocity();
-	double GetAltitude();
-	double GetAltitudeRate();
 	VECTOR3 GetTotalAttitude();
 	VECTOR3 GetAttitudeError();
 
@@ -191,16 +188,11 @@ protected:
 	//AEA lateral velocity in feet
 	double AGSLateralVelocity;
 
-	double Altitude;
-	double AltitudeRate;
-
 	std::queue<uint16_t> ags_queue;
 
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
 	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0); //Least significant bit equals 0.5113269e-3 rad, shifted by 8 bits (word length 18 bits, error 10 bits, both with sign)
 	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
-	const double ALTSCALEFACTOR = 0.3048*2.345*pow(2.0, -3.0);
-	const double ALTRATESCALEFACTOR = 0.3048*pow(2.0, -4.0);
 
 	friend class ARCore;
 	friend class RTCC;

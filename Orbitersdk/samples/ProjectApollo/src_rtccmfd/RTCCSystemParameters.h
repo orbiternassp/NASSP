@@ -220,18 +220,10 @@ struct TLISystemParameters
 	double KY2 = 0.0;
 	//Geodetic latitude of launch site
 	double PHIL = 0.0;
-	//Azimuth from time polynomial (radians)
-	double hx[3][5];
 	//Inclination from azimuth polynomial (radians)
 	double fx[7];
 	//Descending Node Angle from azimuth polynomial (radians)
 	double gx[7];
-	//Times of the opening and closing of launch windows
-	double t_D0, t_D1, t_D2, t_D3;
-	//Times to segment the azimuth calculation polynomial
-	double t_DS0, t_DS1, t_DS2, t_DS3;
-	//Times used to scale the azimuth polynomial
-	double t_SD1, t_SD2, t_SD3;
 };
 
 struct RTCCSystemParameters
@@ -298,7 +290,7 @@ struct RTCCSystemParameters
 		MDVACC[1] = 0.0;
 		MDVDCC[0] = 0.0;
 		MDVDCC[1] = 0.0;
-		MCGVNT = 2.0 / 3600.0;
+		MCGVNT = -2.0 / 3600.0; //Until something better has been implemented for EMMENI, disable post-TLI venting simulation
 		MCGVEN = 0.2*3600.0;
 		for (int i = 0;i < 2;i++)
 		{
@@ -328,7 +320,7 @@ struct RTCCSystemParameters
 		MDTVTV[1][6] = 20000.0;
 		MDTVTV[1][7] = 20001.0; //Switches off vent model at this time
 		MDTVTV[1][8] = 9999999999.9;
-		MCTVSP = 850.0; //Find better value
+		MCTVSP = 750.0; //Find better value
 		MCTVEN = 1.0;
 
 		MCLABN = MCLCBN = MCLSBN = 0.0;
@@ -366,8 +358,8 @@ struct RTCCSystemParameters
 		MCTJT3 = 110900.0 * 4.4482216152605;
 		MCTJT4 = 178147.0 * 4.4482216152605;
 		MCTJTL = 202097.0 * 4.4482216152605;
-		MCTJTH = 202256.0 * 4.4482216152605;
-		MCTJT5 = 202256.0 * 4.4482216152605;
+		MCTJTH = 906114.066;//202256.0 * 4.4482216152605;
+		MCTJT5 = 906114.066;//202256.0 * 4.4482216152605;
 		MCTJT6 = 27784.0 * 4.4482216152605;
 		MCTJT7 = 145.0*4.4482216152605;
 
@@ -376,8 +368,8 @@ struct RTCCSystemParameters
 		MCTJW3 = 157.6 * 0.45359237;
 		MCTJW4 = 412.167 * 0.45359237;
 		MCTJWL = 472.121 * 0.45359237;
-		MCTJWH = 472.18 * 0.45359237;
-		MCTJW5 = 472.18* 0.45359237;
+		MCTJWH = 216.3295874820028;//472.18*0.45359237;
+		MCTJW5 = 216.3295874820028;//472.18*0.45359237;
 		MCTJW6 = 61.7 * 0.45359237;
 		MCTJW7 = 75960.0*0.45359237 / 3600.0;
 
@@ -1147,6 +1139,13 @@ struct RTCCSystemParameters
 		VECTOR3 CG[40];
 		int N;
 	} MHVLCG, MHVACG, MHVCCG; //LM ascent+descent, LM ascent, CSM
+
+	//DPS engine gimbal plane
+	double MGVDGD = 154.0*0.0254;
+	//SPS engine gimbal plane
+	double MGVSGD = 833.2*0.0254;
+	//Distance between SPS and DPS gimbal planes
+	double MGVSTD = 435.55*0.0254;
 
 	//Matrix to convert from J2000 to NBY coordinates
 	MATRIX3 MAT_J2000_BRCS;

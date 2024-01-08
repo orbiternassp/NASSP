@@ -549,6 +549,8 @@ void LEM::Init()
 	VcInfoActive = false;
 	VcInfoEnabled = false;
 
+	visibilitySize = 31.1; //Tuned so the LM disappears in the CSM optics at 400nm range
+
 	Crewed = true;
 	AutoSlow = false;
 
@@ -607,6 +609,7 @@ void LEM::Init()
 	ascidx = -1;
 	dscidx = -1;
 	vcidx = -1;
+	xpointershadesidx = -1;
 
 	drogue = NULL;
 	probes = NULL;
@@ -2009,6 +2012,56 @@ void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
 			CreateAirfoils();
 		}
 	}
+}
+
+void LEM::clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel)
+{
+	OBJHANDLE hLM = GetHandle();
+	if (hNewVessel == hLM) { //LM gains focus
+
+		bool fixCamera = false;
+		if (oapiCameraInternal() == false) {
+			fixCamera = true;
+			oapiCameraAttach(hLM, 0);
+		}
+		
+		if (status == 0) { //Dock Stage
+			SetSize(6);
+		}
+		else if (status == 1) { //Hover Stage
+			SetSize(7);
+		}
+		else if (status == 2) { //Ascent Hover Stage
+			SetSize(5);
+		}
+
+		if (fixCamera == true) {
+			oapiCameraAttach(hLM, 1);
+		}
+	}
+	else if (hOldVessel == hLM) { //LM loses focus
+		SetSize(visibilitySize);
+	}
+}
+
+void LEM::clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos)
+{
+	double size = 0;
+	if (status == 0) { //Dock Stage
+		size = 6;
+	}
+	else if (status == 1) { //Hover Stage
+		size = 7;
+	}
+	else if (status == 2) { //Ascent Hover Stage
+		size = 5;
+	}
+
+	double cs = size * size;  // simplified cross section
+	double albedo = 1.5;    // simplistic albedo (mixture of absorption, reflection)
+
+	F = mflux * (cs * albedo);
+	pos = _V(0, 0, 0);        // don't induce torque
 }
 
 void LEM::DefineAnimations()

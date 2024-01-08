@@ -91,6 +91,8 @@ namespace mission
 		int GetLMCWEAVersion() const;
 		//false = Normal polarity (Apollo 14 and earlier), Lateral axis for PGNS and LR input has switched polarity (Apollo 15 and later)
 		bool GetCrossPointerReversePolarity() const;
+		//false = No shades (Apollo 15 and earlier), Shades (Apollo 16 & 17)
+		bool GetCrossPointerShades() const;
 		//Get time reference of AGC for CMC clock initialization. The value is usually the MJD of midnight July 1st that preceeds the launch
 		double GetTEPHEM0() const;
 		//Get cue cards
@@ -152,6 +154,7 @@ namespace mission
 		bool bHasRateAidedOptics;
 		int iLMCWEAVersion;
 		bool bCrossPointerReversePolarity;
+		bool bCrossPointerShades;
 		std::vector<CueCardConfig> CSMCueCards;
 		std::vector<CueCardConfig> LMCueCards;
 		double dTEPHEM0;

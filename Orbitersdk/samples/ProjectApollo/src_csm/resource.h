@@ -889,6 +889,7 @@
 #define AID_VC_ASCPDISPLAYYAW           3184
 #define AID_VC_POSTLDGVENTHANDLE        3185
 #define AID_VC_EMS_RSI                  3186
+#define AID_VC_ABORT_BUTTON				3187
 
 // VC Active Areas (Panel 325-326)
 #define AID_VC_ROT_P326_01		        3201

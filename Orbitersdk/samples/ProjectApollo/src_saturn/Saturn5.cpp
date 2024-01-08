@@ -641,7 +641,7 @@ void SaturnV::CreateStageSpecificSystems()
 	if (stage < CSM_LEM_STAGE)
 	{
 		iu = new IUSV;
-		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, thg_ver);
 	}
 }
 
