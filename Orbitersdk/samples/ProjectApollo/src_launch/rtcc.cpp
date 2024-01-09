@@ -27693,7 +27693,7 @@ int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 		//TBD: Command sites
 
 		std::vector<int> values;
-		if (data.size() < 4)
+		if (data.size() < 4 || data[3] == "")
 		{
 			//V72
 			values.push_back(0);
