@@ -1724,8 +1724,7 @@ public:
 	/// \param vMin Angle of meter at minimum voltage.
 	/// \param vMax Angle of meter at maximum voltage.
 	///
-	DCVoltMeter(double minVal, double maxVal, double vMin = 210.0, double vMax = (-30.0));
-//-=JK=-	DCVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	DCVoltMeter(double minVal, double maxVal, double vMin = 219.6, double vMax = (-39.6));
 
 	///
 	/// \brief Query the voltage.
@@ -1754,7 +1753,6 @@ public:
 	/// \param vMax Angle of meter at maximum current.
 	///
 	DCAmpMeter(double minVal, double maxVal, double vMin = 210.0, double vMax = (-30.0));
-//-=JK=- 	DCAmpMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
 
 	///
 	/// \brief Query the voltage.
@@ -1781,8 +1779,7 @@ public:
 	/// \param vMin Angle of meter at minimum voltage.
 	/// \param vMax Angle of meter at maximum voltage.
 	///
-	ACVoltMeter(double minVal, double maxVal, double vMin = 210.0, double vMax = (-30.0));
-//-=JK=-	ACVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	ACVoltMeter(double minVal, double maxVal, double vMin = 222.0, double vMax = (-42.0));
 
 	///
 	/// \brief Query the voltage.
