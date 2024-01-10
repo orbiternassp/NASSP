@@ -34,7 +34,7 @@ class ORDEAL {
 
 public:
 	ORDEAL();
-	void Init(ToggleSwitch *EarthSw, CircuitBrakerSwitch *ACCB, CircuitBrakerSwitch *DCCB, OrdealRotationalSwitch *AltSet, ToggleSwitch *ModeSw, ThreePosSwitch *SlewSw, ToggleSwitch *FDAI1Sw, ToggleSwitch *FDAI2Sw, ToggleSwitch *LtgSw);		// Initialization
+	void Init(ToggleSwitch *EarthSw, CircuitBrakerSwitch *ACCB, CircuitBrakerSwitch *DCCB, OrdealRotationalSwitch *AltSet, ToggleSwitch *ModeSw, ThreePosSwitch *SlewSw, ToggleSwitch *FDAI1Sw, ToggleSwitch *FDAI2Sw, ThreePosSwitch *LtgSw);		// Initialization
 	void Timestep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
 
@@ -59,7 +59,7 @@ private:
 	ThreePosSwitch *SlewSwitch;
 	ToggleSwitch *FDAI1Switch;
 	ToggleSwitch *FDAI2Switch;
-	ToggleSwitch *LightingSwitch;
+	ThreePosSwitch *LightingSwitch;
 };
 
 #endif
