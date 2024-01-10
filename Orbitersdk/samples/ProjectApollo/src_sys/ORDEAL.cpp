@@ -82,7 +82,11 @@ void ORDEAL::SystemTimestep(double simdt) {
 	double power = LightingPower();
 
 	// Do we have power?
-	if (!IsPowered()) return;
+	if (!IsPowered()) {
+		ACCircuitBraker->DrawPower(power);
+
+		return;
+	}
 
 	ACCircuitBraker->DrawPower(3 + power);	// see LM Systems Handbook
 	DCCircuitBraker->DrawPower(4);
