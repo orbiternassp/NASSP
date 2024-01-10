@@ -84,7 +84,6 @@ void ORDEAL::SystemTimestep(double simdt) {
 	// Do we have power?
 	if (!IsPowered()) {
 		ACCircuitBraker->DrawPower(power);
-
 		return;
 	}
 
@@ -95,7 +94,7 @@ void ORDEAL::SystemTimestep(double simdt) {
 
 void ORDEAL::Timestep(double simdt) {
 
-	sprintf(oapiDebugString(), "PowerInt: %lf IsACPowered %d", LightingPower(), ACCircuitBraker->IsPowered());
+	//sprintf(oapiDebugString(), "PowerInt: %lf IsACPowered %d", LightingPower(), ACCircuitBraker->IsPowered());
 
 	// Do we have power?
 	if (!IsPowered()) return;
