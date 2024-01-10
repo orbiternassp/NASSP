@@ -61,6 +61,20 @@ bool ORDEAL::IsPowered() {
 	return true;
 }
 
+double ORDEAL::LightingPower() {
+
+		if (IsPowered() && LightingSwitch->IsUp()) {
+			return 1;
+		}
+
+		else if (IsPowered() && LightingSwitch->IsDown()) {
+			return 0.5;
+		}
+
+		else 
+			return 0;
+}
+
 void ORDEAL::SystemTimestep(double simdt) {
 
 	// Do we have power?
@@ -69,12 +83,14 @@ void ORDEAL::SystemTimestep(double simdt) {
 	ACCircuitBraker->DrawPower(4);	// see CSM Systems Handbook
 	DCCircuitBraker->DrawPower(3);
 
-	if (LightingSwitch->IsUp()) {
+	if (LightingPower() == 1){
 		DCCircuitBraker->DrawPower(1);
 	}
-	else if (LightingSwitch->IsDown()) {
+
+	else if (LightingPower() == 0.5) {
 		DCCircuitBraker->DrawPower(0.5);
 	}
+
 	else
 		return;
 }
@@ -122,6 +138,8 @@ void ORDEAL::Timestep(double simdt) {
 			while (pitchOffset < 0) pitchOffset += TWO_PI;
 		}
 	}
+
+	sprintf(oapiDebugString(), "Power Int: %1f ", LightingPower());
 }
 
 double ORDEAL::GetFDAI1PitchAngle() {

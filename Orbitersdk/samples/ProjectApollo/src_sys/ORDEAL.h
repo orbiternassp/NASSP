@@ -41,6 +41,8 @@ public:
 	double GetFDAI1PitchAngle();
 	double GetFDAI2PitchAngle();
 
+	double LightingPower();
+
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
