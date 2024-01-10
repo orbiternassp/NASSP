@@ -511,6 +511,7 @@ public:
 	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
+	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);

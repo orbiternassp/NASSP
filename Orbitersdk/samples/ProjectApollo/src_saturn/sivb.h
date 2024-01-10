@@ -262,6 +262,7 @@ public:
 	void clbkPostCreation();
 
 	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
+	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
 
 	///
 	/// Pass settings from the main DLL to the jettisoned SIVb. This call must be virtual 

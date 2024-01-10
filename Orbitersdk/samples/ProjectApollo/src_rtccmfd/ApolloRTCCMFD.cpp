@@ -52,11 +52,13 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 
 	//font = oapiCreateFont(w / 20, true, "Arial", FONT_NORMAL, 0);
 	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
-	font2 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
+	font2 = oapiCreateFont(w * 2 / 51, true, "Courier", FONT_NORMAL, 0);
 	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
 	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
-	font3 = oapiCreateFont(w / 22, true, "Courier", FONT_NORMAL, 0);
-	font4 = oapiCreateFont(w / 27, true, "Courier", FONT_NORMAL, 0);
+	font3 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
+	font4 = oapiCreateFont(w / 31, true, "Courier", FONT_NORMAL, 0);
+	font5 = oapiCreateFont(w / 32, false, "Fixed", FONT_NORMAL, 0);
+
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
 	bool found = false;
@@ -93,6 +95,7 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(fonttest);
 	oapiReleaseFont(font3);
 	oapiReleaseFont(font4);
+	oapiReleaseFont(font5);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 }
@@ -1257,6 +1260,18 @@ void ApolloRTCCMFD::menuSetDebugPage()
 	SelectPage(127);
 }
 
+void ApolloRTCCMFD::menuSetAGOPPage()
+{
+	marker = 0;
+	markermax = 16;
+	SelectPage(128);
+}
+
+void ApolloRTCCMFD::menuSetRTACFPage()
+{
+	SelectPage(129);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -1292,6 +1307,136 @@ void ApolloRTCCMFD::menuPerigeeAdjustTimeIncrement()
 void ApolloRTCCMFD::menuPerigeeAdjustHeight()
 {
 	GenericDoubleInput(&GC->rtcc->med_k28.H_P, "Perigee height in nautical miles:", 1.0);
+}
+
+void ApolloRTCCMFD::menuCycleAGOPPage()
+{
+	if (G->AGOP_Page == 1)
+	{
+		G->AGOP_Page = 2;
+	}
+	else
+	{
+		G->AGOP_Page = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuSetAGOPInput()
+{
+	switch (marker)
+	{
+	case 0: //Cycle option
+		G->AGOP_Mode = 1;
+		if (G->AGOP_Option < 6)
+		{
+			G->AGOP_Option++;
+		}
+		else
+		{
+			G->AGOP_Option = 1;
+		}
+		break;
+	case 1: //Cycle mode
+		switch (G->AGOP_Option)
+		{
+		case 1:
+			if (G->AGOP_Mode < 4)
+			{
+				G->AGOP_Mode++;
+			}
+			else
+			{
+				G->AGOP_Mode = 1;
+			}
+			break;
+		case 2:
+		case 4:
+			if (G->AGOP_Mode < 6)
+			{
+				G->AGOP_Mode++;
+			}
+			else
+			{
+				G->AGOP_Mode = 1;
+			}
+			break;
+		case 6:
+			if (G->AGOP_Mode < 2)
+			{
+				G->AGOP_Mode++;
+			}
+			else
+			{
+				G->AGOP_Mode = 1;
+			}
+			break;
+		}
+		break;
+	case 2: //Input start time
+		GenericGETInput(&G->AGOP_StartTime, "Enter desired start GET (Format: HH:MM:SS)");
+		break;
+	case 3: //Input start time
+		GenericGETInput(&G->AGOP_StopTime, "Enter desired stop GET (Format: HH:MM:SS)");
+		break;
+	case 4: //Input start time
+		GenericDoubleInput(&G->AGOP_TimeStep, "Enter desired time step in minutes");
+		break;
+	case 5: //CSM REFSMMAT
+		break;
+	case 6: //LM REFSMMAT
+		break;
+	case 7: //Input star
+		if (G->AGOP_Option == 1 || G->AGOP_Option == 3)
+		{
+			GenericIntInput(&G->AGOP_Star, "Enter star ID in decimal format (1-400):", NULL, 1, 400);
+		}
+		else if (G->AGOP_Option == 6)
+		{
+			G->AGOP_HeadsUp = !G->AGOP_HeadsUp;
+		}
+		break;
+	case 8: //Landmark latitude
+		if ((G->AGOP_Option == 1 && (G->AGOP_Mode == 3 || G->AGOP_Mode == 4)) || G->AGOP_Option == 4)
+		{
+			GenericDoubleInput(&G->AGOP_Lat, "Enter landmark latitude in degrees:", RAD);
+		}
+		break;
+	case 9: //Landmark longitude
+		if ((G->AGOP_Option == 1 && (G->AGOP_Mode == 3 || G->AGOP_Mode == 4)) || G->AGOP_Option == 4)
+		{
+			GenericDoubleInput(&G->AGOP_Lng, "Enter landmark longitude in degrees:", RAD);
+		}
+		break;
+	case 10: //Landmark altitude
+		if ((G->AGOP_Option == 1 && (G->AGOP_Mode == 3 || G->AGOP_Mode == 4)) || G->AGOP_Option == 4)
+		{
+			GenericDoubleInput(&G->AGOP_Alt, "Enter landmark height in nautical miles:", 1852.0);
+		}
+		break;
+	case 11: //CSM vs LM IMU
+		if (G->AGOP_Option == 4)
+		{
+			G->AGOP_AttIsCSM = !G->AGOP_AttIsCSM;
+		}
+		break;
+	case 12: //IMU Angles
+	case 13:
+	case 14:
+		GenericDoubleInput(&G->AGOP_Attitude.data[marker - 12], "Input IMU angle in degrees:", RAD);
+		break;
+	case 15: //Antenna Pitch
+		GenericDoubleInput(&G->AGOP_AntennaPitch, "Input antenna pitch angle in degrees:", RAD);
+		break;
+	case 16: //Antenna Yaw
+		GenericDoubleInput(&G->AGOP_AntennaYaw, "Input antenna yaw angle in degrees:", RAD);
+		break;
+	}
+}
+
+void ApolloRTCCMFD::menuAGOPCalc()
+{
+	G->AGOP_Page = 2;
+	G->startSubthread(51);
 }
 
 void ApolloRTCCMFD::menuLWPLiftoffTimeOption()
@@ -1513,11 +1658,13 @@ bool GenericDoubleInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericIntInput(int *val, char *message, void (ApolloRTCCMFD::*func)(void))
+void ApolloRTCCMFD::GenericIntInput(int *val, char *message, void (ApolloRTCCMFD::*func)(void), int min, int max)
 {
 	void *data2;
 
 	tempData.iVal = val;
+	tempData.min1 = min;
+	tempData.max1 = max;
 	tempData.ptr = this;
 	tempData.func = func;
 	data2 = &tempData;
@@ -1533,6 +1680,12 @@ bool GenericIntInputBox(void *id, char *str, void *data)
 
 	if (sscanf(str, "%d", &val) == 1)
 	{
+		if (arr->max1 > arr->min1) //By default this check is disabled
+		{
+			if (val < arr->min1) return false;
+			if (val > arr->max1) return false;
+		}
+
 		*arr->iVal = val;
 
 		if (arr->func)
@@ -5788,6 +5941,8 @@ void ApolloRTCCMFD::menuVECPOINTCalc()
 void ApolloRTCCMFD::StoreStatus(void) const
 {
 	screenData.screen = screen;
+	screenData.marker = marker;
+	screenData.markermax = markermax;
 	screenData.RTETradeoffScreen = RTETradeoffScreen;
 }
 
@@ -5795,6 +5950,8 @@ void ApolloRTCCMFD::RecallStatus(void)
 {
 	SelectPage(screenData.screen);
 	RTETradeoffScreen = screenData.RTETradeoffScreen;
+	marker = screenData.marker;
+	markermax = screenData.markermax;
 }
 
 ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
