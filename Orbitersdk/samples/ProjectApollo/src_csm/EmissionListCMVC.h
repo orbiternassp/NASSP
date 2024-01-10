@@ -115,7 +115,8 @@ DWORD FloodLights_P8[] = {
 		VC_MAT_IlluminatingPartsPanel01_t,
 		VC_MAT_IlluminatingPartsPanel02_t,
 		VC_MAT_IlluminatingPartsPanel03_t,
-		VC_MAT_Talkbacks_t
+		VC_MAT_Talkbacks_t,
+		VC_MAT_Ordeal_Lighting
 };
 
 DWORD NumericLights_P8[] = {
@@ -138,7 +139,7 @@ DWORD IntegralLights_P5[] = {
 		VC_MAT_csm_right_cb_panels_t,
 		VC_MAT_LMVC_t,
 		VC_MAT_Colors_t,
-		VC_MAT_CB_black_t,
+		VC_MAT_CB_black_t
 	};
 
 DWORD FloodLights_P5[] = {
@@ -150,7 +151,7 @@ DWORD FloodLights_P5[] = {
 		VC_MAT_csm_right_cb_panels_t,
 		VC_MAT_LMVC_t,
 		VC_MAT_Colors_t,
-		VC_MAT_CB_black_t,
+		VC_MAT_CB_black_t
 	};
 
 //
@@ -161,7 +162,7 @@ DWORD IntegralLights_P100[] = {
 		// TODO Material List
 		VC_MAT_MAINVCTEX_t,
 		VC_MAT_csm_lower_equip_bay_t,
-		VC_MAT_csm_right_cb_panels_t,
+		VC_MAT_csm_right_cb_panels_t
 	};
 
 DWORD FloodLights_P100[] = {
@@ -209,5 +210,13 @@ DWORD CMVCSeatsFolded[] = {
 	VC_MAT_CM_VC_SeatsFolded_MTL_7,
 	VC_MAT_CM_VC_SeatsFolded_Floodlights_with_Tex
 };
+
+DWORD IntegralLights_CMVC_Ordeal[] = {
+
+		// TODO Material List
+		VC_MAT_Ordeal_Lighting
+};
+
+
 
 #endif // !__EMISSIONLISTCMVC
