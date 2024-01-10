@@ -460,7 +460,7 @@ public:
 	/// \param vMin Angle of meter at minimum current.
 	/// \param vMax Angle of meter at maximum current.
 	///
-	SaturnDCAmpMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	SaturnDCAmpMeter(double minVal, double maxVal, double vMin = 210.0, double vMax = (-30.0));
 
 	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
 
