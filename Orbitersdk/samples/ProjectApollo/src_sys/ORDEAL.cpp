@@ -37,7 +37,7 @@ ORDEAL::ORDEAL() {
 	pitchOffset = 0;
 }
 
-void ORDEAL::Init(ToggleSwitch *EarthSw, CircuitBrakerSwitch *ACCB, CircuitBrakerSwitch *DCCB, OrdealRotationalSwitch *AltSet, ToggleSwitch *ModeSw, ThreePosSwitch *SlewSw, ToggleSwitch *FDAI1Sw, ToggleSwitch *FDAI2Sw) {
+void ORDEAL::Init(ToggleSwitch *EarthSw, CircuitBrakerSwitch *ACCB, CircuitBrakerSwitch *DCCB, OrdealRotationalSwitch *AltSet, ToggleSwitch *ModeSw, ThreePosSwitch *SlewSw, ToggleSwitch *FDAI1Sw, ToggleSwitch *FDAI2Sw, ToggleSwitch *LtgSw) {
 	EarthSwitch = EarthSw;
 	ACCircuitBraker = ACCB;
 	DCCircuitBraker = DCCB;
@@ -46,6 +46,7 @@ void ORDEAL::Init(ToggleSwitch *EarthSw, CircuitBrakerSwitch *ACCB, CircuitBrake
 	SlewSwitch = SlewSw;
 	FDAI1Switch = FDAI1Sw;
 	FDAI2Switch = FDAI2Sw;
+	LightingSwitch = LtgSw;
 }
 
 bool ORDEAL::IsPowered() {
@@ -67,6 +68,15 @@ void ORDEAL::SystemTimestep(double simdt) {
 
 	ACCircuitBraker->DrawPower(4);	// see CSM Systems Handbook
 	DCCircuitBraker->DrawPower(3);
+
+	if (LightingSwitch->IsUp()) {
+		DCCircuitBraker->DrawPower(1);
+	}
+	else if (LightingSwitch->IsDown()) {
+		DCCircuitBraker->DrawPower(0.5);
+	}
+	else
+		return;
 }
 
 void ORDEAL::Timestep(double simdt) {
