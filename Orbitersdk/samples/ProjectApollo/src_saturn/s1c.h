@@ -123,6 +123,8 @@ public:
 	///
 	void clbkPreStep(double simt, double simdt, double mjd);
 
+	void clbkPostCreation();
+
 	///
 	/// \brief Orbiter state loading function.
 	/// \param scn Scenario file to load from.

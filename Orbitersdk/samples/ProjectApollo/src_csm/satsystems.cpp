@@ -3854,7 +3854,7 @@ bool Saturn::GetCMRCSStateCommanded(THRUSTER_HANDLE th) {
 }
 
 
-void Saturn::RCSSoundTimestep() {
+void Saturn::EnginesSoundTimestep() {
 
 	// In case of disabled Orbiter attitude thruster groups OrbiterSound plays no
 	// engine sound, so this needs to be done manually
@@ -3895,5 +3895,46 @@ void Saturn::RCSSoundTimestep() {
 		}				
 	} else {
 		RCSSustainSound.stop();
+	}
+
+	//Main engine sound
+	THGROUP_HANDLE thg;
+	switch (stage)
+	{
+	case PRELAUNCH_STAGE:
+	case LAUNCH_STAGE_ONE:
+		thg = thg_1st;
+		break;
+	case LAUNCH_STAGE_TWO:
+	case LAUNCH_STAGE_TWO_ISTG_JET:
+		thg = thg_2nd;
+		break;
+	case LAUNCH_STAGE_SIVB:
+	case STAGE_ORBIT_SIVB:
+		thg = thg_3rd;
+		break;
+	case CSM_LEM_STAGE:
+		thg = thg_sps;
+		break;
+	default:
+		thg = NULL;
+		break;
+	}
+
+	if (thg)
+	{
+		double lvl;
+		if (lvl = GetThrusterGroupLevel(thg))
+		{
+			EngineS.play(LOOP, static_cast<int>(lvl * 255));
+		}
+		else
+		{
+			EngineS.stop();
+		}
+	}
+	else
+	{
+		EngineS.stop();
 	}
 }

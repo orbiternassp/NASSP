@@ -93,8 +93,6 @@ VAB::VAB(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 		for (int j = 0; j < 8; j++) 
 			mgroupCrane2[i][j] = 0;
 	}
-
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 }
 
 VAB::~VAB() {
@@ -530,6 +528,8 @@ void VAB::clbkPostCreation() {
 	if (lav && !LVVisible) {
 		SetSaturnMeshVisibilityMode(lav->GetBuildStatus(), MESHVIS_NEVER);	
 	}
+
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void VAB::clbkPreStep(double simt, double simdt, double mjd) {
