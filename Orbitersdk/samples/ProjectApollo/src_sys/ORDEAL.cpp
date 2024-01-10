@@ -139,7 +139,7 @@ void ORDEAL::Timestep(double simdt) {
 		}
 	}
 
-	sprintf(oapiDebugString(), "Power Int: %1f ", LightingPower());
+	sprintf(oapiDebugString(), "PowerInt: %1f IsPowered %d", LightingPower(), IsPowered());
 }
 
 double ORDEAL::GetFDAI1PitchAngle() {
