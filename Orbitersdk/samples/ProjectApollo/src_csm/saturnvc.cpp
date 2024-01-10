@@ -767,6 +767,10 @@ bool Saturn::clbkLoadVC (int id)
 	//if ((viewpos >= SATVIEW_ENG1) && (viewpos <= SATVIEW_ENG6))
 	//	return true;
 
+	// Init the 2D panel switches to fix XRSound not giving us switch clicks if we load directly into the VC.
+	// Calling InitPanel(SATPANEL_MAIN) also works, since that function calls SetSwitches() as well.
+	SetSwitches(SATPANEL_MAIN);	// Use main panel as a placeholder, it doesn't actually matter
+
 	//Reset VC free camera to default
 	vcFreeCamx = 0;
 	vcFreeCamy = 0;
