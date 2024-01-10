@@ -3845,13 +3845,13 @@ void ElectricMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
 	double v = minAngle + (ScaleFactor * (volts - minValue));
 	DrawNeedle(drawSurface, xSize / 2, ySize / 2, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, xSize, ySize, SURF_PREDEF_CK);
-}
 
-//angle debug lines
+	//angle debug lines
 	//if (strcmp(name, "DCAmpMeter") == 0)
 	//{
 	//	sprintf(oapiDebugString(), "Angle %lf Current %.2f", 90.0 - v, volts);
 	//}
+}
 
 DCVoltMeter::DCVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
 	ElectricMeter(minVal, maxVal, vMin, vMax)
