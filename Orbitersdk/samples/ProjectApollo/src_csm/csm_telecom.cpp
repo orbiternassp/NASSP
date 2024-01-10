@@ -1414,9 +1414,8 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 	XMITRangeTone = false;
 
 	if (!lem) {
-		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
-		if (lm) {
-			lem = (static_cast<LEM*>(lm));
+		VESSEL *lem = sat->agc.GetLM(); // Replace me with multi-lem code
+		if (lem) {
 			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 		}
 	}
@@ -1424,32 +1423,30 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 
 void VHFAMTransceiver::Timestep()
 {
-	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
-	bool isLem = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	if (lem)
 	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (utils::IsVessel(pVessel, utils::LEM))
+		//this block of code checks to see if the LEM has somehow been deleted mid scenerio, and sets the lem pointer to null
+		bool isLem = false;
+
+		for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
 		{
-			isLem = true;
+			OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+			if (lem == pVessel)
+			{
+				isLem = true;
+			}
+		}
+
+		if (!isLem)
+		{
+			lem = NULL;
+			sat->csm_vhfto_lm_vhfconnector.Disconnect();
 		}
 	}
-
-	if (!isLem)
+	else
 	{
-		lem = NULL;
-		sat->csm_vhfto_lm_vhfconnector.Disconnect();
-	}
-	//
-
-	if (!lem)
-	{
-		VESSEL *lm = sat->agc.GetLM(); 
-		if (lm) {
-			lem = (static_cast<LEM*>(lm)); 
-		}
+		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
 
 	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo && lem)
@@ -1691,26 +1688,27 @@ void VHFRangingSystem::TimeStep(double simdt)
 		return;
 	}
 
-	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
-	bool isLem = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	if (lem)
 	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (utils::IsVessel(pVessel, utils::LEM))
+		//this block of code checks to see if the LEM has somehow been deleted mid scenerio, and sets the lem pointer to null
+		bool isLem = false;
+
+		for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
 		{
-			isLem = true;
+			OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+			if (lem == pVessel)
+			{
+				isLem = true;
+			}
+		}
+
+		if (!isLem)
+		{
+			lem = NULL;
 		}
 	}
-
-	if (!isLem)
-	{
-		lem = NULL;
-	}
-	//
-
-	if (!lem)
+	else
 	{
 		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
@@ -2429,7 +2427,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 113:		// SCI EXP #9
 							return(scale_data(0,0,100));
 						case 114:		// H2O DUMP TEMP
-							return(scale_data(0,0,100));
+							return(scale_data(sat->WasteH2ODumpTempSensor.Voltage(), 0.0, 5.0));
 						case 115:		// SCI EXP #10
 							return(scale_data(0,0,100));
 						case 116:		// SCI EXP #11
@@ -2478,7 +2476,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 134:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 135:		// URINE DUMP NOZZLE TEMP
-							return(scale_data(0,0,100));
+							return(scale_data(sat->UrineDumpTempSensor.Voltage(), 0.0, 5.0));
 						case 136:		// SM ENG PKG A TEMP
 							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));
@@ -2582,9 +2580,9 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
 							return(scale_data(rcsStatus.PropellantPressurePSI, 0, 300));
 						case 29:		// FC 1 N2 PRESS
-							return(scale_data(0,0,75));
+							return(scale_data(sat->FCN2PressureSensor1.Voltage(), 0.0, 5.0));
 						case 30:		// FC 2 N2 PRESS
-							return(scale_data(0,0,75));
+							return(scale_data(sat->FCN2PressureSensor2.Voltage(), 0.0, 5.0));
 						case 31:		// FU/OX VLV 1 POS
 							return(scale_data(0,0,90));
 						case 32:		// FU/OX VLV 2 POS
@@ -2594,7 +2592,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 34:		// FU/OX VLV 4 POS
 							return(scale_data(0,0,90));
 						case 35:		// FC 3 N2 PRESS
-							return(scale_data(0,0,75));
+							return(scale_data(sat->FCN2PressureSensor3.Voltage(), 0.0, 5.0));
 						case 36:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 37:		// SUIT-CABIN DELTA PRESS
@@ -2678,23 +2676,17 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 76:		// FC 1 CUR
 							return scale_data(sat->sce.GetVoltage(1, 4), 0.0, 5.0);
 						case 77:		// FC 1 H2 FLOW
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor1.Voltage(), 0, 5.0);
 						case 78:		// FC 2 H2 FLOW
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor2.Voltage(), 0, 5.0);
 						case 79:		// FC 3 H2 FLOW
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor3.Voltage(), 0, 5.0);
 						case 80:		// FC 1 O2 FLOW
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor1.Voltage(), 0, 5.0);
 						case 81:		// FC 2 O2 FLOW
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor2.Voltage(), 0, 5.0);
 						case 82:		// FC 3 O2 FLOW
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor3.Voltage(), 0, 5.0);
 						case 83:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 84:		// FC 2 CUR

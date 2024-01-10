@@ -488,6 +488,15 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	FCH2PressureSensor1("FuelCell1-H2-Press-Sensor", 0.0, 75.0),
 	FCH2PressureSensor2("FuelCell2-H2-Press-Sensor", 0.0, 75.0),
 	FCH2PressureSensor3("FuelCell3-H2-Press-Sensor", 0.0, 75.0),
+	FCN2PressureSensor1("FuelCell1-N2-Press-Sensor", 0.0, 75.0),
+	FCN2PressureSensor2("FuelCell2-N2-Press-Sensor", 0.0, 75.0),
+	FCN2PressureSensor3("FuelCell3-N2-Press-Sensor", 0.0, 75.0),
+	FCO2FlowSensor1("FuelCell1-O2-Flow-Sensor", 0.0, 1.6),
+	FCO2FlowSensor2("FuelCell2-O2-Flow-Sensor", 0.0, 1.6),
+	FCO2FlowSensor3("FuelCell3-O2-Flow-Sensor", 0.0, 1.6),
+	FCH2FlowSensor1("FuelCell1-H2-Flow-Sensor", 0.0, 0.2),
+	FCH2FlowSensor2("FuelCell2-H2-Flow-Sensor", 0.0, 0.2),
+	FCH2FlowSensor3("FuelCell3-H2-Flow-Sensor", 0.0, 0.2),
 	CabinPressSensor("Cabin-Press-Sensor", 0.0, 17.0),
 	ECSPressGroups1Feeder("ECS-Press-Groups1-Feeder", Panelsdk),
 	ECSPressGroups2Feeder("ECS-Press-Groups2-Feeder", Panelsdk),
@@ -527,6 +536,9 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CMRCSEngine21TempSensor("CM-RCS-Engine-21-Sensor", -50.0, 50.0),
 	CMRCSEngine24TempSensor("CM-RCS-Engine-24-Sensor", -50.0, 50.0),
 	CMRCSEngine25TempSensor("CM-RCS-Engine-25-Sensor", -50.0, 50.0),
+	BatteryManifoldPressureSensor("Battery-Manifold-Pressure-Sensor", 0.0, 20.0),
+	WasteH2ODumpTempSensor("Waste-H2O-Dump-Temp-Sensor", 0.0, 100.0),
+	UrineDumpTempSensor("Urine-Dump-Temp-Sensor", 0.0, 100.0),
 	vesim(&cbCSMVesim, this),
 	CueCards(vcidx, this, 11)
 #pragma warning ( pop ) // disable:4355
@@ -662,7 +674,6 @@ void Saturn::initSaturn()
 	//
 	S1bPanel = false;
 
-	ABORT_IND = false;
 	LEM_DISPLAY=false;
 	ASTPMission = false;
 
@@ -1014,8 +1025,6 @@ void Saturn::initSaturn()
 	}
 
 	th_3rd[0] = 0;
-	th_3rd_lox = 0;
-	th_3rd_lh2 = 0;
 	th_sps[0] = 0;
 
 	/*for (i = 0; i < 2; i++)
@@ -1952,7 +1961,6 @@ int Saturn::GetMainState()
 	state.Scorrec = Scorrec;
 	state.Burned = Burned;
 	state.FireLEM = FireLEM;
-	state.ABORT_IND = ABORT_IND;
 	state.FireTJM = FireTJM;
 	state.viewpos = viewpos;
 	state.PayloadDataTransfer = PayloadDataTransfer;
@@ -1981,7 +1989,6 @@ void Saturn::SetMainState(int s)
 	Scorrec = state.Scorrec;
 	Burned = state.Burned;
 	FireLEM = state.FireLEM;
-	ABORT_IND = state.ABORT_IND;
 	FireTJM = state.FireTJM;
 	viewpos = state.viewpos;
 	PayloadDataTransfer = (state.PayloadDataTransfer != 0);
@@ -2822,6 +2829,11 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	secs.SetSaturnType(SaturnType);
 
 	//
+	// Give the vehicle number to S-IVB systems
+	//
+	if (sivb) sivb->SetVehicleNumber(VehicleNo);
+
+	//
 	// Realism Mode Settings
 	//
 
@@ -2871,11 +2883,11 @@ void Saturn::UpdatePayloadMass()
 		S4PL_Mass = 2012;
 		break;
 
-	case PAYLOAD_LTA:
+	case PAYLOAD_LTA10R:
 		S4PL_Mass = 13381;
 		break;
 
-	case PAYLOAD_LTA6:
+	case PAYLOAD_LTA2R:
 		S4PL_Mass = 11794;
 		break;
 
@@ -2883,7 +2895,7 @@ void Saturn::UpdatePayloadMass()
 		S4PL_Mass = 14360;
 		break;
 
-	case PAYLOAD_LTA8:
+	case PAYLOAD_LTAB:
 		S4PL_Mass = 9026;
 		break;
 
