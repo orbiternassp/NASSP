@@ -146,7 +146,8 @@ void LEM::SetLmVesselDockStage()
 {
 	ClearThrusterDefinitions();
 	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
-	SetSize (6);
+	if (oapiGetFocusObject() == GetHandle()) { SetSize(6); }
+	else { SetSize(visibilitySize); }
 	SetVisibilityLimit(1e-3, 4.6401e-4);
 	SetPMI(_V(2.5428, 2.2871, 2.7566));
 	SetCrossSections (_V(24.53,21.92,24.40));
@@ -210,7 +211,8 @@ void LEM::SetLmVesselDockStage()
 
 void LEM::SetLmVesselHoverStage()
 {
-	SetSize (7);
+	if (oapiGetFocusObject() == GetHandle()) { SetSize(7); }
+	else { SetSize(visibilitySize); }
 	SetVisibilityLimit(1e-3, 5.4135e-4);
 	SetPMI(_V(2.5428, 2.2871, 2.7566));
 	SetCrossSections (_V(24.53,21.92,24.40));
@@ -234,7 +236,8 @@ void LEM::SetLmAscentHoverStage()
 	//We have shifted everything to the center of the mesh. If currentCoG gets used by the ascent stage it will be updated on the next timestep
 	currentCoG = _V(0, 0, 0);
 	LastFuelWeight = numeric_limits<double>::infinity(); // Ensure update at first opportunity
-	SetSize (5);
+	if (oapiGetFocusObject() == GetHandle()) { SetSize(5); }
+	else { SetSize(visibilitySize); }
 	SetVisibilityLimit(1e-3, 3.8668e-4);
 	SetEmptyMass (AscentEmptyMassKg);
 	SetPMI(_V(2.8, 2.29, 2.37));

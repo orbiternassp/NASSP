@@ -809,7 +809,7 @@ void LEM::SystemsInit()
 	gasta.Init(this, &GASTA_DC_CB, &GASTA_AC_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:GASTAHEAT"), &imu);
 
 	//ORDEAL
-	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch, &ORDEALLightingSwitch);
 
 	//LM Mission Programer
 	lmp.Init(this);
@@ -1372,7 +1372,7 @@ void LEM::JoystickTimestep(double simdt)
 
 void LEM::SystemsInternalTimestep(double simdt)
 {
-	double mintFactor = __max(simdt / 20.0, 0.02);
+	double mintFactor = __max(simdt / 50.0, 0.02);
 	double tFactor = __min(mintFactor, simdt);
 	while (simdt > 0) {
 
@@ -1625,10 +1625,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//Suit Fan Heat
 	if (SuitFan1->pumping) {
-		SuitFan1Heat->GenerateHeat(163.0);
+		SuitFan1Heat->GenerateHeat(114.1); //70% of 163W
 	}
 	if (SuitFan2->pumping) {
-		SuitFan2Heat->GenerateHeat(163.0);
+		SuitFan2Heat->GenerateHeat(114.1); //70% of 163W
 	}
 
 	//Seq Camera Power/Heat
@@ -1672,6 +1672,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	{
 		GlycolPumpSound.stop();
 	}
+	
 	/*
 	// Debug tests //
 
@@ -1682,8 +1683,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "InPanel %d InVC %d ExtView %d InFOV %d", InPanel, InVC, ExtView, InFOV);
 
 	//ECS Debug Lines//
-
-	/*
+	
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1751,22 +1751,29 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	double *CabinMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *CabinPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
+	
 	double *CabinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
-
+	double *CabinStructureTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINSTRUCTURE:TEMP");
+	
 	int *suitGasDiverterCabinVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:OUT:ISOPEN");
 	double *suitGasDiverterCabinFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTERCABINOUT:FLOW");
+	double * suitGasDiverterCO2ManifoldFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTEREGRESSOUT:FLOW");
 
 	int *suitGasDiverterEgressVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:OUT2:ISOPEN");
 
 	int *cabinGasReturnVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CO2CANISTERMANIFOLD:LEAK:ISOPEN");
 	double *cabinGasReturnFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINGASRETURN:FLOW");
+	double *CDRSuitFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITISOL:FLOW");
+	double *LMPSuitFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITISOL:FLOW");
 
 	int *primCO2InVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER:IN:ISOPEN");
 	int *primCO2OutVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER:OUT:ISOPEN");
 	int *secCO2InVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER:IN:ISOPEN");
 	int *secCO2OutVLV = (int*)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER:OUT:ISOPEN");
 	double *primCO2CanisterPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER:PRESS");
+	double* primCO2CanisterTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER:TEMP");
 	double *secCO2CanisterPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER:PRESS");
+	double* secCO2CanisterTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER:TEMP");
 	double *primCO2CanisterMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER:MASS");
 	double *secCO2CanisterMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER:MASS");
 	int *primCO2Vent = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMCO2CANISTER:OUT2:ISOPEN");
@@ -1776,8 +1783,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	double* suitfanmanifoldinPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLDIN:PRESS");
 	double *suitfanmanifoldoutPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLDOUT:PRESS");
+	double* suitfanmanifoldinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLDIN:TEMP");
+	double* suitfanmanifoldoutTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLDOUT:TEMP");
 	double *hxheatingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:PRESS");
+	double* SuitFanOutFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLDOUTPIPE:FLOW");
+	
 	double *hxheatingTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:TEMP");
+	
 	double *hxheatingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:MASS");
 	double *hxheatingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEAT:POWER");
 	double *SGDPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:PRESS");
@@ -1791,6 +1803,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *WSMinPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLDIN:PRESS");
 	double *WSMinTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLDIN:TEMP");
 	double* WSMoutPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLDOUT:PRESS");
+	double* WSMoutTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLDOUT:TEMP");
 
 	double *desO2burstflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2BURSTDISK:FLOW");
 	double *desO2reliefflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESO2PRESSURERELIEFVALVE:FLOW");
@@ -1845,12 +1858,15 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	int *primwboutvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMWATERBOILER:OUT:ISOPEN");
 
 	double *primloop1mass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP1:MASS");
+	
 	double *primloop1temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP1:TEMP");
+	
 	double *primloop1press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP1:PRESS");
 	double *primloop2mass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP2:MASS");
+	
 	double *primloop2temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP2:TEMP");
-	double *primloop2press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP2:PRESS");
-
+	//double *primloop2press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP2:PRESS");
+	
 	double *primevapinmass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:MASS");
 	double *primevaptempin = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:TEMP");
 	double *primevapinpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:PRESS");
@@ -1986,9 +2002,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* GASTARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-GASTA-Plate:TEMP");
 	double* LCARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-LCA-Plate:TEMP");
 	double* DSERad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-DSE-Plate:TEMP");
+	
 	double* ASARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LEM-ASA-HSink:TEMP");
+	
 	double* PTARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-PTA-Plate:TEMP");
+	
 	double* IMURad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-IMU-Case:TEMP");
+	
 	double* RGARad = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-RGA-Plate:TEMP");
 	
 	//Prim Loop 2 Heat
@@ -2076,8 +2096,25 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* edbatBtemp = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B:TEMP");
 	double* edbatBheat = (double*)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B:HEAT");
 	double* edbatBHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:EDBATBHX:POWER");
-	*/
 
+	//ASA
+	
+	double* ASAFastHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FastHeater:ISON");
+	double* ASAFineHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FineHeater:ISON");
+	
+	double* ASAPrimHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMASAGLYCOLHX:POWER");
+	double* ASASecHX = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SECASAGLYCOLHX:POWER");
+	
+	double* ASASelfHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:ASAHEAT:HEAT");
+	
+	
+	//IMU
+	double* IMUHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LM-IMU-Heater:ISON");
+	
+	double* ASAFineHtrPWM = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FineHeater:PWMCYC");
+	
+	//sprintf(oapiDebugString(), "Cabin T: %.4f Suit T: %.4f Loop T: %.4f ASA T: %.4f ASASelfHEat W: %.4f FastHtr: %1f FineHtr: %1f FineHtrPWM: %.4f IMUHtr: %1f IMU T: %.4f", KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*hxheatingTemp), 
+		//KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*ASARad), *ASASelfHeat, *ASAFastHtr, *ASAFineHtr, *ASAFineHtrPWM, *IMUHtr, KelvinToFahrenheit(*IMURad));
 	//sprintf(oapiDebugString(), "CFM T: %lf HX: %lf Out: %lf", KelvinToFahrenheit(*CabinFanManifoldTemp), *CabinFanManifoldHX, *CabinFanManifoldOutFlow* LBH);
 
 	//sprintf(oapiDebugString(), "B1T %.3f B2T %.3f B3T %.3f B4T %.3f DGT %.3f B5T %.3f B6T %.3f B5PT %.3f B6PT %.3f AGT %.3f EDA %.3f EDB %.3f", KelvinToFahrenheit(*bat1temp), KelvinToFahrenheit(*bat2temp), KelvinToFahrenheit(*bat3temp), KelvinToFahrenheit(*bat4temp), KelvinToFahrenheit(*desbatglycoltemp), KelvinToFahrenheit(*bat5temp), KelvinToFahrenheit(*bat6temp), KelvinToFahrenheit(*bat5platetemp), KelvinToFahrenheit(*bat6platetemp), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*edbatAtemp), KelvinToFahrenheit(*edbatBtemp));
@@ -2085,7 +2122,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Primary Glycol Heat 1 %lf Primary Glycol Heat 2 %lf Cabin Heat %lf Battery Heat %lf", (*LGCHeat + *CDUHeat + *PSAHeat + *TLEHeat + *GASTAHeat + *LCAHeat + *DSEHeat + *ASAHeat + *PTAHeat + *IMUHeat + *RGAHeat), (*SBPHeat + *SBXHeat + *SPHeat + *AEAHeat + *ATCAHeat + *SCERAHeat + *CWEAHeat + *RREHeat + *VHFHeat + *INVHeat + *ECAHeat + *PCMHeat), *CabinHeat, (*bat1heat+*bat2heat+*bat3heat+*bat4heat+*bat5heat+*bat6heat+*edbatAheat+*edbatBheat));
 
-	//sprintf(oapiDebugString(), "SCT %lf SCF %lf CT %lf SGDF %lf SGDT %lf GRVF %lf CO2MT %lf GlyCT %lf HXCT %lf HXCPwr %lf GlyHT %lf HXHT %lf HXHPwr %lf", KelvinToFahrenheit(*SuitCircuitTemp), *SuitCircuitOutFlow*LBH, KelvinToFahrenheit(*CabinTemp), *suitGasDiverterCabinFlow*LBH, KelvinToFahrenheit(*SGDTemp), *cabinGasReturnFlow*LBH, KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower);
+	//sprintf(oapiDebugString(), "SCT %.4f SCF %.4f CT %.4f SGDF %.4f SGDT %.4f GRVF %.4f CO2MT %.4f GlyCT %.4f HXCT %.4f HXCPwr %.4f GlyHT %.4f HXHT %.4f HXHPwr %.4f", KelvinToFahrenheit(*SuitCircuitTemp), *SuitCircuitOutFlow*LBH, KelvinToFahrenheit(*CabinTemp), *suitGasDiverterCabinFlow*LBH, KelvinToFahrenheit(*SGDTemp), *cabinGasReturnFlow*LBH, KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower);
 	//sprintf(oapiDebugString(), "SGDP %lf SGDV %d SGDF %lf CabP %lf GRV %d GRVF %lf CO2MP %lf", *SGDPress* PSI, *suitGasDiverterCabinVLV, *suitGasDiverterCabinFlow*LBH, *CabinPress* PSI, *gasreturnvlv, *cabinGasReturnFlow*LBH, *CO2ManifoldPress* PSI);
 
 	//sprintf(oapiDebugString(), "LGC %.2f CDU %.2f PSA %.2f GAS %.2f LCA %.2f DSE %.2f TLE %.2f ASA %.2f PTA %.2f IMU %.2f RGA %.2f CT %.2f CR %.2f HX1 %.2f HX2 %.2f", KelvinToFahrenheit(*LGCRad), KelvinToFahrenheit(*CDURad), KelvinToFahrenheit(*PSARad), KelvinToFahrenheit(*GASTARad), KelvinToFahrenheit(*LCARad), KelvinToFahrenheit(*DSERad), KelvinToFahrenheit(*TLERad), KelvinToFahrenheit(*ASARad), KelvinToFahrenheit(*PTARad), KelvinToFahrenheit(*IMURad), KelvinToFahrenheit(*RGARad), KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*CabinPlate), *CabinHX1, *CabinHX2);
@@ -2100,13 +2137,15 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "GlyCTmp %lf HXCTmp %lf HXCPwr %lf GlyHTmp %lf HXHTmp %lf HXHPwr %lf CT %lf LT %lf", KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*cdrsuittemp), KelvinToFahrenheit(*lmpsuittemp));
 	//sprintf(oapiDebugString(), "CO2CP %lf SFMP %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf SC Mass: %lf", *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval, (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldMass + *hxcoolingMass));
 	//sprintf(oapiDebugString(), "Total: %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf RV %d RVF %lf", (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldoutMass + *hxcoolingMass), *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2CanisterMass, *suitfanmanifoldMass, *hxcoolingMass, *suitReliefvlv, *suitReliefflow*LBH);
-	//sprintf(oapiDebugString(), "HXH %lf CS %lf LS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf WSM %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *hxcoolingPress*PSI, *WSMPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval);
+	//sprintf(oapiDebugString(), "HXH %lf CS %lf LS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *hxcoolingPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval);
 	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf OVHDFLOW %lf OVHDFLOWMAX %lf OVHDSIZE %f TUNNELPRESS %lf TUNNELFLOW %lf", ecs.GetCabinPressurePSI(), (*SuitCircuitPress)*PSI, *ovhdHatchFlow*LBH, *ovhdHatchFlowmax*LBH, *ovhdHatchSize, *lmtunnelpress*PSI, *lmtunnelflow*LBH);
 
-	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf", *hxheatingPress* PSI, *cdrsuitpress* PSI, *lmpsuitpress* PSI, *SuitCircuitPress* PSI, *SGDPress* PSI, *CO2ManifoldPress* PSI, *primCO2CanisterPress* PSI, *suitfanmanifoldinPress* PSI, *suitfanmanifoldoutPress* PSI, *hxcoolingPress* PSI, *WSMinPress* PSI, *WSMoutPress* PSI);
+	///sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf SFF %lf CDRF %lf LMPF %lf", *hxheatingPress* PSI, *cdrsuitpress* PSI, *lmpsuitpress* PSI, *SuitCircuitPress* PSI, *SGDPress* PSI, *CO2ManifoldPress* PSI, *primCO2CanisterPress* PSI, *suitfanmanifoldinPress* PSI, *suitfanmanifoldoutPress* PSI, *hxcoolingPress* PSI, *WSMinPress* PSI, *WSMoutPress* PSI, *SuitFanOutFlow*LBH, *CDRSuitFlow *LBH, *LMPSuitFlow*LBH);
+	sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf SFF %lf CDRF %lf LMPF %lf", KelvinToFahrenheit(*hxheatingTemp) , KelvinToFahrenheit(*cdrsuittemp), KelvinToFahrenheit(*lmpsuittemp), KelvinToFahrenheit(*SuitCircuitTemp), KelvinToFahrenheit(*SGDTemp), KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*primCO2CanisterTemp), KelvinToFahrenheit(*suitfanmanifoldinTemp), KelvinToFahrenheit(*suitfanmanifoldoutTemp), KelvinToFahrenheit(*hxcoolingTemp), KelvinToFahrenheit(*WSMinTemp), KelvinToFahrenheit(*WSMoutTemp), *SuitFanOutFlow*LBH, *CDRSuitFlow *LBH, *LMPSuitFlow*LBH);
 	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf CO2F %lf CO2REM %lf GRV %d", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *hxcoolingPress*PSI, *primCO2Flow, *primCO2Removal, *gasreturnvlv);
 	//sprintf(oapiDebugString(), "CAB %lf RVF %lf RVFM %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf", *CabinMass, *suitReliefflow, *suitReliefflowmax, *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2Mass, *suitfanmanifoldoutMass, *hxcoolingMass);
-	
+	//sprintf(oapiDebugString(), "Diverter: Flow to Cabin %lf, Flow to Co2Manifold %lf", *suitGasDiverterCabinFlow * LBH, *suitGasDiverterCO2ManifoldFlow * LBH);
+
 	//sprintf(oapiDebugString(), "CAB %lf RVF %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf", *CabinMass, *suitReliefflow, *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *hxcoolingPress*PSI);
 
 	//sprintf(oapiDebugString(), "SBD: T %lf H %lf RR: T %lf SH %lf H %lf LR: T %lf H %lf", KelvinToFahrenheit(*SBDTemp), *SBDHtr, KelvinToFahrenheit(*RRTemp), *RRStbyHtr, *RRHtr, KelvinToFahrenheit(*LRTemp), *LRHtr);
@@ -2123,6 +2162,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "P1 %lf P2 %lf Reg1 %lf WGHX %lf SHX %lf SHXBP %lf", *Pump1OutFlow*LBH, *Pump2OutFlow*LBH, *primGlyReg1Flow*LBH, *waterGlyHXFlow*LBH, *suitHXGlyFlow*LBH, *suitHXGlyBypassFlow*LBH);
 	//sprintf(oapiDebugString(), "AT %.3f PT %.3f GCT %.3f SCT %.3f HXCP %.3f L1 %.3f HXT %.3f L2 %.3f GHT %.3f SHT %.3f HXHP %.3f EI %.3f EO %.3f A %.3f D %.3f", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolpumpmanifoldtemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*waterglycolhxtemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*primevaptempin), KelvinToFahrenheit(*primevaptempout), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*desbatglycoltemp));
 	
+	//sprintf(oapiDebugString(), "Cabin: %.3f°F Cabin Structure: %.3f°F Primary Glycol Loop %.3f°F ASA: %.3f°F ASAPWM %lf", KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*CabinStructureTemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*ASARad), *ASAFineHtrPWM);
+																											
 	//sprintf(oapiDebugString(), "LCG %lf SEC %lf", LCGPump->Voltage(), SecGlyPump->Voltage());
 	//sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
 	//sprintf(oapiDebugString(), "PRAQ %lf PRAP %lf PRAT %lf PRBQ %lf PRBP %lf PRBT %lf", *PressRegAMass, (*PressRegAPress)*PSI, (*PressRegATemp)* 1.8 - 459.67, *PressRegBMass, (*PressRegBPress)*PSI, (*PressRegBTemp)* 1.8 - 459.67);
@@ -2147,7 +2188,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "DO2Q %lf DO2P %lf DO2T %lf DO2VM %lf DO2E %lf DO2PP %lf", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
 	//sprintf(oapiDebugString(), "DO2TP %lf DO2MP %lf O2MP %lf PREGA %lf SUITP %lf", ecs.DescentOxyTankPressurePSI(), (*DESO2ManifoldPress*PSI), (*O2ManifoldPress*PSI), (*PressRegAPress*PSI), ecs.GetSuitPressurePSI());
 	//sprintf(oapiDebugString(), "DO2TP %lf DO2TM %lf DO2MP %lf DO2MM %lf O2MP %lf O2MM %lf DESO2 %d ASCO21 %d ASCO22 %d", ecs.DescentOxyTankPressurePSI(), ecs.DescentOxyTankQuantity(), (*DESO2ManifoldPress*PSI), *DESO2ManifoldMass, (*O2ManifoldPress*PSI), *O2ManifoldMass, *deso2manifoldoutvlv, *asco2out1vlv, *asco2out2vlv);
-
+	
 
 	/*
 	double CDRAmps=0,LMPAmps=0;
@@ -2407,406 +2448,6 @@ void LEM::CreateMissionSpecificSystems()
 }
 
 // SYSTEMS COMPONENTS
-
-// Landing Radar
-LEM_LR::LEM_LR()
-{
-	lem = NULL;
-	lrheat = 0;
-	antennaAngle = 24; // Position 1
-}
-
-void LEM_LR::Init(LEM *s,e_object *dc_src, h_Radiator *ant, Boiler *anheat, h_HeatLoad *hl){
-	lem = s;
-	// Set up antenna.
-	// LR antenna is designed to operate between 0F and 185F
-	// The heater switches on if the temperature gets below +55F and turns it off again when the temperature reaches +70F
-	// Values in the constructor are name, pos, vol, isol
-	antenna = ant;
-	antheater = anheat;
-	lrheat = hl;
-	antenna->isolation = 0.00001;
-	antenna->Area = 1250; // 1250 cm
-	if(lem != NULL){
-		antheater->WireTo(&lem->HTR_LR_CB);
-	}
-	// Attach power source
-	dc_source = dc_src;
-	// Clear flags
-	range = 0;
-	rate[0] = rate[1] = rate[2] = 0;
-	rangeGood = 0;
-	velocityGood = 0;
-}
-
-// Are we on?
-bool LEM_LR::IsPowered()
-
-{
-	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE || lem->stage > 1) { 
-		return false;
-	}
-	return true;
-}
-
-void LEM_LR::GetRangeLGC()
-{
-	if (!IsPowered()) return;
-
-	// High range is 5.395 feet per count
-	// Low range is 1.079 feet per count
-	if (range >= 2500.0) {
-		// Hi Range
-		lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 5.395);
-	}
-	else {
-		// Lo Range
-		lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 1.079);
-	}
-}
-
-void LEM_LR::GetVelocityXLGC()
-{
-	if (!IsPowered()) return;
-
-	// 12288 COUNTS = -000000 F/S
-	// SIGN REVERSED
-	// 0.643966 F/S PER COUNT
-	lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 - (rate[0] / 0.643966));
-}
-
-void LEM_LR::GetVelocityYLGC()
-{
-	if (!IsPowered()) return;
-
-	// 12288 COUNTS = +000000 F/S
-	// 1.211975 F/S PER COUNT
-	lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[1] / 1.211975));
-}
-
-void LEM_LR::GetVelocityZLGC()
-{
-	if (!IsPowered()) return;
-
-	// 12288 COUNTS = +00000 F/S
-	// 0.866807 F/S PER COUNT
-	lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(12288.0 + (rate[2] / 0.866807));
-}
-
-double LEM_LR::GetAltTransmitterPower()
-{
-	if (!IsPowered())
-	{
-		return 0;
-	}
-
-	return 3.0;
-}
-
-double LEM_LR::GetVelTransmitterPower()
-{
-	if (!IsPowered())
-	{
-		return 0;
-	}
-
-	return 3.0;
-}
-
-void LEM_LR::Timestep(double simdt){
-	if(lem == NULL){ return; }
-	// char debugmsg[256];
-	ChannelValue val12;
-	ChannelValue val33;
-	val12 = lem->agc.GetInputChannel(012);
-	val33 = lem->agc.GetInputChannel(033);
-
-	if (IsPowered())
-	{
-		antheater->SetPumpOff();
-	}
-
-	else
-	{
-		antheater->SetPumpAuto();
-	}
-
-	if (!IsPowered() ) { 
-		// Clobber data.
-		bool clobber = FALSE;
-		if(val33[LRDataGood]){ clobber = TRUE; val33[LRDataGood] = 0; }
-		if(val33[LRVelocityDataGood]){ clobber = TRUE; val33[LRVelocityDataGood] = 0; }
-		if(val33[LRPos1]){ clobber = TRUE; val33[LRPos1] = 0; }
-		if(val33[LRPos2]){ clobber = TRUE; val33[LRPos2] = 0; }
-		if(val33[LRRangeLowScale] == 0){ clobber = TRUE; val33[LRRangeLowScale] = 1; }
-		if(clobber == TRUE){ lem->agc.SetInputChannel(033, val33); }
-		rangeGood = 0;
-		velocityGood = 0;
-		return;
-	}	
-
-	// The altimeter works up to 40,000 feet.
-	// The velocity data should be working by 24,000 feet.
-	// Velocity Z is forward, Velocity X is lateral, meaning Velocity Y must be vertical.
-	// Below 500 feet, the radar may lose lock due to zero doppler.
-	// Below 50 feet, the LGC starts ignoring the radar.
-
-	// Follow drive commands and use power
-	// The antenna takes 10 seconds to move, and draws 15 watts while doing so.
-	// The computer can command position 2, but it can't command position 1 from position 2.
-	if(val12[LRPositionCommand] == 1 || lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		if(antennaAngle != 0){
-			// Drive to Position 2
-			antennaAngle -= (2.4*simdt);
-			if(antennaAngle < 0){ antennaAngle = 0; }
-			dc_source->DrawPower(140);
-			// sprintf(oapiDebugString(),"LR CPos %d Pos %0.1f",val12.Bits.LRPositionCommand,antennaAngle);
-		}else{
-			// At position 2
-			dc_source->DrawPower(125);
-		}
-	}else{
-		if(lem->LandingAntSwitch.GetState() == THREEPOSSWITCH_CENTER && antennaAngle != 24){
-			// Drive to Position 1
-			antennaAngle += (2.4*simdt);
-			if(antennaAngle > 24){ antennaAngle = 24; }
-			dc_source->DrawPower(140);
-			// sprintf(oapiDebugString(),"LR CPos %d Pos %0.1f",val12.Bits.LRPositionCommand,antennaAngle);
-		}else{
-			// At position 1
-			dc_source->DrawPower(125);
-		}
-	}
-	// Maintain antenna angle discretes
-	// If at Pos 1
-	if(antennaAngle == 24){
-		// Light Pos 1
-		if(val33[LRPos1] == 0){
-			val33[LRPos1] = 1;
-			lem->agc.SetInputChannel(033, val33);
-		}
-	}else{
-		// Otherwise
-		// Clobber Pos 1 flag
-		if(val33[LRPos1] == 1){
-			val33[LRPos1] = 0;
-			lem->agc.SetInputChannel(033, val33);
-		}
-		// If at Pos 2
-		if(antennaAngle == 0){
-			// Light Pos 2
-			if(val33[LRPos2] == 0){
-				val33[LRPos2] = 1;
-				lem->agc.SetInputChannel(033, val33);
-			}
-		}else{
-			// Otherwise clobber Pos 2 flag
-			if(val33[LRPos2] == 1){
-				val33[LRPos2] = 0;
-				lem->agc.SetInputChannel(033, val33);
-			}
-		}
-	}
-
-	// Data Determination
-	if(lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_DOWN){
-		if (antennaAngle == 0) {
-			// Test Mode POS 2
-			// Drive to:
-			//
-			//
-			//
-			//
-			range = 8000;
-			rate[0] = -494;
-			rate[1] = 1861;
-			rate[2] = 1331;
-			rangeGood = 1;
-			velocityGood = 1;
-		}
-		else {
-			// Test Mode
-			// Drive to:
-			// Alt 8287 ft
-			// Vel -494,1861,1331 ft/sec
-			// on the LGC
-			// For some reason this should show up as 8000 ft and -480 fps on the alt/alt-rate monitor?
-			range = 8287;
-			rate[0] = -494;
-			rate[1] = 1861;
-			rate[2] = 1331;
-			rangeGood = 1;
-			velocityGood = 1;
-		}
-	}
-	else{
-		// Operate Mode
-		rangeGood = 0;
-		velocityGood = 0;
-
-		MATRIX3 Rot;
-		VECTOR3 pos, lrvec_glob, U_XAB, U_YAB, U_ZAB, U_RBA, U_RBB, U_RBB_lh;
-		OBJHANDLE gravref;
-		double alt, cos_ang, alpha, beta, dh;
-
-		//landing radar under CoG of LM
-		dh = 3.0;
-
-		//Gravity reference
-		gravref = lem->GetGravityRef();
-
-		//Altitude
-		alt = lem->GetAltitude(ALTMODE_GROUND) - dh;
-
-		//Rotation matrix
-		lem->GetRotationMatrix(Rot);
-
-		//state vector
-		lem->GetRelativePos(gravref, pos);
-
-		pos = pos*(length(pos) - dh) / length(pos);
-
-		//Radar Beams Orientation Subroutine
-		alpha = -6.0*RAD;
-		beta = -antennaAngle*RAD;
-
-		U_XAB = _V(cos(beta), sin(alpha)*sin(beta), -sin(beta)*cos(alpha));
-		U_YAB = _V(0, cos(alpha), sin(alpha));
-		U_ZAB = _V(sin(beta), -sin(alpha)*cos(beta), cos(beta)*cos(alpha));
-
-		U_RBA = _V(-cos(20.38*RAD), 0, -sin(20.38*RAD));
-
-		U_RBB = mul(_M(U_XAB.x, U_YAB.x, U_ZAB.x, U_XAB.y, U_YAB.y, U_ZAB.y, U_XAB.z, U_YAB.z, U_ZAB.z), U_RBA);
-
-		//Now Left handed. But also needs to change coordinate system differences
-		U_RBB_lh = _V(U_RBB.y, U_RBB.x, U_RBB.z);
-
-		//convert local LR vector to global frame.
-		lrvec_glob = mul(Rot, U_RBB_lh);
-
-		//Angle between local vertical and LR vector
-		cos_ang = dotp(unit(-pos), unit(lrvec_glob));
-
-		//Assumption: Moon is flat
-		range = alt / cos_ang / 0.3048;
-
-		//Doesn't point at the moon
-		if (range < 0)
-		{
-			range = 1000000.0;
-		}
-
-		if (range > 10.0 && range < 50000.0) //Arbitrary, goal is lock on at 40,000 feet altitude
-		{
-			rangeGood = 1;
-		}
-
-		//Now velocity data
-		VECTOR3 vel, vel_lh, vel_LR;
-
-		lem->GetGroundspeedVector(FRAME_LOCAL, vel_lh);
-
-		//In LM navigation base coordinates
-		vel = _V(vel_lh.y, vel_lh.x, vel_lh.z);
-
-		//Rotate to LR position
-		vel_LR = tmul(_M(U_XAB.x, U_YAB.x, U_ZAB.x, U_XAB.y, U_YAB.y, U_ZAB.y, U_XAB.z, U_YAB.z, U_ZAB.z), vel);
-
-		rate[0] = vel_LR.x / 0.3048;
-		rate[1] = vel_LR.y / 0.3048;
-		rate[2] = vel_LR.z / 0.3048;
-
-		if (range > 10.0 && range < 50000.0)
-		{
-			velocityGood = 1;
-		}
-
-		//sprintf(oapiDebugString(), "Alt: %f, Range: %f, Velocity: %f %f %f", alt/0.3048, range, rate[0], rate[1], rate[2]);
-	}
-
-	// Computer interface
-	/*
-	sprintf(debugmsg,"LR STATUS: ");
-	if(val12.Bits.LRPositionCommand != 0){ sprintf(debugmsg,"%s LRPos2",debugmsg); }
-	if(val13.Bits.RadarA != 0){ sprintf(debugmsg,"%s RadarA",debugmsg); }
-	if(val13.Bits.RadarB != 0){ sprintf(debugmsg,"%s RadarB",debugmsg); }
-	if(val13.Bits.RadarC != 0){ sprintf(debugmsg,"%s RadarC",debugmsg); }
-	if(val13.Bits.RadarActivity != 0){ sprintf(debugmsg,"%s RdrActy",debugmsg); }			
-	sprintf(oapiDebugString(),debugmsg);
-	*/
-
-	// Maintain discretes
-	// Range data good
-	if(rangeGood == 1 && val33[LRDataGood] == 0){ val33[LRDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
-	if(rangeGood == 0 && val33[LRDataGood] == 1){ val33[LRDataGood] = 0; lem->agc.SetInputChannel(033, val33);	}
-	// RANGE SCALE:
-	// C++ VALUE OF 1 = HIGH RANGE
-	// C++ VALUE OF 0 = LOW RANGE
-	// We switch from high range to low range at 2500 feet
-	// Range scale affects only the altimeter, velocity is not affected.
-	if((rangeGood == 1 && range < 2500) && val33[LRRangeLowScale] == 0){ val33[LRRangeLowScale] = 1; lem->agc.SetInputChannel(033, val33);	}
-	if((rangeGood == 0 || range > 2500) && val33[LRRangeLowScale] == 1){ val33[LRRangeLowScale] = 0; lem->agc.SetInputChannel(033, val33);	}
-	// Velocity data good
-	if(velocityGood == 1 && val33[LRVelocityDataGood] == 0){ val33[LRVelocityDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
-	if(velocityGood == 0 && val33[LRVelocityDataGood] == 1){ val33[LRVelocityDataGood] = 0; lem->agc.SetInputChannel(033, val33);	}
-
-	//sprintf(oapiDebugString(), "rangeGood: %d velocityGood: %d ruptSent: %d  RadarActivity: %d Position %f° Range: %f", rangeGood, velocityGood, ruptSent, val13[RadarActivity] == 1, antennaAngle, range);
-}
-
-void LEM_LR::SystemTimestep(double simdt)
-{
-	if (IsPowered())
-	{
-		lrheat->GenerateHeat(118);
-	}
-}
-
-void LEM_LR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-	oapiWriteLine(scn, start_str);
-	papiWriteScenario_double(scn, "RANGE", range);
-	papiWriteScenario_double(scn, "ANTENNAANGLE", antennaAngle);
-	oapiWriteScenario_int(scn, "RANGEGOOD", rangeGood);
-	oapiWriteScenario_int(scn, "VELOCITYGOOD", velocityGood);
-	papiWriteScenario_vec(scn, "RATE", _V(rate[0], rate[1], rate[2]));
-	oapiWriteLine(scn, end_str);
-}
-
-void LEM_LR::LoadState(FILEHANDLE scn,char *end_str){
-	char *line;
-	double dec = 0;
-	int end_len = strlen(end_str);
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, end_str, end_len))
-			return;
-		if (!strnicmp(line, "RANGE", 5)) {
-			sscanf(line + 5, "%lf", &dec);
-			range = dec;
-		}
-		if (!strnicmp(line, "ANTENNAANGLE", 12)) {
-			sscanf(line + 12, "%lf", &dec);
-			antennaAngle = dec;
-		}
-		if (!strnicmp(line, "RANGEGOOD", 9)) {
-			sscanf(line + 9, "%d", &rangeGood);
-		}
-		if (!strnicmp(line, "VELOCITYGOOD", 12)) {
-			sscanf(line + 12, "%d", &velocityGood);
-		}
-		if (!strnicmp(line, "RATE", 4)) {
-			sscanf(line + 4, "%lf %lf %lf", &rate[0], &rate[1], &rate[2]);
-		}
-	}
-}
-
-double LEM_LR::GetAntennaTempF(){
-	if (lem->stage < 2) {
-		return KelvinToFahrenheit(antenna->GetTemp());
-	}
-	else {
-		return KelvinToFahrenheit(0.0);
-	}
-}
 
 LEM_RadarTape::LEM_RadarTape()
 {
