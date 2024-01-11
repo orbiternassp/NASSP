@@ -638,6 +638,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	t_TPIguess = 0.0;
 
 	EMPUplinkNumber = 1;
+	EMPUplinkMaxNumber = 0;
 
 	LVDCLaunchAzimuth = 0.0;
 
@@ -1904,20 +1905,21 @@ void ARCore::AGCLiftoffTimeIncrementUplink(bool csm)
 	UplinkDataV70V73(true, csm);
 }
 
-void ARCore::ErasableMemoryFileLoad(int blocknum)
+void ARCore::ErasableMemoryFileRead()
 {
-	EMPDescription = EMPRope = "";
+	//Read description etc. from the file
+
+	EMPDescription = EMPRope = EMPErrorMessage = "";
+	EMPUplinkMaxNumber = 0;
 
 	std::ifstream file;
 	std::string line;
-
-	if (EMPUplinkNumber <= 0) return;
 
 	file.open(".\\Config\\ProjectApollo\\RTCC\\EMPs\\" + EMPFile + ".txt");
 
 	if (file.is_open() == false)
 	{
-		//Error
+		EMPErrorMessage = "Error: File not available";
 		return;
 	}
 
@@ -1928,6 +1930,46 @@ void ARCore::ErasableMemoryFileLoad(int blocknum)
 	//Get rope name
 	std::getline(file, line);
 	EMPRope = line;
+
+	//Read remaining number of lines
+
+	int num = 0;
+
+	while (std::getline(file, line))
+	{
+		num++;
+	}
+
+	if (num % 2 != 0)
+	{
+		EMPErrorMessage = "Error: Invalid loads";
+		return;
+	}
+	EMPUplinkMaxNumber = num / 2;
+}
+
+void ARCore::ErasableMemoryFileLoad(int blocknum)
+{
+	//Read actual load
+
+	EMPErrorMessage = "";
+
+	std::ifstream file;
+	std::string line;
+
+	if (EMPUplinkNumber <= 0) return;
+
+	file.open(".\\Config\\ProjectApollo\\RTCC\\EMPs\\" + EMPFile + ".txt");
+
+	if (file.is_open() == false)
+	{
+		EMPErrorMessage = "Error: File not available";
+		return;
+	}
+
+	//Skip two lines
+	std::getline(file, line);
+	std::getline(file, line);
 
 	int linenum = EMPUplinkNumber * 2 - 1;
 	int num = 0;
@@ -1941,7 +1983,7 @@ void ARCore::ErasableMemoryFileLoad(int blocknum)
 	}
 	if (num != linenum)
 	{
-		//Line not in file
+		EMPErrorMessage = "Error: Load not available";
 		file.close();
 		return;
 	}
@@ -1955,6 +1997,7 @@ void ARCore::ErasableMemoryFileLoad(int blocknum)
 	{
 		if (num != 2)
 		{
+			EMPErrorMessage = "Error: Invalid load";
 			file.close();
 			return;
 		}
@@ -1964,6 +2007,7 @@ void ARCore::ErasableMemoryFileLoad(int blocknum)
 	{
 		if (num != 1)
 		{
+			EMPErrorMessage = "Error: Invalid load";
 			file.close();
 			return;
 		}
@@ -1974,6 +2018,7 @@ void ARCore::ErasableMemoryFileLoad(int blocknum)
 	//Now look for the data
 	if (!std::getline(file, line))
 	{
+		EMPErrorMessage = "Error: Invalid load";
 		file.close();
 		return;
 	}
@@ -1989,7 +2034,11 @@ void ARCore::ErasableMemoryFileLoad(int blocknum)
 	num = sscanf(line.c_str(), "%o %o %o %o %o %o %o %o %o %o %o %o %o %o %o %o %o %o", &datatab[0], &datatab[1], &datatab[2], &datatab[3], &datatab[4], &datatab[5], &datatab[6], &datatab[7],
 		&datatab[8], &datatab[9], &datatab[10], &datatab[11], &datatab[12], &datatab[13], &datatab[14], &datatab[15], &datatab[16], &datatab[17]);
 
-	if (num == 0) return;
+	if (num == 0)
+	{
+		EMPErrorMessage = "Error: Invalid load";
+		return;
+	}
 
 	for (int i = 0; i < num; i++)
 	{

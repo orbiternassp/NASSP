@@ -125,6 +125,7 @@ public:
 	void TLANDUplink(void);
 	void AGCClockIncrementUplink(bool csm);
 	void AGCLiftoffTimeIncrementUplink(bool csm);
+	void ErasableMemoryFileRead();
 	void ErasableMemoryFileLoad(int blocknum);
 	void ErasableMemoryUpdateUplink(int blocknum);
 
@@ -326,8 +327,8 @@ public:
 
 	//Erasable Memory Programs
 	std::string EMPFile;
-	int EMPUplinkNumber;
-	std::string EMPDescription, EMPRope;
+	int EMPUplinkNumber, EMPUplinkMaxNumber;
+	std::string EMPDescription, EMPRope, EMPErrorMessage;
 
 	//NAV CHECK PAGE
 	AP7NAV navcheckpad;

@@ -2394,53 +2394,55 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(30 * W / 32, 1 * H / 32, "0275", 4);
 		}
 
+		skp->Text(1 * W / 2, 31 * H / 32, G->EMPErrorMessage.c_str(), G->EMPErrorMessage.size());
+
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		skp->Text(1 * W / 16, 2 * H / 14, G->EMPFile.c_str(), G->EMPFile.size());
-		sprintf(Buffer, "%d", G->EMPUplinkNumber);
+		sprintf(Buffer, "%d/%d", G->EMPUplinkNumber, G->EMPUplinkMaxNumber);
 		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(6 * W / 32, 8 * H / 32, "Description:", 12);
-		skp->Text(12 * W / 32, 8 * H / 32, G->EMPDescription.c_str(), G->EMPDescription.size());
+		skp->Text(6 * W / 32, 7 * H / 32, "Description:", 12);
+		skp->Text(12 * W / 32, 7 * H / 32, G->EMPDescription.c_str(), G->EMPDescription.size());
 
-		skp->Text(6 * W / 32, 9 * H / 32, "Rope:", 5);
-		skp->Text(12 * W / 32, 9 * H / 32, G->EMPRope.c_str(), G->EMPRope.size());
+		skp->Text(6 * W / 32, 8 * H / 32, "Rope:", 5);
+		skp->Text(12 * W / 32, 8 * H / 32, G->EMPRope.c_str(), G->EMPRope.size());
 
-		skp->Text(10 * W / 32, 11 * H / 32, "OID", 3);
-		skp->Text(15 * W / 32, 11 * H / 32, "FCT", 3);
+		skp->Text(10 * W / 32, 10 * H / 32, "OID", 3);
+		skp->Text(15 * W / 32, 10 * H / 32, "FCT", 3);
 
 		if (block->IsVerb72)
 		{
-			skp->Text(20 * W / 32, 11 * H / 32, "DSKY V72", 8);
+			skp->Text(20 * W / 32, 10 * H / 32, "DSKY V72", 8);
 		}
 		else
 		{
-			skp->Text(20 * W / 32, 11 * H / 32, "DSKY V71", 8);
+			skp->Text(20 * W / 32, 10 * H / 32, "DSKY V71", 8);
 		}
 		
 		for (int i = 1; i <= 024; i++)
 		{
 			sprintf(Buffer, "%02o", i);
-			skp->Text(10 * W / 32, (i + 11) * H / 32, Buffer, strlen(Buffer));
+			skp->Text(10 * W / 32, (i + 10) * H / 32, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(15 * W / 32, 12 * H / 32, "INDEX", 5);
+		skp->Text(15 * W / 32, 11 * H / 32, "INDEX", 5);
 		sprintf(Buffer, "%05o", block->Index);
-		skp->Text(20 * W / 32, 12 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(20 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
 
 		for (int i = 0; i <= 8; i++)
 		{
-			skp->Text(15 * W / 32, (13 + 2 * i) * H / 32, "ADD", 3);
+			skp->Text(15 * W / 32, (12 + 2 * i) * H / 32, "ADD", 3);
 
 			if (block->IsVerb72 == false) break;
 		}
 
-		for (int i = 0; i < 024; i++)
+		for (int i = 0; i < 19; i++)
 		{
 			if (block->Data[i].OctalData != 0x8000)
 			{
 				sprintf(Buffer, "%05o", block->Data[i].OctalData);
-				skp->Text(20 * W / 32, (i + 13) * H / 32, Buffer, strlen(Buffer));
+				skp->Text(20 * W / 32, (i + 12) * H / 32, Buffer, strlen(Buffer));
 			}
 
 			if (block->Data[i].EndOfDataFlag) break;

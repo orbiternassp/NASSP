@@ -1777,11 +1777,14 @@ bool GenericVectorInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message)
+void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message, void(ApolloRTCCMFD::*func)(void))
 {
 	void *data2;
 
 	tempData.sVal = val;
+	tempData.ptr = this;
+	tempData.func = func;
+
 	data2 = &tempData;
 
 	bool GenericStringInputBox(void *id, char *str, void *data);
@@ -1793,6 +1796,15 @@ bool GenericStringInputBox(void *id, char *str, void *data)
 	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
 
 	arr->sVal->assign(str);
+
+	if (arr->func)
+	{
+		ApolloRTCCMFD *ptr = arr->ptr;
+		void (ApolloRTCCMFD::*func)(void) = arr->func;
+
+		(ptr->*func)();
+	}
+
 	return true;
 }
 
@@ -6834,12 +6846,20 @@ void ApolloRTCCMFD::menuLunarLiftoffSaveInsertionSV()
 
 void ApolloRTCCMFD::menuSetEMPFileName()
 {
-	GenericStringInput(&G->EMPFile, "Enter EMP file name:");
+	GenericStringInput(&G->EMPFile, "Enter EMP file name:", &ApolloRTCCMFD::ErasableMemoryFileRead);
+}
+
+void ApolloRTCCMFD::ErasableMemoryFileRead()
+{
+	G->ErasableMemoryFileRead();
 }
 
 void ApolloRTCCMFD::menuSetEMPUplinkNumber()
 {
-	GenericIntInput(&G->EMPUplinkNumber, "Enter load number:");
+	if (G->EMPUplinkMaxNumber > 0)
+	{
+		GenericIntInput(&G->EMPUplinkNumber, "Enter load number:", NULL, 1, G->EMPUplinkMaxNumber);
+	}
 }
 
 void ApolloRTCCMFD::menuInitializeEMP()

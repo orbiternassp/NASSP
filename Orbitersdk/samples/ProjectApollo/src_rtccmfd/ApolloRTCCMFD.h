@@ -344,6 +344,7 @@ public:
 	void menuLunarLiftoffVVertInput();
 	void menuLunarLiftoffSaveInsertionSV();
 	void menuSetEMPFileName();
+	void ErasableMemoryFileRead();
 	void menuSetEMPUplinkNumber();
 	void menuInitializeEMP();
 	void set_EMPInit(char *str);
@@ -823,7 +824,7 @@ public:
 	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, int min = 1, int max = 0);
 	void GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0, void (ApolloRTCCMFD::*func)(void) = NULL);
-	void GenericStringInput(std::string *val, char* message);
+	void GenericStringInput(std::string *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);
 protected:
 	oapi::Font *font;
