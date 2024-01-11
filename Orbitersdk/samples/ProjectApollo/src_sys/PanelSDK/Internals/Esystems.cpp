@@ -254,7 +254,7 @@ void Socket::BroadcastDemision(ship_object* gonner)
 };
 //----------------------------------- FUEL CELL --------------------------------------
 
-FCell::FCell(char* i_name, int i_status, vector3 i_pos, h_Valve* o2, h_Valve* h2, h_Valve* waste, float r_watts)
+FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2, h_Valve* waste, float r_watts, h_Tank *N2)
 {
 	strcpy(name, i_name);
 	max_stage = 99;
@@ -268,6 +268,8 @@ FCell::FCell(char* i_name, int i_status, vector3 i_pos, h_Valve* o2, h_Valve* h2
 	O2_SRC = o2;
 	H2_SRC = h2;
 	H20_waste = waste;
+
+	N2_Blanket = N2;
 
 	outputImpedance = 0.0346667; //ohms
 
@@ -364,6 +366,9 @@ void FCell::Reaction(double dt)
 	O2_flowPerSecond = O2_flow / dt;
 	reaction = (H2_flow + O2_flow) / reactant; // % of reaction
 
+	O2_SRC->parent->BoilAllAndSetTemp(Temp);
+	H2_SRC->parent->BoilAllAndSetTemp(Temp);
+	
 	// flow from sources
 	if (H2_SRC->parent->space.composition[SUBSTANCE_H2].mass > 0.0)
 	{
@@ -391,6 +396,8 @@ void FCell::Reaction(double dt)
 	//take reactants from source
 	H2_SRC->parent->space.composition[SUBSTANCE_H2].mass -= H2_flow;
 	O2_SRC->parent->space.composition[SUBSTANCE_O2].mass -= O2_flow;
+
+	
 
 	// flow to output
 	h2o_volume.Void();
@@ -463,11 +470,21 @@ void FCell::UpdateFlow(double dt)
 
 	double loadResistance = 784.0 / (power_load); //<R_F>, 784 = (28.0V)^2 which is the voltage that DrawPower() expects. use this calculate the resistive load on the fuel cell
 
+	double O2Press = O2_SRC->parent->space.Press * 0.000145038 + 5.0;
+	double H2Press = H2_SRC->parent->space.Press * 0.000145038;
+
+	double pressureFactor = 0.0;
+	
+	if (O2Press > H2Press) {
+		pressureFactor = log(H2Press + 1.0) / (4.077537443905720) * (1.0 - exp((-0.111111111111111) * ((H2Press - O2Press) * (H2Press - O2Press))));
+	}
+
 	//use an iterative procedure to solve for voltage and current. Should converge in ~2-3 steps, see https://gist.github.com/n7275/46a399d648721367a2bead3a6c2ae9ff
 	int NumSteps = 0;
 	while (NumSteps < 10) //10 is an absolute maximum to prevent hangs, and really should never get much higher than ~6-7 during extream transients
 	{
 		Volts = A + B * Amperes + C * Amperes * Amperes + D * Amperes * Amperes * Amperes + E * Amperes * Amperes * Amperes * Amperes + F * Amperes * Amperes * Amperes * Amperes * Amperes;
+		Volts *= pressureFactor;
 
 		if (Volts > 36.58) {
 			Volts = 36.58;		//prevent unrealistic temperature runaway voltages ---> I will fix this by making voltage depend on H2 and O2 Pressure in the future...
@@ -483,10 +500,10 @@ void FCell::UpdateFlow(double dt)
 	power_load = Amperes * Volts; //recalculate power_load
 
 
-	/*if (!strcmp(name, "FUELCELL1"))
-	{
-	sprintf(oapiDebugString(), "Steps to Converge: %d", NumSteps);
-	}*/
+	//if (!strcmp(name, "FUELCELL1"))
+	//{
+	//	sprintf(oapiDebugString(), "Pressure Factor: %lf", pressureFactor);
+	//}
 
 	/*	voltage divider schematic
 
@@ -573,11 +590,12 @@ void FCell::Save(FILEHANDLE scn)
 //-------------------------------------- BATTERY ---------------------------------
 //
 
-Battery::Battery(char* i_name, e_object* i_src, double i_power, double i_voltage, double i_resistance)
+Battery::Battery(char* i_name, e_object* i_src, double i_power, double i_voltage, double i_resistance, h_Tank* i_tgt)
 {
 	strcpy(name, i_name);
 	max_stage = 99;
 	SRC = i_src;
+	batcase = i_tgt;
 
 	internal_resistance = i_resistance;
 	max_voltage = i_voltage;
@@ -694,6 +712,15 @@ void Battery::refresh(double dt)
 		power += p * dt;
 
 		thermic(chargeheat * dt); //1 joule = 1 watt * dt
+
+		if (!batcase) return;
+
+		double h2 = (SRC->Current() * 0.000001 * dt);
+		double o2 = (SRC->Current() * 0.0000005 * dt);
+		batcase->space.composition[SUBSTANCE_H2].mass += h2;
+		batcase->space.composition[SUBSTANCE_O2].mass += o2;
+		batcase->space.composition[SUBSTANCE_H2].vapor_mass += h2;
+		batcase->space.composition[SUBSTANCE_O2].vapor_mass += o2;
 	}
 }
 
@@ -1437,8 +1464,8 @@ void AtmRegen::Save(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "    <ATMREGEN> ", cbuf);
 }
 
-Boiler::Boiler(char* i_name, int i_pump, e_object* i_src, double heat_watts, double electric_watts,
-	int i_type, double i_valueMin, double i_valueMax, therm_obj* i_target) {
+Boiler::Boiler(char *i_name, int i_pump, e_object *i_src, double heat_watts, double electric_watts,
+		   int i_type, double i_valueMin, double i_valueMax, therm_obj *i_target, bool isramp, double boilerRampRate) {
 
 	strcpy(name, i_name);
 	max_stage = 99;
@@ -1452,7 +1479,7 @@ Boiler::Boiler(char* i_name, int i_pump, e_object* i_src, double heat_watts, dou
 		Amperes = 0;
 	}
 
-	boiler_power = heat_watts;
+	max_boiler_power = heat_watts;
 	boiler_electrical_power = electric_watts;
 	type = i_type;
 	target = i_target;
@@ -1461,6 +1488,11 @@ Boiler::Boiler(char* i_name, int i_pump, e_object* i_src, double heat_watts, dou
 	valueMax = i_valueMax;
 	handleMin = 0;
 	handleMax = 0;
+
+	pwmThrotle = 1.0;
+	ramp = isramp;
+	rampRate = boilerRampRate;
+	boiler_output_power = 0.0;
 }
 
 double Boiler::Current()
@@ -1468,15 +1500,17 @@ double Boiler::Current()
 	if (pumping && SRC) {
 		double v = SRC->Voltage();
 		if (v) {
-			return boiler_power / v;
+			return max_boiler_power / v;
 		}
 	}
 
 	return 0.0;
 }
 
-void Boiler::refresh(double dt)
+void Boiler::refresh(double dt) 
 {
+	pwmThrotle = 1.0; //reset each timestep.
+
 	if (h_pump > 0) { //on auto
 		if (type == 0) { // TEMP
 			if ((target->Temp < valueMin) && (!pumping))
@@ -1498,25 +1532,54 @@ void Boiler::refresh(double dt)
 			if ((target->Temp < valueMax) && (pumping))
 				pumping = 0;
 		}
+		else if (type == 3) { // PWM TEMP
+			if ((target->Temp < valueMax) && (!pumping))
+				pumping = 1;
+			if ((target->Temp > valueMax) && (pumping))
+				pumping = 0;
+
+			pwmThrotle = 1 - ((target->Temp - valueMin) / (valueMax - valueMin));
+			
+			if (pwmThrotle < 0.0) { pwmThrotle = 0.0; }
+			else if (pwmThrotle > 1.0) { pwmThrotle = 1.0; }
+		}
 	}
 	else if (h_pump < 0)
 		pumping = 1; //force manual on
 	else
 		pumping = 0;
 
+	if (ramp) {
+		double rampFactor = 1 - exp(-dt / rampRate);
+
+		if (boiler_output_power < max_boiler_power && pumping) {
+			boiler_output_power += (max_boiler_power - boiler_output_power) * rampFactor;
+		}
+		else {
+			boiler_output_power -= boiler_output_power * rampFactor;
+		}
+	}
+	else {
+		boiler_output_power = max_boiler_power;
+	}
+
+	//Testing
+	//if (!strcmp(name, "LEM-ASA-FineHeater")) {
+	//	sprintf(oapiDebugString(),"%lf %lf %lf %lf %d", pwmThrotle, target->Temp, valueMin, valueMax, type);
+	//}
+
 	if (pumping && SRC) {
 		if (SRC->Voltage() < SP_MIN_DCVOLTAGE) { //or unload if no power.
 			pumping = 0;
 			return;
 		}
-		SRC->DrawPower(boiler_electrical_power);
+		SRC->DrawPower(boiler_electrical_power * pwmThrotle);
 		if (type == 2) {
-			target->thermic(-boiler_power * dt); //cooling (1 joule = 1 watt * dt)
+			target->thermic(-boiler_output_power * dt); //cooling (1 joule = 1 watt * dt)
 		}
 		else
-			target->thermic(boiler_power * dt); //heating (1 joule = 1 watt * dt)
-	}
-	else {
+			target->thermic(boiler_output_power * pwmThrotle * dt); //heating (1 joule = 1 watt * dt)
+	} else {
 		pumping = 0;
 	}
 
@@ -1528,14 +1591,14 @@ void Boiler::refresh(double dt)
 
 void Boiler::Load(char* line)
 {
-	sscanf(line, "    <BOILER> %s %i %i %lf %lf %lf %lf %lf", name, &h_pump, &loaded, &pumping, &valueMin, &valueMax, &boiler_power, &boiler_electrical_power);
+	sscanf(line,"    <BOILER> %s %i %i %lf %lf %lf %lf %lf %lf", name, &h_pump, &loaded, &pumping, &valueMin, &valueMax, &max_boiler_power, &boiler_electrical_power, &boiler_output_power);
 }
 
 void Boiler::Save(FILEHANDLE scn)
 {
-	char cbuf[1000];
-	sprintf(cbuf, "%s %i %i %lf %lf %lf %lf %lf", name, h_pump, loaded, pumping, valueMin, valueMax, boiler_power, boiler_electrical_power);
-	oapiWriteScenario_string(scn, "    <BOILER> ", cbuf);
+    char cbuf[1000];
+	sprintf (cbuf, "%s %i %i %lf %lf %lf %lf %lf %lf", name, h_pump, loaded, pumping, valueMin, valueMax, max_boiler_power, boiler_electrical_power, boiler_output_power);
+	oapiWriteScenario_string (scn, "    <BOILER> ", cbuf);
 }
 
 

@@ -137,7 +137,7 @@ void LEM_ASA::Timestep(double simdt){
 		return;
 	}
 
-	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes to reset this in that case
+	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes sense to reset this in that case
 	if (!lem->aea.IsPowered())
 	{
 		EulerAngles = _V(0.0, 0.0, 0.0);
@@ -171,8 +171,8 @@ void LEM_ASA::SystemTimestep(double simdt)
 {
 	if (IsPowered())
 	{
-		lem->SCS_ASA_CB.DrawPower(41.1);
-		asaHeat->GenerateHeat(95.1); //Electric heat load from LM-8 Systems Handbook
+		lem->SCS_ASA_CB.DrawPower(42.0);
+		asaHeat->GenerateHeat(42.0); //Electric heat load from LM-3 Systems Handbook
 	}
 }
 
@@ -324,8 +324,6 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	cos_psi = 0.0;
 	AGSAttitudeError = _V(0.0, 0.0, 0.0);
 	AGSLateralVelocity = 0.0;
-	Altitude = 0.0;
-	AltitudeRate = 0.0;
 	powered = false;
 
 	//
@@ -345,7 +343,18 @@ void LEM_AEA::Timestep(double simt, double simdt) {
 
 	//Determine if the AEA has power
 	powered = DeterminePowerState();
-	if (!IsPowered()) return;
+	if (!IsPowered())
+	{
+		// Reset last cycling time
+		LastCycled = 0;
+		// Reset program counter to 6000 for power up
+		vags.ProgramCounter = 06000;
+		// Also reset overflow
+		vags.Overflow = 0;
+		// And inhibit engine on
+		OutputPorts[IO_ODISCRETES] |= 02000;
+		return;
+	}
 
 	int Delta, CycleCount = 0;
 
@@ -528,7 +537,7 @@ void LEM_AEA::SetOutputChannel(int Type, int Data)
 
 	case 033:
 		//Altitude, Altitude Rate
-		SetAltitudeAltitudeRate(Data);
+		lem->RadarTape.AGSAltitudeAltitudeRate(Data);
 		break;
 
 	case 034:
@@ -668,32 +677,6 @@ void LEM_AEA::SetLateralVelocity(int Data)
 	AGSLateralVelocity = (double)DataVal*LATVELSCALEFACTOR;
 }
 
-void LEM_AEA::SetAltitudeAltitudeRate(int Data)
-{
-	int DataVal;
-
-	AGSChannelValue40 val = GetOutputChannel(IO_ODISCRETES);
-
-	if (val[AGSAltitude] == 0)
-	{
-		DataVal = Data & 0777777;
-
-		Altitude = (double)DataVal*ALTSCALEFACTOR;
-	}
-	else if (val[AGSAltitudeRate] == 0)
-	{
-		if (Data & 0400000) { // Negative
-			DataVal = -((~Data) & 0777777);
-			DataVal = -0400000 - DataVal;
-		}
-		else {
-			DataVal = Data & 0777777;
-		}
-
-		AltitudeRate = -(double)DataVal*ALTRATESCALEFACTOR;
-	}
-}
-
 void LEM_AEA::SetPGNSIntegratorRegister(int channel, int val)
 {
 	int valx;
@@ -751,16 +734,6 @@ VECTOR3 LEM_AEA::GetAttitudeError()
 double LEM_AEA::GetLateralVelocity()
 {
 	return AGSLateralVelocity;
-}
-
-double LEM_AEA::GetAltitude()
-{
-	return Altitude;
-}
-
-double LEM_AEA::GetAltitudeRate()
-{
-	return AltitudeRate;
 }
 
 void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
@@ -927,8 +900,6 @@ void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	papiWriteScenario_double(scn, "COS_PSI", cos_psi);
 	papiWriteScenario_vec(scn, "ATTITUDEERROR", AGSAttitudeError);
 	papiWriteScenario_double(scn, "LATERALVELOCITY", AGSLateralVelocity);
-	papiWriteScenario_double(scn, "ALTITUDE", Altitude);
-	papiWriteScenario_double(scn, "ALTITUDERATE", AltitudeRate);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -994,8 +965,6 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 		papiReadScenario_double(line, "COS_PSI", cos_psi);
 		papiReadScenario_vec(line, "ATTITUDEERROR", AGSAttitudeError);
 		papiReadScenario_double(line, "LATERALVELOCITY", AGSLateralVelocity);
-		papiReadScenario_double(line, "ALTITUDE", Altitude);
-		papiReadScenario_double(line, "ALTITUDERATE", AltitudeRate);
 	}
 }
 

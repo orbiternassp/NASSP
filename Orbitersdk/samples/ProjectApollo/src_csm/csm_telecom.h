@@ -584,7 +584,7 @@ protected:
 	VHFAntenna *rightAntenna;
 	VHFAntenna *activeAntenna;
 	Saturn *sat;
-	LEM *lem;
+	VESSEL *lem;
 };
 
 

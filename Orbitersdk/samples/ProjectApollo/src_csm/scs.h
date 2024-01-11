@@ -544,6 +544,8 @@ protected:
 	DelayOffTimer engineOffDelay;
 
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
+	bool ThrusterDemandLockup[20];									// Set true when the CMC wants to fire a thruster. Reset in the timestep.
+																	// Causes thruster to fire even if the CMC commanded it off on the same timestep as it was commanded on.
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
 	bool SCSLatchUpA, SCSLatchUpB;
 	bool SPSEnableA, SPSEnableB;

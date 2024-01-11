@@ -721,15 +721,7 @@ void LEM_RR::SystemTimestep(double simdt) {
 		dc_source->DrawPower(150);
 		RREHeat->GenerateHeat(117);
 	}
-	/*
-	if (IsACPowered())
-	{
-		ac_source->DrawPower(13.8);
-		rrheat->GenerateHeat(13.8);
-	}
-	*/
 
-	
 	if (abs(shaftVel) > 0.01*RAD)
 	{
 		ac_source->DrawPower(13.8);

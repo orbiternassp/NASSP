@@ -519,6 +519,17 @@ public:
 /// -------------------------------------------------------------
 	bool completeChecklistItem(ChecklistItem*);
 /// -------------------------------------------------------------
+/// Set the active item in the checklist to the provided item. All
+/// items between the current and provided item will be marked as
+/// complete.
+/// -------------------------------------------------------------
+	bool gotoChecklistItem(ChecklistItem*);
+/// -------------------------------------------------------------
+/// Undo the last checklist item. The last item will be marked as
+/// pending and the cursor will return to the last item.
+/// -------------------------------------------------------------
+	bool undoChecklistItem();
+/// -------------------------------------------------------------
 /// This allows setting of the autoComplete function which 
 /// automatically detects if a step is already complete and marks
 /// it as such, hiding it if it's already at the top of the list.

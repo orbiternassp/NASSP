@@ -3047,31 +3047,62 @@ void MCC::drawPad(bool writetofile){
 	{
 		AP11LMMNV * form = (AP11LMMNV *)padForm;
 
-		int hh, hh2, mm, mm2;
+		int hh, hh2, mm, mm2, length = 0;
 		double ss, ss2;
 
-		sprintf(buffer, "P30 LM MANEUVER");
-		SStoHHMMSS(form->GETI, hh, mm, ss);
-		SStoHHMMSS(form->burntime, hh2, mm2, ss2);
+		if (MissionType == MTP_D)
+		{
+			length += sprintf(buffer + length, "LM MANEUVER (P30)\n");
+		}
+		else
+		{
+			length += sprintf(buffer + length, "P30 LM MANEUVER\n");
+		}
 
-		sprintf(buffer, "%s\n%s PURPOSE\n%+06d HRS N33\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY LOCAL\n%+07.1f DVZ VERT\n"
-			"%+07.1f HA N42\n%+07.1f HP\n%+07.1f DVR\nXXX%d:%02.0f BT\nXXX%03.0f R FDAI\nXXX%03.0f P INER\n%+07.1f DVX AGS N86\n%+07.1f DVY AGS\n%+07.1f DVZ AGS\n",
-			buffer, form->purpose, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->HA, form->HP, form->dVR, mm2, ss2, form->Att.x, form->Att.y, 
-			form->dV_AGS.x,form->dV_AGS.y,form->dV_AGS.z);
+		SStoHHMMSS(form->GETI, hh, mm, ss);
+
+		length += sprintf(buffer + length, "%s PURPOSE\n%+06d HRS N33\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f DVX ", form->purpose, hh, mm, ss, form->dV.x);
+
+		if (MissionType == MTP_D)
+		{
+			length += sprintf(buffer + length, "N82\n"); //Sundance
+		}
+		else
+		{
+			length += sprintf(buffer + length, "N81\n"); //All others
+		}
+
+		length += sprintf(buffer + length, "%+07.1f DVY LOCAL\n%+07.1f DVZ VERT\n", form->dV.y, form->dV.z);
+
+		if (MissionType != MTP_D)
+		{
+			length += sprintf(buffer + length, "%+07.1f HA N42\n%+07.1f HP\n", form->HA, form->HP);
+		}
+
+		length += sprintf(buffer + length, "%+07.1f DVR\n", form->dVR);
+
+		if (MissionType != MTP_D)
+		{
+			SStoHHMMSS(form->burntime, hh2, mm2, ss2);
+			length += sprintf(buffer + length, "XXX%d:%02.0f BT\n", mm2, ss2);
+		}
+
+		length += sprintf(buffer + length, "XXX%03.0f R FDAI\nXXX%03.0f P INER\n%+07.1f DVX AGS N86\n%+07.1f DVY AGS\n%+07.1f DVZ AGS\n",
+			form->Att.x, form->Att.y, form->dV_AGS.x, form->dV_AGS.y, form->dV_AGS.z);
 		
 		if (form->type == 0)
 		{
-			sprintf(buffer, "%sXXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\n", buffer, form->BSSStar, form->SPA, form->SXP);
+			length += sprintf(buffer + length, "XXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\n", form->BSSStar, form->SPA, form->SXP);
 		}
 		else
 		{
 			SStoHHMMSS(form->t_CSI, hh, mm, ss);
 			SStoHHMMSS(form->t_TPI, hh2, mm2, ss2);
 
-			sprintf(buffer, "%s%+06d HRS N11\n%+06d MIN CSI\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\n", buffer, hh, mm, ss, hh2, mm2, ss2);
+			length += sprintf(buffer + length, "%+06d HRS N11\n%+06d MIN CSI\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\n", hh, mm, ss, hh2, mm2, ss2);
 		}
 
-		sprintf(buffer, "%sRemarks:\n%s", buffer, form->remarks);
+		length += sprintf(buffer + length, "Remarks:\n%s", form->remarks);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3080,27 +3111,37 @@ void MCC::drawPad(bool writetofile){
 	{
 		AP10CSI * form = (AP10CSI *)padForm;
 
-		int hh, hh2, mm, mm2;
+		int hh, hh2, mm, mm2, length = 0;
 		double ss, ss2;
-		char buffer1[1000], buffer2[100], buffer3[200];
 
 		SStoHHMMSS(form->t_CSI, hh, mm, ss);
 		SStoHHMMSS(form->t_TPI, hh2, mm2, ss2);
 
-		sprintf(buffer1, "P32 CSI UPDATE\n%+06d HR N11\n%+06d MIN TIG\n%+07.2f SEC CSI\n%+06d HR N37\n%+06d MIN TIG\n%+07.2f SEC TPI\n%+07.1f DVX LOCAL N81\n%+07.1f DVY VERT\n"
-			"XXX%03.0f PLM FDAI\n", hh, mm, ss, hh2, mm2, ss2, form->dV_LVLH.x, form->dV_LVLH.y, form->PLM_FDAI);
-
-		if (form->type == 1)
+		if (MissionType == MTP_D)
 		{
-			sprintf(buffer2, "373 %+07.1f\n275 %+07.1f\n", form->DEDA373, form->DEDA275);
+			length += sprintf(buffer + length, "CSI UPDATE (P32)\n%+06d HR N30\n", hh);
 		}
 		else
 		{
-			sprintf(buffer2, "");
+			length += sprintf(buffer + length, "P32 CSI UPDATE\n%+06d HR N11\n", hh);
 		}
 
-		sprintf(buffer3, "%+07.1f DVX AGS N86\n%+07.1f DVY AGS\n%+07.1f DVZ AGS", form->dV_AGS.x, form->dV_AGS.y, form->dV_AGS.z);
-		sprintf(buffer, "%s%s%s", buffer1, buffer2, buffer3);
+		length += sprintf(buffer + length, "%+06d MIN TIG\n%+07.2f SEC CSI\n%+06d HR N37\n%+06d MIN TIG\n%+07.2f SEC TPI\n%+07.1f DVX LOCAL N81\n%+07.1f DVY VERT\nXXX%03.0f PLM FDAI\n",
+			mm, ss, hh2, mm2, ss2, form->dV_LVLH.x, form->dV_LVLH.y, form->PLM_FDAI);
+
+		if (form->type == 1)
+		{
+			length += sprintf(buffer + length, "373 %+07.1f\n275 %+07.1f\n", form->DEDA373, form->DEDA275);
+		}
+
+		length += sprintf(buffer + length, "%+07.1f DVX AGS N86\n", form->dV_AGS.x);
+
+		if (MissionType != MTP_D)
+		{
+			length += sprintf(buffer + length, "%+07.1f DVY AGS\n", form->dV_AGS.y);
+		}
+
+		length += sprintf(buffer + length, "%+07.1f DVZ AGS", form->dV_AGS.z);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -4454,7 +4495,7 @@ void MCC::SetCSM(char *csmname)
 
 	strncat(CSMName, csmname, 64);
 
-	hVessel = oapiGetObjectByName(csmname);
+	hVessel = oapiGetVesselByName(csmname);
 	if (hVessel != NULL)
 	{
 		v = oapiGetVesselInterface(hVessel);
@@ -4472,7 +4513,7 @@ void MCC::SetLM(char *lemname)
 
 	strncat(LEMName, lemname, 64);
 
-	hVessel = oapiGetObjectByName(lemname);
+	hVessel = oapiGetVesselByName(lemname);
 	if (hVessel != NULL)
 	{
 		v = oapiGetVesselInterface(hVessel);
@@ -4491,7 +4532,7 @@ void MCC::SetLV(char *lvname)
 
 	strncat(LVName, lvname, 64);
 
-	hVessel = oapiGetObjectByName(lvname);
+	hVessel = oapiGetVesselByName(lvname);
 	if (hVessel != NULL)
 	{
 		v = oapiGetVesselInterface(hVessel);

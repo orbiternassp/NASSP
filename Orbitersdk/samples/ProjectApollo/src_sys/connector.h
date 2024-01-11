@@ -243,7 +243,9 @@ public:
 		MFD_PANEL_CHECKLIST_FLASHING_QUERY,		///< Checklist item flashing.
 		MFD_PANEL_GET_ITEM_FLASHING,			///< Get the item's current flashing.
 		MFD_PANEL_GET_CHECKLIST_AUTOEXECUTE,	///< Get automatic checklist execution.
-		MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE		///< Set automatic checklist execution.
+		MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE,    ///< Set automatic checklist execution.
+		MFD_PANEL_GOTO_CHECKLIST_ITEM,          ///< Go to checklist item
+		MFD_PANEL_UNDO_CHECKLIST_ITEM           ///< Undo last item   
 	};
 
 	PanelConnector(PanelSwitches &p, ChecklistController &c);
@@ -278,6 +280,11 @@ public:
 	/// \brief Constructor.
 	///
 	ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel);
+
+	///
+	/// \brief Destructor.
+	///
+	virtual ~ProjectApolloConnectorVessel();
 
 	///
 	/// Other vessels can call this function to get a connector to talk to when they

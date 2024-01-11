@@ -830,14 +830,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double t_TPI0;
 		sv0 = StateVectorCalcEphem(calcParams.src);
 
-		//Coast to predicted Sep-12 min
+		//Coast to 90h GET (desired is Sep-12 min, but CMC software limitations prevent that)
 		med_m50.CSMWT = calcParams.src->GetMass();
 		med_m50.LMWT = calcParams.tgt->GetMass();
 
 		PZMPTLEM.ConfigurationArea = 200.57*0.3048*0.3048;
 
 		//Coast to uplink state vector time with total weight and LM area
-		sv1 = coast(sv0, GMTfromGET(92.0*3600.0) - sv0.GMT, med_m50.CSMWT + med_m50.LMWT, PZMPTLEM.ConfigurationArea);
+		sv1 = coast(sv0, GMTfromGET(90.0*3600.0) - sv0.GMT, med_m50.CSMWT + med_m50.LMWT, PZMPTLEM.ConfigurationArea, 1.0, false);
 
 		DMissionRendezvousPlan(ConvertEphemDatatoSV(sv1), t_TPI0);
 
@@ -886,7 +886,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = EZJGMTX3.data[0].REFSMMAT;
 
 		//Generate state vector for uplink
-		sv_uplink = coast(sv0, GMTfromGET(92.0*3600.0) - sv0.GMT, med_m50.CSMWT + med_m50.LMWT, PZMPTLEM.ConfigurationArea);
+		sv_uplink = coast(sv0, GMTfromGET(92.0*3600.0) - sv0.GMT, med_m50.CSMWT + med_m50.LMWT, PZMPTLEM.ConfigurationArea, 1.0, false);
 
 		char buffer1[1000];
 		char buffer2[1000];

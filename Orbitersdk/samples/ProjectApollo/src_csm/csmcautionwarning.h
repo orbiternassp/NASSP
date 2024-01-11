@@ -35,8 +35,8 @@
 /// \ingroup InternalInterface
 ///
 typedef struct {
-	double H2FlowLBH;			///< H2 flow in pounds per hour.
-	double O2FlowLBH;			///< O2 flow in pounds per hour.
+	double TempF;				///< Temperature in fahrenheit.
+	double CondenserTempF;		///< Condensor temperature in fahrenheit.
 	double CoolingTempF;		///< Cooling temperature in fahrenheit.
 	double RadiatorTempInF;		///< Radiator input temperature in fahrenheit.
 	double RadiatorTempOutF;	///< Radiator output temperature in fahrenheit.
@@ -135,6 +135,7 @@ protected:
 	int SPSPressCheckCount;
 	int CryoPressCheckCount;
 	int GlycolTempCheckCount;
+	int SuitCompDPHighCheckCount;
 	int FuelCellCheckCount[4];
 	bool ACBus1Alarm, ACBus2Alarm;
 	bool ACBus1Reset, ACBus2Reset;

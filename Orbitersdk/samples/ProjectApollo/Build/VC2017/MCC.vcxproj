@@ -169,6 +169,7 @@
     <ClCompile Include="..\..\src_launch\RTCC_Mission_H1.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_SL.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
@@ -207,6 +208,7 @@
     <ClInclude Include="..\..\src_launch\MCC_Mission_SL.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
     <ClInclude Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.h" />
+    <ClInclude Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.h" />
     <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
