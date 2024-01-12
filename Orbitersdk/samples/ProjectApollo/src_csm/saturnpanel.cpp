@@ -5607,8 +5607,8 @@ void Saturn::InitSwitches() {
 	O2Quantity1Meter.Register(PSH, "O2Quantity1Meter", 0, 5.0, 10);
 	O2Quantity2Meter.Register(PSH, "O2Quantity2Meter", 0, 5.0, 10);
 
-	CSMACVoltMeter.Register(PSH, "ACVoltMeter", 85, 145, 3);
-	CSMDCVoltMeter.Register(PSH, "DCVoltMeter", 17.5, 47.5, 3);
+	CSMACVoltMeter.Register(PSH, "ACVoltMeter", 89, 131, 3);
+	CSMDCVoltMeter.Register(PSH, "DCVoltMeter", 19, 46, 3);
 	SystemTestVoltMeter.Register(PSH, "SystemTestMeter", 0.0, 5.0, 3);
 	DCAmpMeter.Register(PSH, "DCAmpMeter", 0, 100, 3);
 

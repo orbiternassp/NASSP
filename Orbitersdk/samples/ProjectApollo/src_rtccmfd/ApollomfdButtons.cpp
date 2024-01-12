@@ -722,7 +722,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Landing Site Update", 0, 'V' },
 		{ "REFSMMAT", 0, 'R' },
 		{ "Optics", 0, 'P' },
-		{ "Erasable Memory Programs", 0, 'E' },
+		{ "", 0, ' ' },
 		{ "Convert nodal target", 0, 'N' },
 		{ "Descent abort", 0, 'A' },
 
@@ -739,7 +739,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LS", OAPI_KEY_V, &ApolloRTCCMFD::menuSetLSUpdateMenu);
 	RegisterFunction("REF", OAPI_KEY_R, &ApolloRTCCMFD::menuSetREFSMMATPage);
 	RegisterFunction("OPT", OAPI_KEY_P, &ApolloRTCCMFD::menuSetRTACFPage);
-	RegisterFunction("EMP", OAPI_KEY_E, &ApolloRTCCMFD::menuSetEMPPage);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("NOD", OAPI_KEY_N, &ApolloRTCCMFD::menuSetNodalTargetConversionPage);
 	RegisterFunction("ABO", OAPI_KEY_A, &ApolloRTCCMFD::menuSetPDAPPage);
 
@@ -821,36 +821,36 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu24[] =
 	{
-		{ "P99", 0, 'P' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Enter file name", 0, 'F' },
+		{ "Enter load number", 0, 'L' },
+		{ "Initialize", 0, 'I' },
+		{ "Edit octal", 0, 'G' },
+		{ "Delete line", 0, 'D' },
 		{ "", 0, ' ' },
 
-		{ "Uplink Load Number", 0, 'O' },
+		{ "Load EMP", 0, 'O' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "Uplink EMP", 0, 'U' },
+		{ "Uplink", 0, 'U' },
 		{ "Back to menu", 0, 'B' }
 	};
 
 	RegisterPage(mnu24, sizeof(mnu24) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("P99", OAPI_KEY_T, &ApolloRTCCMFD::menuSetEMPUplinkP99);
-	RegisterFunction("", OAPI_KEY_J, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("FIL", OAPI_KEY_F, &ApolloRTCCMFD::menuSetEMPFileName);
+	RegisterFunction("NUM", OAPI_KEY_L, &ApolloRTCCMFD::menuSetEMPUplinkNumber);
+	RegisterFunction("INI", OAPI_KEY_I, &ApolloRTCCMFD::menuInitializeEMP);
+	RegisterFunction("EDI", OAPI_KEY_E, &ApolloRTCCMFD::menuEditEMPOctal);
+	RegisterFunction("DEL", OAPI_KEY_D, &ApolloRTCCMFD::menuDeleteEMPLine);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("NUM", OAPI_KEY_O, &ApolloRTCCMFD::menuSetEMPUplinkNumber);
+	RegisterFunction("LOA", OAPI_KEY_O, &ApolloRTCCMFD::menuLoadEMP);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuEMPUplink);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
+	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuUplinkEMP);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
 
 
 	static const MFDBUTTONMENU mnu25[] =

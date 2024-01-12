@@ -3804,19 +3804,21 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&DCAmpMeter);
 	DCAmpMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	DCAmpMeter.SetRotationRange(RAD * 225);
+	DCAmpMeter.SetRotationRange(RAD * 240);
 	DCAmpMeter.DefineMeshGroup(VC_GRP_Needle_P3_09);
 
 	NEEDLE_POS = { 0.8533, 0.5413, 0.3066 };
 
 	MainPanelVC.AddSwitch(&CSMDCVoltMeter);
 	CSMDCVoltMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	CSMDCVoltMeter.SetRotationRange(RAD * 259.2);
 	CSMDCVoltMeter.DefineMeshGroup(VC_GRP_Needle_P3_10);
 
 	NEEDLE_POS = { 0.9799, 0.3656, 0.2478 };
 
 	MainPanelVC.AddSwitch(&CSMACVoltMeter);
 	CSMACVoltMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	CSMACVoltMeter.SetRotationRange(RAD * 264);
 	CSMACVoltMeter.DefineMeshGroup(VC_GRP_Needle_P3_11);
 
 	NEEDLE_POS = { 0.520752, 0.588298, 0.323995 };
