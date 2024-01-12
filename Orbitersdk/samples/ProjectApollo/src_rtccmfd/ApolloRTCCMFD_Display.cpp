@@ -2057,7 +2057,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "Landing Site", 12);
 		skp->Text(1 * W / 8, 4 * H / 14, "REFSMMAT", 8);
 		skp->Text(1 * W / 8, 6 * H / 14, "RTACF", 5);
-		skp->Text(1 * W / 8, 8 * H / 14, "EMP", 3);
 		skp->Text(1 * W / 8, 10 * H / 14, "Nodal Target Conversion", 23);
 		skp->Text(1 * W / 8, 12 * H / 14, "Descent Abort", 13);
 
@@ -2369,13 +2368,85 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 24)
 	{
-		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Erasable Memory Programs", 24);
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->SetFont(font2);
 
-		skp->Text(1 * W / 8, 2 * H / 14, "Program 99", 10);
+		RTCC::AGCErasableMemoryUpdateMakeupBlock *block = &GC->rtcc->CZERAMEM.Blocks[subscreen];
 
-		sprintf(Buffer, "Uplink No. %d", G->EMPUplinkNumber);
-		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		if (subscreen == 0)
+		{
+			skp->Text(4 * W / 8, 2 * H / 32, "CMC ERASABLE MEMORY UPDATE A", 31);
+			skp->Text(30 * W / 32, 1 * H / 32, "0281", 4);
+		}
+		else if (subscreen == 1)
+		{
+			skp->Text(4 * W / 8, 2 * H / 32, "CMC ERASABLE MEMORY UPDATE B", 31);
+			skp->Text(30 * W / 32, 1 * H / 32, "0282", 4);
+		}
+		else if (subscreen == 2)
+		{
+			skp->Text(4 * W / 8, 2 * H / 32, "LGC ERASABLE MEMORY UPDATE A", 31);
+			skp->Text(30 * W / 32, 1 * H / 32, "0269", 4);
+		}
+		else
+		{
+			skp->Text(4 * W / 8, 2 * H / 32, "LGC ERASABLE MEMORY UPDATE B", 31);
+			skp->Text(30 * W / 32, 1 * H / 32, "0275", 4);
+		}
 
+		skp->Text(1 * W / 2, 31 * H / 32, G->EMPErrorMessage.c_str(), G->EMPErrorMessage.size());
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(1 * W / 16, 2 * H / 14, G->EMPFile.c_str(), G->EMPFile.size());
+		sprintf(Buffer, "%d/%d", G->EMPUplinkNumber, G->EMPUplinkMaxNumber);
+		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(6 * W / 32, 7 * H / 32, "Description:", 12);
+		skp->Text(12 * W / 32, 7 * H / 32, G->EMPDescription.c_str(), G->EMPDescription.size());
+
+		skp->Text(6 * W / 32, 8 * H / 32, "Rope:", 5);
+		skp->Text(12 * W / 32, 8 * H / 32, G->EMPRope.c_str(), G->EMPRope.size());
+
+		skp->Text(10 * W / 32, 10 * H / 32, "OID", 3);
+		skp->Text(15 * W / 32, 10 * H / 32, "FCT", 3);
+
+		if (block->IsVerb72)
+		{
+			skp->Text(20 * W / 32, 10 * H / 32, "DSKY V72", 8);
+		}
+		else
+		{
+			skp->Text(20 * W / 32, 10 * H / 32, "DSKY V71", 8);
+		}
+		
+		for (int i = 1; i <= 024; i++)
+		{
+			sprintf(Buffer, "%02o", i);
+			skp->Text(10 * W / 32, (i + 10) * H / 32, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(15 * W / 32, 11 * H / 32, "INDEX", 5);
+		sprintf(Buffer, "%05o", block->Index);
+		skp->Text(20 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
+
+		for (int i = 0; i <= 8; i++)
+		{
+			skp->Text(15 * W / 32, (12 + 2 * i) * H / 32, "ADD", 3);
+
+			if (block->IsVerb72 == false) break;
+		}
+
+		for (int i = 0; i < 19; i++)
+		{
+			if (block->Data[i].OctalData != 0x8000)
+			{
+				sprintf(Buffer, "%05o", block->Data[i].OctalData);
+				skp->Text(20 * W / 32, (i + 12) * H / 32, Buffer, strlen(Buffer));
+			}
+
+			if (block->Data[i].EndOfDataFlag) break;
+		}
 	}
 	else if (screen == 25)
 	{
@@ -4154,15 +4225,19 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 16, 10 * H / 28, "12: CMC REFSMMAT Update", 23);
 		skp->Text(1 * W / 16, 11 * H / 28, "13: CMC Retrofire External DV", 29);
 		skp->Text(1 * W / 16, 12 * H / 28, "14: CMC Entry Update", 20);
+		skp->Text(1 * W / 16, 13 * H / 28, "18: CMC Erasable Memory Update A", 32);
+		skp->Text(1 * W / 16, 14 * H / 28, "19: CMC Erasable Memory Update B", 32);
 
-		skp->Text(1 * W / 16, 14 * H / 28, "20: LGC LM Navigation Update", 28);
-		skp->Text(1 * W / 16, 15 * H / 28, "21: LGC CSM Navigation Update", 29);
-		skp->Text(1 * W / 16, 16 * H / 28, "22: LGC External DV", 19);
-		skp->Text(1 * W / 16, 17 * H / 28, "23: LGC REFSMMAT Update", 23);
-		skp->Text(1 * W / 16, 18 * H / 28, "24: LGC Time Increment", 22);
-		skp->Text(1 * W / 16, 19 * H / 28, "25: LGC Liftoff Time Update", 27);
-		skp->Text(1 * W / 16, 20 * H / 28, "26: LGC Landing Site Vector", 27);
-		skp->Text(1 * W / 16, 21 * H / 28, "28: LGC Descent Update", 22);
+		skp->Text(1 * W / 16, 16 * H / 28, "20: LGC LM Navigation Update", 28);
+		skp->Text(1 * W / 16, 17 * H / 28, "21: LGC CSM Navigation Update", 29);
+		skp->Text(1 * W / 16, 18 * H / 28, "22: LGC External DV", 19);
+		skp->Text(1 * W / 16, 19 * H / 28, "23: LGC REFSMMAT Update", 23);
+		skp->Text(1 * W / 16, 20 * H / 28, "24: LGC Time Increment", 22);
+		skp->Text(1 * W / 16, 21 * H / 28, "25: LGC Liftoff Time Update", 27);
+		skp->Text(1 * W / 16, 22 * H / 28, "26: LGC Landing Site Vector", 27);
+		skp->Text(1 * W / 16, 23 * H / 28, "28: LGC Descent Update", 22);
+		skp->Text(1 * W / 16, 24 * H / 28, "38: LGC Erasable Memory Update A", 32);
+		skp->Text(1 * W / 16, 25 * H / 28, "39: LGC Erasable Memory Update B", 32);
 
 		skp->Text(9 * W / 16, 4 * H / 28, "49: LVDC Navigation Update", 26);
 	}
@@ -6128,7 +6203,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	//Return-to-Earth Tradeoff Display
 	else if (screen == 66)
 	{
-		if (RTETradeoffScreen == 0)
+		if (subscreen == 0)
 		{
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			skp->Text(4 * W / 8, 1 * H / 14, "RTE TRADE OFF INPUTS", 32);
@@ -6196,7 +6271,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Line(W * 1 / 10, H * 9 / 10, W * 19 / 20, H * 9 / 10);
 			skp->Line(W * 19 / 20, H * 3 / 20, W * 19 / 20, H * 9 / 10);
 
-			unsigned p = RTETradeoffScreen - 1;
+			unsigned p = subscreen - 1;
 
 			sprintf(Buffer, "%d", GC->rtcc->RTETradeoffTableBuffer[p].XLabels[0]);
 			skp->Text(4 * W / 40, 23 * H / 24, Buffer, strlen(Buffer));
@@ -6243,7 +6318,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->SetFont(font2);
 
-		sprintf(Buffer, "%d/5", RTETradeoffScreen);
+		sprintf(Buffer, "%d/5", subscreen);
 		skp->Text(15 * W / 16, 1 * H / 14, Buffer, strlen(Buffer));
 	}
 	//Detailed Maneuver Table 1 and 2

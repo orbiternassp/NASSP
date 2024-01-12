@@ -2467,4 +2467,71 @@ Latitude of node (deg)&Longitude of node (deg)&Height of node (NM)&&Card ID\\
 
 The files containing the TLI targeting parameters follow the launch day specific format "`1968-12-21 TLI.txt". They contain the numbers needed to calculate the time of restart preparations and the TLI maneuver in the RTCC. The format of the file follows the MSC card format from the MSC internal note RTCC REQUIREMENTS FOR APOLLO 11 (MISSION G) PREFLIGHT INFORMATION (69-FM-171), which can be found \href{https://web.archive.org/web/20100524010957/http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740072570_1974072570.pdf}{here}. The PDF pages 32 to 40 show the format. One line in the config file is equal to one punch card.
 
+
+\newpage
+\subsection{Erasable Memory Programs}
+
+Erasable Memory Program (EMP) files are loaded in the EMPs folder, which is under Config/ProjectApollo/RTCC. They contain uplink data for the CMC and LGC. The format of the file is as follows:\\
+
+\begin{itemize}
+\item The first line contains a description of the EMP which is shown on the uplink MFD page.
+\item The second line contains the AGC rope name (e.g. Luminary 210) for which the EMP is valid.
+\item The actual uplink loads follow in the subsequent lines. Each load has two lines in the file and the number of possible loads per file is not limited. There are two types of EMP uplinks. Contiguous block update (Verb 71) updates from 1 to 18 consecutive erasable memory registers in the same erasable memory bank. The scatter update (Verb 72) provides the capability to update from 1 to 9 non-consecutive erasable memory registers in the same or different erasable memory banks. The first of the two lines in each load contains either 71 and the starting address for Verb 71 or 72 and no additional value for Verb 72. The second line then contains all the uplink data, for Verb 72 it is alternating address and value. All data is in octal.
+\end{itemize}
+
+On the next page follows a list of EMPs that come with NASSP:\\
+\newpage
+
+\begin{tabular}{|l|L{9cm}|l|}
+\hline
+\textbf{EMP Filename}&\textbf{Description}&\textbf{Rope}\\
+\hline
+P99 L1D&Guided RCS Translation Maneuver&Luminary 178\\
+\hline
+EMP 99&Guided RCS Translation Maneuver&Luminary 210\\
+\hline
+EMP 100A&Backup for failed DSYK key using engine gimbal switch&Luminary 210\\
+\hline
+EMP 100B&Backup for failed DSKY key using mode sel switch&Luminary 210\\
+\hline
+EMP 103A&Descent with failed CDUs&Luminary 210\\
+\hline
+EMP 103B&EMP for failed CDUX&Luminary 210\\
+\hline
+EMP 108&Zero a runaway IMU CDU and prevent coarse align&Luminary 210\\
+\hline
+EMP 500&Landmark Tracking With Datalink Failure Or Unusable Optics&Artemis 72\\
+\hline
+EMP 501&Landmark Tracking With Failed Mark/Mark Rej Button&Artemis 72\\
+\hline
+EMP 512&P40/41/47 Termination During Average G When EMP 509 is Operating&Artemis 72\\
+\hline
+EMP 514&Shortened P23&Artemis 72\\
+\hline
+EMP 515&Manual Range Input&Artemis 72\\
+\hline
+EMP 517&Convert Optics Shaft And Trunnion Angles To Body Angles&Artemis 72\\
+\hline
+EMP 523&Monitor Jet-On Failure&Artemis 72\\
+\hline
+EMP 525A&Optics Switch Monitor&Artemis 72\\
+\hline
+EMP 526 (1 Deg)&IMU CDU Transient Monitor (1 Degree Check)&Artemis 72\\
+\hline
+EMP 526 (2 Deg)&IMU CDU Transient Monitor (2 Degree Check)&Artemis 72\\
+\hline
+EMP 526 (3 Deg)&IMU CDU Transient Monitor (3 Degree Check)&Artemis 72\\
+\hline
+EMP 526 (4 Deg)&IMU CDU Transient Monitor (4 Degree Check)&Artemis 72\\
+\hline
+EMP 527 (CDUX)&Monitor Single IMU CDU (CDUX)&Artemis 72\\
+\hline
+EMP 527 CDUY)&Monitor Single IMU CDU (CDUY)&Artemis 72\\
+\hline
+EMP 527 (CDUZ)&Monitor Single IMU CDU (CDUZ)&Artemis 72\\
+\hline
+EMP 528&Monitor Jet-On Failure and Do EMP 526&Artemis 72\\
+\hline
+\end{tabular}
+
 \end{document}

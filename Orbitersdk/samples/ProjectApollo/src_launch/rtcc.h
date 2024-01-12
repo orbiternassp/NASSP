@@ -2801,6 +2801,8 @@ public:
 	void CMMLIFTF(int L, double hrs);
 	//CSM/LM Time Increment Update Generator
 	void CMMTMEIN(int L, double hrs);
+	//CMC/LGC Erasable Memory Update
+	void CMMERMEM(int blocknum, int med, int line, const std::vector<int> &data);
 
 	// MISSION CONTROL (G)
 
@@ -4753,6 +4755,33 @@ public:
 	{
 		AGCTimeIncrementMakeupTableBlock Blocks[2];
 	} CZTMEINC;
+
+	struct AGCErasableMemoryUpdateData
+	{
+		int OctalData = 0x8000;
+		bool EndOfDataFlag = true;
+		int DataType = 0; //0 = address, 1 = single precision, 2 = double precision, 3 = 2nd of double prec, 4 = triple prec, 5 = 2nd of triple prec, 6 = 3rd of triple prec
+		double EngineeringUnits = 0.0;
+		double ValueLeastSignBit = 0.0;
+	};
+
+	struct AGCErasableMemoryUpdateMakeupBlock
+	{
+		int UpdateNo = 0;
+		int SequenceNumber = 0;
+		std::string PrimarySite;
+		std::string BackupSite;
+		double GETofGeneration = 0.0;
+		int Index = 0; //Number of uplink values
+		bool IsVerb72 = false; //false = V71, true = V72
+		AGCErasableMemoryUpdateData Data[19];
+	};
+
+	struct AGCErasableMemoryUpdateMakeupTable
+	{
+		//0 = CMC A, 1 = CMC B, 2 = LGC A, 3 = LGC B
+		AGCErasableMemoryUpdateMakeupBlock Blocks[4];
+	} CZERAMEM;
 
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{
