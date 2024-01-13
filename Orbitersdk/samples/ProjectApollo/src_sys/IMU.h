@@ -51,7 +51,6 @@ public:
 	void SetVesselFlag(bool LEMFlag);
 	void SetDriftRates(const MATRIX3 DriftRateMatrix);
 	VECTOR3 GetNBDriftRates();
-	VECTOR3 GetTotalAttitude();
 	inline VECTOR3 getResolverPhaseError() { return ResolverPhaseError; };
 	inline VECTOR3 getResolverSineGimbal() { return SineGimbal; };
 	inline VECTOR3 getResolverCosineGimbal() { return CosineGimbal; };
