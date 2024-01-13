@@ -767,6 +767,10 @@ bool Saturn::clbkLoadVC (int id)
 	//if ((viewpos >= SATVIEW_ENG1) && (viewpos <= SATVIEW_ENG6))
 	//	return true;
 
+	// Init the 2D panel switches to fix XRSound not giving us switch clicks if we load directly into the VC.
+	// Calling InitPanel(SATPANEL_MAIN) also works, since that function calls SetSwitches() as well.
+	SetSwitches(SATPANEL_MAIN);	// Use main panel as a placeholder, it doesn't actually matter
+
 	//Reset VC free camera to default
 	vcFreeCamx = 0;
 	vcFreeCamy = 0;
@@ -3691,19 +3695,21 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&DCAmpMeter);
 	DCAmpMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	DCAmpMeter.SetRotationRange(RAD * 225);
+	DCAmpMeter.SetRotationRange(RAD * 240);
 	DCAmpMeter.DefineMeshGroup(VC_GRP_Needle_P3_09);
 
 	NEEDLE_POS = { 0.8533, 0.5413, 0.3066 };
 
 	MainPanelVC.AddSwitch(&CSMDCVoltMeter);
 	CSMDCVoltMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	CSMDCVoltMeter.SetRotationRange(RAD * 259.2);
 	CSMDCVoltMeter.DefineMeshGroup(VC_GRP_Needle_P3_10);
 
 	NEEDLE_POS = { 0.9799, 0.3656, 0.2478 };
 
 	MainPanelVC.AddSwitch(&CSMACVoltMeter);
 	CSMACVoltMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	CSMACVoltMeter.SetRotationRange(RAD * 264);
 	CSMACVoltMeter.DefineMeshGroup(VC_GRP_Needle_P3_11);
 
 	NEEDLE_POS = { 0.520752, 0.588298, 0.323995 };

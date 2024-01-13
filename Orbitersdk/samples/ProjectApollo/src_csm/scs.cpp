@@ -2998,6 +2998,7 @@ engineOffDelay(1.0)
 	int i = 0;
 	while (i < 20) {
 		ThrusterDemand[i] = false;
+		ThrusterDemandLockup[i] = false;
 		PoweredSwitch[i] = NULL;
 		i++;
 	}
@@ -3103,11 +3104,17 @@ void RJEC::TimeStep(double simdt){
 	*/
 
 	// Reset thruster power demand
-	bool td[20];
+	bool td[20], ThrusterDemand2[20];
 	int i;
 	for (i = 0; i < 17; i++) {
 		td[i] = false;
 		PoweredSwitch[i] = NULL;
+	}
+
+	//Get thruster demand
+	for (i = 0; i < 17; i++) {
+		ThrusterDemand2[i] = (ThrusterDemand[i] || ThrusterDemandLockup[i]); //ThrusterDemandLockup causes the thruster to fire on this timestep even if ThrusterDemand was already reset
+		ThrusterDemandLockup[i] = false; // Reset thruster demand lockup
 	}
 
 	//
@@ -3132,14 +3139,14 @@ void RJEC::TimeStep(double simdt){
 	}
 	else
 	{
-		td[9] = ThrusterDemand[9];
-		td[10] = ThrusterDemand[10];
-		td[11] = ThrusterDemand[11];
-		td[12] = ThrusterDemand[12];
-		td[13] = ThrusterDemand[13];
-		td[14] = ThrusterDemand[14];
-		td[15] = ThrusterDemand[15];
-		td[16] = ThrusterDemand[16];
+		td[9] = ThrusterDemand2[9];
+		td[10] = ThrusterDemand2[10];
+		td[11] = ThrusterDemand2[11];
+		td[12] = ThrusterDemand2[12];
+		td[13] = ThrusterDemand2[13];
+		td[14] = ThrusterDemand2[14];
+		td[15] = ThrusterDemand2[15];
+		td[16] = ThrusterDemand2[16];
 	}
 
 	// Pitch
@@ -3156,10 +3163,10 @@ void RJEC::TimeStep(double simdt){
 	}
 	else
 	{
-		td[1] = ThrusterDemand[1];
-		td[2] = ThrusterDemand[2];
-		td[3] = ThrusterDemand[3];
-		td[4] = ThrusterDemand[4];
+		td[1] = ThrusterDemand2[1];
+		td[2] = ThrusterDemand2[2];
+		td[3] = ThrusterDemand2[3];
+		td[4] = ThrusterDemand2[4];
 	}
 
 	// Yaw
@@ -3176,10 +3183,10 @@ void RJEC::TimeStep(double simdt){
 	}
 	else
 	{
-		td[5] = ThrusterDemand[5];
-		td[6] = ThrusterDemand[6];
-		td[7] = ThrusterDemand[7];
-		td[8] = ThrusterDemand[8];
+		td[5] = ThrusterDemand2[5];
+		td[6] = ThrusterDemand2[6];
+		td[7] = ThrusterDemand2[7];
+		td[8] = ThrusterDemand2[8];
 	}
 
 	//
@@ -3317,8 +3324,17 @@ void RJEC::TimeStep(double simdt){
 }
 
 void RJEC::SetThruster(int thruster, bool Active) {
+
 	if (thruster > 0 && thruster < 20) {
-		ThrusterDemand[thruster] = Active; // Next timestep does the work
+		if (Active)
+		{
+			ThrusterDemand[thruster] = true; // Next timestep does the work
+			ThrusterDemandLockup[thruster] = true; //Ensures the thruster will fire on the next timestep even if ThrusterDemand was already reset
+		}
+		else
+		{
+			ThrusterDemand[thruster] = false;
+		}
 	}
 }
 

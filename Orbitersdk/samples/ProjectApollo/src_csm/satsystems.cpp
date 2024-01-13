@@ -424,7 +424,7 @@ void Saturn::SystemsInit() {
 	eca.Init(this);
 	tvsa.Init(this);
 	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
-	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch, &ORDEALLightingSwitch);
 	mechanicalAccelerometer.Init(this);
 
 	qball.Init(this);
@@ -1189,9 +1189,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double* SteamDuctHtrB = (double*)Panelsdk.GetPointerByString("ELECTRIC:STEAMDUCTHEATERB:ISON");
 
 	sprintf(oapiDebugString(), "A: %.3f B: %.3f C: %.3f PA: %.3f PB: %.3f BM: %.3f Vent: %d H2OT: %.3f FRZ: %d UT: %.3f SDT %.3f", *BatCaseAPress* PSI, *BatCaseBPress* PSI, *BatCaseCPress* PSI, *BatCasePyroAPress* PSI, *BatCasePyroBPress* PSI, *BatManifoldPress* PSI, *BatVentValve, WasteH2ODumpHeater.GetTemperatureF(), WasteH2ODumpHeater.IsFrozen(), UrineDumpHeater.GetTemperatureF(), KelvinToFahrenheit(*SteamDuctNozzleTemp));
+	
 	//sprintf(oapiDebugString(), "WHA: %lf WSHA: %lf WHB: %lf WSHB: %lf H2OT: %.3f UDHA: %lf UDSTA: %lf UDHB: %lf UDSTB: %lf UT: %.3f SDHA %lf SDHB %lf SDT %.3f", *WaterHeaterA, *WaterStripHeaterA, *WaterHeaterB, *WaterStripHeaterB, WasteH2ODumpHeater.GetTemperatureF(), 
 		//*UrineHeaterA, *UrineStripHeaterA, *UrineHeaterB, *UrineStripHeaterB, UrineDumpHeater.GetTemperatureF(), 
 		//*SteamDuctHtrA, *SteamDuctHtrB, KelvinToFahrenheit(*SteamDuctNozzleTemp));
+
+	//sprintf(oapiDebugString(), "Main A Volts: %.4f Main A Current: %.4f AC 2 B Volts: %.4f", MainBusA->Voltage(), MainBusA->Current(), ACBus2PhaseB.Voltage());
 */
 
 #ifdef _DEBUG
@@ -3685,10 +3688,26 @@ void Saturn::SetRCSState(int Quad, int Thruster, bool Active)
 		break;
 	}
 
-	double Level = Active ? 1.0 : 0.0;
+	if (th == NULL) return; // Sanity check
 
-	if (th)
-		SetThrusterLevel(th, Level);
+	double Level;
+
+	if (Active)
+	{
+		Level = GetThrusterLevel(th);
+
+		//On the first timestep when a RCS thruster is fired, cause a minimum impulse firing (0.0105 seconds worth of impulse)
+		Level += 0.0105 / oapiGetSimStep();
+		Level = min(1.0, Level);
+
+		//sprintf(oapiDebugString(), "Thruster %d Level %lf", Thruster, Level);
+	}
+	else
+	{
+		Level = 0.0;
+	}
+
+	SetThrusterLevel(th, Level);
 }
 
 void Saturn::SetCMRCSState(int Thruster, bool Active)
