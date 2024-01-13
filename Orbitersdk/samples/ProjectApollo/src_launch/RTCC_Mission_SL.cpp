@@ -87,7 +87,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		Saturn *cm = (Saturn *)calcParams.src;
 
 		//Get TEPHEM
-		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc); //TBD: Add Skylark TEPHEM address here
+		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc, true);
 		double LaunchMJD = (tephem_scal / 8640000.) + SystemParameters.TEPHEM0;
 		LaunchMJD = (LaunchMJD - SystemParameters.GMTBASE)*24.0;
 
