@@ -27437,7 +27437,393 @@ int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 		}
 		CMMRFMAT(Veh, id, type);
 	}
+	//Change and/or delete data from an erasable memory update
+	else if (med == "EC")
+	{
+		if (data.size() < 2)
+		{
+			return 1;
+		}
 
+		int load, block;
+		if (sscanf(data[0].c_str(), "%d", &load) != 1)
+		{
+			return 2;
+		}
+		switch (load)
+		{
+		case 18:
+			block = 0;
+			break;
+		case 19:
+			block = 1;
+			break;
+		case 38:
+			block = 2;
+			break;
+		case 39:
+			block = 3;
+			break;
+		default:
+			return 2;
+		}
+
+		//TBD: Command sites
+
+		if (data.size() > 5)
+		{
+			AGCErasableMemoryUpdateMakeupBlock *bl = &CZERAMEM.Blocks[block];
+
+			int line;
+			if (sscanf(data[5].c_str(), "%o", &line) != 1)
+			{
+				return 2;
+			}
+			if (line < 02)
+			{
+				return 2;
+			}
+			if (bl->IsVerb72)
+			{
+				if (line > 023) return 2;
+			}
+			else
+			{
+				if (line > 024) return 2;
+			}
+
+			std::vector<int> values;
+			CMMERMEM(block, 3, line, values);
+		}
+	}
+	//Generate an erasable memory command load using engineering units
+	else if (med == "EE")
+	{
+		if (data.size() < 4)
+		{
+			return 1;
+		}
+
+		int load, block;
+		if (sscanf(data[0].c_str(), "%d", &load) != 1)
+		{
+			return 2;
+		}
+		switch (load)
+		{
+		case 18:
+			block = 0;
+			break;
+		case 19:
+			block = 1;
+			break;
+		case 38:
+			block = 2;
+			break;
+		case 39:
+			block = 3;
+			break;
+		default:
+			return 2;
+		}
+
+		int line;
+		if (sscanf(data[1].c_str(), "%o", &line) != 1)
+		{
+			return 2;
+		}
+
+		int precision;
+		if (sscanf(data[2].c_str(), "%d", &precision) != 1)
+		{
+			return 2;
+		}
+
+		if (precision < 1 || precision > 3)
+		{
+			return 2;
+		}
+
+		int maxline = 024 - precision + 1;
+
+		AGCErasableMemoryUpdateMakeupBlock *bl = &CZERAMEM.Blocks[block];
+
+		if (bl->IsVerb72)
+		{
+			maxline--;
+		}
+
+		double Magnitude;
+		if (sscanf(data[3].c_str(), "%lf", &Magnitude) != 1)
+		{
+			return 2;
+		}
+
+		double Multiplier;
+
+		if (data.size() < 5 || data[4] == "")
+		{
+			Multiplier = 1.0;
+		}
+		else
+		{
+			if (sscanf(data[4].c_str(), "%lf", &Multiplier) != 1)
+			{
+				return 2;
+			}
+		}
+
+		double ScaleFactor;
+
+		if (data.size() < 6 || data[5] == "")
+		{
+			ScaleFactor = 1.0;
+		}
+		else
+		{
+			if (sscanf(data[5].c_str(), "%lf", &ScaleFactor) != 1)
+			{
+				return 2;
+			}
+		}
+
+		int PowerOfTwo;
+
+		if (data.size() < 7 || data[6] == "")
+		{
+			PowerOfTwo = 0;
+		}
+		else
+		{
+			if (sscanf(data[5].c_str(), "%d", &PowerOfTwo) != 1)
+			{
+				return 2;
+			}
+
+			if (PowerOfTwo < -42 || PowerOfTwo > 42) return 2;
+		}
+
+		std::vector<int> values;
+
+		if (bl->IsVerb72)
+		{
+			//Address
+
+			int Address;
+
+			if (data.size() < 8 || data[7] == "")
+			{
+				return 2;
+			}
+
+			if (sscanf(data[7].c_str(), "%o", &Address) != 1)
+			{
+				return 2;
+			}
+
+			if (Address < 0 || Address > 03777) return 2;
+
+			values.push_back(Address);
+		}
+
+		//Convert to octal
+
+		double number = Magnitude * Multiplier / ScaleFactor;
+
+		if (precision == 1)
+		{
+			int value;
+
+			value = OrbMech::SingleToBuffer(number, PowerOfTwo);
+
+			values.push_back(value);
+		}
+		else if (precision == 2)
+		{
+			int value[2];
+			OrbMech::DoubleToBuffer(number, PowerOfTwo, value[0], value[1]);
+
+			values.push_back(value[0]);
+			values.push_back(value[1]);
+		}
+		else
+		{
+			int value[3];
+
+			OrbMech::TripleToBuffer(number, PowerOfTwo, value[0], value[1], value[2]);
+
+			values.push_back(value[0]);
+			values.push_back(value[1]);
+			values.push_back(value[2]);
+		}
+
+		CMMERMEM(block, 1, line, values);
+	}
+	//Initialize erasable memory update makup buffer
+	else if (med == "EI")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+
+		int load, block;
+		if (sscanf(data[0].c_str(), "%d", &load) != 1)
+		{
+			return 2;
+		}
+		switch (load)
+		{
+		case 18:
+			block = 0;
+			break;
+		case 19:
+			block = 1;
+			break;
+		case 38:
+			block = 2;
+			break;
+		case 39:
+			block = 3;
+			break;
+		default:
+			return 2;
+		}
+
+		//TBD: Command sites
+
+		std::vector<int> values;
+		if (data.size() < 4 || data[3] == "")
+		{
+			//V72
+			values.push_back(0);
+		}
+		else
+		{
+			//V71
+			int address;
+			if (sscanf(data[3].c_str(), "%o", &address) != 1)
+			{
+				return 2;
+			}
+
+			if (address < 0 || address > 03777)
+			{
+				return 2;
+			}
+			values.push_back(address);
+		}
+
+		//Vehicle ID
+		int VehID;
+		if (data.size() < 5)
+		{
+			if (load == 18 || load == 19)
+			{
+				VehID = 4;
+			}
+			else
+			{
+				VehID = 3;
+			}
+		}
+		else
+		{
+			if (sscanf(data[4].c_str(), "%d", &VehID) != 1)
+			{
+				return 2;
+			}
+		}
+
+		CMMERMEM(block, 0, 0, values);
+	}
+	//Generate an erasable memory update with octal entries
+	else if (med == "EO")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		int load, block;
+		if (sscanf(data[0].c_str(), "%d", &load) != 1)
+		{
+			return 2;
+		}
+		switch (load)
+		{
+		case 18:
+			block = 0;
+			break;
+		case 19:
+			block = 1;
+			break;
+		case 38:
+			block = 2;
+			break;
+		case 39:
+			block = 3;
+			break;
+		default:
+			return 2;
+		}
+
+		AGCErasableMemoryUpdateMakeupBlock *bl = &CZERAMEM.Blocks[block];
+
+		int line;
+		if (sscanf(data[1].c_str(), "%o", &line) != 1)
+		{
+			return 2;
+		}
+		if (line < 02)
+		{
+			return 2;
+		}
+		if (bl->IsVerb72)
+		{
+			if (line > 023) return 2;
+		}
+		else
+		{
+			if (line > 024) return 2;
+		}
+
+		int value;
+		if (sscanf(data[2].c_str(), "%o", &value) != 1)
+		{
+			return 2;
+		}
+
+		//Check for valid value or address
+		bool IsAddress;
+		if (bl->IsVerb72)
+		{
+			//Even lines are addresses
+			IsAddress = (line % 2 == 0);
+		}
+		else
+		{
+			//Only line 2 is an address
+			IsAddress = (line == 02);
+		}
+		if (value < 0)
+		{
+			return 2;
+		}
+		if (IsAddress)
+		{
+			if (value > 03777) return 2;
+		}
+		else
+		{
+			if (value > 077777) return 2;
+		}
+
+		std::vector<int> values;
+
+		values.push_back(value);
+
+		CMMERMEM(block, 2, line, values);
+	}
 	return 0;
 }
 
@@ -36786,6 +37172,156 @@ void RTCC::CMMTMEIN(int L, double hrs)
 	block->Octals[0] = OrbMech::DoubleToBuffer(centiseconds, 28, 1);
 	block->Octals[1] = OrbMech::DoubleToBuffer(centiseconds, 28, 0);
 	block->TimeIncrement = hrs * 3600.0;
+}
+
+void RTCC::CMMERMEM(int blocknum, int med, int line, const std::vector<int> &data)
+{
+	//med: 0 = CEI (initialize), 1 = CEE (enter in engineering format), 2 = CEO (enter in octal format), 3 = CEC (change or delete)
+
+	if (blocknum < 0 || blocknum > 3) return;
+
+	const int maxdata = 19;
+
+	unsigned i;
+
+	AGCErasableMemoryUpdateMakeupBlock* block = &CZERAMEM.Blocks[blocknum];
+
+	if (med == 0)
+	{
+		//Initialize
+		block->GETofGeneration = GETfromGMT(RTCCPresentTimeGMT());
+
+		if (data[0] == 0)
+		{
+			//V72
+			block->IsVerb72 = true;
+		}
+		else if (data[0] >= 0 && data[0] <= 03777)
+		{
+			//V71
+			block->IsVerb72 = false;
+
+			block->Data[0].OctalData = data[0];
+			block->Data[0].DataType = 0;
+			block->Data[0].EndOfDataFlag = true;
+			block->Data[0].EngineeringUnits = 0.0;
+			block->Data[0].ValueLeastSignBit = 0.0;
+		}
+		else
+		{
+			//Error
+			return;
+		}
+
+		if (block->SequenceNumber == 0)
+		{
+			switch (blocknum)
+			{
+			case 0:
+				block->SequenceNumber = 1800;
+				break;
+			case 1:
+				block->SequenceNumber = 1900;
+				break;
+			case 2:
+				block->SequenceNumber = 3800;
+				break;
+			case 3:
+				block->SequenceNumber = 3900;
+				break;
+			}
+		}
+		block->SequenceNumber++;
+
+		int num;
+
+		if (block->IsVerb72)
+		{
+			num = 0;
+		}
+		else
+		{
+			num = 1;
+		}
+
+		//Blank out everything
+		for (i = num; i < maxdata; i++)
+		{
+			block->Data[i].OctalData = 0x8000;
+			block->Data[i].DataType = 1;
+			block->Data[i].EndOfDataFlag = true;
+			block->Data[i].ValueLeastSignBit = 0.0;
+			block->Data[i].EngineeringUnits = 0.0;
+		}
+	}
+	else if (med == 1 || med == 2)
+	{
+		//Octal data
+		unsigned num = line - 2;
+
+		//Check if any numbers before num are not valid
+		for (i = 0; i < num; i++)
+		{
+			if (block->Data[i].OctalData == 0x8000)
+			{
+				//Error
+				return;
+			}
+		}
+
+		for (i = 0; i < data.size(); i++)
+		{
+			block->Data[num].OctalData = data[i];
+			block->Data[num].DataType = 1;
+			block->Data[num].EndOfDataFlag = false;
+			block->Data[num].ValueLeastSignBit = 0.0;
+			block->Data[num].EngineeringUnits = 0.0;
+
+			num++;
+
+			if (num >= maxdata) break;
+		}
+
+		for (i = 0; i < num - 1; i++)
+		{
+			block->Data[i].EndOfDataFlag = false;
+		}
+
+		block->Index = num + 1;
+
+		//Blank out rest
+		for (i = num; i < maxdata; i++)
+		{
+			block->Data[i].OctalData = 0x8000;
+			block->Data[i].DataType = 1;
+			block->Data[i].EndOfDataFlag = true;
+			block->Data[i].ValueLeastSignBit = 0.0;
+			block->Data[i].EngineeringUnits = 0.0;
+		}
+	}
+	else if (med == 3)
+	{
+		//Change or delete data
+
+		unsigned num = line - 2;
+
+		if (num > 0)
+		{
+			block->Data[num - 1].EndOfDataFlag = true;
+		}
+
+		block->Index = num + 1;
+
+		//Blank out rest
+		for (i = num; i < maxdata; i++)
+		{
+			block->Data[i].OctalData = 0x8000;
+			block->Data[i].DataType = 1;
+			block->Data[i].EndOfDataFlag = true;
+			block->Data[i].ValueLeastSignBit = 0.0;
+			block->Data[i].EngineeringUnits = 0.0;
+		}
+	}
 }
 
 void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)

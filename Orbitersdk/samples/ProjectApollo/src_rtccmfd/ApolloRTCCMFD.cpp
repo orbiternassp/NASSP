@@ -43,7 +43,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 : MFD2 (w, h, vessel)
 {
 	screen = 0;
-	RTETradeoffScreen = 0;
+	subscreen = 0;
 
 	if (!g_SC) {
 		g_SC = new AR_GCore(vessel);                     // First time only in this Orbiter session. Init the static core.
@@ -794,11 +794,6 @@ void ApolloRTCCMFD::menuMidcoursePage()
 void ApolloRTCCMFD::menuSetLunarLiftoffPage()
 {
 	SelectPage(23);
-}
-
-void ApolloRTCCMFD::menuSetEMPPage()
-{
-	SelectPage(24);
 }
 
 void ApolloRTCCMFD::menuSetNavCheckPADPage()
@@ -1782,6 +1777,37 @@ bool GenericVectorInputBox(void *id, char *str, void *data)
 	return false;
 }
 
+void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message, void(ApolloRTCCMFD::*func)(void))
+{
+	void *data2;
+
+	tempData.sVal = val;
+	tempData.ptr = this;
+	tempData.func = func;
+
+	data2 = &tempData;
+
+	bool GenericStringInputBox(void *id, char *str, void *data);
+	oapiOpenInputBox(message, GenericStringInputBox, 0, 25, data2);
+}
+
+bool GenericStringInputBox(void *id, char *str, void *data)
+{
+	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
+
+	arr->sVal->assign(str);
+
+	if (arr->func)
+	{
+		ApolloRTCCMFD *ptr = arr->ptr;
+		void (ApolloRTCCMFD::*func)(void) = arr->func;
+
+		(ptr->*func)();
+	}
+
+	return true;
+}
+
 void ApolloRTCCMFD::menuCycleRecoveryTargetSelectionPages()
 {
 	if (GC->rtcc->RZDRTSD.CurrentPage < GC->rtcc->RZDRTSD.TotalNumPages)
@@ -1933,13 +1959,13 @@ void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
 {
-	if (RTETradeoffScreen < 5)
+	if (subscreen < 5)
 	{
-		RTETradeoffScreen++;
+		subscreen++;
 	}
 	else
 	{
-		RTETradeoffScreen = 0;
+		subscreen = 0;
 	}
 }
 
@@ -5943,13 +5969,13 @@ void ApolloRTCCMFD::StoreStatus(void) const
 	screenData.screen = screen;
 	screenData.marker = marker;
 	screenData.markermax = markermax;
-	screenData.RTETradeoffScreen = RTETradeoffScreen;
+	screenData.subscreen = subscreen;
 }
 
 void ApolloRTCCMFD::RecallStatus(void)
 {
 	SelectPage(screenData.screen);
-	RTETradeoffScreen = screenData.RTETradeoffScreen;
+	subscreen = screenData.subscreen;
 	marker = screenData.marker;
 	markermax = screenData.markermax;
 }
@@ -6818,33 +6844,159 @@ void ApolloRTCCMFD::menuLunarLiftoffSaveInsertionSV()
 	SelectUplinkScreen(9); //Go to CMC LM state vector page
 }
 
-void ApolloRTCCMFD::menuSetEMPUplinkP99()
+void ApolloRTCCMFD::menuSetEMPFileName()
 {
-	G->EMPUplinkNumber = 0;
-	G->EMPUplinkType = 0;
+	GenericStringInput(&G->EMPFile, "Enter EMP file name:", &ApolloRTCCMFD::ErasableMemoryFileRead);
 }
 
-void ApolloRTCCMFD::menuEMPUplink()
+void ApolloRTCCMFD::ErasableMemoryFileRead()
 {
-	if (G->EMPUplinkType == 0)
-	{
-		G->EMPP99Uplink(G->EMPUplinkNumber);
-	}
+	G->ErasableMemoryFileRead();
 }
 
 void ApolloRTCCMFD::menuSetEMPUplinkNumber()
 {
-	if (G->EMPUplinkType == 0)
+	if (G->EMPUplinkMaxNumber > 0)
 	{
-		if (G->EMPUplinkNumber < 3)
-		{
-			G->EMPUplinkNumber++;
-		}
-		else
-		{
-			G->EMPUplinkNumber = 0;
-		}
+		GenericIntInput(&G->EMPUplinkNumber, "Enter load number:", NULL, 1, G->EMPUplinkMaxNumber);
 	}
+}
+
+void ApolloRTCCMFD::menuInitializeEMP()
+{
+	bool InitializeEMPInputBox(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter starting address (V71) or leave blank (V72):", InitializeEMPInputBox, 0, 25, (void*)this);
+}
+
+bool InitializeEMPInputBox(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_EMPInit(str);
+	return true;
+}
+
+void ApolloRTCCMFD::set_EMPInit(char *str)
+{
+	char Buffer[128];
+	int load;
+
+	if (subscreen == 0)
+	{
+		load = 18;
+	}
+	else if (subscreen == 1)
+	{
+		load = 19;
+	}
+	else if (subscreen == 2)
+	{
+		load = 38;
+	}
+	else
+	{
+		load = 39;
+	}
+
+	sprintf(Buffer, "CEI,%d,HSK,HSK,%s;", load, str);
+	GeneralMEDRequest(Buffer);
+}
+
+void ApolloRTCCMFD::menuEditEMPOctal()
+{
+	bool EditEMPOctalInputBox(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter line and octal value:", EditEMPOctalInputBox, 0, 25, (void*)this);
+}
+
+
+bool EditEMPOctalInputBox(void *id, char *str, void *data)
+{
+	int line, value;
+
+	if (sscanf(str, "%o %o", &line, &value) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_EMPOctal(line, value);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_EMPOctal(int line, int value)
+{
+	char Buffer[128];
+	int load;
+
+	if (subscreen == 0)
+	{
+		load = 18;
+	}
+	else if (subscreen == 1)
+	{
+		load = 19;
+	}
+	else if (subscreen == 2)
+	{
+		load = 38;
+	}
+	else
+	{
+		load = 39;
+	}
+
+	sprintf(Buffer, "CEO,%d,%o,%o;", load, line, value);
+	GeneralMEDRequest(Buffer);
+}
+
+void ApolloRTCCMFD::menuDeleteEMPLine()
+{
+	bool DeleteEMPOctalInputBox(void *id, char *str, void *data);
+	oapiOpenInputBox("Select line to delete from uplink:", DeleteEMPOctalInputBox, 0, 25, (void*)this);
+}
+
+bool DeleteEMPOctalInputBox(void *id, char *str, void *data)
+{
+	int line;
+
+	if (sscanf(str, "%o", &line) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_EMPDelete(line);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_EMPDelete(int line)
+{
+	char Buffer[128];
+	int load;
+
+	if (subscreen == 0)
+	{
+		load = 18;
+	}
+	else if (subscreen == 1)
+	{
+		load = 19;
+	}
+	else if (subscreen == 2)
+	{
+		load = 38;
+	}
+	else
+	{
+		load = 39;
+	}
+
+	sprintf(Buffer, "CEC,%d,HSK,HSK,,,%o;", load, line);
+	GeneralMEDRequest(Buffer);
+}
+
+void ApolloRTCCMFD::menuLoadEMP()
+{
+	G->ErasableMemoryFileLoad(subscreen);
+}
+
+void ApolloRTCCMFD::menuUplinkEMP()
+{
+	G->ErasableMemoryUpdateUplink(subscreen);
 }
 
 void ApolloRTCCMFD::menuNavCheckPADCalc()
@@ -8800,6 +8952,14 @@ void ApolloRTCCMFD::SelectUplinkScreen(int num)
 	case 14: //CMC Entry Update
 		screen = 119;
 		break;
+	case 18: //CMC Erasable Memory Update A
+		screen = 24;
+		subscreen = 0;
+		break;
+	case 19: //CMC Erasable Memory Update B
+		screen = 24;
+		subscreen = 1;
+		break;
 	case 20: //LGC LM State Vector
 		screen = 101;
 		break;
@@ -8823,6 +8983,14 @@ void ApolloRTCCMFD::SelectUplinkScreen(int num)
 		break;
 	case 28: //LGC Descent Update
 		screen = 61;
+		break;
+	case 38: //LGC Erasable Memory Update A
+		screen = 24;
+		subscreen = 2;
+		break;
+	case 39: //LGC Erasable Memory Update B
+		screen = 24;
+		subscreen = 3;
 		break;
 	case 49: //LVDC Navigation Update
 		screen = 96;

@@ -3310,6 +3310,75 @@ unsigned long long BinToDec(unsigned long long num)
 	return dec;
 }
 
+int SingleToBuffer(double x, int SF, bool TwosComplement)
+{
+	double x2;
+	int c;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c = (unsigned)round(x2);
+
+	if (TwosComplement == false && c > 037777)
+	{
+		c = 037777;
+	}
+
+	if (x < 0.0)
+	{
+		// Polarity change
+		c = 0x7FFF & (~c);
+		if (TwosComplement)
+		{
+			c++;
+		}
+	}
+
+	return c;
+}
+
+void DoubleToBuffer(double x, int SF, int &c1, int &c2)
+{
+	double x2;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c1 = (unsigned)x2;
+	x2 = x2 - (double)c1;
+	x2 *= pow(2, 14);
+	c2 = (unsigned)round(x2);
+	if (c2 > 037777)
+	{
+		c2 = 037777;
+	}
+
+	if (x < 0.0) c1 = 0x7FFF & (~c1); // Polarity change
+	if (x < 0.0) c2 = 0x7FFF & (~c2); // Polarity change
+}
+
+void TripleToBuffer(double x, int SF, int &c1, int &c2, int &c3)
+{
+	double x2;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c1 = (unsigned)x2;
+	x2 = x2 - (double)c1;
+	x2 *= pow(2, 14);
+	c2 = (unsigned)x2;
+	x2 = x2 - (double)c2;
+	x2 *= pow(2, 14);
+	c3 = (unsigned)round(x2);
+	if (c3 > 037777)
+	{
+		c3 = 037777;
+	}
+
+	if (x < 0.0) c1 = 0x7FFF & (~c1); // Polarity change
+	if (x < 0.0) c2 = 0x7FFF & (~c2); // Polarity change
+	if (x < 0.0) c3 = 0x7FFF & (~c3); // Polarity change
+}
+
 double cot(double a)
 {
 	return cos(a) / sin(a);
