@@ -58,7 +58,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Get TEPHEM
 		TEPHEM0 = 40038.;
-		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc);
+		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc, true);
 		double LaunchMJD = (tephem_scal / 8640000.) + TEPHEM0;
 		LaunchMJD = (LaunchMJD - SystemParameters.GMTBASE)*24.0;
 
@@ -215,6 +215,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->GET05G = res.GET05G;
 
 		sprintf(form->purpose, "TLI+90");
+		sprintf(form->remarks, "No ullage");
 
 		GMTSV = PZMPTCSM.TimeToBeginManeuver[0] - 10.0*60.0; //10 minutes before TB6
 		sv_uplink = coast(sv, GMTSV - sv.GMT, RTCC_MPT_CSM); //Coast with venting and drag taken into account
@@ -309,6 +310,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManeuverPAD(&opt, *form);
 
 		sprintf(form->purpose, "Evasive");
+		sprintf(form->remarks, "No ullage");
 	}
 	break;
 	case 8: //Block Data 1
@@ -509,6 +511,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 				AP11ManeuverPAD(&manopt, *form);
 				sprintf(form->purpose, manname);
+				if (manopt.enginetype == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "No ullage");
 
 				AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
 				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
@@ -557,7 +560,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManeuverPAD(&opt, *form);
 
 		sprintf(form->purpose, "Flyby");
-		sprintf(form->remarks, "Height of pericynthion is %.0f NM", res.FlybyAlt / 1852.0);
+		sprintf(form->remarks, "No ullage. Height of pericynthion is %.0f NM", res.FlybyAlt / 1852.0);
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;
@@ -683,6 +686,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			AP11ManeuverPAD(&manopt, *form);
 			sprintf(form->purpose, "MCC-3");
+			if (manopt.enginetype == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "No ullage");
 
 			AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv_ephem);
 			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
@@ -810,6 +814,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			AP11ManeuverPAD(&manopt, *form);
 			sprintf(form->purpose, "MCC-4");
+			if (engine == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "No ullage");
 
 			AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv);
 			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
@@ -879,6 +884,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->remarks, "Requires realignment to preferred REFSMMAT");
 		}
 		sprintf(form->purpose, "PC+2");
+		sprintf(form->remarks, "No ullage");
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;
@@ -934,7 +940,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "LOI-1");
-		sprintf(form->remarks, "LM weight is %.0f", form->LMWeight);
+		sprintf(form->remarks, "No ullage. LM weight is %.0f", form->LMWeight);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -989,6 +995,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "LOI-2");
+		sprintf(form->remarks, "Two-jet ullage for 17 seconds");
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -1142,6 +1149,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, manname);
+		sprintf(form->remarks, "Two-jet ullage for 14 seconds");
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;
@@ -1517,7 +1525,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lem = (LEM *)calcParams.tgt;
 		TEPHEM0 = 40038.;
 
-		tephem = GetTEPHEMFromAGC(&lem->agc.vagc);
+		tephem = GetTEPHEMFromAGC(&lem->agc.vagc, false);
 		t_AGC = GetClockTimeFromAGC(&lem->agc.vagc) / 100.0;
 
 		tephem = (tephem / 8640000.) + TEPHEM0;
@@ -1863,6 +1871,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "Backup Insertion");
+		sprintf(form->remarks, "Four-jet ullage for 10 seconds");
 
 		sv_Ins = ExecuteManeuver(sv_CSM, P30TIG, dV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
 
@@ -2187,6 +2196,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			AP11ManeuverPAD(&opt, *form);
 			sprintf(form->purpose, manname);
+			if (opt.enginetype == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "Two-jet ullage for 14 seconds");
 			form->lat = res.latitude*DEG;
 			form->lng = res.longitude*DEG;
 			form->RTGO = res.RTGO;

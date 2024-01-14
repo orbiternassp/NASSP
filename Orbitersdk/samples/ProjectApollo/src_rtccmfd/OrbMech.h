@@ -370,6 +370,9 @@ namespace OrbMech {
 	unsigned long long octal_binary(int oct);
 	unsigned long long BinToDec(unsigned long long num);
 	double DecToDouble(int dec1, int dec2);
+	int SingleToBuffer(double x, int SF, bool TwosComplement = false);
+	void DoubleToBuffer(double x, int SF, int &c1, int &c2);
+	void TripleToBuffer(double x, int SF, int &c1, int &c2, int &c3);
 	double round(double number);
 	double trunc(double d);
 	void normalizeAngle(double &a, bool positive = true);
