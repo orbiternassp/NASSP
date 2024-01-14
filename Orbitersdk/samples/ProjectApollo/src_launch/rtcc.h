@@ -4864,7 +4864,7 @@ public:
 	} VEHDATABUF;
 
 	double GetClockTimeFromAGC(agc_t *agc);
-	double GetTEPHEMFromAGC(agc_t *agc, int address = 01706);
+	double GetTEPHEMFromAGC(agc_t *agc, bool IsCMC);
 
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);

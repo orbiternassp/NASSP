@@ -743,6 +743,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	NodeConvOpt = true;
 	NodeConvLat = 0.0;
 	NodeConvLng = 0.0;
+	NodeConvHeight = 0.0;
 	NodeConvGET = 0.0;
 	NodeConvResLat = 0.0;
 	NodeConvResLng = 0.0;

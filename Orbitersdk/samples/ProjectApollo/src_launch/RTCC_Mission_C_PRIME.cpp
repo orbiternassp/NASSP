@@ -58,7 +58,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		//Get TEPHEM
 		TEPHEM0 = 40038.;
-		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc);
+		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc, true);
 		double LaunchMJD = (tephem_scal / 8640000.) + TEPHEM0;
 		LaunchMJD = (LaunchMJD - SystemParameters.GMTBASE)*24.0;
 
