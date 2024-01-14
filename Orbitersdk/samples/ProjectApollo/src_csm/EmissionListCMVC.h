@@ -60,9 +60,9 @@ DWORD IntegralLights_P8[] = {
 		VC_MAT_Cinematic_Panel1_AND_3_t,
 		VC_MAT_Cinematic_Panel2_t,
 		VC_MAT_Rotary_t,
-		VC_MAT_CMVCTex1_t,
-		VC_MAT_CMVCTex2_t,
-		VC_MAT_CMVCTex3_t,
+//		VC_MAT_CMVCTex1_t,
+//		VC_MAT_CMVCTex2_t,
+//		VC_MAT_CMVCTex3_t,
 		VC_MAT_csm_lower_equip_bay_t,
 		VC_MAT_csm_right_cb_panels_t,
 		VC_MAT_IlluminatingPartsPanel01_t,
@@ -70,7 +70,10 @@ DWORD IntegralLights_P8[] = {
 		VC_MAT_IlluminatingPartsPanel03_t,
 		VC_MAT_csm_cabin_press_panel_t,
 		VC_MAT_Talkbacks_t,
-		VC_MAT_FDAI_Frame_t
+		VC_MAT_FDAI_Frame_t,
+
+		VC_MAT_CMVCTex2_ILL_P8_t,
+		VC_MAT_CMVCTex3_ILL_P8_t
 	};
 
 DWORD FloodLights_P8[] = {
@@ -116,7 +119,16 @@ DWORD FloodLights_P8[] = {
 		VC_MAT_IlluminatingPartsPanel02_t,
 		VC_MAT_IlluminatingPartsPanel03_t,
 		VC_MAT_Talkbacks_t,
-		VC_MAT_Ordeal_Lighting
+		VC_MAT_Ordeal_Lighting,
+
+		VC_MAT_csm_right_cb_panels_ILL_P5_t,
+		VC_MAT_CMVCTex2_ILL_P100_t,
+		VC_MAT_CMVCTex2_ILL_P8_t,
+		VC_MAT_CMVCTex3_ILL_P5_t,
+		VC_MAT_CMVCTex1_ILL_P100_t,
+		VC_MAT_CMVCTex3_ILL_P8_t,
+		VC_MAT_CMVCTex1_ILL_P5_t,
+		VC_MAT_CMVCTex2_ILL_P5_t
 };
 
 DWORD NumericLights_P8[] = {
@@ -133,13 +145,14 @@ DWORD NumericLights_P8[] = {
 DWORD IntegralLights_P5[] = {
 
 		// TODO Material List
-		VC_MAT_CMVCTex2_t,
-		VC_MAT_CMVCTex3_t,
-		VC_MAT_Rotary_t,
-		VC_MAT_csm_right_cb_panels_t,
-		VC_MAT_LMVC_t,
-		VC_MAT_Colors_t,
-		VC_MAT_CB_black_t
+		VC_MAT_CMVCTex1_ILL_P5_t,
+		VC_MAT_CMVCTex2_ILL_P5_t,
+		VC_MAT_CMVCTex3_ILL_P5_t,
+//		VC_MAT_Rotary_t,
+		VC_MAT_csm_right_cb_panels_ILL_P5_t
+//		VC_MAT_LMVC_t,
+//		VC_MAT_Colors_t,
+//		VC_MAT_CB_black_t
 	};
 
 DWORD FloodLights_P5[] = {
@@ -160,9 +173,11 @@ DWORD FloodLights_P5[] = {
 DWORD IntegralLights_P100[] = {
 
 		// TODO Material List
-		VC_MAT_MAINVCTEX_t,
-		VC_MAT_csm_lower_equip_bay_t,
-		VC_MAT_csm_right_cb_panels_t
+//		VC_MAT_MAINVCTEX_t,
+//		VC_MAT_csm_lower_equip_bay_t,
+//		VC_MAT_csm_right_cb_panels_t,		
+		VC_MAT_CMVCTex2_ILL_P100_t,
+		VC_MAT_CMVCTex1_ILL_P100_t
 	};
 
 DWORD FloodLights_P100[] = {
