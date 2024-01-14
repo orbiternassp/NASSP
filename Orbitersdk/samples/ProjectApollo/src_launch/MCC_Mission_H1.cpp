@@ -67,7 +67,7 @@ void MCC::MissionSequence_H1()
 		break;
 		case 1:
 		{
-			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 20.0*60.0 + 15.0))  //4:13:20h GET per flight plan
+			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 20.0*60.0))  //1:20h from TLI cutoff
 			{
 				SlowIfDesired();
 				setState(MST_H1_TRANSLUNAR3);
@@ -111,7 +111,7 @@ void MCC::MissionSequence_H1()
 		break;
 		case 2:
 		{
-			if (SubStateTime > 3.0*60.0) //Start yaw maneuver not earlier than 3 minutes after LM ejection
+			if (SubStateTime > 3.5*60.0) //Start yaw maneuver not earlier than 3.5 minutes after LM ejection
 			{
 				sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_EVASIVE_MANEUVER_ENABLE, NULL);
 				setSubState(3);
@@ -119,7 +119,7 @@ void MCC::MissionSequence_H1()
 		}
 		break;
 		case 3:
-			if (SubStateTime >= 8.0*60.0 && rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 31.0*60.0 + 55.0)) //4:25h GET per flight plan. Not before 8 minutes after yaw maneuver command was sent
+			if (SubStateTime >= 8.0*60.0 && rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 31.0*60.0 + 40.0)) //11m40s after LM ejection. Not before 8 minutes after yaw maneuver command was sent
 			{
 				SlowIfDesired();
 				setState(MST_H1_TRANSLUNAR4);
