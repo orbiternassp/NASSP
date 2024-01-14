@@ -459,7 +459,97 @@ This display is based on the actual display used by the flight controllers for A
 \textbf{THETA:} Angle between the desired lunar orbit plane and the actual achieved plane.\\
 \textbf{FND/E:} True anomaly at LOI on the first ellipse (post LOI).\\
 \newpage
+\subsection{Lunar Launch Window Processor}
+\subsubsection{Introduction}
+The Lunar Launch Window Processor (LLWP) computes the lunar module recommended time of lift-off from the lunar surface and the lunar launch window. It is used for the coelliptic rendezvous profile with the CSI and CDH maneuvers. For the short profile (Apollo 14 and later), see the lunar launch targeting processor.\\
 
+The LLWP computes lift-off times as a function of the height difference ($\Delta$h) in the coelliptic orbits phase of the lunar concentric rendezvous plan. The recommended LM time of lift-off from the lunar surface is that launch time during a given CSM revolution for which the required $\Delta$h is the nominal mission value. The lunar launch window is defined as the total interval of time in the CSM revolution during which the IM can lift-off and rendezvous with the CSM within the limits of maneuver-$\Delta$V budgets, LM ascent stage power lifetime, and safe orbital altitudes. The lift-off time computation involves simulation of the mission
+from LM launch through rendezvous. The lift-off time which satisfies phase convergence for the given coelliptic $\Delta$h at terminal phase initiation is the required time. The LLWP output for each $\Delta$h includes the lift-off time, maneuver times, and maneuver-$\Delta$V values.\\
+
+The LLWP times may be computed based on either LM or CSM execution of the rendezvous maneuvers. In either case, $\Delta$h is positive when the maneuvering vehicle is below the target vehicle, and is negative otherwise. The positive $\Delta$h values are limited by the minimum allowable pericynthion altitude. The negative $\Delta$h values are limited by the rendezvous $\Delta$V budgeted for the maneuvering vehicle; however, a theoretical limit exists above which the vehicle cannot acquire the target along the input elevation angle.\\
+
+The MFD has two initialization pages, corresponding to MEDs K13 and K14. Because LGC P12 targets and powered flight arc and time are inputs, it can improve the accuracy of the calculation to simulate through a lunar ascent with an updated liftoff time. After a LLWP calculation go to the lunar ascent page, input the desired liftoff time and run the ascent simulation. This updates the actually required powered flight arc and time which can then be used in another LLWP calculation.\\
+\newpage
+\subsubsection{Initialization}
+The following inputs correspond to MED K13, Initialization for LM Targeting and Launch Window:\\
+
+\textbf{PFA:} Powered flight arc from lunar liftoff to insertion, in degrees.\\
+\textbf{PFT:} Powered flight time from lunar liftoff to insertion, in seconds.\\
+\textbf{HEI:} Height of insertion, in feet.\\
+\textbf{VLH:} Horizontal velocity at insertion, in feet per second. Corresponds to LGC P12 input.\\
+\textbf{VLV:} Vertical velocity at insertion, in feet per second. Corresponds to LGC P12 input.\\
+\textbf{YAW:} Maximum yaw steering capability during ascent, in degrees. Effectively a maximum crossrange.\\
+
+\textbf{LIF:} Maximum ascent stage lifetime since launch, in hours.\\
+\textbf{MHE:} Minimum safe height from rendezvous maneuvers, in nautical miles.\\
+\textbf{LDV:} Maximum LM Delta V capability, in feet per second.\\
+\textbf{CDV:} Maximum CSM Delta V capability, in feet per second.\\
+
+The following inputs correspond to MED K14, Launch Window Initialization:\\
+
+\textbf{BIA:} Time bias for CSI if CSM is active vehicle. CSI will be done at LM apsis plus input time bias. In minutes.\\
+\textbf{E:} Elevation angle to initiate terminal phase (TPI) on, in degrees.\\
+\textbf{WT:} Terminal phase travel angle from TPI to TPF, in degrees.\\ 
+\textbf{TPH:} Offset height difference at TPF, in nautical miles.\\
+\textbf{TPP:} Phase angle offset at TPF, in nautical miles.\\
+
+\textbf{DHB:} Height difference to begin curve fit, in nautical miles.\\
+\textbf{DHI:} Height difference increment for curve fit, in nautical miles.\\
+\newpage
+\subsubsection{Calculation}
+
+These inputs correspond to MED K15, Generate Launch Window:\\
+
+\textbf{CHA:} Choose either CSM or LM as the chaser, the active vehicle in the rendezvous.\\
+\textbf{VTI:} Choose the CSM vector time for the LLWP calculation. MPT mode only.\\
+\textbf{THT:} Either a threshold time for liftoff or the TPI time if it was input. Currently only the second option is implemented.\\
+\textbf{CSI:} CSI maneuver flag. If 0 is input then CSI is done 90 degrees from insertion. If any negative value is input then CSI is done at apolune after insertion. If a positive value is input then CSI is done at a delta time from insertion. Typically CSI is set at 50 minutes after insertion.\\
+\textbf{CDH:} CDH maneuver flag. If 0 is input then CDH is done at an upcoming apsis after CSI. If positive, it must be an odd number and CDH is done at N/2 orbits after CSI.\\
+
+\textbf{TGT:} Select the target vehicle, typically the CSM (non-MPT mode only).\\
+\textbf{TPI:} TPI definition. Enter the desired TPI time. This must be generated externally, either with the TPI times page or the sunrise/sunset table (MPT mode only).\\
+\textbf{LLW:} Delta height flag. A positive number indicates request for complete launch window and the number of delta heights. A negative number indicates request for the input delta heights only. Presently only the second option is implemented.\\
+\textbf{DH:} Input three delta heights, being used if the delta height flag indicates delta heights are being input.\\
+%\newpage
+\subsubsection{Display}
+
+\begin{figure}[hp]
+	\centering
+		\includegraphics{./ApolloRTCCMFDFiles/RTCCMFD_LLWP_Display.png}
+	\caption{Example LLWP Calculation}
+	\label{fig:LLWPDisplay}
+\end{figure}
+\textbf{Display Parameters}\\
+
+\textbf{CSM STA:} Station ID of CSM state vector used in the LLWP calculation.\\
+\textbf{GMTV:} GMT of CSM state vector.\\
+\textbf{GETV:} GET of CSM state vector.\\
+\textbf{MVR VEH:} Active vehicle, performing the rendezvous maneuvers.\\
+\textbf{LM POSITION:} Latitude and longitude of the lunar landing site, from which the LLWP simulates the launch.\\
+\textbf{THT:} Threshold time or TPI time.\\
+\textbf{LM STA:} Station ID of LM state vector used in the LLWP calculation.\\
+\textbf{GMTV:} GMT of LM state vector.\\
+\textbf{GETV:} GET of LM state vector.\\
+\textbf{DTCSI:} Input time from insertion to CSI.\\
+\textbf{LM LIFE:} LM maximum life time in hours.\\
+\textbf{DV MAX:} Maximum DV of active vehicle.\\
+\textbf{MIN H:} Minimum safe height for rendezvous maneuvers, in nautical miles.\\
+
+\textbf{ID:} Number in table of solutions.\\
+\textbf{M:} Number of revolutions from launch to TPI.\\
+\textbf{DH:} Delta height of solution, in nautical miles.\\
+\textbf{GETLO:} GET of calculated liftoff time.\\
+\textbf{GETINS:} GET of calculation insertion time.\\
+\textbf{GETCSI:} GET of calculated CSI time.\\
+\textbf{DVCSI:} Delta V of CSI maneuver.\\
+\textbf{GETCDH:} GET of calculated CDH time.\\
+\textbf{DVCDH:} Delta V of CDH maneuver.\\
+\textbf{GETTPI:} GET of calculated TPI time.\\
+\textbf{DVTPI:} Delta V of TPI maneuver.\\
+\textbf{DVTPF:} Delta V of TPF maneuver.\\
+\textbf{DVT:} Total Delta V of rendezvous plan.\\
+
+\newpage
 \subsection{Deorbit Targeting}
 \subsubsection{Introduction}
 
@@ -748,7 +838,7 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 \textbf{MD:} Miss distance of the primary entry mode to the target splashdown coordinates. In nautical miles.\\
 
 \newpage
-\subsection{Launch Window Processor}
+\subsection{Skylab Launch Window Processor}
 
 The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. At present there is no capability to stop and re-start the countdown for Saturn launches, so only at the predetermined time in a launch scenario can the launch be done. The liftoff time options other than input time should therefore not used for now.\\
 
@@ -2316,6 +2406,10 @@ MCLRLS & Octal LGC address for landing site vector uplink (and downlink) & 2022 
 MCLTTD & Octal LGC address for the time of lunar landing & 2400 & None\\
 \hline
 MCLABT & Octal LGC address for descent abort constants & 2545 & None\\
+\hline
+MCCTEP & Octal CMC address for TEPHEM (liftoff time) & 1706 & None\\
+\hline
+MCLTEP & Octal LGC address for TEPHEM (liftoff time) & 1706 & None\\
 \hline
 PZREAP\_RRBIAS & Relative range override for the Return-to-Earth processor & 1285.0 & Nautical Miles\\
 \hline

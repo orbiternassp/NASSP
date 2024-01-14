@@ -2200,6 +2200,8 @@ bool RTCC::LoadMissionConstantsFile(std::string file)
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
 			papiReadScenario_int(Buff, "MCLTTD", SystemParameters.MCLTTD);
 			papiReadScenario_int(Buff, "MCLABT", SystemParameters.MCLABT);
+			papiReadScenario_oct(Buff, "MCCTEP", SystemParameters.MCCTEP);
+			papiReadScenario_oct(Buff, "MCLTEP", SystemParameters.MCLTEP);
 			papiReadScenario_double(Buff, "MCTVEN", SystemParameters.MCTVEN);
 			papiReadScenario_doublearr(Buff, "MDLEIC", SystemParameters.MDLEIC, 3);
 			if (papiReadScenario_double(Buff, "RRBIAS", dtemp))
@@ -5111,9 +5113,19 @@ double RTCC::GetClockTimeFromAGC(agc_t *agc)
 	return agc->Erasable[AGC_BANK(025)][AGC_ADDR(025)] + agc->Erasable[AGC_BANK(024)][AGC_ADDR(024)] * pow((double) 2., (double) 14.);
 }
 
-double RTCC::GetTEPHEMFromAGC(agc_t *agc, int address)
+double RTCC::GetTEPHEMFromAGC(agc_t *agc, bool IsCMC)
 {
-	int tephem_int[3];
+	int tephem_int[3], address;
+
+	//Either CMC or LGC TEPHEM address
+	if (IsCMC)
+	{
+		address = SystemParameters.MCCTEP;
+	}
+	else
+	{
+		address = SystemParameters.MCLTEP;
+	}
 
 	tephem_int[0] = agc->Erasable[AGC_BANK(address)][AGC_ADDR(address)];
 	tephem_int[1] = agc->Erasable[AGC_BANK(address + 1)][AGC_ADDR(address + 1)];
