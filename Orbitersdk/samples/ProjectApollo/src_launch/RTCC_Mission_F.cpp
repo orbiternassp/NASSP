@@ -58,7 +58,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Get TEPHEM
 		TEPHEM0 = 40038.;
-		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc);
+		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc, true);
 		double LaunchMJD = (tephem_scal / 8640000.) + TEPHEM0;
 		LaunchMJD = (LaunchMJD - SystemParameters.GMTBASE)*24.0;
 
@@ -1525,7 +1525,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lem = (LEM *)calcParams.tgt;
 		TEPHEM0 = 40038.;
 
-		tephem = GetTEPHEMFromAGC(&lem->agc.vagc);
+		tephem = GetTEPHEMFromAGC(&lem->agc.vagc, false);
 		t_AGC = GetClockTimeFromAGC(&lem->agc.vagc) / 100.0;
 
 		tephem = (tephem / 8640000.) + TEPHEM0;

@@ -5873,7 +5873,7 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	}
 
 	//Get TEPHEM in centiseconds
-	double tephem = GC->rtcc->GetTEPHEMFromAGC(agc);
+	double tephem = GC->rtcc->GetTEPHEMFromAGC(agc, G->vesseltype == 0);
 
 	//Calculate MJD of TEPHEM
 	LaunchMJD = (tephem / 8640000.) + GC->rtcc->SystemParameters.TEPHEM0;
