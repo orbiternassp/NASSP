@@ -12,6 +12,7 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_Ascent_Engine_Cover_t,
 	VC_MAT_Bags_Shelf_t,
 	VC_MAT_CB_black_t,
+	VC_MAT_CB_white_t,
 	VC_MAT_COAS_1_t,
 	VC_MAT_COAS_1ovhd_t,
 	VC_MAT_COAS_Holder1_t,
