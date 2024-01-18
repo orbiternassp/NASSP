@@ -810,6 +810,10 @@ struct RTCCSystemParameters
 	int MCLTTD = 2400;
 	//LGC address for descent abort constants
 	int MCLABT = 2545;
+	//CMC address for TEPHEM (liftoff time)
+	int MCCTEP = 01706;
+	//LGC address for TEPHEM (liftoff time)
+	int MCLTEP = 01706;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
 	int MGRTAG = 1;
 	//Maximum station characteristic blocks
