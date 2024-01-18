@@ -177,6 +177,14 @@ void SoundLib::InitSoundLib(VESSEL *v, char *soundclass)
 
 	Soundlib = XRSound::CreateInstance(v);
 	XRSoundActive = Soundlib->IsPresent();
+	Soundlib->SetDefaultSoundEnabled(XRSound::MusicFolder, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::CabinAmbienceGroup, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::RadioATCGroup, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::AltitudeCalloutsGroup, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::MachCalloutsGroup, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::DockingDistanceCalloutsGroup, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::DockingCallout, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::UndockingCallout, false);
 }
 
 void SoundLib::SetSoundLibMissionPath(char *mission)
