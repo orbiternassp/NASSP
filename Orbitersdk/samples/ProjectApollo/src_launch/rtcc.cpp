@@ -6431,7 +6431,7 @@ void RTCC::AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, 
 	V7XUpdate(71, str, buf->Octals, 17);
 	if (v66)
 	{
-		sprintf(str, "%sV66EV37E00E", str);
+		sprintf(str, "%sV66ER", str);
 	}
 }
 
@@ -6510,7 +6510,7 @@ void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, bool v66)
 	V7XUpdate(71, str, emem, 17);
 	if (v66)
 	{
-		sprintf(str, "%sV66EV37E00E", str);
+		sprintf(str, "%sV66ER", str);
 	}
 }
 
