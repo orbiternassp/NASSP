@@ -364,16 +364,19 @@ void ApolloRTCCMFD::Angle_Display(char *Buff, double angle, bool DispPlus)
 
 void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display a time in the format hhh:mm:ss
 {
-	double time2 = round(time);
+	int hours, minutes;
+	double seconds;
+
+	OrbMech::SStoHHMMSS(time, hours, minutes, seconds);
+
 	if (DispGET)
 	{
-		sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f GET", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
+		sprintf_s(Buff, 32, "%03d:%02d:%02.0f GET", hours, minutes, seconds);
 	}
 	else
 	{
-		sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
+		sprintf_s(Buff, 32, "%03d:%02d:%02.0f", hours, minutes, seconds);
 	}
-	//sprintf(Buff, "%03d:%02d:%02d", hh, mm, ss);
 }
 
 void ApolloRTCCMFD::GET_Display2(char* Buff, double time) //Display a time in the format hhh:mm:ss.ss
@@ -384,38 +387,52 @@ void ApolloRTCCMFD::GET_Display2(char* Buff, double time) //Display a time in th
 		pos = false;
 		time = abs(time);
 	}
-	int cs = (int)(round(time*100.0));
-	int hr = cs / 360000;
-	int min = (cs - 360000*hr) / 6000;
-	double sec = (double)(cs - 360000 * hr - 6000 * min) / 100.0;
+
+	int hours, minutes;
+	double seconds;
+
+	OrbMech::SStoHHMMSS(time, hours, minutes, seconds, 0.01);
+
 	if (pos)
 	{
-		sprintf(Buff, "%03d:%02d:%05.2lf", hr, min, sec);
+		sprintf(Buff, "%03d:%02d:%05.2lf", hours, minutes, seconds);
 	}
 	else
 	{
-		sprintf(Buff, "-%03d:%02d:%05.2lf", hr, min, sec);
+		sprintf(Buff, "-%03d:%02d:%05.2lf", hours, minutes, seconds);
 	}
 }
 
 void ApolloRTCCMFD::GET_Display3(char* Buff, double time) //Display a time in the format hhh:mm:ss.s
 {
-	double time2 = round(time);
-	sprintf(Buff, "%03.0f:%02.0f:%04.1f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
+	int hours, minutes;
+	double seconds;
+
+	OrbMech::SStoHHMMSS(time, hours, minutes, seconds, 0.1);
+
+	sprintf(Buff, "%03d:%02d:%04.1f", hours, minutes, seconds);
 }
 
 //Format: HH:MM:SS
 void ApolloRTCCMFD::GET_Display4(char* Buff, double time) //Display a time in the format hh:mm:ss
 {
-	double time2 = round(time);
-	sprintf(Buff, "%02.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
+	int hours, minutes;
+	double seconds;
+
+	OrbMech::SStoHHMMSS(time, hours, minutes, seconds);
+
+	sprintf(Buff, "%02d:%02d:%02.0f", hours, minutes, seconds);
 }
 
 //Format: HH:MM
 void ApolloRTCCMFD::GET_Display_HHMM(char *Buff, double time)
 {
-	double time2 = round(time);
-	sprintf(Buff, "%03.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0));
+	int hours, minutes;
+	double seconds;
+
+	OrbMech::SStoHHMMSS(time, hours, minutes, seconds, 60.0);
+
+	sprintf(Buff, "%03d:%02d", hours, minutes);
 }
 
 void ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
@@ -4923,17 +4940,17 @@ void ApolloRTCCMFD::menuSetSVTime()
 
 bool SVGETInput(void *id, char *str, void *data)
 {
-	int hh, mm, ss;
-	double SVtime;
+	int hh, mm;
+	double ss, SVtime;
 
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
 		SVtime = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_SVtime(SVtime);
 
 		return true;
 	}
-	else if (sscanf(str, "%d", &ss) == 1)
+	else if (sscanf(str, "%lf", &ss) == 1)
 	{
 		((ApolloRTCCMFD*)data)->set_SVtime(0);
 
@@ -5885,7 +5902,7 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 
 	int hh, mm;
 	double ss;
-	OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
+	OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss, 0.01);
 	char Buff[128];
 	//Update actual liftoff time
 	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
@@ -6200,8 +6217,8 @@ void ApolloRTCCMFD::menuSetTLMCCTLCTimesConstraints()
 	int hh1, hh2, mm1, mm2;
 	double ss1, ss2;
 
-	SStoHHMMSS(GC->rtcc->PZMCCPLN.TLMIN*3600.0, hh1, mm1, ss1);
-	SStoHHMMSS(GC->rtcc->PZMCCPLN.TLMAX*3600.0, hh2, mm2, ss2);
+	OrbMech::SStoHHMMSS(GC->rtcc->PZMCCPLN.TLMIN*3600.0, hh1, mm1, ss1);
+	OrbMech::SStoHHMMSS(GC->rtcc->PZMCCPLN.TLMAX*3600.0, hh2, mm2, ss2);
 
 	sprintf_s(Buff, "%d:%d:%.0lf,%d:%d:%.0lf", hh1, mm1, ss1, hh2, mm2, ss2);
 
@@ -9378,15 +9395,6 @@ void ApolloRTCCMFD::GMPManeuverCodeName(char *buffer, int code)
 		sprintf(buffer, "No Valid Code");
 		break;
 	}
-}
-
-void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
-{
-	double mins;
-	hours = (int)trunc(time / 3600.0);
-	mins = fmod(time / 60.0, 60.0);
-	minutes = (int)trunc(mins);
-	seconds = (mins - minutes) * 60.0;
 }
 
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax, int ymax)
