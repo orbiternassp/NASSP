@@ -3263,81 +3263,81 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (G->PDAPTwoSegment)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Apollo 11", 9);
+			skp->Text(1 * W / 16, 2 * H / 14, "Apollo 12+", 10);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Apollo 12+", 10);
+			skp->Text(1 * W / 16, 2 * H / 14, "Apollo 11", 9);
 		}
 
 		if (G->PDAPEngine == 0)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "DPS/APS", 7);
+			skp->Text(1 * W / 16, 4 * H / 14, "DPS", 3);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "APS", 7);
+			skp->Text(1 * W / 16, 4 * H / 14, "APS", 3);
 		}
 
 		skp->Text(4 * W / 8, 3 * H / 21, "TPI:", 4);
 		GET_Display(Buffer, G->t_TPI);
 		skp->Text(5 * W / 8, 3 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 5 * H / 21, "PGNS Coefficients:", 18);
+		skp->Text(2 * W / 8, 5 * H / 21, "PGNS Coefficients:", 18);
 		if (G->PDAPTwoSegment == false)
 		{
 			sprintf(Buffer, "%e", G->PDAPABTCOF[0] / 0.3048);
-			skp->Text(1 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%e", G->PDAPABTCOF[1] / 0.3048);
-			skp->Text(1 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%e", G->PDAPABTCOF[2] / 0.3048);
-			skp->Text(1 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%f", G->PDAPABTCOF[3] / 0.3048);
-			skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%e", G->PDAPABTCOF[4] / 0.3048);
-			skp->Text(1 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%e", G->PDAPABTCOF[5] / 0.3048);
-			skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%e", G->PDAPABTCOF[6] / 0.3048);
-			skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%f", G->PDAPABTCOF[7] / 0.3048);
-			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 6 * H / 21, "J1", 2);
+			skp->Text(2 * W / 8, 6 * H / 21, "J1", 2);
 			sprintf(Buffer, "%.4f NM", G->PDAP_J1 / 1852.0);
-			skp->Text(2 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
-			skp->Text(1 * W / 8, 7 * H / 21, "K1", 2);
+			skp->Text(3 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 7 * H / 21, "K1", 2);
 			sprintf(Buffer, "%.4f NM/DEG", G->PDAP_K1 / 1852.0 / DEG);
-			skp->Text(2 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
-			skp->Text(1 * W / 8, 8 * H / 21, "J2", 2);
+			skp->Text(3 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 8 * H / 21, "J2", 2);
 			sprintf(Buffer, "%.4f NM", G->PDAP_J2 / 1852.0);
-			skp->Text(2 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
-			skp->Text(1 * W / 8, 9 * H / 21, "K2", 2);
+			skp->Text(3 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 9 * H / 21, "K2", 2);
 			sprintf(Buffer, "%.4f NM/DEG", G->PDAP_K2 / 1852.0 / DEG);
-			skp->Text(2 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
-			skp->Text(1 * W / 8, 10 * H / 21, "THET", 4);
+			skp->Text(3 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 10 * H / 21, "THET", 4);
 			sprintf(Buffer, "%.4f°", G->PDAP_Theta_LIM*DEG);
-			skp->Text(2 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
-			skp->Text(1 * W / 8, 11 * H / 21, "RMIN", 4);
+			skp->Text(3 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 8, 11 * H / 21, "RMIN", 4);
 			sprintf(Buffer, "%.4f NM", G->PDAP_R_amin / 1852.0);
-			skp->Text(2 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(3 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(1 * W / 8, 15 * H / 21, "AGS Coefficients:", 18);
-		skp->Text(1 * W / 8, 16 * H / 21, "224", 3);
+		skp->Text(2 * W / 8, 15 * H / 21, "AGS Coefficients:", 18);
+		skp->Text(2 * W / 8, 16 * H / 21, "224", 3);
 		sprintf(Buffer, "%+06.0f", G->DEDA224 / 0.3048 / 100.0);
-		skp->Text(2 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-		skp->Text(1 * W / 8, 17 * H / 21, "225", 3);
+		skp->Text(3 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(2 * W / 8, 17 * H / 21, "225", 3);
 		sprintf(Buffer, "%+06.0f", G->DEDA225 / 0.3048 / 100.0);
-		skp->Text(2 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
-		skp->Text(1 * W / 8, 18 * H / 21, "226", 3);
+		skp->Text(3 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(2 * W / 8, 18 * H / 21, "226", 3);
 		sprintf(Buffer, "%+06.0f", G->DEDA226 / 0.3048 / 100.0);
-		skp->Text(2 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
-		skp->Text(1 * W / 8, 19 * H / 21, "227", 3);
+		skp->Text(3 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(2 * W / 8, 19 * H / 21, "227", 3);
 		sprintf(Buffer, "%+06d", G->DEDA227);
-		skp->Text(2 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(3 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 
 		if (G->target != NULL)
 		{

@@ -3444,7 +3444,7 @@ void MCC::drawPad(bool writetofile){
 		OrbMech::SStoHHMMSS(form->t_Undock, hh[0], mm[0], ss[0]);
 		OrbMech::SStoHHMMSS(form->t_Separation, hh[1], mm[1], ss[1]);
 
-		sprintf(buffer, "Undocking: %d:%d:%.0lf\nAttitude: %03.0f %03.0f %03.0f\nSeparation: %d:%d:%.0lf", hh[0], mm[0], ss[0], form->Att_Undock.x, form->Att_Undock.y, form->Att_Undock.z, hh[1], mm[1], ss[1]);
+		sprintf(buffer, "Undocking: %d:%02d:%02.0lf\nAttitude: %03.0f %03.0f %03.0f\nSeparation: %d:%02d:%02.0lf", hh[0], mm[0], ss[0], form->Att_Undock.x, form->Att_Undock.y, form->Att_Undock.z, hh[1], mm[1], ss[1]);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
