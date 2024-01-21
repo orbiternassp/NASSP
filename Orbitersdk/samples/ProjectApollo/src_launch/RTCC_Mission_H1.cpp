@@ -202,7 +202,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		int hh, mm;
 		double ss;
 
-		OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
+		OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss, 0.01);
 
 		sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
 		GMGMED(Buff);
@@ -224,7 +224,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		GMGMED("P15,AGS,,100:00:00;");
 
 		//P12: IU GRR and Azimuth
-		OrbMech::SStoHHMMSS(T_GRR, hh, mm, ss);
+		OrbMech::SStoHHMMSS(T_GRR, hh, mm, ss, 0.01);
 		sprintf_s(Buff, "P12,IU1,%d:%d:%.2lf,%.2lf;", hh, mm, ss, Azi);
 		GMGMED(Buff);
 
@@ -577,7 +577,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			F23time = LOIFP - 11.0*60.0;
 			while (PZMCCDIS.data[0].GET_LOI < LOIFP - 5.0 || init)
 			{
-				OrbMech::SStoHHMMSS(F23time, hh, mm, ss);
+				OrbMech::SStoHHMMSS(F23time, hh, mm, ss, 0.01);
 				sprintf_s(Buff, "F23,%d:%d:%.2lf,%d:%d:%.2lf;", hh, mm, ss, hh, mm + 10, ss);
 				GMGMED(Buff);
 				TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
@@ -607,7 +607,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 					F23time = LOIFP - 11.0*60.0;
 					while (PZMCCDIS.data[0].GET_LOI < LOIFP - 5.0 || init)
 					{
-						OrbMech::SStoHHMMSS(F23time, hh, mm, ss);
+						OrbMech::SStoHHMMSS(F23time, hh, mm, ss, 0.01);
 						sprintf_s(Buff, "F23,%d:%d:%.2lf,%d:%d:%.2lf;", hh, mm, ss, hh, mm + 10, ss);
 						GMGMED(Buff);
 						TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
@@ -2769,7 +2769,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 			SystemParameters.MCGZSS = SystemParameters.MCGZSL + KFactor / 3600.0;
 		}
 
-		OrbMech::SStoHHMMSS(GETfromGMT(GetAGSClockZero()), hh, mm, ss);
+		OrbMech::SStoHHMMSS(GETfromGMT(GetAGSClockZero()), hh, mm, ss, 0.01);
 
 		AP11LMASCPAD pad2;
 
@@ -2844,7 +2844,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP11ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "SEP BURN");
-		OrbMech::SStoHHMMSS(form->GETI - 5.0*60.0, hh, mm, ss);
+		OrbMech::SStoHHMMSS(form->GETI - 5.0*60.0, hh, mm, ss, 0.01);
 		sprintf(form->remarks, "Jettison PAD: GET %d:%d:%.2lf R 219 P 358 Y 342\nSep burn is Z-axis, retrograde", hh, mm, ss);
 		form->type = 2;
 
