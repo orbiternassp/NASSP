@@ -45,7 +45,6 @@ public:
 	bool Update (oapi::Sketchpad* skp);
 	void GetStateVector (void);
 	bool SetSource(char *rstr);
-	bool SetIUSource(char *rstr);
 	bool SetReferencePlanet(char *rstr);
 	bool SetCrewNumber (char *rstr);
 	bool SetPrimECSTestHeaterPower (char *rstr);
