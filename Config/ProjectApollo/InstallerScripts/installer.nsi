@@ -8,7 +8,7 @@
 
 ; Custom Defines for information
 !define NAME "Project Apollo - NASSP"
-!define VERSION "8.0.0 Beta-Orbiter2016-2173"
+!define VERSION "8.0.0 Beta-Orbiter2016-2207"
 !define SLUG "${NAME} v${VERSION}"
 
 ; Define installer name and output
@@ -49,7 +49,7 @@ Section "Project Apollo - NASSP" SecMain
     SetOverwrite ifnewer
     File /r "..\..\..\*.*"
     ; Exclude the installer_scripts folder
-    RMDIR /r "$INSTDIR\installer_scripts"
+    RMDIR /r "$INSTDIR\Config\ProjectApollo\InstallerScripts"
 SectionEnd
 
 Section "D3D9 Client" SecD3D9
