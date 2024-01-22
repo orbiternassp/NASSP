@@ -13345,12 +13345,12 @@ void RTCC::PMXSPT(std::string source, int n)
 		{
 			int hh, mm;
 			double ss;
-			OrbMech::SStoHHMMSSTH(RTCCONLINEMON.DoubleBuffer[0], hh, mm, ss);
+			OrbMech::SStoHHMMSS(RTCCONLINEMON.DoubleBuffer[0], hh, mm, ss, 0.01);
 			sprintf_s(Buffer, "LIFTOFF TIME(GMT) = 00/%02d/%02d/%05.2lf", hh, mm, ss);
 			message.push_back(Buffer);
 			sprintf_s(Buffer, "LAUNCH AZIMUTH (DEG) = %.6lf", RTCCONLINEMON.DoubleBuffer[1]);
 			message.push_back(Buffer);
-			OrbMech::SStoHHMMSSTH(RTCCONLINEMON.DoubleBuffer[2], hh, mm, ss);
+			OrbMech::SStoHHMMSS(RTCCONLINEMON.DoubleBuffer[2], hh, mm, ss, 0.01);
 			sprintf_s(Buffer, "VECTOR TIME(HRS) = 00/%02d/%02d/%05.2lf CS = ECT", hh, mm, ss);
 			message.push_back(Buffer);
 			sprintf_s(Buffer, "   R(ER) = %.10lf %.10lf %.10lf", RTCCONLINEMON.VectorBuffer[0].x, RTCCONLINEMON.VectorBuffer[0].y, RTCCONLINEMON.VectorBuffer[0].z);

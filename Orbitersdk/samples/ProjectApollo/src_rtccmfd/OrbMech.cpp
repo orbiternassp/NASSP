@@ -141,8 +141,15 @@ namespace OrbMech{
 		return H*3600.0 + M*60.0 + S;
 	}
 
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
+	double round_to(double value, double precision)
 	{
+		return round(value / precision) * precision;
+	}
+
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision)
+	{
+		time = round_to(time, precision);
+
 		double mins;
 		hours = (int)trunc(time / 3600.0);
 		mins = fmod(time / 60.0, 60.0);
@@ -150,12 +157,32 @@ namespace OrbMech{
 		seconds = (mins - minutes) * 60.0;
 	}
 
-	void SStoHHMMSSTH(double time, int &hours, int &minutes, double &seconds)
+	// Format time to HHH:MM:SS.
+	void format_time(char *buf, double time)
 	{
-		int cs = (int)(round(time*100.0));
-		hours = cs / 360000;
-		minutes = (cs - 360000 * hours) / 6000;
-		seconds = (double)(cs - 360000 * hours - 6000 * minutes) / 100.0;
+		buf[0] = 0; // Clobber
+		if (time < 0) { return; } // don't do that
+
+		int hours, minutes;
+		double seconds;
+
+		SStoHHMMSS(time, hours, minutes, seconds);
+
+		sprintf(buf, "%03d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	// Format precise time.
+	void format_time_prec(char *buf, double time)
+	{
+		buf[0] = 0; // Clobber
+		if (time < 0) { return; } // don't do that
+
+		int hours, minutes;
+		double seconds;
+
+		SStoHHMMSS(time, hours, minutes, seconds, 0.01);
+
+		sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
 	}
 
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
