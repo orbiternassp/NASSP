@@ -4,10 +4,10 @@
 
 ; Includes MUI2
 !include "MUI2.nsh"
+!include "LogicLib.nsh"
 
 ; Custom Defines for information
 !define NAME "Project Apollo - NASSP"
-!define APPFILE "NASSP Installer.exe"
 !define VERSION "8.0.0 Beta-Orbiter2016-2173"
 !define SLUG "${NAME} v${VERSION}"
 
@@ -25,9 +25,11 @@ InstallDir "C:\OrbiterBeta"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "apolloLogo.bmp"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "apolloLogo.bmp"
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "..\..\..\NASSP-LICENSE.txt"
-!insertmacro MUI_PAGE_LICENSE "D3D9-LICENSE.txt"
 !insertmacro MUI_PAGE_COMPONENTS
+!define MUI_PAGE_CUSTOMFUNCTION_PRE excludeInstaller
+!insertmacro MUI_PAGE_LICENSE "..\..\..\NASSP-LICENSE.txt"
+!define MUI_PAGE_CUSTOMFUNCTION_PRE excludeD3D9
+!insertmacro MUI_PAGE_LICENSE "D3D9-LICENSE.txt"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 
@@ -48,12 +50,23 @@ Section "Project Apollo - NASSP" SecMain
     File /r "..\..\..\*.*"
     ; Exclude the installer_scripts folder
     RMDIR /r "$INSTDIR\installer_scripts"
-
 SectionEnd
 
 Section "D3D9 Client" SecD3D9
     SetOutPath $INSTDIR
     SetOverwrite ifnewer
     File /r "D3D9Client\*.*"
-
 SectionEnd
+
+; Exclude license pages if the section is not selected
+Function excludeInstaller
+    ${Unless} ${SectionIsSelected} ${SecMain}
+        Abort
+    ${EndUnless}
+FunctionEnd
+
+Function excludeD3D9
+    ${Unless} ${SectionIsSelected} ${SecD3D9}
+        Abort
+    ${EndUnless}
+FunctionEnd
