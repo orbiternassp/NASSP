@@ -262,9 +262,13 @@ namespace OrbMech {
 	double findelev_conic(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double E, double mu);
 	double findelev_gs(int Epoch, MATRIX3 Rot_J_B, VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);
 	VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA);
-	int FindNearestStar(const std::vector<VECTOR3> &navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
+	int FindNearestStar(const VECTOR3 *navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max);
+	VECTOR3 AOTNavigationBase(double AZ, double EL);
 	VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL);
 	bool isnotocculted(VECTOR3 S_SM, VECTOR3 R_C, double R_E, double dist = 5.0*RAD);
+	MATRIX3 SBNBMatrix();
+	MATRIX3 NBSBMatrix();
+	VECTOR3 SXTNB(double TA, double SA);
 	VECTOR3 CALCGAR(MATRIX3 REFSM, MATRIX3 SMNB);
 	MATRIX3 CALCSMSC(VECTOR3 GA);
 	VECTOR3 CALCGTA(MATRIX3 des);
@@ -272,8 +276,8 @@ namespace OrbMech {
 	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
 	MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB);
 	MATRIX3 ROTCOMP(VECTOR3 U_R, double A);
-	VECTOR3 backupgdcalignment(const std::vector<VECTOR3> &navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
-	MATRIX3 AGSStarAlignment(const std::vector<VECTOR3> &navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter);
+	VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
+	MATRIX3 AGSStarAlignment(const VECTOR3 *navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter);
 	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout);
 	SV coast(int Epoch, SV sv0, double dt);
@@ -306,8 +310,8 @@ namespace OrbMech {
 	void impulsive(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
 	void impulsive(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
 	void impulsive2(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
-	void checkstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
-	void coascheckstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
+	void checkstar(const VECTOR3 *navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
+	void coascheckstar(const VECTOR3 *navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
 	bool AOTcheckstar(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double AZ, double EL);
 	void AOTStarAcquisition(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double AZ, double EL, double &YROT, double &SROT);
 	bool LMCOASCheckStar(VECTOR3 SI, MATRIX3 RMAT, VECTOR3 IMU, int Axis, double &EL, double &SPX);
@@ -366,14 +370,13 @@ namespace OrbMech {
 	unsigned long long octal_binary(int oct);
 	unsigned long long BinToDec(unsigned long long num);
 	double DecToDouble(int dec1, int dec2);
+	int SingleToBuffer(double x, int SF, bool TwosComplement = false);
+	void DoubleToBuffer(double x, int SF, int &c1, int &c2);
+	void TripleToBuffer(double x, int SF, int &c1, int &c2, int &c3);
 	double round(double number);
 	double trunc(double d);
 	void normalizeAngle(double &a, bool positive = true);
 	double quadratic(double *T, double *DV);
-	double HHMMSSToSS(int H, int M, int S);
-	double HHMMSSToSS(double H, double M, double S);
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
-	void SStoHHMMSSTH(double time, int &hours, int &minutes, double &seconds);
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	void rv_from_adbar(VECTOR3 R, VECTOR3 V, double &rmag, double &vmag, double &rtasc, double &decl, double &fpav, double &az);
 	VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs);
@@ -433,6 +436,14 @@ namespace OrbMech {
 	double SumQuad(double *x, int N);
 	double QuadSum(double *x, int N);
 	void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I);
+
+	//Time formatting functions
+	double HHMMSSToSS(int H, int M, int S);
+	double HHMMSSToSS(double H, double M, double S);
+	double round_to(double value, double precision = 1.0);
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision = 1.0);
+	void format_time(char *buf, double time);
+	void format_time_prec(char *buf, double time);
 }
 
 inline CELEMENTS operator+(const CELEMENTS &a, const CELEMENTS &b)

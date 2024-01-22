@@ -2200,6 +2200,8 @@ bool RTCC::LoadMissionConstantsFile(std::string file)
 			papiReadScenario_int(Buff, "MCLRLS", SystemParameters.MCLRLS);
 			papiReadScenario_int(Buff, "MCLTTD", SystemParameters.MCLTTD);
 			papiReadScenario_int(Buff, "MCLABT", SystemParameters.MCLABT);
+			papiReadScenario_oct(Buff, "MCCTEP", SystemParameters.MCCTEP);
+			papiReadScenario_oct(Buff, "MCLTEP", SystemParameters.MCLTEP);
 			papiReadScenario_double(Buff, "MCTVEN", SystemParameters.MCTVEN);
 			papiReadScenario_doublearr(Buff, "MDLEIC", SystemParameters.MDLEIC, 3);
 			if (papiReadScenario_double(Buff, "RRBIAS", dtemp))
@@ -4371,7 +4373,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		dt = GMT_TIG - opt->sv0.GMT;
 		integin.DTU = 0.0;
 	}
-	sv1 = coast(opt->sv0, dt, TotalMass, opt->Area);
+	sv1 = coast(opt->sv0, dt, TotalMass, opt->Area, 1.0, false);
 
 	//Settings for burn simulation
 	integin.sv0 = sv1;
@@ -4458,7 +4460,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 	IMUangles = _V(OG, IG, MG);
 	EphemerisData sv_sxt;
 
-	sv_sxt = coast(sv1, opt->sxtstardtime, TotalMass, opt->Area);
+	sv_sxt = coast(sv1, opt->sxtstardtime, TotalMass, opt->Area, 1.0, false);
 
 	OrbMech::checkstar(EZJGSTAR, opt->REFSMMAT, _V(round(IMUangles.x*DEG)*RAD, round(IMUangles.y*DEG)*RAD, round(IMUangles.z*DEG)*RAD), sv_sxt.R, R_E, pad.Star, pad.Trun, pad.Shaft);
 
@@ -4467,7 +4469,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		EphemerisData sv_nav;
 		double alt, lat, lng;
 
-		sv_nav = coast(sv1, GMTfromGET(opt->navcheckGET) - sv1.GMT, TotalMass, opt->Area);
+		sv_nav = coast(sv1, GMTfromGET(opt->navcheckGET) - sv1.GMT, TotalMass, opt->Area, 1.0, false);
 
 		navcheck(sv_nav.R, sv_nav.GMT, sv1.RBI, lat, lng, alt);
 
@@ -5111,9 +5113,19 @@ double RTCC::GetClockTimeFromAGC(agc_t *agc)
 	return agc->Erasable[AGC_BANK(025)][AGC_ADDR(025)] + agc->Erasable[AGC_BANK(024)][AGC_ADDR(024)] * pow((double) 2., (double) 14.);
 }
 
-double RTCC::GetTEPHEMFromAGC(agc_t *agc, int address)
+double RTCC::GetTEPHEMFromAGC(agc_t *agc, bool IsCMC)
 {
-	int tephem_int[3];
+	int tephem_int[3], address;
+
+	//Either CMC or LGC TEPHEM address
+	if (IsCMC)
+	{
+		address = SystemParameters.MCCTEP;
+	}
+	else
+	{
+		address = SystemParameters.MCLTEP;
+	}
 
 	tephem_int[0] = agc->Erasable[AGC_BANK(address)][AGC_ADDR(address)];
 	tephem_int[1] = agc->Erasable[AGC_BANK(address + 1)][AGC_ADDR(address + 1)];
@@ -6419,7 +6431,7 @@ void RTCC::AGCStateVectorUpdate(char *str, int comp, int ves, EphemerisData sv, 
 	V7XUpdate(71, str, buf->Octals, 17);
 	if (v66)
 	{
-		sprintf(str, "%sV66EV37E00E", str);
+		sprintf(str, "%sV66ER", str);
 	}
 }
 
@@ -6498,7 +6510,7 @@ void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, bool v66)
 	V7XUpdate(71, str, emem, 17);
 	if (v66)
 	{
-		sprintf(str, "%sV66EV37E00E", str);
+		sprintf(str, "%sV66ER", str);
 	}
 }
 
@@ -6959,6 +6971,15 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	{
 		SAVE_INT("EZETVMED_SpaceDigCentralBody", EZETVMED.SpaceDigCentralBody);
 	}
+	SAVE_V3("EZJGSTAR_STAR_392", EZJGSTAR[391]);
+	SAVE_V3("EZJGSTAR_STAR_393", EZJGSTAR[392]);
+	SAVE_V3("EZJGSTAR_STAR_394", EZJGSTAR[393]);
+	SAVE_V3("EZJGSTAR_STAR_395", EZJGSTAR[394]);
+	SAVE_V3("EZJGSTAR_STAR_396", EZJGSTAR[395]);
+	SAVE_V3("EZJGSTAR_STAR_397", EZJGSTAR[396]);
+	SAVE_V3("EZJGSTAR_STAR_398", EZJGSTAR[397]);
+	SAVE_V3("EZJGSTAR_STAR_399", EZJGSTAR[398]);
+	SAVE_V3("EZJGSTAR_STAR_400", EZJGSTAR[399]);
 	SAVE_DOUBLE("PZLTRT_DT_Ins_TPI", PZLTRT.DT_Ins_TPI);
 	SAVE_DOUBLE("PZLTRT_PoweredFlightArc", PZLTRT.PoweredFlightArc);
 	SAVE_DOUBLE("PZLTRT_PoweredFlightTime", PZLTRT.PoweredFlightTime);
@@ -7202,6 +7223,16 @@ void RTCC::LoadState(FILEHANDLE scn) {
 
 		LOAD_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
 		LOAD_INT("EZETVMED_SpaceDigCentralBody", EZETVMED.SpaceDigCentralBody);
+
+		LOAD_V3("EZJGSTAR_STAR_392", EZJGSTAR[391]);
+		LOAD_V3("EZJGSTAR_STAR_393", EZJGSTAR[392]);
+		LOAD_V3("EZJGSTAR_STAR_394", EZJGSTAR[393]);
+		LOAD_V3("EZJGSTAR_STAR_395", EZJGSTAR[394]);
+		LOAD_V3("EZJGSTAR_STAR_396", EZJGSTAR[395]);
+		LOAD_V3("EZJGSTAR_STAR_397", EZJGSTAR[396]);
+		LOAD_V3("EZJGSTAR_STAR_398", EZJGSTAR[397]);
+		LOAD_V3("EZJGSTAR_STAR_399", EZJGSTAR[398]);
+		LOAD_V3("EZJGSTAR_STAR_400", EZJGSTAR[399]);
 
 		LOAD_DOUBLE("PZLTRT_DT_Ins_TPI", PZLTRT.DT_Ins_TPI);
 		LOAD_DOUBLE("PZLTRT_PoweredFlightArc", PZLTRT.PoweredFlightArc);
@@ -7685,7 +7716,7 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt)
 	return sv2;
 }
 
-EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor)
+EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor, bool Venting)
 {
 	EMMENIInputTable in;
 
@@ -7703,6 +7734,7 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt, double Weight, double Ar
 	}
 	in.MaxIntegTime = abs(dt);
 	in.Weight = Weight;
+	in.VentPerturbationFactor = Venting ? 1.0 : 0.0;
 	EMMENI(in);
 	return in.sv_cutoff;
 }
@@ -7711,7 +7743,9 @@ EphemerisData RTCC::coast(EphemerisData sv1, double dt, int veh)
 {
 	MissionPlanTable *mpt = GetMPTPointer(veh);
 
-	return coast(sv1, dt, mpt->TotalInitMass, mpt->ConfigurationArea, mpt->KFactor);
+	bool venting = (mpt->CommonBlock.ConfigCode[RTCC_CONFIG_S] == true);
+
+	return coast(sv1, dt, mpt->TotalInitMass, mpt->ConfigurationArea, mpt->KFactor, venting);
 }
 
 void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD)
@@ -12271,73 +12305,6 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &
 	med3.SPSFuelRemaining = spsmass;
 }
 
-void RTCC::AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA)
-{
-	MATRIX3 M, SBNB, CBNB;
-	VECTOR3 U_S, R_ZC, U_Z, u0, u1, u2, R_H, U_SH, t0, t1, R_L, R_CH;
-	double r_Z, x_H, y_H, A, alpha, beta, A0, A1, a;
-	bool H, k;
-
-	U_S = EZJGSTAR[star - 1];
-	R_ZC = sv.R;
-	//Near Horizon
-	H = false;
-	U_Z = _V(0, 0, 1);
-	r_Z = oapiGetSize(sv.gravref);
-	a = -0.5676353234;
-	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
-
-	u2 = unit(crossp(U_S, R_ZC));
-	u0 = unit(crossp(U_Z, u2));
-	u1 = crossp(u2, u0);
-	M = _M(u0.x, u0.y, u0.z, u1.x, u1.y, u1.z, u2.x, u2.y, u2.z);
-
-	R_H = mul(M, R_ZC);
-	U_SH = mul(M, U_S);
-
-	x_H = R_H.x;
-	y_H = R_H.z;
-
-	A = (x_H*x_H + y_H * y_H) / (r_Z*r_Z);
-	alpha = y_H * sqrt(A - 1.0);
-	beta = x_H * sqrt(A - 1.0);
-
-	t0 = _V(x_H + alpha, y_H - beta, 0)*1.0 / A;
-	t1 = _V(x_H - alpha, y_H + beta, 0)*1.0 / A;
-	A0 = dotp(U_SH, unit(t0 - R_H));
-	A1 = dotp(U_SH, unit(t1 - R_H));
-
-	if (A1 > A0)
-		k = true;
-	else
-		k = false;
-
-	if (H) k = !k;
-
-	if (k == false)
-		R_L = tmul(M, t0);
-	else
-		R_L = tmul(M, t1);
-
-	//Vector pointing from CSM to horizon
-	R_CH = R_L - R_ZC;
-
-	MATRIX3 CBSB;
-	VECTOR3 X_SB, Y_SB, Z_SB;
-
-	Z_SB = unit(R_CH);
-	Y_SB = unit(crossp(Z_SB, U_S));
-	X_SB = crossp(Y_SB, Z_SB);
-
-	CBSB = _M(X_SB.x, X_SB.y, X_SB.z, Y_SB.x, Y_SB.y, Y_SB.z, Z_SB.x, Z_SB.y, Z_SB.z);
-
-	CBNB = mul(SBNB, CBSB);
-	IMUAngles = OrbMech::CALCGAR(REFSMMAT, CBNB);
-
-	//Calculate sextant angles
-	OrbMech::CALCSXA(CBNB, U_S, TA, SA);
-}
-
 VECTOR3 RTCC::LOICrewChartUpdateProcessor(EphemerisData sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T)
 {
 	EphemerisData sv_tig;
@@ -13378,12 +13345,12 @@ void RTCC::PMXSPT(std::string source, int n)
 		{
 			int hh, mm;
 			double ss;
-			OrbMech::SStoHHMMSSTH(RTCCONLINEMON.DoubleBuffer[0], hh, mm, ss);
+			OrbMech::SStoHHMMSS(RTCCONLINEMON.DoubleBuffer[0], hh, mm, ss, 0.01);
 			sprintf_s(Buffer, "LIFTOFF TIME(GMT) = 00/%02d/%02d/%05.2lf", hh, mm, ss);
 			message.push_back(Buffer);
 			sprintf_s(Buffer, "LAUNCH AZIMUTH (DEG) = %.6lf", RTCCONLINEMON.DoubleBuffer[1]);
 			message.push_back(Buffer);
-			OrbMech::SStoHHMMSSTH(RTCCONLINEMON.DoubleBuffer[2], hh, mm, ss);
+			OrbMech::SStoHHMMSS(RTCCONLINEMON.DoubleBuffer[2], hh, mm, ss, 0.01);
 			sprintf_s(Buffer, "VECTOR TIME(HRS) = 00/%02d/%02d/%05.2lf CS = ECT", hh, mm, ss);
 			message.push_back(Buffer);
 			sprintf_s(Buffer, "   R(ER) = %.10lf %.10lf %.10lf", RTCCONLINEMON.VectorBuffer[0].x, RTCCONLINEMON.VectorBuffer[0].y, RTCCONLINEMON.VectorBuffer[0].z);
@@ -15338,12 +15305,12 @@ void RTCC::EMSTAGEN(int L)
 		if (L == 1)
 		{
 			RTCCONLINEMON.TextBuffer[0] = "CSM";
-			EMGPRINT("EMSTAGEN", 36);
+			EMGPRINT("EMSTAGEN", 47);
 		}
 		else
 		{
 			RTCCONLINEMON.TextBuffer[0] = "LEM";
-			EMGPRINT("EMSTAGEN", 36);
+			EMGPRINT("EMSTAGEN", 47);
 		}
 	}
 
@@ -17120,7 +17087,7 @@ void RTCC::EMSTRAJ(StateVectorTableEntry sv, int L)
 	if (sv.LandingSiteIndicator)
 	{
 		cctab->NumRev = 0;
-		EMGPRINT("EMSTRAJ", 42);
+		EMGPRINT("EMSTRAJ", 53);
 	}
 	else
 	{
@@ -19325,7 +19292,7 @@ void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES
 				RTCCONLINEMON.TextBuffer[0] = "LEM";
 			}
 			RTCCONLINEMON.TextBuffer[1] = stationlist.table[i].code;
-			EMGPRINT("EMGENGEN", 44);
+			EMGPRINT("EMGENGEN", 55);
 		}
 	}
 
@@ -22741,7 +22708,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	res.DVREM = man->DVREM / 0.3048;
 	res.DVC = man->DVC / 0.3048;
 
-	res.DT_B = man->dt_BD - man->dt_TO;
+	res.DT_B = man->dt_BD;
 	res.DT_U = man->dt_ullage;
 	res.DT_TO = man->dt_TO;
 	res.DV_TO = man->dv_TO / 0.3048;
@@ -26610,7 +26577,7 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			{
 				return 2;
 			}
-			EMGPRINT("EMGABMED", 35);
+			EMGPRINT("EMGABMED", 46);
 		}
 	}
 	//G MEDs
@@ -26936,6 +26903,10 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			{
 				EMSGSUPP(1, 6, 4);
 			}
+			else if (data[1] == "OST-M")
+			{
+				EMSGSUPP(1, 3, 1);
+			}
 		}
 		//Enter CSM sextant optics and IMU attitudes
 		else if (med == "12")
@@ -26959,7 +26930,7 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 				}
 				if (data[i * 3 + 1] != "")
 				{
-					if (sscanf(data[i * 3 + 1].c_str(), "%o", &star) == 1)
+					if (sscanf(data[i * 3 + 1].c_str(), "%d", &star) == 1)
 					{
 						EZJGSTTB.SXT_STAR[i] = star;
 					}
@@ -27034,6 +27005,50 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			}
 			EMDGSUPP(0);
 		}
+		//Enter target for GOST star catalog
+		else if (med == "13")
+		{
+			if (data.size() < 3)
+			{
+				return 1;
+			}
+
+			unsigned int pos;
+
+			if (sscanf(data[0].c_str(), "%d", &pos) != 1)
+			{
+				return 2;
+			}
+			if (pos < 392 || pos > 400)
+			{
+				return 2;
+			}
+			double ra, dec, deg, hours, minutes;
+
+			if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &deg, &hours, &minutes) != 3)
+			{
+				return 2;
+			}
+			ra = (deg + hours / 60.0 + minutes / 3600.0)*RAD;
+			if (ra < 0.0 || ra > PI2)
+			{
+				return 2;
+			}
+			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &deg, &hours, &minutes) != 3)
+			{
+				return 2;
+			}
+			dec = (abs(deg) + hours / 60.0 + minutes / 3600.0)*RAD;
+			if (deg < 0.0)
+			{
+				dec = -dec;
+			}
+			if (dec < -PI05 || dec > PI05)
+			{
+				return 2;
+			}
+			EZJGSTAR[pos - 1] = OrbMech::r_from_latlong(dec, ra);
+		}
 		//Initialize MSK 229 display of special targets
 		else if (med == "14")
 		{
@@ -27061,11 +27076,11 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			}
 			else
 			{
-				if (sscanf(data[1].c_str(), "%o", &star) != 1)
+				if (sscanf(data[1].c_str(), "%d", &star) != 1)
 				{
 					return 2;
 				}
-				if (star < 1 || star > EZJGSTAR.size())
+				if (star < 1 || star > 400U)
 				{
 					return 2;
 				}
@@ -27128,7 +27143,7 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 					{
 						return 2;
 					}
-					height /= 0.3048;
+					height *= 0.3048;
 				}
 			}
 
@@ -27434,7 +27449,393 @@ int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 		}
 		CMMRFMAT(Veh, id, type);
 	}
+	//Change and/or delete data from an erasable memory update
+	else if (med == "EC")
+	{
+		if (data.size() < 2)
+		{
+			return 1;
+		}
 
+		int load, block;
+		if (sscanf(data[0].c_str(), "%d", &load) != 1)
+		{
+			return 2;
+		}
+		switch (load)
+		{
+		case 18:
+			block = 0;
+			break;
+		case 19:
+			block = 1;
+			break;
+		case 38:
+			block = 2;
+			break;
+		case 39:
+			block = 3;
+			break;
+		default:
+			return 2;
+		}
+
+		//TBD: Command sites
+
+		if (data.size() > 5)
+		{
+			AGCErasableMemoryUpdateMakeupBlock *bl = &CZERAMEM.Blocks[block];
+
+			int line;
+			if (sscanf(data[5].c_str(), "%o", &line) != 1)
+			{
+				return 2;
+			}
+			if (line < 02)
+			{
+				return 2;
+			}
+			if (bl->IsVerb72)
+			{
+				if (line > 023) return 2;
+			}
+			else
+			{
+				if (line > 024) return 2;
+			}
+
+			std::vector<int> values;
+			CMMERMEM(block, 3, line, values);
+		}
+	}
+	//Generate an erasable memory command load using engineering units
+	else if (med == "EE")
+	{
+		if (data.size() < 4)
+		{
+			return 1;
+		}
+
+		int load, block;
+		if (sscanf(data[0].c_str(), "%d", &load) != 1)
+		{
+			return 2;
+		}
+		switch (load)
+		{
+		case 18:
+			block = 0;
+			break;
+		case 19:
+			block = 1;
+			break;
+		case 38:
+			block = 2;
+			break;
+		case 39:
+			block = 3;
+			break;
+		default:
+			return 2;
+		}
+
+		int line;
+		if (sscanf(data[1].c_str(), "%o", &line) != 1)
+		{
+			return 2;
+		}
+
+		int precision;
+		if (sscanf(data[2].c_str(), "%d", &precision) != 1)
+		{
+			return 2;
+		}
+
+		if (precision < 1 || precision > 3)
+		{
+			return 2;
+		}
+
+		int maxline = 024 - precision + 1;
+
+		AGCErasableMemoryUpdateMakeupBlock *bl = &CZERAMEM.Blocks[block];
+
+		if (bl->IsVerb72)
+		{
+			maxline--;
+		}
+
+		double Magnitude;
+		if (sscanf(data[3].c_str(), "%lf", &Magnitude) != 1)
+		{
+			return 2;
+		}
+
+		double Multiplier;
+
+		if (data.size() < 5 || data[4] == "")
+		{
+			Multiplier = 1.0;
+		}
+		else
+		{
+			if (sscanf(data[4].c_str(), "%lf", &Multiplier) != 1)
+			{
+				return 2;
+			}
+		}
+
+		double ScaleFactor;
+
+		if (data.size() < 6 || data[5] == "")
+		{
+			ScaleFactor = 1.0;
+		}
+		else
+		{
+			if (sscanf(data[5].c_str(), "%lf", &ScaleFactor) != 1)
+			{
+				return 2;
+			}
+		}
+
+		int PowerOfTwo;
+
+		if (data.size() < 7 || data[6] == "")
+		{
+			PowerOfTwo = 0;
+		}
+		else
+		{
+			if (sscanf(data[5].c_str(), "%d", &PowerOfTwo) != 1)
+			{
+				return 2;
+			}
+
+			if (PowerOfTwo < -42 || PowerOfTwo > 42) return 2;
+		}
+
+		std::vector<int> values;
+
+		if (bl->IsVerb72)
+		{
+			//Address
+
+			int Address;
+
+			if (data.size() < 8 || data[7] == "")
+			{
+				return 2;
+			}
+
+			if (sscanf(data[7].c_str(), "%o", &Address) != 1)
+			{
+				return 2;
+			}
+
+			if (Address < 0 || Address > 03777) return 2;
+
+			values.push_back(Address);
+		}
+
+		//Convert to octal
+
+		double number = Magnitude * Multiplier / ScaleFactor;
+
+		if (precision == 1)
+		{
+			int value;
+
+			value = OrbMech::SingleToBuffer(number, PowerOfTwo);
+
+			values.push_back(value);
+		}
+		else if (precision == 2)
+		{
+			int value[2];
+			OrbMech::DoubleToBuffer(number, PowerOfTwo, value[0], value[1]);
+
+			values.push_back(value[0]);
+			values.push_back(value[1]);
+		}
+		else
+		{
+			int value[3];
+
+			OrbMech::TripleToBuffer(number, PowerOfTwo, value[0], value[1], value[2]);
+
+			values.push_back(value[0]);
+			values.push_back(value[1]);
+			values.push_back(value[2]);
+		}
+
+		CMMERMEM(block, 1, line, values);
+	}
+	//Initialize erasable memory update makup buffer
+	else if (med == "EI")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+
+		int load, block;
+		if (sscanf(data[0].c_str(), "%d", &load) != 1)
+		{
+			return 2;
+		}
+		switch (load)
+		{
+		case 18:
+			block = 0;
+			break;
+		case 19:
+			block = 1;
+			break;
+		case 38:
+			block = 2;
+			break;
+		case 39:
+			block = 3;
+			break;
+		default:
+			return 2;
+		}
+
+		//TBD: Command sites
+
+		std::vector<int> values;
+		if (data.size() < 4 || data[3] == "")
+		{
+			//V72
+			values.push_back(0);
+		}
+		else
+		{
+			//V71
+			int address;
+			if (sscanf(data[3].c_str(), "%o", &address) != 1)
+			{
+				return 2;
+			}
+
+			if (address < 0 || address > 03777)
+			{
+				return 2;
+			}
+			values.push_back(address);
+		}
+
+		//Vehicle ID
+		int VehID;
+		if (data.size() < 5)
+		{
+			if (load == 18 || load == 19)
+			{
+				VehID = 4;
+			}
+			else
+			{
+				VehID = 3;
+			}
+		}
+		else
+		{
+			if (sscanf(data[4].c_str(), "%d", &VehID) != 1)
+			{
+				return 2;
+			}
+		}
+
+		CMMERMEM(block, 0, 0, values);
+	}
+	//Generate an erasable memory update with octal entries
+	else if (med == "EO")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		int load, block;
+		if (sscanf(data[0].c_str(), "%d", &load) != 1)
+		{
+			return 2;
+		}
+		switch (load)
+		{
+		case 18:
+			block = 0;
+			break;
+		case 19:
+			block = 1;
+			break;
+		case 38:
+			block = 2;
+			break;
+		case 39:
+			block = 3;
+			break;
+		default:
+			return 2;
+		}
+
+		AGCErasableMemoryUpdateMakeupBlock *bl = &CZERAMEM.Blocks[block];
+
+		int line;
+		if (sscanf(data[1].c_str(), "%o", &line) != 1)
+		{
+			return 2;
+		}
+		if (line < 02)
+		{
+			return 2;
+		}
+		if (bl->IsVerb72)
+		{
+			if (line > 023) return 2;
+		}
+		else
+		{
+			if (line > 024) return 2;
+		}
+
+		int value;
+		if (sscanf(data[2].c_str(), "%o", &value) != 1)
+		{
+			return 2;
+		}
+
+		//Check for valid value or address
+		bool IsAddress;
+		if (bl->IsVerb72)
+		{
+			//Even lines are addresses
+			IsAddress = (line % 2 == 0);
+		}
+		else
+		{
+			//Only line 2 is an address
+			IsAddress = (line == 02);
+		}
+		if (value < 0)
+		{
+			return 2;
+		}
+		if (IsAddress)
+		{
+			if (value > 03777) return 2;
+		}
+		else
+		{
+			if (value > 077777) return 2;
+		}
+
+		std::vector<int> values;
+
+		values.push_back(value);
+
+		CMMERMEM(block, 2, line, values);
+	}
 	return 0;
 }
 
@@ -31525,10 +31926,16 @@ void RTCC::EMGPRINT(std::string source, int i)
 	case 22:
 		message.push_back("DOD NOT VALID FOR SAVE");
 		break;
-	case 26:
-		message.push_back("EPHEMERIS NOT AVAILABLE");
+	case 23:
+		message.push_back("OPTICS NOT AVAILABLE");
+		break;
+	case 24:
+		message.push_back("TLM DATA NOT VALID FOR SAVE");
 		break;
 	case 25:
+		message.push_back("EPHEMERIS NOT AVAILABLE");
+		break;
+	case 26:
 		message.push_back("RADIAL FLIGHT CONDITIONS");
 		break;
 	case 29:
@@ -31538,20 +31945,47 @@ void RTCC::EMGPRINT(std::string source, int i)
 		sprintf_s(Buffer, "%d %s STATION CONTACTS GENERATED", RTCCONLINEMON.IntBuffer[0], RTCCONLINEMON.TextBuffer[0].c_str());
 		message.push_back(Buffer);
 		break;
+	case 32:
+		message.push_back("UNRECOGNIZABLE ENTRY");
+		break;
+	case 33:
+		//TBD: Error nn from EMXING for veh, sta
+		break;
+	case 34:
+		//TBD: RTE digitals not valid for save
+		break;
 	case 35:
-		message.push_back("C-BAND CONTACT GENERATION " + RTCCONLINEMON.TextBuffer[0]);
+		//TBD: Error nn unable to generate veh station constants
 		break;
 	case 36:
-		message.push_back("ANCHOR TIME ADJUSTED FOR" + RTCCONLINEMON.TextBuffer[0] + "STATION CONTACTS");
+		//TBD: EMDGAGSN: Vector order of interpolation has been changed from 8 to NN
 		break;
 	case 37:
+		sprintf_s(Buffer, "TABLED STAR ARC - %.3lf DEGREES", RTCCONLINEMON.DoubleBuffer[0]);
+		message.push_back(Buffer);
+		sprintf_s(Buffer, "S/C SIGHTING ARC - %.3lf DEGREES", RTCCONLINEMON.DoubleBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 38:
+		//TBD: CSM/LEM maneuver number 1-15 not in MPT
+		break;
+	case 39:
+		message.push_back("OST REFSMMAT STAR OPTICS NOT VALID");
+		break;
+	case 46:
+		message.push_back("C-BAND CONTACT GENERATION " + RTCCONLINEMON.TextBuffer[0]);
+		break;
+	case 47:
+		message.push_back("ANCHOR TIME ADJUSTED FOR" + RTCCONLINEMON.TextBuffer[0] + "STATION CONTACTS");
+		break;
+	case 48:
 		message.push_back("GRR MATRIX NOT AVAILABLE");
 		break;
-	case 42:
+	case 53:
 		message.push_back("ANCHOR VECTOR IS LUNAR SURFACE");
 		message.push_back("NO ELEMENTS CALCULATED");
 		break;
-	case 44:
+	case 55:
 		sprintf_s(Buffer, "ERROR %d FROM EMXING", RTCCONLINEMON.IntBuffer[0]);
 		message.push_back(Buffer);
 		message.push_back("FOR " + RTCCONLINEMON.TextBuffer[0] + ", "  +RTCCONLINEMON.TextBuffer[1]);
@@ -34942,17 +35376,22 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 		ifstream startable(".\\Config\\ProjectApollo\\RTCC\\Star Table.txt");
 		std::string line;
 		VECTOR3 temp;
-
-		EZJGSTAR.clear();
+		unsigned i = 0;
 
 		while (getline(startable, line))
 		{
 			sscanf(line.c_str(), "%lf %lf %lf", &temp.x, &temp.y, &temp.z);
 			temp = mul(SystemParameters.MAT_J2000_BRCS, temp); //Star table in file is in ecliptic, convert to BRCS
-			EZJGSTAR.push_back(temp);
-
+			EZJGSTAR[i] = temp;
+			i++;
 		}
 		startable.close();
+
+		//Fill rest of table
+		for (; i < 400U; i++)
+		{
+			EZJGSTAR[i] = _V(1, 0, 0);
+		}
 	}
 	//Acquire and save CSM IMU matrix/optics
 	if (QUEID == 1)
@@ -34974,6 +35413,67 @@ void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 			gmt = RTCCPresentTimeGMT();
 			type = RTCC_REFSMMAT_TYPE_TLM;
 		}
+		//TBD: Telemetry (low-speed)
+		//OST-M
+		else if (refs == 3)
+		{
+			type = RTCC_REFSMMAT_TYPE_OST;
+
+			MATRIX3 SMNB;
+			VECTOR3 U_CB, U_CB_apo, U_CBA, U_CBB, U_CBA_apo, U_CBB_apo;
+
+			//Check on optics data being input
+			if (EZJGSTTB.SXT_STAR[0] == 0 || EZJGSTTB.SXT_STAR[1] == 0)
+			{
+				EMGPRINT("EMSGSUPP", 23);
+				return;
+			}
+
+			for (int i = 0; i < 2; i++)
+			{
+				//Get star vector in BRCS
+				U_CB = EZJGSTAR[EZJGSTTB.SXT_STAR[i] - 1];
+
+				//Get star vector in SM
+				SMNB = OrbMech::CALCSMSC(EZJGSTTB.Att[i]);
+				U_CB_apo = tmul(SMNB, OrbMech::SXTNB(EZJGSTTB.SXT_TRN_INP[i], EZJGSTTB.SXT_SFT_INP[i]));
+
+				if (i == 0)
+				{
+					U_CBA = U_CB;
+					U_CBA_apo = U_CB_apo;
+				}
+				else
+				{
+					U_CBB = U_CB;
+					U_CBB_apo = U_CB_apo;
+				}
+			}
+
+			//Error check for vectors being too close to each other
+			const double eps = 0.01*RAD;
+
+			double arc1, arc2;
+
+			arc1 = acos(dotp(U_CBA, U_CBB));
+			arc2 = acos(dotp(U_CBA_apo, U_CBB_apo));
+
+			if (arc1 < eps || arc2 < eps)
+			{
+				EMGPRINT("EMSGSUPP", 39);
+				return;
+			}
+
+			REFSMMAT = OrbMech::AXISGEN(U_CBA_apo, U_CBB_apo, U_CBA, U_CBB);
+			gmt = RTCCPresentTimeGMT();
+
+			//Star arcs
+			RTCCONLINEMON.DoubleBuffer[0] = arc1*DEG;
+			RTCCONLINEMON.DoubleBuffer[1] = arc2*DEG;
+
+			EMGPRINT("EMSGSUPP", 37);
+		}
+		//TBD: OST-T
 		//DMT
 		else if (refs == 5)
 		{
@@ -35237,9 +35737,6 @@ void RTCC::EMMGSTMP()
 	//Boresight/Scanning Telescope Data
 	if (EZGSTMED.MTX1 > 0)
 	{
-		//Stars not initialized, error?
-		if (EZJGSTAR.size() == 0) return;
-
 		//Null stars
 		unsigned i;
 
@@ -35303,7 +35800,7 @@ void RTCC::EMMGSTMP()
 		int num = 0;
 		unsigned endstar;
 
-		if (EZGSTMED.StartingStar <= EZJGSTAR.size())
+		if (EZGSTMED.StartingStar <= 400U)
 		{
 			i = EZGSTMED.StartingStar - 1;
 		}
@@ -35318,9 +35815,13 @@ void RTCC::EMMGSTMP()
 			u = EZJGSTAR[i];
 
 			//Occultation check
-			if (EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
+			if (i <= 396U)
 			{
-				continue;
+				if (EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
+				{
+					i++;
+					continue;
+				}
 			}
 
 			u_SM = mul(RM, u);
@@ -35355,7 +35856,7 @@ void RTCC::EMMGSTMP()
 				}
 			}
 			i++;
-			if (i >= EZJGSTAR.size())
+			if (i >= 400U)
 			{
 				i = 0;
 			}
@@ -35371,9 +35872,6 @@ void RTCC::EMMGSTMP()
 	//Sextant Data
 	if (EZGSTMED.MTX2 > 0)
 	{
-		//Stars not initialized, error?
-		if (EZJGSTAR.size() == 0) return;
-
 		REFSMMATData refs = EZJGMTX1.data[EZGSTMED.MTX2 - 1];
 		if (refs.ID <= 0)
 		{
@@ -35431,7 +35929,7 @@ void RTCC::EMMGSTMP()
 		int num = 0;
 		unsigned endstar;
 
-		if (EZGSTMED.StartingStar <= EZJGSTAR.size())
+		if (EZGSTMED.StartingStar <= 400U)
 		{
 			i = EZGSTMED.StartingStar - 1;
 		}
@@ -35445,8 +35943,8 @@ void RTCC::EMMGSTMP()
 		{
 			u = EZJGSTAR[i];
 
-			//Occultation check
-			if (!EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
+			//Occultation check (but not for stars 398-400)
+			if (i > 396U || !EMMGSTCK(u, sv.R, sv.RBI, R_EM, R_ES))
 			{
 				//Not occulated, check trunnion angle
 				S_SM = mul(RM, u);
@@ -35470,7 +35968,7 @@ void RTCC::EMMGSTMP()
 			//Try next one
 			i++;
 			//Are we back at the start?
-			if (i >= EZJGSTAR.size())
+			if (i >= 400U)
 			{
 				//Continue from star 0 on
 				i = 0;
@@ -35508,11 +36006,10 @@ void RTCC::EMMGSTMP()
 		EZJGSTTB.Landmark_GET = 0.0;
 		VECTOR3 u = EZJGSTAR[EZGSTMED.G14_Star - 1];
 		char buff[4];
-		sprintf_s(buff, "%03o", EZGSTMED.G14_Star);
+		sprintf_s(buff, "%03d", EZGSTMED.G14_Star);
 		EZJGSTTB.Landmark_SC.assign(buff);
 		EZJGSTTB.Landmark_LOS = u;
-		EZJGSTTB.Landmark_DEC = acos(u.z);
-		EZJGSTTB.Landmark_RA = atan2(u.y, u.x);
+		OrbMech::latlong_from_r(u, EZJGSTTB.Landmark_DEC, EZJGSTTB.Landmark_RA);
 		if (EZJGSTTB.Landmark_RA < 0)
 		{
 			EZJGSTTB.Landmark_RA += PI2;
@@ -35543,19 +36040,23 @@ void RTCC::EMMGSTMP()
 			{
 				double r;
 				int in, out;
+
+				//Calculate ECT/MCT position vector of landmark
 				if (EZGSTMED.G14_RB == 2)
 				{
 					r = EZGSTMED.G14_height + BZLAND.rad[RTCC_LMPOS_BEST];
 					in = 3;
 					out = 2;
+					R_BL_equ = OrbMech::r_from_latlong(EZGSTMED.G14_lat, EZGSTMED.G14_lng, r);
 				}
 				else
 				{
 					r = EZGSTMED.G14_height + OrbMech::R_Earth;
 					in = 1;
 					out = 0;
+					R_BL_equ = OrbMech::r_from_latlong(EZGSTMED.G14_lat, EZGSTMED.G14_lng + OrbMech::w_Earth*EZGSTMED.G14_GMT, r);
 				}
-				R_BL_equ = OrbMech::r_from_latlong(EZGSTMED.G14_lat, EZGSTMED.G14_lng + OrbMech::w_Earth*EZGSTMED.G14_GMT, r);
+				//Convert to ECI or MCI
 				if (ELVCNV(R_BL_equ, EZGSTMED.G14_GMT, 1, in, out, R_BL))
 				{
 					err = 2;
@@ -35638,8 +36139,7 @@ void RTCC::EMMGSTMP()
 				}
 				EZJGSTTB.Landmark_GET = GETfromGMT(EZGSTMED.G14_GMT);
 				EZJGSTTB.Landmark_LOS = u;
-				EZJGSTTB.Landmark_DEC = acos(u.z);
-				EZJGSTTB.Landmark_RA = atan2(u.y, u.x);
+				OrbMech::latlong_from_r(u, EZJGSTTB.Landmark_DEC, EZJGSTTB.Landmark_RA);
 				if (EZJGSTTB.Landmark_RA < 0)
 				{
 					EZJGSTTB.Landmark_RA += PI2;
@@ -35865,13 +36365,16 @@ void RTCC::EMMGLMST(int mode)
 		{
 			found = false;
 
-			while (num < EZJGSTAR.size())
+			while (num < 400U)
 			{
-				//Occultation check
-				if (EMMGSTCK(EZJGSTAR[num], sv2.R, sv2.RBI, R_EM, R_ES))
+				//Occultation check (but not for stars 398-400)
+				if (num <= 396U)
 				{
-					num++;
-					continue;
+					if (EMMGSTCK(EZJGSTAR[num], sv2.R, sv2.RBI, R_EM, R_ES))
+					{
+						num++;
+						continue;
+					}
 				}
 				found = OrbMech::AOTcheckstar(EZJGSTAR[num], REFSMMAT, EZJGSTBL.StoredAttMED, AOT_AZ, AOT_EL);
 				if (found) break;
@@ -35921,13 +36424,16 @@ void RTCC::EMMGLMST(int mode)
 		{
 			found = false;
 
-			while (num < EZJGSTAR.size())
+			while (num < 400U)
 			{
-				//Occultation check
-				if (EMMGSTCK(EZJGSTAR[num], sv2.R, sv2.RBI, R_EM, R_ES))
+				//Occultation check (but not for stars 398-400)
+				if (num <= 396U)
 				{
-					num++;
-					continue;
+					if (EMMGSTCK(EZJGSTAR[num], sv2.R, sv2.RBI, R_EM, R_ES))
+					{
+						num++;
+						continue;
+					}
 				}
 				found = OrbMech::LMCOASCheckStar(EZJGSTAR[num], REFSMMAT, EZJGSTBL.StoredAttMED, EZGSTMED.G20_COAS_Axis, EL, SXP);
 				if (found) break;
@@ -36678,6 +37184,156 @@ void RTCC::CMMTMEIN(int L, double hrs)
 	block->Octals[0] = OrbMech::DoubleToBuffer(centiseconds, 28, 1);
 	block->Octals[1] = OrbMech::DoubleToBuffer(centiseconds, 28, 0);
 	block->TimeIncrement = hrs * 3600.0;
+}
+
+void RTCC::CMMERMEM(int blocknum, int med, int line, const std::vector<int> &data)
+{
+	//med: 0 = CEI (initialize), 1 = CEE (enter in engineering format), 2 = CEO (enter in octal format), 3 = CEC (change or delete)
+
+	if (blocknum < 0 || blocknum > 3) return;
+
+	const int maxdata = 19;
+
+	unsigned i;
+
+	AGCErasableMemoryUpdateMakeupBlock* block = &CZERAMEM.Blocks[blocknum];
+
+	if (med == 0)
+	{
+		//Initialize
+		block->GETofGeneration = GETfromGMT(RTCCPresentTimeGMT());
+
+		if (data[0] == 0)
+		{
+			//V72
+			block->IsVerb72 = true;
+		}
+		else if (data[0] >= 0 && data[0] <= 03777)
+		{
+			//V71
+			block->IsVerb72 = false;
+
+			block->Data[0].OctalData = data[0];
+			block->Data[0].DataType = 0;
+			block->Data[0].EndOfDataFlag = true;
+			block->Data[0].EngineeringUnits = 0.0;
+			block->Data[0].ValueLeastSignBit = 0.0;
+		}
+		else
+		{
+			//Error
+			return;
+		}
+
+		if (block->SequenceNumber == 0)
+		{
+			switch (blocknum)
+			{
+			case 0:
+				block->SequenceNumber = 1800;
+				break;
+			case 1:
+				block->SequenceNumber = 1900;
+				break;
+			case 2:
+				block->SequenceNumber = 3800;
+				break;
+			case 3:
+				block->SequenceNumber = 3900;
+				break;
+			}
+		}
+		block->SequenceNumber++;
+
+		int num;
+
+		if (block->IsVerb72)
+		{
+			num = 0;
+		}
+		else
+		{
+			num = 1;
+		}
+
+		//Blank out everything
+		for (i = num; i < maxdata; i++)
+		{
+			block->Data[i].OctalData = 0x8000;
+			block->Data[i].DataType = 1;
+			block->Data[i].EndOfDataFlag = true;
+			block->Data[i].ValueLeastSignBit = 0.0;
+			block->Data[i].EngineeringUnits = 0.0;
+		}
+	}
+	else if (med == 1 || med == 2)
+	{
+		//Octal data
+		unsigned num = line - 2;
+
+		//Check if any numbers before num are not valid
+		for (i = 0; i < num; i++)
+		{
+			if (block->Data[i].OctalData == 0x8000)
+			{
+				//Error
+				return;
+			}
+		}
+
+		for (i = 0; i < data.size(); i++)
+		{
+			block->Data[num].OctalData = data[i];
+			block->Data[num].DataType = 1;
+			block->Data[num].EndOfDataFlag = false;
+			block->Data[num].ValueLeastSignBit = 0.0;
+			block->Data[num].EngineeringUnits = 0.0;
+
+			num++;
+
+			if (num >= maxdata) break;
+		}
+
+		for (i = 0; i < num - 1; i++)
+		{
+			block->Data[i].EndOfDataFlag = false;
+		}
+
+		block->Index = num + 1;
+
+		//Blank out rest
+		for (i = num; i < maxdata; i++)
+		{
+			block->Data[i].OctalData = 0x8000;
+			block->Data[i].DataType = 1;
+			block->Data[i].EndOfDataFlag = true;
+			block->Data[i].ValueLeastSignBit = 0.0;
+			block->Data[i].EngineeringUnits = 0.0;
+		}
+	}
+	else if (med == 3)
+	{
+		//Change or delete data
+
+		unsigned num = line - 2;
+
+		if (num > 0)
+		{
+			block->Data[num - 1].EndOfDataFlag = true;
+		}
+
+		block->Index = num + 1;
+
+		//Blank out rest
+		for (i = num; i < maxdata; i++)
+		{
+			block->Data[i].OctalData = 0x8000;
+			block->Data[i].DataType = 1;
+			block->Data[i].EndOfDataFlag = true;
+			block->Data[i].ValueLeastSignBit = 0.0;
+			block->Data[i].EngineeringUnits = 0.0;
+		}
+	}
 }
 
 void RTCC::QMEPHEM(int EPOCH, int YEAR, int MONTH, int DAY, double HOURS)

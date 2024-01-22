@@ -97,6 +97,23 @@ static inline bool papiReadScenario_int(char *line, char *item, int &i) {
 	return false;
 }
 
+//Same as papiReadScenario_int, but load number in octal
+static inline bool papiReadScenario_oct(char *line, char *item, int &i) {
+
+	char buffer[256];
+	int j;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			if (sscanf(line, "%s %o", buffer, &j) == 2) {
+				i = j;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 static inline bool papiReadScenario_double(char *line, char *item, double &d) {
 
 	char buffer[256];
@@ -217,6 +234,7 @@ static inline bool papiReadScenario_boolarr(char *line, char *item, bool *v, int
 				v[i] = (in != 0);
 				pos += cur;
 			}
+			return true;
 		}
 	}
 	return false;
@@ -284,6 +302,7 @@ static inline bool papiReadScenario_doublearr(char *line, char *item, double *v,
 				sscanf(line + pos, "%lf %n", &v[i], &cur);
 				pos += cur;
 			}
+			return true;
 		}
 	}
 	return false;

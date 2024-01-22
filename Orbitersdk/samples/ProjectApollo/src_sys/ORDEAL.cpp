@@ -37,7 +37,7 @@ ORDEAL::ORDEAL() {
 	pitchOffset = 0;
 }
 
-void ORDEAL::Init(ToggleSwitch *EarthSw, CircuitBrakerSwitch *ACCB, CircuitBrakerSwitch *DCCB, OrdealRotationalSwitch *AltSet, ToggleSwitch *ModeSw, ThreePosSwitch *SlewSw, ToggleSwitch *FDAI1Sw, ToggleSwitch *FDAI2Sw) {
+void ORDEAL::Init(ToggleSwitch *EarthSw, CircuitBrakerSwitch *ACCB, CircuitBrakerSwitch *DCCB, OrdealRotationalSwitch *AltSet, ToggleSwitch *ModeSw, ThreePosSwitch *SlewSw, ToggleSwitch *FDAI1Sw, ToggleSwitch *FDAI2Sw, ThreePosSwitch *LtgSw) {
 	EarthSwitch = EarthSw;
 	ACCircuitBraker = ACCB;
 	DCCircuitBraker = DCCB;
@@ -46,6 +46,7 @@ void ORDEAL::Init(ToggleSwitch *EarthSw, CircuitBrakerSwitch *ACCB, CircuitBrake
 	SlewSwitch = SlewSw;
 	FDAI1Switch = FDAI1Sw;
 	FDAI2Switch = FDAI2Sw;
+	LightingSwitch = LtgSw;
 }
 
 bool ORDEAL::IsPowered() {
@@ -60,16 +61,40 @@ bool ORDEAL::IsPowered() {
 	return true;
 }
 
+double ORDEAL::LightingPower() {
+
+	if (ACCircuitBraker->IsPowered()) {
+
+		if (LightingSwitch->IsUp()) {
+			return 1.0;
+		}
+		else if (LightingSwitch->IsDown()) {
+			return 0.5;
+		}
+		else
+			return 0;
+	}
+	else
+		return 0;
+}
+
 void ORDEAL::SystemTimestep(double simdt) {
+	double power = LightingPower();
 
 	// Do we have power?
-	if (!IsPowered()) return;
+	if (!IsPowered()) {
+		ACCircuitBraker->DrawPower(power);
+		return;
+	}
 
-	ACCircuitBraker->DrawPower(4);	// see CSM Systems Handbook
-	DCCircuitBraker->DrawPower(3);
+	ACCircuitBraker->DrawPower(3 + power);	// see LM Systems Handbook
+	DCCircuitBraker->DrawPower(4);
+
 }
 
 void ORDEAL::Timestep(double simdt) {
+
+	//sprintf(oapiDebugString(), "PowerInt: %lf IsACPowered %d", LightingPower(), ACCircuitBraker->IsPowered());
 
 	// Do we have power?
 	if (!IsPowered()) return;

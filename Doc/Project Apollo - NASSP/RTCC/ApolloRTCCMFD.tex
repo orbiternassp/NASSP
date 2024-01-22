@@ -84,10 +84,11 @@ The main menu is dividing the MFD in the following categories:\\
 \textbf{TAR:} Targeting menu. Contains the various maneuver computation pages. \\
 \textbf{PAD:} Pre-Advisory Data. Shows the PADs that the Apollo crews received during a mission.\\
 \textbf{UTI:} Utility. All additional calculation pages that are not for specific maneuvers.\\
-\textbf{MCC:} MCC Displays. Shows the "TV Guide", a list of displays that were available in the MOCR.\\
+\textbf{INI:} MPT Initialization. Used to update weights, areas and vehicle configuration for the MPT. Also used for non-MPT trajectory propagation.\\ 
 \textbf{PLN:} Mission Plan Table. A central feature of the maneuver planning during a mission. Currently optional.\\
 \textbf{CFG:} Configuration. Various settings for the MFD.\\
 \textbf{UPL:} Uplink Page. All uplinks to the AGCs and LVDC can be found here.\\
+\textbf{MCC:} MCC Displays. Shows the "TV Guide", a list of displays that were available in the MOCR.\\
 
 \section{Targeting}
 
@@ -458,7 +459,97 @@ This display is based on the actual display used by the flight controllers for A
 \textbf{THETA:} Angle between the desired lunar orbit plane and the actual achieved plane.\\
 \textbf{FND/E:} True anomaly at LOI on the first ellipse (post LOI).\\
 \newpage
+\subsection{Lunar Launch Window Processor}
+\subsubsection{Introduction}
+The Lunar Launch Window Processor (LLWP) computes the lunar module recommended time of lift-off from the lunar surface and the lunar launch window. It is used for the coelliptic rendezvous profile with the CSI and CDH maneuvers. For the short profile (Apollo 14 and later), see the lunar launch targeting processor.\\
 
+The LLWP computes lift-off times as a function of the height difference ($\Delta$h) in the coelliptic orbits phase of the lunar concentric rendezvous plan. The recommended LM time of lift-off from the lunar surface is that launch time during a given CSM revolution for which the required $\Delta$h is the nominal mission value. The lunar launch window is defined as the total interval of time in the CSM revolution during which the IM can lift-off and rendezvous with the CSM within the limits of maneuver-$\Delta$V budgets, LM ascent stage power lifetime, and safe orbital altitudes. The lift-off time computation involves simulation of the mission
+from LM launch through rendezvous. The lift-off time which satisfies phase convergence for the given coelliptic $\Delta$h at terminal phase initiation is the required time. The LLWP output for each $\Delta$h includes the lift-off time, maneuver times, and maneuver-$\Delta$V values.\\
+
+The LLWP times may be computed based on either LM or CSM execution of the rendezvous maneuvers. In either case, $\Delta$h is positive when the maneuvering vehicle is below the target vehicle, and is negative otherwise. The positive $\Delta$h values are limited by the minimum allowable pericynthion altitude. The negative $\Delta$h values are limited by the rendezvous $\Delta$V budgeted for the maneuvering vehicle; however, a theoretical limit exists above which the vehicle cannot acquire the target along the input elevation angle.\\
+
+The MFD has two initialization pages, corresponding to MEDs K13 and K14. Because LGC P12 targets and powered flight arc and time are inputs, it can improve the accuracy of the calculation to simulate through a lunar ascent with an updated liftoff time. After a LLWP calculation go to the lunar ascent page, input the desired liftoff time and run the ascent simulation. This updates the actually required powered flight arc and time which can then be used in another LLWP calculation.\\
+\newpage
+\subsubsection{Initialization}
+The following inputs correspond to MED K13, Initialization for LM Targeting and Launch Window:\\
+
+\textbf{PFA:} Powered flight arc from lunar liftoff to insertion, in degrees.\\
+\textbf{PFT:} Powered flight time from lunar liftoff to insertion, in seconds.\\
+\textbf{HEI:} Height of insertion, in feet.\\
+\textbf{VLH:} Horizontal velocity at insertion, in feet per second. Corresponds to LGC P12 input.\\
+\textbf{VLV:} Vertical velocity at insertion, in feet per second. Corresponds to LGC P12 input.\\
+\textbf{YAW:} Maximum yaw steering capability during ascent, in degrees. Effectively a maximum crossrange.\\
+
+\textbf{LIF:} Maximum ascent stage lifetime since launch, in hours.\\
+\textbf{MHE:} Minimum safe height from rendezvous maneuvers, in nautical miles.\\
+\textbf{LDV:} Maximum LM Delta V capability, in feet per second.\\
+\textbf{CDV:} Maximum CSM Delta V capability, in feet per second.\\
+
+The following inputs correspond to MED K14, Launch Window Initialization:\\
+
+\textbf{BIA:} Time bias for CSI if CSM is active vehicle. CSI will be done at LM apsis plus input time bias. In minutes.\\
+\textbf{E:} Elevation angle to initiate terminal phase (TPI) on, in degrees.\\
+\textbf{WT:} Terminal phase travel angle from TPI to TPF, in degrees.\\ 
+\textbf{TPH:} Offset height difference at TPF, in nautical miles.\\
+\textbf{TPP:} Phase angle offset at TPF, in nautical miles.\\
+
+\textbf{DHB:} Height difference to begin curve fit, in nautical miles.\\
+\textbf{DHI:} Height difference increment for curve fit, in nautical miles.\\
+\newpage
+\subsubsection{Calculation}
+
+These inputs correspond to MED K15, Generate Launch Window:\\
+
+\textbf{CHA:} Choose either CSM or LM as the chaser, the active vehicle in the rendezvous.\\
+\textbf{VTI:} Choose the CSM vector time for the LLWP calculation. MPT mode only.\\
+\textbf{THT:} Either a threshold time for liftoff or the TPI time if it was input. Currently only the second option is implemented.\\
+\textbf{CSI:} CSI maneuver flag. If 0 is input then CSI is done 90 degrees from insertion. If any negative value is input then CSI is done at apolune after insertion. If a positive value is input then CSI is done at a delta time from insertion. Typically CSI is set at 50 minutes after insertion.\\
+\textbf{CDH:} CDH maneuver flag. If 0 is input then CDH is done at an upcoming apsis after CSI. If positive, it must be an odd number and CDH is done at N/2 orbits after CSI.\\
+
+\textbf{TGT:} Select the target vehicle, typically the CSM (non-MPT mode only).\\
+\textbf{TPI:} TPI definition. Enter the desired TPI time. This must be generated externally, either with the TPI times page or the sunrise/sunset table (MPT mode only).\\
+\textbf{LLW:} Delta height flag. A positive number indicates request for complete launch window and the number of delta heights. A negative number indicates request for the input delta heights only. Presently only the second option is implemented.\\
+\textbf{DH:} Input three delta heights, being used if the delta height flag indicates delta heights are being input.\\
+%\newpage
+\subsubsection{Display}
+
+\begin{figure}[hp]
+	\centering
+		\includegraphics{./ApolloRTCCMFDFiles/RTCCMFD_LLWP_Display.png}
+	\caption{Example LLWP Calculation}
+	\label{fig:LLWPDisplay}
+\end{figure}
+\textbf{Display Parameters}\\
+
+\textbf{CSM STA:} Station ID of CSM state vector used in the LLWP calculation.\\
+\textbf{GMTV:} GMT of CSM state vector.\\
+\textbf{GETV:} GET of CSM state vector.\\
+\textbf{MVR VEH:} Active vehicle, performing the rendezvous maneuvers.\\
+\textbf{LM POSITION:} Latitude and longitude of the lunar landing site, from which the LLWP simulates the launch.\\
+\textbf{THT:} Threshold time or TPI time.\\
+\textbf{LM STA:} Station ID of LM state vector used in the LLWP calculation.\\
+\textbf{GMTV:} GMT of LM state vector.\\
+\textbf{GETV:} GET of LM state vector.\\
+\textbf{DTCSI:} Input time from insertion to CSI.\\
+\textbf{LM LIFE:} LM maximum life time in hours.\\
+\textbf{DV MAX:} Maximum DV of active vehicle.\\
+\textbf{MIN H:} Minimum safe height for rendezvous maneuvers, in nautical miles.\\
+
+\textbf{ID:} Number in table of solutions.\\
+\textbf{M:} Number of revolutions from launch to TPI.\\
+\textbf{DH:} Delta height of solution, in nautical miles.\\
+\textbf{GETLO:} GET of calculated liftoff time.\\
+\textbf{GETINS:} GET of calculation insertion time.\\
+\textbf{GETCSI:} GET of calculated CSI time.\\
+\textbf{DVCSI:} Delta V of CSI maneuver.\\
+\textbf{GETCDH:} GET of calculated CDH time.\\
+\textbf{DVCDH:} Delta V of CDH maneuver.\\
+\textbf{GETTPI:} GET of calculated TPI time.\\
+\textbf{DVTPI:} Delta V of TPI maneuver.\\
+\textbf{DVTPF:} Delta V of TPF maneuver.\\
+\textbf{DVT:} Total Delta V of rendezvous plan.\\
+
+\newpage
 \subsection{Deorbit Targeting}
 \subsubsection{Introduction}
 
@@ -747,7 +838,7 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 \textbf{MD:} Miss distance of the primary entry mode to the target splashdown coordinates. In nautical miles.\\
 
 \newpage
-\subsection{Launch Window Processor}
+\subsection{Skylab Launch Window Processor}
 
 The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. At present there is no capability to stop and re-start the countdown for Saturn launches, so only at the predetermined time in a launch scenario can the launch be done. The liftoff time options other than input time should therefore not used for now.\\
 
@@ -923,7 +1014,25 @@ The Entry PAD contains all numbers to conduct a safe reentry. There are two type
 \textbf{CLC:} Calculate the missing numbers on the Entry PAD.\\
 \textbf{OPT:} Switch between the Earth Entry PAD and the Lunar Entry PAD.\\
 \textbf{BCK:} Go back to the main menu.\\
+\newpage
+\subsection{Apollo Generalized Optics Program}
 
+The Apollo Generalized Optics Program (AGOP) contains various optics and antenna pointing calculations.\\
+
+Option 1 of the AGOP will be used for cislunar navigation. This program option defines an inertial attitude which will align the optics system to the horizon or some specified landmark on the Earth or Moon. Output consists of IMU gimbal angles and the optics shaft and trunnion angles to point the sextant at the specified star.\\
+
+Option 2 will accept a state vector and compute the right ascension and declination of the spacecraft with respect to the Earth, and the right ascension and declination of the Earth, Moon and Sun with respect to the Earth. Additionally it computes the same quantities referenced to an input landmark when mode 2 is selected. Mode 2 will compute right ascension, declination, and a unit vector from the spacecraft to the specified landmark or the center of the Earth, Moon and Sun as desired\\
+
+Option 3 will output the right ascension, declination and unit vector of all stars in the catalog.\\
+
+Option 4 will accept a state vector and IMU gimbal angles and compute the pitch and yaw angles of the onboard S-Band Hi-Gain Antenna, S-Band Steerable Antenna, and Rendezvous Radar Antenna necessary to point at a specified ground based radar. An additional option provides the capability of fixing the antenna position and computing the necessary spacecraft gimbal angles for pointing the antenna at a specified ground station.\\
+
+Option 5 computes the IMU gimbal angles required to place the spacecraft in a passive thermal control (PTC) attitude, with the +X-axis oriented 90 degrees with respect to the Sun and to the Earth for omnidirectional communication.\\
+
+Option 6 computes the attitude required to orientate the CSM to the forward or aft horizons, either in heads up or down.\
+
+Options 7-9 will be implemented in the future.\\
+\newpage
 \subsection{VECPOINT}
 
 \subsubsection{Explanation}
@@ -935,7 +1044,7 @@ The VECPOINT page, named after a routine in the AGC, is calculating the IMU angl
 \textbf{BOD:} Type the name of the body e.g. Sun, Moon etc.\\
 \textbf{DIR:} Choose the direction of the spacecraft to be pointed at the celestial object.\\
 \textbf{CLC:} Calculate the IMU angles.\\
-
+\newpage
 \subsection{Configuration}
 
 \textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
@@ -948,9 +1057,30 @@ The VECPOINT page, named after a routine in the AGC, is calculating the IMU angl
 \textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
 \textbf{UPD:} Update the liftoff time automatically by downlinking that time from the CMC or LGC. This will actually update three values in the RTCC: CSM liftoff time, time of clock zeroing in the CMC, time of clock zeroing in the LGC. These times are normally all set to the actual liftoff time of the CSM to get a consistent basis to calculate Ground Elapsed Time in the RTCC.\\
 \textbf{BCK:} Go back to the main menu.\\
-
+\newpage
 \section{Mission Planning}
 
+The mission plan table (MPT) is the central planning tool in the RTCC for future maneuvers. The RTCC has two MPTs, one for the CSM and one for the LM, which are related through undocking and docking maneuvers. Each MPT consists of a table header and data blocks for each individual maneuver. The table header has the initial vehicle configuration (combinations of CSM, Saturn and LM ascent and/or descent stages) and initial weights, area (for drag calculations) and propellant. Each maneuver block has data describing the maneuver and updates weights and propellant.\\
+
+At the current stage of RTCC development for NASSP the MPT is an optional feature that can be used to plan and evaluate future maneuvers. The RTCC MFD has a MPT mode which by default is off. When it is switched on then current state vectors and weights are not updated automatically but have to be managed manually. However, the MPT header is already used in the non-MPT mode for trajectory propagation for state vector uplinks. In the future more parts of the MFD will use the data in the MPT header.\\
+
+There are four manual user entry (MED) modes to update the MPT header. The M55 MED is used to establish the initial vehicle configuration, time to start S-IVB venting and the initial CSM/LM docking angle. M51 is used to update the vehicle areas and a K-factor (multiplier) for drag calculations. In MPT mode the M50 MED is used to update vehicle weights and M49 is used to update available propellants. The detailed MED inputs and format can be found in the MED section of the manual.\\
+\subsection{MPT Initialization}
+
+On the left side of this page appear the input parameters that are automatically or manually updated. On the right side the page shows the actual data stored in the MPT.\\
+
+\subsubsection{Buttons}
+\textbf{TAB:} Choose the mission plan table (CSM or LM) to initialize.\\
+\textbf{MED:} Choose the type of initialization to do. The options are M49 for propellants, M50 for weights, M51 for vehicle areas or M55 for the initial vehicle configuration.\\
+\textbf{UPD:} To update the MPT (right side) with the data currently set as input (left side).\\
+\textbf{$<<$:} Go to previous item to manually change input data.\\
+\textbf{$>>$:} Go to next item to manually change input data.\\
+\textbf{SET:} Change the currently selected input.\\
+\textbf{TGT:} Select a vessel in the simulation to automatically populate the input data.\\
+\textbf{AUT:} Automatically update the input data with the selected vessel.\\
+\textbf{VPS:} Go to the Vector Panel Summary page for MPT state vector management.\\
+\textbf{BCK:} Go back to the main menu.\\
+\newpage
 \section{Example: Apollo 7 Rendezvous}
 
 This MFD can be used to replicate the ground solutions for the rendezvous and other SPS burns during the Apollo 7 mission. As an example the inputs for the following maneuvers will be presented:
@@ -1185,6 +1315,141 @@ The procedure to calculate a nominal deorbit maneuver is very similar to the one
 
 \begin{tabbing}
 \textbf{Notes}:
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M49\\
+\textbf{Purpose}: Change fuel remaining weights\\
+\textbf{Example}: \texttt{M49,CSM,20000;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&SPS Fuel Remaining&CSM RCS Fuel Remaining&S-IVB J-2 Remaining&APS Fuel Remaining&LM RCS Fuel Remaining\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FLP&FLP&FLP&FLP&FLP \\
+ \hline
+ \textbf{Input Units} &CSM, LEM&lbs.&lbs.&lbs.&lbs.&lbs. \\
+ \hline
+ \textbf{Checking Option}&&$\geq$0&$\geq$0&$\geq$0&$\geq$0&$\geq$0\\
+ \hline
+ \textbf{Missing Item Option}&Error&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}: A change of fuel will \underline{not} cause a trajectory update.
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M49 (cont.)\\
+\textbf{Purpose}: \\
+\textbf{Example}: \\
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &DPS Fuel Remaining&&&&&\\
+ \hline
+ \textbf{Input Format} &FLP&&&&& \\
+ \hline
+ \textbf{Input Units} &lbs.&&&&& \\
+ \hline
+ \textbf{Checking Option}&$\geq$0&&&&&\\
+ \hline
+ \textbf{Missing Item Option}&Insert neg. number&&&&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M50\\
+\textbf{Purpose}: Change vehicle weights\\
+\textbf{Example}: \texttt{M50,CSM,40000;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&CSM Weight&S-IVB Weight&LM Total Weight&LM Ascent Weight&Time of Weight\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FLP&FLP&FLP&FLP&HH:MM:SS\\
+ \hline
+ \textbf{Input Units} &CSM, LEM&lbs.&lbs.&lbs.&lbs.&lbs. \\
+ \hline
+ \textbf{Checking Option}&&$\geq$2000&$\geq$2000&$\geq$2000&$\geq$2000&$\leq$Present Time\\
+ \hline
+ \textbf{Missing Item Option}&Error&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M51\\
+\textbf{Purpose}: Change vehicle cross-sectional area or K-factor\\
+\textbf{Example}: \texttt{M51,CSM,129.4;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&CSM Area&S-IVB Area&LM Ascent Area&LM Descent Area&K-Factor\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FLP&FLP&FLP&FLP&FLP\\
+ \hline
+ \textbf{Input Units} &CSM, LEM&ft.\textsuperscript{2}&ft.\textsuperscript{2}&ft.\textsuperscript{2}&ft.\textsuperscript{2}&ft.\textsuperscript{2}\\
+ \hline
+ \textbf{Checking Option}&&$0\leq$X$\leq$2000&$0\leq$X$\leq$2000&$0\leq$X$\leq$2000&$0\leq$X$\leq$2000&$-30\leq$X$\leq$30\\
+ \hline
+ \textbf{Missing Item Option}&Error&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number&Insert neg. number\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: M55\\
+\textbf{Purpose}: Input initialization parameters\\
+\textbf{Example}: \texttt{M55,CSM,CSL;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&Configuration Code&GET to begin venting&Delta Docking Angle&&\\
+ \hline
+ \textbf{Input Format} &EBCDIC&EBCDIC&HH:MM:SS&FLP&&\\
+ \hline
+ \textbf{Input Units} &CSM, LEM&Note 1&GET&degrees&&\\
+ \hline
+ \textbf{Checking Option}&Exact&Exact&&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Insert "FF"&Insert neg. number&Insert "FF"&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}: Note 1: Any combination of C (CSM), S (SIVB), L (LEM: Ascent+Descent), A (LEM: Ascent Only), D (LEM: Descent Only)
 \end{tabbing}
 \newpage
 
@@ -2142,6 +2407,10 @@ MCLTTD & Octal LGC address for the time of lunar landing & 2400 & None\\
 \hline
 MCLABT & Octal LGC address for descent abort constants & 2545 & None\\
 \hline
+MCCTEP & Octal CMC address for TEPHEM (liftoff time) & 1706 & None\\
+\hline
+MCLTEP & Octal LGC address for TEPHEM (liftoff time) & 1706 & None\\
+\hline
 PZREAP\_RRBIAS & Relative range override for the Return-to-Earth processor & 1285.0 & Nautical Miles\\
 \hline
 PZREAP\_IRMAX & Maximum return inclination for the Return-to-Earth processor & 40.0 & Degrees\\
@@ -2291,5 +2560,72 @@ Latitude of node (deg)&Longitude of node (deg)&Height of node (NM)&&Card ID\\
 \subsection{TLI Targeting Parameters}
 
 The files containing the TLI targeting parameters follow the launch day specific format "`1968-12-21 TLI.txt". They contain the numbers needed to calculate the time of restart preparations and the TLI maneuver in the RTCC. The format of the file follows the MSC card format from the MSC internal note RTCC REQUIREMENTS FOR APOLLO 11 (MISSION G) PREFLIGHT INFORMATION (69-FM-171), which can be found \href{https://web.archive.org/web/20100524010957/http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740072570_1974072570.pdf}{here}. The PDF pages 32 to 40 show the format. One line in the config file is equal to one punch card.
+
+
+\newpage
+\subsection{Erasable Memory Programs}
+
+Erasable Memory Program (EMP) files are loaded in the EMPs folder, which is under Config/ProjectApollo/RTCC. They contain uplink data for the CMC and LGC. The format of the file is as follows:\\
+
+\begin{itemize}
+\item The first line contains a description of the EMP which is shown on the uplink MFD page.
+\item The second line contains the AGC rope name (e.g. Luminary 210) for which the EMP is valid.
+\item The actual uplink loads follow in the subsequent lines. Each load has two lines in the file and the number of possible loads per file is not limited. There are two types of EMP uplinks. Contiguous block update (Verb 71) updates from 1 to 18 consecutive erasable memory registers in the same erasable memory bank. The scatter update (Verb 72) provides the capability to update from 1 to 9 non-consecutive erasable memory registers in the same or different erasable memory banks. The first of the two lines in each load contains either 71 and the starting address for Verb 71 or 72 and no additional value for Verb 72. The second line then contains all the uplink data, for Verb 72 it is alternating address and value. All data is in octal.
+\end{itemize}
+
+On the next page follows a list of EMPs that come with NASSP:\\
+\newpage
+
+\begin{tabular}{|l|L{9cm}|l|}
+\hline
+\textbf{EMP Filename}&\textbf{Description}&\textbf{Rope}\\
+\hline
+P99 L1D&Guided RCS Translation Maneuver&Luminary 178\\
+\hline
+EMP 99&Guided RCS Translation Maneuver&Luminary 210\\
+\hline
+EMP 100A&Backup for failed DSKY key using engine gimbal switch&Luminary 210\\
+\hline
+EMP 100B&Backup for failed DSKY key using mode sel switch&Luminary 210\\
+\hline
+EMP 103A&Descent with failed CDUs&Luminary 210\\
+\hline
+EMP 103B&EMP for failed CDUX&Luminary 210\\
+\hline
+EMP 108&Zero a runaway IMU CDU and prevent coarse align&Luminary 210\\
+\hline
+EMP 500&Landmark Tracking With Datalink Failure Or Unusable Optics&Artemis 72\\
+\hline
+EMP 501&Landmark Tracking With Failed Mark/Mark Rej Button&Artemis 72\\
+\hline
+EMP 512&P40/41/47 Termination During Average G When EMP 509 is Operating&Artemis 72\\
+\hline
+EMP 514&Shortened P23&Artemis 72\\
+\hline
+EMP 515&Manual Range Input&Artemis 72\\
+\hline
+EMP 517&Convert Optics Shaft And Trunnion Angles To Body Angles&Artemis 72\\
+\hline
+EMP 523&Monitor Jet-On Failure&Artemis 72\\
+\hline
+EMP 525A&Optics Switch Monitor&Artemis 72\\
+\hline
+EMP 526 (1 Deg)&IMU CDU Transient Monitor (1 Degree Check)&Artemis 72\\
+\hline
+EMP 526 (2 Deg)&IMU CDU Transient Monitor (2 Degree Check)&Artemis 72\\
+\hline
+EMP 526 (3 Deg)&IMU CDU Transient Monitor (3 Degree Check)&Artemis 72\\
+\hline
+EMP 526 (4 Deg)&IMU CDU Transient Monitor (4 Degree Check)&Artemis 72\\
+\hline
+EMP 527 (CDUX)&Monitor Single IMU CDU (CDUX)&Artemis 72\\
+\hline
+EMP 527 CDUY)&Monitor Single IMU CDU (CDUY)&Artemis 72\\
+\hline
+EMP 527 (CDUZ)&Monitor Single IMU CDU (CDUZ)&Artemis 72\\
+\hline
+EMP 528&Monitor Jet-On Failure and Do EMP 526&Artemis 72\\
+\hline
+\end{tabular}
 
 \end{document}

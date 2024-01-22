@@ -29,11 +29,14 @@
 void E_system::Create_Boiler(char *line) {
 
 	char name[100], source[100], targetName[100], typeName[100];
-	int pump, type;
-	double watts, ewatts, valueMin, valueMax;
+	int pump, type, ramp;
+	double watts, ewatts, valueMin, valueMax, rampRate;
 
-	sscanf(line + 8,"%s %i %s %lf %lf %s %lf %lf %s",
-		name, &pump, source, &watts, &ewatts, typeName, &valueMin, &valueMax, targetName);
+	ramp = 0;
+	rampRate = 0.0;
+
+	sscanf(line + 8,"%s %i %s %lf %lf %s %lf %lf %s %i %lf",
+		name, &pump, source, &watts, &ewatts, typeName, &valueMin, &valueMax, targetName, &ramp, &rampRate);
 
 	ship_object* so = (ship_object*) GetPointerByString(targetName) ;
 	therm_obj *t = so->GetThermalInterface();
@@ -44,8 +47,10 @@ void E_system::Create_Boiler(char *line) {
 		type = 1;
 	else if (Compare(typeName, "CHILLER"))
 		type = 2;
+	else if (Compare(typeName, "PWM"))
+		type = 3;
 
-	AddSystem(new Boiler(name, pump, src, watts, ewatts, type, valueMin, valueMax, t));
+	AddSystem(new Boiler(name, pump, src, watts, ewatts, type, valueMin, valueMax, t, (bool)ramp, rampRate));
 }
 
 void E_system::Create_AtmRegen(char *line) {
@@ -241,10 +246,12 @@ void E_system::Create_Battery(char *line)
 	double power, operating_voltage, resistance, volume, isolation, mass, temp = 0;
 	vector3 pos;
 	char source[100];
+	char targetName[100];
 
-	sscanf(line + 9, "%s %lf %lf %lf %s %lf <%lf %lf %lf> %lf %lf %lf", name, &power, &operating_voltage, &resistance, source, &temp, &pos.x, &pos.y, &pos.z, &volume, &isolation, &mass);
+	sscanf(line + 10, "%s %lf %lf %lf %s %lf <%lf %lf %lf> %lf %lf %lf %s", name, &power, &operating_voltage, &resistance, source, &temp, &pos.x, &pos.y, &pos.z, &volume, &isolation, &mass, targetName);
 	e_object* SRC=(e_object*)GetPointerByString(source);
-	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance));
+	h_Tank* batcase = (h_Tank*)GetPointerByString(targetName);
+	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance, batcase));
 
 	new_b->parent = this;
 
@@ -266,17 +273,19 @@ void E_system::Create_FCell(char *line) {
 	char source1[100];
 	char source2[100];
 	char source3[100];
+	char source4[100];
 	vector3 pos;
 	int status;
 
-	sscanf(line+7, "%s %i <%lf %lf %lf> %lf %s %s %s", name, &status, &pos.x, &pos.y, &pos.z,
-		&power, source1, source2, source3);
+	sscanf(line+7, "%s %i <%lf %lf %lf> %lf %s %s %s %s", name, &status, &pos.x, &pos.y, &pos.z,
+		&power, source1, source2, source3, source4);
 
 	h_Valve* O_SRC = (h_Valve*)P_hydraulics->GetPointerByString(source1);
 	h_Valve* H_SRC = (h_Valve*)P_hydraulics->GetPointerByString(source2);
 	h_Valve* WATER = (h_Valve*)P_hydraulics->GetPointerByString(source3);
+	h_Tank* N2 = (h_Tank*)P_hydraulics->GetPointerByString(source4);
 
-	FCell *new_fc = (FCell*)AddSystem(new FCell(name, status, pos, O_SRC, H_SRC, WATER, (float)power));
+	FCell *new_fc = (FCell*)AddSystem(new FCell(name, status, pos, O_SRC, H_SRC, WATER, (float)power, N2));
 }
 
 void E_system::Build() {
@@ -457,6 +466,8 @@ void* Boiler::GetComponent(char *component_name) {
 		return (void*)&valueMin;
 	if (Compare(component_name,"ISON"))
 		return (void*)&pumping;
+	if (Compare(component_name, "PWMCYC"))
+		return (void*)&pwmThrotle;
 
 	BuildError(2);
 	return NULL;

@@ -141,8 +141,15 @@ namespace OrbMech{
 		return H*3600.0 + M*60.0 + S;
 	}
 
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
+	double round_to(double value, double precision)
 	{
+		return round(value / precision) * precision;
+	}
+
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision)
+	{
+		time = round_to(time, precision);
+
 		double mins;
 		hours = (int)trunc(time / 3600.0);
 		mins = fmod(time / 60.0, 60.0);
@@ -150,12 +157,32 @@ namespace OrbMech{
 		seconds = (mins - minutes) * 60.0;
 	}
 
-	void SStoHHMMSSTH(double time, int &hours, int &minutes, double &seconds)
+	// Format time to HHH:MM:SS.
+	void format_time(char *buf, double time)
 	{
-		int cs = (int)(round(time*100.0));
-		hours = cs / 360000;
-		minutes = (cs - 360000 * hours) / 6000;
-		seconds = (double)(cs - 360000 * hours - 6000 * minutes) / 100.0;
+		buf[0] = 0; // Clobber
+		if (time < 0) { return; } // don't do that
+
+		int hours, minutes;
+		double seconds;
+
+		SStoHHMMSS(time, hours, minutes, seconds);
+
+		sprintf(buf, "%03d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	// Format precise time.
+	void format_time_prec(char *buf, double time)
+	{
+		buf[0] = 0; // Clobber
+		if (time < 0) { return; } // don't do that
+
+		int hours, minutes;
+		double seconds;
+
+		SStoHHMMSS(time, hours, minutes, seconds, 0.01);
+
+		sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
 	}
 
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
@@ -2787,17 +2814,22 @@ VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA)
 	return U_LOS;
 }
 
+VECTOR3 AOTNavigationBase(double AZ, double EL)
+{
+	return _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+}
+
 VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL)
 {
 	VECTOR3 U_OAN, S_SM, U_LOS;
 
-	U_OAN = _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+	U_OAN = AOTNavigationBase(AZ, EL);
 	S_SM = mul(tmat(SMNB), U_OAN);
 	U_LOS = mul(tmat(REFSMMAT), S_SM);
 	return U_LOS;
 }
 
-int FindNearestStar(const std::vector<VECTOR3> &navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
+int FindNearestStar(const VECTOR3 *navstars, VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 {
 	VECTOR3 ustar;
 	double dotpr, last;
@@ -2818,7 +2850,7 @@ int FindNearestStar(const std::vector<VECTOR3> &navstars, VECTOR3 U_LOS, VECTOR3
 	return star;
 }
 
-VECTOR3 backupgdcalignment(const std::vector<VECTOR3> &navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
+VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 {
 	int starset[3][2];
 	double a, SA, TA1, dTA, TA2;
@@ -2872,7 +2904,7 @@ VECTOR3 backupgdcalignment(const std::vector<VECTOR3> &navstars, MATRIX3 REFS, V
 	return _V(0, 0, 0);
 }
 
-MATRIX3 AGSStarAlignment(const std::vector<VECTOR3> &navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter)
+MATRIX3 AGSStarAlignment(const VECTOR3 *navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter)
 {
 	//Matrix that converts from stable member to navigation base coordinates
 	MATRIX3 SMNB1, SMNB2;
@@ -3303,6 +3335,75 @@ unsigned long long BinToDec(unsigned long long num)
 		num = num / 10;
 	}
 	return dec;
+}
+
+int SingleToBuffer(double x, int SF, bool TwosComplement)
+{
+	double x2;
+	int c;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c = (unsigned)round(x2);
+
+	if (TwosComplement == false && c > 037777)
+	{
+		c = 037777;
+	}
+
+	if (x < 0.0)
+	{
+		// Polarity change
+		c = 0x7FFF & (~c);
+		if (TwosComplement)
+		{
+			c++;
+		}
+	}
+
+	return c;
+}
+
+void DoubleToBuffer(double x, int SF, int &c1, int &c2)
+{
+	double x2;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c1 = (unsigned)x2;
+	x2 = x2 - (double)c1;
+	x2 *= pow(2, 14);
+	c2 = (unsigned)round(x2);
+	if (c2 > 037777)
+	{
+		c2 = 037777;
+	}
+
+	if (x < 0.0) c1 = 0x7FFF & (~c1); // Polarity change
+	if (x < 0.0) c2 = 0x7FFF & (~c2); // Polarity change
+}
+
+void TripleToBuffer(double x, int SF, int &c1, int &c2, int &c3)
+{
+	double x2;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c1 = (unsigned)x2;
+	x2 = x2 - (double)c1;
+	x2 *= pow(2, 14);
+	c2 = (unsigned)x2;
+	x2 = x2 - (double)c2;
+	x2 *= pow(2, 14);
+	c3 = (unsigned)round(x2);
+	if (c3 > 037777)
+	{
+		c3 = 037777;
+	}
+
+	if (x < 0.0) c1 = 0x7FFF & (~c1); // Polarity change
+	if (x < 0.0) c2 = 0x7FFF & (~c2); // Polarity change
+	if (x < 0.0) c3 = 0x7FFF & (~c3); // Polarity change
 }
 
 double cot(double a)
@@ -3825,6 +3926,23 @@ double atan3(double x, double y)
 	}
 	return ganzzahl;
 }*/
+
+MATRIX3 SBNBMatrix()
+{
+	double a = -0.5676353234;
+	return _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
+}
+
+MATRIX3 NBSBMatrix()
+{
+	return tmat(SBNBMatrix());
+}
+
+VECTOR3 SXTNB(double TA, double SA)
+{
+	//To obtain a unit vector which specifies the direction of the line-of-sight of the sextant in navigation base coordinates
+	return mul(SBNBMatrix(), _V(sin(TA)*cos(SA), sin(TA)*sin(SA), cos(TA)));
+}
 
 VECTOR3 CALCGAR(MATRIX3 REFSM, MATRIX3 SMNB)
 {
@@ -4510,7 +4628,7 @@ void format_time_MMSS(char *buf, double time) {
 	sprintf(buf, "%d:%02d", minutes, seconds);
 }
 
-void checkstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
+void checkstar(const VECTOR3 *navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)
 {
 	MATRIX3 SMNB, Q1, Q2, Q3;
 	double OGA, IGA, MGA, TA, SA;
@@ -4554,7 +4672,7 @@ void checkstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 I
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
 }
 
-void coascheckstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp)
+void coascheckstar(const VECTOR3 *navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp)
 {
 	MATRIX3 SMNB, Q1, Q2, Q3;
 	double OGA, IGA, MGA;
@@ -4572,7 +4690,7 @@ void coascheckstar(const std::vector<VECTOR3> &navstars, MATRIX3 REFSMMAT, VECTO
 	SMNB = mul(Q3, mul(Q2, Q1));
 
 	U_LOS = ULOS(REFSMMAT, SMNB, 57.47*RAD, 0.0);
-	star = OrbMech::FindNearestStar(navstars, U_LOS, R_C, R_E, 10.0*RAD);//31.5*RAD);
+	star = FindNearestStar(navstars, U_LOS, R_C, R_E, 10.0*RAD);//31.5*RAD);
 
 	if (star == -1)
 	{

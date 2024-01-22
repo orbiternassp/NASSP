@@ -67,7 +67,7 @@ void MCC::MissionSequence_H1()
 		break;
 		case 1:
 		{
-			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 30.0*60.0))
+			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 20.0*60.0))  //1:20h from TLI cutoff
 			{
 				SlowIfDesired();
 				setState(MST_H1_TRANSLUNAR3);
@@ -80,21 +80,13 @@ void MCC::MissionSequence_H1()
 		switch (SubState) {
 		case 0:
 		{
-			if (cm->GetStage() >= CSM_LEM_STAGE)
+			if (cm->GetStage() >= CSM_LEM_STAGE) //Sanity check if CSM sep has happened
 			{
 				setSubState(1);
 			}
 		}
 		break;
 		case 1:
-		{
-			if (SubStateTime > 2.0*60.0)
-			{
-				setSubState(2);
-			}
-		}
-		break;
-		case 2:
 		{
 			if (sivb == NULL)
 			{
@@ -111,12 +103,23 @@ void MCC::MissionSequence_H1()
 				}
 			}
 
-			sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_EVASIVE_MANEUVER_ENABLE, NULL);
-			setSubState(3);
+			if (sivb->DockingStatus(0) == 0) //Test for LM ejection
+			{
+				setSubState(2);
+			}
+		}
+		break;
+		case 2:
+		{
+			if (SubStateTime > 3.5*60.0) //Start yaw maneuver not earlier than 3.5 minutes after LM ejection
+			{
+				sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_EVASIVE_MANEUVER_ENABLE, NULL);
+				setSubState(3);
+			}
 		}
 		break;
 		case 3:
-			if (rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 51.0*60.0))
+			if (SubStateTime >= 8.0*60.0 && rtcc->GETEval2(rtcc->calcParams.TLI + 3600.0 + 31.0*60.0 + 40.0)) //11m40s after LM ejection. Not before 8 minutes after yaw maneuver command was sent
 			{
 				SlowIfDesired();
 				setState(MST_H1_TRANSLUNAR4);
@@ -136,14 +139,6 @@ void MCC::MissionSequence_H1()
 		break;
 		case 1:
 		{
-			if (SubStateTime > 2.0*60.0)
-			{
-				setSubState(2);
-			}
-		}
-		break;
-		case 2:
-		{
 			if (sivb == NULL)
 			{
 				VESSEL *v;
@@ -160,10 +155,10 @@ void MCC::MissionSequence_H1()
 			}
 
 			sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
-			setSubState(3);
+			setSubState(2);
 		}
 		break;
-		case 3:
+		case 2:
 			if (rtcc->GETEval2(rtcc->calcParams.TLI + 2.0*3600.0 + 29.0*60.0))
 			{
 				SlowIfDesired();
