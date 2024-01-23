@@ -53,7 +53,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		int hh, mm;
 		gmt = modf(oapiGetSimMJD(), &iptr)*24.0*3600.0 + 4.0*3600.0; //TBD: Not sure this is good
 
-		OrbMech::SStoHHMMSS(gmt, hh, mm, ss);
+		OrbMech::SStoHHMMSS(gmt, hh, mm, ss, 0.01);
 
 		sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
 		GMGMED(Buff);
@@ -94,7 +94,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		int hh, mm;
 		double ss;
 
-		OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
+		OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss, 0.01);
 
 		sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
 		GMGMED(Buff);
@@ -113,7 +113,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		GMGMED(Buff);
 
 		//P12: IU GRR and Azimuth
-		OrbMech::SStoHHMMSS(T_GRR, hh, mm, ss);
+		OrbMech::SStoHHMMSS(T_GRR, hh, mm, ss, 0.01);
 		sprintf_s(Buff, "P12,IU1,%d:%d:%.2lf,%.2lf;", hh, mm, ss, Azi);
 		GMGMED(Buff);
 
