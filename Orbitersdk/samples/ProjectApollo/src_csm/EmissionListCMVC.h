@@ -4,50 +4,64 @@
 // Emissionlist for CMVC.msh
 
 /* ********* ALL METERIALS CM_VC.msh *********
-		VC_MAT_CB_black_t,
-		VC_MAT_coas_t,
-		VC_MAT_CMVCTex1_t,
-		VC_MAT_CMVCTex2_t,
-		VC_MAT_Alluminum,
-		VC_MAT_FDAI_Ball_t,
-		VC_MAT_FDAI_errorneedle,
-		VC_MAT_FDAI_Cue,
-		VC_MAT_Black,
-		VC_MAT_FDAI_Frame_t,
-		VC_MAT_FwdHatch_t,
-		VC_MAT_SideHatch_t,
-		VC_MAT_MAINVCTEX_t,
-		VC_MAT_csm_right_cb_panels_t,
-		VC_MAT_csm_lower_equip_bay_t,
-		VC_MAT_Colors_t,
-		VC_MAT_shutte1_t,
-		VC_MAT_CMVCTex3_t,
-		VC_MAT_CMFloor_t,
-		VC_MAT_CMVCDetTex3_t,
-		VC_MAT_CMVCDetTex1_t,
-		VC_MAT_csm_cabin_press_panel_t,
-		VC_MAT_CM_VC_Color_7,
-		VC_MAT_CMVCDetTex6_t,
-		VC_MAT_CM_VC_Color_6,
-		VC_MAT_CM_VC_Color_1,
-		VC_MAT_CM_VC_Color_4,
-		VC_MAT_CMVCDetTex4_t,
-		VC_MAT_Rotary_t,
-		VC_MAT_CM_VC_Color_2,
-		VC_MAT_DOR_t,
-		VC_MAT_HOPEN_t,
-		VC_MAT_CM_VC_Color_3,
-		VC_MAT_LMVC_t,
-		VC_MAT_SwitchCover_t,
-		VC_MAT_HolderRahmen_t,
-		VC_MAT_SCS_Rates_Card_t,
-		VC_MAT_AdditionalParts_t,
-		VC_MAT_Cinematic_Panel1_AND_3_t,
-		VC_MAT_Cinematic_Panel2_t,
-		VC_MAT_IlluminatingPartsPanel01_t,
-		VC_MAT_IlluminatingPartsPanel02_t,
-		VC_MAT_IlluminatingPartsPanel03_t,
-		VC_MAT_Talkbacks_t
+
+VC_MAT_CB_black_t,
+VC_MAT_coas_t,
+VC_MAT_CMVCTex1_t,
+VC_MAT_AdditionalParts_t,
+VC_MAT_DSKY_Alarm_Lights_P2_t,
+VC_MAT_CMVCTex2_t,
+VC_MAT_EMS_Scroll_Timer_P1_t,
+VC_MAT_Alluminum,
+VC_MAT_FDAI_Ball_t,
+VC_MAT_FDAI_errorneedle,
+VC_MAT_FDAI_Cue,
+VC_MAT_Black,
+VC_MAT_FDAI_Frame_t,
+VC_MAT_FwdHatch_t,
+VC_MAT_SideHatch_t,
+VC_MAT_MAINVCTEX_t,
+VC_MAT_csm_right_cb_panels_ILL_P5_t,
+VC_MAT_csm_lower_equip_bay_t,
+VC_MAT_Colors_t,
+VC_MAT_shutte1_t,
+VC_MAT_CMVCTex3_t,
+VC_MAT_CMFloor_t,
+VC_MAT_CMVCTex2_ILL_P100_t,
+VC_MAT_CMVCDetTex3_t,
+VC_MAT_CMVCDetTex1_t,
+VC_MAT_csm_cabin_press_panel_t,
+VC_MAT_CM_VC_Color_7,
+VC_MAT_CMVCDetTex6_t,
+VC_MAT_CM_VC_Color_6,
+VC_MAT_CMVCTex2_ILL_P8_t,
+VC_MAT_CM_VC_Color_1,
+VC_MAT_CMVCTex3_ILL_P5_t,
+VC_MAT_CMVCTex1_ILL_P100_t,
+VC_MAT_CMVCTex3_ILL_P8_t,
+VC_MAT_CM_VC_Color_4,
+VC_MAT_CMVCTex1_ILL_P5_t,
+VC_MAT_CMVCTex2_ILL_P5_t,
+VC_MAT_Ordeal_Lighting,
+VC_MAT_CMVCDetTex4_t,
+VC_MAT_Meters_P1_t,
+VC_MAT_Meters_P2_t,
+VC_MAT_Meters_P3_t,
+VC_MAT_DSKY_Keys_t,
+VC_MAT_csm_right_cb_panels_t,
+VC_MAT_Rotary_t,
+VC_MAT_SCS_Rates_Card_t,
+VC_MAT_CM_VC_Color_2,
+VC_MAT_DOR_t,
+VC_MAT_HOPEN_t,
+VC_MAT_CM_VC_Color_3,
+VC_MAT_LMVC_t,
+VC_MAT_SwitchCover_t,
+VC_MAT_HolderRahmen_t,
+VC_MAT_Talkbacks_Frame_t,
+VC_MAT_Talkbacks_P2_t,
+VC_MAT_Talkbacks_P3_t
+
 */
 
 
@@ -56,144 +70,210 @@
 //
 DWORD IntegralLights_P8[] = {
 
-		// TODO Material List
-		VC_MAT_Cinematic_Panel1_AND_3_t,
-		VC_MAT_Cinematic_Panel2_t,
-		VC_MAT_Rotary_t,
-//		VC_MAT_CMVCTex1_t,
-//		VC_MAT_CMVCTex2_t,
-//		VC_MAT_CMVCTex3_t,
-		VC_MAT_csm_lower_equip_bay_t,
-		VC_MAT_csm_right_cb_panels_t,
-		VC_MAT_IlluminatingPartsPanel01_t,
-		VC_MAT_IlluminatingPartsPanel02_t,
-		VC_MAT_IlluminatingPartsPanel03_t,
-		VC_MAT_csm_cabin_press_panel_t,
-		VC_MAT_Talkbacks_t,
-		VC_MAT_FDAI_Frame_t,
+	// TODO Material List
+	VC_MAT_Meters_P1_t,
+	VC_MAT_Rotarys_P8_t,
+	VC_MAT_csm_lower_equip_bay_t,
+	VC_MAT_csm_right_cb_panels_t,
+	VC_MAT_EMS_Scroll_Timer_P1_t,
+	VC_MAT_csm_cabin_press_panel_t,
+	VC_MAT_FDAI_Frame_t,
+	VC_MAT_DSKY_Keys_t,
 
-		VC_MAT_CMVCTex2_ILL_P8_t,
-		VC_MAT_CMVCTex3_ILL_P8_t
-	};
+	VC_MAT_CMVCTex2_ILL_P8_t,
+	VC_MAT_CMVCTex3_ILL_P8_t,
+	VC_MAT_CMVCTex2_t
+};
+
+/*
+DWORD FloodLights_P8[] = {
+
+	// TODO Material List
+	VC_MAT_EMS_Scroll_Timer_P1_t,
+	VC_MAT_CB_black_t,
+	VC_MAT_coas_t,
+	VC_MAT_CMVCTex1_t,
+	VC_MAT_CMVCTex2_t,
+	VC_MAT_CMVCTex3_t,
+	VC_MAT_Alluminum,
+	VC_MAT_FDAI_Frame_t,
+	VC_MAT_FwdHatch_t,
+	VC_MAT_SideHatch_t,
+	VC_MAT_MAINVCTEX_t,
+	VC_MAT_csm_right_cb_panels_t,
+	VC_MAT_csm_lower_equip_bay_t,
+	VC_MAT_csm_cabin_press_panel_t,
+	VC_MAT_Colors_t,
+	VC_MAT_shutte1_t,
+	VC_MAT_CMFloor_t,
+	VC_MAT_CMVCDetTex1_t,
+	VC_MAT_CMVCDetTex3_t,
+	VC_MAT_CMVCDetTex4_t,
+	VC_MAT_CMVCDetTex6_t,
+	VC_MAT_CM_VC_Color_1,
+	VC_MAT_CM_VC_Color_2,
+	VC_MAT_CM_VC_Color_3,
+	VC_MAT_CM_VC_Color_4,
+	VC_MAT_CM_VC_Color_6,
+	VC_MAT_CM_VC_Color_7,
+	VC_MAT_Rotary_t,
+	VC_MAT_DOR_t,
+	VC_MAT_HOPEN_t,
+	VC_MAT_LMVC_t,
+	VC_MAT_SwitchCover_t,
+	VC_MAT_HolderRahmen_t,
+	VC_MAT_SCS_Rates_Card_t,
+	VC_MAT_AdditionalParts_t,
+	VC_MAT_Meters_P1_t,
+	VC_MAT_Meters_P2_t,
+	VC_MAT_Meters_P3_t,
+	VC_MAT_DSKY_Alarm_Lights_P2_t,
+	VC_MAT_Talkbacks_P2_t,
+	VC_MAT_Talkbacks_P3_t,
+	VC_MAT_Talkbacks_Frame_t,
+	VC_MAT_Ordeal_Lighting,
+
+	VC_MAT_csm_right_cb_panels_ILL_P5_t,
+	VC_MAT_CMVCTex2_ILL_P100_t,
+	VC_MAT_CMVCTex2_ILL_P8_t,
+	VC_MAT_CMVCTex3_ILL_P5_t,
+	VC_MAT_CMVCTex1_ILL_P100_t,
+	VC_MAT_CMVCTex3_ILL_P8_t,
+	VC_MAT_CMVCTex1_ILL_P5_t,
+	VC_MAT_CMVCTex2_ILL_P5_t
+};
+*/
 
 DWORD FloodLights_P8[] = {
 
-		// TODO Material List
-		VC_MAT_CB_black_t,
-		VC_MAT_coas_t,
-		VC_MAT_CMVCTex1_t,
-		VC_MAT_CMVCTex2_t,
-		VC_MAT_CMVCTex3_t,
-		VC_MAT_Alluminum,
-		VC_MAT_FDAI_Frame_t,
-		VC_MAT_FwdHatch_t,
-		VC_MAT_SideHatch_t,
-		VC_MAT_MAINVCTEX_t,
-		VC_MAT_csm_right_cb_panels_t,
-		VC_MAT_csm_lower_equip_bay_t,
-		VC_MAT_csm_cabin_press_panel_t,
-		VC_MAT_Colors_t,
-		VC_MAT_shutte1_t,
-		VC_MAT_CMFloor_t,
-		VC_MAT_CMVCDetTex1_t,
-		VC_MAT_CMVCDetTex3_t,
-		VC_MAT_CMVCDetTex4_t,
-		VC_MAT_CMVCDetTex6_t,
-		VC_MAT_CM_VC_Color_1,
-		VC_MAT_CM_VC_Color_2,
-		VC_MAT_CM_VC_Color_3,
-		VC_MAT_CM_VC_Color_4,
-		VC_MAT_CM_VC_Color_6,
-		VC_MAT_CM_VC_Color_7,
-		VC_MAT_Rotary_t,
-		VC_MAT_DOR_t,
-		VC_MAT_HOPEN_t,
-		VC_MAT_LMVC_t,
-		VC_MAT_SwitchCover_t,
-		VC_MAT_HolderRahmen_t,
-		VC_MAT_SCS_Rates_Card_t,
-		VC_MAT_AdditionalParts_t,
-		VC_MAT_Cinematic_Panel1_AND_3_t,
-		VC_MAT_Cinematic_Panel2_t,
-		VC_MAT_IlluminatingPartsPanel01_t,
-		VC_MAT_IlluminatingPartsPanel02_t,
-		VC_MAT_IlluminatingPartsPanel03_t,
-		VC_MAT_Talkbacks_t,
-		VC_MAT_Ordeal_Lighting,
-
-		VC_MAT_csm_right_cb_panels_ILL_P5_t,
-		VC_MAT_CMVCTex2_ILL_P100_t,
-		VC_MAT_CMVCTex2_ILL_P8_t,
-		VC_MAT_CMVCTex3_ILL_P5_t,
-		VC_MAT_CMVCTex1_ILL_P100_t,
-		VC_MAT_CMVCTex3_ILL_P8_t,
-		VC_MAT_CMVCTex1_ILL_P5_t,
-		VC_MAT_CMVCTex2_ILL_P5_t
+	// TODO Material List
+	VC_MAT_CB_black_t,
+	VC_MAT_coas_t,
+	VC_MAT_CMVCTex1_t,
+	VC_MAT_AdditionalParts_t,
+	VC_MAT_DSKY_Alarm_Lights_P2_t,
+	VC_MAT_CMVCTex2_t,
+	VC_MAT_EMS_Scroll_Timer_P1_t,
+	VC_MAT_Alluminum,
+	VC_MAT_FDAI_Ball_t,
+//	VC_MAT_FDAI_errorneedle,
+//	VC_MAT_FDAI_Cue,
+//	VC_MAT_Black,
+	VC_MAT_FDAI_Frame_t,
+	VC_MAT_FwdHatch_t,
+	VC_MAT_SideHatch_t,
+	VC_MAT_MAINVCTEX_t,
+	VC_MAT_csm_right_cb_panels_ILL_P5_t,
+	VC_MAT_csm_lower_equip_bay_t,
+	VC_MAT_Colors_t,
+	VC_MAT_shutte1_t,
+	VC_MAT_CMVCTex3_t,
+	VC_MAT_CMFloor_t,
+	VC_MAT_CMVCTex2_ILL_P100_t,
+	VC_MAT_CMVCDetTex3_t,
+	VC_MAT_CMVCDetTex1_t,
+	VC_MAT_csm_cabin_press_panel_t,
+	VC_MAT_CM_VC_Color_7,
+	VC_MAT_CMVCDetTex6_t,
+	VC_MAT_CM_VC_Color_6,
+	VC_MAT_CMVCTex2_ILL_P8_t,
+	VC_MAT_CM_VC_Color_1,
+	VC_MAT_CMVCTex3_ILL_P5_t,
+	VC_MAT_CMVCTex1_ILL_P100_t,
+	VC_MAT_CMVCTex3_ILL_P8_t,
+	VC_MAT_CM_VC_Color_4,
+	VC_MAT_CMVCTex1_ILL_P5_t,
+	VC_MAT_CMVCTex2_ILL_P5_t,
+	VC_MAT_Ordeal_Lighting,
+	VC_MAT_CMVCDetTex4_t,
+	VC_MAT_Meters_P1_t,
+	VC_MAT_Meters_P2_t,
+	VC_MAT_Meters_P3_t,
+	VC_MAT_DSKY_Keys_t,
+	VC_MAT_csm_right_cb_panels_t,
+	VC_MAT_Rotarys_P5_t,
+	VC_MAT_Rotarys_P8_t,
+	VC_MAT_Rotarys_P100_t,
+	VC_MAT_SCS_Rates_Card_t,
+	VC_MAT_CM_VC_Color_2,
+	VC_MAT_DOR_t,
+	VC_MAT_HOPEN_t,
+	VC_MAT_CM_VC_Color_3,
+	VC_MAT_LMVC_t,
+	VC_MAT_SwitchCover_t,
+	VC_MAT_HolderRahmen_t,
+	VC_MAT_Talkbacks_Frame_t,
+	VC_MAT_Talkbacks_P2_t,
+	VC_MAT_Talkbacks_P3_t
 };
 
 DWORD NumericLights_P8[] = {
 
-		// TODO Material List
-		VC_MAT_FDAI_Ball_t,
-		VC_MAT_IlluminatingPartsPanel01_t,
-		VC_MAT_IlluminatingPartsPanel02_t
-	};
+	// TODO Material List
+	VC_MAT_FDAI_Ball_t,
+	VC_MAT_DSKY_Alarm_Lights_P2_t
+
+};
 
 //
 // Material Emissions Panel 5
 //
 DWORD IntegralLights_P5[] = {
 
-		// TODO Material List
-		VC_MAT_CMVCTex1_ILL_P5_t,
-		VC_MAT_CMVCTex2_ILL_P5_t,
-		VC_MAT_CMVCTex3_ILL_P5_t,
-//		VC_MAT_Rotary_t,
-		VC_MAT_csm_right_cb_panels_ILL_P5_t
-//		VC_MAT_LMVC_t,
-//		VC_MAT_Colors_t,
-//		VC_MAT_CB_black_t
-	};
+	// TODO Material List
+	VC_MAT_Meters_P2_t,
+	VC_MAT_Meters_P3_t,
+	VC_MAT_Talkbacks_P2_t,
+	VC_MAT_Talkbacks_P3_t,
+	VC_MAT_CMVCTex1_ILL_P5_t,
+	VC_MAT_CMVCTex2_ILL_P5_t,
+	VC_MAT_CMVCTex3_ILL_P5_t,
+	VC_MAT_Rotarys_P5_t,
+	VC_MAT_csm_right_cb_panels_ILL_P5_t
+//	MAT_LMVC_t,
+//	VC_MAT_MAT_Colors_t,
+//	VC_MAT_CB_black_t
+};
 
 DWORD FloodLights_P5[] = {
 
-		// TODO Material List
-		VC_MAT_CMVCTex2_t,
-		VC_MAT_CMVCTex3_t,
-		VC_MAT_Rotary_t,
-		VC_MAT_csm_right_cb_panels_t,
-		VC_MAT_LMVC_t,
-		VC_MAT_Colors_t,
-		VC_MAT_CB_black_t
-	};
+	// TODO Material List
+	VC_MAT_CMVCTex2_t,
+	VC_MAT_CMVCTex3_t,
+	VC_MAT_Rotarys_P5_t,
+	VC_MAT_csm_right_cb_panels_t,
+	VC_MAT_LMVC_t,
+	VC_MAT_Colors_t,
+	VC_MAT_CB_black_t
+};
 
 //
 // Material Emissions Panel 100 (LEB)
 //
 DWORD IntegralLights_P100[] = {
 
-		// TODO Material List
-//		VC_MAT_MAINVCTEX_t,
-//		VC_MAT_csm_lower_equip_bay_t,
-//		VC_MAT_csm_right_cb_panels_t,		
-		VC_MAT_CMVCTex2_ILL_P100_t,
-		VC_MAT_CMVCTex1_ILL_P100_t
-	};
+	// TODO Material List
+//	VC_MAT_MAINVCTEX_t,
+//	VC_MAT_csm_lower_equip_bay_t,
+//	VC_MAT_csm_right_cb_panels_t,		
+	VC_MAT_CMVCTex2_ILL_P100_t,
+	VC_MAT_CMVCTex1_ILL_P100_t,
+	VC_MAT_Rotarys_P100_t
+};
 
 DWORD FloodLights_P100[] = {
 
-		// TODO Material List
-		VC_MAT_MAINVCTEX_t,
-		VC_MAT_csm_lower_equip_bay_t,
-		VC_MAT_csm_right_cb_panels_t
-	};
+	// TODO Material List
+	VC_MAT_MAINVCTEX_t,
+	VC_MAT_csm_lower_equip_bay_t,
+	VC_MAT_csm_right_cb_panels_t
+};
 
 DWORD NumericLights_P100[] = {
 
-		// TODO Material List
-		VC_MAT_IlluminatingPartsPanel01_t,
-		VC_MAT_IlluminatingPartsPanel02_t
-	};
+	// TODO Material List
+	VC_MAT_DSKY_Alarm_Lights_P2_t
+};
 
 //
 // External Meshes
@@ -228,8 +308,8 @@ DWORD CMVCSeatsFolded[] = {
 
 DWORD IntegralLights_CMVC_Ordeal[] = {
 
-		// TODO Material List
-		VC_MAT_Ordeal_Lighting
+	// TODO Material List
+	VC_MAT_Ordeal_Lighting
 };
 
 

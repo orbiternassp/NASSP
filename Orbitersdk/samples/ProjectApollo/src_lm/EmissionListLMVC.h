@@ -53,5 +53,8 @@ DWORD IntegralLights_LMVC[] = {
 	VC_MAT_Rotary_LM_t,
 	VC_MAT_FDAI_LM_t
 };
- 
+
+DWORD FloodLights_XPointer_Shades[] = {
+	0
+};
 #endif // !__EMISSIONLISTCMVC

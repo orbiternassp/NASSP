@@ -423,7 +423,6 @@ const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
 // Subtracted from total material count to find L01 location.
-//const int mat_L01 = 44;
 
 void LEM::JostleViewpoint(double amount)
 
@@ -961,8 +960,6 @@ void LEM::RegisterActiveAreas()
 	//
 	ReleaseSurfacesVC();
 
-//	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hLMVC, 4);
-//	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hLMVC, 3);
 
 	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hLMVC, VC_TEX_LMVC_dds);
 	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hLMVC, VC_TEX_LMVC_2_dds);
@@ -1538,6 +1535,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_LMVC_FLOOD_LIGHT:
         SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MatProp::Light, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_LMVC)/sizeof(FloodLights_LMVC[0]));
+        SetLMVCIntegralLight(xpointershadesidx, FloodLights_XPointer_Shades, MatProp::Light, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_XPointer_Shades)/sizeof(FloodLights_XPointer_Shades[0]));
         return true;
 
 //	case AID_LMVC_NUMERICS_LIGHT:
@@ -1551,6 +1549,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_LMVC_FLOOD_LIGHT:
         SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_LMVC)/sizeof(FloodLights_LMVC[0]));
+        SetLMVCIntegralLight(xpointershadesidx, FloodLights_XPointer_Shades, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_XPointer_Shades)/sizeof(FloodLights_XPointer_Shades[0]));
         return true;
 
 //	case AID_LMVC_NUMERICS_LIGHT:
@@ -1925,7 +1924,6 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		else {
 			SetPowerFailureLight(VC_MAT_L09_PwrFail_XpointerR, false); // Light Off
-//byKJ			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_9, false); // Light Off
 		}
 		return true;
 
