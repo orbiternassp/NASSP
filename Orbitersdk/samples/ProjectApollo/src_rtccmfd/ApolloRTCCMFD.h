@@ -125,7 +125,6 @@ public:
 	void ThrusterName(char *Buff, int n);
 	bool ThrusterType(std::string name, int &id);
 	void MPTAttitudeName(char *Buff, int n);
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
 	void menuSLVTLITargetingUplink();

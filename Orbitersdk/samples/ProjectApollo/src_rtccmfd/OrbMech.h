@@ -377,10 +377,6 @@ namespace OrbMech {
 	double trunc(double d);
 	void normalizeAngle(double &a, bool positive = true);
 	double quadratic(double *T, double *DV);
-	double HHMMSSToSS(int H, int M, int S);
-	double HHMMSSToSS(double H, double M, double S);
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
-	void SStoHHMMSSTH(double time, int &hours, int &minutes, double &seconds);
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	void rv_from_adbar(VECTOR3 R, VECTOR3 V, double &rmag, double &vmag, double &rtasc, double &decl, double &fpav, double &az);
 	VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs);
@@ -440,6 +436,14 @@ namespace OrbMech {
 	double SumQuad(double *x, int N);
 	double QuadSum(double *x, int N);
 	void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I);
+
+	//Time formatting functions
+	double HHMMSSToSS(int H, int M, int S);
+	double HHMMSSToSS(double H, double M, double S);
+	double round_to(double value, double precision = 1.0);
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision = 1.0);
+	void format_time(char *buf, double time);
+	void format_time_prec(char *buf, double time);
 }
 
 inline CELEMENTS operator+(const CELEMENTS &a, const CELEMENTS &b)
