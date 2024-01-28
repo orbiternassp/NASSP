@@ -145,7 +145,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../XRSound;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug\LEM/LEM.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug\Skylab/</AssemblerListingLocation>
       <ObjectFileName>.\Debug\Skylab/</ObjectFileName>
@@ -157,8 +157,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <OutputFile>../../../../../Modules/ProjectApollo/$(ProjectName).dll</OutputFile>
-      <AdditionalLibraryDirectories>;../../../../lib/Lua;.\Debug\PanelSDK;../../../../lib;../../../../XRSound;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>PanelSDK.lib;orbiter.lib;orbitersdk.lib;opengl32.lib;glu32.lib;lua5.1.lib;User32.lib;Gdi32.lib;XRSound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>;../../../../..;.\Debug\PanelSDK;../../../../lib;../../../../XRSound;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>PanelSDK.lib;orbiter.lib;orbitersdk.lib;opengl32.lib;glu32.lib;lua.lib;User32.lib;Gdi32.lib;XRSound.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

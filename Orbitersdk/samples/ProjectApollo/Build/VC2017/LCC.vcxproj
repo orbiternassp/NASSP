@@ -193,8 +193,8 @@
       <ConformanceMode>false</ConformanceMode>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>false</SupportJustMyCode>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug\LCC/LCC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug\LCC/</AssemblerListingLocation>
       <ObjectFileName>.\Debug\LCC/</ObjectFileName>
