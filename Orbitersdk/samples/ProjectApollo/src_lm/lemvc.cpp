@@ -459,7 +459,7 @@ void LEM::VCFreeCam(VECTOR3 dir, bool slow)
 	//dir is always in Orbiter's vessel XYZ reference frame
 	//in SetView() the shift is adjusted to local viewpoint reference frame to make is seem 'natural' from the observer's viewpoint
 
-	double simdt = oapiGetSimStep();
+	double simdt = oapiGetSimStep() / oapiGetTimeAcceleration();
 
 	if (slow == false) {
 		vcFreeCamx += dir.x * vcFreeCamSpeed * simdt;
