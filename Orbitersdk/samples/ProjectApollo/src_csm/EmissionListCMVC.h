@@ -79,6 +79,8 @@ DWORD IntegralLights_P8[] = {
 	VC_MAT_csm_cabin_press_panel_t,
 	VC_MAT_FDAI_Frame_t,
 	VC_MAT_DSKY_Keys_t,
+	VC_MAT_CMVCTex1_ILL_P8_t,
+	VC_MAT_Meters_P2_P8_t,
 
 	VC_MAT_CMVCTex2_ILL_P8_t,
 	VC_MAT_CMVCTex3_ILL_P8_t,
@@ -181,6 +183,7 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_CMVCTex3_ILL_P5_t,
 	VC_MAT_CMVCTex1_ILL_P100_t,
 	VC_MAT_CMVCTex3_ILL_P8_t,
+	VC_MAT_CMVCTex1_ILL_P8_t,
 	VC_MAT_CM_VC_Color_4,
 	VC_MAT_CMVCTex1_ILL_P5_t,
 	VC_MAT_CMVCTex2_ILL_P5_t,
@@ -188,6 +191,7 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_CMVCDetTex4_t,
 	VC_MAT_Meters_P1_t,
 	VC_MAT_Meters_P2_t,
+	VC_MAT_Meters_P2_P8_t,
 	VC_MAT_Meters_P3_t,
 	VC_MAT_DSKY_Keys_t,
 	VC_MAT_csm_right_cb_panels_t,
@@ -204,7 +208,9 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_HolderRahmen_t,
 	VC_MAT_Talkbacks_Frame_t,
 	VC_MAT_Talkbacks_P2_t,
-	VC_MAT_Talkbacks_P3_t
+	VC_MAT_Talkbacks_P3_t,
+	VC_MAT_DSKY_Keys_LEB_t
+
 };
 
 DWORD NumericLights_P8[] = {
@@ -258,7 +264,8 @@ DWORD IntegralLights_P100[] = {
 //	VC_MAT_csm_right_cb_panels_t,		
 	VC_MAT_CMVCTex2_ILL_P100_t,
 	VC_MAT_CMVCTex1_ILL_P100_t,
-	VC_MAT_Rotarys_P100_t
+	VC_MAT_Rotarys_P100_t,
+	VC_MAT_DSKY_Keys_LEB_t
 };
 
 DWORD FloodLights_P100[] = {
