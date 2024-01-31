@@ -389,7 +389,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state2.word = 0;
 	state2.u.RadarGateCounter = vagc.RadarGateCounter;
 
-	oapiWriteScenario_int(scn, "ADDSTATE", state2.word);
+	oapiWriteScenario_int(scn, "STATE2", state2.word);
 
 	//
 	// Write out any non-zero EMEM state.
@@ -459,6 +459,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 
 {
 	char	*line;
+	int inttemp;
 
 	//
 	// Now load the data.
@@ -529,9 +530,11 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf(line+8, "%d", &val);
 			vagc.InterruptRequests[num] = val;
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
+		else if (papiReadScenario_int(line, "STATE", inttemp))
+		{
 			AGCState state;
-			sscanf (line+5, "%d", &state.word);
+
+			state.word = inttemp;
 
 			Reset = state.u.Reset;
 			isFirstTimestep = (state.u.isFirstTimestep != 0);
@@ -561,9 +564,11 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.Trap31B = state.u.Trap31B;
 			vagc.Trap32 = state.u.Trap32;
 		}
-		else if (!strnicmp(line, "ADDSTATE", 8)) {
+		else if (papiReadScenario_int(line, "STATE2", inttemp))
+		{
 			AGCState2 state;
-			sscanf(line + 8, "%d", &state.word);
+
+			state.word = inttemp;
 
 			vagc.RadarGateCounter = state.u.RadarGateCounter;
 		}
