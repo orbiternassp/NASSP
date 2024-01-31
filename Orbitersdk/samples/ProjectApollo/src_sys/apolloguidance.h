@@ -262,9 +262,6 @@ public:
 
 	virtual void ProcessIMUCDUReadCount(int channel, int val);
 
-	/// Resets the radar activity bit, reads radar data and causes the RADARUPT. Should be called after the radar timesteps
-	void RadarRead();
-
 	///
 	/// \brief Triggers Virtual AGC core dump
 	///
@@ -374,6 +371,9 @@ public:
 	void GenericWriteMemory(unsigned int loc, int val);
 
 	int16_t ConvertDecimalToAGCOctal(double x, bool highByte);
+
+	/// Read radar data upon request
+	void RadarRead();
 
 	///
 	/// \brief Are we running the reset program?
