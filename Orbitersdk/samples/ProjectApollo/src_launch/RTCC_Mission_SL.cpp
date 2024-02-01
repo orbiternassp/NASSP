@@ -76,7 +76,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM & SWS state vectors");
+			sprintf(upDesc, "SWS state vector");
 		}
 	}
 	break;

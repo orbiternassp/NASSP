@@ -108,6 +108,8 @@
 						which is the logical OR of channel 11 bit 4 and
 						channel 30 bit 15. The AGC did this internally
 						so the light would still work in standby.
+		01/29/24 MAS	Added the 4-bit RadarGateCounter for timing
+						RADARUPT generation.
    
   For more insight, I'd highly recommend looking at the documents
   http://hrst.mit.edu/hrs/apollo/public/archive/1689.pdf and
@@ -374,6 +376,7 @@ typedef struct
   unsigned Trap31A:1;           // Enable flag for Trap 31A
   unsigned Trap31B:1;           // Enable flag for Trap 31B
   unsigned Trap32:1;            // Enable flag for Trap 32
+  unsigned RadarGateCounter:4;  // Counter tracking radar cycle progress
   uint32_t WarningFilter;       // Current voltage of the AGC warning filter
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
   int NextZ;                    // Next value for the Z register
@@ -747,6 +750,7 @@ int ChannelInput (agc_t * State);
 void ChannelRoutine (agc_t *State);
 void ChannelRoutineGeneric (void *State, void (*UpdatePeripherals) (void *, Client_t *));
 void ShiftToDeda (agc_t *State, int Data);
+void RequestRadarData(agc_t *State);
 
 // DS20060903 Make these available externally
 int CounterPINC (int16_t * Counter);
