@@ -507,14 +507,14 @@ void SIVBSystems::CreateParticleEffects(double TRANZ)
 {
 	//TRANZ is CG location on z-axis (Orbiter)
 
-	//LH2 NPV: approximately at STA 1600.0 (Saturn IB). Vent 1 is near position I, rotated 25° to position IV
+	//LH2 NPV: at STA 1601.9 (Saturn IB). Vent 1 is near position I, rotated 25° to position IV
 	if (LH2_NPV_Stream1) vessel->DelExhaustStream(LH2_NPV_Stream1);
-	LH2_NPV_Stream1 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(-1.395485500267790, 2.992628312795018, 1600.0*0.0254 - TRANZ), _V(-0.422618261740699, 0.906307787036650, 0.0), &LH2_NPV_Stream_Lvl);
+	LH2_NPV_Stream1 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(-1.395485500267790, 2.992628312795018, 1601.9*0.0254 - TRANZ), _V(-0.422618261740699, 0.906307787036650, 0.0), &LH2_NPV_Stream_Lvl);
 	
 	if (LH2_NPV_Stream2) vessel->DelExhaustStream(LH2_NPV_Stream2);
-	LH2_NPV_Stream2 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(1.395485500267790, -2.992628312795018, 1600.0*0.0254 - TRANZ), _V(0.422618261740699, -0.906307787036650, 0.0), &LH2_NPV_Stream_Lvl);
+	LH2_NPV_Stream2 = vessel->AddParticleStream(&lh2_npv_venting_spec, _V(1.395485500267790, -2.992628312795018, 1601.9*0.0254 - TRANZ), _V(0.422618261740699, -0.906307787036650, 0.0), &LH2_NPV_Stream_Lvl);
 
-	//LH2 CVS
+	//LH2 CVS: location TBD
 	if (LH2_CVS_Stream1) vessel->DelExhaustStream(LH2_CVS_Stream1);
 	LH2_CVS_Stream1 = vessel->AddParticleStream(&lh2_cvs_venting_spec, _V(-2.352827103720118, 2.352827103720118, 1600.0*0.0254 - TRANZ), _V(0.0, 0.0, -1.0), &LH2_CVS_Stream_Lvl);
 
