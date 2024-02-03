@@ -170,6 +170,7 @@
       <LinkTimeCodeGeneration />
       <DataExecutionPrevention />
       <ImportLibrary>.\Release\Skylab/Skylab.lib</ImportLibrary>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
