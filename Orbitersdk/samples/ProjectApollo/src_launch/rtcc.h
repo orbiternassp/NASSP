@@ -2752,6 +2752,7 @@ public:
 	double GetOnboardComputerThrust(int thruster);
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
 	double RTCCPresentTimeGMT();
+	double RTCCMissionTime(int veh);
 	OBJHANDLE GetGravref(int body);
 	bool RTEManeuverCodeLogic(char *code, double lmascmass, double lmdscmass, int UllageNum, int &thruster, int &AttMode, int &ConfigCode, int &ManVeh, double &lmmass);
 

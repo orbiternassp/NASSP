@@ -40,6 +40,8 @@
 #include "saturn.h"
 #include "LEM.h"
 #include "Crawler.h"
+#include "mccvessel.h"
+#include "mcc.h"
 #include "papi.h"
 #include <stdio.h>
 #include <string>
@@ -125,6 +127,22 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 	}
 	else if (utils::IsVessel(vessel, utils::LEM)) {
 			lem = (LEM *)vessel;
+	}
+
+	mcc = NULL;
+	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
+	if (hMCC != NULL) {
+		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
+		if (pVessel) {
+			if (utils::IsVessel(pVessel, utils::MCC))
+			{
+				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
+				if (pMCCVessel->mcc)
+				{
+					mcc = pMCCVessel->mcc;
+				}
+			}
+		}
 	}
 
 	HBITMAP hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
@@ -1504,10 +1522,17 @@ std::string ProjectApolloChecklistMFD::DisplayMissionElapsedTime (void)
 	char buffer[20];
 	double mt = 0;
 
-	// Take the mission time from class 
-	if (saturn){ mt = saturn->GetMissionTime(); }
-	if (crawler){ mt = crawler->GetMissionTime(); }
-	if (lem){ mt = lem->GetMissionTime(); }
+	if (mcc)
+	{
+		mt = mcc->GetMissionTime();
+	}
+
+	if (mt <= 0.0) //Mission time from MCC might be nonsense before liftoff
+	{
+		if (saturn) { mt = saturn->GetMissionTime(); }
+		if (crawler) { mt = crawler->GetMissionTime(); }
+		if (lem) { mt = lem->GetMissionTime(); }
+	}
 
 	int secs = abs((int) mt);
 	int hours = (secs / 3600);

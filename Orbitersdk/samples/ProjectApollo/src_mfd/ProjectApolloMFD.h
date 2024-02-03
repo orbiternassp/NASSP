@@ -30,6 +30,7 @@
 class Saturn;
 class LEM;
 class Crawler;
+class MCC;
 
 ///
 /// \ingroup MFD
@@ -131,6 +132,7 @@ protected:
 	Saturn *saturn;
 	Crawler *crawler;
 	LEM *lem;
+	MCC *mcc;
 	int screen;
 	bool debug_frozen;
 	bool isSaturnV;

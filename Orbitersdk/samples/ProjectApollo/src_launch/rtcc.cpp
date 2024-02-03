@@ -22599,6 +22599,23 @@ double RTCC::RTCCPresentTimeGMT()
 	return (oapiGetSimMJD() -SystemParameters.GMTBASE)*24.0*3600.0;
 }
 
+double RTCC::RTCCMissionTime(int veh)
+{
+	if (SystemParameters.GMTBASE == 0.0) return 0.0; //Return zero if mission isn't initialized
+
+	double LiftoffMJD;
+	if (veh == 1)
+	{
+		LiftoffMJD = SystemParameters.GMTBASE + SystemParameters.MCGMTL / 24.0;
+	}
+	else
+	{
+		LiftoffMJD = SystemParameters.GMTBASE + SystemParameters.MCGMTS / 24.0;
+	}
+
+	return (oapiGetSimMJD() - LiftoffMJD)*24.0*3600.0;
+}
+
 double RTCC::GetOnboardComputerThrust(int thruster)
 {
 	if (thruster == RTCC_ENGINETYPE_CSMSPS)
