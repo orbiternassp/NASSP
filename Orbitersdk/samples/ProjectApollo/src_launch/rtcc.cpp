@@ -12197,23 +12197,31 @@ void RTCC::MPTMassUpdate(VESSEL *vessel, MED_M50 &med1, MED_M55 &med2, MED_M49 &
 				hLM = vessel->GetDockStatus(dock);
 				lm = oapiGetVesselInterface(hLM);
 
-				LEM *lem = (LEM *)lm;
-				lm_ascent_mass = lem->GetAscentStageMass();
-
-				//TBD: Make this better
-				if (lem->GetStage() < 2)
+				//Is docked vessel a LM?
+				if (utils::IsVessel(lm, utils::LEM))
 				{
-					cfg = "CL";
-					lmapsmass = lem->AscentFuelMassKg;
-					lmdpsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(0));
+					LEM *lem = (LEM *)lm;
+					lm_ascent_mass = lem->GetAscentStageMass();
+
+					if (lem->GetStage() < 2)
+					{
+						cfg = "CL";
+						lmapsmass = lem->AscentFuelMassKg;
+						lmdpsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(0));
+					}
+					else
+					{
+						cfg = "CA";
+						lmapsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(0));
+					}
+
+					lmrcsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(1)) + lm->GetPropellantMass(lm->GetPropellantHandleByIndex(2));
 				}
 				else
 				{
-					cfg = "CA";
-					lmapsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(0));
+					//No. Could be an ASTP docking module or something else
+					cfg = "CL";
 				}
-
-				lmrcsmass = lm->GetPropellantMass(lm->GetPropellantHandleByIndex(1)) + lm->GetPropellantMass(lm->GetPropellantHandleByIndex(2));
 			}
 			else
 			{

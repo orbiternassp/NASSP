@@ -381,12 +381,17 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 		CY_M[i] = 0.0;
 		RA_M[i] = 0.0;
 		t_Maneuver[i] = 0.0;
+		TYP_M[i] = 0;
 	}
 	SPITCH = 0.0;
 	CPITCH = 0.0;
 	SYAW = 0.0;
 	CYAW = 0.0;
 	ROLLA = 0.0;
+	FSLR = false;
+	FMANT = 0;
+	FSCAH = false;
+	FSCIC = false;
 }
 
 void LVDC1B::Init(){
@@ -1451,34 +1456,7 @@ gtupdate:	// Target of jump from further down
 		cos_chi_Yit = cos(Xtt_p);
 		sin_chi_Zit = sin(Xtt_y);
 		cos_chi_Zit = cos(Xtt_y);
-	thrustvectransentry:
-		VECTOR3 VT; 
-		VT = tmul(MX_G, _V(cos_chi_Yit*cos_chi_Zit, sin_chi_Zit, -sin_chi_Yit * cos_chi_Zit));
-		fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
-
-		X_S1 = VT.x;
-		X_S2 = VT.y;
-		X_S3 = VT.z;
-		fprintf(lvlog,"X_S1-3 = %f %f %f\r\n",X_S1,X_S2,X_S3);
-
-		// FINALLY - COMMANDS!
-		X_Zi = asin(X_S2);			// Yaw
-		if (X_Zi < 0)
-		{
-			X_Zi += PI2;
-		}
-		X_Yi = atan2(-X_S3,X_S1);	// Pitch
-		if (X_Yi < 0)
-		{
-			X_Yi += PI2;
-		}
-		fprintf(lvlog,"*** COMMAND ISSUED ***\r\n");
-		fprintf(lvlog,"PITCH = %f, YAW = %f\r\n",X_Yi*DEG,X_Zi*DEG);
-			
-		// IGM is supposed to generate attitude directly.
-		CommandedAttitude.y = X_Yi; // PITCH
-		CommandedAttitude.z = X_Zi; // YAW;
-
+		ChiComputations(0);
 	limittest:
 		//command rate test; part of major loop;
 		if(CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD){CommandedAttitude.z = -45 * RAD;}
@@ -1614,34 +1592,7 @@ gtupdate:	// Target of jump from further down
 			}
 		}
 
-		//Discrete Input 9 Check (S&C Control of Saturn)		
-		if (ModeCode27[MC27_GRFDiscretesSet] && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && ModeCode27[MC27_SCControlAfterGRF] == false)
-		{
-			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
-			ModeCode27[MC27_SCControlAfterGRF] = true;
-			fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n", LVDC_Timebase, LVDC_TB_ETime);
-		}
-
-		if (ModeCode27[MC27_SCInControl] == false && lvda.GetCMCSIVBTakeover())
-		{
-			if (LVDC_Timebase == 4 && LVDC_TB_ETime > 5.0)
-			{
-				ModeCode27[MC27_SCInControl] = true;
-				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (coasting flight)\r\n", LVDC_Timebase, LVDC_TB_ETime);
-			}
-			else if (ModeCode27[MC27_GRFDiscretesSet] && lvda.GetSCControlPoweredFlight())
-			{
-				ModeCode27[MC27_SCInControl] = true;
-				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (GRF)\r\n", LVDC_Timebase, LVDC_TB_ETime);
-			}
-		}
-		else if (ModeCode27[MC27_SCInControl] && ModeCode27[MC27_SCControlAfterGRF] == false && !lvda.GetCMCSIVBTakeover())
-		{
-			ModeCode27[MC27_SCInControl] = false;
-			CommandedAttitude = PCommandedAttitude = CurrentAttitude;
-			DChi_apo = _V(0, 0, 0);
-			fprintf(lvlog, "[%d+%f] Saturn control returned to LVDC\r\n", LVDC_Timebase, LVDC_TB_ETime);
-		}
+		DiscreteProcessor();
 
 		if (poweredflight == false)
 		{
@@ -1801,7 +1752,7 @@ gtupdate:	// Target of jump from further down
 		}
 
 		// Debug if we're launched
-		/*if(LVDC_Timebase > -1){
+		if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 4){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | Tt_T = %f | ERR %f %f %f | V = %f R = %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -1815,7 +1766,7 @@ gtupdate:	// Target of jump from further down
 					CommandedAttitude.x*DEG,CommandedAttitude.y*DEG,CommandedAttitude.z*DEG,
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG, V,R/1000);
 			}
-		}*/
+		}
 
 		if (poweredflight)
 		{
@@ -1883,202 +1834,7 @@ gtupdate:	// Target of jump from further down
 			//Orbital Guidance
 			R_OG = PosS + DotS * T_SON;
 		orbitalguidance:
-			fprintf(lvlog, "[%d+%f] ORBITAL GUIDANCE\r\n", LVDC_Timebase, LVDC_TB_ETime);
-			//Generalized Maneuver?
-			if (GOMTYP.to_ulong() != 0)
-			{
-				if (LVDC_TB_ETime > T_SOM)
-				{
-					//Local Reference Maneuver
-					if (GOMTYP[4])
-					{
-						if (ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] == false)
-						{
-							ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] = true;
-						}
-					}
-					//Inertial Reference Maneuver
-					else if (GOMTYP[3])
-					{
-						if (ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] == false)
-						{
-							ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] = true;
-						}
-					}
-					//Return to Nominal Timeline
-					else if (GOMTYP[2])
-					{
-
-					}
-					//Special Maneuver A
-					else if (GOMTYP[1])
-					{
-						if (ModeCode27[MC27_DCSSpecialManeuverAImplemented] == false)
-						{
-							ModeCode27[MC27_InertialAttHoldInProgress] = true;
-
-							//Set up inertial attitude hold
-							ModeCode27[MC27_DCSSpecialManeuverAImplemented] = true;
-							ModeCode27[MC27_LocalReferenceManeuverInProgress] = false;
-							ModeCode27[MC27_SCInControl] = false;
-							ModeCode27[MC27_TrackLocalReferenceAfterSCControl] = false;
-							ModeCode27[MC27_InertialAttHoldManeuverAfterSCControl] = false;
-
-							//Pitch up 10°
-							ROLLA = CurrentAttitude.x;
-							SPITCH = CurrentAttitude.y + 10.0*RAD;
-							if (SPITCH >= PI2)
-							{
-								SPITCH -= PI2;
-							}
-							SYAW = CurrentAttitude.z;
-						}
-					}
-					//Special Maneuver B
-					else if (GOMTYP[0])
-					{
-						if (ModeCode27[MC27_DCSSpecialManeuverBImplemented] == false)
-						{
-							ModeCode27[MC27_DCSSpecialManeuverBImplemented] = true;
-						}
-					}
-				}
-			}
-			//Start next maneuver
-			bool tempflag = false;
-			if (LVDC_Timebase == 4 && GOMTYP.to_ulong() == 0)
-			{
-				if (OrbitManeuverCounter < 10)
-				{
-					//Time since GRR
-					if (t_Maneuver[OrbitManeuverCounter] < 0)
-					{
-						if (RealTimeClock - T_GRR > abs(t_Maneuver[OrbitManeuverCounter]))
-						{
-							tempflag = true;
-						}
-					}
-					//Time since TB4
-					else
-					{
-						if (LVDC_TB_ETime > t_Maneuver[OrbitManeuverCounter])
-						{
-							tempflag = true;
-						}
-					}
-				}
-			}
-			if (tempflag)
-			{
-				//Chi freeze
-				if (TYP_M[OrbitManeuverCounter] == 0)
-				{
-					fprintf(lvlog, "Orbital Guidance: Initiate Chi Freeze\r\n");
-					PCommandedAttitude = CurrentAttitude;
-					ROLLA = PCommandedAttitude.x;
-					SPITCH = PCommandedAttitude.y;
-					SYAW = PCommandedAttitude.z;
-					fprintf(lvlog, "Attitude: %f %f %f\r\n", PCommandedAttitude.x*DEG, PCommandedAttitude.y*DEG, PCommandedAttitude.z*DEG);
-					ModeCode27[MC27_InertialAttHoldInProgress] = true;
-					ModeCode27[MC27_LocalReferenceManeuverInProgress] = false;
-					ModeCode27[MC27_SCInControl] = false;
-					ModeCode27[MC27_TrackLocalReferenceAfterSCControl] = false;
-					ModeCode27[MC27_InertialAttHoldManeuverAfterSCControl] = false;
-				}
-				//Inertial attitude hold
-				else if (TYP_M[OrbitManeuverCounter] == 1)
-				{
-					fprintf(lvlog, "Orbital Guidance: Initiate Attitude Hold\r\n");
-					ModeCode27[MC27_InertialAttHoldInProgress] = true;
-					ModeCode27[MC27_LocalReferenceManeuverInProgress] = false;
-					ModeCode27[MC27_SCInControl] = false;
-					ModeCode27[MC27_TrackLocalReferenceAfterSCControl] = false;
-					ModeCode27[MC27_InertialAttHoldManeuverAfterSCControl] = false;
-
-					SPITCH = SP_M[OrbitManeuverCounter];
-					SYAW = SY_M[OrbitManeuverCounter];
-					ROLLA = RA_M[OrbitManeuverCounter];
-					fprintf(lvlog, "Attitude: %f %f %f\r\n", ROLLA*DEG, SPITCH*DEG, SYAW*DEG);
-				}
-				//Track local reference maneuver
-				else if (TYP_M[OrbitManeuverCounter] == -1)
-				{
-					fprintf(lvlog, "Orbital Guidance: Initiate Local Reference Track\r\n");
-					ModeCode27[MC27_InertialAttHoldInProgress] = false;
-					ModeCode27[MC27_LocalReferenceManeuverInProgress] = true;
-					ModeCode27[MC27_SCInControl] = false;
-					ModeCode27[MC27_TrackLocalReferenceAfterSCControl] = false;
-					ModeCode27[MC27_InertialAttHoldManeuverAfterSCControl] = false;
-
-					SPITCH = SP_M[OrbitManeuverCounter];
-					CPITCH = CP_M[OrbitManeuverCounter];
-					SYAW = SY_M[OrbitManeuverCounter];
-					CYAW = CY_M[OrbitManeuverCounter];
-					ROLLA = RA_M[OrbitManeuverCounter];
-
-					fprintf(lvlog, "Local Reference: SP %f CP %f SY %f CY %f RA %f\r\n", SPITCH, CPITCH, SYAW, CYAW, ROLLA*DEG);
-				}
-				//Inertial hold of local reference maneuver
-				else if (TYP_M[OrbitManeuverCounter] == -2)
-				{
-					fprintf(lvlog, "Orbital Guidance: Initiate Local Reference Inertial Hold\r\n");
-					ModeCode27[MC27_InertialAttHoldInProgress] = true;
-					ModeCode27[MC27_LocalReferenceManeuverInProgress] = false;
-					ModeCode27[MC27_SCInControl] = false;
-					ModeCode27[MC27_TrackLocalReferenceAfterSCControl] = false;
-					ModeCode27[MC27_InertialAttHoldManeuverAfterSCControl] = false;
-
-					SPITCH = SP_M[OrbitManeuverCounter];
-					CPITCH = CP_M[OrbitManeuverCounter];
-					SYAW = SY_M[OrbitManeuverCounter];
-					CYAW = CY_M[OrbitManeuverCounter];
-					ROLLA = RA_M[OrbitManeuverCounter];
-
-					fprintf(lvlog, "Local Reference: SP %f CP %f SY %f CY %f RA %f\r\n", SPITCH, CPITCH, SYAW, CYAW, ROLLA*DEG);
-
-					Pos4 = mul(MX_G, R_OG);
-					R4 = sqrt(Pos4.x*Pos4.x + Pos4.z*Pos4.z);
-					sin_chi_Yit = SPITCH * -Pos4.z / R4 + CPITCH * -Pos4.x / R4;
-					cos_chi_Yit = CPITCH * -Pos4.z / R4 - SPITCH * -Pos4.x / R4;
-					sin_chi_Zit = SYAW;
-					cos_chi_Zit = CYAW;
-
-					fprintf(lvlog, "R4 %f sin_chi_Yit %f cos_chi_Yit %f sin_chi_Zit %f cos_chi_Zit %f\r\n", R4, sin_chi_Yit, cos_chi_Yit, sin_chi_Zit, cos_chi_Zit);
-				}
-				else
-				{
-					//Unknown type, displayed orbital guidance
-					OrbitManeuverCounter = 10;
-				}
-				OrbitManeuverCounter++;
-			}
-
-			//Recurring calculations
-			if (ModeCode27[MC27_SCInControl] == false)
-			{
-				//Chi freze, inertial attitude hold, inertial attitude hold of local reference
-				if (ModeCode27[MC27_InertialAttHoldInProgress])
-				{
-					CommandedAttitude.x = ROLLA;
-					CommandedAttitude.y = SPITCH;
-					CommandedAttitude.z = SYAW;
-				}
-				//local reference
-				else if (ModeCode27[MC27_LocalReferenceManeuverInProgress])
-				{
-					Pos4 = mul(MX_G, R_OG);
-					fprintf(lvlog, "Pos4: %f %f %f\r\n", Pos4.x, Pos4.y, Pos4.z);
-					R4 = sqrt(Pos4.x*Pos4.x + Pos4.z*Pos4.z);
-					sin_chi_Yit = SPITCH * -Pos4.z / R4 + CPITCH * -Pos4.x / R4;
-					cos_chi_Yit = CPITCH * -Pos4.z / R4 - SPITCH * -Pos4.x / R4;
-					sin_chi_Zit = SYAW;
-					cos_chi_Zit = CYAW;
-					CommandedAttitude.x = ROLLA;
-					fprintf(lvlog, "R4 %f sin_chi_Yit %f cos_chi_Yit %f sin_chi_Zit %f cos_chi_Zit %f\r\n", R4, sin_chi_Yit, cos_chi_Yit, sin_chi_Zit, cos_chi_Zit);
-					goto thrustvectransentry;
-				}
-			}
-
+			OrbitalGuidance();
 			goto limittest;
 		}
 	}
@@ -2116,6 +1872,8 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_ReadyToLaunch", ReadyToLaunch);
+	oapiWriteScenario_int(scn, "LVDC_FSCAH", FSCAH);
+	oapiWriteScenario_int(scn, "LVDC_FSCIC", FSCIC);
 	// int
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
@@ -2128,6 +1886,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_T_EO1", T_EO1);
 	oapiWriteScenario_int(scn, "LVDC_T_EO2", T_EO2);
 	oapiWriteScenario_int(scn, "LVDC_UP", UP);
+	oapiWriteScenario_int(scn, "LVDC_FMANT", FMANT);
 	// double
 	papiWriteScenario_double(scn, "LVDC_a", a);
 	papiWriteScenario_double(scn, "LVDC_a_1", a_1);
@@ -2477,6 +2236,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_int(line, "LVDC_T_EO1", T_EO1);
 		papiReadScenario_int(line, "LVDC_T_EO2", T_EO2);
 		papiReadScenario_int(line, "LVDC_UP", UP);
+		papiReadScenario_int(line, "LVDC_FMANT", FMANT);
 		// BOOL
 		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
@@ -2493,6 +2253,8 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_ReadyToLaunch", ReadyToLaunch);
+		papiReadScenario_bool(line, "LVDC_FSCAH", FSCAH);
+		papiReadScenario_bool(line, "LVDC_FSCIC", FSCIC);
 
 		// DOUBLE
 		papiReadScenario_double(line, "LVDC_a", a);
@@ -2935,6 +2697,21 @@ bool LVDC1B::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM
 	return false;
 }
 
+bool LVDC1B::GeneralizedManeuver(double T, double X, double Y, double Z, int type)
+{
+	if (LVDC_Timebase == 4)
+	{
+		T_SOM = T;
+		X_ref = X;
+		Y_ref = Y;
+		Z_ref = Z;
+		GOMTYP = type;
+
+		fprintf(lvlog, "Generalized maneuver command received! T %f X_ref %f Y_ref %f Z_ref %f Type %d \r\n", T_SOM, X_ref*DEG, Y_ref*DEG, Z_ref*DEG, type);
+	}
+	return false;
+}
+
 VECTOR3 LVDC1B::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 {
 	VECTOR3 GTEMP;
@@ -2994,6 +2771,505 @@ VECTOR3 LVDC1B::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
 	VECTOR3 A_DS = -V_R * rho * drag_area*K_D*v_R*0.05;
 	//fprintf(lvlog, "A_DS = %e %e %e\r\n", A_DS.x, A_DS.y, A_DS.z);
 	return A_DS;
+}
+
+void LVDC1B::ChiComputations(int entry)
+{
+	//Entries:
+	//0 = Entered once per computation cycle from IGM while IGM is active during Phase 1. Entered 1/sec from the Orbit Guidance module during phase 2.
+	//1 = Entered from Time Tilt Guidance module from liftoff until start of IGM. Entered once per computation cycle from Orbit Guidance during an attitude freeze.
+
+	if (entry == 0)
+	{
+		VECTOR3 VT;
+		VT = tmul(MX_G, _V(cos_chi_Yit*cos_chi_Zit, sin_chi_Zit, -sin_chi_Yit * cos_chi_Zit));
+		fprintf(lvlog, "VT (mul) = %f %f %f\r\n", VT.x, VT.y, VT.z);
+
+		X_S1 = VT.x;
+		X_S2 = VT.y;
+		X_S3 = VT.z;
+		fprintf(lvlog, "X_S1-3 = %f %f %f\r\n", X_S1, X_S2, X_S3);
+
+		// FINALLY - COMMANDS!
+		X_Zi = asin(X_S2);			// Yaw
+		if (X_Zi < 0)
+		{
+			X_Zi += PI2;
+		}
+		X_Yi = atan2(-X_S3, X_S1);	// Pitch
+		if (X_Yi < 0)
+		{
+			X_Yi += PI2;
+		}
+		fprintf(lvlog, "*** COMMAND ISSUED ***\r\n");
+		fprintf(lvlog, "PITCH = %f, YAW = %f\r\n", X_Yi*DEG, X_Zi*DEG);
+
+		// IGM is supposed to generate attitude directly.
+		CommandedAttitude.y = X_Yi; // PITCH
+		CommandedAttitude.z = X_Zi; // YAW;
+	}
+
+	//TBD: Telemeter guidance chi X, Y, Z
+}
+
+void LVDC1B::DiscreteProcessor()
+{
+	//Discrete Input 9 Check (S&C Control of Saturn)		
+	if (ModeCode27[MC27_GRFDiscretesSet] && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && ModeCode27[MC27_SCControlAfterGRF] == false)
+	{
+		lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+		ModeCode27[MC27_SCControlAfterGRF] = true;
+		fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n", LVDC_Timebase, LVDC_TB_ETime);
+	}
+
+	if (ModeCode27[MC27_SCInControl] == false && lvda.GetCMCSIVBTakeover())
+	{
+		if (LVDC_Timebase == 4 && LVDC_TB_ETime > 5.0)
+		{
+			ModeCode27[MC27_SCInControl] = true;
+			fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (coasting flight)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+		else if (ModeCode27[MC27_GRFDiscretesSet] && lvda.GetSCControlPoweredFlight())
+		{
+			ModeCode27[MC27_SCInControl] = true;
+			fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (GRF)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+	}
+	else if (ModeCode27[MC27_SCInControl] && ModeCode27[MC27_SCControlAfterGRF] == false && !lvda.GetCMCSIVBTakeover())
+	{
+		ModeCode27[MC27_SCInControl] = false;
+		CommandedAttitude = PCommandedAttitude = CurrentAttitude;
+		DChi_apo = _V(0, 0, 0);
+		FSCAH = true;
+		FSCIC = true;
+		fprintf(lvlog, "[%d+%f] Saturn control returned to LVDC\r\n", LVDC_Timebase, LVDC_TB_ETime);
+	}
+}
+
+void LVDC1B::AttitudeFreze(int entry)
+{
+	//Entries:
+	//0 = Entered by the Orbit Guidance module to perform an absolute freeze
+	//1 = Entered from Non-Interrupt Sequencer modules to perform a command freeze
+
+	if (entry == 0)
+	{
+		//Absolute freeze
+
+		//Set command chi's to MI theta's
+		PCommandedAttitude = CurrentAttitude;
+	}
+	else
+	{
+		//Command freeze
+	}
+
+	//Set guidance chi's to command chi's
+	CommandedAttitude = PCommandedAttitude;
+	//Zero delta chi's
+	DChi_apo = _V(0, 0, 0);
+	//Setup to bypass setting delta chi's
+}
+
+void LVDC1B::OrbitalGuidanceManeuverProcessor(bool timefordcs)
+{
+	if (timefordcs)
+	{
+		//Local Reference Maneuver
+		if (GOMTYP[4])
+		{
+			fprintf(lvlog, "Orbital Guidance: Initiate DCS Local Reference Maneuver\r\n");
+
+			ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] = true;
+			ModeCode27[MC27_DCSSpecialManeuverAImplemented] = false;
+			ModeCode27[MC27_DCSSpecialManeuverBImplemented] = false;
+
+			FMANT = -1;
+
+			ROLLA = X_ref;
+			SPITCH = sin(Y_ref);
+			CPITCH = cos(Y_ref);
+			SYAW = sin(Z_ref);
+			CYAW = cos(Z_ref);
+		}
+		//Inertial Reference Maneuver
+		else if (GOMTYP[3])
+		{
+			fprintf(lvlog, "Orbital Guidance: Initiate DCS Inertial Attitude Hold\r\n");
+
+			ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] = true;
+			ModeCode27[MC27_DCSSpecialManeuverAImplemented] = false;
+			ModeCode27[MC27_DCSSpecialManeuverBImplemented] = false;
+
+			FMANT = 0;
+
+			ROLLA = X_ref;
+			SPITCH = Y_ref;
+			SYAW = Z_ref;
+		}
+		//Return to Nominal Timeline
+		else if (GOMTYP[2])
+		{
+			fprintf(lvlog, "Orbital Guidance: DCS Return to Nominal Timeline\r\n");
+
+			ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] = false;
+			ModeCode27[MC27_DCSSpecialManeuverAImplemented] = false;
+			ModeCode27[MC27_DCSSpecialManeuverBImplemented] = false;
+
+			GOMTYP.reset();
+
+			//Restart the currently desired scheduled maneuver
+			if (OrbitManeuverCounter > 0)
+			{
+				OrbitManeuverCounter--;
+			}
+
+		}
+		//Special Maneuver A
+		else if (GOMTYP[1])
+		{
+			fprintf(lvlog, "Orbital Guidance: Initiate DCS Special Maneuver A\r\n");
+
+			ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] = false;
+			ModeCode27[MC27_DCSSpecialManeuverAImplemented] = true;
+			ModeCode27[MC27_DCSSpecialManeuverBImplemented] = false;
+
+			FMANT = 0;
+
+			//Pitch up 10°
+			ROLLA = CurrentAttitude.x;
+			SPITCH = CurrentAttitude.y + 10.0*RAD;
+			if (SPITCH >= PI2)
+			{
+				SPITCH -= PI2;
+			}
+			SYAW = CurrentAttitude.z;
+		}
+		//Special Maneuver B
+		else if (GOMTYP[0])
+		{
+			fprintf(lvlog, "Orbital Guidance: Initiate DCS Special Maneuver A\r\n");
+
+			ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] = false;
+			ModeCode27[MC27_DCSSpecialManeuverAImplemented] = false;
+			ModeCode27[MC27_DCSSpecialManeuverBImplemented] = true;
+
+			//TBD		
+		}
+	}
+	else
+	{
+		//Save commanded maneuver type
+		FMANT = TYP_M[OrbitManeuverCounter];
+		//Reset maneuver flags
+		FSCAH = false;
+		FSCIC = false;
+
+		//Chi freeze
+		if (TYP_M[OrbitManeuverCounter] == 0)
+		{
+			fprintf(lvlog, "Orbital Guidance: Initiate Chi Freeze\r\n");
+
+			PCommandedAttitude = CurrentAttitude;
+			ROLLA = PCommandedAttitude.x;
+			SPITCH = PCommandedAttitude.y;
+			SYAW = PCommandedAttitude.z;
+
+			fprintf(lvlog, "Attitude: %f %f %f\r\n", PCommandedAttitude.x*DEG, PCommandedAttitude.y*DEG, PCommandedAttitude.z*DEG);
+		}
+		//Inertial attitude hold
+		else if (TYP_M[OrbitManeuverCounter] == 1)
+		{
+			fprintf(lvlog, "Orbital Guidance: Initiate Attitude Hold\r\n");
+
+			SPITCH = SP_M[OrbitManeuverCounter];
+			SYAW = SY_M[OrbitManeuverCounter];
+			ROLLA = RA_M[OrbitManeuverCounter];
+
+			fprintf(lvlog, "Attitude: %f %f %f\r\n", ROLLA*DEG, SPITCH*DEG, SYAW*DEG);
+		}
+		//Track or hold local reference maneuver
+		else if (TYP_M[OrbitManeuverCounter] == -1 || TYP_M[OrbitManeuverCounter] == -2)
+		{
+			if (TYP_M[OrbitManeuverCounter] == -1)
+			{
+				fprintf(lvlog, "Orbital Guidance: Initiate Local Reference Track\r\n");
+				FSLR = false;
+			}
+			else
+			{
+				fprintf(lvlog, "Orbital Guidance: Initiate Local Reference Inertial Hold\r\n");
+				FSLR = true;
+			}
+
+			SPITCH = SP_M[OrbitManeuverCounter];
+			CPITCH = CP_M[OrbitManeuverCounter];
+			SYAW = SY_M[OrbitManeuverCounter];
+			CYAW = CY_M[OrbitManeuverCounter];
+			ROLLA = RA_M[OrbitManeuverCounter];
+
+			fprintf(lvlog, "Local Reference: SP %f CP %f SY %f CY %f RA %f\r\n", SPITCH, CPITCH, SYAW, CYAW, ROLLA*DEG);
+		}
+		else
+		{
+			//Unknown type, displayed orbital guidance
+			OrbitManeuverCounter = 10;
+		}
+		OrbitManeuverCounter++;
+	}
+}
+
+void LVDC1B::OrbitalGuidance()
+{
+	fprintf(lvlog, "[%d+%f] ORBITAL GUIDANCE\r\n", LVDC_Timebase, LVDC_TB_ETime);
+
+	//Check if it is time to execute DCS maneuver
+	if (GOMTYP.to_ulong() != 0)
+	{
+		if (LVDC_TB_ETime > T_SOM)
+		{
+			OrbitalGuidanceManeuverProcessor(true);
+		}
+	}
+	//Start next scheduled maneuver
+	bool bypass = (ModeCode27[MC27_DCSExecuteGeneralizedManeuverAccepted] == true || ModeCode27[MC27_DCSSpecialManeuverAImplemented] == true || ModeCode27[MC27_DCSSpecialManeuverBImplemented] == true);
+	if (bypass == false)
+	{
+		bool tempflag = false;
+		if (LVDC_Timebase == 4)
+		{
+			if (OrbitManeuverCounter < 10)
+			{
+				//Time since GRR
+				if (t_Maneuver[OrbitManeuverCounter] < 0)
+				{
+					if (RealTimeClock - T_GRR > abs(t_Maneuver[OrbitManeuverCounter]))
+					{
+						tempflag = true;
+					}
+				}
+				//Time since TB4
+				else
+				{
+					if (LVDC_TB_ETime > t_Maneuver[OrbitManeuverCounter])
+					{
+						tempflag = true;
+					}
+				}
+			}
+		}
+
+		if (tempflag)
+		{
+			OrbitalGuidanceManeuverProcessor(false);
+		}
+	}
+
+	//Compute positions in orbit plane
+	OrbitalGuidance040();
+
+	//Reset maneuver bits for mode code 27
+	ModeCode27[MC27_InertialAttHoldInProgress] = false;
+	ModeCode27[MC27_LocalReferenceManeuverInProgress] = false;
+	ModeCode27[MC27_TrackLocalReferenceAfterSCControl] = false;
+	ModeCode27[MC27_InertialAttHoldManeuverAfterSCControl] = false;
+
+	if (ModeCode27[MC27_SCInControl] == true)
+	{
+		//Absolute attitude freeze
+		AttitudeFreze(0);
+		//Telemeter guidance chi's
+		ChiComputations(1);
+	}
+	else if (FSCAH)
+	{
+		//Spacecraft has been in control
+		OrbitalGuidance280();
+	}
+	else if (FMANT == -1 || FMANT == -2)
+	{
+		//Local reference
+		if (FMANT == -1)
+		{
+			//Nominal local reference maneuver
+			ModeCode27[MC27_LocalReferenceManeuverInProgress] = true;
+			//Track local reference
+			OrbitalGuidance680();
+		}
+		else
+		{
+			//Special local reference maneuver
+			ModeCode27[MC27_InertialAttHoldInProgress] = true;
+			//Execute special local reference maneuver
+			OrbitalGuidance940();
+		}
+	}
+	else
+	{
+		if (FMANT == 1)
+		{
+			//Inertial hold
+			ModeCode27[MC27_InertialAttHoldInProgress] = true;
+			//Execute inertial hold maneuver
+			OrbitalGuidance860();
+		}
+		else
+		{
+			//Chi freeze
+			ModeCode27[MC27_InertialAttHoldInProgress] = true;
+			//Attitude freeze maneuver
+			OrbitalGuidance340();
+		}
+	}
+}
+
+void LVDC1B::OrbitalGuidance040()
+{
+	Pos4 = mul(MX_G, R_OG);
+	//fprintf(lvlog, "Pos4: %f %f %f\r\n", Pos4.x, Pos4.y, Pos4.z);
+	R4 = sqrt(Pos4.x*Pos4.x + Pos4.z*Pos4.z);
+}
+
+void LVDC1B::OrbitalGuidance280()
+{
+	if (FSCIC)
+	{
+		//First pass
+		FSCIC = false;
+
+		if (FMANT == -1)
+		{
+			VECTOR3 P_S;
+
+			//Compute unit thrust vector
+			P_S = OrbitalGuidance480();
+			//Compute maneuver parameters for spacecraft
+			OrbitalGuidance580(P_S);
+			//Local reference maneuver
+			ModeCode27[MC27_TrackLocalReferenceAfterSCControl] = true;
+			//Execute track local reference maneuver
+			OrbitalGuidance680();
+		}
+		else
+		{
+			//Inertial hold
+			ModeCode27[MC27_InertialAttHoldManeuverAfterSCControl] = true;
+			//Process attitude freeze
+			OrbitalGuidance340();
+		}
+	}
+	else
+	{
+		if (FMANT == -1)
+		{
+			//Local reference maneuver
+			ModeCode27[MC27_TrackLocalReferenceAfterSCControl] = true;
+			//Execute track local reference maneuver
+			OrbitalGuidance680();
+		}
+		else
+		{
+			//Inertial hold
+			ModeCode27[MC27_InertialAttHoldManeuverAfterSCControl] = true;
+			//Process attitude freeze
+			OrbitalGuidance340();
+		}
+	}
+}
+
+void LVDC1B::OrbitalGuidance340()
+{
+	//Attitude freeze maneuver
+
+	//Perform attitude freeze
+	AttitudeFreze(0);
+	//Telemeter guidance chi's
+	ChiComputations(1);
+}
+
+VECTOR3 LVDC1B::OrbitalGuidance480()
+{
+	CommandedAttitude.x = CurrentAttitude.x;
+
+	return _V(cos(CurrentAttitude.y)*cos(CurrentAttitude.z), sin(CurrentAttitude.z), -sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
+}
+
+void LVDC1B::OrbitalGuidance580(VECTOR3 P_S)
+{
+	VECTOR3 P_4;
+	double phi_SO, phi_P, alpha_LH;
+
+	//Rotate unit thrust vector to 4-system (equation 5.5.1)
+	P_4 = mul(MX_G, P_S);
+	sin_chi_Zit = P_4.y;
+	//Calculate cosine of target plane yaw angle (equation 5.5.11)
+	cos_chi_Zit = sqrt(1.0-pow(sin_chi_Zit,2));
+	//Calculate sine of angle between spacecraft and target vector (equation 5.5.12)
+	phi_SO = atan2(Pos4.z, Pos4.x);
+	//Calculate pitch angle in the target plane (equation 5.5.12)
+	phi_P = atan2(-P_4.z, P_4.x);
+	//Calculate angle from local horizontal to vehicle longitudinal axis (equation 5.5.12)
+	alpha_LH = phi_SO + phi_P + PI05;
+	//Sine and cosines from local horizontal to vehicle longitudinal axis (equation 5.5.13)
+	SPITCH = sin(alpha_LH);
+	CPITCH = cos(alpha_LH);
+	SYAW = sin_chi_Zit;
+	CYAW = cos_chi_Zit;
+	ROLLA = CurrentAttitude.x;
+}
+
+void LVDC1B::OrbitalGuidance680()
+{
+	//Track local reference maneuver
+
+	//Calculate sine and cosine of yaw and pitch in target plane
+	OrbitalGuidance700();
+	//Set up for roll guidance chi
+	CommandedAttitude.x = ROLLA;
+	//Compute guidance chi's
+	ChiComputations(0);
+}
+
+void LVDC1B::OrbitalGuidance700()
+{
+	//Calculate sine of pitch angle in target plane (equation 5.5.4)
+	sin_chi_Yit = SPITCH * -Pos4.z / R4 + CPITCH * -Pos4.x / R4;
+	//Calculate cosine of pitch angle in target plane (equation 5.5.4)
+	cos_chi_Yit = CPITCH * -Pos4.z / R4 - SPITCH * -Pos4.x / R4;
+	//Calculate sine of yaw angle in target plane (equation 5.5.5)
+	sin_chi_Zit = SYAW;
+	//Calculate cosine of yaw angle in target plane (equation 5.5.5)
+	cos_chi_Zit = CYAW;
+}
+
+void LVDC1B::OrbitalGuidance860()
+{
+	//Inertial hold maneuver
+
+	//Set guidance chi's equal to inertial attitude
+	CommandedAttitude.x = ROLLA;
+	CommandedAttitude.y = SPITCH;
+	CommandedAttitude.z = SYAW;
+
+	//Telemeter guidance chi's
+	ChiComputations(1);
+}
+
+void LVDC1B::OrbitalGuidance940()
+{
+	//Special local reference track
+
+	//First pass?
+	if (FSLR)
+	{
+		FSLR = false;
+		OrbitalGuidance700();
+	}
+	else
+	{
+		//Telemeter guidance chi's
+		ChiComputations(1);
+	}
 }
 
 // ***************************

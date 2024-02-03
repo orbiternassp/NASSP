@@ -314,6 +314,11 @@ namespace mission {
 		return true;
 	}
 
+	const std::string& Mission::GetMissionFileName(void) const
+	{
+		return strFileName;
+	}
+
 	int Mission::GetSMJCVersion() const
 	{
 		return iSMJCVersion;

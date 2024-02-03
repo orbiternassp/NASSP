@@ -2770,6 +2770,7 @@ void Saturn::CreateMissionSpecificSystems()
 			secs.SMJCB = new SMJC_MOD1();
 		}
 	}
+	secs.Realize();
 
 	//Create cue cards. TBD: Load mission specific meshes
 	unsigned loc, counter = 0;

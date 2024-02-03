@@ -95,6 +95,8 @@ static struct ProjectApolloMFDData {  // global data storage
 	double iuUplinkDT;
 	double iuUplinkPitch;
 	double iuUplinkYaw;
+	VECTOR3 iuUplinkGenManAtt;
+	int iuUplinkGenManType;
 	bool lmAlignType;	//true = same REFSMMAT; false = nominal alignments
 
 	VECTOR3 V42angles;
@@ -159,6 +161,8 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.iuUplinkDT = 0.0;
 	g_Data.iuUplinkPitch = 0.0;
 	g_Data.iuUplinkYaw = 0.0;
+	g_Data.iuUplinkGenManAtt = _V(0, 0, 0);
+	g_Data.iuUplinkGenManType = 0;
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -1009,7 +1013,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Switch Selector", 15);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Stage:", 6);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: Stage:", 9);
 
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (g_Data.iuUplinkSwitSelStage == 0)
@@ -1030,7 +1034,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			}
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.5), "Channel:", 8);
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "2: Channel:", 11);
 
 			sprintf(buffer, "%d", g_Data.iuUplinkSwitSelChannel);
 			skp->Text((int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
@@ -1041,7 +1045,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Timebase Update", 15);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Delta T:", 8);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: Delta T:", 11);
 
 			sprintf(buffer, "%+.1f s", g_Data.iuUplinkTimebaseUpdateTime);
 			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
@@ -1082,10 +1086,10 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->Text((int)(width * 0.7), (int)(height * 0.35), "S-IVB/IU Lunar Impact", 21);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.45), "TIG:", 4);
-			skp->Text((int)(width * 0.1), (int)(height * 0.5), "BT:", 3);
-			skp->Text((int)(width * 0.1), (int)(height * 0.55), "Pitch:", 6);
-			skp->Text((int)(width * 0.1), (int)(height * 0.6), "Yaw:", 4);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: TIG:", 7);
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "2: BT:", 6);
+			skp->Text((int)(width * 0.1), (int)(height * 0.55), "3: Pitch:", 9);
+			skp->Text((int)(width * 0.1), (int)(height * 0.6), "4: Yaw:", 7);
 
 			sprintf(buffer, "TB8+%.0f s", g_Data.iuUplinkTIG);
 			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
@@ -1100,6 +1104,46 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		{
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Remove Inhibit Mnv. 4", 21);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Saturn IB Generalized Maneuver", 30);
+
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: Type", 7);
+
+			switch (g_Data.iuUplinkGenManType)
+			{
+			case 0:
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Local Reference", 15);
+				break;
+			case 1:
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Inertial Reference", 18);
+				break;
+			case 2:
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Return to Timeline", 18);
+				break;
+			case 3:
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Special Maneuver A", 18);
+				break;
+			case 4:
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Special Maneuver B", 18);
+				break;
+			}
+
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "2: Time", 7);
+
+			sprintf(buffer, "TB4+%.0f s", g_Data.iuUplinkTIG);
+			skp->Text((int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
+
+			if (g_Data.iuUplinkGenManType == 0 || g_Data.iuUplinkGenManType == 1)
+			{
+				skp->Text((int)(width * 0.1), (int)(height * 0.55), "3: Attitude", 11);
+
+				sprintf(buffer, "%.1f %.1f %.1f", g_Data.iuUplinkGenManAtt.x*DEG, g_Data.iuUplinkGenManAtt.y*DEG, g_Data.iuUplinkGenManAtt.z*DEG);
+				skp->Text((int)(width * 0.7), (int)(height * 0.55), buffer, strlen(buffer));
+			}
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -2385,7 +2429,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 9)
+	if (g_Data.iuUplinkType < 10)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -2397,7 +2441,7 @@ void ProjectApolloMFD::menuCycleIUUplinkType()
 	g_Data.iuUplinkResult = 0;
 }
 
-void ProjectApolloMFD::menuCycleSwitSelStage()
+void ProjectApolloMFD::menuSetIUUplinkInp1()
 {
 	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
 	{
@@ -2409,42 +2453,78 @@ void ProjectApolloMFD::menuCycleSwitSelStage()
 		{
 			g_Data.iuUplinkSwitSelStage = 0;
 		}
-
-		g_Data.iuUplinkResult = 0;
 	}
-}
-
-void ProjectApolloMFD::menuSetSwitSelChannel()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
+	else if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
 	{
-		g_Data.iuUplinkResult = 0;
-
-		bool SwitchSelectorChannelInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Switch selector channel [1-112]:", SwitchSelectorChannelInput, 0, 20, (void*)this);
-	}
-}
-
-void ProjectApolloMFD::menuSetTBUpdateTime()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
-	{
-		g_Data.iuUplinkResult = 0;
-
 		bool TimebaseUpdateInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Increment the current LVDC timebase time [4-124 seconds]:", TimebaseUpdateInput, 0, 20, (void*)this);
 	}
-}
-
-void ProjectApolloMFD::menuSetImpactTIG()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	else if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
 	{
-		g_Data.iuUplinkResult = 0;
-
 		bool ImpactTIGInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Time of ignition of S-IVB/IU impact burn:", ImpactTIGInput, 0, 20, (void*)this);
 	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
+	{
+		if (g_Data.iuUplinkGenManType < 4)
+		{
+			g_Data.iuUplinkGenManType++;
+		}
+		else
+		{
+			g_Data.iuUplinkGenManType = 0;
+		}
+	}
+
+	g_Data.iuUplinkResult = 0;
+}
+
+void ProjectApolloMFD::menuSetIUUplinkInp2()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
+	{
+		bool SwitchSelectorChannelInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Switch selector channel [1-112]:", SwitchSelectorChannelInput, 0, 20, (void*)this);
+	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		bool ImpactBTInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Burntime of S-IVB/IU impact burn:", ImpactBTInput, 0, 20, (void*)this);
+	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
+	{
+		bool ImpactTIGInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Time of maneuver in TB4:", ImpactTIGInput, 0, 20, (void*)this);
+	}
+
+	g_Data.iuUplinkResult = 0;
+}
+
+void ProjectApolloMFD::menuSetIUUplinkInp3()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		bool ImpactPitchInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Pitch of S-IVB/IU impact burn:", ImpactPitchInput, 0, 20, (void*)this);
+	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
+	{
+		bool GeneralizedManeuverAttitudeInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Enter attitude in degrees:", GeneralizedManeuverAttitudeInput, 0, 20, (void*)this);
+	}
+
+	g_Data.iuUplinkResult = 0;
+}
+
+void ProjectApolloMFD::menuSetIUUplinkInp4()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		bool ImpactYawInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Yaw of S-IVB/IU impact burn:", ImpactYawInput, 0, 20, (void*)this);
+	}
+
+	g_Data.iuUplinkResult = 0;
 }
 
 bool ProjectApolloMFD::SetImpactTIG(char *rstr)
@@ -2459,17 +2539,6 @@ bool ProjectApolloMFD::SetImpactTIG(char *rstr)
 	return false;
 }
 
-void ProjectApolloMFD::menuSetImpactBT()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
-	{
-		g_Data.iuUplinkResult = 0;
-
-		bool ImpactBTInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Burntime of S-IVB/IU impact burn:", ImpactBTInput, 0, 20, (void*)this);
-	}
-}
-
 bool ProjectApolloMFD::SetImpactBT(char *rstr)
 {
 	double f;
@@ -2480,17 +2549,6 @@ bool ProjectApolloMFD::SetImpactBT(char *rstr)
 		return true;
 	}
 	return false;
-}
-
-void ProjectApolloMFD::menuSetImpactPitch()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
-	{
-		g_Data.iuUplinkResult = 0;
-
-		bool ImpactPitchInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Pitch of S-IVB/IU impact burn:", ImpactPitchInput, 0, 20, (void*)this);
-	}
 }
 
 bool ProjectApolloMFD::SetImpactPitch(char *rstr)
@@ -2505,23 +2563,24 @@ bool ProjectApolloMFD::SetImpactPitch(char *rstr)
 	return false;
 }
 
-void ProjectApolloMFD::menuSetImpactYaw()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
-	{
-		g_Data.iuUplinkResult = 0;
-
-		bool ImpactYawInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Yaw of S-IVB/IU impact burn:", ImpactYawInput, 0, 20, (void*)this);
-	}
-}
-
 bool ProjectApolloMFD::SetImpactYaw(char *rstr)
 {
 	double f;
 
 	if (sscanf(rstr, "%lf", &f) == 1) {
 		g_Data.iuUplinkYaw = f*RAD;
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
+}
+
+bool  ProjectApolloMFD::SetGeneralizedManeuverAttitude(char *rstr)
+{
+	VECTOR3 Att;
+
+	if (sscanf(rstr, "%lf %lf %lf", &Att.x, &Att.y, &Att.z) == 1) {
+		g_Data.iuUplinkGenManAtt = Att * RAD;
 		InvalidateDisplay();
 		return true;
 	}
@@ -2602,6 +2661,38 @@ void ProjectApolloMFD::menuIUUplink()
 		upl.dt = g_Data.iuUplinkDT;
 		upl.pitch = g_Data.iuUplinkPitch;
 		upl.yaw = g_Data.iuUplinkYaw;
+
+		uplink = &upl;
+		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
+	}
+	break;
+	case DCSUPLINK_GENERALIZED_MANEUVER:
+	{
+		DCSGENMANEUVER upl;
+
+		upl.T = g_Data.iuUplinkTIG;
+		upl.X = g_Data.iuUplinkGenManAtt.x;
+		upl.Y = g_Data.iuUplinkGenManAtt.y;
+		upl.Z = g_Data.iuUplinkGenManAtt.z;
+
+		switch (g_Data.iuUplinkGenManType)
+		{
+		case 0:
+			upl.Type = 16;
+			break;
+		case 1:
+			upl.Type = 8;
+			break;
+		case 2:
+			upl.Type = 4;
+			break;
+		case 3:
+			upl.Type = 2;
+			break;
+		case 4:
+			upl.Type = 1;
+			break;
+		}
 
 		uplink = &upl;
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
@@ -2737,6 +2828,11 @@ bool ImpactPitchInput(void *id, char *str, void *data)
 bool ImpactYawInput(void *id, char *str, void *data)
 {
 	return ((ProjectApolloMFD*)data)->SetImpactYaw(str);
+}
+
+bool GeneralizedManeuverAttitudeInput(void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetGeneralizedManeuverAttitude(str);
 }
 
 bool SaturnSwitchFailureInput(void *id, char *str, void *data)
