@@ -141,8 +141,15 @@ namespace OrbMech{
 		return H*3600.0 + M*60.0 + S;
 	}
 
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
+	double round_to(double value, double precision)
 	{
+		return round(value / precision) * precision;
+	}
+
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision)
+	{
+		time = round_to(time, precision);
+
 		double mins;
 		hours = (int)trunc(time / 3600.0);
 		mins = fmod(time / 60.0, 60.0);
@@ -150,12 +157,32 @@ namespace OrbMech{
 		seconds = (mins - minutes) * 60.0;
 	}
 
-	void SStoHHMMSSTH(double time, int &hours, int &minutes, double &seconds)
+	// Format time to HHH:MM:SS.
+	void format_time(char *buf, double time)
 	{
-		int cs = (int)(round(time*100.0));
-		hours = cs / 360000;
-		minutes = (cs - 360000 * hours) / 6000;
-		seconds = (double)(cs - 360000 * hours - 6000 * minutes) / 100.0;
+		buf[0] = 0; // Clobber
+		if (time < 0) { return; } // don't do that
+
+		int hours, minutes;
+		double seconds;
+
+		SStoHHMMSS(time, hours, minutes, seconds);
+
+		sprintf(buf, "%03d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	// Format precise time.
+	void format_time_prec(char *buf, double time)
+	{
+		buf[0] = 0; // Clobber
+		if (time < 0) { return; } // don't do that
+
+		int hours, minutes;
+		double seconds;
+
+		SStoHHMMSS(time, hours, minutes, seconds, 0.01);
+
+		sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
 	}
 
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
@@ -3308,6 +3335,75 @@ unsigned long long BinToDec(unsigned long long num)
 		num = num / 10;
 	}
 	return dec;
+}
+
+int SingleToBuffer(double x, int SF, bool TwosComplement)
+{
+	double x2;
+	int c;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c = (unsigned)round(x2);
+
+	if (TwosComplement == false && c > 037777)
+	{
+		c = 037777;
+	}
+
+	if (x < 0.0)
+	{
+		// Polarity change
+		c = 0x7FFF & (~c);
+		if (TwosComplement)
+		{
+			c++;
+		}
+	}
+
+	return c;
+}
+
+void DoubleToBuffer(double x, int SF, int &c1, int &c2)
+{
+	double x2;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c1 = (unsigned)x2;
+	x2 = x2 - (double)c1;
+	x2 *= pow(2, 14);
+	c2 = (unsigned)round(x2);
+	if (c2 > 037777)
+	{
+		c2 = 037777;
+	}
+
+	if (x < 0.0) c1 = 0x7FFF & (~c1); // Polarity change
+	if (x < 0.0) c2 = 0x7FFF & (~c2); // Polarity change
+}
+
+void TripleToBuffer(double x, int SF, int &c1, int &c2, int &c3)
+{
+	double x2;
+
+	x2 = fabs(x) * pow(2, -SF + 14);
+
+	c1 = (unsigned)x2;
+	x2 = x2 - (double)c1;
+	x2 *= pow(2, 14);
+	c2 = (unsigned)x2;
+	x2 = x2 - (double)c2;
+	x2 *= pow(2, 14);
+	c3 = (unsigned)round(x2);
+	if (c3 > 037777)
+	{
+		c3 = 037777;
+	}
+
+	if (x < 0.0) c1 = 0x7FFF & (~c1); // Polarity change
+	if (x < 0.0) c2 = 0x7FFF & (~c2); // Polarity change
+	if (x < 0.0) c3 = 0x7FFF & (~c3); // Polarity change
 }
 
 double cot(double a)

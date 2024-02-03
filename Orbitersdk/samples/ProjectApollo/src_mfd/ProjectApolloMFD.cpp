@@ -84,7 +84,8 @@ static struct ProjectApolloMFDData {  // global data storage
 	double uplinkBufferSimt;
 	OBJHANDLE planet;
 	VESSEL *vessel;
-	VESSEL *iuVessel;
+	VESSEL *uplinkVessel;
+	int targetnumber;
 	int iuUplinkType;
 	int iuUplinkSwitSelStage;
 	int iuUplinkSwitSelChannel;
@@ -146,7 +147,8 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.V42angles = _V(0, 0, 0);
 	g_Data.killrot = 0;
-	g_Data.iuVessel = NULL;
+	g_Data.uplinkVessel = NULL;
+	g_Data.targetnumber = -1;
 	g_Data.iuUplinkType = 0;
 	g_Data.iuUplinkSwitSelStage = 0;
 	g_Data.iuUplinkSwitSelChannel = 1;
@@ -1121,9 +1123,9 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		skp->SetTextColor(RGB(128, 128, 128));
-		if (g_Data.iuVessel)
+		if (g_Data.uplinkVessel)
 		{
-			oapiGetObjectName(g_Data.iuVessel->GetHandle(), buffer, 100);
+			oapiGetObjectName(g_Data.uplinkVessel->GetHandle(), buffer, 100);
 		}
 		else
 		{
@@ -1602,17 +1604,6 @@ bool ProjectApolloMFD::SetSource (char *rstr)
 	if(vessel_obj != NULL)
 	{
 		g_Data.vessel = new VESSEL(vessel_obj,1);
-		return true;
-	}
-	return false;
-}
-
-bool ProjectApolloMFD::SetIUSource(char *rstr)
-{
-	OBJHANDLE vessel_obj = oapiGetVesselByName(rstr);
-	if (vessel_obj != NULL)
-	{
-		g_Data.iuVessel = oapiGetVesselInterface(vessel_obj);
 		return true;
 	}
 	return false;
@@ -2376,8 +2367,20 @@ void ProjectApolloMFD::menuFreezeDebugLine()
 
 void ProjectApolloMFD::menuSetIUSource()
 {
-	bool IUSourceInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Set S-IVB source", IUSourceInput, 0, 20, (void*)this);
+	int vesselcount;
+
+	vesselcount = oapiGetVesselCount();
+
+	if (g_Data.targetnumber < vesselcount - 1)
+	{
+		g_Data.targetnumber++;
+	}
+	else
+	{
+		g_Data.targetnumber = 0;
+	}
+
+	g_Data.uplinkVessel = oapiGetVesselInterface(oapiGetVesselByIndex(g_Data.targetnumber));
 }
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
@@ -2527,7 +2530,7 @@ bool ProjectApolloMFD::SetImpactYaw(char *rstr)
 
 void ProjectApolloMFD::menuIUUplink()
 {
-	if (g_Data.iuVessel == NULL)
+	if (g_Data.uplinkVessel == NULL)
 	{
 		g_Data.iuUplinkResult = 2;
 		return;
@@ -2537,14 +2540,14 @@ void ProjectApolloMFD::menuIUUplink()
 
 	bool uplinkaccepted = false;
 
-	if (utils::IsVessel(g_Data.iuVessel, utils::Saturn)) {
-		Saturn *iuv = (Saturn *)g_Data.iuVessel;
+	if (utils::IsVessel(g_Data.uplinkVessel, utils::Saturn)) {
+		Saturn *iuv = (Saturn *)g_Data.uplinkVessel;
 
 		iu = iuv->GetIU();
 	}
-	else if (utils::IsVessel(g_Data.iuVessel, utils::SIVB))
+	else if (utils::IsVessel(g_Data.uplinkVessel, utils::SIVB))
 	{
-		SIVB *iuv = (SIVB *)g_Data.iuVessel;
+		SIVB *iuv = (SIVB *)g_Data.uplinkVessel;
 
 		iu = iuv->GetIU();
 	}
@@ -2684,11 +2687,6 @@ int ProjectApolloMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 bool SourceInput (void *id, char *str, void *data)
 {
 	return ((ProjectApolloMFD*)data)->SetSource(str);
-}
-
-bool IUSourceInput(void *id, char *str, void *data)
-{
-	return ((ProjectApolloMFD*)data)->SetIUSource(str);
 }
 
 bool ReferencePlanetInput (void *id, char *str, void *data)
