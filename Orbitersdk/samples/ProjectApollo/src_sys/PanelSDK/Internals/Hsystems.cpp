@@ -1303,7 +1303,8 @@ void h_crew::refresh(double dt) {
 		SRC->space.composition[SUBSTANCE_CO2].vapor_mass += co2;
 		SRC->space.composition[SUBSTANCE_CO2].SetTemp(srcTemp);
 
-		double h2o = 0.0264 * number * dt;  // grams of H2O water vapor (need a source for this)
+		double sweatRate = srcTemp < 310.2 ? 0.0685522320142486 + 1.99493308786737E-63 * exp(srcTemp * 0.4654878554362358) : 1.0;
+		double h2o = 1.1 * sweatRate * number * dt;  // grams of H2O water vapor (need a source for this)
 		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
@@ -1311,7 +1312,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.GetQ();
 		SRC->space.GetMass();
 			
-		double heat = 30.0 * number * dt;  //heat (400 to 760 BTU/Man Hour (117.23 to 222.73 Watts) per LM-8 Systems Handbook)
+		double heat = 1.77 * (310.2 - srcTemp) * number * dt;  //heat (400 to 760 BTU/Man Hour (117.23 to 222.73 Watts) per LM-8 Systems Handbook)
 		t->thermic(heat);
 	}
 }
