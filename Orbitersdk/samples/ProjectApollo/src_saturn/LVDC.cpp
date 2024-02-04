@@ -392,6 +392,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	FMANT = 0;
 	FSCAH = false;
 	FSCIC = false;
+	FFPIH = false;
 }
 
 void LVDC1B::Init(){
@@ -976,85 +977,11 @@ void LVDC1B::TimeStep(double simdt) {
 			fprintf(lvlog, "[%d+%f] *** Major Loop %d ***\r\n", LVDC_Timebase, LVDC_TB_ETime, IGMCycle);
 
 			//ACCELEROMETER READ
-			DotM_act += lvda.GetLVIMUPIPARegisters(); //read the PIPA CDUs
-			//TAS is time of last accelerometer sampling
-			TAS = RealTimeClock - T_GRR;
-
+			AccelerometerRead();
 			//FM CALCULATIONS
-			//dt_c is the LVDC guidance cycle time. The LV IMU currently runs once per Orbiter timestep, so to get a stable Fm reading we need to take the time difference of the LV IMU measurements
-			ddotM_act = (DotM_act - DotM_last) / dt_c;
-			Fm = length(ddotM_act);
-			fprintf(lvlog, "Sensed Acceleration: %f \r\n", Fm);
-
-			if (LVDC_Timebase == 3 && LVDC_TB_ETime > 7.48)
-			{
-				MF[0] = 1.0 / Fm;
-				double MFSTEMP = MFK[0] * MF[0] + MFK[1] * MF[1] + MFK[2] * MF[2] + MFK[3] * MF[3] + MFK[4] * MFSArr[0] + MFK[5] * MFSArr[1] + MFK[6] * MFSArr[2] + MFK[7] * MFSArr[3];
-
-				//MFS can only change by 0.005 sec^2/m per major loop
-				if (MFSTEMP - MFS > 0.005)
-				{
-					MFS = MFS + 0.005;
-				}
-				else if (MFSTEMP - MFS < -0.005)
-				{
-					MFS = MFS - 0.005;
-				}
-				else
-				{
-					MFS = MFSTEMP;
-				}
-
-				//Limit magnitude to 0.25 (= a minimum of 4 m/s^2 acceleration)
-				if (MFS > 0.25)
-				{
-					MFS = 0.25;
-				}
-
-				MFSArr[3] = MFSArr[2];
-				MFSArr[2] = MFSArr[1];
-				MFSArr[1] = MFSArr[0];
-				MFSArr[0] = MFS;
-				MF[3] = MF[2];
-				MF[2] = MF[1];
-				MF[1] = MF[0];
-
-				//sprintf(oapiDebugString(), "FM[0] %lf 1/MFS %lf", Fm, 1.0 / MFS);
-				fprintf(lvlog, "Smoothed Acceleration: %f \r\n", 1.0 / MFS);
-			}
-			
+			FMCalculations();			
 			//BOOST NAVIGATION
-			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2.0 + (DotG_last.x + ddotG_last.x * dt_c / 2.0)*dt_c + Dot0.x * dt_c; //position vector
-			PosS.y += (DotM_act.y + DotM_last.y) * dt_c / 2.0 + (DotG_last.y + ddotG_last.y * dt_c / 2.0)*dt_c + Dot0.y * dt_c;
-			PosS.z += (DotM_act.z + DotM_last.z) * dt_c / 2.0 + (DotG_last.z + ddotG_last.z * dt_c / 2.0)*dt_c + Dot0.z * dt_c;
-			R = length(PosS);
-			ddotG_act = GravitationSubroutine(PosS, true);
-			CG = pow((pow(ddotG_act.x,2)+ pow(ddotG_act.y,2)+ pow(ddotG_act.z,2)),0.5);
-			DotG_act.x = DotG_last.x + (ddotG_act.x  + ddotG_last.x) * dt_c / 2; //gravity velocity vector
-			DotG_act.y = DotG_last.y + (ddotG_act.y  + ddotG_last.y) * dt_c / 2;
-			DotG_act.z = DotG_last.z + (ddotG_act.z  + ddotG_last.z) * dt_c / 2;
-			DotS.x = DotM_act.x + DotG_act.x + Dot0.x; //total velocity vector 
-			DotS.y = DotM_act.y + DotG_act.y + Dot0.y;
-			DotS.z = DotM_act.z + DotG_act.z + Dot0.z;
-			V = pow(pow(DotS.x,2)+pow(DotS.y,2)+pow(DotS.z,2),0.5);
-			//save the 'actual' variables as 'last' variables for the next step
-			DotM_last = DotM_act;
-			DotG_last = DotG_act;
-			ddotG_last = ddotG_act;
-			fprintf(lvlog,"Navigation \r\n");
-			fprintf(lvlog,"Inertial Attitude: %f %f %f \r\n",CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG);
-			fprintf(lvlog,"DotM: %f %f %f \r\n", DotM_act.x,DotM_act.y,DotM_act.z);
-			fprintf(lvlog,"Gravity velocity: %f %f %f \r\n", DotG_act.x,DotG_act.y,DotG_act.z);
-			fprintf(lvlog,"EarthRel Position: %f %f %f \r\n",PosS.x,PosS.y,PosS.z);
-			VECTOR3 drtest = SVCompare();
-			fprintf(lvlog, "SV Accuracy: %f %f %f\r\n", drtest.x, drtest.y, drtest.z);
-			fprintf(lvlog,"EarthRel Velocity: %f %f %f \r\n",DotS.x,DotS.y,DotS.z);	
-			fprintf(lvlog,"Gravity Acceleration: %f \r\n",CG);	
-			fprintf(lvlog,"Total Velocity: %f \r\n",V);
-			fprintf(lvlog,"Dist. from Earth's Center: %f \r\n",R);
-			fprintf(lvlog,"S: %f \r\n",S);
-			fprintf(lvlog,"P: %f \r\n",P);
-			lvda.ZeroLVIMUPIPACounters();
+			BoostNavigation();
 		}
 
 		if(ModeCode25[MC25_BeginTB1] == false){//liftoff not received; initial roll command for FCC
@@ -1458,101 +1385,7 @@ gtupdate:	// Target of jump from further down
 		cos_chi_Zit = cos(Xtt_y);
 		ChiComputations(0);
 	limittest:
-		//command rate test; part of major loop;
-		if(CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD){CommandedAttitude.z = -45 * RAD;}
-		if(CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD){CommandedAttitude.z = 45 * RAD;}
-
-		//Attitude Increments
-		//fprintf(lvlog, "MINOR LOOP SUPPORT\r\n");
-		DChi = CommandedAttitude - PCommandedAttitude;
-		for (int i = 0;i < 3;i++)
-		{
-			if (DChi.data[i] > PI)
-			{
-				DChi.data[i] -= PI2;
-			}
-			else if(DChi.data[i] < -PI)
-			{
-				DChi.data[i] += PI2;
-			}
-		}
-		fprintf(lvlog, "DChi = %f %f %f\r\n", DChi.x*DEG, DChi.y*DEG, DChi.z*DEG);
-
-		DChi_apo.x = (DChi.x) / (MLR*DT_N);
-		DChi_apo.y = (DChi.y) / (MLR*DT_N);
-		DChi_apo.z = (DChi.z) / (MLR*DT_N);
-		//fprintf(lvlog, "DChi_apo = %f %f %f\r\n", DChi_apo.x*DEG, DChi_apo.y*DEG, DChi_apo.z*DEG);
-		ModeCode25[MC25_SMCActive] = true;
-		//Magnitude limit
-		if (abs(DChi_apo.x) > MSLIM1)
-		{
-			fprintf(lvlog, "Roll magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.x*DEG, MSLIM1*DEG);
-			ModeCode25[MC25_SMCActive] = false;
-			if (DChi_apo.x > 0)
-			{
-				DChi_apo.x = MSLIM1;
-			}
-			else
-			{
-				DChi_apo.x = -MSLIM1;
-			}
-		}
-		if (abs(DChi_apo.y) > MSLIM2)
-		{
-			fprintf(lvlog, "Pitch magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.y*DEG, MSLIM2*DEG);
-			ModeCode25[MC25_SMCActive] = false;
-			if (DChi_apo.y > 0)
-			{
-				DChi_apo.y = MSLIM2;
-			}
-			else
-			{
-				DChi_apo.y = -MSLIM2;
-			}
-		}
-		if (abs(DChi_apo.z) > MSLIM2)
-		{
-			fprintf(lvlog, "Yaw magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.z*DEG, MSLIM2*DEG);
-			ModeCode25[MC25_SMCActive] = false;
-			if (DChi_apo.z > 0)
-			{
-				DChi_apo.z = MSLIM2;
-			}
-			else
-			{
-				DChi_apo.z = -MSLIM2;
-			}
-		}
-		//Gimbal-to-Body Transformation
-		Chi_xp_apo = PCommandedAttitude.x + DChi_apo.x*MLR*DT_N;
-		Chi_zp_apo = PCommandedAttitude.z + DChi_apo.z*MLR*DT_N;
-		//fprintf(lvlog, "Gimbal-to-Body Transformation. Chi_xp_apo = %f Chi_zp_apo = %f\r\n", Chi_xp_apo*DEG, Chi_zp_apo*DEG);
-		theta_xa = 0.5*(Chi_xp_apo + CurrentAttitude.x);
-		if (abs(Chi_xp_apo - CurrentAttitude.x) > PI05)
-		{
-			theta_xa += PI;
-		}
-		if (theta_xa >= PI2)
-		{
-			theta_xa -= PI2;
-		}
-		theta_za = 0.5*(Chi_zp_apo + CurrentAttitude.z);
-		if (abs(Chi_zp_apo - CurrentAttitude.z) > PI05)
-		{
-			theta_za += PI;
-		}
-		if (theta_za >= PI2)
-		{
-			theta_za -= PI2;
-		}
-		//fprintf(lvlog, "Gimbal-to-Body Transformation. theta_xa = %f theta_za = %f\r\n", theta_xa*DEG, theta_za*DEG);
-		A1 = cos(theta_xa) * cos(theta_za);
-		A2 = sin(theta_xa);
-		A3 = sin(theta_za);
-		A4 = sin(theta_xa) * cos(theta_za);
-		A5 = cos(theta_xa);
-		//fprintf(lvlog, "Euler Correction. A1 = %f A2 = %f A3 = %f A4 = %f A5 = %f\r\n", A1, A2, A3, A4, A5);
-
+		MinorLoopSupport();
 		//DISCRETE BACKUPS
 		//fprintf(lvlog, "[%d+%f] DISCRETE BACKUPS\r\n", LVDC_Timebase, LVDC_TB_ETime);
 		if (ModeCode25[MC25_BeginTB1] == false)
@@ -1874,6 +1707,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_ReadyToLaunch", ReadyToLaunch);
 	oapiWriteScenario_int(scn, "LVDC_FSCAH", FSCAH);
 	oapiWriteScenario_int(scn, "LVDC_FSCIC", FSCIC);
+	oapiWriteScenario_int(scn, "LVDC_FFPIH", FFPIH);
 	// int
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
@@ -2255,6 +2089,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_ReadyToLaunch", ReadyToLaunch);
 		papiReadScenario_bool(line, "LVDC_FSCAH", FSCAH);
 		papiReadScenario_bool(line, "LVDC_FSCIC", FSCIC);
+		papiReadScenario_bool(line, "LVDC_FFPIH", FFPIH);
 
 		// DOUBLE
 		papiReadScenario_double(line, "LVDC_a", a);
@@ -2773,6 +2608,98 @@ VECTOR3 LVDC1B::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att)
 	return A_DS;
 }
 
+void LVDC1B::AccelerometerRead()
+{
+	//fprintf(lvlog, "[%d+%f] ACCELEROMETER READ\r\n", LVDC_Timebase, LVDC_TB_ETime);
+
+	DotM_act += lvda.GetLVIMUPIPARegisters(); //read the PIPA CDUs
+	//TAS is time of last accelerometer sampling
+	TAS = RealTimeClock - T_GRR;
+}
+
+void LVDC1B::FMCalculations()
+{
+	//fprintf(lvlog, "[%d+%f] F/M CALCULATIONS\r\n", LVDC_Timebase, LVDC_TB_ETime);
+
+	//dt_c is the LVDC guidance cycle time. The LV IMU currently runs once per Orbiter timestep, so to get a stable Fm reading we need to take the time difference of the LV IMU measurements
+	ddotM_act = (DotM_act - DotM_last) / dt_c;
+	Fm = length(ddotM_act);
+	fprintf(lvlog, "Sensed Acceleration: %f \r\n", Fm);
+
+	if (LVDC_Timebase == 3 && LVDC_TB_ETime > 7.48)
+	{
+		MF[0] = 1.0 / Fm;
+		double MFSTEMP = MFK[0] * MF[0] + MFK[1] * MF[1] + MFK[2] * MF[2] + MFK[3] * MF[3] + MFK[4] * MFSArr[0] + MFK[5] * MFSArr[1] + MFK[6] * MFSArr[2] + MFK[7] * MFSArr[3];
+
+		//MFS can only change by 0.005 sec^2/m per major loop
+		if (MFSTEMP - MFS > 0.005)
+		{
+			MFS = MFS + 0.005;
+		}
+		else if (MFSTEMP - MFS < -0.005)
+		{
+			MFS = MFS - 0.005;
+		}
+		else
+		{
+			MFS = MFSTEMP;
+		}
+
+		//Limit magnitude to 0.25 (= a minimum of 4 m/s^2 acceleration)
+		if (MFS > 0.25)
+		{
+			MFS = 0.25;
+		}
+
+		MFSArr[3] = MFSArr[2];
+		MFSArr[2] = MFSArr[1];
+		MFSArr[1] = MFSArr[0];
+		MFSArr[0] = MFS;
+		MF[3] = MF[2];
+		MF[2] = MF[1];
+		MF[1] = MF[0];
+
+		//sprintf(oapiDebugString(), "FM[0] %lf 1/MFS %lf", Fm, 1.0 / MFS);
+		fprintf(lvlog, "Smoothed Acceleration: %f \r\n", 1.0 / MFS);
+	}
+}
+
+void LVDC1B::BoostNavigation()
+{
+	//fprintf(lvlog, "[%d+%f] BOOST NAVIGATION\r\n", LVDC_Timebase, LVDC_TB_ETime);
+	PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2.0 + (DotG_last.x + ddotG_last.x * dt_c / 2.0)*dt_c + Dot0.x * dt_c; //position vector
+	PosS.y += (DotM_act.y + DotM_last.y) * dt_c / 2.0 + (DotG_last.y + ddotG_last.y * dt_c / 2.0)*dt_c + Dot0.y * dt_c;
+	PosS.z += (DotM_act.z + DotM_last.z) * dt_c / 2.0 + (DotG_last.z + ddotG_last.z * dt_c / 2.0)*dt_c + Dot0.z * dt_c;
+	R = length(PosS);
+	ddotG_act = GravitationSubroutine(PosS, true);
+	CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
+	DotG_act.x = DotG_last.x + (ddotG_act.x + ddotG_last.x) * dt_c / 2; //gravity velocity vector
+	DotG_act.y = DotG_last.y + (ddotG_act.y + ddotG_last.y) * dt_c / 2;
+	DotG_act.z = DotG_last.z + (ddotG_act.z + ddotG_last.z) * dt_c / 2;
+	DotS.x = DotM_act.x + DotG_act.x + Dot0.x; //total velocity vector 
+	DotS.y = DotM_act.y + DotG_act.y + Dot0.y;
+	DotS.z = DotM_act.z + DotG_act.z + Dot0.z;
+	V = pow(pow(DotS.x, 2) + pow(DotS.y, 2) + pow(DotS.z, 2), 0.5);
+	//save the 'actual' variables as 'last' variables for the next step
+	DotM_last = DotM_act;
+	DotG_last = DotG_act;
+	ddotG_last = ddotG_act;
+	fprintf(lvlog, "Navigation \r\n");
+	fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
+	fprintf(lvlog, "DotM: %f %f %f \r\n", DotM_act.x, DotM_act.y, DotM_act.z);
+	fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
+	fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
+	VECTOR3 drtest = SVCompare();
+	fprintf(lvlog, "SV Accuracy: %f %f %f\r\n", drtest.x, drtest.y, drtest.z);
+	fprintf(lvlog, "EarthRel Velocity: %f %f %f \r\n", DotS.x, DotS.y, DotS.z);
+	fprintf(lvlog, "Gravity Acceleration: %f \r\n", CG);
+	fprintf(lvlog, "Total Velocity: %f \r\n", V);
+	fprintf(lvlog, "Dist. from Earth's Center: %f \r\n", R);
+	fprintf(lvlog, "S: %f \r\n", S);
+	fprintf(lvlog, "P: %f \r\n", P);
+	lvda.ZeroLVIMUPIPACounters();
+}
+
 void LVDC1B::ChiComputations(int entry)
 {
 	//Entries:
@@ -2791,12 +2718,9 @@ void LVDC1B::ChiComputations(int entry)
 		fprintf(lvlog, "X_S1-3 = %f %f %f\r\n", X_S1, X_S2, X_S3);
 
 		// FINALLY - COMMANDS!
-		X_Zi = asin(X_S2);			// Yaw
-		if (X_Zi < 0)
-		{
-			X_Zi += PI2;
-		}
-		X_Yi = atan2(-X_S3, X_S1);	// Pitch
+		X_Zi = atan2(X_S2, sqrt(1.0 - pow(X_S2, 2)));	// Yaw
+
+		X_Yi = atan2(-X_S3, X_S1);						// Pitch
 		if (X_Yi < 0)
 		{
 			X_Yi += PI2;
@@ -2869,6 +2793,7 @@ void LVDC1B::AttitudeFreze(int entry)
 	//Zero delta chi's
 	DChi_apo = _V(0, 0, 0);
 	//Setup to bypass setting delta chi's
+	//DFDCO = true;
 }
 
 void LVDC1B::OrbitalGuidanceManeuverProcessor(bool timefordcs)
@@ -3017,6 +2942,8 @@ void LVDC1B::OrbitalGuidanceManeuverProcessor(bool timefordcs)
 		}
 		OrbitManeuverCounter++;
 	}
+
+	FFPIH = true;
 }
 
 void LVDC1B::OrbitalGuidance()
@@ -3181,8 +3108,12 @@ void LVDC1B::OrbitalGuidance340()
 {
 	//Attitude freeze maneuver
 
-	//Perform attitude freeze
-	AttitudeFreze(0);
+	if (FFPIH)
+	{
+		//Perform attitude freeze
+		AttitudeFreze(0);
+		FFPIH = false;
+	}
 	//Telemeter guidance chi's
 	ChiComputations(1);
 }
@@ -3270,6 +3201,119 @@ void LVDC1B::OrbitalGuidance940()
 		//Telemeter guidance chi's
 		ChiComputations(1);
 	}
+}
+
+void LVDC1B::MinorLoopSupport()
+{
+	//fprintf(lvlog, "MINOR LOOP SUPPORT\r\n");
+
+	ModeCode25[MC25_SMCActive] = true;
+
+	//Limit commanded yaw gimbal
+	if (CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD)
+	{
+		CommandedAttitude.z = -45 * RAD;
+		ModeCode25[MC25_SMCActive] = false;
+	}
+	if (CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD)
+	{
+		CommandedAttitude.z = 45 * RAD;
+		ModeCode25[MC25_SMCActive] = false;
+	}
+
+	//Compute delta chi values
+	DChi = CommandedAttitude - PCommandedAttitude;
+	for (int i = 0; i < 3; i++)
+	{
+		if (DChi.data[i] > PI)
+		{
+			DChi.data[i] -= PI2;
+		}
+		else if (DChi.data[i] < -PI)
+		{
+			DChi.data[i] += PI2;
+		}
+	}
+	//fprintf(lvlog, "DChi = %f %f %f\r\n", DChi.x*DEG, DChi.y*DEG, DChi.z*DEG);
+
+	DChi_apo.x = (DChi.x) / (MLR*DT_N);
+	DChi_apo.y = (DChi.y) / (MLR*DT_N);
+	DChi_apo.z = (DChi.z) / (MLR*DT_N);
+	//fprintf(lvlog, "DChi_apo = %f %f %f\r\n", DChi_apo.x*DEG, DChi_apo.y*DEG, DChi_apo.z*DEG);
+
+	//Limit delta chi's
+
+	//Magnitude limit
+	if (abs(DChi_apo.x) > MSLIM1)
+	{
+		fprintf(lvlog, "Roll magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.x*DEG, MSLIM1*DEG);
+		ModeCode25[MC25_SMCActive] = false;
+		if (DChi_apo.x > 0)
+		{
+			DChi_apo.x = MSLIM1;
+		}
+		else
+		{
+			DChi_apo.x = -MSLIM1;
+		}
+	}
+	if (abs(DChi_apo.y) > MSLIM2)
+	{
+		fprintf(lvlog, "Pitch magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.y*DEG, MSLIM2*DEG);
+		ModeCode25[MC25_SMCActive] = false;
+		if (DChi_apo.y > 0)
+		{
+			DChi_apo.y = MSLIM2;
+		}
+		else
+		{
+			DChi_apo.y = -MSLIM2;
+		}
+	}
+	if (abs(DChi_apo.z) > MSLIM2)
+	{
+		fprintf(lvlog, "Yaw magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.z*DEG, MSLIM2*DEG);
+		ModeCode25[MC25_SMCActive] = false;
+		if (DChi_apo.z > 0)
+		{
+			DChi_apo.z = MSLIM2;
+		}
+		else
+		{
+			DChi_apo.z = -MSLIM2;
+		}
+	}
+
+	//Compute A1-A5
+	//Gimbal-to-Body Transformation
+	Chi_xp_apo = PCommandedAttitude.x + DChi_apo.x*MLR*DT_N;
+	Chi_zp_apo = PCommandedAttitude.z + DChi_apo.z*MLR*DT_N;
+	//fprintf(lvlog, "Gimbal-to-Body Transformation. Chi_xp_apo = %f Chi_zp_apo = %f\r\n", Chi_xp_apo*DEG, Chi_zp_apo*DEG);
+	theta_xa = 0.5*(Chi_xp_apo + CurrentAttitude.x);
+	if (abs(Chi_xp_apo - CurrentAttitude.x) > PI05)
+	{
+		theta_xa += PI;
+	}
+	if (theta_xa >= PI2)
+	{
+		theta_xa -= PI2;
+	}
+	theta_za = 0.5*(Chi_zp_apo + CurrentAttitude.z);
+	if (abs(Chi_zp_apo - CurrentAttitude.z) > PI05)
+	{
+		theta_za += PI;
+	}
+	if (theta_za >= PI2)
+	{
+		theta_za -= PI2;
+	}
+	//fprintf(lvlog, "Gimbal-to-Body Transformation. theta_xa = %f theta_za = %f\r\n", theta_xa*DEG, theta_za*DEG);
+	A1 = cos(theta_xa) * cos(theta_za);
+	A2 = sin(theta_xa);
+	A3 = sin(theta_za);
+	A4 = sin(theta_xa) * cos(theta_za);
+	A5 = cos(theta_xa);
+	//fprintf(lvlog, "Euler Correction. A1 = %f A2 = %f A3 = %f A4 = %f A5 = %f\r\n", A1, A2, A3, A4, A5);
 }
 
 // ***************************

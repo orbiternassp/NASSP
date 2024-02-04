@@ -953,6 +953,12 @@ private:
 
 	// APPLICATION MODULES
 
+	// Accelerometer Read (AR)
+	void AccelerometerRead();
+	// F/M Calculations (DV)
+	void FMCalculations();
+	// Boost Navigation (BN)
+	void BoostNavigation();
 	// Chi Computations (CC)
 	void ChiComputations(int entry);
 	// Discrete Processor (DP)
@@ -977,6 +983,8 @@ private:
 	void OrbitalGuidance860();
 	//Special local reference track
 	void OrbitalGuidance940();
+	//Minor Loop Support (MS)
+	void MinorLoopSupport();
 
 	bool Initialized;								// Clobberness flag
 	char FSPFileName[256];
@@ -1225,6 +1233,7 @@ private:
 	int FMANT;										// Maneuver type flag, +1 = inertial reference, 0 = chi freeze, -1 = local reference, -2 = inertial hold of local reference
 	bool FSCAH;										// Flag to indicate S/C returned control
 	bool FSCIC;										// First pass flag for spacecraft control return
+	bool FFPIH;										// First pass flag for inertial hold
 
 	//Switch Selector Tables
 	std::vector<SwitchSelectorSet> SSTTB[5];	// [1...4] 0 never used!
