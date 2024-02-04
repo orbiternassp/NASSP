@@ -752,7 +752,7 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(CrewDeadSound, CREWDEAD_SOUND);
-	soundlib.LoadDefaultSound(EngineS, MAIN_ENGINES_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(EngineS, MAIN_ENGINES_SOUND, INTERNAL_ONLY);
 
 	// Configure sound options where needed
 	SuitFanSound.setFadeTime(5);
