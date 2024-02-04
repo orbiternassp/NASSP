@@ -809,7 +809,7 @@ void LEM::SystemsInit()
 	gasta.Init(this, &GASTA_DC_CB, &GASTA_AC_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:GASTAHEAT"), &imu);
 
 	//ORDEAL
-	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
+	ordeal.Init(&ORDEALEarthSwitch, &ORDEAL_AC_CB, &ORDEAL_DC_CB, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch, &ORDEALLightingSwitch);
 
 	//LM Mission Programer
 	lmp.Init(this);
@@ -1534,7 +1534,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	optics.Timestep(simdt);
 	LR.Timestep(simdt);
 	RR.Timestep(simdt);
-	agc.RadarRead();
 	RadarTape.Timestep(simdt);
 	crossPointerLeft.Timestep(simdt);
 	crossPointerRight.Timestep(simdt);

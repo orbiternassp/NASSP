@@ -204,8 +204,14 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 	case STATE_CMARM2:
 		if (abort) break; // Don't do anything if we have aborted.
 
-		//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
-		if (MissionTime >= -(17.0 + oapiGetSimStep()))
+		//Enforce 1.0x time acceleration for GRR
+		if (MissionTime >= -30.0 && oapiGetTimeAcceleration() > 1.0)
+		{
+			oapiSetTimeAcceleration(1.0);
+		}
+
+		//Send Prepare to Launch signal and then at T-17 seconds the GRR signal
+		if (MissionTime >= -17.0)
 		{
 			IuESE->SetGuidanceReferenceRelease(true);
 		}

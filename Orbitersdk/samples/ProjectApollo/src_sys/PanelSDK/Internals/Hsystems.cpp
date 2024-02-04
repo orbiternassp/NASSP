@@ -355,7 +355,7 @@ double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double te
 			}
 			break;
 		case SUBSTANCE_H2:
-			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
+			if (temperature < CRITICAL_T[SUBSTANCE_H2]) {
 				density = 136.4894046680936 + 3242.617524782929 / (temperature - 67.46034096292647);
 			}
 			else {
@@ -363,7 +363,7 @@ double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double te
 			}
 			break;
 		case SUBSTANCE_N2:
-			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
+			if (temperature < CRITICAL_T[SUBSTANCE_N2]) {
 				density = 734.3287921946625 + 9878.83146453045 / (temperature - 146.65628914669438);
 			}
 			else {
