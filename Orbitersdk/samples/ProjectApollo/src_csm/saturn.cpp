@@ -4284,7 +4284,7 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
-	soundlib.LoadDefaultSound(EngineS, MAIN_ENGINES_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(EngineS, MAIN_ENGINES_SOUND, INTERNAL_ONLY);
 
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
