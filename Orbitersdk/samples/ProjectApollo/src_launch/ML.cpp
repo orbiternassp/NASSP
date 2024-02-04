@@ -551,8 +551,14 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 		sat->ActivatePrelaunchVenting();
 
-		//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
-		if (sat->GetMissionTime() >= -(17.0 + oapiGetSimStep()))
+		//Enforce 1.0x time acceleration for GRR
+		if (oapiGetTimeAcceleration() > 1.0)
+		{
+			oapiSetTimeAcceleration(1.0);
+		}
+
+		//Send Prepare to Launch signal and then at T-17 seconds the GRR signal
+		if (sat->GetMissionTime() >= -17.0)
 		{
 			IuESE->SetGuidanceReferenceRelease(true);
 		}
@@ -655,7 +661,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			// Soft-Release Pin Dragging
 			HoldDownForce(sat->GetMissionTime());
 
-			if (bCommit == false && sat->GetMissionTime() >= (-0.05 - simdt))
+			if (bCommit == false && sat->GetMissionTime() >= -0.05)
 			{
 				if (Commit())
 				{
