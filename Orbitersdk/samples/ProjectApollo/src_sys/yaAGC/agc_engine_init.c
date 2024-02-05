@@ -71,6 +71,7 @@
 		04/16/17 MAS    Added initialization of warning filter variables.
 		05/16/17 MAS    Enabled interrupts at startup.
 		07/13/17 MAS	Added initialization of the three HANDRUPT traps.
+		01/29/24 MAS	Added initialization of RadarGateCounter.
 */
 
 #include <stdio.h>
@@ -254,6 +255,8 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->Trap31A = 0;
   State->Trap31B = 0;
   State->Trap32 = 0;
+
+  State->RadarGateCounter = 0;
 
   if (CoreDump != NULL)
     {
