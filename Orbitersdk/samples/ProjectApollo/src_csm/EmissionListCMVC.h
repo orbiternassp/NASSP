@@ -3,7 +3,7 @@
 
 // Emissionlist for CMVC.msh
 
-/* ********* ALL METERIALS CM_VC.msh *********
+/* ********* ALL MATERIALS CM_VC.msh *********
 
 VC_MAT_CB_black_t,
 VC_MAT_coas_t,
@@ -75,7 +75,6 @@ DWORD IntegralLights_P8[] = {
 	VC_MAT_Rotarys_P8_t,
 	VC_MAT_csm_lower_equip_bay_t,
 	VC_MAT_csm_right_cb_panels_t,
-	VC_MAT_EMS_Scroll_Timer_P1_t,
 	VC_MAT_csm_cabin_press_panel_t,
 	VC_MAT_FDAI_Frame_t,
 	VC_MAT_DSKY_Keys_t,
@@ -85,6 +84,13 @@ DWORD IntegralLights_P8[] = {
 	VC_MAT_CMVCTex2_ILL_P8_t,
 	VC_MAT_CMVCTex3_ILL_P8_t,
 	VC_MAT_CMVCTex2_t
+};
+
+// Material Emissions Panel 8 without Emission Texture
+DWORD NumericLights_P8_NTex[] = {
+
+	// TODO Material List
+	VC_MAT_EMS_Scroll_Timer_P1_t
 };
 
 /*
@@ -155,7 +161,7 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_AdditionalParts_t,
 	VC_MAT_DSKY_Alarm_Lights_P2_t,
 	VC_MAT_CMVCTex2_t,
-	VC_MAT_EMS_Scroll_Timer_P1_t,
+//	VC_MAT_EMS_Scroll_Timer_P1_t,
 	VC_MAT_Alluminum,
 	VC_MAT_FDAI_Ball_t,
 //	VC_MAT_FDAI_errorneedle,

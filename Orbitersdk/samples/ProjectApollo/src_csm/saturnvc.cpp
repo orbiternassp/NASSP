@@ -1745,6 +1745,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_NUMERICS_LIGHT_P8:
         SetCMVCIntegralLight(vcidx,NumericLights_P8, MatProp::Light, (double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+        SetCMVCIntegralLight(vcidx, NumericLights_P8_NTex, MatProp::Light, (double)(NumericRotarySwitch.GetState())/10.0, 1);
         return true;
 
 	case AID_VC_INTEGRAL_LIGHT_P5:
@@ -1785,6 +1786,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_NUMERICS_LIGHT_P8:
         SetCMVCIntegralLight(vcidx,NumericLights_P8, MESHM_EMISSION,(double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
+        SetCMVCIntegralLight(vcidx, NumericLights_P8_NTex, MESHM_EMISSION, (double)(NumericRotarySwitch.GetState())/10.0, 1);
         return true;
 
 	case AID_VC_INTEGRAL_LIGHT_P5:
