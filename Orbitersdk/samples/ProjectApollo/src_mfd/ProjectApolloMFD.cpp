@@ -1108,7 +1108,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
 		{
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
-			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Saturn IB Generalized Maneuver", 30);
+			skp->Text((int)(width * 0.65), (int)(height * 0.35), "SIB Generalized Maneuver", 24);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: Type", 7);
@@ -1116,33 +1116,33 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			switch (g_Data.iuUplinkGenManType)
 			{
 			case 0:
-				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Local Reference", 15);
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Local Reference", 15);
 				break;
 			case 1:
-				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Inertial Reference", 18);
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Inertial Reference", 18);
 				break;
 			case 2:
-				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Return to Timeline", 18);
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Return to Timeline", 18);
 				break;
 			case 3:
-				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Special Maneuver A", 18);
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Special Maneuver A", 18);
 				break;
 			case 4:
-				skp->Text((int)(width * 0.7), (int)(height * 0.45), "Special Maneuver B", 18);
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Special Maneuver B", 18);
 				break;
 			}
 
 			skp->Text((int)(width * 0.1), (int)(height * 0.5), "2: Time", 7);
 
 			sprintf(buffer, "TB4+%.0f s", g_Data.iuUplinkTIG);
-			skp->Text((int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.5), (int)(height * 0.5), buffer, strlen(buffer));
 
 			if (g_Data.iuUplinkGenManType == 0 || g_Data.iuUplinkGenManType == 1)
 			{
 				skp->Text((int)(width * 0.1), (int)(height * 0.55), "3: Attitude", 11);
 
 				sprintf(buffer, "%.1f %.1f %.1f", g_Data.iuUplinkGenManAtt.x*DEG, g_Data.iuUplinkGenManAtt.y*DEG, g_Data.iuUplinkGenManAtt.z*DEG);
-				skp->Text((int)(width * 0.7), (int)(height * 0.55), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.5), (int)(height * 0.55), buffer, strlen(buffer));
 			}
 		}
 
@@ -2579,7 +2579,7 @@ bool  ProjectApolloMFD::SetGeneralizedManeuverAttitude(char *rstr)
 {
 	VECTOR3 Att;
 
-	if (sscanf(rstr, "%lf %lf %lf", &Att.x, &Att.y, &Att.z) == 1) {
+	if (sscanf(rstr, "%lf %lf %lf", &Att.x, &Att.y, &Att.z) == 3) {
 		g_Data.iuUplinkGenManAtt = Att * RAD;
 		InvalidateDisplay();
 		return true;
