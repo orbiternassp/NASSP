@@ -2543,6 +2543,7 @@ bool LVDC1B::GeneralizedManeuver(double T, double X, double Y, double Z, int typ
 		GOMTYP = type;
 
 		fprintf(lvlog, "Generalized maneuver command received! T %f X_ref %f Y_ref %f Z_ref %f Type %d \r\n", T_SOM, X_ref*DEG, Y_ref*DEG, Z_ref*DEG, type);
+		return true;
 	}
 	return false;
 }
