@@ -110,10 +110,34 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 	pRTCC->PZGPMDIS.long_A = INFO[3];
 	pRTCC->PZGPMDIS.HA = INFO[4];
 
-	pRTCC->PZGPMDIS.GET_P = pRTCC->GETfromGMT(INFO[5]);
-	pRTCC->PZGPMDIS.lat_P = INFO[7];
-	pRTCC->PZGPMDIS.long_P = INFO[8];
-	pRTCC->PZGPMDIS.HP = INFO[9];
+	//Impacting trajectory?
+	if (INFO[9] < 0.0)
+	{
+		//Find impact location
+
+		int err = pRTCC->PITCIR(aeg.Header, sv_a, R_E, sv_temp);
+
+		//Are some errors ok?
+		if (err == 2 || err == 4)
+		{
+			//Error
+			ErrorIndicator = 2;
+			return ErrorIndicator;
+		}
+
+		pRTCC->PZGPMDIS.GET_P = pRTCC->GETfromGMT(sv_temp.TS);
+		GetLatLongHeight(sv_temp, pRTCC->PZGPMDIS.HP, pRTCC->PZGPMDIS.lat_P, pRTCC->PZGPMDIS.long_P);
+		pRTCC->PZGPMDIS.ShowImpact = true;
+	}
+	else
+	{
+		//No, show periapsis data
+		pRTCC->PZGPMDIS.GET_P = pRTCC->GETfromGMT(INFO[5]);
+		pRTCC->PZGPMDIS.lat_P = INFO[7];
+		pRTCC->PZGPMDIS.long_P = INFO[8];
+		pRTCC->PZGPMDIS.HP = INFO[9];
+		pRTCC->PZGPMDIS.ShowImpact = false;
+	}
 
 	pRTCC->PZGPMDIS.A = sv_a.coe_osc.a;
 	pRTCC->PZGPMDIS.E = sv_a.coe_osc.e;
@@ -430,28 +454,7 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	sv_b_apo = sv_a = sv_b;
 
 	//Compute maneuver point quantities
-	H_man = sv_b.R - R_E;
-	if (aeg.Header.AEGInd == BODY_EARTH)
-	{
-		lat_man = asin(sin(sv_b.U)*sin(sv_b.coe_osc.i));
-		double DELTA = pRTCC->GLQATN(sin(sv_b.U)*cos(sv_b.coe_osc.i), cos(sv_b.U));
-		lng_man = sv_b.coe_osc.h + DELTA - pRTCC->SystemParameters.MCLAMD - OrbMech::w_Earth*sv_b.TS;
-		NormalizeAngle(lng_man);
-	}
-	else
-	{
-		double i_temp, g_temp, h_temp, u_temp;
-		GetSelenographicElements(sv_b, u_temp, i_temp, g_temp, h_temp);
-
-		lat_man = asin(sin(u_temp)*sin(i_temp));
-		double DELTA = pRTCC->GLQATN(sin(u_temp)*cos(i_temp), cos(u_temp));
-		lng_man = h_temp + DELTA;
-		NormalizeAngle(lng_man);
-	}
-	if (lng_man > PI)
-	{
-		lng_man -= PI2;
-	}
+	GetLatLongHeight(sv_b, H_man, lat_man, lng_man);
 
 	//Flight controller input
 	if (ManeuverType == 0)
@@ -1333,5 +1336,31 @@ void RTCCGeneralPurposeManeuverProcessor::OptimumApseLineShift(double dang)
 	{
 		ErrorIndicator = 4;
 		return;
+	}
+}
+
+void RTCCGeneralPurposeManeuverProcessor::GetLatLongHeight(const AEGDataBlock &sv, double &alt, double &lat, double &lng)
+{
+	alt = sv.R - R_E;
+	if (aeg.Header.AEGInd == BODY_EARTH)
+	{
+		lat = asin(sin(sv.U)*sin(sv.coe_osc.i));
+		double DELTA = pRTCC->GLQATN(sin(sv.U)*cos(sv.coe_osc.i), cos(sv.U));
+		lng = sv.coe_osc.h + DELTA - pRTCC->SystemParameters.MCLAMD - OrbMech::w_Earth*sv.TS;
+		NormalizeAngle(lng);
+	}
+	else
+	{
+		double i_temp, g_temp, h_temp, u_temp;
+		GetSelenographicElements(sv, u_temp, i_temp, g_temp, h_temp);
+
+		lat = asin(sin(u_temp)*sin(i_temp));
+		double DELTA = pRTCC->GLQATN(sin(u_temp)*cos(i_temp), cos(u_temp));
+		lng = h_temp + DELTA;
+		NormalizeAngle(lng);
+	}
+	if (lng > PI)
+	{
+		lng -= PI2;
 	}
 }
