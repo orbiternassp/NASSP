@@ -2404,10 +2404,10 @@ void LEM_RadarTape::Timestep(double simdt) {
 			{
 				setRange(lem->LR.GetAltitude());
 			}
-			/*else
+			else
 			{
 				setRange(0);
-			}*/
+			}
 			if (lem->LR.IsVelocityDataGood())
 			{
 				setRate(lem->LR.GetAltitudeRate());

@@ -15810,6 +15810,8 @@ int RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 
 	int NPHASE = 1;
 
+	T = DT = 0.0;
+
 	if (MPTIsRCSThruster(in.Thruster))
 	{
 		in.DETU = 0.0;
@@ -16053,7 +16055,8 @@ RTCC_PMMMPT_9_A:
 	{
 		man.FrozenManeuverInd = true;
 	}
-	if (in.IterationFlag)
+	//Go to iterate logic if it was requested and the predicted main engine burn time is at least 10 seconds
+	if (in.IterationFlag && T - DT > 10.0)
 	{
 		goto RTCC_PMMMPT_12_A;
 	}
