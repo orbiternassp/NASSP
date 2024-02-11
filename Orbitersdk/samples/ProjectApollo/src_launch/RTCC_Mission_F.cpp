@@ -544,7 +544,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
-		PZREAP.RRBIAS = 1285.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -846,7 +845,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
 		entopt.vessel = calcParams.src;
-		PZREAP.RRBIAS = 1285.0;
 		PZREAP.VRMAX = 37500.0;
 
 		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
@@ -1126,7 +1124,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.vessel = calcParams.src;
-		PZREAP.RRBIAS = 1285.0;
 		//It gets close to the nominal 36232 ft/s constraint, so relax it a little bit
 		PZREAP.VRMAX = 36500.0;
 
@@ -2179,7 +2176,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (scrubbed)
 		{
 			//Entry prediction without maneuver
-			EntryUpdateCalc(sv, 1285.0, true, &res);
+			EntryUpdateCalc(sv, PZREAP.RRBIAS, true, &res);
 
 			res.dV_LVLH = _V(0, 0, 0);
 			res.P30TIG = entopt.TIGguess;
