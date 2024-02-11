@@ -643,7 +643,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
-		PZREAP.RRBIAS = 1285.0;
 		entopt.t_zmin = 145.0*3600.0;
 
 		//Temporarily set the minimum pericynthion height constraint to 40 NM. This was apparently done on the actual mission as well to make the desired solution converge
@@ -955,7 +954,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.vessel = calcParams.src;
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
-		PZREAP.RRBIAS = 1285.0;
 		PZREAP.VRMAX = 37500.0;
 
 		RTEMoonTargeting(&entopt, &res);
@@ -1439,7 +1437,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.vessel = calcParams.src;
-		PZREAP.RRBIAS = 1285.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -2518,7 +2515,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (scrubbed)
 			{
 				//Entry prediction without maneuver
-				EntryUpdateCalc(sv, 1285.0, true, &res);
+				EntryUpdateCalc(sv, PZREAP.RRBIAS, true, &res);
 
 				res.dV_LVLH = _V(0, 0, 0);
 				res.P30TIG = entopt.TIGguess;
