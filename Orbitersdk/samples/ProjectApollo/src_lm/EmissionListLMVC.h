@@ -44,7 +44,8 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_WindowsRim,
 	VC_MAT_Protective_Net_t,
 	VC_MAT_COASglass,
-	VC_MAT_COASglass2
+	VC_MAT_COASglass2,
+	VC_MAT_GlareShields
 };
 
 DWORD IntegralLights_LMVC[] = {
