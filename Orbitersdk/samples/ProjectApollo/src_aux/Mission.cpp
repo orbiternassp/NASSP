@@ -314,7 +314,7 @@ namespace mission {
 		return true;
 	}
 
-	const std::string& Mission::GetMissionFileName(void) const
+	const std::string& Mission::GetMissionName(void) const
 	{
 		return strFileName;
 	}

@@ -47,6 +47,7 @@
 #include "LVDC.h"
 #include "iu.h"
 #include "nassputils.h"
+#include "Mission.h"
 
 using namespace nassp;
 
@@ -691,20 +692,23 @@ void MCC::TimeStep(double simdt){
 				case 17:
 					MissionType = MTP_J3;
 					break;
-				case 18: //For now
-					MissionType = MTP_SKYLAB;
-					setState(MST_SL_PRELAUNCH);
-					break;
-				default:
-					// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
-					if (cm->SaturnType == SAT_SATURNV) {
-						MissionType = MTP_H1;
+				default: // No mission number, look for name
+					if (cm->pMission->GetMissionName() == "SL-2")
+					{
+						MissionType = MTP_SKYLAB;
+						setState(MST_SL_PRELAUNCH);
 					}
-					if (cm->SaturnType == SAT_SATURN1B) {
-						MissionType = MTP_C;
+					else
+					{
+						// If the ApolloNo is not on this list, you are expected to provide a mission type in the scenario file, which will override the default.
+						if (cm->SaturnType == SAT_SATURNV) {
+							MissionType = MTP_H1;
+						}
+						if (cm->SaturnType == SAT_SATURN1B) {
+							MissionType = MTP_C;
+						}
 					}
 					break;
-
 				}
 			}
 			else if (lm)

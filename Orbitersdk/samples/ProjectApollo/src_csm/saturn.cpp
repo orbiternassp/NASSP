@@ -1518,7 +1518,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (ApolloNo == 0)
 	{
 		//New system, save mission name
-		strcpy(str, pMission->GetMissionFileName().c_str());
+		strcpy(str, pMission->GetMissionName().c_str());
 		oapiWriteScenario_string(scn, "MISSION", str);
 	}
 	else

@@ -2842,8 +2842,6 @@ void LVDC1B::OrbitalGuidanceManeuverProcessor(bool timefordcs)
 			ModeCode27[MC27_DCSSpecialManeuverAImplemented] = false;
 			ModeCode27[MC27_DCSSpecialManeuverBImplemented] = false;
 
-			GOMTYP.reset();
-
 			//Restart the currently desired scheduled maneuver
 			if (OrbitManeuverCounter > 0)
 			{
@@ -2882,14 +2880,19 @@ void LVDC1B::OrbitalGuidanceManeuverProcessor(bool timefordcs)
 
 			//TBD		
 		}
+
+		GOMTYP.reset();
 	}
 	else
 	{
-		//Save commanded maneuver type
-		FMANT = TYP_M[OrbitManeuverCounter];
-		//Reset maneuver flags
-		FSCAH = false;
-		FSCIC = false;
+		//Save commanded maneuver type if it is a valid one
+		if (TYP_M[OrbitManeuverCounter] != 9)
+		{
+			FMANT = TYP_M[OrbitManeuverCounter];
+			//Reset maneuver flags
+			FSCAH = false;
+			FSCIC = false;
+		}
 
 		//Chi freeze
 		if (TYP_M[OrbitManeuverCounter] == 0)

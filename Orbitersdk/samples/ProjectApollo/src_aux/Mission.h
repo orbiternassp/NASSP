@@ -45,7 +45,7 @@ namespace mission
 		virtual bool LoadMission(const int iMission);
 		virtual bool LoadMission(const std::string& strMission);
 
-		const std::string& GetMissionFileName(void) const;
+		const virtual std::string& GetMissionName(void) const;
 
 		//1 = Block I and pre Apollo 13, 2 = Apollo 13 and later
 		virtual int GetSMJCVersion() const;
