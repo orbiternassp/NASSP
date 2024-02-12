@@ -1585,7 +1585,7 @@ gtupdate:	// Target of jump from further down
 		}
 
 		// Debug if we're launched
-		if(LVDC_Timebase > -1){
+		/*if(LVDC_Timebase > -1){
 			if(LVDC_Timebase < 4){
 				sprintf(oapiDebugString(),"TB%d+%f | T1 = %f | T2 = %f | Tt_T = %f | ERR %f %f %f | V = %f R = %f",
 					LVDC_Timebase,LVDC_TB_ETime,
@@ -1599,7 +1599,7 @@ gtupdate:	// Target of jump from further down
 					CommandedAttitude.x*DEG,CommandedAttitude.y*DEG,CommandedAttitude.z*DEG,
 					AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG, V,R/1000);
 			}
-		}
+		}*/
 
 		if (poweredflight)
 		{
