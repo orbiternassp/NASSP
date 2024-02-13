@@ -85,11 +85,6 @@ public:
 
 protected:
 
-	VECTOR3 RelPos;
-
-	OBJHANDLE hSoyuz;
-	OBJHANDLE hAstpDM;
-
 	void SetupMeshes();
 	void SetFirstStage ();
 	void SetFirstStageMeshes(double offset);

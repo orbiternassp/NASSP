@@ -680,7 +680,6 @@ void Saturn::initSaturn()
 	S1bPanel = false;
 
 	LEM_DISPLAY=false;
-	ASTPMission = false;
 
 	AutoSlow = false;
 	Crewed = true;

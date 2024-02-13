@@ -3936,8 +3936,6 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 
-	bool ASTPMission;
-
 	double DockAngle;
 
 	double 	Offset1st;

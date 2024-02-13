@@ -70,7 +70,6 @@ GDIParams g_Param;
 
 static int refcount = 0;
 static MESHHANDLE hCOAStarget;
-static MESHHANDLE hastp;
 
 Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
 	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk)
@@ -110,15 +109,7 @@ void Saturn1b::initSaturn1b()
 	initSaturn();
 
 	SaturnType = SAT_SATURN1B;
-	RelPos = _V(0.0,0.0,0.0);
-	hSoyuz = 0;
-	hAstpDM = 0;
 	Burned = false;
-
-	if (strcmp(GetName(), "AS-211")==0)
-	{
-		ASTPMission = true;
-	}
 
 	//
 	// Apollo 7 ISP and thrust values.
@@ -228,13 +219,10 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hs4b4=oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-SM");
 	hSMJet = oapiGetVesselByName(VName);
-	GetApolloName(VName); strcat (VName, "-ASTPDM");
-	hAstpDM = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-DCKPRB");
 	hPROBE = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-EVA");
 	hEVA = oapiGetVesselByName(VName);
-	hSoyuz = oapiGetVesselByName("SOYUZ19");
 	GetApolloName(VName); strcat (VName, "-INTSTG");
 	hintstg = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-APEX");

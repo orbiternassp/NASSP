@@ -40,6 +40,7 @@ AS-206:ProjectApollo/Saturn1B
   STAGESTATUS 0
   DOCKSTATE 0
   ATTACHSTATE 63
+  T1V 1021150.0
   TCP 30.0
   MISSNTIME -14400
   LANG English
@@ -49,6 +50,7 @@ AS-206:ProjectApollo/Saturn1B
 	OPX 134.300
   ASCP_END
   LVDC_BEGIN
+    LVDC_FSPFileName Config\ProjectApollo\AS-206 Flight Sequence Program.txt
     LVDC_Ax[0] 490.931
 	LVDC_Ax[1] -20.131
 	LVDC_Ax[2] -1.2501
