@@ -24,9 +24,9 @@
 
 #define ORBITER_MODULE
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
@@ -41,7 +41,7 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "saturn1b.h"
 #include "s1b.h"
@@ -282,8 +282,14 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 
 		if (sat) sat->ActivatePrelaunchVenting();
 
-		///GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
-		if (MissionTime >= -(17.0 + oapiGetSimStep()))
+		//Enforce 1.0x time acceleration for GRR
+		if (MissionTime >= -30.0 && oapiGetTimeAcceleration() > 1.0)
+		{
+			oapiSetTimeAcceleration(1.0);
+		}
+
+		//Send Prepare to Launch signal and then at T-17 seconds the GRR signal
+		if (MissionTime >= -17.0)
 		{
 			IuESE->SetGuidanceReferenceRelease(true);
 		}
@@ -416,7 +422,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 				}
 			}
 
-			if (bCommit == false && MissionTime >= (-0.05 - simdt))
+			if (bCommit == false && MissionTime >= -0.05)
 			{
 				if (Commit())
 				{
@@ -429,6 +435,9 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 
 				if (bCommit)
 				{
+					// Activate liftoff circuit
+					IuUmb->SetEDSLiftoffEnableA();
+					IuUmb->SetEDSLiftoffEnableB();
 					// Disconnect Umbilicals
 					IuUmb->Disconnect();
 					SCMUmb->Disconnect();
@@ -494,6 +503,24 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 	{
 		IuESE->Timestep(MissionTime, simdt);
 		SIBESE->Timestep();
+	}
+
+	// This code forces the vehicle in a landed state, ensuring any thruster firing will not move the vehicle until liftoff. From here: https://www.orbiter-forum.com/threads/how-to-keep-vessels-landed-for-good-in-orbiter-2016-walkthrough.39702/
+	if (sat) {
+		if (sat->GetStage() < LAUNCH_STAGE_ONE) {
+			OBJHANDLE h_Planet;
+			h_Planet = oapiGetGbodyByName("Earth");
+			VESSELSTATUS2 vs;
+			memset(&vs, 0, sizeof(vs));
+			vs.version = 2;
+			vs.rbody = h_Planet;
+			vs.status = 1;
+			vs.arot.x = 10; // <----- Undocumented feature "magic value" to land on touchdown points !! IMPORTANT !! It has to be 10, no more, no less !
+			vs.surf_lng = -80.5612465 * RAD;
+			vs.surf_lat = 28.5217969 * RAD;
+			vs.surf_hdg = -80.0 * RAD;
+			sat->DefSetStateEx(&vs);
+		}
 	}
 }
 
@@ -862,9 +889,9 @@ bool LC34::ESEGetQBallSimulateCmd()
 	return IuESE->GetQBallSimulateCmd();
 }
 
-bool LC34::ESEGetSIBThrustOKSimulate(int eng, int n)
+bool LC34::ESEGetSIThrustOKSimulate(int eng, int n)
 {
-	return SIBESE->GetSIBThrustOKSimulate(eng, n);
+	return SIBESE->GetSIThrustOKSimulate(eng, n);
 }
 
 void LC34::SLCCCheckDiscreteInput(RCA110A *c)

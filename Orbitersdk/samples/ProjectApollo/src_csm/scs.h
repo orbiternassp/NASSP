@@ -100,6 +100,8 @@ protected:
 	Saturn *sat;                                                             // Pointer to ship we're attached to
 	bool powered;                                                            // Data valid flag.
 	int number;																 // BMAG 1 or 2
+
+	static const double GYRO_OUTPUT_LIMIT;
 };
 
 
@@ -208,12 +210,12 @@ public: // We use these inside a timestep, so everything is public to make data 
 	ASCP(Sound &clicksound);									   // Cons
 	void Init(Saturn *vessel);									   // Initialization
 	void TimeStep(double simdt);						           // Timestep
-	bool PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits);     // Update panel image
-	bool PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits);    // Update panel image
-	bool PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits);      // Update panel image
-	void PaintRoll(SURFHANDLE surf, SURFHANDLE wheel);
-	void PaintPitch(SURFHANDLE surf, SURFHANDLE wheel);
-	void PaintYaw(SURFHANDLE surf, SURFHANDLE wheel);
+	bool PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);     // Update panel image
+	bool PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);    // Update panel image
+	bool PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);      // Update panel image
+	void PaintRoll(SURFHANDLE surf, SURFHANDLE wheel, int xTexMul = 1);
+	void PaintPitch(SURFHANDLE surf, SURFHANDLE wheel, int xTexMul = 1);
+	void PaintYaw(SURFHANDLE surf, SURFHANDLE wheel, int xTexMul = 1);
 	bool RollDisplayClicked();									   // Clicked
 	bool PitchDisplayClicked();									   // Clicked
 	bool YawDisplayClicked();									   // Clicked
@@ -249,7 +251,7 @@ public: // We use these inside a timestep, so everything is public to make data 
 	Sound &ClickSound;
 
 protected:
-	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value);
+	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value, int xTexMul = 1);
 	double CalcRollEulerAttitudeSetError();
 	double CalcPitchEulerAttitudeSetError();
 	double CalcYawEulerAttitudeSetError();
@@ -542,6 +544,8 @@ protected:
 	DelayOffTimer engineOffDelay;
 
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
+	bool ThrusterDemandLockup[20];									// Set true when the CMC wants to fire a thruster. Reset in the timestep.
+																	// Causes thruster to fire even if the CMC commanded it off on the same timestep as it was commanded on.
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
 	bool SCSLatchUpA, SCSLatchUpB;
 	bool SPSEnableA, SPSEnableB;
@@ -710,6 +714,12 @@ protected:
 	bool T3QS43;
 	//Pitch Pseudo Rate Disable
 	bool T3QS44;
+
+	//Constants
+
+	//Attitude error limiter
+	static const double L4_upper;
+	static const double L4_lower;
 };
 
 class ServoAmplifierModule
@@ -826,8 +836,9 @@ public:
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
 	double GetdVRangeCounter() { return dVRangeCounter; };
-	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
-	POINT RSITriangle[3];
+	oapi::IVECTOR2 ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
+	oapi::IVECTOR2 ScribePntArrayVC[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
+	oapi::IVECTOR2 RSITriangle[3];
 	void SetRSIDeltaRotation(double dangle);
 	int ScribePntCnt;
 	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
@@ -851,7 +862,6 @@ protected:
 	bool IsDisplayPowered();
 	
 	void AccelerometerTimeStep(double simdt);
-	VECTOR3 GetGravityVector();
 	double xacc, xaccG, constG;
 	double vinert;
 
@@ -860,10 +870,6 @@ protected:
 	int GScribe; //pixels
 	double ScrollPosition; //fractional pixels
 	double MaxScrollPosition;
-	bool dVInitialized;
-	VECTOR3 lastWeight;
-	VECTOR3 lastGlobalVel;
-	double lastSimDT;
 	double dVRangeCounter;
 	double dVTestTime;
 

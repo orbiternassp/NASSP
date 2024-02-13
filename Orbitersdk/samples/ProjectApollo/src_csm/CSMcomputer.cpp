@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -34,12 +34,14 @@
 
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "toggleswitch.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "papi.h"
-#include "thread.h"
+#include "Mission.h"
+#include <thread>
+#include <mutex>
 
 CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) :
 	ApolloGuidance(s, display, im, sc, tc, p), dsky2(display2)
@@ -55,7 +57,7 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CD
 	LastOut6 = 0;
 	LastOut11 = 0;
 
-	thread.Resume ();
+	Start();
 }
 
 CSMcomputer::~CSMcomputer()
@@ -85,7 +87,6 @@ void CSMcomputer::SetMissionInfo(std::string AGCVersion, char *OtherVessel)
 void CSMcomputer::agcTimestep(double simt, double simdt)
 {
 	// Do single timesteps to maintain sync with telemetry engine
-	SingleTimestepPrep(simt, simdt);        // Setup
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt); 
 		sat->pcm.last_update = LastCycled;
@@ -111,7 +112,7 @@ void CSMcomputer::Run ()
 		{
 			timeStepEvent.Wait();
 			{
-				Lock lock(agcCycleMutex);
+				std::lock_guard<std::mutex> guard(agcCycleMutex);
 				agcTimestep(thread_simt,thread_simdt);
 			}
 		}
@@ -177,10 +178,12 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// Turn on EL display and CMC Light (DSKYWarn).
 			vagc.DskyChannel163 = 1;
 			SetOutputChannel(0163, 1);
-			// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
+			// Light OSCILLATOR FAILURE and VOLTAGE FAIL to signify power transient, and be forceful about it.
 			vagc.InputChannel[033] &= 037777;
 			OutputChannel[033] &= 037777;
-			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+			vagc.InputChannel[077] |= 040;
+			OutputChannel[077] |= 040;
+			// Also turn off STBY and RESTART light while power is off.
 			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 			vagc.RestartLight = 1;
@@ -191,7 +194,11 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// Reset last cycling time
 			LastCycled = 0;
 
-			// We should issue telemetry though.
+			// We should issue telemetry though. Careful with the first timestep
+			if (sat->pcm.last_update == 0)
+			{
+				sat->pcm.last_update = simt - simdt;
+			}
 			sat->pcm.TimeStep(simt);
 			return;
 		}
@@ -201,77 +208,24 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if(!PadLoaded) {
 
-			double latitude, longitude, radius, heading, TEPHEM0;
-
-			// init pad load
-			OurVessel->GetEquPos(longitude, latitude, radius);
-			oapiGetHeading(OurVessel->GetHandle(), &heading);
-
-			// set launch pad latitude
-			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
-			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
-
-			if (ProgramName == "Colossus237" || ProgramName == "Colossus249" || ProgramName == "Manche45R2")
-			{
-				// set launch pad longitude
-				if (longitude < 0) { longitude += TWO_PI; }
-				vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0272] = 0;
-				vagc.Erasable[2][0273] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				TEPHEM0 = 40038.;
-			}
-			else if (ProgramName == "Comanche055")	// Comanche 055
-			{
-				// set launch pad longitude
-				if (longitude < 0) { longitude += TWO_PI; }
-				vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0272] = 0;
-				vagc.Erasable[2][0273] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				TEPHEM0 = 40403.;
-			}
-			else if (ProgramName == "Artemis072NBY71")	//Artemis 072 for Apollo 14
-			{
-				// set launch pad longitude
-				if (longitude < 0) longitude += TWO_PI;
-				vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0136] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0133] = 0;
-				vagc.Erasable[2][0134] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				TEPHEM0 = 40768.;
-			}
-			else	//Artemis 072
-			{
-				// set launch pad longitude
-				if (longitude < 0) longitude += TWO_PI;
-				vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-				vagc.Erasable[2][0136] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-				// set launch pad altitude
-				//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
-				vagc.Erasable[2][0133] = 0;
-				vagc.Erasable[2][0134] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				TEPHEM0 = 41133.;
-			}
+			//Get time reference for TEPHEM
+			double TEPHEM0 = sat->pMission->GetTEPHEM0();
 
 			// Synchronize clock with launch time (TEPHEM)
-			double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
-				vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
-				vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+			double tephem;
+			if (ProgramName == "Skylark048") //Only Skylark has a different address
+			{
+				tephem = vagc.Erasable[AGC_BANK(01702)][AGC_ADDR(01702)] +
+					vagc.Erasable[AGC_BANK(01701)][AGC_ADDR(01701)] * pow((double) 2., (double) 14.) +
+					vagc.Erasable[AGC_BANK(01700)][AGC_ADDR(01700)] * pow((double) 2., (double) 28.);
+			}
+			else
+			{
+				tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] +
+					vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
+					vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+			}
+
 			tephem = (tephem / 8640000.) + TEPHEM0;
 			double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double)-28.);
 			vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
@@ -286,14 +240,14 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		if(sat->IsMultiThread && oapiGetTimeAcceleration() > 1.0)
 		{
-			
-			Lock lock(agcCycleMutex);
+			std::lock_guard<std::mutex> guard(agcCycleMutex);
 			thread_simt = simt;
 			thread_simdt = simdt;
 			timeStepEvent.Raise();
+		} else {
+			std::lock_guard<std::mutex> guard(agcCycleMutex);
+			agcTimestep(simt, simdt);
 		}
-		else
-			agcTimestep(simt,simdt);
 
 		//
 		// Check nonspherical gravity sources
@@ -583,6 +537,14 @@ VESSEL *CSMcomputer::GetLM()
 	return NULL;
 }
 
+void CSMcomputer::GetRadarData(int radarBits)
+{
+	if (radarBits == 4)
+	{
+		sat->vhfranging.GetRangeCMC();
+	}
+}
+
 
 //
 // CM Optics class code
@@ -646,19 +608,19 @@ void CMOptics::SystemTimestep(double simdt) {
 // Paint counters. The documentation is not clear if the displayed number is supposed to be decimal degrees or CDU counts.
 // The counters are mechanically connected to the telescope, so it is assumed to be decimal degrees.
 
-bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits){
+bool CMOptics::PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul){
 	int value = (int)(TeleShaft*100.0*DEG);
 	if (value < 0) { value += 36000; }
-	return PaintDisplay(surf, digits, value);
+	return PaintDisplay(surf, digits, value, TexMul);
 }
 
-bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits){
+bool CMOptics::PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul){
 	int value = (int)(TeleTrunion*100.0*DEG);
 	if (value < 0) { value += 36000; }
-	return PaintDisplay(surf, digits, value);
+	return PaintDisplay(surf, digits, value, TexMul);
 }
 
-bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
+bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value, int TexMul){
 	int srx, sry, digit[5];
 	int x=value;
 	digit[0] = (x%10);
@@ -672,24 +634,24 @@ bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
 		sry = 33;
 	else
 		sry = 22;
-	oapiBlt(surf, digits, 0, 0, srx, sry, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 0, 0, srx*TexMul, sry*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 
 	srx = 8 + (digit[3] * 25);
 	if (digit[4] || digit[3])
 		sry = 33;
 	else
 		sry = 22;
-	oapiBlt(surf, digits, 10, 0, srx, sry, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 10*TexMul, 0, srx*TexMul, sry*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 
 	srx = 8 + (digit[2] * 25);
-	oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 20*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	srx = 8 + (digit[1] * 25);
-	oapiBlt(surf, digits, 30, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 30*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	srx = 8 + (digit[0] * 25);
 	sry = (int)(digit[0] * 1.2);
-	oapiBlt(surf, digits, 40, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 40*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 
-	oapiColourFill(surf, oapiGetColour(255, 255, 255), 29, 5, 1, 2);
+	oapiColourFill(surf, oapiGetColour(255, 255, 255), 29*TexMul, 5*TexMul, 1*TexMul, 2*TexMul);
 	return true;
 }
 
@@ -820,7 +782,7 @@ void CMOptics::TimeStep(double simdt) {
 			}
 		}
 
-		if (sat->agc.GetOutputChannelBit(012, DisengageOpticsDAC) == false)
+		if (sat->agc.GetOutputChannelBit(012, DisengageOpticsDAC) == false && (sat->pMission->HasRateAidedOptics()) || sat->OpticsModeSwitch.IsUp())
 		{
 			//26mV per bit, 30.8 revolutions per second per volt, 1/3080 gear ratio (Shaft), 2/11780 gear ratio (Trunnion)
 			dShaft += 0.026*30.8*PI2*1.0 / 3080.0*simdt*(double)sat->scdu.GetErrorCounter();
@@ -870,7 +832,7 @@ void CMOptics::TimeStep(double simdt) {
 			TeleTrunionTarget = 0;
 			break;
 		case THREEPOSSWITCH_DOWN:		// OFFSET 25 DEG
-			TeleTrunionTarget = SextTrunion + 0.218166156; // Add 12.5 degrees to sextant angle
+			TeleTrunionTarget = SextTrunion + 25.0*RAD;
 			break;
 	}
 

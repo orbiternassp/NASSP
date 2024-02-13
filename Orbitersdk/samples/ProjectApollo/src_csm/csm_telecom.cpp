@@ -21,7 +21,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -31,15 +31,18 @@
 #include "resource.h"
 #include "nasspdefs.h"
 #include "nasspsound.h"
+#include "nassputils.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "LEM.h"
 #include "ioChannels.h"
 #include "tracer.h"
 #include "Mission.h"
-#include "RF_calc.h"
+#include "papi.h"
+
+using namespace nassp;
 
 // DS20060326 TELECOM OBJECTS
 
@@ -93,7 +96,7 @@ double SBandAntenna::dBm2SignalStrength(double dBm)
 USB::USB(){
 	sat = NULL;
 	ant = NULL;
-	fm_ena = 1; pa_ovr_1 = 1; pa_ovr_2 = 1;
+	fm_ena = 1;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
 	xpdr_sel = THREEPOSSWITCH_CENTER; // OFF
@@ -103,7 +106,7 @@ USB::USB(){
 void USB::Init(Saturn *vessel){
 	sat = vessel;
 	ant = &sat->omnib;
-	fm_ena = 1; pa_ovr_1 = 1; pa_ovr_2 = 1;
+	fm_ena = 1;
 	pa_mode_1 = 0; pa_timer_1 = 0;
 	pa_mode_2 = 0; pa_timer_2 = 0;
 	xpdr_sel = THREEPOSSWITCH_CENTER; // OFF
@@ -170,49 +173,32 @@ void USB::SystemTimestep(double simdt) {
 	if(fm_opr){
 		if(sat->TelcomGroup1Switch.Voltage() > 100){ sat->TelcomGroup1Switch.DrawPower(6.7); }
 	}
+
+	//Power logic. 0 = off, 1 = low, 2 = high
+	int papwrlogic = PAPowerLogic();
+
 	// S-Band Power Amplifier #1
-	if (pa_ovr_1 > 0) {
-		// Enabled
-		if (pa_ovr_1 > 1) {
-			// TLM forced on
-			if (pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
-		} else {
-			// Normal
-			if (sat->SBandNormalPwrAmpl1Switch.IsUp()) {
-				if (!sat->SBandNormalPwrAmpl2Switch.IsCenter()) {
-					// Turned on
-					if (pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
-				} else {
-					// Turned off
-					if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
-				}
-			}
+	if (sat->SBandNormalPwrAmpl1Switch.IsUp()) {
+		if (papwrlogic > 0) {
+			// Turned on
+			if (pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24) { pa_mode_1 = 2; } // Start warming up
 		}
-	} else {
-		// TLM commanded off
-		if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
+		else {
+			// Turned off
+			if (pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24) { pa_mode_1 = 1; } // Start shutting down
+		}
 	}
+
 	// S-Band Power Amplifier #2
-	if (pa_ovr_2 > 0) { 
-		// Enabled
-		if (pa_ovr_2 > 1) {
-			// TLM forced on
-			if (pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
-		} else {
-			// Normal
-			if (sat->SBandNormalPwrAmpl1Switch.IsDown()) {
-				if (!sat->SBandNormalPwrAmpl2Switch.IsCenter()) {
-					// Turned on
-					if(pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
-				} else {
-					// Turned off
-					if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
-				}
-			}
+	if (sat->SBandNormalPwrAmpl1Switch.IsDown()) {
+		if (papwrlogic > 0) {
+			// Turned on
+			if (pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24) { pa_mode_2 = 2; } // Start warming up
 		}
-	} else {
-		// TLM commanded off
-		if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
+		else {
+			// Turned off
+			if (pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24) { pa_mode_2 = 1; } // Start shutting down
+		}
 	}
 
 	// Power Amplifier #1 
@@ -266,27 +252,21 @@ void USB::TimeStep(double simt) {
 	/// \todo Move all DrawPower's to SystemTimestep
 
 	//S-Band Antenna switches
-	if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_UP)
+	switch (SBandAntennaSelectionLogic())
 	{
-		if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_UP)
-		{
-			ant = &sat->omnia;
-		}
-		else if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_CENTER)
-		{
-			ant = &sat->omnib;
-		}
-		else if (sat->SBandAntennaSwitch1.GetState() == THREEPOSSWITCH_DOWN)
-		{
-			ant = &sat->omnic;
-		}
-	}
-	else if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_CENTER)
-	{
+	case 0:
+		ant = &sat->omnia;
+		break;
+	case 1:
+		ant = &sat->omnib;
+		break;
+	case 2:
+		ant = &sat->omnic;
+		break;
+	case 3:
 		ant = &sat->omnid;
-	}
-	else if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_DOWN)
-	{
+		break;
+	default:
 		if (sat->GetStage() == CSM_LEM_STAGE)
 		{
 			ant = &sat->hga;
@@ -295,7 +275,11 @@ void USB::TimeStep(double simt) {
 		{
 			ant = NULL;
 		}
+		break;
 	}
+
+	//Power logic. 0 = off, 1 = low, 2 = high
+	int papwrlogic = PAPowerLogic();
 	 
 	// Power Amplifier #1 
 	switch(pa_mode_1){
@@ -343,11 +327,11 @@ void USB::TimeStep(double simt) {
 			}
 			if(simt > (pa_timer_1+90)){
 				// Tubes are warm and we're ready to operate.
-				if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
+				if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 1){
 					// Change to low power
 					pa_mode_1 = 3; pa_timer_1 = 0;
 				}
-				if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
+				if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 2){
 					// Change to high power
 					pa_mode_1 = 4; pa_timer_1 = 0;
 				}
@@ -363,11 +347,11 @@ void USB::TimeStep(double simt) {
 					pa_mode_1 = 1; break;
 				}
 			}
-			if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
+			if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 2){
 				// Change to high power
 				pa_mode_1 = 4;
 			}
-			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
+			if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 0){
 				// Change to warm-up
 				pa_mode_1 = 2; pa_timer_1 = (simt-95);
 			}
@@ -382,11 +366,11 @@ void USB::TimeStep(double simt) {
 					pa_mode_1 = 1; break;
 				}
 			}
-			if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
+			if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic== 1){
 				// Change to low power
 				pa_mode_1 = 3;
 			}
-			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl1Switch.IsUp() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
+			if(sat->SBandNormalPwrAmpl1Switch.IsUp() && papwrlogic == 0){
 				// Change to warm-up
 				pa_mode_1 = 2; pa_timer_1 = (simt-95);
 			}
@@ -438,11 +422,11 @@ void USB::TimeStep(double simt) {
 			}
 			if(simt > (pa_timer_2+90)){
 				// Tubes are warm and we're ready to operate.
-				if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsDown())){
+				if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 1){
 					// Change to low power
 					pa_mode_2 = 3; pa_timer_2 = 0;
 				}
-				if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
+				if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 2){
 					// Change to high power
 					pa_mode_2 = 4; pa_timer_2 = 0;
 				}
@@ -458,11 +442,11 @@ void USB::TimeStep(double simt) {
 					pa_mode_2 = 1; break;
 				}
 			}
-			if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsUp())){
+			if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 2){
 				// Change to high power
 				pa_mode_2 = 4;
 			}
-			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
+			if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 0){
 				// Change to warm-up
 				pa_mode_2 = 2; pa_timer_2 = (simt-95);
 			}
@@ -477,11 +461,11 @@ void USB::TimeStep(double simt) {
 					pa_mode_2 = 1; break;
 				}
 			}
-			if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter())){
+			if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 1){
 				// Change to low power
 				pa_mode_2 = 3;
 			}
-			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl1Switch.IsDown() && sat->SBandNormalPwrAmpl2Switch.IsCenter()){
+			if(sat->SBandNormalPwrAmpl1Switch.IsDown() && papwrlogic == 0){
 				// Change to warm-up
 				pa_mode_2 = 2; pa_timer_2 = (simt-95);
 			}
@@ -524,15 +508,69 @@ void USB::TimeStep(double simt) {
 	}
 
 	//sprintf(oapiDebugString(), "rcvr_agc_voltage %lf", rcvr_agc_voltage);
-	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
+	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d papwrlogic %d", pa_mode_1, pa_mode_2, papwrlogic);
 }
 
+int USB::PAPowerLogic()
+{
+	//High
+	if (sat->SBandNormalPwrAmpl2Switch.IsUp() && !sat->udl.GetSBandPALogic1() && !sat->udl.GetSBandPALogic2()) return 2;
+	if (!sat->udl.GetSBandPALogic1() && sat->udl.GetSBandPALogic2()) return 2;
+	//Low
+	if (sat->SBandNormalPwrAmpl2Switch.IsDown() && !sat->udl.GetSBandPALogic1() && !sat->udl.GetSBandPALogic2()) return 1;
+	if (sat->udl.GetSBandPALogic1() && sat->udl.GetSBandPALogic2()) return 1;
+	//Off
+	return 0;
+}
+
+int USB::SBandAntennaSelectionLogic()
+{
+	bool pwr;
+	if (sat->SBandNormalXPDRSwitch.IsUp() & sat->SBandPWRAmpl2FLTBusCB.IsPowered())
+	{
+		pwr = true;
+	}
+	else if (sat->SBandNormalXPDRSwitch.IsDown() && sat->SBandPWRAmpl1FLTBusCB.IsPowered())
+	{
+		pwr = true;
+	}
+	else
+	{
+		pwr = false;
+	}
+
+	//Defaults to HGA
+	if (pwr == false) return 4;
+
+	//Antenna D
+	if (sat->SBandAntennaSwitch2.IsCenter() || sat->udl.GetAntennaSelect())
+	{
+		return 3;
+	}
+	//HGA
+	if (sat->SBandAntennaSwitch2.IsDown())
+	{
+		return 4;
+	}
+	//Antenna A
+	if (sat->SBandAntennaSwitch1.IsUp())
+	{
+		return 0;
+	}
+	//Antenna B
+	if (sat->SBandAntennaSwitch1.IsCenter())
+	{
+		return 1;
+	}
+	//Else, Antenna C
+	return 2;
+}
 
 void USB::LoadState(char *line) {
 	int i;
 
-	sscanf(line + 12, "%i %i %i %i %i %lf %lf %i %i", &fm_ena, &xpdr_sel, &i, 
-		&pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2, &pa_ovr_1, &pa_ovr_2);
+	sscanf(line + 12, "%i %i %i %i %i %lf %lf", &fm_ena, &xpdr_sel, &i, 
+		&pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2);
 	fm_opr  = (i != 0);
 }
 
@@ -540,8 +578,8 @@ void USB::LoadState(char *line) {
 void USB::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%i %i %i %i %i %lf %lf %i %i", fm_ena, xpdr_sel, (fm_opr ? 1 : 0), 
-		pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2, pa_ovr_1, pa_ovr_2);
+	sprintf(buffer, "%i %i %i %i %i %lf %lf", fm_ena, xpdr_sel, (fm_opr ? 1 : 0), 
+		pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2);
 
 	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
 }
@@ -563,6 +601,7 @@ HGA::HGA(){
 	
 	scanlimit = false;
 	scanlimitwarn = false;
+	DriveToReacqSetPoint = false;
 
 	for (int i = 0;i < 0;i++)
 	{
@@ -596,15 +635,13 @@ void HGA::Init(Saturn *vessel){
 	SignalStrength = 0;
 	scanlimit = false;
 	scanlimitwarn = false;
-	ModeSwitchTimer = 0;
+	ModeSwitchTimer = 0.0;
 	AutoTrackingMode = false;
 	RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 
 	HGAFrequency = 2119; //MHz. Should this get set somewhere else?
 	HGAWavelength = C0 / (HGAFrequency * 1000000); //meters
-	Gain85ft = pow(10,(50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
-	Power85ft = 20000; //watts
 }
 
 bool HGA::IsPowered()
@@ -718,7 +755,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 		return;
 	}
-	
+
 	double gain;
 	double AzimuthErrorSignal, ElevationErrorSignal;
 	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
@@ -744,19 +781,19 @@ void HGA::TimeStep(double simt, double simdt)
 		AzmuthTrackErrorDeg = 90 * DEG;
 	}
 
-	TrackErrorSumNorm = sqrt(AzimuthErrorSignalNorm*AzimuthErrorSignalNorm + ElevationErrorSignalNorm*ElevationErrorSignalNorm);
+	TrackErrorSumNorm = sqrt(AzimuthErrorSignalNorm*AzimuthErrorSignalNorm + ElevationErrorSignalNorm * ElevationErrorSignalNorm);
 
 	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
 
 	const double TrkngCtrlGain = 5.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
-	const double ServoFeedbackGain = 3.2; //this works too...
-	const double BeamSwitchingTrkErThreshhold = 0.001; 
-	const double BeamSwitchingTime = 0.1;
+	const double ServoFeedbackGain = 3.2E-2; //this works too...
+	const double BeamSwitchingTrkErThreshhold = 0.005;
+	const double BeamSwitchingTime = 0.5;
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
 
 	//this block handels mode selection based on combinations of mode and beam width switches and the signal strength scanlimit
-	if(sat->GHATrackSwitch.IsCenter()) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
+	if (sat->GHATrackSwitch.IsCenter()) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
 	{
 		AutoTrackingMode = false;
 		RcvBeamWidthSelect = 0;
@@ -799,14 +836,12 @@ void HGA::TimeStep(double simt, double simdt)
 			ModeSwitchTimer = simt + BeamSwitchingTime;
 		}
 	}
-	else
+	else // reacq mode selected
 	{
-		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscilates between manual and auto and won't acquire. 
-									//It get's set to manual later if we actually have no signal
 
 		if (ModeSwitchTimer < simt)
 		{
-			if ((SignalStrength > 0.0) && (scanlimitwarn == false) && (scanlimit == false)) //
+			if ((SignalStrength > 0.0) && (scanlimitwarn == false) && (scanlimit == false) && (DriveToReacqSetPoint == false)) //
 			{
 				AutoTrackingMode = true; //if it somehow wasn't on...
 				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold)) //acquire mode in auto
@@ -814,7 +849,7 @@ void HGA::TimeStep(double simt, double simdt)
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
 				}
-				
+
 				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto wide
 				{
 					RcvBeamWidthSelect = 1;
@@ -831,7 +866,7 @@ void HGA::TimeStep(double simt, double simdt)
 					XmtBeamWidthSelect = 3;
 				}
 			}
-			else if ((SignalStrength > 0.0) && (scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
+			else if ((SignalStrength > 0.0) && (scanlimitwarn == true) && (scanlimit == false) && (DriveToReacqSetPoint == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
 			{
 				AutoTrackingMode = true;
 				RcvBeamWidthSelect = 1;
@@ -842,11 +877,15 @@ void HGA::TimeStep(double simt, double simdt)
 				AutoTrackingMode = false;
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
+
+				DriveToReacqSetPoint = true;
 			}
 			ModeSwitchTimer = simt + BeamSwitchingTime;
 		}
-		
+
 	}
+
+	double HGATrkTimeFactor = exp(-simdt);
 
 	//select control mode for high gain antenna 
 	if (AutoTrackingMode == false) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
@@ -854,6 +893,10 @@ void HGA::TimeStep(double simt, double simdt)
 		double PitchCmd, YawCmd;
 		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*15.0 + 90.0;
 		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*15.0;
+
+		if (abs((YawRes * DEG) - YawCmd) < 1.0 && abs((PitchRes * DEG) - PitchCmd) < 1.0) {
+			DriveToReacqSetPoint = false;
+		}
 
 		//Command Resolver
 		VECTOR3 U_RB;
@@ -864,31 +907,34 @@ void HGA::TimeStep(double simt, double simdt)
 		//sprintf(oapiDebugString(), "PitchCmd: %lf° YawCmd: %lf° AAxisCmd: %lf° CAxisCmd: %lf°", PitchCmd, YawCmd, AAxisCmd*DEG, CAxisCmd*DEG);
 	}
 	else if (AutoTrackingMode == true) //this auto-tracking is used in both the AUTO and the REAQC modes. Beamwidth switching, LOS/AOS logic and scanlimit(warn) log are handled in a seperate block of code 
-	{ 
+	{
 		//auto control, added by n72.75 204020
 		if (Gamma > 45 * RAD)	//mode select A-C servo control
 		{
+
+
+
 			if (AzmuthTrackErrorDeg > 3.0)
 			{
-				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
-				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 			}
 			else
 			{
-				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt);
-				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
-				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor) - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 			}
 		}
 		else					//mode select B-C servo control
 		{
 			if (!WhiparoundIsSet)
 			{
-				AAxisCmd = Alpha - (Beta*ServoFeedbackGain*simdt);
+				AAxisCmd = Alpha - (Beta*ServoFeedbackGain*HGATrkTimeFactor);
 			}
-			BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-			CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+			BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*HGATrkTimeFactor);
+			CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*HGATrkTimeFactor);
 
 			if ((Gamma <= -1.0 * RAD) && !WhiparoundIsSet)
 			{
@@ -964,27 +1010,37 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_CSM;
+	VECTOR3 U_RP, pos, U_R, U_Earth, U_CSM;
 	MATRIX3 Rot;
-	double relang, beamwidth, Moonrelang, EarthSignalDist, CSMrelang;
+	double relang, beamwidth, EarthSignalDist, CSMrelang;
 
-	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
 
-	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	//Global position of the spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
-	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
-	
+
+	//Get the gain, power and global position of the transmitter
+	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
+	if (MCCV) {
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetCM, &GroundTransmitterRFProperties);
+	}
+
+	/*sprintf(oapiDebugString(), "%lf %lf <%lf %lf %lf>", GroundTransmitterRFProperties.Gain, GroundTransmitterRFProperties.Power, GroundTransmitterRFProperties.GlobalPosition.x,
+		GroundTransmitterRFProperties.GlobalPosition.y,
+		GroundTransmitterRFProperties.GlobalPosition.z);*/
+
 	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
-	
-	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
-	
+
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition); //distance from the transmitting station in meters
+
+	//sprintf(oapiDebugString(), "<%lf %lf %lf> <%lf %lf %lf>", pos.x, pos.y, pos.z, R_E.x, R_E.y, R_E.z);
+
 	int RcvBeamWidthMode = 1;
 
-	if(RcvBeamWidthSelect == 0)
+	if (RcvBeamWidthSelect == 0)
 		if (sat->GHABeamSwitch.IsUp())
 		{
 			RcvBeamWidthMode = 1;
@@ -1018,68 +1074,58 @@ void HGA::TimeStep(double simt, double simdt)
 		gain = pow(10, (23.0 / 10)); //dB to ratio
 	}
 
-	RecvdHGAPower = Power85ft*Gain85ft*gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
-	RecvdHGAPower_dBm = 10*log10(1000*RecvdHGAPower);
+	RecvdHGAPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain *gain*pow(HGAWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdHGAPower_dBm = RFCALC_W2dBm(RecvdHGAPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdHGAPower_dBm);
 
 	//sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
 
 	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
 
-	//Moon in the way
-	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+	//Unit vector pointing from CSM to Earth, global frame
+	U_Earth = unit(GroundTransmitterRFProperties.GlobalPosition - pos);
+	//Unit vector of CSM X-axis (Z-axis in Orbiter), global frame
+	U_CSM = mul(Rot, _V(0, 0, 1));
+	//Angle between CSM X-axis and Earth
+	CSMrelang = acos(dotp(U_CSM, U_Earth));
 
-	const VECTOR3 boomAxis = {-0.402019, -0.915631, 0.00 };
-	U_CSM = unit(mul(Rot, unit(boomAxis)));
-
-	CSMrelang = acos(dotp(U_CSM, unit(R_E- pos)));
-	
-
-	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
+	for (int i = 0; i < 4; i++)
 	{
-		SignalStrength = 0.0;
-		for (int i = 0;i < 4;i++)
+		//Unit vector of antenna in vessel's local frame
+		U_RP = ABCAndVectorToBody(Alpha, Beta, Gamma, U_Horn[i]);
+		//Convert from Apollo CSM coordinate system to left-handed Orbiter coordinate system
+		U_RP = _V(U_RP.y, -U_RP.z, U_RP.x);
+
+		//Calculate antenna pointing vector in global frame
+		U_R = mul(Rot, U_RP);
+		//relative angle between antenna pointing vector and direction of Earth
+		relang = acos(dotp(U_R, U_Earth)) - 0.9*RAD;
+
+		if (relang < PI05 / a)
+		{
+			HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*SignalStrengthScaleFactor;
+		}
+		else
 		{
 			HornSignalStrength[i] = 0.0;
 		}
 	}
-	else if (CSMrelang > 125*RAD) //CSM body shadowing the antenna
+
+	//CSM body shadowing the antenna
+	if (CSMrelang < 45.0*RAD)
 	{
-		SignalStrength = 0.0;
+		double reflectionFactor = abs(sin(sqrt(CSMrelang) * 37.22153086901584)); // 37.22153086901584 = 21 * sqrt(pi)
+		double signalStrengthFalloff = (CSMrelang / (45.0 * RAD));
+
 		for (int i = 0; i < 4; i++)
 		{
-			HornSignalStrength[i] = 0.0;
+			HornSignalStrength[i] *= ((signalStrengthFalloff * 3) + reflectionFactor) / 4.0; //Signal strength goes down non-linearly from the edge of the skin reflection zone
 		}
 	}
-	else
-	{
-		for (int i = 0;i < 4;i++)
-		{
-			//Unit vector of antenna in vessel's local frame
-			U_RP = ABCAndVectorToBody(Alpha, Beta, Gamma, U_Horn[i]);
-			//Convert from Apollo CSM coordinate system to left-handed Orbiter coordinate system
-			U_RP = _V(U_RP.y, -U_RP.z, U_RP.x);
 
-			//Calculate antenna pointing vector in global frame
-			U_R = mul(Rot, U_RP);
-			//relative angle between antenna pointing vector and direction of Earth
-			relang = acos(dotp(U_R, unit(R_E - pos)));
+	SignalStrength = (HornSignalStrength[0] + HornSignalStrength[1] + HornSignalStrength[2] + HornSignalStrength[3]) / 4.0;
 
-			if (relang < PI05 / a)
-			{
-				//HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*gain;
-				HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*SignalStrengthScaleFactor;
-			}
-			else
-			{
-				HornSignalStrength[i] = 0.0;
-			}
-		}
-
-		SignalStrength = (HornSignalStrength[0] + HornSignalStrength[1] + HornSignalStrength[2] + HornSignalStrength[3]) / 4.0;
-
-		//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
-	}
+	//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
 
 	double scanlim, scanlimwarn;
 
@@ -1096,6 +1142,7 @@ void HGA::TimeStep(double simt, double simdt)
 	{
 		scanlimit = false;
 	}
+
 	if (Gamma > scanlimwarn)
 	{
 		scanlimitwarn = true;
@@ -1211,14 +1258,14 @@ void HGA::clbkPostCreation()
 
 // Load
 void HGA::LoadState(char *line) {
-	sscanf(line + 15, "%lf %lf %lf %lf %lf %lf", &Alpha, &Beta, &Gamma, &AAxisCmd, &BAxisCmd, &CAxisCmd);
+	sscanf(line + 15, "%lf %lf %lf %lf %lf %lf %lf", &Alpha, &Beta, &Gamma, &AAxisCmd, &BAxisCmd, &CAxisCmd, &SignalStrength);
 }
 
 // Save
 void HGA::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf %lf %lf %lf", Alpha, Beta, Gamma, AAxisCmd, BAxisCmd, CAxisCmd);
+	sprintf(buffer, "%lf %lf %lf %lf %lf %lf %lf", Alpha, Beta, Gamma, AAxisCmd, BAxisCmd, CAxisCmd, SignalStrength);
 
 	oapiWriteScenario_string(scn, "HIGHGAINANTENNA", buffer);
 }
@@ -1227,8 +1274,6 @@ OMNI::OMNI(VECTOR3 dir)
 {
 	direction = unit(dir);
 	hpbw_factor = 0.0;
-	hMoon = NULL;
-	hEarth = NULL;
 }
 
 void OMNI::Init(Saturn *vessel) {
@@ -1241,42 +1286,40 @@ void OMNI::Init(Saturn *vessel) {
 
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
 
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
-
 	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
-	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
-	Gain30ft = pow(10, (43 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
-	Power30ft = 20000; //watts
-
-	
+	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters	
 }
 
 void OMNI::TimeStep()
 {
-	VECTOR3 pos, R_E, R_M, U_R;
+	VECTOR3 pos, U_R;
 	MATRIX3 Rot;
-	double relang, Moonrelang;
+	double relang;
 	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
 
 	double EarthSignalDist;
 
-
-	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	//Global position of Earth and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
-	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
+
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
+	//Get the gain, power and global position of the transmitter
+	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
+	if (MCCV) {
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetCM, &GroundTransmitterRFProperties);
+	}
 
 	//Calculate antenna pointing vector in global frame
 	U_R = mul(Rot, direction);
 	//relative angle between antenna pointing vector and direction of Earth
-	relang = acos(dotp(U_R, unit(R_E - pos)));
+	relang = acos(dotp(U_R, unit(GroundTransmitterRFProperties.GlobalPosition - pos)));
 
-	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition); //distance from earth's surface in meters
 
-	RecvdOMNIPower = Power30ft * Gain30ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
-	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	RecvdOMNIPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower_dBm = RFCALC_W2dBm(RecvdOMNIPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
 	if (relang < 160*RAD)
@@ -1286,14 +1329,6 @@ void OMNI::TimeStep()
 		SignalStrength = sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*SignalStrengthScaleFactor;
 	}
 	else
-	{
-		SignalStrength = 0.0;
-	}
-
-	//Moon in the way
-	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
-
-	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
 		SignalStrength = 0.0;
 	}
@@ -1379,9 +1414,8 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 	XMITRangeTone = false;
 
 	if (!lem) {
-		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
-		if (lm) {
-			lem = (static_cast<LEM*>(lm));
+		VESSEL *lem = sat->agc.GetLM(); // Replace me with multi-lem code
+		if (lem) {
 			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 		}
 	}
@@ -1389,32 +1423,30 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 
 void VHFAMTransceiver::Timestep()
 {
-	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
-	bool isLem = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	if (lem)
 	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		//this block of code checks to see if the LEM has somehow been deleted mid scenerio, and sets the lem pointer to null
+		bool isLem = false;
+
+		for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
 		{
-			isLem = true;
+			OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+			if (lem == pVessel)
+			{
+				isLem = true;
+			}
+		}
+
+		if (!isLem)
+		{
+			lem = NULL;
+			sat->csm_vhfto_lm_vhfconnector.Disconnect();
 		}
 	}
-
-	if (!isLem)
+	else
 	{
-		lem = NULL;
-		sat->csm_vhfto_lm_vhfconnector.Disconnect();
-	}
-	//
-
-	if (!lem)
-	{
-		VESSEL *lm = sat->agc.GetLM(); 
-		if (lm) {
-			lem = (static_cast<LEM*>(lm)); 
-		}
+		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
 
 	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo && lem)
@@ -1630,11 +1662,20 @@ void VHFRangingSystem::RangingReturnSignal()
 	hasLock = 3;
 }
 
+void VHFRangingSystem::GetRangeCMC()
+{
+	if (IsPowered())
+	{
+		sat->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)fmod(range / 18.52, 32768.0);
+	}
+}
+
 void VHFRangingSystem::TimeStep(double simdt)
 {
 	ChannelValue val33;
 
 	val33 = sat->agc.GetInputChannel(033);
+
 	dataGood = false;
 	range = 0.0;
 
@@ -1647,26 +1688,27 @@ void VHFRangingSystem::TimeStep(double simdt)
 		return;
 	}
 
-	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
-	bool isLem = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	if (lem)
 	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		//this block of code checks to see if the LEM has somehow been deleted mid scenerio, and sets the lem pointer to null
+		bool isLem = false;
+
+		for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
 		{
-			isLem = true;
+			OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+			if (lem == pVessel)
+			{
+				isLem = true;
+			}
+		}
+
+		if (!isLem)
+		{
+			lem = NULL;
 		}
 	}
-
-	if (!isLem)
-	{
-		lem = NULL;
-	}
-	//
-
-	if (!lem)
+	else
 	{
 		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
@@ -1722,29 +1764,8 @@ void VHFRangingSystem::TimeStep(double simdt)
 		}
 	}
 
-	ChannelValue val13;
-	val13 = sat->agc.GetInputChannel(013);
-
 	if (dataGood == 1 && val33[RangeUnitDataGood] == 0) { val33[RangeUnitDataGood] = 1; sat->agc.SetInputChannel(033, val33); }
 	if (dataGood == 0 && val33[RangeUnitDataGood] == 1) { val33[RangeUnitDataGood] = 0; sat->agc.SetInputChannel(033, val33); }
-
-	if (val13[RangeUnitActivity] == 1) {
-		int radarBits = 0;
-		if (val13[RangeUnitSelectA] == 1) { radarBits |= 1; }
-		if (val13[RangeUnitSelectB] == 1) { radarBits |= 2; }
-		if (val13[RangeUnitSelectC] == 1) { radarBits |= 4; }
-
-		switch (radarBits) {
-		case 4:
-			// Docs says this should be 0.01 NM/bit, or 18.52 meters/bit
-			sat->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)fmod(range / 18.52, 32768.0);
-			sat->agc.SetInputChannelBit(013, RangeUnitActivity, 0);
-			sat->agc.GenerateRadarupt();
-			break;
-		default:
-			break;
-		}
-	}
 
 	//sprintf(oapiDebugString(), "%d %d %d %f %f %o", isRanging, hasLock, dataGood, range, phaseLockTimer, sat->agc.vagc.Erasable[0][RegRNRAD]);
 
@@ -1765,11 +1786,18 @@ bool VHFRangingSystem::IsPowered()
 	// Do we have a VHF Ranging System?
 	if (!sat->pMission->CSMHasVHFRanging()) return false;
 
-	if (powerswitch->IsUp() && powercb && powercb->IsPowered())
+	if (powercb && powercb->IsPowered() && RangingOffLogic() == false)
 	{
 		return true;
 	}
 
+	return false;
+}
+
+bool VHFRangingSystem::RangingOffLogic()
+{
+	if (sat->udl.GetRangingSignal1()) return true;
+	if (powerswitch->IsDown() && !sat->udl.GetRangingSignal1() && !sat->udl.GetRangingSignal2()) return true;
 	return false;
 }
 
@@ -1791,6 +1819,172 @@ void VHFRangingSystem::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "VHFRANGING", buffer);
 }
 
+// UP DATA LINK EQUIPMENT
+
+UDL::UDL()
+{
+	for (int i = 0;i < 32;i++)
+	{
+		Relays[i] = false;
+	}
+}
+
+void UDL::Init(Saturn *v)
+{
+	vessel = v;
+}
+
+void UDL::Timestep()
+{
+	if (vessel->UPTLMSwitch2.IsUp() && vessel->UDLCB.IsPowered())
+	{
+		OverrideReset();
+	}
+
+	//sprintf(oapiDebugString(), "K1 %d K17 %d K2 %d K18 %d", Relays[0], Relays[16], Relays[1], Relays[17]);
+}
+
+bool UDL::IsPowered()
+{
+	return (vessel->UDLCB.IsPowered() && vessel->UPTLMSwitch2.IsCenter());
+}
+
+void UDL::Decoder(int uplink_state, int data)
+{
+	//Convert to bitset
+	IntBits = data;
+	//Convert to lines
+	settemp[0] = IntBits[0];
+	settemp[1] = IntBits[1];
+	linestemp[0] = IntBits[2];
+	linestemp[1] = IntBits[3];
+	linestemp[2] = IntBits[4];
+	linestemp[3] = IntBits[5];
+
+	lines[0] = (settemp[1] == false && settemp[0]);
+	lines[1] = (settemp[1] && settemp[0]);
+	lines[2] = (settemp[1] == false && settemp[0] == false);
+	lines[3] = (settemp[1] && settemp[0] == false);
+
+	select.reset();
+	if (uplink_state == 40)
+	{
+		//Salvo reset
+		//What is the actual logic that decides here?
+		if (linestemp[0] == false && linestemp[1] && linestemp[2])
+		{
+			if (linestemp[3] == false)
+			{
+				for (unsigned i = 0;i < 8;i++)
+				{
+					select[i] = true;
+				}
+			}
+			else
+			{
+				for (unsigned i = 8;i < 16;i++)
+				{
+					select[i] = true;
+				}
+			}
+		}
+	}
+	else if (uplink_state == 50)
+	{
+		//Command
+		select.set(linestemp.to_ulong());
+	}
+	EvaluateState();
+	//Reset lines
+	lines.reset();
+	select.reset();
+}
+
+void UDL::EvaluateState()
+{
+	for (unsigned int i = 0;i < 16;i++)
+	{
+		if (select[i] == true)
+		{
+			//Set 1
+			if (lines[0])
+			{
+				SetRelayState(i, 1, true);
+			}
+			//Set 2
+			else if (lines[1])
+			{
+				SetRelayState(i, 2, true);
+			}
+			//Reset 1
+			else if (lines[2])
+			{
+				SetRelayState(i, 1, false);
+			}
+			//Reset 2
+			else if (lines[3])
+			{
+				SetRelayState(i, 2, false);
+			}
+		}
+	}
+}
+
+void UDL::SetRelayState(unsigned int sel, int sys, bool set)
+{
+	if (sys == 1)
+	{
+		if (BankNum1[0][sel] >= 0)
+		{
+			Relays[BankNum1[0][sel]] = set;
+		}
+		if (BankNum1[1][sel] >= 0)
+		{
+			Relays[BankNum1[1][sel]] = set;
+		}
+	}
+	else if (sys == 2)
+	{
+		if (BankNum2[0][sel] >= 0)
+		{
+			Relays[BankNum2[0][sel]] = set;
+		}
+		if (BankNum2[1][sel] >= 0)
+		{
+			Relays[BankNum2[1][sel]] = set;
+		}
+	}
+}
+
+void UDL::OverrideReset()
+{
+	for (int i = 5;i < 32;i++)
+	{
+		Relays[i] = false;
+	}
+}
+
+void UDL::SaveState(FILEHANDLE scn)
+{
+	oapiWriteLine(scn, UDL_START_STRING);
+	papiWriteScenario_boolarr(scn, "BANK1", Relays, 16);
+	papiWriteScenario_boolarr(scn, "BANK2", Relays + 16, 16);
+	oapiWriteLine(scn, UDL_END_STRING);
+}
+
+void UDL::LoadState(FILEHANDLE scn)
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, UDL_END_STRING, sizeof(UDL_END_STRING)))
+			return;
+
+		papiReadScenario_boolarr(line, "BANK1", Relays, 16);
+		papiReadScenario_boolarr(line, "BANK2", Relays + 16, 16);
+	}
+}
+
 // PCM SYSTEM
 PCM::PCM()
 {
@@ -1801,7 +1995,6 @@ PCM::PCM()
 	wsk_error = 0;
 	last_update = 0;
 	last_rx = 0;
-	pcm_rate_override = 0;
 	frame_addr = 0;
 	frame_count = 0;
 	m_socket = INVALID_SOCKET;
@@ -1824,7 +2017,6 @@ void PCM::Init(Saturn *vessel){
 	last_update = 0;
 	last_rx = MINUS_INFINITY;
 	word_addr = 0;
-	pcm_rate_override = 0;
 	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
 	if ( iResult != NO_ERROR ){
 		sprintf(wsk_emsg,"TELECOM: Error at WSAStartup()");
@@ -1907,6 +2099,13 @@ void PCM::SystemTimestep(double simdt) {
 	return;
 }
 
+bool PCM::LowBitrateLogic()
+{
+	if (sat->udl.GetBitrateLogic1()) return true;
+	if (sat->PCMBitRateSwitch.IsDown() && !sat->udl.GetBitrateLogic1() && !sat->udl.GetBitrateLogic2()) return true;
+	return false;
+}
+
 void PCM::TimeStep(double simt){
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
@@ -1926,7 +2125,7 @@ void PCM::TimeStep(double simt){
 	*/
 
 	// Generate PCM datastream
-	if(pcm_rate_override == 1 || (pcm_rate_override == 0 && sat->PCMBitRateSwitch.GetState() == TOGGLESWITCH_DOWN)){
+	if(LowBitrateLogic()){
 		tx_size = (int)((simt - last_update) / 0.005);
 		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
@@ -1942,7 +2141,7 @@ void PCM::TimeStep(double simt){
 		}
 		return; // Don't waste time checking for HBR
 	}
-	if(pcm_rate_override == 2 || (pcm_rate_override == 0 && sat->PCMBitRateSwitch.GetState() == TOGGLESWITCH_UP)){
+	else{
 		tx_size = (int)((simt - last_update) / 0.00015625);
 		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
@@ -1970,16 +2169,13 @@ unsigned char PCM::scale_data(double data, double low, double high)
 	if(data <= low){  return 0; }
 	
 	// Now figure step value
-	double step = ( ( high - low ) / 256.0);
+	double step = ( ( high - low ) / 253.0);
 	// and return result
-	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
+	return static_cast<unsigned char>( ( ( data - low ) / step ) + 1.5 );
 }
 
 // Fetch a telemetry data item from its channel code
 unsigned char PCM::measure(int channel, int type, int ccode){
-	// Status structures.
-	TankPressures smTankPress;
-	TankQuantities tankQuantities;
 	SPSStatus spsStatus;
 	FuelCellStatus fcStatus;
 	PyroStatus pyroStatus;
@@ -2074,22 +2270,19 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 35:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 36:		// H2 TK 1 PRESS
-							sat->GetTankPressures( smTankPress );
-							return(scale_data(smTankPress.H2Tank1PressurePSI, 0, 350));
+							return(scale_data(sat->H2Tank1PressSensor.Voltage(), 0.0, 5.0));
 						case 37:		// SPS VLV BODY TEMP
 							return(scale_data(0,0,200));
 						case 38:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 39:		// H2 TK 2 PRESS
-							sat->GetTankPressures( smTankPress );
-							return(scale_data(smTankPress.H2Tank2PressurePSI, 0, 350));
+							return(scale_data(sat->H2Tank2PressSensor.Voltage(), 0.0, 5.0));
 						case 40:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 41:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 42:		// O2 TK 2 QTY
-							sat->GetTankQuantities( tankQuantities );
-							return(scale_data(tankQuantities.O2Tank2Quantity * 100.0, 0, 100));
+							return(scale_data(sat->O2Tank2QuantitySensor.Voltage(), 0.0, 5.0));
 						case 43:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 44:		// OX LINE 1 TEMP
@@ -2137,8 +2330,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 65:		// SIDE HS BOND LOC 1 TEMP
 							return(scale_data(0,-260,600));
 						case 66:		// O2 TK 2 PRESS
-							sat->GetTankPressures( smTankPress );
-							return(scale_data(smTankPress.O2Tank2PressurePSI, 50, 1050));
+							return(scale_data(sat->O2Tank2PressSensor.Voltage(), 0, 5));
 						case 67:		// FC 3 RAD IN TEMP
 							sat->GetFuelCellStatus(3, fcStatus);
 							return(scale_data(fcStatus.RadiatorTempInF, -50, 300));
@@ -2235,7 +2427,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 113:		// SCI EXP #9
 							return(scale_data(0,0,100));
 						case 114:		// H2O DUMP TEMP
-							return(scale_data(0,0,100));
+							return(scale_data(sat->WasteH2ODumpTempSensor.Voltage(), 0.0, 5.0));
 						case 115:		// SCI EXP #10
 							return(scale_data(0,0,100));
 						case 116:		// SCI EXP #11
@@ -2284,7 +2476,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 134:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 135:		// URINE DUMP NOZZLE TEMP
-							return(scale_data(0,0,100));
+							return(scale_data(sat->UrineDumpTempSensor.Voltage(), 0.0, 5.0));
 						case 136:		// SM ENG PKG A TEMP
 							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));
@@ -2297,29 +2489,25 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 140:		// BAY 6 FU TK SURFACE TEMP
 							return(scale_data(0,-100,200));
 						case 141:		// H2 TK 1 QTY
-							sat->GetTankQuantities(tankQuantities);
-							return(scale_data(tankQuantities.H2Tank1Quantity * 100.0, 0, 100));
+							return(scale_data(sat->H2Tank1QuantitySensor.Voltage(), 0.0, 5.0));
 						case 142:		// BAY 2 OX TK SURFACE TEMP
 							return(scale_data(0,-100,200));
 						case 143:		// OX LINE ENTRY SUMP TK TEMP
 							return(scale_data(0,-100,200));
 						case 144:		// H2 TK 2 QTY
-							sat->GetTankQuantities( tankQuantities );
-							return(scale_data(tankQuantities.H2Tank2Quantity * 100.0, 0, 100));
+							return(scale_data(sat->H2Tank2QuantitySensor.Voltage(), 0.0, 5.0));
 						case 145:		// FU LINE ENTRY SUMP TK TEMP
 							return(scale_data(0,-100,200));
 						case 146:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 147:		// O2 TK 1 QTY
-							sat->GetTankQuantities( tankQuantities );
-							return(scale_data(tankQuantities.O2Tank1Quantity * 100.0, 0, 100));
+							return(scale_data(sat->O2Tank1QuantitySensor.Voltage(), 0.0, 5.0));
 						case 148:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 149:		// DOSIMETER RATE
 							return(scale_data(0,0,5));
 						case 150:		// O2 TK 1 PRESS
-							sat->GetTankPressures( smTankPress );
-							return(scale_data(smTankPress.O2Tank1PressurePSI, 50, 1050));
+							return(scale_data(sat->O2Tank1PressSensor.Voltage(), 0, 5));
 						default:
 							sprintf(sat->debugString(),"MEASURE: UNKNOWN 10-A-%d",ccode);
 							break;
@@ -2392,9 +2580,9 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
 							return(scale_data(rcsStatus.PropellantPressurePSI, 0, 300));
 						case 29:		// FC 1 N2 PRESS
-							return(scale_data(0,0,75));
+							return(scale_data(sat->FCN2PressureSensor1.Voltage(), 0.0, 5.0));
 						case 30:		// FC 2 N2 PRESS
-							return(scale_data(0,0,75));
+							return(scale_data(sat->FCN2PressureSensor2.Voltage(), 0.0, 5.0));
 						case 31:		// FU/OX VLV 1 POS
 							return(scale_data(0,0,90));
 						case 32:		// FU/OX VLV 2 POS
@@ -2404,7 +2592,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 34:		// FU/OX VLV 4 POS
 							return(scale_data(0,0,90));
 						case 35:		// FC 3 N2 PRESS
-							return(scale_data(0,0,75));
+							return(scale_data(sat->FCN2PressureSensor3.Voltage(), 0.0, 5.0));
 						case 36:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 37:		// SUIT-CABIN DELTA PRESS
@@ -2468,23 +2656,17 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 66:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 67:		// FC 1 O2 PRESS
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor1.Voltage(), 0.0, 5.0);
 						case 68:		// FC 2 O2 PRESS
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor2.Voltage(), 0.0, 5.0);
 						case 69:		// FC 3 O2 PRESS
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
+							return scale_data(sat->FCO2PressureSensor3.Voltage(), 0.0, 5.0);
 						case 70:		// FC 1 H2 PRESS
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor1.Voltage(), 0.0, 5.0);
 						case 71:		// FC 2 H2 PRESS
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor2.Voltage(), 0.0, 5.0);
 						case 72:		// FC 3 H2 PRESS
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
+							return scale_data(sat->FCH2PressureSensor3.Voltage(), 0.0, 5.0);
 						case 73:		// BAT CHARGER AMPS
 							return scale_data(sat->sce.GetVoltage(1, 0), 0.0, 5.0);
 						case 74:		// BAT A CUR
@@ -2494,23 +2676,17 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 76:		// FC 1 CUR
 							return scale_data(sat->sce.GetVoltage(1, 4), 0.0, 5.0);
 						case 77:		// FC 1 H2 FLOW
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor1.Voltage(), 0, 5.0);
 						case 78:		// FC 2 H2 FLOW
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor2.Voltage(), 0, 5.0);
 						case 79:		// FC 3 H2 FLOW
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
+							return scale_data(sat->FCH2FlowSensor3.Voltage(), 0, 5.0);
 						case 80:		// FC 1 O2 FLOW
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor1.Voltage(), 0, 5.0);
 						case 81:		// FC 2 O2 FLOW
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor2.Voltage(), 0, 5.0);
 						case 82:		// FC 3 O2 FLOW
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
+							return scale_data(sat->FCO2FlowSensor3.Voltage(), 0, 5.0);
 						case 83:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 84:		// FC 2 CUR
@@ -2588,7 +2764,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 120:		// SENSOR EXCITATION 10V
 							return(scale_data(0,0,15));
 						case 121:		// USB RCVR AGC VOLTAGE
-							return(scale_data(0,-130,-50));
+							return(scale_data(sat->usb.rcvr_agc_voltage, 0, 100)); //this should be changed to a 0-5V range not %
 						case 122:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 123:		// UNKNOWN - HBR ONLY
@@ -3134,7 +3310,7 @@ void PCM::generate_stream_lbr(){
 	switch(word_addr){
 		case 0: // SYNC 1
 			// Trigger telemetry END PULSE
-			sat->agc.GenerateDownrupt();
+			sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::DOWNRUPT);
 			// And continue
 			tx_data[tx_offset] = 05;
 			break;
@@ -3380,7 +3556,7 @@ void PCM::generate_stream_lbr(){
 			break;
 		case 20:
 			// Trigger telemetry END PULSE
-			sat->agc.GenerateDownrupt();
+			sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::DOWNRUPT);
 			// and continue
 			switch(frame_count){
 				case 0: // 10DP1 
@@ -3656,11 +3832,11 @@ void PCM::generate_stream_lbr(){
 	if(word_addr > 39){
 		word_addr = 0;
 		frame_addr++;
-		if(frame_addr > 4){
+		if(frame_addr > 49){
 			frame_addr = 0;
 		}
 		frame_count++;
-		if(frame_count > 5){
+		if(frame_count > 4){
 			frame_count = 0;
 		}
 	}
@@ -3976,7 +4152,7 @@ void PCM::generate_stream_hbr(){
 			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
 			tx_data[tx_offset] = data; 
 			// Trigger telemetry END PULSE
-			sat->agc.GenerateDownrupt();			
+			sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::DOWNRUPT);
 			break;
 		case 40:
 			switch(frame_count){
@@ -4767,7 +4943,7 @@ void PCM::perform_io(double simt){
 			if (mcc_size > 0) {
 				// sprintf(oapiDebugString(), "MCCSIZE %d LRX %f LRXINT %f", mcc_size, last_rx, ((simt - last_rx) / 0.005));
 				// Should we recieve?
-				if ((fabs(simt - last_rx) / 0.1) < 1 || sat->agc.IsUpruptActive()) {
+				if ((fabs(simt - last_rx) / 0.1) < 1 || sat->agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 					return; // No
 				}
 				last_rx = simt;
@@ -4824,7 +5000,7 @@ void PCM::perform_io(double simt){
 				}
 			}
 			// Should we recieve?
-			if ((fabs(simt - last_rx) / 0.005) < 1 || sat->agc.IsUpruptActive()) {			
+			if ((fabs(simt - last_rx) / 0.005) < 1 || sat->agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 				return; // No
 			}
 			last_rx = simt;
@@ -4946,7 +5122,7 @@ void PCM::handle_uplink() {
 		// Move to INLINK
 		sat->agc.vagc.Erasable[0][045] = cmc_uplink_wd;
 		// Cause UPRUPT
-		sat->agc.GenerateUprupt();
+		sat->agc.RaiseInterrupt(ApolloGuidance::Interrupt::UPRUPT);
 
 		//sprintf(oapiDebugString(),"CMC UPLINK DATA %05o",cmc_uplink_wd);
 		rx_offset = 0; uplink_state = 0;
@@ -4955,142 +5131,11 @@ void PCM::handle_uplink() {
 
 	case 30: // CTE UPDATE CMD
 		rx_offset = 0; uplink_state = 0; break;
-
 	case 40: // RTC SALVO CMD
-		switch (rx_data[rx_offset]) {
-		case 030: // LATCH RELAYS FOR RESET 1
-			rx_offset = 0; uplink_state = 0; break;
-		case 032: // RESET SALVO 1
-				  // SENDS RTC-COMMANDS
-				  // 00 04 20 10 14 02,16 06 12 22,26 32,36
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 070: // LATCH RELAYS FOR RESET 2
-			rx_offset = 0; uplink_state = 0; break;
-		case 072: // RESET SALVO 2
-				  // SENDS SENDS RTC-COMMANDS
-				  // 40,50 44,54,60 64,70 74 42,46 52,56 62,66 72,76
-			rx_offset = 0; uplink_state = 0; break;
-
-		default:
-			sprintf(sat->debugString(), "UNKNOWN RTC SALVO CMD %o", rx_data[rx_offset]);
-			rx_offset = 0; uplink_state = 0;
-			break;
-		}
-		break;
-
 	case 50: // RTC CMD
-		switch (rx_data[rx_offset]) {
-		case 00: // ABORT LT A OFF
-		{
-			sat->cws.UplinkTestState &= 012;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 01: // ABORT LT A ON
-		{
-			sat->cws.UplinkTestState |= 001;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 04: // CREW ALERT OFF
-		{
-			sat->cws.UplinkTestState &= 003;
 
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 05: // CREW ALERT ON
-		{
-			sat->cws.UplinkTestState |= 010;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 06: // ABORT LT B OFF
-		{
-			sat->cws.UplinkTestState &= 011;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-		case 07: // ABORT LT B ON
-		{
-			sat->cws.UplinkTestState |= 002;
-			rx_offset = 0; uplink_state = 0;
-		}
-		break;
-
-		case 010: // ACE CMC ZERO DISABLE
-		case 011: // ACE CMC ZERO ENABLE
-		case 014: // ACE CMC ONE DISABLE
-		case 015: // ACE CMC ONE ENABLE
-				  // Ignore these
-			rx_offset = 0; uplink_state = 0;
-			break;
-
-		case 022: // LATCH RELAYS FOR VHF RANGING CONTROL
-		case 023: // RANGING DISABLE
-		case 026: // RANGING RESET
-		case 027: // RANGING ENABLE
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 032: // LATCH RELAYS FOR R/T PCM CONTROL
-		case 033: // SAME
-		case 036: // R/T PCM RESET
-		case 037: // R/T PCM 1024 ON (IF 32 LATCHED) or R/T PCM OFF (IF 33 LATCHED)
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 040: // LATCH RELAYS FOR UNIFIED S-BAND SYSTEM CONTROL
-		case 041: // SAME
-		case 042: // SAME
-		case 043: // SAME
-		case 044: // FM OFF, TAPE OFF
-		case 045: // FM ON, TAPE ON
-		case 046: // POWER AMP RESET (IF 42 LATCHED), POWER AMP OFF (IF 43 LATCHED)
-		case 047: // POWER AMP HIGH (IF 42 LATCHED), POWER AMP LOW (IF 43 LATCHED)
-		case 050: // USB MODE RESET 
-		case 051: // BACKUP VOICE FM OFF
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 052: // LATCH RELAYS FOR DSE PLAYBACK MODE CONTROL
-		case 053: // SELECT LM PLAYBACK DATA
-		case 056: // PLAYBACK MODE RESET
-		case 057: // SELECT CSM PLAYBACK DATA
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 062: // LATCH RELAYS FOR DSE CONTROL
-		case 063: // SAME
-		case 064: // LATCH RELAYS FOR PCM DOWNTELEMETRY RATE CONTROL
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 065: // DOWNTLM MODE LBR
-			pcm_rate_override = 1;
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 066: // DSE RESET (IF 62 LATCHED), DSE OFF (IF 63 LATCHED)
-		case 067: // DSE RECORD (IF 62 LATCHED), DSE PLAYBACK (IF 63 LATCHED)
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 070: // DOWNTLM MODE RESET
-			pcm_rate_override = 0;
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 071: // DOWNTLM MODE HBR
-			pcm_rate_override = 2;
-			rx_offset = 0; uplink_state = 0; break;
-
-		case 072: // LATCH RELAYS FOR DSE TAPE CONTROL
-		case 073: // SAME
-		case 074: // ANTENNA SELECT RESET
-		case 075: // ANTENNA SELECT OMNI "D" 
-		case 076: // DSE TAPE RESET (IF 72 LATCHED), DSE TAPE STOP (IF 73 LATCHED)
-		case 077: // DSE TAPE FORWARD (IF 72 LATCHED), DSE TAPE REWIND (IF 73 LATCHED)
-			rx_offset = 0; uplink_state = 0; break;
-
-		default:
-			sprintf(sat->debugString(), "UNKNOWN RTC COMMAND %o", rx_data[rx_offset]);
-			rx_offset = 0; uplink_state = 0;
-			break;
-		}
+		sat->udl.Decoder(uplink_state, rx_data[rx_offset]);
+		rx_offset = 0; uplink_state = 0;
 		break;
 	}
 }
@@ -5380,12 +5425,12 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 
 unsigned char RNDZXPDRSystem::GetScaledRFPower()
 {
-	const double min_value = -122.0;
-	const double max_value = -18.0;
+	const double min_value = 0;
+	const double max_value = 0.250;
 	
-	if(XPDRon && (haslock == LOCKED))
+	if(XPDRon)
 	{ 
-		return static_cast<unsigned char>(((RCVDPowerdB - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>(((XMITpower - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
 	}
 	else
 	{
@@ -5451,7 +5496,7 @@ double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
 
 void RNDZXPDRSystem::SendRF()
 {
-	if (XPDRon && (haslock == LOCKED))//act like a transponder
+	if (XPDRon && !XPDRtest && (haslock == LOCKED))//act like a transponder
 	{
 		sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq*(240.0 / 241.0), XMITpower, RNDZXPDRGain, 0.0);
 	}
@@ -5470,7 +5515,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 	{
 		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		if (utils::IsVessel(pVessel, utils::LEM))
 		{
 			isLem = true;
 		}
@@ -5513,7 +5558,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		}
 		else if ((HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP) && (TestOperateSwitch->GetState() == TOGGLESWITCH_UP))
 		{
-			XPDRon = false;
+			XPDRon = true;
 			XPDRheaterOn = true;
 			XPDRtest = true;
 		}
@@ -5579,7 +5624,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		if (RadarDist > 80.0*0.3048)
 		{
 			RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2); //watts
-			RCVDPowerdB = 10.0 * log10(1000.0 * RCVDPowerdB); //convert to dBm
+			RCVDPowerdB = RFCALC_W2dBm(RCVDPowerdB); //convert to dBm
 		}
 		else
 		{
@@ -5601,6 +5646,13 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		{
 			haslock = UNLOCKED;
 			lockTimer = 0.0;
+		}
+
+		if (XPDRtest)
+		{
+			haslock = LOCKED;
+			lockTimer = 0.0;
+			RCVDPowerdB = -103; //simulated 200nm range for self-test
 		}
 
 		//sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);

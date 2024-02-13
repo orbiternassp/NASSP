@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -60,13 +60,10 @@ LEM_ASA::LEM_ASA()// : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.0
 	hsink = 0;
 	asaHeat = 0;
 
-	Initialized = false;
 	Operate = false;
 	CurrentRotationMatrix = _M(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	EulerAngles = _V(0.0, 0.0, 0.0);
 	RemainingDeltaVel = _V(0.0, 0.0, 0.0);
-	LastWeightAcceleration = _V(0.0, 0.0, 0.0);
-	LastGlobalVel = _V(0.0, 0.0, 0.0);
 	LastSimDT = -1.0;
 }
 
@@ -97,7 +94,6 @@ void LEM_ASA::TurnOn()
 void LEM_ASA::TurnOff()
 {
 	Operate = false;
-	Initialized = false;
 }
 
 void LEM_ASA::Timestep(double simdt){
@@ -141,7 +137,7 @@ void LEM_ASA::Timestep(double simdt){
 		return;
 	}
 
-	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes to reset this in that case
+	//If AEA is unpowered the ASA doesn't get the clock signal necessary to generate pulses, so it makes sense to reset this in that case
 	if (!lem->aea.IsPowered())
 	{
 		EulerAngles = _V(0.0, 0.0, 0.0);
@@ -160,144 +156,23 @@ void LEM_ASA::Timestep(double simdt){
 
 	CurrentRotationMatrix = Rotnew;
 
-	if (!Initialized) 
-	{
-		// Get current weight vector in vessel coordinates
-		VECTOR3 w;
-		lem->GetWeightVector(w);
-		// Transform to Orbiter global and calculate weight acceleration
-		w = mul(CurrentRotationMatrix, w) / lem->GetMass();
+	VECTOR3 accel;
+	lem->inertialData.getAcceleration(accel);
+	accel = -accel;
 
-		//Orbiter 2016 hack
-		if (length(w) == 0.0)
-		{
-			w = GetGravityVector();
-		}
+	RemainingDeltaVel.y += accel.x * LastSimDT;
+	RemainingDeltaVel.x += accel.y * LastSimDT;
+	RemainingDeltaVel.z += accel.z * LastSimDT;
 
-		LastWeightAcceleration = w;
-
-		lem->GetGlobalVel(LastGlobalVel);
-
-		LastSimDT = simdt;
-		Initialized = true;
-	}
-	else
-	{
-		//ACCELERATION
-
-		// Calculate accelerations
-		VECTOR3 w, vel;
-		lem->GetWeightVector(w);
-		// Transform to Orbiter global and calculate accelerations
-		w = mul(CurrentRotationMatrix, w) / lem->GetMass();
-
-		//Orbiter 2016 hack
-		if (length(w) == 0.0)
-		{
-			w = GetGravityVector();
-		}
-
-		lem->GetGlobalVel(vel);
-		VECTOR3 dvel = (vel - LastGlobalVel) / LastSimDT;
-
-		// Measurements with the 2006-P1 version showed that the average of the weight 
-		// vector of this and the last step match the force vector while in free fall
-		// The force vector matches the global velocity change of the last timestep exactly,
-		// but isn't used because GetForceVector isn't working while docked
-		VECTOR3 dw1 = w - dvel;
-		VECTOR3 dw2 = LastWeightAcceleration - dvel;
-		VECTOR3 accel = -(dw1 + dw2) / 2.0;
-		LastWeightAcceleration = w;
-		LastGlobalVel = vel;
-
-		accel = mul(transpose_matrix(CurrentRotationMatrix), accel);
-
-		RemainingDeltaVel.y += accel.x * LastSimDT;
-		RemainingDeltaVel.x += accel.y * LastSimDT;
-		RemainingDeltaVel.z += accel.z * LastSimDT;
-
-		LastSimDT = simdt;
-	}
-}
-
-VECTOR3 LEM_ASA::GetGravityVector()
-{
-	OBJHANDLE gravref = lem->GetGravityRef();
-	OBJHANDLE hSun = oapiGetObjectByName("Sun");
-	VECTOR3 R, U_R;
-	lem->GetRelativePos(gravref, R);
-	U_R = unit(R);
-	double r = length(R);
-	VECTOR3 R_S, U_R_S;
-	lem->GetRelativePos(hSun, R_S);
-	U_R_S = unit(R_S);
-	double r_S = length(R_S);
-	double mu = GGRAV * oapiGetMass(gravref);
-	double mu_S = GGRAV * oapiGetMass(hSun);
-	int jcount = oapiGetPlanetJCoeffCount(gravref);
-	double JCoeff[5];
-	for (int i = 0; i < jcount; i++)
-	{
-		JCoeff[i] = oapiGetPlanetJCoeff(gravref, i);
-	}
-	double R_E = oapiGetSize(gravref);
-
-	VECTOR3 a_dP;
-
-	a_dP = -U_R;
-
-	if (jcount > 0)
-	{
-		MATRIX3 mat;
-		VECTOR3 U_Z;
-		double costheta, P2, P3;
-
-		oapiGetPlanetObliquityMatrix(gravref, &mat);
-		U_Z = mul(mat, _V(0, 1, 0));
-
-		costheta = dotp(U_R, U_Z);
-
-		P2 = 3.0 * costheta;
-		P3 = 0.5*(15.0*costheta*costheta - 3.0);
-		a_dP += (U_R*P3 - U_Z * P2)*JCoeff[0] * pow(R_E / r, 2.0);
-		if (jcount > 1)
-		{
-			double P4;
-			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-			a_dP += (U_R*P4 - U_Z * P3)*JCoeff[1] * pow(R_E / r, 3.0);
-			if (jcount > 2)
-			{
-				double P5;
-				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-				a_dP += (U_R*P5 - U_Z * P4)*JCoeff[2] * pow(R_E / r, 4.0);
-			}
-		}
-	}
-	a_dP *= mu / pow(r, 2.0);
-	a_dP -= U_R_S * mu_S / pow(r_S, 2.0);
-
-	if (gravref == oapiGetObjectByName("Moon"))
-	{
-		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-
-		VECTOR3 R_Ea, U_R_E;
-		lem->GetRelativePos(hEarth, R_Ea);
-		U_R_E = unit(R_Ea);
-		double r_E = length(R_Ea);
-		double mu_E = GGRAV * oapiGetMass(hEarth);
-
-		a_dP -= U_R_E * mu_E / pow(r_E, 2.0);
-	}
-
-	return a_dP;
+	LastSimDT = simdt;
 }
 
 void LEM_ASA::SystemTimestep(double simdt)
 {
 	if (IsPowered())
 	{
-		lem->SCS_ASA_CB.DrawPower(41.1);
-		asaHeat->GenerateHeat(95.1); //Electric heat load from LM-8 Systems Handbook
+		lem->SCS_ASA_CB.DrawPower(42.0);
+		asaHeat->GenerateHeat(42.0); //Electric heat load from LM-3 Systems Handbook
 	}
 }
 
@@ -406,11 +281,8 @@ void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 
 	papiWriteScenario_mx(scn, "CURRENTROTATIONMATRIX", CurrentRotationMatrix);
 	papiWriteScenario_vec(scn, "EULERANGLES", EulerAngles);
-	papiWriteScenario_vec(scn, "LASTWEIGHTACCELERATION", LastWeightAcceleration);
-	papiWriteScenario_vec(scn, "LASTGLOBALVEL", LastGlobalVel);
 	papiWriteScenario_vec(scn, "REMAININGDELTAVEL", RemainingDeltaVel);
 	papiWriteScenario_double(scn, "LASTSIMDT", LastSimDT);
-	papiWriteScenario_bool(scn, "INITIALIZED", Initialized);
 	papiWriteScenario_bool(scn, "OPERATE", Operate);
 
 	oapiWriteLine(scn, end_str);
@@ -426,11 +298,8 @@ void LEM_ASA::LoadState(FILEHANDLE scn, char *end_str)
 
 		papiReadScenario_mat(line, "CURRENTROTATIONMATRIX", CurrentRotationMatrix);
 		papiReadScenario_vec(line, "EULERANGLES", EulerAngles);
-		papiReadScenario_vec(line, "LASTWEIGHTACCELERATION", LastWeightAcceleration);
-		papiReadScenario_vec(line, "LASTGLOBALVEL", LastGlobalVel);
 		papiReadScenario_vec(line, "REMAININGDELTAVEL", RemainingDeltaVel);
 		papiReadScenario_double(line, "LASTSIMDT", LastSimDT);
-		papiReadScenario_bool(line, "INITIALIZED", Initialized);
 		papiReadScenario_bool(line, "OPERATE", Operate);
 	}
 }
@@ -455,8 +324,7 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	cos_psi = 0.0;
 	AGSAttitudeError = _V(0.0, 0.0, 0.0);
 	AGSLateralVelocity = 0.0;
-	Altitude = 0.0;
-	AltitudeRate = 0.0;
+	powered = false;
 
 	//
 	// Virtual AGS.
@@ -475,7 +343,18 @@ void LEM_AEA::Timestep(double simt, double simdt) {
 
 	//Determine if the AEA has power
 	powered = DeterminePowerState();
-	if (!IsPowered()) return;
+	if (!IsPowered())
+	{
+		// Reset last cycling time
+		LastCycled = 0;
+		// Reset program counter to 6000 for power up
+		vags.ProgramCounter = 06000;
+		// Also reset overflow
+		vags.Overflow = 0;
+		// And inhibit engine on
+		OutputPorts[IO_ODISCRETES] |= 02000;
+		return;
+	}
 
 	int Delta, CycleCount = 0;
 
@@ -658,7 +537,7 @@ void LEM_AEA::SetOutputChannel(int Type, int Data)
 
 	case 033:
 		//Altitude, Altitude Rate
-		SetAltitudeAltitudeRate(Data);
+		lem->RadarTape.AGSAltitudeAltitudeRate(Data);
 		break;
 
 	case 034:
@@ -798,32 +677,6 @@ void LEM_AEA::SetLateralVelocity(int Data)
 	AGSLateralVelocity = (double)DataVal*LATVELSCALEFACTOR;
 }
 
-void LEM_AEA::SetAltitudeAltitudeRate(int Data)
-{
-	int DataVal;
-
-	AGSChannelValue40 val = GetOutputChannel(IO_ODISCRETES);
-
-	if (val[AGSAltitude] == 0)
-	{
-		DataVal = Data & 0777777;
-
-		Altitude = (double)DataVal*ALTSCALEFACTOR;
-	}
-	else if (val[AGSAltitudeRate] == 0)
-	{
-		if (Data & 0400000) { // Negative
-			DataVal = -((~Data) & 0777777);
-			DataVal = -0400000 - DataVal;
-		}
-		else {
-			DataVal = Data & 0777777;
-		}
-
-		AltitudeRate = -(double)DataVal*ALTRATESCALEFACTOR;
-	}
-}
-
 void LEM_AEA::SetPGNSIntegratorRegister(int channel, int val)
 {
 	int valx;
@@ -883,16 +736,6 @@ double LEM_AEA::GetLateralVelocity()
 	return AGSLateralVelocity;
 }
 
-double LEM_AEA::GetAltitude()
-{
-	return Altitude;
-}
-
-double LEM_AEA::GetAltitudeRate()
-{
-	return AltitudeRate;
-}
-
 void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
 
 {
@@ -931,6 +774,24 @@ bool LEM_AEA::GetTestModeFailure()
 	AGSChannelValue40 agsval40;
 	agsval40 = OutputPorts[IO_ODISCRETES];
 	return ~agsval40[AGSTestModeFailure];
+}
+
+bool LEM_AEA::GetEngineOnSignal()
+{
+	if (!IsPowered())
+		return false;
+	AGSChannelValue40 agsval40;
+	agsval40 = OutputPorts[IO_ODISCRETES];
+	return ~agsval40[AGSEngineOn];
+}
+
+bool LEM_AEA::GetEngineOffSignal()
+{
+	if (!IsPowered())
+		return false;
+	AGSChannelValue40 agsval40;
+	agsval40 = OutputPorts[IO_ODISCRETES];
+	return ~agsval40[AGSEngineOff];
 }
 
 void LEM_AEA::InitVirtualAGS(char *binfile)
@@ -1039,8 +900,6 @@ void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	papiWriteScenario_double(scn, "COS_PSI", cos_psi);
 	papiWriteScenario_vec(scn, "ATTITUDEERROR", AGSAttitudeError);
 	papiWriteScenario_double(scn, "LATERALVELOCITY", AGSLateralVelocity);
-	papiWriteScenario_double(scn, "ALTITUDE", Altitude);
-	papiWriteScenario_double(scn, "ALTITUDERATE", AltitudeRate);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -1106,8 +965,6 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 		papiReadScenario_double(line, "COS_PSI", cos_psi);
 		papiReadScenario_vec(line, "ATTITUDEERROR", AGSAttitudeError);
 		papiReadScenario_double(line, "LATERALVELOCITY", AGSLateralVelocity);
-		papiReadScenario_double(line, "ALTITUDE", Altitude);
-		papiReadScenario_double(line, "ALTITUDERATE", AltitudeRate);
 	}
 }
 
@@ -1345,24 +1202,26 @@ int LEM_DEDA::ThreeDigitDisplaySegmentsLit(char *Str)
 	return s;
 }
 
-void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int TexMul)
 
 {
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int Curdigit;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
 		Curdigit = Str[0] - '0';
-		oapiBlt(surf,digits,dstx+0,dsty,19*Curdigit,0,19,21);
+		oapiBlt(surf, digits, dstx + 0, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 
 	if (Str[1] >= '0' && Str[1] <= '9') {
 		Curdigit = Str[1] - '0';
-		oapiBlt(surf,digits,dstx+20,dsty,19*Curdigit,0,19,21);
+		oapiBlt(surf, digits, dstx + 20*TexMul, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 
 	if (Str[2] >= '0' && Str[2] <= '9') {
 		Curdigit = Str[2] - '0';
-		oapiBlt(surf,digits,dstx+39,dsty,19*Curdigit,0,19,21);
+		oapiBlt(surf, digits, dstx + 39*TexMul, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 }
 
@@ -1385,23 +1244,25 @@ int LEM_DEDA::SixDigitDisplaySegmentsLit(char *Str)
 	return s;
 }
 
-void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int TexMul)
 
 {
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int	Curdigit;
 	int i;
 
 	if (Str[0] == '-') {
-		oapiBlt(surf,digits,dstx+4,dsty,191,0,19,21);
+		oapiBlt(surf, digits, dstx + 4*TexMul, dsty, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 	else if (Str[0] == '+') {
-		oapiBlt(surf,digits,dstx+4,dsty,210,0,19,21);
+		oapiBlt(surf, digits, dstx + 4*TexMul, dsty, 11 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 
 	for (i = 1; i < 6; i++) {
 		if (Str[i] >= '0' && Str[i] <= '9') {
 			Curdigit = Str[i] - '0';
-			oapiBlt(surf, digits, dstx + (20*i)+ 4, dsty, 19*Curdigit, 0, 19,21);
+			oapiBlt(surf, digits, dstx + ((DigitWidth + 1) * i) + 4, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 		}
 		else {
 //			oapiBlt(surf, digits, dstx + (10*i), dsty, 440, 6, 10, 15);
@@ -1410,16 +1271,16 @@ void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dst
 }
 
 
-void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
+void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset, int TexMul)
 
 {
 	if (!IsPowered() || !HasNumPower())
 		return;
 
-	RenderThreeDigitDisplay(surf, digits, xOffset, yOffset, Adr);
+	RenderThreeDigitDisplay(surf, digits, xOffset, yOffset, Adr, TexMul);
 }
 
-void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
+void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset, int TexMul)
 
 {
 	if (!IsPowered() || !HasNumPower())
@@ -1429,7 +1290,7 @@ void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int y
 	// Register contents.
 	//
 
-	RenderSixDigitDisplay(surf, digits, xOffset, yOffset, Data);
+	RenderSixDigitDisplay(surf, digits, xOffset, yOffset, Data, TexMul);
 }
 
 void LEM_DEDA::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)
@@ -1470,7 +1331,7 @@ void LEM_DEDA::DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, 
 }
 
 
-void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
+void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights, int TexMul)
 
 {
 	if (!HasAnnunPower())
@@ -1481,10 +1342,10 @@ void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
 	//
 
 	if (OprErrLit()) {
-		oapiBlt(surf, lights, 0, 0, 46, 0, 45, 25);
+		oapiBlt(surf, lights, 0, 0, 46*TexMul, 0, 45*TexMul, 25*TexMul);
 	}
 	else {
-		oapiBlt(surf, lights, 0, 0, 0, 0, 45, 25);
+		oapiBlt(surf, lights, 0, 0, 0, 0, 45*TexMul, 25*TexMul);
 	}
 
 }

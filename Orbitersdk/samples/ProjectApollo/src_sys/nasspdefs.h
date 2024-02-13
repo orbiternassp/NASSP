@@ -211,7 +211,7 @@
 #define stricmp _stricmp
 #endif 
 
-#define NASSP_VERSION 80000		///< Current NASSP version.
+#define NASSP_VERSION 80002		///< https://nassp.space/index.php/Scenario_File_Options#Scenario_information
 
 ///
 /// We use this structure to store generic Windows information in one place, such as logical colors,
@@ -223,10 +223,10 @@
 ///
 typedef struct {
 	HINSTANCE hDLL;		///< DLL handle.
-	HFONT font[3];		///< GDI fonts.
+	oapi::Font  *font[3];		///< GDI fonts.
 	DWORD col[6];		///< GDI colors.
-	HBRUSH brush[4];	///< GDI brushes.
-	HPEN pen[7];		///< GDI pens.
+	oapi::Brush *brush[4];	///< GDI brushes.
+	oapi::Pen   *pen[7];		///< GDI pens.
 } GDIParams;
 
 //
@@ -314,6 +314,17 @@ static inline double sign(double x)
 	else return -1.0;
 }
 
+// Functions to convert between coordinate systems
+static inline void OrbiterToCSMCoordinates(VECTOR3 &vec)
+{
+	vec = _V(vec.z, vec.x, -vec.y);
+}
+
+static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
+{
+	vec = _V(vec.y, -vec.z, vec.x);
+}
+
 //
 // Engine information.
 //
@@ -335,7 +346,7 @@ static inline double sign(double x)
 #define PRIM_RCS_FUEL_PER_QUAD	93.5	// AOH
 #define SM_RCS_ISP				(290.0 * G)
 #define SM_RCS_ISP_SL			50.0
-#define SM_RCS_THRUST			441.5
+#define SM_RCS_THRUST			443.9325	// 99.8 lbf
 
 #define CM_RCS_FUEL_PER_TANK	55.5		// The CM has 2 tanks (Apollo 11 Mission Report)
 #define CM_RCS_ISP				(340.0 * G) // AOH, dumping takes 88s with 10 of 12 thrusters
@@ -344,11 +355,12 @@ static inline double sign(double x)
 
 #define LM_RCS_FUEL_PER_TANK	133.084001
 
-#define S4B_APS_FUEL_PER_TANK	143.0
-#define S4B_APS_THRUST			670.0
-#define S4B_APS_ULL_THRUST		310.0
-#define S4B_APS_ISP				(290.0 * G)
-#define S4B_APS_ISP_SL			50.0
+#define S4B_APS_FUEL_PER_TANK_SV	143.0
+#define S4B_APS_FUEL_PER_TANK_SIB	29.71
+#define S4B_APS_THRUST				670.0
+#define S4B_APS_ULL_THRUST			310.0
+#define S4B_APS_ISP					(290.0 * G)
+#define S4B_APS_ISP_SL				50.0
 
 //
 // Mission times for specific events.
@@ -370,13 +382,13 @@ static inline double sign(double x)
 // SIVB payloads.
 //
 
-#define PAYLOAD_LEM					0	///< Payload is a LEM.
+#define PAYLOAD_LEM					0	///< Payload is a LM.
 #define PAYLOAD_ASTP				1	///< Payload is an ASTP docking adapter.
-#define PAYLOAD_LTA					2	///< Payload is an LTA.
-#define PAYLOAD_LM1					3	///< Payload is LM1.
-#define PAYLOAD_LTA8				4	///< Payload is LTA8.
+#define PAYLOAD_LTA10R				2	///< Payload is LTA-10R (Apollo 4).
+#define PAYLOAD_LM1					3	///< Payload is LM-1.
+#define PAYLOAD_LTAB				4	///< Payload is LTA-B (Apollo 8).
 #define PAYLOAD_TARGET				5	///< Payload is a docking target (e.g. Apollo 7).
-#define PAYLOAD_LTA6				6	///< Payload is LTA6.
+#define PAYLOAD_LTA2R				6	///< Payload is LTA-2R (Apollo 6).
 #define PAYLOAD_EMPTY				7	///< Payload is empty (i.e. no payload).
 #define PAYLOAD_DOCKING_ADAPTER		8	///< Payload is SIVB docking adapter (i.e. Apollo to Venus).
 
@@ -394,15 +406,24 @@ static inline double sign(double x)
 // Internal systems.
 //
 
-//#define CSM_H2TANK_CAPACITY 12700.58636		///< in g, 28 lb
-//#define CSM_O2TANK_CAPACITY 145149.5584		///< in g, 320 lb
-#define CSM_H2TANK_CAPACITY 19050.87954   ///< Extended stay tank config (for testing Apollo 15-17)
-#define CSM_O2TANK_CAPACITY 217724.3386	///< Extended stay tank config (for testing Apollo 15-17)
+#define CSM_H2TANK_CAPACITY 12700.58636		///< in g, 28 lb
+#define CSM_O2TANK_CAPACITY 145149.5584		///< in g, 320 lb
+//#define CSM_H2TANK_CAPACITY 19050.87954   ///< Extended stay tank config (for testing Apollo 15-17)
+//#define CSM_O2TANK_CAPACITY 217724.3386	///< Extended stay tank config (for testing Apollo 15-17)
 
 //#define LM_DES_H2O_CAPACITY 151046.2592		///< in g, 333 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
 //#define LM_ASC_H2O_CAPACITY 19277.67573		///< in g, 42.5 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
-//#define LM_DES_H2O_CAPACITY 114795.157			//Pad fill 76%
-#define LM_DES_H2O_CAPACITY 229590.3			//Pad fill 76% for J-Mission Conversion
+#define LM_DES_H2O_CAPACITY 114795.157			//Pad fill 76%
+//#define LM_DES_H2O_CAPACITY 229590.3			//Pad fill 76% for J-Mission Conversion
 #define LM_ASC_H2O_CAPACITY 14651.03355			//Pad fill 76%
+
+//
+// Texture Size (1 = Old ProjectApollo 2K Textures, 2 = New 4K Textures, 4 = New 8K Textures)
+//
+#define TEXTURES_2K 1
+#define TEXTURES_4K 2
+#define TEXTURES_8K 4
+
+const int TexMul = TEXTURES_4K;
 
 #endif

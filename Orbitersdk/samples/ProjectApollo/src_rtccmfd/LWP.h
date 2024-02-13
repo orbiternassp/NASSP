@@ -21,14 +21,71 @@
 #pragma once
 
 #include "OrbMech.h"
+#include "RTCCModule.h"
 
-using namespace OrbMech;
+class RTCC;
+
+struct LWPGlobalConstants
+{
+	//standard gravitational parameter
+	double mu;
+	//angular rate of Earth
+	double w_E;
+	//Reference radius
+	double RREF;
+};
+
+struct LWPProgramConstants
+{
+	//Maximum iterations limit
+	int CMAX = 20;
+	//First guess in change of independent variable
+	double DX1 = 25.0; //Unit?
+	//Transfer angle tolerance
+	double TransferAngleTol = 2.e-4;
+	//Eccentricity tolerance
+	double EccentricityTol = 6.e-4;
+	//Travel angle convergence tolerance
+	double DOS = 2.e-4;
+	//Radius iteration tolerance
+	double DELH = 250.0*0.3048;
+	//Time iteration tolerance
+	double DET = 1.0;
+	//Tolerance on plane change DV for calculating launch window in plane launch points
+	double DVTOL = 0.1*0.3048;
+};
+
+struct LaunchWindowTimesTable
+{
+	int DAY;
+	int DATE[3];
+	double GMT_OPEN;
+	double GMT_CLOSE;
+	double EST_OPEN;
+	double EST_CLOSE;
+	double PST_OPEN;
+	double PST_CLOSE;
+	double PAO;
+	double PAC;
+	double HA;
+	double HP;
+	double LATLS;
+	double LONGLS;
+};
+
+struct GMTLOTable
+{
+	double STAR[10];
+	double LATLS;
+	double LONGLS;
+	double DELTA[10];
+};
 
 struct LWPSummary
 {
 	int LWPERROR = 0;
-	double MJDLO = 0.0;
-	double MJDINS = 0.0;
+	double GMTLO = 0.0;
+	double TINS = 0.0;
 	double AZL = 0.0;
 	double VIGM = 0.0;
 	double RIGM = 0.0;
@@ -39,31 +96,35 @@ struct LWPSummary
 	double DN = 0.0;
 	double DELNO = 0.0;
 	double PA = 0.0;
-	double MJDPLANE = 0.0;
+	double TPLANE = 0.0;
 	double LATLS = 0.0;
 	double LONGLS = 0.0;
-	SV sv_P;
+	double TGRR = 0.0;
 };
 
-struct LWPParameterTable
+struct RLOTDisplay
 {
-	double MJDLO[2] = { 0.0, 0.0 };
-	double GPAZ[2] = { 0.0, 0.0 };
-	double AZL[2] = { 0.0, 0.0 };
-	double YP[2] = { 0.0, 0.0 };
-	double WEDGE[2] = { 0.0, 0.0 };
-	double DVPC[2] = { 0.0, 0.0 };
-	double PHASE[2] = { 0.0, 0.0 };
-	double TIGM[2] = { 0.0, 0.0 };
+	double DELNOD = 0.0;
+	double GSTAR = 0.0;
+	double TYAW = 0.0;
+	double DH = 0.0;
 };
 
-struct LWPSettings
+struct LWPStateVectorTable
 {
-	//Inplane launch window opening and closing times option
+	//Target initial
+	AEGDataBlock sv_T0;
+	//Target at insertion
+	AEGDataBlock sv_T1;
+	//Chaser at insertion
+	AEGDataBlock sv_C;
+};
+
+struct LWPInputTable
+{
+	LWPInputTable();
 	//0 = inplane opening (ascending node), 1 = inplane closing (descending node), 2 = opening and closing (both)
 	int NS;
-	//0 = conic, 1 = integrated
-	int SVPROP;
 	//Delta time to be subtracted from analytical inplane launch time to obtain empirical inplane launch time
 	double DTOPT;
 	//Flag to wrap initial phase angle (add 2NPI to phase angle)
@@ -73,10 +134,6 @@ struct LWPSettings
 	int NEGTIV;
 	//Flightpath angle at insertion
 	double GAMINS;
-	//Geocentric latitude of launch site
-	double LATLS;
-	//Geocentric longitude of launch site
-	double LONGLS;
 	//Powered flight time
 	double PFT;
 	//Powered flight arc
@@ -87,8 +144,6 @@ struct LWPSettings
 	double VINS;
 	//Yaw steering limit
 	double YSMAX;
-	//MJD of inplane lift-off time (normally computed internally)
-	double MJDPLANE;
 	//Launch window/launch targeting options
 	//0 = LW, 1 = LT, 2 = LW and LT
 	int LW;
@@ -96,8 +151,12 @@ struct LWPSettings
 	double TSTART;
 	//Delta time after in-plane time to stop parameter table
 	double TEND;
-	//Target state vector
-	SV TRGVEC;
+	//Position/velocity input state vector for target vehicle
+	VECTOR3 RT, VT;
+	double TT;
+	//Flag for option to compute differential nodal regression from insertion to rendezvous
+	//false = input DELNO, true = compute DELNO
+	bool DELNOF;
 	//Angle that is added to the target descending node to account for differential nodal regression
 	double DELNO;
 	//Lift-off time options for launch targeting
@@ -105,137 +164,115 @@ struct LWPSettings
 	int LOT;
 	//Chaser vehicle weight at OMS-2
 	double CWHT;
-	LWPParameterTable *lwp_param_table;
-};
-
-class LaunchWindowProcessor
-{
-public:
-	LaunchWindowProcessor();
-	void Init(LWPSettings &set);
-	void SetGlobalConstants(double mu, double w_E, double R_E);
-	void LWP();
-	void GetOutput(LWPSummary &out);
-protected:
-	void LWT();
-	SV UPDATE(SV sv0, double dt);
-	void NPLAN(double &MJDIP);
-	void LENSR(double mjdlo, double ysmax, SV &sv_P, double &delta);
-	double PHANG(SV sv_P, int phcont, int wrp);
-	double GMTLS(double MJDI);
-	void RLOT();
-	void TARGT(SV &sv_P);
-	SV PositionMatch(SV sv_A, SV sv_P);
-	void NSERT(double MJDLO, double &UINS, SV &sv_P, double &DH);
-	void LWPT();
-	void LWDSP();
-	void RLOTD();
-	void LWPOT();
-
-	SV coast(SV sv0, double dt);
-	SV coast_osc(SV sv0, double dt, double mu);
-
-	//0 = conic, 1 = integrated
-	int SVPROP;
-	//standard gravitational parameter
-	double mu;
-	//angular rate of Earth
-	double w_E;
-	//Inplane launch window opening and closing times option
-	//0 = inplane opening (ascending node), 1 = inplane closing (descending node), 2 = opening and closing (both)
-	int NS;
-	//Delta time to be subtracted from analytical inplane launch time to obtain empirical inplane launch time
-	double DTOPT;
-	//Flag to wrap initial phase angle (add 2NPI to phase angle)
-	int WRAP;
-	//Initial phase angle control flag
-	//0 = 0 to 2PI, 1 = -2PI to 0, 2 = -PI to PI
-	int NEGTIV;
-	//Flightpath angle at insertion
-	double GAMINS;
-	//Geocentric latitude of launch site
-	double LATLS;
-	//Geocentric longitude of launch site
-	double LONGLS;
-	//Powered flight time
-	double PFT;
-	//Powered flight arc
-	double PFA;
-	//Radius of insertion
-	double RINS;
-	//Velocity magnitude of insertion
-	double VINS;
-	//Yaw steering limit
-	double YSMAX;
-	//Maximum iterations limit
-	int CMAX;
-	//Insertion cutoff conditions option flag
+	//GMTLO* table flag. 1 = compute table, 2 = don't compute table
+	int STABLE;
+	//Delta time prior to each inplane launch point to start GMTLO* search
+	double STARS;
+	//Delta time after each inplane launch to end GMTLO* search
+	double STARE;
+	//0 = do not generate table, 1 = window opening, 2 = window closing, 3 = both, 4 = entire window
+	int LPT;
+	//Phase angle desired at insertion
+	double OFFSET;
 	//1 = Input VINS, GAMINS, RINS; 2 = Input GAMINS, RINS and height difference, 3 = Input GAMINS RINS, altitude at input angle from insertion
 	int INSCO;
-	//Nominal semimajor axis at insertion
-	double ANOM;
-	//Lift-off time options for launch targeting
-	//1 = input time, 2 = phase angle offset, 3 = biased phase zero (GMTLOR threshold), 4 = biased phase zero (TPLANE threshold), 5 = in-plane, 6 = in-plane with nodal regression
-	int LOT;
+	//Launch azimuth coefficients
+	double LAZCOE[4];
+	//Recommended or threshold lift-off GMT
+	double GMTLOR;
 	//Delta time added to inplane time to obtain lift-off time
 	double TRANS;
-	//MJD of inplane lift-off time (normally computed internally)
-	double MJDPLANE;
-	//Recommended or threshold lift-off MJD
-	double MJDLOR;
-	//Time iteration tolerance
-	double DET;
-	//Radius iteration tolerance
-	double DELH;
-	//Flag for option to compute differential nodal regression from insertion to rendezvous
-	//false = input DELNO, true = compute DELNO
-	bool DELNOF;
-	//Angle that is added to the target descending node to account for differential nodal regression
-	double DELNO;
+	//Desired height difference between chaser and target, or altitude of chaser, at input angle from insertion
+	double DHW;
+	//Angle from insertion to obtain a given altitude, or delta altitude
+	double DU;
+	//Bias that is added to GMTLO* to produce lift-off time
+	double BIAS;
 	//DT from lift-off, which defines the time of guidance reference release
 	double DTGRR;
-	//Bias that is added to MJDLOSTAR to produce lift-off time
-	double BIAS;
+	//Nominal semimajor axis at insertion
+	double ANOM;
+	//Launchpad (1 = CSM, 2 = LM)
+	int Pad;
+};
+
+class LaunchWindowProcessor : public RTCCModule
+{
+public:
+	LaunchWindowProcessor(RTCC *r);
+	void SetGlobalConstants(const LWPGlobalConstants &gl);
+	void LWP(const LWPInputTable &in);
+
+	LaunchWindowTimesTable lwtt;
+	GMTLOTable gmtt;
+	LWPSummary lwsum;
+	RLOTDisplay rlott;
+	LWPStateVectorTable svtab;
+protected:
+	void LWT();
+	void UPDAT(VECTOR3 &R, VECTOR3 &V, double &T, double T_des);
+	void NPLAN();
+	void LENSR(double GMTLO);
+	//GMT liftoff for a star time routine (zero phase angle)
+	void GMTLS(double TI, double TF);
+	//Recommended Lift-off Time routine
+	void RLOT();
+	//Compute launch targeting quantities and produce chaser insertion vector
+	void TARGT();
+	//Insertion parameters routine
+	void NSERT(VECTOR3 RB, VECTOR3 VB, double GMTB, double &UINS);
+	//Launch Window Parameters Routine
+	void LWPT();
+	//Launch Window Display routine
+	void LWDSP();
+	void RLOTD();
+	//Launch Window Processor Output Tables routine
+	void LWPOT();
+
+	//Utility functions:
+	//Compute phase angle between RT and RP
+	double PHANG();
+	//Compute time to travel phase angle
+	double TTHET(double phase);
+
+	//Analytical in-plane time
+	double TIP;
+	//GMT of lift-off
+	double GMTLO;
+	
+	//GMT of inplane lift-off time (normally computed internally)
+	double TPLANE;
 	//Differential nodal precession
 	double DELNOD;
+
 	//Launch window/launch targeting options
-	//0 = LW, 1 = LT, 2 = LW and LT
-	int LW;
+
 	//Target vehicle state vector
-	SV sv_T;
+	VECTOR3 RT, VT;
+	double TT;
 	//Delta time prior to in-plane time to start parameter table
 	double TSTART;
 	//Delta time after in-plane time to stop parameter table
 	double TEND;
 	//Time step in parameter table
 	double TSTEP;
-	//First guess change in value of independent variable (used in subroutine ITER)
-	double DX1;
-	//Tolerance on plane change DV for calculating launch window inplane launch points
-	double DVTOL;
 	//Phase angle at window closing (descending node)
 	double PAC;
 	//Phase angle at window opening (ascending node)
 	double PAO;
-	//MJD of lift-off for launch window opening (ascending node)
-	double MJDOPEN;
-	//MJD of lift-off for launch window closing (descending node)
-	double MJDCLOSE;
-	//MJD of insertion
-	double MJDINS;
+	//GMT of lift-off for launch window opening (ascending node)
+	double OPEN;
+	//GMT of lift-off for launch window closing (descending node)
+	double CLOSE;
+	//GMT of insertion
+	double TINS;
 	//Wedge angle between planes
 	double WEDGE;
+	//Time of minimum yaw steering lift-off
+	double TYAW;
+
 	//Launch window parameter table options
-	//0 = do not generate table, 1 = window opening, 2 = window closing, 3 = both, 4 = entire window
-	int LPT;
-	//Reference radius
-	double RREF;
-	//Phase angle desired at insertion
-	double OFFSET;
-	//Launch azimuth coefficients
-	double LAZCOE[4];
-	//MJD of lift-off
-	double MJDLO;
+	
 	//Inclination of chaser at insertion
 	double IIGM;
 	//Angle measured from launch site meridian to chaser descending node
@@ -246,12 +283,32 @@ protected:
 	double AZL;
 	//Target vector Earth-fixed descending node
 	double DN;
+	//Gemini parallel launch azimuth
+	double GPAZ;
 	//Phase angle at insertion
 	double PA;
-	//RLOT chaser state vector
-	SV sv_P1;
+	//Chaser state vector
+	VECTOR3 RP, VP;
+	double TP;
+	//Number of GMTLO* times computed
+	int K25;
+	//GMTLO* time array
+	double STAR[10];
+	//Last GMTLO* time computed
+	double GSTAR;
+	//Delta height at insertion
+	double DH;
 
-	LWPParameterTable *lwp_param_table;
+	//Geocentric latitude of launch site
+	double LATLS;
+	//Geocentric longitude of launch site
+	double LONGLS;
+
 	int error;
-	OBJHANDLE hEarth;
+
+	LWPGlobalConstants GLOCON;
+	LWPProgramConstants PROCON;
+	LWPInputTable inp;
+
+	AEGDataBlock aegdata;
 };

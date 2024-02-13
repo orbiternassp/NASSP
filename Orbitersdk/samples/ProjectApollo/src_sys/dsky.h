@@ -41,7 +41,7 @@ public:
 	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel = 015);
 	virtual ~DSKY();
 
-	void Init(e_object *powered, RotationalSwitch *dimmer);
+	void Init(e_object *statuslightpower, e_object *segmentlightpower, RotationalSwitch *dimmer);
 	void Reset();
 
 	//
@@ -145,8 +145,8 @@ public:
 
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
-	void RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xoffset = 0, int yoffset = 0, bool hasAltVel = true, bool hasDAPPrioDisp = false);
-	void RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xoffset = 0, int yoffset = 0);
+	void RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xoffset = 0, int yoffset = 0, bool hasAltVel = true, bool hasDAPPrioDisp = false, int xTexMul = 1);
+	void RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xoffset = 0, int yoffset = 0, int xTexMul = 1);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 	void ProcessChannel10(ChannelValue val);
 	void ProcessChannel13(ChannelValue val);
@@ -161,7 +161,8 @@ public:
 
 protected:
 
-	bool IsPowered();
+	bool IsStatusPowered();
+	bool IsSegmentPowered();
 	void SendKeyCode(int val);
 
 	//
@@ -269,6 +270,8 @@ protected:
 	Sound Sclick;
 
 	bool FirstTimeStep;
+	e_object *StatusPower;
+	e_object *SegmentPower;
 	RotationalSwitch *DimmerRotationalSwitch;
 
 	//
@@ -279,10 +282,10 @@ protected:
 	void KeyClick();
 	void ResetKeyDown();
 
-	void DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset);
+	void DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset, int xTexMul);
 	void DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 
-	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off);
-	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off);
+	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off, int xTexMul = 1);
+	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off, int xTexMul = 1);
 	int TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off);
 	int SixDigitDisplaySegmentsLit(char *Str, bool Off);
 };

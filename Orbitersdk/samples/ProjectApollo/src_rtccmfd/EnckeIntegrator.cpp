@@ -28,6 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 const double EnckeFreeFlightIntegrator::K = 0.1;
 const double EnckeFreeFlightIntegrator::dt_lim = 1000.0;
 const double EnckeFreeFlightIntegrator::CONS = 6.373338e6 + 700.0*1000.0;
+const double EnckeFreeFlightIntegrator::drag_threshold = 0.1;
 
 EnckeFreeFlightIntegrator::EnckeFreeFlightIntegrator(RTCC *r) : RTCCModule(r)
 {
@@ -35,6 +36,14 @@ EnckeFreeFlightIntegrator::EnckeFreeFlightIntegrator(RTCC *r) : RTCCModule(r)
 	{
 		pEph[i] = NULL;
 	}
+	for (int i = 0;i < 9;i++)
+	{
+		C[i] = S[i] = 0.0;
+	}
+
+	P_S = 0;
+	SRTB = SRDTB = SY = SYP = _V(0, 0, 0);
+	STRECT = SDELT = 0.0;
 }
 
 EnckeFreeFlightIntegrator::~EnckeFreeFlightIntegrator()
@@ -52,8 +61,17 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	STOPVAM = in.MoonRelStopParam;
 	HMULT = in.IsForwardIntegration;
 	DRAG = in.DensityMultiplier;
+	VENT = in.VentPerturbationFactor;
 	CSA = -0.5*in.Area*pRTCC->SystemParameters.MCADRG;
-	WT = in.Weight;
+	if (in.Weight == 0.0)
+	{
+		//Might happen with uninitialized MPT
+		WT = 99999999.9;
+	}
+	else
+	{
+		WT = in.Weight;
+	}
 
 	SetBodyParameters(in.AnchorVector.RBI);
 	ISTOPS = in.CutoffIndicator;
@@ -68,7 +86,11 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	pEph[2] = in.MCIEphemTableIndicator;
 	pEph[3] = in.MCTEphemTableIndicator;
 	EphemerisBuildIndicator = in.EphemerisBuildIndicator;
+	MinEphemDT = in.MinEphemDT;
 
+	a_drag = _V(0, 0, 0);
+	a_vent = _V(0, 0, 0);
+	MDOT_vent = 0.0;
 	delta = _V(0, 0, 0);
 	nu = _V(0, 0, 0);
 	HD2 = H2D2 = H2D8 = HD6 = HP = 0.0;
@@ -94,7 +116,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 		//1 meter tolerance for radius and height
 		DEV = 1.0;
 	}
-	else if (ISTOPS == 4)
+	else if (ISTOPS == 4 || ISTOPS == 6)
 	{
 		//0.0001° tolerance
 		DEV = 0.0001*RAD;
@@ -125,7 +147,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 		}
 	} while (IEND == 0);
 
-	EphemerisStorage();
+	EphemerisStorage(true);
 	WriteEphemerisHeader();
 
 	in.sv_cutoff.R = R_CON + delta;
@@ -229,6 +251,21 @@ EMMENI_Edit_3B:
 				RCALC = FUNCT - STOPVAM;
 			}
 		}
+		else if (ISTOPS == 6)
+		{
+			VECTOR3 NVEC, H_ECT;
+			EphemerisData2 sv_temp, sv_ECT;
+
+			sv_temp.R = R;
+			sv_temp.V = V;
+			sv_temp.GMT = CurrentTime();
+
+			pRTCC->ELVCNV(sv_temp, 0, 1, sv_ECT);
+
+			H_ECT = unit(crossp(sv_ECT.R, sv_ECT.V));
+			NVEC = unit(crossp(_V(0, 0, 1), H_ECT));
+			RCALC = OrbMech::PHSANG(sv_ECT.R, sv_ECT.V, NVEC);
+		}
 	}
 
 	IEND = ISTOPS;
@@ -288,7 +325,10 @@ EMMENI_Edit_4A:
 	{
 		//Now try to find TMAX
 		ISTOPS = 1;
-		RestoreVariables();
+		if (TMAX != 0.0)
+		{
+			RestoreVariables();
+		}
 		//Go back to find new dt
 		goto EMMENI_Edit_3B;
 	}
@@ -411,6 +451,11 @@ void EnckeFreeFlightIntegrator::Step()
 	nu = beta + (F1 + (F2 + F3)*2.0 + YPP) *HD6;
 	//Final acceleration
 	adfunc();
+
+	if (VENT > 0.0)
+	{
+		WT = WT - MDOT_vent * dt;
+	}
 }
 
 double EnckeFreeFlightIntegrator::fq(double q)
@@ -420,8 +465,8 @@ double EnckeFreeFlightIntegrator::fq(double q)
 
 void EnckeFreeFlightIntegrator::adfunc()
 {
-	double r, costheta, P2, P3, P4, P5, q;
-	VECTOR3 U_R, a_dP, a_d, a_dQ, a_dS;
+	double r, q;
+	VECTOR3 a_dP, a_d, a_dQ, a_dS;
 
 	a_dP = a_dQ = a_dS = _V(0, 0, 0);
 
@@ -430,14 +475,18 @@ void EnckeFreeFlightIntegrator::adfunc()
 		if (INITF == false)
 		{
 			INITF = true;
-			MATRIX3 obli = OrbMech::GetObliquityMatrix(P, pRTCC->GetGMTBase() + CurrentTime() / 24.0 / 3600.0);
-			U_Z = mul(obli, _V(0, 1, 0));
-			U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
+
+			//Get Earth rotation matrix only during initialization. For the Moon the libration matrix is updated by the PLEFEM call below
+			if (P == BODY_EARTH)
+			{
+				pRTCC->ELVCNV(CurrentTime(), RTCC_COORDINATES_ECT, RTCC_COORDINATES_ECI, Rot);
+				U_Z = tmul(Rot, _V(0, 0, 1));
+			}
 		}
 
 		TS = tau;
 		OrbMech::rv_from_r0v0(R0, V0, tau, R_CON, V_CON, mu);
-		pRTCC->PLEFEM(1, CurrentTime() / 3600.0, 0, R_EM, V_EM, R_ES);
+		pRTCC->PLEFEM(P == BODY_EARTH ? 1 : 2, CurrentTime() / 3600.0, 0, &R_EM, &V_EM, &R_ES, &Rot); //Get Sun and Moon ephemerides and libration matrix (MCI only)
 	}
 
 	//Calculate actual state
@@ -448,27 +497,8 @@ void EnckeFreeFlightIntegrator::adfunc()
 	//Only calculate perturbations if we are above surface of primary body
 	if (r > R_E)
 	{
-		U_R = unit(R);
-		costheta = dotp(U_R, U_Z);
-
-		P2 = 3.0 * costheta;
-		P3 = 0.5*(15.0*costheta*costheta - 3.0);
-
-		if (P == BODY_EARTH)
-		{
-			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Earth * OrbMech::power(R_E / r, 2.0);
-			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-			a_dP += (U_R*P4 - U_Z * P3)*OrbMech::J3_Earth * OrbMech::power(R_E / r, 3.0);
-			P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-			a_dP += (U_R*P5 - U_Z * P4)*OrbMech::J4_Earth * OrbMech::power(R_E / r, 4.0);
-		}
-		else
-		{
-			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Moon * OrbMech::power(R_E / r, 2.0);
-		}
-
-		a_dP *= mu / OrbMech::power(r, 2.0);
-
+		ACCEL_GRAV();
+		a_dP = G_VEC;
 
 		VECTOR3 R_PS, R_SC, R_PQ, R_QC;
 		double q_Q, q_S;
@@ -508,7 +538,36 @@ void EnckeFreeFlightIntegrator::adfunc()
 				CDRAG = DENS*DRAG * CSA / WT;
 				V_R = V - crossp(U_Z*OrbMech::w_Earth, R);
 				VRMAG = length(V_R);
-				a_d += V_R * VRMAG*CDRAG;
+				//When integrating in the atmosphere, if the altitude/relative velocity ratio reaches a certain minimum value,
+				//the drag perturbation will not be recomputed; but the last computed drag perturbation will be used.
+				if (FACT1 / VRMAG >= drag_threshold)
+				{
+					a_drag = V_R * VRMAG*CDRAG;
+				}
+				a_d += a_drag;
+			}
+		}
+		if (VENT > 0.0)
+		{
+			VECTOR3 VENTDIR = unit(crossp(unit(crossp(R, V)), R));
+			double TV = CurrentTime() - pRTCC->GetGMTLO()*3600.0 - pRTCC->SystemParameters.MCGVEN;
+
+			if (TV < 0.0)
+			{
+				//No venting before MCGVEN
+				a_vent = _V(0.0, 0.0, 0.0);
+				MDOT_vent = 0.0;
+			}
+			else
+			{
+				int i;
+				for (i = 0; i < 8 && pRTCC->SystemParameters.MDTVTV[1][i + 1] < TV; i++);
+				double f = (TV - pRTCC->SystemParameters.MDTVTV[1][i]) / (pRTCC->SystemParameters.MDTVTV[1][i + 1] - pRTCC->SystemParameters.MDTVTV[1][i]);
+				double F_vent = pRTCC->SystemParameters.MCTVEN*(pRTCC->SystemParameters.MDTVTV[0][i] + (pRTCC->SystemParameters.MDTVTV[0][i + 1] - pRTCC->SystemParameters.MDTVTV[0][i]) * f);
+				MDOT_vent = F_vent / pRTCC->SystemParameters.MCTVSP;
+
+				a_vent = VENTDIR * F_vent / WT;
+				a_d += a_vent;
 			}
 		}
 	}
@@ -531,6 +590,12 @@ void EnckeFreeFlightIntegrator::SetBodyParameters(int p)
 		rect1 = 0.75*OrbMech::power(2.0, 21.0);
 		rect2 = 0.75*OrbMech::power(2.0, 2.0)*100.0;
 		P = BODY_EARTH;
+		GMD = 4;
+		GMO = 0; //4 to use the full tesseral data
+		ZONAL[0] = 0.0; ZONAL[1] = OrbMech::J2_Earth; ZONAL[2] = OrbMech::J3_Earth; ZONAL[3] = OrbMech::J4_Earth;
+		//Use this when Orbiter simulates it
+		//C[0] = -1.1619e-9; C[1] =  1.5654e-6; C[2] = 2.1625e-6; C[3] =  3.18750e-7; C[4] = 9.7078e-8; C[5] = -5.1257e-7; C[6] = 7.739e-8; C[7] =  5.7700e-8; C[8] = -3.4567e-9;
+		//S[0] = -4.1312e-9; S[1] = -8.9613e-7; S[2] = 2.6809e-7; S[3] = -2.15567e-8; S[4] = 1.9885e-7; S[5] = -4.4095e-7; S[6] = 1.497e-7; S[7] = -1.2389e-8; S[8] =  6.4464e-9;
 	}
 	else
 	{
@@ -540,6 +605,11 @@ void EnckeFreeFlightIntegrator::SetBodyParameters(int p)
 		rect1 = 0.75*OrbMech::power(2.0, 17.0);
 		rect2 = 0.75*OrbMech::power(2.0, -2.0)*100.0;
 		P = BODY_MOON;
+		GMD = 3;
+		GMO = 0; //3 with L1 model
+		ZONAL[0] = 0.0; ZONAL[1] = OrbMech::J2_Moon; ZONAL[2] = OrbMech::J3_Moon; ZONAL[3] = 0.0;
+		//L1 model, use this when Orbiter simulates it
+		//C[0] = 0.0; C[1] = 0.20715e-4; C[2] = 0.34e-4; C[4] = 0.02583e-4;
 	}
 }
 
@@ -566,6 +636,7 @@ void EnckeFreeFlightIntegrator::StoreVariables()
 	SDELT = tau;
 	STRECT = TRECT;
 	RES1 = RCALC;
+	SWT = WT;
 }
 
 void EnckeFreeFlightIntegrator::RestoreVariables()
@@ -576,6 +647,7 @@ void EnckeFreeFlightIntegrator::RestoreVariables()
 	nu = SYP;
 	tau = SDELT;
 	TRECT = STRECT;
+	WT = SWT;
 	if (P != P_S)
 	{
 		SetBodyParameters(P_S);
@@ -590,19 +662,56 @@ double EnckeFreeFlightIntegrator::CurrentTime()
 	return (t0 + TRECT + tau);
 }
 
-void EnckeFreeFlightIntegrator::EphemerisStorage()
+void EnckeFreeFlightIntegrator::EphemerisStorage(bool last)
 {
 	if (EphemerisBuildIndicator == false) return;
 
-	EphemerisData2 sv, sv2;
-	int in;
+	bool store = false, wastested = false;
 
 	for (int i = 0;i < 4;i++)
 	{
 		if (bStoreEphemeris[i] && pEph[i])
 		{
-			if (pEph[i]->table.size() == 0 || abs(pEph[i]->table.back().GMT - CurrentTime()) > 3.6e-11)
+			//Only go through this once
+			if (wastested == false)
 			{
+				//Always store first and last vector and store them all if MinEphemDT is zero
+				if (pEph[i]->table.size() == 0 || MinEphemDT == 0.0 || last)
+				{
+					store = true;
+				}
+				else
+				{
+					double T_last, T_next, T_cur;
+
+					//Last stored state vector
+					T_last = pEph[i]->table.back().GMT;
+					//Next desired time to store state vector
+					T_next = T_last + MinEphemDT;
+					//Current time
+					T_cur = CurrentTime();
+					//Don't store if state vectors are too close
+					if (abs(T_last - T_cur) > 0.001)
+					{
+						double dt_next;
+
+						//Time difference from current to next desired store time
+						dt_next = T_next - T_cur;
+						//Algorithm: "when the time required to reach the next minimum output point is less than one-half of the time span of the last integration step"
+						if (dt_next < 0.5*dt)
+						{
+							store = true;
+						}
+					}
+				}
+				wastested = true;
+			}
+
+			if (store)
+			{
+				EphemerisData2 sv, sv2;
+				int in;
+
 				if (P == BODY_EARTH)
 				{
 					in = 0;
@@ -641,4 +750,73 @@ void EnckeFreeFlightIntegrator::WriteEphemerisHeader()
 			pEph[i]->Header.VEH = 0;
 		}
 	}
+}
+
+void EnckeFreeFlightIntegrator::ACCEL_GRAV()
+{
+	//This function is based on the Space Shuttle onboard navigation (JSC internal note 79-FM-10)
+
+	//Null gravitation acceleration vector
+	G_VEC = _V(0, 0, 0);
+	//Transform position vector to planet fixed coordinates
+	R_EF = mul(Rot, R);
+	//Components of the planet fixed position unit vector
+	R_INV = 1.0 / length(R);
+	UR = R_EF * R_INV;
+	//Starting values for recursive relations used in Pines formulation
+	R0_ZERO = R_E * R_INV;
+	R0_N = R0_ZERO * mu*R_INV*R_INV;
+	MAT_A[0][1] = 3.0*UR.z;
+	MAT_A[1][1] = 3.0;
+	ZETA_REAL[0] = 1.0;
+	ZETA_IMAG[0] = 0.0;
+	L = 1;
+	AUXILIARY = 0.0;
+	//Effects of tesseral harmonics, terms that depend on the vehicle's longitude
+	for (I = 1;I <= GMO;I++)
+	{
+		ZETA_REAL[I] = UR.x*ZETA_REAL[I - 1] - UR.y*ZETA_IMAG[I - 1];
+		ZETA_IMAG[I] = UR.x*ZETA_IMAG[I - 1] + UR.y*ZETA_REAL[I - 1];
+	}
+	for (N = 2;N <= GMD;N++)
+	{
+		//Derived Legendre functions by means of recursion formulas, multiplied by appropiate combinations of tesseral harmonics (Legendre polynomials shall be multiplied by
+		//zonal harmonics coefficients), and stored as certain auxiliary variables F1-F4.
+		MAT_A[N][0] = 0.0;
+		MAT_A[N][1] = (2.0*(double)N + 1.0)*MAT_A[N - 1][1];
+		MAT_A[N - 1][0] = MAT_A[N - 1][1];
+		MAT_A[N - 1][1] = UR.z*MAT_A[N][1];
+		for (J = 2;J <= N;J++)
+		{
+			MAT_A[N - J][0] = MAT_A[N - J][1];
+			MAT_A[N - J][1] = (UR.z*MAT_A[N - J + 1][1] - MAT_A[N - J + 1][0]) / ((double)J);
+		}
+		F1 = 0.0;
+		F2 = 0.0;
+		F3 = -MAT_A[0][0] * ZONAL[N - 1];
+		F4 = -MAT_A[0][1] * ZONAL[N - 1];
+		//If the maximum order of tesserals wanted has not been attained, do for N1=1 to N (these take into account contributions of tesseral and sectorial harmonics):
+		if (N <= GMO)
+		{
+			for (N1 = 1;N1 <= N;N1++)
+			{
+				F1 = F1 + (double)N1*MAT_A[N1 - 1][0] * (C[L - 1] * ZETA_REAL[N1 - 1] + S[L - 1] * ZETA_IMAG[N1 - 1]);
+				F2 = F2 + (double)N1*MAT_A[N1 - 1][0] * (S[L - 1] * ZETA_REAL[N1 - 1] - C[L - 1] * ZETA_IMAG[N1 - 1]);
+				DNM = C[L - 1] * ZETA_REAL[N1] + S[L - 1] * ZETA_IMAG[N1];
+				F3 = F3 + DNM * MAT_A[N1][0];
+				F4 = F4 + DNM * MAT_A[N1][1];
+				L++;
+			}
+		}
+		//Multiply the sum of zonal and tesseral effects by appropiate distance-related factors, store the results as components of the acceleration vector G_VEC, and prepare for 
+		//final computation by obtaining the intermediate scalar variable AUXILIARY, which accounts for an additional effect proportional to the unit radius vector UR.
+		R0_N = R0_N * R0_ZERO;
+		G_VEC.x = G_VEC.x + R0_N * F1;
+		G_VEC.y = G_VEC.y + R0_N * F2;
+		G_VEC.z = G_VEC.z + R0_N * F3;
+		AUXILIARY = AUXILIARY + R0_N * F4;
+	}
+	//Lastly, the planet fixed acceleration vector shall be obtained and rotated to inertial coordinates
+	G_VEC = G_VEC - UR * AUXILIARY;
+	G_VEC = tmul(Rot, G_VEC);
 }

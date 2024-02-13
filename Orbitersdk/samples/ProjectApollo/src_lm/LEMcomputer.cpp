@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -32,8 +32,10 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
+#include <thread>
+#include <mutex>
 #include "dsky.h"
-#include "lemcomputer.h"
+#include "LEMcomputer.h"
 #include "papi.h"
 #include "saturn.h"
 #include "LEM.h"
@@ -53,7 +55,7 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, 
 	/* FIXME REMOVE THIS LATER, THIS IS TEMPORARY FOR TESTING ONLY AND SHOULD BE IN THE SCENARIO LATER */
 	/* LM PAD LOAD FOR LUMINARY 099 AND APOLLO 11  - OFFICIAL VERSION */
 
-	thread.Resume();
+	Start();
 }
 
 LEMcomputer::~LEMcomputer()
@@ -81,7 +83,6 @@ void LEMcomputer::SetMissionInfo(std::string ProgramName, char *OtherVessel)
 void LEMcomputer::agcTimestep(double simt, double simdt)
 {
 	// Do single timesteps to maintain sync with telemetry engine
-	SingleTimestepPrep(simt, simdt);        // Setup
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
 		lem->PCM.last_update = LastCycled;
@@ -107,7 +108,7 @@ void LEMcomputer::Run ()
 	{
 		timeStepEvent.Wait();
 		{
-			Lock lock(agcCycleMutex);
+			std::lock_guard<std::mutex> guard(agcCycleMutex);
 			agcTimestep(thread_simt,thread_simdt);
 		}
 	}
@@ -157,11 +158,13 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		// Turn on EL display and LGC Light (DSKYWarn).
 		vagc.DskyChannel163 = 1;
 		SetOutputChannel(0163, 1);
-		// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
+		// Light OSCILLATOR FAILURE, VOLTAGE FAIL and LGC WARNING bits to signify power transient, and be forceful about it.
 		// Those two bits are what causes the CWEA to notice.
 		vagc.InputChannel[033] &= 037777;
 		OutputChannel[033] &= 037777;
-		// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+		vagc.InputChannel[077] |= 040;
+		OutputChannel[077] |= 040;
+		// Also turn off STBY and RESTART light while power is off.
 		// The RESTART light will come on as soon as the AGC receives power again.
 		// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 		vagc.RestartLight = 1;
@@ -169,7 +172,11 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		dsky.ClearStby();
 		// Reset last cycling time
 		LastCycled = 0;
-		// We should issue telemetry though.
+		// We should issue telemetry though. Careful with the first timestep
+		if (lem->PCM.last_update == 0)
+		{
+			lem->PCM.last_update = simt - simdt;
+		}
 		lem->PCM.Timestep(simt);
 
 		// and do nothing more.
@@ -180,12 +187,14 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	// If MultiThread is enabled and the simulation is accellerated, the run vAGC in the AGC Thread,
 	// otherwise run in main thread. at x1 acceleration, it is better to run vAGC totally synchronized
 	//
-	if (lem->isMultiThread && oapiGetTimeAcceleration() > 1.0) {
-		Lock lock(agcCycleMutex);
+	if (lem->isMultiThread && oapiGetTimeAcceleration() > 1.0)
+	{
+		std::lock_guard<std::mutex> guard(agcCycleMutex);
 		thread_simt = simt;
 		thread_simdt = simdt;
 		timeStepEvent.Raise();
 	} else {
+		std::lock_guard<std::mutex> guard(agcCycleMutex);
 		agcTimestep(simt,simdt);
 	}
 
@@ -379,6 +388,31 @@ VESSEL * LEMcomputer::GetCSM()
 	}
 
 	return NULL;
+}
+
+void LEMcomputer::GetRadarData(int radarBits)
+{
+	switch (radarBits)
+	{
+	case 1: // LR (LR VEL X)
+		lem->LR.GetVelocityXLGC();
+		break;
+	case 2:	// RR RANGE RATE
+		lem->RR.GetRadarRateLGC();
+		break;
+	case 3:	// LR (LR VEL Z)
+		lem->LR.GetVelocityZLGC();
+		break;
+	case 4:	// RR RANGE
+		lem->RR.GetRadarRangeLGC();
+		break;
+	case 5: // LR (LR VEL Y)
+		lem->LR.GetVelocityYLGC();
+		break;
+	case 7: // LR (LR RANGE)
+		lem->LR.GetRangeLGC();
+		break;
+	}
 }
 
 //

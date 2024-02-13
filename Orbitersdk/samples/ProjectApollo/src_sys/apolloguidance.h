@@ -37,9 +37,11 @@ class PanelSDK;
 #include <bitset>
 #include "powersource.h"
 
-#include "control.h"
+#include "Control.h"
 #include "yaAGC/agc_engine.h"
 #include "thread.h"
+#include <thread>
+#include <mutex>
 
 
 typedef std::bitset<16> ChannelValue;
@@ -315,6 +317,26 @@ public:
 	bool GetTrackerAlarm() { return TrackerAlarm; }
 	bool GetGimbalLockAlarm() { return GimbalLockAlarm; }
 
+	///
+	/// \brief Interrupts
+	///
+	enum Interrupt {
+		T6RUPT = 1,
+		T5RUPT,
+		T3RUPT,
+		T4RUPT,
+		KEYRUPT1,
+		KEYRUPT2,
+		UPRUPT,
+		DOWNRUPT,
+		RADARUPT,
+		HANDRUPT
+		// Maybe add GOJAM here in the future?
+	};
+
+	virtual void RaiseInterrupt(Interrupt rupt) final;
+	virtual bool InterruptPending(Interrupt rupt) final;
+
 protected:
 
 	//
@@ -333,23 +355,25 @@ protected:
 	virtual void ProcessChannel143(ChannelValue val);
 	virtual void ProcessChannel163(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
-	public: virtual void GenerateHandrupt();
-	public: virtual void GenerateDownrupt();
-	public: virtual void GenerateUprupt();
-    public: virtual void GenerateRadarupt();
-	public: virtual bool IsUpruptActive();
+
+	/// Vehicle specific function
+	virtual void GetRadarData(int radarBits) = 0;
+
+public:
 
 	//
 	// Odds and ends.
 	//
 
-	bool SingleTimestepPrep(double simt, double simdt);
 	bool SingleTimestep();
-	bool GenericTimestep(double simt, double simdt);
+	virtual void agcTimestep(double simt, double simdt) = 0;
 	bool GenericReadMemory(unsigned int loc, int &val);
 	void GenericWriteMemory(unsigned int loc, int val);
 
 	int16_t ConvertDecimalToAGCOctal(double x, bool highByte);
+
+	/// Read radar data upon request
+	void RadarRead();
 
 	///
 	/// \brief Are we running the reset program?
@@ -375,9 +399,7 @@ protected:
 	///
 	std::string ProgramName;
 
-	double LastTimestep;
 	double LastCycled;
-	double CurrentTimestep;
 
 	bool isFirstTimestep;
 
@@ -442,7 +464,7 @@ protected:
 	/// \brief Virtual AGC state.
 	///
 	agc_t vagc;
-	Mutex agcCycleMutex;
+	std::mutex agcCycleMutex;
 	Event timeStepEvent;
 	double thread_simt;
 	double thread_simdt;

@@ -24,22 +24,18 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class SCMUmbilical;
-class LCCPadInterface;
+#include "SI_ESE.h"
 
-class SIB_ESE
+class SIB_ESE : public SI_ESE
 {
 public:
-	SIB_ESE(SCMUmbilical *TSMUmb, LCCPadInterface *p);
+	SIB_ESE(TailUmbilical *TSMUmb, LCCPadInterface *p);
 
 	void Timestep();
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	bool GetSIBThrustOKSimulate(int eng, int n) { return SIBThrustOKSimulate[eng - 1][n - 1]; }
+	bool GetSIThrustOKSimulate(int eng, int n) { return SIBThrustOKSimulate[eng - 1][n - 1]; }
 protected:
 	bool SIBThrustOKSimulate[8][3];
-
-	SCMUmbilical *Umbilical;
-	LCCPadInterface *Pad;
 };

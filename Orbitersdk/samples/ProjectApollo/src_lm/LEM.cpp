@@ -21,8 +21,9 @@
   See http://nassp.sourceforge.net/license/ for more details.
 
   **************************************************************************/
+#define ORBITER_MODULE
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -45,6 +46,9 @@
 #include "Mission.h"
 
 #include "connector.h"
+#include "nassputils.h"
+
+using namespace nassp;
 
 char trace_file[] = "ProjectApollo LM.log";
 
@@ -77,28 +81,11 @@ static SoundEvent sevent        ;
 static double NextEventTime = 0.0;
 #endif
 
-static GDIParams g_Param;
+GDIParams g_Param;
 
 // ==============================================================
 // API interface
 // ==============================================================
-
-BOOL WINAPI DllMain (HINSTANCE hModule,
-					 DWORD ul_reason_for_call,
-					 LPVOID lpReserved)
-{
-	switch (ul_reason_for_call) {
-	case DLL_PROCESS_ATTACH:
-		InitGParam(hModule);
-		g_Param.hDLL = hModule; // DS20060413 Save for later
-		break;
-
-	case DLL_PROCESS_DETACH:
-		FreeGParam();
-		break;
-	}
-	return TRUE;
-}
 
 DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 
@@ -134,7 +121,7 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 	if (vessel) delete static_cast<LEM *> (vessel);
 }
 
-#define LM_AXIS_INPUT_CNT  22
+#define LM_AXIS_INPUT_CNT  39
 VesimInputDefinition vesim_lm_inputs[LM_AXIS_INPUT_CNT] = {
 	{ LM_AXIS_INPUT_ACAR,          "ACA Roll",                                 VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
 	{ LM_AXIS_INPUT_ACAP,          "ACA Pitch",                                VESIM_INPUTTYPE_AXIS,     VESIM_DEFAULT_AXIS_VALUE, false },
@@ -152,7 +139,24 @@ VesimInputDefinition vesim_lm_inputs[LM_AXIS_INPUT_CNT] = {
 	{ LM_BUTTON_ABORT_STAGE,       "Abort Stage toggle",                       VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_ABORT_STAGE_GRD,   "Abort Stage Guard toggle",                 VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_DSKY_PRO,          "DSKY PRO",                                 VESIM_INPUTTYPE_BUTTON,  0, true },
-	{ LM_BUTTON_DSKY_ENTER,        "DSKY ENTER",                               VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_KEY_REL,      "DSKY KEY REL",                             VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_VERB,         "DSKY VERB",                                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NOUN,         "DSKY NOUN",                                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_ENTR,         "DSKY ENTR",                                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_CLR,          "DSKY CLR",                                 VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_PLUS,         "DSKY +",                                   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_MINUS,        "DSKY -",                                   VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_RSET,         "DSKY RSET",                                VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_0,        "DSKY Number 0",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_1,        "DSKY Number 1",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_2,        "DSKY Number 2",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_3,        "DSKY Number 3",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_4,        "DSKY Number 4",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_5,        "DSKY Number 5",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_6,        "DSKY Number 6",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_7,        "DSKY Number 7",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_8,        "DSKY Number 8",                            VESIM_INPUTTYPE_BUTTON,  0, true },
+	{ LM_BUTTON_DSKY_NUM_9,        "DSKY Number 9",                            VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_MDCTRL_PGNS,       "Mode Control PGNS Auto/Att Hold toggle",   VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_MDCTRL_PGNS_AUT,   "Mode Control PGNS Auto",                   VESIM_INPUTTYPE_BUTTON,  0, true },
 	{ LM_BUTTON_MDCTRL_PGNS_ATH,   "Mode Control PGNS Att Hold",               VESIM_INPUTTYPE_BUTTON,  0, true },
@@ -221,8 +225,59 @@ void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
 		case LM_BUTTON_DSKY_PRO:
 			pLM->dsky.ProgPressed();
 			break;
-		case LM_BUTTON_DSKY_ENTER:
+		case LM_BUTTON_DSKY_KEY_REL:
+			pLM->dsky.KeyRel();
+			break;
+		case LM_BUTTON_DSKY_VERB:
+			pLM->dsky.VerbPressed();
+			break;
+		case LM_BUTTON_DSKY_NOUN:
+			pLM->dsky.NounPressed();
+			break;
+		case LM_BUTTON_DSKY_ENTR:
 			pLM->dsky.EnterPressed();
+			break;
+		case LM_BUTTON_DSKY_CLR:
+			pLM->dsky.ClearPressed();
+			break;
+		case LM_BUTTON_DSKY_PLUS:
+			pLM->dsky.PlusPressed();
+			break;
+		case LM_BUTTON_DSKY_MINUS:
+			pLM->dsky.MinusPressed();
+			break;
+		case LM_BUTTON_DSKY_RSET:
+			pLM->dsky.ResetPressed();
+			break;
+		case LM_BUTTON_DSKY_NUM_0:
+			pLM->dsky.NumberPressed(0);
+			break;
+		case LM_BUTTON_DSKY_NUM_1:
+			pLM->dsky.NumberPressed(1);
+			break;
+		case LM_BUTTON_DSKY_NUM_2:
+			pLM->dsky.NumberPressed(2);
+			break;
+		case LM_BUTTON_DSKY_NUM_3:
+			pLM->dsky.NumberPressed(3);
+			break;
+		case LM_BUTTON_DSKY_NUM_4:
+			pLM->dsky.NumberPressed(4);
+			break;
+		case LM_BUTTON_DSKY_NUM_5:
+			pLM->dsky.NumberPressed(5);
+			break;
+		case LM_BUTTON_DSKY_NUM_6:
+			pLM->dsky.NumberPressed(6);
+			break;
+		case LM_BUTTON_DSKY_NUM_7:
+			pLM->dsky.NumberPressed(7);
+			break;
+		case LM_BUTTON_DSKY_NUM_8:
+			pLM->dsky.NumberPressed(8);
+			break;
+		case LM_BUTTON_DSKY_NUM_9:
+			pLM->dsky.NumberPressed(9);
 			break;
 		case LM_BUTTON_MDCTRL_PGNS:
 			//Mode Control PGNS - cycle between Auto & Att Hold
@@ -359,12 +414,14 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
-	imu(agc, Panelsdk),
+	inertialData(this),
+	imu(agc, Panelsdk, inertialData),
 	scdu(agc, RegOPTX, 0140, 1),
 	tcdu(agc, RegOPTY, 0141, 1),
 	aea(Panelsdk, deda),
 	deda(this,soundlib, aea),
-	CWEA(soundlib, Bclick),
+	mechanicalAccelerometer(inertialData),
+	CWEA(soundlib),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
 	APSPropellant(ph_Asc, Panelsdk),
@@ -395,11 +452,13 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	lm_vhf_to_csm_csm_connector(this, &VHF),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk),
+	NumDockCompLTGFeeder("Num-Dock-Comp-LTG-Feeder", Panelsdk),
 	DescentECAMainFeeder("Descent-ECA-Main-Feeder", Panelsdk),
 	DescentECAContFeeder("Descent-ECA-Cont-Feeder", Panelsdk),
 	AscentECAMainFeeder("Ascent-ECA-Main-Feeder", Panelsdk),
 	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk),
 	vesim(&cbLMVesim, this)
+
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -467,7 +526,9 @@ void LEM::Init()
 	DebugLineClearTimer = 0;
 
 	ToggleEva=false;
-	CDREVA_IP=false;
+	EVA_IP[0] = false;
+	EVA_IP[1] = false;
+	hLEVA[0] = hLEVA[1] = NULL;
 	refcount = 0;
 	viewpos = LMVIEW_CDR;
 	stage = 0;
@@ -487,6 +548,8 @@ void LEM::Init()
 	SaveFOV = 0;
 	VcInfoActive = false;
 	VcInfoEnabled = false;
+
+	visibilitySize = 31.1; //Tuned so the LM disappears in the CSM optics at 400nm range
 
 	Crewed = true;
 	AutoSlow = false;
@@ -522,6 +585,13 @@ void LEM::Init()
 	ViewOffsety = 0;
 	ViewOffsetz = 0;
 
+	// VC Free Cam
+	vcFreeCamx = 0;
+	vcFreeCamy = 0;
+	vcFreeCamz = 0;
+	vcFreeCamSpeed = 0.2;
+	vcFreeCamMaxOffset = 0.5;
+
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
 	RCSA.SetVessel(this);
@@ -539,9 +609,11 @@ void LEM::Init()
 	ascidx = -1;
 	dscidx = -1;
 	vcidx = -1;
+	xpointershadesidx = -1;
 
 	drogue = NULL;
 	probes = NULL;
+	deflectors = NULL;
 	cdrmesh = NULL;
 	lmpmesh = NULL;
 	vcmesh = NULL;
@@ -567,7 +639,7 @@ void LEM::Init()
 
 	// DS20160916 Physical parameters updation
 	CurrentFuelWeight = 0;
-	LastFuelWeight = 999999; // Ensure update at first opportunity
+	LastFuelWeight = numeric_limits<double>::infinity(); // Ensure update at first opportunity
 	currentCoG = _V(0, 0, 0);
 
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
@@ -627,6 +699,8 @@ void LEM::Init()
 		fdaiDisabled = false;
 		fdaiSmooth = false;
 
+		InitVCAnimations();
+
 		PanelId = LMPANEL_MAIN;	// default panel
 		InitSwitches();
 		// "dummy" SetSwitches to enable the panel event handling
@@ -654,10 +728,21 @@ void LEM::DoFirstTimestep()
 	NextEventTime = 0.0;
 #endif
 
-	char VName10[256]="";
+	char VName10[256] = "";
 
-	strcpy (VName10, GetName()); strcat (VName10, "-LEVA");
-	hLEVA=oapiGetVesselByName(VName10);
+	strcpy(VName10, pMission->GetCDRName().c_str());
+	hLEVA[0] = oapiGetVesselByName(VName10);
+	if (hLEVA[0] == NULL) { //This might be a legacy scenario
+		strcpy(VName10, GetName()); strcat(VName10, "-LEVA-CDR");
+		hLEVA[0] = oapiGetVesselByName(VName10);
+	}
+
+	strcpy(VName10, pMission->GetLMPName().c_str());
+	hLEVA[1] = oapiGetVesselByName(VName10);
+	if (hLEVA[1] == NULL) { //This might be a legacy scenario
+		strcpy(VName10, GetName()); strcat(VName10, "-LEVA-LMP");
+		hLEVA[1] = oapiGetVesselByName(VName10);
+	}
 }
 
 void LEM::LoadDefaultSounds()
@@ -704,6 +789,65 @@ void LEM::LoadDefaultSounds()
     sevent.InitDirectSound(soundlib);
 #endif
 	SoundsLoaded = true;
+}
+
+int LEM::clbkConsumeDirectKey(char* kstate)
+{
+	bool camSlow = false;
+	VECTOR3 camDir = _V(0, 0, 0);
+	bool setFreeCam = false;
+
+	if (KEYMOD_SHIFT(kstate)) {
+		camSlow = true;
+	}
+
+	if (!KEYDOWN(kstate, OAPI_KEY_GRAVE)) {
+		if (KEYDOWN(kstate, OAPI_KEY_LEFT)) {
+			camDir.x = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_RIGHT)) {
+			camDir.x = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.y = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.y = -1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_INSERT)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DELETE)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
+	}
+	else {
+		if (KEYDOWN(kstate, OAPI_KEY_UP)) {
+			camDir.z = 1;
+			setFreeCam = true;
+		}
+		if (KEYDOWN(kstate, OAPI_KEY_DOWN)) {
+			camDir.z = -1;
+			setFreeCam = true;
+		}
+	}
+
+	if ((!KEYMOD_CONTROL(kstate)) && (!KEYMOD_ALT(kstate))) {
+		if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
+			if (setFreeCam == true) {
+				VCFreeCam(camDir, camSlow);
+			}
+			//return 1;
+		}
+	}
+
+	return 0;
 }
 
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
@@ -845,6 +989,10 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_NUMPAD0:
 				deda.NumberPressed(0);
 				break;
+			case OAPI_KEY_D:
+				// Orbiter undocking messes with our undocking system. We consume the keybind here to block it.
+				// This won't work if the user has changed this keybind. Unfortunately Orbiter does not export the keymap through the API (yet). :(
+				return 1;
 			}
 		}
 		else {
@@ -1101,7 +1249,6 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	{
 		DoFirstTimestep();
 		FirstTimestep = false;
-		return;
 	}
 
 	// Prevent Orbiter navmodes from doing stuff
@@ -1213,6 +1360,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 	}
 
+	inertialData.Timestep(simdt);
+
 	// Update VC animations
 	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
 	{
@@ -1242,10 +1391,16 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	// the focus switch a few timesteps to allow it to initialise properly in the background.
 	//
 
-	if (SwitchFocusToLeva > 0 && hLEVA) {
+	if (SwitchFocusToLeva > 0 && hLEVA[0]) {
 		SwitchFocusToLeva--;
 		if (!SwitchFocusToLeva) {
-			oapiSetFocusObject(hLEVA);
+			oapiSetFocusObject(hLEVA[0]);
+		}
+	}
+	if (SwitchFocusToLeva < 0 && hLEVA[1]) {
+		SwitchFocusToLeva++;
+		if (!SwitchFocusToLeva) {
+			oapiSetFocusObject(hLEVA[1]);
 		}
 	}
 
@@ -1263,15 +1418,24 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	}else if (stage == 1 || stage == 5)	{
 
-		if (CDREVA_IP) {
-			if(!hLEVA) {
-				ToggleEVA();
+		if (EVA_IP[0]) {
+			if(!hLEVA[0]) {
+				ToggleEVA(true);
+			}
+		}
+		if (EVA_IP[1]) {
+			if (!hLEVA[1]) {
+				ToggleEVA(false);
 			}
 		}
 
-		if (ToggleEva && GroundContact()){
-			ToggleEVA();
+		if (ToggleEva && GroundContact() && CDRinPLSS > 0 && EVA_IP[0] == false){
+			ToggleEVA(true);
 		}
+		if (ToggleEva && GroundContact() && LMPinPLSS > 0 && EVA_IP[1] == false) {
+			ToggleEVA(false);
+		}
+		ToggleEva = false; //Always reset, in case the condition wasn't met
 
 		double vsAlt = GetAltitude(ALTMODE_GROUND);
 		if (!Landed && (GroundContact() || (vsAlt < 1.0))) {
@@ -1350,10 +1514,6 @@ void LEM::SetGenericStageState(int stat)
 		stage = 1;
 		SetLmVesselDockStage();
 		SetLmVesselHoverStage();
-
-		if (CDREVA_IP) {
-			SetupEVA();
-		}
 		break;
 
 	case 2:
@@ -1461,8 +1621,11 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		if (!strnicmp(line, "CONFIGURATION", 13)) {
 			sscanf(line + 13, "%d", &status);
 		}
-		else if (!strnicmp(line, "EVA", 3)) {
-			CDREVA_IP = true;
+		else if (!strnicmp(line, "EVA_CDR", 7)) {
+			EVA_IP[0] = true;
+		}
+		else if (!strnicmp(line, "EVA_LMP", 7)) {
+			EVA_IP[1] = true;
 		}
 		else if (!strnicmp(line, "CSWITCH", 7)) {
 			SwitchState = 0;
@@ -1544,6 +1707,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "COASRETICLEVISIBLE", 18)) {
 			sscanf(line + 18, "%i", &COASreticlevisible);
+		}
+		else if (!strnicmp(line, INERTIAL_DATA_START_STRING, sizeof(INERTIAL_DATA_START_STRING))) {
+			inertialData.LoadState(scn);
 		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
@@ -1729,9 +1895,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
 		}
-		else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {
-			mechanicalAccelerometer.LoadState(scn);
-		}
 		else if (!strnicmp(line, ATCA_START_STRING, sizeof(ATCA_START_STRING))) {
 			atca.LoadState(scn);
 		}
@@ -1782,7 +1945,7 @@ void LEM::clbkPostCreation()
 	if (hMCC != NULL) {
 		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
 		if (pVessel) {
-			if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\MCC", 17) || !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17))
+			if (utils::IsVessel(pVessel, utils::MCC))
 			{
 				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
 				if (pMCCVessel->mcc)
@@ -1814,7 +1977,9 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 
 	if (dscidx != -1 && pMission->LMHasLegs()) {
 		probes = GetDevMesh(vis, dscidx);
+		deflectors = GetDevMesh(vis, dscidx);
 		HideProbes();
+		HideDeflectors();
 	}
 
 	if (vcidx != -1) {
@@ -1847,6 +2012,56 @@ void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
 			CreateAirfoils();
 		}
 	}
+}
+
+void LEM::clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel)
+{
+	OBJHANDLE hLM = GetHandle();
+	if (hNewVessel == hLM) { //LM gains focus
+
+		bool fixCamera = false;
+		if (oapiCameraInternal() == false) {
+			fixCamera = true;
+			oapiCameraAttach(hLM, 0);
+		}
+		
+		if (status == 0) { //Dock Stage
+			SetSize(6);
+		}
+		else if (status == 1) { //Hover Stage
+			SetSize(7);
+		}
+		else if (status == 2) { //Ascent Hover Stage
+			SetSize(5);
+		}
+
+		if (fixCamera == true) {
+			oapiCameraAttach(hLM, 1);
+		}
+	}
+	else if (hOldVessel == hLM) { //LM loses focus
+		SetSize(visibilitySize);
+	}
+}
+
+void LEM::clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos)
+{
+	double size = 0;
+	if (status == 0) { //Dock Stage
+		size = 6;
+	}
+	else if (status == 1) { //Hover Stage
+		size = 7;
+	}
+	else if (status == 2) { //Ascent Hover Stage
+		size = 5;
+	}
+
+	double cs = size * size;  // simplified cross section
+	double albedo = 1.5;    // simplistic albedo (mixture of absorption, reflection)
+
+	F = mflux * (cs * albedo);
+	pos = _V(0, 0, 0);        // don't induce torque
 }
 
 void LEM::DefineAnimations()
@@ -1972,10 +2187,19 @@ void LEM::SetStateEx(const void *status)
 void LEM::clbkSaveState (FILEHANDLE scn)
 
 {
-	SaveDefaultState (scn);	
+	// save default vessel parameters
+	// set CoG to center of mesh before saving scenario; otherwise, LM position will change slightly when saved scenario is loaded
+	ShiftCG(-currentCoG);
+	VESSEL4::clbkSaveState(scn);
+	// reset CoG to correct position
+	ShiftCG(currentCoG); 
+
 	oapiWriteScenario_int (scn, "CONFIGURATION", status);
-	if (CDREVA_IP){
-		oapiWriteScenario_int (scn, "EVA", int(TO_EVA));
+	if (EVA_IP[0]){
+		oapiWriteScenario_int (scn, "EVA_CDR", int(TO_EVA));
+	}
+	if (EVA_IP[1]) {
+		oapiWriteScenario_int(scn, "EVA_LMP", int(TO_EVA));
 	}
 
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
@@ -2013,6 +2237,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		}
 	}
 
+	inertialData.SaveState(scn);
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
@@ -2110,7 +2335,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	tca3B.SaveState(scn, "RCSTCA_3B_BEGIN", "RCSTCA_END");
 	tca4B.SaveState(scn, "RCSTCA_4B_BEGIN", "RCSTCA_END");
 	ordeal.SaveState(scn);
-	mechanicalAccelerometer.SaveState(scn);
 	atca.SaveState(scn);
 	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
 	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);

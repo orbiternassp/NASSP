@@ -70,6 +70,8 @@ protected:
 	void ProcessChannel143(ChannelValue val);
 	void ProcessChannel34(ChannelValue val);
 
+	void GetRadarData(int radarBits);
+
 	//
 	// log file for autoland debugging
 	//

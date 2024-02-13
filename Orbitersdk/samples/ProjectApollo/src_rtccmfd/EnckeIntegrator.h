@@ -35,7 +35,7 @@ struct EMMENIInputTable
 	//Maximum time of integration
 	double MaxIntegTime = 10.0*24.0*3600.0;
 	//Minimum time between ephemeris points
-	double MinEphemDT;
+	double MinEphemDT = 0.0;
 	//Integration direction indicator (+X-forward, -X-backward)
 	double IsForwardIntegration = 1.0;
 	//Desired value of stopping parameter relative to the Earth
@@ -89,8 +89,9 @@ private:
 	double fq(double q);
 	void adfunc();
 	double CurrentTime();
-	void EphemerisStorage();
+	void EphemerisStorage(bool last = false);
 	void WriteEphemerisHeader();
+	void ACCEL_GRAV();
 
 	double R_E, mu;
 	//State vector at last rectification (RBASE)
@@ -140,7 +141,7 @@ private:
 	double VAR;
 	//Maximum time to integrate
 	double TMAX;
-	//Stop condition (1 = time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch)
+	//Stop condition (1 = time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch, 6 = first ascending node relative to the Earth)
 	int ISTOPS;
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame;
@@ -152,6 +153,8 @@ private:
 	double DEV;
 	//Density multiplier (0 if no drag)
 	double DRAG;
+	//Vent multiplier (negative if no venting)
+	double VENT;
 	//Bounding variable. 0 = first pass, -1 = not bounded, 1 = bounded
 	int INITE;
 	double DEL, AQ, BQ, DISQ, dtesc[2];
@@ -175,6 +178,38 @@ private:
 	double CSA;
 	//Vehicle weight
 	double WT;
+	//Drag acceleration
+	VECTOR3 a_drag;
+	//Vent acceleration
+	VECTOR3 a_vent;
+	//Venting mass loss rate
+	double MDOT_vent;
+	//Minimum output step
+	double MinEphemDT;
+
+	//ACCEL
+	//Rotation matrix from global to local coordinates
+	MATRIX3 Rot;
+	//Planet fixed position vector
+	VECTOR3 R_EF;
+	//Inverse of position radius
+	double R_INV;
+	//Unit position vector in planet fixed coordinates
+	VECTOR3 UR;
+	//Ratio of position and Earth radii
+	double R0_ZERO;
+	//Term in gravity calculation
+	double R0_N;
+	double MAT_A[5][2];
+	double ZETA_REAL[5], ZETA_IMAG[5];
+	//Degree and order of gravity calculations
+	int GMD, GMO;
+	int L, I, N, N1, J;
+	double AUXILIARY;
+	double F1, F2, F3, F4, DNM;
+	VECTOR3 G_VEC;
+	double ZONAL[4];
+	double C[9], S[9];
 
 	//Values used in Step
 	double HP, HD2, H2D2, H2D8, HD6;
@@ -191,9 +226,12 @@ private:
 	static const double K, dt_lim;
 	//700km as radius (used to determine drag or no drag calculation)
 	static const double CONS;
+	//Threshold at which drag isn't recomputed because it would be too large
+	static const double drag_threshold;
 
 	//Stored data
 	int P_S;
 	VECTOR3 SRTB, SRDTB, SY, SYP;
 	double SDELT, STRECT;
+	double SWT;
 };

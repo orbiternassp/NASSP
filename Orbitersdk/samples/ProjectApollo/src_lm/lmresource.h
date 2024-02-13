@@ -302,7 +302,6 @@
 #define AID_MISSION_TIMER_SWITCHES      528
 #define IDB_DSKY_DISP                   529
 #define AID_FDAI_RIGHT                  530
-#define IDB_FDAI_ROLLINDICATOR          531
 #define IDB_FDAI_ROLL                   532
 #define IDB_CWS_LIGHTS                  533
 #define IDB_EVENT_TIMER                 534
@@ -844,6 +843,7 @@
 #define IDB_BORDER_104x106              2021
 #define IDB_BORDER_286x197              2022
 #define AID_DUMMY_PANEL_AREA			2023
+#define AID_LEM_PWRFAIL_RNGALTRATE      2024
 
 // VC Active Areas
 #define AID_VC_OVERHEADHATCH            3000
@@ -867,6 +867,7 @@
 #define AID_VC_SW_RRGYRO                 3020
 #define AID_VC_RETICLEDISP               3021
 
+#define AID_VC_COAS1                     3030
 #define AID_VC_COAS2                     3031
 
 // VC Active Areas (Panel 1)

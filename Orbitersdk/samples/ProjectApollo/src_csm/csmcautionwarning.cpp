@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -38,7 +38,7 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 
 #include "saturn.h"
 #include "papi.h"
@@ -54,6 +54,7 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 	SPSPressCheckCount = 0;
 	CryoPressCheckCount = 0;
 	GlycolTempCheckCount = 0;
+	SuitCompDPHighCheckCount = 0;
 	for (int i = 0; i < 4; i++)
 		FuelCellCheckCount[i] = 0;
 
@@ -72,18 +73,31 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 // Check status of a fuel cell.
 //
 
-bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus &fc, int index)
+bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus& fc, int index)
 {
-	Saturn *sat = (Saturn *)OurVessel;
+	Saturn* sat = (Saturn*)OurVessel;
 
 	bool bad = false;
-	
+
 	//
 	// Various conditions, see Apollo Operations Handbook 2.10.4.2
 	//
 
-	if (fc.H2FlowLBH > 0.161) bad = true;
-	if (fc.O2FlowLBH > 1.276) bad = true;
+	//please refactor me...and the rest of the CWS to be more voltage-based
+	switch (index) {
+		// 4.025 V = 0.161 lb/r H2
+		// 3.9875 V = 1.276 lb/r O2
+
+	case 1:
+		if (sat->FCH2FlowSensor1.Voltage() > 4.025 || sat->FCO2FlowSensor1.Voltage() > 3.9875) { bad = true; }
+		break;
+	case 2:
+		if (sat->FCH2FlowSensor2.Voltage() > 4.025 || sat->FCO2FlowSensor2.Voltage() > 3.9875) { bad = true; }
+		break;
+	case 3:
+		if (sat->FCH2FlowSensor3.Voltage() > 4.025 || sat->FCO2FlowSensor3.Voltage() > 3.9875) { bad = true; }
+		break;
+	}
 
 	// pH > 9 not simulated at the moment
 
@@ -277,7 +291,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	// CREW ALERT
 	//
 
-	if ((UplinkTestState & 010) != 0) {
+	if (sat->udl.GetCrewAlert()) {
 		SetLight(CSM_CWS_CREW_ALERT,true);		
 	} else {
 		SetLight(CSM_CWS_CREW_ALERT,false);
@@ -313,19 +327,17 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			//
 
 			bool LightCryo = false;
-			TankPressures press;
-			sat->GetTankPressures(press);
 
-			if (press.H2Tank1PressurePSI < 220.0 || press.H2Tank2PressurePSI < 220.0) {
+			if (sat->H2Tank1PressSensor.Voltage() < 3.143 || sat->H2Tank2PressSensor.Voltage() < 3.143) {
 				LightCryo = true;
 			}
-			else if (press.H2Tank1PressurePSI > 270.0 || press.H2Tank2PressurePSI > 270.0) {
+			else if (sat->H2Tank1PressSensor.Voltage() > 3.855 || sat->H2Tank2PressSensor.Voltage() > 3.855) {
 				LightCryo = true;
 			}
-			else if (press.O2Tank1PressurePSI < 800.0 || press.O2Tank2PressurePSI < 800.0) {
+			else if (sat->O2Tank1PressSensor.Voltage() < 3.75 || sat->O2Tank2PressSensor.Voltage() < 3.75) {
 				LightCryo = true;
 			}
-			else if (press.O2Tank1PressurePSI > 950.0 || press.O2Tank2PressurePSI > 950.0) {
+			else if (sat->O2Tank1PressSensor.Voltage() > 4.5 || sat->O2Tank2PressSensor.Voltage() > 4.5) {
 				LightCryo = true;
 			}
 
@@ -604,8 +616,15 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// of the SuitComprDeltaPMeter to pervent alarms because of the fluctuations during 
 		// high time acceleration. 
 		//
+
+		if (datm.DisplayedSuitComprDeltaPressurePSI < 0.22) {
+			SuitCompDPHighCheckCount++;
+		}
+		else {
+			SuitCompDPHighCheckCount = 0;
+		}
 		
-		SetLight(CSM_CWS_SUIT_COMPRESSOR, (datm.DisplayedSuitComprDeltaPressurePSI < 0.22));
+		SetLight(CSM_CWS_SUIT_COMPRESSOR, SuitCompDPHighCheckCount > 5);
 
 		//
 		// CM RCS warning lights if pressure is below 260psi or above 330psi (AOH RCS 2.5-46),
@@ -626,18 +645,18 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	}
 }
 
-void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel)
+void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel, int TexMul)
 
 {
 	if (leftpanel) {
-		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6, 122, 0);
+		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6*TexMul, 122*TexMul, 0, TexMul);
 	}
 	else {
-		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261, 122, CWS_LIGHTS_PER_PANEL);
+		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261*TexMul, 122*TexMul, CWS_LIGHTS_PER_PANEL, TexMul);
 	}
 }
 
-void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf)
+void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf, int TexMul)
 
 {
 	if (!LightsPowered() || GNLampState == 0)
@@ -645,15 +664,15 @@ void CSMCautionWarningSystem::RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsu
 
 	// PGNS
 	if (GNLampState == 2 || GNPGNSAlarm) {
-		oapiBlt(surf, lightsurf, 0, 0, 54, 2, 49, 21);
+		oapiBlt(surf, lightsurf, 0, 0, 54*TexMul, 2*TexMul, 49*TexMul, 21*TexMul);
 	}
 	// CMC
 	if (GNLampState == 2 || RightLights[CSM_CWS_CMC_LIGHT - CWS_LIGHTS_PER_PANEL]) {
-		oapiBlt(surf, lightsurf, 0, 25, 54, 27, 49, 21);
+		oapiBlt(surf, lightsurf, 0, 25*TexMul, 54*TexMul, 27*TexMul, 49*TexMul, 21*TexMul);
 	}
 	// ISS
 	if (GNLampState == 2 || RightLights[CSM_CWS_ISS_LIGHT - CWS_LIGHTS_PER_PANEL]) {
-		oapiBlt(surf, lightsurf, 0, 50, 54, 52, 49, 21);
+		oapiBlt(surf, lightsurf, 0, 50*TexMul, 54*TexMul, 52*TexMul, 49*TexMul, 21*TexMul);
 	}
 }
 
@@ -702,7 +721,7 @@ bool CSMCautionWarningSystem::LightPowered(int i)
 	return true;
 }
 
-void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base)
+void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base, int TexMul)
 
 {
 	int i = 0;
@@ -715,7 +734,7 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 		for (column = 0; column < 4; column++) {
 			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK || MasterAlarmPressed))) {
 				if (!IsFailed(i + base) && LightPowered(i + base)) {
-					oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
+					oapiBlt(surf, lightsurf, column * 53*TexMul, row * 18*TexMul, column * 53*TexMul + sdx, row * 18*TexMul + sdy, 50*TexMul, 16*TexMul);
 				}
 			}
 			i++;

@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -44,41 +44,41 @@
  
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
-static GDIParams g_Param;
+extern GDIParams g_Param;
 
-void InitGParam(HINSTANCE hModule)
+DLLCLBK void InitModule(HINSTANCE hModule)
 
 {
 	g_Param.hDLL = hModule;
 
 	// allocate GDI resources
-	g_Param.font[0]  = CreateFont (-13, 0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
-	g_Param.font[1]  = CreateFont (-10, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
+	g_Param.font[0]  = oapiCreateFont(-13, true, "Arial");
+	g_Param.font[1]  = oapiCreateFont(-10, true, "Arial");
 
-	g_Param.brush[0] = CreateSolidBrush (RGB(0,255,0));    // green
-	g_Param.brush[1] = CreateSolidBrush (RGB(255,0,0));    // red
-	g_Param.brush[2] = CreateSolidBrush (RGB(154,154,154));  // Grey
-	g_Param.brush[3] = CreateSolidBrush (RGB(3,3,3));  // Black
+	g_Param.brush[0] = oapiCreateBrush(RGB(0,255,0));    // green
+	g_Param.brush[1] = oapiCreateBrush(RGB(255,0,0));    // red
+	g_Param.brush[2] = oapiCreateBrush(RGB(154,154,154));  // Grey
+	g_Param.brush[3] = oapiCreateBrush(RGB(3,3,3));  // Black
 
-	g_Param.pen[0] = CreatePen (PS_SOLID, 1, RGB(224,224,224));
-	g_Param.pen[1] = CreatePen (PS_SOLID, 3, RGB(164,164,164));
-	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB(255,0,0));
-	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB(255,0,0));
-	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(0,0,0));
+	g_Param.pen[0] = oapiCreatePen(1, 1, RGB(224,224,224));
+	g_Param.pen[1] = oapiCreatePen(1, 3, RGB(164,164,164));
+	g_Param.pen[2] = oapiCreatePen(1, 1, RGB(255,0,0));
+	g_Param.pen[3] = oapiCreatePen(1, 3, RGB(255,0,0));
+	g_Param.pen[4] = oapiCreatePen(1, 3, RGB(0,0,0));
 
 	g_Param.col[2] = oapiGetColour(154,154,154);
 	g_Param.col[3] = oapiGetColour(3,3,3);
 	g_Param.col[4] = oapiGetColour(255,0,255);
 }
 
-void FreeGParam()
+DLLCLBK void ExitModule(HINSTANCE hDll)
 
 {
 	int i;
-	// deallocate GDI resources
-	for (i = 0; i < 2; i++) DeleteObject (g_Param.font[i]);
-	for (i = 0; i < 4; i++) DeleteObject (g_Param.brush[i]);
-	for (i = 0; i < 4; i++) DeleteObject (g_Param.pen[i]);
+	// deallocate sketchpad resources
+	for (i = 0; i < 2; i++) oapiReleaseFont(g_Param.font[i]);
+	for (i = 0; i < 4; i++) oapiReleaseBrush(g_Param.brush[i]);
+	for (i = 0; i < 4; i++) oapiReleasePen(g_Param.pen[i]);
 }
 
 #define RETICLE_X_CENTER 525
@@ -87,66 +87,64 @@ void FreeGParam()
 #define RETICLE_SPLIT_ANGLE 0.05 // about 2.25 degrees
 #define RETICLE_SCREW_NPTS 360
 
-void DrawReticle (HDC hDC, double angle, int dimmer)
+void DrawReticle(oapi::Sketchpad * skp, double angle, int dimmer)
 {
-	HGDIOBJ oldObj;
-	int xend,yend;
+	int xend, yend;
 	// Set up Dimmer Pen
-	HPEN pen = CreatePen(PS_SOLID,1,RGB(dimmer,64,64));
-	oldObj = SelectObject (hDC, pen);
+	oapi::Pen* pen = oapiCreatePen(1, 1, RGB(dimmer, 64, 64));
+	oapi::Pen* oldObj = skp->SetPen(pen);
 	// Draw crosshair vertical member
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle));
 	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
-	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle+PI));
-	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle+PI));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle + PI));
+	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle + PI));
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
 	// Draw crosshair horizontal member
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * cos(angle));
 	yend = RETICLE_Y_CENTER + (int)(RETICLE_RADIUS * sin(angle));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
-	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * cos(angle+PI));
-	yend = RETICLE_Y_CENTER + (int)(RETICLE_RADIUS * sin(angle+PI));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * cos(angle + PI));
+	yend = RETICLE_Y_CENTER + (int)(RETICLE_RADIUS * sin(angle + PI));
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
 	// Draw radial line #1
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle + RETICLE_SPLIT_ANGLE));
 	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle + RETICLE_SPLIT_ANGLE));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
 	// Draw radial line #2
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle - RETICLE_SPLIT_ANGLE));
 	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle - RETICLE_SPLIT_ANGLE));
-	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	skp->MoveTo(RETICLE_X_CENTER, RETICLE_Y_CENTER); skp->LineTo(xend, yend);
 	int i;
-	double theta,b, r;
-	b = -RETICLE_RADIUS / tan(PI2*30.0 / 360.0);
-	POINT ScrewPt[RETICLE_SCREW_NPTS];
+	double theta, b, r;
+	b = -RETICLE_RADIUS / tan(PI2 * 30.0 / 360.0);
+	oapi::IVECTOR2 ScrewPt[RETICLE_SCREW_NPTS];
 	// Draw Archemedes screw #1
-	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
-		theta = 2*PI / RETICLE_SCREW_NPTS * i;
-		r = b * tan(theta*30.0 / 360.0);
-		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle+RETICLE_SPLIT_ANGLE+PI));
-		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle+RETICLE_SPLIT_ANGLE+PI));
+	for (i = 0; i < RETICLE_SCREW_NPTS; i++) {
+		theta = 2 * PI / RETICLE_SCREW_NPTS * i;
+		r = b * tan(theta * 30.0 / 360.0);
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r * sin(theta + angle + RETICLE_SPLIT_ANGLE + PI));
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r * cos(theta + angle + RETICLE_SPLIT_ANGLE + PI));
 	}
-	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
+	skp->Polyline(ScrewPt, RETICLE_SCREW_NPTS);
 	// Draw Archemedes screw #2
-	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
-		theta = 2*PI / RETICLE_SCREW_NPTS * i;
-		r = b * tan(theta*30.0 / 360.0);
-		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle-RETICLE_SPLIT_ANGLE+PI));
-		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle-RETICLE_SPLIT_ANGLE+PI));
+	for (i = 0; i < RETICLE_SCREW_NPTS; i++) {
+		theta = 2 * PI / RETICLE_SCREW_NPTS * i;
+		r = b * tan(theta * 30.0 / 360.0);
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r * sin(theta + angle - RETICLE_SPLIT_ANGLE + PI));
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r * cos(theta + angle - RETICLE_SPLIT_ANGLE + PI));
 	}
-	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
+	skp->Polyline(ScrewPt, RETICLE_SCREW_NPTS);
 
-	SelectObject(hDC, oldObj);
-	DeleteObject(pen);
+	skp->SetPen(oldObj);
+	oapiReleasePen(pen);
 }
 
 void LEM::RedrawPanel_AOTReticle(SURFHANDLE surf)
 {
-	HDC hDC = oapiGetDC (surf);
-	DrawReticle (hDC, optics.OpticsReticle, optics.RetDimmer);
-	oapiReleaseDC (surf,hDC);
-
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	DrawReticle(skp, optics.OpticsReticle, optics.RetDimmer);
+	oapiReleaseSketchpad(skp);
 }
 
 
@@ -170,6 +168,8 @@ void LEM::InitSwitches() {
 	GuidContSwitch.Register(PSH, "GuidContSwitch", true);
 	ModeSelSwitch.Register(PSH, "ModeSelSwitch", THREEPOSSWITCH_UP);
 	AltRngMonSwitch.Register(PSH, "AltRngMonSwitch", TOGGLESWITCH_DOWN);
+	LeftMasterAlarmSwitch.Register(PSH, "LeftMasterAlarmSwitch", TOGGLESWITCH_DOWN);
+	LeftMasterAlarmSwitch.SetDelayTime(1);
 	RateErrorMonSwitch.Register(PSH, "RateErrorMonSwitch", TOGGLESWITCH_DOWN);
 	AttitudeMonSwitch.Register(PSH, "AttitudeMonSwitch", true);
 	ASCHeReg1TB.Register(PSH,"ASCHeReg1TB", true);
@@ -238,6 +238,8 @@ void LEM::InitSwitches() {
 	BALCPLSwitch.Register(PSH, "BALCPLSwitch", true);
 	QTYMonSwitch.Register(PSH, "QTYMonSwitch", THREEPOSSWITCH_DOWN);
 	TempPressMonSwitch.Register(PSH, "TempPressMonSwitch", THREEPOSSWITCH_UP);
+	RightMasterAlarmSwitch.Register(PSH, "RightMasterAlarmSwitch", TOGGLESWITCH_DOWN);
+	RightMasterAlarmSwitch.SetDelayTime(1);
 	RightRateErrorMonSwitch.Register(PSH, "RightRateErrorMonSwitch", TOGGLESWITCH_DOWN);
 	RightAttitudeMonSwitch.Register(PSH, "RightAttitudeMonSwitch", TOGGLESWITCH_DOWN);
 	RightACAPropSwitch.Register(PSH, "RightACAPropSwitch", TOGGLESWITCH_UP);
@@ -297,57 +299,57 @@ void LEM::InitSwitches() {
 	EventTimerMinuteSwitch.Register(PSH,"EventTimerMinuteSwitch",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 	EventTimerSecondSwitch.Register(PSH,"EventTimerSecondSwitch",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
 
-	HeliumMonRotary.AddPosition(0, 290);
+	HeliumMonRotary.AddPosition(0, 285);
 	HeliumMonRotary.AddPosition(1, 315);
-	HeliumMonRotary.AddPosition(2, 340);
-	HeliumMonRotary.AddPosition(3,  20);
+	HeliumMonRotary.AddPosition(2, 344);
+	HeliumMonRotary.AddPosition(3,  16);
 	HeliumMonRotary.AddPosition(4,  45);
-	HeliumMonRotary.AddPosition(5,  70);
-	HeliumMonRotary.AddPosition(6, 110);
+	HeliumMonRotary.AddPosition(5,  75);
+	HeliumMonRotary.AddPosition(6, 106);
 	HeliumMonRotary.Register(PSH, "HeliumMonRotary", 0);
 
-	TempPressMonRotary.AddPosition(0, 340);
-	TempPressMonRotary.AddPosition(1,  20);
+	TempPressMonRotary.AddPosition(0, 345);
+	TempPressMonRotary.AddPosition(1,  17);
 	TempPressMonRotary.AddPosition(2,  45);
-	TempPressMonRotary.AddPosition(3,  70);
+	TempPressMonRotary.AddPosition(3,  74);
 	TempPressMonRotary.Register(PSH, "TempPressMonRotary", 0);
 
-	GlycolRotary.AddPosition(0,  45);
-	GlycolRotary.AddPosition(1,  70);
-	GlycolRotary.AddPosition(2, 110);
+	GlycolRotary.AddPosition(0,  46);
+	GlycolRotary.AddPosition(1,  75);
+	GlycolRotary.AddPosition(2, 107);
 	GlycolRotary.Register(PSH, "GlycolRotary", 2);
 	
 	SuitFanRotary.AddPosition(0,  45);
-	SuitFanRotary.AddPosition(1,  70);
-	SuitFanRotary.AddPosition(2, 110);
+	SuitFanRotary.AddPosition(1,  74);
+	SuitFanRotary.AddPosition(2, 106);
 	SuitFanRotary.Register(PSH, "SuitFanRotary", 1);
 
-	QtyMonRotary.AddPosition(0, 340);
-	QtyMonRotary.AddPosition(1,  20);
+	QtyMonRotary.AddPosition(0, 343);
+	QtyMonRotary.AddPosition(1,  16);
 	QtyMonRotary.AddPosition(2,  45);
-	QtyMonRotary.AddPosition(3,  70);
+	QtyMonRotary.AddPosition(3,  75);
 	QtyMonRotary.Register(PSH, "QtyMonRotary", 3);
 
-	TestMonitorRotary.AddPosition(0, 315);
-	TestMonitorRotary.AddPosition(1, 340);
-	TestMonitorRotary.AddPosition(2,  20);
-	TestMonitorRotary.AddPosition(3,  45);
-	TestMonitorRotary.AddPosition(4,  70);
-	TestMonitorRotary.AddPosition(5, 110);
+	TestMonitorRotary.AddPosition(0, 317);
+	TestMonitorRotary.AddPosition(1, 345);
+	TestMonitorRotary.AddPosition(2,  15);
+	TestMonitorRotary.AddPosition(3,  43);
+	TestMonitorRotary.AddPosition(4,  72);
+	TestMonitorRotary.AddPosition(5, 105);
 	TestMonitorRotary.Register(PSH, "TestMonitorRotary", 0);
 
-	RendezvousRadarRotary.AddPosition(0, 330);
+	RendezvousRadarRotary.AddPosition(0, 333);
 	RendezvousRadarRotary.AddPosition(1,   0);
-	RendezvousRadarRotary.AddPosition(2,  30);
+	RendezvousRadarRotary.AddPosition(2,  27);
 	RendezvousRadarRotary.Register(PSH, "RendezvousRadarRotary", 1);
 
-	TempMonitorRotary.AddPosition(0, 315);
-	TempMonitorRotary.AddPosition(1, 340);
-	TempMonitorRotary.AddPosition(2,  20);
-	TempMonitorRotary.AddPosition(3,  45);
-	TempMonitorRotary.AddPosition(4,  70);
-	TempMonitorRotary.AddPosition(5, 110);
-	TempMonitorRotary.AddPosition(6, 135);
+	TempMonitorRotary.AddPosition(0, 317);
+	TempMonitorRotary.AddPosition(1, 345);
+	TempMonitorRotary.AddPosition(2,  16);
+	TempMonitorRotary.AddPosition(3,  44);
+	TempMonitorRotary.AddPosition(4,  73);
+	TempMonitorRotary.AddPosition(5, 105);
+	TempMonitorRotary.AddPosition(6, 134);
 	TempMonitorRotary.Register(PSH, "TempMonitorRotary", 1);
 
 	FloodRotary.AddPosition(0, 240);
@@ -361,14 +363,14 @@ void LEM::InitSwitches() {
 	FloodRotary.AddPosition(8, 120);
 	FloodRotary.Register(PSH, "FloodRotary", 8);
 
-	LampToneTestRotary.AddPosition(0, 250);
-	LampToneTestRotary.AddPosition(1, 290);
+	LampToneTestRotary.AddPosition(0, 255);
+	LampToneTestRotary.AddPosition(1, 287);
 	LampToneTestRotary.AddPosition(2, 315);
-	LampToneTestRotary.AddPosition(3, 340);
-	LampToneTestRotary.AddPosition(4,  20);
-	LampToneTestRotary.AddPosition(5,  45);
-	LampToneTestRotary.AddPosition(6,  70);
-	LampToneTestRotary.AddPosition(7, 110);
+	LampToneTestRotary.AddPosition(3, 344);
+	LampToneTestRotary.AddPosition(4,  15);
+	LampToneTestRotary.AddPosition(5,  43);
+	LampToneTestRotary.AddPosition(6,  73);
+	LampToneTestRotary.AddPosition(7, 105);
 	LampToneTestRotary.Register(PSH, "LampToneTestRotary", 0);
 
 	EPSMonitorSelectRotary.AddPosition(0,210);
@@ -759,7 +761,7 @@ void LEM::InitSwitches() {
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 
 	LEMCoas1Enabled = false;
-	LEMCoas2Enabled = false;
+	LEMCoas2Enabled = true;
 	ordealEnabled = false;
 
 	RRGyroSelSwitch.Register(PSH,"RRGyroSelSwitch",THREEPOSSWITCH_UP);
@@ -1002,7 +1004,7 @@ void LEM::InitSwitches() {
 
 void LEM::RedrawPanel_Horizon (SURFHANDLE surf)
 {
-POINT pt[4];
+	oapi::IVECTOR2 pt[4];
 	static double prange = RAD*30.0;
 	static int size = 48, size2 = size*2;
 	static int extent = (int)(size*prange);
@@ -1088,24 +1090,24 @@ POINT pt[4];
 	}
 	if (!n) bblue = (pitch < 0.0);
 	oapiClearSurface (surf, bblue ? g_Param.col[3]:g_Param.col[2]);
-	HDC hDC = oapiGetDC (surf);
-	SelectObject (hDC, GetStockObject (BLACK_PEN));
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(g_Param.pen[4]); //pen 4 is black
 	if (n >= 3) {
-		SelectObject (hDC, g_Param.brush[bblue ? 2:3]);
-		Polygon (hDC, pt, n);
-		SelectObject (hDC, g_Param.pen[0]);
-		MoveToEx (hDC, pt[0].x, pt[0].y, NULL); LineTo (hDC, pt[1].x, pt[1].y);
+		skp->SetBrush(g_Param.brush[bblue ? 2 : 3]);
+		skp->Polygon(pt, n);
+		skp->SetPen(g_Param.pen[0]);
+		skp->MoveTo(pt[0].x, pt[0].y); skp->LineTo(pt[1].x, pt[1].y);
 	}
 	// bank indicator
-	SelectObject (hDC, g_Param.pen[0]);
-	SelectObject (hDC, GetStockObject (NULL_BRUSH));
+	skp->SetPen(g_Param.pen[0]);
+	//SelectObject (hDC, GetStockObject (NULL_BRUSH)); //FIXME
 	static double r1 = 40, r2 = 35;
-	double sinb1 = sin(bank-0.1), cosb1 = cos(bank-0.1);
-	double sinb2 = sin(bank+0.1), cosb2 = cos(bank+0.1);
-	pt[0].x = (int)(r2*sinb1+0.5)+size; pt[0].y = -(int)(r2*cosb1+0.5)+size;
-	pt[1].x = (int)(r1*sinb+0.5)+size;  pt[1].y = -(int)(r1*cosb+0.5)+size;
-	pt[2].x = (int)(r2*sinb2+0.5)+size; pt[2].y = -(int)(r2*cosb2+0.5)+size;
-	Polygon (hDC, pt, 3);
+	double sinb1 = sin(bank - 0.1), cosb1 = cos(bank - 0.1);
+	double sinb2 = sin(bank + 0.1), cosb2 = cos(bank + 0.1);
+	pt[0].x = (int)(r2 * sinb1 + 0.5) + size; pt[0].y = -(int)(r2 * cosb1 + 0.5) + size;
+	pt[1].x = (int)(r1 * sinb + 0.5) + size;  pt[1].y = -(int)(r1 * cosb + 0.5) + size;
+	pt[2].x = (int)(r2 * sinb2 + 0.5) + size; pt[2].y = -(int)(r2 * cosb2 + 0.5) + size;
+	skp->Polygon(pt, 3);
 
 	// pitch ladder
 	static double d = size*(10.0*RAD)/prange;
@@ -1119,13 +1121,13 @@ POINT pt[4];
 	ylr = lwsina+d1*cosb, yll = -lwsina+d1*cosb;
 	for (iphi = (int)phi0+4, i = 0; i < 8; i++, iphi--) {
 		if (iphi) {
-			MoveToEx (hDC, size+(int)xll, size+(int)yll, NULL);
-			LineTo   (hDC, size+(int)xlr, size+(int)ylr);
+			skp->MoveTo(size + (int)xll, size + (int)yll);
+			skp->LineTo(size + (int)xlr, size + (int)ylr);
 		}
 		xlr -= dsinb, ylr += dcosb;
 		xll -= dsinb, yll += dcosb;
 	}
-	oapiReleaseDC (surf, hDC);
+	oapiReleaseSketchpad(skp);
 	// labels
 	lwcosa *= 1.6, lwsina *= 1.6;
 	xlr = lwcosa-d1*sinb, xll = -lwcosa-d1*sinb;
@@ -1145,59 +1147,54 @@ POINT pt[4];
 	// oapiBlt (surf, srf[5], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
 }
 
-void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPEN pen1)
+void DrawNeedle(oapi::Sketchpad* skp, int x, int y, double rad, double angle, oapi::Pen* pen0, oapi::Pen* pen1)
 
 {
 	double dx = rad * cos(angle), dy = rad * sin(angle);
-	HGDIOBJ oldObj;
-	oldObj = SelectObject (hDC, pen1);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
-	SelectObject (hDC, oldObj);
-	oldObj = SelectObject (hDC, pen0);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
-	SelectObject (hDC, oldObj);
+	oapi::Pen* oldPen = skp->SetPen(pen1);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(0.85 * dx + 0.5), y - (int)(0.85 * dy + 0.5));
+	skp->SetPen(pen0);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(dx + 0.5), y - (int)(dy + 0.5));
+	skp->SetPen(oldPen);
 }
 
-void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
+void LEM::RedrawPanel_XPointer(CrossPointer* cp, SURFHANDLE surf) {
 
 	int ix, iy;
 	double vx, vy;
-	HDC hDC;
 
 	//draw the crosspointers
 	cp->GetVelocities(vx, vy);
 
 	ix = (int)(-3.0 * vx);
-	if(ix < -60) ix = -60;
-	if(ix > 60) ix = 60;
+	if (ix < -60) ix = -60;
+	if (ix > 60) ix = 60;
 	iy = (int)(3.0 * vy);
-	if(iy < -60) iy = -60;
-	if(iy > 60 ) iy = 60;
-	hDC = oapiGetDC(surf);
-	HPEN pen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
-	SelectObject(hDC, pen);
-	MoveToEx(hDC, 0, 65 + ix, NULL);
-	LineTo(hDC, 134, 65 + ix);
-	MoveToEx(hDC, 67 + iy, 0, NULL);
-	LineTo(hDC, 67 + iy, 131);
-	DeleteObject(pen);
-	oapiReleaseDC(surf, hDC);
+	if (iy < -60) iy = -60;
+	if (iy > 60) iy = 60;
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(g_Param.pen[4]);
+	skp->MoveTo(0, 65 + ix);
+	skp->LineTo(134, 65 + ix);
+	skp->MoveTo(67 + iy, 0);
+	skp->LineTo(67 + iy, 131);
+	oapiReleaseSketchpad(skp);
 }
 
 void LEM::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
 
-	HDC hDC = oapiGetDC (surf);
-	SelectObject (hDC, g_Param.font[1]);
-	SetTextColor (hDC, RGB(255, 255, 255));
-	SetTextAlign (hDC, TA_CENTER);
-	SetBkMode (hDC, TRANSPARENT);
-	const char *label;
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetFont(g_Param.font[1]);
+	skp->SetTextColor(oapiGetColour(255, 255, 255));
+	skp->SetTextAlign(oapi::Sketchpad::CENTER);
+	skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
+	const char* label;
 	for (int bt = 0; bt < 6; bt++) {
-		if (label = oapiMFDButtonLabel (mfd, bt+side*6))
-			TextOut (hDC, xoffset, 44 * bt + yoffset, label, strlen(label));
+		if (label = oapiMFDButtonLabel(mfd, bt + side * 6))
+			skp->Text(xoffset, 44 * bt + yoffset, label, strlen(label));
 		else break;
 	}
-	oapiReleaseDC (surf, hDC);
+	oapiReleaseSketchpad(skp);
 }
 
 void LEM::clbkMFDMode (int mfd, int mode) {
@@ -1259,7 +1256,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LMMFDFRAME]			= oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
 		srf[SRF_LMTHREEPOSLEVER]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
 		srf[SRF_LMTHREEPOSSWITCH]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
-		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
+		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));
 		//srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));		//The LM FDAI texture doesn't need this
 		srf[SRF_FDAIROLL]			= oapiCreateSurface (LOADBMP (IDB_LEM_FDAI_ROLL));
 		srf[SRF_CWSLIGHTS]			= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
@@ -1587,7 +1584,6 @@ bool LEM::clbkLoadPanel (int id) {
 		fdaiLeft.SetLMmode();
 		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1714, 625);
 		fdaiRight.SetLMmode();
-		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea (AID_MFDLEFT,                          _R(635, 1564, 1060, 1918),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDRIGHT,                         _R(1640, 1564, 2065, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
@@ -1621,7 +1617,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1962, 1221, 2010, 1269), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,				_R( 938,  515,  972,  544), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_GUIDCONTSWITCHROW,				_R(1269,  627, 1304,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LEM_MA_LEFT,						_R( 651, 620, 698,  663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_MA_LEFT,						_R( 651, 620, 698,  663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTMONITORSWITCHES,				_R( 659,  712,  693,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FDAILOWERSWITCHROW,				_R( 746,  920,  922,  959), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MPS_REG_CONTROLS_LEFT,			_R( 962,  918,  998, 1125), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1629,7 +1625,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ENGINETHRUSTCONTSWITCHES,		_R( 819, 1006,  928, 1117), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PROPELLANTSWITCHES,				_R(1092,  991, 1154, 1112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_HELIUMMONROTARY,					_R(1192,  992, 1276, 1076), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LEM_MA_RIGHT,						_R(2005, 620, 2052, 663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_MA_RIGHT,					_R(2005, 620, 2052, 663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RIGHTMONITORSWITCHES,			_R(2008,  712, 2042,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TEMPPRESSMONROTARY,				_R(1396, 1002, 1480, 1086), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACAPROPSWITCH,					_R(1620, 1012, 1654, 1051), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1698,6 +1694,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_LEM_PWRFAIL_GLYCOL,               _R(1738, 415, 1751, 427), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEM_PWRFAIL_XPTRCDR,              _R(725,  395, 738,  407), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEM_PWRFAIL_XPTRLMP,              _R(1961, 383, 1974, 395), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_PWRFAIL_RNGALTRATE,			_R(1097, 624, 1104, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -1708,7 +1705,6 @@ bool LEM::clbkLoadPanel (int id) {
 
 		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 36, 445);
 		fdaiRight.SetLMmode();
-		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea(AID_XPOINTERLMP,						_R( 237,  246,  374,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEM_MA_RIGHT, _R(328, 440, 375, 483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1741,7 +1737,6 @@ bool LEM::clbkLoadPanel (int id) {
 
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 1517, 445); // Was 135,625
 		fdaiLeft.SetLMmode();
-		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea(AID_LEM_COAS2,						_R( 675,    0, 1215,  540), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_MISSION_CLOCK,					_R(1455,  106, 1597,  130), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
@@ -1775,7 +1770,6 @@ bool LEM::clbkLoadPanel (int id) {
 
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 1320, 243); // Was 135,625
 		fdaiLeft.SetLMmode();
-		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea(AID_MAIN_PROP_AND_ENGINE_IND,         _R(1622, 46, 1871, 171),    PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_THRUST_WEIGHT_INDICATOR,          _R(1776, 250, 1807, 430),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
@@ -2062,6 +2056,9 @@ void LEM::SetSwitches(int panel) {
 	ModeSelSwitch.Init(0, 83, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], GuidContSwitchRow, &agc);
 	AltRngMonSwitch.Init(0, 167, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], GuidContSwitchRow);
 
+	LeftMasterAlarmSwitchRow.Init(AID_LEM_MA_LEFT, MainPanel);
+	LeftMasterAlarmSwitch.Init(0, 0, 47, 43, srf[SRF_LEM_MASTERALARM], srf[SRF_BORDER_47x43], LeftMasterAlarmSwitchRow, &CWEA);
+
 	LeftMonitorSwitchRow.Init(AID_LEFTMONITORSWITCHES, MainPanel);
 	RateErrorMonSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LeftMonitorSwitchRow);
 	AttitudeMonSwitch.Init(0, 83, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], LeftMonitorSwitchRow);
@@ -2101,6 +2098,9 @@ void LEM::SetSwitches(int panel) {
 
 	HeliumMonRotaryRow.Init(AID_HELIUMMONROTARY, MainPanel);
 	HeliumMonRotary.Init(0, 0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], HeliumMonRotaryRow);
+
+	RightMasterAlarmSwitchRow.Init(AID_LEM_MA_RIGHT, MainPanel);
+	RightMasterAlarmSwitch.Init(0, 0, 47, 43, srf[SRF_LEM_MASTERALARM], srf[SRF_BORDER_47x43], RightMasterAlarmSwitchRow, &CWEA);
 
 	RightMonitorSwitchRow.Init(AID_RIGHTMONITORSWITCHES, MainPanel);
 	RightRateErrorMonSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], RightMonitorSwitchRow);
@@ -3198,10 +3198,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_LEM_MA_LEFT:
-	case AID_LEM_MA_RIGHT:
-		return CWEA.CheckMasterAlarmMouseClick(event);
-
 		// panel 1 events:
 	}
 	return false;
@@ -3377,7 +3373,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_H2OSEP_LIGHT:
-		if (lca.GetAnnunVoltage() > 2.25 && INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
+		if (lca.GetAnnunVoltage() > 2.25 && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3498,7 +3494,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiLeft.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiLeft.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
 		}
 		return true;
 
@@ -3566,7 +3562,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiRight.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
 		}
 		return true;
 
@@ -3608,11 +3604,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 	case AID_RATE_TAPE:
 		RadarTape.RenderRate(surf);
-		return true;
-
-	case AID_LEM_MA_LEFT:
-	case AID_LEM_MA_RIGHT:
-		CWEA.RenderMasterAlarm(surf, srf[SRF_LEM_MASTERALARM], NULL);
 		return true;
 
 	// Power Failure Lights
@@ -3694,6 +3685,15 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		else {
 			oapiBlt(surf, srf[SRF_PWRFAIL_LIGHT], 0, 0, 13, 0, 13, 12);
+		}
+		return true;
+
+	case AID_LEM_PWRFAIL_RNGALTRATE: //FIXME
+		if (RadarTape.PowerSignalMonOn() == true) {
+			oapiBlt(surf, srf[SRF_PWRFAIL_LIGHT], 0, 0, 3, 0, 7, 12);
+		}
+		else {
+			oapiBlt(surf, srf[SRF_PWRFAIL_LIGHT], 0, 0, 16, 0, 7, 12);
 		}
 		return true;
 	}

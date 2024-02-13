@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -33,7 +33,7 @@
 #include "toggleswitch.h"
 #include "nasspdefs.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "ioChannels.h"
 #include "saturn.h"
 #include "papi.h"
@@ -720,7 +720,10 @@ void SPSEngine::Timestep(double simt, double simdt) {
 		spsvector.x = (yawGimbalActuator.GetPosition() + SPS_YAW_OFFSET) * RAD; // Convert deg to rad
 		spsvector.y = (pitchGimbalActuator.GetPosition() + SPS_PITCH_OFFSET) * RAD;
 		spsvector.z = 1;
+		spsvector = unit(spsvector);
 		saturn->SetThrusterDir(spsThruster, spsvector);
+
+		//sprintf(oapiDebugString(), "%lf %lf", pitchGimbalActuator.GetPosition(), yawGimbalActuator.GetPosition());
 	}
 }
 

@@ -56,7 +56,6 @@ public:
 	void SetFCCAttitudeError(VECTOR3 atterr);
 	VECTOR3 GetLVIMUAttitude();
 	void ZeroLVIMUPIPACounters();
-	double GetLVIMULastTime();
 	void ZeroLVIMUCDUs();
 	void ReleaseLVIMUCDUs();
 	void ReleaseLVIMU();
@@ -78,6 +77,7 @@ public:
 	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
 	bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0);
 	bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM);
+	bool TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f);
 	virtual void PrepareToLaunch();
 
 	void SetOutputRegisterBit(int bit, bool state);
@@ -88,8 +88,9 @@ public:
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
 	bool GetSICInboardEngineCutoff();
-	bool GetSIIInboardEngineOut();
-	bool GetSIIEngineOut();
+	bool GetSIIInboardEngineOut();	//DIN 13
+	bool GetSIIOutboardEngineOut();	//DIN 14
+	bool GetSIIEnginesOut();		//DIN 19
 	bool GetCMCSIVBIgnitionSequenceStart();
 	bool GetCMCSIVBCutoff();
 	bool GetCMCSIVBTakeover();

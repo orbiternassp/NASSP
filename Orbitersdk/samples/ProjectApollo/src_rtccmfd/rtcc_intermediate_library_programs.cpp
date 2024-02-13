@@ -40,24 +40,9 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		return;
 	}
 
-	//DPS engine gimbal plane
-	static const double K1 = 154.0*0.0254;
-	//SPS engine gimbal plane
-	static const double K2 = 833.2*0.0254;
-	//Distance between SPS and DPS gimbal planes
-	static const double K3 = 13.2;//435.55*0.0254;
-	//Yaw
-	static const double K4 = -0.0829031395;
-	//Pitch
-	static const double K5 = 0.1876228946;
-
-	/*x1 = LMmass / (CSMmass + LMmass)*6.2;
-	p_T = atan2(-2.15 * RAD * 5.0, 5.0 + x1);
-	y_T = atan2(0.95 * RAD * 5.0, 5.0 + x1);*/
-
 	int IND;
-	double R, W[3];
-	VECTOR3 XCG[2], XI, K;
+	double R, W[3], K;
+	VECTOR3 XCG[2], XI;
 
 	//CSM only
 	if (IC == 1)
@@ -90,9 +75,9 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 			goto RTCC_GIMGBL_LABEL_3_5;
 		}
 		IND = 2;
-		K = _V(K1, 0, 0);
+		K = SystemParameters.MGVDGD;
 		//Use LM DSC CG Table
-		XI = GIMGB2(SystemParameters.LMDSCCGTAB.Weight, SystemParameters.LMDSCCGTAB.CG, SystemParameters.LMDSCCGTAB.N, W[1]);
+		XI = GIMGB2(SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG, SystemParameters.MHVLCG.N, W[1]);
 	}
 	else
 	{
@@ -108,13 +93,14 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		{
 			IND = 1;
 		}
-		K = _V(K2, K4, K5);
+		K = SystemParameters.MGVSGD;
 		//Use CSM CG Table
-		//GIMGB2();
-		XI = _V(26.16328, 0.0, 0.0);
+		XI = GIMGB2(SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG, SystemParameters.MHVCCG.N, W[0]);
 	}
 
-	XCG[IND - 1] = XI - K;
+	XCG[IND - 1].x = XI.x - K;
+	XCG[IND - 1].y = XI.y;
+	XCG[IND - 1].z = XI.z;
 
 	//CSM or LM, but not docked?
 	if (IC <= 12 && IC != 5)
@@ -124,36 +110,30 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	if (IND > 1)
 	{
 		//Use CSM CG Table
-		//GIMGB2();
+		XI = GIMGB2(SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG, SystemParameters.MHVCCG.N, W[0]);
 		IND = 1;
-		K = _V(K2 + K3, 0, 0);
-		XI = _V(26.16328, 0.0, 0.0);
+		K = SystemParameters.MGVSGD + SystemParameters.MGVSTD;
 	}
 	else
 	{
 		if (IJ != 0)
 		{
 			//Use LM w/o descent CG table
-			XI = GIMGB2(SystemParameters.LMASCCGTAB.Weight, SystemParameters.LMASCCGTAB.CG, SystemParameters.LMASCCGTAB.N, W[1]);
-			//XI = _V(7.6616, 0, 0);
+			XI = GIMGB2(SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG, SystemParameters.MHVACG.N, W[1]);
 		}
 		else
 		{
 			//Use LM w/ descent CG table
-			XI = GIMGB2(SystemParameters.LMDSCCGTAB.Weight, SystemParameters.LMDSCCGTAB.CG, SystemParameters.LMDSCCGTAB.N, W[1]);
+			XI = GIMGB2(SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG, SystemParameters.MHVLCG.N, W[1]);
 		}
 		IND = 2;
-		K = _V(K1 + K3, 0, 0);
+		K = SystemParameters.MGVDGD + SystemParameters.MGVSTD;
 	}
 
-	XI = XI - K;
+	XI.x = XI.x - K;
 
 	XCG[IND - 1] = mul(_M(-1.0, 0.0, 0.0, 0.0, -cos(240.0*RAD - D), -sin(240.0*RAD - D), 0.0, -sin(240.0*RAD - D), cos(240.0*RAD - D)), XI);
-	//Remove this when SPS is centered again
-	if (ITC == 33)
-	{
-		XCG[IND - 1] -= _V(0, K4, K5);
-	}
+
 	XCG[1] = (XCG[0] * W[0] + XCG[1] * W[1]) / W[2];
 
 RTCC_GIMGBL_LABEL_3_2:
@@ -163,7 +143,7 @@ RTCC_GIMGBL_LABEL_3_2:
 		RZ = asin(XCG[1].y / R);
 		if (XCG[1].x > 10e-6)
 		{
-			RY = atan(XCG[1].z / XCG[1].x);
+			RY = atan(-XCG[1].z / XCG[1].x);
 		}
 		else
 		{
@@ -265,12 +245,16 @@ VECTOR3 RTCC::PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, boo
 //Right Ascension of Greenwich at Time T
 double RTCC::PIAIES(double hour)
 {
-	return 0.0;
+	double HA;
+
+	HA = SystemParameters.MCLAMD + SystemParameters.MCERTS*hour;
+	OrbMech::normalizeAngle(HA);
+	return HA;
 }
 
 int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg)
 {
-	PMMLAEG aeg;
+	PMMLAEG aeg(this);
 	AEGHeader header;
 	MATRIX3 Rot;
 	VECTOR3 P, W, P_apo, W_apo;
@@ -287,11 +271,12 @@ int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &
 	KE = 0;
 	K = 1;
 RTCC_PIATSU_1A:
-	Rot = OrbMech::GetRotationMatrix(BODY_MOON, SystemParameters.GMTBASE + AEGOUT.TS / 24.0 / 3600.0);
-	OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
-	P_apo = rhtmul(Rot, P);
-	W_apo = rhtmul(Rot, W);
-	OrbMech::PIVECT(P_apo, W_apo, isg, gsg, hsg);
+	//Rotate from selenocentric to selenographic
+	PLEFEM(5, AEGOUT.TS / 3600.0, 0, NULL, NULL, NULL, &Rot);
+	PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
+	P_apo = mul(Rot, P);
+	W_apo = mul(Rot, W);
+	PIVECT(P_apo, W_apo, isg, gsg, hsg);
 	if (isg < eps_i || isg > PI - eps_i)
 	{
 		KE = 2;
@@ -344,14 +329,47 @@ RTCC_PIATSU_1A:
 	goto RTCC_PIATSU_1A;
 }
 
-void RTCC::PIBETA(double BETA, double ONOVA, double &F1, double &F2, double &F3, double &F4)
+void RTCC::PIBETA(double BETA, double ONOVA, double *F)
 {
-	double a = ONOVA * BETA*BETA;
-	F1 = OrbMech::stumpS(a);
-	F2 = OrbMech::stumpC(a);
+	double BETA2, THETA2, TH2, THETA, TH;
+	//false = normal logic, true = modified
+	bool flag;
+	static const double TWOPI2 = PI2 * PI2;
 
-	F3 = 1.0 - a * F1;
-	F4 = 1.0 - a * F2;
+	flag = false;
+	BETA2 = BETA * BETA;
+	THETA2 = BETA2 * ONOVA;
+	TH2 = THETA2;
+	if (TH2 < 0)
+	{
+		if (TWOPI2 + TH2 < 0)
+		{
+			flag = true;
+			THETA = sqrt(-THETA2);
+			TH = fmod(THETA, PI2);
+			//Diagnostic
+			if (TH == 0)
+			{
+				TH = PI2;
+			}
+			TH2 = -TH * TH;
+		}
+	}
+
+	F[0] = OrbMech::stumpS(-TH2);
+	F[1] = OrbMech::stumpC(-TH2);
+	F[2] = 1.0 + TH2 * F[0];
+	F[3] = 1.0 + TH2 * F[1];
+
+	if (flag)
+	{
+		F[0] = (F[0] * TH*TH2 + TH - THETA) / THETA / THETA2;
+		F[1] = F[1] * TH2 / THETA2;
+		F[2] = F[2] * TH / THETA;
+	}
+	F[0] = F[0] * BETA2*BETA;
+	F[1] = F[1] * BETA2;
+	F[2] = F[2] * BETA;
 }
 
 double RTCC::PIBSHA(double hour)
@@ -617,12 +635,32 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	{
 		theta = PI2 - theta;
 	}
-	double EE = atan2(sqrt(1.0 - e * e)*sin(theta), e + cos(theta));
-	if (EE < 0)
+	if (e > 1.0)
 	{
-		EE += PI2;
+		//Hyperbolic
+		double F = log((sqrt(e + 1.0) + sqrt(e - 1.0)*tan(theta / 2.0)) / (sqrt(e + 1.0) - sqrt(e - 1.0)*tan(theta / 2.0)));
+		if (F < 0)
+		{
+			F += PI2;
+		}
+		l = e * sinh(F) - F;
 	}
-	l = EE - e * sin(EE);
+	else if (e == 1.0)
+	{
+		//Parabolic
+		double tan_theta2 = tan(theta / 2.0);
+		l = 0.5*tan_theta2 + 1.0 / 6.0*pow(tan_theta2 / 2.0, 3);
+	}
+	else
+	{
+		//Elliptic
+		double EE = atan2(sqrt(1.0 - e * e)*sin(theta), e + cos(theta));
+		if (EE < 0)
+		{
+			EE += PI2;
+		}
+		l = EE - e * sin(EE);
+	}
 	VECTOR3 K = _V(0, 0, 1);
 	VECTOR3 N = crossp(K, H);
 	g = acos2(dotp(unit(N), unit(E)));
@@ -630,59 +668,238 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	{
 		g = PI2 - g;
 	}
-	h = acos2(N.z / length(N));
+	h = acos2(N.x / length(N));
 	if (N.y < 0)
 	{
 		h = PI2 - h;
 	}
 }
 
-void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double &TIME, double &P)
+void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double &TIME, double &P, bool erunits)
 {
 	//INPUT:
-	//MU: gravitational constant (er^3/hr^2)
+	//MU: gravitational constant
 	//K: outward leg (0.) and return lef (1.) flag. k is input as a floating point number
-	//AORP: semimajor axis of elliptic or hyperbolic conic or semilatus rectum of parabolic conic (er)
-	//e: eccentricity
-	//r: radial distance from focus (er)
+	//AORP: semimajor axis or semilatus rectum (abs(e-1) < 0.00001 is the deciding number)
+	//ECC: eccentricity
+	//rad: radial distance from focus
+	//erunits: Input units are Earth radii
+	//OUTPUT:
+	//TIME: Time from periapsis to the desired radial distance
+	//P: Orbital period, only calculared if orbit is eccentric
 
-	double XP = 0.0, E, TP, X, XAORP = AORP;
+	double eps;
 
-	//Parabolic case?
-	if (abs(ECC - 1.0) < 1.e-5) goto RTCC_PITFPC_2;
-RTCC_PITFPC_5:
-	//Eccentric or hyperbolic?
-	if (ECC < 1.0) goto RTCC_PITFPC_3;
-	//Hyperbolic
-	X = 1.0 / ECC * (1.0 - rad / XAORP);
-	E = log(X + sqrt(X*X - 1.0));
-	TP = XAORP * sqrt(abs(XAORP) / MU)*(E - ECC * (0.5*(exp(E) - exp(-E))));
-	goto RTCC_PITFPC_4;
-RTCC_PITFPC_2:
-	//Check if C3 is sufficiently large to use the non-parabolic calculations
-	double C3;
-	C3 = MU * (ECC*ECC - 1.0) / XAORP;
-	if (abs(C3) >= 10.e-5)
+	if (erunits)
 	{
-		XAORP = XAORP / (1.0 - ECC * ECC);
-		goto RTCC_PITFPC_5;
+		eps = 1.e-5;
 	}
-	//Parabolic
-	double ETAP = acos(XAORP / rad - 1.0);
-	double TEMP1 = sin(ETAP / 2.0) / cos(ETAP / 2.0);
-	TP = XAORP / 2.0*sqrt(XAORP / MU)*(TEMP1 + 1.0 / 3.0*pow(TEMP1, 3.0));
-	goto RTCC_PITFPC_4;
-RTCC_PITFPC_3:
-	//Eccentric
-	E = acos(1.0 / ECC * (1.0 - rad / XAORP));
-	XP = PI2 * XAORP*sqrt(XAORP / MU);
-	TP = XAORP * sqrt(XAORP / MU)*(E - ECC * sin(E));
-RTCC_PITFPC_4:
-	P = XP;
-	TIME = TP;
-	//Outward or return leg?
-	if (K)
+	else
 	{
-		TIME = -TP;
+		eps = 63.78165;
 	}
+
+	//Parabolic case
+	if (abs(ECC - 1.0) < 0.00001)
+	{
+		double C3;
+
+		//Calculate characteristic energy
+		C3 = MU * (ECC*ECC - 1.0) / AORP;
+		if (abs(C3) < eps)
+		{
+			//Calculate true anomaly at given distance r
+			double eta_apo = acos(abs(AORP) / rad - 1.0);
+			double TEMP1 = tan(eta_apo / 2.0);
+			//Calculate time
+			TIME = abs(AORP) / 2.0*sqrt(abs(AORP) / MU)*(TEMP1 + 1.0 / 3.0*pow(TEMP1, 3.0));
+
+			if (K != 0)
+			{
+				TIME = -TIME;
+			}
+			return;
+		}
+		else
+		{
+			//Calculate semi major axis, use non parabolic calculations
+			AORP = AORP / (1.0 - ECC * ECC);
+		}
+	}
+
+	double E;
+
+	//Elliptical case
+	if (ECC < 1.0)
+	{
+		E = acos(1.0 / ECC * (1.0 - rad / AORP));
+		P = PI2 * AORP*sqrt(AORP / MU);
+		TIME = AORP * sqrt(AORP / MU)*(E - ECC * sin(E));
+	}
+	//Hyperbolic case
+	else
+	{
+		double coshE;
+		coshE = 1.0 / ECC * (1.0 - rad / AORP);
+		E = log(coshE + sqrt(coshE*coshE - 1.0));
+		TIME = AORP * sqrt(abs(AORP) / MU)*(E - ECC * (exp(E) - exp(-E)) / 2.0);
+	}
+
+	if (K != 0)
+	{
+		TIME = -TIME;
+	}
+}
+
+int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &out)
+{
+	//Output: 0 = no error, 1 = essentially circular orbit, 2 = unrecoverable AEG error, 3 = requested height not in orbit, 4 = failed to converge on radius
+
+	double cos_f_CI, f_CI, dt, sgn, ddt, eps_t;
+	int I;
+	bool fail;
+
+	eps_t = 0.01;
+
+	if (in.ENTRY == 0)
+	{
+		//Initialize
+		PMMAEGS(header, in, in);
+		//Unrecoverable AEG error
+		if (header.ErrorInd)
+		{
+			PMXSPT("PITCIR", 17);
+			return 2;
+		}
+	}
+
+	out = in;
+
+	//Too circular?
+	if (header.AEGInd == BODY_EARTH)
+	{
+		if (in.coe_mean.e < 0.001)
+		{
+			PMXSPT("PITCIR", 17);
+			return 1;
+		}
+	}
+	else
+	{
+		if (in.coe_mean.e < 0.0001)
+		{
+			PMXSPT("PITCIR", 17);
+			return 1;
+		}
+	}
+
+	in.TIMA = 0;
+
+	cos_f_CI = (in.coe_osc.a*(1.0 - in.coe_osc.e*in.coe_osc.e) - R_CIR) / (in.coe_osc.e*R_CIR);
+	fail = false;
+	if (abs(cos_f_CI) > 1.0)
+	{
+		fail = true;
+		cos_f_CI = cos_f_CI / abs(cos_f_CI);
+	}
+	f_CI = acos(cos_f_CI);
+	if (f_CI >= in.f)
+	{
+		dt = (f_CI - in.f) / (in.g_dot+in.l_dot);
+		sgn = 1.0;
+	}
+	else
+	{
+		if (PI2 - f_CI - in.f > 0)
+		{
+			dt = (PI2 - f_CI - in.f) / (in.g_dot + in.l_dot);
+			sgn = -1.0;
+		}
+		else
+		{
+			dt = (f_CI + PI2 - in.f) / (in.g_dot + in.l_dot);
+			sgn = 1.0;
+		}
+	}
+
+	I = 0;
+
+	do
+	{
+		in.TE = in.TS + dt;
+		PMMAEGS(header, in, out);
+		//AEG error
+		if (header.ErrorInd)
+		{
+			PMXSPT("PITCIR", 17);
+			return 2;
+		}
+		//Calculate desired true anomaly
+		cos_f_CI = (out.coe_osc.a*(1.0 - out.coe_osc.e*out.coe_osc.e) - R_CIR) / (out.coe_osc.e*R_CIR);
+		if (abs(cos_f_CI) > 1.0)
+		{
+			cos_f_CI = cos_f_CI / abs(cos_f_CI);
+		}
+		f_CI = sgn*acos(cos_f_CI);
+		if (f_CI < 0)
+		{
+			f_CI += PI2;
+		}
+		//Calculate angle difference
+		ddt = f_CI - out.f;
+		if (ddt > PI)
+		{
+			ddt -= PI2;
+		}
+		else if (ddt < -PI)
+		{
+			ddt += PI2;
+		}
+		//Calculate ddt
+		ddt = ddt / (out.g_dot + out.l_dot);
+		if (abs(ddt) > eps_t)
+		{
+			dt = dt + ddt;
+		}
+		I++;
+	} while (abs(ddt) > eps_t && I < 10);
+
+	//Failed to converge
+	if (I == 10)
+	{
+		PMXSPT("PITCIR", 19);
+		return 4;
+	}
+	//Height not in orbit
+	if (fail)
+	{
+		PMXSPT("PITCIR", 18);
+		return 3;
+	}
+
+	return 0;
+}
+
+void RTCC::PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h)
+{
+	VECTOR3 n;
+
+	i = acos(W.z / length(W));
+	n = crossp(_V(0, 0, 1), W);
+	h = acos(n.x / length(n));
+	if (n.y < 0)
+	{
+		h = PI2 - h;
+	}
+	g = acos(dotp(unit(n), unit(P)));
+	if (P.z < 0)
+	{
+		g = PI2 - g;
+	}
+}
+
+void RTCC::PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W)
+{
+	P = _V(-sin(h)*cos(i)*sin(g) + cos(h)*cos(g), cos(h)*cos(i)*sin(g) + sin(h)*cos(g), sin(i)*sin(g));
+	W = _V(sin(h)*sin(i), -cos(h)*sin(i), cos(i));
 }

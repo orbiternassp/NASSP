@@ -23,15 +23,19 @@
   **************************************************************************/
 //############################################################################//
 #define ORBITER_MODULE
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>,<fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 //############################################################################//
 #include "stdio.h"
 #include "math.h"
 #include "tracer.h"
 #include "CMChute.h"
 #include "papi.h"
+#include "nassputils.h"
+
+using namespace nassp;
+
 char trace_file[]="ProjectApollo CMChute.log";
 
 const double timprc[3]={1,6,5};
@@ -52,17 +56,20 @@ DLLCLBK void    ovcExit(VESSEL *vessel)                  {if(vessel)delete(CMChu
 //############################################################################//
 CMChute::CMChute(OBJHANDLE hObj,int fmodel):VESSEL2(hObj,fmodel)
 {
- mode=CH_WRONG;    
- char *classname;
- classname=GetClassName();
+    mode = CH_WRONG;    
 
- if(!strnicmp(classname,"ProjectApollo/MainChute",14+9))mode=CH_MAIN;
- if(!strnicmp(classname,"ProjectApollo/DrogueChute",14+11))mode=CH_DROGUE;
+    if(utils::IsVessel(this, utils::MainChute))
+        mode = CH_MAIN;
+    else if(utils::IsVessel(this, utils::DrogueChute))
+        mode = CH_DROGUE;
  
- state=STATE_CHUTE0;
- for(int i=0;i<4;i++){anim[i]=0;proc[i]=1;}
- animLanding=0;
- procLanding=0;
+    state = STATE_CHUTE0;
+    for(int i = 0; i < 4; i++) {
+        anim[i] = 0;
+        proc[i] = 1;
+    }
+    animLanding = 0;
+    procLanding = 0;
 }
 CMChute::~CMChute(){}
 //############################################################################//

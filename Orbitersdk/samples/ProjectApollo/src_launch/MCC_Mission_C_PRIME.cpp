@@ -390,7 +390,10 @@ void MCC::MissionSequence_C_Prime()
 				//Wait for 10 minutes so the burn is over, then calculate Pericynthion time for return trajectory
 				if (rtcc->GETEval2(rtcc->calcParams.TEI + 10.0*60.0))
 				{
-					rtcc->calcParams.LOI = rtcc->PericynthionTime(cm);
+					EphemerisData sv = rtcc->StateVectorCalcEphem(rtcc->calcParams.src);
+					double dt = OrbMech::timetoperi(sv.R, sv.V, OrbMech::mu_Moon);
+					rtcc->calcParams.LOI = rtcc->GETfromGMT(sv.GMT + dt);
+
 					setSubState(13);
 				}
 			}

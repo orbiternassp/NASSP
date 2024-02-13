@@ -22,9 +22,9 @@
 
   **************************** Revision History ****************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include <stdio.h>
 
 #include "PanelSDK/PanelSDK.h"
@@ -34,7 +34,7 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "ioChannels.h"
 
 #include "saturn.h"
@@ -554,7 +554,7 @@ O2SMSupply::~O2SMSupply() {
 void O2SMSupply::Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_Tank *o2rpo, h_Pipe *o2rpop,
 					  RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv,
 					  CircuitBrakerSwitch *mra, CircuitBrakerSwitch *mrb, PanelSwitchItem *eo2v,
-					  PanelSwitchItem *ro2v) {
+					  PanelSwitchItem *ro2v, RotationalSwitch *strv) {
 
 	o2SMSupply = o2sm;	
 	o2MainRegulator = o2mr;
@@ -569,6 +569,7 @@ void O2SMSupply::Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_
 	mainRegulatorBSwitch = mrb;
 	emergencyO2Valve = eo2v;
 	repressO2Valve = ro2v;
+	surgeTankReliefValve = strv;
 }
 
 void O2SMSupply::SystemTimestep(double simdt) {
@@ -592,17 +593,17 @@ void O2SMSupply::SystemTimestep(double simdt) {
 	o2SurgeTank->BoilAllAndSetTemp(285);	//Needs to be done later by a heat exchanger
 
 	if (surgeTankValve->GetState() == 0) {
-		o2SurgeTank->OUT_valve.Close();
 		o2SurgeTank->IN_valve.Close();
 	} else {
-		// SM supply open? 
-		if (o2SMSupply->IN_valve.open) {
 			o2SurgeTank->IN_valve.Open();
-		} else {
-			o2SurgeTank->IN_valve.Close();
 		}
+
+	//Surge tank relief
+	if (surgeTankReliefValve->GetState() == 0) {
+		o2SurgeTank->OUT_valve.Close();
+	}
+	else {
 		o2SurgeTank->OUT_valve.Open();
-		allClosed = false;
 	}
 
 	// Repress package
@@ -643,7 +644,8 @@ void O2SMSupply::SystemTimestep(double simdt) {
 			o2SMSupplyVoid = false;
 		}
 		o2SMSupply->BoilAllAndSetTemp(285);	//Needs to be done later by a heat exchanger
-		// O2 main regulator
+	
+	// O2 main regulator
 		if (mainRegulatorASwitch->GetState() && mainRegulatorBSwitch->GetState()) {
 			o2MainRegulator->IN_valve.Close();
 			mainregvoid = true;
@@ -1073,26 +1075,15 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 		potableTank->OUT_valve.Open();
 	}
 
-	// dump heaters
-	bool heaters = false;
-	if (saturn->WasteH2ODumpSwitch.IsUp() && saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.IsPowered()) {
-		heaters = true;
-		saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.DrawPower(5.7);
-	}
-	if (saturn->WasteH2ODumpSwitch.IsDown() && saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.IsPowered()) {
-		heaters = true;
-		saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.DrawPower(5.7);
-	}
-
 	// Pressure relief
-	if ((saturn->PressureReliefRotary.GetState() == 0 || saturn->PressureReliefRotary.GetState() == 3) && heaters) {	// dump a/b
+	if ((saturn->PressureReliefRotary.GetState() == 0 || saturn->PressureReliefRotary.GetState() == 3) && saturn->WasteH2ODumpHeater.IsFrozen() == false) {	// dump a/b
 		wasteTank->OUT_valve.Open();
 		if (wasteInletTank->OUT_valve.open) {
 			wasteInletTank->OUT2_valve.Close();
 		} else {
 			wasteInletTank->OUT2_valve.Open();
 		}
-	} else if (saturn->PressureReliefRotary.GetState() == 1 && heaters) {	// "2"
+	} else if (saturn->PressureReliefRotary.GetState() == 1 && saturn->WasteH2ODumpHeater.IsFrozen() == false) {	// "2"
 		if (wasteTank->space.Press < 40.0 / PSI) {
 			wasteTank->OUT_valve.Close();
 		} else if (wasteTank->space.Press > 48.0 / PSI) {
@@ -1107,7 +1098,7 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 				wasteInletTank->OUT2_valve.Open();
 			}
 		}		
-	} else {	// off or heaters off (assuming instant freezing)
+	} else {	// off
 		wasteTank->OUT_valve.Close();
 		wasteInletTank->OUT2_valve.Close();
 	}
@@ -1120,18 +1111,10 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 
 	// Urine dump
 	urineDumpLevel = 0;
-	if (saturn->UrineDumpSwitch.IsUp() && saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.IsPowered()) {
-		saturn->ECSWasteH2OUrineDumpHTRMnACircuitBraker.DrawPower(5.7);
-		if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3) {
+
+	if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3 && saturn->UrineDumpHeater.IsFrozen() == false) {
 			urineDumpLevel = 1;
 		}
-	}
-	if (saturn->UrineDumpSwitch.IsDown() && saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.IsPowered()) {
-		saturn->ECSWasteH2OUrineDumpHTRMnBCircuitBraker.DrawPower(5.7);
-		if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3) {
-			urineDumpLevel = 1;
-		}
-	}
 
 	// potable h2o heaters
 	if (saturn->PotH2oHtrSwitch.IsUp() && saturn->ECSPOTH2OHTRMnACircuitBraker.IsPowered()) {
@@ -1517,7 +1500,8 @@ void SaturnPressureEqualizationValve::SystemTimestep(double simdt)
 			double f = (double)(3 - PressureEqualizationSwitch->GetState());
 
 			PressureEqualizationValve->in->Open();
-			PressureEqualizationValve->in->size = (float)(0.15*f);
+			//PressureEqualizationValve->in->size = (float)(0.15*f); //position * 0.15 need to increase for faster LM Press
+			PressureEqualizationValve->in->size = (float)(0.20 * f);
 			PressureEqualizationValve->flowMax = 220.0 / LBH * f;
 		}
 	}
@@ -1552,6 +1536,35 @@ void SaturnWasteStowageVentValve::SystemTimestep(double simdt)
 
 }
 
+SaturnBatteryVent::SaturnBatteryVent()
+{
+	BatteryVentSwitch = NULL;
+	BatteryManifold = NULL;
+}
+
+void SaturnBatteryVent::Init(Saturn* s, RotationalSwitch* bvs, h_Tank* bmt)
+{
+	saturn = s;
+	BatteryVentSwitch = bvs;
+	BatteryManifold = bmt;
+}
+
+void SaturnBatteryVent::SystemTimestep(double simdt)
+{
+	if (!BatteryManifold) return;
+
+	// Valve in motion
+	if (BatteryManifold->OUT_valve.pz) return;
+
+	if (BatteryVentSwitch->GetState() == 1 && saturn->WasteH2ODumpHeater.IsFrozen() == false)
+	{
+		BatteryManifold->OUT_valve.Open();
+	}
+
+	else
+		BatteryManifold->OUT_valve.Close();
+}
+
 SaturnSuitFlowValves::SaturnSuitFlowValves()
 {
 	SuitFlowValve = NULL;
@@ -1579,4 +1592,86 @@ void SaturnSuitFlowValves::SystemTimestep(double simdt)
 	else
 		SuitFlowValve->Open();
 
+}
+
+SaturnDumpHeater::SaturnDumpHeater()
+{
+
+}
+
+void SaturnDumpHeater::Init(Saturn* s, h_Radiator* noz, Boiler* ha, Boiler* sha, Boiler* hb, Boiler* shb, CircuitBrakerSwitch* cba, CircuitBrakerSwitch* cbb, ThreePosSwitch* sw)
+{
+	saturn = s;
+	nozzle = noz;
+	heaterA = ha;
+	stripheaterA = sha;
+	heaterB = hb;
+	stripheaterB = shb;
+	circuitbreakerA = cba;
+	circuitbreakerB = cbb;
+	powerswitch = sw;
+
+	temp = 0.0;
+}
+
+double SaturnDumpHeater::GetTemperatureF()
+{
+	return KelvinToFahrenheit(nozzle->GetTemp());
+}
+
+bool SaturnDumpHeater::IsFrozen()
+{
+	if (GetTemperatureF() < 32.0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void SaturnDumpHeater::SystemTimestep(double simdt)
+{
+	//System A
+	if (circuitbreakerA->IsPowered())
+	{
+		stripheaterA->SetPumpOn();
+
+		if (powerswitch->IsUp())
+		{
+			heaterA->SetPumpOn();
+		}
+
+		else
+		{
+			heaterA->SetPumpOff();
+		}
+	}
+
+	else
+	{
+		stripheaterA->SetPumpOff();
+		heaterA->SetPumpOff();
+	}
+
+	//System B
+	if (circuitbreakerB->IsPowered())
+	{
+		stripheaterB->SetPumpOn();
+
+		if (powerswitch->IsDown())
+		{
+			heaterB->SetPumpOn();
+		}
+
+		else
+		{
+			heaterB->SetPumpOff();
+		}
+	}
+
+	else
+	{
+		stripheaterB->SetPumpOff();
+		heaterB->SetPumpOff();
+	}
 }

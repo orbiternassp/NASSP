@@ -151,7 +151,7 @@ int DoubleToBuffer(double x, double q, int m)
 // =================================================================================================================================
 //
 
-void ARCore::AGCEphemeris(double T0, double Epoch, double TEphem0)
+void ARCore::AGCEphemeris(double T0, int Epoch, double TEphem0)
 {
 	double dt  = 0.25;
 	double Tm0 = T0 - dt*28.0;
@@ -167,7 +167,8 @@ void ARCore::AGCEphemeris(double T0, double Epoch, double TEphem0)
 	double dscale = 1.0/pow(2.0, 31.0);
 	double tscale = 8.64e6/pow(2.0, 26.0);
 
-	MATRIX3 Mat = OrbMech::J2000EclToBRCS(Epoch);//J2000EclToEqu(Epoch);
+	double brcsmjd = OrbMech::MJDOfNBYEpoch(Epoch);
+	MATRIX3 Mat = OrbMech::J2000EclToBRCSMJD(brcsmjd);//J2000EclToEqu(Epoch);
 	
 	// ----- Solar Ephemeris -----
 
@@ -214,7 +215,8 @@ void ARCore::AGCEphemeris(double T0, double Epoch, double TEphem0)
 
 	FILE *file = fopen("EphemData.txt","w");
 
-	fprintf(file,"Epoch   = %6.6f (MJD) Epoch of Basic Reference Coordinate System (40221.525=Colossus249)\n",Epoch);
+	fprintf(file, "Epoch   = %d (Year) Epoch of Basic Reference Coordinate System (1969=Colossus249)\n", Epoch);
+	fprintf(file,"Epoch   = %6.6f (MJD) Epoch of Basic Reference Coordinate System (40221.525=Colossus249)\n",brcsmjd);
 	fprintf(file,"TEphem0 = %6.6f (MJD) Ephemeris Time Zero (40038=Colossus249)\n",TEphem0);
 	fprintf(file,"TIMEM0  = %6.6f (MJD) Mission mid-range time. (Mission Specific value. 40214.5=Apollo8)\n\n",T0);
 

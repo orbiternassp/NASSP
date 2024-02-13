@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 
 #include "math.h"
 #include "windows.h"
@@ -34,8 +34,8 @@
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
-#include "lemcomputer.h"
+#include "CSMcomputer.h"
+#include "LEMcomputer.h"
 #include "IMU.h"
 #include "saturn.h"
 #include "LEM.h"
@@ -44,6 +44,7 @@
 #include "iu.h"
 #include "papi.h"
 #include "OrbMech.h"
+#include "nassputils.h"
 #include <stdio.h>
 
 #include "MFDResource.h"
@@ -51,7 +52,7 @@
 
 #include <queue>
 
-
+using namespace nassp;
 
 // ==============================================================
 // Global variables
@@ -83,7 +84,8 @@ static struct ProjectApolloMFDData {  // global data storage
 	double uplinkBufferSimt;
 	OBJHANDLE planet;
 	VESSEL *vessel;
-	VESSEL *iuVessel;
+	VESSEL *uplinkVessel;
+	int targetnumber;
 	int iuUplinkType;
 	int iuUplinkSwitSelStage;
 	int iuUplinkSwitSelChannel;
@@ -145,7 +147,8 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.V42angles = _V(0, 0, 0);
 	g_Data.killrot = 0;
-	g_Data.iuVessel = NULL;
+	g_Data.uplinkVessel = NULL;
+	g_Data.targetnumber = -1;
 	g_Data.iuUplinkType = 0;
 	g_Data.iuUplinkSwitSelStage = 0;
 	g_Data.iuUplinkSwitSelChannel = 1;
@@ -628,7 +631,7 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 // MFD class implementation
 
 // Constructor
-ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, h, vessel)
+ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w, h, vessel)
 
 {
 	saturn = NULL;
@@ -638,28 +641,25 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 	lem = NULL;
 	width = w;
 	height = h;
-	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
+	HBITMAP hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
+	hLogo = oapiCreateSurface(hBmpLogo);
 	screen = 0;
 	debug_frozen = false;
 	char buffer[8];
 
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
-	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+	if (utils::IsVessel(vessel, utils::Saturn)) {
 		saturn = (Saturn *)vessel;
 		g_Data.progVessel = saturn;
 		g_Data.vessel = vessel;
 		oapiGetObjectName(saturn->GetGravityRef(), buffer, 8);
-		if(strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
+		if (strcmp(buffer, "Earth") == 0 || strcmp(buffer, "Moon") == 0)
 			g_Data.planet = saturn->GetGravityRef();
 		else
 			g_Data.planet = oapiGetGbodyByName("Earth");
 
-		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b"))
+		if (utils::IsVessel(vessel, utils::SaturnIB))
 		{
 			isSaturnV = false;
 		}
@@ -668,13 +668,11 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 			isSaturnV = true;
 		}
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler"))  {
+	else if (utils::IsVessel(vessel, utils::Crawler))  {
 			crawler = (Crawler *)vessel;
 			g_Data.planet = crawler->GetGravityRef();
 	}
-	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+	else if (utils::IsVessel(vessel, utils::LEM)) {
 			lem = (LEM *)vessel;
 			g_Data.vessel = vessel;
 			g_Data.gorpVessel = lem;
@@ -690,6 +688,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 ProjectApolloMFD::~ProjectApolloMFD ()
 {
 	// Add MFD cleanup code here
+	oapiDestroySurface(hLogo);
 }
 
 // Return button labels
@@ -732,33 +731,32 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 }
 
 // Repaint the MFD
-void ProjectApolloMFD::Update (HDC hDC)
+bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 {
 	char buffer[100];
 
-	HDC hDCTemp = CreateCompatibleDC(hDC);
-	HBITMAP hBmpTemp = (HBITMAP) SelectObject(hDCTemp, hBmpLogo);
-	StretchBlt(hDC, 1, 1, width - 2, height - 2, hDCTemp, 0, 0, 256, 256, SRCCOPY);
-	DeleteObject(hBmpTemp);
-	DeleteDC(hDCTemp);
+	SURFHANDLE s = skp->GetSurface();
+	RECT src{ 0, 0, 255, 255 };
+	RECT dst{ 1, 1, (LONG)width - 2, (LONG)height - 2 };
+	oapiBlt(s, hLogo, &dst, &src);
 
 	// Draws the MFD title
-	Title (hDC, "Project Apollo");
+	Title(skp, "Project Apollo");
 
-	SelectDefaultFont(hDC, 0);
-	SetBkMode (hDC, TRANSPARENT);
-	SetTextAlign (hDC, TA_CENTER);
+	skp->SetFont(GetDefaultFont(0));
+	skp->SetBackgroundMode(oapi::Sketchpad::BK_TRANSPARENT);
+	skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
 	if (!saturn && !lem) {
-		SetTextColor (hDC, RGB(255, 0, 0));
-		TextOut(hDC, width / 2, (int) (height * 0.5), "Unsupported vessel", 18); 
+		skp->SetTextColor(RGB(255, 0, 0));
+		skp->Text(width / 2, (int)(height * 0.5), "Unsupported vessel", 18);
 		if (!crawler)
-			return;
+			return true;
 	}
 
 	// Draw mission time
-	SetTextColor (hDC, RGB(0, 255, 0));
-	TextOut(hDC, width / 2, (int) (height * 0.1), "Ground Elapsed Time", 19);
+	skp->SetTextColor (RGB(0, 255, 0));
+	skp->Text(width / 2, (int) (height * 0.1), "Ground Elapsed Time", 19);
 
 	double mt = 0;
 	if (saturn){ mt = saturn->GetMissionTime(); }
@@ -774,27 +772,27 @@ void ProjectApolloMFD::Update (HDC hDC)
 		sprintf(buffer, "-%d:%02d:%02d", hours, minutes, secs);
 	else
 		sprintf(buffer, "%d:%02d:%02d", hours, minutes, secs);
-	TextOut(hDC, width / 2, (int) (height * 0.15), buffer, strlen(buffer));
+	skp->Text(width / 2, (int)(height * 0.15), buffer, strlen(buffer));
 	//If this is the crawler and not the actual Saturn, do NOTHING else!
 	if (!saturn && !lem)
-		return;
+		return true;
 
-	SelectDefaultPen(hDC, 1);
-	MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.25), 0);
-	LineTo (hDC, (int) (width * 0.95), (int) (height * 0.25));
+	skp->SetPen(GetDefaultPen(0));
+	skp->MoveTo((int)(width * 0.05), (int)(height * 0.25));
+	skp->LineTo((int)(width * 0.95), (int)(height * 0.25));
 
 	// Draw GNC
 	if (screen == m_buttonPages.page.GNC) {
-		TextOut(hDC, width / 2, (int) (height * 0.3), "Guidance, Navigation & Control", 30);
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), "Velocity:", 9);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "Vert. Velocity:", 15);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), "Altitude:", 9);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Apoapsis Alt.:", 14);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Periapsis Alt.:", 15);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), "Inclination:", 12);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Latitude:", 9);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.85), "Longitude:", 10);
+		skp->Text(width / 2, (int)(height * 0.3), "Guidance, Navigation & Control", 30);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text((int)(width * 0.1), (int)(height * 0.4), "Velocity:", 9);
+		skp->Text((int)(width * 0.1), (int)(height * 0.45), "Vert. Velocity:", 15);
+		skp->Text((int)(width * 0.1), (int)(height * 0.5), "Altitude:", 9);
+		skp->Text((int)(width * 0.1), (int)(height * 0.6), "Apoapsis Alt.:", 14);
+		skp->Text((int)(width * 0.1), (int)(height * 0.65), "Periapsis Alt.:", 15);
+		skp->Text((int)(width * 0.1), (int)(height * 0.7), "Inclination:", 12);
+		skp->Text((int)(width * 0.1), (int)(height * 0.8), "Latitude:", 9);
+		skp->Text((int)(width * 0.1), (int)(height * 0.85), "Longitude:", 10);
 
 		OBJHANDLE planet;
 		ELEMENTS elem;
@@ -804,7 +802,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 		if (saturn) {
 			planet = saturn->GetGravityRef();
-			saturn->GetRelativeVel(planet, vel); 
+			saturn->GetRelativeVel(planet, vel);
 			if (saturn->GetAirspeedVector(FRAME_HORIZON, hvel)) {
 				vvel = hvel.y * 3.2808399;
 			}
@@ -812,9 +810,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 			saturn->GetPeDist(peDist);
 			saturn->GetEquPos(lon, lat, radius);
 			saturn->GetElements(planet, elem, 0, 0, FRAME_EQU);
-		} else if (lem) {
+		}
+		else if (lem) {
 			planet = lem->GetGravityRef();
-			lem->GetRelativeVel(planet, vel); 
+			lem->GetRelativeVel(planet, vel);
 			if (lem->GetAirspeedVector(FRAME_HORIZON, hvel)) {
 				vvel = hvel.y * 3.2808399;
 			}
@@ -828,341 +827,346 @@ void ProjectApolloMFD::Update (HDC hDC)
 		if (strcmp(planetName, "Earth") == 0) {
 			apDist -= 6.373338e6;
 			peDist -= 6.373338e6;
-		} else {
+		}
+		else {
 			apDist -= 1.73809e6;
 			peDist -= 1.73809e6;
 		}
 
-		SetTextAlign (hDC, TA_RIGHT);
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		sprintf(buffer, "%.0lf ft/s", length(vel) * 3.2808399);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.4), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.9), (int)(height * 0.4), buffer, strlen(buffer));
 		sprintf(buffer, "%.0lf ft/s", vvel);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.45), buffer, strlen(buffer));
-		if(saturn){ sprintf(buffer, "%.1lf nm  ", saturn->GetAltitude() * 0.000539957); }
-		if(lem){    sprintf(buffer, "%.1lf nm  ", lem->GetAltitude() * 0.000539957); }
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.5), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.9), (int)(height * 0.45), buffer, strlen(buffer));
+		if (saturn) { sprintf(buffer, "%.1lf nm  ", saturn->GetAltitude() * 0.000539957); }
+		if (lem) { sprintf(buffer, "%.1lf nm  ", lem->GetAltitude() * 0.000539957); }
+		skp->Text((int)(width * 0.9), (int)(height * 0.5), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lf nm  ", apDist * 0.000539957);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.9), (int)(height * 0.6), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lf nm  ", peDist * 0.000539957);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.9), (int)(height * 0.65), buffer, strlen(buffer));
 		sprintf(buffer, "%.2lf°   ", elem.i * DEG);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.7), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.9), (int)(height * 0.7), buffer, strlen(buffer));
 		sprintf(buffer, "%.2lf°   ", lat * DEG);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.8), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.9), (int)(height * 0.8), buffer, strlen(buffer));
 		sprintf(buffer, "%.2lf°   ", lon * DEG);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.85), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.9), (int)(height * 0.85), buffer, strlen(buffer));
 
 		if (g_Data.killrot) {
-			SetTextColor (hDC, RGB(255, 0, 0));
-			SetTextAlign (hDC, TA_CENTER);
-			TextOut(hDC, width / 2, (int) (height * 0.9), "*** KILL ROTATION ACTIVE ***", 28);
+			skp->SetTextColor(RGB(255, 0, 0));
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(width / 2, (int)(height * 0.9), "*** KILL ROTATION ACTIVE ***", 28);
 		}
 	}
 
 	// Draw ECS
 	else if (screen == m_buttonPages.page.ECS) {
-		TextOut(hDC, width / 2, (int) (height * 0.3), "Environmental Control System", 28);
+		skp->Text(width / 2, (int)(height * 0.3), "Environmental Control System", 28);
 
 		if (saturn)
 		{
 
-			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
 
 			ECSStatus ecs;
 			saturn->GetECSStatus(ecs);
 
-			SetTextAlign(hDC, TA_CENTER);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "OK", 2);
+				skp->Text((int)(width * 0.7), (int)(height * 0.4), "OK", 2);
 			}
 			else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL) {
-				SetTextColor(hDC, RGB(255, 255, 0));
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "CRITICAL", 8);
-				SetTextColor(hDC, RGB(0, 255, 0));
+				skp->SetTextColor(RGB(255, 255, 0));
+				skp->Text((int)(width * 0.7), (int)(height * 0.4), "CRITICAL", 8);
+				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else {
-				SetTextColor(hDC, RGB(255, 0, 0));
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "DEAD", 4);
-				SetTextColor(hDC, RGB(0, 255, 0));
+				skp->SetTextColor(RGB(255, 0, 0));
+				skp->Text((int)(width * 0.7), (int)(height * 0.4), "DEAD", 4);
+				skp->SetTextColor(RGB(0, 255, 0));
 			}
 
 			sprintf(buffer, "%d", ecs.crewNumber);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
 
-			TextOut(hDC, (int)(width * 0.5), (int)(height * 0.525), "Glycol Coolant Loops", 20);
-			TextOut(hDC, (int)(width * 0.6), (int)(height * 0.6), "Prim.", 5);
-			TextOut(hDC, (int)(width * 0.8), (int)(height * 0.6), "Sec.", 4);
+			skp->Text((int)(width * 0.5), (int)(height * 0.525), "Glycol Coolant Loops", 20);
+			skp->Text((int)(width * 0.6), (int)(height * 0.6), "Prim.", 5);
+			skp->Text((int)(width * 0.8), (int)(height * 0.6), "Sec.", 4);
 
-			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.6), "Heating:", 8);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.65), "Actual:", 7);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.7), "Test:", 5);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.8), "Total:", 6);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.9), "CSM O2 Hose:", 12);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.6), "Heating:", 8);
+			skp->Text((int)(width * 0.1), (int)(height * 0.65), "Actual:", 7);
+			skp->Text((int)(width * 0.1), (int)(height * 0.7), "Test:", 5);
+			skp->Text((int)(width * 0.1), (int)(height * 0.8), "Total:", 6);
+			skp->Text((int)(width * 0.1), (int)(height * 0.9), "CSM O2 Hose:", 12);
 
-			SetTextAlign(hDC, TA_CENTER);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating);
-			TextOut(hDC, (int)(width * 0.6), (int)(height * 0.65), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.6), (int)(height * 0.65), buffer, strlen(buffer));
 			sprintf(buffer, "%.0lfW", ecs.PrimECSTestHeating);
-			TextOut(hDC, (int)(width * 0.6), (int)(height * 0.7), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.6), (int)(height * 0.7), buffer, strlen(buffer));
 			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating + ecs.PrimECSTestHeating);
-			TextOut(hDC, (int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
 			sprintf(buffer, "%.0lfW", ecs.SecECSHeating);
-			TextOut(hDC, (int)(width * 0.8), (int)(height * 0.65), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.8), (int)(height * 0.65), buffer, strlen(buffer));
 			sprintf(buffer, "%.0lfW", ecs.SecECSTestHeating);
-			TextOut(hDC, (int)(width * 0.8), (int)(height * 0.7), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.8), (int)(height * 0.7), buffer, strlen(buffer));
 			sprintf(buffer, "%.0lfW", ecs.SecECSHeating + ecs.SecECSTestHeating);
-			TextOut(hDC, (int)(width * 0.8), (int)(height * 0.8), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.8), (int)(height * 0.8), buffer, strlen(buffer));
 
-			MoveToEx(hDC, (int)(width * 0.5), (int)(height * 0.775), 0);
-			LineTo(hDC, (int)(width * 0.9), (int)(height * 0.775));
+			skp->MoveTo((int)(width * 0.5), (int)(height * 0.775));
+			skp->LineTo((int)(width * 0.9), (int)(height * 0.775));
 
 			if (ecs.CSMO2HoseConnected)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.9), "Connected", 9);
+				skp->Text((int)(width * 0.7), (int)(height * 0.9), "Connected", 9);
 			}
 			else
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.9), "Disconnected", 12);
+				skp->Text((int)(width * 0.7), (int)(height * 0.9), "Disconnected", 12);
 			}
 
 		}
 		else if (lem)
 		{
-			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "CDR status:", 11);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "LMP status:", 11);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "CDR status:", 11);
+			skp->Text((int)(width * 0.1), (int)(height * 0.55), "LMP status:", 11);
 
 			LEMECSStatus ecs;
 			lem->GetECSStatus(ecs);
 
-			SetTextAlign(hDC, TA_CENTER);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "OK", 2);
+				skp->Text((int)(width * 0.7), (int)(height * 0.4), "OK", 2);
 			}
 			else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL) {
-				SetTextColor(hDC, RGB(255, 255, 0));
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "CRITICAL", 8);
-				SetTextColor(hDC, RGB(0, 255, 0));
+				skp->SetTextColor(RGB(255, 255, 0));
+				skp->Text((int)(width * 0.7), (int)(height * 0.4), "CRITICAL", 8);
+				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else {
-				SetTextColor(hDC, RGB(255, 0, 0));
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.4), "DEAD", 4);
-				SetTextColor(hDC, RGB(0, 255, 0));
+				skp->SetTextColor(RGB(255, 0, 0));
+				skp->Text((int)(width * 0.7), (int)(height * 0.4), "DEAD", 4);
+				skp->SetTextColor(RGB(0, 255, 0));
 			}
 
 			sprintf(buffer, "%d", ecs.crewNumber);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
 
 			if (ecs.cdrStatus == 0)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Cabin", 8);
+				skp->Text((int)(width * 0.7), (int)(height * 0.5), "In Cabin", 8);
 			}
 			else if (ecs.cdrStatus == 1)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Suit", 7);
+				skp->Text((int)(width * 0.7), (int)(height * 0.5), "In Suit", 7);
 			}
 			else if (ecs.cdrStatus == 2)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "EVA", 3);
+				skp->Text((int)(width * 0.7), (int)(height * 0.5), "EVA", 3);
 			}
 			else
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "PLSS", 4);
+				skp->Text((int)(width * 0.7), (int)(height * 0.5), "PLSS", 4);
 			}
 
 
 			if (ecs.lmpStatus == 0)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Cabin", 8);
+				skp->Text((int)(width * 0.7), (int)(height * 0.55), "In Cabin", 8);
 			}
 			else if (ecs.lmpStatus == 1)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Suit", 7);
+				skp->Text((int)(width * 0.7), (int)(height * 0.55), "In Suit", 7);
 			}
 			else if (ecs.lmpStatus == 2)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "EVA", 3);
+				skp->Text((int)(width * 0.7), (int)(height * 0.55), "EVA", 3);
 			}
 			else
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "PLSS", 4);
+				skp->Text((int)(width * 0.7), (int)(height * 0.55), "PLSS", 4);
 			}
 		}
 		else
 		{
-			TextOut(hDC, width / 2, (int)(height * 0.4), "Unsupported vehicle", 19);
+		skp->Text(width / 2, (int)(height * 0.4), "Unsupported vehicle", 19);
 		}
 	// Draw IMFD
 	} else if (screen == m_buttonPages.page.IU) {
-		TextOut(hDC, width / 2, (int) (height * 0.3), "IU Uplink Data", 14);
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "Type:", 5);
+		skp->Text(width / 2, (int)(height * 0.3), "IU Uplink Data", 14);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text((int)(width * 0.1), (int)(height * 0.35), "Type:", 5);
 
 		if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Switch Selector", 15);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Switch Selector", 15);
 
-			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "Stage:", 6);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Stage:", 6);
 
-			SetTextAlign(hDC, TA_CENTER);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (g_Data.iuUplinkSwitSelStage == 0)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), "IU", 2);
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "IU", 2);
 			}
 			else if (g_Data.iuUplinkSwitSelStage == 1)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), "S-I", 3);
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "S-I", 3);
 			}
 			else if (g_Data.iuUplinkSwitSelStage == 2)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), "S-II", 4);
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "S-II", 4);
 			}
 			else if (g_Data.iuUplinkSwitSelStage == 3)
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), "S-IVB", 5);
+				skp->Text((int)(width * 0.7), (int)(height * 0.45), "S-IVB", 5);
 			}
 
-			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "Channel:", 8);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "Channel:", 8);
 
 			sprintf(buffer, "%d", g_Data.iuUplinkSwitSelChannel);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Timebase Update", 15);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Timebase Update", 15);
 
-			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "Delta T:", 8);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Delta T:", 8);
 
 			sprintf(buffer, "%+.1f s", g_Data.iuUplinkTimebaseUpdateTime);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_LM_ABORT)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "LM Abort (Apollo 5)", 19);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "LM Abort (Apollo 5)", 19);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_TDE_ENABLE)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "TD&E Enable", 11);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "TD&E Enable", 11);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_RESTART_MANEUVER_ENABLE)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Restart Maneuver Enable", 23);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Restart Maneuver Enable", 23);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_8_ENABLE)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Timebase 8 Enable", 17);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Timebase 8 Enable", 17);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_EVASIVE_MANEUVER_ENABLE)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Evasive Maneuver Enable", 23);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Evasive Yaw Mnvr Enable", 23);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_EXECUTE_COMM_MANEUVER)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Execute Comm Maneuver", 21);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Execute Comm Maneuver", 21);
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "S-IVB/IU Lunar Impact", 21);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "S-IVB/IU Lunar Impact", 21);
 
-			SetTextAlign(hDC, TA_LEFT);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "TIG:", 6);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "BT:", 8);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "Pitch:", 8);
-			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.6), "Yaw:", 8);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "TIG:", 4);
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "BT:", 3);
+			skp->Text((int)(width * 0.1), (int)(height * 0.55), "Pitch:", 6);
+			skp->Text((int)(width * 0.1), (int)(height * 0.6), "Yaw:", 4);
 
 			sprintf(buffer, "TB8+%.0f s", g_Data.iuUplinkTIG);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
 			sprintf(buffer, "%.1f s", g_Data.iuUplinkDT);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
 			sprintf(buffer, "%.01f°", g_Data.iuUplinkPitch*DEG);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.7), (int)(height * 0.55), buffer, strlen(buffer));
 			sprintf(buffer, "%.01f°", g_Data.iuUplinkYaw*DEG);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.6), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.7), (int)(height * 0.6), buffer, strlen(buffer));
 		}
 		else if (g_Data.iuUplinkType == DCSUPLINK_REMOVE_INHIBIT_MANEUVER4)
 		{
-			SetTextAlign(hDC, TA_CENTER);
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Remove Inhibit Mnv. 4", 21);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Remove Inhibit Mnv. 4", 21);
 		}
 
-		SetTextAlign (hDC, TA_CENTER);
-		TextOut(hDC, width / 2, (int) (height * 0.75), "IU Uplink Result", 16);
-		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), "Status:", 7);
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(width / 2, (int)(height * 0.75), "IU Uplink Result", 16);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text((int)(width * 0.1), (int)(height * 0.8), "Status:", 7);
 
-		SetTextAlign(hDC, TA_CENTER);
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		if (g_Data.iuUplinkResult == 1)
 		{
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.8), "Uplink accepted", 15);
+			skp->Text((int)(width * 0.7), (int)(height * 0.8), "Uplink accepted", 15);
 		}
 		else if (g_Data.iuUplinkResult == 2)
 		{
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.8), "Vessel has no IU", 16);
+			skp->Text((int)(width * 0.7), (int)(height * 0.8), "Vessel has no IU", 16);
 		}
 		else if (g_Data.iuUplinkResult == 3)
 		{
-			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.8), "Uplink rejected", 15);
+			skp->Text((int)(width * 0.7), (int)(height * 0.8), "Uplink rejected", 15);
 		}
 
-		SetTextAlign(hDC, TA_LEFT);
-		SetTextColor(hDC, RGB(128, 128, 128));
-		if (g_Data.iuVessel)
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->SetTextColor(RGB(128, 128, 128));
+		if (g_Data.uplinkVessel)
 		{
-			oapiGetObjectName(g_Data.iuVessel->GetHandle(), buffer, 100);
-			TextOut(hDC, (int)(width * 0.05), (int)(height * 0.95), buffer, strlen(buffer));
+			oapiGetObjectName(g_Data.uplinkVessel->GetHandle(), buffer, 100);
 		}
+		else
+		{
+			sprintf(buffer, "No Target!");
+		}
+		skp->Text((int)(width * 0.05), (int)(height * 0.95), buffer, strlen(buffer));
 	}
 	//Draw Telemetry
 	else if (screen == m_buttonPages.page.TELE) {
-		SetTextAlign (hDC, TA_LEFT);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		sprintf(buffer, "Telemetry: %s", debugWinsock);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.30), "Telemetry:", 10);
-		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.30), debugWinsock, strlen(debugWinsock));
+		skp->Text((int)(width * 0.1), (int)(height * 0.30), "Telemetry:", 10);
+		skp->Text((int)(width * 0.6), (int)(height * 0.30), debugWinsock, strlen(debugWinsock));
 
 		if (g_Data.uplinkDataReady == 1 || g_Data.updateClockReady == 1) {
 			if (lem) {
-				SetTextAlign (hDC, TA_CENTER);
+				skp->SetTextAlign(oapi::Sketchpad::CENTER);
 				sprintf(buffer, "Checklist");
-				TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-				SetTextAlign (hDC, TA_LEFT);
+				skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
+				skp->SetTextAlign(oapi::Sketchpad::LEFT);
 				sprintf(buffer, "LGC: IDLE (P00 DESIRED)");
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.1), (int)(height * 0.55), buffer, strlen(buffer));
 				sprintf(buffer, "P12: UPDATA LINK - DATA (down)");
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.60), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.1), (int)(height * 0.60), buffer, strlen(buffer));
 				sprintf(buffer, "P11: UP DATA LINK CB - IN");
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
-				SetTextAlign (hDC, TA_CENTER);				
+				skp->Text((int)(width * 0.1), (int)(height * 0.65), buffer, strlen(buffer));
+				skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			} else {
-				SetTextAlign (hDC, TA_CENTER);
+				skp->SetTextAlign(oapi::Sketchpad::CENTER);
 				sprintf(buffer, "Checklist");
-				TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-				SetTextAlign (hDC, TA_LEFT);
+				skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
+				skp->SetTextAlign(oapi::Sketchpad::LEFT);
 				sprintf(buffer, "DSKY - V37E 00E");
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.1), (int)(height * 0.55), buffer, strlen(buffer));
 				sprintf(buffer, "UPTLM CM - ACCEPT (up)   2, 122");
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.60), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.1), (int)(height * 0.60), buffer, strlen(buffer));
 				sprintf(buffer, "UP TLM - DATA (up)            3");
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.1), (int)(height * 0.65), buffer, strlen(buffer));
 				sprintf(buffer, "PCM BIT RATE - HIGH (up)      3");
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), buffer, strlen(buffer));
-				SetTextAlign (hDC, TA_CENTER);
+				skp->Text((int)(width * 0.1), (int)(height * 0.7), buffer, strlen(buffer));
+				skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			}
 			if (g_Data.uplinkDataReady == 1) {
 				if (g_Data.uplinkDataType == UPLINK_SV)
@@ -1170,73 +1174,73 @@ void ProjectApolloMFD::Update (HDC hDC)
 			}
 			else
 				sprintf(buffer, "Press CLK to start upload");
-			TextOut(hDC, width / 2, (int) (height * 0.8), buffer, strlen(buffer));
+			skp->Text(width / 2, (int)(height * 0.8), buffer, strlen(buffer));
 		}
 		else if(g_Data.uplinkDataReady == 2) {
 			double linepos = 0.4;
-			SetTextAlign (hDC, TA_LEFT);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 			sprintf(buffer, "304   %ld", g_Data.emem[0]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "305   %ld", g_Data.emem[1]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "306   %ld", g_Data.emem[2]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "307   %ld", g_Data.emem[3]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "310   %ld", g_Data.emem[4]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "311   %ld", g_Data.emem[5]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "312   %ld", g_Data.emem[6]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "313   %ld", g_Data.emem[7]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
-			sprintf(buffer, "314   %ld", g_Data.emem[8]);		
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
+			sprintf(buffer, "314   %ld", g_Data.emem[8]);
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "315   %ld", g_Data.emem[9]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));		
+			skp->Text((int)(width * 0.1), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			linepos = 0.4;
 			sprintf(buffer, "316   %ld", g_Data.emem[10]);
-			TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.55), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "317   %ld", g_Data.emem[11]);
-			TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.55), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			sprintf(buffer, "320   %ld", g_Data.emem[12]);
-			TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.55), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			if (g_Data.uplinkDataType >= UPLINK_SV) {
 				sprintf(buffer, "321   %ld", g_Data.emem[13]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.55), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "322   %ld", g_Data.emem[14]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.55), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "323   %ld", g_Data.emem[15]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.55), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 				sprintf(buffer, "324   %ld", g_Data.emem[16]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * (linepos+=0.05)), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.55), (int)(height* (linepos += 0.05)), buffer, strlen(buffer));
 			}
 		}
 		else if (g_Data.uplinkDataReady == 3)
 		{
-			SetTextAlign(hDC, TA_LEFT);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 			if (g_Data.uplinkBuffer.size() > 0)
 			{
 				sprintf(buffer, "Uplink word: %d", g_Data.uplinkBuffer.front());
-				TextOut(hDC, (int)(width * 0.1), (int)(height * 0.4), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.1), (int)(height * 0.4), buffer, strlen(buffer));
 			}
 		}
-		SetTextAlign (hDC, TA_LEFT);
-		SetTextColor (hDC, RGB(128, 128, 128));
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->SetTextColor(RGB(128, 128, 128));
 		oapiGetObjectName(g_Data.vessel->GetHandle(), buffer, 100);
-		TextOut(hDC, (int) (width * 0.05), (int) (height * 0.95), buffer, strlen(buffer));
-		SetTextAlign (hDC, TA_CENTER);
+		skp->Text((int)(width * 0.05), (int)(height * 0.95), buffer, strlen(buffer));
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		oapiGetObjectName(g_Data.planet, buffer, 100);
-		TextOut(hDC, (int) (width * 0.5), (int) (height * 0.95), buffer, strlen(buffer));
-		SetTextAlign (hDC, TA_RIGHT);
+		skp->Text((int)(width * 0.5), (int)(height * 0.95), buffer, strlen(buffer));
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		if (g_Data.uplinkSlot == 0) {
 			sprintf(buffer, "This");
 		} else {
 			sprintf(buffer, "Other");
 		}		
-		TextOut(hDC, (int) (width * 0.95), (int) (height * 0.95), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.95), (int)(height * 0.95), buffer, strlen(buffer));
 
 	}
 	else if (screen == m_buttonPages.page.Debug)
@@ -1247,7 +1251,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			strcpy(debugString, debugStringBuffer);
 			sprintf(debugStringBuffer,"");
 		}
-		TextOut(hDC, width / 2, (int)(height * 0.3), "Debug Data",10);
+		skp->Text(width / 2, (int)(height * 0.3), "Debug Data", 10);
 		if (strlen(debugString) > 35)
 		{
 			int i = 0;
@@ -1257,116 +1261,76 @@ void ProjectApolloMFD::Update (HDC hDC)
 			{
 				if (strlen(&debugString[i]) > 35)
 				{
-					TextOut(hDC, width / 2, (int) (height * h), &debugString[i], 35);
+					skp->Text(width / 2, (int)(height* h), &debugString[i], 35);
 					i = i + 35;
 					h = h + 0.05;
 				}
 				else
 				{
-					TextOut(hDC, width / 2, (int) (height * h), &debugString[i], strlen(&debugString[i]));
+					skp->Text(width / 2, (int)(height* h), &debugString[i], strlen(&debugString[i]));
 					done = true;
 				}
 			}
 		}
-		else TextOut(hDC, width / 2, (int) (height * 0.4), debugString, strlen(debugString));
+		else skp->Text(width / 2, (int)(height * 0.4), debugString, strlen(debugString));
 	}
 	// Draw LGC Setup screen
 	else if (screen == m_buttonPages.page.LGC) {
-		OBJHANDLE object;
-		VESSEL *vessel;
-		TextOut(hDC, width / 2, (int) (height * 0.3), "LGC Docked Init Data", 20);
+		skp->Text(width / 2, (int)(height * 0.3), "LGC Docked Init Data", 20);
 		// What's our status?
 		if(saturn == NULL){
-			// TextOut(hDC, width / 2, (int) (height * 0.4), "We are in the LM", 16);
+			// skp->Text(width / 2, (int) (height * 0.4), "We are in the LM", 16);
+
 			// We need to find the CM.
-			// In all of the scenarios in which the LM is present and selectable, the CM is already separated from the S4B.
-			object = oapiGetVesselByName("Gumdrop"); // A9
-			if (object == NULL) {
-				object = oapiGetVesselByName("AS-504"); // A9
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Charlie-Brown"); // A10
-			}
-			if (object == NULL) {
-				object = oapiGetVesselByName("AS-505"); // A10
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Columbia"); // A11
-			}
-			if (object == NULL) {
-				object = oapiGetVesselByName("AS-506"); // A11
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Yankee-Clipper"); // A12
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Odyssey"); // A13
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Kitty-Hawk"); // A14
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Endeavour"); // A15
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("Casper"); // A16
-			}
-			if(object == NULL){
-				object = oapiGetVesselByName("America"); // A17
-			}
-			if(object != NULL){
-				vessel = oapiGetVesselInterface(object);
-				// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
-				if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-					!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-					!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-					!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
-						saturn = (Saturn *)vessel;
+			GetCSM();
 
-						VECTOR3 CMattitude,LMattitude;
-						unsigned short tephem[3];
-						// Obtain CM attitude.
-						// It would be better to call GetTotalAttitude() but for some reason VC++ refuses to link it properly. Sigh.
-						CMattitude.x = saturn->imu.Gimbal.X; // OUTER
-						CMattitude.y = saturn->imu.Gimbal.Y; // INNER
-						CMattitude.z = saturn->imu.Gimbal.Z; // MIDDLE
-						// Docking tunnel angle is assumed to be zero.
-						LMattitude = OrbMech::LMDockedCoarseAlignment(CMattitude, g_Data.lmAlignType);
-						// We should obtain and print CSM time, but...
-						// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
-						// Just initialize from the mission timer.
-						// Obtain TEPHEM
-						tephem[0] = saturn->agc.vagc.Erasable[0][01706];
-						tephem[1] = saturn->agc.vagc.Erasable[0][01707];
-						tephem[2] = saturn->agc.vagc.Erasable[0][01710];
-						sprintf(buffer,"TEPHEM: %05o %05o %05o",tephem[0],tephem[1],tephem[2]);
-						TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
-						// Format gimbal angles and print them
-						sprintf(buffer, "CSM O/I/M: %+07.2f %+07.2f %+07.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
-						TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-						sprintf(buffer, "LM O/I/M: %+07.2f %+07.2f %+07.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
-						TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
+			if (saturn) {
+				VECTOR3 CMattitude, LMattitude;
+				unsigned short tephem[3];
+				// Obtain CM attitude.
+				// It would be better to call GetTotalAttitude() but for some reason VC++ refuses to link it properly. Sigh.
+				CMattitude.x = saturn->imu.Gimbal.X; // OUTER
+				CMattitude.y = saturn->imu.Gimbal.Y; // INNER
+				CMattitude.z = saturn->imu.Gimbal.Z; // MIDDLE
+				// Docking tunnel angle is assumed to be zero.
+				LMattitude = OrbMech::LMDockedCoarseAlignment(CMattitude, g_Data.lmAlignType);
+				// We should obtain and print CSM time, but...
+				// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
+				// Just initialize from the mission timer.
+				// Obtain TEPHEM
+				tephem[0] = saturn->agc.vagc.Erasable[0][01706];
+				tephem[1] = saturn->agc.vagc.Erasable[0][01707];
+				tephem[2] = saturn->agc.vagc.Erasable[0][01710];
+				sprintf(buffer, "TEPHEM: %05o %05o %05o", tephem[0], tephem[1], tephem[2]);
+				skp->Text(width / 2, (int)(height * 0.4), buffer, strlen(buffer));
+				// Format gimbal angles and print them
+				sprintf(buffer, "CSM O/I/M: %+07.2f %+07.2f %+07.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
+				skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
+				sprintf(buffer, "LM O/I/M: %+07.2f %+07.2f %+07.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
+				skp->Text(width / 2, (int)(height * 0.5), buffer, strlen(buffer));
 
-						//Docked IMU Fine Alignment
-						TextOut(hDC, width / 2, (int)(height * 0.6), "Docked IMU Fine Alignment", 25);
+				//Docked IMU Fine Alignment
+				skp->Text(width / 2, (int)(height * 0.6), "Docked IMU Fine Alignment", 25);
 
-						sprintf(buffer, "V42: %+07.3f %+07.3f %+07.3f", g_Data.V42angles.x*DEG, g_Data.V42angles.y*DEG, g_Data.V42angles.z*DEG);
-						TextOut(hDC, width / 2, (int)(height * 0.7), buffer, strlen(buffer));
+				sprintf(buffer, "V42: %+07.3f %+07.3f %+07.3f", g_Data.V42angles.x*DEG, g_Data.V42angles.y*DEG, g_Data.V42angles.z*DEG);
+				skp->Text(width / 2, (int)(height * 0.7), buffer, strlen(buffer));
 
-						if (g_Data.lmAlignType)
-						{
-							TextOut(hDC, width / 2, (int)(height * 0.85), "Alignment: Identical", 20);
-						}
-						else
-						{
-							TextOut(hDC, width / 2, (int)(height * 0.85), "Alignment: LVLH", 15);
-						}
-
-						saturn = NULL; // Clobber
+				if (g_Data.lmAlignType)
+				{
+					skp->Text(width / 2, (int)(height * 0.85), "Alignment: Identical", 20);
 				}
+				else
+				{
+					skp->Text(width / 2, (int)(height * 0.85), "Alignment: LVLH", 15);
+				}
+
+				saturn = NULL; // Clobber
+			}
+			else {
+				skp->Text(width / 2, (int)(height * 0.4), "CSM is not docked", 17);
 			}
 		}else{
-			TextOut(hDC, width / 2, (int) (height * 0.4), "Do this from the LM", 19);
+			skp->Text(width / 2, (int)(height * 0.4), "Do this from the LM", 19);
 		}
 		/*
 		sprintf(buffer, "Socket: %i", close_Socket);
@@ -1377,45 +1341,45 @@ void ProjectApolloMFD::Update (HDC hDC)
 	{
 		if (saturn)
 		{
-			SetTextAlign(hDC, TA_CENTER);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
 			if (FailureSubpage == 0)
 			{
-				TextOut(hDC, width / 2, (int)(height * 0.3), "CSM SECS Failures", 17);
+				skp->Text(width / 2, (int)(height * 0.3), "CSM SECS Failures", 17);
 
 				sprintf(buffer, "1: LET AutoJet Fail: %d", saturn->LaunchFail.LETAutoJetFail);
-				TextOut(hDC, width / 2, (int)(height * 0.4), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.4), buffer, strlen(buffer));
 				sprintf(buffer, "2: LES Jet Motor Fail: %d", saturn->LaunchFail.LESJetMotorFail);
-				TextOut(hDC, width / 2, (int)(height * 0.45), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
 				if (saturn->stage < CSM_LEM_STAGE)
 				{
-					sprintf(buffer, "3: Liftoff Signal A Fail: %d", saturn->LaunchFail.LiftoffSignalAFail);
-					TextOut(hDC, width / 2, (int)(height * 0.5), buffer, strlen(buffer));
-					sprintf(buffer, "4: Liftoff Signal B Fail: %d", saturn->LaunchFail.LiftoffSignalBFail);
-					TextOut(hDC, width / 2, (int)(height * 0.55), buffer, strlen(buffer));
+					sprintf(buffer, "3: Liftoff Signal A Fail: %d", saturn->GetIU()->GetEDS()->GetLiftoffCircuitAFailure());
+					skp->Text(width / 2, (int)(height * 0.5), buffer, strlen(buffer));
+					sprintf(buffer, "4: Liftoff Signal B Fail: %d", saturn->GetIU()->GetEDS()->GetLiftoffCircuitBFailure());
+					skp->Text(width / 2, (int)(height * 0.55), buffer, strlen(buffer));
 				}
 				sprintf(buffer, "5: Auto Abort Enable Fail: %d", saturn->LaunchFail.AutoAbortEnableFail);
-				TextOut(hDC, width / 2, (int)(height * 0.6), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.6), buffer, strlen(buffer));
 				sprintf(buffer, "6: Tower Jett 1 Fail: %d", saturn->SwitchFail.TowerJett1Fail);
-				TextOut(hDC, width / 2, (int)(height * 0.65), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.65), buffer, strlen(buffer));
 				sprintf(buffer, "7: Tower Jett 2 Fail: %d", saturn->SwitchFail.TowerJett2Fail);
-				TextOut(hDC, width / 2, (int)(height * 0.7), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.7), buffer, strlen(buffer));
 				sprintf(buffer, "8: SM Jett 1 Fail: %d", saturn->SwitchFail.SMJett1Fail);
-				TextOut(hDC, width / 2, (int)(height * 0.75), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.75), buffer, strlen(buffer));
 				sprintf(buffer, "9: SM Jett 2 Fail: %d", saturn->SwitchFail.SMJett2Fail);
-				TextOut(hDC, width / 2, (int)(height * 0.8), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.8), buffer, strlen(buffer));
 				sprintf(buffer, "10: Auto Apex Cover Deploy Fail: %d", saturn->LandFail.CoverFail);
-				TextOut(hDC, width / 2, (int)(height * 0.85), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.85), buffer, strlen(buffer));
 				sprintf(buffer, "11: Auto Drogue Chute Deploy Fail: %d", saturn->LandFail.DrogueFail);
-				TextOut(hDC, width / 2, (int)(height * 0.9), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.9), buffer, strlen(buffer));
 				sprintf(buffer, "12: Auto Main Chute Deploy Fail: %d", saturn->LandFail.MainFail);
-				TextOut(hDC, width / 2, (int)(height * 0.95), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.95), buffer, strlen(buffer));
 			}
 			else if (FailureSubpage == 1)
 			{
 				if (isSaturnV)
 				{
-					TextOut(hDC, width / 2, (int)(height * 0.3), "Saturn V Failures", 17);
+					skp->Text(width / 2, (int)(height * 0.3), "Saturn V Failures", 17);
 
 					bool fail = 0.0;
 					double failtime = 0.0;
@@ -1425,25 +1389,25 @@ void ProjectApolloMFD::Update (HDC hDC)
 						{
 							saturn->GetEngineFailure(1, i + 1, fail, failtime);
 							sprintf(buffer, "S-IC Eng %d Fail: %d at T%+.1lf s", i + 1, fail, failtime);
-							TextOut(hDC, width / 2, (int)(height * (0.5 + 0.04*(double)i)), buffer, strlen(buffer));
+							skp->Text(width / 2, (int)(height * (0.5 + 0.04 * (double)i)), buffer, strlen(buffer));
 						}
 					}
 					if (saturn->stage < LAUNCH_STAGE_SIVB)
 					{
 						sprintf(buffer, "13: S-II Auto Sep Fail: %d", saturn->LaunchFail.SIIAutoSepFail);
-						TextOut(hDC, width / 2, (int)(height * 0.45), buffer, strlen(buffer));
+						skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
 
 						for (int i = 0;i < 5;i++)
 						{
 							saturn->GetEngineFailure(2, i + 1, fail, failtime);
 							sprintf(buffer, "S-II Eng %d Fail: %d at Ign%+.1lf s", i + 1, fail, failtime);
-							TextOut(hDC, width / 2, (int)(height * (0.75 + 0.04*(double)i)), buffer, strlen(buffer));
+							skp->Text(width / 2, (int)(height * (0.75 + 0.04 * (double)i)), buffer, strlen(buffer));
 						}
 					}
 				}
 				else
 				{
-					TextOut(hDC, width / 2, (int)(height * 0.3), "Saturn IB Failures", 18);
+					skp->Text(width / 2, (int)(height * 0.3), "Saturn IB Failures", 18);
 
 					bool fail = 0.0;
 					double failtime = 0.0;
@@ -1453,7 +1417,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 						{
 							saturn->GetEngineFailure(1, i + 1, fail, failtime);
 							sprintf(buffer, "S-IB Eng %d Fail: %d at T%+.1lf s", i + 1, fail, failtime);
-							TextOut(hDC, width / 2, (int)(height * (0.5 + 0.04*(double)i)), buffer, strlen(buffer));
+							skp->Text(width / 2, (int)(height* (0.5 + 0.04 * (double)i)), buffer, strlen(buffer));
 						}
 					}
 				}
@@ -1461,15 +1425,16 @@ void ProjectApolloMFD::Update (HDC hDC)
 				if (saturn->stage < CSM_LEM_STAGE)
 				{
 					sprintf(buffer, "IU Platform Fail: %d at T%+.1lf s", saturn->GetIU()->GetEDS()->GetPlatformFail() ? 1 : 0, saturn->GetIU()->GetEDS()->GetPlatformFailTime());
-					TextOut(hDC, width / 2, (int)(height * 0.4), buffer, strlen(buffer));
+					skp->Text(width / 2, (int)(height * 0.4), buffer, strlen(buffer));
 				}
 			}
 		}
 		else
 		{
-			TextOut(hDC, width / 2, (int)(height * 0.5), "Failures not supported!", 23);
+			skp->Text(width / 2, (int)(height * 0.5), "Failures not supported!", 23);
 		}
 	}
+	return true;
 }
 
 // =============================================================================================
@@ -1644,17 +1609,6 @@ bool ProjectApolloMFD::SetSource (char *rstr)
 	return false;
 }
 
-bool ProjectApolloMFD::SetIUSource(char *rstr)
-{
-	OBJHANDLE vessel_obj = oapiGetVesselByName(rstr);
-	if (vessel_obj != NULL)
-	{
-		g_Data.iuVessel = oapiGetVesselInterface(vessel_obj);
-		return true;
-	}
-	return false;
-}
-
 bool ProjectApolloMFD::SetReferencePlanet (char *rstr)
 {
 	if(stricmp(rstr, "Earth") == 0 || stricmp(rstr, "Moon") == 0)
@@ -1745,15 +1699,15 @@ bool ProjectApolloMFD::SetSaturnSwitchFailure(int n)
 		case 3:
 			if (saturn->stage < CSM_LEM_STAGE)
 			{
-				saturn->LaunchFail.LiftoffSignalAFail = !saturn->LaunchFail.LiftoffSignalAFail;
-				saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(saturn->LaunchFail.LiftoffSignalAFail != 0);
+				bool fail = saturn->GetIU()->GetEDS()->GetLiftoffCircuitAFailure();
+				saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(!fail);
 			}
 			return true;
 		case 4:
 			if (saturn->stage < CSM_LEM_STAGE)
 			{
-				saturn->LaunchFail.LiftoffSignalBFail = !saturn->LaunchFail.LiftoffSignalBFail;
-				saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(saturn->LaunchFail.LiftoffSignalBFail != 0);
+				bool fail = saturn->GetIU()->GetEDS()->GetLiftoffCircuitBFailure();
+				saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(!fail);
 			}
 			return true;
 		case 5:
@@ -1981,31 +1935,14 @@ void ProjectApolloMFD::SetRandomFailures(double FailureMultiplier)
 	{
 		if (!(rand() & (int)(255.0 / FailureMultiplier)))
 		{
-			saturn->LaunchFail.LiftoffSignalAFail = 1;
-		}
-		else
-		{
-			saturn->LaunchFail.LiftoffSignalAFail = 0;
-		}
-
-		if (!(rand() & (int)(255.0 / FailureMultiplier)))
-		{
-			saturn->LaunchFail.LiftoffSignalBFail = 1;
-		}
-		else
-		{
-			saturn->LaunchFail.LiftoffSignalBFail = 0;
-		}
-
-		if (saturn->LaunchFail.LiftoffSignalAFail)
-		{
 			saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(true);
 		}
 		else
 		{
 			saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(false);
 		}
-		if (saturn->LaunchFail.LiftoffSignalBFail)
+
+		if (!(rand() & (int)(255.0 / FailureMultiplier)))
 		{
 			saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(true);
 		}
@@ -2097,51 +2034,24 @@ void ProjectApolloMFD::SetAEAACommands(int arm, int set)
 
 void ProjectApolloMFD::GetCSM()
 {
-	OBJHANDLE object;
-	VESSEL *vessel;
+	//Get pointer to CSM vessel while in LM
 
-	object = oapiGetVesselByName("Gumdrop"); // A9
-	if (object == NULL) {
-		object = oapiGetVesselByName("AS-504"); // A9
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Charlie-Brown"); // A10
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("AS-505"); // A10
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Columbia"); // A11
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("AS-506"); // A11
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Yankee-Clipper"); // A12
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Odyssey"); // A13
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Kitty-Hawk"); // A14
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Endeavour"); // A15
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("Casper"); // A16
-	}
-	if (object == NULL) {
-		object = oapiGetVesselByName("America"); // A17
-	}
+	//Only do this in the LM
+	if (lem == NULL) return;
+
+	//Get dock handle
+	DOCKHANDLE dock = lem->GetDockHandle(0);
+	if (dock == NULL) return;
+
+	//Get object handle
+	OBJHANDLE object = lem->GetDockStatus(dock);
+
+	VESSEL *vessel;
 
 	if (object != NULL) {
 		vessel = oapiGetVesselInterface(object);
 		// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
-		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+		if (utils::IsVessel(vessel, utils::Saturn)) {
 			saturn = (Saturn *)vessel;
 		}
 	}
@@ -2149,6 +2059,9 @@ void ProjectApolloMFD::GetCSM()
 
 void ProjectApolloMFD::CalculateV42Angles()
 {
+	//Only do this in the LM
+	if (lem == NULL) return;
+
 	GetCSM();
 	
 	if (saturn && lem)
@@ -2180,6 +2093,9 @@ void ProjectApolloMFD::menuPressEnterOnDSKYDEDA()
 
 void ProjectApolloMFD::menuPressEnterOnCMCLGC()
 {
+	//Only do this in the LM
+	if (lem == NULL) return;
+
 	GetCSM();
 
 	if (lem && saturn)
@@ -2451,8 +2367,20 @@ void ProjectApolloMFD::menuFreezeDebugLine()
 
 void ProjectApolloMFD::menuSetIUSource()
 {
-	bool IUSourceInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Set S-IVB source", IUSourceInput, 0, 20, (void*)this);
+	int vesselcount;
+
+	vesselcount = oapiGetVesselCount();
+
+	if (g_Data.targetnumber < vesselcount - 1)
+	{
+		g_Data.targetnumber++;
+	}
+	else
+	{
+		g_Data.targetnumber = 0;
+	}
+
+	g_Data.uplinkVessel = oapiGetVesselInterface(oapiGetVesselByIndex(g_Data.targetnumber));
 }
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
@@ -2602,7 +2530,7 @@ bool ProjectApolloMFD::SetImpactYaw(char *rstr)
 
 void ProjectApolloMFD::menuIUUplink()
 {
-	if (g_Data.iuVessel == NULL)
+	if (g_Data.uplinkVessel == NULL)
 	{
 		g_Data.iuUplinkResult = 2;
 		return;
@@ -2612,20 +2540,14 @@ void ProjectApolloMFD::menuIUUplink()
 
 	bool uplinkaccepted = false;
 
-	if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/Saturn5") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/Saturn1b")) {
-		Saturn *iuv = (Saturn *)g_Data.iuVessel;
+	if (utils::IsVessel(g_Data.uplinkVessel, utils::Saturn)) {
+		Saturn *iuv = (Saturn *)g_Data.uplinkVessel;
 
 		iu = iuv->GetIU();
 	}
-	else if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/sat5stg3") ||
-			!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
-			!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/nsat1stg2"))
+	else if (utils::IsVessel(g_Data.uplinkVessel, utils::SIVB))
 	{
-		SIVB *iuv = (SIVB *)g_Data.iuVessel;
+		SIVB *iuv = (SIVB *)g_Data.uplinkVessel;
 
 		iu = iuv->GetIU();
 	}
@@ -2765,11 +2687,6 @@ int ProjectApolloMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 bool SourceInput (void *id, char *str, void *data)
 {
 	return ((ProjectApolloMFD*)data)->SetSource(str);
-}
-
-bool IUSourceInput(void *id, char *str, void *data)
-{
-	return ((ProjectApolloMFD*)data)->SetIUSource(str);
 }
 
 bool ReferencePlanetInput (void *id, char *str, void *data)

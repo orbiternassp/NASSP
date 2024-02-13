@@ -23,12 +23,15 @@
   **************************************************************************/
 
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "inttypes.h"
 #include <stdio.h>
 #include <math.h>
+#include <thread>
+#include <mutex>
+#include <cassert>
 #include "soundlib.h"
 
 #include "yaAGC/agc_engine.h"
@@ -44,12 +47,10 @@
 
 #include "tracer.h"
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc), agcCycleMutex()
 
 {
 	Reset = false;
-	CurrentTimestep = 0;
-	LastTimestep = 0;
 	LastCycled = 0;
 	AGCHeat = NULL;
 
@@ -174,14 +175,6 @@ bool ApolloGuidance::OutOfReset()
 	return true;
 }
 
-
-// Do a single timestep - Used by CM to maintain sync between telemetry and vAGC.
-bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
-	LastTimestep = CurrentTimestep;
-	CurrentTimestep = simt;
-	return TRUE;
-}
-
 bool ApolloGuidance::SingleTimestep() {
 
 	agc_engine(&vagc);
@@ -191,25 +184,6 @@ bool ApolloGuidance::SingleTimestep() {
 void ApolloGuidance::VirtualAGCCoreDump(char *fileName) {
 
 	MakeCoreDump(&vagc, fileName); 
-}
-
-bool ApolloGuidance::GenericTimestep(double simt, double simdt)
-{
-//	TRACESETUP("COMPUTER TIMESTEP");
-	int i;
-
-	LastTimestep = CurrentTimestep;
-	CurrentTimestep = simt;
-
-	// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
-	// This resulted in a machine cycle of just over 11.7 microseconds.
-	int cycles = (long) ((simdt) * 1024000 / 12);
-
-	for (i = 0; i < cycles; i++) {
-		agc_engine(&vagc);
-	}
-
-	return true;
 }
 
 void ApolloGuidance::SystemTimestep(double simdt) 
@@ -288,7 +262,7 @@ void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses)
 	if (pulses == 0 ) 
 		return;
 
-	Lock lock(agcCycleMutex);
+	std::lock_guard<std::mutex> guard(agcCycleMutex);
 
 
 	if (pulses >= 0) {
@@ -349,6 +323,18 @@ typedef union
 	unsigned long word;
 } AGCState;
 
+//
+// Structure for additional yaAGC bits
+//
+
+typedef union
+{
+	struct {
+		unsigned RadarGateCounter:4;
+	} u;
+	unsigned long word;
+} AGCState2;
+
 void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 {
@@ -397,6 +383,13 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.Trap32 = vagc.Trap32;
 
 	oapiWriteScenario_int(scn, "STATE", state.word);
+
+	AGCState2 state2;
+
+	state2.word = 0;
+	state2.u.RadarGateCounter = vagc.RadarGateCounter;
+
+	oapiWriteScenario_int(scn, "STATE2", state2.word);
 
 	//
 	// Write out any non-zero EMEM state.
@@ -466,6 +459,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 
 {
 	char	*line;
+	int inttemp;
 
 	//
 	// Now load the data.
@@ -536,9 +530,11 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf(line+8, "%d", &val);
 			vagc.InterruptRequests[num] = val;
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
+		else if (papiReadScenario_int(line, "STATE", inttemp))
+		{
 			AGCState state;
-			sscanf (line+5, "%d", &state.word);
+
+			state.word = inttemp;
 
 			Reset = state.u.Reset;
 			isFirstTimestep = (state.u.isFirstTimestep != 0);
@@ -567,6 +563,14 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.Trap31A = state.u.Trap31A;
 			vagc.Trap31B = state.u.Trap31B;
 			vagc.Trap32 = state.u.Trap32;
+		}
+		else if (papiReadScenario_int(line, "STATE2", inttemp))
+		{
+			AGCState2 state;
+
+			state.word = inttemp;
+
+			vagc.RadarGateCounter = state.u.RadarGateCounter;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);
@@ -641,9 +645,9 @@ void ApolloGuidance::SetInputChannel(int channel, ChannelValue val)
 	else {
 		// If this is a keystroke from the DSKY, generate an interrupt req.
 		if (channel == 015){
-			vagc.InterruptRequests[5] = 1;
+			RaiseInterrupt(Interrupt::KEYRUPT1);
 		}else{ if (channel == 016){ // Secondary DSKY
-			vagc.InterruptRequests[6] = 1;
+			RaiseInterrupt(Interrupt::KEYRUPT2);
 		}}
 
 		//
@@ -700,9 +704,9 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 	// If this is a keystroke from the DSKY (Or MARK/MARKREJ), generate an interrupt req.
 	if (channel == 015 && val != 0){
-		vagc.InterruptRequests[5] = 1;
+		RaiseInterrupt(Interrupt::KEYRUPT1);
 	}else{ if (channel == 016 && val != 0){ // Secondary DSKY
-		vagc.InterruptRequests[6] = 1;
+		RaiseInterrupt(Interrupt::KEYRUPT2);
 	}}
 
 	WriteIO(&vagc, channel, data);
@@ -809,63 +813,65 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 	}
 }
 
+void ApolloGuidance::RadarRead()
+{
+	ChannelValue val13 = GetInputChannel(013);
+
+	int radarBits = 0;
+	if (val13[RangeUnitSelectA] == 1) { radarBits |= 1; }
+	if (val13[RangeUnitSelectB] == 1) { radarBits |= 2; }
+	if (val13[RangeUnitSelectC] == 1) { radarBits |= 4; }
+
+	GetRadarData(radarBits);
+
+	//sprintf(oapiDebugString(), "%lf %d %o %d", oapiGetSimTime(), radarBits, vagc.Erasable[0][RegRNRAD], vagc.Erasable[0][RegRNRAD]);
+}
+
 //
 // By default, do nothing for the RCS channels.
 //
 
-void ApolloGuidance::ProcessChannel5(ChannelValue val){
-}
+void ApolloGuidance::ProcessChannel5(ChannelValue val){}
 
-void ApolloGuidance::ProcessChannel6(ChannelValue val){
-}
+void ApolloGuidance::ProcessChannel6(ChannelValue val){}
 
 // DS20060226 Stubs for optics controls and TVC
-void ApolloGuidance::ProcessChannel14(ChannelValue val){
-}
+void ApolloGuidance::ProcessChannel14(ChannelValue val){}
 
-void ApolloGuidance::ProcessChannel34(ChannelValue val) {
-}
+void ApolloGuidance::ProcessChannel34(ChannelValue val) {}
 
 // Stub for LGC thrust drive
-void ApolloGuidance::ProcessChannel142(ChannelValue val) {
-}
+void ApolloGuidance::ProcessChannel142(ChannelValue val) {}
 
 // Stub for LGC altitude meter drive
-void ApolloGuidance::ProcessChannel143(ChannelValue val) {
-}
+void ApolloGuidance::ProcessChannel143(ChannelValue val) {}
 
 // DS20060308 Stub for FDAI
-void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
+void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){}
+
+void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {}
+
+void ApolloGuidance::RaiseInterrupt(Interrupt rupt)
+{
+	// T3-6RUPT can not be set by peripherals
+	assert(rupt >= KEYRUPT1 && rupt <= NUM_INTERRUPT_TYPES);
+
+	if (!vagc.Standby) {
+		vagc.InterruptRequests[rupt] = 1;
+	}
 }
 
-void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
-}
-
-void ApolloGuidance::GenerateHandrupt() {
-	vagc.InterruptRequests[10] = 1;
-}
-
-void ApolloGuidance::GenerateDownrupt(){
-	vagc.InterruptRequests[8] = 1;
-}
-
-void ApolloGuidance::GenerateUprupt(){
-	vagc.InterruptRequests[7] = 1;
-}
-
-void ApolloGuidance::GenerateRadarupt(){
-	vagc.InterruptRequests[9] = 1;
-}
-
-bool ApolloGuidance::IsUpruptActive() {
-	// UPRUPT waiting to be processed
-	if (vagc.InterruptRequests[7] == 1)
+bool ApolloGuidance::InterruptPending(Interrupt rupt)
+{
+	// Waiting to be serviced?
+	if (vagc.InterruptRequests[rupt] == 1)
 		return 1;
 
-	// UPRUPT currently being processed
-	if (vagc.InIsr && vagc.InterruptRequests[0] == 7)
+	// Currently being serviced?
+	if (vagc.InIsr && vagc.InterruptRequests[0] == rupt)
 		return 1;
 
+	// Neither
 	return 0;
 }
 
@@ -1028,5 +1034,13 @@ int ChannelInput (agc_t *State)
 void ChannelRoutine (agc_t *State)
 
 {
+}
+
+void RequestRadarData(agc_t *State)
+{
+	ApolloGuidance *agc;
+
+	agc = (ApolloGuidance *)State->agc_clientdata;
+	agc->RadarRead();
 }
 

@@ -142,6 +142,7 @@ protected:
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	void ProcessIMUCDUReadCount(int channel, int val);
+	void GetRadarData(int radarBits);
 
 	FILE *Dfile;
 	int count;
@@ -173,8 +174,8 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
-	bool PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits);		// Update panel image
-	bool PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
+	bool PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);		// Update panel image
+	bool PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);	// Update panel image
 	void OpticsSwitchToggled();
 
 	void SaveState(FILEHANDLE scn);
@@ -201,7 +202,7 @@ public:
 	double SextDVTimer;												// Governing timer to prevent view switching at greater than 15 frames per sim second
 	bool OpticsCovered;												// Are optics covers in place?
 protected:
-	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value);
+	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value, int xTexMul = 1);
 	void TelescopeServoDrive(double dt, double sxt_angle, double &sct_angle, double &sct_rate);
 };
 

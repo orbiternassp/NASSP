@@ -42,9 +42,9 @@
 #include <vector>
 #include <deque>
 #include <string>
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbiterSDK.h"
+#include "Orbitersdk.h"
 #include "nasspdefs.h"
 #include "connector.h"
 #include "BasicExcelVC6.hpp"
@@ -518,6 +518,17 @@ public:
 /// display completed.
 /// -------------------------------------------------------------
 	bool completeChecklistItem(ChecklistItem*);
+/// -------------------------------------------------------------
+/// Set the active item in the checklist to the provided item. All
+/// items between the current and provided item will be marked as
+/// complete.
+/// -------------------------------------------------------------
+	bool gotoChecklistItem(ChecklistItem*);
+/// -------------------------------------------------------------
+/// Undo the last checklist item. The last item will be marked as
+/// pending and the cursor will return to the last item.
+/// -------------------------------------------------------------
+	bool undoChecklistItem();
 /// -------------------------------------------------------------
 /// This allows setting of the autoComplete function which 
 /// automatically detects if a step is already complete and marks

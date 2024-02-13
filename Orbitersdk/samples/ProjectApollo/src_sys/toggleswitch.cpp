@@ -25,15 +25,8 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "Orbitersdk.h"
-#include <stdio.h>
-#include <math.h>
-#include "soundlib.h"
-
-#include "nasspdefs.h"
-#include "nasspsound.h"
 
 #include "toggleswitch.h"
 
@@ -42,7 +35,7 @@
 #include "apolloguidance.h"
 #include "ioChannels.h"
 #include "powersource.h"
-#include "fdai.h"
+#include "FDAI.h"
 #include "scs.h"
 #include "connector.h"
 #include "checklistController.h"
@@ -361,60 +354,25 @@ bool TwoPositionSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool TwoPositionSwitch::DoCheckMouseClickVC(int event, VECTOR3 &p)
 {
-	int OldState = state;
+	int mx, my;
 
-	///
-	/// \todo Get CTRL state properly if and when Orbiter supports it.
-	///
-	SHORT ctrlState = GetKeyState(VK_SHIFT);
+	mx = x + int(p.x * width);
+	my = y + int(p.y * height);
 
-	if (IsSpringLoaded())
-		SetHeld((ctrlState & 0x8000) != 0);
-
-	//
-	// Yes, so now we just need to check whether it's an on or
-	// off click.
-	//
-
-	if (event & PANEL_MOUSE_LBDOWN) {
-		if (Sideways == 0 || Sideways == 2) {
-			if (state != TOGGLESWITCH_UP) {
-				SwitchTo(TOGGLESWITCH_UP, true);
-				Sclick.play();
-			}
-		}
-		else {
-			if (state != TOGGLESWITCH_DOWN) {
-				SwitchTo(TOGGLESWITCH_DOWN, true);
-				Sclick.play();
-			}
-		}
-	}
-	else if (event & PANEL_MOUSE_RBDOWN) {
-		if (Sideways == 1) {
-			if (state != TOGGLESWITCH_UP) {
-				SwitchTo(TOGGLESWITCH_UP, true);
-				Sclick.play();
-			}
-		}
-		else {
-			if (state != TOGGLESWITCH_DOWN) {
-				SwitchTo(TOGGLESWITCH_DOWN, true);
-				Sclick.play();
-			}
-		}
-	}
-
-	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
-		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
-		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
-	}
-	return true;
+	return CheckMouseClick(event, mx, my);
 }
 
 bool TwoPositionSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 {
 	return DoCheckMouseClickVC(event, p);
+}
+
+void TwoPositionSwitch::VesimSwitchTo(int newState)
+{
+	if (newState != state) {
+		SwitchTo(newState, true);
+		Sclick.play();
+	}
 }
 
 void TwoPositionSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
@@ -439,6 +397,8 @@ void TwoPositionSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 
 void TwoPositionSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
+	if (!bHasAnimations) return;
+
 	if (IsUp()) {
 		OurVessel->SetAnimation(anim_switch, 1.0);
 	}
@@ -615,58 +575,12 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool ThreePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 {
-	int OldState = state;
+	int mx, my;
 
-	///
-	/// \todo Get CTRL state properly if and when Orbiter supports it.
-	///
-	SHORT ctrlState = GetKeyState(VK_SHIFT);
+	mx = x + int(p.x * width);
+	my = y + int(p.y * height);
 
-	if (IsSpringLoaded())
-		SetHeld((ctrlState & 0x8000) != 0);
-
-	//
-	// Yes, so now we just need to check whether it's an on or
-	// off click.
-	//
-	if (event & PANEL_MOUSE_LBDOWN) {
-		if (Sideways == 0 || Sideways == 2 ) {
-			if (state < 2) {
-				SwitchTo(state + 1, true);
-				Sclick.play();
-			}
-		} else {
-			if (state > 0) {
-				SwitchTo(state - 1, true);
-				Sclick.play();
-			}
-		}
-	} else if (event & PANEL_MOUSE_RBDOWN) {
-		if (Sideways == 1) {
-			if (state < 2) {
-				SwitchTo(state + 1, true);
-				Sclick.play();
-			}
-		} else {
-			if (state > 0) {
-				SwitchTo(state - 1, true);
-				Sclick.play();
-			}
-		}
-	}
-
-	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
-		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN, true);
-		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER, true);
-		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP, true);
-
-		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)
-			SwitchTo(THREEPOSSWITCH_CENTER, true);
-
-		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)
-			SwitchTo(THREEPOSSWITCH_CENTER);
-	}
-	return true;
+	return CheckMouseClick(event, mx, my);
 }
 
 void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
@@ -677,6 +591,8 @@ void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 
 void ThreePosSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
+	if (!bHasAnimations) return;
+
 	if (IsUp()) {
 		OurVessel->SetAnimation(anim_switch, 1.0);
 	}
@@ -1069,6 +985,13 @@ bool PushSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 		SwitchTo(0, true);
 	}
 	return true;
+}
+
+void PushSwitch::VesimSwitchTo(int newState) {
+	if (newState != state) {
+		SwitchTo(newState, true);
+		if (newState) Sclick.play();
+	}
 }
 
 void PushSwitch::InitSound(SoundLib *s) {
@@ -1651,6 +1574,22 @@ int PanelSwitches::GetState(const char *n)
 	return -1;
 }
 
+void PanelSwitches::SetFailedState(const char *n, bool fail, int fail_state)
+{
+	PanelSwitchItem *p;
+	SwitchRow *row = RowList;
+
+	while (row) {
+		p = row->GetItemByName(n);
+		if (p)
+		{
+			p->SetFailed(fail, fail_state);
+			return;
+		}
+		row = row->GetNext();
+	}
+}
+
 bool PanelSwitches::GetFailedState(const char *n)
 
 {
@@ -1901,24 +1840,18 @@ void GuardedToggleSwitch::DefineVCAnimations(UINT vc_idx)
 
 bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (event & PANEL_MOUSE_RBDOWN && p.x > 0.004) {
+	int mx, my;
 
-		if (guardState) {
-			Guard();
-		}
-		else {
-			guardState = 1;
-		}
-		guardClick.play();
-		return true;
+	mx = x + int(p.x * width);
+	my = y + int(p.y * height);
 
+	return CheckMouseClick(event, mx, my);
+}
+
+void GuardedToggleSwitch::VesimSwitchTo(int newState) {
+	if (guardState) {
+		return ToggleSwitch::VesimSwitchTo(newState);
 	}
-	else if (event & (PANEL_MOUSE_DOWN | PANEL_MOUSE_UP)) {
-		if (guardState) {
-			return ToggleSwitch::CheckMouseClickVC(event, p);
-		}
-	}
-	return false;
 }
 
 void GuardedToggleSwitch::SaveState(FILEHANDLE scn) {
@@ -2318,24 +2251,12 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool GuardedThreePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (event & PANEL_MOUSE_RBDOWN && p.x > 0.004) {
+	int mx, my;
 
-		if (guardState) {
-			Guard();
-		}
-		else {
-			guardState = 1;
-		}
-		guardClick.play();
-		return true;
+	mx = x + int(p.x * width);
+	my = y + int(p.y * height);
 
-	}
-	else if (event & (PANEL_MOUSE_DOWN | PANEL_MOUSE_UP)) {
-		if (guardState) {
-			return ThreePosSwitch::CheckMouseClickVC(event, p);
-		}
-	}
-	return false;
+	return CheckMouseClick(event, mx, my);
 }
 
 void GuardedThreePosSwitch::SaveState(FILEHANDLE scn) {
@@ -2690,6 +2611,8 @@ void RotationalSwitch::DefineVCAnimations(UINT vc_idx)
 
 void RotationalSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface)
 {
+	if (!bHasAnimations) return;
+
 	double state = 0;
 
 	if (position) state = position->GetAngle();
@@ -2815,20 +2738,25 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 		char label[100];
 		sprintf(label, "%d", value);
 
-		HDC hDC = oapiGetDC(drawSurface);
-		HFONT font = CreateFont(22, 0, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
-		SelectObject(hDC, font);
-		SetTextColor(hDC, RGB(255, 255, 255));
-		SetTextAlign(hDC, TA_CENTER);
-		SetBkMode(hDC, OPAQUE);
-		SetBkColor(hDC, RGB(146, 146, 146));
+		oapi::Sketchpad* skp = oapiGetSketchpad(drawSurface);
+		oapi::Font* font = oapiCreateFont(22, true, "Arial", FONT_BOLD);
+		oapi::Brush* brush = oapiCreateBrush(RGB(146, 146, 146));
+		oapi::Pen* pen = oapiCreatePen(1, 1, RGB(146, 146, 146));
+		skp->SetBrush(brush);
+		skp->SetPen(pen);
+		skp->SetFont(font);
+		skp->SetTextColor(RGB(255, 255, 255));
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->SetBackgroundMode(oapi::Sketchpad::BK_OPAQUE);
+		skp->SetBackgroundColor(RGB(146, 146, 146));
 
 		if (GetState() == 0) {
 			rt.left = 29 + x;
 			rt.top = 24 + y;
 			rt.right = 60 + x;
 			rt.bottom = 55 + y;
-			ExtTextOut(hDC, 44 + x, 28 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(44 + x, 28 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 1) {
@@ -2836,7 +2764,8 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			rt.top = 30 + y;
 			rt.right = 59 + x;
 			rt.bottom = 52 + y;
-			ExtTextOut(hDC, 49 + x, 31 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(49 + x, 31 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 2) {
@@ -2844,11 +2773,17 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			rt.top = 29 + y;
 			rt.right = 60 + x;
 			rt.bottom = 59 + y;
-			ExtTextOut(hDC, 44 + x, 34 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(44 + x, 34 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 3) {
-			TextOut(hDC, 42 + x, 36 + y, label, strlen(label));
+			rt.left = 29 + x;
+			rt.top = 35 + y;
+			rt.right = 57 + x;
+			rt.bottom = 59 + y;
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(42 + x, 36 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 4) {
@@ -2856,11 +2791,12 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			rt.top = 30 + y;
 			rt.right = 54 + x;
 			rt.bottom = 60 + y;
-			ExtTextOut(hDC, 37 + x, 34 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(37 + x, 34 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 5) {
-			TextOut(hDC, 32 + x, 31 + y, label, strlen(label));
+			skp->Text(32 + x, 31 + y, label, strlen(label));
 
 		}
 		else if (GetState() == 6) {
@@ -2868,11 +2804,14 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			rt.top = 24 + y;
 			rt.right = 55 + x;
 			rt.bottom = 54 + y;
-			ExtTextOut(hDC, 39 + x, 28 + y, ETO_OPAQUE, &rt, label, strlen(label), NULL);
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(39 + x, 28 + y, label, strlen(label));
 		}
 
-		DeleteObject(font);
-		oapiReleaseDC(drawSurface, hDC);
+		oapiReleaseFont(font);
+		oapiReleaseBrush(brush);
+		oapiReleasePen(pen);
+		oapiReleaseSketchpad(skp);
 	}
 }
 
@@ -3278,66 +3217,62 @@ bool ContinuousThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (p.x < 0.005)
-	{
-		if (event == PANEL_MOUSE_LBDOWN) {
-			if (isHorizontal) {
-				if (position < numPositions) {
-					SwitchTo(position + 1);
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (isHorizontal) {
+			if (p.x < 0.5) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
 					sclick.play();
 				}
 			}
 			else {
-				if (position > 0) {
-					SwitchTo(position - 1);
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
 					sclick.play();
 				}
 			}
 		}
-		else if (event == PANEL_MOUSE_RBDOWN)
-		{
-			if (isHorizontal) {
-				if (position > 0) {
-					SwitchTo(position - 1);
+		else {
+			if (p.y < 0.5) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
 					sclick.play();
 				}
 			}
 			else {
-				if (position < numPositions) {
-					SwitchTo(position + 1);
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
 					sclick.play();
 				}
 			}
 		}
-
 	}
-	else
+	else if (event == PANEL_MOUSE_RBDOWN)
 	{
-		if (event == PANEL_MOUSE_LBDOWN) {
-			if (isHorizontal) {
-				if (position + multiplicator <= numPositions) {
-					SwitchTo(position + multiplicator);
+		if (isHorizontal) {
+			if (p.x < 0.5) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
 					sclick.play();
 				}
 			}
 			else {
-				if (position - multiplicator >= 0) {
-					SwitchTo(position - multiplicator);
+				if (position > 0) {
+					SwitchTo(position - 1);
 					sclick.play();
 				}
 			}
 		}
-		else if (event == PANEL_MOUSE_RBDOWN)
-		{
-			if (isHorizontal) {
-				if (position - multiplicator >= 0) {
-					SwitchTo(position - multiplicator);
+		else {
+			if (p.y < 0.5) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
 					sclick.play();
 				}
 			}
 			else {
-				if (position + multiplicator <= numPositions) {
-					SwitchTo(position + multiplicator);
+				if (position > 0) {
+					SwitchTo(position - 1);
 					sclick.play();
 				}
 			}
@@ -3345,6 +3280,12 @@ bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 	}
 
 	return true;
+}
+
+void ContinuousThumbwheelSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
+
+	double s = position / (double)numPositions;
+	OurVessel->SetAnimation(anim_switch, s);
 }
 
 bool ContinuousThumbwheelSwitch::SwitchTo(int newPosition) {
@@ -3579,7 +3520,7 @@ void IndicatorSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
 		displayState += (drawState - 1);
 	}
 
-	oapiBlt(drawSurface, switchsurfacevc, x, y, width * (int)displayState, 0, width, height);
+	oapiBlt(drawSurface, switchsurfacevc, x*TexMul, y*TexMul, width * (int)displayState*TexMul, 0, width*TexMul, height*TexMul);
 }
 
 void IndicatorSwitch::SaveState(FILEHANDLE scn) {
@@ -3675,7 +3616,7 @@ double MeterSwitch::GetDisplayValue() {
 		return displayValue;
 
 	if (lastDrawTime == -1) {
-		lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
+		lastDrawTime = oapiGetSimTime(); // oapiGetSimTime();
 		return displayValue;
 	}
 
@@ -3686,7 +3627,7 @@ double MeterSwitch::GetDisplayValue() {
 	if (minMaxTime == 0) {
 		displayValue = value;
 	} else {
-		double dt = oapiGetSysTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
+		double dt = oapiGetSimTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
 		if (dt > 0) {
 			if (fabs(value - displayValue) / dt > (maxValue - minValue) / minMaxTime) {
 				displayValue += ((value - displayValue) / fabs(value - displayValue)) * (maxValue - minValue) / minMaxTime * dt;
@@ -3695,7 +3636,7 @@ double MeterSwitch::GetDisplayValue() {
 			}
 		}
 	}
-	lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
+	lastDrawTime = oapiGetSimTime(); // oapiGetSimTime();
 	return displayValue;
 }
 
@@ -3819,7 +3760,7 @@ RoundMeter::~RoundMeter()
 		delete pswitchrot;
 }
 
-void RoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row)
+void RoundMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row)
 
 {
 	MeterSwitch::Init(row);
@@ -3860,16 +3801,13 @@ void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double a
 	// Needle function by Rob Conley from Mercury code
 	
 	double dx = rad * cos(angle), dy = rad * sin(angle);
-	HGDIOBJ oldObj;
 
-	HDC hDC = oapiGetDC (surf);
-	oldObj = SelectObject (hDC, Pen1);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
-	SelectObject (hDC, oldObj);
-	oldObj = SelectObject (hDC, Pen0);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
-	SelectObject (hDC, oldObj);
-	oapiReleaseDC (surf, hDC);
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(Pen1);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(0.85 * dx + 0.5), y - (int)(0.85 * dy + 0.5));
+	skp->SetPen(Pen0);
+	skp->MoveTo(x, y); skp->LineTo(x + (int)(dx + 0.5), y - (int)(dy + 0.5));
+	oapiReleaseSketchpad(skp);
 }
 
 ElectricMeter::ElectricMeter(double minVal, double maxVal, double vMin, double vMax)
@@ -3894,7 +3832,7 @@ void ElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
 	FrameSurface = srf;
 }
 
-void ElectricMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch)
+void ElectricMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, e_object *dcindicatorswitch)
 
 {
 	RoundMeter::Init(p0, p1, row);
@@ -3907,6 +3845,12 @@ void ElectricMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
 	double v = minAngle + (ScaleFactor * (volts - minValue));
 	DrawNeedle(drawSurface, xSize / 2, ySize / 2, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, xSize, ySize, SURF_PREDEF_CK);
+
+	//angle debug lines
+	//if (strcmp(name, "DCAmpMeter") == 0)
+	//{
+	//	sprintf(oapiDebugString(), "Angle %lf Current %.2f", 90.0 - v, volts);
+	//}
 }
 
 DCVoltMeter::DCVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
@@ -4500,16 +4444,22 @@ void ThreeSourceTwoDestSwitch::UpdateSourceState()
 		//
 		// Source 1 to dest 1, source 3 to dest 2
 		//
+		dest1->WireTo(source[0]);
+		dest2->WireTo(source[1]);
 	}
 	else if (IsCenter()) {
 		//
-		// Disconnect.
+		// Disconnect. Center is usually wired to NULL, for an "Off" state
 		//
+		dest1->WireTo(source[1]);
+		dest2->WireTo(source[1]);
 	}
 	else if (IsDown()) {
 		//
 		// Source 2 to dest 2, source 3 to dest 1.
 		//
+		dest1->WireTo(source[1]);
+		dest2->WireTo(source[2]);
 	}
 }
 
@@ -5317,6 +5267,18 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		return true;
 	case MFD_PANEL_CHECKLIST_FLASHING:
 		checklist.setFlashing(m.val1.bValue);
+		return true;
+	case MFD_PANEL_GET_CHECKLIST_AUTOEXECUTE:
+		m.val1.bValue = checklist.autoExecute();
+		return true;
+	case MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE:
+		checklist.autoExecute(m.val1.bValue);
+		return true;
+	case MFD_PANEL_GOTO_CHECKLIST_ITEM:
+		m.val2.bValue = checklist.gotoChecklistItem(static_cast<ChecklistItem*>(m.val1.pValue));
+		return true;
+	case MFD_PANEL_UNDO_CHECKLIST_ITEM:
+		m.val1.bValue = checklist.undoChecklistItem();
 		return true;
 	}
 

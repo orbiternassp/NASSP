@@ -262,7 +262,7 @@ public:
 
 class SaturnRoundMeter : public RoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s);
 
 protected:
 	Saturn *Sat;
@@ -298,7 +298,7 @@ public:
 
 class SaturnEcsRadTempInletMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -320,7 +320,7 @@ public:
 
 class SaturnGlyEvapTempOutletMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -330,7 +330,7 @@ protected:
 
 class SaturnGlyEvapSteamPressMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -340,7 +340,7 @@ protected:
 
 class SaturnGlycolDischPressMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -350,7 +350,7 @@ protected:
 
 class SaturnAccumQuantityMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -360,7 +360,7 @@ protected:
 
 class SaturnH2oQuantityMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, PowerSource *src);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, PowerSource *src);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -460,9 +460,9 @@ public:
 	/// \param vMin Angle of meter at minimum current.
 	/// \param vMax Angle of meter at maximum current.
 	///
-	SaturnDCAmpMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	SaturnDCAmpMeter(double minVal, double maxVal, double vMin = 210.0, double vMax = (-30.0));
 
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
 
 	///
 	/// \brief Query the voltage.
@@ -480,11 +480,12 @@ protected:
 	PowerStateRotationalSwitch *DCIndicatorSwitch;
 };
 
-class SaturnSystemTestAttenuator : public VoltageAttenuator {
+class SaturnSystemTestMeter : public DCVoltMeter
+{
 public:
-	SaturnSystemTestAttenuator(char *i_name, double minIn, double maxIn, double minOut, double maxOut);
-	void Init(Saturn* S, RotationalSwitch *leftsystemtestrotaryswitch, RotationalSwitch *rightsystemtestrotaryswitch, e_object *Instrum);
-	double GetValue();
+	SaturnSystemTestMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn* s, RotationalSwitch *leftsystemtestrotaryswitch, RotationalSwitch *rightsystemtestrotaryswitch);
+	double QueryValue();
 protected:
 	Saturn *Sat;
 	RotationalSwitch *LeftSystemTestRotarySwitch;
@@ -592,7 +593,7 @@ protected:
 
 class SaturnLVSPSPcMeter : public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *lvspspcindicatorswitch, SURFHANDLE frameSurface);
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, ToggleSwitch *lvspspcindicatorswitch, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -817,17 +818,22 @@ protected:
 	Sound &ClickSound;
 };
 
-class SaturnCabinPressureReliefLever: public ThumbwheelSwitch {
+class SaturnCabinPressureReliefLever : public ThumbwheelSwitch
+{
+public:
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
+};
+
+class SaturnGuardedCabinPressureReliefLever: public SaturnCabinPressureReliefLever {
 
 public:
-	SaturnCabinPressureReliefLever() { guardState = 0; guardAnim = -1; };
-	virtual ~SaturnCabinPressureReliefLever() { guardClick.done(); };
+	SaturnGuardedCabinPressureReliefLever() { guardState = 0; guardAnim = -1; };
+	virtual ~SaturnGuardedCabinPressureReliefLever() { guardClick.done(); };
 
 	void InitGuard(SURFHANDLE surf, SoundLib *soundlib);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState);
@@ -912,7 +918,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, SECS *s,
 		int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
 	void DoDrawSwitch(SURFHANDLE drawSurface);
-	void RepaintSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc);
+	void RepaintSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc, int xTexMul = 1);
 protected:
 	SECS * secs;
 };
@@ -982,7 +988,7 @@ public:
 	void RedrawPanel_Alt(SURFHANDLE surf);
 	void RedrawPanel_Alt2(SURFHANDLE surf);
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
-	void DrawNeedle(HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPEN pen1);
+	void DrawNeedle(oapi::Sketchpad *skp, int x, int y, double rad, double angle, oapi::Pen *pen0, oapi::Pen *pen1);
 	void DefineVCAnimations(UINT vc_idx);
 
 protected:

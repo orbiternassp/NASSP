@@ -63,7 +63,7 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p)
 		EDSCutoffFromSC[i] = false;
 		ExcessivePitchYawRateAutoAbortInhibit[i] = false;
 		ExcessiveRollRateAutoAbortInhibit[i] = false;
-		TwoEngineOutAutoAbortInhibit[i] = false;
+		TwoEngineOutAutoAbortInhibit[i] = true; //Initialize this to true to prevent race condition with EDS. And it's normally inhibited anyway.
 	}
 
 	LastMissionTime = 10000000.0;
@@ -385,8 +385,6 @@ void IU_ESE::SetEDSMode(int mode)
 		ExcessivePitchYawRateAutoAbortInhibit[1] = true;
 		ExcessivePitchYawRateAutoAbortInhibit[2] = true;
 		EDSPowerInhibit = false;
-		Umbilical->SetEDSLiftoffEnableA();
-		Umbilical->SetEDSLiftoffEnableB();
 	}
 }
 

@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include "stdio.h"
 #include "nasspdefs.h"
 #include "papi.h"
@@ -189,13 +189,13 @@ void Sat1Abort1::Setup()
 			AddMesh(hLM1, &mesh_dir);
 			break;
 
-		case PAYLOAD_LTA:
-		case PAYLOAD_LTA6:
+		case PAYLOAD_LTA10R:
+		case PAYLOAD_LTA2R:
 			mesh_dir = _V(0, 0, 9.6 + PLOFS);
 			AddMesh(hlta_2r, &mesh_dir);
 			break;
 
-		case PAYLOAD_LTA8:
+		case PAYLOAD_LTAB:
 			mesh_dir = _V(0.0, 0, 8.8 + PLOFS);
 			AddMesh(hapollo8lta, &mesh_dir);
 			break;

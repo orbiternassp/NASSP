@@ -33,6 +33,9 @@ typedef struct
 
 } LRVSettings;
 
+static const DWORD ntdvtx = 3;
+static TOUCHDOWNVTX tdvtx[ntdvtx];
+
 ///
 /// \ingroup Astronauts
 /// \brief Lunar Rover.
@@ -104,8 +107,10 @@ public:
 
 private:
 
-	void ScanMotherShip();
 	void MoveLRV(double SimDT, VESSELSTATUS *eva, double heading);
+	void LRVAttitude(VESSELSTATUS2* eva);
+	MATRIX3 RotationMatrix(VECTOR3 angles, bool xyz);
+	void WheelDust();
 	void SetMissionPath();
 	void DoFirstTimestep();
 	void SetMainState(int s);
@@ -163,6 +168,10 @@ protected:
 	bool KEYADD;
 	bool KEYSUBTRACT;
 	bool KEYCTRL;
+	double Height_From_Ground;
+
+	ATTACHMENTHANDLE cdrSeat;
+	ATTACHMENTHANDLE lmpSeat;
 
 	bool FirstTimestep;
 	bool SLEVAPlayed;
@@ -213,4 +222,10 @@ protected:
 	MESHGROUP_TRANSFORM mgtRotSpeed;
 	MESHGROUP_TRANSFORM mgtRotDrums;  // Bearing, distance or range "drum"
 	MESHGROUP_TRANSFORM mgtRotGauges;  // rotation of the 8 needles of the four power/temp gauges
+
+	SURFHANDLE dust_tex;
+	PSTREAM_HANDLE wheel_dust[4];
+	PARTICLESTREAMSPEC dust;
+	double dust_level = 0;
+	VECTOR4 arot_save = _V(0, 0, 0, 0);
 };

@@ -23,6 +23,9 @@
 
   **************************************************************************/
 
+#include "RF_calc.h"
+#include "paCBGmessageID.h"
+
 /* PCM DOWN-TELEMETRY
 
 	HBR FRAME:
@@ -282,6 +285,54 @@ protected:
 	double lastEventTime;				/// Last event time.
 };
 
+//Up Data Link Equipment
+class UDL
+{
+public:
+	UDL();
+	void Init(Saturn *v);
+	void Timestep();
+	void Decoder(int uplink_state, int data);
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+	bool GetAbortLightA() { return Relays[0]; }
+	bool GetCrewAlert() { return Relays[1]; }
+	bool GetBitrateLogic1() { return Relays[13]; }
+	bool GetBitrateLogic2() { return Relays[14]; }
+	bool GetAntennaSelect() { return Relays[15]; }
+	bool GetAbortLightB() { return Relays[17]; }
+	bool GetRangingSignal1() { return Relays[20]; }
+	bool GetRangingSignal2() { return Relays[21]; }
+	bool GetSBandPALogic1() { return Relays[24]; }
+	bool GetSBandPALogic2() { return Relays[25]; }
+protected:
+	bool IsPowered();
+	void OverrideReset();
+	void EvaluateState();
+	void SetRelayState(unsigned int sel, int sys, bool set);
+
+	bool Relays[32];
+	std::bitset<8> IntBits;
+	//Bit 1: Set or Reset. Bit 2: System 1 or 2
+	std::bitset<2> settemp;
+	std::bitset<4> linestemp;
+	//Power to set 1, set 2, reset 1, reset 2
+	std::bitset<4> lines;
+	//Lines 1 to 16
+	std::bitset<16> select;
+
+	Saturn *vessel;
+
+	//Maps set, reset, select lines to relays
+	const int BankNum1[2][16] = { {0, 1, 2, 3, 4, -1, -1, -1, 5, 7, 9, 11, 12, 13, 14, 15},{-1, -1, -1, -1, -1, -1, -1, -1, 6, 8, 10, -1, -1, -1, -1, -1} };
+	const int BankNum2[2][16] = { {16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1} };
+};
+
+#define UDL_START_STRING "UDL_BEGIN"
+#define UDL_END_STRING   "UDL_END"
+
 // PCM system
 class PCM {
 public:		
@@ -320,7 +371,6 @@ public:
 	int rx_offset;					// RX offset to use
 	int mcc_offset;					// RX offset into MCC data block
 	int mcc_size;					// Size of MCC data block
-	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
 	unsigned char mcc_data[2048];	// MCC-provided incoming data
@@ -329,6 +379,8 @@ public:
 
 	Saturn *sat;					// Ship we're installed in
 	friend class MCC;				// Allow MCC to write directly to buffer
+protected:
+	bool LowBitrateLogic();
 };
 
 // Premodulation Processor
@@ -371,9 +423,11 @@ public:
 	bool fm_opr;                       // FM transmitter operating
 	int pa_mode_1, pa_mode_2;          // Power amplifier mode
 	double pa_timer_1, pa_timer_2;	   // Tube heater timer
-	int pa_ovr_1, pa_ovr_2;				// PA mode override for uptelemetry channel
 	double rcvr_agc_voltage;			//Receiver AGC Voltage
 	SBandAntenna *ant;
+protected:
+	int PAPowerLogic(); //0 = off, 1 = low, 2 = high
+	int SBandAntennaSelectionLogic(); //0 = A, 1 = B, 2 = C, 3 = D, 4 = HGA
 };
 
 // High Gain Antenna system
@@ -395,10 +449,10 @@ public:
 	int RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	int XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	bool AutoTrackingMode;
+	bool DriveToReacqSetPoint;
 	double HGAWavelength;
 	double HGAFrequency;
-	double Gain85ft;
-	double Power85ft;
+	RFCALC_RFProperties GroundTransmitterRFProperties;
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }
@@ -443,15 +497,12 @@ public:
 	void TimeStep();			// TimeStep
 	double OMNIWavelength;
 	double OMNIFrequency;
-	double Gain30ft;
-	double Power30ft;
+	RFCALC_RFProperties GroundTransmitterRFProperties;
 	double OMNI_Gain;
 protected:
 	Saturn *sat;				// Ship we're installed in
 	VECTOR3 direction;
 	double hpbw_factor;			//Beamwidth factor
-	OBJHANDLE hMoon;
-	OBJHANDLE hEarth;
 };
 
 class VHFAntenna
@@ -533,7 +584,7 @@ protected:
 	VHFAntenna *rightAntenna;
 	VHFAntenna *activeAntenna;
 	Saturn *sat;
-	LEM *lem;
+	VESSEL *lem;
 };
 
 
@@ -550,7 +601,10 @@ public:
 
 	double GetRange() { return range / 185.20; }
 	void RangingReturnSignal(); // ################# DELETE ME #######################
+	void GetRangeCMC();
 protected:
+
+	bool RangingOffLogic();
 
 	bool dataGood;
 	double internalrange;

@@ -296,7 +296,6 @@
 #define AID_MISSION_TIMER_SWITCHES                          528
 #define IDB_DSKY_DISP                                       529
 #define AID_FDAI_RIGHT                                      530
-#define IDB_FDAI_ROLLINDICATOR                              531
 #define IDB_FDAI_ROLL                                       532
 #define IDB_CWS_LIGHTS                                      533
 #define IDB_EVENT_TIMER                                     534
@@ -868,8 +867,8 @@
 #define AID_VC_PUSHB_P1_10              3160
 #define AID_VC_PUSHB_P1_11              3161
 
-#define AID_VC_TW_P1_01                 3163
-#define AID_VC_TW_P1_02                 3164
+#define AID_VC_TW_P1_01                 3163   // SPS Gimbal Pitch Thumbwheel
+#define AID_VC_TW_P1_02                 3164   // SPS Gimbal Yaw Thumbwheel
 
 #define AID_VC_FDAI_LEFT                3168
 #define AID_VC_MASTER_ALARM             3169
@@ -890,6 +889,7 @@
 #define AID_VC_ASCPDISPLAYYAW           3184
 #define AID_VC_POSTLDGVENTHANDLE        3185
 #define AID_VC_EMS_RSI                  3186
+#define AID_VC_ABORT_BUTTON				3187
 
 // VC Active Areas (Panel 325-326)
 #define AID_VC_ROT_P326_01		        3201
@@ -1651,6 +1651,20 @@
 #define AID_VC_TW_P10_06         6417
 
 #define AID_VC_ROT_P12_01          6420
+
+// Cue Cards
+#define AID_VC_CUE_CARD_LOCATION_1	7000
+#define AID_VC_CUE_CARD_LOCATION_2	7001
+#define AID_VC_CUE_CARD_LOCATION_3	7002
+#define AID_VC_CUE_CARD_LOCATION_4A	7003
+#define AID_VC_CUE_CARD_LOCATION_5	7004
+#define AID_VC_CUE_CARD_LOCATION_6	7005
+#define AID_VC_CUE_CARD_LOCATION_7	7006
+#define AID_VC_CUE_CARD_LOCATION_8	7007
+#define AID_VC_CUE_CARD_LOCATION_9	7008
+#define AID_VC_CUE_CARD_LOCATION_10	7009
+#define AID_VC_CUE_CARD_LOCATION_11	7010
+#define AID_VC_CUE_CARD_LOCATION_4B	7011
 
 
 // Next default values for new objects

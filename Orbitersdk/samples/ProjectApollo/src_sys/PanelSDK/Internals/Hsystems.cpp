@@ -22,8 +22,8 @@
 
   **************************************************************************/
 
-#include "hsystems.h"
-#include "orbitersdk.h"
+#include "Hsystems.h"
+#include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
 #include "nasspdefs.h"
@@ -326,18 +326,72 @@ void h_substance::operator -=(h_substance add) {
 	}
 }
 
+double h_substance::VAPENTH() const
+{
+	if(Temp > CRITICAL_T[subst_type] || Temp <= 0.0) return 0.0;
+
+	
+	return (R_CONST/1000*CRITICAL_T[subst_type]*
+		(7.08*pow((1-Temp/CRITICAL_T[subst_type]),0.354) +
+			10.95 * ACENTRIC[subst_type] * pow((1 - Temp / CRITICAL_T[subst_type]), 0.456)))/ MMASS[subst_type]; //[1]
+
+
+	//[1] [29] G.F. Carruth, R. Kobayashi, Extension to low reduced temperatures of three-parameter corresponding states: vapor pressures,
+	//enthalpies and entropies of vaporization, and liquid fugacity coefficients, Industrial & Engineering Chemistry Fundamentals, 11 (1972) 509-517.
+
+}
+
+double h_substance::GET_LIQUID_DENSITY(const int SUBSTANCE_TYPE, const double temperature) const
+{
+	double density;
+	//see https://gist.github.com/n7275/8676c064fef5f48680b5ba815f24e2bf
+	switch (SUBSTANCE_TYPE) {
+		case SUBSTANCE_O2:
+			if (temperature < CRITICAL_T[SUBSTANCE_O2]) {
+				density = 1434.338998096669 + 30827.66466562366 / (temperature - 186.3966881148979);
+			}
+			else {
+				density = 44.24461555143480 + 7784.502442355128 / (temperature - 136.05498694800465);
+			}
+			break;
+		case SUBSTANCE_H2:
+			if (temperature < CRITICAL_T[SUBSTANCE_H2]) {
+				density = 136.4894046680936 + 3242.617524782929 / (temperature - 67.46034096292647);
+			}
+			else {
+				density = 0.741833633973125 + 642.4040759445162 / (temperature - 17.5701803944558);
+			}
+			break;
+		case SUBSTANCE_N2:
+			if (temperature < CRITICAL_T[SUBSTANCE_N2]) {
+				density = 734.3287921946625 + 9878.83146453045 / (temperature - 146.65628914669438);
+			}
+			else {
+				density = 17.85307222754917 + 4418.262547908501 / (temperature - 107.28230096889227);
+			}
+			break;
+		default:
+			density = L_DENSITY[SUBSTANCE_TYPE];	
+	}
+	return density;
+}
+
 double h_substance::Condense(double dt) {
+
+	double vapenth_temporary = VAPENTH();
 
 	if (vapor_mass < dt)
 		dt = vapor_mass;
 
 	vapor_mass -= dt;
-	Q += VAPENTH[subst_type] * dt;
+	Q += vapenth_temporary * dt;
 
-	return VAPENTH[subst_type] * dt;
+	return vapenth_temporary * dt;
 }
 
 double h_substance::Boil(double dt) {
+
+	double vapenth_temporary = VAPENTH();
 
 	if (vapor_mass + dt > mass - 1.0)
 		dt = mass - 1.0 - vapor_mass;
@@ -345,12 +399,12 @@ double h_substance::Boil(double dt) {
 	if (dt < 0)
 		return 0;
 
-	if (Q < VAPENTH[subst_type] * dt)
-		dt = Q / VAPENTH[subst_type];
+	if (Q < vapenth_temporary * dt)
+		dt = Q / vapenth_temporary;
 
 	vapor_mass += dt;
-	Q -= VAPENTH[subst_type] * dt;
-	return -VAPENTH[subst_type] * dt;
+	Q -= vapenth_temporary * dt;
+	return -vapenth_temporary * dt;
 }
 
 double h_substance::BoilAll() {
@@ -373,7 +427,7 @@ double h_substance::BoilAll() {
 void h_substance::SetTemp(double _temp)
 {
 	Temp = _temp;
-	Q = Temp * mass * SPECIFICC[subst_type];
+	Q = Temp * (vapor_mass * SPECIFICC_GAS[subst_type] + (mass - vapor_mass) * SPECIFICC_LIQ[subst_type]);
 }
 
 
@@ -466,18 +520,24 @@ void h_volume::ThermalComps(double dt) {
 	int i;
 
 	//1. compute average temp
+	// The specific heat of the tank is the average of the specific heats of the contained substances weighted by mass
+	// The specific heat of the substance is the average of the specific heats of the vapor/liquid phases in the tank, weighted by vapor/liquid mass.
 	double AvgC = 0;
 	double vap_press;
-	for (i = 0; i < MAX_SUB; i++)
-		AvgC += composition[i].mass * SPECIFICC[composition[i].subst_type];
+	for (i = 0; i < MAX_SUB; i++) {
+			AvgC += ((composition[i].vapor_mass * SPECIFICC_GAS[composition[i].subst_type]) + ((composition[i].mass - composition[i].vapor_mass) * SPECIFICC_LIQ[composition[i].subst_type]));
+	}
 
-	if (GetMass()) {
+	if (GetMass() > 0.0) {
 		AvgC = AvgC / total_mass;	//weighted average heat capacity.. gives us averaged temp (ideal case)
 		Temp = Q / AvgC / total_mass; //average Temp of substances
 		for (i = 0; i < MAX_SUB; i++)
 			composition[i].SetTemp(Temp);	//redistribute the temps,re-computing the Qs... mathwise we are OK
-	} else
+	}
+	else {
 		Temp = 0;
+	}
+		
 
 	//2. Compute average Press
 	double m_i = 0;
@@ -490,40 +550,41 @@ void h_volume::ThermalComps(double dt) {
 		m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];	//Units of mol
 
 		// temperature dependency of the density is assumed 1 to 2 g/l
-		double density = L_DENSITY[composition[i].subst_type];
-		if (composition[i].subst_type == SUBSTANCE_O2) {
-			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
-			// Correction term is 0 at O2 initial tank temperature (75K), the other factors are "empirical"
-			density += 0.56 * Temp * Temp - 134.0 * Temp + 6900.0;
+		double density = composition->GET_LIQUID_DENSITY(i, Temp);
 
-		} else if (composition[i].subst_type == SUBSTANCE_H2) {
-			// Liquid density is temperature dependent because of cryo tank pressurization with a heater
-			// Correction term is 0 at H2 boiling point (20K), the other factors are "empirical"
-			density += 0.03333 * Temp * Temp - 4.3333 * Temp + 73.3333;
-		}
 		tNV = (composition[i].mass - composition[i].vapor_mass) / density;	//Units of L
 		NV += tNV;	//Units of L
+		NV += VDW_B[i] * composition[i].vapor_mass;
 
-		PNV += tNV / BULK_MOD[composition[i].subst_type];;	//Units of L/Pa
+		PNV += tNV / BULK_MOD[composition[i].subst_type];	//Units of L/Pa
 	}
 
 	m_i = -m_i * R_CONST * Temp;	//Units of L*Pa
 	NV = Volume - NV;	//Units of L
 
 	double delta = (NV * NV) - (4.0 * m_i * PNV); //delta of quadric eq. P^2*PNV+ P*NV + m_i = 0
-	if (PNV)
+	if (PNV > 0.0 && delta > 0.0) {
 		Press = (-NV + sqrt(delta)) / (2.0 * PNV);	//Units of Pa **only first solution is always valid. why is there a second?
-	else
+	}	
+	else {
 		Press = 0;
-
+	}
+		
 	NV = Volume - NV;
 	double air_volume = Volume - NV + Press * PNV;
 
 	for (i = 0; i < MAX_SUB; i++) {
 		//recompute the vapor press
-		vap_press = VAPPRESS[composition[i].subst_type] - (273.0 - Temp) * VAPGRAD[composition[i].subst_type];  //this is vapor pressure of current substance
+
+		if (Temp <= 0.0) {
+			vap_press = 0.0;
+		}
+		else {
+			vap_press = exp(ANTIONE_A[composition[i].subst_type] - (ANTIONE_B[composition[i].subst_type] / Temp))*1E5; //this is vapor pressure of current substance
+		}
 		//need to boil material if vapor pressure > pressure, otherwise condense
-		if (vap_press > Press)	
+		//supercritical fluids are treaded as liquids with variable density
+		if (vap_press > Press && Press < CRITICAL_P[i])
 			Q += composition[i].Boil(dt);
 		else
 			Q += composition[i].Condense(dt);
@@ -708,8 +769,12 @@ void h_Tank::refresh(double dt) {
 			fprintf(PanelsdkLogFile, "\t%i Q %f\n", i, space.composition[i].Q);
 	}*/
 
-	space.ThermalComps(dt);	
+	/*if (!strcmp(name, "O2TANK1"))
+	{
+		sprintf(oapiDebugString(), "%lf", this->space.Press);
+	}*/
 
+	space.ThermalComps(dt);	
 	Temp = space.Temp;
 	energy = space.Q;
 
@@ -793,7 +858,7 @@ void h_Tank::BoilAllAndSetTemp(double _t) {
 
 //------------------------------- PIPE CLASS ------------------------------------
 
-h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two) { 
+h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two, double maxFlow) { 
 
 	strcpy(name, i_name);
 	max_stage = 99;
@@ -805,7 +870,7 @@ h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double m
 	out = i_OUT;
 	open = 0;
 	flow = 0;
-	flowMax = 0;
+	flowMax = maxFlow;
 }
 
 void h_Pipe::BroadcastDemision(ship_object * gonner) {
@@ -966,30 +1031,18 @@ h_Radiator::~h_Radiator() {
 
 void h_Radiator::refresh(double dt) 
 {
-	//if (parent->Vessel->GetAtmDensity() < 0.00001846) //~80km
-	//{
-		Qr = rad * size * 5.67e-8 * dt * pow((Temp), 4); //Stefan–Boltzmann law
-		thermic(-Qr);
-
-		// if (!strcmp(name, "LEM-LR-Antenna")) 
-		//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
-
-		return;
-	//}
-
-	/*
-	AirTemp = parent->Vessel->GetAtmTemperature();
-
-	Qc = AirHeatTransferCoefficient* size * (Temp - AirTemp) * dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
-	Qc *= parent->Vessel->GetAtmDensity() / 1.225; //simple model for correcting for density
-
-	Qr = rad * size * 5.67e-8 * dt * pow(Temp - ((AirTemp) * (parent->Vessel->GetAtmDensity() / 1.225)), 4); //Stefan–Boltzmann law 
+	Qr = rad * size * 5.67e-8 * dt * pow(Temp - 2.7, 4); //Stefan–Boltzmann law
+	Qc = rad * (100 * size * (Temp - parent->Vessel->GetAtmTemperature()))*(parent->Vessel->GetAtmDensity() / 1.225)*dt; //convective heat transfer, useful for preventing the radiators from cooling to 0K on the pad
 	
-	//if (!strcmp(name, "FUELCELLRADIATOR1")) 
-	//sprintf(oapiDebugString(), "Temp=%lf K, Qc=%lf, Qr=%lf",Temp, Qc/dt, Qr/dt);
+	//if (!strcmp(name, "ECSRADIATOR1"))
+		//sprintf(oapiDebugString(), "Qr = %lf, Qc = %lf, Temp = %lf, Air Temp = %lf, Air Density = %lf, rad %lf, size %lf, %lf %lf", Qr/dt, Qc/dt, Temp, parent->Vessel->GetAtmTemperature(), parent->Vessel->GetAtmDensity(), rad, size, Qr, Qc);
+	
+	
+	
+	thermic(-(Qc+Qr));
 
-	thermic( - ( Qc + Qr));
-	*/
+	// if (!strcmp(name, "LEM-LR-Antenna")) 
+	//sprintf(oapiDebugString(), "Radiator %.3f Temp %.1f", Q / dt, GetTemp());
 }
 
 void h_Radiator::Save(FILEHANDLE scn) {
@@ -1029,9 +1082,9 @@ void h_HeatExchanger::refresh(double dt) {
 	} else if (h_pump == 1) {
 		
 		// Only cooling at the moment, heating causes bugs during high time accelerations
-		//if (target->GetTemp() < tempMin && source->GetTemp() > target->GetTemp()) {
-		//	pump = true;
-		//}
+		if (target->GetTemp() < tempMin && source->GetTemp() > target->GetTemp()) {
+			pump = true;
+		}
 		if (target->GetTemp() > tempMax && source->GetTemp() < target->GetTemp()) {
 			pump = true;
 		}
@@ -1104,7 +1157,7 @@ void h_Evaporator::refresh(double dt) {  //Need to look at these values (-0.11, 
 	if (!h_pump) throttle_temp = 0;
 
 	// The evaporators don't work inside the atmosphere, they stop working shortly before apex cover jettison
-	if (parent->Vessel->GetAtmPressure() > 30000.0) {
+	if (parent->Vessel->GetAtmPressure() > 1758.16311) {
 		throttle_temp = 0;
 		steamUnderPressure = -0.11;
 	}
@@ -1139,7 +1192,7 @@ void h_Evaporator::refresh(double dt) {  //Need to look at these values (-0.11, 
 			// evaporate liquid
 			if (flow - vapor_flow > 0)
 			{
-				double Q = VAPENTH[SUBSTANCE_H2O] * (flow - vapor_flow);
+				double Q = 2260.0 * (flow - vapor_flow); //FIXME the evaporator needs an overhaul. this line used to use VAPENTH[SUBSTANCE_H2O] before that was upgraded to the VAPENTH() function
 
 				if (target->energy < Q)
 					Q = 0;
@@ -1404,11 +1457,11 @@ void h_WaterSeparator::refresh(double dt) {
 	drpmcmd = rpmcmd - RPM;
 	if (drpmcmd >= 0.0)
 	{
-		delay = 7.0;	// Gives delay for WS spool up RPM/sec
+		delay = 7.0;	// Gives delay for WS spool up RPM/sec, approximately 2 minutes
 	}
 	else
 	{
-		delay = 28.0;	// Gives delay for WS spin down RPM/sec
+		delay = 30.0;	// Gives delay for WS spin down RPM/sec, approximately 1 minute
 	}
 	if (abs(drpmcmd) > delay*dt)
 	{
@@ -1479,4 +1532,75 @@ void h_Accumulator::refresh(double dt)
 	*/
 
 	//sprintf(oapiDebugString(), "Volume %lf Pressure %lf Original Volume %lf", space.Volume, space.Press*PSI, Original_volume);
+}
+
+
+
+h_ExteriorEnvironment::~h_ExteriorEnvironment()
+{
+}
+
+void h_ExteriorEnvironment::refresh(double dt)
+{
+	double exteriorDensity = parent->Vessel->GetAtmDensity();
+	double exteriorTemperature = parent->Vessel->GetAtmTemperature();
+	body externBody = body::None;
+	OBJHANDLE atmRef = parent->Vessel->GetAtmRef();
+
+	if (atmRef == oapiGetGbodyByName("Earth")) {
+		externBody = Earth;
+	}
+	else if (atmRef == oapiGetGbodyByName("Mars")) { //This is included as an example of how to expand functionality for other bodies. see the definition of compositionRatio[][]
+		externBody = Mars;
+	}
+
+	for (int n = 0; n < MAX_SUB; n++) {
+		h_Tank::space.composition[n].mass = exteriorDensity * h_Tank::space.Volume * compositionRatio[externBody][n];
+	}
+
+
+	h_Tank::BoilAllAndSetTemp(exteriorTemperature);
+	h_Tank::refresh(dt);
+}
+
+h_ExteriorVentPipe::h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_OUT, int i_type, double max, double min, int is_two) :
+	h_Pipe(i_name, i_IN, i_OUT, i_type, max, min, is_two, 0.)
+{
+	v = NULL;
+	Num_Vents = 0;
+};
+
+h_ExteriorVentPipe::~h_ExteriorVentPipe()
+{
+}
+
+void h_ExteriorVentPipe::AddVent(VECTOR3 i_pos, VECTOR3 i_dir, double i_size)
+{
+	pos[Num_Vents] = i_pos;
+	dir[Num_Vents] = i_dir;
+	size[Num_Vents] = i_size;
+	Num_Vents++;
+}
+
+void h_ExteriorVentPipe::ProcessShip(VESSEL* vessel, PROPELLANT_HANDLE ph)
+{
+	ph_vent = ph;
+	v = vessel;
+	for (int i = 0; i < Num_Vents; i++)
+	{
+		thg[i] = v->CreateThruster(pos[i], dir[i], 50, ph, 50);
+		v->AddExhaust(thg[i], size[i] * 1000, size[i] * 50);
+		v->SetThrusterLevel(thg[i], 1.0);
+	};
+}
+
+int h_ExteriorVentPipe::Flow(h_volume block)
+{
+	/*	double mass=block.GetMass()/1000.0;//this we need to flow out in kg
+	v->SetEmptyMass(v->GetEmptyMass()-mass);
+	v->SetPropellantMass(ph_vent,v->GetPropellantMass(ph_vent)+mass);
+	for (int i=0;i<Num_Vents;i++)
+		v->SetThrusterLevel(thg[i],1.0);
+*/
+	return 1;
 }

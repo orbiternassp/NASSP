@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -38,7 +38,7 @@
 
 #include "connector.h"
 
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 
 #include "iu.h"
 
@@ -174,6 +174,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_INERTIAL_ACCEL:
+		if (OurVessel)
+		{
+			OurVessel->GetInertialData()->getAcceleration(*(VECTOR3 *)m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_ROTATIONMATRIX:
 		if (OurVessel)
 		{
@@ -250,14 +258,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.bValue = OurVessel->GetSIBLowLevelSensorsDry();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SII_ENGINE_OUT:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIIEngineOut();
 			return true;
 		}
 		break;

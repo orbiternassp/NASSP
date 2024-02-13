@@ -23,17 +23,20 @@
   **************************************************************************/
 
 #include <stdio.h>
-#include "esystems.h"
+#include "Esystems.h"
 #include "../BUILD.H"
 
 void E_system::Create_Boiler(char *line) {
 
 	char name[100], source[100], targetName[100], typeName[100];
-	int pump, type;
-	double watts, ewatts, valueMin, valueMax;
+	int pump, type, ramp;
+	double watts, ewatts, valueMin, valueMax, rampRate;
 
-	sscanf(line + 8,"%s %i %s %lf %lf %s %lf %lf %s",
-		name, &pump, source, &watts, &ewatts, typeName, &valueMin, &valueMax, targetName);
+	ramp = 0;
+	rampRate = 0.0;
+
+	sscanf(line + 8,"%s %i %s %lf %lf %s %lf %lf %s %i %lf",
+		name, &pump, source, &watts, &ewatts, typeName, &valueMin, &valueMax, targetName, &ramp, &rampRate);
 
 	ship_object* so = (ship_object*) GetPointerByString(targetName) ;
 	therm_obj *t = so->GetThermalInterface();
@@ -44,8 +47,10 @@ void E_system::Create_Boiler(char *line) {
 		type = 1;
 	else if (Compare(typeName, "CHILLER"))
 		type = 2;
+	else if (Compare(typeName, "PWM"))
+		type = 3;
 
-	AddSystem(new Boiler(name, pump, src, watts, ewatts, type, valueMin, valueMax, t));
+	AddSystem(new Boiler(name, pump, src, watts, ewatts, type, valueMin, valueMax, t, (bool)ramp, rampRate));
 }
 
 void E_system::Create_AtmRegen(char *line) {
@@ -81,53 +86,53 @@ void E_system::Create_Pump(char *line) {
 	AddSystem(new Pump(name, pump, SRC, size, power, in, out));
 }
 
-void E_system::Create_Cooling(char *line)
+void E_system::Create_Cooling(char* line)
 {
-char name[100];
-char source[100];
-double lngt;
-//int num;
-int pump;
-double term,max,min;
-therm_obj *TR1;
-e_object *P_SRC;
-ship_object* NON_t;
-sscanf(line+9,"%s %i %s %lf %lf %lf",name,&pump,source,&term,&min,&max);
-P_SRC=(e_object*)GetPointerByString(source);
-Cooling *new_c=(Cooling*)AddSystem(new Cooling(name,pump,P_SRC,term,min,max));
-line=ReadConfigLine();
-while (!Compare(line,"</COOLING>")){
-		sscanf(line,"%s %lf",source,&lngt);
-		NON_t=(ship_object*)GetPointerByString(source);
-		if (NON_t) TR1=NON_t->GetThermalInterface();
+	char name[100];
+	char source[100];
+	double lngt;
+	//int num;
+	int pump;
+	double term, max, min;
+	therm_obj* TR1;
+	e_object* P_SRC;
+	ship_object* NON_t;
+	sscanf(line + 9, "%s %i %s %lf %lf %lf", name, &pump, source, &term, &min, &max);
+	P_SRC = (e_object*)GetPointerByString(source);
+	Cooling* new_c = (Cooling*)AddSystem(new Cooling(name, pump, P_SRC, term, min, max));
+	line = ReadConfigLine();
+	while (!Compare(line, "</COOLING>")) {
+		sscanf(line, "%s %lf", source, &lngt);
+		NON_t = (ship_object*)GetPointerByString(source);
+		if (NON_t) TR1 = NON_t->GetThermalInterface();
 		if (TR1)
-			new_c->AddObject(TR1,lngt);
-		line=ReadConfigLine();
-		}
+			new_c->AddObject(TR1, lngt);
+		line = ReadConfigLine();
+	}
 
 }
-void E_system::Create_Socket(char *line)
+void E_system::Create_Socket(char* line)
 {
-char name[100];
-char source[100];
-int ip;
-char tr1[100],tr2[100],tr3[100];
+	char name[100];
+	char source[100];
+	int ip;
+	char tr1[100], tr2[100], tr3[100];
 
-sscanf(line+8,"%s %i %s %s %s %s",name,&ip,source,tr1,tr2,tr3);
-e_object *SRC=(e_object*)GetPointerByString(source);
-e_object *TR1=(e_object*)GetPointerByString(tr1);
-e_object *TR2=(e_object*)GetPointerByString(tr2);
-e_object *TR3=(e_object*)GetPointerByString(tr3);
-AddSystem(new Socket(name,SRC,ip,TR1,TR2,TR3));
-
+	sscanf(line + 8, "%s %i %s %s %s %s", name, &ip, source, tr1, tr2, tr3);
+	e_object* SRC = (e_object*)GetPointerByString(source);
+	e_object* TR1 = (e_object*)GetPointerByString(tr1);
+	e_object* TR2 = (e_object*)GetPointerByString(tr2);
+	e_object* TR3 = (e_object*)GetPointerByString(tr3);
+	AddSystem(new Socket(name, SRC, ip, TR1, TR2, TR3));
 }
-void E_system::Create_DCbus(char *line)
+
+void E_system::Create_DCbus(char* line)
 {
-char name[100];
-char source[100];
-sscanf(line+7,"%s %s",name,source);
-e_object *SRC=(e_object*)GetPointerByString(source);
-DCbus *new_dc=(DCbus*)AddSystem(new DCbus(name,SRC));
+	char name[100];
+	char source[100];
+	sscanf(line + 7, "%s %s", name, source);
+	e_object* SRC = (e_object*)GetPointerByString(source);
+	DCbus* new_dc = (DCbus*)AddSystem(new DCbus(name, SRC));
 };
 
 void E_system::Create_ACbus(char *line)
@@ -163,16 +168,90 @@ void E_system::Create_Diode(char *line)
 	AddSystem(new Diode(name, Source, NominalTemperature, SaturationCurrent));
 }
 
+
+/// 
+/// Create a new PanelSDK-based electric light, consisting of a OAPI lightemitter and beacon
+/// 
+///	Config file creation string is as follows
+/// 
+///	|Field					|Unit						|Type						|
+///	|-----------------------|---------------------------|---------------------------|
+///	|name					|n / a						|string						|
+///	|sourceName				|n / a						|string						|
+///	|flashing				|n / a						|string						|
+///	|OnTime					|seconds					|double						|
+///	|OffTime				|seconds					|double						|
+///	|<position>				|meters						|VECTOR3					|
+///	|<direction>			|meters						|VECTOR3					|
+///	|CutoffRange			|meters						|double						|
+///	|ConstantAttenuation	|meters						|double						|
+///	|LinearAttenuation		|meters^-1					|double						|
+///	|QuadraticAttenuation	|meters^-2					|double						|
+///	|Umbra					|radians					|double						|
+///	|Penumbra				|radians					|double						|
+///	|< % f % f % f % f>		|n / a						|COLOUR4					|
+///	|<% f% f% f% f>			|n / a						|COLOUR4					|
+///	|<% f% f% f% f>			|n / a						|COLOUR4					|
+///	|% lf					|Watts						|double						|
+///	|% lf					|Volts						|double						|
+/// 
+/// Example:
+/// <LIGHT> SPOTLIGHT DC_DUMMY 0 0.0 0.0 <-1.439 1.390 0.920> <0.0045 -0.0046 0.9999> 5000.0 0.0 0.0 0.0015 0.174533 0.5 <1.0 0.945 0.878 0.0> <1.0 0.945 0.878 0.0> <0.0 0.0 0.0 0.0> 100.0 115.0
+/// 
+/// \ingroup PanelSDK
+/// \brief Create a new electric light
+/// <param name="line">A single line begining with "<LIGHT>" followed by the fields shown in the table above</param>
+///
+void E_system::Create_ElectricLight(char* line)
+{
+	char name[100];
+	char sourceName[100];
+	e_object* powerSource = nullptr;
+	int flashing = 0;
+	double onTime = 0;
+	double offTime = 0;
+	VECTOR3 pos = _V(0, 0, 0);
+	VECTOR3 dir = _V(1, 0, 0);
+	double range = 0;
+	double att0 = 0;
+	double att1 = 0;
+	double att2 = 0;
+	double umbra = 0;
+	double penumbra = 0;
+	COLOUR4 diffuse = { 0, 0, 0, 0};
+	COLOUR4 specular = { 0, 0, 0, 0 };
+	COLOUR4 ambient = { 0, 0, 0, 0 };
+	double powerDraw = 0;
+	double nomVoltage = 0;
+
+	sscanf(line + 7, "%s %s %d %lf %lf <%lf %lf %lf> <%lf %lf %lf> %lf %lf %lf %lf %lf %lf <%f %f %f %f> <%f %f %f %f> <%f %f %f %f> %lf %lf",
+		&name, &sourceName, &flashing, &onTime, &offTime,
+		&pos.x, &pos.y, &pos.z,
+		&dir.x, &dir.y, &dir.z,
+		&range, &att0, &att1, &att2, &umbra, &penumbra, 
+		&diffuse.r, &diffuse.g, &diffuse.b, &diffuse.a,
+		&specular.r, &specular.g, &specular.b, &specular.a, 
+		&ambient.r, &ambient.g, &ambient.b, &ambient.a,
+		&powerDraw, &nomVoltage);
+
+
+	powerSource = (e_object*)GetPointerByString(sourceName);
+	ElectricLight* newLight = new ElectricLight(name, powerSource, (bool)flashing, onTime, offTime, this->Vessel, pos, dir, range, att0, att1, att2, umbra, penumbra, diffuse, specular, ambient, powerDraw, nomVoltage);
+	AddSystem(newLight);
+}
+
 void E_system::Create_Battery(char *line)
 {
 	char name[100];
 	double power, operating_voltage, resistance, volume, isolation, mass, temp = 0;
 	vector3 pos;
 	char source[100];
+	char targetName[100];
 
-	sscanf(line + 9, "%s %lf %lf %lf %s %lf <%lf %lf %lf> %lf %lf %lf", name, &power, &operating_voltage, &resistance, source, &temp, &pos.x, &pos.y, &pos.z, &volume, &isolation, &mass);
+	sscanf(line + 10, "%s %lf %lf %lf %s %lf <%lf %lf %lf> %lf %lf %lf %s", name, &power, &operating_voltage, &resistance, source, &temp, &pos.x, &pos.y, &pos.z, &volume, &isolation, &mass, targetName);
 	e_object* SRC=(e_object*)GetPointerByString(source);
-	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance));
+	h_Tank* batcase = (h_Tank*)GetPointerByString(targetName);
+	Battery *new_b=(Battery*)AddSystem(new Battery(name, SRC, power, operating_voltage, resistance, batcase));
 
 	new_b->parent = this;
 
@@ -194,17 +273,19 @@ void E_system::Create_FCell(char *line) {
 	char source1[100];
 	char source2[100];
 	char source3[100];
+	char source4[100];
 	vector3 pos;
 	int status;
 
-	sscanf(line+7, "%s %i <%lf %lf %lf> %lf %s %s %s", name, &status, &pos.x, &pos.y, &pos.z,
-		&power, source1, source2, source3);
+	sscanf(line+7, "%s %i <%lf %lf %lf> %lf %s %s %s %s", name, &status, &pos.x, &pos.y, &pos.z,
+		&power, source1, source2, source3, source4);
 
 	h_Valve* O_SRC = (h_Valve*)P_hydraulics->GetPointerByString(source1);
 	h_Valve* H_SRC = (h_Valve*)P_hydraulics->GetPointerByString(source2);
 	h_Valve* WATER = (h_Valve*)P_hydraulics->GetPointerByString(source3);
+	h_Tank* N2 = (h_Tank*)P_hydraulics->GetPointerByString(source4);
 
-	FCell *new_fc = (FCell*)AddSystem(new FCell(name, status, pos, O_SRC, H_SRC, WATER, (float)power));
+	FCell *new_fc = (FCell*)AddSystem(new FCell(name, status, pos, O_SRC, H_SRC, WATER, (float)power, N2));
 }
 
 void E_system::Build() {
@@ -235,6 +316,8 @@ void E_system::Build() {
 			Create_Pump(line);
 		else if (Compare(line, "<DIODE>"))
 			Create_Diode(line);
+		else if (Compare(line, "<LIGHT>"))
+			Create_ElectricLight(line);
 
 		line =ReadConfigLine();
 	}
@@ -288,8 +371,6 @@ void* FCell::GetComponent(char *component_name) {
 		return (void*)&start_handle;
 	if (Compare(component_name,"PURGE"))
 		return (void*)&purge_handle;
-	if (Compare(component_name,"RUNNING"))
-		return (void*)&running;
 	if (Compare(component_name,"DPH"))
 		return (void*)&cloggVoltageDrop;
 	if (Compare(component_name,"H2FLOW"))
@@ -385,6 +466,8 @@ void* Boiler::GetComponent(char *component_name) {
 		return (void*)&valueMin;
 	if (Compare(component_name,"ISON"))
 		return (void*)&pumping;
+	if (Compare(component_name, "PWMCYC"))
+		return (void*)&pwmThrotle;
 
 	BuildError(2);
 	return NULL;

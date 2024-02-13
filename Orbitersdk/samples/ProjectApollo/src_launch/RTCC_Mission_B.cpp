@@ -35,9 +35,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 {
 	char uplinkdata[1024 * 3];
 
-	double AGCEpoch = 39856.0;
 	MATRIX3 REFSMMAT = _M(0.749669954748883, -0.141831590016531, 0.646435425251580, 0.318362144838044, 0.933611208066774, -0.16436435, -0.580207293715727, 0.329019622888181, 0.74505405);
-	REFSMMAT = mul(REFSMMAT, OrbMech::J2000EclToBRCS(AGCEpoch));
 
 	switch (fcn)
 	{
@@ -82,7 +80,6 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GET, SVMJD;
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
-		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(1.0, 0.0, -1.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
@@ -172,7 +169,6 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GET, SVMJD;
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
-		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(0.0, 1.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
@@ -228,7 +224,6 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GET, SVMJD;
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
-		opt.GETbase = SVMJD - GET / 24.0 / 3600.0;
 
 		opt.dV_LVLH = _V(1.0, 0.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;

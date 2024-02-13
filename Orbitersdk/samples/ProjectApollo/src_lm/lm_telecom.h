@@ -22,6 +22,9 @@
 
   **************************************************************************/
 
+#include "RF_calc.h"
+#include "paCBGmessageID.h"
+
 /* PCM DOWN-TELEMETRY
 
 	HBR FRAME:
@@ -243,6 +246,8 @@ public:
 	void Timestep(double simt);     // TimeStep
 	void SystemTimestep(double simdt);
 
+	bool TimingSignal();	//Geenerates 512khz timing signal
+
 	double last_update;				// simt of last update
 protected:
 	LEM *lem;					   // Ship we're installed in
@@ -334,8 +339,7 @@ public:
 	double LEM_SteerableAntGain;
 	double LEM_SteerableAntFrequency;
 	double LEM_SteerableAntWavelength;
-	double Gain85ft;
-	double Power85ft;
+	RFCALC_RFProperties GroundTransmitterRFProperties;
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)
@@ -356,8 +360,6 @@ protected:
 	double hpbw_factor;
 
 	const MATRIX3 NBSA = _M(cos(45.0*RAD), -sin(45.0*RAD), 0.0, sin(45.0*RAD), cos(45.0*RAD), 0.0, 0.0, 0.0, 1.0);
-	const OBJHANDLE hMoon = oapiGetObjectByName("Moon");
-	const OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 };
 
 //S-Band Omnidirectional Antenna system
@@ -370,15 +372,12 @@ public:
 
 	double OMNIWavelength;
 	double OMNIFrequency;
-	double Gain85ft;
-	double Power85ft;
+	RFCALC_RFProperties GroundTransmitterRFProperties;
 	double OMNI_Gain;
 protected:
 	LEM *lem;					// Ship we're installed in
 	VECTOR3 direction;
 	double hpbw_factor;			//Beamwidth factor
-	OBJHANDLE hMoon;
-	OBJHANDLE hEarth;
 };
 
 ///

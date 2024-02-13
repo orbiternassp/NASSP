@@ -1,0 +1,3 @@
+AGCEpoch 1968
+LMPadLatitude 28.531445
+LMPadLongitude -80.565077

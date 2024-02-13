@@ -25,6 +25,7 @@
 #pragma once
 
 #include <vector>
+#include <bitset>
 #include "Orbitersdk.h"
 
 struct EphemerisData
@@ -40,6 +41,13 @@ struct EphemerisData2
 	double GMT = 0.0;
 	VECTOR3 R = _V(0, 0, 0);
 	VECTOR3 V = _V(0, 0, 0);
+};
+
+struct SV2
+{
+	EphemerisData sv;
+	double Mass = 0.0;
+	double AttachedMass = 0.0;
 };
 
 struct EphemerisHeader
@@ -60,12 +68,6 @@ struct EphemerisHeader
 	double TL = 0.0;
 	//Time of last returned vector
 	double TR = 0.0;
-};
-
-struct EphemerisDataTable
-{
-	EphemerisHeader Header;
-	std::vector<EphemerisData> table;
 };
 
 struct EphemerisDataTable2
@@ -240,13 +242,86 @@ struct ManeuverTimesTable
 struct EMSMISSAuxOutputTable
 {
 	EphemerisData sv_cutoff;
+	bool landed;
+	//0 = no errors detected, 1 = input time cannot be referenced on sun/moon ephemeris, 2 = MPT is being updated, 3 = error from maneuver integrator, 4 = PLAWDT error
+	//5 = maneuver in interval maybe preventing the minimum number of points from being satisfied, 6 = ephemeris space filled before request was satisfied
 	int ErrorCode;
+	double InputArea;
+	double InputWeight;
+	double CutoffArea;
+	double CutoffWeight;
 	//1 = maximum time, 2 = radius, 3 = altitude, 4 = flight path angle, 5 = reference switch, 6 = beginning of maneuver, 7 = end of maneuver, 8 = ascending node
 	int TerminationCode;
 	//Maneuver number of last processed maneuver
 	unsigned ManeuverNumber;
 	double LunarStayBeginGMT;
 	double LunarStayEndGMT;
+};
+
+struct PLAWDTInput
+{
+	double T_UP;				//Option 1: Time of desired, areas/weights. Option 2: Time to stop adjustment
+	int Num = 0;				//Option 1: Maneuver number of last maneuver to be ignored (zero to consider all maneuvers). Option 2: Configuration code associated with input values (same format as MPT code)
+	bool KFactorOpt = false;	//0 = No K-factor desired, 1 = K-factor desired
+	int TableCode;		//1 = CSM, 3 = LM (MPT and Expandables Tables). Negative for option 2.
+	bool VentingOpt = false;	//0 = No venting, 1 = venting
+	double CSMArea;
+	double SIVBArea;
+	double LMAscArea;
+	double LMDscArea;
+	double CSMWeight;
+	double SIVBWeight;
+	double LMAscWeight;
+	double LMDscWeight;
+	//Time of input areas/weights
+	double T_IN;
+};
+
+struct PLAWDTOutput
+{
+	//0: No error
+	//1: Request time within a maneuver - previous maneuver values used
+	//2: Maneuver not current - last current values used
+	//3: Time to stop adjustment is before time of input areas/weights - input values returned as output
+	int Err;
+	std::bitset<4> CC;
+	double ConfigArea;
+	double ConfigWeight;
+	double CSMArea;
+	double SIVBArea;
+	double LMAscArea;
+	double LMDscArea;
+	double CSMWeight;
+	double SIVBWeight;
+	double LMAscWeight;
+	double LMDscWeight;
+	double KFactor;
+};
+
+struct EMSLSFInputTable
+{
+	bool ECIEphemerisIndicator = false;
+	bool ECTEphemerisIndicator = false;
+	bool MCIEphemerisIndicator = false;
+	bool MCTEphemerisIndicator = false;
+	//Left limit of ephemeris (time to begin ephemeris)
+	double EphemerisLeftLimitGMT;
+	//Right limit of ephemeris (time to end ephemeris)
+	double EphemerisRightLimitGMT;
+	EphemerisDataTable2 *ECIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *ECTEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCIEphemTableIndicator = NULL;
+	EphemerisDataTable2 *MCTEphemTableIndicator = NULL;
+	//Storage interval for lunar surface ephemeris
+	double LunarEphemDT = 3.0*60.0;
+};
+
+struct ReferenceSwitchTable
+{
+	EphemerisData InputVector;
+	EphemerisData BeforeRefSwitchVector;
+	EphemerisData AfterRefSwitchVector;
+	EphemerisData LastVector;
 };
 
 struct EMSMISSInputTable
@@ -270,11 +345,11 @@ struct EMSMISSInputTable
 	//Right limit of ephemeris (time to end ephemeris)
 	double EphemerisRightLimitGMT;
 	//Minimum time between ephemeris points
-	double MinEphemDT;
+	double MinEphemDT = 0.0;
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame = 2;
 	//Minimum number of points desired in ephemeris
-	unsigned MinNumEphemPoints;
+	unsigned MinNumEphemPoints = 9;
 	bool ECIEphemerisIndicator = false;
 	bool ECTEphemerisIndicator = false;
 	bool MCIEphemerisIndicator = false;
@@ -284,7 +359,7 @@ struct EMSMISSInputTable
 	//Maneuver cut-off indicator (0 = cut at begin of maneuver, 1 = cut at end of maneuver, 2 = don't cut off)
 	int ManCutoffIndicator;
 	//Descent burn indicator
-	bool DescentBurnIndicator;
+	bool DescentBurnIndicator = false;
 	//Cut-off indicator (1 = Time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch)
 	int CutoffIndicator = 1;
 	//Integration direction indicator (+X-forward, -X-backward)
@@ -297,12 +372,12 @@ struct EMSMISSInputTable
 	//Density multiplication override indicator
 	bool DensityMultOverrideIndicator = false;
 	//Table of ephemeris addresses indicator
-	EphemerisDataTable *EphemTableIndicator = NULL; //Delete me
 	EphemerisDataTable2 *ECIEphemTableIndicator = NULL;
 	EphemerisDataTable2 *ECTEphemTableIndicator = NULL;
 	EphemerisDataTable2 *MCIEphemTableIndicator = NULL;
 	EphemerisDataTable2 *MCTEphemTableIndicator = NULL;
 	//Reference switch table indicator
+	ReferenceSwitchTable *RefSwitchTabIndicator = NULL;
 	//Maneuver times table indicator
 	ManeuverTimesTable *ManTimesIndicator = NULL;
 	//Runge-Kutta auxiliary output table indicator
@@ -313,6 +388,8 @@ struct EMSMISSInputTable
 	//Maneuver number of last maneuver to be ignored
 	unsigned IgnoreManueverNumber = 10000U;
 	EMSMISSAuxOutputTable NIAuxOutputTable;
+	bool useInputWeights = false;
+	PLAWDTOutput *WeightsTable = NULL;
 };
 
 struct RMMYNIInputTable
@@ -329,7 +406,6 @@ struct RMMYNIInputTable
 	double CGBIAS = 0.0;
 	//Initial bank angle for G&N simulation
 	double C10 = 0.0;
-	double CMWT;
 	double H_EMS = -1.0;
 	//Mode: 1 = Zero lift, 2 = Max Lift, 3 = G&N, 4 = Bank angle - time to reverse bank angle, 5 = Constant bank angle, 6 = Constant bank to G, then roll, 7 = Bank angle to G-level then maximum lift
 	//8 = Bank angle to a G-level then bank angle-time to reverse bank angle, 9 = Bank angle to a G-level then another bank angle to impact prediction, 10 = constant G
@@ -344,6 +420,8 @@ struct RMMYNIInputTable
 	double RLDIR = 1.0;
 	//Time to reverse bank angle
 	double t_RB = 0.0;
+	double CMArea = -1.0;
+	double CMWeight = -1.0;
 };
 
 struct RMMYNIOutputTable
@@ -355,33 +433,68 @@ struct RMMYNIOutputTable
 	double t_lc = 0.0;
 	double t_05g = 0.0;
 	double t_2g = 0.0;
+	double DRE_2g = 0.0;
 	double t_gc = 0.0;
 	double gmax = 0.0;
 	double t_gmax = 0.0;
+	double t_BBO = 0.0;
+	double t_EBO = 0.0;
+	double R_EMS = 0.0;
+	double V_EMS = 0.0;
+	double t_V_Circ = 0.0;
 	//1 = time limit, 2 = impact, 3 = skipout
 	int IEND;
 };
 
-struct ReentryConstraintsTable
+struct ReentryManeuverDefinition
 {
-	//R31
-	int Thruster = 33;		//1 = RCS+2, 2 = RCS+4, 3 = RCS-2, 4 = RCS-4, 33 = SPS
-	int GuidanceMode = 4;	//1 = Inertial, 4 = Guided (G&N)
-	int BurnMode = 3;		//1 = DV, 2 = DT, 3 = V, Gamma Target (only SPS)
-	double dt = 0.0;
-	double dv = 0.0;
-	int AttitudeMode = 2;	//1 = LVLH, 2 = 31.7° window line on horizon
-	VECTOR3 LVLHAttitude = _V(0.0, -48.5*RAD, PI);
-	double UllageTime = 15.0;
-	bool Use4UllageThrusters = true;	//0 = two thrusters, 1 = four thrusters
-	int REFSMMAT = 1;		//1 = CUR...
-	int GimbalIndicator = -1; //-1 = compute, 1 = use system parameters
-	double InitialBankAngle = 0.0;
-	double GLevel = 0.2;
-	double FinalBankAngle = 55.0*RAD;
+	//State vector at main engine on
+	EphemerisData sv0;
+	//Vehicle area
+	double A;
+	//Configuration weight
+	double WT;
+	//1 = fixed inertial, 2 = manual holding body orientation, 3 = Lambert Guidance, 4 = External DV (primary), 5 = External DV (LM AGS)
+	int Attitude;
+	int Thruster;
+	//0 = two thrusters, 1 = four thrusters
+	bool UllageOption;
+	//Configuration code at maneuver initiation
+	unsigned Config;
+	//DT of ullage
+	double dt_ullage;
+	//DT of maneuver
+	double DTMAN;
+	//DV desired
+	double DVMAN;
+	//Unit thrust vector at burn initiate
+	VECTOR3 AT;
+	//Velocity-to-be-gained for External DV
+	VECTOR3 VG;
 };
 
-struct RetrofireDisplayParametersTable
+struct ReentryConstraintsDefinition
+{
+	int LiftMode = 0;
+	double GNInitialBank = 0.0;
+	double InitialBankAngle = 0.0;
+	double FinalBankAngle = 0.0;
+	double GMTReverseBank = 0.0;
+	double GLevel = 0.0;
+	double BackupLiftMode = 0.0;
+	double lat_T = 0.0;
+	double lng_T = 0.0;
+	//1 or -1
+	double RollDirection = 0.0;
+	double ConstantGLevel = 0.0;
+};
+
+struct ReentryConstraintsTable
+{
+	ReentryConstraintsDefinition entry;
+};
+
+struct RetrofireDisplayParametersTableData
 {
 	//0 = good data, +1 = no data, -1 = bad data
 	int Indicator = 1;
@@ -432,6 +545,34 @@ struct RetrofireDisplayParametersTable
 	VECTOR3 VG_XDX;
 	VECTOR3 VGX_THR;
 	double H_apo, H_peri;
+
+	//Sep/shaping maneuver
+	//0 = good data, +1 = no data, -1 = bad data
+	int Indicator_Sep = 1;
+	//Ullage quad (2 or 4)
+	int UllageQuads_Sep;
+	double CSMWeightSep;
+	double TrueAnomalySep;
+	VECTOR3 Att_LVLH_Sep;
+	VECTOR3 Att_IMU_Sep;
+	//Velocity counter - tailoff
+	double DVC_Sep;
+	double BurnTime_Sep;
+	//Total velocity + tailoff
+	double DVT_Sep;
+	double UllageDT_Sep;
+	double GMTI_Sep;
+	double GETI_Sep;
+	//Height at sep/shaping above the oblate Earth
+	double H_Sep;
+	double H_apo_sep, H_peri_sep;
+	double P_G_Sep, Y_G_Sep;
+};
+
+struct RetrofireDisplayParametersTable
+{
+	//Primary, Contingency, Manual
+	RetrofireDisplayParametersTableData data[3];
 };
 
 struct TimeConstraintsTable
@@ -445,18 +586,21 @@ struct TimeConstraintsTable
 	double lng = 0.0;
 	double h = 0.0;
 	double T0 = 0.0;
-	double TA = 0.0;
+	double TA = 0.0; //True anomaly
+	double MA = 0.0; //Mean anomaly
 	double V = 0.0;
 	double azi = 0.0;
 	double AoP = 0.0;
 	double RA = 0.0;
-	double l = 0.0;
+	double l = 0.0;	//Semi-latus rectum
 	int OrbitNum = 0;
 	int RevNum = 0;
 	//EI time?
 	double GMTPI = 0.0;
 	std::string StationID;
 	int TUP = 0;
+	double h_a = 0.0;
+	double h_p = 0.0;
 };
 
 struct RetrofireTransferTableEntry
@@ -466,8 +610,8 @@ struct RetrofireTransferTableEntry
 	int Thruster = 33;
 	double dt_ullage = 0.0;
 	bool UllageThrusterOption = true;
-	double lat_T = 0.0;
-	double lng_T = 0.0;
+
+	ReentryConstraintsDefinition entry;
 };
 
 struct RetrofireTransferTable
@@ -479,11 +623,7 @@ struct RetrofireTransferTable
 struct SpacecraftSettingTable
 {
 	int Indicator = 1; //-1 = bad data, 0 = good data, 1 = no data
-	int EnryMode = 0;
-	int REFSMMATID = 0;
-	double GMTI = 0.0;
-	double lat_T = 0.0;
-	double lng_T = 0.0;
+	bool IsRTE = false; //true = RTE, false = TTF
 };
 
 struct REFSMMATData
@@ -496,4 +636,46 @@ struct REFSMMATData
 struct REFSMMATLocker
 {
 	REFSMMATData data[12];
+};
+
+struct StateVectorTableEntry
+{
+	EphemerisData Vector;
+	int ID = -1;
+	std::string VectorCode;
+	bool LandingSiteIndicator = false;
+};
+
+struct SLVTargetingParametersTable
+{
+	double GMTLO = 0.0;
+	double TINS = 0.0;
+	double GSTAR = 0.0;
+	double DN = 0.0;
+	double TYAW = 0.0;
+	double TPLANE = 0.0;
+	double TGRR = 0.0;
+	double AZL = 0.0;
+	double VIGM = 0.0;
+	double H = 0.0;
+	double AZP = 0.0;
+	double RIGM = 0.0;
+	double GIGM = 0.0;
+	double IIGM = 0.0;
+	double TIGM = 0.0;
+	double TDIGM = 0.0;
+	double DELNO = 0.0;
+	double DELNOD = 0.0;
+	double PA = 0.0;
+	double HA_C = 0.0;
+	double HP_C = 0.0;
+	double TA_C = 0.0;
+	double DH = 0.0;
+	double HA_T = 0.0;
+	double HP_T = 0.0;
+	double I_T = 0.0;
+	double DN_T = 0.0;
+	double BIAS = 0.0;
+	double LATLS = 0.0;
+	double LONGLS = 0.0;
 };

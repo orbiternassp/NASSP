@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "LVIMU.h"
 #include "LVDC.h"
 #include "iu.h"
@@ -96,11 +96,6 @@ void LVDA::ZeroLVIMUPIPACounters()
 	iu->GetLVIMU()->ZeroPIPACounters();
 }
 
-double LVDA::GetLVIMULastTime()
-{
-	return iu->GetLVIMU()->GetLastTime();
-}
-
 void LVDA::ZeroLVIMUCDUs()
 {
 	iu->GetLVIMU()->ZeroIMUCDUFlag = true;
@@ -141,9 +136,14 @@ bool LVDA::GetSIIInboardEngineOut()
 	return iu->GetSIIInboardEngineOut();
 }
 
-bool LVDA::GetSIIEngineOut()
+bool LVDA::GetSIIOutboardEngineOut()
 {
-	return iu->GetSIIEngineOut();
+	return iu->GetSIIOutboardEngineOut();
+}
+
+bool LVDA::GetSIIEnginesOut()
+{
+	return iu->GetSIIEnginesOut();
 }
 
 bool LVDA::GetCMCSIVBIgnitionSequenceStart()
@@ -335,6 +335,14 @@ bool LVDA::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM)
 {
 	if (iu->GetLVDC())
 		return iu->GetLVDC()->NavigationUpdate(DCSRVEC, DCSVVEC, DCSNUPTIM);
+
+	return false;
+}
+
+bool LVDA::TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->TLITargetingUpdate(T_RP, C_3, Inclination, theta_N, e, alpha_D, f);
 
 	return false;
 }

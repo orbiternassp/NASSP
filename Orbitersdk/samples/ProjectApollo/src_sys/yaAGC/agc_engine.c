@@ -364,6 +364,21 @@
 				which is the logical OR of channel 11 bit 4 and
 				channel 30 bit 15. The AGC did this internally
 				so the light would still work in standby.
+		01/03/24 MAS	Changed GOJAM simulation to clear out a lot more
+				yaAGC-internal state that doesn't necessarily
+				exactly match hardware GOJAM actions, but needs
+				to be cleared out nevertheless due to how yaAGC
+				is implemented. This is necessary to fix a
+				longstanding bug where the AGC would fail to
+				correctly exit standby, due to corruption of the
+				first instruction at address 4000 (usually by a
+				non-zero IndexValue).
+		01/29/24 MAS	Added simulation of RADARUPT. Unlike other
+				interrupts, RADARUPT is automatically generated
+				internally by the AGC itself once a full radar
+				cycle has had time to complete. This is important
+				when running ropes sensitive to this timing,
+				like Artemis and Skylark.
 
   
   The technical documentation for the Apollo Guidance & Navigation (G&N) system,
@@ -638,47 +653,6 @@ CpuWriteIO (agc_t * State, int Address, int Value)
       Downlink = 0;
     }
 	*/
-}
-
-void
-GenerateHANDRUPT(agc_t * State)
-{
-	State->InterruptRequests[10] = 1;	// HANDRUPT
-}
-
-void
-GenerateRADARUPT (agc_t * State)
-{
-	State->InterruptRequests[9] = 1;	// RADARUPT
-}
-
-
-// DS20060402 Allow external DOWNRUPT generation
-void
-GenerateDOWNRUPT (agc_t * State)
-{
-	State->InterruptRequests[8] = 1;	// DOWNRUPT.
-}
-
-// DS20070101 Allow external UPRUPT generation
-void
-GenerateUPRUPT (agc_t * State)
-{
-	State->InterruptRequests[7] = 1;	// UPRUPT.
-}
-
-int
-IsUPRUPTActive (agc_t * State)
-{
-	// UPRUPT is waiting to be processed
-	if (State->InterruptRequests[7] == 1) {
-		return 1; 
-	}
-	// UPRUPT is processed currently
-	if (State->InIsr && State->InterruptRequests[0] == 7) {
-		return 1; 
-	}
-	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -2162,6 +2136,11 @@ agc_engine (agc_t * State)
 			  State->ExtraDelay++;
 			  if (CounterPINC(&c(RegTIME5)))
 				  State->InterruptRequests[2] = 1;
+
+			  // Synchronously with TIME5, if radar activity is enabled,
+			  // increment the radar gate counter.
+			  if (State->InputChannel[013] & 010)
+				  State->RadarGateCounter++;
 		  }
 		// TIME4 is the same as TIME3, but 7.5ms out of phase
 		if (010 == (037 & State->InputChannel[ChanSCALER1]))
@@ -2203,6 +2182,22 @@ agc_engine (agc_t * State)
 		  }
 	  }
 
+	  // Similarly, check for radar cycle completion. As with HANDRUPT, the
+	  // timing here is slightly off (early by ~13 MCT), but this should
+	  // not be enough to matter.
+	  if ((State->RadarGateCounter == 9) && (036 == (037 & State->InputChannel[ChanSCALER1])))
+	  {
+		  // Completion of a radar cycle triggers the following actions:
+		  // 1. The radar gate counter is set back to 0.
+		  // 2. The radar activity bit (bit 4 of channel 13) is reset.
+		  // 3. Data from the radar is shifted into the RNRAD counter
+		  //    (this is expected to be performed by RequestRadarData().
+		  // 4. RADARUPT is set pending.
+		  State->RadarGateCounter = 0;
+		  State->InputChannel[013] &= ~010;
+		  RequestRadarData(State);
+		  State->InterruptRequests[9] = 1; // RADARUPT
+	  }
 
       // If we triggered any alarms, simulate a GOJAM
 	  if (TriggeredAlarm || State->ParityFail)
@@ -2248,6 +2243,15 @@ agc_engine (agc_t * State)
         CpuWriteIO(State, 034, 0);
         CpuWriteIO(State, 035, 0);
         State->DownruptTimeValid = 0;
+
+		// Clear other yaAGC-internal state
+		State->IndexValue = AGC_P0;
+		State->ExtraCode = 0;
+		State->SubstituteInstruction = 0;
+		State->PendFlag = 0;
+		State->PendDelay = 0;
+		State->TookBZF = 0;
+		State->TookBZMF = 0;
 
 			  // Light the RESTART light on the DSKY, if we're not going into standby
 			  if (!State->Standby)

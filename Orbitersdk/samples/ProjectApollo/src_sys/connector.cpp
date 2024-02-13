@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbiterSDK.h"
+#include "Orbitersdk.h"
 
 #include "nasspdefs.h"
 
@@ -258,6 +258,19 @@ ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int f
 	}
 
 	ValidationValue = PACV_N_VALIDATION;
+}
+
+ProjectApolloConnectorVessel::~ProjectApolloConnectorVessel()
+{
+	//Disconnect all connectors
+	int i;
+	for (i = 0; i < PACV_N_CONNECTORS; i++)
+	{
+		if (ConnectorList[i].c)
+		{
+			ConnectorList[i].c->Disconnect();
+		}
+	}
 }
 
 bool ProjectApolloConnectorVessel::ValidateVessel()

@@ -28,13 +28,14 @@
 #define _PA_IMU_H
 
 #include "apolloguidance.h"
+#include "inertial.h"
 
 #include "powersource.h"
 
 class IMU {
 
 public:
-	IMU(ApolloGuidance &comp, PanelSDK &p);
+	IMU(ApolloGuidance &comp, PanelSDK &p, InertialData &inertialData);
 	~IMU();
 
 	void Init();
@@ -46,11 +47,11 @@ public:
 	void DriveGimbals(double x, double y, double z);
 	void SetVessel(VESSEL *v, bool LEMFlag);
 	void SetVesselFlag(bool LEMFlag);
-	VECTOR3 GetTotalAttitude();
+	virtual VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
 	void WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b);
-	void InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad *ptaht, h_HeatLoad *psaht);
+	void InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad *ptaht, h_HeatLoad *psaht, h_HeatLoad *cduht);
 
 	bool IsCaged();
 	bool IsPowered();
@@ -75,7 +76,6 @@ protected:
 	void SetOrbiterAttitudeReference();
 	void DoZeroIMUCDUs();
 	void DoZeroIMUGimbals();
-	VECTOR3 GetGravityVector();
 
 	//
 	// Logging.
@@ -131,17 +131,12 @@ protected:
 	} RemainingPIPA;
 
 	struct {
-		struct {
-			double X;
-			double Y;
-			double Z;
-		} Attitude;
-
+		MATRIX3 Attitude_v2g;
+		MATRIX3 Attitude_g2v;
 		MATRIX3 AttitudeReference;
 	} Orbiter;
 
-	VECTOR3 LastWeightAcceleration;
-	VECTOR3 LastGlobalVel;
+	InertialData &inertialData;
 
 	PowerMerge DCPower;
 	PowerMerge DCHeaterPower;
@@ -150,6 +145,7 @@ protected:
 	h_HeatLoad *IMUHeat;
 	h_HeatLoad *PTAHeat;
 	h_HeatLoad *PSAHeat;
+	h_HeatLoad* CDUHeat;
 
 	GuardedToggleSwitch *PowerSwitch;
 

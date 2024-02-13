@@ -35,15 +35,15 @@ _$*
 *.ln
 *.hgtags
 core
+*.core
 
 # Project ignores (converted from .cvsignore files)
 !/Config
 /Config/*
 !/Config/ProjectApollo
 !/Config/Collision/ProjectApollo
-!/Doc
 /Doc/*
-!/Doc/ProjectApollo - NASSP
+!/Doc/Project Apollo - NASSP/
 /Html
 !/Html/Ncpp.chm
 !/Html/Project_Apollo.chm
@@ -64,7 +64,7 @@ core
 /Textures/
 !/Textures/ProjectApollo/
 /Scenarios
-!/Scenarios/ProjectApollo - NASSP
+!/Scenarios/Project Apollo - NASSP/
 *.vcxproj.user
 
 # Stuff that wasn't previously ignored
@@ -106,3 +106,10 @@ XRSound/
 /TrackIR.cfg
 .vs
 /RTCCDebug.txt
+/EphemData.txt
+/PrecessionData.txt
+
+# Ignore EMS scroll
+/*.bmp
+# Ignore Matlab log analyzers
+/*.m

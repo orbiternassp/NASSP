@@ -125,6 +125,8 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	RCVDpow = 0.0;
 	RCVDgain = 0.0;
 	RCVDPhase = 0.0;
+
+	sin_shaft = cos_shaft = sin_trunnion = cos_trunnion = 0.0;
 }
 
 bool LEM_RR::IsDCPowered()
@@ -218,7 +220,30 @@ double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
 	return SignalStrengthRCVD;
 }
 
+void LEM_RR::GetRadarRangeLGC()
+{
+	if (!IsPowered()) return;
 
+	if (range > 93700) {
+		// HI SCALE
+		// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
+		lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 22.8722);
+	}
+	else {
+		// LO SCALE
+		// Should be 9.38 feet/bit
+		lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 2.85902);
+	}
+}
+
+void LEM_RR::GetRadarRateLGC()
+{
+	if (!IsPowered()) return;
+
+	// Our center point is at 17000 counts.
+	// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
+	lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0 - (rate / 0.191361));
+}
 
 void LEM_RR::Timestep(double simdt) {
 
@@ -233,18 +258,14 @@ void LEM_RR::Timestep(double simdt) {
 	rr_proc_last[1] = rr_proc[1];
 
 	ChannelValue val12;
-	ChannelValue val13;
 	ChannelValue val14;
 	ChannelValue val30;
 	ChannelValue val33;
 	val12 = lem->agc.GetInputChannel(012);
-	val13 = lem->agc.GetInputChannel(013);
 	val14 = lem->agc.GetInputChannel(014);
 	val30 = lem->agc.GetInputChannel(030);
 	val33 = lem->agc.GetInputChannel(033);
 
-	double ShaftRate = 0;
-	double TrunRate = 0;
 	trunnionVel = 0;
 	shaftVel = 0;
 
@@ -278,37 +299,15 @@ void LEM_RR::Timestep(double simdt) {
 		RangeLock = false;
 		range = 0.0;
 		rate = 0.0;
-		if (val13[RadarActivity] == 1) {
-			int radarBits = 0;
-			if (val13[RadarA] == 1) { radarBits |= 1; }
-			if (val13[RadarB] == 1) { radarBits |= 2; }
-			if (val13[RadarC] == 1) { radarBits |= 4; }
-			switch (radarBits) {
-			case 2:
-			case 4:
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
-				break;
-			}
-		}
+		sin_shaft = cos_shaft = sin_trunnion = cos_trunnion = 0.0;
 		lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, 0.0, AntennaGain*AntennaPolarValue, AntennaPhase);
 		return;
 	}
 
-	// Determine slew rate
-	switch (lem->SlewRateSwitch.GetState()) {
-	case TOGGLESWITCH_UP:       // HI
-		ShaftRate = 7.0*RAD;
-		TrunRate = 7.0*RAD;
-		break;
-	case TOGGLESWITCH_DOWN:     // LOW
-		ShaftRate = 1.33*RAD;
-		TrunRate = 1.33*RAD;
-		break;
-	}
-
 	//Gyro rates
 	lem->GetAngularVel(GyroRates);
+	//Convert to LM body axes
+	GyroRates = _V(GyroRates.y, GyroRates.x, GyroRates.z);
 
 	// If we are in test mode...
 	if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP) {
@@ -403,7 +402,7 @@ void LEM_RR::Timestep(double simdt) {
 			RCVDgain = pow(10.0, (RCVDgain / 10.0)); //convert to ratio from dB
 
 			RecvdRRPower = RCVDpow*AntennaGain*RCVDgain*pow((C0 / (RCVDfreq * 1000000)) / (4.0 * PI*length(R)), 2.0);
-			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
+			RecvdRRPower_dBm = RFCALC_W2dBm(RecvdRRPower);
 			//sprintf(oapiDebugString(), "RecvdRRPower_dBm = %lf dBm", RecvdRRPower_dBm);
 			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
 
@@ -492,16 +491,22 @@ void LEM_RR::Timestep(double simdt) {
 		TrackingModeSwitch = false;
 	}
 
+	//Gyro stabilization
+	shaftAngle -= GyroRates.y*simdt;
+	trunnionAngle -= (cos(shaftAngle)*GyroRates.x - sin(shaftAngle)*GyroRates.z)*simdt;
+
+	double SlewRate = 0;
+
 	//AUTO TRACKING
 	if (TrackingModeSwitch)
 	{
 		ShaftErrorSignal = (SignalStrengthQuadrant[0] - SignalStrengthQuadrant[1])*0.25;
 		TrunnionErrorSignal = (SignalStrengthQuadrant[2] - SignalStrengthQuadrant[3])*0.25;
 
-		shaftAngle += (ShaftErrorSignal - GyroRates.x)*simdt;
+		shaftAngle += ShaftErrorSignal * simdt;
 		shaftVel = ShaftErrorSignal;
 
-		trunnionAngle += (TrunnionErrorSignal - GyroRates.y)*simdt;
+		trunnionAngle += TrunnionErrorSignal * simdt;
 		trunnionVel = TrunnionErrorSignal;
 
 		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, ShaftErrorSignal %f TrunnionErrorSignal %f", shaftAngle*DEG, trunnionAngle*DEG, ShaftErrorSignal, TrunnionErrorSignal);
@@ -520,22 +525,32 @@ void LEM_RR::Timestep(double simdt) {
 			break;
 
 		case 1: // SLEW
-				// Watch the SLEW switch. 
+			//Determine slew rate
+			if (lem->SlewRateSwitch.IsUp())
+			{
+				SlewRate = SLEW_RATE_FAST;
+			}
+			else
+			{
+				SlewRate = SLEW_RATE_SLOW;
+			}
+
+			// Watch the SLEW switch. 
 			if (lem->RadarSlewSwitch.GetState() == 4) {	// Can we move up?
-				trunnionAngle -= TrunRate * simdt;						// Move the trunnion
-				trunnionVel = -TrunRate;
+				trunnionAngle -= SlewRate * simdt;						// Move the trunnion
+				trunnionVel = -SlewRate;
 			}
 			if (lem->RadarSlewSwitch.GetState() == 3) {	// Can we move down?
-				trunnionAngle += TrunRate * simdt;						// Move the trunnion
-				trunnionVel = TrunRate;
+				trunnionAngle += SlewRate * simdt;						// Move the trunnion
+				trunnionVel = SlewRate;
 			}
 			if (lem->RadarSlewSwitch.GetState() == 2) {
-				shaftAngle += ShaftRate * simdt;
-				shaftVel = ShaftRate;
+				shaftAngle += SlewRate * simdt;
+				shaftVel = SlewRate;
 			}
 			if (lem->RadarSlewSwitch.GetState() == 0) {
-				shaftAngle -= ShaftRate * simdt;
-				shaftVel = -ShaftRate;
+				shaftAngle -= SlewRate * simdt;
+				shaftVel = -SlewRate;
 			}
 
 			//sprintf(oapiDebugString(), "Ang %f Vel %f", shaftAngle*DEG, shaftVel);
@@ -634,12 +649,18 @@ void LEM_RR::Timestep(double simdt) {
 		shaftVel = 0.0;
 	}
 
+	//For display and telemetry
+	sin_shaft = sin(shaftAngle);
+	cos_shaft = cos(shaftAngle);
+	sin_trunnion = sin(trunnionAngle);
+	cos_trunnion = cos(trunnionAngle);
+
 	//Mode I or II determination
-	if (cos(trunnionAngle) > 0.0 && mode == 2)
+	if (cos_trunnion > 0.0 && mode == 2)
 	{
 		mode = 1;
 	}
-	else if (cos(trunnionAngle) < 0.0 && mode == 1)
+	else if (cos_trunnion < 0.0 && mode == 1)
 	{
 		mode = 2;
 	}
@@ -649,7 +670,6 @@ void LEM_RR::Timestep(double simdt) {
 
 	if (lem->RendezvousRadarRotary.GetState() == 2)
 	{
-
 		//sprintf(oapiDebugString(),"RR MOVEMENT: SHAFT %f TRUNNION %f RANGE %f RANGE-RATE %f",shaftAngle*DEG,trunnionAngle*DEG,range,rate);
 
 		// Maintain RADAR GOOD state
@@ -683,68 +703,6 @@ void LEM_RR::Timestep(double simdt) {
 		if(val14.Bits.TrunnionAngleCDUDrive != 0){ sprintf(debugmsg,"%s DriveT(%f)",debugmsg,trunnionAngle*DEG); }
 		sprintf(oapiDebugString(),debugmsg);
 		*/
-
-		// The computer wants something from the radar.
-		if (val13[RadarActivity] == 1) {
-			int radarBits = 0;
-			if (val13[RadarA] == 1) { radarBits |= 1; }
-			if (val13[RadarB] == 1) { radarBits |= 2; }
-			if (val13[RadarC] == 1) { radarBits |= 4; }
-			switch (radarBits) {
-			case 1:
-				// LR (LR VEL X)
-				// Not our problem
-				break;
-			case 2:
-				// RR RANGE RATE
-				// Our center point is at 17000 counts.
-				// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0 - (rate / 0.191361));
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
-				ruptSent = 2;
-
-				break;
-			case 3:
-				// LR (LR VEL Z)
-				// Not our problem
-				break;
-			case 4:
-				// RR RANGE
-				// We use high scale above 50.6nm, and low scale below that.
-				if (range > 93700) {
-					// HI SCALE
-					// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
-					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 22.8722);
-				}
-				else {
-					// LO SCALE
-					// Should be 9.38 feet/bit
-					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 2.85902);
-				}
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
-				ruptSent = 4;
-
-				break;
-			case 5:
-				// LR (LR VEL Y)
-				// Not our problem
-				break;
-			case 7:
-				// LR (LR RANGE)
-				// Not our problem
-				break;
-				/*
-				default:
-				sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
-				*/
-			}
-
-		}
-		else {
-			ruptSent = 0;
-		}
 	}
 
 	//sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);
@@ -760,28 +718,22 @@ void LEM_RR::Timestep(double simdt) {
 void LEM_RR::SystemTimestep(double simdt) {
 	if (IsDCPowered())
 	{
-		dc_source->DrawPower(117); //Total power draw 150W, 33W guessed for RR antenna section
+		dc_source->DrawPower(150);
 		RREHeat->GenerateHeat(117);
-	}
-
-	if (IsACPowered())
-	{
-		ac_source->DrawPower(13.8);
-		RREHeat->GenerateHeat(13.8);
 	}
 
 	if (abs(shaftVel) > 0.01*RAD)
 	{
-		dc_source->DrawPower(16.5);
-		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
+		ac_source->DrawPower(13.8);
+		rrheat->GenerateHeat(13.8); 
 	}
 
 	if (abs(trunnionVel) > 0.01*RAD)
 	{
-		dc_source->DrawPower(16.5);
-		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
+		ac_source->DrawPower(13.8);
+		rrheat->GenerateHeat(13.8);
 	}
-
+	
 }
 
 void LEM_RR::DefineAnimations(UINT idx) {

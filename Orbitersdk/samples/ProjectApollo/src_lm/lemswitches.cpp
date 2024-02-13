@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -448,11 +448,11 @@ double LMOxygenQtyMeter::QueryValue()
 		case 0: // RESET
 		default:
 			return 0;
-		//case 1: // DES
-		//	return (lem->ecs.DescentOxyTankQuantityLBS()/(48.0))*100; 
-		//For J-Mission Conversion
 		case 1: // DES
-			return (lem->ecs.DescentOxyTankQuantityLBS() / (96.0)) * 100;
+			return (lem->ecs.DescentOxyTankQuantityLBS()/(48.0))*100; 
+		//For J-Mission Conversion
+		//case 1: // DES
+		//	return (lem->ecs.DescentOxyTankQuantityLBS() / (96.0)) * 100;
 		case 2: // ASC 1
 			return (lem->ecs.AscentOxyTank1QuantityLBS()/(2.43))*100;	
 		case 3: // ASC 2
@@ -1149,7 +1149,7 @@ bool LGCThrusterPairSwitch::SwitchTo(int newState, bool dontspring)
 }
 
 // Meters
-void LEMRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s)
+void LEMRoundMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s)
 
 {
 	RoundMeter::Init(p0, p1, row);
@@ -1158,7 +1158,7 @@ void LEMRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s)
 
 // DC Voltmeter
 
-void LEMDCVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMDCVoltMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1214,15 +1214,14 @@ void LEMDCVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
 }
 
-void LEMDCVoltMeter::DoDrawSwitchVC(UINT anim) {
-
+void LEMDCVoltMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 	double v = (GetDisplayValue() - 19) / 22;
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // DC Ammeter
 
-void LEMDCAmMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMDCAmMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1279,12 +1278,6 @@ void LEMDCAmMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
 	v = 220-(v*2.25);
 	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
-}
-
-void LEMDCAmMeter::DoDrawSwitchVC(UINT anim) {
-
-	double v = GetDisplayValue() / maxValue;
-	lem->SetAnimation(anim, v);
 }
 
 // LEM Voltmeter-feeding CB hack
@@ -1372,26 +1365,26 @@ void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
-void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface) {
+void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface, int TexMul) {
 
 	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
 		if (IsUp())
 		{
-			oapiBlt(surf, DrawSurface, 0, 0, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul, yOffset*TexMul + height*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
 		}
 		else
 		{
-			oapiBlt(surf, DrawSurface, 0, 0, xOffset + width, yOffset + height, width, height, SURF_PREDEF_CK);
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul + width*TexMul, yOffset*TexMul + height*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
 		}
 	}
 	else {
 		if (IsUp())
 		{
-			oapiBlt(surf, DrawSurface, 0, 0, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul, yOffset*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
 		}
 		else
 		{
-			oapiBlt(surf, DrawSurface, 0, 0, xOffset + width, yOffset, width, height, SURF_PREDEF_CK);
+			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul + width*TexMul, yOffset*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
 		}
 	}
 }
@@ -1693,7 +1686,7 @@ double RadarSignalStrengthAttenuator::GetValue()
 	return val;
 }
 
-void LEMSteerableAntennaPitchMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMSteerableAntennaPitchMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1709,12 +1702,12 @@ void LEMSteerableAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
-void LEMSteerableAntennaPitchMeter::DoDrawSwitchVC(UINT anim) {
+void LEMSteerableAntennaPitchMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 	double v = (GetDisplayValue() + 75) / 330;
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
-void LEMSteerableAntennaYawMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMSteerableAntennaYawMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1730,12 +1723,12 @@ void LEMSteerableAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
-void LEMSteerableAntennaYawMeter::DoDrawSwitchVC(UINT anim) {
+void LEMSteerableAntennaYawMeter::OnPostStep(double SimT, double DeltaT, double MJD){
 	double v = (GetDisplayValue() + 75) / 150;
-	lem->SetAnimation(anim, (v + 0.56) * 0.47);
+	lem->SetAnimation(anim_switch, (v + 0.56) * 0.47);
 }
 
-void LEMSBandAntennaStrengthMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+void LEMSBandAntennaStrengthMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
 	FrameSurface = frameSurface;
@@ -1749,11 +1742,6 @@ void LEMSBandAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface
 	v = 220.0 - 2.7*v;
 	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
-}
-
-void LEMSBandAntennaStrengthMeter::DoDrawSwitchVC(UINT anim) {
-	double v = GetDisplayValue();
-	lem->SetAnimation(anim, v / 100);
 }
 
 LEMDPSValveTalkback::LEMDPSValveTalkback()
@@ -1889,11 +1877,13 @@ void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 	double percent = v * 100.0;
 
+	const int DigitWidth = 19;
+	const int DigitHeight = 21;
 	int Curdigit2 = (int)percent;
 	int Curdigit = (int)percent / 10;
 
-	oapiBlt(drawSurface, Digits, 0, 0, 19 * Curdigit, 0, 19, 21);
-	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 0, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+	oapiBlt(drawSurface, Digits, DigitWidth + 1, 0, DigitWidth * (Curdigit2 - (Curdigit * 10)), 0, DigitWidth, DigitHeight);
 }
 
 void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
@@ -1903,11 +1893,13 @@ void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 
 	double percent = GetDisplayValue() * 100.0;
 
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int Curdigit2 = (int)percent;
 	int Curdigit = (int)percent / 10;
 
-	oapiBlt(surf, DigitsVC, 0, 0, 19 * Curdigit, 0, 19, 21);
-	oapiBlt(surf, DigitsVC, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+	oapiBlt(surf, DigitsVC, 0, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, DigitsVC, DigitWidth + 1, 0, DigitWidth * (Curdigit2 - (Curdigit * 10)), 0, DigitWidth, DigitHeight);
 }
 
 double LEMDPSOxidPercentMeter::QueryValue()
@@ -1970,15 +1962,17 @@ void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 {
 	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.GetNumericVoltage() < 25.0) return;
 
+	const int DigitWidth = 19;
+	const int DigitHeight = 21;
 	int Curdigit4 = (int)v;
 	int Curdigit3 = (int)v / 10;
 	int Curdigit2 = (int)v / 100;
 	int Curdigit = (int)v / 1000;
 
-	oapiBlt(drawSurface, Digits, 0, 0, 19 * Curdigit, 0, 19, 21);
-	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
-	oapiBlt(drawSurface, Digits, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
-	oapiBlt(drawSurface, Digits, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
+	oapiBlt(drawSurface, Digits, 0, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+	oapiBlt(drawSurface, Digits, (DigitWidth + 1), 0, DigitWidth * (Curdigit2 - (Curdigit * 10)), 0, DigitWidth, DigitHeight);
+	oapiBlt(drawSurface, Digits, (DigitWidth + 1) * 2, 0, DigitWidth * (Curdigit3 - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	oapiBlt(drawSurface, Digits, (DigitWidth + 1) * 3, 0, DigitWidth * (Curdigit4 - (Curdigit3 * 10)), 0, DigitWidth, DigitHeight);
 }
 
 void LEMDigitalHeliumPressureMeter::InitVC(SURFHANDLE surf)
@@ -1992,15 +1986,17 @@ void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE s
 
 	double v = GetDisplayValue();
 
+	const int DigitWidth = 19*TexMul;
+	const int DigitHeight = 21*TexMul;
 	int Curdigit4 = (int)v;
 	int Curdigit3 = (int)v / 10;
 	int Curdigit2 = (int)v / 100;
 	int Curdigit = (int)v / 1000;
 
-	oapiBlt(surf, DigitsVC, 0, 0, 19 * Curdigit, 0, 19, 21);
-	oapiBlt(surf, DigitsVC, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
-	oapiBlt(surf, DigitsVC, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
-	oapiBlt(surf, DigitsVC, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
+	oapiBlt(surf, DigitsVC, 0, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, DigitsVC, (DigitWidth + 1), 0, DigitWidth * (Curdigit2 - (Curdigit * 10)), 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, DigitsVC, (DigitWidth + 1) * 2, 0, DigitWidth * (Curdigit3 - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, DigitsVC, (DigitWidth + 1) * 3, 0, DigitWidth * (Curdigit4 - (Curdigit3 * 10)), 0, DigitWidth, DigitHeight);
 }
 
 void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
@@ -2218,4 +2214,43 @@ bool CDRCOASPowerSwitch::SwitchTo(int newState, bool dontspring)
 		return true;
 	}
 	return false;
+}
+
+LEMMasterAlarmSwitch::LEMMasterAlarmSwitch()
+{
+	cwea = NULL;
+}
+
+void LEMMasterAlarmSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM_CWEA *c) {
+	PushSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	cwea = c;
+}
+
+bool LEMMasterAlarmSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (TwoPositionSwitch::SwitchTo(newState, dontspring))
+	{
+		if (state == 1)
+		{
+			cwea->PushMasterAlarm();
+		}
+
+		return true;
+	}
+	return false;
+}
+
+void LEMMasterAlarmSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
+{
+	cwea->RenderMasterAlarm(DrawSurface, SwitchSurface);
+}
+
+void LEMMasterAlarmSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	cwea->RenderMasterAlarm(surf, switchsurfacevc, TexMul);
+}
+
+void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
+{
+	switchsurfacevc = surf;
 }

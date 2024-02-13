@@ -49,6 +49,7 @@ private:
 	double fq(double q);
 	VECTOR3 adfunc(VECTOR3 R);
 	double CurrentTime();
+	void ACCEL_GRAV();
 
 	double R_E, mu;
 	//State vector at last rectification
@@ -69,8 +70,6 @@ private:
 	double r_dP;
 	double mu_Q;
 	double rect1, rect2;
-	//Rotation axis of the primary body
-	VECTOR3 U_Z;
 	//Primary Body, 0 = Earth, 1 = Moon
 	int P;
 	//Current step length
@@ -113,6 +112,30 @@ private:
 	double dt_temp;
 	//Stored time of last forcing function init
 	double TS;
+
+	//ACCEL
+	//Rotation matrix from global to local coordinates
+	MATRIX3 Rot;
+	//Planet fixed position vector
+	VECTOR3 R_EF;
+	//Inverse of position radius
+	double R_INV;
+	//Unit position vector in planet fixed coordinates
+	VECTOR3 UR;
+	//Ratio of position and Earth radii
+	double R0_ZERO;
+	//Term in gravity calculation
+	double R0_N;
+	double MAT_A[5][2];
+	double ZETA_REAL[5], ZETA_IMAG[5];
+	//Degree and order of gravity calculations
+	int GMD, GMO;
+	int L, I, N, N1, J;
+	double AUXILIARY;
+	double F1, F2, F3, F4, DNM;
+	VECTOR3 G_VEC;
+	double ZONAL[4];
+	double C[9], S[9];
 
 	//Constants
 	static const double K, dt_lim;

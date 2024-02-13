@@ -133,7 +133,7 @@
   *	
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -157,6 +157,8 @@ DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), 
 
 {
 	DimmerRotationalSwitch = NULL;
+	StatusPower = NULL;
+	SegmentPower = NULL;
 	Reset();
 	ResetKeyDown();
 	KeyCodeIOChannel = IOChannel;
@@ -204,17 +206,29 @@ DSKY::~DSKY()
 	//
 }
 
-void DSKY::Init(e_object *powered, RotationalSwitch *dimmer)
+void DSKY::Init(e_object *statuslightpower, e_object *segmentlightpower, RotationalSwitch *dimmer)
 
 {
-	WireTo(powered);
+	StatusPower = statuslightpower;
+	SegmentPower = segmentlightpower;
 	DimmerRotationalSwitch = dimmer;
 	Reset();
 	FirstTimeStep = true;
 }
 
-bool DSKY::IsPowered() {
-	if (Voltage() < SP_MIN_DCVOLTAGE){ return false; }
+bool DSKY::IsStatusPowered() {
+	if (StatusPower->Voltage() < 2){ return false; } //Used 2V for now as input voltage can be 0-5V AC or DC here
+
+	if (DimmerRotationalSwitch != NULL) {
+		if (DimmerRotationalSwitch->GetState() == 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool DSKY::IsSegmentPowered() {
+	if (SegmentPower->Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 
 	if (DimmerRotationalSwitch != NULL) {
 		if (DimmerRotationalSwitch->GetState() == 0) {
@@ -237,7 +251,7 @@ void DSKY::Timestep(double simt)
 void DSKY::SystemTimestep(double simdt)
 
 {
-	if (!IsPowered()){ return; }
+	if (!IsStatusPowered() || !IsSegmentPowered()){ return; }
 	//
 	// The DSKY power consumption is a little bit hard to figure out. According 
 	// to the Systems Handbook the complete interior lightning draws about 30W, so
@@ -246,40 +260,49 @@ void DSKY::SystemTimestep(double simdt)
 	// code causes wrong power loads
 	//
 
-	//
-	// Check the lights.
-	//
+	if (IsStatusPowered())
+	{
+		//
+		// Check the lights.
+		//
 
-	LightsLit = 0;
-	if (UplinkLit()) LightsLit++;
-	if (NoAttLit()) LightsLit++;
-	if (StbyLit()) LightsLit++;
-	if (KbRelLit()) LightsLit++;
-	if (OprErrLit()) LightsLit++;
-	if (TempLit()) LightsLit++;
-	if (GimbalLockLit()) LightsLit++;
-	if (ProgLit()) LightsLit++;
-	if (RestartLit()) LightsLit++;
-	if (TrackerLit()) LightsLit++;
+		LightsLit = 0;
+		if (UplinkLit()) LightsLit++;
+		if (NoAttLit()) LightsLit++;
+		if (StbyLit()) LightsLit++;
+		if (KbRelLit()) LightsLit++;
+		if (OprErrLit()) LightsLit++;
+		if (TempLit()) LightsLit++;
+		if (GimbalLockLit()) LightsLit++;
+		if (ProgLit()) LightsLit++;
+		if (RestartLit()) LightsLit++;
+		if (TrackerLit()) LightsLit++;
 
-	//
-	// Check the segments
-	//
+		// 10 lights with together max. 6W, 
+		StatusPower->DrawPower(LightsLit * 0.6);
+	}
 
-	SegmentsLit = 6;
-	if (CompActy) 
-		SegmentsLit += 4;
+	if (IsSegmentPowered())
+	{
+		//
+		// Check the segments
+		//
 
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, false, ELOff);
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing, ELOff);
-	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing, ELOff);
+		SegmentsLit = 6;
+		if (CompActy)
+			SegmentsLit += 4;
 
-	SegmentsLit += SixDigitDisplaySegmentsLit(R1, ELOff);
-	SegmentsLit += SixDigitDisplaySegmentsLit(R2, ELOff);
-	SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
+		SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, false, ELOff);
+		SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing, ELOff);
+		SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing, ELOff);
 
-	// 10 lights with together max. 6W, 184 segments with together max. 4W  
-	DrawPower((LightsLit * 0.6) + (SegmentsLit * 0.022));
+		SegmentsLit += SixDigitDisplaySegmentsLit(R1, ELOff);
+		SegmentsLit += SixDigitDisplaySegmentsLit(R2, ELOff);
+		SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
+
+		// 184 segments with together max. 4W  
+		SegmentPower->DrawPower(SegmentsLit * 0.022);
+	}
 
 	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
 }
@@ -425,30 +448,30 @@ void DSKY::ProcessChannel13(ChannelValue val)
 	//Handled by Channel 163 now
 }
 
-void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset)
+void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset, int TexMul)
 
 {
 	if (lit) {
-		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 101, dsty + 0, 49, 23);
+		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 101*TexMul, dsty + 0, 49*TexMul, 23*TexMul);
 	}
 	else {
-		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 0, dsty + 0, 49, 23);
+		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 0, dsty + 0, 49*TexMul, 23*TexMul);
 	}
 }
 
-void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel, bool hasDAPPrioDisp)
+void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel, bool hasDAPPrioDisp, int TexMul)
 
 {
-	if (!IsPowered())
+	if (!IsStatusPowered())
 	{
 		if (hasAltVel) {
-			DSKYLightBlt(surf, lights, 52, 121, false, xOffset, yOffset);
-			DSKYLightBlt(surf, lights, 52, 144, false, xOffset, yOffset);
+			DSKYLightBlt(surf, lights, 52*TexMul, 121*TexMul, false, xOffset, yOffset, TexMul);
+			DSKYLightBlt(surf, lights, 52*TexMul, 144*TexMul, false, xOffset, yOffset, TexMul);
 		}
 
 		if (hasDAPPrioDisp) {
-			DSKYLightBlt(surf, lights, 0, 121, false, xOffset, yOffset);
-			DSKYLightBlt(surf, lights, 0, 144, false, xOffset, yOffset);
+			DSKYLightBlt(surf, lights, 0, 121*TexMul, false, xOffset, yOffset, TexMul);
+			DSKYLightBlt(surf, lights, 0, 144*TexMul, false, xOffset, yOffset, TexMul);
 		}
 
 		return;
@@ -458,26 +481,26 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 	// Check the lights.
 	//
 
-	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 25, NoAttLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 49, StbyLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 73, KbRelLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 0, 97, OprErrLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 0, 25*TexMul, NoAttLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 0, 49*TexMul, StbyLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 0, 73*TexMul, KbRelLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 0, 97*TexMul, OprErrLit(), xOffset, yOffset, TexMul);
 
-	DSKYLightBlt(surf, lights, 52, 0,  TempLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 52, 25, GimbalLockLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 52, 49, ProgLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 52, 73, RestartLit(), xOffset, yOffset);
-	DSKYLightBlt(surf, lights, 52, 97, TrackerLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 52*TexMul, 0,  TempLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 25*TexMul, GimbalLockLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 49*TexMul, ProgLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 73*TexMul, RestartLit(), xOffset, yOffset, TexMul);
+	DSKYLightBlt(surf, lights, 52*TexMul, 97*TexMul, TrackerLit(), xOffset, yOffset, TexMul);
 
 	if (hasAltVel) {
-		DSKYLightBlt(surf, lights, 52, 121, AltLit(), xOffset, yOffset);
-		DSKYLightBlt(surf, lights, 52, 144, VelLit(), xOffset, yOffset);
+		DSKYLightBlt(surf, lights, 52*TexMul, 121*TexMul, AltLit(), xOffset, yOffset, TexMul);
+		DSKYLightBlt(surf, lights, 52*TexMul, 144*TexMul, VelLit(), xOffset, yOffset, TexMul);
 	}
 
 	if (hasDAPPrioDisp) {
-		DSKYLightBlt(surf, lights, 0, 121, PrioDispLit(), xOffset, yOffset);
-		DSKYLightBlt(surf, lights, 0, 144, NoDAPLit(), xOffset, yOffset);
+		DSKYLightBlt(surf, lights, 0, 121*TexMul, PrioDispLit(), xOffset, yOffset, TexMul);
+		DSKYLightBlt(surf, lights, 0, 144*TexMul, NoDAPLit(), xOffset, yOffset, TexMul);
 	}
 }
 
@@ -631,9 +654,14 @@ void DSKY::ResetKeyDown()
 	KeyDown_Reset = false;
 }
 
-void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off)
+void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash, bool Off, int TexMul)
 
 {
+	const int DigitWidth = 17*TexMul;
+	const int DigitHeight = 19*TexMul;
+	dstx *= TexMul;
+	dsty *= TexMul;
+
 	int Curdigit;
 
 	if (Flash || Off)
@@ -641,12 +669,12 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
 		Curdigit = Str[0] - '0';
-		oapiBlt(surf,digits,dstx,dsty,16*Curdigit,0,16,19);
+		oapiBlt(surf, digits, dstx, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 
 	if (Str[1] >= '0' && Str[1] <= '9') {
 		Curdigit = Str[1] - '0';
-		oapiBlt(surf,digits,dstx+16,dsty,16*Curdigit,0,16,19);
+		oapiBlt(surf, digits, dstx + DigitWidth, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 }
 
@@ -670,9 +698,14 @@ int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash, bool Off)
 	return s;
 }
 
-void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off)
+void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Off, int TexMul)
 
 {
+	const int DigitWidth = 17*TexMul;
+	const int DigitHeight = 19*TexMul;
+	dstx *= TexMul;
+	dsty *= TexMul;
+
 	int	Curdigit;
 	int i;
 
@@ -680,16 +713,16 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 		return;
 
 	if (Str[0] == '-') {
-		oapiBlt(surf,digits,dstx,dsty,161,0,10,19);
+		oapiBlt(surf, digits, dstx, dsty, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 	else if (Str[0] == '+') {
-		oapiBlt(surf,digits,dstx,dsty,174,0,12,19);
+		oapiBlt(surf, digits, dstx, dsty, 11 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 
 	for (i = 1; i < 6; i++) {
 		if (Str[i] >= '0' && Str[i] <= '9') {
 			Curdigit = Str[i] - '0';
-			oapiBlt(surf, digits, dstx + (16*i), dsty, 16*Curdigit, 0, 16,19);
+			oapiBlt(surf, digits, dstx + (DigitWidth * i) - 1, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);	// Offset digits slightly closer to the plus/minus sign like a real DSKY, also helps with centering
 		}
 		else {
 //			oapiBlt(surf, digits, dstx + (10*i), dsty, 440, 6, 10, 15);
@@ -720,39 +753,42 @@ int DSKY::SixDigitDisplaySegmentsLit(char *Str, bool Off)
 	return s;
 }
 
-void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xOffset, int yOffset)
+void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xOffset, int yOffset, int TexMul)
 
 {
-	if (!IsPowered() || ELOff)
+	xOffset *= TexMul;
+	yOffset *= TexMul;
+
+	if (!IsSegmentPowered() || ELOff)
 		return;
 
-	oapiBlt(surf, disp, 66 + xOffset,   3 + yOffset, 35,  0, 35, 10, SURF_PREDEF_CK);
-	oapiBlt(surf, disp, 66 + xOffset,  38 + yOffset, 35, 10, 35, 10, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  6 + xOffset,  38 + yOffset, 35, 20, 35, 10, SURF_PREDEF_CK);
+	oapiBlt(surf, disp, 66*TexMul + xOffset,   3*TexMul + yOffset, 35*TexMul,  0, 35*TexMul, 10*TexMul, SURF_PREDEF_CK);
+	oapiBlt(surf, disp, 66*TexMul + xOffset,  38*TexMul + yOffset, 35*TexMul, 10*TexMul, 35*TexMul, 10*TexMul, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  6*TexMul + xOffset,  38*TexMul + yOffset, 35*TexMul, 20*TexMul, 35*TexMul, 10*TexMul, SURF_PREDEF_CK);
 
-	oapiBlt(surf, disp,  8 + xOffset,  73 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  8 + xOffset, 107 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  8 + xOffset, 141 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8*TexMul + xOffset,  73*TexMul + yOffset,  0, 32*TexMul, 89*TexMul,  4*TexMul, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8*TexMul + xOffset, 107*TexMul + yOffset,  0, 32*TexMul, 89*TexMul,  4*TexMul, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8*TexMul + xOffset, 141*TexMul + yOffset,  0, 32*TexMul, 89*TexMul,  4*TexMul, SURF_PREDEF_CK);
 
 	if (CompActy) {
 		//
 		// Do stuff to update Comp Acty light.
 		//
 
-		oapiBlt(surf, disp,  6 + xOffset,   4 + yOffset,  0,  0, 35, 31, SURF_PREDEF_CK);
+		oapiBlt(surf, disp,  6*TexMul + xOffset,   4*TexMul + yOffset,  0,  0, 35*TexMul, 31*TexMul, SURF_PREDEF_CK);
 	}
 
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, false, ELOff);
-	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing, ELOff);
-	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing, ELOff);
+	RenderTwoDigitDisplay(surf, digits, 66 + xOffset, 16 + yOffset, Prog, false, ELOff, TexMul);
+	RenderTwoDigitDisplay(surf, digits,  7 + xOffset, 51 + yOffset, Verb, VerbFlashing, ELOff, TexMul);
+	RenderTwoDigitDisplay(surf, digits, 66 + xOffset, 51 + yOffset, Noun, NounFlashing, ELOff, TexMul);
 
 	//
 	// Register contents.
 	//
 
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 83 + yOffset, R1, ELOff);
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 117 + yOffset, R2, ELOff);
-	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 151 + yOffset, R3, ELOff);
+	RenderSixDigitDisplay(surf, digits, 1 + xOffset, 83 + yOffset, R1, ELOff, TexMul);
+	RenderSixDigitDisplay(surf, digits, 1 + xOffset, 117 + yOffset, R2, ELOff, TexMul);
+	RenderSixDigitDisplay(surf, digits, 1 + xOffset, 151 + yOffset, R3, ELOff, TexMul);
 }
 
 void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)
@@ -788,11 +824,18 @@ void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset
 void DSKY::DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset) 
 
 {
+	xOffset *= TexMul;
+	yOffset *= TexMul;
+	srcx *= TexMul;
+	srcy *= TexMul;
+	dstx *= TexMul;
+	dsty *= TexMul;
+
 	if (lit) {
-		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy, 38, 37);
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy, 38*TexMul, 37*TexMul);
 	}
 	else {
-		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy + 120, 38, 37);
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy + 120*TexMul, 38*TexMul, 37*TexMul);
 	}
 }
 

@@ -194,6 +194,7 @@ struct TLIPAD {
 	VECTOR3 SepATT;		// SC attitude after S4B sep att maneuver
 	VECTOR3 ExtATT;		// SC attitude at LM extraction
 	char remarks[128];	// Remarks
+	int type;		// 1 = Without extraction attitude, 2 = with extraction attitude
 };
 
 // APOLLO 11 - P37 RETURN-TO-EARTH
@@ -245,6 +246,7 @@ struct AP11MNV {
 	char SetStars[32]; // Stars for Backup GDC Alignment
 	VECTOR3 GDCangles;	// Backup GDC Align
 	char remarks[128];	// remarks
+	int type;           // 1 = Full PAD, 2 = Abbreviated PAD
 
 	double LMWeight;	// LM weight
 };
@@ -476,6 +478,64 @@ struct AP11LMASCPAD
 	double DEDA225_226;	//Lower/Upper limit of semi-major axis at orbit insertion
 	double DEDA231;		//Radial distance of launch site from center of Moon
 	char remarks[128];
+};
+
+//APOLLO 7 MANUAL RETRO ATTITUDE ORIENTATION
+struct AP7RETRORIENTPAD
+{
+	double GET_Day = 0.0;
+	double GET_Night = 0.0;
+	VECTOR3 RetroAtt_Day = _V(0, 0, 0);
+	VECTOR3 RetroAtt_Night = _V(0, 0, 0);
+};
+
+//APOLLO 12 PDI ABORT PAD
+struct AP12PDIABORTPAD
+{
+	double T_TPI_Pre10Min;	//GET of TPI maneuver for abort prior to PDI+10 minutes
+	double T_TPI_Post10Min;	//GET of TPI maneuver for abort subsequent to PDI+10 minutes
+};
+
+//APOLLO 12 LUNAR SURFACE DATA CARD
+
+struct AP12LunarSurfaceDataCard
+{
+	double T2_TIG;
+	double T2_t_TPI;
+	double T3_TIG;
+};
+
+//LM P22 ACQUISTION PAD
+
+struct LMP22ACQPAD
+{
+	double P22_ACQ_GET;
+	int Octals[2];
+};
+
+struct AP12LMASCPAD
+{
+	double TIG;			//Time of APS ignition for LM ascent
+	double V_hor;		//horizontal velocity at orbit insertion
+	double V_vert;		//Vertical velocity at orbit insertion
+	double CR;			//Crossrange distance at orbital insertion
+	int DEDA047;		//Sine of landing azimuth angle
+	int DEDA053;		//Cosine of landing azimuth angle
+	double DEDA225_226;	//Lower/Upper limit of semi-major axis at orbit insertion
+	double DEDA231;		//Radial distance of launch site from center of Moon
+	double DEDA465;     //Target radial rate at insertion
+	double TIG_2;		//Time of APS ignition for LM ascent on next revolution
+	double LMWeight;	// LM weight
+	double CSMWeight;	// CSM weight
+	char remarks[128];
+};
+
+//APOLLO 12 SEPARATION PAD
+struct AP12SEPPAD
+{
+	double t_Undock;
+	VECTOR3 Att_Undock;
+	double t_Separation;
 };
 
 //GENERIC STRING

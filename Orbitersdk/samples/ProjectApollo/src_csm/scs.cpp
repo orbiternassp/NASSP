@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 
 #include "Orbitersdk.h"
@@ -336,6 +336,8 @@ MATRIX3 AttitudeReference::GetRotationMatrixZ(double angle) {
 
 // BMAG
 
+const double BMAG::GYRO_OUTPUT_LIMIT = 16.0*RAD;
+
 BMAG::BMAG() {
 
 	sat = NULL;
@@ -372,6 +374,7 @@ void BMAG::Timestep(double simdt) {
 			if (ac_source != NULL && ac_source->Voltage() > SP_MIN_ACVOLTAGE) {
 				powered = true;
 				sat->GetAngularVel(rates); // From those, generate ROTATION RATE data.
+				OrbiterToCSMCoordinates(rates); //Convert
 			}
 		}
 	}
@@ -385,19 +388,19 @@ void BMAG::Timestep(double simdt) {
 	heater->WireTo(dc_source);	// Take DC power to heat the gyro
 
 	if (uncaged.x == 1) {
-		errorAttitude.x -= rates.z * simdt;
-		while (errorAttitude.x <= TWO_PI) errorAttitude.x += TWO_PI;
-		while (errorAttitude.x >= TWO_PI) errorAttitude.x -= TWO_PI;
+		errorAttitude.x -= rates.x * simdt;
+		if (errorAttitude.x > GYRO_OUTPUT_LIMIT) errorAttitude.x = GYRO_OUTPUT_LIMIT;
+		if (errorAttitude.x < -GYRO_OUTPUT_LIMIT) errorAttitude.x = -GYRO_OUTPUT_LIMIT;
 	}
 	if (uncaged.y == 1) {
-		errorAttitude.y -= rates.x * simdt;
-		while (errorAttitude.y <= TWO_PI) errorAttitude.y += TWO_PI;
-		while (errorAttitude.y >= TWO_PI) errorAttitude.y -= TWO_PI;
+		errorAttitude.y -= rates.y * simdt;
+		if (errorAttitude.y > GYRO_OUTPUT_LIMIT) errorAttitude.y = GYRO_OUTPUT_LIMIT;
+		if (errorAttitude.y < -GYRO_OUTPUT_LIMIT) errorAttitude.y = -GYRO_OUTPUT_LIMIT;
 	}
 	if (uncaged.z == 1) {
-		errorAttitude.z += rates.y * simdt;
-		while (errorAttitude.z <= TWO_PI) errorAttitude.z += TWO_PI;
-		while (errorAttitude.z >= TWO_PI) errorAttitude.z -= TWO_PI;
+		errorAttitude.z -= rates.z * simdt;
+		if (errorAttitude.z > GYRO_OUTPUT_LIMIT) errorAttitude.z = GYRO_OUTPUT_LIMIT;
+		if (errorAttitude.z < -GYRO_OUTPUT_LIMIT) errorAttitude.z = -GYRO_OUTPUT_LIMIT;
 	}
 }
 
@@ -830,7 +833,7 @@ void GDC::Timestep(double simdt) {
 		//Euler mode
 		if (E1_504 && E2_502)
 		{
-			pitchrate = pitchBmag->GetRates().x*cos(Attitude.x) + yawBmag->GetRates().y*sin(Attitude.x);
+			pitchrate = pitchBmag->GetRates().y*cos(Attitude.x) - yawBmag->GetRates().z*sin(Attitude.x);
 			if (A9K3)
 			{
 				//Assumption: secant amplifier gets saturated at +/-80° yaw
@@ -865,7 +868,7 @@ void GDC::Timestep(double simdt) {
 			else
 			{
 				//Non-Euler
-				pitchrate = pitchBmag->GetRates().x;
+				pitchrate = pitchBmag->GetRates().y;
 			}
 		}
 	}
@@ -875,7 +878,7 @@ void GDC::Timestep(double simdt) {
 	if (A3K1)
 	{
 		//Euler mode
-		rollrate = primRollBmag->GetRates().z - pitchrate * sin(Attitude.z);
+		rollrate = primRollBmag->GetRates().x - pitchrate * sin(Attitude.z);
 	}
 	else
 	{
@@ -892,12 +895,12 @@ void GDC::Timestep(double simdt) {
 			if (A3K2)
 			{
 				//Entry (0.05G)
-				rollrate = primRollBmag->GetRates().z*cos(21.0*RAD) +  sat->bmag1.GetRates().y*sin(21.0*RAD);
+				rollrate = primRollBmag->GetRates().x*cos(21.0*RAD) - sat->bmag1.GetRates().z*sin(21.0*RAD);
 			}
 			else
 			{
 				//Non-Euler
-				rollrate = primRollBmag->GetRates().z;
+				rollrate = primRollBmag->GetRates().x;
 			}
 		}
 	}
@@ -909,7 +912,7 @@ void GDC::Timestep(double simdt) {
 		if (E1_504 && E2_502)
 		{
 			//Euler mode
-			yawrate = -yawBmag->GetRates().y*cos(Attitude.x) + pitchBmag->GetRates().x*sin(Attitude.x);
+			yawrate = yawBmag->GetRates().z*cos(Attitude.x) + pitchBmag->GetRates().y*sin(Attitude.x);
 		}
 		else
 			yawrate = 0.0;
@@ -929,12 +932,12 @@ void GDC::Timestep(double simdt) {
 			if (A4K2)
 			{
 				//Entry (0.05G)
-				yawrate = redunRollBmag->GetRates().z*cos(21.0*RAD) + yawBmag->GetRates().y*sin(21.0*RAD);
+				yawrate = redunRollBmag->GetRates().x*cos(21.0*RAD) - yawBmag->GetRates().z*sin(21.0*RAD);
 			}
 			else
 			{
 				//Non-Euler
-				yawrate = -yawBmag->GetRates().y;
+				yawrate = yawBmag->GetRates().z;
 			}
 		}
 	}
@@ -1598,25 +1601,25 @@ bool ASCP::YawDnClick(int Event)
 	return changed;
 }
 
-void ASCP::PaintRoll(SURFHANDLE surf, SURFHANDLE wheel)
+void ASCP::PaintRoll(SURFHANDLE surf, SURFHANDLE wheel, int TexMul )
 
 {
-	oapiBlt(surf, wheel, 0, 0, (int) rolldisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) rolldisplay * 17*TexMul, 0, 17*TexMul, 36*TexMul, SURF_PREDEF_CK);
 }
 
-void ASCP::PaintPitch(SURFHANDLE surf, SURFHANDLE wheel)
+void ASCP::PaintPitch(SURFHANDLE surf, SURFHANDLE wheel, int TexMul)
 
 {
-	oapiBlt(surf, wheel, 0, 0, (int) pitchdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) pitchdisplay * 17*TexMul, 0, 17*TexMul, 36*TexMul, SURF_PREDEF_CK);
 }
 
-void ASCP::PaintYaw(SURFHANDLE surf, SURFHANDLE wheel)
+void ASCP::PaintYaw(SURFHANDLE surf, SURFHANDLE wheel, int TexMul)
 
 {
-	oapiBlt(surf, wheel, 0, 0, (int) yawdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) yawdisplay * 17*TexMul, 0, 17*TexMul, 36*TexMul, SURF_PREDEF_CK);
 }
 
-bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value) {
+bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value, int TexMul) {
 	int srx, sry, beta, digit, digit0, digit1;
 	int x=(int)fabs(value*10);
 	beta = x%10;
@@ -1627,48 +1630,48 @@ bool ASCP::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value) {
 
 	srx = 8 + (digit0 * 25);	 
 	if (!(beta != 0 && digit == 9 && (digit1 == 9 || (digit1 == 5 && digit0 == 3)))) {
-		oapiBlt(surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 0, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	} else {
-		oapiBlt(surf, digits, 0, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+		oapiBlt(surf, digits, 0, sry*TexMul, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul - sry*TexMul, SURF_PREDEF_CK);			
 		if (digit0 == 3) digit0 = 0; else digit0++;
 		srx = 8 + (digit0 * 25);			
-		oapiBlt(surf, digits, 0, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 0, 0, srx*TexMul, 45*TexMul - sry*TexMul, 9*TexMul, sry*TexMul, SURF_PREDEF_CK);
 	}
 
 	srx = 8 + (digit1 * 25);
 	if (digit != 9 || beta == 0) {
-		oapiBlt(surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 10*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	} else {
-		oapiBlt(surf, digits, 10, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+		oapiBlt(surf, digits, 10*TexMul, sry*TexMul, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul - sry*TexMul, SURF_PREDEF_CK);			
 
 		if (digit1 == 9) digit1 = 0; else digit1++;
 		if (digit1 == 6 && digit0 == 3) digit1 = 0;
 		srx = 8 + (digit1 * 25);			
-		oapiBlt(surf, digits, 10, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 10*TexMul, 0, srx*TexMul, 45*TexMul - sry*TexMul, 9*TexMul, sry*TexMul, SURF_PREDEF_CK);
 	}
 
 	srx = 8 + (digit * 25);
 	if (beta == 0) {		
-		oapiBlt(surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 20*TexMul, 0, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul, SURF_PREDEF_CK);
 	} else {
-		oapiBlt(surf, digits, 20, sry, srx, 33, 9, 12 - sry, SURF_PREDEF_CK);			
+		oapiBlt(surf, digits, 20*TexMul, sry*TexMul, srx*TexMul, 33*TexMul, 9*TexMul, 12*TexMul - sry*TexMul, SURF_PREDEF_CK);			
 		if (digit == 9) digit = 0; else digit++;
 		srx = 8 + (digit * 25);			
-		oapiBlt(surf, digits, 20, 0, srx, 45 - sry, 9, sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 20*TexMul, 0, srx*TexMul, 45*TexMul - sry*TexMul, 9*TexMul, sry*TexMul, SURF_PREDEF_CK);
 	}
 	return true;
 }
 
-bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits) {
-	return PaintDisplay(surf, digits, output.x);
+bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul) {
+	return PaintDisplay(surf, digits, output.x, TexMul);
 }
 
-bool ASCP::PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits) {
-	return PaintDisplay(surf, digits, output.y);
+bool ASCP::PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul) {
+	return PaintDisplay(surf, digits, output.y, TexMul);
 }
 
-bool ASCP::PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits){
-	return PaintDisplay(surf, digits, output.z);
+bool ASCP::PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits, int TexMul){
+	return PaintDisplay(surf, digits, output.z, TexMul);
 }
 
 void ASCP::SaveState(FILEHANDLE scn){
@@ -2422,7 +2425,7 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		//Disable logic
-		rate = (T3QS76 ? 0.0 : bmag1rates.x) + (T3QS64 ? 0.0 : bmag2rates.x);
+		rate = (T3QS76 ? 0.0 : bmag1rates.y) + (T3QS64 ? 0.0 : bmag2rates.y);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2440,7 +2443,7 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		//Disable logic
-		rate = (T3QS77 ? 0.0 : bmag1rates.x) + (T3QS65 ? 0.0 : bmag2rates.x);
+		rate = (T3QS77 ? 0.0 : bmag1rates.y) + (T3QS65 ? 0.0 : bmag2rates.y);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2545,7 +2548,7 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		//Disable logic
-		rate = (T2QS76 ? 0.0 : bmag1rates.y) + (T2QS64 ? 0.0 : bmag2rates.y) + (T2QS68 ? 0.0 : -bmag1rates.z*tan(21.0*RAD)) + (T2QS63 ? 0.0 : -bmag2rates.z*tan(21.0*RAD));
+		rate = (T2QS76 ? 0.0 : -bmag1rates.z) + (T2QS64 ? 0.0 : -bmag2rates.z) + (T2QS68 ? 0.0 : -bmag1rates.x*tan(21.0*RAD)) + (T2QS63 ? 0.0 : -bmag2rates.x*tan(21.0*RAD));
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2563,7 +2566,7 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		//Disable logic
-		rate = (T2QS77 ? 0.0 : bmag1rates.y) + (T2QS65 ? 0.0 : bmag2rates.y) + (T2QS69 ? 0.0 : -bmag1rates.z*tan(21.0*RAD)) + (T2QS66 ? 0.0 : -bmag2rates.z*tan(21.0*RAD));
+		rate = (T2QS77 ? 0.0 : -bmag1rates.z) + (T2QS65 ? 0.0 : -bmag2rates.z) + (T2QS69 ? 0.0 : -bmag1rates.x*tan(21.0*RAD)) + (T2QS66 ? 0.0 : -bmag2rates.x*tan(21.0*RAD));
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2670,7 +2673,7 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		//Disable logic
-		rate = (T1QS64 ? 0.0 : bmag1rates.z) + (T1QS68 ? 0.0 : bmag2rates.z);
+		rate = (T1QS64 ? 0.0 : bmag1rates.x) + (T1QS68 ? 0.0 : bmag2rates.x);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2687,7 +2690,7 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		//Disable logic
-		rate = (T1QS65 ? 0.0 : bmag1rates.z) + (T1QS63 ? 0.0 : bmag2rates.z);
+		rate = (T1QS65 ? 0.0 : bmag1rates.x) + (T1QS63 ? 0.0 : bmag2rates.x);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
@@ -2995,6 +2998,7 @@ engineOffDelay(1.0)
 	int i = 0;
 	while (i < 20) {
 		ThrusterDemand[i] = false;
+		ThrusterDemandLockup[i] = false;
 		PoweredSwitch[i] = NULL;
 		i++;
 	}
@@ -3100,11 +3104,17 @@ void RJEC::TimeStep(double simdt){
 	*/
 
 	// Reset thruster power demand
-	bool td[20];
+	bool td[20], ThrusterDemand2[20];
 	int i;
 	for (i = 0; i < 17; i++) {
 		td[i] = false;
 		PoweredSwitch[i] = NULL;
+	}
+
+	//Get thruster demand
+	for (i = 0; i < 17; i++) {
+		ThrusterDemand2[i] = (ThrusterDemand[i] || ThrusterDemandLockup[i]); //ThrusterDemandLockup causes the thruster to fire on this timestep even if ThrusterDemand was already reset
+		ThrusterDemandLockup[i] = false; // Reset thruster demand lockup
 	}
 
 	//
@@ -3129,14 +3139,14 @@ void RJEC::TimeStep(double simdt){
 	}
 	else
 	{
-		td[9] = ThrusterDemand[9];
-		td[10] = ThrusterDemand[10];
-		td[11] = ThrusterDemand[11];
-		td[12] = ThrusterDemand[12];
-		td[13] = ThrusterDemand[13];
-		td[14] = ThrusterDemand[14];
-		td[15] = ThrusterDemand[15];
-		td[16] = ThrusterDemand[16];
+		td[9] = ThrusterDemand2[9];
+		td[10] = ThrusterDemand2[10];
+		td[11] = ThrusterDemand2[11];
+		td[12] = ThrusterDemand2[12];
+		td[13] = ThrusterDemand2[13];
+		td[14] = ThrusterDemand2[14];
+		td[15] = ThrusterDemand2[15];
+		td[16] = ThrusterDemand2[16];
 	}
 
 	// Pitch
@@ -3153,10 +3163,10 @@ void RJEC::TimeStep(double simdt){
 	}
 	else
 	{
-		td[1] = ThrusterDemand[1];
-		td[2] = ThrusterDemand[2];
-		td[3] = ThrusterDemand[3];
-		td[4] = ThrusterDemand[4];
+		td[1] = ThrusterDemand2[1];
+		td[2] = ThrusterDemand2[2];
+		td[3] = ThrusterDemand2[3];
+		td[4] = ThrusterDemand2[4];
 	}
 
 	// Yaw
@@ -3173,32 +3183,10 @@ void RJEC::TimeStep(double simdt){
 	}
 	else
 	{
-		td[5] = ThrusterDemand[5];
-		td[6] = ThrusterDemand[6];
-		td[7] = ThrusterDemand[7];
-		td[8] = ThrusterDemand[8];
-	}
-
-	// Ensure AC logic power, see Systems Handbook 8.2 
-	if (!sat->SIGCondDriverBiasPower1Switch.IsPowered()) {
-		td[1] = false;
-		td[2] = false;
-		td[4] = false;
-		td[6] = false;
-		td[8] = false;
-		td[9] = false;
-		td[12] = false;
-		td[14] = false;
-	}
-	if (!sat->SIGCondDriverBiasPower2Switch.IsPowered()) {
-		td[3] = false;
-		td[5] = false;
-		td[7] = false;
-		td[10] = false;
-		td[11] = false;
-		td[13] = false;
-		td[15] = false;
-		td[16] = false;
+		td[5] = ThrusterDemand2[5];
+		td[6] = ThrusterDemand2[6];
+		td[7] = ThrusterDemand2[7];
+		td[8] = ThrusterDemand2[8];
 	}
 
 	//
@@ -3329,15 +3317,24 @@ void RJEC::TimeStep(double simdt){
 	cmcengineon = !scsmode && cmcsignal;
 	logicA = scsengineonA2 || cmcengineon;
 	logicB = scsengineonB2 || cmcengineon;
-	SPSEnableA = logicA && S26 && sat->SIGCondDriverBiasPower1Switch.IsPowered();
-	SPSEnableB = logicB && S59 && sat->SIGCondDriverBiasPower2Switch.IsPowered();
+	SPSEnableA = logicA && S26;
+	SPSEnableB = logicB && S59;
 	
 	//sprintf(oapiDebugString(), "%d %d %f %d %d", IGN1, IGN2, engineOffDelay.GetTime(), engineOffDelay.IsRunning(), engineOffDelay.ContactClosed());
 }
 
 void RJEC::SetThruster(int thruster, bool Active) {
+
 	if (thruster > 0 && thruster < 20) {
-		ThrusterDemand[thruster] = Active; // Next timestep does the work
+		if (Active)
+		{
+			ThrusterDemand[thruster] = true; // Next timestep does the work
+			ThrusterDemandLockup[thruster] = true; //Ensures the thruster will fire on the next timestep even if ThrusterDemand was already reset
+		}
+		else
+		{
+			ThrusterDemand[thruster] = false;
+		}
 	}
 }
 
@@ -3445,6 +3442,9 @@ void ECAIntegrator::Timestep(double input, double simdt)
 //
 // Electronic Control Assembly
 //
+
+const double ECA::L4_upper = 15.0*RAD;
+const double ECA::L4_lower = -14.0*RAD;
 
 ECA::ECA() :
 	PitchMTVCIntegrator(0.125, 14.0*RAD, -10.0*RAD),
@@ -3882,35 +3882,18 @@ void ECA::TimeStep(double simdt) {
 		target.y = (E1_506 && T3QS21) ? sat->bmag1.GetAttitudeError().y : 0.0;
 		target.z = (E1_506 && T2QS21) ? sat->bmag1.GetAttitudeError().z : 0.0;
 				
-		// Now process
-		if(target.x > 0){ // Positive Error
-			if(target.x > PI){ 
-				errors.x = -(TWO_PI-target.x); }else{ errors.x = target.x;	}
-		}else{
-			if(target.x < -PI){
-				errors.x = TWO_PI+target.x; }else{ errors.x = target.x;	}
-		}
-		if(target.y > 0){ 
-			if(target.y > PI){ 
-				errors.y = TWO_PI-target.y; }else{ errors.y = -target.y;	}
-		}else{
-			if(target.y < -PI){
-				errors.y = -(TWO_PI+target.y); }else{ errors.y = -target.y;	}
-		}
-		if(target.z > 0){ 
-			if(target.z > PI){ 
-				errors.z = -(TWO_PI-target.z); }else{ errors.z = target.z;	}
-		}else{
-			if(target.z < -PI){
-				errors.z = TWO_PI+target.z; }else{ errors.z = target.z;	}
-		}
 		//Limit
-		if (errors.x > 15.0*RAD) errors.x = 15.0*RAD;
-		if (errors.x < -14.0*RAD) errors.x = -14.0*RAD;
-		if (errors.y > 15.0*RAD) errors.y = 15.0*RAD;
-		if (errors.y < -14.0*RAD) errors.y = -14.0*RAD;
-		if (errors.z > 15.0*RAD) errors.z = 15.0*RAD;
-		if (errors.z < -14.0*RAD) errors.z = -14.0*RAD;
+		if (target.x > L4_upper) errors.x = L4_upper;
+		else if (target.x < L4_lower) errors.x = L4_lower;
+		else errors.x = target.x;
+
+		if (target.y > L4_upper) errors.y = L4_upper;
+		else if (target.y < L4_lower) errors.y = L4_lower;
+		else errors.y = target.y;
+
+		if (target.z > L4_upper) errors.z = L4_upper;
+		else if (target.z < L4_lower) errors.z = L4_lower;
+		else errors.z = target.z;
 
 		//Attitude error deadband
 		if (!R1K22)
@@ -3926,22 +3909,22 @@ void ECA::TimeStep(double simdt) {
 		if (!R3K22)
 		{
 			if (errors.y < -4.0 * RAD)
-				cmd_rate.y = (-errors.y - 4.0 * RAD);
+				cmd_rate.y = (errors.y + 4.0 * RAD);
 			if (errors.y > 4.0 * RAD)
-				cmd_rate.y = (-errors.y + 4.0 * RAD);
+				cmd_rate.y = (errors.y - 4.0 * RAD);
 		}
 		else
-			cmd_rate.y = -errors.y;
+			cmd_rate.y = errors.y;
 
 		if (!R2K22)
 		{
 			if (errors.z < -4.0 * RAD)
-				cmd_rate.z = (-errors.z - 4.0 * RAD);
+				cmd_rate.z = (errors.z + 4.0 * RAD);
 			if (errors.z > 4.0 * RAD)
-				cmd_rate.z = (-errors.z + 4.0 * RAD);
+				cmd_rate.z = (errors.z - 4.0 * RAD);
 		}
 		else
-			cmd_rate.z = -errors.z;
+			cmd_rate.z = errors.z;
 		
 		//Attitude error gain
 		if (R1K25)
@@ -3978,14 +3961,14 @@ void ECA::TimeStep(double simdt) {
 
 			if (E1_509) rhc_rate.z += sat->rhc1.GetYawPropRate();
 			if (E2_509) rhc_rate.z += sat->rhc2.GetYawPropRate();
-			rhc_rate.z *= -9.0*RAD;
+			rhc_rate.z *= 9.0*RAD;
 		}
 
 		//MTVC Rate
-		if (E1_509 && R3K31) rhc_rate.y -= 0.495 / 0.4*sat->bmag1.GetRates().x;
-		if (E2_509 && R3K30) rhc_rate.y -= 0.495 / 0.4*sat->bmag2.GetRates().x;
-		if (E1_509 && R2K31) rhc_rate.z -= 0.495 / 0.4*sat->bmag1.GetRates().y;
-		if (E2_509 && R2K30) rhc_rate.z -= 0.495 / 0.4*sat->bmag2.GetRates().y;
+		if (E1_509 && R3K31) rhc_rate.y -= 0.495 / 0.4*sat->bmag1.GetRates().y;
+		if (E2_509 && R3K30) rhc_rate.y -= 0.495 / 0.4*sat->bmag2.GetRates().y;
+		if (E1_509 && R2K31) rhc_rate.z -= 0.495 / 0.4*sat->bmag1.GetRates().z;
+		if (E2_509 && R2K30) rhc_rate.z -= 0.495 / 0.4*sat->bmag2.GetRates().z;
 
 		//MTVC Integrator
 		if (E2_507 && T3QS30)
@@ -4013,9 +3996,9 @@ void ECA::TimeStep(double simdt) {
 		double rollrate, pitchrate, yawrate;
 
 		// BMAG RATES are Z = ROLL, X = PITCH, Y = YAW
-		rollrate = (T1QS28 ? sat->bmag1.GetRates().z : 0.0) + (T1QS29 ? sat->bmag2.GetRates().z : 0.0);
-		yawrate = (T2QS28 ? sat->bmag1.GetRates().y : 0.0) + (T2QS29 ? sat->bmag2.GetRates().y : 0.0);
-		pitchrate = (T3QS28 ? sat->bmag1.GetRates().x : 0.0) + (T3QS29 ? sat->bmag2.GetRates().x : 0.0);
+		rollrate = (T1QS28 ? sat->bmag1.GetRates().x : 0.0) + (T1QS29 ? sat->bmag2.GetRates().x : 0.0);
+		yawrate = (T2QS28 ? sat->bmag1.GetRates().z : 0.0) + (T2QS29 ? sat->bmag2.GetRates().z : 0.0);
+		pitchrate = (T3QS28 ? sat->bmag1.GetRates().y : 0.0) + (T3QS29 ? sat->bmag2.GetRates().y : 0.0);
 
 		//Amplifier
 		if (!E1_506)
@@ -4086,9 +4069,9 @@ void ECA::TimeStep(double simdt) {
 			pseudorate.y = 0;
 		}
 		if (E1_506 && !T2QS44 && sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER){
-			if (sat->rjec.GetThruster(6) || sat->rjec.GetThruster(8)) {
+			if (sat->rjec.GetThruster(5) || sat->rjec.GetThruster(7)) {
 				pseudorate.z += 0.1 * simdt; 
-			} else if (sat->rjec.GetThruster(5) || sat->rjec.GetThruster(7)) {
+			} else if (sat->rjec.GetThruster(6) || sat->rjec.GetThruster(8)) {
 				pseudorate.z -= 0.1 * simdt;
 			} else {
 				if (pseudorate.z > 0) {
@@ -4226,18 +4209,18 @@ void ECA::TimeStep(double simdt) {
 				// Automatic mode and proportional-rate mode
 				if(rate_err.z > 0.034906585){
 					// ACCEL PLUS
-					sat->rjec.SetThruster(6,1);
-					sat->rjec.SetThruster(8,1);
-					sat->rjec.SetThruster(5,0);
-					sat->rjec.SetThruster(7,0);
+					sat->rjec.SetThruster(5, 1);
+					sat->rjec.SetThruster(7, 1);
+					sat->rjec.SetThruster(6, 0);
+					sat->rjec.SetThruster(8, 0);
 					accel_yaw_trigger=1; accel_yaw_flag=-1;
 				}
 				if(rate_err.z < -0.034906585){
 					// ACCEL MINUS
-					sat->rjec.SetThruster(5,1);
-					sat->rjec.SetThruster(7,1);
-					sat->rjec.SetThruster(6,0);
-					sat->rjec.SetThruster(8,0);
+					sat->rjec.SetThruster(6, 1);
+					sat->rjec.SetThruster(8, 1);
+					sat->rjec.SetThruster(5, 0);
+					sat->rjec.SetThruster(7, 0);
 					accel_yaw_trigger=1; accel_yaw_flag=1;
 				}							
 				break;
@@ -4264,7 +4247,7 @@ void ECA::TimeStep(double simdt) {
 
 		//MTVC
 		if (T2QS1)
-			yawMTVCPosition = 0.4*rhc_rate.z;
+			yawMTVCPosition = -0.4*rhc_rate.z;
 		else
 			yawMTVCPosition = 0.0;
 
@@ -4278,37 +4261,41 @@ void ECA::TimeStep(double simdt) {
 		double y = sat->tvsa.GetYawGimbalPosition() - sat->tvsa.GetYawGimbalTrim();
 
 		if (E1_506 && R3K11)
-			PitchAutoTVCIntegrator.Timestep(p + errors.y, simdt);
+			PitchAutoTVCIntegrator.Timestep(p - errors.y, simdt);
 		else
 			PitchAutoTVCIntegrator.Reset();
 
 		if (E1_506 && R2K11)
-			YawAutoTVCIntegrator.Timestep(y + errors.z, simdt);
+			YawAutoTVCIntegrator.Timestep(y - errors.z, simdt);
 		else
 			YawAutoTVCIntegrator.Reset();
+
+		//sprintf(oapiDebugString(), "Error %lf %lf Delt %lf %lf Gimb %lf %lf Trim %lf %lf Integin %lf %lf Integ %lf %lf", errors.y*DEG, errors.z*DEG, p*DEG, y*DEG, 
+		//	sat->tvsa.GetPitchGimbalPosition()*DEG, sat->tvsa.GetYawGimbalPosition()*DEG, sat->tvsa.GetPitchGimbalTrim()*DEG, sat->tvsa.GetYawGimbalTrim()*DEG, 
+		//	(p - errors.y)*DEG, (y - errors.z)*DEG, PitchAutoTVCIntegrator.GetState()*DEG, YawAutoTVCIntegrator.GetState()*DEG);
 
 		if (E1_506 && E1_509)
 		{
 			//TBD: LM-on/off filters
 
-			pitchAutoTVCPosition = PitchAutoTVCIntegrator.GetState() + errors.y + rate_damp.y;
 			if (T3QS11)
-				pitchAutoTVCPosition *= 1.0;
+				pitchAutoTVCPosition = PitchAutoTVCIntegrator.GetState() - 0.3115*errors.y + 0.399*rate_damp.y;
 			else if (T3QS12)
-				pitchAutoTVCPosition *= 1.0;
+				pitchAutoTVCPosition = 0.372*PitchAutoTVCIntegrator.GetState() - 0.166*errors.y + 0.998*rate_damp.y;
 			else
 				pitchAutoTVCPosition = 0.0;
 
-			yawAutoTVCPosition = -(YawAutoTVCIntegrator.GetState() + errors.z + rate_damp.z);
 			if (T2QS11)
-				yawAutoTVCPosition *= 1.0;
+				yawAutoTVCPosition = YawAutoTVCIntegrator.GetState() - 0.3115*errors.z + 0.399*rate_damp.z;
 			else if (T2QS12)
-				yawAutoTVCPosition *= 1.0;
+				yawAutoTVCPosition = 0.372*YawAutoTVCIntegrator.GetState() - 0.166*errors.z + 0.998*rate_damp.z;
 			else
 				yawAutoTVCPosition = 0.0;
 		}
 		else
+		{
 			pitchAutoTVCPosition = yawAutoTVCPosition = 0.0;
+		}
 
 		//Limit
 		if (pitchAutoTVCPosition > 14.0*RAD) pitchAutoTVCPosition = 14.0*RAD;
@@ -4477,6 +4464,8 @@ void TVSA::TimeStep(double simdt)
 {
 	if (sat->TVCServoPower1Switch.IsCenter() && sat->TVCServoPower2Switch.IsCenter())
 	{
+		pitchGimbalPosition1 = yawGimbalPosition1 = pitchGimbalPosition2 = yawGimbalPosition2 = 0.0;
+		pitchGimbalTrim1 = yawGimbalTrim1 = pitchGimbalTrim2 = yawGimbalTrim2 = 0.0;
 		return;
 	}
 	//POWER
@@ -4822,9 +4811,6 @@ extern GDIParams g_Param;
 EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 
 	status = EMS_STATUS_OFF;
-	dVInitialized = false;
-	lastWeight = _V(0, 0, 0);
-	lastGlobalVel = _V(0, 0, 0);
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
@@ -4855,6 +4841,8 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ScribePntCnt = 1;
 	ScribePntArray[0].x = 40;
 	ScribePntArray[0].y = 1;
+	ScribePntArrayVC[0].x = 40*TexMul;
+	ScribePntArrayVC[0].y = 1*TexMul;
 
 	//Initial position of RSI Triangle
 	RSITriangle[0].x = EMS_RSI_CENTER_X + (int)(cos(RSIRotation)*28);
@@ -5125,6 +5113,8 @@ void EMS::TimeStep(double simdt) {
 		}
 		ScribePntArray[ScribePntCnt-1].y = GScribe;
 		ScribePntArray[ScribePntCnt-1].x = SlewScribe;
+		ScribePntArrayVC[ScribePntCnt-1].y = GScribe*TexMul;
+		ScribePntArrayVC[ScribePntCnt-1].x = SlewScribe*TexMul;
 
 		//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 		//sprintf(oapiDebugString(), "ScrollPosition %f", ScrollPosition);
@@ -5141,131 +5131,22 @@ void EMS::SystemTimestep(double simdt) {
 
 	if (IsDisplayPowered() && !IsOff()) {
 		DrawPower(0.022);
+
+		//sprintf(oapiDebugString(), "vinert %f", vinert);
 	}
 }
 
 void EMS::AccelerometerTimeStep(double simdt) {
+	VECTOR3 accel;
+	sat->inertialData.getAcceleration(accel);
+	xacc = -accel.z;
+	// Ground test switch
 
-	VECTOR3 arot, w, vel;
+	constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
 
-	sat->GetGlobalOrientation(arot);
-	sat->GetWeightVector(w);
-	sat->GetGlobalVel(vel);
-
-	MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-arot.z);
-	tinv = mul(AttitudeReference::GetRotationMatrixY(-arot.y), tinv);
-	tinv = mul(AttitudeReference::GetRotationMatrixX(-arot.x), tinv);
-	w = mul(tinv, w) / sat->GetMass();
-
-	//Orbiter 2016 hack
-	if (length(w) == 0.0)
-	{
-		w = GetGravityVector();
+	if (sat->GTASwitch.IsUp()) {
+		xacc -= constG;
 	}
-
-	if (!dVInitialized) {
-		lastWeight = w;
-		lastGlobalVel = vel;
-		lastSimDT = simdt;
-		dVInitialized = true;
-
-	} else {
-		// Acceleration calculation, see IMU
-		VECTOR3 dvel = (vel - lastGlobalVel) / lastSimDT;
-		VECTOR3 dw1 = w - dvel;
-		VECTOR3 dw2 = lastWeight - dvel;
-		lastWeight = w;
-		lastGlobalVel = vel;
-		lastSimDT = simdt;
-
-		// Transform to vessel coordinates
-		MATRIX3	t = AttitudeReference::GetRotationMatrixX(arot.x);
-		t = mul(AttitudeReference::GetRotationMatrixY(arot.y), t);
-		t = mul(AttitudeReference::GetRotationMatrixZ(arot.z), t);
-		VECTOR3 avg = (dw1 + dw2) / 2.0;
-		avg = mul(t, avg);	
-		xacc = -avg.z;
-		// Ground test switch
-	
-		constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
-
-		if (sat->GTASwitch.IsUp()) {
-			xacc -= constG;
-		}
-	}
-
-}
-
-VECTOR3 EMS::GetGravityVector()
-{
-	OBJHANDLE gravref = sat->GetGravityRef();
-	OBJHANDLE hSun = oapiGetObjectByName("Sun");
-	VECTOR3 R, U_R;
-	sat->GetRelativePos(gravref, R);
-	U_R = unit(R);
-	double r = length(R);
-	VECTOR3 R_S, U_R_S;
-	sat->GetRelativePos(hSun, R_S);
-	U_R_S = unit(R_S);
-	double r_S = length(R_S);
-	double mu = GGRAV * oapiGetMass(gravref);
-	double mu_S = GGRAV * oapiGetMass(hSun);
-	int jcount = oapiGetPlanetJCoeffCount(gravref);
-	double JCoeff[5];
-	for (int i = 0; i < jcount; i++)
-	{
-		JCoeff[i] = oapiGetPlanetJCoeff(gravref, i);
-	}
-	double R_E = oapiGetSize(gravref);
-
-	VECTOR3 a_dP;
-
-	a_dP = -U_R;
-
-	if (jcount > 0)
-	{
-		MATRIX3 mat;
-		VECTOR3 U_Z;
-		double costheta, P2, P3;
-
-		oapiGetPlanetObliquityMatrix(gravref, &mat);
-		U_Z = mul(mat, _V(0, 1, 0));
-
-		costheta = dotp(U_R, U_Z);
-
-		P2 = 3.0 * costheta;
-		P3 = 0.5*(15.0*costheta*costheta - 3.0);
-		a_dP += (U_R*P3 - U_Z * P2)*JCoeff[0] * pow(R_E / r, 2.0);
-		if (jcount > 1)
-		{
-			double P4;
-			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-			a_dP += (U_R*P4 - U_Z * P3)*JCoeff[1] * pow(R_E / r, 3.0);
-			if (jcount > 2)
-			{
-				double P5;
-				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-				a_dP += (U_R*P5 - U_Z * P4)*JCoeff[2] * pow(R_E / r, 4.0);
-			}
-		}
-	}
-	a_dP *= mu / pow(r, 2.0);
-	a_dP -= U_R_S * mu_S / pow(r_S, 2.0);
-
-	if (gravref == oapiGetObjectByName("Moon"))
-	{
-		OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-
-		VECTOR3 R_Ea, U_R_E;
-		sat->GetRelativePos(hEarth, R_Ea);
-		U_R_E = unit(R_Ea);
-		double r_E = length(R_Ea);
-		double mu_E = GGRAV * oapiGetMass(hEarth);
-
-		a_dP -= U_R_E * mu_E / pow(r_E, 2.0);
-	}
-
-	return a_dP;
 }
 
 void EMS::SwitchChanged() {
@@ -5284,13 +5165,11 @@ void EMS::SwitchChanged() {
 
 		case 1: // dV
 			if (sat->EMSModeSwitch.IsUp()) {
-				status = EMS_STATUS_DV;
-				dVInitialized = false;
+				status = EMS_STATUS_DV;				
 			} else if (sat->EMSModeSwitch.IsCenter()) {
 				status = EMS_STATUS_STANDBY;
 			} else {
-				status = EMS_STATUS_DV_BACKUP;
-				dVInitialized = false;
+				status = EMS_STATUS_DV_BACKUP;				
 			}
 			break;
 
@@ -5498,10 +5377,6 @@ void EMS::SaveState(FILEHANDLE scn) {
 	
 	oapiWriteLine(scn, EMS_START_STRING);
 	oapiWriteScenario_int(scn, "STATUS", status);
-	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
-	papiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
-	papiWriteScenario_vec(scn, "LASTGLOBALVEL", lastGlobalVel);
-	papiWriteScenario_double(scn, "LASTSIMDT", lastSimDT);
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
 	papiWriteScenario_double(scn, "VINERTIAL", vinert);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
@@ -5533,15 +5408,6 @@ void EMS::LoadState(FILEHANDLE scn) {
 
 		if (!strnicmp (line, "STATUS", 6)) {
 			sscanf(line + 6, "%i", &status);
-		} else if (!strnicmp (line, "DVINITIALIZED", 13)) {
-			sscanf(line + 13, "%i", &i);
-			dVInitialized = (i == 1);
-		} else if (!strnicmp (line, "LASTWEIGHT", 10)) {
-			sscanf(line + 10, "%lf %lf %lf", &lastWeight.x, &lastWeight.y, &lastWeight.z);
-		} else if (!strnicmp (line, "LASTGLOBALVEL", 13)) {
-			sscanf(line + 13, "%lf %lf %lf", &lastGlobalVel.x, &lastGlobalVel.y, &lastGlobalVel.z);
-		} else if (!strnicmp(line, "LASTSIMDT", 9)) {
-			sscanf(line + 9, "%lf", &lastSimDT);
 		} else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
 			sscanf(line + 14, "%lf", &dVRangeCounter);
 		} else if (!strnicmp (line, "VINERTIAL", 9)) {
@@ -5570,6 +5436,8 @@ void EMS::LoadState(FILEHANDLE scn) {
 			sscanf(line + 14, "%i %li %li", &i, &j, &k);
 			ScribePntArray[i].x = j;
 			ScribePntArray[i].y = k;
+			ScribePntArrayVC[i].x = j*TexMul;
+			ScribePntArrayVC[i].y = k*TexMul;
 		}
 	}
 }
@@ -5586,18 +5454,28 @@ bool EMS::WriteScrollToFile() {
 	/////////////////////////////////////////////////////////
     // Get the drawing surface, apply the scribe line and create a corresponding 
     // bitmap with the same dimensions
-
+	
 	HDC hMemDC = CreateCompatibleDC(0);
 	HBITMAP hBitmap = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_EMS_SCROLL_LEO));
 	HGDIOBJ hOld = SelectObject(hMemDC, hBitmap);
 
 	// Draw Commands
 	SetBkMode(hMemDC, TRANSPARENT);
-	HGDIOBJ oldObj = SelectObject(hMemDC, g_Param.pen[5]);
-	Polyline(hMemDC, ScribePntArray, ScribePntCnt);
+	HPEN redPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+	HGDIOBJ oldObj = SelectObject(hMemDC, redPen);
+	POINT *points = new POINT[ScribePntCnt];
+	for (int i = 0; i < ScribePntCnt; i++) {
+		points[i].x = ScribePntArray[i].x;
+		points[i].y = ScribePntArray[i].y;
+	}
+
+	Polyline(hMemDC, points, ScribePntCnt);
+
+	delete[] points;
 
 	SelectObject(hMemDC, oldObj);
 	SelectObject(hMemDC, hOld);
+	DeleteObject(redPen);
 
 	PBITMAPINFO bitmapInfo = CreateBitmapInfoStruct(hBitmap);
 

@@ -9,21 +9,20 @@
 #include "soundlib.h"
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "saturn.h"
 #include "mcc.h"
 #include "rtcc.h"
+#include "LunarTargetingProgram.h"
+#include "thread.h"
 #include <queue>
 
 struct ApolloRTCCMFDData {  // global data storage
 	int connStatus;
 	int emem[24];
 	int uplinkState;
-	IMFD_BURN_DATA burnData;
 	std::queue<unsigned char> uplinkBuffer;
 	double uplinkBufferSimt;
-	bool isRequesting;
-	Saturn *progVessel;
 };
 
 class AR_GCore
@@ -32,17 +31,18 @@ public:
 	AR_GCore(VESSEL* v);
 	~AR_GCore();
 
-	void SetMissionSpecificParameters();
+	void SetMissionSpecificParameters(int mission);
 	void MPTMassUpdate();
 	int MPTTrajectoryUpdate(VESSEL *ves, bool csm);
 
 	bool MissionPlanningActive;
-	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 
 	VESSEL *pMPTVessel;
 	int MPTVesselNumber;
 
 	int mptInitError;
+
+	double REFSMMAT_PTC_MJD;
 
 	RTCC* rtcc;
 };
@@ -55,13 +55,11 @@ public:
 	void SPQcalc();
 	void GPMPCalc();
 	void REFSMMATCalc();
-	void SkylabCalc();
 	void LunarLaunchTargetingCalc();
 	void LDPPalc();
 	void LunarLiftoffCalc();
 	void LOICalc();
 	void LmkCalc();
-	void MoonRTECalc();
 	void EntryCalc();
 	void DeorbitCalc();
 	void TLCCCalc();
@@ -90,6 +88,8 @@ public:
 	void RTETradeoffDisplayCalc();
 	void GetAGSKFactor();
 	void GeneralMEDRequest();
+	void SkylabSaturnIBLaunchCalc();
+	void SkylabSaturnIBLaunchUplink();
 	void TransferTIToMPT();
 	void TransferSPQToMPT();
 	void TransferDKIToMPT();
@@ -104,24 +104,31 @@ public:
 	void TransferRTEToMPT();
 	void SLVNavigationUpdateCalc();
 	void SLVNavigationUpdateUplink();
-	void UpdateGRRTime();
-	bool vesselinLOS();
+	void UpdateGRRTime(VESSEL *v);
+	void PerigeeAdjustCalc();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
 	void UplinkData(bool isCSM);
 	void UplinkData2(bool isCSM);
+	void UplinkDataV70V73(bool v70, bool isCSM);
 	void send_agc_key(char key, bool isCSM);
 	void uplink_word(char *data, bool isCSM);
 	void P30UplinkCalc(bool isCSM);
 	void P30Uplink(bool isCSM);
 	void RetrofireEXDVUplinkCalc(char source, char column);
 	void RetrofireEXDVUplink();
+	void EntryUplinkCalc();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(bool isCSM);
 	void StateVectorUplink(int type);
 	void TLANDUplinkCalc(void);
 	void TLANDUplink(void);
-	void EMPP99Uplink(int i);
+	void AGCClockIncrementUplink(bool csm);
+	void AGCLiftoffTimeIncrementUplink(bool csm);
+	void ErasableMemoryFileRead();
+	void ErasableMemoryFileLoad(int blocknum);
+	void ErasableMemoryUpdateUplink(int blocknum);
+
 	void ManeuverPAD();
 	void EntryPAD();
 	void TPIPAD();
@@ -139,25 +146,28 @@ public:
 	void GetStateVectorFromIU();
 	void GetStateVectorsFromAGS();
 	void VectorCompareDisplayCalc();
-	void UpdateTLITargetTable();
+	void GenerateSpaceDigitalsNoMPT();
+	void LUNTARCalc();
+	void TLIProcessorCalc();
+	void SaturnVTLITargetUplink();
+	int GetVesselParameters(int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
+	void menuCalculateIMUComparison();
 
 	int startSubthread(int fcn);
 	int subThread();
-	void StartIMFDRequest();
-	void StopIMFDRequest();
 
 	//EPHEM PROGRAM
 	void GenerateAGCEphemeris();
 	int agcCelBody_RH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
 	int agcCelBody_LH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
-	void AGCEphemeris(double T0, double Epoch, double TEphem0);
-	void AGCCorrectionVectors(double mjd_launch, double t_land, int mission, bool isCMC);
+	void AGCEphemeris(double T0, int Epoch, double TEphem0);
+	void AGCCorrectionVectors(double mjd_launchday, double dt_UNITW, double dt_504LM, int mission, bool isCMC);
 	void GenerateAGCCorrectionVectors();
 
 	// SUBTHREAD MANAGEMENT
-	HANDLE hThread;
+	KillableWorker subThreadWorker;
 	int subThreadMode;										// What should the subthread do?
-	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
+	std::atomic<ThreadStatus> subThreadStatus;
 
 	ApolloRTCCMFDData g_Data;
 
@@ -169,28 +179,18 @@ public:
 	//GENERAL PARAMETERS
 	double P30TIG;				//Maneuver GET
 	VECTOR3 dV_LVLH;			//LVLH maneuver vector
-	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked, 4 = MCC
+	int vesseltype;				// 0 = CSM, 1 = LM, 2 = MCC
+	bool vesselisdocked;		// false = undocked, true = docked
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
-	bool inhibUplLOS;
 	bool PADSolGood;
 	int manpadenginetype;
 	double t_TPI;				// Generally used TPI time
+	int mptinitmode;			//0 = MED M49, 1 = MED M50, 2 = MED M51, 3 = MED M55
 
 	//DOCKING INITIATION
-	double DKI_TIG;		//Impulsive time of ignition
-	int DKI_Profile;	//0 = Four-impulse: Phasing/CSI/CDH/TPI, 1 = Six-Impulse: Phasing/Boost/HAM/CSI/CDH/TPI, 2 = Four-impulse rescue: Height/CSI/CDH/TPI, 3 = Calculate TPI time only
-	int DKI_TPI_Mode;	//0 = TPI on time, 1 = TPI at orbital midnight, 2 = TPI at X minutes before sunrise
-	bool DKI_Maneuver_Line;	//false = define relative times, true = 0.5 revolutions between maneuvers
-	bool DKI_Radial_DV;	//false = horizontal maneuver, true = 50 ft/s radial component
-	double DKI_dt_TPI_sunrise;
-	double DKI_dt_PBH;	//Delta time between phasing and boost/CSI
-	double DKI_dt_BHAM;	//Delta time between boost and HAM
-	double DKI_dt_HAMH;	//Delta time between HAM and CSI
-	int DKI_N_HC;		//Half revolutions between CSI and CDH
-	int DKI_N_PB;		//Number of half revs between Phasing and Boost/Height
+	int TPI_Mode;
+	double dt_TPI_sunrise;
 	double t_TPIguess;
-	DKIResults dkiresult;
-	VECTOR3 DKI_DV;
 
 	//CONCENTRIC RENDEZVOUS PAGE
 	int SPQMode;	//0 = CSI on time, 1 = CDH, 2 = optimum CSI
@@ -202,7 +202,6 @@ public:
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
-	bool OrbAdjAltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double GMPApogeeHeight;		//Desired apoapsis height
 	double GMPPerigeeHeight;	//Desired periapsis height
 	double GMPWedgeAngle;
@@ -216,8 +215,6 @@ public:
 	double GMPApseLineRotAngle;
 	int GMPRevs;
 	double SPSGET;		//Maneuver GET
-	double GPM_TIG;		//Maneuver GET output
-	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
 	//0 = Apogee
 	//1 = Equatorial crossing
 	//2 = Perigee
@@ -240,23 +237,19 @@ public:
 	//11 = Combination height maneuver and node shift
 	//12 = Combination apogee/perigee change and line-of-apsides shift
 	int GMPManeuverType;
-	GPMPRESULTS GMPResults;
 
 	//REFSMMAT PAGE
-	double REFSMMATTime;
+	double REFSMMAT_LVLH_Time;
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;
 
-	//ENTY PAGE	
-	double EntryAngcor;
+	//ENTRY PAGE
 	double EntryTIGcor;
 	double EntryLatcor;
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
 	double entryrange;
-	double EntryRET05G; //Time of 0.05g
-	double EntryRRT; //Time of entry interface (400k feet altitude)
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double RTEReentryTime; //Desired landing time
@@ -269,6 +262,8 @@ public:
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
+
+	//AGS STATE VECTOR
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
 	AP11AGSSVPAD agssvpad;
@@ -276,10 +271,8 @@ public:
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
 	AP11LMMNV lmmanpad;
-	char GDCset[64];
 	bool HeadsUp;
-	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
-	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
+	AP7TPI TPI_PAD;
 	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
 	double sxtstardtime;
 	double manpad_ullage_dt;
@@ -287,11 +280,11 @@ public:
 	TLIPAD tlipad;
 	AP11PDIPAD pdipad;
 
-	///ENTRY PAD PAGE
+	//ENTRY PAD PAGE
 	AP11ENT lunarentrypad;
 	AP7ENT earthentrypad;
 	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
-	double EntryRTGO;
+	bool EntryPADSxtStarCheckAttOpt; //true = sextant star attitude check at entry attitude, false = sextant star check at horizon check attitude
 
 	//MAP UPDATE PAGE
 	AP10MAPUPDATE mapupdate;
@@ -299,12 +292,7 @@ public:
 	int mappage, mapgs;
 	double mapUpdateGET;
 
-	//TLI PAGE
-	//0 = TLI (nodal), 1 = TLI (free return)
-	int TLImaneuver;
-
 	//TLCC PAGE
-	VECTOR3 R_TLI, V_TLI;
 	int TLCCSolGood;
 
 	//LANDMARK TRACKING PAGE
@@ -313,7 +301,7 @@ public:
 	double LmkTime;
 
 	//VECPOINT PAGE
-	int VECoption;		//0 = Point SC at body, 1 = Open hatch thermal control, 2 = Point AOT with CSM
+	int VECoption;		//0 = Point SC at body, 1 = Open hatch thermal control
 	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z
 	OBJHANDLE VECbody;	//handle for the desired body
 	VECTOR3 VECangles;	//IMU angles
@@ -321,26 +309,13 @@ public:
 	//DOI Page
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
 
-	//Skylab Page
-	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
-	bool Skylab_NPCOption;				//0 = NC1 or NC2 with out-of-plane component, setting up a NPC maneuver 90° later
-	bool Skylab_PCManeuver;				//0 = NC1 is setting up NPC, 1 = NC2 is setting up NPC
-	double SkylabTPIGuess;
-	double Skylab_n_C;
-	double SkylabDH1;					//Delta Height at NCC
-	double SkylabDH2;					//Delta Height at NSR
-	double Skylab_E_L;
-	bool SkylabSolGood;
-	VECTOR3 Skylab_dV_NSR, Skylab_dV_NCC;//, Skylab_dV_NPC;
-	double Skylab_dH_NC2, Skylab_dv_NC2, Skylab_dv_NCC;
-	double Skylab_t_NC1, Skylab_t_NC2, Skylab_t_NCC, Skylab_t_NSR, Skylab_dt_TPM; //Skylab_t_NPC
-
 	//Terrain Model
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
 
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
 	double t_LunarLiftoff;
+	int AscentPADVersion; //0 = Apollo 11-13, 1 = Apollo 14-17
 
 	//Powered Descent Abort Program
 	int PDAPEngine;	//0 = DPS/APS, 1 = APS
@@ -351,8 +326,9 @@ public:
 	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin;
 
 	//Erasable Memory Programs
-	int EMPUplinkType;	// 0 = P99
-	int EMPUplinkNumber;
+	std::string EMPFile;
+	int EMPUplinkNumber, EMPUplinkMaxNumber;
+	std::string EMPDescription, EMPRope, EMPErrorMessage;
 
 	//NAV CHECK PAGE
 	AP7NAV navcheckpad;
@@ -365,7 +341,7 @@ public:
 
 	//AGC EPHEMERIS
 	int AGCEphemOption;	//0 = AGC ephemerides, 1 = AGC precession/nutation/libration correction vectors
-	double AGCEphemBRCSEpoch;
+	int AGCEphemBRCSEpoch;
 	double AGCEphemTEphemZero;
 	double AGCEphemTIMEM0;
 	double AGCEphemTEPHEM;
@@ -381,6 +357,47 @@ public:
 	double NodeConvHeight;
 	double NodeConvResLat;
 	double NodeConvResLng;
+
+	//SPACE DIGITALS
+	int SpaceDigitalsOption;
+	double SpaceDigitalsGET;
+
+	//UPLINK
+	double AGCClockTime[2];
+	double RTCCClockTime[2];
+	double DeltaClockTime[2];
+	double DesiredRTCCLiftoffTime[2];
+	int iuUplinkResult; //0 = no uplink, 1 = uplink accepted, 2 = vessel has no IU, 3 = uplink rejected, 4 = No targeting parameters
+
+	//LUNAR TARGETING PROGRAM
+	double LUNTAR_lat;
+	double LUNTAR_lng;
+	double LUNTAR_bt_guess;
+	double LUNTAR_pitch_guess;
+	double LUNTAR_yaw_guess;
+	double LUNTAR_TIG;
+	LunarTargetingProgramOutput LUNTAR_Output;
+
+	//APOLLO GENERALIZED OPTICS PROGRAM
+	int AGOP_Page;
+	int AGOP_Option;
+	int AGOP_Mode;
+	double AGOP_StartTime;
+	double AGOP_StopTime;
+	double AGOP_TimeStep; //in minutes
+	int AGOP_CSM_REFSMMAT;
+	int AGOP_LM_REFSMMAT;
+	int AGOP_Star;
+	double AGOP_Lat, AGOP_Lng, AGOP_Alt;
+	VECTOR3 AGOP_Attitude;
+	bool AGOP_AttIsCSM;
+	bool AGOP_HeadsUp;
+	double AGOP_AntennaPitch, AGOP_AntennaYaw;
+	std::vector<std::string> AGOP_Output;
+	std::string AGOP_Error;
+
+	//DEBUG
+	VECTOR3 DebugIMUTorquingAngles;
 
 private:
 

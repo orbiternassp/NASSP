@@ -29,6 +29,9 @@
 typedef struct {
 
 	int MissionNo;			///< Apollo mission number.
+	bool isCDR;				///< Flag for CDR vs. LMP.
+	char LEMName[256];		///< LM Name
+	char SuitName[256];		///< Name to print on suit
 
 } LEVASettings;
 
@@ -67,6 +70,7 @@ public:
 	void clbkSetClassCaps (FILEHANDLE cfg);
 	void clbkVisualCreated (VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
+	void clbkPostCreation();
 
 	void SetAstroStage();
 
@@ -101,6 +105,10 @@ private:
 	void ScanMotherShip();
 	void MoveEVA(double SimDT, VESSELSTATUS *eva, double heading);
 	void SetFlag();
+	OBJHANDLE GetLRVHandle();
+	void BoardLRV(OBJHANDLE lrvHandle);
+	void DeboardLRV(OBJHANDLE lrvHandle);
+	void DrawName();
 	void SetMissionPath();
 	void DoFirstTimestep();
 	void SetMainState(int s);
@@ -114,13 +122,12 @@ protected:
 	OBJHANDLE hMaster;
 	bool GoDock1;
 	bool starthover;
-	bool LRVDeployed;
 	void ToggleLRV();
 	bool Astro;						
 	bool MotherShip;
-	char EVAName[256];
+	bool isCDR;
 	char LEMName[256];
-	char MSName[256];
+	char SuitName[256];
 	bool KEY1;
 	bool KEY2;
 	bool KEY3;
@@ -134,6 +141,8 @@ protected:
 	bool KEYSUBTRACT;
 	bool GoFlag;		 
 	bool FlagPlanted;
+
+	ATTACHMENTHANDLE lrvSeat;
 
 	bool FirstTimestep;
 	bool SLEVAPlayed;

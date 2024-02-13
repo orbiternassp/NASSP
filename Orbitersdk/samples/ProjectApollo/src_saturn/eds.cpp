@@ -33,7 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "papi.h"
 
-#include "EDS.h"
+#include "eds.h"
 
 EDS::EDS(IU *iu)
 {
@@ -72,7 +72,6 @@ EDS::EDS(IU *iu)
 	SCControlEnableRelay = false;
 	LVAttRefFail1 = false;
 	LVAttRefFail2 = false;
-	IUCommandSystemEnable = false;
 	LVEnginesCutoffCommand1 = false;
 	LVEnginesCutoffCommand2 = false;
 	LVEnginesCutoffCommand3 = false;
@@ -602,6 +601,13 @@ void EDS::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	papiWriteScenario_bool(scn, "ABORTLIGHTSIGNAL", AbortLightSignal);
 	papiWriteScenario_bool(scn, "LIFTOFFRELAY", LiftoffRelay);
+	if (PlatformFailure)
+	{
+		papiWriteScenario_bool(scn, "PlatformFailure", PlatformFailure);
+		papiWriteScenario_double(scn, "PlatformFailureTime", PlatformFailureTime);
+	}
+	if (LiftoffCircuitAFailure) papiWriteScenario_bool(scn, "LiftoffCircuitAFailure", LiftoffCircuitAFailure);
+	if (LiftoffCircuitBFailure) papiWriteScenario_bool(scn, "LiftoffCircuitBFailure", LiftoffCircuitBFailure);
 }
 
 void EDS::LoadState(char *line)
@@ -627,6 +633,10 @@ void EDS::LoadState(char *line)
 	papiReadScenario_bool(line, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	papiReadScenario_bool(line, "ABORTLIGHTSIGNAL", AbortLightSignal);
 	papiReadScenario_bool(line, "LIFTOFFRELAY", LiftoffRelay);
+	papiReadScenario_bool(line, "PlatformFailure", PlatformFailure);
+	papiReadScenario_double(line, "PlatformFailureTime", PlatformFailureTime);
+	papiReadScenario_bool(line, "LiftoffCircuitAFailure", LiftoffCircuitAFailure);
+	papiReadScenario_bool(line, "LiftoffCircuitBFailure", LiftoffCircuitBFailure);
 }
 
 EDS1B::EDS1B(IU *iu) : EDS(iu)
@@ -636,6 +646,7 @@ EDS1B::EDS1B(IU *iu) : EDS(iu)
 		SIThrustNotOK[i] = false;
 		ThrustOKSignal[i] = false;
 	}
+	IUCommandSystemEnable = true;
 }
 
 void EDS1B::Timestep(double simdt)
@@ -776,11 +787,22 @@ EDSSV::EDSSV(IU *iu) : EDS(iu)
 	SIIEngineOutIndicationA = false;
 	SIIEngineOutIndicationB = false;
 	SIIEDSCutoff = false;
+	IUCommandSystemEnable = false;
 }
 
 bool EDSSV::GetSIIInboardEngineOut()
 {
-	return (SIIEngineThrustMonitorA[4] || SIIEngineThrustMonitorB[4]);
+	return SIIEngineThrustMonitorA[4];
+}
+
+bool EDSSV::GetSIIOutboardEngineOut()
+{
+	return SIIEngineThrustMonitorA[0] || SIIEngineThrustMonitorA[1] || SIIEngineThrustMonitorA[2] || SIIEngineThrustMonitorA[3];
+}
+
+bool EDSSV::GetSIIEnginesOut()
+{
+	return SIIEngineThrustMonitorA[0] && SIIEngineThrustMonitorA[1] && SIIEngineThrustMonitorA[2] && SIIEngineThrustMonitorA[3] && SIIEngineThrustMonitorA[4];
 }
 
 double EDSSV::GetLVTankPressure(int n)
@@ -869,8 +891,8 @@ void EDSSV::Timestep(double simdt)
 		iu->GetLVCommandConnector()->GetSIIThrustOK(ThrustOKSignal);
 		for (int i = 0;i < 5;i++)
 		{
-			SIIEngineThrustMonitorA[i] = SIIEngineOutIndicationA && !ThrustOKSignal[SIIEngInd[i]];
-			SIIEngineThrustMonitorB[i] = SIIEngineOutIndicationB && !ThrustOKSignal[SIIEngInd[i]];
+			SIIEngineThrustMonitorA[i] = SIIEngineOutIndicationA && !ThrustOKSignal[i];
+			SIIEngineThrustMonitorB[i] = SIIEngineOutIndicationB && !ThrustOKSignal[i];
 		}
 	}
 	else

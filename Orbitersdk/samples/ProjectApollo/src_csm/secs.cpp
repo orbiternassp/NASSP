@@ -22,7 +22,7 @@
 
   **************************** Revision History ****************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -57,6 +57,8 @@ TD8(42.0)
 	RCSCCMSMTransferB = false;
 	CMTransferMotor1 = false;
 	CMTransferMotor2 = false;
+	CMRCSHeatersA = false;
+	CMRCSHeatersB = false;
 
 	Mode1ASignal = false;
 
@@ -234,6 +236,24 @@ void RCSC::Timestep(double simdt)
 		FuelAndOxidBypassPurgeB = false;
 	}
 
+	if (CMRCSLogicA() && Sat->CMRCSHTRSSwitch.IsUp())
+	{
+		CMRCSHeatersA = true;
+	}
+	else
+	{
+		CMRCSHeatersA = false;
+	}
+
+	if (CMRCSLogicB() && Sat->CMRCSHTRSSwitch.IsUp())
+	{
+		CMRCSHeatersB = true;
+	}
+	else
+	{
+		CMRCSHeatersB = false;
+	}
+
 	//Mode 1A Display
 	/*char buffer[1024];
 	sprintf(buffer, "REACTION CONTROL SYSTEM CONTROLLER - MODE 1A\n\n");
@@ -342,6 +362,26 @@ bool RCSC::GetCMTransferMotor(bool IsSystemA)
 	return GetCMTransferMotor2();
 }
 
+bool RCSC::GetCMRCSHeatersA()
+{
+	return (CMRCSHeatersA && Sat->CMHeater1MnACircuitBraker.IsPowered());
+}
+
+bool RCSC::GetCMRCSHeatersB()
+{
+	return (CMRCSHeatersB && Sat->CMHeater2MnBCircuitBraker.IsPowered());
+}
+
+bool RCSC::GetCMRCSDumpA()
+{
+	return (InterconnectAndPropellantBurnA && GetPropellantDumpInhibitA() && CMRCSLogicA());
+}
+
+bool RCSC::GetCMRCSDumpB()
+{
+	return (InterconnectAndPropellantBurnB && GetPropellantDumpInhibitB() && CMRCSLogicB());
+}
+
 void RCSC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
@@ -355,6 +395,8 @@ void RCSC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "RCSCCMSMTRANSFERB", RCSCCMSMTransferB);
 	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR1", CMTransferMotor1);
 	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR2", CMTransferMotor2);
+	papiWriteScenario_bool(scn, "CMRCSHEATERSA", CMRCSHeatersA);
+	papiWriteScenario_bool(scn, "CMRCSHEATERSB", CMRCSHeatersB);
 
 	TD1.SaveState(scn, "TD1_BEGIN", "TD1_END");
 	TD2.SaveState(scn, "TD2_BEGIN", "TD_END");
@@ -387,6 +429,8 @@ void RCSC::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "RCSCCMSMTRANSFERB", RCSCCMSMTransferB);
 		papiReadScenario_bool(line, "CMTRANSFERMOTOR1", CMTransferMotor1);
 		papiReadScenario_bool(line, "CMTRANSFERMOTOR2", CMTransferMotor2);
+		papiReadScenario_bool(line, "CMRCSHEATERSA", CMRCSHeatersA);
+		papiReadScenario_bool(line, "CMRCSHEATERSB", CMRCSHeatersB);
 
 		if (!strnicmp(line, "TD1_BEGIN", sizeof("TD1_BEGIN"))) {
 			TD1.LoadState(scn, "TD_END");

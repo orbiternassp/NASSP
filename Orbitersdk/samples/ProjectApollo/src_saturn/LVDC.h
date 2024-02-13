@@ -69,6 +69,7 @@ public:
 	virtual bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw) { return false; }
 	virtual bool ExecuteCommManeuver() { return false; }
 	virtual bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0) { return false; }
+	virtual bool TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f) { return false; }
 	virtual bool DiscreteOutputTest(int bit, bool on) = 0;
 	virtual bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM) = 0;
 	void PrepareToLaunch();
@@ -114,6 +115,7 @@ public:
 	bool ExecuteCommManeuver();
 	bool DiscreteOutputTest(int bit, bool on);
 	bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM);
+	bool TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f);
 
 	//Public Variables
 	double T_L;									// Time of GRR in seconds since midnight
@@ -128,7 +130,9 @@ private:								// Saturn LV
 	void Timer2Interrupt(bool timer2schedule);
 	void NonInterruptSequencer(bool phase13);
 
-	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec);
+	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att);
+	VECTOR3 VentSubroutine(VECTOR3 Att);
+	VECTOR3 OrbitalNavigationAcceleration(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att);
 	bool TimeCheck(double t_event);
 	void StartTimebase4A();
 	void StartTimebase5();
@@ -208,6 +212,8 @@ private:								// Saturn LV
 	void RestartCalculations();
 	//Acquisition Gain/Loss (GL)
 	void AcquisitionGainLoss();
+	//Steering Misalignment Correction (SM)
+	void SteeringMisalignmentCorrection();
 
 	char FSPFileName[256];
 	bool Initialized;								// Clobberness flag
@@ -343,8 +349,7 @@ private:								// Saturn LV
 	// These are variables that are not really part of the LVDC software.
 	VECTOR3 AttitudeError;                          // Attitude Error
 	VECTOR3 DeltaAtt;
-	VECTOR3 AttitudeErrorOld;
-	VECTOR3 WV;										// Gravity
+	VECTOR3 AttitudeErrorOld;						// Gravity
 	double sinceLastCycle;							// Time since last IGM run
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 	bool SIICenterEngineCutoff;
@@ -402,8 +407,8 @@ private:								// Saturn LV
 	bool ImpactBurnEnabled;							// Lunar impact burn has been enabled
 	bool ImpactBurnInProgress;						// Lunar impact burn is in progress
 	std::bitset<26> ModeCode24, ModeCode25, ModeCode26, ModeCode27;
-	std::bitset<26> DPM;							//Mask word that specifies which DIN's are to be processed when they change from OFF to ON
-	std::bitset<12> DVIH;							//Interrupt inhibit
+	std::bitset<26> DPM;							//Mask word that specifies which DIN's are to be processed when they change from OFF to ON.
+	std::bitset<12> DVIH;							//Interrupt inhibit.
 	std::bitset<12> InterruptState;					//To prevent continual interrupts
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
@@ -424,11 +429,12 @@ private:								// Saturn LV
 	double tau3N;
 	double Fm;										// Sensed acceleration
 	double MFS;										// Current smoothed (filtered) value of (M/F)
-	double MFK[9];									// (M/F)S filter coefficients
+	double MFK[9];									// (M/F)S filter coefficients, for S-II
+	double S4MFK[9];								// (M/F)S filter coefficients, for S-IVB
 	double MFSArr[4];								// First through fourth consecutive past values of (M/F)S
 	double MF[5];									// Present through third past consecuitve values of (M/F)
-	double LVIMUMJD;
-	double DTTEMP;
+	double MF0;										// Mass-to-thrust ratio used to initialize S-II (M/F) smoothing filter
+	double MF1;										// Mass-to-thrust ratio used to initialize S-IVB first burn (M/F) smoothing filter
 	VECTOR3 TargetVector;							// Target vector for out-of-orbit targeting
 	double X_1, X_2;								// Intermediate variables for out-of-orbit targeting
 	double Tt_T;									// Time-To-Go computed using Tt_3
@@ -480,7 +486,6 @@ private:								// Saturn LV
 	double Cf;										// Constant used for S2/S4B direct staging
 	double SMCG;									// Steering misalignment correction gain
 	double TS4BS;									// Time from direct-stage interrupt to start IGM.
-	double TSMC1, TSMC2, TSMC3;						// Time test for steering misalignment test relative to TB3,TB4,TB6
 	double V_S2T;									// Nominal S2 cutoff velocity
 	double alpha_1;									// orbital guidance pitch
 	double alpha_2;									// orbital guidance yaw
@@ -522,17 +527,22 @@ private:								// Saturn LV
 	double hx[3][5];								// Azimuth from time polynomial
 	double Rho[6];									// Coasting flight air density polynomial (ref. orbital radius)
 	double Drag_Area[5];							// Coasting flight drag area polynomial (ref. flight path angle)
-
+	double VENTA[7];								// Orbital vent accelerations
+	double VTIM[6];									// Segment switch times for orbital vent accelerations measured from TB5
 
 	// LVDC software variables, NOT PAD-LOADED
 	double Azimuth;									// Azimuth
 	double Inclination;								// Inclination
 	double Azo,Azs;									// Variables for scaling the -from-azimuth polynomials
 	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
-	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS)
-	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)
+	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS), also called DVCC
+	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)	
+	VECTOR3 MidPointAttitude;						// Midpoint attitude for orbital navigation (RADIANS)
 	VECTOR3 N;										// Unit vector normal to parking-orbit plane
 	VECTOR3 T_P;									// Unit target vector in ephemeral coordinates
+	double DVCA[2];									// Average of present and past minor loop commanded CHI at the time of major computer cycle accelerometer read
+	double VCCYA;									// Previous pitch command CHI
+	double VCCZA;									// Present yaw command CHI
 	double F;										// Force in Newtons, I assume.	
 	double A1, A2, A3, A4, A5;
 	double K_Y,K_P,D_P,D_Y;							// Intermediate variables in IGM
@@ -558,7 +568,8 @@ private:								// Saturn LV
 	double V;										// Instantaneous vehicle velocity
 	double VOLD;									// Vehicle velocity during previous major loop
 	double V_T;										// Desired terminal velocity
-	double V_R;										// Velocity referenced to atmosphere (true airspeed)
+	VECTOR3 V_R;									// Velocity referenced to atmosphere (true airspeed)
+	double v_R;										// Magnitude of velocity referenced to atmosphere (true airspeed)
 	double V_i,V_0,V_1,V_2;							// Parameters for cutoff velocity computation
 	double RAS, DEC;								// Right ascension and declination of the target vector
 	double cos_sigma;								// Cosine of the angle between perigee vector and target vector
@@ -567,14 +578,15 @@ private:								// Saturn LV
 	double beta;									// Angle between pseudonodal vector and radius vector at TB6 time
 	double alpha_TS;								// Angle used to determine desired off-plane boundary for the S*T_p test
 	double alphaS_TS;								// Desired angle for S*T_p test
-	MATRIX3 MX_A;									// Transform matrix from earth-centered plumbline to equatorial
-	MATRIX3 MX_B;									// Transform matrix from equatorial to orbital coordinates
-	MATRIX3 MX_G;									// Transform matrix from earth-centered plumbline to orbital
+	MATRIX3 MX_A;									// Transform matrix from earth-centered plumbline to equatorial (MSG matrix)
+	MATRIX3 MX_B;									// Transform matrix from equatorial to orbital coordinates (MG4 matrix)
+	MATRIX3 MX_G;									// Transform matrix from earth-centered plumbline to orbital (MS4 matrix)
 	MATRIX3 MX_K;									// Transform matrix from earth-centered plumbline to terminal
 	MATRIX3 MX_phi_T;								// Matrix made from phi_T
-	MATRIX3 MX_EPH;									// Transform matrix from ephemeral to earth-centered plumbline
+	MATRIX3 MX_EPH;									// Transform matrix from ephemeral to earth-centered plumbline (MES matrix)
 	MATRIX3 MGA;									// Transformation matrix from G-system to A-system
 	MATRIX3 MSA;									// Transformation matrix from S-system to A-system
+	MATRIX3 MEG;									// Transformation matrix from E-system to G-system
 	double phi_T;									// Angle used to estimate location of terminal radius in orbital plane
 	VECTOR3 Pos4;									// Position in the orbital reference system
 	VECTOR3 PosA;									// Position in earth-fixed telemetry station system
@@ -596,7 +608,8 @@ private:								// Saturn LV
 	VECTOR3 Cbar_1;									// Unit vector normal to transfer ellipse plane
 	VECTOR3 Sbar_1;									// Unit vector normal to nodal vector
 	VECTOR3 DDotS_D;								// Atmospheric drag
-	VECTOR3 DotM_act;								// actual sensed velocity from platform
+	VECTOR3 ddotM_act;								// actual sensed acceleration from platform
+	VECTOR3 DotM_act;								// actual sensed velocity from platform (DVDM)
 	VECTOR3 ddotG_act;								// actual computed acceleration from gravity
 	VECTOR3 DotG_act;								// actual computed velocity from gravity
 	VECTOR3 DotM_last;								// last sensed velocity from platform
@@ -604,6 +617,7 @@ private:								// Saturn LV
 	VECTOR3 DotG_last;								// last computed velocity from gravity
 	VECTOR3 DDotV;									// Precomputed venting acceleration
 	VECTOR3 C_A[11];								// Array of telemetry station unit vectors
+	VECTOR3 W_ES;									// Rotational rate vector of the Earth in plumbline coordinates
 	double Y_u;										// position component south of equator
 	double S,P, S_34, P_34;							// intermediate variables for gravity calculation
 	double a;										// earth equatorial radius
@@ -642,7 +656,7 @@ private:								// Saturn LV
 	double X_S1,X_S2,X_S3;							// Direction cosines of the thrust vector
 	double sin_gam,cos_gam;							// Sine and cosine of gamma (flight-path angle)
 	double dot_phi_1,dot_phi_T;						// ???
-	double dt_c;									// Actual computation cycle time
+	double dt_c;									// Actual computation cycle time (DVDT)
 	double dt_g;									// Actual guidance cylce time
 	double dtt_1,dtt_2;								// Used in TGO determination
 	double a_1,a_2;									// Acceleration terms used to determine TGO
@@ -686,6 +700,13 @@ private:								// Saturn LV
 	double R_STA;									// Mean radius of telemetry stations
 	double TBA;										// Time of station acquisition
 	double TBL;										// Time of station loss
+	double SMCY;									// Pitch SMC term
+	double SMCZ;									// Yaw SMC term
+	bool DFSMC;										// Steering misalignment flag
+	VECTOR3 DVAC;									// Accelerometer reading
+	VECTOR3 VOAC;									// Previous accelerometer reading
+	VECTOR3 DVDA;									// Optisyn A change in velocity
+	VECTOR3 DVDB;									// Optisyn B change in velocity
 
 	//Switch Selector Table
 	std::vector<SwitchSelectorSet> SSTABLE;
@@ -926,7 +947,7 @@ public:
 private:
 
 	VECTOR3 GravitationSubroutine(VECTOR3 Rvec, bool J2only);
-	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec);
+	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att);
 
 	bool Initialized;								// Clobberness flag
 	char FSPFileName[256];
@@ -966,6 +987,7 @@ private:
 	double T_1;										// Time left in first-stage IGM
 	double T_2;										// Time left in second and fourth stage IGM
 	double t_D;										// Time of launch after reference launch time (time of launch after window opens)
+	double T_d;										// Time tilt bias constant
 
 	// These are boolean flags that are real flags in the LVDC SOFTWARE.
 	bool GRR_init;									// GRR initialization done
@@ -993,8 +1015,11 @@ private:
 	double tau1;									// Time to consume all fuel before S4 MRS
 	double tau2;									// Time to consume all fuel between MRS and S2 Cutoff
 	double Fm;										// Sensed acceleration
-	double LVIMUMJD;
-	double DTTEMP;
+	double MFS;										// Current smoothed (filtered) value of (M/F)
+	double MFK[8];									// (M/F)S filter coefficients
+	double MFSArr[4];								// First through fourth consecutive past values of (M/F)S
+	double MF[4];									// Present through third past consecuitve values of (M/F)
+	double MF0;										// Mass-to-thrust ratio used to initialize S-IVB (M/F) smoothing filter
 	double Tt_T;									// Time-To-Go computed using Tt_3
 	double Tt_2;									// Estimated second stage burn time
 	double eps_2;									// Guidance option selection time
@@ -1019,10 +1044,16 @@ private:
 	double T_GRR0;									// Nominal value of T_GRR
 	double DT_N1, DT_N2, DT_N3, DT_N4, DT_N5, DT_N6;// Nominal DT for various mission phases
 	double T_SON;									// Time since last orbital navigation pass
+	double rho_c;									// Constant rho for use when altitude is less than h_1
+	double h_1;										// Lower limit of h for atmospheric density polynomial
+	double h_2;										// Upper limit of h for atmospheric density polynomial
+	double K_D;										// Orbital drag model constant
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
 	double Ax[4];									// Variable azimuth polynomial
+	double Rho[6];									// Coasting flight air density polynomial (ref. orbital radius)
+	double Drag_Area[5];							// Coasting flight drag area polynomial (ref. flight path angle)
 
 	// LVDC software variables, NOT PAD-LOADED
 	double Inclination;								// Inclination
@@ -1030,6 +1061,7 @@ private:
 	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
 	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS)
 	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)
+	VECTOR3 MidPointAttitude;						// Midpoint attitude for orbital navigation (RADIANS)
 	double F;										// Force in Newtons, I assume.	
 	double A1,A2,A3,A4,A5;
 	double K_p,K_y,K_r;
@@ -1072,6 +1104,7 @@ private:
 	VECTOR3 ddotM_last;								// last sensed acceleration from platform
 	VECTOR3 DotG_last;								// last computed velocity from gravity
 	VECTOR3 Dot0;									// initial velocity
+	VECTOR3 W_ES;									// Rotational rate vector of the Earth in plumbline coordinates
 	double Y_u;										// position component south of equator
 	double S,P;										// intermediate variables for gravity calculation
 	double a;										// earth equatorial radius
@@ -1131,6 +1164,12 @@ private:
 	double Chi_zp_apo;								// Predicted value of Chi_z_apo at end of present major loop
 	double theta_xa;								// Average value of theta_x during next major loop pass
 	double theta_za;								// Average value of theta_z during next major loop pass
+	double h;										// Altitude of the vehicle above the oblate spheroid of the earth
+	double rho;										// Atmospheric density
+	double drag_area;								// Drag area of the vehicle
+	VECTOR3 V_R;									// Velocity referenced to atmosphere (true airspeed)
+	double v_R;										// Magnitude of velocity referenced to atmosphere (true airspeed)
+	double cos_alpha;								// cosine of the angle of attack
 	VECTOR3 R_OG;									// Radius vector for use in orbital guidance
 	VECTOR3 RTEMP1, VTEMP1, ATEMP1, RPT, VPT, APT, DRT, DVT, ddotS;
 	double R4;

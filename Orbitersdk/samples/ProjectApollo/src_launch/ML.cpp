@@ -24,9 +24,9 @@
 
 #define ORBITER_MODULE
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include "nasspsound.h"
 #include "soundlib.h"
 #include "tracer.h"
@@ -38,11 +38,16 @@
 #include "papi.h"
 #include "IUUmbilical.h"
 #include "TSMUmbilical.h"
+#include "SCMUmbilical.h"
 #include "IU_ESE.h"
 #include "SIC_ESE.h"
+#include "SIB_ESE.h"
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo ML.log";
+
+const static char* MESHNAME_MOBILE_LAUNCHER = "ProjectApollo\\Saturn5ML";
+const static char* MESHNAME_ML_MILKSTOOL = "ProjectApollo\\Saturn1bML";
 
 // States
 #define STATE_VABBUILD		   -2
@@ -124,10 +129,12 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	Hold = false;
 	bCommit = false;
 	TCSSequence = 0;
+	IsSaturnV = true;
 
 	craneProc = 0;
 	cmarmProc = 0.00001;
 	s2aftarmState.Set(AnimState::CLOSED, 0.0);
+	s2intermediatearmState.Set(AnimState::CLOSED, 0.0);
 	damperarmState.Set(AnimState::CLOSED, 0.0);
 	s1cintertankarmState.Set(AnimState::CLOSED, 0.0);
 	s1cforwardarmState.Set(AnimState::CLOSED, 0.0);
@@ -147,16 +154,16 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	IuUmb = new IUUmbilical(this);
 	IuESE = new IUSV_ESE(IuUmb, this);
-	TSMUmb = new TSMUmbilical(this);
-	SICESE = new SIC_ESE(TSMUmb, this);
+	SIESE = NULL;
 	rca110a = new RCA110AM(this);
+	TailUmb = NULL;
 }
 
 ML::~ML() {
 	delete IuUmb;
 	delete IuESE;
-	delete TSMUmb;
-	delete SICESE;
+	delete TailUmb;
+	delete SIESE;
 	delete rca110a;
 }
 
@@ -169,8 +176,10 @@ void ML::clbkSetClassCaps(FILEHANDLE cfg) {
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
+	oapiReadItem_bool(cfg, "IsSaturnV", IsSaturnV);
+
 	VECTOR3 meshoffset = _V(0,0,0);
-    meshindexML = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Saturn5ML"), &meshoffset);
+	meshindexML = AddMesh(oapiLoadMeshGlobal(IsSaturnV ? MESHNAME_MOBILE_LAUNCHER : MESHNAME_ML_MILKSTOOL), &meshoffset);
     //meshindexML = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\LUT"), &meshoffset);
 	SetMeshVisibilityMode(meshindexML, MESHVIS_ALWAYS);
 
@@ -180,6 +189,17 @@ void ML::clbkSetClassCaps(FILEHANDLE cfg) {
 	liftoffStream[1] = AddParticleStream(&liftoffStreamSpec, _V(0, -80, 0), _V(0, 0.4, -1), &liftoffStreamLevel);
 
 	SetTouchdownPointHeight(touchdownPointHeight);
+
+	if (IsSaturnV)
+	{
+		TailUmb = new TSMUmbilical(this);
+		SIESE = new SIC_ESE(TailUmb, this);
+	}
+	else
+	{
+		TailUmb = new SCMUmbilical(this);
+		SIESE = new SIB_ESE(TailUmb, this);
+	}
 }
 
 void ML::clbkPostCreation()
@@ -194,11 +214,13 @@ void ML::clbkPostCreation()
 			oapiGetObjectName(h, buffer, 256);
 			if (!strcmp(LVName, buffer)) {
 				hLV = h;
-				Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+				sat = (Saturn *)oapiGetVesselInterface(hLV);
 				if (sat->GetStage() < LAUNCH_STAGE_ONE)
 				{
 					IuUmb->Connect(sat->GetIU());
-					TSMUmb->Connect(sat->GetSIC());
+
+					if (IsSaturnV) ((TSMUmbilical*)TailUmb)->Connect(sat->GetSIC());
+					else ((SCMUmbilical*)TailUmb)->Connect(sat->GetSIB());
 				}
 			}
 		}
@@ -206,58 +228,23 @@ void ML::clbkPostCreation()
 
 	SetAnimation(craneAnim, craneProc);
 	SetAnimation(cmarmAnim, cmarmProc);
-	SetAnimation(s2aftarmAnim, s2aftarmState.pos);
 	SetAnimation(damperarmAnim, damperarmState.pos);
-	SetAnimation(s1cintertankarmAnim, s1cintertankarmState.pos);
-	SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
 	SetAnimation(swingarmAnim, swingarmState.pos);
-	SetAnimation(mastAnim, mastState.pos);
-	SetAnimation(mastcoversAnim, mastcoversState.pos);
 
+	if (IsSaturnV)
+	{
+		SetAnimation(s2intermediatearmAnim, s2intermediatearmState.pos);
+		SetAnimation(s2aftarmAnim, s2aftarmState.pos);
+		SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
+		SetAnimation(s1cintertankarmAnim, s1cintertankarmState.pos);
+		SetAnimation(mastAnim, mastState.pos);
+		SetAnimation(mastcoversAnim, mastcoversState.pos);
+	}
 }
 
-void ML::clbkPreStep(double simt, double simdt, double mjd) {
-
-	if (s1cintertankarmState.Moving()) {
-		double dp;
-		if (s1cintertankarmState.Closing())
-		{
-			dp = simdt * ML_SIC_INTERTANK_ARM_CONNECTING_SPEED;
-		}
-		else
-		{
-			dp = simdt * ML_SIC_INTERTANK_ARM_RETRACT_SPEED;
-		}
-		s1cintertankarmState.Move(dp);
-		SetAnimation(s1cintertankarmAnim, s1cintertankarmState.pos);
-	}
-
-	if (s1cforwardarmState.Moving()) {
-		double dp;
-		if (s1cforwardarmState.Closing())
-		{
-			dp = simdt * ML_SIC_FORWARD_ARM_CONNECTING_SPEED;
-		}
-		else
-		{
-			dp = simdt * ML_SIC_FORWARD_ARM_RETRACT_SPEED;
-		}
-		s1cforwardarmState.Move(dp);
-		SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
-	}
-	if (s2aftarmState.Moving()) {
-		double dp;
-		if (s2aftarmState.Closing())
-		{
-			dp = simdt * ML_SWINGARM_CONNECTING_SPEED;
-		}
-		else
-		{
-			dp = simdt * ML_SWINGARM_RETRACT_SPEED;
-		}
-		s2aftarmState.Move(dp);
-		SetAnimation(s2aftarmAnim, s2aftarmState.pos);
-	}
+void ML::SetAnimations(double simdt)
+{
+	//S-IVB Forward/IU umbilical(Service Arm 7)
 	if (swingarmState.Moving()) {
 		double dp;
 		if (swingarmState.Closing())
@@ -271,6 +258,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		swingarmState.Move(dp);
 		SetAnimation(swingarmAnim, swingarmState.pos);
 	}
+
 	if (damperarmState.Moving()) {
 		double dp;
 		if (damperarmState.Closing())
@@ -284,6 +272,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		damperarmState.Move(dp);
 		SetAnimation(damperarmAnim, damperarmState.pos);
 	}
+
 	if (mastState.Moving()) {
 		double dp;
 		if (mastState.Closing())
@@ -311,6 +300,75 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		SetAnimation(mastcoversAnim, mastcoversState.pos);
 	}
 
+	if (IsSaturnV == false) return;
+
+	//Here the Saturn V only animations
+
+	//S-II Intermediate (Service Arm 4)
+	if (s2intermediatearmState.Moving()) {
+		double dp;
+		if (s2intermediatearmState.Closing())
+		{
+			dp = simdt * ML_SWINGARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_SWINGARM_RETRACT_SPEED;
+		}
+		s2intermediatearmState.Move(dp);
+		SetAnimation(s2intermediatearmAnim, s2intermediatearmState.pos);
+	}
+
+	//S-II Aft (Service Arm 3)
+	if (s2aftarmState.Moving()) {
+		double dp;
+		if (s2aftarmState.Closing())
+		{
+			dp = simdt * ML_SWINGARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_SWINGARM_RETRACT_SPEED;
+		}
+		s2aftarmState.Move(dp);
+		SetAnimation(s2aftarmAnim, s2aftarmState.pos);
+	}
+
+	//S-IC Forward (Service Arm 2)
+	if (s1cforwardarmState.Moving()) {
+		double dp;
+		if (s1cforwardarmState.Closing())
+		{
+			dp = simdt * ML_SIC_FORWARD_ARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_SIC_FORWARD_ARM_RETRACT_SPEED;
+		}
+		s1cforwardarmState.Move(dp);
+		SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
+	}
+
+	//S-IC Intertank (Service Arm 1)
+	if (s1cintertankarmState.Moving()) {
+		double dp;
+		if (s1cintertankarmState.Closing())
+		{
+			dp = simdt * ML_SIC_INTERTANK_ARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_SIC_INTERTANK_ARM_RETRACT_SPEED;
+		}
+		s1cintertankarmState.Move(dp);
+		SetAnimation(s1cintertankarmAnim, s1cintertankarmState.pos);
+	}
+}
+
+void ML::clbkPreStep(double simt, double simdt, double mjd) {
+
+	SetAnimations(simdt);
+
 	ATTACHMENTHANDLE ah;
 
 	if (!firstTimestepDone) DoFirstTimestep();
@@ -328,6 +386,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 		if (damperarmState.action != AnimState::OPEN) damperarmState.action = AnimState::OPENING;
 		if (s2aftarmState.action != AnimState::OPEN) s2aftarmState.action = AnimState::OPENING;
+		if (s2intermediatearmState.action != AnimState::OPEN) s2intermediatearmState.action = AnimState::OPENING;
 		if (swingarmState.action != AnimState::OPEN) swingarmState.action = AnimState::OPENING;
 		if (s1cintertankarmState.action != AnimState::OPEN) s1cintertankarmState.action = AnimState::OPENING;
 		if (s1cforwardarmState.action != AnimState::OPEN) s1cforwardarmState.action = AnimState::OPENING;
@@ -349,6 +408,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 		if (damperarmState.action != AnimState::CLOSED) damperarmState.action = AnimState::CLOSING;
 		if (s2aftarmState.action != AnimState::CLOSED) s2aftarmState.action = AnimState::CLOSING;
+		if (s2intermediatearmState.action != AnimState::CLOSED) s2intermediatearmState.action = AnimState::CLOSING;
 		if (swingarmState.action != AnimState::CLOSED) swingarmState.action = AnimState::CLOSING;
 		if (s1cintertankarmState.action != AnimState::CLOSED) s1cintertankarmState.action = AnimState::CLOSING;
 		if (s1cforwardarmState.action != AnimState::CLOSED) s1cforwardarmState.action = AnimState::CLOSING;
@@ -362,11 +422,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (GetAttachmentStatus(ah) != NULL) break;
 			
 		// On pad?
-		if ((GetDistanceTo(PAD_LONA, PAD_LATA) > 10.0) && (GetDistanceTo(PAD_LONB, PAD_LATB) > 10.0)) break;
+		if ((GetDistanceTo(PAD_LONA, PAD_LATA) > 15.0) && (GetDistanceTo(PAD_LONB, PAD_LATB) > 15.0)) break;
 
 		// T-3h or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 		if (sat->GetMissionTime() > -3 * 3600) {
 			
 			if (oapiGetTimeAcceleration() > 1) {
@@ -378,7 +437,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			if (GetAttachmentStatus(ah) != NULL) {
 				DetachChild(ah);
 				// and move to pad
-				if (GetDistanceTo(PAD_LONB, PAD_LATB) < 10.0)
+				if (GetDistanceTo(PAD_LONB, PAD_LATB) < 15.0)
 				{
 					moveLVToPadB = true;
 				}
@@ -386,6 +445,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 				{
 					moveLVToPadA = true;
 				}
+
 				// and notify Saturn
 				sat->LaunchVehicleRolloutEnd();
 				
@@ -409,8 +469,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		// T-43min or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -429,8 +488,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		// T-5min or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -449,8 +507,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		// T-30s or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -470,8 +527,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 	case STATE_TERMINAL_COUNT:
 		
-		if (!hLV) break;
-		sat = (Saturn *)oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 		
@@ -491,14 +547,18 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 	case STATE_SICINTERTANKARM:
 
-		
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
-		//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
-		if (sat->GetMissionTime() >= -(17.0 + oapiGetSimStep()))
+		//Enforce 1.0x time acceleration for GRR
+		if (oapiGetTimeAcceleration() > 1.0)
+		{
+			oapiSetTimeAcceleration(1.0);
+		}
+
+		//Send Prepare to Launch signal and then at T-17 seconds the GRR signal
+		if (sat->GetMissionTime() >= -17.0)
 		{
 			IuESE->SetGuidanceReferenceRelease(true);
 		}
@@ -525,8 +585,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 	case STATE_SICFORWARDARM:
 
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -548,57 +607,30 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		else break;
 		//Fall into
 	case STATE_IGNITION_SEQUENCE:
+		if (!sat) break;
 
-		if (CutoffInterlock())
-		{
-			Hold = true;
-			TSMUmb->SIGSECutoff(true);
-		}
-		else if (Hold == false)
-		{
-			if (sat->GetMissionTime() > -8.9)
-			{
-				TSMUmb->SetEngineStart(5);
-			}
-			if (sat->GetMissionTime() > -8.62)
-			{
-				TSMUmb->SetEngineStart(1);
-				TSMUmb->SetEngineStart(3);
-			}
-			if (sat->GetMissionTime() > -8.2)
-			{
-				TSMUmb->SetEngineStart(2);
-				TSMUmb->SetEngineStart(4);
-			}
+		if (IsSaturnV) SaturnVIgnitionSequence(sat->GetMissionTime());
+		else SaturnIBIgnitionSequence(sat->GetMissionTime());
 
-			// T-4.9s or later?
-			if (sat->GetMissionTime() > -4.9) {
-				state = STATE_LIFTOFFSTREAM;
-			}
-		}
+		LiftoffStream(sat->GetMissionTime());
+
 		break;
 
 	case STATE_LIFTOFFSTREAM:
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
-		if (sat->GetMissionTime() < -2.0)
-			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() + 4.9) / 2.9;
-		else
-			liftoffStreamLevel = sat->GetSIThrustLevel();
+		LiftoffStream(sat->GetMissionTime());
 
 		// T-1s or later?
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			TSMUmb->SIGSECutoff(true);
+			TailUmb->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{
 			//Hold-down force
-			if (sat->GetMissionTime() > -4.0) {
-				sat->AddForce(_V(0, 0, -5. * sat->GetFirstStageThrust()), _V(0, 0, 0));
-			}
+			HoldDownForce(sat->GetMissionTime());
 
 			// T-1s or later?
 			if (sat->GetMissionTime() > -1) {
@@ -609,33 +641,27 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 	
 	case STATE_LIFTOFF:
+		if (!sat) break;
 
-		if (!hLV) break;
-		sat = (Saturn *)oapiGetVesselInterface(hLV);
-
-		liftoffStreamLevel = sat->GetSIThrustLevel();
+		LiftoffStream(sat->GetMissionTime());
 
 		//Cutoff
 		if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
 		{
-			TSMUmb->SIGSECutoff(true);
+			TailUmb->SIGSECutoff(true);
 		}
 
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			TSMUmb->SIGSECutoff(true);
+			TailUmb->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{
 			// Soft-Release Pin Dragging
-			if (sat->GetMissionTime() < 0.5)
-			{
-				double PinDragFactor = min(1.0, 1.0 - (sat->GetMissionTime() * 2.0));
-				sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
-			}
+			HoldDownForce(sat->GetMissionTime());
 
-			if (bCommit == false && sat->GetMissionTime() >= (-0.05 - simdt))
+			if (bCommit == false && sat->GetMissionTime() >= -0.05)
 			{
 				if (Commit())
 				{
@@ -648,17 +674,21 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 				if (bCommit)
 				{
+					// Activate liftoff circuit
+					IuUmb->SetEDSLiftoffEnableA();
+					IuUmb->SetEDSLiftoffEnableB();
+					// Disconnect Umbilicals
 					IuUmb->Disconnect();
-					TSMUmb->Disconnect();
+					TailUmb->Disconnect();
 					// Move swingarms
-					swingarmState.action = AnimState::OPENING;
+					OpenInflightSwingarms();
 					// Move masts
 					mastState.action = AnimState::OPENING;
 				}
 				else
 				{
 					Hold = true;
-					TSMUmb->SIGSECutoff(true);
+					TailUmb->SIGSECutoff(true);
 				}
 			}
 
@@ -676,15 +706,12 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 
 	case STATE_POSTLIFTOFF:
+		if (!sat) break;
 
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() < 13.0)
-			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() - 13.0) / -5.0;
-		else
+		LiftoffStream(sat->GetMissionTime());
+
+		if (sat->GetMissionTime() >= 13.0)
 		{
-			liftoffStreamLevel = 0;
-
 			//
 			// Once the stream is finished, forget about the vessel since we won't be
 			// using it again. This prevents a crash if we later delete the vessel.
@@ -699,7 +726,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 	if (sat && state >= STATE_ROLLOUT)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
-		SICESE->Timestep();
+		SIESE->Timestep();
 		rca110a->Timestep(simt, simdt);
 	}
 
@@ -709,7 +736,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 	if (sat) {
 		if (sat->GetStage() < LAUNCH_STAGE_ONE && state > STATE_ROLLOUT) {
 			double lng, lat;
-			if (GetDistanceTo(PAD_LV_LONB, PAD_LV_LATB) < 10.0) {
+			if (GetDistanceTo(PAD_LV_LONB, PAD_LV_LATB) < 15.0) {
 				lng = PAD_LV_LONB;
 				lat = PAD_LV_LATB;
 			} else {
@@ -823,13 +850,13 @@ bool ML::Detach() {
 	if (GetAttachmentStatus(ah) == NULL) return false;
 
 	// Is the pad near?
-	if (GetDistanceTo(PAD_LONA, PAD_LATA) < 10.0) {
+	if (GetDistanceTo(PAD_LONA, PAD_LATA) < 15.0) {
 		
 		SetTouchdownPointHeight(-86.677);	// pad height
 		moveToPadA = true;
 		return true;
 	}
-	else if (GetDistanceTo(PAD_LONB, PAD_LATB) < 10.0) {
+	else if (GetDistanceTo(PAD_LONB, PAD_LATB) < 15.0) {
 
 		SetTouchdownPointHeight(-86.677);	// pad height
 		moveToPadB = true;
@@ -837,7 +864,7 @@ bool ML::Detach() {
 	}
 
 	// Is the VAB near?
-	if (GetDistanceTo(VAB_LON, VAB_LAT) < 10.0) {
+	if (GetDistanceTo(VAB_LON, VAB_LAT) < 15.0) {
 		
 		SetTouchdownPointHeight(-71.827);
 		moveToVab = true;
@@ -903,8 +930,25 @@ void ML::SetTouchdownPointHeight(double height) {
 					   _V( 10, touchdownPointHeight, -10));
 }
 
-void ML::DefineAnimations() {
+void ML::OpenInflightSwingarms()
+{
+	if (swingarmState.action != AnimState::OPEN) swingarmState.action = AnimState::OPENING;
+	if (s2intermediatearmState.action != AnimState::OPEN) s2intermediatearmState.action = AnimState::OPENING;
+}
 
+void ML::DefineAnimations()
+{
+	if (IsSaturnV) DefineSaturnVAnimations();
+	else DefineSaturnIBAnimations();
+}
+
+void ML::DefineSaturnIBAnimations()
+{
+	//TBD
+}
+
+void ML::DefineSaturnVAnimations()
+{
 	// Hammerhead crane
 	static UINT crane_groups[3] = { 21, 22, 50 };
 	static MGROUP_ROTATE crane(meshindexML, crane_groups, 3, _V(0.0874, 57.8447, 14.0843), _V(0, 1, 0), (float)(0.5 * PI));
@@ -917,12 +961,6 @@ void ML::DefineAnimations() {
 	damperarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(damperarmAnim, 0, 1, &damperarm);
 
-	// S2 Aft arm
-	static UINT s2aftarm_groups[2] = { 15, 53 };
-	static MGROUP_ROTATE s2aftarm(meshindexML, s2aftarm_groups, 2, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
-	s2aftarmAnim = CreateAnimation(0.0);
-	AddAnimationComponent(s2aftarmAnim, 0, 1, &s2aftarm);
-
 	// CM access arm
 	static UINT cmarm_groups[3] = { 11, 12, 51 };
 	static MGROUP_ROTATE cmarm1(meshindexML, cmarm_groups, 3, _V(8.7432, 39.8173, 8.9631), _V(0, 1, 0), (float)(3.0 / 180.0 * PI));
@@ -931,23 +969,35 @@ void ML::DefineAnimations() {
 	AddAnimationComponent(cmarmAnim, 0, 0.00001, &cmarm1);
 	AddAnimationComponent(cmarmAnim, 0.00001, 1, &cmarm2);
 
-	// SIC intertank arm
-	static UINT s1cintertankarm_groups[2] = { 13, 49 };
-	static MGROUP_ROTATE s1cintertankarm(meshindexML, s1cintertankarm_groups, 2, _V(5.5646, -39.9844, 5.2651), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
-	s1cintertankarmAnim = CreateAnimation(0.0);
-	AddAnimationComponent(s1cintertankarmAnim, 0, 1, &s1cintertankarm);
+	// Swingarms
+	static UINT swingarm_groups[8] = { 17, 18, 19, 20, 55, 56, 57, 58 };
+	static MGROUP_ROTATE swingarm(meshindexML, swingarm_groups, 8, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
+	swingarmAnim = CreateAnimation(0.0);
+	AddAnimationComponent(swingarmAnim, 0, 1, &swingarm);
 
-	// SIC forward arm
+	// S2 Intermediate arm (SA4)
+	static UINT s2intermediatearm_groups[2] = { 16, 54 };
+	static MGROUP_ROTATE s2intermediatearm(meshindexML, s2intermediatearm_groups, 2, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
+	s2intermediatearmAnim = CreateAnimation(0.0);
+	AddAnimationComponent(s2intermediatearmAnim, 0, 1, &s2intermediatearm);
+
+	// S2 Aft arm (SA3)
+	static UINT s2aftarm_groups[2] = { 15, 53 };
+	static MGROUP_ROTATE s2aftarm(meshindexML, s2aftarm_groups, 2, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
+	s2aftarmAnim = CreateAnimation(0.0);
+	AddAnimationComponent(s2aftarmAnim, 0, 1, &s2aftarm);
+
+	// SIC forward arm (SA2)
 	static UINT s1cforwardarm_groups[2] = { 14, 52 };
 	static MGROUP_ROTATE s1cforwardarm(meshindexML, s1cforwardarm_groups, 2, _V(5.5716, -21.0929, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
 	s1cforwardarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(s1cforwardarmAnim, 0, 1, &s1cforwardarm);
 
-	// Swingarms
-	static UINT swingarm_groups[10] = {16, 17, 18, 19, 20, 54, 55, 56, 57, 58 };
-	static MGROUP_ROTATE swingarm(meshindexML, swingarm_groups, 10, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
-	swingarmAnim = CreateAnimation(0.0);
-	AddAnimationComponent(swingarmAnim, 0, 1, &swingarm);
+	// SIC intertank arm (SA1)
+	static UINT s1cintertankarm_groups[2] = { 13, 49 };
+	static MGROUP_ROTATE s1cintertankarm(meshindexML, s1cintertankarm_groups, 2, _V(5.5646, -39.9844, 5.2651), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
+	s1cintertankarmAnim = CreateAnimation(0.0);
+	AddAnimationComponent(s1cintertankarmAnim, 0, 1, &s1cintertankarm);
 
 	// Masts
 	static UINT mast_groups1[1] = { 3 };
@@ -962,7 +1012,7 @@ void ML::DefineAnimations() {
 	AddAnimationComponent(mastAnim, 0, 1, &mast3);
 
 	// MastCovers
-	static UINT mast_cover1[1] = { 39 }; 
+	static UINT mast_cover1[1] = { 39 };
 	static UINT mast_cover2[1] = { 38 };
 	static UINT mast_cover3[1] = { 37 };
 	static MGROUP_ROTATE mastCover1(meshindexML, mast_cover1, 1, _V(8.5142, -50.4372, -6.1115), _V(0.2509, 0.0000, -0.9680), (float)(-75.0 / 180.0 * PI));
@@ -993,6 +1043,8 @@ void ML::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 			sscanf (line + 9, "%lf", &cmarmProc);
 		} else if (!strnicmp(line, "S2AFTARMPROC", 12)) {
 			sscan_state(line + 12, s2aftarmState);
+		} else if (!strnicmp(line, "S2INTERPROC", 11)) {
+			sscan_state(line + 11, s2intermediatearmState);
 		} else if (!strnicmp(line, "DAMPERARMPROC", 13)) {
 			sscan_state(line + 13, damperarmState);
 		} else if (!strnicmp (line, "S1CINTERTANKARMPROC", 19)) {
@@ -1025,6 +1077,7 @@ void ML::clbkSaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "CRANEPROC", craneProc);
 	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
 	WriteScenario_state(scn, "S2AFTARMPROC", s2aftarmState);
+	WriteScenario_state(scn, "S2INTERPROC", s2intermediatearmState);
 	WriteScenario_state(scn, "DAMPERARMPROC", damperarmState);
 	WriteScenario_state(scn, "S1CINTERTANKARMPROC", s1cintertankarmState);
 	WriteScenario_state(scn, "S1CFORWARDARMPROC", s1cforwardarmState);
@@ -1142,13 +1195,144 @@ int ML::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 bool ML::CutoffInterlock()
 {
-	return (IuUmb->IsEDSUnsafeA() || IuUmb->IsEDSUnsafeB() || TSMUmb->SIStageLogicCutoff());
+	return (IuUmb->IsEDSUnsafeA() || IuUmb->IsEDSUnsafeB() || TailUmb->SIStageLogicCutoff());
 }
 
 bool ML::Commit()
 {
 	if (!sat) return false;
 	return IuUmb->AllSIEnginesRunning() && !CutoffInterlock();
+}
+
+void ML::HoldDownForce(double MissionTime)
+{
+	if (IsSaturnV)
+	{
+		if (MissionTime > -4.0 && MissionTime < -1.0)
+		{
+			sat->AddForce(_V(0, 0, -5. * sat->GetFirstStageThrust()), _V(0, 0, 0));
+		}
+		else if (MissionTime < 0.5)
+		{
+			double PinDragFactor = min(1.0, 1.0 - (MissionTime * 2.0));
+			sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+		}
+	}
+	else
+	{
+		if (MissionTime > -3.1 && MissionTime < -1.0)
+		{
+			sat->AddForce(_V(0, 0, -8. * sat->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
+		}
+		else if (MissionTime < 0.5)
+		{
+			double PinDragFactor = min(1.0, 1.0 - (MissionTime * 2.0));
+			sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+		}
+	}
+}
+
+void ML::LiftoffStream(double MissionTime)
+{
+	if (!sat) return;
+
+	double lvl = sat->GetSIThrustLevel();
+
+	if (IsSaturnV)
+	{
+		if (MissionTime < -4.9)
+			liftoffStreamLevel = 0.0;
+		else if (MissionTime < -2.0)
+			liftoffStreamLevel = lvl * (MissionTime + 4.9) / 2.9;
+		else if (MissionTime < 8.0)
+			liftoffStreamLevel = lvl;
+		else if (MissionTime < 13.0)
+			liftoffStreamLevel = lvl * (MissionTime - 13.0) / -5.0;
+		else
+			liftoffStreamLevel = 0.0;
+	}
+	else
+	{
+		lvl *= 0.05; //Less sideways plume due to sitting on the milkstool
+		if (MissionTime < -2.0)
+			liftoffStreamLevel = 0.0;
+		else if (MissionTime < -1.0)
+			liftoffStreamLevel = lvl * (MissionTime + 2.0);
+		else if (MissionTime < 4.0)
+			liftoffStreamLevel = lvl;
+		else if (MissionTime < 10.0)
+			liftoffStreamLevel = lvl * (MissionTime - 10.0) / -6.0;
+		else
+			liftoffStreamLevel = 0.0;
+	}
+}
+
+void ML::SaturnIBIgnitionSequence(double MissionTime)
+{
+	if (CutoffInterlock())
+	{
+		Hold = true;
+		TailUmb->SIGSECutoff(true);
+	}
+	else if (Hold == false)
+	{
+		if (MissionTime > -3.1)
+		{
+			TailUmb->SetEngineStart(5);
+			TailUmb->SetEngineStart(7);
+		}
+		if (MissionTime > -3.0)
+		{
+			TailUmb->SetEngineStart(6);
+			TailUmb->SetEngineStart(8);
+		}
+		if (MissionTime > -2.9)
+		{
+			TailUmb->SetEngineStart(2);
+			TailUmb->SetEngineStart(4);
+		}
+		if (MissionTime > -2.8)
+		{
+			TailUmb->SetEngineStart(1);
+			TailUmb->SetEngineStart(3);
+		}
+
+		// T-1s or later?
+		if (MissionTime > -2) {
+			state = STATE_LIFTOFFSTREAM;
+		}
+	}
+}
+
+void ML::SaturnVIgnitionSequence(double MissionTime)
+{
+	if (CutoffInterlock())
+	{
+		Hold = true;
+		TailUmb->SIGSECutoff(true);
+	}
+	else if (Hold == false)
+	{
+		if (MissionTime > -8.9)
+		{
+			TailUmb->SetEngineStart(5);
+		}
+		if (MissionTime > -8.62)
+		{
+			TailUmb->SetEngineStart(1);
+			TailUmb->SetEngineStart(3);
+		}
+		if (MissionTime > -8.2)
+		{
+			TailUmb->SetEngineStart(2);
+			TailUmb->SetEngineStart(4);
+		}
+
+		// T-4.9s or later?
+		if (MissionTime > -4.9) {
+			state = STATE_LIFTOFFSTREAM;
+		}
+	}
 }
 
 bool ML::ESEGetCommandVehicleLiftoffIndicationInhibit()
@@ -1241,9 +1425,9 @@ bool ML::ESEGetEDSLVCutoffSimulate(int n)
 	return IuESE->GetEDSLVCutoffSimulate(n);
 }
 
-bool ML::ESEGetSICThrustOKSimulate(int eng, int n)
+bool ML::ESEGetSIThrustOKSimulate(int eng, int n)
 {
-	return SICESE->GetSICThrustOKSimulate(eng, n);
+	return SIESE->GetSIThrustOKSimulate(eng, n);
 }
 
 void ML::MobileLauncherComputer(int mdo, bool on)

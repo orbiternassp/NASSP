@@ -35,10 +35,6 @@
 /// \ingroup InternalInterface
 ///
 typedef struct {
-	double H2FlowLBH;			///< H2 flow in pounds per hour.
-	double H2PressurePSI;		///< H2 pressure in PSI
-	double O2FlowLBH;			///< O2 flow in pounds per hour.
-	double O2PressurePSI;		///< O2 pressure in PSI.
 	double TempF;				///< Temperature in fahrenheit.
 	double CondenserTempF;		///< Condensor temperature in fahrenheit.
 	double CoolingTempF;		///< Cooling temperature in fahrenheit.
@@ -46,7 +42,6 @@ typedef struct {
 	double RadiatorTempOutF;	///< Radiator output temperature in fahrenheit.
 	double Voltage;				///< Output voltage.
 	double Current;				///< Output current.
-	double PowerOutput;			///< Output power.
 } FuelCellStatus;
 
 ///
@@ -97,9 +92,9 @@ public:
 	/// \param lightsurf Surface for the light bitmaps.
 	/// \param leftpanel Is this the left or right panel?
 	///
-	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
+	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel, int xTexMul = 1);
 
-	void RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf);
+	void RenderGNLights(SURFHANDLE surf, SURFHANDLE lightsurf, int xTexMul = 1);
 
 	void GNLampSwitchToggled(PanelSwitchItem *s);
 
@@ -140,6 +135,7 @@ protected:
 	int SPSPressCheckCount;
 	int CryoPressCheckCount;
 	int GlycolTempCheckCount;
+	int SuitCompDPHighCheckCount;
 	int FuelCellCheckCount[4];
 	bool ACBus1Alarm, ACBus2Alarm;
 	bool ACBus1Reset, ACBus2Reset;
@@ -165,7 +161,7 @@ protected:
 	/// \param sdy Y offset for light bitmaps in the panel image surface.
 	/// \param base Light number base for this panel.
 	///
-	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base);
+	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base, int xTexMul = 1);
 
 	///
 	/// Check the fuel cell status to determine whether it's in a 'bad' state that we

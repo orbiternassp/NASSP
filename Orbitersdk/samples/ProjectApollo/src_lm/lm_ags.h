@@ -94,23 +94,18 @@ protected:
 	void TurnOn();
 	void TurnOff();
 
-	VECTOR3 GetGravityVector();
-
 	h_Radiator *hsink;			// Case (Connected to primary coolant loop)
 	Boiler *fastheater;				// Fast Warmup Heater
 	Boiler *fineheater;				// Fine Control Heater
 	h_HeatLoad *asaHeat;
 	ThreePosSwitch *PowerSwitch;
 
-	bool Initialized;
 	bool Operate;
 
 	double LastSimDT;
 	MATRIX3 CurrentRotationMatrix;
 	VECTOR3 EulerAngles;
 	VECTOR3 RemainingDeltaVel;
-	VECTOR3 LastWeightAcceleration;
-	VECTOR3 LastGlobalVel;
 
 	const double AttPulsesScal = pow(2.0, 16.0);
 	const double AccPulsesScal = 1.0 / 0.003125 / 0.3048;
@@ -139,14 +134,11 @@ public:
 	void SetAGSAttitude(int Type, int Data);
 	void SetAGSAttitudeError(int Type, int Data);
 	void SetLateralVelocity(int Data);
-	void SetAltitudeAltitudeRate(int Data);
 	void SetPGNSIntegratorRegister(int channel, int val);
 	void SetDownlinkTelemetryRegister(int val);
 	void PGNCSDownlinkStopPulse();
 
 	double GetLateralVelocity();
-	double GetAltitude();
-	double GetAltitudeRate();
 	VECTOR3 GetTotalAttitude();
 	VECTOR3 GetAttitudeError();
 
@@ -157,6 +149,8 @@ public:
 	bool IsPowered();
 	bool IsACPowered();
 	bool GetTestModeFailure();
+	bool GetEngineOnSignal();
+	bool GetEngineOffSignal();
 	LEM *lem;					// Pointer at LEM
 	h_HeatLoad *aeaHeat;
 
@@ -194,18 +188,14 @@ protected:
 	//AEA lateral velocity in feet
 	double AGSLateralVelocity;
 
-	double Altitude;
-	double AltitudeRate;
-
 	std::queue<uint16_t> ags_queue;
 
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
 	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0); //Least significant bit equals 0.5113269e-3 rad, shifted by 8 bits (word length 18 bits, error 10 bits, both with sign)
 	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
-	const double ALTSCALEFACTOR = 0.3048*2.345*pow(2.0, -3.0);
-	const double ALTRATESCALEFACTOR = 0.3048*pow(2.0, -4.0);
 
 	friend class ARCore;
+	friend class RTCC;
 };
 
 // DATA ENTRY and DISPLAY ASSEMBLY (DEDA)
@@ -272,9 +262,9 @@ public:
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
 	void ResetKeyDown();
-	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights);
-	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
-	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
+	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights, int xTexMul = 1);
+	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0, int xTexMul = 1);
+	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0, int xTexMul = 1);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 
 	void KeyClick();
@@ -371,8 +361,8 @@ protected:
 	void SendKeyCode(int val);
 
 	void DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 
-	void RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
-	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
+	void RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int xTexMul = 1);
+	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int xTexMul = 1);
 	int ThreeDigitDisplaySegmentsLit(char *Str);
 	int SixDigitDisplaySegmentsLit(char *Str);
 	LEM *lem;					// Pointer at LEM

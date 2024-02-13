@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include <stdio.h>
 
 #include "nasspdefs.h"
@@ -33,10 +33,6 @@
 #include "PanelSDK/Internals/Esystems.h"
 
 #include "FDAI.h"
-
-// helper functions
-HBITMAP RotateMemoryDC(HBITMAP hBmpSrc, HDC hdcSrc, int SrcX, int SrcY, float angle, HDC &hdcDst, int &dstX, int &dstY);
-void DrawTransparentBitmap(HDC hdc, HBITMAP hBitmap, short xStart, short yStart, COLORREF cTransparentColor);
 
 FDAI::FDAI() {
 
@@ -56,6 +52,12 @@ FDAI::FDAI() {
 	ACSource = NULL;
 	noAC = false;
 	vessel = NULL;
+	hBallSurf = oapiCreateSurface(180, 180);
+
+	penBlack = oapiCreatePen(1, 1, 0x000000);
+	penWhite = oapiCreatePen(1, 1, 0xffffff);
+	brushBlack = oapiCreateBrush(0x000000);
+	brushWhite = oapiCreateBrush(0xffffff);
 }
 
 void FDAI::Init(VESSEL *v)
@@ -175,6 +177,11 @@ FDAI::~FDAI() {
 		DeleteDC(hDC2);
 		hDC2 = 0;
 	}
+	oapiDestroySurface(hBallSurf);
+	oapiReleasePen(penBlack);
+	oapiReleasePen(penWhite);
+	oapiReleaseBrush(brushBlack);
+	oapiReleaseBrush(brushWhite);
 }
 
 void FDAI::RegisterMe(int index, int x, int y) {
@@ -281,8 +288,7 @@ void FDAI::MoveBall2D()
 }
 
 void FDAI::PaintMe(VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
-	SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth) {
-
+	SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, int smooth) {
 	if (!init) InitGL();
 
 	// Don't do the OpenGL calculations every timestep
@@ -294,38 +300,63 @@ void FDAI::PaintMe(VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hF
 		glFinish();
 
 		lastPaintTime = oapiGetSysTime();
+
+		HDC hDC = oapiGetDC(hBallSurf);
+		BitBlt(hDC, 0, 0, 180, 180, hDC2, 0, 0, SRCCOPY);
+		oapiReleaseDC(hBallSurf, hDC);
 	}
 
-	HDC hDC = oapiGetDC(surf);
-	BitBlt(hDC, 43, 43, 150, 150, hDC2, 10, 10, SRCCOPY);//then we bitblt onto the panel.
+	oapiBlt(surf, hBallSurf, 43, 43, 10, 10, 150, 150, SURF_PREDEF_CK);//then we bitblt onto the panel.
 
 	// roll indicator
-	HDC hDCRotate;
-	int rotateX, rotateY;
 	double angle = -target.y;
 
-	HDC hDCTemp = CreateCompatibleDC(hDC);
-	HBITMAP hBmpTemp = (HBITMAP)SelectObject(hDCTemp, hBmpRoll);
+	oapi::Sketchpad *skp = oapiGetSketchpad(surf);
 
-	HBITMAP hBmpRotate = RotateMemoryDC(hBmpRoll, hDCTemp, 20, 20, (float)(PI - angle), hDCRotate, rotateX, rotateY);
-	HBITMAP hBmpXXX = CreateCompatibleBitmap(hDCRotate, rotateX, rotateY);
-	SelectObject(hDCRotate, hBmpXXX);
+	// Empirical values to draw the indicator
+	const double trisize = 14.0;
+	const double baseangle = 0.15;
+	const double radius = 70;
 
-	double radius = 62;
-	// Was + 93 and 92
-	int targetX = ((int)(sin(-angle) * radius)) + 123 - ((int)(rotateX / 2));
-	int targetY = ((int)(-cos(-angle) * radius)) + 122 - ((int)(rotateY / 2));
-	int targetZ = 0;
+	// Compute roll indicator vertices
+	long xtip = 123 - (long)(radius * sin(angle));
+	long ytip = 123 - (long)(radius * cos(angle));
 
-	DrawTransparentBitmap(hDC, hBmpRotate, targetX, targetY, 0x00FF00FF);
+	long xbl = 123 - (long)((radius - trisize) * sin(angle - baseangle));
+	long ybl = 123 - (long)((radius - trisize) * cos(angle - baseangle));
 
-	DeleteObject(hBmpXXX);
-	DeleteObject(hBmpTemp);
-	DeleteObject(hBmpRotate);
-	DeleteDC(hDCTemp);
-	DeleteDC(hDCRotate);
+	long xbr = 123 - (long)((radius - trisize) * sin(angle + baseangle));
+	long ybr = 123 - (long)((radius - trisize) * cos(angle + baseangle));
 
-	oapiReleaseDC(surf, hDC);
+	// Split it in 3
+	oapi::IVECTOR2 tri1[3] = {
+		{xtip, ytip},
+		{xbl, ybl},
+		{(long)(xbr * 0.3 + xbl * 0.7), (long)(ybr * 0.3 + ybl * 0.7)},
+	};
+	oapi::IVECTOR2 tri2[3] = {
+		{xtip, ytip},
+		{(long)(xbr * 0.3 + xbl * 0.7), (long)(ybr * 0.3 + ybl * 0.7)},
+		{(long)(xbr * 0.7 + xbl * 0.3), (long)(ybr * 0.7 + ybl * 0.3)},
+	};
+	oapi::IVECTOR2 tri3[3] = {
+		{xtip, ytip},
+		{(long)(xbr * 0.7 + xbl * 0.3), (long)(ybr * 0.7 + ybl * 0.3)},
+		{xbr, ybr},
+	};
+
+
+	skp->SetBrush(brushBlack);
+	skp->SetPen(penBlack);
+	skp->Polygon(tri2, 3);
+
+	skp->SetBrush(brushWhite);
+	skp->SetPen(penWhite);
+	skp->Polygon(tri1, 3);
+	skp->Polygon(tri3, 3);
+
+
+	oapiReleaseSketchpad(skp);
 
 	// frame-bitmaps
 	// Was 13,13
@@ -347,6 +378,8 @@ void FDAI::PaintMe(VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hF
 		lastRates = rates;
 	else
 		rates = lastRates;
+
+	int targetX, targetY, targetZ;
 
 	if (!LM_FDAI)
 	{
@@ -505,107 +538,6 @@ int FDAI::LoadOGLBitmap(char *filename) {
 	return (num_texture);
 }
 
-void DrawTransparentBitmap(HDC hdc, HBITMAP hBitmap, short xStart,
-	short yStart, COLORREF cTransparentColor) {
-
-	BITMAP     bm;
-	COLORREF   cColor;
-	HBITMAP    bmAndBack, bmAndObject, bmAndMem, bmSave;
-	HBITMAP    bmBackOld, bmObjectOld, bmMemOld, bmSaveOld;
-	HDC        hdcMem, hdcBack, hdcObject, hdcTemp, hdcSave;
-	POINT      ptSize;
-
-	hdcTemp = CreateCompatibleDC(hdc);
-	SelectObject(hdcTemp, hBitmap);   // Select the bitmap
-
-	GetObject(hBitmap, sizeof(BITMAP), (LPSTR)&bm);
-	ptSize.x = bm.bmWidth;            // Get width of bitmap
-	ptSize.y = bm.bmHeight;           // Get height of bitmap
-	DPtoLP(hdcTemp, &ptSize, 1);      // Convert from device
-
-									  // to logical points
-
-	// Create some DCs to hold temporary data.
-	hdcBack = CreateCompatibleDC(hdc);
-	hdcObject = CreateCompatibleDC(hdc);
-	hdcMem = CreateCompatibleDC(hdc);
-	hdcSave = CreateCompatibleDC(hdc);
-
-	// Create a bitmap for each DC. DCs are required for a number of
-	// GDI functions.
-
-	// Monochrome DC
-	bmAndBack = CreateBitmap(ptSize.x, ptSize.y, 1, 1, NULL);
-
-	// Monochrome DC
-	bmAndObject = CreateBitmap(ptSize.x, ptSize.y, 1, 1, NULL);
-
-	bmAndMem = CreateCompatibleBitmap(hdc, ptSize.x, ptSize.y);
-	bmSave = CreateCompatibleBitmap(hdc, ptSize.x, ptSize.y);
-
-	// Each DC must select a bitmap object to store pixel data.
-	bmBackOld = (HBITMAP)SelectObject(hdcBack, bmAndBack);
-	bmObjectOld = (HBITMAP)SelectObject(hdcObject, bmAndObject);
-	bmMemOld = (HBITMAP)SelectObject(hdcMem, bmAndMem);
-	bmSaveOld = (HBITMAP)SelectObject(hdcSave, bmSave);
-
-	// Set proper mapping mode.
-	SetMapMode(hdcTemp, GetMapMode(hdc));
-
-	// Save the bitmap sent here, because it will be overwritten.
-	BitBlt(hdcSave, 0, 0, ptSize.x, ptSize.y, hdcTemp, 0, 0, SRCCOPY);
-
-	// Set the background color of the source DC to the color.
-	// contained in the parts of the bitmap that should be transparent
-	cColor = SetBkColor(hdcTemp, cTransparentColor);
-
-	// Create the object mask for the bitmap by performing a BitBlt
-	// from the source bitmap to a monochrome bitmap.
-	BitBlt(hdcObject, 0, 0, ptSize.x, ptSize.y, hdcTemp, 0, 0,
-		SRCCOPY);
-
-	// Set the background color of the source DC back to the original
-	// color.
-	SetBkColor(hdcTemp, cColor);
-
-	// Create the inverse of the object mask.
-	BitBlt(hdcBack, 0, 0, ptSize.x, ptSize.y, hdcObject, 0, 0,
-		NOTSRCCOPY);
-
-	// Copy the background of the main DC to the destination.
-	BitBlt(hdcMem, 0, 0, ptSize.x, ptSize.y, hdc, xStart, yStart,
-		SRCCOPY);
-
-	// Mask out the places where the bitmap will be placed.
-	BitBlt(hdcMem, 0, 0, ptSize.x, ptSize.y, hdcObject, 0, 0, SRCAND);
-
-	// Mask out the transparent colored pixels on the bitmap.
-	BitBlt(hdcTemp, 0, 0, ptSize.x, ptSize.y, hdcBack, 0, 0, SRCAND);
-
-	// XOR the bitmap with the background on the destination DC.
-	BitBlt(hdcMem, 0, 0, ptSize.x, ptSize.y, hdcTemp, 0, 0, SRCPAINT);
-
-	// Copy the destination to the screen.
-	BitBlt(hdc, xStart, yStart, ptSize.x, ptSize.y, hdcMem, 0, 0,
-		SRCCOPY);
-
-	// Place the original bitmap back into the bitmap sent here.
-	BitBlt(hdcTemp, 0, 0, ptSize.x, ptSize.y, hdcSave, 0, 0, SRCCOPY);
-
-	// Delete the memory bitmaps.
-	DeleteObject(SelectObject(hdcBack, bmBackOld));
-	DeleteObject(SelectObject(hdcObject, bmObjectOld));
-	DeleteObject(SelectObject(hdcMem, bmMemOld));
-	DeleteObject(SelectObject(hdcSave, bmSaveOld));
-
-	// Delete the memory DCs.
-	DeleteDC(hdcMem);
-	DeleteDC(hdcBack);
-	DeleteDC(hdcObject);
-	DeleteDC(hdcSave);
-	DeleteDC(hdcTemp);
-}
-
 // Helper function for getting the minimum of 4 floats
 float min4(float a, float b, float c, float d)
 {
@@ -714,107 +646,6 @@ pBGR MyGetDibBits(HDC hdcSrc, HBITMAP hBmpSrc, int nx, int ny)
 	return buf;
 }
 
-// RotateMemoryDC rotates a memory DC and returns the rotated DC as well as its dimensions
-HBITMAP RotateMemoryDC(HBITMAP hBmpSrc, HDC hdcSrc, int SrcX, int SrcY, float angle, HDC &hdcDst, int &dstX, int &dstY)
-{
-	HBITMAP hBmpDst;
-	float x1, x2, x3, x4, y1, y2, y3, y4, cA, sA;
-	float CtX, CtY, orgX, orgY, divisor;
-	int OfX, OfY;
-	int stepX, stepY;
-	int iorgX, iorgY;
-	RECT rt;
-	pBGR src, dst, dstLine;
-	BITMAPINFO bi;
-
-	// Rotate the bitmap around the center
-	CtX = ((float)SrcX) / 2;
-	CtY = ((float)SrcY) / 2;
-
-	// First, calculate the destination positions for the four courners to get dstX and dstY
-	cA = (float)cos(angle);
-	sA = (float)sin(angle);
-
-	x1 = CtX + (-CtX) * cA - (-CtY) * sA;
-	x2 = CtX + (SrcX - CtX) * cA - (-CtY) * sA;
-	x3 = CtX + (SrcX - CtX) * cA - (SrcY - CtY) * sA;
-	x4 = CtX + (-CtX) * cA - (SrcY - CtY) * sA;
-
-	y1 = CtY + (-CtY) * cA + (-CtX) * sA;
-	y2 = CtY + (SrcY - CtY) * cA + (-CtX) * sA;
-	y3 = CtY + (SrcY - CtY) * cA + (SrcX - CtX) * sA;
-	y4 = CtY + (-CtY) * cA + (SrcX - CtX) * sA;
-
-	OfX = ((int)floor(min4(x1, x2, x3, x4)));
-	OfY = ((int)floor(min4(y1, y2, y3, y4)));
-
-	dstX = ((int)ceil(max4(x1, x2, x3, x4))) - OfX;
-	dstY = ((int)ceil(max4(y1, y2, y3, y4))) - OfY;
-
-	// Create the new memory DC
-	hdcDst = CreateCompatibleDC(hdcSrc);
-	hBmpDst = CreateCompatibleBitmap(hdcSrc, dstX, dstY);
-	SelectObject(hdcDst, hBmpDst);
-
-	// Fill the new memory DC with the current Window color
-	rt.left = 0;
-	rt.top = 0;
-	rt.right = dstX;
-	rt.bottom = dstY;
-
-	HBRUSH brush = CreateSolidBrush(0x00FF00FF);
-	HBRUSH brushTemp = (HBRUSH)SelectObject(hdcDst, brush);
-	FillRect(hdcDst, &rt, brush);
-	SelectObject(hdcDst, brushTemp);
-	DeleteObject(brush);
-
-	// Get the bitmap bits for the source and destination
-	src = MyGetDibBits(hdcSrc, hBmpSrc, SrcX, SrcY);
-	dst = MyGetDibBits(hdcDst, hBmpDst, dstX, dstY);
-
-	dstLine = dst;
-	divisor = cA*cA + sA*sA;
-	// Step through the destination bitmap
-	for (stepY = 0; stepY < dstY; stepY++) {
-		for (stepX = 0; stepX < dstX; stepX++) {
-			// Calculate the source coordinate
-			orgX = (cA * (((float)stepX + OfX) + CtX * (cA - 1)) + sA * (((float)stepY + OfY) + CtY * (sA - 1))) / divisor;
-			orgY = CtY + (CtX - ((float)stepX + OfX)) * sA + cA *(((float)stepY + OfY) - CtY + (CtY - CtX) * sA);
-			iorgX = (int)orgX;
-			iorgY = (int)orgY;
-			if ((iorgX >= 0) && (iorgY >= 0) && (iorgX < SrcX) && (iorgY < SrcY)) {
-				// Inside the source bitmap -> copy the bits
-				dstLine[dstX - stepX - 1] = src[iorgX + iorgY * SrcX];
-			}
-			else {
-				// Outside the source -> set the color to magenta
-				dstLine[dstX - stepX - 1].b = 255;
-				dstLine[dstX - stepX - 1].g = 0;
-				dstLine[dstX - stepX - 1].r = 255;
-			}
-		}
-		dstLine = dstLine + dstX;
-	}
-
-	// Set the new Bitmap
-	bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
-	bi.bmiHeader.biWidth = dstX;
-	bi.bmiHeader.biHeight = dstY;
-	bi.bmiHeader.biPlanes = 1;
-	bi.bmiHeader.biBitCount = 32;
-	bi.bmiHeader.biCompression = BI_RGB;
-	bi.bmiHeader.biSizeImage = dstX * 4 * dstY;
-	bi.bmiHeader.biClrUsed = 0;
-	bi.bmiHeader.biClrImportant = 0;
-	SetDIBits(hdcDst, hBmpDst, 0, dstY, dst, &bi, DIB_RGB_COLORS);
-
-	// Free the color arrays
-	free(src);
-	free(dst);
-
-	return hBmpDst;
-}
-
 bool FDAI::IsPowered()
 
 {
@@ -866,7 +697,7 @@ void FDAI::AnimateFDAI(VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UI
 	if (rate_proc[2] < 0) rate_proc[2] = 0;
 	if (rate_proc[0] > 1) rate_proc[0] = 1;
 	if (rate_proc[1] > 1) rate_proc[1] = 1;
-	if (rate_proc[2] > 1) rate_proc[1] = 1;
+	if (rate_proc[2] > 1) rate_proc[2] = 1;
 	vessel->SetAnimation(rateR, rate_proc[0]);
 	vessel->SetAnimation(rateP, rate_proc[1]);
 	vessel->SetAnimation(rateY, rate_proc[2]);

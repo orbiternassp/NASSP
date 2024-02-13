@@ -26,9 +26,9 @@
 
 #define STRICT 1
 #define ORBITER_MODULE
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
 #include <commctrl.h>
 #include "resource.h"
 #include <stdio.h>
@@ -699,25 +699,4 @@ DLLCLBK void opcDLLExit (HINSTANCE hDLL)
 	// Unregister the launchpad items
 	oapiUnregisterLaunchpadItem (gParams.item);
 	delete gParams.item;
-}
-
-// 0 = 4:3
-// 1 = 16:10
-// 2 = 16:9
-static int renderViewportIsWideScreen = 0;
-
-DLLCLBK void opcOpenRenderViewport(HWND renderWnd, DWORD width, DWORD height, BOOL fullscreen)
-
-{
-	if (((double) width) / ((double) height) < 1.47) 
-		renderViewportIsWideScreen = 0;
-	else if (((double) width) / ((double) height) < 1.69) 
-		renderViewportIsWideScreen = 1;
-	else
-		renderViewportIsWideScreen = 2;
-}
-
-DLLCLBK int pacRenderViewportIsWideScreen() 
-{
-	return renderViewportIsWideScreen;
 }

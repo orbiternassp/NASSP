@@ -39,20 +39,28 @@ public:
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return -trunnionVel; };
 	double GetRadarShaftVel() { return shaftVel; };
-	double GetRadarTrunnionPos() { return -asin(sin(trunnionAngle)); }
-	double GetRadarShaftPos() { return -asin(sin(shaftAngle)); }
+	double GetRadarTrunnionPos() { return -asin(sin_trunnion); }
+	double GetRadarShaftPos() { return -asin(sin_shaft); }
 	double GetRadarRange() { return range; };
 	double GetRadarRate() { return rate; };
 	double GetSignalStrength() { return SignalStrengthRCVD * 4.0; }
 	double GetShaftErrorSignal();
 	double GetTrunnionErrorSignal();
 	double GetTransmitterPower();
+	double GetShaftSin() { return sin_shaft; }
+	double GetShaftCos() { return cos_shaft; }
+	double GetTrunnionSin() { return sin_trunnion; }
+	double GetTrunnionCos() { return cos_trunnion; }
 	double dBm2SignalStrength(double RecvdRRPower_dBm);
 	void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
+	void GetRadarRangeLGC();
+	void GetRadarRateLGC();
 
 	bool IsPowered();
 	bool IsDCPowered();
 	bool IsACPowered();
+	bool IsRangeDataGood() { return RangeLock; };
+	bool IsFrequencyDataGood() { return FrequencyLock; };
 	bool IsRadarDataGood() { return radarDataGood; };
 	bool GetNoTrackSignal() { return NoTrackSignal; }
 	
@@ -79,7 +87,6 @@ private:
 	double rate;
 	double internalrange;
 	double internalrangerate;
-	int ruptSent;				// Rupt sent
 	int scratch[2];             // Scratch data
 	int mode;					//Mode I = false, Mode II = true
 	double hpbw_factor;			//Beamwidth factor
@@ -103,10 +110,14 @@ private:
 	double ShaftErrorSignal;
 	double TrunnionErrorSignal;
 	VECTOR3 GyroRates;
+	double sin_shaft, cos_shaft, sin_trunnion, cos_trunnion;
 	// Animations
 	UINT anim_RRPitch, anim_RRYaw;
 	double rr_proc[2];
 	double rr_proc_last[2];
 	//connectors
 	//LM_RRtoCSM_RRT_Connector lm_rr_to_csm_connector;
+
+	const double SLEW_RATE_FAST = 7.0*RAD;
+	const double SLEW_RATE_SLOW = 1.33*RAD;
 };

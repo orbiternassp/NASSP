@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbiterSDK.h"
+#include "Orbitersdk.h"
 #include "connector.h"
 
 #include "nasspdefs.h"
@@ -168,7 +168,7 @@ sibsys(this, th_main, ph_main, SIB_SIVB_Sep, LaunchS, SShutS)
 	LowRes = false;
 
 	THRUST_FIRST_VAC = 1008000;
-	ISP_FIRST_SL = 262 * G;
+	ISP_FIRST_SL = 261 * G;
 	ISP_FIRST_VAC = 294 * G;
 
 	for (i = 0; i < 4; i++)

@@ -32,6 +32,7 @@
 
 #include "nasspdefs.h"
 #include "nasspsound.h"
+#include "nassputils.h"
 
 #include "soundlib.h"
 #include "toggleswitch.h"
@@ -48,7 +49,7 @@
 #include "lm_channels.h"
 #include "LM_AscentStageResource.h"
 
-#include "RF_calc.h"
+using namespace nassp;
 
 //VHF Antenna
 
@@ -257,7 +258,7 @@ void LM_VHF::Timestep(double simt)
 	{
 		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\Saturn5", 21)) //some day: if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\CSM", 17))
+		if (utils::IsVessel(pVessel, utils::SaturnV)) //some day: if (utils::IsVessel(pVessel, utils::CSM))
 		{
 			isCSM = true;
 		}
@@ -442,6 +443,16 @@ void LM_PCM::Init(LEM *vessel, h_HeatLoad *pcmh)
 	uplink_state = 0; rx_offset = 0;
 }
 
+bool LM_PCM::TimingSignal() //Currently just looking for power from the PCM/TE cb, this needs to generate a 512 KHz timing signal
+{
+	if (lem->INST_PCMTEA_CB.Voltage() > 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void LM_PCM::SystemTimestep(double simdt)
 {
 	// PMP
@@ -524,9 +535,9 @@ unsigned char LM_PCM::scale_data(double data, double low, double high)
 	if(data <= low){  return 0; }
 	
 	// Now figure step value
-	double step = ( ( high - low ) / 256.0);
+	double step = ( ( high - low ) / 253.0);
 	// and return result
-	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
+	return static_cast<unsigned char>( ( ( data - low ) / step ) + 1.5 );
 }
 
 unsigned char LM_PCM::scale_scea(double data)
@@ -549,7 +560,7 @@ void LM_PCM::perform_io(double simt){
 			if (mcc_size > 0) {
 				// sprintf(oapiDebugString(), "MCCSIZE %d LRX %f LRXINT %f", mcc_size, last_rx, ((simt - last_rx) / 0.005));
 				// Should we recieve?
-				if ((fabs(simt - last_rx) / 0.1) < 1 || lem->agc.IsUpruptActive()) {
+				if ((fabs(simt - last_rx) / 0.1) < 1 || lem->agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 					return; // No
 				}
 				last_rx = simt;
@@ -607,7 +618,7 @@ void LM_PCM::perform_io(double simt){
 				}
 			}
 			// Should we receive?
-			if (((simt - last_rx) / 0.005) < 1 || lem->agc.IsUpruptActive()) {			
+			if (((simt - last_rx) / 0.005) < 1 || lem->agc.InterruptPending(ApolloGuidance::Interrupt::UPRUPT)) {
 				return; // No
 			}
 			last_rx = simt;
@@ -727,7 +738,7 @@ void LM_PCM::handle_uplink()
 		// Move to INLINK
 		lem->agc.vagc.Erasable[0][045] = lgc_uplink_wd;
 		// Cause UPRUPT
-		lem->agc.GenerateUprupt();
+		lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::UPRUPT);
 
 		//sprintf(oapiDebugString(),"LGC UPLINK DATA %05o",cmc_uplink_wd);
 		rx_offset = 0; uplink_state = 0;
@@ -772,8 +783,8 @@ void LM_PCM::generate_stream_hbr(){
 	unsigned char data=0;
 	// 128 words per frame, 50 frames pre second
 	switch(word_addr){
-		case 0: tx_data[tx_offset] = 0375;                // SYNC 1
-			lem->agc.GenerateDownrupt();				  // And generate DOWNRUPT (We read the data out at 120)
+		case 0: tx_data[tx_offset] = 0375;										// SYNC 1
+			lem->agc.RaiseInterrupt(ApolloGuidance::Interrupt::DOWNRUPT);	// And generate DOWNRUPT (We read the data out at 120)
 			break;
 		case 1: tx_data[tx_offset] = 0312; break;         // SYNC 2
 		case 2: tx_data[tx_offset] = 0150; break;         // SYNC 3
@@ -1610,11 +1621,11 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 					return(scale_scea(lem->scera2.GetVoltage(17, 1))); // BAT 5 VOLT 
 				case 10:
 					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
-					return(scale_data(0.0, -21.5, 21.5)); // RR SHFT COS
+					return(scale_data(lem->RR.GetShaftCos(), -1.0, 1.0)); // RR SHFT COS
 				case 11: 
 					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 0.95)); } // DPS OX 1 QTY
 					if(channel == 1){ return (scale_scea(lem->scera2.GetVoltage(9, 2))); } // ROLL GDA POS
-					return(scale_data(0.0, -21.5, 21.5)); // RR TRUN SIN
+					return(scale_data(lem->RR.GetTrunnionSin(), -1.0, 1.0)); // RR TRUN SIN
 				case 12: 
 					if(channel == 10){ return(scale_data(0.0, -20.25, 20.25)); } // MG RSVR OUT COS
 					return (scale_scea(lem->scera1.GetVoltage(7, 1))); // ASC 1 O2 PRESS
@@ -1643,7 +1654,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 					if(channel == 100){ return(scale_data(0.0, -3.0, 3.0)); } // OG SVO ERR IN O
 					return(scale_data(lem->ecs.GetSelectedGlycolPressure(), 0.0, 60.0)); // GLY PUMP PRESS
 				case 20: 
-					if(channel == 10){ return(scale_data(0.0, -21.5, 21.5)); } // RR TRUN COS
+					if(channel == 10){ return(scale_data(lem->RR.GetTrunnionCos(), -1.0, 1.0)); } // RR TRUN COS
 					return(scale_scea(lem->scera1.GetVoltage(8, 1))); // ASC 1 H20 QTY
 				case 21: 
 					if (channel == 1) { return(scale_data(lem->RCSA.GetRCSOxidManifoldPressPSI(), 0.0, 350.0)); } // A OX MFLD PRESS
@@ -1680,7 +1691,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 					if(channel == 1){ return(scale_scea(lem->scera1.GetVoltage(21, 4))); } // RR ANT TEMP
 					return (scale_scea(lem->scera2.GetVoltage(9, 2))); // ROLL GDA POS
 				case 32: // RR SHFT SIN
-					return(scale_data(0.0, -21.5, 21.5));
+					return(scale_data(lem->RR.GetShaftSin(), -1.0, 1.0));
 				case 33: 
 					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 4))); } // PITCH ERR CMD
 					return(scale_data(lem->ecs.DescentWaterTankPressure(), 0.0, 60.0)); // DES H20 PRESS 
@@ -2698,8 +2709,6 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 	LEM_SteerableAntGain = pow(10, (16.5 / 10));
 	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
 	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
-	Gain85ft = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
-	Power85ft = 20000; //watts
 }
 
 void LEM_SteerableAnt::Timestep(double simdt){
@@ -2767,8 +2776,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
 	{
-		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm);
-		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm);
+		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm*exp(-simdt*10));
+		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*exp(-simdt*10));
 	}
 	else
 	{
@@ -2829,65 +2838,58 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	//Signal Strength
 
-	double relang[4], Moonrelang;
+	double relang[4];
 
-	VECTOR3 U_RP[4], pos, R_E, R_M, U_R[4];
+	VECTOR3 U_RP[4], pos, U_R[4];
 	MATRIX3 Rot;
-
 
 	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (0.1 * RAD));
 	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (0.1 * RAD));
 	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (0.1 * RAD), yaw);
 	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (0.1 * RAD), yaw);
-	
 
-	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	//Global position of the spacecraft and spacecraft rotation matrix from local to global
 	lem->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
-	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
+
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
+	//Get the gain, power and global position of the transmitter
+	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
+	if (MCCV) {
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetLM, &GroundTransmitterRFProperties);
+	}
 	
 	double EarthSignalDist;
 	double RecvdLEM_SteerableAntPower, RecvdLEM_SteerableAntPower_dBm;
 
-	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition); //distance from earth's surface in meters
 
-	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft * LEM_SteerableAntGain * pow((LEM_SteerableAntWavelength /(4 * PI*EarthSignalDist)), 2); //maximum recieved power to the HGA on axis in watts
-	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
+	RecvdLEM_SteerableAntPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * LEM_SteerableAntGain * pow((LEM_SteerableAntWavelength /(4 * PI*EarthSignalDist)), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdLEM_SteerableAntPower_dBm = RFCALC_W2dBm(RecvdLEM_SteerableAntPower);
 
 	double SignalStrengthScaleFactor = LEM_SteerableAnt::dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
 
-	//Moon in the way
-	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
+	for (int i = 0; i < 4; i++)
+	{
+		//Calculate antenna pointing vector in global frame
+		U_R[i] = mul(Rot, U_RP[i]);
+		//relative angle between antenna pointing vector and direction of the Transmitting Station
+		relang[i] = acos(dotp(U_R[i], unit(GroundTransmitterRFProperties.GlobalPosition - pos)));
 
-	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
-	{
-		SignalStrength = 0.0;
-	}
-	else
-	{
-		for (int i = 0; i < 4; i++)
+		if (relang[i] < PI05 / hpbw_factor)
 		{
-			//Calculate antenna pointing vector in global frame
-			U_R[i] = mul(Rot, U_RP[i]);
-			//relative angle between antenna pointing vector and direction of Earth
-			relang[i] = acos(dotp(U_R[i], unit(R_E - pos)));
-
-			if (relang[i] < PI05 / hpbw_factor)
-			{
-				HornSignalStrength[i] = cos(hpbw_factor*relang[i])*cos(hpbw_factor*relang[i])*SignalStrengthScaleFactor;
-			}
-			else
-			{
-				HornSignalStrength[i] = 0.0;
-			}
-
-			SignalStrength = (HornSignalStrength[0] + HornSignalStrength[1] + HornSignalStrength[2] + HornSignalStrength[3]) / 4.0;
-
+			HornSignalStrength[i] = cos(hpbw_factor*relang[i])*cos(hpbw_factor*relang[i])*SignalStrengthScaleFactor;
 		}
+		else
+		{
+			HornSignalStrength[i] = 0.0;
+		}
+
+		SignalStrength = (HornSignalStrength[0] + HornSignalStrength[1] + HornSignalStrength[2] + HornSignalStrength[3]) / 4.0;
 	}
 
-	//sprintf(oapiDebugString(), "RecvdLEM_SteerableAntPower_dBm = %lf dBm, Power85ft = %lfW, Gain85ft = %lf, LEM_SteerableAntGain = %lf, LEM_SteerableAntWavelength = %lfM, EarthSignalDist = %lfM", RecvdLEM_SteerableAntPower_dBm, Power85ft, Gain85ft, LEM_SteerableAntGain, LEM_SteerableAntWavelength, EarthSignalDist);
+	//sprintf(oapiDebugString(), "RecvdLEM_SteerableAntPower_dBm = %lf dBm, TransmitterPower = %lfW, TransmitterGain = %lf, LEM_SteerableAntGain = %lf, LEM_SteerableAntWavelength = %lfM, EarthSignalDist = %lfM", RecvdLEM_SteerableAntPower_dBm, TransmitterPower, TransmitterGain, LEM_SteerableAntGain, LEM_SteerableAntWavelength, EarthSignalDist);
 
 	//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
 
@@ -3008,8 +3010,6 @@ LM_OMNI::LM_OMNI(VECTOR3 dir)
 {
 	direction = unit(dir);
 	hpbw_factor = 0.0;
-	hMoon = NULL;
-	hEarth = NULL;
 }
 
 void LM_OMNI::Init(LEM *vessel) {
@@ -3018,42 +3018,43 @@ void LM_OMNI::Init(LEM *vessel) {
 	double beamwidth = 45 * RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
 
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
-
 	OMNI_Gain = pow(10, (-3 / 10));
 
 	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
 	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
-	Gain85ft = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
-	Power85ft = 20000; //watts
 }
 
 void LM_OMNI::Timestep()
 {
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	VECTOR3 U_RP, pos, U_R;
 	MATRIX3 Rot;
-	double relang, Moonrelang;
+	double relang;
 	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
 	double EarthSignalDist;
 
 	//Unit vector of antenna in vessel's local frame
 	U_RP = _V(direction.y, direction.x, direction.z);
 
-	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
+	//Global position of the spacecraft and spacecraft rotation matrix from local to global
 	lem->GetGlobalPos(pos);
-	oapiGetGlobalPos(hEarth, &R_E);
-	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
+
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
+	//Get the gain, power and global position of the transmitter
+	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
+	if (MCCV) { 
+		VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV); ;
+		MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetLM, &GroundTransmitterRFProperties);
+	}
 
 	//Calculate antenna pointing vector in global frame
 	U_R = mul(Rot, U_RP);
-	//relative angle between antenna pointing vector and direction of Earth
-	relang = acos(dotp(U_R, unit(R_E - pos)));
-	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+	//relative angle between antenna pointing vector and direction of the Transmitting Station
+	relang = acos(dotp(U_R, unit(GroundTransmitterRFProperties.GlobalPosition - pos)));
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition); //distance from earth's surface in meters
 
-	RecvdOMNIPower = Power85ft * Gain85ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
-	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	RecvdOMNIPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower_dBm = RFCALC_W2dBm(RecvdOMNIPower);
 	SignalStrengthScaleFactor = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
 	if (relang < 160 * RAD) //this is a litteral copy of the CSM OMNI but should be fairly close
@@ -3063,14 +3064,6 @@ void LM_OMNI::Timestep()
 		SignalStrength = sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*SignalStrengthScaleFactor;
 	}
 	else
-	{
-		SignalStrength = 0.0;
-	}
-
-	//Moon in the way
-	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
-
-	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
 		SignalStrength = 0.0;
 	}

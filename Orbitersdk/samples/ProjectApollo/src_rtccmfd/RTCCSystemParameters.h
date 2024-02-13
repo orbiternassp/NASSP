@@ -27,7 +27,7 @@ struct RTCCDensityTables
 {
 	RTCCDensityTables()
 	{
-		r0 = 6.373338e6; //Adjusted for Orbiter
+		r0 = 6356766.0; //45°32'33'' latitude
 		C2 = 401.8743008658905; //1.4*8.31432/(28.9644/1000)
 		CSMAX = 269.4412597;
 
@@ -127,33 +127,33 @@ struct RTCCDensityTables
 		T_M_b[11] = 210.65;
 		T_M_b[12] = 180.65;
 
-		A7[0] = 1.509968e+00;
-		A7[1] = 1.261296e+00;
-		A7[2] = 1.139848e+00;
-		A7[3] = 1.090665e+00;
-		A7[4] = 1.062369e+00;
-		A7[5] = 1.042924e+00;
-		A7[6] = 1.027149e+00;
-		A7[7] = 1.017294e+00;
-		A7[8] = 1.009915e+00;
-		A7[9] = 1.002785e+00;
-		A7[10] = 1.004037e+00;
-		A7[11] = 1.006551e+00;
-		A7[12] = 1.009404e+00;
+		A7[0] = 1.511805e+00;
+		A7[1] = 1.262093e+00;
+		A7[2] = 1.140239e+00;
+		A7[3] = 1.090911e+00;
+		A7[4] = 1.062535e+00;
+		A7[5] = 1.043037e+00;
+		A7[6] = 1.027220e+00;
+		A7[7] = 1.017338e+00;
+		A7[8] = 1.009940e+00;
+		A7[9] = 1.002792e+00;
+		A7[10] = 1.004047e+00;
+		A7[11] = 1.006568e+00;
+		A7[12] = 1.009429e+00;
 
-		B7[0] = 3.917293e+01;
-		B7[1] = 2.179340e+01;
-		B7[2] = 1.326051e+01;
-		B7[3] = 1.029873e+01;
-		B7[4] = 8.452409e+00;
-		B7[5] = 6.719323e+00;
-		B7[6] = 4.755860e+00;
-		B7[7] = 3.307261e+00;
-		B7[8] = 2.195564e+00;
-		B7[9] = 1.650191e+00;
-		B7[10] = 3.314703e+00;
-		B7[11] = 6.666556e+00;
-		B7[12] = 1.117693e+01;
+		B7[0] = 3.920299e+01;
+		B7[1] = 2.179890e+01;
+		B7[2] = 1.326098e+01;
+		B7[3] = 1.029864e+01;
+		B7[4] = 8.452201e+00;
+		B7[5] = 6.719039e+00;
+		B7[6] = 4.755544e+00;
+		B7[7] = 3.306984e+00;
+		B7[8] = 2.195356e+00;
+		B7[9] = 1.650043e+00;
+		B7[10] = 3.314444e+00;
+		B7[11] = 6.666131e+00;
+		B7[12] = 1.117639e+01;
 
 		ln_rho_b_T_M_b[0] = -20.539228;
 		ln_rho_b_T_M_b[1] = -19.383705;
@@ -220,18 +220,10 @@ struct TLISystemParameters
 	double KY2 = 0.0;
 	//Geodetic latitude of launch site
 	double PHIL = 0.0;
-	//Azimuth from time polynomial (radians)
-	double hx[3][5];
 	//Inclination from azimuth polynomial (radians)
 	double fx[7];
 	//Descending Node Angle from azimuth polynomial (radians)
 	double gx[7];
-	//Times of the opening and closing of launch windows
-	double t_D0, t_D1, t_D2, t_D3;
-	//Times to segment the azimuth calculation polynomial
-	double t_DS0, t_DS1, t_DS2, t_DS3;
-	//Times used to scale the azimuth polynomial
-	double t_SD1, t_SD2, t_SD3;
 };
 
 struct RTCCSystemParameters
@@ -240,14 +232,15 @@ struct RTCCSystemParameters
 	{
 		//DEFAULT VALUES
 
-		//Epoch of NBY 1969 (Apollo 7-10)
-		AGCEpoch = 40221.525;
+		//Epoch of NBY 1969
+		AGCEpoch = 1969;
+		TEPHEM0 = 40038.0;
+		MAT_J2000_BRCS = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-		//These are calculated with R_E = 6.373338e6
-		MCGMUM = 2.454405845045305e-01;
-		MCEMUU = 19.95468740240253;
-		MCSRMU = 4.954196044814240e-01;
-		MCERMU = 4.467066979842873;
+		MCGMUM = 0.244883757275606;
+		MCEMUU = 19.90941651408238;
+		MCSRMU = 0.494857310015327;
+		MCERMU = 4.461996919999204;
 
 		//Time from launch to EOI, seconds
 		MDLIEV[0] = 0.76673814e3;
@@ -278,9 +271,11 @@ struct RTCCSystemParameters
 
 		MCVLMC = 0.0;
 		MCVCMC = 0.5;
+		MCCMCU = 6378165.0;
 		MCCNMC = 3443.93359;
 		MCSMLR = 1738090.0;
 		MCCRPD = 0.01745329251; // PI/180
+		MCECAP = 6373368.0; //0.999247902 in er
 		MCEBAS = 1.0;
 		MCEASQ = 4.0619437e13;
 		MCEBSQ = 4.0619437e13;
@@ -295,8 +290,8 @@ struct RTCCSystemParameters
 		MDVACC[1] = 0.0;
 		MDVDCC[0] = 0.0;
 		MDVDCC[1] = 0.0;
-		MCGVNT = 2.0 / 3600.0;
-		MCGVEN = 15.0 / 60.0;
+		MCGVNT = -2.0 / 3600.0; //Until something better has been implemented for EMMENI, disable post-TLI venting simulation
+		MCGVEN = 0.2*3600.0;
 		for (int i = 0;i < 2;i++)
 		{
 			for (int j = 0;j < 10;j++)
@@ -304,7 +299,30 @@ struct RTCCSystemParameters
 				MDTVTV[i][j] = 0.0;
 			}
 		}
-		MCTVSP = 1000.0;
+
+		//Vent thrust
+		MDTVTV[0][0] = 175.0;
+		MDTVTV[0][1] = 170.0;
+		MDTVTV[0][2] = 80.0;
+		MDTVTV[0][3] = 65.0;
+		MDTVTV[0][4] = 45.0;
+		MDTVTV[0][5] = 40.0;
+		MDTVTV[0][6] = 40.0;
+		MDTVTV[0][7] = 0.0;
+		MDTVTV[0][8] = 0.0;
+		//Vent times
+		MDTVTV[1][0] = 0.0;
+		MDTVTV[1][1] = 1300.0;
+		MDTVTV[1][2] = 3300.0;
+		MDTVTV[1][3] = 6500.0;
+		MDTVTV[1][4] = 11000.0;
+		MDTVTV[1][5] = 15000.0;
+		MDTVTV[1][6] = 20000.0;
+		MDTVTV[1][7] = 20001.0; //Switches off vent model at this time
+		MDTVTV[1][8] = 9999999999.9;
+		MCTVSP = 750.0; //Find better value
+		MCTVEN = 1.0;
+
 		MCLABN = MCLCBN = MCLSBN = 0.0;
 		MGREPH = false;
 
@@ -325,31 +343,35 @@ struct RTCCSystemParameters
 		{
 			MHALLD[i] = MHACLD[i];
 		}
-		MCADRG = 0.1; //Should be 2.0
+		MCZBAB = 0.0;
+		//TBD: Set to 2.0 when RTCC takes drag into account properly
+		MCADRG = 0.1;
 
 		MCTJD1 = 570.0;
 		MCTJD3 = 2.5;
 		MCTJDS = 1.0;
 		MCTJD5 = 99999.0;
-		MCTJD6 = 1.8;
+		MCTJD6 = 1.9;
 
 		MCTJT1 = 38.8 * 4.4482216152605;
 		MCTJT2 = 5889.0 * 4.4482216152605;
 		MCTJT3 = 110900.0 * 4.4482216152605;
 		MCTJT4 = 178147.0 * 4.4482216152605;
 		MCTJTL = 202097.0 * 4.4482216152605;
-		MCTJTH = 202256.0 * 4.4482216152605;
-		MCTJT5 = 202256.0 * 4.4482216152605;
+		MCTJTH = 906114.066;//202256.0 * 4.4482216152605;
+		MCTJT5 = 906114.066;//202256.0 * 4.4482216152605;
 		MCTJT6 = 27784.0 * 4.4482216152605;
+		MCTJT7 = 145.0*4.4482216152605;
 
 		MCTJW1 = 0.111 * 0.45359237;
 		MCTJW2 = 0.75 * 0.45359237;
 		MCTJW3 = 157.6 * 0.45359237;
 		MCTJW4 = 412.167 * 0.45359237;
 		MCTJWL = 472.121 * 0.45359237;
-		MCTJWH = 472.18 * 0.45359237;
-		MCTJW5 = 472.18* 0.45359237;
+		MCTJWH = 216.3295874820028;//472.18*0.45359237;
+		MCTJW5 = 216.3295874820028;//472.18*0.45359237;
 		MCTJW6 = 61.7 * 0.45359237;
+		MCTJW7 = 75960.0*0.45359237 / 3600.0;
 
 		MCTSAV = 202097.0 * 4.4482216152605;
 		MCTWAV = 472.121 * 0.45359237;
@@ -375,16 +397,16 @@ struct RTCCSystemParameters
 		MCVDTM = 2.0;
 		MCCRAM = 0.5;
 
-		MCTCT1 = 441.5*2.0;
-		MCTCT2 = 441.5*4.0;
-		MCTCT3 = 441.5*2.0;
-		MCTCT4 = 441.5*4.0;
+		MCTCT1 = 196.6 * 4.4482216152605;
+		MCTCT2 = 393.2 * 4.4482216152605;
+		MCTCT3 = 196.6 * 4.4482216152605;
+		MCTCT4 = 393.2 * 4.4482216152605;
 		MCTCT5 = 874.37837;
 		MCTCT6 = 874.37837*2.0;
-		MCTCW1 = 0.31038;
-		MCTCW2 = 0.62076;
-		MCTCW3 = 0.31038;
-		MCTCW4 = 0.62076;
+		MCTCW1 = 2599.2 / 3600.0 * 0.45359237;
+		MCTCW2 = 5198.4 / 3600.0 * 0.45359237;
+		MCTCW3 = 2599.2 / 3600.0 * 0.45359237;
+		MCTCW4 = 5198.4 / 3600.0 * 0.45359237;
 		MCTLT1 = 441.5*2.0;
 		MCTLT2 = 441.5*4.0;
 		MCTLT3 = 441.5*2.0;
@@ -450,6 +472,7 @@ struct RTCCSystemParameters
 		MCTAK3 = 15569.0;
 		MCTAK4 = 6181.0;
 		MCTDTF = 0.925;
+		MCTNDU = 15.0;
 
 		MCTSPP = -2.15*RAD;
 		MCTSYP = 0.95*RAD;
@@ -487,129 +510,216 @@ struct RTCCSystemParameters
 		MDVSTP.PHIL = 28.6082888*RAD;
 
 		//CG tables
-		LMDSCCGTAB.Weight[0] = 6350.288000;
-		LMDSCCGTAB.CG[0] = _V(5.657285, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[1] = 6577.084000;
-		LMDSCCGTAB.CG[1] = _V(5.602462, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[2] = 6803.880000;
-		LMDSCCGTAB.CG[2] = _V(5.551295, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[3] = 7030.676000;
-		LMDSCCGTAB.CG[3] = _V(5.503428, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[4] = 7257.472000;
-		LMDSCCGTAB.CG[4] = _V(5.458553, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[5] = 7484.268000;
-		LMDSCCGTAB.CG[5] = _V(5.416398, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[6] = 7711.064000;
-		LMDSCCGTAB.CG[6] = _V(5.376722, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[7] = 7937.860000;
-		LMDSCCGTAB.CG[7] = _V(5.339314, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[8] = 8164.656000;
-		LMDSCCGTAB.CG[8] = _V(5.303984, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[9] = 8391.452000;
-		LMDSCCGTAB.CG[9] = _V(5.270563, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[10] = 8618.248000;
-		LMDSCCGTAB.CG[10] = _V(5.238902, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[11] = 8845.044000;
-		LMDSCCGTAB.CG[11] = _V(5.208864, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[12] = 9071.840000;
-		LMDSCCGTAB.CG[12] = _V(5.180328, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[13] = 9298.636000;
-		LMDSCCGTAB.CG[13] = _V(5.153184, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[14] = 9525.432000;
-		LMDSCCGTAB.CG[14] = _V(5.127333, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[15] = 9752.228000;
-		LMDSCCGTAB.CG[15] = _V(5.102684, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[16] = 9979.024000;
-		LMDSCCGTAB.CG[16] = _V(5.079156, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[17] = 10205.820000;
-		LMDSCCGTAB.CG[17] = _V(5.056673, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[18] = 10432.616000;
-		LMDSCCGTAB.CG[18] = _V(5.035167, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[19] = 10659.412000;
-		LMDSCCGTAB.CG[19] = _V(5.014577, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[20] = 10886.208000;
-		LMDSCCGTAB.CG[20] = _V(4.994845, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[21] = 11113.004000;
-		LMDSCCGTAB.CG[21] = _V(4.975918, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[22] = 11339.800000;
-		LMDSCCGTAB.CG[22] = _V(4.957748, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[23] = 11566.596000;
-		LMDSCCGTAB.CG[23] = _V(4.940291, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[24] = 11793.392000;
-		LMDSCCGTAB.CG[24] = _V(4.923505, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[25] = 12020.188000;
-		LMDSCCGTAB.CG[25] = _V(4.907353, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[26] = 12246.984000;
-		LMDSCCGTAB.CG[26] = _V(4.891799, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[27] = 12473.780000;
-		LMDSCCGTAB.CG[27] = _V(4.876810, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[28] = 12700.576000;
-		LMDSCCGTAB.CG[28] = _V(4.862357, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[29] = 12927.372000;
-		LMDSCCGTAB.CG[29] = _V(4.848411, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[30] = 13154.168000;
-		LMDSCCGTAB.CG[30] = _V(4.834946, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[31] = 13380.964000;
-		LMDSCCGTAB.CG[31] = _V(4.821937, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[32] = 13607.760000;
-		LMDSCCGTAB.CG[32] = _V(4.809362, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[33] = 13834.556000;
-		LMDSCCGTAB.CG[33] = _V(4.797199, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[34] = 14061.352000;
-		LMDSCCGTAB.CG[34] = _V(4.785429, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[35] = 14288.148000;
-		LMDSCCGTAB.CG[35] = _V(4.774032, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[36] = 14514.944000;
-		LMDSCCGTAB.CG[36] = _V(4.762991, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[37] = 14741.740000;
-		LMDSCCGTAB.CG[37] = _V(4.752290, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[38] = 14968.536000;
-		LMDSCCGTAB.CG[38] = _V(4.741913, 0.000000, 0.000000);
-		LMDSCCGTAB.Weight[39] = 15195.332000;
-		LMDSCCGTAB.CG[39] = _V(4.731846, 0.000000, 0.000000);
-		LMDSCCGTAB.N = 40;
+		MHVLCG.Weight[0] = 6350.288000;
+		MHVLCG.CG[0] = _V(5.657285, 0.000000, 0.000000);
+		MHVLCG.Weight[1] = 6577.084000;
+		MHVLCG.CG[1] = _V(5.602462, 0.000000, 0.000000);
+		MHVLCG.Weight[2] = 6803.880000;
+		MHVLCG.CG[2] = _V(5.551295, 0.000000, 0.000000);
+		MHVLCG.Weight[3] = 7030.676000;
+		MHVLCG.CG[3] = _V(5.503428, 0.000000, 0.000000);
+		MHVLCG.Weight[4] = 7257.472000;
+		MHVLCG.CG[4] = _V(5.458553, 0.000000, 0.000000);
+		MHVLCG.Weight[5] = 7484.268000;
+		MHVLCG.CG[5] = _V(5.416398, 0.000000, 0.000000);
+		MHVLCG.Weight[6] = 7711.064000;
+		MHVLCG.CG[6] = _V(5.376722, 0.000000, 0.000000);
+		MHVLCG.Weight[7] = 7937.860000;
+		MHVLCG.CG[7] = _V(5.339314, 0.000000, 0.000000);
+		MHVLCG.Weight[8] = 8164.656000;
+		MHVLCG.CG[8] = _V(5.303984, 0.000000, 0.000000);
+		MHVLCG.Weight[9] = 8391.452000;
+		MHVLCG.CG[9] = _V(5.270563, 0.000000, 0.000000);
+		MHVLCG.Weight[10] = 8618.248000;
+		MHVLCG.CG[10] = _V(5.238902, 0.000000, 0.000000);
+		MHVLCG.Weight[11] = 8845.044000;
+		MHVLCG.CG[11] = _V(5.208864, 0.000000, 0.000000);
+		MHVLCG.Weight[12] = 9071.840000;
+		MHVLCG.CG[12] = _V(5.180328, 0.000000, 0.000000);
+		MHVLCG.Weight[13] = 9298.636000;
+		MHVLCG.CG[13] = _V(5.153184, 0.000000, 0.000000);
+		MHVLCG.Weight[14] = 9525.432000;
+		MHVLCG.CG[14] = _V(5.127333, 0.000000, 0.000000);
+		MHVLCG.Weight[15] = 9752.228000;
+		MHVLCG.CG[15] = _V(5.102684, 0.000000, 0.000000);
+		MHVLCG.Weight[16] = 9979.024000;
+		MHVLCG.CG[16] = _V(5.079156, 0.000000, 0.000000);
+		MHVLCG.Weight[17] = 10205.820000;
+		MHVLCG.CG[17] = _V(5.056673, 0.000000, 0.000000);
+		MHVLCG.Weight[18] = 10432.616000;
+		MHVLCG.CG[18] = _V(5.035167, 0.000000, 0.000000);
+		MHVLCG.Weight[19] = 10659.412000;
+		MHVLCG.CG[19] = _V(5.014577, 0.000000, 0.000000);
+		MHVLCG.Weight[20] = 10886.208000;
+		MHVLCG.CG[20] = _V(4.994845, 0.000000, 0.000000);
+		MHVLCG.Weight[21] = 11113.004000;
+		MHVLCG.CG[21] = _V(4.975918, 0.000000, 0.000000);
+		MHVLCG.Weight[22] = 11339.800000;
+		MHVLCG.CG[22] = _V(4.957748, 0.000000, 0.000000);
+		MHVLCG.Weight[23] = 11566.596000;
+		MHVLCG.CG[23] = _V(4.940291, 0.000000, 0.000000);
+		MHVLCG.Weight[24] = 11793.392000;
+		MHVLCG.CG[24] = _V(4.923505, 0.000000, 0.000000);
+		MHVLCG.Weight[25] = 12020.188000;
+		MHVLCG.CG[25] = _V(4.907353, 0.000000, 0.000000);
+		MHVLCG.Weight[26] = 12246.984000;
+		MHVLCG.CG[26] = _V(4.891799, 0.000000, 0.000000);
+		MHVLCG.Weight[27] = 12473.780000;
+		MHVLCG.CG[27] = _V(4.876810, 0.000000, 0.000000);
+		MHVLCG.Weight[28] = 12700.576000;
+		MHVLCG.CG[28] = _V(4.862357, 0.000000, 0.000000);
+		MHVLCG.Weight[29] = 12927.372000;
+		MHVLCG.CG[29] = _V(4.848411, 0.000000, 0.000000);
+		MHVLCG.Weight[30] = 13154.168000;
+		MHVLCG.CG[30] = _V(4.834946, 0.000000, 0.000000);
+		MHVLCG.Weight[31] = 13380.964000;
+		MHVLCG.CG[31] = _V(4.821937, 0.000000, 0.000000);
+		MHVLCG.Weight[32] = 13607.760000;
+		MHVLCG.CG[32] = _V(4.809362, 0.000000, 0.000000);
+		MHVLCG.Weight[33] = 13834.556000;
+		MHVLCG.CG[33] = _V(4.797199, 0.000000, 0.000000);
+		MHVLCG.Weight[34] = 14061.352000;
+		MHVLCG.CG[34] = _V(4.785429, 0.000000, 0.000000);
+		MHVLCG.Weight[35] = 14288.148000;
+		MHVLCG.CG[35] = _V(4.774032, 0.000000, 0.000000);
+		MHVLCG.Weight[36] = 14514.944000;
+		MHVLCG.CG[36] = _V(4.762991, 0.000000, 0.000000);
+		MHVLCG.Weight[37] = 14741.740000;
+		MHVLCG.CG[37] = _V(4.752290, 0.000000, 0.000000);
+		MHVLCG.Weight[38] = 14968.536000;
+		MHVLCG.CG[38] = _V(4.741913, 0.000000, 0.000000);
+		MHVLCG.Weight[39] = 15195.332000;
+		MHVLCG.CG[39] = _V(4.731846, 0.000000, 0.000000);
+		MHVLCG.N = 40;
 
-		LMASCCGTAB.Weight[0] = 2267.960000;
-		LMASCCGTAB.CG[0] = _V(6.629321, 0.008094, 0.127109);
-		LMASCCGTAB.Weight[1] = 2494.756000;
-		LMASCCGTAB.CG[1] = _V(6.544157, 0.007748, 0.118130);
-		LMASCCGTAB.Weight[2] = 2721.552000;
-		LMASCCGTAB.CG[2] = _V(6.468017, 0.007424, 0.109787);
-		LMASCCGTAB.Weight[3] = 2948.348000;
-		LMASCCGTAB.CG[3] = _V(6.400901, 0.007123, 0.102079);
-		LMASCCGTAB.Weight[4] = 3175.144000;
-		LMASCCGTAB.CG[4] = _V(6.342809, 0.006843, 0.095007);
-		LMASCCGTAB.Weight[5] = 3401.940000;
-		LMASCCGTAB.CG[5] = _V(6.293741, 0.006586, 0.088570);
-		LMASCCGTAB.Weight[6] = 3628.736000;
-		LMASCCGTAB.CG[6] = _V(6.253696, 0.006350, 0.082769);
-		LMASCCGTAB.Weight[7] = 3855.532000;
-		LMASCCGTAB.CG[7] = _V(6.222676, 0.006137, 0.077604);
-		LMASCCGTAB.Weight[8] = 4082.328000;
-		LMASCCGTAB.CG[8] = _V(6.200679, 0.005946, 0.073074);
-		LMASCCGTAB.Weight[9] = 4309.124000;
-		LMASCCGTAB.CG[9] = _V(6.187706, 0.005777, 0.069180);
-		LMASCCGTAB.Weight[10] = 4535.920000;
-		LMASCCGTAB.CG[10] = _V(6.183757, 0.005630, 0.065922);
-		LMASCCGTAB.Weight[11] = 4762.716000;
-		LMASCCGTAB.CG[11] = _V(6.188832, 0.005505, 0.063299);
-		LMASCCGTAB.Weight[12] = 4989.512000;
-		LMASCCGTAB.CG[12] = _V(6.202931, 0.005402, 0.061312);
-		LMASCCGTAB.Weight[13] = 5216.308000;
-		LMASCCGTAB.CG[13] = _V(6.226054, 0.005322, 0.059961);
-		LMASCCGTAB.N = 14;
+		MHVACG.Weight[0] = 2267.960000;
+		MHVACG.CG[0] = _V(6.629321, 0.008094, 0.127109);
+		MHVACG.Weight[1] = 2494.756000;
+		MHVACG.CG[1] = _V(6.544157, 0.007748, 0.118130);
+		MHVACG.Weight[2] = 2721.552000;
+		MHVACG.CG[2] = _V(6.468017, 0.007424, 0.109787);
+		MHVACG.Weight[3] = 2948.348000;
+		MHVACG.CG[3] = _V(6.400901, 0.007123, 0.102079);
+		MHVACG.Weight[4] = 3175.144000;
+		MHVACG.CG[4] = _V(6.342809, 0.006843, 0.095007);
+		MHVACG.Weight[5] = 3401.940000;
+		MHVACG.CG[5] = _V(6.293741, 0.006586, 0.088570);
+		MHVACG.Weight[6] = 3628.736000;
+		MHVACG.CG[6] = _V(6.253696, 0.006350, 0.082769);
+		MHVACG.Weight[7] = 3855.532000;
+		MHVACG.CG[7] = _V(6.222676, 0.006137, 0.077604);
+		MHVACG.Weight[8] = 4082.328000;
+		MHVACG.CG[8] = _V(6.200679, 0.005946, 0.073074);
+		MHVACG.Weight[9] = 4309.124000;
+		MHVACG.CG[9] = _V(6.187706, 0.005777, 0.069180);
+		MHVACG.Weight[10] = 4535.920000;
+		MHVACG.CG[10] = _V(6.183757, 0.005630, 0.065922);
+		MHVACG.Weight[11] = 4762.716000;
+		MHVACG.CG[11] = _V(6.188832, 0.005505, 0.063299);
+		MHVACG.Weight[12] = 4989.512000;
+		MHVACG.CG[12] = _V(6.202931, 0.005402, 0.061312);
+		MHVACG.Weight[13] = 5216.308000;
+		MHVACG.CG[13] = _V(6.226054, 0.005322, 0.059961);
+		MHVACG.N = 14;
+
+		//CSM CG table
+		MHVCCG.Weight[0] = 22600.000000*0.453597;
+		MHVCCG.CG[0] = _V(984.912775, -2.884033, 7.943920)*0.0254;
+		MHVCCG.Weight[1] = 24800.000000*0.453597;
+		MHVCCG.CG[1] = _V(972.611610, -1.639419, 7.374329)*0.0254;
+		MHVCCG.Weight[2] = 27000.000000*0.453597;
+		MHVCCG.CG[2] = _V(963.366431, -0.597632, 6.897560)*0.0254;
+		MHVCCG.Weight[3] = 29200.000000*0.453597;
+		MHVCCG.CG[3] = _V(956.484350, 0.287174, 6.492634)*0.0254;
+		MHVCCG.Weight[4] = 31400.000000*0.453597;
+		MHVCCG.CG[4] = _V(951.466663, 1.047994, 6.144448)*0.0254;
+		MHVCCG.Weight[5] = 33600.000000*0.453597;
+		MHVCCG.CG[5] = _V(947.945279, 1.709183, 5.841858)*0.0254;
+		MHVCCG.Weight[6] = 35800.000000*0.453597;
+		MHVCCG.CG[6] = _V(945.642588, 2.289109, 5.576458)*0.0254;
+		MHVCCG.Weight[7] = 38000.000000*0.453597;
+		MHVCCG.CG[7] = _V(944.345270, 2.801885, 5.341789)*0.0254;
+		MHVCCG.Weight[8] = 40200.000000*0.453597;
+		MHVCCG.CG[8] = _V(943.886698, 3.258536, 5.132805)*0.0254;
+		MHVCCG.Weight[9] = 42400.000000*0.453597;
+		MHVCCG.CG[9] = _V(944.134833, 3.667800, 4.945507)*0.0254;
+		MHVCCG.Weight[10] = 44600.000000*0.453597;
+		MHVCCG.CG[10] = _V(944.983684, 4.036687, 4.776688)*0.0254;
+		MHVCCG.Weight[11] = 46800.000000*0.453597;
+		MHVCCG.CG[11] = _V(943.105002, 4.183811, 4.853823)*0.0254;
+		MHVCCG.Weight[12] = 49000.000000*0.453597;
+		MHVCCG.CG[12] = _V(939.178998, 4.149310, 5.131156)*0.0254;
+		MHVCCG.Weight[13] = 51200.000000*0.453597;
+		MHVCCG.CG[13] = _V(936.299054, 4.117774, 5.384655)*0.0254;
+		MHVCCG.Weight[14] = 53400.000000*0.453597;
+		MHVCCG.CG[14] = _V(934.329808, 4.088837, 5.617266)*0.0254;
+		MHVCCG.Weight[15] = 55600.000000*0.453597;
+		MHVCCG.CG[15] = _V(933.157323, 4.062189, 5.831469)*0.0254;
+		MHVCCG.Weight[16] = 57800.000000*0.453597;
+		MHVCCG.CG[16] = _V(932.685005, 4.037570, 6.029367)*0.0254;
+		MHVCCG.Weight[17] = 60000.000000*0.453597;
+		MHVCCG.CG[17] = _V(932.830431, 4.014757, 6.212751)*0.0254;
+		MHVCCG.Weight[18] = 62200.000000*0.453597;
+		MHVCCG.CG[18] = _V(933.522837, 3.993557, 6.383164)*0.0254;
+		MHVCCG.Weight[19] = 64400.000000*0.453597;
+		MHVCCG.CG[19] = _V(934.701130, 3.973806, 6.541933)*0.0254;
+		MHVCCG.N = 20;
+
+		MDZBLK[0] = -0.9174410e1;
+		MDZBLK[1] = -0.8217687e1;
+		MDZBLK[2] = 0.6120521e1;
+		MDZBLK[3] = -0.7693073e0;
+		MDZBLK[4] = 0.5298784e-1;
+		MDZBLK[5] = -0.2185130e-2;
+		MDZBLK[6] = 0.5340257e-4;
+		MDZBLK[7] = -0.7113728e-6;
+		MDZBLK[8] = 0.3971388e-8;
+
+		MCVCMA = 129.4*0.3048*0.3048;
+		MCVCMW = 5541.0; //Default CM empty + full CM RCS
+
+		MDGTCD[0] = -60.0*RAD;
+		MDGTCD[1] = 0.0*RAD;
+		MDGTCD[2] = 60.0*RAD;
+		MDGTCD[3] = 120.0*RAD;
+		MDGTCD[4] = 180.0*RAD;
+		MDGTCD[5] = 240.0*RAD;
+		MDGETA[0] = 45.0*RAD;
+		MDGETA[1] = 45.0*RAD;
+		MDGETA[2] = 45.0*RAD;
+		MDGETA[3] = 45.0*RAD;
+		MDGETA[4] = 45.0*RAD;
+		MDGETA[5] = 45.0*RAD;
+
+		//Launchpads
+
+		//CSM: LC-39A as default
+		MCLLTP[0] = MCLLTP[1] = 28.608202*RAD;
+		MCLSDA = sin(MCLLTP[0]);
+		MCLCDA = cos(MCLLTP[0]);
+		MCLGRA = -80.604133*RAD;
+
+		//LM: LC-37B as default
+		MCLLLP[0] = MCLLLP[1] = 28.531445*RAD;
+		MCLSLL = sin(MCLLLP[0]);
+		MCLCLL = cos(MCLLLP[0]);
+		MCLLPL = -80.565077*RAD;
 	}
 
 	//DEFINITIONS
 
+	//Meters per Earth radii
+	double MCCMCU;
 	//Nautical miles per Earth radii
 	double MCCNMC;
-	//MJD of epoch
-	double AGCEpoch;
+	//Year of epoch
+	int AGCEpoch;
 	//Mean lunar radius
 	double MCSMLR;
 	//Radians per degree
 	double MCCRPD;
+	//Radius of earth at Cape
+	double MCECAP;
 	//Geodetic Earth constant B²/A²
 	double MCEBAS;
 	//Geodetic Earth constant A²
@@ -633,7 +743,7 @@ struct RTCCSystemParameters
 	//Phase reference time - GET (hrs.)
 	double MCGREF = 0.0;
 	//Venting scale factor
-	double MCTVEN = 0.0;
+	double MCTVEN;
 	//Lambda Zero
 	double MCLAMD = 0.0;
 	//P80 first launch vehicle
@@ -662,12 +772,22 @@ struct RTCCSystemParameters
 	double GMTBASE = 0.0;
 	//Number of hours from January 0 to midnight before launch
 	double MCCBES = 0.0;
-	//Sine of the geodetic latitude of the launch pad
-	double MCLSDA = sin(28.608202*RAD); //LC-39A
-	//Cosine of the geodetic latitude of the launch pad
-	double MCLCDA = cos(28.608202*RAD); //LC-39A
-	//Longitude of launch pad
-	double MCLGRA = -80.604133*RAD;	//LC-39A
+	//Geodetic and geocentric latitude CSM pad (radians)
+	double MCLLTP[2];
+	//Sine of the geodetic latitude of the CSM pad
+	double MCLSDA;
+	//Cosine of the geodetic latitude of the CSM pad
+	double MCLCDA;
+	//Longitude of CSM pad (radians)
+	double MCLGRA;
+	//Geodetic and geocentric latitude LM pad (radians)
+	double MCLLLP[2];
+	//Sine of the geodetic latitude of the LM pad
+	double MCLSLL;
+	//Cosine of the geodetic latitude of the LM pad
+	double MCLCLL;
+	//Longitude of LM pad (radians)
+	double MCLLPL;
 	//CMC address for external DV uplink
 	int MCCCEX = 3404;
 	//LGC address for external DV uplink
@@ -688,8 +808,16 @@ struct RTCCSystemParameters
 	int MCLRLS = 2022;
 	//LGC address for time of landing
 	int MCLTTD = 2400;
+	//LGC address for descent abort constants
+	int MCLABT = 2545;
+	//CMC address for TEPHEM (liftoff time)
+	int MCCTEP = 01706;
+	//LGC address for TEPHEM (liftoff time)
+	int MCLTEP = 01706;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
 	int MGRTAG = 1;
+	//Maximum station characteristic blocks
+	int MKRBKS;
 	//Gravitational constant of the Moon (Er^3/hr^2)
 	double MCGMUM;
 	//Gravitational constant of the Earth (Er^3/hr^2)
@@ -709,6 +837,7 @@ struct RTCCSystemParameters
 	//Phase indicator system parameter
 	// 0 = No Phase, 1 = Prelaunch
 	// 2, 3 = Condition for Launch and Condition for Launch Sim?
+	// 11 = Prelaunch 2 L.S.
 	// 13 = Orbit (likely, but what about lunar orbit)
 	// 17 = Lunar Descent (?)
 	// 18 = Translunar (likely)
@@ -735,6 +864,8 @@ struct RTCCSystemParameters
 	RTCCDensityTables MHGDEN;
 	//Lift/Drag coefficients (Words: 1-25 Mach Number, 26-50 Coefficients of drag, 51-75 Coefficients of lift, 76-100: Trim angle, 101 DX, 102 DZ, 103 DD)
 	double MHACLD[103], MHALLD[103];
+	//Bank angle bias
+	double MCZBAB;
 
 	//Coefficient of drag for Earth orbit
 	double MCADRG;
@@ -767,8 +898,10 @@ struct RTCCSystemParameters
 	double MCTJTL;
 	//Thrust level of sixth S-IVB thrust phase (main burn after MRS)
 	double MCTJT5;
-	//Thrust level of sevent S-IVB thrust phase (tailoff)
+	//Thrust level of seventh S-IVB thrust phase (tailoff)
 	double MCTJT6;
+	//Thrust level of S-IVB blowdown vent
+	double MCTJT7;
 	//Weight flow rate for first S-IVB thrust phase
 	double MCTJW1;
 	//Weight flow rate for second S-IVB thrust phase
@@ -785,6 +918,8 @@ struct RTCCSystemParameters
 	double MCTJW5;
 	//Weight flow rate for seventh S-IVB thrust phase
 	double MCTJW6;
+	//Weight flow rate of S-IVB blowdown vent
+	double MCTJW7;
 	//Time from ignition to start IGM guidance
 	double MCVIGM;
 	//Minimum allowable S-IVB weight
@@ -996,14 +1131,45 @@ struct RTCCSystemParameters
 	double MCTDRG;
 	//Nominal scaling factor for main DPS thrust level and weight loss rate
 	double MCTDTF;
+	//Nominal delta t of ullage
+	double MCTNDU;
 
 	TLISystemParameters MDVSTP;
 
-	//CG table of LM with descent stage
+	//CG tables
 	struct CGTable
 	{
 		double Weight[40];
 		VECTOR3 CG[40];
 		int N;
-	} LMDSCCGTAB, LMASCCGTAB;
+	} MHVLCG, MHVACG, MHVCCG; //LM ascent+descent, LM ascent, CSM
+
+	//DPS engine gimbal plane
+	double MGVDGD = 154.0*0.0254;
+	//SPS engine gimbal plane
+	double MGVSGD = 833.2*0.0254;
+	//Distance between SPS and DPS gimbal planes
+	double MGVSTD = 435.55*0.0254;
+
+	//Matrix to convert from J2000 to NBY coordinates
+	MATRIX3 MAT_J2000_BRCS;
+	//MJD of midnight July 1st before launch
+	double TEPHEM0;
+
+	//Reentry
+
+	//Blackout
+	double MDZBLK[9];
+
+	//CM area
+	double MCVCMA;
+	//CM weight
+	double MCVCMW;
+
+	//Guidance
+
+	//AOT azimuth table
+	double MDGTCD[6];
+	//AOT elevation table
+	double MDGETA[6];
 };

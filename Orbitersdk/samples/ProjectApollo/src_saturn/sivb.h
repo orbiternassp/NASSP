@@ -28,6 +28,7 @@
 #include "PanelSDK/PanelSDK.h"
 #include "payload.h"
 #include "pyro.h"
+#include "inertial.h"
 
 //
 // Data structure passed from main vessel to SIVB to configure stage.
@@ -83,6 +84,7 @@ struct SIVBSettings
 	double ApsFuel1Kg;				///< APS fuel no. 1 in kg.
 	double ApsFuel2Kg;				///< APS fuel no. 2 in kg.
 	double MainFuelKg;				///< Remaining fuel in kg.
+	double MainFuelMaxKg;			///< Maximum fuel in kg.
 
 	bool PanelsHinged;				///< Are SLA panels hinged?
 	double PanelProcess;			///< SLA Panels opening progress
@@ -117,6 +119,7 @@ struct SIVBSettings
 	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0;};
 
 	IU *iu_pointer;
+	SIVBSystems *sivb_pointer;
 };
 
 class SIVB;
@@ -201,18 +204,6 @@ class SIVB : public ProjectApolloConnectorVessel {
 public:
 
 	///
-	/// Specifies the main state of the SIVb
-	///
-	/// \brief SIVb state.
-	/// \ingroup SepStageSettings
-	///
-	enum SIVbState
-	{
-		SIVB_STATE_SETUP = -1,				///< SII is waiting for setup call.
-		SIVB_STATE_WAITING					///< SII is idle after motor burnout.
-	};
-
-	///
 	/// \ingroup ScenarioState
 	/// \brief Main SIVB state-saving structure.
 	///
@@ -270,6 +261,9 @@ public:
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 	void clbkPostCreation();
 
+	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
+	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
+
 	///
 	/// Pass settings from the main DLL to the jettisoned SIVb. This call must be virtual 
 	/// so it can be called from other DLLs without building in the LES code.
@@ -294,6 +288,8 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 
 	IU *GetIU() { return iu; };
+
+	InertialData *GetInertialData() { return &inertialData; };
 
 	///
 	/// \brief Get main propellant mass.
@@ -391,7 +387,6 @@ protected:
 	///
 	void GetApolloName(char *s);
 	void AddRCS_S4B();				///< Add RCS for SIVb control.
-	void Boiloff();					///< Boil off some LOX/LH2 in orbit.
 
 	void CreateSISIVBInterface();
 	bool GetDockingPortFromHandle(OBJHANDLE port, UINT &num);
@@ -403,18 +398,16 @@ protected:
 
 	int PayloadType;				///< Payload type.
 	int VehicleNo;					///< Saturn vehicle number.
-	SIVbState State;				///< Main stage state.
 	PayloadSettings payloadSettings;
 
 	double EmptyMass;				///< Empty mass in kg.
 	double PayloadMass;				///< Payload mass in kg.
 	double MainFuel;				///< Main fuel mass in kg.
+	double MainFuelMax;				///< Maximum main fuel mass in kg.
 	double ApsFuel1Kg;				///< APS fuel no. 1 in kg.
 	double ApsFuel2Kg;				///< APS fuel no. 2 in kg.
 
 	double MissionTime;				///< Current MET in seconds.
-	double NextMissionEventTime;	///< Next event time for automated operation.
-	double LastMissionEventTime;	///< Last event time.
 
 	bool PanelsHinged;				///< SLA panels are hinged.
 	bool PanelsOpened;				///< SLA Panels are open.
@@ -430,6 +423,8 @@ protected:
 	double ISP_THIRD_VAC;			///< J2 engine ISP in vacuum.
 
 	double PayloadEjectionForce;	///< Force applied at "undocking" of the payload attached at the front of the SLA (CSM, nosecone etc.)
+
+	double visibilitySize;
 
 	// Exterior light definitions
 	BEACONLIGHTSPEC dockingLights[5];             // docking lights
@@ -468,6 +463,8 @@ protected:
 	///
 	IU* iu;
 
+	InertialData inertialData;
+
 	bool iuinitflag;
 
 	SIVBSystems *sivbsys;
@@ -492,7 +489,6 @@ protected:
 	Battery *MainBattery;
 
 	THRUSTER_HANDLE th_aps_rot[6], th_main[1], th_aps_ull[2];                 // handles for APS engines
-	THRUSTER_HANDLE th_lox_vent;
 	THGROUP_HANDLE thg_main, thg_sep, thg_sepPanel, thg_ver;
 	PROPELLANT_HANDLE ph_aps1, ph_aps2, ph_main;
 

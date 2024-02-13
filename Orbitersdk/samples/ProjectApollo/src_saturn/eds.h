@@ -35,6 +35,9 @@ public:
 	virtual void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
 	bool GetPlatformFail() { return PlatformFailure; }
 	double GetPlatformFailTime() { return PlatformFailureTime; }
+
+	bool GetLiftoffCircuitAFailure() { return LiftoffCircuitAFailure; }
+	bool GetLiftoffCircuitBFailure() { return LiftoffCircuitBFailure; }
 	virtual void SetLiftoffCircuitAFailure(bool fail) { LiftoffCircuitAFailure = fail; }
 	virtual void SetLiftoffCircuitBFailure(bool fail) { LiftoffCircuitBFailure = fail; }
 
@@ -272,6 +275,8 @@ public:
 	double GetLVTankPressure(int n);
 	bool GetSIISIVBSepSeqStart() { return SIISIVBSepSeqStart; }
 	bool GetSIIInboardEngineOut();
+	bool GetSIIOutboardEngineOut();
+	bool GetSIIEnginesOut();
 
 	//GSE Reset Buses
 	void ResetBus1();
@@ -302,7 +307,4 @@ protected:
 	bool UllageThrustIndicate;
 
 	bool SIIEDSCutoff;
-
-private:
-	const int SIIEngInd[5] = { 1,3,0,2,4 };
 };

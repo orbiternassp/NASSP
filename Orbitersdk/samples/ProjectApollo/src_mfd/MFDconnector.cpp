@@ -22,9 +22,9 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
-#include "orbiterSDK.h"
+#include "Orbitersdk.h"
 
 #include "nasspdefs.h"
 #include "checklistController.h"
@@ -299,6 +299,32 @@ bool MFDConnector::completeChecklistItem(ChecklistItem* in)
 
 	return false;
 }
+bool MFDConnector::gotoChecklistItem(ChecklistItem* in) {
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_GOTO_CHECKLIST_ITEM;
+	cm.val1.pValue = in;
+
+	if (SendMessage(cm))
+	{
+		return cm.val2.bValue;
+	}
+
+	return false;
+}
+bool MFDConnector::undoChecklistItem() {
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_UNDO_CHECKLIST_ITEM;
+
+	if (SendMessage(cm)) {
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
 char *MFDConnector::checklistName()
 {
 	ConnectorMessage cm;
@@ -321,4 +347,26 @@ bool MFDConnector::RetrieveChecklist(ChecklistContainer *input)
 	if (SendMessage(cm))
 		return cm.val2.bValue;
 	return false;
+}
+
+bool MFDConnector::GetAutoExecute()
+{
+	ConnectorMessage cm;
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_GET_CHECKLIST_AUTOEXECUTE;
+
+	if (SendMessage(cm))
+		return cm.val1.bValue;
+
+	return false;
+}
+
+void MFDConnector::SetAutoExecute(bool autoExecute)
+{
+	ConnectorMessage cm;
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_SET_CHECKLIST_AUTOEXECUTE;
+	cm.val1.bValue = autoExecute;
+
+	SendMessage(cm);
 }

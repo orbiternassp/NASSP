@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
@@ -38,7 +38,7 @@
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "ioChannels.h"
 
 #include "s1csystems.h"
@@ -155,7 +155,6 @@ void SaturnV::initSaturnV()
 	// State variables.
 	//
 
-	TLICapableBooster = true;
 	GoHover = false;
 	Burned = false;
 
@@ -197,8 +196,6 @@ SaturnV::~SaturnV()
 
 {
 	TRACESETUP("~SaturnV");
-
-	ReleaseSurfaces();
 
 	if (iu)
 	{
@@ -419,8 +416,6 @@ void SaturnV::DoFirstTimestep(double simt)
 	strcpy (VName, ApolloName); strcat (VName, "-STG1");
 	hstg1= oapiGetVesselByName(VName);
 
-	LookForSIVb();
-
 	strcpy (VName, ApolloName); strcat (VName, "-S4B1");
 	hs4b1 = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-S4B2");
@@ -431,8 +426,6 @@ void SaturnV::DoFirstTimestep(double simt)
 	hs4b4 = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-SM");
 	hSMJet = oapiGetVesselByName(VName);
-
-	LookForLEM();
 
 	strcpy (VName, ApolloName); strcat (VName, "-DCKPRB");
 	hPROBE = oapiGetVesselByName(VName);
@@ -460,20 +453,9 @@ void SaturnV::DoFirstTimestep(double simt)
 void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 {
-	//
-	// On the first timestep we just do basic setup
-	// stuff and return. We seem to get called in at
-	// least some cases before Orbiter is properly set
-	// up, so the last thing we want to do is point the
-	// engines in a wacky direction and then not be
-	// called again for several seconds.
-	//
-
 	if (FirstTimestep) {
 		DoFirstTimestep(simt);
-		LastTimestep = simt;
 		FirstTimestep = false;
-		return;
 	}
 
 	GenericTimestep(simt, simdt, mjd);
@@ -550,8 +532,6 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 		SeparateStage(CM_STAGE);
 		SetStage(CM_STAGE);
 	}
-
-	LastTimestep = simt;
 }
 
 void SaturnV::clbkPostStep (double simt, double simdt, double mjd) {
@@ -661,7 +641,7 @@ void SaturnV::CreateStageSpecificSystems()
 	if (stage < CSM_LEM_STAGE)
 	{
 		iu = new IUSV;
-		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, thg_ver);
 	}
 }
 
@@ -813,15 +793,15 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CSM_LEM_STAGE:
-		SetCSMStage();
+		SetCSMStage(_V(0, 0, 0));
 		break;
 
 	case CM_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_THREE:
@@ -849,7 +829,7 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CM_ENTRY_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 	}
 }
@@ -991,13 +971,6 @@ bool SaturnV::GetSIIPropellantDepletionEngineCutoff()
 	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
 
 	return sii->GetPropellantDepletionEngineCutoff();
-}
-
-bool SaturnV::GetSIIEngineOut()
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
-
-	return sii->GetEngineOut();
 }
 
 void SaturnV::SIEDSCutoff(bool cut)

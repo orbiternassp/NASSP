@@ -22,7 +22,7 @@
 
   **************************************************************************/
 
-// To force orbitersdk.h to use <fstream> in any compiler version
+// To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
@@ -36,7 +36,7 @@
 #include "toggleswitch.h"
 
 #include "apolloguidance.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "ioChannels.h"
 
 #include "s1bsystems.h"
@@ -76,14 +76,13 @@ Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
 	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk)
 {
 	hMaster = hObj;
+	sib = NULL;
 	initSaturn1b();
 }
 
 Saturn1b::~Saturn1b()
 
 {
-	ReleaseSurfaces();
-
 	if (iu)
 	{
 		delete iu;
@@ -114,7 +113,6 @@ void Saturn1b::initSaturn1b()
 	RelPos = _V(0.0,0.0,0.0);
 	hSoyuz = 0;
 	hAstpDM = 0;
-	hNosecapVessel = 0;
 	Burned = false;
 
 	if (strcmp(GetName(), "AS-211")==0)
@@ -220,8 +218,6 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hesc1 = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-STG1");
 	hstg1 = oapiGetVesselByName(VName);
-	GetApolloName(VName); strcat (VName, "-S4BSTG");
-	hs4bM = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-S4B1");
 	hs4b1 = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-S4B2");
@@ -248,26 +244,15 @@ void Saturn1b::DoFirstTimestep(double simt)
 	GetApolloName(VName); strcat (VName, "-MAINCHUTE");
 	hMainChute = oapiGetVesselByName(VName);	
 	GetApolloName(VName); strcat (VName, "-OPTICSCOVER");
-	hOpticsCover = oapiGetVesselByName(VName);	
-	GetApolloName(VName); strcat(VName, "-NOSECAP");
-	hNosecapVessel = oapiGetVesselByName(VName);
+	hOpticsCover = oapiGetVesselByName(VName);
 }
 
 void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 {
-	//
-	// On the first timestep we just do basic setup
-	// stuff and return. We seem to get called in at
-	// least some cases before Orbiter is properly set
-	// up, so the last thing we want to do is point the
-	// engines in a wacky direction and then not be
-	// called again for several seconds.
-	//
 	if (FirstTimestep){
 		DoFirstTimestep(simt);
 		FirstTimestep = false;
-		return;
 	}
 
 	GenericTimestep(simt, simdt, mjd);
@@ -309,8 +294,6 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 		SeparateStage(CM_STAGE);
 		SetStage(CM_STAGE);
 	}
-
-	LastTimestep = simt;
 }
 
 void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
@@ -455,7 +438,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		SetSecondStage();
-		SetSecondStageEngines();
+		SetSecondStageEngines(STG1OF);
 		AddRCS_S4B();
 		break;
 
@@ -486,7 +469,7 @@ void Saturn1b::CreateStageSpecificSystems()
 	if (stage < CSM_LEM_STAGE)
 	{
 		iu = new IU1B;
-		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, thg_ver);
 	}
 }
 
@@ -527,15 +510,15 @@ void Saturn1b::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CSM_LEM_STAGE:
-		SetCSMStage();
+		SetCSMStage(_V(0, 0, 0));
 		break;
 
 	case CM_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 
 	case CM_ENTRY_STAGE_THREE:
@@ -563,7 +546,7 @@ void Saturn1b::ConfigureStageMeshes(int stage_state)
 		break;
 
 	case CM_ENTRY_STAGE:
-		SetReentryStage();
+		SetReentryStage(_V(0, 0, 0));
 		break;
 	}
 }
@@ -585,7 +568,7 @@ void Saturn1b::ConfigureStageEngines(int stage_state)
 
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
-		SetSecondStageEngines();
+		SetSecondStageEngines(STG1OF);
 		break;
 	}
 }

@@ -25,83 +25,100 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 // MISSION STATES: MISSION C
+
+// DAY 0
 #define MST_C_INSERTION		10
-// Ends at specified time, goes to
-#define MST_C_SV_UPDATE1	100
-#define MST_C_SEPARATION	11
-// Ends at 1ST RDZ PHASING BURN, goes to
-#define MST_C_COAST1		12
-// Ends at 1ST SPS BURN (NCC BURN), goes to
-#define MST_C_COAST2		13
-// Ends at 2ND SPS BURN (NSR BURN), goes to
-#define MST_C_COAST3		14
-// Ends at TERMINAL PHASE INITIATION BURN, goes to
-#define MST_C_COAST4		15
-// Ends at MCC, goes to
-#define MST_C_COAST5		16
-// Ends at TERMINAL PHASE FINALIZE BURN, goes to
-#define MST_C_COAST6		17
-// Ends at SEPARATION MANEUVER, goes to
-#define MST_C_COAST7		18
-// Ends at 3RD SPS BURN, goes to
-#define MST_C_COAST8		19
-// Ends at 4TH SPS BURN (MIN IMP TEST), goes to
-#define MST_C_COAST9		20
-// Ends at 5TH SPS BURN, goes to
-#define MST_C_COAST10		21
-// Ends at 6TH SPS BURN (MIN IMP TEST 2), goes to
-#define MST_C_COAST11		22
-// Ends at 7TH SPS BURN (TIME ANOMALY ADJ FOR DEORBIT), goes to
-#define MST_C_COAST12		23
-// Ends at DEORBIT BURN, goes to
-#define MST_C_COAST13		24
-// Ends at entry interface, goes to entry.
-#define MST_C_COAST14		25
-#define MST_C_COAST15		26
-#define MST_C_COAST16		27
-#define MST_C_COAST17		28
-#define MST_C_COAST18		29
-#define MST_C_COAST19		30
-#define MST_C_COAST20		31
-#define MST_C_COAST21		32
-#define MST_C_COAST22		33
-#define MST_C_COAST23		34
-#define MST_C_COAST24		35
-#define MST_C_COAST25		36
-#define MST_C_COAST26		37
-#define MST_C_COAST27		38
-#define MST_C_COAST28		39
-#define MST_C_COAST29		40
-#define MST_C_COAST30		41
-#define MST_C_COAST31		42
-#define MST_C_COAST32		43
-#define MST_C_COAST33		44
-#define MST_C_COAST34		45
-#define MST_C_COAST35		46
-#define MST_C_COAST36		47
-#define MST_C_COAST37		48
-#define MST_C_COAST38		49
-#define MST_C_COAST39		50
-#define MST_C_COAST40		51
-#define MST_C_COAST41		52
-#define MST_C_COAST42		53
-#define MST_C_COAST43		54
-#define MST_C_COAST44		55
-#define MST_C_COAST45		56
-#define MST_C_COAST46		57
-#define MST_C_COAST47		58
-#define MST_C_COAST48		59
-#define MST_C_COAST49		60
-#define MST_C_COAST50		61
-#define MST_C_COAST51		62
-#define MST_C_COAST52		63
-#define MST_C_COAST53		64
-#define MST_C_COAST54		65
-#define MST_C_COAST55		66
-#define MST_C_COAST56		67
-#define MST_C_COAST57		68
-#define MST_C_COAST58		69
-#define MST_C_COAST59		70
-#define MST_C_COAST60		71
-#define MST_C_ABORT			75
-// Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
+#define MST_C_DAY0STATE1	11
+#define MST_C_DAY0STATE2	12
+#define MST_C_DAY0STATE3	13
+#define MST_C_DAY0STATE4	14
+#define MST_C_DAY0STATE5	15
+#define MST_C_DAY0STATE6	16
+#define MST_C_DAY0STATE7	17
+#define MST_C_DAY0STATE8	18
+#define MST_C_DAY0STATE9	19
+
+// DAY 1
+#define MST_C_DAY1STATE1	30
+#define MST_C_DAY1STATE2	31
+#define MST_C_DAY1STATE3	32
+#define MST_C_DAY1STATE4	33
+#define MST_C_DAY1STATE5	34
+#define MST_C_DAY1STATE6	35
+#define MST_C_DAY1STATE7	36
+#define MST_C_DAY1STATE8	37
+#define MST_C_DAY1STATE9	38
+
+// DAY 2
+#define MST_C_DAY2STATE1	50
+#define MST_C_DAY2STATE2	51
+#define MST_C_DAY2STATE3	52
+#define MST_C_DAY2STATE4	53
+#define MST_C_DAY2STATE5	54
+
+// DAY 3
+#define MST_C_DAY3STATE1	60
+#define MST_C_DAY3STATE2	61
+#define MST_C_DAY3STATE3	62
+#define MST_C_DAY3STATE4	63
+#define MST_C_DAY3STATE5	64
+
+// DAY 4
+#define MST_C_DAY4STATE1	70
+#define MST_C_DAY4STATE2	71
+#define MST_C_DAY4STATE3	72
+#define MST_C_DAY4STATE4	73
+#define MST_C_DAY4STATE5	74
+
+// DAY 5
+#define MST_C_DAY5STATE1	80
+#define MST_C_DAY5STATE2	81
+#define MST_C_DAY5STATE3	82
+#define MST_C_DAY5STATE4	83
+#define MST_C_DAY5STATE5	84
+#define MST_C_DAY5STATE6	85
+#define MST_C_DAY5STATE7	86
+#define MST_C_DAY5STATE8	87
+#define MST_C_DAY5STATE9	88
+#define MST_C_DAY5STATE10	89
+
+// DAY 6
+#define MST_C_DAY6STATE1	90
+#define MST_C_DAY6STATE2	91
+#define MST_C_DAY6STATE3	92
+#define MST_C_DAY6STATE4	93
+#define MST_C_DAY6STATE5	94
+#define MST_C_DAY6STATE6	95
+
+// DAY 7
+#define MST_C_DAY7STATE1	100
+#define MST_C_DAY7STATE2	101
+#define MST_C_DAY7STATE3	102
+
+// DAY 8
+#define MST_C_DAY8STATE1	110
+#define MST_C_DAY8STATE2	111
+#define MST_C_DAY8STATE3	112
+#define MST_C_DAY8STATE4	113
+#define MST_C_DAY8STATE5	114
+#define MST_C_DAY8STATE6	115
+#define MST_C_DAY8STATE7	116
+#define MST_C_DAY8STATE8	117
+
+// DAY 9
+#define MST_C_DAY9STATE1	120
+#define MST_C_DAY9STATE2	121
+#define MST_C_DAY9STATE3	122
+#define MST_C_DAY9STATE4	123
+#define MST_C_DAY9STATE5	124
+
+// DAY 10
+#define MST_C_DAY10STATE1	130
+#define MST_C_DAY10STATE2	131
+#define MST_C_DAY10STATE3	132
+#define MST_C_DAY10STATE4	133
+#define MST_C_DAY10STATE5	134
+#define MST_C_DAY10STATE6	135
+
+// SPECIAL
+#define MST_C_ABORT			175

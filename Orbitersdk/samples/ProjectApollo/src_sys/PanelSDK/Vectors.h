@@ -26,7 +26,7 @@
 #define _VECTORS_
 
 
-#include "matrix.h"
+#include "Matrix.h"
 class matrix;
 class vector3
 { public:

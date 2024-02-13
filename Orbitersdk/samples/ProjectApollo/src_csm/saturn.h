@@ -57,7 +57,7 @@
 #include "MechanicalAccelerometer.h"
 #include "checklistController.h"
 #include "payload.h"
-#include "csmcomputer.h"
+#include "CSMcomputer.h"
 #include "qball.h"
 #include "canard.h"
 #include "siisystems.h"
@@ -65,18 +65,15 @@
 #include "sce.h"
 #include "csmsensors.h"
 #include "rhc.h"
+#include "inertial.h"
+#include "CueCardManager.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
 #include "vesim.h"
 
-//
-// IMFD5 communication support
-//
-
-#include "IMFD/IMFD_Client.h"
-
 class IU;
+class SIBSystems;
 class SICSystems;
 
 namespace mission
@@ -93,30 +90,6 @@ namespace mission
 #define RCS_CM_RING_1		4
 #define RCS_CM_RING_2		5
 
-///
-/// \brief O2/H2 tank status.
-/// \ingroup InternalInterface
-///
-typedef struct {
-	double O2Tank1PressurePSI;
-	double O2Tank2PressurePSI;
-	double H2Tank1PressurePSI;
-	double H2Tank2PressurePSI;
-	double O2SurgeTankPressurePSI;
-} TankPressures;
-
-///
-/// \brief O2/H2 tank quantities.
-/// \ingroup InternalInterface
-///
-typedef struct {
-	double O2Tank1Quantity;
-	double O2Tank1QuantityKg;
-	double O2Tank2Quantity;
-	double O2Tank2QuantityKg;
-	double H2Tank1Quantity;
-	double H2Tank2Quantity;
-} TankQuantities;
 
 ///
 /// \brief Cabin atmosphere status.
@@ -320,13 +293,59 @@ typedef struct {
 } SPSStatus;
 
 // Vesim input IDs
-#define CSM_AXIS_INPUT_RHCR    1
-#define CSM_AXIS_INPUT_RHCP    2
-#define CSM_AXIS_INPUT_RHCY    3
-#define CSM_AXIS_INPUT_THCX    4
-#define CSM_AXIS_INPUT_THCY    5
-#define CSM_AXIS_INPUT_THCZ    6
-#define CSM_BUTTON_ROT_LIN     7
+#define CSM_AXIS_INPUT_RHC_R        1
+#define CSM_AXIS_INPUT_RHC_P        2
+#define CSM_AXIS_INPUT_RHC_Y        3
+#define CSM_AXIS_INPUT_THC_X        4
+#define CSM_AXIS_INPUT_THC_Y        5
+#define CSM_AXIS_INPUT_THC_Z        6
+#define CSM_BUTTON_INPUT_THC_CCW    7
+#define CSM_BUTTON_INPUT_THC_CW     8
+#define CSM_BUTTON_ROT_LIN          9
+#define CSM_BUTTON_DSKY1_PRO       10
+#define CSM_BUTTON_DSKY1_KEY_REL   11
+#define CSM_BUTTON_DSKY1_VERB      12
+#define CSM_BUTTON_DSKY1_NOUN      13
+#define CSM_BUTTON_DSKY1_ENTR      14
+#define CSM_BUTTON_DSKY1_CLR       15
+#define CSM_BUTTON_DSKY1_PLUS      16
+#define CSM_BUTTON_DSKY1_MINUS     17
+#define CSM_BUTTON_DSKY1_RSET      18
+#define CSM_BUTTON_DSKY1_NUM_0     19
+#define CSM_BUTTON_DSKY1_NUM_1     20
+#define CSM_BUTTON_DSKY1_NUM_2     21
+#define CSM_BUTTON_DSKY1_NUM_3     22
+#define CSM_BUTTON_DSKY1_NUM_4     23
+#define CSM_BUTTON_DSKY1_NUM_5     24
+#define CSM_BUTTON_DSKY1_NUM_6     25
+#define CSM_BUTTON_DSKY1_NUM_7     26
+#define CSM_BUTTON_DSKY1_NUM_8     27
+#define CSM_BUTTON_DSKY1_NUM_9     28
+#define CSM_BUTTON_DSKY2_PRO       29
+#define CSM_BUTTON_DSKY2_KEY_REL   30
+#define CSM_BUTTON_DSKY2_VERB      31
+#define CSM_BUTTON_DSKY2_NOUN      32
+#define CSM_BUTTON_DSKY2_ENTR      33
+#define CSM_BUTTON_DSKY2_CLR       34
+#define CSM_BUTTON_DSKY2_PLUS      35
+#define CSM_BUTTON_DSKY2_MINUS     36
+#define CSM_BUTTON_DSKY2_RSET      37
+#define CSM_BUTTON_DSKY2_NUM_0     38
+#define CSM_BUTTON_DSKY2_NUM_1     39
+#define CSM_BUTTON_DSKY2_NUM_2     40
+#define CSM_BUTTON_DSKY2_NUM_3     41
+#define CSM_BUTTON_DSKY2_NUM_4     42
+#define CSM_BUTTON_DSKY2_NUM_5     43
+#define CSM_BUTTON_DSKY2_NUM_6     44
+#define CSM_BUTTON_DSKY2_NUM_7     45
+#define CSM_BUTTON_DSKY2_NUM_8     46
+#define CSM_BUTTON_DSKY2_NUM_9     47
+#define CSM_BUTTON_DIR_ULL         48
+#define CSM_BUTTON_THR_ON          49
+#define CSM_BUTTON_DVTA_NORM       50
+#define CSM_BUTTON_DVTA_OFF        51
+#define CSM_BUTTON_DVTB_NORM       52
+#define CSM_BUTTON_DVTB_OFF        53
 
 // Callback for Vesim events
 void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
@@ -565,7 +584,7 @@ public:
 		// used.
 		//
 
-		// VC Sutfaces
+		// VC Surfaces
 		SRF_VC_DSKYDISP,
 		SRF_VC_DSKY_LIGHTS,
 		SRF_VC_DIGITALDISP,
@@ -591,6 +610,7 @@ public:
 		SRF_VC_CWS_GNLIGHTS,
 		SRF_VC_DIGITAL90,
 		SRF_VC_EVENT_TIMER_DIGITS90,
+		SRF_VC_ABORT,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -626,8 +646,6 @@ public:
 			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
 			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
 			unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
-			unsigned LiftoffSignalAFail:1;		///< Liftoff signal A will not come through from the IU.
-			unsigned LiftoffSignalBFail:1;		///< Liftoff signal B will not come through from the IU.
 			unsigned AutoAbortEnableFail:1;		///< IU fails to enable the auto abort relays.
 		};
 		int word;								///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
@@ -713,7 +731,7 @@ public:
 			unsigned ApexCoverAttached:1;	///< Is the apex cover attached?
 			unsigned ChutesAttached:1;		///< Are the chutes attached?
 			unsigned CSMAttached:1;			///< Is there a CSM?
-			unsigned NosecapAttached:1;		///< Is there an Apollo 5-style nosecap?
+			unsigned Spare1:1;				///< Spare
 			unsigned LESLegsCut:1;			///< Are the LES legs attached?
 			unsigned SIMBayPanelJett:1;		///< Has the SIM bay panel been jettisoned?
 		};
@@ -1024,7 +1042,6 @@ public:
 	virtual bool GetSIInboardEngineOut() = 0;
 	virtual bool GetSIOutboardEngineOut() = 0;
 	virtual bool GetSIBLowLevelSensorsDry();
-	virtual bool GetSIIEngineOut();
 	virtual void SetSIThrusterDir(int n, double yaw, double pitch) = 0;
 	virtual void SetSIIThrusterDir(int n, double yaw, double pitch) {};
 	void SetSIVBThrusterDir(double yaw, double pitch);
@@ -1095,8 +1112,6 @@ public:
 	///
 	void GetAtmosStatus(AtmosStatus &atm);
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
-	void GetTankPressures(TankPressures &press);
-	void GetTankQuantities(TankQuantities &q);
 
 	///
 	/// Get information on the status of a fuel cell in the CSM.
@@ -1147,9 +1162,6 @@ public:
 	/// \brief Disable time acceleration if desired.
 	///
 	void SlowIfDesired();
-
-	void ActivateS4RCS();
-	void DeactivateS4RCS();
 
 	virtual void ActivatePrelaunchVenting() = 0;
 	virtual void DeactivatePrelaunchVenting() = 0;
@@ -1252,11 +1264,6 @@ public:
 	void SetCMdocktgtMesh();
 
 	///
-	/// \brief Set nosecap mesh
-	///
-	void SetNosecapMesh();
-
-	///
 	/// \brief Set VC seats mesh
 	///
 	void SetVCSeatsMesh();
@@ -1264,6 +1271,8 @@ public:
 	void SetCOASMesh();
 
 	void SetSIMBayPanelMesh();
+
+	void AddCMMeshes(const VECTOR3 &mesh_dir);
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -1273,11 +1282,6 @@ public:
 	bool LETAttached();
 
 	void CutLESLegs();
-
-	///
-	/// \brief Returns the IMFD communication client for ProjectApolloMFD
-	///
-	virtual IMFD_Client *GetIMFDClient() { return &IMFD_Client; }; 
 
 	///
 	/// \brief TLI event management
@@ -1290,7 +1294,14 @@ public:
 	// \ mass in kg, ro (distance from center of the bottom points), tdph (height of bottom points),
 	// \ height (of the top point), x_target (stiffness/damping factor, stable default is -0.5)
 	//
+	void ConfigTouchdownPoints();
 	void ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target = -0.5);
+	
+	void SetWaterDumpParticleStreams(VECTOR3 ofs);
+
+	// Functions to recalculate moments of inertia and center of gravity
+	void UpdateMassAndCoG();
+	void CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG);
 
 	//
 	// LUA Interface
@@ -1309,11 +1320,13 @@ public:
 	int Lua_GetAGCUplinkStatus();
 
 	//System Access
+	InertialData *GetInertialData() { return &inertialData; };
 	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 	SCE *GetSCE() { return &sce; }
 	EDA *GetEDA() { return &eda; }
 	IU *GetIU() { return iu; };
+	virtual SIBSystems *GetSIB() { return NULL; }
 	virtual SICSystems *GetSIC() { return NULL; }
 	SECS *GetSECS() { return &secs; }
 
@@ -1349,8 +1362,6 @@ protected:
 
 	void JettisonOpticsCover();
 
-	void JettisonNosecap();
-
 	void JettisonSIMBayPanel();
 
 	//
@@ -1364,12 +1375,6 @@ protected:
 	/// \brief SII Sep light.
 	///
 	bool SIISepState;
-
-	///
-	/// Abort light. True if ABORT light is lit.
-	/// \brief Abort light.
-	///
-	bool ABORT_IND;
 
 	///
 	/// Interstage attached flag. True if interstage is attached.
@@ -1414,12 +1419,6 @@ protected:
 	bool CSMAttached;
 
 	///
-	/// True if there is an Apollo 5-style nosecap in place of a CSM.
-	/// \brief Nosecap attached flag.
-	///
-	bool NosecapAttached;
-
-	///
 	/// Gives the angle to which the SLA panels will rotate; some of the Skylab missions
 	/// planned to retain the SLA panels but rotate them around 150 degrees.
 	/// \brief SLA panel rotation angle.
@@ -1437,6 +1436,11 @@ protected:
 	bool DeleteLaunchSite;
 
 	int buildstatus;
+
+	///
+	/// \brief NASSP scenario version
+	///
+	int nasspver;
 
 	//
 	// Current mission time and mission times for stage events.
@@ -1456,13 +1460,6 @@ protected:
 	/// \brief Time of next event.
 	///
 	double NextMissionEventTime;
-
-	///
-	/// The time in seconds of the previous automated event that occur in the mission. This 
-	/// is a generic value used by the autopilot and staging code.
-	/// \brief Time of last event.
-	///
-	double LastMissionEventTime;
 
 
 	///
@@ -1610,8 +1607,6 @@ protected:
 	FDAI fdaiLeft;
 	int fdaiDisabled;
 	int fdaiSmooth;
-
-	HBITMAP hBmpFDAIRollIndicator;
 
 	//Panels
 
@@ -1848,7 +1843,7 @@ protected:
 
 	SwitchRow CSMLightSwitchesRow;
 	ToggleSwitch RunEVALightSwitch;
-	ThreePosSwitch RndzLightSwitch;
+	ThreeSourceTwoDestSwitch RndzLightSwitch;
 	ToggleSwitch TunnelLightSwitch;
 
 	SwitchRow LMPowerSwitchRow;
@@ -2006,8 +2001,7 @@ protected:
 	SaturnDCAmpMeter DCAmpMeter;
 
 	SwitchRow SystemTestMeterRow;
-	DCVoltMeter SystemTestVoltMeter;
-	SaturnSystemTestAttenuator  SystemTestAttenuator;
+	SaturnSystemTestMeter SystemTestVoltMeter;
 
 	//
 	// FDAI control switches.
@@ -3135,10 +3129,10 @@ protected:
 	CircuitBrakerSwitch GlycolToRadiatorsLever;
 
 	SwitchRow CabinPressureReliefLever1Row;
-	ThumbwheelSwitch CabinPressureReliefLever1;
+	SaturnCabinPressureReliefLever CabinPressureReliefLever1;
 
 	SwitchRow CabinPressureReliefLever2Row;
-	SaturnCabinPressureReliefLever CabinPressureReliefLever2;
+	SaturnGuardedCabinPressureReliefLever CabinPressureReliefLever2;
 
 	SwitchRow GlycolReservoirRotariesRow;
 	RotationalSwitch GlycolReservoirInletRotary;
@@ -3466,6 +3460,8 @@ protected:
 	bool LVGuidLight;
 	bool LVRateLight;
 
+	CueCardManager CueCards;
+
 	//
 	// And state that doesn't need to be saved.
 	//
@@ -3484,8 +3480,6 @@ protected:
 	/// \brief SIVb mesh offset.
 	///
 	double S4Offset;
-
-	double actualFUEL;
 
 	bool KEY1;
 	bool KEY2;
@@ -3514,7 +3508,6 @@ protected:
 	int CurrentTimestep;
 	int LongestTimestep;
 	double LongestTimestepLength;
-	VECTOR3 normal;
 
 	PanelSwitches MainPanel;
 	PanelSwitchesVC MainPanelVC;
@@ -3542,6 +3535,8 @@ protected:
 	// Internal systems devices.						 //
 	///////////////////////////////////////////////////////
 
+	InertialData inertialData;
+
 	// SCS components
 	BMAG bmag1;
 	BMAG bmag2;
@@ -3559,6 +3554,7 @@ protected:
 	// Telecom equipment
 	DSE  dataRecorder;
 	PCM  pcm;
+	UDL	 udl;
 	PMP	 pmp;
 	USB  usb;
 	HGA  hga;
@@ -3581,39 +3577,71 @@ protected:
 	PowerMerge InstrumentationPowerFeeder;
 	PowerMerge ECSSecTransducersFeeder;
 public:
-	CSMTankTempTransducer H2Tank1TempSensor;
-	CSMTankTempTransducer H2Tank2TempSensor;
-	CSMTankTempTransducer O2Tank1TempSensor;
-	CSMTankTempTransducer O2Tank2TempSensor;
+	TemperatureTransducer H2Tank1TempSensor;
+	TemperatureTransducer H2Tank2TempSensor;
+	TemperatureTransducer O2Tank1TempSensor;
+	TemperatureTransducer O2Tank2TempSensor;
+	CSMTankPressTransducer H2Tank1PressSensor;
+	CSMTankPressTransducer H2Tank2PressSensor;
+	CSMTankPressTransducer O2Tank1PressSensor;
+	CSMTankPressTransducer O2Tank2PressSensor;
+	CSMTankQuantityTransducer H2Tank1QuantitySensor;
+	CSMTankQuantityTransducer H2Tank2QuantitySensor;
+	CSMTankQuantityTransducer O2Tank1QuantitySensor;
+	CSMTankQuantityTransducer O2Tank2QuantitySensor;
 	CSMTankPressTransducer CabinPressSensor;
-	CSMTankTempTransducer CabinTempSensor;
+	TemperatureTransducer CabinTempSensor;
 	CSMDeltaPressINH2OTransducer SuitCabinDeltaPressSensor;
 	CSMCO2PressTransducer CO2PartPressSensor;
 	CSMTankPressTransducer O2SurgeTankPressSensor;
-	CSMTankTempTransducer SuitTempSensor;
+	TemperatureTransducer SuitTempSensor;
 	CSMTankQuantityTransducer WasteH2OQtySensor;
 	CSMTankQuantityTransducer PotH2OQtySensor;
 	CSMTankPressTransducer SuitPressSensor;
 	CSMDeltaPressPSITransducer SuitCompressorDeltaPSensor;
 	CSMTankPressTransducer GlycolPumpOutPressSensor;
-	CSMTankTempTransducer GlyEvapOutSteamTempSensor;
-	CSMTankTempTransducer GlyEvapOutTempSensor;
+	TemperatureTransducer GlyEvapOutSteamTempSensor;
+	TemperatureTransducer GlyEvapOutTempSensor;
 	CSMTankQuantityTransducer GlycolAccumQtySensor;
-	CSMTankTempTransducer ECSRadOutTempSensor;
+	TemperatureTransducer ECSRadOutTempSensor;
 	CSMEvaporatorPressTransducer GlyEvapBackPressSensor;
 	CSMPipeFlowTransducer ECSO2FlowO2SupplyManifoldSensor;
 	CSMTankPressTransducer O2SupplyManifPressSensor;
 	CSMTankPressTransducer SecGlyPumpOutPressSensor;
-	CSMTankTempTransducer SecEvapOutLiqTempSensor;
+	TemperatureTransducer SecEvapOutLiqTempSensor;
 	CSMTankQuantityTransducer SecGlycolAccumQtySensor;
 	CSMEvaporatorPressTransducer SecEvapOutSteamPressSensor;
 	//CSMTankPressTransducer H2OGlyResPressSensor;
 	//Primary glycol flow rate needs a pipe implemented with name
 	//CSMPipeFlowTransducer PriGlycolFlowRateSensor;
-	CSMTankTempTransducer PriEvapInletTempSensor;
-	CSMTankTempTransducer PriRadInTempSensor;
-	CSMTankTempTransducer SecRadInTempSensor;
-	CSMTankTempTransducer SecRadOutTempSensor;
+	TemperatureTransducer PriEvapInletTempSensor;
+	TemperatureTransducer PriRadInTempSensor;
+	TemperatureTransducer SecRadInTempSensor;
+	TemperatureTransducer SecRadOutTempSensor;
+	CSMTankPressTransducer FCO2PressureSensor1;
+	CSMTankPressTransducer FCO2PressureSensor2;
+	CSMTankPressTransducer FCO2PressureSensor3;
+	CSMTankPressTransducer FCH2PressureSensor1;
+	CSMTankPressTransducer FCH2PressureSensor2;
+	CSMTankPressTransducer FCH2PressureSensor3;
+	TemperatureTransducer CMRCSEngine12TempSensor;
+	TemperatureTransducer CMRCSEngine14TempSensor;
+	TemperatureTransducer CMRCSEngine16TempSensor;
+	TemperatureTransducer CMRCSEngine21TempSensor;
+	TemperatureTransducer CMRCSEngine24TempSensor;
+	TemperatureTransducer CMRCSEngine25TempSensor;
+	CSMTankPressTransducer FCN2PressureSensor1;
+	CSMTankPressTransducer FCN2PressureSensor2;
+	CSMTankPressTransducer FCN2PressureSensor3;
+	CSMPipeFlowTransducer FCO2FlowSensor1;
+	CSMPipeFlowTransducer FCO2FlowSensor2;
+	CSMPipeFlowTransducer FCO2FlowSensor3;
+	CSMPipeFlowTransducer FCH2FlowSensor1;
+	CSMPipeFlowTransducer FCH2FlowSensor2;
+	CSMPipeFlowTransducer FCH2FlowSensor3;
+	CSMTankPressTransducer BatteryManifoldPressureSensor;
+	TemperatureTransducer WasteH2ODumpTempSensor;
+	TemperatureTransducer UrineDumpTempSensor;
 protected:
 
 	// CM Optics
@@ -3625,6 +3653,12 @@ protected:
 	Cooling *FuelCellCooling[3];
 	h_Tank *FuelCellO2Manifold[3];
 	h_Tank *FuelCellH2Manifold[3];
+	h_Tank *FuelCellN2Blanket[3];
+
+	
+	// Electric Lights
+	ElectricLight* SpotLight;
+	ElectricLight* RndzLight;
 
 	// O2 tanks.
 	h_Tank *O2Tanks[2];
@@ -3756,9 +3790,15 @@ protected:
 	SaturnForwardHatch ForwardHatch;
 	SaturnPressureEqualizationValve PressureEqualizationValve;
 	SaturnWasteStowageVentValve WasteStowageVentValve;
+	SaturnBatteryVent BatteryVent;
 	SaturnSuitFlowValves SaturnSuitFlowValve300;
 	SaturnSuitFlowValves SaturnSuitFlowValve301;
 	SaturnSuitFlowValves SaturnSuitFlowValve302;
+	SaturnDumpHeater WasteH2ODumpHeater;
+	SaturnDumpHeater UrineDumpHeater;
+	Boiler *SteamDuctHeaterA;
+	Boiler *SteamDuctHeaterB;
+
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;
@@ -3769,6 +3809,7 @@ protected:
 	// both.
 	DSKY dsky;
 	DSKY dsky2;
+	PowerMerge CMCDCBusFeeder;
 	CSMcomputer agc;	
 	IMU imu;
 	CDU tcdu;
@@ -3834,7 +3875,6 @@ protected:
 	// Misc. settings
 	//
 
-	bool TLICapableBooster;
 	bool IUSCContPermanentEnabled;
 	bool TLISoundsLoaded;
 	bool SkylabSM;
@@ -3889,8 +3929,6 @@ protected:
 	int fwdhatchidx;
 	int opticscoveridx;
 	int cmdocktgtidx;
-	int nosecapidx;
-	int meshLM_1;
 	int simbaypanelidx;
 	int vcidx;
 	int seatsfoldedidx;
@@ -3908,6 +3946,10 @@ protected:
 	bool PayloadDataTransfer;
 
 	mission::Mission* pMission;
+
+	double LastFuelWeight;
+	double CurrentFuelWeight;
+	VECTOR3 currentCoG;
 
 	//
 	// Panels
@@ -3954,16 +3996,9 @@ protected:
 	int ReticleLineCnt[2], ReticleLineMaxLen;
 	int *ReticleLineLen[2]; //[SCT=0 | SXT=1]
 	double *ReticleLine[2][2]; //[SCT=0 | SXT=1][X=0 | Y=1]
-	POINT *ReticlePoint;
+	oapi::IVECTOR2 *ReticlePoint;
 
 	double PanelPixelHeight;
-
-	//
-	// Virtual cockpit
-	//
-
-	VECTOR3 VCCameraOffset;
-	VECTOR3 VCMeshOffset;
 
 	bool KranzPlayed;
 	bool PostSplashdownPlayed;
@@ -3995,13 +4030,11 @@ protected:
 	// Vessel handles.
 	//
 
-	OBJHANDLE hLMV;
 	OBJHANDLE hstg1;
 	OBJHANDLE hstg2;
 	OBJHANDLE hintstg;
 	OBJHANDLE hesc1;
 	OBJHANDLE hPROBE;
-	OBJHANDLE hs4bM;
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
 	OBJHANDLE hs4b3;
@@ -4017,7 +4050,6 @@ protected:
 	OBJHANDLE hDrogueChute;
 	OBJHANDLE hMainChute;
 	OBJHANDLE hOpticsCover;
-	OBJHANDLE hNosecapVessel;
 	OBJHANDLE hLC34;
 	OBJHANDLE hLC37;
 	OBJHANDLE hLCC;
@@ -4097,7 +4129,8 @@ protected:
 	void FirePitchControlMotor();
 	void MoveTHC(bool dir);
 
-	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs);
+	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs, int xTexMul = 1);
+	bool AbortLightLogic();
 
 	void ClearPropellants();
 	void ClearThrusters();
@@ -4117,6 +4150,8 @@ protected:
 
 	void InitFDAI(UINT mesh);
 
+	void VCFreeCam(VECTOR3 dir, bool slow);
+
 	//
 	// Systems functions.
 	//
@@ -4124,10 +4159,6 @@ protected:
 	bool CabinFansActive();
 	bool CabinFan1Active();
 	bool CabinFan2Active();
-	void ActivateCSMRCS();
-	void DeactivateCSMRCS();
-	void ActivateCMRCS();
-	void DeactivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
 	void SetPipeMaxFlow(char *pipe, double flow);
@@ -4189,21 +4220,21 @@ protected:
 	void SetChuteStage3();
 	void SetChuteStage4();
 	void SetSplashStage();
-	void SetCSMStage();
+	void SetCSMStage(VECTOR3 cg_ofs);
 	void CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage);
-	void SetReentryStage();
+	void SetReentryStage(VECTOR3 cg_ofs);
 	void SetReentryMeshes();
 	void AddRCS_CM(double MaxThrust, double offset = 0.0, bool createThrusterGroups = true);
 	void GenericTimestepStage(double simt, double simdt);
 	void SetGenericStageState();
 	void DestroyStages(double simt);
-	void LookForSIVb();
-	void LookForLEM();
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	void LoadVC();
 	void UpdateVC(VECTOR3 meshdir);
+	void DefineCMAttachments();
+	void ResetDynamicMeshIndizes();
 
 	//
 	// Sounds
@@ -4322,7 +4353,6 @@ protected:
 	THGROUP_HANDLE thg_retro1, thg_retro2;
 
 	THRUSTER_HANDLE th_1st[8], th_2nd[5], th_3rd[1], th_sps[1];
-	THRUSTER_HANDLE th_3rd_lox, th_3rd_lh2;
 	THRUSTER_HANDLE th_ull[8], th_ver[3];                       // handles for orbiter main engines
 	THRUSTER_HANDLE th_lem[4], th_tjm[2], th_pcm;
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];
@@ -4355,6 +4385,7 @@ protected:
 	SPSPropellantSource SPSPropellant;
 	Boiler *SPSPropellantLineHeaterA;
 	Boiler *SPSPropellantLineHeaterB;
+	h_HeatLoad *CMRCSHeat[12];
 
 	//
 	// LEM data.
@@ -4374,15 +4405,20 @@ protected:
 	double ViewOffsetz, NoiseOffsetz;
 
 	//
+	// VC Free Cam
+	//
+
+	double vcFreeCamx;
+	double vcFreeCamy;
+	double vcFreeCamz;
+	double vcFreeCamSpeed;
+	double vcFreeCamMaxOffset;
+
+	//
 	// Save the last view offset.
 	//
 
 	double CurrentViewOffset;
-
-	///
-	/// Time of last timestep call.
-	///
-	double LastTimestep;
 
 	//
 	// Panel flash.
@@ -4454,11 +4490,6 @@ protected:
 	double *pCabinRepressFlow;
 	double *pEmergencyCabinRegulatorFlow;
 	double *pO2FlowXducer;
-	double *pO2Tank1Press;
-	double *pO2Tank2Press;
-	double *pH2Tank1Press;
-	double *pH2Tank2Press;
-	double *pO2SurgeTankPress;
 	double *pO2Tank1Quantity;
 	double *pO2Tank2Quantity;
 	double *pH2Tank1Quantity;
@@ -4496,11 +4527,6 @@ protected:
 #define SISYSTEMS_END_STRING		"SISYSTEMS_END"
 
 	//
-	// IMFD5 communication support
-	//
-	IMFD_Client IMFD_Client; 
-
-	//
 	// Friend Class List for systems objects 
 	//
 
@@ -4518,6 +4544,7 @@ protected:
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 	friend class LEMcomputer; 
 	friend class PCM;         // Otherwise reading telemetry is a pain
+	friend class UDL;
 	friend class PMP;
 	friend class USB;
 	friend class HGA;
@@ -4555,7 +4582,7 @@ protected:
 	friend class SaturnHighGainAntennaPitchMeter;
 	friend class SaturnHighGainAntennaYawMeter;
 	friend class SaturnHighGainAntennaStrengthMeter;
-	friend class SaturnSystemTestAttenuator;
+	friend class SaturnSystemTestMeter;
 	friend class SaturnLVSPSPcMeter;
 	friend class SaturnSPSHeliumNitrogenPressMeter;
 	friend class SaturnLMDPGauge;
@@ -4565,12 +4592,17 @@ protected:
 	friend class DockingTargetSwitch;
 	friend class LeftCOASPowerSwitch;
 	friend class SCE;
+	friend class SaturnWaterController;
+	friend class SaturnBatteryVent;
+	friend class SaturnDumpHeater;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ARCore;
 	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+
+	friend void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
 
 extern void BaseInit();
@@ -4579,7 +4611,6 @@ extern void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR
 
 const double STG2O = 8;
 const double SMVO = 0.0;
-const double CREWO = 0.0;
 
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;
@@ -4602,8 +4633,5 @@ extern MESHHANDLE hcmseatsfolded;
 extern MESHHANDLE hcmseatsunfolded;
 extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
-
-extern void SetupgParam(HINSTANCE hModule);
-extern void DeletegParam();
 
 #endif // _PA_SATURN_H
