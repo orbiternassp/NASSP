@@ -735,12 +735,6 @@ void VAB::SetSaturnMeshVisibilityMode(int buildStatus, WORD mode) {
 
 void VAB::DoFirstTimestep() {
 
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-
 	firstTimestepDone = true;
 }
 

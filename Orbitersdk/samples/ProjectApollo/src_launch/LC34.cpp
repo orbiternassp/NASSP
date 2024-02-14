@@ -533,11 +533,6 @@ void LC34::clbkPostStep (double simt, double simdt, double mjd) {
 
 void LC34::DoFirstTimestep()
 {
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 	firstTimestepDone = true;
 }

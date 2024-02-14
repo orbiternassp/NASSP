@@ -748,17 +748,6 @@ void LRV::DoFirstTimestep()
 		if (!SLEVAPlayed)
 			soundlib.LoadMissionSound(SLEVA, LEVA_SOUND, LEVA_SOUND);
 
-		//
-		// Turn off pretty much everything that Orbitersound does by default.
-		//
-
-		soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-		soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-		soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-		soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-		soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-
 		VESSELSTATUS2 evaV2;
 		memset(&evaV2, 0, sizeof(evaV2));
 		evaV2.version = 2;

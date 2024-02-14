@@ -328,13 +328,6 @@ void SM::DoFirstTimestep()
 	strcpy (VName, ApolloName); strcat (VName, "-PANEL6");
 	hPanel6 = oapiGetVesselByName(VName);
 	AddReentryTextureToObject(hPanel6);
-
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 }
 
 void SM::AddReentryTextureToObject(OBJHANDLE handle)

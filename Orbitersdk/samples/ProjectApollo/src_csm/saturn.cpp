@@ -1263,22 +1263,6 @@ void Saturn::clbkPostCreation()
 	LoadDefaultSounds();
 
 	//
-	// Disable cabin fans.
-	//
-
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-
-	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
-	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
-
-	//
-	// We do our own countdown, so ignore the standard one.
-	//
-
-	if (!UseATC)
-		soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-
-	//
 	// Load mission-based sound files. Some of these are just being
 	// preloaded here for the CSM computer.
 	//
@@ -1316,32 +1300,11 @@ void Saturn::clbkPostCreation()
 	if (LESAttached)
 		soundlib.LoadMissionSound(SwindowS, WINDOW_SOUND, POST_TOWER_JET_SOUND);
 
-	//
-	// Only the CSM and LEM have translational thrusters, so disable the message
-	// telling us that they're being switched in other stages.
-	//
-
-	if (stage > CSM_LEM_STAGE || stage < PRELAUNCH_STAGE)
-	{
-		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
-	}
-	else
-	{
-		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
-	}
-
 	if (stage < LAUNCH_STAGE_TWO) {
 		soundlib.LoadMissionSound(SShutS, SI_CUTOFF_SOUND, SISHUTDOWN_SOUND);
 	}
 
 	if (stage < STAGE_ORBIT_SIVB) {
-
-		//
-		// We'll do our own radio playback during launch.
-		//
-
-		if (!UseATC)
-			soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
 
 		soundlib.LoadMissionSound(S2ShutS, SII_CUTOFF_SOUND, SIISHUTDOWN_SOUND);
 		soundlib.LoadMissionSound(S4CutS, GO_FOR_ORBIT_SOUND, SIVBSHUTDOWN_SOUND);
@@ -1393,18 +1356,6 @@ void Saturn::clbkPostCreation()
 		SApollo13.setFlags(SOUNDFLAG_1XORLESS | SOUNDFLAG_COMMS);
 		SExploded.setFlags(SOUNDFLAG_1XORLESS | SOUNDFLAG_COMMS);
 	}
-
-	//
-	// Turn off the timer display on launch.
-	//
-
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-
-	//
-	// Turn off docking sound
-	//
-
-	soundlib.SoundOptionOnOff(PLAYDOCKINGSOUND, FALSE);
 
 	//
 	// Check Saturn devices.
@@ -3062,7 +3013,6 @@ void Saturn::SetStage(int s)
 
 	if (stage >= CSM_LEM_STAGE) {
 
-		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 		ClearTLISounds();
 
 		iuCommandConnector.Disconnect();

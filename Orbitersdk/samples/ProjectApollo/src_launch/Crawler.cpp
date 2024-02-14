@@ -363,15 +363,6 @@ void Crawler::DoFirstTimestep() {
 	SetView();
 
 	oapiGetHeading(GetHandle(), &targetHeading);
-	
-	// Turn off pretty much everything that Orbitersound does by default.
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 	if (!standalone) {
 		if (LVName[0])
