@@ -53,6 +53,7 @@ public:
 	bool SetTimebaseUpdate(char *rstr);
 	void CalculateV42Angles(void);
 	void menuPressEnterOnCMCLGC(void);
+	void menuPressPROOnCMCLGC(void);
 	void menuPressEnterOnDSKYDEDA(void);
 	void menuCycleLMAlignType();
 	bool SetImpactTIG(char *rstr);

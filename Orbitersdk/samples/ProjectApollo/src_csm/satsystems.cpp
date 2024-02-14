@@ -2588,6 +2588,12 @@ void Saturn::CheckSMSystemsState()
 		FCN2PressureSensor1.WireTo(NULL);
 		FCN2PressureSensor2.WireTo(NULL);
 		FCN2PressureSensor3.WireTo(NULL);
+		FCO2FlowSensor1.WireTo(NULL);
+		FCO2FlowSensor2.WireTo(NULL);
+		FCO2FlowSensor3.WireTo(NULL);
+		FCH2FlowSensor1.WireTo(NULL);
+		FCH2FlowSensor2.WireTo(NULL);
+		FCH2FlowSensor3.WireTo(NULL);
 
 		if (secs.SMJCA)
 		{
