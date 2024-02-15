@@ -5366,11 +5366,11 @@ CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body)
 CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 {
 	CELEMENTS out;
-	double ae, am, Em, fm, J2, J3, J4, J5, R_e, cn, cn2, theta, theta2, theta4, eccdp2, sinI, sinI2, cosI2, adr, adr2, adr3, a;
-	double sinta, costa, costa2, sn2gta, cs2gta, sinGD, cosGD, sin2gd, cs2gd, sin3gd, cs3gd, sn3fgd, snf2gd, csf2gd, cs3fgd;
-	double k2, k3, k4, k5, gamma2, gamma3, gamma4, gamma5, gamma2_apo, gamma3_apo, gamma4_apo, gamma5_apo, g3dg2, g4dg2, g5dg2;
-	double A1_apo, A1, A2_apo, A2, A3, A4, A5, A6, A7, A8p, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A20, A21, A25, A26;
-	double B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13, B14, B15;
+	double ae, am, Em, fm, J2, J3, J4, R_e, cn, cn2, theta, theta2, theta4, eccdp2, sinI, sinI2, cosI2, adr, adr2, adr3, a;
+	double sinta, costa, costa2, sn2gta, cs2gta, sinGD, cosGD, sin2gd, cs2gd, sn3fgd, snf2gd, csf2gd, cs3fgd;
+	double k2, k3, k4, gamma2, gamma3, gamma4, gamma2_apo, gamma3_apo, gamma4_apo, g3dg2, g4dg2;
+	double A1_apo, A1, A2_apo, A2, A6, A7, A10, A11, A12, A13, A14, A15, A16, A17, A18, A20, A21, A25, A26;
+	double B1, B2, B4, B5, B7, B8, B10, B11, B13, B14;
 	double delta1e, de, edl, di, sin_im2_dh, lagaha, lgh, sinMADP, cosMADP, sinraandp, cosraandp;
 	bool pseudostate = false;
 
@@ -5379,7 +5379,6 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 		J2 = J2_Earth;
 		J3 = J3_Earth;
 		J4 = J4_Earth;
-		J5 = 0.0;//J5_Earth;
 		R_e = R_Earth;
 	}
 	else
@@ -5387,7 +5386,6 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 		J2 = J2_Moon;
 		J3 = J3_Moon;
 		J4 = 0;
-		J5 = 0;
 		R_e = R_Moon;
 	}
 
@@ -5409,19 +5407,15 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 	k2 = J2 * pow(ae, 2) / 2.0;
 	k3 = -J3 * pow(ae, 3);
 	k4 = -3.0 * J4*pow(ae,4) / 8.0;
-	k5 = -J5 * pow(ae, 5);
 	gamma2 = k2 / pow(am, 2);
 	gamma3 = k3 / pow(am, 3);
 	gamma4 = k4 / pow(am, 4);
-	gamma5 = k5 / pow(am, 5);
 	gamma2_apo = gamma2 / pow(cn, 4);
 	gamma3_apo = gamma3 / pow(cn, 6);
 	gamma4_apo = gamma4 / pow(cn, 8);
-	gamma5_apo = gamma5 / pow(cn, 10);
 
 	g3dg2 = gamma3_apo / gamma2_apo;
 	g4dg2 = gamma4_apo / gamma2_apo;
-	g5dg2 = gamma5_apo / gamma2_apo;
 
 	Em = kepler_E(arr.e, arr.l, 1e-12);
 	fm = atan2(sqrt(1.0 - eccdp2)*sin(Em), cos(Em) - arr.e);
@@ -5447,8 +5441,6 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 	cosGD = cos(arr.g);
 	sin2gd = sin(2.0 * arr.g);
 	cs2gd = cos(2.0 * arr.g);
-	sin3gd = sin(3.0 * arr.g);
-	cs3gd = cos(3.0 * arr.g);
 	sn3fgd = sin(3.0*fm + 2.0*arr.g);
 	cs3fgd = cos(3.0*fm + 2.0*arr.g);
 	sinMADP = sin(arr.l);
@@ -5460,14 +5452,8 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 	A1 = 1.0 / 8.0 * gamma2_apo*cn2 * (1.0 - 11.0 * theta2 - 40.0 * theta4 * A1_apo);
 	A2_apo = 3.0 * theta2 + 8.0 * theta4 * A1_apo;
 	A2 = 5.0 / 12.0 * g4dg2 * cn2 * (1.0 - A2_apo);
-	A3 = g5dg2 * (3.0 * eccdp2 + 4.0);
-	A4 = g5dg2 * (1.0 - 3.0 * A2_apo);
-	A5 = A3 * (1.0 - 3.0 * A2_apo);
 	A6 = 1.0 / 4.0 * g3dg2;
 	A7 = A6 * cn2 * sinI;
-	A8p = g5dg2 * arr.e*(1.0 - 5.0 * theta2 - 16.0 * theta4 * A1_apo);
-	A8 = A8p * arr.e;
-	A9 = cn2 * sinI;
 	A10 = 2.0 + eccdp2;
 	A11 = 3.0 * eccdp2 + 2.0;
 	A12 = A11 * theta2;
@@ -5484,41 +5470,33 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 
 	B1 = cn * (A1 - A2) - (1.0 / 16.0 * (A10 - 400.0 * A14 - 40.0 * A13 - 11.0 * A12) + 1.0 / 8.0 * A21*(11.0 + 200.0 * A16 + 80.0 * A15))*gamma2_apo
 		+ 5.0 / 24.0 * (-80.0 * A14 - 8.0 * A13 - 3.0 * A12 + 2.0 * A25*A21 + A10)*g4dg2;
-	B2 = A6 * A18*(2.0 + cn - eccdp2) + 5.0 / 64.0 * A5*A18*cn2 - 15.0 / 32.0 * A4*A17*cn*cn2
-		+ A20 * tan(arr.i / 2.0)*(5.0 / 64.0 * A5 + A6) + 5.0 / 64.0 * A4*A17*(9.0 * eccdp2 + 26.0)
-		+ 15.0 / 32.0*A3*A20*A25*sinI*(1.0 - theta);
-	B3 = 35.0 / 576.0 * g5dg2 * arr.e*sinI*(theta - 1.0)*A21*(80.0 * A16 + 5.0 + 32.0 * A15)
-		- 35.0 / 1152.0 * A8p*(A21*tan(arr.i / 2.0) + (2.0 * eccdp2 + 3.0 * (1.0 - cn*cn2))*sinI);
+	B2 = A6 * A18*(2.0 + cn - eccdp2) + A20 * tan(arr.i / 2.0)*(A6);
 	B4 = cn * arr.e*(A1 - A2);
-	B5 = cn * (5.0 / 64.0 * A4*A9*(9.0 * eccdp2 + 4.0) + A7);
-	B6 = 35.0 / 384.0 * cn*cn2 * A8*sinI;
+	B5 = cn * A7;
 	B7 = cn2 * A17*A1_apo*(1.0 / 8.0 * gamma2_apo*(1.0 - 15.0 * theta2) - 5.0 / 12.0 * g4dg2 * (1.0 - 7.0 * theta2));
-	B8 = 5.0 / 64.0 * A3*cn2 * (1.0 - 9.0 * theta2 - 24.0 * theta4 * A1_apo) + cn2 * A6;
-	B9 = 35.0 / 384.0 * cn2 * A8;
+	B8 = cn2 * A6;
 	B10 = sinI*(5.0 / 12.0 * g4dg2 * A21*A25 - A26 * gamma2_apo);
-	B11 = A21 * (5.0 / 64.0 * A5 + A6 + 15.0 / 32.0 * A3*A25*pow(sinI, 2));
-	B12 = -((80.0 * A16 + 32.0 * A15 + 5.0)*(36.0 / 576.0 * g5dg2 * arr.e*pow(sinI, 2) * A21) + 35.0 / 1152.0 * A8*A20);
+	B11 = A21 * A6;
 	B13 = arr.e * (A1 - A2);
-	B14 = 5.0 / 64.0 * A5*cn2 * sinI + A7;
-	B15 = 35.0 / 384.0 * A8*cn2 * sinI;
+	B14 = A7;
 
 	a = am * (1.0 + gamma2 * ((3.0 * theta2 - 1.0)*arr.e / (cn2*cn2*cn2)*(arr.e*cn + arr.e / (1.0 + cn) + costa *(3.0 + 3.0 * arr.e*costa
 		+ eccdp2 * costa2)) + 3.0 * (1.0 - theta2)*adr3 * cs2gta));
 
-	delta1e = B13 * cs2gd + B14 * sinGD - B15 * sin3gd;
+	delta1e = B13 * cs2gd + B14 * sinGD;
 	de = delta1e - cn2 / 2.0 * (gamma2_apo*(1.0 - theta2)*(3.0 * csf2gd + cs3fgd)
 		- 3.0 * gamma2 * 1.0 / (cn2*cn2*cn2)*(1.0 - theta2)*cs2gta*(3.0 * arr.e*costa2
 			+ 3.0 * costa + eccdp2 * costa*costa2 + arr.e)
 		- gamma2 * 1.0 / (cn2*cn2*cn2)*(3.0 * theta2 - 1.0)*(arr.e*cn + arr.e / (1.0 + cn) + 3.0 * arr.e*costa2 + 3.0 * costa + eccdp2 * costa * costa2));
-	edl = B4 * sin2gd - B5 * cosGD + B6 * cs3gd
+	edl = B4 * sin2gd - B5 * cosGD
 		- 1.0 / 4.0 * cn*cn2 * gamma2_apo*(2.0 * (3.0 * theta2 - 1.0)*(cn2 * adr2 + adr + 1.0)*sinta
 			+ 3.0 * (1.0 - theta2)*((-cn2 * adr2 - adr + 1.0)*snf2gd
 				+ (cn2 * adr2 + adr + 1.0 / 3.0)*sn3fgd));
 	out.e = sqrt(pow(arr.e + de, 2) + pow(edl, 2));
 
 	di = 1.0 / 2.0 * theta*gamma2_apo*sinI*(arr.e*cs3fgd + 3.0 * (arr.e*csf2gd + cs2gta))
-		- A20 / cn2*(B7*cs2gd + B8 * sinGD - B9 * sin3gd);
-	sin_im2_dh = 1.0 / (2.0 * cosI2)*(B10*sin2gd + B11 * cosGD + B12 * cs3gd
+		- A20 / cn2*(B7*cs2gd + B8 * sinGD);
+	sin_im2_dh = 1.0 / (2.0 * cosI2)*(B10*sin2gd + B11 * cosGD
 		- 1.0 / 2.0 * gamma2_apo*theta*sinI*(6.0 * (arr.e*sinta - arr.l + fm)
 			- 3.0 * (sn2gta + arr.e * snf2gd) - arr.e * sn3fgd));
 	out.i = 2.0 * asin(sqrt(pow(sin_im2_dh, 2) + pow(1.0 / 2.0 * di*cosI2 + sinI2, 2)));
@@ -5549,7 +5527,7 @@ CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
 		}
 	}
 
-	lagaha = arr.l + arr.g + arr.h + B3 * cs3gd + B1 * sin2gd + B2 * cosGD;
+	lagaha = arr.l + arr.g + arr.h + B1 * sin2gd + B2 * cosGD;
 	lgh = lagaha + (1.0 / 4.0 * (cn2 / (cn + 1.0))*arr.e*gamma2_apo*(3.0 * (1.0 - theta2)*(sn3fgd
 		*(1.0 / 3.0 + adr2 * cn2 + adr) + snf2gd *(1.0 - adr2 * cn2 - adr))
 		+ 2.0 * sinta*(3.0 * theta2 - 1.0)*(1.0 + adr2 * cn2 + adr)))

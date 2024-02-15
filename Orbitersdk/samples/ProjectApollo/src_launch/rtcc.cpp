@@ -1257,7 +1257,7 @@ RTCC::RTEConstraintsTable::RTEConstraintsTable()
 	GMAX = 4.0;
 	HMINMC = 50.0;
 	IRMAX = 40.0;
-	RRBIAS = 0.0;
+	RRBIAS = 1285.0;
 	VRMAX = 36323.0;
 	VECID = 0;
 	TGTLN = 1;
@@ -7026,6 +7026,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE2("RTCC_SFP_T_LO", PZSFPTAB.blocks[0].T_lo, PZSFPTAB.blocks[1].T_lo);
 	SAVE_DOUBLE2("RTCC_SFP_T_TE", PZSFPTAB.blocks[0].T_te, PZSFPTAB.blocks[1].T_te);
 
+	SAVE_DOUBLE("RTCC_PZREAP_RRBIAS", PZREAP.RRBIAS);
+
 	if (EZLASITE.REF != -1)
 	{
 		SAVE_INT("RTCC_EZLASITE_REF", EZLASITE.REF);
@@ -7279,6 +7281,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE2("RTCC_SFP_RAD_LLS", PZSFPTAB.blocks[0].rad_lls, PZSFPTAB.blocks[1].rad_lls);
 		LOAD_DOUBLE2("RTCC_SFP_T_LO", PZSFPTAB.blocks[0].T_lo, PZSFPTAB.blocks[1].T_lo);
 		LOAD_DOUBLE2("RTCC_SFP_T_TE", PZSFPTAB.blocks[0].T_te, PZSFPTAB.blocks[1].T_te);
+
+		LOAD_DOUBLE("RTCC_PZREAP_RRBIAS", PZREAP.RRBIAS);
 
 		LOAD_INT("RTCC_EZLASITE_REF", EZLASITE.REF);
 		papiReadScenario_Station(line, "RTCC_EZLASITE", EZLASITE.Data);
@@ -15810,6 +15814,8 @@ int RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 
 	int NPHASE = 1;
 
+	T = DT = 0.0;
+
 	if (MPTIsRCSThruster(in.Thruster))
 	{
 		in.DETU = 0.0;
@@ -16053,7 +16059,8 @@ RTCC_PMMMPT_9_A:
 	{
 		man.FrozenManeuverInd = true;
 	}
-	if (in.IterationFlag)
+	//Go to iterate logic if it was requested and the predicted main engine burn time is at least 10 seconds
+	if (in.IterationFlag && T - DT > 10.0)
 	{
 		goto RTCC_PMMMPT_12_A;
 	}

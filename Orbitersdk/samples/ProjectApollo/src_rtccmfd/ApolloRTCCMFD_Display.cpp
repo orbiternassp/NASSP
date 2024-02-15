@@ -530,7 +530,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(10 * W / 22, 16 * H / 22, Buffer, strlen(Buffer));
 		GET_Display(Buffer, GC->rtcc->PZGPMDIS.GET_P, false);
 		skp->Text(10 * W / 22, 17 * H / 22, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.HP / 1852.0);
+		if (GC->rtcc->PZGPMDIS.ShowImpact)
+		{
+			sprintf(Buffer, "IMPACT");
+		}
+		else
+		{
+			sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.HP / 1852.0);
+		}
 		skp->Text(10 * W / 22, 18 * H / 22, Buffer, strlen(Buffer));
 		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_P*DEG);
 		skp->Text(10 * W / 22, 19 * H / 22, Buffer, strlen(Buffer));
