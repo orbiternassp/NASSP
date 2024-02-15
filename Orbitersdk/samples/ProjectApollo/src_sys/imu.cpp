@@ -143,6 +143,20 @@ void IMU::SetDriftRates(const MATRIX3 DriftRateMatrix)
 	imuDriftRates.ADIA_Z = DriftRateMatrix.m33 * MERU;
 }
 
+void IMU::SetPIPABias(const VECTOR3 PIPABias)
+{
+	pipaBiasScale.PIPA_BiasX = PIPABias.x;
+	pipaBiasScale.PIPA_BiasY = PIPABias.y;
+	pipaBiasScale.PIPA_BiasZ = PIPABias.z;
+}
+
+void IMU::SetPIPAScale(const VECTOR3 PIPAScale)
+{
+	pipaBiasScale.PIPA_ScalePPM_X = PIPAScale.x;
+	pipaBiasScale.PIPA_ScalePPM_X = PIPAScale.y;
+	pipaBiasScale.PIPA_ScalePPM_X = PIPAScale.z;
+}
+
 VECTOR3 IMU::GetNBDriftRates()
 {
 	return _V(imuDriftRates.NBD_X, imuDriftRates.NBD_Y, imuDriftRates.NBD_Z);

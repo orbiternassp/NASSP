@@ -2673,6 +2673,8 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 	agc.SetMissionInfo(pMission->GetCMCVersion(), PayloadName);
 	imu.SetDriftRates(pMission->GetCM_IMU_Drift());
+	imu.SetPIPABias(pMission->GetCM_PIPA_Bias());
+	imu.SetPIPAScale(pMission->GetCM_PIPA_Scale());
 	secs.SetSaturnType(SaturnType);
 
 	//

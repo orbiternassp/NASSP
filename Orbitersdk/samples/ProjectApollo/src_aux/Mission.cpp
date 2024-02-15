@@ -347,32 +347,50 @@ namespace mission {
 			else if (!_strnicmp(line, "CMADIAZ=", 8)) {
 				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m33);
 			}
+			else if (!_strnicmp(line, "CMPIPABIASX=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPABias.x);
+			}
+			else if (!_strnicmp(line, "CMPIPABIASY=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPABias.y);
+			}
+			else if (!_strnicmp(line, "CMPIPABIASZ=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPABias.z);
+			}
+			else if (!_strnicmp(line, "CMPIPASCALEX=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPAScale.x);
+			}
+			else if (!_strnicmp(line, "CMPIPASCALEY=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPAScale.y);
+			}
+			else if (!_strnicmp(line, "CMPIPASCALEZ=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPAScale.z);
+			}
 			else if (!_strnicmp(line, "LMNBDX=", 7)) {
-			sscanf(line + 7, "%lf", &LM_IMUDriftRates.m11);
+				sscanf(line + 7, "%lf", &LM_IMUDriftRates.m11);
 			}
 			else if (!_strnicmp(line, "LMNBDY=", 7)) {
-			sscanf(line + 7, "%lf", &LM_IMUDriftRates.m12);
+				sscanf(line + 7, "%lf", &LM_IMUDriftRates.m12);
 			}
 			else if (!_strnicmp(line, "LMNBDZ=", 7)) {
-			sscanf(line + 7, "%lf", &LM_IMUDriftRates.m13);
+				sscanf(line + 7, "%lf", &LM_IMUDriftRates.m13);
 			}
 			else if (!_strnicmp(line, "LMADSRAX=", 9)) {
-			sscanf(line + 9, "%lf", &LM_IMUDriftRates.m21);
+				sscanf(line + 9, "%lf", &LM_IMUDriftRates.m21);
 			}
 			else if (!_strnicmp(line, "LMADSRAY=", 9)) {
-			sscanf(line + 9, "%lf", &LM_IMUDriftRates.m22);
+				sscanf(line + 9, "%lf", &LM_IMUDriftRates.m22);
 			}
 			else if (!_strnicmp(line, "LMADSRAZ=", 9)) {
-			sscanf(line + 9, "%lf", &LM_IMUDriftRates.m23);
+				sscanf(line + 9, "%lf", &LM_IMUDriftRates.m23);
 			}
 			else if (!_strnicmp(line, "LMADIAX=", 8)) {
-			sscanf(line + 8, "%lf", &LM_IMUDriftRates.m31);
+				sscanf(line + 8, "%lf", &LM_IMUDriftRates.m31);
 			}
 			else if (!_strnicmp(line, "LMADIAY=", 8)) {
-			sscanf(line + 8, "%lf", &LM_IMUDriftRates.m32);
+				sscanf(line + 8, "%lf", &LM_IMUDriftRates.m32);
 			}
 			else if (!_strnicmp(line, "LMADIAZ=", 8)) {
-			sscanf(line + 8, "%lf", &LM_IMUDriftRates.m33);
+				sscanf(line + 8, "%lf", &LM_IMUDriftRates.m33);
 			}
 		}
 		//LoadIMU_AndPIPA_RatesAndBiases(hFile);

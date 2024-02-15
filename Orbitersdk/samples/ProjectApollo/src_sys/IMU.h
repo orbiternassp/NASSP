@@ -50,6 +50,8 @@ public:
 	void SetVessel(VESSEL* v, bool LEMFlag);
 	void SetVesselFlag(bool LEMFlag);
 	void SetDriftRates(const MATRIX3 DriftRateMatrix);
+	void SetPIPABias(const VECTOR3 PIPABias);
+	void SetPIPAScale(const VECTOR3 PIPAScale);
 	VECTOR3 GetNBDriftRates();
 	inline VECTOR3 getResolverPhaseError() { return ResolverPhaseError; };
 	inline VECTOR3 getResolverSineGimbal() { return SineGimbal; };
