@@ -2441,6 +2441,8 @@ void LEM::CreateMissionSpecificSystems()
 	agc.SetMissionInfo(pMission->GetLGCVersion());
 	aea.SetMissionInfo(pMission->GetAEAVersion());
 	imu.SetDriftRates(pMission->GetLM_IMU_Drift());
+	imu.SetPIPABias(pMission->GetLM_PIPA_Bias());
+	imu.SetPIPAScale(pMission->GetLM_PIPA_Scale());
 	if (pMission->LMHasAscEngArmAssy())
 	{
 		aeaa = new LEM_AEAA();

@@ -392,6 +392,24 @@ namespace mission {
 			else if (!_strnicmp(line, "LMADIAZ=", 8)) {
 				sscanf(line + 8, "%lf", &LM_IMUDriftRates.m33);
 			}
+			else if (!_strnicmp(line, "LMPIPABIASX=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPABias.x);
+			}
+			else if (!_strnicmp(line, "LMPIPABIASY=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPABias.y);
+			}
+			else if (!_strnicmp(line, "LMPIPABIASZ=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPABias.z);
+			}
+			else if (!_strnicmp(line, "LMPIPASCALEX=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPAScale.x);
+			}
+			else if (!_strnicmp(line, "LMPIPASCALEY=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPAScale.y);
+			}
+			else if (!_strnicmp(line, "LMPIPASCALEZ=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPAScale.z);
+			}
 		}
 		//LoadIMU_AndPIPA_RatesAndBiases(hFile);
 		hFile.close();

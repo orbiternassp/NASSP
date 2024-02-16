@@ -143,18 +143,18 @@ void IMU::SetDriftRates(const MATRIX3 DriftRateMatrix)
 	imuDriftRates.ADIA_Z = DriftRateMatrix.m33 * MERU;
 }
 
-void IMU::SetPIPABias(const VECTOR3 PIPABias)
+void IMU::SetPIPABias(const VECTOR3 PIPABias) // input is in cm/sec
 {
-	pipaBiasScale.PIPA_BiasX = PIPABias.x;
-	pipaBiasScale.PIPA_BiasY = PIPABias.y;
-	pipaBiasScale.PIPA_BiasZ = PIPABias.z;
+	pipaBiasScale.PIPA_BiasX = PIPABias.x / 100.0;
+	pipaBiasScale.PIPA_BiasY = PIPABias.y / 100.0;
+	pipaBiasScale.PIPA_BiasZ = PIPABias.z / 100.0;
 }
 
-void IMU::SetPIPAScale(const VECTOR3 PIPAScale)
+void IMU::SetPIPAScale(const VECTOR3 PIPAScale) // input is in ppm
 {
-	pipaBiasScale.PIPA_ScalePPM_X = PIPAScale.x;
-	pipaBiasScale.PIPA_ScalePPM_X = PIPAScale.y;
-	pipaBiasScale.PIPA_ScalePPM_X = PIPAScale.z;
+	pipaBiasScale.PIPA_ScalePPM_X = (PIPAScale.x / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_X = (PIPAScale.y / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_X = (PIPAScale.z / 1E6) + 1;
 }
 
 VECTOR3 IMU::GetNBDriftRates()
@@ -835,6 +835,51 @@ void IMU::LoadState(FILEHANDLE scn)
 			TurnedOn = (state.u.TurnedOn != 0);
 			Caged = (state.u.Caged != 0);
 		}
+		else if (!strnicmp(line, "NBD_X", 5)) {
+			scanf(line + 5, "%lf", &imuDriftRates.NBD_X);
+		}
+		else if (!strnicmp(line, "NBD_Y", 5)) {
+			scanf(line + 5, "%lf", &imuDriftRates.NBD_Y);
+		}
+		else if (!strnicmp(line, "NBD_Z", 5)) {
+			scanf(line + 5, "%lf", &imuDriftRates.NBD_Z);
+		}
+		else if (!strnicmp(line, "ADIA_X", 6)) {
+			scanf(line + 5, "%lf", &imuDriftRates.ADIA_X);
+		}
+		else if (!strnicmp(line, "ADIA_Y", 6)) {
+			scanf(line + 5, "%lf", &imuDriftRates.ADIA_Y);
+		}
+		else if (!strnicmp(line, "ADIA_Z", 6)) {
+			scanf(line + 5, "%lf", &imuDriftRates.ADIA_Z);
+		}
+		else if (!strnicmp(line, "ADSRA_X", 7)) {
+			scanf(line + 5, "%lf", &imuDriftRates.ADSRA_X);
+		}
+		else if (!strnicmp(line, "ADSRA_Y", 7)) {
+			scanf(line + 5, "%lf", &imuDriftRates.ADSRA_Y);
+		}
+		else if (!strnicmp(line, "ADSRA_Z", 7)) {
+			scanf(line + 5, "%lf", &imuDriftRates.ADSRA_Z);
+		}
+		else if (!strnicmp(line, "PBIAS_X", 7)) {
+			scanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasX);
+		}
+		else if (!strnicmp(line, "PBIAS_Y", 7)) {
+			scanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasY);
+		}
+		else if (!strnicmp(line, "PBIAS_Z", 7)) {
+			scanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasZ);
+		}
+		else if (!strnicmp(line, "PSCALE_X", 8)) {
+			scanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_X);
+		}
+		else if (!strnicmp(line, "PSCALE_Y", 8)) {
+			scanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_Y);
+		}
+		else if (!strnicmp(line, "PSCALE_Z", 8)) {
+			scanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_Z);
+		}
 	}
 }
 
@@ -873,6 +918,24 @@ void IMU::SaveState(FILEHANDLE scn)
 	state.u.Caged = Caged;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
+
+	//Drift rates and biases
+	papiWriteScenario_double(scn, "NBD_X", imuDriftRates.NBD_X);
+	papiWriteScenario_double(scn, "NBD_Y", imuDriftRates.NBD_Y);
+	papiWriteScenario_double(scn, "NBD_Z", imuDriftRates.NBD_Z);
+	papiWriteScenario_double(scn, "ADIA_X", imuDriftRates.ADIA_X);
+	papiWriteScenario_double(scn, "ADIA_Y", imuDriftRates.ADIA_Y);
+	papiWriteScenario_double(scn, "ADIA_Z", imuDriftRates.ADIA_Z);
+	papiWriteScenario_double(scn, "ADSRA_X", imuDriftRates.ADSRA_X);
+	papiWriteScenario_double(scn, "ADSRA_Y", imuDriftRates.ADSRA_Y);
+	papiWriteScenario_double(scn, "ADSRA_Z", imuDriftRates.ADSRA_Z);
+	papiWriteScenario_double(scn, "PBIAS_X", pipaBiasScale.PIPA_BiasX);
+	papiWriteScenario_double(scn, "PBIAS_Y", pipaBiasScale.PIPA_BiasY);
+	papiWriteScenario_double(scn, "PBIAS_Z", pipaBiasScale.PIPA_BiasZ);
+	papiWriteScenario_double(scn, "PSCALE_X", pipaBiasScale.PIPA_ScalePPM_X);
+	papiWriteScenario_double(scn, "PSCALE_Y", pipaBiasScale.PIPA_ScalePPM_Y);
+	papiWriteScenario_double(scn, "PSCALE_Z", pipaBiasScale.PIPA_ScalePPM_Z);
+
 
 	oapiWriteLine(scn, IMU_END_STRING);
 }
