@@ -2107,6 +2107,22 @@ void ProjectApolloMFD::menuPressEnterOnCMCLGC()
 	saturn = NULL;
 }
 
+void ProjectApolloMFD::menuPressPROOnCMCLGC()
+{
+	//Only do this in the LM
+	if (lem == NULL) return;
+
+	GetCSM();
+
+	if (lem && saturn)
+	{
+		lem->DskySwitchProg.SetState(true);
+		saturn->DskySwitchProg.SetState(true);
+	}
+
+	saturn = NULL;
+}
+
 void ProjectApolloMFD::menuCycleLMAlignType()
 {
 	g_Data.lmAlignType = !g_Data.lmAlignType;
