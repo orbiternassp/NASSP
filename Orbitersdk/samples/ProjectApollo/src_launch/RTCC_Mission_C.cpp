@@ -1622,9 +1622,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.navcheckGET = OrbMech::HHMMSSToSS(215, 44, 0);
 		opt.SVGET = OrbMech::HHMMSSToSS(216, 14, 0);
-		opt.vessel = calcParams.src;
+		opt.sv0 = StateVectorCalcEphem(calcParams.src);
 
-		P27PADCalc(&opt, *form);
+		P27PADCalc(opt, *form);
 	}
 	break;
 	case 37: //MISSION C BLOCK DATA 24
@@ -1944,9 +1944,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.SVGET = GETfromGMT(RTCCPresentTimeGMT());
 		opt.navcheckGET = opt.SVGET + 30 * 60;
-		opt.vessel = calcParams.src;
+		opt.sv0 = StateVectorCalcEphem(calcParams.src);
 
-		P27PADCalc(&opt, *form);
+		P27PADCalc(opt, *form);
 	}
 	break;
 	case 61: //CSM STATE VECTOR UPDATE, W-MATRIX UPDATE AND NAV CHECK PAD
