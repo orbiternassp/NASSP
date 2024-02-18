@@ -2459,7 +2459,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Nav Check PAD", 13);
 
-		GET_Display(Buffer, G->navcheckpad.NavChk[0]);
+		GET_Display2(Buffer, G->navcheckpad.NavChk[0]);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%+07.2f LAT", G->navcheckpad.lat[0]);
