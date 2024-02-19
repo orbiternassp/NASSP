@@ -1277,9 +1277,9 @@ void h_crew::refresh(double dt) {
 		SRC->space.composition[SUBSTANCE_CO2].vapor_mass += co2;
 		SRC->space.composition[SUBSTANCE_CO2].SetTemp(srcTemp);
 
-		double h2o = 0.0264 * number * dt;  // grams of H2O water vapor (need a source for this)
-		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
-		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
+		double h2ovapor = 0.0264 * number * dt;  // grams of H2O water vapor (need a source for this)
+		SRC->space.composition[SUBSTANCE_H2O].mass += h2ovapor;	
+		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2ovapor;	
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
 
 		SRC->space.GetQ();
