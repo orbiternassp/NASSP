@@ -60,15 +60,19 @@ if (query_object)
 BuildError(1);
 return NULL;
 }
+
 void H_system::Create_h_crew(char *line)
 {
 char name[100];
 int nmb;
 char source[100];
+char watertank[100];
 h_Tank *SRC;
-sscanf(line+6,"%s %i %s",name,&nmb,source);
+h_Tank *H2O;
+sscanf(line+7,"%s %i %s %w",name,&nmb,source,watertank);
 SRC=(h_Tank*)GetPointerByString(source);
-AddSystem(new h_crew(name,nmb,SRC));
+H2O=(h_Tank*)GetPointerByString(watertank);
+AddSystem(new h_crew(name,nmb,SRC,H2O));
 }
 
 void H_system::Create_h_Radiator(char *line) {

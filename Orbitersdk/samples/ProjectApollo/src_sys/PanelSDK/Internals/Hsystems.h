@@ -327,8 +327,9 @@ public:
 class h_crew : public h_object {
 
 public:
-    h_crew(char *i_name, int nr, h_Tank *i_src);
+    h_crew(char *i_name, int nr, h_Tank *i_src, h_Tank *i_h2o);
 	h_Tank *SRC;
+	h_Tank *H2O;
 	int number;
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual void* GetComponent(char *component_name);
