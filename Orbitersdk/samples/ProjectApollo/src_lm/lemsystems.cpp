@@ -537,9 +537,9 @@ void LEM::SystemsInit()
 	LMOxygenQtyMeter.WireTo(&ECS_DISP_CB);
 	LMWaterQtyMeter.WireTo(&ECS_DISP_CB);
 
-	CrewInCabin = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CREW"),(h_crew*)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL");
-	CDRSuited = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITED"),(h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL");
-	LMPSuited = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITED"),(h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL");
+	CrewInCabin = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CREW");
+	CDRSuited = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUITED");
+	LMPSuited = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUITED");
 
 	//Initialize LM ECS
 	DesO2Tank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESO2TANK");
