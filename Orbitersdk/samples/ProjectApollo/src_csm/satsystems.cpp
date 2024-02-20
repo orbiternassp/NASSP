@@ -345,7 +345,7 @@ void Saturn::SystemsInit() {
 	PrimECSTestHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:PRIMECSTESTHEATER");
 	SecECSTestHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SECECSTESTHEATER");
 	
-	Crew = (h_crew *)Panelsdk.GetPointerByString("HYDRAULIC:CREW");
+	Crew = (h_crew *) Panelsdk.GetPointerByString("HYDRAULIC:CREW");
 
 	SuitCompressor1 = (AtmRegen *) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER1");
 	SuitCompressor1->WireTo(&SuitCompressor1Switch);
