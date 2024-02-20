@@ -69,7 +69,7 @@ char source[100];
 char watertank[100];
 h_Tank *SRC;
 h_Tank *H2O;
-sscanf(line+7,"%s %i %s %w",name,&nmb,source,watertank);
+sscanf(line+6,"%s %i %s %w",name,&nmb,source,watertank);
 SRC=(h_Tank*)GetPointerByString(source);
 H2O=(h_Tank*)GetPointerByString(watertank);
 AddSystem(new h_crew(name,nmb,SRC,H2O));
