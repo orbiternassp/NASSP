@@ -1296,7 +1296,7 @@ void h_crew::refresh(double dt) {
 		therm_obj *t = H2O->GetThermalInterface();
 
 		H2O->space.composition[SUBSTANCE_H2O].mass -= water;
-		//H2O->space.composition[SUBSTANCE_H2O].SetTemp(h2oTemp); tends to increase the temp too much, the hot water coming in from the fuel cells keeps it balanced
+		//H2O->space.composition[SUBSTANCE_H2O].SetTemp(h2oTemp); //tends to increase the temp too much, the hot water coming in from the fuel cells keeps it balanced
 	}
 
 	if (SRC) {
@@ -1315,7 +1315,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.composition[SUBSTANCE_CO2].SetTemp(srcTemp);
 
 		double sweatRate = srcTemp < 310.2 ? 0.0685522320142486 + 1.99493308786737E-63 * exp(srcTemp * 0.4654878554362358) : 1.0;
-		double h2o = 1.1 * sweatRate * number * dt;  // grams of H2O water vapor (lung loss should be 2.64 lb/day and sweat should be 1.32 lb/day per crew)
+		double h2o = 1.1 * sweatRate * number * dt;  //grams of H2O water vapor (lung loss should be 2.64 lb/day and sweat should be 1.32 lb/day per crew)
 		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
