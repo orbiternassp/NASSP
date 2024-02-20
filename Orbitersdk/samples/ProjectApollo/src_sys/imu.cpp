@@ -153,8 +153,8 @@ void IMU::SetPIPABias(const VECTOR3 PIPABias) // input is in cm/sec
 void IMU::SetPIPAScale(const VECTOR3 PIPAScale) // input is in ppm
 {
 	pipaBiasScale.PIPA_ScalePPM_X = (PIPAScale.x / 1E6) + 1;
-	pipaBiasScale.PIPA_ScalePPM_X = (PIPAScale.y / 1E6) + 1;
-	pipaBiasScale.PIPA_ScalePPM_X = (PIPAScale.z / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_Y = (PIPAScale.y / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_Z = (PIPAScale.z / 1E6) + 1;
 }
 
 VECTOR3 IMU::GetNBDriftRates()

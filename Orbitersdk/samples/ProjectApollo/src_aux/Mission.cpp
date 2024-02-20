@@ -356,14 +356,14 @@ namespace mission {
 			else if (!_strnicmp(line, "CMPIPABIASZ=", 12)) {
 				sscanf(line + 12, "%lf", &CM_PIPABias.z);
 			}
-			else if (!_strnicmp(line, "CMPIPASCALEX=", 12)) {
-				sscanf(line + 12, "%lf", &CM_PIPAScale.x);
+			else if (!_strnicmp(line, "CMPIPASCALEX=", 13)) {
+				sscanf(line + 13, "%lf", &CM_PIPAScale.x);
 			}
-			else if (!_strnicmp(line, "CMPIPASCALEY=", 12)) {
-				sscanf(line + 12, "%lf", &CM_PIPAScale.y);
+			else if (!_strnicmp(line, "CMPIPASCALEY=", 13)) {
+				sscanf(line + 13, "%lf", &CM_PIPAScale.y);
 			}
-			else if (!_strnicmp(line, "CMPIPASCALEZ=", 12)) {
-				sscanf(line + 12, "%lf", &CM_PIPAScale.z);
+			else if (!_strnicmp(line, "CMPIPASCALEZ=", 13)) {
+				sscanf(line + 13, "%lf", &CM_PIPAScale.z);
 			}
 			else if (!_strnicmp(line, "LMNBDX=", 7)) {
 				sscanf(line + 7, "%lf", &LM_IMUDriftRates.m11);
@@ -401,14 +401,14 @@ namespace mission {
 			else if (!_strnicmp(line, "LMPIPABIASZ=", 12)) {
 				sscanf(line + 12, "%lf", &LM_PIPABias.z);
 			}
-			else if (!_strnicmp(line, "LMPIPASCALEX=", 12)) {
-				sscanf(line + 12, "%lf", &LM_PIPAScale.x);
+			else if (!_strnicmp(line, "LMPIPASCALEX=", 13)) {
+				sscanf(line + 13, "%lf", &LM_PIPAScale.x);
 			}
-			else if (!_strnicmp(line, "LMPIPASCALEY=", 12)) {
-				sscanf(line + 12, "%lf", &LM_PIPAScale.y);
+			else if (!_strnicmp(line, "LMPIPASCALEY=", 13)) {
+				sscanf(line + 13, "%lf", &LM_PIPAScale.y);
 			}
-			else if (!_strnicmp(line, "LMPIPASCALEZ=", 12)) {
-				sscanf(line + 12, "%lf", &LM_PIPAScale.z);
+			else if (!_strnicmp(line, "LMPIPASCALEZ=", 13)) {
+				sscanf(line + 13, "%lf", &LM_PIPAScale.z);
 			}
 		}
 		//LoadIMU_AndPIPA_RatesAndBiases(hFile);
