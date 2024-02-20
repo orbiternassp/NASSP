@@ -1289,14 +1289,14 @@ h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Tank *i_h2o) {
 void h_crew::refresh(double dt) {
 
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)	
+	double water = 0.0346494 * number * dt; //grams of  H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
 
-	if (H2O) {
+	if (H2O && H2O->space.composition[SUBSTANCE_H2O].mass > water) {
 		double h2oTemp = H2O->GetTemp();
 		therm_obj *t = H2O->GetThermalInterface();
 
-		double water = 0.0346494 * number * dt; //6.6 lb/day per crew
 		H2O->space.composition[SUBSTANCE_H2O].mass -= water;
-		H2O->space.composition[SUBSTANCE_H2O].SetTemp(h2oTemp);
+		//H2O->space.composition[SUBSTANCE_H2O].SetTemp(h2oTemp); tends to increase the temp too much, the hot water coming in from the fuel cells keeps it balanced
 	}
 
 	if (SRC) {
@@ -1315,7 +1315,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.composition[SUBSTANCE_CO2].SetTemp(srcTemp);
 
 		double sweatRate = srcTemp < 310.2 ? 0.0685522320142486 + 1.99493308786737E-63 * exp(srcTemp * 0.4654878554362358) : 1.0;
-		double h2o = 1.1 * sweatRate * number * dt;  // grams of H2O water vapor (need a source for this)
+		double h2o = 1.1 * sweatRate * number * dt;  // grams of H2O water vapor (lung loss should be 2.64 lb/day and sweat should be 1.32 lb/day per crew)
 		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
