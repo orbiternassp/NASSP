@@ -95,6 +95,8 @@ namespace mission
 		bool GetCrossPointerShades() const;
 		//Get time reference of AGC for CMC clock initialization. The value is usually the MJD of midnight July 1st that preceeds the launch
 		double GetTEPHEM0() const;
+		//Get LM systems (EPS and ECS) version. In the future this will also decide which systems config file will be loaded
+		int GetLMSystemsVersion() const;
 		//Get cue cards
 		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
 		//Name of CDR
@@ -158,6 +160,7 @@ namespace mission
 		std::vector<CueCardConfig> CSMCueCards;
 		std::vector<CueCardConfig> LMCueCards;
 		double dTEPHEM0;
+		int iLMSystemsVersion;
 
 		void SetDefaultValues();
 	};
