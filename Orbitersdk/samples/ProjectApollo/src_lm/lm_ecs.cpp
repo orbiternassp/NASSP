@@ -820,8 +820,6 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 		}
 
 		if (cabinRepressCB->IsPowered() && repressinhibit == false)
-
-		if (cabinRepressCB->IsPowered())
 		{
 			if (lem->CabinPressureSwitch.GetPressureSwitch() != 0 && cabinRepressValve->in->open == 0)
 			{
