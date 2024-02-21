@@ -1735,6 +1735,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_INTEGRAL_LIGHT_P8:
         SetCMVCIntegralLight(vcidx, IntegralLights_P8, MatProp::Emission, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
+        SetCMVCIntegralLight(vcidx, IntergralLights_P8_NTex, MatProp::Light,(double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntergralLights_P8_NTex)/sizeof(IntergralLights_P8_NTex[0]));
         return true;
 
 	case AID_VC_FLOOD_LIGHT_P8:
@@ -1776,6 +1777,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_VC_INTEGRAL_LIGHT_P8:
         SetCMVCIntegralLight(vcidx, IntegralLights_P8, MESHM_EMISSION2, (double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntegralLights_P8)/sizeof(IntegralLights_P8[0]));
+		SetCMVCIntegralLight(vcidx, IntergralLights_P8_NTex, MESHM_EMISSION,(double)(IntegralRotarySwitch.GetState())/10.0, sizeof(IntergralLights_P8_NTex)/sizeof(IntergralLights_P8_NTex[0]));
         return true;
 
 	case AID_VC_FLOOD_LIGHT_P8:

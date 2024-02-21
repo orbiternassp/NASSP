@@ -93,6 +93,14 @@ DWORD NumericLights_P8_NTex[] = {
 	VC_MAT_EMS_Scroll_Timer_P1_t
 };
 
+
+// Material Emissions Panel 8 without Emission Texture
+DWORD IntergralLights_P8_NTex[] = {
+
+	// TODO Material List
+	VC_MAT_FDAI_Ball_t
+};
+
 /*
 DWORD FloodLights_P8[] = {
 
@@ -163,7 +171,7 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_CMVCTex2_t,
 //	VC_MAT_EMS_Scroll_Timer_P1_t,
 	VC_MAT_Alluminum,
-	VC_MAT_FDAI_Ball_t,
+//	VC_MAT_FDAI_Ball_t,
 //	VC_MAT_FDAI_errorneedle,
 //	VC_MAT_FDAI_Cue,
 //	VC_MAT_Black,
@@ -222,7 +230,6 @@ DWORD FloodLights_P8[] = {
 DWORD NumericLights_P8[] = {
 
 	// TODO Material List
-	VC_MAT_FDAI_Ball_t,
 	VC_MAT_DSKY_Alarm_Lights_P2_t
 
 };
