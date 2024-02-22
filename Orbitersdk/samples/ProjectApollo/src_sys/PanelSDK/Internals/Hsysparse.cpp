@@ -728,6 +728,8 @@ void* h_Tank::GetComponent(char *component_name) {
 		 return &(space.composition[0].vapor_mass);
 	if (!strnicmp (component_name, "H2O_MASS", 8))
 		 return &(space.composition[2].mass);
+	if (!strnicmp(component_name, "H2O_VAPORMASS", 13))
+		return &(space.composition[2].vapor_mass);
 
 	BuildError(2);
 	return NULL;

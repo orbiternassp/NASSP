@@ -1296,7 +1296,16 @@ void h_crew::refresh(double dt) {
 		therm_obj *t = H2O->GetThermalInterface();
 
 		H2O->space.composition[SUBSTANCE_H2O].mass -= water;
-		//H2O->space.composition[SUBSTANCE_H2O].SetTemp(h2oTemp); //tends to increase the temp too much, the hot water coming in from the fuel cells keeps it balanced
+
+		if (H2O->space.composition[SUBSTANCE_H2O].vapor_mass > water)
+		{
+			H2O->space.composition[SUBSTANCE_H2O].vapor_mass -= water;
+		}
+
+		H2O->space.composition[SUBSTANCE_H2O].SetTemp(h2oTemp);
+
+		H2O->space.GetQ();
+		H2O->space.GetMass();
 	}
 
 	if (SRC) {
