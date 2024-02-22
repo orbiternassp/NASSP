@@ -6815,38 +6815,39 @@ void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GET)
 	pad.lng[0] = lng*DEG;
 }
 
-void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
+void RTCC::P27PADCalc(const P27Opt &opt, P27PAD &pad)
 {
-	double lat, lng, alt, get, SVMJD;
+	double lat, lng, alt, get, SVGMT, navcheckGMT;
 	VECTOR3 pos, vel;
 	bool csm = true;
-	SV sv, sv1;
+	EphemerisData sv, sv1;
 
-	SVMJD = CalcGETBase() + opt->SVGET / 24.0 / 3600.0;
+	//Convert to GMT
+	SVGMT = GMTfromGET(opt.SVGET);
+	navcheckGMT = GMTfromGET(opt.navcheckGET);
 
-	sv = StateVectorCalc(opt->vessel, SVMJD);
-	sv1 = coast(sv, opt->navcheckGET - opt->SVGET);
+	sv = coast(opt.sv0, SVGMT - opt.sv0.GMT);
+	sv1 = coast(opt.sv0, navcheckGMT - opt.sv0.GMT);
 
-	navcheck(sv1.R, sv1.MJD, hEarth == sv1.gravref ? BODY_EARTH : BODY_MOON, lat, lng, alt);
+	navcheck(sv1.R, sv1.GMT, sv1.RBI, lat, lng, alt);
 	
 	sprintf(pad.Purpose[0], "SV");
-	pad.GET[0] = opt->SVGET;
+	pad.GET[0] = opt.SVGET;
 	pad.alt = alt / 1852.0;
 	pad.lat = lat*DEG;
 	pad.lng = lng*DEG;
-	pad.NavChk = opt->navcheckGET;
+	pad.NavChk = opt.navcheckGET;
 	pad.Index[0] = 21;
 	pad.Verb[0] = 71;
 
 	pos = sv.R;
 	vel = sv.V*0.01;
-	get = opt->SVGET;
+	get = opt.SVGET;
 
-	if (sv.gravref == hMoon) {
+	pad.Data[0][0] = 1501;
 
-		pad.Data[0][0] = 1501;
-
-		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
+	if (sv.RBI == BODY_MOON)
+	{
 		if (csm)
 		{
 			pad.Data[0][1] = 2;
@@ -6871,11 +6872,8 @@ void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
 		pad.Data[0][14] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
 		pad.Data[0][15] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
 	}
-
-	if (sv.gravref == hEarth) {
-
-		pad.Data[0][0] = 1501;
-
+	else
+	{
 		if (csm)
 		{
 			pad.Data[0][1] = 1;

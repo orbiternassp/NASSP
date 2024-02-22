@@ -171,8 +171,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Back", 0, 'B' },
 		{ "Press ENTR on DSKY and DEDA",0,'D' },
 		{ "Press ENTR on DSKY in CSM and LM",0,'E' },
-		{ "Calculate V42 Angles", 0, 'F' },
-		{ 0,0,0 },
+		{ "Press PRO on DSKY in CSM and LM", 0, 'F' },
+		{ "Calculate V42 Angles", 0, 'G' },
 		{ "CSM and LM REFSMMAT types",0,'R' }
 	};
 
@@ -181,7 +181,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 	RegisterFunction("V47", OAPI_KEY_D, &ProjectApolloMFD::menuPressEnterOnDSKYDEDA);
 	RegisterFunction("ENT", OAPI_KEY_E, &ProjectApolloMFD::menuPressEnterOnCMCLGC);
-	RegisterFunction("V42", OAPI_KEY_F, &ProjectApolloMFD::CalculateV42Angles);
+	RegisterFunction("PRO", OAPI_KEY_F, &ProjectApolloMFD::menuPressPROOnCMCLGC);
+	RegisterFunction("V42", OAPI_KEY_G, &ProjectApolloMFD::CalculateV42Angles);
 	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("REF", OAPI_KEY_R, &ProjectApolloMFD::menuCycleLMAlignType);
 
