@@ -67,12 +67,15 @@ char name[100];
 int nmb;
 char source[100];
 char watertank[100];
+char drink[100];
 h_Tank *SRC;
 h_Tank *H2O;
-sscanf(line+6,"%s %i %s %s",name,&nmb,source,watertank);
+h_Pipe *drinkpipe;
+sscanf(line+6,"%s %i %s %s",name,&nmb,source,watertank,drink);
 SRC=(h_Tank*)GetPointerByString(source);
 H2O=(h_Tank*)GetPointerByString(watertank);
-AddSystem(new h_crew(name,nmb,SRC,H2O));
+drinkpipe=(h_Pipe *)GetPointerByString(drink);
+AddSystem(new h_crew(name,nmb,SRC,H2O,drinkpipe));
 }
 
 void H_system::Create_h_Radiator(char *line) {

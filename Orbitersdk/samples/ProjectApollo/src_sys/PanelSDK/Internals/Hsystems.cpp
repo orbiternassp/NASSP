@@ -1277,35 +1277,24 @@ void h_MixingPipe::Save(FILEHANDLE scn) {
 }
 
 
-h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Tank *i_h2o) {
+h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Tank *i_h2o, h_Pipe *i_pipe) {
 	
 	strcpy(name, i_name);
 	max_stage = 99;
 	number = nr;
 	SRC = i_src;
 	H2O = i_h2o;
+	drinkpipe = i_pipe;
 }
 
 void h_crew::refresh(double dt) {
 
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)	
-	double water = 0.0346494 * number * dt; //grams of  H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
+	double water = 0.0346494 * number * dt; //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
 
-	if (H2O && H2O->space.composition[SUBSTANCE_H2O].mass > water) {
-		double h2oTemp = H2O->GetTemp();
-		therm_obj *t = H2O->GetThermalInterface();
-
-		H2O->space.composition[SUBSTANCE_H2O].mass -= water;
-
-		if (H2O->space.composition[SUBSTANCE_H2O].vapor_mass > water)
-		{
-			H2O->space.composition[SUBSTANCE_H2O].vapor_mass -= water;
-		}
-
-		H2O->space.composition[SUBSTANCE_H2O].SetTemp(h2oTemp);
-
-		H2O->space.GetQ();
-		H2O->space.GetMass();
+	if (H2O && drinkpipe && H2O->space.composition[SUBSTANCE_H2O].mass > water) {
+		drinkpipe->in->open;
+		drinkpipe->flow = water;
 	}
 
 	if (SRC) {

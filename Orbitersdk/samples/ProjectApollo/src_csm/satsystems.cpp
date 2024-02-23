@@ -1114,12 +1114,13 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *PotH2OVapMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:H2O_VAPORMASS");
 	double *PotH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:TEMP");
 	double *PotH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:PRESS");
+	double *DrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOW");
 
 	double *WasteH2OMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:MASS");
 	double *WasteH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:TEMP");
 	double *WasteH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:PRESS");
 
-	sprintf(oapiDebugString(), "Mass: %lf VapMass: %lf Temp: %lf Press %lf", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI);
+	sprintf(oapiDebugString(), "Mass: %lf VapMass: %lf Temp: %lf Press %lf Flow %lf", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow);
 
 //GSE Oxygen Purge Debug Lines	
 	
