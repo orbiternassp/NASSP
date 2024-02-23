@@ -1116,12 +1116,13 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *PotH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:PRESS");
 	double *DrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOW");
 	double *DrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOWMAX");
+	double *PotH2OLeakVlv = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:LEAK:ISOPEN");
 
 	double *WasteH2OMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:MASS");
 	double *WasteH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:TEMP");
 	double *WasteH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:PRESS");
 
-	sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax);
+	sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PotH2OLeakVlv);
 
 //GSE Oxygen Purge Debug Lines	
 	

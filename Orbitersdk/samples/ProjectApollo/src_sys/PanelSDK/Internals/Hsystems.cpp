@@ -1293,11 +1293,10 @@ void h_crew::refresh(double dt) {
 	double water = 0.0346494 * number; //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
 
 	if (H2O && drinkpipe) {
-		drinkpipe->in->size = (float)0.01; //Used to change valve size of drinking pipe on older saves
-		drinkpipe->in->Open();
+		drinkpipe->in->size = (float)0.001; //Used to change valve size of drinking pipe on older saves
 
 		if (H2O->space.composition[SUBSTANCE_H2O].mass > water) {
-
+			drinkpipe->in->Open();
 			drinkpipe->flowMax = water;
 		}
 
