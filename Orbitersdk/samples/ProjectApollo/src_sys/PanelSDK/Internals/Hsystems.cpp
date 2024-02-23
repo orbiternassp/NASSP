@@ -1295,14 +1295,16 @@ void h_crew::refresh(double dt) {
 	if (H2O && drinkpipe) {
 		drinkpipe->in->size = (float)0.001; //Used to change valve size of drinking pipe on older saves
 
-		if (H2O->space.composition[SUBSTANCE_H2O].mass > water) {
-			drinkpipe->in->Open();
-			drinkpipe->flowMax = water;
+		if (water == 0.0) {
+			drinkpipe->in->Close();
 		}
 
-		if (water == 0.0)
-		{
-			drinkpipe->in->Close();
+		else {
+			drinkpipe->in->Open();
+		}
+
+		if (H2O->space.composition[SUBSTANCE_H2O].mass > water) {
+			drinkpipe->flowMax = water;
 		}
 	}
 

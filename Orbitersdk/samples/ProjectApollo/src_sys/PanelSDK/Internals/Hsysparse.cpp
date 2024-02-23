@@ -74,7 +74,7 @@ h_Pipe *drinkpipe;
 sscanf(line+6,"%s %i %s %s %s",name,&nmb,source,watertank,drink);
 SRC=(h_Tank*)GetPointerByString(source);
 H2O=(h_Tank*)GetPointerByString(watertank);
-drinkpipe=(h_Pipe *)GetPointerByString(drink);
+drinkpipe=(h_Pipe*)GetPointerByString(drink);
 AddSystem(new h_crew(name,nmb,SRC,H2O,drinkpipe));
 }
 
