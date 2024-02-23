@@ -692,23 +692,12 @@ void IMU::DoZeroIMUGimbals()
 
 void IMU::calculatePhase(const VECTOR3 NewAngles)
 {
-	SineGimbal.x = Gimbal.X - degToRad(50.0);
-	clampTo2pi(SineGimbal.x);
-
-	SineGimbal.y = Gimbal.Y - degToRad(50.0);
-	clampTo2pi(SineGimbal.y);
-
-	SineGimbal.z = Gimbal.Z - degToRad(50.0);
-	clampTo2pi(SineGimbal.z);
-
-	CosineGimbal.x = Gimbal.X + degToRad(130.0);
-	clampTo2pi(CosineGimbal.x);
-
-	CosineGimbal.y = Gimbal.Y + degToRad(130.0);
-	clampTo2pi(CosineGimbal.y);
-
-	CosineGimbal.z = Gimbal.Z + degToRad(130.0);
-	clampTo2pi(CosineGimbal.z);
+	SineGimbal.x = sin(Gimbal.X - degToRad(50.0)) * 21;	//FIXME: This should be fed by 28V 800cps Resolver Phase Excitation. Output is +/- 21VRMS
+	SineGimbal.y = sin(Gimbal.Y - degToRad(50.0)) * 21;
+	SineGimbal.z = sin(Gimbal.Z - degToRad(50.0)) * 21;
+	CosineGimbal.x = cos(Gimbal.X + degToRad(130.0)) * 21;
+	CosineGimbal.y = cos(Gimbal.Y + degToRad(130.0)) * 21;
+	CosineGimbal.z = cos(Gimbal.Z + degToRad(130.0)) * 21;
 
 	ResolverPhaseError.x = (-NewAngles.x - Gimbal.X);
 	ResolverPhaseError.y = (-NewAngles.y - Gimbal.Y);

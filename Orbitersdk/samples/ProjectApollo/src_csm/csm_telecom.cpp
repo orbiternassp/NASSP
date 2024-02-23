@@ -2630,7 +2630,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 53:		// TRUNNION CDU DAC OUT
 							return(scale_data(0,-10,10));
 						case 54:		// IG 1X RSVR OUT SIN
-							return(scale_data(sat->imu.getResolverSineGimbal().y,-50,50));
+							return(scale_data(sat->imu.getResolverSineGimbal().y, -21, 21));
 						case 55:		// O2 SUPPLY MANF PRESS
 							return(scale_data(sat->O2SupplyManifPressSensor.Voltage(), 0.0, 5.0));
 						case 56:		// AC BUS 2 PH A VOLTS
@@ -2640,15 +2640,15 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 58:		// MAIN BUS B VOLTS
 							return scale_data(sat->sce.GetVoltage(0, 1), 0.0, 5.0);
 						case 59:		// IG 1X RSVR OUT COS
-							return(scale_data(sat->imu.getResolverCosineGimbal().y,130,50));
+							return(scale_data(sat->imu.getResolverCosineGimbal().y, -21, 21));
 						case 60:		// MG 1X RSVR OUT SIN
-							return(scale_data(sat->imu.getResolverSineGimbal().z,-50,50));
+							return(scale_data(sat->imu.getResolverSineGimbal().z,-21,21));
 						case 61:		// MG 1X RSVR OUT COS
-							return(scale_data(sat->imu.getResolverCosineGimbal().z,130,50));
+							return(scale_data(sat->imu.getResolverCosineGimbal().z,-21,21));
 						case 62:		// OG 1X RSVR OUT SIN
-							return(scale_data(sat->imu.getResolverSineGimbal().x,-50,50));
+							return(scale_data(sat->imu.getResolverSineGimbal().x, -21, 21));
 						case 63:		// OG 1X RSVR OUT COS
-							return(scale_data(sat->imu.getResolverCosineGimbal().x,130,50));
+							return(scale_data(sat->imu.getResolverCosineGimbal().x, -21, 21));
 						case 64:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 65:		// UNKNOWN - HBR ONLY
