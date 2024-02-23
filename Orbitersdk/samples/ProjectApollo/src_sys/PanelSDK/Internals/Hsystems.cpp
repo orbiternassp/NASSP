@@ -1290,11 +1290,15 @@ h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Tank *i_h2o, h_Pipe *i_pip
 void h_crew::refresh(double dt) {
 
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)	
-	double water = 0.0346494 * number * dt; //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
+	double water = 0.0346494 * number; //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
+	if (drinkpipe) {
+		drinkpipe->in->size = (float) 0.01; //Used to change valve size of drinking pipe on older saves
+		drinkpipe->in->Open();
+	}
 
 	if (H2O && drinkpipe && H2O->space.composition[SUBSTANCE_H2O].mass > water) {
-		drinkpipe->in->open;
-		drinkpipe->flow = water;
+
+		drinkpipe->flowMax = water;
 	}
 
 	if (SRC) {
