@@ -1290,9 +1290,8 @@ h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Tank *i_h2o, h_Pipe *i_pip
 void h_crew::refresh(double dt) {
 
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
-	//sprintf(oapiDebugString(), "Water %.3f", water);
 
-	if (H2O && drinkpipe) {
+	if (H2O && drinkpipe && !(drinkpipe->in->pz)) {
 
 		if (number != 0)
 		{
