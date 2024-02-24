@@ -1289,13 +1289,24 @@ h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Tank *i_h2o, h_Pipe *i_pip
 
 void h_crew::refresh(double dt) {
 
-	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)	
-	double water = 0.0346494 * number; //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
+	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
+	//sprintf(oapiDebugString(), "Water %.3f", water);
 
+	if (H2O && drinkpipe && number != 0) {
+		drinkpipe->in->Open();
+		drinkpipe->flowMax = (0.0346494 * number); //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
+	}
+
+	else if (H2O && drinkpipe && number == 0) {
+		drinkpipe->in->Close();
+		drinkpipe->flowMax = 0;
+	}
+
+	/*
 	if (H2O && drinkpipe) {
-		drinkpipe->in->size = (float)0.001; //Used to change valve size of drinking pipe on older saves
+		//drinkpipe->in->size = (float)0.001; //Used to change valve size of drinking pipe on older saves
 
-		if (water == 0.0) {
+		if (water < 0.0346494) {
 			drinkpipe->in->Close();
 		}
 
@@ -1307,7 +1318,7 @@ void h_crew::refresh(double dt) {
 			drinkpipe->flowMax = water;
 		}
 	}
-
+	*/
 	if (SRC) {
 		double srcTemp = SRC->GetTemp();
 		therm_obj *t = SRC->GetThermalInterface();
