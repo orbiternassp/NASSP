@@ -1302,23 +1302,6 @@ void h_crew::refresh(double dt) {
 		drinkpipe->flowMax = 0;
 	}
 
-	/*
-	if (H2O && drinkpipe) {
-		//drinkpipe->in->size = (float)0.001; //Used to change valve size of drinking pipe on older saves
-
-		if (water < 0.0346494) {
-			drinkpipe->in->Close();
-		}
-
-		else {
-			drinkpipe->in->Open();
-		}
-
-		if (H2O->space.composition[SUBSTANCE_H2O].mass > water) {
-			drinkpipe->flowMax = water;
-		}
-	}
-	*/
 	if (SRC) {
 		double srcTemp = SRC->GetTemp();
 		therm_obj *t = SRC->GetThermalInterface();
