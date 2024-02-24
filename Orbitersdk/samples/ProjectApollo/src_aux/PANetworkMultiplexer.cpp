@@ -38,6 +38,7 @@ DLLCLBK void ExitModule(HINSTANCE hModule){
 
 ProjectApolloNetworkMultiplexer::ProjectApolloNetworkMultiplexer(HINSTANCE HModule) : Module(HModule)
 {
+	// BAD! NO TCP. FIX
 	ports.CSM = 14242;
 	ports.LM = 14243;
 	ports.CSMPlayback = 14244;
