@@ -1292,14 +1292,19 @@ void h_crew::refresh(double dt) {
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
 	//sprintf(oapiDebugString(), "Water %.3f", water);
 
-	if (H2O && drinkpipe && number != 0) {
-		drinkpipe->in->Open();
-		drinkpipe->flowMax = (0.0346494 * number); //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
-	}
+	if (H2O && drinkpipe) {
 
-	else if (H2O && drinkpipe && number == 0) {
-		drinkpipe->in->Close();
-		drinkpipe->flowMax = 0;
+		if (number != 0)
+		{
+			drinkpipe->in->Open();
+			drinkpipe->flowMax = (0.0346494 * number); //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
+		}
+
+		else
+		{
+			drinkpipe->in->Close();
+			drinkpipe->flowMax = 0.0;
+		}
 	}
 
 	if (SRC) {

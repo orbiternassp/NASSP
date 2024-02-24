@@ -1116,7 +1116,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *PotH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:PRESS");
 	double *DrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOW");
 	double *DrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOWMAX");
-	double *PotH2OLeakVlv = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:LEAK:ISOPEN");
+	int *PotH2OLeakVlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:LEAK:ISOPEN");
 
 	double *WasteH2OMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:MASS");
 	double *WasteH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:TEMP");
