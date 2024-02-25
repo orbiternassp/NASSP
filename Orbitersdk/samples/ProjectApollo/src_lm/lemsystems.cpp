@@ -2213,7 +2213,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PLSSH2OMass, *PLSSH2OVapMass, KelvinToFahrenheit(*PLSSH2OTemp), *PLSSH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PLSSH2OLeakVlv, *NumCrew);
 
-
 }
 
 void LEM::SetPipeMaxFlow(char *pipe, double flow) {
