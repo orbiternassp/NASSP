@@ -500,9 +500,9 @@ void IMU::Timestep(double simdt)
 		SetOrbiterAttitudeReference();
 		calculatePhase(-GimbalPositionforPhase);
 
-		accel.x += pipaBiasScale.PIPA_BiasX + accel.x * pipaBiasScale.PIPA_ScalePPM_X;
-		accel.y += pipaBiasScale.PIPA_BiasY + accel.y * pipaBiasScale.PIPA_ScalePPM_Y;
-		accel.z += pipaBiasScale.PIPA_BiasZ + accel.z * pipaBiasScale.PIPA_ScalePPM_Z;
+		accel.x = pipaBiasScale.PIPA_BiasX + accel.x * pipaBiasScale.PIPA_ScalePPM_X;
+		accel.y = pipaBiasScale.PIPA_BiasY + accel.y * pipaBiasScale.PIPA_ScalePPM_Y;
+		accel.z = pipaBiasScale.PIPA_BiasZ + accel.z * pipaBiasScale.PIPA_ScalePPM_Z;
 
 		// pulse PIPAs
 		pulses = RemainingPIPA.X + (accel.x * LastSimDT / pipaRate);
