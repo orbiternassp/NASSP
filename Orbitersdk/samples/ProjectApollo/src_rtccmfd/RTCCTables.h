@@ -622,8 +622,14 @@ struct RetrofireTransferTable
 
 struct SpacecraftSettingTable
 {
-	int Indicator = 1; //-1 = bad data, 0 = good data, 1 = no data
-	bool IsRTE = false; //true = RTE, false = TTF
+	SpacecraftSettingTable();
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	int Indicator; //-1 = bad data, 0 = good data, 1 = no data
+	bool IsRTE; //true = RTE, false = TTF
+	double lat_T; //Latitude of splashdown target
+	double lng_T; //Longitude of splashdown target
 };
 
 struct REFSMMATData
