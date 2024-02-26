@@ -762,6 +762,7 @@ void LEM::InitSwitches() {
 
 	LEMCoas1Enabled = false;
 	LEMCoas2Enabled = true;
+	LEMWindowShades = false;
 	ordealEnabled = false;
 
 	RRGyroSelSwitch.Register(PSH,"RRGyroSelSwitch",THREEPOSSWITCH_UP);
