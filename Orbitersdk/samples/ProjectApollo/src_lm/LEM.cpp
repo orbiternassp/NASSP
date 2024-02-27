@@ -609,6 +609,7 @@ void LEM::Init()
 	ascidx = -1;
 	dscidx = -1;
 	vcidx = -1;
+	windowshadesidx = -1;
 	xpointershadesidx = -1;
 
 	drogue = NULL;
