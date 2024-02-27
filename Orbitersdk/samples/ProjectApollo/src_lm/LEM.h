@@ -480,6 +480,7 @@ public:
 	void SetTrackLight();
 	void SetDockingLights();
 	void SetCOAS();
+	void SetWindowShades();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	int GetApolloNo() { return ApolloNo; }
 	UINT GetStage() { return stage; }
@@ -1538,6 +1539,12 @@ protected:
 	int LEMCoas1Enabled;
 	int LEMCoas2Enabled;
 
+	///////////////////////
+	// LEM Window Shades //
+	///////////////////////
+
+	int LEMWindowShades;
+
 	///////////////////////////
 	// ORDEAL Panel switches //
 	///////////////////////////
@@ -1670,6 +1677,7 @@ protected:
 	UINT ascidx;
 	UINT dscidx;
 	UINT vcidx;
+	UINT windowshadesidx;
 	UINT xpointershadesidx;
 
 	DEVMESHHANDLE probes;
