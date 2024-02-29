@@ -208,6 +208,13 @@ DWORD CMVCSeatsFolded[] = {
 	VC_MAT_CM_VC_SeatsFolded_StdIntr2
 };
 
+// CM-COAS-CDR.msh
+DWORD CMVC_COAS_CDR[] = {
+
+	// TODO Material List
+	0
+};
+
 DWORD IntegralLights_CMVC_Ordeal[] = {
 
 	// TODO Material List
