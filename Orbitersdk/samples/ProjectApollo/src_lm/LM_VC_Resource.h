@@ -7,7 +7,7 @@
 #define VC_NGRP 607
 
 // Number of materials:
-#define VC_NMAT 67
+#define VC_NMAT 68
 
 // Number of textures:
 #define VC_NTEX 33
@@ -685,10 +685,11 @@
 #define VC_MAT_Talkbacks_t 60
 #define VC_MAT_UpperHatch_t 61
 #define VC_MAT_Water_Dispenser_t 62
-#define VC_MAT_WindowsRim 63
-#define VC_MAT_Protective_Net_t 64
-#define VC_MAT_COASglass 65
-#define VC_MAT_COASglass2 66
+#define VC_MAT_LM_Window_Frames 63
+#define VC_MAT_WindowsRim 64
+#define VC_MAT_Protective_Net_t 65
+#define VC_MAT_COASglass 66
+#define VC_MAT_COASglass2 67
 
 // Named Textures:
 #define VC_TEX_LM_ACA_dds 1

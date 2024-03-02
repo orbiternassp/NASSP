@@ -174,7 +174,7 @@ DWORD FloodLights_P100[] = {
 DWORD NumericLights_P100[] = {
 
 	// TODO Material List
-	VC_MAT_DSKY_P8_t
+	VC_MAT_DSKY_LEB_CMVCTex2_t
 };
 
 //
