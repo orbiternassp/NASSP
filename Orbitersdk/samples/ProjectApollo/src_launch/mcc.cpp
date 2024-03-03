@@ -582,6 +582,11 @@ void MCC::Init(){
 	// Uplink items
 	uplink_size = 0;
 	logfileinit = false;
+
+	CSM_TelemetryBuffer = { 0 };
+	LEM_TelemetryBuffer = { 0 };
+	IU_TelemetryBuffer = { 0 };
+	CSM_TelemetryBuffer.reserve(10000000);
 }
 
 void MCC::setState(int newState){
