@@ -34,7 +34,7 @@ public:
 	SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
 	virtual ~SPSPropellantSource();
 
-	void Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *propline);
+	void Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *propline, h_Radiator *oxline);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetFuelPercent();
@@ -43,6 +43,7 @@ public:
 	double GetPropellantPressurePSI() { return propellantPressurePSI; }
 	double GetHeliumPressurePSI() { return heliumPressurePSI; }
 	double GetPropellantLineTempF();
+	double GetOxidizerLineTempF();
 	bool IsHeliumValveAOpen() { return heliumValveAOpen; }
 	bool IsHeliumValveBOpen() { return heliumValveBOpen; }
 	bool IsOxidFlowValveMin();
@@ -75,6 +76,7 @@ protected:
 	PowerMerge DCPower;
 	e_object *ACPower;
 	h_Radiator *propellantLine;
+	h_Radiator *oxidizerLine;
 	bool propellantInitialized;
 	double lastPropellantMass;
 	double propellantBuffer;

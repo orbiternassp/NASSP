@@ -482,6 +482,9 @@ void Saturn::SystemsInit() {
 	FCN2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET"));
 	FCN2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET"));
 
+	SPSFuelFeedTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
+	SPSOxidizerFeedTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE"));
+
 	CabinPressSensor.Init(&ECSPressGroups2Feeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 	CabinTempSensor.Init(&ECSTempTransducerFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 	SuitCabinDeltaPressSensor.Init(&Panel276CB2, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE"), (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
@@ -525,7 +528,8 @@ void Saturn::SystemsInit() {
 
 	// SPS initialization
 	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch, 
-		               (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
+		               (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"),
+		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE"));
 	SPSEngine.Init(this);
 	SPSEngine.pitchGimbalActuator.Init(this, tvsa.GetPitchServoAmp(), &Pitch1Switch, &Pitch2Switch,
 		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker);
@@ -534,6 +538,8 @@ void Saturn::SystemsInit() {
 
 	SPSPropellantLineHeaterA = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA");
 	SPSPropellantLineHeaterB = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB");
+	SPSPropellantLineHeaterA2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA2");
+	SPSPropellantLineHeaterB2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB2");
 
 
 	// SM RCS initialization
@@ -2675,6 +2681,8 @@ void Saturn::CheckSMSystemsState()
 		// SPS
 		SPSPropellantLineHeaterA->WireTo(NULL);
 		SPSPropellantLineHeaterB->WireTo(NULL);
+		SPSPropellantLineHeaterA2->WireTo(NULL);
+		SPSPropellantLineHeaterB2->WireTo(NULL);
 
 		HeValveMnACircuitBraker.WireTo(NULL);
 		HeValveMnBCircuitBraker.WireTo(NULL);
@@ -2965,7 +2973,7 @@ void Saturn::GetSPSStatus( SPSStatus &ss )
 {
 	ss.chamberPressurePSI = SPSEngine.GetChamberPressurePSI();
 	ss.PropellantLineTempF = SPSPropellant.GetPropellantLineTempF();
-	ss.OxidizerLineTempF = SPSPropellant.GetPropellantLineTempF();
+	ss.OxidizerLineTempF = SPSPropellant.GetOxidizerLineTempF();
 }
 
 //

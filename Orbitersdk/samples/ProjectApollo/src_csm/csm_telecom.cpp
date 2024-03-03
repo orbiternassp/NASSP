@@ -2433,15 +2433,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 116:		// SCI EXP #11
 							return(scale_data(0,0,100));
 						case 117:		// SPS FU FEED LINE TEMP
-							sat->GetSPSStatus(spsStatus);
-							return(scale_data(spsStatus.PropellantLineTempF,0,200));
+							return(scale_data(sat->SPSFuelFeedTempSensor.Voltage(), 0.0, 5.0));
 						case 118:		// SCI EXP #12
 							return(scale_data(0,0,100));
 						case 119:		// SCI EXP #13
 							return(scale_data(0,0,100));
 						case 120:		// SPS OX FEED LINE TEMP
-							sat->GetSPSStatus(spsStatus);
-							return(scale_data(spsStatus.OxidizerLineTempF,0,200));
+							return(scale_data(sat->SPSOxidizerFeedTempSensor.Voltage(), 0.0, 5.0));
 						case 121:		// SCI EXP #14
 							return(scale_data(0,0,100));
 						case 122:		// SCI EXP #15

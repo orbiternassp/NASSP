@@ -3993,6 +3993,8 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 	} else if (s == &SPSLineHTRSSwitch) {  
 		int *pump1 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA:PUMP");
 		int *pump2 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB:PUMP");
+		int *pump3 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA2:PUMP");
+		int *pump4 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB2:PUMP");
 
 		if (s->IsUp()) {
 			*pump1 = SP_PUMP_ON;
@@ -5583,7 +5585,7 @@ void Saturn::InitSwitches() {
 	SPSFuelPercentMeter.Register(PSH, "SPSFuelPercentMeter", 0, 0.999, 1, 0.999);
 	SPSOxidUnbalMeter.Register(PSH, "SPSOxidUnbalMeter", -600, 600, 10);
 
-	SPSTempMeter.Register(PSH, "SPSTempMeter", 0, 200, 2);
+	SPSTempMeter.Register(PSH, "SPSTempMeter", 0, 5, 2);
 	SPSHeliumNitrogenPressMeter.Register(PSH, "SPSHeliumNitrogenPressMeter", 0, 5000, 2);
 	SPSFuelPressMeter.Register(PSH, "SPSFuelPressMeter", 0, 250, 2);
 	SPSOxidPressMeter.Register(PSH, "SPSOxidPressMeter", 0, 250, 2);

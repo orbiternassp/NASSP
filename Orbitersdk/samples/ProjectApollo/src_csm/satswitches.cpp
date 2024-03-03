@@ -1198,12 +1198,12 @@ void SaturnSPSTempMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, e_obje
 
 double SaturnSPSTempMeter::QueryValue()
 {
-	return Sat->GetSPSPropellant()->GetPropellantLineTempF();
+	return Sat->SPSOxidizerFeedTempSensor.Voltage();
 }
 
 void SaturnSPSTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	oapiBlt(drawSurface, NeedleSurface, 0, (109 - (int)(v / 200.0 * 103.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 0, (109 - (int)(v / 5.0 * 103.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 

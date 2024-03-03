@@ -67,11 +67,12 @@ SPSPropellantSource::~SPSPropellantSource() {
 	// Nothing for now.
 }
 
-void SPSPropellantSource::Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *propline) {
+void SPSPropellantSource::Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *propline, h_Radiator *oxline) {
 
 	DCPower.WireToBuses(dc1, dc2);
 	ACPower = ac;
 	propellantLine = propline;
+	oxidizerLine = oxline;
 }
 
 void SPSPropellantSource::Timestep(double simt, double simdt) {
@@ -356,6 +357,15 @@ double SPSPropellantSource::GetPropellantLineTempF() {
 
 	
 	return KelvinToFahrenheit(propellantLine->GetTemp());
+}
+
+double SPSPropellantSource::GetOxidizerLineTempF() {
+
+	if (!our_vessel) return 0;
+	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
+
+
+	return KelvinToFahrenheit(oxidizerLine->GetTemp());
 }
 
 void SPSPropellantSource::SaveState(FILEHANDLE scn) {

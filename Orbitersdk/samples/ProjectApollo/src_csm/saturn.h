@@ -3639,9 +3639,12 @@ public:
 	CSMPipeFlowTransducer FCH2FlowSensor1;
 	CSMPipeFlowTransducer FCH2FlowSensor2;
 	CSMPipeFlowTransducer FCH2FlowSensor3;
+	TemperatureTransducer SPSFuelFeedTempSensor;
+	TemperatureTransducer SPSOxidizerFeedTempSensor;
 	CSMTankPressTransducer BatteryManifoldPressureSensor;
 	TemperatureTransducer WasteH2ODumpTempSensor;
 	TemperatureTransducer UrineDumpTempSensor;
+
 protected:
 
 	// CM Optics
@@ -4385,6 +4388,8 @@ protected:
 	SPSPropellantSource SPSPropellant;
 	Boiler *SPSPropellantLineHeaterA;
 	Boiler *SPSPropellantLineHeaterB;
+	Boiler *SPSPropellantLineHeaterA2;
+	Boiler *SPSPropellantLineHeaterB2;
 	h_HeatLoad *CMRCSHeat[12];
 
 	//
