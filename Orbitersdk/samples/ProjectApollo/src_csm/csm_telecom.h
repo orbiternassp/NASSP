@@ -350,7 +350,7 @@ public:
 	sockaddr_in service;			// SOCKADDR_IN
 	SOCKET AcceptSocket;			// Accept Socket
 	int conn_state;                 // Connection State
-	MCC *MCCV;
+	MCC *pMCC;
 	int uplink_state;               // Uplink State
 	void perform_io(double simt);   // Get data from here to there
 	void handle_uplink();	// Handle incoming data

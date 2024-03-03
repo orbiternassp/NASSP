@@ -1998,7 +1998,7 @@ PCM::PCM()
 	frame_addr = 0;
 	frame_count = 0;
 	m_socket = INVALID_SOCKET;
-	MCCV = nullptr;
+	pMCC = nullptr;
 }
 
 PCM::~PCM()
@@ -2070,7 +2070,7 @@ void PCM::Init(Saturn *vessel){
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
 		if (utils::IsVessel(pVessel, utils::MCC))
 		{
-			MCCV = ((MCCVessel*)pVessel)->mcc;
+			pMCC = ((MCCVessel*)pVessel)->mcc;
 		}
 	}
 }
@@ -4948,19 +4948,19 @@ void PCM::generate_stream_hbr(){
 void PCM::perform_io(double simt){
 	
 	//very slow, done for testing only
-	if (!MCCV) {
+	if (!pMCC) {
 		for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
 		{
 			OBJHANDLE hVessel = oapiGetVesselByIndex(i);
 			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
 			if (utils::IsVessel(pVessel, utils::MCC))
 			{
-				MCCV = ((MCCVessel*)pVessel)->mcc;
+				pMCC = ((MCCVessel*)pVessel)->mcc;
 			}
 		}
 	}
 	else {
-		int sent = MCCV->TelemetryDownlink(1, tx_data, tx_size);
+		int sent = pMCC->TelemetryDownlink(1, tx_data, tx_size);
 	}
 
 
