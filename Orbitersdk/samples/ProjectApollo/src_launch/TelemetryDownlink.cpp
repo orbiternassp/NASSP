@@ -31,7 +31,7 @@ int MCC::TelemetryDownlink(int type, const unsigned char* telemetryWords, int me
 		for (int i = 0; i < messageLength; i++)
 		{
 			CSM_BufferLock.lock();
-			sprintf(oapiDebugString(), "Word: %d Length %zu", telemetryWords[i], CSM_TelemetryBuffer.size());
+			//sprintf(oapiDebugString(), "Word: %d Length %zu", telemetryWords[i], CSM_TelemetryBuffer.size());
 			CSM_TelemetryBuffer.push_back((uint8_t)telemetryWords[i]);
 			CSM_BufferLock.unlock();
 		}

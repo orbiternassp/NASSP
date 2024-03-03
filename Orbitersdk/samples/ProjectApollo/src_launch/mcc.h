@@ -28,6 +28,7 @@
 #include <fstream>
 #include <atomic>
 #include <vector>
+#include <deque>
 #include "thread.h"
 #include "RemoteSiteProcessor.h"
 
@@ -329,8 +330,8 @@ public:
 
 	//TELEMETRY PROCESSING
 private:
-	std::vector<uint8_t> CSM_TelemetryBuffer;		//Type 1
-	std::vector<uint8_t> LEM_TelemetryBuffer;		//Type 2
+	std::deque<uint8_t> CSM_TelemetryBuffer;		//Type 1
+	std::deque<uint8_t> LEM_TelemetryBuffer;		//Type 2
 	//std::vector<uint16_t> IU_TelemetryBuffer;		//Type 3
 
 	std::vector<uint8_t> CSM_OutputBuffer;			//Type 1

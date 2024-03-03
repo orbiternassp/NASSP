@@ -27,6 +27,7 @@
 #include <array>
 #include <vector>
 #include <thread>
+#include <deque>
 #include <mutex>
 
 #ifndef _PA_REMOTE_SITE_PROCESSOR
@@ -42,13 +43,13 @@ struct PCMDecommFormat {
 
 class PCMTelemetryProcessor {
 public:
-	PCMTelemetryProcessor(std::vector<uint8_t>* buffer, std::vector<uint8_t>* output, std::mutex *mtex);
+	PCMTelemetryProcessor(std::deque<uint8_t>* buffer, std::vector<uint8_t>* output, std::mutex *mtex);
 	~PCMTelemetryProcessor();
 
 	PCMDecommFormat* HBR_Format;
 	PCMDecommFormat* LBR_Format;
 
-	std::vector<uint8_t>* TelemetryBuffer;
+	std::deque<uint8_t>* TelemetryBuffer;
 	std::vector<uint8_t>* TelemetryOutput;
 	std::mutex* BufferMutex;
 
