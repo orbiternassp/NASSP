@@ -27,6 +27,7 @@
 #include "MCCPADForms.h"
 #include <fstream>
 #include <atomic>
+#include <vector>
 #include "thread.h"
 
 // Save file strings
@@ -376,6 +377,7 @@ public:
 
 	// FRIEND CLASSES
 	friend class RTCC;										// RTCC can handle our data
+	friend class Saturn;
 };
 
 #endif // _PA_MCC_H

@@ -26,6 +26,7 @@
 #include "RF_calc.h"
 #include "paCBGmessageID.h"
 #include "mcc.h"
+#include "mccvessel.h"
 
 /* PCM DOWN-TELEMETRY
 

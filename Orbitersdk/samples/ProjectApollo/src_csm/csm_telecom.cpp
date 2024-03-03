@@ -2070,7 +2070,7 @@ void PCM::Init(Saturn *vessel){
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
 		if (utils::IsVessel(pVessel, utils::MCC))
 		{
-			MCCV = (MCC*)pVessel;
+			MCCV = ((MCCVessel*)pVessel)->mcc;
 		}
 	}
 }
@@ -4955,14 +4955,12 @@ void PCM::perform_io(double simt){
 			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
 			if (utils::IsVessel(pVessel, utils::MCC))
 			{
-				MCCV = (MCC*)pVessel;
+				MCCV = ((MCCVessel*)pVessel)->mcc;
 			}
 		}
 	}
 	else {
 		int sent = MCCV->TelemetryDownlink(1, tx_data, tx_size);
-		//MCCV->CSM_TelemetryBuffer.push_back((unsigned char)05); for testing only
-		//sprintf(oapiDebugString(), "Status: %zu", MCCV->CSM_TelemetryBuffer.size());
 	}
 
 

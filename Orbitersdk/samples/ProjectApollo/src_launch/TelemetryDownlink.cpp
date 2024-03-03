@@ -29,7 +29,7 @@ int MCC::TelemetryDownlink(int type, const unsigned char* telemetryWords, int me
 	case 1:
 		for (int i = 0; i < messageLength; i++)
 		{
-			sprintf(oapiDebugString(), "Word: %d Length %d", telemetryWords[i], messageLength);
+			sprintf(oapiDebugString(), "Word: %d Length %zu", telemetryWords[i], CSM_TelemetryBuffer.size());
 			CSM_TelemetryBuffer.push_back(telemetryWords[i]);
 		}
 		return 1;
