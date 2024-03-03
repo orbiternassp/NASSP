@@ -25,8 +25,13 @@
 
 #include <cstdint>
 #include <array>
+#include <vector>
+#include <thread>
+#include <mutex>
+
 #ifndef _PA_REMOTE_SITE_PROCESSOR
 #define _PA_REMOTE_SITE_PROCESSOR
+
 
 struct PCMDecommFormat {
 	std::array<uint8_t, 3> SyncWords;
@@ -34,13 +39,22 @@ struct PCMDecommFormat {
 	uint8_t NumWords;
 };
 
+
 class PCMTelemetryProcessor {
-	PCMTelemetryProcessor();
+public:
+	PCMTelemetryProcessor(std::vector<uint8_t>* buffer, std::vector<uint8_t>* output, std::mutex *mtex);
 	~PCMTelemetryProcessor();
 
-	PCMDecommFormat HBR_Format;
-	PCMDecommFormat LBR_Format;
+	PCMDecommFormat* HBR_Format;
+	PCMDecommFormat* LBR_Format;
 
+	std::vector<uint8_t>* TelemetryBuffer;
+	std::vector<uint8_t>* TelemetryOutput;
+	std::mutex* BufferMutex;
+
+	void ProcessTelemetry();
+	std::thread ProcessorThread;
+	bool runProcessor;
 };
 
 

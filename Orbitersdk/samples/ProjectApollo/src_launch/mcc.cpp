@@ -145,6 +145,13 @@ MCC::MCC(RTCC *rtc)
 
 	// Ground Systems Init
 	Init();
+
+	CSMTelemetryProcessor = new PCMTelemetryProcessor(&CSM_TelemetryBuffer, &CSM_OutputBuffer, &CSM_BufferLock);
+}
+
+MCC::~MCC()
+{
+	delete this->CSMTelemetryProcessor;
 }
 
 void MCC::Init(){
@@ -585,8 +592,10 @@ void MCC::Init(){
 
 	CSM_TelemetryBuffer = { 0 };
 	LEM_TelemetryBuffer = { 0 };
-	IU_TelemetryBuffer = { 0 };
+	//IU_TelemetryBuffer = { 0 };
 	CSM_TelemetryBuffer.reserve(10000000);
+	LEM_TelemetryBuffer.reserve(10000000);
+	//IU_TelemetryBuffer.reserve(10000000);
 }
 
 void MCC::setState(int newState){

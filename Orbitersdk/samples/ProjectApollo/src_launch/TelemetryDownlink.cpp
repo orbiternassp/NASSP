@@ -23,16 +23,26 @@
 
   **************************************************************************/
 #include "mcc.h"
+#include <mutex>
 
 int MCC::TelemetryDownlink(int type, const unsigned char* telemetryWords, int messageLength) {
 	switch (type) {
 	case 1:
 		for (int i = 0; i < messageLength; i++)
 		{
+			CSM_BufferLock.lock();
 			sprintf(oapiDebugString(), "Word: %d Length %zu", telemetryWords[i], CSM_TelemetryBuffer.size());
-			CSM_TelemetryBuffer.push_back(telemetryWords[i]);
+			CSM_TelemetryBuffer.push_back((uint8_t)telemetryWords[i]);
+			CSM_BufferLock.unlock();
 		}
 		return 1;
+	case 2:
+		for (int i = 0; i < messageLength; i++)
+		{
+			//sprintf(oapiDebugString(), "Word: %d Length %zu", telemetryWords[i], LEM_TelemetryBuffer.size());
+			LEM_TelemetryBuffer.push_back((uint8_t)telemetryWords[i]);
+		}
+		return 2;
 	default:
 		return -1;
 	}

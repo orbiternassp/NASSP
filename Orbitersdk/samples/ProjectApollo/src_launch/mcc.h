@@ -29,6 +29,7 @@
 #include <atomic>
 #include <vector>
 #include "thread.h"
+#include "RemoteSiteProcessor.h"
 
 // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
@@ -244,6 +245,7 @@ class RTCC;
 class MCC {
 public:
 	MCC(RTCC *rtc);											// Cons
+	~MCC();
 
 	char CSMName[64];
 	char LEMName[64];
@@ -326,11 +328,23 @@ public:
 	bool   MT_Enabled;										// Mission status tracking enable/disable
 
 	//TELEMETRY PROCESSING
-//private:
-	std::vector<unsigned char> CSM_TelemetryBuffer;		//Type 1
-	std::vector<unsigned char> LEM_TelemetryBuffer;		//Type 2
-	std::vector<unsigned char> IU_TelemetryBuffer;		//Type 3
-//public:
+private:
+	std::vector<uint8_t> CSM_TelemetryBuffer;		//Type 1
+	std::vector<uint8_t> LEM_TelemetryBuffer;		//Type 2
+	//std::vector<uint16_t> IU_TelemetryBuffer;		//Type 3
+
+	std::vector<uint8_t> CSM_OutputBuffer;			//Type 1
+	std::vector<uint8_t> LEM_OutputBuffer;			//Type 2
+	//std::vector<uint16_t> IU_OutputyBuffer;		//Type 3
+
+	std::mutex CSM_BufferLock;
+	std::mutex LEM_BufferLock;
+	//std::mutex IU_BufferLock;
+
+	PCMTelemetryProcessor* CSMTelemetryProcessor;
+	PCMTelemetryProcessor* LEMTelemetryProcessor;
+	//PCMTelemetryProcessor<uint16_t>* LEMTelemetryProcessor;
+public:
 
 	// MISSION STATE
 	int MissionType;										// Mission Type
@@ -377,7 +391,6 @@ public:
 
 	// FRIEND CLASSES
 	friend class RTCC;										// RTCC can handle our data
-	friend class Saturn;
 };
 
 #endif // _PA_MCC_H
