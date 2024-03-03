@@ -1487,9 +1487,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 15 * H / 21, Buffer, strlen(Buffer));
 
 			skp->Text(1 * W / 16, 16 * H / 21, "Splashdown:", 11);
-			sprintf(Buffer, "Lat:  %+.2f°", G->EntryLatcor*DEG);
+			sprintf(Buffer, "Lat:  %+.2f°", GC->rtcc->RZDBSC1.lat_T*DEG);
 			skp->Text(1 * W / 16, 17 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "Long: %+.2f°", G->EntryLngcor*DEG);
+			sprintf(Buffer, "Long: %+.2f°", GC->rtcc->RZDBSC1.lng_T*DEG);
 			skp->Text(1 * W / 16, 18 * H / 21, Buffer, strlen(Buffer));
 		}
 		else
@@ -1611,9 +1611,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(3 * W / 8, 31 * H / 32, Buffer, strlen(Buffer));
 
 			skp->Text(1 * W / 16, 12 * H / 21, "Splashdown:", 11);
-			sprintf(Buffer, "Lat:  %+.2f°", G->EntryLatcor*DEG);
+			sprintf(Buffer, "Lat:  %+.2f°", GC->rtcc->RZDBSC1.lat_T*DEG);
 			skp->Text(1 * W / 16, 13 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "Long: %+.2f°", G->EntryLngcor*DEG);
+			sprintf(Buffer, "Long: %+.2f°", GC->rtcc->RZDBSC1.lng_T*DEG);
 			skp->Text(1 * W / 16, 14 * H / 21, Buffer, strlen(Buffer));
 		}
 	}
@@ -2459,7 +2459,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Nav Check PAD", 13);
 
-		GET_Display(Buffer, G->navcheckpad.NavChk[0]);
+		GET_Display2(Buffer, G->navcheckpad.NavChk[0]);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%+07.2f LAT", G->navcheckpad.lat[0]);
@@ -2875,9 +2875,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "Desired Range: %.1f NM", G->entryrange);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "Lat:  %.2f °", G->EntryLatcor*DEG);
+		sprintf(Buffer, "Lat:  %.2f °", GC->rtcc->RZDBSC1.lat_T*DEG);
 		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "Long: %.2f °", G->EntryLngcor*DEG);
+		sprintf(Buffer, "Long: %.2f °", GC->rtcc->RZDBSC1.lng_T*DEG);
 		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 31)
@@ -9843,11 +9843,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		skp->Text(5 * W / 32, 8 * H / 28, "LAT", 3);
-		sprintf(Buffer, "%+.2f°", G->EntryLatcor*DEG);
+		sprintf(Buffer, "%+.2f°", GC->rtcc->RZDBSC1.lat_T*DEG);
 		skp->Text(8 * W / 32, 8 * H / 28, Buffer, strlen(Buffer));
 
 		skp->Text(14 * W / 32, 8 * H / 28, "LNG", 3);
-		sprintf(Buffer, "%+.2f°", G->EntryLngcor*DEG);
+		sprintf(Buffer, "%+.2f°", GC->rtcc->RZDBSC1.lng_T*DEG);
 		skp->Text(17 * W / 32, 8 * H / 28, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 32, 10 * H / 28, "OID", 3);

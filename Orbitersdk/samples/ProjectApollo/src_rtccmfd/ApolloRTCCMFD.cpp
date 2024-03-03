@@ -149,10 +149,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "TARGETNUMBER", G->targetnumber);
 	papiWriteScenario_double(scn, "P30TIG", G->P30TIG);
 	papiWriteScenario_vec(scn, "DV_LVLH", G->dV_LVLH);
-	papiWriteScenario_double(scn, "ENTRYTIGCOR", G->EntryTIGcor);
-	papiWriteScenario_double(scn, "ENTRYLATCOR", G->EntryLatcor);
-	papiWriteScenario_double(scn, "ENTRYLNGCOR", G->EntryLngcor);
-	papiWriteScenario_vec(scn, "ENTRYDV", G->Entry_DV);
 	papiWriteScenario_double(scn, "ENTRYRANGE", G->entryrange);
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
@@ -227,10 +223,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "TARGETNUMBER", G->targetnumber);
 		papiReadScenario_double(line, "P30TIG", G->P30TIG);
 		papiReadScenario_vec(line, "DV_LVLH", G->dV_LVLH);
-		papiReadScenario_double(line, "ENTRYTIGCOR", G->EntryTIGcor);
-		papiReadScenario_double(line, "ENTRYLATCOR", G->EntryLatcor);
-		papiReadScenario_double(line, "ENTRYLNGCOR", G->EntryLngcor);
-		papiReadScenario_vec(line, "ENTRYDV", G->Entry_DV);
 		papiReadScenario_double(line, "ENTRYRANGE", G->entryrange);
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
@@ -5371,8 +5363,8 @@ bool ApolloRTCCMFD::set_SaveSplashdownTarget(char *str)
 	{
 		if (GC->rtcc->PZREAP.RTEDTable[0].RTEDCode != "")
 		{
-			G->EntryLatcor = GC->rtcc->PZREAP.RTEDTable[0].lat_imp_tgt;
-			G->EntryLngcor = GC->rtcc->PZREAP.RTEDTable[0].lng_imp_tgt;
+			GC->rtcc->RZDBSC1.lat_T = GC->rtcc->PZREAP.RTEDTable[0].lat_imp_tgt;
+			GC->rtcc->RZDBSC1.lng_T = GC->rtcc->PZREAP.RTEDTable[0].lng_imp_tgt;
 			return true;
 		}
 	}
@@ -5380,8 +5372,8 @@ bool ApolloRTCCMFD::set_SaveSplashdownTarget(char *str)
 	{
 		if (GC->rtcc->PZREAP.RTEDTable[1].RTEDCode != "")
 		{
-			G->EntryLatcor = GC->rtcc->PZREAP.RTEDTable[1].lat_imp_tgt;
-			G->EntryLngcor = GC->rtcc->PZREAP.RTEDTable[1].lng_imp_tgt;
+			GC->rtcc->RZDBSC1.lat_T = GC->rtcc->PZREAP.RTEDTable[1].lat_imp_tgt;
+			GC->rtcc->RZDBSC1.lng_T = GC->rtcc->PZREAP.RTEDTable[1].lng_imp_tgt;
 			return true;
 		}
 	}
@@ -5391,8 +5383,8 @@ bool ApolloRTCCMFD::set_SaveSplashdownTarget(char *str)
 
 void ApolloRTCCMFD::LoadSplashdownTargetToRTEDManualInput()
 {
-	GC->rtcc->med_f81.lat_tgt = G->EntryLatcor;
-	GC->rtcc->med_f81.lng_tgt = G->EntryLngcor;
+	GC->rtcc->med_f81.lat_tgt = GC->rtcc->RZDBSC1.lat_T;
+	GC->rtcc->med_f81.lng_tgt = GC->rtcc->RZDBSC1.lng_T;
 }
 
 void ApolloRTCCMFD::menuTransferRTEToMPT()
@@ -6066,8 +6058,8 @@ void ApolloRTCCMFD::GetEntryTargetfromAGC()
 			Entryoct[4] = saturn->agc.vagc.Erasable[0][03402];
 			Entryoct[5] = saturn->agc.vagc.Erasable[0][03403];
 
-			G->EntryLatcor = OrbMech::DecToDouble(Entryoct[2], Entryoct[3])*PI2;
-			G->EntryLngcor = OrbMech::DecToDouble(Entryoct[4], Entryoct[5])*PI2;
+			GC->rtcc->RZDBSC1.lat_T = OrbMech::DecToDouble(Entryoct[2], Entryoct[3])*PI2;
+			GC->rtcc->RZDBSC1.lng_T = OrbMech::DecToDouble(Entryoct[4], Entryoct[5])*PI2;
 			//G->EntryPADLat = G->EntryLatcor;
 			//G->EntryPADLng = G->EntryLngcor;
 		//}
@@ -6099,12 +6091,12 @@ void ApolloRTCCMFD::set_RTEReentryTime(double t)
 
 void ApolloRTCCMFD::menuEnterSplashdownLat()
 {
-	GenericDoubleInput(&G->EntryLatcor, "Choose the splashdown latitude:", RAD);
+	GenericDoubleInput(&GC->rtcc->RZDBSC1.lat_T, "Choose the splashdown latitude:", RAD);
 }
 
 void ApolloRTCCMFD::menuEnterSplashdownLng()
 {
-	GenericDoubleInput(&G->EntryLngcor, "Choose the splashdown longitude:", RAD);
+	GenericDoubleInput(&GC->rtcc->RZDBSC1.lng_T, "Choose the splashdown longitude:", RAD);
 }
 
 void ApolloRTCCMFD::menuTransferLOIMCCtoMPT()

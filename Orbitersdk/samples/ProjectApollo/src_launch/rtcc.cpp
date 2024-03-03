@@ -1366,6 +1366,42 @@ RTCC::RendezvousPlanningDisplayData::RendezvousPlanningDisplayData()
 	M = 0;
 }
 
+SpacecraftSettingTable::SpacecraftSettingTable()
+{
+	Indicator = 1;
+	IsRTE = false;
+	lat_T = 0.0;
+	lng_T = 0.0;
+}
+
+void SpacecraftSettingTable::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
+
+	oapiWriteScenario_int(scn, "Indicator", Indicator);
+	oapiWriteScenario_int(scn, "IsRTE", IsRTE);
+	papiWriteScenario_double(scn, "lat_T", lat_T);
+	papiWriteScenario_double(scn, "lng_T", lng_T);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void SpacecraftSettingTable::LoadState(FILEHANDLE scn, char *end_str)
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str))) {
+			break;
+		}
+
+		papiReadScenario_int(line, "Indicator", Indicator);
+		papiReadScenario_bool(line, "IsRTE", IsRTE);
+		papiReadScenario_double(line, "lat_T", lat_T);
+		papiReadScenario_double(line, "lng_T", lng_T);
+	}
+}
+
 RTCC::RTCC() :
 	pmmlaeg(this)
 {
@@ -6815,38 +6851,39 @@ void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GET)
 	pad.lng[0] = lng*DEG;
 }
 
-void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
+void RTCC::P27PADCalc(const P27Opt &opt, P27PAD &pad)
 {
-	double lat, lng, alt, get, SVMJD;
+	double lat, lng, alt, get, SVGMT, navcheckGMT;
 	VECTOR3 pos, vel;
 	bool csm = true;
-	SV sv, sv1;
+	EphemerisData sv, sv1;
 
-	SVMJD = CalcGETBase() + opt->SVGET / 24.0 / 3600.0;
+	//Convert to GMT
+	SVGMT = GMTfromGET(opt.SVGET);
+	navcheckGMT = GMTfromGET(opt.navcheckGET);
 
-	sv = StateVectorCalc(opt->vessel, SVMJD);
-	sv1 = coast(sv, opt->navcheckGET - opt->SVGET);
+	sv = coast(opt.sv0, SVGMT - opt.sv0.GMT);
+	sv1 = coast(opt.sv0, navcheckGMT - opt.sv0.GMT);
 
-	navcheck(sv1.R, sv1.MJD, hEarth == sv1.gravref ? BODY_EARTH : BODY_MOON, lat, lng, alt);
+	navcheck(sv1.R, sv1.GMT, sv1.RBI, lat, lng, alt);
 	
 	sprintf(pad.Purpose[0], "SV");
-	pad.GET[0] = opt->SVGET;
+	pad.GET[0] = opt.SVGET;
 	pad.alt = alt / 1852.0;
 	pad.lat = lat*DEG;
 	pad.lng = lng*DEG;
-	pad.NavChk = opt->navcheckGET;
+	pad.NavChk = opt.navcheckGET;
 	pad.Index[0] = 21;
 	pad.Verb[0] = 71;
 
 	pos = sv.R;
 	vel = sv.V*0.01;
-	get = opt->SVGET;
+	get = opt.SVGET;
 
-	if (sv.gravref == hMoon) {
+	pad.Data[0][0] = 1501;
 
-		pad.Data[0][0] = 1501;
-
-		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
+	if (sv.RBI == BODY_MOON)
+	{
 		if (csm)
 		{
 			pad.Data[0][1] = 2;
@@ -6871,11 +6908,8 @@ void RTCC::P27PADCalc(P27Opt *opt, P27PAD &pad)
 		pad.Data[0][14] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
 		pad.Data[0][15] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
 	}
-
-	if (sv.gravref == hEarth) {
-
-		pad.Data[0][0] = 1501;
-
+	else
+	{
 		if (csm)
 		{
 			pad.Data[0][1] = 1;
@@ -7113,6 +7147,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 
 	PZMPTCSM.SaveState(scn, "MPTCSM_BEGIN", "MPTCSM_END");
 	PZMPTLEM.SaveState(scn, "MPTLEM_BEGIN", "MPTLEM_END");
+	RZDBSC1.SaveState(scn, "RZDBSC1_BEGIN", "RZDBSC1_END");
 
 	oapiWriteLine(scn, RTCC_END_STRING);
 }
@@ -7345,6 +7380,10 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp(line, "MPTLEM_BEGIN", sizeof("MPTLEM_BEGIN"))) {
 			PZMPTLEM.LoadState(scn, "MPTLEM_END");
 		}
+		else if (!strnicmp(line, "RZDBSC1_BEGIN", sizeof("RZDBSC1_BEGIN"))) {
+			RZDBSC1.LoadState(scn, "RZDBSC1_END");
+		}
+
 	}
 
 	if (EZANCHR1.AnchorVectors[9].Vector.GMT != 0)
@@ -37601,16 +37640,44 @@ int RTCC::RMRMED(std::string med, std::vector<std::string> data)
 		{
 			return 2;
 		}
+
+		int entry;
+
 		if (data[1] == "T")
 		{
-			if (data[2] == "M")
-			{
+			int entry;
 
+			if (data[2] == "P")
+			{
+				entry = 1;
 			}
+			else if (data[2] == "M")
+			{
+				entry = 2;
+			}
+			else
+			{
+				return 2;
+			}
+
+			RMSSCS(entry);
 		}
 		else if (data[1] == "R")
 		{
+			if (data[2] == "P")
+			{
+				entry = 3;
+			}
+			else if (data[2] == "M")
+			{
+				entry = 4;
+			}
+			else
+			{
+				return 2;
+			}
 
+			RMSSCS(entry);
 		}
 		else
 		{
@@ -37623,10 +37690,75 @@ int RTCC::RMRMED(std::string med, std::vector<std::string> data)
 
 void RTCC::RMSSCS(int entry)
 {
-	if (entry == 1)
+	double lat, lng;
+
+	if (entry == 1 || entry == 2)
 	{
-		//Transfer TTF, Manual column data
+		//Transfer TTF
+
+		RetrofireTransferTableEntry *tab;
+		RetrofireDisplayParametersTableData *tab2;
+
+		if (entry == 1)
+		{
+			//Transfer TTF, Primary column data
+			tab = &RZRFTT.Primary;
+			tab2 = &RZRFDP.data[0];
+		}
+		else
+		{
+			//Transfer TTF, Manual column data
+			tab = &RZRFTT.Manual;
+			tab2 = &RZRFDP.data[2];
+		}
+
+		if (tab2->Indicator != 0)
+		{
+			std::vector<std::string> message;
+			message.push_back("TTF TRANSFER TABLE IS NOT SET FOR S/C SETTING");
+			OnlinePrint("RMSSCS", message);
+			return;
+		}
+
+		lat = tab->entry.lat_T;
+		lng = tab->entry.lng_T;
 	}
+	else if (entry == 3 || entry == 4)
+	{
+		//Transfer RTE
+
+		RTEDigitalSolutionTable *tab;
+
+		if (entry == 3)
+		{
+			//Transfer RTE, Primary column data
+			tab = &PZREAP.RTEDTable[0];
+		}
+		else
+		{
+			//Transfer RTE, Manual column data
+			tab = &PZREAP.RTEDTable[1];
+		}
+
+		if (tab->Error)
+		{
+			std::vector<std::string> message;
+			message.push_back("RTE TRANSFER TABLE IS NOT SET FOR S/C SETTING");
+			OnlinePrint("RMSSCS", message);
+			return;
+		}
+
+		lat = tab->lat_imp_tgt;
+		lng = tab->lng_imp_tgt;
+	}
+	else
+	{
+		//Manual input from R40, R66 and R67
+	}
+
+	RZDBSC1.Indicator = 0;
+	RZDBSC1.lat_T = lat;
+	RZDBSC1.lng_T = lng;
 }
 
 void RTCC::RTACFGuidanceOpticsSupportTable(RTACFGOSTInput in, RTACFGOSTOutput &out)
