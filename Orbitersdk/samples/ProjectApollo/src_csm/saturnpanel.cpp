@@ -3995,18 +3995,32 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 		int *pump2 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB:PUMP");
 		int *pump3 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA2:PUMP");
 		int *pump4 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB2:PUMP");
+		int *pump5 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA3:PUMP");
+		int *pump6 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB3:PUMP");
 
 		if (s->IsUp()) {
 			*pump1 = SP_PUMP_ON;
 			*pump2 = SP_PUMP_ON;
+			*pump3 = SP_PUMP_ON;
+			*pump4 = SP_PUMP_ON;
+			*pump5 = SP_PUMP_ON;
+			*pump6 = SP_PUMP_ON;
 
 		} else if (s->IsDown()) {
 			*pump1 = SP_PUMP_ON;
 			*pump2 = SP_PUMP_OFF;
+			*pump3 = SP_PUMP_ON;
+			*pump4 = SP_PUMP_OFF;
+			*pump5 = SP_PUMP_ON;
+			*pump6 = SP_PUMP_OFF;
 
 		} else {
 			*pump1 = SP_PUMP_OFF;
 			*pump2 = SP_PUMP_OFF;
+			*pump3 = SP_PUMP_OFF;
+			*pump4 = SP_PUMP_OFF;
+			*pump5 = SP_PUMP_OFF;
+			*pump6 = SP_PUMP_OFF;
 		}
 	} else if (s == &EMSModeSwitch) {
 		ems.SwitchChanged();

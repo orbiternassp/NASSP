@@ -3639,6 +3639,8 @@ public:
 	CSMPipeFlowTransducer FCH2FlowSensor1;
 	CSMPipeFlowTransducer FCH2FlowSensor2;
 	CSMPipeFlowTransducer FCH2FlowSensor3;
+	TemperatureTransducer SPSFuelLineTempSensor;
+	TemperatureTransducer SPSOxidizerLineTempSensor;
 	TemperatureTransducer SPSFuelFeedTempSensor;
 	TemperatureTransducer SPSOxidizerFeedTempSensor;
 	CSMTankPressTransducer BatteryManifoldPressureSensor;
@@ -4390,6 +4392,8 @@ protected:
 	Boiler *SPSPropellantLineHeaterB;
 	Boiler *SPSPropellantLineHeaterA2;
 	Boiler *SPSPropellantLineHeaterB2;
+	Boiler *SPSPropellantLineHeaterA3;
+	Boiler *SPSPropellantLineHeaterB3;
 	h_HeatLoad *CMRCSHeat[12];
 
 	//

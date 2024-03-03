@@ -1198,7 +1198,7 @@ void SaturnSPSTempMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, e_obje
 
 double SaturnSPSTempMeter::QueryValue()
 {
-	return Sat->SPSOxidizerFeedTempSensor.Voltage();
+	return Sat->SPSFuelFeedTempSensor.Voltage();
 }
 
 void SaturnSPSTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)

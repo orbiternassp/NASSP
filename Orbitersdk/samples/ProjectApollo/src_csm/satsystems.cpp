@@ -482,8 +482,10 @@ void Saturn::SystemsInit() {
 	FCN2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET"));
 	FCN2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET"));
 
-	SPSFuelFeedTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
-	SPSOxidizerFeedTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE"));
+	SPSFuelLineTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
+	SPSOxidizerLineTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE"));
+	SPSFuelFeedTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE"));
+	SPSOxidizerFeedTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE"));
 
 	CabinPressSensor.Init(&ECSPressGroups2Feeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 	CabinTempSensor.Init(&ECSTempTransducerFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
@@ -528,8 +530,8 @@ void Saturn::SystemsInit() {
 
 	// SPS initialization
 	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch, 
-		               (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"),
-		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE"));
+		               (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE"),
+		(h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE"));
 	SPSEngine.Init(this);
 	SPSEngine.pitchGimbalActuator.Init(this, tvsa.GetPitchServoAmp(), &Pitch1Switch, &Pitch2Switch,
 		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker);
@@ -540,6 +542,8 @@ void Saturn::SystemsInit() {
 	SPSPropellantLineHeaterB = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB");
 	SPSPropellantLineHeaterA2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA2");
 	SPSPropellantLineHeaterB2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB2");
+	SPSPropellantLineHeaterA3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA3");
+	SPSPropellantLineHeaterB3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB3");
 
 
 	// SM RCS initialization
@@ -1092,6 +1096,13 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "H: %lf PSI, B: %lf PSI %lfV H: %lfK B: %lfK H: %lfg, B: %lfg", pHeader->space.Press* PSI, pBlanket->space.Press* PSI, FCN2PressureSensor1.Voltage(), KelvinToFahrenheit(pHeader->space.Temp), KelvinToFahrenheit(pBlanket->space.Temp),
 	//	pHeader->mass, pBlanket->mass);
 
+// SPS Line Temp Debug Lines
+	double *SPSFuelLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE:TEMP");
+	double *SPSOxLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE:TEMP");
+	double* SPSFuelFeedTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE:TEMP");
+	double *SPSOxFeedTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE:TEMP");
+
+	sprintf(oapiDebugString(), "Fuel %.5f Ox %.5f FuelFeed %.5f OxFeed %.5f", KelvinToFahrenheit(*SPSFuelLineTemp), KelvinToFahrenheit(*SPSOxLineTemp), KelvinToFahrenheit(*SPSFuelFeedTemp), KelvinToFahrenheit(*SPSOxFeedTemp));
 
 //GSE Cooling Debug Lines
 	/*
@@ -2683,6 +2694,8 @@ void Saturn::CheckSMSystemsState()
 		SPSPropellantLineHeaterB->WireTo(NULL);
 		SPSPropellantLineHeaterA2->WireTo(NULL);
 		SPSPropellantLineHeaterB2->WireTo(NULL);
+		SPSPropellantLineHeaterA3->WireTo(NULL);
+		SPSPropellantLineHeaterB3->WireTo(NULL);
 
 		HeValveMnACircuitBraker.WireTo(NULL);
 		HeValveMnBCircuitBraker.WireTo(NULL);
