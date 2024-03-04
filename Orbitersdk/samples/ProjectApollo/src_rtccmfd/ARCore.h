@@ -245,10 +245,6 @@ public:
 	bool REFSMMATHeadsUp;
 
 	//ENTRY PAGE
-	double EntryTIGcor;
-	double EntryLatcor;
-	double EntryLngcor;
-	VECTOR3 Entry_DV;
 	double entryrange;
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
