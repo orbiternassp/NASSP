@@ -64,7 +64,7 @@ public:
 	virtual ~SoundData();
 	bool isValid();
 	bool isPlaying();
-	bool play(int flags, int libflags, int volume, int playvolume, int frequency = NULL);
+	bool play(int flags, int libflags, double volume, int playvolume, int frequency = NULL);
 	void stop();
 	void done();
 	void setID(int num) { id = num; };
@@ -76,7 +76,7 @@ public:
 	bool matches(char *s);
 	int GetPlayFlags() { return PlayFlags; };
 	int GetLibFlags() { return LibFlags; };
-	int GetBaseVolume() { return BaseVolume; };
+	double GetBaseVolume() { return BaseVolume; };
 	char *GetFilename() { return filename; };
 
 protected:
@@ -86,10 +86,10 @@ protected:
 	bool valid;
 
 	int id;
-	int PlayVolume;
+	double PlayVolume;
 	int PlayFlags;
 	int LibFlags;
-	int BaseVolume;
+	double BaseVolume;
 	XRSound *Soundlib;
 };
 
@@ -109,7 +109,7 @@ public:
 	void setFlags(int fl);
 	void clearFlags(int fl);
 /* TODO: A true port would change all int volumes to floats */
-	bool play(int flags = NOLOOP, int volume = 255, int frequency = NULL);
+	bool play(int flags = NOLOOP, double volume = 1.0, int frequency = NULL);
 	void stop();
 	void done();
 	void SetSoundData(SoundData *s);
@@ -126,22 +126,22 @@ protected:
 
 class FadeInOutSound : public Sound {
 public:
-	bool play(int volume = 255);
+	bool play(double volume = 1.0);
 	void stop();
 
-	void setRiseTime(int seconds) { riseSlope = 255 / seconds; }
-	void setFadeTime(int seconds) { fadeSlope = 255 / seconds; }
+	void setRiseTime(int seconds) { riseSlope = 1.0 / seconds; }
+	void setFadeTime(int seconds) { fadeSlope = 1.0 / seconds; }
 
 	void setFrequencyShift(int minFreq, int maxFreq) { fMin = minFreq; fMax = maxFreq; }
 	void clearFrequencyShift() { fMin = fMax = NULL; }
 	bool hasFrequencyShift() const { return fMin != NULL && fMax != NULL; }
 
 private:
-	int riseSlope     = 255 / 4; // [vol/sec]
-	int fadeSlope     = 255 / 6; // [vol/sec]
+	int riseSlope     = 1.0 / 4; // [vol/sec]
+	int fadeSlope     = 1.0 / 6; // [vol/sec]
 	int fMin          =  3000;   // [Hz]
 	int fMax          = 22050;   // [Hz]
-	int currentVolume = -1;      // "lagging" volume level
+	double currentVolume = -1.0;      // "lagging" volume level
 };
 
 
@@ -189,8 +189,8 @@ public:
 	///
 	void SetSoundLibMissionPath(char *mission);
 	void SetLanguage(char *language);
-	void SetVolume(int type, int percent);
-	int GetSoundVolume(int flags, int volume);
+	void SetVolume(int type, double percent);
+	double GetSoundVolume(int flags, double volume);
 	bool IsXRSoundActive() { return XRSoundActive; };
 
 protected:
@@ -201,7 +201,7 @@ protected:
 
 #define N_VOLUMES	10
 
-	int MasterVolume[N_VOLUMES];
+	double MasterVolume[N_VOLUMES];
 
 ///
 /// XRSound supports any number of sounds, starting at an ID of
