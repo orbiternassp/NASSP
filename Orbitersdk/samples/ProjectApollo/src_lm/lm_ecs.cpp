@@ -1155,7 +1155,7 @@ void LEMCabinFan::SystemTimestep(double simdt)
 
 void LEMCabinFan::CabinFanSound()
 {
-	cabinfansound.play(200);
+	cabinfansound.play(200.0 / 255.0);
 }
 
 void LEMCabinFan::StopCabinFanSound()

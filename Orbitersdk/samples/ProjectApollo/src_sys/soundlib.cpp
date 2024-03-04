@@ -74,11 +74,11 @@ bool SoundData::isValid()
 	return valid;
 }
 
-bool SoundData::play(int flags, int libflags, double volume, int playvolume, int frequency /*= NULL*/)
+bool SoundData::play(int flags, int libflags, double volume, double playvolume, int frequency /*= NULL*/)
 
 {
 	if (valid) {
-		if (!Soundlib->PlayWav(id, (bool) flags, playvolume))
+		if (!Soundlib->PlayWav(id, (bool) flags, static_cast<float>(playvolume)))
 		{
 			return false;
 		}
@@ -651,7 +651,7 @@ bool Sound::play(int flags, double volume, int frequency /*= NULL*/)
 				return false;
 		}
 
-		int vol = volume;
+		double vol = volume;
 
 		if (sl) {
 			vol = sl->GetSoundVolume(soundflags, volume);
@@ -721,7 +721,7 @@ bool FadeInOutSound::play(double volume)
 	if (currentVolume)
 	{
 		freq = hasFrequencyShift()
-			? fMin + (currentVolume * (fMax - fMin) / 255)
+			? fMin + (currentVolume * (fMax - fMin))
 			: NULL;
 		Sound::play(LOOP, currentVolume, freq);
 	}

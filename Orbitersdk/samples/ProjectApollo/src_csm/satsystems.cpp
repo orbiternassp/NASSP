@@ -2565,12 +2565,12 @@ void Saturn::CabinFansSystemTimestep()
 	// Suit Compressor sound
 	//
 
-	int vol = 0;
-	if (SuitCompressor1->IsOn()) vol += 32;
-	if (SuitCompressor2->IsOn()) vol += 32;
+	double vol = 0;
+	if (SuitCompressor1->IsOn()) vol += (32.0 / 255.0);
+	if (SuitCompressor2->IsOn()) vol += (32.0 / 255.0);
 
 	if (vol > 0)
-		SuitCompressorSound.play(vol + 191);
+		SuitCompressorSound.play(vol + (191.0 / 255.0));
 	else
 		SuitCompressorSound.stop();
 }
@@ -3928,7 +3928,7 @@ void Saturn::EnginesSoundTimestep() {
 		double lvl;
 		if (lvl = GetThrusterGroupLevel(thg))
 		{
-			EngineS.play(LOOP, static_cast<int>(lvl * 255));
+			EngineS.play(LOOP, lvl);
 		}
 		else
 		{

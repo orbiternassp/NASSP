@@ -104,7 +104,7 @@ void LEM_CWEA::Timestep(double simdt) {
 
 	if (MasterAlarm && IsMAPowered()) {
 		if (!MasterAlarmSound.isPlaying()) {
-			MasterAlarmSound.play(LOOP, 255);
+			MasterAlarmSound.play(LOOP);
 		}
 	}
 	else if (!IsMAPowered() ){

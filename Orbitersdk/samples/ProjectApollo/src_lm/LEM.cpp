@@ -2430,7 +2430,7 @@ void LEM::EngineSoundTimestep() {
 		double lvl;
 		if (lvl = GetThrusterLevel(th_hover[0]))
 		{
-			EngineS.play(LOOP, static_cast<int>(lvl * 255));
+			EngineS.play(LOOP, lvl);
 		}
 		else
 		{

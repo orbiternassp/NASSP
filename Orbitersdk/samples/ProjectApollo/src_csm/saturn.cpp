@@ -4141,7 +4141,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 
 	case CM_ENTRY_STAGE_SIX:	// Main chute is attached		
 		if (!SplashdownPlayed && GetAltitude(ALTMODE_GROUND) < 2.5) {
-			SplashS.play(NOLOOP, 180);
+			SplashS.play(NOLOOP, 180.0 / 255.0);
 			SplashS.done();
 
 			SplashdownPlayed = true;
@@ -4595,7 +4595,7 @@ void Saturn::StageSix(double simt){
 				oapiSetTimeAcceleration (1);
 			}
 
-			SApollo13.play(NOLOOP, 255);
+			SApollo13.play(NOLOOP);
 			CryoStir = true;
 
 		}
@@ -4614,7 +4614,7 @@ void Saturn::StageSix(double simt){
 				SApollo13.done();
 			}
 
-			SExploded.play(NOLOOP,255);
+			SExploded.play(NOLOOP);
 			SExploded.done();
 
 			//MasterAlarm();  Main B Undervolt due to power transient at the explosion should trigger this alarm
@@ -4708,7 +4708,7 @@ void Saturn::StageSix(double simt){
 				SExploded.done();
 			}
 
-			SKranz.play(NOLOOP, 150);
+			SKranz.play(NOLOOP, 150.0 / 255.0);
 			SKranz.done();
 
 			KranzPlayed = true;

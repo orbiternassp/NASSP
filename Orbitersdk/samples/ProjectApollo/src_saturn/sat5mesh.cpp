@@ -1144,7 +1144,7 @@ void SaturnV::SeparateStage (int new_stage)
 		vs2.vrot.y = 0.0;
 		vs2.vrot.z = 0.0;
 
-		StageS.play(NOLOOP, 255);
+		StageS.play(NOLOOP);
 
 		CreateStageOne();
 
@@ -1327,7 +1327,7 @@ void SaturnV::SeparateStage (int new_stage)
 
 		CreateSIVBStage("ProjectApollo/sat5stg3", vs1, true);
 
-		SeparationS.play(NOLOOP,255);
+		SeparationS.play(NOLOOP);
 
 		// Store RCS Propellant 
 		double proptemp[6] = { -1,-1,-1,-1,-1,-1 };
@@ -1361,7 +1361,7 @@ void SaturnV::SeparateStage (int new_stage)
 
 		if (ApolloExploded) 
 		{
-			SSMSepExploded.play(NOLOOP, 200);
+			SSMSepExploded.play(NOLOOP, 200.0 / 255.0);
 		}
 		else
 		{

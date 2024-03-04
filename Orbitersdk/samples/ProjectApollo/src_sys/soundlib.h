@@ -64,7 +64,7 @@ public:
 	virtual ~SoundData();
 	bool isValid();
 	bool isPlaying();
-	bool play(int flags, int libflags, double volume, int playvolume, int frequency = NULL);
+	bool play(int flags, int libflags, double volume, double playvolume, int frequency = NULL);
 	void stop();
 	void done();
 	void setID(int num) { id = num; };
@@ -108,7 +108,6 @@ public:
 	bool isPlaying();
 	void setFlags(int fl);
 	void clearFlags(int fl);
-/* TODO: A true port would change all int volumes to floats */
 	bool play(int flags = NOLOOP, double volume = 1.0, int frequency = NULL);
 	void stop();
 	void done();
@@ -137,8 +136,8 @@ public:
 	bool hasFrequencyShift() const { return fMin != NULL && fMax != NULL; }
 
 private:
-	int riseSlope     = 1.0 / 4; // [vol/sec]
-	int fadeSlope     = 1.0 / 6; // [vol/sec]
+	double riseSlope     = 1.0 / 4.0; // [vol/sec]
+	double fadeSlope     = 1.0 / 6.0; // [vol/sec]
 	int fMin          =  3000;   // [Hz]
 	int fMax          = 22050;   // [Hz]
 	double currentVolume = -1.0;      // "lagging" volume level
