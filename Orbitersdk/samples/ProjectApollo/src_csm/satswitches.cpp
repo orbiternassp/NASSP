@@ -1357,7 +1357,7 @@ double SaturnSystemTestMeter::QueryValue()
 		switch (right)
 		{
 		case 0:	//SPS OX LINE TEMP
-			val = Sat->pcm.measure(10, TLM_A, 120);
+			return Sat->SPSOxidizerFeedTempSensor.Voltage();
 			break;
 		case 2:	//TEMP JET 24 -P ENG INJECTOR SYS 2
 			return Sat->CMRCSEngine24TempSensor.Voltage();

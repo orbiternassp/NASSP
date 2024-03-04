@@ -482,8 +482,8 @@ void Saturn::SystemsInit() {
 	FCN2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET"));
 	FCN2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET"));
 
-	SPSFuelLineTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
-	SPSOxidizerLineTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE"));
+	SPSFuelLineTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
+	SPSOxidizerLineTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE"));
 	SPSFuelFeedTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE"));
 	SPSOxidizerFeedTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE"));
 

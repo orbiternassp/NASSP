@@ -2286,7 +2286,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 43:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 44:		// OX LINE 1 TEMP
-							return(scale_data(0,0,200));
+							return(scale_data(sat->SPSOxidizerLineTempSensor.Voltage(), 0.0, 5.0));
 						case 45:		// SUIT AIR HX OUT TEMP
 							return(scale_data(sat->SuitTempSensor.Voltage(), 0.0, 5.0));
 						case 46:		// UNKNOWN - HBR ONLY
@@ -2316,7 +2316,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 58:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 59:		// FU LINE 1 TEMP
-							return(scale_data(0,0,200));
+							return(scale_data(sat->SPSFuelLineTempSensor.Voltage(), 0.0, 5.0));
 						case 60:		// H2 TK 1 TEMP
 							return(scale_data(sat->H2Tank1TempSensor.Voltage(), 0.0, 5.0));
 						case 61:		// NUCLEAR PARTICLE DETECTOR TEMP
