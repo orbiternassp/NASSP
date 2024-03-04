@@ -56,6 +56,10 @@ DWORD IntegralLights_LMVC[] = {
 	VC_MAT_FDAI_LM_t
 };
 
+DWORD IntegralLights_LMVC_NoTex[] = {
+	VC_MAT_LMVC_Tapemeter_t
+};
+
 DWORD FloodLights_XPointer_Shades[] = {
 	0
 };

@@ -1552,6 +1552,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 #ifdef _OPENORBITER
 	case AID_LMVC_INTEGRAL_LIGHT:
         SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC)/sizeof(IntegralLights_LMVC[0]));
+		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Light, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
         return true;
 
 	case AID_LMVC_FLOOD_LIGHT:
@@ -1566,6 +1567,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 #else
 	case AID_LMVC_INTEGRAL_LIGHT:
         SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MESHM_EMISSION2, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC)/sizeof(IntegralLights_LMVC[0]));
+		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
         return true;
 
 	case AID_LMVC_FLOOD_LIGHT:
