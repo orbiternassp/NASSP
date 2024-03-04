@@ -779,7 +779,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		omnic.TimeStep();
 		omnid.TimeStep();
 		if (pMission->CSMHasVHFRanging()) vhfranging.TimeStep(simdt);
-		agc.RadarRead();
 		vhftransceiver.Timestep();
 		sce.Timestep();
 		dataRecorder.TimeStep( MissionTime, simdt );
@@ -2716,6 +2715,12 @@ void Saturn::CheckSMSystemsState()
 		FCN2PressureSensor1.WireTo(NULL);
 		FCN2PressureSensor2.WireTo(NULL);
 		FCN2PressureSensor3.WireTo(NULL);
+		FCO2FlowSensor1.WireTo(NULL);
+		FCO2FlowSensor2.WireTo(NULL);
+		FCO2FlowSensor3.WireTo(NULL);
+		FCH2FlowSensor1.WireTo(NULL);
+		FCH2FlowSensor2.WireTo(NULL);
+		FCH2FlowSensor3.WireTo(NULL);
 
 		if (secs.SMJCA)
 		{

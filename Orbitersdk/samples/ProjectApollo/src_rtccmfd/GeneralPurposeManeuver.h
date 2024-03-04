@@ -143,6 +143,7 @@ protected:
 	void OptimumApseLineShift(double dang);
 
 	void NormalizeAngle(double &ang); //0 to 2*pi
+	void GetLatLongHeight(const AEGDataBlock &sv, double &alt, double &lat, double &lng);
 
 	//SAVE INPUTS
 	//Maneuver code
