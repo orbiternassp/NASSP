@@ -8,7 +8,7 @@
 
 ; Custom Defines for information
 !define NAME "Project Apollo - NASSP"
-!define VERSION "8.0.0 Beta-Orbiter2016-2207"
+!define VERSION "8.0.0 Beta-Orbiter2016-2234"
 !define SLUG "${NAME} v${VERSION}"
 
 ; Define installer name and output
@@ -45,6 +45,7 @@ InstallDir "C:\OrbiterBeta"
 !insertmacro MUI_LANGUAGE "English"
 
 Section "Project Apollo - NASSP" SecMain
+    MessageBox MB_OK "WARNING: Due to software limitations in NASSP, runnning P23 will cause part of the screen to flicker. Those with photosensitive epilepsy should not run P23."
     SetOutPath $INSTDIR
     SetOverwrite ifnewer
     File /r "..\..\..\*.*"
