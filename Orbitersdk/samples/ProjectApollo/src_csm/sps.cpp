@@ -350,6 +350,7 @@ bool SPSPropellantSource::IsGaugingPowered() {
 	return true;
 }
 
+//Temperature sensors moved to correct transducers
 double SPSPropellantSource::GetPropellantLineTempF() {
 
 	if (!our_vessel) return 0;
@@ -359,6 +360,7 @@ double SPSPropellantSource::GetPropellantLineTempF() {
 	return KelvinToFahrenheit(propellantLine->GetTemp());
 }
 
+//Temperature sensors moved to correct transducers
 double SPSPropellantSource::GetOxidizerLineTempF() {
 
 	if (!our_vessel) return 0;
