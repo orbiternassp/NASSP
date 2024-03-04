@@ -3989,7 +3989,43 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 
 	} else if (s == &SPSTestSwitch) {
 		SPSPropellant.SPSTestSwitchToggled();
-	
+	}
+
+	else if (s == &SPSLineHTRSSwitch) {
+	int *pump1 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERA:PUMP");
+	int *pump2 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERB:PUMP");
+	int *pump3 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:PUMP");
+	int *pump4 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:PUMP");
+	int *pump5 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERA:PUMP");
+	int *pump6 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERB:PUMP");
+
+	if (s->IsUp()) {
+		*pump1 = SP_PUMP_ON;
+		*pump2 = SP_PUMP_ON;
+		*pump3 = SP_PUMP_ON;
+		*pump4 = SP_PUMP_ON;
+		*pump5 = SP_PUMP_ON;
+		*pump6 = SP_PUMP_ON;
+
+	}
+	else if (s->IsDown()) {
+		*pump1 = SP_PUMP_ON;
+		*pump2 = SP_PUMP_OFF;
+		*pump3 = SP_PUMP_ON;
+		*pump4 = SP_PUMP_OFF;
+		*pump5 = SP_PUMP_ON;
+		*pump6 = SP_PUMP_OFF;
+
+	}
+	else {
+		*pump1 = SP_PUMP_OFF;
+		*pump2 = SP_PUMP_OFF;
+		*pump3 = SP_PUMP_OFF;
+		*pump4 = SP_PUMP_OFF;
+		*pump5 = SP_PUMP_OFF;
+		*pump6 = SP_PUMP_OFF;
+	}
+
 	} else if (s == &EMSModeSwitch) {
 		ems.SwitchChanged();
 

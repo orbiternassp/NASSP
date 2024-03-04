@@ -42,7 +42,6 @@ public:
 	double GetOxidUnbalanceLB();
 	double GetPropellantPressurePSI() { return propellantPressurePSI; }
 	double GetHeliumPressurePSI() { return heliumPressurePSI; }
-	void SPSLineHeaterToggle(TwoPositionSwitch *s, CircuitBrakerSwitch *mna, CircuitBrakerSwitch *mnb, Boiler *sumpa, Boiler *sumpb, Boiler *feeda, Boiler *feedb, Boiler *valvea, Boiler *valveb);
 	bool IsHeliumValveAOpen() { return heliumValveAOpen; }
 	bool IsHeliumValveBOpen() { return heliumValveBOpen; }
 	bool IsOxidFlowValveMin();
@@ -74,8 +73,6 @@ protected:
 
 	PowerMerge DCPower;
 	e_object *ACPower;
-	h_Radiator *propellantLine;
-	h_Radiator *oxidizerLine;
 	bool propellantInitialized;
 	double lastPropellantMass;
 	double propellantBuffer;

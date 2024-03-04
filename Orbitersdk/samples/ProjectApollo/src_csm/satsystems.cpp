@@ -530,13 +530,6 @@ void Saturn::SystemsInit() {
 
 	// SPS initialization
 	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch);
-	SPSPropellant.SPSLineHeaterToggle(&SPSLineHTRSSwitch, &SPSLineHtrsMnACircuitBraker, &SPSLineHtrsMnBCircuitBraker,
-		(Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERA"),
-		(Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERB"),
-		(Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA"),
-		(Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB"),
-		(Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERA"),
-		(Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERB"));
 	SPSEngine.Init(this);
 	SPSEngine.pitchGimbalActuator.Init(this, tvsa.GetPitchServoAmp(), &Pitch1Switch, &Pitch2Switch,
 		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker);

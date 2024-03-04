@@ -350,54 +350,6 @@ bool SPSPropellantSource::IsGaugingPowered() {
 
 //Temperature sensors moved to correct transducers
 
-void SPSPropellantSource::SPSLineHeaterToggle(TwoPositionSwitch *s, CircuitBrakerSwitch *mna, CircuitBrakerSwitch *mnb, Boiler *sumpa, Boiler *sumpb, Boiler *feeda, Boiler *feedb, Boiler *valvea, Boiler *valveb) {
-
-	if (s->IsUp() && (mna->IsPowered() && mnb->IsPowered())) {
-		sumpa->SetPumpOn();
-		sumpb->SetPumpOn();
-		feeda->SetPumpOn();
-		feedb->SetPumpOn();
-		valvea->SetPumpOn();
-		valveb->SetPumpOn();
-	 }
- 
-	else if (s->IsUp() && (mna->IsPowered() && mnb->IsPowered() == false)) {
-		sumpa->SetPumpOn();
-		sumpb->SetPumpOff();
-		feeda->SetPumpOn();
-		feedb->SetPumpOff();
-		valvea->SetPumpOn();
-		valveb->SetPumpOff();
- }
-
-	else if (s->IsUp() && (mna->IsPowered() == false && mnb->IsPowered())) {
-		sumpa->SetPumpOff();
-		sumpb->SetPumpOn();
-		feeda->SetPumpOff();
-		feedb->SetPumpOn();
-		valvea->SetPumpOff();
-		valveb->SetPumpOn();
-	}
-
-	else if (s->IsDown() && mna->IsPowered()) {
-		sumpa->SetPumpOn();
-		sumpb->SetPumpOff();
-		feeda->SetPumpOn();
-		feedb->SetPumpOff();
-		valvea->SetPumpOn();
-		valveb->SetPumpOff();
-	}
-
-	else {
-		sumpa->SetPumpOff();
-		sumpb->SetPumpOff();
-		feeda->SetPumpOff();
-		feedb->SetPumpOff();
-		valvea->SetPumpOff();
-		valveb->SetPumpOff();
-	}
-}
-
 void SPSPropellantSource::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, SPSPROPELLANT_START_STRING);
