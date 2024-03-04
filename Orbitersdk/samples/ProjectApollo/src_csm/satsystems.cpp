@@ -482,7 +482,7 @@ void Saturn::SystemsInit() {
 	FCN2PressureSensor2.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL2BLANKET"));
 	FCN2PressureSensor3.Init(&Panel276CB3, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET"));
 
-	SPSFuelLineTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
+	SPSFuelLineTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELLINE"));
 	SPSOxidizerLineTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE"));
 	SPSFuelFeedTempSensor.Init(&Panel276CB3, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE"));
 	SPSOxidizerFeedTempSensor.Init(&Panel276CB4, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE"));
@@ -538,12 +538,12 @@ void Saturn::SystemsInit() {
 	SPSEngine.yawGimbalActuator.Init(this, tvsa.GetYawServoAmp(), &Yaw1Switch, &Yaw2Switch,
 		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker);
 
-	SPSPropellantLineHeaterA = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA");
-	SPSPropellantLineHeaterB = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB");
-	SPSPropellantLineHeaterA2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA2");
-	SPSPropellantLineHeaterB2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB2");
-	SPSPropellantLineHeaterA3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA3");
-	SPSPropellantLineHeaterB3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB3");
+	SPSSumpTankHeaterA = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERA");
+	SPSSumpTankHeaterB = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERB");
+	SPSInterfaceFeedHeaterA = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA");
+	SPSInterfaceFeedHeaterB = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB");
+	SPSBallValveHeaterA = (Boiler *)Panelsdk.GetPointerByString("SPSBALLVALVEHEATERA");
+	SPSBallValveHeaterB = (Boiler *)Panelsdk.GetPointerByString("SPSBALLVALVEHEATERB");
 
 
 	// SM RCS initialization
@@ -2689,13 +2689,13 @@ void Saturn::CheckSMSystemsState()
 		H2TanksFans[0]->WireTo(NULL);
 		H2TanksFans[1]->WireTo(NULL);
 		
-		// SPS
-		SPSPropellantLineHeaterA->WireTo(NULL);
-		SPSPropellantLineHeaterB->WireTo(NULL);
-		SPSPropellantLineHeaterA2->WireTo(NULL);
-		SPSPropellantLineHeaterB2->WireTo(NULL);
-		SPSPropellantLineHeaterA3->WireTo(NULL);
-		SPSPropellantLineHeaterB3->WireTo(NULL);
+		// SPS Line Heaters
+		SPSSumpTankHeaterA->WireTo(NULL);
+		SPSSumpTankHeaterB->WireTo(NULL);
+		SPSInterfaceFeedHeaterA->WireTo(NULL);
+		SPSInterfaceFeedHeaterB->WireTo(NULL);
+		SPSBallValveHeaterA->WireTo(NULL);
+		SPSBallValveHeaterB->WireTo(NULL);
 
 		HeValveMnACircuitBraker.WireTo(NULL);
 		HeValveMnBCircuitBraker.WireTo(NULL);

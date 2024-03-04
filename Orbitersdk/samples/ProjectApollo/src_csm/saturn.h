@@ -4388,12 +4388,12 @@ protected:
 
 	SPSEngine SPSEngine;
 	SPSPropellantSource SPSPropellant;
-	Boiler *SPSPropellantLineHeaterA;
-	Boiler *SPSPropellantLineHeaterB;
-	Boiler *SPSPropellantLineHeaterA2;
-	Boiler *SPSPropellantLineHeaterB2;
-	Boiler *SPSPropellantLineHeaterA3;
-	Boiler *SPSPropellantLineHeaterB3;
+	Boiler *SPSSumpTankHeaterA;
+	Boiler *SPSSumpTankHeaterB;
+	Boiler *SPSInterfaceFeedHeaterA;
+	Boiler *SPSInterfaceFeedHeaterB;
+	Boiler *SPSBallValveHeaterA;
+	Boiler *SPSBallValveHeaterB;
 	h_HeatLoad *CMRCSHeat[12];
 
 	//

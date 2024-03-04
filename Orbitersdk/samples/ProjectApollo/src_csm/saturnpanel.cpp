@@ -3991,12 +3991,12 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 		SPSPropellant.SPSTestSwitchToggled();
 	
 	} else if (s == &SPSLineHTRSSwitch) {  
-		int *pump1 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA:PUMP");
-		int *pump2 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB:PUMP");
-		int *pump3 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA2:PUMP");
-		int *pump4 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB2:PUMP");
-		int *pump5 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA3:PUMP");
-		int *pump6 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB3:PUMP");
+		int *pump1 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERA:PUMP");
+		int *pump2 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERB:PUMP");
+		int *pump3 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:PUMP");
+		int *pump4 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:PUMP");
+		int *pump5 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERA:PUMP");
+		int *pump6 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERB:PUMP");
 
 		if (s->IsUp()) {
 			*pump1 = SP_PUMP_ON;
