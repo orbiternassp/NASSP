@@ -486,10 +486,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	P30TIG = 0;
 	dV_LVLH = _V(0.0, 0.0, 0.0);
 
-	EntryTIGcor = 0.0;
-	EntryLatcor = 0.0;
-	EntryLngcor = 0.0;
-	Entry_DV = _V(0.0, 0.0, 0.0);
 	RTEReentryTime = 0.0;
 	entryrange = GC->rtcc->PZREAP.RRBIAS;
 	RTECalcMode = 1;
@@ -844,8 +840,8 @@ void ARCore::EntryUpdateCalc()
 	sv0 = GC->rtcc->StateVectorCalc(vessel);
 	GC->rtcc->EntryUpdateCalc(sv0, entryrange, true, &res);
 
-	EntryLatcor = res.latitude;
-	EntryLngcor = res.longitude;
+	GC->rtcc->RZDBSC1.lat_T = res.latitude;
+	GC->rtcc->RZDBSC1.lng_T = res.longitude;
 }
 
 void ARCore::EntryCalc()
@@ -1835,7 +1831,7 @@ void ARCore::RetrofireEXDVUplink()
 
 void ARCore::EntryUplinkCalc()
 {
-	GC->rtcc->CMMENTRY(EntryLatcor, EntryLngcor);
+	GC->rtcc->CMMENTRY(GC->rtcc->RZDBSC1.lat_T, GC->rtcc->RZDBSC1.lng_T);
 }
 
 void ARCore::EntryUpdateUplink()
@@ -3502,8 +3498,8 @@ int ARCore::subThread()
 
 			GC->rtcc->RZC1RCNS.entry = GC->rtcc->RZRFTT.Manual.entry;
 
-			EntryLatcor = GC->rtcc->RZRFTT.Manual.entry.lat_T;
-			EntryLngcor = GC->rtcc->RZRFTT.Manual.entry.lng_T;
+			GC->rtcc->RZDBSC1.lat_T = GC->rtcc->RZRFTT.Manual.entry.lat_T;
+			GC->rtcc->RZDBSC1.lng_T = GC->rtcc->RZRFTT.Manual.entry.lng_T;
 			manpadenginetype = GC->rtcc->RZRFTT.Manual.Thruster;
 		}
 
@@ -3965,15 +3961,15 @@ int ARCore::subThread()
 			opt.InitialBank = GC->rtcc->RZC1RCNS.entry.GNInitialBank;
 			opt.GLevel = GC->rtcc->RZC1RCNS.entry.GLevel;
 
-			if (EntryLatcor == 0)
+			if (GC->rtcc->RZDBSC1.lat_T == 0)
 			{
 				opt.lat = 0;
 				opt.lng = 0;
 			}
 			else
 			{
-				opt.lat = EntryLatcor;
-				opt.lng = EntryLngcor;
+				opt.lat = GC->rtcc->RZDBSC1.lat_T;
+				opt.lng = GC->rtcc->RZDBSC1.lng_T;
 			}
 
 			VECTOR3 R, V;
@@ -3997,7 +3993,7 @@ int ARCore::subThread()
 		{
 			LunarEntryPADOpt opt;
 
-			if (EntryLatcor == 0)
+			if (GC->rtcc->RZDBSC1.lat_T == 0)
 			{
 				//EntryPADLat = entry->EntryLatPred;
 				//EntryPADLng = entry->EntryLngPred;
@@ -4018,8 +4014,8 @@ int ARCore::subThread()
 
 				//EntryPADLat = EntryLatcor;
 				//EntryPADLng = EntryLngcor;
-				opt.lat = EntryLatcor;
-				opt.lng = EntryLngcor;
+				opt.lat = GC->rtcc->RZDBSC1.lat_T;
+				opt.lng = GC->rtcc->RZDBSC1.lng_T;
 				opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 				opt.SxtStarCheckAttitudeOpt = EntryPADSxtStarCheckAttOpt;
 
