@@ -1356,7 +1356,7 @@ double SaturnSystemTestMeter::QueryValue()
 	case 5:
 		switch (right)
 		{
-		case 0:	//SPS OX LINE TEMP
+		case 0:	//TEMP ENGINE OXIDIZER FEED LINE
 			return Sat->SPSOxidizerFeedTempSensor.Voltage();
 			break;
 		case 2:	//TEMP JET 24 -P ENG INJECTOR SYS 2
