@@ -67,12 +67,10 @@ SPSPropellantSource::~SPSPropellantSource() {
 	// Nothing for now.
 }
 
-void SPSPropellantSource::Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *propline, h_Radiator *oxline) {
+void SPSPropellantSource::Init(e_object *dc1, e_object *dc2, e_object *ac) {
 
 	DCPower.WireToBuses(dc1, dc2);
 	ACPower = ac;
-	propellantLine = propline;
-	oxidizerLine = oxline;
 }
 
 void SPSPropellantSource::Timestep(double simt, double simdt) {
@@ -351,23 +349,53 @@ bool SPSPropellantSource::IsGaugingPowered() {
 }
 
 //Temperature sensors moved to correct transducers
-double SPSPropellantSource::GetPropellantLineTempF() {
 
-	if (!our_vessel) return 0;
-	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
+void SPSPropellantSource::SPSLineHeaterToggle(TwoPositionSwitch *s, CircuitBrakerSwitch *mna, CircuitBrakerSwitch *mnb, Boiler *sumpa, Boiler *sumpb, Boiler *feeda, Boiler *feedb, Boiler *valvea, Boiler *valveb) {
 
-	
-	return KelvinToFahrenheit(propellantLine->GetTemp());
-}
+	if (s->IsUp() && (mna->IsPowered() && mnb->IsPowered())) {
+		sumpa->SetPumpOn();
+		sumpb->SetPumpOn();
+		feeda->SetPumpOn();
+		feedb->SetPumpOn();
+		valvea->SetPumpOn();
+		valveb->SetPumpOn();
+	 }
+ 
+	else if (s->IsUp() && (mna->IsPowered() && mnb->IsPowered() == false)) {
+		sumpa->SetPumpOn();
+		sumpb->SetPumpOff();
+		feeda->SetPumpOn();
+		feedb->SetPumpOff();
+		valvea->SetPumpOn();
+		valveb->SetPumpOff();
+ }
 
-//Temperature sensors moved to correct transducers
-double SPSPropellantSource::GetOxidizerLineTempF() {
+	else if (s->IsUp() && (mna->IsPowered() == false && mnb->IsPowered())) {
+		sumpa->SetPumpOff();
+		sumpb->SetPumpOn();
+		feeda->SetPumpOff();
+		feedb->SetPumpOn();
+		valvea->SetPumpOff();
+		valveb->SetPumpOn();
+	}
 
-	if (!our_vessel) return 0;
-	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
+	else if (s->IsDown() && mna->IsPowered()) {
+		sumpa->SetPumpOn();
+		sumpb->SetPumpOff();
+		feeda->SetPumpOn();
+		feedb->SetPumpOff();
+		valvea->SetPumpOn();
+		valveb->SetPumpOff();
+	}
 
-
-	return KelvinToFahrenheit(oxidizerLine->GetTemp());
+	else {
+		sumpa->SetPumpOff();
+		sumpb->SetPumpOff();
+		feeda->SetPumpOff();
+		feedb->SetPumpOff();
+		valvea->SetPumpOff();
+		valveb->SetPumpOff();
+	}
 }
 
 void SPSPropellantSource::SaveState(FILEHANDLE scn) {

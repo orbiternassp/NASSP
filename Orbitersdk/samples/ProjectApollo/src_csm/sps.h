@@ -34,7 +34,7 @@ public:
 	SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
 	virtual ~SPSPropellantSource();
 
-	void Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *propline, h_Radiator *oxline);
+	void Init(e_object *dc1, e_object *dc2, e_object *ac);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetFuelPercent();
@@ -42,8 +42,7 @@ public:
 	double GetOxidUnbalanceLB();
 	double GetPropellantPressurePSI() { return propellantPressurePSI; }
 	double GetHeliumPressurePSI() { return heliumPressurePSI; }
-	double GetPropellantLineTempF();
-	double GetOxidizerLineTempF();
+	void SPSLineHeaterToggle(TwoPositionSwitch *s, CircuitBrakerSwitch *mna, CircuitBrakerSwitch *mnb, Boiler *sumpa, Boiler *sumpb, Boiler *feeda, Boiler *feedb, Boiler *valvea, Boiler *valveb);
 	bool IsHeliumValveAOpen() { return heliumValveAOpen; }
 	bool IsHeliumValveBOpen() { return heliumValveBOpen; }
 	bool IsOxidFlowValveMin();
