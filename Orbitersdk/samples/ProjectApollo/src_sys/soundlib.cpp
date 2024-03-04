@@ -701,10 +701,6 @@ bool FadeInOutSound::play(double volume)
 	double dt; // [s]
 	int freq;  // [Hz] placed here for debug sprintf() to work
 
-	if (currentVolume == -1.0) { // initial call (first after scenario load) ?
-		currentVolume = volume;
-	}
-
 	if (currentVolume < volume)
 	{
 		dt = oapiGetSimStep();
@@ -721,7 +717,7 @@ bool FadeInOutSound::play(double volume)
 	if (currentVolume)
 	{
 		freq = hasFrequencyShift()
-			? fMin + (currentVolume * (fMax - fMin))
+			? static_cast<int>(fMin + (currentVolume * (fMax - fMin)))
 			: NULL;
 		Sound::play(LOOP, currentVolume, freq);
 	}
