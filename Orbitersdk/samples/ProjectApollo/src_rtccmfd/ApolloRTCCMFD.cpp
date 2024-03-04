@@ -3257,6 +3257,111 @@ void ApolloRTCCMFD::set_RTEConstraintF87(std::string constr, std::string value)
 	GC->rtcc->PMQAFMED("87");
 }
 
+void ApolloRTCCMFD::menuAddRTESite()
+{
+	bool AddRTESiteInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Add RTE Site. Format: Type Name Latitude Longitude. Type = PTP, ATP. Name = Name of Site. One pair of Lat/Lng for PTP, up to 5 for ATP", AddRTESiteInput, 0, 50, (void*)this);
+}
+
+bool AddRTESiteInput(void *id, char *str, void *data)
+{
+	double LatLng[10];
+	char Buffer[256], buff1[100], buff2[100];
+	int num;
+
+	num = sscanf(str, "%s %s %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", buff1, buff2, &LatLng[0], &LatLng[1], &LatLng[2], &LatLng[3], &LatLng[4],
+		&LatLng[5], &LatLng[6], &LatLng[7], &LatLng[8], &LatLng[9]);
+
+	if (num >= 4)
+	{
+		int length = sprintf(Buffer, "F85,ADD,%s,%s,", buff1, buff2);
+
+		for (int i = 0; i < num - 2; i++)
+		{
+			length += sprintf(Buffer + length, ",%lf", LatLng[i]);
+		}
+		length += sprintf(Buffer + length, ";");
+
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buffer);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuReplaceRTESite()
+{
+	bool ReplaceRTESiteInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Replace RTE Site.  Format: Type Site Number Latitude Longitude. Type = PTP, ATP. Site = Name of Site. Number (Skip for PTP, pair number for ATP)", ReplaceRTESiteInput, 0, 50, (void*)this);
+}
+
+bool ReplaceRTESiteInput(void *id, char *str, void *data)
+{
+	char Buffer[256], buff1[100], buff2[100];
+	double LatLng[2];
+
+	if (sscanf(str, "%s", buff1) == 1)
+	{
+		int type;
+
+		if (strcmp(buff1, "PTP") == 0)
+		{
+			type = 0;
+		}
+		else if (strcmp(buff1, "ATP") == 0)
+		{
+			type = 1;
+		}
+		else return false;
+
+		if (type == 0)
+		{
+			if (sscanf(str, "%s %s %lf %lf", buff1, buff2, &LatLng[0], &LatLng[1]) != 4)
+			{
+				return false;
+			}
+
+			sprintf(Buffer, "F85,REPLACE,PTP,%s,,%lf,%lf;", buff2, LatLng[0], LatLng[1]);
+		}
+		else
+		{
+			int pair;
+
+			if (sscanf(str, "%s %s %d %lf %lf", buff1, buff2, &pair, &LatLng[0], &LatLng[1]) != 5)
+			{
+				return false;
+			}
+
+			sprintf(Buffer, "F85,REPLACE,ATP,%s,%d,%lf,%lf;", buff2, pair, LatLng[0], LatLng[1]);
+		}
+
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buffer);
+		return true;
+	}
+
+
+	return false;
+}
+
+void ApolloRTCCMFD::menuDeleteRTESite()
+{
+	bool DeleteRTESiteInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Delete RTE Site. Format: Type Name. Type = PTP, ATP. Name = Name of Site", DeleteRTESiteInput, 0, 20, (void*)this);
+}
+
+bool DeleteRTESiteInput(void *id, char *str, void *data)
+{
+	char Buffer[256], buff1[100], buff2[100];
+
+	if (sscanf(str, "%s %s", buff1, buff2) == 2)
+	{
+		sprintf(Buffer, "F85,DELETE,%s,%s;", buff1, buff2);
+
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buffer);
+		return true;
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::CycleRTECalcMode()
 {
 	if (G->RTECalcMode < 4)

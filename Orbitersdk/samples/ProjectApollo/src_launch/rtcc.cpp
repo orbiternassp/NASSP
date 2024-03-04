@@ -2293,11 +2293,12 @@ bool RTCC::LoadMissionConstantsFile(std::string file)
 			else if (papiReadConfigFile_ATPSite(Buff, "ATPSite", strtemp, darrtemp, itemp))
 			{
 				PZREAP.ATPSite[itemp] = strtemp;
-				for (int i = 0;i < 10;i++)
+				for (int i = 0; i < 10; i++)
 				{
 					PZREAP.ATPCoordinates[itemp][i] = darrtemp[i];
 				}
 			}
+
 			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG);
 			papiReadScenario_int(Buff, "MHVCCG_N", SystemParameters.MHVCCG.N);
 			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG);
@@ -6903,7 +6904,7 @@ void RTCC::P27PADCalc(const P27Opt &opt, P27PAD &pad)
 
 void RTCC::SaveState(FILEHANDLE scn) {
 
-	char Buffer[128];
+	char Buffer[256];
 	int i;
 
 	oapiWriteLine(scn, RTCC_START_STRING);
@@ -7026,6 +7027,37 @@ void RTCC::SaveState(FILEHANDLE scn) {
 
 	SAVE_DOUBLE("RTCC_PZREAP_RRBIAS", PZREAP.RRBIAS);
 
+	for (i = 0; i < 5; i++)
+	{
+		if (PZREAP.PTPSite[i] != "")
+		{
+			sprintf(Buffer, "%d %s %lf %lf", i, PZREAP.PTPSite[i].c_str(), PZREAP.PTPLatitude[i]*DEG, PZREAP.PTPLongitude[i]*DEG);
+			oapiWriteScenario_string(scn, "RTCC_PZREAP_PTPSite", Buffer);
+		}
+	}
+	for (i = 0; i < 5; i++)
+	{
+		if (PZREAP.ATPSite[i] != "")
+		{
+			int length = 0;
+
+			length = sprintf(Buffer, "%d %s", i, PZREAP.ATPSite[i].c_str());
+
+			for (int j = 0; j < 10; j++)
+			{
+				if (PZREAP.ATPCoordinates[i][j] >= 1e9)
+				{
+					length += sprintf(Buffer + length, " %lf", 1e10);
+				}
+				else
+				{
+					length += sprintf(Buffer + length, " %lf", PZREAP.ATPCoordinates[i][j] * DEG);
+				}
+			}
+			oapiWriteScenario_string(scn, "RTCC_PZREAP_ATPSite", Buffer);
+		}
+	}
+
 	if (EZLASITE.REF != -1)
 	{
 		SAVE_INT("RTCC_EZLASITE_REF", EZLASITE.REF);
@@ -7120,6 +7152,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 	char Buff[128];
 	char *line;
 	int tmp = 0; // Used in boolean type loader
+	std::string strtemp;
+	double darrtemp[10];
 	int inttemp, inttemp2;
 	REFSMMATData refs;
 
@@ -7281,6 +7315,20 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE2("RTCC_SFP_T_TE", PZSFPTAB.blocks[0].T_te, PZSFPTAB.blocks[1].T_te);
 
 		LOAD_DOUBLE("RTCC_PZREAP_RRBIAS", PZREAP.RRBIAS);
+		if (papiReadConfigFile_PTPSite(line, "RTCC_PZREAP_PTPSite", strtemp, darrtemp, inttemp))
+		{
+			PZREAP.PTPSite[inttemp] = strtemp;
+			PZREAP.PTPLatitude[inttemp] = darrtemp[0];
+			PZREAP.PTPLongitude[inttemp] = darrtemp[1];
+		}
+		else if (papiReadConfigFile_ATPSite(line, "RTCC_PZREAP_ATPSite", strtemp, darrtemp, inttemp))
+		{
+			PZREAP.ATPSite[inttemp] = strtemp;
+			for (int i = 0; i < 10; i++)
+			{
+				PZREAP.ATPCoordinates[inttemp][i] = darrtemp[i];
+			}
+		}
 
 		LOAD_INT("RTCC_EZLASITE_REF", EZLASITE.REF);
 		papiReadScenario_Station(line, "RTCC_EZLASITE", EZLASITE.Data);
@@ -28501,6 +28549,277 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		else if (data[0] == "DELETE")
 		{
 			action = 3;
+		}
+		else
+		{
+			return 2;
+		}
+
+		int type;
+
+		if (data[1] == "PTP")
+		{
+			type = 0;
+		}
+		else if (data[1] == "ATP")
+		{
+			type = 1;
+		}
+		else
+		{
+			return 2;
+		}
+
+		std::string Site = data[2];
+
+		if (Site == "")
+		{
+			return 2;
+		}
+
+		unsigned i, j;
+
+		if (action == 1)
+		{
+			//ADD
+
+			if (data.size() < 6)
+			{
+				return 1;
+			}
+
+			//Site may not be in the target table and there must be an open space
+			int space = -1;
+
+			std::string *tab;
+
+			if (type == 0)
+			{
+				tab = PZREAP.PTPSite;
+			}
+			else
+			{
+				tab = PZREAP.ATPSite;
+			}
+
+			//Can't have the same name twice
+			for (i = 0; i < 5; i++)
+			{
+				if (tab[i] == Site)
+				{
+					return 2;
+				}
+			}
+
+			//Find free spot
+			for (i = 0; i < 5; i++)
+			{
+				if (tab[i] == "")
+				{
+					space = i;
+					break;
+				}
+			}
+
+			if (space == -1)
+			{
+				return 2;
+			}
+
+			double values[10];
+
+			for (i = 0; i < 10; i++)
+			{
+				values[i] = 1e10;
+			}
+
+			double val;
+
+			for (i = 4; i < 14; i++)
+			{
+				if (type == 0 && i >= 6) break;
+				if (data.size() <= i) break;
+
+				if (sscanf(data[i].c_str(), "%lf", &val) != 1)
+				{
+					return 2;
+				}
+				
+				val *= RAD;
+
+				if (i % 2 == 0)
+				{
+					//Latitude
+					if (val > PI05 || val < -PI05)
+					{
+						return 2;
+					}
+				}
+				else
+				{
+					//Longitude
+					if (val > PI || val < -PI)
+					{
+						return 2;
+					}
+				}
+
+				values[i - 4] = val;
+			}
+			
+			if (type == 0)
+			{
+				//PTP
+				PZREAP.PTPSite[space] = Site;
+				PZREAP.PTPLatitude[space] = values[0];
+				PZREAP.PTPLongitude[space] = values[1];
+			}
+			else
+			{
+				//ATP
+				PZREAP.ATPSite[space] = Site;
+				for (i = 0; i < 10; i++)
+				{
+					PZREAP.ATPCoordinates[space][i] = values[i];
+				}
+			}
+		}
+		else if (action == 2)
+		{
+			//REPLACE
+
+			if (data.size() < 6)
+			{
+				return 1;
+			}
+
+			std::string *tab;
+
+			if (type == 0)
+			{
+				tab = PZREAP.PTPSite;
+			}
+			else
+			{
+				tab = PZREAP.ATPSite;
+			}
+
+			int space = -1;
+
+			//Find item to replace
+			for (i = 0; i < 5; i++)
+			{
+				if (tab[i] == Site)
+				{
+					space = i;
+					break;
+				}
+			}
+
+			if (space == -1)
+			{
+				return 2;
+			}
+
+			//ATP number
+			int Num = 0;
+
+			if (type == 1)
+			{
+				if (sscanf(data[3].c_str(), "%d", &Num) != 1)
+				{
+					return 2;
+				}
+				if (Num < 1 || Num > 5)
+				{
+					return 2;
+				}
+			}
+
+			double val, values[2];
+
+			for (i = 0; i < 2; i++)
+			{
+				if (sscanf(data[i + 4].c_str(), "%lf", &val) != 1)
+				{
+					return 2;
+				}
+
+				val *= RAD;
+
+				if (i % 2 == 0)
+				{
+					//Latitude
+					if (val > PI05 || val < -PI05)
+					{
+						return 2;
+					}
+				}
+				else
+				{
+					//Longitude
+					if (val > PI || val < -PI)
+					{
+						return 2;
+					}
+				}
+
+				values[i] = val;
+			}
+
+			if (type == 0)
+			{
+				//PTP
+				PZREAP.PTPSite[space] = Site;
+				PZREAP.PTPLatitude[space] = values[0];
+				PZREAP.PTPLongitude[space] = values[1];
+			}
+			else
+			{
+				//ATP
+				PZREAP.ATPSite[space] = Site;
+				for (i = 0; i < 2; i++)
+				{
+					PZREAP.ATPCoordinates[space][i + 2 * (Num - 1)] = values[i];
+				}
+			}
+		}
+		else
+		{
+			//DELETE
+
+			std::string *tab;
+
+			if (type == 0)
+			{
+				tab = PZREAP.PTPSite;
+			}
+			else
+			{
+				tab = PZREAP.ATPSite;
+			}
+
+			//Find item to delete
+			for (i = 0; i < 5; i++)
+			{
+				if (tab[i] == Site)
+				{
+					if (type == 0)
+					{
+						PZREAP.PTPSite[i] = "";
+						PZREAP.PTPLatitude[i] = PZREAP.PTPLongitude[i] = 0.0;
+					}
+					else
+					{
+						PZREAP.ATPSite[i] = "";
+						for (j = 0; j < 10; j++)
+						{
+							PZREAP.ATPCoordinates[i][j] = 1e10;
+						}
+					}
+					break;
+				}
+			}
 		}
 	}
 	//Update return to Earth constraints
