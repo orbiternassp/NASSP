@@ -510,10 +510,10 @@ void CoastIntegrator2::SetBodyParameters(int p)
 		rect2 = 0.75*OrbMech::power(2.0, -2.0)*100.0;
 		P = BODY_MOON;
 		GMD = 3;
-		GMO = 0; //3 with L1 model
+		GMO = 3; //3 with L1 model
 		ZONAL[0] = 0.0; ZONAL[1] = OrbMech::J2_Moon; ZONAL[2] = OrbMech::J3_Moon; ZONAL[3] = 0.0;
 		//L1 model, use this when Orbiter simulates it
-		//C[0] = 0.0; C[1] = 0.20715e-4; C[2] = 0.34e-4; C[4] = 0.02583e-4;
+		C[0] = 0.0; C[1] = 0.20715e-4; C[2] = 0.34e-4; C[4] = 0.02583e-4;
 	}
 }
 

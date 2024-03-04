@@ -717,7 +717,7 @@ void LEVA::DoFirstTimestep()
 	//
 
 	if (StateSet) {
-		soundlib.InitSoundLib(GetHandle(), SOUND_DIRECTORY);
+		soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 		SetMissionPath();
 
 		//

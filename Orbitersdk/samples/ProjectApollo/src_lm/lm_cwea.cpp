@@ -41,7 +41,6 @@ LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	lem = NULL;
 	CWEAHeat = 0;
 
-	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 	Operate = false;
 	ECSFailureCount = 0;
@@ -56,12 +55,15 @@ void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah) {
 		}
 		row = 0; col++;
 	}
-	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND, INTERNAL_ONLY);
 
 	cwea_pwr = cwea;
 	ma_pwr = ma;
 	lem = l;
 	CWEAHeat = cweah;
+}
+
+void LEM_CWEA::LoadSounds() {
+	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND, INTERNAL_ONLY);
 }
 
 bool LEM_CWEA::IsCWEAPowered() {

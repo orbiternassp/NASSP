@@ -30,8 +30,6 @@
 
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
-#include "dinput.h"
-#include "vesim.h"
 #include "dsky.h"
 #include "IMU.h"
 #include "cdu.h"
@@ -624,16 +622,10 @@ public:
 	// DS20060413 DirectInput stuff
 	// Handle to DLL instance
 	HINSTANCE dllhandle;
-	// pointer to DirectInput class itself
-	LPDIRECTINPUT8 dx8ppv;
 	// Joysticks-Enabled flag / counter - Zero if we aren't using DirectInput, nonzero is the number of joysticks we have.
 	int js_enabled;
 	// Pointers to DirectInput joystick devices
-	LPDIRECTINPUTDEVICE8 dx8_joystick[2]; // One for THC, one for RHC, ignore extras
-	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
-	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
 	HRESULT				 dx8_failure;     // DX failure reason
-	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  // Joystick # for the RHC
 	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       // ID of SLIDER axis to use for throttle control from joystick configured as ACA
@@ -701,7 +693,7 @@ protected:
 	void DefineVCAnimations();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
-	void RCSSoundTimestep();
+	void EngineSoundTimestep();
 	// void GetDockStatus();
 	void JostleViewpoint(double amount);
 	void VCFreeCam(VECTOR3 dir, bool slow);
@@ -1575,8 +1567,6 @@ protected:
 #define VIEWANGLE 30
 
 	int	viewpos;
-	
-	bool SoundsLoaded;
 
 	bool Crewed;
 	bool AutoSlow;
@@ -1780,6 +1770,7 @@ protected:
 	FadeInOutSound GlycolPumpSound;
 	FadeInOutSound SuitFanSound;
 	Sound CrewDeadSound;
+	Sound EngineS;
 
 	//
 	// Connectors.

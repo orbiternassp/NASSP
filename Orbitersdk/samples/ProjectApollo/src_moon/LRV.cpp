@@ -738,7 +738,7 @@ void LRV::DoFirstTimestep()
 	//
 
 	if (StateSet) {
-		soundlib.InitSoundLib(GetHandle(), SOUND_DIRECTORY);
+		// Probably a better way but I'm not familiar with the API
 		SetMissionPath();
 
 		//
@@ -988,6 +988,11 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	
 	// touchdown point test
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
+}
+
+void LRV::clbkPostCreation()
+{
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void LRV::DoAnimations ()

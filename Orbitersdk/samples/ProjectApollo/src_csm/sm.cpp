@@ -84,9 +84,6 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 {
 	InitSM();
 	DefineAnimations();
-
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-	soundlib.LoadSound(BreakS, CRASH_SOUND);
 }
 
 SM::~SM()
@@ -808,6 +805,13 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	default:
 		break;
 	}
+}
+
+void SM::clbkPostCreation()
+
+{
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
+	soundlib.LoadSound(BreakS, CRASH_SOUND);
 }
 
 void SM::clbkSaveState (FILEHANDLE scn)

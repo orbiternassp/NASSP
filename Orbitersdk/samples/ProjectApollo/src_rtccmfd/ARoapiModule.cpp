@@ -74,10 +74,10 @@ DLLCLBK void ExitModule(HINSTANCE hDLL) {          // Called by Orbiter when mod
 	nGutsUsed = 0;
 }
 
-int ARoapiModule::MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam) {  // Message parser, handling MFD open requests
+OAPI_MSGTYPE ARoapiModule::MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam) {  // Message parser, handling MFD open requests
 	switch (msg) {
 	case OAPI_MSG_MFD_OPENED:
-		return (int)(new ApolloRTCCMFD(LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam, mfd));    // Open an ephemeral RTCC instance each time we make a new RTCC MFD, plus F8, etc/ 
+		return (OAPI_MSGTYPE)new ApolloRTCCMFD(LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam, mfd);    // Open an ephemeral RTCC instance each time we make a new RTCC MFD, plus F8, etc/ 
 	}
 	return 0;
 }

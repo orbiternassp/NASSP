@@ -849,7 +849,6 @@ void LEM::JoystickTimestep(double simdt)
 {
 	// Joystick read
 	if (oapiGetFocusInterface() == this) {
-		if (enableVESIM) vesim.poolDevices();
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
 		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
@@ -918,96 +917,28 @@ void LEM::JoystickTimestep(double simdt)
 		// 2520 points per degree. It breaks out of detent at .5 degres, or 1260 pulses.
 		// 480 points per count.
 
-		// Read data
-		HRESULT hr;
-		// Handle RHC
-		if (enableVESIM) {
-			if (GetAttitudeMode() == RCS_ROT) {
-				rhc_pos[0] = vesim.getInputValue(LM_AXIS_INPUT_ACAR);
-				rhc_pos[1] = vesim.getInputValue(LM_AXIS_INPUT_ACAP);
-				rhc_pos[2] = 65536 - vesim.getInputValue(LM_AXIS_INPUT_ACAY);
-				
-			}
+		// No JS
+
+		// Roll
+		if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
+			rhc_pos[0] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_BANKLEFT) * 32768);
 		}
-		else if (rhc_id != -1 && rhc_id < js_enabled) {
-			// CHECK FOR POWER HERE
-			hr = dx8_joystick[rhc_id]->Poll();
-			if (FAILED(hr)) { // Did that work?
-							  // Attempt to acquire the device
-				hr = dx8_joystick[rhc_id]->Acquire();
-				if (FAILED(hr)) {
-					sprintf(oapiDebugString(), "DX8JS: Cannot aquire RHC");
-				}
-				else {
-					hr = dx8_joystick[rhc_id]->Poll();
-				}
-			}
-			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]), &dx8_jstate[rhc_id]);
-			// Z-axis read.
-			int rhc_rot_pos = 32768; // Initialize to centered
-			if (rhc_rot_id != -1) { // If this is a rotator-type axis
-				switch (rhc_rot_id) {
-				case 0:
-					rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
-				case 1:
-					rhc_rot_pos = dx8_jstate[rhc_id].lRy; break;
-				case 2:
-					rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
-				}
-			}
-			if (rhc_rzx_id != -1 && rhc_rot_id == -1) { // If we use the native Z-axis
-				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
-			}
-
-			rhc_pos[0] = dx8_jstate[rhc_id].lX;
-			rhc_pos[1] = dx8_jstate[rhc_id].lY;
-			rhc_pos[2] = 65536 - rhc_rot_pos;
-
-			//Let's cheat and give the ACA a throttle lever, if the joystick has one
-			if (rhc_sld_id != -1)
-			{
-				ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
-				ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
-			}
-
-			// RCS mode toggle
-			if (rhc_thctoggle && thc_id == -1 && rhc_thctoggle_id != -1) {
-				if (dx8_jstate[rhc_id].rgbButtons[rhc_thctoggle_id]) {
-					if (!rhc_thctoggle_pressed) {
-						SetAttitudeMode(RCS_LIN);
-					}
-					rhc_thctoggle_pressed = true;
-				}
-				else {
-					rhc_thctoggle_pressed = false;
-				}
-			}
+		else if (GetManualControlLevel(THGROUP_ATT_BANKRIGHT) > 0) {
+			rhc_pos[0] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 32768);
 		}
-		else {
-
-			// No JS
-
-			// Roll
-			if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
-				rhc_pos[0] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_BANKLEFT) * 32768);
-			}
-			else if (GetManualControlLevel(THGROUP_ATT_BANKRIGHT) > 0) {
-				rhc_pos[0] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 32768);
-			}
-			// Pitch
-			if (GetManualControlLevel(THGROUP_ATT_PITCHDOWN) > 0) {
-				rhc_pos[1] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_PITCHDOWN) * 32768);
-			}
-			else if (GetManualControlLevel(THGROUP_ATT_PITCHUP) > 0) {
-				rhc_pos[1] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_PITCHUP) * 32768);
-			}
-			// Yaw
-			if (GetManualControlLevel(THGROUP_ATT_YAWLEFT) > 0) {
-				rhc_pos[2] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_YAWLEFT) * 32768);
-			}
-			else if (GetManualControlLevel(THGROUP_ATT_YAWRIGHT) > 0) {
-				rhc_pos[2] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 32768);
-			}
+		// Pitch
+		if (GetManualControlLevel(THGROUP_ATT_PITCHDOWN) > 0) {
+			rhc_pos[1] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_PITCHDOWN) * 32768);
+		}
+		else if (GetManualControlLevel(THGROUP_ATT_PITCHUP) > 0) {
+			rhc_pos[1] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_PITCHUP) * 32768);
+		}
+		// Yaw
+		if (GetManualControlLevel(THGROUP_ATT_YAWLEFT) > 0) {
+			rhc_pos[2] = (int)(32768 + GetManualControlLevel(THGROUP_ATT_YAWLEFT) * 32768);
+		}
+		else if (GetManualControlLevel(THGROUP_ATT_YAWRIGHT) > 0) {
+			rhc_pos[2] = (int)(32768 - GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 32768);
 		}
 
 		CDR_ACA.Timestep(rhc_pos);
@@ -1193,123 +1124,32 @@ void LEM::JoystickTimestep(double simdt)
 			SetRCSJet(3, true);
 		}
 
-		// And now the THC...
-		if (enableVESIM) {
-			if (LeftTTCATranslSwitch.IsUp()) {
-				if (GetAttitudeMode() == RCS_ROT) {
-					thc_x_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAY) - 32768;
-					thc_y_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAX) - 32768;
-					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAZ) - 32768;
-				}
-				else {
-					thc_x_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAR) - 32768;
-					thc_y_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAP) - 32768;
-					thc_z_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAY) - 32768;
-				}
-			}
-			if (vesim.getInputValue(LM_AXIS_THR_JET_LEVER) < 32768) 
-				ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_THROTTLE);				
-			else {
-				if (GetAttitudeMode() == RCS_ROT)			
-					ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_TTCAX);
-				else			
-					ttca_throttle_pos = vesim.getInputValue(LM_AXIS_INPUT_ACAP);				
-				thc_y_pos = 0;
-			}
-			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+		
+		// No JS
+
+		// Up/down
+		if (GetManualControlLevel(THGROUP_ATT_DOWN) > 0) {
+			thc_y_pos = (int)((-GetManualControlLevel(THGROUP_ATT_DOWN)) * 32768.);
 		}
-		else if (thc_id != -1 && thc_id < js_enabled) {
-			hr = dx8_joystick[thc_id]->Poll();
-			if (FAILED(hr)) { // Did that work?
-							  // Attempt to acquire the device
-				hr = dx8_joystick[thc_id]->Acquire();
-				if (FAILED(hr)) {
-					sprintf(oapiDebugString(), "DX8JS: Cannot aquire THC");
-				}
-				else {
-					hr = dx8_joystick[thc_id]->Poll();
-				}
-			}
-
-			if (thc_tjt_id != -1) {
-				ttca_realistic_throttle = true;
-			}
-
-			// Read data
-			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
-			// The LM TTCA is even wierder than the CM THC...
-
-			if (LeftTTCATranslSwitch.IsUp()) {
-				if (thc_tjt_id != -1) {                    // If Throttle/Jets lever enabled
-					thc_tjt_pos = dx8_jstate[thc_id].rglSlider[thc_tjt_id]; // Read
-				}
-
-				thc_y_pos = dx8_jstate[thc_id].lY - 32768;
-				thc_x_pos = dx8_jstate[thc_id].lX - 32768;
-
-				// Z-axis read.
-				if (thc_rot_id != -1) { // If this is a rotator-type axis
-					switch (thc_rot_id) {
-					case 0:
-						thc_rot_pos = dx8_jstate[thc_id].lRx; break;
-					case 1:
-						thc_rot_pos = dx8_jstate[thc_id].lRy; break;
-					case 2:
-						thc_rot_pos = dx8_jstate[thc_id].lRz; break;
-					}
-				}
-				if (thc_rzx_id != -1 && thc_rot_id == -1) { // If we use the native Z-axis
-					thc_rot_pos = dx8_jstate[thc_id].lZ;
-				}
-
-				thc_z_pos = thc_rot_pos - 32768;
-
-				if (thc_debug != -1) {
-					sprintf(oapiDebugString(), "THC: X/Y/Z = %d / %d / %d TJT = %d, Test: %d, thc_rot_id: %d, thc_rzx_id: %d", thc_x_pos, thc_y_pos,
-						thc_z_pos, thc_tjt_pos, dx8_jstate[thc_id].rgbButtons[1], thc_rot_id, thc_rzx_id);
-				}
-			}
-
-			// RCS mode toggle
-			if (rhc_thctoggle && rhc_id == -1 && rhc_thctoggle_id != -1) {
-				if (dx8_jstate[thc_id].rgbButtons[rhc_thctoggle_id]) {
-					if (!rhc_thctoggle_pressed) {
-						SetAttitudeMode(RCS_ROT);
-					}
-					rhc_thctoggle_pressed = true;
-				}
-				else {
-					rhc_thctoggle_pressed = false;
-				}
-			}
+		else if (GetManualControlLevel(THGROUP_ATT_UP) > 0) {
+			thc_y_pos = (int)(GetManualControlLevel(THGROUP_ATT_UP) * 32768.);
 		}
-		else {
-			// No JS
-
-			// Up/down
-			if (GetManualControlLevel(THGROUP_ATT_DOWN) > 0) {
-				thc_y_pos = (int)((-GetManualControlLevel(THGROUP_ATT_DOWN)) * 32768.);
-			}
-			else if (GetManualControlLevel(THGROUP_ATT_UP) > 0) {
-				thc_y_pos = (int)(GetManualControlLevel(THGROUP_ATT_UP) * 32768.);
-			}
-			// Left/right
-			if (GetManualControlLevel(THGROUP_ATT_LEFT) > 0) {
-				thc_x_pos = (int)((-GetManualControlLevel(THGROUP_ATT_LEFT)) * 32768.);
-			}
-			else if (GetManualControlLevel(THGROUP_ATT_RIGHT) > 0) {
-				thc_x_pos = (int)(GetManualControlLevel(THGROUP_ATT_RIGHT) * 32768.);
-			}
-			// Forward/Back
-			if (GetManualControlLevel(THGROUP_ATT_BACK) > 0) {
-				thc_z_pos = (int)((-GetManualControlLevel(THGROUP_ATT_BACK)) * 32768.);
-			}
-			else if (GetManualControlLevel(THGROUP_ATT_FORWARD) > 0) {
-				thc_z_pos = (int)(GetManualControlLevel(THGROUP_ATT_FORWARD) * 32768.);
-			}
-
-			//sprintf(oapiDebugString(), "%f %f", ttca_throttle_pos_dig, ttca_thrustcmd);
+		// Left/right
+		if (GetManualControlLevel(THGROUP_ATT_LEFT) > 0) {
+			thc_x_pos = (int)((-GetManualControlLevel(THGROUP_ATT_LEFT)) * 32768.);
 		}
+		else if (GetManualControlLevel(THGROUP_ATT_RIGHT) > 0) {
+			thc_x_pos = (int)(GetManualControlLevel(THGROUP_ATT_RIGHT) * 32768.);
+		}
+		// Forward/Back
+		if (GetManualControlLevel(THGROUP_ATT_BACK) > 0) {
+			thc_z_pos = (int)((-GetManualControlLevel(THGROUP_ATT_BACK)) * 32768.);
+		}
+		else if (GetManualControlLevel(THGROUP_ATT_FORWARD) > 0) {
+			thc_z_pos = (int)(GetManualControlLevel(THGROUP_ATT_FORWARD) * 32768.);
+		}
+
+		//sprintf(oapiDebugString(), "%f %f", ttca_throttle_pos_dig, ttca_thrustcmd);
 
 		ttca_pos[0] = thc_y_pos;
 		ttca_pos[1] = thc_x_pos;
