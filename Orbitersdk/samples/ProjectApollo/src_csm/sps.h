@@ -140,6 +140,7 @@ public:
 	bool GetInjectorValves34Open() { return injectorValves34Open; };
 	double GetNitrogenPressureAPSI() { return nitrogenPressureAPSI; };
 	double GetNitrogenPressureBPSI() { return nitrogenPressureBPSI; };
+	double GetInjectorValvePosition(int i);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void clbkPostCreation();

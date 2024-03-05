@@ -828,6 +828,23 @@ double SPSEngine::GetChamberPressurePSI() {
 	return saturn->GetThrusterLevel(spsThruster) * 100.0;
 }
 
+
+double SPSEngine::GetInjectorValvePosition(int i)
+{
+	if (!saturn) return 0.0;
+	if (saturn->GetStage() != CSM_LEM_STAGE) return 0.0;
+
+	if (i == 1 || i == 2)
+	{
+		return (injectorValves12Open ? 90.0 : 0.0);
+	}
+
+	else
+	{
+		return (injectorValves34Open ? 90.0 : 0.0);
+	}
+}
+
 void SPSEngine::clbkPostCreation() {
 
 	if (!saturn) return;
