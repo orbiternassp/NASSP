@@ -718,7 +718,7 @@ bool FadeInOutSound::play(double volume)
 		if (currentVolume < 0.0) { currentVolume = 0.0; } // limit (lower)
 	}
 
-	if (currentVolume)
+	if (currentVolume != 0.0)
 	{
 		freq = hasFrequencyShift()
 			? static_cast<int>(fMin + (currentVolume * (fMax - fMin)))
