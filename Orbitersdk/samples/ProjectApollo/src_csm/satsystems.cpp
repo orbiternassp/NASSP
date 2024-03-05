@@ -1101,15 +1101,21 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//	pHeader->mass, pBlanket->mass);
 
 // SPS Line Temp Debug Lines
-	//double *SPSFuelLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELLINE:TEMP");
-	//double *SPSOxLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE:TEMP");
-	//double* SPSFuelFeedTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE:TEMP");
-	//double *SPSOxFeedTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE:TEMP");
-	//double *SPSLineHtrA = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:ISON");
-	//double *SPSLineHtrB = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:ISON");
+	double *SPSFuelLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELLINE:TEMP");
+	double *SPSOxLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE:TEMP");
+	double *SPSFuelFeedTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE:TEMP");
+	double *SPSOxFeedTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE:TEMP");
+	double *SPSFuelValveTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELVALVELINE:TEMP");
+	double *SPSOxValveTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERVALVELINE:TEMP");
+	double *SPSEngineValveTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSEENGINEVALVE:TEMP");
+	double *SPSInjectorTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSINJECTORFLANGE:TEMP");
+	double *SPSLineHtrA = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:ISON");
+	double *SPSLineHtrB = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:ISON");
 
-	//sprintf(oapiDebugString(), "Fuel %.5f Ox %.5f FuelFeed %.5f OxFeed %.5f HtrA: %lf HtrB: %lf", KelvinToFahrenheit(*SPSFuelLineTemp), KelvinToFahrenheit(*SPSOxLineTemp), KelvinToFahrenheit(*SPSFuelFeedTemp), 
-		//KelvinToFahrenheit(*SPSOxFeedTemp), *SPSLineHtrA, *SPSLineHtrB);
+	//sprintf(oapiDebugString(), "Fuel %.3f Ox %.3f FuelFeed %.3f OxFeed %.3f FuelVlv: %.3f OxVlv: %.3f HtrA: %lf HtrB: %lf", KelvinToFahrenheit(*SPSFuelLineTemp), KelvinToFahrenheit(*SPSOxLineTemp), KelvinToFahrenheit(*SPSFuelFeedTemp),
+		//KelvinToFahrenheit(*SPSOxFeedTemp), KelvinToFahrenheit(*SPSFuelValveTemp), KelvinToFahrenheit(*SPSOxValveTemp), *SPSLineHtrA, *SPSLineHtrB);
+	sprintf(oapiDebugString(), "Fuel %.3f Ox %.3f FuelFeed %.3f OxFeed %.3f FuelVlv: %.3f OxVlv: %.3f HtrA: %lf HtrB: %lf", KelvinToFahrenheit(*SPSFuelLineTemp), KelvinToFahrenheit(*SPSOxLineTemp), KelvinToFahrenheit(*SPSFuelFeedTemp),
+		KelvinToFahrenheit(*SPSOxFeedTemp), KelvinToFahrenheit(*SPSFuelValveTemp), KelvinToFahrenheit(*SPSOxValveTemp), KelvinToFahrenheit(*SPSEngineValveTemp), KelvinToFahrenheit(*SPSInjectorTemp));
 
 //GSE Cooling Debug Lines
 	/*
