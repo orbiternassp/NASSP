@@ -4000,8 +4000,8 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 		SPSInterfaceFeedHeaterB->SetPumpOn();
 		SPSBallValveHeaterA->SetPumpOn();
 		SPSBallValveHeaterB->SetPumpOn();
-
 	}
+
 	else if (s->IsDown()) {
 		SPSSumpTankHeaterA->SetPumpOn();
 		SPSSumpTankHeaterB->SetPumpOff();
@@ -4009,8 +4009,8 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 		SPSInterfaceFeedHeaterB->SetPumpOff();
 		SPSBallValveHeaterA->SetPumpOn();
 		SPSBallValveHeaterB->SetPumpOff();
-
 	}
+
 	else {
 		SPSSumpTankHeaterA->SetPumpOff();
 		SPSSumpTankHeaterB->SetPumpOff();
