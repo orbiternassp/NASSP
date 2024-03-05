@@ -1561,15 +1561,17 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
         SetLMVCIntegralLight(xpointershadesidx, FloodLights_XPointer_Shades, MatProp::Light, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_XPointer_Shades)/sizeof(FloodLights_XPointer_Shades[0]));
         return true;
 
-//	case AID_LMVC_NUMERICS_LIGHT:
-//        SetCMVCIntegralLight(vcidx,NumericLights_P8, MatProp::Light, (double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
-//        return true;
+	case AID_LMVC_NUMERICS_LIGHT:
+		SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MatProp::Light, lca.GetNumericVoltage() / 115.0, sizeof(NumericLights_LMVC)/sizeof(NumericLights_LMVC[0]));
+        return true;
 
 #else
 	case AID_LMVC_INTEGRAL_LIGHT:
         SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MESHM_EMISSION2, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC)/sizeof(IntegralLights_LMVC[0]));
 		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
         SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION2, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
+
+
         return true;
 
 	case AID_LMVC_FLOOD_LIGHT:
@@ -1577,9 +1579,9 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
         SetLMVCIntegralLight(xpointershadesidx, FloodLights_XPointer_Shades, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_XPointer_Shades)/sizeof(FloodLights_XPointer_Shades[0]));
         return true;
 
-//	case AID_LMVC_NUMERICS_LIGHT:
-//        SetLMVCIntegralLight(vcidx,NumericLights_P8, MESHM_EMISSION,(double)(NumericRotarySwitch.GetState())/10.0, sizeof(NumericLights_P8)/sizeof(NumericLights_P8[0]));
-//        return true;
+	case AID_LMVC_NUMERICS_LIGHT:
+		SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MESHM_EMISSION, lca.GetNumericVoltage() / 115.0, sizeof(NumericLights_LMVC)/sizeof(NumericLights_LMVC[0]));
+        return true;
 
 #endif
 

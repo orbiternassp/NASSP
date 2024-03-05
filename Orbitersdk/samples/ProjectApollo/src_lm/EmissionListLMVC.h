@@ -56,8 +56,16 @@ DWORD IntegralLights_LMVC[] = {
 	VC_MAT_FDAI_LM_t
 };
 
+
+DWORD NumericLights_LMVC[] = {
+	VC_MAT_Panel4_DSKY,
+	VC_MAT_Panel1_Numerics_Timer
+};
+
+
 DWORD IntegralLights_LMVC_NoTex[] = {
-	VC_MAT_LMVC_Tapemeter_t
+	VC_MAT_LMVC_Tapemeter_t,
+	VC_MAT_Panel4_DSKY_CW
 };
 
 DWORD FloodLights_XPointer_Shades[] = {
