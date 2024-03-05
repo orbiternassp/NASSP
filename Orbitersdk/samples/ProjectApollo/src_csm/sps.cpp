@@ -67,10 +67,12 @@ SPSPropellantSource::~SPSPropellantSource() {
 	// Nothing for now.
 }
 
-void SPSPropellantSource::Init(e_object *dc1, e_object *dc2, e_object *ac) {
+void SPSPropellantSource::Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *inj1, h_Radiator *inj2) {
 
 	DCPower.WireToBuses(dc1, dc2);
 	ACPower = ac;
+	OXInjectorFlange1 = inj1;
+	FUInjectorFlange2 = inj2;
 }
 
 void SPSPropellantSource::Timestep(double simt, double simdt) {
@@ -348,7 +350,22 @@ bool SPSPropellantSource::IsGaugingPowered() {
 	return true;
 }
 
-//Temperature sensors moved to correct transducers
+//Other temperature sensors moved to correct transducers
+double SPSPropellantSource::GetInjectorFlange1TempF() {
+
+	if (!our_vessel) return 0;
+	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
+
+	return KelvinToFahrenheit(OXInjectorFlange1->GetTemp());
+}
+
+double SPSPropellantSource::GetInjectorFlange2TempF() {
+
+	if (!our_vessel) return 0;
+	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
+
+	return KelvinToFahrenheit(FUInjectorFlange2->GetTemp());
+}
 
 void SPSPropellantSource::SaveState(FILEHANDLE scn) {
 

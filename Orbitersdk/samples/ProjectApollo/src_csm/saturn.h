@@ -288,8 +288,8 @@ typedef struct {
 ///
 typedef struct {
 	double chamberPressurePSI;
-	double PropellantLineTempF;
-	double OxidizerLineTempF;
+	double InjectorFlange1TempF;
+	double InjectorFlange2TempF;
 } SPSStatus;
 
 // Vesim input IDs
@@ -3643,6 +3643,7 @@ public:
 	TemperatureTransducer SPSOxidizerLineTempSensor;
 	TemperatureTransducer SPSFuelFeedTempSensor;
 	TemperatureTransducer SPSOxidizerFeedTempSensor;
+	TemperatureTransducer SPSEngVlvTempSensor;
 	CSMTankPressTransducer BatteryManifoldPressureSensor;
 	TemperatureTransducer WasteH2ODumpTempSensor;
 	TemperatureTransducer UrineDumpTempSensor;

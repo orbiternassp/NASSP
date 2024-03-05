@@ -2272,7 +2272,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 36:		// H2 TK 1 PRESS
 							return(scale_data(sat->H2Tank1PressSensor.Voltage(), 0.0, 5.0));
 						case 37:		// SPS VLV BODY TEMP
-							return(scale_data(0,0,200));
+							return(scale_data(sat->SPSEngVlvTempSensor.Voltage(), 0.0, 5.0));
 						case 38:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 39:		// H2 TK 2 PRESS
@@ -2292,11 +2292,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 46:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 47:		// SPS INJECTOR FLANGE TEMP 1
-							return(scale_data(sat->sce.GetVoltage(2, 9), 0.0, 5.0));
+							sat->GetSPSStatus(spsStatus);
+							return(scale_data(spsStatus.InjectorFlange1TempF, 0, 600));
 						case 48:		// PRI RAD IN TEMP
 							return(scale_data(sat->PriRadInTempSensor.Voltage(), 0.0, 5.0));
 						case 49:		// SPS INJECTOR FLANGE TEMP 2
-							return(scale_data(sat->sce.GetVoltage(2, 10), 0.0, 5.0));
+							sat->GetSPSStatus(spsStatus);
+							return(scale_data(spsStatus.InjectorFlange2TempF, 0, 600));
 						case 50:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 51:		// FC 1 COND EXH TEMP
