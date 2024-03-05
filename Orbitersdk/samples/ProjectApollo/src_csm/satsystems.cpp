@@ -543,6 +543,13 @@ void Saturn::SystemsInit() {
 	SPSBallValveHeaterA = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERA");
 	SPSBallValveHeaterB = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERB");
 
+	SPSSumpTankHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
+	SPSSumpTankHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
+	SPSInterfaceFeedHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
+	SPSInterfaceFeedHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
+	SPSBallValveHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
+	SPSBallValveHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
+
 	// SM RCS initialization
 	SMQuadARCS.Init(th_rcs_a, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADA"));
 	SMQuadBRCS.Init(th_rcs_b, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADB"));
