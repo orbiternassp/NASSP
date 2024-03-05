@@ -1101,15 +1101,15 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//	pHeader->mass, pBlanket->mass);
 
 // SPS Line Temp Debug Lines
-	double *SPSFuelLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELLINE:TEMP");
-	double *SPSOxLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE:TEMP");
-	double* SPSFuelFeedTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE:TEMP");
-	double *SPSOxFeedTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE:TEMP");
-	double *SPSLineHtrA = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:ISON");
-	double *SPSLineHtrB = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:ISON");
+	//double *SPSFuelLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELLINE:TEMP");
+	//double *SPSOxLineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERLINE:TEMP");
+	//double* SPSFuelFeedTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELFEEDLINE:TEMP");
+	//double *SPSOxFeedTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERFEEDLINE:TEMP");
+	//double *SPSLineHtrA = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:ISON");
+	//double *SPSLineHtrB = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:ISON");
 
-	sprintf(oapiDebugString(), "Fuel %.5f Ox %.5f FuelFeed %.5f OxFeed %.5f HtrA: %lf HtrB: %lf", KelvinToFahrenheit(*SPSFuelLineTemp), KelvinToFahrenheit(*SPSOxLineTemp), KelvinToFahrenheit(*SPSFuelFeedTemp), 
-		KelvinToFahrenheit(*SPSOxFeedTemp), *SPSLineHtrA, *SPSLineHtrB);
+	//sprintf(oapiDebugString(), "Fuel %.5f Ox %.5f FuelFeed %.5f OxFeed %.5f HtrA: %lf HtrB: %lf", KelvinToFahrenheit(*SPSFuelLineTemp), KelvinToFahrenheit(*SPSOxLineTemp), KelvinToFahrenheit(*SPSFuelFeedTemp), 
+		//KelvinToFahrenheit(*SPSOxFeedTemp), *SPSLineHtrA, *SPSLineHtrB);
 
 //GSE Cooling Debug Lines
 	/*

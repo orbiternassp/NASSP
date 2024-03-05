@@ -3993,13 +3993,6 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 
 	else if (s == &SPSLineHTRSSwitch) {
 
-	//int *pump1 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERA:PUMP");
-	//int *pump2 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERB:PUMP");
-	//int *pump3 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:PUMP");
-	//int *pump4 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:PUMP");
-	//int *pump5 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERA:PUMP");
-	//int *pump6 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERB:PUMP");
-
 	if (s->IsUp()) {
 		SPSSumpTankHeaterA->SetPumpOn();
 		SPSSumpTankHeaterB->SetPumpOn();
