@@ -140,7 +140,7 @@ private:
 	double fadeSlope     = 1.0 / 6.0; // [vol/sec]
 	int fMin          =  3000;   // [Hz]
 	int fMax          = 22050;   // [Hz]
-	double currentVolume = 0.0;      // "lagging" volume level
+	double currentVolume = -1.0;      // "lagging" volume level
 };
 
 
