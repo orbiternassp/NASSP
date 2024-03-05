@@ -1109,7 +1109,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *SPSFuelValveTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELVALVELINE:TEMP");
 	double *SPSOxValveTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERVALVELINE:TEMP");
 	double *SPSEngineValveTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSEENGINEVALVE:TEMP");
-	double *SPSInjectorTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSINJECTORFLANGE:TEMP");
+	double *SPSInjectorTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELINJECTORFLANGE:TEMP");
+
 	double *SPSLineHtrA = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:ISON");
 	double *SPSLineHtrB = (double *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:ISON");
 
