@@ -2874,8 +2874,8 @@ void Saturn::SetSwitches(int panel) {
 		TimersMnBCircuitBraker.Init       (  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB, 5.0);
 		EPSMnBGroup1CircuitBraker.Init    (  0,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
 		EPSMnAGroup1CircuitBraker.Init    (  0, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
-		SPSLineHtrsMnBCircuitBraker.Init  ( 71,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		SPSLineHtrsMnACircuitBraker.Init  ( 71,  47, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+		SPSLineHtrsMnBCircuitBraker.Init  ( 71,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB, 10.0);
+		SPSLineHtrsMnACircuitBraker.Init  ( 71,  47, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA, 10.0);
 		EPSMnBGroup2CircuitBraker.Init    ( 71,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
 		EPSMnAGroup2CircuitBraker.Init    ( 71, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
 		O2VacIonPumpsMnBCircuitBraker.Init(140,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
@@ -3992,38 +3992,39 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 	}
 
 	else if (s == &SPSLineHTRSSwitch) {
-	int *pump1 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERA:PUMP");
-	int *pump2 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERB:PUMP");
-	int *pump3 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:PUMP");
-	int *pump4 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:PUMP");
-	int *pump5 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERA:PUMP");
-	int *pump6 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERB:PUMP");
+
+	//int *pump1 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERA:PUMP");
+	//int *pump2 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSSUMPTANKHEATERB:PUMP");
+	//int *pump3 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERA:PUMP");
+	//int *pump4 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSINTERFACEFEEDHEATERB:PUMP");
+	//int *pump5 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERA:PUMP");
+	//int *pump6 = (int *)Panelsdk.GetPointerByString("ELECTRIC:SPSBALLVALVEHEATERB:PUMP");
 
 	if (s->IsUp()) {
-		*pump1 = SP_PUMP_ON;
-		*pump2 = SP_PUMP_ON;
-		*pump3 = SP_PUMP_ON;
-		*pump4 = SP_PUMP_ON;
-		*pump5 = SP_PUMP_ON;
-		*pump6 = SP_PUMP_ON;
+		SPSSumpTankHeaterA->SetPumpOn();
+		SPSSumpTankHeaterB->SetPumpOn();
+		SPSInterfaceFeedHeaterA->SetPumpOn();
+		SPSInterfaceFeedHeaterB->SetPumpOn();
+		SPSBallValveHeaterA->SetPumpOn();
+		SPSBallValveHeaterB->SetPumpOn();
 
 	}
 	else if (s->IsDown()) {
-		*pump1 = SP_PUMP_ON;
-		*pump2 = SP_PUMP_OFF;
-		*pump3 = SP_PUMP_ON;
-		*pump4 = SP_PUMP_OFF;
-		*pump5 = SP_PUMP_ON;
-		*pump6 = SP_PUMP_OFF;
+		SPSSumpTankHeaterA->SetPumpOn();
+		SPSSumpTankHeaterB->SetPumpOff();
+		SPSInterfaceFeedHeaterA->SetPumpOn();
+		SPSInterfaceFeedHeaterB->SetPumpOff();
+		SPSBallValveHeaterA->SetPumpOn();
+		SPSBallValveHeaterB->SetPumpOff();
 
 	}
 	else {
-		*pump1 = SP_PUMP_OFF;
-		*pump2 = SP_PUMP_OFF;
-		*pump3 = SP_PUMP_OFF;
-		*pump4 = SP_PUMP_OFF;
-		*pump5 = SP_PUMP_OFF;
-		*pump6 = SP_PUMP_OFF;
+		SPSSumpTankHeaterA->SetPumpOff();
+		SPSSumpTankHeaterB->SetPumpOff();
+		SPSInterfaceFeedHeaterA->SetPumpOff();
+		SPSInterfaceFeedHeaterB->SetPumpOff();
+		SPSBallValveHeaterA->SetPumpOff();
+		SPSBallValveHeaterB->SetPumpOff();
 	}
 
 	} else if (s == &EMSModeSwitch) {
