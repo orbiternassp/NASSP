@@ -45,7 +45,6 @@ InstallDir "C:\OrbiterBeta"
 !insertmacro MUI_LANGUAGE "English"
 
 Section "Project Apollo - NASSP" SecMain
-    MessageBox MB_OK "WARNING: Due to software limitations in NASSP, runnning P23 will cause part of the screen to flicker. Those with photosensitive epilepsy should not run P23."
     SetOutPath $INSTDIR
     SetOverwrite ifnewer
     File /r "..\..\..\*.*"
