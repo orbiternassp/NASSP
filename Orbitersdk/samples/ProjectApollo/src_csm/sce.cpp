@@ -136,6 +136,7 @@ void SCE::Timestep()
 	sat->GetFuelCellStatus(1, fcStatus1);
 	sat->GetFuelCellStatus(2, fcStatus2);
 	sat->GetFuelCellStatus(3, fcStatus3);
+	sat->GetSPSStatus(spsStatus);
 
 	//MAIN BUS A VOLTS (CC0206V)
 	AA[0] = scale_data(sat->MainBusA->Voltage(), 0.0, 45.0);
