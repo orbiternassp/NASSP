@@ -1277,13 +1277,12 @@ void h_MixingPipe::Save(FILEHANDLE scn) {
 }
 
 
-h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Tank *i_h2o, h_Pipe *i_pipe) {
+h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Pipe *i_pipe) {
 	
 	strcpy(name, i_name);
 	max_stage = 99;
 	number = nr;
 	SRC = i_src;
-	H2O = i_h2o;
 	drinkpipe = i_pipe;
 }
 
@@ -1291,7 +1290,7 @@ void h_crew::refresh(double dt) {
 
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
 
-	if (H2O && drinkpipe && !(drinkpipe->in->pz)) {
+	if (drinkpipe && !(drinkpipe->in->pz)) {
 
 		if (number != 0)
 		{

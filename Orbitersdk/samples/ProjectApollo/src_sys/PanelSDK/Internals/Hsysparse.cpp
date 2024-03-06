@@ -66,16 +66,13 @@ void H_system::Create_h_crew(char *line)
 char name[100];
 int nmb;
 char source[100];
-char watertank[100];
 char drink[100];
 h_Tank *SRC;
-h_Tank *H2O;
 h_Pipe *drinkpipe;
-sscanf(line+6,"%s %i %s %s %s",name,&nmb,source,watertank,drink);
+sscanf(line+6,"%s %i %s %s",name,&nmb,source,drink);
 SRC=(h_Tank*)GetPointerByString(source);
-H2O=(h_Tank*)GetPointerByString(watertank);
 drinkpipe=(h_Pipe*)GetPointerByString(drink);
-AddSystem(new h_crew(name,nmb,SRC,H2O,drinkpipe));
+AddSystem(new h_crew(name,nmb,SRC,drinkpipe));
 }
 
 void H_system::Create_h_Radiator(char *line) {
@@ -637,6 +634,8 @@ void H_system::Build() {
 
 void* H_system::GetPointerByString(char* query)
 {
+	if (Compare(query, "NOTHING"))
+		return NULL; //intentionally returns NULL for a "dummy" or "placeholder" system
 	if (Compare(query, "HYDRAULIC")) query = query + 10;
 	if (Compare(query, "ELECTRIC"))
 		return P_electric->GetPointerByString(query + 9);
