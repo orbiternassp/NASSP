@@ -351,20 +351,20 @@ bool SPSPropellantSource::IsGaugingPowered() {
 }
 
 //Other temperature sensors moved to correct transducers
-double SPSPropellantSource::GetInjectorFlange1TempF() {
+double SPSPropellantSource::GetInjectorFlangeTempF(int i) {
 
 	if (!our_vessel) return 0;
 	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
 
-	return KelvinToFahrenheit(OXInjectorFlange1->GetTemp());
-}
+	if (i == 1)
+	{
+		return KelvinToFahrenheit(OXInjectorFlange1->GetTemp());
+	}
 
-double SPSPropellantSource::GetInjectorFlange2TempF() {
-
-	if (!our_vessel) return 0;
-	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
-
-	return KelvinToFahrenheit(FUInjectorFlange2->GetTemp());
+	else
+	{
+		return KelvinToFahrenheit(FUInjectorFlange2->GetTemp());
+	}
 }
 
 void SPSPropellantSource::SaveState(FILEHANDLE scn) {

@@ -3004,8 +3004,8 @@ void Saturn::ClearPanelSDKPointers()
 void Saturn::GetSPSStatus( SPSStatus &ss )
 {
 	ss.chamberPressurePSI = SPSEngine.GetChamberPressurePSI();
-	ss.InjectorFlange1TempF = SPSPropellant.GetInjectorFlange1TempF();
-	ss.InjectorFlange2TempF = SPSPropellant.GetInjectorFlange2TempF();
+	ss.InjectorFlange1TempF = SPSPropellant.GetInjectorFlangeTempF(1);
+	ss.InjectorFlange2TempF = SPSPropellant.GetInjectorFlangeTempF(2);
 }
 
 //

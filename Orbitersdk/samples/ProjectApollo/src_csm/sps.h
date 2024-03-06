@@ -42,8 +42,7 @@ public:
 	double GetOxidUnbalanceLB();
 	double GetPropellantPressurePSI() { return propellantPressurePSI; }
 	double GetHeliumPressurePSI() { return heliumPressurePSI; }
-	double GetInjectorFlange1TempF();
-	double GetInjectorFlange2TempF();
+	double GetInjectorFlangeTempF(int i);
 	bool IsHeliumValveAOpen() { return heliumValveAOpen; }
 	bool IsHeliumValveBOpen() { return heliumValveBOpen; }
 	bool IsOxidFlowValveMin();

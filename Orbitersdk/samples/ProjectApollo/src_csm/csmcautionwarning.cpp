@@ -353,6 +353,22 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			}
 
 			//
+			// SPS FLANGE TEMP HI
+			// Will activate if SPS injector flange temp > 480F
+			// See AOH C+W
+			//
+
+			if (sat->sce.GetVoltage(2, 9) > 4.0 || sat->sce.GetVoltage(2, 10) > 4.0)
+			{
+				SetLight(CSM_CWS_SPS_FLANGE_TEMP_HI, true);
+			}
+
+			else
+			{
+				SetLight(CSM_CWS_SPS_FLANGE_TEMP_HI, false);
+			}
+
+			//
 			// SPS PRESS
 			// Fuel and oxidizer have the same pressure for now.
 			// See AOH C+W
@@ -715,6 +731,7 @@ bool CSMCautionWarningSystem::LightPowered(int i)
 	case CSM_CWS_CRYO_PRESS_LIGHT:
 	case CSM_CWS_GLYCOL_TEMP_LOW:
 	case CSM_CWS_FC_BUS_DISCONNECT:
+	case CSM_CWS_SPS_FLANGE_TEMP_HI:
 		return false;
 	}
 
