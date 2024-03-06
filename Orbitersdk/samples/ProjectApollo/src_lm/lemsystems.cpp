@@ -2218,7 +2218,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	int *NumCrew = (int *)Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
 
 	//sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PLSSH2OMass, *PLSSH2OVapMass, KelvinToFahrenheit(*PLSSH2OTemp), *PLSSH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PLSSH2OLeakVlv, *NumCrew);
-	sprintf(oapiDebugString(), "Mass: %.3f CABFlow %.5f CABMax %.5f CABPVlv %d CDRFlow %.5f CDRMax %.5f CDRPVlv %d LMPFlow %.5f LMPMax %.5f LMPPVlv %d", *PLSSH2OMass, *DrinkPipeFlow, *DrinkPipeFlowmax, *PLSSH2OLeakVlv, *CDRDrinkPipeFlow, *CDRDrinkPipeFlowmax, *CDRPLSSH2OLeakVlv, *LMPDrinkPipeFlow, *LMPDrinkPipeFlowmax, *LMPPLSSH2OLeakVlv);
+	//sprintf(oapiDebugString(), "Mass: %.3f CABFlow %.5f CABMax %.5f CABPVlv %d CDRFlow %.5f CDRMax %.5f CDRPVlv %d LMPFlow %.5f LMPMax %.5f LMPPVlv %d", *PLSSH2OMass, *DrinkPipeFlow, *DrinkPipeFlowmax, *PLSSH2OLeakVlv, *CDRDrinkPipeFlow, *CDRDrinkPipeFlowmax, *CDRPLSSH2OLeakVlv, *LMPDrinkPipeFlow, *LMPDrinkPipeFlowmax, *LMPPLSSH2OLeakVlv);
 }
 
 void LEM::SetPipeMaxFlow(char *pipe, double flow) {
