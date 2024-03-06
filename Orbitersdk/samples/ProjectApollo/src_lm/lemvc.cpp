@@ -989,6 +989,7 @@ void LEM::RegisterActiveAreas()
 
 	oapiVCRegisterArea(AID_LMVC_INTEGRAL_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_LMVC_FLOOD_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_LMVC_NUMERICS_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238*TexMul, 27*TexMul, 559*TexMul, 153*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60*TexMul, 259*TexMul, 202*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
@@ -1567,12 +1568,10 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 #else
 	case AID_LMVC_INTEGRAL_LIGHT:
-        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MESHM_EMISSION2, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC)/sizeof(IntegralLights_LMVC[0]));
-		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
-        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION2, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
-
-
-        return true;
+        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MESHM_EMISSION2, lca.GetIntegralVoltage() / 75.0, sizeof(IntegralLights_LMVC)/sizeof(IntegralLights_LMVC[0]));
+		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION, lca.GetIntegralVoltage() / 75.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
+        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION2, lca.GetIntegralVoltage() / 75.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
+		return true;
 
 	case AID_LMVC_FLOOD_LIGHT:
         SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, sizeof(FloodLights_LMVC)/sizeof(FloodLights_LMVC[0]));
@@ -1581,6 +1580,9 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_LMVC_NUMERICS_LIGHT:
 		SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MESHM_EMISSION, lca.GetNumericVoltage() / 115.0, sizeof(NumericLights_LMVC)/sizeof(NumericLights_LMVC[0]));
+
+//		sprintf(oapiDebugString(), "Numerics Voltage = %lf", lca.GetNumericVoltage());
+		
         return true;
 
 #endif
