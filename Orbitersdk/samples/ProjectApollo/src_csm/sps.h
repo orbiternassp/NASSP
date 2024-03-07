@@ -127,7 +127,7 @@ public:
 	SPSEngine(THRUSTER_HANDLE &sps);
 	virtual ~SPSEngine();
 
-	void Init(Saturn *s);
+	void Init(Saturn *s, h_HeatLoad *h);
 	void DefineAnimations(UINT idx);
 	void DeleteAnimations();
 	void Timestep(double simt, double simdt);
@@ -146,6 +146,7 @@ public:
 
 	SPSGimbalActuator pitchGimbalActuator;
 	SPSGimbalActuator yawGimbalActuator;
+	h_HeatLoad *spsThrustHeat;
 
 protected:
 	bool thrustOnA, thrustOnB;

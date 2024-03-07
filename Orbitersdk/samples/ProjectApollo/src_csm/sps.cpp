@@ -496,9 +496,10 @@ SPSEngine::~SPSEngine() {
 	// Nothing for now.
 }
 
-void SPSEngine::Init(Saturn *s) {
+void SPSEngine::Init(Saturn *s, h_HeatLoad *h) {
 
 	saturn = s;
+	spsThrustHeat = h;
 }
 
 void SPSEngine::DefineAnimations(UINT idx) {
@@ -812,6 +813,8 @@ void SPSEngine::SystemTimestep(double simdt) {
 
 	pitchGimbalActuator.SystemTimestep(simdt);
 	yawGimbalActuator.SystemTimestep(simdt);
+
+	spsThrustHeat->GenerateHeat(GetChamberPressurePSI()); //Heat proportional to chamber pressure, right now maximum 100 heat watts
 }
 
 double SPSEngine::GetChamberPressurePSI() {
