@@ -1268,6 +1268,8 @@ public:
 	///
 	void SetVCSeatsMesh();
 
+	void SetWindowShades();
+
 	void SetCOASMesh();
 
 	void SetSIMBayPanelMesh();
@@ -1590,6 +1592,7 @@ protected:
 	//
 
 	int coasEnabled;
+	int CSMWindowShades[5];
 	int ordealEnabled;
 	int opticsDskyEnabled;
 	int hatchPanel600EnabledLeft;
@@ -3933,6 +3936,7 @@ protected:
 	int vcidx;
 	int seatsfoldedidx;
 	int seatsunfoldedidx;
+	int windowshadesidx[5];
 	int coascdridx;
 	int coascdrreticleidx;
 
@@ -4631,6 +4635,7 @@ extern MESHHANDLE hFHO2;
 extern MESHHANDLE hopticscover;
 extern MESHHANDLE hcmseatsfolded;
 extern MESHHANDLE hcmseatsunfolded;
+extern MESHHANDLE hcmWindowShades[5];
 extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
 

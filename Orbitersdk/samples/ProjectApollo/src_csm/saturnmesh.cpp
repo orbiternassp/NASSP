@@ -89,6 +89,7 @@ MESHHANDLE hopticscover;
 MESHHANDLE hcmdocktgt;
 MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
+MESHHANDLE hcmWindowShades[5];
 MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
 
@@ -660,6 +661,11 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmdocktgt, "ProjectApollo/CM-Docktgt");
 	LOAD_MESH(hcmseatsfolded, "ProjectApollo/CM-VC-SeatsFolded");
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
+	LOAD_MESH(hcmWindowShades[0], "ProjectApollo/CM-VC_Shade1");
+	LOAD_MESH(hcmWindowShades[1], "ProjectApollo/CM-VC_Shade2");
+	LOAD_MESH(hcmWindowShades[2], "ProjectApollo/CM-VC_Shade3");
+	LOAD_MESH(hcmWindowShades[3], "ProjectApollo/CM-VC_Shade4");
+	LOAD_MESH(hcmWindowShades[4], "ProjectApollo/CM-VC_Shade5");
 	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
 
@@ -1068,6 +1074,12 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	windowshadesidx[0] = AddMesh(hcmWindowShades[0], &mesh_dir);
+	windowshadesidx[1] = AddMesh(hcmWindowShades[1], &mesh_dir);
+	windowshadesidx[2] = AddMesh(hcmWindowShades[2], &mesh_dir);
+	windowshadesidx[3] = AddMesh(hcmWindowShades[3], &mesh_dir);
+	windowshadesidx[4] = AddMesh(hcmWindowShades[4], &mesh_dir);
+	SetWindowShades();
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
@@ -1338,6 +1350,27 @@ void Saturn::SetVCSeatsMesh() {
 	}
 }
 
+void Saturn::SetWindowShades() {
+
+	if (!hcmWindowShades[0])
+		return;
+	
+	if (CSMWindowShades[0]) { SetMeshVisibilityMode(windowshadesidx[0], MESHVIS_VC); }
+	else { SetMeshVisibilityMode(windowshadesidx[0], MESHVIS_NEVER); }
+
+	if (CSMWindowShades[1]) { SetMeshVisibilityMode(windowshadesidx[1], MESHVIS_VC); }
+	else { SetMeshVisibilityMode(windowshadesidx[1], MESHVIS_NEVER); }
+
+	if (CSMWindowShades[2]) { SetMeshVisibilityMode(windowshadesidx[2], MESHVIS_VC); }
+	else { SetMeshVisibilityMode(windowshadesidx[2], MESHVIS_NEVER); }
+
+	if (CSMWindowShades[3]) { SetMeshVisibilityMode(windowshadesidx[3], MESHVIS_VC); }
+	else { SetMeshVisibilityMode(windowshadesidx[3], MESHVIS_NEVER); }
+
+	if (CSMWindowShades[4]) { SetMeshVisibilityMode(windowshadesidx[4], MESHVIS_VC); }
+	else { SetMeshVisibilityMode(windowshadesidx[4], MESHVIS_NEVER); }
+}
+
 void Saturn::SetCOASMesh() {
 
 	if (coascdridx == -1 || coascdrreticleidx == -1)
@@ -1580,6 +1613,12 @@ void Saturn::SetReentryMeshes() {
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	windowshadesidx[0] = AddMesh(hcmWindowShades[0], &mesh_dir);
+	windowshadesidx[1] = AddMesh(hcmWindowShades[1], &mesh_dir);
+	windowshadesidx[2] = AddMesh(hcmWindowShades[2], &mesh_dir);
+	windowshadesidx[3] = AddMesh(hcmWindowShades[3], &mesh_dir);
+	windowshadesidx[4] = AddMesh(hcmWindowShades[4], &mesh_dir);
+	SetWindowShades();
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
@@ -1864,6 +1903,12 @@ void Saturn::SetRecovery()
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
 	seatsunfoldedidx = AddMesh(hcmseatsunfolded, &mesh_dir);
 	SetVCSeatsMesh();
+	windowshadesidx[0] = AddMesh(hcmWindowShades[0], &mesh_dir);
+	windowshadesidx[1] = AddMesh(hcmWindowShades[1], &mesh_dir);
+	windowshadesidx[2] = AddMesh(hcmWindowShades[2], &mesh_dir);
+	windowshadesidx[3] = AddMesh(hcmWindowShades[3], &mesh_dir);
+	windowshadesidx[4] = AddMesh(hcmWindowShades[4], &mesh_dir);
+	SetWindowShades();
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();

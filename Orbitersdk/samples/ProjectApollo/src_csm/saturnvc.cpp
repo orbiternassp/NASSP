@@ -1034,6 +1034,29 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_COAS, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS, COASLocation + ofs, 0.05);
 
+	// Window Shades
+	const VECTOR3 windowShadesLocation[5] = {
+		{-1.175,0.765,-0.045},
+		{-0.605,1.065,0.145},
+		{0.000,1.250,0.200},
+		{0.605,1.065,0.145},
+		{1.175,0.765,-0.045}
+	};
+	oapiVCRegisterArea(AID_VC_WINDOWSHADE1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_WINDOWSHADE1, windowShadesLocation[0] + ofs, 0.05);
+
+	oapiVCRegisterArea(AID_VC_WINDOWSHADE2, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_WINDOWSHADE2, windowShadesLocation[1] + ofs, 0.05);
+
+	oapiVCRegisterArea(AID_VC_WINDOWSHADE3, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_WINDOWSHADE3, windowShadesLocation[2] + ofs, 0.05);
+
+	oapiVCRegisterArea(AID_VC_WINDOWSHADE4, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_WINDOWSHADE4, windowShadesLocation[3] + ofs, 0.05);
+
+	oapiVCRegisterArea(AID_VC_WINDOWSHADE5, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_WINDOWSHADE5, windowShadesLocation[4] + ofs, 0.05);
+
 	// THC Handle
 	oapiVCRegisterArea(AID_VC_THC_HANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_THC_HANDLE, THChandleLocation + ofs, ROT);
@@ -1648,6 +1671,61 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		}
 		SwitchClick();
 		SetCOASMesh();
+		return true;
+
+	case AID_VC_WINDOWSHADE1:
+		if (CSMWindowShades[0]) {
+			CSMWindowShades[0] = false;
+		}
+		else {
+			CSMWindowShades[0] = true;
+		}
+		//SwitchClick(); //Maybe play a sound here?
+		SetWindowShades();
+		return true;
+
+	case AID_VC_WINDOWSHADE2:
+		if (CSMWindowShades[1]) {
+			CSMWindowShades[1] = false;
+		}
+		else {
+			CSMWindowShades[1] = true;
+		}
+		//SwitchClick(); //Maybe play a sound here?
+		SetWindowShades();
+		return true;
+
+	case AID_VC_WINDOWSHADE3:
+		if (CSMWindowShades[2]) {
+			CSMWindowShades[2] = false;
+		}
+		else {
+			CSMWindowShades[2] = true;
+		}
+		//SwitchClick(); //Maybe play a sound here?
+		SetWindowShades();
+		return true;
+
+	case AID_VC_WINDOWSHADE4:
+		if (CSMWindowShades[3]) {
+			CSMWindowShades[3] = false;
+		}
+		else {
+			CSMWindowShades[3] = true;
+		}
+		//SwitchClick(); //Maybe play a sound here?
+		SetWindowShades();
+		return true;
+
+	case AID_VC_WINDOWSHADE5:
+		if (CSMWindowShades[4]) {
+			CSMWindowShades[4] = false;
+		}
+		else {
+			CSMWindowShades[4] = true;
+		}
+		//SwitchClick(); //Maybe play a sound here?
+		SetWindowShades();
 		return true;
 
 	case AID_VC_CUE_CARD_LOCATION_4A:
