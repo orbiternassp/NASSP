@@ -150,6 +150,9 @@ public:
 	void set_RTEConstraintF86(std::string constr, double value);
 	void menuSetRTEConstraintF87();
 	void set_RTEConstraintF87(std::string constr, std::string value);
+	void menuAddRTESite();
+	void menuReplaceRTESite();
+	void menuDeleteRTESite();
 	void CycleRTECalcMode();
 	void menuSetRTEManeuverCode();
 	void set_RTEManeuverCode(char *code);
