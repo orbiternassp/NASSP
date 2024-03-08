@@ -3994,30 +3994,51 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 	else if (s == &SPSLineHTRSSwitch) {
 
 	if (s->IsUp()) {
-		SPSSumpTankHeaterA->SetPumpOn();
-		SPSSumpTankHeaterB->SetPumpOn();
-		SPSInterfaceFeedHeaterA->SetPumpOn();
-		SPSInterfaceFeedHeaterB->SetPumpOn();
-		SPSBallValveHeaterA->SetPumpOn();
-		SPSBallValveHeaterB->SetPumpOn();
+		SPSFuelSumpTankHeaterA->SetPumpOn();
+		SPSFuelSumpTankHeaterB->SetPumpOn();
+		SPSFuelInterfaceFeedHeaterA->SetPumpOn();
+		SPSFuelInterfaceFeedHeaterB->SetPumpOn();
+		SPSFuelBallValveHeaterA->SetPumpOn();
+		SPSFuelBallValveHeaterB->SetPumpOn();
+
+		SPSOxSumpTankHeaterA->SetPumpOn();
+		SPSOxSumpTankHeaterB->SetPumpOn();
+		SPSOxInterfaceFeedHeaterA->SetPumpOn();
+		SPSOxInterfaceFeedHeaterB->SetPumpOn();
+		SPSOxBallValveHeaterA->SetPumpOn();
+		SPSOxBallValveHeaterB->SetPumpOn();
 	}
 
 	else if (s->IsDown()) {
-		SPSSumpTankHeaterA->SetPumpOn();
-		SPSSumpTankHeaterB->SetPumpOff();
-		SPSInterfaceFeedHeaterA->SetPumpOn();
-		SPSInterfaceFeedHeaterB->SetPumpOff();
-		SPSBallValveHeaterA->SetPumpOn();
-		SPSBallValveHeaterB->SetPumpOff();
+		SPSFuelSumpTankHeaterA->SetPumpOn();
+		SPSFuelSumpTankHeaterB->SetPumpOff();
+		SPSFuelInterfaceFeedHeaterA->SetPumpOn();
+		SPSFuelInterfaceFeedHeaterB->SetPumpOff();
+		SPSFuelBallValveHeaterA->SetPumpOn();
+		SPSFuelBallValveHeaterB->SetPumpOff();
+
+		SPSOxSumpTankHeaterA->SetPumpOn();
+		SPSOxSumpTankHeaterB->SetPumpOff();
+		SPSOxInterfaceFeedHeaterA->SetPumpOn();
+		SPSOxInterfaceFeedHeaterB->SetPumpOff();
+		SPSOxBallValveHeaterA->SetPumpOn();
+		SPSOxBallValveHeaterB->SetPumpOff();
 	}
 
 	else {
-		SPSSumpTankHeaterA->SetPumpOff();
-		SPSSumpTankHeaterB->SetPumpOff();
-		SPSInterfaceFeedHeaterA->SetPumpOff();
-		SPSInterfaceFeedHeaterB->SetPumpOff();
-		SPSBallValveHeaterA->SetPumpOff();
-		SPSBallValveHeaterB->SetPumpOff();
+		SPSFuelSumpTankHeaterA->SetPumpOff();
+		SPSFuelSumpTankHeaterB->SetPumpOff();
+		SPSFuelInterfaceFeedHeaterA->SetPumpOff();
+		SPSFuelInterfaceFeedHeaterB->SetPumpOff();
+		SPSFuelBallValveHeaterA->SetPumpOff();
+		SPSFuelBallValveHeaterB->SetPumpOff();
+
+		SPSOxSumpTankHeaterA->SetPumpOff();
+		SPSOxSumpTankHeaterB->SetPumpOff();
+		SPSOxInterfaceFeedHeaterA->SetPumpOff();
+		SPSOxInterfaceFeedHeaterB->SetPumpOff();
+		SPSOxBallValveHeaterA->SetPumpOff();
+		SPSOxBallValveHeaterB->SetPumpOff();
 	}
 
 	} else if (s == &EMSModeSwitch) {
