@@ -5002,6 +5002,11 @@ protected:
 	void RTACFGuidanceOpticsSupportTable(RTACFGOSTInput in, RTACFGOSTOutput &out);
 
 protected:
+	//RTCC CLOCK TIMES
+	double RTCC_GreenwichMeanTime;		//Time since midnight
+	double RTCC_CSM_GroundElapsedTime;	//Time since MCGMTL (CSM liftoff time)
+	double RTCC_LM_GroundElapsedTime;	//Time since MCGMTS (CSM liftoff time)
+
 	double TimeofIgnition;
 	double SplashLatitude, SplashLongitude;
 	VECTOR3 DeltaV_LVLH;
