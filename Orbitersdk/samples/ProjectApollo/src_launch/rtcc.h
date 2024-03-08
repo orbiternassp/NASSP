@@ -574,7 +574,7 @@ struct TLIPADOpt
 
 struct P27Opt
 {
-	VESSEL* vessel; //vessel
+	EphemerisData sv0; //vessel state vector
 	double SVGET; //GET of the state vector
 	double navcheckGET; //GET of the Nav Check
 };
@@ -4315,6 +4315,7 @@ public:
 		VECTOR3 DV = _V(0, 0, 0);
 		double GET_TIG = 0.0;
 		int Rev = 0;
+		bool ShowImpact = false; //false = HP location, true = impact location
 		int Err = 0;
 	} PZGPMDIS;
 
@@ -4888,7 +4889,7 @@ private:
 	void SunburstAttitudeManeuver(char *list, VECTOR3 imuangles);
 	void SunburstLMPCommand(char *list, int code);
 	void SunburstMassUpdate(char *list, double masskg);
-	void P27PADCalc(P27Opt *opt, P27PAD &pad);
+	void P27PADCalc(const P27Opt &opt, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	double FindOrbitalMidnight(SV sv, double t_TPI_guess);

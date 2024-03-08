@@ -609,6 +609,7 @@ void LEM::Init()
 	ascidx = -1;
 	dscidx = -1;
 	vcidx = -1;
+	windowshadesidx = -1;
 	xpointershadesidx = -1;
 
 	drogue = NULL;
@@ -1708,6 +1709,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "COASRETICLEVISIBLE", 18)) {
 			sscanf(line + 18, "%i", &COASreticlevisible);
 		}
+		else if (!strnicmp(line, "WINDOWSHADESENABLED", 19)) {
+			sscanf(line + 19, "%i", &LEMWindowShades);
+		}
 		else if (!strnicmp(line, INERTIAL_DATA_START_STRING, sizeof(INERTIAL_DATA_START_STRING))) {
 			inertialData.LoadState(scn);
 		}
@@ -2219,6 +2223,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "COAS1ENABLED", LEMCoas1Enabled);
 	oapiWriteScenario_int(scn, "COAS2ENABLED", LEMCoas2Enabled);
 	oapiWriteScenario_int(scn, "COASRETICLEVISIBLE", COASreticlevisible);
+
+	oapiWriteScenario_int(scn, "WINDOWSHADESENABLED", LEMWindowShades);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);

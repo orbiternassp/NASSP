@@ -50,6 +50,7 @@ MESHHANDLE hLMDescent;
 MESHHANDLE hLMDescentNoLeg;
 MESHHANDLE hLMAscent;
 MESHHANDLE hLMVC;
+MESHHANDLE hLMWindowShades;
 MESHHANDLE hLMXpointerShades;
 
 static PARTICLESTREAMSPEC lunar_dust = {
@@ -445,6 +446,9 @@ void LEM::SetLMMeshVisVC() {
 	{
 		SetMeshVisibilityMode(vcidx, MESHVIS_VC);
 	}
+
+	SetWindowShades();
+
 }
 
 void LEM::SetLMMeshVisDsc() {
@@ -679,6 +683,19 @@ void LEM::SetCOAS() {
 	}
 }
 
+void LEM::SetWindowShades() {
+
+	if (!hLMWindowShades)
+		return;
+
+	if (LEMWindowShades) {
+		SetMeshVisibilityMode(windowshadesidx, MESHVIS_VC | MESHVIS_EXTERNAL);
+	}
+	else {
+		SetMeshVisibilityMode(windowshadesidx, MESHVIS_NEVER);
+	}
+}
+
 void LEM::DefineTouchdownPoints(int s)
 {
 	//Touchdown Points
@@ -792,6 +809,8 @@ void LEM::AddDust() {
 }
 
 void LEM::SetMeshes() {
+	// Window Shades Mesh
+	windowshadesidx = AddMesh(hLMWindowShades, &mesh_asc);
 
 	// Ascent Stage Mesh
 	ascidx = AddMesh(hLMAscent, &mesh_asc);
@@ -822,6 +841,7 @@ void LEMLoadMeshes()
 	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
 	hLMVC = oapiLoadMeshGlobal("ProjectApollo/LM_VC");
+	hLMWindowShades = oapiLoadMeshGlobal("ProjectApollo/LM_Window_Shades");
 	hLMXpointerShades = oapiLoadMeshGlobal("ProjectApollo/LM_Xpointer_Shades");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }
