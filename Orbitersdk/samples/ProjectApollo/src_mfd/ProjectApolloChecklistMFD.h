@@ -25,6 +25,8 @@
 #include "connector.h"
 #include "MFDconnector.h"
 
+class MCC;
+
 class ProjectApolloChecklistMFD: public MFD2 {
 public:
 	ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel);
@@ -58,6 +60,7 @@ protected:
 	Saturn *saturn;
 	Crawler *crawler;
 	LEM *lem;
+	MCC *mcc;
 
 	int cnt;
 	VECTOR3 temptime; //x is hr, y is min, z is sec
