@@ -1553,8 +1553,9 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 #ifdef _OPENORBITER
 	case AID_LMVC_INTEGRAL_LIGHT:
         SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC)/sizeof(IntegralLights_LMVC[0]));
-		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Light, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
-        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
+//		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Light, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
+		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Light, ( (lca.GetIntegralVoltage() / 100.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
+//		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, sizeof(IntegralLights_LMVC_NoTex)/sizeof(IntegralLights_LMVC_NoTex[0]));
         return true;
 
 	case AID_LMVC_FLOOD_LIGHT:
@@ -1563,8 +1564,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
         return true;
 
 	case AID_LMVC_NUMERICS_LIGHT:
-			SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MatProp::Light, ( (lca.GetNumericVoltage() / 115.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2, sizeof(NumericLights_LMVC)/sizeof(NumericLights_LMVC[0]));
-       return true;
+		SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MatProp::Light, ( (lca.GetNumericVoltage() / 115.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2, sizeof(NumericLights_LMVC)/sizeof(NumericLights_LMVC[0]));
+		return true;
 
 #else
 	case AID_LMVC_INTEGRAL_LIGHT:
