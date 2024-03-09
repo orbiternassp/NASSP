@@ -1406,6 +1406,9 @@ RTCC::RTCC() :
 	pmmlaeg(this)
 {
 	mcc = NULL;
+	RTCC_GreenwichMeanTime = 0.0;
+	RTCC_CSM_GroundElapsedTime = 0.0;
+	RTCC_LM_GroundElapsedTime = 0.0;
 	TimeofIgnition = 0.0;
 	SplashLatitude = 0.0;
 	SplashLongitude = 0.0;
@@ -1570,20 +1573,35 @@ void RTCC::Init(MCC *ptr)
 
 void RTCC::Timestep(double simt, double simdt, double mjd)
 {
-	double gmt = RTCCPresentTimeGMT();
-	if (PZMPTCSM.ManeuverNum > 0)
+	//UPDATE TIME KEEPING
+	if (SystemParameters.GMTBASE != 0.0) //Launch day has been initialized
 	{
-		if (gmt >= PZMPTCSM.UpcomingManeuverGMT)
+		double MJD = oapiGetSimMJD();
+
+		RTCC_GreenwichMeanTime = (MJD - SystemParameters.GMTBASE)*24.0*3600.0;
+		RTCC_CSM_GroundElapsedTime = RTCC_GreenwichMeanTime - SystemParameters.MCGMTL*3600.0;
+		RTCC_LM_GroundElapsedTime = RTCC_GreenwichMeanTime - SystemParameters.MCGMTS*3600.0;
+
+		//MPT Maneuver Execution Logic
+		if (PZMPTCSM.ManeuverNum > 0)
 		{
-			PMSEXE(RTCC_MPT_CSM, gmt);
+			if (RTCC_GreenwichMeanTime >= PZMPTCSM.UpcomingManeuverGMT)
+			{
+				PMSEXE(RTCC_MPT_CSM, RTCC_GreenwichMeanTime);
+			}
+		}
+		if (PZMPTLEM.ManeuverNum > 0)
+		{
+			if (RTCC_GreenwichMeanTime >= PZMPTLEM.UpcomingManeuverGMT)
+			{
+				PMSEXE(RTCC_MPT_LM, RTCC_GreenwichMeanTime);
+			}
 		}
 	}
-	if (PZMPTLEM.ManeuverNum > 0)
+	else
 	{
-		if (gmt >= PZMPTLEM.UpcomingManeuverGMT)
-		{
-			PMSEXE(RTCC_MPT_LM, gmt);
-		}
+		//Keep times at zero
+		RTCC_GreenwichMeanTime = RTCC_CSM_GroundElapsedTime = RTCC_LM_GroundElapsedTime = 0.0;
 	}
 }
 
@@ -22690,7 +22708,14 @@ int RTCC::PMMMCDCallEMSMISS(EphemerisData sv0, double GMTI, EphemerisData &sv1)
 
 double RTCC::RTCCPresentTimeGMT()
 {
-	return (oapiGetSimMJD() -SystemParameters.GMTBASE)*24.0*3600.0;
+	return RTCC_GreenwichMeanTime;
+}
+
+double RTCC::RTCCMissionTime(int veh)
+{
+	//For MOCR clocks, PAMFD etc.
+	if (veh == 1) return RTCC_CSM_GroundElapsedTime;
+	return RTCC_LM_GroundElapsedTime;
 }
 
 double RTCC::GetOnboardComputerThrust(int thruster)

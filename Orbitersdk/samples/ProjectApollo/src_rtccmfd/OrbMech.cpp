@@ -5620,7 +5620,7 @@ void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double
 	sin_lat = sin(u)*sin(coe_osc.i);
 	R = coe_osc.a*(1.0 - coe_osc.e*coe_osc.e) / (1.0 + coe_osc.e*cos(f));
 	ainv = 1.0 / coe_osc.a + J2 * pow(R_e, 2) / pow(R, 3)*(1.0 - 3.0*pow(sin_lat, 2)) + J3 * pow(R_e, 3) / pow(R, 4)*(3.0*sin_lat - 5.0*pow(sin_lat, 3)) -
-		J4 * pow(R_e, 4) / pow(R, 5)*(1.0 - 10.0*pow(sin_lat, 2) + 35.0 / 3.0*pow(sin_lat, 4));
+		J4 * pow(R_e, 4) / (4.0*pow(R, 5))*(3.0 - 30.0*pow(sin_lat, 2) + 35.0*pow(sin_lat, 4));
 	l_dot = sqrt(mu*pow(ainv, 3));
 
 	//l_dot = n0 + n0 * cn*(gmp2*(3.0 / 2.0*(3.0*theta2 - 1.0) + 3.0 / 32.0*gmp2*(25.0*cn2 + 16.0*cn - 15.0 + (30.0 - 96.0*cn - 90.0*cn2)*theta2

@@ -2752,6 +2752,7 @@ public:
 	double GetOnboardComputerThrust(int thruster);
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
 	double RTCCPresentTimeGMT();
+	double RTCCMissionTime(int veh);
 	OBJHANDLE GetGravref(int body);
 	bool RTEManeuverCodeLogic(char *code, double lmascmass, double lmdscmass, int UllageNum, int &thruster, int &AttMode, int &ConfigCode, int &ManVeh, double &lmmass);
 
@@ -5001,6 +5002,11 @@ protected:
 	void RTACFGuidanceOpticsSupportTable(RTACFGOSTInput in, RTACFGOSTOutput &out);
 
 protected:
+	//RTCC CLOCK TIMES
+	double RTCC_GreenwichMeanTime;		//Time since midnight
+	double RTCC_CSM_GroundElapsedTime;	//Time since MCGMTL (CSM liftoff time)
+	double RTCC_LM_GroundElapsedTime;	//Time since MCGMTS (CSM liftoff time)
+
 	double TimeofIgnition;
 	double SplashLatitude, SplashLongitude;
 	VECTOR3 DeltaV_LVLH;
