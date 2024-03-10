@@ -828,7 +828,7 @@ class SaturnGuardedCabinPressureReliefLever: public SaturnCabinPressureReliefLev
 
 public:
 	SaturnGuardedCabinPressureReliefLever() { guardState = 0; guardAnim = -1; };
-	virtual ~SaturnGuardedCabinPressureReliefLever() { guardClick.done(); };
+	virtual ~SaturnGuardedCabinPressureReliefLever() {};
 
 	void InitGuard(SURFHANDLE surf, SoundLib *soundlib);
 	void DrawSwitch(SURFHANDLE drawSurface);

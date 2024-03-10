@@ -394,10 +394,10 @@ void CabinPressureReliefValve::SystemTimestep(double simdt) {
 		}
 		if (postLandingVent->IsUp()) {
 			postLandingPower->DrawPower(25.5);	// systems handbook
-			postLandingVentSound.play(LOOP, 255); 
+			postLandingVentSound.play(LOOP); 
 		} else {
 			postLandingPower->DrawPower(22.1);	// systems handbook
-			postLandingVentSound.play(LOOP, 170); 
+			postLandingVentSound.play(LOOP, 170.0 / 255.0); 
 		}
 		return;
 	}

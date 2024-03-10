@@ -4246,25 +4246,25 @@ void Saturn::MousePanel_MFDButton(int mfd, int event, int mx, int my) {
 void Saturn::SwitchClick()
 
 {
-	Sclick.play(NOLOOP,255);
+	Sclick.play(NOLOOP);
 }
 
 void Saturn::ButtonClick()
 
 {
-	Bclick.play(NOLOOP,255);
+	Bclick.play(NOLOOP);
 }
 
 void Saturn::GuardClick()
 
 {
-	Gclick.play(NOLOOP,255);
+	Gclick.play(NOLOOP);
 }
 
 void Saturn::ProbeSound()
 
 {
-	Psound.play(NOLOOP,255);
+	Psound.play(NOLOOP);
 }
 
 void Saturn::CabinFanSound()
@@ -4292,7 +4292,7 @@ void Saturn::CabinFanSound()
 	// Scale volume appropriately based on the expected max voltage (115V per phase)
 	//
 
-	CabinFans.play((int) ((64.0 * volume / 400.0) + 127.0));
+	CabinFans.play(((64.0 * volume / 400.0) + 127.0) / 255.0);
 }
 
 void Saturn::StopCabinFanSound()
