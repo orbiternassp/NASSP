@@ -122,7 +122,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv0.LandingSiteIndicator = false;
 		sv0.VectorCode = "APIC001";
 
-		PMSVCT(4, RTCC_MPT_CSM, &sv0);
+		PMSVCT(4, RTCC_MPT_CSM, sv0);
 
 		//Add TLI to MPT
 		if (GETEval2(3.0*3600.0))

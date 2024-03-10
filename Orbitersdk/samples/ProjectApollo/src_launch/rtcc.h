@@ -2481,6 +2481,9 @@ public:
 private:
 	void LoadMissionInitParameters(int year, int month, int day);
 	void InitializeCoordinateSystem();
+
+	//Updates RTCC clocks
+	void TimeUpdate();
 public:
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
 	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
@@ -2702,7 +2705,8 @@ public:
 	//Vehicle Orientation Change Processor
 	void PMMUDT(int L, unsigned man, int headsup, int trim);
 	//Vector Routing Load Module
-	void PMSVCT(int QUEID, int L, StateVectorTableEntry* sv0 = NULL);
+	void PMSVCT(int QUEID, int L);
+	void PMSVCT(int QUEID, int L, StateVectorTableEntry sv0);
 	//Vector Fetch Load Module
 	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	//Maneuver Execution Program
@@ -2727,7 +2731,7 @@ public:
 	//Trajectory Update Control Module
 	void EMSTRAJ(StateVectorTableEntry sv, int L);
 	//Ephemeris Storage and Control Module
-	StateVectorTableEntry EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, double PresentGMT);
+	void EMSEPH(int QUEID, StateVectorTableEntry &sv0, int &L, double PresentGMT);
 	//Miscellaneous Numerical Integration Control Module
 	void EMSMISS(EMSMISSInputTable *in);
 	//Lunar Surface Ephemeris Generator

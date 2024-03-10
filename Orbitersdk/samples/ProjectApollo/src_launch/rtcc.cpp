@@ -1574,14 +1574,10 @@ void RTCC::Init(MCC *ptr)
 void RTCC::Timestep(double simt, double simdt, double mjd)
 {
 	//UPDATE TIME KEEPING
+	TimeUpdate();
+
 	if (SystemParameters.GMTBASE != 0.0) //Launch day has been initialized
 	{
-		double MJD = oapiGetSimMJD();
-
-		RTCC_GreenwichMeanTime = (MJD - SystemParameters.GMTBASE)*24.0*3600.0;
-		RTCC_CSM_GroundElapsedTime = RTCC_GreenwichMeanTime - SystemParameters.MCGMTL*3600.0;
-		RTCC_LM_GroundElapsedTime = RTCC_GreenwichMeanTime - SystemParameters.MCGMTS*3600.0;
-
 		//MPT Maneuver Execution Logic
 		if (PZMPTCSM.ManeuverNum > 0)
 		{
@@ -1597,11 +1593,6 @@ void RTCC::Timestep(double simt, double simdt, double mjd)
 				PMSEXE(RTCC_MPT_LM, RTCC_GreenwichMeanTime);
 			}
 		}
-	}
-	else
-	{
-		//Keep times at zero
-		RTCC_GreenwichMeanTime = RTCC_CSM_GroundElapsedTime = RTCC_LM_GroundElapsedTime = 0.0;
 	}
 }
 
@@ -2380,6 +2371,27 @@ void RTCC::InitializeCoordinateSystem()
 	}
 	//Convert star table to BRCS
 	EMSGSUPP(0, 0);
+}
+
+void RTCC::TimeUpdate()
+{
+	//Updates RTCC GMT and also GET for both CSM and LM
+
+	//Check if mission has been initialized (i.e. GMTBASE not being zero)
+	if (SystemParameters.GMTBASE != 0.0)
+	{
+		//Update times
+		double MJD = oapiGetSimMJD();
+
+		RTCC_GreenwichMeanTime = (MJD - SystemParameters.GMTBASE)*24.0*3600.0;
+		RTCC_CSM_GroundElapsedTime = RTCC_GreenwichMeanTime - SystemParameters.MCGMTL*3600.0;
+		RTCC_LM_GroundElapsedTime = RTCC_GreenwichMeanTime - SystemParameters.MCGMTS*3600.0;
+	}
+	else
+	{
+		//Keep times at zero
+		RTCC_GreenwichMeanTime = RTCC_CSM_GroundElapsedTime = RTCC_LM_GroundElapsedTime = 0.0;
+	}
 }
 
 void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
@@ -7452,13 +7464,16 @@ void RTCC::LoadState(FILEHANDLE scn) {
 
 	}
 
+	//PMSVCT might need to use RTCC GMT
+	TimeUpdate();
+
 	if (EZANCHR1.AnchorVectors[9].Vector.GMT != 0)
 	{
-		PMSVCT(4, RTCC_MPT_CSM, &EZANCHR1.AnchorVectors[9]);
+		PMSVCT(4, RTCC_MPT_CSM, EZANCHR1.AnchorVectors[9]);
 	}
 	if (EZANCHR3.AnchorVectors[9].Vector.GMT != 0 || EZANCHR3.AnchorVectors[9].LandingSiteIndicator)
 	{
-		PMSVCT(4, RTCC_MPT_LM, &EZANCHR3.AnchorVectors[9]);
+		PMSVCT(4, RTCC_MPT_LM, EZANCHR3.AnchorVectors[9]);
 	}
 	//Update Mission Plan Table display
 	PMDMPT();
@@ -13735,7 +13750,25 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 	{
 		tab.TA = PI2 - tab.TA;
 	}
-	tab.MA = OrbMech::TrueToMeanAnomaly(tab.TA, tab.e);
+	if (tab.e < 1.0)
+	{
+		//Elliptical
+		tab.MA = OrbMech::TrueToMeanAnomaly(tab.TA, tab.e);
+	}
+	else if (tab.e > 1.0)
+	{
+		//Hyperbolic
+		double F;
+
+		F = log((sqrt(tab.e + 1.0) + sqrt(tab.e - 1.0)*tan(tab.TA / 2.0)) / (sqrt(tab.e + 1.0) - sqrt(tab.e - 1.0)*tan(tab.TA / 2.0))); //Hyperbolic eccentric anomaly
+		tab.MA = tab.e*sinh(F) - F;
+	}
+	else
+	{
+		//Parabolic
+		tab.MA = 0.5*tan(tab.TA / 2.0) + 1.0 / 6.0*pow(tan(tab.TA / 2.0), 3);
+	}
+
 	tab.V = v;
 
 	OrbMech::periapo(sv.R, sv.V, mu, r_apo, r_peri);
@@ -17168,6 +17201,7 @@ void RTCC::EMSTRAJ(StateVectorTableEntry sv, int L)
 	OrbitEphemerisTable *maineph;
 	CapeCrossingTable *cctab;
 	TimeConstraintsTable *tctab;
+	StateVectorTableEntry sv1;
 
 	double gmt;
 
@@ -17195,7 +17229,8 @@ void RTCC::EMSTRAJ(StateVectorTableEntry sv, int L)
 	tctab->StationID = sv.VectorCode;
 
 	//Generate main ephemeris
-	EMSEPH(2, sv, L, gmt);
+	sv1 = sv;
+	EMSEPH(2, sv1, L, gmt);
 	if (sv.LandingSiteIndicator)
 	{
 		cctab->NumRev = 0;
@@ -17238,16 +17273,19 @@ void RTCC::EMSTRAJ(StateVectorTableEntry sv, int L)
 	EMSNAP(L, 1);
 }
 
-StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, double PresentGMT)
+void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGMT)
 {
-	//QUEID:
-	//1 = Cutoff mode
-	//2 = Ephemeris mode
+	//QUEID: 1 = Cutoff mode, 2 = Ephemeris mode
+	//sv: Input and output state vector
+	//L: 1 = CSM, 3 = LM. Set to a negative value as error indication
 
 	EMSMISSInputTable InTable;
 	EphemerisDataTable2 temptable;
 	ManeuverTimesTable tempmantable;
 	OrbitEphemerisTable *table;
+	StateVectorTableEntry sv0;
+
+	sv0 = sv;
 	
 	if (L == RTCC_MPT_CSM)
 	{
@@ -17467,6 +17505,13 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 			//Terminated on altitude
 			if (InTable.NIAuxOutputTable.TerminationCode == 3)
 			{
+				if (QUEID == 1)
+				{
+					//Unable to get state vector to present time, exit with an error indication
+					L = -L;
+					return;
+				}
+
 				//NI ended on altitude
 				int num;
 
@@ -17592,7 +17637,9 @@ StateVectorTableEntry RTCC::EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, 
 	sv_out.LandingSiteIndicator = InTable.NIAuxOutputTable.landed;
 	sv_out.Vector = InTable.NIAuxOutputTable.sv_cutoff;
 	sv_out.VectorCode = sv0.VectorCode;
-	return sv_out;
+
+	//Set output state vector as input state vector
+	sv = sv_out;
 }
 
 void RTCC::EMSMISS(EMSMISSInputTable *in)
@@ -18372,7 +18419,16 @@ int RTCC::PMMWTC(int med)
 	return 0;
 }
 
-void RTCC::PMSVCT(int QUEID, int L, StateVectorTableEntry* sv0)
+void RTCC::PMSVCT(int QUEID, int L)
+{
+	//Convenient helper function for PMSVCT entries that don't require an input state vector. For QUEID = 7 and higher
+
+	StateVectorTableEntry sv0;
+
+	PMSVCT(QUEID, L, sv0);
+}
+
+void RTCC::PMSVCT(int QUEID, int L, StateVectorTableEntry sv0)
 {
 	//QUEID:
 	//0 = Nominal Insertion
@@ -18429,17 +18485,17 @@ RTCC_PMSVCT_3:
 	//TBD: Time of insertion = time of anchor vector
 RTCC_PMSVCT_4:
 	//New anchor vector
-	if (sv0->LandingSiteIndicator)
+	if (sv0.LandingSiteIndicator)
 	{
 		mpt->GMTAV = RTCCPresentTimeGMT();
 	}
 	else
 	{
-		mpt->GMTAV = sv0->Vector.GMT;
+		mpt->GMTAV = sv0.Vector.GMT;
 	}
 
 	//Station ID to MPT
-	mpt->StationID.assign(sv0->VectorCode);
+	mpt->StationID.assign(sv0.VectorCode);
 	K = 1;
 	I = mpt->ManeuverNum;
 RTCC_PMSVCT_5:
@@ -18457,9 +18513,9 @@ RTCC_PMSVCT_5:
 	//DTWRITE MPT Header
 	//DTREAD MPT mnvr descriptive block
 	//Set maneuver burnout vector = anchor vector
-	mpt->mantable[K - 1].GMT_BO = sv0->Vector.GMT;
-	mpt->mantable[K - 1].R_BO = sv0->Vector.R;
-	mpt->mantable[K - 1].V_BO = sv0->Vector.V;
+	mpt->mantable[K - 1].GMT_BO = sv0.Vector.GMT;
+	mpt->mantable[K - 1].R_BO = sv0.Vector.R;
+	mpt->mantable[K - 1].V_BO = sv0.Vector.V;
 	mpt->mantable[K - 1].CommonBlock.TUP = -abs(mpt->mantable[K - 1].CommonBlock.TUP);
 	//DTWRITE descriptive maneuver block
 	//Page 7
@@ -18470,13 +18526,13 @@ RTCC_PMSVCT_8:
 	{
 		if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM || mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_PGNS_DESCENT)
 		{
-			if (mpt->mantable[i].GMTMAN > sv0->Vector.GMT)
+			if (mpt->mantable[i].GMTMAN > sv0.Vector.GMT)
 			{
 				if (mpt->mantable[i].FrozenManeuverInd == false)
 				{
 					//EMSMISS and PMMSPT for TLI/PDI
 					EMSMISSInputTable intab;
-					intab.AnchorVector = sv0->Vector;
+					intab.AnchorVector = sv0.Vector;
 					intab.AuxTableIndicator = NULL;
 					intab.CutoffIndicator = 1;
 					intab.EphemerisBuildIndicator = false;
@@ -18490,7 +18546,7 @@ RTCC_PMSVCT_8:
 					{
 						intab.ManeuverIndicator = true;
 					}
-					intab.MaxIntegTime = mpt->mantable[i].GMTMAN - sv0->Vector.GMT - 1.0; //One second earlier so that EMSMISS isn't trying to simulate the maneuver
+					intab.MaxIntegTime = mpt->mantable[i].GMTMAN - sv0.Vector.GMT - 1.0; //One second earlier so that EMSMISS isn't trying to simulate the maneuver
 					intab.VehicleCode = L;
 					EMSMISS(&intab);
 
@@ -18549,13 +18605,19 @@ RTCC_PMSVCT_8:
 	}
 	if (QUEID == 0)
 	{
-		sv1 = *sv0;
+		sv1 = sv0;
 		goto RTCC_PMSVCT_12;
 	}
 
 	//Take state vector to current time
-	sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
-	//TBD: Error 35
+	sv1 = sv0;
+	EMSEPH(1, sv1, L, RTCCPresentTimeGMT());
+	if (L < 0)
+	{
+		RTCCONLINEMON.TextBuffer[0] = "PRESENT TIME";
+		PMXSPT("PMSVCT", 35);
+		return;
+	}
 RTCC_PMSVCT_12:
 	mpt->CommonBlock.TUP++;
 	mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
@@ -19376,7 +19438,7 @@ void RTCC::PMMIEV(int L, double T_L)
 	sv0.Vector.GMT = GMT_EOI;
 	sv0.Vector.RBI = BODY_EARTH;
 
-	PMSVCT(0, L, &sv0);
+	PMSVCT(0, L, sv0);
 }
 
 void RTCC::EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY)
@@ -30353,7 +30415,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		sv1.Vector = sv0;
 		sv1.LandingSiteIndicator = landed;
 		sv1.VectorCode = StationID;
-		PMSVCT(4, veh2, &sv1);
+		PMSVCT(4, veh2, sv1);
 	}
 	//Condition for Launch (Simulation)
 	else if (med == "92")
@@ -35184,7 +35246,7 @@ RTCC_BMSVPS_1:
 			return;
 		}
 
-		PMSVCT(queid, L, &BZUSEVEC.data[id]);
+		PMSVCT(queid, L, BZUSEVEC.data[id]);
 	}
 }
 
