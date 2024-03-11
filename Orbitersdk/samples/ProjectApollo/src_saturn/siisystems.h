@@ -61,9 +61,7 @@ public:
 	void SetMixtureRatio(double ratio);
 	void SwitchSelector(int channel);
 
-	void SetEngineFailureParameters(bool *SIICut, double *SIICutTimes);
-	void SetEngineFailureParameters(int n, double SIICutTimes, bool fail);
-	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
+	void SetEngineFailed(int n);
 
 	void GetThrustOK(bool *ok);
 	bool GetPropellantDepletionEngineCutoff();
@@ -95,10 +93,6 @@ protected:
 	bool SIISIVBOrdnanceArmed;
 
 	double J2DefaultThrust;
-
-	bool EarlySIICutoff[5];
-	double SecondStageFailureTime[5];
-	double FailureTimer;
 
 	double LH2TankUllagePressurePSI;
 

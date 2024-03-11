@@ -96,9 +96,7 @@ public:
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 	void SwitchSelector(int channel);
 
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
-	void SetEngineFailureParameters(int n, double SICutTimes, bool fail);
-	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
+	void SetEngineFailed(int n);
 
 	bool PropellantLowLevel();
 	void GetThrustOK(bool *ok);
@@ -142,9 +140,6 @@ protected:
 	bool PointLevelSensorArmed;
 
 	bool ThrustOK[15];
-
-	bool EarlySICutoff[5];
-	double FirstStageFailureTime[5];
 
 	TSMUmbilical *TSMUmb;
 };

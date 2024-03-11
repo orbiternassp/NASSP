@@ -280,7 +280,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	// CSM/LV separation
 	//
 
-	if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
+	if (!Failures.GetFailure(CSMFailures_CSM_LV_Separation_Failure) && CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
 		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 	}
@@ -652,18 +652,14 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 
-void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime, bool fail)
+void Saturn1b::SetEngineFailure(int failstage, int faileng)
 {
 	if (failstage == 1)
 	{
-		sib->SetEngineFailureParameters(faileng, failtime, fail);
+		if (sib) sib->SetEngineFailed(faileng);
 	}
-}
-
-void Saturn1b::GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime)
-{
-	if (failstage == 1 && sib)
+	else if (failstage == 3)
 	{
-		sib->GetEngineFailureParameters(faileng, fail, failtime);
+		if (sivb) sivb->SetEngineFailed();
 	}
 }

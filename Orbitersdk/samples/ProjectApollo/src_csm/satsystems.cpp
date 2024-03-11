@@ -717,6 +717,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		// Do the "normal" Orbiter timestep, some devices are done in clbkPostStep
 		//
 
+		Failures.Timestep();
 		dsky.Timestep(MissionTime);
 		dsky2.Timestep(MissionTime);
 		agc.Timestep(MissionTime, simdt);

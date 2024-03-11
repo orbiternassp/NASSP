@@ -32,9 +32,6 @@ public:
 	EDS(IU *iu);
 	virtual ~EDS() {}
 	virtual void Timestep(double simdt);
-	virtual void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
-	bool GetPlatformFail() { return PlatformFailure; }
-	double GetPlatformFailTime() { return PlatformFailureTime; }
 
 	bool GetLiftoffCircuitAFailure() { return LiftoffCircuitAFailure; }
 	bool GetLiftoffCircuitBFailure() { return LiftoffCircuitBFailure; }
@@ -238,8 +235,6 @@ protected:
 	bool SIVBEDSCutoff;
 
 	//Common Saturn Failures
-	bool PlatformFailure;
-	double PlatformFailureTime;
 	bool LiftoffCircuitAFailure;
 	bool LiftoffCircuitBFailure;
 };

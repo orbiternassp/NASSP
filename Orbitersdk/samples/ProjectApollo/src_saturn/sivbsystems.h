@@ -197,6 +197,7 @@ protected:
 	DelayTimer IgnitionPhaseTimer;
 	DelayTimer SparksDeenergizedTimer;
 
+	bool EngineFailed;
 	//double DebugTimer;
 	double F_CVS;
 };
@@ -243,6 +244,8 @@ public:
 	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }
 	double GetLOXTankUllagePressurePSI() { return LOXTankUllagePressurePSI; }
 	bool GetBurnerMalfunction() { return BurnerMalfunctionSignal; }
+
+	void SetEngineFailed();
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);

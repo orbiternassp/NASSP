@@ -114,6 +114,7 @@ public:
 	void menuSetSIEngineFailure();
 	void menuSetSIIEngineFailure();
 	void menuSetRandomFailures();
+	void menuClearFailures();
 	void menuAEAACommands();
 
 	void WriteStatus (FILEHANDLE scn) const;
