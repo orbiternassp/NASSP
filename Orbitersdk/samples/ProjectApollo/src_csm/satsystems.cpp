@@ -345,7 +345,7 @@ void Saturn::SystemsInit() {
 	PrimECSTestHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:PRIMECSTESTHEATER");
 	SecECSTestHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SECECSTESTHEATER");
 	
-	Crew = (h_crew *) Panelsdk.GetPointerByString("HYDRAULIC:CREW");	 
+	Crew = (h_crew *) Panelsdk.GetPointerByString("HYDRAULIC:CREW");
 
 	SuitCompressor1 = (AtmRegen *) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER1");
 	SuitCompressor1->WireTo(&SuitCompressor1Switch);
@@ -1107,6 +1107,26 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //sprintf(oapiDebugString(), "Prim: %.3f Sec: %.3f RadT: %.3f", *gseprimhxPower, *gsesechxPower, KelvinToFahrenheit(*gseradTemp));
 //sprintf(oapiDebugString(), "Pwr %1f HX %.3f RadT %.3f Acc %.3f RadI %.3f RadO %.3f EvapI %.3f EvapO %.3f", *isonGSEchiller, *gseprimhxPower, KelvinToFahrenheit(*gseradTemp), KelvinToFahrenheit(*primaccumTemp), KelvinToFahrenheit(*primradinTemp), KelvinToFahrenheit(*primradoutTemp), KelvinToFahrenheit(*primevapinTemp), KelvinToFahrenheit(*primevapoutTemp));
 //sprintf(oapiDebugString(), "Acc %.3f RadI %.3f RadO %.3f EvapI %.3f EvapO %.3f", KelvinToFahrenheit(*primaccumTemp), KelvinToFahrenheit(*primradinTemp), KelvinToFahrenheit(*primradoutTemp), KelvinToFahrenheit(*primevapinTemp), KelvinToFahrenheit(*primevapoutTemp));
+
+//Water Tank Debug Lines
+
+	/*
+	double *PotH2OMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:MASS");
+	double *PotH2OVapMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:H2O_VAPORMASS");
+	double *PotH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:TEMP");
+	double *PotH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:PRESS");
+	double *DrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOW");
+	double *DrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOWMAX");
+	int *PotH2OLeakVlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:LEAK:ISOPEN");
+
+	int *NumCrew = (int *)Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
+
+	double *WasteH2OMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:MASS");
+	double *WasteH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:TEMP");
+	double *WasteH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:PRESS");
+
+	sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PotH2OLeakVlv, *NumCrew);
+	*/
 
 //GSE Oxygen Purge Debug Lines	
 	

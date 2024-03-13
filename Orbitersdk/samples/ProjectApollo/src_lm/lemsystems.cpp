@@ -2140,7 +2140,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf OVHDFLOW %lf OVHDFLOWMAX %lf OVHDSIZE %f TUNNELPRESS %lf TUNNELFLOW %lf", ecs.GetCabinPressurePSI(), (*SuitCircuitPress)*PSI, *ovhdHatchFlow*LBH, *ovhdHatchFlowmax*LBH, *ovhdHatchSize, *lmtunnelpress*PSI, *lmtunnelflow*LBH);
 
 	///sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf SFF %lf CDRF %lf LMPF %lf", *hxheatingPress* PSI, *cdrsuitpress* PSI, *lmpsuitpress* PSI, *SuitCircuitPress* PSI, *SGDPress* PSI, *CO2ManifoldPress* PSI, *primCO2CanisterPress* PSI, *suitfanmanifoldinPress* PSI, *suitfanmanifoldoutPress* PSI, *hxcoolingPress* PSI, *WSMinPress* PSI, *WSMoutPress* PSI, *SuitFanOutFlow*LBH, *CDRSuitFlow *LBH, *LMPSuitFlow*LBH);
-	sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf SFF %lf CDRF %lf LMPF %lf", KelvinToFahrenheit(*hxheatingTemp) , KelvinToFahrenheit(*cdrsuittemp), KelvinToFahrenheit(*lmpsuittemp), KelvinToFahrenheit(*SuitCircuitTemp), KelvinToFahrenheit(*SGDTemp), KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*primCO2CanisterTemp), KelvinToFahrenheit(*suitfanmanifoldinTemp), KelvinToFahrenheit(*suitfanmanifoldoutTemp), KelvinToFahrenheit(*hxcoolingTemp), KelvinToFahrenheit(*WSMinTemp), KelvinToFahrenheit(*WSMoutTemp), *SuitFanOutFlow*LBH, *CDRSuitFlow *LBH, *LMPSuitFlow*LBH);
+	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf SFF %lf CDRF %lf LMPF %lf", KelvinToFahrenheit(*hxheatingTemp) , KelvinToFahrenheit(*cdrsuittemp), KelvinToFahrenheit(*lmpsuittemp), KelvinToFahrenheit(*SuitCircuitTemp), KelvinToFahrenheit(*SGDTemp), KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*primCO2CanisterTemp), KelvinToFahrenheit(*suitfanmanifoldinTemp), KelvinToFahrenheit(*suitfanmanifoldoutTemp), KelvinToFahrenheit(*hxcoolingTemp), KelvinToFahrenheit(*WSMinTemp), KelvinToFahrenheit(*WSMoutTemp), *SuitFanOutFlow*LBH, *CDRSuitFlow *LBH, *LMPSuitFlow*LBH);
 	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf CO2F %lf CO2REM %lf GRV %d", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *hxcoolingPress*PSI, *primCO2Flow, *primCO2Removal, *gasreturnvlv);
 	//sprintf(oapiDebugString(), "CAB %lf RVF %lf RVFM %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf", *CabinMass, *suitReliefflow, *suitReliefflowmax, *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2Mass, *suitfanmanifoldoutMass, *hxcoolingMass);
 	//sprintf(oapiDebugString(), "Diverter: Flow to Cabin %lf, Flow to Co2Manifold %lf", *suitGasDiverterCabinFlow * LBH, *suitGasDiverterCO2ManifoldFlow * LBH);
@@ -2198,6 +2198,29 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		CDRVolts,CDRAmps,ACBusA.Voltage(), ACBusB.Voltage());
 	*/
 
+
+	//Water Tank Debug Lines
+
+/*
+	double *PLSSH2OMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:MASS");
+	double *PLSSH2OVapMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:H2O_VAPORMASS");
+	double *PLSSH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:TEMP");
+	double *PLSSH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:PRESS");
+	double *DrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOW");
+	double *DrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOWMAX");
+	double *CDRDrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:CDRDRINKPIPE:FLOW");
+	double *CDRDrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:CDRDRINKPIPE:FLOWMAX");
+	double *LMPDrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:LMPDRINKPIPE:FLOW");
+	double *LMPDrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:LMPDRINKPIPE:FLOWMAX");
+	int *PLSSH2OLeakVlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:LEAK:ISOPEN");
+	int *CDRPLSSH2OLeakVlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:OUT:ISOPEN");
+	int *LMPPLSSH2OLeakVlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:OUT2:ISOPEN");
+
+	int *NumCrew = (int *)Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
+
+	sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PLSSH2OMass, *PLSSH2OVapMass, KelvinToFahrenheit(*PLSSH2OTemp), *PLSSH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PLSSH2OLeakVlv, *NumCrew);
+	sprintf(oapiDebugString(), "Mass: %.3f CABFlow %.5f CABMax %.5f CABPVlv %d CDRFlow %.5f CDRMax %.5f CDRPVlv %d LMPFlow %.5f LMPMax %.5f LMPPVlv %d", *PLSSH2OMass, *DrinkPipeFlow, *DrinkPipeFlowmax, *PLSSH2OLeakVlv, *CDRDrinkPipeFlow, *CDRDrinkPipeFlowmax, *CDRPLSSH2OLeakVlv, *LMPDrinkPipeFlow, *LMPDrinkPipeFlowmax, *LMPPLSSH2OLeakVlv);
+	*/
 }
 
 void LEM::SetPipeMaxFlow(char *pipe, double flow) {

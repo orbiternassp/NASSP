@@ -1277,17 +1277,34 @@ void h_MixingPipe::Save(FILEHANDLE scn) {
 }
 
 
-h_crew::h_crew(char *i_name, int nr, h_Tank *i_src) {
+h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Pipe *i_pipe) {
 	
 	strcpy(name, i_name);
 	max_stage = 99;
 	number = nr;
 	SRC = i_src;
+	drinkpipe = i_pipe;
 }
 
 void h_crew::refresh(double dt) {
 
-	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)	
+	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
+
+	if (drinkpipe && !(drinkpipe->in->pz)) {
+
+		if (number != 0)
+		{
+			drinkpipe->in->Open();
+			drinkpipe->flowMax = (0.0346494 * number); //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
+		}
+
+		else
+		{
+			drinkpipe->in->Close();
+			drinkpipe->flowMax = 0.0;
+		}
+	}
+
 	if (SRC) {
 		double srcTemp = SRC->GetTemp();
 		therm_obj *t = SRC->GetThermalInterface();
@@ -1304,7 +1321,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.composition[SUBSTANCE_CO2].SetTemp(srcTemp);
 
 		double sweatRate = srcTemp < 310.2 ? 0.0685522320142486 + 1.99493308786737E-63 * exp(srcTemp * 0.4654878554362358) : 1.0;
-		double h2o = 1.1 * sweatRate * number * dt;  // grams of H2O water vapor (need a source for this)
+		double h2o = 1.1 * sweatRate * number * dt;  //grams of H2O water vapor (lung loss should be 2.64 lb/day and sweat should be 1.32 lb/day per crew)
 		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
