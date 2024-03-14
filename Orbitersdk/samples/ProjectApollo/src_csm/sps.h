@@ -34,7 +34,7 @@ public:
 	SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
 	virtual ~SPSPropellantSource();
 
-	void Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *propline);
+	void Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *inj1, h_Radiator *inj2);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetFuelPercent();
@@ -42,7 +42,7 @@ public:
 	double GetOxidUnbalanceLB();
 	double GetPropellantPressurePSI() { return propellantPressurePSI; }
 	double GetHeliumPressurePSI() { return heliumPressurePSI; }
-	double GetPropellantLineTempF();
+	double GetInjectorFlangeTempF(int i);
 	bool IsHeliumValveAOpen() { return heliumValveAOpen; }
 	bool IsHeliumValveBOpen() { return heliumValveBOpen; }
 	bool IsOxidFlowValveMin();
@@ -74,7 +74,8 @@ protected:
 
 	PowerMerge DCPower;
 	e_object *ACPower;
-	h_Radiator *propellantLine;
+	h_Radiator *OXInjectorFlange1;
+	h_Radiator *FUInjectorFlange2;
 	bool propellantInitialized;
 	double lastPropellantMass;
 	double propellantBuffer;
@@ -126,7 +127,7 @@ public:
 	SPSEngine(THRUSTER_HANDLE &sps);
 	virtual ~SPSEngine();
 
-	void Init(Saturn *s);
+	void Init(Saturn *s, h_HeatLoad *h);
 	void DefineAnimations(UINT idx);
 	void DeleteAnimations();
 	void Timestep(double simt, double simdt);
@@ -138,12 +139,14 @@ public:
 	bool GetInjectorValves34Open() { return injectorValves34Open; };
 	double GetNitrogenPressureAPSI() { return nitrogenPressureAPSI; };
 	double GetNitrogenPressureBPSI() { return nitrogenPressureBPSI; };
+	double GetInjectorValvePosition(int i);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void clbkPostCreation();
 
 	SPSGimbalActuator pitchGimbalActuator;
 	SPSGimbalActuator yawGimbalActuator;
+	h_HeatLoad *spsThrustHeat;
 
 protected:
 	bool thrustOnA, thrustOnB;

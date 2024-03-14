@@ -288,8 +288,8 @@ typedef struct {
 ///
 typedef struct {
 	double chamberPressurePSI;
-	double PropellantLineTempF;
-	double OxidizerLineTempF;
+	double InjectorFlange1TempF;
+	double InjectorFlange2TempF;
 } SPSStatus;
 
 // Vesim input IDs
@@ -3639,9 +3639,15 @@ public:
 	CSMPipeFlowTransducer FCH2FlowSensor1;
 	CSMPipeFlowTransducer FCH2FlowSensor2;
 	CSMPipeFlowTransducer FCH2FlowSensor3;
+	TemperatureTransducer SPSFuelLineTempSensor;
+	TemperatureTransducer SPSOxidizerLineTempSensor;
+	TemperatureTransducer SPSFuelFeedTempSensor;
+	TemperatureTransducer SPSOxidizerFeedTempSensor;
+	TemperatureTransducer SPSEngVlvTempSensor;
 	CSMTankPressTransducer BatteryManifoldPressureSensor;
 	TemperatureTransducer WasteH2ODumpTempSensor;
 	TemperatureTransducer UrineDumpTempSensor;
+
 protected:
 
 	// CM Optics
@@ -4384,8 +4390,18 @@ protected:
 
 	SPSEngine SPSEngine;
 	SPSPropellantSource SPSPropellant;
-	Boiler *SPSPropellantLineHeaterA;
-	Boiler *SPSPropellantLineHeaterB;
+	Boiler *SPSFuelSumpTankHeaterA;
+	Boiler *SPSFuelSumpTankHeaterB;
+	Boiler *SPSFuelInterfaceFeedHeaterA;
+	Boiler *SPSFuelInterfaceFeedHeaterB;
+	Boiler *SPSFuelBallValveHeaterA;
+	Boiler *SPSFuelBallValveHeaterB;
+	Boiler *SPSOxSumpTankHeaterA;
+	Boiler *SPSOxSumpTankHeaterB;
+	Boiler *SPSOxInterfaceFeedHeaterA;
+	Boiler *SPSOxInterfaceFeedHeaterB;
+	Boiler *SPSOxBallValveHeaterA;
+	Boiler *SPSOxBallValveHeaterB;
 	h_HeatLoad *CMRCSHeat[12];
 
 	//

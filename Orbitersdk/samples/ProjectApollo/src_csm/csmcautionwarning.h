@@ -234,6 +234,7 @@ protected:
 #define CSM_CWS_SM_RCS_B			17			///< CSM RCS quad B warning light.
 #define CSM_CWS_SM_RCS_C			18			///< CSM RCS quad C warning light.
 #define CSM_CWS_SM_RCS_D			19			///< CSM RCS quad D warning light.
+#define CSM_CWS_SPS_FLANGE_TEMP_HI	30			///< CSM SPS injector flange temperature warning light.
 #define CSM_CWS_FC1_LIGHT			31			///< CSM Fuel Cell 1 warning light.
 #define CSM_CWS_FC2_LIGHT			32			///< CSM Fuel Cell 2 warning light.
 #define CSM_CWS_FC3_LIGHT			33			///< CSM Fuel Cell 3 warning light.

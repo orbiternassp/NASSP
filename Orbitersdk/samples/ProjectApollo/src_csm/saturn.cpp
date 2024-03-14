@@ -539,6 +539,11 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	BatteryManifoldPressureSensor("Battery-Manifold-Pressure-Sensor", 0.0, 20.0),
 	WasteH2ODumpTempSensor("Waste-H2O-Dump-Temp-Sensor", 0.0, 100.0),
 	UrineDumpTempSensor("Urine-Dump-Temp-Sensor", 0.0, 100.0),
+	SPSFuelLineTempSensor("SPS-Fuel-Line-Temp-Sensor", 0.0, 200.0),
+	SPSOxidizerLineTempSensor("SPS-Oxidizer-Line-Temp-Sensor", 0.0, 200.0),
+	SPSFuelFeedTempSensor("SPS-Fuel-Feed-Temp-Sensor", 0.0, 200.0),
+	SPSOxidizerFeedTempSensor("SPS-Oxidizer-Feed-Temp-Sensor", 0.0, 200.0),
+	SPSEngVlvTempSensor("SPS-Engine-Valve-Temp-Sensor", 0.0, 200.0),
 	vesim(&cbCSMVesim, this),
 	CueCards(vcidx, this, 11)
 #pragma warning ( pop ) // disable:4355

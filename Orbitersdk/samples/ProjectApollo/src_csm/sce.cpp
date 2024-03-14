@@ -131,10 +131,12 @@ void SCE::Timestep()
 	}
 
 	FuelCellStatus fcStatus1, fcStatus2, fcStatus3;
+	SPSStatus spsStatus;
 
 	sat->GetFuelCellStatus(1, fcStatus1);
 	sat->GetFuelCellStatus(2, fcStatus2);
 	sat->GetFuelCellStatus(3, fcStatus3);
+	sat->GetSPSStatus(spsStatus);
 
 	//MAIN BUS A VOLTS (CC0206V)
 	AA[0] = scale_data(sat->MainBusA->Voltage(), 0.0, 45.0);
@@ -207,9 +209,9 @@ void SCE::Timestep()
 	//FC 3 SKIN TEMP (SC2086T)
 	DBA[8] = scale_data(sat->FuelCells[2]->Temp, 299.817, 560.928);
 	//ENG INJECTOR FLANGE TEMP 1 (SP0061T)
-	DBA[9] = scale_data(0, 0.0, 600.0);
+	DBA[9] = scale_data(spsStatus.InjectorFlange1TempF, 0.0, 600.0);
 	//ENG INJECTOR FLANGE TEMP 2 (SP0062T)
-	DBA[10] = scale_data(0.0, 0.0, 600.0);
+	DBA[10] = scale_data(spsStatus.InjectorFlange2TempF, 0.0, 600.0);
 
 	//AC BUS 1 VOLTS (CC0200V)
 	AC[0] = scale_data(sat->ACBus1.Voltage(), 0.0, 150.0);

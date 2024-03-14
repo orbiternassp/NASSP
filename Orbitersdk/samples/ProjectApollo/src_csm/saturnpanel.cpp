@@ -2874,8 +2874,8 @@ void Saturn::SetSwitches(int panel) {
 		TimersMnBCircuitBraker.Init       (  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB, 5.0);
 		EPSMnBGroup1CircuitBraker.Init    (  0,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
 		EPSMnAGroup1CircuitBraker.Init    (  0, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
-		SPSLineHtrsMnBCircuitBraker.Init  ( 71,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
-		SPSLineHtrsMnACircuitBraker.Init  ( 71,  47, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+		SPSLineHtrsMnBCircuitBraker.Init  ( 71,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB, 10.0);
+		SPSLineHtrsMnACircuitBraker.Init  ( 71,  47, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA, 10.0);
 		EPSMnBGroup2CircuitBraker.Init    ( 71,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusB);
 		EPSMnAGroup2CircuitBraker.Init    ( 71, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, MainBusA);
 		O2VacIonPumpsMnBCircuitBraker.Init(140,   9, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
@@ -3989,23 +3989,58 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 
 	} else if (s == &SPSTestSwitch) {
 		SPSPropellant.SPSTestSwitchToggled();
-	
-	} else if (s == &SPSLineHTRSSwitch) {  
-		int *pump1 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA:PUMP");
-		int *pump2 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB:PUMP");
+	}
 
-		if (s->IsUp()) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_ON;
+	else if (s == &SPSLineHTRSSwitch) {
 
-		} else if (s->IsDown()) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_OFF;
+	if (s->IsUp()) {
+		SPSFuelSumpTankHeaterA->SetPumpOn();
+		SPSFuelSumpTankHeaterB->SetPumpOn();
+		SPSFuelInterfaceFeedHeaterA->SetPumpOn();
+		SPSFuelInterfaceFeedHeaterB->SetPumpOn();
+		SPSFuelBallValveHeaterA->SetPumpOn();
+		SPSFuelBallValveHeaterB->SetPumpOn();
 
-		} else {
-			*pump1 = SP_PUMP_OFF;
-			*pump2 = SP_PUMP_OFF;
-		}
+		SPSOxSumpTankHeaterA->SetPumpOn();
+		SPSOxSumpTankHeaterB->SetPumpOn();
+		SPSOxInterfaceFeedHeaterA->SetPumpOn();
+		SPSOxInterfaceFeedHeaterB->SetPumpOn();
+		SPSOxBallValveHeaterA->SetPumpOn();
+		SPSOxBallValveHeaterB->SetPumpOn();
+	}
+
+	else if (s->IsDown()) {
+		SPSFuelSumpTankHeaterA->SetPumpOn();
+		SPSFuelSumpTankHeaterB->SetPumpOff();
+		SPSFuelInterfaceFeedHeaterA->SetPumpOn();
+		SPSFuelInterfaceFeedHeaterB->SetPumpOff();
+		SPSFuelBallValveHeaterA->SetPumpOn();
+		SPSFuelBallValveHeaterB->SetPumpOff();
+
+		SPSOxSumpTankHeaterA->SetPumpOn();
+		SPSOxSumpTankHeaterB->SetPumpOff();
+		SPSOxInterfaceFeedHeaterA->SetPumpOn();
+		SPSOxInterfaceFeedHeaterB->SetPumpOff();
+		SPSOxBallValveHeaterA->SetPumpOn();
+		SPSOxBallValveHeaterB->SetPumpOff();
+	}
+
+	else {
+		SPSFuelSumpTankHeaterA->SetPumpOff();
+		SPSFuelSumpTankHeaterB->SetPumpOff();
+		SPSFuelInterfaceFeedHeaterA->SetPumpOff();
+		SPSFuelInterfaceFeedHeaterB->SetPumpOff();
+		SPSFuelBallValveHeaterA->SetPumpOff();
+		SPSFuelBallValveHeaterB->SetPumpOff();
+
+		SPSOxSumpTankHeaterA->SetPumpOff();
+		SPSOxSumpTankHeaterB->SetPumpOff();
+		SPSOxInterfaceFeedHeaterA->SetPumpOff();
+		SPSOxInterfaceFeedHeaterB->SetPumpOff();
+		SPSOxBallValveHeaterA->SetPumpOff();
+		SPSOxBallValveHeaterB->SetPumpOff();
+	}
+
 	} else if (s == &EMSModeSwitch) {
 		ems.SwitchChanged();
 
@@ -5583,7 +5618,7 @@ void Saturn::InitSwitches() {
 	SPSFuelPercentMeter.Register(PSH, "SPSFuelPercentMeter", 0, 0.999, 1, 0.999);
 	SPSOxidUnbalMeter.Register(PSH, "SPSOxidUnbalMeter", -600, 600, 10);
 
-	SPSTempMeter.Register(PSH, "SPSTempMeter", 0, 200, 2);
+	SPSTempMeter.Register(PSH, "SPSTempMeter", 0, 5, 2);
 	SPSHeliumNitrogenPressMeter.Register(PSH, "SPSHeliumNitrogenPressMeter", 0, 5000, 2);
 	SPSFuelPressMeter.Register(PSH, "SPSFuelPressMeter", 0, 250, 2);
 	SPSOxidPressMeter.Register(PSH, "SPSOxidPressMeter", 0, 250, 2);

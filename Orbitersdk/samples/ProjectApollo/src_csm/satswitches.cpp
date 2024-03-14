@@ -1198,12 +1198,12 @@ void SaturnSPSTempMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, e_obje
 
 double SaturnSPSTempMeter::QueryValue()
 {
-	return Sat->GetSPSPropellant()->GetPropellantLineTempF();
+	return Sat->SPSFuelFeedTempSensor.Voltage();
 }
 
 void SaturnSPSTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	oapiBlt(drawSurface, NeedleSurface, 0, (109 - (int)(v / 200.0 * 103.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 0, (109 - (int)(v / 5.0 * 103.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 
@@ -1356,8 +1356,8 @@ double SaturnSystemTestMeter::QueryValue()
 	case 5:
 		switch (right)
 		{
-		case 0:	//SPS OX LINE TEMP
-			val = Sat->pcm.measure(10, TLM_A, 120);
+		case 0:	//TEMP ENGINE OXIDIZER FEED LINE
+			return Sat->SPSOxidizerFeedTempSensor.Voltage();
 			break;
 		case 2:	//TEMP JET 24 -P ENG INJECTOR SYS 2
 			return Sat->CMRCSEngine24TempSensor.Voltage();

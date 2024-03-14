@@ -2272,7 +2272,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 36:		// H2 TK 1 PRESS
 							return(scale_data(sat->H2Tank1PressSensor.Voltage(), 0.0, 5.0));
 						case 37:		// SPS VLV BODY TEMP
-							return(scale_data(0,0,200));
+							return(scale_data(sat->SPSEngVlvTempSensor.Voltage(), 0.0, 5.0));
 						case 38:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 39:		// H2 TK 2 PRESS
@@ -2286,7 +2286,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 43:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 44:		// OX LINE 1 TEMP
-							return(scale_data(0,0,200));
+							return(scale_data(sat->SPSOxidizerLineTempSensor.Voltage(), 0.0, 5.0));
 						case 45:		// SUIT AIR HX OUT TEMP
 							return(scale_data(sat->SuitTempSensor.Voltage(), 0.0, 5.0));
 						case 46:		// UNKNOWN - HBR ONLY
@@ -2316,7 +2316,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 58:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 59:		// FU LINE 1 TEMP
-							return(scale_data(0,0,200));
+							return(scale_data(sat->SPSFuelLineTempSensor.Voltage(), 0.0, 5.0));
 						case 60:		// H2 TK 1 TEMP
 							return(scale_data(sat->H2Tank1TempSensor.Voltage(), 0.0, 5.0));
 						case 61:		// NUCLEAR PARTICLE DETECTOR TEMP
@@ -2433,15 +2433,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 116:		// SCI EXP #11
 							return(scale_data(0,0,100));
 						case 117:		// SPS FU FEED LINE TEMP
-							sat->GetSPSStatus(spsStatus);
-							return(scale_data(spsStatus.PropellantLineTempF,0,200));
+							return(scale_data(sat->SPSFuelFeedTempSensor.Voltage(), 0.0, 5.0));
 						case 118:		// SCI EXP #12
 							return(scale_data(0,0,100));
 						case 119:		// SCI EXP #13
 							return(scale_data(0,0,100));
 						case 120:		// SPS OX FEED LINE TEMP
-							sat->GetSPSStatus(spsStatus);
-							return(scale_data(spsStatus.OxidizerLineTempF,0,200));
+							return(scale_data(sat->SPSOxidizerFeedTempSensor.Voltage(), 0.0, 5.0));
 						case 121:		// SCI EXP #14
 							return(scale_data(0,0,100));
 						case 122:		// SCI EXP #15
@@ -2584,13 +2582,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 30:		// FC 2 N2 PRESS
 							return(scale_data(sat->FCN2PressureSensor2.Voltage(), 0.0, 5.0));
 						case 31:		// FU/OX VLV 1 POS
-							return(scale_data(0,0,90));
+							return(scale_data(sat->SPSEngine.GetInjectorValvePosition(1), 0.0, 90.0));
 						case 32:		// FU/OX VLV 2 POS
-							return(scale_data(0,0,90));
+							return(scale_data(sat->SPSEngine.GetInjectorValvePosition(2), 0.0, 90.0));
 						case 33:		// FU/OX VLV 3 POS
-							return(scale_data(0,0,90));
+							return(scale_data(sat->SPSEngine.GetInjectorValvePosition(3), 0.0, 90.0));
 						case 34:		// FU/OX VLV 4 POS
-							return(scale_data(0,0,90));
+							return(scale_data(sat->SPSEngine.GetInjectorValvePosition(4), 0.0, 90.0));
 						case 35:		// FC 3 N2 PRESS
 							return(scale_data(sat->FCN2PressureSensor3.Voltage(), 0.0, 5.0));
 						case 36:		// UNKNOWN - HBR ONLY
