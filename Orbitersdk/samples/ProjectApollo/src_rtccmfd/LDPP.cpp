@@ -653,7 +653,8 @@ LDPP_33_1:
 	else
 	{
 		//For now, from the old DOI calculation
-		double dt4 = OrbMech::time_theta(sv_LM.R, sv_LM.V, opt.theta_D - 15.0*RAD, mu);
+		double dt4;
+		OrbMech::time_theta(sv_LM.R, sv_LM.V, opt.theta_D - 15.0*RAD, mu, dt4);
 		out.azi = opt.azi_nom;
 		out.t_Land = t_L + dt4;
 		out.t_PDI = t_IGN + dt4;

@@ -40,6 +40,8 @@
 #include "saturn.h"
 #include "LEM.h"
 #include "Crawler.h"
+#include "MCCVessel.h"
+#include "MCC.h"
 #include "sivb.h"
 #include "iu.h"
 #include "papi.h"
@@ -643,6 +645,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 	FailureSubpage = 0;
 	crawler = NULL;
 	lem = NULL;
+	mcc = NULL;
 	width = w;
 	height = h;
 	HBITMAP hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
@@ -685,6 +688,22 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 				g_Data.planet = lem->GetGravityRef();
 			else
 				g_Data.planet = oapiGetGbodyByName("Earth");
+	}
+
+	mcc = NULL;
+	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
+	if (hMCC != NULL) {
+		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
+		if (pVessel) {
+			if (utils::IsVessel(pVessel, utils::MCC))
+			{
+				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
+				if (pMCCVessel->mcc)
+				{
+					mcc = pMCCVessel->mcc;
+				}
+			}
+		}
 	}
 }
 
@@ -763,9 +782,17 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	skp->Text(width / 2, (int) (height * 0.1), "Ground Elapsed Time", 19);
 
 	double mt = 0;
-	if (saturn){ mt = saturn->GetMissionTime(); }
-	if (crawler){ mt = crawler->GetMissionTime(); }
-	if (lem){ mt = lem->GetMissionTime(); }
+	if (mcc)
+	{
+		mt = mcc->GetMissionTime();
+	}
+	
+	if (mt <= 0.0) //Mission time from MCC might be nonsense before liftoff
+	{
+		if (saturn) { mt = saturn->GetMissionTime(); }
+		if (crawler) { mt = crawler->GetMissionTime(); }
+		if (lem) { mt = lem->GetMissionTime(); }
+	}
 
 	int secs = abs((int) mt);
 	int hours = (secs / 3600);

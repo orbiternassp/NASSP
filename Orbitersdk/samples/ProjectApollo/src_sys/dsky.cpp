@@ -310,7 +310,7 @@ void DSKY::SystemTimestep(double simdt)
 void DSKY::KeyClick()
 
 {
-	Sclick.play(NOLOOP, 255);
+	Sclick.play(NOLOOP);
 }
 
 void DSKY::SendKeyCode(int val)

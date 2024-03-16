@@ -187,10 +187,9 @@ bool ChecklistDataInterface::ReceiveMessage(Connector *from, ConnectorMessage &m
 
 // Original stuff
 // Todo: Verify
-ChecklistController::ChecklistController(SoundLib sound)
+ChecklistController::ChecklistController(SoundLib &sound) : soundLib(sound)
 {
 	initCalled = false;
-	soundLib = sound;
 	FileName[0] = 0;
 	init(false);
 }

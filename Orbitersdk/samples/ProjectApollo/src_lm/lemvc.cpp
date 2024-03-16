@@ -707,6 +707,10 @@ bool LEM::clbkLoadVC (int id)
 	//Reset Clip Radius settings
 	SetClipRadius(0.0);
 
+	// Init the 2D panel switches to fix XRSound not giving us switch clicks if we load directly into the VC.
+	// Calling InitPanel(LMPANEL_MAIN) also works, since that function calls SetSwitches() as well.
+	SetSwitches(LMPANEL_MAIN);	// Use main panel as a placeholder, it doesn't actually matter
+
 	//Reset VC free camera to default
 	vcFreeCamx = 0;
 	vcFreeCamy = 0;

@@ -180,7 +180,7 @@ void SIISystems::Timestep(double simdt)
 		if (vessel->GetThrusterGroupLevel(ullage) < 1.0 && UllageTrigger)
 		{
 			vessel->SetThrusterGroupLevel(ullage, 1.0);
-			sepSound.play(LOOP, 130);
+			sepSound.play(LOOP, 130.0 / 255.0);
 			UllageTrigger = false;
 		}
 	}
@@ -436,7 +436,7 @@ void SIISystems::SwitchSelector(int channel)
 		break;
 	case 56: //Low (4.5) Engine MR Ratio On
 		SetPUValve(PUVALVE_OPEN);
-		puShiftSound.play(NOLOOP, 255);
+		puShiftSound.play(NOLOOP);
 		puShiftSound.done();
 		break;
 	case 58: //High (5.5) Engine MR Ratio Off

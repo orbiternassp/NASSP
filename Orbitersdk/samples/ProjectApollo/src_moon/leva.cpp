@@ -717,7 +717,7 @@ void LEVA::DoFirstTimestep()
 	//
 
 	if (StateSet) {
-		soundlib.InitSoundLib(GetHandle(), SOUND_DIRECTORY);
+		soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 		SetMissionPath();
 
 		//
@@ -729,16 +729,6 @@ void LEVA::DoFirstTimestep()
 		if (!FlagPlanted)
 			soundlib.LoadMissionSound(FlagSound, FLAG_SPEECH, FLAG_SPEECH);
 
-		//
-		// Turn off pretty much everything that Orbitersound does by default.
-		//
-
-		soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-		soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-		soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-		soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-		soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 		VECTOR3 mesh_dir = _V(0, 0, 0);
 		if (isCDR == true) {
