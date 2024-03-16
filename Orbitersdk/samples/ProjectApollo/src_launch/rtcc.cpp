@@ -3307,7 +3307,10 @@ RTCC_PMSTICN_3_1:
 	}
 	if (T1 >= T2)
 	{
-		T2 = T1 + OrbMech::time_theta(opt.sv_P.R, opt.sv_P.V, WT, mu);
+		double dt;
+
+		OrbMech::time_theta(opt.sv_P.R, opt.sv_P.V, WT, mu, dt);
+		T2 = T1 + dt;
 	}
 	if (opt.IVFLAG == 1)
 	{
@@ -3759,7 +3762,10 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		}
 		else
 		{
-			T2 = T1 + OrbMech::time_theta(sv_P1.R, sv_P1.V, lambert->TravelAngle, mu);
+			double dt;
+
+			OrbMech::time_theta(sv_P1.R, sv_P1.V, lambert->TravelAngle, mu, dt);
+			T2 = T1 + dt;
 		}
 	}
 	else
@@ -11704,7 +11710,7 @@ RTCC_PMMSPQ_A:
 				{
 					theta = PI - coe.TA;
 				}
-				dt = OrbMech::time_theta(sv_C_CSI_apo.R, sv_C_CSI_apo.V, theta, mu);
+				OrbMech::time_theta(sv_C_CSI_apo.R, sv_C_CSI_apo.V, theta, mu, dt);
 				t_CDH = t_CSI + dt + t_P / 2.0*(double)(opt.N_CDH - 1);
 			}
 			sv_C_CDH = coast(sv_C_CSI_apo, t_CDH - t_CSI);
@@ -23887,7 +23893,7 @@ int RTCC::EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, d
 
 			iter2 = 0;
 
-			while (abs(sv_cur.GMT - GMT_old)*24.0*3600.0 > 1.5)
+			while (abs(sv_cur.GMT - GMT_old) > 1.5)
 			{
 				GMT = sv_cur.GMT - cos_theta * (sv_cur.GMT - GMT_old) / (cos_theta - cos_theta_old);
 				cos_theta_old = cos_theta;
