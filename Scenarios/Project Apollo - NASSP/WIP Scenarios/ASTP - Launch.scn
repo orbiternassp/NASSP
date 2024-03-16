@@ -1,5 +1,9 @@
 BEGIN_DESC
 Launch of ASTP at 19:50 GMT on July 15th, 1975.
+
+Required Addons:
+VesselBuilder for Orbiter: https://www.orbiter-forum.com/threads/vesselbuilder-for-orbiter.36956/#post-555500
+Soyuz 7K for Orbiter 2016: https://www.orbiter-forum.com/resources/soyuz-7k-for-orbiter-2016.318/
 END_DESC
 
 BEGIN_ENVIRONMENT
