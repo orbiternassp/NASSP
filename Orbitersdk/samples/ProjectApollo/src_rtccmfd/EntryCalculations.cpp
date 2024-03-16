@@ -7818,7 +7818,7 @@ void RTEMoon::INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, do
 	a = 1.0 / (2.0 / r_2 - v_2 * v_2 / mu);
 	e = sqrt(1.0 - p / a);
 
-	dt_2 = OrbMech::time_theta(R_1, V_1, theta, mu);
+	OrbMech::time_theta(R_1, V_1, theta, mu, dt_2);
 	//VECTOR3 R2_apo, V2_apo;
 	//OrbMech::rv_from_r0v0(R_1, V_1, dt_2, R2_apo, V2_apo, mu);
 

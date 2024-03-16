@@ -1098,7 +1098,7 @@ bool LEM_DEDA::HasIntglPower()
 void LEM_DEDA::KeyClick()
 
 {
-	Sclick.play(NOLOOP, 255);
+	Sclick.play(NOLOOP);
 }
 
 void LEM_DEDA::Reset()

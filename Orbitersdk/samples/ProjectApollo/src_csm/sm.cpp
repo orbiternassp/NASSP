@@ -84,9 +84,6 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 {
 	InitSM();
 	DefineAnimations();
-
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-	soundlib.LoadSound(BreakS, CRASH_SOUND);
 }
 
 SM::~SM()
@@ -331,13 +328,6 @@ void SM::DoFirstTimestep()
 	strcpy (VName, ApolloName); strcat (VName, "-PANEL6");
 	hPanel6 = oapiGetVesselByName(VName);
 	AddReentryTextureToObject(hPanel6);
-
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 }
 
 void SM::AddReentryTextureToObject(OBJHANDLE handle)
@@ -808,6 +798,13 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	default:
 		break;
 	}
+}
+
+void SM::clbkPostCreation()
+
+{
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
+	soundlib.LoadSound(BreakS, CRASH_SOUND);
 }
 
 void SM::clbkSaveState (FILEHANDLE scn)

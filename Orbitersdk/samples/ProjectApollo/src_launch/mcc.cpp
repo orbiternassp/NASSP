@@ -4511,3 +4511,9 @@ void MCC::SetLV(char *lvname)
 		}
 	}
 }
+
+double MCC::GetMissionTime()
+{
+	if (rtcc) return rtcc->RTCCMissionTime(1);
+	return 0.0;
+}

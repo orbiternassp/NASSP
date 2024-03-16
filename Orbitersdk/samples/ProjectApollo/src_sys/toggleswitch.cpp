@@ -188,7 +188,6 @@ TwoPositionSwitch::TwoPositionSwitch() {
 }
 
 TwoPositionSwitch::~TwoPositionSwitch() {
-	Sclick.done();
 }
 
 void TwoPositionSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname) {
@@ -1687,7 +1686,6 @@ GuardedToggleSwitch::GuardedToggleSwitch() {
 }
 
 GuardedToggleSwitch::~GuardedToggleSwitch() {
-	guardClick.done();
 }
 
 void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded) 
@@ -1894,7 +1892,6 @@ GuardedPushSwitch::GuardedPushSwitch() {
 }
 
 GuardedPushSwitch::~GuardedPushSwitch() {
-	guardClick.done();
 }
 
 void GuardedPushSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, int lxoffset, int lyoffset)
@@ -2108,7 +2105,6 @@ GuardedThreePosSwitch::GuardedThreePosSwitch() {
 }
 
 GuardedThreePosSwitch::~GuardedThreePosSwitch() {
-	guardClick.done();
 }
 
 void GuardedThreePosSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
@@ -2407,7 +2403,6 @@ RotationalSwitch::~RotationalSwitch() {
 	if (pswitchrot)
 		delete pswitchrot;
 	DeletePositions();
-	sclick.done();
 }
 
 void RotationalSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultValue) {
@@ -2921,7 +2916,6 @@ ThumbwheelSwitch::ThumbwheelSwitch() {
 ThumbwheelSwitch::~ThumbwheelSwitch() {
 	if (pswitchrot)
 		delete pswitchrot;
-	sclick.done();
 }
 
 void ThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState) {
@@ -5066,7 +5060,6 @@ HandcontrollerSwitch::HandcontrollerSwitch() {
 }
 
 HandcontrollerSwitch::~HandcontrollerSwitch() {
-	sclick.done();
 }
 
 void HandcontrollerSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, bool hasyawaxis) {

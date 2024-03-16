@@ -1656,7 +1656,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//Suit Fan Sound
 	if (SuitFan1->pumping || SuitFan2->pumping) {
-		SuitFanSound.play(220);
+		SuitFanSound.play(220.0 / 255.0);
 	}
 	else
 	{

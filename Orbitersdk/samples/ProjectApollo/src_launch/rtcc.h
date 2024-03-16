@@ -2481,6 +2481,9 @@ public:
 private:
 	void LoadMissionInitParameters(int year, int month, int day);
 	void InitializeCoordinateSystem();
+
+	//Updates RTCC clocks
+	void TimeUpdate();
 public:
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
 	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
@@ -2702,7 +2705,8 @@ public:
 	//Vehicle Orientation Change Processor
 	void PMMUDT(int L, unsigned man, int headsup, int trim);
 	//Vector Routing Load Module
-	void PMSVCT(int QUEID, int L, StateVectorTableEntry* sv0 = NULL);
+	void PMSVCT(int QUEID, int L);
+	void PMSVCT(int QUEID, int L, StateVectorTableEntry sv0);
 	//Vector Fetch Load Module
 	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	//Maneuver Execution Program
@@ -2727,7 +2731,7 @@ public:
 	//Trajectory Update Control Module
 	void EMSTRAJ(StateVectorTableEntry sv, int L);
 	//Ephemeris Storage and Control Module
-	StateVectorTableEntry EMSEPH(int QUEID, StateVectorTableEntry sv0, int L, double PresentGMT);
+	void EMSEPH(int QUEID, StateVectorTableEntry &sv0, int &L, double PresentGMT);
 	//Miscellaneous Numerical Integration Control Module
 	void EMSMISS(EMSMISSInputTable *in);
 	//Lunar Surface Ephemeris Generator
@@ -2752,6 +2756,7 @@ public:
 	double GetOnboardComputerThrust(int thruster);
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
 	double RTCCPresentTimeGMT();
+	double RTCCMissionTime(int veh);
 	OBJHANDLE GetGravref(int body);
 	bool RTEManeuverCodeLogic(char *code, double lmascmass, double lmdscmass, int UllageNum, int &thruster, int &AttMode, int &ConfigCode, int &ManVeh, double &lmmass);
 
@@ -5001,6 +5006,11 @@ protected:
 	void RTACFGuidanceOpticsSupportTable(RTACFGOSTInput in, RTACFGOSTOutput &out);
 
 protected:
+	//RTCC CLOCK TIMES
+	double RTCC_GreenwichMeanTime;		//Time since midnight
+	double RTCC_CSM_GroundElapsedTime;	//Time since MCGMTL (CSM liftoff time)
+	double RTCC_LM_GroundElapsedTime;	//Time since MCGMTS (CSM liftoff time)
+
 	double TimeofIgnition;
 	double SplashLatitude, SplashLongitude;
 	VECTOR3 DeltaV_LVLH;
