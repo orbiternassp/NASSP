@@ -3049,25 +3049,25 @@ void LEM::SwitchClick()
 void LEM::ButtonClick()
 
 {
-	Bclick.play(NOLOOP,255);
+	Bclick.play(NOLOOP);
 }
 
 void LEM::GuardClick()
 
 {
-	Gclick.play(NOLOOP,255);
+	Gclick.play(NOLOOP);
 }
 
 void LEM::VoxSound()
 
 {
-	Vox.play(LOOP,255);
+	Vox.play(LOOP);
 }
 
 void LEM::AbortFire()
 
 {
-	Afire.play(NOLOOP,255);
+	Afire.play(NOLOOP);
 }
 
 bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)

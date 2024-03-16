@@ -79,8 +79,6 @@ MSS::MSS(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	moveLVToPad = false;
 	touchdownPointHeight = -67.25;		// park height
 	hLV = 0;
-
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 }
 
 MSS::~MSS() {
@@ -103,6 +101,7 @@ void MSS::clbkSetClassCaps(FILEHANDLE cfg) {
 }
 
 void MSS::clbkPostCreation() {
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void MSS::clbkPreStep(double simt, double simdt, double mjd) {
@@ -155,12 +154,6 @@ void MSS::DoFirstTimestep() {
 			hLV = h;
 		}
 	}
-
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 	firstTimestepDone = true;
 }

@@ -105,9 +105,6 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	meshidxPanel = 0;
 	meshidxPanelReverse = 0;
 
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-	soundlib.LoadSound(soundEngine, "CrawlerEngine.wav", BOTHVIEW_FADED_MEDIUM);
-
 	panelMeshoffset = _V(0,0,0);
     panelMeshidx = 0;
 }
@@ -356,20 +353,16 @@ void Crawler::clbkPostStep(double simt, double simdt, double mjd) {
 	}
 }
 
+void Crawler::clbkPostCreation() {
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
+	soundlib.LoadSound(soundEngine, "CrawlerEngine.wav", BOTHVIEW_FADED_MEDIUM);
+}
+
 void Crawler::DoFirstTimestep() {
 
 	SetView();
 
 	oapiGetHeading(GetHandle(), &targetHeading);
-	
-	// Turn off pretty much everything that Orbitersound does by default.
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 	if (!standalone) {
 		if (LVName[0])
