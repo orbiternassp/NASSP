@@ -15946,14 +15946,17 @@ RTCC_PMMMCD_17_1:
 	return 0;
 }
 
-int RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
+int RTCC::PMMMPT(PMMMPTInput &in, MPTManeuver &man)
 {
+	//The weights in the input table will be set to the weights after the maneuver in PMMMPT. This is done so that repeated calls of PMMMPT, with multiple maneuvers in a sequence,
+	//use the correct weight to simulate each maneuver.
+
 	EMMENIInputTable emsin;
 	//Reference orbital elements (post maneuver)
 	CELEMENTS ELA;
 	EphemerisData sv_gmti, sv_gmti_other;
 	VECTOR3 DV_LVLH;
-	double WDI[6], TH[6], DELT[6], TIDPS, MASS, DELVB, T, GMTBB, GMTI, WAITA, DT, mu;
+	double WDI[6], TH[6], DELT[6], TIDPS, MASS, DELVB, T, GMTBB, GMTI, WAITA, DT, mu, WTSAVE;
 	int err = 0;
 
 	int NPHASE = 1;
@@ -15980,6 +15983,7 @@ int RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 	man.ConfigCodeBefore = man.CommonBlock.ConfigCode = in.CONFIG;
 	man.TVC = in.VC;
 	man.IMPT = TIMP;
+	WTSAVE = in.VehicleWeight;
 	if (in.Thruster == RTCC_ENGINETYPE_LMAPS)
 	{
 		man.TrimAngleInd = 1;
@@ -16264,14 +16268,17 @@ RTCC_PMMMPT_11_B:
 	in.mpt->TimeToBeginManeuver[in.CurrentManeuver - 1] = in.mpt->TimeToEndManeuver[in.CurrentManeuver - 1] = GMTBB;
 	man.GMTMAN = GMTBB;
 	man.GMTI = GMTI;
-	//WEIGHT = WAITA;
+	//Update weights in input table. This is done for multiple maneuvers being added to the MPT, all of which will have to run PMMMPT and should use an updated weight.
+	in.VehicleWeight = WAITA;
 	if (in.VC == 1)
 	{
 		//Update CSM weight
+		in.CSMWeight = in.CSMWeight - (WTSAVE - WAITA);
 	}
 	else
 	{
 		//Update LM weight
+		in.LMWeight = in.LMWeight - (WTSAVE - WAITA);
 	}
 	return false;
 RTCC_PMMMPT_12_A:
@@ -16306,22 +16313,10 @@ RTCC_PMMMPT_12_A:
 	integin.YB = man.Y_B;
 	integin.ZB = man.Z_B;
 	integin.CAPWT = in.VehicleWeight;
-	integin.CSMWT = 0.0;
-	integin.LMAWT = 0.0;
+	integin.CSMWT = in.CSMWeight;
+	integin.LMAWT = in.LMWeight;
 	integin.LMDWT = 0.0;
 	integin.SIVBWT = 0.0;
-	if (man.TVC == RTCC_MANVEHICLE_CSM)
-	{
-		integin.CSMWT = in.VehicleWeight;
-	}
-	else if (man.TVC == RTCC_MANVEHICLE_LM)
-	{
-		integin.LMDWT = in.VehicleWeight;
-	}
-	else
-	{
-		integin.SIVBWT = in.VehicleWeight;
-	}
 
 	int Ierr;
 	RTCCNIAuxOutputTable aux;
@@ -22125,16 +22120,16 @@ int RTCC::PMMXFR(int id, void *data)
 
 			if (prevman > 0)
 			{
-				in.CSMWeight = 0.0;
-				in.LMWeight = 0.0;
+				in.CSMWeight = mpt->mantable[prevman - 1].CommonBlock.CSMMass;
+				in.LMWeight = mpt->mantable[prevman - 1].CommonBlock.LMAscentMass + mpt->mantable[prevman - 1].CommonBlock.LMDescentMass;
 				in.VehicleWeight = mpt->mantable[prevman - 1].TotalMassAfter;
 				in.VehicleArea = mpt->mantable[prevman - 1].TotalAreaAfter;
 				in.DockingAngle = mpt->mantable[prevman - 1].DockingAngle;
 			}
 			else
 			{
-				in.CSMWeight = 0.0;
-				in.LMWeight = 0.0;
+				in.CSMWeight = mpt->CommonBlock.CSMMass;
+				in.LMWeight = mpt->CommonBlock.LMAscentMass + mpt->CommonBlock.LMDescentMass;
 				in.VehicleWeight = mpt->TotalInitMass;
 				in.VehicleArea = mpt->ConfigurationArea;
 				in.DockingAngle = mpt->DeltaDockingAngle;
@@ -33184,8 +33179,8 @@ PCMATC_5A:
 	integin.WDMULT = 1.0;
 	integin.CAPWT = vars->Vec3.z + vars->LMWeight;
 	integin.CSMWT = vars->Vec3.z;
-	integin.LMAWT = 0.0;
-	integin.LMDWT = vars->LMWeight;
+	integin.LMAWT = vars->LMWeight;
+	integin.LMDWT = 0.0;
 
 	int Ierr;
 
