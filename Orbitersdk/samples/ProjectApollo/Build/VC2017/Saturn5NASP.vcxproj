@@ -415,6 +415,9 @@
     <ClInclude Include="..\..\src_csm\CM_VC_Resource.h" />
     <ClInclude Include="..\..\src_aux\RF_calc.h" />
     <ClInclude Include="..\..\src_csm\csmsensors.h" />
+    <ClInclude Include="..\..\src_csm\CM-VC-SeatsFolded_Resource.h" />
+    <ClInclude Include="..\..\src_csm\CM-VC-SeatsUnfolded_Resource.h" />
+    <ClInclude Include="..\..\src_csm\EmissionListCMVC.h" />
     <ClInclude Include="..\..\src_csm\rhc.h" />
     <ClInclude Include="..\..\src_csm\sce.h" />
     <ClInclude Include="..\..\src_csm\smjc.h" />

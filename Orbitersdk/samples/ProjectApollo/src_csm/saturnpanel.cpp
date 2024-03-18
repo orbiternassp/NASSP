@@ -4333,11 +4333,11 @@ void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src
 	yoffs *= TexMul;
 	if (EngineOn)
 	{
-		oapiBlt(dest, src, xoffs, yoffs, xoffs, yoffs, 29*TexMul, 29*TexMul);
+		oapiBlt(dest, src, xoffs, yoffs, xoffs, yoffs, 33*TexMul, 30*TexMul);
 	}
 	else
 	{
-		oapiBlt(dest, src, xoffs, yoffs, xoffs + 101*TexMul, yoffs, 29*TexMul, 29*TexMul);
+		oapiBlt(dest, src, xoffs, yoffs, xoffs + 102*TexMul, yoffs,33*TexMul, 30*TexMul);
 	}
 }
 
