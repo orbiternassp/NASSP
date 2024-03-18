@@ -87,6 +87,18 @@ namespace mission
 		VECTOR3 GetCGOfEmptySM() const;
 		//false = Optics mode switch is not bypassed for CMC to optics commands, true = optics mode switch is bypassed for CMC to optics commands (ECP 792)
 		bool HasRateAidedOptics() const;
+		//
+		MATRIX3 GetCM_IMU_Drift() const;
+		//
+		MATRIX3 GetLM_IMU_Drift() const;
+		//
+		VECTOR3 GetCM_PIPA_Bias() const;
+		//
+		VECTOR3 GetLM_PIPA_Bias() const;
+		//
+		VECTOR3 GetCM_PIPA_Scale() const;
+		//
+		VECTOR3 GetLM_PIPA_Scale() const;
 		//0 = LM-7 and before (ASC PRESS LOW before staging, RCS for HEATER FAILURE CAUTION), 1 = LM-8 and after (both cut and capped)
 		int GetLMCWEAVersion() const;
 		//false = Normal polarity (Apollo 14 and earlier), Lateral axis for PGNS and LR input has switched polarity (Apollo 15 and later)
@@ -161,6 +173,16 @@ namespace mission
 		std::vector<CueCardConfig> LMCueCards;
 		double dTEPHEM0;
 		int iLMSystemsVersion;
+
+		MATRIX3 CM_IMUDriftRates;
+		VECTOR3 CM_PIPABias;
+		VECTOR3 CM_PIPAScale;
+
+		MATRIX3 LM_IMUDriftRates;
+		VECTOR3 LM_PIPABias;
+		VECTOR3 LM_PIPAScale;
+
+		void Mission::LoadIMU_AndPIPA_RatesAndBiases(std::ifstream &hFile);
 
 		void SetDefaultValues();
 	};

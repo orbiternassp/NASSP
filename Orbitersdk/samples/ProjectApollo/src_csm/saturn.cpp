@@ -72,6 +72,7 @@ extern "C" {
 using namespace nassp;
 
 //extern FILE *PanelsdkLogFile;
+//extern FILE* IMUDriftLogger;
 
 #define CSM_AXIS_INPUT_CNT  53
 VesimInputDefinition vesim_csm_inputs[CSM_AXIS_INPUT_CNT] = {
@@ -1547,8 +1548,18 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	//
 	// Subclass specific handling
 	//
-
+	//VECTOR3 ATTITUDEFORTESTING = imu.GetTotalAttitude();
+	VECTOR3 ATTITUDEFORTESTING = imu.getPlatformEulerAnglesZYX();
+	VECTOR3 DRIFTRATEFORTESTING = imu.GetNBDriftRates();
+	VECTOR3 IMURESOLVERPHASEERROR = imu.getResolverPhaseError();
+	//sprintf(oapiDebugString(), "<%0.10f, %0.10f, %0.10f>, <%0.10f, %0.10f, %0.10f>, <%0.10f, %0.10f, %0.10f>", 
+	//	ATTITUDEFORTESTING.x, ATTITUDEFORTESTING.y, ATTITUDEFORTESTING.z, 
+	//	DRIFTRATEFORTESTING.x, DRIFTRATEFORTESTING.y, DRIFTRATEFORTESTING.z,
+	//	IMURESOLVERPHASEERROR.x, IMURESOLVERPHASEERROR.y, IMURESOLVERPHASEERROR.z);
+	//fprintf(IMUDriftLogger, "%0.15f, %0.15f, %0.15f, %0.15f\n", simt, ATTITUDEFORTESTING.x, ATTITUDEFORTESTING.y, ATTITUDEFORTESTING.z);
+	//fflush(IMUDriftLogger);
 	Timestep(simt, simdt, mjd);
+	
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 
 	TRACE(buffer);
@@ -2776,7 +2787,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	//
 
 	agc.SetMissionInfo(pMission->GetCMCVersion(), PayloadName);
-
+	imu.SetDriftRates(pMission->GetCM_IMU_Drift());
+	imu.SetPIPABias(pMission->GetCM_PIPA_Bias());
+	imu.SetPIPAScale(pMission->GetCM_PIPA_Scale());
 	secs.SetSaturnType(SaturnType);
 
 	//
