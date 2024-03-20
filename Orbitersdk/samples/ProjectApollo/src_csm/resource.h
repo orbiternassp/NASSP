@@ -799,6 +799,11 @@
 #define AID_VC_ALTIMETER                        3015
 #define AID_VC_SWITCH_P163_01                   3016
 #define AID_VC_SWITCH_PLVC                      3017
+#define AID_VC_WINDOWSHADE1						3018
+#define AID_VC_WINDOWSHADE2						3019
+#define AID_VC_WINDOWSHADE3						3020
+#define AID_VC_WINDOWSHADE4						3021
+#define AID_VC_WINDOWSHADE5						3022
 
 // VC Active Areas (Panel 1)
 

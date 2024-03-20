@@ -1134,6 +1134,11 @@ void Saturn::initSaturn()
 	vcidx = -1;
 	seatsfoldedidx = -1;
 	seatsunfoldedidx = -1;
+	windowshadesidx[0] = -1;
+	windowshadesidx[1] = -1;
+	windowshadesidx[2] = -1;
+	windowshadesidx[3] = -1;
+	windowshadesidx[4] = -1;
 	coascdridx = -1;
 	coascdrreticleidx = -1;
 
@@ -1179,6 +1184,12 @@ void Saturn::initSaturn()
 
 	// VC Seats status
 	VCSeatsfolded = false;
+
+	CSMWindowShades[0] = false;
+	CSMWindowShades[1] = false;
+	CSMWindowShades[2] = false;
+	CSMWindowShades[3] = false;
+	CSMWindowShades[4] = false;
 
 	COASreticlevisible = false;
 
@@ -1755,6 +1766,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_float(scn, "LMASCEMPTY", LMAscentEmptyMassKg);
 	}
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
+
+	sprintf(str, "%i %i %i %i %i", CSMWindowShades[0], CSMWindowShades[1], CSMWindowShades[2], CSMWindowShades[3], CSMWindowShades[4]);
+	oapiWriteScenario_string(scn, "WINDOWSHADESENABLED", str);
+
 	oapiWriteScenario_int (scn, "ORDEALENABLED", ordealEnabled);
 	oapiWriteScenario_int (scn, "OPTICSDSKYENABLED", opticsDskyEnabled);
 	oapiWriteScenario_int (scn, "HATCHPANEL600ENABLED", hatchPanel600EnabledLeft);
@@ -2457,6 +2472,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "COASENABLED", 11)) {
 		sscanf (line + 11, "%i", &coasEnabled);
+	}
+	else if (!strnicmp(line, "WINDOWSHADESENABLED", 19)) {
+		sscanf(line + 19, "%i %i %i %i %i", &CSMWindowShades[0], &CSMWindowShades[1], &CSMWindowShades[2], &CSMWindowShades[3], &CSMWindowShades[4]);
 	}
 	else if (!strnicmp(line, "CHKVAR_", 7)) {
 		for (int i = 0; i < 16; i++) {
