@@ -1410,7 +1410,7 @@ void h_WaterSeparator::refresh(double dt) {
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
 		flow = fanned.GetMass() / dt;
 
-		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
+		rpmcmd = flow * 2100.0;  //Gives max flow through water separator approximately = 3600rpm
 
 		if (flow != 0) {
 			h2oremovalratio = (RPM / rpmcmd);
@@ -1442,7 +1442,7 @@ void h_WaterSeparator::refresh(double dt) {
 				fanned.composition[SUBSTANCE_H2O].Q = fanned.composition[SUBSTANCE_H2O].Q*factor;
 
 				//if (!strcmp(name, "WATERSEP1"))
-				//	sprintf(oapiDebugString(), "Rate %f Removed %f Remaining %f", h2oremovalratio, removedmass / dt, fanned.composition[SUBSTANCE_H2O].mass / dt);
+					//sprintf(oapiDebugString(), "RPM %f Rate %f Removed %f Remaining %f", RPM, h2oremovalratio, removedmass / dt, fanned.composition[SUBSTANCE_H2O].mass / dt);
 			}
 		}
 
@@ -1458,11 +1458,11 @@ void h_WaterSeparator::refresh(double dt) {
 	drpmcmd = rpmcmd - RPM;
 	if (drpmcmd >= 0.0)
 	{
-		delay = 7.0;	// Gives delay for WS spool up RPM/sec, approximately 2 minutes
+		delay = 7.0;	// Gives delay for WS spool up RPM/sec, approximately 2 minutes to clear sep light
 	}
 	else
 	{
-		delay = 30.0;	// Gives delay for WS spin down RPM/sec, approximately 1 minute
+		delay = 35.0;	// Gives delay for WS spin down RPM/sec, approximately 1 minute to clear sep light
 	}
 	if (abs(drpmcmd) > delay*dt)
 	{
