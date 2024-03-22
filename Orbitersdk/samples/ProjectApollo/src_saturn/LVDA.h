@@ -78,6 +78,7 @@ public:
 	bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0);
 	bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM);
 	bool TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f);
+	bool GeneralizedManeuver(double T, double X, double Y, double Z, int type);
 	virtual void PrepareToLaunch();
 
 	void SetOutputRegisterBit(int bit, bool state);

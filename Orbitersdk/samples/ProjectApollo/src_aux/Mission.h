@@ -45,6 +45,8 @@ namespace mission
 		virtual bool LoadMission(const int iMission);
 		virtual bool LoadMission(const std::string& strMission);
 
+		const virtual std::string& GetMissionName(void) const;
+
 		//1 = Block I and pre Apollo 13, 2 = Apollo 13 and later
 		virtual int GetSMJCVersion() const;
 		//false = any other CSM, true = J-type mission CSM (for all systems and panels common to CSM-112 to 114)

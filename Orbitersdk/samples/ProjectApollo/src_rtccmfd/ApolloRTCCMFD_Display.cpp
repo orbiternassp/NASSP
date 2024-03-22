@@ -5657,7 +5657,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 			sprintf(Buffer, "DDA:");
 			skp->Text(2 * W / 16, 8 * H / 16, Buffer, strlen(Buffer));
-			if (GC->rtcc->med_m55.DeltaDockingAngle >= 0)
+			if (GC->rtcc->med_m55.DeltaDockingAngle >= -360.0)
 			{
 				sprintf(Buffer, "%.2f°", GC->rtcc->med_m55.DeltaDockingAngle*DEG);
 			}

@@ -541,7 +541,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	TPI_PAD.Rdot = 0.0;
 	TPI_PAD.dH_Max = 0.0;
 	TPI_PAD.Backup_bT = _V(0.0, 0.0, 0.0);
-	sxtstardtime = 0.0;
+	sxtstardtime = -30.0*60.0;
 	manpad_ullage_dt = 0.0;
 	manpad_ullage_opt = true;
 
@@ -2875,7 +2875,7 @@ int ARCore::subThread()
 		{
 			opt.useSV = true;
 
-			if (REFSMMATopt == 0 || REFSMMATopt == 1 || REFSMMATopt == 2 || REFSMMATopt == 5)
+			if (REFSMMATopt == 0 || REFSMMATopt == 1 || REFSMMATopt == 2)
 			{
 				//SV at specified time
 				double GMT = GC->rtcc->GMTfromGET(opt.REFSMMATTime);
@@ -2921,6 +2921,22 @@ int ARCore::subThread()
 				pin.TableCode = mptveh;
 				GC->rtcc->PLAWDT(pin, pout);
 				opt.RV_MCC.mass = pout.ConfigWeight;
+			}
+			else if (REFSMMATopt == 5)
+			{
+				//Landing site
+				double GMT = GC->rtcc->GMTfromGET(opt.REFSMMATTime);
+				EphemerisData EPHEM;
+				if (GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM))
+				{
+					Result = DONE;
+					break;
+				}
+
+				opt.RV_MCC.R = EPHEM.R;
+				opt.RV_MCC.V = EPHEM.V;
+				opt.RV_MCC.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
+				opt.RV_MCC.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 			}
 			else
 			{

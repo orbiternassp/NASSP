@@ -34,9 +34,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define DCSUPLINK_EXECUTE_COMM_MANEUVER		7
 #define DCSUPLINK_SIVBIU_LUNAR_IMPACT		8
 #define DCSUPLINK_REMOVE_INHIBIT_MANEUVER4	9
-#define DCSUPLINK_SATURNIB_LAUNCH_TARGETING	10
-#define DCSUPLINK_SLV_NAVIGATION_UPDATE 	11
-#define DCSUPLINK_SLV_TLI_TARGETING_UPDATE	12
+#define DCSUPLINK_GENERALIZED_MANEUVER		10
+//From here on not available in the PAMFD
+#define DCSUPLINK_SATURNIB_LAUNCH_TARGETING	11
+#define DCSUPLINK_SLV_NAVIGATION_UPDATE 	12
+#define DCSUPLINK_SLV_TLI_TARGETING_UPDATE	13
 
 #define DCS_START_STRING	"DCS_BEGIN"
 #define DCS_END_STRING		"DCS_END"
@@ -93,6 +95,16 @@ struct DCSSLVTLITARGET
 	double alpha_D = 0.0;
 	double f = 0.0;
 	double theta_N = 0.0;
+};
+
+//SIB Generalized Attitude Maneuver
+struct DCSGENMANEUVER
+{
+	double T = 0.0;
+	double X = 0.0;
+	double Y = 0.0;
+	double Z = 0.0;
+	int Type = 0;
 };
 
 class IU;

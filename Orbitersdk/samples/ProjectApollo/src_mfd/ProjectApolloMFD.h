@@ -61,6 +61,7 @@ public:
 	bool SetImpactBT(char *rstr);
 	bool SetImpactPitch(char *rstr);
 	bool SetImpactYaw(char *rstr);
+	bool SetGeneralizedManeuverAttitude(char *rstr);
 	bool SetSaturnSwitchFailure(int n);
 	bool SetIUPlatformFailure(double misst);
 	void SetSIEngineFailure(int n, double misst);
@@ -100,14 +101,11 @@ public:
 	void menuFreezeDebugLine();
 	void menuSetIUSource();
 	void menuCycleIUUplinkType();
-	void menuCycleSwitSelStage();
-	void menuSetSwitSelChannel();
+	void menuSetIUUplinkInp1();
+	void menuSetIUUplinkInp2();
+	void menuSetIUUplinkInp3();
+	void menuSetIUUplinkInp4();
 	void menuIUUplink();
-	void menuSetTBUpdateTime();
-	void menuSetImpactTIG();
-	void menuSetImpactBT();
-	void menuSetImpactPitch();
-	void menuSetImpactYaw();
 	void menuCycleFailuresSubpage();
 	void menuSetSaturnSwitchFailure();
 	void menuSetIUPlatformFailure();

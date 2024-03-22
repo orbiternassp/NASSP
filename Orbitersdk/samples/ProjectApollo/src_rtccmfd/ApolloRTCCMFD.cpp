@@ -4266,7 +4266,7 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 			GenericDoubleInput(&GC->rtcc->med_m51.LMAscentArea, "Input LM ascent stage area in square feet (negative number for no update):", 0.3048*0.3048);
 			break;
 		case 3: //M55: Delta Docking Angle
-			GenericDoubleInput(&GC->rtcc->med_m55.DeltaDockingAngle, "Delta docking angle (negative number for no update):", RAD);
+			GenericDoubleInput(&GC->rtcc->med_m55.DeltaDockingAngle, "Delta docking angle (smaller than -360° for no update):", RAD);
 			break;
 		}
 		break;

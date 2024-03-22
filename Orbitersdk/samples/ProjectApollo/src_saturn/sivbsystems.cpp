@@ -1701,7 +1701,15 @@ void SIVB200Systems::SwitchSelector(int channel)
 		FuelInjTempOKBypass = false;
 		break;
 	case 19: //Engine Ready Bypass On (AS-205) or LH2 Tank Latching Relief Valve Latch Off (AS-206)
-		SetEngineReadyBypass();
+		if (VehicleNo < 206)
+		{
+			SetEngineReadyBypass();
+		}
+		else
+		{
+			LH2TankLatchingReliefValveLatchOn = false;
+			UpdateLH2ValveStates();
+		}
 		break;
 	case 22: //LOX Chilldown Pump On
 		LOXChilldownPumpOn = true;
