@@ -1450,6 +1450,12 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_COAS1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS1, COAS1Location + ofs, 0.05);
 
+	// Cue Cards
+
+	// Above the DSKY for the DAP Monitor Card
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_1, _V(-0.329979, 0.682787, 0.352857) + ofs, _V(-0.257461, 0.682787, 0.352857) + ofs, _V(-0.329979, 0.673671, 0.349805) + ofs, _V(-0.257461, 0.673671, 0.349805) + ofs);
+
 	//
 	// Initialize surfaces and switches
 	//

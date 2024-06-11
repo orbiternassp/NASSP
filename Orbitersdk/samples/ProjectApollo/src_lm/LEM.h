@@ -71,6 +71,7 @@
 #include "checklistController.h"
 #include "payload.h"
 #include "LMMalfunctionSimulation.h"
+#include "CueCardManager.h"
 
 enum LMRCSThrusters
 {
@@ -755,6 +756,7 @@ protected:
 	PanelSwitches MainPanel;
 	PanelSwitchesVC MainPanelVC;
 	PanelSwitchScenarioHandler PSH;
+	CueCardManager CueCards;
 
 	SwitchRow AbortSwitchesRow;
 

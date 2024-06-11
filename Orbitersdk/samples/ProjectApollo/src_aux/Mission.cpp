@@ -147,6 +147,7 @@ namespace mission {
 		AddCSMCueCard(8, "LMP_BOOST-ABORTS");
 		AddCSMCueCard(9, "LOI_LIMITS");
 		AddCSMCueCard(10, "CSM_ANTENNA_LOCATIONS");
+		AddLMCueCard(0, "CUECARD_DAP");
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -463,9 +464,14 @@ namespace mission {
 		return GetCueCards(CSMCueCards, counter, loc, meshname, ofs);
 	}
 
+	bool Mission::GetLMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
+	{
+		return GetCueCards(LMCueCards, counter, loc, meshname, ofs);
+	}
+
 	bool Mission::GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
 	{
-		while (counter < CSMCueCards.size())
+		while (counter < cue.size())
 		{
 			if (cue[counter].meshname != "" && cue[counter].meshname != "None")
 			{

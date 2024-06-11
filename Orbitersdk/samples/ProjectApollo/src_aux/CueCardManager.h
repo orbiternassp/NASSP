@@ -30,7 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 class CueCardManager
 {
 public:
-	CueCardManager(int &vcidx, VESSEL *v, unsigned num);
+	CueCardManager(UINT &vcidx, VESSEL *v, unsigned num);
 
 	//Creates cue card, should be called in vessel constructor or clbkPostStep
 	void CreateCueCard(unsigned location, std::string name, VECTOR3 offs = _V(0, 0, 0));
@@ -49,7 +49,7 @@ public:
 	VESSEL *V() { return vessel; }
 	VECTOR3 GetVCOffset();
 protected:
-	int &vc;
+	UINT &vc;
 	VESSEL *vessel;
 	std::vector<CueCardLocation> CueCardLocations;
 };

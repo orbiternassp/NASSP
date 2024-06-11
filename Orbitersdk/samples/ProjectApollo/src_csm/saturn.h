@@ -3900,7 +3900,7 @@ protected:
 	int opticscoveridx;
 	int cmdocktgtidx;
 	int simbaypanelidx;
-	int vcidx;
+	UINT vcidx;
 	int seatsfoldedidx;
 	int seatsunfoldedidx;
 	int coascdridx;

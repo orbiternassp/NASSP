@@ -2468,6 +2468,15 @@ void LEM::CreateMissionSpecificSystems()
 	{
 		aeaa = new LEM_AEAA();
 	}
+
+	//Create cue cards
+	unsigned loc, counter = 0;
+	std::string meshname;
+	VECTOR3 ofs;
+	while (pMission->GetLMCueCards(counter, loc, meshname, ofs) == false)
+	{
+		CueCards.CreateCueCard(loc, meshname, ofs);
+	}
 }
 
 // SYSTEMS COMPONENTS

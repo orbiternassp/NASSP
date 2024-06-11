@@ -1358,6 +1358,9 @@
 #define AID_VC_ACTOVRDCDR               5026
 #define AID_VC_ACTOVRDLMP               5027
 
+// Cue Cards
+#define AID_VC_CUE_CARD_LOCATION_1		6000
+
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

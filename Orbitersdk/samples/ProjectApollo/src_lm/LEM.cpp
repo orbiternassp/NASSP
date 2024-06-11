@@ -458,8 +458,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	AscentECAMainFeeder("Ascent-ECA-Main-Feeder", Panelsdk),
 	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk),
 	vesim(&cbLMVesim, this),
-	Failures(this)
-
+	Failures(this),
+	CueCards(vcidx, this, 1)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -1900,6 +1900,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "EVENTTIMER_START", sizeof("EVENTTIMER_START"))) {
 			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
 		}
+		else if (!strnicmp(line, CUECARDS_START_STRING, sizeof(CUECARDS_START_STRING))) {
+			CueCards.LoadState(scn);
+		}
 		else if (!strnicmp(line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -2255,6 +2258,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		aea.SaveState(scn, "AEA_START", "AEA_END");
 		asa.SaveState(scn, "ASA_START", "ASA_END");
 	}
+	CueCards.SaveState(scn);
 
 	//
 	// Save the Panel SDK state.
