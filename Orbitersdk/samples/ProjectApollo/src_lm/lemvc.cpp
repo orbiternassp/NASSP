@@ -1452,9 +1452,10 @@ void LEM::RegisterActiveAreas()
 
 	// Cue Cards
 
-	// Above the DSKY for the DAP Monitor Card
+	// Below mission and event timer, descent procedures
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_1, _V(-0.329979, 0.682787, 0.352857) + ofs, _V(-0.257461, 0.682787, 0.352857) + ofs, _V(-0.329979, 0.673671, 0.349805) + ofs, _V(-0.257461, 0.673671, 0.349805) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_1, _V(-0.420300, 0.627500, 1.703500) + ofs, _V(-0.197700, 0.627500, 1.703500) + ofs,
+		_V(-0.420300, 0.804300, 1.729300) + ofs, _V(-0.197700, 0.804300, 1.729300) + ofs);
 
 	//
 	// Initialize surfaces and switches
@@ -1561,6 +1562,9 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			}
 			SwitchClick();
 			SetCOAS();
+			return true;
+		case AID_VC_CUE_CARD_LOCATION_1:
+			CueCards.CycleCueCard(id - AID_VC_CUE_CARD_LOCATION_1);
 			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);

@@ -61,7 +61,8 @@ core
 !/Script
 /Script/*
 !/Script/ProjectApollo
-/Textures/
+!/Textures/
+/Textures/*
 !/Textures/ProjectApollo/
 /Scenarios
 !/Scenarios/Project Apollo - NASSP/

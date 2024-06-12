@@ -147,7 +147,7 @@ namespace mission {
 		AddCSMCueCard(8, "LMP_BOOST-ABORTS");
 		AddCSMCueCard(9, "LOI_LIMITS");
 		AddCSMCueCard(10, "CSM_ANTENNA_LOCATIONS");
-		AddLMCueCard(0, "CUECARD_DAP");
+		AddLMCueCard(0, "A15LM_DPS_PROCEDURE");
 	}
 
 	bool Mission::LoadMission(const int iMission)
