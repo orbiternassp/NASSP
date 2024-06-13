@@ -1454,8 +1454,8 @@ void LEM::RegisterActiveAreas()
 
 	// Below mission and event timer, descent procedures
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_1, _V(-0.420300, 0.627500, 1.703500) + ofs, _V(-0.197700, 0.627500, 1.703500) + ofs,
-		_V(-0.420300, 0.804300, 1.729300) + ofs, _V(-0.197700, 0.804300, 1.729300) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_1, _V(-0.311226, 0.662860, 1.708660) + ofs, _V(-0.291192, 0.662860, 1.708660) + ofs,
+		_V(-0.311226, 0.698220, 1.713820) + ofs, _V(-0.291192, 0.698220, 1.713820) + ofs);
 
 	//
 	// Initialize surfaces and switches
