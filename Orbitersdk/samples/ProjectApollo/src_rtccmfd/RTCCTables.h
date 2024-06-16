@@ -279,6 +279,22 @@ struct PLAWDTInput
 
 struct PLAWDTOutput
 {
+	PLAWDTOutput()
+	{
+		Err = 0;
+		ConfigArea = 0.0;
+		ConfigWeight = 0.0;
+		CSMArea = 0.0;
+		SIVBArea = 0.0;
+		LMAscArea = 0.0;
+		LMDscArea = 0.0;
+		CSMWeight = 0.0;
+		SIVBWeight = 0.0;
+		LMAscWeight = 0.0;
+		LMDscWeight = 0.0;
+		KFactor = 1.0;
+	}
+
 	//0: No error
 	//1: Request time within a maneuver - previous maneuver values used
 	//2: Maneuver not current - last current values used

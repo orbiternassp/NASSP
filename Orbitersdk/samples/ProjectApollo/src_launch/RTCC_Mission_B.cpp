@@ -81,15 +81,15 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
 
+		opt.TIG = OrbMech::HHMMSSToSS(8, 52, 44);
 		opt.dV_LVLH = _V(1.0, 0.0, -1.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = REFSMMAT;
-		opt.TIG = OrbMech::HHMMSSToSS(8, 52, 44);
-		opt.vessel = mcc->lm;
-		opt.csmlmdocked = 0;
+		opt.RV_MCC = StateVectorCalcEphem(mcc->lm);
+		opt.WeightsTable = GetWeightsTable(mcc->lm, false, false);
 
-		AP11LMManeuverPAD(&opt, manpad);
+		AP11LMManeuverPAD(opt, manpad);
 		SunburstAttitudeManeuver(buffer1, manpad.IMUAtt);
 
 		sprintf(uplinkdata, "%s", buffer1);
@@ -170,15 +170,15 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
 
+		opt.TIG = OrbMech::HHMMSSToSS(9, 40, 20);
 		opt.dV_LVLH = _V(0.0, 1.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = REFSMMAT;
-		opt.TIG = OrbMech::HHMMSSToSS(9, 40, 20);
-		opt.vessel = mcc->lm;
-		opt.csmlmdocked = 0;
+		opt.RV_MCC = StateVectorCalcEphem(mcc->lm);
+		opt.WeightsTable = GetWeightsTable(mcc->lm, false, false);
 
-		AP11LMManeuverPAD(&opt, manpad);
+		AP11LMManeuverPAD(opt, manpad);
 		SunburstAttitudeManeuver(buffer1, manpad.IMUAtt);
 
 		sprintf(uplinkdata, "%s", buffer1);
@@ -225,15 +225,15 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SVMJD = oapiGetSimMJD();
 		GET = mcc->lm->GetMissionTime();
 
+		opt.TIG = OrbMech::HHMMSSToSS(12, 52, 18);
 		opt.dV_LVLH = _V(1.0, 0.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = REFSMMAT;
-		opt.TIG = OrbMech::HHMMSSToSS(12, 52, 18);
-		opt.vessel = mcc->lm;
-		opt.csmlmdocked = 0;
+		opt.RV_MCC = StateVectorCalcEphem(mcc->lm);
+		opt.WeightsTable = GetWeightsTable(mcc->lm, false, false);
 
-		AP11LMManeuverPAD(&opt, manpad);
+		AP11LMManeuverPAD(opt, manpad);
 		SunburstAttitudeManeuver(buffer1, manpad.IMUAtt);
 
 		sprintf(uplinkdata, "%s", buffer1);

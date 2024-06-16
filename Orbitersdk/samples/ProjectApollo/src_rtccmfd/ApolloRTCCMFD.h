@@ -85,7 +85,12 @@ public:
 	void menuDKINCCDHInput();
 	void SPQDHdialogue();
 	void set_SPQDH(double DH);
-	void set_target();
+	void set_Vessel();
+	void set_CSMVessel();
+	void set_LMVessel();
+	void set_IUVessel();
+	void set_TargetVessel();
+	void CycleThroughVessels(VESSEL **v) const;
 	void menuSLVLaunchTargetingPad();
 	void menuSLVLaunchTargeting();
 	void menuSLVLaunchUplink();
@@ -122,6 +127,7 @@ public:
 	void menuCycleMarkerUp();
 	void menuCycleMarkerDown();
 	void menuSetGMPInput();
+	void menuGPMCycleVessel();
 	void SPQcalc();
 	void lambertcalc();
 	void Angle_Display(char *Buff, double angle, bool DispPlus = true);
@@ -184,8 +190,8 @@ public:
 	void menuGeneralMEDRequest(char *message);
 	void GeneralMEDRequest(char *str);
 	void EntryRangeDialogue();
+	void set_SVPageTarget();
 	void menuSVCalc();
-	void menuSwitchSVSlot();
 	void menuSVUpload();
 	void menuLSCalc();
 	void menuRevertRLSToPrelaunch();
@@ -235,7 +241,7 @@ public:
 	void menuChangeVesselStatus();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
-	void set_svtarget();
+	bool set_LiftoffTime(bool cmc);
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
 	void menuCycleLunarEntryPADSxtOption();
@@ -420,18 +426,9 @@ public:
 	void menuSetLAPLiftoffTime();
 	void menuSetDAPPADPage();
 	void menuDAPPADCalc();
-	void menuSetLVDCPage();
+	void menuSetSaturnIBLVDCPage();
+	void menuSetSaturnVLVDCPage();
 	void menuLaunchAzimuthCalc();
-	void menuSetAGCEphemerisPage();
-	void menuCycleAGCEphemOpt();
-	void menuCycleAGCEphemAGCType();
-	void menuSetAGCEphemMission();
-	void menuSetAGCEphemBRCSEpoch();
-	void menuSetAGCEphemTEphemZero();
-	void menuSetAGCEphemTEPHEM();
-	void menuSetAGCEphemTIMEM0();
-	void menuSetAGCEphemTLAND();
-	void menuGenerateAGCEphemeris();
 	void cycleVECPOINTOpt();
 	void menuSetLMAscentPADPage();
 	void menuAscentPADCalc();
@@ -840,6 +837,7 @@ public:
 	void menuAGOPCalc();
 	void menuAGOPSaveREFSMMAT();
 	void menuSetRTACFPage();
+	void CycleCSMOrLMSelection();
 
 	void SetMEDInputPageP13();
 	void SetMEDInputPageP14();
@@ -886,6 +884,8 @@ private:
 
 	RTCCMFDInputBoxData tempData;
 
+	bool IsCSM; //Chooses if the CSM or LM vessel in the RTCC is selected
+	int ErrorMessage;
 	MEDInputPage MEDInputData;
 
 	//Additional display functions
@@ -899,6 +899,13 @@ private:
 	void AGOPDisplayOption7(oapi::Sketchpad*skp);
 	void AGOPDisplayOption8(oapi::Sketchpad*skp);
 	void AGOPDisplayOption9(oapi::Sketchpad*skp);
+
+	void CSMOrLMSelection(oapi::Sketchpad*skp);
+	void CSMOrLMSelectionErrorMessage(oapi::Sketchpad*skp);
+	void PrintCSMVessel(char *Buffer, bool ShowCSM = true);
+	void PrintLMVessel(char *Buffer, bool ShowLM = true);
+	void PrintIUVessel(char *Buffer);
+	void PrintTargetVessel(char *Buffer);
 };
 
 #endif // !__ApolloRTCCMFD_H

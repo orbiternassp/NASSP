@@ -122,9 +122,6 @@
     <ClCompile Include="..\..\src_launch\rtcc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_rtccmfd\EphemProg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\ARoapiModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

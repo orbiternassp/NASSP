@@ -89,18 +89,9 @@ void TLIProcessor::Option1()
 {
 	//Propagate state to TIG
 	EMSMISSInputTable in;
-	PLAWDTOutput tab;
 
-	tab.CC[RTCC_CONFIG_S] = true;
-	tab.ConfigArea = 0.0; //TBD
-	tab.ConfigWeight = MEDQuantities.state.Mass;
-	tab.CSMArea = tab.CSMWeight = tab.LMAscArea = tab.LMAscWeight = tab.LMDscArea = tab.LMDscWeight = 0.0;
-	tab.SIVBArea = 0.0; //TBD
-	tab.SIVBWeight = MEDQuantities.state.Mass;
-	tab.KFactor = 1.0;
-
-	in.AnchorVector = MEDQuantities.state.sv;
-	in.MaxIntegTime = MEDQuantities.GMT_TIG - MEDQuantities.state.sv.GMT;
+	in.AnchorVector = MEDQuantities.state;
+	in.MaxIntegTime = MEDQuantities.GMT_TIG - MEDQuantities.state.GMT;
 	if (in.MaxIntegTime < 0)
 	{
 		in.MaxIntegTime = abs(in.MaxIntegTime);
@@ -108,7 +99,7 @@ void TLIProcessor::Option1()
 	}
 	in.VehicleCode = RTCC_MPT_CSM;
 	in.useInputWeights = true;
-	in.WeightsTable = &tab;
+	in.WeightsTable = &MEDQuantities.WeightsTable;
 
 	pRTCC->EMSMISS(&in);
 

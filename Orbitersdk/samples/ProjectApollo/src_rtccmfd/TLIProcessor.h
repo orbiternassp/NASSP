@@ -29,7 +29,8 @@ struct TLIMEDQuantities
 {
 	//1 = S-IVB hypersurface solution, 2 = integrated free-return, 3 = hybrid ellipse, 4 = E-type mission ellipse
 	int Mode;
-	SV2 state;
+	EphemerisData state;
+	PLAWDTOutput WeightsTable;
 
 	//Mode1
 	double GMT_TIG;

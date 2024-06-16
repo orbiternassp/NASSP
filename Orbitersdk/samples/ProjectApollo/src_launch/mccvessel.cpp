@@ -210,6 +210,7 @@ void MCCVessel::clbkPostCreation()
 	{
 		if (mcc) mcc->SetLM(LEMName);
 	}
+	if (rtcc) rtcc->clbkPostCreation();
 }
 
 void MCCVessel::CreateMCC()

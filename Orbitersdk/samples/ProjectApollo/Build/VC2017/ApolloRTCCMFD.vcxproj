@@ -55,7 +55,6 @@
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
-    <ClCompile Include="..\..\src_rtccmfd\EphemProg.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\GeneralizedIterator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\GeneralPurposeManeuver.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp" />
