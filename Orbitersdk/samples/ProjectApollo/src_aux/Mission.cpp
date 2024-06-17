@@ -148,6 +148,10 @@ namespace mission {
 		AddCSMCueCard(9, "LOI_LIMITS");
 		AddCSMCueCard(10, "CSM_ANTENNA_LOCATIONS");
 		AddLMCueCard(0, "A15LM_DPS_PROCEDURE");
+		AddLMCueCard(1, "A15LM_CDR_LMP_BUS_LOST");
+		AddLMCueCard(2, "A15LM_DPS_APS_RCS");
+		AddLMCueCard(3, "A15LM_DPS_ASCENT");
+		AddLMCueCard(4, "A15LM_FT_NM");
 	}
 
 	bool Mission::LoadMission(const int iMission)

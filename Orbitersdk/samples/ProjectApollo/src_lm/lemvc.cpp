@@ -1455,7 +1455,27 @@ void LEM::RegisterActiveAreas()
 	// Below mission and event timer, descent procedures
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_1, _V(-0.311226, 0.662860, 1.708660) + ofs, _V(-0.291192, 0.662860, 1.708660) + ofs,
-		_V(-0.311226, 0.698220, 1.713820) + ofs, _V(-0.291192, 0.698220, 1.713820) + ofs);
+		_V(-0.311226, 0.777780, 1.725430) + ofs, _V(-0.291192, 0.777780, 1.725430) + ofs);
+
+	// Below RCS heater switches, CDR/LMP bus lost
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_2, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_2, _V(0.113078, 0.116084, 1.539060) + ofs, _V(0.154882, 0.116084, 1.539060) + ofs,
+		_V(0.113078, 0.138590, 1.554900) + ofs, _V(0.154882, 0.138590, 1.554900) + ofs);
+
+	// Below RCS controls, DPS/APS/RCS monitor
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_3, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_3, _V(-0.089500, 0.276500, 1.655800) + ofs, _V(0.197400, 0.276500, 1.655800) + ofs,
+		_V(-0.089500, 0.330000, 1.667600) + ofs, _V(0.197400, 0.330000, 1.667600) + ofs);
+
+	// Around RR No Track light, DPS Ascent
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_4, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_4, _V(-0.246735, 0.235775, 1.623300) + ofs, _V(-0.179550, 0.235775, 1.623300) + ofs,
+		_V(-0.246735, 0.278400, 1.653300) + ofs, _V(-0.179550, 0.278400, 1.653300) + ofs);
+
+	// Left of lamp test switch, feet to NM conversion
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_5, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_5, _V(0.198160, 0.150305, 1.566300) + ofs, _V(0.232670, 0.150305, 1.566300) + ofs,
+		_V(0.198160, 0.198455, 1.600300) + ofs, _V(0.232670, 0.198455, 1.600300) + ofs);
 
 	//
 	// Initialize surfaces and switches
@@ -1564,6 +1584,10 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			SetCOAS();
 			return true;
 		case AID_VC_CUE_CARD_LOCATION_1:
+		case AID_VC_CUE_CARD_LOCATION_2:
+		case AID_VC_CUE_CARD_LOCATION_3:
+		case AID_VC_CUE_CARD_LOCATION_4:
+		case AID_VC_CUE_CARD_LOCATION_5:
 			CueCards.CycleCueCard(id - AID_VC_CUE_CARD_LOCATION_1);
 			return true;
 	}
