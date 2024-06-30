@@ -61,7 +61,7 @@ set(SOURCES
 
 link_directories(${ORBITERSDK_DIR}/lib)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ORBITER_INSTALL_DIR}/Modules/Plugin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ORBITER_INSTALL_DIR}/Modules/ProjectApollo)
 
 add_library(MCC SHARED ${SOURCES})
 target_include_directories(MCC PRIVATE ${INCLUDE_DIRS})
