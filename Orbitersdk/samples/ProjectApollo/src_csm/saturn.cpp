@@ -2972,7 +2972,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// find.
 	//
 
-	srandom(VehicleNo + (int) vstatus + (int) time(0));
+	srandom(VehicleNo + (size_t) vstatus + (int) time(0));
 
 	//
 	// At some point we should reorder these checks by length, to minimise the chances
