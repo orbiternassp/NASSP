@@ -143,3 +143,4 @@ XRSound/
 /.ninja_deps
 # Ignore Matlab log analyzers
 /*.m
+/Orbitersdk/samples/ProjectApollo/CMakeSettings.json
