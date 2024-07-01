@@ -26,6 +26,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 
+#ifndef OAPI_MSGTYPE
+typedef int OAPI_MSGTYPE;
+#endif
+
 class ARoapiModule : public oapi::Module {
 public:
 	ARoapiModule(HINSTANCE hDLL);

@@ -28,6 +28,11 @@
 #include "LCC.h"
 #include "LCCMFDButtons.h"
 
+
+#ifndef OAPI_MSGTYPE
+typedef int OAPI_MSGTYPE;
+#endif
+
 class LCC_MFD :public MFD2
 {
 private:

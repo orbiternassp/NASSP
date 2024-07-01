@@ -27,6 +27,10 @@
 
 class MCC;
 
+#ifndef OAPI_MSGTYPE
+typedef int OAPI_MSGTYPE;
+#endif
+
 class ProjectApolloChecklistMFD: public MFD2 {
 public:
 	ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel);
