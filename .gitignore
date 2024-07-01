@@ -144,3 +144,25 @@ XRSound/
 # Ignore Matlab log analyzers
 /*.m
 /Orbitersdk/samples/ProjectApollo/CMakeSettings.json
+/Extern
+/GravityModels
+/packages/ldoc
+/pl
+/CMakeDoxyfile.in
+/CMakeDoxygenDefaults.cmake
+/lfs.dll
+/lfs.exp
+/lfs.ilk
+/lfs.lib
+/lfs.pdb
+/lua.dll
+/lua.exp
+/lua.ilk
+/lua.lib
+/lua.pdb
+/SketchpadOutput2.dds
+/zlibd.dll
+/zlibd.exp
+/zlibd.ilk
+/zlibd.lib
+/zlibd.pdb
