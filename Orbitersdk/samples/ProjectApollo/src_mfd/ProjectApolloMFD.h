@@ -34,6 +34,10 @@ class MCC;
 class SIVB;
 class Skylab;
 
+#ifndef OAPI_MSGTYPE
+typedef int OAPI_MSGTYPE;
+#endif
+
 ///
 /// \ingroup MFD
 ///

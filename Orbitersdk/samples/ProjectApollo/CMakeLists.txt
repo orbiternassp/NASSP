@@ -6,6 +6,8 @@ project(NASSP VERSION 8.0.3)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(OPENORBITER OFF)
+
 #Add /permissive if using C++20 or higher
 #add_compile_options(/permissive)
 
@@ -32,8 +34,14 @@ endif()
 
 if(MSVC)
     # Flag pointer truncation as an error because if it happens that's bad news!
-    add_compile_options(/we4311)
-    #add_link_options("/NODEFAULTLIB:\"LIBCMTD\"")
+    add_compile_options("/we4311")
+    # We need to force the linker to compile us against the statically-linked
+    # C runtime when building for Orbiter Beta due to XRSound.
+    if(NOT OPENORBITER)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        #add_compile_options("/MT")
+    endif()
+    add_link_options("/NODEFAULTLIB:LIBCMTD")
 endif()
 
 # Set project-wide variables
