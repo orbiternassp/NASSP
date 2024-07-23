@@ -13,7 +13,7 @@ set(SOURCES
 
 link_directories(${ORBITERSDK_DIR}/lib)
 
-add_library(FloatBag SHARED ${SOURCES})
-target_include_directories(FloatBag PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(FloatBag Orbiter)
-target_link_libraries(FloatBag Orbitersdk)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)

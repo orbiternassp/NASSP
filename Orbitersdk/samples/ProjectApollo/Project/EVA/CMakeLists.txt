@@ -13,7 +13,7 @@ set(SOURCES
 
 link_directories(${ORBITERSDK_DIR}/lib)
 
-add_library(EVA SHARED ${SOURCES})
-target_include_directories(EVA PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(EVA Orbiter)
-target_link_libraries(EVA Orbitersdk)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)

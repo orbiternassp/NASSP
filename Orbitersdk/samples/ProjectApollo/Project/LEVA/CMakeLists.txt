@@ -21,8 +21,8 @@ set(SOURCES
 link_directories(${ORBITERSDK_DIR}/lib)
 link_directories(${ORBITERSDK_DIR}/XRSound)
 
-add_library(LEVA SHARED ${SOURCES})
-target_include_directories(LEVA PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(LEVA Orbiter)
-target_link_libraries(LEVA Orbitersdk)
-target_link_libraries(LEVA XRSound)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)
+target_link_libraries(${PROJECT_NAME} XRSound)

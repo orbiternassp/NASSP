@@ -12,7 +12,7 @@ set(SOURCES
 
 link_directories(${ORBITERSDK_DIR}/lib)
 
-add_library(LES SHARED ${SOURCES})
-target_include_directories(LES PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(LES Orbiter)
-target_link_libraries(LES Orbitersdk)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)

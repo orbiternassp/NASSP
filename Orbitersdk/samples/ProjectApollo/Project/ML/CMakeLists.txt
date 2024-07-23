@@ -29,8 +29,8 @@ set(SOURCES
 link_directories(${ORBITERSDK_DIR}/lib)
 link_directories(${ORBITERSDK_DIR}/XRSound)
 
-add_library(ML SHARED ${SOURCES})
-target_include_directories(ML PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(ML Orbiter)
-target_link_libraries(ML Orbitersdk)
-target_link_libraries(ML XRSound)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)
+target_link_libraries(${PROJECT_NAME} XRSound)

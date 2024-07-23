@@ -22,8 +22,8 @@ set(SOURCES
 link_directories(${ORBITERSDK_DIR}/lib)
 link_directories(${ORBITERSDK_DIR}/XRSound)
 
-add_library(PanelSDK STATIC ${SOURCES})
-target_include_directories(PanelSDK PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(PanelSDK Orbiter)
-target_link_libraries(PanelSDK Orbitersdk)
-target_link_libraries(PanelSDK XRSound)
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)
+target_link_libraries(${PROJECT_NAME} XRSound)

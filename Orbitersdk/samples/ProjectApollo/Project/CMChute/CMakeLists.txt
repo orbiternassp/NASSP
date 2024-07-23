@@ -13,7 +13,7 @@ set(SOURCES
 
 link_directories(${ORBITERSDK_DIR}/lib)
 
-add_library(CMChute SHARED ${SOURCES})
-target_include_directories(CMChute PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(CMChute Orbiter)
-target_link_libraries(CMChute Orbitersdk)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)

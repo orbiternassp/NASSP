@@ -18,7 +18,7 @@ set(SOURCES
 
 link_directories(${ORBITERSDK_DIR}/lib)
 
-add_library(LCC SHARED ${SOURCES})
-target_include_directories(LCC PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(LCC Orbiter)
-target_link_libraries(LCC Orbitersdk)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)
