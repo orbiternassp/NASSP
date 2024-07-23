@@ -12,7 +12,7 @@ set(SOURCES
 
 link_directories(${ORBITERSDK_DIR}/lib)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ORBITER_INSTALL_DIR}/Modules/Startup)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FINAL_INSTALL_DIR}/Modules/Startup)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_sources(ProjectApolloConfigurator PRIVATE ${NASSP_SOURCE_ROOT}/src_aux/ProjectApolloConfigurator/ProjectApolloConfigurator.rc)
