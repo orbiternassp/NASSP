@@ -21,8 +21,8 @@ set(SOURCES
 link_directories(${ORBITERSDK_DIR}/lib)
 link_directories(${ORBITERSDK_DIR}/XRSound)
 
-add_library(LRV SHARED ${SOURCES})
-target_include_directories(LRV PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(LRV Orbiter)
-target_link_libraries(LRV Orbitersdk)
-target_link_libraries(LRV XRSound)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Orbiter)
+target_link_libraries(${PROJECT_NAME} Orbitersdk)
+target_link_libraries(${PROJECT_NAME} XRSound)
