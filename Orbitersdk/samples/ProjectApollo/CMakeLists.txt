@@ -16,7 +16,13 @@ option(OPENORBITER OFF)
 
 # Check if the user has specified a non-default Orbiter installation location.
 # If not, use the default and alert the user.
-set(ORBITER_INSTALL_DIR ${CMAKE_SOURCE_DIR}/../../../ CACHE STRING "Location of OpenOrbiter installation directory")
+set(ORBITER_INSTALL_DIR ./../../../ CACHE STRING "Location of OpenOrbiter installation directory")
+
+# Allow having a separate installation directory than the Orbiter installation folder.
+# This is generally meant for automated build systems or for folks who want to produce 
+# an installation package of just NASSP's data and modules without
+# including Orbiter data or any NASSP git data or source files.
+set(FINAL_INSTALL_DIR ${ORBITER_INSTALL_DIR} CACHE STRING "Location for final build/file copy output, defaults to your chosen Orbiter install directory")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8) # 64-bit build?
     set(BUILD64 1)
@@ -49,11 +55,11 @@ set(ORBITERSDK_DIR ${ORBITER_INSTALL_DIR}/Orbitersdk)
 set(NASSP_SOURCE_ROOT ${CMAKE_SOURCE_DIR})
 
 # Set project libraries to output their DLL files and debug info to
-# the Orbiter installation's "Modules/ProjectApollo" directory,
+# the final installation dir's "Modules/ProjectApollo" directory,
 # unless a sub-project's CMakeLists.txt file overrides this locally,
 # such as MFDs, which need to go in "Modules/Plugins" or PanelSDK,
 # which can stay in the default directory since it's statically linked.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ORBITER_INSTALL_DIR}/Modules/ProjectApollo)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FINAL_INSTALL_DIR}/Modules/ProjectApollo)
 
 # Sub-projects are what actually build all our vessels, MFDs, etc.
 add_subdirectory(Project/PanelSDK)
