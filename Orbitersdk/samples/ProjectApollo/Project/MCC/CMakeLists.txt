@@ -35,6 +35,7 @@ set(SOURCES
     ${NASSP_SOURCE_ROOT}/src_launch/RTCC_Mission_SL.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/AnalyticEphemerisGenerator.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/ApolloGeneralizedOpticsProgram.cpp
+    ${NASSP_SOURCE_ROOT}/src_rtccmfd/AscentRendezvousMonitor.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/CoastNumericalIntegrator.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/CSMLMGuidanceSim.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/EnckeIntegrator.cpp
@@ -49,6 +50,7 @@ set(SOURCES
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/OrbMech.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/ReentryNumericalIntegrator.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/RTCC_EMSMISS.cpp
+    ${NASSP_SOURCE_ROOT}/src_rtccmfd/RTCCDisplayFormatting.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/rtcc_intermediate_library_programs.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/rtcc_library_programs.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/RTCCModule.cpp
