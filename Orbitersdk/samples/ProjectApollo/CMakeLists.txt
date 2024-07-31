@@ -38,6 +38,7 @@ if (NOT ${CMAKE_GENERATOR} STREQUAL "Ninja")
     add_compile_options(/MP)
 endif()
 
+# Microsoft Visual C compiler specific options
 if(MSVC)
     # Flag pointer truncation as an error because if it happens that's bad news!
     add_compile_options("/we4311")
@@ -97,3 +98,59 @@ add_subdirectory(Project/SIVB)
 add_subdirectory(Project/Skylab)
 add_subdirectory(Project/sm)
 add_subdirectory(Project/VAB)
+
+
+# Copy all relevant documents/scenarios/sounds/configs from this
+# repository into the configured final destination directory.
+# This will only happen if the NASSP repo is NOT located inside
+# the Orbiter installation directory. If we are located
+# inside an Orbiter installation, we can't easily differentiate
+# between our own files and those included with Orbiter.
+set(NASSP_REPO_ROOT ${NASSP_SOURCE_ROOT}/../../..)
+if(${NASSP_REPO_ROOT} STREQUAL ${ORBITER_INSTALL_DIR})
+    message("[NASSP] Refusing to copy config files, NASSP is cloned directly into an Orbiter installation.")
+else()
+    message("[NASSP] Copying config/data files to final destination directory, please wait...")
+
+    # Create the list of input directories to be copied to the install location
+    set(NASSP_INSTALL_DIR_LIST
+        "Config"
+        "Doc"
+        "Html"
+        "Meshes"
+        "Scenarios"
+        "Script"
+        "Sound"
+        "Textures"
+        "XRSound"
+    )
+
+    foreach(dir ${NASSP_INSTALL_DIR_LIST})
+        # Create the top-level folders.
+        #message("[NASSP] Making directory: ${FINAL_INSTALL_DIR}/${dir}")
+        file(MAKE_DIRECTORY ${FINAL_INSTALL_DIR}/${dir})
+
+        # Recursively grab a list of directories/files.
+        file(GLOB_RECURSE DIRECTORIES_TO_COPY LIST_DIRECTORIES true ${NASSP_REPO_ROOT}/${dir}/*)
+
+        # First pass, create only the entries which are directories, in the output destination.
+        foreach(entry ${DIRECTORIES_TO_COPY})
+            if(IS_DIRECTORY ${entry})
+                file(RELATIVE_PATH nested_dir ${NASSP_REPO_ROOT} ${entry})
+                #message("[NASSP] Making subdirectory: ${FINAL_INSTALL_DIR}/${nested_dir}")
+                file(MAKE_DIRECTORY ${FINAL_INSTALL_DIR}/${nested_dir})
+            endif()
+        endforeach()
+
+        # Second pass, now copy the files.
+        foreach(entry ${DIRECTORIES_TO_COPY})
+            if(NOT IS_DIRECTORY ${entry})
+                file(RELATIVE_PATH file ${NASSP_REPO_ROOT} ${entry})
+                #message("[NASSP] Copying file: ${FINAL_INSTALL_DIR}/${file}")
+                file(COPY_FILE ${entry} ${FINAL_INSTALL_DIR}/${file} ONLY_IF_DIFFERENT)
+            endif()
+        endforeach()
+    endforeach()
+
+    message("[NASSP] Copying completed!")
+endif()
