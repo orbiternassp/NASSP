@@ -109,6 +109,8 @@ add_subdirectory(Project/VAB)
 set(NASSP_REPO_ROOT ${NASSP_SOURCE_ROOT}/../../..)
 if(${NASSP_REPO_ROOT} STREQUAL ${ORBITER_INSTALL_DIR})
     message("[NASSP] Refusing to copy config files, NASSP is cloned directly into an Orbiter installation.")
+elseif(${NASSP_REPO_ROOT} STREQUAL ${FINAL_INSTALL_DIR})
+    message("[NASSP] Unnecessary to copy config files, final output directory is the NASSP repo location.")
 else()
     message("[NASSP] Copying config/data files to final destination directory, please wait...")
 
