@@ -106,7 +106,7 @@ add_subdirectory(Project/VAB)
 # the Orbiter installation directory. If we are located
 # inside an Orbiter installation, we can't easily differentiate
 # between our own files and those included with Orbiter.
-set(NASSP_REPO_ROOT ${NASSP_SOURCE_ROOT}/../../..)
+set(NASSP_REPO_ROOT ./../../../)
 if(${NASSP_REPO_ROOT} STREQUAL ${ORBITER_INSTALL_DIR})
     message("[NASSP] Refusing to copy config files, NASSP is cloned directly into an Orbiter installation.")
 elseif(${NASSP_REPO_ROOT} STREQUAL ${FINAL_INSTALL_DIR})
@@ -133,10 +133,10 @@ else()
         file(MAKE_DIRECTORY ${FINAL_INSTALL_DIR}/${dir})
 
         # Recursively grab a list of directories/files.
-        file(GLOB_RECURSE DIRECTORIES_TO_COPY LIST_DIRECTORIES true ${NASSP_REPO_ROOT}/${dir}/*)
+        file(GLOB_RECURSE STUFF_TO_COPY LIST_DIRECTORIES true ${NASSP_REPO_ROOT}/${dir}/*)
 
         # First pass, create only the entries which are directories, in the output destination.
-        foreach(entry ${DIRECTORIES_TO_COPY})
+        foreach(entry ${STUFF_TO_COPY})
             if(IS_DIRECTORY ${entry})
                 file(RELATIVE_PATH nested_dir ${NASSP_REPO_ROOT} ${entry})
                 #message("[NASSP] Making subdirectory: ${FINAL_INSTALL_DIR}/${nested_dir}")
@@ -145,7 +145,7 @@ else()
         endforeach()
 
         # Second pass, now copy the files.
-        foreach(entry ${DIRECTORIES_TO_COPY})
+        foreach(entry ${STUFF_TO_COPY})
             if(NOT IS_DIRECTORY ${entry})
                 file(RELATIVE_PATH file ${NASSP_REPO_ROOT} ${entry})
                 #message("[NASSP] Copying file: ${FINAL_INSTALL_DIR}/${file}")
