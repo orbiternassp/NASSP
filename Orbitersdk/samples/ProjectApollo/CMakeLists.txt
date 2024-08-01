@@ -3,26 +3,9 @@ cmake_minimum_required(VERSION 3.19)
 # Set the project name
 project(NASSP VERSION 8.0.3)
 
+# Set C++ compiler variables
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-option(OPENORBITER OFF)
-
-#Add /permissive if using C++20 or higher
-#add_compile_options(/permissive)
-
-# Group projects in VS
-#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-# Check if the user has specified a non-default Orbiter installation location.
-# If not, use the default and alert the user.
-set(ORBITER_INSTALL_DIR ./../../../ CACHE STRING "Location of OpenOrbiter installation directory")
-
-# Allow having a separate installation directory than the Orbiter installation folder.
-# This is generally meant for automated build systems or for folks who want to produce 
-# an installation package of just NASSP's data and modules without
-# including Orbiter data or any NASSP git data or source files.
-set(FINAL_INSTALL_DIR ${ORBITER_INSTALL_DIR} CACHE STRING "Location for final build/file copy output, defaults to your chosen Orbiter install directory")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8) # 64-bit build?
     set(BUILD64 1)
@@ -51,9 +34,27 @@ if(MSVC)
     add_link_options("/NODEFAULTLIB:LIBCMTD")
 endif()
 
-# Set project-wide variables
+#Add /permissive if using C++20 or higher
+#add_compile_options(/permissive)
+
+# Group projects in VS
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Set NASSP-related variables
 set(ORBITERSDK_DIR ${ORBITER_INSTALL_DIR}/Orbitersdk)
 set(NASSP_SOURCE_ROOT ${CMAKE_SOURCE_DIR})
+set(NASSP_REPO_ROOT ${NASSP_SOURCE_ROOT}/../../../)
+option(OPENORBITER OFF)
+
+# Check if the user has specified a non-default Orbiter installation location.
+# If not, use the default and alert the user.
+set(ORBITER_INSTALL_DIR ${NASSP_REPO_ROOT} CACHE STRING "Location of OpenOrbiter installation directory")
+
+# Allow having a separate installation directory than the Orbiter installation folder.
+# This is generally meant for automated build systems or for folks who want to produce 
+# an installation package of just NASSP's data and modules without
+# including Orbiter data or any NASSP git data or source files.
+set(FINAL_INSTALL_DIR ${ORBITER_INSTALL_DIR} CACHE STRING "Location for final build/file copy output, defaults to your chosen Orbiter install directory")
 
 # Set project libraries to output their DLL files and debug info to
 # the final installation dir's "Modules/ProjectApollo" directory,
@@ -106,7 +107,6 @@ add_subdirectory(Project/VAB)
 # the Orbiter installation directory. If we are located
 # inside an Orbiter installation, we can't easily differentiate
 # between our own files and those included with Orbiter.
-set(NASSP_REPO_ROOT ./../../../)
 if(${NASSP_REPO_ROOT} STREQUAL ${ORBITER_INSTALL_DIR})
     message("[NASSP] Refusing to copy config files, NASSP is cloned directly into an Orbiter installation.")
 elseif(${NASSP_REPO_ROOT} STREQUAL ${FINAL_INSTALL_DIR})
