@@ -113,6 +113,7 @@ elseif(${NASSP_REPO_ROOT} STREQUAL ${FINAL_INSTALL_DIR})
     message("[NASSP] Unnecessary to copy config files, final output directory is the NASSP repo location.")
 else()
     message("[NASSP] Copying config/data files to final destination directory, please wait...")
+    message("[NASSP] Final destination directory: ${FINAL_INSTALL_DIR}")
 
     # Create the list of input directories to be copied to the install location
     set(NASSP_INSTALL_DIR_LIST
