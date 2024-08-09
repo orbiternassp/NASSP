@@ -44,7 +44,13 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(ORBITERSDK_DIR ${ORBITER_INSTALL_DIR}/Orbitersdk)
 set(NASSP_SOURCE_ROOT ${CMAKE_SOURCE_DIR})
 set(NASSP_REPO_ROOT ${NASSP_SOURCE_ROOT}/../../../)
-option(OPENORBITER OFF)
+if(EXISTS ${ORBITER_INSTALL_DIR}/lua.dll)
+    set(OPENORBITER ON)
+    message("[NASSP] Configured for OpenOrbiter build.")
+else()
+    set(OPENORBITER OFF)
+    message("[NASSP] Configured for Orbiter Beta build.")
+endif()
 
 # Check if the user has specified a non-default Orbiter installation location.
 # If not, use the default and alert the user.
@@ -127,9 +133,9 @@ else()
         "Textures"
         "XRSound"
     )
-
+    
+    file(TO_CMAKE_PATH ${FINAL_INSTALL_DIR} destination_fixed)
     foreach(dir ${NASSP_INSTALL_DIR_LIST})
-        file(TO_CMAKE_PATH ${FINAL_INSTALL_DIR} destination_fixed)
         install(DIRECTORY ${NASSP_REPO_ROOT}/${dir} DESTINATION ${destination_fixed})
     endforeach()
 endif()
