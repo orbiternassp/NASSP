@@ -21,19 +21,6 @@ if (NOT ${CMAKE_GENERATOR} STREQUAL "Ninja")
     add_compile_options(/MP)
 endif()
 
-# Microsoft Visual C compiler specific options
-if(MSVC)
-    # Flag pointer truncation as an error because if it happens that's bad news!
-    add_compile_options("/we4311")
-    # We need to force the linker to compile us against the statically-linked
-    # C runtime when building for Orbiter Beta due to XRSound.
-    if(NOT OPENORBITER)
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-        #add_compile_options("/MT")
-    endif()
-    add_link_options("/NODEFAULTLIB:LIBCMTD")
-endif()
-
 #Add /permissive if using C++20 or higher
 #add_compile_options(/permissive)
 
@@ -50,6 +37,19 @@ if(EXISTS ${ORBITER_INSTALL_DIR}/lua.dll)
 else()
     set(OPENORBITER OFF)
     message("[NASSP] Configured for Orbiter Beta build.")
+endif()
+
+# Microsoft Visual C compiler specific options
+if(MSVC)
+    # Flag pointer truncation as an error because if it happens that's bad news!
+    add_compile_options("/we4311")
+    # We need to force the linker to compile us against the statically-linked
+    # C runtime when building for Orbiter Beta due to XRSound.
+    if(NOT OPENORBITER)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        #add_compile_options("/MT")
+    endif()
+    add_link_options("/NODEFAULTLIB:LIBCMTD")
 endif()
 
 # Check if the user has specified a non-default Orbiter installation location.
