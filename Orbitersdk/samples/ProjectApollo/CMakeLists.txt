@@ -27,6 +27,16 @@ endif()
 # Group projects in VS
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Check if the user has specified a non-default Orbiter installation location.
+# If not, use the default and alert the user.
+set(ORBITER_INSTALL_DIR ${NASSP_REPO_ROOT} CACHE STRING "Location of OpenOrbiter installation directory")
+
+# Allow having a separate installation directory than the Orbiter installation folder.
+# This is generally meant for automated build systems or for folks who want to produce 
+# an installation package of just NASSP's data and modules without
+# including Orbiter data or any NASSP git data or source files.
+set(FINAL_INSTALL_DIR ${ORBITER_INSTALL_DIR} CACHE STRING "Location for final build/file copy output, defaults to your chosen Orbiter install directory")
+
 # Set NASSP-related variables
 set(ORBITERSDK_DIR ${ORBITER_INSTALL_DIR}/Orbitersdk)
 set(NASSP_SOURCE_ROOT ${CMAKE_SOURCE_DIR})
@@ -51,16 +61,6 @@ if(MSVC)
     endif()
     add_link_options("/NODEFAULTLIB:LIBCMTD")
 endif()
-
-# Check if the user has specified a non-default Orbiter installation location.
-# If not, use the default and alert the user.
-set(ORBITER_INSTALL_DIR ${NASSP_REPO_ROOT} CACHE STRING "Location of OpenOrbiter installation directory")
-
-# Allow having a separate installation directory than the Orbiter installation folder.
-# This is generally meant for automated build systems or for folks who want to produce 
-# an installation package of just NASSP's data and modules without
-# including Orbiter data or any NASSP git data or source files.
-set(FINAL_INSTALL_DIR ${ORBITER_INSTALL_DIR} CACHE STRING "Location for final build/file copy output, defaults to your chosen Orbiter install directory")
 
 # Set project libraries to output their DLL files and debug info to
 # the final installation dir's "Modules/ProjectApollo" directory,
