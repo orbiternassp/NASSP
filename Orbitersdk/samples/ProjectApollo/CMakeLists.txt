@@ -112,7 +112,7 @@ if(${NASSP_REPO_ROOT} STREQUAL ${ORBITER_INSTALL_DIR})
 elseif(${NASSP_REPO_ROOT} STREQUAL ${FINAL_INSTALL_DIR})
     message("[NASSP] Unnecessary to copy config files, final output directory is the NASSP repo location.")
 else()
-    message("[NASSP] Copying config/data files to final destination directory, please wait...")
+    message("[NASSP] Copying config/data files to final destination directory is possible with \"Install\".")
     message("[NASSP] Final destination directory: ${FINAL_INSTALL_DIR}")
 
     # Create the list of input directories to be copied to the install location
@@ -129,31 +129,7 @@ else()
     )
 
     foreach(dir ${NASSP_INSTALL_DIR_LIST})
-        # Create the top-level folders.
-        #message("[NASSP] Making directory: ${FINAL_INSTALL_DIR}/${dir}")
-        file(MAKE_DIRECTORY ${FINAL_INSTALL_DIR}/${dir})
-
-        # Recursively grab a list of directories/files.
-        file(GLOB_RECURSE STUFF_TO_COPY LIST_DIRECTORIES true ${NASSP_REPO_ROOT}/${dir}/*)
-
-        # First pass, create only the entries which are directories, in the output destination.
-        foreach(entry ${STUFF_TO_COPY})
-            if(IS_DIRECTORY ${entry})
-                file(RELATIVE_PATH nested_dir ${NASSP_REPO_ROOT} ${entry})
-                #message("[NASSP] Making subdirectory: ${FINAL_INSTALL_DIR}/${nested_dir}")
-                file(MAKE_DIRECTORY ${FINAL_INSTALL_DIR}/${nested_dir})
-            endif()
-        endforeach()
-
-        # Second pass, now copy the files.
-        foreach(entry ${STUFF_TO_COPY})
-            if(NOT IS_DIRECTORY ${entry})
-                file(RELATIVE_PATH file ${NASSP_REPO_ROOT} ${entry})
-                #message("[NASSP] Copying file: ${FINAL_INSTALL_DIR}/${file}")
-                file(COPY_FILE ${entry} ${FINAL_INSTALL_DIR}/${file} ONLY_IF_DIFFERENT)
-            endif()
-        endforeach()
+        file(TO_CMAKE_PATH ${FINAL_INSTALL_DIR} destination_fixed)
+        install(DIRECTORY ${NASSP_REPO_ROOT}/${dir} DESTINATION ${destination_fixed})
     endforeach()
-
-    message("[NASSP] Copying completed!")
 endif()
