@@ -52,7 +52,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FINAL_INSTALL_DIR}/Modules/Plugin)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} Orbiter)
-target_link_libraries(${PROJECT_NAME} Orbitersdk)
-target_link_libraries(${PROJECT_NAME} WinMM)
-target_link_libraries(${PROJECT_NAME} WS2_32)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Orbiter
+    Orbitersdk
+    WinMM
+    WS2_32
+)

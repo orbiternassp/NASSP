@@ -25,7 +25,9 @@ link_directories(${CMAKE_BINARY_DIR}/Projects/PanelSDK)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} Orbiter)
-target_link_libraries(${PROJECT_NAME} Orbitersdk)
-target_link_libraries(${PROJECT_NAME} PanelSDK)
-target_link_libraries(${PROJECT_NAME} XRSound)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Orbiter
+    Orbitersdk
+    PanelSDK
+    XRSound
+)

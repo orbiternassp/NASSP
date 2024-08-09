@@ -17,10 +17,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FINAL_INSTALL_DIR}/Modules/Startup)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_sources(ProjectApolloConfigurator PRIVATE ${NASSP_SOURCE_ROOT}/src_aux/ProjectApolloConfigurator/ProjectApolloConfigurator.rc)
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} dxguid)
-target_link_libraries(${PROJECT_NAME} dinput8)
-target_link_libraries(${PROJECT_NAME} GLU32)
-target_link_libraries(${PROJECT_NAME} User32)
-target_link_libraries(${PROJECT_NAME} Orbiter)
-target_link_libraries(${PROJECT_NAME} Orbitersdk)
-target_link_libraries(${PROJECT_NAME} OpenGL32)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    dxguid
+    dinput8
+    GLU32
+    User32
+    Orbiter
+    Orbitersdk
+    OpenGL32
+)

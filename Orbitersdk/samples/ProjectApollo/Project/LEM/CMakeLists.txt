@@ -96,14 +96,16 @@ link_directories(${CMAKE_BINARY_DIR}/Projects/PanelSDK)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_sources(LEM PRIVATE ${NASSP_SOURCE_ROOT}/src_lm/LEMResources.rc)
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} GLU32)
-target_link_libraries(${PROJECT_NAME} dxguid)
-target_link_libraries(${PROJECT_NAME} dinput8)
-target_link_libraries(${PROJECT_NAME} OpenGL32)
-target_link_libraries(${PROJECT_NAME} User32)
-target_link_libraries(${PROJECT_NAME} WinMM)
-target_link_libraries(${PROJECT_NAME} WS2_32)
-target_link_libraries(${PROJECT_NAME} Orbiter)
-target_link_libraries(${PROJECT_NAME} Orbitersdk)
-target_link_libraries(${PROJECT_NAME} PanelSDK)
-target_link_libraries(${PROJECT_NAME} XRSound)
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+    GLU32
+    dxguid
+    dinput8
+    OpenGL32
+    User32
+    WinMM
+    WS2_32
+    Orbiter
+    Orbitersdk
+    PanelSDK
+    XRSound
+)

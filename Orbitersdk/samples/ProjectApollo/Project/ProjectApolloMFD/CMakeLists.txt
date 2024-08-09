@@ -28,8 +28,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FINAL_INSTALL_DIR}/Modules/Plugin)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_sources(ProjectApolloMFD PRIVATE ${NASSP_SOURCE_ROOT}/src_mfd/MFDResources.rc)
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} User32)
-target_link_libraries(${PROJECT_NAME} Orbiter)
-target_link_libraries(${PROJECT_NAME} Orbitersdk)
-target_link_libraries(${PROJECT_NAME} WinMM)
-target_link_libraries(${PROJECT_NAME} WS2_32)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    User32
+    Orbiter
+    Orbitersdk
+    WinMM
+    WS2_32
+)
