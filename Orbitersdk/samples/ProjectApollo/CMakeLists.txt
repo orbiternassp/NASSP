@@ -128,6 +128,7 @@ else()
         "Doc"
         "Html"
         "Meshes"
+        "Missions"
         "Scenarios"
         "Script"
         "Sound"
