@@ -977,7 +977,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
 		med_k16.DesiredHeight = 60.0*1852.0;
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 		PoweredFlightProcessor(sv, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, WeightsTable.LMAscWeight + WeightsTable.LMDscWeight, PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
 		manopt.TIG = P30TIG;
@@ -1324,11 +1324,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 57: //REV 30 LANDMARK TRACKING PADs
 	{
 		LMARKTRKPADOpt opt;
-		SV sv0;
+		EphemerisData sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
+		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
 
@@ -1429,7 +1429,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.entries = 2;
 		}
 
-		LandmarkTrackingPAD(&opt, *form);
+		LandmarkTrackingPAD(opt, *form);
 	}
 	break;
 	case 60: //STATE VECTOR and LLS 2 REFSMMAT UPLINK
@@ -1452,7 +1452,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.Sequence = 1;
 		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(99, 0, 0);
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		calcParams.DOI = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
 		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
@@ -1637,7 +1637,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.Sequence = 1;
 		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(99, 0, 0);
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		calcParams.DOI = t_DOI_imp = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
 		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
@@ -1980,15 +1980,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10CSIPADOpt manopt;
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_CSM, sv_LM, sv_CSI;
-		MATRIX3 Q_Xx;
+		SV sv_CSM, sv_LM;
 		VECTOR3 dV_LVLH;
 		double GETbase, dt_apo;
+		PLAWDTOutput WeightsTable;
 
 		AP10CSI * form = (AP10CSI *)pad;
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
+		WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
 		GETbase = CalcGETBase();
 
 		//CSI at apolune
@@ -2004,19 +2005,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_TPI = calcParams.TPI;
 
 		ConcentricRendezvousProcessor(opt, res);
-
-		sv_CSI = coast(sv_LM, opt.t_CSI - OrbMech::GETfromMJD(sv_LM.MJD, GETbase));
-		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
 		dV_LVLH = res.dV_CSI;
+
+		//Use nominal AGS K-Factor for now
+		SystemParameters.MCGZSS = SystemParameters.MCGZSL + 90.0;
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMAPS;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv0 = sv_LM;
+		manopt.sv0 = ConvertSVtoEphemData(sv_LM);
+		manopt.WeightsTable = WeightsTable;
 		manopt.t_CSI = calcParams.CSI;
 		manopt.t_TPI = calcParams.TPI;
 
-		AP10CSIPAD(&manopt, *form);
+		AP10CSIPAD(manopt, *form);
+		form->type = 0;
 	}
 	break;
 	case 80: //APS DEPLETION UPDATE
@@ -2352,7 +2355,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.REFSMMAT = REFSMMAT;
 		entopt.sv0 = sv;
 
-		LunarEntryPAD(&entopt, *form);
+		LunarEntryPAD(entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{

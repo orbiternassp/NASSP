@@ -773,13 +773,13 @@ void SIVBSystems::Timestep(double simdt)
 		ThrustTimer += simdt;
 		if (ThrustTimer < 0.25)
 		{
-			// 95% of thrust dies in the first .25 second
-			ThrustLevel = 1.0 - (ThrustTimer*3.3048);
+			// 86% of thrust dies in the first .25 second
+			ThrustLevel = 1.0 - (ThrustTimer*3.456);
 		}
 		else if (ThrustTimer < 1.5)
 		{
 			// The remainder dies over the next 1.25 second
-			ThrustLevel = 0.1738 - ((ThrustTimer - 0.25)*0.1390);
+			ThrustLevel = 0.136 - ((ThrustTimer - 0.25)*0.1088);
 		}
 		else
 		{

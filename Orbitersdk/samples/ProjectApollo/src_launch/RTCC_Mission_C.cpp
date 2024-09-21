@@ -1231,11 +1231,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 60: //Rev 136 Landmark Tracking Update
 	{
 		LMARKTRKPADOpt opt;
-		SV sv0;
+		EphemerisData sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
+		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
 
@@ -1360,7 +1360,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.entries = 4;
 		}
 
-		LandmarkTrackingPAD(&opt, *form);
+		LandmarkTrackingPAD(opt, *form);
 	}
 	break;
 	case 24: //MISSION C BLOCK DATA 14

@@ -1542,6 +1542,8 @@ double LEM_ECS::AscentOxyTank2PressurePSI() {
 }
 
 double LEM_ECS::DescentOxyTankQuantityLBS() {
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0; //Temporary check on Sig Sensor cb until pressure used for quantity
+
 	if (!Des_Oxygen) {
 		Des_Oxygen = (double*)sdk.GetPointerByString("HYDRAULIC:DESO2TANK:MASS");
 	}
@@ -1549,6 +1551,8 @@ double LEM_ECS::DescentOxyTankQuantityLBS() {
 }
 
 double LEM_ECS::AscentOxyTank1QuantityLBS() {
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0; //Temporary check on Sig Sensor cb until pressure used for quantity
+
 	if (!Asc_Oxygen1) {
 		Asc_Oxygen1 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK1:MASS");
 	}
@@ -1556,6 +1560,8 @@ double LEM_ECS::AscentOxyTank1QuantityLBS() {
 }
 
 double LEM_ECS::AscentOxyTank2QuantityLBS() {
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0; //Temporary check on Sig Sensor cb until pressure used for quantity
+
 	if (!Asc_Oxygen2) {
 		Asc_Oxygen2 = (double*)sdk.GetPointerByString("HYDRAULIC:ASCO2TANK2:MASS");
 	}

@@ -1307,7 +1307,7 @@ bool EngineStartButton::CheckMouseClick(int event, int mx, int my) {
 	if (mx < x || my < y) return false;
 	if (mx >(x + width) || my >(y + height)) return false;
 
-	if (event == PANEL_MOUSE_LBDOWN)
+	if (event & PANEL_MOUSE_LBDOWN)
 	{
 		Push();
 	}
@@ -1318,7 +1318,7 @@ bool EngineStartButton::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	int OldState = state;
 
-	if (event == PANEL_MOUSE_LBDOWN)
+	if (event & PANEL_MOUSE_LBDOWN)
 	{
 		Push();
 	}
@@ -1403,7 +1403,7 @@ bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
 	if (mx < x || my < y) return false;
 	if (mx >(x + width) || my >(y + height)) return false;
 
-	if (event == PANEL_MOUSE_LBDOWN)
+	if (event & PANEL_MOUSE_LBDOWN)
 	{
 		Push();
 	}
@@ -1414,7 +1414,7 @@ bool EngineStopButton::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	int OldState = state;
 
-	if (event == PANEL_MOUSE_LBDOWN)
+	if (event & PANEL_MOUSE_LBDOWN)
 	{
 		Push();
 	}

@@ -15,6 +15,7 @@
 #include "rtcc.h"
 #include "LunarTargetingProgram.h"
 #include "thread.h"
+#include "RTCCDisplayFormatting.h"
 #include <queue>
 
 struct ApolloRTCCMFDData {  // global data storage
@@ -46,6 +47,25 @@ public:
 
 	RTCC* rtcc;
 
+	//MANEUVER PAD PAGE
+	AP11MNV manpad;
+	AP11LMMNV lmmanpad;
+	AP7TPI TPI_PAD;
+	TLIPAD tlipad;
+	AP11PDIPAD pdipad;
+
+	//ENTRY PAD PAGE
+	AP11ENT lunarentrypad;
+	AP7ENT earthentrypad;
+	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
+	bool EntryPADSxtStarCheckAttOpt; //true = sextant star attitude check at entry attitude, false = sextant star check at horizon check attitude
+
+	//LANDMARK TRACKING PAGE
+	AP11LMARKTRKPAD landmarkpad;
+	double LmkLat, LmkLng;
+	double LmkTime;
+	double LmkElevation;
+
 	//APOLLO GENERALIZED OPTICS PROGRAM
 	int AGOP_Page;
 	int AGOP_Option;
@@ -71,6 +91,12 @@ public:
 	std::string AGOP_Error;
 	MATRIX3 AGOP_REFSMMAT;
 	int AGOP_REFSMMAT_Vehicle;
+
+	//MOCR DISPLAY
+	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned display);
+
+protected:
+	const rtcc::RTCCBackgroundSlides BackgroundSlides;
 };
 
 class ARCore {
@@ -272,22 +298,13 @@ public:
 	AP11AGSSVPAD agssvpad;
 
 	//MANEUVER PAD PAGE
-	AP11MNV manpad;
-	AP11LMMNV lmmanpad;
 	bool HeadsUp;
-	AP7TPI TPI_PAD;
 	int manpadopt; //0 = CSM Maneuver PAD, 1 = LM Maneuver PAD, 2 = TPI PAD, 3 = TLI PAD, 4 = PDI PAD
 	double sxtstardtime;
 	double manpad_ullage_dt;
 	bool manpad_ullage_opt; //true = 4 jets, false = 2 jets
-	TLIPAD tlipad;
-	AP11PDIPAD pdipad;
-
-	//ENTRY PAD PAGE
-	AP11ENT lunarentrypad;
-	AP7ENT earthentrypad;
-	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
-	bool EntryPADSxtStarCheckAttOpt; //true = sextant star attitude check at entry attitude, false = sextant star check at horizon check attitude
+	int ManPADMPT; //1 = CSM, 3 = LEM
+	int ManPADMPTManeuver; //1-15
 
 	//MAP UPDATE PAGE
 	AP10MAPUPDATE mapupdate;
@@ -299,14 +316,10 @@ public:
 	//TLCC PAGE
 	int TLCCSolGood;
 
-	//LANDMARK TRACKING PAGE
-	AP11LMARKTRKPAD landmarkpad;
-	double LmkLat, LmkLng;
-	double LmkTime;
-
 	//VECPOINT PAGE
 	int VECoption;		//0 = Point SC at body, 1 = Open hatch thermal control
-	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z
+	int VECdirection;	//0 = +X, 1 = -X, 2 = Optics, 3 = SIM Bay, 4 = Selectable
+	VECTOR3 VECBodyVector; //Yaw, pitch for option 7 and Omicron
 	OBJHANDLE VECbody;	//handle for the desired body
 	VECTOR3 VECangles;	//IMU angles
 
@@ -317,6 +330,7 @@ public:
 	AP11LMASCPAD lmascentpad;
 	double t_LunarLiftoff;
 	int AscentPADVersion; //0 = Apollo 11-13, 1 = Apollo 14-17
+	double LAP_Phase, LAP_CR;
 
 	//Powered Descent Abort Program
 	int PDAPEngine;	//0 = DPS/APS, 1 = APS

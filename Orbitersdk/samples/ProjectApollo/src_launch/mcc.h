@@ -79,6 +79,7 @@
 #define GSTP_DOD_GROUND  3
 #define GSTP_ARIA		 4
 #define GSTP_SHIP        5
+#define GSTP_RELAY_SAT   6
 
 // Ground Station Purpose Types
 #define GSPT_PRELAUNCH	0x0001
@@ -89,9 +90,6 @@
 #define GSPT_LAUNCH		0x0020
 #define GSPT_TLI		0x0040
 #define GSPT_ENTRY		0x0080
-
-// Max number of ground stations
-#define MAX_GROUND_STATION	43
 
 // Message buffer limits
 #define MAX_MESSAGES		10
@@ -254,6 +252,7 @@ public:
 	void Init();											// Initialization
 	void TimeStep(double simdt);					        // Timestep
 	void AutoUpdateXmitGroundStation(VESSEL* Ves, const TrackingVesselType Type, const TrackingSlot Slot);	// Automaticially Update the Transmitting Ground Station
+	bool UpdateGroundStationPosition(unsigned int i, VECTOR3 &LocalPos, VECTOR3 &GlobalPos);
 	void UpdateRevCounters(const TrackingSlot Slot);
 	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer
@@ -281,6 +280,7 @@ public:
 	void SetCSM(char *csmname);
 	void SetLM(char *lemname);
 	void SetLV(char *lvname);
+	void SetGroundStation(unsigned int i, const GroundStation &temp);
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
 
@@ -304,6 +304,7 @@ public:
 	OBJHANDLE Earth;										// Handle for Earth
 	OBJHANDLE Moon;											// Handle for the moon
 	double R_E, R_M;										// Radius of Earth and Moon
+	VECTOR3 EarthGlobalPos;									// Position of the Earth, global coordinates
 	VECTOR3 MoonGlobalPos;									// Position of the Moon, global coordinates
 	VECTOR3 VesselGlobalPos[2];								// Position of CM/LM, global coordinates
 	VECTOR3 Vessel_Vector[2];								// Position of CM/LM, local coordinates
@@ -314,7 +315,7 @@ public:
 	std::atomic<ThreadStatus> subThreadStatus;
 
 	// GROUND TRACKING NETWORK
-	struct GroundStation GroundStations[MAX_GROUND_STATION]; // Ground Station Array
+	std::vector<GroundStation> GroundStations;				// Ground Station Array
 	int TransmittingGroundStation[2];						//Ground Station Transmitting to the CM
 	VECTOR3 TransmittingGroundStationVector[2];
 	double LastAOSUpdate;									// Last update to AOS data

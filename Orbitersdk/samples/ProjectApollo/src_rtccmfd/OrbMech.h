@@ -319,7 +319,7 @@ namespace OrbMech {
 	void RADUP(VECTOR3 R_W, VECTOR3 V_W, VECTOR3 R_C, double mu, VECTOR3 &R_W1, VECTOR3 &V_W1);
 	void COE(VECTOR3 R, VECTOR3 V, double h, double mu, VECTOR3 &R_C, VECTOR3 &V_C);
 	void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo, double dx0 = 1.0);
-	bool QDRTPI(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J);
+	bool QDRTPI(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, int gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J);
 	bool CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH, double mu, double &dv);
 	VECTOR3 CoellipticDV(VECTOR3 R_A2, VECTOR3 R_PC, VECTOR3 V_PC, double mu);
 	VECTOR3 ApplyHorizontalDV(VECTOR3 R, VECTOR3 V, double dv);

@@ -2398,21 +2398,34 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 
 bool sight(VECTOR3 R1, VECTOR3 R2, double R_E)
 {
+	//Returns true if position vectors R1 and R2 have a line-of-sight, considering the body radius R_E
 	VECTOR3 R1n, R2n;
 	bool los;
-	double tau_min;
+	double r12, r22, tau_min, dot_r1r2;
 
+	//Preliminary calculations
+	//Normalized position vectors
 	R1n = R1 / R_E;
 	R2n = R2 / R_E;
+	//Squares of radius magnitudes
+	r12 = dotp(R1n, R1n);
+	r22 = dotp(R2n, R2n);
+	//Dot product between normalized vectors
+	dot_r1r2 = dotp(R1n, R2n);
 
-	tau_min = (length(R1n)*length(R1n) - dotp(R1n, R2n)) / (length(R1n)*length(R1n) + length(R2n)*length(R2n) - 2.0*dotp(R1n,R2n));
+	//Location on line connecting R1 and R2 where the distance from the center of the body to the line is minimized
+	tau_min = (r12 - dot_r1r2) / (r12 + r22 - 2.0*dot_r1r2);
+	//Default to no line-of-sight
 	los = false;
-	if (tau_min < 0 || tau_min>1)
+	//Is there a line of sight?
+	if (tau_min < 0.0 || tau_min > 1.0)
 	{
+		//Yes, because both vectors have to be in the same quadrant
 		los = true;
 	}
-	else if ((1.0 - tau_min)*length(R1n)*length(R1n) + dotp(R1n, R2n)*tau_min >= 1.0)
+	else if ((1.0 - tau_min)*r12 + dot_r1r2 * tau_min >= 1.0)
 	{
+		//Yes, because minimum distance from center of body to line connecting R1 and R2 is greater than R_E (R1 and R2 having been normalized)
 		los = true;
 	}
 	return los;
@@ -4345,7 +4358,7 @@ void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double 
 	}
 }
 
-bool QDRTPI(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J)
+bool QDRTPI(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, int gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J)
 {
 	int s_F;
 	double c, t, e_T, e_To, to, eps1, p;
@@ -6206,9 +6219,12 @@ SV PositionMatch(int Epoch, SV sv_A, SV sv_P, double mu)
 	SV sv_A1, sv_P1;
 	VECTOR3 u, R_A1, U_L;
 	double phase, n, dt, ddt;
+	int nmax, nn;
 	bool error;
 
 	dt = 0.0;
+	nn = 0;
+	nmax = 100;
 
 	u = unit(crossp(sv_P.R, sv_P.V));
 	U_L = unit(crossp(u, sv_P.R));
@@ -6217,7 +6233,7 @@ SV PositionMatch(int Epoch, SV sv_A, SV sv_P, double mu)
 	do
 	{
 		R_A1 = unit(sv_A1.R - u * dotp(sv_A1.R, u))*length(sv_A1.R);
-		phase = acos(dotp(unit(R_A1), unit(sv_P.R)));
+		phase = acos2(dotp(unit(R_A1), unit(sv_P.R)));
 		if (dotp(U_L, R_A1) > 0)
 		{
 			phase = -phase;
@@ -6226,7 +6242,8 @@ SV PositionMatch(int Epoch, SV sv_A, SV sv_P, double mu)
 		ddt = phase / n;
 		sv_A1 = coast(Epoch, sv_A1, ddt);
 		dt += ddt;
-	} while (abs(ddt) > 0.01);
+		nn++;
+	} while (abs(ddt) > 0.01 && nmax > nn);
 
 	return sv_A1;
 }

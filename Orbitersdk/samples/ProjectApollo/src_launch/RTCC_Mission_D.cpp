@@ -1036,7 +1036,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.sv_P = sv_P;
 		manopt.GMT_TIG = opt.T1;
 
-		AP9LMTPIPAD(&manopt, *form);
+		AP9LMTPIPAD(manopt, *form);
 	}
 	break;
 	case 34: //INSERTION MANEUVER
@@ -1083,12 +1083,15 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10CSIPADOpt manopt;
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_A, sv_P, sv_CSI;
-		MATRIX3 Q_Xx;
+		SV sv_A, sv_P;
 		VECTOR3 dV_LVLH;
+		double m0;
 
 		sv_A = StateVectorCalc(calcParams.tgt);
 		sv_P = StateVectorCalc(calcParams.src);
+
+		LEM *l = (LEM*)calcParams.tgt;
+		m0 = l->GetAscentStageMass();
 
 		opt.E = 27.5*RAD;
 		opt.sv_A = sv_A;
@@ -1098,18 +1101,22 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_TPI = calcParams.TPI;
 
 		ConcentricRendezvousProcessor(opt, res);
-		sv_CSI = coast(sv_A, opt.t_CSI - OrbMech::GETfromMJD(sv_A.MJD, CalcGETBase()));
-		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
 		dV_LVLH = res.dV_CSI;
 
+		//Use nominal AGS K-Factor for now
+		SystemParameters.MCGZSS = SystemParameters.MCGZSL + 90.0;
+
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_LMAPS;
+		manopt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv0 = sv_A;
+		manopt.sv0 = ConvertSVtoEphemData(sv_A);
+		manopt.WeightsTable.CC[RTCC_CONFIG_A] = true;
+		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.LMAscWeight = m0;
 		manopt.t_CSI = calcParams.CSI;
 		manopt.t_TPI = calcParams.TPI;
 
-		AP10CSIPAD(&manopt, *form);
+		AP10CSIPAD(manopt, *form);
+		form->type = 0;
 	}
 	break;
 	case 36: //CDH UPDATE
@@ -1149,10 +1156,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv_A = sv_A;
+		manopt.sv_A = ConvertSVtoEphemData(sv_A);
 		manopt.TIG = calcParams.CDH;
 
-		AP9LMCDHPAD(&manopt, *form);
+		AP9LMCDHPAD(manopt, *form);
 	}
 	break;
 	case 37: //TPI MANEUVER
@@ -1186,7 +1193,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.sv_P = sv_P;
 		manopt.GMT_TIG = res.sv_tig.GMT;
 
-		AP9LMTPIPAD(&manopt, *form);
+		AP9LMTPIPAD(manopt, *form);
 	}
 	break;
 	case 38: //LM DOCKED P52 PAD (STAR 15)
@@ -1761,11 +1768,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 54: //LANDMARK TRACKING UPDATE 4
 	{
 		LMARKTRKPADOpt opt;
-		SV sv0;
+		EphemerisData sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
+		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
 
@@ -1876,7 +1883,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.entries = 4;
 		}
 
-		LandmarkTrackingPAD(&opt, *form);
+		LandmarkTrackingPAD(opt, *form);
 	}
 	break;
 	case 55: //BLOCK DATA 16

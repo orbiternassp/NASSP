@@ -154,6 +154,8 @@ void Saturn::SystemsInit() {
 
 	// H2 Tanks
 
+	H2Tanks[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1");
+	H2Tanks[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2");
 	H2TankHeaters[0] = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:H2TANK1HEATER");
 	H2TankHeaters[0]->WireTo(&CryogenicH2HTR1CB);
 	H2TankHeaters[1] = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:H2TANK2HEATER");
@@ -175,6 +177,8 @@ void Saturn::SystemsInit() {
 	
 	// O2 Tanks
 
+	O2Tanks[0] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"); //Used by Apollo 13 accident code
+	O2Tanks[1] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"); //Used by Apollo 13 accident code
 	O2TankHeaters[0] = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:O2TANK1HEATER");
 	O2TankHeaters[0]->WireTo(&CryogenicO2HTR1CB);
 	O2TankHeaters[1] = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:O2TANK2HEATER");

@@ -6374,12 +6374,8 @@ double ConicRTEEarthNew::TripTime(double v_a, double beta_a)
 	return T;
 }
 
-RTEMoon::RTEMoon(RTCC *r, EphemerisData2 sv0, double GMTBASE, double alpha_SID0) : RTCCModule(r)
+RTEMoon::RTEMoon(RTCC *r) : RTCCModule(r)
 {
-	this->GMTBASE = GMTBASE;
-	this->alpha_SID0 = alpha_SID0;
-	this->sv0 = sv0;
-
 	hMoon = BODY_MOON;
 	mu_E = OrbMech::mu_Earth;
 	mu_M = OrbMech::mu_Moon;
@@ -6388,39 +6384,48 @@ RTEMoon::RTEMoon(RTCC *r, EphemerisData2 sv0, double GMTBASE, double alpha_SID0)
 	R_M = OrbMech::R_Moon;
 	r_r = R_E + 400000.0*0.3048;
 
-	dTIG = 30.0;
-	precision = 1;
 	ReturnInclination = 0.0;
 	EntryLng = 0.0;
 	t_Landing = 0.0;
 }
 
-void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI)
+void RTEMoon::READ(const RTEMoonInputsArray &opt)
 {
 	double LETSGOF, CRITF;
 
-	u_rmax = URMAXI * 0.3048;
-	i_rmax = IRMAXI * RAD;
+	alpha_SID0 = opt.alpha_SID0;
+	for (int i = 0; i < 10; i++)
+	{
+		LINE[i] = opt.LINE[i];
+	}
+
+	u_rmax = opt.URMAXI * 0.3048;
+	i_rmax = opt.IRMAXI * RAD;
 	CENT = 1;
-	t_zmax = TZMAXI;
-	h_min = HMINI * 1852.0;
-	t_zmin = TZMINI;
-	MD_max = MDMAXI;
-	SMODE = SMODEI;
-	CIRCUM = CIRI;
-	LD = L2DI;
-	DV_max = DVMAXI * 0.3048;
-	lambda_z = 0.0;
-	mu_z = MUZI;
+	t_zmax = opt.TZMAXI;
+	h_min = opt.HMINI * 1852.0;
+	t_zmin = opt.TZMINI;
+	MD_max = opt.MDMAXI*1852.0;
+	SMODE = opt.SMODEI;
+	CIRCUM = opt.CIRI;
+	STAVEC = opt.STAVEC;
+	//Set first state vector
+	sv0.R = STAVEC.table[0].R;
+	sv0.V = STAVEC.table[0].V;
+	sv0.GMT = STAVEC.table[0].GMT;
+	LD = opt.L2DI;
+	DV_max = opt.DVMAXI * 0.3048;
+	lambda_z = opt.LAMZI;
+	mu_z = opt.MUZI;
 	lambda_z1 = lambda_z;
 	mu_z1 = mu_z;
-	r_rbias = RRBI;
-	ICRNGG = EPI;
+	r_rbias = opt.RRBI;
+	ICRNGG = opt.EPI;
 
-	CRITF = modf(((double)SMODEI) / 10.0, &LETSGOF);
+	CRITF = modf(((double)opt.SMODEI) / 10.0, &LETSGOF);
 	LETSGO = (int)LETSGOF;
 	CRIT = SMODE - LETSGO * 10;
-	i_rk = IRKI;
+	i_rk = opt.IRKI*RAD;
 
 	if (LETSGO == 2)
 	{
@@ -6431,7 +6436,7 @@ void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CI
 		LFLAG = 2;
 	}
 	bRTCC = false;
-	if (CIRI == 0 && CRIT != 6)
+	if (opt.CIRI == 0 && CRIT != 6)
 	{
 		//If postmaneuver direction of motion is to be determined internally and mode is fuel critical, unspecified area
 		bRTCC = true;
@@ -6444,29 +6449,31 @@ void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CI
 	}
 }
 
-void RTEMoon::ATP(double *line)
+bool RTEMoon::MASTER(const RTEMoonInputsArray &opt)
 {
-	for (int i = 0;i < 10;i++)
-	{
-		LINE[i] = line[i];
-	}
-}
-
-bool RTEMoon::MASTER()
-{
-	VECTOR3 DVARR, TIGARR;
 	double i_r, theta_long, theta_lat, dlng, dt, INTER, dv, t_z;
 	double r_0, v_0, delta_0, alpha_0, beta_0, A_0, z_0, e_0;
-	int IPART, ii;
-	bool ISOL, IOUT, q_0;
+	int ii;
+	bool ISOL, q_0;
 	//0 = noncircumlunar, 1 = circumlunar
 	bool q_m;
+	//End of SEARCH routine
+	bool END, LAST;
+	//Subroutine SEARCH array
+	RTEMoonSEARCHArray SEARCHArray;
 
-	IOUT = false;
-	IPART = 1;
+	//Check if any state vector was input
+	if (opt.STAVEC.table.size() == 0) return false;
+
+	//Initialize input variables
 	ii = 0;
+	END = false;
+	LAST = false;
 
-	while (IOUT == false)
+	//Read program inputs
+	READ(opt);
+
+	do
 	{
 		pRTCC->PICSSC(true, sv0.R, sv0.V, r_0, v_0, delta_0, alpha_0, beta_0, A_0);
 		beta_0 = PI05 - beta_0;
@@ -6516,7 +6523,7 @@ bool RTEMoon::MASTER()
 				QDFLG = true;
 			}
 		}
-
+		//Calculate solution
 		if (CRIT == 4)
 		{
 			ISOL = CLL(i_r, INTER, q_m, t_z, dv);
@@ -6525,18 +6532,37 @@ bool RTEMoon::MASTER()
 		{
 			ISOL = MCUA(i_r, INTER, q_m, t_z, dv);
 		}
-
+		//Calculation failure?
+		if (ISOL == false)
+		{
+			//Set DV to large value
+			dv = 1e10;
+		}
+		//If it is a discrete case, then the calculation is done
 		if (LETSGO == 1) break;
 
-		dTIG = SEARCH(IPART, DVARR, TIGARR, sv0.GMT, dv, IOUT);
-
-		if (IOUT == false)
+		if (LAST == false)
 		{
-			OrbMech::oneclickcoast(pRTCC->SystemParameters.AGCEpoch, sv0.R, sv0.V, GMTBASE + sv0.GMT / 24.0 / 3600.0, dTIG, sv0.R, sv0.V, hMoon, hMoon);
-			sv0.GMT += dTIG;
+			//Run search algorithm
+			SEARCH(SEARCHArray, dv);
+			//Finished?
+			if (SEARCHArray.IPART != 5) continue;
+			//Yes
+			if (SEARCHArray.TEST[6] >= 1e9)
+			{
+				//No good solution
+				return false;
+			}
+			LAST = true;
+			continue;
 		}
-	}
+		else
+		{
+			END = true;
+		}
+	} while (END == false);
 
+	//Calculation failure?
 	if (ISOL == false) return false;
 
 	//Precision Solution
@@ -6564,7 +6590,7 @@ bool RTEMoon::MASTER()
 
 	// Final Calculations
 	double sing, cosg, x2;
-	VECTOR3 i, j, k, N, H_EI_equ, R_peri, V_peri;
+	VECTOR3 i, j, k, N, H_EI_equ;
 	MATRIX3 Q_Xx;
 	j = unit(crossp(sv0.V, sv0.R));
 	k = unit(-sv0.R);
@@ -6584,8 +6610,10 @@ bool RTEMoon::MASTER()
 	H_EI_equ = unit(N);
 	ReturnInclination = -acos(H_EI_equ.z)*INTER;
 
-	OrbMech::timetoperi_integ(pRTCC->SystemParameters.AGCEpoch, sv0.R, Vig_apo, OrbMech::MJDfromGET(sv0.GMT, GMTBASE), pRTCC->GetGravref(hMoon), pRTCC->GetGravref(hMoon), R_peri, V_peri);
-	FlybyPeriAlt = length(R_peri) - R_M;
+	//Calculate flyby altitdue
+	double r_apo, r_peri;
+	OrbMech::periapo(sv0.R, Vig_apo, mu_M, r_apo, r_peri);
+	FlybyPeriAlt = r_peri - pRTCC->BZLAND.rad[0];
 
 	return true;
 }
@@ -7335,7 +7363,7 @@ VECTOR3 RTEMoon::ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E
 		}
 		R_E_apo = sv2.R;
 		V_E_apo = sv2.V;
-		//OrbMech::oneclickcoast(R_I, V_I_apo, t_I, (t_EI - t_I), R_E_apo, V_E_apo, hMoon, hEarth);
+
 		OrbMech::rv_from_r0v0(R_E_apo, V_E_apo, (t_I - t_EI), R_I_sstar, V_I_sstar, mu_E);
 		delta_I_star = R_I_sstar - R_m - R_I_star;
 		delta_I_star_dot = V_I_sstar - V_m - V_I_star;
@@ -7581,48 +7609,204 @@ RTEMoon_MCDRIV_11_W:
 	return 1;
 }
 
-double RTEMoon::SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT)
+void RTEMoon::SEARCH(RTEMoonSEARCHArray &arr, double dv)
 {
-	double DVTEST, dt;
+	//Routine that searches for a global minimum of the maneuver DV
 
-	if (IPART == 1)
+	//CONSTANTS
+	static const double eps_dv = 0.2*0.3048;
+	static const double eps_dt = 1.0;
+
+	EphemerisData sv00, sv1;
+	double DVTEST;
+	int ITS;
+
+	arr.L++;
+
+	//Jump
+	if (arr.IPART == 3) goto RTEMoon_SEARCH_E4;
+	if (arr.IPART == 4) goto RTEMoon_SEARCH_G5;
+	//Set up some things on the first iteration
+	if (arr.IPART == 1)
 	{
-		DVARR = _V(1e10, 1e10, 1e10);
-		TIGARR = _V(1e10, 1e10, 1e10);
-		IPART = 2;
+		for (int i = 0; i < 7; i++)
+		{
+			arr.TEST[i] = 1e10;
+			arr.STAVEX[i].GMT = 1e10;
+		}
+		arr.K = 1;
+		arr.IOUT = false;
+		arr.IPART = 2;
+		arr.L = 1;
+		arr.J = 1;
+		arr.dt = 0.1*3600.0;
 	}
-
-	DVARR.x = DVARR.y;
-	DVARR.y = DVARR.z;
-	DVARR.z = dv;
-	TIGARR.x = TIGARR.y;
-	TIGARR.y = TIGARR.z;
-	TIGARR.z = tig;
-	DVTEST = DVARR.z - DVARR.y;
-	dt = (TIGARR.z - TIGARR.y);
-	if (IPART == 4 && (abs(dt) < 1.0 || abs(DVTEST) < 0.2*0.3048))
+	//Here we search for a local minimum
+	//Push old DVs back and store new one
+	arr.TEST[0] = arr.TEST[2];
+	arr.TEST[2] = arr.TEST[4];
+	arr.TEST[4] = dv;
+	//Push old state vectors back and store new one
+	arr.STAVEX[0] = arr.STAVEX[2];
+	arr.STAVEX[2] = arr.STAVEX[4];
+	arr.STAVEX[4] = sv0;
+	//Test by how much the DV is different from previous test
+	DVTEST = arr.TEST[4] - arr.TEST[2];
+	//Store current test case
+	arr.TEST5 = dv;
+	arr.STAVC5 = sv0;
+	//Is DV still going down?
+	if (DVTEST < 0.0)
 	{
-		IOUT = true;
+		//Yes, no local minimum found yet
+		arr.STAVEX[5] = arr.STAVEX[4];
+		arr.TEST[5] = arr.TEST[4];
+		arr.K = -1;
+		goto RTEMoon_SEARCH_K7;
+	}
+	//Local minimum found
+	//Was this the second state vector in the table?
+	if (arr.L == 2)
+	{
+		//Yes, set indicator to continue the search because the minimum can't be bracketed before the 3rd calculation
+		arr.K = 1;
+	}
+	//Skip logic for a found local minimum and continue?
+	if (arr.K == 1)
+	{
+		//Yes
+		goto RTEMoon_SEARCH_P7;
+	}
+	//Is the DV changing by almost nothing?
+	if (abs(DVTEST) < eps_dv)
+	{
+		arr.IOUT = true;
+	}
+RTEMoon_SEARCH_C3:
+	//Set up test case halfway between left limit and current best case
+	arr.dt = (arr.STAVEX[2].GMT - arr.STAVEX[0].GMT) / 2.0;
+	sv1.R = arr.STAVEX[0].R;
+	sv1.V = arr.STAVEX[0].V;
+	sv1.GMT = arr.STAVEX[0].GMT;
+	sv1.RBI = BODY_MOON;
+	//Integrate for dt
+	pRTCC->PMMCEN(sv1, 0.0, 0.0, 1, arr.dt, 1.0, sv00, ITS);
+	//Store new state
+	sv0.R = sv00.R;
+	sv0.V = sv00.V;
+	sv0.GMT = sv00.GMT;
+	arr.IPART = 3;
+	return;
+RTEMoon_SEARCH_E4:
+	//Entry when the case between left limit and current best case was tested
+	//Store the DV and state
+	arr.TEST[1] = dv;
+	arr.STAVEX[1] = sv0;
+	//Is solution better than current local minimum?
+	DVTEST = arr.TEST[2] - arr.TEST[1];
+	if (DVTEST > 0.0)
+	{
+		//No. Use current run as new left limit. Also store left limit in slot 5?
+		arr.TEST[5] = arr.TEST[1];
+		arr.TEST[4] = arr.TEST[2];
+		arr.TEST[2] = arr.TEST[1];
+		arr.STAVEX[5] = arr.STAVEX[1];
+		arr.STAVEX[4] = arr.STAVEX[2];
+		arr.STAVEX[2] = arr.STAVEX[1];
+		goto RTEMoon_SEARCH_I6;
+	}
+	//Yes the newest run is better. Store current best in slot 5?
+	arr.TEST[5] = arr.TEST[2];
+	//Next case to try is halfway between current best and right limit
+	sv1.R = arr.STAVEX[2].R;
+	sv1.V = arr.STAVEX[2].V;
+	sv1.GMT = arr.STAVEX[2].GMT;
+	sv1.RBI = BODY_MOON;
+	arr.dt = (arr.STAVEX[4].GMT - arr.STAVEX[2].GMT) / 2.0;
+	//Integrate for dt
+	pRTCC->PMMCEN(sv1, 0.0, 0.0, 1, arr.dt, 1.0, sv00, ITS);
+	//Store new state
+	sv0.R = sv00.R;
+	sv0.V = sv00.V;
+	sv0.GMT = sv00.GMT;
+	arr.IPART = 4;
+	return;
+RTEMoon_SEARCH_G5:
+	//Entry when the case between current best case and right limit was tested
+	arr.TEST[3] = dv;
+	arr.STAVEX[3] = sv0;
+	//Is new solution better?
+	DVTEST = arr.TEST[3] - arr.TEST[2];
+	if (DVTEST < 0.0)
+	{
+		//Yes. Previous best is new left limit and newest solution is stored as local minimum. Also store current run in slot 5?
+		arr.TEST[0] = arr.TEST[2];
+		arr.TEST[2] = arr.TEST[3];
+		arr.TEST[5] = arr.TEST[3];
+		arr.STAVEX[0] = arr.STAVEX[2];
+		arr.STAVEX[2] = arr.STAVEX[3];
+		arr.STAVEX[5] = arr.STAVEX[3];
 	}
 	else
 	{
-		IOUT = false;
+		//No. Store previous run (between left limit and best case) as new left limit. Store current run as new right limit.
+		arr.TEST[5] = arr.TEST[2];
+		arr.TEST[0] = arr.TEST[1];
+		arr.TEST[4] = arr.TEST[3];
+		arr.STAVEX[5] = arr.STAVEX[2];
+		arr.STAVEX[0] = arr.STAVEX[1];
+		arr.STAVEX[4] = arr.STAVEX[3];
 	}
-	if (IPART == 2)
+RTEMoon_SEARCH_I6:
+	//Test if convergence criteria are fulfilled
+	if (abs(DVTEST) > eps_dv && abs(arr.dt) > eps_dt)
 	{
-		IPART = 3;
-		return 120.0;
+		//No
+		arr.IOUT = false;
+		goto RTEMoon_SEARCH_C3;
 	}
-	else if (DVTEST <= 0)
+	//Yes. First time it convergenced?
+	if (arr.IOUT == false)
 	{
-		//Most recent DV smaller than the previous one, continue in this direction
-		return dt;
+		//Yes, first time
+		arr.IOUT = true;
+		goto RTEMoon_SEARCH_C3;
+	}
+	//No. Set up continuation of search to find the global minimum?
+	arr.IOUT = false;
+	arr.K = 1;
+	arr.IPART = 2;
+	arr.STAVEX[4] = arr.STAVC5;
+	arr.TEST[4] = arr.TEST5;
+RTEMoon_SEARCH_K7:
+	//Is local minimum a new global minimum?
+	if (arr.TEST[6] <= arr.TEST[5])
+	{
+		//No, restore the global minimum in case it needs to be used as the final run
+		sv0 = arr.STAVEX[6];
+		arr.dt = 1000000.0;//TJUMPN; TBD: What is TJUMPN? Does this just prevent a false convergence?
 	}
 	else
 	{
-		//DV increasing again, we went past a minimum
-		IPART = 4;
-		return -dt / 2.0;
+		//Yes
+		arr.STAVEX[6] = arr.STAVEX[5];
+		arr.TEST[6] = arr.TEST[5];
+		//arr.JSAVE = arr.J - 2;
+	}
+RTEMoon_SEARCH_P7:
+	//Are we at the end of the state vector table?
+	if (arr.J >= STAVEC.table.size())
+	{
+		arr.IPART = 5;
+		sv0 = arr.STAVEX[6]; //Not in document, restore best solution
+		return;
+	}
+	//Still searching for a local minimum in the state vector table?
+	if (arr.IPART <= 2)
+	{
+		//Yes, try next state vector in table
+		arr.J++;
+		sv0 = STAVEC.table[arr.J - 1];
 	}
 }
 

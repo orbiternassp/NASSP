@@ -955,10 +955,10 @@ bool PushSwitch::CheckMouseClick(int event, int mx, int my) {
 	SHORT ctrlState = GetKeyState(VK_SHIFT);
 	SetHeld((ctrlState & 0x8000) != 0);
 
-	if (event == PANEL_MOUSE_LBDOWN) {
+	if (event & PANEL_MOUSE_LBDOWN) {
 		SwitchTo(1, true);
 		Sclick.play();
-	} else if (event == PANEL_MOUSE_LBUP && !IsHeld()) {
+	} else if (event & PANEL_MOUSE_LBUP && !IsHeld()) {
 		SwitchTo(0, true);
 	}
 	return true;
@@ -976,11 +976,11 @@ bool PushSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 	SHORT ctrlState = GetKeyState(VK_SHIFT);
 	SetHeld((ctrlState & 0x8000) != 0);
 
-	if (event == PANEL_MOUSE_LBDOWN) {
+	if (event & PANEL_MOUSE_LBDOWN) {
 		SwitchTo(1, true);
 		Sclick.play();
 	}
-	else if (event == PANEL_MOUSE_LBUP && !IsHeld()) {
+	else if (event & PANEL_MOUSE_LBUP && !IsHeld()) {
 		SwitchTo(0, true);
 	}
 	return true;

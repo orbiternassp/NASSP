@@ -1010,8 +1010,8 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 		integin.sv_CSM.V.x = mpt->mantable[i].Word76;
 		integin.sv_CSM.V.y = mpt->mantable[i].Word77;
 		integin.sv_CSM.V.z = mpt->mantable[i].Word78d;
-		integin.sv_CSM.MJD = OrbMech::MJDfromGET(mpt->mantable[i].Word79, pRTCC->SystemParameters.GMTBASE);
-		integin.sv_CSM.gravref = oapiGetObjectByName("Moon");
+		integin.sv_CSM.GMT = mpt->mantable[i].Word79;
+		integin.sv_CSM.RBI = BODY_MOON;
 	}
 	else
 	{
@@ -1031,10 +1031,8 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 			nierror = 1;
 			return;
 		}
-		integin.sv_CSM.R = SV.R;
-		integin.sv_CSM.V = SV.V;
-		integin.sv_CSM.MJD = OrbMech::MJDfromGET(SV.GMT, pRTCC->SystemParameters.GMTBASE);
-		integin.sv_CSM.gravref = pRTCC->GetGravref(SV.RBI);
+
+		integin.sv_CSM = SV;
 	}
 
 	integin.t_liftoff = mpt->mantable[i].GMTMAN;

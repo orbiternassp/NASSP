@@ -198,7 +198,8 @@ protected:
 	VECTOR3 DV_Vector;
 	double Pitch_Man, Yaw_Man, Node_Ang, Del_G, DV, H_man, lat_man, lng_man;
 	//0 = good maneuver, 1 = Maneuver cannot be performed in this orbit, 2 = Maneuver cannot be performed at this point in the orbit, 3 = AEG failed to converge, 4 = Unrecoverable AEG error
-	//5 = Unable to obtain libration matrix, 6 = Unable to advance to selenographic argument of latitude, 7 = PMMAPD error for current apo/peri, 8 = PMMAPD error for resultant apo/peri
+	//5 = Unable to obtain libration matrix, 6 = Unable to advance to selenographic argument of latitude, 7 = PMMAPD error for current apo/peri, 8 = PMMAPD error for resultant apo/peri, 
+	//9 = Resultant orbit non-elliptical
 	int ErrorIndicator;
 
 	//CONSTANTS

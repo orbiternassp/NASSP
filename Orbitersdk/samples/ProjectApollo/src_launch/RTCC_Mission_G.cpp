@@ -1083,7 +1083,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
 		med_k16.DesiredHeight = 60.0*1852.0;
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		PoweredFlightProcessor(sv, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, WeightsTable.LMAscWeight + WeightsTable.LMDscWeight, PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
@@ -1135,7 +1135,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.Sequence = 1;
 		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LOI + 25.0*3600.0;
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		calcParams.DOI = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
 		calcParams.PDI = PZLDPDIS.PD_GETIG;
@@ -1160,10 +1160,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		landmarkopt.lat[0] = 1.243*RAD;
 		landmarkopt.LmkTime[0] = calcParams.LOI + 22.5*3600.0;
 		landmarkopt.lng[0] = 23.688*RAD;
-		landmarkopt.sv0 = sv;
+		landmarkopt.sv0 = ConvertSVtoEphemData(sv);
 		landmarkopt.entries = 1;
 
-		LandmarkTrackingPAD(&landmarkopt, *form);
+		LandmarkTrackingPAD(landmarkopt, *form);
 
 		AGCStateVectorUpdate(buffer1, sv, true);
 		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT);
@@ -1320,7 +1320,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.Sequence = 1;
 		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LOI + 25.0*3600.0;
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		calcParams.DOI = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
 		calcParams.PDI = PZLDPDIS.PD_GETIG;
@@ -1525,11 +1525,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 64: //LM ACQUISITION TIME
 	{
 		LMARKTRKPADOpt opt;
-		SV sv0;
+		EphemerisData sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
+		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
 
@@ -1562,7 +1562,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.entries = 1;
 		}
 
-		LandmarkTrackingPAD(&opt, *form);
+		LandmarkTrackingPAD(opt, *form);
 	}
 	break;
 	case 170: //PDI2 PAD
@@ -1582,7 +1582,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.Sequence = 1;
 		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = calcParams.LOI + 25.0*3600.0;
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		calcParams.PDI = PZLDPDIS.PD_GETIG;
 		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
@@ -1607,7 +1607,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv0 = sv;
 		opt.t_land = CZTDTGTU.GETTD;
 
-		PDI_PAD(&opt, *form);
+		PDI_PAD(opt, *form);
 	}
 	break;
 	case 71: //PDI ABORT PAD
@@ -1716,27 +1716,32 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LunarSurfaceDataCard * form = (AP11LunarSurfaceDataCard*)pad;
 
-		SV sv_CSM, sv_Ins, sv_IG;
-		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
-		double T2, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, dt1, dt2, t_CSI1, t_sunrise, t_TPI, dv;
+		LunarAscentProcessorInputs asc_in;
+		LunarAscentProcessorOutputs asc_out;
+		SV sv_CSM;
+		VECTOR3 R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
+		double T2, GETbase, t_C1, dt1, dt2, t_CSI1, t_sunrise, t_TPI;
 		char buffer1[1000];
 
 		GETbase = CalcGETBase();
 		sv_CSM = StateVectorCalc(calcParams.src);
 		
 		LEM *l = (LEM*)calcParams.tgt;
-		m0 = l->GetAscentStageMass();
-
-		v_LH = 5515.2*0.3048;
-		v_LV = 19.6*0.3048;
-
+		
+		//T2
 		T2 = calcParams.PDI + 21.0*60.0 + 24.0;
-		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
-		LunarAscentProcessor(R_LS, m0, sv_CSM, T2, v_LH, v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
-		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, OrbMech::mu_Moon);
-		OrbMech::rv_from_r0v0(sv_Ins.R, sv_Ins.V, dt1, R_C1, V_C1, OrbMech::mu_Moon);
-		t_C1 = T2 + dt_asc + dt1;
+		asc_in.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
+		asc_in.m0 = l->GetAscentStageMass();
+		asc_in.sv_CSM = ConvertSVtoEphemData(sv_CSM);
+		asc_in.t_liftoff = GMTfromGET(T2);
+		asc_in.v_LH = 5515.2*0.3048;
+		asc_in.v_LV = 19.6*0.3048;
+
+		LunarAscentProcessor(asc_in, asc_out);
+		dt1 = OrbMech::timetoapo(asc_out.sv_Ins.R, asc_out.sv_Ins.V, OrbMech::mu_Moon);
+		OrbMech::rv_from_r0v0(asc_out.sv_Ins.R, asc_out.sv_Ins.V, dt1, R_C1, V_C1, OrbMech::mu_Moon);
+		t_C1 = T2 + asc_out.dt_asc + dt1;
 		u = unit(crossp(R_C1, V_C1));
 		V_C1F = V_C1 + unit(crossp(u, V_C1))*10.0*0.3048;
 		OrbMech::REVUP(R_C1, V_C1F, 1.5, OrbMech::mu_Moon, R_CSI1, V_CSI1, dt2);
@@ -1755,7 +1760,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//T3
 		LunarLiftoffTimeOpt opt;
 		SV sv_CSM2, sv_CSM_over;
-		double MJD_over, t_P, t_PPlusDT, theta_1, dt_1, t_L, t_CSI;
+		double MJD_over, t_P, t_PPlusDT, t_L, t_CSI;
 
 		//Calculate TPI time for T3
 		t_sunrise = calcParams.PDI + 5.0*3600.0;
@@ -1798,9 +1803,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LunarLaunchWindowProcessor(opt);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
-		opt.theta_1 = theta_1;
-		opt.dt_1 = dt_1;
+		asc_in.t_liftoff = GMTfromGET(PZLRPT.data[1].GETLO);
+		LunarAscentProcessor(asc_in, asc_out);
+		opt.theta_1 = asc_out.theta;
+		opt.dt_1 = asc_out.dt_asc;
 		//Final pass through
 		LunarLaunchWindowProcessor(opt);
 		t_L = PZLRPT.data[1].GETLO;
@@ -1901,19 +1907,16 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMASCPAD * form = (AP11LMASCPAD*)pad;
 
+		LunarAscentProcessorInputs asc_in;
+		LunarAscentProcessorOutputs asc_out;
 		ASCPADOpt ascopt;
 		LunarLiftoffTimeOpt opt;
-		SV sv_CSM, sv_Ins, sv_IG;
-		VECTOR3 R_LS;
+		SV sv_CSM;
 		char buffer1[100], buffer2[1000];
-		double m0, theta_1, dt_1, dv;
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 
 		LEM *l = (LEM*)calcParams.tgt;
-		m0 = l->GetAscentStageMass();
-
-		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 
 		//T3
 		double t_sunrise, t_TPI;
@@ -1958,10 +1961,20 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Initial pass through the processor
 		LunarLaunchWindowProcessor(opt);
+
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
-		opt.theta_1 = theta_1;
-		opt.dt_1 = dt_1;
+		asc_in.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
+		asc_in.m0 = l->GetAscentStageMass();
+		asc_in.sv_CSM = ConvertSVtoEphemData(sv_CSM);
+		asc_in.t_liftoff = GMTfromGET(PZLRPT.data[1].GETLO);
+		asc_in.v_LH = opt.v_LH;
+		asc_in.v_LV = opt.v_LV;
+
+		LunarAscentProcessor(asc_in, asc_out);
+
+		opt.theta_1 = asc_out.theta;
+		opt.dt_1 = asc_out.dt_asc;
+
 		//Final pass through
 		LunarLaunchWindowProcessor(opt);
 		calcParams.LunarLiftoff = PZLRPT.data[1].GETLO;
@@ -1970,7 +1983,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.CDH = PZLRPT.data[1].T_CDH;
 		calcParams.TPI = PZLRPT.data[1].T_TPI;
 
-		ascopt.R_LS = R_LS;
+		ascopt.R_LS = asc_in.R_LS;
 		ascopt.sv_CSM = ConvertSVtoEphemData(sv_CSM);
 		ascopt.TIG = calcParams.LunarLiftoff;
 		ascopt.v_LH = opt.v_LH;
@@ -1981,7 +1994,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Store for CSI PAD
 		calcParams.DVSTORE1 = _V(PZLRPT.data[1].DVCSI*0.3048, 0, 0);
-		calcParams.SVSTORE1 = sv_Ins;
+		calcParams.SVSTORE1 = ConvertEphemDatatoSV(asc_out.sv_Ins, asc_out.m1);
 
 		LandingSiteUplink(buffer1, RTCC_MPT_LM);
 		AGCStateVectorUpdate(buffer2, sv_CSM, true);
@@ -2000,15 +2013,19 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP10CSIPADOpt opt;
 
+		//Use nominal AGS K-Factor for now
+		SystemParameters.MCGZSS = SystemParameters.MCGZSL + 90.0;
+
 		opt.dV_LVLH = calcParams.DVSTORE1;
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
-		opt.KFactor = 90.0*3600.0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		opt.sv0 = calcParams.SVSTORE1;
+		opt.sv0 = ConvertSVtoEphemData(calcParams.SVSTORE1);
 		opt.t_CSI = calcParams.CSI;
 		opt.t_TPI = calcParams.TPI;
+		opt.WeightsTable.CC[RTCC_CONFIG_A] = true;
+		opt.WeightsTable.ConfigWeight = opt.WeightsTable.LMAscWeight = calcParams.SVSTORE1.mass;
 
-		AP10CSIPAD(&opt, *form);
+		AP10CSIPAD(opt, *form);
 		form->type = 1;
 	}
 	break;
@@ -2018,15 +2035,15 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		LIFTOFFTIMES * form = (LIFTOFFTIMES*)pad;
 
+		LunarAscentProcessorInputs asc_in;
+		LunarAscentProcessorOutputs asc_out;
 		LunarLiftoffTimeOpt opt;
-		SV sv_CSM, sv_CSM_upl, sv_Ins, sv_IG;
-		VECTOR3 R_LS;
-		double m0, theta_1, dt_1, dv, t_TPI_guess;
+		SV sv_CSM, sv_CSM_upl;
+		double t_TPI_guess;
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 
 		LEM *l = (LEM*)calcParams.tgt;
-		m0 = l->GetAscentStageMass();
 
 		//Set all the options
 		opt.I_BURN = 1;
@@ -2078,8 +2095,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->startdigit = 10;
 		}
 
-		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-
 		double t_TPI;
 		t_TPI = FindOrbitalSunrise(sv_CSM, t_TPI_guess) - 23.0*60.0;
 		//Round to next 30 seconds
@@ -2088,10 +2103,19 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Initial pass through the processor
 		LunarLaunchWindowProcessor(opt);
+
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
-		opt.theta_1 = theta_1;
-		opt.dt_1 = dt_1;
+		asc_in.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
+		asc_in.m0 = l->GetAscentStageMass();
+		asc_in.sv_CSM = ConvertSVtoEphemData(sv_CSM);
+		asc_in.t_liftoff = GMTfromGET(PZLRPT.data[1].GETLO);
+		asc_in.v_LH = opt.v_LH;
+		asc_in.v_LV = opt.v_LV;
+
+		LunarAscentProcessor(asc_in, asc_out);
+
+		opt.theta_1 = asc_out.theta;
+		opt.dt_1 = asc_out.dt_asc;
 
 		for (int i = 0;i < form->entries;i++)
 		{
@@ -2146,7 +2170,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GZGENCSN.LDPPAzimuth = 0.0;
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		PoweredFlightProcessor(sv, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, PZLDPDIS.DVVector[0] * 0.3048, true, TimeofIgnition, DeltaV_LVLH);
 
@@ -2231,19 +2255,19 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 100: //NOMINAL INSERTION TARGET + LGC SV UPDATE
 	{
+		LunarAscentProcessorInputs asc_in;
+		LunarAscentProcessorOutputs asc_out;
 		LunarLiftoffTimeOpt opt;
 		REFSMMATOpt refsopt;
-		SV sv_CSM, sv_CSM_upl, sv_Ins, sv_IG;
+		SV sv_CSM, sv_CSM_upl;
 		MATRIX3 REFSMMAT;
-		VECTOR3 R_LS;
 		char buffer1[100];
-		double GETbase, m0, theta_1, dt_1, dv, t_TPI_guess, t_TPI;
+		double GETbase, t_TPI_guess, t_TPI;
 
 		GETbase = CalcGETBase();
 		sv_CSM = StateVectorCalc(calcParams.src);
 
 		LEM *l = (LEM*)calcParams.tgt;
-		m0 = l->GetAscentStageMass();
 
 		//Rev 24 is the nominal for this update. Nominal TPI time is about 24.5 hours after PDI
 		t_TPI_guess = calcParams.PDI + 24.5*3600.0 + 23.0*60.0 + 2.0*3600.0*(double)(mcc->MoonRev - 24);
@@ -2283,14 +2307,22 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dt_1 = 447.0;
 		opt.t_hole = GMTfromGET(t_TPI);
 
-		R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-
 		//Initial pass through the processor
 		LunarLaunchWindowProcessor(opt);
+
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, PZLRPT.data[1].GETLO, opt.v_LH, opt.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
-		opt.theta_1 = theta_1;
-		opt.dt_1 = dt_1;
+		asc_in.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
+		asc_in.m0 = l->GetAscentStageMass();
+		asc_in.sv_CSM = ConvertSVtoEphemData(sv_CSM);
+		asc_in.t_liftoff = GMTfromGET(PZLRPT.data[1].GETLO);
+		asc_in.v_LH = opt.v_LH;
+		asc_in.v_LV = opt.v_LV;
+
+		LunarAscentProcessor(asc_in, asc_out);
+
+		opt.theta_1 = asc_out.theta;
+		opt.dt_1 = asc_out.dt_asc;
+
 		//Final pass through
 		LunarLaunchWindowProcessor(opt);
 
@@ -2317,7 +2349,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		DeltaV_LVLH = _V(opt.v_LH, opt.v_LV, 0);
 		//Store for CSI PAD
 		calcParams.DVSTORE1 = _V(PZLRPT.data[1].DVCSI*0.3048, 0, 0);
-		calcParams.SVSTORE1 = sv_Ins;
+		calcParams.SVSTORE1 = ConvertEphemDatatoSV(asc_out.sv_Ins, asc_out.m1);
 
 		sv_CSM_upl = coast(sv_CSM, PZLRPT.data[1].T_CSI + 18.0*60.0 - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
 		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true);
@@ -2390,15 +2422,19 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP10CSIPADOpt opt;
 
+		//Use nominal AGS K-Factor for now
+		SystemParameters.MCGZSS = SystemParameters.MCGZSL + 120.0;
+
 		opt.dV_LVLH = calcParams.DVSTORE1;
 		opt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
-		opt.KFactor = 120.0*3600.0;
 		opt.REFSMMAT = EZJGMTX3.data[RTCC_REFSMMAT_TYPE_LLD - 1].REFSMMAT;
-		opt.sv0 = calcParams.SVSTORE1;
+		opt.sv0 = ConvertSVtoEphemData(calcParams.SVSTORE1);
 		opt.t_CSI = calcParams.CSI;
 		opt.t_TPI = calcParams.TPI;
+		opt.WeightsTable.CC[RTCC_CONFIG_A] = true;
+		opt.WeightsTable.ConfigWeight = opt.WeightsTable.LMAscWeight = calcParams.SVSTORE1.mass;
 
-		AP10CSIPAD(&opt, *form);
+		AP10CSIPAD(opt, *form);
 		form->type = 1;
 	}
 	break;
@@ -2682,7 +2718,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.REFSMMAT = REFSMMAT;
 		entopt.sv0 = sv;
 
-		LunarEntryPAD(&entopt, *form);
+		LunarEntryPAD(entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{

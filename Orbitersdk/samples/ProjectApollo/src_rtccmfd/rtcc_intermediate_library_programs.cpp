@@ -758,10 +758,11 @@ int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &
 {
 	//Output: 0 = no error, 1 = essentially circular orbit, 2 = unrecoverable AEG error, 3 = requested height not in orbit, 4 = failed to converge on radius
 
-	double cos_f_CI, f_CI, dt, sgn, ddt, eps_t;
-	int I;
+	double cos_f_CI, f_CI, dt, sgn, ddt, eps_t, l2, dl;
+	int I, IMAX;
 	bool fail;
 
+	IMAX = 10;
 	eps_t = 0.01;
 
 	if (in.ENTRY == 0)
@@ -849,26 +850,28 @@ int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &
 			f_CI += PI2;
 		}
 		//Calculate angle difference
-		ddt = f_CI - out.f;
-		if (ddt > PI)
+		l2 = OrbMech::TrueToMeanAnomaly(f_CI, out.coe_osc.e);
+		dl = l2 - out.coe_osc.l;
+		if (dl > PI)
 		{
-			ddt -= PI2;
+			dl -= PI2;
 		}
-		else if (ddt < -PI)
+		else if (dl < -PI)
 		{
-			ddt += PI2;
+			dl += PI2;
 		}
+
 		//Calculate ddt
-		ddt = ddt / (out.g_dot + out.l_dot);
+		ddt = dl / (out.g_dot + out.l_dot);
 		if (abs(ddt) > eps_t)
 		{
 			dt = dt + ddt;
 		}
 		I++;
-	} while (abs(ddt) > eps_t && I < 10);
+	} while (abs(ddt) > eps_t && I < IMAX);
 
 	//Failed to converge
-	if (I == 10)
+	if (I >= IMAX)
 	{
 		PMXSPT("PITCIR", 19);
 		return 4;

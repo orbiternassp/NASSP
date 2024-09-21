@@ -7141,14 +7141,14 @@ void LVDCSV::DiscreteProcessor1()
 void LVDCSV::DiscreteProcessor2()
 {
 	bool fail = false;
-	//If we don't do a center engine cutoff treat center engine failure as normal. Otherwise ignore it
-	if (SIICenterEngineCutoff == false && DPM[DIN13_SIIInboardEngineOut] == false && lvda.GetSIIInboardEngineOut())
+	//S-II inboard engine failure
+	if (DPM[DIN13_SIIInboardEngineOut] == false && lvda.GetSIIInboardEngineOut())
 	{
 		fail = true;
 		DPM[DIN13_SIIInboardEngineOut] = true;
 		ModeCode25[MC25_SIIInboardEngineOut] = true;
 	}
-	//Outer engine failures are always treated normally
+	//S-II outboard engine failure
 	if (DPM[DIN21_SIIOutboardEngineOut] == false && lvda.GetSIIOutboardEngineOut())
 	{
 		fail = true;
@@ -7171,16 +7171,24 @@ void LVDCSV::DiscreteProcessor2()
 				//pre-IGM S2 engine fail handling
 				T_0 = t_21 + dt_LET - TMM;
 				T_1 = (T_0 / 4) + ((5 * T_1) / 4);
-				T_2 = 5 * T_2 / 4;
-				tau2 = 5 * tau2 / 4;
+				//Don't adjust post-MRS performance parameters as the presettings have taken care of the four engine S-II performance
+				if (SIICenterEngineCutoff == false)
+				{
+					T_2 = 5.0 * T_2 / 4.0;
+					tau2 = 5.0 * tau2 / 4.0;
+				}
 				fprintf(lvlog, "[%d+%f] Pre-IGM SII engine out interrupt received!\r\n", LVDC_Timebase, LVDC_TB_ETime);
 			}
 			else
 			{
 				//IGM engine fail
 				T_1 = 5.0 * T_1 / 4.0;
-				T_2 = 5.0 * T_2 / 4.0;
-				tau2 = 5.0 * tau2 / 4.0;
+				//Don't adjust post-MRS performance parameters as the presettings have taken care of the four engine S-II performance
+				if (SIICenterEngineCutoff == false)
+				{
+					T_2 = 5.0 * T_2 / 4.0;
+					tau2 = 5.0 * tau2 / 4.0;
+				}
 				fprintf(lvlog, "[%d+%f] SII engine out interrupt received!\r\n", LVDC_Timebase, LVDC_TB_ETime);
 			}
 		}
@@ -8513,12 +8521,6 @@ EP00:
 		ModeCode26[MC26_SMCActive] = true;
 		break;
 	case 32: //S-II IECO (TB3+299.0), actual flight only
-		if (SIICenterEngineCutoff)
-		{
-			ModeCode25[MC25_SIIInboardEngineOut] = true;
-			DPM[DIN13_SIIInboardEngineOut] = true;
-			//T_EO2 = 1;
-		}
 		break;
 	case 33: //TB3+355.0 Enable INT6
 		DVIH[INT6_SIIEnginesCutoff] = false;
@@ -9670,7 +9672,7 @@ restartprep:
 			//Second opportunity targeting from TABLE
 
 			tgt_index = 0;
-			while (t_D > TABLE15[1].target[tgt_index].t_D)
+			while (tgt_index < 14 && t_D > TABLE15[1].target[tgt_index].t_D)
 			{
 				tgt_index++;
 			}
@@ -9711,7 +9713,7 @@ restartprep:
 			//First opportunity targeting from TABLE
 
 			tgt_index = 0;
-			while (t_D > TABLE15[0].target[tgt_index].t_D)
+			while (tgt_index < 14 && t_D > TABLE15[0].target[tgt_index].t_D)
 			{
 				tgt_index++;
 			}

@@ -20,6 +20,7 @@
     <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARoapiModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\AscentRendezvousMonitor.h" />
     <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
@@ -33,6 +34,7 @@
     <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCDisplayFormatting.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCSystemParameters.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCC_EMSMISS.h" />
@@ -51,6 +53,7 @@
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD_Display.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARCore.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARoapiModule.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\AscentRendezvousMonitor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
@@ -64,6 +67,7 @@
     <ClCompile Include="..\..\src_rtccmfd\LWP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\RTCCDisplayFormatting.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\RTCCModule.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\RTCC_EMSMISS.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />

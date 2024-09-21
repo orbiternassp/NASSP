@@ -74,6 +74,10 @@ public:
 	virtual void Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm = false, int xTexMul =1);
 
 protected:
+
+	//Function that controls what happens when the timer counts down through zero
+	virtual void CountingThroughZero(double &t);
+
 	//
 	// These are expected to be saved by the owning class.
 	//
@@ -111,6 +115,7 @@ public:
 	void SystemTimestep(double simdt);
 
 protected:
+	virtual void CountingThroughZero(double &t);
 };
 
 //
@@ -124,7 +129,12 @@ public:
 	void Render(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);
 	void SystemTimestep(double simdt);
 
+	void SetReverseAtZero(bool dir) { ReverseDirection = dir; }
 protected:
+	void CountingThroughZero(double &t);
+
+	//If timer counts down and reaches zero, start counting up
+	bool ReverseDirection;
 };
 
 

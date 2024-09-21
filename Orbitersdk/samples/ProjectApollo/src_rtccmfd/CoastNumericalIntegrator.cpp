@@ -438,7 +438,7 @@ VECTOR3 CoastIntegrator2::adfunc(VECTOR3 R)
 			//Get Earth rotation matrix only during initialization. For the Moon the libration matrix is updated by the PLEFEM call below
 			if (P == BODY_EARTH)
 			{
-				pRTCC->ELVCNV(CurrentTime(), RTCC_COORDINATES_ECT, RTCC_COORDINATES_ECI, Rot);
+				pRTCC->ELVCNV(CurrentTime(), RTCC_COORDINATES_ECI, RTCC_COORDINATES_ECT, Rot);
 			}
 		}
 

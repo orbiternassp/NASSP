@@ -1020,6 +1020,7 @@ public:
 	//CSM to LM interface functions
 	h_Pipe* GetCMTunnelPipe() { return CMTunnel; }
 	h_Pipe* GetCSMO2Hose();
+	void ConnectCSMO2Hose();
 	void ConnectTunnelToCabinVent();
 	bool GetLMDesBatLVOn();
 	bool GetLMDesBatLVHVOffA();
@@ -1280,6 +1281,7 @@ public:
 	virtual SIBSystems *GetSIB() { return NULL; }
 	virtual SICSystems *GetSIC() { return NULL; }
 	SECS *GetSECS() { return &secs; }
+	mission::Mission *GetMission() { return pMission; }
 
 	void ClearMeshes();
 

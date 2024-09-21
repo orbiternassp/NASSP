@@ -44,6 +44,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/GeneralPurposeManeuver.h"
 #include "../src_rtccmfd/LWP.h"
 #include "../src_rtccmfd/AnalyticEphemerisGenerator.h"
+#include "../src_rtccmfd/RTCCDisplayFormatting.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -341,13 +342,15 @@ struct AP11LMManPADOpt
 
 struct AP10CSIPADOpt
 {
-	SV sv0;
-	double t_CSI;
-	double t_TPI;
-	VECTOR3 dV_LVLH;
-	MATRIX3 REFSMMAT;
-	int enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4; //Engine type used for the maneuver
-	double KFactor = 0.0;
+	AP10CSIPADOpt();
+
+	EphemerisData sv0;			// State vector of active vehicle
+	double t_CSI;				// Time of CSI (GET)
+	double t_TPI;				// Time of TPI (GET)
+	VECTOR3 dV_LVLH;			// DV of CSI maneuver (LVLH)
+	MATRIX3 REFSMMAT;			// REFSMMAT during the maneuver
+	int enginetype;				//Engine type used for the maneuver
+	PLAWDTOutput WeightsTable;	// Table with spacecraft weights
 };
 
 struct AP7TPIPADOpt
@@ -370,7 +373,9 @@ struct AP9LMTPIPADOpt
 
 struct AP9LMCDHPADOpt
 {
-	SV sv_A; //Chaser state vector
+	AP9LMCDHPADOpt();
+
+	EphemerisData sv_A; //Chaser state vector
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	MATRIX3 REFSMMAT;	//REFSMMAT
@@ -717,8 +722,9 @@ struct ASCPADOpt
 
 struct LMARKTRKPADOpt
 {
-	SV sv0; //Input state vector
-	double LmkTime[4]; //initial guess for time over landmark
+	EphemerisData sv0; //Input state vector
+	double Elevation = 35.0*RAD; //Elevation angle at acquisition
+	double LmkTime[4]; //initial guess for time over landmark (GET)
 	double lat[4];		//landmark latitude
 	double lng[4];		//landmark longitude
 	double alt[4] = { 0,0,0,0 };	//landmark altitude
@@ -1744,7 +1750,7 @@ struct PMMLDIInput
 struct PMMLAIInput
 {
 	double m0;
-	SV sv_CSM;
+	EphemerisData sv_CSM;
 	double t_liftoff;
 	double v_LH;
 	double v_LV;
@@ -2034,7 +2040,8 @@ struct LunarDescentPlanningTable
 	double PD_GETTD;
 	char DescAzMode[4];
 	double DescAsc;
-	double SN_LK_A; //???
+	double SN_LK_A; //Sun look angle (elevation angle at landing site)
+	int error;
 };
 
 struct SunriseSunsetData
@@ -2202,7 +2209,7 @@ struct RTEDMEDData
 	bool HeadsUp;
 	int PrimaryReentryMode;
 	int BackupReentryMode;
-	int IRM; //REFSMMAT number: -1 = input, 0 = Reentry, 1 = deorbit, 2 = orbital preferred, 3 = TEI
+	int IRM; //REFSMMAT number: -1 = input, 0 = Reentry, 1 = deorbit, 2 = orbital preferred, 3 = TEI, 4 = Lunar Entry (LVLH 0,0,0), 5 = Lunar Entry (LVLH 0,180,0)
 	int StoppingMode; //-1 = Time, 1 = Gamma
 	bool ManualEntry;
 	int TrimInd;
@@ -2443,13 +2450,13 @@ private:
 	void TimeUpdate();
 public:
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
-	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
-	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
+	void AP9LMTPIPAD(const AP9LMTPIPADOpt &opt, AP9LMTPI &pad);
+	void AP9LMCDHPAD(const AP9LMCDHPADOpt &opt, AP9LMCDH &pad);
 	void TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad);
-	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
-	void LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad);
+	bool PDI_PAD(const PDIPADOpt &opt, AP11PDIPAD &pad);
+	void LunarAscentPAD(const ASCPADOpt &opt, AP11LMASCPAD &pad);
 	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
-	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
+	void LunarEntryPAD(const LunarEntryPADOpt &opt, AP11ENT &pad);
 	//Conic Fit
 	int PCZYCF(double R1, double R2, double PHIT, double DELT, double VXI2, double VYI2, double VXF1, double VYF1, double SQRMU, int NREVS, int body, double &a, double &e, double &f_T, double &t_PT);
 	int PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH, double theta, EphemerisData &sv_A1_apo, EphemerisData &sv_A2, EphemerisData &sv_A2_apo);
@@ -2465,7 +2472,7 @@ public:
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
 	void TranslunarInjectionProcessor(EphemerisData sv, PLAWDTOutput WeightsTable);
 	void TranslunarMidcourseCorrectionProcessor(EphemerisData sv0, double CSMmass, double LMmass);
-	int LunarDescentPlanningProcessor(SV sv);
+	int LunarDescentPlanningProcessor(EphemerisData sv, double W_LM);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	int DetermineSVBody(EphemerisData2 sv);
@@ -2475,12 +2482,12 @@ public:
 	void AGSStateVectorPAD(const AGSSVOpt &opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(const AP11LMManPADOpt &opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad);
-	void AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad);
+	void AP10CSIPAD(const AP10CSIPADOpt &opt, AP10CSI &pad);
 	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked);
 	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked, bool asc = false);
 	void RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(EphemerisData sv0, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
-	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
+	void LandmarkTrackingPAD(const LMARKTRKPADOpt &opt, AP11LMARKTRKPAD &pad);
 	//S-IVB TLI IGM Pre-Thrust Targeting Module
 	int PMMSPT(PMMSPTInput &in);
 	int PCMSP2(TLITargetingParametersTable *tlitab, int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC);
@@ -2504,7 +2511,42 @@ public:
 	void LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp, int M, int P, int I_CDH, double DH, double &dv_CSI, double &dv_CDH, double &t_CDH);
 	void LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt);
 	bool LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargetingTable &res);
-	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
+
+	struct LunarAscentProcessorInputs
+	{
+		//Landing site vector in MCT coordinates
+		VECTOR3 R_LS;
+		//LM mass at liftoff
+		double m0;
+		//CSM state vector near liftoff
+		EphemerisData sv_CSM;
+		//GMT of liftof
+		double t_liftoff;
+		//Insertion velocity
+		double v_LH, v_LV;
+	};
+
+	struct LunarAscentProcessorOutputs
+	{
+		//Ascent powered flight arc
+		double theta;
+		//Ascent powered flight time
+		double dt_asc;
+		//Ascent total DV
+		double dv;
+		//LM state vector at ignition
+		EphemerisData sv_IG;
+		//Cross range at ignition
+		double CR;
+		//Phase angle at insertion
+		double phase;
+		//LM state vector at insertion
+		EphemerisData sv_Ins;
+		//LM mass at insertion
+		double m1;
+	};
+
+	void LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscentProcessorOutputs &out);
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
@@ -2619,14 +2661,14 @@ public:
 	//Central Manual Entry Device Decoder
 	bool GMGMED(char *str);
 	//MED Decoder for G, A and B MEDs
-	int EMGABMED(int type, std::string med, std::vector<std::string> data);
+	void EMGABMED(int type, std::string med, std::vector<std::string> data, int &err, unsigned &param);
 	//MED Decoder for C MEDs
-	int CMRMEDIN(std::string med, std::vector<std::string> data);
+	void CMRMEDIN(std::string med, std::vector<std::string> data, int &err, unsigned &param);
 	//'F' MED Module
 	int PMQAFMED(std::string med);
 	int PMQAFMED(std::string med, std::vector<std::string> data);
 	//K-MED Decoder
-	void PMKMED(std::string med);
+	void PMKMED(std::string med, std::vector<std::string> data, int &err, unsigned &param);
 	//'M' MED Module
 	int PMMMED(std::string med, std::vector<std::string> data);
 	//'P' Code MED Processor
@@ -3961,6 +4003,7 @@ public:
 		double LDPPDescentFlightTime = 11.0*60.0; //Minutes
 		//Block 45
 		double LDPPDescentFlightArc = 15.0*RAD;
+		double LDPPLandingSiteOffset = 15.0*RAD;
 		//Block 46
 		double SPQDeltaH = 15.0*1852.0;
 		//Block 47
@@ -4091,10 +4134,10 @@ public:
 
 		//Block 12
 		std::string RTESite = "No Site!";
-		double RTEVectorTime;
-		double RTET0Min; //Time of abort or minimum time
-		double RTET0Max; //Maximum time
-		double RTETimeOfLanding;
+		double RTEVectorTime; //Vector time in GMT (hrs)
+		double RTET0Min; //Time of abort or minimum time in GMT (hrs)
+		double RTET0Max; //Maximum time in GMT (hrs)
+		double RTETimeOfLanding; //Landing time in GMT (hrs)
 		double RTEUADVMax;
 		double RTEPTPMissDistance;
 		double RTEInclination;
@@ -4250,7 +4293,7 @@ public:
 
 	struct LAIInputOutput
 	{
-		double t_launch;
+		double t_launch = 0.0;
 		double R_D, Y_D;
 		double R_D_dot, Y_D_dot, Z_D_dot;
 		EphemerisData sv_Insertion;
@@ -4544,6 +4587,63 @@ public:
 		double dh_bias = 0.0;
 		bool PlaneSolnForInterSoln = true;
 	} PZLOIPLN; //Figure out real name!
+
+	struct ARMMEDSaveTable
+	{
+		ARMMEDSaveTable();
+		void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+		void LoadState(FILEHANDLE scn, char *end_str);
+
+		//Coelliptic
+
+		//Elevation angle
+		double E;
+		//CSI: If zero CSI performed at first apolune after insertion. non-zero parameter used as delta time from insertion to CSI. (minutes)
+		double CSIFlag;
+		//CDH Indicator (+N: N apsis crossings from CSI to CDH, -N: N/2 revs from CSI to CDH (N must be odd)
+		int CDHIndicator;
+		//Minimum safe perilune
+		double h_min;
+		//Time of TPI (GMT)
+		double t_TPI_Coell;
+
+		//Short
+
+		//false = time of tweak DT from insertion, true = input time of tweat
+		bool ITWEAK;
+		//false = time of TPI is DTPI from insertion, true = input time of TPI
+		bool ITPI;
+		//Time of tweak (GMT)
+		double t_tweak;
+		//Delta time of tweak
+		double DT;
+		//Delta time of TPI
+		double DTPI;
+		//Phase and height offsets at TPI
+		double DTHETA;
+		//IMU gimbal angles
+		VECTOR3 IMUAngles;
+		//body axis reference. false = gimbal angles, true = Axhor
+		bool IREF;
+		//Angle between line of sight to the forward horizon and the spacecraft X-axis
+		double Axhor;
+		//Time of TPI (GMT)
+		double t_TPI_Short;
+
+		//Both
+
+		//Terminal phase travel angle
+		double WT;
+		//Desired Delta H
+		double DH;
+		//Time of insertion (GMT)
+		double t_Ins;
+
+		double t_Calc_ARM = -1.0;
+		double t_Calc_ShortARM = -1.0;
+
+	} PZMARM;
+
 
 	struct UMEDSaveTable
 	{
@@ -4923,6 +5023,12 @@ private:
 	void PMDRPT();
 	//Two-Impulse Multiple Solution Display
 	void PMDTIMP();
+public:
+		//Ascent Rendezvous Monitoring Display
+		void PMDARM(EphemerisData sv_CSM, EphemerisData sv_LM);
+		//Short Ascent Rendezvous Monitoring Display
+		void PMDSARM(EphemerisData sv_CSM, EphemerisData sv_LM);
+protected:
 	//GOST CSM/LM LCV Computation
 	void EMMGLCVP(int L, double gmt, int body);
 	//Relative Motion Digital Display
@@ -4955,7 +5061,6 @@ protected:
 	bool PMMXFRDeleteOption(int L, double GMTI);
 	int PMMMCDCallEMSMISS(EphemerisData sv0, double GMTI, EphemerisData &sv1);
 	int PMSVCTAuxVectorFetch(int L, double T_F, EphemerisData &sv);
-	bool MEDTimeInputHHMMSS(std::string vec, double &hours);
 public:
 	EphemerisData ConvertSVtoEphemData(SV sv);
 	SV ConvertEphemDatatoSV(EphemerisData sv, double mass = 0.0);
@@ -5006,6 +5111,7 @@ public:
 	char LEMName[64];
 
 	RTCCSystemParameters SystemParameters;
+	rtcc::RTCCDynamicDisplayData DynamicDisplayData;
 };
 
 #endif

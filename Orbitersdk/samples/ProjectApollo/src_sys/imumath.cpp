@@ -59,6 +59,15 @@ int IMU::radToGyroPulses(double angle) {
 	return (int)((angle * 2097152.0) / TWO_PI);
 }
 
+void IMU::clampTo2pi(double angle) {
+	if (angle >= TWO_PI) {
+		angle -= TWO_PI;
+	}
+	if (angle < 0.0) {
+		angle += TWO_PI;
+	}
+}
+
 MATRIX3 IMU::getRotationMatrixX(double angle) {
 	// Returns the rotation matrix for a rotation of a given angle around the X axis (Pitch)
 	

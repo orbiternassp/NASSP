@@ -150,6 +150,15 @@
     <ClCompile Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\AscentRendezvousMonitor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\RTCCDisplayFormatting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_aux\Mission.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -252,6 +261,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\AscentRendezvousMonitor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\RTCCDisplayFormatting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\RTCCUtilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_aux\Mission.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

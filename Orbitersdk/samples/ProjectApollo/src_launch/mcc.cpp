@@ -98,8 +98,9 @@ MCC::MCC(RTCC *rtc)
 	R_E = 0;
 	R_M = 0;
 	// Reset ground stations
-	int x=0;
-	while(x<MAX_GROUND_STATION){
+	GroundStations.resize(43);
+	unsigned int x=0;
+	while(x < GroundStations.size()){
 		GroundStations[x].Active = false;
 		GroundStations[x].Position[0] = 0;
 		GroundStations[x].Position[1] = 0;
@@ -142,6 +143,7 @@ MCC::MCC(RTCC *rtc)
 	upMessage[0] = 0;
 	upType = 0;
 	subThreadStatus = DONE;
+	EarthGlobalPos = _V(0.0, 0.0, 0.0);
 	MoonGlobalPos = _V(0.0, 0.0, 0.0);
 
 	// Ground Systems Init
@@ -549,6 +551,20 @@ void MCC::Init(){
 	GroundStations[42].CommCaps = GSGC_TELETYPE|GSGC_SCAMA_VOICE;
 	GroundStations[42].Active = true;
 
+	/*
+	sprintf(GroundStations[43].Name, "ATS-6"); sprintf(GroundStations[43].Code, "ATS");
+	GroundStations[43].SBandAntenna = GSSA_3PT7METER;
+	GroundStations[43].HasRadar = true;
+	GroundStations[43].HasAcqAid = true;
+	GroundStations[43].DownTlmCaps = GSDT_USB | GSDT_VHF;
+	GroundStations[43].TrackingCaps = GSTK_CBAND_LOWSPEED | GSTK_USB;
+	GroundStations[43].USBCaps = GSSC_VOICE | GSSC_TELEMETRY;
+	GroundStations[43].CommCaps = GSGC_TELETYPE | GSGC_SCAMA_VOICE | GSGC_VHFAG_VOICE;
+	GroundStations[43].StationPurpose = GSPT_LUNAR;
+	GroundStations[43].StationType = GSTP_RELAY_SAT;
+	GroundStations[43].Active = true;
+	*/
+
 	// MISSION STATE
 	MissionPhase = 0;
 	setState(MMST_PRELAUNCH);
@@ -606,6 +622,7 @@ void MCC::TimeStep(double simdt){
 	LastAOSUpdate += simdt;
 	if (LastAOSUpdate > 1.0) {
 		LastAOSUpdate = 0.0;
+		oapiGetGlobalPos(Earth, &EarthGlobalPos);
 		oapiGetGlobalPos(Moon, &MoonGlobalPos);
 		if (cm) { AutoUpdateXmitGroundStation(static_cast<VESSEL*>(cm), TrackingVesselType::TypeCM, TrackingSlot::SlotCM); }
 		if (lm) { AutoUpdateXmitGroundStation(static_cast<VESSEL*>(lm), TrackingVesselType::TypeLM, TrackingSlot::SlotLM); }
@@ -613,20 +630,16 @@ void MCC::TimeStep(double simdt){
 	}
 
 	if (TransmittingGroundStation[TrackingSlot::SlotCM]) {
-		VECTOR3 XmitGSVector = _V(cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotCM]].Position[1] * RAD) * cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotCM]].Position[0] * RAD),
-			sin(GroundStations[TransmittingGroundStation[TrackingSlot::SlotCM]].Position[0] * RAD),
-			sin(GroundStations[TransmittingGroundStation[TrackingSlot::SlotCM]].Position[1] * RAD) * cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotCM]].Position[0] * RAD)) * oapiGetSize(Earth);
-		oapiLocalToGlobal(Earth, &XmitGSVector, &TransmittingGroundStationVector[TrackingSlot::SlotCM]);
+		VECTOR3 XmitGSVector;
+		UpdateGroundStationPosition(TransmittingGroundStation[TrackingSlot::SlotCM], XmitGSVector, TransmittingGroundStationVector[TrackingSlot::SlotCM]);
 	}
 	else {
 		TransmittingGroundStationVector[TrackingSlot::SlotCM] = _V(0, 0, 0);
 	}
 
 	if (TransmittingGroundStation[TrackingSlot::SlotLM]) {
-		VECTOR3 XmitGSVector = _V(cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[1] * RAD) * cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[0] * RAD),
-			sin(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[0] * RAD),
-			sin(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[1] * RAD) * cos(GroundStations[TransmittingGroundStation[TrackingSlot::SlotLM]].Position[0] * RAD)) * oapiGetSize(Earth);
-		oapiLocalToGlobal(Earth, &XmitGSVector, &TransmittingGroundStationVector[TrackingSlot::SlotLM]);
+		VECTOR3 XmitGSVector;
+		UpdateGroundStationPosition(TransmittingGroundStation[TrackingSlot::SlotLM], XmitGSVector, TransmittingGroundStationVector[TrackingSlot::SlotLM]);
 	}
 	else {
 		TransmittingGroundStationVector[TrackingSlot::SlotLM] = _V(0, 0, 0);
@@ -950,11 +963,10 @@ void MCC::TimeStep(double simdt){
 
 void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, TrackingSlot Slot)
 {
-	double Moonrelang;
-	double LOSRange;
+	double LOSRange = 0.0;
 	VECTOR3 GSGlobalVector = _V(0, 0, 0);
 	VECTOR3 GSVector = _V(0, 0, 0);
-	bool MoonInTheWay, Sight;
+	bool Sight, Connected, InAOS;
 
 	// Bail out if we failed to find either major body
 	if (Earth == NULL) { addMessage("Can't find Earth"); GT_Enabled = false; return; }
@@ -966,63 +978,73 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 	Ves->GetGlobalPos(VesselGlobalPos[Slot]);
 	oapiGlobalToLocal(Earth, &VesselGlobalPos[Slot], &(Vessel_Vector[Slot]));
 
-	for(int StationIndex = 1; StationIndex < MAX_GROUND_STATION; StationIndex++){
+	for(unsigned int StationIndex = 1; StationIndex < GroundStations.size(); StationIndex++){
 		if (GroundStations[StationIndex].Active == true) {
 
-			GSVector = _V(cos(GroundStations[StationIndex].Position[1] * RAD) * cos(GroundStations[StationIndex].Position[0] * RAD),
-				sin(GroundStations[StationIndex].Position[0] * RAD), 
-				sin(GroundStations[StationIndex].Position[1] * RAD) * cos(GroundStations[StationIndex].Position[0] * RAD)) * R_E;
-			
-			oapiLocalToGlobal(Earth, &GSVector, &GSGlobalVector);
-			MoonInTheWay = false;
-			if (GroundStations[StationIndex].StationPurpose & GSPT_LUNAR)
+			//Get local and global position of ground station
+			Connected = UpdateGroundStationPosition(StationIndex, GSVector, GSGlobalVector);
+
+			//Check if relay satellite is available
+			if (Connected && GroundStations[StationIndex].StationType == GSTP_RELAY_SAT)
 			{
-				LOSRange = 5e8;
+				//Check if the satellite is connected to MSFN. For now, only consider lunar occulation for possible lunar relay satellites
+				Connected = OrbMech::sight(EarthGlobalPos - MoonGlobalPos, GSGlobalVector - MoonGlobalPos, R_M);
+			}
+
+			//Range and line-of-sight checks
+			if (Connected)
+			{
+				if (GroundStations[StationIndex].StationPurpose & GSPT_LUNAR)
+				{
+					LOSRange = 5e8;
+				}
+				else
+				{
+					LOSRange = 2e7;
+				}
+				//Check if there is line-of-sight between vessel and station and that the Moon is not in the way either
+				Sight = OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E) && OrbMech::sight(VesselGlobalPos[Slot] - MoonGlobalPos, GSGlobalVector - MoonGlobalPos, R_M);
+
+				//Now put it all together
+				InAOS = (Sight && ((GroundStations[StationIndex].USBCaps & GSSC_VOICE) || (GroundStations[StationIndex].CommCaps & GSGC_VHFAG_VOICE)) && length(Vessel_Vector[Slot] - GSVector) < LOSRange);
 			}
 			else
 			{
-				LOSRange = 2e7;
+				InAOS = false;
 			}
-			//Check if there is line-of-sight between vessel and station
-			Sight = OrbMech::sight(Vessel_Vector[Slot], GSVector, R_E);
-			//Moon in the way
-			Moonrelang = dotp(unit(MoonGlobalPos - VesselGlobalPos[Slot]), unit(GSGlobalVector - VesselGlobalPos[Slot]));
-			if (Moonrelang > cos(asin(R_M / length(MoonGlobalPos - VesselGlobalPos[Slot]))))
+
+			if (InAOS && GroundStations[StationIndex].AOS[Slot] == 0)
 			{
-				MoonInTheWay = true;
-			}
-			if (Sight && GroundStations[StationIndex].AOS[Slot] == 0 && ((GroundStations[StationIndex].USBCaps & GSSC_VOICE) || (GroundStations[StationIndex].CommCaps & GSGC_VHFAG_VOICE))) {
-				if (length(Vessel_Vector[Slot] - GSVector) < LOSRange && !MoonInTheWay)
-				{
-					//Dont switch to a new station if we're transmitting an uplink;
-					bool uplinking = false;
-					
-					switch (Type) {
-						case TrackingVesselType::TypeCM:
-							if (((Saturn*)Ves)->pcm.mcc_size != 0) { uplinking = true; }
-							break;
-						case TrackingVesselType::TypeLM:
-							if (((LEM*)Ves)->PCM.mcc_size != 0) { uplinking = true; }
-							break;
+				//Dont switch to a new station if we're transmitting an uplink;
+				bool uplinking = false;
+
+				switch (Type) {
+				case TrackingVesselType::TypeCM:
+					if (((Saturn*)Ves)->pcm.mcc_size != 0) { uplinking = true; }
+					break;
+				case TrackingVesselType::TypeLM:
+					if (((LEM*)Ves)->PCM.mcc_size != 0) { uplinking = true; }
+					break;
+				}
+
+				if (!uplinking) {
+					GroundStations[StationIndex].AOS[Slot] = 1;
+					if (Type == TrackingVesselType::TypeCM && GT_Enabled == true) {
+						char buf[MAX_MSGSIZE];
+						sprintf(buf, "AOS %s", GroundStations[StationIndex].Name);
+						addMessage(buf);
 					}
-					
-
-					if (!uplinking) {
-						GroundStations[StationIndex].AOS[Slot] = 1;
-						if (Type == TrackingVesselType::TypeCM && GT_Enabled == true) {
-							char buf[MAX_MSGSIZE];
-							sprintf(buf, "AOS %s", GroundStations[StationIndex].Name);
-							addMessage(buf);
-						}
-
-						if (GroundStations[StationIndex].USBCaps) {
+					//S-Band station?
+					if (GroundStations[StationIndex].USBCaps) {
+						//Special logic for ASTP (mostly), relay satellites take precedent. So don't switch to the new station if the transmitting station is currently a satellite
+						if (TransmittingGroundStation[Slot] == 0 || GroundStations[TransmittingGroundStation[Slot]].StationType != GSTP_RELAY_SAT)
+						{
 							TransmittingGroundStation[Slot] = StationIndex; //only interested in picking a station to tx USB carrier
 						}
 					}
-
 				}
 			}
-			if ((!Sight || length(Vessel_Vector[Slot] - GSVector) > LOSRange || MoonInTheWay) && GroundStations[StationIndex].AOS[Slot] == 1) {
+			else if (!InAOS && GroundStations[StationIndex].AOS[Slot] == 1) {
 				GroundStations[StationIndex].AOS[Slot] = 0;
 
 				if (Type == TrackingVesselType::TypeCM && GT_Enabled == true) {
@@ -1031,12 +1053,89 @@ void MCC::AutoUpdateXmitGroundStation(VESSEL* Ves, TrackingVesselType Type, Trac
 					addMessage(buf);
 				}
 			}
-			if (GroundStations[StationIndex].AOS[Slot]) { AOSCount++; }
+			//Count how many S-Band capable stations are in AOS
+			if (GroundStations[StationIndex].AOS[Slot] && GroundStations[StationIndex].USBCaps)
+			{
+				AOSCount++;
+			}
+		}
+		else
+		{
+			//Set AOS to off if station is not active, just to be sure
+			GroundStations[StationIndex].AOS[Slot] = 0;
 		}
 	}
-	if (AOSCount == 0) {
-		TransmittingGroundStation[Slot] = 0;
+
+	//Transmitting ground station logic
+	bool LookForNewStation = false;
+
+	//Connected currently?
+	if (TransmittingGroundStation[Slot])
+	{
+		//Connected to a station
+		//Do we have LOS?
+		if (GroundStations[TransmittingGroundStation[Slot]].AOS[Slot] == 0)
+		{
+			//Reset transmitting and search for new one
+			TransmittingGroundStation[Slot] = 0;
+			LookForNewStation = true;
+		}
 	}
+	else
+	{
+		//No station currently
+		LookForNewStation = true;
+	}
+
+	if (LookForNewStation && AOSCount != 0)
+	{
+		//Go through list to find new station
+		for (unsigned int i = 0; i < GroundStations.size(); i++)
+		{
+			if (GroundStations[i].AOS[Slot] && GroundStations[i].USBCaps)
+			{
+				TransmittingGroundStation[Slot] = i;
+			}
+		}
+	}
+}
+
+bool MCC::UpdateGroundStationPosition(unsigned int i, VECTOR3 &LocalPos, VECTOR3 &GlobalPos)
+{
+	//Return true of positions were available
+	LocalPos = GlobalPos = _V(0, 0, 0);
+
+	if (i == 0 || i >= GroundStations.size())
+	{
+		//Error
+		return false;
+	}
+
+	if (GroundStations[i].StationType == GSTP_RELAY_SAT)
+	{
+		//Relay satellite
+		OBJHANDLE hVes = oapiGetObjectByName(GroundStations[i].Name);
+		if (hVes)
+		{
+			oapiGetGlobalPos(hVes, &GlobalPos);
+			oapiGlobalToLocal(Earth, &GlobalPos, &LocalPos);
+		}
+		else
+		{
+			//Error
+			return false;
+		}
+	}
+	else
+	{
+		//Ground station
+		LocalPos = _V(cos(GroundStations[i].Position[1] * RAD) * cos(GroundStations[i].Position[0] * RAD),
+			sin(GroundStations[i].Position[0] * RAD),
+			sin(GroundStations[i].Position[1] * RAD) * cos(GroundStations[i].Position[0] * RAD)) * R_E;
+
+		oapiLocalToGlobal(Earth, &LocalPos, &GlobalPos);
+	}
+	return true;
 }
 
 void MCC::UpdateRevCounters(TrackingSlot Slot)
@@ -1382,16 +1481,16 @@ void MCC::SaveState(FILEHANDLE scn) {
 	SAVE_INT("MCC_EarthRev", EarthRev);
 	SAVE_INT("MCC_MoonRev", MoonRev);
 	SAVE_INT("MCC_AbortMode", AbortMode);
-	for (int i = 0; i < MAX_GROUND_STATION; i++)
+	for (unsigned int i = 0; i < GroundStations.size(); i++)
 	{
 		if (GroundStations[i].AOS[TrackingSlot::SlotCM])
 		{
-			int Itemp[2] = { i, GroundStations[i].AOS[TrackingSlot::SlotCM]};
+			int Itemp[2] = { (int)i, GroundStations[i].AOS[TrackingSlot::SlotCM]};
 			papiWriteScenario_intarr(scn, "MCC_GroundStationAOS_CM", Itemp, 2);
 		}
-		if (GroundStations[i].AOS[0])
+		if (GroundStations[i].AOS[TrackingSlot::SlotLM])
 		{
-			int Itemp[2] = { i, GroundStations[i].AOS[TrackingSlot::SlotLM] };
+			int Itemp[2] = { (int)i, GroundStations[i].AOS[TrackingSlot::SlotLM] };
 			papiWriteScenario_intarr(scn, "MCC_GroundStationAOS_LM", Itemp, 2);
 		}
 	}
@@ -1993,19 +2092,30 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("MCC_MoonRevTime", MoonRevTime);
 		LOAD_STRING("MCC_PCOption_Text", PCOption_Text, 32);
 		LOAD_STRING("MCC_NCOption_Text", NCOption_Text, 32);
-		LOAD_INT("MCC_TransmittingGroundstation", TransmittingGroundStation[TrackingSlot::SlotCM]);
-		LOAD_INT("MCC_TransmittingGroundstationLM", TransmittingGroundStation[TrackingSlot::SlotLM]);
+
+		if (papiReadScenario_int(line, "MCC_TransmittingGroundstation", iTemp[0]))
+		{
+			unsigned int i = iTemp[0];
+			if (GroundStations.size() > i) TransmittingGroundStation[TrackingSlot::SlotCM] = iTemp[0];
+		}
+		if (papiReadScenario_int(line, "MCC_TransmittingGroundstationLM", iTemp[0]))
+		{
+			unsigned int i = iTemp[0];
+			if (GroundStations.size() > i) TransmittingGroundStation[TrackingSlot::SlotLM] = iTemp[0];
+		}
 		LOAD_INT("MCC_padNumber", padNumber);
 		//LOAD_INT("MCC_padState", padState);
 
 		if (papiReadScenario_intarr(line, "MCC_GroundStationAOS_CM", iTemp, 2))
 		{
-			GroundStations[iTemp[0]].AOS[TrackingSlot::SlotCM] = iTemp[1];
+			unsigned int i = iTemp[0];
+			if (GroundStations.size() > i) GroundStations[i].AOS[TrackingSlot::SlotCM] = iTemp[1];
 		}
 
 		if (papiReadScenario_intarr(line, "MCC_GroundStationAOS_LM", iTemp, 2))
 		{
-			GroundStations[iTemp[0]].AOS[TrackingSlot::SlotLM] = iTemp[1];
+			unsigned int i = iTemp[0];
+			if (GroundStations.size() > i) GroundStations[i].AOS[TrackingSlot::SlotLM] = iTemp[1];
 		}
 
 		if (padNumber > 0)
@@ -4526,6 +4636,22 @@ void MCC::SetLV(char *lvname)
 		if (utils::IsVessel(v, utils::SIVB)) {
 			sivb = (SIVB *)v;
 		}
+	}
+}
+
+void MCC::SetGroundStation(unsigned int i, const GroundStation &temp)
+{
+	//Station 0 isn't used, so use that as a flag to create a new station 
+	if (i == 0)
+	{
+		//Create
+		GroundStations.push_back(temp);
+	}
+	else
+	{
+		//Replace
+		if (i >= GroundStations.size()) return;
+		GroundStations[i] = temp;
 	}
 }
 
